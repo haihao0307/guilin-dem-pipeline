@@ -1,0 +1,87 @@
+name: Palau KAOPU source intake R1
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [data/palau-kaopu-source-intake-r1-20260920]
+    paths:
+      - tools/palau_source_intake_r1.py
+      - .github/workflows/palau-kaopu-source-intake-r1.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: palau-kaopu-source-intake-r1
+  cancel-in-progress: true
+
+jobs:
+  intake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      OUT: /tmp/palau-kaopu-source-intake-r1
+      PROJ_NETWORK: ON
+      GDAL_DISABLE_READDIR_ON_OPEN: EMPTY_DIR
+      CPL_VSIL_CURL_ALLOWED_EXTENSIONS: .tif,.TIF,.xml,.json,.zip
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: data/palau-kaopu-source-intake-r1-20260920
+
+      - name: Install geospatial intake tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gdal-bin unzip zip
+          python -m pip install --upgrade pip
+          python -m pip install requests beautifulsoup4 osm2geojson numpy pillow rasterio mercantile awscli
+
+      - name: Download and derive first-round Palau evidence
+        run: |
+          rm -rf "$OUT"
+          mkdir -p "$OUT"
+          python -u tools/palau_source_intake_r1.py --out "$OUT" | tee "$OUT/intake.log"
+          test -f "$OUT/metadata/PALAU_WORLD_CONDUCTOR_R1.json"
+          test -f "$OUT/metadata/DOWNLOAD_REPORT.json"
+
+      - name: Preserve small source ledger and receipts on the branch
+        if: always()
+        run: |
+          mkdir -p evidence/palau-source-intake-r1
+          for f in \
+            PALAU_WORLD_CONDUCTOR_R1.json \
+            PALAU_SOURCE_LEDGER_R1.json \
+            DOWNLOAD_REPORT.json \
+            NOAA_ENC_CELLS.json \
+            NOAA_2025_WAF_INVENTORY.json \
+            IHO_DCDB_CSB_COUNT.json \
+            IHO_DCDB_CSB_PLATFORMS.json \
+            SENTINEL2_SELECTED_ITEMS.json \
+            ALLEN_CORAL_RELEVANT_LAYERS.json \
+            ALLEN_CORAL_BATHYMETRY_ACCESS.json; do
+            if [ -f "$OUT/metadata/$f" ]; then cp "$OUT/metadata/$f" evidence/palau-source-intake-r1/; fi
+          done
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add evidence/palau-source-intake-r1
+          if ! git diff --cached --quiet; then
+            git commit -m 'data(palau): record KAOPU source intake R1 receipts'
+            git pull --rebase origin data/palau-kaopu-source-intake-r1-20260920
+            git push origin HEAD:data/palau-kaopu-source-intake-r1-20260920
+          fi
+
+      - name: Build one downloadable data package
+        if: always()
+        run: |
+          cd /tmp
+          zip -q -r Palau_KAOPU_Source_Intake_R1.zip palau-kaopu-source-intake-r1
+          ls -lh Palau_KAOPU_Source_Intake_R1.zip
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Palau-KAOPU-Source-Intake-R1
+          path: /tmp/Palau_KAOPU_Source_Intake_R1.zip
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 90
