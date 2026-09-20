@@ -1,0 +1,93 @@
+{
+  "schema": "kaopu.fish.3a-quality-gate/1.0",
+  "policy": "all_required_gates_must_pass_no_weighted_average",
+  "stages": [
+    {
+      "id": "Q0_SOURCE",
+      "required": [
+        "exact_identity",
+        "rights_record",
+        "reference_vs_native_labels",
+        "no_unapproved_runtime_source_dependency"
+      ]
+    },
+    {
+      "id": "Q1_PRIMARY_SHAPE",
+      "thresholds": {
+        "fixedViewIouMin": 0.985,
+        "fixedViewXorPctMax": 1.5,
+        "boundaryP95PxMax": 2.0,
+        "candidateToSourceRmsPctLMax": 0.2,
+        "sourceToCandidateRmsPctLMax": 0.25,
+        "criticalLandmarkPctLMax": 0.15
+      },
+      "manualRequired": [
+        "side",
+        "three_quarter",
+        "front",
+        "top"
+      ]
+    },
+    {
+      "id": "Q2_ANATOMY",
+      "required": [
+        "jaw_mouth_corner_cheek_continuity",
+        "operculum_gill_opening_separation",
+        "fin_root_membrane_ray_continuity",
+        "caudal_peduncle_keel_lobe_load_path",
+        "eye_iris_cornea_layering"
+      ]
+    },
+    {
+      "id": "Q3_RIG_DEFORMATION",
+      "required": [
+        "source_correspondence_retained_during_study",
+        "reduced_rig_pose_error_report",
+        "no_volume_collapse",
+        "no_fin_root_sliding",
+        "no_joint_scale_artifacts"
+      ]
+    },
+    {
+      "id": "Q4_PBR",
+      "required": [
+        "wet_skin_dielectric_response",
+        "scale_micro_normal",
+        "roughness_field",
+        "thin_fin_transmission",
+        "eye_cornea_optics",
+        "no_emissive_pigment_cheat"
+      ]
+    },
+    {
+      "id": "Q5_MOTION",
+      "required": [
+        "evidence_bounded_tail_wave",
+        "turn_acceleration_stop",
+        "jaw_operculum_coordination",
+        "pose_cycle_seam_continuity",
+        "no_n2_clip_claimed_as_natural_truth"
+      ]
+    },
+    {
+      "id": "Q6_RUNTIME",
+      "required": [
+        "desktop_browser_qa",
+        "390x844_mobile_qa",
+        "webgl_error_zero",
+        "page_console_errors_zero",
+        "memory_and_frame_time_recorded_on_target_device"
+      ]
+    },
+    {
+      "id": "Q7_ACCEPTANCE",
+      "required": [
+        "visual_acceptance",
+        "motion_acceptance",
+        "species_identity_boundary",
+        "user_acceptance",
+        "publication_authorisation"
+      ]
+    }
+  ]
+}
