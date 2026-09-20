@@ -1,0 +1,34 @@
+{
+  "schema": "kaopu.palau-world.bathymetry-evidence-binding/1.1",
+  "consumer": "PalauWorld.sample()",
+  "singleConductor": true,
+  "traditionalLOD": false,
+  "status": "CANDIDATE_NOT_SURVEY_TRUTH",
+  "verticalDatum": {
+    "soundingDatumCode": 24,
+    "soundingDatumName": "local datum",
+    "numericTransform": "NONE",
+    "mslEquivalence": "NOT_ASSERTED"
+  },
+  "rasters": {
+    "status": "CANDIDATE_NOT_SURVEY_TRUTH",
+    "depthGrid": "grids/candidate_depth_chart_datum_m_r11.tif",
+    "uncertaintyGrid": "grids/candidate_uncertainty_enc_depare_conditioned_m_r11.tif",
+    "nearestEvidenceGrid": "grids/nearest_evidence_distance_m_r11.tif",
+    "qualityWeightGrid": "grids/candidate_source_quality_weight_r11.tif",
+    "semanticZoneGrid": "grids/candidate_semantic_zone_r08.tif",
+    "supportClassGrid": "grids/candidate_support_class_r11.tif",
+    "depareLowerGrid": "grids/enc_depare_drval1_m_r11.tif",
+    "depareUpperGrid": "grids/enc_depare_drval2_m_r11.tif",
+    "depareResidualGrid": "grids/enc_depare_range_residual_m_r11.tif",
+    "noDataPreserved": true,
+    "numericDepthValuesChanged": false
+  },
+  "samplingRules": [
+    "Return NoData where the preferred depth grid is NoData.",
+    "Carry uncertainty, nearest-evidence distance, source-quality weight, semantic zone and DEPARE support class with sampled candidate depth.",
+    "DEPARE disagreement raises uncertainty; it does not clamp or replace the interpolated depth in R11.",
+    "Do not convert local chart sounding datum to MSL without an explicit transformation model.",
+    "Allen/OSM/Sentinel semantics remain qualifiers, not depth observations."
+  ]
+}
