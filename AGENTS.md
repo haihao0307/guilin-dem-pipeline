@@ -22,6 +22,20 @@ DEM、Cloud Mother、Weather Mother、Ocean Mother、Coast、Landscape Mother �
 
 所有 Mother 面向用户的常规交付只允许展示一个已经发布并验证通过的公开网址。该网址必须可以直接点击、自动进入最终工作台，并在同一入口内完成模块切换。不得在常规回复中发送沙箱文件、下载链接、全量包、修正版压缩包、哈希、清单、QA 截图或多组测试地址。上述内部资产可以继续生成和保存，只有用户明确索要时才展示。
 
+## 参考复刻 / 学习任务禁止擅自创作硬门禁
+
+所有 Mother、Codex 和子执行端在执行“按参考做、复刻、学习别人、照模型/照片/视频做、做得一样、不要想象补画”类型任务前，必须读取并执行 `knowledge/REFERENCE_REPLICATION_NO_CREATIVE_SUBSTITUTE_GATE.md`。
+
+默认：
+- `TASK_MODE = REPLICATION_LOCKED`
+- `CREATIVE_AUTHORIZATION = FALSE`
+
+除非用户在当前任务明确授权原创，否则禁止自行设计、简化、补画、做 generic/toy/placeholder 版本、为了展示过程先做一个“差不多”的东西，或在参考缺失处凭审美补全。未知区域必须保持 UNKNOWN / SOURCE_ENTRY_REQUIRED / MEASUREMENT_REQUIRED。
+
+一旦出现未经授权的创作替代，立即将该结果标记为 `REJECTED_CREATIVE_SUBSTITUTE`，停止在它上面继续修，不得作为下一版形体基线；回到最后一个已接受/已证据化版本，从参考测量重新开始。错误版本只留作失败证据，不改写历史、不 force push。
+
+测试 primitive 仅允许隔离在 TEST_FIXTURE_ONLY，不得进入正式工作台、视觉截图、生产继承链或用户验收。每一个可见修改必须能对应到参考、测量、用户批准约束或已批准物理关系。
+
 ## 真实三维工作台硬门禁
 
 所有 Mother 开工、计划、任务卡、交接和发布前，必须读取并执行 `knowledge/REAL_3D_WORKBENCH_ONLY_GATE.md`。
