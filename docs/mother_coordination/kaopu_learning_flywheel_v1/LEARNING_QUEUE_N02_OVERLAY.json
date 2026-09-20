@@ -26,9 +26,23 @@
         "question": "How can the local nearshore renderer consume the same SMI_WAKE_BAY_R01 bed used by CPU terrain/player contact, without modifying frozen deep-ocean/cloud source or introducing a second shoreline?",
         "observedBlocker": "The recorded browser review reports a broad white foam/water sheet and old GPU bathymetry versus updated CPU bed. The coordinator read this report; it is not a new independent image observation.",
         "requiredOutput": "Pinned expressions and units; same-coordinate CPU/GPU comparison including bay blending boundaries; one bounded reversible local-adapter experiment; contact error and cost evidence; exact remaining renderer gap.",
-        "recipientIssues": [90, 94, 84],
-        "state": "next-bounded-question",
-        "implementationAccepted": false
+        "recipientIssues": [
+          90,
+          94,
+          84
+        ],
+        "state": "candidate-partial-consumer-parity-open",
+        "implementationAccepted": false,
+        "latestLearningReceipt": {
+          "round": "N25",
+          "commit": "7fe8281bad0dce500c74417be15ba845952cece6",
+          "learningLog": "LEARNING_LOG/2026-09-20_SMI_NEARSHORE_CONSUMER_PARITY_N25.md",
+          "candidatePullRequest": 100,
+          "candidateHead": "fa227b7c73cbce92f7a5548a5eeae8d2df45c7cd",
+          "verified": "Exact fixed release accepts/reverses the local adapter; waveSurface uses SMI_WAKE_BAY_R01, but vertex shallow depth/thickness and fragment shoreline distance remain legacy consumers.",
+          "counterexample": "At the authoritative 0.18 m mean-water crossing, legacy vThickness is 0.18 m versus authoritative 0 m, so the actual foam visibility smoothstep is 1 versus 0.",
+          "remainingGap": "Full consumer parity, full-scene desktop/390x844 A/B, hardware cost, Mother acknowledgement and user visual acceptance remain Unknown."
+        }
       },
       {
         "id": "SMI-Q-ENVIRONMENT-CLOCK-01",
@@ -39,7 +53,11 @@
         "receiptCommit": "7fd1745613f12a903011be9be551fe9b89ef2b82",
         "executedChecks": "14 CPU/Node-VM checks passed against the game-frozen Weather source. No scene import or actual browser/device validation yet.",
         "requiredOutput": "Validate a single existing clock owner, pause/resume and snapshot semantics at the actual scene boundary; do not mistake the observation snapshot for upstream simulation restoration.",
-        "recipientIssues": [95, 84, 86],
+        "recipientIssues": [
+          95,
+          84,
+          86
+        ],
         "state": "cpu-interface-verified-scene-integration-pending",
         "implementationAccepted": false
       },
@@ -49,7 +67,10 @@
         "question": "What existing source-bound plant/fish/coral generator and attachment semantics are actually readable and suitable for a bounded game import?",
         "plantClue": "User Library text Vegetation Workbench.txt identifies version 4.2.0-rc.16, Veteran banyan rebuild, export-current-plant and shared wind. It contains no verified source repository or asset bytes. UI options do not prove accepted assets exist.",
         "requiredOutput": "Exact readable source/generator identity, coordinate/unit and attachment contract, permitted-use status recorded once, independent reusable logic separated from source-restricted assets, and one actual recipient test. Missing bytes are a scoped blocker, not a reason to stop unrelated production.",
-        "recipientIssues": [85, 87],
+        "recipientIssues": [
+          85,
+          87
+        ],
         "state": "source-entry-resolution-required",
         "implementationAccepted": false
       }
