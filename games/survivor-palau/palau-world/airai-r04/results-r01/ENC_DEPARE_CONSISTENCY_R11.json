@@ -1,0 +1,200 @@
+{
+  "schema": "kaopu.palau.airai-enc-depare-consistency-r11/1.0",
+  "sourceIdentity": {
+    "depare": {
+      "path": "vectors/DEPARE.geojson",
+      "sha256": "cb1f1e11049ab06a5f51ac970a3055fdf61b5c4904736b9b98df31e78fee594b",
+      "sourceCellsUsed": [
+        "US4TB3P0"
+      ],
+      "featureCountUsed": 388,
+      "role": "NOAA ENC charted depth-area interval evidence"
+    },
+    "depthR10": {
+      "path": "grids/candidate_depth_chart_datum_m_r10.tif",
+      "sha256": "dbe23d3f3aaf175d9f4540fd85a7fba2e5f6f99c8f593a71662fd2b8d57a3850"
+    },
+    "uncertaintyR10": {
+      "path": "grids/candidate_uncertainty_evidence_conditioned_m_r10.tif",
+      "sha256": "93ef138734b30ebe0288e7e00c6d27dc440a86445c90e8de3abcecd92445fe64"
+    },
+    "datumR09": {
+      "path": "ENC_SOUNDING_DATUM_R09.json",
+      "sha256": "950e8e9bd1ceea75f12bfa2f8aeb134d895597c4db463b383caa81e52d1017bd"
+    }
+  },
+  "verticalDatum": {
+    "soundingDatumCode": 24,
+    "soundingDatumName": "local datum",
+    "numericTransform": "NONE",
+    "mslEquivalence": "NOT_ASSERTED"
+  },
+  "depareFields": {
+    "lower": "DRVAL1",
+    "upper": "DRVAL2",
+    "sourceCell": "_enc_cell"
+  },
+  "overlapRule": "Broad/open DEPARE intervals are rasterized first; narrower intervals overwrite them in overlaps. No candidate value is used to select the interval.",
+  "numericToleranceM": 0.05,
+  "candidateAudit": {
+    "validCells": 56874,
+    "depareCoveredValidCells": 50334,
+    "depareUncoveredValidCells": 6540,
+    "withinDepareRangeCells": 22643,
+    "contradictionCells": 27691,
+    "shallowerThanDRVAL1Cells": 10202,
+    "deeperThanDRVAL2Cells": 17489,
+    "allCandidateDepthStatsM": {
+      "count": 56874,
+      "min": 0.009978439658880234,
+      "p05": 1.3437269806861878,
+      "median": 26.384629249572754,
+      "p95": 206.33278808593735,
+      "max": 849.2308349609375
+    },
+    "contradictionDepthStatsM": {
+      "count": 27691,
+      "min": 0.050810765475034714,
+      "p05": 1.2742737531661987,
+      "median": 18.939624786376953,
+      "p95": 150.6498031616211,
+      "max": 199.93939208984375
+    },
+    "contradictionResidualStatsM": {
+      "count": 27691,
+      "min": 0.05033111572265625,
+      "p05": 0.3584899455308914,
+      "median": 10.148107528686523,
+      "p95": 64.2021255493164,
+      "max": 190.1821756362915
+    },
+    "contradictionCells60To70M": 27,
+    "contradictionCellsOver100M": 2950
+  },
+  "bySemanticZone": {
+    "outside_allen_geomorphic_or_unclassified": {
+      "validCells": 37348,
+      "depareCoveredCells": 31021,
+      "depareContradictionCells": 10910,
+      "depareContradictionFractionOfCovered": 0.3516972373553399,
+      "residualStatsM": {
+        "count": 10910,
+        "min": 0.05033111572265625,
+        "p05": 0.24065322875976564,
+        "median": 5.859464883804321,
+        "p95": 91.04184646606438,
+        "max": 190.1821756362915
+      },
+      "contradictionCells60To70M": 27,
+      "contradictionCellsOver100M": 2950
+    },
+    "reef_flat_or_crest": {
+      "validCells": 13938,
+      "depareCoveredCells": 13802,
+      "depareContradictionCells": 13322,
+      "depareContradictionFractionOfCovered": 0.9652224315316621,
+      "residualStatsM": {
+        "count": 13322,
+        "min": 0.050810765475034714,
+        "p05": 0.46320869475603105,
+        "median": 11.317436218261719,
+        "p95": 40.77943820953369,
+        "max": 48.67887878417969
+      },
+      "contradictionCells60To70M": 0,
+      "contradictionCellsOver100M": 0
+    },
+    "shallow_lagoon": {
+      "validCells": 865,
+      "depareCoveredCells": 865,
+      "depareContradictionCells": 865,
+      "depareContradictionFractionOfCovered": 1.0,
+      "residualStatsM": {
+        "count": 865,
+        "min": 24.94829750061035,
+        "p05": 25.79988899230957,
+        "median": 32.34345626831055,
+        "p95": 43.444189453125,
+        "max": 44.16764450073242
+      },
+      "contradictionCells60To70M": 0,
+      "contradictionCellsOver100M": 0
+    },
+    "deep_lagoon": {
+      "validCells": 2098,
+      "depareCoveredCells": 2021,
+      "depareContradictionCells": 1449,
+      "depareContradictionFractionOfCovered": 0.7169717961405245,
+      "residualStatsM": {
+        "count": 1449,
+        "min": 0.05506706237792969,
+        "p05": 0.6191497802734375,
+        "median": 7.223814010620117,
+        "p95": 34.043410301208496,
+        "max": 39.78066349029541
+      },
+      "contradictionCells60To70M": 0,
+      "contradictionCellsOver100M": 0
+    },
+    "reef_slope": {
+      "validCells": 2542,
+      "depareCoveredCells": 2542,
+      "depareContradictionCells": 1137,
+      "depareContradictionFractionOfCovered": 0.44728560188827693,
+      "residualStatsM": {
+        "count": 1137,
+        "min": 0.05230903625488281,
+        "p05": 0.18196582794189453,
+        "median": 3.2014036178588867,
+        "p95": 35.920159912109376,
+        "max": 49.279727935791016
+      },
+      "contradictionCells60To70M": 0,
+      "contradictionCellsOver100M": 0
+    },
+    "plateau": {
+      "validCells": 83,
+      "depareCoveredCells": 83,
+      "depareContradictionCells": 8,
+      "depareContradictionFractionOfCovered": 0.0963855421686747,
+      "residualStatsM": {
+        "count": 8,
+        "min": 0.14240646362304688,
+        "p05": 0.1887082576751709,
+        "median": 0.2936258316040039,
+        "p95": 0.8992017745971677,
+        "max": 1.1284914016723633
+      },
+      "contradictionCells60To70M": 0,
+      "contradictionCellsOver100M": 0
+    }
+  },
+  "uncertaintyUpdate": {
+    "formula": "sqrt(R10_uncertainty^2 + DEPARE_range_residual^2)",
+    "depthValuesChanged": false,
+    "nearestEvidenceValuesChanged": false,
+    "qualityWeightValuesChanged": false,
+    "uncertaintyValuesChanged": true,
+    "depareUsedAsDepthReplacement": false
+  },
+  "workingHypothesisAudit": {
+    "hypothesis": "major channels about 60-70 m and reef-interior water generally below 100 m depth",
+    "forcedToHypothesis": false,
+    "rule": "DEPARE intervals are retained as encoded. No interval or candidate depth is changed to satisfy the hypothesis."
+  },
+  "preferredCandidatePackage": {
+    "status": "CANDIDATE_NOT_SURVEY_TRUTH",
+    "depthGrid": "grids/candidate_depth_chart_datum_m_r11.tif",
+    "uncertaintyGrid": "grids/candidate_uncertainty_enc_depare_conditioned_m_r11.tif",
+    "nearestEvidenceGrid": "grids/nearest_evidence_distance_m_r11.tif",
+    "qualityWeightGrid": "grids/candidate_source_quality_weight_r11.tif",
+    "semanticZoneGrid": "grids/candidate_semantic_zone_r08.tif",
+    "supportClassGrid": "grids/candidate_support_class_r11.tif",
+    "depareLowerGrid": "grids/enc_depare_drval1_m_r11.tif",
+    "depareUpperGrid": "grids/enc_depare_drval2_m_r11.tif",
+    "depareResidualGrid": "grids/enc_depare_range_residual_m_r11.tif",
+    "noDataPreserved": true,
+    "numericDepthValuesChanged": false
+  },
+  "palauWorldContract": "R11 remains one evidence package for PalauWorld.sample(); no traditional LOD or parallel terrain world is introduced."
+}
