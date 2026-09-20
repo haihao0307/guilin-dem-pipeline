@@ -74,6 +74,10 @@ jobs:
           python games/survivor-palau/palau-world/airai-r04/scripts/postprocess_osm_semantics_r07.py \
             --intake /tmp/airai-reef-intake \
             --results games/survivor-palau/palau-world/airai-r04/results-r01
+      - name: Reconcile measured soundings with reef-interior semantic zones
+        run: |
+          python games/survivor-palau/palau-world/airai-r04/scripts/postprocess_reef_zones_r08.py \
+            --results games/survivor-palau/palau-world/airai-r04/results-r01
       - name: Preserve small derived products on work branch
         run: |
           git config user.name 'github-actions[bot]'
