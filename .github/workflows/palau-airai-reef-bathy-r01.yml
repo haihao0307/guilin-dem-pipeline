@@ -1,0 +1,81 @@
+name: Palau Airai reef bathymetry R01
+on:
+  push:
+    branches: [work/palau-airai-reef-bathy-r01-20260920]
+    paths:
+      - .github/workflows/palau-airai-reef-bathy-r01.yml
+      - games/survivor-palau/palau-world/airai-r04/aoi/**
+      - games/survivor-palau/palau-world/airai-r04/scripts/**
+      - games/survivor-palau/palau-world/airai-r04/REEF_BATHY_EVIDENCE_RULES_R01_ZH.md
+  workflow_dispatch:
+    inputs:
+      sentinel_assets:
+        description: Download selected Sentinel-2 scene bands
+        type: boolean
+        default: false
+permissions:
+  contents: write
+concurrency:
+  group: palau-airai-reef-bathy-r01
+  cancel-in-progress: false
+jobs:
+  acquire-build-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/palau-airai-reef-bathy-r01-20260920
+          fetch-depth: 0
+      - name: Install geospatial runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gdal-bin libgdal-dev python3-gdal unzip
+          python -m pip install --upgrade pip
+          python -m pip install requests numpy pandas scipy shapely pyproj rasterio geopandas fiona matplotlib
+      - name: Acquire official and open evidence
+        run: |
+          EXTRA=""
+          if [ "${{ inputs.sentinel_assets || false }}" = "true" ]; then EXTRA="--sentinel-assets"; fi
+          python games/survivor-palau/palau-world/airai-r04/scripts/acquire_airai_reef_sources.py \
+            --output /tmp/airai-reef-intake $EXTRA
+      - name: Build traceable reef bathymetry evidence
+        run: |
+          rm -rf games/survivor-palau/palau-world/airai-r04/results-r01
+          python games/survivor-palau/palau-world/airai-r04/scripts/build_airai_reef_evidence.py \
+            --intake /tmp/airai-reef-intake \
+            --output games/survivor-palau/palau-world/airai-r04/results-r01
+      - name: Preserve small derived products on work branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add games/survivor-palau/palau-world/airai-r04/results-r01
+          git diff --cached --quiet || git commit -m 'data(palau): record Airai reef bathymetry R01 evidence'
+          git pull --rebase origin work/palau-airai-reef-bathy-r01-20260920
+          git push origin HEAD:work/palau-airai-reef-bathy-r01-20260920
+      - name: Publish evidence report to GitHub Pages
+        run: |
+          git fetch origin gh-pages
+          rm -rf /tmp/gh-pages
+          git worktree add /tmp/gh-pages origin/gh-pages
+          TARGET=/tmp/gh-pages/games/palau-airai-stone-money/airai-reef-bathy-r01
+          rm -rf "$TARGET"
+          mkdir -p "$TARGET"
+          cp -R games/survivor-palau/palau-world/airai-r04/results-r01/. "$TARGET/"
+          cd /tmp/gh-pages
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add games/palau-airai-stone-money/airai-reef-bathy-r01
+          git diff --cached --quiet || git commit -m 'publish(palau): Airai reef bathymetry evidence R01'
+          git push origin HEAD:gh-pages
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: palau-airai-reef-bathy-r01
+          path: |
+            /tmp/airai-reef-intake/
+            games/survivor-palau/palau-world/airai-r04/results-r01/
+            games/survivor-palau/palau-world/airai-r04/aoi/
+            games/survivor-palau/palau-world/airai-r04/REEF_BATHY_EVIDENCE_RULES_R01_ZH.md
+          if-no-files-found: warn
+          retention-days: 30
