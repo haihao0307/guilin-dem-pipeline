@@ -1,0 +1,24 @@
+import assert from 'node:assert/strict';
+import {classifyGameVisibleSize,chooseSizeProductionMode,engineeringPreview} from '../src/production-scope.mjs';
+
+assert.equal(classifyGameVisibleSize(19.9).status,'OUT_OF_SCOPE_GAME_INVISIBLE');
+assert.equal(classifyGameVisibleSize(20).status,'VISIBLE_EDGE');
+assert.equal(classifyGameVisibleSize(29.9).status,'VISIBLE_EDGE');
+assert.equal(classifyGameVisibleSize(30).status,'PRIMARY_REEF_FISH_BAND');
+assert.equal(classifyGameVisibleSize(100).status,'PRIMARY_REEF_FISH_BAND');
+assert.equal(classifyGameVisibleSize(100.1).status,'LATER_LARGE_FISH_BAND');
+const one=[{lengthMm:80,lengthDefinition:'TL',sourceId:'TEST_80'}];
+assert.equal(chooseSizeProductionMode(one,80).mode,'FIXED_MEASURED');
+assert.equal(chooseSizeProductionMode(one,50).mode,'UNSUPPORTED_SINGLE_ANCHOR_ONLY');
+const two=[{lengthMm:30,lengthDefinition:'TL',sourceId:'TEST_30'},{lengthMm:80,lengthDefinition:'TL',sourceId:'TEST_80'}];
+const mid=chooseSizeProductionMode(two,55);
+assert.equal(mid.mode,'MEASURED_INTERPOLATION');
+assert(Math.abs(mid.t-0.5)<1e-12);
+assert.equal(chooseSizeProductionMode(two,90).mode,'UNSUPPORTED_OUTSIDE_MEASURED_RANGE');
+assert.throws(()=>chooseSizeProductionMode([{lengthMm:30,lengthDefinition:'TL',sourceId:'A'},{lengthMm:80,lengthDefinition:'SL',sourceId:'B'}],50),/mixed_length_definitions/);
+const preview=engineeringPreview(one[0],40);
+assert.equal(preview.engineeringPreview,true);
+assert.equal(preview.biologicalClaim,false);
+assert.equal(preview.persistAsNatureDerived,false);
+assert.equal(preview.scale,0.5);
+console.log('Original Fish game-visible scope: 14 assertions passed');
