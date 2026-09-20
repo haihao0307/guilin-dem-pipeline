@@ -82,6 +82,100 @@ jobs:
           print(q)
           PY
 
+      - name: Headless browser gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet websocket-client
+          python3 -m http.server 8765 >/tmp/r05-http.log 2>&1 &
+          HTTP_PID=$!
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          "$CHROME" \
+            --headless=new \
+            --no-sandbox \
+            --disable-dev-shm-usage \
+            --remote-debugging-port=9222 \
+            --remote-allow-origins='*' \
+            --use-angle=swiftshader \
+            --enable-webgl \
+            --ignore-gpu-blocklist \
+            --window-size=1440,1100 \
+            --user-data-dir=/tmp/r05-chrome-profile \
+            about:blank >/tmp/r05-chrome.out 2>/tmp/r05-chrome.err &
+          CHROME_PID=$!
+          trap 'kill $CHROME_PID $HTTP_PID 2>/dev/null || true' EXIT
+
+          python3 - <<'PY'
+          import base64, json, time, urllib.request
+          from pathlib import Path
+          import websocket
+
+          def get_json(url, attempts=80):
+              last = None
+              for _ in range(attempts):
+                  try:
+                      with urllib.request.urlopen(url, timeout=2) as r:
+                          return json.load(r)
+                  except Exception as e:
+                      last = e
+                      time.sleep(.2)
+              raise last
+
+          targets = get_json('http://127.0.0.1:9222/json/list')
+          target = next(t for t in targets if t.get('type') == 'page')
+          ws = websocket.create_connection(target['webSocketDebuggerUrl'], timeout=15, origin='http://127.0.0.1')
+          seq = 0
+
+          def call(method, params=None):
+              global seq
+              seq += 1
+              ident = seq
+              ws.send(json.dumps({'id': ident, 'method': method, 'params': params or {}}))
+              while True:
+                  msg = json.loads(ws.recv())
+                  if msg.get('id') == ident:
+                      if 'error' in msg:
+                          raise RuntimeError(msg['error'])
+                      return msg.get('result', {})
+
+          call('Page.enable')
+          call('Runtime.enable')
+          call('Page.addScriptToEvaluateOnNewDocument', {
+              'source': "window.__qaErrors=[];addEventListener('error',e=>window.__qaErrors.push(String(e.message||e.error||e)));addEventListener('unhandledrejection',e=>window.__qaErrors.push(String(e.reason||e)));"
+          })
+          call('Page.navigate', {'url': 'http://127.0.0.1:8765/coral-mother-r05-direct-no-loader/'})
+          time.sleep(8)
+          expr = """JSON.stringify((()=>{const c=document.querySelector('canvas');let gl=false;try{gl=!!(c&&(c.getContext('webgl2')||c.getContext('webgl')))}catch(e){}return{ready:document.readyState,title:document.title,canvas:document.querySelectorAll('canvas').length,controls:document.querySelectorAll('button,input,select').length,gl,body:(document.body.innerText||'').slice(0,4000),errors:window.__qaErrors||[]}})())"""
+          r = call('Runtime.evaluate', {'expression': expr, 'returnByValue': True})
+          value = r['result']['value']
+          q = json.loads(value)
+          assert q['ready'] == 'complete', q
+          assert q['canvas'] >= 1, q
+          assert q['controls'] >= 8, q
+          assert q['gl'] is True, q
+          assert '启动失败' not in q['body'], q
+          assert 'Failed to fetch' not in q['body'], q
+          assert not q['errors'], q
+          shot = call('Page.captureScreenshot', {'format': 'png', 'captureBeyondViewport': False})
+          Path('/tmp/r05-direct-qa.png').write_bytes(base64.b64decode(shot['data']))
+          assert Path('/tmp/r05-direct-qa.png').stat().st_size > 10000
+          qa_path = Path('coral-mother-r05-direct-no-loader/QA_DIRECT.json')
+          qa = json.loads(qa_path.read_text(encoding='utf-8'))
+          qa['browserQA'] = {
+              'passed': True,
+              'viewport': '1440x1100',
+              'readyState': q['ready'],
+              'canvasCount': q['canvas'],
+              'controlCount': q['controls'],
+              'webglContext': q['gl'],
+              'runtimeErrors': q['errors'],
+              'startupFailureText': False,
+          }
+          qa_path.write_text(json.dumps(qa, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(q, ensure_ascii=False))
+          ws.close()
+          PY
+
       - name: Commit direct page
         shell: bash
         run: |
@@ -92,6 +186,6 @@ jobs:
           if git diff --cached --quiet; then
             echo 'No direct-page changes.'
           else
-            git commit -m 'fix(coral): publish direct R05 without fetch or decompression'
+            git commit -m 'fix(coral): publish browser-verified direct R05'
             git push origin gh-pages
           fi
