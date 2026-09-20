@@ -78,6 +78,11 @@ jobs:
         run: |
           python games/survivor-palau/palau-world/airai-r04/scripts/postprocess_reef_zones_r08.py \
             --results games/survivor-palau/palau-world/airai-r04/results-r01
+      - name: Resolve S-57 DSPM sounding datum and M_SDAT overrides
+        run: |
+          python games/survivor-palau/palau-world/airai-r04/scripts/postprocess_sounding_datum_r09.py \
+            --intake /tmp/airai-reef-intake \
+            --results games/survivor-palau/palau-world/airai-r04/results-r01
       - name: Preserve small derived products on work branch
         run: |
           git config user.name 'github-actions[bot]'
