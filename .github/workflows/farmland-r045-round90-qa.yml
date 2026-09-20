@@ -1,0 +1,84 @@
+name: farmland-r045-round90-qa
+on:
+  push:
+    branches: [restart/farmland-object-dna-v020-20260907]
+    paths:
+      - 'farmland-object-dna/research/r045-autonomous-rebuild/round-90/**'
+      - '.github/workflows/farmland-r045-round90-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  qa-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run R90 authoritative numeric QA
+        id: numeric
+        continue-on-error: true
+        run: node farmland-object-dna/research/r045-autonomous-rebuild/round-90/r045_round90_fast_qa.mjs
+      - name: Build fixed-view audit cache
+        if: always()
+        run: node farmland-object-dna/research/r045-autonomous-rebuild/round-90/r045_round90_build_audit_cache.mjs
+      - name: Real Chrome fixed-view startup and screenshot
+        if: always()
+        run: |
+          set +e
+          cd farmland-object-dna/research/r045-autonomous-rebuild/round-90
+          python3 -m http.server 8000 >/tmp/r90-http.log 2>&1 & echo $! >/tmp/r90-http.pid
+          sleep 1
+          CHROME=/usr/bin/google-chrome
+          timeout 30s $CHROME --headless --no-sandbox --disable-gpu --hide-scrollbars --run-all-compositor-stages-before-draw --virtual-time-budget=3000 --window-size=1400,900 --screenshot=r045_round90_fixed_view.png http://127.0.0.1:8000/r045_round90_audit.html
+          SS=$?
+          timeout 30s $CHROME --headless --no-sandbox --disable-gpu --virtual-time-budget=3000 --dump-dom http://127.0.0.1:8000/r045_round90_audit.html > r045_round90_dom.html
+          DOM=$?
+          grep -q 'data-ready="true"' r045_round90_dom.html; READY=$?
+          BYTES=$(wc -c < r045_round90_fixed_view.png 2>/dev/null || echo 0)
+          STARTUP=$([ $SS -eq 0 ] && [ $DOM -eq 0 ] && [ $BYTES -gt 10000 ] && echo true || echo false)
+          ACCEPTED=$([ $SS -eq 0 ] && [ $DOM -eq 0 ] && [ $READY -eq 0 ] && [ $BYTES -gt 10000 ] && echo true || echo false)
+          printf '{"source_sha":"%s","qa_contract":"R045.90-anchored-riser-profile-concentration-v1","chrome":"%s","screenshot_status":%d,"dom_status":%d,"ready_status":%d,"png_bytes":%d,"page_startup_passed":%s,"passed":%s}\n' "$GITHUB_SHA" "$CHROME" "$SS" "$DOM" "$READY" "$BYTES" "$STARTUP" "$ACCEPTED" > r045_round90_browser_result.json
+          cat r045_round90_browser_result.json
+          kill $(cat /tmp/r90-http.pid) 2>/dev/null || true
+          [ $SS -eq 0 ] && [ $DOM -eq 0 ] && [ $BYTES -gt 10000 ]
+      - name: Farmland contract validator smoke
+        if: always()
+        run: |
+          set -euo pipefail
+          python -m json.tool farmland-object-dna/QUALITY_GATES.json >/dev/null
+          python farmland-object-dna/tools/validate_farmland_dna.py farmland-object-dna/examples/traditional-paddy-v002-research.json > /tmp/r90-validator.json
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/r90-validator.json'))
+          assert d['ok'] is True and d['mode']=='research'
+          assert d['visualAcceptance'] is False and d['productionReady'] is False
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: farmland-r045-round90-fixed-view
+          path: |
+            farmland-object-dna/research/r045-autonomous-rebuild/round-90/r045_round90_fixed_view.png
+            farmland-object-dna/research/r045-autonomous-rebuild/round-90/r045_round90_qa_result.json
+            farmland-object-dna/research/r045-autonomous-rebuild/round-90/r045_round90_browser_result.json
+            farmland-object-dna/research/r045-autonomous-rebuild/round-90/r045_round90_audit_cache.mjs
+          if-no-files-found: warn
+      - name: Verify result provenance before persistence
+        id: provenance
+        if: always()
+        run: |
+          node -e "const q=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-90/r045_round90_qa_result.json');if(q.sourceSha!==process.env.GITHUB_SHA||q.qaContract!=='R045.90-anchored-riser-profile-concentration-v1')process.exit(3)"
+          git fetch origin ${GITHUB_REF_NAME}
+          REMOTE=$(git rev-parse origin/${GITHUB_REF_NAME})
+          test "$REMOTE" = "$GITHUB_SHA" || { echo 'branch moved; refusing stale evidence'; exit 4; }
+      - name: Persist evidence
+        if: ${{ always() && steps.provenance.outcome == 'success' }}
+        run: |
+          git config user.name 'github-actions[bot]'; git config user.email '4189824+github-actions[bot]@users.noreply.github.com'
+          git add farmland-object-dna/research/r045-autonomous-rebuild/round-90/r045_round90_qa_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-90/r045_round90_browser_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-90/r045_round90_audit_cache.mjs farmland-object-dna/research/r045-autonomous-rebuild/round-90/r045_round90_fixed_view.png || true
+          git diff --cached --quiet && exit 0
+          git commit -m 'farmland R045.90 persist QA browser and fixed-view evidence [skip ci]'
+          git push origin HEAD:${GITHUB_REF_NAME}
+      - name: Require authoritative numeric and browser gates
+        if: always()
+        run: node -e "const q=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-90/r045_round90_qa_result.json'),b=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-90/r045_round90_browser_result.json');if(q.sourceSha!==process.env.GITHUB_SHA||b.source_sha!==process.env.GITHUB_SHA||q.qaContract!=='R045.90-anchored-riser-profile-concentration-v1'||b.qa_contract!=='R045.90-anchored-riser-profile-concentration-v1'||!q.passed||!b.passed)process.exit(2);console.log(q.passedCount+'/'+q.gateCount+'; browser '+b.passed)"

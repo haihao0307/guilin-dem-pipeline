@@ -1,0 +1,241 @@
+{
+  "version": "R045.57",
+  "passed": true,
+  "gateCount": 19,
+  "passedCount": 19,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.57",
+      "limit": "R045.57"
+    },
+    {
+      "name": "water_graph_identity",
+      "pass": true,
+      "value": {
+        "nodes": 22,
+        "edges": 55
+      },
+      "limit": "exact inherited graph"
+    },
+    {
+      "name": "plan_frame_frozen",
+      "pass": true,
+      "value": {
+        "maskChange": 0,
+        "stepChange": 0,
+        "phaseChange": 0,
+        "indexChange": 0,
+        "baseChange": 0
+      },
+      "limit": "exact R47 plan frame"
+    },
+    {
+      "name": "strong_core_exact",
+      "pass": true,
+      "value": 0,
+      "limit": "R56/R54 exact at R47 mask >=0.64"
+    },
+    {
+      "name": "medium_support_material",
+      "pass": true,
+      "value": {
+        "mediumChanged": 7,
+        "changed": 7,
+        "active": 134
+      },
+      "limit": ">=4 changed 12m audit cells in inherited medium support"
+    },
+    {
+      "name": "medium_support_multifamily",
+      "pass": true,
+      "value": [
+        1,
+        0,
+        2
+      ],
+      "limit": ">=2 terrace families participate"
+    },
+    {
+      "name": "coverage_gain_material",
+      "pass": true,
+      "value": {
+        "avgCoverageGain": 0.19039822755399874,
+        "coverageGainMax": 0.3063704350430503
+      },
+      "limit": "mean >0.015 and max >0.04"
+    },
+    {
+      "name": "height_change_bounded",
+      "pass": true,
+      "value": 0.02585545685781701,
+      "limit": "0.002m < max terrace-delta change <0.18m"
+    },
+    {
+      "name": "support_localized",
+      "pass": true,
+      "value": 0,
+      "limit": "no change outside R47 0.22<mask<0.64 band"
+    },
+    {
+      "name": "hard_drainage_exact",
+      "pass": true,
+      "value": {
+        "hardChanged": 0,
+        "unsafeChanged": 0
+      },
+      "limit": "zero new change inside <=12m drainage core"
+    },
+    {
+      "name": "foreground_receiver_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "zero changed samples within receiver +12m band"
+    },
+    {
+      "name": "three_meter_cliff_bound",
+      "pass": true,
+      "value": 0.6260590742478886,
+      "limit": "<1.05m terrace increment / 3m at changed cells"
+    },
+    {
+      "name": "three_groups_retained",
+      "pass": true,
+      "value": [
+        22,
+        58,
+        54
+      ],
+      "limit": "three groups present on bounded audit lattice"
+    },
+    {
+      "name": "locks_retained",
+      "pass": true,
+      "value": {
+        "visual": false,
+        "parcel": false,
+        "water": false,
+        "production": false
+      },
+      "limit": "all false pending fixed-view manual review"
+    },
+    {
+      "name": "coverage_fallacy_corrected",
+      "pass": true,
+      "value": "R56 proved the physical cross-contour bench/riser profile is valid on strong support, but that does not imply a whole hillside will read as terraced if the same profile is applied only to the strongest mask core. This would be a sampling-to-coverage fallacy: local profile validity is necessary but not sufficient for slope-scale legibility. R57 therefore changes only profile coverage inside already accepted R47 terrace support; it does not invent new terrace footprint or use higher risers as a substitute for organization.",
+      "limit": "local validity != slope-scale coverage"
+    },
+    {
+      "name": "field_constraint_explicit",
+      "pass": true,
+      "value": "the 0.22/0.58 support thresholds, 0.82 spread cap, 0.46-0.54 transition, 6 m QA lattice and inherited 12 m drainage hard core are synthetic morphology/QA parameters, not surveyed Yunnan terrace dimensions. A 12.5 m macro DEM and photographs cannot provide field microtopography, real parcel/management boundaries, bund/riser/channel sections, inlet/outlet sill elevations, hydraulic connectivity, water head/depth/discharge/gate state or event water-management records.",
+      "limit": "field truth missing"
+    },
+    {
+      "name": "xiaoma_boundary_retained",
+      "pass": true,
+      "value": "Xiaoma/TLO remains binding: geometric adjacency and a more legible terrace profile do not establish parcel ownership, hydraulic connectivity, head, water depth, discharge, gate state, soil-water state or sediment state.",
+      "limit": "geometry evidence != hydraulic truth"
+    },
+    {
+      "name": "mrrolord_ordering_only",
+      "pass": true,
+      "value": "the saved MrRolord study is used only as ordering discipline: drainage hierarchy -> accumulated terrain influence -> terrain-conforming contour land use -> paths/vegetation/materials. The original named video is not available to replay in this run; Blender dimensions, Voronoi, shader displacement and adaptive subdivision are not agricultural truth.",
+      "limit": "ordering only"
+    },
+    {
+      "name": "reference_nonmetric",
+      "pass": true,
+      "value": "image(173).png is reread only as non-metric morphology evidence: long contour-following benches remain visibly separated by concentrated darker riser edges over broad portions of the agricultural slope, with unequal widths, nested bends and drainage interruptions. No width, height, channel size or hydraulic parameter is inferred from it.",
+      "limit": "nonmetric only"
+    }
+  ],
+  "metrics": {
+    "active": 134,
+    "groups": [
+      22,
+      58,
+      54
+    ],
+    "mediumChanged": 7,
+    "changed": 7,
+    "changedGroups": [
+      1,
+      0,
+      2
+    ],
+    "changedPoints": [
+      {
+        "x": -144,
+        "z": -54,
+        "change": -0.02585545685781701,
+        "mask": 0.4791465179757459,
+        "groupIndex": 1,
+        "coverageGain": 0.21716260743421156
+      },
+      {
+        "x": -12,
+        "z": -102,
+        "change": 0.014377984050063741,
+        "mask": 0.518186532303273,
+        "groupIndex": 1,
+        "coverageGain": 0.11650175033006438
+      },
+      {
+        "x": 24,
+        "z": -54,
+        "change": -0.010747302175280582,
+        "mask": 0.4089087365083314,
+        "groupIndex": 1,
+        "coverageGain": 0.3063704350430503
+      },
+      {
+        "x": 84,
+        "z": -54,
+        "change": -0.0006702273603338693,
+        "mask": 0.34681343898225825,
+        "groupIndex": 1,
+        "coverageGain": 0.23204386429958934
+      },
+      {
+        "x": 96,
+        "z": -90,
+        "change": -0.00032454584419121246,
+        "mask": 0.2394552242056759,
+        "groupIndex": 0,
+        "coverageGain": 0.006925751712938652
+      },
+      {
+        "x": 96,
+        "z": -78,
+        "change": 0.004713273503189119,
+        "mask": 0.4651587578500037,
+        "groupIndex": 2,
+        "coverageGain": 0.24597225020711488
+      },
+      {
+        "x": 96,
+        "z": -30,
+        "change": 0.0177255133612762,
+        "mask": 0.33842030695205105,
+        "groupIndex": 1,
+        "coverageGain": 0.20781093385102198
+      }
+    ],
+    "avgCoverageGain": 0.19039822755399874,
+    "coverageGainMax": 0.3063704350430503,
+    "strongErr": 0,
+    "maxChange": 0.02585545685781701,
+    "unsupportedChanged": 0,
+    "hardChanged": 0,
+    "receiverChanged": 0,
+    "maxInc": 0.6260590742478886,
+    "maskChange": 0,
+    "stepChange": 0,
+    "phaseChange": 0,
+    "indexChange": 0,
+    "baseChange": 0,
+    "qaScope": "12m whole-slope plan-frame audit plus focused 3m cliff checks at changed cells; browser fixed view built separately"
+  }
+}

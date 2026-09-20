@@ -1,0 +1,560 @@
+{
+  "version": "R045.43",
+  "passed": true,
+  "gateCount": 31,
+  "passedCount": 31,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.43",
+      "limit": "R045.43"
+    },
+    {
+      "name": "water_graph_identity_preserved",
+      "pass": true,
+      "value": {
+        "nodes": [
+          22,
+          22
+        ],
+        "edges": [
+          55,
+          55
+        ]
+      },
+      "limit": "exact inherited graph"
+    },
+    {
+      "name": "terrain_carriers_identity_preserved",
+      "pass": true,
+      "value": {
+        "terrainChannels": 12,
+        "outlets": 3
+      },
+      "limit": "exact inherited carriers"
+    },
+    {
+      "name": "terrace_geometry_substantive_bounded",
+      "pass": true,
+      "value": {
+        "deltaMax": 0.5073769549580318,
+        "changeFrom42": 0.07069611523688918,
+        "active": 543,
+        "oldActive": 540,
+        "core": 356,
+        "oldCore": 356,
+        "incGainCells": 3,
+        "incThreshold": 3,
+        "incUnsupported": 0,
+        "branchSourceCrossings": 3,
+        "maxIncGain": 0.16,
+        "unsafe": 0,
+        "groups": [
+          92,
+          228,
+          223
+        ],
+        "rowRunsN": 82,
+        "rowRunsP": 82,
+        "rowRuns40": 78,
+        "fragmentationBurdenDiagnosticN": 0.15101289134438306,
+        "fragmentationBurdenDiagnosticP": 0.15185185185185185,
+        "fragmentationBurdenDiagnostic40": 0.14606741573033707,
+        "topology2D": {
+          "new": {
+            "components": 18,
+            "orphans": 0,
+            "tinyComponents": 1,
+            "largest": 124,
+            "sizes": [
+              124,
+              79,
+              51,
+              51,
+              45,
+              38,
+              32,
+              23,
+              20,
+              20,
+              16,
+              11,
+              10,
+              9,
+              5,
+              4,
+              3,
+              2
+            ]
+          },
+          "prior": {
+            "components": 18,
+            "orphans": 0,
+            "tinyComponents": 1,
+            "largest": 122,
+            "sizes": [
+              122,
+              78,
+              51,
+              51,
+              45,
+              38,
+              32,
+              23,
+              20,
+              20,
+              16,
+              11,
+              10,
+              9,
+              5,
+              4,
+              3,
+              2
+            ]
+          },
+          "r40": {
+            "components": 18,
+            "orphans": 0,
+            "tinyComponents": 1,
+            "largest": 120,
+            "sizes": [
+              120,
+              76,
+              51,
+              51,
+              45,
+              38,
+              32,
+              23,
+              20,
+              18,
+              16,
+              11,
+              10,
+              9,
+              5,
+              4,
+              3,
+              2
+            ]
+          }
+        },
+        "medianLongestN": 57,
+        "medianLongestP": 57,
+        "medianLongest40": 60,
+        "maxLongestN": 78,
+        "maxLongestP": 78,
+        "maxLongest40": 78,
+        "existingActiveMaskChange": 0,
+        "existingActiveDeltaChange": 0
+      },
+      "limit": ".20m < max delta < .95m"
+    },
+    {
+      "name": "r43_increment_is_material",
+      "pass": true,
+      "value": {
+        "incGainCells": 3,
+        "incThreshold": 3,
+        "maxIncGain": 0.16
+      },
+      "limit": ">=2 frozen-source companion gains and >=2 threshold crossings"
+    },
+    {
+      "name": "r43_crossings_have_frozen_branch_source",
+      "pass": true,
+      "value": {
+        "incThreshold": 3,
+        "incUnsupported": 0,
+        "branchSourceCrossings": 3
+      },
+      "limit": "every crossing is supported by an already-active R41 familyRepairGain source"
+    },
+    {
+      "name": "r43_change_from_r42_bounded",
+      "pass": true,
+      "value": 0.07069611523688918,
+      "limit": ".001m < sampled max change < .14m"
+    },
+    {
+      "name": "existing_r42_active_surface_exact",
+      "pass": true,
+      "value": {
+        "existingActiveMaskChange": 0,
+        "existingActiveDeltaChange": 0
+      },
+      "limit": "all already-active R42 samples exact"
+    },
+    {
+      "name": "support_does_not_shrink",
+      "pass": true,
+      "value": {
+        "active": 543,
+        "oldActive": 540
+      },
+      "limit": "active >= R42"
+    },
+    {
+      "name": "core_does_not_shrink",
+      "pass": true,
+      "value": {
+        "core": 356,
+        "oldCore": 356
+      },
+      "limit": "core >= R42"
+    },
+    {
+      "name": "compatible_2d_fragmentation_not_worse",
+      "pass": true,
+      "value": {
+        "topoN": {
+          "components": 18,
+          "orphans": 0,
+          "tinyComponents": 1,
+          "largest": 124,
+          "sizes": [
+            124,
+            79,
+            51,
+            51,
+            45,
+            38,
+            32,
+            23,
+            20,
+            20,
+            16,
+            11,
+            10,
+            9,
+            5,
+            4,
+            3,
+            2
+          ]
+        },
+        "topoP": {
+          "components": 18,
+          "orphans": 0,
+          "tinyComponents": 1,
+          "largest": 122,
+          "sizes": [
+            122,
+            78,
+            51,
+            51,
+            45,
+            38,
+            32,
+            23,
+            20,
+            20,
+            16,
+            11,
+            10,
+            9,
+            5,
+            4,
+            3,
+            2
+          ]
+        },
+        "topo40": {
+          "components": 18,
+          "orphans": 0,
+          "tinyComponents": 1,
+          "largest": 120,
+          "sizes": [
+            120,
+            76,
+            51,
+            51,
+            45,
+            38,
+            32,
+            23,
+            20,
+            18,
+            16,
+            11,
+            10,
+            9,
+            5,
+            4,
+            3,
+            2
+          ]
+        }
+      },
+      "limit": "same-family/stair-compatible 8-neighbour components, orphan cells and <=2-cell components may not increase vs R42 or R40"
+    },
+    {
+      "name": "row_run_count_not_worse_diagnostic",
+      "pass": true,
+      "value": {
+        "rowRunsN": 82,
+        "rowRunsP": 82,
+        "burdenN": 0.15101289134438306,
+        "burdenP": 0.15185185185185185,
+        "burden40": 0.14606741573033707
+      },
+      "limit": "row runs may not increase vs R42; runs/active retained as diagnostic only because branches and denominator growth make it non-identifying"
+    },
+    {
+      "name": "longest_ribbons_hold",
+      "pass": true,
+      "value": {
+        "medianNew": 57,
+        "medianOld": 57,
+        "maxNew": 78,
+        "maxOld": 78
+      },
+      "limit": "median/max longest ribbons do not shrink"
+    },
+    {
+      "name": "all_three_groups_remain_material",
+      "pass": true,
+      "value": [
+        92,
+        228,
+        223
+      ],
+      "limit": "each >20"
+    },
+    {
+      "name": "companion_candidates_stay_safe",
+      "pass": true,
+      "value": {
+        "unsafe": 0
+      },
+      "limit": "no incremental gain in hard drainage/outside eligibility/receiver"
+    },
+    {
+      "name": "hard_drainage_core_empty",
+      "pass": true,
+      "value": {
+        "hardCoreActive": 0,
+        "hardCoreDelta": 0
+      },
+      "limit": "zero support/delta <=12m drainage"
+    },
+    {
+      "name": "r42_stair_frame_exact",
+      "pass": true,
+      "value": {
+        "frameN": 77,
+        "maxStep": 0,
+        "maxPhase": 0,
+        "maxRaw": 0
+      },
+      "limit": "step/phase/raw exact"
+    },
+    {
+      "name": "far_upstream_untouched",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "support_localized",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "drainage_core_protected",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "foreground_receiver_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "terrace_increment_not_cliff",
+      "pass": true,
+      "value": 0.8363728754031337,
+      "limit": "<1.25m / 6m"
+    },
+    {
+      "name": "visual_acceptance_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "parcel_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "water_unknown",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "production_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "logic_error_explicit",
+      "pass": true,
+      "value": "R42 browser success did not make its geometry successful: persisted QA shows zero incremental gain. The first R43 attempt also produced zero gain, proving that two-sided same-row gap closure was not an available repair class. A second diagnostic error was treating row-run count or rowRuns/active as a necessary fragmentation truth after R41 deliberately introduced adjacent-row branches. Legitimate branches can add row runs, and rowRuns/active can be gamed downward simply by appending cells to existing runs without reconnecting topology. R43 therefore keeps those values as diagnostics but gates fragmentation with same-family/stair-compatible 2-D connected components, tiny components and orphan cells, while the actual geometry work remains one frozen-source branch companion rather than riser amplification or global mask closing.",
+      "limit": "browser/no-op != geometry pass; row-run ratio is not topology-identifying after branching"
+    },
+    {
+      "name": "real_world_constraint_explicit",
+      "pass": true,
+      "value": "the 6 m QA lattice, one-cell branch-companion rule, stair tolerances, 12 m hard drainage core and generated continuations are morphology/QA parameters, not surveyed Yunnan terrace dimensions or measured connectivity. Current macro DEM and photographs cannot provide field microtopography, parcel/management boundaries, bund-riser-channel sections, inlet/outlet sill elevations, hydraulic connectivity or event water-management records.",
+      "limit": "synthetic parameters and missing field truth explicit"
+    },
+    {
+      "name": "xiaoma_boundary_retained",
+      "pass": true,
+      "value": "Xiaoma/TLO boundaries remain active: geometric continuity, adjacency and conservation do not establish parcel ownership, hydraulic connectivity, head, water depth, discharge, gate state, soil-water state or sediment state without field-scale evidence.",
+      "limit": "continuity/adjacency/conservation != ownership/hydraulics"
+    },
+    {
+      "name": "mrrolord_ordering_only",
+      "pass": true,
+      "value": "the saved MrRolord study is used only for ordering discipline: drainage hierarchy -> accumulated terrain influence -> terrain-conforming contour land use. Blender dimensions, Voronoi cells, shader displacement and adaptive subdivision are not agricultural truth.",
+      "limit": "ordering only"
+    },
+    {
+      "name": "reference_nonmetric",
+      "pass": true,
+      "value": "image(173).png is used only for non-metric morphology: long curved contour-following ribbons, unequal widths, nested organization and drainage interruptions. No terrace width, continuation length, riser height, channel size, water depth or hydraulic parameter is inferred from the photograph.",
+      "limit": "visual morphology only"
+    }
+  ],
+  "metrics": {
+    "geometry": {
+      "deltaMax": 0.5073769549580318,
+      "changeFrom42": 0.07069611523688918,
+      "active": 543,
+      "oldActive": 540,
+      "core": 356,
+      "oldCore": 356,
+      "incGainCells": 3,
+      "incThreshold": 3,
+      "incUnsupported": 0,
+      "branchSourceCrossings": 3,
+      "maxIncGain": 0.16,
+      "unsafe": 0,
+      "groups": [
+        92,
+        228,
+        223
+      ],
+      "rowRunsN": 82,
+      "rowRunsP": 82,
+      "rowRuns40": 78,
+      "fragmentationBurdenDiagnosticN": 0.15101289134438306,
+      "fragmentationBurdenDiagnosticP": 0.15185185185185185,
+      "fragmentationBurdenDiagnostic40": 0.14606741573033707,
+      "topology2D": {
+        "new": {
+          "components": 18,
+          "orphans": 0,
+          "tinyComponents": 1,
+          "largest": 124,
+          "sizes": [
+            124,
+            79,
+            51,
+            51,
+            45,
+            38,
+            32,
+            23,
+            20,
+            20,
+            16,
+            11,
+            10,
+            9,
+            5,
+            4,
+            3,
+            2
+          ]
+        },
+        "prior": {
+          "components": 18,
+          "orphans": 0,
+          "tinyComponents": 1,
+          "largest": 122,
+          "sizes": [
+            122,
+            78,
+            51,
+            51,
+            45,
+            38,
+            32,
+            23,
+            20,
+            20,
+            16,
+            11,
+            10,
+            9,
+            5,
+            4,
+            3,
+            2
+          ]
+        },
+        "r40": {
+          "components": 18,
+          "orphans": 0,
+          "tinyComponents": 1,
+          "largest": 120,
+          "sizes": [
+            120,
+            76,
+            51,
+            51,
+            45,
+            38,
+            32,
+            23,
+            20,
+            18,
+            16,
+            11,
+            10,
+            9,
+            5,
+            4,
+            3,
+            2
+          ]
+        }
+      },
+      "medianLongestN": 57,
+      "medianLongestP": 57,
+      "medianLongest40": 60,
+      "maxLongestN": 78,
+      "maxLongestP": 78,
+      "maxLongest40": 78,
+      "existingActiveMaskChange": 0,
+      "existingActiveDeltaChange": 0
+    },
+    "far": 0,
+    "near": 0,
+    "receiver": 0,
+    "outside": 0,
+    "maxInc": 0.8363728754031337,
+    "qaScope": "full 6m R43 frozen-R41-source companion sweep + same-family/stair-compatible 2-D component/orphan fragmentation gate + row-run diagnostic + exact active-R42 inheritance + drainage/receiver boundaries"
+  }
+}

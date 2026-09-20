@@ -1,0 +1,33 @@
+{
+  "schema": "farmland-xiaoma-tlo-dem-bridge-package-scope/r025",
+  "bridge_id": "FARMLAND_XIAOMA_TLO_DEM_BRIDGE_R025_20260911",
+  "include": {
+    "farmland_tracked_source": "all files under farmland-object-dna at the package source commit except excluded prefixes",
+    "repository_context": [
+      "AGENTS.md",
+      "contracts/PRODUCTION_CONTRACT.json",
+      "knowledge/PUBLIC_WEB_DELIVERY_GATE.md",
+      ".github/workflows/validate-farmland-object-dna-rules.yml"
+    ],
+    "generated_records": [
+      "PACKAGE_METADATA.json",
+      "VALIDATION_REPORT.json",
+      "PACKAGE_MANIFEST.json",
+      "SHA256SUMS.txt"
+    ]
+  },
+  "exclude_prefixes": [
+    "farmland-object-dna/distributions/",
+    "farmland-object-dna/workbench-v001/"
+  ],
+  "prohibited_payloads": [
+    "raw TIFF",
+    "canonical numeric DEM tile binaries",
+    "historical distribution ZIP files",
+    "rejected V0.1 visual workbench",
+    "protected portal content",
+    "credentials or authentication material",
+    "unrelated Mother assets"
+  ],
+  "reason": "The bridge carries current Farmland knowledge contracts and validators, not terrain payloads, rejected visuals, credentials, or unrelated production lines."
+}

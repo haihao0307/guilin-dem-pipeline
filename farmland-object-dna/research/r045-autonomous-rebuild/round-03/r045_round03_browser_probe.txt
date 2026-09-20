@@ -1,0 +1,12 @@
+R045.03 browser startup probe
+Date: 2026-09-17
+Command:
+  chromium --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --dump-dom data:text/html,<html><body>R045_BROWSER_OK</body></html>
+Result:
+  timeout after 18 s; exit 124; no DOM output.
+Observed errors:
+  Failed to connect to /run/dbus/system_bus_socket
+  Could not parse DBus server address
+  org.freedesktop.DBus NameHasOwner/GetAll failures
+Interpretation:
+  browserQA=false. This environment did not prove browser startup, so no public HTTPS workbench is authorized from this round.

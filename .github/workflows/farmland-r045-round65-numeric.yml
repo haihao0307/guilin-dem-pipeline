@@ -1,0 +1,27 @@
+name: farmland-r045-round65-numeric
+on:
+  push:
+    branches: [restart/farmland-object-dna-v020-20260907]
+    paths:
+      - 'farmland-object-dna/research/r045-autonomous-rebuild/round-65/r045_round65_kernel.mjs'
+      - 'farmland-object-dna/research/r045-autonomous-rebuild/round-65/r045_round65_qa.mjs'
+      - '.github/workflows/farmland-r045-round65-numeric.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  numeric:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run R65 authoritative numeric QA
+        run: node farmland-object-dna/research/r045-autonomous-rebuild/round-65/r045_round65_qa.mjs
+      - name: Persist result even if failed
+        if: always()
+        run: |
+          git config user.name 'github-actions[bot]'; git config user.email '41898242+github-actions[bot]@users.noreply.github.com'
+          git add farmland-object-dna/research/r045-autonomous-rebuild/round-65/r045_round65_qa_result.json 2>/dev/null || true
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'farmland R045.65 persist numeric evidence [skip ci]'
+          git push origin HEAD:${GITHUB_REF_NAME}

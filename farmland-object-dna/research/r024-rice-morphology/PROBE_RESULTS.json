@@ -1,0 +1,178 @@
+{
+  "probe": "farmland-r024-rice-organ-lifecycle-contract",
+  "status": "pass",
+  "validation": {
+    "ok": true,
+    "contract_id": "rice_lifecycle_r024",
+    "stage_count": 14,
+    "documented_fact_count": 10,
+    "locked_source_count": 2,
+    "unavailable_source_target_count": 3,
+    "independent_geometry_family_count": 14,
+    "independent_topology_signature_count": 14,
+    "independent_structure_signature_count": 14,
+    "unresolved_regional_parameter_count": 24,
+    "regional_geometry_ready": false
+  },
+  "phase_counts": {
+    "establishment_management": 4,
+    "post_crop_management": 2,
+    "reproductive": 4,
+    "ripening": 2,
+    "vegetative": 2
+  },
+  "stage_transitions": [
+    {
+      "stage": "nursery",
+      "basis": "contractual_management_transition_with_documented_seedling_anatomy",
+      "geometry_family_id": "rice:nursery_seedling_medium_contact",
+      "required_topology_event": "nursery_root_medium_contact",
+      "panicle_state": "absent",
+      "grain_state": "absent",
+      "cut_state": "uncut",
+      "geometry_ready": false
+    },
+    {
+      "stage": "lifting_seedlings",
+      "basis": "contractual_management_transition",
+      "geometry_family_id": "rice:lifted_seedling_batch",
+      "required_topology_event": "broken_root_medium_contact",
+      "panicle_state": "absent",
+      "grain_state": "absent",
+      "cut_state": "nursery_soil_contact_broken_not_culm_cut",
+      "geometry_ready": false
+    },
+    {
+      "stage": "transplanted",
+      "basis": "contractual_management_transition",
+      "geometry_family_id": "rice:newly_transplanted_field_hills",
+      "required_topology_event": "discrete_inserted_hills",
+      "panicle_state": "absent",
+      "grain_state": "absent",
+      "cut_state": "uncut",
+      "geometry_ready": false
+    },
+    {
+      "stage": "establishment",
+      "basis": "contractual_management_transition",
+      "geometry_family_id": "rice:establishing_field_hills",
+      "required_topology_event": "rooted_recovering_hills",
+      "panicle_state": "absent",
+      "grain_state": "absent",
+      "cut_state": "uncut",
+      "geometry_ready": false
+    },
+    {
+      "stage": "tillering",
+      "basis": "documented_species_morphology",
+      "geometry_family_id": "rice:basally_branching_tiller_clump",
+      "required_topology_event": "basal_tiller_branches",
+      "panicle_state": "absent",
+      "grain_state": "absent",
+      "cut_state": "uncut",
+      "geometry_ready": false
+    },
+    {
+      "stage": "stem_elongation",
+      "basis": "documented_species_morphology",
+      "geometry_family_id": "rice:elongating_nodal_culm_clump",
+      "required_topology_event": "elongated_culm_internodes",
+      "panicle_state": "not_externally_visible_state_requires_stage_observation",
+      "grain_state": "absent",
+      "cut_state": "uncut",
+      "geometry_ready": false
+    },
+    {
+      "stage": "panicle_initiation",
+      "basis": "documented_species_morphology",
+      "geometry_family_id": "rice:hidden_apical_panicle_transition",
+      "required_topology_event": "hidden_apical_panicle",
+      "panicle_state": "initiated_at_tiller_growing_tip_hidden",
+      "grain_state": "absent",
+      "cut_state": "uncut",
+      "geometry_ready": false
+    },
+    {
+      "stage": "booting",
+      "basis": "documented_species_morphology",
+      "geometry_family_id": "rice:flag_sheath_enclosed_panicle",
+      "required_topology_event": "panicle_within_flag_sheath",
+      "panicle_state": "developing_inside_flag_leaf_sheath",
+      "grain_state": "absent",
+      "cut_state": "uncut",
+      "geometry_ready": false
+    },
+    {
+      "stage": "heading",
+      "basis": "documented_species_morphology",
+      "geometry_family_id": "rice:emerging_panicle_through_flag_sheath",
+      "required_topology_event": "panicle_crosses_flag_sheath_opening",
+      "panicle_state": "partially_or_fully_emerged_from_flag_leaf_sheath",
+      "grain_state": "absent_before_fertilization",
+      "cut_state": "uncut",
+      "geometry_ready": false
+    },
+    {
+      "stage": "flowering",
+      "basis": "documented_species_morphology",
+      "geometry_family_id": "rice:open_floret_anthesis_panicle",
+      "required_topology_event": "open_florets_and_exserted_stamens",
+      "panicle_state": "emerged_with_opening_florets",
+      "grain_state": "fertilization_transition_not_yet_filled",
+      "cut_state": "uncut",
+      "geometry_ready": false
+    },
+    {
+      "stage": "grain_filling",
+      "basis": "documented_species_morphology",
+      "geometry_family_id": "rice:developing_grain_bending_panicle",
+      "required_topology_event": "filled_spikelets_and_bending_panicle",
+      "panicle_state": "emerged_green_and_bending_with_developing_grain",
+      "grain_state": "fertilized_ovary_filling_milk_to_dough",
+      "cut_state": "uncut",
+      "geometry_ready": false
+    },
+    {
+      "stage": "maturity",
+      "basis": "documented_species_morphology",
+      "geometry_family_id": "rice:hard_grain_senescent_stand",
+      "required_topology_event": "hard_grain_on_senescent_stand",
+      "panicle_state": "bent_or_supported_posture_requires_cultivar_and_load_measurement",
+      "grain_state": "hard_and_dry",
+      "cut_state": "uncut",
+      "geometry_ready": false
+    },
+    {
+      "stage": "harvest",
+      "basis": "contractual_management_transition_with_documented_maturity",
+      "geometry_family_id": "rice:harvest_severance_and_removed_crop",
+      "required_topology_event": "severed_or_removed_crop_components",
+      "panicle_state": "detached_or_removed_from_standing_crop",
+      "grain_state": "mature_harvested_product_handling_unresolved",
+      "cut_state": "harvest_severance_or_removal_form_unresolved",
+      "geometry_ready": false
+    },
+    {
+      "stage": "stubble",
+      "basis": "contractual_management_transition",
+      "geometry_family_id": "rice:postharvest_cut_culm_stubble",
+      "required_topology_event": "cut_culm_ends_without_panicles",
+      "panicle_state": "absent_from_remaining_cut_culms",
+      "grain_state": "absent_from_remaining_cut_culms",
+      "cut_state": "cut_culm_bases_remain_height_unresolved",
+      "geometry_ready": false
+    }
+  ],
+  "source_sha256": {
+    "tools/rice_morphology.py": "fefe599da688d6881f792bc853334790c85b449477103f4f6a7bf45818741a33",
+    "tools/probe_rice_morphology_r024.py": "0e67fd710d7caa1c47cd0fc621ce0a20a88f80d6e7fe9ed625eeb2a877e249d5",
+    "research/r024-rice-morphology/RICE_LIFECYCLE_CONTRACT.json": "19c8345003b9747d1df7d19ec46d402f34af030553773bccf611921c186e1dbc"
+  },
+  "speciesStageContractComplete": true,
+  "regionalNumericProfileComplete": false,
+  "geometryAssetsComplete": false,
+  "readyForStructuralTruthWorkbench": false,
+  "syntheticGeometryProduced": false,
+  "visualAcceptance": false,
+  "productionReady": false
+}

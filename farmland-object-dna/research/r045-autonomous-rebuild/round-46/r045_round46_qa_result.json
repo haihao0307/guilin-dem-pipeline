@@ -1,0 +1,416 @@
+{
+  "version": "R045.46",
+  "passed": false,
+  "gateCount": 30,
+  "passedCount": 28,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.46",
+      "limit": "R045.46"
+    },
+    {
+      "name": "water_graph_identity_preserved",
+      "pass": true,
+      "value": {
+        "nodes": [
+          22,
+          22
+        ],
+        "edges": [
+          55,
+          55
+        ]
+      },
+      "limit": "exact inherited graph"
+    },
+    {
+      "name": "terrain_carriers_identity_preserved",
+      "pass": true,
+      "value": {
+        "terrainChannels": 12,
+        "outlets": 3
+      },
+      "limit": "exact inherited carriers"
+    },
+    {
+      "name": "r46_contour_extension_material",
+      "pass": false,
+      "value": {
+        "gains": 3,
+        "cross": 3,
+        "active": 546,
+        "oldActive": 543,
+        "directions": [
+          "NW",
+          "W",
+          "SE"
+        ]
+      },
+      "limit": ">=4 gain samples, >=4 new active samples"
+    },
+    {
+      "name": "r46_change_bounded_nontrivial",
+      "pass": true,
+      "value": 0.06265152690939962,
+      "limit": ".006m < sampled max R46-R43 change < .22m"
+    },
+    {
+      "name": "existing_r43_active_surface_exact",
+      "pass": true,
+      "value": {
+        "oldMaskChange": 0,
+        "oldDeltaChange": 0
+      },
+      "limit": "all already-active R43 samples exact"
+    },
+    {
+      "name": "core_not_shrunk",
+      "pass": true,
+      "value": {
+        "core": 356,
+        "oldCore": 356
+      },
+      "limit": "core >= R43"
+    },
+    {
+      "name": "all_three_groups_material",
+      "pass": true,
+      "value": [
+        94,
+        229,
+        223
+      ],
+      "limit": "each >20"
+    },
+    {
+      "name": "all_promotions_supported",
+      "pass": true,
+      "value": {
+        "gains": 3,
+        "cross": 3,
+        "unsupported": 0
+      },
+      "limit": "every promotion has frozen two-cell R43 support"
+    },
+    {
+      "name": "contour_alignment_real",
+      "pass": true,
+      "value": {
+        "minAlignment": 0.5897948713351957,
+        "directions": [
+          "NW",
+          "W",
+          "SE"
+        ]
+      },
+      "limit": ">=0.55 local contour-tangent alignment"
+    },
+    {
+      "name": "promotions_safe",
+      "pass": true,
+      "value": {
+        "unsafe": 0
+      },
+      "limit": "no promotion in hard drainage/outside eligibility/foreground receiver"
+    },
+    {
+      "name": "compatible_fragmentation_not_worse",
+      "pass": true,
+      "value": {
+        "new": {
+          "components": 18,
+          "orphans": 0,
+          "tiny": 1,
+          "largest": 124,
+          "second": 79,
+          "sizes": [
+            124,
+            79,
+            51,
+            51,
+            45,
+            38,
+            32,
+            23,
+            21,
+            20,
+            16,
+            11,
+            11,
+            9,
+            6,
+            4,
+            3,
+            2
+          ]
+        },
+        "prior": {
+          "components": 18,
+          "orphans": 0,
+          "tiny": 1,
+          "largest": 124,
+          "second": 79,
+          "sizes": [
+            124,
+            79,
+            51,
+            51,
+            45,
+            38,
+            32,
+            23,
+            20,
+            20,
+            16,
+            11,
+            10,
+            9,
+            5,
+            4,
+            3,
+            2
+          ]
+        }
+      },
+      "limit": "adding frozen-run endpoints may preserve/merge compatible components, never add fragments"
+    },
+    {
+      "name": "major_components_not_shrunk",
+      "pass": true,
+      "value": {
+        "new": [
+          124,
+          79
+        ],
+        "prior": [
+          124,
+          79
+        ]
+      },
+      "limit": "largest and top-two support may not shrink"
+    },
+    {
+      "name": "straight_contour_support_not_shorter",
+      "pass": true,
+      "value": {
+        "new": {
+          "best": 14,
+          "totalStarts": 592,
+          "totalLength": 2184
+        },
+        "prior": {
+          "best": 14,
+          "totalStarts": 584,
+          "totalLength": 2172
+        }
+      },
+      "limit": "best run nondecreasing and total compatible straight-run support increases"
+    },
+    {
+      "name": "hard_drainage_core_empty",
+      "pass": true,
+      "value": {
+        "hardCoreActive": 0,
+        "hardCoreDelta": 0
+      },
+      "limit": "zero support/delta <=12m drainage"
+    },
+    {
+      "name": "r43_stair_frame_exact",
+      "pass": true,
+      "value": {
+        "frameN": 77,
+        "maxStep": 0,
+        "maxPhase": 0,
+        "maxRaw": 0
+      },
+      "limit": "step/phase/raw exact"
+    },
+    {
+      "name": "far_upstream_untouched",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "support_localized",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "drainage_core_protected",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "foreground_receiver_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "terrace_increment_not_cliff",
+      "pass": true,
+      "value": 0.8363728754031337,
+      "limit": "<1.25m / 6m"
+    },
+    {
+      "name": "visual_acceptance_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "parcel_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "water_unknown",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "production_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "logic_error_explicit",
+      "pass": false,
+      "value": "R45 incorrectly treated a reduction in global compatible-component count as a necessary improvement. Protected drainage corridors can legitimately split terrace support into separate components, so forcing fewer global components can reward crossing a separator. R46 instead verifies local contour-run continuation inside the protected domain and requires compatible components/orphans/tiny fragments to be no worse; browser rendering cannot compensate for failed numeric geometry.",
+      "limit": "global component reduction is not necessary across drainage separators"
+    },
+    {
+      "name": "real_world_constraint_explicit",
+      "pass": true,
+      "value": "the 6 m QA lattice, one-cell frozen-run continuation, 0.55 tangent alignment, stair tolerances and 12 m hard drainage core are synthetic morphology/QA parameters, not surveyed Yunnan terrace dimensions or measured connectivity. Current 12.5 m macro DEM and photographs cannot provide field microtopography, parcel/management boundaries, bund-riser-channel sections, inlet/outlet sill elevations, hydraulic connectivity or event water-management records.",
+      "limit": "synthetic parameters and missing field truth explicit"
+    },
+    {
+      "name": "xiaoma_boundary_retained",
+      "pass": true,
+      "value": "Xiaoma/TLO boundaries remain active: geometric continuity, adjacency and conservation do not establish parcel ownership, hydraulic connectivity, head, water depth, discharge, gate state, soil-water state or sediment state without field-scale evidence.",
+      "limit": "continuity/conservation != ownership/hydraulics"
+    },
+    {
+      "name": "mrrolord_ordering_only",
+      "pass": true,
+      "value": "the saved MrRolord study is used only as ordering discipline: drainage hierarchy -> accumulated terrain influence -> terrain-conforming contour land use. Blender dimensions, Voronoi cells, shader displacement and adaptive subdivision are not agricultural truth.",
+      "limit": "ordering only"
+    },
+    {
+      "name": "reference_nonmetric",
+      "pass": true,
+      "value": "image(173).png is reread only for non-metric morphology: long curved contour-following ribbons, unequal widths, nested organization and drainage interruptions. No terrace width, continuation length, riser height, channel size, water depth or hydraulic parameter is inferred from the photograph.",
+      "limit": "visual morphology only"
+    }
+  ],
+  "metrics": {
+    "geometry": {
+      "active": 546,
+      "oldActive": 543,
+      "core": 356,
+      "oldCore": 356,
+      "gains": 3,
+      "cross": 3,
+      "unsupported": 0,
+      "unsafe": 0,
+      "maxChange": 0.06265152690939962,
+      "oldMaskChange": 0,
+      "oldDeltaChange": 0,
+      "minAlignment": 0.5897948713351957,
+      "groups": [
+        94,
+        229,
+        223
+      ],
+      "directions": [
+        "NW",
+        "W",
+        "SE"
+      ],
+      "topology2D": {
+        "new": {
+          "components": 18,
+          "orphans": 0,
+          "tiny": 1,
+          "largest": 124,
+          "second": 79,
+          "sizes": [
+            124,
+            79,
+            51,
+            51,
+            45,
+            38,
+            32,
+            23,
+            21,
+            20,
+            16,
+            11,
+            11,
+            9,
+            6,
+            4,
+            3,
+            2
+          ]
+        },
+        "prior": {
+          "components": 18,
+          "orphans": 0,
+          "tiny": 1,
+          "largest": 124,
+          "second": 79,
+          "sizes": [
+            124,
+            79,
+            51,
+            51,
+            45,
+            38,
+            32,
+            23,
+            20,
+            20,
+            16,
+            11,
+            10,
+            9,
+            5,
+            4,
+            3,
+            2
+          ]
+        }
+      },
+      "straightRuns": {
+        "new": {
+          "best": 14,
+          "totalStarts": 592,
+          "totalLength": 2184
+        },
+        "prior": {
+          "best": 14,
+          "totalStarts": 584,
+          "totalLength": 2172
+        }
+      }
+    },
+    "far": 0,
+    "near": 0,
+    "receiver": 0,
+    "outside": 0,
+    "maxInc": 0.8363728754031337,
+    "qaScope": "6m full-slope frozen-R43 contour-run endpoint sweep + exact R43 active/stair inheritance + drainage/receiver protection + compatible 2-D fragmentation guard"
+  }
+}

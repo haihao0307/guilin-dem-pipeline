@@ -1,0 +1,1149 @@
+{
+  "version": "R045.29",
+  "passed": true,
+  "gateCount": 43,
+  "passedCount": 43,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.29",
+      "limit": "R045.29"
+    },
+    {
+      "name": "three_break_profiles",
+      "pass": true,
+      "value": [
+        [
+          "OUTLET-A",
+          "major"
+        ],
+        [
+          "OUTLET-B",
+          "subordinate"
+        ],
+        [
+          "OUTLET-C",
+          "local"
+        ]
+      ],
+      "limit": "exactly three inherited outlet-tied break profiles"
+    },
+    {
+      "name": "water_graph_identity_preserved",
+      "pass": true,
+      "value": {
+        "nodes": [
+          22,
+          22
+        ],
+        "edges": [
+          55,
+          55
+        ]
+      },
+      "limit": "exact planimetric graph identity"
+    },
+    {
+      "name": "terrain_carriers_identity_preserved",
+      "pass": true,
+      "value": {
+        "terrainChannels": 12,
+        "outlets": 3
+      },
+      "limit": "exact inherited carrier arrays"
+    },
+    {
+      "name": "r28_contact_identity_preserved",
+      "pass": true,
+      "value": [
+        "OUTLET-A",
+        "OUTLET-B",
+        "OUTLET-C"
+      ],
+      "limit": "exact R28 contact definitions retained"
+    },
+    {
+      "name": "break_profiles_are_not_clones",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "scaleClass": "major",
+          "zStart": -20,
+          "zEnd": 126,
+          "width0": 92,
+          "width1": 178,
+          "centre0": -8,
+          "sweep": 46,
+          "bend": 31,
+          "shift": 28,
+          "secondary": -11
+        },
+        {
+          "id": "OUTLET-B",
+          "scaleClass": "subordinate",
+          "zStart": -12,
+          "zEnd": 108,
+          "width0": 70,
+          "width1": 128,
+          "centre0": 18,
+          "sweep": -36,
+          "bend": -24,
+          "shift": -23,
+          "secondary": 9
+        },
+        {
+          "id": "OUTLET-C",
+          "scaleClass": "local",
+          "zStart": -4,
+          "zEnd": 92,
+          "width0": 52,
+          "width1": 94,
+          "centre0": -14,
+          "sweep": 28,
+          "bend": 19,
+          "shift": 17,
+          "secondary": -7
+        }
+      ],
+      "limit": "three unique breakline-warp signatures"
+    },
+    {
+      "name": "declared_break_scales_are_ordered",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "scaleClass": "major",
+          "zStart": -20,
+          "zEnd": 126,
+          "width0": 92,
+          "width1": 178,
+          "centre0": -8,
+          "sweep": 46,
+          "bend": 31,
+          "shift": 28,
+          "secondary": -11
+        },
+        {
+          "id": "OUTLET-B",
+          "scaleClass": "subordinate",
+          "zStart": -12,
+          "zEnd": 108,
+          "width0": 70,
+          "width1": 128,
+          "centre0": 18,
+          "sweep": -36,
+          "bend": -24,
+          "shift": -23,
+          "secondary": 9
+        },
+        {
+          "id": "OUTLET-C",
+          "scaleClass": "local",
+          "zStart": -4,
+          "zEnd": 92,
+          "width0": 52,
+          "width1": 94,
+          "centre0": -14,
+          "sweep": 28,
+          "bend": 19,
+          "shift": 17,
+          "secondary": -7
+        }
+      ],
+      "limit": "major > subordinate > local in width and support length"
+    },
+    {
+      "name": "break_migration_changes_direction",
+      "pass": true,
+      "value": [
+        28,
+        -23,
+        17
+      ],
+      "limit": "adjacent hierarchy members move breakline in opposite z directions"
+    },
+    {
+      "name": "breakline_migration_is_substantive",
+      "pass": true,
+      "value": {
+        "shiftMax": 25.52222062829173,
+        "shiftMean": 4.313781455423375,
+        "maxShiftAt": [
+          -188,
+          64
+        ],
+        "posShift": 10398.52784470146,
+        "negShift": 1891.4355217997115,
+        "warpMax": 0.6826277819699513,
+        "warpMean": 0.045283505326959045,
+        "coreWarpMean": 0.05913239118586364,
+        "maxWarpStep": 0.22592063288187975,
+        "maxWarpAt": [
+          -212,
+          4
+        ]
+      },
+      "limit": "8 m < max z-phase shift <=34 m"
+    },
+    {
+      "name": "breakline_migration_is_broad",
+      "pass": true,
+      "value": 4.313781455423375,
+      "limit": "mean absolute z-phase shift >0.35 m over full review grid"
+    },
+    {
+      "name": "both_migration_directions_survive",
+      "pass": true,
+      "value": {
+        "posShift": 10398.52784470146,
+        "negShift": 1891.4355217997115
+      },
+      "limit": "positive and negative breakline migration both survive final field"
+    },
+    {
+      "name": "vertical_response_is_substantive_but_bounded",
+      "pass": true,
+      "value": {
+        "shiftMax": 25.52222062829173,
+        "shiftMean": 4.313781455423375,
+        "maxShiftAt": [
+          -188,
+          64
+        ],
+        "posShift": 10398.52784470146,
+        "negShift": 1891.4355217997115,
+        "warpMax": 0.6826277819699513,
+        "warpMean": 0.045283505326959045,
+        "coreWarpMean": 0.05913239118586364,
+        "maxWarpStep": 0.22592063288187975,
+        "maxWarpAt": [
+          -212,
+          4
+        ]
+      },
+      "limit": "0.035 m < max inherited-surface warp delta <=0.781 m"
+    },
+    {
+      "name": "vertical_response_is_broad",
+      "pass": true,
+      "value": 0.05913239118586364,
+      "limit": "0.0025 m < core mean abs warp <0.25 m"
+    },
+    {
+      "name": "warped_break_is_longitudinally_gradual",
+      "pass": true,
+      "value": {
+        "maxWarpStep": 0.22592063288187975,
+        "at": [
+          -212,
+          4
+        ]
+      },
+      "limit": "<0.24 m added warp change per 4 m z"
+    },
+    {
+      "name": "warp_reaches_footslope",
+      "pass": true,
+      "value": 335,
+      "limit": ">25 active samples at z=-8..30"
+    },
+    {
+      "name": "warp_reaches_receiving_plain",
+      "pass": true,
+      "value": 688,
+      "limit": ">60 active samples at z=38..106"
+    },
+    {
+      "name": "warp_overlaps_r28_contact_system",
+      "pass": true,
+      "value": 571,
+      "limit": ">20 cells where R29 warp and R28 contact both have substantive signal"
+    },
+    {
+      "name": "all_three_break_components_exist",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "scaleClass": "major",
+          "mass": 6011.162631635747,
+          "centroid": [
+            -138.30748625932287,
+            58.44559029106316
+          ],
+          "peak": 27.509677795733246,
+          "count": 648,
+          "occupiedRows": 23,
+          "pos": 6011.162631635747,
+          "neg": 0
+        },
+        {
+          "id": "OUTLET-B",
+          "scaleClass": "subordinate",
+          "mass": 2660.696887809417,
+          "centroid": [
+            -21.46931077327041,
+            53.82892602559641
+          ],
+          "peak": 20.20946554545518,
+          "count": 433,
+          "occupiedRows": 19,
+          "pos": 11.238145012667143,
+          "neg": 2649.45874279675
+        },
+        {
+          "id": "OUTLET-C",
+          "scaleClass": "local",
+          "mass": 963.3553491123257,
+          "centroid": [
+            171.03743711448334,
+            46.895758258473485
+          ],
+          "peak": 13.088266511048172,
+          "count": 197,
+          "occupiedRows": 14,
+          "pos": 945.3561064527964,
+          "neg": 17.999242659529234
+        }
+      ],
+      "limit": "each shift component peak >3 m and >12 occupied samples"
+    },
+    {
+      "name": "actual_break_scale_hierarchy_survives",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "count": 648,
+          "rows": 23
+        },
+        {
+          "id": "OUTLET-B",
+          "count": 433,
+          "rows": 19
+        },
+        {
+          "id": "OUTLET-C",
+          "count": 197,
+          "rows": 14
+        }
+      ],
+      "limit": "occupied shift samples major > subordinate > local by >3% each step"
+    },
+    {
+      "name": "break_components_remain_spatially_distinct",
+      "pass": true,
+      "value": {
+        "minSep": 116.92934977946994,
+        "componentStats": [
+          {
+            "id": "OUTLET-A",
+            "scaleClass": "major",
+            "mass": 6011.162631635747,
+            "centroid": [
+              -138.30748625932287,
+              58.44559029106316
+            ],
+            "peak": 27.509677795733246,
+            "count": 648,
+            "occupiedRows": 23,
+            "pos": 6011.162631635747,
+            "neg": 0
+          },
+          {
+            "id": "OUTLET-B",
+            "scaleClass": "subordinate",
+            "mass": 2660.696887809417,
+            "centroid": [
+              -21.46931077327041,
+              53.82892602559641
+            ],
+            "peak": 20.20946554545518,
+            "count": 433,
+            "occupiedRows": 19,
+            "pos": 11.238145012667143,
+            "neg": 2649.45874279675
+          },
+          {
+            "id": "OUTLET-C",
+            "scaleClass": "local",
+            "mass": 963.3553491123257,
+            "centroid": [
+              171.03743711448334,
+              46.895758258473485
+            ],
+            "peak": 13.088266511048172,
+            "count": 197,
+            "occupiedRows": 14,
+            "pos": 945.3561064527964,
+            "neg": 17.999242659529234
+          }
+        ]
+      },
+      "limit": "pairwise component centroid separation >15 m"
+    },
+    {
+      "name": "breakline_front_exists_across_scene",
+      "pass": true,
+      "value": 25,
+      "limit": ">=8 lateral columns carry substantive break migration"
+    },
+    {
+      "name": "breakline_front_is_not_parallel",
+      "pass": true,
+      "value": {
+        "frontRange": 55.52192376581284,
+        "columns": [
+          {
+            "x": -210,
+            "centroidZ": 55.56484040780308,
+            "peakZ": 68,
+            "peak": 24.634752308346847
+          },
+          {
+            "x": -196,
+            "centroidZ": 58.352722821340286,
+            "peakZ": 64,
+            "peak": 25.414975364825217
+          },
+          {
+            "x": -182,
+            "centroidZ": 62.36368508774587,
+            "peakZ": 64,
+            "peak": 25.42911689080953
+          },
+          {
+            "x": -168,
+            "centroidZ": 62.112485848434055,
+            "peakZ": 60,
+            "peak": 23.871200213710694
+          },
+          {
+            "x": -154,
+            "centroidZ": 51.106912765416475,
+            "peakZ": 16,
+            "peak": 12.4124482331259
+          },
+          {
+            "x": -140,
+            "centroidZ": 19.456103039548342,
+            "peakZ": 0,
+            "peak": 1.6823284322668202
+          },
+          {
+            "x": -98,
+            "centroidZ": 71.09736568172065,
+            "peakZ": 100,
+            "peak": 9.124517071174463
+          },
+          {
+            "x": -84,
+            "centroidZ": 68.18908594998173,
+            "peakZ": 100,
+            "peak": 13.800098709972335
+          },
+          {
+            "x": -70,
+            "centroidZ": 70.99023309607536,
+            "peakZ": 100,
+            "peak": 8.700745802182418
+          },
+          {
+            "x": -56,
+            "centroidZ": 73.98510469409004,
+            "peakZ": 104,
+            "peak": 1.743111037000415
+          },
+          {
+            "x": -14,
+            "centroidZ": 58.36178354436021,
+            "peakZ": 60,
+            "peak": 4.6894490705321115
+          },
+          {
+            "x": 0,
+            "centroidZ": 60.175487042547175,
+            "peakZ": 56,
+            "peak": 11.886819580617118
+          },
+          {
+            "x": 14,
+            "centroidZ": 55.48218556191046,
+            "peakZ": 72,
+            "peak": 12.052966491474821
+          },
+          {
+            "x": 28,
+            "centroidZ": 57.16028198941942,
+            "peakZ": 76,
+            "peak": 10.81845290548477
+          },
+          {
+            "x": 42,
+            "centroidZ": 62.37938575849422,
+            "peakZ": 76,
+            "peak": 8.478297833754537
+          },
+          {
+            "x": 56,
+            "centroidZ": 66.54971161142713,
+            "peakZ": 72,
+            "peak": 5.127696640385726
+          },
+          {
+            "x": 70,
+            "centroidZ": 74.97802680536118,
+            "peakZ": 56,
+            "peak": 1.6914731029401548
+          },
+          {
+            "x": 84,
+            "centroidZ": 61.42849409871355,
+            "peakZ": 72,
+            "peak": 3.5090218322189988
+          },
+          {
+            "x": 98,
+            "centroidZ": 61.476322125065195,
+            "peakZ": 68,
+            "peak": 7.475187361150104
+          },
+          {
+            "x": 112,
+            "centroidZ": 57.90466540448131,
+            "peakZ": 60,
+            "peak": 5.218222944294262
+          },
+          {
+            "x": 154,
+            "centroidZ": 30.88945716632089,
+            "peakZ": 16,
+            "peak": 2.0245402967318444
+          },
+          {
+            "x": 168,
+            "centroidZ": 44.24083598272599,
+            "peakZ": 28,
+            "peak": 9.239226039829429
+          },
+          {
+            "x": 182,
+            "centroidZ": 46.806156889865285,
+            "peakZ": 44,
+            "peak": 13.180681316479575
+          },
+          {
+            "x": 196,
+            "centroidZ": 45.8883878018228,
+            "peakZ": 52,
+            "peak": 10.78251032145062
+          },
+          {
+            "x": 210,
+            "centroidZ": 46.26854430028508,
+            "peakZ": 52,
+            "peak": 7.972900478766362
+          }
+        ]
+      },
+      "limit": "shift-weighted break position changes by >8 m across x"
+    },
+    {
+      "name": "breakline_peak_position_varies",
+      "pass": true,
+      "value": {
+        "peakRange": 104,
+        "columns": [
+          {
+            "x": -210,
+            "centroidZ": 55.56484040780308,
+            "peakZ": 68,
+            "peak": 24.634752308346847
+          },
+          {
+            "x": -196,
+            "centroidZ": 58.352722821340286,
+            "peakZ": 64,
+            "peak": 25.414975364825217
+          },
+          {
+            "x": -182,
+            "centroidZ": 62.36368508774587,
+            "peakZ": 64,
+            "peak": 25.42911689080953
+          },
+          {
+            "x": -168,
+            "centroidZ": 62.112485848434055,
+            "peakZ": 60,
+            "peak": 23.871200213710694
+          },
+          {
+            "x": -154,
+            "centroidZ": 51.106912765416475,
+            "peakZ": 16,
+            "peak": 12.4124482331259
+          },
+          {
+            "x": -140,
+            "centroidZ": 19.456103039548342,
+            "peakZ": 0,
+            "peak": 1.6823284322668202
+          },
+          {
+            "x": -98,
+            "centroidZ": 71.09736568172065,
+            "peakZ": 100,
+            "peak": 9.124517071174463
+          },
+          {
+            "x": -84,
+            "centroidZ": 68.18908594998173,
+            "peakZ": 100,
+            "peak": 13.800098709972335
+          },
+          {
+            "x": -70,
+            "centroidZ": 70.99023309607536,
+            "peakZ": 100,
+            "peak": 8.700745802182418
+          },
+          {
+            "x": -56,
+            "centroidZ": 73.98510469409004,
+            "peakZ": 104,
+            "peak": 1.743111037000415
+          },
+          {
+            "x": -14,
+            "centroidZ": 58.36178354436021,
+            "peakZ": 60,
+            "peak": 4.6894490705321115
+          },
+          {
+            "x": 0,
+            "centroidZ": 60.175487042547175,
+            "peakZ": 56,
+            "peak": 11.886819580617118
+          },
+          {
+            "x": 14,
+            "centroidZ": 55.48218556191046,
+            "peakZ": 72,
+            "peak": 12.052966491474821
+          },
+          {
+            "x": 28,
+            "centroidZ": 57.16028198941942,
+            "peakZ": 76,
+            "peak": 10.81845290548477
+          },
+          {
+            "x": 42,
+            "centroidZ": 62.37938575849422,
+            "peakZ": 76,
+            "peak": 8.478297833754537
+          },
+          {
+            "x": 56,
+            "centroidZ": 66.54971161142713,
+            "peakZ": 72,
+            "peak": 5.127696640385726
+          },
+          {
+            "x": 70,
+            "centroidZ": 74.97802680536118,
+            "peakZ": 56,
+            "peak": 1.6914731029401548
+          },
+          {
+            "x": 84,
+            "centroidZ": 61.42849409871355,
+            "peakZ": 72,
+            "peak": 3.5090218322189988
+          },
+          {
+            "x": 98,
+            "centroidZ": 61.476322125065195,
+            "peakZ": 68,
+            "peak": 7.475187361150104
+          },
+          {
+            "x": 112,
+            "centroidZ": 57.90466540448131,
+            "peakZ": 60,
+            "peak": 5.218222944294262
+          },
+          {
+            "x": 154,
+            "centroidZ": 30.88945716632089,
+            "peakZ": 16,
+            "peak": 2.0245402967318444
+          },
+          {
+            "x": 168,
+            "centroidZ": 44.24083598272599,
+            "peakZ": 28,
+            "peak": 9.239226039829429
+          },
+          {
+            "x": 182,
+            "centroidZ": 46.806156889865285,
+            "peakZ": 44,
+            "peak": 13.180681316479575
+          },
+          {
+            "x": 196,
+            "centroidZ": 45.8883878018228,
+            "peakZ": 52,
+            "peak": 10.78251032145062
+          },
+          {
+            "x": 210,
+            "centroidZ": 46.26854430028508,
+            "peakZ": 52,
+            "peak": 7.972900478766362
+          }
+        ]
+      },
+      "limit": "peak break migration position changes by >12 m across x"
+    },
+    {
+      "name": "far_upstream_work_untouched",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled R29 change at z<=-30"
+    },
+    {
+      "name": "support_is_band_limited",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change outside R29 support"
+    },
+    {
+      "name": "drainage_axes_are_protected",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change within 10 m of inherited drainage axes"
+    },
+    {
+      "name": "foreground_receiver_is_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change around receiver river"
+    },
+    {
+      "name": "warp_does_not_create_new_wall",
+      "pass": true,
+      "value": {
+        "old": {
+          "maxRise": 0.3713056450240231,
+          "at": [
+            60,
+            24
+          ]
+        },
+        "new": {
+          "maxRise": 0.3682632931045364,
+          "at": [
+            60,
+            24
+          ]
+        }
+      },
+      "limit": "new worst 4 m uphill rise <= R28 +0.18 m"
+    },
+    {
+      "name": "terrace_permission_recomputed_after_surface_change",
+      "pass": true,
+      "value": 0.2478934407124846,
+      "limit": "permission must respond to R29 warped candidate substrate"
+    },
+    {
+      "name": "permission_change_remains_bounded",
+      "pass": true,
+      "value": 0.2478934407124846,
+      "limit": "localized substrate update must not globally overturn suitability"
+    },
+    {
+      "name": "terrace_permission_excludes_drainage",
+      "pass": true,
+      "value": 0,
+      "limit": "<0.01"
+    },
+    {
+      "name": "future_terrace_candidates_remain",
+      "pass": true,
+      "value": 0.665292756025109,
+      "limit": ">0.02 while geometry remains locked"
+    },
+    {
+      "name": "visual_acceptance_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "terrace_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "terrace_pilot_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "parcel_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "water_state_unknown",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "logic_error_explicitly_corrected",
+      "pass": true,
+      "value": "R28 being subtle in perspective does not imply that relief amplitude is the missing cause. Visibility can fail because the breakline occupies nearly the same plan position; R29 therefore changes breakline position before adding terrace relief.",
+      "limit": "must reject amplitude-only visibility fix"
+    },
+    {
+      "name": "xiaoma_boundary_retained",
+      "pass": true,
+      "value": "12.5 m macro DEM continuity and a plausible warped slope-foot do not establish surveyed field boundaries, bund/channel sections, inlet/outlet sill elevations, hydraulic connectivity, centimetric water depth, discharge, gate state, soil-water state or sediment state; common-datum field evidence remains required.",
+      "limit": "macro morphology cannot be promoted to surveyed/hydraulic truth"
+    },
+    {
+      "name": "mrrolord_ordering_only",
+      "pass": true,
+      "value": "the saved video-frame study is reused only for process ordering: river hierarchy -> accumulated terrain influence -> land-use pattern. Blender dimensions, Voronoi parcel appearance and adaptive-subdivision choices are not copied as agricultural truth.",
+      "limit": "reuse process ordering only, not dimensions or truth"
+    },
+    {
+      "name": "user_reference_reopened_without_metric_inference",
+      "pass": true,
+      "value": "image(173).png was reopened this round. Only its visibly non-parallel contour envelopes, unequal nested terrace masses and changing slope-foot plan positions are used; no terrace width, riser height, channel dimension, water depth or regional metric is inferred.",
+      "limit": "image(173).png reopened only for visible planform hierarchy"
+    },
+    {
+      "name": "survey_claims_forbidden",
+      "pass": true,
+      "value": [
+        "surveyed breakline position",
+        "surveyed terrace width",
+        "measured riser height",
+        "measured bund section",
+        "measured channel section",
+        "known inlet sill",
+        "known outlet sill",
+        "known hydraulic connectivity",
+        "known water depth",
+        "known discharge",
+        "known gate state",
+        "known soil-water state",
+        "known sediment state",
+        "regional truth from photograph"
+      ],
+      "limit": "explicit evidence boundary"
+    },
+    {
+      "name": "production_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    }
+  ],
+  "metrics": {
+    "delta": {
+      "shiftMax": 25.52222062829173,
+      "shiftMean": 4.313781455423375,
+      "maxShiftAt": [
+        -188,
+        64
+      ],
+      "posShift": 10398.52784470146,
+      "negShift": 1891.4355217997115,
+      "warpMax": 0.6826277819699513,
+      "warpMean": 0.045283505326959045,
+      "coreWarpMean": 0.05913239118586364,
+      "maxWarpStep": 0.22592063288187975,
+      "maxWarpAt": [
+        -212,
+        4
+      ]
+    },
+    "signatures": [
+      {
+        "id": "OUTLET-A",
+        "scaleClass": "major",
+        "zStart": -20,
+        "zEnd": 126,
+        "width0": 92,
+        "width1": 178,
+        "centre0": -8,
+        "sweep": 46,
+        "bend": 31,
+        "shift": 28,
+        "secondary": -11
+      },
+      {
+        "id": "OUTLET-B",
+        "scaleClass": "subordinate",
+        "zStart": -12,
+        "zEnd": 108,
+        "width0": 70,
+        "width1": 128,
+        "centre0": 18,
+        "sweep": -36,
+        "bend": -24,
+        "shift": -23,
+        "secondary": 9
+      },
+      {
+        "id": "OUTLET-C",
+        "scaleClass": "local",
+        "zStart": -4,
+        "zEnd": 92,
+        "width0": 52,
+        "width1": 94,
+        "centre0": -14,
+        "sweep": 28,
+        "bend": 19,
+        "shift": 17,
+        "secondary": -7
+      }
+    ],
+    "footCount": 335,
+    "plainCount": 688,
+    "overlap28": 571,
+    "componentStats": [
+      {
+        "id": "OUTLET-A",
+        "scaleClass": "major",
+        "mass": 6011.162631635747,
+        "centroid": [
+          -138.30748625932287,
+          58.44559029106316
+        ],
+        "peak": 27.509677795733246,
+        "count": 648,
+        "occupiedRows": 23,
+        "pos": 6011.162631635747,
+        "neg": 0
+      },
+      {
+        "id": "OUTLET-B",
+        "scaleClass": "subordinate",
+        "mass": 2660.696887809417,
+        "centroid": [
+          -21.46931077327041,
+          53.82892602559641
+        ],
+        "peak": 20.20946554545518,
+        "count": 433,
+        "occupiedRows": 19,
+        "pos": 11.238145012667143,
+        "neg": 2649.45874279675
+      },
+      {
+        "id": "OUTLET-C",
+        "scaleClass": "local",
+        "mass": 963.3553491123257,
+        "centroid": [
+          171.03743711448334,
+          46.895758258473485
+        ],
+        "peak": 13.088266511048172,
+        "count": 197,
+        "occupiedRows": 14,
+        "pos": 945.3561064527964,
+        "neg": 17.999242659529234
+      }
+    ],
+    "minCentroidSep": 116.92934977946994,
+    "columns": [
+      {
+        "x": -210,
+        "centroidZ": 55.56484040780308,
+        "peakZ": 68,
+        "peak": 24.634752308346847
+      },
+      {
+        "x": -196,
+        "centroidZ": 58.352722821340286,
+        "peakZ": 64,
+        "peak": 25.414975364825217
+      },
+      {
+        "x": -182,
+        "centroidZ": 62.36368508774587,
+        "peakZ": 64,
+        "peak": 25.42911689080953
+      },
+      {
+        "x": -168,
+        "centroidZ": 62.112485848434055,
+        "peakZ": 60,
+        "peak": 23.871200213710694
+      },
+      {
+        "x": -154,
+        "centroidZ": 51.106912765416475,
+        "peakZ": 16,
+        "peak": 12.4124482331259
+      },
+      {
+        "x": -140,
+        "centroidZ": 19.456103039548342,
+        "peakZ": 0,
+        "peak": 1.6823284322668202
+      },
+      {
+        "x": -98,
+        "centroidZ": 71.09736568172065,
+        "peakZ": 100,
+        "peak": 9.124517071174463
+      },
+      {
+        "x": -84,
+        "centroidZ": 68.18908594998173,
+        "peakZ": 100,
+        "peak": 13.800098709972335
+      },
+      {
+        "x": -70,
+        "centroidZ": 70.99023309607536,
+        "peakZ": 100,
+        "peak": 8.700745802182418
+      },
+      {
+        "x": -56,
+        "centroidZ": 73.98510469409004,
+        "peakZ": 104,
+        "peak": 1.743111037000415
+      },
+      {
+        "x": -14,
+        "centroidZ": 58.36178354436021,
+        "peakZ": 60,
+        "peak": 4.6894490705321115
+      },
+      {
+        "x": 0,
+        "centroidZ": 60.175487042547175,
+        "peakZ": 56,
+        "peak": 11.886819580617118
+      },
+      {
+        "x": 14,
+        "centroidZ": 55.48218556191046,
+        "peakZ": 72,
+        "peak": 12.052966491474821
+      },
+      {
+        "x": 28,
+        "centroidZ": 57.16028198941942,
+        "peakZ": 76,
+        "peak": 10.81845290548477
+      },
+      {
+        "x": 42,
+        "centroidZ": 62.37938575849422,
+        "peakZ": 76,
+        "peak": 8.478297833754537
+      },
+      {
+        "x": 56,
+        "centroidZ": 66.54971161142713,
+        "peakZ": 72,
+        "peak": 5.127696640385726
+      },
+      {
+        "x": 70,
+        "centroidZ": 74.97802680536118,
+        "peakZ": 56,
+        "peak": 1.6914731029401548
+      },
+      {
+        "x": 84,
+        "centroidZ": 61.42849409871355,
+        "peakZ": 72,
+        "peak": 3.5090218322189988
+      },
+      {
+        "x": 98,
+        "centroidZ": 61.476322125065195,
+        "peakZ": 68,
+        "peak": 7.475187361150104
+      },
+      {
+        "x": 112,
+        "centroidZ": 57.90466540448131,
+        "peakZ": 60,
+        "peak": 5.218222944294262
+      },
+      {
+        "x": 154,
+        "centroidZ": 30.88945716632089,
+        "peakZ": 16,
+        "peak": 2.0245402967318444
+      },
+      {
+        "x": 168,
+        "centroidZ": 44.24083598272599,
+        "peakZ": 28,
+        "peak": 9.239226039829429
+      },
+      {
+        "x": 182,
+        "centroidZ": 46.806156889865285,
+        "peakZ": 44,
+        "peak": 13.180681316479575
+      },
+      {
+        "x": 196,
+        "centroidZ": 45.8883878018228,
+        "peakZ": 52,
+        "peak": 10.78251032145062
+      },
+      {
+        "x": 210,
+        "centroidZ": 46.26854430028508,
+        "peakZ": 52,
+        "peak": 7.972900478766362
+      }
+    ],
+    "frontRange": 55.52192376581284,
+    "peakRange": 104,
+    "farUpstreamMax": 0,
+    "nearMax": 0,
+    "receiverMax": 0,
+    "outsideMax": 0,
+    "oldForward": {
+      "maxRise": 0.3713056450240231,
+      "at": [
+        60,
+        24
+      ]
+    },
+    "newForward": {
+      "maxRise": 0.3682632931045364,
+      "at": [
+        60,
+        24
+      ]
+    },
+    "terraceNearDrainageMean": 0,
+    "terraceFarDrainageMean": 0.665292756025109,
+    "permissionMaxChange": 0.2478934407124846
+  }
+}

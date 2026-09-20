@@ -1,0 +1,158 @@
+{
+  "identity": {
+    "world_id": "earth",
+    "object_id": "example-traditional-paddy-001",
+    "type_id": "paddy",
+    "variant_id": "traditional_manual_irrigated",
+    "configuration_id": "example-v001",
+    "revision": "v0.0.1-example",
+    "valid_time": {
+      "start": null,
+      "end": null,
+      "precision": "unknown"
+    },
+    "recorded_at": "2026-09-07",
+    "evidence": {
+      "kind": "generated",
+      "sources": [],
+      "method_version": "farmland-object-dna-v0.0.1",
+      "uncertainty": "example only"
+    },
+    "review_status": "candidate"
+  },
+  "spatial": {
+    "crs": null,
+    "frame": "local-example-frame",
+    "units": "m",
+    "vertical_datum": null,
+    "boundary": [[0, 0, 0], [36, 3, 0], [33, 25, 0], [4, 28, 0]],
+    "area_m2": 900,
+    "elevation_range_m": null,
+    "slope_mean_deg": null,
+    "terrain_ref": "unknown"
+  },
+  "parcel": {
+    "cells": [
+      {
+        "id": "cell-01",
+        "leveling_state": "bounded_level_surface"
+      }
+    ],
+    "bunds": [
+      {
+        "id": "bund-ring-01",
+        "material": "compacted_local_soil",
+        "maintenance": "manual"
+      }
+    ],
+    "paths": [
+      {
+        "id": "footpath-01",
+        "mode": "pedestrian"
+      }
+    ],
+    "relations": [
+      {
+        "kind": "belongs_to_settlement",
+        "target_id": "unknown-settlement"
+      },
+      {
+        "kind": "served_by_path",
+        "target_id": "footpath-01"
+      }
+    ]
+  },
+  "hydraulics": {
+    "water_source": {
+      "source_ref": "unknown",
+      "authority": "external-water-source"
+    },
+    "inlets": [
+      {
+        "id": "inlet-01",
+        "control": "manual_open_close"
+      }
+    ],
+    "outlets": [
+      {
+        "id": "outlet-01",
+        "control": "manual"
+      }
+    ],
+    "channels": [
+      {
+        "id": "field-channel-01",
+        "direction": "source_to_field"
+      },
+      {
+        "id": "drain-01",
+        "direction": "field_to_downstream"
+      }
+    ],
+    "surface_water_depth_m": null,
+    "irrigation_demand_m3_per_day": null,
+    "drainage_state": "unknown"
+  },
+  "soil": {
+    "texture": "unknown",
+    "puddled_layer": "candidate",
+    "infiltration_state": "unknown",
+    "organic_matter": "unknown"
+  },
+  "crop": {
+    "species": "Oryza sativa",
+    "variety": null,
+    "stage": "unknown",
+    "canopy_cover": null,
+    "planting_method": "manual_transplant_candidate"
+  },
+  "laborSettlement": {
+    "settlement_ref": "unknown-settlement",
+    "household_ref": "unknown-household",
+    "available_labor_person_days": null,
+    "maintenance_capacity_state": "unknown",
+    "tasks": [
+      "bund_repair",
+      "channel_cleaning",
+      "water_control",
+      "field_preparation",
+      "transplanting",
+      "weeding",
+      "harvest"
+    ]
+  },
+  "calendar": {
+    "profile": "unknown-local-calendar",
+    "events": []
+  },
+  "maintenance": {
+    "bund_condition": "unknown",
+    "channel_condition": "unknown",
+    "backlog": "unknown"
+  },
+  "degradation": {
+    "abandonment_state": "active_candidate",
+    "breach_state": "unknown",
+    "siltation_state": "unknown",
+    "weed_invasion_state": "unknown"
+  },
+  "coupling": {
+    "inputs": [
+      {"field": "terrain_elevation", "authority": "DEM_or_Landscape"},
+      {"field": "precipitation_rate", "authority": "Weather_Mother"},
+      {"field": "source_water_level", "authority": "water_source_system"},
+      {"field": "available_labor", "authority": "population_or_settlement_system"}
+    ],
+    "outputs": [
+      {"field": "irrigation_demand", "authority": "Farmland_Object_DNA"},
+      {"field": "surface_water_depth", "authority": "Farmland_Object_DNA"},
+      {"field": "canopy_cover", "authority": "Farmland_Object_DNA"},
+      {"field": "labor_task_schedule", "authority": "Farmland_Object_DNA"}
+    ]
+  },
+  "representation": {
+    "seed": 1,
+    "method_version": "farmland-object-dna-v0.0.1",
+    "runtime_budget": null
+  }
+}

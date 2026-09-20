@@ -1,0 +1,420 @@
+{
+  "version": "R045.68",
+  "qaContract": "R045.68-connected-frozen-proposal-components-v1",
+  "sourceSha": "884b9f0bf25d2a993999aa1cb25e3d398146a3e3",
+  "passed": true,
+  "gateCount": 30,
+  "passedCount": 30,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.68",
+      "limit": "R045.68"
+    },
+    {
+      "name": "qa_contract",
+      "pass": true,
+      "value": "R045.68-connected-frozen-proposal-components-v1",
+      "limit": "exact contract id"
+    },
+    {
+      "name": "source_sha_present",
+      "pass": true,
+      "value": "884b9f0bf25d2a993999aa1cb25e3d398146a3e3",
+      "limit": "workflow source commit recorded"
+    },
+    {
+      "name": "water_graph_identity",
+      "pass": true,
+      "value": {
+        "nodes": 22,
+        "edges": 55
+      },
+      "limit": "exact inherited graph"
+    },
+    {
+      "name": "plan_frame_exact",
+      "pass": true,
+      "value": {
+        "maskErr": 0,
+        "stepErr": 0,
+        "phaseErr": 0,
+        "indexErr": 0,
+        "baseErr": 0,
+        "groupErr": 0
+      },
+      "limit": "exact frozen R47/R66 mask/group/step/phase/index/base"
+    },
+    {
+      "name": "active_footprint_exact",
+      "pass": true,
+      "value": {
+        "activeN": 548,
+        "activeP": 548,
+        "thresholdCross": 0
+      },
+      "limit": "exact R66 active footprint"
+    },
+    {
+      "name": "proposal_material",
+      "pass": true,
+      "value": {
+        "candidateTotal": 43,
+        "acceptedCandidate": 8,
+        "rejectedCandidate": 35
+      },
+      "limit": ">=24 physically material frozen R67 proposal cells exist"
+    },
+    {
+      "name": "isolated_proposals_actually_rejected",
+      "pass": true,
+      "value": {
+        "rejectedCandidate": 35,
+        "candidateTotal": 43
+      },
+      "limit": ">=8 sparse proposal cells are removed rather than counted as organization"
+    },
+    {
+      "name": "connected_residual_realization",
+      "pass": true,
+      "value": {
+        "acceptedCandidate": 8,
+        "changed": 8,
+        "ratio": 1
+      },
+      "limit": "all accepted connected residual opportunities realized; >=8 cells (= at least two 4-cell components)"
+    },
+    {
+      "name": "proposal_subset_exact",
+      "pass": true,
+      "value": {
+        "maxProposalMismatch": 0
+      },
+      "limit": "every retained change is exactly the frozen R67 proposal, no new amplitude invented"
+    },
+    {
+      "name": "accepted_component_gate",
+      "pass": true,
+      "value": {
+        "minAcceptedComponent": 4,
+        "minAcceptedSpan": 18
+      },
+      "limit": "every changed cell belongs to frozen candidate component >=4 cells and >=18m physical span"
+    },
+    {
+      "name": "connected_run_material",
+      "pass": true,
+      "value": {
+        "largestComponent": 4,
+        "largestPhysicalSpan": 18,
+        "cellsInComponents4": 8,
+        "changed": 8,
+        "componentCount": 2
+      },
+      "limit": "every changed cell is in a 4+ cell compatible run; >=8 changed cells total; largest run >=18m"
+    },
+    {
+      "name": "connected_share_material",
+      "pass": true,
+      "value": {
+        "connectedShare": 1,
+        "changed": 8,
+        "cellsInComponents4": 8
+      },
+      "limit": "100% (within numeric tolerance) of changed cells belong to 4+ cell compatible runs"
+    },
+    {
+      "name": "multi_family_change",
+      "pass": true,
+      "value": [
+        0,
+        2
+      ],
+      "limit": ">=2 terrace families participate"
+    },
+    {
+      "name": "all_changes_supported",
+      "pass": true,
+      "value": 0,
+      "limit": "every changed cell is an accepted frozen R67 candidate component"
+    },
+    {
+      "name": "inactive_exact",
+      "pass": true,
+      "value": 0,
+      "limit": "zero change at inherited mask <=0.12"
+    },
+    {
+      "name": "strong_exact",
+      "pass": true,
+      "value": 0,
+      "limit": "zero change at inherited mask >=0.82"
+    },
+    {
+      "name": "hard_drainage_exact",
+      "pass": true,
+      "value": {
+        "hardChanged": 0,
+        "hard": 0
+      },
+      "limit": "zero change in <=12m drainage core"
+    },
+    {
+      "name": "foreground_receiver_exact",
+      "pass": true,
+      "value": {
+        "receiverChanged": 0,
+        "receiver": 0
+      },
+      "limit": "zero change in receiver +12m band"
+    },
+    {
+      "name": "outside_exact",
+      "pass": true,
+      "value": 0,
+      "limit": "zero outside terrace support domain"
+    },
+    {
+      "name": "height_change_bounded",
+      "pass": true,
+      "value": 0.007265457907736167,
+      "limit": "0.004m < max R68-R66 delta <=0.045m"
+    },
+    {
+      "name": "three_meter_cliff_gate",
+      "pass": true,
+      "value": {
+        "maxInc": 0.7373459917717708,
+        "maxIncAt": {
+          "x": 78,
+          "z": -90,
+          "xx": 75,
+          "zz": -90,
+          "inc": 0.7373459917717708
+        }
+      },
+      "limit": "<1.05m terrace increment / 3m at every changed 6m cell"
+    },
+    {
+      "name": "three_groups_retained",
+      "pass": true,
+      "value": [
+        95,
+        229,
+        224
+      ],
+      "limit": "three terrace families retained"
+    },
+    {
+      "name": "locks_retained",
+      "pass": true,
+      "value": {
+        "visual": false,
+        "parcel": false,
+        "water": false,
+        "production": false
+      },
+      "limit": "all false pending fixed-view review"
+    },
+    {
+      "name": "logic_fallacy_explicit",
+      "pass": true,
+      "value": "R67 exposed two distinct reasoning errors. First, a large count of physically changed cells does not prove macro terrace organization; 72 changed cells still had only 23.6% participation in four-cell-or-longer compatible runs. Second, the persisted R67 result at branch head was generated against a different QA contract than the head QA source after a later edit, so evidence persistence without source provenance can certify the wrong contract. R68 changes the geometry by rejecting isolated proposal edits rather than relaxing the connectivity gate, and its workflow binds every result to the exact source commit and refuses to persist stale evidence after the branch moves.",
+      "limit": "changed count != macro organization; stale evidence != current contract"
+    },
+    {
+      "name": "connected_denominator_corrected",
+      "pass": true,
+      "value": {
+        "acceptedCandidate": 8,
+        "changed": 8,
+        "connectedShare": 1
+      },
+      "limit": "do not require unsupported edits merely to hit an arbitrary absolute cell count"
+    },
+    {
+      "name": "field_constraint_explicit",
+      "pass": true,
+      "value": "the authoritative 6 m compatibility graph, four-cell/18 m acceptance gate, 0.5 mm proposal deadband, between-node interpolation, inherited 12 m drainage core and all profile amplitudes are synthetic morphology/QA controls, not surveyed Yunnan terrace dimensions. A 12.5 m macro DEM plus photographs cannot recover metre/sub-metre field microtopography, real parcel/management boundaries, measured bund/riser/channel sections, inlet/outlet invert elevations, observed hydraulic connectivity, head/depth/discharge/gate states or event-level water management.",
+      "limit": "field truth missing"
+    },
+    {
+      "name": "xiaoma_boundary_retained",
+      "pass": true,
+      "value": "Xiaoma/TLO remains binding: longer connected contour-run geometry, adjacency and conservation are not evidence of parcel ownership, surveyed riser section, hydraulic exchange, head, water depth, discharge, gate state, soil-water state or sediment state.",
+      "limit": "geometry != hydraulic truth"
+    },
+    {
+      "name": "mrrolord_ordering_only",
+      "pass": true,
+      "value": "saved MrRolord research is used only as ordering discipline: drainage hierarchy -> accumulated terrain influence -> terrain-conforming contour land use -> paths/vegetation/materials. The original named video is not available in this run to replay, and Blender/Voronoi/shader dimensions are not agricultural truth.",
+      "limit": "ordering only"
+    },
+    {
+      "name": "reference_reread_honest",
+      "pass": true,
+      "value": "image(173).png was re-resolved and reread in this run as non-metric morphology evidence only: broad portions of one agricultural slope read as long curved contour-following benches with unequal widths, nested bends, concentrated darker riser edges and drainage interruptions. No width, riser height, channel size or hydraulic parameter is inferred from the photograph.",
+      "limit": "exact image reread; non-metric use only"
+    }
+  ],
+  "metrics": {
+    "activeN": 548,
+    "activeP": 548,
+    "groups": [
+      95,
+      229,
+      224
+    ],
+    "candidateTotal": 43,
+    "acceptedCandidate": 8,
+    "rejectedCandidate": 35,
+    "changed": 8,
+    "changedGroups": [
+      0,
+      2
+    ],
+    "largestComponent": 4,
+    "largestPhysicalSpan": 18,
+    "cellsInComponents4": 8,
+    "connectedShare": 1,
+    "componentCount": 2,
+    "minAcceptedComponent": 4,
+    "minAcceptedSpan": 18,
+    "maxChange": 0.007265457907736167,
+    "maxProposalMismatch": 0,
+    "maxInc": 0.7373459917717708,
+    "maxIncAt": {
+      "x": 78,
+      "z": -90,
+      "xx": 75,
+      "zz": -90,
+      "inc": 0.7373459917717708
+    },
+    "inactiveChanged": 0,
+    "unsupportedChanged": 0,
+    "hardChanged": 0,
+    "receiverChanged": 0,
+    "strongChanged": 0,
+    "outside": 0,
+    "hard": 0,
+    "receiver": 0,
+    "changedPoints": [
+      {
+        "x": 78,
+        "z": -90,
+        "change": 0.00245995718517128,
+        "mask": 0.750933270577567,
+        "groupIndex": 0,
+        "index": 19,
+        "candidatePredictedDelta": 0.0024599571851712998,
+        "proposalPhysicalDelta": 0.00245995718517128,
+        "componentSize": 4,
+        "componentSpan": 18,
+        "dd": 44.78211401719504
+      },
+      {
+        "x": 78,
+        "z": -60,
+        "change": -0.0006265527382801062,
+        "mask": 0.8018020185959077,
+        "groupIndex": 2,
+        "index": 12,
+        "candidatePredictedDelta": 0.0006265527382801528,
+        "proposalPhysicalDelta": 0.0006265527382801062,
+        "componentSize": 4,
+        "componentSpan": 25.455844122715714,
+        "dd": 38.69303838563463
+      },
+      {
+        "x": 84,
+        "z": -90,
+        "change": 0.003402416743074954,
+        "mask": 0.5627084628887788,
+        "groupIndex": 0,
+        "index": 19,
+        "candidatePredictedDelta": 0.003402416743074948,
+        "proposalPhysicalDelta": 0.003402416743074954,
+        "componentSize": 4,
+        "componentSpan": 18,
+        "dd": 40.72776624609097
+      },
+      {
+        "x": 84,
+        "z": -66,
+        "change": 0.0014745266920841438,
+        "mask": 0.762141618019709,
+        "groupIndex": 2,
+        "index": 13,
+        "candidatePredictedDelta": 0.001474526692084156,
+        "proposalPhysicalDelta": 0.0014745266920841438,
+        "componentSize": 4,
+        "componentSpan": 25.455844122715714,
+        "dd": 38.39695043380311
+      },
+      {
+        "x": 90,
+        "z": -90,
+        "change": 0.003211011794471433,
+        "mask": 0.4643644162328815,
+        "groupIndex": 0,
+        "index": 19,
+        "candidatePredictedDelta": 0.0032110117944714345,
+        "proposalPhysicalDelta": 0.003211011794471433,
+        "componentSize": 4,
+        "componentSpan": 18,
+        "dd": 34.7685603940999
+      },
+      {
+        "x": 90,
+        "z": -72,
+        "change": -0.0021779179347943822,
+        "mask": 0.667801886264394,
+        "groupIndex": 2,
+        "index": 14,
+        "candidatePredictedDelta": 0.002177917934794376,
+        "proposalPhysicalDelta": 0.0021779179347943822,
+        "componentSize": 4,
+        "componentSpan": 25.455844122715714,
+        "dd": 33.20212608358971
+      },
+      {
+        "x": 96,
+        "z": -90,
+        "change": -0.0018347952400185608,
+        "mask": 0.2394552242056759,
+        "groupIndex": 0,
+        "index": 19,
+        "candidatePredictedDelta": 0.0018347952400185705,
+        "proposalPhysicalDelta": 0.0018347952400185608,
+        "componentSize": 4,
+        "componentSpan": 18,
+        "dd": 28.7838081951155
+      },
+      {
+        "x": 96,
+        "z": -78,
+        "change": 0.007265457907736167,
+        "mask": 0.4651587578500037,
+        "groupIndex": 2,
+        "index": 15,
+        "candidatePredictedDelta": 0.007265457907736132,
+        "proposalPhysicalDelta": 0.007265457907736167,
+        "componentSize": 4,
+        "componentSpan": 25.455844122715714,
+        "dd": 27.85137022714343
+      }
+    ],
+    "components": [
+      {
+        "size": 4,
+        "physicalSpan": 18
+      },
+      {
+        "size": 4,
+        "physicalSpan": 25.455844122715714
+      }
+    ],
+    "qaScope": "authoritative 6m whole-slope connected frozen-R67-proposal filter over accepted R66 geometry; materiality denominator is the accepted connected residual-opportunity set, not an arbitrary larger change count; exact inherited footprint/levels/drainage locks + 3m local cliff checks + source-provenance contract"
+  }
+}

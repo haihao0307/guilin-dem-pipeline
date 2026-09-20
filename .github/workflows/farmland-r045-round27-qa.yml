@@ -1,0 +1,135 @@
+name: farmland-r045-round27-qa
+on:
+  push:
+    branches:
+      - restart/farmland-object-dna-v020-20260907
+    paths:
+      - 'farmland-object-dna/research/r045-autonomous-rebuild/round-27/r045_round27_kernel.mjs'
+      - 'farmland-object-dna/research/r045-autonomous-rebuild/round-27/r045_round27_qa.mjs'
+      - 'farmland-object-dna/research/r045-autonomous-rebuild/round-27/r045_round27_audit.html'
+      - '.github/workflows/farmland-r045-round27-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate numeric result
+        shell: bash
+        run: node farmland-object-dna/research/r045-autonomous-rebuild/round-27/r045_round27_qa.mjs
+      - name: Gate numeric QA
+        if: always()
+        run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-27/r045_round27_qa_result.json');console.log(r.passedCount+'/'+r.gateCount);if(!r.passed){for(const c of r.checks.filter(x=>!x.pass))console.error('FAIL',c.name,JSON.stringify(c.value),'limit',c.limit);process.exit(2)}"
+      - name: Browser fixed-view A-B gate
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          ROOT="$PWD"
+          PAGE='http://127.0.0.1:8127/farmland-object-dna/research/r045-autonomous-rebuild/round-27/r045_round27_audit.html'
+          OUT="$ROOT/farmland-object-dna/research/r045-autonomous-rebuild/round-27"
+          CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          rm -f "$OUT/r045_round27_fixed_view.png"
+          python3 -m http.server 8127 --bind 127.0.0.1 > /tmp/r045-r27-http.log 2>&1 & SERVER_PID=$!; sleep 2
+          if [ -z "$CHROME_BIN" ]; then SHOT_STATUS=127; DOM_STATUS=127; : > /tmp/r045-round27-dom.html; else
+            unset DBUS_SESSION_BUS_ADDRESS
+            FLAGS=(--headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --disable-background-networking --disable-component-update --disable-sync --disable-extensions --disable-default-apps --disable-domain-reliability --no-first-run --no-default-browser-check --metrics-recording-only --hide-scrollbars --window-size=1400,900 --force-device-scale-factor=1 --virtual-time-budget=3500)
+            timeout 30s "$CHROME_BIN" "${FLAGS[@]}" --screenshot="$OUT/r045_round27_fixed_view.png" "$PAGE"; SHOT_STATUS=$?
+            timeout 30s "$CHROME_BIN" "${FLAGS[@]}" --dump-dom "$PAGE" > /tmp/r045-round27-dom.html; DOM_STATUS=$?
+          fi
+          kill "$SERVER_PID" 2>/dev/null || true; grep -q 'data-ready="true"' /tmp/r045-round27-dom.html; READY_STATUS=$?
+          export SHOT_STATUS DOM_STATUS READY_STATUS CHROME_BIN OUT
+          python3 - <<'PY'
+          import json, os
+          out=os.environ['OUT']; shot=os.path.join(out,'r045_round27_fixed_view.png')
+          r={'chrome_bin':os.environ.get('CHROME_BIN',''),'screenshot_status':int(os.environ.get('SHOT_STATUS','999')),'dom_status':int(os.environ.get('DOM_STATUS','999')),'ready_marker_status':int(os.environ.get('READY_STATUS','999')),'screenshot_exists':os.path.exists(shot),'screenshot_bytes':os.path.getsize(shot) if os.path.exists(shot) else 0}
+          r['screenshot_process_clean_exit']=r['screenshot_status']==0
+          r['render_evidence_present']=r['screenshot_exists'] and r['screenshot_bytes']>20000
+          r['page_startup_passed']=r['dom_status']==0 and r['ready_marker_status']==0
+          r['warning']='' if r['screenshot_process_clean_exit'] else f"screenshot subprocess exit {r['screenshot_status']} after render attempt"
+          r['passed']=r['page_startup_passed'] and r['render_evidence_present']
+          with open(os.path.join(out,'r045_round27_browser_result.json'),'w') as f: json.dump(r,f,indent=2)
+          print(json.dumps(r,indent=2)); raise SystemExit(0 if r['passed'] else 3)
+          PY
+      - name: Build portable visual-review preview
+        if: always()
+        shell: bash
+        run: |
+          set -e
+          OUT="$PWD/farmland-object-dna/research/r045-autonomous-rebuild/round-27"
+          export OUT
+          python3 - <<'PY'
+          import os,struct,zlib,binascii,base64
+          src=os.path.join(os.environ['OUT'],'r045_round27_fixed_view.png')
+          data=open(src,'rb').read(); assert data[:8]==b'\x89PNG\r\n\x1a\n'
+          p=8; ids=[]; w=h=ctype=depth=interlace=None
+          while p<len(data):
+              n=struct.unpack('>I',data[p:p+4])[0]; typ=data[p+4:p+8]; payload=data[p+8:p+8+n]; p+=12+n
+              if typ==b'IHDR': w,h,depth,ctype,comp,filt,interlace=struct.unpack('>IIBBBBB',payload)
+              elif typ==b'IDAT': ids.append(payload)
+              elif typ==b'IEND': break
+          assert depth==8 and ctype in (2,6) and interlace==0,(w,h,depth,ctype,interlace)
+          bpp=3 if ctype==2 else 4; raw=zlib.decompress(b''.join(ids)); stride=w*bpp
+          rows=[]; pos=0; prev=bytearray(stride)
+          def paeth(a,b,c):
+              q=a+b-c; pa=abs(q-a); pb=abs(q-b); pc=abs(q-c); return a if pa<=pb and pa<=pc else (b if pb<=pc else c)
+          for y in range(h):
+              ft=raw[pos]; pos+=1; scan=bytearray(raw[pos:pos+stride]); pos+=stride
+              for i in range(stride):
+                  a=scan[i-bpp] if i>=bpp else 0; b=prev[i]; c=prev[i-bpp] if i>=bpp else 0
+                  if ft==1: scan[i]=(scan[i]+a)&255
+                  elif ft==2: scan[i]=(scan[i]+b)&255
+                  elif ft==3: scan[i]=(scan[i]+((a+b)//2))&255
+                  elif ft==4: scan[i]=(scan[i]+paeth(a,b,c))&255
+                  elif ft!=0: raise ValueError(ft)
+              rows.append(scan); prev=scan
+          tw=280; th=max(1,round(h*tw/w)); outrows=[]
+          for yy in range(th):
+              sy=min(h-1,round((yy+.5)*h/th-.5)); s=rows[sy]; r=bytearray(tw*3)
+              for xx in range(tw):
+                  sx=min(w-1,round((xx+.5)*w/tw-.5)); si=sx*bpp; di=xx*3; r[di:di+3]=s[si:si+3]
+              outrows.append(b'\x00'+bytes(r))
+          def chunk(t,payload): return struct.pack('>I',len(payload))+t+payload+struct.pack('>I',binascii.crc32(t+payload)&0xffffffff)
+          png=b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>IIBBBBB',tw,th,8,2,0,0,0))+chunk(b'IDAT',zlib.compress(b''.join(outrows),9))+chunk(b'IEND',b'')
+          open(os.path.join(os.environ['OUT'],'r045_round27_fixed_view_preview.png'),'wb').write(png)
+          b64=base64.b64encode(png).decode('ascii'); open(os.path.join(os.environ['OUT'],'r045_round27_fixed_view_preview.b64.txt'),'w').write(b64+'\n')
+          print({'source':[w,h],'preview':[tw,th],'preview_bytes':len(png),'b64_bytes':len(b64)})
+          PY
+      - name: Build concise QA summary
+        if: always()
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs=require('fs'); const p='farmland-object-dna/research/r045-autonomous-rebuild/round-27/';
+          const q=JSON.parse(fs.readFileSync(p+'r045_round27_qa_result.json','utf8'));let b=null;try{b=JSON.parse(fs.readFileSync(p+'r045_round27_browser_result.json','utf8'))}catch(e){}
+          fs.writeFileSync(p+'r045_round27_summary.json',JSON.stringify({version:q.version,passed:q.passed,passedCount:q.passedCount,gateCount:q.gateCount,failed:q.checks.filter(c=>!c.pass),browser:b,metrics:q.metrics},null,2));
+          NODE
+      - name: Upload R045.27 audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: farmland-r045-round27-audit
+          if-no-files-found: warn
+          path: |
+            farmland-object-dna/research/r045-autonomous-rebuild/round-27/r045_round27_qa_result.json
+            farmland-object-dna/research/r045-autonomous-rebuild/round-27/r045_round27_browser_result.json
+            farmland-object-dna/research/r045-autonomous-rebuild/round-27/r045_round27_summary.json
+            farmland-object-dna/research/r045-autonomous-rebuild/round-27/r045_round27_fixed_view.png
+            farmland-object-dna/research/r045-autonomous-rebuild/round-27/r045_round27_fixed_view_preview.png
+            farmland-object-dna/research/r045-autonomous-rebuild/round-27/r045_round27_fixed_view_preview.b64.txt
+      - name: Persist machine-readable and visual QA evidence
+        if: always()
+        shell: bash
+        run: |
+          set -e
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add farmland-object-dna/research/r045-autonomous-rebuild/round-27/r045_round27_qa_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-27/r045_round27_browser_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-27/r045_round27_summary.json farmland-object-dna/research/r045-autonomous-rebuild/round-27/r045_round27_fixed_view.png farmland-object-dna/research/r045-autonomous-rebuild/round-27/r045_round27_fixed_view_preview.png farmland-object-dna/research/r045-autonomous-rebuild/round-27/r045_round27_fixed_view_preview.b64.txt
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'farmland R045.27 persist QA evidence [skip ci]'
+          git push origin HEAD:${GITHUB_REF_NAME}

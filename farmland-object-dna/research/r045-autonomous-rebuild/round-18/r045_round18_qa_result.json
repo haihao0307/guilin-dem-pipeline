@@ -1,0 +1,575 @@
+{
+  "version": "R045.18",
+  "passed": true,
+  "gateCount": 29,
+  "passedCount": 29,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.18",
+      "limit": "R045.18"
+    },
+    {
+      "name": "water_graph_identity_preserved",
+      "pass": true,
+      "value": {
+        "nodes": [
+          22,
+          22
+        ],
+        "edges": [
+          55,
+          55
+        ]
+      },
+      "limit": "unchanged"
+    },
+    {
+      "name": "terrain_carrier_inventory_preserved",
+      "pass": true,
+      "value": {
+        "terrainChannels": [
+          12,
+          12
+        ],
+        "outlets": [
+          3,
+          3
+        ]
+      },
+      "limit": "unchanged"
+    },
+    {
+      "name": "three_headwater_footprints_present",
+      "pass": true,
+      "value": [
+        "A",
+        "B",
+        "C"
+      ],
+      "limit": "A/B/C"
+    },
+    {
+      "name": "headwater_profiles_are_not_parameter_clones",
+      "pass": true,
+      "value": [
+        {
+          "id": "A",
+          "anchorU": 0.135,
+          "angleDeg": -34,
+          "major": 70,
+          "minor": 34,
+          "rimOffset": 47,
+          "rearShift": -15,
+          "amplitude": 0.34,
+          "sideBias": -0.24,
+          "rearScale": 0.42,
+          "centerShift": -14,
+          "aspect": 2.0588235294117645
+        },
+        {
+          "id": "B",
+          "anchorU": 0.245,
+          "angleDeg": 27,
+          "major": 88,
+          "minor": 34,
+          "rimOffset": 61,
+          "rearShift": -24,
+          "amplitude": 0.39,
+          "sideBias": 0.22,
+          "rearScale": 0.32,
+          "centerShift": 24,
+          "aspect": 2.588235294117647
+        },
+        {
+          "id": "C",
+          "anchorU": 0.15,
+          "angleDeg": -52,
+          "major": 58,
+          "minor": 31,
+          "rimOffset": 43,
+          "rearShift": -10,
+          "amplitude": 0.31,
+          "sideBias": -0.32,
+          "rearScale": 0.5,
+          "centerShift": 8,
+          "aspect": 1.8709677419354838
+        }
+      ],
+      "limit": "3 distinct signatures"
+    },
+    {
+      "name": "orientation_span_is_substantive",
+      "pass": true,
+      "value": [
+        -34,
+        27,
+        -52
+      ],
+      "limit": ">55 degrees across A/B/C"
+    },
+    {
+      "name": "footprint_aspect_ratios_are_not_clones",
+      "pass": true,
+      "value": [
+        {
+          "id": "A",
+          "aspect": 2.0588235294117645
+        },
+        {
+          "id": "B",
+          "aspect": 2.588235294117647
+        },
+        {
+          "id": "C",
+          "aspect": 1.8709677419354838
+        }
+      ],
+      "limit": "aspect-ratio stdev >0.08"
+    },
+    {
+      "name": "headwater_footprint_change_is_substantive",
+      "pass": true,
+      "value": {
+        "max": 0.6521387034359619,
+        "mean": 0.07088033544366734,
+        "n": 1480,
+        "at": [
+          -112,
+          -194
+        ]
+      },
+      "limit": "0.10 < max <= 0.921 m"
+    },
+    {
+      "name": "headwater_footprint_change_is_bounded",
+      "pass": true,
+      "value": 0.07088033544366734,
+      "limit": "absolute mean <0.13 m"
+    },
+    {
+      "name": "complete_drainage_skeleton_is_protected",
+      "pass": true,
+      "value": {
+        "nearN": 132,
+        "nearDrain": 0
+      },
+      "limit": "sampled d<=11.5 m: zero R18 delta"
+    },
+    {
+      "name": "rear_ridge_controls_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "0 sampled change z<=-220"
+    },
+    {
+      "name": "terrace_candidate_and_lower_slope_geometry_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "0 sampled change at z>=-158"
+    },
+    {
+      "name": "terrace_permission_is_exactly_inherited",
+      "pass": true,
+      "value": 0,
+      "limit": "0 sampled permission difference"
+    },
+    {
+      "name": "front_receiver_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "0 sampled change around receiver"
+    },
+    {
+      "name": "all_three_headwaters_gain_oriented_relief",
+      "pass": true,
+      "value": [
+        {
+          "id": "A",
+          "max": 0.2921014990098049,
+          "mean": 0.021251454563647677,
+          "at": [
+            -106,
+            -196
+          ],
+          "angleDeg": -34,
+          "major": 70,
+          "minor": 34,
+          "centerShift": -14
+        },
+        {
+          "id": "B",
+          "max": 0.3054079671081466,
+          "mean": 0.025082547625239614,
+          "at": [
+            -114,
+            -192
+          ],
+          "angleDeg": 27,
+          "major": 88,
+          "minor": 34,
+          "centerShift": 24
+        },
+        {
+          "id": "C",
+          "max": 0.35811349352719996,
+          "mean": 0.02651439468653748,
+          "at": [
+            182,
+            -192
+          ],
+          "angleDeg": -52,
+          "major": 58,
+          "minor": 31,
+          "centerShift": 8
+        }
+      ],
+      "limit": "each component max >0.09 m"
+    },
+    {
+      "name": "component_peak_locations_are_not_clones",
+      "pass": true,
+      "value": [
+        {
+          "id": "A",
+          "at": [
+            -106,
+            -196
+          ]
+        },
+        {
+          "id": "B",
+          "at": [
+            -114,
+            -192
+          ]
+        },
+        {
+          "id": "C",
+          "at": [
+            182,
+            -192
+          ]
+        }
+      ],
+      "limit": "3 distinct peak grid cells"
+    },
+    {
+      "name": "headwater_field_has_no_new_longitudinal_step",
+      "pass": true,
+      "value": {
+        "maxStep": 0.14737765556456844,
+        "at": [
+          -105,
+          -208
+        ]
+      },
+      "limit": "<0.22 m delta change per 4 m"
+    },
+    {
+      "name": "headwater_relief_is_cross_slope_structured_not_uniform_lift",
+      "pass": true,
+      "value": [
+        {
+          "z": -212,
+          "mean": 0.03258916899373499,
+          "stdev": 0.034442832676252054,
+          "max": 0.14295928692802687
+        },
+        {
+          "z": -204,
+          "mean": 0.10505431360003789,
+          "stdev": 0.10152373705249065,
+          "max": 0.4374419257236444
+        },
+        {
+          "z": -196,
+          "mean": 0.15616256218404814,
+          "stdev": 0.146042051674058,
+          "max": 0.6591777459207896
+        },
+        {
+          "z": -188,
+          "mean": 0.13692802893851333,
+          "stdev": 0.13022901011755972,
+          "max": 0.5603336070672704
+        },
+        {
+          "z": -180,
+          "mean": 0.08270868903094053,
+          "stdev": 0.07975610575409182,
+          "max": 0.3066063776006486
+        },
+        {
+          "z": -172,
+          "mean": 0.026224447516625254,
+          "stdev": 0.030791630130925708,
+          "max": 0.11023907238809635
+        },
+        {
+          "z": -164,
+          "mean": 0.0018466382597483045,
+          "stdev": 0.002757600718710901,
+          "max": 0.009562585837700352
+        }
+      ],
+      "limit": "at least 3 rows delta stdev >0.025 m"
+    },
+    {
+      "name": "upper_wall_gate_has_real_sampling_coverage",
+      "pass": true,
+      "value": {
+        "r17": {
+          "totalEligible": 428,
+          "rows": 15
+        },
+        "r18": {
+          "totalEligible": 428,
+          "rows": 15
+        }
+      },
+      "limit": ">200 eligible samples each"
+    },
+    {
+      "name": "inherited_upper_wall_debt_is_explicit",
+      "pass": true,
+      "value": {
+        "oldWall": {
+          "fraction": 0.21212121212121213,
+          "z": -202,
+          "count": 7,
+          "eligible": 33,
+          "maxContiguousSpan": 10,
+          "clearance": 16,
+          "threshold": 0.55,
+          "totalEligible": 428,
+          "rowsWithEligible": 15
+        },
+        "knownDebt": "R17 already contains an upper-slope wall-persistence fraction near 0.212 around z=-202; R18 must not worsen it and does not claim to solve it in this single-scope round"
+      },
+      "limit": "baseline debt explicitly retained, not mislabeled solved"
+    },
+    {
+      "name": "persistent_upper_cross_slope_wall_not_worsened",
+      "pass": true,
+      "value": {
+        "r17": {
+          "fraction": 0.21212121212121213,
+          "z": -202,
+          "count": 7,
+          "eligible": 33,
+          "maxContiguousSpan": 10,
+          "clearance": 16,
+          "threshold": 0.55,
+          "totalEligible": 428,
+          "rowsWithEligible": 15
+        },
+        "r18": {
+          "fraction": 0.21212121212121213,
+          "z": -202,
+          "count": 7,
+          "eligible": 33,
+          "maxContiguousSpan": 10,
+          "clearance": 16,
+          "threshold": 0.55,
+          "totalEligible": 428,
+          "rowsWithEligible": 15
+        }
+      },
+      "limit": "R18 <= R17 baseline fraction/span; inherited debt remains for later round"
+    },
+    {
+      "name": "terrace_permission_excludes_drainage",
+      "pass": true,
+      "value": 0,
+      "limit": "<0.01"
+    },
+    {
+      "name": "future_terrace_candidates_remain",
+      "pass": true,
+      "value": 0.6837247695906252,
+      "limit": ">0.04; geometry still locked"
+    },
+    {
+      "name": "visual_acceptance_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "terrace_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "parcel_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "water_state_unknown",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "reference_is_visual_not_metric_truth",
+      "pass": true,
+      "value": "user reference images constrain source-to-slope hierarchy and non-clone contour turning only; no metric extraction",
+      "limit": "visual hierarchy only"
+    },
+    {
+      "name": "survey_claims_forbidden",
+      "pass": true,
+      "value": [
+        "surveyed headwater geometry",
+        "measured channel section",
+        "active flow",
+        "regional terrace dimensions",
+        "field microtopography truth",
+        "soil/sediment property",
+        "ownership"
+      ],
+      "limit": "explicit evidence boundary"
+    }
+  ],
+  "metrics": {
+    "delta": {
+      "max": 0.6521387034359619,
+      "mean": 0.07088033544366734,
+      "n": 1480,
+      "at": [
+        -112,
+        -194
+      ]
+    },
+    "components": [
+      {
+        "id": "A",
+        "max": 0.2921014990098049,
+        "mean": 0.021251454563647677,
+        "at": [
+          -106,
+          -196
+        ],
+        "angleDeg": -34,
+        "major": 70,
+        "minor": 34,
+        "centerShift": -14
+      },
+      {
+        "id": "B",
+        "max": 0.3054079671081466,
+        "mean": 0.025082547625239614,
+        "at": [
+          -114,
+          -192
+        ],
+        "angleDeg": 27,
+        "major": 88,
+        "minor": 34,
+        "centerShift": 24
+      },
+      {
+        "id": "C",
+        "max": 0.35811349352719996,
+        "mean": 0.02651439468653748,
+        "at": [
+          182,
+          -192
+        ],
+        "angleDeg": -52,
+        "major": 58,
+        "minor": 31,
+        "centerShift": 8
+      }
+    ],
+    "nearDrainProtection": {
+      "nearN": 132,
+      "nearDrain": 0
+    },
+    "rear": 0,
+    "lower": 0,
+    "receiver": 0,
+    "candidateDiff": 0,
+    "permissionDiff": 0,
+    "maxLongitudinalDeltaStep": {
+      "value": 0.14737765556456844,
+      "at": [
+        -105,
+        -208
+      ]
+    },
+    "rowStats": [
+      {
+        "z": -212,
+        "mean": 0.03258916899373499,
+        "stdev": 0.034442832676252054,
+        "max": 0.14295928692802687
+      },
+      {
+        "z": -204,
+        "mean": 0.10505431360003789,
+        "stdev": 0.10152373705249065,
+        "max": 0.4374419257236444
+      },
+      {
+        "z": -196,
+        "mean": 0.15616256218404814,
+        "stdev": 0.146042051674058,
+        "max": 0.6591777459207896
+      },
+      {
+        "z": -188,
+        "mean": 0.13692802893851333,
+        "stdev": 0.13022901011755972,
+        "max": 0.5603336070672704
+      },
+      {
+        "z": -180,
+        "mean": 0.08270868903094053,
+        "stdev": 0.07975610575409182,
+        "max": 0.3066063776006486
+      },
+      {
+        "z": -172,
+        "mean": 0.026224447516625254,
+        "stdev": 0.030791630130925708,
+        "max": 0.11023907238809635
+      },
+      {
+        "z": -164,
+        "mean": 0.0018466382597483045,
+        "stdev": 0.002757600718710901,
+        "max": 0.009562585837700352
+      }
+    ],
+    "oldWall": {
+      "fraction": 0.21212121212121213,
+      "z": -202,
+      "count": 7,
+      "eligible": 33,
+      "maxContiguousSpan": 10,
+      "clearance": 16,
+      "threshold": 0.55,
+      "totalEligible": 428,
+      "rowsWithEligible": 15
+    },
+    "newWall": {
+      "fraction": 0.21212121212121213,
+      "z": -202,
+      "count": 7,
+      "eligible": 33,
+      "maxContiguousSpan": 10,
+      "clearance": 16,
+      "threshold": 0.55,
+      "totalEligible": 428,
+      "rowsWithEligible": 15
+    },
+    "terraceNearDrainageMean": 0,
+    "terraceFarDrainageMean": 0.6837247695906252
+  }
+}

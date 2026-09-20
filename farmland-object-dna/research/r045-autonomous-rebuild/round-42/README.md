@@ -1,0 +1,11 @@
+# Farmland Mother R045.42 — short contour-gap fragmentation repair
+
+R045.41 repaired the impossible R040 materiality-gate/eligibility pairing and retained all inherited safety boundaries, but its final numeric result still failed the unchanged fragmentation gate: row-run burden rose above the allowed 101% of R040. R045.42 does not lower that gate, raise risers, alter stair phase, or touch any already-active R041 terrace sample.
+
+R045.42 closes only short same-contour-row gaps bounded on both sides by frozen R041 active ribbons. Both boundary ribbons and every weak interior sample must be same-family and stair-compatible; every interior sample must retain weak R039 provenance and pass agricultural-slope, family-envelope, drainage and foreground-receiver safety. The closure is non-recursive and limited to at most four 6 m weak cells. The <=12 m drainage core remains a hard zero zone.
+
+Logic correction: passing R041 materiality/topology gates does not make its higher fragmentation acceptable. Lowering the fragmentation gate would hide a measured regression, while increasing riser amplitude would affect visibility rather than terrace organization. This round therefore changes only short-gap continuity on already-supported contour rows and keeps the failed gate intact.
+
+Evidence boundary: the 6 m QA lattice, four-cell closure limit, 12 m drainage hard core and generated junction organization are synthetic morphology parameters, not surveyed Yunnan terrace dimensions or measured branch/merge locations. Current macro DEM and photographs cannot provide field microtopography, parcel/management boundaries, bund-riser-channel sections, inlet/outlet sill elevations, hydraulic connectivity or event-level water-management records.
+
+Reference discipline: `image(173).png` is used only for non-metric cues visible in the photograph—long curved contour-following ribbons, unequal widths, local branch/re-merge structure and drainage interruptions. Xiaoma/TLO water-state boundaries remain active: continuity or adjacency does not establish ownership, head, discharge, gate state or water depth. The saved MrRolord study is used only for ordering discipline: drainage hierarchy -> accumulated terrain influence -> terrain-conforming contour land use.
