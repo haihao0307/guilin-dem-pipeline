@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="fish-runtime" content="source-top-generated-middle-data-bottom">
+<title>Fish Mother｜Tuna Lab R0.01</title>
+<style>
+:root{color-scheme:dark;--bg:#071018;--panel:#0d1922;--line:#284554;--text:#eef6f8;--muted:#92a8b4;--good:#74d7ad;--warn:#e8c86e;--bad:#ef938d;--accent:#7acaf3}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"SF Pro Display","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}body{overflow:hidden}
+.app{height:100dvh;display:grid;grid-template-rows:50px minmax(0,1fr)}
+.top{display:flex;align-items:center;gap:10px;padding:0 12px;background:#0a1720;border-bottom:1px solid var(--line);min-width:0}.top b{font-size:14px;white-space:nowrap}.top small{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tag{margin-left:auto;border:1px solid #31596c;border-radius:999px;padding:4px 8px;font-size:9px;color:var(--good);white-space:nowrap}
+.stack{min-height:0;display:grid;grid-template-rows:minmax(220px,38%) minmax(220px,38%) minmax(150px,24%);gap:1px;background:var(--line)}
+.layer{position:relative;min-width:0;min-height:0;background:#03080b;overflow:hidden}.layer-head{position:absolute;left:9px;top:9px;z-index:8;padding:7px 9px;border:1px solid #426577;border-radius:8px;background:#07131bd9;backdrop-filter:blur(7px);font-size:10px;line-height:1.45;max-width:calc(100% - 18px)}.layer-head b{display:block;color:#fff}.layer-head span{color:var(--muted)}
+.source iframe{width:100%;height:100%;border:0;display:block;background:#03080b}.source-note{position:absolute;right:9px;top:9px;z-index:8;padding:6px 8px;border:1px solid #5b5031;border-radius:8px;background:#171407dd;color:var(--warn);font-size:9px;max-width:44%;line-height:1.35}
+.generated canvas{display:block;width:100%;height:100%}.toolbar{position:absolute;right:9px;top:9px;z-index:9;display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;max-width:55%}.toolbar button{border:1px solid #315160;background:#102631;color:var(--text);border-radius:7px;padding:6px 8px;font-size:9px}.toolbar button.active{border-color:var(--good);color:var(--good)}
+.legend{position:absolute;left:9px;bottom:9px;z-index:8;padding:7px 9px;border:1px solid #315160;border-radius:8px;background:#07131bd9;font-size:9px;color:var(--muted);line-height:1.45}.legend b{color:#fff}
+.data{background:var(--panel);overflow:auto;padding:10px 12px}.data-grid{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:12px}.card{border:1px solid #274552;border-radius:9px;background:#09151c;padding:9px}.card h3{margin:0 0 7px;font-size:10px;letter-spacing:.08em;color:#d9e9ef}.metric{display:flex;justify-content:space-between;gap:12px;border-bottom:1px dashed #203946;padding:5px 0;font-size:9px;color:var(--muted)}.metric:last-child{border-bottom:0}.metric strong{color:#fff;text-align:right;font-weight:600}.gate{font-size:9px;color:var(--muted);line-height:1.45;margin:4px 0}.gate:before{content:"●";color:var(--bad);margin-right:6px}.gate.ok:before{color:var(--good)}.gate.warn:before{color:var(--warn)}
+.slider{display:grid;grid-template-columns:92px minmax(90px,1fr) 52px;gap:8px;align-items:center;font-size:9px;color:var(--muted);margin:5px 0}.slider input{width:100%;accent-color:var(--accent)}.slider output{text-align:right;color:#fff}
+@media(max-width:760px){.top small{display:none}.tag{font-size:8px}.stack{grid-template-rows:32% 38% 30%}.data-grid{grid-template-columns:1fr}.source-note{top:auto;bottom:8px;right:8px;max-width:58%}.toolbar{max-width:62%}.layer-head{max-width:68%}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top"><b>Fish Mother · Tuna Lab R0.01</b><small>Bird-style source lock → independent continuous reconstruction → reverse comparison</small><span class="tag">REF TOP · OURS MIDDLE · DATA BOTTOM</span></header>
+<main class="stack">
+<section class="layer source">
+  <div class="layer-head"><b>① 高精度 Tuna 原始参考｜FISH-REF-002</b><span>原件只读 · Sketchfab CC-BY-4.0 · 几何/骨骼/动作与高分辨率外观参考</span></div>
+  <div class="source-note">参考模型只用于学习、测量和反向比较；不会成为我们最终运行时的外部网格依赖。</div>
+  <iframe title="FISH-REF-002 high fidelity tuna source" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen src="https://sketchfab.com/models/642c6515d893474a8fc8f129491efcac/embed?autostart=1&ui_theme=dark&dnt=1&camera=0&preload=0"></iframe>
+</section>
+<section class="layer generated" id="generated">
+  <div class="layer-head"><b>② 我们自己的 Tuna｜TUNA-NATIVE-R001</b><span>连续参数曲面 · 独立鳍膜 · 尾柄/尾鳍/胸鳍分离 · 不读取源 GLB</span></div>
+  <div class="toolbar"><button data-view="side" class="active">侧面</button><button data-view="three">3/4</button><button data-view="front">正面</button><button data-view="top">顶部</button><button id="wireBtn">线框</button><button id="spinBtn">旋转</button></div>
+  <div class="legend"><b>当前目标：</b>先把金枪鱼的主形、头部、尾柄和鳍根比例做准；材质与动作暂不开门。</div>
+</section>
+<section class="data">
+  <div class="data-grid">
+    <div class="card"><h3>实时形体参数</h3>
+      <div class="slider"><label>体长</label><input id="length" type="range" min="2.6" max="3.8" step="0.02" value="3.20"><output id="lengthO">3.20</output></div>
+      <div class="slider"><label>最大体深</label><input id="depth" type="range" min="0.46" max="0.76" step="0.01" value="0.62"><output id="depthO">0.62</output></div>
+      <div class="slider"><label>体宽系数</label><input id="width" type="range" min="0.38" max="0.62" step="0.01" value="0.49"><output id="widthO">0.49</output></div>
+      <div class="slider"><label>头部体积</label><input id="head" type="range" min="0.75" max="1.24" step="0.01" value="1.02"><output id="headO">1.02</output></div>
+      <div class="slider"><label>尾柄收束</label><input id="peduncle" type="range" min="0.42" max="0.76" step="0.01" value="0.56"><output id="peduncleO">0.56</output></div>
+      <div class="slider"><label>尾鳍展幅</label><input id="tail" type="range" min="0.72" max="1.28" step="0.01" value="1.00"><output id="tailO">1.00</output></div>
+    </div>
+    <div class="card"><h3>源参考 / R09R4 历史基线</h3>
+      <div class="metric"><span>FISH-REF-002 几何/骨骼/动作</span><strong>6,137,560 B</strong></div>
+      <div class="metric"><span>高分辨率外观参考</span><strong>58,908,280 B</strong></div>
+      <div class="metric"><span>源关节</span><strong>98</strong></div>
+      <div class="metric"><span>源动作周期</span><strong>2.1667 s</strong></div>
+      <div class="metric"><span>R09R4 native vertices</span><strong>48,672</strong></div>
+      <div class="metric"><span>R09R4 triangles</span><strong>93,619</strong></div>
+      <div class="metric"><span>R09R4 side IoU</span><strong>0.97943</strong></div>
+      <div class="metric"><span>R09R4 front IoU</span><strong>0.97500</strong></div>
+    </div>
+    <div class="card"><h3>本轮门禁 / 快速迭代</h3>
+      <div class="metric"><span>R001 body vertices</span><strong id="vCount">—</strong></div>
+      <div class="metric"><span>R001 triangles</span><strong id="fCount">—</strong></div>
+      <div class="metric"><span>运行时源 GLB 依赖</span><strong>FALSE</strong></div>
+      <div class="gate ok">高精度源参考与自研模型严格分层显示</div>
+      <div class="gate ok">自研模型由连续函数现场生成</div>
+      <div class="gate ok">固定视角可快速来回核对</div>
+      <div class="gate warn">R001 尚未做源—候选逐点距离 QA</div>
+      <div class="gate">头/嘴/鳃盖仍未过形体门</div>
+      <div class="gate">鳍根、鳍条、皮肤、动作仍未开放</div>
+    </div>
+  </div>
+</section>
+</main>
+</div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js';
+const host=document.getElementById('generated');
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.setClearColor(0x050b10,1);renderer.outputColorSpace=THREE.SRGBColorSpace;host.appendChild(renderer.domElement);
+const scene=new THREE.Scene();scene.fog=new THREE.FogExp2(0x050b10,0.07);
+const camera=new THREE.PerspectiveCamera(28,1,0.01,50);camera.position.set(0,0.25,6.3);
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.target.set(0,0,0);controls.minDistance=2.6;controls.maxDistance=10;
+scene.add(new THREE.HemisphereLight(0xbfe7ff,0x23303a,1.8));const key=new THREE.DirectionalLight(0xffffff,3.0);key.position.set(3,4,5);scene.add(key);const rim=new THREE.DirectionalLight(0x8fc8ff,1.4);rim.position.set(-4,1,-5);scene.add(rim);
+const grid=new THREE.GridHelper(8,16,0x1c3845,0x10252f);grid.rotation.x=Math.PI/2;grid.position.z=-0.85;scene.add(grid);
+const root=new THREE.Group();scene.add(root);
+let spin=false,wire=false;
+const P={length:3.20,depth:.62,width:.49,head:1.02,peduncle:.56,tail:1.00};
+const matBody=new THREE.MeshStandardMaterial({color:0x8fa8b6,roughness:.38,metalness:.06,vertexColors:true,side:THREE.DoubleSide});
+const matFin=new THREE.MeshStandardMaterial({color:0x9ba98c,roughness:.5,metalness:.02,side:THREE.DoubleSide,transparent:true,opacity:.96});
+const matDark=new THREE.MeshStandardMaterial({color:0x24333b,roughness:.5,metalness:.0});
+const matEye=new THREE.MeshStandardMaterial({color:0x071014,roughness:.12,metalness:.25});
+function smoothstep(a,b,x){const t=THREE.MathUtils.clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)}
+function gauss(x,c,w){const q=(x-c)/w;return Math.exp(-q*q)}
+function bodyProfile(u){
+  const nose=smoothstep(0,.085,u), tail=smoothstep(1,.78,u);
+  const bulk=gauss(u,.43,.36);
+  const headBoost=1+(P.head-1)*gauss(u,.16,.12);
+  const ped=1-(1-P.peduncle)*smoothstep(.73,.92,u);
+  let d=(.095+.92*bulk)*P.depth*headBoost*ped;
+  d*= (.34+.66*nose) * (1-.73*tail);
+  const w=d*P.width*(.96+.06*gauss(u,.25,.18));
+  const zc=.045*P.depth*Math.sin((u-.12)*Math.PI)*gauss(u,.3,.55)-.025*gauss(u,.82,.14);
+  return {d,w,zc};
+}
+function buildBody(){const NU=180,NT=64;const pos=[],idx=[],cols=[];for(let i=0;i<NU;i++){const u=i/(NU-1),x=P.length*(.5-u),b=bodyProfile(u);for(let k=0;k<NT;k++){const a=2*Math.PI*k/NT;const cs=Math.cos(a),sn=Math.sin(a);const sideFlatten=.92+.08*Math.cos(2*a);let y=b.w*cs*sideFlatten;let z=b.zc+b.d*sn*(.96+.04*Math.cos(a));if(u<.13){const forehead=gauss(u,.08,.06)*Math.max(0,sn)*.05*P.depth;z+=forehead}pos.push(x,y,z);const dorsal=Math.max(0,sn),ventral=Math.max(0,-sn);const side=Math.abs(cs);const c=new THREE.Color();c.setRGB(.40+.18*side+.05*ventral,.55+.19*side+.05*ventral,.63+.20*side-.09*dorsal);cols.push(c.r,c.g,c.b)}}for(let i=0;i<NU-1;i++)for(let k=0;k<NT;k++){const a=i*NT+k,b=i*NT+(k+1)%NT,c=(i+1)*NT+(k+1)%NT,d=(i+1)*NT+k;idx.push(a,b,c,a,c,d)}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));g.setIndex(idx);g.computeVertexNormals();return new THREE.Mesh(g,matBody)}
+function finMesh(points,mirror=false,material=matFin){const verts=[],faces=[];const pp=points.map(p=>new THREE.Vector3(...p));const steps=10;for(let r=0;r<steps;r++){const t=r/(steps-1);for(let i=0;i<pp.length;i++){const base=pp[0].clone().lerp(pp[i],t);const bow=Math.sin(Math.PI*t)*.012*(i/(pp.length-1));base.y+=mirror?-bow:bow;verts.push(base.x,mirror?-base.y:base.y,base.z)}}for(let r=0;r<steps-1;r++)for(let i=0;i<pp.length-1;i++){const a=r*pp.length+i,b=a+1,c=(r+1)*pp.length+i+1,d=c-1;faces.push(a,b,c,a,c,d)}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));g.setIndex(faces);g.computeVertexNormals();return new THREE.Mesh(g,material)}
+function tailMesh(sign=1){const x=-P.length*.48,amp=P.tail;const p=[[x,0,.00],[x-.02,0,.10*sign],[x-.13,0,.48*sign*amp],[x-.33,0,.72*sign*amp],[x-.24,0,.24*sign*amp],[x-.08,0,.04*sign]];const sh=new THREE.Shape();sh.moveTo(p[0][0],p[0][2]);for(let i=1;i<p.length;i++)sh.lineTo(p[i][0],p[i][2]);sh.closePath();const g=new THREE.ShapeGeometry(sh,12);const m=new THREE.Mesh(g,matFin);m.rotation.x=Math.PI/2;return m}
+function buildTuna(){while(root.children.length){const o=root.children.pop();o.geometry?.dispose()}
+  const body=buildBody();root.add(body);
+  const L=P.length;root.add(finMesh([[.18*L,0,.23],[.04*L,0,.55],[-.16*L,0,.48],[-.23*L,0,.22],[-.04*L,0,.19]]));
+  root.add(finMesh([[-.22*L,0,.14],[-.30*L,0,.32],[-.39*L,0,.23],[-.43*L,0,.10]]));
+  root.add(finMesh([[-.20*L,0,-.17],[-.30*L,0,-.35],[-.39*L,0,-.25],[-.43*L,0,-.10]]));
+  const pec=[[.26*L,.15,.03],[.15*L,.36,-.03],[-.02*L,.50,-.08],[-.12*L,.35,-.06],[.12*L,.16,-.01]];root.add(finMesh(pec,false));root.add(finMesh(pec,true));
+  root.add(tailMesh(1),tailMesh(-1));
+  for(let s of [-1,1]){const eye=new THREE.Mesh(new THREE.SphereGeometry(.045*P.length/3.2,24,16),matEye);eye.position.set(.39*L,s*.15*P.width,.10*P.depth);root.add(eye)}
+  const op=new THREE.TorusGeometry(.15*P.depth,.008,7,42,Math.PI*.92);for(let s of [-1,1]){const e=new THREE.Mesh(op,matDark);e.position.set(.30*L,s*.205*P.width,.02);e.rotation.set(Math.PI/2,0,s>0?-.2:.2);root.add(e)}
+  for(let j=0;j<6;j++){const x=-.26*L-j*.032*L;const h=.055*(1-j/9);const g=new THREE.ConeGeometry(.018,h,8);const f=new THREE.Mesh(g,matFin);f.position.set(x,0,.20+(.015*j));f.rotation.z=-.18;root.add(f);const f2=f.clone();f2.position.z=-.17-(.012*j);f2.rotation.z=Math.PI+.18;root.add(f2)}
+  const tri=body.geometry.index.count/3;let extra=0;root.children.forEach(o=>{if(o!==body&&o.geometry?.index)extra+=o.geometry.index.count/3;else if(o!==body&&o.geometry?.attributes?.position)extra+=o.geometry.attributes.position.count/3});document.getElementById('vCount').textContent=body.geometry.attributes.position.count.toLocaleString();document.getElementById('fCount').textContent=Math.round(tri+extra).toLocaleString();setWire(wire)
+}
+function setWire(v){wire=v;matBody.wireframe=v;matFin.wireframe=v;document.getElementById('wireBtn').classList.toggle('active',v)}
+function setView(v){document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===v));const d=6.2;if(v==='side')camera.position.set(0,.10,d);if(v==='three')camera.position.set(3.8,2.1,4.7);if(v==='front')camera.position.set(6.0,.25,0);if(v==='top')camera.position.set(0,6.2,.15);camera.up.set(0,1,0);controls.target.set(0,0,0);controls.update()}
+for(const id of ['length','depth','width','head','peduncle','tail']){const el=document.getElementById(id),out=document.getElementById(id+'O');el.oninput=()=>{P[id]=Number(el.value);out.textContent=Number(el.value).toFixed(2);buildTuna()}}
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));document.getElementById('wireBtn').onclick=()=>setWire(!wire);document.getElementById('spinBtn').onclick=()=>{spin=!spin;document.getElementById('spinBtn').classList.toggle('active',spin)};
+function resize(){const w=host.clientWidth,h=host.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}new ResizeObserver(resize).observe(host);resize();buildTuna();setView('side');
+function loop(){requestAnimationFrame(loop);if(spin)root.rotation.y+=.004;controls.update();renderer.render(scene,camera)}loop();
+</script>
+</body>
+</html>
