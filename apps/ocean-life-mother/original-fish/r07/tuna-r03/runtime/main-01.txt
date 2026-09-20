@@ -55,6 +55,6 @@ const start=performance.now();
 
 function buildScene(){
   disposeScene();
-  const built=buildTunaR03();
+  const built=enhanceTuna(buildTunaR03());
   sceneMeshes=built.parts.map((part,index)=>createMesh(part,index));
   skeletonMesh=crea
