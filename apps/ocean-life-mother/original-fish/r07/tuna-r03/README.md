@@ -1,4 +1,4 @@
-# Original Fish / Tuna branch R03.2
+# Original Fish / Tuna branch R03.3
 
 Date: 2026-09-20  
 Branch: `work/original-fish-r07-tuna-standardization-20260920`
@@ -21,12 +21,14 @@ Reference identity: `FISH-REF-002`.
 
 The native runtime does not load the source meshes, textures, 98-joint rig or source animation tracks.
 
-## R03.2 implemented increment
+## R03.3 implemented increment
 
 - 41-section source-constrained fusiform body;
 - smoother head taper and peduncle continuity;
 - separate first/second dorsal, anal, pectoral, pelvic and lunate caudal membranes;
 - ten individual finlets with posterior phase delay;
+- twenty-five function-generated fin-ray detail structures;
+- paired maxillary, preopercular and supraorbital head-detail curves;
 - paired caudal-peduncle keels;
 - terminal mouth, mouth cavity and paired opercular boundaries;
 - separate eye globe, iris, pupil and cornea;
@@ -42,7 +44,9 @@ The finlet phase relationship and comparatively stiff anterior body are retained
 
 ```text
 node tests/tuna-r03.test.mjs
-Original Fish Tuna R03: 383 assertions passed; 36 parts; 18832 triangles
+Original Fish Tuna R03: 383 base assertions passed; 36 base parts; 18832 triangles
+node tests/tuna-r033-detail.test.mjs
+Original Fish Tuna R03.3 detail overlay: 153 assertions passed; 67 total parts; 19820 triangles
 ```
 
 Browser QA:
@@ -56,13 +60,14 @@ Browser QA:
 
 Direct network navigation is administratively blocked in this execution environment. Browser QA used the exact local HTML/CSS/modules converted to data URLs under `page.set_content`; this is a local runtime pass, not a public-link acceptance.
 
-The exact tested runtime is stored as seven auditable text chunks. `main.js` verifies their availability, reconstructs the runtime and binds it to the local `source-bundle.mjs`; this packaging avoids any source-reference asset dependency.
+The exact tested runtime is stored as seven auditable text chunks. `main.js` verifies their availability, reconstructs the runtime and binds it to the local `source-bundle.mjs` and `detail-overlay.mjs`; this packaging avoids any source-reference asset dependency.
 
 ## Current non-acceptance
 
 This remains an engineering candidate.
 
 - body surface is still too smooth;
+- the new head curves remain line-like engineering details rather than continuous 3A soft tissue;
 - fin silhouettes and fin-ray fields remain simplified;
 - mouth, maxillary and operculum lack 3A soft-tissue continuity;
 - scales, chromatophore structure, wet surface and fin transmission are not physically calibrated;
