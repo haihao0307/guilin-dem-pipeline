@@ -1,0 +1,54 @@
+{
+  "suite": "SMI nearshore GPU consumer-parity probe N25",
+  "passed": true,
+  "profileId": "SMI_WAKE_BAY_R01",
+  "source": {
+    "productionReviewCommit": "c07eec73616f613acde90881ac642b0972f12391",
+    "candidatePullRequest": 100,
+    "candidateHead": "fa227b7c73cbce92f7a5548a5eeae8d2df45c7cd",
+    "releaseIndexSha256": "5ec8a35e89dbb2f45835ad860d326136ce963fbf34563618c8db098970a9a1d5",
+    "locallyIntegratedCandidateSha256": "c6b8e573da4a8450fab8c6572a0bd194686f55bdb3956dccafebd771993db962",
+    "roundTripByteIdentical": true
+  },
+  "candidate": {
+    "generatedAdapterMarkers": 1,
+    "waveSurfaceAuthoritativeBedReads": 1,
+    "waveSurfaceLegacyBedReads": 0
+  },
+  "remainingGpuConsumers": {
+    "vertexShallowDepthLegacyBedReads": 1,
+    "vertexThicknessLegacyBedReads": 1,
+    "fragmentShoreDistanceLegacyReads": 1
+  },
+  "meanWaterCounterexample": {
+    "units": "metre",
+    "x": 23.773102305096508,
+    "z": 22.595179809081475,
+    "seaLevel": 0.18,
+    "signedDistance": -2.218277644905342e-16,
+    "legacyBed": 0,
+    "authoritativeBed": 0.18,
+    "legacyThickness": 0.18,
+    "authoritativeThickness": 0,
+    "foamVisibilityGate": {
+      "expression": "smoothstep(0.008, 0.07, thickness)",
+      "legacy": 1,
+      "authoritative": 0
+    }
+  },
+  "status": {
+    "observation": "The candidate couples waveSurface to SMI_WAKE_BAY_R01 but leaves vertex shallow/thickness and fragment shoreline-distance consumers on legacy functions.",
+    "candidate": "Evaluate one shared authoritative bed/distance contract at every nearshore consumer before claiming full CPU/GPU parity.",
+    "rejected": [
+      "Wave-surface bed parity alone proves complete nearshore renderer parity.",
+      "A successful shader compile proves the full-scene white-sheet defect is removed."
+    ],
+    "unknown": [
+      "full-scene visual effect",
+      "desktop hardware GPU",
+      "390x844 device result",
+      "performance cost",
+      "user acceptance"
+    ]
+  }
+}
