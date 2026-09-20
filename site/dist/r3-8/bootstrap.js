@@ -15,7 +15,12 @@ installReadingControls();
 THREE.Object3D.prototype[Symbol.for('wenzhou.r3.3.surface-evidence-installed')]=true;
 installSoilContext();installEnvironmentContext();installWorldScore();
 if(window.__WENZHOU_HISTORY_1942===true){
-  const[{installNg51IslandRelief},{installNg51Bathymetry}]=await Promise.all([import('./ng51-island-relief.js'),import('./ng51-bathymetry.js')]);
+  const[{installNg51IslandRelief},{installNg51Bathymetry},{installNg51RegistrationContract}]=await Promise.all([
+    import('./ng51-island-relief.js'),
+    import('./ng51-bathymetry.js'),
+    import('./ng51-registration-contract.js'),
+  ]);
+  installNg51RegistrationContract();
   installNg51IslandRelief();
   installNg51Bathymetry();
 }
