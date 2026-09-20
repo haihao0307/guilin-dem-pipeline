@@ -1,0 +1,71 @@
+name: Coral R05 Direct Publish
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/coral-r05-direct-publish.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out GitHub Pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+
+      - name: Build direct uncompressed workbench
+        shell: bash
+        run: |
+          set -euo pipefail
+          src='coral-mother-r05-growth-field-c7b87a4'
+          out='coral-mother-r05-direct-no-loader'
+          rm -rf "$out"
+          mkdir -p "$out"
+          cat "$src"/coral-runtime-{00..07}.b64 \
+            | tr -d '\r\n\t ' \
+            | base64 --decode \
+            | gzip --decompress --stdout \
+            > "$out/index.html"
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          p = Path('coral-mother-r05-direct-no-loader/index.html')
+          b = p.read_bytes()
+          assert b.lower().startswith(b'<!doctype html>'), 'not an html document'
+          assert b'DecompressionStream' not in b, 'runtime still contains decompression loader'
+          assert b'coral-runtime-' not in b, 'runtime still references split payloads'
+          q = {
+              'schema': 'CORAL_MOTHER_R05_DIRECT_PUBLISH_QA',
+              'bytes': len(b),
+              'sha256': hashlib.sha256(b).hexdigest(),
+              'externalSplitPayloadRequests': 0,
+              'runtimeDecompression': False,
+              'source': 'gh-pages/coral-mother-r05-growth-field-c7b87a4/coral-runtime-00..07.b64',
+          }
+          Path('coral-mother-r05-direct-no-loader/QA_DIRECT.json').write_text(
+              json.dumps(q, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
+          )
+          print(q)
+          PY
+
+      - name: Commit direct page
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Haihao_Nature Grace HK'
+          git config user.email 'haihao0307@gmail.com'
+          git add coral-mother-r05-direct-no-loader/
+          if git diff --cached --quiet; then
+            echo 'No direct-page changes.'
+          else
+            git commit -m 'fix(coral): publish direct R05 without fetch or decompression'
+            git push origin gh-pages
+          fi
