@@ -1,0 +1,108 @@
+import {
+  BLACK_BASS_R1_CARD,
+  buildBlackBassHeadMouth,
+  buildEllipsoidMesh
+} from './renderers/blackBassFish.js';
+
+const canvas=document.getElementById('view');
+const statusEl=document.getElementById('status');
+const fatal=document.getElementById('fatal');
+const metrics=document.getElementById('metrics');
+const mouth=document.getElementById('mouth');
+const angleOut=document.getElementById('angleOut');
+const gl=canvas.getContext('webgl2',{antialias:true,alpha:false,preserveDrawingBuffer:true});
+if(!gl) fail('WebGL2 不可用，无法打开三维结构工作台。');
+
+const vertex=`#version 300 es
+precision highp float;
+in vec3 position;in vec3 normal;
+uniform mat4 mvp;uniform mat4 model;
+out vec3 vNormal;out vec3 vWorld;
+void main(){vec4 w=model*vec4(position,1.0);vWorld=w.xyz;vNormal=mat3(model)*normal;gl_Position=mvp*vec4(position,1.0);}`;
+const fragment=`#version 300 es
+precision highp float;
+in vec3 vNormal;in vec3 vWorld;
+uniform vec4 color;uniform vec3 lightDir;uniform bool wirePass;
+out vec4 outColor;
+void main(){vec3 n=normalize(vNormal);float d=max(dot(n,normalize(lightDir)),0.0);float rim=pow(1.0-max(abs(n.z),0.0),2.0);vec3 c=color.rgb*(0.31+0.69*d)+rim*0.055;outColor=vec4(c,color.a);}`;
+const program=link(vertex,fragment);
+const loc={mvp:gl.getUniformLocation(program,'mvp'),model:gl.getUniformLocation(program,'model'),color:gl.getUniformLocation(program,'color'),lightDir:gl.getUniformLocation(program,'lightDir')};
+
+const palette={
+ cranium:[.43,.46,.32,1],lowerJaw:[.55,.50,.35,1],mouthCavity:[.12,.018,.012,1],
+ eyeLeft:[.12,.075,.018,1],eyeRight:[.12,.075,.018,1],irisLeft:[.30,.16,.025,1],irisRight:[.30,.16,.025,1],
+ pupilLeft:[.004,.004,.003,1],pupilRight:[.004,.004,.003,1],
+ maxillaryLeft:[.33,.29,.20,1],maxillaryRight:[.33,.29,.20,1],
+ upperLipLeft:[.27,.23,.16,1],upperLipRight:[.27,.23,.16,1],lowerLipLeft:[.30,.25,.17,1],lowerLipRight:[.30,.25,.17,1],
+ anchor:[.95,.58,.20,1]
+};
+let meshes=[];let mouthAngle=0;let animate=false;let time0=performance.now();let yaw=0,pitch=0,zoom=1;let currentView='side';
+let dragging=false,lastX=0,lastY=0;
+
+function rebuild(){
+  for(const m of meshes) m.dispose?.(); meshes=[];
+  const built=buildBlackBassHeadMouth({jaw:{mouthOpenRad:mouthAngle}});
+  for(const [name,geo] of Object.entries(built.parts)){
+    if(name==='mouthCavity'&&!document.getElementById('showCavity').checked)continue;
+    if(name==='lowerJaw'&&!document.getElementById('showJaw').checked)continue;
+    meshes.push(makeMesh(name,geo,palette[name]??[.5,.5,.5,1]));
+  }
+  const sideEyes=[[-1,'Left'],[1,'Right']];
+  for(const [side,suffix] of sideEyes){
+    const c=side<0?BLACK_BASS_R1_CARD.eyes.leftCenter:BLACK_BASS_R1_CARD.eyes.rightCenter;
+    meshes.push(makeMesh('iris'+suffix,buildEllipsoidMesh([side*.0536,c[1],c[2]],[.0017,.0132,.0128]),palette['iris'+suffix]));
+    meshes.push(makeMesh('pupil'+suffix,buildEllipsoidMesh([side*.0551,c[1],c[2]],[.0010,.0065,.0062]),palette['pupil'+suffix]));
+  }
+  if(document.getElementById('showAnchors').checked){
+    const a=BLACK_BASS_R1_CARD.jaw.hinge;
+    meshes.push(makeMesh('jawHinge',buildEllipsoidMesh(a,[.0042,.0042,.0042],{latitudeSegments:10,longitudeSegments:16}),palette.anchor));
+  }
+  const tri=meshes.reduce((s,m)=>s+m.indexCount/3,0);
+  metrics.textContent=`原生部件 ${meshes.length} · ${Math.round(tri).toLocaleString()} triangles · source runtime dependency = false`;
+}
+
+function makeMesh(name,geo,color){
+  const positions=new Float32Array(geo.positions);const indices=new Uint32Array(geo.indices);const normals=calculateNormals(positions,indices);
+  const vao=gl.createVertexArray();gl.bindVertexArray(vao);
+  const pbo=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,pbo);gl.bufferData(gl.ARRAY_BUFFER,positions,gl.STATIC_DRAW);
+  const pa=gl.getAttribLocation(program,'position');gl.enableVertexAttribArray(pa);gl.vertexAttribPointer(pa,3,gl.FLOAT,false,0,0);
+  const nbo=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,nbo);gl.bufferData(gl.ARRAY_BUFFER,normals,gl.STATIC_DRAW);
+  const na=gl.getAttribLocation(program,'normal');gl.enableVertexAttribArray(na);gl.vertexAttribPointer(na,3,gl.FLOAT,false,0,0);
+  const ebo=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ebo);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices,gl.STATIC_DRAW);
+  gl.bindVertexArray(null);
+  const edges=uniqueEdges(indices);const edgeBuffer=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,edgeBuffer);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,edges,gl.STATIC_DRAW);
+  return{name,color,vao,indexCount:indices.length,ebo,edgeBuffer,edgeCount:edges.length,dispose(){gl.deleteVertexArray(vao);gl.deleteBuffer(pbo);gl.deleteBuffer(nbo);gl.deleteBuffer(ebo);gl.deleteBuffer(edgeBuffer)}};
+}
+function calculateNormals(p,idx){const n=new Float32Array(p.length);for(let i=0;i<idx.length;i+=3){const ia=idx[i]*3,ib=idx[i+1]*3,ic=idx[i+2]*3;const ax=p[ib]-p[ia],ay=p[ib+1]-p[ia+1],az=p[ib+2]-p[ia+2],bx=p[ic]-p[ia],by=p[ic+1]-p[ia+1],bz=p[ic+2]-p[ia+2];const nx=ay*bz-az*by,ny=az*bx-ax*bz,nz=ax*by-ay*bx;for(const o of[ia,ib,ic]){n[o]+=nx;n[o+1]+=ny;n[o+2]+=nz}}for(let i=0;i<n.length;i+=3){const l=Math.hypot(n[i],n[i+1],n[i+2])||1;n[i]/=l;n[i+1]/=l;n[i+2]/=l}return n}
+function uniqueEdges(idx){const set=new Set(),out=[];for(let i=0;i<idx.length;i+=3){for(const [a,b]of[[idx[i],idx[i+1]],[idx[i+1],idx[i+2]],[idx[i+2],idx[i]]]){const x=Math.min(a,b),y=Math.max(a,b),k=x+','+y;if(!set.has(k)){set.add(k);out.push(x,y)}}}return new Uint32Array(out)}
+
+function draw(now){
+  resize();
+  if(animate){mouthAngle=.045+.055*(.5+.5*Math.sin((now-time0)*.0022));mouth.value=mouthAngle;angleOut.value=(mouthAngle*180/Math.PI).toFixed(1)+'°';rebuild()}
+  gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);gl.clearColor(.035,.067,.076,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(program);
+  const aspect=canvas.width/canvas.height;const view=viewMatrix(currentView);const projection=ortho(-.25*aspect/zoom,.25*aspect/zoom,-.25/zoom,.25/zoom,-2,2);const model=mat4RotateXY(yaw,pitch);const mvp=multiply(projection,multiply(view,model));
+  gl.uniformMatrix4fv(loc.mvp,false,mvp);gl.uniformMatrix4fv(loc.model,false,model);gl.uniform3f(loc.lightDir,-.35,.58,.74);
+  for(const m of meshes){gl.bindVertexArray(m.vao);gl.uniform4fv(loc.color,m.color);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,m.ebo);gl.drawElements(gl.TRIANGLES,m.indexCount,gl.UNSIGNED_INT,0)}
+  if(document.getElementById('wire').checked){gl.disable(gl.CULL_FACE);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.uniform4f(loc.color,.72,.86,.86,.16);for(const m of meshes){gl.bindVertexArray(m.vao);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,m.edgeBuffer);gl.drawElements(gl.LINES,m.edgeCount,gl.UNSIGNED_INT,0)}gl.disable(gl.BLEND)}
+  gl.bindVertexArray(null);requestAnimationFrame(draw);
+}
+
+function viewMatrix(preset){const c=[0,0,.82];if(preset==='side')return lookAt([-.62,.015,.82],c,[0,1,0]);if(preset==='three')return lookAt([-.45,.08,1.15],c,[0,1,0]);if(preset==='front')return lookAt([0,.01,1.48],c,[0,1,0]);return lookAt([0,.68,.82],c,[0,0,1])}
+function resize(){const d=Math.min(devicePixelRatio||1,2),w=Math.max(1,Math.round(canvas.clientWidth*d)),h=Math.max(1,Math.round(canvas.clientHeight*d));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h)}}
+function mat4RotateXY(yaw,pitch){const cy=Math.cos(yaw),sy=Math.sin(yaw),cx=Math.cos(pitch),sx=Math.sin(pitch);return new Float32Array([cy,sy*sx,-sy*cx,0,0,cx,sx,0,sy,-cy*sx,cy*cx,0,0,0,0,1])}
+function ortho(l,r,b,t,n,f){return new Float32Array([2/(r-l),0,0,0,0,2/(t-b),0,0,0,0,-2/(f-n),0,-(r+l)/(r-l),-(t+b)/(t-b),-(f+n)/(f-n),1])}
+function lookAt(e,c,u){let z=norm(sub(e,c)),x=norm(cross(u,z)),y=cross(z,x);return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-dot(x,e),-dot(y,e),-dot(z,e),1])}
+function multiply(a,b){const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[0*4+r]*b[c*4+0]+a[1*4+r]*b[c*4+1]+a[2*4+r]*b[c*4+2]+a[3*4+r]*b[c*4+3];return o}
+const sub=(a,b)=>a.map((v,i)=>v-b[i]),dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>{const l=Math.hypot(...a)||1;return a.map(v=>v/l)};
+function compile(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s}
+function link(v,f){const p=gl.createProgram();gl.attachShader(p,compile(gl.VERTEX_SHADER,v));gl.attachShader(p,compile(gl.FRAGMENT_SHADER,f));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return p}
+function fail(message){fatal.hidden=false;fatal.textContent=message;throw Error(message)}
+
+mouth.addEventListener('input',()=>{animate=false;document.getElementById('animate').classList.remove('active');mouthAngle=Number(mouth.value);angleOut.value=(mouthAngle*180/Math.PI).toFixed(1)+'°';rebuild()});
+document.getElementById('animate').onclick=e=>{animate=!animate;e.currentTarget.classList.toggle('active',animate);time0=performance.now()};
+document.getElementById('reset').onclick=()=>{animate=false;mouthAngle=0;mouth.value=0;angleOut.value='0.0°';yaw=pitch=0;zoom=1;rebuild()};
+for(const el of document.querySelectorAll('#views button'))el.onclick=()=>{for(const b of document.querySelectorAll('#views button'))b.classList.remove('active');el.classList.add('active');currentView=el.dataset.view;yaw=pitch=0;zoom=1};
+for(const id of['showCavity','showJaw','showAnchors'])document.getElementById(id).addEventListener('change',rebuild);
+canvas.addEventListener('pointerdown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;canvas.setPointerCapture(e.pointerId)});canvas.addEventListener('pointermove',e=>{if(!dragging)return;yaw+=(e.clientX-lastX)*.008;pitch+=(e.clientY-lastY)*.008;pitch=Math.max(-1.2,Math.min(1.2,pitch));lastX=e.clientX;lastY=e.clientY});canvas.addEventListener('pointerup',()=>dragging=false);canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(.55,Math.min(2.4,zoom*Math.exp(-e.deltaY*.001)))},{passive:false});
+
+try{rebuild();statusEl.textContent='原生函数运行中';statusEl.dataset.ready='true';requestAnimationFrame(draw)}catch(error){console.error(error);fail(String(error.message||error))}
