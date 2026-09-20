@@ -1,0 +1,11 @@
+Open.toFixed(2)};
+  document.getElementById('swim').onclick=e=>{swimOn=!swimOn;e.currentTarget.classList.toggle('active',swimOn)};
+  document.getElementById('reset').onclick=()=>{amplitude=.045;period=TUNA_R03_PROFILE.semanticRig.sourceClipPeriodSeconds;mouthOpen=0;gillOpen=.35;yaw=pitch=0;zoom=1;swimOn=true;amp.value=amplitude;ampOut.value=amplitude.toFixed(3);per.value=period;perOut.value=period.toFixed(2)+' s';mouth.value=0;mouthOut.value='0.00';gill.value=.35;gillOut.value='0.35';document.getElementById('swim').classList.add('active')};
+  for(const b of document.querySelectorAll('#views button'))b.onclick=()=>{for(const x of document.querySelectorAll('#views button'))x.classList.remove('active');b.classList.add('active');currentView=b.dataset.view;yaw=pitch=0;zoom=1};
+  canvas.addEventListener('pointerdown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;canvas.setPointerCapture(e.pointerId)});
+  canvas.addEventListener('pointermove',e=>{if(!dragging)return;yaw+=(e.clientX-lastX)*.007;pitch=clamp(pitch+(e.clientY-lastY)*.007,-1.25,1.25);lastX=e.clientX;lastY=e.clientY});
+  canvas.addEventListener('pointerup',()=>dragging=false);canvas.addEventListener('pointercancel',()=>dragging=false);
+  canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=clamp(zoom*Math.exp(-e.deltaY*.001),.58,2.6)},{passive:false});
+}
+
+try{buildScene();bindControls();statusEl.textContent='金枪鱼分支 R03 运行中';statusEl.dataset.ready='true';requestAnimationFrame(draw)}catch(error){console.error(error);fail(String(error?.message||error))}
