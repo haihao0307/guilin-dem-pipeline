@@ -36,6 +36,16 @@ DEM、Cloud Mother、Weather Mother、Ocean Mother、Coast、Landscape Mother �
 
 测试 primitive 仅允许隔离在 TEST_FIXTURE_ONLY，不得进入正式工作台、视觉截图、生产继承链或用户验收。每一个可见修改必须能对应到参考、测量、用户批准约束或已批准物理关系。
 
+## 任务新鲜度 / 禁止旧产物冒充新交付硬门禁
+
+所有 Mother、Codex 和子执行端在执行用户已经明确交代的新任务后，必须读取并执行 `knowledge/TASK_FRESHNESS_AND_NO_STALE_DELIVERY_GATE.md`。
+
+任何“这是最新结果 / 今天新做的 / 昨晚做的 / 本轮修改后的效果”都必须能证明发生在本任务 dispatch anchor 之后，并绑定当前 head。旧模型、旧网页、旧截图、旧 release、旧 QA 只能作为 BASELINE / BEFORE，不得冒充新交付。
+
+如果本轮没有形成新产物，必须明确写 `NO_NEW_ARTIFACT`，不得为了“有东西给用户看”而重发旧成果。最新构建失败时不得静默回退旧版并伪装成当前效果；fallback 必须明确标记且不能作为验收结果。
+
+用户已经明确“今晚做什么、明早看什么”时，次日必须先读取最新任务锚点和最后指令，不得重新选题、回退旧路线或拿旧版本顶替。做错目标或使用旧产物统一标记 `REJECTED_STALE_OR_WRONG_TARGET_DELIVERY`。
+
 ## 真实三维工作台硬门禁
 
 所有 Mother 开工、计划、任务卡、交接和发布前，必须读取并执行 `knowledge/REAL_3D_WORKBENCH_ONLY_GATE.md`。
