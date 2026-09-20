@@ -53,6 +53,30 @@ A valid `BLOCKED` report must include:
 
 A blocked lane remains useful only by producing a bounded, source-independent artifact or by returning ownership promptly.
 
+## Task fidelity and freshness
+
+Execution evidence must be fresh and target-faithful, not merely executable.
+
+For every bounded task, record a dispatch anchor with at least:
+- taskId;
+- branch;
+- base SHA;
+- target object;
+- target defect/change;
+- expected artifact;
+- protected invariants;
+- forbidden substitutions.
+
+A claimed new result is invalid if it predates dispatch, comes from an older head/release, or shows a different target. Old artifacts may be used only as BASELINE/BEFORE.
+
+If no new artifact exists after dispatch, report `NO_NEW_ARTIFACT`. Reusing an old screenshot/page/model to create the appearance of progress is `REJECTED_STALE_OR_WRONG_TARGET_DELIVERY`.
+
+If the newest build fails, do not silently show a fallback old build as current. Any fallback must be explicitly marked `FALLBACK_ACTIVE=true` and is not acceptance evidence.
+
+Validation-only tasks may have no source diff, but the validation run itself must be new, executed after dispatch, and bound to the exact tested commit.
+
+For overnight / next-morning tasks, the next session must read the latest task anchor and last user instruction before doing anything else. It may not choose a new target, revive an older route, or substitute yesterday's artifact for the requested new result.
+
 ## Operational consequences
 
 1. **45 minutes without an executable delta:** mark `AT_RISK`; stop expanding scope; force the smallest testable task.
