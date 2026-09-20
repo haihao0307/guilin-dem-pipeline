@@ -69,6 +69,11 @@ jobs:
           python games/survivor-palau/palau-world/airai-r04/scripts/postprocess_sentinel2_r06.py \
             --intake /tmp/airai-reef-intake \
             --results games/survivor-palau/palau-world/airai-r04/results-r01
+      - name: Reconcile OSM reef coast and mangrove semantics
+        run: |
+          python games/survivor-palau/palau-world/airai-r04/scripts/postprocess_osm_semantics_r07.py \
+            --intake /tmp/airai-reef-intake \
+            --results games/survivor-palau/palau-world/airai-r04/results-r01
       - name: Preserve small derived products on work branch
         run: |
           git config user.name 'github-actions[bot]'
