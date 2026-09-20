@@ -1,0 +1,110 @@
+name: Landscape Small Karst R2.3 Fast Karst Color
+
+on:
+  push:
+    branches:
+      - feature/landscape-small-karst-brick-v26-r2-20260919
+    paths:
+      - workbenches/landscape-small-karst-field-r2-3-fast-karst-color/build_r23.py
+      - .github/workflows/landscape-small-karst-r23-fast.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build R2.3
+        run: |
+          python -m py_compile workbenches/landscape-small-karst-field-r2-3-fast-karst-color/build_r23.py
+          python workbenches/landscape-small-karst-field-r2-3-fast-karst-color/build_r23.py
+
+      - name: Static contract and shader compilation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,re
+          root=Path('workbenches/landscape-small-karst-field-r2-3-fast-karst-color')
+          s=(root/'index.html').read_text(encoding='utf-8')
+          b=json.loads((root/'build.json').read_text(encoding='utf-8'))
+          required=[
+            'STRICT_BRICK_V26_STONE_BLOCK_R23_FAST',
+            '小尺度帕劳卡斯特 R2.3',
+            'uColorStrength','uBlueStrength','zoomIn','zoomOut','qualityBtn',
+            'verticalA','waterNotch','MAX_STEPS 88',
+            'dataset.karstReady','firstFrameMs'
+          ]
+          for token in required: assert token in s, token
+          assert b['schema']=='LANDSCAPE_SMALL_KARST_R23_FAST_KARST_COLOR'
+          assert b['performance']['defaultQualityScale']==0.78
+          assert b['shape']['verticalFluting'] is True
+          assert b['color']['paletteReplaced'] is False
+          for name,file in [('VS','/tmp/r23.vert'),('GEOMETRY_FS','/tmp/r23-geom.frag'),('MATERIAL_FS','/tmp/r23-mat.frag')]:
+            m=re.search(rf'const {name}=`(.*?)`;',s,re.S);assert m,name
+            Path(file).write_text(m.group(1),encoding='utf-8')
+          scripts=re.findall(r'<script>(.*?)</script>',s,re.S);assert scripts
+          Path('/tmp/r23-app.js').write_text(scripts[-1],encoding='utf-8')
+          PY
+          node --check /tmp/r23-app.js
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq glslang-tools
+          glslangValidator -S vert /tmp/r23.vert
+          glslangValidator -S frag /tmp/r23-geom.frag
+          glslangValidator -S frag /tmp/r23-mat.frag
+
+      - name: Run Chromium and capture proof
+        run: |
+          python3 -m http.server 8000 >/tmp/http.log 2>&1 &
+          SERVER=$!
+          trap 'kill $SERVER || true' EXIT
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/ >/dev/null && break; sleep .2; done
+          CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)
+          if [ -z "$CHROME" ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq chromium-browser || sudo apt-get install -y -qq chromium
+            CHROME=$(command -v chromium || command -v chromium-browser)
+          fi
+          URL=http://127.0.0.1:8000/workbenches/landscape-small-karst-field-r2-3-fast-karst-color/index.html
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage \
+            --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist \
+            --run-all-compositor-stages-before-draw --virtual-time-budget=22000 \
+            --dump-dom "$URL" >/tmp/r23-dom.html 2>/tmp/r23-chrome.log
+          grep -q 'data-karst-ready="true"' /tmp/r23-dom.html
+          grep -q 'data-first-frame-ms=' /tmp/r23-dom.html
+          ! grep -q 'data-karst-failure="true"' /tmp/r23-dom.html
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage \
+            --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist \
+            --run-all-compositor-stages-before-draw --virtual-time-budget=22000 \
+            --window-size=1440,1000 --screenshot=/tmp/r23.png "$URL" \
+            >/tmp/r23-shot.log 2>&1
+          test -s /tmp/r23.png
+          test $(stat -c%s /tmp/r23.png) -gt 100000
+          mkdir -p /tmp/r23-proof
+          cp /tmp/r23.png /tmp/r23-proof/r23.png
+          cp /tmp/r23-dom.html /tmp/r23-proof/dom.html
+          cp workbenches/landscape-small-karst-field-r2-3-fast-karst-color/build.json /tmp/r23-proof/build.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: landscape-small-karst-r23-fast-proof
+          path: /tmp/r23-proof
+          retention-days: 7
+
+      - name: Materialize browser-tested R2.3
+        run: |
+          git config user.name "Landscape Mother"
+          git config user.email "actions@users.noreply.github.com"
+          git add workbenches/landscape-small-karst-field-r2-3-fast-karst-color/index.html \
+                  workbenches/landscape-small-karst-field-r2-3-fast-karst-color/build.json
+          if git diff --cached --quiet; then
+            echo "R2.3 already materialized"
+            exit 0
+          fi
+          git commit -m "feat(landscape): materialize browser-tested R2.3 [skip ci]"
+          git push
