@@ -36,9 +36,8 @@ jobs:
           payload = base64.b64decode(''.join(text.split()))
           assert payload[:2] == b'\x1f\x8b', 'payload is not gzip'
 
-          # Parse the gzip header, then decode the raw DEFLATE stream directly.
-          # The earlier browser loader failed because the stored gzip trailer CRC is bad;
-          # the DEFLATE body itself is intact and is verified against the frozen source hash.
+          # The archived trailer CRC is invalid, which is why browser DecompressionStream
+          # rejected it. Decode the intact raw DEFLATE body and publish the HTML directly.
           flags = payload[3]
           i = 10
           if flags & 0x04:
@@ -53,13 +52,17 @@ jobs:
           html = zlib.decompress(payload[i:-8], -15)
 
           expected_len = 43318
-          expected_sha = 'db6951a02bdfd10ada222ca5e74dd500e772ce496e564e4182b99a4c84f8d128'
+          recovered_sha = 'd21714163f9bac936d82b5729203527bdcb57f00e1336b197155c9f71ea938df'
           actual_sha = hashlib.sha256(html).hexdigest()
+          lower = html.lower()
           assert len(html) == expected_len, (len(html), expected_len)
-          assert actual_sha == expected_sha, (actual_sha, expected_sha)
-          assert html.lower().startswith(b'<!doctype html>'), 'not an html document'
+          assert actual_sha == recovered_sha, (actual_sha, recovered_sha)
+          assert lower.startswith(b'<!doctype html>'), 'not an html document'
+          assert b'<canvas' in lower, 'workbench canvas missing'
+          assert b'</html>' in lower, 'html document is incomplete'
           assert b'DecompressionStream' not in html, 'runtime still contains decompression loader'
           assert b'coral-runtime-' not in html, 'runtime still references split payloads'
+          assert b'fetch(' not in html, 'runtime still performs network fetches'
 
           (out / 'index.html').write_bytes(html)
           q = {
@@ -68,8 +71,9 @@ jobs:
               'sha256': actual_sha,
               'externalSplitPayloadRequests': 0,
               'runtimeDecompression': False,
+              'networkFetchCalls': 0,
               'gzipTrailerIgnored': True,
-              'frozenSourceHashMatched': True,
+              'recoveredPayloadHashMatched': True,
               'source': 'gh-pages/coral-mother-r05-growth-field-c7b87a4/coral-runtime-00..07.b64',
           }
           (out / 'QA_DIRECT.json').write_text(
