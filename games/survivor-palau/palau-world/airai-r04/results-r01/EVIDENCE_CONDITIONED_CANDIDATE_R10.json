@@ -1,0 +1,254 @@
+{
+  "schema": "kaopu.palau.airai-evidence-conditioned-candidate-r10/1.0",
+  "inputIdentity": {
+    "depthR09": {
+      "path": "grids/candidate_depth_chart_datum_m_r09.tif",
+      "sha256": "09a46056a771c9c7035bc6051060937a0acd7e89b23514303e8dfd99b728d435"
+    },
+    "uncertaintyR09": {
+      "path": "grids/candidate_uncertainty_m_r09.tif",
+      "sha256": "984bf397b1ddd0bd2adf94ddee276b6ecb016579c8b99e886cf88ba391cb0f69"
+    },
+    "nearestEvidenceR09": {
+      "path": "grids/nearest_evidence_distance_m_r09.tif",
+      "sha256": "6a7c4379807140d9120c8467c0e439db6505e7953599664ab615aa0136e8f33b"
+    },
+    "qualityR09": {
+      "path": "grids/candidate_source_quality_weight_r09.tif",
+      "sha256": "b076f678d966c1d3d732d5708470d713daf58d83f50731bb625dd06ed92ff94a"
+    },
+    "semanticZoneR08": {
+      "path": "grids/candidate_semantic_zone_r08.tif",
+      "sha256": "08f2541a10ebed43df4cab23e3550835cc3ca0a23814d70bfca4e47d76953155"
+    },
+    "soundingsR08": {
+      "path": "vectors/SOUNDG_REEF_ZONE_JOINED_R08.geojson",
+      "sha256": "c196909b2ef26bb1d36aabb4a7c1fe3eb60ca31df48f977c5853ec3609cf8cfd"
+    }
+  },
+  "verticalDatum": {
+    "soundingDatumCode": 24,
+    "soundingDatumName": "local datum",
+    "numericTransform": "NONE",
+    "mslEquivalence": "NOT_ASSERTED"
+  },
+  "empiricalZoneEnvelopes": {
+    "reef_flat_or_crest": {
+      "zoneCode": 2,
+      "highQualitySoundingStatsM": {
+        "count": 4,
+        "min": 2.0,
+        "p05": 2.045,
+        "median": 2.3499999999999996,
+        "p95": 2.485,
+        "max": 2.5
+      },
+      "envelopeBuilt": true,
+      "lowerM": 0.0,
+      "upperM": 5.484999999999999,
+      "method": "HQ CATZOC A1/A2/B empirical p05-p95 expanded by max(3 m, 35% of span); uncertainty-only"
+    },
+    "shallow_lagoon": {
+      "zoneCode": 3,
+      "highQualitySoundingStatsM": {
+        "count": 0,
+        "min": null,
+        "p05": null,
+        "median": null,
+        "p95": null,
+        "max": null
+      },
+      "envelopeBuilt": false,
+      "lowerM": null,
+      "upperM": null,
+      "method": null
+    },
+    "deep_lagoon": {
+      "zoneCode": 4,
+      "highQualitySoundingStatsM": {
+        "count": 5,
+        "min": 2.7,
+        "p05": 3.9000000000000004,
+        "median": 11.2,
+        "p95": 23.199999999999996,
+        "max": 25.4
+      },
+      "envelopeBuilt": true,
+      "lowerM": 0.0,
+      "upperM": 29.954999999999995,
+      "method": "HQ CATZOC A1/A2/B empirical p05-p95 expanded by max(3 m, 35% of span); uncertainty-only"
+    },
+    "reef_slope": {
+      "zoneCode": 5,
+      "highQualitySoundingStatsM": {
+        "count": 50,
+        "min": 2.3,
+        "p05": 3.145,
+        "median": 9.0,
+        "p95": 15.529999999999998,
+        "max": 24.7
+      },
+      "envelopeBuilt": true,
+      "lowerM": 0.0,
+      "upperM": 19.864749999999997,
+      "method": "HQ CATZOC A1/A2/B empirical p05-p95 expanded by max(3 m, 35% of span); uncertainty-only"
+    },
+    "plateau": {
+      "zoneCode": 6,
+      "highQualitySoundingStatsM": {
+        "count": 2,
+        "min": 8.9,
+        "p05": 8.925,
+        "median": 9.15,
+        "p95": 9.375,
+        "max": 9.4
+      },
+      "envelopeBuilt": false,
+      "lowerM": null,
+      "upperM": null,
+      "method": null
+    }
+  },
+  "gridAuditBySemanticZone": {
+    "outside_allen_geomorphic_or_unclassified": {
+      "cells": 37348,
+      "depthStatsM": {
+        "count": 37348,
+        "min": 0.3418116271495819,
+        "p05": 5.37171142101288,
+        "median": 30.18803596496582,
+        "p95": 291.8888061523439,
+        "max": 849.2308349609375
+      },
+      "cells60To70M": 255,
+      "cellsOver100M": 6071,
+      "outsideEmpiricalEnvelopeCells": null,
+      "empiricalEnvelopeM": null
+    },
+    "reef_flat_or_crest": {
+      "cells": 13938,
+      "depthStatsM": {
+        "count": 13938,
+        "min": 0.009978439658880234,
+        "p05": 0.49147781878709795,
+        "median": 11.322912693023682,
+        "p95": 40.63086128234863,
+        "max": 48.67887878417969
+      },
+      "cells60To70M": 0,
+      "cellsOver100M": 0,
+      "outsideEmpiricalEnvelopeCells": 11558,
+      "empiricalEnvelopeM": [
+        0.0,
+        5.484999999999999
+      ]
+    },
+    "shallow_lagoon": {
+      "cells": 865,
+      "depthStatsM": {
+        "count": 865,
+        "min": 24.94829750061035,
+        "p05": 25.79988899230957,
+        "median": 32.34345626831055,
+        "p95": 43.444189453125,
+        "max": 44.16764450073242
+      },
+      "cells60To70M": 0,
+      "cellsOver100M": 0,
+      "outsideEmpiricalEnvelopeCells": null,
+      "empiricalEnvelopeM": null
+    },
+    "deep_lagoon": {
+      "cells": 2098,
+      "depthStatsM": {
+        "count": 2098,
+        "min": 0.2961566746234894,
+        "p05": 7.447871041297913,
+        "median": 17.968713760375977,
+        "p95": 36.37497997283935,
+        "max": 49.76292419433594
+      },
+      "cells60To70M": 0,
+      "cellsOver100M": 0,
+      "outsideEmpiricalEnvelopeCells": 282,
+      "empiricalEnvelopeM": [
+        0.0,
+        29.954999999999995
+      ]
+    },
+    "reef_slope": {
+      "cells": 2542,
+      "depthStatsM": {
+        "count": 2542,
+        "min": 2.498884439468384,
+        "p05": 5.021990370750427,
+        "median": 11.775873184204102,
+        "p95": 34.39856662750235,
+        "max": 49.7172737121582
+      },
+      "cells60To70M": 0,
+      "cellsOver100M": 0,
+      "outsideEmpiricalEnvelopeCells": 565,
+      "empiricalEnvelopeM": [
+        0.0,
+        19.864749999999997
+      ]
+    },
+    "plateau": {
+      "cells": 83,
+      "depthStatsM": {
+        "count": 83,
+        "min": 7.86346960067749,
+        "p05": 8.940001106262207,
+        "median": 10.294623374938965,
+        "p95": 15.40358304977417,
+        "max": 17.9993896484375
+      },
+      "cells60To70M": 0,
+      "cellsOver100M": 0,
+      "outsideEmpiricalEnvelopeCells": null,
+      "empiricalEnvelopeM": null
+    }
+  },
+  "hypothesisAudit": {
+    "workingHypothesis": "major channels about 60-70 m and reef-interior water generally below 100 m depth",
+    "highQualityMeasuredSoundings": {
+      "count": 274,
+      "min": 2.0,
+      "p05": 3.665,
+      "median": 25.3,
+      "p95": 42.0,
+      "max": 62.0,
+      "between60And70M": 2,
+      "deeperThan100M": 0
+    },
+    "candidateValidCells": 56874,
+    "candidateCells60To70M": 255,
+    "candidateCellsOver100M": 6071,
+    "forcedToHypothesis": false,
+    "rule": "Counts are diagnostics only. No cell is clipped, deepened, or shoaled to satisfy the working hypothesis."
+  },
+  "uncertaintyUpdate": {
+    "formula": "sqrt(R09_uncertainty^2 + semantic_empirical_residual^2)",
+    "cellsWithEmpiricalEnvelope": 18578,
+    "cellsOutsideEnvelope": 12405,
+    "depthValuesChanged": false,
+    "nearestEvidenceValuesChanged": false,
+    "qualityWeightValuesChanged": false,
+    "uncertaintyValuesChanged": true,
+    "semanticsUsedAsDepthObservations": false
+  },
+  "preferredCandidatePackage": {
+    "status": "CANDIDATE_NOT_SURVEY_TRUTH",
+    "depthGrid": "grids/candidate_depth_chart_datum_m_r10.tif",
+    "uncertaintyGrid": "grids/candidate_uncertainty_evidence_conditioned_m_r10.tif",
+    "nearestEvidenceGrid": "grids/nearest_evidence_distance_m_r10.tif",
+    "qualityWeightGrid": "grids/candidate_source_quality_weight_r10.tif",
+    "semanticZoneGrid": "grids/candidate_semantic_zone_r08.tif",
+    "supportClassGrid": "grids/candidate_support_class_r10.tif",
+    "semanticResidualGrid": "grids/semantic_depth_residual_m_r10.tif",
+    "noDataPreserved": true,
+    "numericDepthValuesChanged": false
+  },
+  "palauWorldContract": "All R10 rasters are one evidence package for the same PalauWorld.sample() conductor. No traditional LOD or parallel terrain world is introduced."
+}

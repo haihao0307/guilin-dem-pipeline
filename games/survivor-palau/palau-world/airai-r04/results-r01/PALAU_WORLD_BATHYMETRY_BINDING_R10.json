@@ -1,0 +1,31 @@
+{
+  "schema": "kaopu.palau-world.bathymetry-evidence-binding/1.0",
+  "consumer": "PalauWorld.sample()",
+  "singleConductor": true,
+  "traditionalLOD": false,
+  "status": "CANDIDATE_NOT_SURVEY_TRUTH",
+  "verticalDatum": {
+    "soundingDatumCode": 24,
+    "soundingDatumName": "local datum",
+    "numericTransform": "NONE",
+    "mslEquivalence": "NOT_ASSERTED"
+  },
+  "rasters": {
+    "status": "CANDIDATE_NOT_SURVEY_TRUTH",
+    "depthGrid": "grids/candidate_depth_chart_datum_m_r10.tif",
+    "uncertaintyGrid": "grids/candidate_uncertainty_evidence_conditioned_m_r10.tif",
+    "nearestEvidenceGrid": "grids/nearest_evidence_distance_m_r10.tif",
+    "qualityWeightGrid": "grids/candidate_source_quality_weight_r10.tif",
+    "semanticZoneGrid": "grids/candidate_semantic_zone_r08.tif",
+    "supportClassGrid": "grids/candidate_support_class_r10.tif",
+    "semanticResidualGrid": "grids/semantic_depth_residual_m_r10.tif",
+    "noDataPreserved": true,
+    "numericDepthValuesChanged": false
+  },
+  "samplingRules": [
+    "Return NoData where the preferred depth grid is NoData; do not synthesize depth from habitat semantics.",
+    "Carry uncertainty, nearest-evidence distance, source-quality weight, semantic zone and support class with every sampled candidate depth.",
+    "Do not convert the local chart sounding datum to MSL without an explicit transformation model.",
+    "Allen/OSM/Sentinel semantics may qualify support or uncertainty but are not depth observations by themselves."
+  ]
+}
