@@ -64,6 +64,11 @@ jobs:
           python games/survivor-palau/palau-world/airai-r04/scripts/postprocess_allen_atlas_r05.py \
             --intake /tmp/airai-reef-intake \
             --results games/survivor-palau/palau-world/airai-r04/results-r01
+      - name: Reconcile Sentinel-2 shallow-water scene metadata
+        run: |
+          python games/survivor-palau/palau-world/airai-r04/scripts/postprocess_sentinel2_r06.py \
+            --intake /tmp/airai-reef-intake \
+            --results games/survivor-palau/palau-world/airai-r04/results-r01
       - name: Preserve small derived products on work branch
         run: |
           git config user.name 'github-actions[bot]'
