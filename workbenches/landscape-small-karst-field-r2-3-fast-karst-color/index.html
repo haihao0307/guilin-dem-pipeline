@@ -1,0 +1,1210 @@
+<!doctype html>
+<html lang="zh-CN" data-transfer="STRICT_BRICK_V26_STONE_BLOCK_R23_FAST">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Landscape Mother · 小尺度帕劳卡斯特 R2.3</title>
+<style>
+:root{color-scheme:dark;--panel:rgba(13,16,15,.92);--line:rgba(255,255,255,.13);--text:#eee9df;--muted:#a7aaa5;--accent:#d0a365}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0d1110;color:var(--text);font:12px/1.45 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+.brand,.tools,.panel,.badge{position:fixed;z-index:4;border:1px solid var(--line);background:var(--panel);box-shadow:0 14px 42px rgba(0,0,0,.34);backdrop-filter:blur(12px)}
+.brand{left:14px;top:14px;padding:11px 13px;border-radius:12px}.brand small{display:block;color:var(--accent);font-size:8px;letter-spacing:.13em;font-weight:800}.brand b{display:block;margin-top:3px;font-size:17px}.brand span{display:block;margin-top:3px;color:var(--muted);font-size:9px}
+.tools{right:14px;top:14px;display:flex;gap:5px;padding:5px;border-radius:11px}button{border:0;border-radius:8px;padding:8px 11px;background:transparent;color:inherit;cursor:pointer}button:hover,button.on{background:#3d3528;color:#ffe4b8}
+.panel{right:14px;top:72px;width:286px;max-height:calc(100vh - 104px);overflow:auto;padding:15px 17px;border-radius:13px}.panel.hide{display:none}
+.group+ .group{margin-top:15px;padding-top:13px;border-top:1px solid var(--line)}h3{margin:0 0 8px;color:var(--accent);font-size:10px;letter-spacing:.08em}
+.row{display:flex;align-items:center;justify-content:space-between;margin-top:10px}.row output{color:#d8aa6f;font-variant-numeric:tabular-nums}input[type=range]{width:100%;accent-color:#bd8c52;margin:5px 0 0}
+.note{margin:8px 0 0;color:var(--muted);font-size:9px}.badge{left:14px;bottom:14px;padding:8px 10px;border-radius:9px;color:var(--muted);font-size:9px}
+.error{display:none;position:fixed;z-index:8;left:50%;top:50%;transform:translate(-50%,-50%);max-width:min(760px,86vw);padding:15px 17px;border-radius:11px;background:#3c1612;color:#ffd9cf;white-space:pre-wrap}
+@media(max-width:720px){.brand{left:8px;top:8px}.tools{right:8px;top:8px}.panel{left:8px;right:8px;top:88px;width:auto;max-height:48vh}.badge{left:8px;bottom:8px}}
+</style>
+</head>
+<body>
+<canvas id="view"></canvas>
+<div class="brand"><small>LANDSCAPE MOTHER · FAST KARST ITERATION</small><b>小尺度帕劳卡斯特 R2.3</b><span>R2.2 严格材质保留 · 提速、卡斯特形体与强色彩快速迭代</span></div>
+<div class="tools"><button id="zoomOut" title="缩小">−</button><button id="zoomIn" title="放大">＋</button><button id="qualityBtn">标准</button><button id="reset">复位</button><button id="panelBtn">调节</button><button id="gray">灰模</button></div>
+<aside class="panel" id="panel">
+  <section class="group"><h3>形体比例</h3>
+    <div class="row"><label>整体大小</label><output id="overallOut"></output></div><input id="overall" type="range" min=".55" max="2.20" step=".01" value="1">
+    <div class="row"><label>高度</label><output id="heightOut"></output></div><input id="height" type="range" min=".60" max="1.70" step=".01" value="1">
+    <div class="row"><label>宽度</label><output id="widthOut"></output></div><input id="width" type="range" min=".60" max="1.80" step=".01" value="1">
+  </section>
+  <section class="group"><h3>孔洞</h3>
+    <div class="row"><label>孔洞大小</label><output id="holeSizeOut"></output></div><input id="holeSize" type="range" min=".35" max="1.85" step=".01" value="1">
+    <div class="row"><label>孔洞深度</label><output id="cavityOut"></output></div><input id="cavity" type="range" min="0" max="2.2" step=".01" value="1.10">
+  </section>
+  <section class="group"><h3>仅形体细节</h3>
+    <div class="row"><label>大变形</label><output id="macroOut"></output></div><input id="macro" type="range" min="0" max="2.5" step=".01" value="1.05">
+    <div class="row"><label>域 Warp</label><output id="warpOut"></output></div><input id="warp" type="range" min="0" max="3" step=".01" value="1.20">
+    <div class="row"><label>细节强度</label><output id="detailOut"></output></div><input id="detail" type="range" min="0" max="2.4" step=".01" value="1">
+    <div class="row"><label>细节尺度</label><output id="detailScaleOut"></output></div><input id="detailScale" type="range" min=".35" max="2.6" step=".01" value="1">
+    <p class="note">颜色、花纹、粗糙度、微法线、照明和所有材料种子仍来自历史 V2.6；本轮只提高蓝灰综合色彩强度。</p>
+  </section>
+  <section class="group"><h3>V2.6 色彩增益</h3>
+    <div class="row"><label>色彩强度</label><output id="colorStrengthOut"></output></div><input id="colorStrength" type="range" min=".80" max="1.90" step=".01" value="1.42">
+    <div class="row"><label>冷蓝倾向</label><output id="blueStrengthOut"></output></div><input id="blueStrength" type="range" min="0" max=".75" step=".01" value=".32">
+    <p class="note">不更换历史 V2.6 色板，只在同一色板内增强饱和度与冷蓝层。</p>
+  </section>
+</aside>
+<div class="badge" id="badge">默认约 16 m 高 / 12 m 宽 · 快速首帧 · 强蓝灰 V2.6 · 可显式缩放</div>
+<div class="error" id="error"></div>
+<script>
+(()=>{"use strict";
+const canvas=document.getElementById("view");
+const gl=canvas.getContext("webgl2",{antialias:false,alpha:false,preserveDrawingBuffer:false,powerPreference:"high-performance"});
+if(!gl){const e=document.getElementById("error");e.style.display="block";e.textContent="需要 WebGL2";return}
+const VS=`#version 300 es
+precision highp float;const vec2 P[3]=vec2[3](vec2(-1.,-1.),vec2(3.,-1.),vec2(-1.,3.));void main(){gl_Position=vec4(P[gl_VertexID],0.,1.);}`;
+const GEOMETRY_FS=`#version 300 es
+precision highp float;
+in vec2 vUv;
+layout(location=0) out vec4 gPosition;
+layout(location=1) out vec4 gNormal;
+uniform vec2 uRes;
+uniform vec3 uCam;
+uniform mat3 uBasis;
+uniform float uOverall,uHeight,uWidth,uHoleSize,uCavity,uMacro,uWarp,uDetail,uDetailScale,uSoil;
+#define MAX_STEPS 88
+#define FAR 80.0
+float hash31(vec3 p){p=fract(p*.1031);p+=dot(p,p.yzx+33.33);return fract((p.x+p.y)*p.z);}vec3 hash33(vec3 p){p=vec3(dot(p,vec3(127.1,311.7,74.7)),dot(p,vec3(269.5,183.3,246.1)),dot(p,vec3(113.5,271.9,124.6)));return fract(sin(p)*43758.5453123);}
+float valueNoise3(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*f*(f*(f*6.-15.)+10.);float a=hash31(i),b=hash31(i+vec3(1,0,0)),c=hash31(i+vec3(0,1,0)),d=hash31(i+vec3(1,1,0)),e=hash31(i+vec3(0,0,1)),g=hash31(i+vec3(1,0,1)),h=hash31(i+vec3(0,1,1)),j=hash31(i+vec3(1,1,1));return mix(mix(mix(a,b,f.x),mix(c,d,f.x),f.y),mix(mix(e,g,f.x),mix(h,j,f.x),f.y),f.z);}
+float gradientNoise3(vec3 p){vec3 i=floor(p),f=fract(p),u=f*f*f*(f*(f*6.-15.)+10.);float a=dot(normalize(hash33(i)*2.-1.),f),b=dot(normalize(hash33(i+vec3(1,0,0))*2.-1.),f-vec3(1,0,0)),c=dot(normalize(hash33(i+vec3(0,1,0))*2.-1.),f-vec3(0,1,0)),d=dot(normalize(hash33(i+vec3(1,1,0))*2.-1.),f-vec3(1,1,0)),e=dot(normalize(hash33(i+vec3(0,0,1))*2.-1.),f-vec3(0,0,1)),g=dot(normalize(hash33(i+vec3(1,0,1))*2.-1.),f-vec3(1,0,1)),h=dot(normalize(hash33(i+vec3(0,1,1))*2.-1.),f-vec3(0,1,1)),j=dot(normalize(hash33(i+vec3(1,1,1))*2.-1.),f-vec3(1,1,1));return mix(mix(mix(a,b,u.x),mix(c,d,u.x),u.y),mix(mix(e,g,u.x),mix(h,j,u.x),u.y),u.z)*.5+.5;}
+float fbmGradient(vec3 p){float v=0.,a=.52,t=0.;for(int i=0;i<5;i++){v+=gradientNoise3(p)*a;t+=a;p=p*2.03+vec3(19.1,7.7,13.4);a*=.49;}return v/t;}float ridgedFbm(vec3 p){float v=0.,a=.56,t=0.;for(int i=0;i<5;i++){float n=1.-abs(gradientNoise3(p)*2.-1.);v+=n*n*a;t+=a;p=p*2.11+vec3(11.7,5.3,17.9);a*=.47;}return v/t;}float fbmValueFast(vec3 p){float v=0.,a=.54,t=0.;for(int i=0;i<4;i++){v+=valueNoise3(p)*a;t+=a;p=p*2.05+vec3(7.3,15.1,3.9);a*=.48;}return v/t;}float turbulence(vec3 p){float v=0.,a=.54,t=0.;for(int i=0;i<4;i++){v+=abs(valueNoise3(p)*2.-1.)*a;t+=a;p=p*2.07+vec3(3.7,17.2,9.1);a*=.5;}return v/t;}
+vec2 worley3(vec3 p){vec3 ip=floor(p),fp=fract(p);float f1=10.,f2=10.;for(int z=-1;z<=1;z++)for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec3 cell=vec3(float(x),float(y),float(z)),point=hash33(ip+cell),dv=cell+point-fp;float d2=dot(dv,dv);if(d2<f1){f2=f1;f1=d2;}else if(d2<f2)f2=d2;}return sqrt(vec2(f1,f2));}vec3 domainWarp(vec3 p){return vec3(fbmValueFast(p+vec3(17.1,3.8,9.2)),fbmValueFast(p+vec3(4.4,19.7,12.1)),fbmValueFast(p+vec3(13.8,7.2,23.4)))-.5;}
+float bmSat(float v){return clamp(v,0.,1.);}float bmAuto(float v,float lo,float hi){return bmSat((v-lo)/max(hi-lo,.00001));}float bmClarity(float v,float a){float t=bmSat(v),l=t*t*(3.-2.*t);return bmSat(t+(t-l)*a*1.45);}float bmMask(float v,float sharp){float w=mix(.30,.035,bmSat(sharp/1.6));return smoothstep(.5-w,.5+w,v);}vec3 srgbToLinear(vec3 c){return mix(c/12.92,pow((c+.055)/1.055,vec3(2.4)),step(vec3(.04045),c));}vec3 linearToSrgb(vec3 c){return mix(c*12.92,1.055*pow(max(c,0.),vec3(1./2.4))-.055,step(vec3(.0031308),c));}vec3 adjustSaturation(vec3 c,float s){float l=dot(c,vec3(.2126,.7152,.0722));return mix(vec3(l),c,s);}
+struct Fields{float rugged;float strata;float microErosion;float rockMap;float flow;float protrusion;float cavity;};Fields gaea(vec3 p,vec3 n){vec3 sv=vec3(8231.*.0113,8231.*.0197,8231.*.0311)*.91;vec3 q=p+domainWarp(p*.73+sv*.21)*.22;float ra=ridgedFbm(q*7.6+sv*.67),rb=ridgedFbm((q+domainWarp(q*1.31))*7.6*.53+sv*1.19),rug=bmClarity(ra*.68+rb*.32,.74);vec2 cells=worley3(q*7.6*.76+sv*.89);float plate=1.-smoothstep(.026,.17,cells.y-cells.x);float phaseNoise=fbmValueFast(q*3.7+sv*1.91)-.5;float phase=(q.y+q.x*.18+q.z*.075+phaseNoise*.18)*8.4*6.2831853+sv.x;float sw=sin(phase)*.5+.5;float sg=bmAuto(fbmValueFast(q*2.65+sv*1.43),.27,.82),sb=bmAuto(fbmValueFast(q*5.1+sv*2.11),.33,.81);float strata=bmMask(sw*(.16+sg*.52)*(.31+sb*.69),.7*.72);float mb=ridgedFbm(q*30.+sv*1.77),mg=bmAuto(turbulence(q*30.*.31+sv*2.13),.31,.86),micro=smoothstep(.61,.94,mb)*mg;float slope=1.-abs(n.y),pa=bmAuto(fbmValueFast(q*2.12+sv*2.73),.30,.79),pb=bmAuto(fbmGradient(q*4.35+sv*1.57),.28,.76);float rock=bmMask((pa*.46+pb*.34+rug*.20)*(.57+slope*.43),.7*.50);float vertical=bmAuto(1.-(p.y+.5),.08,.92),fn=bmAuto(fbmValueFast(vec3(q.x*2.1,q.y*.57,q.z*2.1)+sv*2.47),.48,.86),flow=bmMask(vertical*fn*(.38+slope*.62),.7*.58);Fields o;o.rugged=rug;o.strata=strata;o.microErosion=micro;o.rockMap=rock;o.flow=flow;o.protrusion=bmSat(rug*.60+strata*.12+pa*.28);o.cavity=bmSat(micro*.41+(1.-rug)*.27+(1.-pb)*.24+plate*.08);return o;}
+float smin(float a,float b,float k){float h=max(k-abs(a-b),0.)/k;return min(a,b)-h*h*k*.25;}
+float sdEllipsoid(vec3 p,vec3 r){float k0=length(p/r),k1=length(p/(r*r));return k0*(k0-1.)/max(k1,1e-5);}float baseForm(vec3 p){
+  float d=sdEllipsoid(p-vec3(-.35,-.20,.05),vec3(2.72,7.90,2.66));
+  d=smin(d,sdEllipsoid(p-vec3(-1.42,1.92,.30),vec3(2.18,4.88,2.14)),.44);
+  d=smin(d,sdEllipsoid(p-vec3(1.78,-1.30,-.42),vec3(2.34,4.18,2.08)),.40);
+  d=smin(d,sdEllipsoid(p-vec3(.22,5.42,-.42),vec3(2.16,2.78,1.94)),.36);
+  d=smin(d,sdEllipsoid(p-vec3(-.82,-4.22,.82),vec3(1.70,3.22,1.72)),.34);
+  d=smin(d,sdEllipsoid(p-vec3(-2.14,-2.62,.10),vec3(1.12,2.28,1.22)),.28);
+  d=smin(d,sdEllipsoid(p-vec3(.08,6.12,-.20),vec3(2.52,1.42,2.24)),.32);
+  return d;
+}float caveField(vec3 p){float hs=max(.20,uHoleSize);float c1=sdEllipsoid(p-vec3(-1.10,-2.60,2.05),vec3(2.55,2.20,3.15)*hs);float c2=sdEllipsoid(p-vec3(2.35,.65,1.55),vec3(1.45,1.25,2.05)*hs);float c3=sdEllipsoid(p-vec3(-2.85,2.15,-.2),vec3(1.15,1.55,1.5)*hs);float c4=sdEllipsoid(p-vec3(.25,4.15,1.2),vec3(.85,.72,1.05)*hs);return min(min(c1,c2),min(c3,c4));}
+float mapRock(vec3 wp){
+  float s=max(uOverall,.1);
+  vec3 p=wp/s;
+  p.x/=max(uWidth,.1);p.z/=max(uWidth,.1);p.y/=max(uHeight,.1);
+  vec3 q=p,w0=domainWarp(p*.18+vec3(2.4,-3.1,5.7));
+  q+=w0*(.78*uWarp);
+  vec3 w1=domainWarp((q+w0)*.43+vec3(-7.7,8.3,2.1));
+  q+=w1*(.13*uWarp);
+  float d=baseForm(q),cave=caveField(q);
+  d=max(d,-(cave+.15*(valueNoise3(q*.7)-.5)*uCavity));
+  float f=max(.16,uDetailScale);
+  float macro=(fbmGradient(q*.23*f)-.5)*.86+(ridgedFbm(q*.46*f)-.5)*.48;
+  float mid=(ridgedFbm(q*1.10*f)-.5)*.36+(valueNoise3(q*2.15*f)-.5)*.20;
+  float fine=(valueNoise3(q*5.2*f)-.5)*.085;
+  float directional=(valueNoise3(vec3(q.x*.45,q.y*.15,q.z*.45)+w0*1.4)-.5)*.18;
+  float verticalA=ridgedFbm(vec3(q.x*1.12,q.y*.13,q.z*1.12)+w1*1.8);
+  float verticalB=ridgedFbm(vec3(q.x*1.78,q.y*.085,q.z*1.78)+w0*2.15);
+  float fissures=smoothstep(.68,.93,verticalA);
+  float flutes=smoothstep(.64,.90,verticalB);
+  float radial=length(q.xz);
+  float lower=1.-smoothstep(-4.9,-1.7,q.y);
+  float undercut=lower*smoothstep(1.45,3.10,radial);
+  float waterNotch=exp(-pow((q.y+3.55)*.72,2.))*smoothstep(1.20,3.00,radial);
+  float crownBreak=smoothstep(3.7,6.9,q.y)*smoothstep(.68,.92,ridgedFbm(q*.68+w0*1.55));
+  d+=uMacro*(macro+directional)*.50+uDetail*(mid+fine)*.22;
+  d+=fissures*.15+flutes*.10+undercut*.22+waterNotch*.17+crownBreak*.075;
+  return d*s*min(uWidth,uHeight);
+}float mapGround(vec3 p){return p.y+7.85+.18*sin(p.x*.24)+.14*sin(p.z*.31);}vec2 mapScene(vec3 p){float r=mapRock(p),g=mapGround(p);return r<g?vec2(r,1.):vec2(g,2.);}vec3 normalAt(vec3 p){float e=.014*max(.65,uOverall);vec2 h=vec2(1.,-1.)*.5773;return normalize(h.xyy*mapScene(p+h.xyy*e).x+h.yyx*mapScene(p+h.yyx*e).x+h.yxy*mapScene(p+h.yxy*e).x+h.xxx*mapScene(p+h.xxx*e).x);}float softShadow(vec3 ro,vec3 rd,float mint,float maxt){float res=1.,t=mint;for(int i=0;i<22;i++){float h=mapScene(ro+rd*t).x;res=min(res,18.*h/t);t+=clamp(h,.025,.45);if(res<.01||t>maxt)break;}return clamp(res,0.,1.);}float aoField(vec3 p,vec3 n){float o=0.,s=1.;for(int i=1;i<=2;i++){float h=.10*float(i),d=mapScene(p+n*h).x;o+=(h-d)*s;s*=.58;}return clamp(1.-o*1.65,0.,1.);}float skyOpen(vec3 p){float o=1.;for(int i=1;i<=5;i++){float h=.42*float(i*i);o*=smoothstep(-.05,.26,mapScene(p+vec3(0,h,0)).x);}return o;}
+
+void main(){
+  vec2 uv=(gl_FragCoord.xy-.5*uRes)/uRes.y;
+  vec3 ro=uCam,rd=normalize(uBasis*vec3(uv,1.55));
+  float t=0.;vec2 hit=vec2(FAR,0.);vec3 p=ro;
+  for(int i=0;i<MAX_STEPS;i++){
+    p=ro+rd*t;hit=mapScene(p);
+    if(abs(hit.x)<.0016*max(1.,t*.14)||t>FAR)break;
+    t+=max(hit.x*.80,.008);
+  }
+  if(t>FAR){gPosition=vec4(0.,0.,0.,0.);gNormal=vec4(rd,1.);return;}
+  vec3 N=normalAt(p);float occ=aoField(p,N);
+  gPosition=vec4(p,hit.y);
+  gNormal=vec4(N,occ);
+}`;
+const MATERIAL_FS=`#version 300 es
+precision highp float;
+
+float valueNoise3(vec3 p);
+float gradientNoise3(vec3 p);
+float fbmGradient(vec3 p);
+float ridgedFbm(vec3 p);
+float fbmValueFast(vec3 p);
+float turbulence(vec3 p);
+vec2 worley3(vec3 p);
+vec3 domainWarp(vec3 p);
+
+float bmSaturate(float v) {
+  return clamp(v, 0.0, 1.0);
+}
+
+float bmAutoLevel(float v, float low, float high) {
+  return bmSaturate((v - low) / max(high - low, 0.00001));
+}
+
+float bmClarity(float v, float amount) {
+  float t = bmSaturate(v);
+  float local = t * t * (3.0 - 2.0 * t);
+  return bmSaturate(t + (t - local) * amount * 1.45);
+}
+
+float bmSoftClip(float v, float low, float high) {
+  float t = bmAutoLevel(v, low, high);
+  return t * t * (3.0 - 2.0 * t);
+}
+
+float bmMaskSharp(float v, float sharpness) {
+  float width = mix(0.30, 0.035, bmSaturate(sharpness / 1.6));
+  return smoothstep(0.5 - width, 0.5 + width, v);
+}
+
+float bmCombine(float a, float b, float mode, float ratio) {
+  float r = bmSaturate(ratio);
+  if (mode < 0.5) return mix(a, b, r);
+  if (mode < 1.5) return bmSaturate(a + b * r);
+  if (mode < 2.5) return bmSaturate(mix(a, a * b, r));
+  if (mode < 3.5) return mix(a, max(a, b), r);
+  if (mode < 4.5) return mix(a, min(a, b), r);
+  if (mode < 5.5) return mix(a, 1.0 - (1.0 - a) * (1.0 - b), r);
+  return mix(a, abs(a - b), r);
+}
+
+vec3 bmClut5(float t, vec3 c0, vec3 c1, vec3 c2, vec3 c3, vec3 c4) {
+  float x = bmSaturate(t) * 4.0;
+  if (x < 1.0) return mix(c0, c1, x);
+  if (x < 2.0) return mix(c1, c2, x - 1.0);
+  if (x < 3.0) return mix(c2, c3, x - 2.0);
+  return mix(c3, c4, x - 3.0);
+}
+
+vec4 bmSplatWeights(float a, float b, float c, float d, float sharpness) {
+  float power = 1.0 + bmSaturate(sharpness / 1.6) * 5.0;
+  vec4 w = pow(max(vec4(a, b, c, d), vec4(0.00001)), vec4(power));
+  return w / max(dot(w, vec4(1.0)), 0.00001);
+}
+
+struct BMGaeaFields {
+  float rugged;
+  float strata;
+  float microErosion;
+  float rockMap;
+  float flow;
+  float protrusion;
+  float cavity;
+  float separation;
+};
+
+BMGaeaFields bmGaeaEvaluate(
+  vec3 p,
+  vec3 n,
+  vec3 seedV,
+  float ruggedScale,
+  float strataFrequency,
+  float surfaceScale,
+  float maskSharpness
+) {
+  vec3 q = p + domainWarp(p * 0.73 + seedV * 0.21) * 0.22;
+  float ruggedA = ridgedFbm(q * ruggedScale + seedV * 0.67);
+  float ruggedB = ridgedFbm((q + domainWarp(q * 1.31)) * ruggedScale * 0.53 + seedV * 1.19);
+  float rugged = bmClarity(ruggedA * 0.68 + ruggedB * 0.32, 0.74);
+
+  vec2 cells = worley3(q * ruggedScale * 0.76 + seedV * 0.89);
+  float plateEdge = 1.0 - smoothstep(0.026, 0.17, cells.y - cells.x);
+
+  float strataPhaseNoise = fbmValueFast(q * 3.7 + seedV * 1.91) - 0.5;
+  float strataPhase = (
+    q.y + q.x * 0.18 + q.z * 0.075 + strataPhaseNoise * 0.18
+  ) * strataFrequency * 6.2831853 + seedV.x;
+  float strataWave = sin(strataPhase) * 0.5 + 0.5;
+  float strataGate = bmAutoLevel(fbmValueFast(q * 2.65 + seedV * 1.43), 0.27, 0.82);
+  float strataBreak = bmAutoLevel(fbmValueFast(q * 5.1 + seedV * 2.11), 0.33, 0.81);
+  float strata = bmMaskSharp(
+    strataWave * (0.16 + strataGate * 0.52) * (0.31 + strataBreak * 0.69),
+    maskSharpness * 0.72
+  );
+
+  float microBase = ridgedFbm(q * surfaceScale + seedV * 1.77);
+  float microGate = bmAutoLevel(turbulence(q * surfaceScale * 0.31 + seedV * 2.13), 0.31, 0.86);
+  float microErosion = smoothstep(0.61, 0.94, microBase) * microGate;
+
+  float slope = 1.0 - abs(n.y);
+  float rockPatchA = bmAutoLevel(fbmValueFast(q * 2.12 + seedV * 2.73), 0.30, 0.79);
+  float rockPatchB = bmAutoLevel(fbmGradient(q * 4.35 + seedV * 1.57), 0.28, 0.76);
+  float rockMap = bmMaskSharp(
+    (rockPatchA * 0.46 + rockPatchB * 0.34 + rugged * 0.20) * (0.57 + slope * 0.43),
+    maskSharpness * 0.50
+  );
+
+  float vertical = bmAutoLevel(1.0 - (p.y + 0.5), 0.08, 0.92);
+  float flowNoise = bmAutoLevel(fbmValueFast(vec3(q.x * 2.1, q.y * 0.57, q.z * 2.1) + seedV * 2.47), 0.48, 0.86);
+  float flow = bmMaskSharp(vertical * flowNoise * (0.38 + slope * 0.62), maskSharpness * 0.58);
+
+  float materialA = fbmValueFast(q * 2.55 + seedV * 3.07);
+  float materialB = fbmGradient(q * 4.95 + seedV * 2.31);
+  float protrusion = bmSaturate(rugged * 0.60 + strata * 0.12 + rockPatchA * 0.28);
+  float cavity = bmSaturate(
+    microErosion * 0.41 +
+    (1.0 - rugged) * 0.27 +
+    (1.0 - rockPatchB) * 0.24 +
+    plateEdge * 0.08
+  );
+  float separation = bmMaskSharp(
+    bmSaturate(abs(materialA - materialB) * 0.72 + flow * 0.12 + microErosion * 0.16),
+    maskSharpness * 0.40
+  );
+
+  BMGaeaFields result;
+  result.rugged = rugged;
+  result.strata = strata;
+  result.microErosion = microErosion;
+  result.rockMap = rockMap;
+  result.flow = flow;
+  result.protrusion = protrusion;
+  result.cavity = cavity;
+  result.separation = separation;
+  return result;
+}
+
+
+in vec2 vUv;
+out vec4 outColor;
+uniform sampler2D uPositionTex;
+uniform sampler2D uNormalTex;
+uniform float uKarstOverall;
+uniform float uKarstHeight;
+uniform float uKarstWidth;
+uniform float uColorStrength;
+uniform float uBlueStrength;
+vec3 vWorldPos;
+vec3 vLocalPos;
+vec3 vNormal;
+
+uniform vec3 uCamera;
+uniform vec3 uLowColor;
+uniform vec3 uMeanColor;
+uniform vec3 uHighColor;
+uniform vec3 uPaletteDark;
+uniform vec3 uPaletteWarm;
+uniform vec3 uPaletteOxide;
+uniform vec3 uPaletteMineral;
+uniform vec3 uPaletteBio;
+uniform vec3 uPaletteWet;
+uniform vec3 uPaletteStraw;
+uniform vec3 uPaletteHusk;
+uniform vec3 uPaletteSeedColor;
+uniform vec2 uRoughness;
+uniform vec3 uDimensions;
+uniform float uWarpStrength;
+uniform float uMacroScale;
+uniform float uRidgedScale;
+uniform float uCellScale;
+uniform float uPoreThreshold;
+uniform float uPoreSharpness;
+uniform float uMicroScale;
+uniform float uColorContrast;
+uniform float uCavityStrength;
+uniform float uBumpStrength;
+uniform float uRoughnessCorrelation;
+uniform float uMineralScale;
+uniform float uFiringBand;
+uniform float uColorRichness;
+uniform float uWaterStrength;
+uniform float uWeatherStrength;
+uniform float uInclusionStrength;
+uniform float uPoreDepth;
+uniform float uPoreDensity;
+uniform float uPoreVariety;
+uniform float uColorSeed;
+uniform float uPoreSeed;
+uniform float uWaterSeed;
+uniform float uWeatherSeed;
+uniform float uInclusionSeed;
+uniform float uDetailSeed;
+uniform float uGaeaRockDetail;
+uniform float uGaeaStrata;
+uniform float uGaeaMicroErosion;
+uniform float uGaeaColorClarity;
+uniform float uGaeaColorGamut;
+uniform float uGaeaMaskSharpness;
+uniform float uGaeaRuggedScale;
+uniform float uGaeaStrataFrequency;
+uniform float uGaeaSurfaceScale;
+uniform int uFamily;
+uniform int uDebugMode;
+uniform int uGround;
+uniform vec3 uShadowPos0;
+uniform vec3 uShadowPos1;
+uniform vec3 uShadowPos2;
+uniform vec2 uShadowSize0;
+uniform vec2 uShadowSize1;
+uniform vec2 uShadowSize2;
+
+float hash31(vec3 p) {
+  p = fract(p * 0.1031);
+  p += dot(p, p.yzx + 33.33);
+  return fract((p.x + p.y) * p.z);
+}
+
+vec2 hash22(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973));
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.xx + p3.yz) * p3.zy);
+}
+
+vec3 hash33(vec3 p) {
+  p = vec3(
+    dot(p, vec3(127.1, 311.7, 74.7)),
+    dot(p, vec3(269.5, 183.3, 246.1)),
+    dot(p, vec3(113.5, 271.9, 124.6))
+  );
+  return fract(sin(p) * 43758.5453123);
+}
+
+mat2 rotate2(float a) {
+  float c = cos(a), s = sin(a);
+  return mat2(c, -s, s, c);
+}
+
+float valueNoise3(vec3 p) {
+  vec3 i = floor(p);
+  vec3 f = fract(p);
+  f = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+  float n000 = hash31(i + vec3(0, 0, 0));
+  float n100 = hash31(i + vec3(1, 0, 0));
+  float n010 = hash31(i + vec3(0, 1, 0));
+  float n110 = hash31(i + vec3(1, 1, 0));
+  float n001 = hash31(i + vec3(0, 0, 1));
+  float n101 = hash31(i + vec3(1, 0, 1));
+  float n011 = hash31(i + vec3(0, 1, 1));
+  float n111 = hash31(i + vec3(1, 1, 1));
+  return mix(
+    mix(mix(n000, n100, f.x), mix(n010, n110, f.x), f.y),
+    mix(mix(n001, n101, f.x), mix(n011, n111, f.x), f.y),
+    f.z
+  );
+}
+
+float gradientNoise3(vec3 p) {
+  vec3 i = floor(p);
+  vec3 f = fract(p);
+  vec3 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+  float n000 = dot(normalize(hash33(i + vec3(0, 0, 0)) * 2.0 - 1.0), f - vec3(0, 0, 0));
+  float n100 = dot(normalize(hash33(i + vec3(1, 0, 0)) * 2.0 - 1.0), f - vec3(1, 0, 0));
+  float n010 = dot(normalize(hash33(i + vec3(0, 1, 0)) * 2.0 - 1.0), f - vec3(0, 1, 0));
+  float n110 = dot(normalize(hash33(i + vec3(1, 1, 0)) * 2.0 - 1.0), f - vec3(1, 1, 0));
+  float n001 = dot(normalize(hash33(i + vec3(0, 0, 1)) * 2.0 - 1.0), f - vec3(0, 0, 1));
+  float n101 = dot(normalize(hash33(i + vec3(1, 0, 1)) * 2.0 - 1.0), f - vec3(1, 0, 1));
+  float n011 = dot(normalize(hash33(i + vec3(0, 1, 1)) * 2.0 - 1.0), f - vec3(0, 1, 1));
+  float n111 = dot(normalize(hash33(i + vec3(1, 1, 1)) * 2.0 - 1.0), f - vec3(1, 1, 1));
+  float n = mix(
+    mix(mix(n000, n100, u.x), mix(n010, n110, u.x), u.y),
+    mix(mix(n001, n101, u.x), mix(n011, n111, u.x), u.y),
+    u.z
+  );
+  return n * 0.5 + 0.5;
+}
+
+float fbmGradient(vec3 p) {
+  float v = 0.0;
+  float a = 0.52;
+  float total = 0.0;
+  for (int i = 0; i < 5; i++) {
+    v += gradientNoise3(p) * a;
+    total += a;
+    p = p * 2.03 + vec3(19.1, 7.7, 13.4);
+    a *= 0.49;
+  }
+  return v / total;
+}
+
+float ridgedFbm(vec3 p) {
+  float v = 0.0;
+  float a = 0.56;
+  float total = 0.0;
+  for (int i = 0; i < 5; i++) {
+    float n = 1.0 - abs(gradientNoise3(p) * 2.0 - 1.0);
+    v += n * n * a;
+    total += a;
+    p = p * 2.11 + vec3(11.7, 5.3, 17.9);
+    a *= 0.47;
+  }
+  return v / total;
+}
+
+float fbmValueFast(vec3 p) {
+  float v = 0.0;
+  float a = 0.54;
+  float total = 0.0;
+  for (int i = 0; i < 4; i++) {
+    v += valueNoise3(p) * a;
+    total += a;
+    p = p * 2.05 + vec3(7.3, 15.1, 3.9);
+    a *= 0.48;
+  }
+  return v / total;
+}
+
+float turbulence(vec3 p) {
+  float v = 0.0;
+  float a = 0.54;
+  float total = 0.0;
+  for (int i = 0; i < 4; i++) {
+    v += abs(valueNoise3(p) * 2.0 - 1.0) * a;
+    total += a;
+    p = p * 2.07 + vec3(3.7, 17.2, 9.1);
+    a *= 0.5;
+  }
+  return v / total;
+}
+
+vec2 worley3(vec3 p) {
+  vec3 ip = floor(p);
+  vec3 fp = fract(p);
+  float f1 = 10.0;
+  float f2 = 10.0;
+  for (int z = -1; z <= 1; z++) {
+    for (int y = -1; y <= 1; y++) {
+      for (int x = -1; x <= 1; x++) {
+        vec3 cell = vec3(float(x), float(y), float(z));
+        vec3 point = hash33(ip + cell);
+        vec3 d = cell + point - fp;
+        float dist2 = dot(d, d);
+        if (dist2 < f1) {
+          f2 = f1;
+          f1 = dist2;
+        } else if (dist2 < f2) {
+          f2 = dist2;
+        }
+      }
+    }
+  }
+  return sqrt(vec2(f1, f2));
+}
+
+vec3 domainWarp(vec3 p) {
+  return vec3(
+    fbmValueFast(p + vec3(17.1, 3.8, 9.2)),
+    fbmValueFast(p + vec3(4.4, 19.7, 12.1)),
+    fbmValueFast(p + vec3(13.8, 7.2, 23.4))
+  ) - 0.5;
+}
+
+vec3 seedVector(float s, float multiplier) {
+  return vec3(s * 0.0113, s * 0.0197, s * 0.0311) * multiplier;
+}
+
+vec2 surfaceProjection(vec3 p, vec3 n) {
+  vec3 a = abs(n);
+  if (a.x > a.y && a.x > a.z) return p.zy;
+  if (a.y > a.z) return p.xz;
+  return p.xy;
+}
+
+vec4 organicInclusions(vec2 uv, float seed) {
+  vec2 g0 = uv * 6.2;
+  vec2 id0 = floor(g0);
+  vec2 f0 = fract(g0) - 0.5;
+  vec2 r0 = hash22(id0 + seed * 0.013);
+  vec2 q0 = rotate2((r0.x - 0.5) * 3.14159265) * (f0 - (r0 - 0.5) * 0.38);
+  float gate0 = smoothstep(0.43, 0.76, hash31(vec3(id0, seed * 0.017)));
+  float strawLong = (1.0 - smoothstep(0.026, 0.066, abs(q0.y))) *
+                    (1.0 - smoothstep(0.34, 0.49, abs(q0.x))) * gate0;
+
+  vec2 g0b = uv * 3.8 + vec2(9.3, 2.7);
+  vec2 id0b = floor(g0b);
+  vec2 f0b = fract(g0b) - 0.5;
+  vec2 r0b = hash22(id0b + seed * 0.019 + 41.0);
+  vec2 q0b = rotate2(r0b.y * 6.2831853) * (f0b - (r0b - 0.5) * 0.28);
+  float gate0b = smoothstep(0.70, 0.92, hash31(vec3(id0b, seed * 0.021 + 29.0)));
+  float strawLongB = (1.0 - smoothstep(0.020, 0.052, abs(q0b.y))) *
+                     (1.0 - smoothstep(0.39, 0.51, abs(q0b.x))) * gate0b;
+
+  vec2 g1 = uv * 11.5 + vec2(3.7, 9.1);
+  vec2 id1 = floor(g1);
+  vec2 f1 = fract(g1) - 0.5;
+  vec2 r1 = hash22(id1 + seed * 0.023 + 17.0);
+  vec2 q1 = rotate2(r1.y * 6.2831853) * (f1 - (r1 - 0.5) * 0.31);
+  float gate1 = smoothstep(0.54, 0.83, hash31(vec3(id1, seed * 0.029 + 11.0)));
+  float strawShort = (1.0 - smoothstep(0.030, 0.080, abs(q1.y))) *
+                     (1.0 - smoothstep(0.20, 0.34, abs(q1.x))) * gate1;
+
+  vec2 g2 = uv * 16.0 + vec2(11.0, 2.0);
+  vec2 id2 = floor(g2);
+  vec2 f2 = fract(g2) - 0.5;
+  vec2 r2 = hash22(id2 + seed * 0.031 + 29.0);
+  vec2 q2 = rotate2((r2.x - 0.5) * 2.2) * (f2 - (r2 - 0.5) * 0.24);
+  float ellipseH = length(q2 / vec2(0.33, 0.125));
+  float husk = (1.0 - smoothstep(0.065, 0.18, abs(ellipseH - 1.0))) *
+               smoothstep(0.60, 0.87, hash31(vec3(id2, seed * 0.037 + 7.0)));
+
+  vec2 g3 = uv * 20.0 + vec2(5.0, 13.0);
+  vec2 id3 = floor(g3);
+  vec2 f3 = fract(g3) - 0.5;
+  vec2 r3 = hash22(id3 + seed * 0.041 + 43.0);
+  vec2 q3 = rotate2(r3.y * 6.2831853) * (f3 - (r3 - 0.5) * 0.19);
+  float seedEllipse = length(q3 / vec2(0.22, 0.125));
+  float seedMask = (1.0 - smoothstep(0.78, 1.15, seedEllipse)) *
+                   smoothstep(0.70, 0.91, hash31(vec3(id3, seed * 0.047 + 31.0)));
+
+  vec2 g4 = uv * 24.0 + vec2(17.0, 3.0);
+  vec2 id4 = floor(g4);
+  vec2 f4 = fract(g4) - 0.5;
+  vec2 r4 = hash22(id4 + seed * 0.051 + 59.0);
+  float pit = (1.0 - smoothstep(0.075, 0.19, length(f4 - (r4 - 0.5) * 0.34))) *
+              smoothstep(0.76, 0.95, hash31(vec3(id4, seed * 0.057 + 47.0)));
+
+  float clusterLarge = smoothstep(0.26, 0.72, fbmValueFast(vec3(uv * 1.05, seed * 0.0061)));
+  float clusterFine = smoothstep(0.40, 0.83, valueNoise3(vec3(uv * 3.1, seed * 0.0097)));
+  float burial = mix(0.22, 1.0, clusterLarge) * mix(0.64, 1.0, clusterFine);
+  float strawMask = max(max(strawLong, strawLongB), strawShort);
+  vec4 result = vec4(strawMask, husk, seedMask, pit);
+  result.xyz *= burial;
+  result.w *= mix(0.42, 1.0, clusterLarge);
+  return clamp(result, 0.0, 1.0);
+}
+
+vec2 waterWeatherMasks(vec3 p, vec3 n, float waterSeed, float weatherSeed) {
+  vec3 an = abs(n);
+  float horizontal = an.x > an.z ? p.z : p.x;
+  float yNorm = clamp(vLocalPos.y / max(uDimensions.y, 0.001) + 0.5, 0.0, 1.0);
+
+  float columnScale = 5.4;
+  float column = horizontal * columnScale + waterSeed * 0.0031;
+  float columnId = floor(column);
+  float local = fract(column) - 0.5;
+  float jitter = (hash31(vec3(columnId, waterSeed * 0.013, 7.0)) - 0.5) * 0.56;
+  float width = mix(0.045, 0.16, hash31(vec3(columnId, waterSeed * 0.019, 13.0)));
+  float line = 1.0 - smoothstep(width, width + 0.055, abs(local - jitter));
+  float start = mix(0.52, 1.02, hash31(vec3(columnId, waterSeed * 0.023, 19.0)));
+  float lengthV = mix(0.16, 0.78, hash31(vec3(columnId, waterSeed * 0.029, 23.0)));
+  float verticalGate = smoothstep(start - lengthV - 0.05, start - lengthV + 0.055, yNorm) *
+                       (1.0 - smoothstep(start - 0.025, start + 0.045, yNorm));
+  float streakGate = smoothstep(0.48, 0.86, hash31(vec3(columnId, waterSeed * 0.037, 31.0)));
+  float streak = line * verticalGate * streakGate;
+
+  vec3 waterCoord = vec3(horizontal * 1.75, yNorm * 3.0, waterSeed * 0.009);
+  float broad = smoothstep(0.54, 0.82, fbmValueFast(waterCoord + domainWarp(waterCoord * 0.7) * 0.45));
+  float lowerDamp = (1.0 - smoothstep(0.06, 0.34, yNorm)) *
+                    smoothstep(0.35, 0.78, fbmValueFast(vec3(p.x * 1.3, p.z * 1.3, waterSeed * 0.011)));
+  float waterMask = clamp(streak * 0.92 + broad * verticalGate * 0.32 + lowerDamp * 0.58, 0.0, 1.0);
+
+  vec3 edgeCoord = abs(vLocalPos) / max(uDimensions * 0.5, vec3(0.001));
+  float edgeCount = smoothstep(0.72, 0.99, edgeCoord.x) +
+                    smoothstep(0.72, 0.99, edgeCoord.y) +
+                    smoothstep(0.72, 0.99, edgeCoord.z);
+  float edgeMask = smoothstep(1.08, 1.88, edgeCount);
+  float topExposure = smoothstep(0.05, 0.72, n.y) * smoothstep(0.35, 0.98, yNorm);
+  float weatherNoise = fbmGradient(p * 1.82 + seedVector(weatherSeed, 0.74));
+  float weatherFine = ridgedFbm(p * 7.1 + seedVector(weatherSeed, 1.31));
+  float weatherMask = clamp((edgeMask * 0.72 + topExposure * 0.55) * smoothstep(0.30, 0.84, weatherNoise) +
+                            smoothstep(0.76, 0.96, weatherFine) * 0.18, 0.0, 1.0);
+  return vec2(waterMask, weatherMask);
+}
+
+vec3 srgbToLinear(vec3 c) {
+  return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(vec3(0.04045), c));
+}
+
+vec3 linearToSrgb(vec3 c) {
+  return mix(c * 12.92, 1.055 * pow(max(c, 0.0), vec3(1.0 / 2.4)) - 0.055, step(vec3(0.0031308), c));
+}
+
+vec3 adjustSaturation(vec3 c, float saturation) {
+  float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+  return mix(vec3(l), c, saturation);
+}
+
+float shadowBlob(vec3 p, vec3 c, vec2 s) {
+  vec2 q = (p.xz - c.xz) / max(s, vec2(0.01));
+  return exp(-dot(q, q) * 2.65);
+}
+
+float D_GGX(float NoH, float a) {
+  float a2 = a * a;
+  float d = NoH * NoH * (a2 - 1.0) + 1.0;
+  return a2 / (3.14159265 * d * d + 0.00001);
+}
+
+float G_Schlick(float NoV, float k) {
+  return NoV / (NoV * (1.0 - k) + k + 0.00001);
+}
+
+vec3 F_Schlick(float VoH, vec3 F0) {
+  return F0 + (1.0 - F0) * pow(1.0 - VoH, 5.0);
+}
+
+vec3 shadeLight(vec3 N, vec3 V, vec3 L, vec3 lightColor, float intensity, vec3 albedo, float rough) {
+  vec3 H = normalize(V + L);
+  float NoL = max(dot(N, L), 0.0);
+  float NoV = max(dot(N, V), 0.001);
+  float NoH = max(dot(N, H), 0.0);
+  float VoH = max(dot(V, H), 0.0);
+  float a = max(0.05, rough * rough);
+  float k = (rough + 1.0) * (rough + 1.0) / 8.0;
+  vec3 F = F_Schlick(VoH, vec3(0.026));
+  float D = D_GGX(NoH, a);
+  float G = G_Schlick(NoV, k) * G_Schlick(NoL, k);
+  vec3 spec = (D * G * F) / (4.0 * NoV * max(NoL, 0.001) + 0.0001);
+  vec3 kd = 1.0 - F;
+  return (kd * albedo / 3.14159265 + spec) * NoL * lightColor * intensity;
+}
+
+void main() {
+  ivec2 pixel = ivec2(gl_FragCoord.xy);
+  vec4 gp = texelFetch(uPositionTex, pixel, 0);
+  vec4 gn = texelFetch(uNormalTex, pixel, 0);
+  if (gp.w < 0.5) {
+    vec3 rd = normalize(gn.xyz);
+    vec3 sky = mix(vec3(0.035, 0.040, 0.043), vec3(0.105, 0.116, 0.118), clamp(rd.y * 0.5 + 0.5, 0.0, 1.0));
+    outColor = vec4(linearToSrgb(sky), 1.0);
+    return;
+  }
+  vWorldPos = gp.xyz;
+  vec3 karstLocal = vec3(
+    gp.x / max(uKarstOverall * uKarstWidth * 3.20, 0.001),
+    gp.y / max(uKarstOverall * uKarstHeight * 8.00, 0.001),
+    gp.z / max(uKarstOverall * uKarstWidth * 3.20, 0.001)
+  );
+  vLocalPos = karstLocal * (uDimensions * 0.5);
+  vNormal = normalize(gn.xyz);
+  if (gp.w > 1.5) {
+    vec3 c = vec3(0.060, 0.064, 0.068);
+    float grain = valueNoise3(vWorldPos * 3.2 + uColorSeed) * 0.014 - 0.007;
+    float sh = clamp(
+      shadowBlob(vWorldPos, uShadowPos0, uShadowSize0) +
+      shadowBlob(vWorldPos, uShadowPos1, uShadowSize1) +
+      shadowBlob(vWorldPos, uShadowPos2, uShadowSize2),
+      0.0, 1.0
+    );
+    c = (c + grain) * (1.0 - 0.34 * sh);
+    float gx = abs(fract(vWorldPos.x * 0.5) - 0.5);
+    float gz = abs(fract(vWorldPos.z * 0.5) - 0.5);
+    float grid = min(gx, gz);
+    c += (1.0 - smoothstep(0.0, 0.028, grid)) * 0.014;
+    outColor = vec4(linearToSrgb(c), 1.0);
+    return;
+  }
+
+  float minD = max(0.0001, min(uDimensions.x, min(uDimensions.y, uDimensions.z)));
+  vec3 p = vLocalPos / minD;
+  vec3 colorSeedV = seedVector(uColorSeed, 1.0);
+  vec3 poreSeedV = seedVector(uPoreSeed, 1.0);
+  vec3 detailSeedV = seedVector(uDetailSeed, 1.0);
+  vec3 warped = p + domainWarp(p * uMacroScale * 0.72 + detailSeedV) * uWarpStrength;
+  vec3 colorWarped = p + domainWarp(p * uMacroScale * 0.58 + colorSeedV) * (uWarpStrength * 1.22);
+  vec3 poreWarped = p + domainWarp(p * uCellScale * 0.10 + poreSeedV) * (uWarpStrength * 0.72);
+
+  float macro = fbmGradient(colorWarped * uMacroScale + colorSeedV * 0.31);
+  float macroB = fbmValueFast(colorWarped * uMacroScale * 0.63 + colorSeedV * 1.27);
+  float ridge = ridgedFbm(warped * uRidgedScale + detailSeedV * 0.57);
+  float turbul = turbulence(warped * uRidgedScale * 0.68 + detailSeedV * 0.91);
+  float micro = gradientNoise3(warped * uMicroScale + detailSeedV * 1.7);
+  float grit = valueNoise3(warped * uMicroScale * 2.35 + detailSeedV * 3.1);
+  float crustBroad = ridgedFbm(warped * (uFamily == 2 ? 10.5 : 13.5) + detailSeedV * 2.17);
+  float crustFine = fbmValueFast(warped * (uFamily == 2 ? 24.0 : 32.0) + detailSeedV * 3.73);
+  float crustFlake = smoothstep(0.45, 0.82, crustBroad * 0.68 + crustFine * 0.32);
+
+  float poreDensityN = clamp(uPoreDensity / 2.2, 0.0, 1.0);
+  float poreVarietyN = clamp(uPoreVariety / 1.8, 0.0, 1.0);
+
+  vec2 cell = worley3(poreWarped * uCellScale + poreSeedV * 0.27);
+  float poreAA = max(fwidth(cell.x) * 1.4, 0.003);
+  float poreCore = 1.0 - smoothstep(
+    uPoreThreshold - poreAA,
+    uPoreThreshold + uPoreSharpness + poreAA,
+    cell.x
+  );
+  float poreGate = smoothstep(
+    mix(0.62, 0.45, poreDensityN),
+    0.88,
+    valueNoise3(poreWarped * uCellScale * 0.31 + poreSeedV * 4.3)
+  );
+  float pore = poreCore * poreGate;
+
+  vec2 mediumCell = worley3(
+    poreWarped * uCellScale * mix(0.46, 0.34, poreVarietyN) + poreSeedV * 0.61
+  );
+  float mediumAA = max(fwidth(mediumCell.x) * 1.55, 0.006);
+  float mediumRadius = mix(0.105, 0.175, poreVarietyN);
+  float mediumCore = 1.0 - smoothstep(
+    mediumRadius - mediumAA,
+    mediumRadius + 0.055 + mediumAA,
+    mediumCell.x
+  );
+  float mediumGate = smoothstep(
+    mix(0.70, 0.52, poreDensityN),
+    0.91,
+    fbmValueFast(poreWarped * 2.35 + poreSeedV * 2.7)
+  );
+  float poreMedium = mediumCore * mediumGate;
+
+  vec2 largeCell = worley3(
+    poreWarped * uCellScale * mix(0.235, 0.165, poreVarietyN) + poreSeedV * 1.17
+  );
+  float largeAA = max(fwidth(largeCell.x) * 1.65, 0.008);
+  float largeRadius = mix(0.105, 0.205, poreVarietyN);
+  float largeCore = 1.0 - smoothstep(
+    largeRadius - largeAA,
+    largeRadius + 0.070 + largeAA,
+    largeCell.x
+  );
+  float largeGate = smoothstep(
+    mix(0.82, 0.66, poreDensityN),
+    0.95,
+    fbmGradient(poreWarped * 1.55 + poreSeedV * 3.6)
+  );
+  float poreLarge = largeCore * largeGate;
+
+  float mediumRing = smoothstep(mediumRadius * 0.76, mediumRadius, mediumCell.x) *
+                     (1.0 - smoothstep(mediumRadius, mediumRadius + 0.095, mediumCell.x)) *
+                     mediumGate;
+  float largeRing = smoothstep(largeRadius * 0.70, largeRadius, largeCell.x) *
+                    (1.0 - smoothstep(largeRadius, largeRadius + 0.13, largeCell.x)) *
+                    largeGate;
+  float poreRim = clamp(mediumRing * 0.72 + largeRing, 0.0, 1.0);
+  float poreComposite = clamp(
+    pore * 0.78 +
+    poreMedium * (0.58 + poreDensityN * 0.40) +
+    poreLarge * (0.64 + poreVarietyN * 0.42),
+    0.0, 1.0
+  );
+
+  vec2 mineralCell = worley3(warped * uMineralScale + colorSeedV * 1.17);
+  float microPore = (1.0 - smoothstep(0.052, 0.125 + fwidth(mineralCell.x), mineralCell.x)) *
+                    smoothstep(0.72, 0.94, valueNoise3(warped * uMicroScale * 0.19 + poreSeedV * 6.7));
+  float mineralCore = 1.0 - smoothstep(0.055, 0.145 + fwidth(mineralCell.x), mineralCell.x);
+  float mineralGate = smoothstep(0.57, 0.90, valueNoise3(warped * uMineralScale * 0.37 + colorSeedV * 2.9));
+  float mineral = mineralCore * mineralGate;
+  float cellularEdge = 1.0 - smoothstep(0.018, 0.105 + fwidth(mineralCell.y - mineralCell.x), mineralCell.y - mineralCell.x);
+
+  vec3 baseNormal = normalize(vNormal);
+  BMGaeaFields gaea = bmGaeaEvaluate(
+    p,
+    baseNormal,
+    seedVector(uDetailSeed + uColorSeed * 0.37, 0.91),
+    uGaeaRuggedScale,
+    uGaeaStrataFrequency,
+    uGaeaSurfaceScale,
+    uGaeaMaskSharpness
+  );
+  vec2 projected = surfaceProjection(p, baseNormal);
+  vec4 inclusions = organicInclusions(projected, uInclusionSeed);
+  inclusions *= float(uFamily == 1) * uInclusionStrength;
+
+  float cavity = clamp(
+    poreComposite * (0.72 + uPoreDepth * 0.25) +
+    poreLarge * (0.18 + uPoreDepth * 0.12) +
+    microPore * 0.34 +
+    smoothstep(0.77, 0.98, turbul) * 0.16 +
+    smoothstep(0.84, 0.99, 1.0 - ridge) * 0.10 +
+    inclusions.w * 0.52,
+    0.0, 1.0
+  );
+
+  cavity = clamp(
+    cavity +
+    gaea.cavity * (0.14 + uGaeaRockDetail * 0.24) +
+    gaea.microErosion * uGaeaMicroErosion * 0.11,
+    0.0, 1.0
+  );
+
+  float microToneWeight = uFamily == 2 ? 0.026 : (uFamily == 1 ? 0.050 : 0.054);
+  float gritToneWeight = uFamily == 2 ? 0.007 : (uFamily == 1 ? 0.016 : 0.018);
+  float tone = clamp(
+    0.08 + macro * 0.56 + macroB * 0.20 + ridge * 0.14 +
+    (micro - 0.5) * microToneWeight + (grit - 0.5) * gritToneWeight,
+    0.0, 1.0
+  );
+  tone = clamp((tone - 0.5) * uColorContrast + 0.5, 0.0, 1.0);
+
+  vec3 low = srgbToLinear(uLowColor);
+  vec3 mean = srgbToLinear(uMeanColor);
+  vec3 high = srgbToLinear(uHighColor);
+  vec3 dark = srgbToLinear(uPaletteDark);
+  vec3 warm = srgbToLinear(uPaletteWarm);
+  vec3 oxideColor = srgbToLinear(uPaletteOxide);
+  vec3 mineralColor = srgbToLinear(uPaletteMineral);
+  vec3 bioColor = srgbToLinear(uPaletteBio);
+  vec3 wetColor = srgbToLinear(uPaletteWet);
+  vec3 strawColor = srgbToLinear(uPaletteStraw);
+  vec3 huskColor = srgbToLinear(uPaletteHusk);
+  vec3 seedColor = srgbToLinear(uPaletteSeedColor);
+
+  vec3 albedo = mix(low, mean, smoothstep(0.06, 0.50, tone));
+  albedo = mix(albedo, high, smoothstep(0.49, 0.90, tone));
+
+  float rich = clamp(uColorRichness, 0.0, 2.0);
+  float warmMask = smoothstep(0.48, 0.83, macro * 0.66 + macroB * 0.34) *
+                   smoothstep(0.26, 0.79, ridge);
+  float oxideBroad = fbmValueFast(colorWarped * 2.85 + colorSeedV * 1.83);
+  float oxideMid = fbmGradient(colorWarped * 6.40 + colorSeedV * 2.37);
+  float oxideSpeck = valueNoise3(colorWarped * 19.0 + colorSeedV * 4.17);
+  float oxideMask = smoothstep(
+    0.61, 0.83,
+    oxideBroad * 0.58 + oxideMid * 0.27 + smoothstep(0.90, 0.975, oxideSpeck) * 0.15
+  ) * smoothstep(0.31, 0.83, macroB);
+  float darkAggregate = smoothstep(0.86, 0.975, valueNoise3(colorWarped * 15.0 + colorSeedV * 4.7));
+  float paleAggregate = mineral * smoothstep(0.42, 0.86, macro);
+  float bioMask = smoothstep(0.72, 0.93, fbmValueFast(colorWarped * 2.8 + seedVector(uWeatherSeed, 0.73))) *
+                  smoothstep(-0.2, 0.58, 0.4 - baseNormal.y);
+
+  vec3 charColor = mix(dark, vec3(0.006, 0.005, 0.004), 0.42);
+  vec3 coolColor = mix(wetColor, bioColor, 0.30);
+  vec3 rustColor = mix(oxideColor, warm, 0.18);
+  vec3 saltColor = mix(mineralColor, vec3(0.94, 0.91, 0.78), 0.18);
+
+  float eventPatchA = fbmValueFast(colorWarped * 2.18 + colorSeedV * 1.61);
+  float eventPatchB = fbmGradient(colorWarped * 4.65 + colorSeedV * 2.07);
+  float eventPatchC = fbmValueFast(colorWarped * 8.40 + colorSeedV * 2.91);
+  float eventPatch = smoothstep(
+    0.38, 0.77,
+    eventPatchA * 0.52 + eventPatchB * 0.31 + eventPatchC * 0.17
+  );
+  float gaeaColorDriver = bmClarity(
+    bmAutoLevel(
+      macro * 0.31 + ridge * 0.12 + gaea.rugged * 0.17 + gaea.strata * 0.07 +
+      gaea.flow * 0.08 + eventPatch * 0.25,
+      0.16, 0.86
+    ),
+    uGaeaColorClarity * 0.86
+  );
+  float eventGate = smoothstep(
+    0.36, 0.76,
+    eventPatch * 0.55 + gaea.flow * 0.12 + gaea.rockMap * 0.13 +
+    gaea.cavity * 0.12 + gaea.microErosion * 0.08
+  );
+
+  vec3 gaeaClut = bmClut5(gaeaColorDriver, charColor, coolColor, mean, rustColor, saltColor);
+  vec4 gaeaWeights = bmSplatWeights(
+    darkAggregate + gaea.cavity * 0.34,
+    oxideMask * (0.55 + eventPatch * 0.45) + gaea.flow * 0.06,
+    paleAggregate + gaea.strata * 0.12 + gaea.microErosion * 0.08,
+    warmMask * 0.60 + gaea.protrusion * 0.16 + eventPatch * 0.24,
+    uGaeaMaskSharpness * 0.74
+  );
+  vec3 gaeaSplat =
+    charColor * gaeaWeights.x +
+    rustColor * gaeaWeights.y +
+    saltColor * gaeaWeights.z +
+    warm * gaeaWeights.w;
+  float gaeaColorBlend = clamp(
+    uGaeaColorGamut * (0.018 + eventGate * 0.31),
+    0.0, 0.40
+  );
+  albedo = mix(albedo, gaeaClut, gaeaColorBlend * 0.38);
+  albedo = mix(albedo, gaeaSplat, gaeaColorBlend * 0.26);
+
+  albedo = mix(albedo, warm, warmMask * 0.11 * rich);
+  albedo = mix(albedo, oxideColor, oxideMask * (0.04 + 0.075 * rich));
+  albedo = mix(albedo, mineralColor, paleAggregate * (0.16 + 0.075 * rich));
+  albedo = mix(albedo, dark, darkAggregate * (0.18 + 0.08 * rich));
+  albedo = mix(albedo, bioColor, bioMask * (0.04 + 0.085 * uWeatherStrength));
+
+  float axisness = max(abs(baseNormal.x), max(abs(baseNormal.y), abs(baseNormal.z)));
+  float brokenFace = smoothstep(0.12, 0.50, 1.0 - axisness);
+
+  if (uFamily == 0) {
+    float firedRegion = fbmValueFast(colorWarped * 0.82 + colorSeedV * 0.63);
+    float firedRegionB = fbmGradient(colorWarped * 1.95 + colorSeedV * 1.47);
+    float firedRegionC = fbmValueFast(colorWarped * 4.7 + colorSeedV * 2.91);
+    float redRegion = smoothstep(0.42, 0.72, firedRegion * 0.56 + firedRegionB * 0.31 + eventPatchA * 0.13);
+    float deepRedRegion = smoothstep(0.61, 0.84, firedRegionB * 0.48 + eventPatchB * 0.32 + gaea.protrusion * 0.20);
+    float carbonRegion = smoothstep(0.61, 0.87, (1.0 - firedRegion) * 0.43 + gaea.cavity * 0.36 + eventPatchC * 0.21);
+    float ashRegion = smoothstep(0.60, 0.86, (1.0 - firedRegionB) * 0.38 + gaea.flow * 0.34 + gaea.microErosion * 0.28);
+    float mineralBloom = smoothstep(0.70, 0.92, mineral * 0.34 + firedRegionC * 0.29 + gaea.flow * 0.22 + crustFlake * 0.15);
+    float oxideEvent = smoothstep(0.62, 0.87, oxideMask * 0.35 + firedRegionC * 0.28 + gaea.flow * 0.20 + eventPatch * 0.17);
+    vec3 brickRed = mix(mean, vec3(0.47, 0.055, 0.020), 0.62);
+    vec3 burntUmber = mix(dark, vec3(0.22, 0.055, 0.022), 0.62);
+    vec3 charcoal = mix(charColor, vec3(0.022, 0.026, 0.030), 0.24);
+    vec3 ashGray = mix(coolColor, vec3(0.26, 0.25, 0.22), 0.46);
+    vec3 creamMineral = mix(mineralColor, vec3(0.88, 0.79, 0.61), 0.34);
+    albedo = mix(albedo, brickRed, redRegion * (0.34 + rich * 0.20));
+    albedo = mix(albedo, burntUmber, deepRedRegion * (0.26 + rich * 0.12));
+    albedo = mix(albedo, charcoal, carbonRegion * (0.30 + rich * 0.10));
+    albedo = mix(albedo, ashGray, ashRegion * 0.18);
+    albedo = mix(albedo, rustColor, oxideEvent * (0.20 + rich * 0.15));
+    albedo = mix(albedo, creamMineral, mineralBloom * 0.24);
+  } else if (uFamily == 1) {
+    float adobeRegion = fbmValueFast(colorWarped * 0.92 + colorSeedV * 0.71);
+    float adobeRegionB = fbmGradient(colorWarped * 2.15 + colorSeedV * 1.59);
+    float adobeRegionC = fbmValueFast(colorWarped * 4.9 + colorSeedV * 2.83);
+    float clayRed = smoothstep(0.48, 0.78, adobeRegion * 0.53 + adobeRegionB * 0.31 + oxideBroad * 0.16);
+    float clayOchre = smoothstep(0.42, 0.77, (1.0 - adobeRegion) * 0.38 + macroB * 0.35 + eventPatchB * 0.27);
+    float clayDust = smoothstep(0.64, 0.88, adobeRegionC * 0.38 + mineral * 0.30 + gaea.microErosion * 0.20 + crustFlake * 0.12);
+    float clayDamp = smoothstep(0.52, 0.83, gaea.flow * 0.47 + gaea.cavity * 0.33 + (1.0 - adobeRegionB) * 0.20);
+    float fiberAge = fbmValueFast(vec3(projected * 3.6, uInclusionSeed * 0.011));
+    float fiberDust = valueNoise3(vec3(projected * 9.0, uInclusionSeed * 0.017));
+    vec3 adobeClayRed = mix(mean, vec3(0.43, 0.13, 0.052), 0.54);
+    vec3 adobeOchre = mix(warm, vec3(0.61, 0.37, 0.13), 0.42);
+    vec3 adobeDust = mix(mineralColor, vec3(0.74, 0.67, 0.54), 0.36);
+    vec3 strawAged = mix(strawColor, mix(warm, dark, 0.46), fiberAge * 0.52);
+    vec3 strawVar = mix(strawAged, mineralColor, smoothstep(0.70, 0.94, fiberDust) * 0.24);
+    vec3 huskVar = mix(huskColor, mix(mineralColor, dark, 0.20), micro * 0.28);
+    vec3 seedVar = mix(seedColor, dark, 0.36 + cavity * 0.18);
+    albedo = mix(albedo, adobeClayRed, clayRed * (0.26 + rich * 0.14));
+    albedo = mix(albedo, adobeOchre, clayOchre * 0.22);
+    albedo = mix(albedo, adobeDust, clayDust * 0.22);
+    albedo = mix(albedo, wetColor, clayDamp * 0.26);
+    albedo = mix(albedo, strawVar, inclusions.x);
+    albedo = mix(albedo, huskVar, inclusions.y * 0.96);
+    albedo = mix(albedo, seedVar, inclusions.z * 0.98);
+    albedo = mix(albedo, charColor, inclusions.w * 0.94);
+    albedo = mix(albedo, dark, inclusions.x * smoothstep(0.63, 0.91, fiberAge) * 0.18);
+    cavity *= 1.12;
+  } else {
+    float stoneRegion = fbmValueFast(colorWarped * 0.78 + colorSeedV * 0.59);
+    float stoneRegionB = fbmGradient(colorWarped * 1.82 + colorSeedV * 1.31);
+    float stoneRegionC = fbmValueFast(colorWarped * 4.2 + colorSeedV * 2.77);
+    float blueRegion = 1.0 - smoothstep(0.34, 0.57, stoneRegion);
+    float neutralRegion = smoothstep(0.28, 0.48, stoneRegion) * (1.0 - smoothstep(0.58, 0.76, stoneRegion));
+    float warmRegion = smoothstep(0.55, 0.79, stoneRegion * 0.70 + stoneRegionB * 0.30);
+    float oliveRegion = smoothstep(0.62, 0.86, stoneRegionB * 0.43 + bioMask * 0.30 + gaea.flow * 0.27);
+    float rustRegion = smoothstep(0.70, 0.91, oxideMask * 0.36 + stoneRegionC * 0.31 + gaea.flow * 0.20 + eventPatchC * 0.13);
+    float wetRegion = smoothstep(0.55, 0.84, gaea.cavity * 0.47 + gaea.flow * 0.35 + (1.0 - stoneRegionC) * 0.18);
+    float calciteVein = smoothstep(0.70, 0.91, ridgedFbm(colorWarped * 4.8 + colorSeedV * 5.7) * 0.54 + gaea.strata * 0.29 + stoneRegionB * 0.17);
+    float layerRegion = gaea.strata * smoothstep(0.39, 0.76, stoneRegionB * 0.61 + gaea.rockMap * 0.39) * uGaeaStrata;
+    vec3 slateBlue = mix(mean, vec3(0.085, 0.16, 0.235), 0.66);
+    vec3 neutralStone = mix(mean, vec3(0.32, 0.32, 0.29), 0.44);
+    vec3 earthStone = mix(mean, vec3(0.37, 0.24, 0.13), 0.58);
+    vec3 oliveGray = mix(mean, vec3(0.16, 0.22, 0.10), 0.58);
+    vec3 calciteColor = mix(mineralColor, vec3(0.86, 0.84, 0.74), 0.46);
+    vec3 rustStone = mix(oxideColor, vec3(0.54, 0.12, 0.025), 0.52);
+    albedo = mix(albedo, slateBlue, blueRegion * 0.52);
+    albedo = mix(albedo, neutralStone, neutralRegion * 0.32);
+    albedo = mix(albedo, earthStone, warmRegion * 0.34);
+    albedo = mix(albedo, oliveGray, oliveRegion * 0.26);
+    albedo = mix(albedo, calciteColor, calciteVein * 0.32 + layerRegion * 0.16);
+    albedo = mix(albedo, rustStone, rustRegion * 0.25);
+    albedo = mix(albedo, wetColor, wetRegion * 0.38);
+    albedo = mix(albedo, charColor, gaea.rockMap * 0.10 * uGaeaRockDetail);
+  }
+
+  vec2 waterWeather = waterWeatherMasks(p, baseNormal, uWaterSeed, uWeatherSeed);
+  float waterMask = waterWeather.x * uWaterStrength;
+  float weatherMask = waterWeather.y * uWeatherStrength;
+  float saltMask = smoothstep(0.42, 0.80, waterWeather.x) *
+                   smoothstep(0.73, 0.94, ridgedFbm(p * 10.2 + seedVector(uWeatherSeed, 1.9))) *
+                   uWeatherStrength;
+  float sheltered = smoothstep(-0.08, 0.72, 0.38 - baseNormal.y);
+  float wetBlend = uFamily == 2 ? 0.34 : (uFamily == 1 ? 0.44 : 0.48);
+  float weatherBase = uFamily == 2 ? 0.10 : (uFamily == 1 ? 0.12 : 0.14);
+  float saltBlend = uFamily == 2 ? 0.22 : (uFamily == 1 ? 0.27 : 0.31);
+  albedo = mix(albedo, wetColor, clamp(waterMask * wetBlend, 0.0, 0.60));
+  albedo = mix(
+    albedo,
+    mineralColor,
+    clamp(weatherMask * (weatherBase + max(baseNormal.y, 0.0) * 0.11) + saltMask * saltBlend, 0.0, 0.44)
+  );
+  albedo = mix(albedo, dark, clamp(weatherMask * sheltered * 0.12, 0.0, 0.22));
+
+  float poreInterior = clamp(pore * 0.22 + poreMedium * 0.66 + poreLarge, 0.0, 1.0);
+  float poreWetness = smoothstep(
+    0.42, 0.88,
+    gaea.flow * 0.34 + waterMask * 0.38 + gaea.cavity * 0.28
+  );
+  vec3 poreInteriorColor = mix(charColor, wetColor, poreWetness * 0.66);
+  float poreColorStrength = uFamily == 2 ? 0.58 : (uFamily == 1 ? 0.52 : 0.56);
+  albedo = mix(albedo, poreInteriorColor, poreInterior * poreColorStrength);
+  vec3 rimColor = uFamily == 2
+    ? mix(mineralColor, warm, 0.18)
+    : (uFamily == 1 ? mix(mineralColor, warm, 0.36) : mix(mineralColor, oxideColor, 0.22));
+  albedo = mix(albedo, rimColor, poreRim * (0.12 + uPoreVariety * 0.09));
+
+  albedo = mix(albedo, mineralColor * 0.92, brokenFace * (0.07 + weatherMask * 0.08));
+  float cavityShade = uFamily == 2
+    ? (0.20 + 0.12 * uCavityStrength + 0.045 * uPoreDepth)
+    : (uFamily == 1
+        ? (0.34 + 0.18 * uCavityStrength + 0.08 * uPoreDepth)
+        : (0.36 + 0.20 * uCavityStrength + 0.085 * uPoreDepth));
+  albedo *= 1.0 - cavity * cavityShade;
+  float familySaturation = uFamily == 2
+    ? 0.94 + rich * 0.18
+    : (uFamily == 1 ? 0.94 + rich * 0.18 : 0.98 + rich * 0.23);
+  albedo = adjustSaturation(albedo, familySaturation * uColorStrength);
+  albedo *= mix(vec3(1.0), vec3(0.90, 1.025, 1.18), uBlueStrength);
+  albedo = clamp(albedo, vec3(0.004), vec3(1.0));
+
+  float inclusionHeight = inclusions.x * 0.15 + inclusions.y * 0.11 + inclusions.z * 0.07 - inclusions.w * 0.28;
+  float familyMicroHeight = uFamily == 2 ? 0.082 : (uFamily == 1 ? 0.155 : 0.125);
+  float familyGritHeight = uFamily == 2 ? 0.014 : (uFamily == 1 ? 0.032 : 0.027);
+  float familyCrustHeight = uFamily == 2 ? 0.12 : (uFamily == 1 ? 0.14 : 0.13);
+  float heightField =
+    (macro - 0.5) * 0.16 +
+    (ridge - 0.5) * 0.22 +
+    (micro - 0.5) * familyMicroHeight +
+    (grit - 0.5) * familyGritHeight +
+    (crustBroad - 0.5) * familyCrustHeight +
+    (crustFine - 0.5) * familyCrustHeight * 0.34 +
+    mineral * 0.18 +
+    weatherMask * 0.08 +
+    inclusionHeight * 1.18 +
+    (gaea.protrusion - 0.5) * 0.34 * uGaeaRockDetail +
+    (gaea.strata - 0.5) * 0.24 * uGaeaStrata * (uFamily == 2 ? 1.0 : 0.22) -
+    gaea.microErosion * 0.29 * uGaeaMicroErosion +
+    poreRim * (0.10 + uPoreVariety * 0.05) -
+    poreMedium * (0.23 + uPoreDepth * 0.07) -
+    poreLarge * (0.40 + uPoreDepth * 0.12) -
+    cavity * (0.56 + uPoreDepth * 0.12);
+
+  vec3 N = baseNormal;
+  vec3 dpdx = dFdx(vWorldPos);
+  vec3 dpdy = dFdy(vWorldPos);
+  float dhdx = dFdx(heightField);
+  float dhdy = dFdy(heightField);
+  vec3 R1 = cross(dpdy, N);
+  vec3 R2 = cross(N, dpdx);
+  float det = dot(dpdx, R1);
+  vec3 surfGrad = sign(det) * (dhdx * R1 + dhdy * R2);
+  N = normalize(abs(det) * N - surfGrad * uBumpStrength);
+
+  float familyMicroRough = uFamily == 2 ? 0.20 : (uFamily == 1 ? 0.31 : 0.29);
+  float roughDriver = clamp(
+    0.14 +
+    micro * familyMicroRough +
+    ridge * 0.15 +
+    cavity * uRoughnessCorrelation +
+    brokenFace * 0.18 +
+    weatherMask * 0.18 +
+    gaea.rockMap * 0.18 * uGaeaRockDetail +
+    gaea.strata * 0.10 * uGaeaStrata +
+    gaea.microErosion * 0.15 * uGaeaMicroErosion +
+    crustFlake * 0.16 + crustBroad * 0.08 +
+    poreRim * 0.20 + poreMedium * 0.14 + poreLarge * 0.18 +
+    inclusions.x * 0.12 + inclusions.y * 0.10 -
+    mineral * 0.08 -
+    waterMask * 0.16,
+    0.0, 1.0
+  );
+  float rough = mix(uRoughness.x, uRoughness.y, roughDriver);
+
+  if (uDebugMode == 1) {
+    outColor = vec4(linearToSrgb(clamp(albedo, 0.0, 1.0)), 1.0);
+    return;
+  }
+  if (uDebugMode == 2) {
+    outColor = vec4(vec3(cavity), 1.0);
+    return;
+  }
+  if (uDebugMode == 3) {
+    outColor = vec4(vec3(rough), 1.0);
+    return;
+  }
+  if (uDebugMode == 4) {
+    outColor = vec4(N * 0.5 + 0.5, 1.0);
+    return;
+  }
+  if (uDebugMode == 5) {
+    outColor = vec4(vec3(macro, ridge, clamp(poreComposite + mineral * 0.45, 0.0, 1.0)), 1.0);
+    return;
+  }
+  if (uDebugMode == 6) {
+    outColor = vec4(clamp(vec3(waterWeather.x, waterWeather.y, saltMask), 0.0, 1.0), 1.0);
+    return;
+  }
+  if (uDebugMode == 7) {
+    outColor = vec4(clamp(vec3(inclusions.x, inclusions.y, inclusions.z + inclusions.w), 0.0, 1.0), 1.0);
+    return;
+  }
+  if (uDebugMode == 8) {
+    float fieldComposite = clamp(
+      gaea.rockMap * 0.48 + gaea.strata * 0.22 + gaea.microErosion * 0.20 + gaea.flow * 0.10,
+      0.0, 1.0
+    );
+    outColor = vec4(vec3(fieldComposite), 1.0);
+    return;
+  }
+
+  vec3 V = normalize(uCamera - vWorldPos);
+  vec3 L1 = normalize(vec3(-0.44, 0.83, 0.36));
+  vec3 L2 = normalize(vec3(0.62, 0.47, -0.63));
+  vec3 L3 = normalize(vec3(-0.12, 0.28, -0.95));
+
+  vec3 color = vec3(0.0);
+  color += shadeLight(N, V, L1, vec3(1.0, 0.975, 0.94), 2.18, albedo, rough);
+  color += shadeLight(N, V, L2, vec3(0.48, 0.64, 0.88), 0.52, albedo, rough);
+  color += shadeLight(N, V, L3, vec3(0.86, 0.62, 0.42), 0.18, albedo, rough);
+
+  float hemiBase = uFamily == 2 ? 0.31 : (uFamily == 1 ? 0.29 : 0.28);
+  float hemi = hemiBase + 0.14 * clamp(N.y * 0.5 + 0.5, 0.0, 1.0);
+  float cavityAo = uFamily == 2 ? 0.24 : (uFamily == 1 ? 0.36 : 0.38);
+  float gaeaAo = uFamily == 2 ? 0.055 : 0.085;
+  float ao = clamp(
+    1.0 -
+    cavity * (cavityAo + uPoreDepth * 0.055) -
+    poreLarge * (0.10 + uPoreDepth * 0.045) -
+    poreMedium * 0.045 -
+    smoothstep(0.82, 1.0, 1.0 - ridge) * 0.075 -
+    gaea.cavity * uGaeaRockDetail * gaeaAo -
+    gaea.microErosion * uGaeaMicroErosion * 0.045,
+    uFamily == 2 ? 0.50 : 0.42,
+    1.0
+  );
+  color += albedo * hemi;
+  color *= ao;
+
+  float familyExposure = uFamily == 2 ? 0.96 : (uFamily == 1 ? 0.92 : 0.96);
+  color = 1.0 - exp(-color * familyExposure);
+  color = pow(max(color, 0.0), vec3(1.015));
+  outColor = vec4(linearToSrgb(color), 1.0);
+}`;
+const MATERIAL={"low":[0.04,0.047,0.052],"mean":[0.31,0.31,0.29],"high":[0.66,0.63,0.55],"paletteDark":[0.034,0.041,0.048],"paletteWarm":[0.44,0.34,0.25],"paletteOxide":[0.48,0.25,0.11],"paletteMineral":[0.82,0.8,0.72],"paletteBio":[0.18,0.22,0.14],"paletteWet":[0.04,0.058,0.075],"paletteStraw":[0.52,0.39,0.18],"paletteHusk":[0.7,0.56,0.31],"paletteSeed":[0.21,0.14,0.07],"roughness":[0.78,0.96],"dimensions":[3.4,1.872246696,1.428524229],"warpStrength":0.2,"macroScale":1.75,"ridgedScale":6.2,"cellScale":18.0,"poreThreshold":0.105,"poreSharpness":0.05,"microScale":36.0,"colorContrast":1.46,"cavityStrength":0.8,"bumpStrength":0.15,"roughnessCorrelation":0.34,"mineralScale":21.0,"firingBand":0.0,"colorRichness":1.34,"waterStrength":0.72,"weatherStrength":0.88,"inclusionStrength":0.1,"poreDepth":1.32,"poreDensity":1.46,"poreVariety":1.58,"colorSeed":8632,"poreSeed":8538,"waterSeed":8734,"weatherSeed":8832,"inclusionSeed":8932,"detailSeed":9040,"gaeaRockDetail":1.3,"gaeaStrata":1.02,"gaeaMicroErosion":1.08,"gaeaColorClarity":1.12,"gaeaColorGamut":1.3,"gaeaMaskSharpness":0.7,"gaeaRuggedScale":7.6,"gaeaStrataFrequency":8.4,"gaeaSurfaceScale":30.0,"family":2};
+
+function shader(type,src,label){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(label+" shader compile:\n"+(gl.getShaderInfoLog(s)||"(empty)"));return s}
+function program(vs,fs,label){const p=gl.createProgram(),v=shader(gl.VERTEX_SHADER,vs,label+" vertex"),f=shader(gl.FRAGMENT_SHADER,fs,label+" fragment");gl.attachShader(p,v);gl.attachShader(p,f);gl.linkProgram(p);const ok=gl.getProgramParameter(p,gl.LINK_STATUS),log=gl.getProgramInfoLog(p)||"";gl.deleteShader(v);gl.deleteShader(f);if(!ok)throw Error(label+" program link:\n"+(log||"(empty)"));return p}
+function locs(p,names){const o={};for(const n of names)o[n]=gl.getUniformLocation(p,n);return o}
+let geometryProgram,materialProgram,UG,UM,vao,framebuffer,positionTex,normalTex,targetW=0,targetH=0;
+try{
+ if(!gl.getExtension("EXT_color_buffer_float"))throw Error("浏览器缺少 EXT_color_buffer_float");
+ geometryProgram=program(VS,GEOMETRY_FS,"geometry");
+ materialProgram=program(VS,MATERIAL_FS,"Brick Mother V2.6 exact");
+ UG=locs(geometryProgram,["uRes","uCam","uBasis","uOverall","uHeight","uWidth","uHoleSize","uCavity","uMacro","uWarp","uDetail","uDetailScale","uSoil"]);
+ UM=locs(materialProgram,["uRes","uPositionTex","uNormalTex","uCamera","uKarstOverall","uKarstHeight","uKarstWidth","uColorStrength","uBlueStrength","uLowColor","uMeanColor","uHighColor","uPaletteDark","uPaletteWarm","uPaletteOxide","uPaletteMineral","uPaletteBio","uPaletteWet","uPaletteStraw","uPaletteHusk","uPaletteSeedColor","uRoughness","uDimensions","uWarpStrength","uMacroScale","uRidgedScale","uCellScale","uPoreThreshold","uPoreSharpness","uMicroScale","uColorContrast","uCavityStrength","uBumpStrength","uRoughnessCorrelation","uMineralScale","uFiringBand","uColorRichness","uWaterStrength","uWeatherStrength","uInclusionStrength","uPoreDepth","uPoreDensity","uPoreVariety","uColorSeed","uPoreSeed","uWaterSeed","uWeatherSeed","uInclusionSeed","uDetailSeed","uGaeaRockDetail","uGaeaStrata","uGaeaMicroErosion","uGaeaColorClarity","uGaeaColorGamut","uGaeaMaskSharpness","uGaeaRuggedScale","uGaeaStrataFrequency","uGaeaSurfaceScale","uFamily","uDebugMode","uGround","uShadowPos0","uShadowPos1","uShadowPos2","uShadowSize0","uShadowSize1","uShadowSize2"]);
+ vao=gl.createVertexArray();framebuffer=gl.createFramebuffer();positionTex=gl.createTexture();normalTex=gl.createTexture();
+}catch(err){const e=document.getElementById("error");e.style.display="block";e.textContent=err.stack||err;document.documentElement.dataset.karstFailure="true";return}
+
+function tex(t,w,h){gl.bindTexture(gl.TEXTURE_2D,t);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA16F,w,h,0,gl.RGBA,gl.HALF_FLOAT,null)}
+function targets(w,h){if(w===targetW&&h===targetH)return;targetW=w;targetH=h;tex(positionTex,w,h);tex(normalTex,w,h);gl.bindFramebuffer(gl.FRAMEBUFFER,framebuffer);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,positionTex,0);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT1,gl.TEXTURE_2D,normalTex,0);gl.drawBuffers([gl.COLOR_ATTACHMENT0,gl.COLOR_ATTACHMENT1]);const s=gl.checkFramebufferStatus(gl.FRAMEBUFFER);gl.bindFramebuffer(gl.FRAMEBUFFER,null);if(s!==gl.FRAMEBUFFER_COMPLETE)throw Error("framebuffer incomplete 0x"+s.toString(16))}
+const state={overall:1,height:1,width:1,holeSize:1,cavity:1.10,macro:1.05,warp:1.20,detail:1,detailScale:1,colorStrength:1.42,blueStrength:.32,quality:.78,gray:0,theta:.56,phi:1.27,radius:28,target:[0,.4,0]};
+const ids=["overall","height","width","holeSize","cavity","macro","warp","detail","detailScale","colorStrength","blueStrength"];
+const scaled=new Set(["overall","height","width","holeSize","detailScale"]);
+function sync(){for(const k of ids){const e=document.getElementById(k),o=document.getElementById(k+"Out");e.value=state[k];o.textContent=Number(state[k]).toFixed(2)+(scaled.has(k)?"×":"")}}
+ids.forEach(k=>document.getElementById(k).oninput=e=>{state[k]=+e.target.value;document.getElementById(k+"Out").textContent=state[k].toFixed(2)+(scaled.has(k)?"×":"");dirty=true});
+document.getElementById("reset").onclick=()=>{Object.assign(state,{overall:1,height:1,width:1,holeSize:1,cavity:1.10,macro:1.05,warp:1.20,detail:1,detailScale:1,colorStrength:1.42,blueStrength:.32,quality:.78,gray:0,theta:.56,phi:1.27,radius:28,target:[0,.4,0]});document.getElementById("gray").classList.remove("on");sync();dirty=true};
+document.getElementById("panelBtn").onclick=()=>document.getElementById("panel").classList.toggle("hide");
+document.getElementById("zoomIn").onclick=()=>{state.radius=Math.max(7.5,state.radius*.82);dirty=true};
+document.getElementById("zoomOut").onclick=()=>{state.radius=Math.min(72,state.radius*1.22);dirty=true};
+const qualityLevels=[{v:.58,n:"快速"},{v:.78,n:"标准"},{v:1.0,n:"精细"}];let qualityIndex=1;
+document.getElementById("qualityBtn").onclick=e=>{qualityIndex=(qualityIndex+1)%qualityLevels.length;state.quality=qualityLevels[qualityIndex].v;e.currentTarget.textContent=qualityLevels[qualityIndex].n;targetW=0;targetH=0;dirty=true};
+document.getElementById("gray").onclick=e=>{state.gray=1-state.gray;e.currentTarget.classList.toggle("on",!!state.gray);dirty=true};
+let dirty=true,drag=false,lx=0,ly=0;
+canvas.onpointerdown=e=>{drag=true;lx=e.clientX;ly=e.clientY;canvas.setPointerCapture(e.pointerId)};
+canvas.onpointermove=e=>{if(!drag)return;state.theta-=(e.clientX-lx)*.005;state.phi=Math.max(.22,Math.min(2.9,state.phi-(e.clientY-ly)*.004));lx=e.clientX;ly=e.clientY;dirty=true};
+canvas.onpointerup=()=>drag=false;canvas.onpointercancel=()=>drag=false;
+canvas.onwheel=e=>{e.preventDefault();state.radius=Math.max(11,Math.min(62,state.radius*Math.exp(e.deltaY*.0012)));dirty=true};
+function resize(){const dpr=Math.min(devicePixelRatio||1,1.10)*state.quality,w=Math.max(1,Math.floor(innerWidth*dpr)),h=Math.max(1,Math.floor(innerHeight*dpr));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;targets(w,h);dirty=true}}
+addEventListener("resize",()=>{try{resize()}catch(err){const e=document.getElementById("error");e.style.display="block";e.textContent=err.stack||err;document.documentElement.dataset.karstFailure="true"}});
+function norm(v){const l=Math.hypot(...v)||1;return v.map(x=>x/l)}function cross(a,b){return[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}
+function set1(loc,v){if(loc!==null)gl.uniform1f(loc,v)}function set1i(loc,v){if(loc!==null)gl.uniform1i(loc,v)}function set2(loc,v){if(loc!==null)gl.uniform2fv(loc,v)}function set3(loc,v){if(loc!==null)gl.uniform3fv(loc,v)}
+function materialUniforms(eye){
+ set3(UM.uCamera,eye);set1(UM.uKarstOverall,state.overall);set1(UM.uKarstHeight,state.height);set1(UM.uKarstWidth,state.width);set1(UM.uColorStrength,state.colorStrength);set1(UM.uBlueStrength,state.blueStrength);
+ set3(UM.uLowColor,MATERIAL.low);set3(UM.uMeanColor,MATERIAL.mean);set3(UM.uHighColor,MATERIAL.high);
+ set3(UM.uPaletteDark,MATERIAL.paletteDark);set3(UM.uPaletteWarm,MATERIAL.paletteWarm);set3(UM.uPaletteOxide,MATERIAL.paletteOxide);set3(UM.uPaletteMineral,MATERIAL.paletteMineral);set3(UM.uPaletteBio,MATERIAL.paletteBio);set3(UM.uPaletteWet,MATERIAL.paletteWet);set3(UM.uPaletteStraw,MATERIAL.paletteStraw);set3(UM.uPaletteHusk,MATERIAL.paletteHusk);set3(UM.uPaletteSeedColor,MATERIAL.paletteSeed);
+ set2(UM.uRoughness,MATERIAL.roughness);set3(UM.uDimensions,MATERIAL.dimensions);
+ for(const k of ["warpStrength","macroScale","ridgedScale","cellScale","poreThreshold","poreSharpness","microScale","colorContrast","cavityStrength","bumpStrength","roughnessCorrelation","mineralScale","firingBand","colorRichness","waterStrength","weatherStrength","inclusionStrength","poreDepth","poreDensity","poreVariety","colorSeed","poreSeed","waterSeed","weatherSeed","inclusionSeed","detailSeed","gaeaRockDetail","gaeaStrata","gaeaMicroErosion","gaeaColorClarity","gaeaColorGamut","gaeaMaskSharpness","gaeaRuggedScale","gaeaStrataFrequency","gaeaSurfaceScale"]){const u="u"+k[0].toUpperCase()+k.slice(1);set1(UM[u],MATERIAL[k])}
+ set1i(UM.uFamily,2);set1i(UM.uDebugMode,state.gray?4:0);set1i(UM.uGround,0);
+ set3(UM.uShadowPos0,[0,-7.85,0]);set3(UM.uShadowPos1,[1000,0,1000]);set3(UM.uShadowPos2,[-1000,0,-1000]);set2(UM.uShadowSize0,[6.5,6.5]);set2(UM.uShadowSize1,[1,1]);set2(UM.uShadowSize2,[1,1]);
+}
+function drawGeometry(eye,basis){gl.bindFramebuffer(gl.FRAMEBUFFER,framebuffer);gl.viewport(0,0,canvas.width,canvas.height);gl.useProgram(geometryProgram);gl.bindVertexArray(vao);gl.uniform2f(UG.uRes,canvas.width,canvas.height);gl.uniform3fv(UG.uCam,eye);gl.uniformMatrix3fv(UG.uBasis,false,basis);for(const k of ids){const u=UG["u"+k[0].toUpperCase()+k.slice(1)];if(u!==null&&u!==undefined)gl.uniform1f(u,state[k])}if(UG.uSoil!==null)gl.uniform1f(UG.uSoil,0);gl.drawArrays(gl.TRIANGLES,0,3)}
+function drawMaterial(eye){gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,canvas.width,canvas.height);gl.useProgram(materialProgram);gl.bindVertexArray(vao);gl.uniform2f(UM.uRes,canvas.width,canvas.height);materialUniforms(eye);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,positionTex);gl.uniform1i(UM.uPositionTex,0);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,normalTex);gl.uniform1i(UM.uNormalTex,1);gl.drawArrays(gl.TRIANGLES,0,3)}
+const startedAt=performance.now();let first=true;
+function frame(){requestAnimationFrame(frame);try{resize();if(!dirty)return;dirty=false;const cp=Math.cos(state.phi),sp=Math.sin(state.phi),ct=Math.cos(state.theta),st=Math.sin(state.theta),eye=[state.target[0]+state.radius*sp*st,state.target[1]+state.radius*cp,state.target[2]+state.radius*sp*ct],f=norm([state.target[0]-eye[0],state.target[1]-eye[1],state.target[2]-eye[2]]),r=norm(cross(f,[0,1,0])),u=cross(r,f),basis=new Float32Array([r[0],r[1],r[2],u[0],u[1],u[2],f[0],f[1],f[2]]);drawGeometry(eye,basis);drawMaterial(eye);if(first){first=false;const loadMs=Math.round(performance.now()-startedAt);window.__KARST_READY__=true;window.__KARST_METRICS__={firstFrameMs:loadMs,quality:state.quality};document.documentElement.dataset.karstReady="true";document.documentElement.dataset.firstFrameMs=String(loadMs);document.getElementById("badge").textContent=`首帧 ${loadMs} ms · 标准质量 · 强蓝灰 V2.6 · 滚轮/按钮缩放`}}catch(err){const e=document.getElementById("error");e.style.display="block";e.textContent=err.stack||err;document.documentElement.dataset.karstFailure="true";dirty=false}}
+sync();resize();requestAnimationFrame(frame);window.__KARST_STATE__=state;window.__KARST_DIAGNOSTICS__={renderer:"two-pass-r23-adaptive",material:"Brick Mother V2.6 stone-block + controlled color gain",shape:"Palau karst fluting and undercut"};
+})();
+</script>
+</body>
+</html>
