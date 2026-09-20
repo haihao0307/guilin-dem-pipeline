@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import argparse, csv, hashlib, json, math
+import argparse, csv, hashlib, json
 from pathlib import Path
 from shapely.geometry import box, shape
 
@@ -21,7 +21,7 @@ def write_json(p:Path,obj):
     p.write_text(json.dumps(obj,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 
 
-def pct(v):
+def num(v):
     try: return float(v)
     except Exception: return None
 
@@ -40,13 +40,15 @@ def scene_row(f,core_geom):
     assets=f.get('assets',{}) or {}
     wanted=['blue','green','red','nir','scl','coastal']
     present=[k for k in wanted if k in assets]
-    cloud=pct(p.get('eo:cloud_cover'))
-    nodata=pct(p.get('s2:nodata_pixel_percentage'))
-    shadow=pct(p.get('s2:cloud_shadow_percentage'))
-    thin=pct(p.get('s2:thin_cirrus_percentage'))
-    high=pct(p.get('s2:high_proba_clouds_percentage'))
-    med=pct(p.get('s2:medium_proba_clouds_percentage'))
-    solar_zen=pct(p.get('s2:mean_solar_zenith'))
+    cloud=num(p.get('eo:cloud_cover'))
+    nodata=num(p.get('s2:nodata_pixel_percentage'))
+    shadow=num(p.get('s2:cloud_shadow_percentage'))
+    thin=num(p.get('s2:thin_cirrus_percentage'))
+    high=num(p.get('s2:high_proba_clouds_percentage'))
+    med=num(p.get('s2:medium_proba_clouds_percentage'))
+    sun_elev=num(p.get('view:sun_elevation'))
+    sun_az=num(p.get('view:sun_azimuth'))
+    solar_zen=(90.0-sun_elev) if sun_elev is not None else None
     # Ranking heuristic only. It is not a radiometric uncertainty model.
     penalty=0.0
     for val,w in ((cloud,1.0),(nodata,0.5),(shadow,0.8),(thin,0.5),(high,0.7),(med,0.3)):
@@ -58,7 +60,8 @@ def scene_row(f,core_geom):
     return {
       'id':f.get('id'),'datetime':p.get('datetime'),'platform':p.get('platform'),'collection':f.get('collection'),
       'cloudCoverPct':cloud,'nodataPct':nodata,'cloudShadowPct':shadow,'thinCirrusPct':thin,
-      'highProbabilityCloudPct':high,'mediumProbabilityCloudPct':med,'meanSolarZenithDeg':solar_zen,
+      'highProbabilityCloudPct':high,'mediumProbabilityCloudPct':med,
+      'sunElevationDeg':sun_elev,'sunAzimuthDeg':sun_az,'meanSolarZenithDeg':solar_zen,
       'coreFootprintOverlapFraction':overlap,'mgrs':mgrs or None,'processingBaseline':p.get('s2:processing_baseline'),
       'productUri':p.get('s2:product_uri'),'assetsPresent':present,'allRequiredOpticalAssets':all(k in assets for k in ('blue','green','red','nir')),
       'rankingPenaltyLowerIsBetter':round(penalty,6),
@@ -82,7 +85,7 @@ def main():
         keys=tuple(sorted((f.get('assets') or {}).keys()))
         asset_sets[str(keys)]=asset_sets.get(str(keys),0)+1
     report={
-      'schema':'kaopu.palau.sentinel2-scene-metadata-r06/1.0',
+      'schema':'kaopu.palau.sentinel2-scene-metadata-r06/1.1',
       'contextBBoxWGS84':CONTEXT,'coreBBoxWGS84':CORE,'userConfirmedAnchorWGS84':ANCHOR,
       'source':{
         'catalog':'Element 84 Earth Search STAC v1','collection':'sentinel-2-c1-l2a',
@@ -99,6 +102,7 @@ def main():
       'methodBoundary':{
         'productMeaning':'Sentinel-2 Level-2A is atmospherically corrected bottom-of-atmosphere surface reflectance with Scene Classification support.',
         'metadataRole':'Scene discovery and optical-quality screening only in R06.',
+        'sunGeometry':'Earth Search STAC view:sun_elevation and view:sun_azimuth are retained; solar zenith is derived as 90 - sun elevation for ranking only.',
         'notYetPerformed':['water-column correction','sunglint correction from image pixels','turbidity masking from image pixels','satellite-derived bathymetry inversion','ENC-calibrated depth regression'],
         'important':'Low scene-level cloud percentage does not prove cloud-free or optically clear water over the reef core; pixel assets must be inspected before any shallow-water depth inference.'
       },
@@ -108,9 +112,9 @@ def main():
     }
     write_json(results/'SENTINEL2_SCENE_METADATA_R06.json',report)
     csvp=results/'tables/SENTINEL2_TOP_SCENES_R06.csv'; csvp.parent.mkdir(parents=True,exist_ok=True)
-    fields=['id','datetime','platform','mgrs','cloudCoverPct','nodataPct','cloudShadowPct','thinCirrusPct','meanSolarZenithDeg','coreFootprintOverlapFraction','rankingPenaltyLowerIsBetter','allRequiredOpticalAssets']
+    fields=['id','datetime','platform','mgrs','cloudCoverPct','nodataPct','cloudShadowPct','thinCirrusPct','sunElevationDeg','sunAzimuthDeg','meanSolarZenithDeg','coreFootprintOverlapFraction','rankingPenaltyLowerIsBetter','allRequiredOpticalAssets']
     with csvp.open('w',newline='',encoding='utf-8') as f:
-        w=csv.DictWriter(f,fieldnames=fields); w.writeheader();
+        w=csv.DictWriter(f,fieldnames=fields); w.writeheader()
         for r in rows[:20]: w.writerow({k:r.get(k) for k in fields})
     ep=results/'AIRAI_REEF_EVIDENCE_REPORT.json'
     if ep.exists():
