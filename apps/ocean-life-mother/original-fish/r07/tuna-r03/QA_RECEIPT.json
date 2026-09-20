@@ -1,8 +1,8 @@
 {
-  "schema": "kaopu.original-fish.tuna-r03.qa/1.0",
+  "schema": "kaopu.original-fish.tuna-r03.qa/1.1",
   "date": "2026-09-20",
   "branch": "work/original-fish-r07-tuna-standardization-20260920",
-  "scope": "Original Fish trunk / tuna species branch R03.2",
+  "scope": "Original Fish trunk / tuna species branch R03.3",
   "source": {
     "referenceId": "FISH-REF-002",
     "lowSha256": "f75f073a2999ee20c4839434d28f90565e486b50270e663f48484cca2dbae9f0",
@@ -10,76 +10,80 @@
     "runtimeDependency": false
   },
   "numeric": {
-    "command": "node tests/tuna-r03.test.mjs",
-    "result": "Original Fish Tuna R03: 383 assertions passed; 36 parts; 18832 triangles",
+    "commands": [
+      "node tests/tuna-r03.test.mjs",
+      "node tests/tuna-r033-detail.test.mjs"
+    ],
+    "results": [
+      "383 assertions passed; 36 base parts; 18,832 triangles",
+      "153 assertions passed; 67 enhanced parts; 19,820 triangles"
+    ],
+    "totalAssertions": 536,
     "status": "PASS"
   },
   "browser": {
-    "schema": "kaopu.original-fish.tuna-r03-browser-qa/1.0",
     "loadMode": "page.set_content with exact local modules converted to data URLs because network navigation is administratively blocked",
     "runs": [
       {
-        "status": "金枪鱼分支 R03 运行中",
-        "metrics": "36 function parts · 24 semantic controls · 18,832 triangles · source dependency=false",
-        "horizontalOverflow": 0,
-        "webglError": 0,
-        "canvas": [1440,1000],
-        "ready": true,
         "name": "desktop",
         "viewport": [1440,1000],
-        "pageErrors": [],
-        "consoleErrors": [],
-        "screenshot": "/mnt/data/tuna_r03_build/qa/tuna_r03_desktop.png",
-        "screenshotSha256": "bb7f6ff566fc4ba508922a7f68b3ff67ba00763a1d3aa8dbe920bcc5db878c78"
-      },
-      {
         "status": "金枪鱼分支 R03 运行中",
-        "metrics": "36 function parts · 24 semantic controls · 18,832 triangles · source dependency=false",
+        "metrics": "67 function parts · 24 semantic controls · 19,820 triangles · source dependency=false",
         "horizontalOverflow": 0,
         "webglError": 0,
-        "canvas": [390,844],
-        "ready": true,
-        "name": "mobile",
-        "viewport": [390,844],
         "pageErrors": [],
         "consoleErrors": [],
-        "screenshot": "/mnt/data/tuna_r03_build/qa/tuna_r03_mobile.png",
-        "screenshotSha256": "a4597aef04bac00866c7d878a8338130a32ca8182f5bbd8e30d83b3d7506eb53"
+        "screenshotSha256": "a7a9d3346711d125bcdf04aed477253a280f61ea061e9de4b1fff9f5bb3f38f7"
+      },
+      {
+        "name": "mobile",
+        "viewport": [390,844],
+        "status": "金枪鱼分支 R03 运行中",
+        "metrics": "67 function parts · 24 semantic controls · 19,820 triangles · source dependency=false",
+        "horizontalOverflow": 0,
+        "webglError": 0,
+        "pageErrors": [],
+        "consoleErrors": [],
+        "screenshotSha256": "1ab36175bfa0058585d62374ec920c3644f6d81a9f178007f88dbe873ea030d3"
       }
     ],
     "fixedViews": [
-      {"view":"side","path":"/mnt/data/tuna_r03_build/qa/tuna_r03_side.png","sha256":"a6f048fb9149863d572715bb148538818b1b6784d7ddc0a0886983dfbd602223","webglError":0},
-      {"view":"three","path":"/mnt/data/tuna_r03_build/qa/tuna_r03_three.png","sha256":"b485fbe4b81e68c1b70db676e7f1f9afa6b60c70354e3a458dc524fe1ffbf784","webglError":0},
-      {"view":"front","path":"/mnt/data/tuna_r03_build/qa/tuna_r03_front.png","sha256":"b84dd5156b386ff70ae75d0447e5f0e214e0037fe8d48ae33fbc6650fd685c66","webglError":0},
-      {"view":"top","path":"/mnt/data/tuna_r03_build/qa/tuna_r03_top.png","sha256":"f8c85d1c905c1f47ffc694b294821c302cf9092c856c62ba28f9795f04f6f188","webglError":0}
+      {"view":"side","sha256":"678dd103297bddd9da2d6338b2812830d9a0d4a14c8a1f35d5050f7bb96c8ee7","webglError":0},
+      {"view":"three","sha256":"657eb59aa33501151f6de787b87399ab79a46b9497b1c341cfa0443219b0a6f5","webglError":0},
+      {"view":"front","sha256":"d9ede79d99bddc7ccabdb9027abab64d6a61baa2dc16f026b30e032f70f967c6","webglError":0},
+      {"view":"top","sha256":"a7407db82752ad06d8e8a9222fe3dc3ae087c39f5e8e62cbac4062ec4c8a55d4","webglError":0}
     ],
     "fixedViewPageErrors": [],
     "fixedViewConsoleErrors": []
   },
   "implementation": {
-    "functionParts": 36,
+    "functionParts": 67,
+    "baseFunctionParts": 36,
+    "detailParts": 31,
     "semanticControls": 24,
-    "triangles": 18832,
+    "triangles": 19820,
     "bodySections": 41,
     "finlets": 10,
     "peduncleKeels": 2,
+    "finRayDetails": 25,
+    "pairedHeadDetailCurves": 6,
     "eyeOptics": ["eye globe","iris","pupil","cornea"],
     "motionRelations": ["stiff anterior body","tailward amplitude increase","posterior finlet phase delay","slight caudal flexibility"]
   },
   "visualSelfReview": {
     "accepted": false,
     "improvements": [
-      "head taper and body-to-peduncle continuity are cleaner than R02",
-      "dorsal/anal/caudal membranes are body-rooted rather than detached generic plates",
-      "paired peduncle keels and ten separate finlets are explicit",
-      "iris, pupil and cornea are separate generated layers",
-      "mobile portrait framing now keeps the whole fish visible above controls"
+      "fin membranes now carry explicit source-independent ray structures",
+      "caudal lobes have internal ray direction instead of flat dark plates",
+      "paired maxillary, preopercular and supraorbital curves make head layering inspectable",
+      "head taper and peduncle continuity remain cleaner than R02",
+      "mobile portrait framing keeps the whole fish visible above controls"
     ],
     "defects": [
       "body remains a smooth low-dimensional shell and lacks accepted scale/skin microstructure",
-      "dorsal, anal and caudal outlines remain faceted engineering candidates",
-      "source reference has richer fin-ray structure, head folds and surface variation than this native candidate",
-      "mouth, maxillary and opercular soft-tissue transitions are not 3A",
+      "head detail curves are still line-like engineering structures rather than continuous 3A soft tissue",
+      "dorsal, anal and caudal outer silhouettes remain faceted engineering candidates",
+      "source reference retains richer fin-ray counts, folds and surface variation",
       "procedural wet PBR and fin translucency are qualitative, not spectrally calibrated",
       "current swim period and amplitude are not accepted natural tuna calibration"
     ]
@@ -94,12 +98,9 @@
     "publicationAuthorised": false
   },
   "localVisualEvidence": [
-    {"name":"tuna_r03_desktop","bytes":163997,"sha256":"bb7f6ff566fc4ba508922a7f68b3ff67ba00763a1d3aa8dbe920bcc5db878c78","localPath":"/mnt/data/tuna_r03_build/qa/tuna_r03_desktop.png"},
-    {"name":"tuna_r03_front","bytes":120430,"sha256":"b84dd5156b386ff70ae75d0447e5f0e214e0037fe8d48ae33fbc6650fd685c66","localPath":"/mnt/data/tuna_r03_build/qa/tuna_r03_front.png"},
-    {"name":"tuna_r03_mobile","bytes":62338,"sha256":"a4597aef04bac00866c7d878a8338130a32ca8182f5bbd8e30d83b3d7506eb53","localPath":"/mnt/data/tuna_r03_build/qa/tuna_r03_mobile.png"},
-    {"name":"tuna_r03_side","bytes":170741,"sha256":"a6f048fb9149863d572715bb148538818b1b6784d7ddc0a0886983dfbd602223","localPath":"/mnt/data/tuna_r03_build/qa/tuna_r03_side.png"},
-    {"name":"tuna_r03_source_vs_native","bytes":327274,"sha256":"3256045a97959c6c0ef558d617887c4cfea574a60d95685bebcf0657f2a3b01c","localPath":"/mnt/data/tuna_r03_build/qa/tuna_r03_source_vs_native.png"},
-    {"name":"tuna_r03_three","bytes":162471,"sha256":"b485fbe4b81e68c1b70db676e7f1f9afa6b60c70354e3a458dc524fe1ffbf784","localPath":"/mnt/data/tuna_r03_build/qa/tuna_r03_three.png"},
-    {"name":"tuna_r03_top","bytes":146411,"sha256":"f8c85d1c905c1f47ffc694b294821c302cf9092c856c62ba28f9795f04f6f188","localPath":"/mnt/data/tuna_r03_build/qa/tuna_r03_top.png"}
+    {"name":"tuna_r03_desktop","bytes":164613,"sha256":"a7a9d3346711d125bcdf04aed477253a280f61ea061e9de4b1fff9f5bb3f38f7","localPath":"/mnt/data/tuna_r03_build/qa/tuna_r03_desktop.png"},
+    {"name":"tuna_r03_mobile","bytes":62542,"sha256":"1ab36175bfa0058585d62374ec920c3644f6d81a9f178007f88dbe873ea030d3","localPath":"/mnt/data/tuna_r03_build/qa/tuna_r03_mobile.png"},
+    {"name":"tuna_r03_side","bytes":171697,"sha256":"678dd103297bddd9da2d6338b2812830d9a0d4a14c8a1f35d5050f7bb96c8ee7","localPath":"/mnt/data/tuna_r03_build/qa/tuna_r03_side.png"},
+    {"name":"tuna_r033_source_vs_native","bytes":185117,"sha256":"9d2ead66103a994b5f610b2b852722d8b3e3207d95f934c53f570f4f44f47ab5","localPath":"/mnt/data/tuna_r033_source_vs_native.png"}
   ]
 }
