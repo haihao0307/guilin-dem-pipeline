@@ -1,0 +1,154 @@
+name: Coral R07 Massive P13 Palau Only
+
+on:
+  push:
+    branches:
+      - work/coral-mother-r07-massive-porites-p13-palau-only-20260921
+    paths:
+      - coral-mother/palau/PALAU_ONLY_PRODUCTION_POLICY_ZH.md
+      - coral-mother/palau/PALAU_CORAL_SPECIES_REGISTRY_R1.json
+      - tools/coral/validate_palau_only_coral_registry.py
+      - tools/coral/coral_r07_massive_p13_palau_only.py
+      - tools/coral/coral_r07_massive_p13_browser_qa.py
+      - tools/coral/coral_r07_massive_p12_browser_qa.py
+      - tools/coral/coral_r07_massive_p11_browser_qa.py
+      - tools/coral/coral_r07_massive_p00_browser_qa.py
+      - .github/workflows/coral-r07-massive-p13-palau-only.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: coral-r07-massive-p13-palau-only
+  cancel-in-progress: true
+
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out P13 Palau-only branch
+        uses: actions/checkout@v4
+        with:
+          ref: work/coral-mother-r07-massive-porites-p13-palau-only-20260921
+          fetch-depth: 1
+          path: work
+
+      - name: Check out frozen GitHub Pages baseline
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 1
+          path: pages
+
+      - name: Build P13 from exact published P12 baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE=pages/coral-mother-r07-massive-porites-p12
+          test -s "$SOURCE/index.html"
+          test -s "$SOURCE/BUILD_R07_P00.json"
+          test -s "$SOURCE/PALAU_OCCURRENCE_EVIDENCE.json"
+          rm -rf /tmp/coral-r07-p13
+          cp -a "$SOURCE" /tmp/coral-r07-p13
+          python3 work/tools/coral/coral_r07_massive_p13_palau_only.py /tmp/coral-r07-p13
+          printf '%s\n' \
+            'https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-r07-massive-porites-p13-palau-only/' \
+            > /tmp/coral-r07-p13/PUBLIC_URL.txt
+          grep -q 'R07-P13' /tmp/coral-r07-p13/index.html
+          grep -q "palauOccurrenceStatus:'CONFIRMED_PALAU'" /tmp/coral-r07-p13/index.html
+          grep -q "palauOnlyProductionEligible:true" /tmp/coral-r07-p13/index.html
+          grep -q "productionAdmission:'PALAU_ONLY_ADMITTED'" /tmp/coral-r07-p13/index.html
+          grep -q 'CORAL_MOTHER_R07_MASSIVE_P13_BUILD' /tmp/coral-r07-p13/BUILD_R07_P00.json
+          grep -q 'PALAU_ONLY_ADMITTED' /tmp/coral-r07-p13/PALAU_OCCURRENCE_EVIDENCE.json
+          grep -q 'noaa-coral-19702' /tmp/coral-r07-p13/PALAU_OCCURRENCE_EVIDENCE.json
+          test "$(grep -o 'type="range"' /tmp/coral-r07-p13/index.html | wc -l)" -eq 12
+          test "$(grep -o 'id="gl"' /tmp/coral-r07-p13/index.html | wc -l)" -eq 1
+
+      - name: Enforce Palau-only registry and build admission
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 work/tools/coral/validate_palau_only_coral_registry.py \
+            work/coral-mother/palau/PALAU_CORAL_SPECIES_REGISTRY_R1.json \
+            /tmp/coral-r07-p13
+          test -s /tmp/coral-r07-p13/PALAU_ONLY_GATE_RECEIPT.json
+          grep -q '"productionMode": "PALAU_ONLY"' /tmp/coral-r07-p13/PALAU_ONLY_GATE_RECEIPT.json
+          grep -q '"palauOnlyProductionEligible": true' /tmp/coral-r07-p13/PALAU_ONLY_GATE_RECEIPT.json
+          grep -q '"passed": true' /tmp/coral-r07-p13/PALAU_ONLY_GATE_RECEIPT.json
+
+      - name: Browser geometry and Palau-only runtime gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet websocket-client pillow
+          python3 -m http.server 8773 --directory /tmp/coral-r07-p13 >/tmp/coral-r07-p13-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          python3 work/tools/coral/coral_r07_massive_p13_browser_qa.py /tmp/coral-r07-p13
+
+      - name: Assert P13 evidence survived browser QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'CORAL_MOTHER_R07_MASSIVE_P13_BUILD' /tmp/coral-r07-p13/BUILD_R07_P00.json
+          grep -q 'palauOnlyProductionMode' /tmp/coral-r07-p13/BUILD_R07_P00.json
+          grep -q 'palauSpeciesOccurrenceConfirmed' /tmp/coral-r07-p13/BUILD_R07_P00.json
+          grep -q 'localSitePlacementSeparate' /tmp/coral-r07-p13/BUILD_R07_P00.json
+          test -s /tmp/coral-r07-p13/QA_SCREENSHOT_ULTRAWIDE_2560X1080.png
+          test -s /tmp/coral-r07-p13/QA_CLOSEUP_ULTRAWIDE_2560X1080.png
+          test -s /tmp/coral-r07-p13/QA_MICROSCOPE_0.png
+          test -s /tmp/coral-r07-p13/QA_MICROSCOPE_1.png
+          test -s /tmp/coral-r07-p13/QA_WARP_0.png
+          test -s /tmp/coral-r07-p13/QA_WARP_1.png
+
+      - name: Upload complete P13 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: CORAL_R07_MASSIVE_P13_PALAU_ONLY_EVIDENCE_${{ github.sha }}
+          path: /tmp/coral-r07-p13
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish fixed P13 workbench
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET=coral-mother-r07-massive-porites-p13-palau-only
+          rm -rf "pages/$TARGET"
+          mkdir -p "pages/$TARGET"
+          cp -a /tmp/coral-r07-p13/. "pages/$TARGET/"
+          cd pages
+          git config user.name 'Haihao_Nature Grace HK'
+          git config user.email 'haihao0307@gmail.com'
+          git add "$TARGET/"
+          if git diff --cached --quiet; then
+            echo 'No publication changes.'
+          else
+            git commit -m "publish(coral): R07 P13 Palau-only Porites lutea"
+            git pull --rebase origin gh-pages
+            git push origin gh-pages
+          fi
+
+      - name: Write run summary
+        shell: bash
+        run: |
+          {
+            echo '## Coral Mother R07-P13 · Palau Only'
+            echo
+            echo '- Species: Porites lutea'
+            echo '- NOAA: Hard / stony coral → Massive coral'
+            echo '- Palau admission: CONFIRMED_PALAU'
+            echo '- Authority: NOAA NCEI noaa-coral-19702'
+            echo '- Regional site: Ulong Channel, Palau Archipelago'
+            echo '- Production mode: PALAU_ONLY'
+            echo '- Non-Palau and generic Indo-Pacific evidence: rejected'
+            echo '- Local Airai / Stone Money placement: still independently gated'
+            echo '- Geometry: unchanged validated P12 geodesic/Poisson contract'
+            echo '- Runtime assets: 0 GLB / 0 texture / 0 fetch'
+            echo '- visualAcceptance: false'
+            echo '- productionReady: false'
+            echo
+            echo 'Public workbench:'
+            echo 'https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-r07-massive-porites-p13-palau-only/'
+          } >> "$GITHUB_STEP_SUMMARY"
