@@ -1,0 +1,104 @@
+name: Palau Airai R12 reproducible evidence runtime
+
+on:
+  push:
+    branches:
+      - work/palau-airai-r12-reproducible-evidence-runtime-20260921
+    paths:
+      - .github/workflows/palau-airai-r12-rebuild.yml
+      - handoff/survivor-palau-stone-money-full-r011-20260921/r12-bootstrap/**
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: palau-airai-r12-rebuild
+  cancel-in-progress: false
+
+jobs:
+  rebuild-verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Check out exact triggering commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: games/survivor-palau/palau-world/airai-r12/requirements-r12.txt
+
+      - name: Reconstruct and verify sealed R12 source bootstrap
+        shell: bash
+        run: |
+          set -euo pipefail
+          BOOT=handoff/survivor-palau-stone-money-full-r011-20260921/r12-bootstrap
+          cat "$BOOT"/chunk-*.b64 > /tmp/airai-r12-bootstrap.b64
+          test "$(wc -c < /tmp/airai-r12-bootstrap.b64)" -eq 40080
+          echo 'ce22b293e7fff3c8d0fbdd08295cc7f92165ac42926c51936bbad5604fb32b74  /tmp/airai-r12-bootstrap.b64' | sha256sum -c -
+          base64 --decode /tmp/airai-r12-bootstrap.b64 > /tmp/airai-r12-bootstrap.tar.gz
+          test "$(wc -c < /tmp/airai-r12-bootstrap.tar.gz)" -eq 30059
+          echo 'ba9ccc25f1c0888e5137c3e8e498e16713bc0ab3201f1dbf70af87aabd376b2c  /tmp/airai-r12-bootstrap.tar.gz' | sha256sum -c -
+          tar -xzf /tmp/airai-r12-bootstrap.tar.gz -C .
+          test -f games/survivor-palau/palau-world/airai-r12/build_runtime_evidence_r12.py
+          test -f games/survivor-palau/palau-world/airai-r12/qa_browser_r12.py
+          test -f games/survivor-palau/palau-world/airai-r12/finalize_r12.py
+
+      - name: Install pinned geospatial and browser runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=games/survivor-palau/palau-world/airai-r12
+          python -m pip install --upgrade pip
+          python -m pip install -r "$ROOT/requirements-r12.txt"
+          python -m playwright install --with-deps chromium
+
+      - name: Rebuild runtime and run numeric plus browser QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=games/survivor-palau/palau-world/airai-r12
+          RESULTS=games/survivor-palau/palau-world/airai-r04/results-r01
+          rm -rf "$ROOT/runtime" "$ROOT/evidence" "$ROOT/R12_QA_RECEIPT.json" "$ROOT/R12_PROGRESS_RECEIPT.json"
+          mkdir -p "$ROOT/runtime" "$ROOT/evidence"
+          python "$ROOT/build_runtime_evidence_r12.py" --results "$RESULTS" --out "$ROOT/runtime" | tee /tmp/airai-r12-build.json
+          python "$ROOT/verify_r12.py" | tee "$ROOT/evidence/numeric-qa.json"
+          xvfb-run -a python "$ROOT/qa_browser_r12.py" --out "$ROOT/evidence"
+          python "$ROOT/finalize_r12.py" | tee /tmp/airai-r12-finalize.json
+          test "$(python -c 'import json; print(json.load(open("games/survivor-palau/palau-world/airai-r12/evidence/numeric-qa.json"))["status"])')" = PASS
+          test "$(python -c 'import json; print(json.load(open("games/survivor-palau/palau-world/airai-r12/evidence/browser-qa.json"))["status"])')" = PASS
+          test "$(python -c 'import json; print(json.load(open("games/survivor-palau/palau-world/airai-r12/R12_QA_RECEIPT.json"))["browserStatus"])')" = PASS
+          test "$(python -c 'import json; print(str(json.load(open("games/survivor-palau/palau-world/airai-r12/PUBLICATION_PROOF.json"))["shareAllowed"]).lower())')" = false
+
+      - name: Commit exact rebuilt assets to the work branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=games/survivor-palau/palau-world/airai-r12
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$ROOT"
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat(palau): build Airai R12 reproducible evidence runtime [skip ci]'
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+
+      - name: Upload auditable R12 build artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: palau-airai-r12-reproducible-evidence-runtime
+          path: |
+            games/survivor-palau/palau-world/airai-r12/
+            handoff/survivor-palau-stone-money-full-r011-20260921/r12-bootstrap/BOOTSTRAP_MANIFEST.json
+            /tmp/airai-r12-build.json
+            /tmp/airai-r12-finalize.json
+          if-no-files-found: warn
+          retention-days: 30
