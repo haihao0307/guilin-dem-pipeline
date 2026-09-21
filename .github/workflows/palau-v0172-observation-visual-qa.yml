@@ -84,12 +84,13 @@ jobs:
             git push origin HEAD:${{ github.ref_name }}
           fi
 
-      - name: Upload V0172 evidence
+      - name: Upload V0172 evidence and one-click HTML
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: palau-v0172-observation-visual-qa
           path: |
+            games/survivor-palau/releases/v0.1.7.2/index.html
             games/survivor-palau/releases/v0.1.7.2/BROWSER_QA.json
             games/survivor-palau/releases/v0.1.7.2/BUILD.json
             games/survivor-palau/releases/v0.1.7.2/evidence
