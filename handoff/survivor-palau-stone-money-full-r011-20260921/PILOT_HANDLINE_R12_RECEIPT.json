@@ -1,0 +1,72 @@
+{
+  "schema": "kaopu.survivor-palau.pilot-handline-runtime-receipt/1.0",
+  "version": "PILOT_HANDLINE_R12_A1_20260921",
+  "branch": "work/survivor-palau-r12-pilot-story-integration-20260921",
+  "canonicalWorld": "handoff/survivor-palau-stone-money-full-r011-20260921",
+  "importsOldWorld": false,
+  "upstream": {
+    "fishingCore": {
+      "commit": "c07eec73616f613acde90881ac642b0972f12391",
+      "gitBlob": "b90b7bad470f062448621e2bd789d1e5d4b38c44",
+      "exactBlobMaterialized": true
+    },
+    "handlineController": {
+      "commit": "4f98d6c25f6a19a44795af877e0798371a6233a9",
+      "gitBlob": "d39866df1a1ebd1f9997bde171945d2053d0398f",
+      "exactBlobMaterialized": true
+    }
+  },
+  "newFilesSha256": {
+    "pilot_handline_runtime.cjs": "d3616f19fcffa466fab90de4f94db4ebdc83b619722ce7afa3a37496b47d3146",
+    "pilot_handline_runtime.test.cjs": "a55030d32fa55a284cc04d4dfa14ceb69632b059edc419fb97b476bc606f4a41",
+    "palau_world_fishing_adapter.cjs": "2fe3fbe3dadc2f995400ac60b5a1afc30a63614184b39153631d0e005bb2eae6",
+    "palau_world_fishing_adapter.test.cjs": "a6ebe0e1f45c8423a6ac74a287f90223d24ec4ab93d90f39206d71024d80ebe8"
+  },
+  "executed": [
+    {
+      "command": "node upstream/v0230/fishing_core.test.cjs",
+      "result": "PASS"
+    },
+    {
+      "command": "node upstream/v0230/handline_r01/handline_controller.test.cjs",
+      "result": "PASS",
+      "passed": 9
+    },
+    {
+      "command": "node pilot_handline_runtime.test.cjs",
+      "result": "PASS",
+      "passed": 12
+    },
+    {
+      "command": "node palau_world_fishing_adapter.test.cjs",
+      "result": "PASS",
+      "passed": 4
+    },
+    {
+      "command": "python3 story/validate_story_contract.py",
+      "result": "PASS"
+    }
+  ],
+  "causality": {
+    "automaticFishLock": false,
+    "automaticHookset": false,
+    "automaticCatch": false,
+    "automaticFoodReward": false,
+    "finiteGearLoss": true,
+    "sameFishIdentityAcrossHook": true
+  },
+  "worldPort": {
+    "conductor": "PalauWorld.sample()",
+    "missingEvidenceStaysDegraded": true,
+    "fallbackCanPassProduction": false
+  },
+  "acceptance": {
+    "sourceModified": true,
+    "interactive3D": false,
+    "staticImageSubstitute": false,
+    "publicHttpsPassed": false,
+    "browserPassed": false,
+    "visualAcceptance": false,
+    "productionReady": false
+  }
+}

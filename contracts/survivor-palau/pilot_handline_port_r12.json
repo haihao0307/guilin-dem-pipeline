@@ -1,0 +1,81 @@
+{
+  "schema": "kaopu.survivor-palau.pilot-handline-port/1.0",
+  "version": "PILOT_HANDLINE_R12_20260921",
+  "worldAuthority": {
+    "conductor": "PalauWorld.sample()",
+    "canonicalHandoff": "handoff/survivor-palau-stone-money-full-r011-20260921",
+    "traditionalLOD": false,
+    "importsOldWorld": false
+  },
+  "upstream": {
+    "fishingCore": {
+      "commit": "c07eec73616f613acde90881ac642b0972f12391",
+      "path": "games/survivor-palau/source/v0230/fishing_core.cjs",
+      "gitBlob": "b90b7bad470f062448621e2bd789d1e5d4b38c44"
+    },
+    "handlineController": {
+      "commit": "4f98d6c25f6a19a44795af877e0798371a6233a9",
+      "path": "games/survivor-palau/source/v0230/handline_r01/handline_controller.cjs",
+      "gitBlob": "d39866df1a1ebd1f9997bde171945d2053d0398f"
+    }
+  },
+  "runtimePhases": [
+    "ready",
+    "prepared",
+    "line_deployed",
+    "fish_notice",
+    "fish_approach",
+    "fish_inspect",
+    "bite_window",
+    "fight",
+    "landed",
+    "attempt_failed",
+    "aborted",
+    "gear_exhausted"
+  ],
+  "manualCausality": {
+    "automaticFishLock": false,
+    "automaticHookset": false,
+    "automaticCatch": false,
+    "automaticFoodReward": false,
+    "finiteBait": true,
+    "finiteLineHooksSinkers": true,
+    "sameFishIdentityAcrossHook": true
+  },
+  "observationBoundary": {
+    "equipment": "aviation-goggles-or-lenses-plus-short-snorkel",
+    "exactModel": "unverified",
+    "allowedUse": "surface-or-very-shallow-observation-only",
+    "depthEqualizedDivingMaskClaimed": false,
+    "signals": [
+      "faceSubmerged",
+      "snorkelTopClearanceM",
+      "tubeFlooded",
+      "coughRecoveryS",
+      "lensFlooding",
+      "visibility",
+      "disturbance"
+    ]
+  },
+  "sampleWorldRequest": {
+    "input": ["x", "y", "z", "worldSeconds", "purpose"],
+    "requiredSurface": ["water.eta or water.surfaceY"],
+    "productionSurface": ["water.normal", "water.surfaceVelocity", "water.breaker", "water.clarity"],
+    "productionCurrent": ["water.current or water.currentVelocity"],
+    "productionHabitat": ["habitat.snagRisk", "habitat.abrasionRate", "habitat.snagContact", "habitat.evidenceStatus"]
+  },
+  "fallbackBoundary": {
+    "logicTestFallbackAllowed": true,
+    "missingEvidenceRecordedAsDegraded": true,
+    "fallbackCanPassProduction": false
+  },
+  "acceptance": {
+    "sourceModified": true,
+    "interactive3D": false,
+    "staticImageSubstitute": false,
+    "publicHttpsPassed": false,
+    "browserPassed": false,
+    "visualAcceptance": false,
+    "productionReady": false
+  }
+}
