@@ -1,0 +1,80 @@
+{
+  "schema": "kaopu.delivery-receipt/2.0",
+  "taskId": "SMI-GAME-POINTER-PROBE-R01",
+  "status": "EXECUTING_VERIFIED_CORE / BROWSER_INTEGRATION_PENDING",
+  "baseSha": "b667b102f71182028fa07c622ea1a2b64a3fe498",
+  "productionHeadSha": "804ea802bf69011c77ffdf33606be14b019e6745",
+  "branch": "work/smi-v0290-pointer-probe-r01-20260921",
+  "target": "Game-side pointer/touch trajectory to world-space interactionProbe input layer",
+  "productionFilesChanged": [
+    "games/survivor-palau/source/v0290/pointer_probe_r01/interaction_probe.cjs",
+    "games/survivor-palau/source/v0290/pointer_probe_r01/pointer_input_adapter.cjs",
+    "games/survivor-palau/source/v0290/pointer_probe_r01/interaction_probe.test.cjs",
+    "games/survivor-palau/source/v0290/pointer_probe_r01/TASK_ANCHOR.json"
+  ],
+  "freshness": {
+    "baseToHead": "4 commits ahead / 0 behind",
+    "onlyAllowedPathsChanged": true,
+    "releaseHtmlChanged": false,
+    "fishGeometryChanged": false,
+    "oceanChanged": false
+  },
+  "tests": [
+    {
+      "kind": "syntax",
+      "command": "node --check interaction_probe.cjs && node --check pointer_input_adapter.cjs",
+      "result": "PASS",
+      "runtime": "Node v22.16.0"
+    },
+    {
+      "kind": "deterministic-unit",
+      "command": "node interaction_probe.test.cjs",
+      "result": "PASS (25 assertions)",
+      "runtime": "Node v22.16.0"
+    }
+  ],
+  "sourceIdentityVerification": {
+    "method": "git blob SHA equality between committed GitHub files and the locally executed exact file bytes",
+    "interactionProbeBlob": "61e41487f96abf5702831ed284ca5c0391292cef",
+    "pointerAdapterBlob": "864faa571c5de957f9131299b89f2d0d1a6887f0",
+    "testBlob": "9959acbe0aca97f683b462ceab27827099d5cf09",
+    "exactExecutedSourceMatchesCommittedHead": true
+  },
+  "verifiedBehaviors": [
+    "stable probeId",
+    "stable pointerId until pointer source changes",
+    "first sample does not invent velocity",
+    "world velocity derives from measured projected displacement/time",
+    "velocity smoothing",
+    "idle velocity decay",
+    "pointer cancel deactivates live stimulus",
+    "cancelled residual velocity decays rather than becoming an active ghost",
+    "new pointerId does not inherit old pointer velocity",
+    "Game-supplied projector owns screen-to-world mapping",
+    "shared Game worldTime passes through probe state",
+    "adapter listener disposal is deterministic"
+  ],
+  "browserDesktop": {
+    "executed": false,
+    "reason": "This bounded R01 stops before patching v0.2.9 release HTML."
+  },
+  "browser390x844": {
+    "executed": false,
+    "reason": "No production page integration exists yet; desktop mouse evidence may not substitute for touch acceptance."
+  },
+  "referenceViews": [],
+  "failedGates": [],
+  "knownLimitations": [
+    "No Fish behavior consumes interactionProbe yet.",
+    "No authoritative current Ocean/surface projection is wired; projectToWorld remains a required Game callback.",
+    "No production v0.2.9 HTML or runtime entry was modified.",
+    "No slow-approach / fast-lunge / habituation / shoal-contagion behavior is claimed; those remain Fish-owned.",
+    "No browser, mobile touch, physical iPhone, visualAcceptance or productionReady evidence.",
+    "No independent verifier has promoted this candidate."
+  ],
+  "fallbackActive": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "promotion": "HOLD",
+  "nextAction": "Independent verifier re-runs this exact production head, then Game may wire the probe to the existing camera/world projection without changing fish identity or Ocean truth."
+}
