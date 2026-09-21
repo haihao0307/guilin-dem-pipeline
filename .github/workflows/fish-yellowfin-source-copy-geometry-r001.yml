@@ -1,0 +1,172 @@
+name: Fish Mother Yellowfin Source Copy Geometry R001
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - work/ocean-life-fish-mother-yellowfin-source-copy-r001-20260921
+    paths:
+      - .github/workflows/fish-yellowfin-source-copy-geometry-r001.yml
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/tools/build_source_copy_geometry.py
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/tools/classify_source_components.py
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/tests/source-copy-geometry-r001.test.mjs
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/SOURCE_COMPONENT_CLASSIFICATION_R001.json
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace/source/tuna_fish_4k.glb
+      - apps/ocean-life-mother/fish-mother/yellowfin-study-r006/tools/build_kaopu_source_copy_package.py
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fish-yellowfin-source-copy-geometry-r001
+  cancel-in-progress: true
+
+env:
+  COPY_ROOT: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001
+  SOURCE_GLB: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace/source/tuna_fish_4k.glb
+  PACKAGE_ROOT: /tmp/yellowfin-source-copy-r001-package
+  CLASSIFICATION: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/SOURCE_COMPONENT_CLASSIFICATION_R001.json
+  GEOMETRY_GLB: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry/YELLOWFIN_SOURCE_COPY_R001.glb
+  GEOMETRY_RECEIPT: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/SOURCE_COPY_GEOMETRY_R001.json
+
+jobs:
+  build-segmented-source-copy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out the Source Copy branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install exact-source geometry dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install numpy matplotlib trimesh
+
+      - name: Build a temporary exact-source package
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "$PACKAGE_ROOT"
+          python apps/ocean-life-mother/fish-mother/yellowfin-study-r006/tools/build_kaopu_source_copy_package.py \
+            "$SOURCE_GLB" \
+            --out "$PACKAGE_ROOT"
+
+      - name: Build the first region-separated exact-source copy
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "$(dirname "$GEOMETRY_GLB")"
+          python "$COPY_ROOT/tools/build_source_copy_geometry.py" \
+            --package "$PACKAGE_ROOT" \
+            --classification "$CLASSIFICATION" \
+            --out-glb "$GEOMETRY_GLB" \
+            --out-receipt "$GEOMETRY_RECEIPT"
+
+      - name: Record geometry-copy status
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+
+          root = Path(os.environ['COPY_ROOT'])
+          receipt = json.loads(Path(os.environ['GEOMETRY_RECEIPT']).read_text())
+
+          status_path = root / 'CURRENT_STATUS.json'
+          status = json.loads(status_path.read_text())
+          status['phase'] = 'SOURCE_COPY_GEOMETRY_R001_STATIC_READY_BROWSER_QA_PENDING'
+          status['gates'].update({
+              'sourceCopyStaticGeometryGenerated': True,
+              'sourceCopyAllFacesAssignedExactlyOnce': True,
+              'sourceCopySourceBoundsPreserved': True,
+              'sourceCopyGeometryBrowserQAPassed': False,
+              'sourceCopySkinTransferred': False,
+              'sourceCopyMaterialsTransferred': False,
+              'independentReconstructionUnlocked': False,
+              'generationLocked': True,
+          })
+          status['sourceCopyGeometry'] = {
+              'receipt': 'SOURCE_COPY_GEOMETRY_R001.json',
+              'glb': 'geometry/YELLOWFIN_SOURCE_COPY_R001.glb',
+              'sha256': receipt['output']['sha256'],
+              'bytes': receipt['output']['bytes'],
+              'meshCount': receipt['output']['meshCount'],
+              'faceCount': receipt['output']['faceCount'],
+              'regions': [item['name'] for item in receipt['regions']],
+              'sourcePositionsReusedWithoutModification': True,
+              'sourceProportionsPreserved': True,
+              'staticOnly': True,
+          }
+          status['next'] = 'Run fixed-view source-versus-segmented-copy browser QA, then transfer the exact source skeleton and skin weights without changing geometry.'
+          status_path.write_text(json.dumps(status, ensure_ascii=False, indent=2) + '\n')
+
+          baseline_path = Path('CURRENT_BASELINE.json')
+          baseline = json.loads(baseline_path.read_text())
+          active = baseline.setdefault('activeState', {})
+          active.update({
+              'phase': 'YELLOWFIN_SOURCE_COPY_R001_STATIC_SEGMENTED_GEOMETRY_READY',
+              'workBranch': 'work/ocean-life-fish-mother-yellowfin-source-copy-r001-20260921',
+              'activeWorkbench': 'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/index.html',
+              'sourceCopyStaticGeometryGenerated': True,
+              'sourceCopyGeometryReceipt': 'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/SOURCE_COPY_GEOMETRY_R001.json',
+              'sourceCopyGeometryGlb': 'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry/YELLOWFIN_SOURCE_COPY_R001.glb',
+              'sourceCopyGeometrySha256': receipt['output']['sha256'],
+              'sourceCopyGeometryBrowserQAPassed': False,
+              'sourceCopySkinTransferred': False,
+              'sourceCopyUnlocked': False,
+              'generationLocked': True,
+              'nextAllowedBuild': 'YELLOWFIN-SOURCE-COPY-R001-STATIC-GEOMETRY-QA',
+          })
+          baseline_path.write_text(json.dumps(baseline, ensure_ascii=False, indent=2) + '\n')
+          PY
+
+      - name: Run geometry-copy contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node "$COPY_ROOT/tests/source-copy-geometry-r001.test.mjs"
+          node "$COPY_ROOT/tests/source-component-classification-r001.test.mjs"
+          node "$COPY_ROOT/tests/source-copy-r001-contract.test.mjs"
+
+      - name: Upload segmented source-copy geometry
+        uses: actions/upload-artifact@v4
+        with:
+          name: YELLOWFIN-SOURCE-COPY-GEOMETRY-R001
+          path: |
+            ${{ env.GEOMETRY_GLB }}
+            ${{ env.GEOMETRY_RECEIPT }}
+            ${{ env.COPY_ROOT }}/CURRENT_STATUS.json
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 6
+
+      - name: Commit the generated geometry and receipts
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Fish Mother R001"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config http.postBuffer 157286400
+          git add \
+            CURRENT_BASELINE.json \
+            "$COPY_ROOT/CURRENT_STATUS.json" \
+            "$GEOMETRY_RECEIPT" \
+            "$GEOMETRY_GLB"
+          if git diff --cached --quiet; then
+            echo "No source-copy geometry delta to commit."
+            exit 0
+          fi
+          git commit -m "feat(fish): generate segmented exact-source geometry copy"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
