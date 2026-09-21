@@ -6,6 +6,9 @@ import sys
 from pathlib import Path
 
 
+APPROVED_AT = '2026-09-21'
+
+
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise RuntimeError(message)
@@ -22,24 +25,31 @@ def main() -> None:
     require('Microscope Geometry T07' in html, 'unexpected T07 source')
     require('window.__CORAL_R06_T07_BUILD__' in html, 'T07 build marker missing')
     require('continuousTube' in override and 'warpPoint' in override and 'rebuild=function' in override, 'T08 override incomplete')
-    # The override replaces several function bindings and then immediately runs
-    # an IIFE.  Insert an explicit statement boundary so ASI cannot interpret
-    # the IIFE as a call on the preceding function-expression assignment.
+
+    # Keep a hard statement boundary before the runtime IIFE.
     require('\n(function(){' in override, 'T08 initialization IIFE missing')
     override = override.replace('\n(function(){', '\n;\n(function(){', 1)
 
+    # User approved the complete T08 visual result on 2026-09-21.  Palau
+    # ecological placement remains a separate unresolved evidence gate.
+    override = override.replace(
+        'visualAcceptance:false,productionReady:false',
+        'visualAcceptance:true,productionReady:true',
+    )
+    require('visualAcceptance:false,productionReady:false' not in override, 'stale T08 approval flags remain')
+
     replacements = {
-        '<title>Coral Mother R06 · Microscope Geometry T07</title>': '<title>Coral Mother R06 · Uniform Microscope + Warp T08</title>',
+        '<title>Coral Mother R06 · Microscope Geometry T07</title>': '<title>Coral Mother R06 · Uniform Microscope + Warp T08 · Approved</title>',
         'PROCEDURAL · R06-T07': 'PROCEDURAL · R06-T08',
         'FUNCTION · R06-T07': 'FUNCTION · R06-T08',
-        'Coral Mother R06 · T07': 'Coral Mother R06 · T08',
+        'Coral Mother R06 · T07': 'Coral Mother R06 · T08 · APPROVED',
         'Pocillopora 微尺度形体工作台 T07': 'Pocillopora 单色 Microscope + Warp 工作台 T08',
         '连续管状生长 + Microscope 真实形体位移；0 GLB / 0 texture': '全表面 Microscope + 连续域 Warp；0 GLB / 0 texture',
         '继续保持标本／函数 A/B。T07 在连续管环上加入杯体、杯缘／细脊与骨骼颗粒三频真实位移，并以附着根连通遍历删除悬空枝。': 'T08 统一同一母体的物种主色；Microscope 覆盖全部管环并重算法线；Warp 连续影响中心线、接点与疣突。',
-        'CONTINUOUS TUBE / MICROSCOPE GEOMETRY · visualAcceptance=false': 'UNIFORM COLOR / FULL-SURFACE MICROSCOPE / WARP · visualAcceptance=false',
+        'CONTINUOUS TUBE / MICROSCOPE GEOMETRY · visualAcceptance=false': 'UNIFORM COLOR / FULL-SURFACE MICROSCOPE / WARP · APPROVED',
         'Living color / 高饱和活组织视觉候选': 'Species color / 单一物种主色候选',
         '<strong>显示边界：</strong>高饱和色用于活组织视觉候选，白化与裸骨独立。它们不是 NOAA 分类颜色，也不替代后续物种和水下光谱校准。': '<strong>显示边界：</strong>普通形体模式只使用一个物种主色；颜色用于生产识别，不作为物种分类依据。枝序多色只存在于显式诊断。',
-        '<strong>当前边界：</strong>T07 已把 Microscope 从纯明暗推进到连续管环真实位移，并在细枝筛选后执行 root-connected traversal。所有显示枝体必须可沿父路径回到共同附着基底；仍需用户视觉批准。': '<strong>当前边界：</strong>T08 的 Microscope 覆盖全部连续枝体，位移后重新计算几何法线；Warp 使用共享世界坐标场。仍需用户视觉批准。',
+        '<strong>当前边界：</strong>T07 已把 Microscope 从纯明暗推进到连续管环真实位移，并在细枝筛选后执行 root-connected traversal。所有显示枝体必须可沿父路径回到共同附着基底；仍需用户视觉批准。': '<strong>冻结状态：</strong>T08 已获用户视觉批准并归档为 NOAA Hard / stony coral → Branching coral。Palau 出现证据仍为 UNRESOLVED，因此生态投放必须继续单独审核。',
     }
     for old, new in replacements.items():
         require(old in html, f'missing source marker: {old[:72]}')
@@ -50,9 +60,39 @@ def main() -> None:
     html = html.replace('</body>', script + '</body>', 1)
     require(html.count('id="gl"') == 1, 'canvas contract changed')
     require('window.__CORAL_R06_T08_BUILD__' in html, 'T08 marker missing after insert')
+    require('visualAcceptance:true' in html and 'productionReady:true' in html, 'approval flags missing from runtime')
 
     out.mkdir(parents=True, exist_ok=True)
     (out / 'index.html').write_text(html, encoding='utf-8')
+
+    classification = {
+        'schema': 'CORAL_NOAA_CLASSIFICATION_V1',
+        'assetId': 'CORAL_R06_T08_POCILLOPORA_DAMICORNIS',
+        'scientificName': 'Pocillopora damicornis',
+        'formalTaxonomy': {
+            'kingdom': 'Animalia',
+            'phylum': 'Cnidaria',
+            'class': 'Anthozoa',
+            'subclass': 'Hexacorallia',
+            'order': 'Scleractinia',
+            'family': 'Pocilloporidae',
+            'genus': 'Pocillopora',
+            'species': 'Pocillopora damicornis',
+        },
+        'noaa': {
+            'broadType': 'Hard / stony coral',
+            'growthForm': 'Branching coral',
+            'morphologyId': 'HARD_BRANCHING',
+            'classificationLevel': 'growth form, not species',
+        },
+        'commonLanguageNote': '鹿角状只是外观类比；NOAA staghorn coral 特指 Acropora cervicornis，不等于本资产。',
+        'palauOccurrenceEvidence': 'UNRESOLVED',
+        'ecologicalPlacementReady': False,
+        'visualAcceptance': True,
+        'productionReady': True,
+        'approvedAt': APPROVED_AT,
+    }
+
     build = {
         'schema': 'CORAL_MOTHER_R06_T08_UNIFORM_MICROSCOPE_WARP_BUILD',
         'source': str(source),
@@ -64,8 +104,10 @@ def main() -> None:
             'formalOrder': 'Scleractinia',
             'family': 'Pocilloporidae',
             'noaaBroadType': 'Hard / stony coral',
-            'noaaGrowthForm': 'Branching Coral',
+            'noaaGrowthForm': 'Branching coral',
+            'noaaMorphologyId': 'HARD_BRANCHING',
             'palauOccurrenceEvidence': 'UNRESOLVED',
+            'ecologicalPlacementReady': False,
         },
         'geometry': {
             'continuousTube': True,
@@ -78,23 +120,55 @@ def main() -> None:
             'tubeSides': 18,
             'pathSubdivision': 5,
         },
+        'approval': {
+            'status': 'USER_VISUAL_APPROVED_AND_FROZEN',
+            'approvedAt': APPROVED_AT,
+            'scope': ['colony silhouette', 'uniform color', 'full-surface microscope', 'warp', 'root-connected geometry'],
+            'exclusions': ['Palau occurrence', 'real-world size calibration', 'ecological placement'],
+        },
         'adjustableControls': 12,
         'runtimeGLB': 0,
         'runtimeTextures': 0,
         'networkFetchCalls': 0,
-        'visualAcceptance': False,
-        'productionReady': False,
+        'visualAcceptance': True,
+        'productionReady': True,
+        'ecologicalPlacementReady': False,
     }
     (out / 'BUILD_T08.json').write_text(json.dumps(build, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    (out / 'NOAA_CLASSIFICATION.json').write_text(json.dumps(classification, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    (out / 'FREEZE_MANIFEST.json').write_text(
+        json.dumps(
+            {
+                'schema': 'CORAL_MOTHER_FREEZE_MANIFEST_V1',
+                'releaseId': 'CORAL_R06_T08_BRANCHING_APPROVED_20260921',
+                'approvedAt': APPROVED_AT,
+                'classification': 'Hard / stony coral → Branching coral',
+                'asset': 'Pocillopora damicornis',
+                'immutableSourceSha256': build['sha256'],
+                'visualAcceptance': True,
+                'productionReady': True,
+                'ecologicalPlacementReady': False,
+                'nextNoaaGrowthForm': 'Massive coral',
+                'nextCandidate': 'Porites lutea morphology prototype; Palau evidence unresolved',
+            },
+            ensure_ascii=False,
+            indent=2,
+        ) + '\n',
+        encoding='utf-8',
+    )
     (out / 'T08_IMPLEMENTATION_ZH.md').write_text(
-        '# Coral Mother R06-T08 实现回执\n\n'
+        '# Coral Mother R06-T08 冻结回执\n\n'
+        '- 用户于 2026-09-21 明确视觉批准，本版已固化。\n'
+        '- NOAA 生产分类：Hard / stony coral → Branching coral。\n'
+        '- 正式分类：Scleractinia → Pocilloporidae → Pocillopora → P. damicornis。\n'
+        '- “像鹿角”仅是外观类比；不得登记成 Acropora cervicornis。\n'
         '- 默认显示统一为单一物种主色；枝序多色只在显式诊断模式出现。\n'
-        '- Microscope 覆盖全部连续管环，管环由 10 边提高到 18 边，路径采样由 3 提高到 5。\n'
-        '- 位移后使用环向与纵向切线重算法线，不再沿用未位移径向法线。\n'
+        '- Microscope 覆盖全部连续管环，位移后重新计算几何法线。\n'
         '- Warp 使用共享世界坐标场，连续影响中心线、接点、枝端和疣突。\n'
-        '- 细枝仍补齐至共同附着根，禁止悬空枝进入网格。\n'
+        '- 细枝补齐至共同附着根，禁止悬空枝进入网格。\n'
         '- 运行时保持 0 GLB、0 外部贴图、0 fetch。\n'
-        '- visualAcceptance=false；productionReady=false。\n',
+        '- visualAcceptance=true；productionReady=true。\n'
+        '- Palau occurrence=UNRESOLVED；ecologicalPlacementReady=false。\n',
         encoding='utf-8',
     )
     (out / 'COST_COMPARISON_ZH.md').write_text(
