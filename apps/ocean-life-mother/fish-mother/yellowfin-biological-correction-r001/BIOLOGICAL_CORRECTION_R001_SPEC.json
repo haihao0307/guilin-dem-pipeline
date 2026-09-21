@@ -1,0 +1,90 @@
+{
+  "schema": "kaopu.fish-mother.yellowfin-biological-correction-spec/1.0",
+  "date": "2026-09-21",
+  "build": "YELLOWFIN-BIOLOGICAL-CORRECTION-R001",
+  "species": {
+    "commonName": "Yellowfin tuna",
+    "scientificName": "Thunnus albacares",
+    "targetStage": "large-adult candidate",
+    "stagePolicy": "Do not pretend there is one universal Yellowfin proportion. Size class and geographic morphometric variation remain explicit variables."
+  },
+  "frozenInput": {
+    "branch": "work/ocean-life-fish-mother-yellowfin-source-copy-r001-20260921",
+    "commit": "9b610f4ef0134e015c2fb6b14574e7e4f48ed943",
+    "glb": "apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry/YELLOWFIN_SOURCE_COPY_SKINNED_R001.glb",
+    "sha256": "2130a3c03fc50d22676919c3599e75707e61d9f75ddd90523a6897887715ec02",
+    "bytes": 58956620,
+    "immutable": true
+  },
+  "coordinateContract": {
+    "sourceWorldAxes": {
+      "x": "lateral",
+      "y": "tail-to-snout",
+      "z": "dorsal-negative / ventral-positive"
+    },
+    "normalization": "inferred fork length when the caudal-upper/lower shared trailing notch is valid; otherwise report total longitudinal extent and block candidate acceptance",
+    "frameMixingForbidden": true
+  },
+  "evidencePolicy": {
+    "publishedHardConstraints": [
+      {
+        "id": "FAO_PECTORAL_LENGTH",
+        "metric": "pectoralLengthOverForkLength",
+        "range": [0.22, 0.31],
+        "scope": "species diagnostic range",
+        "source": "FAO species diagnostic account for Thunnus albacares"
+      },
+      {
+        "id": "FAO_DEEPEST_BODY_LOCATION",
+        "metric": "maximumBodyDepthLocation",
+        "constraint": "near the middle of the first dorsal-fin base",
+        "source": "FAO species diagnostic account for Thunnus albacares"
+      },
+      {
+        "id": "FAO_LARGE_ADULT_FIN_ELONGATION",
+        "metric": "secondDorsalAndAnalMaximumRayOverForkLength",
+        "constraint": "can exceed 0.20 in large specimens; this is conditional, not a universal minimum",
+        "source": "FAO species diagnostic account for Thunnus albacares"
+      }
+    ],
+    "populationVariation": {
+      "required": true,
+      "source": "William F. Royce, A morphometric study of yellowfin Thunnus albacares, 4,180 specimens",
+      "rule": "Use envelopes and a declared adult phenotype; never label one exact ratio as species truth."
+    },
+    "provisionalEngineeringEnvelopes": {
+      "maximumBodyDepthOverForkLength": [0.22, 0.30],
+      "semanticHeadLengthOverForkLength": [0.23, 0.31],
+      "peduncleDepthOverForkLength": [0.025, 0.065],
+      "caudalVerticalSpanOverForkLength": [0.32, 0.50],
+      "largeAdultSecondDorsalHeightOverForkLength": [0.16, 0.24],
+      "largeAdultAnalHeightOverForkLength": [0.16, 0.24]
+    },
+    "provisionalRule": "Engineering envelopes are candidate controls, not published species limits. They must remain labeled provisional until visual and morphometric acceptance."
+  },
+  "correctionOrder": [
+    "audit frozen rest geometry, regions, bind skeleton and animation channels",
+    "lock fork-length inference and baseline morphometrics",
+    "correct body depth distribution and head transition",
+    "correct caudal peduncle and keel support without weakening the tail root",
+    "correct pectoral, second dorsal and anal fin proportions for the declared adult phenotype",
+    "preserve finlet count unless evidence proves a segmentation error",
+    "propagate the same smooth rest-space deformation to vertices, bind joints and translation animation data",
+    "run rest-pose, Swim, material, silhouette and console-zero browser QA"
+  ],
+  "invariants": {
+    "neverOverwriteFrozenSourceCopy": true,
+    "retainSemanticRegionAddressability": true,
+    "retainSkinCount": 1,
+    "retainAnimationCount": 1,
+    "retainMaterialCount": 3,
+    "retainTextureAndImageTables": true,
+    "retainFinletCounts": {
+      "dorsal": 9,
+      "ventral": 8
+    },
+    "consoleErrorsAllowed": 0,
+    "pageErrorsAllowed": 0,
+    "productionReady": false
+  }
+}
