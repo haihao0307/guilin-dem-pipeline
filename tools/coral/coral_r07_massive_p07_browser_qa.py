@@ -8,8 +8,10 @@ from pathlib import Path
 SOURCE = Path(__file__).with_name('coral_r07_massive_p06_browser_qa.py')
 code = SOURCE.read_text(encoding='utf-8')
 final_exec = "exec(compile(code, str(SOURCE), 'exec'), {'__name__': '__main__', '__file__': str(SOURCE)})"
-if final_exec not in code:
-    raise RuntimeError('P07 QA final exec marker missing')
+marker = "\n" + final_exec + "\n"
+pos = code.rfind(marker)
+if pos < 0:
+    raise RuntimeError('P07 QA terminal exec marker missing')
 
 extra = r'''
 p07_replacements = {
@@ -29,8 +31,8 @@ for old, new in p07_replacements.items():
         raise RuntimeError(f'P07 QA source marker missing: {old}')
     code = code.replace(old, new, 1)
 
-# Expose the explicit-cup counts in the functional probe and require the cup
-# mesh to disappear completely at microscope=0 and return at microscope=1.
+# Expose explicit-cup counts in the functional probe and require the cup mesh
+# to disappear completely at microscope=0 and return at microscope=1.
 probe_old = "microSpace:q.microDisplacementSpace,warpRms:q.warpDisplacementRms"
 probe_new = "microSpace:q.microDisplacementSpace,cupCount:q.cupCount,cupVertices:q.cupVertexCount,cupTriangles:q.cupTriangleCount,baseSurfaceMicroNoise:q.baseSurfaceMicroNoise,warpRms:q.warpDisplacementRms"
 if probe_old not in code:
@@ -51,5 +53,6 @@ code = code.replace(micro1_old, micro1_new, 1)
 
 exec(compile(code, str(SOURCE), 'exec'), {'__name__': '__main__', '__file__': str(SOURCE)})
 '''.strip()
-code = code.replace(final_exec, extra, 1)
+
+code = code[:pos] + "\n" + extra + "\n" + code[pos + len(marker):]
 exec(compile(code, str(SOURCE), 'exec'), {'__name__': '__main__', '__file__': str(SOURCE)})
