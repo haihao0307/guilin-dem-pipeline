@@ -1,0 +1,85 @@
+{
+  "schema": "kaopu.task-anchor/2.0",
+  "taskId": "AIRAI-STONE-MONEY-R09-SUPERVISED-STRUCTURE",
+  "dispatchTime": "2026-09-21",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "work/palau-airai-r09-supervised-structure-20260921",
+  "baseSha": "f11da1423356115e8bb2e7d078d10a7a493bc9ff",
+  "acceptedAuthority": {
+    "fullPalauFrame": {
+      "filename": "IMG_7975.jpeg",
+      "sha256": "5b6e1d716bfa66f204aac9240944fe5d1526444d981ccb8a3f23875633d73312",
+      "dimensions": [581,1260]
+    },
+    "storyRegion": {
+      "filename": "IMG_7974.jpeg",
+      "sha256": "4fad4cd637fd556044fec5cfd56f6ef29eb8859a72a543788feb7084c4daeb47",
+      "dimensions": [1284,2778],
+      "meaning": "the entire user-drawn yellow Stone Money Island region, not a guessed point"
+    }
+  },
+  "userDirectiveVerbatimOrLosslessSummary": "Every report must show, in this order: complete Palau map; unique latest Stone Money Island location; land/beach/reef/channel/deep-ocean structural separation; current workbench screenshot; one sentence naming the most obvious remaining error. Old R01/R03 workbenches and old anchors are forbidden. Land is not reef. High detail only around Airai and the story island.",
+  "targetObject": "Airai / Stone Money Island geographic truth and workbench delivery sequence",
+  "targetDefectOrChange": "Stop repeated wrong-frame, wrong-anchor, land-versus-reef conflation and stale-workbench delivery.",
+  "taskMode": "REFERENCE_AND_EVIDENCE_LOCKED",
+  "creativeAuthorization": false,
+  "precedence": [
+    "This R09 user directive supersedes the R07 instruction that forbade all structure-separation images.",
+    "R09 REQUIRES a structure-separation image, but every layer must be evidence-derived and carry uncertainty/NoData where evidence is insufficient.",
+    "R07/R08 remain provenance/history, not authority to skip any R09 required image."
+  ],
+  "requiredDeliveryOrder": [
+    "01 complete Palau user frame",
+    "02 latest unique Stone Money story-region location",
+    "03 evidence-derived land/beach/reef/channel/deep-ocean structural separation",
+    "04 current-head workbench screenshot",
+    "05 one-sentence most-obvious-error statement"
+  ],
+  "allowedEvidence": [
+    "user original images and their frozen SHA256 identities",
+    "NOAA ENC COALNE/LNDARE/SOUNDG/DEPCNT/DEPARE/M_QUAL/M_SDAT",
+    "NOAA/NCEI bathymetry coverage",
+    "GMRT context",
+    "Allen Coral Atlas geomorphic/benthic context",
+    "Sentinel-2 optical evidence",
+    "OSM semantic cross-check",
+    "Palau DEM source ledger"
+  ],
+  "structuralLayerRules": {
+    "land": "derived from land/coast/DEM evidence; never expanded to equal reef platform",
+    "beach": "separate interfacial class only where supported; otherwise UNKNOWN",
+    "reef": "submerged/shallow reef-platform class from reef/geomorphic/optical/depth evidence; not land",
+    "channel": "water corridor distinct from reef; must remain topologically continuous through KB Bridge / Toachel Mid",
+    "deepOcean": "reef-exterior/deeper water class from depth/context evidence",
+    "unknown": "must remain explicit; never filled for visual completeness"
+  },
+  "highDetailRule": {
+    "focus": "Airai + Stone Money story region",
+    "outsideFocus": "retain island existence, coarse placement and basic relations only",
+    "forbidden": "same-level high-detail refinement across all islands before focus area passes"
+  },
+  "forbiddenRoutes": [
+    "R01/R03/R03C workbench as current delivery",
+    "R05/R06 guessed world or structure image as current authority",
+    "old Stone Money candidate anchor",
+    "Boracay/Orrak/Ngellil reintroduced as story location",
+    "land outline reused as reef outline",
+    "invented reef boundary",
+    "channel that breaks before/at KB Bridge",
+    "old screenshot presented as fresh progress",
+    "text-only progress claim",
+    "reason/explanation substituted for the required images"
+  ],
+  "acceptanceGates": [
+    "Image 01 exact identity matches frozen complete Palau map",
+    "Image 02 exact identity matches frozen user story region and contains no old anchor overlay",
+    "Image 03 contains five explicit classes plus UNKNOWN/NoData where needed",
+    "Image 03 records evidence source for each visible class",
+    "land and submerged reef are semantically distinct and not represented by the same mask",
+    "channel continuity through KB Bridge / Toachel Mid passes a topology check",
+    "Image 04 is generated from current head after dispatch and visibly carries current version/head stamp",
+    "desktop workbench and 390x844 evidence are separate when the workbench changes",
+    "report includes exactly one concrete sentence naming the largest remaining visible/structural error",
+    "no stale workbench or superseded anchor appears anywhere in the delivery package"
+  ]
+}
