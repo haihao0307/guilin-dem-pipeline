@@ -73,9 +73,15 @@ injected = marker + """        bite_ui = page.evaluate(\"\"\"(()=>({phase:PalauE
             polling=50,
         )
         overlay = page.evaluate(\"\"\"(()=>{const e=document.getElementById('pilotLensOverlay'),s=getComputedStyle(e),b=e.getBoundingClientRect();return{hidden:e.hidden,display:s.display,visibility:s.visibility,opacity:Number(s.opacity),width:b.width,height:b.height}})()\"\"\")
+        gear = page.evaluate('JSON.parse(JSON.stringify(PalauExperience.survival.telemetry))')
         visual['overlayState'] = overlay
         visual['overlayVisible'] = page.locator('#pilotLensOverlay').is_visible()
         r['checks']['visualReadability'] = visual
+        r['checks']['surfaceLineNearPlane'] = {
+            'originRangeM': gear.get('surfaceLineOriginRangeM'),
+            'radiusM': gear.get('surfaceLineRadiusM'),
+            'visible': gear.get('surfaceLineVisible'),
+        }
         save()
         assert visual['solidLensCount'] == 0, visual
         assert visual['lensFrame'] == 'thin-screen-space', visual
@@ -84,8 +90,40 @@ injected = marker + """        bite_ui = page.evaluate(\"\"\"(()=>({phase:PalauE
         assert visual['candidateFishLengthPx'] >= 22.0, visual
         assert visual['baitDiameterPx'] >= 10.0, visual
         assert visual['overlayVisible'] and overlay['opacity'] > .9 and overlay['visibility'] == 'visible', visual
+        assert gear.get('surfaceLineOriginRangeM', 0) >= .9, gear
+        assert gear.get('surfaceLineRadiusM', 1) <= .004, gear
+        assert gear.get('surfaceLineVisible') is True, gear
 """
 assert BASE.count(marker) == 1
 BASE = BASE.replace(marker, injected, 1)
+
+caught_snapshot = """        snapshot(page, 'desktop-caught')
+"""
+caught_checks = caught_snapshot + """        caught_visual = page.evaluate('JSON.parse(JSON.stringify(PalauExperience.survival.telemetry))')
+        r['checks']['caughtGeometryPlacement'] = {
+            'caughtFishRangeM': caught_visual.get('caughtFishRangeM'),
+            'surfaceLineVisible': caught_visual.get('surfaceLineVisible'),
+        }
+        save()
+        assert caught_visual.get('caughtFishRangeM', 0) >= 1.2, caught_visual
+        assert caught_visual.get('surfaceLineVisible') is False, caught_visual
+"""
+assert BASE.count(caught_snapshot) == 1
+BASE = BASE.replace(caught_snapshot, caught_checks, 1)
+
+broken_snapshot = """            snapshot(page, 'desktop-line-broken')
+"""
+broken_checks = broken_snapshot + """            broken_visual = page.evaluate('JSON.parse(JSON.stringify(PalauExperience.survival.telemetry))')
+            r['checks']['brokenGeometryRemoved'] = {
+                'surfaceLineVisible': broken_visual.get('surfaceLineVisible'),
+                'brokenLineVisible': broken_visual.get('brokenLineVisible'),
+            }
+            save()
+            assert broken_visual.get('surfaceLineVisible') is False, broken_visual
+            assert broken_visual.get('brokenLineVisible') is False, broken_visual
+"""
+assert BASE.count(broken_snapshot) == 1
+BASE = BASE.replace(broken_snapshot, broken_checks, 1)
+
 sys.argv = [sys.argv[0]]
 exec(compile(BASE, __file__ + ':v0170-base', 'exec'), {'__name__': '__main__', '__file__': __file__})
