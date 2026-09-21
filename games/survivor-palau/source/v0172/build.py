@@ -52,7 +52,7 @@ once(
 once("target=[o.focusX,focusWater-.82,o.focusZ]", "target=[o.focusX,focusWater-.72,o.focusZ]", 'initial observation aim depth')
 once(
     "o.anchorX=CANOE_STATE.x+Math.sin(side)*2.35;o.anchorZ=CANOE_STATE.z+Math.cos(side)*2.35;",
-    "o.anchorX=CANOE_STATE.x+Math.sin(side)*3.0;o.anchorZ=CANOE_STATE.z+Math.cos(side)*3.0;",
+    "o.anchorX=CANOE_STATE.x+Math.sin(side)*4.2;o.anchorZ=CANOE_STATE.z+Math.cos(side)*4.2;",
     'clear canoe from observation view',
 )
 
@@ -97,6 +97,7 @@ meta = {
     'thinScreenSpaceGoggleFrame': True,
     'solidGoggleOccluders': 0,
     'handlineTargetRangeM': 7.5,
+    'observationLateralOffsetM': 4.2,
     'activeObservationCameraReframed': True,
     'autoCatch': False,
     'elasticSpear': False,
