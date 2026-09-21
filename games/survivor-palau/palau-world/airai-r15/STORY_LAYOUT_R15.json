@@ -1,14 +1,20 @@
 {
-  "schema": "kaopu.palau.story-spatial-layout/1.0",
-  "version": "R15_ROCK_ISLAND_STORY_CORE_20260921",
+  "schema": "kaopu.palau.story-spatial-layout/1.1",
+  "version": "R15_ROCK_ISLAND_STORY_CORE_GIS_BOUND_20260921",
   "authority": {
     "type": "user_annotated_satellite_reference",
     "imageSizePx": [1594, 1362],
-    "georeferencingStatus": "RELATIVE_LAYOUT_ONLY_NOT_SURVEYED",
+    "georeferencingStatus": "CANDIDATE_NOT_SURVEYED",
     "modernMapLabelsAreCanon": false,
+    "registration": {
+      "method": "non-deep-water image mask aligned to NOAA ENC LNDARE plus Allen Coral Atlas geomorphic union, followed by semantic snapping to plausible DEM/shore/lagoon cells",
+      "referenceBoundsWgs84": [134.51662554114412, 7.3046, 134.56517445885586, 7.3496],
+      "storyViewBoundsWgs84": [134.48, 7.29, 134.63, 7.4],
+      "status": "candidate_not_historical_survey"
+    },
     "notes": [
       "Arrows and handwritten labels constrain relative story relations, not exact latitude/longitude.",
-      "Exact geographic placement must be solved against DEM, coastline, lagoon and reef evidence before production lock."
+      "The candidate coordinates below are production anchors only and remain subject to user acceptance and historical evidence."
     ]
   },
   "storyOpening": {
@@ -26,16 +32,18 @@
       "role": "playable_start_and_highest_detail_beach",
       "referencePx": [814, 535],
       "referenceUv": [0.5107, 0.3928],
-      "extentPx": [[755, 495], [905, 605]],
-      "precision": "USER_RELATIVE_HIGH_CONFIDENCE"
+      "candidateWgs84": [134.5410143, 7.3304934],
+      "candidateTerrain": {"land": true, "elevationM": 0.9, "shoreDistanceM": 40},
+      "precision": "USER_RELATIVE_PLUS_GIS_SNAPPED_CANDIDATE"
     },
     {
       "id": "ROCK_ISLAND_HIDE_ZONE",
       "role": "primary_hideout_rest_observation_and_scene_center",
       "referencePx": [748, 505],
       "referenceUv": [0.4693, 0.3708],
-      "extentPx": [[680, 420], [835, 590]],
-      "precision": "USER_RELATIVE_REGION_EXACT_CENTER_PENDING",
+      "candidateWgs84": [134.539821, 7.3310855],
+      "candidateTerrain": {"land": true, "elevationM": 47.8, "shoreDistanceM": 88},
+      "precision": "USER_RELATIVE_REGION_PLUS_GIS_SNAPPED_CANDIDATE",
       "productionRule": "Relocate prior beach, arch, rock-shelf and island details around this Rock Island only when terrain relations remain plausible."
     },
     {
@@ -43,34 +51,31 @@
       "role": "turtle_habitat_shallow_lagoon_and_observation_area",
       "referencePx": [633, 515],
       "referenceUv": [0.3971, 0.3781],
-      "extentPx": [[520, 455], [715, 665]],
-      "precision": "USER_RELATIVE_HIGH_CONFIDENCE"
+      "candidateWgs84": [134.5341527, 7.3325658],
+      "candidateTerrain": {"land": false, "depthM": 1.7, "semantic": "terrestrial_reef_flat_candidate", "shoreDistanceM": 40},
+      "precision": "USER_RELATIVE_PLUS_GIS_SNAPPED_CANDIDATE"
     },
     {
       "id": "POWER_TREE_ZONE",
       "role": "power_tree_landmark_and_east_northeast_objective",
       "referencePx": [780, 482],
       "referenceUv": [0.4893, 0.3539],
-      "extentPx": [[730, 405], [850, 525]],
-      "precision": "USER_RELATIVE_HIGH_CONFIDENCE"
+      "candidateWgs84": [134.5404177, 7.3334539],
+      "candidateTerrain": {"land": true, "elevationM": 70.4, "shoreDistanceM": 288},
+      "precision": "USER_RELATIVE_PLUS_GIS_SNAPPED_CANDIDATE"
     },
     {
       "id": "JAPANESE_OUTPOST_ZONE",
       "role": "enemy_outpost_patrol_and_exposure_source",
       "referencePx": [391, 543],
       "referenceUv": [0.2453, 0.3987],
-      "extentPx": [[300, 430], [475, 650]],
-      "precision": "USER_RELATIVE_HIGH_CONFIDENCE"
+      "candidateWgs84": [134.5308353, 7.3311613],
+      "candidateTerrain": {"land": true, "elevationM": 0.5, "shoreDistanceM": 40},
+      "precision": "USER_RELATIVE_PLUS_GIS_SNAPPED_CANDIDATE"
     }
   ],
   "movementPolicy": {
-    "primaryAxis": [
-      "WHITE_SAND_WAKE_ZONE",
-      "ROCK_ISLAND_HIDE_ZONE",
-      "TURTLE_HOUSE_ZONE",
-      "POWER_TREE_ZONE",
-      "EAST_ACTIVITY_CORRIDOR"
-    ],
+    "primaryAxis": ["WHITE_SAND_WAKE_ZONE", "ROCK_ISLAND_HIDE_ZONE", "TURTLE_HOUSE_ZONE", "POWER_TREE_ZONE", "EAST_ACTIVITY_CORRIDOR"],
     "allowedBias": "EAST_AND_SOUTHEAST",
     "avoidSectors": ["WEST", "NORTH", "NORTHWEST"],
     "avoidReason": "Japanese outpost and patrol exposure",
@@ -89,13 +94,10 @@
     "fullPalauFirstView": true,
     "continuousWorld": true,
     "traditionalLOD": false,
-    "oceanRuntime": "frozen Ocean Mother R018 V0.3.6 or byte-verified successor",
+    "oceanRuntime": "frozen Ocean Mother R018 V0.3.6 adapted without calibration island",
     "calibrationIslandAllowed": false,
-    "externalRuntimeRequestsAllowed": false
+    "externalRuntimeRequestsAllowed": false,
+    "singleFileOfflineDelivery": true
   },
-  "acceptance": {
-    "visualAcceptance": false,
-    "userAcceptance": false,
-    "productionReady": false
-  }
+  "acceptance": {"visualAcceptance": false, "userAcceptance": false, "productionReady": false}
 }
