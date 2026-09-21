@@ -9,6 +9,7 @@ on:
       - .github/workflows/fish-yellowfin-source-copy-r001-visual-qa.yml
       - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/index.html
       - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/qa/**
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/SOURCE_COMPONENT_CLASSIFICATION_R001.json
       - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace/source/**
       - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/SOURCE_IDENTITY.json
 
@@ -62,7 +63,7 @@ jobs:
           cat /tmp/yellowfin-source-copy-http.log
           exit 1
 
-      - name: Capture fixed-view source evidence
+      - name: Capture semantic fixed-view and classification evidence
         shell: bash
         run: |
           set -euo pipefail
@@ -83,29 +84,35 @@ jobs:
               raise SystemExit('Browser QA receipt did not pass')
           status_path=root/'CURRENT_STATUS.json'
           status=json.loads(status_path.read_text())
-          status['phase']='EXACT_SOURCE_BROWSER_QA_PASSED_CLASSIFICATION_OPEN'
+          status['phase']='SOURCE_COMPONENT_CLASSIFICATION_R001_BROWSER_QA_PASSED'
           status['gates'].update({
               'browserVisualQAPassed':True,
               'fixedViewsCaptured':True,
+              'semanticViewAxesPassed':True,
+              'classificationMarkersCaptured':True,
+              'sourceComponentClassificationPassed':True,
+              'dorsalFinletConfirmedCount':receipt['classification']['dorsalConfirmed'],
+              'ventralFinletConfirmedCount':receipt['classification']['ventralConfirmed'],
               'consoleZeroErrors':True,
-              'pageZeroErrors':True,
+              'pageErrorsZero':True,
               'independentReconstructionUnlocked':False,
               'generationLocked':True
           })
           status['visualEvidence']={
               'receipt':'evidence/browser/BROWSER_QA_RECEIPT.json',
-              'views':['workbench-ui','side','quarter','top','head-on','side-wireframe','side-skeleton'],
+              'views':['workbench-ui','side','quarter','top','head-on','side-classification','side-wireframe','side-skeleton'],
               'viewport':'1440x900',
-              'source':receipt['identity']['source']
+              'source':receipt['identity']['source'],
+              'semanticViewAxes':receipt['viewSemantics']
           }
-          status['next']='Use the fixed-view and wireframe evidence to classify dorsal/ventral finlet components, fin roots/free edges, peduncle and keel candidates before copying geometry.'
+          status['next']='Use the accepted source-component map to begin region-by-region Source Copy geometry without changing source proportions.'
           status_path.write_text(json.dumps(status,ensure_ascii=False,indent=2)+'\n')
           PY
 
       - name: Upload browser evidence
         uses: actions/upload-artifact@v4
         with:
-          name: YELLOWFIN-SOURCE-COPY-R001-BROWSER-QA
+          name: YELLOWFIN-SOURCE-COPY-R001-SEMANTIC-BROWSER-QA
           path: ${{ env.QA_OUT }}
           if-no-files-found: error
           retention-days: 30
@@ -122,5 +129,5 @@ jobs:
             echo "No browser QA delta to commit."
             exit 0
           fi
-          git commit -m "test(fish): capture exact-source fixed-view browser evidence"
+          git commit -m "test(fish): validate semantic views and source classification"
           git push origin "HEAD:${GITHUB_REF_NAME}"
