@@ -1,0 +1,95 @@
+{
+  "schema": "kaopu.fish-mother.source-component-classification/1.0",
+  "date": "2026-09-21",
+  "build": "YELLOWFIN-SOURCE-COPY-R001",
+  "referenceId": "FISH-REF-002",
+  "source": {
+    "sha256": "5603d4aabc9a1127856841335a86ae7aa462b6b25d1a6586e93bf644f4d47abe",
+    "bytes": 58908280,
+    "strictPackage": true
+  },
+  "frame": {
+    "axisContract": {
+      "x": "lateral",
+      "y": "tail-to-snout",
+      "z": "dorsal-negative / ventral-positive"
+    },
+    "bodyLengthSourceUnits": 3.003418,
+    "tailY": -1.508615,
+    "snoutY": 1.494802,
+    "centerlineZFromSpineBind": 0.05
+  },
+  "finlets": {
+    "dorsal": {
+      "confirmedCount": 9,
+      "confirmed": [
+        {"seriesIndexFrontToTail": 1, "centerU": 0.355852, "centerSource": [0.0, -0.439843, -0.128344], "faces": 40},
+        {"seriesIndexFrontToTail": 2, "centerU": 0.338107, "centerSource": [0.0, -0.493138, -0.108104], "faces": 32},
+        {"seriesIndexFrontToTail": 3, "centerU": 0.319169, "centerSource": [0.0, -0.550018, -0.083887], "faces": 32},
+        {"seriesIndexFrontToTail": 4, "centerU": 0.298722, "centerSource": [0.0, -0.611427, -0.061946], "faces": 36},
+        {"seriesIndexFrontToTail": 5, "centerU": 0.279331, "centerSource": [0.0, -0.669668, -0.036665], "faces": 30},
+        {"seriesIndexFrontToTail": 6, "centerU": 0.257419, "centerSource": [0.0, -0.735479, -0.016216], "faces": 36},
+        {"seriesIndexFrontToTail": 7, "centerU": 0.236123, "centerSource": [0.0, -0.799439, 0.001634], "faces": 38},
+        {"seriesIndexFrontToTail": 8, "centerU": 0.213708, "centerSource": [0.0, -0.866762, 0.015025], "faces": 36},
+        {"seriesIndexFrontToTail": 9, "centerU": 0.191752, "centerSource": [0.0, -0.932704, 0.026089], "faces": 40}
+      ],
+      "overlapCandidates": [
+        {"centerU": 0.37672, "centerSource": [0.0, -0.377169, -0.149694], "faces": 6}
+      ],
+      "rule": "Confirmed only after axial/root thin-sheet topology, midline thickness, face-normal and repeated-series gates all pass."
+    },
+    "ventral": {
+      "confirmedCount": 8,
+      "confirmed": [
+        {"seriesIndexFrontToTail": 1, "centerU": 0.342719, "centerSource": [0.0, -0.479287, 0.301759], "faces": 34},
+        {"seriesIndexFrontToTail": 2, "centerU": 0.322761, "centerSource": [0.0, -0.539229, 0.278224], "faces": 32},
+        {"seriesIndexFrontToTail": 3, "centerU": 0.301138, "centerSource": [0.0, -0.604172, 0.253286], "faces": 38},
+        {"seriesIndexFrontToTail": 4, "centerU": 0.282774, "centerSource": [0.0, -0.659328, 0.226941], "faces": 30},
+        {"seriesIndexFrontToTail": 5, "centerU": 0.26118, "centerSource": [0.0, -0.724183, 0.202596], "faces": 36},
+        {"seriesIndexFrontToTail": 6, "centerU": 0.240212, "centerSource": [0.0, -0.787159, 0.181193], "faces": 38},
+        {"seriesIndexFrontToTail": 7, "centerU": 0.21792, "centerSource": [0.0, -0.85411, 0.166482], "faces": 36},
+        {"seriesIndexFrontToTail": 8, "centerU": 0.19394, "centerSource": [-0.000682, -0.926131, 0.141024], "faces": 47}
+      ],
+      "overlapCandidates": [],
+      "rule": "Confirmed only after axial/root thin-sheet topology, midline thickness, face-normal and repeated-series gates all pass."
+    }
+  },
+  "peduncle": {
+    "method": "weighted body-vertex window; finlet midline points excluded from depth by lateral-support gate",
+    "scanRangeU": [0.16, 0.23],
+    "minimum": {
+      "u": 0.1925,
+      "widthPctL": 0.966,
+      "depthPctL": 3.831,
+      "areaProxyPctL2": 3.7,
+      "supportPoints": 72,
+      "lateralSupportPoints": 16,
+      "widthPlateauU": [0.1865, 0.2],
+      "lateralKeelZCandidatesNormalized": [
+        {"zNormalized": 0.011235, "supportPoints": 8},
+        {"zNormalized": 0.048393, "supportPoints": 8}
+      ]
+    }
+  },
+  "gates": {
+    "exactSourceBound": true,
+    "finletsRecoveredFromAxialThinSheets": true,
+    "dorsalConfirmedCount": 9,
+    "ventralConfirmedCount": 8,
+    "attachmentRootsRecorded": true,
+    "freeEdgesRecorded": true,
+    "peduncleStableWindowRecorded": true,
+    "keelCandidatesRequireVisualConfirmation": true,
+    "sourceCopyGeometryGenerated": false,
+    "productionReady": false
+  },
+  "interpretationBoundary": [
+    "These are exact-source topology facts, not Thunnus albacares biological truth.",
+    "Low-face leading overlap candidates remain candidates until fixed-view visual acceptance.",
+    "Lateral keel z clusters are geometry candidates and are not yet accepted anatomical keels."
+  ],
+  "generation": {
+    "generatedBy": "tools/classify_source_components.py",
+    "fullClassificationPendingWorkflow": true
+  }
+}
