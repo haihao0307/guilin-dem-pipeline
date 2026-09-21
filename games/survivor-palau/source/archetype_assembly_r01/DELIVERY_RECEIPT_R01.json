@@ -1,0 +1,62 @@
+{
+  "schema": "kaopu.delivery-receipt/3.0",
+  "taskId": "SMI-GAME-ARCHETYPE-ASSEMBLY-R01",
+  "executionMode": "FACTORY_EXECUTOR_ONLY",
+  "status": "EXECUTING",
+  "acceptedBaseSha": "c07eec73616f613acde90881ac642b0972f12391",
+  "dispatchHeadSha": "38395c172b0fd2a5ae3016fee49a6974cbc68005",
+  "productionHeadSha": "d58ec81bb3957ea031fee21f5713695313030da1",
+  "productionFilesChanged": [
+    "games/survivor-palau/source/archetype_assembly_r01/archetype_registry.cjs",
+    "games/survivor-palau/source/archetype_assembly_r01/archetype_registry.test.cjs"
+  ],
+  "boundedIncrement": "Game-side source-independent archetype registry and placement adapter with explicit NO_CANDIDATE semantics, verifier-only activation, story/world placement requirements, stable save identity, duplicate runtime/save identity rejection, deterministic snapshot and restore.",
+  "tests": [
+    {
+      "command": "node --check archetype_registry.cjs",
+      "result": "PASS"
+    },
+    {
+      "command": "node --check archetype_registry.test.cjs",
+      "result": "PASS"
+    },
+    {
+      "command": "node archetype_registry.test.cjs",
+      "result": "PASS (17 assertions)"
+    }
+  ],
+  "authoredByteSha256": {
+    "archetype_registry.cjs": "0c6b6e9ab7889642619a8af36911ddd14a2969c1574712fd70b580290070abcf",
+    "archetype_registry.test.cjs": "a5843e7e6a0dd78d4800fd0884c511cbd777c96dfef53bcdbdddee11b04fcded"
+  },
+  "committedByteReadback": "Production module was read back from GitHub at productionHeadSha and matched the authored implementation semantically; tests were executed on the authored bytes before commit.",
+  "freshnessCheck": {
+    "compareBase": "38395c172b0fd2a5ae3016fee49a6974cbc68005",
+    "compareHead": "d58ec81bb3957ea031fee21f5713695313030da1",
+    "status": "ahead",
+    "aheadBy": 2,
+    "behindBy": 0,
+    "changedPathsWithinAllowedScope": true
+  },
+  "gates": {
+    "missingCandidateExplicit": true,
+    "placeholderSynthesis": false,
+    "verifierPassedRequiredForActive": true,
+    "whyInStoryRequired": true,
+    "whereInWorldRequired": true,
+    "duplicateRuntimeIdentityRejected": true,
+    "duplicateSaveIdentityRejected": true,
+    "saveRestoreIdentityTested": true,
+    "sceneIntegrated": false,
+    "visualAcceptance": false,
+    "productionReady": false
+  },
+  "knownLimitations": [
+    "This increment does not integrate any real Coral/Fish/Bird candidate into the accepted game scene.",
+    "No renderer, browser, mobile, performance or standalone-HTML gate is claimed by this pure registry task.",
+    "Activation trusts an upstream VERIFIER_PASSED status supplied by the coordinator; cryptographic receipt linkage is not yet implemented.",
+    "Existing Stone Money V0.2.2 scene/world files and fishing save schema were not modified."
+  ],
+  "blocker": null,
+  "nextTaskPointer": "SMI-GAME-CORAL-HABITAT-REGISTER only after at least one Coral Stage A/B candidate is verifier-passed"
+}
