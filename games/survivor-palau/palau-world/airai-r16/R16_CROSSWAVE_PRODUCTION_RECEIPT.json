@@ -1,0 +1,60 @@
+{
+  "schema": "kaopu.palau.r16-crosswave-production-receipt/1.0",
+  "version": "STONE_MONEY_ISLAND_R16_KAOPU_CROSSWAVE_TIDE_20260921",
+  "entry": "STONE_MONEY_ISLAND_R16_DIRECT_OPEN.html",
+  "entryBytes": 130326,
+  "entrySha256": "609028f361cb27d83319d50eb67437abc38c3f298c6dc405dde853df109f7a8d",
+  "runtime": {
+    "language": "Z(x,y)=sum Xk(x)*Yk(y); future volume F(x,y,z)=sum Xk(x,z)*Yk(y,z)",
+    "fullPalauCrossWaveRank": 48,
+    "airaiCrossWaveRank": 48,
+    "storyCrossWaveRank": 48,
+    "fullPalauRmseM": 4.3307,
+    "airaiRmseM": 5.7419,
+    "storyRmseM": 3.2605,
+    "fullPalauLandIoU": 0.9654803,
+    "airaiLandIoU": 0.9935208,
+    "storyLandIoU": 0.9938137,
+    "traditionalLOD": false,
+    "continuousWorld": true
+  },
+  "tide": {
+    "station": "NOAA 1841367 Malakal Harbor, Palau Island",
+    "period": "1944-10-01T00:00:00Z/1944-10-31T23:00:00Z",
+    "hours": 744,
+    "constituents": 26,
+    "mllwMinM": 0.173,
+    "mllwMaxM": 2.204,
+    "mslCandidateAboveMllwM": 1.109,
+    "relativeMslMinM": -0.936,
+    "relativeMslMaxM": 1.095,
+    "formula": "Water(x,y,t)=MSL_candidate+Tide1944(t)+OceanMother(x,y,t)"
+  },
+  "sourceRemoval": {
+    "pngOrJpegInRuntime": false,
+    "terrainTextures": false,
+    "embeddedReferenceImages": false,
+    "externalRuntimeRequests": 0,
+    "referenceImageSha256": "16709fcb539ea4654ea81294579151e3a8f820ee9d5f22b957860451d80250dd",
+    "referenceCache": "haihao0307/KAOPU-REFERENCE-CACHE",
+    "referenceCacheStatus": "PENDING_BINARY_UPLOAD_METADATA_REGISTERED"
+  },
+  "browserQA": {
+    "desktop1536x960": true,
+    "mobile390x844": true,
+    "webgl2Desktop": true,
+    "webgl2Mobile": true,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "externalRequests": 0,
+    "fileUrlProbe": "BLOCKED_BY_HOST_ADMINISTRATOR_POLICY"
+  },
+  "truthBoundary": [
+    "1944 tide is a NOAA harmonic backcast using modern station constants.",
+    "MSL zero is a station-datum candidate, not a proved 1944 absolute mean-level datum.",
+    "Current CrossWave freezes the evidence-supported single surface; cave, arch and negative-angle volume waves remain pending evidence.",
+    "visualAcceptance=false",
+    "userAcceptance=false",
+    "productionReady=false"
+  ]
+}
