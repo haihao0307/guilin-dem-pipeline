@@ -1,0 +1,71 @@
+name: Coral R06 T06 Compact Parameter Dock
+
+on:
+  push:
+    branches:
+      - work/coral-mother-r06-t06-compact-parameter-dock-20260921
+    paths:
+      - tools/coral/coral_r06_t06_compact.py
+      - tools/coral/coral_r06_t06_browser_qa.py
+      - .github/workflows/coral-r06-t06-compact-parameter-dock.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out T06 work branch
+        uses: actions/checkout@v4
+        with:
+          ref: work/coral-mother-r06-t06-compact-parameter-dock-20260921
+          fetch-depth: 0
+          path: work
+
+      - name: Check out current GitHub Pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+          path: pages
+
+      - name: Build direct T06 workbench from browser-verified T05
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/coral-t06
+          python3 work/tools/coral/coral_r06_t06_compact.py \
+            pages/coral-mother-r06-pocillopora-t05-continuous-tube/index.html \
+            /tmp/coral-t06
+
+      - name: Browser gate ultrawide desktop and mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet websocket-client
+          python3 -m http.server 8770 --directory /tmp/coral-t06 >/tmp/coral-t06-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          python3 work/tools/coral/coral_r06_t06_browser_qa.py /tmp/coral-t06
+
+      - name: Publish direct single-file T06 workbench
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET=coral-mother-r06-pocillopora-t06-compact-parameter-dock
+          rm -rf "pages/$TARGET"
+          mkdir -p "pages/$TARGET"
+          cp -a /tmp/coral-t06/. "pages/$TARGET/"
+          cd pages
+          git config user.name 'Haihao_Nature Grace HK'
+          git config user.email 'haihao0307@gmail.com'
+          git add "$TARGET/"
+          if git diff --cached --quiet; then
+            echo 'No publication changes.'
+          else
+            git commit -m "publish(coral): R06 T06 compact parameter dock"
+            git pull --rebase origin gh-pages
+            git push origin gh-pages
+          fi
