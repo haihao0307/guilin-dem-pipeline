@@ -9,6 +9,7 @@ on:
       - .github/workflows/fish-yellowfin-biological-correction-r001-candidate-a.yml
       - apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/CANDIDATE_A_CONTROLS.json
       - apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/tools/build_candidate_a.py
+      - apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/tools/build_candidate_a_runtime_safe.py
       - apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/tools/audit_frozen_baseline.py
       - apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/tests/candidate-a-r001.test.mjs
 
@@ -50,11 +51,11 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install numpy
 
-      - name: Build rig-coherent Candidate A
+      - name: Build runtime-safe Candidate A with the frozen source rig
         shell: bash
         run: |
           set -euo pipefail
-          python "$CORRECTION_ROOT/tools/build_candidate_a.py" \
+          python "$CORRECTION_ROOT/tools/build_candidate_a_runtime_safe.py" \
             --input "$FROZEN_GLB" \
             --baseline "$CORRECTION_ROOT/BIOLOGICAL_CORRECTION_R001_BASELINE.json" \
             --controls "$CORRECTION_ROOT/CANDIDATE_A_CONTROLS.json" \
