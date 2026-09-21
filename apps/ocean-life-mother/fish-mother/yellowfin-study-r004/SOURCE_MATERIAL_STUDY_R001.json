@@ -1,0 +1,65 @@
+{
+  "schema": "kaopu.fish-mother.yellowfin-source-material-study/1.0",
+  "date": "2026-09-21",
+  "source": "FISH-REF-002",
+  "materials": [
+    {
+      "index": 0,
+      "name": "Material",
+      "alphaMode": "OPAQUE",
+      "doubleSided": true,
+      "maps": {
+        "baseColor": true,
+        "metallicRoughness": true,
+        "normal": true,
+        "occlusion": true
+      }
+    },
+    {
+      "index": 1,
+      "name": "Material.003",
+      "alphaMode": "OPAQUE",
+      "doubleSided": true,
+      "maps": {
+        "baseColor": true,
+        "metallicRoughness": true,
+        "normal": true,
+        "occlusion": false
+      }
+    },
+    {
+      "index": 2,
+      "name": "Material.004",
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "baseColorAlpha": 0.028952469188477523,
+      "maps": {
+        "baseColor": false,
+        "metallicRoughness": false,
+        "normal": false,
+        "occlusion": false
+      },
+      "roleCandidate": "transparent cornea"
+    }
+  ],
+  "textureVariants": {
+    "lowResolution": 1024,
+    "highResolution": 4096,
+    "geometryRigAnimationExactlyEqual": true,
+    "imagePayloadsEqual": false
+  },
+  "copyRequirements": [
+    "preserve separate transparent cornea layer",
+    "preserve body normal response instead of flat color",
+    "preserve metallic/roughness variation from source appearance",
+    "do not collapse body, eye/cornea and fin appearance into one generic plastic material",
+    "record exact visible color-region boundaries before re-authoring textures"
+  ],
+  "open": [
+    "which opaque material maps to body vs eye/other visible mesh",
+    "exact fin membrane material assignment",
+    "roughness range by region",
+    "normal-scale by region",
+    "visible boundary coordinates"
+  ]
+}
