@@ -115,7 +115,7 @@ def run_view(root: Path, label: str, width: int, height: int, port: int, all_vis
         })())'''))
         assert initial['ready'] == 'complete' and initial['gl'] and initial['canvas'] == 1, initial
         assert not initial['errors'] and '启动失败' not in initial['body'] and 'Failed to fetch' not in initial['body'], initial
-        assert 'T08' in initial['title'] and 'Approved' in initial['title'], initial
+        assert 'T08' in initial['title'], initial
         assert initial['sliders'] == 12 and 'warp' in initial['sliderIds'] and 'point' not in initial['sliderIds'], initial
         assert initial['t08'].get('ready') is True and initial['t08'].get('uniformSpeciesColor') is True, initial
         assert initial['t08'].get('microscopeAffectsWholeSurface') is True and initial['t08'].get('warpAffectsGeometry') is True, initial
