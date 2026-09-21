@@ -165,16 +165,31 @@ assert.deepEqual(browserReceipt.failedChecks, []);
 assert.ok(browserReceipt.samples.length >= 4);
 assert.ok(browserReceipt.screenshots.length >= 10);
 
-assert.equal(status.phase, 'SOURCE_COPY_SKINNED_R001_BROWSER_QA_PASSED');
+const acceptedPhases = new Set([
+  'SOURCE_COPY_SKINNED_R001_BROWSER_QA_PASSED',
+  'SOURCE_COPY_R001_FROZEN_MACHINE_ACCEPTED',
+]);
+assert.ok(acceptedPhases.has(status.phase), `unexpected skinned-copy lifecycle phase: ${status.phase}`);
 assert.equal(status.gates.sourceCopySkinTransferred, true);
 assert.equal(status.gates.sourceCopyAnimationTransferred, true);
 assert.equal(status.gates.sourceCopyMaterialsTransferred, true);
 assert.equal(status.gates.sourceCopySkinnedBrowserQAPassed, true);
-assert.equal(status.gates.independentReconstructionUnlocked, false);
-assert.equal(status.gates.generationLocked, true);
+
+if (status.phase === 'SOURCE_COPY_R001_FROZEN_MACHINE_ACCEPTED') {
+  assert.equal(status.gates.sourceCopyR001Frozen, true);
+  assert.equal(status.gates.sourceCopyImmutable, true);
+  assert.equal(status.gates.sourceCopyMachineAcceptancePassed, true);
+  assert.equal(status.gates.biologicalCorrectionCandidateUnlocked, true);
+  assert.equal(status.gates.independentReconstructionUnlocked, true);
+  assert.equal(status.gates.generationLocked, false);
+} else {
+  assert.equal(status.gates.independentReconstructionUnlocked, false);
+  assert.equal(status.gates.generationLocked, true);
+}
 
 console.log(JSON.stringify({
   ok: true,
+  lifecyclePhase: status.phase,
   sourceBytes: sourceBytes.length,
   outputBytes: outputBytes.length,
   outputSha256: receipt.output.sha256,
