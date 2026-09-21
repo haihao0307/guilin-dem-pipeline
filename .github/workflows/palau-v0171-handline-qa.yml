@@ -1,0 +1,81 @@
+name: Palau V0171 handline current-head QA
+
+on:
+  push:
+    branches:
+      - work/survivor-palau-v0171-handline-qa-20260921
+    paths:
+      - .github/workflows/palau-v0171-handline-qa.yml
+
+permissions:
+  contents: write
+
+jobs:
+  browser-qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+          persist-credentials: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build current V0170 source into release
+        run: |
+          python3 games/survivor-palau/source/v0170/build.py
+          node --check games/survivor-palau/source/v0170/survival.mjs
+          python3 -m py_compile \
+            games/survivor-palau/source/v0170/build.py \
+            games/survivor-palau/source/v0170/browser_qa.py
+          grep -q 'pilotGameplayElapsed' games/survivor-palau/releases/v0.1.7.0/index.html
+          git diff --check
+
+      - name: Install browser QA runtime
+        run: |
+          python3 -m pip install --disable-pip-version-check playwright==1.55.0
+          command -v google-chrome || command -v chromium
+          command -v xvfb-run
+
+      - name: Run full handline browser QA
+        run: |
+          xvfb-run -a -s '-screen 0 1280x800x24' \
+            python3 games/survivor-palau/source/v0170/browser_qa.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('games/survivor-palau/releases/v0.1.7.0/BROWSER_QA.json')
+          report=json.loads(p.read_text())
+          assert report.get('passed') is True, json.dumps(report, ensure_ascii=False, indent=2)
+          assert 'visibleBite' in report.get('checks', {}), report
+          assert 'finiteGearLoss' in report.get('checks', {}), report
+          build=Path('games/survivor-palau/releases/v0.1.7.0/BUILD.json')
+          meta=json.loads(build.read_text())
+          meta['browserPassed']=True
+          meta['shareAllowed']=False
+          meta['productionReady']=False
+          build.write_text(json.dumps(meta, ensure_ascii=False, indent=2)+"\n")
+          PY
+
+      - name: Commit rebuilt release and evidence
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add games/survivor-palau/releases/v0.1.7.0
+          git commit -m 'test(palau): rebuild V0170 and capture passing handline QA'
+          git push origin HEAD:${{ github.ref_name }}
+
+      - name: Upload QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: palau-v0171-handline-qa
+          path: |
+            games/survivor-palau/releases/v0.1.7.0/BROWSER_QA.json
+            games/survivor-palau/releases/v0.1.7.0/BUILD.json
+            games/survivor-palau/releases/v0.1.7.0/evidence
+          if-no-files-found: warn
