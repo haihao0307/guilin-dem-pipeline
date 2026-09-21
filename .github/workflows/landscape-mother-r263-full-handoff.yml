@@ -147,7 +147,7 @@ jobs:
           ZIP_PATH=handoffs/landscape-mother/${PACKAGE_NAME}.zip
           git config user.name "Landscape Mother"
           git config user.email "actions@users.noreply.github.com"
-          git add "$ZIP_PATH"
+          git add -f "$ZIP_PATH"
           if git diff --cached --quiet; then
             echo "R2.6.3 full handoff ZIP already materialized"
             exit 0
