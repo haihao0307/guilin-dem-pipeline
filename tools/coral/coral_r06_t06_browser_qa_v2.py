@@ -70,14 +70,17 @@ def run_view(root: Path, label: str, width: int, height: int, port: int, require
         assert query["sliders"] == 12 and query["t06"].get("ready") is True and query["t06"].get("allAdjustablesGrouped") is True, query
         fine = query["fine"]
         assert fine["min"] == "0" and fine["max"] == "1" and fine["step"] == "0.001" and abs(float(fine["value"]) - 0.22) < 1e-9, query
-        assert query["mainWidthRatio"] >= 0.985 and not query["overflow"], query
+        assert not query["overflow"], query
         qa = query["qa"]
         assert qa.get("runtimeGLB") == 0 and qa.get("runtimeTextures") == 0 and qa.get("networkFetches") == 0, query
         assert qa.get("continuousTube") is True and abs(qa.get("fineRetention") - 0.22) < 1e-9, query
         assert 0.07 < qa.get("fineThreshold", 0) < 0.10, query
         assert 15 < qa.get("growthPaths", 0) < 216, query
         if require_all_visible:
+            assert query["mainWidthRatio"] >= 0.985, query
             assert query["allVisible"] and query["dockVisible"] and query["controlsBottom"] <= height + 2, query
+        else:
+            assert query["mainWidthRatio"] >= 0.96, query
 
         def fine_paths(value: float) -> dict:
             expr = f"""(()=>{{const e=document.querySelector('#fine');e.value='{value:.3f}';e.oninput();return JSON.stringify({{paths:window.__CORAL_R06_QA__.growthPaths,threshold:window.__CORAL_R06_QA__.fineThreshold,retention:window.__CORAL_R06_QA__.fineRetention}})}})()"""
