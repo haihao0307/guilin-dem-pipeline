@@ -48,19 +48,18 @@ jobs:
           grep -F 'annotateSemanticRegions' "$CORRECTION_ROOT/candidate-a-qa.html"
           grep -F 'rigPreservationMachineGatesPassed' "$CORRECTION_ROOT/candidate-a-qa.html"
 
-      - name: Commit runtime-safe Candidate A fix
+      - name: Commit runtime-safe Candidate A implementation
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "Fish Mother R001"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add \
-            .github/workflows/fish-yellowfin-biological-correction-r001-candidate-a.yml \
             "$CORRECTION_ROOT/tools/build_candidate_a_runtime_safe.py" \
             "$CORRECTION_ROOT/tests/candidate-a-r001.test.mjs" \
             "$CORRECTION_ROOT/candidate-a-qa.html"
           if git diff --cached --quiet; then
-            echo "Candidate A runtime-safe fix is already applied."
+            echo "Candidate A runtime-safe implementation is already applied."
             exit 0
           fi
           git commit -m "fix(fish): preserve source rig and animation in Candidate A"
