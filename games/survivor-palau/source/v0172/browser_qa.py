@@ -14,6 +14,25 @@ BASE = BASE.replace(
     1,
 )
 
+# Pause in the same JavaScript turn that first observes the transient bite. At sub-1 FPS, a later
+# Playwright call can arrive after the bite has already become "missed", producing false evidence.
+first_bite_wait = """        page.wait_for_function("PalauExperience.fishing.phase==='bite'", timeout=180000, polling=100)
+"""
+atomic_bite_wait = """        page.wait_for_function(
+            \"\"\"()=>{if(PalauExperience.fishing.phase!=='bite')return false;document.getElementById('uiPause').click();return PalauExperience.fishing.phase==='bite'}\"\"\",
+            timeout=180000,
+            polling=100,
+        )
+"""
+assert BASE.count(first_bite_wait) == 2
+BASE = BASE.replace(first_bite_wait, atomic_bite_wait, 1)
+pause_before_snapshot = """        page.evaluate("document.getElementById('uiPause').click()")
+        snapshot(page, 'desktop-visible-bite', settle_frames=0)
+"""
+assert BASE.count(pause_before_snapshot) == 1
+BASE = BASE.replace(pause_before_snapshot, """        snapshot(page, 'desktop-visible-bite', settle_frames=0)
+""", 1)
+
 # Under sub-1 FPS software rendering, a transient reel state can be entered correctly and then
 # missed by an asynchronous 100 ms poll. Read the result synchronously from the same real button
 # click instead; this strengthens the assertion and records the exact before/after state.
@@ -44,7 +63,10 @@ marker = """        r['checks']['visibleBite'] = {
             'lineEndDepthM': visible_bite['telemetry']['lineEndDepthM'],
         }
 """
-injected = marker + """        visual = page.evaluate('PalauExperience.observationVisualMetrics()')
+injected = marker + """        bite_ui = page.evaluate(\"\"\"(()=>({phase:PalauExperience.fishing.phase,title:document.getElementById('fishTitle').textContent,help:document.getElementById('fishHelp').textContent,action:document.getElementById('actionFish').textContent,pause:document.getElementById('uiPause').textContent}))()\"\"\")
+        r['checks']['visibleBiteUI'] = bite_ui
+        assert bite_ui['phase'] == 'bite' and '游走' not in bite_ui['title'], bite_ui
+        visual = page.evaluate('PalauExperience.observationVisualMetrics()')
         page.wait_for_function(
             \"\"\"()=>{const e=document.getElementById('pilotLensOverlay'),s=getComputedStyle(e);return !e.hidden&&s.display!=='none'&&s.visibility==='visible'&&Number(s.opacity)>.9}\"\"\",
             timeout=45000,
