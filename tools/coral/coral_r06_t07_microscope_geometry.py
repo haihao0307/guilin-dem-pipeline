@@ -109,10 +109,16 @@ function extractPathsFromGraph(adj,edgePairs){
   return paths;
 }
 function attachmentRoot(){
-  let root=0,minY=nodes[0].p[1];
-  for(let i=1;i<nodes.length;i++){
-    const y=nodes[i].p[1];
-    if(y<minY-1e-7||(Math.abs(y-minY)<1e-7&&nodes[i].r>nodes[root].r)){root=i;minY=y}
+  const minY=Math.min(...nodes.map(n=>n.p[1])),maxY=Math.max(...nodes.map(n=>n.p[1])),
+    maxR=Math.max(...nodes.map(n=>n.r)),minOrder=Math.min(...nodes.map(n=>n.order));
+  let root=0,best=-Infinity;
+  for(let i=0;i<nodes.length;i++){
+    const n=nodes[i],radiusScore=n.r/Math.max(maxR,1e-6),
+      baseScore=1-clamp((n.p[1]-minY)/Math.max(maxY-minY,1e-6),0,1),
+      orderScore=1-clamp((n.order-minOrder)/4,0,1),
+      degreeScore=Math.min(adjacency[i].length,5)/5,
+      score=radiusScore*6+orderScore*2+baseScore*.75+degreeScore*.5;
+    if(score>best){best=score;root=i}
   }
   return root;
 }
@@ -226,7 +232,7 @@ function rebuild(){
   $('pathStats').textContent=activePaths.length+' / '+tubeSamples;
   window.__CORAL_R06_QA__={
     ready:true,errors:[],referencePoints:ref.length,nodes:nodes.length,sourceEdges:edges.length,
-    rootNode:graph.root,rootY:nodes[graph.root].p[1],candidatePaths:graph.candidatePaths,
+    rootNode:graph.root,rootY:nodes[graph.root].p[1],rootRadius:nodes[graph.root].r,rootOrder:nodes[graph.root].order,rootDegree:adjacency[graph.root].length,candidatePaths:graph.candidatePaths,
     candidateEdges:graph.candidateEdges,activeEdges,growthPaths:activePaths.length,activeNodeCount,
     rootConnectedPrunedEdges:graph.prunedDisconnectedEdges,allActiveRootConnected:true,disconnectedActiveEdges:0,
     fineRetention:retention,fineThreshold,tubeSamples,tubeRings,
@@ -261,7 +267,7 @@ function markT07(){
   window.__CORAL_R06_T07__={
     ready:true,version:'R06-T07',geometry:'continuous tube + root-connected pruning + 3-band ring-normal displacement',
     microscopeAffectsGeometry:true,tipClosure:'continuous variable blunt cap',rootConnectedPruning:true,
-    adjustableControls:document.querySelectorAll('#parameterDock input[type=range]').length,
+    adjustableControls:document.querySelectorAll('input[type=range]').length,
     visualAcceptance:false,productionReady:false
   };
 }
@@ -411,7 +417,7 @@ window.__CORAL_R06_T07_BUILD__={
         "- 三频带：杯体、杯缘／细脊、骨骼颗粒。\n"
         "- 表面起伏改为中尺度轮廓位移。\n"
         "- 枝端钝化控制连续闭合长度与半径保持曲线，不增加球帽。\n"
-        "- 细枝筛选后执行附着根 BFS，只生成 root-connected 路径、节点和疣突。\n"
+        "- 附着根由枝序、半径、基底高度和拓扑度联合识别；细枝筛选后执行 BFS，只生成 root-connected 路径、节点和疣突。\n"
         "- 运行时保持 0 GLB、0 外部贴图、0 fetch。\n"
         "- visualAcceptance=false；productionReady=false。\n",
         encoding="utf-8",
