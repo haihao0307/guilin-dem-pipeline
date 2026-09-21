@@ -22,7 +22,7 @@ h3{font-size:10px;margin:7px 0 8px;color:#dcebf0}.grid{display:grid;grid-templat
 <aside class="panel left" id="left">
 <h3>归一化源锚点</h3><div class="warn">这里全部是 [x/L, u, z/L]。在这个区里量出的距离可直接表示为体长百分比。</div>
 <div class="list" id="anchors"></div>
-<h3>Normalized A / B</h3><div class="measure"><div class="pt" id="nA"><b>A</b><br>未设置</div><div class="pt" id="nB"><b>B</b><br>未设置</div></div><div class="res" id="nRes">设置 A/B 后计算。</div>
+<h3>Normalized A / B</h3><div class="measure"><div class="pt" id="nA"><b>A</b><br>未设置</div><div class="pt" id="nB"><b>B</b><br>未设置</div></div><div class="res" id="nRes">设置 A/B 后计算。</div><div class="grid" style="margin-top:6px"><button id="saveN">保存 Normalized 测量</button><button id="exportLedger">导出测量账本</button></div><div class="metric"><span>已保存测量</span><strong id="ledgerCount">0</strong></div>
 <h3>预设关键对</h3><div class="grid"><button data-pair="snout,head">吻端↔Head</button><button data-pair="snout,eyeLeft">吻端↔眼</button><button data-pair="eyeLeft,eyeRight">双眼间距</button><button data-pair="operculumLeft,operculumRight">鳃盖左右</button><button data-pair="peduncle0,peduncle1">尾柄段1</button><button data-pair="peduncle1,peduncle2">尾柄段2</button></div>
 <h3>源固定视角基线</h3>
 <div class="metric"><span>Side bbox aspect</span><strong>1.8884</strong></div>
@@ -39,7 +39,7 @@ h3{font-size:10px;margin:7px 0 8px;color:#dcebf0}.grid{display:grid;grid-templat
 <select id="group"><option value="head">头/嘴/眼/鳃盖</option><option value="fin">鳍</option><option value="tail">尾柄/尾鳍</option><option value="axial">身体轴</option><option value="all">全部</option></select>
 <div class="list" id="nodes"><button class="node">等待源节点…</button></div>
 <div class="box" id="sel"><b>当前节点</b><br>未选择</div><div class="grid" style="margin-top:6px"><button id="rawA">设为 Raw A</button><button id="rawB">设为 Raw B</button></div>
-<h3>Raw A / B</h3><div class="measure"><div class="pt" id="rA"><b>A</b><br>未设置</div><div class="pt" id="rB"><b>B</b><br>未设置</div></div><div class="res" id="rRes">只计算 Viewer raw-frame 距离。</div>
+<h3>Raw A / B</h3><div class="measure"><div class="pt" id="rA"><b>A</b><br>未设置</div><div class="pt" id="rB"><b>B</b><br>未设置</div></div><div class="res" id="rRes">只计算 Viewer raw-frame 距离。</div><button id="saveR" style="width:100%;margin-top:6px">保存 Raw 测量</button>
 <h3>当前硬门</h3><div class="gate ok">R003 坐标错误已作废</div><div class="gate ok">Normalized / Raw frame 已隔离</div><div class="gate warn">主鳍自由边仍需直接量</div><div class="gate warn">Finlets 仍需逐个登记</div><div class="gate warn">Keel 位置仍需可视确认</div><div class="gate">Source Copy 仍锁定</div>
 </aside></main>
 <nav class="mobile"><button id="mLeft">归一化测量</button><button id="mRight">Raw节点</button><button id="play">播放</button><button id="pause">暂停</button></nav>
@@ -58,6 +58,9 @@ upperTail:[0,.137565,.011774],lowerTail:[0,.143632,.054833]};
 const V={side_left:{eye:[4.2,-.0069,.1128],target:[0,-.0069,.1128]},side_right:{eye:[-4.2,-.0069,.1128],target:[0,-.0069,.1128]},head:{eye:[0,4.3,.1128],target:[0,-.0069,.1128]},tail:{eye:[0,-4.3,.1128],target:[0,-.0069,.1128]},top:{eye:[0,-.0069,4.2],target:[0,-.0069,.1128]},three:{eye:[3.2,3.1,2],target:[0,-.0069,.1128]}};
 const RE={head:/head|jaw|eye|side\.|mouth|lip/i,fin:/fin|upper|lower/i,tail:/tail|spine\.00[678]|pedunc/i,axial:/rootjoint|hips|spine_|spine\.|head_05/i,all:/.*/};
 const $=id=>document.getElementById(id);let api=null,nodes=[],animations=[],na=null,nb=null,cur=null,ra=null,rb=null;
+let ledger=[];try{ledger=JSON.parse(localStorage.getItem('yellowfin-r004-ledger')||'[]')}catch(e){ledger=[]}
+function refreshLedger(){const el=$('ledgerCount');if(el)el.textContent=ledger.length}
+function persistLedger(){try{localStorage.setItem('yellowfin-r004-ledger',JSON.stringify(ledger))}catch(e){}refreshLedger()}
 const fmt=p=>'['+p.map(v=>Number(v).toFixed(6)).join(', ')+']';
 function setN(w,n){const p=A[n];if(w==='A')na={name:n,p};else nb={name:n,p};$(w==='A'?'nA':'nB').innerHTML='<b>'+w+' · '+n+'</b><br>'+fmt(p);calcN()}
 function calcN(){if(!na||!nb){$('nRes').textContent='设置 A/B 后计算。';return}const d=Math.hypot(na.p[0]-nb.p[0],na.p[1]-nb.p[1],na.p[2]-nb.p[2]);$('nRes').innerHTML='Normalized distance <strong>'+d.toFixed(6)+' L</strong><br>占体长 <strong>'+(d*100).toFixed(3)+'%</strong><br>Δu <strong>'+Math.abs(na.p[1]-nb.p[1]).toFixed(6)+'</strong>'}
@@ -68,7 +71,10 @@ function renderNodes(){const re=RE[$('group').value]||/.*/;const list=nodes.filt
 function pick(id,b){document.querySelectorAll('.node').forEach(x=>x.classList.remove('active'));b.classList.add('active');if(!api||!api.getMatrix)return;api.getMatrix(id,(e,m)=>{if(e||!m)return;const p=[+m[12]||0,+m[13]||0,+m[14]||0];cur={name:b.textContent,p};$('sel').innerHTML='<b>'+b.textContent+'</b><br>'+fmt(p)})}
 function setR(w){if(!cur)return;if(w==='A')ra=JSON.parse(JSON.stringify(cur));else rb=JSON.parse(JSON.stringify(cur));$(w==='A'?'rA':'rB').innerHTML='<b>'+w+' · '+cur.name+'</b><br>'+fmt(cur.p);calcR()}
 function calcR(){if(!ra||!rb){$('rRes').textContent='只计算 Viewer raw-frame 距离。';return}const d=Math.hypot(ra.p[0]-rb.p[0],ra.p[1]-rb.p[1],ra.p[2]-rb.p[2]);$('rRes').innerHTML='Raw-frame distance <strong>'+d.toFixed(6)+'</strong><br><span style="color:#e9c86d">不可直接解释为 %L，除非另行完成 frame calibration。</span>'}
-$('rawA').onclick=()=>setR('A');$('rawB').onclick=()=>setR('B');$('group').onchange=renderNodes;
+function saveNorm(){if(!na||!nb)return;const d=Math.hypot(na.p[0]-nb.p[0],na.p[1]-nb.p[1],na.p[2]-nb.p[2]);ledger.push({type:'normalized',time:new Date().toISOString(),A:na,B:nb,distanceL:d,distancePctL:d*100,deltaU:Math.abs(na.p[1]-nb.p[1])});persistLedger()}
+function saveRaw(){if(!ra||!rb)return;const d=Math.hypot(ra.p[0]-rb.p[0],ra.p[1]-rb.p[1],ra.p[2]-rb.p[2]);ledger.push({type:'viewer_raw',time:new Date().toISOString(),A:ra,B:rb,distanceRaw:d,warning:'raw viewer frame; not %L'});persistLedger()}
+function exportLedger(){const payload={schema:'kaopu.fish-mother.yellowfin-live-measurement-ledger/1.0',date:new Date().toISOString(),source:'FISH-REF-002',measurements:ledger};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='YELLOWFIN_FISH_REF_002_MEASUREMENTS.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},400)}
+$('rawA').onclick=()=>setR('A');$('rawB').onclick=()=>setR('B');$('group').onchange=renderNodes;$('saveN').onclick=saveNorm;$('saveR').onclick=saveRaw;$('exportLedger').onclick=exportLedger;refreshLedger();
 function setView(k){if(!api)return;const v=V[k];if(v)api.setCameraLookAt(v.eye,v.target,.8,()=>{})}
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));
 function play(){if(api&&animations[0])api.setCurrentAnimationByUID(animations[0][0],()=>api.play(()=>{}))}function pause(){if(api)api.pause(()=>{})}
