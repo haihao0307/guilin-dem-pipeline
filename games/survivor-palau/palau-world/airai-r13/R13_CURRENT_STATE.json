@@ -1,0 +1,58 @@
+{
+  "schema": "kaopu.palau.airai-r13-current-state/1.0",
+  "version": "AIRAI_R13_EVIDENCE_BOUND_CORE_20260921",
+  "parentBranch": "handoff/survivor-palau-stone-money-full-r011-20260921",
+  "parentCommit": "c47f7cc62d864e95117bd5548ca9ffa3f1d770a8",
+  "correctionToR12": "R11 contained NOAA/Allen vector evidence. The absent artifacts were the exact authority-image binaries and GeoTIFF binaries named by the reports.",
+  "evidenceCore": {
+    "bboxWGS84": [134.53500017627564, 7.314829679428376, 134.6051512431471, 7.385000133767383],
+    "resolutionM": 25,
+    "shape": [310, 310],
+    "validCandidateCells": 56874,
+    "landCells": 30655,
+    "waterCandidateCellsAfterLandSuppression": 51649,
+    "soundings": 392,
+    "catzocB": 274,
+    "catzocD": 118,
+    "datum": {
+      "code": 24,
+      "name": "local datum",
+      "mslEquivalence": "NOT_ASSERTED"
+    }
+  },
+  "implemented": [
+    "reconstructed R02 quality-aware candidate grids from frozen SOUNDG, M_QUAL and DEPCNT vectors",
+    "reconstructed R08 Allen semantic companion grid without changing depth",
+    "restored R09 S-57 datum provenance with numeric values unchanged",
+    "re-ran R10 semantic uncertainty conditioning with depth unchanged",
+    "re-ran R11 DEPARE consistency conditioning with depth unchanged",
+    "built runtime bindings for PalauWorld.sample(), sampleGeo() and sampleCell()",
+    "suppressed candidate bathymetry wherever NOAA ENC LNDARE marks land",
+    "retained frozen Ocean Mother R018 with zero shader/default-parameter changes"
+  ],
+  "truthBoundaries": {
+    "bathymetry": "CANDIDATE_NOT_SURVEY_TRUTH",
+    "fullPalauTerrain": "BLOCKED_COMPLETE_PALAU_DEM_OR_AUTHORITY_RASTER_MISSING",
+    "yellowStoryRegion": "BLOCKED_EXACT_AUTHORITY_IMAGE_BINARY_MISSING",
+    "landElevation": "UNAVAILABLE_NO_DEM_BOUND",
+    "oceanToChartDatumAlignment": "UNRESOLVED_NO_NUMERIC_TRANSFORM",
+    "visibleOceanMotherCalibrationIsland": "NOT_PALAU_TERRAIN_TRUTH"
+  },
+  "browserQA": {
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "functionalBrowserPass": true,
+    "strictProductionPerformancePass": false,
+    "desktop1536x960SwiftShaderFps": 0.5003001801080648,
+    "mobile390x844SwiftShaderFps": 2.2939287352805837,
+    "rendererBoundary": "Xvfb plus ANGLE SwiftShader; not representative of target hardware"
+  },
+  "oldCandidateAnchorLoaded": false,
+  "traditionalLOD": false,
+  "deployed": false,
+  "publicHttpsPassed": false,
+  "visualAcceptance": false,
+  "userAcceptance": false,
+  "productionReady": false,
+  "nextBoundedIncrement": "Recover exact authority images and bind a complete Palau land-elevation source before replacing the visible calibration island with source-coupled terrain."
+}
