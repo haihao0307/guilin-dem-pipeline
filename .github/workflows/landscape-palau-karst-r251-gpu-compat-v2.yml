@@ -1,0 +1,112 @@
+name: Landscape Palau Karst R2.5.1 GPU Compatibility V2
+
+on:
+  push:
+    branches:
+      - feature/landscape-small-karst-brick-v26-r2-20260919
+    paths:
+      - workbenches/landscape-small-karst-field-r2-5-1-gpu-compat/build_r251_v2.py
+      - .github/workflows/landscape-palau-karst-r251-gpu-compat-v2.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build corrected R2.5.1 GPU-compatible renderer
+        run: |
+          python -m py_compile workbenches/landscape-small-karst-field-r2-5-1-gpu-compat/build_r251_v2.py
+          python workbenches/landscape-small-karst-field-r2-5-1-gpu-compat/build_r251_v2.py
+
+      - name: Static contract and shader compilation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,re
+          root=Path('workbenches/landscape-small-karst-field-r2-5-1-gpu-compat')
+          s=(root/'index.html').read_text(encoding='utf-8')
+          b=json.loads((root/'build.json').read_text(encoding='utf-8'))
+          required=[
+            'PALAU_KARST_R251_GPU_COMPAT',
+            'P1 高瘦礁塔','P2 宽厚岩岛','P3 偏心双体',
+            'writePacked','unpack16','octEncode','octDecode',
+            'uMetaTex','gMeta','gl.RGBA8','gl.UNSIGNED_BYTE',
+            'dataset.karstOutputVisible'
+          ]
+          for token in required: assert token in s, token
+          assert 'EXT_color_buffer_float' not in s
+          assert 'RGBA16F' not in s
+          assert 'in vec2 vUv;' not in s
+          assert '\\nvec2 pack16' not in s
+          assert b['schema']=='LANDSCAPE_PALAU_KARST_R251_GPU_COMPAT'
+          for name,file in [('VS','/tmp/r251.vert'),('GEOMETRY_FS','/tmp/r251-geom.frag'),('MATERIAL_FS','/tmp/r251-mat.frag')]:
+            m=re.search(rf'const {name}=`(.*?)`;',s,re.S);assert m,name
+            Path(file).write_text(m.group(1),encoding='utf-8')
+          scripts=re.findall(r'<script>(.*?)</script>',s,re.S);assert scripts
+          Path('/tmp/r251-app.js').write_text(scripts[-1],encoding='utf-8')
+          PY
+          node --check /tmp/r251-app.js
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq glslang-tools
+          glslangValidator -S vert /tmp/r251.vert
+          glslangValidator -S frag /tmp/r251-geom.frag
+          glslangValidator -S frag /tmp/r251-mat.frag
+
+      - name: Run Chromium and verify non-black output
+        run: |
+          python3 -m http.server 8000 >/tmp/http.log 2>&1 &
+          SERVER=$!
+          trap 'kill $SERVER || true' EXIT
+          for i in $(seq 1 40); do curl -fsS http://127.0.0.1:8000/ >/dev/null && break; sleep .25; done
+          CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)
+          if [ -z "$CHROME" ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq chromium-browser || sudo apt-get install -y -qq chromium
+            CHROME=$(command -v chromium || command -v chromium-browser)
+          fi
+          URL=http://127.0.0.1:8000/workbenches/landscape-small-karst-field-r2-5-1-gpu-compat/index.html
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage \
+            --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist \
+            --run-all-compositor-stages-before-draw --virtual-time-budget=26000 \
+            --dump-dom "$URL" >/tmp/r251-dom.html 2>/tmp/r251-chrome.log
+          grep -q 'data-karst-ready="true"' /tmp/r251-dom.html
+          grep -q 'data-karst-output-visible="true"' /tmp/r251-dom.html
+          ! grep -q 'data-karst-failure=' /tmp/r251-dom.html
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage \
+            --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist \
+            --run-all-compositor-stages-before-draw --virtual-time-budget=26000 \
+            --window-size=1440,1000 --screenshot=/tmp/r251.png "$URL" \
+            >/tmp/r251-shot.log 2>&1
+          test -s /tmp/r251.png
+          test $(stat -c%s /tmp/r251.png) -gt 100000
+          mkdir -p /tmp/r251-proof
+          cp /tmp/r251.png /tmp/r251-proof/r251.png
+          cp /tmp/r251-dom.html /tmp/r251-proof/dom.html
+          cp /tmp/r251-chrome.log /tmp/r251-proof/chrome.log
+          cp workbenches/landscape-small-karst-field-r2-5-1-gpu-compat/build.json /tmp/r251-proof/build.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: landscape-palau-karst-r251-gpu-compat-proof-v2
+          path: /tmp/r251-proof
+          retention-days: 7
+
+      - name: Materialize browser-tested R2.5.1
+        run: |
+          git config user.name "Landscape Mother"
+          git config user.email "actions@users.noreply.github.com"
+          git add workbenches/landscape-small-karst-field-r2-5-1-gpu-compat/index.html \
+                  workbenches/landscape-small-karst-field-r2-5-1-gpu-compat/build.json
+          if git diff --cached --quiet; then
+            echo "R2.5.1 already materialized"
+            exit 0
+          fi
+          git commit -m "fix(landscape): materialize browser-tested R2.5.1 GPU compatibility [skip ci]"
+          git push
