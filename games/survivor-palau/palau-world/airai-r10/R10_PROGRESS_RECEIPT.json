@@ -1,0 +1,45 @@
+{
+  "schema": "kaopu.palau.airai-r10-progress-receipt/1.0",
+  "version": "AIRAI_R10_DIRECT_TERRAIN_OCEAN_RESTORE_20260921",
+  "parentAuthorityCommit": "700aec81c919df668d71f16ad459667d1a9eef9b",
+  "localWorkbench": "airai_r10_ocean_world/index.html",
+  "localWorkbenchSha256": "ef340c07f04f7f41b061591d8585dc89b4e441a3f59b4e910728c501fe06a027",
+  "implemented": [
+    "remove red authority/evidence frame from default world view",
+    "render full Palau and Stone Money terrain directly",
+    "restore animated Ocean Mother-compatible sea surface",
+    "restore sky and moving cloud layer",
+    "reef-to-deep-water optical transition",
+    "desktop and 390x844 camera controls",
+    "single PalauWorld.sample terrain/water query",
+    "traditionalLOD=false"
+  ],
+  "oceanContract": {
+    "sourceIdentity": "frozen-ocean-mother-v001-adapter",
+    "macroComponents": 24,
+    "microSlopeHarmonics": 12,
+    "weatherEnvironment": {
+      "hour": 16,
+      "windMps": 12,
+      "windFromDegrees": 270
+    }
+  },
+  "browserQA": {
+    "desktopFull": true,
+    "desktopStory": true,
+    "mobile390x844Full": true,
+    "mobile390x844Story": true,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "method": "Chromium set_content with ANGLE SwiftShader because host policy blocks local navigation"
+  },
+  "knownLimitations": [
+    "terrain elevation and reef geometry remain source-image-derived candidates rather than accepted DEM/bathymetry truth",
+    "clouds are a restored runtime layer but not yet the full volumetric Weather Mother renderer",
+    "shoreline, vegetation, fish, coral, patrol boat, player and collision systems are not yet merged into R10",
+    "visualAcceptance=false",
+    "userAcceptance=false",
+    "productionReady=false"
+  ],
+  "nextBoundedIncrement": "bind accepted DEM and NOAA bathymetry to the shared PalauWorld field while preserving the restored ocean/sky/cloud baseline"
+}
