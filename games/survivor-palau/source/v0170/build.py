@@ -65,6 +65,11 @@ once(
 # Existing handline remains the physical line/reel implementation, but its decision source is
 # now the visible fish runtime rather than a fixed waiting timer.
 once(
+    "const FISH={phase:'closed',time:0,progress:0,tension:.18,held:false,catches:0,attempt:0,target:null,gearClock:0};",
+    "const FISH={phase:'closed',time:0,progress:0,tension:.18,held:false,catches:0,attempt:0,target:null,gearClock:0,suppressClick:false,holdPointerActive:false};",
+    'hold release guard state',
+)
+once(
     'function beginFishing(){\n const point=chooseFishingTarget();',
     'function beginFishing(){\n if(!pilotCanStartFishing())return false;\n const point=chooseFishingTarget();',
     'limited gear start gate',
@@ -78,6 +83,11 @@ once(
     "qa.view='fishing';opaqueDirty=true;return true;",
     "qa.view='fishing';opaqueDirty=true;pilotAfterFishingCamera(point);return true;",
     'surface observation camera',
+)
+once(
+    "function fishingAction(){\n if(config.paused)return;",
+    "function fishingAction(){\n if(FISH.suppressClick){FISH.suppressClick=false;return;}\n if(config.paused)return;",
+    'suppress release click after reel hold',
 )
 once(
     "if(['ready','caught','missed','broken'].includes(FISH.phase)){FISH.progress=0;FISH.tension=.18;fishPhase('cast');return;}",
@@ -99,6 +109,11 @@ once(
     "land[1]=waveAt(land[0],land[2],physicalTime,config).eta+pilotLineEndOffset(t)+(FISH.phase==='cast'?Math.sin(t*Math.PI)*3:0)-(FISH.phase==='bite'?.18:0);",
     'underwater visible bait',
 )
+once(
+    "$('actionFish').addEventListener('pointerdown',e=>{if(FISH.phase==='reel'&&!config.paused){FISH.held=true;e.currentTarget.setPointerCapture(e.pointerId);}});\n for(const event of ['pointerup','pointercancel','lostpointercapture'])$('actionFish').addEventListener(event,()=>FISH.held=false);",
+    "$('actionFish').addEventListener('pointerdown',e=>{if(FISH.phase==='reel'&&!config.paused){FISH.held=true;FISH.holdPointerActive=true;e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);}});\n for(const event of ['pointerup','pointercancel','lostpointercapture'])$('actionFish').addEventListener(event,()=>{const consumed=FISH.holdPointerActive;FISH.held=false;FISH.holdPointerActive=false;if(event==='pointerup'&&consumed)FISH.suppressClick=true;});",
+    'reel pointer lifecycle',
+)
 
 OUT = ROOT / "games/survivor-palau/releases/v0.1.7.0"
 if len(sys.argv) > 2:
@@ -119,6 +134,7 @@ meta = {
     "visibleBaitAndHook": True,
     "shortSnorkelWaveInteraction": True,
     "limitedFishingGear": True,
+    "reelReleaseClickGuard": True,
     "autoCatch": False,
     "elasticSpear": False,
     "hawaiianSling": False,
