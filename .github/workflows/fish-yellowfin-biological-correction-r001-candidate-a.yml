@@ -1,0 +1,109 @@
+name: Fish Mother Yellowfin Biological Correction R001 Candidate A
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - work/ocean-life-fish-mother-yellowfin-biological-correction-r001-20260921
+    paths:
+      - .github/workflows/fish-yellowfin-biological-correction-r001-candidate-a.yml
+      - apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/CANDIDATE_A_CONTROLS.json
+      - apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/tools/build_candidate_a.py
+      - apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/tools/audit_frozen_baseline.py
+      - apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/tests/candidate-a-r001.test.mjs
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fish-yellowfin-biological-correction-r001-candidate-a
+  cancel-in-progress: true
+
+env:
+  CORRECTION_ROOT: apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001
+  SOURCE_COPY_ROOT: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001
+  FROZEN_GLB: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry/YELLOWFIN_SOURCE_COPY_SKINNED_R001.glb
+  CANDIDATE_GLB: apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/geometry/YELLOWFIN_BIOLOGICAL_CORRECTION_R001_CANDIDATE_A.glb
+  CANDIDATE_RECEIPT: apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/CANDIDATE_A_RECEIPT.json
+
+jobs:
+  build-candidate-a:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - name: Check out the biological correction branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install deformation dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install numpy
+
+      - name: Build rig-coherent Candidate A
+        shell: bash
+        run: |
+          set -euo pipefail
+          python "$CORRECTION_ROOT/tools/build_candidate_a.py" \
+            --input "$FROZEN_GLB" \
+            --baseline "$CORRECTION_ROOT/BIOLOGICAL_CORRECTION_R001_BASELINE.json" \
+            --controls "$CORRECTION_ROOT/CANDIDATE_A_CONTROLS.json" \
+            --status "$CORRECTION_ROOT/CURRENT_STATUS.json" \
+            --output "$CANDIDATE_GLB" \
+            --receipt "$CANDIDATE_RECEIPT"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Run Candidate A contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          node "$CORRECTION_ROOT/tests/candidate-a-r001.test.mjs"
+
+      - name: Upload Candidate A machine-acceptance package
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: YELLOWFIN-BIOLOGICAL-CORRECTION-R001-CANDIDATE-A
+          path: |
+            ${{ env.CORRECTION_ROOT }}/CANDIDATE_A_CONTROLS.json
+            ${{ env.CANDIDATE_RECEIPT }}
+            ${{ env.CANDIDATE_GLB }}
+            ${{ env.CORRECTION_ROOT }}/CURRENT_STATUS.json
+            CURRENT_BASELINE.json
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
+
+      - name: Commit Candidate A and machine evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Fish Mother R001"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config http.postBuffer 262144000
+          git add \
+            CURRENT_BASELINE.json \
+            "$CORRECTION_ROOT/CURRENT_STATUS.json" \
+            "$CANDIDATE_RECEIPT" \
+            "$CANDIDATE_GLB"
+          if git diff --cached --quiet; then
+            echo "No Candidate A delta to commit."
+            exit 0
+          fi
+          git commit -m "feat(fish): build machine-accepted Yellowfin Candidate A"
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
