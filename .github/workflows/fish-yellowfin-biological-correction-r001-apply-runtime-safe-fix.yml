@@ -8,6 +8,7 @@ on:
     paths:
       - .github/workflows/fish-yellowfin-biological-correction-r001-apply-runtime-safe-fix.yml
       - apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/tools/apply_candidate_a_runtime_safe_fix.py
+      - apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/tools/apply_candidate_a_runtime_safe_payload.py
 
 permissions:
   contents: write
@@ -39,9 +40,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python "$CORRECTION_ROOT/tools/apply_candidate_a_runtime_safe_fix.py"
+          python "$CORRECTION_ROOT/tools/apply_candidate_a_runtime_safe_payload.py"
           python -m py_compile \
             "$CORRECTION_ROOT/tools/apply_candidate_a_runtime_safe_fix.py" \
+            "$CORRECTION_ROOT/tools/apply_candidate_a_runtime_safe_payload.py" \
             "$CORRECTION_ROOT/tools/build_candidate_a_runtime_safe.py"
           grep -F 'build_candidate_a_runtime_safe.py' .github/workflows/fish-yellowfin-biological-correction-r001-candidate-a.yml
           grep -F 'source-rig-byte-preserved' "$CORRECTION_ROOT/tests/candidate-a-r001.test.mjs"
