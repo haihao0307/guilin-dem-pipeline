@@ -1,0 +1,38 @@
+name: Palau V0170 geometry hotfix
+on:
+  push:
+    branches: [work/survivor-palau-v0170-pilot-survival-20260921]
+    paths:
+      - .github/workflows/palau-v0170-geometry-hotfix.yml
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+          persist-credentials: true
+      - name: Restore indexed face corner
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('games/survivor-palau/source/v0170/survival.mjs')
+          s=p.read_text()
+          old='g.tri(k,k+f[2],k+f[3])'
+          new='g.tri(k+f[0],k+f[2],k+f[3])'
+          assert s.count(old)==1, s.count(old)
+          p.write_text(s.replace(old,new,1))
+          PY
+          node --check games/survivor-palau/source/v0170/survival.mjs
+          git diff --check
+      - name: Commit exact hotfix
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add games/survivor-palau/source/v0170/survival.mjs
+          git commit -m 'fix(palau): restore survival prop face indexing'
+          git push origin HEAD:${{ github.ref_name }}
