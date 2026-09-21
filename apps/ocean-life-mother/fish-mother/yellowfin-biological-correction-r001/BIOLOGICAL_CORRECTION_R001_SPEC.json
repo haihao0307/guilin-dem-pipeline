@@ -25,6 +25,16 @@
     "normalization": "inferred fork length when the caudal-upper/lower shared trailing notch is valid; otherwise report total longitudinal extent and block candidate acceptance",
     "frameMixingForbidden": true
   },
+  "topologyInterpretation": {
+    "version": "mirrored-fin-surface-pair-v1",
+    "rule": "Raw connected-component order is not anatomical identity. Thin fins stored as disconnected positive-X and negative-X sheets must be paired by mirrored centroid, identical topology, longitudinal range, attachment root and height before naming the first or second dorsal fin.",
+    "frozenDorsalGroupsExpected": {
+      "firstDorsalSurfaceComponentIds": [0, 3],
+      "secondDorsalSurfaceComponentIds": [2, 4],
+      "posteriorDorsalStructureComponentIds": [1]
+    },
+    "acceptance": "The first and second dorsal fins must each resolve to two symmetric sheets. Deforming only one sheet is a hard failure even when a one-sided metric reaches its target."
+  },
   "evidencePolicy": {
     "publishedHardConstraints": [
       {
@@ -64,6 +74,7 @@
   },
   "correctionOrder": [
     "audit frozen rest geometry, regions, bind skeleton and animation channels",
+    "resolve mirrored fin sheets into anatomical surface pairs before reading fin identity or metrics",
     "lock fork-length inference and baseline morphometrics",
     "correct body depth distribution and head transition",
     "correct caudal peduncle and keel support without weakening the tail root",
