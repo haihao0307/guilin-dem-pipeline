@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Fish Mother · Yellowfin Skinned Source Copy QA</title>
+  <style>
+    :root{color-scheme:dark;--bg:#061019;--panel:rgba(7,17,27,.93);--line:rgba(151,196,219,.22);--text:#e9f5f8;--muted:#91aab7;--accent:#ffd34f;--ok:#71e5a1;--bad:#ff7474}
+    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--text)}canvas{display:block;width:100%;height:100%}
+    .panel{position:fixed;z-index:5;top:16px;left:16px;width:min(485px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--panel);backdrop-filter:blur(14px);box-shadow:0 18px 60px rgba(0,0,0,.36)}
+    h1{font-size:17px;line-height:1.25;margin:0 0 5px}.kicker{font-size:11px;color:var(--accent);letter-spacing:.16em;text-transform:uppercase;font-weight:750}.sub{font-size:12px;color:var(--muted);line-height:1.5;margin:7px 0 12px}.state{display:flex;gap:9px;border:1px solid var(--line);border-radius:11px;padding:10px 11px;margin-bottom:10px;background:rgba(255,255,255,.025)}
+    .dot{width:9px;height:9px;margin-top:4px;border-radius:50%;background:var(--accent);box-shadow:0 0 15px currentColor;flex:none}.dot.ok{background:var(--ok)}.dot.bad{background:var(--bad)}.state strong{display:block;font-size:12px}.state span{display:block;font-size:11px;color:var(--muted);line-height:1.45;margin-top:2px;overflow-wrap:anywhere}
+    .progress{height:5px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin:8px 0 12px}.progress>i{display:block;width:0;height:100%;background:linear-gradient(90deg,#72d7ff,var(--accent));transition:width .15s linear}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.metric{border:1px solid var(--line);border-radius:9px;padding:8px 9px;background:rgba(255,255,255,.018)}.metric b{display:block;font-size:10px;color:var(--muted);font-weight:600}.metric span{display:block;font-size:12px;margin-top:3px;overflow-wrap:anywhere}.wide{grid-column:1/-1}
+    .controls{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}button{appearance:none;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.045);color:var(--text);padding:8px 10px;font:600 11px/1 system-ui;cursor:pointer}button:hover{background:rgba(255,255,255,.10)}button[aria-pressed="true"]{border-color:rgba(255,211,79,.65);color:var(--accent);background:rgba(255,211,79,.08)}
+    input[type=range]{width:100%;margin:11px 0 2px;accent-color:var(--accent)}.rule{margin-top:11px;padding-top:10px;border-top:1px solid var(--line);font-size:10px;line-height:1.55;color:var(--muted)}.rule strong{color:var(--text)}
+    .badge{position:fixed;right:16px;bottom:16px;z-index:3;padding:9px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(7,16,24,.76);backdrop-filter:blur(10px);font-size:10px;color:var(--muted)}
+    @media(max-width:700px){.panel{top:8px;left:8px;width:calc(100vw - 16px);max-height:60vh;padding:13px}.badge{right:8px;bottom:8px}}
+  </style>
+  <script type="importmap">
+  {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}
+  </script>
+</head>
+<body>
+  <section class="panel">
+    <div class="kicker">Ocean Life Mother · Fish Mother</div>
+    <h1>Yellowfin Source Copy · Skin / Swim QA</h1>
+    <p class="sub">精确源和分区蒙皮副本同步播放同一条 `Swim` 动画。浏览器逐帧核对完整三角面数、动画时长、骨骼世界矩阵和动态包围盒。</p>
+    <div class="state"><i id="stateDot" class="dot"></i><div><strong id="stateTitle">正在读取蒙皮副本</strong><span id="stateText">源字节、输出回执、骨架、动作和材质全部闭合后才通过。</span></div></div>
+    <div class="progress"><i id="progressBar"></i></div>
+    <div class="grid">
+      <div class="metric"><b>MODE</b><span id="modeText">loading…</span></div><div class="metric"><b>VIEW</b><span id="viewText">loading…</span></div>
+      <div class="metric wide"><b>SOURCE SHA-256</b><span id="sourceShaText">—</span></div><div class="metric wide"><b>COPY SHA-256</b><span id="copyShaText">—</span></div>
+      <div class="metric"><b>SOURCE N/M/F/B</b><span id="sourceStatsText">—</span></div><div class="metric"><b>COPY N/M/F/B</b><span id="copyStatsText">—</span></div>
+      <div class="metric"><b>ANIMATION</b><span id="animationText">—</span></div><div class="metric"><b>TIME</b><span id="timeText">—</span></div>
+      <div class="metric"><b>DYNAMIC BOUNDS Δ</b><span id="boundsDeltaText">—</span></div><div class="metric"><b>BONE MATRIX Δ</b><span id="boneDeltaText">—</span></div>
+    </div>
+    <div class="controls"><button data-mode="source" aria-pressed="false">精确源</button><button data-mode="copy" aria-pressed="false">蒙皮副本</button><button data-mode="overlay" aria-pressed="false">动作叠合</button><button id="playButton" aria-pressed="false">播放</button></div>
+    <div class="controls"><button data-view="side" aria-pressed="false">侧视</button><button data-view="quarter" aria-pressed="false">3/4</button><button data-view="top" aria-pressed="false">俯视</button><button data-view="front" aria-pressed="false">头向</button></div>
+    <input id="timeSlider" type="range" min="0" max="1" step="0.001" value="0" disabled />
+    <div class="rule"><strong>硬门禁：</strong>输出 GLB 必须保留源二进制前缀、骨架层级、逆绑定矩阵、JOINTS/WEIGHTS、所有动画、材质、纹理和图像。五个固定动画采样点的动态边界差不得超过 0.00005，骨骼世界矩阵最大元素差不得超过 0.000001。</div>
+  </section>
+  <div class="badge">当前阶段：精确源复制；不做 Yellowfin 生物学修形</div>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const SOURCE_SHA='5603d4aabc9a1127856841335a86ae7aa462b6b25d1a6586e93bf644f4d47abe';
+const SOURCE_BYTES=58908280;
+const SOURCE_URL='./source-workspace/source/tuna_fish_4k.glb';
+const COPY_URL='./geometry/YELLOWFIN_SOURCE_COPY_SKINNED_R001.glb';
+const RECEIPT_URL='./SOURCE_COPY_SKINNED_R001.json';
+const BOUNDS_TOLERANCE=0.00005;
+const BONE_TOLERANCE=0.000001;
+const VIEW_CONTRACT={side:{position:[0,8,.01],up:[1,0,0]},quarter:{position:[4.8,5.8,7.2],up:[1,0,0]},top:{position:[8,0,.01],up:[0,1,0]},front:{position:[.01,0,8],up:[1,0,0]}};
+const $=id=>document.getElementById(id);
+const setState=(kind,title,text)=>{$('stateDot').className='dot '+(kind||'');$('stateTitle').textContent=title;$('stateText').textContent=text};
+const qa={ready:false,playing:false,mode:'loading',activeView:'loading',activeTime:0,sourceSha:null,copySha:null,receipt:null,sourceStats:null,copyStats:null,sourceAnimations:[],copyAnimations:[],animationName:null,duration:0,samples:[],currentSample:null,boundsTolerance:BOUNDS_TOLERANCE,boneTolerance:BONE_TOLERANCE,checks:{},failure:null};
+window.__skinnedQa=qa;
+
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x061019);
+const camera=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,.01,100);camera.position.set(...VIEW_CONTRACT.side.position);camera.up.set(...VIEW_CONTRACT.side.up);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',preserveDrawingBuffer:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;document.body.prepend(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.055;controls.target.set(0,0,0);controls.minDistance=2;controls.maxDistance=24;
+scene.add(new THREE.HemisphereLight(0xdff5ff,0x17202a,2.1));const key=new THREE.DirectionalLight(0xffffff,3);key.position.set(4,6,7);scene.add(key);const rim=new THREE.DirectionalLight(0x80cfff,2);rim.position.set(-5,1,-5);scene.add(rim);
+const floor=new THREE.Mesh(new THREE.CircleGeometry(8,96),new THREE.MeshStandardMaterial({color:0x0a1620,roughness:.94}));floor.rotation.x=-Math.PI/2;floor.position.y=-2.3;scene.add(floor);
+let sourceRoot=null,copyRoot=null,sourceMixer=null,copyMixer=null,sourceAction=null,copyAction=null,lastFrame=performance.now();
+const sourceMaterials=[];
+
+async function fetchBytes(url,label,start,end){const response=await fetch(url,{cache:'no-store'});if(!response.ok)throw new Error(`${label}: HTTP ${response.status}`);const total=Number(response.headers.get('content-length'))||1,reader=response.body?.getReader();if(!reader){const bytes=new Uint8Array(await response.arrayBuffer());$('progressBar').style.width=`${end}%`;return bytes}const chunks=[];let received=0;while(true){const {done,value}=await reader.read();if(done)break;chunks.push(value);received+=value.length;$('progressBar').style.width=`${start+(end-start)*Math.min(1,received/total)}%`;$('stateText').textContent=`${label} · ${(received/1048576).toFixed(1)} MiB`}const all=new Uint8Array(received);let offset=0;for(const chunk of chunks){all.set(chunk,offset);offset+=chunk.length}return all}
+async function digestHex(bytes){const view=bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength),hash=await crypto.subtle.digest('SHA-256',view);return [...new Uint8Array(hash)].map(value=>value.toString(16).padStart(2,'0')).join('')}
+function parseGlb(bytes){return new Promise((resolve,reject)=>new GLTFLoader().parse(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength),'',resolve,reject))}
+function stats(root){let nodes=0,meshes=0,triangles=0,bones=0;root.traverse(object=>{nodes++;if(object.isBone)bones++;if(object.isMesh){meshes++;const index=object.geometry.index;triangles+=index?index.count/3:(object.geometry.attributes.position?.count||0)/3}});return {nodes,meshes,triangles:Math.round(triangles),bones}}
+function animationRecords(clips){return clips.map(clip=>({name:clip.name,duration:clip.duration,tracks:clip.tracks.length}))}
+function boundsRecord(root){root.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(root,true);return {min:box.min.toArray(),max:box.max.toArray()}}
+function maxBoundsDelta(a,b){return Math.max(...a.min.map((value,index)=>Math.abs(value-b.min[index])),...a.max.map((value,index)=>Math.abs(value-b.max[index])))}
+function boneRecords(root){const result=[];root.updateMatrixWorld(true);root.traverse(object=>{if(object.isBone)result.push({name:object.name||'',matrix:object.matrixWorld.elements.slice()})});return result}
+function maxBoneDelta(a,b){if(a.length!==b.length)return Infinity;let maximum=0;for(let index=0;index<a.length;index++){if(a[index].name!==b[index].name)return Infinity;for(let element=0;element<16;element++)maximum=Math.max(maximum,Math.abs(a[index].matrix[element]-b[index].matrix[element]))}return maximum}
+function shortSha(value){return `${value.slice(0,12)}…${value.slice(-12)}`}
+function setView(name){const spec=VIEW_CONTRACT[name];camera.position.set(...spec.position);camera.up.set(...spec.up);controls.target.set(0,0,0);camera.lookAt(controls.target);controls.update();qa.activeView=name;$('viewText').textContent=name;document.querySelectorAll('[data-view]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.view===name)))}
+function setSourceOverlay(on){for(const state of sourceMaterials){const material=state.material;if(on){material.wireframe=true;material.transparent=true;material.opacity=.28;material.depthWrite=false;if(material.color)material.color.setHex(0x58dfff);material.map=null}else{material.wireframe=state.wireframe;material.transparent=state.transparent;material.opacity=state.opacity;material.depthWrite=state.depthWrite;if(material.color&&state.color)material.color.copy(state.color);material.map=state.map;material.needsUpdate=true}}}
+function setMode(mode){if(!sourceRoot||!copyRoot)return;qa.mode=mode;$('modeText').textContent=mode;sourceRoot.visible=mode!=='copy';copyRoot.visible=mode!=='source';setSourceOverlay(mode==='overlay');document.querySelectorAll('[data-mode]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.mode===mode)))}
+function applyTime(time,record=true){if(!sourceMixer||!copyMixer)return null;const wrapped=qa.duration>0?Math.max(0,Math.min(time,qa.duration)):0;sourceMixer.setTime(wrapped);copyMixer.setTime(wrapped);sourceRoot.updateMatrixWorld(true);copyRoot.updateMatrixWorld(true);const sourceBounds=boundsRecord(sourceRoot),copyBounds=boundsRecord(copyRoot);const sample={time:wrapped,sourceBounds,copyBounds,boundsDelta:maxBoundsDelta(sourceBounds,copyBounds),boneMatrixDelta:maxBoneDelta(boneRecords(sourceRoot),boneRecords(copyRoot))};qa.activeTime=wrapped;qa.currentSample=sample;if(record)qa.samples.push(sample);$('timeSlider').value=qa.duration?String(wrapped/qa.duration):'0';$('timeText').textContent=`${wrapped.toFixed(3)} / ${qa.duration.toFixed(3)} s`;$('boundsDeltaText').textContent=Number.isFinite(sample.boundsDelta)?sample.boundsDelta.toExponential(3):'∞';$('boneDeltaText').textContent=Number.isFinite(sample.boneMatrixDelta)?sample.boneMatrixDelta.toExponential(3):'∞';return sample}
+function setPlaying(value){qa.playing=value;$('playButton').setAttribute('aria-pressed',String(value));$('playButton').textContent=value?'暂停':'播放'}
+
+document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>setView(button.dataset.view)));document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>setMode(button.dataset.mode)));$('playButton').addEventListener('click',()=>setPlaying(!qa.playing));$('timeSlider').addEventListener('input',event=>{setPlaying(false);applyTime(Number(event.target.value)*qa.duration,false)});
+
+async function boot(){
+  try{
+    const receiptResponse=await fetch(RECEIPT_URL,{cache:'no-store'});if(!receiptResponse.ok)throw new Error(`蒙皮回执缺失：HTTP ${receiptResponse.status}`);const receipt=await receiptResponse.json();qa.receipt=receipt;if(receipt?.source?.sha256!==SOURCE_SHA||receipt?.source?.bytes!==SOURCE_BYTES)throw new Error('蒙皮回执未绑定精确 FISH-REF-002');
+    const sourceBytes=await fetchBytes(SOURCE_URL,'读取精确源',0,48);if(sourceBytes.byteLength!==SOURCE_BYTES)throw new Error(`源字节数错误：${sourceBytes.byteLength}`);qa.sourceSha=await digestHex(sourceBytes);$('sourceShaText').textContent=shortSha(qa.sourceSha);if(qa.sourceSha!==SOURCE_SHA)throw new Error('源 SHA-256 未通过');
+    const copyBytes=await fetchBytes(COPY_URL,'读取蒙皮副本',48,88);qa.copySha=await digestHex(copyBytes);$('copyShaText').textContent=shortSha(qa.copySha);if(qa.copySha!==receipt.output.sha256||copyBytes.byteLength!==receipt.output.bytes)throw new Error('蒙皮副本 SHA-256 或字节数与回执不符');
+    $('progressBar').style.width='92%';setState('','解析骨架和动作','建立源与副本的同步 Swim 采样。');
+    const [sourceGltf,copyGltf]=await Promise.all([parseGlb(sourceBytes),parseGlb(copyBytes)]);sourceRoot=sourceGltf.scene;copyRoot=copyGltf.scene;sourceRoot.name='ExactSourceRoot';copyRoot.name='SkinnedCopyRoot';qa.sourceStats=stats(sourceRoot);qa.copyStats=stats(copyRoot);qa.sourceAnimations=animationRecords(sourceGltf.animations);qa.copyAnimations=animationRecords(copyGltf.animations);
+    $('sourceStatsText').textContent=`${qa.sourceStats.nodes}/${qa.sourceStats.meshes}/${qa.sourceStats.triangles}/${qa.sourceStats.bones}`;$('copyStatsText').textContent=`${qa.copyStats.nodes}/${qa.copyStats.meshes}/${qa.copyStats.triangles}/${qa.copyStats.bones}`;
+    const sourceClip=sourceGltf.animations.find(clip=>clip.name==='Swim')||sourceGltf.animations[0],copyClip=copyGltf.animations.find(clip=>clip.name===sourceClip?.name)||copyGltf.animations[0];if(!sourceClip||!copyClip)throw new Error('源或副本缺少动作');qa.animationName=sourceClip.name;qa.duration=sourceClip.duration;$('animationText').textContent=`${qa.animationName} · ${qa.duration.toFixed(3)} s`;
+    if(Math.abs(sourceClip.duration-copyClip.duration)>1e-9)throw new Error('源与副本动画时长不一致');
+    sourceMixer=new THREE.AnimationMixer(sourceRoot);copyMixer=new THREE.AnimationMixer(copyRoot);sourceAction=sourceMixer.clipAction(sourceClip);copyAction=copyMixer.clipAction(copyClip);sourceAction.play();copyAction.play();
+
+    const displayRoot=new THREE.Group(),contentRoot=new THREE.Group();contentRoot.add(sourceRoot,copyRoot);displayRoot.add(contentRoot);scene.add(displayRoot);applyTime(0,false);const restBox=new THREE.Box3().setFromObject(sourceRoot,true),restCenter=restBox.getCenter(new THREE.Vector3()),restSize=restBox.getSize(new THREE.Vector3());contentRoot.position.copy(restCenter).multiplyScalar(-1);displayRoot.rotation.z=-Math.PI/2;displayRoot.scale.setScalar(6/Math.max(restSize.x,restSize.y,restSize.z));
+    sourceRoot.traverse(object=>{if(!object.isMesh)return;const list=Array.isArray(object.material)?object.material:[object.material],cloned=list.map(material=>material.clone());object.material=Array.isArray(object.material)?cloned:cloned[0];for(const material of cloned)sourceMaterials.push({material,color:material.color?.clone(),map:material.map,wireframe:material.wireframe,transparent:material.transparent,opacity:material.opacity,depthWrite:material.depthWrite})});
+
+    const sampleTimes=[0,qa.duration*.25,qa.duration*.5,qa.duration*.75,Math.max(0,qa.duration-.001)];qa.samples=[];for(const time of sampleTimes)applyTime(time,true);const maxBounds=Math.max(...qa.samples.map(sample=>sample.boundsDelta)),maxBone=Math.max(...qa.samples.map(sample=>sample.boneMatrixDelta));
+    qa.checks={
+      sourceExactSha:qa.sourceSha===SOURCE_SHA,sourceExactBytes:sourceBytes.byteLength===SOURCE_BYTES,copyReceiptSha:qa.copySha===receipt.output.sha256,copyReceiptBytes:copyBytes.byteLength===receipt.output.bytes,
+      sourceAndCopyTrianglesMatch:qa.sourceStats.triangles===qa.copyStats.triangles,sourceAndCopyBoneCountsMatch:qa.sourceStats.bones===qa.copyStats.bones,
+      animationInventoryMatches:JSON.stringify(qa.sourceAnimations)===JSON.stringify(qa.copyAnimations),sourceBinaryPrefixByteIdentical:receipt.gates.sourceBinaryPrefixByteIdentical===true,
+      sourceSkinsRetained:receipt.gates.sourceSkinsRetained===true,sourceAnimationsRetained:receipt.gates.sourceAnimationsRetained===true,sourceMaterialsRetained:receipt.gates.sourceMaterialsTexturesImagesRetained===true,
+      sampledDynamicBoundsMatch:maxBounds<=BOUNDS_TOLERANCE,sampledBoneMatricesMatch:maxBone<=BONE_TOLERANCE
+    };
+    const failed=Object.entries(qa.checks).filter(([,value])=>!value).map(([key])=>key);if(failed.length)throw new Error(`蒙皮 QA 失败：${failed.join(', ')}；bounds Δ=${maxBounds.toExponential(6)}；bone Δ=${maxBone.toExponential(6)}`);
+    qa.ready=true;$('timeSlider').disabled=false;$('progressBar').style.width='100%';applyTime(0,false);setMode('copy');setView('side');setPlaying(false);setState('ok','蒙皮与 Swim 动作通过同步门禁',`${qa.sourceStats.triangles.toLocaleString()} faces · ${qa.sourceStats.bones} bones · max bounds Δ ${maxBounds.toExponential(3)} · max bone Δ ${maxBone.toExponential(3)}`);
+  }catch(error){qa.failure=error?.message||String(error);console.error(error);setState('bad','蒙皮副本被拒绝',qa.failure);$('progressBar').style.width='0%'}
+}
+function animate(now){requestAnimationFrame(animate);const delta=Math.min(.05,(now-lastFrame)/1000);lastFrame=now;if(qa.ready&&qa.playing&&qa.duration){let next=qa.activeTime+delta;if(next>=qa.duration)next%=qa.duration;applyTime(next,false)}controls.update();renderer.render(scene,camera)}
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});boot();requestAnimationFrame(animate);
+</script>
+</body>
+</html>
