@@ -1,0 +1,91 @@
+{
+  "schema": "kaopu.palau.airai-r12-takeover-audit/1.0",
+  "date": "2026-09-21",
+  "handoff": "handoff/survivor-palau-stone-money-full-r011-20260921",
+  "conclusion": "HANDOFF_USABLE_BUT_NOT_SELF_REPRODUCING",
+  "originalTiffPolicy": {
+    "status": "EXTERNAL_BY_PROJECT_CONTRACT",
+    "interpretation": "The absence of user-retained original TIFFs is not by itself a takeover defect."
+  },
+  "missingReferencedRasterCount": 25,
+  "missingReferencedRasters": [
+    "grids/candidate_depth_chart_datum_m_r02.tif",
+    "grids/candidate_depth_chart_datum_m_r09.tif",
+    "grids/candidate_depth_chart_datum_m_r10.tif",
+    "grids/candidate_depth_chart_datum_m_r11.tif",
+    "grids/candidate_semantic_zone_r08.tif",
+    "grids/candidate_source_quality_weight_r02.tif",
+    "grids/candidate_source_quality_weight_r09.tif",
+    "grids/candidate_source_quality_weight_r10.tif",
+    "grids/candidate_source_quality_weight_r11.tif",
+    "grids/candidate_support_class_r10.tif",
+    "grids/candidate_support_class_r11.tif",
+    "grids/candidate_uncertainty_enc_depare_conditioned_m_r11.tif",
+    "grids/candidate_uncertainty_evidence_conditioned_m_r10.tif",
+    "grids/candidate_uncertainty_m_r02.tif",
+    "grids/candidate_uncertainty_m_r09.tif",
+    "grids/enc_depare_drval1_m_r11.tif",
+    "grids/enc_depare_drval2_m_r11.tif",
+    "grids/enc_depare_range_residual_m_r11.tif",
+    "grids/nearest_evidence_distance_m_r02.tif",
+    "grids/nearest_evidence_distance_m_r09.tif",
+    "grids/nearest_evidence_distance_m_r10.tif",
+    "grids/nearest_evidence_distance_m_r11.tif",
+    "grids/semantic_depth_residual_m_r10.tif",
+    "raw/gmrt/airai_topo_mask_max.tif",
+    "raw/gmrt/airai_topo_max.tif"
+  ],
+  "r10Receipt": {
+    "path": "../airai-r10/R10_PROGRESS_RECEIPT.json",
+    "claimedLocalWorkbench": "airai_r10_ocean_world/index.html",
+    "claimedSha256": "ef340c07f04f7f41b061591d8585dc89b4e441a3f59b4e910728c501fe06a027",
+    "workbenchPresentInHandoff": false,
+    "gitSourcePresent": false
+  },
+  "r08AuthorityReceipt": {
+    "path": "../airai-r08/R08_LOCAL_BUILD_RECEIPT.json",
+    "fullMapSha256": "5b6e1d716bfa66f204aac9240944fe5d1526444d981ccb8a3f23875633d73312",
+    "yellowStoryRegionSha256": "4fad4cd637fd556044fec5cfd56f6ef29eb8859a72a543788feb7084c4daeb47",
+    "claimedLocalPaths": {
+      "workbench": "/mnt/data/airai_r08_exact_authority/index.html",
+      "progressBoard": "/mnt/data/airai_r08_exact_authority/R08_PROGRESS_BOARD.png",
+      "package": "/mnt/data/Airai_R08_Exact_User_Authority_Workbench.zip"
+    },
+    "authorityImageBytesPresentInHandoff": false
+  },
+  "historicalGridReproduction": {
+    "historicalReport": "../airai-r04/results-r01/ENC_DEPARE_CONSISTENCY_R11.json",
+    "historicalDerivedRasterPresentInHandoff": false,
+    "historicalDepthStatsM": {
+      "count": 56874,
+      "min": 0.009978439658880234,
+      "p05": 1.3437269806861878,
+      "median": 26.384629249572754,
+      "p95": 206.33278808593735,
+      "max": 849.2308349609375
+    },
+    "rebuiltFromSealedVectorsDepthStatsM": {
+      "count": 56874,
+      "min": 0.009713289327919483,
+      "p05": 1.3420839309692383,
+      "median": 26.363292694091797,
+      "p95": 196.25405883789062,
+      "max": 849.1170654296875
+    },
+    "rebuiltMinusHistoricalM": {
+      "min": -0.0002651503309607506,
+      "p05": -0.0016430497169495073,
+      "median": -0.02133655548095703,
+      "p95": -10.078729248046727,
+      "max": -0.11376953125
+    },
+    "numericReproductionMatch": false,
+    "interpretation": "LINEAGE_DRIFT: the sealed vectors and scripts rebuild the same grid geometry and valid-cell coverage, but not the historical R11 depth distribution; the missing historical GeoTIFF cannot be reconstructed byte-for-byte."
+  },
+  "decision": "R12 is a new deterministic candidate rebuilt from sealed vectors. It must not be represented as byte-identical R11 recovery.",
+  "gates": {
+    "visualAcceptance": false,
+    "productionReady": false,
+    "publicShareAllowed": false
+  }
+}

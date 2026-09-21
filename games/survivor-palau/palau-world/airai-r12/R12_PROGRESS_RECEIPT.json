@@ -1,0 +1,245 @@
+{
+  "schema": "kaopu.palau.airai-r12-progress/1.1",
+  "version": "AIRAI_R12_REPRODUCIBLE_EVIDENCE_RUNTIME_20260921",
+  "implemented": [
+    "deterministic vector-to-grid rebuild",
+    "browser-loadable PalauWorld.sample()",
+    "real WebGL2 3D diagnostic",
+    "numeric deterministic QA",
+    "desktop and mobile browser QA",
+    "takeover source-gap audit",
+    "branch-rebuild workflow with pinned geospatial dependencies"
+  ],
+  "counts": {
+    "soundingsCore": 392,
+    "contourConstraintPointsCore": 663,
+    "candidateValidCells": 56874,
+    "candidateNoDataCells": 39226,
+    "landSupportedCells": 5225,
+    "depareSupportedCells": 50334,
+    "depareContradictionCells": 28028,
+    "depareShallowerCells": 10510,
+    "depareDeeperCells": 17518
+  },
+  "checks": {
+    "numeric": "PASS",
+    "deterministicRebuild": "PASS",
+    "sampler": "PASS",
+    "desktopBrowser": "PASS",
+    "mobileBrowser": "PASS",
+    "consoleErrors": 0,
+    "consoleWarnings": 0,
+    "pageErrors": 0,
+    "glErrors": 0
+  },
+  "historicalReceiptComparison": {
+    "historicalReport": "../airai-r04/results-r01/ENC_DEPARE_CONSISTENCY_R11.json",
+    "historicalDerivedRasterPresentInHandoff": false,
+    "historicalDepthStatsM": {
+      "count": 56874,
+      "min": 0.009978439658880234,
+      "p05": 1.3437269806861878,
+      "median": 26.384629249572754,
+      "p95": 206.33278808593735,
+      "max": 849.2308349609375
+    },
+    "rebuiltFromSealedVectorsDepthStatsM": {
+      "count": 56874,
+      "min": 0.009713289327919483,
+      "p05": 1.3420839309692383,
+      "median": 26.363292694091797,
+      "p95": 196.25405883789062,
+      "max": 849.1170654296875
+    },
+    "rebuiltMinusHistoricalM": {
+      "min": -0.0002651503309607506,
+      "p05": -0.0016430497169495073,
+      "median": -0.02133655548095703,
+      "p95": -10.078729248046727,
+      "max": -0.11376953125
+    },
+    "numericReproductionMatch": false,
+    "interpretation": "LINEAGE_DRIFT: the sealed vectors and scripts rebuild the same grid geometry and valid-cell coverage, but not the historical R11 depth distribution; the missing historical GeoTIFF cannot be reconstructed byte-for-byte."
+  },
+  "gates": {
+    "visualAcceptance": false,
+    "productionReady": false,
+    "publicShareAllowed": false
+  },
+  "blockingConditions": [
+    "exact full-Palau first-view authority assets are not restored into the auditable Git baseline",
+    "accepted Palau land DEM numeric storage is absent from this runtime",
+    "local chart datum to MSL transformation is unresolved",
+    "R10 workbench source is absent from Git history",
+    "Ocean Mother visual coupling and complete visual acceptance are not yet executed",
+    "public HTTPS deployment and PUBLICATION_PROOF shareAllowed=true are absent"
+  ],
+  "nextBoundedIncrement": "Recover exact full-Palau authority assets and R10 source, then bind accepted land DEM and an explicit vertical datum before Ocean Mother visual integration.",
+  "files": [
+    {
+      "path": "PUBLICATION_PROOF.json",
+      "bytes": 483,
+      "sha256": "3f66d6e40c0050b32b7dad483e958877cd133aa3a6c36ebdff77426cf8b8620e"
+    },
+    {
+      "path": "R12_QA_RECEIPT.json",
+      "bytes": 5366,
+      "sha256": "05261b5fde2c36f472e20f1ec2b4c5f0ebbba81421152c437af9b46ba4ca2747"
+    },
+    {
+      "path": "R12_TAKEOVER_AUDIT.json",
+      "bytes": 3976,
+      "sha256": "badbdfc97d495cb7b4af8ec8735b670747eac99fcfe3825d8b3405ee4e56898d"
+    },
+    {
+      "path": "R12_TAKEOVER_AUDIT_ZH.md",
+      "bytes": 4134,
+      "sha256": "539fb6618e40b22d9924dc20ad4684900705a23c5e9c023e17f8f9c3d6514bd1"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2236,
+      "sha256": "b118d63d6be8b5e09a099d3a118412a0540225c522d45d4ff20860773a680ba6"
+    },
+    {
+      "path": "build_runtime_evidence_r12.py",
+      "bytes": 24729,
+      "sha256": "c7f6cc2f8e2f792be129b21a42d0eadc9877d8d239a71484424f1342733d6deb"
+    },
+    {
+      "path": "evidence/browser-qa.json",
+      "bytes": 6806,
+      "sha256": "5c5d410d984ca0f7c54c281f6c64d1a149d877d5ca49c5439ee9ea66c28ce8d7"
+    },
+    {
+      "path": "evidence/desktop_1440x900_depth_initial.png",
+      "bytes": 259982,
+      "sha256": "f69afcb7df9e54b915c8f5bc86febdcada4b74ecea847bcbb7e5f40094999a80"
+    },
+    {
+      "path": "evidence/desktop_1440x900_uncertainty_interaction.png",
+      "bytes": 721847,
+      "sha256": "e647080d217b6f273dc083396349b0d77b702d94ddcb19f8b7849fbf74d52977"
+    },
+    {
+      "path": "evidence/mobile_390x844_depth_initial.png",
+      "bytes": 131052,
+      "sha256": "09e93b81c51563c1865e72c1e2ce96e15600f3edddd72a91d11b5fa4c360d002"
+    },
+    {
+      "path": "evidence/mobile_390x844_uncertainty_interaction.png",
+      "bytes": 209467,
+      "sha256": "8ba505d9ec4c760266ddb221d428e5613090b2027ae26122be381175fb975453"
+    },
+    {
+      "path": "evidence/numeric-qa.json",
+      "bytes": 1878,
+      "sha256": "9fa8a8f48373d0c00836470b2241f8d05d5f638ca852f0c2e80b004425d8c30f"
+    },
+    {
+      "path": "finalize_r12.py",
+      "bytes": 7132,
+      "sha256": "2e23bf037b7fc299de8891453d5d4c11bd720e2c3a1bd14dfe8883b8da255888"
+    },
+    {
+      "path": "index.html",
+      "bytes": 24893,
+      "sha256": "6cbb42a504911b3fafa0b60e6de251e237c214dff07455e11367c181b7d5f029"
+    },
+    {
+      "path": "palau-world-evidence.js",
+      "bytes": 7623,
+      "sha256": "75bf07b795864c70ea5b731ce8d81070aeb6ba18bd12e97d8a5e2809d0caaa41"
+    },
+    {
+      "path": "qa_browser_r12.py",
+      "bytes": 5242,
+      "sha256": "80ecd766b96b9141a913308275dc3668a8c6b20b140a26baab8d4881a81b8a89"
+    },
+    {
+      "path": "requirements-r12.txt",
+      "bytes": 122,
+      "sha256": "93de01b01eb4bc1f9999ed57e8a1fccd3b9978d983115c865e9e95f9a8176ace"
+    },
+    {
+      "path": "runtime/evidence-vectors.js",
+      "bytes": 80196,
+      "sha256": "8656aace3594ecb2140670a76ca290809feeb0bce6098b305adb441931c5961f"
+    },
+    {
+      "path": "runtime/grid-depareLowerDm.js",
+      "bytes": 256384,
+      "sha256": "6504bb872ec9ce6cddd86cca07d4ddfc370864640fcb8bc3799a395c290b2373"
+    },
+    {
+      "path": "runtime/grid-depareResidualDm.js",
+      "bytes": 256387,
+      "sha256": "6c8a45cdb4a3e545f165255f9584624c76254e21534f36d6287ba13c98b446a0"
+    },
+    {
+      "path": "runtime/grid-depareUpperDm.js",
+      "bytes": 256384,
+      "sha256": "0a7d659a656cf8e399a1c283df6292fde1768d2e8b81783947c8f02f975accc3"
+    },
+    {
+      "path": "runtime/grid-depthDm.js",
+      "bytes": 256378,
+      "sha256": "f8adbd98a0b845137681fad88b594611cf9fe69bc495c42182254b02b0986ac8"
+    },
+    {
+      "path": "runtime/grid-landU8.js",
+      "bytes": 128245,
+      "sha256": "1567bcd88df356826e30f13308a9d9964989d6b1980b50a715298571348ca09c"
+    },
+    {
+      "path": "runtime/grid-nearestM.js",
+      "bytes": 256379,
+      "sha256": "58beb877b537f1ed7c4eb34462a91f4597f2e69d71f17977b8f26afdf1e1ac58"
+    },
+    {
+      "path": "runtime/grid-qualityU8.js",
+      "bytes": 128248,
+      "sha256": "6e0b07be92bdfcba0692b3b7aee4a11e065a5f59dac1c14fe5a36aade7450faf"
+    },
+    {
+      "path": "runtime/grid-semanticResidualDm.js",
+      "bytes": 256389,
+      "sha256": "a5caaa85eb0832b4069d956401b2cd2a932242a88dd8590490bbf60f918532b6"
+    },
+    {
+      "path": "runtime/grid-semanticU8.js",
+      "bytes": 128249,
+      "sha256": "14b6f909ca989df49cbc7f072a55904ebf03517ce64d5862bfcdc66727033259"
+    },
+    {
+      "path": "runtime/grid-supportU8.js",
+      "bytes": 128248,
+      "sha256": "a94e6c22605a609b2a7af1dad2042ff61e9389c2037c1c537dca92a998ee9862"
+    },
+    {
+      "path": "runtime/grid-uncertaintyDm.js",
+      "bytes": 256384,
+      "sha256": "186296615acb217cd2ae2767757f1a815bb9d3cb6ac36fc5d502b74b1151a562"
+    },
+    {
+      "path": "runtime/manifest.js",
+      "bytes": 8211,
+      "sha256": "7a6a05e5bf63c7021b25356a29dbde4dd8f4e31da3790ca6336f0f365433bc3a"
+    },
+    {
+      "path": "runtime/manifest.json",
+      "bytes": 10519,
+      "sha256": "88002bf5898465972d53b4d36fb4afa7ff4c3c53a66ef362a6191425608fb8a8"
+    },
+    {
+      "path": "verify_r12.py",
+      "bytes": 4226,
+      "sha256": "6b38572a03ddc3903e42b53e2066e17b138a305f95b865f8929acde292fbc30a"
+    },
+    {
+      "path": "verify_sampler_r12.mjs",
+      "bytes": 3172,
+      "sha256": "3ffb41a1ab3b9e763c2b2ed43b5957b240befe96c8095b049c3c07dce976d395"
+    }
+  ]
+}
