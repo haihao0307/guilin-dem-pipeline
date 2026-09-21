@@ -1,0 +1,104 @@
+name: Fish Mother Yellowfin Biological Correction R001 Baseline
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - work/ocean-life-fish-mother-yellowfin-biological-correction-r001-20260921
+    paths:
+      - .github/workflows/fish-yellowfin-biological-correction-r001-baseline.yml
+      - apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/BIOLOGICAL_CORRECTION_R001_SPEC.json
+      - apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/tools/audit_frozen_baseline.py
+      - apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/tests/biological-correction-baseline-r001.test.mjs
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fish-yellowfin-biological-correction-r001-baseline
+  cancel-in-progress: true
+
+env:
+  CORRECTION_ROOT: apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001
+  SOURCE_COPY_ROOT: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001
+  FROZEN_GLB: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry/YELLOWFIN_SOURCE_COPY_SKINNED_R001.glb
+  BASELINE_REPORT: apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/BIOLOGICAL_CORRECTION_R001_BASELINE.json
+
+jobs:
+  audit-frozen-baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out the biological correction branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install audit dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install numpy
+
+      - name: Audit frozen geometry, fork frame, skin and animation contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python "$CORRECTION_ROOT/tools/audit_frozen_baseline.py" \
+            --glb "$FROZEN_GLB" \
+            --spec "$CORRECTION_ROOT/BIOLOGICAL_CORRECTION_R001_SPEC.json" \
+            --source-status "$SOURCE_COPY_ROOT/CURRENT_STATUS.json" \
+            --freeze-report "$SOURCE_COPY_ROOT/SOURCE_COPY_REGION_MATERIAL_ACCEPTANCE_R001.json" \
+            --classification "$SOURCE_COPY_ROOT/SOURCE_COMPONENT_CLASSIFICATION_R001.json" \
+            --correction-status "$CORRECTION_ROOT/CURRENT_STATUS.json" \
+            --out "$BASELINE_REPORT"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Run biological correction baseline contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          node "$CORRECTION_ROOT/tests/biological-correction-baseline-r001.test.mjs"
+
+      - name: Upload the baseline audit package
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: YELLOWFIN-BIOLOGICAL-CORRECTION-R001-BASELINE
+          path: |
+            ${{ env.CORRECTION_ROOT }}/BIOLOGICAL_CORRECTION_R001_SPEC.json
+            ${{ env.BASELINE_REPORT }}
+            ${{ env.CORRECTION_ROOT }}/CURRENT_STATUS.json
+            CURRENT_BASELINE.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Commit the audited baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Fish Mother R001"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            CURRENT_BASELINE.json \
+            "$CORRECTION_ROOT/CURRENT_STATUS.json" \
+            "$BASELINE_REPORT"
+          if git diff --cached --quiet; then
+            echo "No baseline audit delta to commit."
+            exit 0
+          fi
+          git commit -m "feat(fish): audit frozen Yellowfin correction baseline"
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
