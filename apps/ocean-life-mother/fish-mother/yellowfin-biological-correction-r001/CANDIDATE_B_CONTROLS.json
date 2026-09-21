@@ -1,0 +1,108 @@
+{
+  "schema": "kaopu.fish-mother.yellowfin-biological-correction-controls/1.0",
+  "date": "2026-09-21",
+  "candidate": "YELLOWFIN-BIOLOGICAL-CORRECTION-R001-CANDIDATE-B",
+  "baseline": "BIOLOGICAL_CORRECTION_R001_BASELINE.json",
+  "predecessor": {
+    "candidate": "YELLOWFIN-BIOLOGICAL-CORRECTION-R001-CANDIDATE-A",
+    "sha256": "7653c63f2a5fda43a3217178257e9bfe10c446ac4445b54f2585ff8456d1fdee",
+    "machineBrowserQAPassed": true,
+    "manualVisualAcceptance": false,
+    "failure": "The solver elongated frozen dorsal components 2 and 4 by 4.722846545 even though the fixed side views show those sheets are the rear panels of the first dorsal assembly. This created an extra rectangular sail. Frozen component 1 is the caudal sickle-shaped second dorsal and is already close to the declared 0.18 FL target."
+  },
+  "solver": {
+    "version": "root-pinned-final-metric-v4-visual-anatomy-corrected",
+    "method": "binary search against the final root-pinned metric after visual identity review of the disconnected dorsal structures",
+    "reason": "Connected-component pairing alone was insufficient. Candidate A proved that two mirrored sheets can be adjoining panels of the first dorsal rather than a separate second dorsal.",
+    "dorsalSurfaceGroups": {
+      "firstDorsalFrontSheets": [0, 3],
+      "firstDorsalRearSheets": [2, 4],
+      "trueSecondDorsal": [1]
+    },
+    "selectionRule": "Preserve the two anterior paired groups as one first-dorsal assembly; select the caudal-most dorsal group as the second dorsal even when it is one watertight component rather than two disconnected sheets."
+  },
+  "targets": {
+    "maximumBodyDepthOverForkLength": 0.285,
+    "pectoralLengthOverForkLength": 0.24,
+    "secondDorsalHeightOverForkLength": 0.18,
+    "analHeightOverForkLength": 0.18
+  },
+  "acceptanceWindows": {
+    "maximumBodyDepthOverForkLength": [0.275, 0.295],
+    "semanticHeadLengthOverForkLength": [0.23, 0.31],
+    "pectoralLengthOverForkLength": [0.235, 0.245],
+    "secondDorsalHeightOverForkLength": [0.175, 0.185],
+    "analHeightOverForkLength": [0.175, 0.185],
+    "caudalVerticalSpanOverForkLength": [0.32, 0.5],
+    "peduncleDepthOverForkLength": [0.025, 0.065]
+  },
+  "longitudinalBodyDepthWeight": [
+    [-0.1, 0.0],
+    [0.0, 0.0],
+    [0.08, 0.12],
+    [0.18, 0.45],
+    [0.35, 0.88],
+    [0.58, 1.0],
+    [0.75, 0.86],
+    [0.9, 0.48],
+    [0.98, 0.08],
+    [1.05, 0.0]
+  ],
+  "bodyPolicy": {
+    "lateralScale": 1.0,
+    "longitudinalScale": 1.0,
+    "verticalScaleSolvedFromTarget": true,
+    "centerline": "interpolated original axial bind-joint line",
+    "caudalFade": "zero body-depth correction at and behind the inferred fork",
+    "headFade": "return smoothly to the frozen snout"
+  },
+  "finPolicy": {
+    "pectoral": "extend each connected side-fin component away from its shared body root; root vertices remain pinned",
+    "secondDorsal": "extend only frozen component 1, the caudal sickle-shaped structure, from its actual baseline height to 0.18 FL; root vertices remain pinned",
+    "anal": "extend only the connected anal component with the greatest ventral height; root vertices remain pinned",
+    "firstDorsal": "retain frozen components 0, 3, 2 and 4 as the complete first-dorsal assembly without independent elongation",
+    "caudal": "do not independently rescale",
+    "finlets": "do not change counts or independently rescale"
+  },
+  "rigPolicy": {
+    "deformAllMeshPositionAccessors": true,
+    "recomputeNormalsAndTangents": true,
+    "retainSourceNodeHierarchy": true,
+    "retainSourceSkinTable": true,
+    "retainSourceInverseBindMatrices": true,
+    "retainAllAnimationInputOutputAccessors": true,
+    "rewriteJointRestTranslations": false,
+    "rewriteAnimationTranslations": false,
+    "browserRuntimeQAAuthoritative": true
+  },
+  "visualEvidencePolicy": {
+    "candidateARejectedEvidence": [
+      "evidence/candidate-a-browser/candidate-a-corrected-side-rest.png",
+      "evidence/candidate-a-browser/candidate-a-overlay-side-rest.png",
+      "evidence/candidate-a-browser/candidate-a-corrected-quarter-tmid.png"
+    ],
+    "candidateBRequiredViews": [
+      "side frozen/candidate/overlay",
+      "true second dorsal close-up candidate/overlay",
+      "first dorsal assembly close-up candidate/overlay",
+      "pectoral close-up candidate/overlay",
+      "quarter/top/front rest",
+      "five synchronized Swim samples"
+    ],
+    "manualVisualAcceptanceRequired": true
+  },
+  "invariants": {
+    "frozenInputSha256": "2130a3c03fc50d22676919c3599e75707e61d9f75ddd90523a6897887715ec02",
+    "frozenInputBytes": 58956620,
+    "semanticRegions": 13,
+    "semanticFaces": 6920,
+    "joints": 98,
+    "skins": 1,
+    "animations": 1,
+    "materials": 3,
+    "images": 6,
+    "dorsalFinlets": 9,
+    "ventralFinlets": 8,
+    "productionReady": false
+  }
+}
