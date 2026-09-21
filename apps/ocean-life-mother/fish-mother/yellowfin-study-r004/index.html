@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Fish Mother · Yellowfin 3D Measure R0.04</title>
+<style>
+:root{color-scheme:dark;--bg:#071018;--panel:#0d1922;--line:#294754;--text:#eef6f8;--muted:#93a9b5;--good:#72d8ad;--warn:#e9c86d;--bad:#ef918b}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+button,select{font:inherit;border:1px solid var(--line);background:#132631;color:var(--text);border-radius:7px;padding:6px 8px}button.active{border-color:var(--good);color:var(--good)}
+.app{height:100dvh;display:grid;grid-template-rows:50px 1fr 30px}.top{display:flex;align-items:center;gap:8px;padding:0 12px;background:#091821;border-bottom:1px solid var(--line)}.top b{font-size:14px}.top small{font-size:9px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tag{margin-left:auto;color:var(--warn);border:1px solid #5b5031;border-radius:999px;padding:4px 8px;font-size:9px}
+.main{min-height:0;display:grid;grid-template-columns:310px 1fr 330px}.panel{background:var(--panel);padding:10px;overflow:auto}.left{border-right:1px solid var(--line)}.right{border-left:1px solid var(--line)}
+.stage{position:relative;background:#02070a;min-width:0;min-height:0}.stage iframe{width:100%;height:100%;border:0}.label{position:absolute;z-index:5;left:9px;top:9px;max-width:72%;padding:7px 9px;background:#07131bdd;border:1px solid #426779;border-radius:8px;font-size:10px;line-height:1.4}.label b{display:block}.label span{color:var(--muted)}
+h3{font-size:10px;margin:7px 0 8px;color:#dcebf0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}.metric{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px dashed #203945;font-size:9px;color:var(--muted)}.metric strong{color:#fff;text-align:right}
+.list{max-height:220px;overflow:auto;border:1px solid #294654;border-radius:8px;background:#08131a}.row{display:grid;grid-template-columns:minmax(0,1fr) 45px 45px;gap:4px;align-items:center;padding:6px;border-bottom:1px solid #172d38;font-size:9px}.row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.row button{font-size:8px;padding:4px}.node{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #172d38;border-radius:0;padding:6px 8px;background:transparent;color:#a9bdc7;font-size:9px}.node.active{background:#102630;color:var(--good)}
+.box{padding:8px;border:1px solid #355766;border-radius:8px;background:#09151c;font-size:9px;line-height:1.45;color:var(--muted)}.box b{color:#fff}.measure{display:grid;grid-template-columns:1fr 1fr;gap:6px}.pt{min-height:68px;padding:7px;border:1px solid #355766;border-radius:8px;background:#09151c;font-size:9px;line-height:1.4;color:var(--muted)}.pt b{color:#fff}.res{margin-top:6px;padding:8px;border:1px solid #42616f;border-radius:8px;background:#08141b;font-size:9px;color:var(--muted);line-height:1.5}.res strong{color:var(--good)}
+.warn{padding:8px;border:1px solid #5c5130;border-radius:8px;background:#171407;color:var(--warn);font-size:9px;line-height:1.45}.gate{font-size:9px;color:var(--muted);margin:5px 0}.gate:before{content:"●";color:var(--bad);margin-right:6px}.gate.ok:before{color:var(--good)}.gate.warn:before{color:var(--warn)}
+.foot{display:flex;align-items:center;gap:12px;padding:0 10px;background:#091821;border-top:1px solid var(--line);font-size:9px;color:var(--muted)}.foot b{color:var(--good)}.mobile{display:none}
+@media(max-width:920px){.app{grid-template-rows:50px 1fr 58px}.main{grid-template-columns:1fr}.panel{position:fixed;z-index:20;top:50px;bottom:58px;width:min(91vw,380px);transition:transform .2s;box-shadow:0 20px 50px #000a}.left{left:0;transform:translateX(-105%)}.right{right:0;transform:translateX(105%)}.panel.show{transform:translateX(0)}.mobile{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:5px 6px;background:#0d1d25}.mobile button{min-height:46px;font-size:9px}.foot{display:none}.top small{display:none}}
+</style></head>
+<body><div class="app">
+<header class="top"><b>Yellowfin 3D Measure R0.04</b><small>坐标系纠错版：归一化源锚点与 Viewer 原始节点严格隔离</small><span class="tag">FRAME-SAFE</span></header>
+<main class="main">
+<aside class="panel left" id="left">
+<h3>归一化源锚点</h3><div class="warn">这里全部是 [x/L, u, z/L]。在这个区里量出的距离可直接表示为体长百分比。</div>
+<div class="list" id="anchors"></div>
+<h3>Normalized A / B</h3><div class="measure"><div class="pt" id="nA"><b>A</b><br>未设置</div><div class="pt" id="nB"><b>B</b><br>未设置</div></div><div class="res" id="nRes">设置 A/B 后计算。</div>
+<h3>预设关键对</h3><div class="grid"><button data-pair="snout,head">吻端↔Head</button><button data-pair="snout,eyeLeft">吻端↔眼</button><button data-pair="eyeLeft,eyeRight">双眼间距</button><button data-pair="operculumLeft,operculumRight">鳃盖左右</button><button data-pair="peduncle0,peduncle1">尾柄段1</button><button data-pair="peduncle1,peduncle2">尾柄段2</button></div>
+<h3>固定视角</h3><div class="grid"><button data-view="side_left">左侧</button><button data-view="side_right">右侧</button><button data-view="head">头部</button><button data-view="tail">尾部</button><button data-view="top">顶部</button><button data-view="three">3/4</button></div>
+</aside>
+<section class="stage" id="stage"><div class="label"><b>FISH-REF-002｜源样板</b><span>中间只看源模型。左边量归一化证据；右边量 Viewer 原始节点。两边禁止混算。</span></div><iframe id="viewer" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe></section>
+<aside class="panel right" id="right">
+<h3>Viewer 原始节点</h3><div class="warn">这里读取 Viewer matrix。它和左侧归一化锚点不是同一坐标系；只能在 Viewer 节点之间互量。</div>
+<select id="group"><option value="head">头/嘴/眼/鳃盖</option><option value="fin">鳍</option><option value="tail">尾柄/尾鳍</option><option value="axial">身体轴</option><option value="all">全部</option></select>
+<div class="list" id="nodes"><button class="node">等待源节点…</button></div>
+<div class="box" id="sel"><b>当前节点</b><br>未选择</div><div class="grid" style="margin-top:6px"><button id="rawA">设为 Raw A</button><button id="rawB">设为 Raw B</button></div>
+<h3>Raw A / B</h3><div class="measure"><div class="pt" id="rA"><b>A</b><br>未设置</div><div class="pt" id="rB"><b>B</b><br>未设置</div></div><div class="res" id="rRes">只计算 Viewer raw-frame 距离。</div>
+<h3>当前硬门</h3><div class="gate ok">R003 坐标错误已作废</div><div class="gate ok">Normalized / Raw frame 已隔离</div><div class="gate warn">主鳍自由边仍需直接量</div><div class="gate warn">Finlets 仍需逐个登记</div><div class="gate warn">Keel 位置仍需可视确认</div><div class="gate">Source Copy 仍锁定</div>
+</aside></main>
+<nav class="mobile"><button id="mLeft">归一化测量</button><button id="mRight">Raw节点</button><button id="play">播放</button><button id="pause">暂停</button></nav>
+<footer class="foot"><b>● frame-safe source measurement</b><span id="ready">viewer starting</span><span id="count">nodes —</span><span>Source Copy Locked</span></footer>
+</div>
+<script src="https://static.sketchfab.com/api/sketchfab-viewer-1.12.1.js"></script>
+<script>
+(()=>{'use strict';
+const UID='642c6515d893474a8fc8f129491efcac';
+const A={
+snout:[0,1,.061293],tail:[0,0,-.129522],leftmost:[-.248594,.577229,.040445],rightmost:[.248594,.577229,.040445],
+dorsalExtreme:[0,.688375,-.22652],ventralExtreme:[.077591,.647644,.30163],
+head:[0,.750964,.01389],upperJaw:[0,.900217,.054498],lowerJaw:[0,.78576,.059702],eyeLeft:[.03499,.882019,.004916],eyeRight:[-.03499,.882019,.004916],
+operculumLeft:[.062703,.85877,.038177],operculumRight:[-.062703,.85877,.038177],peduncle0:[0,.470489,.01633],peduncle1:[0,.366313,.02028],peduncle2:[0,.274335,.023785],
+upperTail:[0,.137565,.011774],lowerTail:[0,.143632,.054833]};
+const V={side_left:{eye:[4.2,-.0069,.1128],target:[0,-.0069,.1128]},side_right:{eye:[-4.2,-.0069,.1128],target:[0,-.0069,.1128]},head:{eye:[0,4.3,.1128],target:[0,-.0069,.1128]},tail:{eye:[0,-4.3,.1128],target:[0,-.0069,.1128]},top:{eye:[0,-.0069,4.2],target:[0,-.0069,.1128]},three:{eye:[3.2,3.1,2],target:[0,-.0069,.1128]}};
+const RE={head:/head|jaw|eye|side\.|mouth|lip/i,fin:/fin|upper|lower/i,tail:/tail|spine\.00[678]|pedunc/i,axial:/rootjoint|hips|spine_|spine\.|head_05/i,all:/.*/};
+const $=id=>document.getElementById(id);let api=null,nodes=[],animations=[],na=null,nb=null,cur=null,ra=null,rb=null;
+const fmt=p=>'['+p.map(v=>Number(v).toFixed(6)).join(', ')+']';
+function setN(w,n){const p=A[n];if(w==='A')na={name:n,p};else nb={name:n,p};$(w==='A'?'nA':'nB').innerHTML='<b>'+w+' · '+n+'</b><br>'+fmt(p);calcN()}
+function calcN(){if(!na||!nb){$('nRes').textContent='设置 A/B 后计算。';return}const d=Math.hypot(na.p[0]-nb.p[0],na.p[1]-nb.p[1],na.p[2]-nb.p[2]);$('nRes').innerHTML='Normalized distance <strong>'+d.toFixed(6)+' L</strong><br>占体长 <strong>'+(d*100).toFixed(3)+'%</strong><br>Δu <strong>'+Math.abs(na.p[1]-nb.p[1]).toFixed(6)+'</strong>'}
+$('anchors').innerHTML=Object.entries(A).map(([n,p])=>'<div class="row"><span>'+n+'<br><small>'+fmt(p)+'</small></span><button data-n="'+n+'" data-w="A">→A</button><button data-n="'+n+'" data-w="B">→B</button></div>').join('');
+document.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>setN(b.dataset.w,b.dataset.n));
+document.querySelectorAll('[data-pair]').forEach(b=>b.onclick=()=>{const [x,y]=b.dataset.pair.split(',');setN('A',x);setN('B',y)});
+function renderNodes(){const re=RE[$('group').value]||/.*/;const list=nodes.filter(n=>re.test(String(n.name||''))).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));$('nodes').innerHTML=list.slice(0,280).map(n=>'<button class="node" data-id="'+n.instanceID+'">'+String(n.name||'(unnamed)')+'</button>').join('')||'<button class="node">无节点</button>';document.querySelectorAll('.node[data-id]').forEach(b=>b.onclick=()=>pick(Number(b.dataset.id),b))}
+function pick(id,b){document.querySelectorAll('.node').forEach(x=>x.classList.remove('active'));b.classList.add('active');if(!api||!api.getMatrix)return;api.getMatrix(id,(e,m)=>{if(e||!m)return;const p=[+m[12]||0,+m[13]||0,+m[14]||0];cur={name:b.textContent,p};$('sel').innerHTML='<b>'+b.textContent+'</b><br>'+fmt(p)})}
+function setR(w){if(!cur)return;if(w==='A')ra=JSON.parse(JSON.stringify(cur));else rb=JSON.parse(JSON.stringify(cur));$(w==='A'?'rA':'rB').innerHTML='<b>'+w+' · '+cur.name+'</b><br>'+fmt(cur.p);calcR()}
+function calcR(){if(!ra||!rb){$('rRes').textContent='只计算 Viewer raw-frame 距离。';return}const d=Math.hypot(ra.p[0]-rb.p[0],ra.p[1]-rb.p[1],ra.p[2]-rb.p[2]);$('rRes').innerHTML='Raw-frame distance <strong>'+d.toFixed(6)+'</strong><br><span style="color:#e9c86d">不可直接解释为 %L，除非另行完成 frame calibration。</span>'}
+$('rawA').onclick=()=>setR('A');$('rawB').onclick=()=>setR('B');$('group').onchange=renderNodes;
+function setView(k){if(!api)return;const v=V[k];if(v)api.setCameraLookAt(v.eye,v.target,.8,()=>{})}
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));
+function play(){if(api&&animations[0])api.setCurrentAnimationByUID(animations[0][0],()=>api.play(()=>{}))}function pause(){if(api)api.pause(()=>{})}
+$('play').onclick=play;$('pause').onclick=pause;$('mLeft').onclick=()=>{$('left').classList.toggle('show');$('right').classList.remove('show')};$('mRight').onclick=()=>{$('right').classList.toggle('show');$('left').classList.remove('show')};
+if(!window.Sketchfab)return;const client=new Sketchfab('1.12.1',$('viewer'));client.init(UID,{autostart:1,preload:1,camera:0,animation_autoplay:0,dnt:1,ui_theme:'dark',success(a){api=a;api.start();api.addEventListener('viewerready',()=>{$('ready').textContent='viewer ready';let q=2,done=()=>{if(--q===0){renderNodes();$('count').textContent='nodes '+nodes.length;setView('side_left')}};api.getNodeMap((e,d)=>{nodes=e?[]:(Array.isArray(d)?d:Object.values(d||{}));done()});api.getAnimations((e,d)=>{animations=e?[]:(d||[]);done()})})}})})();
+</script></body></html>
