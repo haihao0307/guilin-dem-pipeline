@@ -6,6 +6,7 @@ on:
       - work/coral-mother-r06-t07-microscope-geometry-20260921
     paths:
       - tools/coral/coral_r06_t07_microscope_geometry.py
+      - tools/coral/coral_r06_t07_production_builder.py
       - tools/coral/coral_r06_t07_browser_qa.py
       - .github/workflows/coral-r06-t07-microscope-geometry.yml
   workflow_dispatch:
@@ -42,7 +43,7 @@ jobs:
           SOURCE=work/handoff/coral-mother-r06-t06-full-20260921/runtime/index.html
           test -s "$SOURCE"
           rm -rf /tmp/coral-t07
-          python3 work/tools/coral/coral_r06_t07_microscope_geometry.py \
+          python3 work/tools/coral/coral_r06_t07_production_builder.py \
             "$SOURCE" \
             /tmp/coral-t07
           printf '%s\n' \
@@ -50,6 +51,7 @@ jobs:
             > /tmp/coral-t07/PUBLIC_URL.txt
           grep -q 'microscopeGeometry:true' /tmp/coral-t07/index.html
           grep -q 'buildRootConnectedGraph' /tmp/coral-t07/index.html
+          grep -q 'anchoredComponentNodes' /tmp/coral-t07/index.html
           grep -q 'visualAcceptance:false' /tmp/coral-t07/index.html
           test "$(grep -o 'id="[^"]*"' /tmp/coral-t07/index.html | grep -c 'id="gl"')" -eq 1
 
@@ -98,7 +100,7 @@ jobs:
             echo '## Coral Mother R06-T07'
             echo
             echo '- Microscope: true ring-normal geometry displacement'
-            echo '- Root-connected pruning: enforced'
+            echo '- Root-connected pruning: anchored component enforced after retention'
             echo '- Continuous variable blunt tip closure: enforced'
             echo '- Runtime assets: 0 GLB / 0 texture / 0 fetch'
             echo '- visualAcceptance: false'
