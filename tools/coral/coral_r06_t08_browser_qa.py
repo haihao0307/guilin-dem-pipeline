@@ -115,11 +115,13 @@ def run_view(root: Path, label: str, width: int, height: int, port: int, all_vis
         })())'''))
         assert initial['ready'] == 'complete' and initial['gl'] and initial['canvas'] == 1, initial
         assert not initial['errors'] and '启动失败' not in initial['body'] and 'Failed to fetch' not in initial['body'], initial
-        assert 'T08' in initial['title'], initial
+        assert 'T08' in initial['title'] and 'Approved' in initial['title'], initial
         assert initial['sliders'] == 12 and 'warp' in initial['sliderIds'] and 'point' not in initial['sliderIds'], initial
         assert initial['t08'].get('ready') is True and initial['t08'].get('uniformSpeciesColor') is True, initial
         assert initial['t08'].get('microscopeAffectsWholeSurface') is True and initial['t08'].get('warpAffectsGeometry') is True, initial
+        assert initial['t08'].get('visualAcceptance') is True and initial['t08'].get('productionReady') is True, initial
         assert initial['build'].get('runtimeGLB') == 0 and initial['build'].get('runtimeTextures') == 0 and initial['build'].get('networkFetches') == 0, initial
+        assert initial['build'].get('visualAcceptance') is True and initial['build'].get('productionReady') is True, initial
         assert not initial['overflow'], initial
         qa = initial['qa']
         assert qa.get('runtimeGLB') == 0 and qa.get('runtimeTextures') == 0 and qa.get('networkFetches') == 0, initial
@@ -128,8 +130,18 @@ def run_view(root: Path, label: str, width: int, height: int, port: int, all_vis
         assert qa.get('microscopeGeometry') is True and qa.get('recomputedSurfaceNormals') is True, initial
         assert qa.get('warpGeometry') is True and qa.get('tubeSides') == 18 and qa.get('pathSubdivision') == 5, initial
         assert qa.get('growthPaths', 0) > 15 and qa.get('activeEdges', 0) > 50, initial
-        assert qa.get('visualAcceptance') is False and qa.get('productionReady') is False, initial
+        assert qa.get('visualAcceptance') is True and qa.get('productionReady') is True, initial
         assert qa.get('rebuildMs', 99999) < 8000, initial
+        assert (root / 'NOAA_CLASSIFICATION.json').is_file(), 'classification manifest missing'
+        assert (root / 'FREEZE_MANIFEST.json').is_file(), 'freeze manifest missing'
+        classification = json.loads((root / 'NOAA_CLASSIFICATION.json').read_text(encoding='utf-8'))
+        freeze = json.loads((root / 'FREEZE_MANIFEST.json').read_text(encoding='utf-8'))
+        assert classification['noaa']['broadType'] == 'Hard / stony coral', classification
+        assert classification['noaa']['growthForm'] == 'Branching coral', classification
+        assert classification['noaa']['morphologyId'] == 'HARD_BRANCHING', classification
+        assert classification['visualAcceptance'] is True and classification['productionReady'] is True, classification
+        assert classification['ecologicalPlacementReady'] is False, classification
+        assert freeze['releaseId'] == 'CORAL_R06_T08_BRANCHING_APPROVED_20260921', freeze
         if all_visible:
             assert initial['mainWidthRatio'] >= .985 and initial['allVisible'] and initial['dockVisible'] and initial['controlsBottom'] <= height + 2, initial
         else:
@@ -141,6 +153,7 @@ def run_view(root: Path, label: str, width: int, height: int, port: int, all_vis
             'sliderCount': 12, 'allSlidersVisible': initial['allVisible'], 'mainWidthRatio': initial['mainWidthRatio'],
             'defaultPaths': qa['growthPaths'], 'defaultActiveEdges': qa['activeEdges'], 'defaultRebuildMs': qa['rebuildMs'],
             'rootConnected': qa['allActiveRootConnected'], 'uniformSpeciesColor': qa['uniformSpeciesColor'],
+            'visualAcceptance': qa['visualAcceptance'], 'productionReady': qa['productionReady'],
             'screenshotBytes': len(full),
         }
 
@@ -150,7 +163,7 @@ def run_view(root: Path, label: str, width: int, height: int, port: int, all_vis
 
             def probe(slider: str, value: float) -> dict[str, Any]:
                 sid=json.dumps(slider);sval=json.dumps(str(value))
-                return json.loads(evaluate(f'''JSON.stringify((()=>{{const e=document.getElementById({sid});if(!e)throw new Error('missing '+{sid});e.value={sval};e.dispatchEvent(new Event('input',{{bubbles:true}}));const q=window.__CORAL_R06_QA__;return{{id:{sid},value:Number(e.value),signature:q.geometrySignature,microRms:q.microDisplacementRms,microCoverage:q.microCoveragePct,normalDeviation:q.normalDeviationRms,warpRms:q.warpDisplacementRms,maxWarp:q.maxWarpDisplacement,meshColorCount:q.meshColorCount,paths:q.growthPaths,edges:q.activeEdges,rootConnected:q.allActiveRootConnected,disconnected:q.disconnectedActiveEdges,rebuildMs:q.rebuildMs}}}})())'''))
+                return json.loads(evaluate(f'''JSON.stringify((()=>{{const e=document.getElementById({sid});if(!e)throw new Error('missing '+{sid});e.value={sval};e.dispatchEvent(new Event('input',{{bubbles:true}}));const q=window.__CORAL_R06_QA__;return{{id:{sid},value:Number(e.value),signature:q.geometrySignature,microRms:q.microDisplacementRms,microCoverage:q.microCoveragePct,normalDeviation:q.normalDeviationRms,warpRms:q.warpDisplacementRms,maxWarp:q.maxWarpDisplacement,meshColorCount:q.meshColorCount,paths:q.growthPaths,edges:q.activeEdges,rootConnected:q.allActiveRootConnected,disconnected:q.disconnectedActiveEdges,rebuildMs:q.rebuildMs,visualAcceptance:q.visualAcceptance,productionReady:q.productionReady}}}})())'''))
 
             micro0=probe('micro',0);time.sleep(.5);micro0png=capture('QA_MICROSCOPE_0.png',True)
             micro1=probe('micro',1);time.sleep(.5);micro1png=capture('QA_MICROSCOPE_1.png',True)
@@ -158,6 +171,7 @@ def run_view(root: Path, label: str, width: int, height: int, port: int, all_vis
             assert abs(micro0['microRms']) < 1e-10 and micro0['microCoverage'] == 0, (micro0,micro1)
             assert micro1['microRms'] > .025 and micro1['microCoverage'] > 80 and micro1['normalDeviation'] > .01, (micro0,micro1)
             assert micro0['signature'] != micro1['signature'] and mdiff['changedPixelPct'] > 2.5 and mdiff['changedRegionMeanRgb'] > 8.0, (micro0,micro1,mdiff)
+            assert micro0['visualAcceptance'] and micro1['visualAcceptance'] and micro0['productionReady'] and micro1['productionReady'], (micro0,micro1)
 
             warp0=probe('warp',0);time.sleep(.5);warp0png=capture('QA_WARP_0.png',True)
             warp1=probe('warp',1);time.sleep(.5);warp1png=capture('QA_WARP_1.png',True)
@@ -194,7 +208,7 @@ def main() -> None:
     }
     path=root/'BUILD_T08.json';build=json.loads(path.read_text(encoding='utf-8'))
     build['browserQA']=results
-    build['functionalGates']={'uniformSpeciesColor':True,'microscopeWholeSurface':True,'microscopeVisiblePixelDifference':True,'recomputedSurfaceNormals':True,'warpGeometry':True,'warpVisiblePixelDifference':True,'rootConnected':True,'runtimeErrors':0}
+    build['functionalGates']={'uniformSpeciesColor':True,'microscopeWholeSurface':True,'microscopeVisiblePixelDifference':True,'recomputedSurfaceNormals':True,'warpGeometry':True,'warpVisiblePixelDifference':True,'rootConnected':True,'classificationManifest':True,'freezeManifest':True,'visualAcceptance':True,'productionReady':True,'runtimeErrors':0}
     path.write_text(json.dumps(build,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     print(json.dumps(build,ensure_ascii=False))
 
