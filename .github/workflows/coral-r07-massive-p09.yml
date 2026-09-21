@@ -1,0 +1,139 @@
+name: Coral R07 Massive P09
+
+on:
+  push:
+    branches:
+      - work/coral-mother-r07-massive-porites-p09-shared-wall-voronoi-20260921
+    paths:
+      - tools/coral/coral_r07_massive_p08_patch.py
+      - tools/coral/coral_r07_massive_p08_browser_qa.py
+      - tools/coral/coral_r07_massive_p09_promote.py
+      - tools/coral/coral_r07_massive_p00_browser_qa.py
+      - .github/workflows/coral-r07-massive-p09.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: coral-r07-massive-p09
+  cancel-in-progress: true
+
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out R07 P09 work branch
+        uses: actions/checkout@v4
+        with:
+          ref: work/coral-mother-r07-massive-porites-p09-shared-wall-voronoi-20260921
+          fetch-depth: 1
+          path: work
+
+      - name: Check out frozen GitHub Pages baseline
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 1
+          path: pages
+
+      - name: Build P09 from exact published P07 baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE=pages/coral-mother-r07-massive-porites-p07
+          test -s "$SOURCE/index.html"
+          test -s "$SOURCE/BUILD_R07_P00.json"
+          rm -rf /tmp/coral-r07-p09
+          cp -a "$SOURCE" /tmp/coral-r07-p09
+          python3 work/tools/coral/coral_r07_massive_p09_promote.py /tmp/coral-r07-p09
+          printf '%s\n' \
+            'https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-r07-massive-porites-p09/' \
+            > /tmp/coral-r07-p09/PUBLIC_URL.txt
+          grep -q 'R07-P09' /tmp/coral-r07-p09/index.html
+          grep -q "integratedCoralliteField:true" /tmp/coral-r07-p09/index.html
+          grep -q "explicitCoralliteCups:false" /tmp/coral-r07-p09/index.html
+          grep -q "siteDistribution:'golden-angle-jittered-hemisphere'" /tmp/coral-r07-p09/index.html
+          grep -q "rowBandCount:0" /tmp/coral-r07-p09/index.html
+          grep -q "coralliteTopology:'shared-wall-rim-pit-septa'" /tmp/coral-r07-p09/index.html
+          ! grep -q 'for(let band=0;band<bands;band++)' /tmp/coral-r07-p09/index.html
+          ! grep -q 'R07-P08' /tmp/coral-r07-p09/index.html
+          grep -q 'CORAL_MOTHER_R07_MASSIVE_P09_BUILD' /tmp/coral-r07-p09/BUILD_R07_P00.json
+          grep -q 'sharedWallUsesSecondNearest' /tmp/coral-r07-p09/BUILD_R07_P00.json
+          test "$(grep -o 'type="range"' /tmp/coral-r07-p09/index.html | wc -l)" -eq 12
+          test "$(grep -o 'id="gl"' /tmp/coral-r07-p09/index.html | wc -l)" -eq 1
+
+      - name: Browser, geometry, and visible-difference gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet websocket-client pillow
+          python3 -m http.server 8773 --directory /tmp/coral-r07-p09 >/tmp/coral-r07-p09-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          python3 work/tools/coral/coral_r07_massive_p08_browser_qa.py /tmp/coral-r07-p09
+
+      - name: Assert P09 evidence survived browser QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'CORAL_MOTHER_R07_MASSIVE_P09_BUILD' /tmp/coral-r07-p09/BUILD_R07_P00.json
+          grep -q 'golden-angle-jittered-hemisphere' /tmp/coral-r07-p09/BUILD_R07_P00.json
+          grep -q 'shared-wall-rim-pit-septa' /tmp/coral-r07-p09/BUILD_R07_P00.json
+          grep -q 'constantTopologyAcrossMicroscope' /tmp/coral-r07-p09/BUILD_R07_P00.json
+          grep -q 'sharedWallUsesSecondNearest' /tmp/coral-r07-p09/BUILD_R07_P00.json
+          test -s /tmp/coral-r07-p09/QA_SCREENSHOT_ULTRAWIDE_2560X1080.png
+          test -s /tmp/coral-r07-p09/QA_CLOSEUP_ULTRAWIDE_2560X1080.png
+          test -s /tmp/coral-r07-p09/QA_MICROSCOPE_0.png
+          test -s /tmp/coral-r07-p09/QA_MICROSCOPE_1.png
+          test -s /tmp/coral-r07-p09/QA_WARP_0.png
+          test -s /tmp/coral-r07-p09/QA_WARP_1.png
+
+      - name: Upload complete P09 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: CORAL_R07_MASSIVE_P09_EVIDENCE_${{ github.sha }}
+          path: /tmp/coral-r07-p09
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish fixed P09 workbench
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET=coral-mother-r07-massive-porites-p09
+          rm -rf "pages/$TARGET"
+          mkdir -p "pages/$TARGET"
+          cp -a /tmp/coral-r07-p09/. "pages/$TARGET/"
+          cd pages
+          git config user.name 'Haihao_Nature Grace HK'
+          git config user.email 'haihao0307@gmail.com'
+          git add "$TARGET/"
+          if git diff --cached --quiet; then
+            echo 'No publication changes.'
+          else
+            git commit -m "publish(coral): R07 massive Porites P09 shared-wall Voronoi"
+            git pull --rebase origin gh-pages
+            git push origin gh-pages
+          fi
+
+      - name: Write run summary
+        shell: bash
+        run: |
+          {
+            echo '## Coral Mother R07-P09'
+            echo
+            echo '- NOAA: Hard / stony coral → Massive coral'
+            echo '- Candidate: Porites lutea morphology prototype'
+            echo '- P07 retained as regular detached-cup failure evidence'
+            echo '- Published P08 retained as weak nearest-center failure evidence'
+            echo '- P09: golden-angle jittered sites + nearest/second-nearest shared walls'
+            echo '- Microscope displacement: integrated surface-normal field, zero tangential leak'
+            echo '- Topology remains constant when Microscope changes'
+            echo '- Runtime assets: 0 GLB / 0 texture / 0 fetch'
+            echo '- visualAcceptance: false'
+            echo '- productionReady: false'
+            echo
+            echo 'Public workbench:'
+            echo 'https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-r07-massive-porites-p09/'
+          } >> "$GITHUB_STEP_SUMMARY"
