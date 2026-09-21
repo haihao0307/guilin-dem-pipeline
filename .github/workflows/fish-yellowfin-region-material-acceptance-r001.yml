@@ -1,0 +1,227 @@
+name: Fish Mother Yellowfin Region Material Acceptance R001
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - work/ocean-life-fish-mother-yellowfin-source-copy-r001-20260921
+    paths:
+      - .github/workflows/fish-yellowfin-region-material-acceptance-r001.yml
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/tools/build_region_material_acceptance.py
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/region-material-qa.html
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/region-material-qa/**
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/tests/source-copy-region-material-r001.test.mjs
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/SOURCE_COPY_SKINNED_R001.json
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry/YELLOWFIN_SOURCE_COPY_SKINNED_R001.glb
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/evidence/skinned-browser/SKINNED_BROWSER_QA_RECEIPT.json
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fish-yellowfin-region-material-acceptance-r001
+  cancel-in-progress: true
+
+env:
+  COPY_ROOT: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001
+  SOURCE_GLB: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace/source/tuna_fish_4k.glb
+  COPY_GLB: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry/YELLOWFIN_SOURCE_COPY_SKINNED_R001.glb
+  SKINNED_RECEIPT: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/SOURCE_COPY_SKINNED_R001.json
+  SKINNED_BROWSER: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/evidence/skinned-browser/SKINNED_BROWSER_QA_RECEIPT.json
+  ACCEPTANCE_REPORT: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/SOURCE_COPY_REGION_MATERIAL_ACCEPTANCE_R001.json
+  QA_REGION_OUT: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/evidence/region-material-browser
+  QA_REGION_URL: http://127.0.0.1:4173/apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/region-material-qa.html
+
+jobs:
+  validate-and-freeze-source-copy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - name: Check out the latest Source Copy branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Build structural region and material acceptance evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python "$COPY_ROOT/tools/build_region_material_acceptance.py" \
+            --source "$SOURCE_GLB" \
+            --copy "$COPY_GLB" \
+            --skinned-receipt "$SKINNED_RECEIPT" \
+            --skinned-browser "$SKINNED_BROWSER" \
+            --out "$ACCEPTANCE_REPORT"
+
+      - name: Install Playwright and Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+
+      - name: Start the region/material QA server
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/yellowfin-region-material-http.log 2>&1 &
+          echo $! >/tmp/yellowfin-region-material-http.pid
+          for i in $(seq 1 30); do
+            if curl --fail --silent "$QA_REGION_URL" >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/yellowfin-region-material-http.log
+          exit 1
+
+      - name: Capture every semantic region and retained source material
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "$QA_REGION_OUT"
+          node "$COPY_ROOT/region-material-qa/capture-region-material-qa.cjs"
+
+      - name: Freeze the machine-accepted Source Copy R001 baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path('apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001')
+          report_path = root / 'SOURCE_COPY_REGION_MATERIAL_ACCEPTANCE_R001.json'
+          browser_path = root / 'evidence/region-material-browser/REGION_MATERIAL_BROWSER_QA_RECEIPT.json'
+          report = json.loads(report_path.read_text())
+          browser = json.loads(browser_path.read_text())
+          if browser.get('passed') is not True:
+              raise SystemExit('Region/material browser receipt did not pass')
+          if browser.get('copySha256') != report['copy']['sha256']:
+              raise SystemExit('Region/material browser receipt is not bound to accepted copy SHA')
+
+          report['gates']['browserRegionVisibilityQAPassed'] = True
+          report['gates']['sourceCopyR001Frozen'] = True
+          report['gates']['sourceCopyMachineAcceptancePassed'] = True
+          report['visualEvidence'] = {
+              'receipt': 'evidence/region-material-browser/REGION_MATERIAL_BROWSER_QA_RECEIPT.json',
+              'semanticRegions': len(browser['regionInventory']),
+              'materials': len(browser['materialInventory']),
+              'screenshots': [item['name'] for item in browser['screenshots']],
+              'consoleZeroErrors': browser['consoleErrors'] == [],
+              'pageZeroErrors': browser['pageErrors'] == [],
+              'machineAcceptanceOnly': True,
+              'manualVisualAcceptancePending': True,
+          }
+          report['next'] = 'Begin YELLOWFIN-BIOLOGICAL-CORRECTION-R001 from this frozen immutable Source Copy baseline; never edit the frozen source-copy GLBs in place.'
+          report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+
+          status_path = root / 'CURRENT_STATUS.json'
+          status = json.loads(status_path.read_text())
+          status['phase'] = 'SOURCE_COPY_R001_FROZEN_MACHINE_ACCEPTED'
+          status.setdefault('gates', {}).update({
+              'sourceCopyRegionVisibilityPassed': True,
+              'sourceCopyMaterialBoundaryPassed': True,
+              'sourceCopyR001Frozen': True,
+              'sourceCopyImmutable': True,
+              'sourceCopyMachineAcceptancePassed': True,
+              'sourceCopyManualVisualAcceptancePending': True,
+              'biologicalCorrectionCandidateUnlocked': True,
+              'independentReconstructionUnlocked': True,
+              'generationLocked': False,
+          })
+          status['sourceCopyRegionMaterial'] = {
+              'report': 'SOURCE_COPY_REGION_MATERIAL_ACCEPTANCE_R001.json',
+              'qaWorkbench': 'region-material-qa.html',
+              'browserReceipt': 'evidence/region-material-browser/REGION_MATERIAL_BROWSER_QA_RECEIPT.json',
+              'copySha256': report['copy']['sha256'],
+              'semanticRegionCount': report['copy']['semanticRegionCount'],
+              'semanticFaces': report['copy']['semanticFaces'],
+              'interRegionEdges': report['boundary']['interRegionEdges'],
+              'interRegionVertices': report['boundary']['interRegionVertices'],
+              'materialCount': len(report['materials']['inventory']),
+              'regionMaterialIndices': report['copy']['regionMaterialIndices'],
+              'sourceCopyR001Frozen': True,
+              'machineAcceptancePassed': True,
+              'manualVisualAcceptancePending': True,
+          }
+          status['next'] = 'Begin YELLOWFIN-BIOLOGICAL-CORRECTION-R001 from the frozen Source Copy baseline. Keep all Source Copy R001 assets immutable.'
+          status_path.write_text(json.dumps(status, ensure_ascii=False, indent=2) + '\n')
+
+          baseline_path = Path('CURRENT_BASELINE.json')
+          baseline = json.loads(baseline_path.read_text())
+          active = baseline.setdefault('activeState', {})
+          active.update({
+              'phase': 'YELLOWFIN_SOURCE_COPY_R001_FROZEN_MACHINE_ACCEPTED',
+              'workBranch': 'work/ocean-life-fish-mother-yellowfin-source-copy-r001-20260921',
+              'activeWorkbench': 'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/index.html',
+              'geometryQaWorkbench': 'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry-qa.html',
+              'skinnedQaWorkbench': 'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/skinned-qa.html',
+              'regionMaterialQaWorkbench': 'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/region-material-qa.html',
+              'sourceCopyRegionMaterialReport': 'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/SOURCE_COPY_REGION_MATERIAL_ACCEPTANCE_R001.json',
+              'sourceCopyR001Frozen': True,
+              'sourceCopyImmutable': True,
+              'sourceCopyMachineAcceptancePassed': True,
+              'sourceCopyManualVisualAcceptancePending': True,
+              'sourceCopyUnlocked': True,
+              'biologicalCorrectionCandidateUnlocked': True,
+              'independentReconstructionUnlocked': True,
+              'generationLocked': False,
+              'productionReady': False,
+              'nextAllowedBuild': 'YELLOWFIN-BIOLOGICAL-CORRECTION-R001',
+          })
+          baseline_path.write_text(json.dumps(baseline, ensure_ascii=False, indent=2) + '\n')
+          PY
+
+      - name: Run Source Copy R001 freeze contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          node "$COPY_ROOT/tests/source-copy-region-material-r001.test.mjs"
+          node "$COPY_ROOT/tests/source-copy-skinned-r001.test.mjs"
+          node "$COPY_ROOT/tests/source-component-classification-r001.test.mjs"
+          node "$COPY_ROOT/tests/source-copy-r001-contract.test.mjs"
+
+      - name: Upload the full region/material acceptance package
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: YELLOWFIN-SOURCE-COPY-R001-REGION-MATERIAL-ACCEPTANCE
+          path: |
+            ${{ env.ACCEPTANCE_REPORT }}
+            ${{ env.QA_REGION_OUT }}
+            ${{ env.COPY_ROOT }}/CURRENT_STATUS.json
+            CURRENT_BASELINE.json
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 6
+
+      - name: Commit the frozen Source Copy R001 acceptance evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Fish Mother R001"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            CURRENT_BASELINE.json \
+            "$COPY_ROOT/CURRENT_STATUS.json" \
+            "$ACCEPTANCE_REPORT" \
+            "$QA_REGION_OUT"
+          if git diff --cached --quiet; then
+            echo "Source Copy R001 region/material acceptance is already committed."
+            exit 0
+          fi
+          git commit -m "feat(fish): freeze machine-accepted Yellowfin Source Copy R001"
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"
