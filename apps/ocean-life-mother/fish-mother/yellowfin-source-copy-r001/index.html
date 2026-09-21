@@ -47,7 +47,7 @@
     <div class="timeline"><label><span>Swim 时间</span><span id="timeText">0.00 / 0.00 s</span></label><input id="timeSlider" type="range" min="0" max="1" step="0.001" value="0" disabled /></div>
     <div class="rule"><strong>当前门禁：</strong>小鳍不能再由骨骼命名猜测。蓝色为源拓扑确认的背侧小鳍，红色为腹侧小鳍，紫色为仍需视觉接受的前缘重叠候选；黄色环标记稳定尾柄窗口。</div>
   </section>
-  <div class="badge">侧视沿 lateral-y，俯视沿 vertical-z，头向沿 length-x；固定视角不再互换</div>
+  <div class="badge">展示轴：长度 z、侧向 y、垂直 x；侧视沿 y，俯视沿 x，头向沿 z</div>
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -55,20 +55,31 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const EXPECTED_SHA='5603d4aabc9a1127856841335a86ae7aa462b6b25d1a6586e93bf644f4d47abe';
 const EXPECTED_BYTES=58908280;
+const SOURCE_WORLD_SCALE=0.6139094233512878;
 const LOCAL='./source-workspace/source/tuna_fish_4k.glb';
 const PINNED='https://raw.githubusercontent.com/NipunMehra25/github_ocean/c8c32e7880733ffd628c6106fd5749a2abab97c3/assets/models/tuna_fish.glb';
 const CLASSIFICATION='./SOURCE_COMPONENT_CLASSIFICATION_R001.json';
 const VIEW_CONTRACT={
-  side:{position:[0,8,0.01],up:[0,0,1],dominantAxis:'y'},
-  quarter:{position:[6,4,4],up:[0,0,1],dominantAxis:'quarter'},
-  top:{position:[0.01,0,8],up:[0,1,0],dominantAxis:'z'},
-  front:{position:[8,0,0.01],up:[0,0,1],dominantAxis:'x'}
+  side:{position:[0,8,0.01],up:[1,0,0],dominantAxis:'y'},
+  quarter:{position:[4.8,5.8,7.2],up:[1,0,0],dominantAxis:'quarter'},
+  top:{position:[8,0,0.01],up:[0,1,0],dominantAxis:'x'},
+  front:{position:[0.01,0,8],up:[1,0,0],dominantAxis:'z'}
 };
 const $=id=>document.getElementById(id);
 const stateDot=$('stateDot'),stateTitle=$('stateTitle'),stateText=$('stateText'),progressBar=$('progressBar');
 const setState=(kind,title,text)=>{stateDot.className='dot '+(kind||'');stateTitle.textContent=title;stateText.textContent=text};
 
-const qaState={activeView:'loading',axes:{length:'x',lateral:'y',vertical:'z'},viewContract:VIEW_CONTRACT,camera:null,modelSpan:null,classificationLoaded:false,classification:null};
+const qaState={
+  activeView:'loading',
+  axes:{length:'z',lateral:'y',vertical:'x'},
+  sourceAxes:{length:'y',lateral:'x',vertical:'z'},
+  viewContract:VIEW_CONTRACT,
+  camera:null,
+  modelSpan:null,
+  classificationLoaded:false,
+  classification:null,
+  markerMapping:null
+};
 window.__fishQa=qaState;
 
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x071018);
@@ -78,7 +89,7 @@ const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamp
 scene.add(new THREE.HemisphereLight(0xdff5ff,0x17202a,2.0));
 const key=new THREE.DirectionalLight(0xffffff,3.0);key.position.set(4,6,7);scene.add(key);
 const rim=new THREE.DirectionalLight(0x80cfff,2.0);rim.position.set(-5,1,-5);scene.add(rim);
-const floor=new THREE.Mesh(new THREE.CircleGeometry(8,96),new THREE.MeshStandardMaterial({color:0x0b1620,roughness:.92,metalness:0}));floor.position.z=-2.25;floor.receiveShadow=true;scene.add(floor);
+const floor=new THREE.Mesh(new THREE.CircleGeometry(8,96),new THREE.MeshStandardMaterial({color:0x0b1620,roughness:.92,metalness:0}));floor.rotation.y=Math.PI/2;floor.position.x=-2.25;floor.receiveShadow=true;scene.add(floor);
 
 let mixer=null,clip=null,playing=true,model=null,displayRoot=null,skeleton=null,markerGroup=null;
 const materials=[];
@@ -106,21 +117,36 @@ function frame(viewName){
 }
 document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>frame(button.dataset.view)));
 
+function sourceToModel(source){
+  return new THREE.Vector3(
+    source[0]/SOURCE_WORLD_SCALE,
+    -source[2]/SOURCE_WORLD_SCALE,
+    source[1]/SOURCE_WORLD_SCALE
+  );
+}
 function markerMaterial(color){return new THREE.MeshBasicMaterial({color,depthTest:true,depthWrite:true});}
 function buildClassificationMarkers(classification){
   if(!displayRoot)return;
   if(markerGroup)displayRoot.remove(markerGroup);
   markerGroup=new THREE.Group();markerGroup.name='SourceComponentClassificationMarkers';markerGroup.visible=false;
-  const geometry=new THREE.SphereGeometry(.022,14,10);const colors={dorsal:0x2577d4,ventral:0xe04343,overlap:0xa94ad8};
+  const geometry=new THREE.SphereGeometry(.035,14,10);const colors={dorsal:0x2577d4,ventral:0xe04343,overlap:0xa94ad8};
+  const mappedPoints=[];
   for(const side of ['dorsal','ventral']){
     const material=markerMaterial(colors[side]);
-    for(const item of classification.finlets[side].confirmed){const marker=new THREE.Mesh(geometry,material);marker.position.fromArray(item.centerSource);marker.userData={side,index:item.seriesIndexFrontToTail};markerGroup.add(marker);}
+    for(const item of classification.finlets[side].confirmed){const marker=new THREE.Mesh(geometry,material);const mapped=sourceToModel(item.centerSource);marker.position.copy(mapped);mappedPoints.push(mapped.clone());marker.userData={side,index:item.seriesIndexFrontToTail};markerGroup.add(marker);}
     const overlapMaterial=markerMaterial(colors.overlap);
-    for(const item of classification.finlets[side].overlapCandidates||[]){const marker=new THREE.Mesh(new THREE.SphereGeometry(.018,12,8),overlapMaterial);marker.position.fromArray(item.centerSource);marker.userData={side,candidate:true};markerGroup.add(marker);}
+    for(const item of classification.finlets[side].overlapCandidates||[]){const marker=new THREE.Mesh(new THREE.SphereGeometry(.03,12,8),overlapMaterial);const mapped=sourceToModel(item.centerSource);marker.position.copy(mapped);mappedPoints.push(mapped.clone());marker.userData={side,candidate:true};markerGroup.add(marker);}
   }
-  const minimum=classification.peduncle.minimum;const y=classification.frame.tailY+minimum.u*classification.frame.bodyLengthSourceUnits;
-  const ring=new THREE.Mesh(new THREE.TorusGeometry(.055,.007,12,36),markerMaterial(0xffd34f));ring.rotation.x=Math.PI/2;ring.position.set(0,y,classification.frame.centerlineZFromSpineBind);ring.userData={peduncle:true,u:minimum.u};markerGroup.add(ring);
+  const minimum=classification.peduncle.minimum;const sourceY=classification.frame.tailY+minimum.u*classification.frame.bodyLengthSourceUnits;
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(.12,.012,12,36),markerMaterial(0xffd34f));const ringPoint=sourceToModel([0,sourceY,classification.frame.centerlineZFromSpineBind]);ring.position.copy(ringPoint);mappedPoints.push(ringPoint.clone());ring.userData={peduncle:true,u:minimum.u};markerGroup.add(ring);
   displayRoot.add(markerGroup);
+  const markerBounds=new THREE.Box3().setFromPoints(mappedPoints);
+  qaState.markerMapping={
+    mode:'canonical-source-to-model-inverse-root',
+    scale:SOURCE_WORLD_SCALE,
+    count:markerGroup.children.length,
+    bounds:{min:markerBounds.min.toArray(),max:markerBounds.max.toArray()}
+  };
 }
 async function loadClassification(){
   const response=await fetch(CLASSIFICATION,{cache:'no-store'});if(!response.ok)throw new Error(`结构分类缺失：HTTP ${response.status}`);
