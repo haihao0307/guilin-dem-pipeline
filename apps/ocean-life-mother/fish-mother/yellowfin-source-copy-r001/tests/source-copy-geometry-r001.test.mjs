@@ -8,14 +8,16 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..');
 const receiptPath = path.join(root, 'SOURCE_COPY_GEOMETRY_R001.json');
 const geometryPath = path.join(root, 'geometry', 'YELLOWFIN_SOURCE_COPY_R001.glb');
+const browserReceiptPath = path.join(root, 'evidence', 'geometry-browser', 'GEOMETRY_BROWSER_QA_RECEIPT.json');
 const statusPath = path.join(root, 'CURRENT_STATUS.json');
 const classificationPath = path.join(root, 'SOURCE_COMPONENT_CLASSIFICATION_R001.json');
 
-for (const required of [receiptPath, geometryPath, statusPath, classificationPath]) {
+for (const required of [receiptPath, geometryPath, browserReceiptPath, statusPath, classificationPath]) {
   assert.equal(fs.existsSync(required), true, `missing required artifact: ${required}`);
 }
 
 const receipt = JSON.parse(fs.readFileSync(receiptPath, 'utf8'));
+const browserReceipt = JSON.parse(fs.readFileSync(browserReceiptPath, 'utf8'));
 const status = JSON.parse(fs.readFileSync(statusPath, 'utf8'));
 const classification = JSON.parse(fs.readFileSync(classificationPath, 'utf8'));
 const glb = fs.readFileSync(geometryPath);
@@ -55,6 +57,8 @@ for (const requiredRegion of [
 const assignedFaces = receipt.regions.reduce((sum, region) => sum + region.faces, 0);
 assert.equal(assignedFaces, receipt.output.faceCount, 'every source face must appear in exactly one copied region');
 assert.equal(receipt.output.meshCount, receipt.regions.length);
+assert.ok(receipt.source.copiedPrimitiveInstances >= receipt.source.sceneMeshCount, 'every source mesh primitive instance must be retained');
+assert.ok(receipt.output.auxiliaryRegionCount >= 0);
 assert.equal(receipt.finlets.dorsalConfirmedCount, 9);
 assert.equal(receipt.finlets.ventralConfirmedCount, 8);
 assert.equal(classification.finlets.dorsal.confirmedCount, 9);
@@ -64,24 +68,40 @@ assert.deepEqual(receipt.peduncle, classification.peduncle.minimum);
 for (const gate of [
   'exactSourceBound',
   'classificationRegeneratedWithoutDrift',
+  'allPrimaryFacesAssignedExactlyOnce',
+  'allSourceMeshPrimitiveInstancesCopied',
   'allFacesAssignedExactlyOnce',
   'sourcePositionsReusedWithoutModification',
   'sourceProportionsPreserved',
   'sourceBoundsPreserved',
   'segmentedStaticGlbGenerated',
+  'browserVisualQAPassed',
 ]) {
   assert.equal(receipt.gates[gate], true, `geometry gate failed: ${gate}`);
 }
 assert.equal(receipt.gates.skinnedAnimationTransferred, false);
 assert.equal(receipt.gates.sourceMaterialsTransferred, false);
-assert.equal(receipt.gates.browserVisualQAPassed, false);
 assert.equal(receipt.gates.productionReady, false);
 
-assert.equal(status.phase, 'SOURCE_COPY_GEOMETRY_R001_STATIC_READY_BROWSER_QA_PENDING');
+assert.equal(browserReceipt.schema, 'kaopu.fish-mother.yellowfin-source-copy-geometry-browser-qa/1.0');
+assert.equal(browserReceipt.passed, true);
+assert.equal(browserReceipt.sourceSha256, receipt.source.sha256);
+assert.equal(browserReceipt.copySha256, receipt.output.sha256);
+assert.equal(browserReceipt.sourceStats.triangles, receipt.output.faceCount);
+assert.equal(browserReceipt.copyStats.triangles, receipt.output.faceCount);
+assert.equal(browserReceipt.copyStats.meshes, receipt.output.meshCount);
+assert.ok(browserReceipt.boundsDelta <= browserReceipt.boundsTolerance);
+assert.deepEqual(browserReceipt.failedChecks, []);
+assert.deepEqual(browserReceipt.consoleErrors, []);
+assert.deepEqual(browserReceipt.pageErrors, []);
+assert.ok(browserReceipt.screenshots.length >= 9);
+
+assert.equal(status.phase, 'SOURCE_COPY_GEOMETRY_R001_BROWSER_QA_PASSED_SKIN_TRANSFER_NEXT');
 assert.equal(status.gates.sourceCopyStaticGeometryGenerated, true);
 assert.equal(status.gates.sourceCopyAllFacesAssignedExactlyOnce, true);
+assert.equal(status.gates.sourceCopyEveryPrimitiveCopied, true);
 assert.equal(status.gates.sourceCopySourceBoundsPreserved, true);
-assert.equal(status.gates.sourceCopyGeometryBrowserQAPassed, false);
+assert.equal(status.gates.sourceCopyGeometryBrowserQAPassed, true);
 assert.equal(status.gates.sourceCopySkinTransferred, false);
 assert.equal(status.gates.independentReconstructionUnlocked, false);
 assert.equal(status.gates.generationLocked, true);
@@ -92,5 +112,7 @@ console.log(JSON.stringify({
   glbSha256: glbSha,
   meshCount: receipt.output.meshCount,
   faceCount: receipt.output.faceCount,
+  primitiveInstances: receipt.source.copiedPrimitiveInstances,
+  boundsDelta: browserReceipt.boundsDelta,
   regions: receipt.regions.map(region => ({ name: region.name, faces: region.faces, vertices: region.vertices })),
 }, null, 2));
