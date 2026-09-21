@@ -1,0 +1,136 @@
+name: Fish Mother Yellowfin Source Classification R001
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - work/ocean-life-fish-mother-yellowfin-source-copy-r001-20260921
+    paths:
+      - .github/workflows/fish-yellowfin-source-classification-r001.yml
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/tools/classify_source_components.py
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/tests/source-component-classification-r001.test.mjs
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace/source/tuna_fish_4k.glb
+      - apps/ocean-life-mother/fish-mother/yellowfin-study-r006/tools/build_kaopu_source_copy_package.py
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fish-yellowfin-source-classification-r001
+  cancel-in-progress: true
+
+env:
+  COPY_ROOT: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001
+  SOURCE_GLB: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace/source/tuna_fish_4k.glb
+  PACKAGE_ROOT: /tmp/yellowfin-source-copy-r001-package
+  CLASSIFICATION_OUT: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/SOURCE_COMPONENT_CLASSIFICATION_R001.json
+  CLASSIFICATION_EVIDENCE: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/evidence/classification
+
+jobs:
+  classify-exact-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out the Source Copy branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install classification dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install numpy matplotlib
+
+      - name: Build a temporary exact-source package
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "$PACKAGE_ROOT"
+          python apps/ocean-life-mother/fish-mother/yellowfin-study-r006/tools/build_kaopu_source_copy_package.py \
+            "$SOURCE_GLB" \
+            --out "$PACKAGE_ROOT"
+
+      - name: Classify source components and render evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "$CLASSIFICATION_EVIDENCE"
+          python "$COPY_ROOT/tools/classify_source_components.py" \
+            --package "$PACKAGE_ROOT" \
+            --out "$CLASSIFICATION_OUT" \
+            --evidence-dir "$CLASSIFICATION_EVIDENCE"
+
+      - name: Run classification contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node "$COPY_ROOT/tests/source-component-classification-r001.test.mjs"
+
+      - name: Record classification status
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          root=Path(os.environ['COPY_ROOT'])
+          classification=json.loads(Path(os.environ['CLASSIFICATION_OUT']).read_text())
+          status_path=root/'CURRENT_STATUS.json'
+          status=json.loads(status_path.read_text())
+          status['phase']='SOURCE_COMPONENT_CLASSIFICATION_R001_PASSED_BROWSER_QA_PENDING'
+          status['gates'].update({
+              'sourceComponentClassificationPassed':True,
+              'finletsRecoveredFromAxialThinSheets':True,
+              'dorsalFinletConfirmedCount':classification['finlets']['dorsal']['confirmedCount'],
+              'ventralFinletConfirmedCount':classification['finlets']['ventral']['confirmedCount'],
+              'attachmentRootsRecorded':True,
+              'freeEdgesRecorded':True,
+              'peduncleStableWindowRecorded':True,
+              'keelCandidatesRequireVisualConfirmation':True,
+              'independentReconstructionUnlocked':False,
+              'generationLocked':True
+          })
+          status['componentClassification']={
+              'report':'SOURCE_COMPONENT_CLASSIFICATION_R001.json',
+              'evidenceDirectory':'evidence/classification',
+              'dorsalFinlets':classification['finlets']['dorsal']['confirmedCount'],
+              'ventralFinlets':classification['finlets']['ventral']['confirmedCount'],
+              'peduncleMinimum':classification['peduncle']['minimum']
+          }
+          status['next']='Run semantic fixed-view browser QA with source-component markers, then begin region-by-region Source Copy geometry.'
+          status_path.write_text(json.dumps(status,ensure_ascii=False,indent=2)+'\n')
+          PY
+
+      - name: Upload classification evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: YELLOWFIN-SOURCE-COMPONENT-CLASSIFICATION-R001
+          path: |
+            ${{ env.CLASSIFICATION_OUT }}
+            ${{ env.CLASSIFICATION_EVIDENCE }}
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 6
+
+      - name: Commit classification and evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Fish Mother R001"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$COPY_ROOT/CURRENT_STATUS.json" "$CLASSIFICATION_OUT" "$CLASSIFICATION_EVIDENCE"
+          if git diff --cached --quiet; then
+            echo "No classification delta to commit."
+            exit 0
+          fi
+          git commit -m "feat(fish): classify exact-source fins finlets and peduncle"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
