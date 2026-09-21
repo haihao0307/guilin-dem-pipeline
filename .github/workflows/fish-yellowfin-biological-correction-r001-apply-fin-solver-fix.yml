@@ -1,0 +1,50 @@
+name: Fish Mother Yellowfin Biological Correction R001 Apply Fin Solver Fix
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - work/ocean-life-fish-mother-yellowfin-biological-correction-r001-20260921
+    paths:
+      - .github/workflows/fish-yellowfin-biological-correction-r001-apply-fin-solver-fix.yml
+      - apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/tools/apply_candidate_a_solver_fix.py
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fish-yellowfin-biological-correction-r001-apply-fin-solver-fix
+  cancel-in-progress: true
+
+jobs:
+  apply-fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out correction branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+
+      - name: Apply nonlinear root-pinned fin solver
+        shell: bash
+        run: |
+          set -euo pipefail
+          python apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/tools/apply_candidate_a_solver_fix.py
+          python -m py_compile apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/tools/build_candidate_a.py
+
+      - name: Commit corrected generator
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Fish Mother R001"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/tools/build_candidate_a.py
+          if git diff --cached --quiet; then
+            echo "Generator already contains nonlinear fin solver."
+            exit 0
+          fi
+          git commit -m "fix(fish): solve Candidate A fin targets from final geometry"
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
