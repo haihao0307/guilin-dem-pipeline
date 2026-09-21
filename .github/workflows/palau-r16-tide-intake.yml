@@ -1,0 +1,229 @@
+name: Palau R16 Malakal Tide Intake
+
+on:
+  push:
+    branches:
+      - work/palau-airai-r13-evidence-bound-core-20260921
+    paths:
+      - .github/workflows/palau-r16-tide-intake.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  tide-intake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch authoritative station metadata and predictions
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .r16-tide-source games/survivor-palau/palau-world/airai-r16/generated
+          base_meta='https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/1841367'
+          curl --fail --location --retry 4 --retry-all-errors "$base_meta.json" -o .r16-tide-source/station.json
+          curl --fail --location --retry 4 --retry-all-errors "$base_meta/harcon.json?units=metric" -o .r16-tide-source/harcon.json
+          curl --fail --location --retry 4 --retry-all-errors "$base_meta/datums.json?units=metric" -o .r16-tide-source/datums.json || printf '{"error":"datums unavailable"}\n' > .r16-tide-source/datums.json
+
+          api='https://api.tidesandcurrents.noaa.gov/api/prod/datagetter'
+          common='station=1841367&product=predictions&datum=MLLW&time_zone=gmt&units=metric&interval=h&format=json&application=Kaopu_Palau_R16'
+          curl --fail --location --retry 4 --retry-all-errors "$api?begin_date=19441001&end_date=19441031&$common" -o .r16-tide-source/predictions_1944_10.json || printf '{"error":{"message":"NOAA historical prediction request failed"}}\n' > .r16-tide-source/predictions_1944_10.json
+          curl --fail --location --retry 4 --retry-all-errors "$api?begin_date=20261001&end_date=20261031&$common" -o .r16-tide-source/predictions_2026_10.json
+
+          curl --fail --location --retry 4 --retry-all-errors 'https://psmsl.org/data/obtaining/met.monthly.data/338.metdata' -o .r16-tide-source/psmsl_malakal_a_1926_1939.metdata || true
+          sha256sum .r16-tide-source/* | tee .r16-tide-source/SHA256SUMS.txt
+
+      - name: Build compact Kaopu tide field
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from __future__ import annotations
+          import hashlib, json, math, statistics
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          src=Path('.r16-tide-source')
+          out=Path('games/survivor-palau/palau-world/airai-r16/generated')
+          out.mkdir(parents=True,exist_ok=True)
+
+          def load(name):
+              return json.loads((src/name).read_text(encoding='utf-8'))
+
+          station=load('station.json')
+          har=load('harcon.json')
+          datums=load('datums.json')
+          p44=load('predictions_1944_10.json')
+          p26=load('predictions_2026_10.json')
+
+          def predictions(obj):
+              rows=obj.get('predictions',[]) if isinstance(obj,dict) else []
+              out=[]
+              for r in rows:
+                  try:
+                      t=datetime.strptime(r['t'],'%Y-%m-%d %H:%M').replace(tzinfo=timezone.utc)
+                      v=float(r['v'])
+                      out.append((t,v))
+                  except Exception:
+                      pass
+              return out
+
+          def stats(rows):
+              vals=[v for _,v in rows]
+              if not vals: return None
+              return {
+                  'count':len(vals),
+                  'minM':round(min(vals),4),
+                  'maxM':round(max(vals),4),
+                  'rangeM':round(max(vals)-min(vals),4),
+                  'meanM':round(statistics.fmean(vals),4),
+                  'p05M':round(sorted(vals)[int(.05*(len(vals)-1))],4),
+                  'p95M':round(sorted(vals)[int(.95*(len(vals)-1))],4),
+              }
+
+          rows44=predictions(p44); rows26=predictions(p26)
+          datum_map={}
+          for d in datums.get('datums',datums.get('Datums',[])) if isinstance(datums,dict) else []:
+              name=d.get('name')
+              try: datum_map[name]=float(d.get('value'))
+              except Exception: pass
+
+          # NOAA returns station-specific harmonic constituents. Keep all non-zero terms;
+          # the runtime evaluates them as a compact temporal wave stack.
+          raw_h=har.get('HarmonicConstituents',har.get('harconList',[])) if isinstance(har,dict) else []
+          constituents=[]
+          for c in raw_h:
+              try:
+                  amp=float(c.get('amplitude',0))
+                  if amp<=0: continue
+                  constituents.append({
+                      'name':c.get('name') or c.get('constituentName'),
+                      'amplitudeM':round(amp,7),
+                      'phaseGMTDeg':round(float(c.get('phase_GMT',c.get('phaseGMT',0))),6),
+                      'phaseLocalDeg':round(float(c.get('phase_local',c.get('phaseLocal',0))),6),
+                      'speedDegPerHour':round(float(c.get('speed',0)),9),
+                  })
+              except Exception:
+                  continue
+          constituents.sort(key=lambda c:c['amplitudeM'],reverse=True)
+
+          # The runtime zero is mean tide / MSL where available, not MLLW.
+          msl_above_mllw=None
+          if 'MSL' in datum_map and 'MLLW' in datum_map:
+              msl_above_mllw=datum_map['MSL']-datum_map['MLLW']
+          elif rows26:
+              msl_above_mllw=statistics.fmean(v for _,v in rows26)
+
+          # Hourly October 1944 curve is small enough to preserve as a verification table,
+          # but runtime uses the constituent stack; no raster or texture is involved.
+          backcast=[]
+          if rows44:
+              center=statistics.fmean(v for _,v in rows44)
+              backcast=[{'utc':t.strftime('%Y-%m-%dT%H:%M:%SZ'),'anomalyM':round(v-center,4),'mllwM':round(v,4)} for t,v in rows44]
+
+          psml_path=src/'psmsl_malakal_a_1926_1939.metdata'
+          psmsl_meta={
+              'available':psml_path.exists() and psmsl_path.stat().st_size>0,
+              'sha256':hashlib.sha256(psml_path.read_bytes()).hexdigest() if psml_path.exists() and psmsl_path.stat().st_size>0 else None,
+              'role':'pre-war monthly mean-level context only; not an hourly 1944 tide record',
+              'qualityWarning':'PSMSL labels MALAKAL-A metric data as not research quality and advises extreme caution.'
+          }
+
+          source_files=[]
+          for p in sorted(src.iterdir()):
+              if p.is_file(): source_files.append({'file':p.name,'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+
+          model={
+              'schema':'kaopu.palau.tide-field/1.0',
+              'version':'PALAU_R16_MALAKAL_1944_BACKCAST_20260921',
+              'station':{
+                  'id':'1841367','name':'Malakal Harbor, Palau Island',
+                  'latitude':7.333333,'longitude':134.466667,
+                  'timezone':'Pacific/Palau','utcOffsetHours':9,
+                  'noaaType':'harmonic','referenceDatum':'MLLW'
+              },
+              'zeroConvention':{
+                  'runtimeSeaZero':'mean tide / MSL candidate',
+                  'tideSignal':'waterSurfaceZ = zero + astronomicalTide(t) + meteorologicalResidual(t) + OceanMotherWave(x,y,t)',
+                  'mslAboveMllwM':round(msl_above_mllw,4) if msl_above_mllw is not None else None,
+                  'warning':'MLLW chart datum and mean sea level are not interchangeable.'
+              },
+              'constituents':constituents,
+              'constituentCount':len(constituents),
+              'october1944':{
+                  'status':'NOAA_HARMONIC_BACKCAST' if rows44 else 'NOAA_BACKCAST_UNAVAILABLE',
+                  'statsMLLW':stats(rows44),
+                  'hourlyVerification':backcast,
+                  'datumCaveat':'Astronomical phase can be backcast; the modern MLLW datum is not claimed as the exact 1944 mean-level datum.'
+              },
+              'october2026':{'statsMLLW':stats(rows26)},
+              'preWarGaugeContext':psmsl_meta,
+              'spatialPolicy':{
+                  'baseStation':'Malakal',
+                  'palauPhaseVariation':'small at game scale; local wind/wave setup may shift observed timing and level',
+                  'rockIslandAdjustment':'future local shallow-water response term; do not invent before evidence/validation'
+              },
+              'sourceFiles':source_files,
+              'acceptance':{'visualAcceptance':False,'userAcceptance':False,'productionReady':False}
+          }
+          text=json.dumps(model,ensure_ascii=False,separators=(',',':'))
+          (out/'PALAU_TIDE_R16.json').write_text(json.dumps(model,ensure_ascii=False,indent=2),encoding='utf-8')
+          (out/'PALAU_TIDE_R16.js').write_text('window.PALAU_TIDE_R16='+text+';\n',encoding='utf-8')
+          receipt={
+              'schema':'kaopu.palau.r16-tide-intake-receipt/1.0',
+              'modelSha256':hashlib.sha256((out/'PALAU_TIDE_R16.json').read_bytes()).hexdigest(),
+              'jsBytes':(out/'PALAU_TIDE_R16.js').stat().st_size,
+              'constituentCount':len(constituents),
+              'october1944':stats(rows44),
+              'october2026':stats(rows26),
+              'sourceFiles':source_files,
+              'visualAcceptance':False,'productionReady':False
+          }
+          (out/'PALAU_TIDE_R16_RECEIPT.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2),encoding='utf-8')
+          print(json.dumps(receipt,ensure_ascii=False,indent=2))
+          PY
+
+      - name: Validate R16 tide contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('games/survivor-palau/palau-world/airai-r16/generated/PALAU_TIDE_R16.json')
+          d=json.loads(p.read_text())
+          assert d['station']['id']=='1841367'
+          assert d['constituentCount']>=4
+          assert d['zeroConvention']['runtimeSeaZero']=='mean tide / MSL candidate'
+          assert d['acceptance']['productionReady'] is False
+          print('R16 tide contract passed')
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: palau-r16-tide-intake
+          path: |
+            games/survivor-palau/palau-world/airai-r16/generated/PALAU_TIDE_R16*
+            .r16-tide-source/SHA256SUMS.txt
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Commit generated tide model
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add games/survivor-palau/palau-world/airai-r16/generated
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'build(palau): freeze R16 Malakal tide field and 1944 backcast [skip ci]'
+          git push origin HEAD:work/palau-airai-r13-evidence-bound-core-20260921
