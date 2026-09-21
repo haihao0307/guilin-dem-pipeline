@@ -3,7 +3,7 @@
   "date": "2026-09-21",
   "branch": "work/ocean-life-fish-mother-yellowfin-biological-correction-r001-20260921",
   "build": "YELLOWFIN-BIOLOGICAL-CORRECTION-R001",
-  "phase": "FROZEN_BASELINE_AUDITED",
+  "phase": "CANDIDATE_A_GENERATED_MACHINE_ACCEPTED",
   "frozenInput": {
     "commit": "9b610f4ef0134e015c2fb6b14574e7e4f48ed943",
     "sha256": "2130a3c03fc50d22676919c3599e75707e61d9f75ddd90523a6897887715ec02",
@@ -17,12 +17,13 @@
     "forkLengthInferenceValid": true,
     "skinInfluenceAuditPassed": true,
     "animationChannelAuditPassed": true,
-    "correctionCandidateGenerated": false,
+    "correctionCandidateGenerated": true,
     "candidateBrowserQAPassed": false,
     "manualVisualAcceptancePending": true,
-    "productionReady": false
+    "productionReady": false,
+    "candidateMachineAcceptancePassed": true
   },
-  "next": "Generate Candidate A with one smooth rest-space deformation field shared by geometry, bind skeleton and translation animation channels; preserve the frozen GLB unchanged.",
+  "next": "Run synchronized frozen-vs-Candidate-A browser QA in rest pose and Swim, capture fixed views, verify console zero errors, silhouette, eye/cornea attachment and fin-root continuity.",
   "baseline": {
     "report": "BIOLOGICAL_CORRECTION_R001_BASELINE.json",
     "frozenCopySha256": "2130a3c03fc50d22676919c3599e75707e61d9f75ddd90523a6897887715ec02",
@@ -32,5 +33,49 @@
     "semanticFaces": 6920,
     "joints": 98,
     "animations": 1
+  },
+  "candidateA": {
+    "glb": "geometry/YELLOWFIN_BIOLOGICAL_CORRECTION_R001_CANDIDATE_A.glb",
+    "receipt": "CANDIDATE_A_RECEIPT.json",
+    "sha256": "5a178b23d5c8836b79a0b7f7c7ac0899504f34411499e36eaa68f5a45c9df243",
+    "bytes": 58956912,
+    "before": {
+      "maximumBodyDepthOverForkLength": 0.354311375,
+      "maximumBodyDepthU": 0.5875,
+      "maximumBodyWidthOverForkLength": 0.214951779,
+      "maximumBodyWidthU": 0.7125,
+      "semanticHeadLengthOverForkLength": 0.285143386,
+      "pectoralLengthOverForkLength": 0.203603971,
+      "secondDorsalHeightOverForkLength": 0.134250968,
+      "analHeightOverForkLength": 0.139587282,
+      "caudalVerticalSpanOverForkLength": 0.344582822,
+      "peduncleDepthOverForkLength": 0.060558492,
+      "peduncleWidthOverForkLength": 0.011310506,
+      "deepestBodyNearFirstDorsalBase": true,
+      "firstDorsalBaseURange": [
+        0.591784408,
+        0.711028173
+      ]
+    },
+    "after": {
+      "forkLength": 2.735563469,
+      "forkOverTotalLength": 0.910816875,
+      "maximumBodyDepthOverForkLength": 0.285000005,
+      "maximumBodyDepthU": 0.5875,
+      "maximumBodyWidthOverForkLength": 0.214951779,
+      "maximumBodyWidthU": 0.7125,
+      "semanticHeadLengthOverForkLength": 0.285143387,
+      "pectoralLengthOverForkLength": 0.240000001,
+      "secondDorsalHeightOverForkLength": 0.180000009,
+      "analHeightOverForkLength": 0.180000001,
+      "caudalVerticalSpanOverForkLength": 0.344582822,
+      "peduncleDepthOverForkLength": 0.057921074,
+      "peduncleWidthOverForkLength": 0.011310506,
+      "deepestBodyNearFirstDorsalBase": true,
+      "firstDorsalBaseURange": [
+        0.591784413,
+        0.711028176
+      ]
+    }
   }
 }
