@@ -1,0 +1,17 @@
+<style id="palau-v0172-observation-visual-interface">
+/* Thin screen-space aviation-goggle rim. Transparent centers are mandatory: the frame may
+   communicate worn improvised optics but may never hide the fish, bait or horizon. */
+#pilotLensOverlay{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;overflow:visible;filter:drop-shadow(0 2px 3px #041a1b78)}
+#pilotLensOverlay .outer{fill:none;stroke:#182827b8;stroke-width:13;vector-effect:non-scaling-stroke}
+#pilotLensOverlay .inner{fill:none;stroke:#a7b9ae66;stroke-width:2;vector-effect:non-scaling-stroke}
+#pilotLensOverlay .bridge{fill:none;stroke:#5a4b3fbd;stroke-width:10;stroke-linecap:round;vector-effect:non-scaling-stroke}
+#pilotLensOverlay .strap{fill:none;stroke:#24302da8;stroke-width:8;stroke-linecap:round;vector-effect:non-scaling-stroke}
+#pilotSurvivalLayer>#survivalRibbon,#pilotSurvivalLayer>#observeCard,#pilotSurvivalLayer>#pilotNotice,#pilotSurvivalLayer>#storySheet{z-index:5}
+@media(max-width:760px){#pilotLensOverlay .outer{stroke-width:9}#pilotLensOverlay .bridge{stroke-width:7}#pilotLensOverlay .strap{stroke-width:6}}
+</style>
+<svg id="pilotLensOverlay" hidden aria-hidden="true" viewBox="0 0 1280 800" preserveAspectRatio="none">
+ <ellipse class="outer" cx="442" cy="418" rx="270" ry="226"/><ellipse class="inner" cx="442" cy="418" rx="259" ry="215"/>
+ <ellipse class="outer" cx="838" cy="418" rx="270" ry="226"/><ellipse class="inner" cx="838" cy="418" rx="259" ry="215"/>
+ <path class="bridge" d="M704 397 C674 381 606 381 576 397"/>
+ <path class="strap" d="M174 414 L90 385 M1106 414 L1190 385"/>
+</svg>
