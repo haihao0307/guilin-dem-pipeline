@@ -4,9 +4,14 @@
   "candidate": "YELLOWFIN-BIOLOGICAL-CORRECTION-R001-CANDIDATE-A",
   "baseline": "BIOLOGICAL_CORRECTION_R001_BASELINE.json",
   "solver": {
-    "version": "root-pinned-final-metric-v2",
-    "method": "binary search against the final deformed component metric",
-    "reason": "The first run proved that target/current scaling is invalid under root pinning and smoothstep attenuation."
+    "version": "root-pinned-final-metric-v3-anatomical-surface-pairs",
+    "method": "binary search against the final deformed anatomical fin metric after pairing mirrored sheets",
+    "reason": "Raw connected components are surface sheets, not necessarily separate anatomical fins. The first run also proved that target/current scaling is invalid under root pinning and smoothstep attenuation.",
+    "dorsalSurfaceGroups": {
+      "firstDorsal": [0, 3],
+      "secondDorsal": [2, 4],
+      "posteriorDorsalStructure": [1]
+    }
   },
   "targets": {
     "maximumBodyDepthOverForkLength": 0.285,
@@ -45,9 +50,10 @@
   },
   "finPolicy": {
     "pectoral": "extend each connected side-fin component away from its shared body root; root vertices remain pinned",
-    "secondDorsal": "extend only the second anterior-ordered dorsal component after the first dorsal; root vertices remain pinned",
+    "secondDorsal": "extend both mirrored sheets of the second dorsal anatomical group, frozen components 2 and 4, with identical final height; root vertices remain pinned",
     "anal": "extend only the connected anal component with the greatest ventral height; root vertices remain pinned",
-    "firstDorsal": "do not independently elongate in Candidate A",
+    "firstDorsal": "retain both mirrored sheets, frozen components 0 and 3, without independent elongation in Candidate A",
+    "posteriorDorsalStructure": "do not relabel or independently rescale frozen component 1 in Candidate A",
     "caudal": "do not independently rescale in Candidate A",
     "finlets": "do not change counts or independently rescale in Candidate A"
   },
