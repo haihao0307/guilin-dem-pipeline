@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Fish Mother · Yellowfin Study R0.05</title>
+<style>
+:root{color-scheme:dark;--bg:#071018;--panel:#0d1922;--line:#294754;--text:#eef6f8;--muted:#93a9b5;--good:#72d8ad;--warn:#e9c86d;--bad:#ef918b;--accent:#79c9f3}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"SF Pro Display","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+button,select{font:inherit;border:1px solid var(--line);background:#132631;color:var(--text);border-radius:7px;padding:6px 8px}
+button.active{border-color:var(--good);color:var(--good);background:#102a25}
+.app{height:100dvh;display:grid;grid-template-rows:50px minmax(0,1fr) 30px}
+.top{display:flex;align-items:center;gap:8px;padding:0 12px;background:#091821;border-bottom:1px solid var(--line)}
+.top b{font-size:14px}.top small{font-size:9px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tag{margin-left:auto;color:var(--warn);border:1px solid #5b5031;border-radius:999px;padding:4px 8px;font-size:9px;white-space:nowrap}
+.main{min-height:0;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) 310px}
+.viewer,.imagePanel{position:relative;min-width:0;min-height:0;background:#02070a;border-right:1px solid var(--line)}
+.viewer iframe{width:100%;height:100%;border:0}.label{position:absolute;z-index:8;left:9px;top:9px;max-width:75%;padding:7px 9px;border:1px solid #426779;border-radius:8px;background:#07131bdd;font-size:10px;line-height:1.4}.label b{display:block}.label span{color:var(--muted)}
+.viewerTools{position:absolute;z-index:9;right:9px;top:9px;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;max-width:60%}.viewerTools button{font-size:8px}
+.imageWrap{position:absolute;inset:0;display:grid;place-items:center;overflow:hidden;background:#0b1116}
+.imageMeasure{position:relative;max-width:100%;max-height:100%;display:inline-block}.imageMeasure img{display:block;max-width:100%;max-height:calc(100dvh - 80px);object-fit:contain;user-select:none;-webkit-user-drag:none}.overlay{position:absolute;inset:0;touch-action:none}
+.dot{position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2px solid #fff;background:#e9c86d;box-shadow:0 0 0 2px #0008;pointer-events:none}.dot.b{background:#79c9f3}.dot.dorsal{background:#ffd436}.dot.ventral{background:#ff8c49}.dot.snout{background:#72d8ad}.dot.fork{background:#ef918b}
+.panel{background:var(--panel);padding:10px;overflow:auto}
+h3{font-size:10px;color:#dcebf0;margin:7px 0 8px;letter-spacing:.08em}.grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.box{padding:8px;border:1px solid #355766;border-radius:8px;background:#09151c;font-size:9px;line-height:1.45;color:var(--muted)}.box b{color:#fff}
+.metric{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px dashed #203945;font-size:9px;color:var(--muted)}.metric strong{color:#fff;text-align:right}
+.nodes{max-height:170px;overflow:auto;border:1px solid #294654;border-radius:8px;background:#08131a}.node{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #172d38;border-radius:0;padding:6px 8px;background:transparent;color:#a9bdc7;font-size:9px}.node.active{background:#102630;color:var(--good)}
+.warn{padding:8px;border:1px solid #5c5130;border-radius:8px;background:#171407;color:var(--warn);font-size:9px;line-height:1.45}
+.gate{font-size:9px;color:var(--muted);margin:5px 0}.gate:before{content:"●";color:var(--bad);margin-right:6px}.gate.ok:before{color:var(--good)}.gate.warn:before{color:var(--warn)}
+.foot{display:flex;align-items:center;gap:12px;padding:0 10px;background:#091821;border-top:1px solid var(--line);font-size:9px;color:var(--muted)}.foot b{color:var(--good)}
+.mobile{display:none}
+@media(max-width:960px){
+ .app{grid-template-rows:50px minmax(0,1fr) 58px}.main{display:block;position:relative}.viewer,.imagePanel{position:absolute;inset:0;border:0}.imagePanel{display:none}.main.mode-image .viewer{display:none}.main.mode-image .imagePanel{display:block}.panel{position:fixed;z-index:30;top:50px;bottom:58px;right:0;width:min(90vw,370px);transform:translateX(105%);transition:transform .2s;box-shadow:0 20px 50px #000a}.panel.show{transform:translateX(0)}.mobile{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:5px 6px;background:#0d1d25}.mobile button{min-height:46px;font-size:9px}.foot{display:none}.top small{display:none}.tag{font-size:8px}.label{max-width:64%}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top"><b>Yellowfin Study R0.05</b><small>3D 源样板 + 作者侧视图像测量 + finlet 登记</small><span class="tag">MEASURE, DO NOT CREATE</span></header>
+<main class="main" id="main">
+<section class="viewer">
+<div class="label"><b>① FISH-REF-002 3D</b><span>只观察源样板；固定视角、节点和动作都来自原参考。</span></div>
+<div class="viewerTools"><button data-view="side_left" class="active">左侧</button><button data-view="side_right">右侧</button><button data-view="head">头</button><button data-view="tail">尾</button><button data-view="top">顶</button><button data-view="three">3/4</button></div>
+<iframe id="viewer" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
+</section>
+<section class="imagePanel">
+<div class="label"><b>② 作者公开侧视 Render</b><span>点击测量；先校准 Snout 和 Fork，再量任何长度。D/V 模式用于逐个登记 finlets。</span></div>
+<div class="imageWrap"><div class="imageMeasure" id="imageMeasure"><img id="renderImg" src="https://media.fab.com/image_previews/gallery_images/e0299ded-1977-4510-a003-1aff0156996d/d8bd9870-35fc-4d95-8a97-0898da56921e.jpg" alt="GoldenZtuff Tuna Fish side render"><div class="overlay" id="overlay"></div></div></div>
+</section>
+<aside class="panel" id="panel">
+<h3>图像测量模式</h3>
+<div class="grid"><button data-mode="snout">设 Snout</button><button data-mode="fork">设 Fork</button><button data-mode="A">测量 A</button><button data-mode="B">测量 B</button><button data-mode="dorsal">加背侧 finlet</button><button data-mode="ventral">加腹侧 finlet</button></div>
+<div class="box" id="imageStatus"><b>状态</b><br>先设 Snout 和 Fork。</div>
+<div class="metric"><span>Fork length px</span><strong id="flPx">—</strong></div>
+<div class="metric"><span>A↔B</span><strong id="abPx">—</strong></div>
+<div class="metric"><span>A↔B / FL</span><strong id="abPct">—</strong></div>
+<div class="metric"><span>背侧 finlets 已点</span><strong id="dCount">0</strong></div>
+<div class="metric"><span>腹侧 finlets 已点</span><strong id="vCount">0</strong></div>
+<div class="grid" style="margin-top:6px"><button id="undoImg">撤销最后一点</button><button id="clearImg">清空图像测量</button></div>
+
+<h3>3D 源节点</h3>
+<select id="group"><option value="head">头/嘴/眼/鳃盖</option><option value="fin">鳍</option><option value="tail">尾柄/尾鳍</option><option value="axial">身体轴</option><option value="all">全部</option></select>
+<div class="nodes" id="nodes"><button class="node">等待源节点…</button></div>
+<div class="box" id="sel"><b>当前节点</b><br>未选择</div>
+
+<h3>学习门</h3>
+<div class="gate ok">R003 坐标混用已作废</div>
+<div class="gate ok">R004 frame-safe 测量保留</div>
+<div class="gate warn">R005 正在补侧视图像/finlet 直接证据</div>
+<div class="gate">未完成前 Source Copy 不启动</div>
+
+<h3>账本</h3>
+<div class="grid"><button id="saveSnapshot">保存当前快照</button><button id="export">导出 JSON</button></div>
+<div class="metric"><span>已保存快照</span><strong id="snapCount">0</strong></div>
+</aside>
+</main>
+<nav class="mobile"><button id="show3D">3D 样板</button><button id="showImage">侧视测量</button><button id="showPanel">测量面板</button><button id="play">播放 Swim</button></nav>
+<footer class="foot"><b>● sustained source study</b><span id="ready">viewer starting</span><span id="nodeCount">nodes —</span><span id="calibState">image FL uncalibrated</span><span>Generation Locked</span></footer>
+</div>
+<script src="https://static.sketchfab.com/api/sketchfab-viewer-1.12.1.js"></script>
+<script>
+(()=>{'use strict';
+const UID='642c6515d893474a8fc8f129491efcac';
+const V={side_left:{eye:[4.2,-.0069,.1128],target:[0,-.0069,.1128]},side_right:{eye:[-4.2,-.0069,.1128],target:[0,-.0069,.1128]},head:{eye:[0,4.3,.1128],target:[0,-.0069,.1128]},tail:{eye:[0,-4.3,.1128],target:[0,-.0069,.1128]},top:{eye:[0,-.0069,4.2],target:[0,-.0069,.1128]},three:{eye:[3.2,3.1,2],target:[0,-.0069,.1128]}};
+const RE={head:/head|jaw|eye|side\.|mouth|lip/i,fin:/fin|upper|lower/i,tail:/tail|spine\.00[678]|pedunc/i,axial:/rootjoint|hips|spine_|spine\.|head_05/i,all:/.*/};
+const $=id=>document.getElementById(id);let api=null,nodes=[],animations=[],mode='snout';
+let imgState={snout:null,fork:null,A:null,B:null,dorsal:[],ventral:[],history:[]};
+let snapshots=[];try{imgState=JSON.parse(localStorage.getItem('yft-r005-image')||JSON.stringify(imgState));snapshots=JSON.parse(localStorage.getItem('yft-r005-snaps')||'[]')}catch(e){}
+function persist(){localStorage.setItem('yft-r005-image',JSON.stringify(imgState));localStorage.setItem('yft-r005-snaps',JSON.stringify(snapshots));renderImageState();$('snapCount').textContent=snapshots.length}
+function dot(p,cls,label){const d=document.createElement('div');d.className='dot '+cls;d.style.left=(p.x*100)+'%';d.style.top=(p.y*100)+'%';d.title=label;$('overlay').appendChild(d)}
+function dist(a,b){return a&&b?Math.hypot(a.x-b.x,a.y-b.y):null}
+function renderImageState(){
+ $('overlay').innerHTML='';
+ if(imgState.snout)dot(imgState.snout,'snout','snout');
+ if(imgState.fork)dot(imgState.fork,'fork','fork');
+ if(imgState.A)dot(imgState.A,'','A');
+ if(imgState.B)dot(imgState.B,'b','B');
+ imgState.dorsal.forEach((p,i)=>dot(p,'dorsal','D'+(i+1)));
+ imgState.ventral.forEach((p,i)=>dot(p,'ventral','V'+(i+1)));
+ const fl=dist(imgState.snout,imgState.fork),ab=dist(imgState.A,imgState.B);
+ $('flPx').textContent=fl?(fl*1000).toFixed(1)+' relpx':'—';
+ $('abPx').textContent=ab?(ab*1000).toFixed(1)+' relpx':'—';
+ $('abPct').textContent=fl&&ab?(ab/fl*100).toFixed(2)+'%':'—';
+ $('dCount').textContent=imgState.dorsal.length;$('vCount').textContent=imgState.ventral.length;
+ $('calibState').textContent=fl?'image FL calibrated':'image FL uncalibrated';
+ $('imageStatus').innerHTML='<b>当前模式：</b>'+mode+'<br>Snout '+(imgState.snout?'✓':'—')+' · Fork '+(imgState.fork?'✓':'—');
+}
+document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('active',x===b));renderImageState()});
+$('overlay').addEventListener('pointerdown',e=>{const r=$('overlay').getBoundingClientRect(),p={x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height};imgState.history.push({mode,prev:JSON.parse(JSON.stringify(imgState[mode]??null))});if(mode==='snout'||mode==='fork'||mode==='A'||mode==='B')imgState[mode]=p;else if(mode==='dorsal'||mode==='ventral')imgState[mode].push(p);persist()});
+$('undoImg').onclick=()=>{const h=imgState.history.pop();if(!h)return;if(h.mode==='dorsal'||h.mode==='ventral')imgState[h.mode].pop();else imgState[h.mode]=h.prev;persist()};
+$('clearImg').onclick=()=>{imgState={snout:null,fork:null,A:null,B:null,dorsal:[],ventral:[],history:[]};persist()};
+$('saveSnapshot').onclick=()=>{snapshots.push({time:new Date().toISOString(),image:JSON.parse(JSON.stringify(imgState))});persist()};
+$('export').onclick=()=>{const payload={schema:'kaopu.fish-mother.yellowfin-r005-live-ledger/1.0',date:new Date().toISOString(),source:'FISH-REF-002',imageMeasurement:imgState,snapshots};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='YELLOWFIN_R005_SOURCE_STUDY.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},300)};
+renderImageState();$('snapCount').textContent=snapshots.length;
+
+function renderNodes(){const re=RE[$('group').value]||/.*/;const list=nodes.filter(n=>re.test(String(n.name||''))).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));$('nodes').innerHTML=list.slice(0,300).map(n=>'<button class="node" data-id="'+n.instanceID+'">'+String(n.name||'(unnamed)')+'</button>').join('')||'<button class="node">无节点</button>';document.querySelectorAll('.node[data-id]').forEach(b=>b.onclick=()=>pick(Number(b.dataset.id),b))}
+function pick(id,b){document.querySelectorAll('.node').forEach(x=>x.classList.remove('active'));b.classList.add('active');if(!api||!api.getMatrix)return;api.getMatrix(id,(e,m)=>{if(e||!m)return;const p=[+m[12]||0,+m[13]||0,+m[14]||0];$('sel').innerHTML='<b>'+b.textContent+'</b><br>instanceID '+id+'<br>['+p.map(v=>v.toFixed(6)).join(', ')+']'})}
+$('group').onchange=renderNodes;
+function setView(k){if(!api)return;const v=V[k];if(v)api.setCameraLookAt(v.eye,v.target,.8,()=>{})}
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));
+$('show3D').onclick=()=>{$('main').classList.remove('mode-image');$('panel').classList.remove('show')};
+$('showImage').onclick=()=>{$('main').classList.add('mode-image');$('panel').classList.remove('show')};
+$('showPanel').onclick=()=>$('panel').classList.toggle('show');
+$('play').onclick=()=>{if(api&&animations[0])api.setCurrentAnimationByUID(animations[0][0],()=>api.play(()=>{}))};
+if(window.Sketchfab){const client=new Sketchfab('1.12.1',$('viewer'));client.init(UID,{autostart:1,preload:1,camera:0,animation_autoplay:0,dnt:1,ui_theme:'dark',success(a){api=a;api.start();api.addEventListener('viewerready',()=>{$('ready').textContent='viewer ready';let q=2,done=()=>{if(--q===0){renderNodes();$('nodeCount').textContent='nodes '+nodes.length;setView('side_left')}};api.getNodeMap((e,d)=>{nodes=e?[]:(Array.isArray(d)?d:Object.values(d||{}));done()});api.getAnimations((e,d)=>{animations=e?[]:(d||[]);done()})})}})}
+})();
+</script>
+</body>
+</html>
