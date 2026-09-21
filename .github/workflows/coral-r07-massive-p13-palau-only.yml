@@ -8,7 +8,7 @@ on:
       - coral-mother/palau/PALAU_ONLY_PRODUCTION_POLICY_ZH.md
       - coral-mother/palau/PALAU_CORAL_SPECIES_REGISTRY_R1.json
       - tools/coral/validate_palau_only_coral_registry.py
-      - tools/coral/coral_r07_massive_p13_palau_only.py
+      - tools/coral/coral_r07_massive_p13_palau_only_production.py
       - tools/coral/coral_r07_massive_p13_browser_qa.py
       - tools/coral/coral_r07_massive_p12_browser_qa.py
       - tools/coral/coral_r07_massive_p11_browser_qa.py
@@ -51,7 +51,7 @@ jobs:
           test -s "$SOURCE/PALAU_OCCURRENCE_EVIDENCE.json"
           rm -rf /tmp/coral-r07-p13
           cp -a "$SOURCE" /tmp/coral-r07-p13
-          python3 work/tools/coral/coral_r07_massive_p13_palau_only.py /tmp/coral-r07-p13
+          python3 work/tools/coral/coral_r07_massive_p13_palau_only_production.py /tmp/coral-r07-p13
           printf '%s\n' \
             'https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-r07-massive-porites-p13-palau-only/' \
             > /tmp/coral-r07-p13/PUBLIC_URL.txt
