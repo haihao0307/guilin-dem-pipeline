@@ -1,0 +1,57 @@
+name: Landscape Karst DEM Field R2.6.1 Debug
+
+on:
+  push:
+    branches:
+      - feature/landscape-karst-dem-field-r26-cracks-20260921
+    paths:
+      - .github/workflows/landscape-karst-dem-field-r261-debug.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          python workbenches/landscape-karst-dem-field-r2-6-1-driver-safe/build_r261.py
+      - name: Capture diagnostics
+        continue-on-error: true
+        run: |
+          python3 -m http.server 8000 >/tmp/http.log 2>&1 &
+          SERVER=$!
+          trap 'kill $SERVER || true' EXIT
+          for i in $(seq 1 60); do curl -fsS http://127.0.0.1:8000/ >/dev/null && break; sleep .25; done
+          CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)
+          URL=http://127.0.0.1:8000/workbenches/landscape-karst-dem-field-r2-6-1-driver-safe/index.html
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage \
+            --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist \
+            --run-all-compositor-stages-before-draw --virtual-time-budget=40000 \
+            --dump-dom "$URL" >/tmp/r261-dom.html 2>/tmp/r261-chrome.log || true
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage \
+            --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist \
+            --run-all-compositor-stages-before-draw --virtual-time-budget=40000 \
+            --window-size=1600,900 --screenshot=/tmp/r261.png "$URL" >/tmp/r261-shot.log 2>&1 || true
+          echo '--- DATASET MARKERS ---'
+          grep -o 'data-karst-[^ >]*' /tmp/r261-dom.html || true
+          echo '--- ERROR BOX ---'
+          grep -o 'DEM 几何缓冲[^<]*\|WebGL 绘制错误[^<]*\|GPU 已完成[^<]*' /tmp/r261-dom.html || true
+          echo '--- CHROME LOG TAIL ---'
+          tail -80 /tmp/r261-chrome.log || true
+          mkdir -p /tmp/r261-debug
+          cp /tmp/r261-dom.html /tmp/r261-debug/dom.html || true
+          cp /tmp/r261-chrome.log /tmp/r261-debug/chrome.log || true
+          cp /tmp/r261-shot.log /tmp/r261-debug/shot.log || true
+          cp /tmp/r261.png /tmp/r261-debug/r261.png || true
+          cp /tmp/http.log /tmp/r261-debug/http.log || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: landscape-karst-r261-debug
+          path: /tmp/r261-debug
+          retention-days: 7
