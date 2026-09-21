@@ -1,0 +1,101 @@
+{
+  "schema": "kaopu.palau.story-spatial-layout/1.0",
+  "version": "R15_ROCK_ISLAND_STORY_CORE_20260921",
+  "authority": {
+    "type": "user_annotated_satellite_reference",
+    "imageSizePx": [1594, 1362],
+    "georeferencingStatus": "RELATIVE_LAYOUT_ONLY_NOT_SURVEYED",
+    "modernMapLabelsAreCanon": false,
+    "notes": [
+      "Arrows and handwritten labels constrain relative story relations, not exact latitude/longitude.",
+      "Exact geographic placement must be solved against DEM, coastline, lagoon and reef evidence before production lock."
+    ]
+  },
+  "storyOpening": {
+    "date": "1944-10",
+    "playerRole": "Allied fighter pilot",
+    "priorAction": "attack on Japanese small transport and supply craft between Palau islands",
+    "aircraftState": "damaged; radio failed",
+    "playerInjury": "not injured",
+    "drift": "ditched to the east, boarded life raft, drifted several days until supplies were exhausted",
+    "playableStart": "wake on the white-sand shore"
+  },
+  "zones": [
+    {
+      "id": "WHITE_SAND_WAKE_ZONE",
+      "role": "playable_start_and_highest_detail_beach",
+      "referencePx": [814, 535],
+      "referenceUv": [0.5107, 0.3928],
+      "extentPx": [[755, 495], [905, 605]],
+      "precision": "USER_RELATIVE_HIGH_CONFIDENCE"
+    },
+    {
+      "id": "ROCK_ISLAND_HIDE_ZONE",
+      "role": "primary_hideout_rest_observation_and_scene_center",
+      "referencePx": [748, 505],
+      "referenceUv": [0.4693, 0.3708],
+      "extentPx": [[680, 420], [835, 590]],
+      "precision": "USER_RELATIVE_REGION_EXACT_CENTER_PENDING",
+      "productionRule": "Relocate prior beach, arch, rock-shelf and island details around this Rock Island only when terrain relations remain plausible."
+    },
+    {
+      "id": "TURTLE_HOUSE_ZONE",
+      "role": "turtle_habitat_shallow_lagoon_and_observation_area",
+      "referencePx": [633, 515],
+      "referenceUv": [0.3971, 0.3781],
+      "extentPx": [[520, 455], [715, 665]],
+      "precision": "USER_RELATIVE_HIGH_CONFIDENCE"
+    },
+    {
+      "id": "POWER_TREE_ZONE",
+      "role": "power_tree_landmark_and_east_northeast_objective",
+      "referencePx": [780, 482],
+      "referenceUv": [0.4893, 0.3539],
+      "extentPx": [[730, 405], [850, 525]],
+      "precision": "USER_RELATIVE_HIGH_CONFIDENCE"
+    },
+    {
+      "id": "JAPANESE_OUTPOST_ZONE",
+      "role": "enemy_outpost_patrol_and_exposure_source",
+      "referencePx": [391, 543],
+      "referenceUv": [0.2453, 0.3987],
+      "extentPx": [[300, 430], [475, 650]],
+      "precision": "USER_RELATIVE_HIGH_CONFIDENCE"
+    }
+  ],
+  "movementPolicy": {
+    "primaryAxis": [
+      "WHITE_SAND_WAKE_ZONE",
+      "ROCK_ISLAND_HIDE_ZONE",
+      "TURTLE_HOUSE_ZONE",
+      "POWER_TREE_ZONE",
+      "EAST_ACTIVITY_CORRIDOR"
+    ],
+    "allowedBias": "EAST_AND_SOUTHEAST",
+    "avoidSectors": ["WEST", "NORTH", "NORTHWEST"],
+    "avoidReason": "Japanese outpost and patrol exposure",
+    "threatBoundaryMode": "graduated_detection_and_patrol_risk_not_unexplained_invisible_wall"
+  },
+  "sceneDensity": {
+    "ROCK_ISLAND_HIDE_ZONE": "MAXIMUM",
+    "WHITE_SAND_WAKE_ZONE": "MAXIMUM",
+    "TURTLE_HOUSE_ZONE": "HIGH",
+    "POWER_TREE_ZONE": "HIGH",
+    "EAST_ACTIVITY_CORRIDOR": "HIGH",
+    "SURROUNDING_ROCK_ISLANDS_AND_LAGOON": "MEDIUM",
+    "WEST_NORTH_THREAT_SECTOR": "EVIDENCE_PRESERVED_THREAT_FOCUSED"
+  },
+  "runtimeContracts": {
+    "fullPalauFirstView": true,
+    "continuousWorld": true,
+    "traditionalLOD": false,
+    "oceanRuntime": "frozen Ocean Mother R018 V0.3.6 or byte-verified successor",
+    "calibrationIslandAllowed": false,
+    "externalRuntimeRequestsAllowed": false
+  },
+  "acceptance": {
+    "visualAcceptance": false,
+    "userAcceptance": false,
+    "productionReady": false
+  }
+}
