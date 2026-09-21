@@ -11,8 +11,8 @@
   },
   "output": {
     "path": "apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/geometry/YELLOWFIN_BIOLOGICAL_CORRECTION_R001_CANDIDATE_A.glb",
-    "sha256": "5a178b23d5c8836b79a0b7f7c7ac0899504f34411499e36eaa68f5a45c9df243",
-    "bytes": 58956912,
+    "sha256": "c7c10590375a503fdfc6b38212abcf35be52d5d691b180a6194ac675fa10f69f",
+    "bytes": 58956676,
     "meshCount": 3,
     "primitiveCount": 15,
     "nodeCount": 113,
@@ -35,8 +35,16 @@
       0.24,
       0.24
     ],
-    "secondDorsalFactor": 2.424963534,
+    "secondDorsalFactor": 4.722846545,
+    "secondDorsalFactors": [
+      4.722846545,
+      4.722846545
+    ],
     "secondDorsalSolvedMetric": 0.18,
+    "secondDorsalSolvedMetrics": [
+      0.18,
+      0.18
+    ],
     "analFactor": 1.309396497,
     "analSolvedMetric": 0.18,
     "targets": {
@@ -83,7 +91,7 @@
     "maximumBodyWidthU": 0.7125,
     "semanticHeadLengthOverForkLength": 0.285143386,
     "pectoralLengthOverForkLength": 0.203603971,
-    "secondDorsalHeightOverForkLength": 0.134250968,
+    "secondDorsalHeightOverForkLength": 0.066386989,
     "analHeightOverForkLength": 0.139587282,
     "caudalVerticalSpanOverForkLength": 0.344582822,
     "peduncleDepthOverForkLength": 0.060558492,
@@ -103,7 +111,12 @@
     "maximumBodyWidthU": 0.7125,
     "semanticHeadLengthOverForkLength": 0.285143387,
     "pectoralLengthOverForkLength": 0.240000001,
-    "secondDorsalHeightOverForkLength": 0.180000009,
+    "secondDorsalHeightOverForkLength": 0.180000012,
+    "firstDorsalSurfaceHeightSpread": 0.0,
+    "secondDorsalSurfaceHeightSpread": 0.0,
+    "dorsalAnatomicalGroupCount": 3,
+    "firstDorsalSurfaceCount": 2,
+    "secondDorsalSurfaceCount": 2,
     "analHeightOverForkLength": 0.180000001,
     "caudalVerticalSpanOverForkLength": 0.344582822,
     "peduncleDepthOverForkLength": 0.057921074,
@@ -118,18 +131,19 @@
     "maximumBodyDepthOverForkLength": -0.06931137,
     "semanticHeadLengthOverForkLength": 1e-09,
     "pectoralLengthOverForkLength": 0.03639603,
-    "secondDorsalHeightOverForkLength": 0.045749041,
+    "secondDorsalHeightOverForkLength": 0.113613023,
     "analHeightOverForkLength": 0.040412719,
     "caudalVerticalSpanOverForkLength": 0.0,
     "peduncleDepthOverForkLength": -0.002637418,
     "peduncleWidthOverForkLength": 0.0
   },
   "deformation": {
-    "maximumPrimaryVertexDisplacementOverForkLength": 0.06019076,
-    "meanPrimaryVertexDisplacementOverForkLength": 0.014892496,
+    "maximumPrimaryVertexDisplacementOverForkLength": 0.104076541,
+    "meanPrimaryVertexDisplacementOverForkLength": 0.016028096,
     "changedPrimaryVertices": 3731,
     "primaryVertices": 4053,
     "firstDorsalIndependentlyElongated": false,
+    "secondDorsalMirroredSheetsDeformedTogether": true,
     "caudalIndependentlyRescaled": false,
     "finletCountChanged": false
   },
@@ -203,34 +217,185 @@
         "ventralHeightOverForkLength": 0.041100956
       }
     ],
-    "firstDorsal": {
-      "component": 0,
-      "faces": 187,
-      "vertices": 119,
-      "rootVertices": 25,
-      "rootU": 0.648401473,
-      "uRange": [
-        0.591784408,
-        0.711028172
-      ],
-      "maximumRootDistanceOverForkLength": 0.073878338,
-      "dorsalHeightOverForkLength": 0.11048983,
-      "ventralHeightOverForkLength": 0.003160455
-    },
-    "secondDorsal": {
-      "component": 3,
-      "faces": 187,
-      "vertices": 119,
-      "rootVertices": 25,
-      "rootU": 0.648401473,
-      "uRange": [
-        0.591784408,
-        0.711028172
-      ],
-      "maximumRootDistanceOverForkLength": 0.073878338,
-      "dorsalHeightOverForkLength": 0.11048983,
-      "ventralHeightOverForkLength": 0.003160455
-    },
+    "dorsalAnatomicalGroups": [
+      {
+        "componentIds": [
+          0,
+          3
+        ],
+        "surfaceCount": 2,
+        "rootU": 0.648401473,
+        "uRange": [
+          0.591784408,
+          0.711028172
+        ],
+        "dorsalHeightOverForkLength": 0.11048983,
+        "surfaceHeightSpread": 0.0,
+        "surfaces": [
+          {
+            "component": 0,
+            "faces": 187,
+            "vertices": 119,
+            "rootVertices": 25,
+            "rootU": 0.648401473,
+            "uRange": [
+              0.591784408,
+              0.711028172
+            ],
+            "maximumRootDistanceOverForkLength": 0.073878338,
+            "dorsalHeightOverForkLength": 0.11048983,
+            "ventralHeightOverForkLength": 0.003160455
+          },
+          {
+            "component": 3,
+            "faces": 187,
+            "vertices": 119,
+            "rootVertices": 25,
+            "rootU": 0.648401473,
+            "uRange": [
+              0.591784408,
+              0.711028172
+            ],
+            "maximumRootDistanceOverForkLength": 0.073878338,
+            "dorsalHeightOverForkLength": 0.11048983,
+            "ventralHeightOverForkLength": 0.003160455
+          }
+        ]
+      },
+      {
+        "componentIds": [
+          2,
+          4
+        ],
+        "surfaceCount": 2,
+        "rootU": 0.48431196,
+        "uRange": [
+          0.401981949,
+          0.553435734
+        ],
+        "dorsalHeightOverForkLength": 0.053484557,
+        "surfaceHeightSpread": 0.0,
+        "surfaces": [
+          {
+            "component": 2,
+            "faces": 200,
+            "vertices": 128,
+            "rootVertices": 30,
+            "rootU": 0.48431196,
+            "uRange": [
+              0.401981949,
+              0.553435734
+            ],
+            "maximumRootDistanceOverForkLength": 0.039321713,
+            "dorsalHeightOverForkLength": 0.053484557,
+            "ventralHeightOverForkLength": 0.013152281
+          },
+          {
+            "component": 4,
+            "faces": 200,
+            "vertices": 128,
+            "rootVertices": 30,
+            "rootU": 0.48431196,
+            "uRange": [
+              0.401981949,
+              0.553435734
+            ],
+            "maximumRootDistanceOverForkLength": 0.039321713,
+            "dorsalHeightOverForkLength": 0.053484557,
+            "ventralHeightOverForkLength": 0.013152281
+          }
+        ]
+      },
+      {
+        "componentIds": [
+          1
+        ],
+        "surfaceCount": 1,
+        "rootU": 0.35553064,
+        "uRange": [
+          0.106682738,
+          0.405582629
+        ],
+        "dorsalHeightOverForkLength": 0.173967057,
+        "surfaceHeightSpread": 0.0,
+        "surfaces": [
+          {
+            "component": 1,
+            "faces": 358,
+            "vertices": 204,
+            "rootVertices": 13,
+            "rootU": 0.35553064,
+            "uRange": [
+              0.106682738,
+              0.405582629
+            ],
+            "maximumRootDistanceOverForkLength": 0.268549775,
+            "dorsalHeightOverForkLength": 0.173967057,
+            "ventralHeightOverForkLength": 0.005488737
+          }
+        ]
+      }
+    ],
+    "firstDorsalSurfaces": [
+      {
+        "component": 0,
+        "faces": 187,
+        "vertices": 119,
+        "rootVertices": 25,
+        "rootU": 0.648401473,
+        "uRange": [
+          0.591784408,
+          0.711028172
+        ],
+        "maximumRootDistanceOverForkLength": 0.073878338,
+        "dorsalHeightOverForkLength": 0.11048983,
+        "ventralHeightOverForkLength": 0.003160455
+      },
+      {
+        "component": 3,
+        "faces": 187,
+        "vertices": 119,
+        "rootVertices": 25,
+        "rootU": 0.648401473,
+        "uRange": [
+          0.591784408,
+          0.711028172
+        ],
+        "maximumRootDistanceOverForkLength": 0.073878338,
+        "dorsalHeightOverForkLength": 0.11048983,
+        "ventralHeightOverForkLength": 0.003160455
+      }
+    ],
+    "secondDorsalSurfaces": [
+      {
+        "component": 2,
+        "faces": 200,
+        "vertices": 128,
+        "rootVertices": 30,
+        "rootU": 0.48431196,
+        "uRange": [
+          0.401981949,
+          0.553435734
+        ],
+        "maximumRootDistanceOverForkLength": 0.039321713,
+        "dorsalHeightOverForkLength": 0.053484557,
+        "ventralHeightOverForkLength": 0.013152281
+      },
+      {
+        "component": 4,
+        "faces": 200,
+        "vertices": 128,
+        "rootVertices": 30,
+        "rootU": 0.48431196,
+        "uRange": [
+          0.401981949,
+          0.553435734
+        ],
+        "maximumRootDistanceOverForkLength": 0.039321713,
+        "dorsalHeightOverForkLength": 0.053484557,
+        "ventralHeightOverForkLength": 0.013152281
+      }
+    ],
     "anal": {
       "component": 0,
       "faces": 338,
@@ -269,6 +434,9 @@
     "caudalSpanPreserved": true,
     "peduncleDepthPreserved": true,
     "deepestBodyLocationPreserved": true,
+    "dorsalAnatomicalSurfaceGroupsResolved": true,
+    "firstDorsalSurfaceSymmetryPassed": true,
+    "secondDorsalSurfaceSymmetryPassed": true,
     "candidateBrowserQAPassed": false,
     "manualVisualAcceptancePending": true,
     "productionReady": false,
@@ -277,6 +445,7 @@
   "risks": [
     "Candidate A is a machine-valid morphometric candidate, not a visually approved final fish.",
     "Nonlinear rest-space correction is approximated through the existing 98-joint rig; extreme poses may still reveal volume loss or local creasing.",
+    "Dorsal anatomical identity is resolved from mirrored surface pairs, not raw connected-component order.",
     "The inferred fork landmark remains a machine hypothesis and must be checked in the browser overlay.",
     "Published adult fin elongation is variable; the 0.18 FL target is a declared large-adult design candidate, not universal species truth."
   ],
