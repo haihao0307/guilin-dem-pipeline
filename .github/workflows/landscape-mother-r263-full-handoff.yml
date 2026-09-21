@@ -1,0 +1,156 @@
+name: Landscape Mother R2.6.3 Full Handoff
+
+on:
+  push:
+    branches:
+      - handoff/landscape-mother-r263-production-full-20260921
+    paths:
+      - handoffs/landscape-mother/r263-production-restart-20260921/PACKAGE_ORDER.md
+      - .github/workflows/landscape-mother-r263-full-handoff.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify exact restored baseline
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor 14fa478ff4545c2c58656bf57ba5326c03492a33 HEAD
+          test -f workbenches/landscape-karst-dem-field-r2-6-3-production/index.html
+          test -f workbenches/landscape-karst-dem-field-r2-6-3-production/build_r263.py
+          test -f workbenches/landscape-karst-dem-field-r2-6-3-production/production_contract.json
+          test -f workbenches/landscape-karst-dem-field-r2-6-3-production/karst_field_runtime_bridge.js
+          test ! -e workbenches/landscape-karst-dem-field-r2-6-4-cached
+          test ! -e .github/workflows/landscape-karst-dem-field-r264-cached.yml
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          root = Path('workbenches/landscape-karst-dem-field-r2-6-3-production')
+          index = root / 'index.html'
+          build = json.loads((root / 'build.json').read_text(encoding='utf-8'))
+          digest = hashlib.sha256(index.read_bytes()).hexdigest()
+          assert digest == build['outputSha256'], (digest, build['outputSha256'])
+          assert digest == '019b82309afda22c68f570db0b7f6475cf60ec79299c596581e91ab911be0d53'
+          assert build['schema'] == 'LANDSCAPE_KARST_DEM_FIELD_R263_PRODUCTION'
+          assert build['productionCandidate'] is True
+          assert build['visualApproved'] is False
+          print({'r263IndexSha256': digest, 'schema': build['schema']})
+          PY
+
+      - name: Assemble complete restart tree
+        run: |
+          set -euo pipefail
+          PACKAGE_NAME=LANDSCAPE_MOTHER_R263_PRODUCTION_FULL_HANDOFF_2026-09-21
+          STAGE=/tmp/$PACKAGE_NAME
+          rm -rf "$STAGE"
+          mkdir -p "$STAGE/workbenches" "$STAGE/.github/workflows"
+
+          cp handoffs/landscape-mother/r263-production-restart-20260921/START_HERE.md "$STAGE/START_HERE.md"
+          cp handoffs/landscape-mother/r263-production-restart-20260921/NEW_CHAT_BOOTSTRAP.md "$STAGE/NEW_CHAT_BOOTSTRAP.md"
+          cp handoffs/landscape-mother/r263-production-restart-20260921/CURRENT_BASELINE.json "$STAGE/CURRENT_BASELINE.json"
+          cp handoffs/landscape-mother/r263-production-restart-20260921/REJECTED_R264.md "$STAGE/REJECTED_R264.md"
+          cp handoffs/landscape-mother/r263-production-restart-20260921/PACKAGE_ORDER.md "$STAGE/PACKAGE_ORDER.md"
+
+          for d in \
+            workbenches/landscape-small-karst-field-r2-5-1-gpu-compat \
+            workbenches/landscape-karst-dem-field-r2-6-cracks \
+            workbenches/landscape-karst-dem-field-r2-6-1-driver-safe \
+            workbenches/landscape-karst-dem-field-r2-6-1b-final \
+            workbenches/landscape-karst-dem-field-r2-6-2-compact \
+            workbenches/landscape-karst-dem-field-r2-6-3-production
+          do
+            test -d "$d"
+            cp -a "$d" "$STAGE/workbenches/"
+          done
+
+          shopt -s nullglob
+          workflows=(
+            .github/workflows/landscape-palau-karst-r251*.yml
+            .github/workflows/landscape-karst-dem-field-r26*.yml
+          )
+          test ${#workflows[@]} -gt 0
+          for f in "${workflows[@]}"; do
+            case "$f" in
+              *r264*|*r2-6-4*) echo "Rejected R2.6.4 workflow detected: $f"; exit 1 ;;
+            esac
+            cp "$f" "$STAGE/.github/workflows/"
+          done
+
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json, os
+          stage = Path('/tmp/LANDSCAPE_MOTHER_R263_PRODUCTION_FULL_HANDOFF_2026-09-21')
+          rows = []
+          for p in sorted(stage.rglob('*')):
+              if not p.is_file() or p.name in {'FULL_PACKAGE_MANIFEST.json', 'SHA256SUMS.txt'}:
+                  continue
+              data = p.read_bytes()
+              rel = p.relative_to(stage).as_posix()
+              assert 'r2-6-4-cached' not in rel.lower()
+              assert 'r264' not in rel.lower()
+              rows.append({'path': rel, 'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()})
+          manifest = {
+              'schema': 'LANDSCAPE_MOTHER_R263_PRODUCTION_FULL_HANDOFF_V1',
+              'repository': 'haihao0307/guilin-dem-pipeline',
+              'handoffBranch': 'handoff/landscape-mother-r263-production-full-20260921',
+              'restoredFromCommit': '14fa478ff4545c2c58656bf57ba5326c03492a33',
+              'authoritativeWorkbench': 'workbenches/landscape-karst-dem-field-r2-6-3-production/index.html',
+              'rejectedVersion': 'R2.6.4 cached production',
+              'visualApproved': False,
+              'productionReady': False,
+              'fileCountExcludingManifestAndChecksums': len(rows),
+              'files': rows,
+          }
+          (stage / 'FULL_PACKAGE_MANIFEST.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+
+          (
+            cd "$STAGE"
+            find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
+            sha256sum -c SHA256SUMS.txt
+            ! grep -Eqi 'r2-6-4-cached|r264' SHA256SUMS.txt
+          )
+
+      - name: Build and validate one-file ZIP
+        run: |
+          set -euo pipefail
+          PACKAGE_NAME=LANDSCAPE_MOTHER_R263_PRODUCTION_FULL_HANDOFF_2026-09-21
+          STAGE=/tmp/$PACKAGE_NAME
+          ZIP_PATH=handoffs/landscape-mother/${PACKAGE_NAME}.zip
+          mkdir -p handoffs/landscape-mother
+          rm -f "$ZIP_PATH"
+          (
+            cd /tmp
+            zip -X -9 -r "$GITHUB_WORKSPACE/$ZIP_PATH" "$PACKAGE_NAME" >/tmp/zip.log
+          )
+          test -s "$ZIP_PATH"
+          unzip -t "$ZIP_PATH"
+          ! unzip -Z1 "$ZIP_PATH" | grep -Eqi 'r2-6-4-cached|r264'
+          unzip -Z1 "$ZIP_PATH" | grep -q "$PACKAGE_NAME/START_HERE.md"
+          unzip -Z1 "$ZIP_PATH" | grep -q "$PACKAGE_NAME/workbenches/landscape-karst-dem-field-r2-6-3-production/index.html"
+          sha256sum "$ZIP_PATH" | tee /tmp/package-sha256.txt
+          stat -c '%n %s bytes' "$ZIP_PATH"
+
+      - name: Commit full handoff package
+        run: |
+          set -euo pipefail
+          PACKAGE_NAME=LANDSCAPE_MOTHER_R263_PRODUCTION_FULL_HANDOFF_2026-09-21
+          ZIP_PATH=handoffs/landscape-mother/${PACKAGE_NAME}.zip
+          git config user.name "Landscape Mother"
+          git config user.email "actions@users.noreply.github.com"
+          git add "$ZIP_PATH"
+          if git diff --cached --quiet; then
+            echo "R2.6.3 full handoff ZIP already materialized"
+            exit 0
+          fi
+          git commit -m "handoff(landscape): package exact R2.6.3 production restart [skip ci]"
+          git push
