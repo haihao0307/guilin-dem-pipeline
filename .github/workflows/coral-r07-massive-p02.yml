@@ -1,0 +1,123 @@
+name: Coral R07 Massive P02
+
+on:
+  push:
+    branches:
+      - work/coral-mother-r07-massive-porites-p02-outward-surface-20260921
+    paths:
+      - tools/coral/coral_r07_massive_p00_builder.py
+      - tools/coral/coral_r07_massive_p00_browser_qa.py
+      - tools/coral/coral_r07_massive_p01_patch.py
+      - tools/coral/coral_r07_massive_p02_patch.py
+      - .github/workflows/coral-r07-massive-p02.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: coral-r07-massive-p02
+  cancel-in-progress: true
+
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out R07 P02 work branch
+        uses: actions/checkout@v4
+        with:
+          ref: work/coral-mother-r07-massive-porites-p02-outward-surface-20260921
+          fetch-depth: 1
+          path: work
+
+      - name: Check out current GitHub Pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 1
+          path: pages
+
+      - name: Build P00 and apply P01-P02 corrections
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/coral-r07-p02
+          python3 work/tools/coral/coral_r07_massive_p00_builder.py /tmp/coral-r07-p02
+          python3 work/tools/coral/coral_r07_massive_p01_patch.py /tmp/coral-r07-p02
+          python3 work/tools/coral/coral_r07_massive_p02_patch.py /tmp/coral-r07-p02
+          printf '%s\n' \
+            'https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-r07-massive-porites-p02/' \
+            > /tmp/coral-r07-p02/PUBLIC_URL.txt
+          grep -q 'R07-P02' /tmp/coral-r07-p02/index.html
+          grep -q "baseCapOrientation:'downward'" /tmp/coral-r07-p02/index.html
+          grep -q "surfaceWinding:'outward-ccw'" /tmp/coral-r07-p02/index.html
+          grep -q 'backfaceCullingCompatible' /tmp/coral-r07-p02/BUILD_R07_P00.json
+          ! grep -q 'indices.push(a,d,c,a,c,b)' /tmp/coral-r07-p02/index.html
+          test "$(grep -o 'type="range"' /tmp/coral-r07-p02/index.html | wc -l)" -eq 12
+
+      - name: Browser and geometry gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet websocket-client pillow
+          python3 -m http.server 8773 --directory /tmp/coral-r07-p02 >/tmp/coral-r07-p02-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          python3 work/tools/coral/coral_r07_massive_p00_browser_qa.py /tmp/coral-r07-p02
+
+      - name: Assert P02 evidence survived browser QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'CORAL_MOTHER_R07_MASSIVE_P02_BUILD' /tmp/coral-r07-p02/BUILD_R07_P00.json
+          grep -q 'surfaceWinding' /tmp/coral-r07-p02/BUILD_R07_P00.json
+          test -s /tmp/coral-r07-p02/QA_SCREENSHOT_ULTRAWIDE_2560X1080.png
+          test -s /tmp/coral-r07-p02/QA_MICROSCOPE_1.png
+          test -s /tmp/coral-r07-p02/QA_WARP_1.png
+
+      - name: Upload complete P02 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: CORAL_R07_MASSIVE_P02_EVIDENCE_${{ github.sha }}
+          path: /tmp/coral-r07-p02
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish fixed P02 workbench
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET=coral-mother-r07-massive-porites-p02
+          rm -rf "pages/$TARGET"
+          mkdir -p "pages/$TARGET"
+          cp -a /tmp/coral-r07-p02/. "pages/$TARGET/"
+          cd pages
+          git config user.name 'Haihao_Nature Grace HK'
+          git config user.email 'haihao0307@gmail.com'
+          git add "$TARGET/"
+          if git diff --cached --quiet; then
+            echo 'No publication changes.'
+          else
+            git commit -m "publish(coral): R07 massive Porites P02 outward surface"
+            git pull --rebase origin gh-pages
+            git push origin gh-pages
+          fi
+
+      - name: Write run summary
+        shell: bash
+        run: |
+          {
+            echo '## Coral Mother R07-P02'
+            echo
+            echo '- NOAA: Hard / stony coral → Massive coral'
+            echo '- Candidate: Porites lutea morphology prototype'
+            echo '- P00 failure: upward cap occluded dome'
+            echo '- P01 failure: inward dome winding exposed black cavity'
+            echo '- P02: downward cap + outward CCW dome surface'
+            echo '- Runtime assets: 0 GLB / 0 texture / 0 fetch'
+            echo '- visualAcceptance: false'
+            echo '- productionReady: false'
+            echo
+            echo 'Public workbench:'
+            echo 'https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-r07-massive-porites-p02/'
+          } >> "$GITHUB_STEP_SUMMARY"
