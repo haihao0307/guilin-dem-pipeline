@@ -17,6 +17,12 @@ from pathlib import Path
 SOURCE = Path(__file__).with_name("coral_r07_massive_p11_browser_qa.py")
 code = SOURCE.read_text(encoding="utf-8")
 
+old_space = "assert qa.get('microDisplacementSpace') == 'surface-normal-integrated-voronoi' and abs(qa.get('microTangentialLeakRms', 1)) < 1e-10, initial"
+new_space = "assert qa.get('microDisplacementSpace') == 'surface-normal-geodesic-voronoi' and abs(qa.get('microTangentialLeakRms', 1)) < 1e-10, initial"
+if old_space not in code:
+    raise RuntimeError("P12 QA displacement-space marker missing")
+code = code.replace(old_space, new_space, 1)
+
 needle = (
     "assert qa.get('baseVertexCount') == qa.get('vertexCount'), initial\\n"
     "        assert qa.get('maxMicroNormalDisplacement', 1) < .016, initial"
@@ -28,7 +34,6 @@ replacement = (
     "        assert qa.get('boundaryVertexCount') == 1024, initial\\n"
     "        assert qa.get('triangleAspectMean', 99) < 1.30 and qa.get('triangleAspectMax', 99) < 1.43, initial\\n"
     "        assert qa.get('meshResolution') == 'geodesic-subdivision-8', initial\\n"
-    "        assert qa.get('microDisplacementSpace') == 'surface-normal-geodesic-voronoi', initial\\n"
     "        assert qa.get('maxMicroNormalDisplacement', 1) < .016, initial"
 )
 if needle not in code:
