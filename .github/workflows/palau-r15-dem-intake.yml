@@ -1,0 +1,247 @@
+name: Palau R15 Copernicus DEM Intake
+
+on:
+  push:
+    branches:
+      - work/palau-airai-r13-evidence-bound-core-20260921
+    paths:
+      - .github/workflows/palau-r15-dem-intake.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  dem-intake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout production branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install raster tooling
+        run: python -m pip install --disable-pip-version-check numpy==2.1.3 rasterio==1.4.3 pillow==11.0.0
+
+      - name: Download the three public Copernicus GLO-30 source tiles
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .r15-dem-source
+          fetch_tile() {
+            local lat="$1"
+            local out=".r15-dem-source/Copernicus_DSM_10_N${lat}_00_E134_00_DEM.tif"
+            local open_topography="https://opentopography.s3.sdsc.edu/raster/COP30/COP30_hh/Copernicus_DSM_10_N${lat}_00_E134_00_DEM.tif"
+            local aws="https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_N${lat}_00_E134_00_DEM/Copernicus_DSM_COG_10_N${lat}_00_E134_00_DEM.tif"
+            if curl --fail --location --retry 4 --retry-all-errors --connect-timeout 20 --max-time 420 "$open_topography" -o "$out"; then
+              printf '%s\n' "$open_topography" > "${out}.source-url.txt"
+            else
+              rm -f "$out"
+              curl --fail --location --retry 4 --retry-all-errors --connect-timeout 20 --max-time 420 "$aws" -o "$out"
+              printf '%s\n' "$aws" > "${out}.source-url.txt"
+            fi
+            test -s "$out"
+          }
+          fetch_tile 06
+          fetch_tile 07
+          fetch_tile 08
+          sha256sum .r15-dem-source/*.tif | tee .r15-dem-source/SHA256SUMS.txt
+
+      - name: Build frozen multiscale Palau DEM payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p games/survivor-palau/palau-world/airai-r15/generated
+          python - <<'PY'
+          from __future__ import annotations
+          import base64
+          import hashlib
+          import json
+          import math
+          from pathlib import Path
+
+          import numpy as np
+          import rasterio
+          from PIL import Image
+          from rasterio.merge import merge
+          from rasterio.transform import from_bounds
+          from rasterio.warp import reproject, Resampling
+
+          root = Path('.')
+          src_dir = root / '.r15-dem-source'
+          out_dir = root / 'games/survivor-palau/palau-world/airai-r15/generated'
+          out_dir.mkdir(parents=True, exist_ok=True)
+          tile_paths = [src_dir / f'Copernicus_DSM_10_N{lat}_00_E134_00_DEM.tif' for lat in ('06','07','08')]
+          datasets = [rasterio.open(p) for p in tile_paths]
+          try:
+              mosaic, src_transform = merge(datasets, nodata=-32768.0, dtype='float32')
+              src_crs = datasets[0].crs
+              src_nodata = datasets[0].nodata
+          finally:
+              for ds in datasets:
+                  ds.close()
+
+          grids = [
+              ('palauMain', [134.04, 6.82, 134.82, 8.16], 384),
+              ('airaiContext', [134.43, 7.27, 134.65, 7.45], 512),
+              ('storyReferenceContext', [134.46, 7.28, 134.64, 7.43], 540),
+          ]
+
+          def extract_grid(name: str, bounds: list[float], width: int):
+              west, south, east, north = bounds
+              mid_lat = (south + north) * 0.5
+              height = max(2, round(width * (north - south) / ((east - west) * math.cos(math.radians(mid_lat)))))
+              dst = np.full((height, width), -32768.0, dtype=np.float32)
+              dst_transform = from_bounds(west, south, east, north, width, height)
+              reproject(
+                  source=mosaic[0], destination=dst,
+                  src_transform=src_transform, src_crs=src_crs,
+                  src_nodata=src_nodata if src_nodata is not None else -32768.0,
+                  dst_transform=dst_transform, dst_crs='EPSG:4326',
+                  dst_nodata=-32768.0, resampling=Resampling.bilinear,
+                  num_threads=2,
+              )
+              invalid = (~np.isfinite(dst)) | (dst <= -1000.0)
+              quant = np.rint(np.clip(dst, -32767.0, 32767.0)).astype('<i2')
+              quant[invalid] = -32768
+              valid = quant != -32768
+              positive = quant > 0
+              valid_values = quant[valid]
+              positive_values = quant[positive]
+              raw = quant.tobytes(order='C')
+              sha = hashlib.sha256(raw).hexdigest()
+
+              # Diagnostic hillshade only; not used as the delivered terrain truth.
+              z = np.where(valid, quant.astype(np.float32), 0.0)
+              gy, gx = np.gradient(z)
+              shade = np.clip(0.70 - gx * 0.035 + gy * 0.025, 0.0, 1.0)
+              elev = np.clip(z / max(1.0, float(np.percentile(positive_values, 99.5)) if positive_values.size else 1.0), 0.0, 1.0)
+              img = np.uint8(np.clip((shade * 0.62 + elev * 0.38) * 255.0, 0, 255))
+              Image.fromarray(img, mode='L').save(out_dir / f'{name}_dem_diagnostic.png', optimize=True)
+
+              return {
+                  'id': name,
+                  'bounds': bounds,
+                  'width': width,
+                  'height': height,
+                  'encoding': 'base64-int16-little-endian-row-major',
+                  'nodata': -32768,
+                  'verticalUnit': 'metre',
+                  'dataSha256': sha,
+                  'validCellCount': int(valid.sum()),
+                  'positiveCellCount': int(positive.sum()),
+                  'minValidM': int(valid_values.min()) if valid_values.size else None,
+                  'maxValidM': int(valid_values.max()) if valid_values.size else None,
+                  'maxPositiveM': int(positive_values.max()) if positive_values.size else None,
+                  'data': base64.b64encode(raw).decode('ascii'),
+              }
+
+          payload_grids = [extract_grid(*spec) for spec in grids]
+          source_tiles = []
+          for p in tile_paths:
+              b = p.read_bytes()
+              source_tiles.append({
+                  'file': p.name,
+                  'bytes': len(b),
+                  'sha256': hashlib.sha256(b).hexdigest(),
+                  'sourceUrl': Path(str(p) + '.source-url.txt').read_text(encoding='utf-8').strip(),
+              })
+
+          metadata = {
+              'schema': 'kaopu.palau.dem-multiscale-payload/1.0',
+              'version': 'PALAU_R15_COPERNICUS_GLO30_20260921',
+              'source': {
+                  'product': 'Copernicus DEM GLO-30',
+                  'kind': 'DSM',
+                  'crs': str(src_crs),
+                  'nominalResolution': '1 arc-second / approximately 30 m',
+                  'sourceTiles': source_tiles,
+                  'runtimeNetworkDependency': False,
+                  'warnings': [
+                      'This product is a digital surface model, not a bare-earth DTM.',
+                      'Vegetation/buildings may affect height values.',
+                      'Reefs, bathymetry and ocean surface are supplied by separate evidence/runtime systems.',
+                  ],
+              },
+              'grids': payload_grids,
+              'contracts': {
+                  'fullPalauFirstView': True,
+                  'continuousWorld': True,
+                  'traditionalLOD': False,
+                  'externalRuntimeRequestsAllowed': False,
+                  'visualAcceptance': False,
+                  'productionReady': False,
+              },
+          }
+
+          js = 'window.PALAU_DEM_R15=' + json.dumps(metadata, ensure_ascii=False, separators=(',', ':')) + ';\n'
+          js_path = out_dir / 'PALAU_DEM_R15_PAYLOAD.js'
+          js_path.write_text(js, encoding='utf-8')
+          receipt = {
+              'schema': 'kaopu.palau.r15-dem-intake-receipt/1.0',
+              'payloadFile': str(js_path.relative_to(root)),
+              'payloadBytes': js_path.stat().st_size,
+              'payloadSha256': hashlib.sha256(js_path.read_bytes()).hexdigest(),
+              'sourceTiles': source_tiles,
+              'grids': [{k: v for k, v in g.items() if k != 'data'} for g in payload_grids],
+              'sourceKind': 'Copernicus GLO-30 DSM',
+              'runtimeNetworkDependency': False,
+              'visualAcceptance': False,
+              'productionReady': False,
+          }
+          (out_dir / 'PALAU_DEM_R15_SOURCE_RECEIPT.json').write_text(json.dumps(receipt, ensure_ascii=False, indent=2), encoding='utf-8')
+          print(json.dumps(receipt, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Validate payload identity and source boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, hashlib, re
+          from pathlib import Path
+          d=Path('games/survivor-palau/palau-world/airai-r15/generated')
+          js=(d/'PALAU_DEM_R15_PAYLOAD.js').read_text(encoding='utf-8')
+          assert js.startswith('window.PALAU_DEM_R15=') and js.rstrip().endswith(';')
+          obj=json.loads(js[len('window.PALAU_DEM_R15='):-2])
+          assert obj['source']['kind']=='DSM'
+          assert obj['source']['runtimeNetworkDependency'] is False
+          assert len(obj['grids'])==3
+          assert all(g['data'] and g['width']>0 and g['height']>0 for g in obj['grids'])
+          assert obj['contracts']['traditionalLOD'] is False
+          assert obj['contracts']['visualAcceptance'] is False
+          receipt=json.loads((d/'PALAU_DEM_R15_SOURCE_RECEIPT.json').read_text(encoding='utf-8'))
+          assert receipt['payloadSha256']==hashlib.sha256((d/'PALAU_DEM_R15_PAYLOAD.js').read_bytes()).hexdigest()
+          print('R15 DEM payload static validation passed')
+          PY
+
+      - name: Upload reproducible DEM intake artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: palau-r15-dem-intake
+          path: |
+            games/survivor-palau/palau-world/airai-r15/generated/
+            .r15-dem-source/SHA256SUMS.txt
+            .r15-dem-source/*.source-url.txt
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Commit frozen generated payload to the production branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add games/survivor-palau/palau-world/airai-r15/generated
+          if git diff --cached --quiet; then
+            echo 'No generated payload change.'
+            exit 0
+          fi
+          git commit -m 'build(palau): freeze R15 Copernicus GLO-30 DEM payload [skip ci]'
+          git push origin HEAD:work/palau-airai-r13-evidence-bound-core-20260921
