@@ -57,6 +57,13 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve,ms));
 
     const uiPath=path.join(outDir,'workbench-ui.png');await page.screenshot({path:uiPath,fullPage:true});
     if(!(await page.locator('#playBtn').isDisabled()))await trigger('#playBtn');
+    const restPose=await page.evaluate(()=>{
+      const slider=document.querySelector('#timeSlider');if(!slider)throw new Error('time slider missing');
+      slider.value='0';slider.dispatchEvent(new Event('input',{bubbles:true}));
+      return {slider:Number(slider.value),label:document.querySelector('#timeText')?.textContent||''};
+    });
+    await sleep(500);
+    restPose.label=await page.locator('#timeText').textContent();
     await page.evaluate(()=>{const panel=document.querySelector('.panel');if(panel)panel.style.display='none';const badge=document.querySelector('.badge');if(badge)badge.style.display='none';});
 
     const viewSemantics={};const expectedAxes={side:'y',top:'x',front:'z'};
@@ -77,7 +84,7 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve,ms));
 
     const files=fs.readdirSync(outDir).filter(name=>name.endsWith('.png')).sort().map(name=>{const file=path.join(outDir,name);return {name,bytes:fs.statSync(file).size,sha256:sha256File(file)};});
     const semanticViewAxesPassed=['side','top','front'].every(view=>viewSemantics[view]?.dominant===expectedAxes[view]&&viewSemantics[view]?.activeView===view);
-    receipt={schema:'kaopu.fish-mother.yellowfin-source-copy-browser-qa/2.1',date:'2026-09-21',build:'YELLOWFIN-SOURCE-COPY-R001',url,viewport:{width:1440,height:900,deviceScaleFactor:1},renderer:'headless Chromium WebGL / SwiftShader',identity,classification:{dorsalConfirmed:identity.qa.classification.dorsal,ventralConfirmed:identity.qa.classification.ventral,peduncleU:identity.qa.classification.peduncleU,markerMapping:identity.qa.markerMapping},viewSemantics,screenshots:files,consoleErrors,pageErrors,checks:{exactShaDisplayed:identity.sha===expectedSha,branchLocalSourceUsed:identity.source==='branch-local',classificationLoaded:identity.qa.classificationLoaded===true,finletCountsDisplayed:identity.finlets.includes('9 dorsal / 8 ventral'),displayAxisContractPassed:identity.qa.axes.length==='z'&&identity.qa.axes.lateral==='y'&&identity.qa.axes.vertical==='x',modelLengthAxisIsZ:identity.qa.modelSpan.z>identity.qa.modelSpan.x&&identity.qa.modelSpan.z>identity.qa.modelSpan.y,markerMappingPassed:identity.qa.markerMapping.mode==='canonical-source-to-model-inverse-root'&&identity.qa.markerMapping.count===19,semanticViewAxesPassed,classificationMarkersCaptured:files.some(file=>file.name==='source-side-classification.png'),fixedViewsCaptured:files.length>=8,consoleZeroErrors:consoleErrors.length===0,pageZeroErrors:pageErrors.length===0}};
+    receipt={schema:'kaopu.fish-mother.yellowfin-source-copy-browser-qa/2.1',date:'2026-09-21',build:'YELLOWFIN-SOURCE-COPY-R001',url,viewport:{width:1440,height:900,deviceScaleFactor:1},renderer:'headless Chromium WebGL / SwiftShader',identity,classification:{dorsalConfirmed:identity.qa.classification.dorsal,ventralConfirmed:identity.qa.classification.ventral,peduncleU:identity.qa.classification.peduncleU,markerMapping:identity.qa.markerMapping},restPose,viewSemantics,screenshots:files,consoleErrors,pageErrors,checks:{exactShaDisplayed:identity.sha===expectedSha,branchLocalSourceUsed:identity.source==='branch-local',classificationLoaded:identity.qa.classificationLoaded===true,finletCountsDisplayed:identity.finlets.includes('9 dorsal / 8 ventral'),displayAxisContractPassed:identity.qa.axes.length==='z'&&identity.qa.axes.lateral==='y'&&identity.qa.axes.vertical==='x',modelLengthAxisIsZ:identity.qa.modelSpan.z>identity.qa.modelSpan.x&&identity.qa.modelSpan.z>identity.qa.modelSpan.y,markerMappingPassed:identity.qa.markerMapping.mode==='canonical-source-to-model-inverse-root'&&identity.qa.markerMapping.count===19,restPoseLockedForEvidence:restPose.slider===0&&restPose.label.startsWith('0.00 /'),semanticViewAxesPassed,classificationMarkersCaptured:files.some(file=>file.name==='source-side-classification.png'),fixedViewsCaptured:files.length>=8,consoleZeroErrors:consoleErrors.length===0,pageZeroErrors:pageErrors.length===0}};
     receipt.passed=Object.values(receipt.checks).every(Boolean);
     fs.writeFileSync(path.join(outDir,'BROWSER_QA_RECEIPT.json'),JSON.stringify(receipt,null,2)+'\n');
     if(!receipt.passed)throw new Error(`browser QA failed: ${JSON.stringify(receipt.checks)}`);
