@@ -19,6 +19,8 @@ p07_replacements = {
         "assert qa.get('vertexCount', 0) > 90000 and qa.get('triangleCount', 0) > 160000, initial",
     "qa.get('meshResolution') == '192x384'":
         "qa.get('meshResolution') == '128x256+explicit-cups'",
+    "qa.get('coralliteTopology') == 'shallow-pit-fine-rim-filled-elements'":
+        "qa.get('coralliteTopology') == 'outer-blend-rim-inner-filled-center'",
     "qa.get('microDisplacementSpace') == 'surface-normal' and qa.get('microRadialOnly') is False and qa.get('microTangentialLeakRms', 1) < 1e-9 and qa.get('microNormalDisplacementRms', 0) > .002":
         "qa.get('microDisplacementSpace') == 'explicit-surface-normal-cup-mesh' and qa.get('microRadialOnly') is False and qa.get('microTangentialLeakRms', 1) < 1e-9 and qa.get('microNormalDisplacementRms', 0) > .002 and qa.get('baseSurfaceMicroNoise') is False and qa.get('cupCount', 0) > 1000 and qa.get('cupSides') == 12 and qa.get('cupVertexCount', 0) > 40000 and qa.get('cupTriangleCount', 0) > 50000",
     "assert build.get('microDisplacementSpace') == 'surface-normal' and build.get('microRadialOnly') is False, initial":
