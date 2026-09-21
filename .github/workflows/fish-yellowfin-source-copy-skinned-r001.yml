@@ -9,6 +9,7 @@ on:
       - .github/workflows/fish-yellowfin-source-copy-skinned-r001.yml
       - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/tools/build_source_copy_skinned.py
       - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/tools/classify_source_components.py
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/tools/record_skinned_status.py
       - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/tests/source-copy-skinned-r001.test.mjs
       - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/skinned-qa.html
       - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/skinned-qa/**
@@ -111,98 +112,11 @@ jobs:
           rm -rf "$QA_SKINNED_OUT"
           node "$COPY_ROOT/skinned-qa/capture-skinned-qa.cjs"
 
-      - name: Record passed skinned-copy status
+      - name: Record passed skinned-copy status without lifecycle regression
         shell: bash
         run: |
           set -euo pipefail
-          python - <<'PY'
-          import json, os
-          from pathlib import Path
-
-          root = Path(os.environ['COPY_ROOT'])
-          receipt_path = Path(os.environ['SKINNED_RECEIPT'])
-          browser_path = Path(os.environ['QA_SKINNED_OUT']) / 'SKINNED_BROWSER_QA_RECEIPT.json'
-          receipt = json.loads(receipt_path.read_text())
-          browser = json.loads(browser_path.read_text())
-          if not browser.get('passed'):
-              raise SystemExit('Skinned browser QA receipt did not pass')
-          if browser.get('copySha256') != receipt['output']['sha256']:
-              raise SystemExit('Skinned browser QA is not bound to generated copy SHA')
-          receipt['gates']['browserRestPoseQAPassed'] = True
-          receipt['gates']['browserAnimationQAPassed'] = True
-          receipt['visualEvidence'] = {
-              'receipt': 'evidence/skinned-browser/SKINNED_BROWSER_QA_RECEIPT.json',
-              'animationName': browser['animationName'],
-              'duration': browser['duration'],
-              'samples': browser['samples'],
-              'maximumDynamicBoundsDelta': browser['maximumDynamicBoundsDelta'],
-              'maximumBoneMatrixDelta': browser['maximumBoneMatrixDelta'],
-              'boundsTolerance': browser['boundsTolerance'],
-              'boneTolerance': browser['boneTolerance'],
-              'consoleZeroErrors': len(browser['consoleErrors']) == 0,
-              'pageZeroErrors': len(browser['pageErrors']) == 0,
-              'views': [item['name'] for item in browser['screenshots']],
-          }
-          receipt['next'] = 'Close region-by-region visibility and material-boundary acceptance, then freeze Source Copy R001 before Yellowfin biological correction.'
-          receipt_path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n')
-
-          status_path = root / 'CURRENT_STATUS.json'
-          status = json.loads(status_path.read_text())
-          status['phase'] = 'SOURCE_COPY_SKINNED_R001_BROWSER_QA_PASSED'
-          status['gates'].update({
-              'sourceCopySkinTransferred': True,
-              'sourceCopyAnimationTransferred': True,
-              'sourceCopyMaterialsTransferred': True,
-              'sourceCopySkinnedBrowserQAPassed': True,
-              'sourceCopySkinnedFixedViewsCaptured': True,
-              'sourceCopySkinnedConsoleZeroErrors': True,
-              'sourceCopySkinnedPageErrorsZero': True,
-              'independentReconstructionUnlocked': False,
-              'generationLocked': True,
-          })
-          status['sourceCopySkinned'] = {
-              'receipt': 'SOURCE_COPY_SKINNED_R001.json',
-              'glb': 'geometry/YELLOWFIN_SOURCE_COPY_SKINNED_R001.glb',
-              'qaWorkbench': 'skinned-qa.html',
-              'browserReceipt': 'evidence/skinned-browser/SKINNED_BROWSER_QA_RECEIPT.json',
-              'sha256': receipt['output']['sha256'],
-              'bytes': receipt['output']['bytes'],
-              'semanticPrimitiveCount': receipt['output']['semanticPrimitiveCount'],
-              'meshCount': receipt['output']['meshCount'],
-              'skinCount': receipt['output']['skinCount'],
-              'animationCount': receipt['output']['animationCount'],
-              'materialCount': receipt['output']['materialCount'],
-              'maximumDynamicBoundsDelta': browser['maximumDynamicBoundsDelta'],
-              'maximumBoneMatrixDelta': browser['maximumBoneMatrixDelta'],
-              'sourceBinaryPrefixByteIdentical': True,
-              'sourceSkinWeightsRetained': True,
-              'sourceAnimationsRetained': True,
-              'sourceMaterialsRetained': True,
-          }
-          status['next'] = 'Close region-by-region visibility and material-boundary acceptance, then freeze Source Copy R001 before Yellowfin biological correction.'
-          status_path.write_text(json.dumps(status, ensure_ascii=False, indent=2) + '\n')
-
-          baseline_path = Path('CURRENT_BASELINE.json')
-          baseline = json.loads(baseline_path.read_text())
-          active = baseline.setdefault('activeState', {})
-          active.update({
-              'phase': 'YELLOWFIN_SOURCE_COPY_R001_SKINNED_BROWSER_QA_PASSED',
-              'workBranch': 'work/ocean-life-fish-mother-yellowfin-source-copy-r001-20260921',
-              'activeWorkbench': 'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/index.html',
-              'skinnedQaWorkbench': 'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/skinned-qa.html',
-              'sourceCopySkinnedGlb': 'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry/YELLOWFIN_SOURCE_COPY_SKINNED_R001.glb',
-              'sourceCopySkinnedReceipt': 'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/SOURCE_COPY_SKINNED_R001.json',
-              'sourceCopySkinnedSha256': receipt['output']['sha256'],
-              'sourceCopySkinTransferred': True,
-              'sourceCopyAnimationTransferred': True,
-              'sourceCopyMaterialsTransferred': True,
-              'sourceCopySkinnedBrowserQAPassed': True,
-              'sourceCopyUnlocked': False,
-              'generationLocked': True,
-              'nextAllowedBuild': 'YELLOWFIN-SOURCE-COPY-R001-REGION-MATERIAL-ACCEPTANCE',
-          })
-          baseline_path.write_text(json.dumps(baseline, ensure_ascii=False, indent=2) + '\n')
-          PY
+          python "$COPY_ROOT/tools/record_skinned_status.py"
 
       - name: Run skinned-copy contracts
         shell: bash
