@@ -95,17 +95,30 @@ async function main() {
     });
 
     const selectView = async (view) => {
-      await page.locator(`button[data-view="${view}"]`).click();
+      await page.evaluate(expected => {
+        const button = document.querySelector(`button[data-view="${expected}"]`);
+        if (!button) throw new Error(`missing view control: ${expected}`);
+        button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      }, view);
       await page.waitForFunction(expected => window.__geometryQa?.activeView === expected, view);
       await page.waitForTimeout(220);
     };
     const selectMode = async (mode) => {
-      await page.locator(`button[data-mode="${mode}"]`).click();
+      await page.evaluate(expected => {
+        const button = document.querySelector(`button[data-mode="${expected}"]`);
+        if (!button) throw new Error(`missing mode control: ${expected}`);
+        button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      }, mode);
       await page.waitForFunction(expected => window.__geometryQa?.mode === expected, mode);
       await page.waitForTimeout(220);
     };
     const selectRegion = async (region) => {
-      await page.locator('#regionSelect').selectOption(region);
+      await page.evaluate(expected => {
+        const select = document.querySelector('#regionSelect');
+        if (!select) throw new Error('missing region control');
+        select.value = expected;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+      }, region);
       await page.waitForFunction(expected => window.__geometryQa?.activeRegion === expected, region);
       await page.waitForTimeout(220);
     };
