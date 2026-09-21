@@ -87,19 +87,29 @@ async function main() {
     });
 
     const selectMode = async (mode) => {
-      await page.locator(`button[data-mode="${mode}"]`).click();
+      await page.evaluate(expected => {
+        const button = document.querySelector(`button[data-mode="${expected}"]`);
+        if (!button) throw new Error(`missing mode control: ${expected}`);
+        button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      }, mode);
       await page.waitForFunction(expected => window.__skinnedQa?.mode === expected, mode);
       await page.waitForTimeout(180);
     };
     const selectView = async (view) => {
-      await page.locator(`button[data-view="${view}"]`).click();
+      await page.evaluate(expected => {
+        const button = document.querySelector(`button[data-view="${expected}"]`);
+        if (!button) throw new Error(`missing view control: ${expected}`);
+        button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      }, view);
       await page.waitForFunction(expected => window.__skinnedQa?.activeView === expected, view);
       await page.waitForTimeout(180);
     };
     const selectTimeRatio = async (ratio) => {
-      await page.locator('#timeSlider').evaluate((element, value) => {
-        element.value = String(value);
-        element.dispatchEvent(new Event('input', { bubbles: true }));
+      await page.evaluate(value => {
+        const slider = document.querySelector('#timeSlider');
+        if (!slider) throw new Error('missing time control');
+        slider.value = String(value);
+        slider.dispatchEvent(new Event('input', { bubbles: true }));
       }, ratio);
       await page.waitForFunction(expected => Math.abs((window.__skinnedQa?.activeTime || 0) - expected.time) < 0.002, {
         time: initial.qa.duration * ratio,
