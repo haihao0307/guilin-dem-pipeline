@@ -36,8 +36,18 @@ def image_difference(a: bytes, b: bytes) -> dict[str, float]:
     stat = ImageStat.Stat(diff)
     mean = sum(stat.mean) / 3.0
     pixels = list(diff.getdata())
-    changed = sum(1 for px in pixels if max(px) >= 8)
-    return {'meanAbsRgb': mean, 'changedPixelPct': 100.0 * changed / max(1, len(pixels))}
+    changed_pixels = [px for px in pixels if max(px) >= 8]
+    changed = len(changed_pixels)
+    changed_mean = (
+        sum((px[0] + px[1] + px[2]) / 3.0 for px in changed_pixels) / changed
+        if changed
+        else 0.0
+    )
+    return {
+        'meanAbsRgb': mean,
+        'changedPixelPct': 100.0 * changed / max(1, len(pixels)),
+        'changedRegionMeanRgb': changed_mean,
+    }
 
 
 def run_view(root: Path, label: str, width: int, height: int, port: int, all_visible: bool, functional: bool) -> dict[str, Any]:
@@ -147,7 +157,7 @@ def run_view(root: Path, label: str, width: int, height: int, port: int, all_vis
             mdiff=image_difference(micro0png,micro1png)
             assert abs(micro0['microRms']) < 1e-10 and micro0['microCoverage'] == 0, (micro0,micro1)
             assert micro1['microRms'] > .025 and micro1['microCoverage'] > 80 and micro1['normalDeviation'] > .01, (micro0,micro1)
-            assert micro0['signature'] != micro1['signature'] and mdiff['meanAbsRgb'] > .6 and mdiff['changedPixelPct'] > 1.5, (micro0,micro1,mdiff)
+            assert micro0['signature'] != micro1['signature'] and mdiff['changedPixelPct'] > 2.5 and mdiff['changedRegionMeanRgb'] > 8.0, (micro0,micro1,mdiff)
 
             warp0=probe('warp',0);time.sleep(.5);warp0png=capture('QA_WARP_0.png',True)
             warp1=probe('warp',1);time.sleep(.5);warp1png=capture('QA_WARP_1.png',True)
@@ -155,7 +165,7 @@ def run_view(root: Path, label: str, width: int, height: int, port: int, all_vis
             assert abs(warp0['warpRms']) < 1e-10 and abs(warp0['maxWarp']) < 1e-10, (warp0,warp1)
             assert warp1['warpRms'] > .04 and warp1['maxWarp'] > .08, (warp0,warp1)
             assert warp0['paths']==warp1['paths'] and warp0['edges']==warp1['edges'] and warp1['rootConnected'] and warp1['disconnected']==0, (warp0,warp1)
-            assert warp0['signature'] != warp1['signature'] and wdiff['meanAbsRgb'] > .6 and wdiff['changedPixelPct'] > 1.5, (warp0,warp1,wdiff)
+            assert warp0['signature'] != warp1['signature'] and wdiff['changedPixelPct'] > 2.5 and wdiff['changedRegionMeanRgb'] > 8.0, (warp0,warp1,wdiff)
 
             evaluate("document.querySelector('[data-palette=cyan]')?.click();true")
             cyan=json.loads(evaluate("JSON.stringify(window.__CORAL_R06_QA__)"))
