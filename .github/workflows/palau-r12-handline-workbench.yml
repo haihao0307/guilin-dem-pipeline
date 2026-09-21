@@ -1,0 +1,191 @@
+name: Palau R12 pilot handline WebGL2 workbench
+
+on:
+  push:
+    branches:
+      - work/survivor-palau-r12-pilot-story-integration-20260921
+    paths:
+      - .github/workflows/palau-r12-handline-workbench.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Stack the verified Airai R12 evidence runtime without changing its claims
+        run: |
+          set -euo pipefail
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git fetch --no-tags origin \
+            refs/heads/work/palau-airai-r12-reproducible-evidence-runtime-20260921:refs/remotes/origin/airai-r12-evidence
+          test "$(git rev-parse refs/remotes/origin/airai-r12-evidence)" = 'aa011c2fe0039190de2ce8452b07f503260c82a8'
+          git merge --no-commit --no-ff refs/remotes/origin/airai-r12-evidence
+
+      - name: Materialize and build the bounded handline workbench
+        run: |
+          set -euo pipefail
+          base64 -d .r12-workbench-staging/payload.tar.xz.b64 > /tmp/pilot-handline-workbench.tar.xz
+          echo '7f3eeedf6057e3fe4580023d08048bdd05cf7c475131e280644f59d5c4cdde2f  /tmp/pilot-handline-workbench.tar.xz' | sha256sum -c -
+          rm -rf .r12-workbench-staging/payload
+          mkdir -p .r12-workbench-staging/payload
+          tar -xJf /tmp/pilot-handline-workbench.tar.xz -C .r12-workbench-staging/payload
+          python3 .r12-workbench-staging/payload/build_workbench.py
+          node --check games/survivor-palau/workbenches/pilot-handline-r12/pilot-handline-bundle.js
+          node --check games/survivor-palau/workbenches/pilot-handline-r12/pilot-handline-overlay.js
+          python3 -m py_compile \
+            games/survivor-palau/workbenches/pilot-handline-r12/build_workbench.py \
+            games/survivor-palau/workbenches/pilot-handline-r12/qa_browser.py
+
+      - name: Re-run exact logic, story, and Airai sampler gates
+        run: |
+          set -euo pipefail
+          root=games/survivor-palau/source/pilot_r12
+          node "$root/upstream/v0230/fishing_core.test.cjs"
+          node "$root/upstream/v0230/handline_r01/handline_controller.test.cjs"
+          node "$root/pilot_handline_runtime.test.cjs"
+          node "$root/palau_world_fishing_adapter.test.cjs"
+          node games/survivor-palau/palau-world/airai-r12/verify_sampler_r12.mjs
+          python3 games/survivor-palau/story/pilot-survival-r2-20260921/validate_story_contract.py
+
+      - name: Install browser QA runtime
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check playwright==1.57.0
+          command -v xvfb-run
+          command -v google-chrome || command -v chromium
+
+      - name: Run desktop and mobile WebGL2 causal QA
+        run: |
+          set -euo pipefail
+          BROWSER="$(command -v google-chrome || command -v chromium)"
+          xvfb-run -a -s '-screen 0 1440x900x24' \
+            python3 games/survivor-palau/workbenches/pilot-handline-r12/qa_browser.py \
+              --executable-path "$BROWSER"
+
+      - name: Record receipts without false public or visual acceptance
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          repo=Path.cwd()
+          wb=repo/'games/survivor-palau/workbenches/pilot-handline-r12'
+          qa=json.loads((wb/'evidence/BROWSER_QA.json').read_text(encoding='utf-8'))
+          assert qa['status']=='PASS', qa
+          (wb/'BROWSER_QA.json').write_text(json.dumps(qa,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          def sha(path): return hashlib.sha256(path.read_bytes()).hexdigest()
+
+          build={
+            'schema':'kaopu.survivor-palau.pilot-handline-workbench-build/1.0',
+            'version':'PILOT_HANDLINE_AIRAI_R12_WEBGL2_A1_20260921',
+            'branch':'work/survivor-palau-r12-pilot-story-integration-20260921',
+            'stackedEvidenceRuntime':{
+              'branch':'work/palau-airai-r12-reproducible-evidence-runtime-20260921',
+              'head':'aa011c2fe0039190de2ce8452b07f503260c82a8',
+              'role':'candidate evidence field only; not an accepted world or Ocean Mother replacement'
+            },
+            'files':{
+              'index.html':sha(wb/'index.html'),
+              'pilot-handline-bundle.js':sha(wb/'pilot-handline-bundle.js'),
+              'pilot-handline-overlay.js':sha(wb/'pilot-handline-overlay.js'),
+              'qa_browser.py':sha(wb/'qa_browser.py')
+            },
+            'verified':{
+              'desktop1440x900WebGL2':True,
+              'mobile390x844WebGL2':True,
+              'consoleErrors':0,
+              'pageErrors':0,
+              'worldGlErrors':0,
+              'pilotGlErrors':0,
+              'manualCausalPhases':['line_deployed','fish_notice','fish_approach','fish_inspect','bite_window','fight'],
+              'finiteGearLoss':True,
+              'snorkelFloodRecoveryLogic':True,
+              'sameFishIdentityAcrossHook':True,
+              'automaticCatch':False
+            },
+            'knownBoundary':{
+              'visibleSurface':'static chart-datum diagnostic plane',
+              'oceanMotherCoupled':False,
+              'landElevationKnown':False,
+              'currentKnown':False,
+              'coralSnagKnown':False,
+              'finalFishSpecies':False
+            },
+            'acceptance':{
+              'sourceModified':True,
+              'interactive3D':True,
+              'staticImageSubstitute':False,
+              'publicHttpsPassed':False,
+              'browserPassed':True,
+              'visualAcceptance':False,
+              'productionReady':False
+            }
+          }
+          (wb/'BUILD_RECEIPT.json').write_text(json.dumps(build,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          (wb/'PUBLICATION_PROOF.json').write_text(json.dumps({
+            'version':build['version'],'published':False,'publicHttpsPassed':False,'shareAllowed':False,
+            'reason':'branch candidate has not been deployed and HTTP-200/browser-verified on the fixed public Pages path'
+          },ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          port_path=repo/'contracts/survivor-palau/pilot_handline_port_r12.json'
+          port=json.loads(port_path.read_text(encoding='utf-8'))
+          port['workbench']={
+            'path':'games/survivor-palau/workbenches/pilot-handline-r12/index.html',
+            'airaiEvidenceHead':'aa011c2fe0039190de2ce8452b07f503260c82a8',
+            'surfaceBoundary':'static chart-datum diagnostic plane; not Ocean Mother',
+            'browserQa':'games/survivor-palau/workbenches/pilot-handline-r12/BROWSER_QA.json'
+          }
+          port['acceptance'].update({'sourceModified':True,'interactive3D':True,'browserPassed':True,'publicHttpsPassed':False,'visualAcceptance':False,'productionReady':False})
+          port_path.write_text(json.dumps(port,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          story_path=repo/'contracts/survivor-palau/pilot_survival_story_r12.json'
+          story=json.loads(story_path.read_text(encoding='utf-8'))
+          impl=story.setdefault('implementation',{}).setdefault('pilotHandlineRuntime',{})
+          impl.update({'interactive3D':True,'browserPassed':True,'publicHttpsPassed':False,'visualAcceptance':False,'productionReady':False,'workbench':'games/survivor-palau/workbenches/pilot-handline-r12/index.html'})
+          story_path.write_text(json.dumps(story,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          receipt={
+            'schema':'kaopu.survivor-palau.pilot-handline-workbench-receipt/1.0',
+            'version':build['version'],
+            'workbench':'games/survivor-palau/workbenches/pilot-handline-r12/index.html',
+            'browserQa':'games/survivor-palau/workbenches/pilot-handline-r12/BROWSER_QA.json',
+            'evidenceRuntimeHead':'aa011c2fe0039190de2ce8452b07f503260c82a8',
+            'importsOldWorld':False,
+            'usesStaticChartDatumPlane':True,
+            'oceanMotherCoupled':False,
+            'visualAcceptance':False,
+            'productionReady':False,
+            'publicShareAllowed':False
+          }
+          out=repo/'handoff/survivor-palau-stone-money-full-r011-20260921/PILOT_HANDLINE_WORKBENCH_R12_RECEIPT.json'
+          out.write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+          python3 -m json.tool games/survivor-palau/workbenches/pilot-handline-r12/BUILD_RECEIPT.json >/dev/null
+          python3 -m json.tool games/survivor-palau/workbenches/pilot-handline-r12/BROWSER_QA.json >/dev/null
+          python3 -m json.tool contracts/survivor-palau/pilot_handline_port_r12.json >/dev/null
+          python3 -m json.tool contracts/survivor-palau/pilot_survival_story_r12.json >/dev/null
+          git diff --check
+
+      - name: Commit the tested stacked workbench and remove one-shot staging
+        run: |
+          set -euo pipefail
+          rm -rf .r12-workbench-staging .github/workflows/palau-r12-handline-workbench.yml
+          git add -A
+          git commit -m 'feat(palau): stack causal handline on Airai R12 WebGL2 evidence runtime'
+          git push origin HEAD:${{ github.ref_name }}
