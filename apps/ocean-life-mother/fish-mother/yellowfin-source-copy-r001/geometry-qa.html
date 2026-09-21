@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Fish Mother · Yellowfin Source Copy Geometry QA</title>
+  <style>
+    :root{color-scheme:dark;--bg:#071018;--panel:rgba(8,18,28,.92);--line:rgba(151,196,219,.22);--text:#e8f4f8;--muted:#91aab7;--accent:#ffd34f;--ok:#71e5a1;--bad:#ff7474}
+    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--text)}
+    canvas{display:block;width:100%;height:100%}.panel{position:fixed;z-index:5;top:16px;left:16px;width:min(460px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--panel);backdrop-filter:blur(14px);box-shadow:0 18px 60px rgba(0,0,0,.35)}
+    h1{font-size:17px;line-height:1.25;margin:0 0 5px;letter-spacing:.02em}.kicker{font-size:11px;color:var(--accent);letter-spacing:.16em;text-transform:uppercase;font-weight:750}.sub{font-size:12px;color:var(--muted);line-height:1.5;margin:7px 0 12px}.state{display:flex;align-items:flex-start;gap:9px;border:1px solid var(--line);border-radius:11px;padding:10px 11px;margin-bottom:10px;background:rgba(255,255,255,.025)}
+    .dot{width:9px;height:9px;margin-top:4px;border-radius:50%;background:var(--accent);box-shadow:0 0 15px currentColor;flex:0 0 auto}.dot.ok{background:var(--ok)}.dot.bad{background:var(--bad)}.state strong{display:block;font-size:12px}.state span{display:block;font-size:11px;color:var(--muted);line-height:1.45;margin-top:2px;overflow-wrap:anywhere}
+    .progress{height:5px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin:8px 0 12px}.progress>i{display:block;width:0;height:100%;background:linear-gradient(90deg,#72d7ff,var(--accent));transition:width .15s linear}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.metric{border:1px solid var(--line);border-radius:9px;padding:8px 9px;background:rgba(255,255,255,.018)}.metric b{display:block;font-size:10px;color:var(--muted);font-weight:600}.metric span{display:block;font-size:12px;margin-top:3px;overflow-wrap:anywhere}.wide{grid-column:1/-1}
+    .controls{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}button,select{appearance:none;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.045);color:var(--text);padding:8px 10px;font:600 11px/1 system-ui}button{cursor:pointer}button:hover{background:rgba(255,255,255,.10)}button[aria-pressed="true"]{border-color:rgba(255,211,79,.65);color:var(--accent);background:rgba(255,211,79,.08)}select{width:100%;margin-top:8px}.rule{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:10px;line-height:1.55;color:var(--muted)}.rule strong{color:var(--text)}
+    .badge{position:fixed;right:16px;bottom:16px;z-index:3;padding:9px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(7,16,24,.76);backdrop-filter:blur(10px);font-size:10px;color:var(--muted)}
+    @media(max-width:700px){.panel{top:8px;left:8px;width:calc(100vw - 16px);max-height:58vh;padding:13px}.badge{right:8px;bottom:8px}}
+  </style>
+  <script type="importmap">
+  {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}
+  </script>
+</head>
+<body>
+  <section class="panel">
+    <div class="kicker">Ocean Life Mother · Fish Mother</div>
+    <h1>Yellowfin Source Copy · Geometry QA</h1>
+    <p class="sub">同一相机、同一轴系、同一归一化变换检查精确源与分区几何副本。副本只拆区，不允许改动任何源顶点位置、面或整体比例。</p>
+    <div class="state"><i id="stateDot" class="dot"></i><div><strong id="stateTitle">正在读取源与副本</strong><span id="stateText">先验 SHA、面数与边界全部通过后才开放对照。</span></div></div>
+    <div class="progress"><i id="progressBar"></i></div>
+    <div class="grid">
+      <div class="metric"><b>MODE</b><span id="modeText">loading…</span></div>
+      <div class="metric"><b>ACTIVE VIEW</b><span id="viewText">loading…</span></div>
+      <div class="metric wide"><b>SOURCE SHA-256</b><span id="sourceShaText">—</span></div>
+      <div class="metric wide"><b>COPY SHA-256</b><span id="copyShaText">—</span></div>
+      <div class="metric"><b>SOURCE N/M/F</b><span id="sourceStatsText">—</span></div>
+      <div class="metric"><b>COPY N/M/F</b><span id="copyStatsText">—</span></div>
+      <div class="metric"><b>REGIONS</b><span id="regionCountText">—</span></div>
+      <div class="metric"><b>BOUNDS Δ MAX</b><span id="boundsDeltaText">—</span></div>
+      <div class="metric wide"><b>ACTIVE REGION</b><span id="regionText">all</span></div>
+    </div>
+    <div class="controls" id="modeControls">
+      <button data-mode="source" aria-pressed="false">精确源</button>
+      <button data-mode="copy" aria-pressed="false">分区副本</button>
+      <button data-mode="overlay" aria-pressed="false">重合检查</button>
+    </div>
+    <div class="controls" id="viewControls">
+      <button data-view="side" aria-pressed="false">侧视</button><button data-view="quarter" aria-pressed="false">3/4</button><button data-view="top" aria-pressed="false">俯视</button><button data-view="front" aria-pressed="false">头向</button>
+    </div>
+    <select id="regionSelect" disabled><option value="all">全部分区</option></select>
+    <div class="rule"><strong>硬门禁：</strong>源和副本必须具有相同的完整场景三角面总数；每个源 mesh primitive instance 都必须保留；原始边界与副本边界的最大差不得超过 0.00005 源单位。重合模式中青色线框为精确源，彩色实体为分区副本。</div>
+  </section>
+  <div class="badge">长度 z · 侧向 y · 垂直 x；当前阶段：静态分区几何，不含蒙皮与动作</div>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const SOURCE_SHA='5603d4aabc9a1127856841335a86ae7aa462b6b25d1a6586e93bf644f4d47abe';
+const SOURCE_BYTES=58908280;
+const SOURCE_URL='./source-workspace/source/tuna_fish_4k.glb';
+const COPY_URL='./geometry/YELLOWFIN_SOURCE_COPY_R001.glb';
+const RECEIPT_URL='./SOURCE_COPY_GEOMETRY_R001.json';
+const BOUNDS_TOLERANCE=0.00005;
+const VIEW_CONTRACT={
+  side:{position:[0,8,0.01],up:[1,0,0]},
+  quarter:{position:[4.8,5.8,7.2],up:[1,0,0]},
+  top:{position:[8,0,0.01],up:[0,1,0]},
+  front:{position:[0.01,0,8],up:[1,0,0]}
+};
+const $=id=>document.getElementById(id);
+const setState=(kind,title,text)=>{$('stateDot').className='dot '+(kind||'');$('stateTitle').textContent=title;$('stateText').textContent=text};
+const qa={ready:false,mode:'loading',activeView:'loading',activeRegion:'all',sourceSha:null,copySha:null,sourceStats:null,copyStats:null,receipt:null,sourceBounds:null,copyBounds:null,boundsDelta:null,checks:{}};
+window.__geometryQa=qa;
+
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x071018);
+const camera=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,.01,100);camera.position.set(...VIEW_CONTRACT.side.position);camera.up.set(...VIEW_CONTRACT.side.up);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',preserveDrawingBuffer:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;document.body.prepend(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.055;controls.target.set(0,0,0);controls.minDistance=2;controls.maxDistance=24;
+scene.add(new THREE.HemisphereLight(0xdff5ff,0x17202a,2.1));
+const key=new THREE.DirectionalLight(0xffffff,3.0);key.position.set(4,6,7);scene.add(key);
+const rim=new THREE.DirectionalLight(0x80cfff,2.0);rim.position.set(-5,1,-5);scene.add(rim);
+const floor=new THREE.Mesh(new THREE.CircleGeometry(8,96),new THREE.MeshStandardMaterial({color:0x0b1620,roughness:.92,metalness:0}));floor.rotation.y=Math.PI/2;floor.position.x=-2.25;scene.add(floor);
+
+let sourceRoot=null,copyRoot=null;
+const sourceMaterials=[];
+const copyMeshes=[];
+
+async function fetchBytes(url,label,start,end){
+  const response=await fetch(url,{cache:'no-store'});if(!response.ok)throw new Error(`${label}: HTTP ${response.status}`);
+  const total=Number(response.headers.get('content-length'))||1;const reader=response.body?.getReader();
+  if(!reader){const bytes=new Uint8Array(await response.arrayBuffer());$('progressBar').style.width=`${end}%`;return bytes;}
+  const chunks=[];let received=0;
+  while(true){const {done,value}=await reader.read();if(done)break;chunks.push(value);received+=value.length;const p=start+(end-start)*Math.min(1,received/total);$('progressBar').style.width=`${p}%`;$('stateText').textContent=`${label} · ${(received/1048576).toFixed(1)} MiB`;}
+  const all=new Uint8Array(received);let offset=0;for(const chunk of chunks){all.set(chunk,offset);offset+=chunk.length}return all;
+}
+async function digestHex(bytes){const view=bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength);const hash=await crypto.subtle.digest('SHA-256',view);return [...new Uint8Array(hash)].map(v=>v.toString(16).padStart(2,'0')).join('');}
+function parseGlb(bytes){return new Promise((resolve,reject)=>new GLTFLoader().parse(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength),'',resolve,reject));}
+function stats(root){let nodes=0,meshes=0,triangles=0;root.traverse(object=>{nodes++;if(object.isMesh){meshes++;const index=object.geometry.index;triangles+=index?index.count/3:(object.geometry.attributes.position?.count||0)/3;}});return {nodes,meshes,triangles:Math.round(triangles)};}
+function boundsRecord(box){return {min:box.min.toArray(),max:box.max.toArray()};}
+function maxBoundsDelta(a,b){return Math.max(...a.min.map((v,i)=>Math.abs(v-b.min[i])),...a.max.map((v,i)=>Math.abs(v-b.max[i])));}
+function shortSha(value){return `${value.slice(0,12)}…${value.slice(-12)}`;}
+function setView(name){const spec=VIEW_CONTRACT[name];camera.position.set(...spec.position);camera.up.set(...spec.up);controls.target.set(0,0,0);camera.lookAt(controls.target);controls.update();qa.activeView=name;$('viewText').textContent=name;document.querySelectorAll('[data-view]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.view===name)));}
+function setSourceOverlay(on){for(const state of sourceMaterials){const material=state.material;if(on){material.wireframe=true;material.transparent=true;material.opacity=.28;material.depthWrite=false;if(material.color)material.color.setHex(0x58dfff);material.map=null;}else{material.wireframe=state.wireframe;material.transparent=state.transparent;material.opacity=state.opacity;material.depthWrite=state.depthWrite;if(material.color&&state.color)material.color.copy(state.color);material.map=state.map;material.needsUpdate=true;}}}
+function setMode(mode){if(!sourceRoot||!copyRoot)return;qa.mode=mode;$('modeText').textContent=mode;sourceRoot.visible=mode!=='copy';copyRoot.visible=mode!=='source';setSourceOverlay(mode==='overlay');document.querySelectorAll('[data-mode]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.mode===mode)));}
+function setRegion(region){qa.activeRegion=region;$('regionText').textContent=region;for(const mesh of copyMeshes){mesh.visible=region==='all'||mesh.userData.regionName===region;}if(region!=='all'&&qa.mode==='source')setMode('copy');}
+
+document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>setView(button.dataset.view)));
+document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>setMode(button.dataset.mode)));
+$('regionSelect').addEventListener('change',event=>setRegion(event.target.value));
+
+async function boot(){
+  try{
+    const receiptResponse=await fetch(RECEIPT_URL,{cache:'no-store'});if(!receiptResponse.ok)throw new Error(`几何回执缺失：HTTP ${receiptResponse.status}`);const receipt=await receiptResponse.json();qa.receipt=receipt;
+    if(receipt?.source?.sha256!==SOURCE_SHA||receipt?.source?.bytes!==SOURCE_BYTES)throw new Error('几何回执未绑定精确 FISH-REF-002');
+    const sourceBytes=await fetchBytes(SOURCE_URL,'读取精确源',0,62);if(sourceBytes.byteLength!==SOURCE_BYTES)throw new Error(`源字节数错误：${sourceBytes.byteLength}`);
+    qa.sourceSha=await digestHex(sourceBytes);$('sourceShaText').textContent=shortSha(qa.sourceSha);if(qa.sourceSha!==SOURCE_SHA)throw new Error('源 SHA-256 未通过');
+    const copyBytes=await fetchBytes(COPY_URL,'读取分区副本',62,88);qa.copySha=await digestHex(copyBytes);$('copyShaText').textContent=shortSha(qa.copySha);if(qa.copySha!==receipt.output.sha256||copyBytes.byteLength!==receipt.output.bytes)throw new Error('分区副本 SHA-256 或字节数与回执不符');
+    $('progressBar').style.width='92%';setState('','解析源和副本','建立同轴、同尺度、同中心的重合检查。');
+    const [sourceGltf,copyGltf]=await Promise.all([parseGlb(sourceBytes),parseGlb(copyBytes)]);
+    qa.sourceStats=stats(sourceGltf.scene);qa.copyStats=stats(copyGltf.scene);
+    $('sourceStatsText').textContent=`${qa.sourceStats.nodes} / ${qa.sourceStats.meshes} / ${qa.sourceStats.triangles}`;
+    $('copyStatsText').textContent=`${qa.copyStats.nodes} / ${qa.copyStats.meshes} / ${qa.copyStats.triangles}`;
+    $('regionCountText').textContent=String(receipt.regions.length);
+
+    const sourceRawBox=new THREE.Box3().setFromObject(sourceGltf.scene);const copyRawBox=new THREE.Box3().setFromObject(copyGltf.scene);qa.sourceBounds=boundsRecord(sourceRawBox);qa.copyBounds=boundsRecord(copyRawBox);qa.boundsDelta=maxBoundsDelta(qa.sourceBounds,qa.copyBounds);$('boundsDeltaText').textContent=qa.boundsDelta.toExponential(3);
+
+    sourceRoot=new THREE.Group();copyRoot=new THREE.Group();sourceRoot.name='ExactSourceRoot';copyRoot.name='SegmentedCopyRoot';sourceRoot.rotation.z=-Math.PI/2;copyRoot.rotation.z=-Math.PI/2;sourceRoot.add(sourceGltf.scene);copyRoot.add(copyGltf.scene);scene.add(sourceRoot,copyRoot);
+    const orientedSourceBox=new THREE.Box3().setFromObject(sourceRoot),size=orientedSourceBox.getSize(new THREE.Vector3());const scale=6/Math.max(size.x,size.y,size.z);sourceRoot.scale.setScalar(scale);copyRoot.scale.setScalar(scale);const scaledSourceBox=new THREE.Box3().setFromObject(sourceRoot),center=scaledSourceBox.getCenter(new THREE.Vector3());sourceRoot.position.sub(center);copyRoot.position.sub(center);
+
+    sourceGltf.scene.traverse(object=>{if(!object.isMesh)return;const list=Array.isArray(object.material)?object.material:[object.material];object.material=Array.isArray(object.material)?list.map(material=>material.clone()):list[0].clone();const cloned=Array.isArray(object.material)?object.material:[object.material];for(const material of cloned){sourceMaterials.push({material,color:material.color?.clone(),map:material.map,wireframe:material.wireframe,transparent:material.transparent,opacity:material.opacity,depthWrite:material.depthWrite});}});
+    copyGltf.scene.traverse(object=>{if(!object.isMesh)return;const raw=object.name.startsWith('source_copy_')?object.name.slice('source_copy_'.length):object.parent?.name?.replace(/^source_copy_/,'')||object.name;object.userData.regionName=raw;copyMeshes.push(object);});
+    const options=['all',...receipt.regions.map(item=>item.name)];$('regionSelect').innerHTML=options.map(value=>`<option value="${value}">${value==='all'?'全部分区':value}</option>`).join('');$('regionSelect').disabled=false;
+
+    qa.checks={
+      sourceExactSha:qa.sourceSha===SOURCE_SHA,
+      sourceExactBytes:sourceBytes.byteLength===SOURCE_BYTES,
+      copyReceiptSha:qa.copySha===receipt.output.sha256,
+      copyReceiptBytes:copyBytes.byteLength===receipt.output.bytes,
+      sourceTrianglesMatchReceipt:qa.sourceStats.triangles===receipt.output.faceCount,
+      copyTrianglesMatchReceipt:qa.copyStats.triangles===receipt.output.faceCount,
+      copyMeshesMatchReceipt:qa.copyStats.meshes===receipt.output.meshCount,
+      everySourcePrimitiveCopied:receipt.gates.allSourceMeshPrimitiveInstancesCopied===true,
+      allFacesAssignedExactlyOnce:receipt.gates.allFacesAssignedExactlyOnce===true,
+      boundsWithinTolerance:qa.boundsDelta<=BOUNDS_TOLERANCE,
+    };
+    const failed=Object.entries(qa.checks).filter(([,value])=>!value).map(([key])=>key);if(failed.length)throw new Error(`几何 QA 失败：${failed.join(', ')}`);
+    qa.ready=true;$('progressBar').style.width='100%';setMode('copy');setView('side');setRegion('all');setState('ok','分区几何副本通过结构门禁',`${receipt.output.faceCount.toLocaleString()} faces · ${receipt.output.meshCount} regions · bounds Δ ${qa.boundsDelta.toExponential(3)}`);
+  }catch(error){console.error(error);setState('bad','分区几何副本被拒绝',error?.message||String(error));$('progressBar').style.width='0%';}
+}
+function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+boot();animate();
+</script>
+</body>
+</html>
