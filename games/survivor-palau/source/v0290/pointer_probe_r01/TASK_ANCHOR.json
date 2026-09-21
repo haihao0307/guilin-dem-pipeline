@@ -1,0 +1,54 @@
+{
+  "schema": "kaopu.task-anchor/2.0",
+  "taskId": "SMI-GAME-POINTER-PROBE-R01",
+  "dispatchTime": "2026-09-21",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "work/smi-v0290-pointer-probe-r01-20260921",
+  "baseSha": "b667b102f71182028fa07c622ea1a2b64a3fe498",
+  "candidateParent": "work/stone-money-island-v0290-palau-seacut-20260920@b667b102f71182028fa07c622ea1a2b64a3fe498",
+  "acceptedLineage": "Stone Money Island V0.2.2 preserved; V0.2.9 remains a non-approved visual candidate",
+  "userDirectiveVerbatimOrLosslessSummary": "Update to the latest state and continue the Desktop Habitats hand/finger-to-fish interaction direction inside Stone Money Game.",
+  "targetObject": "Game input interaction probe",
+  "targetDefectOrChange": "Stone Money Game lacks a canonical pointer/touch trajectory to world-space stimulus layer that Fish can consume without Game directly moving fish.",
+  "primaryDefectCount": 1,
+  "referenceSet": [
+    "chaseleantj/desktop-habitats@e6ea239e92bb04dcd3953f80758aef61c72b2146 README.md",
+    "chaseleantj/desktop-habitats@e6ea239e92bb04dcd3953f80758aef61c72b2146 scenes/riverscape/src/main.js",
+    "chaseleantj/desktop-habitats@e6ea239e92bb04dcd3953f80758aef61c72b2146 scenes/riverscape/src/fish.js",
+    "chaseleantj/desktop-habitats@e6ea239e92bb04dcd3953f80758aef61c72b2146 scenes/riverscape/tests/fish-behavior.mjs",
+    "games/survivor-palau/docs/POINTER_FISH_INTERACTION_DESKTOP_HABITATS_20260920_ZH.md@426a1890c2a1ff0a8b99c61e321ee42bc0f78d29",
+    "games/survivor-palau/docs/fishing-v0230/CROSS_MEDIUM_CONTRACT.json"
+  ],
+  "taskMode": "REPLICATION_LOCKED_METHOD_TRANSFER",
+  "creativeAuthorization": false,
+  "expectedArtifact": "Source-independent Game-side interactionProbe core + browser Pointer Events adapter + deterministic Node tests + one receipt.",
+  "allowedPaths": [
+    "games/survivor-palau/source/v0290/pointer_probe_r01/**"
+  ],
+  "protectedInvariants": [
+    "Do not change fish geometry, species, material or accepted identity.",
+    "Do not directly mutate fish.position from pointer/touch input.",
+    "Do not create a second Ocean surface, bed, clock or fish state.",
+    "Do not modify v0.2.9 release HTML in this bounded task.",
+    "Do not relax the existing 0.15 m cross-medium discontinuity gate.",
+    "Do not claim 390x844 browser or physical-device acceptance without fresh evidence."
+  ],
+  "forbiddenRoutes": [
+    "generic/toy fish substitute",
+    "pointer teleports fish",
+    "copy aquarium distances/thrust as Palau biological truth",
+    "stale screenshot or older release as new evidence",
+    "silent projection fallback"
+  ],
+  "acceptanceGates": [
+    "stable probeId and pointerId",
+    "world position supplied only by Game projector",
+    "world velocity derived from measured displacement/time",
+    "velocity smoothing and idle decay",
+    "pointerup/pointercancel deactivates stimulus with no ghost active probe",
+    "pointer identity switch does not inherit prior velocity",
+    "shared Game worldTime preserved",
+    "tests execute on current committed source",
+    "known limitations explicitly keep Fish behavior, Ocean projection, browser/mobile and visual acceptance open"
+  ]
+}
