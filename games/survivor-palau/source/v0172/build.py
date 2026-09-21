@@ -82,9 +82,9 @@ tackle = '''function buildTackle(){
  const startPoint=surface?[sx+dx*.55,water-.08,sz+dz*.55]:[sx+dx*3,water+.12,sz+dz*3];
  const land=[mix(startPoint[0],FISH.target.x,t)*(1-progress)+tip[0]*progress,0,mix(startPoint[2],FISH.target.z,t)*(1-progress)+tip[2]*progress];
  land[1]=waveAt(land[0],land[2],physicalTime,config).eta+pilotLineEndOffset(t)+(FISH.phase==='cast'?Math.sin(t*Math.PI)*(surface?1.2:3):0)-(FISH.phase==='bite'?.18:0);
- let p=tip;for(let i=1;i<=14;i++){const f=i/14,q=tip.map((v,k)=>mix(v,land[k],f));q[1]-=Math.sin(f*Math.PI)*(surface?.22:.36);g.tube(p,q,.012,10,4);p=q;}
+ let p=tip;for(let i=1;i<=14;i++){const f=i/14,q=tip.map((v,k)=>mix(v,land[k],f));q[1]-=Math.sin(f*Math.PI)*(surface ? .22 : .36);g.tube(p,q,.012,10,4);p=q;}
  g.sphere(...land,.085,.14,.085,11,0,5,8);
- if(FISH.phase==='caught'){const cx=sx+dx*.42,cz=sz+dz*.42,cy=water+(surface?.06:.62);g.sphere(cx,cy,cz,.16,.12,.43,8,31,6,10);const rx=dz,rz=-dx,k=g.v.length/7;g.vertex([cx-dx*.28,cy,cz-dz*.28],8);g.vertex([cx-dx*.52+rx*.18,cy,cz-dz*.52+rz*.18],8);g.vertex([cx-dx*.52-rx*.18,cy,cz-dz*.52-rz*.18],8);g.tri(k,k+1,k+2);g.tri(k,k+2,k+1);}
+ if(FISH.phase==='caught'){const cx=sx+dx*.42,cz=sz+dz*.42,cy=water+(surface ? .06 : .62);g.sphere(cx,cy,cz,.16,.12,.43,8,31,6,10);const rx=dz,rz=-dx,k=g.v.length/7;g.vertex([cx-dx*.28,cy,cz-dz*.28],8);g.vertex([cx-dx*.52+rx*.18,cy,cz-dz*.52+rz*.18],8);g.vertex([cx-dx*.52-rx*.18,cy,cz-dz*.52-rz*.18],8);g.tri(k,k+1,k+2);g.tri(k,k+2,k+1);}
  if(tackleGeo)disposeGeo(tackleGeo);tackleGeo=g.upload();opaqueDirty=true;
 }'''
 s = s[:tackle_start] + tackle + s[tackle_end:]
