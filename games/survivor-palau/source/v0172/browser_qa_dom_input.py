@@ -1,70 +1,52 @@
-"""Run the V0172 QA with deterministic DOM mouse events under sub-1 FPS SwiftShader.
+"""Run V0172 reel QA through the real DOM event chain under sub-1 FPS SwiftShader.
 
-The production workbench still uses real pointer, mouse, touch and keyboard input. This wrapper only
-replaces Playwright's asynchronously queued low-level mouse hold/release calls with synchronous
-mousedown/mouseup/click dispatch through the same button event chain. It never writes fishing state
-or bypasses tension, progress, bite, gear-loss or catch rules.
+The production workbench still owns every fishing rule. This wrapper replaces the external
+Playwright hold/release polling loop with an in-page requestAnimationFrame controller that presses
+the real button for exactly one rendered frame at a time. It never writes fishing state, tension,
+progress, catches or inventory.
 """
 from pathlib import Path
 
 SOURCE_PATH = Path('games/survivor-palau/source/v0172/browser_qa.py')
 source = SOURCE_PATH.read_text()
+start_marker = "new_reel = '''def reel_to_end"
+end_marker = "'''\nassert BASE.count(old_reel) == 1"
+start = source.index(start_marker)
+end = source.index(end_marker, start)
 
-old_transition = '''        if desired != actual_held:
-            (page.mouse.down if desired else page.mouse.up)()
-            held = desired
-            page.wait_for_function(
-                "(v)=>PalauExperience.fishing.phase!=='reel'||PalauExperience.fishing.held===v",
-                arg=desired,
-                timeout=5000,
-                polling=50,
-            )
+replacement = """new_reel = '''def reel_to_end(page, expect='caught', timeout_s=300):
+    box = page.locator('#actionFish').bounding_box()
+    assert box
+    cx = box['x'] + box['width'] / 2
+    cy = box['y'] + box['height'] / 2
+    installed = page.evaluate(
+        \"([expect,cx,cy])=>{const button=document.getElementById('actionFish');const state={expect,done:false,history:[],startedAt:performance.now(),failure:null};window.__palauQaReel=state;if(!button){state.failure='missing-actionFish';state.done=true;return state;}const emit=(type,buttons)=>{button.dispatchEvent(new MouseEvent(type,{bubbles:true,cancelable:true,button:0,buttons,clientX:cx,clientY:cy}));if(type==='mouseup')button.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,button:0,buttons:0,clientX:cx,clientY:cy}));};const tick=()=>{const f=PalauExperience.fishing;state.history.push({frame:OceanMotherR018.qa.frames,phase:f.phase,tension:f.tension,progress:f.progress,held:!!f.held,inputAck:{source:f.lastHoldInput||null,held:!!f.held,transitions:f.holdInputTransitions||0},pauseText:document.getElementById('uiPause')?.textContent||''});if(state.history.length>256)state.history.shift();if(f.phase!=='reel'){if(f.holdPointerActive||f.held)emit('mouseup',0);state.end={...f};state.done=true;state.completedAt=performance.now();return;}if(expect==='broken'){if(!f.held)emit('mousedown',1);}else{if(f.held)emit('mouseup',0);else if(f.tension<=.08)emit('mousedown',1);}requestAnimationFrame(tick);};requestAnimationFrame(tick);return{installed:true,expect};}\",
+        [expect, cx, cy],
+    )
+    assert installed.get('installed') is True, installed
+    page.wait_for_function(
+        \"()=>window.__palauQaReel?.done===true\",
+        timeout=timeout_s * 1000,
+        polling=250,
+    )
+    result = page.evaluate('JSON.parse(JSON.stringify(window.__palauQaReel))')
+    end = result.get('end') or page.evaluate('({...PalauExperience.fishing})')
+    r['checks']['reelControl_' + expect] = {
+        'controller': {
+            'startedAt': result.get('startedAt'),
+            'completedAt': result.get('completedAt'),
+            'failure': result.get('failure'),
+        },
+        'history': result.get('history', [])[-96:],
+        'end': end,
+    }
+    save()
+    assert result.get('failure') is None, result
+    assert end['phase'] == expect, end
+    return end
 '''
-new_transition = '''        if desired != actual_held:
-            event_init = {
-                'button': 0,
-                'buttons': 1 if desired else 0,
-                'clientX': box['x'] + box['width'] / 2,
-                'clientY': box['y'] + box['height'] / 2,
-                'bubbles': True,
-                'cancelable': True,
-            }
-            page.locator('#actionFish').dispatch_event('mousedown' if desired else 'mouseup', event_init)
-            if not desired:
-                # A physical mouse emits click after mouseup. Mirror that event so the runtime's
-                # release-click suppression is exercised and cleared exactly as it is for a player.
-                page.locator('#actionFish').dispatch_event('click', event_init)
-            ack = page.evaluate('({...PalauExperience.fishing})')
-            history[-1]['inputAck'] = {
-                'desired': desired,
-                'held': bool(ack['held']),
-                'phase': ack['phase'],
-                'source': ack.get('lastHoldInput'),
-                'transitions': ack.get('holdInputTransitions'),
-            }
-            assert ack['phase'] != 'reel' or bool(ack['held']) == desired, history[-1]
-            held = bool(ack['held']) if ack['phase'] == 'reel' else False
-'''
-assert source.count(old_transition) == 1, 'V0172 reel transition patch point drifted'
-source = source.replace(old_transition, new_transition, 1)
-
-old_cleanup = '''    if held or page.evaluate("PalauExperience.fishing.held"):
-        page.mouse.up()
-'''
-new_cleanup = '''    if held or page.evaluate("PalauExperience.fishing.held"):
-        release_init = {
-            'button': 0,
-            'buttons': 0,
-            'clientX': box['x'] + box['width'] / 2,
-            'clientY': box['y'] + box['height'] / 2,
-            'bubbles': True,
-            'cancelable': True,
-        }
-        page.locator('#actionFish').dispatch_event('mouseup', release_init)
-        page.locator('#actionFish').dispatch_event('click', release_init)
-'''
-assert source.count(old_cleanup) == 1, 'V0172 reel cleanup patch point drifted'
-source = source.replace(old_cleanup, new_cleanup, 1)
+"""
+source = source[:start] + replacement + source[end + 4:]
 
 exec(compile(source, str(SOURCE_PATH) + ':dom-input', 'exec'), {
     '__name__': '__main__',
