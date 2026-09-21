@@ -13,7 +13,14 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-from classify_source_components import EXPECTED_BYTES, EXPECTED_SHA, classify
+from classify_source_components import (
+    EXPECTED_BYTES,
+    EXPECTED_SHA,
+    classify,
+    load_array,
+    parents_for,
+    world_matrix,
+)
 
 
 REGION_ALIASES = {
@@ -64,6 +71,7 @@ REGION_COLORS = {
     "caudal_upper": [246, 198, 68, 255],
     "caudal_lower": [236, 151, 56, 255],
     "unclassified": [196, 72, 186, 255],
+    "auxiliary": [172, 190, 198, 255],
 }
 
 
@@ -112,6 +120,58 @@ def region_mesh(
     return mesh, source_vertex_ids
 
 
+def primitive_arrays(package_root: Path, primitive: dict, transform: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    positions = load_array(package_root, primitive["attributes"]["POSITION"]).astype(np.float64)
+    positions = (transform @ np.c_[positions, np.ones(len(positions))].T).T[:, :3]
+    if "indices" in primitive:
+        faces = load_array(package_root, primitive["indices"]).astype(np.int64).reshape(-1, 3)
+    else:
+        if len(positions) % 3:
+            raise ValueError("non-indexed triangle primitive vertex count is not divisible by three")
+        faces = np.arange(len(positions), dtype=np.int64).reshape(-1, 3)
+    return positions, faces
+
+
+def add_region(
+    scene: trimesh.Scene,
+    region_records: list[dict],
+    all_source_points: list[np.ndarray],
+    name: str,
+    positions: np.ndarray,
+    faces: np.ndarray,
+    face_ids: np.ndarray,
+    color: list[int],
+    body_length: float,
+    tail_y: float,
+    source_node: int,
+    source_mesh: int,
+    source_primitive: int,
+    semantic: bool,
+) -> None:
+    mesh, source_vertex_ids = region_mesh(positions, faces, face_ids, color)
+    geometry_name = f"source_copy_{name}"
+    scene.add_geometry(mesh, node_name=geometry_name, geom_name=geometry_name)
+    points = positions[source_vertex_ids]
+    all_source_points.append(points)
+    region_records.append({
+        "name": name,
+        "semanticRegion": semantic,
+        "sourceNode": source_node,
+        "sourceMesh": source_mesh,
+        "sourcePrimitive": source_primitive,
+        "faces": int(face_ids.size),
+        "vertices": int(source_vertex_ids.size),
+        "faceIdSha256": sha256_bytes(np.ascontiguousarray(face_ids.astype("<u4")).tobytes()),
+        "sourceVertexIdSha256": sha256_bytes(np.ascontiguousarray(source_vertex_ids.astype("<u4")).tobytes()),
+        "boundsSourceUnits": {
+            "min": rounded(points.min(axis=0)),
+            "max": rounded(points.max(axis=0)),
+        },
+        "boundsNormalized": normalized_bounds(points, body_length, tail_y),
+        "displayColorRgba": color,
+    })
+
+
 def build(
     package_root: Path,
     classification_path: Path,
@@ -132,6 +192,13 @@ def build(
     if regenerated["peduncle"]["minimum"] != committed["peduncle"]["minimum"]:
         raise ValueError("peduncle classification drift")
 
+    manifest = json.loads((package_root / "KAOPU_SOURCE_COPY_MANIFEST.json").read_text())
+    if manifest.get("sourceSha256") != EXPECTED_SHA or int(manifest.get("sourceBytes", -1)) != EXPECTED_BYTES:
+        raise ValueError("strict package is not exact FISH-REF-002")
+    nodes = manifest["nodes"]
+    parents = parents_for(nodes)
+    primary_node = next(index for index, node in enumerate(nodes) if node.get("mesh") == 0)
+
     positions = np.asarray(data["positions"], dtype=np.float64)
     faces = np.asarray(data["faces"], dtype=np.int64)
     face_groups = np.asarray(data["faceGroups"], dtype=object)
@@ -150,7 +217,8 @@ def build(
             all_regions.append(name)
 
     scene = trimesh.Scene()
-    region_records = []
+    region_records: list[dict] = []
+    all_source_points: list[np.ndarray] = []
     assigned = np.zeros(len(faces), dtype=np.int16)
     body_length = float(regenerated["frame"]["bodyLengthSourceUnits"])
     tail_y = float(regenerated["frame"]["tailY"])
@@ -160,32 +228,69 @@ def build(
         if face_ids.size == 0:
             continue
         assigned[face_ids] += 1
-        color = REGION_COLORS.get(region_name, [180, 180, 180, 255])
-        mesh, source_vertex_ids = region_mesh(positions, faces, face_ids, color)
-        geometry_name = f"source_copy_{region_name}"
-        scene.add_geometry(mesh, node_name=geometry_name, geom_name=geometry_name)
-        points = positions[source_vertex_ids]
-        region_records.append({
-            "name": region_name,
-            "faces": int(face_ids.size),
-            "vertices": int(source_vertex_ids.size),
-            "faceIdSha256": sha256_bytes(np.ascontiguousarray(face_ids.astype("<u4")).tobytes()),
-            "sourceVertexIdSha256": sha256_bytes(np.ascontiguousarray(source_vertex_ids.astype("<u4")).tobytes()),
-            "boundsSourceUnits": {
-                "min": rounded(points.min(axis=0)),
-                "max": rounded(points.max(axis=0)),
-            },
-            "boundsNormalized": normalized_bounds(points, body_length, tail_y),
-            "displayColorRgba": color,
-        })
+        add_region(
+            scene=scene,
+            region_records=region_records,
+            all_source_points=all_source_points,
+            name=region_name,
+            positions=positions,
+            faces=faces,
+            face_ids=face_ids,
+            color=REGION_COLORS.get(region_name, [180, 180, 180, 255]),
+            body_length=body_length,
+            tail_y=tail_y,
+            source_node=primary_node,
+            source_mesh=0,
+            source_primitive=0,
+            semantic=True,
+        )
 
     if not np.all(assigned == 1):
         missing = int(np.count_nonzero(assigned == 0))
         duplicated = int(np.count_nonzero(assigned > 1))
-        raise ValueError(f"face assignment failed: missing={missing} duplicated={duplicated}")
+        raise ValueError(f"primary face assignment failed: missing={missing} duplicated={duplicated}")
 
-    used_source_vertex_ids = np.unique(faces.reshape(-1))
-    source_points = positions[used_source_vertex_ids]
+    full_scene_face_count = int(len(faces))
+    source_primitive_count = 1
+    auxiliary_face_count = 0
+    auxiliary_region_count = 0
+
+    for node_index, node in enumerate(nodes):
+        mesh_index = node.get("mesh")
+        if mesh_index is None:
+            continue
+        transform = world_matrix(nodes, parents, node_index)
+        mesh_record = manifest["meshes"][int(mesh_index)]
+        for primitive_index, primitive in enumerate(mesh_record.get("primitives", [])):
+            if node_index == primary_node and int(mesh_index) == 0 and primitive_index == 0:
+                continue
+            aux_positions, aux_faces = primitive_arrays(package_root, primitive, transform)
+            if len(aux_faces) == 0:
+                continue
+            face_ids = np.arange(len(aux_faces), dtype=np.int64)
+            region_name = f"aux_node_{node_index:03d}_mesh_{int(mesh_index):02d}_prim_{primitive_index:02d}"
+            add_region(
+                scene=scene,
+                region_records=region_records,
+                all_source_points=all_source_points,
+                name=region_name,
+                positions=aux_positions,
+                faces=aux_faces,
+                face_ids=face_ids,
+                color=REGION_COLORS["auxiliary"],
+                body_length=body_length,
+                tail_y=tail_y,
+                source_node=node_index,
+                source_mesh=int(mesh_index),
+                source_primitive=primitive_index,
+                semantic=False,
+            )
+            source_primitive_count += 1
+            auxiliary_region_count += 1
+            auxiliary_face_count += int(len(aux_faces))
+            full_scene_face_count += int(len(aux_faces))
+
+    source_points = np.concatenate(all_source_points, axis=0)
     source_min = source_points.min(axis=0)
     source_max = source_points.max(axis=0)
     scene.metadata.update({
@@ -193,7 +298,9 @@ def build(
         "sourceSha256": EXPECTED_SHA,
         "sourceBytes": EXPECTED_BYTES,
         "regionCount": len(region_records),
-        "faceCount": int(len(faces)),
+        "sourcePrimitiveCount": source_primitive_count,
+        "classifiedPrimaryFaceCount": int(len(faces)),
+        "faceCount": full_scene_face_count,
     })
 
     glb = trimesh.exchange.gltf.export_glb(scene)
@@ -214,14 +321,20 @@ def build(
             "bodyLengthSourceUnits": body_length,
             "tailY": tail_y,
             "snoutY": float(regenerated["frame"]["snoutY"]),
+            "sceneMeshCount": len(manifest["meshes"]),
+            "sceneNodeMeshInstances": sum(1 for node in nodes if node.get("mesh") is not None),
+            "copiedPrimitiveInstances": source_primitive_count,
         },
         "output": {
             "glb": str(out_glb.as_posix()),
             "sha256": sha256_bytes(glb),
             "bytes": len(glb),
             "meshCount": len(region_records),
-            "faceCount": int(len(faces)),
-            "sourceVertexCountUsed": int(used_source_vertex_ids.size),
+            "faceCount": full_scene_face_count,
+            "classifiedPrimaryFaceCount": int(len(faces)),
+            "auxiliaryFaceCount": auxiliary_face_count,
+            "auxiliaryRegionCount": auxiliary_region_count,
+            "exportedVertexCount": int(sum(item["vertices"] for item in region_records)),
             "boundsSourceUnits": {
                 "min": rounded(source_min),
                 "max": rounded(source_max),
@@ -238,6 +351,8 @@ def build(
         "gates": {
             "exactSourceBound": True,
             "classificationRegeneratedWithoutDrift": True,
+            "allPrimaryFacesAssignedExactlyOnce": True,
+            "allSourceMeshPrimitiveInstancesCopied": True,
             "allFacesAssignedExactlyOnce": True,
             "sourcePositionsReusedWithoutModification": True,
             "sourceProportionsPreserved": True,
@@ -250,7 +365,8 @@ def build(
             "productionReady": False,
         },
         "interpretationBoundary": [
-            "This GLB is a static region-separated copy of the exact source geometry.",
+            "This GLB is a static region-separated copy of every mesh primitive instance in the exact source scene.",
+            "The primary skinned mesh is separated by accepted semantic classification; every additional source primitive is retained as an auxiliary region instead of being silently dropped.",
             "No source vertex position or face was altered; shared boundary vertices are duplicated only between exported region meshes.",
             "Original skinning, animation and materials are intentionally not transferred in this stage.",
             "The geometry remains a transitional source reference, not Thunnus albacares biological truth.",
