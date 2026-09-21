@@ -19,6 +19,11 @@ marker = """        r['checks']['visibleBite'] = {
         }
 """
 injected = marker + """        visual = page.evaluate('PalauExperience.observationVisualMetrics()')
+        page.wait_for_function(
+            \"\"\"()=>{const e=document.getElementById('pilotLensOverlay'),s=getComputedStyle(e);return !e.hidden&&s.display!=='none'&&s.visibility==='visible'&&Number(s.opacity)>.9}\"\"\",
+            timeout=45000,
+            polling=50,
+        )
         overlay = page.evaluate(\"\"\"(()=>{const e=document.getElementById('pilotLensOverlay'),s=getComputedStyle(e),b=e.getBoundingClientRect();return{hidden:e.hidden,display:s.display,visibility:s.visibility,opacity:Number(s.opacity),width:b.width,height:b.height}})()\"\"\")
         visual['overlayState'] = overlay
         visual['overlayVisible'] = page.locator('#pilotLensOverlay').is_visible()
