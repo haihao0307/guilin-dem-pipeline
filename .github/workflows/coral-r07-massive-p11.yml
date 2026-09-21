@@ -1,0 +1,135 @@
+name: Coral R07 Massive P11
+
+on:
+  push:
+    branches:
+      - work/coral-mother-r07-massive-porites-p11-readable-corallites-20260921
+    paths:
+      - tools/coral/coral_r07_massive_p11_readable_corallites.py
+      - tools/coral/coral_r07_massive_p11_browser_qa.py
+      - tools/coral/coral_r07_massive_p00_browser_qa.py
+      - .github/workflows/coral-r07-massive-p11.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: coral-r07-massive-p11
+  cancel-in-progress: true
+
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out R07 P11 work branch
+        uses: actions/checkout@v4
+        with:
+          ref: work/coral-mother-r07-massive-porites-p11-readable-corallites-20260921
+          fetch-depth: 1
+          path: work
+
+      - name: Check out frozen GitHub Pages baseline
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 1
+          path: pages
+
+      - name: Build P11 from exact published P10 baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE=pages/coral-mother-r07-massive-porites-p10
+          test -s "$SOURCE/index.html"
+          test -s "$SOURCE/BUILD_R07_P00.json"
+          rm -rf /tmp/coral-r07-p11
+          cp -a "$SOURCE" /tmp/coral-r07-p11
+          python3 work/tools/coral/coral_r07_massive_p11_readable_corallites.py /tmp/coral-r07-p11
+          printf '%s\n' \
+            'https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-r07-massive-porites-p11/' \
+            > /tmp/coral-r07-p11/PUBLIC_URL.txt
+          grep -q 'R07-P11' /tmp/coral-r07-p11/index.html
+          grep -q "microSignalEncoding:'vertex-alpha-lighting-only'" /tmp/coral-r07-p11/index.html
+          grep -q "uniformRgbColor:true" /tmp/coral-r07-p11/index.html
+          grep -q 'colors\[i\]\[3\]=microSignal' /tmp/coral-r07-p11/index.html
+          grep -q 'microShade=clamp' /tmp/coral-r07-p11/index.html
+          ! grep -q 'R07-P10' /tmp/coral-r07-p11/index.html
+          grep -q 'CORAL_MOTHER_R07_MASSIVE_P11_BUILD' /tmp/coral-r07-p11/BUILD_R07_P00.json
+          test "$(grep -o 'type="range"' /tmp/coral-r07-p11/index.html | wc -l)" -eq 12
+          test "$(grep -o 'id="gl"' /tmp/coral-r07-p11/index.html | wc -l)" -eq 1
+
+      - name: Browser, geometry, and readable-surface gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet websocket-client pillow
+          python3 -m http.server 8773 --directory /tmp/coral-r07-p11 >/tmp/coral-r07-p11-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          python3 work/tools/coral/coral_r07_massive_p11_browser_qa.py /tmp/coral-r07-p11
+
+      - name: Assert P11 evidence survived browser QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'CORAL_MOTHER_R07_MASSIVE_P11_BUILD' /tmp/coral-r07-p11/BUILD_R07_P00.json
+          grep -q 'microSignalUsesNonRgbChannel' /tmp/coral-r07-p11/BUILD_R07_P00.json
+          grep -q 'neutralSignalAtMicroscopeZero' /tmp/coral-r07-p11/BUILD_R07_P00.json
+          grep -q 'readableSignalRange' /tmp/coral-r07-p11/BUILD_R07_P00.json
+          grep -q 'constantTopologyAcrossMicroscope' /tmp/coral-r07-p11/BUILD_R07_P00.json
+          test -s /tmp/coral-r07-p11/QA_SCREENSHOT_ULTRAWIDE_2560X1080.png
+          test -s /tmp/coral-r07-p11/QA_CLOSEUP_ULTRAWIDE_2560X1080.png
+          test -s /tmp/coral-r07-p11/QA_MICROSCOPE_0.png
+          test -s /tmp/coral-r07-p11/QA_MICROSCOPE_1.png
+          test -s /tmp/coral-r07-p11/QA_WARP_0.png
+          test -s /tmp/coral-r07-p11/QA_WARP_1.png
+
+      - name: Upload complete P11 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: CORAL_R07_MASSIVE_P11_EVIDENCE_${{ github.sha }}
+          path: /tmp/coral-r07-p11
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish fixed P11 workbench
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET=coral-mother-r07-massive-porites-p11
+          rm -rf "pages/$TARGET"
+          mkdir -p "pages/$TARGET"
+          cp -a /tmp/coral-r07-p11/. "pages/$TARGET/"
+          cd pages
+          git config user.name 'Haihao_Nature Grace HK'
+          git config user.email 'haihao0307@gmail.com'
+          git add "$TARGET/"
+          if git diff --cached --quiet; then
+            echo 'No publication changes.'
+          else
+            git commit -m "publish(coral): R07 massive Porites P11 readable corallites"
+            git pull --rebase origin gh-pages
+            git push origin gh-pages
+          fi
+
+      - name: Write run summary
+        shell: bash
+        run: |
+          {
+            echo '## Coral Mother R07-P11'
+            echo
+            echo '- NOAA: Hard / stony coral → Massive coral'
+            echo '- Candidate: Porites lutea morphology prototype'
+            echo '- P10 retained as smooth-but-unreadable microstructure evidence'
+            echo '- P11: narrower pit/rim/wall geometry + non-RGB local lighting signal'
+            echo '- RGB species colour remains uniform'
+            echo '- Microscope zero restores neutral signal'
+            echo '- Topology remains constant when Microscope changes'
+            echo '- Runtime assets: 0 GLB / 0 texture / 0 fetch'
+            echo '- visualAcceptance: false'
+            echo '- productionReady: false'
+            echo
+            echo 'Public workbench:'
+            echo 'https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-r07-massive-porites-p11/'
+          } >> "$GITHUB_STEP_SUMMARY"
