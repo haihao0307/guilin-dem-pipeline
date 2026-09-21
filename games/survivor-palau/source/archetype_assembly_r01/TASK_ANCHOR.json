@@ -1,0 +1,31 @@
+{
+  "schema": "kaopu.task-anchor/3.0",
+  "taskId": "SMI-GAME-ARCHETYPE-ASSEMBLY-R01",
+  "executionMode": "FACTORY_EXECUTOR_ONLY",
+  "baseSha": "c07eec73616f613acde90881ac642b0972f12391",
+  "acceptedLineage": "Stone Money Island V0.2.2 preserved",
+  "targetObject": "Game Archetype Registry and Assembly Adapter",
+  "primaryDefectCount": 1,
+  "targetDefectOrChange": "Add a source-independent registry/placement contract so Game can consume verifier-passed Coral/Fish/Bird/Environment archetypes without inventing fallback assets.",
+  "allowedPaths": [
+    "games/survivor-palau/source/archetype_assembly_r01/**"
+  ],
+  "protectedInvariants": [
+    "Do not modify existing accepted scene/world files in R01.",
+    "Do not create generic fish/coral/bird placeholders.",
+    "Missing archetype must remain NO_CANDIDATE.",
+    "Do not create a second Ocean/Landscape truth.",
+    "Do not alter #83 fishing identity or save schema in this first task."
+  ],
+  "acceptanceGates": [
+    "registry stores archetypeId/domain/version/sourceHead/status",
+    "only verifier-passed candidates can become ACTIVE",
+    "missing candidate is explicit and never synthesized",
+    "placement requires WHY_IN_STORY and WHERE_IN_WORLD metadata",
+    "duplicate runtime identity is rejected",
+    "save identity is stable",
+    "deterministic Node tests pass",
+    "fresh receipt has exact base/head/commands/limitations"
+  ],
+  "nextTaskPointer": "SMI-GAME-CORAL-HABITAT-REGISTER after at least one Coral Stage A/B candidate is verifier-passed"
+}
