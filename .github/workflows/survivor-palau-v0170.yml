@@ -1,0 +1,141 @@
+name: Palau V0170 pilot survival browser review
+on:
+  push:
+    branches: [work/survivor-palau-v0170-pilot-survival-20260921]
+    paths:
+      - games/survivor-palau/source/v0170/**
+      - games/survivor-palau/story/pilot-survival-r2-20260921/**
+      - games/survivor-palau/docs/V0170_**
+      - .github/workflows/survivor-palau-v0170.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: palau-v0170-pilot-survival-review
+  cancel-in-progress: false
+jobs:
+  review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 42
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+          sparse-checkout: |
+            games/survivor-palau
+          persist-credentials: true
+      - name: Build inherited V0160 and V0170 source
+        run: |
+          python3 games/survivor-palau/source/v0170/build.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('games/survivor-palau/releases/v0.1.7.0/index.html').read_text()
+          module=re.search(r'<script type="module">(.*)</script>',s,re.S)
+          assert module
+          Path('/tmp/palau-v0170.mjs').write_text(module[1])
+          assert 'palau-survival-0.1.7.0-pilot-survival' in s
+          assert 'pilotFishReadyToBite' in s
+          assert '1944-11-21' in s
+          PY
+          node --check /tmp/palau-v0170.mjs
+          python3 -m json.tool games/survivor-palau/releases/v0.1.7.0/BUILD.json >/dev/null
+      - name: Browser prerequisites
+        run: |
+          python3 -m pip install -q playwright
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb fonts-noto-cjk
+      - name: Real WebGL and gameplay tests
+        id: qa
+        continue-on-error: true
+        run: xvfb-run -a python3 games/survivor-palau/source/v0170/browser_qa.py
+      - name: Persist candidate and actual test evidence
+        if: always()
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add games/survivor-palau/releases/v0.1.6.0 games/survivor-palau/releases/v0.1.7.0
+          git diff --cached --quiet || git commit -m 'build(palau): preserve V0170 pilot survival candidate and browser evidence [skip ci]'
+          git push origin HEAD:${{ github.ref_name }}
+          echo "PALAU_BUILD_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Verify fixed public URL and full interactions
+        if: steps.qa.outcome == 'success'
+        run: |
+          cat >/tmp/palau_public_prepare.py <<'PY'
+          from pathlib import Path
+          import hashlib,json,os,time,traceback,urllib.request
+          root=Path('games/survivor-palau/releases/v0.1.7.0')
+          url='https://raw.githack.com/haihao0307/guilin-dem-pipeline/'+os.environ['PALAU_BUILD_COMMIT']+'/games/survivor-palau/releases/v0.1.7.0/index.html'
+          expected=hashlib.sha256((root/'index.html').read_bytes()).hexdigest()
+          state={'url':url,'commit':os.environ['PALAU_BUILD_COMMIT'],'sha256':expected,'httpPassed':False,'bytes':0,'failure':None}
+          try:
+            for attempt in range(15):
+              try:
+                req=urllib.request.Request(url,headers={'User-Agent':'Palau-V0170-QA'})
+                with urllib.request.urlopen(req,timeout=35) as response:
+                  body=response.read()
+                  assert response.status==200
+                  assert hashlib.sha256(body).hexdigest()==expected
+                  assert b'palau-survival-0.1.7.0-pilot-survival' in body
+                state['httpPassed']=True;state['bytes']=len(body);break
+              except Exception:
+                if attempt==14:raise
+                time.sleep(6)
+          except Exception as exc:
+            state['failure']=str(exc);state['traceback']=traceback.format_exc()
+          Path('/tmp/palau-public-state.json').write_text(json.dumps(state,indent=2))
+          print(json.dumps(state,indent=2));assert state['httpPassed']
+          print(url)
+          PY
+          PUBLIC_URL=$(python3 /tmp/palau_public_prepare.py | tail -n 1)
+          xvfb-run -a python3 games/survivor-palau/source/v0170/browser_qa.py "$PUBLIC_URL"
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          root=Path('games/survivor-palau/releases/v0.1.7.0')
+          http=json.loads(Path('/tmp/palau-public-state.json').read_text())
+          qa=json.loads((root/'PUBLIC_BROWSER_QA.json').read_text())
+          proof={
+            'sourceModified':True,
+            'interactive3D':True,
+            'staticImageSubstitute':False,
+            'publicHttpsPassed':bool(http['httpPassed']),
+            'browserPassed':bool(qa['passed']),
+            'shareAllowed':bool(http['httpPassed'] and qa['passed']),
+            'visualAcceptancePending':True,
+            'physicalPhoneTested':False,
+            'url':http['url'],
+            'commit':http['commit'],
+            'sha256':http['sha256'],
+            'bytes':http['bytes'],
+            'historicalPrototypeDate':'1944-11-21',
+            'surfaceObservation':True,
+            'visibleFishRuntime':True,
+            'visibleBaitAndHook':True,
+            'shortSnorkelWaveInteraction':True,
+            'finiteGearLoss':True,
+            'autoCatch':False,
+            'elasticSpear':False,
+            'hawaiianSling':False,
+            'mechanicalSpeargun':False,
+            'browserChecks':qa.get('checks',{}),
+          }
+          (root/'PUBLICATION_PROOF.json').write_text(json.dumps(proof,ensure_ascii=False,indent=2))
+          print(json.dumps(proof,ensure_ascii=False,indent=2));assert proof['shareAllowed']
+          PY
+      - name: Persist public proof
+        if: always()
+        run: |
+          git add games/survivor-palau/releases/v0.1.7.0
+          git diff --cached --quiet || git commit -m 'test(palau): persist V0170 fixed-URL browser proof [skip ci]'
+          git push origin HEAD:${{ github.ref_name }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Palau-V0170-pilot-survival-real-browser-evidence
+          path: games/survivor-palau/releases/v0.1.7.0
+          retention-days: 30
+      - name: Enforce production gate
+        if: steps.qa.outcome != 'success'
+        run: exit 1
