@@ -1,0 +1,245 @@
+name: Palau R12 import pilot-survival story package
+
+on:
+  push:
+    branches:
+      - work/survivor-palau-r12-pilot-story-integration-20260921
+    paths:
+      - .github/workflows/palau-r12-import-pilot-story.yml
+
+permissions:
+  contents: write
+
+jobs:
+  import-and-validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+          persist-credentials: true
+
+      - name: Import the sealed story package from the verified prototype branch
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin \
+            refs/heads/work/survivor-palau-v0170-pilot-survival-20260921:refs/remotes/origin/pilot-story-source
+          git checkout refs/remotes/origin/pilot-story-source -- \
+            games/survivor-palau/story/pilot-survival-r2-20260921
+
+      - name: Bind the story to the R11 canonical world without reviving the old prototype world
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          story = Path('games/survivor-palau/story/pilot-survival-r2-20260921')
+          manifest_path = story / 'manifest.json'
+          manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+          manifest['version'] = 'R2.2'
+          manifest['repository_integration'] = 'work/survivor-palau-r12-pilot-story-integration-20260921'
+          manifest['canonical_world_handoff'] = 'handoff/survivor-palau-stone-money-full-r011-20260921'
+          manifest['prototype_source'] = 'work/survivor-palau-v0170-pilot-survival-20260921'
+          manifest['original_zip_sha256'] = 'b7ddc94cf54d75fd05de0bfd2f19093b21228b65f136f7dfe703ba70d206ece2'
+          integration_name = '10_R11_CANONICAL_INTEGRATION_R22_ZH.md'
+          if integration_name not in manifest['files']:
+              manifest['files'].append(integration_name)
+          manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          (story / integration_name).write_text('''# R2.2 接入 R11 现役世界基线说明
+
+日期：2026-09-21
+
+## 正确的继承关系
+
+- 世界与场景权威基线：`handoff/survivor-palau-stone-money-full-r011-20260921`
+- 飞行员故事主控：本目录 `01_MASTER_SPEC_ZH.md`
+- 旧玩法原型：`work/survivor-palau-v0170-pilot-survival-20260921`
+- 可回收游戏组件：`work/smi-v0230-game-fishing-loop-20260918`
+
+旧 V0.1.7.0 原型和 V0.2.3.0 组件都不是当前世界权威，不能覆盖 R11 的完整 Palau、用户黄色故事区域、Ocean Mother、真实 DEM、NOAA 水深或 `PalauWorld.sample()`。
+
+## 已锁定的故事事实与分叉
+
+历史原型为 Carroll E. McCullah、VMF-122、Goodyear FG-1 Corsair BuNo 14053，日期为 1944-11-21。真实事件中他完成受控水上迫降、放出救生筏并很快获救。游戏必须把虚构分叉明确放在“救援失败或被打断”之后，不能把长期漂流冒充真实结局。
+
+## 当前执行边界
+
+只允许把旧原型中已经证明有价值的水面观察、短呼吸管、可见鱼饵鱼钩、有限手线物资与真实咬钩状态机重新接到现役世界。禁止直接移植旧岛位、旧地形、旧海面或旧相机世界。
+
+航空眼镜／镜片只作为水面或极浅水观察工具，不是深潜面镜；自由潜放在后期，禁止过度换气和单人深潜。精确航空眼镜型号、当天实际求生包组合、FG-1 单人筏固定位置和释放步骤仍属待核查项。
+
+## 验收状态
+
+- `visualAcceptance=false`
+- `productionReady=false`
+- `publicShareAllowed=false`
+
+故事包进入现役仓库并不等于场景、交互或历史装备已经完成。下一步只能在 R11 世界关系上做隔离式接入和真实浏览器验收。
+''', encoding='utf-8')
+
+          contract_dir = Path('contracts/survivor-palau')
+          contract_dir.mkdir(parents=True, exist_ok=True)
+          contract = {
+              'schema': 'kaopu.survivor-palau.pilot-survival-story/1.0',
+              'version': 'R12_STORY_CONTRACT_20260921',
+              'canonicalWorld': {
+                  'handoffBranch': 'handoff/survivor-palau-stone-money-full-r011-20260921',
+                  'worldConductor': 'PalauWorld.sample()',
+                  'traditionalLOD': False,
+                  'reuseExistingOceanMother': True,
+                  'newOceanSkyBeachDesignAllowed': False,
+                  'cartoonTerrainAllowed': False
+              },
+              'historicalPrototype': {
+                  'pilot': 'Carroll E. McCullah',
+                  'unit': 'VMF-122',
+                  'aircraft': 'Goodyear FG-1 Corsair',
+                  'bureauNumber': '14053',
+                  'lossDate': '1944-11-21',
+                  'verifiedOutcome': ['controlled water landing', 'life raft deployed', 'rapid rescue'],
+                  'gameDivergence': 'rescue fails or is interrupted after the verified ditching sequence'
+              },
+              'equipmentCertainty': {
+                  'exactIssuedSurvivalKit': 'unverified',
+                  'specificAviationGoggleModel': 'unverified',
+                  'fg1RaftStowageAndRelease': 'unverified',
+                  'm592BackPadKit': 'period context only; not asserted as McCullah personal issue'
+              },
+              'lockedProgression': [
+                  'finite handline fishing',
+                  'surface observation with aviation goggles or lenses and a short snorkel',
+                  'simple sharpened wooden spear for shore, tide-pool, and very shallow use',
+                  'freediving learned later'
+              ],
+              'bannedRoutes': [
+                  'elastic spear',
+                  'rubber-powered pole spear',
+                  'Hawaiian sling',
+                  'mechanical speargun',
+                  'trigger fish gun',
+                  'long-hose underwater breathing',
+                  'automatic fish lock',
+                  'automatic catch'
+              ],
+              'physicalSafetyLimits': {
+                  'aviationEyecups': 'surface or very shallow observation only; independent eyecups cannot be treated as a depth-equalized diving mask',
+                  'freediving': 'no hyperventilation and no solo deep-diving progression',
+                  'reefFood': 'species, toxic spines, spoilage, and ciguatera risk must remain explicit'
+              },
+              'reusePolicy': {
+                  'v0170': 'interaction prototype evidence only; do not import its world',
+                  'v0230': 'recover compatible gameplay components only; do not create a second fishing core',
+                  'r11': 'authoritative world, user map, story AOI, Ocean Mother, DEM, bathymetry, and NoData rules'
+              },
+              'acceptance': {
+                  'visualAcceptance': False,
+                  'productionReady': False,
+                  'publicShareAllowed': False
+              },
+              'sourcePackage': {
+                  'directory': str(story),
+                  'originalZipSha256': 'b7ddc94cf54d75fd05de0bfd2f19093b21228b65f136f7dfe703ba70d206ece2',
+                  'master': '01_MASTER_SPEC_ZH.md'
+              }
+          }
+          contract_path = contract_dir / 'pilot_survival_story_r12.json'
+          contract_path.write_text(json.dumps(contract, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          validator = r'''#!/usr/bin/env python3
+          import json
+          from pathlib import Path
+
+          repo = Path.cwd()
+          story = repo / 'games/survivor-palau/story/pilot-survival-r2-20260921'
+          manifest = json.loads((story / 'manifest.json').read_text(encoding='utf-8'))
+          contract = json.loads((repo / 'contracts/survivor-palau/pilot_survival_story_r12.json').read_text(encoding='utf-8'))
+
+          missing = [name for name in manifest['files'] if not (story / name).is_file()]
+          assert not missing, f'missing package files: {missing}'
+          assert manifest['version'] == 'R2.2'
+          assert manifest['original_zip_sha256'] == contract['sourcePackage']['originalZipSha256']
+          assert contract['historicalPrototype']['lossDate'] == '1944-11-21'
+          assert contract['historicalPrototype']['bureauNumber'] == '14053'
+          assert contract['historicalPrototype']['gameDivergence'].startswith('rescue fails')
+          assert contract['equipmentCertainty']['exactIssuedSurvivalKit'] == 'unverified'
+          assert contract['equipmentCertainty']['specificAviationGoggleModel'] == 'unverified'
+          assert contract['equipmentCertainty']['fg1RaftStowageAndRelease'] == 'unverified'
+          assert contract['canonicalWorld']['worldConductor'] == 'PalauWorld.sample()'
+          assert contract['canonicalWorld']['traditionalLOD'] is False
+          assert contract['acceptance'] == {
+              'visualAcceptance': False,
+              'productionReady': False,
+              'publicShareAllowed': False,
+          }
+
+          master = (story / '01_MASTER_SPEC_ZH.md').read_text(encoding='utf-8')
+          rejected = (story / '03_LOCKED_DECISIONS_AND_REJECTED_ROUTES_ZH.md').read_text(encoding='utf-8')
+          assert '1944 年 11 月 21 日' in master
+          for required in ('手线', '短呼吸管', '木鱼叉', '自由潜'):
+              assert required in master, f'master missing {required}'
+          for banned in ('弹力', 'Hawaiian sling', '机械鱼枪', '自动'):
+              assert banned.lower() in rejected.lower(), f'rejected-routes ledger missing {banned}'
+          for banned in ('elastic spear', 'Hawaiian sling', 'mechanical speargun', 'automatic catch'):
+              assert banned in contract['bannedRoutes'], f'contract missing banned route {banned}'
+
+          print(json.dumps({
+              'passed': True,
+              'manifestVersion': manifest['version'],
+              'fileCount': len(manifest['files']),
+              'canonicalWorld': contract['canonicalWorld']['handoffBranch'],
+              'storyDate': contract['historicalPrototype']['lossDate'],
+              'acceptance': contract['acceptance'],
+          }, ensure_ascii=False, indent=2))
+          '''
+          validator = '\n'.join(line[10:] if line.startswith('          ') else line for line in validator.splitlines()) + '\n'
+          validator_path = story / 'validate_story_contract.py'
+          validator_path.write_text(validator, encoding='utf-8')
+          validator_path.chmod(0o755)
+          if 'validate_story_contract.py' not in manifest['files']:
+              manifest['files'].append('validate_story_contract.py')
+              manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          handoff = Path('handoff/survivor-palau-stone-money-full-r011-20260921')
+          receipt = {
+              'schema': 'kaopu.survivor-palau.story-integration-receipt/1.0',
+              'version': 'R12_PILOT_STORY_INTEGRATION_20260921',
+              'baseHandoff': 'handoff/survivor-palau-stone-money-full-r011-20260921',
+              'workBranch': 'work/survivor-palau-r12-pilot-story-integration-20260921',
+              'prototypeSourceBranch': 'work/survivor-palau-v0170-pilot-survival-20260921',
+              'prototypeSourceHead': '0967503268adaddc92d67ffcaa66360189626a76',
+              'originalZipSha256': 'b7ddc94cf54d75fd05de0bfd2f19093b21228b65f136f7dfe703ba70d206ece2',
+              'storyContract': 'contracts/survivor-palau/pilot_survival_story_r12.json',
+              'masterStory': str(story / '01_MASTER_SPEC_ZH.md'),
+              'worldImportedFromPrototype': False,
+              'visualAcceptance': False,
+              'productionReady': False,
+              'publicShareAllowed': False
+          }
+          (handoff / 'PILOT_STORY_R12_RECEIPT.json').write_text(
+              json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
+          )
+          PY
+
+          python3 games/survivor-palau/story/pilot-survival-r2-20260921/validate_story_contract.py
+          python3 -m json.tool contracts/survivor-palau/pilot_survival_story_r12.json >/dev/null
+          python3 -m json.tool games/survivor-palau/story/pilot-survival-r2-20260921/manifest.json >/dev/null
+          python3 -m json.tool handoff/survivor-palau-stone-money-full-r011-20260921/PILOT_STORY_R12_RECEIPT.json >/dev/null
+
+      - name: Commit the canonical story integration and remove this one-shot workflow
+        run: |
+          set -euo pipefail
+          rm .github/workflows/palau-r12-import-pilot-story.yml
+          git diff --check
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add \
+            games/survivor-palau/story/pilot-survival-r2-20260921 \
+            contracts/survivor-palau/pilot_survival_story_r12.json \
+            handoff/survivor-palau-stone-money-full-r011-20260921/PILOT_STORY_R12_RECEIPT.json \
+            .github/workflows/palau-r12-import-pilot-story.yml
+          git commit -m 'docs(palau): bind pilot survival story to the R11 canonical world'
+          git push origin HEAD:${{ github.ref_name }}
