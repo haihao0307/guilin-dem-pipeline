@@ -1,25 +1,29 @@
-# Ocean Life / Fish Mother — Tuna R09R4 clean handoff
+# Ocean Life / Fish Mother — Yellowfin full handoff R006
 
-This branch is the clean continuation package for the Tuna R09R4 work completed on 2026-09-20.
+Date: 2026-09-21
 
-Canonical production source:
-- repository: haihao0307/guilin-dem-pipeline
-- source branch: work/original-fish-r08-tuna-hifi-restart-20260920
-- source commit: 17d6290844e258af7592bf65bcff5b1e576cc0a6
-- commit time: 2026-09-20T09:38:45Z (17:38:45 UTC+08:00)
+This is the clean full handoff for restarting the Fish Mother / Yellowfin line in a new conversation.
 
-Use `apps/ocean-life-mother/original-fish/r08/r09r4/` as the current Tuna baseline.
+## Start here
 
-Do not revive the rejected low-dimensional Tuna R02–R10 body-parameter lineage. R09R4 is the high-dimensional restart lineage.
+1. Read `CURRENT_BASELINE.json`.
+2. Read `RESTART_ORDER.md`.
+3. Open `apps/ocean-life-mother/fish-mother/yellowfin-study/index.html`.
+4. Continue from R006. Do not restart the generic-fish / low-dimensional line.
 
-What is preserved here:
-- R08 restart contract, benchmark summaries, QA and tests;
-- Tuna R09R4 primary-shape data, QA, fixed-view gate, 3A quality gate, tests and reproducible builder;
-- clean Fish Mother handoff documents from 2026-09-19;
-- FISH-REF-002 reference-cache metadata and audit ledger.
+## Current line
 
-Known preservation gap:
-- the locally generated self-contained `candidate.html` was never committed to GitHub. The release manifest records 1,577,730 bytes and SHA-256 `c4e4fea4c0dd031bc7c8ca383d604ad3d062f504aeea1047ee965157e14bddf2`;
-- the reference GLB binaries were locally verified but remained pending Git LFS ingest. Their hashes and sizes are preserved under `reference-cache/`.
+- Ocean Life Mother → Fish Mother
+- species target: Yellowfin tuna / `Thunnus albacares`
+- locked copy target: `FISH-REF-002` / GoldenZtuff Tuna Fish
+- active study state: R006 source-copy laboratory toolchain ready
+- next allowed build: `YELLOWFIN-SOURCE-COPY-R001`
+- generation remains locked until the source-copy gate is satisfied.
 
-Therefore this package is the complete GitHub-preserved R09R4 source/reproduction handoff, not a claim that the lost local-only HTML payload has been recovered.
+## Important
+
+Do **not** fall into the old loop of repeatedly searching for the model and building more planning infrastructure.
+
+The exact GLB was previously verified locally and its hashes are preserved. The user has indicated that a temporary/cache repository already contains the relevant material. In the restarted conversation, use the user's available temporary/cache source first. If an exact model is presented, verify its SHA and immediately run the R006 ingest/extractor toolchain.
+
+This handoff preserves R07 source audit, R08/R09R4 high-dimensional restart evidence, all Yellowfin study R001-R006 artifacts, tools/tests, the locked Source Copy scaffold, Reference Cache metadata, and the earlier Fish Mother clean handoff.

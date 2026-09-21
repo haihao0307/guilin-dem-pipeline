@@ -1,58 +1,44 @@
 {
-  "schema": "kaopu.ocean-life.fish-mother-handoff/1.0",
-  "date": "2026-09-20",
-  "role": "Fish Mother under Ocean Life Mother",
-  "canonicalBaseline": {
-    "repository": "haihao0307/guilin-dem-pipeline",
-    "sourceBranch": "work/original-fish-r08-tuna-hifi-restart-20260920",
-    "sourceCommit": "17d6290844e258af7592bf65bcff5b1e576cc0a6",
-    "sourceCommitTimeUtc": "2026-09-20T09:38:45Z",
-    "sourceCommitTimeUtcPlus8": "2026-09-20T17:38:45+08:00",
-    "path": "apps/ocean-life-mother/original-fish/r08/r09r4/"
+  "schema": "kaopu.ocean-life.fish-mother.full-handoff/2.0",
+  "date": "2026-09-21",
+  "handoffBranch": "handoff/ocean-life-fish-mother-yellowfin-full-r006-20260921",
+  "sourceBranch": "work/fish-mother-yellowfin-study-r001-20260921",
+  "sourceHead": "445255c6f90a610d7b3b075d5f9dd64920378bda",
+  "role": "Ocean Life Mother / Fish Mother",
+  "speciesTarget": {
+    "commonName": "Yellowfin tuna",
+    "scientificName": "Thunnus albacares"
   },
-  "candidate": {
-    "label": "Tuna R09R4",
-    "runtimeDependencyOnSource": false,
-    "nativeVertices": 48672,
-    "nativeFaces": 93619,
-    "bodyGrid": [
-      260,
-      144
-    ],
-    "status": {
-      "primarySilhouette": "PROVISIONAL_PASS",
-      "headJawOperculum": "HOLD",
-      "finRootAndFreeEdge": "HOLD",
-      "overallShape": "HOLD",
-      "materials": "CLOSED",
-      "motion": "CLOSED",
-      "productionReady": false
-    }
-  },
-  "localOnlyArtifact": {
-    "filename": "candidate.html",
-    "bytes": 1577730,
-    "sha256": "c4e4fea4c0dd031bc7c8ca383d604ad3d062f504aeea1047ee965157e14bddf2",
-    "githubPresence": false,
-    "recoveryRule": "Do not substitute another fish or older Tuna build. Recover only by exact hash or rebuild from the preserved R09R4 process and reference source."
-  },
-  "referenceSource": {
+  "primaryCopyTarget": {
     "id": "FISH-REF-002",
-    "lowResGeometryRigMotion": {
-      "filename": "tuna_fish(1).glb",
-      "bytes": 6137560,
-      "sha256": "f75f073a2999ee20c4839434d28f90565e486b50270e663f48484cca2dbae9f0",
-      "githubBinaryPresence": false
-    },
-    "highResAppearance": {
-      "filename": "tuna_fish (1)(2).glb",
-      "bytes": 58908280,
-      "sha256": "5603d4aabc9a1127856841335a86ae7aa462b6b25d1a6586e93bf644f4d47abe",
-      "githubBinaryPresence": false
-    }
+    "title": "Tuna Fish",
+    "author": "GoldenZtuff",
+    "knownVariants": [
+      {
+        "sha256": "f75f073a2999ee20c4839434d28f90565e486b50270e663f48484cca2dbae9f0",
+        "bytes": 6137560,
+        "role": "geometry-rig-motion / 1024 appearance"
+      },
+      {
+        "sha256": "5603d4aabc9a1127856841335a86ae7aa462b6b25d1a6586e93bf644f4d47abe",
+        "bytes": 58908280,
+        "role": "same geometry-rig-motion / 4096 appearance"
+      }
+    ]
   },
-  "lineage": {
-    "rejectedLowDimensionalLineageMustStayRejected": true,
-    "continueFrom": "R09R4 high-dimensional restart"
+  "activeState": {
+    "phase": "R006_SOURCE_COPY_LAB_TOOLCHAIN_READY",
+    "activeWorkbench": "apps/ocean-life-mother/fish-mother/yellowfin-study/index.html",
+    "latestDetailedWorkbench": "apps/ocean-life-mother/fish-mother/yellowfin-study-r005/index.html",
+    "r006Summary": "apps/ocean-life-mother/fish-mother/yellowfin-study-r006/R006_SUMMARY.json",
+    "generationLocked": true,
+    "sourceCopyUnlocked": false,
+    "nextAllowedBuild": "YELLOWFIN-SOURCE-COPY-R001"
+  },
+  "restartRule": "Do not repeat model-search loops. Recover/use the user's temporary/cache model source when available, verify exact SHA, run R006 ingest/extractor, then proceed to Source Copy.",
+  "exactSourceTools": {
+    "ingest": "apps/ocean-life-mother/fish-mother/yellowfin-study-r006/tools/ingest_exact_source.py",
+    "evidenceExtractor": "apps/ocean-life-mother/fish-mother/yellowfin-study-r006/tools/extract_yellowfin_copy_evidence.py",
+    "kaopuPackageBuilder": "apps/ocean-life-mother/fish-mother/yellowfin-study-r006/tools/build_kaopu_source_copy_package.py"
   }
 }
