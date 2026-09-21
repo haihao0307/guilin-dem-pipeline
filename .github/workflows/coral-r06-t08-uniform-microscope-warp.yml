@@ -1,0 +1,122 @@
+name: Coral R06 T08 Uniform Microscope Warp
+
+on:
+  push:
+    branches:
+      - work/coral-mother-r06-t08-uniform-microscope-warp-20260921
+    paths:
+      - tools/coral/coral_r06_t08_builder.py
+      - tools/coral/coral_r06_t08_override.js
+      - tools/coral/coral_r06_t08_browser_qa.py
+      - .github/workflows/coral-r06-t08-uniform-microscope-warp.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: coral-r06-t08-uniform-microscope-warp
+  cancel-in-progress: true
+
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out T08 work branch
+        uses: actions/checkout@v4
+        with:
+          ref: work/coral-mother-r06-t08-uniform-microscope-warp-20260921
+          fetch-depth: 1
+          path: work
+
+      - name: Check out frozen T07 publication baseline
+        uses: actions/checkout@v4
+        with:
+          ref: 70bc5af5852fcdf4c94c85e6bb8d8937e492c4ce
+          fetch-depth: 1
+          path: baseline
+
+      - name: Check out current GitHub Pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 1
+          path: pages
+
+      - name: Build T08 single-file runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE=baseline/coral-mother-r06-pocillopora-t07-microscope-geometry/index.html
+          test -s "$SOURCE"
+          rm -rf /tmp/coral-t08
+          python3 work/tools/coral/coral_r06_t08_builder.py \
+            "$SOURCE" \
+            work/tools/coral/coral_r06_t08_override.js \
+            /tmp/coral-t08
+          printf '%s\n' \
+            'https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-r06-pocillopora-t08-uniform-microscope-warp/' \
+            > /tmp/coral-t08/PUBLIC_URL.txt
+          grep -q 'window.__CORAL_R06_T08_BUILD__' /tmp/coral-t08/index.html
+          grep -q 'microscopeAffectsWholeSurface' /tmp/coral-t08/index.html
+          grep -q 'recomputedSurfaceNormals' /tmp/coral-t08/index.html
+          grep -q 'warpAffectsGeometry' /tmp/coral-t08/index.html
+          grep -q 'uniformSpeciesColor' /tmp/coral-t08/index.html
+          test "$(grep -o 'id="[^"]*"' /tmp/coral-t08/index.html | grep -c 'id="gl"')" -eq 1
+
+      - name: Browser geometry and visible-difference gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet websocket-client pillow
+          python3 -m http.server 8772 --directory /tmp/coral-t08 >/tmp/coral-t08-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          python3 work/tools/coral/coral_r06_t08_browser_qa.py /tmp/coral-t08
+
+      - name: Upload complete T08 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: CORAL_R06_T08_FULL_EVIDENCE_${{ github.sha }}
+          path: /tmp/coral-t08
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish fixed T08 workbench
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET=coral-mother-r06-pocillopora-t08-uniform-microscope-warp
+          rm -rf "pages/$TARGET"
+          mkdir -p "pages/$TARGET"
+          cp -a /tmp/coral-t08/. "pages/$TARGET/"
+          cd pages
+          git config user.name 'Haihao_Nature Grace HK'
+          git config user.email 'haihao0307@gmail.com'
+          git add "$TARGET/"
+          if git diff --cached --quiet; then
+            echo 'No publication changes.'
+          else
+            git commit -m "publish(coral): R06 T08 uniform microscope warp"
+            git pull --rebase origin gh-pages
+            git push origin gh-pages
+          fi
+
+      - name: Write run summary
+        shell: bash
+        run: |
+          {
+            echo '## Coral Mother R06-T08'
+            echo
+            echo '- Default display: one species color'
+            echo '- Microscope: whole-surface geometry displacement'
+            echo '- Normals: recomputed after displacement'
+            echo '- Warp: shared-domain centerline and junction deformation'
+            echo '- Root-connected pruning: retained'
+            echo '- Runtime assets: 0 GLB / 0 texture / 0 fetch'
+            echo '- visualAcceptance: false'
+            echo '- productionReady: false'
+            echo
+            echo 'Public workbench:'
+            echo 'https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-r06-pocillopora-t08-uniform-microscope-warp/'
+          } >> "$GITHUB_STEP_SUMMARY"
