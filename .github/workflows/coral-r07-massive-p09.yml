@@ -8,6 +8,7 @@ on:
       - tools/coral/coral_r07_massive_p08_patch.py
       - tools/coral/coral_r07_massive_p08_browser_qa.py
       - tools/coral/coral_r07_massive_p09_promote.py
+      - tools/coral/coral_r07_massive_p09_tune.py
       - tools/coral/coral_r07_massive_p00_browser_qa.py
       - .github/workflows/coral-r07-massive-p09.yml
   workflow_dispatch:
@@ -47,6 +48,7 @@ jobs:
           rm -rf /tmp/coral-r07-p09
           cp -a "$SOURCE" /tmp/coral-r07-p09
           python3 work/tools/coral/coral_r07_massive_p09_promote.py /tmp/coral-r07-p09
+          python3 work/tools/coral/coral_r07_massive_p09_tune.py /tmp/coral-r07-p09
           printf '%s\n' \
             'https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-r07-massive-porites-p09/' \
             > /tmp/coral-r07-p09/PUBLIC_URL.txt
@@ -56,10 +58,14 @@ jobs:
           grep -q "siteDistribution:'golden-angle-jittered-hemisphere'" /tmp/coral-r07-p09/index.html
           grep -q "rowBandCount:0" /tmp/coral-r07-p09/index.html
           grep -q "coralliteTopology:'shared-wall-rim-pit-septa'" /tmp/coral-r07-p09/index.html
+          grep -q "sharedWallUsesSecondNearest:true" /tmp/coral-r07-p09/index.html
+          grep -q "visibleReliefTuned:true" /tmp/coral-r07-p09/index.html
           ! grep -q 'for(let band=0;band<bands;band++)' /tmp/coral-r07-p09/index.html
           ! grep -q 'R07-P08' /tmp/coral-r07-p09/index.html
+          ! grep -q 'P08 保留半球' /tmp/coral-r07-p09/index.html
           grep -q 'CORAL_MOTHER_R07_MASSIVE_P09_BUILD' /tmp/coral-r07-p09/BUILD_R07_P00.json
           grep -q 'sharedWallUsesSecondNearest' /tmp/coral-r07-p09/BUILD_R07_P00.json
+          grep -q 'visibleReliefTuned' /tmp/coral-r07-p09/BUILD_R07_P00.json
           test "$(grep -o 'type="range"' /tmp/coral-r07-p09/index.html | wc -l)" -eq 12
           test "$(grep -o 'id="gl"' /tmp/coral-r07-p09/index.html | wc -l)" -eq 1
 
@@ -82,6 +88,7 @@ jobs:
           grep -q 'shared-wall-rim-pit-septa' /tmp/coral-r07-p09/BUILD_R07_P00.json
           grep -q 'constantTopologyAcrossMicroscope' /tmp/coral-r07-p09/BUILD_R07_P00.json
           grep -q 'sharedWallUsesSecondNearest' /tmp/coral-r07-p09/BUILD_R07_P00.json
+          grep -q 'visibleReliefTuned' /tmp/coral-r07-p09/BUILD_R07_P00.json
           test -s /tmp/coral-r07-p09/QA_SCREENSHOT_ULTRAWIDE_2560X1080.png
           test -s /tmp/coral-r07-p09/QA_CLOSEUP_ULTRAWIDE_2560X1080.png
           test -s /tmp/coral-r07-p09/QA_MICROSCOPE_0.png
@@ -129,6 +136,7 @@ jobs:
             echo '- Published P08 retained as weak nearest-center failure evidence'
             echo '- P09: golden-angle jittered sites + nearest/second-nearest shared walls'
             echo '- Microscope displacement: integrated surface-normal field, zero tangential leak'
+            echo '- Visible relief strengthened without changing topology'
             echo '- Topology remains constant when Microscope changes'
             echo '- Runtime assets: 0 GLB / 0 texture / 0 fetch'
             echo '- visualAcceptance: false'
