@@ -1,0 +1,143 @@
+name: Coral R07 Massive P06
+
+on:
+  push:
+    branches:
+      - work/coral-mother-r07-massive-porites-p02-outward-surface-20260921
+    paths:
+      - tools/coral/coral_r07_massive_p00_builder.py
+      - tools/coral/coral_r07_massive_p00_browser_qa.py
+      - tools/coral/coral_r07_massive_p01_patch.py
+      - tools/coral/coral_r07_massive_p02_patch.py
+      - tools/coral/coral_r07_massive_p03_patch.py
+      - tools/coral/coral_r07_massive_p04_patch.py
+      - tools/coral/coral_r07_massive_p04_tune.py
+      - tools/coral/coral_r07_massive_p05_palua_smooth_filled.py
+      - tools/coral/coral_r07_massive_p05_runner.py
+      - tools/coral/coral_r07_massive_p05_browser_qa.py
+      - tools/coral/coral_r07_massive_p06_surface_normal_corallites.py
+      - tools/coral/coral_r07_massive_p06_browser_qa.py
+      - .github/workflows/coral-r07-massive-p06.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: coral-r07-massive-p06
+  cancel-in-progress: true
+
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out R07 P06 work branch
+        uses: actions/checkout@v4
+        with:
+          ref: work/coral-mother-r07-massive-porites-p02-outward-surface-20260921
+          fetch-depth: 1
+          path: work
+
+      - name: Check out current GitHub Pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 1
+          path: pages
+
+      - name: Build P00 and apply P01-P06 corrections
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/coral-r07-p06
+          python3 work/tools/coral/coral_r07_massive_p00_builder.py /tmp/coral-r07-p06
+          python3 work/tools/coral/coral_r07_massive_p01_patch.py /tmp/coral-r07-p06
+          python3 work/tools/coral/coral_r07_massive_p02_patch.py /tmp/coral-r07-p06
+          python3 work/tools/coral/coral_r07_massive_p03_patch.py /tmp/coral-r07-p06
+          python3 work/tools/coral/coral_r07_massive_p04_patch.py /tmp/coral-r07-p06
+          python3 work/tools/coral/coral_r07_massive_p04_tune.py /tmp/coral-r07-p06
+          python3 work/tools/coral/coral_r07_massive_p05_runner.py /tmp/coral-r07-p06
+          python3 work/tools/coral/coral_r07_massive_p06_surface_normal_corallites.py /tmp/coral-r07-p06
+          printf '%s\n' \
+            'https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-r07-massive-porites-p06/' \
+            > /tmp/coral-r07-p06/PUBLIC_URL.txt
+          grep -q 'R07-P06' /tmp/coral-r07-p06/index.html
+          grep -q "microDisplacementSpace:'surface-normal'" /tmp/coral-r07-p06/index.html
+          grep -q "microRadialOnly:false" /tmp/coral-r07-p06/index.html
+          grep -q "meshResolution:'192x384'" /tmp/coral-r07-p06/index.html
+          grep -q 'microNormalDisplacementRms' /tmp/coral-r07-p06/index.html
+          ! grep -q 'radius=radialBase\*baseSpread\*(1+f.macro+f.med+f.micro)' /tmp/coral-r07-p06/index.html
+          grep -q 'CORAL_MOTHER_R07_MASSIVE_P06_BUILD' /tmp/coral-r07-p06/BUILD_R07_P00.json
+          test -s /tmp/coral-r07-p06/PALAU_OCCURRENCE_EVIDENCE.json
+          test "$(grep -o 'type="range"' /tmp/coral-r07-p06/index.html | wc -l)" -eq 12
+
+      - name: Browser surface-normal and evidence gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet websocket-client pillow
+          python3 -m http.server 8773 --directory /tmp/coral-r07-p06 >/tmp/coral-r07-p06-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          python3 work/tools/coral/coral_r07_massive_p06_browser_qa.py /tmp/coral-r07-p06
+
+      - name: Assert P06 evidence survived browser QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'surface-normal' /tmp/coral-r07-p06/BUILD_R07_P00.json
+          grep -q 'microRadialOnly' /tmp/coral-r07-p06/BUILD_R07_P00.json
+          test -s /tmp/coral-r07-p06/QA_SCREENSHOT_ULTRAWIDE_2560X1080.png
+          test -s /tmp/coral-r07-p06/QA_CLOSEUP_ULTRAWIDE_2560X1080.png
+          test -s /tmp/coral-r07-p06/QA_MICROSCOPE_0.png
+          test -s /tmp/coral-r07-p06/QA_MICROSCOPE_1.png
+          test -s /tmp/coral-r07-p06/QA_WARP_1.png
+
+      - name: Upload complete P06 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: CORAL_R07_MASSIVE_P06_EVIDENCE_${{ github.sha }}
+          path: /tmp/coral-r07-p06
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish fixed P06 workbench
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET=coral-mother-r07-massive-porites-p06
+          rm -rf "pages/$TARGET"
+          mkdir -p "pages/$TARGET"
+          cp -a /tmp/coral-r07-p06/. "pages/$TARGET/"
+          cd pages
+          git config user.name 'Haihao_Nature Grace HK'
+          git config user.email 'haihao0307@gmail.com'
+          git add "$TARGET/"
+          if git diff --cached --quiet; then
+            echo 'No publication changes.'
+          else
+            git commit -m "publish(coral): R07 massive Porites P06 surface-normal corallites"
+            git pull --rebase origin gh-pages
+            git push origin gh-pages
+          fi
+
+      - name: Write run summary
+        shell: bash
+        run: |
+          {
+            echo '## Coral Mother R07-P06'
+            echo
+            echo '- NOAA: Hard / stony coral → Massive coral'
+            echo '- Species candidate: Porites lutea morphology prototype'
+            echo '- Palau Archipelago: NOAA NCEI confirmed at Ulong Channel'
+            echo '- Local Airai / Stone Money Island placement: unresolved'
+            echo '- Microscope: true base-surface-normal displacement, then final normal recompute'
+            echo '- Mesh: 192×384'
+            echo '- Runtime assets: 0 GLB / 0 texture / 0 fetch'
+            echo '- visualAcceptance: false'
+            echo '- productionReady: false'
+            echo '- ecologicalPlacementReady: false'
+            echo
+            echo 'Public workbench:'
+            echo 'https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-r07-massive-porites-p06/'
+          } >> "$GITHUB_STEP_SUMMARY"
