@@ -3,7 +3,7 @@
   "date": "2026-09-21",
   "branch": "work/ocean-life-fish-mother-yellowfin-source-copy-r001-20260921",
   "build": "YELLOWFIN-SOURCE-COPY-R001",
-  "phase": "SOURCE_COPY_GEOMETRY_R001_STATIC_READY_BROWSER_QA_PENDING",
+  "phase": "SOURCE_COPY_GEOMETRY_R001_BROWSER_QA_PASSED_SKIN_TRANSFER_NEXT",
   "referenceId": "FISH-REF-002",
   "activeWorkbench": "apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/index.html",
   "source": {
@@ -43,9 +43,13 @@
     "sourceCopyStaticGeometryGenerated": true,
     "sourceCopyAllFacesAssignedExactlyOnce": true,
     "sourceCopySourceBoundsPreserved": true,
-    "sourceCopyGeometryBrowserQAPassed": false,
+    "sourceCopyGeometryBrowserQAPassed": true,
     "sourceCopySkinTransferred": false,
-    "sourceCopyMaterialsTransferred": false
+    "sourceCopyMaterialsTransferred": false,
+    "sourceCopyEveryPrimitiveCopied": true,
+    "sourceCopyGeometryFixedViewsCaptured": true,
+    "sourceCopyGeometryConsoleZeroErrors": true,
+    "sourceCopyGeometryPageErrorsZero": true
   },
   "rules": [
     "Copy the source first.",
@@ -53,7 +57,7 @@
     "A byte-count match is not an identity proof; SHA-256 must pass before ingest is accepted.",
     "The exact source reference is transitional evidence, not Yellowfin biological truth."
   ],
-  "next": "Run fixed-view source-versus-segmented-copy browser QA, then transfer the exact source skeleton and skin weights without changing geometry.",
+  "next": "Transfer the exact source skeleton and skin weights onto the accepted segmented geometry without changing geometry.",
   "visualEvidence": {
     "receipt": "evidence/browser/BROWSER_QA_RECEIPT.json",
     "views": [
@@ -306,10 +310,18 @@
   "sourceCopyGeometry": {
     "receipt": "SOURCE_COPY_GEOMETRY_R001.json",
     "glb": "geometry/YELLOWFIN_SOURCE_COPY_R001.glb",
+    "qaWorkbench": "geometry-qa.html",
+    "browserReceipt": "evidence/geometry-browser/GEOMETRY_BROWSER_QA_RECEIPT.json",
     "sha256": "a20caf1778454872a081a6b9f5b6eca5d3474a4f61ef679e45ca4262439f2312",
     "bytes": 191012,
     "meshCount": 15,
     "faceCount": 7944,
+    "classifiedPrimaryFaceCount": 6920,
+    "auxiliaryFaceCount": 1024,
+    "copiedPrimitiveInstances": 3,
+    "copyVsExactPackageBoundsDelta": 4.756512450576622e-08,
+    "sourceVsCopyBrowserBoundsDelta": 0.8282823061480118,
+    "browserBoundsPolicy": "source SkinnedMesh bounds are diagnostic only; copy must match exact R006 package bounds",
     "regions": [
       "body_core",
       "upper_jaw",
