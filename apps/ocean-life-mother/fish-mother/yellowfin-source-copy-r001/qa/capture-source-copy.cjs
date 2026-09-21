@@ -24,6 +24,16 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve,ms));
   page.on('console',msg=>{if(msg.type()==='error')consoleErrors.push(msg.text())});
   page.on('pageerror',err=>pageErrors.push(String(err)));
 
+  const trigger = async selector => {
+    const found = await page.evaluate(sel=>{
+      const element=document.querySelector(sel);
+      if(!element)return false;
+      element.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window}));
+      return true;
+    },selector);
+    if(!found)throw new Error(`QA control missing: ${selector}`);
+  };
+
   let receipt;
   try{
     await page.goto(url,{waitUntil:'domcontentloaded',timeout:120000});
@@ -45,7 +55,7 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve,ms));
 
     const uiPath=path.join(outDir,'workbench-ui.png');
     await page.screenshot({path:uiPath,fullPage:true});
-    if(!(await page.locator('#playBtn').isDisabled()))await page.click('#playBtn');
+    if(!(await page.locator('#playBtn').isDisabled()))await trigger('#playBtn');
     await page.evaluate(()=>{
       const panel=document.querySelector('.panel');if(panel)panel.style.display='none';
       const badge=document.querySelector('.badge');if(badge)badge.style.display='none';
@@ -53,12 +63,12 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve,ms));
 
     const shots=[['side','source-side.png'],['quarter','source-quarter.png'],['top','source-top.png'],['front','source-head-on.png']];
     for(const [view,file] of shots){
-      await page.click(`[data-view="${view}"]`);await sleep(650);
+      await trigger(`[data-view="${view}"]`);await sleep(650);
       await page.screenshot({path:path.join(outDir,file),fullPage:true});
     }
-    await page.click('[data-view="side"]');await page.click('#wireBtn');await sleep(650);
+    await trigger('[data-view="side"]');await trigger('#wireBtn');await sleep(650);
     await page.screenshot({path:path.join(outDir,'source-side-wireframe.png'),fullPage:true});
-    await page.click('#wireBtn');await page.click('#skeletonBtn');await sleep(650);
+    await trigger('#wireBtn');await trigger('#skeletonBtn');await sleep(650);
     await page.screenshot({path:path.join(outDir,'source-side-skeleton.png'),fullPage:true});
 
     const files=fs.readdirSync(outDir).filter(x=>x.endsWith('.png')).sort().map(name=>{
