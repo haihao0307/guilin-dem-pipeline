@@ -57,7 +57,7 @@ jobs:
           cp handoffs/landscape-mother/r263-production-restart-20260921/START_HERE.md "$STAGE/START_HERE.md"
           cp handoffs/landscape-mother/r263-production-restart-20260921/NEW_CHAT_BOOTSTRAP.md "$STAGE/NEW_CHAT_BOOTSTRAP.md"
           cp handoffs/landscape-mother/r263-production-restart-20260921/CURRENT_BASELINE.json "$STAGE/CURRENT_BASELINE.json"
-          cp handoffs/landscape-mother/r263-production-restart-20260921/REJECTED_R264.md "$STAGE/REJECTED_R264.md"
+          cp handoffs/landscape-mother/r263-production-restart-20260921/REJECTED_VERSION.md "$STAGE/REJECTED_VERSION.md"
           cp handoffs/landscape-mother/r263-production-restart-20260921/PACKAGE_ORDER.md "$STAGE/PACKAGE_ORDER.md"
 
           for d in \
@@ -87,7 +87,7 @@ jobs:
 
           python - <<'PY'
           from pathlib import Path
-          import hashlib, json, os
+          import hashlib, json
           stage = Path('/tmp/LANDSCAPE_MOTHER_R263_PRODUCTION_FULL_HANDOFF_2026-09-21')
           rows = []
           for p in sorted(stage.rglob('*')):
