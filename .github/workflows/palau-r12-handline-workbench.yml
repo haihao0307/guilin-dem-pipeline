@@ -40,10 +40,10 @@ jobs:
           set -euo pipefail
           base64 -d .r12-workbench-staging/payload.tar.xz.b64 > /tmp/pilot-handline-workbench.tar.xz
           echo '7f3eeedf6057e3fe4580023d08048bdd05cf7c475131e280644f59d5c4cdde2f  /tmp/pilot-handline-workbench.tar.xz' | sha256sum -c -
-          rm -rf /tmp/pilot-handline-workbench-payload
-          mkdir -p /tmp/pilot-handline-workbench-payload
-          tar -xJf /tmp/pilot-handline-workbench.tar.xz -C /tmp/pilot-handline-workbench-payload
-          python3 /tmp/pilot-handline-workbench-payload/build_workbench.py
+          rm -rf .r12-workbench-staging/payload
+          mkdir -p .r12-workbench-staging/payload
+          tar -xJf /tmp/pilot-handline-workbench.tar.xz -C .r12-workbench-staging/payload
+          python3 .r12-workbench-staging/payload/build_workbench.py
           node --check games/survivor-palau/workbenches/pilot-handline-r12/pilot-handline-bundle.js
           node --check games/survivor-palau/workbenches/pilot-handline-r12/pilot-handline-overlay.js
           python3 -m py_compile \
