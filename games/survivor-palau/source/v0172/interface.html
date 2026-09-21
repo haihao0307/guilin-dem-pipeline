@@ -1,20 +1,23 @@
 <style id="palau-v0172-observation-visual-interface">
-/* Thin screen-space aviation-goggle rim. Transparent centers are mandatory: the frame may
-   communicate worn improvised optics but may never hide the fish, bait or horizon. */
-#pilotLensOverlay{position:fixed!important;inset:0;width:100%;height:100%;display:block!important;z-index:4;pointer-events:none;overflow:visible;opacity:1;visibility:visible;filter:drop-shadow(0 2px 3px #041a1b78)}
-/* The inherited workbench declares [hidden]{display:none!important}. Override it only for this
-   overlay so the hidden property can remain the single source of truth without losing the SVG. */
+/* Low-profile improvised observation goggles. The glass remains essentially clear; only a thin
+   edge may enter the player's view. This must never become two opaque discs or a binocular mask. */
+#pilotLensOverlay{position:fixed!important;inset:0;width:100%;height:100%;display:block!important;z-index:4;pointer-events:none;overflow:visible;opacity:1;visibility:visible;filter:drop-shadow(0 1px 2px #041a1b52)}
 #pilotLensOverlay[hidden]{display:block!important;opacity:0;visibility:hidden}
-#pilotLensOverlay .outer{fill:none;stroke:#182827b8;stroke-width:13;vector-effect:non-scaling-stroke}
-#pilotLensOverlay .inner{fill:none;stroke:#a7b9ae66;stroke-width:2;vector-effect:non-scaling-stroke}
-#pilotLensOverlay .bridge{fill:none;stroke:#5a4b3fbd;stroke-width:10;stroke-linecap:round;vector-effect:non-scaling-stroke}
-#pilotLensOverlay .strap{fill:none;stroke:#24302da8;stroke-width:8;stroke-linecap:round;vector-effect:non-scaling-stroke}
+#pilotLensOverlay .lensGlass{fill:#d9f2ef0a;stroke:none}
+#pilotLensOverlay .outer{fill:none;stroke:#1b2b2a9e;stroke-width:8;vector-effect:non-scaling-stroke}
+#pilotLensOverlay .inner{fill:none;stroke:#d4e7df5c;stroke-width:1.5;vector-effect:non-scaling-stroke}
+#pilotLensOverlay .bridge{fill:none;stroke:#544b43a8;stroke-width:5;stroke-linecap:round;vector-effect:non-scaling-stroke}
+#pilotLensOverlay .nose{fill:none;stroke:#544b4388;stroke-width:3;stroke-linecap:round;vector-effect:non-scaling-stroke}
 #pilotSurvivalLayer>#survivalRibbon,#pilotSurvivalLayer>#observeCard,#pilotSurvivalLayer>#pilotNotice,#pilotSurvivalLayer>#storySheet{z-index:5}
-@media(max-width:760px){#pilotLensOverlay .outer{stroke-width:9}#pilotLensOverlay .bridge{stroke-width:7}#pilotLensOverlay .strap{stroke-width:6}}
+@media(max-width:760px){#pilotLensOverlay .outer{stroke-width:6}#pilotLensOverlay .bridge{stroke-width:4}#pilotLensOverlay .nose{stroke-width:2.5}}
 </style>
 <svg id="pilotLensOverlay" hidden aria-hidden="true" viewBox="0 0 1280 800" preserveAspectRatio="xMidYMid meet">
- <ellipse class="outer" cx="442" cy="418" rx="270" ry="226"/><ellipse class="inner" cx="442" cy="418" rx="259" ry="215"/>
- <ellipse class="outer" cx="838" cy="418" rx="270" ry="226"/><ellipse class="inner" cx="838" cy="418" rx="259" ry="215"/>
- <path class="bridge" d="M704 397 C674 381 606 381 576 397"/>
- <path class="strap" d="M174 414 L90 385 M1106 414 L1190 385"/>
+ <rect class="lensGlass" x="155" y="235" width="440" height="330" rx="112" ry="112"/>
+ <rect class="outer" x="155" y="235" width="440" height="330" rx="112" ry="112"/>
+ <rect class="inner" x="166" y="246" width="418" height="308" rx="102" ry="102"/>
+ <rect class="lensGlass" x="685" y="235" width="440" height="330" rx="112" ry="112"/>
+ <rect class="outer" x="685" y="235" width="440" height="330" rx="112" ry="112"/>
+ <rect class="inner" x="696" y="246" width="418" height="308" rx="102" ry="102"/>
+ <path class="bridge" d="M594 374 C618 353 662 353 686 374"/>
+ <path class="nose" d="M626 388 C632 419 648 419 654 388"/>
 </svg>
