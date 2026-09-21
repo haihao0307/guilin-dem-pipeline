@@ -18,7 +18,7 @@ function pilotNotice(text,seconds=2.4){const el=document.getElementById('pilotNo
 function pilotBox(g,x,y,z,sx,sy,sz,kind=10){
  const k=g.v.length/7,p=[[-sx,-sy,-sz],[sx,-sy,-sz],[sx,sy,-sz],[-sx,sy,-sz],[-sx,-sy,sz],[sx,-sy,sz],[sx,sy,sz],[-sx,sy,sz]];
  p.forEach(q=>g.vertex([x+q[0],y+q[1],z+q[2]],kind));
- for(const f of [[0,3,2,1],[4,5,6,7],[0,4,7,3],[1,2,6,5],[3,7,6,2],[0,1,5,4]]){g.tri(k+f[0],k+f[1],k+f[2]);g.tri(k,k+f[2],k+f[3])}
+ for(const f of [[0,3,2,1],[4,5,6,7],[0,4,7,3],[1,2,6,5],[3,7,6,2],[0,1,5,4]]){g.tri(k+f[0],k+f[1],k+f[2]);g.tri(k+f[0],k+f[2],k+f[3])}
 }
 function pilotOrientedEllipsoid(g,c,fx,fz,length,height,width,kind=8,seed=0,lat=5,lon=9){
  const fl=Math.hypot(fx,fz)||1;fx/=fl;fz/=fl;const rx=fz,rz=-fx,b=g.v.length/7;
