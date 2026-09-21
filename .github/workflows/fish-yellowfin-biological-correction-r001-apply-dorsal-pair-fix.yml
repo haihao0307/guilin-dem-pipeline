@@ -1,0 +1,74 @@
+name: Fish Mother Yellowfin Biological Correction R001 Apply Dorsal Pair Fix
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - work/ocean-life-fish-mother-yellowfin-biological-correction-r001-20260921
+    paths:
+      - .github/workflows/fish-yellowfin-biological-correction-r001-apply-dorsal-pair-fix.yml
+      - apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/tools/apply_dorsal_surface_pair_fix.py
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fish-yellowfin-biological-correction-r001-apply-dorsal-pair-fix
+  cancel-in-progress: true
+
+env:
+  CORRECTION_ROOT: apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001
+
+jobs:
+  apply-dorsal-pair-fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Check out correction branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+
+      - name: Apply anatomical mirrored-surface grouping
+        shell: bash
+        run: |
+          set -euo pipefail
+          python "$CORRECTION_ROOT/tools/apply_dorsal_surface_pair_fix.py"
+
+      - name: Compile patched Python sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            "$CORRECTION_ROOT/tools/audit_frozen_baseline.py" \
+            "$CORRECTION_ROOT/tools/build_candidate_a.py" \
+            "$CORRECTION_ROOT/tools/apply_dorsal_surface_pair_fix.py"
+
+      - name: Verify anatomical contracts were inserted
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -F 'dorsalAnatomicalSurfaceGroupsResolved' "$CORRECTION_ROOT/tools/audit_frozen_baseline.py"
+          grep -F 'firstAndSecondDorsalDistinct' "$CORRECTION_ROOT/tools/audit_frozen_baseline.py"
+          grep -F 'secondDorsalMirroredSheetsDeformedTogether' "$CORRECTION_ROOT/tools/build_candidate_a.py"
+          grep -F 'secondDorsalSurfaceSymmetryPassed' "$CORRECTION_ROOT/tools/build_candidate_a.py"
+          grep -F '[2, 4]' "$CORRECTION_ROOT/tests/candidate-a-r001.test.mjs"
+
+      - name: Commit patched audit, generator and contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Fish Mother R001"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            "$CORRECTION_ROOT/tools/audit_frozen_baseline.py" \
+            "$CORRECTION_ROOT/tools/build_candidate_a.py" \
+            "$CORRECTION_ROOT/tests/candidate-a-r001.test.mjs"
+          if git diff --cached --quiet; then
+            echo "Dorsal surface-pair correction already present."
+            exit 0
+          fi
+          git commit -m "fix(fish): resolve dorsal fins as mirrored surface pairs"
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
