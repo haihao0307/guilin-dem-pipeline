@@ -1,7 +1,7 @@
 // Palau V0170 — first playable slice of the pilot-survival story contract.
 // Historical prototype and game divergence are documented separately. This module does not
 // invent the still-unverified FG-1 raft stowage/release animation.
-let survivalGeo=null,surfaceFishGeo=null,surfaceGearGeo=null;
+let survivalGeo=null,surfaceFishGeo=null,surfaceGearGeo=null,pilotGameplayClockMs=performance.now();
 const SURVIVAL={
  version:'palau-pilot-survival-r2-v0170',ready:false,day:1,
  story:{date:'1944-11-21',pilot:'Carroll E. McCullah',unit:'VMF-122',aircraft:'Goodyear FG-1 Corsair',bureauNumber:'14053',historicalOutcome:'rapid rescue',gameDivergence:'rescue interrupted; long survival near Airai',minuteByMinuteReenactment:false},
@@ -10,10 +10,11 @@ const SURVIVAL={
  observation:{active:false,anchorX:0,anchorZ:0,bobY:0,focusX:0,focusZ:0,breath:1,fog:.08,leak:.03,calm:.12,ingress:0,snorkelClearanceM:.2,lowProfile:false,actionDisturbance:0,lastYaw:0,lastPitch:0,geometryClock:0,uiClock:0,behaviorClockMs:0,behaviorDtS:0},
  fishing:{candidate:-1,biteReady:false,castSerial:0,candidateDistanceM:99,baitDepthM:.72,baitVisible:false,hookVisible:false,autoCatch:false},
  fish:[],
- telemetry:{visibleFishCount:0,cameraSurfaceOffsetM:0,snorkelSubmerged:false,fishRespondToMotion:false,lineEndDepthM:0,historyDateResolved:true,behaviorClockIndependent:true,behaviorWallDtCapS:1.25,visualAcceptance:false,productionReady:false}
+ telemetry:{visibleFishCount:0,cameraSurfaceOffsetM:0,snorkelSubmerged:false,fishRespondToMotion:false,lineEndDepthM:0,historyDateResolved:true,behaviorClockIndependent:true,behaviorWallDtCapS:.5,visualAcceptance:false,productionReady:false}
 };
 function pilot01(v){return Math.max(0,Math.min(1,v))}
 function pilotAngleDelta(a,b){return Math.atan2(Math.sin(a-b),Math.cos(a-b))}
+function pilotGameplayElapsed(elapsed){const now=performance.now(),wall=Math.max(0,(now-pilotGameplayClockMs)/1000);pilotGameplayClockMs=now;return Math.max(elapsed,Math.min(.5,wall))}
 function pilotNotice(text,seconds=2.4){const el=document.getElementById('pilotNotice');if(!el)return;el.textContent=text;el.classList.add('show');clearTimeout(pilotNotice.timer);pilotNotice.timer=setTimeout(()=>el.classList.remove('show'),seconds*1000)}
 function pilotBox(g,x,y,z,sx,sy,sz,kind=10){
  const k=g.v.length/7,p=[[-sx,-sy,-sz],[sx,-sy,-sz],[sx,sy,-sz],[-sx,sy,-sz],[-sx,-sy,sz],[sx,-sy,sz],[sx,sy,sz],[-sx,sy,sz]];
@@ -155,9 +156,9 @@ function pilotUpdateHUD(){
  if(FISH.phase==='waiting'){set('fishTitle','直接观察鱼群与饵钩');set('fishHelp',`目标鱼距饵 ${Math.min(99,SURVIVAL.fishing.candidateDistanceM).toFixed(1)} m。看见吞饵后再提线；动作过大，鱼会离开。`)}
  if(FISH.phase==='bite'){set('fishTitle','你看见鱼吞下饵钩');set('fishHelp','现在提线。过早或过晚都会失去这次机会。')}
 }
-function updatePilotSurvival(dt){
+function updatePilotSurvival(dt,behaviorDt=dt){
  if(!SURVIVAL.ready)return false;const o=SURVIVAL.observation;if(!o.active){o.uiClock+=dt;if(o.uiClock>.5){o.uiClock=0;pilotUpdateHUD()}return false}
- const now=performance.now(),wallDt=o.behaviorClockMs?Math.max(0,(now-o.behaviorClockMs)/1000):dt;o.behaviorClockMs=now;o.behaviorDtS=Math.max(dt,Math.min(1.25,wallDt));
+ o.behaviorDtS=behaviorDt;
  pilotUpdateObservation(dt,o.behaviorDtS);o.geometryClock+=dt;o.uiClock+=dt;let changed=false;
  if(o.geometryClock>.075){o.geometryClock=0;if(surfaceFishGeo)disposeGeo(surfaceFishGeo);if(surfaceGearGeo)disposeGeo(surfaceGearGeo);surfaceFishGeo=buildSurfaceFish();surfaceGearGeo=buildSurfaceGear();opaqueDirty=true;changed=true}
  if(o.uiClock>.10){o.uiClock=0;pilotUpdateHUD()}return changed;

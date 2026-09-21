@@ -53,7 +53,7 @@ once(
 )
 once(
     ' updateFishing(elapsed);\n updateCamera(canvas.width/canvas.height);',
-    ' updateFishing(elapsed);\n if(updatePilotSurvival(elapsed))changed=true;\n updateCamera(canvas.width/canvas.height);',
+    ' const pilotElapsed=pilotGameplayElapsed(elapsed);\n updateFishing(pilotElapsed);\n if(updatePilotSurvival(elapsed,pilotElapsed))changed=true;\n updateCamera(canvas.width/canvas.height);',
     'frame update',
 )
 once(
