@@ -6,8 +6,9 @@ on:
     branches:
       - work/ocean-life-fish-mother-yellowfin-source-copy-r001-20260921
     paths:
-      - .github/workflows/fish-yellowfin-source-copy-r001.yml
-      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/**
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/SOURCE_IDENTITY.json
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/requirements.txt
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/tests/source-copy-r001-contract.test.mjs
       - apps/ocean-life-mother/fish-mother/yellowfin-study-r006/tools/**
 
 permissions:
@@ -40,9 +41,10 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+          cache-dependency-path: ${{ env.COPY_ROOT }}/requirements.txt
 
       - name: Install exact-source extractor dependencies
-        run: python -m pip install --upgrade pip numpy trimesh scipy networkx pillow
+        run: python -m pip install --upgrade pip -r "$COPY_ROOT/requirements.txt"
 
       - name: Download the pinned high-resolution source
         shell: bash
@@ -108,7 +110,8 @@ jobs:
 
           status_path=root/'CURRENT_STATUS.json'
           status=json.loads(status_path.read_text())
-          status['phase']='EXACT_SOURCE_INGESTED_R006_EVIDENCE_READY'
+          visual_passed=bool(status.get('gates',{}).get('browserVisualQAPassed'))
+          status['phase']='EXACT_SOURCE_BROWSER_QA_PASSED_CLASSIFICATION_OPEN' if visual_passed else 'EXACT_SOURCE_INGESTED_R006_EVIDENCE_READY'
           status['source']['actualSha256']=sha
           status['source']['actualBytes']=size
           status['source']['activeLocalPath']='source-workspace/source/tuna_fish_4k.glb'
@@ -121,7 +124,11 @@ jobs:
               'independentReconstructionUnlocked': False,
               'generationLocked': True
           })
-          status['next']='Inspect fixed views, classify extracted connected components, and close source-copy acceptance scenes before independent reconstruction.'
+          status['next']=(
+              'Use the fixed-view and wireframe evidence to classify dorsal/ventral finlet components, fin roots/free edges, peduncle and keel candidates before copying geometry.'
+              if visual_passed else
+              'Inspect fixed views, classify extracted connected components, and close source-copy acceptance scenes before independent reconstruction.'
+          )
           status_path.write_text(json.dumps(status,ensure_ascii=False,indent=2)+'\n')
 
           evidence=json.loads((ws/'evidence/YELLOWFIN_EXACT_SOURCE_COPY_EVIDENCE_R001.json').read_text())
