@@ -14,6 +14,95 @@ BASE = BASE.replace(
     1,
 )
 
+# The full scene can run below 0.4 FPS in SwiftShader. Drive the real hold/release button from the
+# authoritative in-game held state, confirm each pointer transition before advancing a frame, and
+# predict the maximum next-frame tension rise. This changes only QA input timing, never game rules.
+old_reel = '''def reel_to_end(page, expect='caught', timeout_s=240):
+    box = page.locator('#actionFish').bounding_box()
+    assert box
+    page.mouse.move(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
+    held = False
+    deadline = time.monotonic() + timeout_s
+    while time.monotonic() < deadline:
+        s = page.evaluate('({...PalauExperience.fishing})')
+        if s['phase'] != 'reel':
+            break
+        if expect == 'broken':
+            desired = True
+        else:
+            # SwiftShader may render below one frame per second. Decide once per actual frame and
+            # leave enough headroom for the next capped 0.5 s gameplay step; polling stale tension
+            # at 150 ms otherwise holds through several unseen updates and creates a false break.
+            desired = s['tension'] < (.44 if held else .16)
+        if desired != held:
+            (page.mouse.down if desired else page.mouse.up)()
+            held = desired
+        frame = page.evaluate('OceanMotherR018.qa.frames')
+        page.wait_for_function(
+            "(f)=>OceanMotherR018.qa.frames>f || PalauExperience.fishing.phase!=='reel'",
+            arg=frame,
+            timeout=20000,
+            polling=100,
+        )
+    if held:
+        page.mouse.up()
+    end = page.evaluate('({...PalauExperience.fishing})')
+    assert end['phase'] == expect, end
+    return end
+'''
+new_reel = '''def reel_to_end(page, expect='caught', timeout_s=240):
+    box = page.locator('#actionFish').bounding_box()
+    assert box
+    page.mouse.move(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
+    held = False
+    history = []
+    deadline = time.monotonic() + timeout_s
+    while time.monotonic() < deadline:
+        s = page.evaluate('({...PalauExperience.fishing})')
+        if s['phase'] != 'reel':
+            break
+        actual_held = bool(s['held'])
+        history.append({
+            'frame': page.evaluate('OceanMotherR018.qa.frames'),
+            'tension': s['tension'],
+            'progress': s['progress'],
+            'actualHeld': actual_held,
+        })
+        if expect == 'broken':
+            desired = True
+        else:
+            # At the capped 0.5 s gameplay step, one held frame can add at most 0.19 tension.
+            # Release before 0.24 and restart only below 0.08, leaving a wide safety margin.
+            desired = s['tension'] < (.24 if actual_held else .08)
+        if desired != actual_held:
+            (page.mouse.down if desired else page.mouse.up)()
+            held = desired
+            page.wait_for_function(
+                "(v)=>PalauExperience.fishing.phase!=='reel'||PalauExperience.fishing.held===v",
+                arg=desired,
+                timeout=5000,
+                polling=50,
+            )
+        else:
+            held = actual_held
+        frame = page.evaluate('OceanMotherR018.qa.frames')
+        page.wait_for_function(
+            "(f)=>OceanMotherR018.qa.frames>f || PalauExperience.fishing.phase!=='reel'",
+            arg=frame,
+            timeout=20000,
+            polling=100,
+        )
+    if held or page.evaluate("PalauExperience.fishing.held"):
+        page.mouse.up()
+    end = page.evaluate('({...PalauExperience.fishing})')
+    r['checks']['reelControl_' + expect] = {'history': history[-96:], 'end': end}
+    save()
+    assert end['phase'] == expect, end
+    return end
+'''
+assert BASE.count(old_reel) == 1
+BASE = BASE.replace(old_reel, new_reel, 1)
+
 # Pause in the same JavaScript turn that first observes the transient bite. At sub-1 FPS, a later
 # Playwright call can arrive after the bite has already become "missed", producing false evidence.
 first_bite_wait = """        page.wait_for_function("PalauExperience.fishing.phase==='bite'", timeout=180000, polling=100)
