@@ -3,7 +3,7 @@
   "date": "2026-09-21",
   "branch": "work/ocean-life-fish-mother-yellowfin-biological-correction-r001-20260921",
   "build": "YELLOWFIN-BIOLOGICAL-CORRECTION-R001",
-  "phase": "FROZEN_BASELINE_AUDIT_PENDING",
+  "phase": "FROZEN_BASELINE_AUDITED",
   "frozenInput": {
     "commit": "9b610f4ef0134e015c2fb6b14574e7e4f48ed943",
     "sha256": "2130a3c03fc50d22676919c3599e75707e61d9f75ddd90523a6897887715ec02",
@@ -13,14 +13,24 @@
     "sourceCopyFrozen": true,
     "sourceCopyImmutable": true,
     "evidenceContractWritten": true,
-    "morphometricBaselineAudited": false,
-    "forkLengthInferenceValid": false,
-    "skinInfluenceAuditPassed": false,
-    "animationChannelAuditPassed": false,
+    "morphometricBaselineAudited": true,
+    "forkLengthInferenceValid": true,
+    "skinInfluenceAuditPassed": true,
+    "animationChannelAuditPassed": true,
     "correctionCandidateGenerated": false,
     "candidateBrowserQAPassed": false,
     "manualVisualAcceptancePending": true,
     "productionReady": false
   },
-  "next": "Run the frozen GLB baseline audit. Do not deform geometry until fork-length, region, bind-skeleton and animation-channel measurements are machine recorded."
+  "next": "Generate Candidate A with one smooth rest-space deformation field shared by geometry, bind skeleton and translation animation channels; preserve the frozen GLB unchanged.",
+  "baseline": {
+    "report": "BIOLOGICAL_CORRECTION_R001_BASELINE.json",
+    "frozenCopySha256": "2130a3c03fc50d22676919c3599e75707e61d9f75ddd90523a6897887715ec02",
+    "forkLength": 2.735563469,
+    "forkOverTotalLength": 0.910816875,
+    "semanticRegions": 13,
+    "semanticFaces": 6920,
+    "joints": 98,
+    "animations": 1
+  }
 }
