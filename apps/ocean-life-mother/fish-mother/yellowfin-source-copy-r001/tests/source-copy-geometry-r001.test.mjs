@@ -90,7 +90,10 @@ assert.equal(browserReceipt.copySha256, receipt.output.sha256);
 assert.equal(browserReceipt.sourceStats.triangles, receipt.output.faceCount);
 assert.equal(browserReceipt.copyStats.triangles, receipt.output.faceCount);
 assert.equal(browserReceipt.copyStats.meshes, receipt.output.meshCount);
-assert.ok(browserReceipt.boundsDelta <= browserReceipt.boundsTolerance);
+assert.deepEqual(browserReceipt.exactPackageBounds, receipt.output.boundsSourceUnits);
+assert.ok(browserReceipt.copyVsExactPackageBoundsDelta <= browserReceipt.boundsTolerance);
+assert.ok(Number.isFinite(browserReceipt.sourceVsCopyBrowserBoundsDelta));
+assert.match(browserReceipt.browserBoundsPolicy, /diagnostic only|record/i);
 assert.deepEqual(browserReceipt.failedChecks, []);
 assert.deepEqual(browserReceipt.consoleErrors, []);
 assert.deepEqual(browserReceipt.pageErrors, []);
@@ -113,6 +116,7 @@ console.log(JSON.stringify({
   meshCount: receipt.output.meshCount,
   faceCount: receipt.output.faceCount,
   primitiveInstances: receipt.source.copiedPrimitiveInstances,
-  boundsDelta: browserReceipt.boundsDelta,
+  copyVsExactPackageBoundsDelta: browserReceipt.copyVsExactPackageBoundsDelta,
+  sourceVsCopyBrowserBoundsDelta: browserReceipt.sourceVsCopyBrowserBoundsDelta,
   regions: receipt.regions.map(region => ({ name: region.name, faces: region.faces, vertices: region.vertices })),
 }, null, 2));
