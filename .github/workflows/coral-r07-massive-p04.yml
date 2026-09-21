@@ -11,6 +11,8 @@ on:
       - tools/coral/coral_r07_massive_p02_patch.py
       - tools/coral/coral_r07_massive_p03_patch.py
       - tools/coral/coral_r07_massive_p04_patch.py
+      - tools/coral/coral_r07_massive_p04_tune.py
+      - tools/coral/coral_r07_massive_p04_browser_qa.py
       - .github/workflows/coral-r07-massive-p04.yml
   workflow_dispatch:
 
@@ -49,6 +51,7 @@ jobs:
           python3 work/tools/coral/coral_r07_massive_p02_patch.py /tmp/coral-r07-p04
           python3 work/tools/coral/coral_r07_massive_p03_patch.py /tmp/coral-r07-p04
           python3 work/tools/coral/coral_r07_massive_p04_patch.py /tmp/coral-r07-p04
+          python3 work/tools/coral/coral_r07_massive_p04_tune.py /tmp/coral-r07-p04
           printf '%s\n' \
             'https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-r07-massive-porites-p04/' \
             > /tmp/coral-r07-p04/PUBLIC_URL.txt
@@ -57,6 +60,7 @@ jobs:
           grep -q "meshResolution:'128x224'" /tmp/coral-r07-p04/index.html
           grep -q "coralliteFrequency:'cellular-worley'" /tmp/coral-r07-p04/index.html
           grep -q "coralliteTopology:'pit-rim-wall'" /tmp/coral-r07-p04/index.html
+          grep -q "cellularCoverageTuned:true" /tmp/coral-r07-p04/index.html
           grep -q 'CORAL_MOTHER_R07_MASSIVE_P04_BUILD' /tmp/coral-r07-p04/BUILD_R07_P00.json
           test "$(grep -o 'type="range"' /tmp/coral-r07-p04/index.html | wc -l)" -eq 12
 
@@ -68,7 +72,7 @@ jobs:
           python3 -m http.server 8773 --directory /tmp/coral-r07-p04 >/tmp/coral-r07-p04-http.log 2>&1 &
           SERVER_PID=$!
           trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
-          python3 work/tools/coral/coral_r07_massive_p00_browser_qa.py /tmp/coral-r07-p04
+          python3 work/tools/coral/coral_r07_massive_p04_browser_qa.py /tmp/coral-r07-p04
 
       - name: Assert P04 evidence survived browser QA
         shell: bash
@@ -76,6 +80,7 @@ jobs:
           set -euo pipefail
           grep -q 'cellular-worley' /tmp/coral-r07-p04/BUILD_R07_P00.json
           grep -q 'pit-rim-wall' /tmp/coral-r07-p04/BUILD_R07_P00.json
+          grep -q 'cellularCoverageTuned' /tmp/coral-r07-p04/BUILD_R07_P00.json
           test -s /tmp/coral-r07-p04/QA_SCREENSHOT_ULTRAWIDE_2560X1080.png
           test -s /tmp/coral-r07-p04/QA_MICROSCOPE_1.png
           test -s /tmp/coral-r07-p04/QA_WARP_1.png
