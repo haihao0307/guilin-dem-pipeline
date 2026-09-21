@@ -334,3 +334,39 @@ STARTED 仍要求：
 post-dispatch executable code + executed tests + exact base/head + known-limitations receipt。
 
 这个文档本身不是 STARTED。
+
+
+## 13. 最终用户交付必须是单体 HTML
+
+本任务最终给用户验收的页面必须输出为一个双击即可直接运行的 standalone HTML，例如：
+
+`Stone_Money_Camera_Crossing_R01.html`
+
+该文件必须内含本任务运行所需的全部 JavaScript、Three.js/runtime、shader、CSS、图片、测试场景参数、必要模型/音频/decoder。不得要求用户解压、启动 Vite/npm/Python/local server、配置相对路径、下载额外 asset 或打开第二个工具。
+
+必须真实执行本地 `file://` 双击验收：
+- 首帧成功；
+- Above / Partial / Under 三状态可切换或实际穿越；
+- partial 同帧 air + underwater 成立；
+- console 0 error；
+- 无缺失资产；
+- 无 file:// CORS 核心失败；
+- 核心运行所需网络请求 = 0。
+
+开发阶段可保持多文件，但交付构建必须把它们 bundle/inline/编码进单个 HTML。公网链接只能作为同一 standalone HTML 的附加镜像，不能替代双击文件。
+
+Receipt 追加：
+```json
+{
+  "singleFileHtml": true,
+  "fileProtocolTested": true,
+  "requiresUnzip": false,
+  "requiresServer": false,
+  "requiresExternalAssets": false,
+  "requiresCDN": false,
+  "requiredNetworkRequests": 0,
+  "consoleErrors": 0
+}
+```
+
+跨 Mother 永久规则：`knowledge/SINGLE_FILE_DOUBLE_CLICK_HTML_DELIVERY_GATE.md`。
