@@ -19,7 +19,10 @@ def main():
  srcdir=a.workspace/"source"; evdir=a.workspace/"evidence"; srcdir.mkdir(exist_ok=True); evdir.mkdir(exist_ok=True)
  dst=srcdir/meta["canonical"]; shutil.copyfile(a.source,dst)
  extractor=Path(__file__).with_name("extract_yellowfin_copy_evidence.py")
+ packer=Path(__file__).with_name("build_kaopu_source_copy_package.py")
  subprocess.run([sys.executable,str(extractor),str(dst),"--out",str(evdir)],check=True)
+ packagedir=a.workspace/"kaopu-reference-package"; packagedir.mkdir(exist_ok=True)
+ subprocess.run([sys.executable,str(packer),str(dst),"--out",str(packagedir)],check=True)
  receipt={
   "schema":"kaopu.fish-mother.fish-ref-002-ingest/1.0",
   "sourceInput":str(a.source),
@@ -28,6 +31,7 @@ def main():
   "variant":meta["variant"],
   "workspaceSource":str(dst),
   "evidenceDirectory":str(evdir),
+  "kaopuReferencePackage":str(packagedir),
   "sourceCopyUnlocked":False,
   "rule":"Evidence extraction is not Source Copy acceptance."
  }
