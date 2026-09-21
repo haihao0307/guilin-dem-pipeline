@@ -242,4 +242,5 @@ jobs:
             exit 0
           fi
           git commit -m "feat(fish): validate complete segmented exact-source geometry copy"
+          git pull --rebase origin "$GITHUB_REF_NAME"
           git push origin "HEAD:${GITHUB_REF_NAME}"
