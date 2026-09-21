@@ -1,0 +1,126 @@
+name: Landscape Karst DEM Field R2.6.2 Compact
+
+on:
+  push:
+    branches:
+      - feature/landscape-karst-dem-field-r26-cracks-20260921
+    paths:
+      - workbenches/landscape-karst-dem-field-r2-6-2-compact/build_r262.py
+      - .github/workflows/landscape-karst-dem-field-r262-compact.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build compact R2.6.2 workbench
+        run: |
+          python -m py_compile workbenches/landscape-karst-dem-field-r2-6-2-compact/build_r262.py
+          python workbenches/landscape-karst-dem-field-r2-6-2-compact/build_r262.py
+
+      - name: Static contract and shader compilation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,re
+          root=Path('workbenches/landscape-karst-dem-field-r2-6-2-compact')
+          s=(root/'index.html').read_text(encoding='utf-8')
+          b=json.loads((root/'build.json').read_text(encoding='utf-8'))
+          required=[
+            'PALAU_KARST_DEM_FIELD_R262_COMPACT',
+            'DEM 连续山体（默认生产验证）',
+            'crackNetwork','pocketField','demFieldBase',
+            'uiReady','loading','rgba8-compact',
+            '__KARST_FIELD_CONTRACT__','dataset.karstOutputVisible'
+          ]
+          for token in required: assert token in s, token
+          assert b['schema']=='LANDSCAPE_KARST_DEM_FIELD_R262_COMPACT'
+          assert b['uiPaintsBeforeShaderCompile'] is True
+          assert b['runtimeReadbackGateRemoved'] is True
+          assert b['geometryOperatorsUnchanged'] is True
+          assert b['outputBytes'] < 220000, b['outputBytes']
+          for name,file in [('VS','/tmp/r262.vert'),('GEOMETRY_FS','/tmp/r262-geom.frag'),('MATERIAL_FS','/tmp/r262-mat.frag')]:
+            m=re.search(rf'const {name}=`(.*?)`;',s,re.S);assert m,name
+            Path(file).write_text(m.group(1),encoding='utf-8')
+          scripts=re.findall(r'<script>(.*?)</script>',s,re.S);assert scripts
+          Path('/tmp/r262-app.js').write_text(scripts[-1],encoding='utf-8')
+          PY
+          node --check /tmp/r262-app.js
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq glslang-tools
+          glslangValidator -S vert /tmp/r262.vert
+          glslangValidator -S frag /tmp/r262-geom.frag
+          glslangValidator -S frag /tmp/r262-mat.frag
+
+      - name: Run Chromium and capture compact workbench
+        run: |
+          python3 -m http.server 8000 >/tmp/http.log 2>&1 &
+          SERVER=$!
+          trap 'kill $SERVER || true' EXIT
+          for i in $(seq 1 60); do curl -fsS http://127.0.0.1:8000/ >/dev/null && break; sleep .25; done
+          CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)
+          if [ -z "$CHROME" ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq chromium-browser || sudo apt-get install -y -qq chromium
+            CHROME=$(command -v chromium || command -v chromium-browser)
+          fi
+          URL=http://127.0.0.1:8000/workbenches/landscape-karst-dem-field-r2-6-2-compact/index.html
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage \
+            --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist \
+            --run-all-compositor-stages-before-draw --virtual-time-budget=30000 \
+            --dump-dom "$URL" >/tmp/r262-dom.html 2>/tmp/r262-chrome.log
+          grep -q 'data-ui-ready="true"' /tmp/r262-dom.html
+          grep -q 'data-karst-ready="true"' /tmp/r262-dom.html
+          grep -q 'data-karst-output-visible="true"' /tmp/r262-dom.html
+          ! grep -q 'data-karst-failure' /tmp/r262-dom.html
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage \
+            --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist \
+            --run-all-compositor-stages-before-draw --virtual-time-budget=30000 \
+            --window-size=1600,900 --screenshot=/tmp/r262.png "$URL" >/tmp/r262-shot.log 2>&1
+          test -s /tmp/r262.png
+          python -m pip install -q pillow
+          python - <<'PY'
+          from PIL import Image,ImageStat
+          im=Image.open('/tmp/r262.png').convert('RGB')
+          ext=ImageStat.Stat(im).extrema
+          spread=sum(hi-lo for lo,hi in ext)
+          px=list(im.resize((80,45)).getdata())
+          bright=sum(1 for r,g,b in px if r>245 and g>245 and b>245)/len(px)
+          dark=sum(1 for r,g,b in px if r<18 and g<18 and b<18)/len(px)
+          assert spread>70,(ext,spread)
+          assert bright<.92,bright
+          assert dark<.92,dark
+          print({'extrema':ext,'spread':spread,'bright_ratio':bright,'dark_ratio':dark})
+          PY
+          mkdir -p /tmp/r262-proof
+          cp /tmp/r262.png /tmp/r262-proof/r262.png
+          cp /tmp/r262-dom.html /tmp/r262-proof/dom.html
+          cp /tmp/r262-chrome.log /tmp/r262-proof/chrome.log
+          cp workbenches/landscape-karst-dem-field-r2-6-2-compact/build.json /tmp/r262-proof/build.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: landscape-karst-dem-field-r262-compact-proof
+          path: /tmp/r262-proof
+          retention-days: 7
+
+      - name: Materialize browser-tested R2.6.2
+        run: |
+          git config user.name "Landscape Mother"
+          git config user.email "actions@users.noreply.github.com"
+          git add workbenches/landscape-karst-dem-field-r2-6-2-compact/index.html \
+                  workbenches/landscape-karst-dem-field-r2-6-2-compact/build.json
+          if git diff --cached --quiet; then
+            echo "R2.6.2 already materialized"
+            exit 0
+          fi
+          git commit -m "fix(landscape): materialize browser-tested R2.6.2 compact workbench [skip ci]"
+          git push
