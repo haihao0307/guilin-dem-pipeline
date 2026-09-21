@@ -104,11 +104,20 @@ def reel_to_end(page, expect='caught', timeout_s=240):
         if expect == 'broken':
             desired = True
         else:
-            desired = s['tension'] < (.72 if held else .30)
+            # SwiftShader may render below one frame per second. Decide once per actual frame and
+            # leave enough headroom for the next capped 0.5 s gameplay step; polling stale tension
+            # at 150 ms otherwise holds through several unseen updates and creates a false break.
+            desired = s['tension'] < (.44 if held else .16)
         if desired != held:
             (page.mouse.down if desired else page.mouse.up)()
             held = desired
-        page.wait_for_timeout(150)
+        frame = page.evaluate('OceanMotherR018.qa.frames')
+        page.wait_for_function(
+            "(f)=>OceanMotherR018.qa.frames>f || PalauExperience.fishing.phase!=='reel'",
+            arg=frame,
+            timeout=20000,
+            polling=100,
+        )
     if held:
         page.mouse.up()
     end = page.evaluate('({...PalauExperience.fishing})')
@@ -200,6 +209,7 @@ try:
         caught = reel_to_end(page, 'caught')
         inv_caught = page.evaluate('JSON.parse(JSON.stringify(PalauExperience.survival.inventory))')
         assert caught['catches'] == 1 and inv_caught['fishFood'] == 1
+        r['checks']['reelReleaseClickGuard'] = {'phaseAfterRelease': caught['phase'], 'catches': caught['catches']}
         snapshot(page, 'desktop-caught')
 
         if not PUBLIC:
