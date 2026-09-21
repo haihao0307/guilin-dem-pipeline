@@ -1,0 +1,109 @@
+name: Coral R06 T07 Microscope Geometry
+
+on:
+  push:
+    branches:
+      - work/coral-mother-r06-t07-microscope-geometry-20260921
+    paths:
+      - tools/coral/coral_r06_t07_microscope_geometry.py
+      - tools/coral/coral_r06_t07_browser_qa.py
+      - .github/workflows/coral-r06-t07-microscope-geometry.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: coral-r06-t07-microscope-geometry
+  cancel-in-progress: false
+
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out T07 work branch
+        uses: actions/checkout@v4
+        with:
+          ref: work/coral-mother-r06-t07-microscope-geometry-20260921
+          fetch-depth: 0
+          path: work
+
+      - name: Check out current GitHub Pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+          path: pages
+
+      - name: Build T07 from frozen T06 production baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE=work/handoff/coral-mother-r06-t06-full-20260921/runtime/index.html
+          test -s "$SOURCE"
+          rm -rf /tmp/coral-t07
+          python3 work/tools/coral/coral_r06_t07_microscope_geometry.py \
+            "$SOURCE" \
+            /tmp/coral-t07
+          printf '%s\n' \
+            'https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-r06-pocillopora-t07-microscope-geometry/' \
+            > /tmp/coral-t07/PUBLIC_URL.txt
+          grep -q 'microscopeGeometry:true' /tmp/coral-t07/index.html
+          grep -q 'buildRootConnectedGraph' /tmp/coral-t07/index.html
+          grep -q 'visualAcceptance:false' /tmp/coral-t07/index.html
+          test "$(grep -o 'id="[^"]*"' /tmp/coral-t07/index.html | grep -c 'id="gl"')" -eq 1
+
+      - name: Browser and geometry gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet websocket-client
+          python3 -m http.server 8771 --directory /tmp/coral-t07 >/tmp/coral-t07-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          python3 work/tools/coral/coral_r06_t07_browser_qa.py /tmp/coral-t07
+
+      - name: Upload complete T07 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: CORAL_R06_T07_FULL_EVIDENCE_${{ github.sha }}
+          path: /tmp/coral-t07
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish fixed single-file T07 workbench
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET=coral-mother-r06-pocillopora-t07-microscope-geometry
+          rm -rf "pages/$TARGET"
+          mkdir -p "pages/$TARGET"
+          cp -a /tmp/coral-t07/. "pages/$TARGET/"
+          cd pages
+          git config user.name 'Haihao_Nature Grace HK'
+          git config user.email 'haihao0307@gmail.com'
+          git add "$TARGET/"
+          if git diff --cached --quiet; then
+            echo 'No publication changes.'
+          else
+            git commit -m "publish(coral): R06 T07 microscope geometry"
+            git pull --rebase origin gh-pages
+            git push origin gh-pages
+          fi
+
+      - name: Write run summary
+        shell: bash
+        run: |
+          {
+            echo '## Coral Mother R06-T07'
+            echo
+            echo '- Microscope: true ring-normal geometry displacement'
+            echo '- Root-connected pruning: enforced'
+            echo '- Continuous variable blunt tip closure: enforced'
+            echo '- Runtime assets: 0 GLB / 0 texture / 0 fetch'
+            echo '- visualAcceptance: false'
+            echo '- productionReady: false'
+            echo
+            echo 'Public workbench:'
+            echo 'https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-r06-pocillopora-t07-microscope-geometry/'
+          } >> "$GITHUB_STEP_SUMMARY"
