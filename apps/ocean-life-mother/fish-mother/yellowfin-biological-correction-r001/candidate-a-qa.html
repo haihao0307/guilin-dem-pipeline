@@ -55,6 +55,7 @@ const CANDIDATE_URL='./geometry/YELLOWFIN_BIOLOGICAL_CORRECTION_R001_CANDIDATE_A
 const RECEIPT_URL='./CANDIDATE_A_RECEIPT.json';
 const VIEW_CONTRACT={side:{position:[0,8,.01],up:[1,0,0],target:[0,0,0]},quarter:{position:[4.8,5.8,7.2],up:[1,0,0],target:[0,0,0]},top:{position:[8,0,.01],up:[0,1,0],target:[0,0,0]},front:{position:[.01,0,8],up:[1,0,0],target:[0,0,0]}};
 const EXPECTED_REGIONS=['anal_fin','body_core','caudal_lower','caudal_upper','dorsal_fin','dorsal_finlets','eye','lower_jaw','operculum_candidate','pectoral_fin','pelvic_fin','upper_jaw','ventral_finlets'];
+const REGION_PRIMITIVE_ORDER=['body_core','upper_jaw','lower_jaw','eye','operculum_candidate','pectoral_fin','pelvic_fin','dorsal_fin','anal_fin','dorsal_finlets','ventral_finlets','caudal_upper','caudal_lower'];
 const $=id=>document.getElementById(id);
 const setState=(kind,title,text)=>{$('stateDot').className='dot '+(kind||'');$('stateTitle').textContent=title;$('stateText').textContent=text};
 const qa={ready:false,playing:false,mode:'loading',activeView:'loading',activeTime:0,frozenSha:null,candidateSha:null,receipt:null,frozenStats:null,candidateStats:null,frozenAnimations:[],candidateAnimations:[],animationName:null,duration:0,samples:[],currentSample:null,checks:{},thresholds:{spanRatioMin:.5,spanRatioMax:2,centerDeltaMax:1.5,boneMagnitudeMax:100},focusAvailable:{dorsal:false,pectoral:false},failure:null};
@@ -77,6 +78,20 @@ function shortSha(value){return `${value.slice(0,12)}…${value.slice(-12)}`}
 function materialArray(material){return Array.isArray(material)?material:[material]}
 function modelStats(root){let nodes=0,meshes=0,triangles=0,bones=0,skinnedMeshes=0;const materialMap=new Map(),regions=new Set();root.traverse(object=>{nodes++;if(object.isBone)bones++;if(object.isMesh){meshes++;if(object.isSkinnedMesh)skinnedMeshes++;const index=object.geometry.index;triangles+=index?index.count/3:(object.geometry.attributes.position?.count||0)/3;const region=object.userData?.kaopuSourceCopyRegion;if(region)regions.add(String(region));for(const material of materialArray(object.material)){if(!material)continue;materialMap.set(material.uuid,{name:material.name||'',transparent:material.transparent===true,opacity:Number(material.opacity),hasMap:Boolean(material.map)})}}});const materials=[...materialMap.values()].sort((a,b)=>a.name.localeCompare(b.name));return {nodes,meshes,triangles:Math.round(triangles),bones,skinnedMeshes,materialCount:materials.length,materialNames:materials.map(item=>item.name).sort(),transparentMaterials:materials.filter(item=>item.transparent).length,mappedMaterials:materials.filter(item=>item.hasMap).length,regions:[...regions].sort()}}
 function animationRecords(clips){return clips.map(clip=>({name:clip.name,duration:clip.duration,tracks:clip.tracks.length}))}
+function annotateSemanticRegions(gltf){
+  let annotated=0;
+  gltf.scene.traverse(object=>{
+    if(!object.isMesh)return;
+    const association=gltf.parser?.associations?.get(object);
+    const meshIndex=association?.meshes;
+    const primitiveIndex=association?.primitives;
+    if(meshIndex===0&&Number.isInteger(primitiveIndex)&&primitiveIndex>=0&&primitiveIndex<REGION_PRIMITIVE_ORDER.length){
+      object.userData.kaopuSourceCopyRegion=REGION_PRIMITIVE_ORDER[primitiveIndex];
+      annotated++;
+    }
+  });
+  return annotated;
+}
 function finiteArray(values){return values.every(value=>Number.isFinite(value))}
 function boundsRecord(root){const visible=root.visible;root.visible=true;scene.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(root,true);root.visible=visible;const min=box.min.toArray(),max=box.max.toArray(),span=box.getSize(new THREE.Vector3()).toArray(),center=box.getCenter(new THREE.Vector3()).toArray();return {min,max,span,center,finite:finiteArray([...min,...max,...span,...center])&&span.every(value=>value>0)}}
 function boneRecords(root){const result=[];const visible=root.visible;root.visible=true;scene.updateMatrixWorld(true);root.traverse(object=>{if(object.isBone)result.push({name:object.name||'',matrix:object.matrixWorld.elements.slice()})});root.visible=visible;return result}
@@ -99,7 +114,7 @@ async function boot(){
     const frozenBytes=await fetchBytes(FROZEN_URL,'读取冻结 Source Copy',0,44);if(frozenBytes.byteLength!==FROZEN_BYTES)throw new Error(`冻结版字节数错误：${frozenBytes.byteLength}`);qa.frozenSha=await digestHex(frozenBytes);$('frozenShaText').textContent=shortSha(qa.frozenSha);if(qa.frozenSha!==FROZEN_SHA)throw new Error('冻结版 SHA-256 未通过');
     const candidateBytes=await fetchBytes(CANDIDATE_URL,'读取 Candidate A',44,86);qa.candidateSha=await digestHex(candidateBytes);$('candidateShaText').textContent=shortSha(qa.candidateSha);if(qa.candidateSha!==receipt.output.sha256||candidateBytes.byteLength!==receipt.output.bytes)throw new Error('Candidate A SHA-256 或字节数与回执不符');
     $('progressBar').style.width='90%';setState('','解析骨架、材质与 Swim','建立冻结版和 Candidate A 的同步动态采样。');
-    const [frozenGltf,candidateGltf]=await Promise.all([parseGlb(frozenBytes),parseGlb(candidateBytes)]);frozenRoot=frozenGltf.scene;candidateRoot=candidateGltf.scene;frozenRoot.name='FrozenSourceCopyRoot';candidateRoot.name='YellowfinCandidateARoot';contentRoot.add(frozenRoot,candidateRoot);qa.frozenStats=modelStats(frozenRoot);qa.candidateStats=modelStats(candidateRoot);qa.frozenAnimations=animationRecords(frozenGltf.animations);qa.candidateAnimations=animationRecords(candidateGltf.animations);
+    const [frozenGltf,candidateGltf]=await Promise.all([parseGlb(frozenBytes),parseGlb(candidateBytes)]);qa.regionAnnotations={frozen:annotateSemanticRegions(frozenGltf),candidate:annotateSemanticRegions(candidateGltf)};frozenRoot=frozenGltf.scene;candidateRoot=candidateGltf.scene;frozenRoot.name='FrozenSourceCopyRoot';candidateRoot.name='YellowfinCandidateARoot';contentRoot.add(frozenRoot,candidateRoot);qa.frozenStats=modelStats(frozenRoot);qa.candidateStats=modelStats(candidateRoot);qa.frozenAnimations=animationRecords(frozenGltf.animations);qa.candidateAnimations=animationRecords(candidateGltf.animations);
     $('frozenStatsText').textContent=`${qa.frozenStats.nodes}/${qa.frozenStats.meshes}/${qa.frozenStats.triangles}/${qa.frozenStats.bones}`;$('candidateStatsText').textContent=`${qa.candidateStats.nodes}/${qa.candidateStats.meshes}/${qa.candidateStats.triangles}/${qa.candidateStats.bones}`;
     $('bodyDepthText').textContent=`${receipt.before.maximumBodyDepthOverForkLength.toFixed(4)} → ${receipt.after.maximumBodyDepthOverForkLength.toFixed(4)}`;$('pectoralText').textContent=`${receipt.before.pectoralLengthOverForkLength.toFixed(4)} → ${receipt.after.pectoralLengthOverForkLength.toFixed(4)}`;$('dorsalText').textContent=`${receipt.before.secondDorsalHeightOverForkLength.toFixed(4)} → ${receipt.after.secondDorsalHeightOverForkLength.toFixed(4)}`;$('analText').textContent=`${receipt.before.analHeightOverForkLength.toFixed(4)} → ${receipt.after.analHeightOverForkLength.toFixed(4)}`;
     const frozenClip=frozenGltf.animations.find(clip=>clip.name==='Swim')||frozenGltf.animations[0],candidateClip=candidateGltf.animations.find(clip=>clip.name===frozenClip?.name)||candidateGltf.animations[0];if(!frozenClip||!candidateClip)throw new Error('冻结版或 Candidate A 缺少动作');qa.animationName=frozenClip.name;qa.duration=frozenClip.duration;$('animationText').textContent=`${qa.animationName} · ${qa.duration.toFixed(3)} s`;if(Math.abs(frozenClip.duration-candidateClip.duration)>1e-9)throw new Error('冻结版与 Candidate A 动画时长不一致');
@@ -122,7 +137,7 @@ async function boot(){
       machineAcceptanceBound:receipt.gates.candidateMachineAcceptancePassed===true,
       dorsalAnatomicalPairsResolved:receipt.gates.dorsalAnatomicalSurfaceGroupsResolved===true&&receipt.after.firstDorsalSurfaceCount===2&&receipt.after.secondDorsalSurfaceCount===2,
       dorsalSurfaceSymmetryPassed:receipt.gates.firstDorsalSurfaceSymmetryPassed===true&&receipt.gates.secondDorsalSurfaceSymmetryPassed===true&&receipt.after.firstDorsalSurfaceHeightSpread<=1e-6&&receipt.after.secondDorsalSurfaceHeightSpread<=1e-6,
-      rigPropagationMachineGatesPassed:receipt.gates.restSkinIdentityPassed===true&&receipt.gates.restJointPropagationPassed===true&&receipt.gates.animationTranslationPropagationPassed===true,
+      rigPreservationMachineGatesPassed:receipt.gates.sourceNodeHierarchyRetained===true&&receipt.gates.sourceSkinTableRetained===true&&receipt.gates.sourceInverseBindMatricesRetained===true&&receipt.gates.sourceAnimationTableRetained===true&&receipt.gates.sourceAnimationAccessorsRetained===true,
       sampledBoundsFinite:allBoundsFinite,
       sampledBoneMatricesFinite:allBonesFinite,
       sampledSpanRatiosPlausible:allRatios.every(value=>Number.isFinite(value)&&value>=qa.thresholds.spanRatioMin&&value<=qa.thresholds.spanRatioMax),
