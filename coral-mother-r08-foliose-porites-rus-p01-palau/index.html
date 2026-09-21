@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Coral Mother R08 · Palau Porites rus Foliose P01</title>
+<style>
+:root{color-scheme:dark;--bg:#061014;--panel:#0e191ddd;--line:#ffffff18;--text:#edf4f2;--muted:#91a5a4;--accent:#c8aa72;--stage:510px}
+*{box-sizing:border-box}html,body{margin:0;width:100%;min-height:100%;background:radial-gradient(circle at 50% -12%,#14343c 0,#071216 48%,#04080a 100%);color:var(--text);font:12px/1.42 Inter,system-ui,"PingFang SC","Microsoft YaHei",sans-serif}
+body{overflow-x:hidden}main{width:100%;padding:5px 6px 12px}button,input{font:inherit}#stage{height:var(--stage);min-height:390px;position:relative;overflow:hidden;border:1px solid var(--line);border-radius:15px;background:linear-gradient(#06151a,#071116 54%,#111918);box-shadow:0 22px 80px #000b}
+#gl{display:block;width:100%;height:100%;touch-action:none;cursor:grab}#gl:active{cursor:grabbing}
+#stageInfo{position:absolute;left:12px;right:12px;top:10px;display:flex;gap:8px;justify-content:space-between;pointer-events:none;z-index:2}.chipRow{display:flex;gap:6px;flex-wrap:wrap}.chip,.titleBox{background:#081216de;border:1px solid var(--line);backdrop-filter:blur(10px);border-radius:10px;padding:7px 10px;box-shadow:0 12px 34px #0007}.titleBox{max-width:700px}.titleBox b{font-size:14px}.titleBox small,.chip small{color:var(--muted)}.chip strong{color:var(--accent)}
+#hud{position:absolute;right:12px;bottom:10px;padding:7px 10px;border-radius:9px;background:#071015df;border:1px solid var(--line);text-align:right;color:var(--muted);pointer-events:none}#hud b{color:var(--text)}
+#controls{margin-top:5px;border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:10px 12px}.head{display:flex;align-items:center;justify-content:space-between;gap:12px}.head h1{font-size:16px;margin:0}.head p{margin:3px 0 0;color:var(--muted);font-size:10px}.badge{white-space:nowrap;border:1px solid #c8aa7244;background:#c8aa720d;color:#ead2a1;border-radius:9px;padding:7px 9px;font-size:9px;font-weight:800;letter-spacing:.08em}
+.toolbar{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}.toolbar button{border:1px solid var(--line);background:#ffffff06;color:var(--text);padding:6px 10px;border-radius:8px;cursor:pointer}.toolbar button:hover,.toolbar button.on{border-color:#c8aa7288;background:#c8aa7218;color:#f6dfb4}
+.sectionTitle{margin-top:9px;color:var(--accent);font-size:9px;font-weight:900;letter-spacing:.11em;text-transform:uppercase}.grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;margin-top:5px}.param{display:block;border:1px solid var(--line);background:#0710158c;border-radius:9px;padding:7px 8px;min-width:0}.paramHead{display:flex;justify-content:space-between;gap:6px;align-items:center}.paramHead b{font-size:10px}.param output{color:#e2c38b;font-variant-numeric:tabular-nums}.param small{display:block;color:var(--muted);font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.param input{width:100%;accent-color:#c6a66e;margin:4px 0 2px}.qa{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin-top:5px}.qaCard{border:1px solid var(--line);background:#0710158c;border-radius:8px;padding:7px 8px}.qaCard span{display:block;color:var(--muted);font-size:8px}.qaCard b{display:block;margin-top:2px;font-size:10px;font-variant-numeric:tabular-nums}.note{margin-top:7px;color:var(--muted);font-size:9px}.note strong{color:#dec18b}
+#error{display:none;position:fixed;inset:20% 12%;z-index:20;background:#421a16;border:1px solid #ff806d66;border-radius:12px;padding:18px;white-space:pre-wrap}
+@media(max-width:1100px){:root{--stage:440px}.grid{grid-template-columns:repeat(4,minmax(0,1fr))}.qa{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:720px){:root{--stage:54vh}main{padding:3px}.head{align-items:flex-start}.head p,.badge{display:none}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.qa{grid-template-columns:repeat(2,minmax(0,1fr))}.titleBox{max-width:250px}.chipRow{display:none}#controls{padding:8px}}
+@media(min-width:2000px) and (max-height:1200px){:root{--stage:500px}}
+</style>
+</head>
+<body><main>
+<section id="stage">
+<canvas id="gl" aria-label="Palau Porites rus foliose coral procedural workbench"></canvas>
+<div id="stageInfo"><div class="titleBox"><b>Coral Mother R08 · Porites rus Foliose P01</b><br><small>Palau-confirmed · NOAA Hard / stony coral → Foliose coral · irregular overlapping shingle colony</small></div><div class="chipRow"><div class="chip"><strong>REGION</strong><br><small>PALAU ONLY</small></div><div class="chip"><strong>NOAA FORM</strong><br><small>FOLIOSE</small></div><div class="chip"><strong>SPECIES</strong><br><small>PORITES RUS</small></div><div class="chip"><strong>RUNTIME</strong><br><small>0 GLB / 0 TEX / 0 FETCH</small></div></div></div>
+<div id="hud"><b id="viewName">45° shingle profile</b><br><span id="fps">-- FPS</span><br><span id="meshStats">-- TRIANGLES</span></div>
+</section>
+<section id="controls">
+<div class="head"><div><h1>Palau Foliose / Overlapping Shingle Growth Form</h1><p>Porites rus 已由帕劳礁区研究与 Ngeruktabel Rock Islands 的直接野外记录确认。P01 淘汰 P00 的莲花式同心扇叶，改为低矮、不规则、相互遮盖的 shingle 群体；所有层片仍连接共同附着基底，其他地区资料不进入生产真值。</p></div><div class="badge">R08-P01 · visualAcceptance=false</div></div>
+<div class="toolbar" id="views"><button data-view="persp" class="on">45°</button><button data-view="front">正面</button><button data-view="side">侧面</button><button data-view="top">顶面</button><button data-view="micro">表面近景</button><button id="resetCamera">重置镜头</button><button id="resetParams">恢复参数</button></div>
+<div class="sectionTitle">Foliose shingle parameters / 全部可调项</div>
+<div class="grid" id="parameterDock">
+<label class="param"><span class="paramHead"><b>层片数量</b><output id="plateCountO">16</output></span><input id="plateCount" type="range" min="6" max="18" step="1" value="16"><small>总层片数量</small></label>
+<label class="param"><span class="paramHead"><b>垂直层数</b><output id="layerCountO">4</output></span><input id="layerCount" type="range" min="2" max="4" step="1" value="4"><small>重叠瓦片层级</small></label>
+<label class="param"><span class="paramHead"><b>展开半径</b><output id="spreadO">1.30</output></span><input id="spread" type="range" min="0.75" max="1.75" step="0.01" value="1.30"><small>群体水平覆盖</small></label>
+<label class="param"><span class="paramHead"><b>层片长度</b><output id="lengthO">1.10</output></span><input id="length" type="range" min="0.65" max="1.45" step="0.01" value="1.10"><small>从基底向外延伸</small></label>
+<label class="param"><span class="paramHead"><b>层片宽度</b><output id="widthO">0.48</output></span><input id="width" type="range" min="0.28" max="0.82" step="0.01" value="0.48"><small>瓦片扇面宽度</small></label>
+<label class="param"><span class="paramHead"><b>边缘卷曲</b><output id="curlO">0.22</output></span><input id="curl" type="range" min="0" max="1" step="0.01" value="0.22"><small>层片边缘向上卷曲</small></label>
+<label class="param"><span class="paramHead"><b>重叠程度</b><output id="overlapO">0.64</output></span><input id="overlap" type="range" min="0.12" max="0.78" step="0.01" value="0.64"><small>上层遮盖下层根部</small></label>
+<label class="param"><span class="paramHead"><b>Warp 扭曲</b><output id="warpO">0.16</output></span><input id="warp" type="range" min="0" max="1" step="0.01" value="0.16"><small>连续改变层片走向</small></label>
+<label class="param"><span class="paramHead"><b>表面起伏</b><output id="undulationO">0.18</output></span><input id="undulation" type="range" min="0" max="1" step="0.01" value="0.18"><small>中尺度片面起伏</small></label>
+<label class="param"><span class="paramHead"><b>Microscope 尺度</b><output id="microScaleO">1.00</output></span><input id="microScale" type="range" min="0.55" max="1.85" step="0.01" value="1"><small>珊瑚杯密度</small></label>
+<label class="param"><span class="paramHead"><b>Microscope 凹凸</b><output id="microDepthO">0.52</output></span><input id="microDepth" type="range" min="0" max="1" step="0.01" value="0.52"><small>真实法线方向位移</small></label>
+<label class="param"><span class="paramHead"><b>色彩饱和</b><output id="saturationO">0.86</output></span><input id="saturation" type="range" min="0.55" max="1.35" step="0.01" value="0.86"><small>整株统一主色</small></label>
+</div>
+<div class="sectionTitle">Numerical QA / 数值自检</div>
+<div class="qa"><div class="qaCard"><span>NOAA class</span><b>HARD_FOLIOSE</b></div><div class="qaCard"><span>Generated W:H:D</span><b id="extent">--</b></div><div class="qaCard"><span>Plates / layers</span><b id="plateStats">--</b></div><div class="qaCard"><span>Vertices / triangles</span><b id="meshCount">--</b></div><div class="qaCard"><span>Microscope coverage</span><b id="microCoverage">--</b></div><div class="qaCard"><span>Root anchor max</span><b id="rootAnchor">--</b></div></div>
+<div class="note"><strong>帕劳限定：</strong>Porites rus 已在帕劳礁区研究中列出，并在 Ngeruktabel Rock Islands 被直接描述为重叠 shingle 层片。它可以进入帕劳资产生产库；Airai / Stone Money Island 的具体深度与微生境投放仍单独待审。</div>
+</section></main><div id="error"></div>
+<script>
+'use strict';
+const $=id=>document.getElementById(id),clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),mix=(a,b,t)=>a+(b-a)*t,TAU=Math.PI*2;
+const canvas=$('gl'),gl=canvas.getContext('webgl2',{antialias:true,alpha:false,preserveDrawingBuffer:true,powerPreference:'high-performance'});
+if(!gl){$('error').style.display='block';$('error').textContent='WebGL2 unavailable';throw new Error('WebGL2 unavailable')}
+const cfg={plateCount:16,layerCount:4,spread:1.30,length:1.10,width:.48,curl:.22,overlap:.64,warp:.16,undulation:.18,microScale:1,microDepth:.52,saturation:.86};
+const defaults={...cfg},controls=Object.keys(defaults);
+const VS=`#version 300 es
+precision highp float;layout(location=0)in vec3 aPos;layout(location=1)in vec3 aNormal;layout(location=2)in vec4 aColor;uniform mat4 uMVP;uniform mat4 uModel;out vec3 vN;out vec3 vP;out vec4 vC;void main(){vec4 w=uModel*vec4(aPos,1.);vP=w.xyz;vN=normalize(mat3(uModel)*aNormal);vC=aColor;gl_Position=uMVP*vec4(aPos,1.);}`;
+const FS=`#version 300 es
+precision highp float;in vec3 vN;in vec3 vP;in vec4 vC;out vec4 outColor;uniform vec3 uLight;uniform vec3 uEye;void main(){vec3 n=normalize(vN),l=normalize(uLight-vP),v=normalize(uEye-vP),h=normalize(l+v);float front=max(dot(n,l),0.),back=max(dot(-n,l),0.),diff=.82*front+.16*back,spec=pow(max(dot(n,h),0.),26.),rim=pow(1.-max(dot(n,v),0.),2.2),micro=clamp(vC.a,0.,1.),shade=clamp(1.+(micro-.5)*.28,.86,1.14);vec3 c=vC.rgb*(.27+.69*diff)*shade+vec3(.16,.22,.21)*rim*.34+vec3(1.,.82,.58)*spec*mix(.10,.18,micro);outColor=vec4(pow(max(c,0.),vec3(.88)),1.);}`;
+function shader(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s}
+const prog=gl.createProgram();gl.attachShader(prog,shader(gl.VERTEX_SHADER,VS));gl.attachShader(prog,shader(gl.FRAGMENT_SHADER,FS));gl.linkProgram(prog);if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(prog));
+const vao=gl.createVertexArray(),vbo=gl.createBuffer(),ebo=gl.createBuffer();gl.bindVertexArray(vao);gl.bindBuffer(gl.ARRAY_BUFFER,vbo);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ebo);for(let i=0;i<3;i++)gl.enableVertexAttribArray(i);gl.vertexAttribPointer(0,3,gl.FLOAT,false,40,0);gl.vertexAttribPointer(1,3,gl.FLOAT,false,40,12);gl.vertexAttribPointer(2,4,gl.FLOAT,false,40,24);gl.bindVertexArray(null);
+const locMVP=gl.getUniformLocation(prog,'uMVP'),locModel=gl.getUniformLocation(prog,'uModel'),locLight=gl.getUniformLocation(prog,'uLight'),locEye=gl.getUniformLocation(prog,'uEye');
+const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],mul=(a,s)=>[a[0]*s,a[1]*s,a[2]*s],cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],len=a=>Math.hypot(a[0],a[1],a[2]),norm=a=>{const l=len(a)||1;return[a[0]/l,a[1]/l,a[2]/l]},smooth=t=>{t=clamp(t,0,1);return t*t*(3-2*t)};
+function hash2(x,y,s){const n=Math.sin(x*127.1+y*311.7+s*74.7)*43758.5453123;return n-Math.floor(n)}
+function cellular2(x,y,seed){const ix=Math.floor(x),iy=Math.floor(y);let d1=1e9,d2=1e9;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const cx=ix+dx+hash2(ix+dx,iy+dy,seed),cy=iy+dy+hash2(ix+dx,iy+dy,seed+3.7),qx=x-cx,qy=y-cy,d=Math.hypot(qx,qy);if(d<d1){d2=d1;d1=d}else if(d<d2)d2=d}return[d1,d2]}
+function baseColor(){const c=[.43,.37,.24],l=.2126*c[0]+.7152*c[1]+.0722*c[2],s=cfg.saturation;return[c[0]*s+l*(1-s),c[1]*s+l*(1-s),c[2]*s+l*(1-s),.5]}
+function plateBasePoint(meta,u,v,warpOverride=cfg.warp){
+  const layerNorm=meta.layer/Math.max(1,meta.layers-1),warp=warpOverride,
+    angle=meta.angle+warp*(.17*Math.sin(u*3.7+meta.seed*4.1)+.060*v*Math.sin(meta.seed*8.3)),
+    radial=[Math.cos(angle),0,Math.sin(angle)],side=[-Math.sin(angle),0,Math.cos(angle)],
+    rootR=.10+layerNorm*.085*(1-cfg.overlap)+meta.rootShift,
+    length=cfg.length*cfg.spread*mix(1.08,.84,layerNorm)*meta.lengthScale,
+    rootEnv=smooth(u/.14),tipSetback=(.16+.08*meta.seed)*v*v*smooth((u-.58)/.42),
+    env=rootEnv*(1-.28*smooth((u-.76)/.24)),
+    halfWidth=cfg.width*mix(1.03,.88,layerNorm)*meta.widthScale*env*(.70+.30*u),
+    edgeIrregular=cfg.undulation*.024*smooth((u-.42)/.58)*Math.sin(v*7.1+meta.seed*13.7),
+    r=rootR+u*length*(1-tipSetback)+edgeIrregular+cfg.undulation*.018*Math.sin(u*TAU*1.45+meta.seed*5.1),
+    baseY=.035+layerNorm*(.055+.045*cfg.overlap)+meta.heightJitter,
+    rise=mix(.035,.135,layerNorm)*u,
+    arch=(.042+.065*layerNorm)*Math.sin(Math.PI*u),
+    edgeCurl=cfg.curl*(.018+.075*u*u)*v*v,
+    wave=cfg.undulation*(.018*Math.sin(u*TAU*2.0+v*2.5+meta.seed*6.1)+.010*Math.sin(u*TAU*4.1-v*3.7+meta.seed*2.3)),
+    lateral=v*halfWidth+.055*length*u*(1-u)*meta.sideBias,
+    p=add(mul(radial,r),mul(side,lateral));
+  p[1]=baseY+rise+arch+edgeCurl+wave;
+  return p;
+}
+function plateSurface(meta,u,v,withMicro){
+  const e=.0025,p=plateBasePoint(meta,u,v),pu=plateBasePoint(meta,clamp(u+e,0,1),v),mu=plateBasePoint(meta,clamp(u-e,0,1),v),pv=plateBasePoint(meta,u,clamp(v+e,-1,1)),mv=plateBasePoint(meta,u,clamp(v-e,-1,1)),
+    du=sub(pu,mu),dv=sub(pv,mv);let n=norm(cross(dv,du));if(n[1]<0)n=mul(n,-1);
+  let offset=0,signal=.5,affected=false;
+  if(withMicro&&cfg.microDepth>0){const freq=20+22*cfg.microScale,cells=cellular2(u*freq*1.28+meta.seed*7.1,(v*.5+.5)*freq+meta.seed*3.9,meta.seed),d=cells[0],edge=cells[1]-cells[0],pit=1-smooth((d-.035)/.155),rim=Math.pow(clamp(1-Math.abs(d-.195)/.072,0,1),1.8),wall=Math.pow(clamp(1-edge/.075,0,1),2.2);offset=cfg.microDepth*(.0115*wall+.0135*rim-.0185*pit);signal=clamp(.5+.26*wall+.23*rim-.43*pit,0,1);affected=Math.abs(offset)>.00085}
+  return{p:add(p,mul(n,offset)),n,signal,offset,affected};
+}
+function generate(){
+  const start=performance.now(),U=48,V=32,THICK=.030,positions=[],normals=[],colors=[],indices=[],col=baseColor(),metas=[],count=Math.round(cfg.plateCount),layers=Math.round(cfg.layerCount),perLayer=Math.ceil(count/layers);
+  let actual=0,rootAnchorMax=0,microSq=0,microCount=0,microAffected=0,warpSq=0,warpCount=0,min=[1e9,1e9,1e9],max=[-1e9,-1e9,-1e9];
+  for(let layer=0;layer<layers;layer++)for(let j=0;j<perLayer&&actual<count;j++,actual++){const seed=(actual*.61803398875)%1,span=3.85,angle=-1.93+span*((j+.50)/perLayer)+layer*.11+(seed-.5)*.22;metas.push({layer,layers,angle,seed,lengthScale:.86+.28*hash2(actual,layer,1.7),widthScale:.82+.26*hash2(actual,layer,4.3),rootShift:(hash2(actual,layer,7.1)-.5)*.045,heightJitter:(hash2(actual,layer,9.9)-.5)*.025,sideBias:(hash2(actual,layer,12.7)-.5)*2})}
+  const addVertex=(p,n,c)=>{const id=positions.length;positions.push(p);normals.push(n);colors.push(c);for(let k=0;k<3;k++){min[k]=Math.min(min[k],p[k]);max[k]=Math.max(max[k],p[k])}return id};
+  for(const meta of metas){
+    const top=[],bottom=[];let baseNoWarp=null;
+    for(let i=0;i<=U;i++){const u=i/U,tr=[],br=[];for(let j=0;j<=V;j++){const v=-1+2*j/V,s=plateSurface(meta,u,v,true),topP=add(s.p,mul(s.n,THICK*.5)),bottomP=add(s.p,mul(s.n,-THICK*.5));tr.push(addVertex(topP,s.n,[col[0],col[1],col[2],s.signal]));br.push(addVertex(bottomP,mul(s.n,-1),[col[0],col[1],col[2],s.signal]));microSq+=s.offset*s.offset;microCount++;if(s.affected)microAffected++;if(i===0&&j===Math.floor(V/2))rootAnchorMax=Math.max(rootAnchorMax,Math.hypot(s.p[0],s.p[2]));{const pWarp=plateBasePoint(meta,u,v,cfg.warp),p0=plateBasePoint(meta,u,v,0),d=len(sub(pWarp,p0));warpSq+=d*d;warpCount++}}
+      top.push(tr);bottom.push(br)
+    }
+    for(let i=0;i<U;i++)for(let j=0;j<V;j++){const a=top[i][j],b=top[i][j+1],c=top[i+1][j+1],d=top[i+1][j];indices.push(a,b,c,a,c,d);const A=bottom[i][j],B=bottom[i+1][j],C=bottom[i+1][j+1],D=bottom[i][j+1];indices.push(A,B,C,A,C,D)}
+    const edgePairs=[];for(let j=0;j<V;j++)edgePairs.push([top[0][j],top[0][j+1],bottom[0][j+1],bottom[0][j]],[top[U][j+1],top[U][j],bottom[U][j],bottom[U][j+1]]);for(let i=0;i<U;i++)edgePairs.push([top[i+1][0],top[i][0],bottom[i][0],bottom[i+1][0]],[top[i][V],top[i+1][V],bottom[i+1][V],bottom[i][V]]);for(const q of edgePairs)indices.push(q[0],q[1],q[2],q[0],q[2],q[3]);
+  }
+  const BASE_LAT=14,BASE_LON=72,baseGrid=[];
+  for(let i=0;i<=BASE_LAT;i++){const row=[],t=i/BASE_LAT,theta=t*Math.PI*.5;for(let j=0;j<BASE_LON;j++){const a=j/BASE_LON*TAU,r=.52*Math.sin(theta)*(1+.035*Math.sin(a*5)+.018*Math.sin(a*9+1.3)),p=[r*Math.cos(a),.105*Math.cos(theta)+.008*Math.sin(a*7)*Math.sin(theta),r*Math.sin(a)],n=norm([p[0],Math.max(.015,p[1]*2.1),p[2]]);row.push(addVertex(p,n,[col[0],col[1],col[2],.5]))}baseGrid.push(row)}
+  for(let i=0;i<BASE_LAT;i++)for(let j=0;j<BASE_LON;j++){const k=(j+1)%BASE_LON,a=baseGrid[i][j],b=baseGrid[i][k],c=baseGrid[i+1][k],d=baseGrid[i+1][j];indices.push(a,b,c,a,c,d)}
+  const center=addVertex([0,0,0],[0,-1,0],[col[0],col[1],col[2],.5]);for(let j=0;j<BASE_LON;j++){const k=(j+1)%BASE_LON;indices.push(center,baseGrid[BASE_LAT][k],baseGrid[BASE_LAT][j])}
+  const recalculated=positions.map(()=>[0,0,0]);for(let i=0;i<indices.length;i+=3){const ia=indices[i],ib=indices[i+1],ic=indices[i+2],fn=cross(sub(positions[ib],positions[ia]),sub(positions[ic],positions[ia]));for(const id of[ia,ib,ic]){recalculated[id][0]+=fn[0];recalculated[id][1]+=fn[1];recalculated[id][2]+=fn[2]}}
+  for(let i=0;i<normals.length;i++){let n=norm(recalculated[i]);if(len(n)<.5)n=normals[i];normals[i]=n}
+  const data=new Float32Array(positions.length*10);for(let i=0;i<positions.length;i++){const o=i*10;data.set(positions[i],o);data.set(normals[i],o+3);data.set(colors[i],o+6)}gl.bindBuffer(gl.ARRAY_BUFFER,vbo);gl.bufferData(gl.ARRAY_BUFFER,data,gl.DYNAMIC_DRAW);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ebo);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint32Array(indices),gl.DYNAMIC_DRAW);indexCount=indices.length;
+  let signature=0;for(let i=0;i<data.length;i+=137)signature+=Math.abs(data[i]||0)*.73+Math.abs(data[i+1]||0)*1.31+Math.abs(data[i+2]||0)*2.17;signature=Number(signature.toFixed(6));const ext=max.map((x,i)=>x-min[i]),microRms=Math.sqrt(microSq/Math.max(1,microCount)),coverage=100*microAffected/Math.max(1,microCount),warpRms=Math.sqrt(warpSq/Math.max(1,warpCount)),rebuildMs=performance.now()-start;
+  $('extent').textContent=ext.map(x=>x.toFixed(3)).join(' : ');$('plateStats').textContent=metas.length+' / '+layers;$('meshCount').textContent=positions.length+' / '+indices.length/3;$('microCoverage').textContent=coverage.toFixed(1)+'%';$('rootAnchor').textContent=rootAnchorMax.toFixed(3);$('meshStats').textContent=(indices.length/3)+' TRIANGLES';
+  window.__CORAL_R08_QA__={ready:true,errors:window.__qaErrors||[],version:'R08-P01',productionMode:'PALAU_ONLY',colonyContract:'irregular-overlapping-shingle-slope',microReliefGain:'P01-visible-fine-corallites',warpMetric:'center-surface-only',warpVisibleGain:'P01-preserve-1.5pct-gate-v2',scientificName:'Porites rus',noaaBroadType:'Hard / stony coral',noaaGrowthForm:'Foliose coral',noaaMorphologyId:'HARD_FOLIOSE',growthFormContract:'overlapping-shingle-foliose-candidate',palauOccurrenceStatus:'CONFIRMED_PALAU',palauOnlyProductionEligible:true,productionAdmission:'PALAU_ONLY_ADMITTED',palauEvidenceAuthorities:['AIMS','Living Oceans Foundation'],palauEvidenceSite:'Ngeruktabel, Rock Islands',localSitePlacementReady:false,runtimeGLB:0,runtimeTextures:0,networkFetches:0,uniformSpeciesColor:true,meshColorCount:1,rootConnected:true,rootAnchorMax,plateCount:metas.length,layerCount:layers,vertexCount:positions.length,triangleCount:indices.length/3,extent:ext,microscopeGeometry:true,microDisplacementRms:microRms,microCoveragePct:coverage,warpGeometry:true,warpDisplacementRms:warpRms,geometrySignature:signature,rebuildMs,visualAcceptance:false,productionReady:false};
+}
+let indexCount=0;function m4mul(a,b){const o=new Float32Array(16);for(let r=0;r<4;r++)for(let c=0;c<4;c++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];return o}function perspective(fov,aspect,n,f){const t=1/Math.tan(fov/2),nf=1/(n-f);return new Float32Array([t/aspect,0,0,0,0,t,0,0,0,0,(f+n)*nf,-1,0,0,2*f*n*nf,0])}function lookAt(e,t,u){const z=norm(sub(e,t)),x=norm(cross(u,z)),y=cross(z,x);return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-(x[0]*e[0]+x[1]*e[1]+x[2]*e[2]),-(y[0]*e[0]+y[1]*e[1]+y[2]*e[2]),-(z[0]*e[0]+z[1]*e[1]+z[2]*e[2]),1])}
+const identity=new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]),camera={yaw:.72,pitch:.46,dist:4.8,target:[0,.35,0]};let drag=false,lx=0,ly=0;
+function resize(){const d=Math.min(devicePixelRatio||1,2),w=Math.max(1,Math.floor(canvas.clientWidth*d)),h=Math.max(1,Math.floor(canvas.clientHeight*d));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}gl.viewport(0,0,w,h)}function eye(){const cp=Math.cos(camera.pitch);return[camera.target[0]+camera.dist*cp*Math.sin(camera.yaw),camera.target[1]+camera.dist*Math.sin(camera.pitch),camera.target[2]+camera.dist*cp*Math.cos(camera.yaw)]}
+let frames=0,lastFps=performance.now();function render(now){resize();gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);gl.clearColor(.024,.055,.060,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);const e=eye(),p=perspective(.72,canvas.width/canvas.height,.04,50),v=lookAt(e,camera.target,[0,1,0]),mvp=m4mul(p,m4mul(v,identity));gl.useProgram(prog);gl.uniformMatrix4fv(locMVP,false,mvp);gl.uniformMatrix4fv(locModel,false,identity);gl.uniform3fv(locLight,new Float32Array([3.4,5.2,4.1]));gl.uniform3fv(locEye,new Float32Array(e));gl.bindVertexArray(vao);gl.drawElements(gl.TRIANGLES,indexCount,gl.UNSIGNED_INT,0);frames++;if(now-lastFps>800){$('fps').textContent=Math.round(frames*1000/(now-lastFps))+' FPS';frames=0;lastFps=now}requestAnimationFrame(render)}
+canvas.addEventListener('pointerdown',e=>{drag=true;lx=e.clientX;ly=e.clientY;canvas.setPointerCapture(e.pointerId)});canvas.addEventListener('pointermove',e=>{if(!drag)return;camera.yaw-=(e.clientX-lx)*.008;camera.pitch=clamp(camera.pitch-(e.clientY-ly)*.008,-1.15,1.35);lx=e.clientX;ly=e.clientY});canvas.addEventListener('pointerup',()=>drag=false);canvas.addEventListener('wheel',e=>{e.preventDefault();camera.dist=clamp(camera.dist*Math.exp(e.deltaY*.001),1.6,12)},{passive:false});
+function setView(v){document.querySelectorAll('#views [data-view]').forEach(b=>b.classList.toggle('on',b.dataset.view===v));if(v==='front'){camera.yaw=0;camera.pitch=.16;camera.dist=4.6;camera.target=[0,.35,0];$('viewName').textContent='Front shingle profile'}else if(v==='side'){camera.yaw=Math.PI/2;camera.pitch=.16;camera.dist=4.6;camera.target=[0,.35,0];$('viewName').textContent='Side shingle profile'}else if(v==='top'){camera.yaw=0;camera.pitch=1.48;camera.dist=4.7;camera.target=[0,.25,0];$('viewName').textContent='Top overlap profile'}else if(v==='micro'){camera.yaw=.34;camera.pitch=.22;camera.dist=1.55;camera.target=[.02,.20,.48];$('viewName').textContent='Foliose microscope close-up'}else{camera.yaw=.72;camera.pitch=.46;camera.dist=4.8;camera.target=[0,.35,0];$('viewName').textContent='45° shingle profile'}}
+document.querySelectorAll('#views [data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));$('resetCamera').onclick=()=>setView('persp');
+function bind(){for(const id of controls){const el=$(id),out=$(id+'O');el.oninput=()=>{cfg[id]=Number(el.value);out.value=(id==='plateCount'||id==='layerCount')?String(Math.round(cfg[id])):cfg[id].toFixed(2);generate()}}$('resetParams').onclick=()=>{for(const[id,v]of Object.entries(defaults)){const el=$(id);el.value=String(v);el.dispatchEvent(new Event('input',{bubbles:true}))}}}
+bind();generate();setView('persp');window.__CORAL_R08_BUILD__={ready:true,version:'R08-P01',productionMode:'PALAU_ONLY',colonyContract:'irregular-overlapping-shingle-slope',microReliefGain:'P01-visible-fine-corallites',warpMetric:'center-surface-only',warpVisibleGain:'P01-preserve-1.5pct-gate-v2',scientificName:'Porites rus',noaaBroadType:'Hard / stony coral',noaaGrowthForm:'Foliose coral',noaaMorphologyId:'HARD_FOLIOSE',growthFormContract:'overlapping-shingle-foliose-candidate',palauOccurrenceStatus:'CONFIRMED_PALAU',palauOnlyProductionEligible:true,productionAdmission:'PALAU_ONLY_ADMITTED',palauEvidenceAuthorities:['AIMS','Living Oceans Foundation'],palauEvidenceSite:'Ngeruktabel, Rock Islands',localSitePlacementReady:false,runtimeGLB:0,runtimeTextures:0,networkFetches:0,visualAcceptance:false,productionReady:false};requestAnimationFrame(render);
+</script>
+</body></html>
