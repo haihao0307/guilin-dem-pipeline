@@ -3,7 +3,7 @@
   "date": "2026-09-21",
   "branch": "work/ocean-life-fish-mother-yellowfin-biological-correction-r001-20260921",
   "build": "YELLOWFIN-BIOLOGICAL-CORRECTION-R001",
-  "phase": "CANDIDATE_A_GENERATED_MACHINE_ACCEPTED",
+  "phase": "CANDIDATE_A_BROWSER_QA_PASSED_MACHINE_ACCEPTED",
   "frozenInput": {
     "commit": "9b610f4ef0134e015c2fb6b14574e7e4f48ed943",
     "sha256": "2130a3c03fc50d22676919c3599e75707e61d9f75ddd90523a6897887715ec02",
@@ -18,15 +18,19 @@
     "skinInfluenceAuditPassed": true,
     "animationChannelAuditPassed": true,
     "correctionCandidateGenerated": true,
-    "candidateBrowserQAPassed": false,
+    "candidateBrowserQAPassed": true,
     "manualVisualAcceptancePending": true,
     "productionReady": false,
     "candidateMachineAcceptancePassed": true,
     "sourceRigPreserved": true,
     "sourceAnimationPreserved": true,
-    "runtimeBrowserQAAuthoritative": true
+    "runtimeBrowserQAAuthoritative": true,
+    "candidateFixedViewsCaptured": true,
+    "candidateSwimSamplesCaptured": true,
+    "candidateConsoleZeroErrors": true,
+    "candidatePageErrorsZero": true
   },
-  "next": "Run synchronized frozen-vs-Candidate-A browser QA with the source rig and Swim tracks retained; capture fixed views and reject any orientation, attachment, fin-root or dynamic-boundary failure.",
+  "next": "Review the fixed Candidate A screenshots manually for Yellowfin silhouette, first/second dorsal identity, paired-surface continuity, eye/cornea attachment, fin roots and Swim deformation. If rejected, create Candidate B from the frozen Source Copy; do not modify Candidate A in place and do not mark productionReady.",
   "baseline": {
     "report": "BIOLOGICAL_CORRECTION_R001_BASELINE.json",
     "frozenCopySha256": "2130a3c03fc50d22676919c3599e75707e61d9f75ddd90523a6897887715ec02",
@@ -86,6 +90,17 @@
       ]
     },
     "rigPolicy": "preserve-source-rig-and-animation",
-    "animationTranslationsRewritten": false
+    "animationTranslationsRewritten": false,
+    "browserWorkbench": "candidate-a-qa.html",
+    "browserReceipt": "evidence/candidate-a-browser/CANDIDATE_A_BROWSER_QA_RECEIPT.json",
+    "browserPassed": true,
+    "screenshots": 17,
+    "swimSamples": 5,
+    "minimumSampledSpanRatio": 0.9542946104911605,
+    "maximumSampledSpanRatio": 1.1491090904284262,
+    "maximumSampledCenterDelta": 0.11541118557251873,
+    "maximumCandidateBoneMagnitude": 2.9037993575945857,
+    "manualVisualAcceptancePending": true,
+    "productionReady": false
   }
 }
