@@ -1,0 +1,63 @@
+name: Fish Mother Yellowfin Geometry Axis Alignment Fix
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - work/ocean-life-fish-mother-yellowfin-source-copy-r001-20260921
+    paths:
+      - .github/workflows/fish-yellowfin-geometry-axis-alignment-fix.yml
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/tools/patch_geometry_qa_axis_alignment.py
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fish-yellowfin-geometry-axis-alignment-fix
+  cancel-in-progress: true
+
+jobs:
+  patch-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out the current Source Copy branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+
+      - name: Apply the proven package-to-browser axis mapping
+        shell: bash
+        run: |
+          set -euo pipefail
+          python apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/tools/patch_geometry_qa_axis_alignment.py
+
+      - name: Verify the patch markers
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -F "copyRoot.rotation.x=Math.PI/2" apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry-qa.html
+          grep -F "sourceAndAlignedCopyBoundsMatch" apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry-qa.html
+          grep -F "sourceVsAlignedCopyBrowserBoundsDelta" apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry-qa/capture-geometry-qa.cjs
+          grep -F "sourceVsAlignedCopyBrowserBoundsDelta" apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/tests/source-copy-geometry-r001.test.mjs
+          grep -F "sourceVsAlignedCopyBrowserBoundsDelta" .github/workflows/fish-yellowfin-source-copy-geometry-r001.yml
+
+      - name: Commit the axis-aligned QA contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Fish Mother R001"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            .github/workflows/fish-yellowfin-source-copy-geometry-r001.yml \
+            apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry-qa.html \
+            apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry-qa/capture-geometry-qa.cjs \
+            apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/tests/source-copy-geometry-r001.test.mjs
+          if git diff --cached --quiet; then
+            echo "Axis alignment patch is already present."
+            exit 0
+          fi
+          git commit -m "fix(fish): align static source-copy visual QA axes"
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
