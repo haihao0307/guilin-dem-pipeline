@@ -10,6 +10,8 @@ on:
       - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/tools/build_source_copy_geometry.py
       - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/tools/classify_source_components.py
       - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/tests/source-copy-geometry-r001.test.mjs
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry-qa.html
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry-qa/**
       - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/SOURCE_COMPONENT_CLASSIFICATION_R001.json
       - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace/source/tuna_fish_4k.glb
       - apps/ocean-life-mother/fish-mother/yellowfin-study-r006/tools/build_kaopu_source_copy_package.py
@@ -28,11 +30,13 @@ env:
   CLASSIFICATION: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/SOURCE_COMPONENT_CLASSIFICATION_R001.json
   GEOMETRY_GLB: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry/YELLOWFIN_SOURCE_COPY_R001.glb
   GEOMETRY_RECEIPT: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/SOURCE_COPY_GEOMETRY_R001.json
+  QA_GEOMETRY_OUT: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/evidence/geometry-browser
+  QA_GEOMETRY_URL: http://127.0.0.1:4173/apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry-qa.html
 
 jobs:
   build-segmented-source-copy:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
     steps:
       - name: Check out the Source Copy branch
         uses: actions/checkout@v4
@@ -45,6 +49,11 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
 
       - name: Install exact-source geometry dependencies
         shell: bash
@@ -62,7 +71,7 @@ jobs:
             "$SOURCE_GLB" \
             --out "$PACKAGE_ROOT"
 
-      - name: Build the first region-separated exact-source copy
+      - name: Build the complete region-separated exact-source copy
         shell: bash
         run: |
           set -euo pipefail
@@ -73,7 +82,36 @@ jobs:
             --out-glb "$GEOMETRY_GLB" \
             --out-receipt "$GEOMETRY_RECEIPT"
 
-      - name: Record geometry-copy status
+      - name: Install Playwright and Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+
+      - name: Start the geometry QA workbench server
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/yellowfin-geometry-http.log 2>&1 &
+          echo $! >/tmp/yellowfin-geometry-http.pid
+          for i in $(seq 1 30); do
+            if curl --fail --silent "$QA_GEOMETRY_URL" >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/yellowfin-geometry-http.log
+          exit 1
+
+      - name: Capture source-versus-copy fixed-view evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "$QA_GEOMETRY_OUT"
+          node "$COPY_ROOT/geometry-qa/capture-geometry-qa.cjs"
+
+      - name: Record passed geometry-copy status
         shell: bash
         run: |
           set -euo pipefail
@@ -82,16 +120,41 @@ jobs:
           from pathlib import Path
 
           root = Path(os.environ['COPY_ROOT'])
-          receipt = json.loads(Path(os.environ['GEOMETRY_RECEIPT']).read_text())
+          geometry_receipt_path = Path(os.environ['GEOMETRY_RECEIPT'])
+          browser_receipt_path = Path(os.environ['QA_GEOMETRY_OUT']) / 'GEOMETRY_BROWSER_QA_RECEIPT.json'
+          receipt = json.loads(geometry_receipt_path.read_text())
+          browser = json.loads(browser_receipt_path.read_text())
+          if not browser.get('passed'):
+              raise SystemExit('Geometry browser QA receipt did not pass')
+          if browser.get('copySha256') != receipt['output']['sha256']:
+              raise SystemExit('Geometry browser QA is not bound to generated copy SHA')
+          receipt['gates']['browserVisualQAPassed'] = True
+          receipt['visualEvidence'] = {
+              'receipt': 'evidence/geometry-browser/GEOMETRY_BROWSER_QA_RECEIPT.json',
+              'sourceTriangles': browser['sourceStats']['triangles'],
+              'copyTriangles': browser['copyStats']['triangles'],
+              'copyMeshes': browser['copyStats']['meshes'],
+              'boundsDelta': browser['boundsDelta'],
+              'boundsTolerance': browser['boundsTolerance'],
+              'consoleZeroErrors': len(browser['consoleErrors']) == 0,
+              'pageZeroErrors': len(browser['pageErrors']) == 0,
+              'views': [item['name'] for item in browser['screenshots']],
+          }
+          receipt['next'] = 'Transfer the exact source skeleton and skin weights onto the accepted segmented geometry without changing geometry.'
+          geometry_receipt_path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n')
 
           status_path = root / 'CURRENT_STATUS.json'
           status = json.loads(status_path.read_text())
-          status['phase'] = 'SOURCE_COPY_GEOMETRY_R001_STATIC_READY_BROWSER_QA_PENDING'
+          status['phase'] = 'SOURCE_COPY_GEOMETRY_R001_BROWSER_QA_PASSED_SKIN_TRANSFER_NEXT'
           status['gates'].update({
               'sourceCopyStaticGeometryGenerated': True,
               'sourceCopyAllFacesAssignedExactlyOnce': True,
+              'sourceCopyEveryPrimitiveCopied': True,
               'sourceCopySourceBoundsPreserved': True,
-              'sourceCopyGeometryBrowserQAPassed': False,
+              'sourceCopyGeometryBrowserQAPassed': True,
+              'sourceCopyGeometryFixedViewsCaptured': True,
+              'sourceCopyGeometryConsoleZeroErrors': True,
+              'sourceCopyGeometryPageErrorsZero': True,
               'sourceCopySkinTransferred': False,
               'sourceCopyMaterialsTransferred': False,
               'independentReconstructionUnlocked': False,
@@ -100,34 +163,41 @@ jobs:
           status['sourceCopyGeometry'] = {
               'receipt': 'SOURCE_COPY_GEOMETRY_R001.json',
               'glb': 'geometry/YELLOWFIN_SOURCE_COPY_R001.glb',
+              'qaWorkbench': 'geometry-qa.html',
+              'browserReceipt': 'evidence/geometry-browser/GEOMETRY_BROWSER_QA_RECEIPT.json',
               'sha256': receipt['output']['sha256'],
               'bytes': receipt['output']['bytes'],
               'meshCount': receipt['output']['meshCount'],
               'faceCount': receipt['output']['faceCount'],
+              'classifiedPrimaryFaceCount': receipt['output']['classifiedPrimaryFaceCount'],
+              'auxiliaryFaceCount': receipt['output']['auxiliaryFaceCount'],
+              'copiedPrimitiveInstances': receipt['source']['copiedPrimitiveInstances'],
+              'boundsDelta': browser['boundsDelta'],
               'regions': [item['name'] for item in receipt['regions']],
               'sourcePositionsReusedWithoutModification': True,
               'sourceProportionsPreserved': True,
               'staticOnly': True,
           }
-          status['next'] = 'Run fixed-view source-versus-segmented-copy browser QA, then transfer the exact source skeleton and skin weights without changing geometry.'
+          status['next'] = 'Transfer the exact source skeleton and skin weights onto the accepted segmented geometry without changing geometry.'
           status_path.write_text(json.dumps(status, ensure_ascii=False, indent=2) + '\n')
 
           baseline_path = Path('CURRENT_BASELINE.json')
           baseline = json.loads(baseline_path.read_text())
           active = baseline.setdefault('activeState', {})
           active.update({
-              'phase': 'YELLOWFIN_SOURCE_COPY_R001_STATIC_SEGMENTED_GEOMETRY_READY',
+              'phase': 'YELLOWFIN_SOURCE_COPY_R001_STATIC_GEOMETRY_BROWSER_QA_PASSED',
               'workBranch': 'work/ocean-life-fish-mother-yellowfin-source-copy-r001-20260921',
               'activeWorkbench': 'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/index.html',
+              'geometryQaWorkbench': 'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry-qa.html',
               'sourceCopyStaticGeometryGenerated': True,
               'sourceCopyGeometryReceipt': 'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/SOURCE_COPY_GEOMETRY_R001.json',
               'sourceCopyGeometryGlb': 'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry/YELLOWFIN_SOURCE_COPY_R001.glb',
               'sourceCopyGeometrySha256': receipt['output']['sha256'],
-              'sourceCopyGeometryBrowserQAPassed': False,
+              'sourceCopyGeometryBrowserQAPassed': True,
               'sourceCopySkinTransferred': False,
               'sourceCopyUnlocked': False,
               'generationLocked': True,
-              'nextAllowedBuild': 'YELLOWFIN-SOURCE-COPY-R001-STATIC-GEOMETRY-QA',
+              'nextAllowedBuild': 'YELLOWFIN-SOURCE-COPY-R001-SKIN-TRANSFER',
           })
           baseline_path.write_text(json.dumps(baseline, ensure_ascii=False, indent=2) + '\n')
           PY
@@ -140,19 +210,21 @@ jobs:
           node "$COPY_ROOT/tests/source-component-classification-r001.test.mjs"
           node "$COPY_ROOT/tests/source-copy-r001-contract.test.mjs"
 
-      - name: Upload segmented source-copy geometry
+      - name: Upload segmented source-copy geometry and browser evidence
         uses: actions/upload-artifact@v4
         with:
           name: YELLOWFIN-SOURCE-COPY-GEOMETRY-R001
           path: |
             ${{ env.GEOMETRY_GLB }}
             ${{ env.GEOMETRY_RECEIPT }}
+            ${{ env.QA_GEOMETRY_OUT }}
             ${{ env.COPY_ROOT }}/CURRENT_STATUS.json
+            CURRENT_BASELINE.json
           if-no-files-found: error
           retention-days: 30
           compression-level: 6
 
-      - name: Commit the generated geometry and receipts
+      - name: Commit the generated geometry and evidence
         shell: bash
         run: |
           set -euo pipefail
@@ -163,10 +235,11 @@ jobs:
             CURRENT_BASELINE.json \
             "$COPY_ROOT/CURRENT_STATUS.json" \
             "$GEOMETRY_RECEIPT" \
-            "$GEOMETRY_GLB"
+            "$GEOMETRY_GLB" \
+            "$QA_GEOMETRY_OUT"
           if git diff --cached --quiet; then
             echo "No source-copy geometry delta to commit."
             exit 0
           fi
-          git commit -m "feat(fish): generate segmented exact-source geometry copy"
+          git commit -m "feat(fish): validate complete segmented exact-source geometry copy"
           git push origin "HEAD:${GITHUB_REF_NAME}"
