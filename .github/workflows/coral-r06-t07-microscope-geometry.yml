@@ -15,7 +15,7 @@ permissions:
 
 concurrency:
   group: coral-r06-t07-microscope-geometry
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build-test-publish:
@@ -25,14 +25,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: work/coral-mother-r06-t07-microscope-geometry-20260921
-          fetch-depth: 0
+          fetch-depth: 1
           path: work
 
       - name: Check out current GitHub Pages
         uses: actions/checkout@v4
         with:
           ref: gh-pages
-          fetch-depth: 0
+          fetch-depth: 1
           path: pages
 
       - name: Build T07 from frozen T06 production baseline
