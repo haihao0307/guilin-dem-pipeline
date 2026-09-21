@@ -358,6 +358,97 @@ def region_components(
     return records
 
 
+def group_mirrored_fin_surfaces(components: list[dict[str, Any]]) -> list[list[dict[str, Any]]]:
+    """Pair disconnected positive/negative-X sheets that form one anatomical fin.
+
+    The source dorsal mesh stores the first and second dorsal fins as mirrored surface
+    sheets. Connectivity alone therefore counts two components per anatomical fin.
+    Pair only components with identical topology and longitudinal/root metrics, then
+    sort anatomical groups from snout toward tail by root U.
+    """
+    used: set[int] = set()
+    groups: list[list[dict[str, Any]]] = []
+    tolerance = 2e-6
+    for index, component in enumerate(components):
+        if index in used:
+            continue
+        used.add(index)
+        group = [component]
+        centroid = component["bounds"]["centroid"]
+        root_centroid = component["attachmentRoot"]["bounds"]["centroid"]
+        if centroid is not None and root_centroid is not None and abs(float(centroid[0])) > tolerance:
+            best_index: int | None = None
+            best_score = float("inf")
+            for other_index, other in enumerate(components):
+                if other_index in used:
+                    continue
+                other_centroid = other["bounds"]["centroid"]
+                other_root_centroid = other["attachmentRoot"]["bounds"]["centroid"]
+                if other_centroid is None or other_root_centroid is None:
+                    continue
+                if component["faces"] != other["faces"] or component["vertices"] != other["vertices"]:
+                    continue
+                if not np.allclose(component["bounds"]["uRange"], other["bounds"]["uRange"], atol=tolerance, rtol=0):
+                    continue
+                if not np.allclose(
+                    component["attachmentRoot"]["bounds"]["uRange"],
+                    other["attachmentRoot"]["bounds"]["uRange"],
+                    atol=tolerance,
+                    rtol=0,
+                ):
+                    continue
+                if abs(component["dorsalHeightOverForkLength"] - other["dorsalHeightOverForkLength"]) > tolerance:
+                    continue
+                if abs(float(centroid[0]) + float(other_centroid[0])) > tolerance:
+                    continue
+                score = (
+                    abs(float(root_centroid[1]) - float(other_root_centroid[1]))
+                    + abs(float(root_centroid[2]) - float(other_root_centroid[2]))
+                    + abs(abs(float(centroid[0])) - abs(float(other_centroid[0])))
+                )
+                if score < best_score:
+                    best_score = score
+                    best_index = other_index
+            if best_index is not None:
+                used.add(best_index)
+                group.append(components[best_index])
+        groups.append(group)
+
+    groups.sort(
+        key=lambda group: float(
+            np.mean(
+                [
+                    component["attachmentRoot"]["bounds"]["centroid"][1]
+                    for component in group
+                    if component["attachmentRoot"]["bounds"]["centroid"] is not None
+                ]
+            )
+        ),
+        reverse=True,
+    )
+    return groups
+
+
+def fin_surface_group_summary(group: list[dict[str, Any]]) -> dict[str, Any]:
+    root_u = [
+        float(component["attachmentRoot"]["bounds"]["centroid"][1])
+        for component in group
+        if component["attachmentRoot"]["bounds"]["centroid"] is not None
+    ]
+    u_ranges = [component["bounds"]["uRange"] for component in group]
+    heights = [float(component["dorsalHeightOverForkLength"]) for component in group]
+    return {
+        "componentIds": [int(component["component"]) for component in group],
+        "surfaceCount": len(group),
+        "rootU": clean_float(float(np.mean(root_u))),
+        "uRange": vector([min(value[0] for value in u_ranges), max(value[1] for value in u_ranges)]),
+        "dorsalHeightOverForkLength": clean_float(max(heights)),
+        "surfaceHeightSpread": clean_float(max(heights) - min(heights), 12),
+        "faces": int(sum(component["faces"] for component in group)),
+        "vertices": int(sum(component["vertices"] for component in group)),
+    }
+
+
 def profile_metrics(points: np.ndarray, fork_y: float, fork_length: float, bins: int = 120) -> dict[str, Any]:
     u = (points[:, 1] - fork_y) / fork_length
     samples: list[dict[str, Any]] = []
@@ -623,15 +714,27 @@ def audit(args: argparse.Namespace) -> dict[str, Any]:
     )
     dorsal_components = component_records["dorsal_fin"]
     anal_components = component_records["anal_fin"]
-    second_dorsal = dorsal_components[1] if len(dorsal_components) > 1 else (dorsal_components[0] if dorsal_components else None)
-    first_dorsal = dorsal_components[0] if dorsal_components else None
-    first_dorsal_base_u = (
-        first_dorsal["attachmentRoot"]["bounds"]["uRange"] if first_dorsal is not None else None
+    dorsal_surface_groups = group_mirrored_fin_surfaces(dorsal_components)
+    if len(dorsal_surface_groups) < 3:
+        raise ValueError(f"dorsal anatomy unresolved: {len(dorsal_surface_groups)} surface groups")
+    first_dorsal_group = dorsal_surface_groups[0]
+    second_dorsal_group = dorsal_surface_groups[1]
+    if len(first_dorsal_group) != 2 or len(second_dorsal_group) != 2:
+        raise ValueError(
+            "first and second dorsal fins must each resolve to two mirrored surface sheets: "
+            f"{[len(group) for group in dorsal_surface_groups]}"
+        )
+    dorsal_group_records = [fin_surface_group_summary(group) for group in dorsal_surface_groups]
+    second_dorsal_height = max(
+        float(component["dorsalHeightOverForkLength"]) for component in second_dorsal_group
     )
+    first_dorsal_base_u = [
+        min(component["attachmentRoot"]["bounds"]["uRange"][0] for component in first_dorsal_group),
+        max(component["attachmentRoot"]["bounds"]["uRange"][1] for component in first_dorsal_group),
+    ]
     deepest_u = float(profile["deepest"]["u"])
     deepest_near_first_dorsal = bool(
-        first_dorsal_base_u is not None
-        and first_dorsal_base_u[0] - 0.08 <= deepest_u <= first_dorsal_base_u[1] + 0.08
+        first_dorsal_base_u[0] - 0.08 <= deepest_u <= first_dorsal_base_u[1] + 0.08
     )
 
     caudal_vertices = np.union1d(region_vertices["caudal_upper"], region_vertices["caudal_lower"])
@@ -714,6 +817,14 @@ def audit(args: argparse.Namespace) -> dict[str, Any]:
         "singleAnimationRetained": len(animation_records) == 1,
         "materialCountRetained": material_count == 3,
         "finletCountsRetained": dorsal_finlet_count == 9 and ventral_finlet_count == 8,
+        "dorsalAnatomicalSurfaceGroupsResolved": (
+            len(dorsal_surface_groups) >= 3
+            and len(first_dorsal_group) == 2
+            and len(second_dorsal_group) == 2
+        ),
+        "firstAndSecondDorsalDistinct": (
+            dorsal_group_records[0]["rootU"] - dorsal_group_records[1]["rootU"] > 0.05
+        ),
         "frozenGlbNotModified": True,
         "candidateGenerated": False,
         "productionReady": False,
@@ -769,9 +880,7 @@ def audit(args: argparse.Namespace) -> dict[str, Any]:
             "maximumBodyWidthU": profile["widest"]["u"],
             "semanticHeadLengthOverForkLength": clean_float(semantic_head_length / fork_length),
             "pectoralLengthOverForkLength": clean_float(pectoral_length_ratio),
-            "secondDorsalHeightOverForkLength": None
-            if second_dorsal is None
-            else second_dorsal["dorsalHeightOverForkLength"],
+            "secondDorsalHeightOverForkLength": clean_float(second_dorsal_height),
             "analHeightOverForkLength": max(
                 (component["ventralHeightOverForkLength"] for component in anal_components),
                 default=0.0,
@@ -789,6 +898,7 @@ def audit(args: argparse.Namespace) -> dict[str, Any]:
         },
         "regions": region_records,
         "components": component_records,
+        "dorsalAnatomicalSurfaceGroups": dorsal_group_records,
         "boundary": {
             "uniqueEdges": int(len(edge_members)),
             "interRegionEdges": int(len(inter_region_edges)),
@@ -833,6 +943,7 @@ def audit(args: argparse.Namespace) -> dict[str, Any]:
             "The fork landmark is inferred, not authored; manual silhouette review remains required.",
             "Royce documented size and geographic morphometric variation, so a single exact adult ratio would be false precision.",
             "The current source may violate published adult pectoral or mature-fin proportions; candidate deformation must report the delta rather than silently forcing a preset.",
+            "Thin dorsal fins are stored as mirrored disconnected sheets; component order alone is not anatomical identity.",
             "The rig contains joint translation animation channels; changing only vertices would cause rest/motion divergence.",
             "The frozen Source Copy is machine accepted but still awaits manual visual acceptance and is not production ready.",
         ],

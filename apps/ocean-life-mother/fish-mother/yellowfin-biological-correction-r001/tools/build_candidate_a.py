@@ -275,6 +275,7 @@ def component_topology(
                 "vertexIds": vertex_ids,
                 "rootVertexIds": root_vertex_ids,
                 "rootCentroid": root_centroid,
+                "centroid": component_points.mean(axis=0),
                 "maxRootDistance": float(max_distance or 0.0),
                 "rootU": float((root_centroid[1] - fork_y) / fork_length),
                 "uRange": [
@@ -289,6 +290,73 @@ def component_topology(
         )
     records.sort(key=lambda item: item["rootU"], reverse=True)
     return records
+
+
+def group_mirrored_components(components: list[dict[str, Any]]) -> list[list[dict[str, Any]]]:
+    """Resolve disconnected mirrored sheets into anatomical fin groups."""
+    used: set[int] = set()
+    groups: list[list[dict[str, Any]]] = []
+    tolerance = 2e-6
+    for index, component in enumerate(components):
+        if index in used:
+            continue
+        used.add(index)
+        group = [component]
+        centroid = component["centroid"]
+        if abs(float(centroid[0])) > tolerance:
+            best_index: int | None = None
+            best_score = float("inf")
+            for other_index, other in enumerate(components):
+                if other_index in used:
+                    continue
+                if component["faces"] != other["faces"] or component["vertices"] != other["vertices"]:
+                    continue
+                if not np.allclose(component["uRange"], other["uRange"], atol=tolerance, rtol=0):
+                    continue
+                if abs(component["rootU"] - other["rootU"]) > tolerance:
+                    continue
+                if abs(component["dorsalHeight"] - other["dorsalHeight"]) > fork_length_for_pairing(components) * tolerance:
+                    continue
+                if abs(float(centroid[0]) + float(other["centroid"][0])) > fork_length_for_pairing(components) * tolerance:
+                    continue
+                score = (
+                    abs(component["rootU"] - other["rootU"])
+                    + abs(float(component["rootCentroid"][2]) - float(other["rootCentroid"][2]))
+                    + abs(abs(float(centroid[0])) - abs(float(other["centroid"][0])))
+                )
+                if score < best_score:
+                    best_score = score
+                    best_index = other_index
+            if best_index is not None:
+                used.add(best_index)
+                group.append(components[best_index])
+        groups.append(group)
+    groups.sort(key=lambda group: float(np.mean([component["rootU"] for component in group])), reverse=True)
+    return groups
+
+
+def fork_length_for_pairing(components: list[dict[str, Any]]) -> float:
+    spans = [
+        max(float(component["maxRootDistance"]), float(component["dorsalHeight"]), float(component["ventralHeight"]))
+        for component in components
+    ]
+    return max(max(spans, default=1.0), 1.0)
+
+
+def anatomical_group_summary(group: list[dict[str, Any]], fork_length: float) -> dict[str, Any]:
+    heights = [component_metric(component, np.empty((0, 3)), fork_length, "dorsal") if False else component["dorsalHeight"] / fork_length for component in group]
+    return {
+        "componentIds": [int(component["component"]) for component in group],
+        "surfaceCount": len(group),
+        "rootU": clean_float(float(np.mean([component["rootU"] for component in group]))),
+        "uRange": vector([
+            min(component["uRange"][0] for component in group),
+            max(component["uRange"][1] for component in group),
+        ]),
+        "dorsalHeightOverForkLength": clean_float(max(heights)),
+        "surfaceHeightSpread": clean_float(max(heights) - min(heights), 12),
+        "surfaces": [component_summary(component, fork_length) for component in group],
+    }
 
 
 def component_summary(component: dict[str, Any], fork_length: float) -> dict[str, Any]:
@@ -926,8 +994,18 @@ def measure_candidate(
         (component_metric(component, positions, fork_length, "distance") for component in components["pectoral_fin"]),
         default=0.0,
     )
-    second_dorsal = components["dorsal_fin"][1] if len(components["dorsal_fin"]) > 1 else components["dorsal_fin"][0]
-    second_dorsal_height = component_metric(second_dorsal, positions, fork_length, "dorsal")
+    dorsal_groups = group_mirrored_components(components["dorsal_fin"])
+    if len(dorsal_groups) < 3 or len(dorsal_groups[0]) != 2 or len(dorsal_groups[1]) != 2:
+        raise ValueError(f"candidate dorsal anatomy unresolved: {[len(group) for group in dorsal_groups]}")
+    first_dorsal_group = dorsal_groups[0]
+    second_dorsal_group = dorsal_groups[1]
+    first_dorsal_heights = [
+        component_metric(component, positions, fork_length, "dorsal") for component in first_dorsal_group
+    ]
+    second_dorsal_heights = [
+        component_metric(component, positions, fork_length, "dorsal") for component in second_dorsal_group
+    ]
+    second_dorsal_height = max(second_dorsal_heights)
     anal_height = max(
         (component_metric(component, positions, fork_length, "ventral") for component in components["anal_fin"]),
         default=0.0,
@@ -950,8 +1028,10 @@ def measure_candidate(
     peduncle_points = body_points[peduncle_select]
     peduncle_depth = float(peduncle_points[:, 2].max() - peduncle_points[:, 2].min())
     peduncle_width = float(peduncle_points[:, 0].max() - peduncle_points[:, 0].min())
-    first_dorsal = components["dorsal_fin"][0]
-    first_root_points = positions[first_dorsal["rootVertexIds"]]
+    first_root_vertex_ids = np.unique(
+        np.concatenate([component["rootVertexIds"] for component in first_dorsal_group])
+    ).astype(np.int64)
+    first_root_points = positions[first_root_vertex_ids]
     first_base_u = [
         float((first_root_points[:, 1].min() - fork_y) / fork_length),
         float((first_root_points[:, 1].max() - fork_y) / fork_length),
@@ -967,6 +1047,11 @@ def measure_candidate(
         "semanticHeadLengthOverForkLength": clean_float(head_length / fork_length),
         "pectoralLengthOverForkLength": clean_float(pectoral),
         "secondDorsalHeightOverForkLength": clean_float(second_dorsal_height),
+        "firstDorsalSurfaceHeightSpread": clean_float(max(first_dorsal_heights) - min(first_dorsal_heights), 12),
+        "secondDorsalSurfaceHeightSpread": clean_float(max(second_dorsal_heights) - min(second_dorsal_heights), 12),
+        "dorsalAnatomicalGroupCount": len(dorsal_groups),
+        "firstDorsalSurfaceCount": len(first_dorsal_group),
+        "secondDorsalSurfaceCount": len(second_dorsal_group),
         "analHeightOverForkLength": clean_float(anal_height),
         "caudalVerticalSpanOverForkLength": clean_float(caudal_span / fork_length),
         "peduncleDepthOverForkLength": clean_float(peduncle_depth / fork_length),
@@ -1074,22 +1159,38 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         pectoral_solved_metrics.append(solved_metric)
         pectoral_configs.append(component_point_deformer(global_component, global_main_positions, factor, "isotropic"))
 
-    if len(component_global["dorsal_fin"]) < 2:
-        raise ValueError("second dorsal component is missing")
-    second_dorsal_component = component_global["dorsal_fin"][1]
+    dorsal_surface_groups = group_mirrored_components(component_global["dorsal_fin"])
+    if len(dorsal_surface_groups) < 3:
+        raise ValueError(f"second dorsal anatomy is missing: {len(dorsal_surface_groups)} groups")
+    first_dorsal_surfaces = dorsal_surface_groups[0]
+    second_dorsal_surfaces = dorsal_surface_groups[1]
+    if len(first_dorsal_surfaces) != 2 or len(second_dorsal_surfaces) != 2:
+        raise ValueError(
+            "first and second dorsal fins must each have two mirrored sheets: "
+            f"{[len(group) for group in dorsal_surface_groups]}"
+        )
     second_dorsal_target = float(controls["targets"]["secondDorsalHeightOverForkLength"])
-    second_dorsal_factor, second_dorsal_solved_metric = solve_component_extension_factor(
-        candidate_main_positions,
-        second_dorsal_component,
-        second_dorsal_target,
-        fork_length,
-        "vertical",
-        "dorsal",
-    )
-    extend_component_vertices(candidate_main_positions, second_dorsal_component, second_dorsal_factor, "vertical")
-    second_dorsal_config = component_point_deformer(
-        second_dorsal_component, global_main_positions, second_dorsal_factor, "vertical"
-    )
+    second_dorsal_factors: list[float] = []
+    second_dorsal_solved_metrics: list[float] = []
+    second_dorsal_configs: list[dict[str, Any]] = []
+    for second_dorsal_component in second_dorsal_surfaces:
+        factor, solved_metric = solve_component_extension_factor(
+            candidate_main_positions,
+            second_dorsal_component,
+            second_dorsal_target,
+            fork_length,
+            "vertical",
+            "dorsal",
+        )
+        extend_component_vertices(candidate_main_positions, second_dorsal_component, factor, "vertical")
+        second_dorsal_factors.append(factor)
+        second_dorsal_solved_metrics.append(solved_metric)
+        second_dorsal_configs.append(
+            component_point_deformer(second_dorsal_component, global_main_positions, factor, "vertical")
+        )
+    second_dorsal_component_ids = {
+        int(component["component"]) for component in second_dorsal_surfaces
+    }
 
     anal_component = max(
         component_global["anal_fin"],
@@ -1107,13 +1208,16 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
     extend_component_vertices(candidate_main_positions, anal_component, anal_factor, "vertical")
     anal_config = component_point_deformer(anal_component, global_main_positions, anal_factor, "vertical")
 
+    second_dorsal_config_by_id = {
+        int(config["component"]["component"]): config for config in second_dorsal_configs
+    }
     dorsal_all_configs = [
-        component_point_deformer(component, global_main_positions, 1.0, "vertical")
+        second_dorsal_config_by_id.get(
+            int(component["component"]),
+            component_point_deformer(component, global_main_positions, 1.0, "vertical"),
+        )
         for component in component_global["dorsal_fin"]
     ]
-    for index, config in enumerate(dorsal_all_configs):
-        if index == 1:
-            dorsal_all_configs[index] = second_dorsal_config
     anal_all_configs = [
         component_point_deformer(component, global_main_positions, 1.0, "vertical")
         for component in component_global["anal_fin"]
@@ -1130,8 +1234,8 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
             return apply_component_to_point(globally_deformed, config) if config else globally_deformed
         if name.startswith("UpperFin"):
             nearest = nearest_component(globally_deformed, dorsal_all_configs)
-            if nearest is second_dorsal_config:
-                return apply_component_to_point(globally_deformed, second_dorsal_config)
+            if nearest and int(nearest["component"]["component"]) in second_dorsal_component_ids:
+                return apply_component_to_point(globally_deformed, nearest)
         if name.startswith("LowerBackFin"):
             nearest = nearest_component(globally_deformed, anal_all_configs)
             if nearest is anal_config:
@@ -1273,6 +1377,13 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         "caudalSpanPreserved": within(after["caudalVerticalSpanOverForkLength"], windows["caudalVerticalSpanOverForkLength"]),
         "peduncleDepthPreserved": within(after["peduncleDepthOverForkLength"], windows["peduncleDepthOverForkLength"]),
         "deepestBodyLocationPreserved": after["deepestBodyNearFirstDorsalBase"] is True,
+        "dorsalAnatomicalSurfaceGroupsResolved": (
+            after["dorsalAnatomicalGroupCount"] >= 3
+            and after["firstDorsalSurfaceCount"] == 2
+            and after["secondDorsalSurfaceCount"] == 2
+        ),
+        "firstDorsalSurfaceSymmetryPassed": after["firstDorsalSurfaceHeightSpread"] <= 1e-6,
+        "secondDorsalSurfaceSymmetryPassed": after["secondDorsalSurfaceHeightSpread"] <= 1e-6,
         "candidateBrowserQAPassed": False,
         "manualVisualAcceptancePending": True,
         "productionReady": False,
@@ -1320,8 +1431,10 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
             "solvedGlobalBodyDepth": clean_float(solved_depth),
             "pectoralFactors": vector(pectoral_factors),
             "pectoralSolvedMetrics": vector(pectoral_solved_metrics),
-            "secondDorsalFactor": clean_float(second_dorsal_factor),
-            "secondDorsalSolvedMetric": clean_float(second_dorsal_solved_metric),
+            "secondDorsalFactor": clean_float(second_dorsal_factors[0]),
+            "secondDorsalFactors": vector(second_dorsal_factors),
+            "secondDorsalSolvedMetric": clean_float(max(second_dorsal_solved_metrics)),
+            "secondDorsalSolvedMetrics": vector(second_dorsal_solved_metrics),
             "analFactor": clean_float(anal_factor),
             "analSolvedMetric": clean_float(anal_solved_metric),
             "targets": controls["targets"],
@@ -1348,6 +1461,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
             "changedPrimaryVertices": int(np.count_nonzero(displacement_norm > 1e-8)),
             "primaryVertices": int(len(displacement_norm)),
             "firstDorsalIndependentlyElongated": False,
+            "secondDorsalMirroredSheetsDeformedTogether": True,
             "caudalIndependentlyRescaled": False,
             "finletCountChanged": False,
         },
@@ -1359,14 +1473,22 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         },
         "componentSelection": {
             "pectoral": [component_summary(component, fork_length) for component in component_global["pectoral_fin"]],
-            "firstDorsal": component_summary(component_global["dorsal_fin"][0], fork_length),
-            "secondDorsal": component_summary(second_dorsal_component, fork_length),
+            "dorsalAnatomicalGroups": [
+                anatomical_group_summary(group, fork_length) for group in dorsal_surface_groups
+            ],
+            "firstDorsalSurfaces": [
+                component_summary(component, fork_length) for component in first_dorsal_surfaces
+            ],
+            "secondDorsalSurfaces": [
+                component_summary(component, fork_length) for component in second_dorsal_surfaces
+            ],
             "anal": component_summary(anal_component, fork_length),
         },
         "gates": gates,
         "risks": [
             "Candidate A is a machine-valid morphometric candidate, not a visually approved final fish.",
             "Nonlinear rest-space correction is approximated through the existing 98-joint rig; extreme poses may still reveal volume loss or local creasing.",
+            "Dorsal anatomical identity is resolved from mirrored surface pairs, not raw connected-component order.",
             "The inferred fork landmark remains a machine hypothesis and must be checked in the browser overlay.",
             "Published adult fin elongation is variable; the 0.18 FL target is a declared large-adult design candidate, not universal species truth.",
         ],

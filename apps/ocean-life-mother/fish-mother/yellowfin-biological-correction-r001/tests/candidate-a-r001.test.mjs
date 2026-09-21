@@ -80,6 +80,17 @@ assert.ok(receipt.rig.animation.maximumJointOriginPropagationError <= 1e-6);
 assert.ok(receipt.rig.shading.normalAccessors.length > 0);
 assert.ok(receipt.rig.shading.tangentAccessors.length > 0);
 assert.equal(receipt.deformation.firstDorsalIndependentlyElongated, false);
+assert.equal(receipt.deformation.secondDorsalMirroredSheetsDeformedTogether, true);
+assert.equal(receipt.after.firstDorsalSurfaceCount, 2);
+assert.equal(receipt.after.secondDorsalSurfaceCount, 2);
+assert.ok(receipt.after.firstDorsalSurfaceHeightSpread <= 1e-6);
+assert.ok(receipt.after.secondDorsalSurfaceHeightSpread <= 1e-6);
+assert.equal(receipt.componentSelection.firstDorsalSurfaces.length, 2);
+assert.equal(receipt.componentSelection.secondDorsalSurfaces.length, 2);
+assert.deepEqual(
+  receipt.componentSelection.secondDorsalSurfaces.map(surface => surface.component).sort((a, b) => a - b),
+  [2, 4],
+);
 assert.equal(receipt.deformation.caudalIndependentlyRescaled, false);
 assert.equal(receipt.deformation.finletCountChanged, false);
 assert.ok(receipt.deformation.changedPrimaryVertices > 0);
