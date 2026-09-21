@@ -93,7 +93,9 @@ assert.equal(browserReceipt.copyStats.meshes, receipt.output.meshCount);
 assert.deepEqual(browserReceipt.exactPackageBounds, receipt.output.boundsSourceUnits);
 assert.ok(browserReceipt.copyVsExactPackageBoundsDelta <= browserReceipt.boundsTolerance);
 assert.ok(Number.isFinite(browserReceipt.sourceVsCopyBrowserBoundsDelta));
-assert.match(browserReceipt.browserBoundsPolicy, /diagnostic only|record/i);
+assert.ok(browserReceipt.sourceVsAlignedCopyBrowserBoundsDelta <= browserReceipt.boundsTolerance);
+assert.ok(browserReceipt.checks.sourceAndAlignedCopyBoundsMatch);
+assert.match(browserReceipt.browserBoundsPolicy, /diagnostic|aligned/i);
 assert.deepEqual(browserReceipt.failedChecks, []);
 assert.deepEqual(browserReceipt.consoleErrors, []);
 assert.deepEqual(browserReceipt.pageErrors, []);
@@ -118,5 +120,6 @@ console.log(JSON.stringify({
   primitiveInstances: receipt.source.copiedPrimitiveInstances,
   copyVsExactPackageBoundsDelta: browserReceipt.copyVsExactPackageBoundsDelta,
   sourceVsCopyBrowserBoundsDelta: browserReceipt.sourceVsCopyBrowserBoundsDelta,
+  sourceVsAlignedCopyBrowserBoundsDelta: browserReceipt.sourceVsAlignedCopyBrowserBoundsDelta,
   regions: receipt.regions.map(region => ({ name: region.name, faces: region.faces, vertices: region.vertices })),
 }, null, 2));

@@ -36,7 +36,8 @@
       <div class="metric"><b>COPY N/M/F</b><span id="copyStatsText">—</span></div>
       <div class="metric"><b>REGIONS</b><span id="regionCountText">—</span></div>
       <div class="metric"><b>COPY↔PACKAGE Δ</b><span id="packageDeltaText">—</span></div>
-      <div class="metric wide"><b>SOURCE↔COPY BROWSER Δ（记录项）</b><span id="browserDeltaText">—</span></div>
+      <div class="metric"><b>ALIGNED OVERLAY Δ</b><span id="alignedDeltaText">—</span></div>
+      <div class="metric"><b>RAW AXIS Δ</b><span id="browserDeltaText">—</span></div>
       <div class="metric wide"><b>ACTIVE REGION</b><span id="regionText">all</span></div>
     </div>
     <div class="controls" id="modeControls">
@@ -48,7 +49,7 @@
       <button data-view="side" aria-pressed="false">侧视</button><button data-view="quarter" aria-pressed="false">3/4</button><button data-view="top" aria-pressed="false">俯视</button><button data-view="front" aria-pressed="false">头向</button>
     </div>
     <select id="regionSelect" disabled><option value="all">全部分区</option></select>
-    <div class="rule"><strong>硬门禁：</strong>源和副本的完整场景三角面数必须一致；每个源 mesh primitive instance 必须保留；副本边界与精确源包边界的最大差不得超过 0.00005 源单位。重合模式中青色线框为浏览器蒙皮源，彩色实体为静态分区副本。</div>
+    <div class="rule"><strong>硬门禁：</strong>源和副本的完整场景三角面数必须一致；每个源 mesh primitive instance 必须保留；副本边界与精确源包边界的最大差不得超过 0.00005；副本按已证明的坐标映射 `(x, y, z) → (x, -z, y)`，即 `+90° X` 后，与浏览器源边界差也不得超过 0.00005。重合模式中青色线框为浏览器蒙皮源，彩色实体为轴对齐后的静态分区副本。</div>
   </section>
   <div class="badge">长度 z · 侧向 y · 垂直 x；当前阶段：静态分区几何，不含蒙皮与动作</div>
 <script type="module">
@@ -72,9 +73,9 @@ const $=id=>document.getElementById(id);
 const setState=(kind,title,text)=>{$('stateDot').className='dot '+(kind||'');$('stateTitle').textContent=title;$('stateText').textContent=text};
 const qa={
   ready:false,mode:'loading',activeView:'loading',activeRegion:'all',sourceSha:null,copySha:null,
-  sourceStats:null,copyStats:null,receipt:null,receiptBounds:null,sourceBrowserBounds:null,copyBrowserBounds:null,
-  copyVsReceiptBoundsDelta:null,sourceCopyBrowserBoundsDelta:null,boundsTolerance:BOUNDS_TOLERANCE,
-  browserBoundsPolicy:'source SkinnedMesh bounds are diagnostic only; copy must match exact R006 package bounds',checks:{},failure:null
+  sourceStats:null,copyStats:null,receipt:null,receiptBounds:null,sourceBrowserBounds:null,copyBrowserBounds:null,alignedCopyBrowserBounds:null,
+  copyVsReceiptBoundsDelta:null,sourceCopyBrowserBoundsDelta:null,sourceVsAlignedCopyBrowserBoundsDelta:null,boundsTolerance:BOUNDS_TOLERANCE,
+  browserBoundsPolicy:'raw source/copy browser bounds are diagnostic; the copy must match exact R006 package bounds and the +90deg X aligned copy must match the source browser axes',checks:{},failure:null
 };
 window.__geometryQa=qa;
 
@@ -143,6 +144,11 @@ async function boot(){
     const contentRoot=new THREE.Group();
     sourceRoot=sourceGltf.scene;copyRoot=copyGltf.scene;
     sourceRoot.name='ExactSourceRoot';copyRoot.name='SegmentedCopyRoot';
+    copyRoot.rotation.x=Math.PI/2;
+    copyRoot.updateMatrixWorld(true);
+    qa.alignedCopyBrowserBounds=boundsRecord(new THREE.Box3().setFromObject(copyRoot,true));
+    qa.sourceVsAlignedCopyBrowserBoundsDelta=maxBoundsDelta(qa.sourceBrowserBounds,qa.alignedCopyBrowserBounds);
+    $('alignedDeltaText').textContent=qa.sourceVsAlignedCopyBrowserBoundsDelta.toExponential(3);
     contentRoot.add(sourceRoot,copyRoot);displayRoot.add(contentRoot);scene.add(displayRoot);
     const receiptMin=new THREE.Vector3(...qa.receiptBounds.min),receiptMax=new THREE.Vector3(...qa.receiptBounds.max);
     const receiptCenter=receiptMin.clone().add(receiptMax).multiplyScalar(.5);const receiptSize=receiptMax.clone().sub(receiptMin);
@@ -163,12 +169,13 @@ async function boot(){
       copyMeshesMatchReceipt:qa.copyStats.meshes===receipt.output.meshCount,
       everySourcePrimitiveCopied:receipt.gates.allSourceMeshPrimitiveInstancesCopied===true,
       allFacesAssignedExactlyOnce:receipt.gates.allFacesAssignedExactlyOnce===true,
-      copyBoundsMatchExactSourcePackage:qa.copyVsReceiptBoundsDelta<=BOUNDS_TOLERANCE
+      copyBoundsMatchExactSourcePackage:qa.copyVsReceiptBoundsDelta<=BOUNDS_TOLERANCE,
+      sourceAndAlignedCopyBoundsMatch:qa.sourceVsAlignedCopyBrowserBoundsDelta<=BOUNDS_TOLERANCE
     };
     const failed=Object.entries(qa.checks).filter(([,value])=>!value).map(([key])=>key);
-    if(failed.length)throw new Error(`几何 QA 失败：${failed.join(', ')}；copy↔package Δ=${qa.copyVsReceiptBoundsDelta.toExponential(6)}；source↔copy browser Δ=${qa.sourceCopyBrowserBoundsDelta.toExponential(6)}`);
+    if(failed.length)throw new Error(`几何 QA 失败：${failed.join(', ')}；copy↔package Δ=${qa.copyVsReceiptBoundsDelta.toExponential(6)}；raw axis Δ=${qa.sourceCopyBrowserBoundsDelta.toExponential(6)}；aligned overlay Δ=${qa.sourceVsAlignedCopyBrowserBoundsDelta.toExponential(6)}`);
 
-    qa.ready=true;$('progressBar').style.width='100%';setMode('copy');setView('side');setRegion('all');setState('ok','分区几何副本通过结构门禁',`${receipt.output.faceCount.toLocaleString()} faces · ${receipt.output.meshCount} regions · copy↔package Δ ${qa.copyVsReceiptBoundsDelta.toExponential(3)}`);
+    qa.ready=true;$('progressBar').style.width='100%';setMode('copy');setView('side');setRegion('all');setState('ok','分区几何副本通过结构门禁',`${receipt.output.faceCount.toLocaleString()} faces · ${receipt.output.meshCount} regions · package Δ ${qa.copyVsReceiptBoundsDelta.toExponential(3)} · aligned Δ ${qa.sourceVsAlignedCopyBrowserBoundsDelta.toExponential(3)}`);
   }catch(error){qa.failure=error?.message||String(error);console.error(error);setState('bad','分区几何副本被拒绝',qa.failure);$('progressBar').style.width='0%';}
 }
 function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}
