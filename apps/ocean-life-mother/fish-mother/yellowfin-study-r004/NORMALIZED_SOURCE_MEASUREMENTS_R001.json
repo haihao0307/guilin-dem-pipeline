@@ -1,0 +1,193 @@
+{
+  "schema": "kaopu.fish-mother.yellowfin-normalized-source-measurements/1.0",
+  "date": "2026-09-21",
+  "referenceId": "FISH-REF-002",
+  "coordinateFrame": {
+    "x": "lateral / sourceBodyLength",
+    "u": "(sourceY-tailY) / sourceBodyLength",
+    "z": "sourceZ / sourceBodyLength",
+    "sourceBodyLength": 3.003418,
+    "tailY": -1.508615,
+    "snoutY": 1.494802
+  },
+  "rawLandmarksNormalizedFromSourceBenchmark": {
+    "snout": [
+      0,
+      1,
+      0.061293
+    ],
+    "tail": [
+      0,
+      0,
+      -0.129522
+    ],
+    "leftmost": [
+      -0.248594,
+      0.577229,
+      0.040445
+    ],
+    "rightmost": [
+      0.248594,
+      0.577229,
+      0.040445
+    ],
+    "dorsalExtreme": [
+      0,
+      0.688375,
+      -0.22652
+    ],
+    "ventralExtreme": [
+      0.077591,
+      0.647644,
+      0.30163
+    ]
+  },
+  "anatomyPartitionAnchorsAlreadyNormalized": {
+    "head": [
+      0,
+      0.750964,
+      0.01389
+    ],
+    "upperJaw": [
+      0,
+      0.900217,
+      0.054498
+    ],
+    "lowerJaw": [
+      0,
+      0.78576,
+      0.059702
+    ],
+    "eyeLeft": [
+      0.03499,
+      0.882019,
+      0.004916
+    ],
+    "eyeRight": [
+      -0.03499,
+      0.882019,
+      0.004916
+    ],
+    "operculumLeft": [
+      0.062703,
+      0.85877,
+      0.038177
+    ],
+    "operculumRight": [
+      -0.062703,
+      0.85877,
+      0.038177
+    ],
+    "peduncle0": [
+      0,
+      0.470489,
+      0.01633
+    ],
+    "peduncle1": [
+      0,
+      0.366313,
+      0.02028
+    ],
+    "peduncle2": [
+      0,
+      0.274335,
+      0.023785
+    ],
+    "upperTail": [
+      0,
+      0.137565,
+      0.011774
+    ],
+    "lowerTail": [
+      0,
+      0.143632,
+      0.054833
+    ]
+  },
+  "derivedAnchorDistancesPctBodyLength": [
+    {
+      "a": "snout",
+      "b": "head",
+      "distancePctL": 25.351,
+      "note": "source anchor distance; do not equate automatically with anatomical head length"
+    },
+    {
+      "a": "snout",
+      "b": "upperJaw",
+      "distancePctL": 10.001
+    },
+    {
+      "a": "snout",
+      "b": "eyeLeft",
+      "distancePctL": 13.536
+    },
+    {
+      "a": "upperJaw",
+      "b": "lowerJaw",
+      "distancePctL": 11.458
+    },
+    {
+      "a": "eyeLeft",
+      "b": "eyeRight",
+      "distancePctL": 6.998
+    },
+    {
+      "a": "operculumLeft",
+      "b": "operculumRight",
+      "distancePctL": 12.541
+    },
+    {
+      "a": "head",
+      "b": "upperJaw",
+      "distancePctL": 15.468
+    },
+    {
+      "a": "head",
+      "b": "eyeLeft",
+      "distancePctL": 13.594
+    },
+    {
+      "a": "head",
+      "b": "operculumLeft",
+      "distancePctL": 12.706
+    },
+    {
+      "a": "peduncle0",
+      "b": "peduncle1",
+      "distancePctL": 10.425
+    },
+    {
+      "a": "peduncle1",
+      "b": "peduncle2",
+      "distancePctL": 9.204
+    },
+    {
+      "a": "peduncle2",
+      "b": "upperTail",
+      "distancePctL": 13.73
+    },
+    {
+      "a": "upperTail",
+      "b": "lowerTail",
+      "distancePctL": 4.348
+    }
+  ],
+  "directExtentFacts": [
+    {
+      "id": "lateral-extreme-span",
+      "valuePctL": 49.719,
+      "warning": "includes source mesh lateral extremes; do not interpret as trunk maximum width without component isolation"
+    },
+    {
+      "id": "vertical-extreme-span",
+      "valuePctL": 53.537,
+      "warning": "includes fin/extreme geometry; do not interpret as body depth"
+    }
+  ],
+  "usageRules": [
+    "Distances within this normalized frame are valid.",
+    "Live viewer node matrices remain a separate raw coordinate frame.",
+    "Do not mix normalized anchors and raw viewer matrices without calibrated transform.",
+    "Anchor distances are source-control geometry facts, not automatically anatomical landmark definitions."
+  ]
+}
