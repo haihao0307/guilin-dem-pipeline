@@ -22,6 +22,11 @@ def main() -> None:
     require('Microscope Geometry T07' in html, 'unexpected T07 source')
     require('window.__CORAL_R06_T07_BUILD__' in html, 'T07 build marker missing')
     require('continuousTube' in override and 'warpPoint' in override and 'rebuild=function' in override, 'T08 override incomplete')
+    # The override replaces several function bindings and then immediately runs
+    # an IIFE.  Insert an explicit statement boundary so ASI cannot interpret
+    # the IIFE as a call on the preceding function-expression assignment.
+    require('\n(function(){' in override, 'T08 initialization IIFE missing')
+    override = override.replace('\n(function(){', '\n;\n(function(){', 1)
 
     replacements = {
         '<title>Coral Mother R06 · Microscope Geometry T07</title>': '<title>Coral Mother R06 · Uniform Microscope + Warp T08</title>',
