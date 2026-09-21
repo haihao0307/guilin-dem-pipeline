@@ -1,0 +1,122 @@
+{
+  "schema": "kaopu.fish-mother.yellowfin-source-copy-blueprint/1.0",
+  "date": "2026-09-21",
+  "targetBuild": "YELLOWFIN-SOURCE-COPY-R001",
+  "source": "FISH-REF-002",
+  "generationState": "LOCKED",
+  "copyPrinciple": "copy source first; no creative improvement during source-copy pass",
+  "sourceIdentity": {
+    "lowSha256": "f75f073a2999ee20c4839434d28f90565e486b50270e663f48484cca2dbae9f0",
+    "highSha256": "5603d4aabc9a1127856841335a86ae7aa462b6b25d1a6586e93bf644f4d47abe",
+    "bodyVertices": 4053,
+    "bodyTriangles": 6920,
+    "eyeVertices": 292,
+    "corneaVertices": 292,
+    "joints": 98,
+    "animationChannels": 291,
+    "materials": 3,
+    "textures": 6
+  },
+  "geometryLayers": [
+    {
+      "id": "body_surface",
+      "source": "FishC mesh",
+      "rule": "copy source silhouette/local curvature, jaw-cheek-operculum continuity and peduncle shape"
+    },
+    {
+      "id": "eyes",
+      "source": "EyesC mesh",
+      "rule": "copy exact eye volume and placement"
+    },
+    {
+      "id": "cornea",
+      "source": "CorneaC mesh",
+      "rule": "copy separate transparent cornea geometry/layer"
+    },
+    {
+      "id": "major_fins",
+      "source": "skin-dominant fin fields",
+      "rule": "copy root line, free edge, ray direction and membrane relation"
+    },
+    {
+      "id": "finlets",
+      "source": "source geometry connected components + author render",
+      "rule": "copy every source-visible finlet; current side-render visual counts dorsal=8 ventral=7"
+    },
+    {
+      "id": "caudal_peduncle",
+      "source": "axial/core geometry",
+      "rule": "copy minimum cross-section and keel system after exact extraction"
+    }
+  ],
+  "appearanceLayers": [
+    {
+      "id": "body_pbr",
+      "source": "opaque material family",
+      "maps": [
+        "baseColor",
+        "metallicRoughness",
+        "normal",
+        "occlusion"
+      ],
+      "rule": "copy source visual response before biological correction"
+    },
+    {
+      "id": "secondary_opaque",
+      "source": "Material.003 candidate",
+      "maps": [
+        "baseColor",
+        "metallicRoughness",
+        "normal"
+      ],
+      "rule": "exact mesh assignment pending exact GLB extraction"
+    },
+    {
+      "id": "cornea_optics",
+      "source": "Material.004 candidate",
+      "alphaMode": "BLEND",
+      "sourceAlpha": 0.028952469188477523,
+      "rule": "preserve separate transparent optical layer"
+    }
+  ],
+  "rigMotionLayers": [
+    {
+      "id": "source_rig",
+      "sourceJoints": 98,
+      "rule": "retain source correspondences during study; independent runtime compression only after static copy acceptance"
+    },
+    {
+      "id": "semantic_map",
+      "nativeControls": 24,
+      "rule": "used as correspondence/indexing layer, not as permission to simplify source shape"
+    },
+    {
+      "id": "swim_clip",
+      "durationSeconds": 2.1666667461395264,
+      "channels": 291,
+      "significantRotations": 68,
+      "significantTranslations": 4,
+      "rule": "copy authored motion after static geometry/material copy; natural correction later"
+    }
+  ],
+  "acceptanceOrder": [
+    "exact source identity verified",
+    "source evidence extractor passes",
+    "fixed-view silhouette copy passes",
+    "head/jaw/eye/operculum copy passes",
+    "major fin root/free-edge copy passes",
+    "finlet source copy passes",
+    "peduncle/keel source copy passes",
+    "material/texture source copy passes",
+    "authored motion copy passes",
+    "only then open species-correction/improvement phase"
+  ],
+  "hardFails": [
+    "generic body loft replacing high-dimensional source",
+    "generic mouth or operculum plate",
+    "placeholder finlets",
+    "single plastic material",
+    "creative Yellowfin correction inside source-copy pass",
+    "cross-coordinate measurements without calibration"
+  ]
+}
