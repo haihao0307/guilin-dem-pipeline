@@ -51,12 +51,12 @@ jobs:
           node --check /tmp/palau-v0170.mjs
           git restore --worktree games/survivor-palau/releases/v0.1.6.0 2>/dev/null || true
           git clean -fd games/survivor-palau/releases/v0.1.6.0
-      - name: Commit normal source tree
+      - name: Commit verified source without workflow mutation
         run: |
           rm -rf games/survivor-palau/.bootstrap/v0170
-          rm -f .github/workflows/palau-v0170-bootstrap.yml
+          rm -f .github/workflows/survivor-palau-v0170.yml
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add -A
-          git commit -m 'feat(palau): integrate V0170 pilot survival story and interactive slice'
+          git commit -m 'feat(palau): integrate V0170 pilot survival story and interactive slice [skip ci]'
           git push origin HEAD:${{ github.ref_name }}
