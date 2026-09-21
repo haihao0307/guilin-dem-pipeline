@@ -1,0 +1,72 @@
+{
+  "schema": "kaopu.fish-mother.yellowfin-biological-correction-controls/1.0",
+  "date": "2026-09-21",
+  "candidate": "YELLOWFIN-BIOLOGICAL-CORRECTION-R001-CANDIDATE-A",
+  "baseline": "BIOLOGICAL_CORRECTION_R001_BASELINE.json",
+  "targets": {
+    "maximumBodyDepthOverForkLength": 0.285,
+    "pectoralLengthOverForkLength": 0.24,
+    "secondDorsalHeightOverForkLength": 0.18,
+    "analHeightOverForkLength": 0.18
+  },
+  "acceptanceWindows": {
+    "maximumBodyDepthOverForkLength": [0.275, 0.295],
+    "semanticHeadLengthOverForkLength": [0.23, 0.31],
+    "pectoralLengthOverForkLength": [0.235, 0.245],
+    "secondDorsalHeightOverForkLength": [0.175, 0.185],
+    "analHeightOverForkLength": [0.175, 0.185],
+    "caudalVerticalSpanOverForkLength": [0.32, 0.5],
+    "peduncleDepthOverForkLength": [0.025, 0.065]
+  },
+  "longitudinalBodyDepthWeight": [
+    [-0.1, 0.0],
+    [0.0, 0.0],
+    [0.08, 0.12],
+    [0.18, 0.45],
+    [0.35, 0.88],
+    [0.58, 1.0],
+    [0.75, 0.86],
+    [0.9, 0.48],
+    [0.98, 0.08],
+    [1.05, 0.0]
+  ],
+  "bodyPolicy": {
+    "lateralScale": 1.0,
+    "longitudinalScale": 1.0,
+    "verticalScaleSolvedFromTarget": true,
+    "centerline": "interpolated original axial bind-joint line",
+    "caudalFade": "zero body-depth correction at and behind the inferred fork",
+    "headFade": "return smoothly to the frozen snout"
+  },
+  "finPolicy": {
+    "pectoral": "extend each connected side-fin component away from its shared body root; root vertices remain pinned",
+    "secondDorsal": "extend only the second anterior-ordered dorsal component after the first dorsal; root vertices remain pinned",
+    "anal": "extend only the connected anal component with the greatest ventral height; root vertices remain pinned",
+    "firstDorsal": "do not independently elongate in Candidate A",
+    "caudal": "do not independently rescale in Candidate A",
+    "finlets": "do not change counts or independently rescale in Candidate A"
+  },
+  "rigPolicy": {
+    "deformAllMeshPositionAccessors": true,
+    "recomputeNormalsAndTangents": true,
+    "deformBindJointOrigins": true,
+    "rebuildInverseBindMatrices": true,
+    "propagateAllJointTranslationAnimationChannels": true,
+    "retainRotationAndScaleAnimationChannels": true,
+    "vertexOnlyCorrectionForbidden": true
+  },
+  "invariants": {
+    "frozenInputSha256": "2130a3c03fc50d22676919c3599e75707e61d9f75ddd90523a6897887715ec02",
+    "frozenInputBytes": 58956620,
+    "semanticRegions": 13,
+    "semanticFaces": 6920,
+    "joints": 98,
+    "skins": 1,
+    "animations": 1,
+    "materials": 3,
+    "images": 6,
+    "dorsalFinlets": 9,
+    "ventralFinlets": 8,
+    "productionReady": false
+  }
+}
