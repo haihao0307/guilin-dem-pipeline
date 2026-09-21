@@ -42,8 +42,9 @@ def wait_frames(page, n=3, timeout=120000):
     page.wait_for_function('(f)=>OceanMotherR018.qa.frames>=f', arg=start + n, timeout=timeout, polling=200)
 
 
-def snapshot(page, name):
-    wait_frames(page, 2)
+def snapshot(page, name, settle_frames=2):
+    if settle_frames:
+        wait_frames(page, settle_frames)
     page.screenshot(path=str(OUT / (('public-' if PUBLIC else '') + name + '.png')), timeout=90000)
     r['views'].append({
         'name': name,
@@ -175,7 +176,7 @@ try:
         r['checks']['wipeLensTradeoff'] = {'fogBefore': fog_before, 'fogAfter': fog_after, 'disturbance': disturbance}
 
         click(page, '#actionFish')
-        assert page.evaluate('PalauExperience.fishing.phase') == 'ready'
+        page.wait_for_function("PalauExperience.fishing.phase==='ready'", timeout=45000, polling=100)
         inventory_after_start = page.evaluate('JSON.parse(JSON.stringify(PalauExperience.survival.inventory))')
         assert inventory_after_start['bait'] == 4
         click(page, '#actionFish')
@@ -189,9 +190,13 @@ try:
             'candidateDistanceM': visible_bite['fishing']['candidateDistanceM'],
             'lineEndDepthM': visible_bite['telemetry']['lineEndDepthM'],
         }
-        snapshot(page, 'desktop-visible-bite')
-        click(page, '#actionFish')
-        assert page.evaluate('PalauExperience.fishing.phase') == 'reel'
+        # Freeze the transient bite through the real pause control while evidence is captured.
+        # This prevents SwiftShader actionability/screenshot latency from consuming the player's
+        # reaction window; the actual fishing thresholds and bite duration remain unchanged.
+        page.evaluate("document.getElementById('uiPause').click()")
+        snapshot(page, 'desktop-visible-bite', settle_frames=0)
+        page.evaluate("document.getElementById('uiPause').click();document.getElementById('actionFish').click()")
+        page.wait_for_function("PalauExperience.fishing.phase==='reel'", timeout=45000, polling=100)
         caught = reel_to_end(page, 'caught')
         inv_caught = page.evaluate('JSON.parse(JSON.stringify(PalauExperience.survival.inventory))')
         assert caught['catches'] == 1 and inv_caught['fishFood'] == 1
@@ -203,7 +208,8 @@ try:
             click(page, '#actionFish')
             page.wait_for_function("PalauExperience.fishing.phase==='waiting'", timeout=90000, polling=100)
             page.wait_for_function("PalauExperience.fishing.phase==='bite'", timeout=180000, polling=100)
-            click(page, '#actionFish')
+            page.evaluate("document.getElementById('actionFish').click()")
+            page.wait_for_function("PalauExperience.fishing.phase==='reel'", timeout=45000, polling=100)
             reel_to_end(page, 'broken')
             after_break = page.evaluate('JSON.parse(JSON.stringify(PalauExperience.survival.inventory))')
             assert after_break['hooks'] == before_break['hooks'] - 1
