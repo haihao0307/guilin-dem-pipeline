@@ -1,0 +1,212 @@
+name: Fish Mother Yellowfin Source Copy R001
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - work/ocean-life-fish-mother-yellowfin-source-copy-r001-20260921
+    paths:
+      - .github/workflows/fish-yellowfin-source-copy-r001.yml
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/**
+      - apps/ocean-life-mother/fish-mother/yellowfin-study-r006/tools/**
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fish-yellowfin-source-copy-r001
+  cancel-in-progress: false
+
+env:
+  SOURCE_URL: https://raw.githubusercontent.com/NipunMehra25/github_ocean/c8c32e7880733ffd628c6106fd5749a2abab97c3/assets/models/tuna_fish.glb
+  SOURCE_SHA256: 5603d4aabc9a1127856841335a86ae7aa462b6b25d1a6586e93bf644f4d47abe
+  SOURCE_BYTES: "58908280"
+  COPY_ROOT: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001
+  SOURCE_WORKSPACE: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace
+
+jobs:
+  exact-source-ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out the Source Copy branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install exact-source extractor dependencies
+        run: python -m pip install --upgrade pip numpy trimesh scipy networkx pillow
+
+      - name: Download the pinned high-resolution source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/fish-source
+          curl --fail --location --retry 6 --retry-all-errors \
+            --output /tmp/fish-source/tuna_fish_4k.glb \
+            "$SOURCE_URL"
+
+      - name: Verify exact bytes and SHA-256
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, os
+          from pathlib import Path
+          p=Path('/tmp/fish-source/tuna_fish_4k.glb')
+          raw=p.read_bytes()
+          actual_bytes=len(raw)
+          actual_sha=hashlib.sha256(raw).hexdigest()
+          expected_bytes=int(os.environ['SOURCE_BYTES'])
+          expected_sha=os.environ['SOURCE_SHA256']
+          print({'actualBytes':actual_bytes,'actualSha256':actual_sha})
+          if actual_bytes != expected_bytes:
+              raise SystemExit(f'REJECTED byte count: {actual_bytes} != {expected_bytes}')
+          if actual_sha != expected_sha:
+              raise SystemExit(f'REJECTED SHA-256: {actual_sha} != {expected_sha}')
+          print('EXACT FISH-REF-002 VERIFIED')
+          PY
+
+      - name: Execute the R006 ingest, evidence extractor and strict package builder
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "$SOURCE_WORKSPACE"
+          python apps/ocean-life-mother/fish-mother/yellowfin-study-r006/tools/ingest_exact_source.py \
+            /tmp/fish-source/tuna_fish_4k.glb \
+            --workspace "$SOURCE_WORKSPACE"
+
+      - name: Activate the R001 source-ingest gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          root=Path(os.environ['COPY_ROOT'])
+          ws=Path(os.environ['SOURCE_WORKSPACE'])
+          sha=os.environ['SOURCE_SHA256']
+          size=int(os.environ['SOURCE_BYTES'])
+          identity_path=root/'SOURCE_IDENTITY.json'
+          identity=json.loads(identity_path.read_text())
+          identity['verification']={
+              'candidateByteCountMatchesCacheRecord': True,
+              'sha256RequiredBeforeIngest': True,
+              'status': 'EXACT_SOURCE_VERIFIED_AND_INGESTED',
+              'actualSha256': sha,
+              'actualBytes': size,
+              'verifiedBy': 'GitHub Actions exact-source gate'
+          }
+          identity_path.write_text(json.dumps(identity,ensure_ascii=False,indent=2)+'\n')
+
+          status_path=root/'CURRENT_STATUS.json'
+          status=json.loads(status_path.read_text())
+          status['phase']='EXACT_SOURCE_INGESTED_R006_EVIDENCE_READY'
+          status['source']['actualSha256']=sha
+          status['source']['actualBytes']=size
+          status['source']['activeLocalPath']='source-workspace/source/tuna_fish_4k.glb'
+          status['gates'].update({
+              'exactSha256Verified': True,
+              'r006ExtractorExecuted': True,
+              'strictReferencePackageBuilt': True,
+              'browserSourceWorkbenchReady': True,
+              'sourceCopyReferenceAvailable': True,
+              'independentReconstructionUnlocked': False,
+              'generationLocked': True
+          })
+          status['next']='Inspect fixed views, classify extracted connected components, and close source-copy acceptance scenes before independent reconstruction.'
+          status_path.write_text(json.dumps(status,ensure_ascii=False,indent=2)+'\n')
+
+          evidence=json.loads((ws/'evidence/YELLOWFIN_EXACT_SOURCE_COPY_EVIDENCE_R001.json').read_text())
+          package_receipt=json.loads((ws/'kaopu-reference-package/PACKAGE_RECEIPT.json').read_text())
+          gate={
+              'schema':'kaopu.fish-mother.yellowfin-source-ingest-gate/1.0',
+              'date':'2026-09-21',
+              'referenceId':'FISH-REF-002',
+              'build':'YELLOWFIN-SOURCE-COPY-R001',
+              'source':{
+                  'sha256':sha,
+                  'bytes':size,
+                  'localPath':'source-workspace/source/tuna_fish_4k.glb',
+                  'pinnedUpstreamCommit':'c8c32e7880733ffd628c6106fd5749a2abab97c3'
+              },
+              'checks':{
+                  'exactByteCountVerified':True,
+                  'exactSha256Verified':True,
+                  'r006ExtractorExecuted':True,
+                  'evidenceBoundToExactSha':evidence['input']['sha256']==sha,
+                  'strictReferencePackageBuilt':package_receipt['sourceSha256']==sha,
+                  'sourceWorkbenchAvailable':True
+              },
+              'sourceReferenceUnlocked':True,
+              'independentReconstructionUnlocked':False,
+              'generationLocked':True,
+              'remainingGate':'Fixed-view and region-by-region source-copy visual acceptance remains required.'
+          }
+          (root/'SOURCE_INGEST_GATE_R001.json').write_text(json.dumps(gate,ensure_ascii=False,indent=2)+'\n')
+
+          baseline_path=Path('CURRENT_BASELINE.json')
+          baseline=json.loads(baseline_path.read_text())
+          active=baseline.setdefault('activeState',{})
+          active.update({
+              'phase':'YELLOWFIN_SOURCE_COPY_R001_EXACT_SOURCE_INGESTED',
+              'workBranch':'work/ocean-life-fish-mother-yellowfin-source-copy-r001-20260921',
+              'activeWorkbench':'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/index.html',
+              'exactSourceBinaryVerified':True,
+              'exactSourceSha256':sha,
+              'exactSourceBytes':size,
+              'sourceReferenceUnlocked':True,
+              'sourceCopyUnlocked':False,
+              'generationLocked':True,
+              'nextAllowedBuild':'YELLOWFIN-SOURCE-COPY-R001'
+          })
+          baseline_path.write_text(json.dumps(baseline,ensure_ascii=False,indent=2)+'\n')
+          PY
+
+      - name: Run historical R006 and active R001 gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          node apps/ocean-life-mother/fish-mother/yellowfin-study-r006/tests/yellowfin-r006-gate.test.mjs
+          node apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/tests/source-copy-r001-contract.test.mjs
+
+      - name: Upload the complete strict reference package
+        uses: actions/upload-artifact@v4
+        with:
+          name: YELLOWFIN-SOURCE-COPY-R001-STRICT-REFERENCE
+          path: |
+            ${{ env.SOURCE_WORKSPACE }}/INGEST_RECEIPT.json
+            ${{ env.SOURCE_WORKSPACE }}/evidence
+            ${{ env.SOURCE_WORKSPACE }}/kaopu-reference-package
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 6
+
+      - name: Commit the verified source and durable evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Fish Mother R001"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config http.postBuffer 157286400
+          git add \
+            CURRENT_BASELINE.json \
+            "$COPY_ROOT/SOURCE_IDENTITY.json" \
+            "$COPY_ROOT/CURRENT_STATUS.json" \
+            "$COPY_ROOT/SOURCE_INGEST_GATE_R001.json" \
+            "$SOURCE_WORKSPACE/source/tuna_fish_4k.glb" \
+            "$SOURCE_WORKSPACE/evidence/YELLOWFIN_EXACT_SOURCE_COPY_EVIDENCE_R001.json" \
+            "$SOURCE_WORKSPACE/INGEST_RECEIPT.json"
+          if git diff --cached --quiet; then
+            echo "No durable delta to commit."
+            exit 0
+          fi
+          git commit -m "feat(fish): ingest exact FISH-REF-002 for Yellowfin Source Copy R001"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
