@@ -1,0 +1,52 @@
+<style id="palau-v0170-pilot-interface">
+/* V0170: story/survival controls layered over the retained real-time 3D workbench. */
+#survivalRibbon{position:absolute;top:82px;left:max(24px,env(safe-area-inset-left));display:flex;gap:6px;flex-wrap:wrap;max-width:min(680px,calc(100vw - 48px));font-size:10px;letter-spacing:.025em;text-shadow:0 2px 8px #002734}
+#survivalRibbon span{display:inline-flex;align-items:center;min-height:26px;padding:5px 9px;border:1px solid #ffffff32;border-radius:999px;background:#0d3944a8;color:#f2f0df;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+#pilotStoryTag{color:#f2dba6!important;border-color:#f2dba64d!important}
+#playerActions{flex-wrap:wrap}#playerHUD #actionObserve{background:#174e58d9;border-color:#b6ded35c;min-width:116px}#playerHUD #actionObserve.active{background:#c8e8dc;color:#163e3e;border-color:#ecfff8}
+#observeCard{position:absolute;left:max(24px,env(safe-area-inset-left));bottom:96px;width:min(320px,calc(100vw - 48px));padding:15px 17px;border:1px solid #ffffff3d;border-radius:19px;background:#0d3843ed;box-shadow:0 10px 36px #002a3528;color:#f7f5e8;pointer-events:auto}
+#observeCard small{font-size:9px;letter-spacing:.16em;color:#bdd8d1}#observeCard h3{font:500 19px/1.25 Georgia,serif;margin:5px 0 7px}#observeCard p{margin:0 0 10px;font-size:11px;line-height:1.55;color:#d8e7e3}
+#observeReadouts{display:grid;grid-template-columns:auto 1fr auto;gap:5px 8px;align-items:center;font-size:10px}#observeReadouts b{font-variant-numeric:tabular-nums;font-weight:600}.pilotMeter{height:4px;background:#ffffff20;border-radius:8px;overflow:hidden}.pilotMeter i{display:block;height:100%;width:0;background:#a9d8c8;transition:width .1s linear}.pilotMeter.warn i{background:#e5bc76}
+#observeControls{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}#observeControls button{font-size:11px;min-height:42px;padding:8px 10px;border-radius:13px;background:#ffffff12}#observeControls button.active{background:#e7d6a4;color:#223d3b}
+#pilotNotice{position:absolute;left:50%;top:17%;transform:translateX(-50%);width:min(520px,calc(100vw - 34px));padding:11px 16px;border:1px solid #ffffff38;border-radius:15px;background:#0d3843e8;text-align:center;font-size:11px;line-height:1.55;color:#f5f1df;box-shadow:0 8px 30px #00263230;pointer-events:none;opacity:0;transition:opacity .18s}#pilotNotice.show{opacity:1}
+#storySheet{position:absolute;right:24px;top:88px;width:min(390px,calc(100vw - 48px));max-height:calc(100dvh - 116px);overflow:auto;padding:17px 19px;border:1px solid #ffffff3d;border-radius:19px;background:#103b43f6;color:#f6f2e2;box-shadow:0 12px 40px #06313932;pointer-events:auto}
+#storySheet h3{font:500 20px/1.3 Georgia,serif;margin:2px 0 9px}#storySheet h4{font-size:10px;letter-spacing:.12em;margin:15px 0 6px;color:#d9c48d}#storySheet p,#storySheet li{font-size:11px;line-height:1.65;color:#dbe6df}#storySheet ul{padding-left:18px;margin:7px 0}#storySheet .boundary{padding:9px 11px;border-left:3px solid #d7bc7b;background:#ffffff09;border-radius:0 10px 10px 0}#storyClose{position:sticky;float:right;top:0;background:#ffffff12!important;border-radius:50%!important;min-width:38px!important;min-height:38px!important;padding:4px!important}
+#exploreSheet #uiPilotStory{color:#ead59d}
+#fishCard[data-phase=waiting] h3{color:#c7e6d7}#fishCard[data-phase=bite] h3{color:#ffe2a0}
+@media(max-width:760px){#survivalRibbon{top:71px;left:16px;right:16px;max-width:none;gap:4px}#survivalRibbon span{font-size:9px;min-height:23px;padding:4px 7px}#playerActions{grid-template-columns:repeat(2,1fr)!important}#playerHUD #actionObserve{min-width:0}#observeCard{left:16px;right:16px;width:auto;bottom:max(206px,calc(env(safe-area-inset-bottom) + 186px));padding:13px 15px}#observeCard h3{font-size:18px}#storySheet{left:15px;right:15px;top:79px;width:auto;max-height:calc(100dvh - 96px)}#pilotNotice{top:15%}}
+@media(max-height:500px){#survivalRibbon{top:55px;left:18px;max-width:62vw}#survivalRibbon span{font-size:8px;min-height:21px;padding:3px 6px}#observeCard{left:18px;right:auto;bottom:70px;width:300px;padding:10px 13px}#observeCard p{display:none}#observeControls{margin-top:7px}#storySheet{top:62px;bottom:8px;max-height:none}}
+</style>
+<div id="pilotSurvivalLayer">
+ <div id="survivalRibbon" aria-live="polite">
+  <span id="pilotStoryTag">FG-1 · VMF-122 · 1944-11-21</span>
+  <span id="waterCount">饮水 2</span><span id="rationCount">口粮 2</span><span id="hookCount">鱼钩 4</span><span id="lineCount">线组 3</span><span id="baitCount">鱼饵 5</span>
+ </div>
+ <section id="observeCard" hidden aria-live="polite">
+  <small>SURFACE OBSERVATION / 水面观察</small>
+  <h3 id="observeTitle">脸朝下，保持管口露出水面</h3>
+  <p id="observeHelp">镜片只用于水面与极浅水观察。动作越稳，鱼越可能靠近饵钩。</p>
+  <div id="observeReadouts">
+   <span>呼吸</span><div class="pilotMeter"><i id="breathFill"></i></div><b id="breathPct">100%</b>
+   <span>镜片</span><div class="pilotMeter warn"><i id="fogFill"></i></div><b id="fogPct">0%</b>
+   <span>鱼群</span><div class="pilotMeter"><i id="calmFill"></i></div><b id="calmPct">0%</b>
+  </div>
+  <div id="observeControls"><button id="wipeLens">擦拭镜片</button><button id="braceObserve">按住贴近观察</button></div>
+ </section>
+ <div id="pilotNotice"></div>
+ <section id="storySheet" hidden>
+  <button id="storyClose" aria-label="关闭故事说明">×</button>
+  <small>HISTORICAL PROTOTYPE / GAME DIVERGENCE</small>
+  <h3>帕劳，1944 年 11 月 21 日</h3>
+  <h4>已查证原型</h4>
+  <p>Carroll E. McCullah，VMF-122，Goodyear FG-1 Corsair BuNo 14053。飞机受损后发出遇险信息并实施海上迫降，展开单人救生筏；真实历史中较快获救。</p>
+  <h4>游戏改编</h4>
+  <p class="boundary">救援因巡逻、火力、天气或视线受阻而中断，主角漂向 Airai 一带，进入长期求生。本工作台不是对真人经历的逐分钟复刻。</p>
+  <h4>当前已实现切片</h4>
+  <ul><li>有限鱼钩、线组与鱼饵；</li><li>短呼吸管水面淹没、呛水与恢复；</li><li>镜片起雾、擦拭动作与鱼群惊扰；</li><li>可见饵钩、可见鱼群、真实靠近与咬钩判定；</li><li>仍需玩家观察咬钩并手动提线、间歇收线。</li></ul>
+  <h4>尚未伪造</h4>
+  <p>FG-1 内单人筏的精确固定位置与释放步骤仍待史料核查，因此本切片没有把猜测包装成座舱动画。木鱼叉和自由潜仍按既定阶段锁定，且永久禁用弹力与机械鱼枪。</p>
+ </section>
+</div>
+<script id="palau-v0170-interface-install">
+(()=>{const actions=document.getElementById('playerActions');if(actions&&!document.getElementById('actionObserve')){const b=document.createElement('button');b.id='actionObserve';b.textContent='水面观察';actions.appendChild(b)}const menu=document.getElementById('exploreSheet');if(menu&&!document.getElementById('uiPilotStory')){const b=document.createElement('button');b.id='uiPilotStory';b.textContent='故事原型与当前实现';menu.insertBefore(b,menu.lastElementChild)}})();
+</script>
