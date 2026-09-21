@@ -134,8 +134,10 @@ jobs:
               'sourceTriangles': browser['sourceStats']['triangles'],
               'copyTriangles': browser['copyStats']['triangles'],
               'copyMeshes': browser['copyStats']['meshes'],
-              'boundsDelta': browser['boundsDelta'],
+              'copyVsExactPackageBoundsDelta': browser['copyVsExactPackageBoundsDelta'],
+              'sourceVsCopyBrowserBoundsDelta': browser['sourceVsCopyBrowserBoundsDelta'],
               'boundsTolerance': browser['boundsTolerance'],
+              'browserBoundsPolicy': browser['browserBoundsPolicy'],
               'consoleZeroErrors': len(browser['consoleErrors']) == 0,
               'pageZeroErrors': len(browser['pageErrors']) == 0,
               'views': [item['name'] for item in browser['screenshots']],
@@ -172,7 +174,9 @@ jobs:
               'classifiedPrimaryFaceCount': receipt['output']['classifiedPrimaryFaceCount'],
               'auxiliaryFaceCount': receipt['output']['auxiliaryFaceCount'],
               'copiedPrimitiveInstances': receipt['source']['copiedPrimitiveInstances'],
-              'boundsDelta': browser['boundsDelta'],
+              'copyVsExactPackageBoundsDelta': browser['copyVsExactPackageBoundsDelta'],
+              'sourceVsCopyBrowserBoundsDelta': browser['sourceVsCopyBrowserBoundsDelta'],
+              'browserBoundsPolicy': browser['browserBoundsPolicy'],
               'regions': [item['name'] for item in receipt['regions']],
               'sourcePositionsReusedWithoutModification': True,
               'sourceProportionsPreserved': True,
@@ -211,6 +215,7 @@ jobs:
           node "$COPY_ROOT/tests/source-copy-r001-contract.test.mjs"
 
       - name: Upload segmented source-copy geometry and browser evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: YELLOWFIN-SOURCE-COPY-GEOMETRY-R001
