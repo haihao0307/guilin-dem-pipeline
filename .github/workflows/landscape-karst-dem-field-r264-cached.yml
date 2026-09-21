@@ -1,0 +1,136 @@
+name: Landscape Karst DEM Field R2.6.4 Cached Production
+
+on:
+  push:
+    branches:
+      - feature/landscape-karst-dem-field-r26-cracks-20260921
+    paths:
+      - workbenches/landscape-karst-dem-field-r2-6-4-cached/build_r264.py
+      - workbenches/landscape-karst-dem-field-r2-6-4-cached/template.html
+      - .github/workflows/landscape-karst-dem-field-r264-cached.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install deterministic field baker
+        run: python -m pip install -q numpy scikit-image pillow
+
+      - name: Bake R2.6.4 frozen field caches
+        run: |
+          python -m py_compile workbenches/landscape-karst-dem-field-r2-6-4-cached/build_r264.py
+          python workbenches/landscape-karst-dem-field-r2-6-4-cached/build_r264.py
+
+      - name: Static contract and cache validation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64,json,re,struct,zlib
+          root=Path('workbenches/landscape-karst-dem-field-r2-6-4-cached')
+          s=(root/'index.html').read_text(encoding='utf-8')
+          b=json.loads((root/'build.json').read_text(encoding='utf-8'))
+          c=json.loads((root/'production_contract.json').read_text(encoding='utf-8'))
+          required=['PALAU_KARST_DEM_FIELD_R264_CACHED_PRODUCTION','DecompressionStream','cracksAffectDistanceField','reefPlatformContinuousUnion','runtimeTideChangesGeometry','drawElements']
+          for token in required: assert token in s, token
+          assert b['schema']=='LANDSCAPE_KARST_DEM_FIELD_R264_CACHED_PRODUCTION'
+          assert b['runtimeRenderer'].startswith('simple indexed WebGL2')
+          assert c['authority']=='deterministic function field'
+          assert c['cacheIsNotTerrainTruth'] is True
+          for name in ['default.kfc.b64','no-cracks.kfc.b64']:
+              raw=zlib.decompress(base64.b64decode((root/name).read_text()))
+              hlen=struct.unpack_from('<I',raw,0)[0]
+              h=json.loads(raw[4:4+hlen])
+              expected=4+hlen+h['vertices']*6+h['vertices']*3+h['vertices']+h['faces']*12
+              assert len(raw)==expected,(name,len(raw),expected)
+          scripts=re.findall(r'<script>(.*?)</script>',s,re.S);assert scripts
+          Path('/tmp/r264-app.js').write_text(scripts[-1],encoding='utf-8')
+          for name,file in [('vs','/tmp/r264.vert'),('fs','/tmp/r264.frag'),('wvs','/tmp/r264-water.vert'),('wfs','/tmp/r264-water.frag')]:
+              m=re.search(rf'const {name}=`(.*?)`;',s,re.S);assert m,name
+              Path(file).write_text(m.group(1),encoding='utf-8')
+          PY
+          node --check /tmp/r264-app.js
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq glslang-tools
+          glslangValidator -S vert /tmp/r264.vert
+          glslangValidator -S frag /tmp/r264.frag
+          glslangValidator -S vert /tmp/r264-water.vert
+          glslangValidator -S frag /tmp/r264-water.frag
+
+      - name: Run Chromium cached-field A/B validation
+        run: |
+          python3 -m http.server 8000 >/tmp/http.log 2>&1 &
+          SERVER=$!
+          trap 'kill $SERVER || true' EXIT
+          for i in $(seq 1 80); do curl -fsS http://127.0.0.1:8000/ >/dev/null && break; sleep .25; done
+          CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)
+          if [ -z "$CHROME" ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq chromium-browser || sudo apt-get install -y -qq chromium
+            CHROME=$(command -v chromium || command -v chromium-browser)
+          fi
+          BASE=http://127.0.0.1:8000/workbenches/landscape-karst-dem-field-r2-6-4-cached/index.html
+          FLAGS="--headless=new --no-sandbox --disable-dev-shm-usage --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist --run-all-compositor-stages-before-draw --virtual-time-budget=18000 --window-size=1600,1000"
+          $CHROME $FLAGS --dump-dom "$BASE" >/tmp/r264-dom.html 2>/tmp/r264-chrome.log
+          grep -q 'data-karst-ready="true"' /tmp/r264-dom.html
+          grep -q 'data-karst-output-visible="true"' /tmp/r264-dom.html
+          ! grep -q 'data-karst-failure' /tmp/r264-dom.html
+          $CHROME $FLAGS --screenshot=/tmp/r264-default.png "$BASE" >/tmp/r264-default.log 2>&1
+          $CHROME $FLAGS --screenshot=/tmp/r264-no-cracks.png "$BASE?cracks=off" >/tmp/r264-nocracks.log 2>&1
+          $CHROME $FLAGS --screenshot=/tmp/r264-high-tide.png "$BASE?tide=1.2" >/tmp/r264-tide.log 2>&1
+          python - <<'PY'
+          from PIL import Image,ImageChops,ImageStat
+          paths=['/tmp/r264-default.png','/tmp/r264-no-cracks.png','/tmp/r264-high-tide.png']
+          ims=[Image.open(p).convert('RGB') for p in paths]
+          for p,im in zip(paths,ims):
+              st=ImageStat.Stat(im);spread=sum(hi-lo for lo,hi in st.extrema)
+              pix=list(im.resize((80,50)).getdata())
+              bright=sum(1 for r,g,b in pix if r>245 and g>245 and b>245)/len(pix)
+              dark=sum(1 for r,g,b in pix if r<18 and g<18 and b<18)/len(pix)
+              assert spread>80,(p,st.extrema,spread)
+              assert bright<.92,(p,bright)
+              assert dark<.92,(p,dark)
+          d0=sum(ImageStat.Stat(ImageChops.difference(ims[0],ims[1])).mean)/3
+          d1=sum(ImageStat.Stat(ImageChops.difference(ims[0],ims[2])).mean)/3
+          assert d0>.18,d0
+          assert d1>.10,d1
+          print({'crack_ab_mean':d0,'tide_ab_mean':d1})
+          PY
+          mkdir -p /tmp/r264-proof
+          cp /tmp/r264-default.png /tmp/r264-proof/
+          cp /tmp/r264-no-cracks.png /tmp/r264-proof/
+          cp /tmp/r264-high-tide.png /tmp/r264-proof/
+          cp /tmp/r264-dom.html /tmp/r264-proof/dom.html
+          cp /tmp/r264-chrome.log /tmp/r264-proof/chrome.log
+          cp workbenches/landscape-karst-dem-field-r2-6-4-cached/build.json /tmp/r264-proof/
+          cp workbenches/landscape-karst-dem-field-r2-6-4-cached/production_contract.json /tmp/r264-proof/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: landscape-karst-dem-field-r264-cached-proof
+          path: /tmp/r264-proof
+          retention-days: 7
+
+      - name: Materialize browser-tested R2.6.4
+        run: |
+          git config user.name "Landscape Mother"
+          git config user.email "actions@users.noreply.github.com"
+          git add workbenches/landscape-karst-dem-field-r2-6-4-cached/index.html \
+                  workbenches/landscape-karst-dem-field-r2-6-4-cached/default.kfc.b64 \
+                  workbenches/landscape-karst-dem-field-r2-6-4-cached/no-cracks.kfc.b64 \
+                  workbenches/landscape-karst-dem-field-r2-6-4-cached/build.json \
+                  workbenches/landscape-karst-dem-field-r2-6-4-cached/production_contract.json
+          if git diff --cached --quiet; then
+            echo "R2.6.4 already materialized"
+            exit 0
+          fi
+          git commit -m "fix(landscape): materialize cached R2.6.4 production field [skip ci]"
+          git push
