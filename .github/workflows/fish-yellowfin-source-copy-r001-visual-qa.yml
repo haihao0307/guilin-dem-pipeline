@@ -1,0 +1,126 @@
+name: Fish Mother Yellowfin Source Copy R001 Visual QA
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - work/ocean-life-fish-mother-yellowfin-source-copy-r001-20260921
+    paths:
+      - .github/workflows/fish-yellowfin-source-copy-r001-visual-qa.yml
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/index.html
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/qa/**
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace/source/**
+      - apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/SOURCE_IDENTITY.json
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fish-yellowfin-source-copy-r001-visual-qa
+  cancel-in-progress: true
+
+env:
+  COPY_ROOT: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001
+  QA_OUT: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/evidence/browser
+  QA_URL: http://127.0.0.1:4173/apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/index.html
+
+jobs:
+  browser-visual-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out the Source Copy branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install Playwright and Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+
+      - name: Start the source-copy workbench server
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/yellowfin-source-copy-http.log 2>&1 &
+          echo $! >/tmp/yellowfin-source-copy-http.pid
+          for i in $(seq 1 30); do
+            if curl --fail --silent "$QA_URL" >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/yellowfin-source-copy-http.log
+          exit 1
+
+      - name: Capture fixed-view source evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "$QA_OUT"
+          node "$COPY_ROOT/qa/capture-source-copy.cjs"
+
+      - name: Record visual QA status
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          root=Path(os.environ['COPY_ROOT'])
+          receipt_path=Path(os.environ['QA_OUT'])/'BROWSER_QA_RECEIPT.json'
+          receipt=json.loads(receipt_path.read_text())
+          if not receipt.get('passed'):
+              raise SystemExit('Browser QA receipt did not pass')
+          status_path=root/'CURRENT_STATUS.json'
+          status=json.loads(status_path.read_text())
+          status['phase']='EXACT_SOURCE_BROWSER_QA_PASSED_CLASSIFICATION_OPEN'
+          status['gates'].update({
+              'browserVisualQAPassed':True,
+              'fixedViewsCaptured':True,
+              'consoleZeroErrors':True,
+              'pageZeroErrors':True,
+              'independentReconstructionUnlocked':False,
+              'generationLocked':True
+          })
+          status['visualEvidence']={
+              'receipt':'evidence/browser/BROWSER_QA_RECEIPT.json',
+              'views':['workbench-ui','side','quarter','top','head-on','side-wireframe','side-skeleton'],
+              'viewport':'1440x900',
+              'source':receipt['identity']['source']
+          }
+          status['next']='Use the fixed-view and wireframe evidence to classify dorsal/ventral finlet components, fin roots/free edges, peduncle and keel candidates before copying geometry.'
+          status_path.write_text(json.dumps(status,ensure_ascii=False,indent=2)+'\n')
+          PY
+
+      - name: Upload browser evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: YELLOWFIN-SOURCE-COPY-R001-BROWSER-QA
+          path: ${{ env.QA_OUT }}
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 6
+
+      - name: Commit browser evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Fish Mother R001"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$COPY_ROOT/CURRENT_STATUS.json" "$QA_OUT"
+          if git diff --cached --quiet; then
+            echo "No browser QA delta to commit."
+            exit 0
+          fi
+          git commit -m "test(fish): capture exact-source fixed-view browser evidence"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
