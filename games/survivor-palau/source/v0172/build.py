@@ -56,13 +56,38 @@ once(
     'clear canoe from observation view',
 )
 
-# Early handline is a close observation task, not a 13 m cast. Preserve the same depth/reef checks.
+# Early handline begins at the floating player's hand, not at a retained canoe rod. The target is
+# selected directly ahead of the current observation pose, preserving the same depth and reef gates.
 start = s.index('function chooseFishingTarget(){')
 end = s.index('\nfunction beginFishing(){', start)
-block = s[start:end]
-assert block.count('*13') == 2 and block.count('i/13') == 2 and block.count('<=13') == 1, block
-block = block.replace('*13', '*7.5').replace('<=13', '<=10').replace('i/13', 'i/10')
-s = s[:start] + block + s[end:]
+choose_target = '''function chooseFishingTarget(){
+ const o=SURVIVAL.observation,surface=!!o.active,ox=surface?o.anchorX:CANOE_STATE.x,oz=surface?o.anchorZ:CANOE_STATE.z;
+ let baseYaw=CANOE_STATE.yaw;if(surface){const fx=o.focusX-ox,fz=o.focusZ-oz;if(Math.hypot(fx,fz)>.2)baseYaw=Math.atan2(fx,fz);}
+ for(const off of [0,.35,-.35,.7,-.7,1.2,-1.2,Math.PI]){const a=baseYaw+off,x=ox+Math.sin(a)*7.5,z=oz+Math.cos(a)*7.5;let clear=true;for(let i=1;i<=10;i++){const px=mix(ox,x,i/10),pz=mix(oz,z,i/10);if(rockField.sample(px,pz)>.15||bedHeight(px,pz)>waterLevel(physicalTime)-.1){clear=false;break;}}if(clear&&waterLevel(physicalTime)-bedHeight(x,z)>.65&&rockField.sample(x,z)<0)return{x,z};}
+ return null;
+}'''
+s = s[:start] + choose_target + s[end:]
+
+# Surface observation uses a bare handline entering the water close to the camera. Retaining the
+# canoe-mounted rod in this view placed a giant hull and rod across the evidence frame and contradicted
+# the locked one-hand-controls-line posture.
+tackle_start = s.index('function buildTackle(){')
+tackle_end = s.index('\nfunction updateFishing(', tackle_start)
+tackle = '''function buildTackle(){
+ if(!FISH.target||FISH.phase==='closed')return;
+ const g=new PalauGeometry(),o=SURVIVAL.observation,surface=!!o.active,sx=surface?o.anchorX:CANOE_STATE.x,sz=surface?o.anchorZ:CANOE_STATE.z;
+ const a=surface?Math.atan2(FISH.target.x-sx,FISH.target.z-sz):CANOE_STATE.yaw,dx=Math.sin(a),dz=Math.cos(a),water=waveAt(sx,sz,physicalTime,config).eta;
+ let tip;if(surface){tip=[sx+dx*.28,water-.04,sz+dz*.28];}else{const root=[sx+dx,water+.28,sz+dz];tip=[sx+dx*3.1,water+2.6,sz+dz*3.1];g.tube(root,tip,.027,6,6);}
+ const t=FISH.phase==='ready'?0:FISH.phase==='cast'?smooth(0,1,FISH.time):1,progress=FISH.phase==='caught'?1:FISH.phase==='reel'?FISH.progress:0;
+ const startPoint=surface?[sx+dx*.55,water-.08,sz+dz*.55]:[sx+dx*3,water+.12,sz+dz*3];
+ const land=[mix(startPoint[0],FISH.target.x,t)*(1-progress)+tip[0]*progress,0,mix(startPoint[2],FISH.target.z,t)*(1-progress)+tip[2]*progress];
+ land[1]=waveAt(land[0],land[2],physicalTime,config).eta+pilotLineEndOffset(t)+(FISH.phase==='cast'?Math.sin(t*Math.PI)*(surface?1.2:3):0)-(FISH.phase==='bite'?.18:0);
+ let p=tip;for(let i=1;i<=14;i++){const f=i/14,q=tip.map((v,k)=>mix(v,land[k],f));q[1]-=Math.sin(f*Math.PI)*(surface?.22:.36);g.tube(p,q,.012,10,4);p=q;}
+ g.sphere(...land,.085,.14,.085,11,0,5,8);
+ if(FISH.phase==='caught'){const cx=sx+dx*.42,cz=sz+dz*.42,cy=water+(surface?.06:.62);g.sphere(cx,cy,cz,.16,.12,.43,8,31,6,10);const rx=dz,rz=-dx,k=g.v.length/7;g.vertex([cx-dx*.28,cy,cz-dz*.28],8);g.vertex([cx-dx*.52+rx*.18,cy,cz-dz*.52+rz*.18],8);g.vertex([cx-dx*.52-rx*.18,cy,cz-dz*.52-rz*.18],8);g.tri(k,k+1,k+2);g.tri(k,k+2,k+1);}
+ if(tackleGeo)disposeGeo(tackleGeo);tackleGeo=g.upload();opaqueDirty=true;
+}'''
+s = s[:tackle_start] + tackle + s[tackle_end:]
 
 # Keep the thin overlay state coupled to the same authoritative observation state.
 once(
@@ -99,6 +124,8 @@ meta = {
     'handlineTargetRangeM': 7.5,
     'observationLateralOffsetM': 4.2,
     'activeObservationCameraReframed': True,
+    'surfaceHandlineOrigin': True,
+    'canoeRodRemovedFromSurfaceObservation': True,
     'autoCatch': False,
     'elasticSpear': False,
     'hawaiianSling': False,
