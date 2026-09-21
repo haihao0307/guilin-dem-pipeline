@@ -19,14 +19,18 @@ marker = """        r['checks']['visibleBite'] = {
         }
 """
 injected = marker + """        visual = page.evaluate('PalauExperience.observationVisualMetrics()')
+        overlay = page.evaluate(\"\"\"(()=>{const e=document.getElementById('pilotLensOverlay'),s=getComputedStyle(e),b=e.getBoundingClientRect();return{hidden:e.hidden,display:s.display,visibility:s.visibility,opacity:Number(s.opacity),width:b.width,height:b.height}})()\"\"\")
+        visual['overlayState'] = overlay
+        visual['overlayVisible'] = page.locator('#pilotLensOverlay').is_visible()
+        r['checks']['visualReadability'] = visual
+        save()
         assert visual['solidLensCount'] == 0, visual
         assert visual['lensFrame'] == 'thin-screen-space', visual
         assert visual['targetRangeM'] <= 9.0, visual
         assert visual['cameraFocusXZErrorM'] < .25, visual
         assert visual['candidateFishLengthPx'] >= 22.0, visual
         assert visual['baitDiameterPx'] >= 10.0, visual
-        assert page.locator('#pilotLensOverlay').is_visible()
-        r['checks']['visualReadability'] = visual
+        assert visual['overlayVisible'] and overlay['opacity'] > .9 and overlay['visibility'] == 'visible', visual
 """
 assert BASE.count(marker) == 1
 BASE = BASE.replace(marker, injected, 1)
