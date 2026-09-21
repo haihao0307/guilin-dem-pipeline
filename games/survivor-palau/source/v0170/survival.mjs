@@ -7,10 +7,10 @@ const SURVIVAL={
  story:{date:'1944-11-21',pilot:'Carroll E. McCullah',unit:'VMF-122',aircraft:'Goodyear FG-1 Corsair',bureauNumber:'14053',historicalOutcome:'rapid rescue',gameDivergence:'rescue interrupted; long survival near Airai',minuteByMinuteReenactment:false},
  inventory:{water:2,rations:2,hooks:4,lineSegments:3,bait:5,fishFood:0},
  gear:{goggles:'improvised surface-observation only',snorkel:'short surface tube',woodSpear:'locked-next-stage',freediving:'locked-later-stage',elasticSpear:false,hawaiianSling:false,mechanicalSpeargun:false},
- observation:{active:false,anchorX:0,anchorZ:0,bobY:0,focusX:0,focusZ:0,breath:1,fog:.08,leak:.03,calm:.12,ingress:0,snorkelClearanceM:.2,lowProfile:false,actionDisturbance:0,lastYaw:0,lastPitch:0,geometryClock:0,uiClock:0},
+ observation:{active:false,anchorX:0,anchorZ:0,bobY:0,focusX:0,focusZ:0,breath:1,fog:.08,leak:.03,calm:.12,ingress:0,snorkelClearanceM:.2,lowProfile:false,actionDisturbance:0,lastYaw:0,lastPitch:0,geometryClock:0,uiClock:0,behaviorClockMs:0,behaviorDtS:0},
  fishing:{candidate:-1,biteReady:false,castSerial:0,candidateDistanceM:99,baitDepthM:.72,baitVisible:false,hookVisible:false,autoCatch:false},
  fish:[],
- telemetry:{visibleFishCount:0,cameraSurfaceOffsetM:0,snorkelSubmerged:false,fishRespondToMotion:false,lineEndDepthM:0,historyDateResolved:true,visualAcceptance:false,productionReady:false}
+ telemetry:{visibleFishCount:0,cameraSurfaceOffsetM:0,snorkelSubmerged:false,fishRespondToMotion:false,lineEndDepthM:0,historyDateResolved:true,behaviorClockIndependent:true,behaviorWallDtCapS:1.25,visualAcceptance:false,productionReady:false}
 };
 function pilot01(v){return Math.max(0,Math.min(1,v))}
 function pilotAngleDelta(a,b){return Math.atan2(Math.sin(a-b),Math.cos(a-b))}
@@ -18,7 +18,7 @@ function pilotNotice(text,seconds=2.4){const el=document.getElementById('pilotNo
 function pilotBox(g,x,y,z,sx,sy,sz,kind=10){
  const k=g.v.length/7,p=[[-sx,-sy,-sz],[sx,-sy,-sz],[sx,sy,-sz],[-sx,sy,-sz],[-sx,-sy,sz],[sx,-sy,sz],[sx,sy,sz],[-sx,sy,sz]];
  p.forEach(q=>g.vertex([x+q[0],y+q[1],z+q[2]],kind));
- for(const f of [[0,3,2,1],[4,5,6,7],[0,4,7,3],[1,2,6,5],[3,7,6,2],[0,1,5,4]]){g.tri(k+f[0],k+f[1],k+f[2]);g.tri(k+f[0],k+f[2],k+f[3])}
+ for(const f of [[0,3,2,1],[4,5,6,7],[0,4,7,3],[1,2,6,5],[3,7,6,2],[0,1,5,4]]){g.tri(k+f[0],k+f[1],k+f[2]);g.tri(k,k+f[2],k+f[3])}
 }
 function pilotOrientedEllipsoid(g,c,fx,fz,length,height,width,kind=8,seed=0,lat=5,lon=9){
  const fl=Math.hypot(fx,fz)||1;fx/=fl;fz/=fl;const rx=fz,rz=-fx,b=g.v.length/7;
@@ -91,13 +91,13 @@ function pilotDeriveCamera(eye,target){
  camera.target=[...target];camera.distance=d;camera.yaw=Math.atan2(dx,dz);camera.pitch=Math.asin(clamp(dy/d,-.94,.94));camera.fov=61*Math.PI/180;camera.dirty=true;
 }
 function enterSurfaceObservation(point=FISH.target){
- const o=SURVIVAL.observation;if(o.active&&point){o.focusX=point.x;o.focusZ=point.z;return true}
+ const o=SURVIVAL.observation;if(o.active&&point){o.focusX=point.x;o.focusZ=point.z;o.behaviorClockMs=performance.now();return true}
  setCanoeDrive(false);const side=CANOE_STATE.yaw+Math.PI*.5;o.anchorX=CANOE_STATE.x+Math.sin(side)*2.35;o.anchorZ=CANOE_STATE.z+Math.cos(side)*2.35;o.bobY=waveAt(o.anchorX,o.anchorZ,physicalTime,config).eta;
- const fx=Math.sin(CANOE_STATE.yaw),fz=Math.cos(CANOE_STATE.yaw);o.focusX=point?.x??o.anchorX+fx*7.2;o.focusZ=point?.z??o.anchorZ+fz*7.2;o.active=true;o.lowProfile=false;o.breath=Math.max(o.breath,.72);o.calm=.10;o.actionDisturbance=.45;o.lastYaw=camera.yaw;o.lastPitch=camera.pitch;
+ const fx=Math.sin(CANOE_STATE.yaw),fz=Math.cos(CANOE_STATE.yaw);o.focusX=point?.x??o.anchorX+fx*7.2;o.focusZ=point?.z??o.anchorZ+fz*7.2;o.active=true;o.lowProfile=false;o.breath=Math.max(o.breath,.72);o.calm=.10;o.actionDisturbance=.45;o.lastYaw=camera.yaw;o.lastPitch=camera.pitch;o.behaviorClockMs=performance.now();o.behaviorDtS=0;
  const focusWater=waveAt(o.focusX,o.focusZ,physicalTime,config).eta,target=[o.focusX,focusWater-.82,o.focusZ],eye=[o.anchorX,o.bobY-.055,o.anchorZ];pilotDeriveCamera(eye,target);pilotSeedFish(o.focusX,o.focusZ);qa.view='surface-observation';opaqueDirty=true;pilotUpdateHUD();return true;
 }
 function exitSurfaceObservation(restore=false){
- const o=SURVIVAL.observation;o.active=false;o.lowProfile=false;o.actionDisturbance=0;SURVIVAL.fishing.biteReady=false;if(surfaceFishGeo)disposeGeo(surfaceFishGeo);if(surfaceGearGeo)disposeGeo(surfaceGearGeo);surfaceFishGeo=null;surfaceGearGeo=null;opaqueDirty=true;pilotUpdateHUD();if(restore&&FISH.phase==='closed')setView('canoe');
+ const o=SURVIVAL.observation;o.active=false;o.lowProfile=false;o.actionDisturbance=0;o.behaviorClockMs=0;o.behaviorDtS=0;SURVIVAL.fishing.biteReady=false;if(surfaceFishGeo)disposeGeo(surfaceFishGeo);if(surfaceGearGeo)disposeGeo(surfaceGearGeo);surfaceFishGeo=null;surfaceGearGeo=null;opaqueDirty=true;pilotUpdateHUD();if(restore&&FISH.phase==='closed')setView('canoe');
 }
 function pilotCanStartFishing(){
  const i=SURVIVAL.inventory;if(i.hooks<=0||i.lineSegments<=0){pilotNotice('鱼钩或线组已耗尽，不能继续抛线。');return false}if(i.bait<=0){pilotNotice('鱼饵已经用完，需要另找可用饵料。');return false}return true;
@@ -110,7 +110,7 @@ function pilotAfterFishingCamera(point){enterSurfaceObservation(point);pilotNoti
 function pilotOnLineBroken(){const i=SURVIVAL.inventory;i.hooks=Math.max(0,i.hooks-1);i.lineSegments=Math.max(0,i.lineSegments-1);SURVIVAL.fishing.biteReady=false;pilotNotice('鱼线失控：损失 1 枚鱼钩和 1 组线。',3);pilotUpdateHUD()}
 function pilotOnCatch(){SURVIVAL.inventory.fishFood++;SURVIVAL.fishing.biteReady=false;pilotNotice('鱼已收回。它仍需处理和烹饪，不能直接转化为完整生存值。',3);pilotUpdateHUD()}
 function pilotFishReadyToBite(){return SURVIVAL.observation.active&&SURVIVAL.fishing.biteReady}
-function pilotUpdateFish(dt,motion){
+function pilotUpdateFishStep(dt,motion){
  const o=SURVIVAL.observation,b=pilotBaitPoint(),phase=FISH.phase,n=SURVIVAL.fish.length;if(!n)return;
  const candidate=((SURVIVAL.fishing.candidate%n)+n)%n;SURVIVAL.fishing.biteReady=false;
  for(let i=0;i<n;i++){
@@ -130,14 +130,18 @@ function pilotUpdateFish(dt,motion){
  }
  SURVIVAL.telemetry.visibleFishCount=n;
 }
-function pilotUpdateObservation(dt){
+function pilotUpdateFish(dt,motion){
+ let remaining=Math.min(1.25,Math.max(0,dt));
+ while(remaining>1e-5){const step=Math.min(.10,remaining);pilotUpdateFishStep(step,motion);remaining-=step;if(SURVIVAL.fishing.biteReady)break}
+}
+function pilotUpdateObservation(dt,behaviorDt=dt){
  const o=SURVIVAL.observation,w=waveAt(o.anchorX,o.anchorZ,physicalTime,config).eta;o.bobY=mix(o.bobY,w,pilot01(dt*2.0));
- const moveRate=(Math.abs(pilotAngleDelta(camera.yaw,o.lastYaw))+Math.abs(camera.pitch-o.lastPitch))/Math.max(.016,dt);o.lastYaw=camera.yaw;o.lastPitch=camera.pitch;const motion=moveRate*.22+Math.abs(CANOE_STATE.speed)*.8+o.actionDisturbance;o.actionDisturbance=Math.max(0,o.actionDisturbance-dt*.72);
+ const moveRate=(Math.abs(pilotAngleDelta(camera.yaw,o.lastYaw))+Math.abs(camera.pitch-o.lastPitch))/Math.max(.016,dt);o.lastYaw=camera.yaw;o.lastPitch=camera.pitch;const motion=moveRate*.22+Math.abs(CANOE_STATE.speed)*.8+o.actionDisturbance;o.actionDisturbance=Math.max(0,o.actionDisturbance-behaviorDt*.72);
  const tubeHeight=o.lowProfile ? .015 : .20,crest=waveAt(o.anchorX,o.anchorZ,physicalTime,config).eta;o.snorkelClearanceM=o.bobY+tubeHeight-crest;
  if(o.snorkelClearanceM<0){o.ingress=pilot01(o.ingress+dt*1.9);o.breath=pilot01(o.breath-dt*(.58+o.ingress*.42));o.leak=pilot01(o.leak+dt*.07)}else{o.ingress=pilot01(o.ingress-dt*1.05);o.breath=pilot01(o.breath+dt*.34)}
- o.fog=pilot01(o.fog+dt*(.006+.012*o.leak));o.calm=pilot01(o.calm+dt*((motion<.30&&o.ingress<.25) ? .18 : -.70));
+ o.fog=pilot01(o.fog+dt*(.006+.012*o.leak));o.calm=pilot01(o.calm+behaviorDt*((motion<.30&&o.ingress<.25) ? .18 : -.70));
  const desiredEyeY=o.bobY-.055;camera.target[1]=desiredEyeY-camera.distance*Math.sin(camera.pitch);camera.dirty=true;SURVIVAL.telemetry.cameraSurfaceOffsetM=desiredEyeY-w;SURVIVAL.telemetry.snorkelSubmerged=o.snorkelClearanceM<0;SURVIVAL.telemetry.lineEndDepthM=FISH.target?pilotBaitPoint()[1]-waveAt(FISH.target.x,FISH.target.z,physicalTime,config).eta:0;
- pilotUpdateFish(dt,motion);return motion;
+ pilotUpdateFish(behaviorDt,motion);return motion;
 }
 function pilotUpdateHUD(){
  const i=SURVIVAL.inventory,o=SURVIVAL.observation,set=(id,text)=>{const e=document.getElementById(id);if(e)e.textContent=text};
@@ -153,7 +157,8 @@ function pilotUpdateHUD(){
 }
 function updatePilotSurvival(dt){
  if(!SURVIVAL.ready)return false;const o=SURVIVAL.observation;if(!o.active){o.uiClock+=dt;if(o.uiClock>.5){o.uiClock=0;pilotUpdateHUD()}return false}
- pilotUpdateObservation(dt);o.geometryClock+=dt;o.uiClock+=dt;let changed=false;
+ const now=performance.now(),wallDt=o.behaviorClockMs?Math.max(0,(now-o.behaviorClockMs)/1000):dt;o.behaviorClockMs=now;o.behaviorDtS=Math.max(dt,Math.min(1.25,wallDt));
+ pilotUpdateObservation(dt,o.behaviorDtS);o.geometryClock+=dt;o.uiClock+=dt;let changed=false;
  if(o.geometryClock>.075){o.geometryClock=0;if(surfaceFishGeo)disposeGeo(surfaceFishGeo);if(surfaceGearGeo)disposeGeo(surfaceGearGeo);surfaceFishGeo=buildSurfaceFish();surfaceGearGeo=buildSurfaceGear();opaqueDirty=true;changed=true}
  if(o.uiClock>.10){o.uiClock=0;pilotUpdateHUD()}return changed;
 }
