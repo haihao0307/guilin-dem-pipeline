@@ -20,8 +20,20 @@ ok(identity.referenceId==='FISH-REF-002','exact reference id');
 ok(identity.selectedVariant.expectedBytes===58908280,'expected byte count locked');
 ok(identity.selectedVariant.expectedSha256==='5603d4aabc9a1127856841335a86ae7aa462b6b25d1a6586e93bf644f4d47abe','expected hash locked');
 ok(identity.pinnedUpstream.commit==='c8c32e7880733ffd628c6106fd5749a2abab97c3','upstream commit pinned');
-ok(status.gates.generationLocked===true,'generation stays locked');
-ok(status.gates.independentReconstructionUnlocked===false,'independent reconstruction stays locked');
+
+const frozen=status.phase==='SOURCE_COPY_R001_FROZEN_MACHINE_ACCEPTED';
+if(frozen){
+  ok(status.gates.sourceCopyR001Frozen===true,'source copy frozen before correction unlock');
+  ok(status.gates.sourceCopyImmutable===true,'frozen source copy immutable');
+  ok(status.gates.sourceCopyMachineAcceptancePassed===true,'source copy machine acceptance passed');
+  ok(status.gates.biologicalCorrectionCandidateUnlocked===true,'biological correction candidate unlocked only after freeze');
+  ok(status.gates.independentReconstructionUnlocked===true,'independent reconstruction unlocked only after frozen baseline');
+  ok(status.gates.generationLocked===false,'generation lock released only after frozen baseline');
+}else{
+  ok(status.gates.generationLocked===true,'generation stays locked before source-copy freeze');
+  ok(status.gates.independentReconstructionUnlocked===false,'independent reconstruction stays locked before source-copy freeze');
+}
+
 ok(html.includes("const EXPECTED_SHA='5603d4aabc9a1127856841335a86ae7aa462b6b25d1a6586e93bf644f4d47abe'"),'browser hash guard present');
 ok(html.includes('REPLICATION_LOCKED'),'workbench mode visible');
 ok(html.includes('fixed提交镜像')||html.includes('固定提交镜像'),'pinned mirror fallback visible');
@@ -40,6 +52,6 @@ const gate=JSON.parse(fs.readFileSync(gatePath,'utf8'));
 ok(gate.checks.exactSha256Verified===true,'ingest hash gate passed');
 ok(gate.checks.r006ExtractorExecuted===true,'R006 extractor executed');
 ok(gate.checks.strictReferencePackageBuilt===true,'strict package built');
-ok(gate.independentReconstructionUnlocked===false,'copy acceptance still required');
+ok(gate.independentReconstructionUnlocked===false,'historical ingest gate remains locked and immutable');
 
-console.log(`Yellowfin Source Copy R001 contract: ${n} assertions passed`);
+console.log(`Yellowfin Source Copy R001 contract: ${n} assertions passed · phase=${status.phase}`);
