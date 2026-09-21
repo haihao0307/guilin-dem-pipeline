@@ -67,7 +67,7 @@ s = s[:start] + block + s[end:]
 # Keep the thin overlay state coupled to the same authoritative observation state.
 once(
     "const card=document.getElementById('observeCard'),button=document.getElementById('actionObserve');if(card)card.hidden=!o.active;if(button){button.classList.toggle('active',o.active);button.textContent=o.active?'退出观察':'水面观察'}",
-    "const card=document.getElementById('observeCard'),button=document.getElementById('actionObserve'),lens=document.getElementById('pilotLensOverlay');if(card)card.hidden=!o.active;if(lens)lens.hidden=!o.active;if(button){button.classList.toggle('active',o.active);button.textContent=o.active?'退出观察':'水面观察'}",
+    "const card=document.getElementById('observeCard'),button=document.getElementById('actionObserve'),lens=document.getElementById('pilotLensOverlay');if(card)card.hidden=!o.active;if(lens){lens.hidden=!o.active;pilotSyncObservationLens();}if(button){button.classList.toggle('active',o.active);button.textContent=o.active?'退出观察':'水面观察'}",
     'lens overlay lifecycle',
 )
 once(
