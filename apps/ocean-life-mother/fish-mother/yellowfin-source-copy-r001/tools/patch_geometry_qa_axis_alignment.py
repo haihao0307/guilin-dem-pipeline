@@ -4,7 +4,6 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-REPO = ROOT.parents[3]
 
 
 def replace_once(path: Path, old: str, new: str) -> None:
@@ -107,31 +106,10 @@ def patch_test() -> None:
     )
 
 
-def patch_workflow() -> None:
-    path = REPO / ".github" / "workflows" / "fish-yellowfin-source-copy-geometry-r001.yml"
-    replace_once(
-        path,
-        "              'sourceVsCopyBrowserBoundsDelta': browser['sourceVsCopyBrowserBoundsDelta'],\n"
-        "              'boundsTolerance': browser['boundsTolerance'],",
-        "              'sourceVsCopyBrowserBoundsDelta': browser['sourceVsCopyBrowserBoundsDelta'],\n"
-        "              'sourceVsAlignedCopyBrowserBoundsDelta': browser['sourceVsAlignedCopyBrowserBoundsDelta'],\n"
-        "              'boundsTolerance': browser['boundsTolerance'],",
-    )
-    replace_once(
-        path,
-        "              'sourceVsCopyBrowserBoundsDelta': browser['sourceVsCopyBrowserBoundsDelta'],\n"
-        "              'browserBoundsPolicy': browser['browserBoundsPolicy'],",
-        "              'sourceVsCopyBrowserBoundsDelta': browser['sourceVsCopyBrowserBoundsDelta'],\n"
-        "              'sourceVsAlignedCopyBrowserBoundsDelta': browser['sourceVsAlignedCopyBrowserBoundsDelta'],\n"
-        "              'browserBoundsPolicy': browser['browserBoundsPolicy'],",
-    )
-
-
 def main() -> None:
     patch_html()
     patch_capture()
     patch_test()
-    patch_workflow()
     print("PATCHED_EXACT_SOURCE_COPY_AXIS_ALIGNMENT")
 
 
