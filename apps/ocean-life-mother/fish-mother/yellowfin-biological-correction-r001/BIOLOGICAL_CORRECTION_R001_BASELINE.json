@@ -68,7 +68,7 @@
     "maximumBodyWidthU": 0.7125,
     "semanticHeadLengthOverForkLength": 0.285143386,
     "pectoralLengthOverForkLength": 0.203603971,
-    "secondDorsalHeightOverForkLength": 0.134250968,
+    "secondDorsalHeightOverForkLength": 0.066386989,
     "analHeightOverForkLength": 0.139587282,
     "caudalVerticalSpanOverForkLength": 0.344582822,
     "peduncleDepthOverForkLength": 0.060558492,
@@ -12670,6 +12670,55 @@
       }
     ]
   },
+  "dorsalAnatomicalSurfaceGroups": [
+    {
+      "componentIds": [
+        0,
+        3
+      ],
+      "surfaceCount": 2,
+      "rootU": 0.648401473,
+      "uRange": [
+        0.591784408,
+        0.711028173
+      ],
+      "dorsalHeightOverForkLength": 0.134250968,
+      "surfaceHeightSpread": 0.0,
+      "faces": 374,
+      "vertices": 238
+    },
+    {
+      "componentIds": [
+        2,
+        4
+      ],
+      "surfaceCount": 2,
+      "rootU": 0.48431196,
+      "uRange": [
+        0.401981949,
+        0.553435735
+      ],
+      "dorsalHeightOverForkLength": 0.066386989,
+      "surfaceHeightSpread": 0.0,
+      "faces": 400,
+      "vertices": 256
+    },
+    {
+      "componentIds": [
+        1
+      ],
+      "surfaceCount": 1,
+      "rootU": 0.35553064,
+      "uRange": [
+        0.106682739,
+        0.405582629
+      ],
+      "dorsalHeightOverForkLength": 0.170581936,
+      "surfaceHeightSpread": 0.0,
+      "faces": 358,
+      "vertices": 204
+    }
+  ],
   "boundary": {
     "uniqueEdges": 10978,
     "interRegionEdges": 594,
@@ -15329,6 +15378,7 @@
     "The fork landmark is inferred, not authored; manual silhouette review remains required.",
     "Royce documented size and geographic morphometric variation, so a single exact adult ratio would be false precision.",
     "The current source may violate published adult pectoral or mature-fin proportions; candidate deformation must report the delta rather than silently forcing a preset.",
+    "Thin dorsal fins are stored as mirrored disconnected sheets; component order alone is not anatomical identity.",
     "The rig contains joint translation animation channels; changing only vertices would cause rest/motion divergence.",
     "The frozen Source Copy is machine accepted but still awaits manual visual acceptance and is not production ready."
   ],
@@ -15350,6 +15400,8 @@
     "singleAnimationRetained": true,
     "materialCountRetained": true,
     "finletCountsRetained": true,
+    "dorsalAnatomicalSurfaceGroupsResolved": true,
+    "firstAndSecondDorsalDistinct": true,
     "frozenGlbNotModified": true,
     "candidateGenerated": false,
     "productionReady": false,
