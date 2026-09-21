@@ -1,0 +1,42 @@
+{
+  "schema": "KARST_FIELD_PRODUCTION_CONTRACT_R263",
+  "fieldIdentity": "freeze after visual approval",
+  "sourceMode": "DEM_CONTINUOUS_FIELD",
+  "specimensAreProbes": true,
+  "frozenGeometryInputs": [
+    "demCanonical",
+    "seaLevelBaseline",
+    "seaNotchAmplitude",
+    "primaryCavities",
+    "secondaryPockets",
+    "oneSidedWedgeCracks",
+    "reefPlatformUnion",
+    "macroWarp"
+  ],
+  "runtimeInputs": {
+    "tideOffset": {
+      "source": "Ocean Mother",
+      "min": -1.5,
+      "max": 1.5,
+      "affects": [
+        "wetBand",
+        "reefWetDryBoundary"
+      ],
+      "changesGeometry": false
+    },
+    "wetBand": {
+      "affects": [
+        "rockWetBand",
+        "reefWetDryBoundary"
+      ],
+      "changesGeometry": false
+    }
+  },
+  "runtimeBands": [
+    "demMacro",
+    "karstStructure",
+    "surfaceMicroscope"
+  ],
+  "cacheKey": "demHash + operatorHash + frozenParameterHash + formatVersion",
+  "visualApproved": false
+}

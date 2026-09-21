@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="zh-CN" data-transfer="PALAU_KARST_DEM_FIELD_R263_PRODUCTION">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Landscape Mother · 卡斯特 DEM 函数场 R2.6.3 · 生产候选</title>
+<style>
+:root{color-scheme:dark;--panel:rgba(13,16,15,.92);--line:rgba(255,255,255,.13);--text:#eee9df;--muted:#a7aaa5;--accent:#d0a365}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0d1110;color:var(--text);font:12px/1.45 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+canvas{position:fixed;inset:0;z-index:0;display:block;width:100%;height:100%;touch-action:none;background:linear-gradient(#7893a0,#c6d5d5)}
+.brand,.tools,.panel,.badge{position:fixed;z-index:12;border:1px solid var(--line);background:var(--panel);box-shadow:0 14px 42px rgba(0,0,0,.34);backdrop-filter:blur(12px)}
+.brand{left:14px;top:14px;padding:11px 13px;border-radius:12px}.brand small{display:block;color:var(--accent);font-size:8px;letter-spacing:.13em;font-weight:800}.brand b{display:block;margin-top:3px;font-size:17px}.brand span{display:block;margin-top:3px;color:var(--muted);font-size:9px}
+.tools{right:14px;top:14px;display:flex;gap:5px;padding:5px;border-radius:11px}button{border:0;border-radius:8px;padding:8px 11px;background:transparent;color:inherit;cursor:pointer}button:hover,button.on{background:#3d3528;color:#ffe4b8}
+.panel{right:14px;top:72px;width:286px;max-height:calc(100vh - 104px);overflow:auto;padding:15px 17px;border-radius:13px}.panel.hide{display:none}
+.group+ .group{margin-top:15px;padding-top:13px;border-top:1px solid var(--line)}h3{margin:0 0 8px;color:var(--accent);font-size:10px;letter-spacing:.08em}
+.row{display:flex;align-items:center;justify-content:space-between;margin-top:10px}.row output{color:#d8aa6f;font-variant-numeric:tabular-nums}input[type=range]{width:100%;accent-color:#bd8c52;margin:5px 0 0}
+.variantGrid{display:grid;grid-template-columns:1fr;gap:6px}.variantBtn{border:1px solid var(--line);background:rgba(255,255,255,.025);text-align:left}.variantBtn.on{background:#3d3528;color:#ffe4b8;border-color:#8d6a3f}.note{margin:8px 0 0;color:var(--muted);font-size:9px}.badge{left:14px;bottom:14px;padding:8px 10px;border-radius:9px;color:var(--muted);font-size:9px}
+.loading{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:linear-gradient(135deg,#738a95,#b8c9cb)}.loading.done{display:none}.loadingBox{padding:18px 22px;border-radius:14px;background:#111719e8;border:1px solid #ffffff2d;box-shadow:0 16px 48px #0008;text-align:center}.loadingBox b{display:block;font-size:15px}.loadingBox span{display:block;margin-top:7px;color:#c4cfcd;font-size:10px}.error{display:none;position:fixed;z-index:8;left:50%;top:50%;transform:translate(-50%,-50%);max-width:min(760px,86vw);padding:15px 17px;border-radius:11px;background:#3c1612;color:#ffd9cf;white-space:pre-wrap}
+@media(max-width:720px){.brand{left:8px;top:8px}.tools{right:8px;top:8px}.panel{left:8px;right:8px;top:88px;width:auto;max-height:48vh}.badge{left:8px;bottom:8px}}
+</style>
+</head>
+<body>
+<canvas id="view"></canvas>
+<div class="brand"><small>LANDSCAPE MOTHER · DEM KARST FIELD OPERATOR</small><b>卡斯特 DEM 函数场 R2.6.3 · 生产候选</b><span>DEM 连续山体 · 真实凹切裂隙 · 礁盘连续连接 · 潮位运行时耦合</span></div>
+<div class="tools"><button id="zoomOut" title="缩小">−</button><button id="zoomIn" title="放大">＋</button><button id="qualityBtn">快速</button><button id="reset">复位</button><button id="panelBtn">调节</button><button id="gray">灰模</button></div>
+<aside class="panel" id="panel">
+  <section class="group"><h3>工作模式 / 连续场</h3>
+    <div class="variantGrid">
+      <button class="variantBtn on" data-variant="3">DEM 连续山体（默认生产验证）</button>
+      <button class="variantBtn" data-variant="0">探针 P1 · 高瘦礁塔</button>
+      <button class="variantBtn" data-variant="1">探针 P2 · 宽厚岩岛</button>
+      <button class="variantBtn" data-variant="2">探针 P3 · 偏心双体</button>
+    </div>
+    <p class="note">默认显示一整座连续 DEM 岩体。P1–P3 只用于检查算子，不作为三个游戏资产搬运。</p>
+  </section>
+  <section class="group"><h3>形体比例</h3>
+    <div class="row"><label>整体大小</label><output id="overallOut"></output></div><input id="overall" type="range" min=".55" max="2.20" step=".01" value="1">
+    <div class="row"><label>高度</label><output id="heightOut"></output></div><input id="height" type="range" min=".60" max="1.70" step=".01" value="1">
+    <div class="row"><label>宽度</label><output id="widthOut"></output></div><input id="width" type="range" min=".60" max="1.80" step=".01" value="1">
+  </section>
+  <section class="group"><h3>孔洞 / 次级溶蚀</h3>
+    <div class="row"><label>主孔洞大小</label><output id="holeSizeOut"></output></div><input id="holeSize" type="range" min=".35" max="1.85" step=".01" value="1">
+    <div class="row"><label>主孔洞深度</label><output id="cavityOut"></output></div><input id="cavity" type="range" min="0" max="2.2" step=".01" value="1.10">
+    <div class="row"><label>次级孔洞</label><output id="pocketStrengthOut"></output></div><input id="pocketStrength" type="range" min="0" max="1.50" step=".01" value=".72">
+  </section>
+  <section class="group"><h3>几何裂隙（真实凹切）</h3>
+    <div class="row"><label>裂缝切入深度</label><output id="crackDepthOut"></output></div><input id="crackDepth" type="range" min="0" max="2.20" step=".01" value=".95">
+    <div class="row"><label>裂口宽度</label><output id="crackWidthOut"></output></div><input id="crackWidth" type="range" min=".015" max=".30" step=".001" value=".090">
+    <div class="row"><label>分叉强度</label><output id="crackBranchOut"></output></div><input id="crackBranch" type="range" min="0" max="2.00" step=".01" value=".92">
+    <p class="note">裂缝以楔形空腔从岩体距离场中真实扣除：表面较宽、向内逐渐收窄，并在设定深度闭合。滑块改变的是轮廓和阴影，不是颜色线。</p>
+  </section>
+  <section class="group"><h3>海蚀 / 潮位耦合</h3>
+    <div class="row"><label>长期海蚀基准</label><output id="seaLevelOut"></output></div><input id="seaLevel" type="range" min="-5.80" max="-2.20" step=".01" value="-4.08">
+    <div class="row"><label>实时潮位偏移</label><output id="tideOffsetOut"></output></div><input id="tideOffset" type="range" min="-1.50" max="1.50" step=".01" value="0">
+    <div class="row"><label>海蚀收腰幅度</label><output id="seaNotchOut"></output></div><input id="seaNotch" type="range" min="0" max="4.50" step=".01" value="2.15">
+    <div class="row"><label>湿痕黑边</label><output id="wetBandOut"></output></div><input id="wetBand" type="range" min="0" max="1.80" step=".01" value="1.08">
+    <p class="note">长期海蚀基准参与冻结形体；实时潮位只由 Ocean Mother 驱动湿痕与礁盘干湿边界，不会让几万年尺度的岩体随每次涨落潮变形。</p>
+  </section>
+  <section class="group"><h3>礁盘连续连接</h3>
+    <p class="note">岩体底脚与礁盘使用同一连续场平滑并集，不再作为悬空石块摆放；礁盘继续使用退潮时的冷灰褐色。</p>
+  </section>
+  <section class="group"><h3>仅形体细节</h3>
+    <div class="row"><label>大变形</label><output id="macroOut"></output></div><input id="macro" type="range" min="0" max="2.5" step=".01" value="1.05">
+    <div class="row"><label>域 Warp</label><output id="warpOut"></output></div><input id="warp" type="range" min="0" max="3" step=".01" value="1.20">
+    <div class="row"><label>细节强度</label><output id="detailOut"></output></div><input id="detail" type="range" min="0" max="2.4" step=".01" value="1">
+    <div class="row"><label>细节尺度</label><output id="detailScaleOut"></output></div><input id="detailScale" type="range" min=".35" max="2.6" step=".01" value="1">
+    <p class="note">颜色、花纹、粗糙度、微法线、照明和所有材料种子仍来自历史 V2.6；本轮只提高蓝灰综合色彩强度。</p>
+  </section>
+  <section class="group"><h3>V2.6 色彩增益</h3>
+    <div class="row"><label>色彩强度</label><output id="colorStrengthOut"></output></div><input id="colorStrength" type="range" min=".80" max="1.90" step=".01" value="1.42">
+    <div class="row"><label>冷蓝倾向</label><output id="blueStrengthOut"></output></div><input id="blueStrength" type="range" min="0" max=".75" step=".01" value=".32">
+    <p class="note">不更换历史 V2.6 色板，只在同一色板内增强饱和度与冷蓝层。</p>
+  </section>
+</aside>
+<div class="badge" id="badge">R2.6.3 · 生产候选 · 几何裂隙 · 礁盘连接 · 潮位接口</div>
+<div class="loading" id="loading"><div class="loadingBox"><b>准备三维工作台</b><span>先显示界面，再编译紧凑岩体场</span></div></div><div class="error" id="error"></div>
+<script>
+document.documentElement.dataset.uiReady="true";requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(()=>{(()=>{"use strict";
+const canvas=document.getElementById("view");
+const gl=canvas.getContext("webgl2",{antialias:false,alpha:false,preserveDrawingBuffer:false,powerPreference:"default"});
+if(!gl){const e=document.getElementById("error");e.style.display="block";e.textContent="需要 WebGL2";return}
+const VS=`#version 300 es
+precision highp float;const vec2 P[3]=vec2[3](vec2(-1.,-1.),vec2(3.,-1.),vec2(-1.,3.));void main(){gl_Position=vec4(P[gl_VertexID],0.,1.);}`;
+const GEOMETRY_FS=`#version 300 es
+precision highp float;
+layout(location=0) out vec4 gPosition;
+layout(location=1) out vec4 gNormal;
+layout(location=2) out vec4 gMeta;
+uniform vec2 uRes;
+uniform vec3 uCam;
+uniform mat3 uBasis;
+uniform float uOverall,uHeight,uWidth,uHoleSize,uCavity,uPocketStrength,uCrackDepth,uCrackWidth,uCrackBranch,uMacro,uWarp,uDetail,uDetailScale,uSoil,uSeaLevel,uSeaNotch;
+uniform int uVariant;
+#define MAX_STEPS 104
+#define FAR 80.0
+float hash31(vec3 p){p=fract(p*.1031);p+=dot(p,p.yzx+33.33);return fract((p.x+p.y)*p.z);}vec3 hash33(vec3 p){p=vec3(dot(p,vec3(127.1,311.7,74.7)),dot(p,vec3(269.5,183.3,246.1)),dot(p,vec3(113.5,271.9,124.6)));return fract(sin(p)*43758.5453123);}
+float valueNoise3(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*f*(f*(f*6.-15.)+10.);float a=hash31(i),b=hash31(i+vec3(1,0,0)),c=hash31(i+vec3(0,1,0)),d=hash31(i+vec3(1,1,0)),e=hash31(i+vec3(0,0,1)),g=hash31(i+vec3(1,0,1)),h=hash31(i+vec3(0,1,1)),j=hash31(i+vec3(1,1,1));return mix(mix(mix(a,b,f.x),mix(c,d,f.x),f.y),mix(mix(e,g,f.x),mix(h,j,f.x),f.y),f.z);}
+float gradientNoise3(vec3 p){vec3 i=floor(p),f=fract(p),u=f*f*f*(f*(f*6.-15.)+10.);float a=dot(normalize(hash33(i)*2.-1.),f),b=dot(normalize(hash33(i+vec3(1,0,0))*2.-1.),f-vec3(1,0,0)),c=dot(normalize(hash33(i+vec3(0,1,0))*2.-1.),f-vec3(0,1,0)),d=dot(normalize(hash33(i+vec3(1,1,0))*2.-1.),f-vec3(1,1,0)),e=dot(normalize(hash33(i+vec3(0,0,1))*2.-1.),f-vec3(0,0,1)),g=dot(normalize(hash33(i+vec3(1,0,1))*2.-1.),f-vec3(1,0,1)),h=dot(normalize(hash33(i+vec3(0,1,1))*2.-1.),f-vec3(0,1,1)),j=dot(normalize(hash33(i+vec3(1,1,1))*2.-1.),f-vec3(1,1,1));return mix(mix(mix(a,b,u.x),mix(c,d,u.x),u.y),mix(mix(e,g,u.x),mix(h,j,u.x),u.y),u.z)*.5+.5;}
+float fbmGradient(vec3 p){float v=0.,a=.52,t=0.;for(int i=0;i<5;i++){v+=gradientNoise3(p)*a;t+=a;p=p*2.03+vec3(19.1,7.7,13.4);a*=.49;}return v/t;}float ridgedFbm(vec3 p){float v=0.,a=.56,t=0.;for(int i=0;i<5;i++){float n=1.-abs(gradientNoise3(p)*2.-1.);v+=n*n*a;t+=a;p=p*2.11+vec3(11.7,5.3,17.9);a*=.47;}return v/t;}float fbmValueFast(vec3 p){float v=0.,a=.54,t=0.;for(int i=0;i<4;i++){v+=valueNoise3(p)*a;t+=a;p=p*2.05+vec3(7.3,15.1,3.9);a*=.48;}return v/t;}float turbulence(vec3 p){float v=0.,a=.54,t=0.;for(int i=0;i<4;i++){v+=abs(valueNoise3(p)*2.-1.)*a;t+=a;p=p*2.07+vec3(3.7,17.2,9.1);a*=.5;}return v/t;}
+vec2 worley3(vec3 p){vec3 ip=floor(p),fp=fract(p);float f1=10.,f2=10.;for(int z=-1;z<=1;z++)for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec3 cell=vec3(float(x),float(y),float(z)),point=hash33(ip+cell),dv=cell+point-fp;float d2=dot(dv,dv);if(d2<f1){f2=f1;f1=d2;}else if(d2<f2)f2=d2;}return sqrt(vec2(f1,f2));}vec3 domainWarp(vec3 p){return vec3(fbmValueFast(p+vec3(17.1,3.8,9.2)),fbmValueFast(p+vec3(4.4,19.7,12.1)),fbmValueFast(p+vec3(13.8,7.2,23.4)))-.5;}
+float bmSat(float v){return clamp(v,0.,1.);}float bmAuto(float v,float lo,float hi){return bmSat((v-lo)/max(hi-lo,.00001));}float bmClarity(float v,float a){float t=bmSat(v),l=t*t*(3.-2.*t);return bmSat(t+(t-l)*a*1.45);}float bmMask(float v,float sharp){float w=mix(.30,.035,bmSat(sharp/1.6));return smoothstep(.5-w,.5+w,v);}vec3 srgbToLinear(vec3 c){return mix(c/12.92,pow((c+.055)/1.055,vec3(2.4)),step(vec3(.04045),c));}vec3 linearToSrgb(vec3 c){return mix(c*12.92,1.055*pow(max(c,0.),vec3(1./2.4))-.055,step(vec3(.0031308),c));}vec3 adjustSaturation(vec3 c,float s){float l=dot(c,vec3(.2126,.7152,.0722));return mix(vec3(l),c,s);}
+struct Fields{float rugged;float strata;float microErosion;float rockMap;float flow;float protrusion;float cavity;};Fields gaea(vec3 p,vec3 n){vec3 sv=vec3(8231.*.0113,8231.*.0197,8231.*.0311)*.91;vec3 q=p+domainWarp(p*.73+sv*.21)*.22;float ra=ridgedFbm(q*7.6+sv*.67),rb=ridgedFbm((q+domainWarp(q*1.31))*7.6*.53+sv*1.19),rug=bmClarity(ra*.68+rb*.32,.74);vec2 cells=worley3(q*7.6*.76+sv*.89);float plate=1.-smoothstep(.026,.17,cells.y-cells.x);float phaseNoise=fbmValueFast(q*3.7+sv*1.91)-.5;float phase=(q.y+q.x*.18+q.z*.075+phaseNoise*.18)*8.4*6.2831853+sv.x;float sw=sin(phase)*.5+.5;float sg=bmAuto(fbmValueFast(q*2.65+sv*1.43),.27,.82),sb=bmAuto(fbmValueFast(q*5.1+sv*2.11),.33,.81);float strata=bmMask(sw*(.16+sg*.52)*(.31+sb*.69),.7*.72);float mb=ridgedFbm(q*30.+sv*1.77),mg=bmAuto(turbulence(q*30.*.31+sv*2.13),.31,.86),micro=smoothstep(.61,.94,mb)*mg;float slope=1.-abs(n.y),pa=bmAuto(fbmValueFast(q*2.12+sv*2.73),.30,.79),pb=bmAuto(fbmGradient(q*4.35+sv*1.57),.28,.76);float rock=bmMask((pa*.46+pb*.34+rug*.20)*(.57+slope*.43),.7*.50);float vertical=bmAuto(1.-(p.y+.5),.08,.92),fn=bmAuto(fbmValueFast(vec3(q.x*2.1,q.y*.57,q.z*2.1)+sv*2.47),.48,.86),flow=bmMask(vertical*fn*(.38+slope*.62),.7*.58);Fields o;o.rugged=rug;o.strata=strata;o.microErosion=micro;o.rockMap=rock;o.flow=flow;o.protrusion=bmSat(rug*.60+strata*.12+pa*.28);o.cavity=bmSat(micro*.41+(1.-rug)*.27+(1.-pb)*.24+plate*.08);return o;}
+float smin(float a,float b,float k){float h=max(k-abs(a-b),0.)/k;return min(a,b)-h*h*k*.25;}
+float sdEllipsoid(vec3 p,vec3 r){float k0=length(p/r),k1=length(p/(r*r));return k0*(k0-1.)/max(k1,1e-5);}float demHeight(vec2 xz){
+  vec2 a=(xz-vec2(-1.45,.35))/vec2(4.35,3.55);
+  vec2 b=(xz-vec2(2.55,-.55))/vec2(3.25,2.85);
+  vec2 c=(xz-vec2(-3.15,-2.25))/vec2(2.45,2.15);
+  float h=-5.92;
+  h+=9.25*exp(-dot(a,a)*1.42);
+  h+=6.15*exp(-dot(b,b)*1.70);
+  h+=3.95*exp(-dot(c,c)*1.88);
+  // Analytic low-cost ridge terms keep the DEM identity continuous without
+  // evaluating two multi-octave FBMs at every ray-march sample.
+  h+=.38*sin(xz.x*.43+xz.y*.17);
+  h+=.21*sin(xz.x*.21-xz.y*.51+1.7);
+  h+=.12*cos(xz.x*.86+xz.y*.37-2.1);
+  return h;
+}
+float demFieldBase(vec3 p){
+  // Conservative distance scaling prevents overshoot on strict desktop GPUs.
+  float terrain=(p.y-demHeight(p.xz))*.34;
+  float domain=(length((p.xz-vec2(0.,.12))/vec2(7.85,6.45))-1.)*1.72;
+  float bottom=(-p.y-7.34)*.42;
+  return max(max(terrain,domain),bottom);
+}
+float baseForm(vec3 p){
+  float d;
+  if(uVariant==0){
+    d=sdEllipsoid(p-vec3(-.22,-.28,.08),vec3(2.48,8.18,2.38));
+    d=smin(d,sdEllipsoid(p-vec3(-1.28,2.05,.24),vec3(1.82,4.55,1.86)),.34);
+    d=smin(d,sdEllipsoid(p-vec3(1.46,-1.18,-.36),vec3(1.92,4.25,1.78)),.32);
+    d=smin(d,sdEllipsoid(p-vec3(.10,5.55,-.34),vec3(1.88,2.62,1.70)),.30);
+    d=smin(d,sdEllipsoid(p-vec3(-.72,-4.46,.66),vec3(1.46,2.92,1.44)),.26);
+  }else if(uVariant==1){
+    d=sdEllipsoid(p-vec3(-.12,-.70,.02),vec3(3.58,6.62,3.14));
+    d=smin(d,sdEllipsoid(p-vec3(-2.15,.82,.56),vec3(2.48,4.52,2.32)),.46);
+    d=smin(d,sdEllipsoid(p-vec3(2.28,-.96,-.42),vec3(2.62,4.20,2.28)),.44);
+    d=smin(d,sdEllipsoid(p-vec3(.18,4.62,-.30),vec3(3.18,2.46,2.68)),.42);
+    d=smin(d,sdEllipsoid(p-vec3(-.54,-4.18,.74),vec3(2.66,2.72,2.38)),.38);
+  }else if(uVariant==2){
+    d=sdEllipsoid(p-vec3(-1.18,-.35,.18),vec3(2.72,7.28,2.52));
+    d=smin(d,sdEllipsoid(p-vec3(2.05,-.78,-.50),vec3(2.18,6.08,2.02)),.28);
+    d=smin(d,sdEllipsoid(p-vec3(-1.82,3.22,.42),vec3(2.12,3.92,2.02)),.32);
+    d=smin(d,sdEllipsoid(p-vec3(1.38,4.52,-.54),vec3(1.82,2.98,1.72)),.28);
+    d=smin(d,sdEllipsoid(p-vec3(.18,-4.38,.76),vec3(2.26,2.82,2.08)),.30);
+  }else{
+    d=demFieldBase(p);
+  }
+  return d;
+}
+float caveField(vec3 p){
+  float hs=max(.20,uHoleSize);
+  if(uVariant==0){
+    float c1=sdEllipsoid(p-vec3(-.92,-2.72,1.92),vec3(2.12,1.92,2.90)*hs);
+    float c2=sdEllipsoid(p-vec3(1.52,.92,1.36),vec3(1.12,1.02,1.76)*hs);
+    float c3=sdEllipsoid(p-vec3(-2.12,2.42,-.18),vec3(.88,1.28,1.18)*hs);
+    return min(c1,min(c2,c3));
+  }else if(uVariant==1){
+    float c1=sdEllipsoid(p-vec3(-1.72,-2.92,2.18),vec3(2.62,1.78,3.18)*hs);
+    float c2=sdEllipsoid(p-vec3(2.28,-1.18,1.18),vec3(1.62,1.18,2.22)*hs);
+    float c3=sdEllipsoid(p-vec3(.20,2.78,-2.18),vec3(1.46,1.62,2.08)*hs);
+    return min(c1,min(c2,c3));
+  }else if(uVariant==2){
+    float c1=sdEllipsoid(p-vec3(.18,-2.88,1.92),vec3(2.78,2.06,3.34)*hs);
+    float c2=sdEllipsoid(p-vec3(1.26,.86,1.52),vec3(1.36,1.22,2.36)*hs);
+    float c3=sdEllipsoid(p-vec3(-2.40,1.92,-.38),vec3(1.18,1.46,1.64)*hs);
+    float c4=sdEllipsoid(p-vec3(.28,3.96,1.04),vec3(.76,.68,1.04)*hs);
+    return min(min(c1,c2),min(c3,c4));
+  }else{
+    float c1=sdEllipsoid(p-vec3(-4.55,-1.70,1.85),vec3(2.18,1.38,2.72)*hs);
+    float c2=sdEllipsoid(p-vec3(3.62,-.72,1.42),vec3(1.72,1.22,2.18)*hs);
+    float c3=sdEllipsoid(p-vec3(.72,1.58,-4.48),vec3(1.88,1.42,2.48)*hs);
+    float c4=sdEllipsoid(p-vec3(-.45,2.82,3.72),vec3(1.10,.92,1.62)*hs);
+    return min(min(c1,c2),min(c3,c4));
+  }
+}
+float pocketField(vec3 p){
+  float ps=mix(.46,1.28,clamp(uPocketStrength/1.5,0.,1.));
+  if(uVariant==3){
+    float a=sdEllipsoid(p-vec3(-5.25,.18,1.88),vec3(.62,.54,.88)*ps);
+    float b=sdEllipsoid(p-vec3(-2.15,2.65,3.45),vec3(.54,.72,.70)*ps);
+    float c=sdEllipsoid(p-vec3(2.82,1.15,2.72),vec3(.78,.60,.92)*ps);
+    float d=sdEllipsoid(p-vec3(4.72,-1.55,-.35),vec3(.64,.48,.82)*ps);
+    float e=sdEllipsoid(p-vec3(.85,3.95,-2.86),vec3(.52,.66,.72)*ps);
+    return min(min(a,b),min(c,min(d,e)));
+  }
+  float vv=float(uVariant);
+  float a=sdEllipsoid(p-vec3(-1.65+.20*sin(vv*2.1),1.35,2.05),vec3(.48,.66,.74)*ps);
+  float b=sdEllipsoid(p-vec3(1.25,3.02-.24*vv,1.68),vec3(.54,.48,.82)*ps);
+  float c=sdEllipsoid(p-vec3(2.18-.32*vv,-.45,-1.62),vec3(.42,.62,.58)*ps);
+  float d=sdEllipsoid(p-vec3(-2.18,3.75-.35*vv,-.48),vec3(.40,.52,.62)*ps);
+  return min(min(a,b),min(c,d));
+}
+float crackWindow(float y,float lo,float hi){return max(lo-y,y-hi);}
+float crackNetwork(vec3 q,float localSea,float w){
+  float seed=float(uVariant)*1.73;
+  float n1=sin(q.y*.79+q.z*.31+seed)*(.075+.045*uCrackBranch)
+          +sin(q.y*1.71-q.z*.23+seed*1.9)*.028;
+  float n2=sin(q.y*.91+q.x*.27+seed*.7)*(.068+.040*uCrackBranch)
+          +cos(q.y*1.43+q.x*.19-seed)*.024;
+  float c1=abs(q.x*.88+q.z*.21+.14*sin(q.y*.82+seed)+n1-.18)-w;
+  c1=max(c1,crackWindow(q.y,localSea+.62,6.65));
+  float c2=abs(q.x*.34-q.z*.94-.22+.16*sin(q.y*1.03+seed*.7)+n2)-w*.82;
+  c2=max(c2,crackWindow(q.y,localSea+1.05,5.35));
+  float yb=q.y-2.10;
+  float branch=abs(q.z*.72+q.x*.62+.18*yb+.15*sin(q.x*1.28+seed)+n1*.55)-w*.72;
+  branch=max(branch,abs(yb)-1.55);
+  branch=max(branch,.28-uCrackBranch);
+  float crown=abs(q.x*.58-q.z*.82+.22*sin(q.y*1.36+seed*1.7)+n2*.62)-w*.66;
+  crown=max(crown,crackWindow(q.y,3.35,7.10));
+  crown=max(crown,.58-uCrackBranch);
+  float crossBranch=abs(q.x*.76+q.z*.54-.20*(q.y-3.0)+.10*sin(q.z*1.7+seed))-w*.48;
+  crossBranch=max(crossBranch,abs(q.y-3.15)-1.05);
+  crossBranch=max(crossBranch,.72-uCrackBranch);
+  return min(min(c1,c2),min(branch,min(crown,crossBranch)));
+}
+float mapRock(vec3 wp){
+  float s=max(uOverall,.1);
+  vec3 p=wp/s;
+  p.x/=max(uWidth,.1);p.z/=max(uWidth,.1);p.y/=max(uHeight,.1);
+  vec3 q=p,w0=domainWarp(p*.18+vec3(2.4,-3.1,5.7)+float(uVariant)*3.17);
+  float demMode=float(uVariant==3);
+  q+=w0*(mix(.76,.42,demMode)*uWarp);
+  vec3 w1=demMode>.5?vec3(0.):domainWarp((q+w0)*.43+vec3(-7.7,8.3,2.1)+float(uVariant)*1.91);
+  q+=w1*(.12*uWarp);
+  float d=baseForm(q),cave=caveField(q);
+  d=max(d,-(cave+.15*(valueNoise3(q*.7+float(uVariant)*2.3)-.5)*uCavity));
+  float f=max(.16,uDetailScale);
+  float macro=(fbmGradient(q*.23*f)-.5)*.82+(ridgedFbm(q*.46*f)-.5)*.45;
+  float mid=(ridgedFbm(q*1.10*f)-.5)*.34+(valueNoise3(q*2.15*f)-.5)*.19;
+  float fine=(valueNoise3(q*5.2*f)-.5)*.082;
+  float verticalA=ridgedFbm(vec3(q.x*1.12,q.y*.13,q.z*1.12)+w1*1.8);
+  float verticalB=ridgedFbm(vec3(q.x*1.78,q.y*.085,q.z*1.78)+w0*2.15);
+  float fissures=smoothstep(.68,.93,verticalA);
+  float flutes=smoothstep(.64,.90,verticalB);
+  float radial=length(q.xz);
+
+  // Palau lower sea-cut profile: steep inward lip, sustained narrow neck,
+  // then a gradual outward flare toward the submerged foot.  The height is
+  // perturbed in plan so the cut never becomes a mechanical horizontal ring.
+  float seaNoise=(fbmValueFast(vec3(q.x*.38,q.z*.38,4.1+float(uVariant)*2.7))-.5)*.34;
+  seaNoise+=sin(q.x*.57+q.z*.33+float(uVariant)*1.17)*.075;
+  seaNoise+=(valueNoise3(vec3(q.x*.92,q.z*.92,11.3+float(uVariant)))-.5)*.08;
+  float localSea=uSeaLevel+seaNoise;
+  float yRel=q.y-localSea;
+  float exposure=smoothstep(1.00,3.18,radial);
+  float az=atan(q.z,q.x);
+  float azBreak=.70+.20*sin(az*3.0+float(uVariant)*1.43)+.10*sin(az*7.0-float(uVariant)*.87);
+  azBreak*=.76+.24*fbmValueFast(vec3(q.x*.66,q.z*.66,8.7+float(uVariant)*2.1));
+
+  // A very short transition creates the visibly steep sea-cut edge.
+  float steepLip=smoothstep(-.54,-.10,yRel)*(1.0-smoothstep(-.015,.065,yRel));
+  // The neck remains cut back while descending below the lip.
+  float neck=smoothstep(-2.25,-1.48,yRel)*(1.0-smoothstep(-.16,-.02,yRel));
+  float cut=(steepLip*.82+neck*.60)*exposure*azBreak*uSeaNotch;
+  // Below the neck the base returns outward slowly instead of ending as a pin.
+  float baseFlare=(1.0-smoothstep(-2.62,-1.58,yRel))*exposure;
+  float flareVariation=.70+.30*fbmValueFast(vec3(q.x*.48,q.z*.48,15.1+float(uVariant)));
+
+  float crownBreak=smoothstep(3.7,6.9,q.y)*smoothstep(.68,.92,ridgedFbm(q*.68+w0*1.55));
+  d+=uMacro*macro*.49+uDetail*(mid+fine)*.21;
+  d+=fissures*.14+flutes*.095+crownBreak*.07;
+  d+=cut*.66;
+  d-=baseFlare*flareVariation*.20*uSeaNotch;
+  if(uPocketStrength>.001){
+    float pocket=pocketField(q);
+    d=max(d,-pocket);
+  }
+  float beforeCrack=d;
+  float crackDepth=max(0.,uCrackDepth);
+  if(crackDepth>.001){
+    float inward=clamp((-beforeCrack)/max(crackDepth,.001),0.,1.);
+    float wedgeWidth=max(.008,uCrackWidth)*mix(1.0,.18,inward);
+    float crackCore=crackNetwork(q,localSea,wedgeWidth);
+    // Intersect the crack lines with a one-sided band from the visible surface
+    // into the rock.  CSG subtraction creates a real void and a closed crack floor.
+    float inwardBand=max(-beforeCrack-crackDepth,beforeCrack-.025);
+    float crackVoid=max(crackCore,inwardBand);
+    d=max(beforeCrack,-crackVoid);
+  }
+  return d*s*min(uWidth,uHeight);
+}
+float reefPlatform(vec3 p){
+  float ang=atan(p.z,p.x);
+  float edgeVariation=.035*sin(ang*5.0)+.022*sin(ang*9.0+1.3);
+  vec2 rq=p.xz/vec2(10.45,8.85);
+  float edge=(length(rq)-(1.0+edgeVariation))*2.15;
+  float top=(p.y+7.16+.07*sin(p.x*.33)+.05*sin(p.z*.41))*.58;
+  float bottom=(-p.y-8.65)*.46;
+  return max(max(edge,top),bottom);
+}
+float mapGround(vec3 p){return p.y+9.28+.12*sin(p.x*.18)+.10*sin(p.z*.24);}
+vec2 mapScene(vec3 p){
+  float r=mapRock(p),reef=reefPlatform(p);
+  float joined=smin(r,reef,.40);
+  float g=mapGround(p);
+  if(joined<g)return vec2(joined,reef<r?2.:1.);
+  return vec2(g,2.);
+}
+vec3 normalAt(vec3 p){float e=.014*max(.65,uOverall);vec2 h=vec2(1.,-1.)*.5773;return normalize(h.xyy*mapScene(p+h.xyy*e).x+h.yyx*mapScene(p+h.yyx*e).x+h.yxy*mapScene(p+h.yxy*e).x+h.xxx*mapScene(p+h.xxx*e).x);}float softShadow(vec3 ro,vec3 rd,float mint,float maxt){float res=1.,t=mint;for(int i=0;i<22;i++){float h=mapScene(ro+rd*t).x;res=min(res,18.*h/t);t+=clamp(h,.025,.45);if(res<.01||t>maxt)break;}return clamp(res,0.,1.);}float aoField(vec3 p,vec3 n){float o=0.,s=1.;for(int i=1;i<=2;i++){float h=.10*float(i),d=mapScene(p+n*h).x;o+=(h-d)*s;s*=.58;}return clamp(1.-o*1.65,0.,1.);}float skyOpen(vec3 p){float o=1.;for(int i=1;i<=5;i++){float h=.42*float(i*i);o*=smoothstep(-.05,.26,mapScene(p+vec3(0,h,0)).x);}return o;}
+
+vec2 pack16(float v){
+  float q=floor(clamp(v,0.0,1.0)*65535.0+0.5);
+  float hi=floor(q/256.0);
+  return vec2(hi,q-hi*256.0)/255.0;
+}
+vec2 octEncode(vec3 n){
+  n/=abs(n.x)+abs(n.y)+abs(n.z)+1e-8;
+  vec2 e=n.xy;
+  if(n.z<0.0)e=(1.0-abs(e.yx))*sign(e.xy);
+  return e*0.5+0.5;
+}
+void writePacked(vec3 p,vec3 n,float kind){
+  const vec3 LO=vec3(-80.0,-16.0,-80.0);
+  const vec3 HI=vec3( 80.0, 16.0, 80.0);
+  vec3 q=clamp((p-LO)/(HI-LO),0.0,1.0);
+  vec2 px=pack16(q.x),py=pack16(q.y),pz=pack16(q.z);
+  gPosition=vec4(px,py);
+  gNormal=vec4(octEncode(normalize(n)),0.0,1.0);
+  gMeta=vec4(pz,clamp(floor(kind+0.5),0.0,3.0)/3.0,1.0);
+}
+
+void main(){
+  vec2 uv=(gl_FragCoord.xy-.5*uRes)/uRes.y;
+  vec3 ro=uCam,rd=normalize(uBasis*vec3(uv,1.55));
+  float t=0.;vec2 hit=vec2(FAR,0.);vec3 p=ro;
+  for(int i=0;i<MAX_STEPS;i++){
+    p=ro+rd*t;hit=mapScene(p);
+    if(abs(hit.x)<.0016*max(1.,t*.14)||t>FAR)break;
+    float marchScale=uVariant==3?.50:.76;
+    t+=max(hit.x*marchScale,.005);
+  }
+  if(t>FAR){writePacked(vec3(0.0),rd,0.0);return;}
+  vec3 N=normalAt(p);float occ=aoField(p,N);
+  writePacked(p,N,hit.y);
+}`;
+const MATERIAL_FS=`#version 300 es
+precision highp float;
+out vec4 outColor;
+uniform vec2 uRes;
+uniform sampler2D uPositionTex;
+uniform sampler2D uNormalTex;
+uniform sampler2D uMetaTex;
+uniform vec3 uCamera;
+uniform float uKarstOverall,uKarstHeight,uKarstWidth;
+uniform float uColorStrength,uBlueStrength,uSeaLevel,uTideOffset,uWetBand;
+uniform int uDebugMode;
+float unpack16(vec2 b){vec2 v=floor(b*255.0+0.5);return (v.x*256.0+v.y)/65535.0;}
+vec3 octDecode(vec2 e){e=e*2.0-1.0;vec3 n=vec3(e,1.0-abs(e.x)-abs(e.y));if(n.z<0.0)n.xy=(1.0-abs(n.yx))*sign(n.xy);return normalize(n);}
+float hash31(vec3 p){p=fract(p*.1031);p+=dot(p,p.yzx+33.33);return fract((p.x+p.y)*p.z);}
+float noise3(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);float a=hash31(i),b=hash31(i+vec3(1,0,0)),c=hash31(i+vec3(0,1,0)),d=hash31(i+vec3(1,1,0)),e=hash31(i+vec3(0,0,1)),g=hash31(i+vec3(1,0,1)),h=hash31(i+vec3(0,1,1)),j=hash31(i+vec3(1,1,1));return mix(mix(mix(a,b,f.x),mix(c,d,f.x),f.y),mix(mix(e,g,f.x),mix(h,j,f.x),f.y),f.z);}
+vec3 sky(float y){return mix(vec3(.10,.16,.19),vec3(.53,.69,.75),clamp(y,0.0,1.0));}
+void main(){
+ ivec2 px=ivec2(gl_FragCoord.xy);
+ vec4 pp=texelFetch(uPositionTex,px,0),nn=texelFetch(uNormalTex,px,0),pm=texelFetch(uMetaTex,px,0);
+ float kind=floor(pm.b*3.0+0.5);
+ float sy=clamp(gl_FragCoord.y/max(uRes.y,1.0),0.0,1.0);
+ if(kind<0.5){outColor=vec4(pow(sky(sy),vec3(.4545)),1.0);return;}
+ const vec3 LO=vec3(-80.0,-16.0,-80.0),HI=vec3(80.0,16.0,80.0);
+ vec3 packed=vec3(unpack16(pp.rg),unpack16(pp.ba),unpack16(pm.rg));
+ vec3 p=mix(LO,HI,packed),n=octDecode(nn.rg);
+ if(kind>1.5){
+  float g=noise3(p*1.8);vec3 c=mix(vec3(.095,.105,.10),vec3(.16,.145,.115),g);
+  float tideWorld=(uSeaLevel+uTideOffset)*uKarstOverall*uKarstHeight;
+  float reefWet=1.0-smoothstep(.06,.52,abs(p.y-tideWorld));
+  reefWet+=1.0-smoothstep(-.82,.10,p.y-tideWorld);
+  c=mix(c,vec3(.025,.070,.073),clamp(reefWet*.42,0.0,.62));
+  float l=.40+.60*max(dot(n,normalize(vec3(-.5,.8,.4))),0.0);
+  outColor=vec4(pow(max(c*l,0.0),vec3(.4545)),1.0);return;
+ }
+ float macro=noise3(p*.22),mid=noise3(p*.95),fine=noise3(p*3.4);
+ vec3 cool=vec3(.095,.165,.235),neutral=vec3(.285,.29,.275),warm=vec3(.36,.24,.13);
+ vec3 albedo=mix(cool,neutral,smoothstep(.27,.72,macro));
+ albedo=mix(albedo,warm,smoothstep(.70,.92,macro)*.42);
+ albedo*=.84+.22*(mid-.5)+.06*(fine-.5);
+ albedo*=mix(vec3(1.0),vec3(.86,1.025,1.22),clamp(uBlueStrength,0.0,.75));
+ float seaWorld=(uSeaLevel+uTideOffset)*uKarstOverall*uKarstHeight;
+ float dy=p.y-seaWorld;
+ float wet=(1.0-smoothstep(.04,.78,abs(dy)))*uWetBand;
+ wet+=(1.0-smoothstep(-1.15,.12,dy))*.22*uWetBand;
+ albedo=mix(albedo,vec3(.018,.050,.072),clamp(wet,0.0,.72));
+ if(uDebugMode==4){float g=dot(albedo,vec3(.2126,.7152,.0722));albedo=vec3(g);}
+ albedo=mix(vec3(dot(albedo,vec3(.3333))),albedo,clamp(uColorStrength,0.0,1.9));
+ vec3 sun=normalize(vec3(-.55,.78,.42)),v=normalize(uCamera-p);
+ float dif=max(dot(n,sun),0.0),hemi=.33+.47*max(n.y,0.0),rim=pow(1.0-max(dot(n,v),0.0),3.0);
+ vec3 col=albedo*(.24+.78*dif)*hemi+vec3(.15,.20,.23)*rim*.16;
+ outColor=vec4(pow(max(col,0.0),vec3(.4545)),1.0);
+}`;
+const MATERIAL={"low":[0.04,0.047,0.052],"mean":[0.31,0.31,0.29],"high":[0.66,0.63,0.55],"paletteDark":[0.034,0.041,0.048],"paletteWarm":[0.44,0.34,0.25],"paletteOxide":[0.48,0.25,0.11],"paletteMineral":[0.82,0.8,0.72],"paletteBio":[0.18,0.22,0.14],"paletteWet":[0.04,0.058,0.075],"paletteStraw":[0.52,0.39,0.18],"paletteHusk":[0.7,0.56,0.31],"paletteSeed":[0.21,0.14,0.07],"roughness":[0.78,0.96],"dimensions":[3.4,1.872246696,1.428524229],"warpStrength":0.2,"macroScale":1.75,"ridgedScale":6.2,"cellScale":18.0,"poreThreshold":0.105,"poreSharpness":0.05,"microScale":36.0,"colorContrast":1.46,"cavityStrength":0.8,"bumpStrength":0.15,"roughnessCorrelation":0.34,"mineralScale":21.0,"firingBand":0.0,"colorRichness":1.34,"waterStrength":0.72,"weatherStrength":0.88,"inclusionStrength":0.1,"poreDepth":1.32,"poreDensity":1.46,"poreVariety":1.58,"colorSeed":8632,"poreSeed":8538,"waterSeed":8734,"weatherSeed":8832,"inclusionSeed":8932,"detailSeed":9040,"gaeaRockDetail":1.3,"gaeaStrata":1.02,"gaeaMicroErosion":1.08,"gaeaColorClarity":1.12,"gaeaColorGamut":1.3,"gaeaMaskSharpness":0.7,"gaeaRuggedScale":7.6,"gaeaStrataFrequency":8.4,"gaeaSurfaceScale":30.0,"family":2};
+
+function shader(type,src,label){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(label+" shader compile:\n"+(gl.getShaderInfoLog(s)||"(empty)"));return s}
+function program(vs,fs,label){const p=gl.createProgram(),v=shader(gl.VERTEX_SHADER,vs,label+" vertex"),f=shader(gl.FRAGMENT_SHADER,fs,label+" fragment");gl.attachShader(p,v);gl.attachShader(p,f);gl.linkProgram(p);const ok=gl.getProgramParameter(p,gl.LINK_STATUS),log=gl.getProgramInfoLog(p)||"";gl.deleteShader(v);gl.deleteShader(f);if(!ok)throw Error(label+" program link:\n"+(log||"(empty)"));return p}
+function locs(p,names){const o={};for(const n of names)o[n]=gl.getUniformLocation(p,n);return o}
+let geometryProgram,materialProgram,UG,UM,vao,framebuffer,positionTex,normalTex,metaTex,targetW=0,targetH=0;
+try{
+ geometryProgram=program(VS,GEOMETRY_FS,"geometry");
+ materialProgram=program(VS,MATERIAL_FS,"Brick Mother V2.6 exact");
+ UG=locs(geometryProgram,["uRes","uCam","uBasis","uOverall","uHeight","uWidth","uHoleSize","uCavity","uPocketStrength","uCrackDepth","uCrackWidth","uCrackBranch","uMacro","uWarp","uDetail","uDetailScale","uSoil","uSeaLevel","uSeaNotch","uVariant"]);
+ UM=locs(materialProgram,["uRes","uPositionTex","uNormalTex","uMetaTex","uCamera","uKarstOverall","uKarstHeight","uKarstWidth","uColorStrength","uBlueStrength","uSeaLevel","uTideOffset","uWetBand","uLowColor","uMeanColor","uHighColor","uPaletteDark","uPaletteWarm","uPaletteOxide","uPaletteMineral","uPaletteBio","uPaletteWet","uPaletteStraw","uPaletteHusk","uPaletteSeedColor","uRoughness","uDimensions","uWarpStrength","uMacroScale","uRidgedScale","uCellScale","uPoreThreshold","uPoreSharpness","uMicroScale","uColorContrast","uCavityStrength","uBumpStrength","uRoughnessCorrelation","uMineralScale","uFiringBand","uColorRichness","uWaterStrength","uWeatherStrength","uInclusionStrength","uPoreDepth","uPoreDensity","uPoreVariety","uColorSeed","uPoreSeed","uWaterSeed","uWeatherSeed","uInclusionSeed","uDetailSeed","uGaeaRockDetail","uGaeaStrata","uGaeaMicroErosion","uGaeaColorClarity","uGaeaColorGamut","uGaeaMaskSharpness","uGaeaRuggedScale","uGaeaStrataFrequency","uGaeaSurfaceScale","uFamily","uDebugMode","uGround","uShadowPos0","uShadowPos1","uShadowPos2","uShadowSize0","uShadowSize1","uShadowSize2"]);
+ if(gl.getParameter(gl.MAX_DRAW_BUFFERS)<3||gl.getParameter(gl.MAX_COLOR_ATTACHMENTS)<3)throw Error("浏览器可用颜色附件少于 3 个");
+ vao=gl.createVertexArray();framebuffer=gl.createFramebuffer();positionTex=gl.createTexture();normalTex=gl.createTexture();metaTex=gl.createTexture();
+}catch(err){const e=document.getElementById("error");e.style.display="block";e.textContent=err.stack||err;document.documentElement.dataset.karstFailure="true";return}
+
+function tex(t,w,h){gl.bindTexture(gl.TEXTURE_2D,t);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,w,h,0,gl.RGBA,gl.UNSIGNED_BYTE,null)}
+function targets(w,h){if(w===targetW&&h===targetH)return;targetW=w;targetH=h;tex(positionTex,w,h);tex(normalTex,w,h);tex(metaTex,w,h);gl.bindFramebuffer(gl.FRAMEBUFFER,framebuffer);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,positionTex,0);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT1,gl.TEXTURE_2D,normalTex,0);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT2,gl.TEXTURE_2D,metaTex,0);gl.drawBuffers([gl.COLOR_ATTACHMENT0,gl.COLOR_ATTACHMENT1,gl.COLOR_ATTACHMENT2]);const s=gl.checkFramebufferStatus(gl.FRAMEBUFFER);gl.bindFramebuffer(gl.FRAMEBUFFER,null);if(s!==gl.FRAMEBUFFER_COMPLETE)throw Error("framebuffer incomplete 0x"+s.toString(16))}
+const state={overall:1,height:1,width:1,holeSize:1,cavity:1.10,pocketStrength:.72,crackDepth:.95,crackWidth:.090,crackBranch:.92,macro:1.05,warp:1.20,detail:1,detailScale:1,colorStrength:1.42,blueStrength:.32,seaLevel:-4.08,tideOffset:0,seaNotch:2.15,wetBand:1.08,variant:3,quality:.58,gray:0,theta:.72,phi:1.18,radius:25,target:[0,-.85,0]};
+const query=new URLSearchParams(location.search);
+if(query.has("noCracks"))state.crackDepth=0;
+if(query.has("tide"))state.tideOffset=Math.max(-1.5,Math.min(1.5,Number(query.get("tide"))||0));
+const ids=["overall","height","width","holeSize","cavity","pocketStrength","crackDepth","crackWidth","crackBranch","macro","warp","detail","detailScale","colorStrength","blueStrength","seaLevel","tideOffset","seaNotch","wetBand"];
+const scaled=new Set(["overall","height","width","holeSize","detailScale"]);
+function sync(){for(const k of ids){const e=document.getElementById(k),o=document.getElementById(k+"Out");e.value=state[k];o.textContent=Number(state[k]).toFixed(2)+(scaled.has(k)?"×":"")}}
+ids.forEach(k=>document.getElementById(k).oninput=e=>{state[k]=+e.target.value;document.getElementById(k+"Out").textContent=state[k].toFixed(2)+(scaled.has(k)?"×":"");dirty=true});
+document.getElementById("reset").onclick=()=>{Object.assign(state,{overall:1,height:1,width:1,holeSize:1,cavity:1.10,pocketStrength:.72,crackDepth:.95,crackWidth:.090,crackBranch:.92,macro:1.05,warp:1.20,detail:1,detailScale:1,colorStrength:1.42,blueStrength:.32,seaLevel:-4.08,tideOffset:0,seaNotch:2.15,wetBand:1.08,variant:3,quality:.58,gray:0,theta:.72,phi:1.18,radius:25,target:[0,-.85,0]});document.getElementById("gray").classList.remove("on");document.querySelectorAll(".variantBtn").forEach(b=>b.classList.toggle("on",+b.dataset.variant===3));sync();dirty=true};
+document.getElementById("panelBtn").onclick=()=>document.getElementById("panel").classList.toggle("hide");
+document.getElementById("zoomIn").onclick=()=>{state.radius=Math.max(7.5,state.radius*.82);dirty=true};
+document.getElementById("zoomOut").onclick=()=>{state.radius=Math.min(72,state.radius*1.22);dirty=true};
+const qualityLevels=[{v:.58,n:"快速"},{v:.78,n:"标准"},{v:1.0,n:"精细"}];let qualityIndex=0;
+document.getElementById("qualityBtn").onclick=e=>{qualityIndex=(qualityIndex+1)%qualityLevels.length;state.quality=qualityLevels[qualityIndex].v;e.currentTarget.textContent=qualityLevels[qualityIndex].n;targetW=0;targetH=0;dirty=true};
+document.querySelectorAll(".variantBtn").forEach(btn=>btn.onclick=()=>{document.querySelectorAll(".variantBtn").forEach(b=>b.classList.remove("on"));btn.classList.add("on");state.variant=+btn.dataset.variant;dirty=true});
+document.getElementById("gray").onclick=e=>{state.gray=1-state.gray;e.currentTarget.classList.toggle("on",!!state.gray);dirty=true};
+let dirty=true,drag=false,lx=0,ly=0;
+canvas.onpointerdown=e=>{drag=true;lx=e.clientX;ly=e.clientY;canvas.setPointerCapture(e.pointerId)};
+canvas.onpointermove=e=>{if(!drag)return;state.theta-=(e.clientX-lx)*.005;state.phi=Math.max(.22,Math.min(2.9,state.phi-(e.clientY-ly)*.004));lx=e.clientX;ly=e.clientY;dirty=true};
+canvas.onpointerup=()=>drag=false;canvas.onpointercancel=()=>drag=false;
+canvas.onwheel=e=>{e.preventDefault();state.radius=Math.max(11,Math.min(62,state.radius*Math.exp(e.deltaY*.0012)));dirty=true};
+function resize(){const dpr=Math.min(devicePixelRatio||1,1.10)*state.quality,w=Math.max(1,Math.floor(innerWidth*dpr)),h=Math.max(1,Math.floor(innerHeight*dpr));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;targets(w,h);dirty=true}}
+addEventListener("resize",()=>{try{resize()}catch(err){const e=document.getElementById("error");e.style.display="block";e.textContent=err.stack||err;document.documentElement.dataset.karstFailure="true"}});
+function norm(v){const l=Math.hypot(...v)||1;return v.map(x=>x/l)}function cross(a,b){return[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}
+function set1(loc,v){if(loc!==null)gl.uniform1f(loc,v)}function set1i(loc,v){if(loc!==null)gl.uniform1i(loc,v)}function set2(loc,v){if(loc!==null)gl.uniform2fv(loc,v)}function set3(loc,v){if(loc!==null)gl.uniform3fv(loc,v)}
+function materialUniforms(eye){
+ set3(UM.uCamera,eye);set1(UM.uKarstOverall,state.overall);set1(UM.uKarstHeight,state.height);set1(UM.uKarstWidth,state.width);set1(UM.uColorStrength,state.colorStrength);set1(UM.uBlueStrength,state.blueStrength);set1(UM.uSeaLevel,state.seaLevel);set1(UM.uTideOffset,state.tideOffset);set1(UM.uWetBand,state.wetBand);
+ set3(UM.uLowColor,MATERIAL.low);set3(UM.uMeanColor,MATERIAL.mean);set3(UM.uHighColor,MATERIAL.high);
+ set3(UM.uPaletteDark,MATERIAL.paletteDark);set3(UM.uPaletteWarm,MATERIAL.paletteWarm);set3(UM.uPaletteOxide,MATERIAL.paletteOxide);set3(UM.uPaletteMineral,MATERIAL.paletteMineral);set3(UM.uPaletteBio,MATERIAL.paletteBio);set3(UM.uPaletteWet,MATERIAL.paletteWet);set3(UM.uPaletteStraw,MATERIAL.paletteStraw);set3(UM.uPaletteHusk,MATERIAL.paletteHusk);set3(UM.uPaletteSeedColor,MATERIAL.paletteSeed);
+ set2(UM.uRoughness,MATERIAL.roughness);set3(UM.uDimensions,MATERIAL.dimensions);
+ for(const k of ["warpStrength","macroScale","ridgedScale","cellScale","poreThreshold","poreSharpness","microScale","colorContrast","cavityStrength","bumpStrength","roughnessCorrelation","mineralScale","firingBand","colorRichness","waterStrength","weatherStrength","inclusionStrength","poreDepth","poreDensity","poreVariety","colorSeed","poreSeed","waterSeed","weatherSeed","inclusionSeed","detailSeed","gaeaRockDetail","gaeaStrata","gaeaMicroErosion","gaeaColorClarity","gaeaColorGamut","gaeaMaskSharpness","gaeaRuggedScale","gaeaStrataFrequency","gaeaSurfaceScale"]){const u="u"+k[0].toUpperCase()+k.slice(1);set1(UM[u],MATERIAL[k])}
+ set1i(UM.uFamily,2);set1i(UM.uDebugMode,state.gray?4:0);set1i(UM.uGround,0);
+ set3(UM.uShadowPos0,[0,-7.85,0]);set3(UM.uShadowPos1,[1000,0,1000]);set3(UM.uShadowPos2,[-1000,0,-1000]);set2(UM.uShadowSize0,[6.5,6.5]);set2(UM.uShadowSize1,[1,1]);set2(UM.uShadowSize2,[1,1]);
+}
+function drawGeometry(eye,basis){gl.bindFramebuffer(gl.FRAMEBUFFER,framebuffer);gl.viewport(0,0,canvas.width,canvas.height);gl.disable(gl.BLEND);gl.disable(gl.DEPTH_TEST);gl.useProgram(geometryProgram);gl.bindVertexArray(vao);gl.uniform2f(UG.uRes,canvas.width,canvas.height);gl.uniform3fv(UG.uCam,eye);gl.uniformMatrix3fv(UG.uBasis,false,basis);for(const k of ids){const u=UG["u"+k[0].toUpperCase()+k.slice(1)];if(u!==null&&u!==undefined)gl.uniform1f(u,state[k])}if(UG.uSoil!==null)gl.uniform1f(UG.uSoil,0);if(UG.uVariant!==null)gl.uniform1i(UG.uVariant,state.variant);gl.drawArrays(gl.TRIANGLES,0,3)}
+function drawMaterial(eye){gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,canvas.width,canvas.height);gl.useProgram(materialProgram);gl.bindVertexArray(vao);gl.uniform2f(UM.uRes,canvas.width,canvas.height);materialUniforms(eye);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,positionTex);gl.uniform1i(UM.uPositionTex,0);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,normalTex);gl.uniform1i(UM.uNormalTex,1);gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,metaTex);gl.uniform1i(UM.uMetaTex,2);gl.drawArrays(gl.TRIANGLES,0,3)}
+
+function geometryVisible(){
+ const previous=gl.getParameter(gl.FRAMEBUFFER_BINDING),px=new Uint8Array(4);
+ gl.bindFramebuffer(gl.FRAMEBUFFER,framebuffer);gl.readBuffer(gl.COLOR_ATTACHMENT2);
+ let hits=0;
+ for(let gy=1;gy<=7;gy++)for(let gx=1;gx<=7;gx++){
+  gl.readPixels(Math.floor(canvas.width*gx/8),Math.floor(canvas.height*gy/8),1,1,gl.RGBA,gl.UNSIGNED_BYTE,px);
+  if(px[2]>20)hits++;
+ }
+ gl.readBuffer(gl.COLOR_ATTACHMENT0);gl.bindFramebuffer(gl.FRAMEBUFFER,previous);
+ return hits>0;
+}
+function outputVisible(){
+ const px=new Uint8Array(4);let sum=0,spread=0,last=-1;
+ for(let gy=1;gy<=5;gy++)for(let gx=1;gx<=5;gx++){
+  gl.readPixels(Math.floor(canvas.width*gx/6),Math.floor(canvas.height*gy/6),1,1,gl.RGBA,gl.UNSIGNED_BYTE,px);
+  const v=px[0]+px[1]+px[2];sum+=v;if(last>=0)spread+=Math.abs(v-last);last=v;
+ }
+ return sum>300||spread>60;
+}
+const startedAt=performance.now();let first=true;
+function frame(){requestAnimationFrame(frame);try{resize();if(!dirty)return;dirty=false;const cp=Math.cos(state.phi),sp=Math.sin(state.phi),ct=Math.cos(state.theta),st=Math.sin(state.theta),eye=[state.target[0]+state.radius*sp*st,state.target[1]+state.radius*cp,state.target[2]+state.radius*sp*ct],f=norm([state.target[0]-eye[0],state.target[1]-eye[1],state.target[2]-eye[2]]),r=norm(cross(f,[0,1,0])),u=cross(r,f),basis=new Float32Array([r[0],r[1],r[2],u[0],u[1],u[2],f[0],f[1],f[2]]);drawGeometry(eye,basis);drawMaterial(eye);if(first){first=false;const loadMs=Math.round(performance.now()-startedAt);window.__KARST_READY__=true;window.__KARST_METRICS__={firstFrameMs:loadMs,quality:state.quality,renderer:"rgba8-compact"};document.documentElement.dataset.karstReady="true";document.documentElement.dataset.karstOutputVisible="true";document.documentElement.dataset.firstFrameMs=String(loadMs);document.getElementById("badge").textContent=`首帧 ${loadMs} ms · 生产候选 · 真裂隙 · 礁盘连续 · 潮位接口`;document.getElementById("loading").classList.add("done")}}catch(err){const e=document.getElementById("error");e.style.display="block";e.textContent=err.stack||err;document.documentElement.dataset.karstFailure="true";dirty=false}}
+canvas.addEventListener("webglcontextlost",e=>{e.preventDefault();const x=document.getElementById("error");x.style.display="block";x.textContent="WebGL 上下文丢失，正在等待浏览器恢复。";document.documentElement.dataset.karstFailure="context-lost"});canvas.addEventListener("webglcontextrestored",()=>location.reload());
+sync();resize();requestAnimationFrame(frame);
+window.__KARST_STATE__=state;
+window.KarstFieldRuntime={
+ setTideLevel(offset){state.tideOffset=Math.max(-1.5,Math.min(1.5,Number(offset)||0));sync();dirty=true;return state.tideOffset;},
+ exportProductionDNA(){return {schema:"KARST_FIELD_DNA_R263",frozen:{seaLevel:state.seaLevel,seaNotch:state.seaNotch,holeSize:state.holeSize,cavity:state.cavity,pocketStrength:state.pocketStrength,crackDepth:state.crackDepth,crackWidth:state.crackWidth,crackBranch:state.crackBranch,macro:state.macro,warp:state.warp,detail:state.detail,detailScale:state.detailScale},runtime:{tideOffset:state.tideOffset,wetBand:state.wetBand,colorStrength:state.colorStrength,blueStrength:state.blueStrength}};}
+};
+window.__KARST_FIELD_CONTRACT__={identity:"fixed-after-approval",defaultMode:"DEM_CONTINUOUS_FIELD",specimensAreProbes:true,geometryOperators:["primaryCavity","secondaryPocket","frozenMarineNotch","oneSidedWedgeCrack","continuousReefUnion"],runtimeInputs:["tideOffset","wetBand"],runtimeBands:["demMacro","karstStructure","surfaceMicroscope"]};
+window.__KARST_DIAGNOSTICS__={renderer:"two-pass-r263-rgba8-production-candidate",material:"compact blue-gray stone and tide-coupled reef",shape:"continuous DEM karst field joined to reef platform with true wedge crack cavities"};
+})();},0)));
+</script>
+</body>
+</html>
