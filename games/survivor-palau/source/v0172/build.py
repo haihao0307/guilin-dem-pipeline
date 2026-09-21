@@ -68,23 +68,57 @@ choose_target = '''function chooseFishingTarget(){
 }'''
 s = s[:start] + choose_target + s[end:]
 
-# Surface observation uses a bare handline entering the water close to the camera. Retaining the
-# canoe-mounted rod in this view placed a giant hull and rod across the evidence frame and contradicted
-# the locked one-hand-controls-line posture.
+# Surface observation uses a bare handline. The line begins beyond the camera near plane and is much
+# thinner than the canoe rod line. Broken gear disappears; a caught fish is shown at arm's length,
+# never collapsed onto the eye position. Degenerate zero-length tube segments are skipped.
 tackle_start = s.index('function buildTackle(){')
 tackle_end = s.index('\nfunction updateFishing(', tackle_start)
 tackle = '''function buildTackle(){
  if(!FISH.target||FISH.phase==='closed')return;
- const g=new PalauGeometry(),o=SURVIVAL.observation,surface=!!o.active,sx=surface?o.anchorX:CANOE_STATE.x,sz=surface?o.anchorZ:CANOE_STATE.z;
- const a=surface?Math.atan2(FISH.target.x-sx,FISH.target.z-sz):CANOE_STATE.yaw,dx=Math.sin(a),dz=Math.cos(a),water=waveAt(sx,sz,physicalTime,config).eta;
- let tip;if(surface){tip=[sx+dx*.28,water-.04,sz+dz*.28];}else{const root=[sx+dx,water+.28,sz+dz];tip=[sx+dx*3.1,water+2.6,sz+dz*3.1];g.tube(root,tip,.027,6,6);}
+ const o=SURVIVAL.observation,surface=!!o.active;
+ if(surface&&FISH.phase==='broken'){
+  if(tackleGeo){disposeGeo(tackleGeo);tackleGeo=null;}
+  SURVIVAL.telemetry.surfaceLineVisible=false;
+  SURVIVAL.telemetry.brokenLineVisible=false;
+  SURVIVAL.telemetry.caughtFishRangeM=0;
+  opaqueDirty=true;
+  return;
+ }
+ const g=new PalauGeometry(),sx=surface?o.anchorX:CANOE_STATE.x,sz=surface?o.anchorZ:CANOE_STATE.z;
+ const a=surface?Math.atan2(FISH.target.x-sx,FISH.target.z-sz):CANOE_STATE.yaw,dx=Math.sin(a),dz=Math.cos(a),rx=dz,rz=-dx,water=waveAt(sx,sz,physicalTime,config).eta;
+ let tip,lineRadius=.012;
+ if(surface){
+  tip=[sx+dx*.95+rx*.38,water-.22,sz+dz*.95+rz*.38];
+  lineRadius=.0035;
+  const eye=[o.anchorX,o.bobY-.055,o.anchorZ];
+  SURVIVAL.telemetry.surfaceLineOriginRangeM=Math.hypot(tip[0]-eye[0],tip[1]-eye[1],tip[2]-eye[2]);
+  SURVIVAL.telemetry.surfaceLineRadiusM=lineRadius;
+ }else{
+  const root=[sx+dx,water+.28,sz+dz];tip=[sx+dx*3.1,water+2.6,sz+dz*3.1];g.tube(root,tip,.027,6,6);
+ }
  const t=FISH.phase==='ready'?0:FISH.phase==='cast'?smooth(0,1,FISH.time):1,progress=FISH.phase==='caught'?1:FISH.phase==='reel'?FISH.progress:0;
- const startPoint=surface?[sx+dx*.55,water-.08,sz+dz*.55]:[sx+dx*3,water+.12,sz+dz*3];
+ const startPoint=surface?[sx+dx*1.05+rx*.38,water-.24,sz+dz*1.05+rz*.38]:[sx+dx*3,water+.12,sz+dz*3];
  const land=[mix(startPoint[0],FISH.target.x,t)*(1-progress)+tip[0]*progress,0,mix(startPoint[2],FISH.target.z,t)*(1-progress)+tip[2]*progress];
  land[1]=waveAt(land[0],land[2],physicalTime,config).eta+pilotLineEndOffset(t)+(FISH.phase==='cast'?Math.sin(t*Math.PI)*(surface?1.2:3):0)-(FISH.phase==='bite'?.18:0);
- let p=tip;for(let i=1;i<=14;i++){const f=i/14,q=tip.map((v,k)=>mix(v,land[k],f));q[1]-=Math.sin(f*Math.PI)*(surface ? .22 : .36);g.tube(p,q,.012,10,4);p=q;}
- g.sphere(...land,.085,.14,.085,11,0,5,8);
- if(FISH.phase==='caught'){const cx=sx+dx*.42,cz=sz+dz*.42,cy=water+(surface ? .06 : .62);g.sphere(cx,cy,cz,.16,.12,.43,8,31,6,10);const rx=dz,rz=-dx,k=g.v.length/7;g.vertex([cx-dx*.28,cy,cz-dz*.28],8);g.vertex([cx-dx*.52+rx*.18,cy,cz-dz*.52+rz*.18],8);g.vertex([cx-dx*.52-rx*.18,cy,cz-dz*.52-rz*.18],8);g.tri(k,k+1,k+2);g.tri(k,k+2,k+1);}
+ if(!(surface&&FISH.phase==='caught')){
+  let p=tip;for(let i=1;i<=14;i++){const f=i/14,q=tip.map((v,k)=>mix(v,land[k],f));q[1]-=Math.sin(f*Math.PI)*(surface ? .22 : .36);if(Math.hypot(q[0]-p[0],q[1]-p[1],q[2]-p[2])>.02)g.tube(p,q,lineRadius,10,4);p=q;}
+  g.sphere(...land,.085,.14,.085,11,0,5,8);
+ }
+ if(FISH.phase==='caught'){
+  if(surface){
+   const cx=sx+dx*1.85+rx*.65,cz=sz+dz*1.85+rz*.65,cy=water-.32;
+   pilotFishShape(g,{x:cx,y:cy,z:cz,heading:a+Math.PI,size:.28,kind:8,seed:401});
+   const eye=[o.anchorX,o.bobY-.055,o.anchorZ];
+   SURVIVAL.telemetry.caughtFishRangeM=Math.hypot(cx-eye[0],cy-eye[1],cz-eye[2]);
+   SURVIVAL.telemetry.surfaceLineVisible=false;
+  }else{
+   const cx=sx,cz=sz,cy=water+.62;g.sphere(cx,cy,cz,.16,.12,.43,8,31,6,10);const k=g.v.length/7;g.vertex([cx-dx*.28,cy,cz-dz*.28],8);g.vertex([cx-dx*.52+rx*.18,cy,cz-dz*.52+rz*.18],8);g.vertex([cx-dx*.52-rx*.18,cy,cz-dz*.52-rz*.18],8);g.tri(k,k+1,k+2);g.tri(k,k+2,k+1);
+  }
+ }else if(surface){
+  SURVIVAL.telemetry.caughtFishRangeM=0;
+  SURVIVAL.telemetry.surfaceLineVisible=true;
+ }
+ if(surface)SURVIVAL.telemetry.brokenLineVisible=false;
  if(tackleGeo)disposeGeo(tackleGeo);tackleGeo=g.upload();opaqueDirty=true;
 }'''
 s = s[:tackle_start] + tackle + s[tackle_end:]
@@ -125,6 +159,10 @@ meta = {
     'observationLateralOffsetM': 4.2,
     'activeObservationCameraReframed': True,
     'surfaceHandlineOrigin': True,
+    'surfaceLineOriginMinimumM': .9,
+    'surfaceLineRadiusM': .0035,
+    'brokenSurfaceLineRemoved': True,
+    'caughtFishArmLengthPlacement': True,
     'canoeRodRemovedFromSurfaceObservation': True,
     'autoCatch': False,
     'elasticSpear': False,
