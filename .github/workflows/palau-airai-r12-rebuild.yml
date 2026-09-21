@@ -73,10 +73,22 @@ jobs:
           python "$ROOT/verify_r12.py" | tee "$ROOT/evidence/numeric-qa.json"
           xvfb-run -a python "$ROOT/qa_browser_r12.py" --out "$ROOT/evidence"
           python "$ROOT/finalize_r12.py" | tee /tmp/airai-r12-finalize.json
-          test "$(python -c 'import json; print(json.load(open("games/survivor-palau/palau-world/airai-r12/evidence/numeric-qa.json"))["status"])')" = PASS
-          test "$(python -c 'import json; print(json.load(open("games/survivor-palau/palau-world/airai-r12/evidence/browser-qa.json"))["status"])')" = PASS
-          test "$(python -c 'import json; print(json.load(open("games/survivor-palau/palau-world/airai-r12/R12_QA_RECEIPT.json"))["browserStatus"])')" = PASS
-          test "$(python -c 'import json; print(str(json.load(open("games/survivor-palau/palau-world/airai-r12/PUBLICATION_PROOF.json"))["shareAllowed"]).lower())')" = false
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('games/survivor-palau/palau-world/airai-r12')
+          numeric = json.loads((root / 'evidence/numeric-qa.json').read_text())
+          browser = json.loads((root / 'evidence/browser-qa.json').read_text())
+          receipt = json.loads((root / 'R12_QA_RECEIPT.json').read_text())
+          publication = json.loads((root / 'PUBLICATION_PROOF.json').read_text())
+          assert numeric['status'] == 'PASS'
+          assert len(browser) == 2
+          assert all(item['initial']['qa']['actualWebGL2'] for item in browser)
+          assert all(item['afterInteraction']['glError'] == 0 for item in browser)
+          assert all(not item['console'] and not item['pageErrors'] for item in browser)
+          assert receipt['browserStatus'] == 'PASS'
+          assert publication['shareAllowed'] is False
+          PY
 
       - name: Commit exact rebuilt assets to the work branch
         shell: bash
