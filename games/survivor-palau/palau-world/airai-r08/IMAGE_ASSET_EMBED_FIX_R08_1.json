@@ -1,0 +1,24 @@
+{
+  "schema": "kaopu.palau.airai.image-asset-embed-fix/1.0",
+  "version": "AIRAI_R08_1_EMBEDDED_USER_AUTHORITY",
+  "failure": "R08 index.html referenced assets/palau_full_user_authority.jpeg and assets/stone_money_yellow_user_authority.jpeg, but the delivered workbench package did not contain the assets directory. Both evidence planes therefore rendered as broken-image placeholders.",
+  "repair": "Embed the exact user-authority JPEG bytes as data:image/jpeg;base64 URIs in the single HTML workbench; no external authority-image path remains.",
+  "fullImageSha256": "5b6e1d716bfa66f204aac9240944fe5d1526444d981ccb8a3f23875633d73312",
+  "storyImageSha256": "4fad4cd637fd556044fec5cfd56f6ef29eb8859a72a543788feb7084c4daeb47",
+  "fixedHtmlSha256": "8a93637cf7d84d2f2e5943eba24092f3be88d1c011c27b6486fa53266b57ecca",
+  "fixedHtmlBytes": 922100,
+  "browserChecks": {
+    "desktop1536x960": true,
+    "mobile390x844": true,
+    "allThreeImageElementsLoaded": true,
+    "fullImageNaturalSize": [581, 1260],
+    "storyImageNaturalSize": [1284, 2778],
+    "consoleErrors": 0,
+    "pageErrors": 0
+  },
+  "browserCheckMethod": "Chromium set_content rendering was used because host administrator policy blocks local HTTP/file navigation; screenshots are real rendered browser frames, not generated mockups.",
+  "oldCandidateCount": 0,
+  "inventedStructureCount": 0,
+  "visualAcceptance": false,
+  "regressionGate": "Any future one-click package must either embed authority images or include and verify every referenced asset before delivery. Broken-image placeholders are an automatic delivery failure."
+}
