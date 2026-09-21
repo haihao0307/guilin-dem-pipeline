@@ -1,0 +1,141 @@
+{
+  "schema": "kaopu.palau.airai-r12-qa/1.1",
+  "version": "AIRAI_R12_REPRODUCIBLE_EVIDENCE_RUNTIME_20260921",
+  "numeric": {
+    "schema": "kaopu.palau.airai-r12-verification/1.0",
+    "status": "PASS",
+    "assertions": 31,
+    "deterministicRebuild": true,
+    "mismatches": [],
+    "counts": {
+      "soundingsCore": 392,
+      "contourConstraintPointsCore": 663,
+      "candidateValidCells": 56874,
+      "candidateNoDataCells": 39226,
+      "landSupportedCells": 5225,
+      "depareSupportedCells": 50334,
+      "depareContradictionCells": 28028,
+      "depareShallowerCells": 10510,
+      "depareDeeperCells": 17518
+    },
+    "sampler": {
+      "status": "PASS",
+      "assertions": 20,
+      "version": "AIRAI_R12_REPRODUCIBLE_EVIDENCE_RUNTIME_20260921",
+      "centerDepthM": 11.057,
+      "knownDepthM": 30.921,
+      "knownUncertaintyM": 7.518,
+      "historicalReproductionMatch": false
+    },
+    "historicalReceiptComparison": {
+      "historicalReport": "../airai-r04/results-r01/ENC_DEPARE_CONSISTENCY_R11.json",
+      "historicalDerivedRasterPresentInHandoff": false,
+      "historicalDepthStatsM": {
+        "count": 56874,
+        "min": 0.009978439658880234,
+        "p05": 1.3437269806861878,
+        "median": 26.384629249572754,
+        "p95": 206.33278808593735,
+        "max": 849.2308349609375
+      },
+      "rebuiltFromSealedVectorsDepthStatsM": {
+        "count": 56874,
+        "min": 0.009713289327919483,
+        "p05": 1.3420839309692383,
+        "median": 26.363292694091797,
+        "p95": 196.25405883789062,
+        "max": 849.1170654296875
+      },
+      "rebuiltMinusHistoricalM": {
+        "min": -0.0002651503309607506,
+        "p05": -0.0016430497169495073,
+        "median": -0.02133655548095703,
+        "p95": -10.078729248046727,
+        "max": -0.11376953125
+      },
+      "numericReproductionMatch": false,
+      "interpretation": "LINEAGE_DRIFT: the sealed vectors and scripts rebuild the same grid geometry and valid-cell coverage, but not the historical R11 depth distribution; the missing historical GeoTIFF cannot be reconstructed byte-for-byte."
+    }
+  },
+  "browser": [
+    {
+      "name": "desktop_1440x900",
+      "viewport": [
+        1440,
+        900
+      ],
+      "actualWebGL2": true,
+      "consoleErrors": 0,
+      "consoleWarnings": 0,
+      "pageErrors": [],
+      "glErrorAfterInteraction": 0,
+      "fpsSoftwareRenderer": 5,
+      "overflow": {
+        "x": 0,
+        "y": 0
+      },
+      "interactionMode": "1",
+      "sampleText": "{\n  \"status\": \"CANDIDATE_NOT_SURVEY_TRUTH\",\n  \"wgs84\": {\n    \"lon\": 134.585,\n    \"lat\": 7.345\n  },\n  \"depthM\": 30.92,\n  \"uncertaintyM\": 7.52,\n  \"nearestEvidenceM\": 48.1,\n  \"chartedLand\": false,\n  \"semantic\": \"outside_allen_geomorphic_or_unclassified\",\n  \"depare\": \"within_depare_or_partial_interval\",\n  \"verticalDatum\": \"local datum\"\n}",
+      "canvas": [
+        1440,
+        900
+      ],
+      "status": "RUNNING · 6 FPS · 101312 seabed triangles · 9140 flat LNDARE diagnostic triangles · 392 soundings · visualAcceptance=false"
+    },
+    {
+      "name": "mobile_390x844",
+      "viewport": [
+        390,
+        844
+      ],
+      "actualWebGL2": true,
+      "consoleErrors": 0,
+      "consoleWarnings": 0,
+      "pageErrors": [],
+      "glErrorAfterInteraction": 0,
+      "fpsSoftwareRenderer": 7,
+      "overflow": {
+        "x": 0,
+        "y": 0
+      },
+      "interactionMode": "1",
+      "sampleText": "{\n  \"status\": \"CANDIDATE_NOT_SURVEY_TRUTH\",\n  \"wgs84\": {\n    \"lon\": 134.585,\n    \"lat\": 7.345\n  },\n  \"depthM\": 30.92,\n  \"uncertaintyM\": 7.52,\n  \"nearestEvidenceM\": 48.1,\n  \"chartedLand\": false,\n  \"semantic\": \"outside_allen_geomorphic_or_unclassified\",\n  \"depare\": \"within_depare_or_partial_interval\",\n  \"verticalDatum\": \"local datum\"\n}",
+      "canvas": [
+        390,
+        844
+      ],
+      "status": "RUNNING · 8 FPS · 101312 seabed triangles · 9140 flat LNDARE diagnostic triangles · 392 soundings · visualAcceptance=false"
+    }
+  ],
+  "browserStatus": "PASS",
+  "browserFailures": [],
+  "screenshots": [
+    {
+      "path": "evidence/desktop_1440x900_depth_initial.png",
+      "bytes": 259982,
+      "sha256": "f69afcb7df9e54b915c8f5bc86febdcada4b74ecea847bcbb7e5f40094999a80"
+    },
+    {
+      "path": "evidence/desktop_1440x900_uncertainty_interaction.png",
+      "bytes": 721847,
+      "sha256": "e647080d217b6f273dc083396349b0d77b702d94ddcb19f8b7849fbf74d52977"
+    },
+    {
+      "path": "evidence/mobile_390x844_depth_initial.png",
+      "bytes": 131052,
+      "sha256": "09e93b81c51563c1865e72c1e2ce96e15600f3edddd72a91d11b5fa4c360d002"
+    },
+    {
+      "path": "evidence/mobile_390x844_uncertainty_interaction.png",
+      "bytes": 209467,
+      "sha256": "8ba505d9ec4c760266ddb221d428e5613090b2027ae26122be381175fb975453"
+    }
+  ],
+  "performanceBoundary": "FPS values are from a software renderer under Xvfb/SwiftShader and prove only that the shipped WebGL2 path runs. They are not a production desktop-GPU, mobile-GPU, or integrated-world performance claim.",
+  "buildContext": {
+    "githubRepository": "haihao0307/guilin-dem-pipeline",
+    "githubRunId": "35574893460",
+    "githubSha": "6399561ae480e683dcb54be7127d220851548b8b",
+    "githubRefName": "work/palau-airai-r12-reproducible-evidence-runtime-20260921"
+  }
+}
