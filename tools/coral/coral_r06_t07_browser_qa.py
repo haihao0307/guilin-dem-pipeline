@@ -166,11 +166,13 @@ def run_view(
         assert initial["t07"].get("ready") is True, initial
         assert initial["t07"].get("microscopeAffectsGeometry") is True, initial
         assert initial["t07"].get("rootConnectedPruning") is True, initial
+        assert initial["t07"].get("adjustableControls") == 12, initial
         assert initial["build"].get("runtimeGLB") == 0, initial
         assert initial["build"].get("runtimeTextures") == 0, initial
         assert initial["build"].get("networkFetches") == 0, initial
         fine = initial["fine"]
-        assert fine == {"min": "0", "max": "1", "step": "0.001", "value": "0.220"}, initial
+        assert fine["min"] == "0" and fine["max"] == "1" and fine["step"] == "0.001", initial
+        assert abs(float(fine["value"]) - 0.22) < 1e-9, initial
         assert not initial["overflow"], initial
 
         qa = initial["qa"]
@@ -180,7 +182,9 @@ def run_view(
         assert qa.get("allActiveRootConnected") is True, initial
         assert qa.get("disconnectedActiveEdges") == 0, initial
         assert qa.get("visualAcceptance") is False and qa.get("productionReady") is False, initial
-        assert qa.get("growthPaths", 0) > 0 and qa.get("activeEdges", 0) > 0, initial
+        assert qa.get("growthPaths", 0) > 15 and qa.get("activeEdges", 0) > 50, initial
+        assert qa.get("activeNodeCount", 0) > 50, initial
+        assert qa.get("aspectErrorPct", 100) < 20, initial
 
         if require_all_visible:
             assert initial["mainWidthRatio"] >= 0.985, initial
