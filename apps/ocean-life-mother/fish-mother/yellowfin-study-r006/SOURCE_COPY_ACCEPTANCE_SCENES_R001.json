@@ -1,0 +1,95 @@
+{
+  "schema": "kaopu.fish-mother.yellowfin-source-copy-acceptance-scenes/1.0",
+  "date": "2026-09-21",
+  "target": "YELLOWFIN-SOURCE-COPY-R001",
+  "staticScenes": [
+    {
+      "id": "side-left",
+      "view": "source side_left projection fit",
+      "purpose": "silhouette, mouth, eye, operculum, finlets, stripe"
+    },
+    {
+      "id": "three-quarter",
+      "view": "source three_quarter projection fit",
+      "purpose": "body volume, fin roots, eye/cornea, jaw/cheek continuity"
+    },
+    {
+      "id": "front",
+      "view": "source front projection fit",
+      "purpose": "maximum width, bilateral symmetry, eye spacing, pectoral roots"
+    },
+    {
+      "id": "top",
+      "view": "source top projection fit",
+      "purpose": "body width distribution, pectoral span, peduncle taper"
+    },
+    {
+      "id": "head-close",
+      "view": "head crop from matched camera",
+      "purpose": "snout, lips, jaw, eye, cornea, operculum free edge"
+    },
+    {
+      "id": "peduncle-close",
+      "view": "rear side/top crops",
+      "purpose": "minimum cross-section, keel system, finlet roots, caudal continuity"
+    },
+    {
+      "id": "dorsal-close",
+      "view": "side/three-quarter crop",
+      "purpose": "first/second dorsal rays, membrane, root tangent"
+    },
+    {
+      "id": "anal-close",
+      "view": "side/three-quarter crop",
+      "purpose": "anal rays, membrane, root tangent"
+    }
+  ],
+  "motionScenes": [
+    {
+      "id": "swim-p0",
+      "phase": 0
+    },
+    {
+      "id": "swim-p25",
+      "phase": 0.25
+    },
+    {
+      "id": "swim-p50",
+      "phase": 0.5
+    },
+    {
+      "id": "swim-p75",
+      "phase": 0.75
+    },
+    {
+      "id": "swim-head-close",
+      "phase": "phase-of-maximum-head/jaw/operculum-motion"
+    },
+    {
+      "id": "swim-peduncle-close",
+      "phase": "phase-of-maximum-peduncle-bend"
+    },
+    {
+      "id": "swim-pectoral-close",
+      "phase": "phase-of-maximum-pectoral-response"
+    }
+  ],
+  "displayRules": [
+    "source and copy use identical camera, projection, lighting, background and viewport",
+    "geometry comparison uses matched neutral grey material in addition to source PBR",
+    "material comparison uses copied PBR without changing camera/light to hide errors",
+    "failed screenshots are retained and marked FAILED/NOT FOR ACCEPTANCE",
+    "silhouette score cannot compensate for wrong local anatomy or materials"
+  ],
+  "requiredMetrics": [
+    "IoU and boundary error in four fixed views",
+    "source-copy anchor distance errors",
+    "connected component and boundary-edge counts",
+    "jaw/eye/operculum local errors",
+    "fin-root/free-edge local errors",
+    "finlet count/position error",
+    "peduncle/keel local errors",
+    "material-layer count and assignment",
+    "phase-aligned motion control errors"
+  ]
+}
