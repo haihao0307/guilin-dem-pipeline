@@ -1,0 +1,53 @@
+{
+  "schema": "kaopu.regression-case/3.0",
+  "caseId": "MOTHER-NO-THINKING-STALL-R3-001",
+  "status": "MANDATORY_CROSS_MOTHER",
+  "failure": "Production Mother stayed in thinking/analyzing/waiting/cannot-think state instead of executing a frozen bounded task.",
+  "mustNeverRepeat": [
+    "thinking presented as production progress",
+    "cannot-think presented as a long-running state",
+    "automatic downgrade to a lower-capability model",
+    "long planning response after a valid Task Anchor already exists",
+    "waiting for the user to say continue when a next executable step is already specified",
+    "branch/issue/README creation counted as task startup without production artifact"
+  ],
+  "requiredOnTaskReceipt": {
+    "taskAnchorRead": true,
+    "baseShaKnown": true,
+    "primaryDefectCount": 1,
+    "firstExecutableCommandOrDiffRequired": true
+  },
+  "validFirstOutcome": [
+    "EXECUTING",
+    "BLOCKED_VALID",
+    "EXECUTOR_CAPABILITY_BLOCKED"
+  ],
+  "invalidStates": [
+    "thinking",
+    "still thinking",
+    "analyzing",
+    "waiting",
+    "cannot think",
+    "unable to think",
+    "almost done"
+  ],
+  "capabilityBlockerReceiptMustContain": [
+    "taskId",
+    "baseSha",
+    "completedArtifact",
+    "nextConcreteCommand",
+    "exactCapabilityOrToolLimit",
+    "sourceIndependentWorkStillPossible"
+  ],
+  "watchdog": {
+    "at45MinutesWithoutArtifactOrValidBlocker": "AT_RISK_EXECUTION_STALL",
+    "at90MinutesWithoutCodeDataGeometryAndTest": "NOT_STARTED_EXECUTION",
+    "at120MinutesWithoutArtifactOrValidBlocker": "ROUTING_REVIEW",
+    "sameBlockerAcrossTwoAttempts": "ESCALATE_COMMON_CAUSE"
+  },
+  "modelPolicy": {
+    "silentDowngradeForbidden": true,
+    "qualityGateDowngradeForbidden": true,
+    "modelSwitchOwnedByCoordinator": true
+  }
+}
