@@ -48,7 +48,7 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           from __future__ import annotations
-          import hashlib, json, math, statistics
+          import hashlib, json, statistics
           from datetime import datetime, timezone
           from pathlib import Path
 
@@ -92,14 +92,13 @@ jobs:
 
           rows44=predictions(p44); rows26=predictions(p26)
           datum_map={}
-          for d in datums.get('datums',datums.get('Datums',[])) if isinstance(datums,dict) else []:
+          datum_rows=(datums.get('datums') or datums.get('Datums') or []) if isinstance(datums,dict) else []
+          for d in datum_rows:
               name=d.get('name')
               try: datum_map[name]=float(d.get('value'))
               except Exception: pass
 
-          # NOAA returns station-specific harmonic constituents. Keep all non-zero terms;
-          # the runtime evaluates them as a compact temporal wave stack.
-          raw_h=har.get('HarmonicConstituents',har.get('harconList',[])) if isinstance(har,dict) else []
+          raw_h=(har.get('HarmonicConstituents') or har.get('harconList') or []) if isinstance(har,dict) else []
           constituents=[]
           for c in raw_h:
               try:
@@ -116,24 +115,21 @@ jobs:
                   continue
           constituents.sort(key=lambda c:c['amplitudeM'],reverse=True)
 
-          # The runtime zero is mean tide / MSL where available, not MLLW.
           msl_above_mllw=None
           if 'MSL' in datum_map and 'MLLW' in datum_map:
               msl_above_mllw=datum_map['MSL']-datum_map['MLLW']
           elif rows26:
               msl_above_mllw=statistics.fmean(v for _,v in rows26)
 
-          # Hourly October 1944 curve is small enough to preserve as a verification table,
-          # but runtime uses the constituent stack; no raster or texture is involved.
           backcast=[]
           if rows44:
               center=statistics.fmean(v for _,v in rows44)
               backcast=[{'utc':t.strftime('%Y-%m-%dT%H:%M:%SZ'),'anomalyM':round(v-center,4),'mllwM':round(v,4)} for t,v in rows44]
 
-          psml_path=src/'psmsl_malakal_a_1926_1939.metdata'
+          psmsl_path=src/'psmsl_malakal_a_1926_1939.metdata'
           psmsl_meta={
-              'available':psml_path.exists() and psmsl_path.stat().st_size>0,
-              'sha256':hashlib.sha256(psml_path.read_bytes()).hexdigest() if psml_path.exists() and psmsl_path.stat().st_size>0 else None,
+              'available':psmsl_path.exists() and psmsl_path.stat().st_size>0,
+              'sha256':hashlib.sha256(psmsl_path.read_bytes()).hexdigest() if psmsl_path.exists() and psmsl_path.stat().st_size>0 else None,
               'role':'pre-war monthly mean-level context only; not an hourly 1944 tide record',
               'qualityWarning':'PSMSL labels MALAKAL-A metric data as not research quality and advises extreme caution.'
           }
