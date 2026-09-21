@@ -1,0 +1,63 @@
+name: Palau V0170 verified bootstrap
+on:
+  push:
+    branches: [work/survivor-palau-v0170-pilot-survival-20260921]
+    paths:
+      - games/survivor-palau/.bootstrap/v0170/**
+      - .github/workflows/palau-v0170-bootstrap.yml
+permissions:
+  contents: write
+concurrency:
+  group: palau-v0170-bootstrap
+  cancel-in-progress: false
+jobs:
+  integrate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+          persist-credentials: true
+      - name: Expand and verify production files
+        run: |
+          python3 games/survivor-palau/.bootstrap/v0170/unpack.py
+          test -s games/survivor-palau/source/v0170/survival.mjs
+          test -s games/survivor-palau/story/pilot-survival-r2-20260921/01_MASTER_SPEC_ZH.md
+          node --check games/survivor-palau/source/v0170/survival.mjs
+          python3 -m py_compile \
+            games/survivor-palau/source/v0170/build.py \
+            games/survivor-palau/source/v0170/browser_qa.py
+          python3 -m json.tool games/survivor-palau/docs/V0170_IMPLEMENTATION_STATE.json >/dev/null
+          python3 -m json.tool games/survivor-palau/story/pilot-survival-r2-20260921/manifest.json >/dev/null
+      - name: Prove inherited build patch before integration
+        run: |
+          rm -rf /tmp/palau-v0170-build
+          python3 games/survivor-palau/source/v0170/build.py \
+            games/survivor-palau/releases/v0.1.6.0/index.html \
+            /tmp/palau-v0170-build
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('/tmp/palau-v0170-build/index.html').read_text()
+          assert 'palau-survival-0.1.7.0-pilot-survival' in s
+          assert 'pilotFishReadyToBite' in s
+          assert '1944-11-21' in s
+          module=re.search(r'<script type="module">(.*)</script>',s,re.S)
+          assert module
+          Path('/tmp/palau-v0170.mjs').write_text(module[1])
+          PY
+          node --check /tmp/palau-v0170.mjs
+          git restore --worktree games/survivor-palau/releases/v0.1.6.0 2>/dev/null || true
+          git clean -fd games/survivor-palau/releases/v0.1.6.0
+      - name: Commit normal source tree
+        run: |
+          rm -rf games/survivor-palau/.bootstrap/v0170
+          rm -f .github/workflows/palau-v0170-bootstrap.yml
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add -A
+          git diff --cached --check
+          git commit -m 'feat(palau): integrate V0170 pilot survival story and interactive slice'
+          git push origin HEAD:${{ github.ref_name }}
