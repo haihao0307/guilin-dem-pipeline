@@ -1,5 +1,18 @@
 // V0172 visual-readability instrumentation. This does not alter the fishing result or add aim assist.
+let pilotLensObserver=null;
+function pilotSyncObservationLens(){
+ const lens=document.getElementById('pilotLensOverlay');
+ if(!lens)return false;
+ const active=!!SURVIVAL?.observation?.active;
+ if(lens.hidden===active)lens.hidden=!active;
+ lens.style.setProperty('display','block','important');
+ lens.style.opacity=active?'1':'0';
+ lens.style.visibility=active?'visible':'hidden';
+ lens.setAttribute('aria-hidden',active?'false':'true');
+ return active;
+}
 function pilotObservationVisualMetrics(){
+ pilotSyncObservationLens();
  const o=SURVIVAL.observation,eye=[o.anchorX,o.bobY-.055,o.anchorZ],focalPx=Math.max(1,innerHeight)/(2*Math.tan(camera.fov*.5));
  const focusWater=waveAt(o.focusX,o.focusZ,physicalTime,config).eta,focus=[o.focusX,focusWater-.72,o.focusZ];
  const targetRangeM=Math.hypot(focus[0]-eye[0],focus[1]-eye[1],focus[2]-eye[2]);
@@ -15,6 +28,14 @@ function installPilotObservationVisual(){
  SURVIVAL.telemetry.surfaceGearSolidLensCount=0;
  SURVIVAL.telemetry.lensFrame='thin-screen-space';
  SURVIVAL.telemetry.observationVisualCandidate=true;
+ const lens=document.getElementById('pilotLensOverlay');
+ if(lens){
+  pilotLensObserver?.disconnect();
+  pilotLensObserver=new MutationObserver(()=>pilotSyncObservationLens());
+  pilotLensObserver.observe(lens,{attributes:true,attributeFilter:['hidden']});
+  pilotSyncObservationLens();
+ }
  window.PalauExperience.observationVisualMetrics=pilotObservationVisualMetrics;
+ window.PalauExperience.syncObservationLens=pilotSyncObservationLens;
  qa.observationVisualV0172=true;
 }
