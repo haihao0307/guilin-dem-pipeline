@@ -8,9 +8,42 @@ const { chromium } = require('playwright');
 const url = process.env.QA_GEOMETRY_URL || 'http://127.0.0.1:4173/apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry-qa.html';
 const outDir = path.resolve(process.env.QA_GEOMETRY_OUT || 'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/evidence/geometry-browser');
 const viewport = { width: 1440, height: 900 };
+const receiptPath = path.join(outDir, 'GEOMETRY_BROWSER_QA_RECEIPT.json');
 
 function sha256(file) {
   return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+}
+
+function buildReceipt({ qa, screenshots, consoleErrors, pageErrors, fatalError = null }) {
+  const failedChecks = Object.entries(qa?.checks || {}).filter(([, value]) => value !== true).map(([key]) => key);
+  return {
+    schema: 'kaopu.fish-mother.yellowfin-source-copy-geometry-browser-qa/1.0',
+    date: '2026-09-21',
+    build: 'YELLOWFIN-SOURCE-COPY-R001',
+    url,
+    viewport: { ...viewport, deviceScaleFactor: 1 },
+    renderer: 'headless Chromium WebGL / SwiftShader',
+    sourceSha256: qa?.sourceSha || null,
+    copySha256: qa?.copySha || null,
+    sourceStats: qa?.sourceStats || null,
+    copyStats: qa?.copyStats || null,
+    exactPackageBounds: qa?.receiptBounds || null,
+    sourceBrowserBounds: qa?.sourceBrowserBounds || null,
+    copyBrowserBounds: qa?.copyBrowserBounds || null,
+    copyVsExactPackageBoundsDelta: qa?.copyVsReceiptBoundsDelta ?? null,
+    sourceVsCopyBrowserBoundsDelta: qa?.sourceCopyBrowserBoundsDelta ?? null,
+    boundsTolerance: qa?.boundsTolerance ?? 0.00005,
+    browserBoundsPolicy: qa?.browserBoundsPolicy || null,
+    regionCount: qa?.receipt?.regions?.length ?? null,
+    copiedPrimitiveInstances: qa?.receipt?.source?.copiedPrimitiveInstances ?? null,
+    checks: qa?.checks || {},
+    failedChecks,
+    screenshots,
+    consoleErrors,
+    pageErrors,
+    fatalError,
+    passed: qa?.ready === true && failedChecks.length === 0 && consoleErrors.length === 0 && pageErrors.length === 0 && !fatalError,
+  };
 }
 
 async function main() {
@@ -39,8 +72,20 @@ async function main() {
       ready: window.__geometryQa?.ready,
       title: document.querySelector('#stateTitle')?.textContent,
       detail: document.querySelector('#stateText')?.textContent,
+      qa: JSON.parse(JSON.stringify(window.__geometryQa || {})),
     }));
-    if (!initialState.ready) throw new Error(`${initialState.title}: ${initialState.detail}`);
+    if (!initialState.ready) {
+      await snap('geometry-qa-failure.png');
+      const failureReceipt = buildReceipt({
+        qa: initialState.qa,
+        screenshots,
+        consoleErrors,
+        pageErrors,
+        fatalError: `${initialState.title}: ${initialState.detail}`,
+      });
+      fs.writeFileSync(receiptPath, `${JSON.stringify(failureReceipt, null, 2)}\n`);
+      throw new Error(failureReceipt.fatalError);
+    }
 
     await page.waitForTimeout(500);
     await snap('geometry-workbench-ui.png');
@@ -90,36 +135,18 @@ async function main() {
     await selectRegion('all');
 
     const qa = await page.evaluate(() => JSON.parse(JSON.stringify(window.__geometryQa)));
-    const failedChecks = Object.entries(qa.checks || {}).filter(([, value]) => value !== true).map(([key]) => key);
-    const receipt = {
-      schema: 'kaopu.fish-mother.yellowfin-source-copy-geometry-browser-qa/1.0',
-      date: '2026-09-21',
-      build: 'YELLOWFIN-SOURCE-COPY-R001',
-      url,
-      viewport: { ...viewport, deviceScaleFactor: 1 },
-      renderer: 'headless Chromium WebGL / SwiftShader',
-      sourceSha256: qa.sourceSha,
-      copySha256: qa.copySha,
-      sourceStats: qa.sourceStats,
-      copyStats: qa.copyStats,
-      sourceBounds: qa.sourceBounds,
-      copyBounds: qa.copyBounds,
-      boundsDelta: qa.boundsDelta,
-      boundsTolerance: 0.00005,
-      regionCount: qa.receipt?.regions?.length,
-      copiedPrimitiveInstances: qa.receipt?.source?.copiedPrimitiveInstances,
-      checks: qa.checks,
-      failedChecks,
-      screenshots,
-      consoleErrors,
-      pageErrors,
-      passed: qa.ready === true && failedChecks.length === 0 && consoleErrors.length === 0 && pageErrors.length === 0,
-    };
-    fs.writeFileSync(path.join(outDir, 'GEOMETRY_BROWSER_QA_RECEIPT.json'), `${JSON.stringify(receipt, null, 2)}\n`);
-    if (!receipt.passed) throw new Error(`geometry browser QA failed: ${JSON.stringify({ failedChecks, consoleErrors, pageErrors })}`);
+    const receipt = buildReceipt({ qa, screenshots, consoleErrors, pageErrors });
+    fs.writeFileSync(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`);
+    if (!receipt.passed) throw new Error(`geometry browser QA failed: ${JSON.stringify({ failedChecks: receipt.failedChecks, consoleErrors, pageErrors })}`);
     process.stdout.write(`${JSON.stringify(receipt, null, 2)}\n`);
   } catch (error) {
-    try { await snap('geometry-qa-failure.png'); } catch {}
+    if (!fs.existsSync(receiptPath)) {
+      try { await snap('geometry-qa-failure.png'); } catch {}
+      let qa = {};
+      try { qa = await page.evaluate(() => JSON.parse(JSON.stringify(window.__geometryQa || {}))); } catch {}
+      const receipt = buildReceipt({ qa, screenshots, consoleErrors, pageErrors, fatalError: error?.message || String(error) });
+      fs.writeFileSync(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`);
+    }
     throw error;
   } finally {
     await browser.close();
