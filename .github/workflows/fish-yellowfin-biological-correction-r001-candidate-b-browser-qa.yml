@@ -1,0 +1,122 @@
+name: Fish Mother Yellowfin Biological Correction R001 Candidate B Browser QA
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - work/ocean-life-fish-mother-yellowfin-biological-correction-r001-20260921
+    paths:
+      - .github/workflows/fish-yellowfin-biological-correction-r001-candidate-b-browser-qa.yml
+      - apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/candidate-b-qa.html
+      - apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/candidate-b-qa/**
+      - apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/tools/record_candidate_b_browser_status.py
+      - apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/tests/candidate-b-browser-r001.test.mjs
+      - apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/CANDIDATE_B_RECEIPT.json
+      - apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/geometry/YELLOWFIN_BIOLOGICAL_CORRECTION_R001_CANDIDATE_B.glb
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fish-yellowfin-biological-correction-r001-candidate-b-browser-qa
+  cancel-in-progress: true
+
+env:
+  CORRECTION_ROOT: apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001
+  QA_CANDIDATE_OUT: apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/evidence/candidate-b-browser
+  QA_CANDIDATE_URL: http://127.0.0.1:4173/apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/candidate-b-qa.html
+
+jobs:
+  candidate-b-browser-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - name: Check out the biological correction branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install Playwright and Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+
+      - name: Start the Candidate B direct-open QA workbench
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/yellowfin-candidate-b-http.log 2>&1 &
+          echo $! >/tmp/yellowfin-candidate-b-http.pid
+          for i in $(seq 1 30); do
+            if curl --fail --silent "$QA_CANDIDATE_URL" >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/yellowfin-candidate-b-http.log
+          exit 1
+
+      - name: Capture frozen versus Candidate B fixed browser evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "$QA_CANDIDATE_OUT"
+          node "$CORRECTION_ROOT/candidate-b-qa/capture-candidate-b-qa.cjs"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Record Candidate B browser QA without claiming manual approval
+        shell: bash
+        run: |
+          set -euo pipefail
+          python "$CORRECTION_ROOT/tools/record_candidate_b_browser_status.py"
+
+      - name: Run Candidate B browser contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          node "$CORRECTION_ROOT/tests/candidate-b-browser-r001.test.mjs"
+
+      - name: Upload Candidate B browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: YELLOWFIN-BIOLOGICAL-CORRECTION-R001-CANDIDATE-B-BROWSER-QA
+          path: |
+            ${{ env.CORRECTION_ROOT }}/candidate-b-qa.html
+            ${{ env.QA_CANDIDATE_OUT }}
+            ${{ env.CORRECTION_ROOT }}/CURRENT_STATUS.json
+            CURRENT_BASELINE.json
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
+
+      - name: Commit Candidate B browser evidence and status
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Fish Mother R001"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config http.postBuffer 262144000
+          git add \
+            CURRENT_BASELINE.json \
+            "$CORRECTION_ROOT/CURRENT_STATUS.json" \
+            "$QA_CANDIDATE_OUT"
+          if git diff --cached --quiet; then
+            echo "No Candidate B browser QA delta to commit."
+            exit 0
+          fi
+          git commit -m "test(fish): pass Candidate B browser machine QA"
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
