@@ -45,7 +45,7 @@
       <button id="playBtn" disabled aria-pressed="true">暂停动作</button><button id="wireBtn" disabled aria-pressed="false">线框</button><button id="skeletonBtn" disabled aria-pressed="false">骨骼</button><button id="markersBtn" disabled aria-pressed="false">结构标记</button>
     </div>
     <div class="timeline"><label><span>Swim 时间</span><span id="timeText">0.00 / 0.00 s</span></label><input id="timeSlider" type="range" min="0" max="1" step="0.001" value="0" disabled /></div>
-    <div class="rule"><strong>当前门禁：</strong>小鳍不能再由骨骼命名猜测。蓝色为源拓扑确认的背侧小鳍，红色为腹侧小鳍，紫色为仍需视觉接受的前缘重叠候选；黄色环标记稳定尾柄窗口。</div>
+    <div class="rule"><strong>当前门禁：</strong>小鳍不能再由骨骼命名猜测。蓝色为源拓扑确认的背侧小鳍，红色为腹侧小鳍，紫色为仍需视觉接受的前缘重叠候选；黄色环标记稳定尾柄窗口；开启结构标记时自动锁定原始静止姿态。</div>
   </section>
   <div class="badge">展示轴：长度 z、侧向 y、垂直 x；侧视沿 y，俯视沿 x，头向沿 z</div>
 <script type="module">
@@ -91,7 +91,7 @@ const key=new THREE.DirectionalLight(0xffffff,3.0);key.position.set(4,6,7);scene
 const rim=new THREE.DirectionalLight(0x80cfff,2.0);rim.position.set(-5,1,-5);scene.add(rim);
 const floor=new THREE.Mesh(new THREE.CircleGeometry(8,96),new THREE.MeshStandardMaterial({color:0x0b1620,roughness:.92,metalness:0}));floor.rotation.y=Math.PI/2;floor.position.x=-2.25;floor.receiveShadow=true;scene.add(floor);
 
-let mixer=null,clip=null,playing=true,model=null,displayRoot=null,skeleton=null,markerGroup=null;
+let mixer=null,clip=null,playing=true,model=null,displayRoot=null,skeleton=null,markerGroup=null,markerPlaybackState=null;
 const materials=[];
 
 async function readBytes(url,label){
@@ -118,32 +118,29 @@ function frame(viewName){
 document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>frame(button.dataset.view)));
 
 function sourceToModel(source){
-  return new THREE.Vector3(
-    source[0]/SOURCE_WORLD_SCALE,
-    -source[2]/SOURCE_WORLD_SCALE,
-    source[1]/SOURCE_WORLD_SCALE
-  );
+  return new THREE.Vector3(source[0],-source[2],source[1]);
 }
 function markerMaterial(color){return new THREE.MeshBasicMaterial({color,depthTest:true,depthWrite:true});}
 function buildClassificationMarkers(classification){
   if(!displayRoot)return;
   if(markerGroup)displayRoot.remove(markerGroup);
   markerGroup=new THREE.Group();markerGroup.name='SourceComponentClassificationMarkers';markerGroup.visible=false;
-  const geometry=new THREE.SphereGeometry(.035,14,10);const colors={dorsal:0x2577d4,ventral:0xe04343,overlap:0xa94ad8};
+  const geometry=new THREE.SphereGeometry(.026,14,10);const colors={dorsal:0x2577d4,ventral:0xe04343,overlap:0xa94ad8};
   const mappedPoints=[];
   for(const side of ['dorsal','ventral']){
     const material=markerMaterial(colors[side]);
     for(const item of classification.finlets[side].confirmed){const marker=new THREE.Mesh(geometry,material);const mapped=sourceToModel(item.centerSource);marker.position.copy(mapped);mappedPoints.push(mapped.clone());marker.userData={side,index:item.seriesIndexFrontToTail};markerGroup.add(marker);}
     const overlapMaterial=markerMaterial(colors.overlap);
-    for(const item of classification.finlets[side].overlapCandidates||[]){const marker=new THREE.Mesh(new THREE.SphereGeometry(.03,12,8),overlapMaterial);const mapped=sourceToModel(item.centerSource);marker.position.copy(mapped);mappedPoints.push(mapped.clone());marker.userData={side,candidate:true};markerGroup.add(marker);}
+    for(const item of classification.finlets[side].overlapCandidates||[]){const marker=new THREE.Mesh(new THREE.SphereGeometry(.023,12,8),overlapMaterial);const mapped=sourceToModel(item.centerSource);marker.position.copy(mapped);mappedPoints.push(mapped.clone());marker.userData={side,candidate:true};markerGroup.add(marker);}
   }
   const minimum=classification.peduncle.minimum;const sourceY=classification.frame.tailY+minimum.u*classification.frame.bodyLengthSourceUnits;
-  const ring=new THREE.Mesh(new THREE.TorusGeometry(.12,.012,12,36),markerMaterial(0xffd34f));const ringPoint=sourceToModel([0,sourceY,classification.frame.centerlineZFromSpineBind]);ring.position.copy(ringPoint);mappedPoints.push(ringPoint.clone());ring.userData={peduncle:true,u:minimum.u};markerGroup.add(ring);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(.085,.009,12,36),markerMaterial(0xffd34f));const ringPoint=sourceToModel([0,sourceY,classification.frame.centerlineZFromSpineBind]);ring.position.copy(ringPoint);mappedPoints.push(ringPoint.clone());ring.userData={peduncle:true,u:minimum.u};markerGroup.add(ring);
   displayRoot.add(markerGroup);
   const markerBounds=new THREE.Box3().setFromPoints(mappedPoints);
   qaState.markerMapping={
-    mode:'canonical-source-to-model-inverse-root',
-    scale:SOURCE_WORLD_SCALE,
+    mode:'canonical-source-axis-remap',
+    sourceWorldScale:SOURCE_WORLD_SCALE,
+    appliedScale:1,
     count:markerGroup.children.length,
     bounds:{min:markerBounds.min.toArray(),max:markerBounds.max.toArray()}
   };
@@ -161,7 +158,20 @@ function enableUi(){
   $('playBtn').onclick=()=>{playing=!playing;$('playBtn').setAttribute('aria-pressed',String(playing));$('playBtn').textContent=playing?'暂停动作':'继续动作'};
   $('wireBtn').onclick=()=>{const on=$('wireBtn').getAttribute('aria-pressed')!=='true';$('wireBtn').setAttribute('aria-pressed',String(on));for(const material of materials)material.wireframe=on};
   $('skeletonBtn').onclick=()=>{const on=$('skeletonBtn').getAttribute('aria-pressed')!=='true';$('skeletonBtn').setAttribute('aria-pressed',String(on));if(skeleton)skeleton.visible=on};
-  $('markersBtn').onclick=()=>{const on=$('markersBtn').getAttribute('aria-pressed')!=='true';$('markersBtn').setAttribute('aria-pressed',String(on));if(markerGroup)markerGroup.visible=on};
+  $('markersBtn').onclick=()=>{
+    const on=$('markersBtn').getAttribute('aria-pressed')!=='true';
+    $('markersBtn').setAttribute('aria-pressed',String(on));
+    if(markerGroup)markerGroup.visible=on;
+    if(on){
+      markerPlaybackState={playing,time:mixer?.time||0};
+      playing=false;if(mixer&&clip)mixer.setTime(0);
+      $('playBtn').disabled=true;$('timeSlider').disabled=true;$('playBtn').setAttribute('aria-pressed','false');$('playBtn').textContent='结构标记静止姿态';
+    }else{
+      if(markerPlaybackState&&mixer&&clip)mixer.setTime(markerPlaybackState.time);
+      playing=markerPlaybackState?.playing??false;markerPlaybackState=null;
+      $('playBtn').disabled=!clip;$('timeSlider').disabled=!clip;$('playBtn').setAttribute('aria-pressed',String(playing));$('playBtn').textContent=playing?'暂停动作':'继续动作';
+    }
+  };
   $('timeSlider').oninput=event=>{if(!mixer||!clip)return;playing=false;$('playBtn').setAttribute('aria-pressed','false');$('playBtn').textContent='继续动作';mixer.setTime(Number(event.target.value)*clip.duration)};
 }
 async function boot(){
