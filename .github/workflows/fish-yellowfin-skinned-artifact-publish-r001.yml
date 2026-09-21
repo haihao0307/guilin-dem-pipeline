@@ -1,0 +1,258 @@
+name: Fish Mother Yellowfin Publish Skinned Artifact R001
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - work/ocean-life-fish-mother-yellowfin-source-copy-r001-20260921
+    paths:
+      - .github/workflows/fish-yellowfin-skinned-artifact-publish-r001.yml
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: fish-yellowfin-skinned-artifact-publish-r001
+  cancel-in-progress: true
+
+env:
+  COPY_ROOT: apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001
+  SOURCE_RUN_ID: "35579454857"
+  STATIC_ALIGNMENT_RUN_ID: "35580148100"
+  ARTIFACT_NAME: YELLOWFIN-SOURCE-COPY-SKINNED-R001
+  EXPECTED_SOURCE_SHA256: 5603d4aabc9a1127856841335a86ae7aa462b6b25d1a6586e93bf644f4d47abe
+  EXPECTED_SOURCE_BYTES: "58908280"
+
+jobs:
+  publish-validated-skinned-copy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Wait for the corrected static overlap gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 240); do
+            payload="$(curl --fail --silent --show-error \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/$REPOSITORY/actions/runs/$STATIC_ALIGNMENT_RUN_ID")"
+            state="$(python -c 'import json,sys; print(json.load(sys.stdin)["status"])' <<<"$payload")"
+            conclusion="$(python -c 'import json,sys; print(json.load(sys.stdin).get("conclusion") or "")' <<<"$payload")"
+            echo "static overlap gate: status=$state conclusion=${conclusion:-pending}"
+            if [[ "$state" == "completed" ]]; then
+              [[ "$conclusion" == "success" ]] || { echo "Corrected static overlap gate did not pass." >&2; exit 1; }
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Timed out waiting for corrected static overlap gate." >&2
+          exit 1
+
+      - name: Check out the latest Source Copy branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+
+      - name: Download the already validated skinned artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: /tmp/yellowfin-skinned-artifact
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.SOURCE_RUN_ID }}
+
+      - name: Verify the artifact before publishing
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          base = Path('/tmp/yellowfin-skinned-artifact')
+          receipts = list(base.rglob('SOURCE_COPY_SKINNED_R001.json'))
+          if len(receipts) != 1:
+              raise SystemExit(f'Expected one skinned receipt, found {len(receipts)}')
+          root = receipts[0].parent
+          glb = root / 'geometry/YELLOWFIN_SOURCE_COPY_SKINNED_R001.glb'
+          browser_path = root / 'evidence/skinned-browser/SKINNED_BROWSER_QA_RECEIPT.json'
+          if not glb.is_file() or not browser_path.is_file():
+              raise SystemExit('Skinned GLB or browser receipt missing from artifact')
+          receipt = json.loads(receipts[0].read_text())
+          browser = json.loads(browser_path.read_text())
+          raw = glb.read_bytes()
+          actual_sha = hashlib.sha256(raw).hexdigest()
+          checks = {
+              'referenceId': receipt.get('referenceId') == 'FISH-REF-002',
+              'exactSourceSha': receipt.get('source', {}).get('sha256') == os.environ['EXPECTED_SOURCE_SHA256'],
+              'exactSourceBytes': int(receipt.get('source', {}).get('bytes', -1)) == int(os.environ['EXPECTED_SOURCE_BYTES']),
+              'outputBytes': len(raw) == int(receipt.get('output', {}).get('bytes', -1)),
+              'outputSha': actual_sha == receipt.get('output', {}).get('sha256'),
+              'browserPassed': browser.get('passed') is True,
+              'browserCopySha': browser.get('copySha256') == actual_sha,
+              'dynamicBoundsExact': float(browser.get('maximumDynamicBoundsDelta', 1)) <= float(browser.get('boundsTolerance', 0)),
+              'boneMatricesExact': float(browser.get('maximumBoneMatrixDelta', 1)) <= float(browser.get('boneTolerance', 0)),
+              'consoleZero': browser.get('consoleErrors') == [],
+              'pageZero': browser.get('pageErrors') == [],
+              'evidenceViews': len(browser.get('screenshots', [])) >= 10,
+          }
+          for gate in [
+              'exactSourceBound',
+              'classificationRegeneratedWithoutDrift',
+              'primaryFacesPartitionedExactlyOnce',
+              'sourceBinaryPrefixByteIdentical',
+              'sourcePositionNormalUvJointWeightAccessorsRetained',
+              'sourceNodesRetained',
+              'sourceSkinsRetained',
+              'sourceInverseBindMatricesRetained',
+              'sourceAnimationsRetained',
+              'sourceMaterialsTexturesImagesRetained',
+              'nonPrimaryPrimitivesRetained',
+              'browserRestPoseQAPassed',
+              'browserAnimationQAPassed',
+          ]:
+              checks[f'gate:{gate}'] = receipt.get('gates', {}).get(gate) is True
+          failed = [name for name, passed in checks.items() if not passed]
+          print(json.dumps({
+              'artifactRoot': str(root),
+              'actualBytes': len(raw),
+              'actualSha256': actual_sha,
+              'maximumDynamicBoundsDelta': browser.get('maximumDynamicBoundsDelta'),
+              'maximumBoneMatrixDelta': browser.get('maximumBoneMatrixDelta'),
+              'checks': checks,
+          }, indent=2))
+          if failed:
+              raise SystemExit(f'Validated artifact rejected: {failed}')
+          Path('/tmp/yellowfin-skinned-root.txt').write_text(str(root))
+          PY
+
+      - name: Rebase the publish workspace onto the newest branch head
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin "$GITHUB_REF_NAME"
+          git reset --hard "origin/$GITHUB_REF_NAME"
+
+      - name: Publish the immutable GLB and evidence without stale status files
+        shell: bash
+        run: |
+          set -euo pipefail
+          ARTIFACT_ROOT="$(cat /tmp/yellowfin-skinned-root.txt)"
+          mkdir -p "$COPY_ROOT/geometry" "$COPY_ROOT/evidence/skinned-browser"
+          cp -f "$ARTIFACT_ROOT/SOURCE_COPY_SKINNED_R001.json" "$COPY_ROOT/SOURCE_COPY_SKINNED_R001.json"
+          cp -f "$ARTIFACT_ROOT/geometry/YELLOWFIN_SOURCE_COPY_SKINNED_R001.glb" "$COPY_ROOT/geometry/YELLOWFIN_SOURCE_COPY_SKINNED_R001.glb"
+          rm -rf "$COPY_ROOT/evidence/skinned-browser"
+          cp -a "$ARTIFACT_ROOT/evidence/skinned-browser" "$COPY_ROOT/evidence/skinned-browser"
+
+      - name: Merge the accepted skinned state into the latest status
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path('apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001')
+          receipt = json.loads((root / 'SOURCE_COPY_SKINNED_R001.json').read_text())
+          browser = json.loads((root / 'evidence/skinned-browser/SKINNED_BROWSER_QA_RECEIPT.json').read_text())
+
+          status_path = root / 'CURRENT_STATUS.json'
+          status = json.loads(status_path.read_text())
+          status['phase'] = 'SOURCE_COPY_SKINNED_R001_BROWSER_QA_PASSED'
+          status.setdefault('gates', {}).update({
+              'sourceCopySkinTransferred': True,
+              'sourceCopyAnimationTransferred': True,
+              'sourceCopyMaterialsTransferred': True,
+              'sourceCopySkinnedBrowserQAPassed': True,
+              'sourceCopySkinnedFixedViewsCaptured': True,
+              'sourceCopySkinnedConsoleZeroErrors': True,
+              'sourceCopySkinnedPageErrorsZero': True,
+              'independentReconstructionUnlocked': False,
+              'generationLocked': True,
+          })
+          status['sourceCopySkinned'] = {
+              'receipt': 'SOURCE_COPY_SKINNED_R001.json',
+              'glb': 'geometry/YELLOWFIN_SOURCE_COPY_SKINNED_R001.glb',
+              'qaWorkbench': 'skinned-qa.html',
+              'browserReceipt': 'evidence/skinned-browser/SKINNED_BROWSER_QA_RECEIPT.json',
+              'sha256': receipt['output']['sha256'],
+              'bytes': receipt['output']['bytes'],
+              'semanticPrimitiveCount': receipt['output']['semanticPrimitiveCount'],
+              'semanticFaceCount': receipt['output']['semanticFaceCount'],
+              'meshCount': receipt['output']['meshCount'],
+              'primitiveCount': receipt['output']['primitiveCount'],
+              'nodeCount': receipt['output']['nodeCount'],
+              'skinCount': receipt['output']['skinCount'],
+              'animationCount': receipt['output']['animationCount'],
+              'materialCount': receipt['output']['materialCount'],
+              'imageCount': receipt['output']['imageCount'],
+              'maximumDynamicBoundsDelta': browser['maximumDynamicBoundsDelta'],
+              'maximumBoneMatrixDelta': browser['maximumBoneMatrixDelta'],
+              'sourceBinaryPrefixByteIdentical': True,
+              'sourceSkinWeightsRetained': True,
+              'sourceAnimationsRetained': True,
+              'sourceMaterialsRetained': True,
+          }
+          status['next'] = 'Close region-by-region visibility and material-boundary acceptance, then freeze Source Copy R001 before Yellowfin biological correction.'
+          status_path.write_text(json.dumps(status, ensure_ascii=False, indent=2) + '\n')
+
+          baseline_path = Path('CURRENT_BASELINE.json')
+          baseline = json.loads(baseline_path.read_text())
+          active = baseline.setdefault('activeState', {})
+          active.update({
+              'phase': 'YELLOWFIN_SOURCE_COPY_R001_SKINNED_BROWSER_QA_PASSED',
+              'workBranch': 'work/ocean-life-fish-mother-yellowfin-source-copy-r001-20260921',
+              'activeWorkbench': 'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/index.html',
+              'geometryQaWorkbench': 'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry-qa.html',
+              'skinnedQaWorkbench': 'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/skinned-qa.html',
+              'sourceCopySkinnedGlb': 'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry/YELLOWFIN_SOURCE_COPY_SKINNED_R001.glb',
+              'sourceCopySkinnedReceipt': 'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/SOURCE_COPY_SKINNED_R001.json',
+              'sourceCopySkinnedSha256': receipt['output']['sha256'],
+              'sourceCopySkinTransferred': True,
+              'sourceCopyAnimationTransferred': True,
+              'sourceCopyMaterialsTransferred': True,
+              'sourceCopySkinnedBrowserQAPassed': True,
+              'sourceCopyUnlocked': False,
+              'generationLocked': True,
+              'nextAllowedBuild': 'YELLOWFIN-SOURCE-COPY-R001-REGION-MATERIAL-ACCEPTANCE',
+          })
+          baseline_path.write_text(json.dumps(baseline, ensure_ascii=False, indent=2) + '\n')
+          PY
+
+      - name: Re-run all skinned-copy contracts on the merged branch state
+        shell: bash
+        run: |
+          set -euo pipefail
+          node "$COPY_ROOT/tests/source-copy-skinned-r001.test.mjs"
+          node "$COPY_ROOT/tests/source-component-classification-r001.test.mjs"
+          node "$COPY_ROOT/tests/source-copy-r001-contract.test.mjs"
+
+      - name: Commit the validated skinned copy
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Fish Mother R001"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config http.postBuffer 262144000
+          git add \
+            CURRENT_BASELINE.json \
+            "$COPY_ROOT/CURRENT_STATUS.json" \
+            "$COPY_ROOT/SOURCE_COPY_SKINNED_R001.json" \
+            "$COPY_ROOT/geometry/YELLOWFIN_SOURCE_COPY_SKINNED_R001.glb" \
+            "$COPY_ROOT/evidence/skinned-browser"
+          if git diff --cached --quiet; then
+            echo "Validated skinned source copy is already published."
+            exit 0
+          fi
+          git commit -m "feat(fish): publish validated skinned Yellowfin source copy"
+          git push origin "HEAD:$GITHUB_REF_NAME"
