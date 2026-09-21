@@ -6,6 +6,7 @@ on:
       - work/survivor-palau-v0171-handline-qa-20260921
     paths:
       - .github/workflows/palau-v0171-handline-qa.yml
+      - games/survivor-palau/source/v0170/**
 
 permissions:
   contents: write
@@ -66,8 +67,12 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add games/survivor-palau/releases/v0.1.7.0
-          git commit -m 'test(palau): rebuild V0170 and capture passing handline QA'
-          git push origin HEAD:${{ github.ref_name }}
+          if git diff --cached --quiet; then
+            echo 'No release changes to commit.'
+          else
+            git commit -m 'test(palau): rebuild V0170 and capture passing handline QA'
+            git push origin HEAD:${{ github.ref_name }}
+          fi
 
       - name: Upload QA evidence
         if: always()
