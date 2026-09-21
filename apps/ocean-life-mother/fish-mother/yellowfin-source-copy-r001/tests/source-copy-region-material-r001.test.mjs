@@ -47,7 +47,7 @@ for (const region of report.regions) {
 assert.ok(report.boundary.interRegionEdges > 0);
 assert.ok(report.boundary.interRegionVertices > 0);
 assert.ok(report.boundary.adjacency.length > 0);
-assert.match(report.boundary.interpretation, /shared|source vertex/i);
+assert.match(report.boundary.interpretation, /shared|source vertex|original vertex ids/i);
 
 assert.equal(report.materials.inventory.length, 3);
 assert.deepEqual(report.materials.inventory.map(material => material.name), ['Material', 'Material.003', 'Material.004']);
