@@ -11,8 +11,8 @@
   },
   "output": {
     "path": "apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-r001/geometry/YELLOWFIN_BIOLOGICAL_CORRECTION_R001_CANDIDATE_A.glb",
-    "sha256": "c7c10590375a503fdfc6b38212abcf35be52d5d691b180a6194ac675fa10f69f",
-    "bytes": 58956676,
+    "sha256": "7653c63f2a5fda43a3217178257e9bfe10c446ac4445b54f2585ff8456d1fdee",
+    "bytes": 58957276,
     "meshCount": 3,
     "primitiveCount": 15,
     "nodeCount": 113,
@@ -145,24 +145,32 @@
     "firstDorsalIndependentlyElongated": false,
     "secondDorsalMirroredSheetsDeformedTogether": true,
     "caudalIndependentlyRescaled": false,
-    "finletCountChanged": false
+    "finletCountChanged": false,
+    "jointRestTranslationsRewritten": false,
+    "inverseBindMatricesRewritten": false,
+    "animationTranslationsRewritten": false,
+    "sourceRigAndAnimationPreserved": true
   },
   "rig": {
     "rest": {
       "jointCount": 98,
-      "maximumRestJointOriginError": 0.0,
-      "maximumRestSkinIdentityError": 0.0,
+      "mode": "source-rig-byte-preserved",
+      "sourceNodeHierarchyRetained": true,
+      "sourceSkinTableRetained": true,
+      "sourceInverseBindMatricesRetained": true,
       "inverseBindAccessor": 14
     },
     "animation": {
+      "mode": "source-animation-byte-preserved",
       "translationChannelCount": 97,
+      "rotationChannelsRetained": 97,
+      "scaleChannelsRetained": 97,
       "uniqueSampleTimes": 105,
-      "maximumJointOriginPropagationError": 0.0,
       "interpolations": [
         "LINEAR"
       ],
-      "rotationChannelsRetained": 97,
-      "scaleChannelsRetained": 97
+      "sourceAnimationTableRetained": true,
+      "sourceAnimationAccessorsRetained": true
     },
     "shading": {
       "groups": 3,
@@ -177,13 +185,12 @@
       ]
     },
     "policy": {
-      "deformAllMeshPositionAccessors": true,
-      "recomputeNormalsAndTangents": true,
-      "deformBindJointOrigins": true,
-      "rebuildInverseBindMatrices": true,
-      "propagateAllJointTranslationAnimationChannels": true,
-      "retainRotationAndScaleAnimationChannels": true,
-      "vertexOnlyCorrectionForbidden": true
+      "mode": "preserve-source-rig-and-animation",
+      "mesh": "deform POSITION/NORMAL/TANGENT in rest space",
+      "nodes": "retain source node hierarchy and local transforms",
+      "skin": "retain source skin and inverse bind matrices",
+      "animation": "retain every source input/output accessor without rewrite",
+      "authority": "headless-browser synchronized runtime QA"
     }
   },
   "componentSelection": {
@@ -423,9 +430,6 @@
     "materialCountRetained": true,
     "imageCountRetained": true,
     "finletCountsRetained": true,
-    "restSkinIdentityPassed": true,
-    "restJointPropagationPassed": true,
-    "animationTranslationPropagationPassed": true,
     "bodyDepthTargetPassed": true,
     "headLengthPreservedWithinEnvelope": true,
     "pectoralPublishedRangeCandidatePassed": true,
@@ -440,14 +444,20 @@
     "candidateBrowserQAPassed": false,
     "manualVisualAcceptancePending": true,
     "productionReady": false,
-    "candidateMachineAcceptancePassed": true
+    "candidateMachineAcceptancePassed": true,
+    "sourceNodeHierarchyRetained": true,
+    "sourceSkinTableRetained": true,
+    "sourceInverseBindMatricesRetained": true,
+    "sourceAnimationTableRetained": true,
+    "sourceAnimationAccessorsRetained": true,
+    "runtimeBrowserQAAuthoritative": true
   },
   "risks": [
     "Candidate A is a machine-valid morphometric candidate, not a visually approved final fish.",
-    "Nonlinear rest-space correction is approximated through the existing 98-joint rig; extreme poses may still reveal volume loss or local creasing.",
+    "The existing source rig is intentionally retained. Browser Swim QA is authoritative for detecting fin-root creasing, volume loss or attachment drift after the rest-shape edit.",
     "Dorsal anatomical identity is resolved from mirrored surface pairs, not raw connected-component order.",
     "The inferred fork landmark remains a machine hypothesis and must be checked in the browser overlay.",
     "Published adult fin elongation is variable; the 0.18 FL target is a declared large-adult design candidate, not universal species truth."
   ],
-  "next": "Run synchronized frozen-vs-Candidate-A browser QA in rest pose and Swim, capture fixed views, verify console zero errors, silhouette, eye/cornea attachment and fin-root continuity."
+  "next": "Run synchronized frozen-vs-Candidate-A browser QA with the source rig and Swim tracks retained; capture fixed views and reject any orientation, attachment, fin-root or dynamic-boundary failure."
 }
