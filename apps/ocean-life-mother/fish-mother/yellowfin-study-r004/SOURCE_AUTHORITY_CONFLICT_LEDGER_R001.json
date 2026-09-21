@@ -1,0 +1,93 @@
+{
+  "schema": "kaopu.fish-mother.yellowfin-source-authority-conflict-ledger/1.0",
+  "date": "2026-09-21",
+  "referenceId": "FISH-REF-002",
+  "comparableFacts": [
+    {
+      "item": "snout-to-Head_05 anchor distance",
+      "sourceValuePctL": 25.351,
+      "authorityRangePctFL": [
+        25,
+        26
+      ],
+      "authorityMetric": "head length / fork length",
+      "interpretation": "close numerical agreement, but not yet proof that Head_05 equals the anatomical posterior head boundary",
+      "status": "SUPPORTIVE_NOT_LOCKED"
+    }
+  ],
+  "nonComparableWithoutFurtherMeasurement": [
+    {
+      "item": "eyeLeft-eyeRight center distance",
+      "sourceAnchorDistancePctL": 6.998,
+      "reason": "eye-center separation is not the same metric as interorbital width"
+    },
+    {
+      "item": "operculumLeft-operculumRight anchor distance",
+      "sourceAnchorDistancePctL": 12.541,
+      "reason": "paired deformation-control centers do not define operculum width"
+    },
+    {
+      "item": "leftmost-rightmost mesh extreme span",
+      "sourceValuePctL": 49.719,
+      "reason": "mesh extremes include lateral fin geometry and cannot be used as trunk maximum width"
+    },
+    {
+      "item": "dorsalExtreme-ventralExtreme span",
+      "sourceValuePctL": 53.537,
+      "reason": "mesh extremes include fin fields and cannot be used as body depth"
+    }
+  ],
+  "importantSourceAnchorDistancesPctL": [
+    {
+      "a": "snout",
+      "b": "upperJaw",
+      "value": 10.001
+    },
+    {
+      "a": "snout",
+      "b": "eyeLeft",
+      "value": 13.536
+    },
+    {
+      "a": "upperJaw",
+      "b": "lowerJaw",
+      "value": 11.458
+    },
+    {
+      "a": "head",
+      "b": "upperJaw",
+      "value": 15.468
+    },
+    {
+      "a": "head",
+      "b": "eyeLeft",
+      "value": 13.594
+    },
+    {
+      "a": "head",
+      "b": "operculumLeft",
+      "value": 12.706
+    },
+    {
+      "a": "peduncle0",
+      "b": "peduncle1",
+      "value": 10.425
+    },
+    {
+      "a": "peduncle1",
+      "b": "peduncle2",
+      "value": 9.204
+    },
+    {
+      "a": "peduncle2",
+      "b": "upperTail",
+      "value": 13.73
+    }
+  ],
+  "rules": [
+    "Do not force authority metrics onto non-equivalent source control distances.",
+    "When a metric name differs, record the difference instead of pretending it matches.",
+    "Source Copy R001 copies the source; authority bounds only flag possible source-vs-species conflicts.",
+    "Species-correction work, if any, happens after source-copy acceptance."
+  ]
+}
