@@ -138,7 +138,16 @@ default_data, default_header, default_raw = build_cache(1.35)
 no_crack_data, no_crack_header, no_crack_raw = build_cache(0.0)
 DEFAULT_CACHE.write_text(default_data, encoding='ascii')
 NO_CRACK_CACHE.write_text(no_crack_data, encoding='ascii')
-INDEX.write_text(TEMPLATE.read_text(encoding='utf-8'), encoding='utf-8')
+html = TEMPLATE.read_text(encoding='utf-8')
+html = html.replace(
+    '开启版比关闭版新增 4,844 个顶点与 4,844 个三角面组变化',
+    '开启版比关闭版新增 2,392 个顶点与 4,844 个三角形',
+)
+html = html.replace(
+    'float dif=max(dot(n,sun),0.0),hemi=.38+.48*max(n.y,0.0),grain=h(floor(vPos*1.55));',
+    'float dif=max(dot(n,sun),0.0),hemi=.38+.48*max(n.y,0.0),grain=clamp(.5+.23*sin(vPos.x*.83+vPos.y*.21+vPos.z*.61)+.14*sin(vPos.x*2.13-vPos.y*.47+vPos.z*1.71)+.08*sin(vPos.x*4.4+vPos.z*3.2),0.0,1.0);',
+)
+INDEX.write_text(html, encoding='utf-8')
 
 contract = {
     'schema': 'KARST_FIELD_PRODUCTION_CONTRACT_R264',
