@@ -11,6 +11,7 @@ ROOT = Path("apps/ocean-life-mother/fish-mother/yellowfin-biological-correction-
 def common(text: str) -> str:
     return (
         text.replace("CANDIDATE_A", "CANDIDATE_B")
+        .replace("CANDIDATE-A", "CANDIDATE-B")
         .replace("candidateA", "candidateB")
         .replace("Candidate A", "Candidate B")
         .replace("candidate-a", "candidate-b")
