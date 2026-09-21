@@ -34,7 +34,7 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve,ms));
       const state=window.__fishQa;if(!state)throw new Error('window.__fishQa missing');
       const vector=state.camera.position.map((value,index)=>value-state.camera.target[index]);
       const axes=['x','y','z'];const dominant=axes[vector.map(Math.abs).indexOf(Math.max(...vector.map(Math.abs)))];
-      return {expected,activeView:state.activeView,dominant,camera:state.camera,modelSpan:state.modelSpan};
+      return {expected,activeView:state.activeView,dominant,camera:state.camera,modelSpan:state.modelSpan,axes:state.axes,markerMapping:state.markerMapping};
     },view);
   };
 
@@ -42,7 +42,7 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve,ms));
   try{
     await page.goto(url,{waitUntil:'domcontentloaded',timeout:120000});
     await page.waitForSelector('#stateDot.ok',{timeout:180000});
-    await page.waitForFunction(()=>document.querySelector('#stateTitle')?.textContent?.includes('FISH-REF-002')&&window.__fishQa?.classificationLoaded===true,null,{timeout:180000});
+    await page.waitForFunction(()=>document.querySelector('#stateTitle')?.textContent?.includes('FISH-REF-002')&&window.__fishQa?.classificationLoaded===true&&window.__fishQa?.markerMapping?.count===19,null,{timeout:180000});
     await sleep(1200);
 
     const identity=await page.evaluate(()=>({
@@ -51,13 +51,15 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve,ms));
     if(identity.sha!==expectedSha)throw new Error(`browser SHA display mismatch: ${identity.sha}`);
     if(identity.source!=='branch-local')throw new Error(`workbench did not use branch-local source: ${identity.source}`);
     if(identity.qa?.classification?.dorsal!==9||identity.qa?.classification?.ventral!==8)throw new Error(`classification count mismatch: ${JSON.stringify(identity.qa?.classification)}`);
-    if(!(identity.qa?.modelSpan?.x>identity.qa?.modelSpan?.y&&identity.qa?.modelSpan?.x>identity.qa?.modelSpan?.z))throw new Error(`display length axis is not x: ${JSON.stringify(identity.qa?.modelSpan)}`);
+    if(identity.qa?.axes?.length!=='z'||identity.qa?.axes?.lateral!=='y'||identity.qa?.axes?.vertical!=='x')throw new Error(`display axis contract mismatch: ${JSON.stringify(identity.qa?.axes)}`);
+    if(!(identity.qa?.modelSpan?.z>identity.qa?.modelSpan?.x&&identity.qa?.modelSpan?.z>identity.qa?.modelSpan?.y))throw new Error(`display length axis is not z: ${JSON.stringify(identity.qa?.modelSpan)}`);
+    if(identity.qa?.markerMapping?.mode!=='canonical-source-to-model-inverse-root'||identity.qa?.markerMapping?.count!==19)throw new Error(`marker mapping mismatch: ${JSON.stringify(identity.qa?.markerMapping)}`);
 
     const uiPath=path.join(outDir,'workbench-ui.png');await page.screenshot({path:uiPath,fullPage:true});
     if(!(await page.locator('#playBtn').isDisabled()))await trigger('#playBtn');
     await page.evaluate(()=>{const panel=document.querySelector('.panel');if(panel)panel.style.display='none';const badge=document.querySelector('.badge');if(badge)badge.style.display='none';});
 
-    const viewSemantics={};const expectedAxes={side:'y',top:'z',front:'x'};
+    const viewSemantics={};const expectedAxes={side:'y',top:'x',front:'z'};
     const shots=[['side','source-side.png'],['quarter','source-quarter.png'],['top','source-top.png'],['front','source-head-on.png']];
     for(const [view,file] of shots){
       const inspected=await inspectView(view);viewSemantics[view]=inspected;
@@ -75,12 +77,12 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve,ms));
 
     const files=fs.readdirSync(outDir).filter(name=>name.endsWith('.png')).sort().map(name=>{const file=path.join(outDir,name);return {name,bytes:fs.statSync(file).size,sha256:sha256File(file)};});
     const semanticViewAxesPassed=['side','top','front'].every(view=>viewSemantics[view]?.dominant===expectedAxes[view]&&viewSemantics[view]?.activeView===view);
-    receipt={schema:'kaopu.fish-mother.yellowfin-source-copy-browser-qa/2.0',date:'2026-09-21',build:'YELLOWFIN-SOURCE-COPY-R001',url,viewport:{width:1440,height:900,deviceScaleFactor:1},renderer:'headless Chromium WebGL / SwiftShader',identity,classification:{dorsalConfirmed:identity.qa.classification.dorsal,ventralConfirmed:identity.qa.classification.ventral,peduncleU:identity.qa.classification.peduncleU},viewSemantics,screenshots:files,consoleErrors,pageErrors,checks:{exactShaDisplayed:identity.sha===expectedSha,branchLocalSourceUsed:identity.source==='branch-local',classificationLoaded:identity.qa.classificationLoaded===true,finletCountsDisplayed:identity.finlets.includes('9 dorsal / 8 ventral'),modelLengthAxisIsX:identity.qa.modelSpan.x>identity.qa.modelSpan.y&&identity.qa.modelSpan.x>identity.qa.modelSpan.z,semanticViewAxesPassed,classificationMarkersCaptured:files.some(file=>file.name==='source-side-classification.png'),fixedViewsCaptured:files.length>=8,consoleZeroErrors:consoleErrors.length===0,pageZeroErrors:pageErrors.length===0}};
+    receipt={schema:'kaopu.fish-mother.yellowfin-source-copy-browser-qa/2.1',date:'2026-09-21',build:'YELLOWFIN-SOURCE-COPY-R001',url,viewport:{width:1440,height:900,deviceScaleFactor:1},renderer:'headless Chromium WebGL / SwiftShader',identity,classification:{dorsalConfirmed:identity.qa.classification.dorsal,ventralConfirmed:identity.qa.classification.ventral,peduncleU:identity.qa.classification.peduncleU,markerMapping:identity.qa.markerMapping},viewSemantics,screenshots:files,consoleErrors,pageErrors,checks:{exactShaDisplayed:identity.sha===expectedSha,branchLocalSourceUsed:identity.source==='branch-local',classificationLoaded:identity.qa.classificationLoaded===true,finletCountsDisplayed:identity.finlets.includes('9 dorsal / 8 ventral'),displayAxisContractPassed:identity.qa.axes.length==='z'&&identity.qa.axes.lateral==='y'&&identity.qa.axes.vertical==='x',modelLengthAxisIsZ:identity.qa.modelSpan.z>identity.qa.modelSpan.x&&identity.qa.modelSpan.z>identity.qa.modelSpan.y,markerMappingPassed:identity.qa.markerMapping.mode==='canonical-source-to-model-inverse-root'&&identity.qa.markerMapping.count===19,semanticViewAxesPassed,classificationMarkersCaptured:files.some(file=>file.name==='source-side-classification.png'),fixedViewsCaptured:files.length>=8,consoleZeroErrors:consoleErrors.length===0,pageZeroErrors:pageErrors.length===0}};
     receipt.passed=Object.values(receipt.checks).every(Boolean);
     fs.writeFileSync(path.join(outDir,'BROWSER_QA_RECEIPT.json'),JSON.stringify(receipt,null,2)+'\n');
     if(!receipt.passed)throw new Error(`browser QA failed: ${JSON.stringify(receipt.checks)}`);
   }catch(error){
-    receipt=receipt||{schema:'kaopu.fish-mother.yellowfin-source-copy-browser-qa/2.0',date:'2026-09-21',build:'YELLOWFIN-SOURCE-COPY-R001',url,consoleErrors,pageErrors,passed:false,error:String(error)};
+    receipt=receipt||{schema:'kaopu.fish-mother.yellowfin-source-copy-browser-qa/2.1',date:'2026-09-21',build:'YELLOWFIN-SOURCE-COPY-R001',url,consoleErrors,pageErrors,passed:false,error:String(error)};
     fs.writeFileSync(path.join(outDir,'BROWSER_QA_RECEIPT.json'),JSON.stringify(receipt,null,2)+'\n');throw error;
   }finally{await browser.close();}
   console.log(JSON.stringify(receipt,null,2));
