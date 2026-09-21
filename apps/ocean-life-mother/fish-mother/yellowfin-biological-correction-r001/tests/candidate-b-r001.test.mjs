@@ -1,0 +1,156 @@
+import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const root = path.resolve(here, '..');
+const repoRoot = path.resolve(root, '../../../..');
+const frozenPath = path.join(repoRoot, 'apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/geometry/YELLOWFIN_SOURCE_COPY_SKINNED_R001.glb');
+const candidatePath = path.join(root, 'geometry/YELLOWFIN_BIOLOGICAL_CORRECTION_R001_CANDIDATE_B.glb');
+const receiptPath = path.join(root, 'CANDIDATE_B_RECEIPT.json');
+const controlsPath = path.join(root, 'CANDIDATE_B_CONTROLS.json');
+const statusPath = path.join(root, 'CURRENT_STATUS.json');
+const baselinePath = path.join(repoRoot, 'CURRENT_BASELINE.json');
+
+for (const required of [frozenPath, candidatePath, receiptPath, controlsPath, statusPath, baselinePath]) {
+  assert.equal(fs.existsSync(required), true, `missing Candidate B artifact: ${required}`);
+}
+
+const receipt = JSON.parse(fs.readFileSync(receiptPath, 'utf8'));
+const controls = JSON.parse(fs.readFileSync(controlsPath, 'utf8'));
+const status = JSON.parse(fs.readFileSync(statusPath, 'utf8'));
+const baseline = JSON.parse(fs.readFileSync(baselinePath, 'utf8'));
+const frozenBytes = fs.readFileSync(frozenPath);
+const candidateBytes = fs.readFileSync(candidatePath);
+const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
+const frozenSha = sha(frozenBytes);
+const candidateSha = sha(candidateBytes);
+
+assert.equal(receipt.schema, 'kaopu.fish-mother.yellowfin-biological-correction-candidate/1.0');
+assert.equal(receipt.candidate, 'YELLOWFIN-BIOLOGICAL-CORRECTION-R001-CANDIDATE-B');
+assert.equal(frozenSha, '2130a3c03fc50d22676919c3599e75707e61d9f75ddd90523a6897887715ec02');
+assert.equal(receipt.frozenInput.sha256, frozenSha);
+assert.equal(receipt.frozenInput.bytes, 58956620);
+assert.equal(receipt.frozenInput.immutable, true);
+assert.equal(candidateSha, receipt.output.sha256);
+assert.notEqual(candidateSha, frozenSha);
+assert.equal(candidateBytes.length, receipt.output.bytes);
+
+assert.equal(receipt.output.meshCount, 3);
+assert.equal(receipt.output.primitiveCount, 15);
+assert.equal(receipt.output.nodeCount, 113);
+assert.equal(receipt.output.skinCount, 1);
+assert.equal(receipt.output.jointCount, 98);
+assert.equal(receipt.output.animationCount, 1);
+assert.equal(receipt.output.materialCount, 3);
+assert.equal(receipt.output.imageCount, 6);
+assert.equal(receipt.output.semanticRegionCount, 13);
+assert.equal(receipt.output.semanticFaceCount, 6920);
+
+const windows = controls.acceptanceWindows;
+const within = (value, range) => value >= range[0] && value <= range[1];
+for (const key of [
+  'maximumBodyDepthOverForkLength',
+  'semanticHeadLengthOverForkLength',
+  'pectoralLengthOverForkLength',
+  'secondDorsalHeightOverForkLength',
+  'analHeightOverForkLength',
+  'caudalVerticalSpanOverForkLength',
+  'peduncleDepthOverForkLength',
+]) {
+  assert.equal(within(receipt.after[key], windows[key]), true, `${key} outside Candidate B acceptance window`);
+}
+assert.equal(receipt.after.deepestBodyNearFirstDorsalBase, true);
+assert.ok(receipt.after.maximumBodyDepthOverForkLength < receipt.before.maximumBodyDepthOverForkLength);
+assert.ok(receipt.after.pectoralLengthOverForkLength > receipt.before.pectoralLengthOverForkLength);
+assert.ok(receipt.after.secondDorsalHeightOverForkLength > receipt.before.secondDorsalHeightOverForkLength);
+assert.ok(receipt.after.analHeightOverForkLength > receipt.before.analHeightOverForkLength);
+assert.ok(Math.abs(receipt.delta.semanticHeadLengthOverForkLength) < 1e-6);
+assert.ok(Math.abs(receipt.delta.caudalVerticalSpanOverForkLength) < 0.01);
+
+assert.equal(receipt.rig.rest.jointCount, 98);
+assert.equal(receipt.rig.rest.mode, 'source-rig-byte-preserved');
+assert.equal(receipt.rig.rest.sourceNodeHierarchyRetained, true);
+assert.equal(receipt.rig.rest.sourceSkinTableRetained, true);
+assert.equal(receipt.rig.rest.sourceInverseBindMatricesRetained, true);
+assert.equal(receipt.rig.animation.mode, 'source-animation-byte-preserved');
+assert.equal(receipt.rig.animation.translationChannelCount, 97);
+assert.equal(receipt.rig.animation.rotationChannelsRetained, 97);
+assert.equal(receipt.rig.animation.scaleChannelsRetained, 97);
+assert.equal(receipt.rig.animation.sourceAnimationTableRetained, true);
+assert.equal(receipt.rig.animation.sourceAnimationAccessorsRetained, true);
+assert.equal(receipt.deformation.jointRestTranslationsRewritten, false);
+assert.equal(receipt.deformation.inverseBindMatricesRewritten, false);
+assert.equal(receipt.deformation.animationTranslationsRewritten, false);
+assert.equal(receipt.deformation.sourceRigAndAnimationPreserved, true);
+assert.ok(receipt.rig.shading.normalAccessors.length > 0);
+assert.ok(receipt.rig.shading.tangentAccessors.length > 0);
+assert.equal(receipt.deformation.firstDorsalIndependentlyElongated, false);
+assert.equal(receipt.deformation.secondDorsalMirroredSheetsDeformedTogether, false);
+assert.equal(receipt.deformation.secondDorsalSingleWatertightStructureSelected, true);
+assert.equal(receipt.deformation.firstDorsalRearPanelsIndependentlyElongated, false);
+assert.equal(receipt.after.firstDorsalSurfaceCount, 2);
+assert.equal(receipt.after.secondDorsalSurfaceCount, 1);
+assert.ok(receipt.after.firstDorsalSurfaceHeightSpread <= 1e-6);
+assert.ok(receipt.after.secondDorsalSurfaceHeightSpread <= 1e-6);
+assert.equal(receipt.componentSelection.firstDorsalSurfaces.length, 2);
+assert.equal(receipt.componentSelection.secondDorsalSurfaces.length, 1);
+assert.deepEqual(
+  receipt.componentSelection.secondDorsalSurfaces.map(surface => surface.component).sort((a, b) => a - b),
+  [1],
+);
+assert.equal(receipt.deformation.caudalIndependentlyRescaled, false);
+assert.equal(receipt.deformation.finletCountChanged, false);
+assert.equal(receipt.gates.candidateAVisualRejected, true);
+assert.equal(receipt.gates.trueSecondDorsalComponentSelected, true);
+assert.equal(receipt.gates.firstDorsalFrontSheetsPreserved, true);
+assert.equal(receipt.gates.firstDorsalRearSheetsPreservedFromIndependentElongation, true);
+assert.equal(receipt.gates.candidateBMachineAcceptancePassed, true);
+assert.ok(receipt.controls.secondDorsalFactor < 1.5, 'Candidate B must not repeat the 4.72x wrong-panel expansion');
+assert.equal(receipt.predecessorReview.manualVisualAcceptance, false);
+assert.equal(status.candidateA.manualVisualAcceptance, false);
+assert.equal(status.gates.candidateAVisualRejected, true);
+assert.ok(receipt.deformation.changedPrimaryVertices > 0);
+assert.ok(receipt.deformation.maximumPrimaryVertexDisplacementOverForkLength > 0);
+
+for (const [gate, value] of Object.entries(receipt.gates)) {
+  if (['candidateBrowserQAPassed', 'productionReady'].includes(gate)) {
+    assert.equal(value, false, `${gate} must remain false before browser QA`);
+  } else if (gate === 'manualVisualAcceptancePending') {
+    assert.equal(value, true);
+  } else {
+    assert.equal(value, true, `Candidate B gate failed: ${gate}`);
+  }
+}
+
+assert.equal(status.phase, 'CANDIDATE_B_GENERATED_MACHINE_ACCEPTED');
+assert.equal(status.gates.correctionCandidateGenerated, true);
+assert.equal(status.gates.candidateMachineAcceptancePassed, true);
+assert.equal(status.gates.candidateBrowserQAPassed, false);
+assert.equal(status.gates.manualVisualAcceptancePending, true);
+assert.equal(status.gates.productionReady, false);
+assert.equal(status.candidateB.sha256, candidateSha);
+
+assert.equal(baseline.activeState.phase, 'YELLOWFIN_BIOLOGICAL_CORRECTION_R001_CANDIDATE_B_MACHINE_ACCEPTED');
+assert.equal(baseline.activeState.biologicalCorrectionCandidateSha256, candidateSha);
+assert.equal(baseline.activeState.correctionCandidateGenerated, true);
+assert.equal(baseline.activeState.candidateMachineAcceptancePassed, true);
+assert.equal(baseline.activeState.candidateBrowserQAPassed, false);
+assert.equal(baseline.activeState.productionReady, false);
+assert.equal(baseline.activeState.nextAllowedBuild, 'YELLOWFIN-BIOLOGICAL-CORRECTION-R001-CANDIDATE-B-BROWSER-QA');
+
+console.log(JSON.stringify({
+  ok: true,
+  frozenSha,
+  candidateSha,
+  before: receipt.before,
+  after: receipt.after,
+  bodyDepthAmplitude: receipt.controls.bodyDepthAmplitude,
+  pectoralFactors: receipt.controls.pectoralFactors,
+  secondDorsalFactor: receipt.controls.secondDorsalFactor,
+  analFactor: receipt.controls.analFactor,
+  translationChannels: receipt.rig.animation.translationChannelCount,
+  next: receipt.next,
+}, null, 2));

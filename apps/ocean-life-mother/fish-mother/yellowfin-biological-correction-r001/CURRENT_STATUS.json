@@ -3,7 +3,7 @@
   "date": "2026-09-21",
   "branch": "work/ocean-life-fish-mother-yellowfin-biological-correction-r001-20260921",
   "build": "YELLOWFIN-BIOLOGICAL-CORRECTION-R001",
-  "phase": "CANDIDATE_A_BROWSER_QA_PASSED_MACHINE_ACCEPTED",
+  "phase": "CANDIDATE_B_GENERATED_MACHINE_ACCEPTED",
   "frozenInput": {
     "commit": "9b610f4ef0134e015c2fb6b14574e7e4f48ed943",
     "sha256": "2130a3c03fc50d22676919c3599e75707e61d9f75ddd90523a6897887715ec02",
@@ -18,7 +18,7 @@
     "skinInfluenceAuditPassed": true,
     "animationChannelAuditPassed": true,
     "correctionCandidateGenerated": true,
-    "candidateBrowserQAPassed": true,
+    "candidateBrowserQAPassed": false,
     "manualVisualAcceptancePending": true,
     "productionReady": false,
     "candidateMachineAcceptancePassed": true,
@@ -28,9 +28,11 @@
     "candidateFixedViewsCaptured": true,
     "candidateSwimSamplesCaptured": true,
     "candidateConsoleZeroErrors": true,
-    "candidatePageErrorsZero": true
+    "candidatePageErrorsZero": true,
+    "candidateAVisualRejected": true,
+    "candidateBMachineAcceptancePassed": true
   },
-  "next": "Review the fixed Candidate A screenshots manually for Yellowfin silhouette, first/second dorsal identity, paired-surface continuity, eye/cornea attachment, fin roots and Swim deformation. If rejected, create Candidate B from the frozen Source Copy; do not modify Candidate A in place and do not mark productionReady.",
+  "next": "Run Candidate B browser QA with real close-ups of first-dorsal front/rear panels, true second dorsal component 1, pectoral roots, eye/cornea attachment and five synchronized Swim samples.",
   "baseline": {
     "report": "BIOLOGICAL_CORRECTION_R001_BASELINE.json",
     "frozenCopySha256": "2130a3c03fc50d22676919c3599e75707e61d9f75ddd90523a6897887715ec02",
@@ -101,6 +103,81 @@
     "maximumSampledCenterDelta": 0.11541118557251873,
     "maximumCandidateBoneMagnitude": 2.9037993575945857,
     "manualVisualAcceptancePending": true,
-    "productionReady": false
+    "productionReady": false,
+    "manualVisualAcceptance": false,
+    "manualVisualReview": {
+      "candidate": "YELLOWFIN-BIOLOGICAL-CORRECTION-R001-CANDIDATE-A",
+      "sha256": "7653c63f2a5fda43a3217178257e9bfe10c446ac4445b54f2585ff8456d1fdee",
+      "machineBrowserQAPassed": true,
+      "manualVisualAcceptance": false,
+      "failure": "Wrong dorsal identity: components 2 and 4 are rear panels of the first-dorsal assembly, not the true second dorsal. Their 4.722846545 enlargement produced an extra rectangular sail.",
+      "evidence": [
+        "evidence/candidate-a-browser/candidate-a-corrected-side-rest.png",
+        "evidence/candidate-a-browser/candidate-a-overlay-side-rest.png",
+        "evidence/candidate-a-browser/candidate-a-corrected-quarter-tmid.png"
+      ]
+    }
+  },
+  "candidateB": {
+    "glb": "geometry/YELLOWFIN_BIOLOGICAL_CORRECTION_R001_CANDIDATE_B.glb",
+    "receipt": "CANDIDATE_B_RECEIPT.json",
+    "sha256": "f36f8f034a9ea864c6050f3c0eda3629a201e0917ded9a631f2584be3cadbcbc",
+    "bytes": 58957272,
+    "before": {
+      "maximumBodyDepthOverForkLength": 0.354311375,
+      "maximumBodyDepthU": 0.5875,
+      "maximumBodyWidthOverForkLength": 0.214951779,
+      "maximumBodyWidthU": 0.7125,
+      "semanticHeadLengthOverForkLength": 0.285143386,
+      "pectoralLengthOverForkLength": 0.203603971,
+      "secondDorsalHeightOverForkLength": 0.066386989,
+      "analHeightOverForkLength": 0.139587282,
+      "caudalVerticalSpanOverForkLength": 0.344582822,
+      "peduncleDepthOverForkLength": 0.060558492,
+      "peduncleWidthOverForkLength": 0.011310506,
+      "deepestBodyNearFirstDorsalBase": true,
+      "firstDorsalBaseURange": [
+        0.591784408,
+        0.711028173
+      ]
+    },
+    "after": {
+      "forkLength": 2.735563469,
+      "forkOverTotalLength": 0.910816875,
+      "maximumBodyDepthOverForkLength": 0.285000005,
+      "maximumBodyDepthU": 0.5875,
+      "maximumBodyWidthOverForkLength": 0.214951779,
+      "maximumBodyWidthU": 0.7125,
+      "semanticHeadLengthOverForkLength": 0.285143387,
+      "pectoralLengthOverForkLength": 0.240000001,
+      "secondDorsalHeightOverForkLength": 0.179999995,
+      "firstDorsalSurfaceHeightSpread": 0.0,
+      "secondDorsalSurfaceHeightSpread": 0.0,
+      "dorsalAnatomicalGroupCount": 3,
+      "firstDorsalSurfaceCount": 2,
+      "secondDorsalSurfaceCount": 1,
+      "analHeightOverForkLength": 0.180000001,
+      "caudalVerticalSpanOverForkLength": 0.344582822,
+      "peduncleDepthOverForkLength": 0.057921074,
+      "peduncleWidthOverForkLength": 0.011310506,
+      "deepestBodyNearFirstDorsalBase": true,
+      "firstDorsalBaseURange": [
+        0.591784413,
+        0.711028176
+      ]
+    },
+    "manualVisualAcceptancePending": true,
+    "productionReady": false,
+    "trueSecondDorsalComponents": [
+      1
+    ],
+    "preservedFirstDorsalComponents": [
+      0,
+      3,
+      2,
+      4
+    ],
+    "rigPolicy": "preserve-source-rig-and-animation",
+    "animationTranslationsRewritten": false
   }
 }
