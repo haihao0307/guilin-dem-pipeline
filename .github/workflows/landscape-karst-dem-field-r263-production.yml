@@ -1,0 +1,157 @@
+name: Landscape Karst DEM Field R2.6.3 Production
+
+on:
+  push:
+    branches:
+      - feature/landscape-karst-dem-field-r26-cracks-20260921
+    paths:
+      - workbenches/landscape-karst-dem-field-r2-6-3-production/build_r263.py
+      - workbenches/landscape-karst-dem-field-r2-6-3-production/KARST_FIELD_PRODUCTION_HANDOFF_R263.md
+      - .github/workflows/landscape-karst-dem-field-r263-production.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build R2.6.3 production candidate
+        run: |
+          python -m py_compile workbenches/landscape-karst-dem-field-r2-6-3-production/build_r263.py
+          python workbenches/landscape-karst-dem-field-r2-6-3-production/build_r263.py
+
+      - name: Static contract and shader compilation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,re
+          root=Path('workbenches/landscape-karst-dem-field-r2-6-3-production')
+          s=(root/'index.html').read_text(encoding='utf-8')
+          b=json.loads((root/'build.json').read_text(encoding='utf-8'))
+          c=json.loads((root/'production_contract.json').read_text(encoding='utf-8'))
+          required=[
+            'PALAU_KARST_DEM_FIELD_R263_PRODUCTION',
+            'DEM 连续山体（默认生产验证）',
+            'one-sided band','wedgeWidth','crackVoid',
+            'reefPlatform','continuousReefUnion',
+            'uTideOffset','KarstFieldRuntime','exportProductionDNA',
+            'seaNotch:2.15','crackDepth:.95',
+            '__KARST_FIELD_CONTRACT__'
+          ]
+          for token in required: assert token in s, token
+          assert b['schema']=='LANDSCAPE_KARST_DEM_FIELD_R263_PRODUCTION'
+          assert b['productionCandidate'] is True
+          assert b['geometry']['cracksAffectDistanceField'] is True
+          assert b['geometry']['reefPlatformContinuousUnion'] is True
+          assert b['tide']['runtimeTideChangesGeometry'] is False
+          assert c['runtimeInputs']['tideOffset']['source']=='Ocean Mother'
+          assert c['runtimeInputs']['tideOffset']['changesGeometry'] is False
+          for name,file in [('VS','/tmp/r263.vert'),('GEOMETRY_FS','/tmp/r263-geom.frag'),('MATERIAL_FS','/tmp/r263-mat.frag')]:
+            m=re.search(rf'const {name}=`(.*?)`;',s,re.S);assert m,name
+            Path(file).write_text(m.group(1),encoding='utf-8')
+          scripts=re.findall(r'<script>(.*?)</script>',s,re.S);assert scripts
+          Path('/tmp/r263-app.js').write_text(scripts[-1],encoding='utf-8')
+          Path('/tmp/r263-bridge.mjs').write_text((root/'karst_field_runtime_bridge.js').read_text(encoding='utf-8'),encoding='utf-8')
+          PY
+          node --check /tmp/r263-app.js
+          node --check /tmp/r263-bridge.mjs
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq glslang-tools
+          glslangValidator -S vert /tmp/r263.vert
+          glslangValidator -S frag /tmp/r263-geom.frag
+          glslangValidator -S frag /tmp/r263-mat.frag
+
+      - name: Run Chromium A/B geometry and tide validation
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 >/tmp/http.log 2>&1 &
+          SERVER=$!
+          trap 'kill $SERVER || true' EXIT
+          for i in $(seq 1 80); do
+            if curl -fsS http://127.0.0.1:8000/ >/dev/null; then break; fi
+            sleep .25
+          done
+          curl -fsS http://127.0.0.1:8000/ >/dev/null
+          CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)
+          if [ -z "$CHROME" ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq chromium-browser || sudo apt-get install -y -qq chromium
+            CHROME=$(command -v chromium || command -v chromium-browser)
+          fi
+          BASE=http://127.0.0.1:8000/workbenches/landscape-karst-dem-field-r2-6-3-production/index.html
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage \
+            --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist \
+            --run-all-compositor-stages-before-draw --virtual-time-budget=32000 \
+            --dump-dom "$BASE" >/tmp/r263-dom.html 2>/tmp/r263-chrome.log
+          grep -q 'data-karst-ready="true"' /tmp/r263-dom.html
+          grep -q 'data-karst-output-visible="true"' /tmp/r263-dom.html
+          ! grep -q 'data-karst-failure' /tmp/r263-dom.html
+          for pair in \
+            "default:$BASE" \
+            "no-cracks:$BASE?noCracks=1" \
+            "high-tide:$BASE?tide=1.20"; do
+            NAME=${pair%%:*}
+            URL=${pair#*:}
+            "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage \
+              --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist \
+              --run-all-compositor-stages-before-draw --virtual-time-budget=32000 \
+              --window-size=1600,1000 --screenshot=/tmp/r263-${NAME}.png "$URL" \
+              >/tmp/r263-${NAME}.log 2>&1
+            test -s /tmp/r263-${NAME}.png
+            test $(stat -c%s /tmp/r263-${NAME}.png) -gt 100000
+          done
+          python -m pip install -q pillow
+          python - <<'PY'
+          from PIL import Image, ImageChops, ImageStat
+          base=Image.open('/tmp/r263-default.png').convert('RGB')
+          no_cracks=Image.open('/tmp/r263-no-cracks.png').convert('RGB')
+          high_tide=Image.open('/tmp/r263-high-tide.png').convert('RGB')
+          stat=ImageStat.Stat(base)
+          spread=sum(hi-lo for lo,hi in stat.extrema)
+          pixels=list(base.resize((80,50)).getdata())
+          bright=sum(1 for r,g,b in pixels if r>245 and g>245 and b>245)/len(pixels)
+          dark=sum(1 for r,g,b in pixels if r<18 and g<18 and b<18)/len(pixels)
+          crack_diff=sum(ImageStat.Stat(ImageChops.difference(base,no_cracks)).mean)/3
+          tide_diff=sum(ImageStat.Stat(ImageChops.difference(base,high_tide)).mean)/3
+          assert spread>60, (stat.extrema,spread)
+          assert bright<.94, bright
+          assert dark<.94, dark
+          assert crack_diff>.03, crack_diff
+          assert tide_diff>.01, tide_diff
+          print({'spread':spread,'bright_ratio':bright,'dark_ratio':dark,'crack_ab_mean':crack_diff,'tide_ab_mean':tide_diff})
+          PY
+          mkdir -p /tmp/r263-proof
+          cp /tmp/r263-default.png /tmp/r263-proof/r263-default.png
+          cp /tmp/r263-no-cracks.png /tmp/r263-proof/r263-no-cracks.png
+          cp /tmp/r263-high-tide.png /tmp/r263-proof/r263-high-tide.png
+          cp /tmp/r263-dom.html /tmp/r263-proof/dom.html
+          cp /tmp/r263-chrome.log /tmp/r263-proof/chrome.log
+          cp workbenches/landscape-karst-dem-field-r2-6-3-production/build.json /tmp/r263-proof/build.json
+          cp workbenches/landscape-karst-dem-field-r2-6-3-production/production_contract.json /tmp/r263-proof/production_contract.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: landscape-karst-dem-field-r263-production-proof
+          path: /tmp/r263-proof
+          retention-days: 7
+
+      - name: Materialize browser-tested R2.6.3
+        run: |
+          git config user.name "Landscape Mother"
+          git config user.email "actions@users.noreply.github.com"
+          git add workbenches/landscape-karst-dem-field-r2-6-3-production/index.html \
+                  workbenches/landscape-karst-dem-field-r2-6-3-production/build.json \
+                  workbenches/landscape-karst-dem-field-r2-6-3-production/production_contract.json \
+                  workbenches/landscape-karst-dem-field-r2-6-3-production/karst_field_runtime_bridge.js
+          if git diff --cached --quiet; then
+            echo "R2.6.3 already materialized"
+            exit 0
+          fi
+          git commit -m "feat(landscape): materialize browser-tested R2.6.3 production field [skip ci]"
+          git push
