@@ -4,7 +4,8 @@
   "archiveFormat": "tar.gz",
   "payloadEncoding": "base64",
   "payloadPattern": "chunk-*.b64",
-  "payloadChunks": 11,
+  "payloadChunks": 8,
+  "payloadChunkBytes": [4000, 4000, 4000, 4000, 4000, 8000, 8000, 4080],
   "payloadEncodedBytes": 40080,
   "archiveBytes": 30059,
   "archiveSha256": "ba9ccc25f1c0888e5137c3e8e498e16713bc0ab3201f1dbf70af87aabd376b2c",
@@ -18,7 +19,7 @@
     "takeover audit and publication gate"
   ],
   "generatedRuntimeIncluded": false,
-  "generatedRuntimeRule": "GitHub Actions reconstructs this archive, rebuilds runtime assets from sealed vectors, runs QA, regenerates receipts, and commits the derived files to the same work branch.",
+  "generatedRuntimeRule": "GitHub Actions reconstructs this archive, verifies both encoded and archive hashes, rebuilds runtime assets from sealed vectors, runs QA, regenerates receipts, and commits the derived files to the same work branch.",
   "visualAcceptance": false,
   "productionReady": false,
   "publicShareAllowed": false
