@@ -112,3 +112,17 @@ Production Mother 是执行车间，不是项目总设计者。小妈/Coordinato
 已有明确 Task Anchor 时禁止重新写 master plan、重新选题或等待用户反复说“继续”。首轮必须实际执行 first command / source diff / numeric probe，或者给出精确 BLOCKED_VALID。一个 Mother 一次只解决一个 primary defect；做完后按 nextTaskPointer 接下一个零件，不能自己发明下一任务。
 
 跨 Mother 完整规范：`haihao0307/guilin-dem-pipeline@8c8635a512d6d136c202e96187f8b31d93325bd9:knowledge/MOTHER_FACTORY_EXECUTION_MODE_R3_ZH.md`。R2 的 LOCK→EXECUTE→VERIFY→PROMOTE、参考复刻、freshness、verifier、单体 HTML 等门禁全部保留；R3 只进一步锁死“Production Mother 主要职责是 EXECUTE，不是重新 THINK”。
+
+
+## Archetype Factory System R1（2026-09-21）
+
+Coral、Fish、Bird、Tree、Animal、Geoform、Habitat Cover、Dynamic Process 等高物种/高变体领域，默认不再按“一个物种从零研究到完成，再做下一个”的串行手工业方式生产。必须读取并执行 `knowledge/ARCHETYPE_FACTORY_SYSTEM_R1_ZH.md`。
+
+默认生产链：
+`Research/Xiaoma → Archetype Identity Card → 最多3个独立 Production Slots → Stage A/B/C/D → 同一 Workbench 横向比较 → verifier → Variant → Game Assembly`。
+
+Production Mother 不承担广泛研究和重新分类。每个 slot 一次只做一个 Stage；SPECIMEN_LOCAL blocker 只允许卡当前 slot，不得把整个 Domain 停掉。缺候选时必须显示 `NO_CANDIDATE` / UNKNOWN，禁止 generic/toy/placeholder 补位。
+
+每个母型必须记录 `TARGET_ARCHETYPE`、`CONFUSION_SET`、Identity source/image、`CURRENT_LARGEST_DEVIATION`。母型未过 Stage gate，不得靠下一阶段材质/微表面掩盖问题。
+
+最终目标是 Game：Domain Mother 生产零件，Game Mother 总装，小妈负责研究、拆解、跨模块协调与质量制度。所有用户可见 Workbench/Game 仍执行 standalone single-HTML 双击门禁。
