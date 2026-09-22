@@ -1,0 +1,96 @@
+name: Palau R19 Authority Gate
+
+on:
+  push:
+    branches:
+      - work/palau-airai-r19-authority-locked-restart-20260922
+    paths:
+      - games/survivor-palau/palau-world/airai-r19/**
+      - tools/palau/r19/**
+      - .github/workflows/palau-r19-authority-gate.yml
+  pull_request:
+    paths:
+      - games/survivor-palau/palau-world/airai-r19/**
+      - tools/palau/r19/**
+      - .github/workflows/palau-r19-authority-gate.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  authority-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact branch bytes
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate exact authority contract and honest blocked state
+        run: python tools/palau/r19/verify_authority_inputs.py
+
+      - name: Prove ready-state cannot pass without exact source binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/palau-r19-empty-input
+          if python tools/palau/r19/verify_authority_inputs.py \
+            --require-ready \
+            --input-root /tmp/palau-r19-empty-input; then
+            echo 'ERROR: ready gate passed without source binaries' >&2
+            exit 1
+          fi
+          echo 'Negative source-binary gate behaved correctly.'
+
+      - name: Reject visual artifacts while source gate is blocked
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='games/survivor-palau/palau-world/airai-r19'
+          forbidden=$(find "$root" -type f \( \
+            -iname '*.html' -o -iname '*.htm' -o \
+            -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o \
+            -iname '*.webp' -o -iname '*.gif' -o \
+            -iname '*.tif' -o -iname '*.tiff' -o \
+            -iname '*.glb' -o -iname '*.gltf' \
+          \) -print)
+          if [ -n "$forbidden" ]; then
+            echo 'Visual/runtime artifacts are forbidden while R19 is source-blocked:' >&2
+            echo "$forbidden" >&2
+            exit 1
+          fi
+
+      - name: Reject forbidden R12-R18 inheritance declarations
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          lock=json.loads(Path('games/survivor-palau/palau-world/airai-r19/R19_AUTHORITY_LOCK.json').read_text())
+          lineage=lock['rejectedLineage']
+          required_false=[
+              'reuseVisibleGeography','reuseCoastlines','reuseStoryAnchors',
+              'reuseTerrainMeshes','reuseVisualResults'
+          ]
+          bad=[key for key in required_false if lineage.get(key) is not False]
+          if bad:
+              raise SystemExit(f'Forbidden lineage reuse enabled: {bad}')
+          print('R12-R18 visible lineage remains disabled.')
+          PY
+
+      - name: Real 3D and public delivery checklist status
+        run: |
+          cat <<'EOF'
+          [x] No generated image substituted for real 3D.
+          [x] Production gate source was modified.
+          [ ] Interactive 3D workbench exists — correctly blocked by missing exact sources.
+          [ ] Runtime frame comes from real-time 3D — not yet allowed.
+          [ ] Public fixed HTTPS URL passed — not yet allowed.
+          [x] Only-source-audit state is not presented as a visual delivery.
+          EOF
