@@ -1,0 +1,118 @@
+{
+  "schema": "kaopu.survivor-palau.r19-vertical-normalization/1.0",
+  "version": "R19_EGM96_ORTHOMETRIC_NORMALIZATION_20260922",
+  "operation": "H_EGM96 = h_ASF_RTC_ELLIPSOID - N_EGM96",
+  "geoid": {
+    "filename": "us_nga_egm96_15.tif",
+    "bytes": 2710815,
+    "sha256": "db493027562c9b004d7220fa881f5603adada4e1c5029b933fa7de4547b0e78d",
+    "model": "NGA EGM96 15-minute geoid undulation grid distributed by OSGeo PROJ-data"
+  },
+  "sources": {
+    "F0130": {
+      "sourceFilename": "AP_08074_FBD_F0130_RT1.dem.tif",
+      "sourceSha256": "51f67338ed23d2e30570fc41ee720f664d8dc0e5ed3300595fcaf7ff9940abf6",
+      "derivedFilename": "F0130_ORTHOMETRIC_EGM96_12_5M_POSTING_SRTM30_SOURCE.tif",
+      "derivedSha256": "b29909348d12b437a123b4387e82efc6cfb456dba3e4c29bf8a773d08e9f7433",
+      "derivedBytes": 7093190,
+      "width": 5921,
+      "height": 5326,
+      "validCells": 31415184,
+      "sourceNoDataCells": 120062,
+      "geoidRangeM": [61.83948516845703, 67.61280822753906],
+      "orthometricRangeM": [-14.630767822265625, 205.99720764160156],
+      "orthometricPercentilesM": {
+        "p01": -0.48957061767578125,
+        "p50": 0.014766693115234375,
+        "p99": 41.72637176513672
+      },
+      "nearSeaAbsLe5M": {
+        "cellCount": 30716195,
+        "medianM": 0.008087158203125,
+        "p05M": -0.443023681640625,
+        "p95M": 0.44249725341796875
+      }
+    },
+    "F0140": {
+      "sourceFilename": "AP_08074_FBD_F0140_RT1.dem.tif",
+      "sourceSha256": "32bb0462185d400aa3b6190927556f2a68a7c49d2e69cc88af6b8d19abbaf7b8",
+      "derivedFilename": "F0140_ORTHOMETRIC_EGM96_12_5M_POSTING_SRTM30_SOURCE.tif",
+      "derivedSha256": "dee2aeca43312a8e35ad07f9fa8288cdf1644402641621883263cc0ccb2c55be",
+      "derivedBytes": 8279210,
+      "width": 6358,
+      "height": 5319,
+      "validCells": 33700359,
+      "sourceNoDataCells": 117843,
+      "geoidRangeM": [62.03147506713867, 68.20453643798828],
+      "orthometricRangeM": [-12.832550048828125, 241.60211181640625],
+      "orthometricPercentilesM": {
+        "p01": -0.490203857421875,
+        "p50": 0.03653717041015625,
+        "p99": 108.69952392578125
+      },
+      "nearSeaAbsLe5M": {
+        "cellCount": 31154518,
+        "medianM": -0.00791168212890625,
+        "p05M": -0.4537925720214844,
+        "p95M": 0.45522308349609375
+      },
+      "highestSample": {
+        "heightM": 241.60211181640625,
+        "longitude": 134.57149258583334,
+        "latitude": 7.562577426888734
+      }
+    },
+    "canonical": {
+      "derivedFilename": "PALAU_R19_ORTHOMETRIC_EGM96_CANONICAL_F0130_GRID_12_5M_POSTING_SRTM30_SOURCE.tif",
+      "derivedSha256": "6ace836106dcc93c69a0d16fee1e8b8a2a93b4446f9e34af1eb1994e3d1b975c",
+      "derivedBytes": 23089134,
+      "provenanceMaskFilename": "PALAU_R19_CANONICAL_PROVENANCE_MASK.tif",
+      "provenanceMaskSha256": "b08c0c8bbe553b14e87fc853ff81f66312d5865e0d9abf51e536351ec2501f72",
+      "provenanceMaskBytes": 127256,
+      "crs": "EPSG:32653",
+      "transform": [12.5, 0.0, 414914.6875, 0.0, -12.5, 872194.625],
+      "bounds": [414914.6875, 750807.125, 500027.1875, 872194.625],
+      "width": 6809,
+      "height": 9711,
+      "validCells": 60046919,
+      "noDataCells": 6075280,
+      "orthometricRangeM": [-14.630767822265625, 241.60133361816406],
+      "orthometricPercentilesM": {
+        "p01": -0.489227294921875,
+        "p50": 0.02214813232421875,
+        "p99": 89.43226623535156
+      },
+      "provenanceCounts": {
+        "0_noData": 6075280,
+        "1_F0130_only": 26346560,
+        "2_F0140_resampled_only": 28631735,
+        "3_overlap_F0130_priority": 5068624
+      },
+      "gridAuthority": "F0130 pixel lattice",
+      "overlapPolicy": "F0130 exact-copy priority; F0140 bilinearly resampled only outside valid F0130 coverage",
+      "native12_5m": false,
+      "sourceDemResolution": "SRTMGL1 nominal 30 m"
+    }
+  },
+  "validation": {
+    "seaLevelNormalizationSupported": true,
+    "reason": "After subtracting EGM96 undulation, the near-sea median is within 0.01 m of zero in both frames and the northern maximum becomes 241.60 m.",
+    "originalBytesModified": false,
+    "noDataFilled": false,
+    "coastlineInvented": false,
+    "reefInvented": false,
+    "channelInvented": false
+  },
+  "truthBoundary": [
+    "Elevation information originates from SRTMGL1 nominal 30 m and is stored at 12.5 m posting in ASF RT1 packages.",
+    "Original ZIP and GeoTIFF bytes remain immutable.",
+    "The canonical grid is a derived product and does not upgrade the source to native 12.5 m terrain truth.",
+    "Negative residual samples are preserved; no clamping or NoData filling is performed.",
+    "Exact user authority JPEG overlays are still required before any visual candidate may be shown."
+  ],
+  "derivedBinaryStorage": "LOCAL_VERIFIED_PRIVATE_BINARY_UPLOAD_PENDING",
+  "visualBuildAllowed": false,
+  "interactive3D": false,
+  "visualAcceptance": false,
+  "productionReady": false
+}
