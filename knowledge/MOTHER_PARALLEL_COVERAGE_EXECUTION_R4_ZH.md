@@ -1,7 +1,7 @@
 # KAOPU Mother Parallel Coverage Execution R4
 ## 复杂资产不允许被一个局部细节卡死
 
-版本：4.1.0
+版本：4.2.0
 日期：2026-09-22
 状态：PERMANENT / CROSS-MOTHER / USER-AUTHORITY
 
@@ -286,3 +286,91 @@ Watchdog / Coordinator 只在以下情况写新评论或通知用户：
 - 当前执行端缺少必要浏览器/GPU/file:// 能力。
 
 此时 HOLD / ROUTE / VERIFY，而不是继续生成更多解释。
+
+
+## 13. Reference-First / First-Look Gate：先把“像不像”锁住，再允许往下做
+
+从 2026-09-22 起，所有可见自然对象、人物、船、飞机、建筑、服装和生物 Mother 都执行这个门。
+
+### 13.1 Production Mother 不负责规划
+Production Mother 不重新分类、不重新选参考、不重新发明路线。
+Coordinator / 小妈先给：
+- 唯一对象/母型；
+- 唯一 reference set；
+- 当前只做哪个 Stage / defect；
+- 第一轮看什么。
+
+Mother 收到后直接生产。
+
+### 13.2 第一屏必须同时看到 Reference 与 Candidate
+凡是 Coral / Fish / Bird / Animal / Human / Clothing / Boat / Aircraft 等形体任务，工作台第一屏必须至少同时显示：
+- LEFT / TOP：冻结 reference（用户图、已授权模型截图、权威身份图或测量图）；
+- RIGHT / BOTTOM：当前 candidate；
+- identity / source / current head；
+- CURRENT_LARGEST_DEVIATION。
+
+不能让用户先看一个脱离参考的孤立候选，再靠文字解释它“应该像什么”。
+
+如果 reference 是 3D：
+- 固定一个同视角截图或同一相机投影；
+- 必要时增加 overlay / silhouette difference；
+- 参考只做比较，不成为运行时依赖。
+
+### 13.3 First-Look Gate
+每个新对象/新母型第一轮只判断：
+1. identity 对不对；
+2. 大轮廓对不对；
+3. 长宽高 / 身高 / 主轴比例对不对；
+4. 基本角色/物种/时代/服装类别有没有跑偏；
+5. 有没有明显卡通 / toy / generic substitute。
+
+这个 Gate 没过：
+- 禁止进入手指、眼睛、corallite、micro-surface、旧化、复杂材质等微观工作；
+- 禁止靠细节把错误的大形盖住；
+- 直接 CORRECT Stage A / identity。
+
+目标是第一轮很快就暴露方向错误；在可连续执行环境中，首个 first-look artifact 目标为约 10 分钟级，而不是数小时后才第一次看到整体。
+
+### 13.4 人物身份门
+历史人物必须先通过“身份 + 时代 + 岗位” reference gate，再做局部动作：
+- 目标国别/军种/时期由任务资料冻结；
+- 面部、发型、帽型、制服轮廓、装备组合必须与冻结 reference set 比较；
+- 不允许 generic Western/default avatar、现代人物或卡通头部作为历史日本船员等任务的继承基线；
+- 不根据程序默认肤色/脸型自动宣称身份正确；
+- 若身份视觉未通过，人物状态 = HOLD_IDENTITY，而不是继续抠手指。
+
+### 13.5 Coral / Fish / Bird 的固定第一轮
+Coral：
+- 每个 lane 先放一张该母型真实 reference；
+- 旁边只做 Stage A 大轮廓；
+- 通过后才进入 topology / surface biology。
+
+Fish：
+- reference fish / source model 与 candidate 同屏；
+- 先看 body envelope、头/吻、尾柄、鳍位置和整体比例；
+- 通过后再做 rig / material / behavior 细化。
+
+Bird：
+- identity reference 与 candidate 同屏；
+- 先看体轴、翼展/翼形、腿、颈、头喙比例和站姿/飞行大形；
+- 通过后再做羽毛微表面和复杂动作。
+
+### 13.6 船 / 复杂设备的固定第一轮
+先比较：
+- reference silhouette；
+- 总长/宽/高；
+- 水线/吃水关系；
+- 人/设备与船体比例；
+- 主要机械/武器/桅杆位置。
+
+这些没有通过以前，不准让一个 crew 手指或一个螺栓成为主生产任务。
+
+### 13.7 用户只看工作台
+用户默认不看内部计划、Issue、Task Anchor、receipt 细节。
+用户可见汇报优先只有：
+- 当前 standalone HTML；
+- reference vs candidate 画面；
+- CURRENT_LARGEST_DEVIATION；
+- 是否 PASS / CORRECT / HOLD。
+
+文字解释不能替代工作台。
