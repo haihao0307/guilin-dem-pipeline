@@ -32,7 +32,8 @@ jobs:
       - name: Verify archive
         run: |
           python -m zipfile -t handoffs/landscape-mother/LANDSCAPE_MOTHER_R263_FINAL_CLOSEOUT_FULL_HANDOFF_2026-09-22.zip
-          sha256sum -c handoffs/landscape-mother/LANDSCAPE_MOTHER_R263_FINAL_CLOSEOUT_FULL_HANDOFF_2026-09-22.zip.sha256
+          cd handoffs/landscape-mother
+          sha256sum -c LANDSCAPE_MOTHER_R263_FINAL_CLOSEOUT_FULL_HANDOFF_2026-09-22.zip.sha256
 
       - name: Commit sealed package
         run: |
