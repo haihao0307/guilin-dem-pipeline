@@ -1,0 +1,76 @@
+{
+  "schema": "kaopu.survivor-palau.unified-field-execution-receipt/1.0",
+  "version": "R19_UNIFIED_FIELD_EXECUTION_RECEIPT_R01",
+  "status": "IMPLEMENTED_TESTED_SUBMITTED_TO_SMALL_MOTHER_NOT_APPROVED",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "work/palau-airai-r19-authority-locked-restart-20260922",
+  "baseBeforeUnifiedField": "64b2490b4f701f914040e5a186b132fe897923a3",
+  "candidateHead": "4bb2baf4f11250ef154fa75ea0746dae217081d1",
+  "draftPr": 136,
+  "smallMotherValidationIssue": 138,
+  "smallMotherLedger": 63,
+  "files": [
+    "unified_field.cjs",
+    "unified_field.test.cjs",
+    "validate_registry.cjs",
+    "R19_UNIFIED_FIELD_REGISTRY_R01.json",
+    "R19_SMALL_MOTHER_VALIDATION_PACKET_R01.md"
+  ],
+  "executedCommands": [
+    {
+      "command": "node games/survivor-palau/palau-world/airai-r19/unified-field-r01/unified_field.test.cjs",
+      "result": "PASS",
+      "output": "R19 unified field contract tests: PASS"
+    },
+    {
+      "command": "node games/survivor-palau/palau-world/airai-r19/unified-field-r01/validate_registry.cjs",
+      "result": "PASS",
+      "output": "R19 unified field registry validation: PASS (14 pages)"
+    }
+  ],
+  "githubActions": [
+    {
+      "name": "verify-unified-field",
+      "runId": 35733503198,
+      "checkRunId": 106764734257,
+      "conclusion": "success"
+    },
+    {
+      "name": "authority-gate",
+      "runId": 35733510901,
+      "checkRunId": 106764760227,
+      "conclusion": "success"
+    }
+  ],
+  "proved": [
+    "Unknown and NoData are not silently converted to numeric zero.",
+    "Malakal regional tide cannot become exact Airai local tide without an explicit local transfer field.",
+    "NOAA ENC local sounding datum code 24 cannot be subtracted from EGM96 elevation without a validated datum bridge.",
+    "Samples with different represented times cannot be silently combined.",
+    "Wave representations must retain source identity, residuals, NoData and reconstruction error metrics.",
+    "Wave representations cannot promote themselves to Canonical Truth.",
+    "One World Score can contain independent typed fields under one world identity and observation request."
+  ],
+  "notProved": [
+    "Small Mother approval",
+    "final geographic registration of the user yellow AOI",
+    "valid Airai local tide transfer",
+    "1944 non-tidal residual water level",
+    "validated NOAA ENC chart-datum bridge to EGM96 or MSL",
+    "real-data wave decomposition coefficients",
+    "interactive three-dimensional workbench",
+    "visual acceptance",
+    "production readiness"
+  ],
+  "gates": {
+    "smallMotherValidation": "REQUESTED_NOT_APPROVED",
+    "unifiedFieldContractTestsPassed": true,
+    "registryValidationPassed": true,
+    "authorityGatePassed": true,
+    "waveDecompositionAdopted": false,
+    "visualBuildAllowed": false,
+    "interactive3D": false,
+    "visualAcceptance": false,
+    "productionReady": false
+  }
+}
