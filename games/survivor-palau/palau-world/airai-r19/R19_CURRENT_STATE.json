@@ -1,7 +1,7 @@
 {
-  "schema": "kaopu.survivor-palau.r19-current-state/1.2",
-  "version": "R19_CURRENT_STATE_20260922_LOCATION_TO_DEM_CANDIDATE",
-  "status": "DEM_PAIR_RECOVERED_EGM96_NORMALIZED_USER_LOCATION_CHAIN_PIXEL_REGISTERED_DEM_CANDIDATE_GENERATED_QA_PENDING",
+  "schema": "kaopu.survivor-palau.r19-current-state/1.3",
+  "version": "R19_CURRENT_STATE_20260922_COAST_HYDRO_ASSETS_PERSISTED",
+  "status": "DEM_NORMALIZED_USER_LOCATION_LOCKED_EXISTING_COAST_HYDRO_ASSETS_RECOVERED_AND_PERSISTED_NEW_AOI_REPROCESSING_PENDING",
   "branch": "work/palau-airai-r19-authority-locked-restart-20260922",
   "base": "c47f7cc62d864e95117bd5548ca9ffa3f1d770a8",
   "sourceRecovery": {
@@ -56,12 +56,37 @@
     "geographicRegistrationPassed": false,
     "storyAoiFrozen": false
   },
+  "existingCoastHydroEvidence": {
+    "assetLock": "games/survivor-palau/palau-world/airai-r19/R19_EXISTING_COAST_HYDRO_ASSET_LOCK_20260922.json",
+    "activeCache": "games/survivor-palau/palau-world/airai-r19/evidence-cache/airai-reef-bathy-r01",
+    "recoveryReceipt": "games/survivor-palau/palau-world/airai-r19/evidence-cache/airai-reef-bathy-r01/RECOVERY_RECEIPT.json",
+    "status": "RECOVERED_VERIFIED_AND_PERSISTED",
+    "sourceArtifactSha256": "63eaf6cf9095847cf7510a1b0adb35208c828027ece42b6c07089414c4fd0960",
+    "rawIntakeManifestVerifiedFiles": 33,
+    "totalPersistedRawIntakeFilesIncludingManifest": 34,
+    "persistedGridFiles": 26,
+    "existingVectorAndReportRoot": "games/survivor-palau/palau-world/airai-r04/results-r01",
+    "noaaEncRawCells": 8,
+    "coastlinePresent": true,
+    "landAreaPresent": true,
+    "soundingsPresent": true,
+    "depthContoursPresent": true,
+    "depthAreasPresent": true,
+    "seabedAreasPresent": true,
+    "surveyQualityPresent": true,
+    "underwaterRocksPresent": true,
+    "obstructionsPresent": true,
+    "redownloadRequired": false,
+    "oldDerivedCoreFullyContainsNewAoi": false,
+    "reuseRule": "Reuse the persisted raw context sources and re-clip/reprocess for the new yellow AOI; do not reuse the rejected old anchor or accept old candidate grids as final truth."
+  },
   "privateCache": {
     "demSourceMetadataRegistered": true,
     "demSourceBinaryUploaded": false,
     "userImageHashesAndConversationFileIdsRegisteredInR19": true,
     "locationAuthorityManifestDraftPr": "haihao0307/KAOPU-REFERENCE-CACHE#1",
-    "blocker": "The current GitHub connector has no direct local-binary file parameter; do not claim native binary persistence until remote byte replay is verified."
+    "hydroEvidenceNowPersistedOnActiveProductionBranch": true,
+    "blocker": "The two large original DEM ZIPs are still not native binaries in KAOPU-REFERENCE-CACHE; the NOAA/GMRT/OSM hydro evidence recovered from the existing workflow artifact is now durable on the active R19 branch."
   },
   "gates": {
     "sourceBytesLocallyVerified": true,
@@ -69,9 +94,14 @@
     "readyForTerrainEvidenceQa": true,
     "locationAmbiguityResolved": true,
     "userImagePixelOverlayPassed": true,
+    "existingCoastHydroAssetsLocated": true,
+    "existingCoastHydroAssetsPersisted": true,
+    "existingCoastHydroAssetsVerified": true,
+    "redownloadRequired": false,
     "readyForAuthorityOverlay": true,
     "demGeographicCandidateGenerated": true,
     "demGeographicOverlayPassed": false,
+    "newAoiHydroReprocessingPassed": false,
     "readyForVisualBuild": false,
     "interactive3D": false,
     "publicHttpsPassed": false,
@@ -80,9 +110,10 @@
     "productionReady": false
   },
   "nextRequired": [
-    "Overlay the candidate AOI on the exact normalized DEM mosaic and provenance mask.",
-    "Confirm peninsula, adjacent-islet and channel control-point relationships against the user image and retained coastline evidence.",
-    "Cross-check reef-platform and low-island extent before freezing the final geographic AOI polygon.",
-    "Only after the overlay passes may the visible three-dimensional build start."
+    "Use the persisted context-level NOAA ENC, GMRT, OSM and Allen evidence; do not download them again.",
+    "Re-clip and reprocess shoreline, land, sounding, contour, depth-area, seabed, rock and obstruction evidence for the newly locked yellow AOI because the old derived core does not fully contain it.",
+    "Overlay the resulting evidence on the exact normalized DEM mosaic and provenance mask.",
+    "Freeze the final geographic AOI polygon only after peninsula, adjacent-islet, channel and reef-platform controls pass.",
+    "Only after those evidence gates pass may the visible three-dimensional build start."
   ]
 }
