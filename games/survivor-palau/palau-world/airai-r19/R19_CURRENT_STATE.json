@@ -1,87 +1,90 @@
 {
-  "schema": "kaopu.survivor-palau.r19-current-state/1.4",
-  "version": "R19_CURRENT_STATE_20260922_USER_AOI_EVIDENCE_PERSISTED",
-  "status": "DEM_NORMALIZED_USER_LOCATION_LOCKED_EXISTING_COAST_HYDRO_ASSETS_PERSISTED_USER_AOI_REPROCESSED_GEOGRAPHIC_OVERLAY_QA_PENDING",
+  "schema": "kaopu.survivor-palau.r19-current-state/1.5",
+  "version": "R19_CURRENT_STATE_20260922_MOTHER_LEARNING_HOLD",
+  "status": "LEARNING_HOLD_NO_VISUAL_PRODUCTION_KAOPU_REEXPRESSION_IN_PROGRESS",
   "branch": "work/palau-airai-r19-authority-locked-restart-20260922",
   "base": "c47f7cc62d864e95117bd5548ca9ffa3f1d770a8",
+  "userStopOrder": {
+    "received": true,
+    "productionStopped": true,
+    "reason": "First learn from small Mother how to organize all existing data lines and re-express them in the KAOPU language. No guessed geography, tide, underwater surface, island or story placement is allowed.",
+    "allowedWork": [
+      "read and compare small-Mother methodology",
+      "organize existing evidence",
+      "write knowledge and interface contracts",
+      "record counterexamples, conflicts, Unknown and stop conditions"
+    ],
+    "forbiddenWork": [
+      "new visual map",
+      "new three-dimensional terrain",
+      "new story coordinate freeze",
+      "procedural shoreline or island generation",
+      "NoData filling",
+      "bathymetry interpolation presented as truth",
+      "publication or production approval"
+    ]
+  },
+  "learning": {
+    "holdDocument": "games/survivor-palau/palau-world/airai-r19/R19_MOTHER_LEARNING_HOLD_AND_KAOPU_REEXPRESSION_20260922.md",
+    "worldScoreCandidate": "games/survivor-palau/palau-world/airai-r19/R19_KAOPU_WORLD_SCORE_CANDIDATE_R01.json",
+    "sourcesRead": [
+      "MOTHER_HANDOFF_TEMPLATE.md",
+      "MOTHER_UNIFIED_EVOLUTION_METHOD_V1.0.0.md",
+      "FARMLAND_WATER_STATE_LEARNING_2026-09-12.md",
+      "Landscape_Karst_KAOPU_R2.html",
+      "Ocean Mother R019 staged-core status and existing Ocean Mother runtime contracts",
+      "official NOAA CO-OPS Malakal/Koror station metadata",
+      "official UHSLC Malakal data/datum guidance",
+      "Allen Coral Atlas science and methods"
+    ],
+    "adoptionState": "KNOWLEDGE_CANDIDATE_ONLY",
+    "runtimeIntegrated": false,
+    "smallMotherReviewAccepted": false
+  },
   "sourceRecovery": {
     "F0130ArchiveVerified": true,
     "F0140ArchiveVerified": true,
     "bothDemGeoTiffsVerified": true,
-    "authorityFullPalauJpegVerified": false,
-    "authorityYellowStoryJpegVerified": false,
     "userCompletePalauOverviewVerified": true,
-    "userAiraiYellowStoryAoiVerified": true
+    "userAiraiYellowStoryAoiVerified": true,
+    "existingCoastHydroAssetsLocated": true,
+    "existingCoastHydroAssetsPersisted": true,
+    "redownloadRequired": false
   },
   "terrain": {
     "sourceClassification": "ASF ALOS PALSAR RTC ancillary DEM using SRTMGL1 nominal 30 m, stored at 12.5 m posting",
     "native12_5m": false,
     "verticalNormalization": "EGM96 orthometric",
     "verticalNormalizationPassed": true,
-    "canonicalDerivedGridVerified": true,
     "canonicalDerivedSha256": "6ace836106dcc93c69a0d16fee1e8b8a2a93b4446f9e34af1eb1994e3d1b975c",
-    "seaLevelMedianCheckM": {
-      "F0130": 0.008087158203125,
-      "F0140": -0.00791168212890625
-    },
     "highestDerivedSampleM": 241.60211181640625
   },
   "userLocationAuthority": {
-    "bindingFile": "games/survivor-palau/palau-world/airai-r19/R19_USER_LOCATION_AUTHORITY_20260922.json",
-    "bindingCommit": "86af24b6fc0644d9516c21545e1aa79cb43d73df",
     "completePalauOverviewSha256": "5bfd05f06513ff6c7816e31f58ac0f88a375e24a7b946d355035b162f4acc8f9",
     "airaiYellowStoryAoiSha256": "82844df1bdf52da94b68d06f3262b3e97089379dff3d7550bcebea0a7d67bf46",
     "redAiraiBoxMeaning": "broad_context_and_transition_extent",
     "yellowCircleMeaning": "Stone_Money_story_core_AOI",
     "storyCoreIsPoint": false,
-    "pixelRegistration": {
-      "method": "SIFT_RANSAC_HOMOGRAPHY",
-      "goodMatches": 207,
-      "inliers": 178,
-      "inlierRmsePx": 0.4575214691283916,
-      "passed": true
-    }
-  },
-  "locationToDemRegistration": {
-    "candidateFile": "games/survivor-palau/palau-world/airai-r19/R19_LOCATION_TO_DEM_REGISTRATION_CANDIDATE_20260922.json",
-    "candidateCommit": "ef11441b0eaf6bd5456753d69b01bd1a0241b9e9",
-    "status": "EVIDENCE_DERIVED_CANDIDATE_NOT_FINAL",
-    "consensusCentroidLonLat": [134.53531712481433, 7.329601051583299],
-    "candidateMeanPolygonBBoxLonLat": [134.52117150, 7.31703795, 134.54811869, 7.34353654],
-    "methodCentroidSpreadApproxM": {
-      "eastWest": 203.44334318072765,
-      "northSouth": 291.70484135429797
-    },
-    "maximumPerVertexMethodDeviationM": 267.31182553583824,
     "geographicRegistrationPassed": false,
     "storyAoiFrozen": false
   },
   "existingCoastHydroEvidence": {
     "assetLock": "games/survivor-palau/palau-world/airai-r19/R19_EXISTING_COAST_HYDRO_ASSET_LOCK_20260922.json",
     "activeCache": "games/survivor-palau/palau-world/airai-r19/evidence-cache/airai-reef-bathy-r01",
-    "recoveryReceipt": "games/survivor-palau/palau-world/airai-r19/evidence-cache/airai-reef-bathy-r01/RECOVERY_RECEIPT.json",
     "status": "RECOVERED_VERIFIED_AND_PERSISTED",
-    "sourceArtifactSha256": "63eaf6cf9095847cf7510a1b0adb35208c828027ece42b6c07089414c4fd0960",
     "rawIntakeManifestVerifiedFiles": 33,
     "totalPersistedRawIntakeFilesIncludingManifest": 34,
     "persistedGridFiles": 26,
-    "existingVectorAndReportRoot": "games/survivor-palau/palau-world/airai-r04/results-r01",
     "noaaEncRawCells": 8,
-    "redownloadRequired": false
+    "redownloadRequired": false,
+    "deletionOrOverwriteAllowed": false
   },
   "userAoiEvidence": {
     "packageRoot": "games/survivor-palau/palau-world/airai-r19/user-aoi-evidence-r01",
-    "report": "games/survivor-palau/palau-world/airai-r19/user-aoi-evidence-r01/R19_USER_AOI_EVIDENCE_REPORT.json",
-    "buildCommit": "c1982c3f814ee8c005ef6e592d71e0939e7c51b2",
-    "workflowRun": 35729128724,
-    "workflowPassed": true,
-    "redownloadPerformed": false,
-    "aoiStatus": "EVIDENCE_DERIVED_CANDIDATE_NOT_FINAL",
+    "status": "EVIDENCE_DERIVED_CANDIDATE_NOT_FINAL",
     "coastlineFeatures": 13,
     "landAreaFeatures": 13,
     "landConnectedComponents": 14,
-    "landAreaM2": 1129561.4989209983,
-    "coastlineLengthM": 11688.019243894876,
     "soundings": {
       "count": 43,
       "minimumM": 1.0,
@@ -93,72 +96,47 @@
       "datumCode": 24,
       "datumName": "local datum"
     },
-    "otherEvidenceFeatures": {
-      "depthContours": 30,
-      "depthAreas": 32,
-      "seabedAreas": 10,
-      "surveyQualityAreas": 5,
-      "underwaterRocks": 4,
-      "obstructions": 1,
-      "allenGeomorphic": 319,
-      "allenBenthic": 1067
-    },
     "candidateGrid": {
       "resolutionM": 25.0,
-      "shape": [119, 120],
-      "aoiCells": 10077,
-      "validCells": 6632,
       "validFractionOfAoi": 0.6581323806688498,
       "depthMedianM": 11.730540479330749,
-      "depthMaximumM": 43.182746935537736,
       "uncertaintyMedianM": 16.003061629862678,
-      "nearestEvidenceMedianM": 186.15704228837993,
       "depareCoveredValidCells": 5465,
       "depareContradictionCells": 4832,
       "status": "CANDIDATE_NOT_SURVEY_TRUTH",
       "noDataPreserved": true,
       "chartDatumConvertedToMsl": false
-    },
-    "storyIslandNameAssigned": false,
-    "proceduralCoastlineAdded": false,
-    "unknownFilled": false
+    }
   },
-  "privateCache": {
-    "demSourceMetadataRegistered": true,
-    "demSourceBinaryUploaded": false,
-    "userImageHashesAndConversationFileIdsRegisteredInR19": true,
-    "locationAuthorityManifestDraftPr": "haihao0307/KAOPU-REFERENCE-CACHE#1",
-    "hydroEvidenceNowPersistedOnActiveProductionBranch": true,
-    "blocker": "The two large original DEM ZIPs are still not native binaries in KAOPU-REFERENCE-CACHE; the NOAA/GMRT/OSM hydro evidence is durable on the active R19 branch."
+  "methodCorrections": {
+    "waveLanguageCannotReplaceEvidence": true,
+    "two2dFieldsDoNotAutomaticallyCreateFull3dTruth": true,
+    "heightFieldCannotRepresentOverhangOrCave": true,
+    "seaLevelZeroRequiresNamedVerticalDatum": true,
+    "malakalTideCannotBeCopiedAsExactAiraiLocalTide": true,
+    "observationsAndInterpolatedBathymetryMustRemainSeparate": true,
+    "unknownMustNotBecomeZero": true
   },
   "gates": {
-    "sourceBytesLocallyVerified": true,
-    "verticalDatumNormalized": true,
-    "readyForTerrainEvidenceQa": true,
-    "locationAmbiguityResolved": true,
-    "userImagePixelOverlayPassed": true,
-    "existingCoastHydroAssetsLocated": true,
-    "existingCoastHydroAssetsPersisted": true,
-    "existingCoastHydroAssetsVerified": true,
-    "redownloadRequired": false,
-    "readyForAuthorityOverlay": true,
-    "demGeographicCandidateGenerated": true,
-    "newAoiHydroReprocessingPassed": true,
-    "newAoiEvidencePersisted": true,
+    "learningHoldActive": true,
+    "smallMotherMethodReviewAccepted": false,
+    "kaopuWorldScoreAccepted": false,
+    "verticalReferenceGraphAccepted": false,
+    "airaiTideSourceAndLocalTransferPolicyAccepted": false,
     "demGeographicOverlayPassed": false,
     "storyAoiFrozen": false,
     "readyForVisualBuild": false,
     "interactive3D": false,
-    "publicHttpsPassed": false,
     "shareAllowed": false,
     "visualAcceptance": false,
     "productionReady": false
   },
-  "nextRequired": [
-    "Overlay the new user-AOI coastline, land components, sounding and reef evidence on the exact normalized DEM mosaic and provenance mask.",
-    "Use the 13 coastline and 13 land features to verify the peninsula, adjacent-islet and channel correspondences against the user image.",
-    "Resolve the high DEPARE contradiction rate as uncertainty evidence; do not force candidate depths to match the interval hypotheses.",
-    "Freeze the final geographic AOI polygon only after the control relationships pass.",
-    "Only then begin the visible three-dimensional workbench from the verified terrain, shoreline, reef and underwater evidence."
+  "resumeConditions": [
+    "Small-Mother method review is complete and explicitly adopted.",
+    "Identity, representation, space, time, vertical datum, source, uncertainty and Unknown are present for every data line.",
+    "Malakal regional tide, Airai local transfer, non-tidal residual and Ocean Mother wave surface are separated.",
+    "NOAA observations, Allen semantics, GMRT context and interpolated bathymetry candidates are separated.",
+    "The user AOI geographic overlay is verified without guessed island names or coordinates.",
+    "The user or small Mother explicitly releases this learning hold."
   ]
 }
