@@ -1,126 +1,92 @@
-# 来源索引｜R4
+# 来源索引｜R5
 
-> 说明：本文件记录已经在本条研究线中使用或提及的来源。正式生产前，应重新打开原始资料核对页码、版本和上下文。一般 Pacific、Hawaiian 或 Micronesian wayfinding 资料只能支持“多线索观察”的广义机制，不能直接冒充 Palau-specific 传统。
+> 本文件记录本线已经使用或必须继续核对的来源。用户在 Stone Money Island 的长期实地观察与公开资料属于不同证据层：前者决定本岛世界必须表现什么，后者帮助确定物种名、历史、材料、健康风险和物理边界。
+
+## 0. 用户 Stone Money Island 长期实地观察
+
+用途：
+
+- 清晨不同海鸟分批出海，形成成千上万只鸟潮；
+- 黄昏不同海鸟分批归岛；
+- 天堂鸟在树林、屋顶、海滩和脚下山谷飞行；
+- 石钱洞及相关洞穴数万食果果蝠夜间出洞、清晨回归；
+- 蜥蜴暮鸣后快速入夜；
+- 夜海荧光藻和大型海洋生命活动；
+- 高处可见鲸、manta、翼鼓瑞鱼、海龟；
+- 洞穴、Power Tree、Turtle House、白沙滩和海面观察体验。
+
+使用边界：这些是本项目的场景生产权威，不再由通用网页否定。仍需通过照片、视频、地形、声音和物种资料补齐精确资产名、数量层级与动作。
 
 ## 1. BentProp Project｜FG-1 Corsair BuNo 14053 调查报告
 
-用途：
+用途：确认飞机、局号、飞行员、1944-11-21 事件、海上迫降、救生筏、真实获救和残骸背景。
 
-- 确认飞机、局号、飞行员和事件
-- 确认海上迫降与救生筏
-- 确认残骸位置与深度
-- 区分真实获救与游戏改编
+来源：BentProp Project 调查报告及附件。
 
-URL：
-
-https://legacy.bentprop.org/pm14/final_report/ATTACHMENT_5_Survey_form_Corsair_FG1_14053_NONCON_RPJedits.pdf
-
-## 2. Air-Sea Rescue Bulletin（美国二战时期航空海上救援资料）
+## 2. Air-Sea Rescue Bulletin｜二战美国航空海上救援资料
 
 用途：
 
-- AN-R-2 系列单人筏
-- Mae West 类救生衣
-- 后背式求生包
-- 信号、饮水、口粮、鱼线鱼钩、绳和补漏物资
-- 航空人员水上求生训练
+- 单人充气筏、Mae West、后背式求生包；
+- 饮水、口粮、刀、绳、补漏、信号和火种类别；
+- 航空人员水上求生训练。
 
-Archive.org 文本入口：
-
-https://archive.org/stream/AirSeaRescueBulletinV1/AirSeaRescueBulletinV1_djvu.txt
+证据边界：同期类别不等于 McCullah 当天逐件携带。
 
 ## 3. Patriots Point Naval & Maritime Museum｜美国海军航空眼镜档案
 
-用途：
-
-- 航空眼镜材质和用途
-- 证明其设计目标为飞行防护，而非潜水面镜
-
-URL：
-
-https://www.patriotspoint.org/artifacts-archives/us-naval-aviator-goggles-box
+用途：航空眼镜材质、结构和飞行防护用途；证明其不是原装潜水面镜。
 
 ## 4. Divers Alert Network｜面镜压迫与自由潜安全
 
 用途：
 
-- 面镜内外压力平衡
-- 独立眼杯深潜风险
-- 自由潜耗氧与过度换气风险
-
-URL：
-
-https://world.dan.org/health-medicine/health-resources/diseases-conditions/mask-squeeze-aka-facial-barotrauma/
-
-https://dan.org/alert-diver/article/freediving-safety-awareness/
+- 面镜内外压力平衡；
+- 独立眼杯深潜风险；
+- 自由潜耗氧、屏气和过度换气风险。
 
 ## 5. CDC Yellow Book｜海洋毒素与雪卡毒素
 
-用途：
+用途：热带珊瑚礁鱼并非全部安全可食；烹煮不能可靠破坏部分海洋毒素。
 
-- 说明热带珊瑚礁鱼并非全部安全可食
-- 说明烹煮不能可靠破坏雪卡毒素
-
-URL：
-
-https://www.cdc.gov/yellow-book/hcp/environmental-hazards-risks/food-poisoning-from-marine-toxins.html
-
-## 6. Hōkūleʻa / Polynesian Voyaging Society｜Non-instrument Wayfinding
+## 6. USGS 与 CDC｜饮水、海水、过滤与淡化边界
 
 用途：
 
-- 支持“太阳、月亮、星辰、波浪、洋流和动物行为需要综合判断”的一般 wayfinding 原理
-- 支持在云层遮挡星空时，必须转用其他自然参照
-- 支持把导航理解为持续观察和心理模型，而非单一仪器
+- 海水不能直接饮用；
+- 海水变淡水需要去除溶解盐，蒸发—冷凝属于淡化方法；
+- 活性炭/碳过滤的功能取决于污染物和滤材，不能被写成万能净化；
+- R5 中椰壳与椰壳炭只用于改善已收集雨水，海盐另行蒸发结晶。
 
-URL：
+主要页面：
 
-https://worldwidevoyage.hokulea.com/wwv/
+- U.S. Geological Survey, `Why can't people drink seawater?`
+- U.S. Geological Survey, `Desalination`
+- CDC, drinking-water filter and treatment guidance
 
-https://worldwidevoyage.hokulea.com/education-at-sea/polynesian-navigation/the-star-compass/
-
-https://worldwidevoyage.hokulea.com/education-at-sea/polynesian-navigation/polynesian-non-instrument-wayfinding/hawaiian-star-lines/
-
-边界：这些页面介绍现代 Hawaiian wayfinding 和 Hōkūleʻa 教学体系，不能直接标成 1944 年帕劳本地传统。R4 只借其证明“多线索交叉判断”是合理设计方向，具体 Palau 知识仍待查证。
-
-## 7. Smithsonian Ocean｜Micronesian Navigation Chart / Meddo
+## 7. U.S. Fish & Wildlife Service｜果蝠与海鸟一般行为
 
 用途：
 
-- 确认密克罗尼西亚航海知识中存在以编织框架和贝壳表达岛屿、涌浪或航路关系的物质文化
-- 为涌浪与空间关系的视觉教学提供参考
+- 果蝠类群白天群居栖息、日落后逐步外出觅食的一般行为；
+- 海鸟巢地、觅食、光污染和群体行为的一般保护背景；
+- 帕劳相关物种页面作为命名候选入口。
 
-URL：
+证据边界：一般果蝠或海鸟资料不能覆盖用户对 Stone Money Island 具体鸟潮、果蝠潮和天堂鸟的实地观察，也不能直接给出本岛具体物种与数量。
 
-https://ocean.si.edu/micronesian-navigation-chart
+## 8. 后续必须补充的一手资料
 
-https://ocean.si.edu/micronesian-meddo
+- 用户已有 Stone Money Island 照片、视频、录音、方位和日期；
+- 鸟潮、果蝠洞、暮蜥鸣、天堂鸟、鲸、manta、翼鼓瑞鱼、海龟和荧光藻的现场证据索引；
+- 1944-12-31 Palau 天光、日出、暮光、月相和天气资料；
+- 降落伞伞布、伞绳、点火工具、手工鱼钩和木鱼叉的同期材料资料；
+- 白沙滩、石钱洞、Power Tree、Turtle House 和巡逻艇航路的统一地形参考。
 
-边界：密克罗尼西亚内部存在显著地区差异，Marshallese、Carolinian、Palauan 等知识不可互换。
+## 9. 来源使用规则
 
-## 8. Smithsonian National Air and Space Museum｜Sidereal Time / Hōkūleʻa Navigation
-
-用途：
-
-- 支持星空相对地球自转而每日提前出现的基础天文关系
-- 支持用太阳、星辰及其他观测确定海上方向的一般说明
-
-URL：
-
-https://timeandnavigation.si.edu/multimedia-asset/sidereal-time
-
-https://airandspace.si.edu/events/navigation-and-astronomy-hokulea-style
-
-## 9. R4 尚需补齐的来源
-
-- 1944 年 11 月帕劳天空的可靠天文计算或星表
-- Palau/Airai/Koror 本地航海、风、涌浪、鸟和云层知识
-- 帕劳近岸与海鸟的物种化日常飞行、巢地和觅食资料
-- Koror—Malakal—Airai 一带季节风、涌浪、潮汐与地形云资料
-- 1944 年日军小型巡逻艇、近岸巡逻和射击行为的一手史料
-- 白沙滩三股浓烟事件所需的地形、登陆、视线、风场与资产依据
-- 二战求生物资的容量、数量、腐败与每日消耗依据
-
-## 10. 实物与收藏资料
-
-此前研究中还参考过二战美海军 M-592、PK-1、后背包和单人筏的实物页面。它们可用于外形比对，但收藏商页面不能替代军方原始配发表，正式结论仍应以一手资料为主。
+1. 不使用中国网站作为检索来源。
+2. 历史装备优先军方原始资料、博物馆和可靠研究。
+3. 医疗和饮水优先政府、公共卫生和专业组织。
+4. 生态资料优先 Palau 本地机构、用户现场记录、官方保护机构和同行研究。
+5. 通用资料只能补充机制，不得覆盖 Stone Money Island 的实地世界真值。
+6. 没有证据的具体物种名、数量、语言和历史事件必须标为待查或游戏改编。
