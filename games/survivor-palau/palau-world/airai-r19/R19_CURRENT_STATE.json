@@ -1,25 +1,26 @@
 {
-  "schema": "kaopu.survivor-palau.r19-current-state/1.5",
-  "version": "R19_CURRENT_STATE_20260922_MOTHER_LEARNING_HOLD",
-  "status": "LEARNING_HOLD_NO_VISUAL_PRODUCTION_KAOPU_REEXPRESSION_IN_PROGRESS",
+  "schema": "kaopu.survivor-palau.r19-current-state/1.6",
+  "version": "R19_CURRENT_STATE_20260922_UNIFIED_FIELD_SUBMITTED_TO_SMALL_MOTHER",
+  "status": "UNIFIED_FIELD_IMPLEMENTED_TESTED_SMALL_MOTHER_VALIDATION_REQUESTED_NO_VISUAL_BUILD",
   "branch": "work/palau-airai-r19-authority-locked-restart-20260922",
   "base": "c47f7cc62d864e95117bd5548ca9ffa3f1d770a8",
   "userStopOrder": {
     "received": true,
     "productionStopped": true,
-    "reason": "First learn from small Mother how to organize all existing data lines and re-express them in the KAOPU language. No guessed geography, tide, underwater surface, island or story placement is allowed.",
+    "reason": "Organize all existing Palau, Airai, tide, coastline, reef, bathymetry and Ocean Mother data in the KAOPU World Score before visual production. No guessed geography or hidden defaults are allowed.",
     "allowedWork": [
-      "read and compare small-Mother methodology",
-      "organize existing evidence",
-      "write knowledge and interface contracts",
-      "record counterexamples, conflicts, Unknown and stop conditions"
+      "read and apply Small Mother methodology",
+      "organize existing evidence into typed World Score fields",
+      "implement pure query contracts and rejection gates",
+      "execute non-visual tests",
+      "submit a one-way validation packet to Small Mother"
     ],
     "forbiddenWork": [
       "new visual map",
       "new three-dimensional terrain",
       "new story coordinate freeze",
       "procedural shoreline or island generation",
-      "NoData filling",
+      "NoData or Unknown filling",
       "bathymetry interpolation presented as truth",
       "publication or production approval"
     ]
@@ -27,17 +28,12 @@
   "learning": {
     "holdDocument": "games/survivor-palau/palau-world/airai-r19/R19_MOTHER_LEARNING_HOLD_AND_KAOPU_REEXPRESSION_20260922.md",
     "worldScoreCandidate": "games/survivor-palau/palau-world/airai-r19/R19_KAOPU_WORLD_SCORE_CANDIDATE_R01.json",
-    "sourcesRead": [
-      "MOTHER_HANDOFF_TEMPLATE.md",
-      "MOTHER_UNIFIED_EVOLUTION_METHOD_V1.0.0.md",
-      "FARMLAND_WATER_STATE_LEARNING_2026-09-12.md",
-      "Landscape_Karst_KAOPU_R2.html",
-      "Ocean Mother R019 staged-core status and existing Ocean Mother runtime contracts",
-      "official NOAA CO-OPS Malakal/Koror station metadata",
-      "official UHSLC Malakal data/datum guidance",
-      "Allen Coral Atlas science and methods"
+    "smallMotherKernelSources": [
+      "WORLD_KERNEL_CORE_CHARTER_R1.md",
+      "WORLD_SCORE_TLO_SEMANTIC_CHARTER_R1_20260909.md",
+      "KAOPU_WORLD_CHORUS_CLOSED_LOOP_R1_20260909.md"
     ],
-    "adoptionState": "KNOWLEDGE_CANDIDATE_ONLY",
+    "adoptionState": "IMPLEMENTED_CANDIDATE_AWAITING_SMALL_MOTHER_JUDGMENT",
     "runtimeIntegrated": false,
     "smallMotherReviewAccepted": false
   },
@@ -108,6 +104,35 @@
       "chartDatumConvertedToMsl": false
     }
   },
+  "unifiedField": {
+    "root": "games/survivor-palau/palau-world/airai-r19/unified-field-r01",
+    "kernel": "unified_field.cjs",
+    "contractTests": "unified_field.test.cjs",
+    "registry": "R19_UNIFIED_FIELD_REGISTRY_R01.json",
+    "registryValidator": "validate_registry.cjs",
+    "validationPacket": "R19_SMALL_MOTHER_VALIDATION_PACKET_R01.md",
+    "executionReceipt": "R19_UNIFIED_FIELD_EXECUTION_RECEIPT_R01.json",
+    "candidateHead": "4bb2baf4f11250ef154fa75ea0746dae217081d1",
+    "smallMotherValidationIssue": 138,
+    "smallMotherLedger": 63,
+    "worldPages": 14,
+    "oneWorldIdentity": true,
+    "oneWorldTimeContract": true,
+    "oneOceanSurfaceAuthority": true,
+    "unknownIsNotZero": true,
+    "noDataIsNotZero": true,
+    "waveRepresentationMayReplaceSourceTruth": false,
+    "malakalMayBeCopiedAsExactAiraiLocalTide": false,
+    "localTideTransferState": "UNKNOWN_NOT_ZERO",
+    "nonTidalResidual1944State": "UNKNOWN_NOT_ZERO",
+    "noaaChartDatumToEgm96BridgeState": "UNKNOWN_NO_VALIDATED_TRANSFORM"
+  },
+  "executedChecks": {
+    "localContractTest": "PASS",
+    "localRegistryValidation": "PASS_14_PAGES",
+    "githubVerifyUnifiedField": "SUCCESS_RUN_35733503198",
+    "githubAuthorityGate": "SUCCESS_RUN_35733510901"
+  },
   "methodCorrections": {
     "waveLanguageCannotReplaceEvidence": true,
     "two2dFieldsDoNotAutomaticallyCreateFull3dTruth": true,
@@ -119,10 +144,14 @@
   },
   "gates": {
     "learningHoldActive": true,
+    "smallMotherValidation": "REQUESTED_NOT_APPROVED",
     "smallMotherMethodReviewAccepted": false,
     "kaopuWorldScoreAccepted": false,
+    "unifiedFieldContractTestsPassed": true,
+    "unifiedFieldRegistryValidationPassed": true,
     "verticalReferenceGraphAccepted": false,
     "airaiTideSourceAndLocalTransferPolicyAccepted": false,
+    "waveDecompositionAdopted": false,
     "demGeographicOverlayPassed": false,
     "storyAoiFrozen": false,
     "readyForVisualBuild": false,
@@ -132,11 +161,12 @@
     "productionReady": false
   },
   "resumeConditions": [
-    "Small-Mother method review is complete and explicitly adopted.",
-    "Identity, representation, space, time, vertical datum, source, uncertainty and Unknown are present for every data line.",
-    "Malakal regional tide, Airai local transfer, non-tidal residual and Ocean Mother wave surface are separated.",
-    "NOAA observations, Allen semantics, GMRT context and interpolated bathymetry candidates are separated.",
+    "Small Mother returns PROMOTE_METHOD or explicit CONTINUE_WITH_CORRECTIONS on issue 138.",
+    "Identity, representation, space, time, vertical datum, source, uncertainty and Unknown remain present for every data line.",
+    "Malakal regional tide, Airai local transfer, non-tidal residual and Ocean Mother wave surface remain separate typed fields.",
+    "NOAA observations, Allen semantics, GMRT context and interpolated bathymetry candidates remain separate.",
     "The user AOI geographic overlay is verified without guessed island names or coordinates.",
-    "The user or small Mother explicitly releases this learning hold."
+    "A real-data wave decomposition passes reconstruction, residual and NoData gates before runtime adoption.",
+    "Only after those gates may the single-source three-dimensional workbench begin."
   ]
 }
