@@ -27,7 +27,6 @@
 
 首次建立统一 Markdown，记录历史原型、开局装备、水面观察、呼吸管、木鱼叉、自由潜和禁用路线。
 
-
 ## R3 Candidate｜2026-09-22
 
 继续收敛 Stone Money Island / Survivor: Palau 的海洋核心：
@@ -43,9 +42,8 @@
 - “鱼枪”再次澄清为无扳机、无橡胶动力的原始近距离刺鱼工具。
 - 建立 Silent-First Threat System：巡逻船危险不能依赖声音。
 - Web 版不得依赖震动；原生 iPhone 版可加入触觉增强。
-- 被发现后采用转向、加速、子弹入水和极短逃生窗，不做无预警 Game Over。
+- 当时的候选仍保留“被发现后有极短逃生窗”；该项已被后续最终锁定覆盖。
 - 日军只承担低占比的持续威胁与“过度获取”价值对照。
-
 
 ## R3 Candidate Threat Lock｜2026-09-22
 
@@ -57,3 +55,17 @@
 - 一旦玩家周边出现日军子弹入水水花，即视为已经被发现并射击，立即 Game Over。
 - 不再保留被射击后的最后逃生窗口。
 - 游戏学习点前移到“第一发子弹之前”：玩家必须学会从生态撤离、船影、尾迹、发动机增强提示和暴露行为中提前躲避。
+
+## R3 Final Morning Sync｜2026-09-22
+
+把今天早上最终讨论从“主控中的一段补充”同步成完整生产合同：
+
+- 更新 `00_START_HERE.md`，明确 R3 是当前有效修订，且当前仍为文档锁定、非可玩完成。
+- 修正 `02_HISTORICAL_EVIDENCE_LEDGER_ZH.md`：历史日期不再待定；生态撤离和即时死亡明确列为游戏改编，而非历史或生物学绝对事实。
+- 更新 `03_LOCKED_DECISIONS_AND_REJECTED_ROUTES_ZH.md`：生态撤离、空海、静音可读性、第一批近身子弹水花即 Game Over 均成为硬限制。
+- 永久删除“子弹出现后仍有逃生窗口”、生命值扣减、躲弹和反击路线。
+- 更新 `04_GAMEPLAY_IMPLEMENTATION_BRIEF_ZH.md`，形成 S0—S5 权威状态机、跨模块依赖和桌面/移动验收门槛。
+- 更新 `05_OPEN_RESEARCH_QUEUE_ZH.md`，加入巡逻艇资产、ThreatState、玩家暴露/掩体、动物撤离、渐进返回和实体 iPhone 阻断项。
+- 新增 `09_CURRENT_IMPLEMENTATION_STATE_R3_ZH.md`，明确现有捕鱼原型不能冒充巡逻艇系统已完成。
+- 更新 `manifest.json`，当前修订为 R3，状态为 `documentation_locked_not_playable`。
+- 旧 R3 Candidate 中“极短逃生窗”的条目只保留为历史记录，已明确标注失效。
