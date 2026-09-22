@@ -1,7 +1,7 @@
 {
-  "schema": "kaopu.survivor-palau.r19-current-state/1.0",
-  "version": "R19_CURRENT_STATE_20260922_DEM_PAIR_NORMALIZED",
-  "status": "DEM_PAIR_RECOVERED_AND_EGM96_NORMALIZED_AUTHORITY_IMAGES_PENDING",
+  "schema": "kaopu.survivor-palau.r19-current-state/1.1",
+  "version": "R19_CURRENT_STATE_20260922_USER_LOCATION_CHAIN_RECOVERED",
+  "status": "DEM_PAIR_RECOVERED_EGM96_NORMALIZED_USER_LOCATION_CHAIN_PIXEL_REGISTERED_GEOGRAPHIC_REGISTRATION_PENDING",
   "branch": "work/palau-airai-r19-authority-locked-restart-20260922",
   "base": "c47f7cc62d864e95117bd5548ca9ffa3f1d770a8",
   "sourceRecovery": {
@@ -9,7 +9,9 @@
     "F0140ArchiveVerified": true,
     "bothDemGeoTiffsVerified": true,
     "authorityFullPalauJpegVerified": false,
-    "authorityYellowStoryJpegVerified": false
+    "authorityYellowStoryJpegVerified": false,
+    "userCompletePalauOverviewVerified": true,
+    "userAiraiYellowStoryAoiVerified": true
   },
   "terrain": {
     "sourceClassification": "ASF ALOS PALSAR RTC ancillary DEM using SRTMGL1 nominal 30 m, stored at 12.5 m posting",
@@ -24,16 +26,37 @@
     },
     "highestDerivedSampleM": 241.60211181640625
   },
+  "userLocationAuthority": {
+    "bindingFile": "games/survivor-palau/palau-world/airai-r19/R19_USER_LOCATION_AUTHORITY_20260922.json",
+    "bindingCommit": "86af24b6fc0644d9516c21545e1aa79cb43d73df",
+    "completePalauOverviewSha256": "5bfd05f06513ff6c7816e31f58ac0f88a375e24a7b946d355035b162f4acc8f9",
+    "airaiYellowStoryAoiSha256": "82844df1bdf52da94b68d06f3262b3e97089379dff3d7550bcebea0a7d67bf46",
+    "redAiraiBoxMeaning": "broad_context_and_transition_extent",
+    "yellowCircleMeaning": "Stone_Money_story_core_AOI",
+    "storyCoreIsPoint": false,
+    "pixelRegistration": {
+      "method": "SIFT_RANSAC_HOMOGRAPHY",
+      "goodMatches": 207,
+      "inliers": 178,
+      "inlierRmsePx": 0.4575214691283916,
+      "passed": true
+    },
+    "geographicRegistrationPassed": false
+  },
   "privateCache": {
-    "sourceMetadataRegistered": true,
-    "sourceBinaryUploaded": false,
-    "blocker": "No authorized Git LFS or binary upload action is exposed by the current connector."
+    "demSourceMetadataRegistered": true,
+    "demSourceBinaryUploaded": false,
+    "userImageHashesAndConversationFileIdsRegisteredInR19": true,
+    "blocker": "The current GitHub connector has no direct local-binary file parameter; do not claim native binary persistence until remote byte replay is verified."
   },
   "gates": {
     "sourceBytesLocallyVerified": true,
     "verticalDatumNormalized": true,
     "readyForTerrainEvidenceQa": true,
-    "readyForAuthorityOverlay": false,
+    "locationAmbiguityResolved": true,
+    "userImagePixelOverlayPassed": true,
+    "readyForAuthorityOverlay": true,
+    "demGeographicOverlayPassed": false,
     "readyForVisualBuild": false,
     "interactive3D": false,
     "publicHttpsPassed": false,
@@ -42,8 +65,8 @@
     "productionReady": false
   },
   "nextRequired": [
-    "Recover the exact two authority JPEG binaries and verify their frozen SHA-256 identities.",
-    "Register control points and overlay the complete Palau frame and full yellow AOI against the normalized terrain evidence.",
-    "Only after overlay QA, bind coastline, reef, bathymetry and KB Bridge channel evidence without filling unknown areas."
+    "Register the complete Palau overview to the verified normalized DEM mosaic using coastline and island control points.",
+    "Transform the user-drawn yellow AOI hull from overview pixels into a provenance-bearing geographic polygon without guessing coordinates.",
+    "Run coastline, reef-platform and surrounding-island continuity QA before enabling any visible 3D build."
   ]
 }
