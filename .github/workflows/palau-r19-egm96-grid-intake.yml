@@ -22,12 +22,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p .r19-egm96
+          mkdir -p r19-egm96
           curl --fail --location --retry 5 --retry-all-errors \
             https://cdn.proj.org/us_nga_egm96_15.tif \
-            -o .r19-egm96/us_nga_egm96_15.tif
-          test -s .r19-egm96/us_nga_egm96_15.tif
-          sha256sum .r19-egm96/us_nga_egm96_15.tif | tee .r19-egm96/SHA256SUMS.txt
+            -o r19-egm96/us_nga_egm96_15.tif
+          test -s r19-egm96/us_nga_egm96_15.tif
+          sha256sum r19-egm96/us_nga_egm96_15.tif | tee r19-egm96/SHA256SUMS.txt
 
       - name: Record source identity
         shell: bash
@@ -36,7 +36,7 @@ jobs:
           python - <<'PY'
           import hashlib, json
           from pathlib import Path
-          p=Path('.r19-egm96/us_nga_egm96_15.tif')
+          p=Path('r19-egm96/us_nga_egm96_15.tif')
           receipt={
             'schema':'kaopu.palau.r19-egm96-grid-intake/1.0',
             'sourceUrl':'https://cdn.proj.org/us_nga_egm96_15.tif',
@@ -49,13 +49,13 @@ jobs:
             'visualAcceptance':False,
             'productionReady':False,
           }
-          Path('.r19-egm96/RECEIPT.json').write_text(json.dumps(receipt,indent=2),encoding='utf-8')
+          Path('r19-egm96/RECEIPT.json').write_text(json.dumps(receipt,indent=2),encoding='utf-8')
           print(json.dumps(receipt,indent=2))
           PY
 
       - uses: actions/upload-artifact@v4
         with:
           name: palau-r19-egm96-grid
-          path: .r19-egm96/
+          path: r19-egm96/
           if-no-files-found: error
           retention-days: 30
