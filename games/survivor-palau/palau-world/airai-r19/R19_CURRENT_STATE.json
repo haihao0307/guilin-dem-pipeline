@@ -1,41 +1,20 @@
 {
-  "schema": "kaopu.survivor-palau.r19-current-state/1.6",
-  "version": "R19_CURRENT_STATE_20260922_UNIFIED_FIELD_SUBMITTED_TO_SMALL_MOTHER",
-  "status": "UNIFIED_FIELD_IMPLEMENTED_TESTED_SMALL_MOTHER_VALIDATION_REQUESTED_NO_VISUAL_BUILD",
+  "schema": "kaopu.survivor-palau.r19-current-state/1.7",
+  "version": "R19_CURRENT_STATE_20260923_UNIFIED_FIELD_R02_SMALL_MOTHER_PENDING",
+  "status": "UNIFIED_FIELD_R02_TYPED_OCEAN_VALID_TIME_TESTED_SMALL_MOTHER_VALIDATION_PENDING_NO_VISUAL_BUILD",
   "branch": "work/palau-airai-r19-authority-locked-restart-20260922",
   "base": "c47f7cc62d864e95117bd5548ca9ffa3f1d770a8",
-  "userStopOrder": {
-    "received": true,
+  "governance": {
     "productionStopped": true,
-    "reason": "Organize all existing Palau, Airai, tide, coastline, reef, bathymetry and Ocean Mother data in the KAOPU World Score before visual production. No guessed geography or hidden defaults are allowed.",
-    "allowedWork": [
-      "read and apply Small Mother methodology",
-      "organize existing evidence into typed World Score fields",
-      "implement pure query contracts and rejection gates",
-      "execute non-visual tests",
-      "submit a one-way validation packet to Small Mother"
-    ],
-    "forbiddenWork": [
-      "new visual map",
-      "new three-dimensional terrain",
-      "new story coordinate freeze",
-      "procedural shoreline or island generation",
-      "NoData or Unknown filling",
-      "bathymetry interpolation presented as truth",
-      "publication or production approval"
-    ]
-  },
-  "learning": {
-    "holdDocument": "games/survivor-palau/palau-world/airai-r19/R19_MOTHER_LEARNING_HOLD_AND_KAOPU_REEXPRESSION_20260922.md",
-    "worldScoreCandidate": "games/survivor-palau/palau-world/airai-r19/R19_KAOPU_WORLD_SCORE_CANDIDATE_R01.json",
-    "smallMotherKernelSources": [
-      "WORLD_KERNEL_CORE_CHARTER_R1.md",
-      "WORLD_SCORE_TLO_SEMANTIC_CHARTER_R1_20260909.md",
-      "KAOPU_WORLD_CHORUS_CLOSED_LOOP_R1_20260909.md"
-    ],
-    "adoptionState": "IMPLEMENTED_CANDIDATE_AWAITING_SMALL_MOTHER_JUDGMENT",
-    "runtimeIntegrated": false,
-    "smallMotherReviewAccepted": false
+    "learningAndContractWorkOnly": true,
+    "noGuessedGeography": true,
+    "noGuessedTide": true,
+    "noGuessedBathymetry": true,
+    "noProceduralShorelineOrIsland": true,
+    "noUnknownOrNoDataFill": true,
+    "noVisualBuild": true,
+    "smallMotherValidationRequiredBeforeWaveDecomposition": true,
+    "smallMotherValidationRequiredBefore3dWorkbench": true
   },
   "sourceRecovery": {
     "F0130ArchiveVerified": true,
@@ -45,7 +24,8 @@
     "userAiraiYellowStoryAoiVerified": true,
     "existingCoastHydroAssetsLocated": true,
     "existingCoastHydroAssetsPersisted": true,
-    "redownloadRequired": false
+    "redownloadRequired": false,
+    "deletionOrOverwriteAllowed": false
   },
   "terrain": {
     "sourceClassification": "ASF ALOS PALSAR RTC ancillary DEM using SRTMGL1 nominal 30 m, stored at 12.5 m posting",
@@ -53,7 +33,8 @@
     "verticalNormalization": "EGM96 orthometric",
     "verticalNormalizationPassed": true,
     "canonicalDerivedSha256": "6ace836106dcc93c69a0d16fee1e8b8a2a93b4446f9e34af1eb1994e3d1b975c",
-    "highestDerivedSampleM": 241.60211181640625
+    "highestDerivedSampleM": 241.60211181640625,
+    "validTimePolicy": "explicit interval; query must fall inside the field validity interval"
   },
   "userLocationAuthority": {
     "completePalauOverviewSha256": "5bfd05f06513ff6c7816e31f58ac0f88a375e24a7b946d355035b162f4acc8f9",
@@ -72,8 +53,7 @@
     "totalPersistedRawIntakeFilesIncludingManifest": 34,
     "persistedGridFiles": 26,
     "noaaEncRawCells": 8,
-    "redownloadRequired": false,
-    "deletionOrOverwriteAllowed": false
+    "redownloadRequired": false
   },
   "userAoiEvidence": {
     "packageRoot": "games/survivor-palau/palau-world/airai-r19/user-aoi-evidence-r01",
@@ -104,21 +84,49 @@
       "chartDatumConvertedToMsl": false
     }
   },
-  "unifiedField": {
-    "root": "games/survivor-palau/palau-world/airai-r19/unified-field-r01",
-    "kernel": "unified_field.cjs",
-    "contractTests": "unified_field.test.cjs",
-    "registry": "R19_UNIFIED_FIELD_REGISTRY_R01.json",
-    "registryValidator": "validate_registry.cjs",
-    "validationPacket": "R19_SMALL_MOTHER_VALIDATION_PACKET_R01.md",
-    "executionReceipt": "R19_UNIFIED_FIELD_EXECUTION_RECEIPT_R01.json",
-    "candidateHead": "4bb2baf4f11250ef154fa75ea0746dae217081d1",
-    "smallMotherValidationIssue": 138,
-    "smallMotherLedger": 63,
+  "unifiedFieldR01": {
+    "status": "PRESERVED_AS_REGRESSION_BASELINE",
+    "kernel": "games/survivor-palau/palau-world/airai-r19/unified-field-r01/unified_field.cjs",
+    "registry": "games/survivor-palau/palau-world/airai-r19/unified-field-r01/R19_UNIFIED_FIELD_REGISTRY_R01.json",
     "worldPages": 14,
+    "regressionRun": 35799870381,
+    "regressionJob": 106987528262,
+    "regressionConclusion": "success"
+  },
+  "unifiedFieldR02": {
+    "status": "IMPLEMENTED_TESTED_SUBMITTED_TO_SMALL_MOTHER_NOT_APPROVED",
+    "implementationHead": "250c5b3bb58019e9908119ebe96f708fb193710c",
+    "receiptCommit": "a2523cc7d1eb342c84d2249e11c43a7dcb535328",
+    "validationPacketCommit": "02f68787498553f556ccbcb29d8b26ec4313f884",
+    "kernel": "games/survivor-palau/palau-world/airai-r19/unified-field-r01/unified_field_r02.cjs",
+    "tests": "games/survivor-palau/palau-world/airai-r19/unified-field-r01/unified_field_r02.test.cjs",
+    "registry": "games/survivor-palau/palau-world/airai-r19/unified-field-r01/R19_UNIFIED_FIELD_REGISTRY_R02.json",
+    "registryValidator": "games/survivor-palau/palau-world/airai-r19/unified-field-r01/validate_registry_r02.cjs",
+    "executionReceipt": "games/survivor-palau/palau-world/airai-r19/unified-field-r01/R19_UNIFIED_FIELD_R02_EXECUTION_RECEIPT.json",
+    "smallMotherValidationPacket": "games/survivor-palau/palau-world/airai-r19/unified-field-r01/R19_SMALL_MOTHER_VALIDATION_PACKET_R02.md",
+    "smallMotherValidationIssue": 138,
+    "internalCorrectionIssue": 140,
+    "implementationIssue": 142,
     "oneWorldIdentity": true,
     "oneWorldTimeContract": true,
-    "oneOceanSurfaceAuthority": true,
+    "explicitValidTime": true,
+    "partialDecompositionForUnknownComponents": true,
+    "oneOceanSurfaceGeometryAuthority": true,
+    "oceanSurfaceStateFields": [
+      "surfaceStateId",
+      "parameterCoord",
+      "horizontalDisplacement",
+      "eta",
+      "normal",
+      "surfaceVelocity"
+    ],
+    "separateLayers": [
+      "OCEAN_SURFACE_STATE",
+      "WATER_SURFACE_OPTICS",
+      "WATER_VOLUME_OPTICS",
+      "OCEAN_ENVIRONMENT_ADAPTER",
+      "COAST_BOUNDARY"
+    ],
     "unknownIsNotZero": true,
     "noDataIsNotZero": true,
     "waveRepresentationMayReplaceSourceTruth": false,
@@ -128,10 +136,29 @@
     "noaaChartDatumToEgm96BridgeState": "UNKNOWN_NO_VALIDATED_TRANSFORM"
   },
   "executedChecks": {
-    "localContractTest": "PASS",
-    "localRegistryValidation": "PASS_14_PAGES",
-    "githubVerifyUnifiedField": "SUCCESS_RUN_35733503198",
-    "githubAuthorityGate": "SUCCESS_RUN_35733510901"
+    "firstR02Run": {
+      "runId": 35799792493,
+      "jobId": 106987283210,
+      "conclusion": "failure",
+      "cause": "strict floating-point assertion expected 2.97 and received 2.9699999999999998",
+      "classification": "TEST_ASSERTION_DEFECT_NOT_MODEL_DEFECT",
+      "hidden": false
+    },
+    "correctedR02Run": {
+      "runId": 35799870613,
+      "jobId": 106987528775,
+      "conclusion": "success"
+    },
+    "authorityGate": {
+      "runId": 35799870379,
+      "jobId": 106987528020,
+      "conclusion": "success"
+    },
+    "r01Regression": {
+      "runId": 35799870381,
+      "jobId": 106987528262,
+      "conclusion": "success"
+    }
   },
   "methodCorrections": {
     "waveLanguageCannotReplaceEvidence": true,
@@ -140,15 +167,20 @@
     "seaLevelZeroRequiresNamedVerticalDatum": true,
     "malakalTideCannotBeCopiedAsExactAiraiLocalTide": true,
     "observationsAndInterpolatedBathymetryMustRemainSeparate": true,
-    "unknownMustNotBecomeZero": true
+    "unknownMustNotBecomeZero": true,
+    "staticTerrainUsesValidityIntervalNotInstantEquality": true,
+    "visibleSurfaceNormalVelocityAndContactShareOneSurfaceState": true,
+    "opticsEnvironmentAndCoastCannotWriteSurfaceGeometry": true
   },
   "gates": {
     "learningHoldActive": true,
     "smallMotherValidation": "REQUESTED_NOT_APPROVED",
     "smallMotherMethodReviewAccepted": false,
     "kaopuWorldScoreAccepted": false,
-    "unifiedFieldContractTestsPassed": true,
-    "unifiedFieldRegistryValidationPassed": true,
+    "r01RegressionPassed": true,
+    "r02ContractTestsPassed": true,
+    "r02RegistryValidationPassed": true,
+    "authorityGatePassed": true,
     "verticalReferenceGraphAccepted": false,
     "airaiTideSourceAndLocalTransferPolicyAccepted": false,
     "waveDecompositionAdopted": false,
@@ -160,13 +192,12 @@
     "visualAcceptance": false,
     "productionReady": false
   },
-  "resumeConditions": [
-    "Small Mother returns PROMOTE_METHOD or explicit CONTINUE_WITH_CORRECTIONS on issue 138.",
-    "Identity, representation, space, time, vertical datum, source, uncertainty and Unknown remain present for every data line.",
-    "Malakal regional tide, Airai local transfer, non-tidal residual and Ocean Mother wave surface remain separate typed fields.",
-    "NOAA observations, Allen semantics, GMRT context and interpolated bathymetry candidates remain separate.",
-    "The user AOI geographic overlay is verified without guessed island names or coordinates.",
-    "A real-data wave decomposition passes reconstruction, residual and NoData gates before runtime adoption.",
-    "Only after those gates may the single-source three-dimensional workbench begin."
+  "nextRequired": [
+    "Obtain Small Mother Judgment on R02 through issue 138.",
+    "Apply any explicit corrections without creating visual output.",
+    "After PROMOTE_METHOD only, run the first real-data reversible wave decomposition with source hashes, NoData, residuals and reconstruction error gates.",
+    "Verify the user yellow AOI against DEM, NOAA coastline and reef evidence without guessed coordinates or island names.",
+    "Resolve or explicitly park vertical-datum and Airai local-tide unknowns.",
+    "Only after those gates may one single-source three-dimensional workbench begin."
   ]
 }
