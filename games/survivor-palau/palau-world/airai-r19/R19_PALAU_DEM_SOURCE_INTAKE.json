@@ -1,0 +1,112 @@
+{
+  "schema": "kaopu.survivor-palau.r19-palau-dem-source-intake/1.0",
+  "version": "R19_PALAU_DEM_SOURCE_INTAKE_20260922",
+  "status": "SOURCE_BYTES_LOCAL_VERIFIED_VERTICAL_NORMALIZATION_REQUIRED",
+  "receivedFiles": [
+    {
+      "archive": "AP_08074_FBD_F0130_RT1.zip",
+      "archiveBytes": 282961150,
+      "archiveSha256": "a485445a4ce3c547689c5efd8fa61dc07f6f9b326591b4573afc6f529176b410",
+      "dem": {
+        "filename": "AP_08074_FBD_F0130_RT1.dem.tif",
+        "bytes": 63113560,
+        "sha256": "51f67338ed23d2e30570fc41ee720f664d8dc0e5ed3300595fcaf7ff9940abf6",
+        "driver": "GTiff",
+        "width": 5921,
+        "height": 5326,
+        "count": 1,
+        "dtype": "int16",
+        "crs": "EPSG:32653",
+        "pixelSizeM": [12.5, -12.5],
+        "transform": [12.5, 0.0, 426014.6875, 0.0, -12.5, 817382.125],
+        "bounds": [426014.6875, 750807.125, 500027.1875, 817382.125],
+        "boundsWgs84": [134.33045978919196, 6.792006436378491, 135.00024636263274, 7.394701546849229],
+        "nodata": 0,
+        "minStoredM": 52,
+        "maxStoredM": 273
+      }
+    },
+    {
+      "archive": "AP_08074_FBD_F0140_RT1.zip",
+      "archiveBytes": 292372721,
+      "archiveSha256": "f05cc9859fa0872a0b2df55ce252ba8a8a3d516aac516b4f4657adf6c774e2a2",
+      "dem": {
+        "filename": "AP_08074_FBD_F0140_RT1.dem.tif",
+        "bytes": 67679416,
+        "sha256": "32bb0462185d400aa3b6190927556f2a68a7c49d2e69cc88af6b8d19abbaf7b8",
+        "driver": "GTiff",
+        "width": 6358,
+        "height": 5319,
+        "count": 1,
+        "dtype": "int16",
+        "crs": "EPSG:32653",
+        "pixelSizeM": [12.5, -12.5],
+        "transform": [12.5, 0.0, 414923.1875, 0.0, -12.5, 872182.625],
+        "bounds": [414923.1875, 805695.125, 494398.1875, 872182.625],
+        "boundsWgs84": [134.22927257992635, 7.288326237798764, 134.949179966631, 7.890407692444282],
+        "nodata": 0,
+        "minStoredM": 54,
+        "maxStoredM": 307
+      }
+    }
+  ],
+  "productIdentity": {
+    "family": "ASF ALOS PALSAR Radiometrically Terrain Corrected high-resolution product",
+    "beamMode": "FBD",
+    "rtcResolutionCode": "RT1",
+    "embeddedDemSource": "SRTMGL1, nominal 30 m, ASF June 2015 version 1.1 corrections",
+    "storedPixelSpacingM": 12.5,
+    "classification": "RTC_PROCESSING_ANCILLARY_DEM_NOT_NATIVE_12_5M_TERRAIN_TRUTH",
+    "verticalReference": "ELLIPSOID_CORRECTED_FOR_SAR_PROCESSING_EXACT_MODEL_TO_VERIFY",
+    "seaLevelZeroReady": false
+  },
+  "coverage": {
+    "unionProjectedBounds": [414923.1875, 750807.125, 500027.1875, 872182.625],
+    "approxUnionWgs84": [134.22927257992635, 6.792006436378491, 135.00024636263274, 7.890407692444282],
+    "overlapProjectedBounds": [426014.6875, 805695.125, 494398.1875, 817382.125],
+    "overlapSizeM": [68383.5, 11687.0],
+    "gridAlignment": {
+      "sameCrs": true,
+      "samePixelSpacing": true,
+      "samePixelOrigin": false,
+      "offsetCellsF0130RelativeToF0140": [887.32, 4384.04],
+      "rule": "Do not concatenate pixel arrays or call this a lossless native mosaic."
+    }
+  },
+  "overlapQa": {
+    "comparison": "F0140 bilinearly sampled onto the F0130 overlap grid for QA only; no production raster created",
+    "validSamples": 5068624,
+    "meanDifferenceM": -0.00006657005724264309,
+    "medianDifferenceM": 0.0,
+    "rmseM": 0.2843356132507324,
+    "absoluteDifferenceWithin1mFraction": 0.9886049941759342,
+    "absoluteDifferenceWithin2mFraction": 0.9961821985611874,
+    "absoluteDifferenceWithin5mFraction": 0.999628104195537
+  },
+  "strictUsePolicy": [
+    "Freeze both ZIP archives and both DEM GeoTIFFs byte-for-byte before any visual build.",
+    "Do not call the 12.5 m posting native 12.5 m elevation resolution; metadata identifies SRTMGL1 30 m as the source DEM.",
+    "Do not use stored values as sea-level-relative height before vertical reference normalization and validation.",
+    "Do not merge the two grids by raw array concatenation because their pixel origins are not aligned.",
+    "Do not fill NoData or invent coastline, reef, channel, or story anchors.",
+    "Authority JPEG overlays and exact story AOI remain required before a visual candidate can be shown."
+  ],
+  "privateCache": {
+    "repository": "haihao0307/KAOPU-REFERENCE-CACHE",
+    "binaryUploadStatus": "PENDING_AUTHORIZED_LFS_OR_BINARY_CHANNEL",
+    "metadataRegistrationAllowed": true,
+    "doNotClaimIngestComplete": true
+  },
+  "gates": {
+    "sourceBytesLocallyVerified": true,
+    "twoDemFramesPresent": true,
+    "native12_5mTruth": false,
+    "verticalDatumNormalized": false,
+    "authorityImagesPresent": false,
+    "readyForAuthorityOverlay": false,
+    "readyForVisualBuild": false,
+    "interactive3D": false,
+    "visualAcceptance": false,
+    "productionReady": false
+  }
+}
