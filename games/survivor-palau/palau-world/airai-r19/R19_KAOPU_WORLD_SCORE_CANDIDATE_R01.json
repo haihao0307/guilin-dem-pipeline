@@ -1,0 +1,310 @@
+{
+  "schema": "kaopu.survivor-palau.world-score/0.1",
+  "version": "R19_KAOPU_WORLD_SCORE_CANDIDATE_R01",
+  "status": "KNOWLEDGE_ONLY_CANDIDATE_NOT_RUNTIME_ADOPTED",
+  "identity": {
+    "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+    "name": "Stone Money Island / Survival Palau",
+    "kind": "EvidenceBoundWorldScoreCandidate",
+    "instanceIdentity": "user-defined 1944 Palau survival story world",
+    "storyCore": "user-drawn yellow AOI inside Airai context",
+    "storyCoreIsPoint": false
+  },
+  "governance": {
+    "productionStopped": true,
+    "learningOnly": true,
+    "smallMotherMethodReviewRequired": true,
+    "noGuessing": true,
+    "noProceduralCoastline": true,
+    "noAutomaticIslandNaming": true,
+    "noNoDataFill": true,
+    "noDatumConversionWithoutModel": true,
+    "noVisibleBuild": true
+  },
+  "spaceFrames": [
+    {
+      "frameId": "WGS84_GEOGRAPHIC",
+      "crs": "EPSG:4326",
+      "axes": ["longitude_east", "latitude_north"],
+      "unit": "degree",
+      "georeferenced": true
+    },
+    {
+      "frameId": "PALAU_UTM53N",
+      "crs": "EPSG:32653",
+      "axes": ["easting", "northing", "up"],
+      "unit": "metre",
+      "georeferenced": true
+    },
+    {
+      "frameId": "RUNTIME_LOCAL_RH_Y_UP",
+      "crs": null,
+      "axes": ["east_or_runtime_x", "up_y", "north_or_runtime_z"],
+      "unit": "metre",
+      "georeferenced": false,
+      "transformFromPalauUtm": "UNKNOWN_UNTIL_RUNTIME_ORIGIN_AND_AXIS_CONTRACT_IS_FROZEN"
+    }
+  ],
+  "time": {
+    "storyRepresentedPeriod": "1944-10",
+    "calendar": "proleptic Gregorian candidate unless historical contract states otherwise",
+    "canonicalComputationTimeZone": "UTC",
+    "localCivilTimeZone": "Pacific/Palau candidate; historical offset verification required",
+    "observationTimePolicy": "Every observation retains its own observation/issue time; modern observations do not become 1944 state automatically.",
+    "processingTime": "2026-09-22"
+  },
+  "verticalReferenceGraph": {
+    "nodes": [
+      {
+        "id": "ASF_RTC_ELLIPSOID_HEIGHT",
+        "kind": "ellipsoidHeight",
+        "unit": "metre",
+        "source": "ASF ALOS PALSAR RTC ancillary DEM"
+      },
+      {
+        "id": "EGM96_ORTHOMETRIC_HEIGHT",
+        "kind": "orthometricHeight",
+        "unit": "metre",
+        "source": "NGA EGM96 15-minute geoid model"
+      },
+      {
+        "id": "NOAA_ENC_LOCAL_SOUNDING_DATUM_CODE_24",
+        "kind": "chartSoundingDatum",
+        "unit": "metre",
+        "sourceCell": "US4TB3P0",
+        "status": "RESOLVED_IDENTITY_CONVERSION_UNKNOWN"
+      },
+      {
+        "id": "MALAKAL_B_STATION_DATUM",
+        "kind": "tideGaugeStationDatum",
+        "unit": "metre",
+        "station": "UHSLC Malakal-B",
+        "status": "DOCUMENTED_STATION_SPECIFIC_NOT_WORLD_DATUM"
+      },
+      {
+        "id": "MALAKAL_B_MSL",
+        "kind": "meanSeaLevelDatum",
+        "unit": "metre",
+        "station": "UHSLC Malakal-B",
+        "status": "DOCUMENTED_STATION_SPECIFIC_NOT_AIRAI_LOCAL_TRUTH"
+      },
+      {
+        "id": "INSTANTANEOUS_FREE_SURFACE",
+        "kind": "timeVaryingWaterSurface",
+        "unit": "metre",
+        "status": "DERIVED_ONLY_WHEN_ALL_COMPONENTS_SHARE_A_VALID_DATUM"
+      }
+    ],
+    "edges": [
+      {
+        "from": "ASF_RTC_ELLIPSOID_HEIGHT",
+        "to": "EGM96_ORTHOMETRIC_HEIGHT",
+        "operation": "H_EGM96 = h_ASF_RTC - N_EGM96",
+        "status": "VERIFIED_FOR_THE_TWO_RECOVERED_DEM_FRAMES"
+      },
+      {
+        "from": "MALAKAL_B_STATION_DATUM",
+        "to": "MALAKAL_B_MSL",
+        "operation": "H_MSL = H_station_datum - 1.532 m",
+        "status": "DOCUMENTED_UHSLC_EXAMPLE_ONLY_NOT_APPLIED_TO_NOAA_ENC_OR_AIRAI"
+      },
+      {
+        "from": "NOAA_ENC_LOCAL_SOUNDING_DATUM_CODE_24",
+        "to": "EGM96_ORTHOMETRIC_HEIGHT",
+        "operation": null,
+        "status": "UNKNOWN_NO_VALIDATED_TRANSFORM"
+      },
+      {
+        "from": "MALAKAL_B_MSL",
+        "to": "AIRAI_LOCAL_INSTANTANEOUS_FREE_SURFACE",
+        "operation": null,
+        "status": "UNKNOWN_REQUIRES_LOCAL_TRANSFER_AND_NON_TIDAL_COMPONENTS"
+      }
+    ]
+  },
+  "observationRoots": [
+    {
+      "id": "USER_COMPLETE_PALAU_OVERVIEW",
+      "kind": "userAuthorityImage",
+      "sha256": "5bfd05f06513ff6c7816e31f58ac0f88a375e24a7b946d355035b162f4acc8f9",
+      "role": "complete Palau first-view and navigation authority",
+      "epistemic": "observed_user_authority"
+    },
+    {
+      "id": "USER_AIRAI_YELLOW_STORY_AOI",
+      "kind": "userAuthorityImage",
+      "sha256": "82844df1bdf52da94b68d06f3262b3e97089379dff3d7550bcebea0a7d67bf46",
+      "role": "story-core AOI identity and relative placement",
+      "epistemic": "observed_user_authority"
+    },
+    {
+      "id": "DEM_F0130",
+      "kind": "rasterElevationObservationPackage",
+      "sha256": "51f67338ed23d2e30570fc41ee720f664d8dc0e5ed3300595fcaf7ff9940abf6",
+      "storedPostingM": 12.5,
+      "effectiveSourceResolution": "SRTMGL1 nominal 30 m",
+      "crs": "EPSG:32653",
+      "epistemic": "observed_source_package"
+    },
+    {
+      "id": "DEM_F0140",
+      "kind": "rasterElevationObservationPackage",
+      "sha256": "32bb0462185d400aa3b6190927556f2a68a7c49d2e69cc88af6b8d19abbaf7b8",
+      "storedPostingM": 12.5,
+      "effectiveSourceResolution": "SRTMGL1 nominal 30 m",
+      "crs": "EPSG:32653",
+      "epistemic": "observed_source_package"
+    },
+    {
+      "id": "NOAA_ENC_COALNE",
+      "kind": "shorelineVectorEvidence",
+      "verticalReference": null,
+      "epistemic": "observed_chart_evidence"
+    },
+    {
+      "id": "NOAA_ENC_LNDARE",
+      "kind": "landAreaVectorEvidence",
+      "epistemic": "observed_chart_evidence"
+    },
+    {
+      "id": "NOAA_ENC_SOUNDG",
+      "kind": "discreteBathymetryObservation",
+      "verticalReference": "NOAA_ENC_LOCAL_SOUNDING_DATUM_CODE_24",
+      "qualityField": "M_QUAL / ZOC",
+      "epistemic": "observed_chart_evidence"
+    },
+    {
+      "id": "NOAA_ENC_DEPCNT",
+      "kind": "depthContourEvidence",
+      "verticalReference": "NOAA_ENC_LOCAL_SOUNDING_DATUM_CODE_24",
+      "epistemic": "observed_chart_evidence"
+    },
+    {
+      "id": "NOAA_ENC_DEPARE",
+      "kind": "depthIntervalEvidence",
+      "verticalReference": "NOAA_ENC_LOCAL_SOUNDING_DATUM_CODE_24",
+      "epistemic": "observed_chart_evidence"
+    },
+    {
+      "id": "NOAA_ENC_M_QUAL",
+      "kind": "hydrographicQualityEvidence",
+      "epistemic": "observed_chart_metadata"
+    },
+    {
+      "id": "NOAA_ENC_SBDARE_UWTROC_OBSTRN",
+      "kind": "seabedRockObstructionEvidence",
+      "epistemic": "observed_chart_evidence"
+    },
+    {
+      "id": "ALLEN_CORAL_ATLAS_GEOMORPHIC_BENTHIC",
+      "kind": "remoteSensingReefSemanticEvidence",
+      "spatialScope": "clear shallow reef waters",
+      "epistemic": "derived_remote_sensing_classification"
+    },
+    {
+      "id": "ALLEN_CORAL_ATLAS_SHALLOW_BATHYMETRY",
+      "kind": "satelliteDerivedBathymetry",
+      "nominalResolutionM": 10,
+      "epistemic": "derived_remote_sensing_candidate"
+    },
+    {
+      "id": "GMRT_AIRAI_CONTEXT",
+      "kind": "regionalBathymetryTopographyContext",
+      "epistemic": "derived_regional_context"
+    },
+    {
+      "id": "NOAA_MALAKAL_1841367",
+      "kind": "regionalTideReferenceStation",
+      "coordinatesWgs84": [134.4667, 7.3333],
+      "epistemic": "official_station_metadata"
+    },
+    {
+      "id": "UHSLC_MALAKAL_A_B",
+      "kind": "tideGaugeObservationSeriesAndDatumMetadata",
+      "coordinatesWgs84Approx": [134.4501, 7.32852],
+      "epistemic": "official_observation_and_station_metadata"
+    }
+  ],
+  "derivedProducts": [
+    {
+      "id": "PALAU_R19_EGM96_CANONICAL_DEM",
+      "kind": "derivedOrthometricElevationGrid",
+      "sha256": "6ace836106dcc93c69a0d16fee1e8b8a2a93b4446f9e34af1eb1994e3d1b975c",
+      "source": ["DEM_F0130", "DEM_F0140"],
+      "verticalReference": "EGM96_ORTHOMETRIC_HEIGHT",
+      "epistemic": "derived_verified_processing",
+      "native12_5m": false
+    },
+    {
+      "id": "USER_YELLOW_AOI_GEOGRAPHIC_CANDIDATE",
+      "kind": "candidateGeographicPolygon",
+      "epistemic": "candidate_not_frozen",
+      "geographicRegistrationPassed": false
+    },
+    {
+      "id": "R19_AOI_BATHYMETRY_CANDIDATE",
+      "kind": "interpolatedBathymetryCandidate",
+      "resolutionM": 25,
+      "verticalReference": "NOAA_ENC_LOCAL_SOUNDING_DATUM_CODE_24",
+      "epistemic": "candidate_not_survey_truth",
+      "noDataPreserved": true,
+      "uncertaintyRequired": true
+    }
+  ],
+  "fieldSeparation": {
+    "bedAndLand": "evidence-bound static geometry/elevation state",
+    "shoreline": "evidence-bound boundary whose wet/dry expression may vary with water level but whose source identity remains separate",
+    "reefSemantic": "remote-sensing classification, not geometry or bathymetry truth",
+    "regionalTide": "time series or harmonic/model candidate at a named station/reference",
+    "localTideTransfer": "spatial correction field; currently Unknown",
+    "nonTidalResidual": "surge, pressure, wind and circulation residual; currently Unknown for 1944 Airai",
+    "waveSurface": "Ocean Mother dynamic displacement and optics candidate",
+    "instantaneousSurface": "derived only after datum/time compatibility passes",
+    "wetDry": "query result, not a permanently baked shoreline",
+    "ecology": "separate biological production consuming substrate, water, light and time states"
+  },
+  "queryContract": {
+    "preconditions": [
+      "same horizontal frame or verified transform",
+      "same represented time or explicit temporal interpolation",
+      "compatible vertical references or verified datum bridge",
+      "source and epistemic state retained",
+      "NoData remains NoData"
+    ],
+    "functions": [
+      "bedElevation(x,y,t,verticalReference)",
+      "landWaterEvidence(x,y,t)",
+      "reefSemantic(x,y,t)",
+      "regionalTide(t,station,datum)",
+      "localTideCorrection(x,y,t)",
+      "nonTidalResidual(x,y,t)",
+      "waveDisplacement(x,y,t)",
+      "freeSurface(x,y,t,targetDatum)",
+      "waterDepth(x,y,t,targetDatum)",
+      "wetDryState(x,y,t,targetDatum)",
+      "evidenceAt(x,y,t)"
+    ],
+    "invalidQueryPolicy": "return Unknown/NoData plus failed preconditions; never synthesize a numeric zero"
+  },
+  "knownUnknowns": [
+    "final geographic freeze of the user yellow AOI",
+    "validated transform from NOAA ENC local sounding datum code 24 to EGM96 or MSL",
+    "Airai local tide amplitude and phase transfer from Malakal",
+    "1944 atmospheric/ocean residual water level",
+    "1944 wave setup/runup at the story beaches and reef edges",
+    "continuous surveyed bathymetry inside all lagoon and reef-interior cells",
+    "true overhang/cave/arch geometry for individual Rock Islands",
+    "runtime local frame origin and axis contract",
+    "historical local civil-time convention for every 1944 story timestamp"
+  ],
+  "resumeGates": {
+    "smallMotherLearningIntegrated": false,
+    "verticalReferenceGraphAccepted": false,
+    "aoiGeographicOverlayPassed": false,
+    "tideSourceAndLocalTransferPolicyAccepted": false,
+    "observationCandidateSeparationPassed": true,
+    "representationBoundaryPassed": false,
+    "visualBuildAllowed": false,
+    "productionReady": false
+  }
+}
