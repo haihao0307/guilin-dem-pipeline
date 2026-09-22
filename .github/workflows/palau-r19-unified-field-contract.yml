@@ -1,0 +1,39 @@
+name: Palau R19 unified field contract
+
+on:
+  push:
+    branches:
+      - work/palau-airai-r19-authority-locked-restart-20260922
+    paths:
+      - games/survivor-palau/palau-world/airai-r19/unified-field-r01/**
+      - .github/workflows/palau-r19-unified-field-contract.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-unified-field:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/palau-airai-r19-authority-locked-restart-20260922
+
+      - name: Verify evidence-bound unified field kernel
+        run: node games/survivor-palau/palau-world/airai-r19/unified-field-r01/unified_field.test.cjs
+
+      - name: Verify World Score field registry
+        run: node games/survivor-palau/palau-world/airai-r19/unified-field-r01/validate_registry.cjs
+
+      - name: Assert this package contains no visual-production output
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="games/survivor-palau/palau-world/airai-r19/unified-field-r01"
+          if find "$ROOT" -type f \( -iname '*.html' -o -iname '*.glb' -o -iname '*.gltf' -o -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.tif' -o -iname '*.tiff' \) | grep -q .; then
+            echo 'Learning/contract package unexpectedly contains visual or binary production output.' >&2
+            exit 1
+          fi
+          echo 'No visual-production or binary output in unified-field contract package.'
