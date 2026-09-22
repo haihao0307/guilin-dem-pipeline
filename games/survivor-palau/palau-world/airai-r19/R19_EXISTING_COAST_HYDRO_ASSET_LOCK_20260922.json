@@ -1,0 +1,159 @@
+{
+  "schema": "kaopu.survivor-palau.r19-existing-coast-hydro-asset-lock/1.0",
+  "version": "R19_EXISTING_COAST_HYDRO_ASSET_LOCK_20260922",
+  "status": "FOUND_VERIFIED_PERSISTED_DO_NOT_REDOWNLOAD",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "work/palau-airai-r19-authority-locked-restart-20260922",
+  "persistence": {
+    "activeBranchCache": "games/survivor-palau/palau-world/airai-r19/evidence-cache/airai-reef-bathy-r01",
+    "recoveryReceipt": "games/survivor-palau/palau-world/airai-r19/evidence-cache/airai-reef-bathy-r01/RECOVERY_RECEIPT.json",
+    "existingDerivedRoot": "games/survivor-palau/palau-world/airai-r04/results-r01",
+    "ghPagesBinaryMirror": "games/palau-airai-stone-money/airai-reef-bathy-r01",
+    "sourceWorkflowRunId": 35543393597,
+    "sourceArtifactId": 10615334057,
+    "sourceArtifactSha256": "63eaf6cf9095847cf7510a1b0adb35208c828027ece42b6c07089414c4fd0960",
+    "sourceArtifactStillRequired": false,
+    "redownloadRequired": false
+  },
+  "verifiedCoverage": {
+    "sourceContextBBoxWGS84": [134.49, 7.27, 134.64, 7.42],
+    "oldDerivedCoreBBoxWGS84": [134.535, 7.315, 134.605, 7.385],
+    "newUserAoiCandidateBBoxWGS84": [134.52117150, 7.31703795, 134.54811869, 7.34353654],
+    "newUserAoiInsideSourceContext": true,
+    "newUserAoiFullyInsideOldDerivedCore": false,
+    "implication": "Reuse the already-downloaded raw context sources. Do not accept the old core-clipped candidate grids as the final yellow-AOI result without re-clipping/reprocessing."
+  },
+  "persistedRawIntake": {
+    "manifest": "evidence-cache/airai-reef-bathy-r01/raw-intake/SHA256SUMS.txt",
+    "manifestVerifiedFiles": 33,
+    "totalFilesIncludingManifest": 34,
+    "sources": {
+      "noaaEnc": {
+        "catalog": "raw-intake/metadata/noaa_enc/ENCProdCat.xml",
+        "cells": [
+          "US4TB3C0",
+          "US4TB3J0",
+          "US4TB3P0",
+          "US5TB3P1",
+          "US5TB4S1",
+          "US5TB4S2",
+          "US5TB4Y1",
+          "US5TB4Y3"
+        ],
+        "rawZipCount": 8,
+        "metadataXmlCount": 8
+      },
+      "noaaSurveyDiscovery": {
+        "multibeamFootprints": "raw-intake/metadata/noaa_surveys/multibeam.geojson",
+        "nosHydroLayers": [
+          "raw-intake/metadata/noaa_surveys/nos_hydro_layer_0.geojson",
+          "raw-intake/metadata/noaa_surveys/nos_hydro_layer_1.geojson",
+          "raw-intake/metadata/noaa_surveys/nos_hydro_layer_2.geojson"
+        ]
+      },
+      "gmrt": [
+        "raw-intake/raw/gmrt/airai_topo_max.tif",
+        "raw-intake/raw/gmrt/airai_topo_mask_max.tif",
+        "raw-intake/metadata/gmrt/airai_metadata.json"
+      ],
+      "osm": [
+        "raw-intake/raw/osm/palau-latest.osm.pbf",
+        "raw-intake/metadata/osm/palau.poly"
+      ],
+      "allenCoralAtlasMetadata": [
+        "raw-intake/metadata/allen/maps.json",
+        "raw-intake/metadata/allen/wfs_capabilities.xml",
+        "raw-intake/metadata/allen/wms_capabilities.xml"
+      ],
+      "sentinel2": [
+        "raw-intake/metadata/sentinel2/search.json",
+        "raw-intake/metadata/sentinel2/search_payload.json"
+      ]
+    }
+  },
+  "persistedDerivedEvidence": {
+    "resultsManifest": "evidence-cache/airai-reef-bathy-r01/RESULTS_MANIFEST.sha256",
+    "gridCount": 26,
+    "preferredR11Package": {
+      "depth": "evidence-cache/airai-reef-bathy-r01/grids/candidate_depth_chart_datum_m_r11.tif",
+      "uncertainty": "evidence-cache/airai-reef-bathy-r01/grids/candidate_uncertainty_enc_depare_conditioned_m_r11.tif",
+      "nearestEvidence": "evidence-cache/airai-reef-bathy-r01/grids/nearest_evidence_distance_m_r11.tif",
+      "qualityWeight": "evidence-cache/airai-reef-bathy-r01/grids/candidate_source_quality_weight_r11.tif",
+      "semanticZone": "evidence-cache/airai-reef-bathy-r01/grids/candidate_semantic_zone_r08.tif",
+      "supportClass": "evidence-cache/airai-reef-bathy-r01/grids/candidate_support_class_r11.tif",
+      "depareLower": "evidence-cache/airai-reef-bathy-r01/grids/enc_depare_drval1_m_r11.tif",
+      "depareUpper": "evidence-cache/airai-reef-bathy-r01/grids/enc_depare_drval2_m_r11.tif",
+      "depareResidual": "evidence-cache/airai-reef-bathy-r01/grids/enc_depare_range_residual_m_r11.tif"
+    },
+    "vectorRoot": "games/survivor-palau/palau-world/airai-r04/results-r01/vectors",
+    "vectors": {
+      "coastline": "COALNE.geojson",
+      "landArea": "LNDARE.geojson",
+      "soundings": "SOUNDG.geojson",
+      "depthContours": "DEPCNT.geojson",
+      "depthAreas": "DEPARE.geojson",
+      "seabedAreas": "SBDARE.geojson",
+      "surveyQuality": "M_QUAL.geojson",
+      "underwaterRocks": "UWTROC.geojson",
+      "obstructions": "OBSTRN.geojson",
+      "normalizedSoundings": "SOUNDG_NORMALIZED.geojson",
+      "qualityJoinedSoundings": "SOUNDG_QUALITY_JOINED.geojson",
+      "reefZoneJoinedSoundings": "SOUNDG_REEF_ZONE_JOINED_R08.geojson",
+      "noaaMultibeamCoreClips": "NOAA_MULTIBEAM_CORE_CLIPS_R03.geojson",
+      "allenGeomorphicContext": "ALLEN_GEOMORPHIC_CONTEXT_SOURCE_R05.geojson",
+      "allenGeomorphicCore": "ALLEN_GEOMORPHIC_CORE_R05.geojson",
+      "allenBenthicContext": "ALLEN_BENTHIC_CONTEXT_SOURCE_R05.geojson",
+      "allenBenthicCore": "ALLEN_BENTHIC_CORE_R05.geojson",
+      "osmSemanticsCore": "OSM_SEMANTICS_CORE_R07.geojson"
+    },
+    "layerCounts": {
+      "SOUNDG": 1431,
+      "DEPCNT": 390,
+      "DEPARE": 388,
+      "SBDARE": 373,
+      "COALNE": 93,
+      "LNDARE": 68,
+      "M_QUAL": 60,
+      "OBSTRN": 16,
+      "UWTROC": 96
+    },
+    "coreSoundings": {
+      "count": 392,
+      "sourceCell": "US4TB3P0",
+      "datumCode": 24,
+      "datumName": "local datum"
+    }
+  },
+  "truthBoundaries": {
+    "coastlineAndLandVectorsAreExistingEvidence": true,
+    "underwaterDataAlreadyDownloaded": true,
+    "candidateBathymetryIsSurveyTruth": false,
+    "oldUserConfirmedAnchorMayBeReused": false,
+    "oldCoreClipMayBeUsedAsFinalNewAoi": false,
+    "noDataMustRemainNoData": true,
+    "chartDatumConversionToMSLWithoutModel": false,
+    "noaaNceiMultibeamMeaning": "trackline context only; not a reef-interior depth surface",
+    "noaaNosSurveyPolygonResult": "no polygons found in the previous context query; this does not invalidate ENC lineage",
+    "sentinel2BandsDownloaded": false,
+    "sentinel2MetadataDownloaded": true
+  },
+  "reuseOrder": [
+    "Use the persisted raw NOAA ENC cells, GMRT, OSM and retained Allen context evidence; do not redownload them.",
+    "Re-clip/reprocess them to the newly locked user yellow AOI because the old derived core does not fully contain the new AOI.",
+    "Bind COALNE and LNDARE before any visible shoreline is rendered.",
+    "Bind SOUNDG, DEPCNT, DEPARE, M_QUAL, SBDARE, UWTROC and OBSTRN with their original datum and quality metadata.",
+    "Keep R11 grids as auditable prior candidates and uncertainty layers, not as unquestioned final bathymetry.",
+    "Never delete or overwrite the active R19 evidence cache without a replacement that passes both manifests."
+  ],
+  "gate": {
+    "existingAssetsLocated": true,
+    "rawIntakeRecovered": true,
+    "rawIntakeVerified": true,
+    "derivedGridsRecovered": true,
+    "derivedGridsVerified": true,
+    "persistedOnActiveR19Branch": true,
+    "redownloadBlocked": true,
+    "newAoiReprocessingPending": true,
+    "visualBuildAllowed": false
+  }
+}
