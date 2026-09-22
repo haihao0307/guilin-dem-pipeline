@@ -1,6 +1,6 @@
 {
-  "schema": "kaopu.survivor-palau.r19-input-bindings/1.1",
-  "version": "R19_INPUT_BINDINGS_20260922_BOTH_RTC_DEMS_BOUND",
+  "schema": "kaopu.survivor-palau.r19-input-bindings/1.2",
+  "version": "R19_INPUT_BINDINGS_20260922_DEMS_NORMALIZED_AUTHORITY_IMAGES_PENDING",
   "authorityImages": [
     {
       "role": "complete_palau_frame",
@@ -44,7 +44,11 @@
       "sourceDem": "SRTMGL1 nominal 30 m with ASF June 2015 v1.1 corrections",
       "storedPixelSpacingM": 12.5,
       "classification": "ASF_ALOS_PALSAR_RTC_ANCILLARY_DEM_NOT_NATIVE_12_5M_TERRAIN_TRUTH",
-      "status": "SOURCE_BYTES_LOCAL_VERIFIED_CACHE_BINARY_PENDING"
+      "orthometricDerivedFilename": "F0130_ORTHOMETRIC_EGM96_12_5M_POSTING_SRTM30_SOURCE.tif",
+      "orthometricDerivedBytes": 7093190,
+      "orthometricDerivedSha256": "b29909348d12b437a123b4387e82efc6cfb456dba3e4c29bf8a773d08e9f7433",
+      "orthometricRangeM": [-14.630767822265625, 205.99720764160156],
+      "status": "SOURCE_BYTES_LOCAL_VERIFIED_EGM96_ORTHOMETRIC_DERIVED_CACHE_BINARY_PENDING"
     },
     {
       "id": "PALAU_USER_DEM_F0140",
@@ -68,7 +72,16 @@
       "sourceDem": "SRTMGL1 nominal 30 m with ASF June 2015 v1.1 corrections",
       "storedPixelSpacingM": 12.5,
       "classification": "ASF_ALOS_PALSAR_RTC_ANCILLARY_DEM_NOT_NATIVE_12_5M_TERRAIN_TRUTH",
-      "status": "SOURCE_BYTES_LOCAL_VERIFIED_CACHE_BINARY_PENDING"
+      "orthometricDerivedFilename": "F0140_ORTHOMETRIC_EGM96_12_5M_POSTING_SRTM30_SOURCE.tif",
+      "orthometricDerivedBytes": 8279210,
+      "orthometricDerivedSha256": "dee2aeca43312a8e35ad07f9fa8288cdf1644402641621883263cc0ccb2c55be",
+      "orthometricRangeM": [-12.832550048828125, 241.60211181640625],
+      "highestSample": {
+        "heightM": 241.60211181640625,
+        "longitude": 134.57149258583334,
+        "latitude": 7.562577426888734
+      },
+      "status": "SOURCE_BYTES_LOCAL_VERIFIED_EGM96_ORTHOMETRIC_DERIVED_CACHE_BINARY_PENDING"
     }
   ],
   "demPairQa": {
@@ -82,6 +95,40 @@
     "overlapAbsDifferenceWithin1mFraction": 0.9886049941759342,
     "rule": "Do not concatenate raw arrays. Any common-grid product requires an explicit resampling and vertical-normalization contract."
   },
+  "verticalNormalization": {
+    "model": "NGA EGM96 15-minute geoid grid distributed by OSGeo PROJ-data",
+    "geoidFilename": "us_nga_egm96_15.tif",
+    "geoidBytes": 2710815,
+    "geoidSha256": "db493027562c9b004d7220fa881f5603adada4e1c5029b933fa7de4547b0e78d",
+    "operation": "H_EGM96 = h_ASF_RTC_ELLIPSOID - N_EGM96",
+    "receipt": "R19_VERTICAL_NORMALIZATION_RECEIPT.json",
+    "seaLevelCheck": {
+      "F0130NearSeaMedianM": 0.008087158203125,
+      "F0140NearSeaMedianM": -0.00791168212890625
+    },
+    "status": "LOCAL_DERIVED_BYTES_VERIFIED"
+  },
+  "canonicalDerivedTerrain": {
+    "filename": "PALAU_R19_ORTHOMETRIC_EGM96_CANONICAL_F0130_GRID_12_5M_POSTING_SRTM30_SOURCE.tif",
+    "bytes": 23089134,
+    "sha256": "6ace836106dcc93c69a0d16fee1e8b8a2a93b4446f9e34af1eb1994e3d1b975c",
+    "provenanceMaskFilename": "PALAU_R19_CANONICAL_PROVENANCE_MASK.tif",
+    "provenanceMaskBytes": 127256,
+    "provenanceMaskSha256": "b08c0c8bbe553b14e87fc853ff81f66312d5865e0d9abf51e536351ec2501f72",
+    "crs": "EPSG:32653",
+    "transform": [12.5, 0.0, 414914.6875, 0.0, -12.5, 872194.625],
+    "bounds": [414914.6875, 750807.125, 500027.1875, 872194.625],
+    "width": 6809,
+    "height": 9711,
+    "validCells": 60046919,
+    "noDataCells": 6075280,
+    "rangeM": [-14.630767822265625, 241.60133361816406],
+    "gridAuthority": "F0130 pixel lattice",
+    "overlapPolicy": "F0130 exact-copy priority; F0140 bilinearly resampled only outside valid F0130 coverage",
+    "native12_5m": false,
+    "sourceDemResolution": "SRTMGL1 nominal 30 m",
+    "status": "LOCAL_DERIVED_BYTES_VERIFIED_PRIVATE_BINARY_UPLOAD_PENDING"
+  },
   "privateCache": {
     "repository": "haihao0307/KAOPU-REFERENCE-CACHE",
     "authorityImageObjectsPresent": false,
@@ -92,7 +139,8 @@
   },
   "sourceBytesLocallyVerified": true,
   "twoDemFramesPresent": true,
-  "verticalDatumNormalized": false,
+  "verticalDatumNormalized": true,
+  "readyForTerrainEvidenceQa": true,
   "readyForAuthorityOverlay": false,
   "readyForVisualBuild": false
 }
