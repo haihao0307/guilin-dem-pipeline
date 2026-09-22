@@ -27,7 +27,45 @@ jobs:
           ref: work/palau-airai-r19-authority-locked-restart-20260922
           fetch-depth: 0
 
+      - name: Check whether the persistent cache is already complete
+        shell: bash
+        run: |
+          set +e
+          DEST="games/survivor-palau/palau-world/airai-r19/evidence-cache/airai-reef-bathy-r01"
+          CACHE_VALID=false
+          if [ -f "$DEST/raw-intake/SHA256SUMS.txt" ] && [ -f "$DEST/RESULTS_MANIFEST.sha256" ]; then
+            (cd "$DEST/raw-intake" && sha256sum -c SHA256SUMS.txt >/tmp/raw-cache-check.log 2>&1)
+            RAW_OK=$?
+            python - <<'PY' >/tmp/grid-cache-check.log 2>&1
+          import hashlib
+          from pathlib import Path
+          root = Path('games/survivor-palau/palau-world/airai-r19/evidence-cache/airai-reef-bathy-r01')
+          wanted = {}
+          for line in (root / 'RESULTS_MANIFEST.sha256').read_text().splitlines():
+              if not line.strip():
+                  continue
+              digest, rel = line.split(None, 1)
+              rel = rel.strip()
+              if rel.startswith('grids/'):
+                  wanted[rel.removeprefix('grids/')] = digest
+          present = {p.name for p in (root / 'grids').glob('*.tif')}
+          if present != set(wanted):
+              raise SystemExit(f'grid set mismatch: missing={sorted(set(wanted)-present)} extra={sorted(present-set(wanted))}')
+          for name, expected in wanted.items():
+              actual = hashlib.sha256((root / 'grids' / name).read_bytes()).hexdigest()
+              if actual != expected:
+                  raise SystemExit(f'{name}: {actual} != {expected}')
+          print(f'verified {len(wanted)} persisted grids')
+          PY
+            GRID_OK=$?
+            if [ "$RAW_OK" -eq 0 ] && [ "$GRID_OK" -eq 0 ]; then CACHE_VALID=true; fi
+          fi
+          echo "CACHE_VALID=$CACHE_VALID" >> "$GITHUB_ENV"
+          echo "cache_valid=$CACHE_VALID"
+          set -e
+
       - name: Recover the already-downloaded Airai hydro artifact
+        if: env.CACHE_VALID != 'true'
         uses: actions/download-artifact@v4
         with:
           name: palau-airai-reef-bathy-r01
@@ -37,6 +75,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify the original download and derived evidence manifests
+        if: env.CACHE_VALID != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -50,6 +89,7 @@ jobs:
           echo "RESULTS=$RESULTS" >> "$GITHUB_ENV"
 
       - name: Persist raw intake and raster grids on the active R19 branch
+        if: env.CACHE_VALID != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -60,22 +100,37 @@ jobs:
           cp -a "$RESULTS/grids/." "$DEST/grids/"
           cp "$RESULTS/MANIFEST.sha256" "$DEST/RESULTS_MANIFEST.sha256"
           cp "$RESULTS/PALAU_WORLD_BATHYMETRY_BINDING_R11.json" "$DEST/PALAU_WORLD_BATHYMETRY_BINDING_R11.json"
+
+      - name: Write an accurate recovery receipt
+        shell: bash
+        run: |
+          set -euo pipefail
           python - <<'PY'
           import json
           from pathlib import Path
           dest = Path('games/survivor-palau/palau-world/airai-r19/evidence-cache/airai-reef-bathy-r01')
+          raw_files = [p for p in (dest / 'raw-intake').rglob('*') if p.is_file()]
+          raw_manifest_lines = [line for line in (dest / 'raw-intake' / 'SHA256SUMS.txt').read_text().splitlines() if line.strip()]
+          grid_files = sorted((dest / 'grids').glob('*.tif'))
+          expected_grid_lines = []
+          for line in (dest / 'RESULTS_MANIFEST.sha256').read_text().splitlines():
+              if line.strip() and line.split(None, 1)[1].strip().startswith('grids/'):
+                  expected_grid_lines.append(line)
           receipt = {
-            'schema': 'kaopu.survivor-palau.r19-hydro-evidence-cache/1.0',
+            'schema': 'kaopu.survivor-palau.r19-hydro-evidence-cache/1.1',
             'status': 'RECOVERED_VERIFIED_AND_PERSISTED',
             'sourceWorkflowRunId': 35543393597,
             'sourceArtifactId': 10615334057,
             'sourceArtifactName': 'palau-airai-reef-bathy-r01',
             'sourceArtifactSha256': '63eaf6cf9095847cf7510a1b0adb35208c828027ece42b6c07089414c4fd0960',
             'sourceArtifactExpiresAt': '2026-10-20T23:03:41Z',
+            'sourceArtifactRequiredForFutureRecovery': False,
             'rawIntakeManifest': 'raw-intake/SHA256SUMS.txt',
             'derivedResultsManifest': 'RESULTS_MANIFEST.sha256',
-            'persistedRawIntakeFiles': 33,
-            'persistedGridFiles': 23,
+            'rawIntakeManifestVerifiedFiles': len(raw_manifest_lines),
+            'totalPersistedRawIntakeFilesIncludingManifest': len(raw_files),
+            'persistedGridFiles': len(grid_files),
+            'expectedGridFilesFromManifest': len(expected_grid_lines),
             'existingVectorAndReportRoot': 'games/survivor-palau/palau-world/airai-r04/results-r01',
             'existingGhPagesMirror': 'games/palau-airai-stone-money/airai-reef-bathy-r01',
             'rules': {
@@ -125,9 +180,9 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add games/survivor-palau/palau-world/airai-r19/evidence-cache/airai-reef-bathy-r01
           if git diff --cached --quiet; then
-            echo 'Evidence cache already matches the verified artifact.'
+            echo 'Evidence cache already matches the verified persistent copy.'
             exit 0
           fi
-          git commit -m 'data(palau): persist recovered NOAA shoreline and bathymetry evidence'
+          git commit -m 'data(palau): refresh verified NOAA shoreline and bathymetry cache receipt'
           git pull --rebase origin work/palau-airai-r19-authority-locked-restart-20260922
           git push origin HEAD:work/palau-airai-r19-authority-locked-restart-20260922
