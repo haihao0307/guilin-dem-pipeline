@@ -24,6 +24,18 @@ const space = 'PALAU_UTM53N';
 const egm96 = 'EGM96_ORTHOMETRIC_HEIGHT';
 const chartDatum = 'NOAA_ENC_LOCAL_SOUNDING_DATUM_CODE_24';
 
+function assertClose(actual, expected, tolerance = 1e-12) {
+  assert.ok(
+    Number.isFinite(actual) && Math.abs(actual - expected) <= tolerance,
+    `expected ${actual} to be within ${tolerance} of ${expected}`,
+  );
+}
+
+function assertVectorClose(actual, expected, tolerance = 1e-12) {
+  assert.equal(actual.length, expected.length);
+  for (let i = 0; i < actual.length; i += 1) assertClose(actual[i], expected[i], tolerance);
+}
+
 function scalar(value, options = {}) {
   const representedTime = options.representedTime ?? t;
   const validTime = options.validTime ?? { kind: 'instant', at: representedTime };
@@ -70,7 +82,7 @@ function oceanState(overrides = {}) {
     queryTime: t,
   });
   assert.equal(result.status, STATUS.PARTIAL);
-  assert.equal(result.value.knownSum, 0.73);
+  assertClose(result.value.knownSum, 0.73);
   assert.equal(result.unresolved.length, 2);
   assert.equal(result.meta.finalValueAvailable, false);
 }
@@ -86,7 +98,7 @@ function oceanState(overrides = {}) {
     queryTime: t,
   });
   assert.equal(result.status, STATUS.KNOWN);
-  assert.equal(result.value, 0.72);
+  assertClose(result.value, 0.72);
 }
 
 // A guessed zero is still rejected even though it is numeric.
@@ -122,7 +134,7 @@ function oceanState(overrides = {}) {
   });
   const depth = composeWaterDepth({ freeSurface: surface, bedElevation: bed, queryTime: t });
   assert.equal(depth.status, STATUS.KNOWN);
-  assert.equal(depth.value, 2.97);
+  assertClose(depth.value, 2.97);
   assert.equal(depth.meta.wetDryState, 'WET');
 }
 
@@ -181,7 +193,7 @@ function oceanState(overrides = {}) {
   });
   assert.equal(result.status, STATUS.KNOWN);
   assert.equal(result.value.surfaceStateId, 'OCEAN_MOTHER_CANONICAL_SURFACE_R019');
-  assert.deepEqual(result.value.knownWorldPosition, [1000.35, 0.73, 1999.82]);
+  assertVectorClose(result.value.knownWorldPosition, [1000.35, 0.73, 1999.82]);
   assert.deepEqual(result.value.surfaceVelocity, [0.4, 0.08, -0.2]);
   assert.equal(result.meta.oneAuthoritativeSurface, true);
 }
@@ -198,7 +210,7 @@ function oceanState(overrides = {}) {
   });
   assert.equal(result.status, STATUS.PARTIAL);
   assert.equal(result.value.finalSurfaceAvailable, false);
-  assert.equal(result.value.knownSurfaceElevation, 0.77);
+  assertClose(result.value.knownSurfaceElevation, 0.77);
   assert.equal(result.unresolved[0].name, 'localTideCorrection');
 }
 
