@@ -1,7 +1,7 @@
 {
-  "schema": "kaopu.survivor-palau.r19-current-state/1.3",
-  "version": "R19_CURRENT_STATE_20260922_COAST_HYDRO_ASSETS_PERSISTED",
-  "status": "DEM_NORMALIZED_USER_LOCATION_LOCKED_EXISTING_COAST_HYDRO_ASSETS_RECOVERED_AND_PERSISTED_NEW_AOI_REPROCESSING_PENDING",
+  "schema": "kaopu.survivor-palau.r19-current-state/1.4",
+  "version": "R19_CURRENT_STATE_20260922_USER_AOI_EVIDENCE_PERSISTED",
+  "status": "DEM_NORMALIZED_USER_LOCATION_LOCKED_EXISTING_COAST_HYDRO_ASSETS_PERSISTED_USER_AOI_REPROCESSED_GEOGRAPHIC_OVERLAY_QA_PENDING",
   "branch": "work/palau-airai-r19-authority-locked-restart-20260922",
   "base": "c47f7cc62d864e95117bd5548ca9ffa3f1d770a8",
   "sourceRecovery": {
@@ -67,18 +67,61 @@
     "persistedGridFiles": 26,
     "existingVectorAndReportRoot": "games/survivor-palau/palau-world/airai-r04/results-r01",
     "noaaEncRawCells": 8,
-    "coastlinePresent": true,
-    "landAreaPresent": true,
-    "soundingsPresent": true,
-    "depthContoursPresent": true,
-    "depthAreasPresent": true,
-    "seabedAreasPresent": true,
-    "surveyQualityPresent": true,
-    "underwaterRocksPresent": true,
-    "obstructionsPresent": true,
-    "redownloadRequired": false,
-    "oldDerivedCoreFullyContainsNewAoi": false,
-    "reuseRule": "Reuse the persisted raw context sources and re-clip/reprocess for the new yellow AOI; do not reuse the rejected old anchor or accept old candidate grids as final truth."
+    "redownloadRequired": false
+  },
+  "userAoiEvidence": {
+    "packageRoot": "games/survivor-palau/palau-world/airai-r19/user-aoi-evidence-r01",
+    "report": "games/survivor-palau/palau-world/airai-r19/user-aoi-evidence-r01/R19_USER_AOI_EVIDENCE_REPORT.json",
+    "buildCommit": "c1982c3f814ee8c005ef6e592d71e0939e7c51b2",
+    "workflowRun": 35729128724,
+    "workflowPassed": true,
+    "redownloadPerformed": false,
+    "aoiStatus": "EVIDENCE_DERIVED_CANDIDATE_NOT_FINAL",
+    "coastlineFeatures": 13,
+    "landAreaFeatures": 13,
+    "landConnectedComponents": 14,
+    "landAreaM2": 1129561.4989209983,
+    "coastlineLengthM": 11688.019243894876,
+    "soundings": {
+      "count": 43,
+      "minimumM": 1.0,
+      "medianM": 17.7,
+      "maximumM": 47.0,
+      "zocB": 6,
+      "zocD": 37,
+      "sourceCell": "US4TB3P0",
+      "datumCode": 24,
+      "datumName": "local datum"
+    },
+    "otherEvidenceFeatures": {
+      "depthContours": 30,
+      "depthAreas": 32,
+      "seabedAreas": 10,
+      "surveyQualityAreas": 5,
+      "underwaterRocks": 4,
+      "obstructions": 1,
+      "allenGeomorphic": 319,
+      "allenBenthic": 1067
+    },
+    "candidateGrid": {
+      "resolutionM": 25.0,
+      "shape": [119, 120],
+      "aoiCells": 10077,
+      "validCells": 6632,
+      "validFractionOfAoi": 0.6581323806688498,
+      "depthMedianM": 11.730540479330749,
+      "depthMaximumM": 43.182746935537736,
+      "uncertaintyMedianM": 16.003061629862678,
+      "nearestEvidenceMedianM": 186.15704228837993,
+      "depareCoveredValidCells": 5465,
+      "depareContradictionCells": 4832,
+      "status": "CANDIDATE_NOT_SURVEY_TRUTH",
+      "noDataPreserved": true,
+      "chartDatumConvertedToMsl": false
+    },
+    "storyIslandNameAssigned": false,
+    "proceduralCoastlineAdded": false,
+    "unknownFilled": false
   },
   "privateCache": {
     "demSourceMetadataRegistered": true,
@@ -86,7 +129,7 @@
     "userImageHashesAndConversationFileIdsRegisteredInR19": true,
     "locationAuthorityManifestDraftPr": "haihao0307/KAOPU-REFERENCE-CACHE#1",
     "hydroEvidenceNowPersistedOnActiveProductionBranch": true,
-    "blocker": "The two large original DEM ZIPs are still not native binaries in KAOPU-REFERENCE-CACHE; the NOAA/GMRT/OSM hydro evidence recovered from the existing workflow artifact is now durable on the active R19 branch."
+    "blocker": "The two large original DEM ZIPs are still not native binaries in KAOPU-REFERENCE-CACHE; the NOAA/GMRT/OSM hydro evidence is durable on the active R19 branch."
   },
   "gates": {
     "sourceBytesLocallyVerified": true,
@@ -100,8 +143,10 @@
     "redownloadRequired": false,
     "readyForAuthorityOverlay": true,
     "demGeographicCandidateGenerated": true,
+    "newAoiHydroReprocessingPassed": true,
+    "newAoiEvidencePersisted": true,
     "demGeographicOverlayPassed": false,
-    "newAoiHydroReprocessingPassed": false,
+    "storyAoiFrozen": false,
     "readyForVisualBuild": false,
     "interactive3D": false,
     "publicHttpsPassed": false,
@@ -110,10 +155,10 @@
     "productionReady": false
   },
   "nextRequired": [
-    "Use the persisted context-level NOAA ENC, GMRT, OSM and Allen evidence; do not download them again.",
-    "Re-clip and reprocess shoreline, land, sounding, contour, depth-area, seabed, rock and obstruction evidence for the newly locked yellow AOI because the old derived core does not fully contain it.",
-    "Overlay the resulting evidence on the exact normalized DEM mosaic and provenance mask.",
-    "Freeze the final geographic AOI polygon only after peninsula, adjacent-islet, channel and reef-platform controls pass.",
-    "Only after those evidence gates pass may the visible three-dimensional build start."
+    "Overlay the new user-AOI coastline, land components, sounding and reef evidence on the exact normalized DEM mosaic and provenance mask.",
+    "Use the 13 coastline and 13 land features to verify the peninsula, adjacent-islet and channel correspondences against the user image.",
+    "Resolve the high DEPARE contradiction rate as uncertainty evidence; do not force candidate depths to match the interval hypotheses.",
+    "Freeze the final geographic AOI polygon only after the control relationships pass.",
+    "Only then begin the visible three-dimensional workbench from the verified terrain, shoreline, reef and underwater evidence."
   ]
 }
