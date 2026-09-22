@@ -1,0 +1,101 @@
+{
+  "schema": "kaopu.survivor-palau.r19-user-location-authority/1.0",
+  "version": "R19_USER_LOCATION_AUTHORITY_20260922",
+  "status": "USER_LOCATION_CHAIN_RECOVERED_PIXEL_REGISTERED_GEOGRAPHIC_REGISTRATION_PENDING",
+  "branch": "work/palau-airai-r19-authority-locked-restart-20260922",
+  "receivedAt": "2026-09-22",
+  "sources": {
+    "completePalauOverview": {
+      "conversationFileId": "file_0000000017bc81fda908a3976ebca7e1",
+      "sourceFilename": "微信图片_20260922171155_66_32.jpg",
+      "format": "JPEG",
+      "bytes": 49948,
+      "dimensionsPx": [581, 1260],
+      "sha256": "5bfd05f06513ff6c7816e31f58ac0f88a375e24a7b946d355035b162f4acc8f9",
+      "gitBlobSha1IfStoredUnmodified": "e2090aaaac97f9c747473a7b3876b404e992cee4",
+      "role": "complete_palau_navigation_and_context_frame",
+      "redAiraiContextBoxPx": [284, 637, 469, 829]
+    },
+    "airaiYellowStoryAoi": {
+      "conversationFileId": "file_00000000a318822f9b6e85446f39acdc",
+      "sourceFilename": "微信图片_20260922171154_65_32.jpg",
+      "format": "JPEG",
+      "bytes": 190821,
+      "dimensionsPx": [946, 2048],
+      "sha256": "82844df1bdf52da94b68d06f3262b3e97089379dff3d7550bcebea0a7d67bf46",
+      "gitBlobSha1IfStoredUnmodified": "6059cf6d4e41dd4ba427a4dfae86c8ae05adf71b",
+      "role": "user_drawn_yellow_story_core_aoi_inside_airai_context",
+      "mapViewportPx": [0, 176, 945, 1639],
+      "yellowStrokeComponentPx": {
+        "bbox": [403, 940, 678, 1215],
+        "areaPx": 13821,
+        "centroidPx": [528.5728963171985, 1079.8124593010637]
+      }
+    }
+  },
+  "pixelRegistration": {
+    "method": "SIFT_FEATURE_MATCH_PLUS_RANSAC_HOMOGRAPHY",
+    "direction": "airai_zoom_map_viewport_to_complete_palau_overview",
+    "keypoints": {
+      "overview": 2281,
+      "zoomViewport": 871
+    },
+    "goodMatches": 207,
+    "ransacInliers": 178,
+    "inlierRatio": 0.8599033816425121,
+    "inlierRmsePx": 0.4575214691283916,
+    "homography": [
+      [0.16233192936550883, -0.0009448968147111994, 255.48694410596093],
+      [-0.0025029553489275312, 0.16123259524865943, 632.1212581269162],
+      [-0.000003373125647974936, -0.0000028451393898263147, 1.0]
+    ],
+    "yellowAoiMappedToOverviewPx": {
+      "bbox": [321.3177490234375, 756.9732055664062, 366.47882080078125, 802.1168212890625],
+      "centroid": [341.93072509765625, 779.923095703125],
+      "convexHullSimplified": [
+        [365.659, 790.317],
+        [351.857, 798.518],
+        [331.325, 801.286],
+        [321.807, 787.483],
+        [322.795, 762.053],
+        [336.741, 756.973],
+        [349.217, 762.884],
+        [361.213, 774.709],
+        [366.478, 785.389]
+      ]
+    },
+    "geographicCoordinatesStatus": "PENDING_REGISTRATION_TO_VERIFIED_DEM_AND_COASTLINE_CONTROL_POINTS"
+  },
+  "bindingSemantics": {
+    "firstView": "show_the_complete_Palau_overview_not_a_cropped_tile",
+    "redAiraiBox": "broad_transition_and_context_extent_only",
+    "yellowUserCircle": "the_Stone_Money_story_core_AOI",
+    "yellowAoiIsPoint": false,
+    "yellowAoiIncludes": [
+      "the_complete_user_circled_island_group",
+      "associated_reef_platform",
+      "lagoon_and_water_relationships_visible_inside_the_circle"
+    ],
+    "mustNot": [
+      "treat_the_entire_red_Airai_box_as_the_story_core",
+      "reduce_the_yellow_AOI_to_one_marker",
+      "reuse_R12_R18_story_coordinates_or_invented_islands",
+      "guess_an_island_name_or_geographic_coordinate",
+      "replace_continuous_zoom_with_a_square_scene_swap"
+    ],
+    "navigation": "complete_Palau_to_Airai_context_to_yellow_story_AOI_as_one_continuous_world"
+  },
+  "authorityRelationship": {
+    "thisPairResolvesLocationSemantics": true,
+    "thisPairSupersedesPreviousAutomaticCandidateLocations": true,
+    "thisPairReplacesFrozenOriginalAuthorityJpegs": false,
+    "reason": "these_are_current_user_confirmed_location_images_but_have_different_dimensions_and_hashes_from_the_earlier_frozen_original_JPEG_identities"
+  },
+  "gate": {
+    "locationAmbiguityResolved": true,
+    "pixelOverlayPassed": true,
+    "demGeographicOverlayPassed": false,
+    "visualBuildAllowed": false,
+    "reason": "derive_and_verify_geographic_AOI_polygon_against_the_two_verified_DEM_frames_and_coastline_evidence_before_rendering"
+  }
+}
