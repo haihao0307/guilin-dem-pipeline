@@ -1,0 +1,42 @@
+name: Palau R19 unified field R02
+
+on:
+  push:
+    branches:
+      - work/palau-airai-r19-authority-locked-restart-20260922
+    paths:
+      - games/survivor-palau/palau-world/airai-r19/unified-field-r01/unified_field_r02.cjs
+      - games/survivor-palau/palau-world/airai-r19/unified-field-r01/unified_field_r02.test.cjs
+      - games/survivor-palau/palau-world/airai-r19/unified-field-r01/R19_UNIFIED_FIELD_REGISTRY_R02.json
+      - games/survivor-palau/palau-world/airai-r19/unified-field-r01/validate_registry_r02.cjs
+      - .github/workflows/palau-r19-unified-field-r02.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-r02:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/palau-airai-r19-authority-locked-restart-20260922
+
+      - name: Verify R02 typed Ocean surface and valid-time semantics
+        run: node games/survivor-palau/palau-world/airai-r19/unified-field-r01/unified_field_r02.test.cjs
+
+      - name: Verify R02 World Score registry and layer separation
+        run: node games/survivor-palau/palau-world/airai-r19/unified-field-r01/validate_registry_r02.cjs
+
+      - name: Assert R02 contains no visible-production artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="games/survivor-palau/palau-world/airai-r19/unified-field-r01"
+          if find "$ROOT" -maxdepth 1 -type f \( -iname '*.html' -o -iname '*.glb' -o -iname '*.gltf' -o -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.tif' -o -iname '*.tiff' \) | grep -q .; then
+            echo 'R02 contract directory contains visible-production or binary artifacts.' >&2
+            exit 1
+          fi
+          echo 'R02 remains a non-visual contract and validation package.'
