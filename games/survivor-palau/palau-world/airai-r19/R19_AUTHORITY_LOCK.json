@@ -1,0 +1,95 @@
+{
+  "schema": "kaopu.survivor-palau.r19-authority-lock/1.0",
+  "version": "R19_AUTHORITY_LOCKED_RESTART_20260922",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "work/palau-airai-r19-authority-locked-restart-20260922",
+  "base": {
+    "branch": "handoff/survivor-palau-stone-money-full-r011-20260921",
+    "sha": "c47f7cc62d864e95117bd5548ca9ffa3f1d770a8"
+  },
+  "rejectedLineage": {
+    "range": "R12-R18",
+    "reuseVisibleGeography": false,
+    "reuseCoastlines": false,
+    "reuseStoryAnchors": false,
+    "reuseTerrainMeshes": false,
+    "reuseVisualResults": false,
+    "reason": "USER_REJECTED_FABRICATED_GEOGRAPHY"
+  },
+  "authorityImages": [
+    {
+      "role": "complete_palau_frame",
+      "sourceFilename": "IMG_7975.jpeg",
+      "canonicalFilename": "01_PALAU_FULL_FRAME_USER_ORIGINAL.jpeg",
+      "bytes": 109929,
+      "dimensions": [581, 1260],
+      "sha256": "5b6e1d716bfa66f204aac9240944fe5d1526444d981ccb8a3f23875633d73312",
+      "requiredForVisualBuild": true,
+      "binaryStatus": "MISSING_FROM_R11_PACKAGE_AND_CURRENT_REFERENCE_CACHE"
+    },
+    {
+      "role": "stone_money_user_yellow_region",
+      "sourceFilename": "IMG_7974.jpeg",
+      "canonicalFilename": "02_STONE_MONEY_YELLOW_AREA_USER_ORIGINAL.jpeg",
+      "bytes": 285719,
+      "dimensions": [1284, 2778],
+      "sha256": "4fad4cd637fd556044fec5cfd56f6ef29eb8859a72a543788feb7084c4daeb47",
+      "requiredForVisualBuild": true,
+      "binaryStatus": "MISSING_FROM_R11_PACKAGE_AND_CURRENT_REFERENCE_CACHE"
+    }
+  ],
+  "elevationAuthority": {
+    "requiredProduct": "two original user-uploaded Palau DEM GeoTIFF binaries",
+    "requiredCount": 2,
+    "binaryStatus": "SOURCE_BINARY_REQUIRED",
+    "filenames": [null, null],
+    "sha256": [null, null],
+    "substitutionAllowed": false,
+    "copernicusFallbackAllowed": false,
+    "proceduralReplacementAllowed": false,
+    "interpolationAcrossNoDataAllowed": false,
+    "visualBuildBlockedUntilExactIdentityKnown": true
+  },
+  "oceanAuthority": {
+    "reuseRequired": true,
+    "redesignAllowed": false,
+    "path": "ocean-mother/releases/r018-v036-unified/Ocean_Mother_R018_V0.3.6_Unified_Seascape_Verified_Direct_Open.html",
+    "gitBlobSha": "8da2aafb66c9248e8cbb4f88bf610284afe9b59b",
+    "calibrationIslandAllowedInStoryWorld": false
+  },
+  "bathymetryEvidence": {
+    "sources": ["NOAA ENC", "NOAA NCEI", "GMRT", "Allen Coral Atlas", "Sentinel-2", "OSM"],
+    "measuredValuesMustRemainInChartDatum": true,
+    "unknownMustRemainUnknown": true,
+    "noDataMustRemainNoData": true,
+    "guessedChannelAllowed": false,
+    "kbBridgeToachelMidContinuityRequired": true
+  },
+  "worldRules": {
+    "firstView": "exact complete Palau frame defined by authority image 01",
+    "airaiView": "continuous camera/detail transition retaining surrounding world context",
+    "storyRegion": "entire yellow hand-drawn AOI from authority image 02",
+    "storyRegionIsPoint": false,
+    "automaticIslandNamingAllowed": false,
+    "guessedStoryCoordinatesAllowed": false,
+    "cartoonTerrainAllowed": false,
+    "traditionalLOD": false,
+    "worldSampler": "PalauWorld.sample()"
+  },
+  "gate": {
+    "sourceModified": true,
+    "interactive3D": false,
+    "staticImageSubstitute": false,
+    "publicHttpsPassed": false,
+    "browserPassed": false,
+    "authorityOverlayPassed": false,
+    "visualBuildAllowed": false,
+    "shareAllowed": false,
+    "status": "BLOCKED_SOURCE_BINARIES"
+  },
+  "acceptance": {
+    "visualAcceptance": false,
+    "userAcceptance": false,
+    "productionReady": false
+  }
+}
