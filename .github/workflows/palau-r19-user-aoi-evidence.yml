@@ -1,0 +1,90 @@
+name: Palau R19 User Yellow AOI Evidence
+
+on:
+  push:
+    branches:
+      - work/palau-airai-r19-authority-locked-restart-20260922
+    paths:
+      - .github/workflows/palau-r19-user-aoi-evidence.yml
+      - games/survivor-palau/palau-world/airai-r19/scripts/build_user_aoi_evidence.py
+      - games/survivor-palau/palau-world/airai-r19/R19_LOCATION_TO_DEM_REGISTRATION_CANDIDATE_20260922.json
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: palau-r19-user-aoi-evidence
+  cancel-in-progress: false
+
+jobs:
+  build-verify-persist:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/palau-airai-r19-authority-locked-restart-20260922
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install geospatial runtime
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy pandas scipy shapely pyproj rasterio geopandas fiona
+
+      - name: Build exact user-AOI evidence package without redownloading
+        run: |
+          set -euo pipefail
+          python games/survivor-palau/palau-world/airai-r19/scripts/build_user_aoi_evidence.py \
+            --source-root games/survivor-palau/palau-world/airai-r04/results-r01 \
+            --candidate games/survivor-palau/palau-world/airai-r19/R19_LOCATION_TO_DEM_REGISTRATION_CANDIDATE_20260922.json \
+            --output games/survivor-palau/palau-world/airai-r19/user-aoi-evidence-r01
+
+      - name: Verify manifests and truth boundaries
+        run: |
+          set -euo pipefail
+          ROOT=games/survivor-palau/palau-world/airai-r19/user-aoi-evidence-r01
+          (cd "$ROOT" && sha256sum -c MANIFEST.sha256)
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('games/survivor-palau/palau-world/airai-r19/user-aoi-evidence-r01')
+          report = json.loads((root / 'R19_USER_AOI_EVIDENCE_REPORT.json').read_text())
+          assert report['status'] == 'EVIDENCE_DERIVED_CANDIDATE_NOT_FINAL'
+          assert report['sourceEvidence']['noRedownload'] is True
+          assert report['truthBoundaries']['noDataPreserved'] is True
+          assert report['truthBoundaries']['chartDatumConvertedToMsl'] is False
+          assert report['truthBoundaries']['proceduralCoastlineAdded'] is False
+          assert report['truthBoundaries']['visualBuildAllowed'] is False
+          assert report['clipSummary']['COALNE']['intersectingFeatures'] > 0
+          assert report['clipSummary']['LNDARE']['intersectingFeatures'] > 0
+          assert report['soundings']['count'] > 0
+          assert report['gridCandidate']['validCells'] > 0
+          assert report['gridCandidate']['validFractionOfAoi'] < 1.0
+          print(json.dumps({
+              'soundings': report['soundings']['count'],
+              'coastFeatures': report['clipSummary']['COALNE']['intersectingFeatures'],
+              'landFeatures': report['clipSummary']['LNDARE']['intersectingFeatures'],
+              'validGridCells': report['gridCandidate']['validCells'],
+              'validFractionOfAoi': report['gridCandidate']['validFractionOfAoi'],
+              'depareContradictionCells': report['gridCandidate']['depareContradictionCells'],
+          }, indent=2))
+          PY
+
+      - name: Commit the AOI evidence package
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add games/survivor-palau/palau-world/airai-r19/user-aoi-evidence-r01
+          if git diff --cached --quiet; then
+            echo 'User-AOI evidence package already matches inputs.'
+            exit 0
+          fi
+          git commit -m 'data(palau): persist user yellow AOI coastline and underwater evidence'
+          git pull --rebase origin work/palau-airai-r19-authority-locked-restart-20260922
+          git push origin HEAD:work/palau-airai-r19-authority-locked-restart-20260922
