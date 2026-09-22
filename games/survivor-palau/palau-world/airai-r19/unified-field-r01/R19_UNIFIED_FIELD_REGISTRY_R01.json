@@ -1,0 +1,174 @@
+{
+  "schema": "kaopu.survivor-palau.unified-field-registry/0.1",
+  "version": "R19_UNIFIED_FIELD_REGISTRY_R01",
+  "status": "SMALL_MOTHER_REVIEW_CANDIDATE_NOT_RUNTIME_ADOPTED",
+  "kernelOrder": "Time->Identity->Truth/State->Strategy->Precision->Query->Function->Evidence",
+  "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+  "representedPeriod": "1944-10",
+  "rules": {
+    "oneWorldIdentity": true,
+    "oneWorldTime": true,
+    "oneOceanSurfaceAuthority": true,
+    "unknownIsNotZero": true,
+    "noDataIsNotZero": true,
+    "waveRepresentationMayReplaceSourceTruth": false,
+    "unvalidatedDatumBridgeAllowed": false,
+    "malakalMayBeCopiedAsExactAiraiLocalTide": false
+  },
+  "pages": [
+    {
+      "time": {"representedTime": "1944-10", "observationTime": "2026-09-22", "timeRole": "user authority image"},
+      "identity": {"id": "USER_COMPLETE_PALAU_OVERVIEW", "type": "Observation"},
+      "truthState": {"epistemicState": "observed_user_authority", "absenceState": "Unknown", "adoptionState": "REVIEWED_CANDIDATE"},
+      "strategy": {"id": "PRESERVE_IMAGE_AND_DERIVE_RELATIVE_CONSTRAINTS_ONLY"},
+      "precision": {"P_space": "visual-relative", "P_semantic": "high", "P_geometry": "not surveyed"},
+      "query": {"id": "completePalauNavigationFrame"},
+      "functions": [{"id": "registerObservationToGeography", "sideEffects": false}],
+      "evidence": {"sources": ["sha256:5bfd05f06513ff6c7816e31f58ac0f88a375e24a7b946d355035b162f4acc8f9"]}
+    },
+    {
+      "time": {"representedTime": "1944-10", "observationTime": "2026-09-22", "timeRole": "user authority annotation"},
+      "identity": {"id": "USER_AIRAI_YELLOW_STORY_AOI", "type": "Observation"},
+      "truthState": {"epistemicState": "observed_user_authority", "absenceState": "Unknown", "adoptionState": "REVIEWED_CANDIDATE"},
+      "strategy": {"id": "REGION_NOT_POINT_RELATIVE_REGISTRATION"},
+      "precision": {"P_space": "candidate polygon", "P_semantic": "high", "P_geometry": "pending geographic QA"},
+      "query": {"id": "storyCoreAoi"},
+      "functions": [{"id": "mapYellowAoiToPalauFrame", "sideEffects": false}],
+      "evidence": {"sources": ["sha256:82844df1bdf52da94b68d06f3262b3e97089379dff3d7550bcebea0a7d67bf46"]}
+    },
+    {
+      "time": {"representedTime": "terrain state assumed static for story interval", "observationTime": "source acquisition metadata retained"},
+      "identity": {"id": "PALAU_R19_EGM96_CANONICAL_DEM", "type": "DerivedField"},
+      "truthState": {"epistemicState": "derived_verified_processing", "absenceState": "NoData", "adoptionState": "VERIFIED_FUNCTION"},
+      "strategy": {"id": "F0130_EXACT_F0140_OUTSIDE_COVERAGE_WITH_PROVENANCE"},
+      "precision": {"P_space": "12.5 m posting; SRTMGL1 nominal 30 m source", "P_geometry": "orthometric height candidate"},
+      "query": {"id": "bedOrLandElevationEgm96"},
+      "functions": [{"id": "sampleCanonicalDem", "sideEffects": false}],
+      "evidence": {"sources": ["sha256:51f67338ed23d2e30570fc41ee720f664d8dc0e5ed3300595fcaf7ff9940abf6", "sha256:32bb0462185d400aa3b6190927556f2a68a7c49d2e69cc88af6b8d19abbaf7b8", "sha256:6ace836106dcc93c69a0d16fee1e8b8a2a93b4446f9e34af1eb1994e3d1b975c"]}
+    },
+    {
+      "time": {"representedTime": "NOAA ENC issue 2025-04-16", "observationTime": "chart evidence"},
+      "identity": {"id": "NOAA_ENC_COALNE_LNDARE", "type": "EvidenceField"},
+      "truthState": {"epistemicState": "observed_chart_evidence", "absenceState": "NotCovered", "adoptionState": "VERIFIED_OBSERVATION"},
+      "strategy": {"id": "VECTOR_EVIDENCE_NO_PROCEDURAL_SHORELINE"},
+      "precision": {"P_space": "chart compilation scale dependent", "P_semantic": "shoreline/land evidence"},
+      "query": {"id": "landWaterBoundaryEvidence"},
+      "functions": [{"id": "intersectCoastlineEvidence", "sideEffects": false}],
+      "evidence": {"sources": ["NOAA ENC COALNE", "NOAA ENC LNDARE", "US4TB3P0"]}
+    },
+    {
+      "time": {"representedTime": "NOAA ENC issue 2025-04-16", "observationTime": "chart evidence"},
+      "identity": {"id": "NOAA_ENC_SOUNDG", "type": "ObservationField"},
+      "truthState": {"epistemicState": "observed_chart_evidence", "absenceState": "NotCovered", "adoptionState": "VERIFIED_OBSERVATION"},
+      "strategy": {"id": "DISCRETE_SOUNDINGS_KEEP_DATUM_AND_QUALITY"},
+      "precision": {"P_space": "discrete points", "P_geometry": "ZOC B/D", "P_physics": "local chart datum code 24"},
+      "query": {"id": "soundingEvidenceAt"},
+      "functions": [{"id": "nearestSounding", "sideEffects": false}],
+      "evidence": {"sources": ["NOAA ENC SOUNDG", "NOAA ENC M_QUAL", "US4TB3P0"]}
+    },
+    {
+      "time": {"representedTime": "NOAA ENC issue 2025-04-16", "observationTime": "chart evidence"},
+      "identity": {"id": "NOAA_ENC_DEPCNT_DEPARE", "type": "ConstraintField"},
+      "truthState": {"epistemState": "observed_chart_evidence", "epistemicState": "observed_chart_evidence", "absenceState": "NotCovered", "adoptionState": "VERIFIED_OBSERVATION"},
+      "strategy": {"id": "KEEP_CONTOURS_INTERVALS_AND_CONTRADICTIONS"},
+      "precision": {"P_space": "chart scale dependent", "P_geometry": "interval/contour constraints", "P_physics": "local chart datum code 24"},
+      "query": {"id": "depthConstraintAt"},
+      "functions": [{"id": "queryDepthInterval", "sideEffects": false}],
+      "evidence": {"sources": ["NOAA ENC DEPCNT", "NOAA ENC DEPARE", "US4TB3P0"]}
+    },
+    {
+      "time": {"representedTime": "modern remote-sensing product epoch", "observationTime": "product metadata retained"},
+      "identity": {"id": "ALLEN_REEF_GEOMORPHIC_BENTHIC", "type": "SemanticField"},
+      "truthState": {"epistemicState": "derived_remote_sensing_classification", "absenceState": "NotCovered", "adoptionState": "REVIEWED_CANDIDATE"},
+      "strategy": {"id": "REEF_SEMANTICS_NOT_BATHYMETRY_TRUTH"},
+      "precision": {"P_space": "product resolution dependent", "P_semantic": "reef class candidate"},
+      "query": {"id": "reefSemanticAt"},
+      "functions": [{"id": "queryReefClass", "sideEffects": false}],
+      "evidence": {"sources": ["Allen Coral Atlas geomorphic", "Allen Coral Atlas benthic"]}
+    },
+    {
+      "time": {"representedTime": "regional context product epoch", "observationTime": "GMRT metadata retained"},
+      "identity": {"id": "GMRT_AIRAI_CONTEXT", "type": "ContextField"},
+      "truthState": {"epistemicState": "derived_regional_context", "absenceState": "NoData", "adoptionState": "REVIEWED_CANDIDATE"},
+      "strategy": {"id": "REGIONAL_BACKGROUND_NEVER_OVERRIDE_LOCAL_EVIDENCE"},
+      "precision": {"P_space": "regional", "P_geometry": "context only"},
+      "query": {"id": "regionalBedContext"},
+      "functions": [{"id": "sampleGmrtContext", "sideEffects": false}],
+      "evidence": {"sources": ["airai_topo_max.tif", "airai_topo_mask_max.tif"]}
+    },
+    {
+      "time": {"representedTime": "1944-10 candidate", "observationTime": "modern station metadata and harmonic/model input"},
+      "identity": {"id": "MALAKAL_REGIONAL_ASTRONOMICAL_TIDE", "type": "ProcessField"},
+      "truthState": {"epistemicState": "modelled_candidate", "absenceState": "Unknown", "adoptionState": "REVIEWED_CANDIDATE"},
+      "strategy": {"id": "REGIONAL_TIDE_SOURCE_NOT_AIRAI_LOCAL_TRUTH"},
+      "precision": {"P_time": "harmonic/model dependent", "P_space": "station/regional boundary"},
+      "query": {"id": "regionalTideAt"},
+      "functions": [{"id": "evaluateAstronomicalTideCandidate", "sideEffects": false}],
+      "evidence": {"sources": ["NOAA CO-OPS 1841367 Malakal Harbor", "UHSLC Malakal A/B"]}
+    },
+    {
+      "time": {"representedTime": "1944-10", "observationTime": null},
+      "identity": {"id": "AIRAI_LOCAL_TIDE_TRANSFER", "type": "UnknownField"},
+      "truthState": {"epistemicState": "unknown", "absenceState": "Unknown", "adoptionState": "NOT_ADOPTED"},
+      "strategy": {"id": "NO_ZERO_FALLBACK_REQUIRE_OBSERVATION_OR_VALIDATED_MODEL"},
+      "precision": {"P_time": "unknown", "P_space": "unknown"},
+      "query": {"id": "localTideCorrectionAt"},
+      "functions": [{"id": "returnUnknownUntilValidated", "sideEffects": false}],
+      "evidence": {"sources": ["explicit missing local Airai transfer evidence"]}
+    },
+    {
+      "time": {"representedTime": "1944-10", "observationTime": null},
+      "identity": {"id": "AIRAI_1944_NON_TIDAL_RESIDUAL", "type": "UnknownField"},
+      "truthState": {"epistemicState": "unknown", "absenceState": "Unknown", "adoptionState": "NOT_ADOPTED"},
+      "strategy": {"id": "NO_ZERO_FALLBACK_REQUIRE_WEATHER_SURGE_EVIDENCE"},
+      "precision": {"P_time": "unknown", "P_space": "unknown"},
+      "query": {"id": "nonTidalResidualAt"},
+      "functions": [{"id": "returnUnknownUntilValidated", "sideEffects": false}],
+      "evidence": {"sources": ["explicit missing 1944 pressure/wind/surge evidence"]}
+    },
+    {
+      "time": {"representedTime": "world time t", "observationTime": "runtime"},
+      "identity": {"id": "OCEAN_MOTHER_WAVE_SURFACE", "type": "ProcessField"},
+      "truthState": {"epistemicState": "modelled_runtime_candidate", "absenceState": "Unknown", "adoptionState": "REVIEWED_CANDIDATE"},
+      "strategy": {"id": "ONE_AUTHORITATIVE_SURFACE_QUERY"},
+      "precision": {"P_time": "runtime dt", "P_space": "query dependent", "P_optics": "separate from geometry truth"},
+      "query": {"id": "waveDisplacementAt"},
+      "functions": [{"id": "surfaceAt", "sideEffects": false}],
+      "evidence": {"sources": ["frozen Ocean Mother surface contract"]}
+    },
+    {
+      "time": {"representedTime": "world time t", "observationTime": "derived query"},
+      "identity": {"id": "INSTANTANEOUS_FREE_SURFACE", "type": "DerivedField"},
+      "truthState": {"epistemicState": "derived_only_if_compatible", "absenceState": "Unknown", "adoptionState": "NOT_ADOPTED"},
+      "strategy": {"id": "EXPLICIT_COMPONENT_SUM_WITH_DATUM_TIME_SPACE_GATES"},
+      "precision": {"P_time": "max component requirement", "P_space": "max component requirement"},
+      "query": {"id": "freeSurfaceAt"},
+      "functions": [{"id": "composeFreeSurface", "sideEffects": false}],
+      "evidence": {"sources": ["MALAKAL_REGIONAL_ASTRONOMICAL_TIDE", "AIRAI_LOCAL_TIDE_TRANSFER", "AIRAI_1944_NON_TIDAL_RESIDUAL", "OCEAN_MOTHER_WAVE_SURFACE"]}
+    },
+    {
+      "time": {"representedTime": "world time t", "observationTime": "derived query"},
+      "identity": {"id": "WORLD_WATER_DEPTH", "type": "DerivedField"},
+      "truthState": {"epistemicState": "derived_only_if_compatible", "absenceState": "Unknown", "adoptionState": "NOT_ADOPTED"},
+      "strategy": {"id": "FREE_SURFACE_MINUS_BED_ONLY_AFTER_DATUM_BRIDGE"},
+      "precision": {"P_time": "query dependent", "P_space": "query dependent"},
+      "query": {"id": "waterDepthAt"},
+      "functions": [{"id": "composeWaterDepth", "sideEffects": false}],
+      "evidence": {"sources": ["INSTANTANEOUS_FREE_SURFACE", "PALAU_R19_EGM96_CANONICAL_DEM", "NOAA_ENC_SOUNDG"]}
+    }
+  ],
+  "waveRepresentationGate": {
+    "sourceTruthRetained": true,
+    "allowedRole": "compressed reversible candidate view of a verified source field",
+    "required": [
+      "source field identity and hash",
+      "space/time/datum contract",
+      "frequency bands and basis",
+      "reconstruction RMSE and max error",
+      "coverage fraction",
+      "residual channel",
+      "NoData preservation",
+      "independent Small Mother validation before runtime adoption"
+    ]
+  }
+}
