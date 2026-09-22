@@ -1,0 +1,87 @@
+{
+  "schema": "kaopu.survivor-palau.unified-field-r02-execution-receipt/1.0",
+  "version": "R19_UNIFIED_FIELD_R02_EXECUTION_RECEIPT",
+  "status": "IMPLEMENTED_TESTED_SMALL_MOTHER_REVIEW_PENDING",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "work/palau-airai-r19-authority-locked-restart-20260922",
+  "r02Head": "250c5b3bb58019e9908119ebe96f708fb193710c",
+  "draftPr": 136,
+  "parentCorrectionIssue": 140,
+  "implementationIssue": 142,
+  "smallMotherValidationIssue": 138,
+  "files": [
+    "unified_field_r02.cjs",
+    "unified_field_r02.test.cjs",
+    "R19_UNIFIED_FIELD_REGISTRY_R02.json",
+    "validate_registry_r02.cjs",
+    ".github/workflows/palau-r19-unified-field-r02.yml"
+  ],
+  "firstRun": {
+    "runId": 35799792493,
+    "conclusion": "failure",
+    "failure": "strict floating-point equality expected 2.97 but received 2.9699999999999998",
+    "classification": "TEST_ASSERTION_DEFECT_NOT_MODEL_DEFECT",
+    "hidden": false
+  },
+  "correction": {
+    "commit": "250c5b3bb58019e9908119ebe96f708fb193710c",
+    "change": "replace strict decimal equality with explicit finite tolerance for derived floating-point values"
+  },
+  "successfulRuns": [
+    {
+      "name": "Palau R19 unified field R02 / verify-r02",
+      "runId": 35799870613,
+      "jobId": 106987528775,
+      "conclusion": "success",
+      "steps": [
+        "R02 typed Ocean surface and valid-time tests",
+        "R02 World Score registry and layer separation validation",
+        "no visible-production artifacts assertion"
+      ]
+    },
+    {
+      "name": "R19 authority gate",
+      "runId": 35799870379,
+      "jobId": 106987528020,
+      "conclusion": "success"
+    },
+    {
+      "name": "R01 unified field regression",
+      "runId": 35799870381,
+      "jobId": 106987528262,
+      "conclusion": "success"
+    }
+  ],
+  "proved": [
+    "Static terrain or bed fields can be queried at an instantaneous world time only when the query lies inside their explicit validity interval.",
+    "An out-of-interval static field is rejected rather than silently reused.",
+    "Missing Airai local tide transfer and 1944 non-tidal residual return PARTIAL decomposition with unresolved components; they are not replaced by zero.",
+    "One OceanSurfaceState identity carries eta, dx, dz, normal, surface velocity and parameter coordinate together.",
+    "A non-unit normal is rejected before rendering, contact or buoyancy consumers can use it.",
+    "WaterSurfaceOptics, WaterVolumeOptics, OceanEnvironmentAdapter and CoastBoundary cannot write the authoritative surface geometry.",
+    "Chart-datum bathymetry and EGM96 surface elevation cannot be combined without an explicit validated bridge.",
+    "R01 tests remain green after R02 is added."
+  ],
+  "notProved": [
+    "Small Mother approval",
+    "real Ocean Mother adapter integration",
+    "valid Airai local tide transfer",
+    "1944 non-tidal residual",
+    "final geographic registration of the user AOI",
+    "real-data wave coefficients",
+    "interactive three-dimensional workbench",
+    "visual acceptance",
+    "production readiness"
+  ],
+  "gates": {
+    "r02TestsPassed": true,
+    "r02RegistryPassed": true,
+    "r01RegressionPassed": true,
+    "authorityGatePassed": true,
+    "smallMotherValidation": "REQUESTED_NOT_APPROVED",
+    "waveDecompositionAdopted": false,
+    "visualBuildAllowed": false,
+    "interactive3D": false,
+    "productionReady": false
+  }
+}
