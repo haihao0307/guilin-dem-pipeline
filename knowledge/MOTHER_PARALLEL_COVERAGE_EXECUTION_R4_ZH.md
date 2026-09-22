@@ -1,7 +1,7 @@
 # KAOPU Mother Parallel Coverage Execution R4
 ## 复杂资产不允许被一个局部细节卡死
 
-版本：4.0.0
+版本：4.1.0
 日期：2026-09-22
 状态：PERMANENT / CROSS-MOTHER / USER-AUTHORITY
 
@@ -220,3 +220,69 @@ Watchdog 每轮增加：
 - 用户看到的整体候选不断提升；
 - 微观问题不会阻塞帽子、衣服、其他人物、材质、烟雾、动作等独立工作；
 - 最终再把局部问题逐一收口。
+
+
+## 12. Token / Coordination Economy：只为可见产出花上下文
+
+从 2026-09-22 起，复杂资产生产额外执行“低对话开销”规则：
+
+### 12.1 用户不可见的包装工作不得无限增长
+以下内容属于 supporting work，不得连续占用多个 production turn：
+- 新 Issue；
+- 新 branch；
+- 新 Task Anchor；
+- 新 policy；
+- 新 workflow；
+- 新 receipt；
+- 重新解释同一个 blocker；
+- 重复写状态评论。
+
+同一 bounded increment 最多允许一份 Task Anchor + 一份 receipt。若 production delta 未变化，不得因为增加文档/工作流而把版本号继续往前滚。
+
+### 12.2 Silence by default
+Watchdog / Coordinator 只在以下情况写新评论或通知用户：
+- 新可执行 artifact；
+- 新数值/浏览器结果；
+- blocker 首次出现或发生实质变化；
+- verifier 结论改变；
+- routing correction / merge / promotion 决策。
+
+“状态没变”不发重复评论。
+
+### 12.3 Artifact-to-Meta Ratio
+每个复杂资产在一个生产窗口内，目标比例：
+- 至少 70% 的新增提交服务于 production code / geometry / data / standalone HTML / executed QA；
+- policy / docs / workflow / receipt 等元工作原则上不超过 30%。
+
+如果连续 3 个提交都只有 docs / workflow / receipt 而没有 production delta：
+状态 = `META_WORK_STALL`，停止继续包装，必须回到 production 或报告精确 blocker。
+
+### 12.4 用户汇报压缩
+用户默认只看一张总表：
+- CURRENT ARTIFACT
+- BASE -> HEAD
+- WHAT VISIBLY CHANGED
+- TEST
+- BLOCKER
+- NEXT
+
+不要把每个内部 Mother 的长日志直接复制给用户。
+
+### 12.5 夜间/长时间生产的结果门
+如果用户说“晚上继续、明早看”：
+最终只允许汇总为：
+- `CANDIDATE_READY`
+- `BLOCKED_VALID`
+- `NO_NEW_ARTIFACT`
+
+夜间可以有很多内部试验，但早晨必须压缩成少量真正有意义的 artifact。大量中间提交不能替代一个用户可见候选。
+
+### 12.6 停止条件
+出现下列任一情况时，不继续消耗 token 做同类尝试：
+- 同一 LOCAL defect 连续两次失败；
+- 只有元工作，没有 production delta；
+- 当前候选已经需要人工视觉判断而不是更多数字微调；
+- 下一步依赖另一个 lane 的真实输入；
+- 当前执行端缺少必要浏览器/GPU/file:// 能力。
+
+此时 HOLD / ROUTE / VERIFY，而不是继续生成更多解释。
