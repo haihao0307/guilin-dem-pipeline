@@ -1,0 +1,49 @@
+{
+  "schema": "kaopu.survivor-palau.r19-current-state/1.0",
+  "version": "R19_CURRENT_STATE_20260922_DEM_PAIR_NORMALIZED",
+  "status": "DEM_PAIR_RECOVERED_AND_EGM96_NORMALIZED_AUTHORITY_IMAGES_PENDING",
+  "branch": "work/palau-airai-r19-authority-locked-restart-20260922",
+  "base": "c47f7cc62d864e95117bd5548ca9ffa3f1d770a8",
+  "sourceRecovery": {
+    "F0130ArchiveVerified": true,
+    "F0140ArchiveVerified": true,
+    "bothDemGeoTiffsVerified": true,
+    "authorityFullPalauJpegVerified": false,
+    "authorityYellowStoryJpegVerified": false
+  },
+  "terrain": {
+    "sourceClassification": "ASF ALOS PALSAR RTC ancillary DEM using SRTMGL1 nominal 30 m, stored at 12.5 m posting",
+    "native12_5m": false,
+    "verticalNormalization": "EGM96 orthometric",
+    "verticalNormalizationPassed": true,
+    "canonicalDerivedGridVerified": true,
+    "canonicalDerivedSha256": "6ace836106dcc93c69a0d16fee1e8b8a2a93b4446f9e34af1eb1994e3d1b975c",
+    "seaLevelMedianCheckM": {
+      "F0130": 0.008087158203125,
+      "F0140": -0.00791168212890625
+    },
+    "highestDerivedSampleM": 241.60211181640625
+  },
+  "privateCache": {
+    "sourceMetadataRegistered": true,
+    "sourceBinaryUploaded": false,
+    "blocker": "No authorized Git LFS or binary upload action is exposed by the current connector."
+  },
+  "gates": {
+    "sourceBytesLocallyVerified": true,
+    "verticalDatumNormalized": true,
+    "readyForTerrainEvidenceQa": true,
+    "readyForAuthorityOverlay": false,
+    "readyForVisualBuild": false,
+    "interactive3D": false,
+    "publicHttpsPassed": false,
+    "shareAllowed": false,
+    "visualAcceptance": false,
+    "productionReady": false
+  },
+  "nextRequired": [
+    "Recover the exact two authority JPEG binaries and verify their frozen SHA-256 identities.",
+    "Register control points and overlay the complete Palau frame and full yellow AOI against the normalized terrain evidence.",
+    "Only after overlay QA, bind coastline, reef, bathymetry and KB Bridge channel evidence without filling unknown areas."
+  ]
+}
