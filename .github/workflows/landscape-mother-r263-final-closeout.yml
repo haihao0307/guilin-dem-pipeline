@@ -1,0 +1,50 @@
+name: Landscape Mother R263 Final Closeout
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - handoff/landscape-mother-r263-final-closeout-20260922
+    paths:
+      - handoffs/landscape-mother/r263-final-closeout-20260922/**
+      - .github/workflows/landscape-mother-r263-final-closeout.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: landscape-mother-r263-final-closeout
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout closeout branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      - name: Build exact full handoff
+        run: python handoffs/landscape-mother/r263-final-closeout-20260922/build_package.py
+
+      - name: Verify archive
+        run: |
+          python -m zipfile -t handoffs/landscape-mother/LANDSCAPE_MOTHER_R263_FINAL_CLOSEOUT_FULL_HANDOFF_2026-09-22.zip
+          sha256sum -c handoffs/landscape-mother/LANDSCAPE_MOTHER_R263_FINAL_CLOSEOUT_FULL_HANDOFF_2026-09-22.zip.sha256
+
+      - name: Commit sealed package
+        run: |
+          git config user.name "Landscape Mother"
+          git config user.email "actions@users.noreply.github.com"
+          git add \
+            handoffs/landscape-mother/LANDSCAPE_MOTHER_R263_FINAL_CLOSEOUT_FULL_HANDOFF_2026-09-22.zip \
+            handoffs/landscape-mother/LANDSCAPE_MOTHER_R263_FINAL_CLOSEOUT_FULL_HANDOFF_2026-09-22.zip.sha256 \
+            handoffs/landscape-mother/CURRENT_FULL_HANDOFF.md
+          if git diff --cached --quiet; then
+            echo "Package already sealed."
+            exit 0
+          fi
+          git commit -m "handoff(landscape): seal R2.6.3 final closeout package [skip ci]"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
