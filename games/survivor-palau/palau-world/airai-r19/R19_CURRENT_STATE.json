@@ -1,7 +1,7 @@
 {
-  "schema": "kaopu.survivor-palau.r19-current-state/1.1",
-  "version": "R19_CURRENT_STATE_20260922_USER_LOCATION_CHAIN_RECOVERED",
-  "status": "DEM_PAIR_RECOVERED_EGM96_NORMALIZED_USER_LOCATION_CHAIN_PIXEL_REGISTERED_GEOGRAPHIC_REGISTRATION_PENDING",
+  "schema": "kaopu.survivor-palau.r19-current-state/1.2",
+  "version": "R19_CURRENT_STATE_20260922_LOCATION_TO_DEM_CANDIDATE",
+  "status": "DEM_PAIR_RECOVERED_EGM96_NORMALIZED_USER_LOCATION_CHAIN_PIXEL_REGISTERED_DEM_CANDIDATE_GENERATED_QA_PENDING",
   "branch": "work/palau-airai-r19-authority-locked-restart-20260922",
   "base": "c47f7cc62d864e95117bd5548ca9ffa3f1d770a8",
   "sourceRecovery": {
@@ -40,13 +40,27 @@
       "inliers": 178,
       "inlierRmsePx": 0.4575214691283916,
       "passed": true
+    }
+  },
+  "locationToDemRegistration": {
+    "candidateFile": "games/survivor-palau/palau-world/airai-r19/R19_LOCATION_TO_DEM_REGISTRATION_CANDIDATE_20260922.json",
+    "candidateCommit": "ef11441b0eaf6bd5456753d69b01bd1a0241b9e9",
+    "status": "EVIDENCE_DERIVED_CANDIDATE_NOT_FINAL",
+    "consensusCentroidLonLat": [134.53531712481433, 7.329601051583299],
+    "candidateMeanPolygonBBoxLonLat": [134.52117150, 7.31703795, 134.54811869, 7.34353654],
+    "methodCentroidSpreadApproxM": {
+      "eastWest": 203.44334318072765,
+      "northSouth": 291.70484135429797
     },
-    "geographicRegistrationPassed": false
+    "maximumPerVertexMethodDeviationM": 267.31182553583824,
+    "geographicRegistrationPassed": false,
+    "storyAoiFrozen": false
   },
   "privateCache": {
     "demSourceMetadataRegistered": true,
     "demSourceBinaryUploaded": false,
     "userImageHashesAndConversationFileIdsRegisteredInR19": true,
+    "locationAuthorityManifestDraftPr": "haihao0307/KAOPU-REFERENCE-CACHE#1",
     "blocker": "The current GitHub connector has no direct local-binary file parameter; do not claim native binary persistence until remote byte replay is verified."
   },
   "gates": {
@@ -56,6 +70,7 @@
     "locationAmbiguityResolved": true,
     "userImagePixelOverlayPassed": true,
     "readyForAuthorityOverlay": true,
+    "demGeographicCandidateGenerated": true,
     "demGeographicOverlayPassed": false,
     "readyForVisualBuild": false,
     "interactive3D": false,
@@ -65,8 +80,9 @@
     "productionReady": false
   },
   "nextRequired": [
-    "Register the complete Palau overview to the verified normalized DEM mosaic using coastline and island control points.",
-    "Transform the user-drawn yellow AOI hull from overview pixels into a provenance-bearing geographic polygon without guessing coordinates.",
-    "Run coastline, reef-platform and surrounding-island continuity QA before enabling any visible 3D build."
+    "Overlay the candidate AOI on the exact normalized DEM mosaic and provenance mask.",
+    "Confirm peninsula, adjacent-islet and channel control-point relationships against the user image and retained coastline evidence.",
+    "Cross-check reef-platform and low-island extent before freezing the final geographic AOI polygon.",
+    "Only after the overlay passes may the visible three-dimensional build start."
   ]
 }
