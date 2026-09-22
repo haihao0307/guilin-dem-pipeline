@@ -1,0 +1,89 @@
+{
+  "schema": "kaopu.survivor-palau.r19-location-to-dem-registration/1.0",
+  "version": "R19_LOCATION_TO_DEM_REGISTRATION_CANDIDATE_20260922",
+  "status": "EVIDENCE_DERIVED_CANDIDATE_NOT_FINAL",
+  "purpose": "Transform the user-confirmed yellow story AOI from the two location images into the verified Palau DEM coordinate system without assigning an invented island name or unverified final coordinate.",
+  "inputAuthority": {
+    "userLocationBinding": "R19_USER_LOCATION_AUTHORITY_20260922.json",
+    "completePalauImageSha256": "5bfd05f06513ff6c7816e31f58ac0f88a375e24a7b946d355035b162f4acc8f9",
+    "airaiYellowAoiImageSha256": "82844df1bdf52da94b68d06f3262b3e97089379dff3d7550bcebea0a7d67bf46",
+    "demFrames": [
+      {
+        "name": "AP_08074_FBD_F0130_RT1.dem.tif",
+        "sha256": "51f67338ed23d2e30570fc41ee720f664d8dc0e5ed3300595fcaf7ff9940abf6"
+      },
+      {
+        "name": "AP_08074_FBD_F0140_RT1.dem.tif",
+        "sha256": "32bb0462185d400aa3b6190927556f2a68a7c49d2e69cc88af6b8d19abbaf7b8"
+      }
+    ]
+  },
+  "demRegistrationSurface": {
+    "crs": "EPSG:32653",
+    "boundsM": [414923.1875, 750807.125, 500027.1875, 872182.625],
+    "qaRenderDimensionsPx": [840, 1200],
+    "sourceRule": "F0130 authoritative where valid; F0140 only where F0130 is absent; no NoData fill and no invented coastline"
+  },
+  "methods": [
+    {
+      "id": "SIFT_RANSAC_RATIO_070",
+      "centroidLonLat": [134.53469637855193, 7.330708113269632],
+      "aoiBBoxLonLat": [134.52070076527315, 7.318263079430624, 134.54732885215284, 7.344376149916903]
+    },
+    {
+      "id": "SIFT_RANSAC_RATIO_075",
+      "centroidLonLat": [134.53471600646012, 7.3300250243395055],
+      "aoiBBoxLonLat": [134.5206809830314, 7.317552203419658, 134.54739115337415, 7.343806608887004]
+    },
+    {
+      "id": "BOUNDARY_DISTANCE_ICP",
+      "centroidLonLat": [134.53653898943094, 7.328070017140757],
+      "aoiBBoxLonLat": [134.52213275307082, 7.315298560533298, 134.54963606752835, 7.342426867965478]
+    }
+  ],
+  "consensusCandidate": {
+    "centroidLonLat": [134.53531712481433, 7.329601051583299],
+    "centroidMethodSpreadApproxM": {
+      "eastWest": 203.44334318072765,
+      "northSouth": 291.70484135429797
+    },
+    "meanPolygonLonLat": [
+      [134.54760958, 7.32304809],
+      [134.53926487, 7.31836031],
+      [134.52688235, 7.31703795],
+      [134.52117150, 7.32546387],
+      [134.52181622, 7.34071146],
+      [134.53024858, 7.34353654],
+      [134.53776747, 7.33977987],
+      [134.54497487, 7.33248234],
+      [134.54811869, 7.32598903]
+    ],
+    "meanPolygonBBoxLonLat": [134.52117150, 7.31703795, 134.54811869, 7.34353654],
+    "methodEnvelopeBBoxLonLat": [134.5206809830314, 7.315298560533298, 134.54963606752835, 7.344376149916903],
+    "maximumPerVertexMethodDeviationM": 267.31182553583824
+  },
+  "interpretation": {
+    "redAiraiRectangle": "context_extent_only",
+    "yellowAoi": "complete_story_core_area_not_point",
+    "automaticIslandName": null,
+    "storyCoordinateFinal": false,
+    "whyNotFinal": [
+      "the complete Palau overview is a rendered reference frame rather than an embedded GeoTIFF",
+      "the candidate must be checked against coastline and islet correspondences at the yellow AOI",
+      "reef-platform and low-island evidence must be verified before freezing the final polygon"
+    ]
+  },
+  "requiredQaBeforeFinalization": [
+    "overlay the candidate polygon on the exact normalized DEM mosaic and provenance mask",
+    "confirm the mainland peninsula, adjacent islets and channel relationships visible in the user image",
+    "cross-check reef-platform extent with retained satellite and reef evidence without filling unknown water",
+    "record residuals and freeze the final geographic polygon only after all control points pass"
+  ],
+  "gate": {
+    "candidateGenerated": true,
+    "geographicOverlayPassed": false,
+    "storyAoiFrozen": false,
+    "visualBuildAllowed": false,
+    "productionReady": false
+  }
+}
