@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
-const { validateLedger } = require('./kaopu_core_r03.cjs');
+const { validateLedger } = require('./kaopu_core_r03_loader.cjs');
 
 const schema = JSON.parse(
   fs.readFileSync(path.join(__dirname, 'R19_KAOPU_CORE_SCHEMA_R03.json'), 'utf8'),
