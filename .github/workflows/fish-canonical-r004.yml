@@ -1,0 +1,140 @@
+name: Fish Canonical R004
+on:
+  push:
+    branches: [work/fish-yellowfin-canonical-r004-20260923]
+    paths:
+      - restart/fish-yellowfin-teacher-r2/web-r004/**
+      - .github/workflows/fish-canonical-r004.yml
+permissions:
+  contents: write
+concurrency:
+  group: fish-yellowfin-canonical-r004
+  cancel-in-progress: false
+jobs:
+  compile-verify-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace/source
+            restart/fish-yellowfin-teacher-r2/web-r003
+            restart/fish-yellowfin-teacher-r2/web-r004
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build lossless canonical fields from exact teacher
+        run: |
+          python -m pip install numpy==2.2.6 Pillow==11.2.1
+          python restart/fish-yellowfin-teacher-r2/web-r004/compile_teacher.py --source apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace/source/tuna_fish_4k.glb --out dist/fish-mother-yellowfin/canonical-r004
+          cp dist/fish-mother-yellowfin/canonical-r004/EXTRACTION_QA.json SOURCE_IDENTITY_PROOF.json
+          python restart/fish-yellowfin-teacher-r2/web-r004/prepare.py
+      - name: Bundle pinned runtime without changing the approved shell or favicon
+        working-directory: restart/fish-yellowfin-teacher-r2/web-r004
+        run: |
+          npm install --no-save three@0.170.0 esbuild@0.24.2 playwright@1.51.1
+          node --check main.mjs
+          node --check canonical.mjs
+          npx esbuild main.mjs --bundle --format=esm --target=es2022 --minify --legal-comments=inline --outfile=bundle.js
+          npx playwright install --with-deps chromium
+      - name: Build standalone HTML retaining all original 4K texture bytes
+        run: python restart/fish-yellowfin-teacher-r2/web-r004/build.py
+      - name: File-protocol original regressions plus canonical 209-pose and silhouette verifier
+        run: node restart/fish-yellowfin-teacher-r2/web-r004/qa.mjs
+      - name: Preserve evidence and produce internal review thumbnail
+        if: always()
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import base64
+          p=Path('dist/fish-mother-yellowfin/evidence/review.jpg')
+          if p.exists():
+              im=Image.open(p);im.thumbnail((720,470));o=p.with_name('review-small.jpg');im.save(o,quality=62)
+              print('REVIEW_THUMB_BASE64='+base64.b64encode(o.read_bytes()).decode())
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fish-canonical-r004-build-and-evidence
+          path: |
+            dist/fish-mother-yellowfin
+            restart/fish-yellowfin-teacher-r2/web-r004
+          retention-days: 30
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: public
+          sparse-checkout: fish-mother-yellowfin
+      - name: Guard and preserve approved R003; update only the Fish folder
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import shutil,json
+          p=Path('public/fish-mother-yellowfin');old=p/'index.html'
+          if old.exists():
+              h=old.read_bytes()[:2500]
+              assert b'FISH_AUTOPSY_R003' in h or b'FISH_CANONICAL_R004' in h,'Concurrent unexpected Fish version; refusing overwrite'
+              if b'FISH_AUTOPSY_R003' in h:
+                  (p/'r003').mkdir(exist_ok=True);shutil.copyfile(old,p/'r003/index.html')
+                  for name in ['PUBLICATION_PROOF.json','BROWSER_QA.json','BUILD_MANIFEST.json']:
+                      if (p/name).exists():shutil.copyfile(p/name,p/'r003'/name)
+          shutil.copytree('dist/fish-mother-yellowfin',p,dirs_exist_ok=True)
+          receipt={'version':'FISH_CANONICAL_R004','publicVerified':False,'shareAllowed':False,'reason':'Await exact public HTTP and browser checks','productionReady':False}
+          (p/'PUBLICATION_PROOF.json').write_text(json.dumps(receipt,indent=2))
+          PY
+          cd public
+          git config user.name 'Fish Mother Build'
+          git config user.email 'fish-mother@users.noreply.github.com'
+          git add fish-mother-yellowfin
+          git commit -m 'Fish R004: canonical teacher reconstruction; preserve approved R003 and all other Mothers'
+          for attempt in 1 2 3; do
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            git pull --rebase origin gh-pages
+          done
+          exit 1
+      - name: Verify exact current HTML on fixed public URL
+        run: |
+          python - <<'PY'
+          import pathlib,hashlib,urllib.request,time
+          target='https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/'
+          expected=hashlib.sha256(pathlib.Path('dist/fish-mother-yellowfin/index.html').read_bytes()).hexdigest()
+          for i in range(75):
+              try:
+                  with urllib.request.urlopen(target,timeout=45) as r:data=r.read();status=r.status
+                  if status==200 and hashlib.sha256(data).hexdigest()==expected:
+                      print('PUBLIC_CURRENT_HASH_PASS',expected,len(data),flush=True);break
+              except Exception as e:print('PUBLIC_WAIT',str(e),flush=True)
+              time.sleep(10)
+          else:raise SystemExit('Current public bytes not verified')
+          PY
+      - name: Run final-public-url browser and all canonical regression gates
+        env:
+          PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/
+        run: node restart/fish-yellowfin-teacher-r2/web-r004/qa.mjs
+      - name: Persist verified publication proof without promoting anatomy or generator
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,os,shutil,datetime
+          out=Path('dist/fish-mother-yellowfin');public=Path('public/fish-mother-yellowfin')
+          qa=json.loads((out/'PUBLIC_BROWSER_QA.json').read_text());build=json.loads((out/'BUILD_MANIFEST.json').read_text())
+          assert qa['browserPass'] and qa['allPoseChecks']['passed']
+          proof={'version':'FISH_CANONICAL_R004','url':'https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/','sourceBuildSha':os.environ['GITHUB_SHA'],'verificationRunId':os.environ['GITHUB_RUN_ID'],'verifiedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'httpStatus':200,'htmlSha256':build['sha256'],'htmlBytes':build['bytes'],'publicFullFileHashMatchesBuild':True,'fileProtocolBrowserPass':True,'publicBrowserPass':True,'desktopPass':True,'mobileViewportPass':True,'physicalMobileDeviceTested':False,'canonical':qa['canonical'],'allPoseChecks':qa['allPoseChecks'],'silhouettes':qa['silhouettes'],'consoleAndPageErrors':qa['errors'],'sourceGeometryRigMotionReconstructed':True,'sharedOriginalTexturePool':True,'anatomicalPartitionApproved':False,'independentGenerator':False,'manualVisualAcceptance':False,'productionReady':False,'shareAllowed':True}
+          for p in [out/'PUBLICATION_PROOF.json',public/'PUBLICATION_PROOF.json']:p.write_text(json.dumps(proof,indent=2))
+          shutil.copyfile(out/'PUBLIC_BROWSER_QA.json',public/'PUBLIC_BROWSER_QA.json')
+          print('PUBLICATION_VERIFIED',json.dumps(proof),flush=True)
+          PY
+          cd public
+          git add fish-mother-yellowfin/PUBLICATION_PROOF.json fish-mother-yellowfin/PUBLIC_BROWSER_QA.json
+          git commit -m 'Fish R004: persist exact-public browser and canonical verification receipt'
+          git pull --rebase origin gh-pages
+          git push origin HEAD:gh-pages
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fish-canonical-r004-public-proof
+          path: |
+            dist/fish-mother-yellowfin/PUBLIC_BROWSER_QA.json
+            dist/fish-mother-yellowfin/PUBLICATION_PROOF.json
