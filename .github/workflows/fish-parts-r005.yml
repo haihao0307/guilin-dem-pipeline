@@ -1,0 +1,137 @@
+name: Fish Parts R005
+on:
+  push:
+    branches: [work/fish-yellowfin-parts-r005-20260923]
+    paths:
+      - restart/fish-yellowfin-teacher-r2/web-r005/**
+      - .github/workflows/fish-parts-r005.yml
+permissions:
+  contents: write
+concurrency:
+  group: fish-yellowfin-parts-r005
+  cancel-in-progress: false
+jobs:
+  compile-verify-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace/source
+            restart/fish-yellowfin-teacher-r2/web-r003
+            restart/fish-yellowfin-teacher-r2/web-r004
+            restart/fish-yellowfin-teacher-r2/web-r005
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Reproduce exact source fields and derive traceable regions
+        run: |
+          python -m pip install numpy==2.2.6 Pillow==11.2.1
+          python restart/fish-yellowfin-teacher-r2/web-r004/compile_teacher.py --source apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace/source/tuna_fish_4k.glb --out dist/fish-mother-yellowfin/canonical-r004
+          cp dist/fish-mother-yellowfin/canonical-r004/EXTRACTION_QA.json SOURCE_IDENTITY_PROOF.json
+          python restart/fish-yellowfin-teacher-r2/web-r005/compile_regions.py --package dist/fish-mother-yellowfin/canonical-r004 --out dist/fish-mother-yellowfin/parts-r005
+          python restart/fish-yellowfin-teacher-r2/web-r005/prepare_r005.py
+      - name: Bundle pinned original runtime and new non-destructive tools
+        run: |
+          npm install --no-save three@0.170.0 esbuild@0.24.2 playwright@1.51.1
+          node --check restart/fish-yellowfin-teacher-r2/web-r005/main.mjs
+          node --check restart/fish-yellowfin-teacher-r2/web-r005/regions.mjs
+          npx esbuild restart/fish-yellowfin-teacher-r2/web-r005/main.mjs --bundle --format=esm --target=es2022 --minify --legal-comments=inline --outfile=restart/fish-yellowfin-teacher-r2/web-r005/bundle.js
+          npx playwright install --with-deps chromium
+          python restart/fish-yellowfin-teacher-r2/web-r005/build.py
+      - name: Real file-protocol 209 poses, 17 isolated parts, source seams and axial-section regression
+        run: node restart/fish-yellowfin-teacher-r2/web-r005/qa.mjs
+      - name: Preserve internal visual review crops
+        if: always()
+        run: |
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          root=Path('dist/fish-mother-yellowfin/evidence')
+          for name in ['trunk','dorsal_front','dorsal_rear','head']:
+              p=root/('r005-'+name+'.png')
+              if p.exists():
+                  im=Image.open(p);im=im.crop((588,130,1170,835));im.thumbnail((290,350));im.convert('RGB').save(root/('review-'+name+'.jpg'),quality=40)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fish-r005-code-data-and-browser-evidence
+          path: |
+            dist/fish-mother-yellowfin
+            restart/fish-yellowfin-teacher-r2/web-r005
+          retention-days: 30
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: public
+          sparse-checkout: fish-mother-yellowfin
+      - name: Preserve R004 and publish only the fixed Fish directory
+        run: |
+          python - <<'PY'
+          import pathlib,shutil,json
+          p=pathlib.Path('public/fish-mother-yellowfin');old=p/'index.html';head=old.read_bytes()[:2500]
+          assert b'FISH_CANONICAL_R004' in head or b'FISH_PARTS_R005' in head,'Unexpected concurrent Fish change; refusing overwrite'
+          if b'FISH_CANONICAL_R004' in head:
+              archive=p/'r004';archive.mkdir(exist_ok=True);shutil.copyfile(old,archive/'index.html')
+              for name in ['PUBLICATION_PROOF.json','BROWSER_QA.json','PUBLIC_BROWSER_QA.json','BUILD_MANIFEST.json']:
+                  if (p/name).exists():shutil.copyfile(p/name,archive/name)
+          shutil.copytree('dist/fish-mother-yellowfin',p,dirs_exist_ok=True)
+          (p/'PUBLICATION_PROOF.json').write_text(json.dumps({'version':'FISH_PARTS_R005','shareAllowed':False,'reason':'Await exact public verification','productionReady':False}))
+          PY
+          cd public
+          git config user.name 'Fish Mother Build'
+          git config user.email 'fish-mother@users.noreply.github.com'
+          git add fish-mother-yellowfin
+          git commit -m 'Fish R005 source parts and fin/body seam study; preserve R004 and other Mothers'
+          for attempt in 1 2 3; do
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            git pull --rebase origin gh-pages
+          done
+          exit 1
+      - name: Verify fixed public URL bytes after Pages publication
+        run: |
+          python - <<'PY'
+          import pathlib,hashlib,urllib.request,time
+          target='https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/'
+          expected=hashlib.sha256(pathlib.Path('dist/fish-mother-yellowfin/index.html').read_bytes()).hexdigest()
+          for i in range(75):
+              try:
+                  with urllib.request.urlopen(target,timeout=45) as r:data=r.read();status=r.status
+                  actual=hashlib.sha256(data).hexdigest()
+                  if status==200 and actual==expected:
+                      print('PUBLIC_CURRENT_HASH_PASS',expected,len(data),flush=True);break
+                  print('PUBLIC_WAIT_OLD_VERSION',status,actual,flush=True)
+              except Exception as e:print('PUBLIC_WAIT',str(e),flush=True)
+              time.sleep(10)
+          else:raise SystemExit('Current public bytes not verified')
+          PY
+      - name: Final public browser with original and new interaction gates
+        env:
+          PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/
+        run: node restart/fish-yellowfin-teacher-r2/web-r005/qa.mjs
+      - name: Persist exact-public R005 proof with unapproved anatomy boundaries
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,os,shutil,datetime
+          out=Path('dist/fish-mother-yellowfin');public=Path('public/fish-mother-yellowfin')
+          qa=json.loads((out/'PUBLIC_BROWSER_QA.json').read_text());build=json.loads((out/'BUILD_MANIFEST.json').read_text());parts=json.loads((out/'parts-r005/PARTS_QA.json').read_text())
+          assert qa['browserPass'] and qa['allPoseChecks']['passed'] and len(qa['regionChecks'])==17
+          proof={'version':'FISH_PARTS_R005','url':'https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/','sourceBuildSha':os.environ['GITHUB_SHA'],'verificationRunId':os.environ['GITHUB_RUN_ID'],'verifiedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'httpStatus':200,'htmlSha256':build['sha256'],'htmlBytes':build['bytes'],'publicFullFileHashMatchesBuild':True,'fileProtocolBrowserPass':True,'publicBrowserPass':True,'desktopPass':True,'mobileViewportPass':True,'physicalMobileDeviceTested':False,'canonical':qa['canonical'],'allPoseChecks':qa['allPoseChecks'],'silhouettes':qa['silhouettes'],'regionChecks':qa['regionChecks'],'seams':qa['seams'],'axialSections':qa['axialSections'],'sourcePartsQA':parts,'consoleAndPageErrors':qa['errors'],'sharedOriginalTexturePool':True,'anatomicalPartitionApproved':False,'stageAComplete':False,'independentGenerator':False,'manualVisualAcceptance':False,'productionReady':False,'shareAllowed':True}
+          for p in [out/'PUBLICATION_PROOF.json',public/'PUBLICATION_PROOF.json']:p.write_text(json.dumps(proof,indent=2))
+          shutil.copyfile(out/'PUBLIC_BROWSER_QA.json',public/'PUBLIC_BROWSER_QA.json');print('R005_PUBLIC_VERIFIED',json.dumps(proof),flush=True)
+          PY
+          cd public
+          git add fish-mother-yellowfin/PUBLICATION_PROOF.json fish-mother-yellowfin/PUBLIC_BROWSER_QA.json
+          git commit -m 'Fish R005 exact-public runtime and source-parts verification receipt'
+          git pull --rebase origin gh-pages
+          git push origin HEAD:gh-pages
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fish-r005-public-proof
+          path: |
+            dist/fish-mother-yellowfin/PUBLIC_BROWSER_QA.json
+            dist/fish-mother-yellowfin/PUBLICATION_PROOF.json
