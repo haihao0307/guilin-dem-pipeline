@@ -1,0 +1,2864 @@
+{
+  "schema": "kaopu.survivor-palau.core-ledger/0.3",
+  "version": "R19_KAOPU_CORE_LEDGER_R03",
+  "status": "SMALL_MOTHER_REVIEW_CANDIDATE_NOT_RUNTIME_ADOPTED",
+  "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+  "currentBestViewPolicy": {
+    "recomputable": true,
+    "overwritesEvidence": false,
+    "overwritesConflict": false,
+    "promotionRequiresSmallMotherJudgment": true
+  },
+  "entries": [
+    {
+      "identity": {
+        "id": "USER_COMPLETE_PALAU_OVERVIEW",
+        "type": "ObservationProjection",
+        "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+        "parentId": "EXTERNAL:PALAU_WORLD_ROOT",
+        "epistemicState": "observed_user_authority",
+        "adoptionState": "REVIEWED_CANDIDATE"
+      },
+      "spaceFrame": {
+        "status": "Known",
+        "frameId": "USER_COMPLETE_PALAU_IMAGE_PIXEL_FRAME",
+        "crs": null,
+        "geometryRole": "complete Palau navigation and relative-location observation",
+        "unit": "pixel",
+        "coverage": "581 x 1260 uploaded image; not a surveyed geographic frame"
+      },
+      "time": {
+        "representedTime": "present-day geographic reference image; satellite acquisition epoch not frozen",
+        "observedTime": "2026-09-22 user instruction and upload",
+        "createdTime": "2026-09-23 ledger entry",
+        "validTime": {
+          "kind": "unknown",
+          "reason": "image acquisition time is not frozen; only the user's navigation and relative-location semantics are adopted"
+        },
+        "timeRoles": ["source observation time", "represented imagery time", "1944 story application target kept separate"]
+      },
+      "scale": {
+        "spatialSupport": "complete Palau overview visible in the uploaded frame",
+        "nominalResolution": "image-pixel visual reference only",
+        "frequencyRole": "low-frequency navigation and island-chain context",
+        "scaleStatus": "Mixed"
+      },
+      "quantityState": [
+        {
+          "quantityId": "complete-palau-first-view-semantics",
+          "quantityKind": "categorical relation",
+          "status": "KNOWN",
+          "unit": null,
+          "reference": {"frameId": "USER_COMPLETE_PALAU_IMAGE_PIXEL_FRAME"},
+          "valueType": "categorical",
+          "value": "first view must show the complete Palau overview"
+        },
+        {
+          "quantityId": "overview-geographic-transform",
+          "quantityKind": "image-to-geography transform",
+          "status": "UNKNOWN",
+          "unit": null,
+          "reference": {"targetFrame": "PALAU_UTM53N"},
+          "valueType": "transform",
+          "reason": "final control-point registration to verified DEM and coastline has not passed"
+        }
+      ],
+      "relations": [
+        {"type": "containsRelativeContextFor", "targetId": "USER_AIRAI_YELLOW_STORY_AOI", "status": "Known"},
+        {"type": "constrainsViewOf", "targetId": "USER_YELLOW_AOI_GEOGRAPHIC_CANDIDATE", "status": "Candidate"}
+      ],
+      "observations": [
+        {
+          "observationId": "OBS_USER_COMPLETE_PALAU_OVERVIEW",
+          "kind": "user-uploaded annotated overview image",
+          "directness": "direct_user_instruction",
+          "sourceAssetIds": ["ASSET_USER_COMPLETE_PALAU_JPEG"],
+          "representedTime": "imagery epoch unknown; user location semantics observed 2026-09-22",
+          "limitations": ["not a GeoTIFF", "not a surveyed coastline", "grid and labels are rendered image content"]
+        }
+      ],
+      "claims": [
+        {
+          "claimId": "CLAIM_COMPLETE_PALAU_FIRST_VIEW",
+          "property": "navigation first view",
+          "state": "SUPPORTED",
+          "value": "complete Palau, not a cropped Airai tile",
+          "epistemicState": "observed_user_authority",
+          "supportObservationIds": ["OBS_USER_COMPLETE_PALAU_OVERVIEW"],
+          "oppositionObservationIds": []
+        }
+      ],
+      "provenance": {
+        "sourceAssets": [
+          {
+            "assetId": "ASSET_USER_COMPLETE_PALAU_JPEG",
+            "role": "raw user authority image",
+            "lineageType": "original conversation upload",
+            "independenceRoot": "ROOT_USER_MAP_OVERVIEW_20260922",
+            "sha256": "5bfd05f06513ff6c7816e31f58ac0f88a375e24a7b946d355035b162f4acc8f9"
+          }
+        ],
+        "transformations": [],
+        "lineage": {"copyLineage": "single uploaded asset", "sharedBias": "rendered satellite-map screenshot"},
+        "independenceSummary": {
+          "uniqueIndependenceRoots": ["ROOT_USER_MAP_OVERVIEW_20260922"],
+          "declaredIndependentRootCount": 1,
+          "copyCountDoesNotIncreaseEvidence": true
+        },
+        "processingVersion": "R19_USER_LOCATION_AUTHORITY_20260922"
+      },
+      "uncertainty": {
+        "byProperty": [
+          {"property": "geographic transform", "state": "Unknown", "reason": "final DEM/coastline registration has not passed"},
+          {"property": "imagery acquisition time", "state": "Unknown", "reason": "not preserved in the uploaded screenshot"},
+          {"property": "user first-view requirement", "state": "Known", "reason": "directly stated by user"}
+        ],
+        "sharedBiasGroups": ["rendered-map-label-and-imagery-bias"]
+      },
+      "change": {
+        "mode": "immutable_source_asset",
+        "events": [],
+        "historyRequired": true
+      },
+      "view": {
+        "viewId": "VIEW_COMPLETE_PALAU_NAVIGATION_CANDIDATE",
+        "sourceEntryId": "USER_COMPLETE_PALAU_OVERVIEW",
+        "recomputable": true,
+        "overwritesEvidence": false,
+        "canonicalTruth": false,
+        "query": "show complete Palau context without inventing geometry"
+      }
+    },
+    {
+      "identity": {
+        "id": "USER_AIRAI_YELLOW_STORY_AOI",
+        "type": "ObservationProjection",
+        "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+        "parentId": "USER_COMPLETE_PALAU_OVERVIEW",
+        "epistemicState": "observed_user_authority",
+        "adoptionState": "REVIEWED_CANDIDATE"
+      },
+      "spaceFrame": {
+        "status": "Known",
+        "frameId": "USER_AIRAI_ZOOM_IMAGE_PIXEL_FRAME",
+        "crs": null,
+        "geometryRole": "user-drawn story-core AOI observation",
+        "unit": "pixel",
+        "coverage": "946 x 2048 uploaded image with yellow hand-drawn region"
+      },
+      "time": {
+        "representedTime": "present-day geographic reference image; satellite acquisition epoch not frozen",
+        "observedTime": "2026-09-22 user instruction and upload",
+        "createdTime": "2026-09-23 ledger entry",
+        "validTime": {
+          "kind": "unknown",
+          "reason": "source imagery epoch is unknown; story-region identity is user authority, not a 1944 survey"
+        },
+        "timeRoles": ["source observation time", "represented imagery time", "1944 story application target kept separate"]
+      },
+      "scale": {
+        "spatialSupport": "yellow-circled island, reef platform, lagoon and surrounding water relationship",
+        "nominalResolution": "image-pixel visual reference only",
+        "frequencyRole": "Airai story-region morphology and relative placement",
+        "scaleStatus": "Mixed"
+      },
+      "quantityState": [
+        {
+          "quantityId": "story-core-region-semantics",
+          "quantityKind": "categorical region identity",
+          "status": "KNOWN",
+          "unit": null,
+          "reference": {"frameId": "USER_AIRAI_ZOOM_IMAGE_PIXEL_FRAME"},
+          "valueType": "categorical",
+          "value": "yellow circle is the full story-core AOI and is not a point"
+        },
+        {
+          "quantityId": "yellow-aoi-geographic-polygon",
+          "quantityKind": "geographic polygon",
+          "status": "UNKNOWN",
+          "unit": "degree",
+          "reference": {"frameId": "WGS84_GEOGRAPHIC"},
+          "valueType": "geometry",
+          "reason": "geographic overlay remains a candidate pending coastline, islet and reef QA"
+        }
+      ],
+      "relations": [
+        {"type": "isRelativeSubregionOf", "targetId": "USER_COMPLETE_PALAU_OVERVIEW", "status": "Known"},
+        {"type": "constrains", "targetId": "USER_YELLOW_AOI_GEOGRAPHIC_CANDIDATE", "status": "Candidate"}
+      ],
+      "observations": [
+        {
+          "observationId": "OBS_USER_YELLOW_STORY_AOI",
+          "kind": "user-uploaded annotated Airai zoom image",
+          "directness": "direct_user_instruction",
+          "sourceAssetIds": ["ASSET_USER_AIRAI_YELLOW_AOI_JPEG"],
+          "representedTime": "imagery epoch unknown; user story-region instruction observed 2026-09-22",
+          "limitations": ["yellow stroke has finite width", "not a surveyed polygon", "not a point coordinate"]
+        }
+      ],
+      "claims": [
+        {
+          "claimId": "CLAIM_YELLOW_AOI_IS_REGION",
+          "property": "story core spatial semantics",
+          "state": "SUPPORTED",
+          "value": "complete circled area including island, reef, lagoon and water relations",
+          "epistemicState": "observed_user_authority",
+          "supportObservationIds": ["OBS_USER_YELLOW_STORY_AOI"],
+          "oppositionObservationIds": []
+        }
+      ],
+      "provenance": {
+        "sourceAssets": [
+          {
+            "assetId": "ASSET_USER_AIRAI_YELLOW_AOI_JPEG",
+            "role": "raw user authority image",
+            "lineageType": "original conversation upload",
+            "independenceRoot": "ROOT_USER_MAP_YELLOW_AOI_20260922",
+            "sha256": "82844df1bdf52da94b68d06f3262b3e97089379dff3d7550bcebea0a7d67bf46"
+          }
+        ],
+        "transformations": [],
+        "lineage": {"copyLineage": "single uploaded asset", "sharedBias": "rendered satellite-map screenshot and hand-drawn stroke"},
+        "independenceSummary": {
+          "uniqueIndependenceRoots": ["ROOT_USER_MAP_YELLOW_AOI_20260922"],
+          "declaredIndependentRootCount": 1,
+          "copyCountDoesNotIncreaseEvidence": true
+        },
+        "processingVersion": "R19_USER_LOCATION_AUTHORITY_20260922"
+      },
+      "uncertainty": {
+        "byProperty": [
+          {"property": "region identity", "state": "Known", "reason": "direct user instruction"},
+          {"property": "polygon edge", "state": "Unknown", "reason": "hand-drawn stroke is not a surveyed boundary"},
+          {"property": "geographic coordinates", "state": "Unknown", "reason": "final evidence overlay not frozen"}
+        ],
+        "sharedBiasGroups": ["user-annotation-stroke-width", "rendered-map-imagery-bias"]
+      },
+      "change": {
+        "mode": "immutable_source_asset",
+        "events": [],
+        "historyRequired": true
+      },
+      "view": {
+        "viewId": "VIEW_USER_YELLOW_AOI_CANDIDATE",
+        "sourceEntryId": "USER_AIRAI_YELLOW_STORY_AOI",
+        "recomputable": true,
+        "overwritesEvidence": false,
+        "canonicalTruth": false,
+        "query": "display yellow user region separately from geographic candidate"
+      }
+    },
+    {
+      "identity": {
+        "id": "USER_YELLOW_AOI_GEOGRAPHIC_CANDIDATE",
+        "type": "DerivedGeometryCandidate",
+        "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+        "parentId": "USER_AIRAI_YELLOW_STORY_AOI",
+        "epistemicState": "derived_verified_processing",
+        "adoptionState": "REVIEWED_CANDIDATE"
+      },
+      "spaceFrame": {
+        "status": "Known",
+        "frameId": "WGS84_GEOGRAPHIC",
+        "crs": "EPSG:4326",
+        "geometryRole": "candidate transformation of user yellow image region",
+        "unit": "degree",
+        "coverage": "candidate polygon around the user-circled Airai story area"
+      },
+      "time": {
+        "representedTime": "candidate geographic placement of a modern reference image for a 1944 story world",
+        "observedTime": "2026-09-22 source images",
+        "createdTime": "2026-09-22 processing candidate",
+        "validTime": {
+          "kind": "unknown",
+          "reason": "historic 1944 applicability and final geography have not passed independent QA"
+        },
+        "timeRoles": ["source imagery time unknown", "processing time", "1944 application target"]
+      },
+      "scale": {
+        "spatialSupport": "approximately kilometre-scale story-region candidate",
+        "nominalResolution": "method spread approximately 200-300 m at candidate centroid",
+        "frequencyRole": "AOI placement only, not shoreline detail",
+        "scaleStatus": "Known"
+      },
+      "quantityState": [
+        {
+          "quantityId": "candidate-centroid",
+          "quantityKind": "geographic coordinate candidate",
+          "status": "KNOWN",
+          "unit": "degree",
+          "reference": {"frameId": "WGS84_GEOGRAPHIC"},
+          "valueType": "vector2",
+          "value": [134.53531712481433, 7.329601051583299]
+        },
+        {
+          "quantityId": "final-aoi-polygon",
+          "quantityKind": "approved geographic polygon",
+          "status": "UNKNOWN",
+          "unit": "degree",
+          "reference": {"frameId": "WGS84_GEOGRAPHIC"},
+          "valueType": "geometry",
+          "reason": "candidate has not passed coastline, islet, channel and reef correspondence QA"
+        }
+      ],
+      "relations": [
+        {"type": "derivedFrom", "targetId": "USER_COMPLETE_PALAU_OVERVIEW", "status": "Known"},
+        {"type": "derivedFrom", "targetId": "USER_AIRAI_YELLOW_STORY_AOI", "status": "Known"},
+        {"type": "mustBeVerifiedAgainst", "targetId": "PALAU_R19_EGM96_CANONICAL_DEM", "status": "Known"},
+        {"type": "mustBeVerifiedAgainst", "targetId": "NOAA_ENC_COALNE_LNDARE", "status": "Known"},
+        {"type": "mustBeVerifiedAgainst", "targetId": "ALLEN_REEF_GEOMORPHIC_BENTHIC", "status": "Known"}
+      ],
+      "observations": [
+        {
+          "observationId": "OBS_AOI_IMAGE_REGISTRATION",
+          "kind": "SIFT, RANSAC and boundary-distance registration result",
+          "directness": "derived_from_named_sources",
+          "sourceAssetIds": ["ASSET_USER_COMPLETE_PALAU_JPEG", "ASSET_USER_AIRAI_YELLOW_AOI_JPEG", "ASSET_DEM_CANONICAL_IDENTITY"],
+          "representedTime": "processing candidate created 2026-09-22",
+          "limitations": ["source overview is a rendered image", "three methods retain 200-300 m centroid spread", "not a final surveyed polygon"]
+        }
+      ],
+      "claims": [
+        {
+          "claimId": "CLAIM_AOI_GEOGRAPHIC_CANDIDATE_ONLY",
+          "property": "geographic registration status",
+          "state": "SUPPORTED",
+          "value": "candidate generated but not frozen",
+          "epistemicState": "derived_verified_processing",
+          "supportObservationIds": ["OBS_AOI_IMAGE_REGISTRATION"],
+          "oppositionObservationIds": []
+        }
+      ],
+      "provenance": {
+        "sourceAssets": [
+          {
+            "assetId": "ASSET_USER_COMPLETE_PALAU_JPEG",
+            "role": "overview image input",
+            "lineageType": "original conversation upload",
+            "independenceRoot": "ROOT_USER_MAP_OVERVIEW_20260922",
+            "sha256": "5bfd05f06513ff6c7816e31f58ac0f88a375e24a7b946d355035b162f4acc8f9"
+          },
+          {
+            "assetId": "ASSET_USER_AIRAI_YELLOW_AOI_JPEG",
+            "role": "yellow AOI image input",
+            "lineageType": "original conversation upload",
+            "independenceRoot": "ROOT_USER_MAP_YELLOW_AOI_20260922",
+            "sha256": "82844df1bdf52da94b68d06f3262b3e97089379dff3d7550bcebea0a7d67bf46"
+          },
+          {
+            "assetId": "ASSET_DEM_CANONICAL_IDENTITY",
+            "role": "verified DEM mosaic identity and control surface",
+            "lineageType": "derived from two ASF source packages",
+            "independenceRoot": "ROOT_ASF_RTC_DEM_PAIR",
+            "sha256": "6ace836106dcc93c69a0d16fee1e8b8a2a93b4446f9e34af1eb1994e3d1b975c"
+          }
+        ],
+        "transformations": [
+          {
+            "transformationId": "TRANSFORM_USER_IMAGES_TO_DEM_CANDIDATE",
+            "method": "SIFT+RANSAC homography, boundary-distance ICP and consensus",
+            "inputAssetIds": ["ASSET_USER_COMPLETE_PALAU_JPEG", "ASSET_USER_AIRAI_YELLOW_AOI_JPEG", "ASSET_DEM_CANONICAL_IDENTITY"],
+            "outputRole": "candidate WGS84 AOI placement",
+            "reproducible": true
+          }
+        ],
+        "lineage": {"copyLineage": "two user observations plus one DEM-derived control surface", "sharedBias": "rendered overview map can bias all image-registration methods"},
+        "independenceSummary": {
+          "uniqueIndependenceRoots": ["ROOT_ASF_RTC_DEM_PAIR", "ROOT_USER_MAP_OVERVIEW_20260922", "ROOT_USER_MAP_YELLOW_AOI_20260922"],
+          "declaredIndependentRootCount": 3,
+          "copyCountDoesNotIncreaseEvidence": true
+        },
+        "processingVersion": "R19_LOCATION_TO_DEM_REGISTRATION_CANDIDATE_20260922"
+      },
+      "uncertainty": {
+        "byProperty": [
+          {
+            "property": "candidate centroid east-west spread",
+            "state": "Known",
+            "reason": "three independent processing methods compared",
+            "numericBounds": [0, 203.44334318072765],
+            "boundsEvidence": "method centroid spread receipt"
+          },
+          {
+            "property": "candidate centroid north-south spread",
+            "state": "Known",
+            "reason": "three independent processing methods compared",
+            "numericBounds": [0, 291.70484135429797],
+            "boundsEvidence": "method centroid spread receipt"
+          },
+          {"property": "final AOI polygon", "state": "Unknown", "reason": "coastline and reef correspondence not approved"},
+          {"property": "1944 shoreline equivalence", "state": "Unknown", "reason": "modern imagery is not a 1944 survey"}
+        ],
+        "sharedBiasGroups": ["rendered-overview-georegistration-bias"]
+      },
+      "change": {
+        "mode": "derived_view_only",
+        "events": [],
+        "historyRequired": true
+      },
+      "view": {
+        "viewId": "VIEW_AOI_GEOGRAPHIC_REGISTRATION_CANDIDATE",
+        "sourceEntryId": "USER_YELLOW_AOI_GEOGRAPHIC_CANDIDATE",
+        "recomputable": true,
+        "overwritesEvidence": false,
+        "canonicalTruth": false,
+        "query": "show candidate polygon, method envelope and unresolved control points"
+      }
+    },
+    {
+      "identity": {
+        "id": "PALAU_R19_EGM96_CANONICAL_DEM",
+        "type": "DerivedContinuousField",
+        "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+        "parentId": "EXTERNAL:PALAU_TERRAIN_SCORE",
+        "epistemicState": "derived_verified_processing",
+        "adoptionState": "VERIFIED_FUNCTION"
+      },
+      "spaceFrame": {
+        "status": "Known",
+        "frameId": "PALAU_UTM53N",
+        "crs": "EPSG:32653",
+        "geometryRole": "orthometric land and source-DEM elevation field",
+        "unit": "metre",
+        "coverage": "two-frame Palau DEM mosaic with provenance mask"
+      },
+      "time": {
+        "representedTime": "source DEM terrain state; source acquisition epoch not yet normalized as 1944 observation",
+        "observedTime": "ASF source metadata retained in original packages",
+        "createdTime": "2026-09-22 EGM96 normalization and mosaic",
+        "validTime": {
+          "kind": "interval",
+          "start": "1944-10-01T00:00:00Z",
+          "end": "1944-10-31T23:59:59Z",
+          "basis": "macro-terrain stability candidate, not a historical 1944 survey"
+        },
+        "timeRoles": ["source terrain epoch", "processing time", "candidate story-world validity interval"]
+      },
+      "scale": {
+        "spatialSupport": "regional Palau terrain",
+        "nominalResolution": "12.5 m storage posting; SRTMGL1 nominal 30 m information source",
+        "frequencyRole": "measured/derived macro and meso terrain, no invented sub-source detail",
+        "scaleStatus": "Known"
+      },
+      "quantityState": [
+        {
+          "quantityId": "orthometric-elevation",
+          "quantityKind": "elevation",
+          "status": "KNOWN",
+          "unit": "m",
+          "reference": {"frameId": "PALAU_UTM53N", "verticalReference": "EGM96_ORTHOMETRIC_HEIGHT"},
+          "valueType": "continuous raster",
+          "value": "source-bound GeoTIFF field with provenance mask",
+          "vertical": true
+        },
+        {
+          "quantityId": "native-12_5m-truth",
+          "quantityKind": "resolution claim",
+          "status": "OBSERVED_ABSENT",
+          "unit": null,
+          "reference": {"source": "ASF metadata"},
+          "valueType": "categorical",
+          "reason": "12.5 m is storage posting; source elevation is SRTMGL1 nominal 30 m"
+        }
+      ],
+      "relations": [
+        {"type": "constrains", "targetId": "COAST_BOUNDARY", "status": "Candidate"},
+        {"type": "providesBedCandidateFor", "targetId": "WORLD_WATER_DEPTH", "status": "Candidate"},
+        {"type": "controlSurfaceFor", "targetId": "USER_YELLOW_AOI_GEOGRAPHIC_CANDIDATE", "status": "Candidate"}
+      ],
+      "observations": [
+        {
+          "observationId": "OBS_ASF_DEM_PAIR_BYTES",
+          "kind": "two verified ASF RTC ancillary DEM GeoTIFFs",
+          "directness": "direct_asset_read",
+          "sourceAssetIds": ["ASSET_DEM_F0130", "ASSET_DEM_F0140", "ASSET_EGM96_GRID"],
+          "representedTime": "source terrain epoch from product metadata; not claimed as 1944 survey",
+          "limitations": ["SRTMGL1 nominal 30 m source", "vegetation/building contamination possible", "no cave or overhang representation"]
+        },
+        {
+          "observationId": "OBS_DEM_OVERLAP_QA",
+          "kind": "overlap consistency measurement",
+          "directness": "derived_from_named_sources",
+          "sourceAssetIds": ["ASSET_DEM_F0130", "ASSET_DEM_F0140"],
+          "representedTime": "2026 processing QA",
+          "limitations": ["tests consistency between related product frames, not independent terrain truth"]
+        }
+      ],
+      "claims": [
+        {
+          "claimId": "CLAIM_DEM_EGM96_NORMALIZED",
+          "property": "vertical reference",
+          "state": "SUPPORTED",
+          "value": "EGM96 orthometric height derived from ASF RTC ellipsoid height",
+          "epistemicState": "derived_verified_processing",
+          "supportObservationIds": ["OBS_ASF_DEM_PAIR_BYTES", "OBS_DEM_OVERLAP_QA"],
+          "oppositionObservationIds": []
+        },
+        {
+          "claimId": "CLAIM_DEM_NOT_NATIVE_12_5M",
+          "property": "source resolution",
+          "state": "SUPPORTED",
+          "value": "not native 12.5 m elevation truth",
+          "epistemicState": "observed_source_asset",
+          "supportObservationIds": ["OBS_ASF_DEM_PAIR_BYTES"],
+          "oppositionObservationIds": []
+        }
+      ],
+      "provenance": {
+        "sourceAssets": [
+          {
+            "assetId": "ASSET_DEM_F0130",
+            "role": "southern ASF RTC ancillary DEM",
+            "lineageType": "original user-uploaded source package member",
+            "independenceRoot": "ROOT_ASF_RTC_DEM_PAIR",
+            "sha256": "51f67338ed23d2e30570fc41ee720f664d8dc0e5ed3300595fcaf7ff9940abf6"
+          },
+          {
+            "assetId": "ASSET_DEM_F0140",
+            "role": "northern ASF RTC ancillary DEM",
+            "lineageType": "original user-uploaded source package member",
+            "independenceRoot": "ROOT_ASF_RTC_DEM_PAIR",
+            "sha256": "32bb0462185d400aa3b6190927556f2a68a7c49d2e69cc88af6b8d19abbaf7b8"
+          },
+          {
+            "assetId": "ASSET_EGM96_GRID",
+            "role": "official geoid correction grid",
+            "lineageType": "official PROJ/NGA grid",
+            "independenceRoot": "ROOT_NGA_EGM96_MODEL",
+            "sha256": "db493027562c9b004d7220fa881f5603adada4e1c5029b933fa7de4547b0e78d"
+          }
+        ],
+        "transformations": [
+          {
+            "transformationId": "TRANSFORM_RTC_ELLIPSOID_TO_EGM96",
+            "method": "H_EGM96 = h_RTC - N_EGM96",
+            "inputAssetIds": ["ASSET_DEM_F0130", "ASSET_DEM_F0140", "ASSET_EGM96_GRID"],
+            "outputRole": "EGM96 orthometric canonical mosaic with provenance mask",
+            "reproducible": true
+          }
+        ],
+        "lineage": {"copyLineage": "two related ASF frames from one product family", "sharedBias": "both frames inherit SRTMGL1 and ASF processing bias"},
+        "independenceSummary": {
+          "uniqueIndependenceRoots": ["ROOT_ASF_RTC_DEM_PAIR", "ROOT_NGA_EGM96_MODEL"],
+          "declaredIndependentRootCount": 2,
+          "copyCountDoesNotIncreaseEvidence": true
+        },
+        "processingVersion": "R19_DEM_EGM96_CANONICAL_V1"
+      },
+      "uncertainty": {
+        "byProperty": [
+          {"property": "source spatial information", "state": "Known", "reason": "SRTMGL1 nominal 30 m despite 12.5 m posting"},
+          {
+            "property": "frame overlap RMSE",
+            "state": "Known",
+            "reason": "measured on approximately 5.06 million overlap samples",
+            "numericBounds": [0, 0.284],
+            "boundsEvidence": "R19 DEM overlap QA"
+          },
+          {"property": "1944 terrain equivalence", "state": "Unknown", "reason": "source is not a 1944 survey; macro stability is a candidate assumption"},
+          {"property": "overhang and cave geometry", "state": "NotObserved", "reason": "single-valued DEM cannot observe those structures"}
+        ],
+        "sharedBiasGroups": ["SRTMGL1-source-bias", "ASF-RTC-processing-bias"]
+      },
+      "change": {
+        "mode": "versioned_static_candidate",
+        "events": [],
+        "historyRequired": true
+      },
+      "view": {
+        "viewId": "VIEW_DEM_EGM96_WITH_PROVENANCE",
+        "sourceEntryId": "PALAU_R19_EGM96_CANONICAL_DEM",
+        "recomputable": true,
+        "overwritesEvidence": false,
+        "canonicalTruth": false,
+        "query": "sample orthometric elevation together with source-frame provenance and NoData"
+      }
+    },
+    {
+      "identity": {
+        "id": "NOAA_ENC_COALNE_LNDARE",
+        "type": "ObservedVectorEvidence",
+        "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+        "parentId": "EXTERNAL:PALAU_COAST_EVIDENCE_SCORE",
+        "epistemicState": "observed_chart_evidence",
+        "adoptionState": "VERIFIED_OBSERVATION"
+      },
+      "spaceFrame": {
+        "status": "Known",
+        "frameId": "WGS84_GEOGRAPHIC",
+        "crs": "EPSG:4326",
+        "geometryRole": "chart coastline and land-area evidence",
+        "unit": "degree",
+        "coverage": "NOAA ENC cells retained in R19 evidence cache"
+      },
+      "time": {
+        "representedTime": "NOAA ENC chart compilation state",
+        "observedTime": "ENC issue date including 2025-04-16 for US4TB3P0",
+        "createdTime": "2026-09-22 R19 evidence extraction",
+        "validTime": {
+          "kind": "unknown",
+          "reason": "chart issue time is modern and does not directly prove 1944 shoreline"
+        },
+        "timeRoles": ["chart compilation time", "extraction time", "1944 application target kept separate"]
+      },
+      "scale": {
+        "spatialSupport": "Airai and surrounding ENC coverage",
+        "nominalResolution": "chart compilation-scale dependent",
+        "frequencyRole": "shoreline and land-area constraint",
+        "scaleStatus": "Mixed"
+      },
+      "quantityState": [
+        {
+          "quantityId": "coastline-features",
+          "quantityKind": "vector geometry",
+          "status": "KNOWN",
+          "unit": "degree",
+          "reference": {"frameId": "WGS84_GEOGRAPHIC"},
+          "valueType": "feature collection",
+          "value": "COALNE features retained from verified ENC source"
+        },
+        {
+          "quantityId": "land-area-features",
+          "quantityKind": "polygon geometry",
+          "status": "KNOWN",
+          "unit": "degree",
+          "reference": {"frameId": "WGS84_GEOGRAPHIC"},
+          "valueType": "feature collection",
+          "value": "LNDARE features retained from verified ENC source"
+        },
+        {
+          "quantityId": "1944-exact-shoreline",
+          "quantityKind": "historical shoreline",
+          "status": "UNKNOWN",
+          "unit": "degree",
+          "reference": {"frameId": "WGS84_GEOGRAPHIC"},
+          "valueType": "geometry",
+          "reason": "modern chart evidence is not a 1944 shoreline survey"
+        }
+      ],
+      "relations": [
+        {"type": "constrains", "targetId": "COAST_BOUNDARY", "status": "Candidate"},
+        {"type": "verifiesAgainst", "targetId": "USER_YELLOW_AOI_GEOGRAPHIC_CANDIDATE", "status": "Candidate"}
+      ],
+      "observations": [
+        {
+          "observationId": "OBS_NOAA_ENC_COALNE_LNDARE",
+          "kind": "official electronic navigational chart vector features",
+          "directness": "direct_asset_read",
+          "sourceAssetIds": ["ASSET_NOAA_ENC_ARCHIVES"],
+          "representedTime": "modern chart compilation state",
+          "limitations": ["chart generalization", "modern not 1944", "feature omissions possible by chart purpose"]
+        }
+      ],
+      "claims": [
+        {
+          "claimId": "CLAIM_NO_PROCEDURAL_SHORELINE",
+          "property": "shoreline source policy",
+          "state": "SUPPORTED",
+          "value": "COALNE and LNDARE are evidence constraints; missing geometry remains unknown",
+          "epistemicState": "observed_chart_evidence",
+          "supportObservationIds": ["OBS_NOAA_ENC_COALNE_LNDARE"],
+          "oppositionObservationIds": []
+        }
+      ],
+      "provenance": {
+        "sourceAssets": [
+          {
+            "assetId": "ASSET_NOAA_ENC_ARCHIVES",
+            "role": "eight verified NOAA ENC source archives",
+            "lineageType": "official NOAA chart distribution",
+            "independenceRoot": "ROOT_NOAA_ENC_PALAU_CHART_FAMILY",
+            "sha256": null
+          }
+        ],
+        "transformations": [
+          {
+            "transformationId": "TRANSFORM_ENC_COALNE_LNDARE_EXTRACT",
+            "method": "lossless feature extraction and AOI clipping with source attributes retained",
+            "inputAssetIds": ["ASSET_NOAA_ENC_ARCHIVES"],
+            "outputRole": "coastline and land-area evidence layers",
+            "reproducible": true
+          }
+        ],
+        "lineage": {"copyLineage": "features share NOAA ENC chart-family roots", "sharedBias": "hydrographic chart purpose and compilation bias"},
+        "independenceSummary": {
+          "uniqueIndependenceRoots": ["ROOT_NOAA_ENC_PALAU_CHART_FAMILY"],
+          "declaredIndependentRootCount": 1,
+          "copyCountDoesNotIncreaseEvidence": true
+        },
+        "processingVersion": "R19_COAST_HYDRO_CACHE_R01"
+      },
+      "uncertainty": {
+        "byProperty": [
+          {"property": "modern chart coastline", "state": "Known", "reason": "official chart features retained"},
+          {"property": "1944 shoreline", "state": "Unknown", "reason": "no frozen 1944 shoreline observation"},
+          {"property": "reef-flat wet/dry edge", "state": "NotObserved", "reason": "chart coastline is not an instantaneous tidal wet/dry boundary"}
+        ],
+        "sharedBiasGroups": ["NOAA-ENC-chart-compilation-bias"]
+      },
+      "change": {
+        "mode": "immutable_source_asset",
+        "events": [],
+        "historyRequired": true
+      },
+      "view": {
+        "viewId": "VIEW_NOAA_COAST_LAND_EVIDENCE",
+        "sourceEntryId": "NOAA_ENC_COALNE_LNDARE",
+        "recomputable": true,
+        "overwritesEvidence": false,
+        "canonicalTruth": false,
+        "query": "display chart coastline and land polygons with issue time and source cell"
+      }
+    },
+    {
+      "identity": {
+        "id": "COAST_BOUNDARY",
+        "type": "EvidenceBoundBoundaryCandidate",
+        "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+        "parentId": "EXTERNAL:PALAU_COAST_SCORE",
+        "epistemicState": "evidence_bound_composite",
+        "adoptionState": "REVIEWED_CANDIDATE"
+      },
+      "spaceFrame": {
+        "status": "Known",
+        "frameId": "PALAU_UTM53N",
+        "crs": "EPSG:32653",
+        "geometryRole": "solid occupancy, bed and boundary query candidate",
+        "unit": "metre",
+        "coverage": "verified DEM coverage intersected with chart and AOI evidence"
+      },
+      "time": {
+        "representedTime": "candidate 1944 story boundary assembled from modern and terrain evidence",
+        "observedTime": "mixed source times retained per input",
+        "createdTime": "2026-09-23 semantic candidate",
+        "validTime": {
+          "kind": "interval",
+          "start": "1944-10-01T00:00:00Z",
+          "end": "1944-10-31T23:59:59Z",
+          "basis": "candidate macro-boundary validity only; historical shoreline uncertainty retained"
+        },
+        "timeRoles": ["source-specific observation times", "candidate story-world validity"]
+      },
+      "scale": {
+        "spatialSupport": "Palau-to-Airai land/bed boundary",
+        "nominalResolution": "mixed DEM and chart evidence",
+        "frequencyRole": "solid boundary and bed query, no invented residual geometry",
+        "scaleStatus": "Mixed"
+      },
+      "quantityState": [
+        {
+          "quantityId": "solid-occupancy-query",
+          "quantityKind": "binary/categorical occupancy candidate",
+          "status": "KNOWN",
+          "unit": null,
+          "reference": {"frameId": "PALAU_UTM53N"},
+          "valueType": "query function",
+          "value": "source-bound query with Unknown outside evidence"
+        },
+        {
+          "quantityId": "boundary-normal-query",
+          "quantityKind": "surface normal candidate",
+          "status": "UNKNOWN",
+          "unit": null,
+          "reference": {"frameId": "PALAU_UTM53N"},
+          "valueType": "vector3",
+          "reason": "not implemented or validated for all boundary classes"
+        },
+        {
+          "quantityId": "historic-instantaneous-wet-dry-edge",
+          "quantityKind": "dynamic shoreline state",
+          "status": "UNKNOWN",
+          "unit": "m",
+          "reference": {"frameId": "PALAU_UTM53N", "verticalReference": "UNRESOLVED_COMMON_WATER_DATUM"},
+          "valueType": "dynamic geometry",
+          "reason": "requires final free surface, bed and datum bridge"
+        }
+      ],
+      "relations": [
+        {"type": "reads", "targetId": "PALAU_R19_EGM96_CANONICAL_DEM", "status": "Known"},
+        {"type": "reads", "targetId": "NOAA_ENC_COALNE_LNDARE", "status": "Known"},
+        {"type": "consumedBy", "targetId": "WATER_VOLUME_OPTICS", "status": "Candidate"},
+        {"type": "consumedBy", "targetId": "WORLD_WET_DRY_STATE", "status": "Candidate"}
+      ],
+      "observations": [
+        {
+          "observationId": "OBS_COAST_BOUNDARY_INPUT_SET",
+          "kind": "named evidence-bound composite input inventory",
+          "directness": "derived_from_named_sources",
+          "sourceAssetIds": ["ASSET_DEM_CANONICAL", "ASSET_NOAA_COAST_LAND"],
+          "representedTime": "mixed source times, candidate 1944 application",
+          "limitations": ["no final 1944 shoreline", "no automatic cave or overhang", "NoData preserved"]
+        }
+      ],
+      "claims": [
+        {
+          "claimId": "CLAIM_COAST_BOUNDARY_NO_FILL",
+          "property": "boundary construction policy",
+          "state": "SUPPORTED",
+          "value": "unknown space remains unknown; no procedural coast fill",
+          "epistemicState": "evidence_bound_composite",
+          "supportObservationIds": ["OBS_COAST_BOUNDARY_INPUT_SET"],
+          "oppositionObservationIds": []
+        }
+      ],
+      "provenance": {
+        "sourceAssets": [
+          {
+            "assetId": "ASSET_DEM_CANONICAL",
+            "role": "EGM96 land/bed elevation candidate",
+            "lineageType": "verified derived raster",
+            "independenceRoot": "ROOT_ASF_RTC_DEM_PAIR",
+            "sha256": "6ace836106dcc93c69a0d16fee1e8b8a2a93b4446f9e34af1eb1994e3d1b975c"
+          },
+          {
+            "assetId": "ASSET_NOAA_COAST_LAND",
+            "role": "NOAA coastline and land-area vectors",
+            "lineageType": "official chart-derived evidence",
+            "independenceRoot": "ROOT_NOAA_ENC_PALAU_CHART_FAMILY",
+            "sha256": null
+          }
+        ],
+        "transformations": [
+          {
+            "transformationId": "TRANSFORM_COAST_BOUNDARY_COMPOSITE",
+            "method": "typed query composition without gap filling",
+            "inputAssetIds": ["ASSET_DEM_CANONICAL", "ASSET_NOAA_COAST_LAND"],
+            "outputRole": "candidate solid/bed/boundary query",
+            "reproducible": true
+          }
+        ],
+        "lineage": {"copyLineage": "derived view over two evidence families", "sharedBias": "modern-to-1944 temporal transfer remains unresolved"},
+        "independenceSummary": {
+          "uniqueIndependenceRoots": ["ROOT_ASF_RTC_DEM_PAIR", "ROOT_NOAA_ENC_PALAU_CHART_FAMILY"],
+          "declaredIndependentRootCount": 2,
+          "copyCountDoesNotIncreaseEvidence": true
+        },
+        "processingVersion": "R19_COAST_BOUNDARY_SEMANTIC_R03"
+      },
+      "uncertainty": {
+        "byProperty": [
+          {"property": "solid land occupancy", "state": "Conflict", "reason": "DEM, chart and imagery may disagree locally; conflict must remain inspectable"},
+          {"property": "1944 shoreline", "state": "Unknown", "reason": "historic observation missing"},
+          {"property": "cave/overhang boundary", "state": "NotObserved", "reason": "input sources do not provide volumetric geometry"},
+          {"property": "outside evidence coverage", "state": "NoData", "reason": "no automatic extrapolation"}
+        ],
+        "sharedBiasGroups": ["modern-to-1944-transfer-bias", "DEM-heightfield-limitation"]
+      },
+      "change": {
+        "mode": "versioned_static_candidate",
+        "events": [],
+        "historyRequired": true
+      },
+      "view": {
+        "viewId": "VIEW_COAST_BOUNDARY_EVIDENCE_CANDIDATE",
+        "sourceEntryId": "COAST_BOUNDARY",
+        "recomputable": true,
+        "overwritesEvidence": false,
+        "canonicalTruth": false,
+        "query": "show solid, unknown, conflict and evidence source separately"
+      }
+    },
+    {
+      "identity": {
+        "id": "NOAA_ENC_SOUNDG",
+        "type": "ObservedPointField",
+        "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+        "parentId": "EXTERNAL:PALAU_BATHYMETRY_EVIDENCE_SCORE",
+        "epistemicState": "observed_chart_evidence",
+        "adoptionState": "VERIFIED_OBSERVATION"
+      },
+      "spaceFrame": {
+        "status": "Known",
+        "frameId": "WGS84_GEOGRAPHIC",
+        "crs": "EPSG:4326",
+        "geometryRole": "discrete sounding observation locations",
+        "unit": "degree",
+        "coverage": "yellow AOI and surrounding NOAA ENC coverage"
+      },
+      "time": {
+        "representedTime": "NOAA ENC chart compilation state",
+        "observedTime": "source survey epochs not individually frozen in current ledger; chart issue retained",
+        "createdTime": "2026-09-22 R19 extraction",
+        "validTime": {
+          "kind": "unknown",
+          "reason": "soundings are modern chart evidence and do not directly prove 1944 depths"
+        },
+        "timeRoles": ["survey/compilation time", "chart issue time", "processing time", "1944 application target"]
+      },
+      "scale": {
+        "spatialSupport": "43 discrete soundings in the current yellow AOI evidence crop",
+        "nominalResolution": "irregular point spacing",
+        "frequencyRole": "local measured depth constraints",
+        "scaleStatus": "Known"
+      },
+      "quantityState": [
+        {
+          "quantityId": "sounding-depth",
+          "quantityKind": "depth below chart datum",
+          "status": "KNOWN",
+          "unit": "m",
+          "reference": {"frameId": "WGS84_GEOGRAPHIC", "verticalReference": "NOAA_ENC_LOCAL_SOUNDING_DATUM_CODE_24"},
+          "valueType": "point observations",
+          "value": {"count": 43, "minimum": 1.0, "median": 17.7, "maximum": 47.0},
+          "vertical": true
+        },
+        {
+          "quantityId": "sounding-to-egm96-transform",
+          "quantityKind": "vertical datum transformation",
+          "status": "UNKNOWN",
+          "unit": "m",
+          "reference": {"from": "NOAA_ENC_LOCAL_SOUNDING_DATUM_CODE_24", "to": "EGM96_ORTHOMETRIC_HEIGHT"},
+          "valueType": "function",
+          "reason": "no validated transform has been recovered"
+        }
+      ],
+      "relations": [
+        {"type": "constrains", "targetId": "R19_AOI_BATHYMETRY_CANDIDATE", "status": "Known"},
+        {"type": "cannotDirectlyCombineWith", "targetId": "PALAU_R19_EGM96_CANONICAL_DEM", "status": "Known"},
+        {"type": "supports", "targetId": "WORLD_WATER_DEPTH", "status": "Unknown", "reason": "datum bridge and final free surface missing"}
+      ],
+      "observations": [
+        {
+          "observationId": "OBS_NOAA_SOUNDG_43_POINTS",
+          "kind": "official chart sounding points",
+          "directness": "direct_asset_read",
+          "sourceAssetIds": ["ASSET_NOAA_ENC_SOUNDG"],
+          "representedTime": "modern chart evidence",
+          "limitations": ["local datum code 24", "37 points ZOC D and 6 ZOC B in current crop", "irregular and sparse coverage"]
+        }
+      ],
+      "claims": [
+        {
+          "claimId": "CLAIM_SOUNDINGS_ARE_DISCRETE",
+          "property": "coverage semantics",
+          "state": "SUPPORTED",
+          "value": "43 discrete observations do not constitute a continuous surveyed surface",
+          "epistemicState": "observed_chart_evidence",
+          "supportObservationIds": ["OBS_NOAA_SOUNDG_43_POINTS"],
+          "oppositionObservationIds": []
+        }
+      ],
+      "provenance": {
+        "sourceAssets": [
+          {
+            "assetId": "ASSET_NOAA_ENC_SOUNDG",
+            "role": "NOAA ENC SOUNDG and M_QUAL features",
+            "lineageType": "official chart-derived observation",
+            "independenceRoot": "ROOT_NOAA_ENC_US4TB3P0_HYDRO",
+            "sha256": null
+          }
+        ],
+        "transformations": [
+          {
+            "transformationId": "TRANSFORM_SOUNDG_AOI_CLIP",
+            "method": "attribute-preserving AOI clip",
+            "inputAssetIds": ["ASSET_NOAA_ENC_SOUNDG"],
+            "outputRole": "43-point yellow AOI sounding evidence",
+            "reproducible": true
+          }
+        ],
+        "lineage": {"copyLineage": "all points belong to the same chart/survey lineage family unless source metadata proves otherwise", "sharedBias": "chart and survey quality bias"},
+        "independenceSummary": {
+          "uniqueIndependenceRoots": ["ROOT_NOAA_ENC_US4TB3P0_HYDRO"],
+          "declaredIndependentRootCount": 1,
+          "copyCountDoesNotIncreaseEvidence": true
+        },
+        "processingVersion": "R19_USER_AOI_EVIDENCE_R01"
+      },
+      "uncertainty": {
+        "byProperty": [
+          {"property": "individual sounding values", "state": "Known", "reason": "retained from source chart attributes"},
+          {"property": "vertical datum bridge", "state": "Unknown", "reason": "local datum code 24 has no verified transformation to world datum"},
+          {"property": "continuous unsounded cells", "state": "NotObserved", "reason": "no sounding at those cells"},
+          {"property": "1944 equivalence", "state": "Unknown", "reason": "source is modern chart evidence"}
+        ],
+        "sharedBiasGroups": ["NOAA-ENC-US4TB3P0-survey-lineage"]
+      },
+      "change": {
+        "mode": "immutable_source_asset",
+        "events": [],
+        "historyRequired": true
+      },
+      "view": {
+        "viewId": "VIEW_SOUNDING_POINTS_WITH_QUALITY",
+        "sourceEntryId": "NOAA_ENC_SOUNDG",
+        "recomputable": true,
+        "overwritesEvidence": false,
+        "canonicalTruth": false,
+        "query": "show each sounding with datum, quality, source cell and distance to query"
+      }
+    },
+    {
+      "identity": {
+        "id": "NOAA_ENC_DEPCNT_DEPARE",
+        "type": "ObservedConstraintField",
+        "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+        "parentId": "EXTERNAL:PALAU_BATHYMETRY_EVIDENCE_SCORE",
+        "epistemicState": "observed_chart_evidence",
+        "adoptionState": "VERIFIED_OBSERVATION"
+      },
+      "spaceFrame": {
+        "status": "Known",
+        "frameId": "WGS84_GEOGRAPHIC",
+        "crs": "EPSG:4326",
+        "geometryRole": "depth contour and interval constraints",
+        "unit": "degree",
+        "coverage": "NOAA ENC cells intersecting current AOI"
+      },
+      "time": {
+        "representedTime": "modern chart compilation state",
+        "observedTime": "chart source dates retained",
+        "createdTime": "2026-09-22 extraction",
+        "validTime": {"kind": "unknown", "reason": "modern chart intervals are not a 1944 survey"},
+        "timeRoles": ["chart time", "processing time", "1944 application target"]
+      },
+      "scale": {
+        "spatialSupport": "30 contours and 32 depth areas in current AOI crop",
+        "nominalResolution": "chart-scale dependent line and polygon constraints",
+        "frequencyRole": "meso-scale bathymetric constraint, not continuous truth",
+        "scaleStatus": "Known"
+      },
+      "quantityState": [
+        {
+          "quantityId": "depth-contour-values",
+          "quantityKind": "depth contour",
+          "status": "KNOWN",
+          "unit": "m",
+          "reference": {"verticalReference": "NOAA_ENC_LOCAL_SOUNDING_DATUM_CODE_24"},
+          "valueType": "line constraints",
+          "value": {"featureCount": 30},
+          "vertical": true
+        },
+        {
+          "quantityId": "depth-area-intervals",
+          "quantityKind": "depth interval",
+          "status": "KNOWN",
+          "unit": "m",
+          "reference": {"verticalReference": "NOAA_ENC_LOCAL_SOUNDING_DATUM_CODE_24"},
+          "valueType": "polygon interval constraints",
+          "value": {"featureCount": 32},
+          "vertical": true
+        }
+      ],
+      "relations": [
+        {"type": "constrains", "targetId": "R19_AOI_BATHYMETRY_CANDIDATE", "status": "Known"},
+        {"type": "sharesDatumWith", "targetId": "NOAA_ENC_SOUNDG", "status": "Known"}
+      ],
+      "observations": [
+        {
+          "observationId": "OBS_NOAA_DEPCNT_DEPARE",
+          "kind": "official chart contour and depth-area features",
+          "directness": "direct_asset_read",
+          "sourceAssetIds": ["ASSET_NOAA_ENC_DEPCNT_DEPARE"],
+          "representedTime": "modern chart compilation",
+          "limitations": ["interval rather than exact continuous depth", "chart generalization", "local datum code 24"]
+        }
+      ],
+      "claims": [
+        {
+          "claimId": "CLAIM_DEPARE_IS_INTERVAL_NOT_EXACT_SURFACE",
+          "property": "constraint semantics",
+          "state": "SUPPORTED",
+          "value": "DEPARE provides intervals and contradictions must remain visible",
+          "epistemicState": "observed_chart_evidence",
+          "supportObservationIds": ["OBS_NOAA_DEPCNT_DEPARE"],
+          "oppositionObservationIds": []
+        }
+      ],
+      "provenance": {
+        "sourceAssets": [
+          {
+            "assetId": "ASSET_NOAA_ENC_DEPCNT_DEPARE",
+            "role": "NOAA ENC DEPCNT and DEPARE features",
+            "lineageType": "official chart-derived constraints",
+            "independenceRoot": "ROOT_NOAA_ENC_US4TB3P0_HYDRO",
+            "sha256": null
+          }
+        ],
+        "transformations": [
+          {
+            "transformationId": "TRANSFORM_DEPTH_CONSTRAINT_AOI_CLIP",
+            "method": "attribute-preserving AOI clip",
+            "inputAssetIds": ["ASSET_NOAA_ENC_DEPCNT_DEPARE"],
+            "outputRole": "AOI depth contour and interval constraints",
+            "reproducible": true
+          }
+        ],
+        "lineage": {"copyLineage": "same ENC hydrographic family as SOUNDG", "sharedBias": "chart compilation and datum bias"},
+        "independenceSummary": {
+          "uniqueIndependenceRoots": ["ROOT_NOAA_ENC_US4TB3P0_HYDRO"],
+          "declaredIndependentRootCount": 1,
+          "copyCountDoesNotIncreaseEvidence": true
+        },
+        "processingVersion": "R19_USER_AOI_EVIDENCE_R01"
+      },
+      "uncertainty": {
+        "byProperty": [
+          {"property": "contour and interval attributes", "state": "Known", "reason": "retained from chart source"},
+          {"property": "within-area exact depth", "state": "Unknown", "reason": "DEPARE specifies interval, not exact surface"},
+          {"property": "candidate interpolation consistency", "state": "Conflict", "reason": "4832 of 5465 DEPARE-covered valid candidate cells currently contradict interval hypotheses"}
+        ],
+        "sharedBiasGroups": ["NOAA-ENC-US4TB3P0-hydrographic-family"]
+      },
+      "change": {
+        "mode": "immutable_source_asset",
+        "events": [],
+        "historyRequired": true
+      },
+      "view": {
+        "viewId": "VIEW_DEPTH_CONSTRAINTS_AND_CONFLICTS",
+        "sourceEntryId": "NOAA_ENC_DEPCNT_DEPARE",
+        "recomputable": true,
+        "overwritesEvidence": false,
+        "canonicalTruth": false,
+        "query": "show contours, intervals and candidate contradictions together"
+      }
+    },
+    {
+      "identity": {
+        "id": "NOAA_ENC_MQUAL_SEABED_HAZARDS",
+        "type": "ObservedSemanticAndQualityField",
+        "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+        "parentId": "EXTERNAL:PALAU_BATHYMETRY_EVIDENCE_SCORE",
+        "epistemicState": "observed_chart_evidence",
+        "adoptionState": "VERIFIED_OBSERVATION"
+      },
+      "spaceFrame": {
+        "status": "Known",
+        "frameId": "WGS84_GEOGRAPHIC",
+        "crs": "EPSG:4326",
+        "geometryRole": "survey quality, seabed class, rock and obstruction evidence",
+        "unit": "degree",
+        "coverage": "current AOI chart coverage"
+      },
+      "time": {
+        "representedTime": "modern chart compilation state",
+        "observedTime": "source feature times retained where available",
+        "createdTime": "2026-09-22 extraction",
+        "validTime": {"kind": "unknown", "reason": "modern evidence may not equal 1944 hazards or seabed state"},
+        "timeRoles": ["chart/survey time", "processing time", "1944 application target"]
+      },
+      "scale": {
+        "spatialSupport": "5 quality areas, 10 seabed areas, 4 underwater rocks and 1 obstruction in current AOI crop",
+        "nominalResolution": "feature-scale dependent",
+        "frequencyRole": "quality and hazard constraints",
+        "scaleStatus": "Known"
+      },
+      "quantityState": [
+        {
+          "quantityId": "survey-quality-areas",
+          "quantityKind": "categorical survey quality",
+          "status": "KNOWN",
+          "unit": null,
+          "reference": {"standard": "NOAA ENC M_QUAL / ZOC"},
+          "valueType": "polygon categories",
+          "value": {"featureCount": 5}
+        },
+        {
+          "quantityId": "seabed-and-hazards",
+          "quantityKind": "categorical substrate and hazard observations",
+          "status": "KNOWN",
+          "unit": null,
+          "reference": {"standard": "NOAA ENC"},
+          "valueType": "feature collection",
+          "value": {"seabedAreas": 10, "underwaterRocks": 4, "obstructions": 1}
+        }
+      ],
+      "relations": [
+        {"type": "qualifies", "targetId": "NOAA_ENC_SOUNDG", "status": "Known"},
+        {"type": "qualifies", "targetId": "R19_AOI_BATHYMETRY_CANDIDATE", "status": "Known"},
+        {"type": "constrains", "targetId": "COAST_BOUNDARY", "status": "Candidate"}
+      ],
+      "observations": [
+        {
+          "observationId": "OBS_NOAA_QUALITY_SEABED_HAZARDS",
+          "kind": "official chart quality, substrate and hazard features",
+          "directness": "direct_asset_read",
+          "sourceAssetIds": ["ASSET_NOAA_ENC_QUALITY_HAZARDS"],
+          "representedTime": "modern chart state",
+          "limitations": ["categorical and chart-purpose dependent", "not exhaustive habitat mapping", "historic persistence unknown"]
+        }
+      ],
+      "claims": [
+        {
+          "claimId": "CLAIM_QUALITY_MUST_PROPAGATE",
+          "property": "downstream uncertainty policy",
+          "state": "SUPPORTED",
+          "value": "M_QUAL/ZOC and hazard evidence must remain attached to derived bathymetry and interaction queries",
+          "epistemicState": "observed_chart_evidence",
+          "supportObservationIds": ["OBS_NOAA_QUALITY_SEABED_HAZARDS"],
+          "oppositionObservationIds": []
+        }
+      ],
+      "provenance": {
+        "sourceAssets": [
+          {
+            "assetId": "ASSET_NOAA_ENC_QUALITY_HAZARDS",
+            "role": "NOAA M_QUAL, SBDARE, UWTROC and OBSTRN features",
+            "lineageType": "official chart-derived evidence",
+            "independenceRoot": "ROOT_NOAA_ENC_US4TB3P0_HYDRO",
+            "sha256": null
+          }
+        ],
+        "transformations": [
+          {
+            "transformationId": "TRANSFORM_QUALITY_HAZARD_AOI_CLIP",
+            "method": "attribute-preserving AOI clip",
+            "inputAssetIds": ["ASSET_NOAA_ENC_QUALITY_HAZARDS"],
+            "outputRole": "AOI quality, substrate and hazard evidence",
+            "reproducible": true
+          }
+        ],
+        "lineage": {"copyLineage": "same NOAA chart family", "sharedBias": "chart purpose and survey lineage"},
+        "independenceSummary": {
+          "uniqueIndependenceRoots": ["ROOT_NOAA_ENC_US4TB3P0_HYDRO"],
+          "declaredIndependentRootCount": 1,
+          "copyCountDoesNotIncreaseEvidence": true
+        },
+        "processingVersion": "R19_USER_AOI_EVIDENCE_R01"
+      },
+      "uncertainty": {
+        "byProperty": [
+          {"property": "feature attributes", "state": "Known", "reason": "retained from official chart"},
+          {"property": "absence of uncharted hazards", "state": "NotObserved", "reason": "no feature does not prove absence"},
+          {"property": "1944 persistence", "state": "Unknown", "reason": "modern chart state does not freeze 1944 seabed/hazards"}
+        ],
+        "sharedBiasGroups": ["NOAA-ENC-US4TB3P0-hydrographic-family"]
+      },
+      "change": {
+        "mode": "immutable_source_asset",
+        "events": [],
+        "historyRequired": true
+      },
+      "view": {
+        "viewId": "VIEW_HYDRO_QUALITY_SEABED_HAZARDS",
+        "sourceEntryId": "NOAA_ENC_MQUAL_SEABED_HAZARDS",
+        "recomputable": true,
+        "overwritesEvidence": false,
+        "canonicalTruth": false,
+        "query": "show quality and hazard reasons behind each candidate value"
+      }
+    },
+    {
+      "identity": {
+        "id": "ALLEN_REEF_GEOMORPHIC_BENTHIC",
+        "type": "RemoteSensingSemanticField",
+        "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+        "parentId": "EXTERNAL:PALAU_REEF_EVIDENCE_SCORE",
+        "epistemicState": "derived_remote_sensing_classification",
+        "adoptionState": "REVIEWED_CANDIDATE"
+      },
+      "spaceFrame": {
+        "status": "Known",
+        "frameId": "WGS84_GEOGRAPHIC",
+        "crs": "EPSG:4326",
+        "geometryRole": "reef geomorphic and benthic semantic classes",
+        "unit": "degree",
+        "coverage": "Allen Coral Atlas product coverage intersecting Airai AOI"
+      },
+      "time": {
+        "representedTime": "Allen product epoch, modern remote-sensing classification",
+        "observedTime": "product metadata retained in evidence cache",
+        "createdTime": "2026-09-22 AOI extraction",
+        "validTime": {"kind": "unknown", "reason": "classification epoch and 1944 persistence are not equivalent"},
+        "timeRoles": ["remote-sensing acquisition/product time", "processing time", "1944 application target"]
+      },
+      "scale": {
+        "spatialSupport": "319 geomorphic and 1067 benthic AOI features",
+        "nominalResolution": "product-specific shallow-water mapping scale",
+        "frequencyRole": "reef and substrate semantics, not exact bed geometry",
+        "scaleStatus": "Known"
+      },
+      "quantityState": [
+        {
+          "quantityId": "reef-geomorphic-class",
+          "quantityKind": "categorical reef geomorphology",
+          "status": "KNOWN",
+          "unit": null,
+          "reference": {"classification": "Allen Coral Atlas"},
+          "valueType": "polygon categories",
+          "value": {"featureCount": 319}
+        },
+        {
+          "quantityId": "reef-benthic-class",
+          "quantityKind": "categorical benthic class",
+          "status": "KNOWN",
+          "unit": null,
+          "reference": {"classification": "Allen Coral Atlas"},
+          "valueType": "polygon categories",
+          "value": {"featureCount": 1067}
+        },
+        {
+          "quantityId": "exact-bathymetry-from-semantic-class",
+          "quantityKind": "depth",
+          "status": "NOT_APPLICABLE",
+          "unit": "m",
+          "reference": {"verticalReference": "UNSPECIFIED"},
+          "valueType": "numeric field",
+          "reason": "geomorphic/benthic categories do not directly provide exact depth"
+        }
+      ],
+      "relations": [
+        {"type": "verifiesReefContextFor", "targetId": "USER_YELLOW_AOI_GEOGRAPHIC_CANDIDATE", "status": "Candidate"},
+        {"type": "qualifies", "targetId": "R19_AOI_BATHYMETRY_CANDIDATE", "status": "Candidate"},
+        {"type": "consumedBy", "targetId": "WATER_VOLUME_OPTICS", "status": "Candidate"}
+      ],
+      "observations": [
+        {
+          "observationId": "OBS_ALLEN_REEF_CLASSES",
+          "kind": "satellite-derived reef geomorphic and benthic classifications",
+          "directness": "direct_asset_read",
+          "sourceAssetIds": ["ASSET_ALLEN_REEF_CLASSES"],
+          "representedTime": "modern product epoch",
+          "limitations": ["remote-sensing classification", "clear shallow-water dependence", "not exact depth or 1944 survey"]
+        }
+      ],
+      "claims": [
+        {
+          "claimId": "CLAIM_ALLEN_SEMANTIC_NOT_BATHY_TRUTH",
+          "property": "product role",
+          "state": "SUPPORTED",
+          "value": "reef semantics may constrain interpretation but cannot replace NOAA observations or exact bathymetry",
+          "epistemicState": "derived_remote_sensing_classification",
+          "supportObservationIds": ["OBS_ALLEN_REEF_CLASSES"],
+          "oppositionObservationIds": []
+        }
+      ],
+      "provenance": {
+        "sourceAssets": [
+          {
+            "assetId": "ASSET_ALLEN_REEF_CLASSES",
+            "role": "Allen geomorphic and benthic product features",
+            "lineageType": "satellite-derived classification product",
+            "independenceRoot": "ROOT_ALLEN_CORAL_ATLAS_PRODUCT",
+            "sha256": null
+          }
+        ],
+        "transformations": [
+          {
+            "transformationId": "TRANSFORM_ALLEN_AOI_CLIP",
+            "method": "AOI intersection preserving product classes",
+            "inputAssetIds": ["ASSET_ALLEN_REEF_CLASSES"],
+            "outputRole": "Airai reef semantic evidence",
+            "reproducible": true
+          }
+        ],
+        "lineage": {"copyLineage": "geomorphic and benthic layers may share imagery and model lineage", "sharedBias": "remote-sensing visibility and classification bias"},
+        "independenceSummary": {
+          "uniqueIndependenceRoots": ["ROOT_ALLEN_CORAL_ATLAS_PRODUCT"],
+          "declaredIndependentRootCount": 1,
+          "copyCountDoesNotIncreaseEvidence": true
+        },
+        "processingVersion": "R19_USER_AOI_EVIDENCE_R01"
+      },
+      "uncertainty": {
+        "byProperty": [
+          {"property": "mapped product classes", "state": "Known", "reason": "product classes preserved"},
+          {"property": "class accuracy at each local boundary", "state": "Unknown", "reason": "no local validation set frozen"},
+          {"property": "deep or turbid water", "state": "NotCovered", "reason": "product has shallow clear-water limits"},
+          {"property": "1944 reef state", "state": "Unknown", "reason": "modern product epoch"}
+        ],
+        "sharedBiasGroups": ["Allen-shared-imagery-model-bias"]
+      },
+      "change": {
+        "mode": "immutable_source_asset",
+        "events": [],
+        "historyRequired": true
+      },
+      "view": {
+        "viewId": "VIEW_ALLEN_REEF_SEMANTICS",
+        "sourceEntryId": "ALLEN_REEF_GEOMORPHIC_BENTHIC",
+        "recomputable": true,
+        "overwritesEvidence": false,
+        "canonicalTruth": false,
+        "query": "display reef classes with product epoch and coverage limitations"
+      }
+    },
+    {
+      "identity": {
+        "id": "GMRT_AIRAI_CONTEXT",
+        "type": "RegionalContextField",
+        "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+        "parentId": "EXTERNAL:PALAU_BATHYMETRY_CONTEXT_SCORE",
+        "epistemicState": "derived_regional_context",
+        "adoptionState": "REVIEWED_CANDIDATE"
+      },
+      "spaceFrame": {
+        "status": "Known",
+        "frameId": "WGS84_GEOGRAPHIC",
+        "crs": "EPSG:4326",
+        "geometryRole": "regional topography/bathymetry context",
+        "unit": "degree",
+        "coverage": "Airai regional context GeoTIFFs"
+      },
+      "time": {
+        "representedTime": "GMRT compiled regional context",
+        "observedTime": "source metadata retained",
+        "createdTime": "2026 evidence intake",
+        "validTime": {"kind": "unknown", "reason": "compiled regional product is not a 1944 local survey"},
+        "timeRoles": ["source compilation time", "processing time", "1944 application target"]
+      },
+      "scale": {
+        "spatialSupport": "regional Airai land and seafloor context",
+        "nominalResolution": "regional product; not local reef-survey resolution",
+        "frequencyRole": "low-frequency context only",
+        "scaleStatus": "Mixed"
+      },
+      "quantityState": [
+        {
+          "quantityId": "regional-elevation-depth-context",
+          "quantityKind": "topography/bathymetry context",
+          "status": "KNOWN",
+          "unit": "m",
+          "reference": {"verticalReference": "GMRT_SOURCE_REFERENCE_REQUIRES_METADATA"},
+          "valueType": "raster field",
+          "value": "two retained GMRT context GeoTIFFs",
+          "vertical": true
+        },
+        {
+          "quantityId": "local-reef-exact-depth",
+          "quantityKind": "exact local bathymetry",
+          "status": "NOT_APPLICABLE",
+          "unit": "m",
+          "reference": {"verticalReference": "UNSPECIFIED"},
+          "valueType": "raster field",
+          "reason": "regional GMRT context cannot substitute for local hydrographic observations"
+        }
+      ],
+      "relations": [
+        {"type": "providesLowFrequencyContextFor", "targetId": "R19_AOI_BATHYMETRY_CANDIDATE", "status": "Candidate"},
+        {"type": "mustNotOverride", "targetId": "NOAA_ENC_SOUNDG", "status": "Known"}
+      ],
+      "observations": [
+        {
+          "observationId": "OBS_GMRT_CONTEXT_RASTERS",
+          "kind": "retained regional GMRT GeoTIFF context",
+          "directness": "direct_asset_read",
+          "sourceAssetIds": ["ASSET_GMRT_AIRAI_CONTEXT"],
+          "representedTime": "compiled regional product epoch",
+          "limitations": ["regional resolution", "mixed source lineage", "not exact nearshore reef bathymetry"]
+        }
+      ],
+      "claims": [
+        {
+          "claimId": "CLAIM_GMRT_CONTEXT_ONLY",
+          "property": "product role",
+          "state": "SUPPORTED",
+          "value": "GMRT may supply low-frequency regional context but cannot override NOAA local evidence",
+          "epistemicState": "derived_regional_context",
+          "supportObservationIds": ["OBS_GMRT_CONTEXT_RASTERS"],
+          "oppositionObservationIds": []
+        }
+      ],
+      "provenance": {
+        "sourceAssets": [
+          {
+            "assetId": "ASSET_GMRT_AIRAI_CONTEXT",
+            "role": "GMRT regional context GeoTIFFs",
+            "lineageType": "compiled regional product",
+            "independenceRoot": "ROOT_GMRT_REGIONAL_PRODUCT",
+            "sha256": null
+          }
+        ],
+        "transformations": [],
+        "lineage": {"copyLineage": "two context outputs may share one GMRT compilation root", "sharedBias": "GMRT source compilation and interpolation bias"},
+        "independenceSummary": {
+          "uniqueIndependenceRoots": ["ROOT_GMRT_REGIONAL_PRODUCT"],
+          "declaredIndependentRootCount": 1,
+          "copyCountDoesNotIncreaseEvidence": true
+        },
+        "processingVersion": "R19_COAST_HYDRO_CACHE_R01"
+      },
+      "uncertainty": {
+        "byProperty": [
+          {"property": "regional low-frequency form", "state": "Known", "reason": "source rasters retained"},
+          {"property": "local reef depth", "state": "Unknown", "reason": "regional product lacks local hydrographic precision"},
+          {"property": "vertical datum compatibility", "state": "Unknown", "reason": "must be read from exact source metadata before composition"}
+        ],
+        "sharedBiasGroups": ["GMRT-compilation-bias"]
+      },
+      "change": {
+        "mode": "immutable_source_asset",
+        "events": [],
+        "historyRequired": true
+      },
+      "view": {
+        "viewId": "VIEW_GMRT_REGIONAL_CONTEXT",
+        "sourceEntryId": "GMRT_AIRAI_CONTEXT",
+        "recomputable": true,
+        "overwritesEvidence": false,
+        "canonicalTruth": false,
+        "query": "show regional context separately from local evidence"
+      }
+    },
+    {
+      "identity": {
+        "id": "R19_AOI_BATHYMETRY_CANDIDATE",
+        "type": "DerivedContinuousFieldCandidate",
+        "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+        "parentId": "EXTERNAL:PALAU_BATHYMETRY_CANDIDATE_SCORE",
+        "epistemicState": "derived_verified_processing",
+        "adoptionState": "REVIEWED_CANDIDATE"
+      },
+      "spaceFrame": {
+        "status": "Known",
+        "frameId": "PALAU_UTM53N",
+        "crs": "EPSG:32653",
+        "geometryRole": "interpolated bathymetry candidate with evidence and uncertainty channels",
+        "unit": "metre",
+        "coverage": "current yellow AOI 25 m candidate grid"
+      },
+      "time": {
+        "representedTime": "modern chart-derived candidate surface applied only as evidence candidate",
+        "observedTime": "mixed modern chart and remote-sensing source times",
+        "createdTime": "2026-09-22 processing",
+        "validTime": {"kind": "unknown", "reason": "not a 1944 surveyed bathymetry and datum bridge unresolved"},
+        "timeRoles": ["source observation times", "processing time", "1944 application target"]
+      },
+      "scale": {
+        "spatialSupport": "119 x 120 cells over current AOI",
+        "nominalResolution": "25 m grid; evidence spacing is irregular and often coarser",
+        "frequencyRole": "candidate continuous view of sparse constraints",
+        "scaleStatus": "Known"
+      },
+      "quantityState": [
+        {
+          "quantityId": "candidate-depth",
+          "quantityKind": "depth below local chart datum",
+          "status": "KNOWN",
+          "unit": "m",
+          "reference": {"frameId": "PALAU_UTM53N", "verticalReference": "NOAA_ENC_LOCAL_SOUNDING_DATUM_CODE_24"},
+          "valueType": "raster candidate",
+          "value": {"validCells": 6632, "aoiCells": 10077, "median": 11.730540479330749, "maximum": 43.182746935537736},
+          "vertical": true
+        },
+        {
+          "quantityId": "candidate-uncertainty",
+          "quantityKind": "depth uncertainty proxy",
+          "status": "KNOWN",
+          "unit": "m",
+          "reference": {"method": "evidence-conditioned candidate uncertainty"},
+          "valueType": "raster field",
+          "value": {"median": 16.003061629862678}
+        },
+        {
+          "quantityId": "unknown-cells",
+          "quantityKind": "coverage absence",
+          "status": "NODATA",
+          "unit": null,
+          "reference": {"grid": "R19 AOI candidate"},
+          "valueType": "mask",
+          "reason": "evidence support insufficient; cells remain NoData"
+        }
+      ],
+      "relations": [
+        {"type": "derivedFrom", "targetId": "NOAA_ENC_SOUNDG", "status": "Known"},
+        {"type": "constrainedBy", "targetId": "NOAA_ENC_DEPCNT_DEPARE", "status": "Known"},
+        {"type": "qualifiedBy", "targetId": "NOAA_ENC_MQUAL_SEABED_HAZARDS", "status": "Known"},
+        {"type": "qualifiedBy", "targetId": "ALLEN_REEF_GEOMORPHIC_BENTHIC", "status": "Candidate"},
+        {"type": "contextualizedBy", "targetId": "GMRT_AIRAI_CONTEXT", "status": "Candidate"},
+        {"type": "cannotDirectlyCombineWith", "targetId": "PALAU_R19_EGM96_CANONICAL_DEM", "status": "Known"}
+      ],
+      "observations": [
+        {
+          "observationId": "OBS_R19_BATHY_CANDIDATE_BUILD",
+          "kind": "reproducible interpolation and constraint-processing result",
+          "directness": "derived_from_named_sources",
+          "sourceAssetIds": ["ASSET_NOAA_HYDRO_FEATURES", "ASSET_ALLEN_CLASSES", "ASSET_GMRT_CONTEXT"],
+          "representedTime": "2026 processing candidate over modern evidence",
+          "limitations": ["not survey truth", "34 percent of AOI remains NoData", "4832 DEPARE contradictions", "local datum code 24"]
+        }
+      ],
+      "claims": [
+        {
+          "claimId": "CLAIM_BATHY_CANDIDATE_NOT_SURVEY_TRUTH",
+          "property": "epistemic status",
+          "state": "SUPPORTED",
+          "value": "continuous grid is a candidate view, not a continuous measured seabed",
+          "epistemicState": "derived_verified_processing",
+          "supportObservationIds": ["OBS_R19_BATHY_CANDIDATE_BUILD"],
+          "oppositionObservationIds": []
+        },
+        {
+          "claimId": "CLAIM_DEPARE_CONFLICT_RETAINED",
+          "property": "constraint conflict",
+          "state": "CONTESTED",
+          "value": "4832 of 5465 DEPARE-covered valid cells conflict with interval hypotheses",
+          "epistemicState": "conflict",
+          "supportObservationIds": ["OBS_R19_BATHY_CANDIDATE_BUILD"],
+          "oppositionObservationIds": []
+        }
+      ],
+      "provenance": {
+        "sourceAssets": [
+          {
+            "assetId": "ASSET_NOAA_HYDRO_FEATURES",
+            "role": "SOUNDG, DEPCNT, DEPARE, M_QUAL and hazard inputs",
+            "lineageType": "official chart evidence family",
+            "independenceRoot": "ROOT_NOAA_ENC_US4TB3P0_HYDRO",
+            "sha256": null
+          },
+          {
+            "assetId": "ASSET_ALLEN_CLASSES",
+            "role": "reef semantic constraints",
+            "lineageType": "satellite-derived classification",
+            "independenceRoot": "ROOT_ALLEN_CORAL_ATLAS_PRODUCT",
+            "sha256": null
+          },
+          {
+            "assetId": "ASSET_GMRT_CONTEXT",
+            "role": "regional low-frequency context",
+            "lineageType": "compiled regional product",
+            "independenceRoot": "ROOT_GMRT_REGIONAL_PRODUCT",
+            "sha256": null
+          }
+        ],
+        "transformations": [
+          {
+            "transformationId": "TRANSFORM_R19_AOI_BATHY_INTERPOLATION",
+            "method": "evidence-conditioned interpolation with NoData, distance, quality and conflict channels",
+            "inputAssetIds": ["ASSET_NOAA_HYDRO_FEATURES", "ASSET_ALLEN_CLASSES", "ASSET_GMRT_CONTEXT"],
+            "outputRole": "25 m candidate bathymetry and uncertainty grids",
+            "reproducible": true
+          }
+        ],
+        "lineage": {"copyLineage": "derived from three evidence families; NOAA layers within one hydrographic root", "sharedBias": "modern-to-1944 transfer and local datum bias"},
+        "independenceSummary": {
+          "uniqueIndependenceRoots": ["ROOT_ALLEN_CORAL_ATLAS_PRODUCT", "ROOT_GMRT_REGIONAL_PRODUCT", "ROOT_NOAA_ENC_US4TB3P0_HYDRO"],
+          "declaredIndependentRootCount": 3,
+          "copyCountDoesNotIncreaseEvidence": true
+        },
+        "processingVersion": "R19_USER_AOI_EVIDENCE_R01"
+      },
+      "uncertainty": {
+        "byProperty": [
+          {
+            "property": "valid-cell coverage fraction",
+            "state": "Known",
+            "reason": "counted from candidate grid and AOI mask",
+            "numericBounds": [0.6581323806688498, 0.6581323806688498],
+            "boundsEvidence": "R19 AOI evidence report"
+          },
+          {
+            "property": "nearest evidence distance median",
+            "state": "Known",
+            "reason": "computed from source constraints",
+            "numericBounds": [186.15704228837993, 186.15704228837993],
+            "boundsEvidence": "R19 AOI evidence report"
+          },
+          {"property": "NoData cells", "state": "NoData", "reason": "insufficient support retained as NoData"},
+          {"property": "DEPARE consistency", "state": "Conflict", "reason": "high contradiction count retained rather than forced"},
+          {"property": "1944 bathymetry", "state": "Unknown", "reason": "modern evidence and no historic seabed survey"}
+        ],
+        "sharedBiasGroups": ["NOAA-chart-datum-bias", "modern-to-1944-transfer-bias", "interpolation-method-bias"]
+      },
+      "change": {
+        "mode": "derived_view_only",
+        "events": [],
+        "historyRequired": true
+      },
+      "view": {
+        "viewId": "VIEW_BATHY_CANDIDATE_WITH_SUPPORT",
+        "sourceEntryId": "R19_AOI_BATHYMETRY_CANDIDATE",
+        "recomputable": true,
+        "overwritesEvidence": false,
+        "canonicalTruth": false,
+        "query": "return candidate depth only with uncertainty, evidence distance, quality, conflicts and NoData"
+      }
+    },
+    {
+      "identity": {
+        "id": "MALAKAL_REGIONAL_ASTRONOMICAL_TIDE",
+        "type": "ModelledRegionalProcessCandidate",
+        "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+        "parentId": "EXTERNAL:PALAU_TIDE_SCORE",
+        "epistemicState": "modelled_candidate",
+        "adoptionState": "REVIEWED_CANDIDATE"
+      },
+      "spaceFrame": {
+        "status": "Known",
+        "frameId": "WGS84_GEOGRAPHIC",
+        "crs": "EPSG:4326",
+        "geometryRole": "regional tide reference station and boundary source",
+        "unit": "degree",
+        "coverage": "Malakal station/reference location, not every Airai channel"
+      },
+      "time": {
+        "representedTime": "1944-10 astronomical tide candidate",
+        "observedTime": "modern NOAA/UHSLC station metadata and available harmonic/model inputs",
+        "createdTime": "2026 candidate reconstruction",
+        "validTime": {"kind": "interval", "start": "1944-10-01T00:00:00Z", "end": "1944-10-31T23:59:59Z"},
+        "timeRoles": ["station observation/metadata time", "candidate represented historical time", "processing time"]
+      },
+      "scale": {
+        "spatialSupport": "regional station/boundary forcing",
+        "nominalResolution": "time-series or harmonic-model dependent",
+        "frequencyRole": "astronomical tide only",
+        "scaleStatus": "Known"
+      },
+      "quantityState": [
+        {
+          "quantityId": "regional-astronomical-tide",
+          "quantityKind": "water-level anomaly",
+          "status": "KNOWN",
+          "unit": "m",
+          "reference": {"verticalReference": "MALAKAL_STATION_OR_MODEL_DATUM_REQUIRES_EXPLICIT_QUERY"},
+          "valueType": "time function",
+          "value": "candidate function; exact series retained outside this semantic ledger",
+          "vertical": true
+        },
+        {
+          "quantityId": "airai-local-tide",
+          "quantityKind": "local water-level anomaly",
+          "status": "NOT_APPLICABLE",
+          "unit": "m",
+          "reference": {"verticalReference": "UNRESOLVED_AIRAI_LOCAL_REFERENCE"},
+          "valueType": "field",
+          "reason": "Malakal regional source is not the Airai local-transfer field"
+        }
+      ],
+      "relations": [
+        {"type": "regionalInputTo", "targetId": "INSTANTANEOUS_FREE_SURFACE", "status": "Candidate"},
+        {"type": "requiresTransferField", "targetId": "AIRAI_LOCAL_TIDE_TRANSFER", "status": "Known"}
+      ],
+      "observations": [
+        {
+          "observationId": "OBS_MALAKAL_STATION_METADATA",
+          "kind": "official NOAA CO-OPS and UHSLC station metadata",
+          "directness": "official_metadata",
+          "sourceAssetIds": ["ASSET_NOAA_MALAKAL_METADATA", "ASSET_UHSLC_MALAKAL_METADATA"],
+          "representedTime": "modern station metadata supporting a 1944 astronomical candidate",
+          "limitations": ["not Airai local tide", "non-tidal residual excluded", "station/model datum must be explicit"]
+        }
+      ],
+      "claims": [
+        {
+          "claimId": "CLAIM_MALAKAL_REGIONAL_ONLY",
+          "property": "spatial applicability",
+          "state": "SUPPORTED",
+          "value": "Malakal may be a regional source but cannot be copied as exact Airai local tide",
+          "epistemicState": "official_station_metadata",
+          "supportObservationIds": ["OBS_MALAKAL_STATION_METADATA"],
+          "oppositionObservationIds": []
+        }
+      ],
+      "provenance": {
+        "sourceAssets": [
+          {
+            "assetId": "ASSET_NOAA_MALAKAL_METADATA",
+            "role": "NOAA CO-OPS 1841367 station metadata",
+            "lineageType": "official station metadata",
+            "independenceRoot": "ROOT_NOAA_COOPS_MALAKAL",
+            "sha256": null
+          },
+          {
+            "assetId": "ASSET_UHSLC_MALAKAL_METADATA",
+            "role": "UHSLC Malakal A/B data and datum guidance",
+            "lineageType": "official tide-gauge metadata/data family",
+            "independenceRoot": "ROOT_UHSLC_MALAKAL",
+            "sha256": null
+          }
+        ],
+        "transformations": [
+          {
+            "transformationId": "TRANSFORM_1944_ASTRONOMICAL_TIDE_CANDIDATE",
+            "method": "harmonic or validated global-tide reconstruction with explicit datum and phase conventions",
+            "inputAssetIds": ["ASSET_NOAA_MALAKAL_METADATA", "ASSET_UHSLC_MALAKAL_METADATA"],
+            "outputRole": "1944 regional astronomical tide candidate",
+            "reproducible": false
+          }
+        ],
+        "lineage": {"copyLineage": "NOAA and UHSLC may reference related physical station observations but are separate institutional products", "sharedBias": "station location and datum transfer bias"},
+        "independenceSummary": {
+          "uniqueIndependenceRoots": ["ROOT_NOAA_COOPS_MALAKAL", "ROOT_UHSLC_MALAKAL"],
+          "declaredIndependentRootCount": 2,
+          "copyCountDoesNotIncreaseEvidence": true
+        },
+        "processingVersion": "R19_TIDE_METHOD_CANDIDATE_R01"
+      },
+      "uncertainty": {
+        "byProperty": [
+          {"property": "station identity", "state": "Known", "reason": "official metadata"},
+          {"property": "1944 astronomical phase/amplitude", "state": "Unknown", "reason": "exact harmonic/model reconstruction package not yet frozen in R19"},
+          {"property": "Airai local transfer", "state": "NotApplicable", "reason": "belongs to a separate field"},
+          {"property": "1944 surge and pressure residual", "state": "NotApplicable", "reason": "belongs to non-tidal residual field"}
+        ],
+        "sharedBiasGroups": ["regional-station-to-local-transfer-bias"]
+      },
+      "change": {
+        "mode": "time_varying_process",
+        "events": [],
+        "historyRequired": false
+      },
+      "view": {
+        "viewId": "VIEW_MALAKAL_REGIONAL_TIDE_CANDIDATE",
+        "sourceEntryId": "MALAKAL_REGIONAL_ASTRONOMICAL_TIDE",
+        "recomputable": true,
+        "overwritesEvidence": false,
+        "canonicalTruth": false,
+        "query": "return regional astronomical component with station/model datum and uncertainty"
+      }
+    },
+    {
+      "identity": {
+        "id": "AIRAI_LOCAL_TIDE_TRANSFER",
+        "type": "UnknownProcessField",
+        "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+        "parentId": "EXTERNAL:PALAU_TIDE_SCORE",
+        "epistemicState": "unknown",
+        "adoptionState": "NOT_ADOPTED"
+      },
+      "spaceFrame": {
+        "status": "Unknown",
+        "frameId": "AIRAI_LOCAL_TIDE_FIELD_PENDING",
+        "crs": "EPSG:32653",
+        "geometryRole": "local amplitude and phase correction over reef, channels and lagoon",
+        "unit": "metre",
+        "coverage": "Airai AOI",
+        "reason": "no validated local field has been observed or modelled"
+      },
+      "time": {
+        "representedTime": "1944-10",
+        "observedTime": null,
+        "createdTime": "2026-09-23 explicit gap record",
+        "validTime": {"kind": "unknown", "reason": "field does not yet exist"},
+        "timeRoles": ["target represented time", "missing observation time"]
+      },
+      "scale": {
+        "spatialSupport": "Airai reef, channels and lagoon",
+        "nominalResolution": "unknown",
+        "frequencyRole": "local hydrodynamic correction",
+        "scaleStatus": "Unknown"
+      },
+      "quantityState": [
+        {
+          "quantityId": "local-tide-correction",
+          "quantityKind": "water-level anomaly correction",
+          "status": "UNKNOWN",
+          "unit": "m",
+          "reference": {"verticalReference": "UNRESOLVED_AIRAI_LOCAL_REFERENCE"},
+          "valueType": "space-time field",
+          "reason": "no Airai observation, transfer function or validated hydrodynamic model"
+        }
+      ],
+      "relations": [
+        {"type": "transfersFrom", "targetId": "MALAKAL_REGIONAL_ASTRONOMICAL_TIDE", "status": "Unknown", "reason": "transfer relation is not validated"},
+        {"type": "requiredBy", "targetId": "INSTANTANEOUS_FREE_SURFACE", "status": "Known"}
+      ],
+      "observations": [
+        {
+          "observationId": "OBS_GAP_AIRAI_LOCAL_TIDE",
+          "kind": "explicit missing-evidence record",
+          "directness": "explicit_gap_record",
+          "sourceAssetIds": ["ASSET_GAP_AIRAI_LOCAL_TIDE"],
+          "representedTime": "1944-10 target",
+          "limitations": ["not a numeric observation", "must not be replaced by zero"]
+        }
+      ],
+      "claims": [
+        {
+          "claimId": "CLAIM_AIRAI_LOCAL_TIDE_UNKNOWN",
+          "property": "local tide transfer state",
+          "state": "UNKNOWN",
+          "epistemicState": "unknown",
+          "supportObservationIds": ["OBS_GAP_AIRAI_LOCAL_TIDE"],
+          "oppositionObservationIds": []
+        }
+      ],
+      "provenance": {
+        "sourceAssets": [
+          {
+            "assetId": "ASSET_GAP_AIRAI_LOCAL_TIDE",
+            "role": "explicit gap marker",
+            "lineageType": "absence-of-validated-source record",
+            "independenceRoot": null,
+            "sha256": null
+          }
+        ],
+        "transformations": [],
+        "lineage": {"copyLineage": "no source", "sharedBias": "none; value intentionally unknown"},
+        "independenceSummary": {
+          "uniqueIndependenceRoots": [],
+          "declaredIndependentRootCount": 0,
+          "copyCountDoesNotIncreaseEvidence": true
+        },
+        "processingVersion": "R19_UNIFIED_FIELD_R02"
+      },
+      "uncertainty": {
+        "byProperty": [
+          {"property": "amplitude correction", "state": "Unknown", "reason": "no evidence"},
+          {"property": "phase correction", "state": "Unknown", "reason": "no evidence"},
+          {"property": "channel/lagoon spatial pattern", "state": "Unknown", "reason": "no local hydrodynamic field"}
+        ],
+        "sharedBiasGroups": []
+      },
+      "change": {
+        "mode": "unknown",
+        "events": [],
+        "historyRequired": true
+      },
+      "view": {
+        "viewId": "VIEW_AIRAI_LOCAL_TIDE_GAP",
+        "sourceEntryId": "AIRAI_LOCAL_TIDE_TRANSFER",
+        "recomputable": true,
+        "overwritesEvidence": false,
+        "canonicalTruth": false,
+        "query": "return Unknown plus missing preconditions"
+      }
+    },
+    {
+      "identity": {
+        "id": "AIRAI_1944_NON_TIDAL_RESIDUAL",
+        "type": "UnknownProcessField",
+        "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+        "parentId": "EXTERNAL:PALAU_TIDE_SCORE",
+        "epistemicState": "unknown",
+        "adoptionState": "NOT_ADOPTED"
+      },
+      "spaceFrame": {
+        "status": "Unknown",
+        "frameId": "AIRAI_1944_NON_TIDAL_FIELD_PENDING",
+        "crs": "EPSG:32653",
+        "geometryRole": "wind, pressure, circulation and surge water-level residual",
+        "unit": "metre",
+        "coverage": "Airai AOI",
+        "reason": "1944 atmospheric and ocean residual evidence has not been recovered"
+      },
+      "time": {
+        "representedTime": "1944-10",
+        "observedTime": null,
+        "createdTime": "2026-09-23 explicit gap record",
+        "validTime": {"kind": "unknown", "reason": "field does not yet exist"},
+        "timeRoles": ["target represented time", "missing observation time"]
+      },
+      "scale": {
+        "spatialSupport": "Airai and regional ocean",
+        "nominalResolution": "unknown",
+        "frequencyRole": "non-astronomical water-level residual",
+        "scaleStatus": "Unknown"
+      },
+      "quantityState": [
+        {
+          "quantityId": "non-tidal-water-level-residual",
+          "quantityKind": "water-level anomaly residual",
+          "status": "UNKNOWN",
+          "unit": "m",
+          "reference": {"verticalReference": "UNRESOLVED_COMMON_WATER_DATUM"},
+          "valueType": "space-time field",
+          "reason": "no verified 1944 pressure, wind, surge or circulation reconstruction"
+        }
+      ],
+      "relations": [
+        {"type": "requiredBy", "targetId": "INSTANTANEOUS_FREE_SURFACE", "status": "Known"},
+        {"type": "dependsOn", "targetId": "OCEAN_ENVIRONMENT_ADAPTER", "status": "Unknown", "reason": "1944 environment evidence is missing"}
+      ],
+      "observations": [
+        {
+          "observationId": "OBS_GAP_1944_NON_TIDAL_RESIDUAL",
+          "kind": "explicit missing-evidence record",
+          "directness": "explicit_gap_record",
+          "sourceAssetIds": ["ASSET_GAP_1944_NON_TIDAL"],
+          "representedTime": "1944-10 target",
+          "limitations": ["not a numeric observation", "must not be replaced by zero"]
+        }
+      ],
+      "claims": [
+        {
+          "claimId": "CLAIM_1944_NON_TIDAL_UNKNOWN",
+          "property": "non-tidal residual state",
+          "state": "UNKNOWN",
+          "epistemicState": "unknown",
+          "supportObservationIds": ["OBS_GAP_1944_NON_TIDAL_RESIDUAL"],
+          "oppositionObservationIds": []
+        }
+      ],
+      "provenance": {
+        "sourceAssets": [
+          {
+            "assetId": "ASSET_GAP_1944_NON_TIDAL",
+            "role": "explicit gap marker",
+            "lineageType": "absence-of-validated-source record",
+            "independenceRoot": null,
+            "sha256": null
+          }
+        ],
+        "transformations": [],
+        "lineage": {"copyLineage": "no source", "sharedBias": "none; value intentionally unknown"},
+        "independenceSummary": {
+          "uniqueIndependenceRoots": [],
+          "declaredIndependentRootCount": 0,
+          "copyCountDoesNotIncreaseEvidence": true
+        },
+        "processingVersion": "R19_UNIFIED_FIELD_R02"
+      },
+      "uncertainty": {
+        "byProperty": [
+          {"property": "pressure contribution", "state": "Unknown", "reason": "no 1944 pressure field"},
+          {"property": "wind setup", "state": "Unknown", "reason": "no 1944 local wind/hydrodynamic model"},
+          {"property": "surge and circulation", "state": "Unknown", "reason": "no validated reconstruction"}
+        ],
+        "sharedBiasGroups": []
+      },
+      "change": {
+        "mode": "unknown",
+        "events": [],
+        "historyRequired": true
+      },
+      "view": {
+        "viewId": "VIEW_1944_NON_TIDAL_GAP",
+        "sourceEntryId": "AIRAI_1944_NON_TIDAL_RESIDUAL",
+        "recomputable": true,
+        "overwritesEvidence": false,
+        "canonicalTruth": false,
+        "query": "return Unknown plus missing weather and ocean preconditions"
+      }
+    },
+    {
+      "identity": {
+        "id": "OCEAN_SURFACE_STATE",
+        "type": "ModelledProcessField",
+        "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+        "parentId": "EXTERNAL:OCEAN_MOTHER_SCORE",
+        "epistemicState": "modelled_runtime_candidate",
+        "adoptionState": "REVIEWED_CANDIDATE"
+      },
+      "spaceFrame": {
+        "status": "Known",
+        "frameId": "PALAU_UTM53N_RUNTIME_MAPPING_PENDING",
+        "crs": "EPSG:32653",
+        "geometryRole": "single authoritative parametric free-surface state",
+        "unit": "metre",
+        "coverage": "requested Ocean query domain"
+      },
+      "time": {
+        "representedTime": "world time t in the 1944 simulation candidate",
+        "observedTime": "runtime/model query time",
+        "createdTime": "2026-09-23 R02 contract",
+        "validTime": {"kind": "instant", "at": "query time"},
+        "timeRoles": ["world time", "model evaluation time", "observation request time"]
+      },
+      "scale": {
+        "spatialSupport": "query-dependent ocean surface footprint",
+        "nominalResolution": "runtime query precision",
+        "frequencyRole": "dynamic wave surface; low-to-high bands selected by observation request",
+        "scaleStatus": "Mixed"
+      },
+      "quantityState": [
+        {
+          "quantityId": "ocean-surface-state-vector",
+          "quantityKind": "parametric surface state",
+          "status": "KNOWN",
+          "unit": "m and m/s",
+          "reference": {"frameId": "PALAU_UTM53N_RUNTIME_MAPPING_PENDING", "verticalReference": "TARGET_WATER_REFERENCE_REQUIRED"},
+          "valueType": "typed state",
+          "value": ["surfaceStateId", "q", "dx", "dz", "eta", "normal", "surfaceVelocity"]
+        },
+        {
+          "quantityId": "inverse-world-to-q-query",
+          "quantityKind": "inverse parametric mapping",
+          "status": "UNKNOWN",
+          "unit": "m",
+          "reference": {"frameId": "PALAU_UTM53N_RUNTIME_MAPPING_PENDING"},
+          "valueType": "function",
+          "reason": "R02 contract identifies the requirement but has not implemented or validated an inverse lookup"
+        }
+      ],
+      "relations": [
+        {"type": "readBy", "targetId": "WATER_SURFACE_OPTICS", "status": "Candidate"},
+        {"type": "readBy", "targetId": "WATER_VOLUME_OPTICS", "status": "Candidate"},
+        {"type": "componentOf", "targetId": "INSTANTANEOUS_FREE_SURFACE", "status": "Candidate"},
+        {"type": "readsEnvironmentFrom", "targetId": "OCEAN_ENVIRONMENT_ADAPTER", "status": "Candidate"}
+      ],
+      "observations": [
+        {
+          "observationId": "OBS_OCEAN_SURFACE_CONTRACT",
+          "kind": "frozen Ocean Mother interface and Small Mother adapter requirement",
+          "directness": "derived_from_named_sources",
+          "sourceAssetIds": ["ASSET_OCEAN_MOTHER_CONTRACT", "ASSET_SMALL_MOTHER_OCEAN_ADAPTER"],
+          "representedTime": "runtime candidate",
+          "limitations": ["contract validated, runtime adapter not yet integrated", "inverse q query not proven", "local tide and datum still unresolved"]
+        }
+      ],
+      "claims": [
+        {
+          "claimId": "CLAIM_ONE_SURFACE_STATE_IDENTITY",
+          "property": "surface authority",
+          "state": "SUPPORTED",
+          "value": "eta, horizontal displacement, normal and velocity must come from one surfaceStateId",
+          "epistemicState": "interface_candidate",
+          "supportObservationIds": ["OBS_OCEAN_SURFACE_CONTRACT"],
+          "oppositionObservationIds": []
+        }
+      ],
+      "provenance": {
+        "sourceAssets": [
+          {
+            "assetId": "ASSET_OCEAN_MOTHER_CONTRACT",
+            "role": "frozen Ocean Mother surface interface lineage",
+            "lineageType": "existing project contract",
+            "independenceRoot": "ROOT_OCEAN_MOTHER_CONTRACT",
+            "sha256": null
+          },
+          {
+            "assetId": "ASSET_SMALL_MOTHER_OCEAN_ADAPTER",
+            "role": "Small Mother Ocean/Coast adapter method",
+            "lineageType": "reviewed knowledge candidate",
+            "independenceRoot": "ROOT_SMALL_MOTHER_WORLD_KNOWLEDGE",
+            "sha256": null
+          }
+        ],
+        "transformations": [
+          {
+            "transformationId": "TRANSFORM_OCEAN_SURFACE_R02_CONTRACT",
+            "method": "typed contract synthesis and adversarial tests",
+            "inputAssetIds": ["ASSET_OCEAN_MOTHER_CONTRACT", "ASSET_SMALL_MOTHER_OCEAN_ADAPTER"],
+            "outputRole": "single authoritative OceanSurfaceState contract",
+            "reproducible": true
+          }
+        ],
+        "lineage": {"copyLineage": "contract synthesis from two project knowledge roots", "sharedBias": "implementation has not yet been observed in browser/runtime"},
+        "independenceSummary": {
+          "uniqueIndependenceRoots": ["ROOT_OCEAN_MOTHER_CONTRACT", "ROOT_SMALL_MOTHER_WORLD_KNOWLEDGE"],
+          "declaredIndependentRootCount": 2,
+          "copyCountDoesNotIncreaseEvidence": true
+        },
+        "processingVersion": "R19_UNIFIED_FIELD_R02"
+      },
+      "uncertainty": {
+        "byProperty": [
+          {"property": "contract identity and required fields", "state": "Known", "reason": "executable validator and tests pass"},
+          {"property": "runtime implementation", "state": "NotObserved", "reason": "no Ocean adapter integration or browser evidence"},
+          {"property": "inverse q lookup", "state": "Unknown", "reason": "not implemented"},
+          {"property": "physical fidelity", "state": "Unknown", "reason": "contract tests are not physical validation"}
+        ],
+        "sharedBiasGroups": ["contract-without-runtime-evidence"]
+      },
+      "change": {
+        "mode": "time_varying_process",
+        "events": [],
+        "historyRequired": true
+      },
+      "view": {
+        "viewId": "VIEW_OCEAN_SURFACE_STATE_DIAGNOSTIC",
+        "sourceEntryId": "OCEAN_SURFACE_STATE",
+        "recomputable": true,
+        "overwritesEvidence": false,
+        "canonicalTruth": false,
+        "query": "return eta, dx, dz, normal, velocity, source identity and unresolved preconditions"
+      }
+    },
+    {
+      "identity": {
+        "id": "WATER_SURFACE_OPTICS",
+        "type": "ModelledOpticsField",
+        "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+        "parentId": "EXTERNAL:OCEAN_MOTHER_SCORE",
+        "epistemicState": "modelled_runtime_candidate",
+        "adoptionState": "REVIEWED_CANDIDATE"
+      },
+      "spaceFrame": {
+        "status": "Known",
+        "frameId": "OCEAN_SURFACE_STATE_FRAME",
+        "crs": null,
+        "geometryRole": "read-only air-water interface optical response",
+        "unit": "mixed optical quantities",
+        "coverage": "queried visible surface footprint"
+      },
+      "time": {
+        "representedTime": "world time t",
+        "observedTime": "runtime query time",
+        "createdTime": "2026-09-23 R02 contract",
+        "validTime": {"kind": "instant", "at": "query time"},
+        "timeRoles": ["world time", "observation time"]
+      },
+      "scale": {
+        "spatialSupport": "visible water-interface samples",
+        "nominalResolution": "render/query dependent",
+        "frequencyRole": "interface reflection/transmission and foam optics",
+        "scaleStatus": "Mixed"
+      },
+      "quantityState": [
+        {
+          "quantityId": "surface-optical-response",
+          "quantityKind": "radiometric interface response",
+          "status": "UNKNOWN",
+          "unit": null,
+          "reference": {"surface": "OCEAN_SURFACE_STATE"},
+          "valueType": "function",
+          "reason": "layer contract exists but optical parameters and runtime implementation are not validated"
+        }
+      ],
+      "relations": [
+        {"type": "reads", "targetId": "OCEAN_SURFACE_STATE", "status": "Known"},
+        {"type": "reads", "targetId": "OCEAN_ENVIRONMENT_ADAPTER", "status": "Candidate"},
+        {"type": "cannotWrite", "targetId": "OCEAN_SURFACE_STATE", "status": "Known"}
+      ],
+      "observations": [
+        {
+          "observationId": "OBS_SURFACE_OPTICS_ROLE",
+          "kind": "Small Mother interface responsibility statement",
+          "directness": "derived_from_named_sources",
+          "sourceAssetIds": ["ASSET_SMALL_MOTHER_OCEAN_ADAPTER"],
+          "representedTime": "method candidate",
+          "limitations": ["no runtime optical test", "no calibrated water parameters"]
+        }
+      ],
+      "claims": [
+        {
+          "claimId": "CLAIM_SURFACE_OPTICS_READ_ONLY",
+          "property": "write authority",
+          "state": "SUPPORTED",
+          "value": "surface optics may read normal and environment but may not write geometry, bed or tide",
+          "epistemicState": "interface_candidate",
+          "supportObservationIds": ["OBS_SURFACE_OPTICS_ROLE"],
+          "oppositionObservationIds": []
+        }
+      ],
+      "provenance": {
+        "sourceAssets": [
+          {
+            "assetId": "ASSET_SMALL_MOTHER_OCEAN_ADAPTER",
+            "role": "Ocean/Coast adapter method",
+            "lineageType": "reviewed knowledge candidate",
+            "independenceRoot": "ROOT_SMALL_MOTHER_WORLD_KNOWLEDGE",
+            "sha256": null
+          }
+        ],
+        "transformations": [
+          {
+            "transformationId": "TRANSFORM_SURFACE_OPTICS_ROLE_CONTRACT",
+            "method": "responsibility extraction and forbidden-capability tests",
+            "inputAssetIds": ["ASSET_SMALL_MOTHER_OCEAN_ADAPTER"],
+            "outputRole": "read-only WaterSurfaceOptics contract",
+            "reproducible": true
+          }
+        ],
+        "lineage": {"copyLineage": "single method root", "sharedBias": "method candidate not runtime evidence"},
+        "independenceSummary": {
+          "uniqueIndependenceRoots": ["ROOT_SMALL_MOTHER_WORLD_KNOWLEDGE"],
+          "declaredIndependentRootCount": 1,
+          "copyCountDoesNotIncreaseEvidence": true
+        },
+        "processingVersion": "R19_UNIFIED_FIELD_R02"
+      },
+      "uncertainty": {
+        "byProperty": [
+          {"property": "responsibility boundary", "state": "Known", "reason": "encoded and tested"},
+          {"property": "optical coefficients", "state": "Unknown", "reason": "not calibrated"},
+          {"property": "visual result", "state": "NotObserved", "reason": "no visual build"}
+        ],
+        "sharedBiasGroups": ["method-without-rendering-evidence"]
+      },
+      "change": {
+        "mode": "time_varying_process",
+        "events": [],
+        "historyRequired": false
+      },
+      "view": {
+        "viewId": "VIEW_WATER_SURFACE_OPTICS_CONTRACT",
+        "sourceEntryId": "WATER_SURFACE_OPTICS",
+        "recomputable": true,
+        "overwritesEvidence": false,
+        "canonicalTruth": false,
+        "query": "return responsibility and unresolved optical parameters"
+      }
+    },
+    {
+      "identity": {
+        "id": "WATER_VOLUME_OPTICS",
+        "type": "ModelledOpticsField",
+        "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+        "parentId": "EXTERNAL:OCEAN_MOTHER_SCORE",
+        "epistemicState": "modelled_runtime_candidate",
+        "adoptionState": "REVIEWED_CANDIDATE"
+      },
+      "spaceFrame": {
+        "status": "Known",
+        "frameId": "PALAU_UTM53N_RUNTIME_MAPPING_PENDING",
+        "crs": "EPSG:32653",
+        "geometryRole": "read-only underwater absorption, scattering and path integration",
+        "unit": "mixed optical quantities",
+        "coverage": "valid water volume between one surface and one bed query"
+      },
+      "time": {
+        "representedTime": "world time t",
+        "observedTime": "runtime query time",
+        "createdTime": "2026-09-23 R02 contract",
+        "validTime": {"kind": "instant", "at": "query time"},
+        "timeRoles": ["world time", "observation time"]
+      },
+      "scale": {
+        "spatialSupport": "camera/light path within water volume",
+        "nominalResolution": "render/query dependent",
+        "frequencyRole": "volume optical integration",
+        "scaleStatus": "Mixed"
+      },
+      "quantityState": [
+        {
+          "quantityId": "water-volume-optical-response",
+          "quantityKind": "absorption and scattering",
+          "status": "UNKNOWN",
+          "unit": null,
+          "reference": {"surface": "OCEAN_SURFACE_STATE", "bed": "COAST_BOUNDARY"},
+          "valueType": "path integral function",
+          "reason": "parameters and runtime implementation are not validated"
+        }
+      ],
+      "relations": [
+        {"type": "reads", "targetId": "OCEAN_SURFACE_STATE", "status": "Known"},
+        {"type": "reads", "targetId": "COAST_BOUNDARY", "status": "Candidate"},
+        {"type": "reads", "targetId": "ALLEN_REEF_GEOMORPHIC_BENTHIC", "status": "Candidate"},
+        {"type": "cannotWrite", "targetId": "OCEAN_SURFACE_STATE", "status": "Known"}
+      ],
+      "observations": [
+        {
+          "observationId": "OBS_VOLUME_OPTICS_ROLE",
+          "kind": "Small Mother water-volume responsibility statement",
+          "directness": "derived_from_named_sources",
+          "sourceAssetIds": ["ASSET_SMALL_MOTHER_OCEAN_ADAPTER"],
+          "representedTime": "method candidate",
+          "limitations": ["no calibrated absorption/scattering", "bed and final surface may be unresolved"]
+        }
+      ],
+      "claims": [
+        {
+          "claimId": "CLAIM_VOLUME_OPTICS_READ_ONLY",
+          "property": "write authority",
+          "state": "SUPPORTED",
+          "value": "water volume optics reads surface and bed but cannot create a second geometry field",
+          "epistemicState": "interface_candidate",
+          "supportObservationIds": ["OBS_VOLUME_OPTICS_ROLE"],
+          "oppositionObservationIds": []
+        }
+      ],
+      "provenance": {
+        "sourceAssets": [
+          {
+            "assetId": "ASSET_SMALL_MOTHER_OCEAN_ADAPTER",
+            "role": "Ocean/Coast adapter method",
+            "lineageType": "reviewed knowledge candidate",
+            "independenceRoot": "ROOT_SMALL_MOTHER_WORLD_KNOWLEDGE",
+            "sha256": null
+          }
+        ],
+        "transformations": [
+          {
+            "transformationId": "TRANSFORM_VOLUME_OPTICS_ROLE_CONTRACT",
+            "method": "responsibility extraction and forbidden-capability tests",
+            "inputAssetIds": ["ASSET_SMALL_MOTHER_OCEAN_ADAPTER"],
+            "outputRole": "read-only WaterVolumeOptics contract",
+            "reproducible": true
+          }
+        ],
+        "lineage": {"copyLineage": "single method root", "sharedBias": "method candidate not runtime evidence"},
+        "independenceSummary": {
+          "uniqueIndependenceRoots": ["ROOT_SMALL_MOTHER_WORLD_KNOWLEDGE"],
+          "declaredIndependentRootCount": 1,
+          "copyCountDoesNotIncreaseEvidence": true
+        },
+        "processingVersion": "R19_UNIFIED_FIELD_R02"
+      },
+      "uncertainty": {
+        "byProperty": [
+          {"property": "responsibility boundary", "state": "Known", "reason": "encoded and tested"},
+          {"property": "absorption/scattering coefficients", "state": "Unknown", "reason": "not calibrated"},
+          {"property": "underwater visual result", "state": "NotObserved", "reason": "no visual build"}
+        ],
+        "sharedBiasGroups": ["method-without-rendering-evidence"]
+      },
+      "change": {
+        "mode": "time_varying_process",
+        "events": [],
+        "historyRequired": false
+      },
+      "view": {
+        "viewId": "VIEW_WATER_VOLUME_OPTICS_CONTRACT",
+        "sourceEntryId": "WATER_VOLUME_OPTICS",
+        "recomputable": true,
+        "overwritesEvidence": false,
+        "canonicalTruth": false,
+        "query": "return responsibility and unresolved volume-optics inputs"
+      }
+    },
+    {
+      "identity": {
+        "id": "OCEAN_ENVIRONMENT_ADAPTER",
+        "type": "ReadOnlyAdapterField",
+        "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+        "parentId": "EXTERNAL:OCEAN_MOTHER_SCORE",
+        "epistemicState": "interface_candidate",
+        "adoptionState": "REVIEWED_CANDIDATE"
+      },
+      "spaceFrame": {
+        "status": "Known",
+        "frameId": "WORLD_ENVIRONMENT_QUERY_FRAME",
+        "crs": null,
+        "geometryRole": "read-only weather-to-ocean environment interface",
+        "unit": "mixed SI quantities",
+        "coverage": "queried world point and time"
+      },
+      "time": {
+        "representedTime": "world time t",
+        "observedTime": "runtime query time",
+        "createdTime": "2026-09-23 R02 contract",
+        "validTime": {"kind": "instant", "at": "query time"},
+        "timeRoles": ["world time", "environment query time"]
+      },
+      "scale": {
+        "spatialSupport": "point/local environment query",
+        "nominalResolution": "weather provider dependent",
+        "frequencyRole": "solar, sky, wind and precipitation inputs",
+        "scaleStatus": "Mixed"
+      },
+      "quantityState": [
+        {
+          "quantityId": "environment-read-interface",
+          "quantityKind": "environment state bundle",
+          "status": "UNKNOWN",
+          "unit": null,
+          "reference": {"provider": "Weather/Cloud Mother"},
+          "valueType": "typed query",
+          "reason": "contract exists but 1944 weather provider and runtime adapter are not integrated"
+        }
+      ],
+      "relations": [
+        {"type": "readBy", "targetId": "OCEAN_SURFACE_STATE", "status": "Candidate"},
+        {"type": "readBy", "targetId": "WATER_SURFACE_OPTICS", "status": "Candidate"},
+        {"type": "cannotWrite", "targetId": "OCEAN_SURFACE_STATE", "status": "Known"},
+        {"type": "doesNotProvide", "targetId": "AIRAI_1944_NON_TIDAL_RESIDUAL", "status": "Known"}
+      ],
+      "observations": [
+        {
+          "observationId": "OBS_ENVIRONMENT_ADAPTER_ROLE",
+          "kind": "Small Mother Weather/Ocean responsibility statement",
+          "directness": "derived_from_named_sources",
+          "sourceAssetIds": ["ASSET_SMALL_MOTHER_OCEAN_ADAPTER"],
+          "representedTime": "method candidate",
+          "limitations": ["does not prove 1944 weather", "cannot directly mutate Ocean geometry"]
+        }
+      ],
+      "claims": [
+        {
+          "claimId": "CLAIM_ENVIRONMENT_ADAPTER_READ_ONLY",
+          "property": "write authority",
+          "state": "SUPPORTED",
+          "value": "Weather inputs are read-only; Ocean owns its state update",
+          "epistemicState": "interface_candidate",
+          "supportObservationIds": ["OBS_ENVIRONMENT_ADAPTER_ROLE"],
+          "oppositionObservationIds": []
+        }
+      ],
+      "provenance": {
+        "sourceAssets": [
+          {
+            "assetId": "ASSET_SMALL_MOTHER_OCEAN_ADAPTER",
+            "role": "Weather/Ocean interface method",
+            "lineageType": "reviewed knowledge candidate",
+            "independenceRoot": "ROOT_SMALL_MOTHER_WORLD_KNOWLEDGE",
+            "sha256": null
+          }
+        ],
+        "transformations": [
+          {
+            "transformationId": "TRANSFORM_ENVIRONMENT_ADAPTER_ROLE_CONTRACT",
+            "method": "responsibility extraction and forbidden-capability tests",
+            "inputAssetIds": ["ASSET_SMALL_MOTHER_OCEAN_ADAPTER"],
+            "outputRole": "read-only environment adapter contract",
+            "reproducible": true
+          }
+        ],
+        "lineage": {"copyLineage": "single method root", "sharedBias": "method candidate not runtime evidence"},
+        "independenceSummary": {
+          "uniqueIndependenceRoots": ["ROOT_SMALL_MOTHER_WORLD_KNOWLEDGE"],
+          "declaredIndependentRootCount": 1,
+          "copyCountDoesNotIncreaseEvidence": true
+        },
+        "processingVersion": "R19_UNIFIED_FIELD_R02"
+      },
+      "uncertainty": {
+        "byProperty": [
+          {"property": "responsibility boundary", "state": "Known", "reason": "encoded and tested"},
+          {"property": "1944 environment state", "state": "Unknown", "reason": "weather evidence not recovered"},
+          {"property": "runtime adapter", "state": "NotObserved", "reason": "not integrated"}
+        ],
+        "sharedBiasGroups": ["method-without-runtime-evidence"]
+      },
+      "change": {
+        "mode": "time_varying_process",
+        "events": [],
+        "historyRequired": true
+      },
+      "view": {
+        "viewId": "VIEW_OCEAN_ENVIRONMENT_ADAPTER_CONTRACT",
+        "sourceEntryId": "OCEAN_ENVIRONMENT_ADAPTER",
+        "recomputable": true,
+        "overwritesEvidence": false,
+        "canonicalTruth": false,
+        "query": "return environment fields or explicit Unknown without writing Ocean state"
+      }
+    },
+    {
+      "identity": {
+        "id": "INSTANTANEOUS_FREE_SURFACE",
+        "type": "DerivedFieldCandidate",
+        "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+        "parentId": "EXTERNAL:PALAU_WATER_STATE_SCORE",
+        "epistemicState": "derived_only_if_compatible",
+        "adoptionState": "NOT_ADOPTED"
+      },
+      "spaceFrame": {
+        "status": "Unknown",
+        "frameId": "COMMON_WATER_SURFACE_FRAME_PENDING",
+        "crs": "EPSG:32653",
+        "geometryRole": "instantaneous free-surface elevation and full Ocean state composition",
+        "unit": "metre",
+        "coverage": "Airai/Palau query point",
+        "reason": "common vertical datum and local tide components are unresolved"
+      },
+      "time": {
+        "representedTime": "world query time in 1944-10",
+        "observedTime": "derived query time",
+        "createdTime": "2026-09-23 R02 contract",
+        "validTime": {"kind": "instant", "at": "query time"},
+        "timeRoles": ["world time", "component evaluation time", "observation request time"]
+      },
+      "scale": {
+        "spatialSupport": "point/query footprint",
+        "nominalResolution": "maximum required precision among component fields",
+        "frequencyRole": "regional tide + local transfer + residual + dynamic wave",
+        "scaleStatus": "Mixed"
+      },
+      "quantityState": [
+        {
+          "quantityId": "final-free-surface-elevation",
+          "quantityKind": "instantaneous water-surface elevation",
+          "status": "UNKNOWN",
+          "unit": "m",
+          "reference": {"verticalReference": "UNRESOLVED_COMMON_WATER_DATUM"},
+          "valueType": "numeric field",
+          "reason": "Airai local tide transfer, 1944 residual and datum compatibility are unresolved"
+        },
+        {
+          "quantityId": "known-partial-components",
+          "quantityKind": "partial decomposition",
+          "status": "KNOWN",
+          "unit": "m",
+          "reference": {"verticalReference": "component-specific; final sum blocked until compatible"},
+          "valueType": "component ledger",
+          "value": ["reference level candidate", "regional tide candidate", "OceanSurfaceState wave component", "unresolved local transfer", "unresolved non-tidal residual"]
+        }
+      ],
+      "relations": [
+        {"type": "composes", "targetId": "MALAKAL_REGIONAL_ASTRONOMICAL_TIDE", "status": "Candidate"},
+        {"type": "requires", "targetId": "AIRAI_LOCAL_TIDE_TRANSFER", "status": "Known"},
+        {"type": "requires", "targetId": "AIRAI_1944_NON_TIDAL_RESIDUAL", "status": "Known"},
+        {"type": "composes", "targetId": "OCEAN_SURFACE_STATE", "status": "Candidate"},
+        {"type": "requiredBy", "targetId": "WORLD_WATER_DEPTH", "status": "Known"}
+      ],
+      "observations": [
+        {
+          "observationId": "OBS_FREE_SURFACE_R02_CONTRACT_TESTS",
+          "kind": "pure-logic composition and rejection tests",
+          "directness": "model_output",
+          "sourceAssetIds": ["ASSET_R02_KERNEL_TESTS"],
+          "representedTime": "synthetic test fixtures representing 1944 query semantics",
+          "limitations": ["not physical observation", "does not supply missing tide components", "does not validate runtime Ocean"]
+        }
+      ],
+      "claims": [
+        {
+          "claimId": "CLAIM_FREE_SURFACE_PARTIAL_STOP",
+          "property": "composition stop condition",
+          "state": "SUPPORTED",
+          "value": "missing required components yield PARTIAL, not a false final numeric surface",
+          "epistemicState": "derived_verified_processing",
+          "supportObservationIds": ["OBS_FREE_SURFACE_R02_CONTRACT_TESTS"],
+          "oppositionObservationIds": []
+        }
+      ],
+      "provenance": {
+        "sourceAssets": [
+          {
+            "assetId": "ASSET_R02_KERNEL_TESTS",
+            "role": "R02 kernel, tests and CI receipt",
+            "lineageType": "project logic artifact",
+            "independenceRoot": "ROOT_R19_UNIFIED_FIELD_R02",
+            "sha256": null
+          }
+        ],
+        "transformations": [
+          {
+            "transformationId": "TRANSFORM_FREE_SURFACE_CONTRACT",
+            "method": "typed component composition with time, frame, datum and adoption gates",
+            "inputAssetIds": ["ASSET_R02_KERNEL_TESTS"],
+            "outputRole": "free-surface query contract",
+            "reproducible": true
+          }
+        ],
+        "lineage": {"copyLineage": "single R02 logic root", "sharedBias": "synthetic contract tests do not prove physical field values"},
+        "independenceSummary": {
+          "uniqueIndependenceRoots": ["ROOT_R19_UNIFIED_FIELD_R02"],
+          "declaredIndependentRootCount": 1,
+          "copyCountDoesNotIncreaseEvidence": true
+        },
+        "processingVersion": "R19_UNIFIED_FIELD_R02"
+      },
+      "uncertainty": {
+        "byProperty": [
+          {"property": "composition semantics", "state": "Known", "reason": "R02 tests pass"},
+          {"property": "final numeric elevation", "state": "Unknown", "reason": "required real fields and datum bridge missing"},
+          {"property": "partial known sum", "state": "Known", "reason": "can be reported with unresolved components but cannot drive final depth"}
+        ],
+        "sharedBiasGroups": ["contract-test-not-physical-validation"]
+      },
+      "change": {
+        "mode": "derived_view_only",
+        "events": [],
+        "historyRequired": false
+      },
+      "view": {
+        "viewId": "VIEW_FREE_SURFACE_COMPONENT_LEDGER",
+        "sourceEntryId": "INSTANTANEOUS_FREE_SURFACE",
+        "recomputable": true,
+        "overwritesEvidence": false,
+        "canonicalTruth": false,
+        "query": "return final surface only when complete; otherwise return PARTIAL component ledger"
+      }
+    },
+    {
+      "identity": {
+        "id": "WORLD_WATER_DEPTH",
+        "type": "DerivedFieldCandidate",
+        "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+        "parentId": "EXTERNAL:PALAU_WATER_STATE_SCORE",
+        "epistemicState": "derived_only_if_compatible",
+        "adoptionState": "NOT_ADOPTED"
+      },
+      "spaceFrame": {
+        "status": "Unknown",
+        "frameId": "COMMON_WATER_DEPTH_FRAME_PENDING",
+        "crs": "EPSG:32653",
+        "geometryRole": "free surface minus bed elevation",
+        "unit": "metre",
+        "coverage": "query point",
+        "reason": "final free surface and common vertical datum are unresolved"
+      },
+      "time": {
+        "representedTime": "world query time in 1944-10",
+        "observedTime": "derived query time",
+        "createdTime": "2026-09-23 R02 contract",
+        "validTime": {"kind": "instant", "at": "query time"},
+        "timeRoles": ["world time", "bed valid-time test", "surface valid-time test"]
+      },
+      "scale": {
+        "spatialSupport": "point/query footprint",
+        "nominalResolution": "maximum required precision of surface and bed",
+        "frequencyRole": "derived depth and wet/dry precursor",
+        "scaleStatus": "Mixed"
+      },
+      "quantityState": [
+        {
+          "quantityId": "water-depth",
+          "quantityKind": "vertical water column depth",
+          "status": "UNKNOWN",
+          "unit": "m",
+          "reference": {"verticalReference": "UNRESOLVED_COMMON_WATER_DATUM"},
+          "valueType": "numeric field",
+          "reason": "final free surface and chart/EGM96 datum bridge are unresolved"
+        }
+      ],
+      "relations": [
+        {"type": "subtracts", "targetId": "PALAU_R19_EGM96_CANONICAL_DEM", "status": "Candidate"},
+        {"type": "subtractsFrom", "targetId": "INSTANTANEOUS_FREE_SURFACE", "status": "Candidate"},
+        {"type": "constrainedBy", "targetId": "NOAA_ENC_SOUNDG", "status": "Unknown", "reason": "datum bridge unresolved"},
+        {"type": "requiredBy", "targetId": "WORLD_WET_DRY_STATE", "status": "Known"}
+      ],
+      "observations": [
+        {
+          "observationId": "OBS_WATER_DEPTH_R02_CONTRACT_TESTS",
+          "kind": "pure-logic datum, valid-time and NoData rejection tests",
+          "directness": "model_output",
+          "sourceAssetIds": ["ASSET_R02_KERNEL_TESTS"],
+          "representedTime": "synthetic test fixtures",
+          "limitations": ["not physical depth observation", "only proves query contract"]
+        }
+      ],
+      "claims": [
+        {
+          "claimId": "CLAIM_DEPTH_REQUIRES_COMMON_DATUM",
+          "property": "calculation precondition",
+          "state": "SUPPORTED",
+          "value": "surface and bed must share a validated vertical reference and valid query time",
+          "epistemicState": "derived_verified_processing",
+          "supportObservationIds": ["OBS_WATER_DEPTH_R02_CONTRACT_TESTS"],
+          "oppositionObservationIds": []
+        }
+      ],
+      "provenance": {
+        "sourceAssets": [
+          {
+            "assetId": "ASSET_R02_KERNEL_TESTS",
+            "role": "R02 depth query tests",
+            "lineageType": "project logic artifact",
+            "independenceRoot": "ROOT_R19_UNIFIED_FIELD_R02",
+            "sha256": null
+          }
+        ],
+        "transformations": [
+          {
+            "transformationId": "TRANSFORM_WATER_DEPTH_CONTRACT",
+            "method": "freeSurface - bed only after time/frame/datum compatibility",
+            "inputAssetIds": ["ASSET_R02_KERNEL_TESTS"],
+            "outputRole": "water-depth query contract",
+            "reproducible": true
+          }
+        ],
+        "lineage": {"copyLineage": "single R02 logic root", "sharedBias": "contract test not physical validation"},
+        "independenceSummary": {
+          "uniqueIndependenceRoots": ["ROOT_R19_UNIFIED_FIELD_R02"],
+          "declaredIndependentRootCount": 1,
+          "copyCountDoesNotIncreaseEvidence": true
+        },
+        "processingVersion": "R19_UNIFIED_FIELD_R02"
+      },
+      "uncertainty": {
+        "byProperty": [
+          {"property": "calculation semantics", "state": "Known", "reason": "R02 tests pass"},
+          {"property": "actual Airai depth at story time", "state": "Unknown", "reason": "final inputs unresolved"},
+          {"property": "outside bed evidence", "state": "NoData", "reason": "NoData must propagate"}
+        ],
+        "sharedBiasGroups": ["contract-test-not-physical-validation"]
+      },
+      "change": {
+        "mode": "derived_view_only",
+        "events": [],
+        "historyRequired": false
+      },
+      "view": {
+        "viewId": "VIEW_WATER_DEPTH_PRECONDITIONS",
+        "sourceEntryId": "WORLD_WATER_DEPTH",
+        "recomputable": true,
+        "overwritesEvidence": false,
+        "canonicalTruth": false,
+        "query": "return depth only after surface, bed, time and datum gates pass"
+      }
+    },
+    {
+      "identity": {
+        "id": "WORLD_WET_DRY_STATE",
+        "type": "DerivedStateCandidate",
+        "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+        "parentId": "EXTERNAL:PALAU_WATER_STATE_SCORE",
+        "epistemicState": "derived_only_if_compatible",
+        "adoptionState": "NOT_ADOPTED"
+      },
+      "spaceFrame": {
+        "status": "Unknown",
+        "frameId": "COMMON_WET_DRY_FRAME_PENDING",
+        "crs": "EPSG:32653",
+        "geometryRole": "dynamic classification derived from one depth query",
+        "unit": null,
+        "coverage": "query point",
+        "reason": "water depth is unresolved"
+      },
+      "time": {
+        "representedTime": "world query time in 1944-10",
+        "observedTime": "derived query time",
+        "createdTime": "2026-09-23 R02 contract",
+        "validTime": {"kind": "instant", "at": "query time"},
+        "timeRoles": ["world time", "depth query time"]
+      },
+      "scale": {
+        "spatialSupport": "point/query footprint",
+        "nominalResolution": "inherits water-depth query",
+        "frequencyRole": "dynamic wet/contact/dry classification",
+        "scaleStatus": "Mixed"
+      },
+      "quantityState": [
+        {
+          "quantityId": "wet-dry-state",
+          "quantityKind": "categorical hydrologic contact state",
+          "status": "UNKNOWN",
+          "unit": null,
+          "reference": {"source": "WORLD_WATER_DEPTH"},
+          "valueType": "categorical",
+          "reason": "water depth is not yet a final known field"
+        }
+      ],
+      "relations": [
+        {"type": "derivedFrom", "targetId": "WORLD_WATER_DEPTH", "status": "Known"},
+        {"type": "reads", "targetId": "COAST_BOUNDARY", "status": "Candidate"},
+        {"type": "mustNotBecomePrivateShoreline", "targetId": "NOAA_ENC_COALNE_LNDARE", "status": "Known"}
+      ],
+      "observations": [
+        {
+          "observationId": "OBS_WET_DRY_R02_CONTRACT",
+          "kind": "pure-logic classification contract",
+          "directness": "model_output",
+          "sourceAssetIds": ["ASSET_R02_KERNEL_TESTS"],
+          "representedTime": "synthetic test fixtures",
+          "limitations": ["not a physical shoreline observation", "depends entirely on valid water depth"]
+        }
+      ],
+      "claims": [
+        {
+          "claimId": "CLAIM_NO_PRIVATE_BAKED_SHORELINE",
+          "property": "wet/dry derivation policy",
+          "state": "SUPPORTED",
+          "value": "wet/dry is derived from the one water-depth query and cannot create a second baked shoreline",
+          "epistemicState": "derived_verified_processing",
+          "supportObservationIds": ["OBS_WET_DRY_R02_CONTRACT"],
+          "oppositionObservationIds": []
+        }
+      ],
+      "provenance": {
+        "sourceAssets": [
+          {
+            "assetId": "ASSET_R02_KERNEL_TESTS",
+            "role": "R02 wet/dry query contract tests",
+            "lineageType": "project logic artifact",
+            "independenceRoot": "ROOT_R19_UNIFIED_FIELD_R02",
+            "sha256": null
+          }
+        ],
+        "transformations": [
+          {
+            "transformationId": "TRANSFORM_WET_DRY_CONTRACT",
+            "method": "classify sign of valid water depth with explicit Unknown and NoData propagation",
+            "inputAssetIds": ["ASSET_R02_KERNEL_TESTS"],
+            "outputRole": "wet/contact/dry query contract",
+            "reproducible": true
+          }
+        ],
+        "lineage": {"copyLineage": "single R02 logic root", "sharedBias": "contract test not physical validation"},
+        "independenceSummary": {
+          "uniqueIndependenceRoots": ["ROOT_R19_UNIFIED_FIELD_R02"],
+          "declaredIndependentRootCount": 1,
+          "copyCountDoesNotIncreaseEvidence": true
+        },
+        "processingVersion": "R19_UNIFIED_FIELD_R02"
+      },
+      "uncertainty": {
+        "byProperty": [
+          {"property": "classification semantics", "state": "Known", "reason": "R02 contract"},
+          {"property": "actual 1944 wet/dry state", "state": "Unknown", "reason": "water depth unresolved"},
+          {"property": "outside evidence", "state": "NoData", "reason": "NoData propagates"}
+        ],
+        "sharedBiasGroups": ["contract-test-not-physical-validation"]
+      },
+      "change": {
+        "mode": "derived_view_only",
+        "events": [],
+        "historyRequired": false
+      },
+      "view": {
+        "viewId": "VIEW_WET_DRY_STATE_PRECONDITIONS",
+        "sourceEntryId": "WORLD_WET_DRY_STATE",
+        "recomputable": true,
+        "overwritesEvidence": false,
+        "canonicalTruth": false,
+        "query": "return WET/CONTACT/DRY only from valid one-source water depth"
+      }
+    }
+  ]
+}
