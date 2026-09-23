@@ -106,8 +106,8 @@ function normalizePair(teacherRoot, candidateRoot) {
   const size = box.getSize(new THREE.Vector3());
   const scale = 2.4 / Math.max(size.x, size.y, size.z);
   for (const root of [teacherRoot, candidateRoot]) {
-    root.position.sub(center);
     root.scale.setScalar(scale);
+    root.position.copy(center).multiplyScalar(-scale);
     root.updateMatrixWorld(true);
   }
   return { center, sourceSize: size, scale };
