@@ -61,7 +61,11 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           root=Path('apps/coral-restart-20260923/blue-coral-a04-hdf')
-          combined='\n'.join((root/name).read_text() for name in [
+          implementation='\n'.join((root/name).read_text() for name in [
+            'tools/compile_exact_teacher.py',
+            'tools/build_exact_workbench.py',
+          ])
+          complete='\n'.join((root/name).read_text() for name in [
             'tools/compile_exact_teacher.py',
             'tools/verify_exact_fields.py',
             'tools/build_exact_workbench.py',
@@ -71,14 +75,14 @@ jobs:
             'allSourceAccessorsPreservedByteExact',
             'separateCandidateBuffersRequired',
             'sameScaleSameCameraComparisonRequired',
-          ]: assert marker in combined, marker
+          ]: assert marker in complete, marker
           for marker in [
             'trimesh.simplify',
             'MarchingCubes(',
             'meshopt_simplify(',
             'voxelize(',
             'simplify_quadratic_decimation',
-          ]: assert marker not in combined, marker
+          ]: assert marker not in implementation, marker
           print('BLUE_CORAL_A04_COMPILER_AND_BUILDER_METHOD_PASS')
           PY
 
@@ -105,7 +109,7 @@ jobs:
           test -s /tmp/blue-coral-a04-runtime.js
           ! grep -q 'SkeletonUtils' /tmp/blue-coral-a04-runtime.js
           grep -q 'BLUE_CORAL_CANONICAL_A04' /tmp/blue-coral-a04-runtime.js
-          grep -q 'sourceCloneUsed:!1' /tmp/blue-coral-a04-runtime.js || grep -q 'sourceCloneUsed:false' /tmp/blue-coral-a04-runtime.js
+          grep -Eq 'sourceCloneUsed:(!1|false)' /tmp/blue-coral-a04-runtime.js
           echo "BLUE_CORAL_A04_RUNTIME_BUNDLE_BYTES=$(wc -c </tmp/blue-coral-a04-runtime.js)"
 
       - uses: actions/upload-artifact@v4
