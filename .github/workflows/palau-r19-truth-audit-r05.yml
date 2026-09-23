@@ -1,0 +1,71 @@
+name: Palau R19 truth audit R05
+
+on:
+  push:
+    branches:
+      - work/palau-airai-r19-authority-locked-restart-20260922
+    paths:
+      - games/survivor-palau/palau-world/airai-r19/unified-field-r01/R19_SMALL_MOTHER_INDEPENDENT_TRUTH_AUDIT_R05.md
+      - games/survivor-palau/palau-world/airai-r19/unified-field-r01/R19_TRUTH_CLAIM_MATRIX_R05.json
+      - games/survivor-palau/palau-world/airai-r19/unified-field-r01/validate_truth_claim_matrix_r05.cjs
+      - games/survivor-palau/palau-world/airai-r19/R19_CURRENT_STATE.json
+      - games/survivor-palau/palau-world/airai-r19/unified-field-r01/R19_TRANSFER_GRAPH_R04.json
+      - .github/workflows/palau-r19-truth-audit-r05.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preaudit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/palau-airai-r19-authority-locked-restart-20260922
+
+      - name: Validate claim states, blocked routes and non-promotion gates
+        run: node games/survivor-palau/palau-world/airai-r19/unified-field-r01/validate_truth_claim_matrix_r05.cjs
+
+      - name: Reject visible-production artifacts in the audit package
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="games/survivor-palau/palau-world/airai-r19/unified-field-r01"
+          for file in \
+            "$ROOT/R19_SMALL_MOTHER_INDEPENDENT_TRUTH_AUDIT_R05.md" \
+            "$ROOT/R19_TRUTH_CLAIM_MATRIX_R05.json" \
+            "$ROOT/validate_truth_claim_matrix_r05.cjs"; do
+            test -f "$file"
+          done
+          if find "$ROOT" -maxdepth 1 -type f \( -iname '*R05*.html' -o -iname '*R05*.glb' -o -iname '*R05*.gltf' -o -iname '*R05*.png' -o -iname '*R05*.jpg' -o -iname '*R05*.jpeg' -o -iname '*R05*.tif' -o -iname '*R05*.tiff' \) | grep -q .; then
+            echo 'Truth-audit package contains forbidden visual/production output.' >&2
+            exit 1
+          fi
+
+      - name: Prove unresolved gates remain false
+        shell: bash
+        run: |
+          set -euo pipefail
+          STATE="games/survivor-palau/palau-world/airai-r19/R19_CURRENT_STATE.json"
+          node - "$STATE" <<'NODE'
+          const fs = require('node:fs');
+          const state = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+          const requiredFalse = [
+            'waveDecompositionAdopted',
+            'demGeographicOverlayPassed',
+            'storyAoiFrozen',
+            'readyForVisualBuild',
+            'interactive3D',
+            'visualAcceptance',
+            'productionReady',
+          ];
+          for (const key of requiredFalse) {
+            if (state.gates[key] !== false) throw new Error(`${key} must remain false`);
+          }
+          if (state.gates.smallMotherValidation !== 'REQUESTED_NOT_APPROVED') {
+            throw new Error('Small Mother judgment has not been received');
+          }
+          console.log('Unresolved production gates remain correctly blocked.');
+          NODE
