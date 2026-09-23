@@ -1,0 +1,39 @@
+name: Palau R19 KAOPU Core R03
+
+on:
+  push:
+    branches:
+      - work/palau-airai-r19-authority-locked-restart-20260922
+    paths:
+      - games/survivor-palau/palau-world/airai-r19/unified-field-r01/R19_KAOPU_CORE_SCHEMA_R03.json
+      - games/survivor-palau/palau-world/airai-r19/unified-field-r01/R19_KAOPU_CORE_LEDGER_R03.json
+      - games/survivor-palau/palau-world/airai-r19/unified-field-r01/kaopu_core_r03.cjs
+      - games/survivor-palau/palau-world/airai-r19/unified-field-r01/validate_kaopu_core_r03.cjs
+      - .github/workflows/palau-r19-kaopu-core-r03.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-kaopu-core-r03:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/palau-airai-r19-authority-locked-restart-20260922
+
+      - name: Validate complete KAOPU Core ledger and adversarial cases
+        run: node games/survivor-palau/palau-world/airai-r19/unified-field-r01/validate_kaopu_core_r03.cjs
+
+      - name: Keep R03 semantic package non-visual
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="games/survivor-palau/palau-world/airai-r19/unified-field-r01"
+          if find "$ROOT" -maxdepth 1 -type f \( -iname '*.html' -o -iname '*.glb' -o -iname '*.gltf' -o -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.tif' -o -iname '*.tiff' \) | grep -q .; then
+            echo 'R03 semantic package contains forbidden visual or binary production output.' >&2
+            exit 1
+          fi
+          echo 'R03 remains a semantic, provenance and validation package only.'
