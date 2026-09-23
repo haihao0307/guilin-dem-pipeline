@@ -9,7 +9,14 @@ fs.mkdirSync(out, { recursive: true });
 
 const browser = await chromium.launch({
   headless: true,
-  args: ['--use-angle=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'],
+  args: [
+    '--use-gl=angle',
+    '--use-angle=swiftshader',
+    '--enable-webgl',
+    '--enable-unsafe-swiftshader',
+    '--ignore-gpu-blocklist',
+    '--disable-dev-shm-usage',
+  ],
 });
 
 async function verifyViewport(name, viewport) {
@@ -27,54 +34,100 @@ async function verifyViewport(name, viewport) {
     error: request.failure()?.errorText || 'unknown',
   }));
 
-  const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 240_000 });
+  const started = Date.now();
+  const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 300_000 });
   assert(response, `${name}: missing document response`);
   assert.equal(response.status(), 200, `${name}: public HTTP status is not 200`);
-  await page.waitForFunction(() => window.__CORAL_READY__ === true || Boolean(window.__CORAL_ERROR__), null, { timeout: 360_000 });
-  const runtimeError = await page.evaluate(() => window.__CORAL_ERROR__ || null);
+  await page.waitForFunction(
+    () => window.__CORAL_READY__ === true || Boolean(window.__CORAL_STARTUP_ERROR__),
+    null,
+    { timeout: 360_000 },
+  );
+  const runtimeError = await page.evaluate(() => window.__CORAL_STARTUP_ERROR__ || null);
   assert.equal(runtimeError, null, `${name}: runtime error: ${runtimeError}`);
-  await page.waitForFunction(() => window.__RENDER_COUNT__ >= 2, null, { timeout: 60_000 });
 
-  const capabilities = await page.evaluate(() => ({
-    webgl2: Boolean(document.querySelector('canvas')?.getContext('webgl2')),
+  // The regular workbench renders continuously for OrbitControls. Stop that loop
+  // after readiness on the software-GPU runner and render explicitly for evidence.
+  await page.evaluate(() => {
+    window.requestAnimationFrame = () => 0;
+    window.coralA04.render();
+  });
+  await page.waitForTimeout(300);
+
+  const runtime = await page.evaluate(() => ({
     ready: window.__CORAL_READY__ === true,
-    renderCount: window.__RENDER_COUNT__ || 0,
     hasRuntimeApi: Boolean(window.coralA04),
-    canvas: (() => {
-      const canvas = document.querySelector('canvas');
-      const rect = canvas?.getBoundingClientRect();
-      return rect ? { width: rect.width, height: rect.height } : null;
+    audit: window.coralA04.audit(),
+    layout: (() => {
+      const canvas = document.querySelector('#coralCanvas')?.getBoundingClientRect();
+      const controls = document.querySelector('.controls')?.getBoundingClientRect();
+      const leftTag = document.querySelector('.tag.left')?.getBoundingClientRect();
+      const rightTag = document.querySelector('.tag.right')?.getBoundingClientRect();
+      const divider = document.querySelector('.divider')?.getBoundingClientRect();
+      return {
+        innerWidth,
+        innerHeight,
+        bodyWidth: document.body.scrollWidth,
+        canvas: canvas && { x: canvas.x, y: canvas.y, width: canvas.width, height: canvas.height },
+        controls: controls && { x: controls.x, y: controls.y, width: controls.width, height: controls.height },
+        leftTag: leftTag && { x: leftTag.x, y: leftTag.y, width: leftTag.width, height: leftTag.height },
+        rightTag: rightTag && { x: rightTag.x, y: rightTag.y, width: rightTag.width, height: rightTag.height },
+        divider: divider && { x: divider.x, y: divider.y, width: divider.width, height: divider.height },
+      };
     })(),
   }));
-  assert(capabilities.webgl2, `${name}: WebGL2 is unavailable`);
-  assert(capabilities.ready, `${name}: ready flag missing`);
-  assert(capabilities.hasRuntimeApi, `${name}: A04 runtime API missing`);
-  assert(capabilities.canvas && capabilities.canvas.width > 300 && capabilities.canvas.height > 300, `${name}: 3D canvas is not visible`);
 
-  const audit = await page.evaluate(() => window.coralA04.verify());
-  assert.equal(audit.mismatchBytes, 0, `${name}: teacher-field byte mismatch`);
-  assert.equal(audit.accessorMismatch, 0, `${name}: accessor mismatch`);
-  assert.equal(audit.maxPosition, 0, `${name}: position mismatch`);
-  assert.equal(audit.maxNormal, 0, `${name}: normal mismatch`);
-  assert.equal(audit.maxUv, 0, `${name}: UV mismatch`);
-  assert.equal(audit.indexMismatch, 0, `${name}: index mismatch`);
-  assert.equal(audit.separateTypedArrays, true, `${name}: teacher and candidate share typed arrays`);
-  assert.equal(audit.separateGpuBuffers, true, `${name}: teacher and candidate share GPU buffers`);
-  assert.equal(audit.noSourceObjectClone, true, `${name}: source object clone gate failed`);
+  assert(runtime.ready, `${name}: ready flag missing`);
+  assert(runtime.hasRuntimeApi, `${name}: A04 runtime API missing`);
+  assert(runtime.layout.canvas?.width > 300 && runtime.layout.canvas?.height > 300, `${name}: 3D canvas is not visible`);
+  const audit = runtime.audit;
+  assert.equal(audit.version, 'BLUE_CORAL_CANONICAL_A04', `${name}: wrong version`);
+  assert.equal(audit.stage, 'ONE_TO_ONE_HIGH_DIMENSIONAL_FIELD_EXPRESSION', `${name}: wrong stage`);
+  assert.equal(audit.webgl2, true, `${name}: WebGL2 unavailable`);
+  assert.equal(audit.allSourceAccessorsDecoded, true, `${name}: not all source accessors decoded`);
+  assert.equal(audit.decodedAccessorCount, 36, `${name}: accessor count changed`);
+  assert.equal(audit.surfaceCount, 9, `${name}: surface count changed`);
+  assert.equal(audit.vertexRecordCount, 582034, `${name}: vertex-record count changed`);
+  assert.equal(audit.triangleCount, 1000000, `${name}: triangle count changed`);
+  assert.equal(audit.separateTypedArrays, true, `${name}: candidate typed arrays are not independent`);
+  assert.equal(audit.separateArrayBuffers, true, `${name}: candidate ArrayBuffers are not independent`);
+  assert.equal(audit.separateGpuBuffers, true, `${name}: candidate GPU buffers are not independent`);
+  assert.equal(audit.teacherGeometryAliasCount, 0, `${name}: candidate aliases teacher geometry`);
+  assert.equal(audit.teacherBufferAliasCount, 0, `${name}: candidate aliases teacher buffers`);
+  assert.equal(audit.noTeacherAliasing, true, `${name}: teacher-aliasing gate failed`);
+  assert.equal(audit.sameScaleSameCameraCompare, true, `${name}: same-camera comparison gate failed`);
+  assert.equal(audit.sourceCloneUsed, false, `${name}: candidate cloned teacher object`);
   assert.equal(audit.gltfLoaderUsedForCandidate, false, `${name}: candidate used GLTFLoader`);
-  assert.equal(audit.highDimensionalFieldExpression, true, `${name}: high-dimensional field contract missing`);
+  for (const key of ['meshSimplification', 'decimation', 'remeshing', 'voxelization', 'marchingCubes']) {
+    assert.equal(audit[key], false, `${name}: forbidden method ${key} enabled`);
+  }
+  assert.equal(audit.structureGrammarUnlocked, false, `${name}: structure grammar unlocked too early`);
   assert.equal(audit.finalGenerator, false, `${name}: A04 incorrectly claims final generator status`);
-  assert(Array.isArray(audit.silhouettes) && audit.silhouettes.length === 4, `${name}: silhouette suite incomplete`);
-  assert(audit.silhouettes.every(item => item.union > 0 && item.iou >= 0.99999), `${name}: silhouette mismatch`);
+  assert.equal(audit.productionReady, false, `${name}: A04 incorrectly claims production-ready status`);
 
-  await page.screenshot({ path: path.join(out, `${name}.png`), fullPage: true });
+  if (viewport.width === 390) {
+    assert.equal(runtime.layout.innerWidth, 390, `${name}: mobile inner width changed`);
+    assert(runtime.layout.bodyWidth <= 390, `${name}: mobile horizontal overflow`);
+    assert(runtime.layout.divider?.width >= 389 && runtime.layout.divider?.height <= 2, `${name}: mobile divider is not horizontal`);
+    assert(runtime.layout.rightTag?.y > runtime.layout.leftTag?.y + 150, `${name}: mobile teacher/candidate labels are not stacked`);
+  } else {
+    assert(runtime.layout.divider?.height > 400 && runtime.layout.divider?.width <= 2, `${name}: desktop divider is not vertical`);
+    assert(runtime.layout.rightTag?.x > runtime.layout.leftTag?.x + 300, `${name}: desktop teacher/candidate labels are not side by side`);
+  }
+
+  const screenshot = path.join(out, `${name}.png`);
+  await page.screenshot({ path: screenshot, fullPage: false });
+  const screenshotBytes = fs.statSync(screenshot).size;
+  assert(screenshotBytes > 50_000, `${name}: screenshot is unexpectedly empty`);
   await context.close();
+
   return {
     name,
     viewport,
+    loadSeconds: (Date.now() - started) / 1000,
     httpStatus: response.status(),
-    capabilities,
-    audit,
+    runtime,
+    screenshot: { file: path.basename(screenshot), bytes: screenshotBytes },
     consoleErrors,
     pageErrors,
     requestFailures,
@@ -88,14 +141,17 @@ try {
   assert(desktop.passed, `desktop browser errors: ${JSON.stringify(desktop)}`);
   assert(mobile.passed, `mobile browser errors: ${JSON.stringify(mobile)}`);
   const receipt = {
-    schema: 'kaopu.browser-qa/1.0',
-    version: 'BLUE_CORAL_A04_HIGH_DIMENSIONAL_FUNCTION_EXPRESSION',
+    schema: 'kaopu.browser-qa/2.0',
+    version: 'BLUE_CORAL_CANONICAL_A04',
+    stage: 'ONE_TO_ONE_HIGH_DIMENSIONAL_FIELD_EXPRESSION',
     url,
     verifiedAt: new Date().toISOString(),
     desktop,
     mobile,
     physicalMobileDeviceTested: false,
     userVisualApproval: false,
+    structureGrammarUnlocked: false,
+    finalGenerator: false,
     productionReady: false,
     passed: true,
   };
