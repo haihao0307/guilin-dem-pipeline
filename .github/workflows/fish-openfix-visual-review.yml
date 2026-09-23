@@ -1,0 +1,36 @@
+name: Fish Open Fix Visual Review
+on:
+  push:
+    branches: [fix/fish-r006-1-white-screen-20260923]
+    paths: [.github/workflows/fish-openfix-visual-review.yml]
+permissions:
+  contents: read
+jobs:
+  inspect-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Read actual frozen browser screenshots and make inspection copies
+        run: |
+          python -m pip install Pillow==11.2.1
+          python - <<'PY'
+          import urllib.request,hashlib,base64,json,io,pathlib
+          from PIL import Image
+          base='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/0bf136051dd3b8c65306cddc08d7bbd11d5c2e3d/fish-mother-yellowfin/evidence/openfix/'
+          receipts=[]
+          for name in ['01-before-model-arrives','03-real-fish-cold-start']:
+              raw=urllib.request.urlopen(base+name+'.png',timeout=30).read();im=Image.open(io.BytesIO(raw)).convert('RGB')
+              original_size=im.size
+              if name.startswith('03'):im=im.crop((0,125,1175,837))
+              im.thumbnail((384,256));buf=io.BytesIO();im.save(buf,format='WEBP',quality=35,method=6);data=buf.getvalue();pathlib.Path(name+'.webp').write_bytes(data)
+              row={'name':name,'sourcePngSha256':hashlib.sha256(raw).hexdigest(),'originalSize':original_size,'inspectionSize':im.size,'inspectionSha256':hashlib.sha256(data).hexdigest(),'inspectionBytes':len(data)};receipts.append(row)
+              print('INSPECTION_META='+json.dumps(row),flush=True)
+              print('INSPECTION_WEBP_BASE64='+base64.b64encode(data).decode(),flush=True)
+          pathlib.Path('INSPECTION_SOURCE.json').write_text(json.dumps(receipts,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fish-openfix-frozen-inspection-copies
+          path: |
+            *.webp
+            INSPECTION_SOURCE.json
