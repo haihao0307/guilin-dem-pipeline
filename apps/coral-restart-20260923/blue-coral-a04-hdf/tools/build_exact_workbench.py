@@ -106,12 +106,15 @@ def main() -> None:
         count = html.count(marker)
         assert count == 1, (marker, count)
         html = html.replace(marker, value)
-    assert "__" not in html, "Unresolved build marker remains"
+    unresolved = [marker for marker in replacements if marker in html]
+    assert not unresolved, f"Unresolved build markers: {unresolved}"
     assert "new GLTFLoader(" in html, "Teacher loader missing"
     assert "gltfLoaderUsedForCandidate: false" in html, "Candidate anti-clone marker missing"
     assert "reconstructCandidate" in html, "Canonical decoder missing"
     assert "meshSimplification: false" in html
     assert "marchingCubes: false" in html
+    assert "window.__CORAL_READY__" in html, "Runtime readiness gate missing"
+    assert "window.__CORAL_AUDIT__" in html, "Runtime audit gate missing"
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html, encoding="utf-8")
