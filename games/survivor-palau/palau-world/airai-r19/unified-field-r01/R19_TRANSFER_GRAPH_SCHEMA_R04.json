@@ -1,0 +1,74 @@
+{
+  "schema": "kaopu.transfer-graph-schema/0.4",
+  "version": "R19_TRANSFER_GRAPH_SCHEMA_R04",
+  "status": "SMALL_MOTHER_REVIEW_CANDIDATE",
+  "nodeDomains": [
+    "spatial_frame",
+    "vertical_reference",
+    "time_state",
+    "semantic_identity",
+    "observed_state",
+    "process_state",
+    "representation"
+  ],
+  "edgeKinds": [
+    "spatial_transform",
+    "vertical_datum_transform",
+    "temporal_transfer",
+    "semantic_binding",
+    "state_transfer",
+    "process_transfer",
+    "representation_transform",
+    "component_relation"
+  ],
+  "edgeStatuses": [
+    "VERIFIED",
+    "VERIFIED_SCOPED",
+    "CANDIDATE",
+    "BLOCKED",
+    "REJECTED"
+  ],
+  "canonicalTraversalStatuses": [
+    "VERIFIED",
+    "VERIFIED_SCOPED"
+  ],
+  "directionValues": [
+    "one_way"
+  ],
+  "verifiedEdgeRequirements": [
+    "operation",
+    "evidence",
+    "validRange",
+    "tests.passed=true"
+  ],
+  "verifiedScopedAdditionalRequirements": [
+    "scope"
+  ],
+  "candidateRequirements": [
+    "reason",
+    "approvalGate",
+    "applied=false"
+  ],
+  "blockedRequirements": [
+    "reason",
+    "operation=null",
+    "applied=false"
+  ],
+  "globalRules": {
+    "defaultValueForbidden": true,
+    "unknownIsNotZero": true,
+    "candidateEdgeNotCanonical": true,
+    "blockedEdgeNotCanonical": true,
+    "rejectedEdgeNotCanonical": true,
+    "inverseMustBeExplicit": true,
+    "verifiedPathOnlyForCanonicalQueries": true,
+    "modernToHistoricalTransferMustBeExplicit": true,
+    "sourceToWaveBasisRequiresSmallMotherPromotion": true
+  },
+  "scopeKeys": [
+    "stationId",
+    "boundsWgs84",
+    "allowedSourceSha256",
+    "requiredContext"
+  ]
+}
