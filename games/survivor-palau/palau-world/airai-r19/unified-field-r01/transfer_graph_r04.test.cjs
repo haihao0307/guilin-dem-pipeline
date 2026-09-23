@@ -70,9 +70,14 @@ expectValidationFailure((graph) => {
   };
 }, 'BLOCKED_OPERATION');
 
-// Promoting a candidate status without the full verified contract is rejected.
+// Promoting a candidate status still fails if the verified operation is absent.
 expectValidationFailure((graph) => {
-  edge(graph, 'EDGE_DEM_TO_WAVE_BASIS').status = 'VERIFIED';
+  const promoted = edge(graph, 'EDGE_DEM_TO_WAVE_BASIS');
+  promoted.status = 'VERIFIED';
+  promoted.applied = true;
+  promoted.validRange = { description: 'test fixture only' };
+  promoted.tests = { passed: true, receipt: 'test fixture' };
+  // operation deliberately remains null.
 }, 'VERIFIED_OPERATION');
 
 // Missing node references are rejected.
