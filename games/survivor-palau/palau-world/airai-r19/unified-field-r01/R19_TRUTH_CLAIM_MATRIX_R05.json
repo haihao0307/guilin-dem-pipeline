@@ -1,0 +1,211 @@
+{
+  "schema": "kaopu.survivor-palau.truth-claim-matrix/1.0",
+  "version": "R19_TRUTH_CLAIM_MATRIX_R05",
+  "status": "AUDIT_INPUT_NOT_SMALL_MOTHER_APPROVED",
+  "auditCommitParent": "e8a6838b500aace2f102dfb6c08870c673de2c0d",
+  "allowedStates": [
+    "VERIFIED_SOURCE_IDENTITY",
+    "DERIVED_TESTED",
+    "CANDIDATE",
+    "BLOCKED",
+    "UNKNOWN",
+    "REJECTED"
+  ],
+  "rules": {
+    "candidateMayBeReportedAsTruth": false,
+    "blockedMayCarryDefaultZero": false,
+    "unknownMayCarryNumericValue": false,
+    "modernEvidenceMayBecome1944ObservationImplicitly": false,
+    "successfulCiMayProveExternalReality": false,
+    "selfAuditMayCountAsSmallMotherApproval": false
+  },
+  "claims": [
+    {
+      "claimId": "C001_R19_BASE",
+      "statement": "R19 is based on sealed R11 commit c47f7cc62d864e95117bd5548ca9ffa3f1d770a8.",
+      "state": "VERIFIED_SOURCE_IDENTITY",
+      "evidence": ["git branch ancestry", "R19_CURRENT_STATE.json", "PR #136"],
+      "independentAuditRequired": true
+    },
+    {
+      "claimId": "C002_REJECT_R12_R18",
+      "statement": "R12-R18 rejected geography, coordinates, meshes and visuals are forbidden production inputs.",
+      "state": "VERIFIED_SOURCE_IDENTITY",
+      "evidence": ["R19_AUTHORITY_LOCK.json", "R19_CURRENT_STATE.json", "authority-gate CI"],
+      "independentAuditRequired": true
+    },
+    {
+      "claimId": "C003_USER_FULL_PALAU_IMAGE",
+      "statement": "The current complete-Palau user image identity is SHA-256 5bfd05f06513ff6c7816e31f58ac0f88a375e24a7b946d355035b162f4acc8f9.",
+      "state": "VERIFIED_SOURCE_IDENTITY",
+      "evidence": ["R19_USER_LOCATION_AUTHORITY_20260922.json"],
+      "independentAuditRequired": true
+    },
+    {
+      "claimId": "C004_USER_YELLOW_AOI_IMAGE",
+      "statement": "The current Airai/yellow-AOI user image identity is SHA-256 82844df1bdf52da94b68d06f3262b3e97089379dff3d7550bcebea0a7d67bf46.",
+      "state": "VERIFIED_SOURCE_IDENTITY",
+      "evidence": ["R19_USER_LOCATION_AUTHORITY_20260922.json"],
+      "independentAuditRequired": true
+    },
+    {
+      "claimId": "C005_IMAGE_TO_IMAGE_REGISTRATION",
+      "statement": "The Airai zoom image has a tested pixel-space registration to the complete Palau overview.",
+      "state": "DERIVED_TESTED",
+      "evidence": ["R19_USER_LOCATION_AUTHORITY_20260922.json", "R19_TRANSFER_GRAPH_R04.json"],
+      "scope": "relative image pixels only; not geographic truth",
+      "independentAuditRequired": true
+    },
+    {
+      "claimId": "C006_FINAL_AOI_GEOGRAPHY",
+      "statement": "The final yellow story AOI WGS84 polygon is not frozen.",
+      "state": "CANDIDATE",
+      "evidence": ["R19_LOCATION_TO_DEM_REGISTRATION_CANDIDATE_20260922.json", "R19_TRANSFER_GRAPH_R04.json"],
+      "mustNotBePromoted": true
+    },
+    {
+      "claimId": "C007_DEM_F0130",
+      "statement": "DEM F0130 identity is SHA-256 51f67338ed23d2e30570fc41ee720f664d8dc0e5ed3300595fcaf7ff9940abf6.",
+      "state": "VERIFIED_SOURCE_IDENTITY",
+      "evidence": ["R19_INPUT_BINDINGS.json", "R19_DEM_CLASSIFICATION_AND_NORMALIZATION_ZH.md"],
+      "independentAuditRequired": true
+    },
+    {
+      "claimId": "C008_DEM_F0140",
+      "statement": "DEM F0140 identity is SHA-256 32bb0462185d400aa3b6190927556f2a68a7c49d2e69cc88af6b8d19abbaf7b8.",
+      "state": "VERIFIED_SOURCE_IDENTITY",
+      "evidence": ["R19_INPUT_BINDINGS.json", "R19_DEM_CLASSIFICATION_AND_NORMALIZATION_ZH.md"],
+      "independentAuditRequired": true
+    },
+    {
+      "claimId": "C009_DEM_RESOLUTION_CLASSIFICATION",
+      "statement": "12.5 m is storage posting; native elevation information must not be marketed as native 12.5 m survey truth.",
+      "state": "DERIVED_TESTED",
+      "evidence": ["R19_DEM_CLASSIFICATION_AND_NORMALIZATION_ZH.md", "R19_KAOPU_CORE_LEDGER_R03.json"],
+      "independentAuditRequired": true
+    },
+    {
+      "claimId": "C010_EGM96_NORMALIZATION",
+      "statement": "ASF RTC ellipsoid height to EGM96 orthometric height is allowed only for the exact verified DEM source identities and recorded operation scope.",
+      "state": "DERIVED_TESTED",
+      "evidence": ["R19_TRANSFER_GRAPH_R04.json", "R19_TRANSFER_GRAPH_R04_EXECUTION_RECEIPT.json"],
+      "independentAuditRequired": true
+    },
+    {
+      "claimId": "C011_DEM_TO_1944",
+      "statement": "Using modern DEM-derived macro terrain for October 1944 is a candidate temporal transfer, not a 1944 observation.",
+      "state": "CANDIDATE",
+      "evidence": ["R19_KAOPU_CORE_LEDGER_R03.json", "R19_TRANSFER_GRAPH_R04.json"],
+      "mustNotBePromoted": true
+    },
+    {
+      "claimId": "C012_COAST_HYDRO_CACHE",
+      "statement": "The branch contains a locked evidence cache and manifests for previously obtained NOAA ENC, GMRT, OSM and Allen data.",
+      "state": "DERIVED_TESTED",
+      "evidence": ["R19_EXISTING_COAST_HYDRO_ASSET_LOCK_20260922.json", "evidence-cache/airai-reef-bathy-r01/**"],
+      "independentAuditRequired": true
+    },
+    {
+      "claimId": "C013_AOI_SOUNDINGS",
+      "statement": "The current yellow-AOI processing reports 43 NOAA ENC soundings.",
+      "state": "DERIVED_TESTED",
+      "evidence": ["user-aoi-evidence-r01/**", "R19_CURRENT_STATE.json"],
+      "scope": "current processing result; not continuous survey coverage",
+      "independentAuditRequired": true
+    },
+    {
+      "claimId": "C014_CONTINUOUS_BATHYMETRY",
+      "statement": "The continuous AOI bathymetry surface is not survey truth.",
+      "state": "CANDIDATE",
+      "evidence": ["user-aoi-evidence-r01/**", "R19_KAOPU_CORE_LEDGER_R03.json"],
+      "mustNotBePromoted": true
+    },
+    {
+      "claimId": "C015_NOAA_DATUM_BRIDGE",
+      "statement": "NOAA ENC local sounding datum code 24 has no validated bridge to EGM96 or Malakal MSL in R19.",
+      "state": "BLOCKED",
+      "evidence": ["R19_TRANSFER_GRAPH_R04.json"],
+      "defaultValueForbidden": true
+    },
+    {
+      "claimId": "C016_MALAKAL_REGIONAL_TIDE",
+      "statement": "Malakal is represented only as a regional tide source/candidate and not exact Airai local tide.",
+      "state": "CANDIDATE",
+      "evidence": ["R19_KAOPU_CORE_LEDGER_R03.json", "R19_TRANSFER_GRAPH_R04.json"],
+      "mustNotBePromoted": true
+    },
+    {
+      "claimId": "C017_AIRAI_LOCAL_TIDE_TRANSFER",
+      "statement": "Airai local tide transfer is unresolved.",
+      "state": "UNKNOWN",
+      "evidence": ["R19_UNIFIED_FIELD_REGISTRY_R02.json", "R19_TRANSFER_GRAPH_R04.json"],
+      "numericDefaultForbidden": true
+    },
+    {
+      "claimId": "C018_1944_NON_TIDAL_RESIDUAL",
+      "statement": "October 1944 Airai non-tidal residual is unresolved.",
+      "state": "UNKNOWN",
+      "evidence": ["R19_UNIFIED_FIELD_REGISTRY_R02.json", "R19_KAOPU_CORE_LEDGER_R03.json"],
+      "numericDefaultForbidden": true
+    },
+    {
+      "claimId": "C019_ONE_OCEAN_SURFACE_STATE",
+      "statement": "R02 defines one OceanSurfaceState contract for eta, horizontal displacement, normal and surface velocity.",
+      "state": "DERIVED_TESTED",
+      "evidence": ["unified_field_r02.cjs", "unified_field_r02.test.cjs", "R19_UNIFIED_FIELD_R02_EXECUTION_RECEIPT.json"],
+      "scope": "contract method only; not final physical ocean validation",
+      "independentAuditRequired": true
+    },
+    {
+      "claimId": "C020_KAOPU_CORE",
+      "statement": "R03 validates 22 typed data lines against the declared KAOPU semantic core.",
+      "state": "DERIVED_TESTED",
+      "evidence": ["R19_KAOPU_CORE_SCHEMA_R03.json", "R19_KAOPU_CORE_LEDGER_R03.json", "R19_KAOPU_CORE_R03_EXECUTION_RECEIPT.json"],
+      "scope": "semantic/validator result only",
+      "independentAuditRequired": true
+    },
+    {
+      "claimId": "C021_TRANSFER_GRAPH",
+      "statement": "R04 validates a 30-node, 21-edge transfer graph with verified-only canonical traversal.",
+      "state": "DERIVED_TESTED",
+      "evidence": ["R19_TRANSFER_GRAPH_R04.json", "R19_TRANSFER_GRAPH_R04_EXECUTION_RECEIPT.json"],
+      "scope": "method/graph result only",
+      "independentAuditRequired": true
+    },
+    {
+      "claimId": "C022_WAVE_DECOMPOSITION",
+      "statement": "No real-data DEM or bathymetry wave coefficients have been adopted.",
+      "state": "BLOCKED",
+      "evidence": ["R19_CURRENT_STATE.json", "R19_TRANSFER_GRAPH_R04.json"],
+      "mustRemainFalseUntilSmallMotherPromotion": true
+    },
+    {
+      "claimId": "C023_THREE_DIMENSIONAL_WORKBENCH",
+      "statement": "No approved R19 three-dimensional workbench exists.",
+      "state": "BLOCKED",
+      "evidence": ["R19_CURRENT_STATE.json", "PR #136"],
+      "mustRemainFalseUntilSeparateAcceptance": true
+    },
+    {
+      "claimId": "C024_PRODUCTION_READY",
+      "statement": "R19 is not production ready and not visually accepted.",
+      "state": "BLOCKED",
+      "evidence": ["R19_CURRENT_STATE.json", "PR #136"],
+      "mustRemainFalse": true
+    }
+  ],
+  "requestedJudgment": {
+    "truthAudit": [
+      "PASS_NO_UNSUPPORTED_PROMOTION_FOUND",
+      "CONTINUE_WITH_TRUTH_CORRECTIONS",
+      "PARK_INSUFFICIENT_AUDIT_EVIDENCE",
+      "FAIL_UNSUPPORTED_OR_FABRICATED_CLAIM_FOUND"
+    ],
+    "method": [
+      "PROMOTE_METHOD",
+      "CONTINUE_WITH_CORRECTIONS",
+      "PARK",
+      "REJECT"
+    ]
+  }
+}
