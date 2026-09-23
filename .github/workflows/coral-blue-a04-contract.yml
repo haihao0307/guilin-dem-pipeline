@@ -33,7 +33,7 @@ jobs:
           python apps/coral-restart-20260923/blue-coral-a04-hdf/tests/test_exact_contract.py \
             apps/coral-restart-20260923/blue-coral-a04-hdf
 
-      - name: Verify frozen execution boundary
+      - name: Verify frozen execution boundary and centered browser evidence
         run: |
           python - <<'PY'
           import json
@@ -41,6 +41,7 @@ jobs:
           root=Path('apps/coral-restart-20260923/blue-coral-a04-hdf')
           boundary=json.loads((root/'contracts/EXECUTION_BOUNDARY.json').read_text())
           receipt=json.loads((root/'contracts/EXACT_VERIFICATION.json').read_text())
+          browser=json.loads((root/'contracts/LOCAL_BROWSER_QA.json').read_text())
           package=json.loads((root/'teacher-package.json').read_text())
           assert boundary['methodChangeAuthorized'] is False
           assert boundary['structureGrammarUnlocked'] is False
@@ -48,12 +49,23 @@ jobs:
           assert receipt['passed'] is True
           assert receipt['accessorByteMismatchCount'] == 0
           assert receipt['forbiddenMethodCount'] == 0
-          assert receipt['workbench']['bytes'] == 52830447
-          assert receipt['workbench']['sha256'] == 'ba27dce0c4d5e89eed70ffdd391fe8fe3fe8de7561020edcdd9a84d5023138fb'
+          assert receipt['workbench']['bytes'] == 53385483
+          assert receipt['workbench']['sha256'] == 'b8c7b69b9cbf95e05abe8d499f6b801ba61f5d7d9e61889d01c3cbb65e3cbd27'
+          assert browser['build'] == receipt['workbench']
+          assert browser['desktop']['passed'] is True
+          assert browser['desktop']['viewport'] == '1440x1000'
+          assert browser['desktop']['objectsCenteredAndFullyVisible'] is True
+          assert browser['mobile']['passed'] is True
+          assert browser['mobile']['viewport'] == '390x844'
+          assert browser['mobile']['bodyWidth'] == 390
+          assert browser['mobile']['objectsCenteredAndFullyVisible'] is True
+          assert browser['fixedPublicUrlVerified'] is False
+          assert package['proof']['workbenchBytes'] == receipt['workbench']['bytes']
+          assert package['proof']['workbenchSha256'] == receipt['workbench']['sha256']
           assert package['boundary']['oneToOneVisualRestatementApproved'] is False
           assert package['boundary']['structureGrammarUnlocked'] is False
           assert package['boundary']['isFinalCoralGenerator'] is False
-          print('BLUE_CORAL_A04_BOUNDARY_AND_RECEIPT_PASS')
+          print('BLUE_CORAL_A04_BOUNDARY_BROWSER_AND_RECEIPT_PASS')
           PY
 
       - name: Verify compiler and builder contain no downgrade implementation
