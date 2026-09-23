@@ -8,7 +8,13 @@ const browser=await chromium.launch({headless:true,args:['--no-sandbox','--enabl
 const report={version:'FISH_OPEN_R006_1',publicOnline:!!process.env.PUBLIC_URL,physicalDeviceTested:false,originalUserDeviceCauseConfirmed:false,checks:[],passed:false};
 const assert=(x,m)=>{if(!x)throw Error(m);};
 const state=()=>({ready:window.FISH_BOOT?.ready,failed:window.FISH_BOOT?.failed,received:window.FISH_BOOT?.received,phase:window.FISH_BOOT?.phase,error:window.FISH_BOOT?.error});
-async function snapshot(p,name){await p.screenshot({path:path.join(dir,name+'.png')});}
+async function snapshot(p,name){
+ if(name==='01-before-model-arrives'){
+  // The response is intentionally unfinished. Waiting for document.fonts.ready here
+  // defeats this test. CDP captures the actual compositor while payload remains paused.
+  const cdp=await p.context().newCDPSession(p);const result=await cdp.send('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false});fs.writeFileSync(path.join(dir,name+'.png'),Buffer.from(result.data,'base64'));await cdp.detach();
+ }else await p.screenshot({path:path.join(dir,name+'.png')});
+}
 try{
  if(!process.env.PUBLIC_URL){
   const slow=await browser.newPage({viewport:{width:1100,height:800}});const start=Date.now();await slow.goto(local+'/delayed',{waitUntil:'commit',timeout:30000});await slow.locator('#fish-boot-title').waitFor({state:'visible',timeout:4000});await slow.waitForTimeout(300);const visible=await slow.evaluate(()=>({received:window.FISH_BOOT.received,ready:window.FISH_BOOT.ready,bg:getComputedStyle(document.body).backgroundColor,title:document.querySelector('#fish-boot-title').textContent}));assert(visible.received===0&&!visible.ready&&visible.bg==='rgb(9, 19, 28)','white screen before source arrival');await snapshot(slow,'01-before-model-arrives');report.checks.push({name:'visible-before-model-arrives',elapsedMs:Date.now()-start,...visible,passed:true});await slow.close();
