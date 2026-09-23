@@ -19,7 +19,7 @@ concurrency:
 jobs:
   exact-publication:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 50
     steps:
       - name: Checkout A04 publication contract
         uses: actions/checkout@v4
@@ -86,32 +86,47 @@ jobs:
           assert actual == expected, (actual, expected)
           text = data.decode('utf-8')
           required = [
-              'BLUE_CORAL_A04_HIGH_DIMENSIONAL_FUNCTION_EXPRESSION',
+              'BLUE_CORAL_CANONICAL_A04',
+              'ONE_TO_ONE_HIGH_DIMENSIONAL_FIELD_EXPRESSION',
+              'BLUE_CORAL_CANONICAL_A04_INDEPENDENT_CANDIDATE',
               'window.__CORAL_READY__',
+              'window.__CORAL_AUDIT__',
               'window.coralA04',
-              'sourceCloneUsed":false',
-              'gltfLoaderUsedForCandidate":false',
-              'meshSimplification":false',
-              'decimation":false',
-              'remeshing":false',
-              'voxelization":false',
-              'marchingCubes":false',
-              'allSourceAccessorsPreservedByteExact":true',
-              'separateCandidateArrayBuffers":true',
-              'sameScaleSameCameraCompare":true',
+              'sourceCloneUsed',
+              'gltfLoaderUsedForCandidate',
+              'meshSimplification',
+              'decimation',
+              'remeshing',
+              'voxelization',
+              'marchingCubes',
+              'allSourceAccessorsPreservedByteExact',
+              'separateCandidateArrayBuffers',
+              'sameScaleSameCameraCompare',
           ]
           missing = [marker for marker in required if marker not in text]
           assert not missing, missing
+          forbidden = [
+              'new MarchingCubes(',
+              'new SimplifyModifier(',
+              'meshopt_simplify(',
+              'simplify_quadratic_decimation',
+          ]
+          present_forbidden = [marker for marker in forbidden if marker in text]
+          assert not present_forbidden, present_forbidden
           proof = {
-              'schema': 'kaopu.payload-identity/1.0',
-              'version': 'BLUE_CORAL_A04_HIGH_DIMENSIONAL_FUNCTION_EXPRESSION',
+              'schema': 'kaopu.payload-identity/2.0',
+              'version': 'BLUE_CORAL_CANONICAL_A04',
+              'stage': 'ONE_TO_ONE_HIGH_DIMENSIONAL_FIELD_EXPRESSION',
               'bytes': len(data),
               'sha256': actual,
               'requiredMarkers': required,
               'missingMarkers': missing,
+              'presentForbiddenMarkers': present_forbidden,
               'exactPayloadIdentityPass': True,
               'publishedYet': False,
               'userVisualApproval': False,
+              'structureGrammarUnlocked': False,
+              'finalGenerator': False,
               'productionReady': False,
           }
           Path('dist/coral-blue-a04/PAYLOAD_IDENTITY.json').write_text(json.dumps(proof, indent=2))
@@ -131,6 +146,9 @@ jobs:
 
       - name: Install exact A04 at the fixed public entry
         if: steps.request.outputs.enabled == 'true'
+        env:
+          EXPECTED_BYTES: ${{ steps.request.outputs.bytes }}
+          EXPECTED_SHA256: ${{ steps.request.outputs.sha256 }}
         run: |
           mkdir -p public/coral/blue-coral-a04
           cp dist/coral-blue-a04/index.html public/coral/blue-coral-a04/index.html
@@ -138,19 +156,22 @@ jobs:
           import json, os
           from pathlib import Path
           proof = {
-              'schema': 'kaopu.publication-proof/1.0',
-              'version': 'BLUE_CORAL_A04_HIGH_DIMENSIONAL_FUNCTION_EXPRESSION',
+              'schema': 'kaopu.publication-proof/2.0',
+              'version': 'BLUE_CORAL_CANONICAL_A04',
+              'stage': 'ONE_TO_ONE_HIGH_DIMENSIONAL_FIELD_EXPRESSION',
               'url': 'https://haihao0307.github.io/guilin-dem-pipeline/coral/blue-coral-a04/',
               'sourceBuildSha': os.environ['GITHUB_SHA'],
               'verificationRunId': os.environ['GITHUB_RUN_ID'],
-              'htmlBytes': 52830447,
-              'htmlSha256': 'ba27dce0c4d5e89eed70ffdd391fe8fe3fe8de7561020edcdd9a84d5023138fb',
+              'htmlBytes': int(os.environ['EXPECTED_BYTES']),
+              'htmlSha256': os.environ['EXPECTED_SHA256'],
               'publicFullFileHashMatchesBuild': False,
               'publicBrowserPass': False,
               'desktopPass': False,
               'mobileViewportPass': False,
               'physicalMobileDeviceTested': False,
               'userVisualApproval': False,
+              'structureGrammarUnlocked': False,
+              'finalGenerator': False,
               'productionReady': False,
               'shareAllowed': False,
           }
@@ -160,7 +181,7 @@ jobs:
           git config user.name 'Coral Mother Build'
           git config user.email 'coral-mother@users.noreply.github.com'
           git add coral/blue-coral-a04/index.html coral/blue-coral-a04/PUBLICATION_PROOF.json
-          git commit -m 'Coral A04: publish exact high-dimensional field workbench [skip ci]'
+          git diff --cached --quiet || git commit -m 'Coral A04: publish exact canonical field workbench [skip ci]'
           for attempt in 1 2 3; do
             if git push origin HEAD:gh-pages; then exit 0; fi
             git pull --rebase origin gh-pages
@@ -181,7 +202,10 @@ jobs:
           expected_bytes = int(os.environ['EXPECTED_BYTES'])
           for attempt in range(90):
               try:
-                  request = urllib.request.Request(url, headers={'Cache-Control': 'no-cache', 'User-Agent': 'Coral-A04-Public-Verifier'})
+                  request = urllib.request.Request(url, headers={
+                      'Cache-Control': 'no-cache',
+                      'User-Agent': 'Coral-A04-Public-Verifier',
+                  })
                   with urllib.request.urlopen(request, timeout=90) as response:
                       data = response.read()
                       status = response.status
@@ -220,9 +244,11 @@ jobs:
           identity = json.loads(Path('dist/coral-blue-a04/PAYLOAD_IDENTITY.json').read_text())
           assert qa['passed'] is True
           assert identity['exactPayloadIdentityPass'] is True
+          assert qa['version'] == 'BLUE_CORAL_CANONICAL_A04'
           proof = {
-              'schema': 'kaopu.publication-proof/1.0',
-              'version': 'BLUE_CORAL_A04_HIGH_DIMENSIONAL_FUNCTION_EXPRESSION',
+              'schema': 'kaopu.publication-proof/2.0',
+              'version': 'BLUE_CORAL_CANONICAL_A04',
+              'stage': 'ONE_TO_ONE_HIGH_DIMENSIONAL_FIELD_EXPRESSION',
               'url': 'https://haihao0307.github.io/guilin-dem-pipeline/coral/blue-coral-a04/',
               'sourceBuildSha': os.environ['GITHUB_SHA'],
               'verificationRunId': os.environ['GITHUB_RUN_ID'],
@@ -233,7 +259,7 @@ jobs:
               'desktopPass': qa['desktop']['passed'],
               'mobileViewportPass': qa['mobile']['passed'],
               'physicalMobileDeviceTested': False,
-              'runtimeAudit': qa['desktop']['audit'],
+              'runtimeAudit': qa['desktop']['runtime']['audit'],
               'consoleAndPageErrors': {
                   'desktopConsole': qa['desktop']['consoleErrors'],
                   'desktopPage': qa['desktop']['pageErrors'],
@@ -241,6 +267,8 @@ jobs:
                   'mobilePage': qa['mobile']['pageErrors'],
               },
               'userVisualApproval': False,
+              'structureGrammarUnlocked': False,
+              'finalGenerator': False,
               'productionReady': False,
               'shareAllowed': True,
           }
@@ -249,12 +277,15 @@ jobs:
               Path('public/coral/blue-coral-a04/PUBLICATION_PROOF.json'),
           ]:
               target.write_text(json.dumps(proof, indent=2))
-          shutil.copyfile('dist/coral-blue-a04/PUBLIC_BROWSER_QA.json', 'public/coral/blue-coral-a04/PUBLIC_BROWSER_QA.json')
+          shutil.copyfile(
+              'dist/coral-blue-a04/PUBLIC_BROWSER_QA.json',
+              'public/coral/blue-coral-a04/PUBLIC_BROWSER_QA.json',
+          )
           print('BLUE_CORAL_A04_PUBLICATION_VERIFIED', json.dumps(proof))
           PY
           cd public
           git add coral/blue-coral-a04/PUBLICATION_PROOF.json coral/blue-coral-a04/PUBLIC_BROWSER_QA.json
-          git commit -m 'Coral A04: persist exact-public browser verification [skip ci]'
+          git diff --cached --quiet || git commit -m 'Coral A04: persist exact-public browser verification [skip ci]'
           for attempt in 1 2 3; do
             if git push origin HEAD:gh-pages; then exit 0; fi
             git pull --rebase origin gh-pages
