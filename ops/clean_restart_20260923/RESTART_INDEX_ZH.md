@@ -14,14 +14,6 @@ Branch:
 START:
 `restart/fish-yellowfin-teacher-r2/START_HERE_ZH.md`
 
-### Patrol Crew R2
-Branch:
-`restart/patrol-crew-teacher-r2-20260923`
-START:
-`restart/patrol-crew-teacher-r2/START_HERE_ZH.md`
-
-船体/机械冻结；只重启四名船员 Teacher 路线。
-
 ### Game Assembly Clean R2
 Branch:
 `restart/game-assembly-clean-r2-20260923`
@@ -29,6 +21,11 @@ START:
 `restart/game-assembly-clean-r2/START_HERE_ZH.md`
 
 只消费 VERIFIER_PASSED Domain output。
+
+## 已删除的生产线
+
+旧日军巡逻艇、日本小船和 Patrol Crew 入口已经全部删除。不得从旧分支、旧提交、旧缓存或旧资料恢复。唯一有效记录：
+`ops/user_authority/patrol_boat/PATROL_BOAT_USER_RECORD_ONLY_20260923.md`
 
 ## 统一召唤语句
 
