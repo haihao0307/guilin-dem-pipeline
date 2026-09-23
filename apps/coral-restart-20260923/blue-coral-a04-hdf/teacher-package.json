@@ -1,90 +1,85 @@
 {
-  "schema": "kaopu.coral.teacher-fields/1.0",
-  "id": "BLUE-CORAL-TEACHER-A04-HDF-20260923",
-  "stage": "ONE_TO_ONE_HIGH_DIMENSIONAL_FUNCTION_EXPRESSION_GEOMETRY_CORE",
+  "schema": "kaopu.canonical-coral-teacher/1.0",
+  "version": "BLUE_CORAL_CANONICAL_A04",
+  "stage": "ONE_TO_ONE_HIGH_DIMENSIONAL_FIELD_EXPRESSION",
   "authority": {
     "sourcePolicy": "USER_REUPLOADED_SOURCE_ONLY",
     "sourceArchive": "blue_coral.zip",
     "sourceArchiveSha256": "c65bc1b9c389b3b1c3f4c09fc345619ad4ad4994666a06eb294822eafa503857",
     "sceneGltfSha256": "6a13fc948469db72878528f4941a734bfac256dc1d2939ab6dcc9e2fe1818e0a",
     "sceneBinSha256": "23f65069936dc9316b975617beb9a07991a24b20bba8de5f45ff6bb0afecadb3",
+    "textureSha256": "27734e7adaa0657fb314715088f74c707c12c8029965cb12172fef104a673906",
     "license": "CC BY 4.0",
     "creator": "RISD Nature Lab",
     "objectLabel": "Blue Coral / Heliopora coerulea",
     "accession": "34.25"
   },
-  "geometry": {
-    "primitiveCount": 9,
+  "dimensions": {
+    "accessorCount": 36,
+    "surfaceCount": 9,
     "vertexRecordCount": 582034,
     "indexCount": 3000000,
     "triangleCount": 1000000,
-    "bounds": {
-      "min": [-69.72824096679688, -71.76160430908203, -94.91523742675781],
-      "max": [67.17840576171875, 78.70600891113281, 81.05046081542969]
-    },
-    "sourcePositionF32Sha256": "25eebc4633739ac00f26e7467f83257ab8c6eefab6e8dc6b26b8f629805d926b",
-    "sourceIndexU32Sha256": "6e687a4122dab81bb723067e9b069e9c60c31a88b09953a8f26409462d6cec77",
-    "primitiveRanges": [
-      {"primitive": 0, "vertexOffset": 0, "vertexCount": 65532, "indexOffset": 0, "indexCount": 280290, "triangleCount": 93430},
-      {"primitive": 1, "vertexOffset": 65532, "vertexCount": 65532, "indexOffset": 280290, "indexCount": 338040, "triangleCount": 112680},
-      {"primitive": 2, "vertexOffset": 131064, "vertexCount": 65532, "indexOffset": 618330, "indexCount": 345384, "triangleCount": 115128},
-      {"primitive": 3, "vertexOffset": 196596, "vertexCount": 65532, "indexOffset": 963714, "indexCount": 350289, "triangleCount": 116763},
-      {"primitive": 4, "vertexOffset": 262128, "vertexCount": 65532, "indexOffset": 1314003, "indexCount": 353334, "triangleCount": 117778},
-      {"primitive": 5, "vertexOffset": 327660, "vertexCount": 65532, "indexOffset": 1667337, "indexCount": 347343, "triangleCount": 115781},
-      {"primitive": 6, "vertexOffset": 393192, "vertexCount": 65534, "indexOffset": 2014680, "indexCount": 322122, "triangleCount": 107374},
-      {"primitive": 7, "vertexOffset": 458726, "vertexCount": 65532, "indexOffset": 2336802, "indexCount": 351216, "triangleCount": 117072},
-      {"primitive": 8, "vertexOffset": 524258, "vertexCount": 57776, "indexOffset": 2688018, "indexCount": 311982, "triangleCount": 103994}
-    ]
+    "scalarValueCount": 7656272,
+    "worldBounds": [
+      [-69.72824096679688, -94.91523742675781, -78.70600891113281],
+      [67.17840576171875, 81.05046081542969, 71.76160430908203]
+    ],
+    "worldExtents": [136.90664672851562, 175.9656982421875, 150.46761322021484],
+    "surfaceAreaSourceUnits2": 133908.5990718602,
+    "physicalScaleKnown": false
   },
   "fields": {
-    "position": {
-      "url": "teacher-positions.bcp.gz",
-      "encoding": "gzip + BCP1 signed-zigzag delta varint",
-      "fixedPointScale": 1000000,
-      "decodedType": "Float32Array",
-      "bitExactToSource": true,
-      "compressedSha256": "d4dd58eccfcd8848c6d4e26cc0fe5a566fe5c3c81a8c4e819d4d93a4e20752f6"
-    },
-    "topology": {
-      "url": "teacher-indices.bci.gz",
-      "encoding": "gzip + BCI1 signed-zigzag triangle-local varint",
-      "decodedType": "Uint32Array",
-      "exactToSource": true,
-      "compressedSha256": "7460d2710a006e828b7933a2a558f0b25c35e59770c5997025fbe438884e52f8"
-    },
-    "normal": {
-      "mode": "RECOMPUTE_FROM_EXACT_GEOMETRY",
-      "sourceNormalField": "NOT_YET_BOUND_IN_A04_GEOMETRY_CORE"
-    },
-    "uv": {
-      "mode": "NOT_BOUND",
-      "reason": "A04 uses neutral material geometry gate; no source texture inheritance"
-    }
+    "manifest": "contracts/ACCESSOR_MANIFEST.json",
+    "payload": "teacher-fields.bin",
+    "payloadBytes": 30625096,
+    "payloadSha256": "4763714feed24c967d8e39a27ccba18a456a70131247856d6b4fc3c697cd4f06",
+    "position": "SOURCE_FLOAT32_BYTE_EXACT",
+    "normal": "SOURCE_FLOAT32_BYTE_EXACT",
+    "uv0": "SOURCE_FLOAT32_BYTE_EXACT",
+    "topology": "SOURCE_UINT32_BYTE_EXACT",
+    "allSourceAccessorsPreservedByteExact": true
   },
-  "proof": {
-    "positionBitMismatch": 0,
-    "indexMismatch": 0,
-    "maxPositionErrorScannerUnits": 0,
-    "vertexRecordRemoved": 0,
-    "triangleRemoved": 0,
-    "primitiveRemoved": 0,
+  "runtime": {
+    "candidateConstruction": "DECODE_CANONICAL_FIELDS_TO_INDEPENDENT_TYPED_ARRAYS_AND_GPU_BUFFERS",
+    "sourceCloneUsed": false,
+    "gltfLoaderUsedForCandidate": false,
+    "runtimeGlbDependency": false,
+    "runtimeReferenceTextureDependencyForCandidate": false,
+    "separateCandidateArrayBuffers": true,
+    "separateCandidateGpuBuffers": true,
+    "sameScaleSameCameraCompare": true
+  },
+  "forbiddenMethods": {
     "meshSimplification": false,
     "decimation": false,
-    "remesh": false,
-    "voxel": false,
+    "remeshing": false,
+    "voxelization": false,
     "marchingCubes": false,
-    "surfaceProjection": false,
-    "gltfRuntimeDependency": false,
-    "glbRuntimeDependency": false,
-    "textureRuntimeDependency": false,
-    "cloneTeacherObject": false
+    "surfaceProjectionProxy": false,
+    "lowDimensionalProxy": false,
+    "genericNoiseReplacement": false,
+    "teacherObjectClone": false
+  },
+  "proof": {
+    "verificationReceipt": "contracts/EXACT_VERIFICATION.json",
+    "accessorByteMismatch": 0,
+    "forbiddenMethodCount": 0,
+    "workbenchBytes": 52830447,
+    "workbenchSha256": "ba27dce0c4d5e89eed70ffdd391fe8fe3fe8de7561020edcdd9a84d5023138fb",
+    "localDesktopWebgl2Pass": true,
+    "localResponsive390x844Pass": true,
+    "publicExactBytesVerified": false,
+    "userVisualApproval": false
   },
   "boundary": {
+    "sourceStudyComplete": true,
+    "sourceDissectionRecorded": true,
+    "highDimensionalFieldExpressionBuilt": true,
+    "oneToOneVisualRestatementApproved": false,
+    "structureGrammarUnlocked": false,
     "isFinalCoralGenerator": false,
-    "isLowDimensionalGrowthGrammar": false,
-    "isGeometryCoreComplete": true,
-    "materialAndLivingColorRestatement": "PENDING_LATER_GATE",
-    "userVisualApproval": false,
-    "fixedOnlineEntry": "PENDING_BINARY_PUBLICATION"
+    "productionReady": false,
+    "fixedOnlineEntry": "PENDING_EXACT_PAYLOAD_PUBLICATION"
   }
 }
