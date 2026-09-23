@@ -1,7 +1,7 @@
 {
-  "schema": "kaopu.survivor-palau.r19-current-state/1.8",
-  "version": "R19_CURRENT_STATE_20260923_KAOPU_CORE_R03_SMALL_MOTHER_PENDING",
-  "status": "KAOPU_CORE_R03_22_FIELDS_VALIDATED_SMALL_MOTHER_JUDGMENT_PENDING_NO_VISUAL_BUILD",
+  "schema": "kaopu.survivor-palau.r19-current-state/1.9",
+  "version": "R19_CURRENT_STATE_20260923_TRANSFER_GRAPH_R04_SMALL_MOTHER_PENDING",
+  "status": "TRANSFER_GRAPH_R04_VERIFIED_ONLY_PATHS_TESTED_SMALL_MOTHER_JUDGMENT_PENDING_NO_VISUAL_BUILD",
   "branch": "work/palau-airai-r19-authority-locked-restart-20260922",
   "base": "c47f7cc62d864e95117bd5548ca9ffa3f1d770a8",
   "governance": {
@@ -34,7 +34,7 @@
     "verticalNormalizationPassed": true,
     "canonicalDerivedSha256": "6ace836106dcc93c69a0d16fee1e8b8a2a93b4446f9e34af1eb1994e3d1b975c",
     "highestDerivedSampleM": 241.60211181640625,
-    "validTimePolicy": "explicit interval; source epoch and 1944 application target remain separate"
+    "validTimePolicy": "source epoch and October 1944 application target remain separate"
   },
   "userLocationAuthority": {
     "completePalauOverviewSha256": "5bfd05f06513ff6c7816e31f58ac0f88a375e24a7b946d355035b162f4acc8f9",
@@ -43,7 +43,8 @@
     "yellowCircleMeaning": "Stone_Money_story_core_AOI",
     "storyCoreIsPoint": false,
     "modernImageryIs1944Observation": false,
-    "geographicRegistrationPassed": false,
+    "imageToImagePixelRegistrationPassed": true,
+    "overviewToWgs84RegistrationPassed": false,
     "storyAoiFrozen": false
   },
   "existingCoastHydroEvidence": {
@@ -89,8 +90,6 @@
   "unifiedFieldR02": {
     "status": "IMPLEMENTED_TESTED_SUBMITTED_TO_SMALL_MOTHER_NOT_APPROVED",
     "implementationHead": "250c5b3bb58019e9908119ebe96f708fb193710c",
-    "oneWorldIdentity": true,
-    "oneWorldTimeContract": true,
     "explicitValidTime": true,
     "partialDecompositionForUnknownComponents": true,
     "oneOceanSurfaceGeometryAuthority": true,
@@ -111,9 +110,6 @@
     ],
     "unknownIsNotZero": true,
     "noDataIsNotZero": true,
-    "localTideTransferState": "UNKNOWN_NOT_ZERO",
-    "nonTidalResidual1944State": "UNKNOWN_NOT_ZERO",
-    "noaaChartDatumToEgm96BridgeState": "UNKNOWN_NO_VALIDATED_TRANSFORM",
     "testsPassed": true,
     "registryPassed": true
   },
@@ -122,9 +118,6 @@
     "implementationIssue": 145,
     "schema": "games/survivor-palau/palau-world/airai-r19/unified-field-r01/R19_KAOPU_CORE_SCHEMA_R03.json",
     "ledger": "games/survivor-palau/palau-world/airai-r19/unified-field-r01/R19_KAOPU_CORE_LEDGER_R03.json",
-    "validator": "games/survivor-palau/palau-world/airai-r19/unified-field-r01/kaopu_core_r03.cjs",
-    "setPreservingLoader": "games/survivor-palau/palau-world/airai-r19/unified-field-r01/kaopu_core_r03_loader.cjs",
-    "tests": "games/survivor-palau/palau-world/airai-r19/unified-field-r01/validate_kaopu_core_r03.cjs",
     "executionReceipt": "games/survivor-palau/palau-world/airai-r19/unified-field-r01/R19_KAOPU_CORE_R03_EXECUTION_RECEIPT.json",
     "semanticCore": "Identity + Space/Frame + Time + Scale + Quantity/State + Relation + Observation + Claim + Provenance + Uncertainty + Change + View",
     "entryCount": 22,
@@ -135,60 +128,93 @@
     "currentBestViewRecomputable": true,
     "currentBestViewOverwritesEvidence": false,
     "unknownObservedAbsentNotApplicableNoDataSeparated": true,
-    "temporalCorrections": [
-      "modern user map imagery is not a 1944 observation",
-      "modern NOAA ENC evidence is not exact 1944 shoreline or bathymetry",
-      "Allen and GMRT retain their own product epochs",
-      "DEM use for 1944 macro terrain is a candidate temporal transfer, not a historic survey",
-      "source observation time, represented time, processing time and application target remain separate"
-    ]
+    "testsPassed": true
+  },
+  "transferGraphR04": {
+    "status": "IMPLEMENTED_TESTED_SUBMITTED_TO_SMALL_MOTHER_NOT_APPROVED",
+    "implementationIssue": 146,
+    "correctedImplementationHead": "1c2ccb811c157fcd0edb0602e9544c1751b590be",
+    "schema": "games/survivor-palau/palau-world/airai-r19/unified-field-r01/R19_TRANSFER_GRAPH_SCHEMA_R04.json",
+    "graph": "games/survivor-palau/palau-world/airai-r19/unified-field-r01/R19_TRANSFER_GRAPH_R04.json",
+    "resolver": "games/survivor-palau/palau-world/airai-r19/unified-field-r01/transfer_graph_r04.cjs",
+    "validator": "games/survivor-palau/palau-world/airai-r19/unified-field-r01/validate_transfer_graph_r04.cjs",
+    "adversarialTests": "games/survivor-palau/palau-world/airai-r19/unified-field-r01/transfer_graph_r04.test.cjs",
+    "executionReceipt": "games/survivor-palau/palau-world/airai-r19/unified-field-r01/R19_TRANSFER_GRAPH_R04_EXECUTION_RECEIPT.json",
+    "smallMotherValidationPacket": "games/survivor-palau/palau-world/airai-r19/unified-field-r01/R19_SMALL_MOTHER_VALIDATION_PACKET_R04.md",
+    "nodeCount": 30,
+    "edgeCount": 21,
+    "canonicalTraversalPolicy": "VERIFIED_EDGES_ONLY_WITH_SCOPE",
+    "verifiedRoutes": [
+      "Airai zoom image pixels -> complete Palau overview pixels",
+      "user yellow pixels -> story-core semantic identity",
+      "WGS84 <-> UTM53N inside declared Palau scope",
+      "two exact ASF DEM source hashes -> EGM96 orthometric height",
+      "Malakal-B station datum -> Malakal-B MSL inside exact station scope"
+    ],
+    "blockedOrCandidateRoutes": [
+      "complete Palau overview pixels -> final WGS84 AOI",
+      "NOAA local datum code 24 -> EGM96 or Malakal MSL",
+      "Malakal MSL -> Airai local water reference",
+      "modern evidence -> exact October 1944 shoreline or bathymetry",
+      "Malakal regional tide -> Airai local tide",
+      "DEM or bathymetry candidate -> wave basis",
+      "OceanSurfaceState -> final free surface"
+    ],
+    "defaultValueForbidden": true,
+    "inverseTransformMustBeExplicit": true,
+    "candidateAndBlockedEdgesCanonical": false,
+    "testsPassed": true
   },
   "executedChecks": {
-    "firstR02Run": {
-      "runId": 35799792493,
-      "jobId": 106987283210,
-      "conclusion": "failure",
-      "cause": "strict floating-point assertion",
-      "classification": "TEST_ASSERTION_DEFECT_NOT_MODEL_DEFECT",
-      "hidden": false
-    },
-    "correctedR02Run": {
+    "r02Success": {
       "runId": 35799870613,
       "jobId": 106987528775,
       "conclusion": "success"
     },
-    "firstR03Run": {
+    "r03FirstFailure": {
       "runId": 35800619086,
       "jobId": 106989881985,
-      "conclusion": "failure",
-      "cause": "validator helper JSON-cloned an internal Set and lost referential lookup methods",
-      "classification": "VALIDATOR_IMPLEMENTATION_DEFECT_NOT_LEDGER_SEMANTIC_FAILURE",
+      "cause": "validator Set lost through JSON clone",
       "hidden": false
     },
-    "correctedR03Run": {
+    "r03Success": {
       "runId": 35800759464,
       "jobId": 106990319188,
       "conclusion": "success"
     },
-    "r01RegressionAfterR03": {
-      "runId": 35800759320,
-      "jobId": 106990318724,
+    "r04FirstFailure": {
+      "runId": 35801350100,
+      "jobId": 106992161685,
+      "cause": "adversarial test expected VERIFIED_OPERATION before providing the other required verified keys",
+      "classification": "TEST_EXPECTATION_ORDER_DEFECT_NOT_GRAPH_MODEL_DEFECT",
+      "hidden": false
+    },
+    "r04Success": {
+      "runId": 35801403720,
+      "jobId": 106992333757,
       "conclusion": "success"
     },
-    "authorityGateAfterR03": {
-      "runId": 35800759331,
-      "jobId": 106990318696,
+    "r01RegressionAfterR04": {
+      "runId": 35801403732,
+      "jobId": 106992333852,
+      "conclusion": "success"
+    },
+    "authorityGateAfterR04": {
+      "runId": 35801403746,
+      "jobId": 106992333835,
       "conclusion": "success"
     }
   },
-  "r03AdversarialGates": [
-    "missing property-level uncertainty rejected",
-    "Claim referencing nonexistent Observation rejected",
-    "Unknown quantity carrying numeric zero rejected",
-    "copies cannot inflate independent evidence roots",
-    "Current Best View cannot overwrite evidence or conflicts",
-    "Observation cannot carry asserted Claim payload",
-    "Claim cannot carry raw source hash or raw asset payload"
+  "r04AdversarialGates": [
+    "blocked edge carrying defaultValue=0 rejected",
+    "verified edge without evidence or passing receipt rejected",
+    "candidate edge marked applied or exposing operation rejected",
+    "blocked datum edge acquiring guessed operation rejected",
+    "candidate status cannot be promoted without full verified contract",
+    "missing node and duplicate node rejected",
+    "inverse transforms are not implied",
+    "scope mismatch blocks verified-scoped edges",
+    "candidate image-to-geography edge never enters canonical traversal"
   ],
   "methodCorrections": {
     "waveLanguageCannotReplaceEvidence": true,
@@ -204,7 +230,9 @@
     "observationAndClaimMustRemainSeparate": true,
     "sourceAssetAndWorldObjectMustRemainSeparate": true,
     "uncertaintyMustAttachToPropertyOrClaim": true,
-    "currentBestViewMustBeRecomputableAndNonDestructive": true
+    "currentBestViewMustBeRecomputableAndNonDestructive": true,
+    "allCrossFrameDatumTimeProcessRepresentationTransfersMustUseExplicitGraphEdges": true,
+    "canonicalQueriesUseVerifiedEdgesOnly": true
   },
   "gates": {
     "learningHoldActive": true,
@@ -213,8 +241,8 @@
     "kaopuWorldScoreAccepted": false,
     "r01RegressionPassed": true,
     "r02ContractTestsPassed": true,
-    "r02RegistryValidationPassed": true,
     "r03KaopuCoreLedgerPassed": true,
+    "r04TransferGraphPassed": true,
     "authorityGatePassed": true,
     "verticalReferenceGraphAccepted": false,
     "airaiTideSourceAndLocalTransferPolicyAccepted": false,
@@ -228,12 +256,11 @@
     "productionReady": false
   },
   "nextRequired": [
-    "Obtain Small Mother Judgment on R02 and R03 through issue 138.",
-    "Apply explicit corrections without creating visual output.",
-    "Replace any temporary validator implementation detail if Small Mother requires a stricter artifact form.",
-    "After PROMOTE_METHOD only, run the first real-data reversible wave decomposition with source hashes, NoData, residuals and reconstruction error gates.",
+    "Obtain Small Mother Judgment on R02, R03 and R04 through issue 138.",
+    "Apply any explicit corrections without visual production.",
+    "After an explicit PROMOTE_METHOD limited to DEM wave work, run the first real-data reversible DEM wave decomposition with source hash, NoData, residual and reconstruction error gates.",
+    "Keep bathymetry, tide, historic shoreline and final free surface blocked until their separate transfer edges are promoted by evidence.",
     "Verify the user yellow AOI against DEM, NOAA coastline and reef evidence without guessed coordinates or island names.",
-    "Resolve or explicitly park vertical-datum and Airai local-tide unknowns.",
-    "Only after those gates may one single-source three-dimensional workbench begin."
+    "Only after all corresponding gates pass may one single-source three-dimensional workbench begin."
   ]
 }
