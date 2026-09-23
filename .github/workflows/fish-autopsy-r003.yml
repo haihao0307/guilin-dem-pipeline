@@ -4,9 +4,13 @@ on:
     branches: [work/fish-yellowfin-autopsy-workbench-r003-20260923]
 permissions:
   contents: write
+concurrency:
+  group: fish-autopsy-r003
+  cancel-in-progress: false
 jobs:
   source-preflight:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
         with:
@@ -39,9 +43,72 @@ jobs:
           expected=['afc9066b9f9c45159bbecab6c94a902bad2c32a482cea6f6700f9508d9e4956b','e25683ecdc68fa84347f1465088429851eaa128953ad2ca793bd229635163827','b8be1ad495d4c092df12ce2d10652932c7c3aca8500b116d60070cd335ba555a','a97e40a087b918a643113a6bcba3b2a7a33c6cd18f6be2bf99b9de42bcdd590c','43bc988d96d42a275af1d022e6a644921c09c610642c9c8d73b10fcb6e6bb0fd','d57a5fa83c4575f9f440b7625c97da3bb39e806d7e3604ad759775fa8dde6b53']
           assert imgh==expected,'New upload original PNG bytes differ; no lossy substitute'
           pathlib.Path('SOURCE_IDENTITY_PROOF.json').write_text(json.dumps(result,indent=2))
-          print('SOURCE_IDENTITY_PASS: new user glTF and frozen source have identical accessor arrays, scene semantics and six original PNG files',flush=True)
+          print('SOURCE_IDENTITY_PASS',flush=True)
           PY
-      - uses: actions/upload-artifact@v4
+      - uses: actions/setup-node@v4
         with:
-          name: fish-r003-source-identity
-          path: SOURCE_IDENTITY_PROOF.json
+          node-version: '22'
+      - name: Install pinned runtime and browser build tools
+        working-directory: restart/fish-yellowfin-teacher-r2/web-r003
+        run: |
+          npm install --no-save three@0.170.0 esbuild@0.24.2 playwright@1.51.1
+          npx esbuild main.mjs --bundle --format=esm --target=es2022 --minify --legal-comments=inline --outfile=bundle.js
+          npx playwright install --with-deps chromium
+      - name: Build one standalone HTML with original teacher bytes
+        run: python restart/fish-yellowfin-teacher-r2/web-r003/build.py
+      - name: Real file-protocol desktop and mobile browser gates
+        run: node restart/fish-yellowfin-teacher-r2/web-r003/qa.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fish-r003-standalone-and-evidence
+          path: |
+            dist/fish-mother-yellowfin
+            SOURCE_IDENTITY_PROOF.json
+          retention-days: 30
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: public
+          fetch-depth: 1
+          sparse-checkout: fish-mother-yellowfin
+      - name: Publish only isolated Fish folder, preserve all other Mothers
+        run: |
+          cp -a dist/fish-mother-yellowfin public/
+          cd public
+          git config user.name 'Fish Mother Build'
+          git config user.email 'fish-mother@users.noreply.github.com'
+          git add fish-mother-yellowfin
+          git commit -m "Fish R003 standalone teacher autopsy; real-browser QA passed; production approval remains false"
+          for attempt in 1 2 3; do
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            git pull --rebase origin gh-pages
+          done
+          exit 1
+      - name: Wait for externally triggered Pages publication and verify exact public HTML
+        run: |
+          python - <<'PY'
+          import urllib.request,time,hashlib,pathlib,json
+          target='https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/'
+          expected=hashlib.sha256(pathlib.Path('dist/fish-mother-yellowfin/index.html').read_bytes()).hexdigest()
+          for i in range(60):
+            try:
+              with urllib.request.urlopen(target,timeout=45) as r:
+                data=r.read();status=r.status
+              actual=hashlib.sha256(data).hexdigest()
+              if status==200 and actual==expected:
+                print('PUBLIC_HTTP_HASH_PASS',target,len(data),actual,flush=True);break
+              print('PUBLIC_NOT_CURRENT',status,actual,flush=True)
+            except Exception as e: print('PUBLIC_NOT_READY',str(e),flush=True)
+            time.sleep(10)
+          else: raise SystemExit('Public HTML not verified; no public delivery claim')
+          PY
+      - name: Real browser at final public URL
+        env:
+          PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/
+        run: node restart/fish-yellowfin-teacher-r2/web-r003/qa.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fish-r003-public-proof
+          path: dist/fish-mother-yellowfin/PUBLIC_BROWSER_QA.json
