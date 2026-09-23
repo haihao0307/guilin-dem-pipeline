@@ -8,30 +8,44 @@ root = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(__file__).resolve().pare
 package = json.loads((root / "teacher-package.json").read_text(encoding="utf-8"))
 manifest = json.loads((root / "contracts/ACCESSOR_MANIFEST.json").read_text(encoding="utf-8"))
 receipt = json.loads((root / "contracts/EXACT_VERIFICATION.json").read_text(encoding="utf-8"))
-assert package["schema"] in {"kaopu.coral.teacher-fields/1.0", "kaopu.canonical-coral-teacher/1.0"}
-assert package["stage"] in {
-    "ONE_TO_ONE_HIGH_DIMENSIONAL_FUNCTION_EXPRESSION_GEOMETRY_CORE",
-    "ONE_TO_ONE_HIGH_DIMENSIONAL_FIELD_EXPRESSION",
+
+assert package["schema"] == "kaopu.canonical-coral-teacher/1.0"
+assert package["version"] == "BLUE_CORAL_CANONICAL_A04"
+assert package["stage"] == "ONE_TO_ONE_HIGH_DIMENSIONAL_FIELD_EXPRESSION"
+dimensions = package["dimensions"]
+assert dimensions["accessorCount"] == 36
+assert dimensions["surfaceCount"] == 9
+assert dimensions["vertexRecordCount"] == 582_034
+assert dimensions["indexCount"] == 3_000_000
+assert dimensions["triangleCount"] == 1_000_000
+assert dimensions["scalarValueCount"] == 7_656_272
+
+assert package["fields"] == {
+    "manifest": "contracts/ACCESSOR_MANIFEST.json",
+    "payload": "teacher-fields.bin",
+    "payloadBytes": 30_625_096,
+    "payloadSha256": "4763714feed24c967d8e39a27ccba18a456a70131247856d6b4fc3c697cd4f06",
+    "position": "SOURCE_FLOAT32_BYTE_EXACT",
+    "normal": "SOURCE_FLOAT32_BYTE_EXACT",
+    "uv0": "SOURCE_FLOAT32_BYTE_EXACT",
+    "topology": "SOURCE_UINT32_BYTE_EXACT",
+    "allSourceAccessorsPreservedByteExact": True,
 }
-geometry = package.get("geometry") or package["sourceDimensions"]
-assert geometry.get("primitiveCount", geometry.get("surfaces")) == 9
-assert geometry.get("vertexRecordCount", geometry.get("vertices")) == 582_034
-assert geometry.get("triangleCount", geometry.get("triangles")) == 1_000_000
-proof = package.get("proof", package.get("contracts", {}))
-for key in (
-    "meshSimplification",
-    "decimation",
-    "remesh",
-    "remeshing",
-    "voxel",
-    "voxelization",
-    "marchingCubes",
-    "surfaceProjection",
-    "cloneTeacherObject",
-    "sourceCloneUsed",
-):
-    if key in proof:
-        assert proof[key] is False, key
+runtime = package["runtime"]
+assert runtime["sourceCloneUsed"] is False
+assert runtime["gltfLoaderUsedForCandidate"] is False
+assert runtime["runtimeGlbDependency"] is False
+assert runtime["runtimeReferenceTextureDependencyForCandidate"] is False
+assert runtime["separateCandidateArrayBuffers"] is True
+assert runtime["separateCandidateGpuBuffers"] is True
+assert runtime["sameScaleSameCameraCompare"] is True
+for key, value in package["forbiddenMethods"].items():
+    assert value is False, key
+boundary = package["boundary"]
+assert boundary["oneToOneVisualRestatementApproved"] is False
+assert boundary["structureGrammarUnlocked"] is False
+assert boundary["isFinalCoralGenerator"] is False
+assert boundary["productionReady"] is False
 
 assert manifest["schema"] == "kaopu.coral-a04-accessor-manifest/1.0"
 assert manifest["dimensions"]["accessors"] == len(manifest["accessors"]) == 36
@@ -54,8 +68,12 @@ for surface in manifest["surfaces"]:
         if binding["surface"] == surface["id"]
     }
     assert bindings == {"POSITION", "NORMAL", "TEXCOORD_0", "INDICES"}, (surface["id"], bindings)
+
 assert receipt["passed"] is True
 assert receipt["accessorByteMismatchCount"] == 0
 assert receipt["forbiddenMethodCount"] == 0
 assert receipt["scalarValueCountChecked"] == 7_656_272
-print("BLUE_CORAL_A04_EXACT_CONTRACT_PASS")
+assert receipt["visualApproval"] is False
+assert receipt["structureGrammarUnlocked"] is False
+assert receipt["finalGenerator"] is False
+print("BLUE_CORAL_A04_SINGLE_CANONICAL_CONTRACT_PASS")
