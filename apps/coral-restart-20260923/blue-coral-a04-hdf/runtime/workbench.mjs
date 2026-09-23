@@ -8,7 +8,7 @@ import {
   setCandidateRoughness,
   verifyNoTeacherAliasing,
 } from './exact-field-decoder.mjs';
-import { runSameCameraSilhouetteAudit } from './silhouette-audit.mjs';
+import { runSameCameraProjectedEnvelopeAudit } from './projected-envelope-audit.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const required = (selector) => {
@@ -157,7 +157,7 @@ function createWorkbench({ packageJson, manifest, objectGraph, teacher, candidat
   const candidateHeatMaterial = new THREE.MeshBasicMaterial({ color: 0xff3c87, side: THREE.DoubleSide, transparent: true, opacity: 0.48, depthWrite: false });
   const candidateNormalMaterial = new THREE.MeshNormalMaterial({ side: THREE.DoubleSide });
   const candidateBaseMaterial = candidate.material;
-  let lastSilhouetteAudit = null;
+  let lastProjectedEnvelopeAudit = null;
 
   const state = {
     mode: 'compare',
@@ -278,7 +278,7 @@ function createWorkbench({ packageJson, manifest, objectGraph, teacher, candidat
       teacherBufferAliasCount: noAliasing.bufferAliasCount,
       noTeacherAliasing: noAliasing.passed,
       sameScaleSameCameraCompare: true,
-      silhouetteAudit: lastSilhouetteAudit,
+      projectedEnvelopeAudit: lastProjectedEnvelopeAudit,
       meshSimplification: false,
       decimation: false,
       remeshing: false,
@@ -333,10 +333,10 @@ function createWorkbench({ packageJson, manifest, objectGraph, teacher, candidat
     required('#auditOutput').textContent = JSON.stringify(result, null, 2);
     window.__CORAL_AUDIT__ = result;
   });
-  required('#runSilhouetteAudit').addEventListener('click', () => {
+  required('#runProjectedEnvelopeAudit').addEventListener('click', () => {
     const output = required('#auditOutput');
-    output.textContent = '正在执行四视角同相机轮廓核验……';
-    lastSilhouetteAudit = runSameCameraSilhouetteAudit({
+    output.textContent = '正在执行四视角同相机投影轮廓核验……';
+    lastProjectedEnvelopeAudit = runSameCameraProjectedEnvelopeAudit({
       renderer,
       camera,
       controls,
@@ -349,7 +349,7 @@ function createWorkbench({ packageJson, manifest, objectGraph, teacher, candidat
     const result = audit();
     output.textContent = JSON.stringify(result, null, 2);
     window.__CORAL_AUDIT__ = result;
-    window.__CORAL_SILHOUETTE__ = lastSilhouetteAudit;
+    window.__CORAL_PROJECTED_ENVELOPE__ = lastProjectedEnvelopeAudit;
   });
 
   applyMode();
@@ -369,8 +369,8 @@ function createWorkbench({ packageJson, manifest, objectGraph, teacher, candidat
     audit,
     render,
     setView,
-    runSilhouetteAudit() {
-      lastSilhouetteAudit = runSameCameraSilhouetteAudit({
+    runProjectedEnvelopeAudit() {
+      lastProjectedEnvelopeAudit = runSameCameraProjectedEnvelopeAudit({
         renderer,
         camera,
         controls,
@@ -380,9 +380,9 @@ function createWorkbench({ packageJson, manifest, objectGraph, teacher, candidat
         candidateMeshes: candidate.meshes,
         presets,
       });
-      window.__CORAL_SILHOUETTE__ = lastSilhouetteAudit;
+      window.__CORAL_PROJECTED_ENVELOPE__ = lastProjectedEnvelopeAudit;
       window.__CORAL_AUDIT__ = audit();
-      return structuredClone(lastSilhouetteAudit);
+      return structuredClone(lastProjectedEnvelopeAudit);
     },
     setMode(mode) {
       state.mode = mode;
