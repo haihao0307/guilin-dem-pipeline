@@ -8,6 +8,7 @@ import {
   setCandidateRoughness,
   verifyNoTeacherAliasing,
 } from './exact-field-decoder.mjs';
+import { runSameCameraSilhouetteAudit } from './silhouette-audit.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const required = (selector) => {
@@ -156,6 +157,7 @@ function createWorkbench({ packageJson, manifest, objectGraph, teacher, candidat
   const candidateHeatMaterial = new THREE.MeshBasicMaterial({ color: 0xff3c87, side: THREE.DoubleSide, transparent: true, opacity: 0.48, depthWrite: false });
   const candidateNormalMaterial = new THREE.MeshNormalMaterial({ side: THREE.DoubleSide });
   const candidateBaseMaterial = candidate.material;
+  let lastSilhouetteAudit = null;
 
   const state = {
     mode: 'compare',
@@ -184,7 +186,7 @@ function createWorkbench({ packageJson, manifest, objectGraph, teacher, candidat
     candidate.root.visible = true;
     if (state.mode === 'neutral') {
       for (const mesh of teacherMeshes) mesh.material = teacherNeutralMaterial;
-    } else if (state.mode === 'difference') {
+    } else if (state.mode === 'difference' || state.mode === 'overlay') {
       for (const mesh of teacherMeshes) mesh.material = teacherHeatMaterial;
       for (const mesh of candidate.meshes) mesh.material = candidateHeatMaterial;
     } else if (state.mode === 'normals') {
@@ -219,6 +221,19 @@ function createWorkbench({ packageJson, manifest, objectGraph, teacher, candidat
     renderer.render(scene, camera);
   }
 
+  function drawOverlay(x, y, width, height) {
+    renderer.setViewport(x, y, width, height);
+    renderer.setScissor(x, y, width, height);
+    camera.aspect = width / Math.max(height, 1);
+    camera.updateProjectionMatrix();
+    renderer.autoClear = true;
+    renderer.render(teacherScene, camera);
+    renderer.autoClear = false;
+    renderer.clearDepth();
+    renderer.render(candidateScene, camera);
+    renderer.autoClear = true;
+  }
+
   function render() {
     const width = canvas.clientWidth;
     const height = canvas.clientHeight;
@@ -227,8 +242,10 @@ function createWorkbench({ packageJson, manifest, objectGraph, teacher, candidat
     if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) renderer.setSize(width, height, false);
     renderer.clear();
     const mobile = width < 680;
-    const single = ['teacher', 'candidate'].includes(state.mode);
-    if (single) {
+    const single = ['teacher', 'candidate', 'overlay'].includes(state.mode);
+    if (state.mode === 'overlay') {
+      drawOverlay(0, 0, canvas.width, canvas.height);
+    } else if (single) {
       drawScene(state.mode === 'teacher' ? teacherScene : candidateScene, 0, 0, canvas.width, canvas.height);
     } else if (mobile) {
       const half = Math.floor(canvas.height / 2);
@@ -261,6 +278,7 @@ function createWorkbench({ packageJson, manifest, objectGraph, teacher, candidat
       teacherBufferAliasCount: noAliasing.bufferAliasCount,
       noTeacherAliasing: noAliasing.passed,
       sameScaleSameCameraCompare: true,
+      silhouetteAudit: lastSilhouetteAudit,
       meshSimplification: false,
       decimation: false,
       remeshing: false,
@@ -315,6 +333,24 @@ function createWorkbench({ packageJson, manifest, objectGraph, teacher, candidat
     required('#auditOutput').textContent = JSON.stringify(result, null, 2);
     window.__CORAL_AUDIT__ = result;
   });
+  required('#runSilhouetteAudit').addEventListener('click', () => {
+    const output = required('#auditOutput');
+    output.textContent = '正在执行四视角同相机轮廓核验……';
+    lastSilhouetteAudit = runSameCameraSilhouetteAudit({
+      renderer,
+      camera,
+      controls,
+      teacherScene,
+      candidateScene,
+      teacherMeshes,
+      candidateMeshes: candidate.meshes,
+      presets,
+    });
+    const result = audit();
+    output.textContent = JSON.stringify(result, null, 2);
+    window.__CORAL_AUDIT__ = result;
+    window.__CORAL_SILHOUETTE__ = lastSilhouetteAudit;
+  });
 
   applyMode();
   updateCandidateMaterial();
@@ -333,6 +369,21 @@ function createWorkbench({ packageJson, manifest, objectGraph, teacher, candidat
     audit,
     render,
     setView,
+    runSilhouetteAudit() {
+      lastSilhouetteAudit = runSameCameraSilhouetteAudit({
+        renderer,
+        camera,
+        controls,
+        teacherScene,
+        candidateScene,
+        teacherMeshes,
+        candidateMeshes: candidate.meshes,
+        presets,
+      });
+      window.__CORAL_SILHOUETTE__ = lastSilhouetteAudit;
+      window.__CORAL_AUDIT__ = audit();
+      return structuredClone(lastSilhouetteAudit);
+    },
     setMode(mode) {
       state.mode = mode;
       applyMode();
