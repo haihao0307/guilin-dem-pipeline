@@ -1,0 +1,34 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b1620"><meta name="fish-version" content="FISH_OPEN_R006_1"><meta name="fish-build" content="__BUILD_SHA__"><title>Fish Mother · 黄鳍金枪鱼 · R006.1</title><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Cpath fill=%22%2366d7c5%22 d=%22M4 32Q28 4 48 28L60 16V48L48 36Q28 60 4 32Z%22/%3E%3C/svg%3E"><style>
+html,body{margin:0;min-height:100%;background:#09131c;color:#eef5f6;font:15px/1.6 system-ui,-apple-system,'Segoe UI','Microsoft YaHei',sans-serif}#fish-boot{position:fixed;inset:0;z-index:1000;display:grid;place-content:center;background:#09131c;padding:24px;box-sizing:border-box}#fish-boot[hidden]{display:none!important}#fish-boot .boot-card{width:min(480px,calc(100vw - 48px));max-height:calc(100dvh - 48px);overflow:auto}#fish-boot .boot-brand{color:#66d7c5;letter-spacing:2px;font-size:12px}#fish-boot h1{font-size:25px;line-height:1.4;margin:14px 0 8px;font-weight:600}#fish-boot p{color:#adc2cb;margin:10px 0}#fish-boot progress{display:block;width:100%;height:9px;margin:25px 0 8px;accent-color:#66d7c5}#fish-boot .boot-meter{font:12px/1.7 ui-monospace,monospace;color:#91aebc}#fish-boot .boot-note{font-size:12px;color:#819faa}#fish-boot-actions{display:flex;gap:10px;flex-wrap:wrap;margin:24px 0 0}#fish-boot button,#fish-boot a{display:inline-block;font:14px/1.4 inherit;border:1px solid #355360;border-radius:7px;padding:9px 12px;color:#c8f4e9;background:#132b34;text-decoration:none;cursor:pointer}#fish-boot [hidden]{display:none!important}#fish-boot pre{padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid #30424c;font:12px/1.6 monospace;max-height:160px;overflow:auto}#fish-boot .boot-error{color:#ffcbac}#fish-boot noscript{display:block;margin-top:18px;color:#ffcbac}
+</style></head><body><section id="fish-boot" role="status" aria-live="polite"><div class="boot-card"><div class="boot-brand">FISH MOTHER / R006.1</div><h1 id="fish-boot-title">正在打开黄鳍金枪鱼工作台</h1><p id="fish-boot-message">正在接收页面。加载进度会在这里显示。</p><progress id="fish-boot-progress" max="100" value="0" aria-label="原始模型接收进度"></progress><div id="fish-boot-meter" class="boot-meter">页面已打开 · 等待原始鱼类数据</div><p class="boot-note">完整原鱼、原骨架与 4K 贴图保留。本页为单体 HTML，无需解压或另开工具。</p><div id="fish-boot-actions"><button id="fish-boot-retry" type="button">重新加载当前页</button><a id="fish-boot-rollback" href="https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/r003/?rescue=white-screen">打开已保留的 R003 查看台</a></div><pre id="fish-boot-error" hidden></pre><noscript>浏览器没有执行 JavaScript，无法运行三维场景。原始资料未被更改。</noscript></div></section><script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);},panel=$('fish-boot'),buffer=null,watch;
+var boot=window.FISH_BOOT={version:'FISH_OPEN_R006_1',ready:false,failed:false,startedAt:performance.now(),phase:'page-open',received:0,total:__SOURCE_BYTES__,chunks:0,chunkLimit:786432,phases:[],sourceReleased:false,decodeMode:'unselected'};
+function text(id,value){var e=$(id);if(e)e.textContent=value;}
+boot.mark=function(phase,message){boot.phase=phase;boot.phases.push({phase:phase,ms:Math.round(performance.now()-boot.startedAt)});if(message)text('fish-boot-message',message);};
+boot.fail=function(error,phase){boot.failed=true;boot.ready=false;panel.hidden=false;panel.classList.add('boot-error');text('fish-boot-title','三维工作台暂未打开');text('fish-boot-message','加载或三维启动失败。原始资料未更改；下面保留重试和已知版本入口。');var e=$('fish-boot-error');e.hidden=false;e.textContent='阶段：'+(phase||boot.phase)+'\n'+String(error&&error.message||error);boot.error=e.textContent;clearInterval(watch);};
+window.addEventListener('error',function(e){boot.fail(e.error||e.message,'script-error');});
+window.addEventListener('unhandledrejection',function(e){boot.fail(e.reason,'unhandled-rejection');});
+boot.chunk=function(element){
+ try{
+  if(boot.failed)return;
+  var i=Number(element.dataset.index);if(i!==boot.chunks)throw Error('原始数据分块顺序不完整');
+  if(buffer===null)buffer=new Uint8Array(boot.total);
+  var encoded=element.textContent.trim(),decoded;
+  if(typeof Uint8Array.fromBase64==='function'&&!window.FISH_FORCE_BASE64_FALLBACK){decoded=Uint8Array.fromBase64(encoded);boot.decodeMode='typed-array';}
+  else{var raw=atob(encoded);decoded=new Uint8Array(raw.length);for(var k=0;k<raw.length;k++)decoded[k]=raw.charCodeAt(k);raw=null;boot.decodeMode='bounded-atob-fallback';}
+  if(decoded.length>boot.chunkLimit||boot.received+decoded.length>boot.total)throw Error('原始数据分块尺寸不符');
+  buffer.set(decoded,boot.received);boot.received+=decoded.length;boot.chunks++;encoded=null;decoded=null;
+  boot.phase='receive-model';$('fish-boot-progress').value=Math.round(boot.received/boot.total*90);
+  text('fish-boot-message','正在接收完整原鱼数据，未降低贴图精度。');text('fish-boot-meter',(boot.received/1048576).toFixed(1)+' / '+(boot.total/1048576).toFixed(1)+' MiB · '+Math.round(boot.received/boot.total*100)+'%');
+ }catch(e){boot.fail(e,'source-chunk');}finally{element.remove();}
+};
+boot.takeSource=function(){if(boot.failed)throw Error(boot.error);if(!buffer||boot.received!==boot.total)throw Error('原始鱼类数据没有完整到达');var result=buffer;buffer=null;boot.sourceReleased=true;boot.mark('initialize-3d','原鱼数据已接收，正在启动三维视图。');return result;};
+boot.done=function(){if(boot.failed)return;boot.ready=true;boot.mark('first-render','三维工作台已打开');$('fish-boot-progress').value=100;clearInterval(watch);panel.hidden=true;};
+$('fish-boot-retry').onclick=function(){if(location.protocol==='file:'){location.reload();return;}var u=new URL(location.href);u.searchParams.set('openfix','r006-1');u.searchParams.set('retry',Date.now());location.replace(u.href);};
+window.addEventListener('DOMContentLoaded',function(){if(!boot.ready&&!boot.failed&&boot.received!==boot.total)boot.fail('页面已结束，但模型数据未收齐。文件可能不完整或传输中断。','incomplete-file');});
+watch=setInterval(function(){if(boot.ready||boot.failed)return;var seconds=Math.floor((performance.now()-boot.startedAt)/1000);if(seconds>25)text('fish-boot-title','仍在加载 · 已等待 '+seconds+' 秒');if(seconds>90)text('fish-boot-message','加载尚未完成。可继续等待，也可使用下方保留入口；不会反复自动刷新。');},1000);
+boot.mark('visible-shell','页面已显示，开始接收原始模型。');
+})();
+</script>
