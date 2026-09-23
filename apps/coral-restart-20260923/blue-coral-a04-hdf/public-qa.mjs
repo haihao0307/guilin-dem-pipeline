@@ -46,6 +46,11 @@ async function verifyViewport(name, viewport) {
   const runtimeError = await page.evaluate(() => window.__CORAL_STARTUP_ERROR__ || null);
   assert.equal(runtimeError, null, `${name}: runtime error: ${runtimeError}`);
 
+  const silhouette = await page.evaluate(() => window.coralA04.runSilhouetteAudit());
+  assert.equal(silhouette.passed, true, `${name}: silhouette audit failed`);
+  assert(silhouette.views.length === 4, `${name}: four silhouette views were not checked`);
+  assert(silhouette.minIoU >= 0.99999, `${name}: silhouette IoU ${silhouette.minIoU}`);
+
   // The regular workbench renders continuously for OrbitControls. Stop that loop
   // after readiness on the software-GPU runner and render explicitly for evidence.
   await page.evaluate(() => {
@@ -96,6 +101,8 @@ async function verifyViewport(name, viewport) {
   assert.equal(audit.teacherBufferAliasCount, 0, `${name}: candidate aliases teacher buffers`);
   assert.equal(audit.noTeacherAliasing, true, `${name}: teacher-aliasing gate failed`);
   assert.equal(audit.sameScaleSameCameraCompare, true, `${name}: same-camera comparison gate failed`);
+  assert.equal(audit.silhouetteAudit.passed, true, `${name}: runtime silhouette gate missing`);
+  assert(audit.silhouetteAudit.minIoU >= 0.99999, `${name}: runtime silhouette IoU changed`);
   assert.equal(audit.sourceCloneUsed, false, `${name}: candidate cloned teacher object`);
   assert.equal(audit.gltfLoaderUsedForCandidate, false, `${name}: candidate used GLTFLoader`);
   for (const key of ['meshSimplification', 'decimation', 'remeshing', 'voxelization', 'marchingCubes']) {
@@ -126,6 +133,7 @@ async function verifyViewport(name, viewport) {
     viewport,
     loadSeconds: (Date.now() - started) / 1000,
     httpStatus: response.status(),
+    silhouette,
     runtime,
     screenshot: { file: path.basename(screenshot), bytes: screenshotBytes },
     consoleErrors,
@@ -141,7 +149,7 @@ try {
   assert(desktop.passed, `desktop browser errors: ${JSON.stringify(desktop)}`);
   assert(mobile.passed, `mobile browser errors: ${JSON.stringify(mobile)}`);
   const receipt = {
-    schema: 'kaopu.browser-qa/2.0',
+    schema: 'kaopu.browser-qa/2.1',
     version: 'BLUE_CORAL_CANONICAL_A04',
     stage: 'ONE_TO_ONE_HIGH_DIMENSIONAL_FIELD_EXPRESSION',
     url,
