@@ -1,0 +1,105 @@
+name: Probe Blue Coral Teacher Asset Transport
+
+on:
+  push:
+    branches: [work/coral-blue-a04-hdf-exact-20260923]
+    paths:
+      - .github/workflows/coral-blue-a04-sketchfab-source-probe.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: coral-blue-a04-source-probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install browser probe
+        run: |
+          npm install --no-save playwright@1.51.1
+          npx playwright install --with-deps chromium
+      - name: Capture official public viewer network
+        run: |
+          cat > /tmp/probe.mjs <<'JS'
+          import { chromium } from 'playwright';
+          import { createHash } from 'node:crypto';
+          import fs from 'node:fs';
+          import path from 'node:path';
+          const uid='28a6da41dc6b40bfaaec9a8a4eea4fc0';
+          const expected={
+            sceneBin:'23f65069936dc9316b975617beb9a07991a24b20bba8de5f45ff6bb0afecadb3',
+            sceneGltf:'6a13fc948469db72878528f4941a734bfac256dc1d2939ab6dcc9e2fe1818e0a',
+            texture:'27734e7adaa0657fb314715088f74c707c12c8029965cb12172fef104a673906'
+          };
+          const outDir='apps/coral-restart-20260923/blue-coral-a04-hdf/source-probe';
+          fs.mkdirSync(outDir,{recursive:true});
+          const browser=await chromium.launch({headless:true});
+          const context=await browser.newContext({viewport:{width:1280,height:900}});
+          const page=await context.newPage();
+          const rows=[]; const pending=[];
+          page.on('response',response=>{
+            const task=(async()=>{
+              const url=response.url();
+              let headers={}; try{headers=await response.allHeaders();}catch{}
+              const type=headers['content-type']||'';
+              const declared=Number(headers['content-length']||0);
+              const relevant=/sketchfab|amazonaws|cloudfront|cdn/i.test(url) && !/analytics|google|facebook|sentry|segment/i.test(url);
+              if(!relevant)return;
+              const row={url,status:response.status(),contentType:type,declaredBytes:declared,resourceType:response.request().resourceType()};
+              if((declared>50000 || /octet|model|image|gzip|binary/i.test(type)) && response.status()===200){
+                try{
+                  const body=await response.body();
+                  row.bodyBytes=body.length;
+                  row.sha256=createHash('sha256').update(body).digest('hex');
+                  row.matchesKnown=Object.entries(expected).filter(([,v])=>v===row.sha256).map(([k])=>k);
+                  if(body.length>500000 && body.length<40000000){
+                    const name=String(rows.length).padStart(3,'0')+'-'+row.sha256.slice(0,16)+'.bin';
+                    fs.writeFileSync(path.join(outDir,name),body);
+                    row.savedAs=name;
+                  }
+                }catch(error){row.bodyError=String(error)}
+              }
+              rows.push(row);
+            })(); pending.push(task);
+          });
+          const consoleErrors=[];page.on('console',m=>{if(m.type()==='error')consoleErrors.push(m.text())});
+          const pageErrors=[];page.on('pageerror',e=>pageErrors.push(String(e)));
+          const target=`https://sketchfab.com/models/${uid}/embed?autostart=1&ui_hint=0&dnt=1&preload=1`;
+          let navigation=null;
+          try{const r=await page.goto(target,{waitUntil:'domcontentloaded',timeout:120000});navigation={status:r?.status(),url:page.url()};await page.waitForTimeout(90000);}catch(error){navigation={error:String(error),url:page.url()}}
+          await Promise.allSettled(pending);
+          await browser.close();
+          rows.sort((a,b)=>(b.bodyBytes||b.declaredBytes||0)-(a.bodyBytes||a.declaredBytes||0));
+          const direct=[];
+          for(const url of [`https://api.sketchfab.com/v3/models/${uid}`,`https://sketchfab.com/i/models/${uid}`,`https://sketchfab.com/oembed?url=https://sketchfab.com/3d-models/blue-coral-${uid}`]){
+            try{const r=await fetch(url,{headers:{'user-agent':'Coral-A04-Source-Probe/1.0'}});const b=Buffer.from(await r.arrayBuffer());direct.push({url,status:r.status,contentType:r.headers.get('content-type'),bytes:b.length,sha256:createHash('sha256').update(b).digest('hex'),preview:b.toString('utf8',0,Math.min(1200,b.length))});}catch(error){direct.push({url,error:String(error)})}
+          }
+          const result={schema:'kaopu.coral-source-probe/1.0',uid,target,navigation,expected,requests:rows,direct,consoleErrors,pageErrors,generatedAt:new Date().toISOString()};
+          fs.writeFileSync(path.join(outDir,'NETWORK_PROBE.json'),JSON.stringify(result,null,2));
+          console.log('PROBE_ROWS',rows.length);
+          console.log(JSON.stringify(rows.slice(0,25),null,2));
+          JS
+          node /tmp/probe.mjs
+      - name: Commit probe evidence only
+        run: |
+          git config user.name 'Coral Mother Probe'
+          git config user.email 'coral-probe@users.noreply.github.com'
+          git add apps/coral-restart-20260923/blue-coral-a04-hdf/source-probe
+          git diff --cached --quiet && exit 0
+          git commit -m 'coral: record official Blue Coral viewer transport probe [skip ci]'
+          git push origin HEAD:work/coral-blue-a04-hdf-exact-20260923
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coral-blue-a04-source-probe
+          path: apps/coral-restart-20260923/blue-coral-a04-hdf/source-probe
+          retention-days: 7
