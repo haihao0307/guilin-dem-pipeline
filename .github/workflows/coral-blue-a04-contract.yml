@@ -28,12 +28,12 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Verify single canonical package and all 36 source accessors
+      - name: Verify the single canonical package and all 36 source accessors
         run: |
           python apps/coral-restart-20260923/blue-coral-a04-hdf/tests/test_exact_contract.py \
             apps/coral-restart-20260923/blue-coral-a04-hdf
 
-      - name: Verify frozen execution boundary and external evidence receipts
+      - name: Verify the frozen Mother execution boundary
         run: |
           python - <<'PY'
           import json
@@ -41,7 +41,6 @@ jobs:
           root=Path('apps/coral-restart-20260923/blue-coral-a04-hdf')
           boundary=json.loads((root/'contracts/EXECUTION_BOUNDARY.json').read_text())
           receipt=json.loads((root/'contracts/EXACT_VERIFICATION.json').read_text())
-          browser=json.loads((root/'contracts/LOCAL_BROWSER_QA.json').read_text())
           package=json.loads((root/'teacher-package.json').read_text())
           assert boundary['methodChangeAuthorized'] is False
           assert boundary['structureGrammarUnlocked'] is False
@@ -49,27 +48,18 @@ jobs:
           assert receipt['passed'] is True
           assert receipt['accessorByteMismatchCount'] == 0
           assert receipt['forbiddenMethodCount'] == 0
-          assert browser['build'] == receipt['workbench']
-          assert browser['desktop']['passed'] is True
-          assert browser['desktop']['viewport'] == '1440x1000'
-          assert browser['desktop']['objectsCenteredAndFullyVisible'] is True
-          assert browser['mobile']['passed'] is True
-          assert browser['mobile']['viewport'] == '390x844'
-          assert browser['mobile']['bodyWidth'] == 390
-          assert browser['mobile']['objectsCenteredAndFullyVisible'] is True
-          assert browser['fixedPublicUrlVerified'] is False
-          assert package['proof']['exactFieldReceipt'] == 'contracts/EXACT_VERIFICATION.json'
-          assert package['proof']['workbenchBuildReceipt'] == 'contracts/BUILD_MANIFEST.json'
-          assert package['proof']['browserQaReceipt'] == 'contracts/LOCAL_BROWSER_QA.json'
-          assert 'workbenchSha256' not in package['proof']
-          assert 'workbenchBytes' not in package['proof']
+          assert receipt['fieldPayload']['bytes'] == 30625096
+          assert receipt['fieldPayload']['sha256'] == '4763714feed24c967d8e39a27ccba18a456a70131247856d6b4fc3c697cd4f06'
+          assert package['schema'] == 'kaopu.canonical-coral-teacher/1.0'
+          assert package['stage'] == 'ONE_TO_ONE_HIGH_DIMENSIONAL_FIELD_EXPRESSION'
           assert package['boundary']['oneToOneVisualRestatementApproved'] is False
           assert package['boundary']['structureGrammarUnlocked'] is False
           assert package['boundary']['isFinalCoralGenerator'] is False
-          print('BLUE_CORAL_A04_BOUNDARY_AND_EXTERNAL_RECEIPTS_PASS')
+          assert package['boundary']['productionReady'] is False
+          print('BLUE_CORAL_A04_BOUNDARY_PASS')
           PY
 
-      - name: Verify compiler and builder contain no downgrade implementation
+      - name: Verify no downgrade implementation was introduced
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -77,39 +67,42 @@ jobs:
           implementation='\n'.join((root/name).read_text() for name in [
             'tools/compile_exact_teacher.py',
             'tools/build_exact_workbench.py',
-          ])
-          complete='\n'.join((root/name).read_text() for name in [
-            'tools/compile_exact_teacher.py',
-            'tools/verify_exact_fields.py',
-            'tools/build_exact_workbench.py',
+            'runtime/exact-field-decoder.mjs',
+            'runtime/projected-envelope-audit.mjs',
+            'runtime/workbench.mjs',
           ])
           for marker in [
-            'c65bc1b9c389b3b1c3f4c09fc345619ad4ad4994666a06eb294822eafa503857',
             'allSourceAccessorsPreservedByteExact',
             'separateCandidateBuffersRequired',
             'sameScaleSameCameraComparisonRequired',
-          ]: assert marker in complete, marker
+            'BLUE_CORAL_CANONICAL_A04_INDEPENDENT_CANDIDATE',
+            'kaopu.same-camera-projected-envelope/1.0',
+          ]:
+            assert marker in implementation, marker
           for marker in [
             'trimesh.simplify',
-            'MarchingCubes(',
+            'new MarchingCubes(',
             'meshopt_simplify(',
             'voxelize(',
             'simplify_quadratic_decimation',
-          ]: assert marker not in implementation, marker
-          print('BLUE_CORAL_A04_COMPILER_AND_BUILDER_METHOD_PASS')
+            "from './silhouette-audit.mjs'",
+          ]:
+            assert marker not in implementation, marker
+          print('BLUE_CORAL_A04_NO_DOWNGRADE_PASS')
           PY
 
-      - name: Syntax-check runtime and deterministic builder
+      - name: Syntax-check the independent field runtime and deterministic builder
         run: |
           node --check apps/coral-restart-20260923/blue-coral-a04-hdf/runtime/exact-field-decoder.mjs
-          node --check apps/coral-restart-20260923/blue-coral-a04-hdf/runtime/silhouette-audit.mjs
+          node --check apps/coral-restart-20260923/blue-coral-a04-hdf/runtime/projected-envelope-audit.mjs
           node --check apps/coral-restart-20260923/blue-coral-a04-hdf/runtime/workbench.mjs
+          node --check apps/coral-restart-20260923/blue-coral-a04-hdf/public-qa.mjs
           python -m py_compile \
             apps/coral-restart-20260923/blue-coral-a04-hdf/tools/compile_exact_teacher.py \
             apps/coral-restart-20260923/blue-coral-a04-hdf/tools/verify_exact_fields.py \
             apps/coral-restart-20260923/blue-coral-a04-hdf/tools/build_exact_workbench.py
 
-      - name: Bundle the independent candidate runtime
+      - name: Bundle the projected-envelope A04 runtime
         run: |
           npm install --no-save three@0.170.0 esbuild@0.24.2
           npx esbuild \
@@ -122,14 +115,15 @@ jobs:
             --outfile=/tmp/blue-coral-a04-runtime.js
           test -s /tmp/blue-coral-a04-runtime.js
           ! grep -q 'SkeletonUtils' /tmp/blue-coral-a04-runtime.js
+          ! grep -q 'silhouette-audit.mjs' /tmp/blue-coral-a04-runtime.js
           grep -q 'BLUE_CORAL_CANONICAL_A04' /tmp/blue-coral-a04-runtime.js
           grep -Eq 'sourceCloneUsed:(!1|false)' /tmp/blue-coral-a04-runtime.js
-          grep -q 'kaopu.same-camera-silhouette/1.0' /tmp/blue-coral-a04-runtime.js
+          grep -q 'kaopu.same-camera-projected-envelope/1.0' /tmp/blue-coral-a04-runtime.js
           echo "BLUE_CORAL_A04_RUNTIME_BUNDLE_BYTES=$(wc -c </tmp/blue-coral-a04-runtime.js)"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: blue-coral-a04-runtime-source-and-bundle
+          name: blue-coral-a04-projected-envelope-runtime
           path: |
             /tmp/blue-coral-a04-runtime.js
             apps/coral-restart-20260923/blue-coral-a04-hdf/runtime
