@@ -1,0 +1,150 @@
+name: Fish Oral R008
+on:
+  push:
+    branches: [work/fish-yellowfin-oral-r008-20260924]
+    paths:
+      - restart/fish-yellowfin-teacher-r2/web-r008/**
+      - .github/workflows/fish-oral-r008.yml
+permissions:
+  contents: write
+concurrency:
+  group: fish-oral-r008
+  cancel-in-progress: false
+jobs:
+  verify-oral-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace/source
+            restart/fish-yellowfin-teacher-r2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Reproduce original teacher and compile traceable source mouth geometry
+        run: |
+          python -m pip install numpy==2.2.6 Pillow==11.2.1
+          python restart/fish-yellowfin-teacher-r2/web-r004/compile_teacher.py --source apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace/source/tuna_fish_4k.glb --out dist/fish-mother-yellowfin/canonical-r004
+          cp dist/fish-mother-yellowfin/canonical-r004/EXTRACTION_QA.json SOURCE_IDENTITY_PROOF.json
+          python restart/fish-yellowfin-teacher-r2/web-r005/compile_regions.py --package dist/fish-mother-yellowfin/canonical-r004 --out dist/fish-mother-yellowfin/parts-r005
+          python restart/fish-yellowfin-teacher-r2/web-r006/compile_boundary.py --canonical dist/fish-mother-yellowfin/canonical-r004 --parts dist/fish-mother-yellowfin/parts-r005 --out dist/fish-mother-yellowfin/boundary-r006
+          python restart/fish-yellowfin-teacher-r2/web-r007/compile_head.py --canonical dist/fish-mother-yellowfin/canonical-r004 --parts dist/fish-mother-yellowfin/parts-r005 --out dist/fish-mother-yellowfin/head-r007
+          python restart/fish-yellowfin-teacher-r2/web-r008/compile_oral.py --canonical dist/fish-mother-yellowfin/canonical-r004 --parts dist/fish-mother-yellowfin/parts-r005 --head dist/fish-mother-yellowfin/head-r007 --out dist/fish-mother-yellowfin/oral-r008
+          python restart/fish-yellowfin-teacher-r2/web-r008/prepare_r008.py
+      - name: Bundle repaired standalone workbench with all source precision unchanged
+        run: |
+          npm install --no-save three@0.170.0 esbuild@0.24.2 playwright@1.51.1
+          node --check restart/fish-yellowfin-teacher-r2/web-r008/main.mjs
+          node --check restart/fish-yellowfin-teacher-r2/web-r008/oral.mjs
+          npx esbuild restart/fish-yellowfin-teacher-r2/web-r008/main.mjs --bundle --format=esm --target=es2022 --minify --legal-comments=inline --outfile=restart/fish-yellowfin-teacher-r2/web-r008/bundle.js
+          python restart/fish-yellowfin-teacher-r2/web-r008/build.py
+          npx playwright install --with-deps chromium
+      - name: Real browser old gates plus source/candidate mouth and eye metric parity
+        run: node restart/fish-yellowfin-teacher-r2/web-r008/qa_regression.mjs
+      - name: Preserve delayed payload and all fault recovery checks
+        run: node restart/fish-yellowfin-teacher-r2/web-r008/qa_openfix.mjs
+      - name: Preserve real screenshot inspection copies
+        if: always()
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import json,hashlib
+          r=Path('dist/fish-mother-yellowfin/evidence');r.mkdir(parents=True,exist_ok=True);rows=[]
+          for name in ['r008-oral-min','r008-oral-max','r008-oral-front']:
+              p=r/(name+'.png')
+              if p.exists():
+                  im=Image.open(p).convert('RGB');im=im.crop((0,130,1175,837));im.thumbnail((480,290));dest=r/(name+'.webp');im.save(dest,quality=45,method=6)
+                  rows.append({'source':p.name,'sourceSha256':hashlib.sha256(p.read_bytes()).hexdigest(),'inspection':dest.name,'inspectionSha256':hashlib.sha256(dest.read_bytes()).hexdigest(),'bytes':dest.stat().st_size})
+          (r/'ORAL_INSPECTION.json').write_text(json.dumps(rows,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fish-r008-code-data-browser-evidence
+          path: |
+            dist/fish-mother-yellowfin
+            restart/fish-yellowfin-teacher-r2/web-r008
+          retention-days: 30
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: public
+          sparse-checkout: fish-mother-yellowfin
+      - name: Preserve R007 and publish only the verified Fish folder
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import shutil,json
+          p=Path('public/fish-mother-yellowfin');old=p/'index.html';h=old.read_bytes()[:2500]
+          assert b'FISH_HEAD_R007' in h or b'FISH_ORAL_R008' in h,'Concurrent unexpected Fish version'
+          if b'FISH_HEAD_R007' in h:
+              a=p/'r007';a.mkdir(exist_ok=True);shutil.copyfile(old,a/'index.html')
+              for n in ['PUBLICATION_PROOF.json','BROWSER_QA.json','PUBLIC_BROWSER_QA.json','BUILD_MANIFEST.json','OPENFIX_QA.json','PUBLIC_OPENFIX_QA.json']:
+                  if (p/n).exists():shutil.copyfile(p/n,a/n)
+          shutil.copytree('dist/fish-mother-yellowfin',p,dirs_exist_ok=True)
+          (p/'PUBLICATION_PROOF.json').write_text(json.dumps({'version':'FISH_ORAL_R008','shareAllowed':False,'reason':'Await exact public verification','productionReady':False}))
+          PY
+          cd public
+          git config user.name 'Fish Mother Build'
+          git config user.email 'fish-mother@users.noreply.github.com'
+          git add fish-mother-yellowfin
+          git commit -m 'Fish R008 source mouth-rim geometry; preserve R007 and all other Mothers'
+          for attempt in 1 2 3; do
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            git pull --rebase origin gh-pages
+          done
+          exit 1
+      - name: Exact public HTML at bare and versioned fixed entry
+        run: |
+          python - <<'PY'
+          import pathlib,hashlib,urllib.request,time
+          base='https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/'
+          expected=hashlib.sha256(pathlib.Path('dist/fish-mother-yellowfin/index.html').read_bytes()).hexdigest()
+          for i in range(75):
+              try:
+                  for u in [base,base+'?v=r008']:
+                      with urllib.request.urlopen(u,timeout=45) as r:b=r.read();status=r.status
+                      assert status==200 and hashlib.sha256(b).hexdigest()==expected,'public not current'
+                  print('PUBLIC_CURRENT_HASH_PASS',expected,len(b),flush=True);break
+              except Exception as e:print('PUBLIC_WAIT',str(e),flush=True)
+              time.sleep(10)
+          else:raise SystemExit('R008 public bytes not verified')
+          PY
+      - name: Final public complete 3D regression
+        env:
+          PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/?v=r008
+        run: node restart/fish-yellowfin-teacher-r2/web-r008/qa_regression.mjs
+      - name: Final public cold-start and fault recovery
+        env:
+          PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/?v=r008
+        run: node restart/fish-yellowfin-teacher-r2/web-r008/qa_openfix.mjs
+      - name: Persist precise delivery proof without anatomy or device promotion
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,os,datetime,shutil
+          o=Path('dist/fish-mother-yellowfin');p=Path('public/fish-mother-yellowfin')
+          q=json.loads((o/'PUBLIC_BROWSER_QA.json').read_text());b=json.loads((o/'BUILD_MANIFEST.json').read_text());local=json.loads((o/'OPENFIX_QA.json').read_text());live=json.loads((o/'PUBLIC_OPENFIX_QA.json').read_text())
+          assert q['browserPass'] and q['allPoseChecks']['passed'] and q['headAudit']['passed'] and q['oralAudit']['passed'] and local['passed'] and live['passed']
+          proof={'version':'FISH_ORAL_R008','url':'https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/?v=r008','sourceBuildSha':os.environ['GITHUB_SHA'],'verificationRunId':os.environ['GITHUB_RUN_ID'],'verifiedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'httpStatus':200,'htmlSha256':b['sha256'],'htmlBytes':b['bytes'],'publicFullFileHashMatchesBuild':True,'fileProtocolBrowserPass':True,'publicBrowserPass':True,'desktopPass':True,'mobileViewportPass':True,'physicalMobileDeviceTested':False,'userDeviceRetested':False,'originalClientCauseConfirmed':False,'visibleHtmlBeforeSource':b['visibleHtmlBeforeSource'],'sourceChunkRoundtripHashMatches':b['sourceChunkRoundtripHashMatches'],'sourceGlbSha256':b['sourceGlbSha256'],'sourcePrecisionChanged':False,'allPoseChecks':q['allPoseChecks'],'silhouettes':q['silhouettes'],'regionChecks':q['regionChecks'],'boundaryAudit':q['boundaryAudit'],'headAudit':q['headAudit'],'oralStudy':q['oralStudy'],'oralAudit':q['oralAudit'],'oralSamples':q['oralSamples'],'oralTrace':q['oralTrace'],'materialRestoration':q['materialRestoration'],'openfixLocal':local,'openfixPublic':live,'consoleAndPageErrorsInNormalRegression':q['errors'],'anatomicalPartitionApproved':False,'stageAComplete':False,'independentGenerator':False,'productionReady':False,'manualVisualAcceptance':False,'shareAllowed':True}
+          for f in [o/'PUBLICATION_PROOF.json',p/'PUBLICATION_PROOF.json']:f.write_text(json.dumps(proof,indent=2))
+          for n in ['PUBLIC_BROWSER_QA.json','OPENFIX_QA.json','PUBLIC_OPENFIX_QA.json']:shutil.copyfile(o/n,p/n)
+          print('R008_PUBLIC_VERIFIED',json.dumps(proof),flush=True)
+          PY
+          cd public
+          git add fish-mother-yellowfin/PUBLICATION_PROOF.json fish-mother-yellowfin/PUBLIC_BROWSER_QA.json fish-mother-yellowfin/OPENFIX_QA.json fish-mother-yellowfin/PUBLIC_OPENFIX_QA.json
+          git commit -m 'Fish R008 exact-public source oral and recovery verification receipt'
+          git pull --rebase origin gh-pages
+          git push origin HEAD:gh-pages
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fish-r008-public-proof
+          path: |
+            dist/fish-mother-yellowfin/PUBLIC_BROWSER_QA.json
+            dist/fish-mother-yellowfin/PUBLICATION_PROOF.json
+            dist/fish-mother-yellowfin/OPENFIX_QA.json
+            dist/fish-mother-yellowfin/PUBLIC_OPENFIX_QA.json
