@@ -14,23 +14,6 @@ Branch:
 START:
 `restart/fish-yellowfin-teacher-r2/START_HERE_ZH.md`
 
-### Coral / Pocillopora R2
-Branch:
-`restart/coral-pocillopora-teacher-r2-20260923`
-START:
-`restart/coral-pocillopora-teacher-r2/START_HERE_ZH.md`
-
-### Coral / Massive Porites R2
-Branch:
-`restart/coral-porites-teacher-r2-20260923`
-START:
-`restart/coral-porites-teacher-r2/START_HERE_ZH.md`
-
-### Coral / Sea Fan
-当前不重启生产。
-只有 SOURCE_READY Teacher 进入 Source Vault 后才开 R2。
-禁止 procedural placeholder 顶替。
-
 ### Patrol Crew R2
 Branch:
 `restart/patrol-crew-teacher-r2-20260923`
