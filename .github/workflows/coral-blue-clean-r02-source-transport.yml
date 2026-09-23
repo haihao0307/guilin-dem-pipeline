@@ -1,0 +1,92 @@
+name: Blue Coral Clean R02 Source Transport
+
+on:
+  push:
+    branches: [work/coral-blue-clean-r02-20260924]
+    paths:
+      - .github/workflows/coral-blue-clean-r02-source-transport.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  transport:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download current public teacher transport
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          UID='28a6da41dc6b40bfaaec9a8a4eea4fc0'
+          META="https://sketchfab.com/i/models/${UID}"
+          curl -fL --retry 3 --retry-delay 2 "$META" -o out/model.json
+          python - <<'PY'
+          import json, pathlib, urllib.request
+          root=pathlib.Path('out')
+          data=json.loads((root/'model.json').read_text())
+          record={
+            'uid':data.get('uid'),
+            'name':data.get('name'),
+            'author':data.get('user',{}).get('displayName') or data.get('user',{}).get('username'),
+            'license':data.get('license',{}).get('label'),
+            'faceCount':data.get('faceCount'),
+            'vertexCount':data.get('vertexCount'),
+            'archiveSize':data.get('archiveSize'),
+            'files':data.get('files',[]),
+          }
+          (root/'transport-record.json').write_text(json.dumps(record,indent=2),encoding='utf-8')
+          files=data.get('files') or []
+          if not files or not files[0].get('osgjsUrl'):
+            raise SystemExit('No public osgjs transport URL')
+          urllib.request.urlretrieve(files[0]['osgjsUrl'], root/'teacher-file.binz')
+          textures=[]
+          try:
+            with urllib.request.urlopen(f"https://sketchfab.com/i/models/{data['uid']}/textures") as r:
+              tex=json.load(r)
+            (root/'textures.json').write_text(json.dumps(tex,indent=2),encoding='utf-8')
+            for result in tex.get('results',[]):
+              images=result.get('images') or []
+              if images:
+                chosen=max(images,key=lambda x:x.get('width',0)*x.get('height',0))
+                url=chosen.get('url')
+                if url:
+                  target=root/f"texture-{len(textures):02d}{pathlib.Path(url.split('?')[0]).suffix or '.bin'}"
+                  urllib.request.urlretrieve(url,target)
+                  textures.append({'url':url,'path':str(target),'width':chosen.get('width'),'height':chosen.get('height')})
+            (root/'downloaded-textures.json').write_text(json.dumps(textures,indent=2),encoding='utf-8')
+          except Exception as exc:
+            (root/'texture-error.txt').write_text(repr(exc),encoding='utf-8')
+          PY
+      - name: Inspect teacher transport bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          file out/* > out/file-types.txt || true
+          sha256sum out/* > out/SHA256SUMS.txt || true
+          wc -c out/* > out/BYTES.txt || true
+          xxd -l 256 out/teacher-file.binz > out/teacher-file-head.hex
+          strings -n 6 out/teacher-file.binz | head -500 > out/teacher-file-strings.txt || true
+          python - <<'PY'
+          from pathlib import Path
+          import gzip,zlib,bz2,lzma,json,hashlib
+          p=Path('out/teacher-file.binz'); data=p.read_bytes()
+          report={'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest(),'headHex':data[:64].hex(),'decoders':{}}
+          for name,fn in [('gzip',gzip.decompress),('zlib',zlib.decompress),('bz2',bz2.decompress),('lzma',lzma.decompress)]:
+            try:
+              out=fn(data)
+              target=Path(f'out/teacher-file.{name}.decoded')
+              target.write_bytes(out)
+              report['decoders'][name]={'ok':True,'bytes':len(out),'sha256':hashlib.sha256(out).hexdigest(),'headHex':out[:64].hex()}
+            except Exception as exc:
+              report['decoders'][name]={'ok':False,'error':repr(exc)}
+          Path('out/transport-inspection.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: blue-coral-clean-r02-public-transport
+          path: out
+          retention-days: 7
