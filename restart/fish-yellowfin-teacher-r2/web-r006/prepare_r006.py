@@ -9,7 +9,21 @@ assert 'let regionTool=null;' in s and 'window.FISH_STRUCTURAL={' in s
 s=s.replace('let regionTool=null;','let regionTool=null,boundaryTool=null;')
 s=s.replace('regionTool?.update();','regionTool?.update();boundaryTool?.update();')
 s=s.replace('window.FISH_STRUCTURAL={',"boundaryTool=installBoundaryEvidence({state,qa,scenes,cam,controls,regionTool,compiled,getSurfaces:()=>surfaces,setRest:()=>document.querySelector('#rest').click(),setTime:t=>{state.play=false;at(t);},preset});\nwindow.FISH_STRUCTURAL={")
-s=s.replace('FISH_PARTS_R005','FISH_BOUNDARY_R006').replace('R005</span>','R006</span>');(r/'main.mjs').write_text(s)
+s=s.replace('FISH_PARTS_R005','FISH_BOUNDARY_R006').replace('R005</span>','R006</span>')
+# Diagnose the first navigation timeout without changing source or acceptance thresholds.
+for a,b in [
+ ("const $=s=>", "console.log('R006_PHASE module-evaluated');\nconst $=s=>"),
+ ("const element=$('#teacher')", "console.log('R006_PHASE decode-source');const element=$('#teacher')"),
+ ("const loader=new GLTFLoader();", "console.log('R006_PHASE webgl-environment-ready');const loader=new GLTFLoader();"),
+ ("let teacher=await loader.parseAsync(bytes.buffer,'');", "let teacher=await loader.parseAsync(bytes.buffer,'');console.log('R006_PHASE source-parsed');"),
+ ("const compiled=await reconstructTeacher", "console.log('R006_PHASE canonical-start');const compiled=await reconstructTeacher"),
+ ("let roots=[teacher.scene,compiled.scene]", "console.log('R006_PHASE canonical-ready');let roots=[teacher.scene,compiled.scene]"),
+ ("boundaryTool=installBoundaryEvidence", "console.log('R006_PHASE boundary-start');boundaryTool=installBoundaryEvidence"),
+ ("window.FISH_STRUCTURAL={", "console.log('R006_PHASE boundary-ready');window.FISH_STRUCTURAL={"),
+ ("if(qa.frames===2){qa.ready=true;", "if(qa.frames===2){console.log('R006_PHASE first-frames-ready');qa.ready=true;")]:
+ assert a in s,a
+ s=s.replace(a,b)
+(r/'main.mjs').write_text(s)
 b=(old/'build.py').read_text().replace('FISH_PARTS_R005','FISH_BOUNDARY_R006').replace(' R005',' R006')
 a='html=head+extra+';assert a in b
 insertion="extra+='<script id=\"boundaryEvidence\" type=\"application/json\">'+(out/'boundary-r006/boundary-evidence.json').read_text().replace('<','\\\\u003c')+'</script>'\n"
@@ -27,5 +41,6 @@ q=q.replace(a,''' result.boundary=await page.evaluate(()=>window.FISHQA.boundary
  result.initial=initial;''')
 a="await page.locator('#toolsBtn').click();";assert a in q
 q=q.replace(a,a+"await page.selectOption('#interfaceSelect','7');assert(await page.evaluate(()=>window.FISHQA.interfaceCheck.edges===24),'mobile head-mouth interface failed');await page.locator('#boundaryClear').click();")
+q=q.replace("page.on('pageerror'", "page.on('console',m=>console.log('BROWSER_TRACE',m.type(),m.text().slice(0,400)));page.on('crash',()=>console.log('BROWSER_CRASH'));page.on('requestfailed',r=>console.log('REQUEST_FAILED',r.resourceType(),r.failure()?.errorText));\npage.on('pageerror'")
 (r/'qa.mjs').write_text(q)
 print('R006_PATCH_READY: R005 preserved; open source endpoint and interface trace tests appended')
