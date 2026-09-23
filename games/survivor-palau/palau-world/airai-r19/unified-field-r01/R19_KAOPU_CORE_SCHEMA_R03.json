@@ -1,0 +1,117 @@
+{
+  "schema": "kaopu.core.semantic-entry-schema/0.3",
+  "version": "R19_KAOPU_CORE_SCHEMA_R03",
+  "status": "SMALL_MOTHER_REVIEW_CANDIDATE",
+  "coreEquation": "Identity + Space/Frame + Time + Scale + Quantity/State + Relation + Observation + Claim + Provenance + Uncertainty + Change + View",
+  "requiredEntrySections": [
+    "identity",
+    "spaceFrame",
+    "time",
+    "scale",
+    "quantityState",
+    "relations",
+    "observations",
+    "claims",
+    "provenance",
+    "uncertainty",
+    "change",
+    "view"
+  ],
+  "absenceStates": [
+    "Known",
+    "Unknown",
+    "NotObserved",
+    "ObservedAbsent",
+    "NotApplicable",
+    "NoData",
+    "NotCovered",
+    "Occluded",
+    "Conflict"
+  ],
+  "epistemicStates": [
+    "observed_user_authority",
+    "observed_source_asset",
+    "observed_chart_evidence",
+    "official_station_metadata",
+    "derived_verified_processing",
+    "derived_remote_sensing_classification",
+    "derived_regional_context",
+    "evidence_bound_composite",
+    "modelled_candidate",
+    "modelled_runtime_candidate",
+    "interface_candidate",
+    "derived_only_if_compatible",
+    "unknown",
+    "conflict",
+    "rejected"
+  ],
+  "adoptionStates": [
+    "VERIFIED_OBSERVATION",
+    "VERIFIED_FUNCTION",
+    "REVIEWED_CANDIDATE",
+    "NOT_ADOPTED",
+    "PARKED",
+    "REJECTED"
+  ],
+  "validTimeKinds": [
+    "instant",
+    "interval",
+    "timeless_relation",
+    "unknown"
+  ],
+  "quantityStatuses": [
+    "KNOWN",
+    "UNKNOWN",
+    "NODATA",
+    "NOT_OBSERVED",
+    "OBSERVED_ABSENT",
+    "NOT_APPLICABLE",
+    "CONFLICT"
+  ],
+  "observationDirectness": [
+    "direct_user_instruction",
+    "direct_asset_read",
+    "official_metadata",
+    "derived_from_named_sources",
+    "model_output",
+    "explicit_gap_record"
+  ],
+  "claimStates": [
+    "SUPPORTED",
+    "CONTESTED",
+    "UNKNOWN",
+    "REJECTED",
+    "NOT_APPLICABLE"
+  ],
+  "changeModes": [
+    "immutable_source_asset",
+    "versioned_static_candidate",
+    "time_varying_process",
+    "derived_view_only",
+    "unknown"
+  ],
+  "viewRules": {
+    "mustBeRecomputable": true,
+    "mustNotOverwriteEvidence": true,
+    "mustNotPromoteItselfToCanonicalTruth": true
+  },
+  "lineageRules": {
+    "observationAndClaimMustRemainSeparate": true,
+    "sourceAssetAndWorldObjectMustRemainSeparate": true,
+    "copiesDoNotIncreaseIndependentObservationCount": true,
+    "allTransformationsMustBeNamed": true,
+    "sourceHashesRequiredWhenAvailable": true
+  },
+  "uncertaintyRules": {
+    "perPropertyOrClaim": true,
+    "singleObjectConfidenceScoreInsufficient": true,
+    "unknownAndConflictMustRemainLegal": true,
+    "numericBoundsCannotBeInvented": true
+  },
+  "quantityRules": {
+    "knownNumericRequiresUnit": true,
+    "unknownOrNoDataMustNotCarryNumericValue": true,
+    "categoricalKnownMayUseNullUnit": true,
+    "referenceDatumRequiredForVerticalQuantity": true
+  }
+}
