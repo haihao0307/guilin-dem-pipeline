@@ -1,0 +1,617 @@
+{
+  "schema": "kaopu.survivor-palau.transfer-graph/0.4",
+  "version": "R19_TRANSFER_GRAPH_R04",
+  "status": "SMALL_MOTHER_REVIEW_CANDIDATE_NOT_RUNTIME_ADOPTED",
+  "worldId": "KAOPU:SURVIVOR_PALAU:STONE_MONEY:R19",
+  "canonicalTraversalPolicy": "VERIFIED_EDGES_ONLY_WITH_SCOPE",
+  "nodes": [
+    {
+      "id": "USER_AIRAI_ZOOM_PIXEL_FRAME",
+      "domain": "spatial_frame",
+      "type": "image_pixel_frame",
+      "description": "Pixel frame of the user Airai zoom image containing the yellow story AOI."
+    },
+    {
+      "id": "USER_COMPLETE_PALAU_PIXEL_FRAME",
+      "domain": "spatial_frame",
+      "type": "image_pixel_frame",
+      "description": "Pixel frame of the complete Palau user overview image."
+    },
+    {
+      "id": "WGS84_GEOGRAPHIC",
+      "domain": "spatial_frame",
+      "type": "crs",
+      "description": "EPSG:4326 longitude/latitude frame."
+    },
+    {
+      "id": "PALAU_UTM53N",
+      "domain": "spatial_frame",
+      "type": "crs",
+      "description": "EPSG:32653 projected metre frame used by the verified DEM sources."
+    },
+    {
+      "id": "STORY_CORE_SEMANTIC",
+      "domain": "semantic_identity",
+      "type": "user_authority_region_identity",
+      "description": "The complete user-circled Stone Money story AOI; region, not point."
+    },
+    {
+      "id": "STORY_CORE_GEOGRAPHIC_CANDIDATE",
+      "domain": "semantic_identity",
+      "type": "candidate_geographic_region",
+      "description": "Evidence-derived but not frozen WGS84 candidate for the user story AOI."
+    },
+    {
+      "id": "ASF_RTC_ELLIPSOID_HEIGHT",
+      "domain": "vertical_reference",
+      "type": "ellipsoid_height",
+      "description": "Vertical reference carried by the ASF RTC ancillary DEM source values."
+    },
+    {
+      "id": "EGM96_ORTHOMETRIC_HEIGHT",
+      "domain": "vertical_reference",
+      "type": "orthometric_height",
+      "description": "EGM96 orthometric reference used by the canonical derived terrain grid."
+    },
+    {
+      "id": "NOAA_ENC_LOCAL_SOUNDING_DATUM_CODE_24",
+      "domain": "vertical_reference",
+      "type": "chart_sounding_datum",
+      "description": "Local sounding datum code 24 carried by NOAA ENC cell US4TB3P0."
+    },
+    {
+      "id": "MALAKAL_B_STATION_DATUM",
+      "domain": "vertical_reference",
+      "type": "tide_gauge_station_datum",
+      "description": "UHSLC Malakal-B station datum."
+    },
+    {
+      "id": "MALAKAL_B_MSL",
+      "domain": "vertical_reference",
+      "type": "station_mean_sea_level",
+      "description": "Malakal-B station-specific MSL reference."
+    },
+    {
+      "id": "AIRAI_LOCAL_WATER_REFERENCE",
+      "domain": "vertical_reference",
+      "type": "local_water_reference_pending",
+      "description": "Airai local water-level reference; currently unresolved."
+    },
+    {
+      "id": "USER_MAP_MODERN_IMAGERY_TIME",
+      "domain": "time_state",
+      "type": "observation_epoch_unknown",
+      "description": "Modern user map imagery epoch, not frozen and not a 1944 observation."
+    },
+    {
+      "id": "NOAA_ENC_MODERN_CHART_TIME",
+      "domain": "time_state",
+      "type": "chart_compilation_time",
+      "description": "Modern NOAA ENC issue/compilation state."
+    },
+    {
+      "id": "ALLEN_MODERN_PRODUCT_TIME",
+      "domain": "time_state",
+      "type": "remote_sensing_product_epoch",
+      "description": "Allen Coral Atlas product epoch."
+    },
+    {
+      "id": "GMRT_COMPILED_PRODUCT_TIME",
+      "domain": "time_state",
+      "type": "compiled_product_epoch",
+      "description": "GMRT regional product epoch."
+    },
+    {
+      "id": "STORY_1944_10_TIME",
+      "domain": "time_state",
+      "type": "represented_story_interval",
+      "description": "October 1944 represented story interval."
+    },
+    {
+      "id": "MODERN_SHORELINE_EVIDENCE",
+      "domain": "observed_state",
+      "type": "modern_chart_and_imagery_shoreline_evidence",
+      "description": "Modern NOAA/user-image shoreline evidence."
+    },
+    {
+      "id": "STORY_1944_SHORELINE_STATE",
+      "domain": "observed_state",
+      "type": "historical_shoreline_state_pending",
+      "description": "October 1944 shoreline state; not directly observed."
+    },
+    {
+      "id": "MODERN_BATHYMETRY_EVIDENCE",
+      "domain": "observed_state",
+      "type": "modern_chart_remote_sensing_context",
+      "description": "Modern NOAA, Allen and GMRT bathymetry-related evidence."
+    },
+    {
+      "id": "STORY_1944_BATHYMETRY_STATE",
+      "domain": "observed_state",
+      "type": "historical_bathymetry_state_pending",
+      "description": "October 1944 bathymetry state; not directly surveyed in current evidence."
+    },
+    {
+      "id": "MALAKAL_REGIONAL_TIDE",
+      "domain": "process_state",
+      "type": "regional_astronomical_tide_candidate",
+      "description": "Malakal station/model regional tide candidate."
+    },
+    {
+      "id": "AIRAI_LOCAL_TIDE",
+      "domain": "process_state",
+      "type": "local_tide_field_pending",
+      "description": "Airai local amplitude and phase tide field; unresolved."
+    },
+    {
+      "id": "AIRAI_1944_NON_TIDAL_RESIDUAL",
+      "domain": "process_state",
+      "type": "non_tidal_water_level_field_pending",
+      "description": "1944 pressure, wind, circulation and surge residual; unresolved."
+    },
+    {
+      "id": "PALAU_R19_EGM96_CANONICAL_DEM",
+      "domain": "representation",
+      "type": "source_bound_continuous_field",
+      "description": "Verified EGM96 orthometric DEM mosaic with source provenance."
+    },
+    {
+      "id": "PALAU_DEM_WAVE_BASIS_R01",
+      "domain": "representation",
+      "type": "wave_basis_candidate_pending",
+      "description": "Future reversible wave representation of the verified DEM."
+    },
+    {
+      "id": "R19_AOI_BATHYMETRY_CANDIDATE",
+      "domain": "representation",
+      "type": "interpolated_bathymetry_candidate",
+      "description": "25 m candidate bathymetry with NoData, uncertainty and conflict channels."
+    },
+    {
+      "id": "AIRAI_BATHY_WAVE_BASIS_R01",
+      "domain": "representation",
+      "type": "wave_basis_candidate_pending",
+      "description": "Future reversible wave representation of the bathymetry candidate and support channels."
+    },
+    {
+      "id": "OCEAN_MOTHER_SURFACE_STATE",
+      "domain": "process_state",
+      "type": "authoritative_parametric_surface_state",
+      "description": "One OceanSurfaceState identity carrying eta, dx, dz, normal and velocity."
+    },
+    {
+      "id": "INSTANTANEOUS_FREE_SURFACE",
+      "domain": "process_state",
+      "type": "derived_surface_pending",
+      "description": "Final free surface after all compatible components and datums are resolved."
+    }
+  ],
+  "edges": [
+    {
+      "id": "EDGE_AIRAI_PIXELS_TO_PALAU_PIXELS",
+      "kind": "spatial_transform",
+      "from": "USER_AIRAI_ZOOM_PIXEL_FRAME",
+      "to": "USER_COMPLETE_PALAU_PIXEL_FRAME",
+      "direction": "one_way",
+      "status": "VERIFIED",
+      "operation": {
+        "id": "APPLY_RANSAC_HOMOGRAPHY_R19",
+        "description": "Apply the frozen 3x3 homography derived from SIFT matches and RANSAC inlier filtering.",
+        "deterministic": true
+      },
+      "evidence": [
+        "sha256:5bfd05f06513ff6c7816e31f58ac0f88a375e24a7b946d355035b162f4acc8f9",
+        "sha256:82844df1bdf52da94b68d06f3262b3e97089379dff3d7550bcebea0a7d67bf46",
+        "207 good matches",
+        "178 RANSAC inliers",
+        "0.4575214691283916 px inlier RMSE"
+      ],
+      "validRange": {
+        "sourceFrame": "USER_AIRAI_ZOOM_PIXEL_FRAME",
+        "sourceViewport": [0, 176, 945, 1639]
+      },
+      "tests": {
+        "passed": true,
+        "receipt": "R19_USER_LOCATION_AUTHORITY_20260922.json"
+      },
+      "applied": true
+    },
+    {
+      "id": "EDGE_PALAU_PIXELS_TO_WGS84",
+      "kind": "spatial_transform",
+      "from": "USER_COMPLETE_PALAU_PIXEL_FRAME",
+      "to": "WGS84_GEOGRAPHIC",
+      "direction": "one_way",
+      "status": "CANDIDATE",
+      "operation": null,
+      "proposedOperation": {
+        "id": "IMAGE_CONTROL_POINTS_TO_WGS84",
+        "description": "Register overview pixels against verified DEM, coastline, islets and reef control points."
+      },
+      "evidence": [
+        "R19_LOCATION_TO_DEM_REGISTRATION_CANDIDATE_20260922.json",
+        "three-method centroid spread remains approximately 203 m east-west and 292 m north-south"
+      ],
+      "reason": "Final coastline, islet, channel and reef correspondence QA has not passed.",
+      "approvalGate": "SMALL_MOTHER_AND_EVIDENCE_OVERLAY",
+      "applied": false
+    },
+    {
+      "id": "EDGE_WGS84_TO_UTM53N",
+      "kind": "spatial_transform",
+      "from": "WGS84_GEOGRAPHIC",
+      "to": "PALAU_UTM53N",
+      "direction": "one_way",
+      "status": "VERIFIED_SCOPED",
+      "operation": {
+        "id": "EPSG_4326_TO_32653",
+        "description": "Standard CRS transform from WGS84 longitude/latitude to UTM zone 53N metres.",
+        "deterministic": true
+      },
+      "evidence": [
+        "EPSG:4326",
+        "EPSG:32653",
+        "two source DEMs declare EPSG:32653"
+      ],
+      "validRange": {
+        "description": "Palau project region only"
+      },
+      "scope": {
+        "boundsWgs84": [134.15, 6.70, 135.10, 8.00]
+      },
+      "tests": {
+        "passed": true,
+        "receipt": "two recovered DEM bounds and coordinate conversion QA"
+      },
+      "applied": true
+    },
+    {
+      "id": "EDGE_UTM53N_TO_WGS84",
+      "kind": "spatial_transform",
+      "from": "PALAU_UTM53N",
+      "to": "WGS84_GEOGRAPHIC",
+      "direction": "one_way",
+      "status": "VERIFIED_SCOPED",
+      "operation": {
+        "id": "EPSG_32653_TO_4326",
+        "description": "Standard inverse CRS transform from UTM zone 53N metres to WGS84 longitude/latitude.",
+        "deterministic": true
+      },
+      "evidence": [
+        "EPSG:32653",
+        "EPSG:4326",
+        "two source DEMs declare EPSG:32653"
+      ],
+      "validRange": {
+        "description": "Palau project region only"
+      },
+      "scope": {
+        "requiredContext": {
+          "projectRegion": "PALAU"
+        }
+      },
+      "tests": {
+        "passed": true,
+        "receipt": "two recovered DEM bounds and coordinate conversion QA"
+      },
+      "applied": true
+    },
+    {
+      "id": "EDGE_YELLOW_PIXELS_TO_STORY_SEMANTIC",
+      "kind": "semantic_binding",
+      "from": "USER_AIRAI_ZOOM_PIXEL_FRAME",
+      "to": "STORY_CORE_SEMANTIC",
+      "direction": "one_way",
+      "status": "VERIFIED",
+      "operation": {
+        "id": "BIND_USER_YELLOW_REGION_SEMANTICS",
+        "description": "Bind the full user-circled island, reef, lagoon and surrounding-water region to the Stone Money story-core identity.",
+        "deterministic": true
+      },
+      "evidence": [
+        "direct user instruction 2026-09-22",
+        "sha256:82844df1bdf52da94b68d06f3262b3e97089379dff3d7550bcebea0a7d67bf46"
+      ],
+      "validRange": {
+        "description": "semantic identity only; not a geographic coordinate transform"
+      },
+      "tests": {
+        "passed": true,
+        "receipt": "R19_USER_LOCATION_AUTHORITY_20260922.json"
+      },
+      "applied": true
+    },
+    {
+      "id": "EDGE_STORY_SEMANTIC_TO_GEOGRAPHIC_CANDIDATE",
+      "kind": "semantic_binding",
+      "from": "STORY_CORE_SEMANTIC",
+      "to": "STORY_CORE_GEOGRAPHIC_CANDIDATE",
+      "direction": "one_way",
+      "status": "CANDIDATE",
+      "operation": null,
+      "proposedOperation": {
+        "id": "FREEZE_VERIFIED_AOI_POLYGON",
+        "description": "Promote the user semantic region to a WGS84 polygon only after all evidence overlays pass."
+      },
+      "evidence": [
+        "R19_LOCATION_TO_DEM_REGISTRATION_CANDIDATE_20260922.json",
+        "R19_USER_AOI_EVIDENCE_REPORT.json"
+      ],
+      "reason": "The final geographic polygon is not frozen.",
+      "approvalGate": "SMALL_MOTHER_AND_USER_LOCATION_QA",
+      "applied": false
+    },
+    {
+      "id": "EDGE_ASF_ELLIPSOID_TO_EGM96",
+      "kind": "vertical_datum_transform",
+      "from": "ASF_RTC_ELLIPSOID_HEIGHT",
+      "to": "EGM96_ORTHOMETRIC_HEIGHT",
+      "direction": "one_way",
+      "status": "VERIFIED_SCOPED",
+      "operation": {
+        "id": "RTC_ELLIPSOID_MINUS_EGM96_GEOID",
+        "description": "H_EGM96 = h_ASF_RTC - N_EGM96.",
+        "deterministic": true
+      },
+      "evidence": [
+        "sha256:51f67338ed23d2e30570fc41ee720f664d8dc0e5ed3300595fcaf7ff9940abf6",
+        "sha256:32bb0462185d400aa3b6190927556f2a68a7c49d2e69cc88af6b8d19abbaf7b8",
+        "sha256:db493027562c9b004d7220fa881f5603adada4e1c5029b933fa7de4547b0e78d"
+      ],
+      "validRange": {
+        "description": "Only the two verified ASF RTC ancillary DEM frames and their canonical derived mosaic."
+      },
+      "scope": {
+        "allowedSourceSha256": [
+          "51f67338ed23d2e30570fc41ee720f664d8dc0e5ed3300595fcaf7ff9940abf6",
+          "32bb0462185d400aa3b6190927556f2a68a7c49d2e69cc88af6b8d19abbaf7b8"
+        ]
+      },
+      "tests": {
+        "passed": true,
+        "receipt": "R19_DEM_NORMALIZATION_RECEIPT.json and sea-level median QA"
+      },
+      "applied": true
+    },
+    {
+      "id": "EDGE_NOAA_DATUM24_TO_EGM96",
+      "kind": "vertical_datum_transform",
+      "from": "NOAA_ENC_LOCAL_SOUNDING_DATUM_CODE_24",
+      "to": "EGM96_ORTHOMETRIC_HEIGHT",
+      "direction": "one_way",
+      "status": "BLOCKED",
+      "operation": null,
+      "evidence": [
+        "NOAA ENC US4TB3P0 declares local datum code 24",
+        "no validated geodetic or hydrodynamic bridge recovered"
+      ],
+      "reason": "No validated transformation from local chart datum code 24 to EGM96 is available.",
+      "applied": false
+    },
+    {
+      "id": "EDGE_NOAA_DATUM24_TO_MALAKAL_MSL",
+      "kind": "vertical_datum_transform",
+      "from": "NOAA_ENC_LOCAL_SOUNDING_DATUM_CODE_24",
+      "to": "MALAKAL_B_MSL",
+      "direction": "one_way",
+      "status": "BLOCKED",
+      "operation": null,
+      "evidence": [
+        "chart datum and station MSL are distinct references",
+        "no validated local offset or transformation surface recovered"
+      ],
+      "reason": "A chart-datum-to-station-MSL bridge cannot be inferred from names or location proximity.",
+      "applied": false
+    },
+    {
+      "id": "EDGE_MALAKAL_STATION_DATUM_TO_MSL",
+      "kind": "vertical_datum_transform",
+      "from": "MALAKAL_B_STATION_DATUM",
+      "to": "MALAKAL_B_MSL",
+      "direction": "one_way",
+      "status": "VERIFIED_SCOPED",
+      "operation": {
+        "id": "MALAKAL_B_STATION_DATUM_MINUS_1_532M",
+        "description": "Convert Malakal-B station-datum values to Malakal-B MSL using the documented station-specific 1.532 m offset.",
+        "deterministic": true
+      },
+      "evidence": [
+        "UHSLC Malakal-B datum guidance retained in the Small Mother study record"
+      ],
+      "validRange": {
+        "description": "Malakal-B station series only"
+      },
+      "scope": {
+        "stationId": "MALAKAL_B"
+      },
+      "tests": {
+        "passed": true,
+        "receipt": "R19_KAOPU_WORLD_SCORE_CANDIDATE_R01 vertical reference graph"
+      },
+      "applied": true
+    },
+    {
+      "id": "EDGE_MALAKAL_MSL_TO_AIRAI_REFERENCE",
+      "kind": "vertical_datum_transform",
+      "from": "MALAKAL_B_MSL",
+      "to": "AIRAI_LOCAL_WATER_REFERENCE",
+      "direction": "one_way",
+      "status": "BLOCKED",
+      "operation": null,
+      "evidence": [
+        "Malakal and Airai are different hydrodynamic locations",
+        "no local datum-transfer surface recovered"
+      ],
+      "reason": "Station MSL cannot be copied as an Airai local water reference without a validated spatial transfer.",
+      "applied": false
+    },
+    {
+      "id": "EDGE_USER_MAP_TIME_TO_1944",
+      "kind": "temporal_transfer",
+      "from": "USER_MAP_MODERN_IMAGERY_TIME",
+      "to": "STORY_1944_10_TIME",
+      "direction": "one_way",
+      "status": "BLOCKED",
+      "operation": null,
+      "evidence": [
+        "source image acquisition epoch is not frozen",
+        "modern imagery is not a 1944 observation"
+      ],
+      "reason": "The user images constrain present-day relative geography and story intent, not exact 1944 physical state.",
+      "applied": false
+    },
+    {
+      "id": "EDGE_NOAA_CHART_TIME_TO_1944",
+      "kind": "temporal_transfer",
+      "from": "NOAA_ENC_MODERN_CHART_TIME",
+      "to": "STORY_1944_10_TIME",
+      "direction": "one_way",
+      "status": "BLOCKED",
+      "operation": null,
+      "evidence": [
+        "US4TB3P0 modern issue/compilation state",
+        "no historical shoreline or bathymetry change model"
+      ],
+      "reason": "Modern NOAA chart evidence cannot be silently relabelled as exact October 1944 state.",
+      "applied": false
+    },
+    {
+      "id": "EDGE_ALLEN_PRODUCT_TIME_TO_1944",
+      "kind": "temporal_transfer",
+      "from": "ALLEN_MODERN_PRODUCT_TIME",
+      "to": "STORY_1944_10_TIME",
+      "direction": "one_way",
+      "status": "BLOCKED",
+      "operation": null,
+      "evidence": [
+        "Allen is a modern remote-sensing classification product",
+        "no validated historic reef-change transfer"
+      ],
+      "reason": "Modern reef classes cannot become a 1944 reef state without historical evidence or a validated change model.",
+      "applied": false
+    },
+    {
+      "id": "EDGE_GMRT_PRODUCT_TIME_TO_1944",
+      "kind": "temporal_transfer",
+      "from": "GMRT_COMPILED_PRODUCT_TIME",
+      "to": "STORY_1944_10_TIME",
+      "direction": "one_way",
+      "status": "BLOCKED",
+      "operation": null,
+      "evidence": [
+        "GMRT is a compiled regional context product",
+        "no exact historic local-seafloor transfer"
+      ],
+      "reason": "Regional compiled context is not a 1944 local survey.",
+      "applied": false
+    },
+    {
+      "id": "EDGE_MODERN_SHORELINE_TO_1944_SHORELINE",
+      "kind": "state_transfer",
+      "from": "MODERN_SHORELINE_EVIDENCE",
+      "to": "STORY_1944_SHORELINE_STATE",
+      "direction": "one_way",
+      "status": "BLOCKED",
+      "operation": null,
+      "evidence": [
+        "modern NOAA COALNE/LNDARE",
+        "modern user imagery",
+        "no 1944 shoreline observation or change history"
+      ],
+      "reason": "Modern shoreline evidence may constrain a candidate, but exact 1944 shoreline requires an explicit temporal-transfer model and evidence.",
+      "applied": false
+    },
+    {
+      "id": "EDGE_MODERN_BATHY_TO_1944_BATHY",
+      "kind": "state_transfer",
+      "from": "MODERN_BATHYMETRY_EVIDENCE",
+      "to": "STORY_1944_BATHYMETRY_STATE",
+      "direction": "one_way",
+      "status": "BLOCKED",
+      "operation": null,
+      "evidence": [
+        "modern NOAA soundings and chart constraints",
+        "modern Allen classes",
+        "compiled GMRT context",
+        "no historic change model or survey"
+      ],
+      "reason": "Modern bathymetric evidence cannot be promoted to exact October 1944 seabed state.",
+      "applied": false
+    },
+    {
+      "id": "EDGE_MALAKAL_TIDE_TO_AIRAI_LOCAL_TIDE",
+      "kind": "process_transfer",
+      "from": "MALAKAL_REGIONAL_TIDE",
+      "to": "AIRAI_LOCAL_TIDE",
+      "direction": "one_way",
+      "status": "BLOCKED",
+      "operation": null,
+      "evidence": [
+        "Malakal is a regional reference source",
+        "Airai reef, channel and lagoon transfer is unobserved"
+      ],
+      "reason": "No validated amplitude, phase and spatial transfer field exists for Airai.",
+      "applied": false
+    },
+    {
+      "id": "EDGE_DEM_TO_WAVE_BASIS",
+      "kind": "representation_transform",
+      "from": "PALAU_R19_EGM96_CANONICAL_DEM",
+      "to": "PALAU_DEM_WAVE_BASIS_R01",
+      "direction": "one_way",
+      "status": "CANDIDATE",
+      "operation": null,
+      "proposedOperation": {
+        "id": "EVIDENCE_BOUND_REVERSIBLE_MULTI_SCALE_DECOMPOSITION",
+        "description": "Encode verified DEM bands while preserving source identity, NoData and residuals and measuring reconstruction error."
+      },
+      "evidence": [
+        "source field sha256:6ace836106dcc93c69a0d16fee1e8b8a2a93b4446f9e34af1eb1994e3d1b975c",
+        "R19_KAOPU_CORE_LEDGER_R03.json"
+      ],
+      "reason": "No real-data coefficients or reconstruction receipt exist and Small Mother has not promoted the method.",
+      "approvalGate": "SMALL_MOTHER_PROMOTE_METHOD_PLUS_RECONSTRUCTION_GATES",
+      "applied": false
+    },
+    {
+      "id": "EDGE_BATHY_CANDIDATE_TO_WAVE_BASIS",
+      "kind": "representation_transform",
+      "from": "R19_AOI_BATHYMETRY_CANDIDATE",
+      "to": "AIRAI_BATHY_WAVE_BASIS_R01",
+      "direction": "one_way",
+      "status": "CANDIDATE",
+      "operation": null,
+      "proposedOperation": {
+        "id": "MULTI_CHANNEL_WAVE_PLUS_RESIDUAL_ENCODING",
+        "description": "Encode candidate depth, uncertainty, support distance, quality, conflict and NoData as separate reversible channels."
+      },
+      "evidence": [
+        "R19_USER_AOI_EVIDENCE_REPORT.json",
+        "R19_KAOPU_CORE_LEDGER_R03.json"
+      ],
+      "reason": "The source itself is not survey truth, has high DEPARE conflicts and has not passed Small Mother method judgment.",
+      "approvalGate": "SMALL_MOTHER_PROMOTE_METHOD_PLUS_SOURCE_STATUS_AND_RECONSTRUCTION_GATES",
+      "applied": false
+    },
+    {
+      "id": "EDGE_OCEAN_STATE_TO_FINAL_FREE_SURFACE",
+      "kind": "component_relation",
+      "from": "OCEAN_MOTHER_SURFACE_STATE",
+      "to": "INSTANTANEOUS_FREE_SURFACE",
+      "direction": "one_way",
+      "status": "CANDIDATE",
+      "operation": null,
+      "proposedOperation": {
+        "id": "COMPOSE_ONE_SURFACE_WITH_TIDE_AND_RESIDUAL_COMPONENTS",
+        "description": "Compose reference level, regional tide, local transfer, non-tidal residual and the one OceanSurfaceState."
+      },
+      "evidence": [
+        "R19_UNIFIED_FIELD_R02_EXECUTION_RECEIPT.json",
+        "R19_KAOPU_CORE_LEDGER_R03.json"
+      ],
+      "reason": "Airai local tide, 1944 non-tidal residual and common water datum remain unresolved.",
+      "approvalGate": "ALL_COMPONENTS_KNOWN_COMPATIBLE_AND_SMALL_MOTHER_APPROVED",
+      "applied": false
+    }
+  ]
+}
