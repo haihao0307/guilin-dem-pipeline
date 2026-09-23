@@ -19,8 +19,6 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Replace the heavy raster audit with the exact projected-envelope audit
         run: |
@@ -69,7 +67,6 @@ jobs:
               ('runSilhouetteAudit', 'runProjectedEnvelopeAudit'),
               ('silhouetteAudit', 'projectedEnvelopeAudit'),
               ('silhouette', 'projectedEnvelope'),
-              ('Silhouette', 'ProjectedEnvelope'),
           ]
           for before, after in qa_replacements:
               count = qa.count(before)
