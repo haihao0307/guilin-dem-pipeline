@@ -1,0 +1,70 @@
+name: Fish Open Fix Current Chrome
+on:
+  push:
+    branches: [fix/fish-r006-1-white-screen-20260923]
+    paths: [.github/workflows/fish-openfix-native-chrome.yml]
+permissions:
+  contents: read
+jobs:
+  current-chrome:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Wait for exact repaired public entry
+        run: |
+          python - <<'PY'
+          import urllib.request,json,time,pathlib
+          root='https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/'
+          for i in range(90):
+              try:
+                  with urllib.request.urlopen(root+'BUILD_MANIFEST.json?native=r006-1',timeout=30) as r:m=json.load(r)
+                  if m.get('version')=='FISH_OPEN_R006_1' and m.get('buildSha')=='9d17da85c18659d1dbbeb29d6b6289d77475b775':
+                      pathlib.Path('EXPECTED_BUILD.json').write_text(json.dumps(m));break
+              except Exception:pass
+              time.sleep(10)
+          else:raise SystemExit('Repaired version not public yet')
+          PY
+      - name: Real current Chrome cold load, native array decoder and fallback decoder
+        run: |
+          npm install --no-save playwright@1.51.1
+          cat > smoke.mjs <<'JS'
+          import {chromium} from 'playwright';import fs from 'node:fs';import crypto from 'node:crypto';
+          const report={version:'FISH_OPEN_R006_1',physicalUserDeviceTested:false,cases:[],passed:false};const browser=await chromium.launch({channel:'chrome',headless:true,args:['--no-sandbox','--enable-webgl','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--disable-dev-shm-usage']});report.browserVersion=browser.version();
+          const expected=JSON.parse(fs.readFileSync('EXPECTED_BUILD.json'));report.sourceBuildSha=expected.buildSha;
+          try{
+           for(const fallback of [false,true]){
+            const p=await browser.newPage({viewport:{width:1440,height:940}});const errors=[];p.on('pageerror',e=>errors.push(String(e)));p.on('console',m=>{if(m.type()==='error')errors.push(m.text());});if(fallback)await p.addInitScript(()=>window.FISH_FORCE_BASE64_FALLBACK=true);
+            const response=await p.goto('https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/?openfix=r006-1&native='+fallback,{waitUntil:'load',timeout:180000});const hash=crypto.createHash('sha256').update(await response.body()).digest('hex');if(hash!==expected.sha256)throw Error('Public native-browser HTML differs from verified build');
+            await p.waitForFunction(()=>window.FISH_BOOT?.ready||window.FISH_BOOT?.failed,null,{timeout:180000});const result=await p.evaluate(()=>({ready:window.FISH_BOOT.ready,failed:window.FISH_BOOT.failed,decodeMode:window.FISH_BOOT.decodeMode,nativeAvailable:typeof Uint8Array.fromBase64==='function',received:window.FISH_BOOT.received,chunks:window.FISH_BOOT.chunks,vertices:window.FISHQA.vertices,textureSizes:window.FISHQA.textureSizes,errors:window.FISHQA.errors,poses:[0,.5,1,2].map(t=>window.FISH.verify(t)),bootPhases:window.FISH_BOOT.phases}));
+            if(!result.ready||result.failed||result.received!==58908280||result.chunks!==75||result.vertices!==4637||!result.poses.every(x=>x.passed)||errors.length||result.errors.length)throw Error('Native browser runtime check failed '+JSON.stringify(result));
+            if(fallback&&result.decodeMode!=='bounded-atob-fallback')throw Error('Fallback was not exercised');if(!fallback&&result.nativeAvailable&&result.decodeMode!=='typed-array')throw Error('Native decoder was not exercised');
+            await p.screenshot({path:fallback?'chrome-fallback.png':'chrome-native.png'});await p.setViewportSize({width:390,height:844});await p.waitForTimeout(500);await p.screenshot({path:fallback?'chrome-fallback-mobile.png':'chrome-native-mobile.png'});report.cases.push({forcedFallback:fallback,htmlSha256:hash,...result});await p.close();
+           }
+           report.passed=true;
+          }catch(e){report.error=String(e.stack||e);process.exitCode=1;}finally{fs.writeFileSync('CURRENT_CHROME_QA.json',JSON.stringify(report,null,2));console.log('CURRENT_CHROME_QA',JSON.stringify(report));await browser.close();}
+          JS
+          node smoke.mjs
+      - name: Compact visible-fish proof
+        if: always()
+        run: |
+          python - <<'PY'
+          from PIL import Image
+          import pathlib,base64
+          p=pathlib.Path('chrome-native.png')
+          if p.exists():
+              im=Image.open(p);im.thumbnail((720,470));im.convert('RGB').save('CURRENT_CHROME_REVIEW.jpg',quality=55)
+              print('REVIEW_JPEG_BASE64='+base64.b64encode(pathlib.Path('CURRENT_CHROME_REVIEW.jpg').read_bytes()).decode())
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fish-openfix-current-chrome-proof
+          path: |
+            CURRENT_CHROME_QA.json
+            CURRENT_CHROME_REVIEW.jpg
+            chrome-*.png
+            EXPECTED_BUILD.json
+            smoke.mjs
