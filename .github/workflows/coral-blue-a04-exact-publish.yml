@@ -1,0 +1,270 @@
+name: Publish Blue Coral A04 Exact HDF
+
+on:
+  push:
+    branches: [work/coral-blue-a04-hdf-exact-20260923]
+    paths:
+      - .github/workflows/coral-blue-a04-exact-publish.yml
+      - apps/coral-restart-20260923/blue-coral-a04-hdf/publication-request.json
+      - apps/coral-restart-20260923/blue-coral-a04-hdf/public-qa.mjs
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: coral-blue-a04-exact-publication
+  cancel-in-progress: false
+
+jobs:
+  exact-publication:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout A04 publication contract
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            apps/coral-restart-20260923/blue-coral-a04-hdf
+          sparse-checkout-cone-mode: true
+
+      - name: Read publication request
+        id: request
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          request = json.loads(Path('apps/coral-restart-20260923/blue-coral-a04-hdf/publication-request.json').read_text())
+          enabled = request.get('enabled') is True
+          url = request.get('payloadUrl', '')
+          if enabled:
+              assert url.startswith('https://'), 'Enabled publication requires an HTTPS direct-download URL'
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"enabled={'true' if enabled else 'false'}\n")
+              f.write(f"url={url}\n")
+              f.write(f"bytes={request['payload']['bytes']}\n")
+              f.write(f"sha256={request['payload']['sha256']}\n")
+              f.write(f"public_url={request['destination']['url']}\n")
+          print('PUBLICATION_REQUEST', json.dumps({
+              'enabled': enabled,
+              'state': request.get('state'),
+              'expectedBytes': request['payload']['bytes'],
+              'expectedSha256': request['payload']['sha256'],
+              'destination': request['destination'],
+          }, indent=2))
+          PY
+
+      - name: Keep publication gate closed until exact payload relay is authorized
+        if: steps.request.outputs.enabled != 'true'
+        run: |
+          echo 'BLUE_CORAL_A04_PUBLICATION_PENDING'
+          echo 'No placeholder, simplified model, old Coral asset, or static image will be published.'
+
+      - name: Download exact locally verified A04 payload
+        if: steps.request.outputs.enabled == 'true'
+        run: |
+          mkdir -p dist/coral-blue-a04
+          curl --fail --location --retry 4 --retry-all-errors --connect-timeout 30 --max-time 1200 \
+            '${{ steps.request.outputs.url }}' \
+            --output dist/coral-blue-a04/index.html
+
+      - name: Verify exact payload identity and anti-fallback markers
+        if: steps.request.outputs.enabled == 'true'
+        env:
+          EXPECTED_BYTES: ${{ steps.request.outputs.bytes }}
+          EXPECTED_SHA256: ${{ steps.request.outputs.sha256 }}
+        run: |
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          p = Path('dist/coral-blue-a04/index.html')
+          data = p.read_bytes()
+          actual = hashlib.sha256(data).hexdigest()
+          expected = os.environ['EXPECTED_SHA256']
+          assert len(data) == int(os.environ['EXPECTED_BYTES']), (len(data), os.environ['EXPECTED_BYTES'])
+          assert actual == expected, (actual, expected)
+          text = data.decode('utf-8')
+          required = [
+              'BLUE_CORAL_A04_HIGH_DIMENSIONAL_FUNCTION_EXPRESSION',
+              'window.__CORAL_READY__',
+              'window.coralA04',
+              'sourceCloneUsed":false',
+              'gltfLoaderUsedForCandidate":false',
+              'meshSimplification":false',
+              'decimation":false',
+              'remeshing":false',
+              'voxelization":false',
+              'marchingCubes":false',
+              'allSourceAccessorsPreservedByteExact":true',
+              'separateCandidateArrayBuffers":true',
+              'sameScaleSameCameraCompare":true',
+          ]
+          missing = [marker for marker in required if marker not in text]
+          assert not missing, missing
+          proof = {
+              'schema': 'kaopu.payload-identity/1.0',
+              'version': 'BLUE_CORAL_A04_HIGH_DIMENSIONAL_FUNCTION_EXPRESSION',
+              'bytes': len(data),
+              'sha256': actual,
+              'requiredMarkers': required,
+              'missingMarkers': missing,
+              'exactPayloadIdentityPass': True,
+              'publishedYet': False,
+              'userVisualApproval': False,
+              'productionReady': False,
+          }
+          Path('dist/coral-blue-a04/PAYLOAD_IDENTITY.json').write_text(json.dumps(proof, indent=2))
+          print('BLUE_CORAL_A04_EXACT_PAYLOAD_PASS', json.dumps(proof))
+          PY
+
+      - name: Checkout gh-pages without touching other Mother folders
+        if: steps.request.outputs.enabled == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: public
+          fetch-depth: 1
+          sparse-checkout: |
+            coral/blue-coral-a04
+          sparse-checkout-cone-mode: false
+
+      - name: Install exact A04 at the fixed public entry
+        if: steps.request.outputs.enabled == 'true'
+        run: |
+          mkdir -p public/coral/blue-coral-a04
+          cp dist/coral-blue-a04/index.html public/coral/blue-coral-a04/index.html
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          proof = {
+              'schema': 'kaopu.publication-proof/1.0',
+              'version': 'BLUE_CORAL_A04_HIGH_DIMENSIONAL_FUNCTION_EXPRESSION',
+              'url': 'https://haihao0307.github.io/guilin-dem-pipeline/coral/blue-coral-a04/',
+              'sourceBuildSha': os.environ['GITHUB_SHA'],
+              'verificationRunId': os.environ['GITHUB_RUN_ID'],
+              'htmlBytes': 52830447,
+              'htmlSha256': 'ba27dce0c4d5e89eed70ffdd391fe8fe3fe8de7561020edcdd9a84d5023138fb',
+              'publicFullFileHashMatchesBuild': False,
+              'publicBrowserPass': False,
+              'desktopPass': False,
+              'mobileViewportPass': False,
+              'physicalMobileDeviceTested': False,
+              'userVisualApproval': False,
+              'productionReady': False,
+              'shareAllowed': False,
+          }
+          Path('public/coral/blue-coral-a04/PUBLICATION_PROOF.json').write_text(json.dumps(proof, indent=2))
+          PY
+          cd public
+          git config user.name 'Coral Mother Build'
+          git config user.email 'coral-mother@users.noreply.github.com'
+          git add coral/blue-coral-a04/index.html coral/blue-coral-a04/PUBLICATION_PROOF.json
+          git commit -m 'Coral A04: publish exact high-dimensional field workbench [skip ci]'
+          for attempt in 1 2 3; do
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            git pull --rebase origin gh-pages
+          done
+          exit 1
+
+      - name: Verify exact current HTML bytes on the fixed public URL
+        if: steps.request.outputs.enabled == 'true'
+        env:
+          PUBLIC_URL: ${{ steps.request.outputs.public_url }}
+          EXPECTED_SHA256: ${{ steps.request.outputs.sha256 }}
+          EXPECTED_BYTES: ${{ steps.request.outputs.bytes }}
+        run: |
+          python - <<'PY'
+          import hashlib, os, time, urllib.request
+          url = os.environ['PUBLIC_URL']
+          expected_hash = os.environ['EXPECTED_SHA256']
+          expected_bytes = int(os.environ['EXPECTED_BYTES'])
+          for attempt in range(90):
+              try:
+                  request = urllib.request.Request(url, headers={'Cache-Control': 'no-cache', 'User-Agent': 'Coral-A04-Public-Verifier'})
+                  with urllib.request.urlopen(request, timeout=90) as response:
+                      data = response.read()
+                      status = response.status
+                  actual = hashlib.sha256(data).hexdigest()
+                  if status == 200 and len(data) == expected_bytes and actual == expected_hash:
+                      print('BLUE_CORAL_A04_PUBLIC_HASH_PASS', status, len(data), actual)
+                      break
+                  print('PUBLIC_WAIT', attempt, status, len(data), actual)
+              except Exception as error:
+                  print('PUBLIC_WAIT', attempt, repr(error))
+              time.sleep(10)
+          else:
+              raise SystemExit('Exact A04 public bytes were not observed at the fixed URL')
+          PY
+
+      - name: Install pinned public-browser verifier
+        if: steps.request.outputs.enabled == 'true'
+        run: |
+          npm install --no-save playwright@1.51.1
+          npx playwright install --with-deps chromium
+
+      - name: Run desktop and 390x844 QA against the public URL
+        if: steps.request.outputs.enabled == 'true'
+        env:
+          PUBLIC_URL: ${{ steps.request.outputs.public_url }}
+          QA_OUT: dist/coral-blue-a04
+        run: node apps/coral-restart-20260923/blue-coral-a04-hdf/public-qa.mjs
+
+      - name: Persist verified public proof without claiming visual approval
+        if: steps.request.outputs.enabled == 'true'
+        run: |
+          python - <<'PY'
+          import json, os, shutil
+          from pathlib import Path
+          qa = json.loads(Path('dist/coral-blue-a04/PUBLIC_BROWSER_QA.json').read_text())
+          identity = json.loads(Path('dist/coral-blue-a04/PAYLOAD_IDENTITY.json').read_text())
+          assert qa['passed'] is True
+          assert identity['exactPayloadIdentityPass'] is True
+          proof = {
+              'schema': 'kaopu.publication-proof/1.0',
+              'version': 'BLUE_CORAL_A04_HIGH_DIMENSIONAL_FUNCTION_EXPRESSION',
+              'url': 'https://haihao0307.github.io/guilin-dem-pipeline/coral/blue-coral-a04/',
+              'sourceBuildSha': os.environ['GITHUB_SHA'],
+              'verificationRunId': os.environ['GITHUB_RUN_ID'],
+              'htmlBytes': identity['bytes'],
+              'htmlSha256': identity['sha256'],
+              'publicFullFileHashMatchesBuild': True,
+              'publicBrowserPass': True,
+              'desktopPass': qa['desktop']['passed'],
+              'mobileViewportPass': qa['mobile']['passed'],
+              'physicalMobileDeviceTested': False,
+              'runtimeAudit': qa['desktop']['audit'],
+              'consoleAndPageErrors': {
+                  'desktopConsole': qa['desktop']['consoleErrors'],
+                  'desktopPage': qa['desktop']['pageErrors'],
+                  'mobileConsole': qa['mobile']['consoleErrors'],
+                  'mobilePage': qa['mobile']['pageErrors'],
+              },
+              'userVisualApproval': False,
+              'productionReady': False,
+              'shareAllowed': True,
+          }
+          for target in [
+              Path('dist/coral-blue-a04/PUBLICATION_PROOF.json'),
+              Path('public/coral/blue-coral-a04/PUBLICATION_PROOF.json'),
+          ]:
+              target.write_text(json.dumps(proof, indent=2))
+          shutil.copyfile('dist/coral-blue-a04/PUBLIC_BROWSER_QA.json', 'public/coral/blue-coral-a04/PUBLIC_BROWSER_QA.json')
+          print('BLUE_CORAL_A04_PUBLICATION_VERIFIED', json.dumps(proof))
+          PY
+          cd public
+          git add coral/blue-coral-a04/PUBLICATION_PROOF.json coral/blue-coral-a04/PUBLIC_BROWSER_QA.json
+          git commit -m 'Coral A04: persist exact-public browser verification [skip ci]'
+          for attempt in 1 2 3; do
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            git pull --rebase origin gh-pages
+          done
+          exit 1
+
+      - name: Preserve publication evidence
+        if: always() && steps.request.outputs.enabled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coral-blue-a04-exact-publication-proof
+          path: dist/coral-blue-a04
+          retention-days: 30
