@@ -1,0 +1,127 @@
+{
+  "schema": "kaopu.survivor-palau.core-r03-execution-receipt/1.0",
+  "version": "R19_KAOPU_CORE_R03_EXECUTION_RECEIPT",
+  "status": "IMPLEMENTED_TESTED_SMALL_MOTHER_REVIEW_PENDING",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "work/palau-airai-r19-authority-locked-restart-20260922",
+  "draftPr": 136,
+  "implementationIssue": 145,
+  "smallMotherValidationIssue": 138,
+  "files": [
+    "R19_KAOPU_CORE_SCHEMA_R03.json",
+    "R19_KAOPU_CORE_LEDGER_R03.json",
+    "kaopu_core_r03.cjs",
+    "kaopu_core_r03_loader.cjs",
+    "validate_kaopu_core_r03.cjs",
+    ".github/workflows/palau-r19-kaopu-core-r03.yml"
+  ],
+  "semanticCore": "Identity + Space/Frame + Time + Scale + Quantity/State + Relation + Observation + Claim + Provenance + Uncertainty + Change + View",
+  "ledger": {
+    "entryCount": 22,
+    "covers": [
+      "two user location authority observations",
+      "geographic AOI candidate",
+      "EGM96 DEM",
+      "NOAA coastline and land evidence",
+      "coast boundary candidate",
+      "NOAA soundings",
+      "NOAA depth contours and areas",
+      "NOAA quality, seabed and hazards",
+      "Allen reef semantics",
+      "GMRT regional context",
+      "bathymetry candidate",
+      "Malakal regional tide",
+      "Airai local tide gap",
+      "1944 non-tidal residual gap",
+      "OceanSurfaceState",
+      "surface optics",
+      "volume optics",
+      "environment adapter",
+      "instantaneous free surface",
+      "water depth",
+      "wet/dry state"
+    ],
+    "observationClaimSeparated": true,
+    "sourceAssetWorldObjectSeparated": true,
+    "copyLineageDoesNotIncreaseEvidence": true,
+    "propertyLevelUncertaintyRequired": true,
+    "currentBestViewNonDestructive": true
+  },
+  "firstRun": {
+    "runId": 35800619086,
+    "jobId": 106989881985,
+    "conclusion": "failure",
+    "failure": "validator helper cloned internal Set metadata through JSON serialization, so observationIds.has was unavailable",
+    "classification": "VALIDATOR_IMPLEMENTATION_DEFECT_NOT_LEDGER_SEMANTIC_FAILURE",
+    "hidden": false
+  },
+  "correction": {
+    "loaderCommit": "d0050aae347c5a1057236d87265e23e485219809",
+    "validatorCommit": "268dc5c18fbb612c0075c30bb6693f54b11ff04c",
+    "change": "preserve internal Set instances during in-process referential validation; public receipts remain JSON-serializable",
+    "semanticGateRelaxed": false
+  },
+  "successfulRuns": [
+    {
+      "name": "Palau R19 KAOPU Core R03",
+      "runId": 35800759464,
+      "jobId": 106990319188,
+      "conclusion": "success",
+      "steps": [
+        "validate 22-entry KAOPU Core ledger",
+        "run adversarial observation/claim/provenance/uncertainty/view tests",
+        "assert no visual or binary production artifacts"
+      ]
+    },
+    {
+      "name": "R01 unified field regression",
+      "runId": 35800759320,
+      "jobId": 106990318724,
+      "conclusion": "success"
+    },
+    {
+      "name": "R19 authority gate",
+      "runId": 35800759331,
+      "jobId": 106990318696,
+      "conclusion": "success"
+    }
+  ],
+  "adversarialGates": [
+    "missing property-level uncertainty is rejected",
+    "Claim referencing a nonexistent Observation is rejected",
+    "Unknown quantity carrying numeric zero is rejected",
+    "copy count cannot inflate independent evidence roots",
+    "Current Best View cannot overwrite evidence or conflicts",
+    "Observation cannot contain asserted Claim payload",
+    "Claim cannot contain raw source hash or asset payload"
+  ],
+  "importantTemporalCorrections": [
+    "modern user satellite-map screenshots are not labelled as 1944 observations",
+    "modern NOAA ENC evidence is not labelled as exact 1944 shoreline or bathymetry",
+    "modern Allen and GMRT products retain their own product epochs",
+    "1944 use is recorded as an application target or candidate temporal transfer, not a source observation fact",
+    "DEM macro-terrain stability across the story interval remains a candidate assumption, not a historical survey claim"
+  ],
+  "notProved": [
+    "Small Mother approval",
+    "final geographic AOI registration",
+    "valid vertical datum bridge for NOAA local sounding datum code 24",
+    "Airai local tide transfer",
+    "1944 non-tidal residual",
+    "real-data wave decomposition",
+    "runtime Ocean integration",
+    "interactive three-dimensional workbench",
+    "visual acceptance",
+    "production readiness"
+  ],
+  "gates": {
+    "kaopuCoreLedgerValidated": true,
+    "r01RegressionPassed": true,
+    "authorityGatePassed": true,
+    "smallMotherValidation": "REQUESTED_NOT_APPROVED",
+    "waveDecompositionAdopted": false,
+    "visualBuildAllowed": false,
+    "interactive3D": false,
+    "productionReady": false
+  }
+}
