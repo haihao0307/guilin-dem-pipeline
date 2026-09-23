@@ -1,0 +1,141 @@
+{
+  "schema": "kaopu.survivor-palau.transfer-graph-r04-execution-receipt/1.0",
+  "version": "R19_TRANSFER_GRAPH_R04_EXECUTION_RECEIPT",
+  "status": "IMPLEMENTED_TESTED_SMALL_MOTHER_REVIEW_PENDING",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "work/palau-airai-r19-authority-locked-restart-20260922",
+  "draftPr": 136,
+  "implementationIssue": 146,
+  "smallMotherValidationIssue": 138,
+  "correctedImplementationHead": "1c2ccb811c157fcd0edb0602e9544c1751b590be",
+  "files": [
+    "R19_TRANSFER_GRAPH_SCHEMA_R04.json",
+    "R19_TRANSFER_GRAPH_R04.json",
+    "transfer_graph_r04.cjs",
+    "validate_transfer_graph_r04.cjs",
+    "transfer_graph_r04.test.cjs",
+    ".github/workflows/palau-r19-transfer-graph-r04.yml"
+  ],
+  "graph": {
+    "nodeCount": 30,
+    "edgeCount": 21,
+    "canonicalTraversalPolicy": "VERIFIED_EDGES_ONLY_WITH_SCOPE",
+    "statuses": [
+      "VERIFIED",
+      "VERIFIED_SCOPED",
+      "CANDIDATE",
+      "BLOCKED",
+      "REJECTED"
+    ],
+    "domains": [
+      "spatial_frame",
+      "vertical_reference",
+      "time_state",
+      "semantic_identity",
+      "observed_state",
+      "process_state",
+      "representation"
+    ]
+  },
+  "verifiedRoutes": [
+    "user Airai zoom pixels -> complete Palau overview pixels",
+    "user yellow region pixels -> Stone Money story semantic identity",
+    "WGS84 -> UTM 53N inside scoped Palau bounds",
+    "UTM 53N -> WGS84 inside the Palau project context",
+    "ASF RTC ellipsoid height -> EGM96 orthometric height for the two verified DEM source hashes",
+    "Malakal-B station datum -> Malakal-B MSL within the exact station scope"
+  ],
+  "explicitlyUnresolvedRoutes": [
+    "complete Palau overview pixels -> WGS84 final geography: CANDIDATE",
+    "story semantic identity -> frozen geographic polygon: CANDIDATE",
+    "NOAA local sounding datum code 24 -> EGM96: BLOCKED",
+    "NOAA local sounding datum code 24 -> Malakal MSL: BLOCKED",
+    "Malakal MSL -> Airai local water reference: BLOCKED",
+    "modern user imagery -> October 1944 state: BLOCKED",
+    "modern NOAA chart state -> October 1944 state: BLOCKED",
+    "modern Allen/GMRT product state -> October 1944 state: BLOCKED",
+    "modern shoreline evidence -> exact 1944 shoreline: BLOCKED",
+    "modern bathymetry evidence -> exact 1944 seabed: BLOCKED",
+    "Malakal regional tide -> Airai local tide: BLOCKED",
+    "canonical DEM -> wave basis: CANDIDATE",
+    "bathymetry candidate -> wave basis: CANDIDATE",
+    "OceanSurfaceState -> final free surface: CANDIDATE"
+  ],
+  "firstRun": {
+    "runId": 35801350100,
+    "jobId": 106992161685,
+    "conclusion": "failure",
+    "failure": "adversarial fixture promoted a candidate edge to VERIFIED but expected VERIFIED_OPERATION before supplying the other required verified keys; validator correctly returned MISSING_KEYS first",
+    "classification": "TEST_EXPECTATION_ORDER_DEFECT_NOT_GRAPH_MODEL_DEFECT",
+    "hidden": false
+  },
+  "correction": {
+    "commit": "1c2ccb811c157fcd0edb0602e9544c1751b590be",
+    "change": "complete the promoted-edge fixture with applied, validRange and passing test receipt while deliberately leaving operation null, so the intended VERIFIED_OPERATION gate is tested",
+    "semanticGateRelaxed": false
+  },
+  "successfulRuns": [
+    {
+      "name": "Palau R19 transfer graph R04",
+      "runId": 35801403720,
+      "jobId": 106992333757,
+      "conclusion": "success",
+      "steps": [
+        "validate 30 nodes and 21 typed edges",
+        "verify canonical and unresolved routes",
+        "run adversarial default/promotion/scope/inverse tests",
+        "assert no visible output, binary output or wave coefficients"
+      ]
+    },
+    {
+      "name": "R01 unified field regression",
+      "runId": 35801403732,
+      "jobId": 106992333852,
+      "conclusion": "success"
+    },
+    {
+      "name": "R19 authority gate",
+      "runId": 35801403746,
+      "jobId": 106992333835,
+      "conclusion": "success"
+    }
+  ],
+  "adversarialGates": [
+    "blocked edge carrying defaultValue=0 is rejected",
+    "verified edge without evidence is rejected",
+    "verified edge without passing receipt is rejected",
+    "candidate edge marked applied is rejected",
+    "candidate edge exposing an applied operation is rejected",
+    "blocked datum edge acquiring an operation is rejected",
+    "candidate status cannot be promoted without the complete verified contract",
+    "missing-node references are rejected",
+    "duplicate nodes are rejected",
+    "inverse transforms are never implied",
+    "verified scoped transforms cannot run without matching source/station/region context",
+    "candidate image-to-geography edge never enters canonical traversal"
+  ],
+  "notProved": [
+    "Small Mother approval",
+    "final overview-pixel to WGS84 registration",
+    "NOAA datum-code-24 bridge to EGM96 or MSL",
+    "Airai local water reference",
+    "modern-to-1944 shoreline or bathymetry transfer",
+    "Airai local tide transfer",
+    "real-data wave coefficients",
+    "final instantaneous free surface",
+    "interactive three-dimensional workbench",
+    "visual acceptance",
+    "production readiness"
+  ],
+  "gates": {
+    "transferGraphValidated": true,
+    "verifiedOnlyCanonicalTraversal": true,
+    "r01RegressionPassed": true,
+    "authorityGatePassed": true,
+    "smallMotherValidation": "REQUESTED_NOT_APPROVED",
+    "waveDecompositionAdopted": false,
+    "visualBuildAllowed": false,
+    "interactive3D": false,
+    "productionReady": false
+  }
+}
