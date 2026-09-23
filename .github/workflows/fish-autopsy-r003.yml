@@ -1,0 +1,47 @@
+name: Fish Autopsy R003
+on:
+  push:
+    branches: [work/fish-yellowfin-autopsy-workbench-r003-20260923]
+permissions:
+  contents: write
+jobs:
+  source-preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace/source
+            restart/fish-yellowfin-teacher-r2/web-r003
+          fetch-depth: 1
+      - name: Verify original glTF array and PNG identity
+        run: |
+          python - <<'PY'
+          import pathlib,struct,json,hashlib
+          p=pathlib.Path('apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace/source/tuna_fish_4k.glb')
+          b=p.read_bytes();h=lambda x:hashlib.sha256(x).hexdigest()
+          assert b[:4]==b'glTF','Source is not readable GLB bytes'
+          print('GLB_BYTES',len(b),'GLB_SHA256',h(b),flush=True)
+          n=struct.unpack_from('<I',b,12)[0];g=json.loads(b[20:20+n]);offset=20+n;bl=struct.unpack_from('<I',b,offset)[0];bin=b[offset+8:offset+8+bl]
+          sizes={5120:1,5121:1,5122:2,5123:2,5125:4,5126:4};ncomp={'SCALAR':1,'VEC2':2,'VEC3':3,'VEC4':4,'MAT2':4,'MAT3':9,'MAT4':16}
+          hashes=[]
+          for a in g['accessors']:
+            v=g['bufferViews'][a['bufferView']];size=sizes[a['componentType']]*ncomp[a['type']];o=v.get('byteOffset',0)+a.get('byteOffset',0);stride=v.get('byteStride',size)
+            hashes.append(h(b''.join(bin[o+i*stride:o+i*stride+size] for i in range(a['count']))))
+          aggregate=h(''.join(hashes).encode());sem=h(json.dumps({k:g.get(k) for k in ['nodes','scenes','scene','skins','meshes','animations','materials','textures','samplers']},sort_keys=True,separators=(',',':')).encode())
+          imgh=[]
+          for im in g['images']:
+            v=g['bufferViews'][im['bufferView']];o=v.get('byteOffset',0);imgh.append(h(bin[o:o+v['byteLength']]))
+          result={'accessorCount':len(hashes),'arrayAggregate':aggregate,'semanticHash':sem,'imageHashes':imgh}
+          print('SOURCE_COMPARISON',json.dumps(result),flush=True)
+          assert aggregate=='5c8abd79a95ad18412acc31a600cce7908cb82c31d1cf020a7927c26fa661e63','New upload array identity does not match cached teacher; no publication permitted'
+          assert sem=='aaeeb9e50cc5a0b6ed4a59efa8fd9e14929e09c20549e68c3e92f5b66ad90360','New upload scene semantics differ; no silent substitution'
+          expected=['afc9066b9f9c45159bbecab6c94a902bad2c32a482cea6f6700f9508d9e4956b','e25683ecdc68fa84347f1465088429851eaa128953ad2ca793bd229635163827','b8be1ad495d4c092df12ce2d10652932c7c3aca8500b116d60070cd335ba555a','a97e40a087b918a643113a6bcba3b2a7a33c6cd18f6be2bf99b9de42bcdd590c','43bc988d96d42a275af1d022e6a644921c09c610642c9c8d73b10fcb6e6bb0fd','d57a5fa83c4575f9f440b7625c97da3bb39e806d7e3604ad759775fa8dde6b53']
+          assert imgh==expected,'New upload original PNG bytes differ; no lossy substitute'
+          pathlib.Path('SOURCE_IDENTITY_PROOF.json').write_text(json.dumps(result,indent=2))
+          print('SOURCE_IDENTITY_PASS: new user glTF and frozen source have identical accessor arrays, scene semantics and six original PNG files',flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fish-r003-source-identity
+          path: SOURCE_IDENTITY_PROOF.json
