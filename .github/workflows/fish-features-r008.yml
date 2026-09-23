@@ -1,0 +1,154 @@
+name: Fish Surface Features R008
+on:
+  push:
+    branches: [work/fish-yellowfin-features-r008-20260924]
+    paths:
+      - restart/fish-yellowfin-teacher-r2/web-r008/**
+      - .github/workflows/fish-features-r008.yml
+permissions:
+  contents: write
+concurrency:
+  group: fish-features-r008
+  cancel-in-progress: false
+jobs:
+  verify-features-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace/source
+            restart/fish-yellowfin-teacher-r2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Compile complete teacher, prior evidence and frozen source surface features
+        run: |
+          python -m pip install numpy==2.2.6 Pillow==11.2.1
+          R=restart/fish-yellowfin-teacher-r2
+          O=dist/fish-mother-yellowfin
+          python $R/web-r004/compile_teacher.py --source apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace/source/tuna_fish_4k.glb --out $O/canonical-r004
+          cp $O/canonical-r004/EXTRACTION_QA.json SOURCE_IDENTITY_PROOF.json
+          python $R/web-r005/compile_regions.py --package $O/canonical-r004 --out $O/parts-r005
+          python $R/web-r006/compile_boundary.py --canonical $O/canonical-r004 --parts $O/parts-r005 --out $O/boundary-r006
+          python $R/web-r007/compile_head.py --canonical $O/canonical-r004 --parts $O/parts-r005 --out $O/head-r007
+          python $R/web-r008/compile_features.py --canonical $O/canonical-r004 --parts $O/parts-r005 --head $O/head-r007 --out $O/feature-r008
+          python $R/web-r008/prepare_r008.py
+      - name: Bundle pinned runtime, repaired boot, immutable material restoration and original textures
+        run: |
+          npm install --no-save three@0.170.0 esbuild@0.24.2 playwright@1.51.1
+          R=restart/fish-yellowfin-teacher-r2/web-r008
+          node --check $R/main.mjs
+          node --check $R/features.mjs
+          npx esbuild $R/main.mjs --bundle --format=esm --target=es2022 --minify --legal-comments=inline --outfile=$R/bundle.js
+          python $R/build.py
+          npx playwright install --with-deps chromium
+      - name: Full original 3D checks plus source and candidate feature traces at rest and 209 clamped samples
+        run: node restart/fish-yellowfin-teacher-r2/web-r008/qa_regression.mjs
+      - name: Delayed payload, incomplete file, context loss, retry and unsupported WebGL
+        run: node restart/fish-yellowfin-teacher-r2/web-r008/qa_openfix.mjs
+      - name: Preserve actual browser pixels and compact inspection copies
+        if: always()
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import json,hashlib
+          root=Path('dist/fish-mother-yellowfin/evidence');root.mkdir(parents=True,exist_ok=True);rows=[]
+          for name in ['mouth_span','eye_l_link','eye_r_link']:
+              p=root/('r008-'+name+'.png')
+              if p.exists():
+                  im=Image.open(p).convert('RGB');im=im.crop((0,130,1175,837));im.thumbnail((480,290));q=p.with_suffix('.webp');im.save(q,quality=35,method=6)
+                  rows.append({'source':p.name,'sourceSha256':hashlib.sha256(p.read_bytes()).hexdigest(),'inspection':q.name,'inspectionSha256':hashlib.sha256(q.read_bytes()).hexdigest(),'bytes':q.stat().st_size})
+          (root/'FEATURE_INSPECTION.json').write_text(json.dumps(rows,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fish-r008-source-code-and-browser-evidence
+          path: |
+            dist/fish-mother-yellowfin
+            restart/fish-yellowfin-teacher-r2/web-r008
+          retention-days: 30
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: public
+          sparse-checkout: fish-mother-yellowfin
+      - name: Preserve R007 and publish only the Fish entry after all offline gates
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import shutil,json
+          p=Path('public/fish-mother-yellowfin');old=p/'index.html';h=old.read_bytes()[:2500]
+          assert b'FISH_HEAD_R007' in h or b'FISH_FEATURES_R008' in h,'Unexpected concurrent Fish version; refusing overwrite'
+          if b'FISH_HEAD_R007' in h:
+              a=p/'r007';a.mkdir(exist_ok=True);shutil.copyfile(old,a/'index.html')
+              for n in ['PUBLICATION_PROOF.json','BROWSER_QA.json','PUBLIC_BROWSER_QA.json','BUILD_MANIFEST.json','OPENFIX_QA.json','PUBLIC_OPENFIX_QA.json']:
+                  if (p/n).exists():shutil.copyfile(p/n,a/n)
+          shutil.copytree('dist/fish-mother-yellowfin',p,dirs_exist_ok=True)
+          (p/'PUBLICATION_PROOF.json').write_text(json.dumps({'version':'FISH_FEATURES_R008','shareAllowed':False,'reason':'Await exact final public verification','productionReady':False}))
+          PY
+          cd public
+          git config user.name 'Fish Mother Build'
+          git config user.email 'fish-mother@users.noreply.github.com'
+          git add fish-mother-yellowfin
+          git commit -m 'Fish R008 source surface correspondence; preserve R007 and other Mothers'
+          for attempt in 1 2 3; do
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            git pull --rebase origin gh-pages
+          done
+          exit 1
+      - name: Verify complete fixed and versioned public HTML
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,urllib.request,time
+          base='https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/'
+          expected=hashlib.sha256(Path('dist/fish-mother-yellowfin/index.html').read_bytes()).hexdigest()
+          for i in range(75):
+              try:
+                  for u in [base,base+'?v=r008']:
+                      with urllib.request.urlopen(u,timeout=45) as r:b=r.read();status=r.status
+                      assert status==200 and hashlib.sha256(b).hexdigest()==expected,'public bytes not current'
+                  print('PUBLIC_HASH_PASS',expected,len(b),flush=True);break
+              except Exception as e:print('PUBLIC_WAIT',str(e),flush=True)
+              time.sleep(10)
+          else:raise SystemExit('Public R008 bytes not verified')
+          PY
+      - name: Full final-public 3D and source-feature regression
+        env:
+          PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/?v=r008
+        run: node restart/fish-yellowfin-teacher-r2/web-r008/qa_regression.mjs
+      - name: Public cold-start and fault recovery
+        env:
+          PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/?v=r008
+        run: node restart/fish-yellowfin-teacher-r2/web-r008/qa_openfix.mjs
+      - name: Persist exact-head proof without anatomical or user-device approval
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,os,datetime,shutil
+          o=Path('dist/fish-mother-yellowfin');p=Path('public/fish-mother-yellowfin')
+          q=json.loads((o/'PUBLIC_BROWSER_QA.json').read_text());b=json.loads((o/'BUILD_MANIFEST.json').read_text());local=json.loads((o/'OPENFIX_QA.json').read_text());live=json.loads((o/'PUBLIC_OPENFIX_QA.json').read_text())
+          assert q['browserPass'] and q['allPoseChecks']['passed'] and q['headAudit']['passed'] and q['featureAudit']['passed'] and local['passed'] and live['passed']
+          proof={'version':'FISH_FEATURES_R008','url':'https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/?v=r008','sourceBuildSha':os.environ['GITHUB_SHA'],'verificationRunId':os.environ['GITHUB_RUN_ID'],'verifiedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'httpStatus':200,'htmlSha256':b['sha256'],'htmlBytes':b['bytes'],'publicFullFileHashMatchesBuild':True,'fileProtocolBrowserPass':True,'publicBrowserPass':True,'desktopPass':True,'mobileViewportPass':True,'physicalMobileDeviceTested':False,'userDeviceRetested':False,'originalClientCauseConfirmed':False,'visibleHtmlBeforeSource':b['visibleHtmlBeforeSource'],'sourceChunkRoundtripHashMatches':b['sourceChunkRoundtripHashMatches'],'sourceGlbSha256':b['sourceGlbSha256'],'sourcePrecisionChanged':False,'allPoseChecks':q['allPoseChecks'],'silhouettes':q['silhouettes'],'regionChecks':q['regionChecks'],'boundaryAudit':q['boundaryAudit'],'headAudit':q['headAudit'],'featureStudy':q['featureStudy'],'featureAudit':q['featureAudit'],'featureSelections':q['featureSelections'],'materialRestoration':q['materialRestoration'],'openfixLocal':local,'openfixPublic':live,'consoleAndPageErrorsInNormalRegression':q['errors'],'anatomicalPartitionApproved':False,'stageAComplete':False,'independentGenerator':False,'productionReady':False,'manualVisualAcceptance':False,'shareAllowed':True}
+          for f in [o/'PUBLICATION_PROOF.json',p/'PUBLICATION_PROOF.json']:f.write_text(json.dumps(proof,indent=2))
+          for n in ['PUBLIC_BROWSER_QA.json','OPENFIX_QA.json','PUBLIC_OPENFIX_QA.json']:shutil.copyfile(o/n,p/n)
+          print('R008_PUBLIC_VERIFIED',json.dumps(proof),flush=True)
+          PY
+          cd public
+          git add fish-mother-yellowfin/PUBLICATION_PROOF.json fish-mother-yellowfin/PUBLIC_BROWSER_QA.json fish-mother-yellowfin/OPENFIX_QA.json fish-mother-yellowfin/PUBLIC_OPENFIX_QA.json
+          git commit -m 'Fish R008 exact-public surface feature and boot recovery verification receipt'
+          git pull --rebase origin gh-pages
+          git push origin HEAD:gh-pages
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fish-r008-public-proof
+          path: |
+            dist/fish-mother-yellowfin/PUBLIC_BROWSER_QA.json
+            dist/fish-mother-yellowfin/PUBLICATION_PROOF.json
+            dist/fish-mother-yellowfin/OPENFIX_QA.json
+            dist/fish-mother-yellowfin/PUBLIC_OPENFIX_QA.json
