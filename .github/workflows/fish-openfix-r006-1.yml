@@ -1,0 +1,147 @@
+name: Fish Open Fix R006.1
+on:
+  push:
+    branches: [fix/fish-r006-1-white-screen-20260923]
+    paths:
+      - restart/fish-yellowfin-teacher-r2/openfix-r006-1/**
+      - .github/workflows/fish-openfix-r006-1.yml
+permissions:
+  contents: write
+concurrency:
+  group: fish-openfix-r006-1
+  cancel-in-progress: false
+jobs:
+  verify-openfix-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace/source
+            restart/fish-yellowfin-teacher-r2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Preserve all teacher and R006 analysis fields
+        run: |
+          python -m pip install numpy==2.2.6 Pillow==11.2.1
+          python restart/fish-yellowfin-teacher-r2/web-r004/compile_teacher.py --source apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace/source/tuna_fish_4k.glb --out dist/fish-mother-yellowfin/canonical-r004
+          cp dist/fish-mother-yellowfin/canonical-r004/EXTRACTION_QA.json SOURCE_IDENTITY_PROOF.json
+          python restart/fish-yellowfin-teacher-r2/web-r005/compile_regions.py --package dist/fish-mother-yellowfin/canonical-r004 --out dist/fish-mother-yellowfin/parts-r005
+          python restart/fish-yellowfin-teacher-r2/web-r006/compile_boundary.py --canonical dist/fish-mother-yellowfin/canonical-r004 --parts dist/fish-mother-yellowfin/parts-r005 --out dist/fish-mother-yellowfin/boundary-r006
+          python restart/fish-yellowfin-teacher-r2/openfix-r006-1/build_openfix.py prepare
+      - name: Build visible-first single HTML with bounded exact-source chunks
+        run: |
+          npm install --no-save three@0.170.0 esbuild@0.24.2 playwright@1.51.1
+          node --check restart/fish-yellowfin-teacher-r2/openfix-r006-1/main.mjs
+          npx esbuild restart/fish-yellowfin-teacher-r2/openfix-r006-1/main.mjs --bundle --format=esm --target=es2022 --minify --legal-comments=inline --outfile=restart/fish-yellowfin-teacher-r2/openfix-r006-1/bundle.js
+          python restart/fish-yellowfin-teacher-r2/openfix-r006-1/build_openfix.py
+          npx playwright install --with-deps chromium
+      - name: Real file-protocol full R006 structural and interaction regressions
+        run: node restart/fish-yellowfin-teacher-r2/openfix-r006-1/qa_regression.mjs
+      - name: Delayed payload, truncated file, WebGL unavailable, context-loss and retry tests
+        run: node restart/fish-yellowfin-teacher-r2/openfix-r006-1/qa_openfix.mjs
+      - name: Produce browser proof contact sheet
+        if: always()
+        run: |
+          python - <<'PY'
+          from PIL import Image,ImageOps,ImageDraw
+          from pathlib import Path
+          p=Path('dist/fish-mother-yellowfin/evidence/openfix')
+          names=['01-before-model-arrives','03-real-fish-cold-start','04-context-loss-visible-recovery','05-retry-restores-real-fish']
+          sheet=Image.new('RGB',(800,560),(9,19,28));d=ImageDraw.Draw(sheet)
+          for i,n in enumerate(names):
+              f=p/(n+'.png')
+              if f.exists():
+                  im=Image.open(f).convert('RGB');im.thumbnail((390,250));sheet.paste(im,(5+(i%2)*400,25+(i//2)*280));d.text((8+(i%2)*400,5+(i//2)*280),n,fill='white')
+          sheet.save(p/'openfix-review.jpg',quality=65)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fish-openfix-r006-1-code-data-evidence
+          path: |
+            dist/fish-mother-yellowfin
+            restart/fish-yellowfin-teacher-r2/openfix-r006-1
+          retention-days: 30
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: public
+          sparse-checkout: fish-mother-yellowfin
+      - name: Preserve R006 and update only the fixed Fish entry
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import shutil,json
+          p=Path('public/fish-mother-yellowfin');old=p/'index.html';h=old.read_bytes()[:2500]
+          assert b'FISH_BOUNDARY_R006' in h or b'FISH_OPEN_R006_1' in h,'Unexpected concurrent Fish version; not overwriting'
+          if b'FISH_BOUNDARY_R006' in h:
+              a=p/'r006';a.mkdir(exist_ok=True);shutil.copyfile(old,a/'index.html')
+              for n in ['PUBLICATION_PROOF.json','BROWSER_QA.json','PUBLIC_BROWSER_QA.json','BUILD_MANIFEST.json']:
+                  if (p/n).exists():shutil.copyfile(p/n,a/n)
+          shutil.copytree('dist/fish-mother-yellowfin',p,dirs_exist_ok=True)
+          (p/'PUBLICATION_PROOF.json').write_text(json.dumps({'version':'FISH_OPEN_R006_1','shareAllowed':False,'reason':'Final public cold start and recovery verification pending','productionReady':False}))
+          PY
+          cd public
+          git config user.name 'Fish Mother Build'
+          git config user.email 'fish-mother@users.noreply.github.com'
+          git add fish-mother-yellowfin
+          git commit -m 'Fish R006.1: visible-first exact-source load and recoverable WebGL failure; preserve R006'
+          for attempt in 1 2 3; do
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            git pull --rebase origin gh-pages
+          done
+          exit 1
+      - name: Verify current complete HTML at bare and cache-busted public entry
+        run: |
+          python - <<'PY'
+          import pathlib,hashlib,urllib.request,time
+          base='https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/'
+          expected=hashlib.sha256(pathlib.Path('dist/fish-mother-yellowfin/index.html').read_bytes()).hexdigest()
+          for i in range(75):
+              try:
+                  for u in [base,base+'?openfix=r006-1']:
+                      with urllib.request.urlopen(u,timeout=45) as r:b=r.read();status=r.status
+                      assert status==200 and hashlib.sha256(b).hexdigest()==expected,'public entry not current'
+                  print('PUBLIC_CURRENT_HASH_PASS',expected,len(b),flush=True);break
+              except Exception as e:print('PUBLIC_WAIT',str(e),flush=True)
+              time.sleep(10)
+          else:raise SystemExit('Current public openfix not verified')
+          PY
+      - name: Complete regression at the final public URL
+        env:
+          PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/?openfix=r006-1
+        run: node restart/fish-yellowfin-teacher-r2/openfix-r006-1/qa_regression.mjs
+      - name: Public cold-start, context-loss recovery and unsupported-WebGL proof
+        env:
+          PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/?openfix=r006-1
+        run: node restart/fish-yellowfin-teacher-r2/openfix-r006-1/qa_openfix.mjs
+      - name: Persist exact-public proof while keeping user-device verification open
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,os,datetime,shutil
+          o=Path('dist/fish-mother-yellowfin');p=Path('public/fish-mother-yellowfin')
+          q=json.loads((o/'PUBLIC_BROWSER_QA.json').read_text());b=json.loads((o/'BUILD_MANIFEST.json').read_text());local=json.loads((o/'OPENFIX_QA.json').read_text());live=json.loads((o/'PUBLIC_OPENFIX_QA.json').read_text())
+          assert q['browserPass'] and q['allPoseChecks']['passed'] and local['passed'] and live['passed']
+          proof={'version':'FISH_OPEN_R006_1','url':'https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/?openfix=r006-1','sourceBuildSha':os.environ['GITHUB_SHA'],'verificationRunId':os.environ['GITHUB_RUN_ID'],'verifiedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'httpStatus':200,'htmlSha256':b['sha256'],'htmlBytes':b['bytes'],'publicFullFileHashMatchesBuild':True,'fileProtocolBrowserPass':True,'publicBrowserPass':True,'desktopPass':True,'mobileViewportPass':True,'physicalMobileDeviceTested':False,'userDeviceRetested':False,'userWhiteScreenReportAccepted':True,'originalClientCauseConfirmed':False,'visibleHtmlBeforeSource':b['visibleHtmlBeforeSource'],'sourceChunkRoundtripHashMatches':b['sourceChunkRoundtripHashMatches'],'sourceGlbSha256':b['sourceGlbSha256'],'sourcePrecisionChanged':False,'allPoseChecks':q['allPoseChecks'],'silhouettes':q['silhouettes'],'regionChecks':q['regionChecks'],'boundaryAudit':q['boundaryAudit'],'openfixLocal':local,'openfixPublic':live,'consoleAndPageErrorsInNormalRegression':q['errors'],'anatomicalPartitionApproved':False,'stageAComplete':False,'independentGenerator':False,'productionReady':False,'manualVisualAcceptance':False,'shareAllowed':True}
+          for f in [o/'PUBLICATION_PROOF.json',p/'PUBLICATION_PROOF.json']:f.write_text(json.dumps(proof,indent=2))
+          for n in ['PUBLIC_BROWSER_QA.json','OPENFIX_QA.json','PUBLIC_OPENFIX_QA.json']:shutil.copyfile(o/n,p/n)
+          print('OPENFIX_PUBLIC_VERIFIED',json.dumps(proof),flush=True)
+          PY
+          cd public
+          git add fish-mother-yellowfin/PUBLICATION_PROOF.json fish-mother-yellowfin/PUBLIC_BROWSER_QA.json fish-mother-yellowfin/OPENFIX_QA.json fish-mother-yellowfin/PUBLIC_OPENFIX_QA.json
+          git commit -m 'Fish R006.1: exact-public cold-start and recovery checks, not a claim of user-device approval'
+          git pull --rebase origin gh-pages
+          git push origin HEAD:gh-pages
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fish-openfix-r006-1-public-proof
+          path: |
+            dist/fish-mother-yellowfin/PUBLIC_BROWSER_QA.json
+            dist/fish-mother-yellowfin/OPENFIX_QA.json
+            dist/fish-mother-yellowfin/PUBLIC_OPENFIX_QA.json
+            dist/fish-mother-yellowfin/PUBLICATION_PROOF.json
