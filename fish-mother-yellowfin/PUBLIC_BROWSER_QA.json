@@ -1,5 +1,5 @@
 {
-  "version": "FISH_FEATURES_R008",
+  "version": "FISH_ORAL_MERGE_R009",
   "runtime": "real Chromium / WebGL2",
   "fileProtocol": false,
   "publicOnline": true,
@@ -284,7 +284,7 @@
     "sourceSeamEdges": 216,
     "maxGap": 0,
     "endpointEvents": 502,
-    "maxRuntimeEndpointTraceError": 3.578035677795419e-8,
+    "maxRuntimeEndpointTraceError": 3.578035672287334e-8,
     "anatomicalApproval": false
   },
   "interfaceChecks": [
@@ -488,7 +488,7 @@
     }
   ],
   "openfix": {
-    "version": "FISH_FEATURES_R008",
+    "version": "FISH_ORAL_MERGE_R009",
     "ready": true,
     "received": 58908280,
     "total": 58908280,
@@ -502,15 +502,15 @@
       },
       {
         "phase": "initialize-3d",
-        "ms": 988
+        "ms": 575
       },
       {
         "phase": "teacher-parsed",
-        "ms": 1940
+        "ms": 1204
       },
       {
         "phase": "first-render",
-        "ms": 5837
+        "ms": 3564
       }
     ]
   },
@@ -598,7 +598,7 @@
     "clampedNonLoopSamples": 209,
     "sourceAnchorMaxError": 7.217129994461865e-8,
     "candidateAnchorMaxError": 7.217129994461865e-8,
-    "distanceMaxError": 8.607804442319067e-9,
+    "distanceMaxError": 8.607804441451705e-9,
     "mouthPolylineMaxError": 6.118647133401822e-8,
     "threshold": 0.000001,
     "passed": true,
@@ -621,8 +621,115 @@
       "max": 0.006981565452297489
     }
   ],
+  "oralStudy": {
+    "version": "FISH_ORAL_R008",
+    "rimEdges": 24,
+    "cycleVertices": 24,
+    "sourceHeadVertexIds": 25,
+    "samples": 209,
+    "restSamples": 1,
+    "metrics": 8,
+    "maxHeadMatrixRegression": 0,
+    "maxFrameOrthogonalityError": 1.8314211958377767e-7,
+    "maxAliasPositionGap": 0,
+    "maxHeadInnerSeamGap": 0,
+    "sourceBinaryUnchanged": true,
+    "sourceVerticesWelded": 0,
+    "newGeometryCreated": false,
+    "physicalLengthKnown": false,
+    "biologicalGapeAngleMeasured": false,
+    "anatomicalPartitionApproved": false,
+    "stageAComplete": false,
+    "independentGenerator": false,
+    "productionReady": false
+  },
+  "oralAudit": {
+    "restSamples": 1,
+    "clampedTimes": 209,
+    "rimEdges": 24,
+    "sourceHeadVertexIds": 25,
+    "comparedRuntimes": 2,
+    "maxRimPointError": 7.333623586145438e-8,
+    "maxLengthMetricError": 6.118647122299592e-8,
+    "maxProjectedAreaError": 2.473903282750045e-10,
+    "maxAliasGap": 0,
+    "lengthTolerance": 0.000001,
+    "areaTolerance": 1e-8,
+    "passed": true,
+    "anatomicalApproval": false
+  },
+  "oralSamples": [
+    {
+      "chosen": {
+        "index": 92,
+        "time": 0.9583333134651184,
+        "kind": "min"
+      },
+      "actual": {
+        "headFrameVerticalExtent": 0.03527955681408378,
+        "headFrameLateralExtent": 0.059492372151542156,
+        "headFrameLongitudinalExtent": 0.06059018544547934,
+        "sourceRimPerimeter": 0.2967435653281366,
+        "headFrameYZProjectedArea": 0.0011261377708284232,
+        "eyeSurfaceCentroidSeparation": 0.07416949286600813,
+        "rimMeanToEyeL": 0.09882503534310336,
+        "rimMeanToEyeR": 0.09882187386410012
+      },
+      "expected": {
+        "headFrameVerticalExtent": 0.035279556347205365,
+        "headFrameLateralExtent": 0.059492373272818394,
+        "headFrameLongitudinalExtent": 0.060590187724493316,
+        "sourceRimPerimeter": 0.2967435633559745,
+        "headFrameYZProjectedArea": 0.0011261378486321376,
+        "eyeSurfaceCentroidSeparation": 0.07416949189646108,
+        "rimMeanToEyeL": 0.09882503296067241,
+        "rimMeanToEyeR": 0.09882187550144328
+      }
+    },
+    {
+      "chosen": {
+        "index": 52,
+        "time": 0.5416666865348816,
+        "kind": "max"
+      },
+      "actual": {
+        "headFrameVerticalExtent": 0.06580629427707636,
+        "headFrameLateralExtent": 0.059472331681001786,
+        "headFrameLongitudinalExtent": 0.059559285102794846,
+        "sourceRimPerimeter": 0.3158101114569163,
+        "headFrameYZProjectedArea": 0.002572542825458425,
+        "eyeSurfaceCentroidSeparation": 0.07416943709207344,
+        "rimMeanToEyeL": 0.10283397227874996,
+        "rimMeanToEyeR": 0.10281665937552137
+      },
+      "expected": {
+        "headFrameVerticalExtent": 0.06580629378295731,
+        "headFrameLateralExtent": 0.059472332098021316,
+        "headFrameLongitudinalExtent": 0.05955928439544955,
+        "sourceRimPerimeter": 0.3158100994162574,
+        "headFrameYZProjectedArea": 0.0025725428243117982,
+        "eyeSurfaceCentroidSeparation": 0.07416943691512351,
+        "rimMeanToEyeL": 0.10283397131708143,
+        "rimMeanToEyeR": 0.10281665906348367
+      }
+    }
+  ],
+  "oralTrace": {
+    "index": 14,
+    "sourceVertex": 2183,
+    "sourceAliases": [
+      2183,
+      3455
+    ],
+    "world": [
+      -0.45805928111076355,
+      -0.053690530359745026,
+      0.003392998594790697
+    ]
+  },
+  "additiveMergePass": true,
   "initial": {
-    "version": "FISH_FEATURES_R008",
+    "version": "FISH_ORAL_MERGE_R009",
     "ready": true,
     "errors": [],
     "frames": 3,
@@ -776,6 +883,28 @@
       "newMotionCreated": false,
       "physicalLengthKnown": false,
       "anatomicalApproval": false,
+      "productionReady": false
+    },
+    "oralStudy": {
+      "version": "FISH_ORAL_R008",
+      "rimEdges": 24,
+      "cycleVertices": 24,
+      "sourceHeadVertexIds": 25,
+      "samples": 209,
+      "restSamples": 1,
+      "metrics": 8,
+      "maxHeadMatrixRegression": 0,
+      "maxFrameOrthogonalityError": 1.8314211958377767e-7,
+      "maxAliasPositionGap": 0,
+      "maxHeadInnerSeamGap": 0,
+      "sourceBinaryUnchanged": true,
+      "sourceVerticesWelded": 0,
+      "newGeometryCreated": false,
+      "physicalLengthKnown": false,
+      "biologicalGapeAngleMeasured": false,
+      "anatomicalPartitionApproved": false,
+      "stageAComplete": false,
+      "independentGenerator": false,
       "productionReady": false
     },
     "time": 0,
@@ -988,17 +1117,17 @@
     "segments": 22816
   },
   "playTimes": [
-    0.15000000000000002,
-    0.25
+    0.25,
+    0.44999999999999996
   ],
   "errors": [],
   "externalRequests": [
-    "https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/?v=r008"
+    "https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/?v=r009"
   ],
   "browserPass": true,
   "desktopPass": true,
   "mobilePass": true,
   "interactionsPass": true,
-  "fileBytes": 85172749,
-  "htmlSha256": "623e31dba94c83abbc1f232666bcd2b395668e2c8789ae124353549ec1ce406f"
+  "fileBytes": 86123736,
+  "htmlSha256": "6e21c7de7641739d237d9712242de18f5efedda4090a757374b5ef6ea9ef5762"
 }
