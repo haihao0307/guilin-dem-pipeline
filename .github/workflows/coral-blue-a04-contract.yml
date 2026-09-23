@@ -1,0 +1,64 @@
+name: Blue Coral A04 Exact Contract
+
+on:
+  push:
+    branches: [work/coral-blue-a04-hdf-exact-20260923]
+    paths:
+      - apps/coral-restart-20260923/blue-coral-a04-hdf/**
+      - .github/workflows/coral-blue-a04-contract.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: coral-blue-a04-exact-contract
+  cancel-in-progress: false
+
+jobs:
+  exact-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact-stage package and forbidden-method gates
+        run: |
+          python apps/coral-restart-20260923/blue-coral-a04-hdf/tests/test_exact_contract.py \
+            apps/coral-restart-20260923/blue-coral-a04-hdf
+      - name: Verify frozen execution boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('apps/coral-restart-20260923/blue-coral-a04-hdf')
+          boundary=json.loads((root/'contracts/EXECUTION_BOUNDARY.json').read_text())
+          receipt=json.loads((root/'contracts/EXACT_VERIFICATION.json').read_text())
+          assert boundary['methodChangeAuthorized'] is False
+          assert boundary['structureGrammarUnlocked'] is False
+          assert boundary['finalGenerator'] is False
+          assert receipt['passed'] is True
+          assert receipt['accessorByteMismatchCount'] == 0
+          assert receipt['forbiddenMethodCount'] == 0
+          assert receipt['workbench']['bytes'] == 52830447
+          assert receipt['workbench']['sha256'] == 'ba27dce0c4d5e89eed70ffdd391fe8fe3fe8de7561020edcdd9a84d5023138fb'
+          print('BLUE_CORAL_A04_BOUNDARY_AND_RECEIPT_PASS')
+          PY
+      - name: Verify compiler contains source identity and no downgrade implementation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('apps/coral-restart-20260923/blue-coral-a04-hdf/tools/compile_exact_teacher.py')
+          s=p.read_text()
+          for marker in [
+            'c65bc1b9c389b3b1c3f4c09fc345619ad4ad4994666a06eb294822eafa503857',
+            'allSourceAccessorsPreservedByteExact',
+            'separateCandidateBuffersRequired',
+            'sameScaleSameCameraComparisonRequired',
+          ]: assert marker in s, marker
+          for marker in ['trimesh.simplify', 'MarchingCubes(', 'meshopt_simplify(', 'voxelize(']:
+            assert marker not in s, marker
+          print('BLUE_CORAL_A04_COMPILER_METHOD_PASS')
+          PY
