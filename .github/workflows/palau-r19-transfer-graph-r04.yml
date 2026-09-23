@@ -1,0 +1,47 @@
+name: Palau R19 transfer graph R04
+
+on:
+  push:
+    branches:
+      - work/palau-airai-r19-authority-locked-restart-20260922
+    paths:
+      - games/survivor-palau/palau-world/airai-r19/unified-field-r01/R19_TRANSFER_GRAPH_SCHEMA_R04.json
+      - games/survivor-palau/palau-world/airai-r19/unified-field-r01/R19_TRANSFER_GRAPH_R04.json
+      - games/survivor-palau/palau-world/airai-r19/unified-field-r01/transfer_graph_r04.cjs
+      - games/survivor-palau/palau-world/airai-r19/unified-field-r01/validate_transfer_graph_r04.cjs
+      - games/survivor-palau/palau-world/airai-r19/unified-field-r01/transfer_graph_r04.test.cjs
+      - .github/workflows/palau-r19-transfer-graph-r04.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-transfer-graph-r04:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/palau-airai-r19-authority-locked-restart-20260922
+
+      - name: Validate verified and unresolved transfer routes
+        run: node games/survivor-palau/palau-world/airai-r19/unified-field-r01/validate_transfer_graph_r04.cjs
+
+      - name: Run adversarial transfer-graph tests
+        run: node games/survivor-palau/palau-world/airai-r19/unified-field-r01/transfer_graph_r04.test.cjs
+
+      - name: Keep R04 non-visual and coefficient-free
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="games/survivor-palau/palau-world/airai-r19/unified-field-r01"
+          if find "$ROOT" -maxdepth 1 -type f \( -iname '*.html' -o -iname '*.glb' -o -iname '*.gltf' -o -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.tif' -o -iname '*.tiff' -o -iname '*.bin' \) | grep -q .; then
+            echo 'R04 contains forbidden visual, binary or production artifacts.' >&2
+            exit 1
+          fi
+          if grep -R --line-number --fixed-strings 'waveCoefficients' "$ROOT"/R19_TRANSFER_GRAPH_R04.json "$ROOT"/transfer_graph_r04.cjs; then
+            echo 'R04 must not contain real-data wave coefficients before Small Mother promotion.' >&2
+            exit 1
+          fi
+          echo 'R04 remains a transfer-contract and validation package only.'
