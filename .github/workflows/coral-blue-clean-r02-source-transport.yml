@@ -21,8 +21,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p out
-          UID='28a6da41dc6b40bfaaec9a8a4eea4fc0'
-          META="https://sketchfab.com/i/models/${UID}"
+          MODEL_UID='28a6da41dc6b40bfaaec9a8a4eea4fc0'
+          META="https://sketchfab.com/i/models/${MODEL_UID}"
           curl -fL --retry 3 --retry-delay 2 "$META" -o out/model.json
           python - <<'PY'
           import json, pathlib, urllib.request
