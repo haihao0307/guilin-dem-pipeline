@@ -1,0 +1,51 @@
+name: Build Patrol Boat V002 Single HTML
+
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - '.patrol-build/v002/READY'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: patrol-boat-v002-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GitHub Pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+
+      - name: Reconstruct standalone HTML
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p patrol-boat-v002
+          cat .patrol-build/v002/chunk*.b64 \
+            | base64 --decode \
+            | gzip --decompress \
+            > patrol-boat-v002/index.html
+          test "$(wc -c < patrol-boat-v002/index.html)" = "885554"
+          echo "5fd0da44b231ef2c2472b1a15f67de8cf813d73c04dcf166a973055bcb1367a5  patrol-boat-v002/index.html" | sha256sum --check
+
+      - name: Commit public single-file workbench
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Patrol Boat Production"
+          git config user.email "noreply@openai.com"
+          git add patrol-boat-v002/index.html
+          if git diff --cached --quiet; then
+            echo "No change"
+            exit 0
+          fi
+          git commit -m "feat: publish patrol boat workbench V002"
+          git push origin gh-pages
