@@ -1,0 +1,77 @@
+name: Palau R10 Full Local Package
+
+on:
+  push:
+    branches:
+      - handoff/survivor-palau-pilot-survival-full-r010-20260924
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fixed branch head
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Build complete repository snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          PACKAGE_ROOT="STONE_MONEY_ISLAND_SURVIVOR_PALAU_R010_FULL_20260924"
+          ZIP_NAME="${PACKAGE_ROOT}.zip"
+          mkdir -p "package/${PACKAGE_ROOT}"
+
+          git archive --format=tar "$GITHUB_SHA" | tar -xf - -C "package/${PACKAGE_ROOT}"
+
+          cat > "package/${PACKAGE_ROOT}/LOCAL_PACKAGE_INFO_20260924.txt" <<EOF
+          Project: Stone Money Island / Survivor: Palau
+          Package revision: R10
+          Package date: 2026-09-24
+          Repository: haihao0307/guilin-dem-pipeline
+          Branch: handoff/survivor-palau-pilot-survival-full-r010-20260924
+          Commit: ${GITHUB_SHA}
+          World start: 1944-12-31 05:00 Palau local time
+          Design baseline: R9 human-trace ecology and patrol-inference contract
+          Status: Full repository snapshot; design/runtime contracts locked; complete playable implementation not yet accepted.
+          EOF
+
+          test -f "package/${PACKAGE_ROOT}/games/survivor-palau/handoff/pilot-survival-full-r002-20260922/00_START_HERE.md"
+          test -f "package/${PACKAGE_ROOT}/games/survivor-palau/handoff/pilot-survival-full-r002-20260922/24_R9_HUMAN_TRACE_ECOLOGY_DETECTION_LOOP_ZH.md"
+          test -f "package/${PACKAGE_ROOT}/games/survivor-palau/handoff/pilot-survival-full-r002-20260922/25_R9_CAUSALITY_CHAINS_ZH.md"
+          test -f "package/${PACKAGE_ROOT}/games/survivor-palau/handoff/pilot-survival-full-r002-20260922/26_CURRENT_IMPLEMENTATION_STATE_R9_ZH.md"
+          test -f "package/${PACKAGE_ROOT}/games/survivor-palau/handoff/pilot-survival-full-r002-20260922/28_R10_FULL_LOCAL_PACKAGE_SNAPSHOT_ZH.md"
+          test -f "package/${PACKAGE_ROOT}/games/survivor-palau/handoff/pilot-survival-full-r002-20260922/manifest.json"
+
+          (
+            cd "package/${PACKAGE_ROOT}"
+            find . -type f ! -name 'PACKAGE_TREE_SHA256SUMS.txt' -print0 \
+              | sort -z \
+              | xargs -0 sha256sum > PACKAGE_TREE_SHA256SUMS.txt
+          )
+
+          (
+            cd package
+            zip -q -r "${ZIP_NAME}" "${PACKAGE_ROOT}"
+            unzip -t "${ZIP_NAME}" > ZIP_INTEGRITY_TEST.txt
+            sha256sum "${ZIP_NAME}" > "${ZIP_NAME}.sha256"
+            find "${PACKAGE_ROOT}" -type f | wc -l > PACKAGE_FILE_COUNT.txt
+            du -b "${ZIP_NAME}" > PACKAGE_BYTE_SIZE.txt
+          )
+
+      - name: Upload complete package
+        uses: actions/upload-artifact@v4
+        with:
+          name: survivor-palau-r010-full-local-package
+          path: |
+            package/STONE_MONEY_ISLAND_SURVIVOR_PALAU_R010_FULL_20260924.zip
+            package/STONE_MONEY_ISLAND_SURVIVOR_PALAU_R010_FULL_20260924.zip.sha256
+            package/ZIP_INTEGRITY_TEST.txt
+            package/PACKAGE_FILE_COUNT.txt
+            package/PACKAGE_BYTE_SIZE.txt
+          if-no-files-found: error
+          retention-days: 30
