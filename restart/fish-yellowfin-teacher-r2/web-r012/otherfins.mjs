@@ -72,10 +72,14 @@ export function installRemainingFinStudy(ctx) {
     const offset = probe.clone().sub(interfaceMean).applyMatrix3(frame.transpose());
     const part = parts.get(definition.id);
     let area = 0;
-    const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+    const positions = surface.p;
     for (const face of part.sourceTriangles) {
       const ids = surface.idx.subarray(face * 3, face * 3 + 3);
-      area += a.subVectors(vector(surface, ids[1]), vector(surface, ids[0])).cross(b.subVectors(vector(surface, ids[2]), vector(surface, ids[0]))).length() * 0.5;
+      const a = ids[0] * 3, b = ids[1] * 3, c = ids[2] * 3;
+      const abx = positions[b] - positions[a], aby = positions[b + 1] - positions[a + 1], abz = positions[b + 2] - positions[a + 2];
+      const acx = positions[c] - positions[a], acy = positions[c + 1] - positions[a + 1], acz = positions[c + 2] - positions[a + 2];
+      const nx = aby * acz - abz * acy, ny = abz * acx - abx * acz, nz = abx * acy - aby * acx;
+      area += Math.hypot(nx, ny, nz) * 0.5;
     }
     const interfaceGaps = {};
     let maxGap = 0;
