@@ -1,0 +1,37 @@
+{
+  "suite": "KAOPU CI claim-scope historical replay N26",
+  "passed": true,
+  "hypothesis": "A green workflow may support only the claims whose required steps and proof fields passed; skipped claim-critical steps must hold the stronger claim.",
+  "actualHistory": {
+    "fixtureId": "SMI-R0152-RUN-35936763006",
+    "workflowConclusion": "success",
+    "verifiedSetup": {
+      "claim": "VERIFIED_SETUP",
+      "requiredStepConclusions": ["success", "success"],
+      "proofMismatches": [],
+      "passed": true,
+      "state": "CLAIM_VERIFIED"
+    },
+    "publicationComplete": {
+      "claim": "PUBLICATION_COMPLETE",
+      "requiredStepConclusions": ["skipped", "skipped"],
+      "proofMismatches": ["shareAllowed", "deployed", "publicBrowserPassed"],
+      "passed": false,
+      "state": "HOLD_CLAIM_INCOMPLETE"
+    }
+  },
+  "falsificationControl": {
+    "claim": "PUBLICATION_COMPLETE",
+    "requiredStepConclusions": ["success", "success"],
+    "proofMismatches": [],
+    "passed": true,
+    "state": "CLAIM_VERIFIED"
+  },
+  "currentBestView": "Treat workflow conclusion as transport/execution metadata. Promotion must bind a named claim to a required-step manifest and proof predicates.",
+  "boundary": [
+    "This replay does not prove that every workflow needs the same steps.",
+    "A skipped step is blocking only when the current named claim declares it critical.",
+    "The replay does not publish the Stone Money artifact or resolve source transfer.",
+    "Global adoption requires a real Mother trial and verifier receipt."
+  ]
+}
