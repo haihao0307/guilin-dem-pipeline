@@ -222,6 +222,11 @@ def compile_fin_surfaces(canonical, parts_path, head_path, out, head_code=None):
         }
 
     definition_by_id = {item["id"]: item for item in definitions}
+    track_memberships = [control_track for definition in definitions for control in definition["controls"] for control_track in control["tracks"]]
+    unique_track_keys = {
+        (item["nodeId"], item["property"], item["timeField"], item["valueField"], item["interpolation"])
+        for item in track_memberships
+    }
     qa = {
         "version": "FISH_REMAINING_FINS_R012",
         "patchIds": [item["id"] for item in definitions],
@@ -231,7 +236,9 @@ def compile_fin_surfaces(canonical, parts_path, head_path, out, head_code=None):
         "sourceControlGroups": {item["id"]: len(item["sourceControlSupport"]) for item in definitions},
         "sourceSupportNodes": {item["id"]: len(item["controlNodes"]) for item in definitions},
         "controlContextNodes": len(all_support_nodes),
-        "sourceTracks": sum(len(control["tracks"]) for item in definitions for control in item["controls"]),
+        "sourceTracks": len(unique_track_keys),
+        "sourceTrackMemberships": len(track_memberships),
+        "sourceTracksByPatch": {item["id"]: sum(len(control["tracks"]) for control in item["controls"]) for item in definitions},
         "samples": len(samples),
         "restSamples": 1,
         "maxRestInterfaceGap": max(row["metrics"]["interfaceMaxGap"] for row in rest_sample["patches"]),
