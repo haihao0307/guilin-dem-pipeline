@@ -1,0 +1,58 @@
+{
+  "suite": "KAOPU partial-source atomic promotion replay N27",
+  "passed": true,
+  "hypothesis": "A staged source cannot become a publishable or parent artifact until every ordered chunk has a size and digest descriptor, strict decoding passes, and the reconstructed bytes match the frozen target size and digest.",
+  "actualHistory": {
+    "fixtureId": "SMI-R0152-PARTIAL-STAGING-BBE5333",
+    "commit": "bbe533341bd65b4d1277b80b3cf2007c04d197bc",
+    "state": "HOLD_SOURCE_INCOMPLETE_OR_CORRUPT",
+    "passed": false,
+    "failedChecks": [
+      "stageMarkerCleared",
+      "manifestPresent",
+      "expectedChunkCountKnown",
+      "chunkCountMatches",
+      "allChunksStrictBase64",
+      "allChunkDescriptorsPresent",
+      "allChunkDescriptorsMatch",
+      "targetSizeMatches",
+      "targetDigestMatches"
+    ],
+    "chunks": [
+      {
+        "path": "stone-money-island/r0152/blobs/chunk-00.b64",
+        "encodedBytes": 15684,
+        "strictBase64Passed": false,
+        "firstInvalidOffset": 15669,
+        "observedMarker": "... (truncated)"
+      },
+      {
+        "path": "stone-money-island/r0152/blobs/chunk-01.b64",
+        "encodedBytes": 21007,
+        "strictBase64Passed": false,
+        "firstInvalidOffset": 10000,
+        "observedMarker": "[... ELLIPSIZATION ...]"
+      }
+    ],
+    "assembledBytes": null,
+    "assembledSha256": null
+  },
+  "falsificationControl": {
+    "state": "SOURCE_TRANSFER_VERIFIED",
+    "passed": true,
+    "expectedChunkCount": 3,
+    "allChunksStrictBase64": true,
+    "allChunkDescriptorsMatch": true,
+    "assembledBytes": 79,
+    "assembledSha256": "6fffc8dc92eacea62f3ddefe172371dd5c2c0660208950402c22708493ce5149",
+    "targetSizeMatches": true,
+    "targetDigestMatches": true
+  },
+  "currentBestView": "Chunk commits are quarantine transport state. Only the verified reconstructed object may receive SOURCE_TRANSFER_VERIFIED and become a publication input or parent.",
+  "boundary": [
+    "Transfer integrity only; not visual correctness, browser verification, publication, or user acceptance.",
+    "Does not require every artifact to use Base64 or chunking.",
+    "Does not repair or publish Stone Money R015.2.",
+    "Global R2 adoption requires one real Mother trial and an independent verifier receipt."
+  ]
+}
