@@ -1,0 +1,41 @@
+{
+  "caseId": "FINAL-CLAIM-CLOSURE-001",
+  "status": "CANDIDATE_REAL_RUN_REPLAY_PASSED_NOT_ADOPTED",
+  "active": false,
+  "scope": "Stone Money publication-lane trial",
+  "trigger": "A named delivery claim depends on evidence produced by multiple ordered CI steps.",
+  "mustNever": [
+    "A job-level success directly promotes a stronger named claim.",
+    "An early proof file is silently treated as if it contained a later step result.",
+    "Missing final closure is converted to ALLOW by ignoring absent or false fields.",
+    "A technical publication claim is expanded into iPhone, visual, Game-baseline or user acceptance."
+  ],
+  "requiredEvidence": [
+    "claimType and claimScope",
+    "exact runId and headSha",
+    "subject byte size and digest",
+    "claim-critical step results",
+    "path and SHA-256 for every consumed evidence atom",
+    "proof predicates and excluded claims",
+    "issuedAfterCriticalSteps=true",
+    "claimState",
+    "independent verifier identity or explicit UNKNOWN"
+  ],
+  "states": [
+    "HOLD_CLAIM_CRITICAL_EVIDENCE_INCOMPLETE",
+    "HOLD_FINAL_CLAIM_UNSEALED",
+    "HOLD_FINAL_CLAIM_INVALID",
+    "CLAIM_VERIFIED"
+  ],
+  "historyFixtures": [
+    {
+      "runId": 35936763006,
+      "expectedState": "HOLD_CLAIM_CRITICAL_EVIDENCE_INCOMPLETE"
+    },
+    {
+      "runId": 35973024167,
+      "expectedState": "HOLD_FINAL_CLAIM_UNSEALED"
+    }
+  ],
+  "activationGate": "One real Mother implementation of a post-critical-step finalizer plus an independent verifier GATE-RUN; coordinator review required before wider activation."
+}
