@@ -1,66 +1,55 @@
-name: Stone Money R015.2 exact-source publication
+name: Stone Money exact GitHub-only publication
 on:
   push:
     branches:
       - publish/stone-money-r0152-exact-20260924
     paths:
-      - ops/stone-money-r0152/**
+      - ops/stone-money-r0153/**
       - .github/workflows/smi-r0152-exact-publication.yml
   workflow_dispatch:
 permissions:
   contents: write
   pages: write
 concurrency:
-  group: stone-money-r0152-exact-publication
+  group: stone-money-exact-publication
   cancel-in-progress: false
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PYTHONUNBUFFERED: '1'
     steps:
-      - name: Read only the two source-bound publication files at this exact commit
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Reassemble exact R015.3 from repository chunks
         run: |
           mkdir -p publication-evidence
-          python - <<'PY'
-          import os,json,base64,urllib.request
-          from pathlib import Path
-          repo=os.environ['GITHUB_REPOSITORY']; head=os.environ['GITHUB_SHA']
-          headers={'Authorization':'Bearer '+os.environ['GITHUB_TOKEN'],'Accept':'application/vnd.github+json','User-Agent':'SMI-exact-publisher'}
-          for filename in ('publish_exact.py','publication-input.json'):
-              url=f'https://api.github.com/repos/{repo}/contents/ops/stone-money-r0152/{filename}?ref={head}'
-              with urllib.request.urlopen(urllib.request.Request(url,headers=headers),timeout=45) as r: obj=json.load(r)
-              Path(filename).write_bytes(base64.b64decode(obj['content']))
-          cfg=json.loads(Path('publication-input.json').read_text())
-          ready=bool(cfg.get('sourceUrl'))
-          with open(os.environ['GITHUB_ENV'],'a') as f:f.write('SOURCE_READY='+('true' if ready else 'false')+'\n')
-          proof={'state':'SOURCE_TRANSFER_REQUIRED' if not ready else 'SOURCE_URL_PRESENT_NOT_YET_VERIFIED','executionCommit':head,'sourceSHA256':cfg['sourceSHA256'],'sourceBytes':cfg['sourceBytes'],'shareAllowed':False,'deployed':False,'publicBrowserPassed':False,'realIPhoneTested':False,'productionReady':False}
-          url='https://haihao0307.github.io/guilin-dem-pipeline/stone-money-island/'
-          try:
-              with urllib.request.urlopen(url,timeout=30) as r:
-                  proof['currentPublicStatus']=r.status
-                  proof['currentPublicStillR009']=b'SMI-R009' in r.read()
-          except Exception as e:proof['publicProbeError']=str(e)
-          Path('publication-evidence/PUBLICATION_PROOF.json').write_text(json.dumps(proof,indent=2))
-          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
-              f.write('## Exact source publication\n\n'+proof['state']+'\n\nMissing source transfer is not a repository-permission diagnosis. No source or public page has been changed in this step.\n')
-          print(json.dumps(proof))
-          PY
-      - name: Install real Chromium verification tools
-        if: env.SOURCE_READY == 'true'
+          python ops/stone-money-r0153/assemble_source.py --root ops/stone-money-r0153/source-chunks --out STONE_MONEY_ISLAND_R015_3_REAL_3D.html | tee publication-evidence/ASSEMBLY_PROOF.json
+          test "$(sha256sum STONE_MONEY_ISLAND_R015_3_REAL_3D.html | cut -d' ' -f1)" = "5d3167af1127a9a9f2eeaa47957158312060e0bff114020befec6703bc88001c"
+          test "$(wc -c < STONE_MONEY_ISLAND_R015_3_REAL_3D.html)" = "956838"
+      - name: Install real Chromium verifier
         run: |
-          python -m pip install playwright==1.55.0
+          python -m pip install playwright==1.57.0
           python -m playwright install --with-deps chromium
-      - name: Verify every byte, perform real browser tests, publish, and reread HTTPS
-        if: env.SOURCE_READY == 'true'
-        run: python publish_exact.py --config publication-input.json --out publication-evidence --publish
-      - name: Preserve execution evidence without claiming that a green preflight is publication
+      - name: Test local real WebGL
+        run: |
+          python -m http.server 8765 >/tmp/smi-http.log 2>&1 &
+          echo $! >/tmp/smi-http.pid
+          sleep 2
+          xvfb-run -a python ops/stone-money-r0153/qa_publication.py --url http://127.0.0.1:8765/STONE_MONEY_ISLAND_R015_3_REAL_3D.html --out publication-evidence/local
+      - name: Publish the one approved Pages path and verify exact HTTPS bytes
+        run: python ops/stone-money-r0153/publish_exact.py --source STONE_MONEY_ISLAND_R015_3_REAL_3D.html --out publication-evidence
+      - name: Test public real WebGL
+        run: xvfb-run -a python ops/stone-money-r0153/qa_publication.py --url "https://haihao0307.github.io/guilin-dem-pipeline/stone-money-island/?v=R0153-5d3167af1127" --out publication-evidence/public
+      - name: Preserve evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SMI-R0152-exact-publication-${{ github.run_id }}
+          name: SMI-R0153-exact-publication-${{ github.run_id }}
           path: publication-evidence/
           retention-days: 30
           if-no-files-found: error
