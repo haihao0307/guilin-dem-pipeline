@@ -1,0 +1,63 @@
+name: Fish R011 Published Download Verification
+on:
+  push:
+    branches: [handoff/fish-mother-r011-full-20260924]
+    paths: [.github/workflows/fish-r011-download-verify.yml]
+permissions:
+  contents: write
+jobs:
+  verify-existing-public-zip:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Resolve the final published asset; preserve the existing package
+        id: locate
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const r=await github.rest.repos.getReleaseByTag({...context.repo,tag:'fish-mother-r011-full-project-20260924'});
+            if(r.data.draft)throw Error('Release is still draft');
+            const a=r.data.assets.find(a=>a.name==='FISH_MOTHER_R011_FULL_PROJECT_20260924.zip');
+            if(!a||a.id!==585273960||a.size!==138917097||a.digest!=='sha256:1d312283d1292338651b8383ea1c6dba52ab91d0eb4ab8258b2f1a0201d2d6aa')throw Error('Package identity changed');
+            require('fs').writeFileSync('PUBLISHED_ASSET_METADATA.json',JSON.stringify(a,null,2));
+            core.setOutput('url',a.browser_download_url);core.setOutput('release',r.data.id);
+      - name: Independently download final public URL and check SHA, CRC and all 181 entries
+        env:
+          DOWNLOAD_URL: ${{ steps.locate.outputs.url }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import urllib.request,hashlib,json,os,zipfile,datetime
+          url=os.environ['DOWNLOAD_URL'];p=Path('verified.zip');h=hashlib.sha256();count=0
+          with urllib.request.urlopen(url,timeout=120) as r,p.open('wb') as f:
+              status=r.status;headers={k:r.headers.get(k) for k in ['Content-Type','Content-Disposition','Content-Length']}
+              assert status==200
+              while True:
+                  b=r.read(1048576)
+                  if not b:break
+                  h.update(b);f.write(b);count+=len(b)
+          assert count==138917097 and h.hexdigest()=='1d312283d1292338651b8383ea1c6dba52ab91d0eb4ab8258b2f1a0201d2d6aa'
+          with zipfile.ZipFile(p) as z:
+              assert z.testzip() is None
+              root='FISH_MOTHER_R011_PROJECT/';m=json.loads(z.read(root+'MANIFEST.json'))
+              assert len(m['files'])==181
+              for x in m['files']:
+                  b=z.read(root+x['path']);assert len(b)==x['bytes'] and hashlib.sha256(b).hexdigest()==x['sha256']
+              assert hashlib.sha256(z.read(root+'index.html')).hexdigest()=='34725bd559733f8f12d49feecf6efa388886b0ddfc02d35158b34eaee8a68e35'
+          proof={'file':'FISH_MOTHER_R011_FULL_PROJECT_20260924.zip','url':url,'httpStatus':status,'bytes':count,'sha256':h.hexdigest(),'zipCrcPass':True,'manifestEntriesVerified':181,'originalIndexHashMatches':True,'headers':headers,'verifiedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'verificationRun':os.environ['GITHUB_RUN_ID'],'packagingRun':35962473032,'freshUnzipBrowserSmokePassedInPackagingRun':True,'firstDownloadCheckFailure':'The upload response contained an untagged draft URL, which stopped resolving after publication. Final release metadata supplies the correct tag URL. The existing ZIP was not rebuilt or replaced.','privateSourceVaultIncluded':False,'privateContinuousLogIncluded':False,'physicalUserDeviceTested':False}
+          Path('DOWNLOAD_VERIFIED.json').write_text(json.dumps(proof,ensure_ascii=False,indent=2));print('PUBLIC_DOWNLOAD_VERIFIED',json.dumps(proof),flush=True)
+          PY
+      - name: Attach actual public download verification proof
+        uses: actions/github-script@v7
+        env:
+          RELEASE_ID: ${{ steps.locate.outputs.release }}
+        with:
+          script: |
+            await github.rest.repos.uploadReleaseAsset({...context.repo,release_id:Number(process.env.RELEASE_ID),name:'DOWNLOAD_VERIFIED.json',headers:{'content-type':'application/json'},data:require('fs').readFileSync('DOWNLOAD_VERIFIED.json')});
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fish-r011-final-download-proof
+          path: |
+            DOWNLOAD_VERIFIED.json
+            PUBLISHED_ASSET_METADATA.json
