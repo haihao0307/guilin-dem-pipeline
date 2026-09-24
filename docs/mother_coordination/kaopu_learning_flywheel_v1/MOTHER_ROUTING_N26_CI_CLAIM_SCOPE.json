@@ -1,7 +1,7 @@
 {
   "schema": "kaopu.mother-routing/2.0",
   "round": "N26",
-  "status": "POSTED_NOT_ACKNOWLEDGED",
+  "status": "POSTED_GATE_RUN_HOLD_NOT_IMPLEMENTED",
   "target": {
     "mother": "Stone Money",
     "issue": 63,
@@ -25,7 +25,7 @@
     "POSTED": true,
     "ACKNOWLEDGED": false,
     "IMPLEMENTED": false,
-    "GATE-RUN": false,
+    "GATE-RUN": true,
     "ADOPTED": false,
     "USER-ACCEPTED": false
   },
@@ -40,5 +40,13 @@
     "Do not change R2 globally from this history replay.",
     "Do not classify every skipped step as a failure.",
     "Do not change production branches or current Stone Money publication status."
-  ]
+  ],
+  "actualTrial": {
+    "runId": 35973024167,
+    "headSha": "66fb787c91772cf4efa6b1ba2618bff8c93032e6",
+    "replay": "N28",
+    "result": "TECHNICAL_EVIDENCE_COMPLETE_BUT_FINAL_CLAIM_UNSEALED",
+    "note": "N26 was run by the coordinator against a real later Mother execution. The production Mother did not implement the required final closure fields; ACKNOWLEDGED/IMPLEMENTED/ADOPTED remain false.",
+    "evidence": "docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/final_claim_closure_result_n28.json"
+  }
 }
