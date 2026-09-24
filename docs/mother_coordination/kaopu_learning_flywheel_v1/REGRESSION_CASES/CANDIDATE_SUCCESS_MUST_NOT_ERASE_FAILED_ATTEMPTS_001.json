@@ -1,0 +1,30 @@
+{
+  "id": "SUCCESS-MUST-NOT-ERASE-FAILED-ATTEMPTS-001",
+  "status": "Candidate",
+  "scope": "single Mother trial: Fish delivery receipt after two or more bounded failures",
+  "trigger": "same bounded task reaches the configured Root Cause Review threshold and later obtains a successful terminal run",
+  "assertions": [
+    "each attempt remains an immutable record bound to runId, jobId, headSha, gate conclusion and failure signature",
+    "the terminal success may supersede the current technical gate but must not rewrite or omit prior failures",
+    "a separate learning-closure state remains HOLD until the review covers every observed failure signature",
+    "each corrective action binds a failure signature to an observed repair delta",
+    "the terminal success explicitly retests the covered signatures and names the attempts it supersedes"
+  ],
+  "states": [
+    "VERIFIED_FINAL_ATTEMPT",
+    "TERMINAL_SUCCESS_WITH_FAILURE_LINEAGE",
+    "HOLD_ATTEMPT_LEDGER_INCOMPLETE",
+    "HOLD_ATTEMPT_RECORD_MUTATED",
+    "HOLD_ROOT_CAUSE_REVIEW_MISSING",
+    "HOLD_ROOT_CAUSE_SIGNATURE_COVERAGE",
+    "HOLD_CORRECTIVE_DELTA_UNBOUND",
+    "HOLD_FINAL_RETEST_COVERAGE",
+    "HOLD_SUPERSESSION_LINK_INCOMPLETE"
+  ],
+  "activation": {
+    "implemented": false,
+    "gateRun": false,
+    "adopted": false,
+    "userAccepted": false
+  }
+}

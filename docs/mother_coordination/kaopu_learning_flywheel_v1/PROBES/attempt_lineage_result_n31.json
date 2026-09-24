@@ -1,0 +1,111 @@
+{
+  "schema": "kaopu.attempt-lineage-result/1.0",
+  "candidateRegression": "SUCCESS-MUST-NOT-ERASE-FAILED-ATTEMPTS-001",
+  "passed": 8,
+  "total": 8,
+  "allPassed": true,
+  "cases": [
+    {
+      "name": "real_history_without_machine_readable_review",
+      "expected": {
+        "technicalGate": "VERIFIED_FINAL_ATTEMPT",
+        "learningClosure": "HOLD_ROOT_CAUSE_REVIEW_MISSING"
+      },
+      "actual": {
+        "technicalGate": "VERIFIED_FINAL_ATTEMPT",
+        "learningClosure": "HOLD_ROOT_CAUSE_REVIEW_MISSING"
+      },
+      "passed": true
+    },
+    {
+      "name": "complete_counterfactual_closure",
+      "expected": {
+        "technicalGate": "VERIFIED_FINAL_ATTEMPT",
+        "learningClosure": "TERMINAL_SUCCESS_WITH_FAILURE_LINEAGE"
+      },
+      "actual": {
+        "technicalGate": "VERIFIED_FINAL_ATTEMPT",
+        "learningClosure": "TERMINAL_SUCCESS_WITH_FAILURE_LINEAGE"
+      },
+      "passed": true
+    },
+    {
+      "name": "terminal_success_only_erases_failures",
+      "expected": {
+        "technicalGate": "UNKNOWN",
+        "learningClosure": "HOLD_ATTEMPT_LEDGER_INCOMPLETE"
+      },
+      "actual": {
+        "technicalGate": "UNKNOWN",
+        "learningClosure": "HOLD_ATTEMPT_LEDGER_INCOMPLETE"
+      },
+      "passed": true
+    },
+    {
+      "name": "past_failure_rewritten_as_success",
+      "expected": {
+        "technicalGate": "UNKNOWN",
+        "learningClosure": "HOLD_ATTEMPT_RECORD_MUTATED"
+      },
+      "actual": {
+        "technicalGate": "UNKNOWN",
+        "learningClosure": "HOLD_ATTEMPT_RECORD_MUTATED"
+      },
+      "passed": true
+    },
+    {
+      "name": "no_terminal_success",
+      "expected": {
+        "technicalGate": "UNKNOWN",
+        "learningClosure": "HOLD_ATTEMPT_RECORD_MUTATED"
+      },
+      "actual": {
+        "technicalGate": "UNKNOWN",
+        "learningClosure": "HOLD_ATTEMPT_RECORD_MUTATED"
+      },
+      "passed": true
+    },
+    {
+      "name": "review_omits_first_failure_signature",
+      "expected": {
+        "technicalGate": "VERIFIED_FINAL_ATTEMPT",
+        "learningClosure": "HOLD_ROOT_CAUSE_SIGNATURE_COVERAGE"
+      },
+      "actual": {
+        "technicalGate": "VERIFIED_FINAL_ATTEMPT",
+        "learningClosure": "HOLD_ROOT_CAUSE_SIGNATURE_COVERAGE"
+      },
+      "passed": true
+    },
+    {
+      "name": "corrective_action_not_bound_to_observed_delta",
+      "expected": {
+        "technicalGate": "VERIFIED_FINAL_ATTEMPT",
+        "learningClosure": "HOLD_CORRECTIVE_DELTA_UNBOUND"
+      },
+      "actual": {
+        "technicalGate": "VERIFIED_FINAL_ATTEMPT",
+        "learningClosure": "HOLD_CORRECTIVE_DELTA_UNBOUND"
+      },
+      "passed": true
+    },
+    {
+      "name": "final_success_does_not_cover_both_failure_signatures",
+      "expected": {
+        "technicalGate": "VERIFIED_FINAL_ATTEMPT",
+        "learningClosure": "HOLD_FINAL_RETEST_COVERAGE"
+      },
+      "actual": {
+        "technicalGate": "VERIFIED_FINAL_ATTEMPT",
+        "learningClosure": "HOLD_FINAL_RETEST_COVERAGE"
+      },
+      "passed": true
+    }
+  ],
+  "limits": {
+    "motherTrial": false,
+    "independentVerifier": false,
+    "globalAdoption": false,
+    "userAcceptance": false
+  }
+}

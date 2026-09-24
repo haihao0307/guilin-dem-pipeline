@@ -1,0 +1,52 @@
+{
+  "schema": "kaopu.attempt-lineage-fixture/1.0",
+  "task": "Fish R012 remaining source fin study",
+  "rootCauseThreshold": 2,
+  "expectedRunIds": [35972942265, 35973503878, 35974311593],
+  "authoritativeAttempts": [
+    {
+      "ordinal": 1,
+      "runId": 35972942265,
+      "jobId": 107546645465,
+      "headSha": "3249b38d1e39e621217c3ebf13fd8a8ad4d9c86f",
+      "conclusion": "failure",
+      "failedGate": "real-offline-3d-browser",
+      "failureSignature": "runtime-ui-state-reference",
+      "observation": "TypeError reading toFixed; boot-error overlay intercepted #otherFinFocus"
+    },
+    {
+      "ordinal": 2,
+      "runId": 35973503878,
+      "jobId": 107548433781,
+      "headSha": "9d3fb3e453e7ac2d1702233e67a43aa6af97927f",
+      "conclusion": "failure",
+      "failedGate": "real-offline-3d-browser",
+      "failureSignature": "browser-harness-global-scope",
+      "observation": "ReferenceError: window is not defined in qa_regression.mjs"
+    },
+    {
+      "ordinal": 3,
+      "runId": 35974311593,
+      "jobId": 107551050350,
+      "headSha": "b5f2d11cbf55e17518dda411bf034596818c46d5",
+      "conclusion": "success",
+      "failedGate": null,
+      "failureSignature": null,
+      "observation": "all numerical, browser, publication and public regression steps succeeded"
+    }
+  ],
+  "observedCommitDeltas": [
+    {
+      "from": "3249b38d1e39e621217c3ebf13fd8a8ad4d9c86f",
+      "to": "9d3fb3e453e7ac2d1702233e67a43aa6af97927f",
+      "changedPaths": ["restart/fish-yellowfin-teacher-r2/web-r012/otherfins.mjs"],
+      "addresses": ["runtime-ui-state-reference"]
+    },
+    {
+      "from": "9d3fb3e453e7ac2d1702233e67a43aa6af97927f",
+      "to": "b5f2d11cbf55e17518dda411bf034596818c46d5",
+      "changedPaths": ["restart/fish-yellowfin-teacher-r2/web-r012/prepare_r012.py"],
+      "addresses": ["browser-harness-global-scope"]
+    }
+  ]
+}
