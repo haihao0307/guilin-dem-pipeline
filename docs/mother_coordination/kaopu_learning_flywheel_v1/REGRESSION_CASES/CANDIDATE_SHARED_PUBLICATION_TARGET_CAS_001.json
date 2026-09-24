@@ -1,0 +1,43 @@
+{
+  "id": "SHARED-PUBLICATION-TARGET-CAS-001",
+  "status": "Candidate",
+  "scope": "single-Mother trial for workflows that publish a mutable shared entry",
+  "trigger": "two or more independently dispatched candidates can write the same public alias, branch path or canonical pointer",
+  "requiredReceiptFields": [
+    "targetKey",
+    "candidateSubject",
+    "casExpectedSubject",
+    "observedSubjectAtMutation",
+    "writerConcurrencyGroup",
+    "serializationCoverage",
+    "conflictPolicy",
+    "requiredIntegratedSubjects",
+    "candidateIncludesSubjects",
+    "testsRerun",
+    "publicationDecision"
+  ],
+  "assertions": [
+    "local candidate verification does not grant permission to mutate a shared target",
+    "the expected target identity must exactly equal the target identity observed immediately before the state-changing write",
+    "a mismatched target is held without force push or automatic rebase-and-retry",
+    "after a concurrent advance, the replacement candidate must include all required predecessor deltas and rerun their applicable tests",
+    "a shared concurrency group reduces races but does not replace the target identity precondition"
+  ],
+  "states": [
+    "VERIFIED_LOCAL_CANDIDATE",
+    "PUBLICATION_CAS_ALLOWED",
+    "HOLD_CONCURRENT_TARGET_ADVANCED",
+    "HOLD_MUTATION_PRECONDITION_MISSING",
+    "HOLD_REBASE_WITHOUT_TARGET_REVALIDATION",
+    "HOLD_MERGE_COVERAGE_INCOMPLETE",
+    "HOLD_TIME_OF_CHECK_TO_USE"
+  ],
+  "activation": {
+    "posted": false,
+    "acknowledged": false,
+    "implemented": false,
+    "gateRun": false,
+    "adopted": false,
+    "userAccepted": false
+  }
+}

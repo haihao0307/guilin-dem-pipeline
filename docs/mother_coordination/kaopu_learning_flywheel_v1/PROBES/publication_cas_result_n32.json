@@ -1,0 +1,149 @@
+{
+  "schema": "kaopu.publication-cas-result/1.0",
+  "candidateRegression": "SHARED-PUBLICATION-TARGET-CAS-001",
+  "passed": 8,
+  "total": 8,
+  "allPassed": true,
+  "cases": [
+    {
+      "name": "features_r008_first_writer_matches_r007",
+      "expected": {
+        "candidateTechnical": "VERIFIED_LOCAL_CANDIDATE",
+        "publicationDecision": "PUBLICATION_CAS_ALLOWED",
+        "serializationCoverage": "INCOMPLETE",
+        "reason": "CAS_PRECONDITION_MATCHED"
+      },
+      "actual": {
+        "candidateTechnical": "VERIFIED_LOCAL_CANDIDATE",
+        "publicationDecision": "PUBLICATION_CAS_ALLOWED",
+        "serializationCoverage": "INCOMPLETE",
+        "reason": "CAS_PRECONDITION_MATCHED"
+      },
+      "passed": true
+    },
+    {
+      "name": "oral_r008_detects_features_advance",
+      "expected": {
+        "candidateTechnical": "VERIFIED_LOCAL_CANDIDATE",
+        "publicationDecision": "HOLD",
+        "serializationCoverage": "INCOMPLETE",
+        "reason": "HOLD_CONCURRENT_TARGET_ADVANCED"
+      },
+      "actual": {
+        "candidateTechnical": "VERIFIED_LOCAL_CANDIDATE",
+        "publicationDecision": "HOLD",
+        "serializationCoverage": "INCOMPLETE",
+        "reason": "HOLD_CONCURRENT_TARGET_ADVANCED"
+      },
+      "passed": true
+    },
+    {
+      "name": "allowed_header_string_is_not_cas",
+      "expected": {
+        "candidateTechnical": "VERIFIED_LOCAL_CANDIDATE",
+        "publicationDecision": "HOLD",
+        "serializationCoverage": "INCOMPLETE",
+        "reason": "HOLD_CONCURRENT_TARGET_ADVANCED"
+      },
+      "actual": {
+        "candidateTechnical": "VERIFIED_LOCAL_CANDIDATE",
+        "publicationDecision": "HOLD",
+        "serializationCoverage": "INCOMPLETE",
+        "reason": "HOLD_CONCURRENT_TARGET_ADVANCED"
+      },
+      "passed": true
+    },
+    {
+      "name": "target_changes_after_early_check",
+      "expected": {
+        "candidateTechnical": "VERIFIED_LOCAL_CANDIDATE",
+        "publicationDecision": "HOLD",
+        "serializationCoverage": "INCOMPLETE",
+        "reason": "HOLD_CONCURRENT_TARGET_ADVANCED"
+      },
+      "actual": {
+        "candidateTechnical": "VERIFIED_LOCAL_CANDIDATE",
+        "publicationDecision": "HOLD",
+        "serializationCoverage": "INCOMPLETE",
+        "reason": "HOLD_CONCURRENT_TARGET_ADVANCED"
+      },
+      "passed": true
+    },
+    {
+      "name": "automatic_rebase_without_target_revalidation",
+      "expected": {
+        "candidateTechnical": "VERIFIED_LOCAL_CANDIDATE",
+        "publicationDecision": "HOLD",
+        "serializationCoverage": "INCOMPLETE",
+        "reason": "HOLD_REBASE_WITHOUT_TARGET_REVALIDATION"
+      },
+      "actual": {
+        "candidateTechnical": "VERIFIED_LOCAL_CANDIDATE",
+        "publicationDecision": "HOLD",
+        "serializationCoverage": "INCOMPLETE",
+        "reason": "HOLD_REBASE_WITHOUT_TARGET_REVALIDATION"
+      },
+      "passed": true
+    },
+    {
+      "name": "merged_r009_exact_predecessor_and_full_rerun",
+      "expected": {
+        "candidateTechnical": "VERIFIED_LOCAL_CANDIDATE",
+        "publicationDecision": "PUBLICATION_CAS_ALLOWED",
+        "serializationCoverage": "TARGET_WIDE",
+        "reason": "CAS_PRECONDITION_MATCHED"
+      },
+      "actual": {
+        "candidateTechnical": "VERIFIED_LOCAL_CANDIDATE",
+        "publicationDecision": "PUBLICATION_CAS_ALLOWED",
+        "serializationCoverage": "TARGET_WIDE",
+        "reason": "CAS_PRECONDITION_MATCHED"
+      },
+      "passed": true
+    },
+    {
+      "name": "merged_candidate_omits_oral_subject",
+      "expected": {
+        "candidateTechnical": "VERIFIED_LOCAL_CANDIDATE",
+        "publicationDecision": "HOLD",
+        "serializationCoverage": "TARGET_WIDE",
+        "reason": "HOLD_MERGE_COVERAGE_INCOMPLETE"
+      },
+      "actual": {
+        "candidateTechnical": "VERIFIED_LOCAL_CANDIDATE",
+        "publicationDecision": "HOLD",
+        "serializationCoverage": "TARGET_WIDE",
+        "reason": "HOLD_MERGE_COVERAGE_INCOMPLETE"
+      },
+      "passed": true
+    },
+    {
+      "name": "same_concurrency_group_does_not_replace_cas",
+      "expected": {
+        "candidateTechnical": "VERIFIED_LOCAL_CANDIDATE",
+        "publicationDecision": "HOLD",
+        "serializationCoverage": "TARGET_WIDE",
+        "reason": "HOLD_CONCURRENT_TARGET_ADVANCED"
+      },
+      "actual": {
+        "candidateTechnical": "VERIFIED_LOCAL_CANDIDATE",
+        "publicationDecision": "HOLD",
+        "serializationCoverage": "TARGET_WIDE",
+        "reason": "HOLD_CONCURRENT_TARGET_ADVANCED"
+      },
+      "passed": true
+    }
+  ],
+  "observedHistory": {
+    "featuresR008": "published",
+    "oralR008": "local gates passed; publication failed at merge conflict; no overwrite",
+    "mergedR009": "both deltas rebuilt, rerun and published"
+  },
+  "limits": {
+    "motherTrial": false,
+    "independentVerifier": false,
+    "workflowImplemented": false,
+    "globalAdoption": false,
+    "userAcceptance": false
+  }
+}
