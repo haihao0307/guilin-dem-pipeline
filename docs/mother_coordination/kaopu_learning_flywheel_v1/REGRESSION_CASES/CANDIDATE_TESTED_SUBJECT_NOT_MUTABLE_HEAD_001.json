@@ -1,0 +1,39 @@
+{
+  "id": "TESTED-SUBJECT-NOT-MUTABLE-HEAD-001",
+  "status": "Candidate",
+  "scope": "Fish R012 receipt lineage; possible later reuse for multi-step publication receipts",
+  "trigger": "A tested implementation is followed by receipt or task-anchor commits before audit or delivery.",
+  "requiredInputs": [
+    "testedSubjectSha",
+    "workflowRun and workflowJob",
+    "receiptSha",
+    "observedBranchHead",
+    "ancestor relation",
+    "complete changed-path set from tested subject",
+    "explicit metadata path allowlist",
+    "artifact identity"
+  ],
+  "gate": [
+    "The tested subject must be an ancestor of the receipt/head.",
+    "The receipt must bind the exact tested subject and run/job evidence.",
+    "Every descendant change must be inside the explicit metadata allowlist.",
+    "Any runtime, source, workflow, public artifact, or unrelated policy delta requires a new test or HOLD.",
+    "Human and machine claims must name the tested subject; a mutable branch head cannot inherit the word tested."
+  ],
+  "passStates": [
+    "TESTED_SUBJECT_VERIFIED",
+    "METADATA_ONLY_DESCENDANT_VERIFIED"
+  ],
+  "holdStates": [
+    "HOLD_LINEAGE_DIVERGED",
+    "HOLD_RECEIPT_SUBJECT_MISMATCH",
+    "HOLD_RECEIPT_BINDING_INCOMPLETE",
+    "HOLD_UNTESTED_NONMETADATA_DELTA"
+  ],
+  "activation": {
+    "global": false,
+    "singleMotherTrialRequired": true,
+    "independentVerifierRequired": true,
+    "rollback": "Do not activate; retain current R2 and require exact tested implementation SHA."
+  }
+}

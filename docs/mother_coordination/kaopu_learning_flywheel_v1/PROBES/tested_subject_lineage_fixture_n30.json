@@ -1,0 +1,102 @@
+{
+  "schema": "kaopu.tested-subject-lineage-fixture/1.0",
+  "observation": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "mother": "Fish",
+    "branch": "work/fish-yellowfin-fin-surfaces-r012-20260924",
+    "testedSubjectSha": "b5f2d11cbf55e17518dda411bf034596818c46d5",
+    "receiptSha": "8c68829d91d3e9bc9ca56670cda964ab96ed5d0a",
+    "observedBranchHead": "862c4a78436a904c0e06c08d295ff5c46c3e25e5",
+    "workflowRun": 35974311593,
+    "workflowJob": 107551050350,
+    "artifact": {
+      "bytes": 94452856,
+      "sha256": "d4ea8e9092cade31693a6de4f654a7d7a47efe278de2a1a6b286f4585aaac7d3"
+    },
+    "parentMap": {
+      "8c68829d91d3e9bc9ca56670cda964ab96ed5d0a": "b5f2d11cbf55e17518dda411bf034596818c46d5",
+      "862c4a78436a904c0e06c08d295ff5c46c3e25e5": "8c68829d91d3e9bc9ca56670cda964ab96ed5d0a"
+    },
+    "changedPathsFromTestedSubject": {
+      "b5f2d11cbf55e17518dda411bf034596818c46d5": [],
+      "8c68829d91d3e9bc9ca56670cda964ab96ed5d0a": [
+        "restart/fish-yellowfin-teacher-r2/receipts-r012/DELIVERY_RECEIPT_R012.md"
+      ],
+      "862c4a78436a904c0e06c08d295ff5c46c3e25e5": [
+        "restart/fish-yellowfin-teacher-r2/receipts-r012/DELIVERY_RECEIPT_R012.md",
+        "restart/fish-yellowfin-teacher-r2/receipts-r012/TASK_ANCHOR_R012.json"
+      ]
+    },
+    "metadataPathPrefixes": [
+      "restart/fish-yellowfin-teacher-r2/receipts-r012/"
+    ]
+  },
+  "cases": [
+    {
+      "id": "real-exact-tested-subject",
+      "head": "b5f2d11cbf55e17518dda411bf034596818c46d5",
+      "claimSubjectSha": "b5f2d11cbf55e17518dda411bf034596818c46d5",
+      "bindingComplete": true,
+      "expected": "TESTED_SUBJECT_VERIFIED"
+    },
+    {
+      "id": "real-receipt-only-descendant",
+      "head": "8c68829d91d3e9bc9ca56670cda964ab96ed5d0a",
+      "claimSubjectSha": "b5f2d11cbf55e17518dda411bf034596818c46d5",
+      "bindingComplete": true,
+      "expected": "METADATA_ONLY_DESCENDANT_VERIFIED"
+    },
+    {
+      "id": "real-anchor-only-descendant",
+      "head": "862c4a78436a904c0e06c08d295ff5c46c3e25e5",
+      "claimSubjectSha": "b5f2d11cbf55e17518dda411bf034596818c46d5",
+      "bindingComplete": true,
+      "expected": "METADATA_ONLY_DESCENDANT_VERIFIED"
+    },
+    {
+      "id": "counterfactual-production-delta-after-test",
+      "head": "synthetic-production-descendant",
+      "claimSubjectSha": "b5f2d11cbf55e17518dda411bf034596818c46d5",
+      "bindingComplete": true,
+      "parent": "862c4a78436a904c0e06c08d295ff5c46c3e25e5",
+      "changedPaths": [
+        "restart/fish-yellowfin-teacher-r2/web-r012/prepare_r012.py"
+      ],
+      "expected": "HOLD_UNTESTED_NONMETADATA_DELTA"
+    },
+    {
+      "id": "counterfactual-diverged-head",
+      "head": "synthetic-diverged-head",
+      "claimSubjectSha": "b5f2d11cbf55e17518dda411bf034596818c46d5",
+      "bindingComplete": true,
+      "parent": null,
+      "changedPaths": [],
+      "expected": "HOLD_LINEAGE_DIVERGED"
+    },
+    {
+      "id": "counterfactual-moving-head-claimed-as-tested",
+      "head": "862c4a78436a904c0e06c08d295ff5c46c3e25e5",
+      "claimSubjectSha": "862c4a78436a904c0e06c08d295ff5c46c3e25e5",
+      "bindingComplete": true,
+      "expected": "HOLD_RECEIPT_SUBJECT_MISMATCH"
+    },
+    {
+      "id": "counterfactual-missing-run-binding",
+      "head": "8c68829d91d3e9bc9ca56670cda964ab96ed5d0a",
+      "claimSubjectSha": "b5f2d11cbf55e17518dda411bf034596818c46d5",
+      "bindingComplete": false,
+      "expected": "HOLD_RECEIPT_BINDING_INCOMPLETE"
+    },
+    {
+      "id": "counterfactual-unrelated-doc-after-test",
+      "head": "synthetic-unrelated-doc-descendant",
+      "claimSubjectSha": "b5f2d11cbf55e17518dda411bf034596818c46d5",
+      "bindingComplete": true,
+      "parent": "862c4a78436a904c0e06c08d295ff5c46c3e25e5",
+      "changedPaths": [
+        "knowledge/UNRELATED_POLICY.md"
+      ],
+      "expected": "HOLD_UNTESTED_NONMETADATA_DELTA"
+    }
+  ]
+}
