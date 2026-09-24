@@ -1,5 +1,5 @@
 {
-  "revision": "R012",
+  "revision": "R012G",
   "published_at": "2026-09-24",
   "scope": [
     "brightened inspection lighting",
@@ -24,6 +24,21 @@
     "bytes": 92344,
     "sha256": "0c1f3fc06aa6b0352ac815eb0ec9220da0180e316cc8f348e118356e5aff3664"
   },
+  "public_loader_fix": {
+    "cause": "two published base64 payload chunks were corrupted or truncated during upload, while the standalone file remained valid",
+    "payload_parts": 11,
+    "base64_characters": 68352,
+    "gzip_bytes": 51262,
+    "gzip_sha256": "dffcc8e3ef7b818398580cfa74a70b127bff811679054c25fc03fb32e41e1a8d",
+    "decoded_html_bytes": 92344,
+    "decoded_html_sha256": "0c1f3fc06aa6b0352ac815eb0ec9220da0180e316cc8f348e118356e5aff3664",
+    "decoded_matches_standalone": true,
+    "loader_validation": [
+      "payload length must equal 68352",
+      "base64 alphabet validation",
+      "UTF-8 decoded byte length must equal 92344"
+    ]
+  },
   "qa": {
     "desktop_1440x900": {
       "page_errors": 0,
@@ -42,10 +57,15 @@
       "dimension_guides_on": true,
       "dimension_label_clipping": false
     },
-    "note": "Chromium emitted only the software-WebGL fallback deprecation warning; no page or console errors occurred."
+    "public_payload_reconstruction": {
+      "atob_pass": true,
+      "gzip_decompression_pass": true,
+      "byte_for_byte_match_to_standalone": true
+    },
+    "note": "The earlier browser QA covered the standalone artifact, not the corrupted first public payload upload. R012G validates the exact published payload assembly before opening the workbench."
   },
   "public_entries": {
-    "fixed": "https://haihao0307.github.io/guilin-dem-pipeline/patrol-boat/",
-    "versioned": "https://haihao0307.github.io/guilin-dem-pipeline/patrol-boat/r012/"
+    "fixed": "https://haihao0307.github.io/guilin-dem-pipeline/patrol-boat/?r=012g2",
+    "versioned": "https://haihao0307.github.io/guilin-dem-pipeline/patrol-boat/r012/?r=012g2"
   }
 }
