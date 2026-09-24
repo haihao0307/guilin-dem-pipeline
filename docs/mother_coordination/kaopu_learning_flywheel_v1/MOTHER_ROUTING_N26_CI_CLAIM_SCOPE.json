@@ -1,0 +1,43 @@
+{
+  "schema": "kaopu.mother-routing/2.0",
+  "round": "N26",
+  "status": "PREPARED_NOT_POSTED",
+  "target": {
+    "mother": "Stone Money",
+    "issue": 63,
+    "nextApplicableTask": "next exact-source publication attempt"
+  },
+  "increment": {
+    "classification": "Candidate partial / history replay verified",
+    "requiredFields": [
+      "claimType",
+      "claimScope",
+      "requiredStepManifest",
+      "stepResults",
+      "skippedClaimCriticalSteps",
+      "proofPredicates",
+      "claimState"
+    ],
+    "rule": "Overall success cannot set publication, deployment, browser, shareAllowed, productionReady, or user acceptance. Derive each named claim from its own required steps and proof predicates."
+  },
+  "acceptancePath": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE-RUN": false,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  },
+  "minimumTrial": [
+    "Declare VERIFIED_SETUP and PUBLICATION_COMPLETE separately.",
+    "Bind the publication claim to Chromium installation and exact-byte verify/publish/HTTPS reread steps.",
+    "Preserve skipped/missing conclusions in the receipt.",
+    "Require shareAllowed=true, deployed=true, and publicBrowserPassed=true for PUBLICATION_COMPLETE.",
+    "Have an independent verifier sign the claim result."
+  ],
+  "boundaries": [
+    "Do not change R2 globally from this history replay.",
+    "Do not classify every skipped step as a failure.",
+    "Do not change production branches or current Stone Money publication status."
+  ]
+}
