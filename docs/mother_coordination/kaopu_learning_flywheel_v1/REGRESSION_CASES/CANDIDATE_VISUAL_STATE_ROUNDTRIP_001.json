@@ -1,0 +1,46 @@
+{
+  "id": "VISUAL-STATE-ROUNDTRIP-001",
+  "status": "Candidate",
+  "scope": "single-Mother trial for reversible visual controls that mutate renderer, material, visibility, camera or overlay state",
+  "trigger": "a workflow and final browser state pass while a captured intermediate or restored view remains visually contaminated",
+  "requiredReceiptFields": [
+    "testedSubjectSha",
+    "controlId",
+    "baselineStateTuple",
+    "baselineTupleFrozen",
+    "transitionSequence",
+    "returnedLogicalState",
+    "returnedStateTuple",
+    "tupleEqualityDecision",
+    "repeatCycleDecision",
+    "paintedEvidenceBefore",
+    "paintedEvidenceAfterReturn",
+    "visualEnvironment",
+    "visualDiffDecision",
+    "failedTransition"
+  ],
+  "assertions": [
+    "the restore oracle is an immutable snapshot captured before the first transition, not a mutable object that the transition can contaminate",
+    "the exact ordered transition sequence is executed and recorded",
+    "returning the UI boolean to its initial value is insufficient without equality of every claim-relevant renderer state field",
+    "at least one repeated round trip must produce the same state tuple as the original baseline",
+    "state tuple equality and painted visual evidence are complementary and neither substitutes for the other",
+    "a real visual failure rejects the visual-restoration claim without erasing separately valid numerical or workflow evidence",
+    "visual comparison environment and tolerance must be pinned and versioned"
+  ],
+  "states": [
+    "TECHNICAL_RUN_COMPLETE",
+    "VISUAL_STATE_ROUNDTRIP_VERIFIED",
+    "HOLD_VISUAL_STATE_ROUNDTRIP_INCOMPLETE",
+    "REJECTED_BY_VISUAL_OBSERVATION",
+    "ROOT_CAUSE_CONFIRMED"
+  ],
+  "activation": {
+    "posted": false,
+    "acknowledged": false,
+    "implemented": false,
+    "gateRun": false,
+    "adopted": false,
+    "userAccepted": false
+  }
+}

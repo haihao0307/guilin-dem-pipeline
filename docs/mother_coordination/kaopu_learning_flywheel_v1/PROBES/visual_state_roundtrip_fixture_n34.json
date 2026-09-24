@@ -1,0 +1,121 @@
+{
+  "schema": "kaopu.visual-state-roundtrip-fixture/1.0",
+  "round": "N34",
+  "observations": {
+    "r007First": {
+      "testedSubjectSha": "2ae157f09512db7505ff64a1f78dfce4a97f039b",
+      "workflowRunId": 35890512697,
+      "workflowConclusion": "success",
+      "allWorkflowStepsSucceeded": true,
+      "actualVisualFailure": "right-side candidate remained semi-transparent after ghost was switched off",
+      "failureCaughtBy": "manual inspection of captured browser pixels"
+    },
+    "r007Corrected": {
+      "testedSubjectSha": "d1e9b56f6456673d214ed165a8801a0beca0d249",
+      "workflowRunId": 35891489740,
+      "workflowConclusion": "success",
+      "repair": "freeze original opacity/transparent/depthWrite tuple and restore from that immutable snapshot",
+      "regression": "compare restored material tuple and repeat a ghost on/off cycle",
+      "manualVisualAcceptance": false
+    }
+  },
+  "cases": [
+    {
+      "id": "r007-first-run-technical-success-remains-valid",
+      "claim": "TECHNICAL_RUN_COMPLETE",
+      "evidence": {
+        "immutableSubjectBound": true,
+        "workflowSuccess": true,
+        "finalBrowserReady": true,
+        "actualVisualFailureObserved": true
+      },
+      "expectedDecision": "CLAIM_VERIFIED"
+    },
+    {
+      "id": "r007-first-run-visual-claim-rejected",
+      "claim": "VISUAL_STATE_ROUNDTRIP_VERIFIED",
+      "evidence": {
+        "immutableSubjectBound": true,
+        "actualVisualFailureObserved": true
+      },
+      "expectedDecision": "REJECTED_BY_VISUAL_OBSERVATION"
+    },
+    {
+      "id": "final-toggle-boolean-is-insufficient",
+      "claim": "VISUAL_STATE_ROUNDTRIP_VERIFIED",
+      "evidence": {
+        "immutableSubjectBound": true,
+        "transitionSequenceRecorded": true,
+        "returnedToBaselineState": true
+      },
+      "expectedDecision": "HOLD_VISUAL_STATE_ROUNDTRIP_INCOMPLETE"
+    },
+    {
+      "id": "mutable-default-cannot-be-baseline",
+      "claim": "VISUAL_STATE_ROUNDTRIP_VERIFIED",
+      "evidence": {
+        "immutableSubjectBound": true,
+        "transitionSequenceRecorded": true,
+        "returnedToBaselineState": true,
+        "fullTupleEqualityAfterReturn": true,
+        "repeatCycleEquality": true,
+        "paintedVisualEvidenceAfterReturn": true,
+        "visualEnvironmentPinned": true
+      },
+      "expectedDecision": "HOLD_VISUAL_STATE_ROUNDTRIP_INCOMPLETE"
+    },
+    {
+      "id": "state-tuple-without-pixels-can-miss-unmodeled-output",
+      "claim": "VISUAL_STATE_ROUNDTRIP_VERIFIED",
+      "evidence": {
+        "immutableSubjectBound": true,
+        "immutableBaselineTuple": true,
+        "transitionSequenceRecorded": true,
+        "returnedToBaselineState": true,
+        "fullTupleEqualityAfterReturn": true,
+        "repeatCycleEquality": true,
+        "visualEnvironmentPinned": true
+      },
+      "expectedDecision": "HOLD_VISUAL_STATE_ROUNDTRIP_INCOMPLETE"
+    },
+    {
+      "id": "pixels-without-state-tuple-cannot-prove-restoration",
+      "claim": "VISUAL_STATE_ROUNDTRIP_VERIFIED",
+      "evidence": {
+        "immutableSubjectBound": true,
+        "immutableBaselineTuple": true,
+        "transitionSequenceRecorded": true,
+        "returnedToBaselineState": true,
+        "repeatCycleEquality": true,
+        "paintedVisualEvidenceAfterReturn": true,
+        "visualEnvironmentPinned": true
+      },
+      "expectedDecision": "HOLD_VISUAL_STATE_ROUNDTRIP_INCOMPLETE"
+    },
+    {
+      "id": "r007-corrected-roundtrip",
+      "claim": "VISUAL_STATE_ROUNDTRIP_VERIFIED",
+      "evidence": {
+        "immutableSubjectBound": true,
+        "immutableBaselineTuple": true,
+        "transitionSequenceRecorded": true,
+        "returnedToBaselineState": true,
+        "fullTupleEqualityAfterReturn": true,
+        "repeatCycleEquality": true,
+        "paintedVisualEvidenceAfterReturn": true,
+        "visualEnvironmentPinned": true
+      },
+      "expectedDecision": "ROUNDTRIP_VERIFIED"
+    },
+    {
+      "id": "r007-repair-diff-supports-bounded-root-cause",
+      "claim": "ROOT_CAUSE_CONFIRMED",
+      "evidence": {
+        "failureSignatureBound": true,
+        "repairDiffBound": true,
+        "counterfactualReplayPassed": true
+      },
+      "expectedDecision": "ROOT_CAUSE_CONFIRMED"
+    }
+  ]
+}

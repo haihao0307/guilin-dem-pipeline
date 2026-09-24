@@ -1,0 +1,93 @@
+{
+  "schema": "kaopu.learning-probe/1.0",
+  "round": "N34",
+  "question": "Can a green final-state browser run prove a reversible visual control restores its original rendered state?",
+  "passed": 8,
+  "total": 8,
+  "allPassed": true,
+  "results": [
+    {
+      "id": "r007-first-run-technical-success-remains-valid",
+      "claim": "TECHNICAL_RUN_COMPLETE",
+      "expectedDecision": "CLAIM_VERIFIED",
+      "actualDecision": "CLAIM_VERIFIED",
+      "missing": [],
+      "passed": true
+    },
+    {
+      "id": "r007-first-run-visual-claim-rejected",
+      "claim": "VISUAL_STATE_ROUNDTRIP_VERIFIED",
+      "expectedDecision": "REJECTED_BY_VISUAL_OBSERVATION",
+      "actualDecision": "REJECTED_BY_VISUAL_OBSERVATION",
+      "missing": [],
+      "passed": true
+    },
+    {
+      "id": "final-toggle-boolean-is-insufficient",
+      "claim": "VISUAL_STATE_ROUNDTRIP_VERIFIED",
+      "expectedDecision": "HOLD_VISUAL_STATE_ROUNDTRIP_INCOMPLETE",
+      "actualDecision": "HOLD_VISUAL_STATE_ROUNDTRIP_INCOMPLETE",
+      "missing": [
+        "immutableBaselineTuple",
+        "fullTupleEqualityAfterReturn",
+        "repeatCycleEquality",
+        "paintedVisualEvidenceAfterReturn",
+        "visualEnvironmentPinned"
+      ],
+      "passed": true
+    },
+    {
+      "id": "mutable-default-cannot-be-baseline",
+      "claim": "VISUAL_STATE_ROUNDTRIP_VERIFIED",
+      "expectedDecision": "HOLD_VISUAL_STATE_ROUNDTRIP_INCOMPLETE",
+      "actualDecision": "HOLD_VISUAL_STATE_ROUNDTRIP_INCOMPLETE",
+      "missing": [
+        "immutableBaselineTuple"
+      ],
+      "passed": true
+    },
+    {
+      "id": "state-tuple-without-pixels-can-miss-unmodeled-output",
+      "claim": "VISUAL_STATE_ROUNDTRIP_VERIFIED",
+      "expectedDecision": "HOLD_VISUAL_STATE_ROUNDTRIP_INCOMPLETE",
+      "actualDecision": "HOLD_VISUAL_STATE_ROUNDTRIP_INCOMPLETE",
+      "missing": [
+        "paintedVisualEvidenceAfterReturn"
+      ],
+      "passed": true
+    },
+    {
+      "id": "pixels-without-state-tuple-cannot-prove-restoration",
+      "claim": "VISUAL_STATE_ROUNDTRIP_VERIFIED",
+      "expectedDecision": "HOLD_VISUAL_STATE_ROUNDTRIP_INCOMPLETE",
+      "actualDecision": "HOLD_VISUAL_STATE_ROUNDTRIP_INCOMPLETE",
+      "missing": [
+        "fullTupleEqualityAfterReturn"
+      ],
+      "passed": true
+    },
+    {
+      "id": "r007-corrected-roundtrip",
+      "claim": "VISUAL_STATE_ROUNDTRIP_VERIFIED",
+      "expectedDecision": "ROUNDTRIP_VERIFIED",
+      "actualDecision": "ROUNDTRIP_VERIFIED",
+      "missing": [],
+      "passed": true
+    },
+    {
+      "id": "r007-repair-diff-supports-bounded-root-cause",
+      "claim": "ROOT_CAUSE_CONFIRMED",
+      "expectedDecision": "ROOT_CAUSE_CONFIRMED",
+      "actualDecision": "ROOT_CAUSE_CONFIRMED",
+      "missing": [],
+      "passed": true
+    }
+  ],
+  "status": "Candidate historical replay verified",
+  "limits": {
+    "productionGateInstalled": false,
+    "globalR2Changed": false,
+    "crossMotherValidated": false,
+    "userAccepted": false
+  }
+}
