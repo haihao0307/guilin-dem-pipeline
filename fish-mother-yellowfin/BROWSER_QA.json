@@ -1,5 +1,5 @@
 {
-  "version": "FISH_PECTORAL_R011",
+  "version": "FISH_REMAINING_FINS_R012",
   "runtime": "real Chromium / WebGL2",
   "fileProtocol": true,
   "publicOnline": false,
@@ -284,7 +284,7 @@
     "sourceSeamEdges": 216,
     "maxGap": 0,
     "endpointEvents": 502,
-    "maxRuntimeEndpointTraceError": 3.578035677795419e-8,
+    "maxRuntimeEndpointTraceError": 3.578035672287334e-8,
     "anatomicalApproval": false
   },
   "interfaceChecks": [
@@ -488,7 +488,7 @@
     }
   ],
   "openfix": {
-    "version": "FISH_PECTORAL_R011",
+    "version": "FISH_REMAINING_FINS_R012",
     "ready": true,
     "received": 58908280,
     "total": 58908280,
@@ -502,15 +502,15 @@
       },
       {
         "phase": "initialize-3d",
-        "ms": 1010
+        "ms": 603
       },
       {
         "phase": "teacher-parsed",
-        "ms": 1883
+        "ms": 1395
       },
       {
         "phase": "first-render",
-        "ms": 6295
+        "ms": 3561
       }
     ]
   },
@@ -598,7 +598,7 @@
     "clampedNonLoopSamples": 209,
     "sourceAnchorMaxError": 7.217129994461865e-8,
     "candidateAnchorMaxError": 7.217129994461865e-8,
-    "distanceMaxError": 8.607804442319067e-9,
+    "distanceMaxError": 8.607804441451705e-9,
     "mouthPolylineMaxError": 6.118647133401822e-8,
     "threshold": 0.000001,
     "passed": true,
@@ -890,8 +890,189 @@
     }
   ],
   "pectoralAdditivePass": true,
+  "otherFinStudy": {
+    "version": "FISH_REMAINING_FINS_R012",
+    "patchIds": [
+      "dorsal_front",
+      "dorsal_rear",
+      "pelvic_l",
+      "pelvic_r",
+      "anal",
+      "finlets_d",
+      "finlets_v"
+    ],
+    "sourceTriangles": {
+      "dorsal_front": 1160,
+      "dorsal_rear": 376,
+      "pelvic_l": 355,
+      "pelvic_r": 355,
+      "anal": 346,
+      "finlets_d": 516,
+      "finlets_v": 496
+    },
+    "sourceVertexIndices": {
+      "dorsal_front": 660,
+      "dorsal_rear": 214,
+      "pelvic_l": 205,
+      "pelvic_r": 205,
+      "anal": 201,
+      "finlets_d": 317,
+      "finlets_v": 301
+    },
+    "sourceInterfaceEdges": {
+      "dorsal_front": {
+        "trunk": 30
+      },
+      "dorsal_rear": {
+        "trunk": 16
+      },
+      "pelvic_l": {
+        "trunk": 11
+      },
+      "pelvic_r": {
+        "trunk": 11
+      },
+      "anal": {
+        "trunk": 12
+      },
+      "finlets_d": {
+        "tail": 4,
+        "trunk": 22
+      },
+      "finlets_v": {
+        "tail": 2,
+        "trunk": 22
+      }
+    },
+    "sourceControlGroups": {
+      "dorsal_front": 20,
+      "dorsal_rear": 5,
+      "pelvic_l": 4,
+      "pelvic_r": 4,
+      "anal": 3,
+      "finlets_d": 3,
+      "finlets_v": 3
+    },
+    "sourceSupportNodes": {
+      "dorsal_front": 59,
+      "dorsal_rear": 16,
+      "pelvic_l": 9,
+      "pelvic_r": 9,
+      "anal": 11,
+      "finlets_d": 13,
+      "finlets_v": 12
+    },
+    "controlContextNodes": 81,
+    "sourceTracks": 240,
+    "sourceTrackMemberships": 387,
+    "sourceTracksByPatch": {
+      "dorsal_front": 177,
+      "dorsal_rear": 48,
+      "pelvic_l": 27,
+      "pelvic_r": 27,
+      "anal": 33,
+      "finlets_d": 39,
+      "finlets_v": 36
+    },
+    "samples": 209,
+    "restSamples": 1,
+    "maxRestInterfaceGap": 0,
+    "maxObservedInterfaceGap": 0,
+    "sourceArrayAggregate": "5c8abd79a95ad18412acc31a600cce7908cb82c31d1cf020a7927c26fa661e63",
+    "sourceBinarySha256": "ce463e3c6953e86e38789ead946bcc70a1dfb11f19db27c7dc46fd6e85f950e9",
+    "sourceBinaryUnchanged": true,
+    "mirroredPatchesCreated": false,
+    "weldedVertices": 0,
+    "newMotionCreated": false,
+    "physicalLengthKnown": false,
+    "anatomicalPartitionApproved": false,
+    "stageAComplete": false,
+    "independentGenerator": false,
+    "productionReady": false
+  },
+  "otherFinAudit": {
+    "restSamples": 1,
+    "clampedTimes": 209,
+    "comparedRuntimes": 2,
+    "patches": [
+      "dorsal_front",
+      "dorsal_rear",
+      "pelvic_l",
+      "pelvic_r",
+      "anal",
+      "finlets_d",
+      "finlets_v"
+    ],
+    "sourceTriangles": {
+      "dorsal_front": 1160,
+      "dorsal_rear": 376,
+      "pelvic_l": 355,
+      "pelvic_r": 355,
+      "anal": 346,
+      "finlets_d": 516,
+      "finlets_v": 496
+    },
+    "controlContextNodes": 81,
+    "sourceTracks": 240,
+    "pointMaxError": 3.5667759996643845e-8,
+    "matrixMaxError": 3.678724080913298e-8,
+    "measureMaxError": 2.0599999095427535e-8,
+    "surfaceAreaMaxError": 8.379648121226158e-9,
+    "interfaceMaxError": 0,
+    "aliasMaxGap": 0,
+    "lengthTolerance": 0.000001,
+    "areaTolerance": 1e-8,
+    "passed": true,
+    "mirroredPatchesCreated": false,
+    "anatomicalApproval": false
+  },
+  "otherFinSelections": [
+    {
+      "id": "dorsal_front",
+      "sourceTriangles": 1160,
+      "sourcePatchSurfaceArea": 0.037448425481200434,
+      "sourceVertex": 2597
+    },
+    {
+      "id": "dorsal_rear",
+      "sourceTriangles": 376,
+      "sourcePatchSurfaceArea": 0.0250064475612799,
+      "sourceVertex": 172
+    },
+    {
+      "id": "pelvic_l",
+      "sourceTriangles": 355,
+      "sourcePatchSurfaceArea": 0.01615605772475193,
+      "sourceVertex": 1653
+    },
+    {
+      "id": "pelvic_r",
+      "sourceTriangles": 355,
+      "sourcePatchSurfaceArea": 0.016133758363787422,
+      "sourceVertex": 3062
+    },
+    {
+      "id": "anal",
+      "sourceTriangles": 346,
+      "sourcePatchSurfaceArea": 0.021998822658033042,
+      "sourceVertex": 1863
+    },
+    {
+      "id": "finlets_d",
+      "sourceTriangles": 516,
+      "sourcePatchSurfaceArea": 0.0032024164698823275,
+      "sourceVertex": 2661
+    },
+    {
+      "id": "finlets_v",
+      "sourceTriangles": 496,
+      "sourcePatchSurfaceArea": 0.004658759334405594,
+      "sourceVertex": 242
+    }
+  ],
+  "otherFinAdditivePass": true,
   "initial": {
-    "version": "FISH_PECTORAL_R011",
+    "version": "FISH_REMAINING_FINS_R012",
     "ready": true,
     "errors": [],
     "frames": 3,
@@ -1137,6 +1318,107 @@
       "productionReady": false
     },
     "pectoralEnabled": false,
+    "otherFinStudy": {
+      "version": "FISH_REMAINING_FINS_R012",
+      "patchIds": [
+        "dorsal_front",
+        "dorsal_rear",
+        "pelvic_l",
+        "pelvic_r",
+        "anal",
+        "finlets_d",
+        "finlets_v"
+      ],
+      "sourceTriangles": {
+        "dorsal_front": 1160,
+        "dorsal_rear": 376,
+        "pelvic_l": 355,
+        "pelvic_r": 355,
+        "anal": 346,
+        "finlets_d": 516,
+        "finlets_v": 496
+      },
+      "sourceVertexIndices": {
+        "dorsal_front": 660,
+        "dorsal_rear": 214,
+        "pelvic_l": 205,
+        "pelvic_r": 205,
+        "anal": 201,
+        "finlets_d": 317,
+        "finlets_v": 301
+      },
+      "sourceInterfaceEdges": {
+        "dorsal_front": {
+          "trunk": 30
+        },
+        "dorsal_rear": {
+          "trunk": 16
+        },
+        "pelvic_l": {
+          "trunk": 11
+        },
+        "pelvic_r": {
+          "trunk": 11
+        },
+        "anal": {
+          "trunk": 12
+        },
+        "finlets_d": {
+          "tail": 4,
+          "trunk": 22
+        },
+        "finlets_v": {
+          "tail": 2,
+          "trunk": 22
+        }
+      },
+      "sourceControlGroups": {
+        "dorsal_front": 20,
+        "dorsal_rear": 5,
+        "pelvic_l": 4,
+        "pelvic_r": 4,
+        "anal": 3,
+        "finlets_d": 3,
+        "finlets_v": 3
+      },
+      "sourceSupportNodes": {
+        "dorsal_front": 59,
+        "dorsal_rear": 16,
+        "pelvic_l": 9,
+        "pelvic_r": 9,
+        "anal": 11,
+        "finlets_d": 13,
+        "finlets_v": 12
+      },
+      "controlContextNodes": 81,
+      "sourceTracks": 240,
+      "sourceTrackMemberships": 387,
+      "sourceTracksByPatch": {
+        "dorsal_front": 177,
+        "dorsal_rear": 48,
+        "pelvic_l": 27,
+        "pelvic_r": 27,
+        "anal": 33,
+        "finlets_d": 39,
+        "finlets_v": 36
+      },
+      "samples": 209,
+      "restSamples": 1,
+      "maxRestInterfaceGap": 0,
+      "maxObservedInterfaceGap": 0,
+      "sourceArrayAggregate": "5c8abd79a95ad18412acc31a600cce7908cb82c31d1cf020a7927c26fa661e63",
+      "sourceBinarySha256": "ce463e3c6953e86e38789ead946bcc70a1dfb11f19db27c7dc46fd6e85f950e9",
+      "sourceBinaryUnchanged": true,
+      "mirroredPatchesCreated": false,
+      "weldedVertices": 0,
+      "newMotionCreated": false,
+      "physicalLengthKnown": false,
+      "anatomicalPartitionApproved": false,
+      "stageAComplete": false,
+      "independentGenerator": false,
+      "productionReady": false
+    },
+    "otherFinEnabled": false,
     "time": 0,
     "drawCalls": 5
   },
@@ -1347,8 +1629,8 @@
     "segments": 22816
   },
   "playTimes": [
-    0.15000000000000002,
-    0.2
+    0.2,
+    0.39999999999999997
   ],
   "errors": [],
   "externalRequests": [],
@@ -1356,6 +1638,6 @@
   "desktopPass": true,
   "mobilePass": true,
   "interactionsPass": true,
-  "fileBytes": 88658689,
-  "htmlSha256": "34725bd559733f8f12d49feecf6efa388886b0ddfc02d35158b34eaee8a68e35"
+  "fileBytes": 94452856,
+  "htmlSha256": "d4ea8e9092cade31693a6de4f654a7d7a47efe278de2a1a6b286f4585aaac7d3"
 }
