@@ -1,0 +1,34 @@
+{
+  "caseId": "CROSS-OBJECT-IDENTITY-CONFLATION-001",
+  "status": "CANDIDATE_REAL_CORRECTION_REPLAY_PASSED_NOT_ADOPTED",
+  "active": false,
+  "scope": "Stone Money multi-artifact publication-lane trial",
+  "trigger": "A receipt or audit names one artifact while a run contains multiple source, package, deployable and proof objects.",
+  "historicalFailure": {
+    "issue": 91,
+    "incorrectCommentId": 5810551382,
+    "correctionCommentId": 5812115818,
+    "mixedIdentity": "160774272 bytes from another source/package combined with the R015.3 HTML digest",
+    "correctIdentity": "956838 bytes / sha256:7acf5fce0949e8880fd64575863f27ffa4113ee63b78cc4f598d1bc96c8efe68"
+  },
+  "mustNever": [
+    "Bytes and digest are validated independently against different manifest entries.",
+    "A generic source/package size is reported as the deployable HTML size.",
+    "A filename or version label substitutes for an exact descriptor.",
+    "A successful workflow overrides a descriptor mismatch."
+  ],
+  "requiredDescriptorFields": [
+    "artifactRole",
+    "canonicalPath",
+    "mediaType",
+    "producerStep",
+    "bytes",
+    "digest"
+  ],
+  "states": [
+    "HOLD_SUBJECT_DESCRIPTOR_MISSING",
+    "HOLD_SUBJECT_DESCRIPTOR_MISMATCH",
+    "SUBJECT_DESCRIPTOR_VERIFIED"
+  ],
+  "activationGate": "One real Mother implementation on a multi-artifact publication run plus independent verifier GATE-RUN; coordinator review before wider activation."
+}

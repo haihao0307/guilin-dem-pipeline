@@ -1,0 +1,78 @@
+{
+  "caseId": "CROSS-OBJECT-IDENTITY-CONFLATION-001",
+  "observation": {
+    "issue": 91,
+    "incorrectCommentId": 5810551382,
+    "correctionCommentId": 5812115818,
+    "runId": 35973024167,
+    "headSha": "66fb787c91772cf4efa6b1ba2618bff8c93032e6"
+  },
+  "evidenceManifest": [
+    {
+      "artifactRole": "deployable-html",
+      "canonicalPath": "assembled/STONE_MONEY_ISLAND_R0153.html",
+      "mediaType": "text/html",
+      "bytes": 956838,
+      "digest": "sha256:7acf5fce0949e8880fd64575863f27ffa4113ee63b78cc4f598d1bc96c8efe68",
+      "producerStep": "reassemble-exact-r0153"
+    },
+    {
+      "artifactRole": "different-source-or-package",
+      "canonicalPath": "unknown-from-correction",
+      "mediaType": "application/octet-stream",
+      "bytes": 160774272,
+      "digest": null,
+      "producerStep": "unknown-from-correction"
+    }
+  ],
+  "claims": [
+    {
+      "id": "historical-mixed-identity",
+      "subject": {
+        "artifactRole": "deployable-html",
+        "canonicalPath": "assembled/STONE_MONEY_ISLAND_R0153.html",
+        "mediaType": "text/html",
+        "bytes": 160774272,
+        "digest": "sha256:7acf5fce0949e8880fd64575863f27ffa4113ee63b78cc4f598d1bc96c8efe68",
+        "producerStep": "reassemble-exact-r0153"
+      },
+      "expectedTupleState": "HOLD_SUBJECT_DESCRIPTOR_MISMATCH"
+    },
+    {
+      "id": "corrected-r0153-html",
+      "subject": {
+        "artifactRole": "deployable-html",
+        "canonicalPath": "assembled/STONE_MONEY_ISLAND_R0153.html",
+        "mediaType": "text/html",
+        "bytes": 956838,
+        "digest": "sha256:7acf5fce0949e8880fd64575863f27ffa4113ee63b78cc4f598d1bc96c8efe68",
+        "producerStep": "reassemble-exact-r0153"
+      },
+      "expectedTupleState": "SUBJECT_DESCRIPTOR_VERIFIED"
+    },
+    {
+      "id": "right-size-wrong-role",
+      "subject": {
+        "artifactRole": "source-package",
+        "canonicalPath": "assembled/STONE_MONEY_ISLAND_R0153.html",
+        "mediaType": "text/html",
+        "bytes": 956838,
+        "digest": "sha256:7acf5fce0949e8880fd64575863f27ffa4113ee63b78cc4f598d1bc96c8efe68",
+        "producerStep": "reassemble-exact-r0153"
+      },
+      "expectedTupleState": "HOLD_SUBJECT_DESCRIPTOR_MISMATCH"
+    },
+    {
+      "id": "right-fields-wrong-producer-step",
+      "subject": {
+        "artifactRole": "deployable-html",
+        "canonicalPath": "assembled/STONE_MONEY_ISLAND_R0153.html",
+        "mediaType": "text/html",
+        "bytes": 956838,
+        "digest": "sha256:7acf5fce0949e8880fd64575863f27ffa4113ee63b78cc4f598d1bc96c8efe68",
+        "producerStep": "package-full-source"
+      },
+      "expectedTupleState": "HOLD_SUBJECT_DESCRIPTOR_MISMATCH"
+    }
+  ]
+}

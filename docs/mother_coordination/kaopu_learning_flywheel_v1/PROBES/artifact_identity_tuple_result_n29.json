@@ -1,0 +1,76 @@
+{
+  "schema": "kaopu.artifact-identity-tuple-probe/1.0",
+  "caseId": "CROSS-OBJECT-IDENTITY-CONFLATION-001",
+  "sourceObservation": {
+    "issue": 91,
+    "incorrectCommentId": 5810551382,
+    "correctionCommentId": 5812115818,
+    "runId": 35973024167,
+    "headSha": "66fb787c91772cf4efa6b1ba2618bff8c93032e6"
+  },
+  "currentBestView": "Artifact identity fields are an atomic descriptor tuple; scalar values found on different objects cannot be recombined into a valid subject.",
+  "cases": [
+    {
+      "id": "historical-mixed-identity",
+      "legacyState": "LEGACY_SCALAR_FIELDS_SEEN",
+      "tupleState": "HOLD_SUBJECT_DESCRIPTOR_MISMATCH",
+      "expectedTupleState": "HOLD_SUBJECT_DESCRIPTOR_MISMATCH",
+      "passed": true
+    },
+    {
+      "id": "corrected-r0153-html",
+      "legacyState": "LEGACY_SCALAR_FIELDS_SEEN",
+      "tupleState": "SUBJECT_DESCRIPTOR_VERIFIED",
+      "expectedTupleState": "SUBJECT_DESCRIPTOR_VERIFIED",
+      "passed": true
+    },
+    {
+      "id": "right-size-wrong-role",
+      "legacyState": "LEGACY_SCALAR_FIELDS_SEEN",
+      "tupleState": "HOLD_SUBJECT_DESCRIPTOR_MISMATCH",
+      "expectedTupleState": "HOLD_SUBJECT_DESCRIPTOR_MISMATCH",
+      "passed": true
+    },
+    {
+      "id": "right-fields-wrong-producer-step",
+      "legacyState": "LEGACY_SCALAR_FIELDS_SEEN",
+      "tupleState": "HOLD_SUBJECT_DESCRIPTOR_MISMATCH",
+      "expectedTupleState": "HOLD_SUBJECT_DESCRIPTOR_MISMATCH",
+      "passed": true
+    }
+  ],
+  "assertions": [
+    {
+      "id": "historical-mixed-fields-pass-weak-gate",
+      "passed": true
+    },
+    {
+      "id": "historical-mixed-tuple-held",
+      "passed": true
+    },
+    {
+      "id": "corrected-tuple-verified",
+      "passed": true
+    },
+    {
+      "id": "wrong-role-held",
+      "passed": true
+    },
+    {
+      "id": "wrong-producer-step-held",
+      "passed": true
+    },
+    {
+      "id": "all-case-expectations-met",
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "status": "CANDIDATE_HISTORY_REPLAY_PASSED_NOT_ADOPTED",
+  "unknown": [
+    "Mother implementation",
+    "independent verifier receipt",
+    "effect on correction recurrence or first-pass acceptance",
+    "global applicability outside multi-artifact delivery claims"
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "schema": "kaopu.mother-routing/2.0",
+  "round": "N29",
+  "status": "PREPARED_NOT_POSTED",
+  "target": {
+    "mother": "Stone Money publication lane",
+    "issue": 91,
+    "comment": null,
+    "nextApplicableTask": "next publication receipt containing more than one artifact identity"
+  },
+  "increment": {
+    "classification": "Candidate partial / real correction replay verified",
+    "rule": "Validate artifactRole, canonicalPath, mediaType, producerStep, bytes and digest as one atomic descriptor entry; never satisfy scalar fields from different objects."
+  },
+  "acceptancePath": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE-RUN": false,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  },
+  "minimumTrial": [
+    "Generate one immutable evidence manifest with one descriptor per artifact.",
+    "Have FINAL_CLAIM_RECEIPT reference a descriptor entry rather than restating loose size/digest fields.",
+    "Reject cross-entry scalar matches with HOLD_SUBJECT_DESCRIPTOR_MISMATCH.",
+    "Render the human summary from the verified descriptor.",
+    "Obtain an independent verifier receipt before wider adoption."
+  ],
+  "regressionCandidate": "CROSS-OBJECT-IDENTITY-CONFLATION-001",
+  "globalR2Change": false
+}
+
