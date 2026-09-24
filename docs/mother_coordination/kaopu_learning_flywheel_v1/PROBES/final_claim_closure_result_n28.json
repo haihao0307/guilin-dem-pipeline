@@ -1,0 +1,40 @@
+{
+  "suite": "KAOPU final-claim closure replay N28",
+  "passed": true,
+  "hypothesis": "A named claim may be promoted only by a final receipt issued after all claim-critical steps and bound to the exact run, head, subject and evidence digests.",
+  "oldGreenSkippedHistory": {
+    "runId": 35936763006,
+    "state": "HOLD_CLAIM_CRITICAL_EVIDENCE_INCOMPLETE",
+    "passed": false,
+    "criticalStepFailures": 5,
+    "technicalProofChecksPassed": 0
+  },
+  "r0153ActualHistory": {
+    "runId": 35973024167,
+    "headSha": "66fb787c91772cf4efa6b1ba2618bff8c93032e6",
+    "technicalEvidenceState": "TECHNICAL_EVIDENCE_COMPLETE",
+    "technicalProofChecksPassed": 4,
+    "claimState": "HOLD_FINAL_CLAIM_UNSEALED",
+    "claimPassed": false,
+    "reason": "All technical evidence atoms pass, but PUBLICATION_PROOF was produced before the public-browser step and still records shareAllowed=false/publicBrowserPassed=false. No final closure receipt binds the complete evidence set."
+  },
+  "falsificationControl": {
+    "state": "CLAIM_VERIFIED",
+    "passed": true,
+    "closureChecks": {
+      "claimMatches": true,
+      "runMatches": true,
+      "subjectMatches": true,
+      "evidenceSetMatches": true,
+      "issuedAfterCriticalSteps": true,
+      "claimStateVerified": true
+    }
+  },
+  "currentBestView": "Keep evidence atoms immutable and scope-specific. Derive a final named claim once, after the last critical step, in a digest-bound closure receipt. Missing closure is HOLD, not implicit success.",
+  "boundary": [
+    "R015.3 exact source, public bytes and desktop/390x844 Chromium evidence are real and remain valid.",
+    "This gate does not imply real iPhone verification, independent human visual acceptance, Game baseline promotion or user acceptance.",
+    "The candidate does not modify the production workflow or global R2.",
+    "Mother implementation and independent verifier adoption remain unknown."
+  ]
+}
