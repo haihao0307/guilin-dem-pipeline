@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 // Read-only observations over the remaining R005 source patches.
 export function installRemainingFinStudy(ctx) {
-  const {compiled, meshes, qa, scenes, cam, controls, preset, regionTool, getSurfaces} = ctx;
+  const {compiled, meshes, state: fishState, qa, scenes, cam, controls, preset, regionTool, getSurfaces} = ctx;
   const $ = selector => document.querySelector(selector);
   const evidence = $('#otherFinEvidence');
   const data = JSON.parse(evidence.textContent);
@@ -125,8 +125,8 @@ export function installRemainingFinStudy(ctx) {
     fill(markers, [...observation.interfaceMean.toArray(), ...observation.probe.toArray()]);
     edges.visible = rig.visible = markers.visible = true;
     trail.visible = state.trail;
-    qa.otherFinCurrent = {id: definition.id, time: state.time, rest: state.rest, isolated: state.isolated, sourceVertex: definition.probe.sourceVertex, interfaceGaps: observation.interfaceGaps, metrics: observation.metrics};
-    $('#otherFinLive').textContent = `${definition.label}\n${state.rest ? '原静息态' : `原 Swim ${state.time.toFixed(4)} s`} · ${state.isolated ? '仅显示原面片' : '全鱼观察'}\n源顶点探针 ${definition.probe.sourceVertex}\n到原接口均值 ${observation.metrics.probeToInterfaceMean.toFixed(6)}\n体架垂向位移 ${observation.metrics.bodyFrameProbeVertical.toFixed(6)}\n体架侧向位移 ${observation.metrics.bodyFrameProbeLateral.toFixed(6)}\n原三角面面积 ${observation.metrics.sourcePatchSurfaceArea.toFixed(6)}\n最大接口间距 ${observation.metrics.interfaceMaxGap.toExponential(2)}\n原接口邻面 ${Object.entries(observation.interfaceGaps).map(([name, gap]) => `${name}: ${gap.toExponential(2)}`).join(' · ')}`;
+    qa.otherFinCurrent = {id: definition.id, time: fishState.time, rest: fishState.rest, isolated: state.isolated, sourceVertex: definition.probe.sourceVertex, interfaceGaps: observation.interfaceGaps, metrics: observation.metrics};
+    $('#otherFinLive').textContent = `${definition.label}\n${fishState.rest ? '原静息态' : `原 Swim ${fishState.time.toFixed(4)} s`} · ${state.isolated ? '仅显示原面片' : '全鱼观察'}\n源顶点探针 ${definition.probe.sourceVertex}\n到原接口均值 ${observation.metrics.probeToInterfaceMean.toFixed(6)}\n体架垂向位移 ${observation.metrics.bodyFrameProbeVertical.toFixed(6)}\n体架侧向位移 ${observation.metrics.bodyFrameProbeLateral.toFixed(6)}\n原三角面面积 ${observation.metrics.sourcePatchSurfaceArea.toFixed(6)}\n最大接口间距 ${observation.metrics.interfaceMaxGap.toExponential(2)}\n原接口邻面 ${Object.entries(observation.interfaceGaps).map(([name, gap]) => `${name}: ${gap.toExponential(2)}`).join(' · ')}`;
   }
   function hide() {
     const wasIsolated = state.isolated;
@@ -183,8 +183,8 @@ export function installRemainingFinStudy(ctx) {
     const definition = selected();
     const index = definition.summary.bodyFrameProbeVertical[`${kind}Index`];
     ctx.jumpExact(data.samples[index].time);
-    $('#time').value = state.time;
-    $('#timeLabel').textContent = `${state.time.toFixed(3)} s · 源样本`;
+    $('#time').value = fishState.time;
+    $('#timeLabel').textContent = `${fishState.time.toFixed(3)} s · 源样本`;
     qa.otherFinSelectedSample = {kind, id: definition.id, index, key: 'bodyFrameProbeVertical'};
     focus();
     update();
@@ -270,3 +270,4 @@ export function installRemainingFinStudy(ctx) {
   window.FISH_OTHER_FINS = api;
   return api;
 }
+
