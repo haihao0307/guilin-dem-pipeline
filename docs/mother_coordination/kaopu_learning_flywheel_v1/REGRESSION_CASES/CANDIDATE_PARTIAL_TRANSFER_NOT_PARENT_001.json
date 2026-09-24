@@ -1,0 +1,33 @@
+{
+  "caseId": "PARTIAL-TRANSFER-NOT-PARENT-001",
+  "status": "CANDIDATE_HISTORY_REPLAY_PASSED_NOT_ADOPTED",
+  "active": false,
+  "scope": "Stone Money R015.2 staged-source transfer trial",
+  "trigger": "A task stages a large source as ordered text/binary chunks before reconstruction.",
+  "mustNever": [
+    "A partial or corrupt chunk set becomes a publication input or next-version parent.",
+    "A decoder ignores non-alphabet truncation or ellipsization markers and promotes partial output.",
+    "SOURCE_TRANSFER_VERIFIED is declared from filenames, commit count, or a target SHA text file without reconstructing the target bytes.",
+    "Transfer integrity is described as browser verification, publication completion, or user acceptance."
+  ],
+  "requiredEvidence": [
+    "frozen target path, byte size, and SHA-256",
+    "stage marker cleared",
+    "ordered manifest with expectedChunkCount",
+    "each chunk has decoded byte size and SHA-256 descriptor",
+    "strict encoding validation and successful decoder exit",
+    "reconstructed byte size and SHA-256 match frozen target",
+    "verifiedObjectPath and parentEligible=true only for reconstructed object",
+    "independent verifier receipt"
+  ],
+  "states": [
+    "STAGING_QUARANTINE",
+    "HOLD_SOURCE_INCOMPLETE_OR_CORRUPT",
+    "SOURCE_TRANSFER_VERIFIED"
+  ],
+  "fixture": {
+    "commit": "bbe533341bd65b4d1277b80b3cf2007c04d197bc",
+    "expectedState": "HOLD_SOURCE_INCOMPLETE_OR_CORRUPT"
+  },
+  "activationGate": "One real Stone Money Mother trial plus independent verifier GATE-RUN; coordinator review required before any wider activation."
+}
