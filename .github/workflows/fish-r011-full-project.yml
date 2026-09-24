@@ -1,0 +1,128 @@
+name: Fish R011 Full Project Download
+on:
+  push:
+    branches: [handoff/fish-mother-r011-full-20260924]
+    paths:
+      - handoff/fish-r011-full/build_snapshot.py
+      - .github/workflows/fish-r011-full-project.yml
+permissions:
+  contents: write
+concurrency:
+  group: fish-r011-full-project-package
+  cancel-in-progress: false
+jobs:
+  full-download:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: packager
+          sparse-checkout: handoff/fish-r011-full
+      - uses: actions/checkout@v4
+        with:
+          ref: 675137a657c615602431641b6a26fb68da902737
+          path: code_snapshot
+          sparse-checkout: |
+            restart/fish-yellowfin-teacher-r2
+            apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace/source
+            .github/workflows
+      - uses: actions/checkout@v4
+        with:
+          ref: 4babde056ca653508c8e1af6c9079de5ecc6439c
+          path: public_snapshot
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /fish-mother-yellowfin/*
+            !/fish-mother-yellowfin/r0*/
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Assemble exact existing public project; verify every archived file and CRC
+        run: python packager/handoff/fish-r011-full/build_snapshot.py
+      - name: Unzip into a new folder and verify real standalone 3D startup
+        run: |
+          npm install --no-save playwright@1.51.1
+          npx playwright install --with-deps chromium
+          python - <<'PY'
+          import zipfile
+          with zipfile.ZipFile('FISH_MOTHER_R011_FULL_PROJECT_20260924.zip') as z:z.extractall('unzip_test')
+          PY
+          cat > smoke.mjs <<'JS'
+          import {chromium} from 'playwright';
+          import fs from 'node:fs';import path from 'node:path';import {pathToFileURL} from 'node:url';
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox','--enable-webgl','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--disable-dev-shm-usage']});
+          const report={version:'R011_PROJECT_FULL_SNAPSHOT',passed:false,scope:'Fresh unzip file-protocol smoke; not biological or physical-user-device acceptance'};
+          const errors=[],external=[];const page=await browser.newPage({viewport:{width:1440,height:940}});
+          page.on('pageerror',e=>errors.push(String(e)));page.on('request',r=>{if(/^https?:/.test(r.url()))external.push(r.url());});
+          try {
+            await page.goto(pathToFileURL(path.resolve('unzip_test/FISH_MOTHER_R011_PROJECT/index.html')).href,{waitUntil:'domcontentloaded',timeout:180000});
+            await page.waitForFunction(()=>window.FISH_BOOT?.ready&&window.FISHQA?.ready,null,{timeout:180000});
+            report.runtime=await page.evaluate(()=>({version:window.FISHQA.version,vertices:window.FISHQA.vertices,triangles:window.FISHQA.triangles,textureSizes:window.FISHQA.textureSizes,poses:[0,.5,1].map(t=>window.FISH.verify(t)),received:window.FISH_BOOT.received}));
+            if(report.runtime.version!=='FISH_PECTORAL_R011'||report.runtime.vertices!==4637||report.runtime.triangles!==7944||!report.runtime.poses.every(x=>x.passed)||errors.length||external.length)throw Error('Extracted project smoke failed');
+            await page.screenshot({path:'PACKAGE_DESKTOP.png'});await page.setViewportSize({width:390,height:844});await page.waitForTimeout(500);await page.screenshot({path:'PACKAGE_MOBILE.png'});
+            report.passed=true;report.desktopViewport=[1440,940];report.mobileViewport=[390,844];
+          } catch(e){report.error=String(e.stack||e);process.exitCode=1;}
+          finally{report.pageErrors=errors;report.externalRequests=external;fs.writeFileSync('PACKAGE_SMOKE_QA.json',JSON.stringify(report,null,2));console.log('PACKAGE_SMOKE',JSON.stringify(report));await browser.close();}
+          JS
+          node smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fish-r011-full-package-and-checks
+          path: |
+            FISH_MOTHER_R011_FULL_PROJECT_20260924.zip
+            PACKAGE_RECEIPT.json
+            PACKAGE_SMOKE_QA.json
+            PACKAGE_DESKTOP.png
+            PACKAGE_MOBILE.png
+          retention-days: 30
+      - name: Publish one downloadable release archive without touching the live workbench
+        id: release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs=require('fs');const {owner,repo}=context.repo;
+            const tag='fish-mother-r011-full-project-20260924';
+            const receipt=JSON.parse(fs.readFileSync('PACKAGE_RECEIPT.json'));
+            const qa=JSON.parse(fs.readFileSync('PACKAGE_SMOKE_QA.json'));if(!qa.passed)throw Error('ZIP smoke gate not passed');
+            const prior=await github.rest.repos.getReleaseByTag({owner,repo,tag}).catch(e=>{if(e.status!==404)throw e;return null;});
+            if(prior)throw Error('Existing release is preserved; refusing to overwrite it');
+            const body='R011 complete runnable public-project snapshot. Unzip once and open index.html. Includes the exact standalone workbench, original runtime Teacher GLB, all inherited Fish source, current data, tests, repository receipts and browser evidence.\n\nThis is NOT the complete private Library Source Vault: the originally uploaded FBX/glTF ZIP and private continuous working log remain separately preserved and are not included. No biological, generator or user-device approval is claimed.\n\nZIP bytes: '+receipt.bytes+'\nSHA-256: '+receipt.sha256+'\nVerified files: '+receipt.verifiedFileCount+'\nFresh-unzip standalone browser smoke: PASS.\nNo production file was modified.';
+            const r=await github.rest.repos.createRelease({owner,repo,tag_name:tag,target_commitish:context.sha,name:'Fish Mother R011 — complete runnable project',body,draft:true,prerelease:false,make_latest:'false'});
+            let download='';for(const name of [receipt.file,'PACKAGE_RECEIPT.json','PACKAGE_SMOKE_QA.json']){
+              const a=await github.rest.repos.uploadReleaseAsset({owner,repo,release_id:r.data.id,name,data:fs.readFileSync(name)});
+              if(name===receipt.file)download=a.data.browser_download_url;
+            }
+            await github.rest.repos.updateRelease({owner,repo,release_id:r.data.id,draft:false,make_latest:'false'});
+            core.setOutput('url',download);core.setOutput('release_id',r.data.id);console.log('FULL_PROJECT_DOWNLOAD_URL='+download);
+      - name: Download the published archive again and verify its exact SHA256
+        env:
+          DOWNLOAD_URL: ${{ steps.release.outputs.url }}
+        run: |
+          python - <<'PY'
+          import urllib.request,hashlib,json,os,time
+          p=json.load(open('PACKAGE_RECEIPT.json'));url=os.environ['DOWNLOAD_URL']
+          for attempt in range(12):
+              try:
+                  h=hashlib.sha256();total=0
+                  with urllib.request.urlopen(url,timeout=60) as r:
+                      assert r.status==200
+                      while True:
+                          b=r.read(1048576)
+                          if not b:break
+                          h.update(b);total+=len(b)
+                  assert total==p['bytes'] and h.hexdigest()==p['sha256']
+                  p.update({'publicDownloadUrl':url,'publicDownloadHttpStatus':200,'publicDownloadBytesVerified':True,'freshUnzipStandaloneBrowserPass':True,'entirePrivateSourceVault':False})
+                  json.dump(p,open('DOWNLOAD_VERIFIED.json','w'),indent=2);print('PUBLIC_DOWNLOAD_VERIFIED',json.dumps(p),flush=True);break
+              except Exception as e:
+                  print('DOWNLOAD_RETRY',str(e),flush=True);time.sleep(5)
+          else:raise SystemExit('Published ZIP could not be independently verified')
+          PY
+      - name: Attach verified download receipt
+        uses: actions/github-script@v7
+        env:
+          RELEASE_ID: ${{ steps.release.outputs.release_id }}
+        with:
+          script: |
+            const fs=require('fs');await github.rest.repos.uploadReleaseAsset({...context.repo,release_id:Number(process.env.RELEASE_ID),name:'DOWNLOAD_VERIFIED.json',data:fs.readFileSync('DOWNLOAD_VERIFIED.json')});
