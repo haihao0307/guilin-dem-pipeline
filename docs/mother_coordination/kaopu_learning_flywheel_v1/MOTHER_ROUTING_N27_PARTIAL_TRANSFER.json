@@ -1,14 +1,15 @@
 {
   "routeId": "KAOPU-N27-STONE-MONEY-PARTIAL-TRANSFER",
-  "status": "PREPARED",
+  "status": "POSTED",
   "target": {
     "mother": "Stone Money",
-    "entry": "https://github.com/haihao0307/guilin-dem-pipeline/issues/153"
+    "entry": "https://github.com/haihao0307/guilin-dem-pipeline/issues/153",
+    "comment": "https://github.com/haihao0307/guilin-dem-pipeline/issues/153#issuecomment-5810087725"
   },
   "reason": "The fixed staging commit contains two non-RFC4648 Base64 chunks with literal truncation/ellipsization markers and lacks an ordered per-chunk descriptor manifest.",
   "candidateAction": "In the next reconstruction attempt, keep chunks quarantined; generate a transfer manifest; reconstruct exact bytes; have an independent verifier re-read Git blobs, strictly decode, and recompute per-chunk and final identities before parentEligible=true.",
   "acceptance": {
-    "POSTED": false,
+    "POSTED": true,
     "ACKNOWLEDGED": false,
     "IMPLEMENTED": false,
     "GATE-RUN": false,
