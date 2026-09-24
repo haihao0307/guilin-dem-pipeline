@@ -1,0 +1,95 @@
+name: Fish Remaining Fin Surfaces R012
+on:
+  push:
+    branches: [work/fish-yellowfin-fin-surfaces-r012-20260924]
+    paths:
+      - restart/fish-yellowfin-teacher-r2/web-r012/**
+      - .github/workflows/fish-fin-surfaces-r012.yml
+permissions:
+  contents: write
+concurrency:
+  group: fish-yellowfin-single-publisher
+  cancel-in-progress: false
+jobs:
+  verify-remaining-source-fin-study:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace/source
+            restart/fish-yellowfin-teacher-r2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Reproduce the Teacher and all inherited source studies; compile remaining original fins
+        run: |
+          python -m pip install numpy==2.2.6 Pillow==11.2.1
+          R=restart/fish-yellowfin-teacher-r2
+          O=dist/fish-mother-yellowfin
+          python $R/web-r004/compile_teacher.py --source apps/ocean-life-mother/fish-mother/yellowfin-source-copy-r001/source-workspace/source/tuna_fish_4k.glb --out $O/canonical-r004
+          cp $O/canonical-r004/EXTRACTION_QA.json SOURCE_IDENTITY_PROOF.json
+          python $R/web-r005/compile_regions.py --package $O/canonical-r004 --out $O/parts-r005
+          python $R/web-r006/compile_boundary.py --canonical $O/canonical-r004 --parts $O/parts-r005 --out $O/boundary-r006
+          python $R/web-r007/compile_head.py --canonical $O/canonical-r004 --parts $O/parts-r005 --out $O/head-r007
+          python $R/web-r008/compile_features.py --canonical $O/canonical-r004 --parts $O/parts-r005 --head $O/head-r007 --out $O/feature-r008
+          python $R/web-r009/compile_oral.py --canonical $O/canonical-r004 --parts $O/parts-r005 --head $O/head-r007 --out $O/oral-r009
+          python $R/web-r010/compile_tail.py --canonical $O/canonical-r004 --parts $O/parts-r005 --head $O/head-r007 --out $O/tail-r010
+          python $R/web-r011/compile_pectoral.py --canonical $O/canonical-r004 --parts $O/parts-r005 --head $O/head-r007 --out $O/pectoral-r011
+          python $R/web-r012/compile_fin_surfaces.py --canonical $O/canonical-r004 --parts $O/parts-r005/parts.json --head $O/head-r007/head-evidence.json --out $O/remaining-fins-r012
+          python $R/web-r012/prepare_r012.py
+      - name: Preserve the standalone visible-first page and original 4K texture precision
+        run: |
+          npm install --no-save three@0.170.0 esbuild@0.24.2 playwright@1.51.1
+          R=restart/fish-yellowfin-teacher-r2/web-r012
+          node --check $R/main.mjs
+          node --check $R/otherfins.mjs
+          npx esbuild $R/main.mjs --bundle --format=esm --target=es2022 --minify --legal-comments=inline --outfile=$R/bundle.js
+          python $R/build.py
+          npx playwright install --with-deps chromium
+      - name: Real offline 3D; source and candidate at rest plus 209 clamped original times
+        run: node restart/fish-yellowfin-teacher-r2/web-r012/qa_regression.mjs
+      - name: Preserve delayed loading, incomplete file, context-loss and retry gates
+        run: node restart/fish-yellowfin-teacher-r2/web-r012/qa_openfix.mjs
+      - name: Preserve browser pixel evidence
+        if: always()
+        run: python restart/fish-yellowfin-teacher-r2/web-r012/delivery.py review
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fish-r012-fin-surface-code-data-browser-evidence
+          path: |
+            dist/fish-mother-yellowfin
+            restart/fish-yellowfin-teacher-r2/web-r012
+          retention-days: 30
+      - name: Exact R011 predecessor and single-publisher safety gate
+        run: python restart/fish-yellowfin-teacher-r2/web-r012/delivery.py predecessor
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: public
+          sparse-checkout: fish-mother-yellowfin
+      - name: Preserve R011 and publish only the Fish directory
+        run: python restart/fish-yellowfin-teacher-r2/web-r012/delivery.py publish
+      - name: Verify complete bare and versioned public HTML hashes
+        run: python restart/fish-yellowfin-teacher-r2/web-r012/delivery.py wait
+      - name: Final public seven-patch source study and inherited 3D regressions
+        env:
+          PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/?v=r012
+        run: node restart/fish-yellowfin-teacher-r2/web-r012/qa_regression.mjs
+      - name: Final public cold-start and injected-fault recovery
+        env:
+          PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/?v=r012
+        run: node restart/fish-yellowfin-teacher-r2/web-r012/qa_openfix.mjs
+      - name: Persist the exact tested-head proof without biological or user-device promotion
+        run: python restart/fish-yellowfin-teacher-r2/web-r012/delivery.py proof
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fish-r012-public-proof
+          path: |
+            dist/fish-mother-yellowfin/PUBLIC_BROWSER_QA.json
+            dist/fish-mother-yellowfin/PUBLICATION_PROOF.json
+            dist/fish-mother-yellowfin/OPENFIX_QA.json
+            dist/fish-mother-yellowfin/PUBLIC_OPENFIX_QA.json
