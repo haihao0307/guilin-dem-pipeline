@@ -1,0 +1,125 @@
+{
+  "schema": "kaopu.derived-json-identity-probe/1.0",
+  "round": "N35",
+  "probeScope": "historical metadata replay plus synthetic JCS-compatible-subset controls; not a full RFC 8785 conformance implementation",
+  "historicalDecision": {
+    "byteIdentity": "HOLD_BYTE_IDENTITY_MISMATCH",
+    "semanticObjectIdentity": "UNKNOWN_PAYLOAD_PAIR_NOT_AVAILABLE",
+    "numericalBehaviorEvidence": "VERIFIED_INDEPENDENT_EVIDENCE_PRESERVED",
+    "rootCause": "UNKNOWN_NOT_INFERRED"
+  },
+  "candidateClaimModes": {
+    "exactBytes": "require same media type, bytes and same-algorithm digest of both payloads",
+    "exactSemanticObject": "require both payloads plus pinned canonicalization profile and matching canonical digest",
+    "numericalEquivalence": "require schema-bound quantities, units, ordering and explicit tolerance policy; never relabel as byte identity"
+  },
+  "controlResults": [
+    {
+      "id": "property-order-and-whitespace",
+      "rawEqual": false,
+      "canonicalEqual": true,
+      "leftCanonicalSha256": "43258cff783fe7036d8a43033f830adfc60ec037382473548ac742b888292777",
+      "rightCanonicalSha256": "43258cff783fe7036d8a43033f830adfc60ec037382473548ac742b888292777"
+    },
+    {
+      "id": "equivalent-number-lexemes",
+      "rawEqual": false,
+      "canonicalEqual": true,
+      "leftCanonicalSha256": "2d6412ab0155bb89d63b73dbf83334b26b39d03e8c832cc253c6a6caceba9733",
+      "rightCanonicalSha256": "2d6412ab0155bb89d63b73dbf83334b26b39d03e8c832cc253c6a6caceba9733"
+    },
+    {
+      "id": "array-order-is-semantic",
+      "rawEqual": false,
+      "canonicalEqual": false,
+      "leftCanonicalSha256": "5575b54b067f7e76e7ae711b123da8ac258d2001fc1c0550f199c58ce274a35b",
+      "rightCanonicalSha256": "793b7fb9fde9277a25c31a5b8fee126b71089349a0ef5eb082e3147bed7e2989"
+    },
+    {
+      "id": "numeric-value-change",
+      "rawEqual": false,
+      "canonicalEqual": false,
+      "leftCanonicalSha256": "2d6412ab0155bb89d63b73dbf83334b26b39d03e8c832cc253c6a6caceba9733",
+      "rightCanonicalSha256": "a3842f4450aa683fcac3154a7b0f25d7ad9112875633ca505b5883665a74ac44"
+    }
+  ],
+  "checks": [
+    {
+      "id": "historical-size-mismatch-holds-byte-identity",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "id": "historical-semantic-identity-remains-unknown-without-pair",
+      "actual": false,
+      "expected": false,
+      "passed": true
+    },
+    {
+      "id": "independent-numerical-evidence-is-preserved",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "id": "property-order-and-whitespace-raw",
+      "actual": false,
+      "expected": false,
+      "passed": true
+    },
+    {
+      "id": "property-order-and-whitespace-canonical",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "id": "equivalent-number-lexemes-raw",
+      "actual": false,
+      "expected": false,
+      "passed": true
+    },
+    {
+      "id": "equivalent-number-lexemes-canonical",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "id": "array-order-is-semantic-raw",
+      "actual": false,
+      "expected": false,
+      "passed": true
+    },
+    {
+      "id": "array-order-is-semantic-canonical",
+      "actual": false,
+      "expected": false,
+      "passed": true
+    },
+    {
+      "id": "numeric-value-change-raw",
+      "actual": false,
+      "expected": false,
+      "passed": true
+    },
+    {
+      "id": "numeric-value-change-canonical",
+      "actual": false,
+      "expected": false,
+      "passed": true
+    },
+    {
+      "id": "byte-and-semantic-claims-are-not-interchangeable",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    }
+  ],
+  "summary": {
+    "passed": 12,
+    "total": 12,
+    "allPassed": true
+  }
+}

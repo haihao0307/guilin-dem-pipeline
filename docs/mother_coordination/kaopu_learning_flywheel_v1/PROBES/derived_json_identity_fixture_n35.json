@@ -1,0 +1,51 @@
+{
+  "historicalObservation": {
+    "mother": "Fish",
+    "round": "R008",
+    "testedSubjectSha": "60e2c6d054f2a74a33aa8bd530e365c021b24927",
+    "workflowRun": 35898899451,
+    "local": {
+      "bytes": 151109,
+      "sha256": "74a0264cf8808bf1f1dcb9eb1aad00920421e6478647d3e2c5dbc2178c8a2072"
+    },
+    "ci": {
+      "bytes": 151122,
+      "gitBlobSha": "5b98a86c6c99cd2fb55ca8dcc1f5ead1e924fb88"
+    },
+    "payloadPairAvailableToN35": false,
+    "sourceArraysPreservedByIndependentChecks": true,
+    "numericalAndBrowserChecksPassed": true,
+    "differenceQuantified": false,
+    "causeConfirmed": false
+  },
+  "syntheticControls": [
+    {
+      "id": "property-order-and-whitespace",
+      "left": "{\"b\":2,\"a\":1}",
+      "right": "{\n  \"a\": 1, \"b\": 2\n}",
+      "expectRawEqual": false,
+      "expectCanonicalEqual": true
+    },
+    {
+      "id": "equivalent-number-lexemes",
+      "left": "{\"x\":1e-6}",
+      "right": "{\"x\":0.000001}",
+      "expectRawEqual": false,
+      "expectCanonicalEqual": true
+    },
+    {
+      "id": "array-order-is-semantic",
+      "left": "{\"samples\":[1,2,3]}",
+      "right": "{\"samples\":[3,2,1]}",
+      "expectRawEqual": false,
+      "expectCanonicalEqual": false
+    },
+    {
+      "id": "numeric-value-change",
+      "left": "{\"x\":0.000001}",
+      "right": "{\"x\":0.0000011}",
+      "expectRawEqual": false,
+      "expectCanonicalEqual": false
+    }
+  ]
+}

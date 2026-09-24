@@ -1,0 +1,51 @@
+{
+  "id": "DERIVED-JSON-IDENTITY-LAYERS-001",
+  "status": "Candidate",
+  "scope": "single-Mother trial for derived JSON used as identity-bearing evidence, cache input, signed receipt or cross-environment regression artifact",
+  "trigger": "two producers claim the same derived JSON while raw sizes or same-algorithm digests differ, or while only tolerance-based numerical checks are available",
+  "requiredReceiptFields": [
+    "testedSubjectSha",
+    "artifactRole",
+    "producerRuntime",
+    "claimMode",
+    "rawPayloadRef",
+    "rawBytes",
+    "rawDigestAlgorithm",
+    "rawDigest",
+    "canonicalizationProfile",
+    "canonicalizationVersion",
+    "canonicalDigestAlgorithm",
+    "canonicalDigest",
+    "schemaId",
+    "orderedArrayPaths",
+    "quantityUnits",
+    "numericTolerancePolicy",
+    "identityDecision",
+    "independentEvidencePreserved"
+  ],
+  "assertions": [
+    "EXACT_BYTES requires the same media type, byte length and same-algorithm digest for both payloads",
+    "EXACT_SEMANTIC_OBJECT requires both raw payloads, a pinned canonicalization profile and matching canonical digests",
+    "NUMERICAL_EQUIVALENCE requires schema-bound field paths, units, array ordering and explicit tolerances and must not be renamed byte identity",
+    "a raw byte mismatch rejects only byte identity unless another claim has its own evidence",
+    "missing payloads leave semantic identity and root cause Unknown",
+    "canonicalization does not reorder arrays or define domain units and tolerances",
+    "digest algorithm identifiers are mandatory and unlike algorithms are not directly comparable"
+  ],
+  "states": [
+    "BYTE_IDENTITY_VERIFIED",
+    "SEMANTIC_OBJECT_IDENTITY_VERIFIED",
+    "NUMERICAL_EQUIVALENCE_VERIFIED",
+    "HOLD_BYTE_IDENTITY_MISMATCH",
+    "HOLD_IDENTITY_EVIDENCE_INCOMPLETE",
+    "UNKNOWN_PAYLOAD_PAIR_NOT_AVAILABLE"
+  ],
+  "activation": {
+    "posted": false,
+    "acknowledged": false,
+    "implemented": false,
+    "gateRun": false,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
