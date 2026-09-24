@@ -28,7 +28,7 @@ def prepare_main():
     source = replace_once(source, "clearOther(){tailTool.hide();oralTool.clear(false);", "clearOther(){otherFinTool?.hide();tailTool.hide();oralTool.clear(false);", "pectoral overlay exclusion")
     anchor = "window.FISH_STRUCTURAL={"
     setup = """let otherFinClock=null;
-otherFinTool=installRemainingFinStudy({compiled,meshes,state,qa,scenes,cam,controls,preset,regionTool,getSurfaces:()=>surfaces,
+otherFinTool=installRemainingFinStudy({compiled,meshes,state,qa,scenes,cam,controls,preset,regionTool,getSurfaces:()=>surfaces,readSurface,
  clearOther(){pectoralTool.hide();tailTool.hide();oralTool.clear(false);featureTool.hide();headTool.clear();boundaryTool.clear();regionTool.restore();},
  beginExact(){otherFinClock={time:state.time,rest:state.rest,play:state.play,modes:oralModes()};state.play=false;},
  seekExact:oralSeek,
