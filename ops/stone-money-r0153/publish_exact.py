@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from pathlib import Path
 import argparse,base64,hashlib,json,os,time,urllib.request
-REPO='haihao0307/guilin-dem-pipeline';TARGET='stone-money-island/index.html';PUBLIC='https://haihao0307.github.io/guilin-dem-pipeline/stone-money-island/';EXPECTED='5d3167af1127a9a9f2eeaa47957158312060e0bff114020befec6703bc88001c';SIZE=956838;ALLOWED={'e66d23c3c679c9fd28fdc9149e701279ba1b3b7d','92d0af603824251300638ac568ba5783e343f624','9d3bc7b0e9a2300fc55f5a0929baad8fec85bdcd'}
+REPO='haihao0307/guilin-dem-pipeline';TARGET='stone-money-island/index.html';PUBLIC='https://haihao0307.github.io/guilin-dem-pipeline/stone-money-island/';EXPECTED='7acf5fce0949e8880fd64575863f27ffa4113ee63b78cc4f598d1bc96c8efe68';SIZE=956838;ALLOWED={'e66d23c3c679c9fd28fdc9149e701279ba1b3b7d','92d0af603824251300638ac568ba5783e343f624','9d3bc7b0e9a2300fc55f5a0929baad8fec85bdcd','7b13977ec5e4beb8afb9f6d96eb11e506eb2bda6'}
 def h(b):return hashlib.sha256(b).hexdigest()
 def gb(b):return hashlib.sha1(f'blob {len(b)}\0'.encode()+b).hexdigest()
 def api(path,method='GET',data=None):

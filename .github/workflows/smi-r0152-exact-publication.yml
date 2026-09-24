@@ -29,7 +29,7 @@ jobs:
         run: |
           mkdir -p publication-evidence
           python ops/stone-money-r0153/assemble_source.py --root ops/stone-money-r0153/source-chunks --out STONE_MONEY_ISLAND_R015_3_REAL_3D.html | tee publication-evidence/ASSEMBLY_PROOF.json
-          test "$(sha256sum STONE_MONEY_ISLAND_R015_3_REAL_3D.html | cut -d' ' -f1)" = "5d3167af1127a9a9f2eeaa47957158312060e0bff114020befec6703bc88001c"
+          test "$(sha256sum STONE_MONEY_ISLAND_R015_3_REAL_3D.html | cut -d' ' -f1)" = "7acf5fce0949e8880fd64575863f27ffa4113ee63b78cc4f598d1bc96c8efe68"
           test "$(wc -c < STONE_MONEY_ISLAND_R015_3_REAL_3D.html)" = "956838"
       - name: Install real Chromium verifier
         run: |
@@ -44,7 +44,7 @@ jobs:
       - name: Publish the one approved Pages path and verify exact HTTPS bytes
         run: python ops/stone-money-r0153/publish_exact.py --source STONE_MONEY_ISLAND_R015_3_REAL_3D.html --out publication-evidence
       - name: Test public real WebGL
-        run: xvfb-run -a python ops/stone-money-r0153/qa_publication.py --url "https://haihao0307.github.io/guilin-dem-pipeline/stone-money-island/?v=R0153-5d3167af1127" --out publication-evidence/public
+        run: xvfb-run -a python ops/stone-money-r0153/qa_publication.py --url "https://haihao0307.github.io/guilin-dem-pipeline/stone-money-island/?v=R0153-7acf5fce0949" --out publication-evidence/public
       - name: Preserve evidence
         if: always()
         uses: actions/upload-artifact@v4
