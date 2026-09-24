@@ -1,0 +1,44 @@
+{
+  "schema": "kaopu.mother-regression-case/2.0",
+  "caseId": "CI-GREEN-SKIPPED-CLAIM-001",
+  "title": "Green workflow must not promote a claim whose critical steps were skipped",
+  "status": "CANDIDATE_HISTORY_REPLAY_PASSED_NOT_ADOPTED",
+  "active": false,
+  "source": {
+    "issue": "https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-5807198398",
+    "workflowRun": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/35936763006",
+    "jobId": 107435412791,
+    "headSha": "7d60191bd8cf2d7e5138dab30873d8e59cca044b"
+  },
+  "failureClass": "CLAIM_SCOPE_OVERPROMOTION",
+  "failureDescription": "The workflow and job concluded success while both publication-critical steps were skipped. The run supported VERIFIED_SETUP only, not PUBLICATION_COMPLETE.",
+  "mustNeverRepeat": [
+    "Quote an overall green workflow as deployment, browser verification, publication, or user delivery evidence without checking the named claim manifest.",
+    "Count a preflight or evidence artifact as the outcome-bearing delivery.",
+    "Hide skipped claim-critical steps behind the workflow conclusion."
+  ],
+  "requiredEvidence": [
+    "exact workflow run, job, and tested commit",
+    "named claimType and claimScope",
+    "requiredStepManifest",
+    "actual step conclusions including skipped and missing",
+    "claim-specific proof predicates",
+    "derived claimState"
+  ],
+  "gateLogic": {
+    "pass": "All claim-required steps conclude success and all claim proof predicates match.",
+    "hold": "Any claim-required step is skipped, missing, failed, or cancelled, or any proof predicate mismatches.",
+    "scopeBoundary": "A skipped step is not globally fatal; it blocks only claims that declare that step critical.",
+    "workflowConclusion": "Transport/execution metadata only; it never promotes the claim by itself."
+  },
+  "appliesTo": [
+    "Stone Money exact-source publication trial",
+    "Mother workflows that make outcome-bearing delivery claims"
+  ],
+  "historyReplay": {
+    "verifiedSetup": "CLAIM_VERIFIED",
+    "publicationComplete": "HOLD_CLAIM_INCOMPLETE",
+    "falsificationControl": "CLAIM_VERIFIED"
+  },
+  "activationRequirement": "Run once in an actual affected Mother workflow and obtain an independent verifier receipt before adoption."
+}
