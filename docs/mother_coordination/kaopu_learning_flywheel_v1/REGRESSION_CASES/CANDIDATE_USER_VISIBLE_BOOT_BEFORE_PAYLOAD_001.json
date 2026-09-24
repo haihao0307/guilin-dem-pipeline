@@ -1,0 +1,46 @@
+{
+  "id": "USER-VISIBLE-BOOT-BEFORE-PAYLOAD-001",
+  "status": "Candidate",
+  "scope": "single-Mother trial for large standalone HTML whose primary payload can delay or fail independently of the document shell",
+  "trigger": "a final-ready browser test can pass while a real user reports a blank or white initial page",
+  "requiredReceiptFields": [
+    "testedSubjectSha",
+    "artifactIdentity",
+    "bootPrefixUpperBoundBytes",
+    "firstPayloadByteOffset",
+    "navigationWaitState",
+    "responseHeldBeforePayload",
+    "paintedShellEvidence",
+    "visibilityDeadlineMs",
+    "truncatedResponseDecision",
+    "runtimeFailureRecoveryDecision",
+    "finalRuntimeReadyDecision",
+    "userDeviceRetested",
+    "originalClientCauseConfirmed"
+  ],
+  "assertions": [
+    "final runtime readiness does not prove the page painted useful content before the primary payload completed",
+    "the test must hold the main response before the primary payload and observe a painted visible shell within a bounded time",
+    "DOM source order or a final screenshot alone is insufficient early-visibility evidence",
+    "a truncated response must produce a visible error state rather than a silent blank page",
+    "runtime capability failure must expose visible recovery or rollback without weakening final-ready tests",
+    "a user-visible failure rejects the stronger user-visible claim but does not erase separately valid artifact-integrity or final-ready evidence",
+    "user-device repair and original root cause remain Unknown until independently verified"
+  ],
+  "states": [
+    "FINAL_RUNTIME_READY",
+    "USER_VISIBLE_BOOT_RESILIENT",
+    "HOLD_VISIBLE_BOOT_INCOMPLETE",
+    "REJECTED_BY_USER_OBSERVATION",
+    "UNKNOWN_USER_DEVICE_NOT_RETESTED",
+    "UNKNOWN_ORIGINAL_ROOT_CAUSE"
+  ],
+  "activation": {
+    "posted": false,
+    "acknowledged": false,
+    "implemented": false,
+    "gateRun": false,
+    "adopted": false,
+    "userAccepted": false
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "schema": "kaopu.learning-probe/1.0",
+  "round": "N33",
+  "question": "Can final-ready success prove a large single-file page is visibly alive before its payload completes?",
+  "passed": 8,
+  "total": 8,
+  "allPassed": true,
+  "results": [
+    {
+      "id": "r006-final-ready-remains-valid",
+      "claim": "FINAL_RUNTIME_READY",
+      "expectedDecision": "CLAIM_VERIFIED",
+      "actualDecision": "CLAIM_VERIFIED",
+      "missing": [],
+      "passed": true
+    },
+    {
+      "id": "r006-user-white-screen-rejects-stronger-claim",
+      "claim": "USER_VISIBLE_BOOT_RESILIENT",
+      "expectedDecision": "REJECTED_BY_USER_OBSERVATION",
+      "actualDecision": "REJECTED_BY_USER_OBSERVATION",
+      "missing": [],
+      "passed": true
+    },
+    {
+      "id": "final-screenshot-does-not-prove-early-visible-shell",
+      "claim": "USER_VISIBLE_BOOT_RESILIENT",
+      "expectedDecision": "HOLD_VISIBLE_BOOT_INCOMPLETE",
+      "actualDecision": "HOLD_VISIBLE_BOOT_INCOMPLETE",
+      "missing": [
+        "shellBeforePayload",
+        "responseHeldBeforePayload",
+        "boundedVisibilityAssertion",
+        "truncatedResponseVisibleError",
+        "runtimeFailureVisibleRecovery"
+      ],
+      "passed": true
+    },
+    {
+      "id": "dom-prefix-without-painted-observation-is-insufficient",
+      "claim": "USER_VISIBLE_BOOT_RESILIENT",
+      "expectedDecision": "HOLD_VISIBLE_BOOT_INCOMPLETE",
+      "actualDecision": "HOLD_VISIBLE_BOOT_INCOMPLETE",
+      "missing": [
+        "paintedShellObserved"
+      ],
+      "passed": true
+    },
+    {
+      "id": "load-only-check-is-not-pre-payload-proof",
+      "claim": "USER_VISIBLE_BOOT_RESILIENT",
+      "expectedDecision": "HOLD_VISIBLE_BOOT_INCOMPLETE",
+      "actualDecision": "HOLD_VISIBLE_BOOT_INCOMPLETE",
+      "missing": [
+        "responseHeldBeforePayload"
+      ],
+      "passed": true
+    },
+    {
+      "id": "r006-1-visible-first-replay",
+      "claim": "USER_VISIBLE_BOOT_RESILIENT",
+      "expectedDecision": "CLAIM_VERIFIED",
+      "actualDecision": "CLAIM_VERIFIED",
+      "missing": [],
+      "passed": true
+    },
+    {
+      "id": "r006-1-user-device-remains-unknown",
+      "claim": "USER_DEVICE_FIXED",
+      "expectedDecision": "UNKNOWN_USER_DEVICE_NOT_RETESTED",
+      "actualDecision": "UNKNOWN_USER_DEVICE_NOT_RETESTED",
+      "missing": [
+        "userDeviceRetested"
+      ],
+      "passed": true
+    },
+    {
+      "id": "r006-1-original-cause-remains-unknown",
+      "claim": "ORIGINAL_ROOT_CAUSE_CONFIRMED",
+      "expectedDecision": "UNKNOWN_ORIGINAL_ROOT_CAUSE",
+      "actualDecision": "UNKNOWN_ORIGINAL_ROOT_CAUSE",
+      "missing": [
+        "originalClientCauseConfirmed"
+      ],
+      "passed": true
+    }
+  ],
+  "status": "Candidate historical replay verified",
+  "limits": {
+    "productionGateInstalled": false,
+    "userDeviceRetested": false,
+    "originalClientCauseConfirmed": false,
+    "globalR2Changed": false
+  }
+}

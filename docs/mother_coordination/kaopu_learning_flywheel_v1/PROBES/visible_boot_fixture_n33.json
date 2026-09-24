@@ -1,0 +1,127 @@
+{
+  "schema": "kaopu.visible-boot-replay-fixture/1.0",
+  "round": "N33",
+  "observations": {
+    "r006": {
+      "testedSubjectSha": "a987895498c51e46ef786f4cab0a69ef8679526e",
+      "workflowRunId": 35843264304,
+      "workflowConclusion": "success",
+      "finalOfflineAndPublicBrowserSteps": "success",
+      "userReport": "white screen",
+      "actualUserVisibleFailure": true,
+      "originalClientCauseConfirmed": false
+    },
+    "r006_1": {
+      "testedSubjectSha": "9d17da85c18659d1dbbeb29d6b6289d77475b775",
+      "workflowRunId": 35850561063,
+      "workflowConclusion": "success",
+      "sourceBytes": 58908280,
+      "chunkBytes": 786432,
+      "chunkCount": 75,
+      "bootPrefixUpperBoundBytes": 16384,
+      "delayedPayloadProbe": true,
+      "truncatedResponseProbe": true,
+      "webglUnavailableProbe": true,
+      "contextLossAndRetryProbe": true,
+      "userDeviceRetested": false,
+      "originalClientCauseConfirmed": false
+    }
+  },
+  "cases": [
+    {
+      "id": "r006-final-ready-remains-valid",
+      "claim": "FINAL_RUNTIME_READY",
+      "evidence": {
+        "immutableSubjectBound": true,
+        "artifactIdentityBound": true,
+        "finalBrowserReady": true,
+        "actualUserVisibleFailure": true
+      },
+      "expectedDecision": "CLAIM_VERIFIED"
+    },
+    {
+      "id": "r006-user-white-screen-rejects-stronger-claim",
+      "claim": "USER_VISIBLE_BOOT_RESILIENT",
+      "evidence": {
+        "immutableSubjectBound": true,
+        "artifactIdentityBound": true,
+        "finalBrowserReady": true,
+        "actualUserVisibleFailure": true
+      },
+      "expectedDecision": "REJECTED_BY_USER_OBSERVATION"
+    },
+    {
+      "id": "final-screenshot-does-not-prove-early-visible-shell",
+      "claim": "USER_VISIBLE_BOOT_RESILIENT",
+      "evidence": {
+        "immutableSubjectBound": true,
+        "artifactIdentityBound": true,
+        "finalBrowserReady": true,
+        "paintedShellObserved": true
+      },
+      "expectedDecision": "HOLD_VISIBLE_BOOT_INCOMPLETE"
+    },
+    {
+      "id": "dom-prefix-without-painted-observation-is-insufficient",
+      "claim": "USER_VISIBLE_BOOT_RESILIENT",
+      "evidence": {
+        "immutableSubjectBound": true,
+        "artifactIdentityBound": true,
+        "shellBeforePayload": true,
+        "responseHeldBeforePayload": true,
+        "boundedVisibilityAssertion": true,
+        "truncatedResponseVisibleError": true,
+        "runtimeFailureVisibleRecovery": true,
+        "finalBrowserReady": true
+      },
+      "expectedDecision": "HOLD_VISIBLE_BOOT_INCOMPLETE"
+    },
+    {
+      "id": "load-only-check-is-not-pre-payload-proof",
+      "claim": "USER_VISIBLE_BOOT_RESILIENT",
+      "evidence": {
+        "immutableSubjectBound": true,
+        "artifactIdentityBound": true,
+        "shellBeforePayload": true,
+        "paintedShellObserved": true,
+        "boundedVisibilityAssertion": true,
+        "truncatedResponseVisibleError": true,
+        "runtimeFailureVisibleRecovery": true,
+        "finalBrowserReady": true
+      },
+      "expectedDecision": "HOLD_VISIBLE_BOOT_INCOMPLETE"
+    },
+    {
+      "id": "r006-1-visible-first-replay",
+      "claim": "USER_VISIBLE_BOOT_RESILIENT",
+      "evidence": {
+        "immutableSubjectBound": true,
+        "artifactIdentityBound": true,
+        "shellBeforePayload": true,
+        "responseHeldBeforePayload": true,
+        "paintedShellObserved": true,
+        "boundedVisibilityAssertion": true,
+        "truncatedResponseVisibleError": true,
+        "runtimeFailureVisibleRecovery": true,
+        "finalBrowserReady": true
+      },
+      "expectedDecision": "CLAIM_VERIFIED"
+    },
+    {
+      "id": "r006-1-user-device-remains-unknown",
+      "claim": "USER_DEVICE_FIXED",
+      "evidence": {
+        "userDeviceRetested": false
+      },
+      "expectedDecision": "UNKNOWN_USER_DEVICE_NOT_RETESTED"
+    },
+    {
+      "id": "r006-1-original-cause-remains-unknown",
+      "claim": "ORIGINAL_ROOT_CAUSE_CONFIRMED",
+      "evidence": {
+        "originalClientCauseConfirmed": false
+      },
+      "expectedDecision": "UNKNOWN_ORIGINAL_ROOT_CAUSE"
+    }
+  ]
+}
