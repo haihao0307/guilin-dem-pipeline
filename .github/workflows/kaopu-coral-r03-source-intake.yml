@@ -1,0 +1,44 @@
+name: KAOPU Coral R03 source intake
+on:
+  push:
+    branches: [gh-pages]
+    paths: [.github/workflows/kaopu-coral-r03-source-intake.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  intake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read pinned current runtime and original reference
+        run: |
+          mkdir -p intake
+          python - <<'PY'
+          import urllib.request, pathlib, hashlib, json
+          root=pathlib.Path('intake')
+          sources={
+            'R02_LIVE_PINNED.html':'https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/5777251712c25345d8ddbb5fb166e21bafe4202e/game-coral-mother-wave-r01/index.html',
+            'Australia_Lizard_Island_Anne_Hoggett.jpeg':'https://upload.wikimedia.org/wikipedia/commons/9/9a/Heliopora_coerulea%2C_Lizard_Island.jpeg',
+            'AUSTRALIA_SOURCE.html':'https://commons.wikimedia.org/wiki/File:Heliopora_coerulea,_Lizard_Island.jpeg',
+            'PICRC_RESEARCH.html':'https://picrc.org/works/'
+          }
+          report={}
+          for name,url in sources.items():
+            try:
+              req=urllib.request.Request(url,headers={'User-Agent':'KAOPU-Reference-Archive/1.0 (personal research; attribution retained)'})
+              with urllib.request.urlopen(req,timeout=45) as r: data=r.read();status=r.status
+              (root/name).write_bytes(data)
+              report[name]={'url':url,'status':status,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
+            except Exception as e: report[name]={'url':url,'error':str(e)}
+          (root/'INTAKE.json').write_text(json.dumps(report,indent=2))
+          (root/'ATTRIBUTION.txt').write_text('Australian photograph: Anne Hoggett, Lizard Island, 1 November 2014. Museum source resource IxB1ppuf. Commons mirror, CC BY 3.0 https://creativecommons.org/licenses/by/3.0/ . Caption describes ONE branching colony about ONE METRE ACROSS, not branch height or count of independent colonies. Original image retained unchanged. Exact RISD teacher scale remains unknown. PICRC pages are research references, not a transfer of site-specific conditions.\n')
+          assert 'error' not in report['R02_LIVE_PINNED.html'],report
+          print(json.dumps(report,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: KAOPU-CORAL-R03-SOURCE-INTAKE
+          path: intake/
+          retention-days: 30
