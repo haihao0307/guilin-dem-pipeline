@@ -1,0 +1,118 @@
+{
+  "studyId": "N40",
+  "boundedQuestion": "Does a pinned source and successful run prove that the same gate can be reproduced later when the toolchain closure is mutable or unrecorded?",
+  "historical": {
+    "r012": {
+      "testedSubjectSha": "b5f2d11cbf55e17518dda411bf034596818c46d5",
+      "workflowBlobSha": "b0bc8a27e96bbcb698a88df415f8370b01e51b82",
+      "runId": 35974311593,
+      "jobId": 107551050350,
+      "runConclusion": "success",
+      "runnerLabel": "ubuntu-latest",
+      "runnerImageRelease": null,
+      "runnerSbomDigest": null,
+      "actionRefs": [
+        "actions/checkout@v4",
+        "actions/setup-node@v4",
+        "actions/upload-artifact@v4"
+      ],
+      "resolvedActionShasReceipt": null,
+      "runtimeRequests": {
+        "node": "22",
+        "python": "ambient runner python",
+        "npm": "ambient setup-node npm",
+        "pip": "ambient runner pip"
+      },
+      "resolvedRuntimeVersionsReceipt": null,
+      "directDependencies": {
+        "numpy": "2.2.6",
+        "Pillow": "11.2.1",
+        "three": "0.170.0",
+        "esbuild": "0.24.2",
+        "playwright": "1.51.1"
+      },
+      "dependencyLockDigest": null,
+      "frozenInstall": false,
+      "installedDependencyInventoryDigest": null,
+      "browserBuildReceipt": null,
+      "systemDependencyInventoryDigest": null
+    }
+  },
+  "controls": [
+    {
+      "id": "sealed-compatible-rerun",
+      "sourceSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "workflowBlobSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "actionRefs": [
+        "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+        "actions/setup-node@1e60f620b9541dca151540d0c174e2ac74f7419a"
+      ],
+      "runnerImageRelease": "ubuntu24/20260920.1",
+      "runnerSbomDigest": "sha256:runner-sbom",
+      "resolvedRuntimeVersions": {
+        "node": "22.20.0",
+        "python": "3.12.11",
+        "npm": "11.6.0",
+        "pip": "25.2"
+      },
+      "dependencyLockDigest": "sha256:dependency-lock",
+      "frozenInstall": true,
+      "installedDependencyInventoryDigest": "sha256:installed-tree",
+      "browserBuildReceipt": "chromium-140.0.7339.207",
+      "systemDependencyInventoryDigest": "sha256:system-deps",
+      "expected": "RERUN_TOOLCHAIN_CLOSURE_VERIFIED"
+    },
+    {
+      "id": "mutable-actions",
+      "sourceSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "workflowBlobSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "actionRefs": ["actions/checkout@v4"],
+      "runnerImageRelease": "ubuntu24/20260920.1",
+      "runnerSbomDigest": "sha256:runner-sbom",
+      "resolvedRuntimeVersions": {"node": "22.20.0"},
+      "dependencyLockDigest": "sha256:dependency-lock",
+      "frozenInstall": true,
+      "installedDependencyInventoryDigest": "sha256:installed-tree",
+      "browserBuildReceipt": "chromium-140.0.7339.207",
+      "systemDependencyInventoryDigest": "sha256:system-deps",
+      "expected": "HOLD_ACTION_RESOLUTION_MUTABLE"
+    },
+    {
+      "id": "direct-versions-without-closure",
+      "sourceSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "workflowBlobSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "actionRefs": ["actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683"],
+      "runnerImageRelease": "ubuntu24/20260920.1",
+      "runnerSbomDigest": "sha256:runner-sbom",
+      "resolvedRuntimeVersions": {"node": "22.20.0"},
+      "directDependencies": {"playwright": "1.51.1"},
+      "dependencyLockDigest": null,
+      "frozenInstall": false,
+      "installedDependencyInventoryDigest": null,
+      "browserBuildReceipt": "chromium-140.0.7339.207",
+      "systemDependencyInventoryDigest": "sha256:system-deps",
+      "expected": "HOLD_DEPENDENCY_CLOSURE_MISSING"
+    },
+    {
+      "id": "runner-image-unidentified",
+      "sourceSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "workflowBlobSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "actionRefs": ["actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683"],
+      "runnerImageRelease": null,
+      "runnerSbomDigest": null,
+      "resolvedRuntimeVersions": {"node": "22.20.0"},
+      "dependencyLockDigest": "sha256:dependency-lock",
+      "frozenInstall": true,
+      "installedDependencyInventoryDigest": "sha256:installed-tree",
+      "browserBuildReceipt": "chromium-140.0.7339.207",
+      "systemDependencyInventoryDigest": "sha256:system-deps",
+      "expected": "HOLD_RUNNER_IMAGE_UNIDENTIFIED"
+    },
+    {
+      "id": "toolchain-manifest-drift",
+      "expectedToolchainManifestDigest": "sha256:toolchain-a",
+      "observedToolchainManifestDigest": "sha256:toolchain-b",
+      "expected": "TOOLCHAIN_DRIFT_DETECTED"
+    }
+  ]
+}

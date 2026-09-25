@@ -1,0 +1,51 @@
+{
+  "id": "RUN-SUCCESS-NOT-RERUN-REPRODUCIBILITY-001",
+  "status": "Candidate",
+  "scope": "Fish Mother long-lived browser regression reruns only",
+  "problem": "An immutable source/workflow and one successful run can be overclaimed as proof that the same gate is reproducible later while actions, runner image, runtime patches, transitive dependencies, browser and system packages remain mutable or unrecorded.",
+  "falsifiableHypothesis": "A claim-separated toolchain-closure gate will preserve the historical R012 success while refusing rerun reproducibility until action resolution, runner image, runtime versions, dependency closure, browser and system dependency identities are recorded.",
+  "requiredFields": [
+    "claimId",
+    "testedSubjectSha",
+    "workflowBlobSha",
+    "runId",
+    "jobId",
+    "historicalRunDecision",
+    "actionResolutionManifest",
+    "runnerImageRelease",
+    "runnerSbomDigestOrUnknown",
+    "resolvedRuntimeVersions",
+    "dependencyLockDigest",
+    "frozenInstallDecision",
+    "installedDependencyInventoryDigest",
+    "browserBuildReceipt",
+    "systemDependencyInventoryDigest",
+    "toolchainManifestDigest",
+    "rerunDecision"
+  ],
+  "decisions": [
+    "HISTORICAL_RUN_VERIFIED",
+    "UNKNOWN_RERUN_REPRODUCIBILITY_TOOLCHAIN_UNSEALED",
+    "HOLD_ACTION_RESOLUTION_MUTABLE",
+    "HOLD_RUNNER_IMAGE_UNIDENTIFIED",
+    "HOLD_RUNTIME_VERSION_UNRESOLVED",
+    "HOLD_DEPENDENCY_CLOSURE_MISSING",
+    "HOLD_BROWSER_SYSTEM_CLOSURE_MISSING",
+    "TOOLCHAIN_DRIFT_DETECTED",
+    "RERUN_TOOLCHAIN_CLOSURE_VERIFIED"
+  ],
+  "activation": {
+    "global": false,
+    "motherTrialRequired": true,
+    "independentVerifierRequired": true,
+    "rollbackPoint": "Do not change current R2 gates or invalidate run 35974311593; remove this Candidate if a real rerun shows no discriminating value."
+  },
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE-RUN": false,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}
