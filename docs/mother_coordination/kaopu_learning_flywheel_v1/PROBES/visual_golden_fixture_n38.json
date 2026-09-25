@@ -1,0 +1,184 @@
+{
+  "historicalFirstRun": {
+    "name": "Fish R007 first green run",
+    "testedSubjectSha": "2ae157f09512db7505ff64a1f78dfce4a97f039b",
+    "runId": "35890512697",
+    "jobId": "107281492832",
+    "workflowConclusion": "success",
+    "producerIdentity": "Fish Mother R007 Producer",
+    "screenshotCapture": {
+      "captured": true,
+      "paths": [
+        "r007-jaw-weight-and-trajectory.png",
+        "r007-head-original-material.png",
+        "r007-eye-source-probes.png"
+      ],
+      "comparisonExecuted": false,
+      "currentImageDigest": null
+    },
+    "baseline": null,
+    "comparison": null,
+    "independentVisualObservation": {
+      "observed": true,
+      "decision": "reject",
+      "signature": "GHOST_OFF_RIGHT_FISH_REMAINS_SEMITRANSPARENT"
+    },
+    "manualVisualAcceptance": false,
+    "userAcceptance": false
+  },
+  "historicalRepairRun": {
+    "name": "Fish R007 immutable-state repair run",
+    "testedSubjectSha": "d1e9b56f6456673d214ed165a8801a0beca0d249",
+    "runId": "35891489740",
+    "jobId": "107286496975",
+    "workflowConclusion": "success",
+    "producerIdentity": "Fish Mother R007 Producer",
+    "stateRoundtrip": {
+      "baselineTupleFrozen": true,
+      "transitionSequenceComplete": true,
+      "returnedTupleEqual": true,
+      "repeatCyclePassed": true
+    },
+    "screenshotCapture": {
+      "captured": true,
+      "paths": ["r007-ghost-state-regression.png"],
+      "comparisonExecuted": false,
+      "currentImageDigest": null
+    },
+    "baseline": null,
+    "comparison": null,
+    "independentVisualObservation": null,
+    "manualVisualAcceptance": false,
+    "userAcceptance": false
+  },
+  "counterfactualControls": {
+    "approvedIndependentBaseline": {
+      "testedSubjectSha": "1111111111111111111111111111111111111111",
+      "runId": "synthetic-control-independent-approval",
+      "workflowConclusion": "success",
+      "producerIdentity": "Producer-A",
+      "screenshotCapture": {
+        "captured": true,
+        "paths": ["fixed-view.png"],
+        "comparisonExecuted": true,
+        "currentImageDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "baseline": {
+        "baselineId": "FISH-FIXED-VIEW-GOLDEN-V1",
+        "baselineSubjectSha": "0000000000000000000000000000000000000000",
+        "baselineImageDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "approved": true,
+        "baselineApprovedBy": "Verifier-B",
+        "baselineApprovalReceipt": "synthetic-independent-approval-receipt",
+        "updatedForCurrentCandidate": false,
+        "environment": "chromium-fixed-v1"
+      },
+      "comparison": {
+        "environment": "chromium-fixed-v1",
+        "metric": "pixel-diff-count",
+        "threshold": 20,
+        "actualDiff": 4,
+        "maskId": "dynamic-regions-v1",
+        "styleId": "fixed-render-style-v1"
+      },
+      "independentVisualObservation": null
+    },
+    "selfApprovedBaselineUpdate": {
+      "testedSubjectSha": "2222222222222222222222222222222222222222",
+      "runId": "synthetic-control-self-approval",
+      "workflowConclusion": "success",
+      "producerIdentity": "Producer-A",
+      "screenshotCapture": {
+        "captured": true,
+        "paths": ["fixed-view.png"],
+        "comparisonExecuted": true,
+        "currentImageDigest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      },
+      "baseline": {
+        "baselineId": "FISH-FIXED-VIEW-GOLDEN-V2",
+        "baselineSubjectSha": "2222222222222222222222222222222222222222",
+        "baselineImageDigest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "approved": true,
+        "baselineApprovedBy": "Producer-A",
+        "baselineApprovalReceipt": "synthetic-self-approval-receipt",
+        "updatedForCurrentCandidate": true,
+        "oldBaselineDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "newBaselineDigest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "updateReason": "accept current output",
+        "diffArtifact": "synthetic-old-vs-new.png",
+        "environment": "chromium-fixed-v1"
+      },
+      "comparison": {
+        "environment": "chromium-fixed-v1",
+        "metric": "pixel-diff-count",
+        "threshold": 20,
+        "actualDiff": 0,
+        "maskId": "dynamic-regions-v1",
+        "styleId": "fixed-render-style-v1"
+      },
+      "independentVisualObservation": null
+    },
+    "environmentMismatch": {
+      "testedSubjectSha": "3333333333333333333333333333333333333333",
+      "runId": "synthetic-control-environment-mismatch",
+      "workflowConclusion": "success",
+      "producerIdentity": "Producer-A",
+      "screenshotCapture": {
+        "captured": true,
+        "paths": ["fixed-view.png"],
+        "comparisonExecuted": true,
+        "currentImageDigest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+      },
+      "baseline": {
+        "baselineId": "FISH-FIXED-VIEW-GOLDEN-V1",
+        "baselineSubjectSha": "0000000000000000000000000000000000000000",
+        "baselineImageDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "approved": true,
+        "baselineApprovedBy": "Verifier-B",
+        "baselineApprovalReceipt": "synthetic-independent-approval-receipt",
+        "updatedForCurrentCandidate": false,
+        "environment": "chromium-fixed-v1"
+      },
+      "comparison": {
+        "environment": "webkit-fixed-v1",
+        "metric": "pixel-diff-count",
+        "threshold": 20,
+        "actualDiff": 4,
+        "maskId": "dynamic-regions-v1",
+        "styleId": "fixed-render-style-v1"
+      },
+      "independentVisualObservation": null
+    },
+    "regressionDetected": {
+      "testedSubjectSha": "4444444444444444444444444444444444444444",
+      "runId": "synthetic-control-regression-detected",
+      "workflowConclusion": "success",
+      "producerIdentity": "Producer-A",
+      "screenshotCapture": {
+        "captured": true,
+        "paths": ["fixed-view.png"],
+        "comparisonExecuted": true,
+        "currentImageDigest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+      },
+      "baseline": {
+        "baselineId": "FISH-FIXED-VIEW-GOLDEN-V1",
+        "baselineSubjectSha": "0000000000000000000000000000000000000000",
+        "baselineImageDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "approved": true,
+        "baselineApprovedBy": "Verifier-B",
+        "baselineApprovalReceipt": "synthetic-independent-approval-receipt",
+        "updatedForCurrentCandidate": false,
+        "environment": "chromium-fixed-v1"
+      },
+      "comparison": {
+        "environment": "chromium-fixed-v1",
+        "metric": "pixel-diff-count",
+        "threshold": 20,
+        "actualDiff": 241,
+        "maskId": "dynamic-regions-v1",
+        "styleId": "fixed-render-style-v1"
+      },
+      "independentVisualObservation": null
+    }
+  }
+}

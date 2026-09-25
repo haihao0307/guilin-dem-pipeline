@@ -1,0 +1,75 @@
+{
+  "probeId": "VISUAL-GOLDEN-UPDATE-SEPARATION-001-N38-REPLAY",
+  "generatedAt": "2026-09-25T13:43:01+08:00",
+  "boundedQuestion": "Can a producer-created or producer-updated visual golden authorize the same candidate?",
+  "assertions": [
+    {
+      "name": "first subject is pinned",
+      "passed": true
+    },
+    {
+      "name": "first run identity is pinned",
+      "passed": true
+    },
+    {
+      "name": "first successful capture remains valid",
+      "passed": true
+    },
+    {
+      "name": "first stronger visual claim is rejected by observation",
+      "passed": true
+    },
+    {
+      "name": "first run did not execute a golden comparison",
+      "passed": true
+    },
+    {
+      "name": "repair subject and run are pinned",
+      "passed": true
+    },
+    {
+      "name": "repair state roundtrip is independently valid",
+      "passed": true
+    },
+    {
+      "name": "repair visual regression claim still lacks an approved golden",
+      "passed": true
+    },
+    {
+      "name": "independently approved compatible golden passes",
+      "passed": true
+    },
+    {
+      "name": "producer self-approved golden update is held",
+      "passed": true
+    },
+    {
+      "name": "incompatible rendering environment is held",
+      "passed": true
+    },
+    {
+      "name": "diff beyond frozen threshold is detected",
+      "passed": true
+    }
+  ],
+  "summary": {
+    "passed": 12,
+    "total": 12,
+    "allPassed": true
+  },
+  "observations": {
+    "firstCapture": "VISUAL_EVIDENCE_CAPTURED",
+    "firstVisualClaim": "REJECTED_BY_VISUAL_OBSERVATION",
+    "repairCapture": "VISUAL_EVIDENCE_CAPTURED",
+    "repairStateRoundtrip": "STATE_ROUNDTRIP_VERIFIED",
+    "repairVisualClaim": "HOLD_NO_APPROVED_VISUAL_BASELINE",
+    "approvedIndependentBaseline": "VISUAL_REGRESSION_VERIFIED",
+    "selfApprovedBaselineUpdate": "HOLD_BASELINE_UPDATE_SELF_APPROVED",
+    "environmentMismatch": "HOLD_VISUAL_ENVIRONMENT_MISMATCH",
+    "regressionDetected": "VISUAL_REGRESSION_DETECTED"
+  },
+  "classification": "Candidate partial",
+  "productionChanged": false,
+  "globalR2Changed": false,
+  "userAcceptance": "Unknown"
+}

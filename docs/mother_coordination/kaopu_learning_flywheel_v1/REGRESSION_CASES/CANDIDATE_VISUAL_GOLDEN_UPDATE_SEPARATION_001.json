@@ -1,0 +1,62 @@
+{
+  "id": "VISUAL-GOLDEN-UPDATE-SEPARATION-001",
+  "status": "Candidate",
+  "scope": "Stable fixed-view visual regression claims where a versioned golden is an appropriate oracle",
+  "trigger": "A candidate claims visual-regression success from screenshots or from a golden that the same producer created or updated for that candidate.",
+  "requiredFields": [
+    "claimId",
+    "testedSubjectSha",
+    "runIdentity",
+    "producerIdentity",
+    "currentImageDigest",
+    "baselineId",
+    "baselineSubjectSha",
+    "baselineImageDigest",
+    "baselineEnvironment",
+    "comparisonEnvironment",
+    "metric",
+    "threshold",
+    "maskId",
+    "styleId",
+    "actualDiff",
+    "comparisonDecision",
+    "baselineApprovedBy",
+    "baselineApprovalReceipt",
+    "baselineUpdateReason",
+    "oldBaselineDigest",
+    "newBaselineDigest",
+    "baselineDiffArtifact",
+    "verifierIdentity",
+    "manualVisualAcceptance",
+    "userAcceptance"
+  ],
+  "assertions": [
+    "capturing and hashing a screenshot may verify VISUAL_EVIDENCE_CAPTURED but never implies a visual-regression oracle was applied",
+    "a visual-regression claim requires an immutable baseline identity, current image identity, comparison environment, metric, threshold, masks/styles, and result",
+    "a golden created or updated for the current candidate cannot be approved by that candidate's producer",
+    "a baseline update preserves the old and new identities, the old-vs-new diff, the reason, and an independent approval receipt",
+    "comparison evidence from an incompatible rendering environment is held rather than silently normalized",
+    "a diff beyond the frozen threshold yields VISUAL_REGRESSION_DETECTED",
+    "an independent human or user visual rejection overrides the stronger visual claim without erasing valid capture or technical-run evidence",
+    "state-roundtrip verification, visual-regression verification, manual visual acceptance, and user acceptance remain separate claims"
+  ],
+  "states": [
+    "VISUAL_EVIDENCE_CAPTURED",
+    "HOLD_NO_APPROVED_VISUAL_BASELINE",
+    "HOLD_BASELINE_UPDATE_SELF_APPROVED",
+    "HOLD_VISUAL_IMAGE_IDENTITY_INCOMPLETE",
+    "HOLD_VISUAL_COMPARISON_NOT_RUN",
+    "HOLD_VISUAL_ENVIRONMENT_MISMATCH",
+    "VISUAL_REGRESSION_DETECTED",
+    "VISUAL_REGRESSION_VERIFIED",
+    "REJECTED_BY_VISUAL_OBSERVATION"
+  ],
+  "activation": {
+    "posted": false,
+    "acknowledged": false,
+    "implemented": false,
+    "gateRun": false,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
