@@ -1,0 +1,81 @@
+{
+  "schema": "kaopu.visible-scope-replay-result/1.0",
+  "candidateCaseId": "VISIBLE-SCOPE-EXPANSION-REQUIRES-REAUTHORIZATION-001",
+  "total": 8,
+  "passed": 8,
+  "failed": 0,
+  "allPassed": true,
+  "results": [
+    {
+      "id": "reconstructed-r01-from-explicit-comment",
+      "expectedVerdict": "SCOPE_AUTHORIZED",
+      "actualVerdict": "SCOPE_AUTHORIZED",
+      "passed": true,
+      "reasons": [],
+      "computedScopeDigest": "sha256:26d1960c248c31af08a341bfe33331c73c30713e14a74313c24f5e56e69fb635"
+    },
+    {
+      "id": "replay-r02-against-reconstructed-r01-scope",
+      "expectedVerdict": "HOLD_SCOPE_EXPANSION_REQUIRES_REAUTHORIZATION",
+      "actualVerdict": "HOLD_SCOPE_EXPANSION_REQUIRES_REAUTHORIZATION",
+      "passed": true,
+      "reasons": [
+        "objectCount=19 outside 1..1",
+        "forbidden features: procedural_blind_pores",
+        "unlisted features: nineteen_colony_layout,procedural_blind_pores"
+      ],
+      "computedScopeDigest": "sha256:26d1960c248c31af08a341bfe33331c73c30713e14a74313c24f5e56e69fb635"
+    },
+    {
+      "id": "single-object-but-forbidden-pores",
+      "expectedVerdict": "HOLD_SCOPE_EXPANSION_REQUIRES_REAUTHORIZATION",
+      "actualVerdict": "HOLD_SCOPE_EXPANSION_REQUIRES_REAUTHORIZATION",
+      "passed": true,
+      "reasons": [
+        "forbidden features: procedural_blind_pores",
+        "unlisted features: procedural_blind_pores"
+      ],
+      "computedScopeDigest": "sha256:26d1960c248c31af08a341bfe33331c73c30713e14a74313c24f5e56e69fb635"
+    },
+    {
+      "id": "counterfactual-explicitly-reauthorized-r02-scope",
+      "expectedVerdict": "SCOPE_AUTHORIZED",
+      "actualVerdict": "SCOPE_AUTHORIZED",
+      "passed": true,
+      "reasons": [],
+      "computedScopeDigest": "sha256:fa10d73714a45e76b3bd65282162862d0864d572020d2bc2d51767920055b999"
+    },
+    {
+      "id": "mutated-scope-under-original-task",
+      "expectedVerdict": "HOLD_SCOPE_CONTRACT_MUTATED",
+      "actualVerdict": "HOLD_SCOPE_CONTRACT_MUTATED",
+      "passed": true,
+      "reasons": ["scope digest is not the frozen dispatch digest"],
+      "computedScopeDigest": "sha256:26d1960c248c31af08a341bfe33331c73c30713e14a74313c24f5e56e69fb635"
+    },
+    {
+      "id": "candidate-class-escalation",
+      "expectedVerdict": "HOLD_CANDIDATE_CLASS_ESCALATION",
+      "actualVerdict": "HOLD_CANDIDATE_CLASS_ESCALATION",
+      "passed": true,
+      "reasons": ["candidate class changed without separate authorization"],
+      "computedScopeDigest": null
+    },
+    {
+      "id": "reference-target-changed",
+      "expectedVerdict": "HOLD_REFERENCE_TARGET_CHANGED",
+      "actualVerdict": "HOLD_REFERENCE_TARGET_CHANGED",
+      "passed": true,
+      "reasons": ["reference digest set changed"],
+      "computedScopeDigest": null
+    },
+    {
+      "id": "missing-formal-task-anchor",
+      "expectedVerdict": "UNKNOWN_TASK_ANCHOR_MISSING",
+      "actualVerdict": "UNKNOWN_TASK_ANCHOR_MISSING",
+      "passed": true,
+      "reasons": ["formal scope anchor is incomplete"],
+      "computedScopeDigest": null
+    }
+  ]
+}

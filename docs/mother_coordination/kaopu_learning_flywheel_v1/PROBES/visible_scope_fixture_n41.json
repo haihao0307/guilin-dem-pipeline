@@ -1,0 +1,168 @@
+{
+  "schema": "kaopu.visible-scope-replay/1.0",
+  "candidateCaseId": "VISIBLE-SCOPE-EXPANSION-REQUIRES-REAUTHORIZATION-001",
+  "historicalSubjects": {
+    "r01": {
+      "sourceCommit": "341dd29fffe1a45476f457c0e1edfdaae41cf0fb",
+      "bytes": 23196,
+      "sha256": "917af477221d70de8fd89c5cddac5babb3f50a15801a6ecfa7e328ff32092b61"
+    },
+    "r02": {
+      "sourceCommit": "5777251712c25345d8ddbb5fb166e21bafe4202e",
+      "bytes": 38613,
+      "sha256": "6fede6c39377042604f128eba80b986dd5a4672b8835b492105a87b70393a921"
+    }
+  },
+  "cases": [
+    {
+      "id": "reconstructed-r01-from-explicit-comment",
+      "anchor": {
+        "taskId": "CORAL-WAVE-R01",
+        "authorizationId": "PR151-C5833754643",
+        "candidateClass": "METHOD_DEMO_CANDIDATE",
+        "referenceSetDigests": [
+          "sha256:23f65069936dc9316b975617beb9a07991a24b20bba8de5f45ff6bb0afecadb3",
+          "sha256:3771d3ad5404b02449b87e48bc44509a11ecb4993c401a418ccd1d41e2580da7"
+        ],
+        "authorizedScope": {
+          "objectCount": {"min": 1, "max": 1},
+          "allowedVisibleFeatureTypes": ["bidirectional_wave", "continuous_solid", "simple_rock"],
+          "forbiddenVisibleFeatureTypes": ["coral_forest", "ecology", "microscope", "noise_detail", "procedural_blind_pores", "seawater"]
+        },
+        "scopeDigest": "sha256:26d1960c248c31af08a341bfe33331c73c30713e14a74313c24f5e56e69fb635"
+      },
+      "observed": {
+        "taskId": "CORAL-WAVE-R01",
+        "scopeDigest": "sha256:26d1960c248c31af08a341bfe33331c73c30713e14a74313c24f5e56e69fb635",
+        "candidateClass": "METHOD_DEMO_CANDIDATE",
+        "referenceSetDigests": [
+          "sha256:23f65069936dc9316b975617beb9a07991a24b20bba8de5f45ff6bb0afecadb3",
+          "sha256:3771d3ad5404b02449b87e48bc44509a11ecb4993c401a418ccd1d41e2580da7"
+        ],
+        "targetObjectCount": 1,
+        "visibleFeatureTypes": ["bidirectional_wave", "continuous_solid", "simple_rock"]
+      },
+      "expectedVerdict": "SCOPE_AUTHORIZED"
+    },
+    {
+      "id": "replay-r02-against-reconstructed-r01-scope",
+      "anchorRef": "reconstructed-r01-from-explicit-comment",
+      "observed": {
+        "taskId": "CORAL-WAVE-R01",
+        "scopeDigest": "sha256:26d1960c248c31af08a341bfe33331c73c30713e14a74313c24f5e56e69fb635",
+        "candidateClass": "METHOD_DEMO_CANDIDATE",
+        "referenceSetDigests": [
+          "sha256:23f65069936dc9316b975617beb9a07991a24b20bba8de5f45ff6bb0afecadb3",
+          "sha256:3771d3ad5404b02449b87e48bc44509a11ecb4993c401a418ccd1d41e2580da7"
+        ],
+        "targetObjectCount": 19,
+        "visibleFeatureTypes": ["bidirectional_wave", "continuous_solid", "nineteen_colony_layout", "procedural_blind_pores", "simple_rock"]
+      },
+      "expectedVerdict": "HOLD_SCOPE_EXPANSION_REQUIRES_REAUTHORIZATION"
+    },
+    {
+      "id": "single-object-but-forbidden-pores",
+      "anchorRef": "reconstructed-r01-from-explicit-comment",
+      "observed": {
+        "taskId": "CORAL-WAVE-R01",
+        "scopeDigest": "sha256:26d1960c248c31af08a341bfe33331c73c30713e14a74313c24f5e56e69fb635",
+        "candidateClass": "METHOD_DEMO_CANDIDATE",
+        "referenceSetDigests": [
+          "sha256:23f65069936dc9316b975617beb9a07991a24b20bba8de5f45ff6bb0afecadb3",
+          "sha256:3771d3ad5404b02449b87e48bc44509a11ecb4993c401a418ccd1d41e2580da7"
+        ],
+        "targetObjectCount": 1,
+        "visibleFeatureTypes": ["bidirectional_wave", "continuous_solid", "procedural_blind_pores", "simple_rock"]
+      },
+      "expectedVerdict": "HOLD_SCOPE_EXPANSION_REQUIRES_REAUTHORIZATION"
+    },
+    {
+      "id": "counterfactual-explicitly-reauthorized-r02-scope",
+      "anchor": {
+        "taskId": "CORAL-WAVE-R02-EXPANSION",
+        "authorizationId": "COUNTERFACTUAL-INDEPENDENT-AUTHORITY",
+        "candidateClass": "METHOD_DEMO_CANDIDATE",
+        "referenceSetDigests": [
+          "sha256:23f65069936dc9316b975617beb9a07991a24b20bba8de5f45ff6bb0afecadb3",
+          "sha256:3771d3ad5404b02449b87e48bc44509a11ecb4993c401a418ccd1d41e2580da7"
+        ],
+        "authorizedScope": {
+          "objectCount": {"min": 19, "max": 19},
+          "allowedVisibleFeatureTypes": ["bidirectional_wave", "continuous_solid", "nineteen_colony_layout", "procedural_blind_pores", "simple_rock"],
+          "forbiddenVisibleFeatureTypes": ["microscope", "seawater"]
+        },
+        "scopeDigest": "sha256:fa10d73714a45e76b3bd65282162862d0864d572020d2bc2d51767920055b999"
+      },
+      "observed": {
+        "taskId": "CORAL-WAVE-R02-EXPANSION",
+        "scopeDigest": "sha256:fa10d73714a45e76b3bd65282162862d0864d572020d2bc2d51767920055b999",
+        "candidateClass": "METHOD_DEMO_CANDIDATE",
+        "referenceSetDigests": [
+          "sha256:23f65069936dc9316b975617beb9a07991a24b20bba8de5f45ff6bb0afecadb3",
+          "sha256:3771d3ad5404b02449b87e48bc44509a11ecb4993c401a418ccd1d41e2580da7"
+        ],
+        "targetObjectCount": 19,
+        "visibleFeatureTypes": ["bidirectional_wave", "continuous_solid", "nineteen_colony_layout", "procedural_blind_pores", "simple_rock"]
+      },
+      "expectedVerdict": "SCOPE_AUTHORIZED"
+    },
+    {
+      "id": "mutated-scope-under-original-task",
+      "anchorRef": "reconstructed-r01-from-explicit-comment",
+      "observed": {
+        "taskId": "CORAL-WAVE-R01",
+        "scopeDigest": "sha256:mutated-after-dispatch",
+        "candidateClass": "METHOD_DEMO_CANDIDATE",
+        "referenceSetDigests": [
+          "sha256:23f65069936dc9316b975617beb9a07991a24b20bba8de5f45ff6bb0afecadb3",
+          "sha256:3771d3ad5404b02449b87e48bc44509a11ecb4993c401a418ccd1d41e2580da7"
+        ],
+        "targetObjectCount": 19,
+        "visibleFeatureTypes": ["bidirectional_wave", "continuous_solid", "nineteen_colony_layout", "procedural_blind_pores", "simple_rock"]
+      },
+      "expectedVerdict": "HOLD_SCOPE_CONTRACT_MUTATED"
+    },
+    {
+      "id": "candidate-class-escalation",
+      "anchorRef": "reconstructed-r01-from-explicit-comment",
+      "observed": {
+        "taskId": "CORAL-WAVE-R01",
+        "scopeDigest": "sha256:26d1960c248c31af08a341bfe33331c73c30713e14a74313c24f5e56e69fb635",
+        "candidateClass": "PRODUCTION_CANDIDATE",
+        "referenceSetDigests": [
+          "sha256:23f65069936dc9316b975617beb9a07991a24b20bba8de5f45ff6bb0afecadb3",
+          "sha256:3771d3ad5404b02449b87e48bc44509a11ecb4993c401a418ccd1d41e2580da7"
+        ],
+        "targetObjectCount": 1,
+        "visibleFeatureTypes": ["bidirectional_wave", "continuous_solid", "simple_rock"]
+      },
+      "expectedVerdict": "HOLD_CANDIDATE_CLASS_ESCALATION"
+    },
+    {
+      "id": "reference-target-changed",
+      "anchorRef": "reconstructed-r01-from-explicit-comment",
+      "observed": {
+        "taskId": "CORAL-WAVE-R01",
+        "scopeDigest": "sha256:26d1960c248c31af08a341bfe33331c73c30713e14a74313c24f5e56e69fb635",
+        "candidateClass": "METHOD_DEMO_CANDIDATE",
+        "referenceSetDigests": ["sha256:different-teacher"],
+        "targetObjectCount": 1,
+        "visibleFeatureTypes": ["bidirectional_wave", "continuous_solid", "simple_rock"]
+      },
+      "expectedVerdict": "HOLD_REFERENCE_TARGET_CHANGED"
+    },
+    {
+      "id": "missing-formal-task-anchor",
+      "anchor": null,
+      "observed": {
+        "taskId": null,
+        "scopeDigest": null,
+        "candidateClass": "METHOD_DEMO_CANDIDATE",
+        "referenceSetDigests": [],
+        "targetObjectCount": 1,
+        "visibleFeatureTypes": ["bidirectional_wave", "continuous_solid", "simple_rock"]
+      },
+      "expectedVerdict": "UNKNOWN_TASK_ANCHOR_MISSING"
+    }
+  ]
+}
