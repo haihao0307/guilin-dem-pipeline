@@ -1,0 +1,42 @@
+name: Coral R03 verify exact reference
+on:
+  push:
+    branches: [gh-pages]
+    paths: [.github/workflows/kaopu-coral-r03-verify-data.yml]
+permissions:
+  contents: write
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Restore complete verified sample payload
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p data-verification
+          python - <<'PY'
+          import os,json,base64,hashlib,urllib.request,pathlib
+          api='https://api.github.com/repos/haihao0307/guilin-dem-pipeline/contents/game-coral-mother-wave-r03/pore-reference.json'
+          def request(url,data=None):
+            headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','User-Agent':'KAOPU-R03'}
+            return json.load(urllib.request.urlopen(urllib.request.Request(url,data=json.dumps(data).encode() if data else None,headers=headers,method='PUT' if data else 'GET')))
+          original=request(api+'?ref=gh-pages')
+          d=json.loads(base64.b64decode(original['content']))
+          suffix='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y'
+          # Fail closed: never publish a numerically altered measurement.
+          d['referenceSamples']['data']=d['referenceSamples']['data'].split('Jfq981XoSeWp')[0]+suffix
+          raw=base64.b64decode(d['referenceSamples']['data'],validate=True)
+          assert len(raw)==8192
+          assert hashlib.sha256(raw).hexdigest()=='366dadca42c4ce5c9bb3e39f13ba7572d20fd23e6c2a8926522cd5ecae8e8057'
+          payload=json.dumps(d,separators=(',',':')).encode()
+          assert hashlib.sha256(payload).hexdigest()=='7e8479286912cef5a865e99ec5096222b3baf6adf0104fabb7408f2ceb115855'
+          out=request(api,{'message':'Restore hash-verified complete R03 triangle reference payload','branch':'gh-pages','sha':original['sha'],'content':base64.b64encode(payload).decode()})
+          pathlib.Path('data-verification/pore-reference.json').write_bytes(payload)
+          pathlib.Path('data-verification/receipt.json').write_text(json.dumps({'bytes':len(payload),'sha256':hashlib.sha256(payload).hexdigest(),'commit':out['commit']['sha']},indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: CORAL-R03-DATA-VERIFICATION
+          path: data-verification/
