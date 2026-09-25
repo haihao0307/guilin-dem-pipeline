@@ -1,0 +1,93 @@
+name: GAME Coral Wave R01 browser evidence
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - game-coral-mother-wave-r01/**
+      - .github/workflows/game-coral-wave-r01-qa.yml
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Install browser test driver
+        run: python -m pip install playwright
+      - name: Verify exact public page and controls
+        run: |
+          mkdir -p evidence
+          cat > /tmp/coral-qa.py <<'PY'
+          import hashlib,json,time,urllib.request,shutil
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          out=Path('evidence')
+          source='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/341dd29fffe1a45476f457c0e1edfdaae41cf0fb/game-coral-mother-wave-r01/index.html'
+          url='https://haihao0307.github.io/guilin-dem-pipeline/game-coral-mother-wave-r01/'
+          expected=urllib.request.urlopen(source,timeout=30).read()
+          (out/'index.html').write_bytes(expected)
+          report={'sourceCommit':'341dd29fffe1a45476f457c0e1edfdaae41cf0fb','url':url,'sourceBytes':len(expected),'sourceSha256':hashlib.sha256(expected).hexdigest(),'physicalPhoneTested':False,'teacherQuantitativeFit':False,'errors':[],'checks':{}}
+          def save(): (out/'PUBLIC_BROWSER_QA.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+          save()
+          for attempt in range(30):
+              try:
+                  req=urllib.request.Request(url+'?qa='+str(int(time.time())),headers={'Cache-Control':'no-cache'})
+                  public=urllib.request.urlopen(req,timeout=20).read()
+                  if public==expected: break
+              except Exception: pass
+              time.sleep(4)
+          else: raise AssertionError('Public HTML does not match fixed source')
+          report['checks']['publicBytesMatch']=True;save()
+          with sync_playwright() as p:
+              executable=shutil.which('google-chrome') or shutil.which('chromium') or shutil.which('chromium-browser')
+              assert executable,'No browser executable on runner'
+              browser=p.chromium.launch(executable_path=executable,headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+              page=browser.new_page(viewport={'width':390,'height':844},device_scale_factor=1,is_mobile=True,has_touch=True)
+              page.on('pageerror',lambda e:report['errors'].append(str(e)))
+              response=page.goto(url,wait_until='load',timeout=60000)
+              assert response and response.status==200
+              page.wait_for_function('window.__coralReady || window.__coralError',timeout=60000)
+              assert page.evaluate('window.__coralReady === true'),page.evaluate('window.__coralError')
+              report['checks']['publicWebGLReady']=True;save()
+              for year in [0,5,10,20]:
+                  page.evaluate(f'CoralDemo.setTime({year});CoralDemo.render()')
+                  page.screenshot(path=str(out/f'mobile-{year:02}.png'),timeout=60000)
+              report['mobileState']=page.evaluate('CoralDemo.getState()');save()
+              for view in ['front','side','top']:
+                  page.locator(f'[data-view={view}]').click()
+                  page.screenshot(path=str(out/f'mobile-{view}.png'),timeout=60000)
+              page.evaluate('CoralDemo.setView("oblique");CoralDemo.setTime(5);CoralDemo.render()')
+              geometry=page.evaluate('CoralDemo.getGeometry()')
+              page.evaluate('CoralDemo.setTime(10);CoralDemo.render();CoralDemo.setTime(5);CoralDemo.render()')
+              report['checks']['sameTimeDeterministic']=geometry==page.evaluate('CoralDemo.getGeometry()')
+              page.locator('#play').click();page.wait_for_timeout(1300)
+              report['checks']['playAdvances']=page.evaluate('CoralDemo.getState().time')>5
+              page.locator('#play').click();before=page.evaluate('CoralDemo.getState().time');page.wait_for_timeout(300)
+              report['checks']['pauseStable']=before==page.evaluate('CoralDemo.getState().time')
+              page.locator('#time').evaluate('(e)=>{e.value=12;e.dispatchEvent(new Event("input",{bubbles:true}))}')
+              report['checks']['timeSlider']=page.evaluate('CoralDemo.getState().time')==12
+              before=page.evaluate('CoralDemo.getGeometry()')
+              page.locator('#waveX').evaluate('(e)=>{e.value=1.4;e.dispatchEvent(new Event("input",{bubbles:true}))}')
+              page.evaluate('CoralDemo.render()')
+              report['checks']['waveAffectsGeometry']=before!=page.evaluate('CoralDemo.getGeometry()')
+              page.locator('#defaults').click();page.locator('#end').click()
+              data=page.evaluate('CoralDemo.getData()');(out/'object.kaopu.json').write_text(json.dumps(data,separators=(',',':')))
+              report['checks']['parentReadyBeforeChild']=all(n[0]<0 or n[2]>=data['nodes'][n[0]][2]+data['nodes'][n[0]][3]*n[1] for n in data['nodes'])
+              report['checks']['mobileNoHorizontalOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+              save()
+              page.set_viewport_size({'width':1365,'height':930});page.evaluate('CoralDemo.render()');page.screenshot(path=str(out/'desktop-final.png'),timeout=60000)
+              report['desktopState']=page.evaluate('CoralDemo.getState()')
+              report['checks']['desktopNoHorizontalOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+              save();browser.close()
+          assert not report['errors'],report['errors']
+          assert all(report['checks'].values()),report['checks']
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          PY
+          python -u /tmp/coral-qa.py
+      - name: Preserve exact HTML, receipts, and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GAME-CORAL-WAVE-R01-EVIDENCE
+          path: evidence/
+          retention-days: 30
