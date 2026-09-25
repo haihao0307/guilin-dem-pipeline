@@ -1,0 +1,54 @@
+name: Coral R03 measured reference assembly
+on:
+  push:
+    branches: [gh-pages]
+    paths: [.github/workflows/kaopu-coral-r03-assemble-reference.yml]
+permissions:
+  contents: write
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Assemble and check original measurements
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p verified
+          python - <<'PY'
+          import os,json,base64,hashlib,urllib.request,pathlib,zlib,array
+          root='https://api.github.com/repos/haihao0307/guilin-dem-pipeline/contents/'
+          folder='game-coral-mother-wave-r03/'
+          def request(path,data=None):
+            h={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','User-Agent':'KAOPU-R03'}
+            return json.load(urllib.request.urlopen(urllib.request.Request(root+path,data=json.dumps(data).encode() if data else None,headers=h,method='PUT' if data else 'GET')))
+          chunks=[]
+          for i in range(6):
+            r=request(folder+'source-transfer/part'+str(i)+'.txt?ref=gh-pages')
+            s=base64.b64decode(r['content']).decode().strip();chunks.append(s)
+            print(i,len(s),hashlib.sha256(s.encode()).hexdigest())
+          b=zlib.decompress(base64.b64decode(''.join(chunks),validate=True))
+          assert len(b)==8192
+          v=[[b[y*64+x]+256*b[4096+y*64+x] for x in range(64)] for y in range(64)]
+          for y in range(64):
+            for x in range(1,64):v[y][x]=(v[y][x]+v[y][x-1])%65536
+          for y in range(1,64):
+            for x in range(64):v[y][x]=(v[y][x]+v[y-1][x])%65536
+          values=array.array('H',[a for row in v for a in row]);raw=values.tobytes()
+          assert hashlib.sha256(raw).hexdigest()=='366dadca42c4ce5c9bb3e39f13ba7572d20fd23e6c2a8926522cd5ecae8e8057',hashlib.sha256(raw).hexdigest()
+          old=request(folder+'pore-reference.json?ref=gh-pages')
+          d=json.loads(base64.b64decode(old['content']));d['referenceSamples']['data']=base64.b64encode(raw).decode()
+          payload=json.dumps(d,separators=(',',':')).encode()
+          sha=hashlib.sha256(payload).hexdigest()
+          assert sha=='7e8479286912cef5a865e99ec5096222b3baf6adf0104fabb7408f2ceb115855',sha
+          out=request(folder+'pore-reference.json',{'message':'R03 restore complete hash-verified triangle reference samples','branch':'gh-pages','sha':old['sha'],'content':base64.b64encode(payload).decode()})
+          pathlib.Path('verified/pore-reference.json').write_bytes(payload)
+          pathlib.Path('verified/receipt.json').write_text(json.dumps({'sha256':sha,'bytes':len(payload),'commit':out['commit']['sha']},indent=2))
+          print(out['commit']['sha'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: CORAL-R03-VERIFIED-REFERENCE
+          path: verified/
+          retention-days: 30
