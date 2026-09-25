@@ -1,0 +1,55 @@
+{
+  "id": "ARTIFACT-SIZE-NOT-RESOURCE-BUDGET-001",
+  "status": "Candidate",
+  "scope": "Fish Mother large standalone WebGL delivery resource claims only",
+  "problem": "Exact artifact bytes and a successful hosted-browser run can be overclaimed as proof of a constrained physical-device resource envelope.",
+  "falsifiableHypothesis": "A claim-bound resource gate will preserve valid artifact/runtime evidence while refusing a constrained-device resource claim unless a task-specific budget, compatible environment and all required measurements are present.",
+  "requiredFields": [
+    "claimId",
+    "testedSubjectSha",
+    "artifactIdentity",
+    "runIdentity",
+    "resourceBudgetProfileId",
+    "claimEnvironmentProfileId",
+    "evidenceEnvironmentProfileId",
+    "measurementWindow",
+    "navigationTransferBytes",
+    "navigationEncodedBodyBytes",
+    "navigationDecodedBodyBytes",
+    "peakJsHeapBytes",
+    "peakProcessRssBytes",
+    "peakGpuBytesOrUnknown",
+    "cpuWindow",
+    "timeToFirstVisibleMs",
+    "timeToInteractiveMs",
+    "contextLossRecoveryDecision",
+    "resourceEnvelopeDecision",
+    "physicalDeviceResult",
+    "userAcceptance"
+  ],
+  "decisions": [
+    "ARTIFACT_IDENTITY_VERIFIED",
+    "HOSTED_RUNTIME_VERIFIED",
+    "CONTEXT_RECOVERY_VERIFIED",
+    "UNKNOWN_RESOURCE_BUDGET_NOT_PINNED",
+    "HOLD_RESOURCE_ENVELOPE_UNMEASURED",
+    "HOLD_RESOURCE_ENVIRONMENT_MISMATCH",
+    "RESOURCE_BUDGET_EXCEEDED",
+    "RESOURCE_ENVELOPE_VERIFIED",
+    "REJECTED_BY_USER_OBSERVATION"
+  ],
+  "activation": {
+    "global": false,
+    "motherTrialRequired": true,
+    "independentVerifierRequired": true,
+    "rollbackPoint": "Do not alter existing R2 gates; remove this candidate record if the trial adds no discriminating value."
+  },
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE-RUN": false,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}

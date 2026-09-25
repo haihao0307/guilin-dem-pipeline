@@ -1,0 +1,122 @@
+{
+  "studyId": "N39",
+  "boundedQuestion": "Can exact artifact size plus hosted Chromium success verify a constrained-device resource envelope?",
+  "historical": {
+    "r012": {
+      "testedSubjectSha": "b5f2d11cbf55e17518dda411bf034596818c46d5",
+      "runId": 35974311593,
+      "jobId": 107551050350,
+      "workflowBlobSha": "b0bc8a27e96bbcb698a88df415f8370b01e51b82",
+      "artifact": {
+        "path": "restart/fish-yellowfin-teacher-r2/release/index.html",
+        "bytes": 94452856,
+        "sha256": "d4ea8e9092cade31693a6de4f654a7d7a47efe278de2a1a6b286f4585aaac7d3"
+      },
+      "evidenceEnvironment": {
+        "runner": "github-hosted ubuntu-latest",
+        "browser": "Playwright Chromium",
+        "physicalDevice": false
+      },
+      "runtimeChecks": {
+        "desktopPassed": true,
+        "viewport390x844Passed": true,
+        "webglUnavailableFallbackPassed": true,
+        "contextLossRecoveryPassed": true,
+        "publicBrowserPassed": true
+      },
+      "resourceBudgetProfile": null,
+      "resourceMeasurements": {
+        "navigationTransferBytes": null,
+        "navigationEncodedBodyBytes": null,
+        "navigationDecodedBodyBytes": null,
+        "peakJsHeapBytes": null,
+        "peakProcessRssBytes": null,
+        "peakGpuBytes": null,
+        "cpuWindow": null,
+        "timeToFirstVisibleMs": null,
+        "timeToInteractiveMs": null
+      },
+      "userDeviceRetested": false,
+      "manualVisualAcceptance": false
+    },
+    "r006UserObservation": {
+      "observation": "WHITE_SCREEN",
+      "strongClaimDecision": "REJECTED_BY_USER_OBSERVATION",
+      "uniqueRootCauseConfirmed": false
+    }
+  },
+  "controls": [
+    {
+      "id": "complete-compatible-within-budget",
+      "claimEnvironmentProfileId": "iphone-safari-profile-a",
+      "evidenceEnvironmentProfileId": "iphone-safari-profile-a",
+      "budget": {
+        "requiredMetrics": ["navigationTransferBytes", "navigationDecodedBodyBytes", "peakJsHeapBytes", "peakProcessRssBytes", "timeToFirstVisibleMs", "timeToInteractiveMs"],
+        "max": {
+          "navigationTransferBytes": 100000000,
+          "navigationDecodedBodyBytes": 140000000,
+          "peakJsHeapBytes": 300000000,
+          "peakProcessRssBytes": 500000000,
+          "timeToFirstVisibleMs": 3000,
+          "timeToInteractiveMs": 12000
+        }
+      },
+      "measurements": {
+        "navigationTransferBytes": 94452856,
+        "navigationDecodedBodyBytes": 120000000,
+        "peakJsHeapBytes": 250000000,
+        "peakProcessRssBytes": 420000000,
+        "timeToFirstVisibleMs": 1200,
+        "timeToInteractiveMs": 9000
+      },
+      "expected": "RESOURCE_ENVELOPE_VERIFIED"
+    },
+    {
+      "id": "missing-required-heap",
+      "claimEnvironmentProfileId": "iphone-safari-profile-a",
+      "evidenceEnvironmentProfileId": "iphone-safari-profile-a",
+      "budget": {
+        "requiredMetrics": ["navigationTransferBytes", "peakJsHeapBytes"],
+        "max": {
+          "navigationTransferBytes": 100000000,
+          "peakJsHeapBytes": 300000000
+        }
+      },
+      "measurements": {
+        "navigationTransferBytes": 94452856,
+        "peakJsHeapBytes": null
+      },
+      "expected": "HOLD_RESOURCE_ENVELOPE_UNMEASURED"
+    },
+    {
+      "id": "measured-over-budget",
+      "claimEnvironmentProfileId": "iphone-safari-profile-a",
+      "evidenceEnvironmentProfileId": "iphone-safari-profile-a",
+      "budget": {
+        "requiredMetrics": ["peakJsHeapBytes"],
+        "max": {
+          "peakJsHeapBytes": 300000000
+        }
+      },
+      "measurements": {
+        "peakJsHeapBytes": 350000000
+      },
+      "expected": "RESOURCE_BUDGET_EXCEEDED"
+    },
+    {
+      "id": "environment-mismatch",
+      "claimEnvironmentProfileId": "physical-iphone-safari",
+      "evidenceEnvironmentProfileId": "github-hosted-chromium",
+      "budget": {
+        "requiredMetrics": ["peakJsHeapBytes"],
+        "max": {
+          "peakJsHeapBytes": 300000000
+        }
+      },
+      "measurements": {
+        "peakJsHeapBytes": 250000000
+      },
+      "expected": "HOLD_RESOURCE_ENVIRONMENT_MISMATCH"
+    }
+  ]
+}
