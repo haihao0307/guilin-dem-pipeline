@@ -74,6 +74,6 @@ Decision: `CANDIDATE_SINGLE_MOTHER_TRIAL_ONLY`.
 
 Route only to GAME Coral Mother through PR #151 for the next related task. Do not activate globally and do not modify R2 until one real Mother trial and independent verifier receipt exist. Rollback is deletion of the Candidate; the unchanged R2 and mandatory regressions remain authoritative.
 
-Lifecycle at record creation: `POSTED=false`, `ACKNOWLEDGED=false`, `IMPLEMENTED=false`, `GATE-RUN=false`, `ADOPTED=false`, `USER-ACCEPTED=false`.
+Lifecycle after targeted routing to PR #151 comment `5838593437`: `POSTED=true`, `ACKNOWLEDGED=false`, `IMPLEMENTED=false`, `GATE-RUN=false`, `ADOPTED=false`, `USER-ACCEPTED=false`.
 
 Institutional KPI effect: `Unknown`; no reliable post-adoption sample exists.
