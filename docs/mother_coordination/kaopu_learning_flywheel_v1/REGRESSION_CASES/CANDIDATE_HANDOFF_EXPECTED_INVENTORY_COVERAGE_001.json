@@ -1,0 +1,45 @@
+{
+  "id": "HANDOFF-EXPECTED-INVENTORY-COVERAGE-001",
+  "status": "Candidate",
+  "scope": "single-Mother handoff/backup/reproducibility/full-project package",
+  "trigger": "An archive passes checksum, CRC, manifest and runtime checks while task-required semantic roles may never have entered the selected output.",
+  "requiredFields": [
+    "testedSubjectSha",
+    "completenessProfileId",
+    "claimLabel",
+    "expectedInventory",
+    "observedInventory",
+    "missingRequiredRoles",
+    "deliveryModes",
+    "identityRequirements",
+    "archiveIntegrityDecision",
+    "runtimeDecision",
+    "contractCompletenessDecision",
+    "userAcceptance"
+  ],
+  "assertions": [
+    "expectedInventory is fixed before packaging and independently of output traversal",
+    "observed roles use INCLUDED_VERIFIED, VERIFIED_EXTERNAL, KNOWN_NOT_INCLUDED, MISSING, or UNKNOWN",
+    "a self-generated archive manifest proves integrity only for selected contents",
+    "file count and byte count cannot overrule a missing required semantic role",
+    "KNOWN_NOT_INCLUDED remains an explicit exclusion and cannot become delivered by wording",
+    "external delivery counts only when authorized, retrievable, identity-verified, and receipt-bound",
+    "archive integrity, runtime, contract completeness, and user acceptance remain separate states"
+  ],
+  "states": [
+    "ARCHIVE_INTEGRITY_VERIFIED",
+    "RUNNABLE_SUBSET_COMPLETE",
+    "HANDOFF_CONTRACT_COMPLETE",
+    "HOLD_REQUIRED_ROLE_MISSING",
+    "HOLD_EXTERNAL_DELIVERY_UNVERIFIED",
+    "UNKNOWN_TASK_PROFILE_NOT_PINNED"
+  ],
+  "activation": {
+    "posted": false,
+    "acknowledged": false,
+    "implemented": false,
+    "gateRun": false,
+    "adopted": false,
+    "userAccepted": false
+  }
+}

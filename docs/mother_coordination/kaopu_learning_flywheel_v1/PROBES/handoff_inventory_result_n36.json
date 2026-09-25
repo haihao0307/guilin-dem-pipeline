@@ -1,0 +1,124 @@
+{
+  "schema": "kaopu.handoff-inventory-probe/1.0",
+  "round": "N36",
+  "historicalDecision": {
+    "archiveIntegrity": "ARCHIVE_INTEGRITY_VERIFIED",
+    "runnableSubsetProfile": "HANDOFF_CONTRACT_COMPLETE",
+    "fullTakeoverSourceVaultProfile": "HOLD_REQUIRED_ROLE_MISSING",
+    "actualTaskProfile": "UNKNOWN_NOT_PINNED_IN_MACHINE_READABLE_TASK_ANCHOR",
+    "userAcceptance": "UNKNOWN"
+  },
+  "profileResults": {
+    "PUBLIC_RUNNABLE_SUBSET_V1": {
+      "claim": "complete runnable public-project snapshot",
+      "requiredRoleCount": 7,
+      "missing": [],
+      "decision": "HANDOFF_CONTRACT_COMPLETE"
+    },
+    "FULL_TAKEOVER_SOURCE_VAULT_V1": {
+      "claim": "complete source-vault takeover",
+      "requiredRoleCount": 9,
+      "missing": [
+        "originalFbxGltfUploadZip",
+        "privateContinuousInstructionLog"
+      ],
+      "decision": "HOLD_REQUIRED_ROLE_MISSING"
+    }
+  },
+  "candidateMethod": {
+    "expectedInventorySource": "Task Anchor profile fixed before packaging and independent of observed archive traversal",
+    "observedInventorySource": "archive traversal plus per-role identity verification",
+    "decisionRule": "every required role must be INCLUDED_VERIFIED or satisfy an explicitly authorized external-delivery mode",
+    "preservedClaims": [
+      "archive integrity",
+      "download identity",
+      "fresh-unzip runtime"
+    ],
+    "forbiddenShortcut": "verified file count or self-generated manifest implies task-contract completeness"
+  },
+  "checks": [
+    {
+      "id": "archive-integrity-evidence-is-valid",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "id": "fresh-unzip-runtime-evidence-is-valid",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "id": "public-runnable-subset-complete",
+      "actual": "HANDOFF_CONTRACT_COMPLETE",
+      "expected": "HANDOFF_CONTRACT_COMPLETE",
+      "passed": true
+    },
+    {
+      "id": "public-runnable-subset-has-no-missing-role",
+      "actual": [],
+      "expected": [],
+      "passed": true
+    },
+    {
+      "id": "full-source-vault-is-held",
+      "actual": "HOLD_REQUIRED_ROLE_MISSING",
+      "expected": "HOLD_REQUIRED_ROLE_MISSING",
+      "passed": true
+    },
+    {
+      "id": "full-source-vault-missing-roles-are-explicit",
+      "actual": [
+        "originalFbxGltfUploadZip",
+        "privateContinuousInstructionLog"
+      ],
+      "expected": [
+        "originalFbxGltfUploadZip",
+        "privateContinuousInstructionLog"
+      ],
+      "passed": true
+    },
+    {
+      "id": "file-count-cannot-overrule-missing-required-role",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "id": "historical-manifest-does-not-claim-private-vault",
+      "actual": false,
+      "expected": false,
+      "passed": true
+    },
+    {
+      "id": "known-exclusion-does-not-become-inclusion",
+      "actual": "KNOWN_NOT_INCLUDED",
+      "expected": "KNOWN_NOT_INCLUDED",
+      "passed": true
+    },
+    {
+      "id": "scope-matched-runnable-claim-remains-valid",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "id": "task-contract-completeness-remains-unknown-without-pinned-profile",
+      "actual": "UNKNOWN",
+      "expected": "UNKNOWN",
+      "passed": true
+    },
+    {
+      "id": "integrity-and-contract-completeness-are-independent",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    }
+  ],
+  "summary": {
+    "passed": 12,
+    "total": 12,
+    "allPassed": true
+  }
+}
