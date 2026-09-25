@@ -1,0 +1,123 @@
+name: GAME Coral Wave R02 publish and evidence
+on:
+  push:
+    branches: [gh-pages]
+    paths: ['.github/workflows/game-coral-wave-r02-publish.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 1
+      - name: Verify payload and preserve R01 before updating only the Coral directory
+        run: |
+          python - <<'PY'
+          import base64,lzma,hashlib,pathlib,re,json
+          d=pathlib.Path('game-coral-mother-wave-r01');r=d/'releases/r02'
+          source=''.join((r/f'payload-{i}.txt').read_text().strip() for i in (1,2,3))
+          b=lzma.decompress(base64.b64decode(source,validate=True))
+          expected='4d884be3a251f5b844fa9e3e3989f2d113ee6808b71aca5c6b1309ce889e2ee0'
+          assert hashlib.sha256(b).hexdigest()==expected, 'R02 payload mismatch'
+          old=(d/'index.html').read_bytes()
+          oldsha=hashlib.sha256(old).hexdigest()
+          assert oldsha in ['917af477221d70de8fd89c5cddac5babb3f50a15801a6ecfa7e328ff32092b61',expected], 'Live workbench changed; stop for reconciliation'
+          if not (d/'R01.html').exists():
+              assert oldsha=='917af477221d70de8fd89c5cddac5babb3f50a15801a6ecfa7e328ff32092b61'
+              (d/'R01.html').write_bytes(old)
+          assert hashlib.sha256((d/'R01.html').read_bytes()).hexdigest()=='917af477221d70de8fd89c5cddac5babb3f50a15801a6ecfa7e328ff32092b61'
+          (d/'index.html').write_bytes(b)
+          text=b.decode();data=json.loads(re.search(r'<script id="kaopuData" type="application/json">\s*(.*?)\s*</script>',text,re.S).group(1))
+          (r/'object.kaopu.json').write_text(json.dumps(data,ensure_ascii=False,separators=(',',':')))
+          script=re.findall(r'<script(?: [^>]*)?>([\s\S]*?)</script>',text)[-1]
+          pathlib.Path('/tmp/coral-r02-check.js').write_text(script)
+          (r/'README_ZH.md').write_text('# Coral R02：单株、浅孔、19实例群落\n\n保留R01.html。候选仅黑白。对象33个显式局部、两路共享波形；在老师原网格上测了宽高0.909875、纵深高1.169459，并校准解析体支持包络。不是老师逐点复原；局部结构和孔位未对应老师。浅孔为实体差集盲孔，不是贴黑点。19实例的种子布局不是澳大利亚/帕劳实地测绘，不表明19个生物群体身份已确认。时间为演示年，尺度非厘米。\n\n网页包含参考轮廓与公共渲染器，体积另计；对象JSON不是R08原生容器的新标准。无老师网格运行依赖。显示缓存包含浮点段端点；高统一变量容量GPU使用uniform，其他设备使用纹理。屏幕像素直接求交、分对象包围体剔除，深度缓冲正确排序；GPU fence限制为一帧待完成，避免动画堆积。分辨率会受设备与模式限制，不把JavaScript提交耗时说成GPU帧率。真实iPhone/Safari、真实年龄、逐孔一致性和用户视觉批准仍待验。\n\n参考：RISD Nature Lab Blue Coral / Accession34.25，CC BY4.0。本页弹窗是本轮原网格投影提取的轮廓，不表示内部孔洞。\n')
+          print('Verified',len(b),expected)
+          PY
+          node --check /tmp/coral-r02-check.js
+          git config user.name 'KAOPU Coral Workbench'
+          git config user.email 'kaopu-coral@users.noreply.github.com'
+          git add game-coral-mother-wave-r01/index.html game-coral-mother-wave-r01/R01.html game-coral-mother-wave-r01/releases/r02/object.kaopu.json game-coral-mother-wave-r01/releases/r02/README_ZH.md
+          git diff --cached --quiet || git commit -m 'Coral R02: measured envelope, bounded cavities, 19 shared instances; retain R01'
+          git pull --rebase origin gh-pages
+          git push origin HEAD:gh-pages
+      - name: Request branch Pages build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api --method POST repos/${{ github.repository }}/pages/builds
+      - name: Install browser driver
+        run: |
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Check exact public bytes and exercise actual browser
+        run: |
+          mkdir -p /tmp/coral-r02-evidence
+          python -u - <<'PY'
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          import urllib.request,time,hashlib,json
+          root=Path('/tmp/coral-r02-evidence');url='https://haihao0307.github.io/guilin-dem-pipeline/game-coral-mother-wave-r01/'
+          expected='4d884be3a251f5b844fa9e3e3989f2d113ee6808b71aca5c6b1309ce889e2ee0';data=None
+          for attempt in range(42):
+              try:
+                  data=urllib.request.urlopen(url+'?r02='+str(attempt),timeout=15).read()
+                  if hashlib.sha256(data).hexdigest()==expected:break
+              except Exception as e:print(str(e))
+              time.sleep(8)
+          assert data and hashlib.sha256(data).hexdigest()==expected, 'Public bytes not yet equal verified R02'
+          (root/'index.html').write_bytes(data)
+          report={'url':url,'sha256':expected,'htmlBytes':len(data),'physicalIPhoneTested':False,'exactTeacherFit':False,'exactTeacherPores':False,'errors':[],'checks':{'publicBytesMatch':True}}
+          checks=report['checks']
+          with sync_playwright() as p:
+              b=p.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+              pg=b.new_page(viewport={'width':1280,'height':900});pg.on('pageerror',lambda e:report['errors'].append(str(e)))
+              pg.goto(url+'?r02=verified',wait_until='networkidle',timeout=120000);pg.wait_for_function('window.__coralReady||window.__coralError',timeout=120000)
+              assert pg.evaluate('window.__coralReady'),pg.evaluate('window.__coralError');checks['webglReady']=True
+              def frame():return pg.evaluate('CoralDemo.getState().frameCount')
+              def wait(n):pg.wait_for_function(f'CoralDemo.getState().frameCount>{n}',timeout=180000)
+              def t(v):
+                  n=frame();pg.evaluate(f'CoralDemo.setTime({v})');wait(n)
+              t(1);pg.screenshot(path=str(root/'desktop-01.png'),timeout=180000)
+              t(20);pg.screenshot(path=str(root/'desktop-single.png'),timeout=180000)
+              report['single']=pg.evaluate('CoralDemo.getState()')
+              checks['parentBeforeChild']=pg.evaluate('(()=>{let n=CoralDemo.getData().nodes;return n.every(a=>a[0]<0||a[2]+1e-7>=n[a[0]][2]+n[a[0]][3]*a[1])})()')
+              t(8);a=pg.evaluate('JSON.stringify(CoralDemo.getGeometry())');t(12);t(8);checks['deterministicReplay']=a==pg.evaluate('JSON.stringify(CoralDemo.getGeometry())')
+              now=pg.evaluate('CoralDemo.getState().time');pg.wait_for_timeout(300);checks['pauseStable']=now==pg.evaluate('CoralDemo.getState().time')
+              pg.click('#play');pg.wait_for_timeout(400);pg.click('#play');checks['playAdvances']=pg.evaluate('CoralDemo.getState().time')>now
+              n=frame();pg.click('[data-mode=patch]');wait(n);pg.screenshot(path=str(root/'desktop-patch.png'),timeout=180000);report['patch']=pg.evaluate('CoralDemo.getState()');checks['nineteenInstances']=report['patch']['instances']==19
+              checks['desktopNoOverflow']=pg.evaluate('document.documentElement.scrollWidth<=innerWidth')
+              n=frame();pg.click('[data-mode=close]');wait(n);pg.screenshot(path=str(root/'pores-on.png'),timeout=180000)
+              n=frame();pg.eval_on_selector('#pores','e=>{e.value=0;e.dispatchEvent(new Event("input"))}');wait(n);pg.screenshot(path=str(root/'pores-off.png'),timeout=180000);checks['poresChangeRaster']=(root/'pores-on.png').read_bytes()!=(root/'pores-off.png').read_bytes()
+              pg.set_viewport_size({'width':390,'height':844});n=frame();pg.evaluate('CoralDemo.setMode("patch")');wait(n);pg.screenshot(path=str(root/'mobile-patch.png'),timeout=180000);checks['mobileNoOverflow']=pg.evaluate('document.documentElement.scrollWidth<=innerWidth');report['mobile']=pg.evaluate('CoralDemo.getState()')
+              b.close()
+          report['passed']=all(checks.values()) and not report['errors'];(root/'PUBLIC_QA.json').write_text(json.dumps(report,ensure_ascii=False,indent=2));print(json.dumps(report));assert report['passed']
+          PY
+      - name: Preserve accessible reference images without publishing them on the workbench
+        if: always()
+        run: |
+          python - <<'PY'
+          import urllib.request,json,hashlib,pathlib
+          r=pathlib.Path('/tmp/coral-r02-evidence/references');r.mkdir(parents=True,exist_ok=True)
+          items=[('Australian-Museum','https://lifg.australian.museum/Image/IxB1ppuf.jpeg?version=full'),('Kwajalein','https://www.underwaterkwaj.com/uw-misc/coral/heliopora/Heliopora-jj-0434-111111.jpg'),('Courtney2021-Fig1','https://media.springernature.com/lw685/springer-static/image/art%3A10.1007%2Fs00338-021-02137-3/MediaObjects/338_2021_2137_Fig1_HTML.jpg')]
+          rec=[]
+          for name,url in items:
+              row={'name':name,'url':url,'publicReuseLicenseVerified':name=='Courtney2021-Fig1'}
+              try:
+                  data=urllib.request.urlopen(url,timeout=18).read();assert data[:2]==b'\xff\xd8' or data[:8]==b'\x89PNG\r\n\x1a\n';(r/(name+'.jpg')).write_bytes(data);row.update(saved=True,sha256=hashlib.sha256(data).hexdigest(),bytes=len(data))
+              except Exception as e:row.update(saved=False,error=str(e))
+              rec.append(row)
+          (r/'REFERENCE_RECEIPT.json').write_text(json.dumps(rec,indent=2))
+          PY
+      - name: Store exact page, browser receipts, and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GAME-CORAL-WAVE-R02-EVIDENCE
+          path: /tmp/coral-r02-evidence
+          retention-days: 30
