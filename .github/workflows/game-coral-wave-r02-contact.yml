@@ -1,0 +1,67 @@
+name: GAME Coral R02 contact repair and regression
+on:
+  push:
+    branches: [gh-pages]
+    paths: ['.github/workflows/game-coral-wave-r02-contact.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 1
+      - name: Apply exact bounded support-contact correction
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          p=Path('game-coral-mother-wave-r01/index.html');b=p.read_bytes()
+          old='4d884be3a251f5b844fa9e3e3989f2d113ee6808b71aca5c6b1309ce889e2ee0';new='fc1eecfb282b5803e011a31144feccfd3f770cb11b9ca03352ebbc99173da231'
+          digest=hashlib.sha256(b).hexdigest();assert digest in [old,new], 'Unexpected live file: stop for reconciliation'
+          if digest==old:
+              pairs=[('vec3(0.,-.075,0.)','vec3(0.,-.04,0.)'),('vec3(.58,.135,.70)','vec3(.64,.21,.76)'),('vec3(0.,-.32,0.)','vec3(0.,-.12,0.)'),('vec3(2.65,.38,2.48)','vec3(2.8,.50,2.8)'),('d=max(d,-p.y-.16);','d=max(max(d,-p.y-.16),p.y-.070);'),('vec3 n=normalize((p-ct)/(rr*rr));','vec3 n=p.y>.068?vec3(0.,1.,0.):normalize((p-ct)/(rr*rr));'),('vec3(pose.x,0.,pose.y)','vec3(pose.x,.055*(1.-pose.z),pose.y)'),('center=[pose[0],.55*pose[2],pose[1]]','center=[pose[0],.55*pose[2]+.055*(1-pose[2]),pose[1]]')]
+              s=b.decode()
+              for a,c in pairs:
+                  assert a in s,a
+                  s=s.replace(a,c)
+              b=s.encode();assert hashlib.sha256(b).hexdigest()==new;p.write_bytes(b)
+          assert hashlib.sha256(p.read_bytes()).hexdigest()==new
+          assert hashlib.sha256(Path('game-coral-mother-wave-r01/R01.html').read_bytes()).hexdigest()=='917af477221d70de8fd89c5cddac5babb3f50a15801a6ecfa7e328ff32092b61'
+          Path('game-coral-mother-wave-r01/releases/r02/CONTACT_FIX.md').write_text('# R02 contact correction\n\nSimple display rock has a horizontal attachment area. Instance scale no longer changes the common attachment elevation. This display substrate does not reconstruct the unknown teacher specimen base. Current HTML: 36,387 bytes; SHA256 '+new+'\n')
+          PY
+          git config user.name 'KAOPU Coral Workbench'
+          git config user.email 'kaopu-coral@users.noreply.github.com'
+          git add game-coral-mother-wave-r01/index.html game-coral-mother-wave-r01/releases/r02/CONTACT_FIX.md
+          git diff --cached --quiet || git commit -m 'Coral R02: stable rock attachment under scaled shared instances'
+          git pull --rebase origin gh-pages
+          git push origin HEAD:gh-pages
+      - name: Request Pages publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api --method POST repos/${{ github.repository }}/pages/builds
+      - name: Install browser driver
+        run: |
+          python -m pip install playwright pyyaml
+          python -m playwright install --with-deps chromium
+      - name: Run the R02 full public regression against the corrected hash
+        run: |
+          python - <<'PY'
+          import yaml,pathlib,subprocess
+          data=yaml.safe_load(pathlib.Path('.github/workflows/game-coral-wave-r02-publish.yml').read_text())
+          step=next(x for x in data['jobs']['publish']['steps'] if x.get('name')=='Check exact public bytes and exercise actual browser')
+          script=step['run'].replace('4d884be3a251f5b844fa9e3e3989f2d113ee6808b71aca5c6b1309ce889e2ee0','fc1eecfb282b5803e011a31144feccfd3f770cb11b9ca03352ebbc99173da231')
+          subprocess.run(['bash','-e','-c',script],check=True)
+          PY
+      - name: Preserve exact corrected-page evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GAME-CORAL-R02-CONTACT-EVIDENCE
+          path: /tmp/coral-r02-evidence
+          retention-days: 30
