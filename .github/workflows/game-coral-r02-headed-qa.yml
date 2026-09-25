@@ -1,0 +1,72 @@
+name: GAME Coral R02 headed public browser QA
+on:
+  push:
+    branches: [gh-pages]
+    paths: ['.github/workflows/game-coral-r02-headed-qa.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - name: Install headed browser driver
+        run: |
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Exercise the unchanged public workbench with a virtual display
+        run: |
+          mkdir -p /tmp/coral-r02-headed
+          cat > /tmp/test-r02.py <<'PY'
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          import urllib.request,hashlib,json,time,traceback
+          r=Path('/tmp/coral-r02-headed');url='https://haihao0307.github.io/guilin-dem-pipeline/game-coral-mother-wave-r01/'
+          expected='fc1eecfb282b5803e011a31144feccfd3f770cb11b9ca03352ebbc99173da231'
+          data=urllib.request.urlopen(url+'?qa=headed-r02',timeout=30).read();assert hashlib.sha256(data).hexdigest()==expected
+          (r/'index.html').write_bytes(data)
+          report={'url':url,'sha256':expected,'htmlBytes':len(data),'browserMode':'headed Chromium / Xvfb / SwiftShader','physicalIPhoneTested':False,'teacherPointwiseFit':False,'teacherPoreCorrespondence':False,'errors':[],'checks':{'publicBytesMatch':True}}
+          C=report['checks']
+          def save():
+              report['passed']=all(C.values()) and not report['errors'] and report.get('completed',False)
+              (r/'PUBLIC_QA.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+          save()
+          try:
+              with sync_playwright() as p:
+                  b=p.chromium.launch(headless=False,args=['--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+                  page=b.new_page(viewport={'width':1440,'height':1000});page.on('pageerror',lambda e:report['errors'].append(str(e)))
+                  page.goto(url+'?qa=headed-r02',wait_until='networkidle',timeout=90000)
+                  page.wait_for_function('window.__coralReady||window.__coralError',timeout=90000);assert page.evaluate('window.__coralReady'),page.evaluate('window.__coralError');C['webglReady']=True
+                  def wait_frame(n):page.wait_for_function(f'CoralDemo.getState().frameCount>{n}',timeout=150000)
+                  def settime(t):
+                      n=page.evaluate('CoralDemo.getState().frameCount');page.evaluate(f'CoralDemo.setTime({t})');wait_frame(n)
+                  def shot(name):
+                      print('screenshot start',name,time.time(),flush=True)
+                      page.screenshot(path=str(r/(name+'.png')),timeout=150000)
+                      print('screenshot complete',name,time.time(),flush=True);save()
+                  settime(1);shot('single-01');settime(20);shot('single-20');report['single']=page.evaluate('CoralDemo.getState()')
+                  C['parentBeforeChild']=page.evaluate('(()=>{let n=CoralDemo.getData().nodes;return n.every(a=>a[0]<0||a[2]+1e-7>=n[a[0]][2]+n[a[0]][3]*a[1])})()')
+                  settime(8);a=page.evaluate('JSON.stringify(CoralDemo.getGeometry())');settime(12);settime(8);C['sameTimeDeterministic']=a==page.evaluate('JSON.stringify(CoralDemo.getGeometry())')
+                  t=page.evaluate('CoralDemo.getState().time');page.wait_for_timeout(300);C['pauseStable']=t==page.evaluate('CoralDemo.getState().time')
+                  page.click('#play');page.wait_for_timeout(400);page.click('#play');C['playAdvances']=page.evaluate('CoralDemo.getState().time')>t
+                  n=page.evaluate('CoralDemo.getState().frameCount');page.click('[data-mode=patch]');wait_frame(n);report['patch']=page.evaluate('CoralDemo.getState()');C['nineteenInstances']=report['patch']['instances']==19;save();shot('patch-20')
+                  n=page.evaluate('CoralDemo.getState().frameCount');page.click('[data-mode=close]');wait_frame(n);shot('close-20')
+                  n=page.evaluate('CoralDemo.getState().frameCount');page.eval_on_selector('#pores','e=>{e.value=0;e.dispatchEvent(new Event("input"))}');wait_frame(n);shot('close-pores-off');C['poresChangeRaster']=(r/'close-20.png').read_bytes()!=(r/'close-pores-off.png').read_bytes()
+                  C['desktopNoHorizontalOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+                  page.click('#showTeacher');C['referenceAvailable']=page.locator('#teacherModal img').evaluate('e=>e.complete&&e.naturalWidth>0');page.click('#closeTeacher')
+                  page.set_viewport_size({'width':390,'height':844});n=page.evaluate('CoralDemo.getState().frameCount');page.evaluate('CoralDemo.setMode("patch")');wait_frame(n);shot('mobile-patch-20');C['mobileNoHorizontalOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth');report['mobile']=page.evaluate('CoralDemo.getState()')
+                  page.evaluate('CoralDemo.setMode("single")');settime(0);shot('mobile-start')
+                  b.close();report['completed']=True;save()
+          except Exception as e:
+              report['errors'].append(str(e));report['traceback']=traceback.format_exc();save();raise
+          print(json.dumps(report,ensure_ascii=False),flush=True);assert report['passed']
+          PY
+          xvfb-run -a -s '-screen 0 1600x1200x24' python -u /tmp/test-r02.py
+      - name: Retain all evidence including failed checks
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GAME-CORAL-R02-HEADED-PUBLIC-QA
+          path: /tmp/coral-r02-headed
+          retention-days: 30
