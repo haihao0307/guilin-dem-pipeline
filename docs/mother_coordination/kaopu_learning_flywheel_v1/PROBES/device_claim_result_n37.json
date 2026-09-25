@@ -1,0 +1,158 @@
+{
+  "schema": "kaopu.device-claim-probe/1.0",
+  "round": "N37",
+  "boundedQuestion": "Can a 390x844 Chromium viewport pass on an ubuntu-latest hosted runner be promoted to physical iPhone/Safari verification?",
+  "historicalDecision": {
+    "r006": {
+      "hostedRuntime": "HOSTED_CHROMIUM_RUNTIME_VERIFIED",
+      "physicalDeviceOperational": "REJECTED_BY_USER_OBSERVATION",
+      "originalClientCause": "UNKNOWN_NOT_INFERRED"
+    },
+    "r012": {
+      "responsiveViewport": "RESPONSIVE_VIEWPORT_VERIFIED",
+      "hostedRuntime": "HOSTED_CHROMIUM_RUNTIME_VERIFIED",
+      "physicalDeviceOperational": "UNKNOWN_NO_PHYSICAL_DEVICE_RUN",
+      "userDeviceRetested": false
+    }
+  },
+  "candidateMethod": {
+    "rule": "A claim may inherit only evidence whose execution environment satisfies the claim environment profile.",
+    "independentAxes": [
+      "viewport/layout",
+      "browser engine and host platform",
+      "physical device and OS",
+      "user observation/acceptance"
+    ],
+    "forbiddenPromotion": "viewport dimensions or emulated device parameters imply physical-device execution"
+  },
+  "decisions": {
+    "r006HostedRuntime": {
+      "decision": "HOSTED_CHROMIUM_RUNTIME_VERIFIED",
+      "missing": []
+    },
+    "r006PhysicalDevice": {
+      "decision": "REJECTED_BY_USER_OBSERVATION",
+      "missing": [
+        "deviceClass",
+        "osName",
+        "osVersion",
+        "browserBrand",
+        "browserVersion",
+        "deviceRunId"
+      ]
+    },
+    "r012Viewport": {
+      "decision": "RESPONSIVE_VIEWPORT_VERIFIED",
+      "missing": []
+    },
+    "r012HostedRuntime": {
+      "decision": "HOSTED_CHROMIUM_RUNTIME_VERIFIED",
+      "missing": []
+    },
+    "r012PhysicalDevice": {
+      "decision": "UNKNOWN_NO_PHYSICAL_DEVICE_RUN",
+      "missing": [
+        "deviceClass",
+        "osName",
+        "osVersion",
+        "browserBrand",
+        "browserVersion",
+        "deviceRunId"
+      ]
+    },
+    "viewportOnlyAsPhysical": {
+      "decision": "UNKNOWN_NO_PHYSICAL_DEVICE_RUN",
+      "missing": [
+        "deviceClass",
+        "osName",
+        "osVersion",
+        "browserBrand",
+        "browserVersion",
+        "deviceRunId"
+      ]
+    },
+    "completePhysicalControl": {
+      "decision": "PHYSICAL_DEVICE_OPERATIONAL_VERIFIED",
+      "missing": []
+    }
+  },
+  "checks": [
+    {
+      "id": "r012-exact-tested-subject",
+      "actual": "b5f2d11cbf55e17518dda411bf034596818c46d5",
+      "expected": "b5f2d11cbf55e17518dda411bf034596818c46d5",
+      "passed": true
+    },
+    {
+      "id": "r012-runner-is-hosted-ubuntu",
+      "actual": "ubuntu-latest",
+      "expected": "ubuntu-latest",
+      "passed": true
+    },
+    {
+      "id": "r012-installed-browser-is-chromium",
+      "actual": "chromium",
+      "expected": "chromium",
+      "passed": true
+    },
+    {
+      "id": "r012-receipt-keeps-user-device-untested",
+      "actual": false,
+      "expected": false,
+      "passed": true
+    },
+    {
+      "id": "r012-viewport-claim-is-valid",
+      "actual": "RESPONSIVE_VIEWPORT_VERIFIED",
+      "expected": "RESPONSIVE_VIEWPORT_VERIFIED",
+      "passed": true
+    },
+    {
+      "id": "r012-hosted-runtime-claim-is-valid",
+      "actual": "HOSTED_CHROMIUM_RUNTIME_VERIFIED",
+      "expected": "HOSTED_CHROMIUM_RUNTIME_VERIFIED",
+      "passed": true
+    },
+    {
+      "id": "r012-physical-device-claim-stays-unknown",
+      "actual": "UNKNOWN_NO_PHYSICAL_DEVICE_RUN",
+      "expected": "UNKNOWN_NO_PHYSICAL_DEVICE_RUN",
+      "passed": true
+    },
+    {
+      "id": "viewport-only-cannot-promote-to-physical-device",
+      "actual": "UNKNOWN_NO_PHYSICAL_DEVICE_RUN",
+      "expected": "UNKNOWN_NO_PHYSICAL_DEVICE_RUN",
+      "passed": true
+    },
+    {
+      "id": "r006-hosted-runtime-evidence-remains-valid",
+      "actual": "HOSTED_CHROMIUM_RUNTIME_VERIFIED",
+      "expected": "HOSTED_CHROMIUM_RUNTIME_VERIFIED",
+      "passed": true
+    },
+    {
+      "id": "r006-user-white-screen-rejects-strong-device-operational-claim",
+      "actual": "REJECTED_BY_USER_OBSERVATION",
+      "expected": "REJECTED_BY_USER_OBSERVATION",
+      "passed": true
+    },
+    {
+      "id": "complete-physical-device-control-can-pass",
+      "actual": "PHYSICAL_DEVICE_OPERATIONAL_VERIFIED",
+      "expected": "PHYSICAL_DEVICE_OPERATIONAL_VERIFIED",
+      "passed": true
+    },
+    {
+      "id": "physical-control-has-no-missing-environment-fields",
+      "actual": [],
+      "expected": [],
+      "passed": true
+    }
+  ],
+  "summary": {
+    "passed": 12,
+    "total": 12,
+    "allPassed": true
+  }
+}

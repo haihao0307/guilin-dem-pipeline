@@ -1,0 +1,53 @@
+{
+  "id": "VIEWPORT-NOT-PHYSICAL-DEVICE-001",
+  "status": "Candidate",
+  "scope": "Fish/browser/WebGL/mobile-device claims",
+  "trigger": "Viewport, emulated-device, or hosted-browser evidence is used to support a stronger physical-device or branded-browser claim.",
+  "requiredFields": [
+    "claimEnvironmentProfileId",
+    "testedSubjectSha",
+    "artifactIdentity",
+    "runIdentity",
+    "evidenceExecutionKind",
+    "hostPlatform",
+    "browserEngine",
+    "browserBrand",
+    "browserVersion",
+    "viewportProfile",
+    "physicalDevice",
+    "deviceClass",
+    "osName",
+    "osVersion",
+    "deviceRunId",
+    "userDeviceRetested",
+    "userObservation",
+    "environmentCompatibilityDecision",
+    "userAcceptance"
+  ],
+  "assertions": [
+    "viewport dimensions remain layout evidence and never imply physical-device execution",
+    "user-agent, touch, screen, or device-descriptor emulation never changes evidenceExecutionKind to physicalDevice",
+    "hosted Chromium evidence may verify hosted Chromium without verifying iOS Safari",
+    "Playwright WebKit is not silently relabeled as branded Safari or physical iOS Safari",
+    "a physical-device claim requires device, OS, browser, immutable subject, and device-run identity",
+    "a real user observation may reject a stronger operational claim without erasing valid weaker-environment evidence",
+    "absence of a physical-device run yields UNKNOWN_NO_PHYSICAL_DEVICE_RUN rather than pass or fail",
+    "user acceptance remains separate from viewport, hosted-runtime, and physical-device states"
+  ],
+  "states": [
+    "RESPONSIVE_VIEWPORT_VERIFIED",
+    "HOSTED_CHROMIUM_RUNTIME_VERIFIED",
+    "UNKNOWN_NO_PHYSICAL_DEVICE_RUN",
+    "HOLD_ENVIRONMENT_IDENTITY_INCOMPLETE",
+    "REJECTED_BY_USER_OBSERVATION",
+    "PHYSICAL_DEVICE_OPERATIONAL_VERIFIED"
+  ],
+  "activation": {
+    "posted": false,
+    "acknowledged": false,
+    "implemented": false,
+    "gateRun": false,
+    "adopted": false,
+    "userAccepted": false
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "schema": "kaopu.device-claim-fixture/1.0",
+  "round": "N37",
+  "historicalCases": {
+    "FISH_R006": {
+      "testedSubjectSha": "a987895498c51e46ef786f4cab0a69ef8679526e",
+      "runId": 35843264304,
+      "artifactBytes": 84052164,
+      "workflowConclusion": "success",
+      "evidenceEnvironment": {
+        "executionKind": "hostedRunner",
+        "runnerLabel": "ubuntu-latest",
+        "browserEngine": "chromium",
+        "viewports": ["desktop", "390x844"],
+        "physicalDevice": false
+      },
+      "userObservation": "WHITE_SCREEN",
+      "userDeviceRetested": false
+    },
+    "FISH_R012": {
+      "testedSubjectSha": "b5f2d11cbf55e17518dda411bf034596818c46d5",
+      "runId": 35974311593,
+      "jobId": 107551050350,
+      "artifactBytes": 94452856,
+      "workflowConclusion": "success",
+      "workflowFacts": {
+        "runsOn": "ubuntu-latest",
+        "installedBrowser": "chromium",
+        "workflowPath": ".github/workflows/fish-fin-surfaces-r012.yml"
+      },
+      "receiptFacts": {
+        "desktopAnd390x844ViewportInteractionPassed": true,
+        "userDeviceRetested": false,
+        "productionReady": false,
+        "manualVisualAcceptance": false
+      },
+      "evidenceEnvironment": {
+        "executionKind": "hostedRunner",
+        "runnerLabel": "ubuntu-latest",
+        "browserEngine": "chromium",
+        "viewports": ["desktop", "390x844"],
+        "physicalDevice": false
+      }
+    }
+  },
+  "claimProfiles": {
+    "RESPONSIVE_VIEWPORT_390X844": {
+      "requiredEnvironmentFields": ["browserEngine", "viewports"],
+      "requiresPhysicalDevice": false
+    },
+    "HOSTED_CHROMIUM_RUNTIME": {
+      "requiredEnvironmentFields": ["executionKind", "runnerLabel", "browserEngine"],
+      "requiresPhysicalDevice": false
+    },
+    "PHYSICAL_IOS_SAFARI_OPERATIONAL": {
+      "requiredEnvironmentFields": [
+        "executionKind",
+        "deviceClass",
+        "osName",
+        "osVersion",
+        "browserBrand",
+        "browserVersion",
+        "browserEngine",
+        "deviceRunId"
+      ],
+      "requiresPhysicalDevice": true
+    }
+  },
+  "syntheticControls": {
+    "completePhysicalDeviceEvidence": {
+      "executionKind": "physicalDevice",
+      "deviceClass": "iPhone",
+      "osName": "iOS",
+      "osVersion": "PINNED_EXAMPLE",
+      "browserBrand": "Safari",
+      "browserVersion": "PINNED_EXAMPLE",
+      "browserEngine": "WebKit",
+      "deviceRunId": "SYNTHETIC-PHYSICAL-RUN",
+      "physicalDevice": true,
+      "result": "pass"
+    },
+    "viewportOnlyEvidence": {
+      "executionKind": "hostedRunner",
+      "runnerLabel": "ubuntu-latest",
+      "browserEngine": "chromium",
+      "viewports": ["390x844"],
+      "physicalDevice": false,
+      "result": "pass"
+    }
+  }
+}
