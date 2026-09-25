@@ -1,0 +1,124 @@
+name: Coral R03 exact public browser QA
+on:
+  push:
+    branches: [gh-pages]
+    paths: [.github/workflows/kaopu-coral-r03-public-qa.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Install browser driver
+        run: pip install playwright==1.55.0
+      - name: Install Chinese system glyphs
+        continue-on-error: true
+        run: sudo apt-get install -y fonts-noto-cjk
+      - name: Check exact deployment and actual pixels
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          mkdir -p evidence/source
+          cat > /tmp/qa.py <<'PY'
+          import urllib.request,json,hashlib,pathlib,time,os,re,traceback
+          from playwright.sync_api import sync_playwright
+          root=pathlib.Path('evidence');src=root/'source';sha=os.environ['SOURCE_SHA']
+          url='https://haihao0307.github.io/guilin-dem-pipeline/game-coral-mother-wave-r03/'
+          raw='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+sha+'/game-coral-mother-wave-r03/'
+          names=['index.html','runtime.js','object.kaopu.json','pore-reference.json']
+          def get(u):return urllib.request.urlopen(urllib.request.Request(u,headers={'User-Agent':'KAOPU-R03-QA/1.0'}),timeout=35).read()
+          sources={n:get(raw+n) for n in names}
+          for n,b in sources.items():(src/n).write_bytes(b)
+          assert hashlib.sha256(sources['object.kaopu.json']).hexdigest()=='0b01177d72f6b75453f1334ca6ed13366ca96c614b86271ead0e5ac560fdef9c'
+          assert hashlib.sha256(sources['pore-reference.json']).hexdigest()=='7e8479286912cef5a865e99ec5096222b3baf6adf0104fabb7408f2ceb115855'
+          for attempt in range(40):
+            try:
+              if all(get(url+n+'?verify='+sha)==sources[n] for n in names):break
+            except Exception:pass
+            time.sleep(8)
+          else:raise AssertionError('Public deployment bytes do not yet match pinned source')
+          html=sources['index.html'].decode().replace('<script id="kaopuData" type="application/json"></script>','<script id="kaopuData" type="application/json">'+sources['object.kaopu.json'].decode()+'</script>').replace('<script id="poreData" type="application/json"></script>','<script id="poreData" type="application/json">'+sources['pore-reference.json'].decode()+'</script>')
+          html,count=re.subn(r'<script>\s*\(async\(\)=>.*?</script>',lambda m:'<script>'+sources['runtime.js'].decode()+'</script>',html,flags=re.S)
+          assert count==1
+          (root/'GAME_CORAL_WAVE_R03.html').write_text(html)
+          report={'sourceCommit':sha,'url':url,'sourceFiles':{n:{'bytes':len(b),'sha256':hashlib.sha256(b).hexdigest()} for n,b in sources.items()},'physicalPhoneTested':False,'teacherExactFit':False,'wholeTeacherPoresExact':False,'checks':{'publicFilesByteExact':True},'frames':[],'errors':[]}
+          C=report['checks']
+          try:
+            with sync_playwright() as pw:
+              browser=pw.chromium.launch(executable_path='/usr/bin/google-chrome',headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader'])
+              page=browser.new_page(viewport={'width':1440,'height':1000},device_scale_factor=1)
+              page.on('pageerror',lambda e:report['errors'].append(str(e)))
+              page.goto(url+'?verified='+sha,wait_until='networkidle',timeout=60000)
+              page.wait_for_function('window.__coralReady===true',timeout=120000)
+              def snap(t=20,mode='single',quality=180,name=None):
+                old=page.evaluate('CoralDemo.getState().completedFrames')
+                page.evaluate('([t,m,q])=>{CoralDemo.setMode(m);CoralDemo.quality(q);CoralDemo.setTime(t);}',[t,mode,quality])
+                page.wait_for_function('([n,t,m])=>{let s=CoralDemo.getState();return s.completedFrames>n&&s.renderedTime===t&&s.mode===m;}',arg=[old,t,mode],timeout=120000)
+                state=page.evaluate('CoralDemo.getState()');pixels=page.evaluate('CoralDemo.pixelDigest()')
+                report['frames'].append({'name':name,'state':state,'pixels':pixels})
+                if name:page.screenshot(path=str(root/(name+'.png')))
+                return state,pixels
+              states=[];digests=[]
+              for t in [0,5,10,20]:
+                s,p=snap(t,name='desktop-'+str(t).zfill(2));states.append(s);digests.append(p['hash'])
+              C['realGrowthPixelsChange']=len(set(digests))==4 and states[-1]['active']>states[0]['active']
+              s,p=snap(9);before=s['completedFrames'];page.locator('#play').click()
+              page.wait_for_function('n=>CoralDemo.getState().completedFrames>=n+8',arg=before,timeout=120000)
+              page.evaluate("document.getElementById('play').click()")
+              page.wait_for_timeout(1000)
+              after=page.evaluate('CoralDemo.getState()');p2=page.evaluate('CoralDemo.pixelDigest()')
+              C['playChangesCompletedFrames']=after['renderedTime']>9 and p2['hash']!=p['hash']
+              page.wait_for_timeout(1000);pause=page.evaluate('CoralDemo.getState()')
+              C['pauseStable']=pause['renderedTime']==after['renderedTime'] and not pause['playing']
+              C['timelineReflectsRenderedTime']=page.locator('#year').inner_text()==format(pause['renderedTime'],'.1f')
+              s,p=snap();page.evaluate("CoralDemo.setView('side')");page.wait_for_function('n=>CoralDemo.getState().completedFrames>n',arg=s['completedFrames'],timeout=120000)
+              C['rotationChangesPixels']=page.evaluate('CoralDemo.pixelDigest().hash')!=p['hash']
+              s,p=snap();page.evaluate('CoralDemo.setSettings({waveX:0})');page.wait_for_function('n=>CoralDemo.getState().completedFrames>n',arg=s['completedFrames'],timeout=120000)
+              C['waveChangesGeometryPixels']=page.evaluate('CoralDemo.pixelDigest().hash')!=p['hash']
+              page.evaluate('CoralDemo.setSettings({waveX:1})')
+              s9,p9=snap(20,'patch9',220,'desktop-group9');s25,p25=snap(20,'patch25',440,'desktop-group25')
+              C['groupModesDrawDifferentGeometry']=s9['instanceCount']==9 and s25['instanceCount']==25 and p9['hash']!=p25['hash']
+              C['groupHasIndependentVariation']=len({tuple(r['stretch']) for r in s25['instanceRecords']})>1 and len({tuple(r['variation']) for r in s25['instanceRecords']})>1
+              C['groupHasStaggeredGrowth']=len({r['delay'] for r in s25['instanceRecords']})>1
+              C['desktopNoOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+              sp,pp=snap(20,'pore',900,'desktop-pore')
+              C['poreInspectorUsesMeasuredReference']=page.evaluate('window.__poreStudy.rawReferenceBytes===8192&&window.__poreStudy.coefficients===1024') and pp['bright']>100
+              page.evaluate('CoralDemo.setCamera(.45,.25,3.5)');page.wait_for_function('n=>CoralDemo.getState().completedFrames>n',arg=sp['completedFrames'],timeout=120000)
+              C['poreInspectorRotates3D']=page.evaluate('CoralDemo.pixelDigest().hash')!=pp['hash']
+              s,p=snap(20,'single',450,'desktop-single')
+              C['returnFromPoresNoGLError']=s['glError']==0 and p['bright']>100
+              page.set_viewport_size({'width':390,'height':844})
+              sm,pm=snap(20,'patch25',260,'mobile-group25')
+              C['mobileNoOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+              C['mobileReal3DVisible']=pm['bright']>50 and sm['glError']==0
+              snap(20,'pore',390,'mobile-pore')
+              page.evaluate("document.querySelector('details:last-of-type').open=true")
+              with page.expect_download() as download:page.locator('#export').click()
+              download.value.save_as(str(root/'export.kaopu.json'))
+              export=json.loads((root/'export.kaopu.json').read_text())
+              C['exportIncludesActualInstances']=bool(export.get('instances')) and 'referenceSamples' not in export['poreStudy']
+              offline=browser.new_page(viewport={'width':390,'height':844})
+              offline.on('pageerror',lambda e:report['errors'].append('offline: '+str(e)))
+              offline.set_content(html,wait_until='load');offline.wait_for_function('window.__coralReady===true',timeout=120000)
+              offline.evaluate('CoralDemo.quality(160);CoralDemo.setTime(10)')
+              offline.wait_for_function('CoralDemo.getState().renderedTime===10',timeout=120000)
+              C['standaloneWorksWithoutNetwork']=offline.evaluate('CoralDemo.pixelDigest().bright>20&&CoralDemo.getState().glError===0')
+              C['pageErrorsZero']=not report['errors']
+              browser.close()
+          except Exception:
+            report['failure']=traceback.format_exc()
+            raise
+          finally:
+            (root/'PUBLIC_BROWSER_QA.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+            print(json.dumps(report['checks'],indent=2))
+          assert all(C.values()),C
+          PY
+          python /tmp/qa.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: GAME-CORAL-R03-PUBLIC-EVIDENCE
+          path: evidence/
+          retention-days: 30
