@@ -1,0 +1,94 @@
+name: GAME Coral R02 accelerated strict visual QA
+on:
+  push:
+    branches: [gh-pages]
+    paths: ['.github/workflows/game-coral-r02-accelerated.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+jobs:
+  publish-and-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 1
+          sparse-checkout: |
+            game-coral-mother-wave-r01
+      - name: Apply tested ray-entry optimization without changing the shape parameters
+        run: |
+          python game-coral-mother-wave-r01/releases/r02/apply_acceleration.py
+          git config user.name 'KAOPU Coral Workbench'
+          git config user.email 'kaopu-coral@users.noreply.github.com'
+          git add -A game-coral-mother-wave-r01
+          git diff --cached --quiet || git commit -m 'R02: analytic empty-ray rejection, GPU-complete readiness, explicit context loss'
+          git pull --rebase origin gh-pages
+          git push origin HEAD:gh-pages
+      - name: Publish branch Pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api --method POST repos/${{ github.repository }}/pages/builds
+      - name: Install browser and raster comparison tools
+        run: |
+          python -m pip install playwright pillow numpy
+          python -m playwright install --with-deps chromium
+      - name: Check actual public renders, not just button state
+        run: |
+          mkdir -p /tmp/coral-r02-strict
+          cat > /tmp/test-r02-strict.py <<'PY'
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          from PIL import Image
+          import urllib.request,time,json,hashlib,numpy as np,traceback
+          r=Path('/tmp/coral-r02-strict');url='https://haihao0307.github.io/guilin-dem-pipeline/game-coral-mother-wave-r01/';expected='6fede6c39377042604f128eba80b986dd5a4672b8835b492105a87b70393a921'
+          report={'url':url,'expectedSha256':expected,'physicalIPhoneTested':False,'teacherPointwiseFit':False,'teacherPoreCorrespondence':False,'checks':{},'errors':[],'completed':False};C=report['checks']
+          def save():
+              report['passed']=report['completed'] and all(C.values()) and not report['errors']
+              (r/'PUBLIC_QA.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+          try:
+              for i in range(40):
+                  data=urllib.request.urlopen(url+'?strict='+str(i),timeout=20).read()
+                  if hashlib.sha256(data).hexdigest()==expected:break
+                  time.sleep(8)
+              assert hashlib.sha256(data).hexdigest()==expected
+              (r/'index.html').write_bytes(data);C['publicBytesMatch']=True;report['htmlBytes']=len(data);save()
+              with sync_playwright() as p:
+                  b=p.chromium.launch(headless=False,args=['--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+                  page=b.new_page(viewport={'width':1440,'height':1000});page.on('pageerror',lambda e:report['errors'].append(str(e)))
+                  response=page.goto(url+'?strict=final',wait_until='networkidle',timeout=90000);C['browserBytesMatch']=hashlib.sha256(response.body()).hexdigest()==expected;assert C['browserBytesMatch']
+                  page.wait_for_function('window.__coralReady||window.__coralError',timeout=90000)
+                  def check():
+                      state=page.evaluate('CoralDemo.getState()');assert not state['contextLost'],'WebGL context lost';assert not page.evaluate('window.__coralError||false');assert page.locator('#error').is_hidden();return state
+                  def settle(mode,t):
+                      page.wait_for_function('([m,t])=>{let s=CoralDemo.getState();return !s.contextLost&&!window.__coralError&&s.completedFrames>0&&s.renderedMode===m&&Math.abs(s.renderedTime-t)<.00001}',arg=[mode,t],timeout=120000);return check()
+                  def settime(t,mode='single'):
+                      page.evaluate(f'CoralDemo.setTime({t})');return settle(mode,t)
+                  def shot(name):
+                      print('capture',name,flush=True);page.screenshot(path=str(r/(name+'.png')),timeout=120000);check();save()
+                  C['webglReady']=not check()['contextLost'];settime(1);shot('single-01');settime(20);shot('single-20');report['single']=check()
+                  C['parentBeforeChild']=page.evaluate('(()=>{let n=CoralDemo.getData().nodes;return n.every(a=>a[0]<0||a[2]+1e-7>=n[a[0]][2]+n[a[0]][3]*a[1])})()')
+                  settime(8);g=page.evaluate('JSON.stringify(CoralDemo.getGeometry())');settime(12);settime(8);C['sameTimeDeterministic']=g==page.evaluate('JSON.stringify(CoralDemo.getGeometry())')
+                  t=page.evaluate('CoralDemo.getState().time');page.wait_for_timeout(300);C['pauseStable']=t==page.evaluate('CoralDemo.getState().time');page.click('#play');page.wait_for_timeout(400);page.click('#play');C['playAdvances']=page.evaluate('CoralDemo.getState().time')>t
+                  page.click('[data-mode=patch]');settle('patch',20);shot('patch-20');report['patch']=check();C['nineteenInstances']=report['patch']['instances']==19 and report['patch']['active']==33
+                  page.click('[data-mode=close]');settle('close',20);shot('close-20')
+                  n=check()['completedFrames'];page.eval_on_selector('#pores','e=>{e.value=0;e.dispatchEvent(new Event("input"))}');page.wait_for_function(f'CoralDemo.getState().completedFrames>{n}',timeout=120000);settle('close',20);shot('close-pores-off')
+                  A=np.asarray(Image.open(r/'close-20.png').convert('RGB')).astype(int);B=np.asarray(Image.open(r/'close-pores-off.png').convert('RGB')).astype(int);diff=abs(A[240:800,:1160]-B[240:800,:1160]);report['poreCanvasChangedPixels']=int(np.sum(np.max(diff,2)>2));C['poresChangeCanvasWithoutUI']=report['poreCanvasChangedPixels']>1000
+                  C['desktopNoOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth');page.click('#showTeacher');C['referenceAvailable']=page.locator('#teacherModal img').evaluate('e=>e.complete&&e.naturalWidth>0');page.click('#closeTeacher')
+                  page.set_viewport_size({'width':390,'height':844});page.evaluate('CoralDemo.setMode("patch")');settle('patch',20);shot('mobile-patch-20');C['mobileNoOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth');report['mobile']=check()
+                  page.evaluate('CoralDemo.setMode("single")');settime(0);shot('mobile-start');C['contextRetainedAcrossModes']=not check()['contextLost']
+                  report['completed']=True;save();b.close()
+          except Exception as e:
+              report['errors'].append(str(e));report['traceback']=traceback.format_exc();save();raise
+          print(json.dumps(report,ensure_ascii=False),flush=True);assert report['passed']
+          PY
+          xvfb-run -a -s '-screen 0 1600x1200x24' python -u /tmp/test-r02-strict.py
+      - name: Preserve checks and real screenshots, including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GAME-CORAL-R02-ACCELERATED-STRICT-QA
+          path: /tmp/coral-r02-strict
+          retention-days: 30
