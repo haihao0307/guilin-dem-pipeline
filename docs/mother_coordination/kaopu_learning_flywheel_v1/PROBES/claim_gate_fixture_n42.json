@@ -1,0 +1,191 @@
+{
+  "schema": "kaopu.claim-gate-dependency-replay/1.0",
+  "candidateCaseId": "CLAIM-REQUIRES-PREREQUISITE-GATES-001",
+  "historicalSubject": {
+    "coralR031HeadSha": "509f95b359f9c29349da3c63612a58b9f304f821",
+    "sourceCommitSha": "b3d414c2f48b033662bff5279690a9796c394eb4",
+    "startupWorkflowPath": ".github/workflows/coral-r031-startup-qa.yml",
+    "startupWorkflowRun": 36202544305,
+    "pagesWorkflowRun": 36202543641,
+    "startupChecksThatPreserveForbiddenScope": ["groupStillWorks", "poreStillWorks"],
+    "formalTaskAnchorPresent": false,
+    "scopeGateRunPresent": false,
+    "referenceFidelityGateRunPresent": false,
+    "standaloneHtmlGateRunPresent": false
+  },
+  "cases": [
+    {
+      "id": "historical-r031-promotable-claim",
+      "contract": {
+        "claimId": "PROMOTABLE_CORAL_METHOD_CANDIDATE",
+        "subjectHeadSha": "509f95b359f9c29349da3c63612a58b9f304f821",
+        "requiresTaskAnchor": true,
+        "taskAnchorDigest": "sha256:frozen-coral-r04-anchor",
+        "requiredGates": [
+          {"gateId":"SCOPE_AUTHORIZED","independentVerifierRequired":true},
+          {"gateId":"REFERENCE_FIDELITY","independentVerifierRequired":true},
+          {"gateId":"STANDALONE_HTML","independentVerifierRequired":false},
+          {"gateId":"PUBLIC_STARTUP_READY","independentVerifierRequired":false}
+        ]
+      },
+      "observed": {
+        "subjectHeadSha": "509f95b359f9c29349da3c63612a58b9f304f821",
+        "taskAnchorDigest": null,
+        "gateReceipts": [
+          {"gateId":"PUBLIC_STARTUP_READY","subjectHeadSha":"509f95b359f9c29349da3c63612a58b9f304f821","conclusion":"success","producerId":"CoralMother","verifierId":"GitHubActionsStartup"}
+        ]
+      },
+      "expectedVerdict": "HOLD_TASK_ANCHOR_MISSING"
+    },
+    {
+      "id": "anchor-present-scope-gate-missing",
+      "contractRef": "historical-r031-promotable-claim",
+      "observed": {
+        "subjectHeadSha": "509f95b359f9c29349da3c63612a58b9f304f821",
+        "taskAnchorDigest": "sha256:frozen-coral-r04-anchor",
+        "gateReceipts": [
+          {"gateId":"PUBLIC_STARTUP_READY","subjectHeadSha":"509f95b359f9c29349da3c63612a58b9f304f821","conclusion":"success","producerId":"CoralMother","verifierId":"GitHubActionsStartup"}
+        ]
+      },
+      "expectedVerdict": "HOLD_REQUIRED_GATE_MISSING"
+    },
+    {
+      "id": "scope-job-skipped-but-check-green",
+      "contract": {
+        "claimId": "SCOPE_AUTHORIZED_CORAL",
+        "subjectHeadSha": "candidate-scope-skipped",
+        "requiresTaskAnchor": true,
+        "taskAnchorDigest": "sha256:anchor-scope-skipped",
+        "requiredGates": [{"gateId":"SCOPE_AUTHORIZED","independentVerifierRequired":true}]
+      },
+      "observed": {
+        "subjectHeadSha": "candidate-scope-skipped",
+        "taskAnchorDigest": "sha256:anchor-scope-skipped",
+        "gateReceipts": [{"gateId":"SCOPE_AUTHORIZED","subjectHeadSha":"candidate-scope-skipped","conclusion":"skipped","producerId":"CoralMother","verifierId":"IndependentScopeVerifier"}]
+      },
+      "expectedVerdict": "HOLD_REQUIRED_GATE_NOT_RUN"
+    },
+    {
+      "id": "scope-gate-fails",
+      "contract": {
+        "claimId": "SCOPE_AUTHORIZED_CORAL",
+        "subjectHeadSha": "candidate-scope-failed",
+        "requiresTaskAnchor": true,
+        "taskAnchorDigest": "sha256:anchor-scope-failed",
+        "requiredGates": [{"gateId":"SCOPE_AUTHORIZED","independentVerifierRequired":true}]
+      },
+      "observed": {
+        "subjectHeadSha": "candidate-scope-failed",
+        "taskAnchorDigest": "sha256:anchor-scope-failed",
+        "gateReceipts": [{"gateId":"SCOPE_AUTHORIZED","subjectHeadSha":"candidate-scope-failed","conclusion":"failure","producerId":"CoralMother","verifierId":"IndependentScopeVerifier"}]
+      },
+      "expectedVerdict": "HOLD_REQUIRED_GATE_FAIL"
+    },
+    {
+      "id": "gate-passed-on-different-head",
+      "contract": {
+        "claimId": "SCOPE_AUTHORIZED_CORAL",
+        "subjectHeadSha": "candidate-current-head",
+        "requiresTaskAnchor": true,
+        "taskAnchorDigest": "sha256:anchor-current-head",
+        "requiredGates": [{"gateId":"SCOPE_AUTHORIZED","independentVerifierRequired":true}]
+      },
+      "observed": {
+        "subjectHeadSha": "candidate-current-head",
+        "taskAnchorDigest": "sha256:anchor-current-head",
+        "gateReceipts": [{"gateId":"SCOPE_AUTHORIZED","subjectHeadSha":"candidate-old-head","conclusion":"success","producerId":"CoralMother","verifierId":"IndependentScopeVerifier"}]
+      },
+      "expectedVerdict": "HOLD_GATE_SUBJECT_MISMATCH"
+    },
+    {
+      "id": "producer-self-approves-scope",
+      "contract": {
+        "claimId": "SCOPE_AUTHORIZED_CORAL",
+        "subjectHeadSha": "candidate-self-approved",
+        "requiresTaskAnchor": true,
+        "taskAnchorDigest": "sha256:anchor-self-approved",
+        "requiredGates": [{"gateId":"SCOPE_AUTHORIZED","independentVerifierRequired":true}]
+      },
+      "observed": {
+        "subjectHeadSha": "candidate-self-approved",
+        "taskAnchorDigest": "sha256:anchor-self-approved",
+        "gateReceipts": [{"gateId":"SCOPE_AUTHORIZED","subjectHeadSha":"candidate-self-approved","conclusion":"success","producerId":"CoralMother","verifierId":"CoralMother"}]
+      },
+      "expectedVerdict": "HOLD_SELF_APPROVED_GATE_RUN"
+    },
+    {
+      "id": "complete-exact-lineage-control",
+      "contract": {
+        "claimId": "PROMOTABLE_CORAL_METHOD_CANDIDATE",
+        "subjectHeadSha": "candidate-complete-head",
+        "requiresTaskAnchor": true,
+        "taskAnchorDigest": "sha256:anchor-complete",
+        "requiredGates": [
+          {"gateId":"SCOPE_AUTHORIZED","independentVerifierRequired":true},
+          {"gateId":"REFERENCE_FIDELITY","independentVerifierRequired":true},
+          {"gateId":"STANDALONE_HTML","independentVerifierRequired":false},
+          {"gateId":"PUBLIC_STARTUP_READY","independentVerifierRequired":false}
+        ]
+      },
+      "observed": {
+        "subjectHeadSha": "candidate-complete-head",
+        "taskAnchorDigest": "sha256:anchor-complete",
+        "gateReceipts": [
+          {"gateId":"SCOPE_AUTHORIZED","subjectHeadSha":"candidate-complete-head","conclusion":"success","producerId":"CoralMother","verifierId":"IndependentScopeVerifier"},
+          {"gateId":"REFERENCE_FIDELITY","subjectHeadSha":"candidate-complete-head","conclusion":"success","producerId":"CoralMother","verifierId":"IndependentVisualVerifier"},
+          {"gateId":"STANDALONE_HTML","subjectHeadSha":"candidate-complete-head","conclusion":"success","producerId":"CoralMother","verifierId":"PackagingQA"},
+          {"gateId":"PUBLIC_STARTUP_READY","subjectHeadSha":"candidate-complete-head","conclusion":"success","producerId":"CoralMother","verifierId":"BrowserQA"}
+        ]
+      },
+      "expectedVerdict": "CLAIM_VERIFIED"
+    },
+    {
+      "id": "historical-r031-narrow-startup-claim",
+      "contract": {
+        "claimId": "PUBLIC_STARTUP_READY",
+        "subjectHeadSha": "509f95b359f9c29349da3c63612a58b9f304f821",
+        "requiresTaskAnchor": false,
+        "taskAnchorDigest": null,
+        "requiredGates": [
+          {"gateId":"PUBLIC_BYTES_EXACT","independentVerifierRequired":false},
+          {"gateId":"FIRST_FRAME","independentVerifierRequired":false},
+          {"gateId":"FAILURE_UI","independentVerifierRequired":false}
+        ]
+      },
+      "observed": {
+        "subjectHeadSha": "509f95b359f9c29349da3c63612a58b9f304f821",
+        "taskAnchorDigest": null,
+        "gateReceipts": [
+          {"gateId":"PUBLIC_BYTES_EXACT","subjectHeadSha":"509f95b359f9c29349da3c63612a58b9f304f821","conclusion":"success","producerId":"CoralMother","verifierId":"GitHubActionsStartup"},
+          {"gateId":"FIRST_FRAME","subjectHeadSha":"509f95b359f9c29349da3c63612a58b9f304f821","conclusion":"success","producerId":"CoralMother","verifierId":"GitHubActionsStartup"},
+          {"gateId":"FAILURE_UI","subjectHeadSha":"509f95b359f9c29349da3c63612a58b9f304f821","conclusion":"success","producerId":"CoralMother","verifierId":"GitHubActionsStartup"}
+        ]
+      },
+      "expectedVerdict": "CLAIM_VERIFIED"
+    },
+    {
+      "id": "forbidden-features-survive-startup",
+      "contractRef": "historical-r031-promotable-claim",
+      "observed": {
+        "subjectHeadSha": "509f95b359f9c29349da3c63612a58b9f304f821",
+        "taskAnchorDigest": "sha256:frozen-coral-r04-anchor",
+        "gateReceipts": [
+          {"gateId":"PUBLIC_STARTUP_READY","subjectHeadSha":"509f95b359f9c29349da3c63612a58b9f304f821","conclusion":"success","producerId":"CoralMother","verifierId":"GitHubActionsStartup","observations":{"groupStillWorks":true,"poreStillWorks":true}}
+        ]
+      },
+      "expectedVerdict": "HOLD_REQUIRED_GATE_MISSING"
+    },
+    {
+      "id": "task-anchor-does-not-match-claim",
+      "contract": {
+        "claimId": "PROMOTABLE_CORAL_METHOD_CANDIDATE",
+        "subjectHeadSha": "candidate-anchor-mismatch",
+        "requiresTaskAnchor": true,
+        "taskAnchorDigest": "sha256:frozen-anchor",
+        "requiredGates": []
+      },
+      "observed": {"subjectHeadSha":"candidate-anchor-mismatch","taskAnchorDigest":"sha256:mutated-anchor","gateReceipts":[]},
+      "expectedVerdict": "HOLD_TASK_ANCHOR_MISMATCH"
+    }
+  ]
+}
