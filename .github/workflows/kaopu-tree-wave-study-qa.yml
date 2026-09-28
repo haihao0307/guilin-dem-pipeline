@@ -1,0 +1,78 @@
+name: KAOPU Tree Wave Study QA
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - '.github/workflows/kaopu-tree-wave-study-qa.yml'
+      - 'game-coral-mother-wave-r03/tree-wave/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser
+        run: |
+          npm init -y
+          npm install --save-exact playwright@1.51.1
+          npx playwright install --with-deps chromium
+      - name: Test exact public HTML and render both viewports
+        run: |
+          mkdir -p evidence
+          cat > check.cjs <<'JS'
+          const { chromium } = require('playwright');
+          const crypto = require('node:crypto');
+          const fs = require('node:fs');
+          const url = 'https://haihao0307.github.io/guilin-dem-pipeline/game-coral-mother-wave-r03/tree-wave/';
+          const expected = '330f14d9ee6bf9bbbfec73f9107ea1b4c6deec20fd0854721cc94c8df13dfc54';
+          (async () => {
+            let raw, status;
+            for(let attempt=0;attempt<8;attempt++) {
+              const response = await fetch(url+'?qa='+Date.now());
+              status=response.status; raw=Buffer.from(await response.arrayBuffer());
+              if(status===200 && crypto.createHash('sha256').update(raw).digest('hex')===expected) break;
+              await new Promise(r=>setTimeout(r,12000));
+            }
+            const sha=crypto.createHash('sha256').update(raw).digest('hex');
+            if(status!==200 || sha!==expected) throw Error('Public bytes mismatch: HTTP '+status+' SHA '+sha);
+            fs.writeFileSync('evidence/public_index.html',raw);
+            const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+            const report={url,httpStatus:status,sha256:sha,scope:'Live public HTTP and Chromium desktop/mobile viewport; not physical Safari/iPhone.',tests:[]};
+            for(const [name,width,height] of [['desktop',1440,1000],['mobile',390,844]]) {
+              const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,isMobile:name==='mobile',hasTouch:name==='mobile'});
+              const page=await context.newPage(),errors=[];
+              page.on('pageerror',e=>errors.push(e.message));
+              await page.goto(url+'?qa='+Date.now(),{waitUntil:'networkidle',timeout:60000});
+              await page.waitForFunction(()=>window.studyState?.ready && window.studyState.frameCount>2,{timeout:60000});
+              let state=await page.evaluate(()=>window.studyState);
+              let check=await page.evaluate(()=>({noOverflow:document.documentElement.scrollWidth<=innerWidth+1,errorHidden:document.querySelector('#error').hidden,canvasWidth:document.querySelector('canvas').width,canvasHeight:document.querySelector('canvas').height}));
+              if(!check.noOverflow||!check.errorHidden||state.branches!==103||errors.length) throw Error(name+' startup failed '+JSON.stringify({state,check,errors}));
+              await page.screenshot({path:'evidence/'+name+'.png',fullPage:true});
+              await page.click('#axes'); await page.waitForFunction(()=>window.studyState.mode==='lines');
+              await page.screenshot({path:'evidence/'+name+'-axes.png',fullPage:true});
+              await page.click('#solid');
+              await page.evaluate(()=>{const e=document.querySelector('#growth');e.value='.42';e.dispatchEvent(new Event('input',{bubbles:true}));});
+              await page.waitForFunction(()=>Math.abs(window.studyState.growth-.42)<.01);
+              await page.screenshot({path:'evidence/'+name+'-growth.png',fullPage:true});
+              if(errors.length) throw Error(name+' script errors '+errors.join(';'));
+              report.tests.push({name,state,check,errors,axisAndGrowth:true});
+              await context.close();
+            }
+            await browser.close();
+            report.passed=true;
+            fs.writeFileSync('evidence/report.json',JSON.stringify(report,null,2));
+            console.log(JSON.stringify(report,null,2));
+          })().catch(e=>{console.error(e);process.exit(1);});
+          JS
+          node check.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kaopu-tree-wave-public-qa
+          path: evidence/
+          retention-days: 30
