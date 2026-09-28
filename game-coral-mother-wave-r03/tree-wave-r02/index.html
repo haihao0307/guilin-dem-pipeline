@@ -19,19 +19,47 @@ function V(x=0,y=0,z=0){return{x,y,z}}function add(a,b){return V(a.x+b.x,a.y+b.y
 function setPreset(name){preset=name;p={...P[name]};for(const k of ['thick','step','branch','wave','field','space','tips'])$(k).value=p[k];document.querySelectorAll('[data-p]').forEach(b=>b.classList.toggle('on',b.dataset.p===name));sync();build()}
 function sync(){for(const k of ['thick','step','branch','wave','field','space','tips']){p[k]=+$ (k).value;$(k+'O').textContent=k==='tips'?p[k]:p[k].toFixed(k==='step'||k==='thick'?1:2)}$('growO').textContent=Math.round(growth*100)+'%'}
 function nearest(q,arr,max=1e9){let best=max,hit=null;for(const a of arr){let d=len(sub(q,a));if(d<best){best=d;hit=a}}return[hit,best]}
-function build(){let saved=seed;segments=[];tips=[];pts=[];let targets=[];let n=p.tips;
-for(let i=0;i<n;i++){let a=(rng()-.5)*2,b=rng(),r=Math.sqrt(b);let x,z,y;if(preset==='radial'){let th=rng()*TAU,ph=Math.acos(2*rng()-1);x=Math.sin(ph)*Math.cos(th)*r*160;y=Math.cos(ph)*r*160;z=Math.sin(ph)*Math.sin(th)*r*160}else{x=a*150*r;y=20+r*245*(.72+.28*rng());z=(rng()-.5)*2*160*(1-p.flat);x+=Math.sin(y*.025)*18*p.wave}targets.push(V(x,y,z))}
-let nodes=[{p:V(0,-150,0),d:V(0,1,0),parent:-1,load:1,birth:0}],active=[0],iter=0,maxIter=520;
-while(targets.length&&active.length&&iter++<maxIter){let influence=new Map(),kill=new Set();
-for(let ti=0;ti<targets.length;ti++){let t=targets[ti],best=1e9,bi=-1;for(let ai=0;ai<active.length;ai++){let ni=active[ai],d=len(sub(t,nodes[ni].p));if(d<11){kill.add(ti);bi=-1;break}if(d<72&&d<best){best=d;bi=ni}}if(bi>=0){let v=norm(sub(t,nodes[bi].p));if(!influence.has(bi))influence.set(bi,[]);influence.get(bi).push(v)}}
-targets=targets.filter((_,i)=>!kill.has(i));let next=[];
-for(const [ni,dirs] of influence){let n0=nodes[ni],avg=V();for(const d of dirs)avg=add(avg,d);avg=norm(avg);let phase=(ni*1.618+saved*.0001);let wave=V(Math.sin(iter*.23+phase)*p.wave,Math.sin(iter*.17+phase)*p.wave*.22,Math.cos(iter*.19+phase)*p.wave*(1-p.flat));let field=preset==='fan'?V(0,p.up,0):preset==='volume'?V(0,p.up,.08):V();let branchJitter=V((rng()-.5)*p.branch,(rng()-.5)*p.branch*.35,(rng()-.5)*p.branch*(1-p.flat));let d=norm(add(add(mul(n0.d,.42),mul(avg,.9)),add(add(mul(wave,.32),mul(field,p.field)),branchJitter)));
-if(p.space>0){let repel=V();for(let j=Math.max(0,nodes.length-100);j<nodes.length;j++){if(j===ni)continue;let dv=sub(n0.p,nodes[j].p),dl=len(dv);if(dl>0&&dl<18)repel=add(repel,mul(norm(dv),(18-dl)/18))}d=norm(add(d,mul(repel,p.space*.75)))}
-let np=add(n0.p,mul(d,p.step)),idx=nodes.length;nodes.push({p:np,d,parent:ni,load:1,birth:iter/maxIter});segments.push({a:n0.p,b:np,node:idx,birth:iter/maxIter});next.push(idx)}
-active=[...new Set([...active.filter(i=>!influence.has(i)),...next])];if(active.length>220)active=active.slice(-220)}
-for(let i=nodes.length-1;i>0;i--){let n0=nodes[i];if(n0.parent>=0)nodes[n0.parent].load+=Math.pow(n0.load,.86)}
-for(const s of segments)s.w=.32+p.thick*Math.pow(nodes[s.node].load,.42)/Math.pow(Math.max(1,nodes[1]?.load||1),.42);
-tips=active.map(i=>nodes[i].p);seed=saved;$('info').textContent=`${segments.length} 段 · ${targets.length} 个未占领目标 · Score: ${preset}`;$('status').textContent='拓扑→下游负载→粗细；参数改变会重新演奏同一套函数';draw()}
+function build(){let saved=seed;segments=[];tips=[];pts=[];let targets=[],n=p.tips;
+for(let i=0;i<n;i++){let a=(rng()-.5)*2,b=rng(),r=Math.sqrt(b),x,z,y;
+ if(preset==='radial'){let th=rng()*TAU,ph=Math.acos(2*rng()-1);x=Math.sin(ph)*Math.cos(th)*r*155;y=Math.cos(ph)*r*155+5;z=Math.sin(ph)*Math.sin(th)*r*155}
+ else{x=a*150*r;y=-5+r*250*(.70+.30*rng());z=(rng()-.5)*2*150*(1-p.flat);x+=Math.sin(y*.025)*16*p.wave}
+ targets.push(V(x,y,z))}
+let nodes=[{p:V(0,-150,0),d:V(0,1,0),parent:-1,load:1,birth:0}],active=[0],iter=0,maxIter=420,maxNodes=6500;
+const influenceR=preset==='fan'?112:preset==='volume'?105:98,killR=Math.max(7,p.step*1.45);
+function makeChild(ni,goal,branchIndex=0){let n0=nodes[ni],phase=(ni*1.618+saved*.0001+branchIndex*.73);
+ let wave=V(Math.sin(iter*.23+phase)*p.wave,Math.sin(iter*.17+phase)*p.wave*.18,Math.cos(iter*.19+phase)*p.wave*(1-p.flat));
+ let field=preset==='fan'?V(0,p.up,0):preset==='volume'?V(0,p.up,.06):V();
+ let jitter=V((rng()-.5)*p.branch*.55,(rng()-.5)*p.branch*.15,(rng()-.5)*p.branch*.55*(1-p.flat));
+ let d=norm(add(add(mul(n0.d,.34),mul(goal,1.05)),add(add(mul(wave,.30),mul(field,p.field)),jitter)));
+ if(p.space>0){let repel=V(),from=Math.max(0,nodes.length-180);for(let j=from;j<nodes.length;j++){if(j===ni||j===n0.parent)continue;let dv=sub(n0.p,nodes[j].p),dl=len(dv);if(dl>0&&dl<16)repel=add(repel,mul(norm(dv),(16-dl)/16))}d=norm(add(d,mul(repel,p.space*.50)))}
+ let np=add(n0.p,mul(d,p.step)),idx=nodes.length;nodes.push({p:np,d,parent:ni,load:1,birth:iter/maxIter});segments.push({a:n0.p,b:np,node:idx,birth:iter/maxIter});return idx}
+while(targets.length&&active.length&&iter++<maxIter&&nodes.length<maxNodes){
+ let influence=new Map(),kill=new Set();
+ for(let ti=0;ti<targets.length;ti++){let t=targets[ti],best=1e9,bi=-1;
+  for(const ni of active){let d=len(sub(t,nodes[ni].p));if(d<killR){kill.add(ti);bi=-1;break}if(d<influenceR&&d<best){best=d;bi=ni}}
+  if(bi>=0){if(!influence.has(bi))influence.set(bi,[]);influence.get(bi).push(norm(sub(t,nodes[bi].p)))}
+ }
+ targets=targets.filter((_,i)=>!kill.has(i));let next=[];
+ for(const ni of active){
+  let dirs=influence.get(ni)||[];
+  if(!dirs.length){
+   let best=1e9,target=null;for(const t of targets){let d=len(sub(t,nodes[ni].p));if(d<best){best=d;target=t}}
+   if(target&&best<260){next.push(makeChild(ni,norm(sub(target,nodes[ni].p)),0))}continue;
+  }
+  let avg=V();for(const d of dirs)avg=add(avg,d);avg=norm(avg);
+  let lateral=preset==='fan'?V(1,0,0):norm({x:-avg.z,y:0,z:avg.x});if(len(lateral)<.2)lateral=V(1,0,0);
+  let A=[],B=[];for(const d of dirs)((d.x*lateral.x+d.y*lateral.y+d.z*lateral.z)>=0?A:B).push(d);
+  let split=dirs.length>=10&&A.length>=3&&B.length>=3&&rng()<Math.min(.86,.18+p.branch*5.2);
+  if(split){
+   for(const [g,bi] of [[A,0],[B,1]]){let av=V();for(const d of g)av=add(av,d);av=norm(av);next.push(makeChild(ni,av,bi))}
+  }else next.push(makeChild(ni,avg,0));
+ }
+ active=next.slice(0,260);
+}
+for(let i=nodes.length-1;i>0;i--){let n0=nodes[i];if(n0.parent>=0)nodes[n0.parent].load+=n0.load}
+let rootLoad=Math.max(1,nodes[0].load);
+for(const s of segments)s.w=.28+p.thick*Math.pow(nodes[s.node].load/rootLoad,.43);
+tips=active.map(i=>nodes[i].p);seed=saved;$('info').textContent=`${segments.length} 段 · ${targets.length} 个未占领目标 · Score: ${preset}`;$('status').textContent=segments.length?'真实分裂端 + 空间竞争 + 下游负载粗细':'未生成：算法或参数异常';draw()}
 function camera(v,w,h){let ang=.36,ca=Math.cos(ang),sa=Math.sin(ang),x=v.x*ca-v.z*sa,z=v.x*sa+v.z*ca;let sc=Math.min(w,h)/430,depth=1+z/700;return[w/2+x*sc/depth,h*.77-v.y*sc/depth,z]}
 function draw(){let r=C.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2),w=C.width=Math.round(r.width*d),h=C.height=Math.round(r.height*d);X.setTransform(1,0,0,1,0,0);X.clearRect(0,0,w,h);let arr=segments.filter(s=>s.birth<=growth).map(s=>{let a=camera(s.a,w,h),b=camera(s.b,w,h);return{s,a,b,z:(a[2]+b[2])/2}}).sort((a,b)=>a.z-b.z);X.lineCap='round';for(const q of arr){let alpha=.36+.64*clamp((q.z+180)/360,0,1);X.strokeStyle=mode==='line'?`rgba(190,220,207,${alpha})`:`rgba(220,225,221,${alpha})`;X.lineWidth=(mode==='line'?1:Math.max(1,q.s.w))*d;X.beginPath();X.moveTo(q.a[0],q.a[1]);X.lineTo(q.b[0],q.b[1]);X.stroke()}requestAnimationFrame(()=>{})}
 function tick(t){if(playing){let dt=(t-last)/1000||0;growth=Math.min(1,growth+dt*.18);$('grow').value=growth;sync();draw();if(growth>=1)playing=false}last=t;requestAnimationFrame(tick)}
