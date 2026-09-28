@@ -1,0 +1,20 @@
+{
+  "schema": "kaopu.claim-gate-dependency-result/1.0",
+  "candidateCaseId": "CLAIM-REQUIRES-PREREQUISITE-GATES-001",
+  "total": 10,
+  "passed": 10,
+  "failed": 0,
+  "allPassed": true,
+  "results": [
+    {"id":"historical-r031-promotable-claim","expectedVerdict":"HOLD_TASK_ANCHOR_MISSING","actualVerdict":"HOLD_TASK_ANCHOR_MISSING","passed":true,"missingGateIds":[],"gateId":null,"verifiedClaim":null,"contractDigest":"sha256:ca66904d12f61a1aec7c2b7c77ac303ccb098c580ee3d303441f89b53fe21735"},
+    {"id":"anchor-present-scope-gate-missing","expectedVerdict":"HOLD_REQUIRED_GATE_MISSING","actualVerdict":"HOLD_REQUIRED_GATE_MISSING","passed":true,"missingGateIds":["SCOPE_AUTHORIZED","REFERENCE_FIDELITY","STANDALONE_HTML"],"gateId":null,"verifiedClaim":null,"contractDigest":"sha256:ca66904d12f61a1aec7c2b7c77ac303ccb098c580ee3d303441f89b53fe21735"},
+    {"id":"scope-job-skipped-but-check-green","expectedVerdict":"HOLD_REQUIRED_GATE_NOT_RUN","actualVerdict":"HOLD_REQUIRED_GATE_NOT_RUN","passed":true,"missingGateIds":[],"gateId":"SCOPE_AUTHORIZED","verifiedClaim":null,"contractDigest":"sha256:4c11696511225b73a6b901cd68ab254577d898b83ddd3725a099b3c3d6df1abc"},
+    {"id":"scope-gate-fails","expectedVerdict":"HOLD_REQUIRED_GATE_FAIL","actualVerdict":"HOLD_REQUIRED_GATE_FAIL","passed":true,"missingGateIds":[],"gateId":"SCOPE_AUTHORIZED","verifiedClaim":null,"contractDigest":"sha256:83855eb8bb1d3511028d976802344e739ca36d2ea93742535a5771f986054dcc"},
+    {"id":"gate-passed-on-different-head","expectedVerdict":"HOLD_GATE_SUBJECT_MISMATCH","actualVerdict":"HOLD_GATE_SUBJECT_MISMATCH","passed":true,"missingGateIds":[],"gateId":"SCOPE_AUTHORIZED","verifiedClaim":null,"contractDigest":"sha256:6beb55ec682f7e73a712fc2671d2d949e831596acf01e3c8205e938c4cf4d9fd"},
+    {"id":"producer-self-approves-scope","expectedVerdict":"HOLD_SELF_APPROVED_GATE_RUN","actualVerdict":"HOLD_SELF_APPROVED_GATE_RUN","passed":true,"missingGateIds":[],"gateId":"SCOPE_AUTHORIZED","verifiedClaim":null,"contractDigest":"sha256:8498bb9f7964568723927be29cc397914bf15821cd04e59385931ce2f076d1aa"},
+    {"id":"complete-exact-lineage-control","expectedVerdict":"CLAIM_VERIFIED","actualVerdict":"CLAIM_VERIFIED","passed":true,"missingGateIds":[],"gateId":null,"verifiedClaim":"PROMOTABLE_CORAL_METHOD_CANDIDATE","contractDigest":"sha256:101dd5b30ed515fecd64f6deb6b2ff39fc8dbdf51cd530802d73376f0dabc6cb"},
+    {"id":"historical-r031-narrow-startup-claim","expectedVerdict":"CLAIM_VERIFIED","actualVerdict":"CLAIM_VERIFIED","passed":true,"missingGateIds":[],"gateId":null,"verifiedClaim":"PUBLIC_STARTUP_READY","contractDigest":"sha256:4bf5fcc6a5d5cb2ef96da949e6eb4073f53ceff8dce01511b3a8f856f8e79e3e"},
+    {"id":"forbidden-features-survive-startup","expectedVerdict":"HOLD_REQUIRED_GATE_MISSING","actualVerdict":"HOLD_REQUIRED_GATE_MISSING","passed":true,"missingGateIds":["SCOPE_AUTHORIZED","REFERENCE_FIDELITY","STANDALONE_HTML"],"gateId":null,"verifiedClaim":null,"contractDigest":"sha256:ca66904d12f61a1aec7c2b7c77ac303ccb098c580ee3d303441f89b53fe21735"},
+    {"id":"task-anchor-does-not-match-claim","expectedVerdict":"HOLD_TASK_ANCHOR_MISMATCH","actualVerdict":"HOLD_TASK_ANCHOR_MISMATCH","passed":true,"missingGateIds":[],"gateId":null,"verifiedClaim":null,"contractDigest":"sha256:035395c78fbc2363885c3f4654854a95620af3a1b8fe29c6a04b8de4a86d5723"}
+  ]
+}
