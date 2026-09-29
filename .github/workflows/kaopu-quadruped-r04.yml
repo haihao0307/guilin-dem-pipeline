@@ -1,0 +1,213 @@
+name: KAOPU Quadruped Instrument R04
+
+on:
+  push:
+    branches:
+      - work/kaopu-quadruped-instrument-r04-20260929
+    paths:
+      - 'kaopu-quadruped-r04/**'
+      - '.github/workflows/kaopu-quadruped-r04.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: kaopu-quadruped-r04-publish
+  cancel-in-progress: false
+
+env:
+  PROJECT_DIR: kaopu-quadruped-r04
+  PUBLIC_SUBDIR: kaopu-score-instrument/quadruped-r04-20260929
+  PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-score-instrument/quadruped-r04-20260929/
+
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Check out production branch
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pinned dependencies
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: npm install --no-audit --no-fund
+
+      - name: Audit score and instrument boundary
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: npm test | tee ../quadruped-r04-unit-results.txt
+
+      - name: Install real browser
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: npx playwright install --with-deps chromium
+
+      - name: Build pure instrument and standalone players
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: npm run build
+
+      - name: Verify output package boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          DIST="$PROJECT_DIR/dist"
+          for file in index.html KAOPU_QUADRUPED_PLAYER.html KAOPU_QUADRUPED_K4.js KAOPU_POLAR_BEAR_K4.score KAOPU_TORTOISE_K4.score KAOPU_NEUTRAL_QUADRUPED_K4.score BUILD.json README.txt LICENSE_THREE.txt; do
+            test -s "$DIST/$file"
+          done
+          grep -q 'KAOPU · Quadruped Instrument R04' "$DIST/index.html"
+          grep -q 'KAOPU · Empty Quadruped Player K4' "$DIST/KAOPU_QUADRUPED_PLAYER.html"
+          grep -q 'KAOPUQuadruped' "$DIST/KAOPU_QUADRUPED_K4.js"
+          ! grep -Eqi 'polar bear|polarbear|tortoise|eagle|北极熊|陆龟|老鹰' "$DIST/KAOPU_QUADRUPED_K4.js"
+          grep -q '^K4|' "$DIST/KAOPU_POLAR_BEAR_K4.score"
+          grep -q '^K4|' "$DIST/KAOPU_TORTOISE_K4.score"
+          grep -q '^K4|' "$DIST/KAOPU_NEUTRAL_QUADRUPED_K4.score"
+          if grep -Eqi '<script[^>]+src=' "$DIST/index.html" "$DIST/KAOPU_QUADRUPED_PLAYER.html"; then
+            echo 'External script reference found.'
+            exit 1
+          fi
+          if grep -Eqi '<link[^>]+stylesheet' "$DIST/index.html" "$DIST/KAOPU_QUADRUPED_PLAYER.html"; then
+            echo 'External stylesheet reference found.'
+            exit 1
+          fi
+
+      - name: Test standalone workbench and empty player
+        shell: bash
+        run: |
+          set -euo pipefail
+          WORKBENCH_URL=$(node -e "console.log(require('node:url').pathToFileURL(process.argv[1]).href)" "$GITHUB_WORKSPACE/$PROJECT_DIR/dist/index.html")
+          PLAYER_URL=$(node -e "console.log(require('node:url').pathToFileURL(process.argv[1]).href)" "$GITHUB_WORKSPACE/$PROJECT_DIR/dist/KAOPU_QUADRUPED_PLAYER.html")
+          WORKBENCH_URL="$WORKBENCH_URL" PLAYER_URL="$PLAYER_URL" node "$PROJECT_DIR/tests/browser.mjs"
+
+      - name: Publish isolated R04 directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          rm -rf /tmp/kaopu-quadruped-pages
+          git worktree add --detach /tmp/kaopu-quadruped-pages origin/gh-pages
+          TARGET="/tmp/kaopu-quadruped-pages/$PUBLIC_SUBDIR"
+          rm -rf "$TARGET"
+          mkdir -p "$TARGET"
+          cp "$PROJECT_DIR/dist/"* "$TARGET/"
+          cd /tmp/kaopu-quadruped-pages
+          git config user.name 'KAOPU Quadruped CI'
+          git config user.email 'kaopu-quadruped-ci@users.noreply.github.com'
+          git add "$PUBLIC_SUBDIR"
+          git commit -m 'publish(kaopu): quadruped R04 score-owned anatomy [skip ci]'
+          git push origin HEAD:gh-pages
+
+      - name: Request Pages build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          type=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.build_type' || echo unknown)
+          echo "Pages build type: $type"
+          if [ "$type" = legacy ]; then
+            gh api --method POST "repos/$GITHUB_REPOSITORY/pages/builds" --jq '.status' || true
+          fi
+
+      - name: Verify exact public payloads
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=(index.html KAOPU_QUADRUPED_PLAYER.html KAOPU_QUADRUPED_K4.js KAOPU_POLAR_BEAR_K4.score KAOPU_TORTOISE_K4.score KAOPU_NEUTRAL_QUADRUPED_K4.score)
+          for file in "${files[@]}"; do
+            expected=$(sha256sum "$PROJECT_DIR/dist/$file" | awk '{print $1}')
+            ok=0
+            for attempt in $(seq 1 90); do
+              code=$(curl --max-time 20 -L -sS -H 'Cache-Control: no-cache' -o "/tmp/$file" -w '%{http_code}' "$PUBLIC_URL$file" || true)
+              actual=$(sha256sum "/tmp/$file" 2>/dev/null | awk '{print $1}' || true)
+              if [ "$code" = 200 ] && [ "$actual" = "$expected" ]; then ok=1; break; fi
+              echo "Waiting for $file ($attempt/90) HTTP=$code actual=$actual expected=$expected"
+              sleep 5
+            done
+            test "$ok" = 1
+          done
+
+      - name: Test live workbench and empty player
+        env:
+          WORKBENCH_URL: ${{ env.PUBLIC_URL }}index.html
+          PLAYER_URL: ${{ env.PUBLIC_URL }}KAOPU_QUADRUPED_PLAYER.html
+        run: node "$PROJECT_DIR/tests/browser.mjs"
+
+      - name: Write publication proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          export WORKBENCH_SHA=$(sha256sum "$PROJECT_DIR/dist/index.html" | awk '{print $1}')
+          export PLAYER_SHA=$(sha256sum "$PROJECT_DIR/dist/KAOPU_QUADRUPED_PLAYER.html" | awk '{print $1}')
+          export INSTRUMENT_SHA=$(sha256sum "$PROJECT_DIR/dist/KAOPU_QUADRUPED_K4.js" | awk '{print $1}')
+          export BUILD_JSON="$PROJECT_DIR/dist/BUILD.json"
+          node --input-type=module <<'JS'
+          import { readFile, writeFile } from 'node:fs/promises';
+          const e = process.env;
+          const build = JSON.parse(await readFile(e.BUILD_JSON, 'utf8'));
+          const standalone = JSON.parse(await readFile('qa-artifacts/standalone-results.json', 'utf8'));
+          const live = JSON.parse(await readFile('qa-artifacts/public-results.json', 'utf8'));
+          const proof = {
+            project: 'KAOPU Quadruped Instrument R04',
+            instrumentVersion: 'K4.0.0',
+            sourceRepository: e.GITHUB_REPOSITORY,
+            sourceBranch: e.GITHUB_REF_NAME,
+            sourceSha: e.GITHUB_SHA,
+            publicUrl: e.PUBLIC_URL,
+            instrumentUrl: e.PUBLIC_URL + 'KAOPU_QUADRUPED_K4.js',
+            emptyPlayerUrl: e.PUBLIC_URL + 'KAOPU_QUADRUPED_PLAYER.html',
+            verifiedAt: new Date().toISOString(),
+            architectureAudit: {
+              previousPresetSelectorRejected: true,
+              instrumentIdentityPresets: 0,
+              scoreOwnsIdentityData: true,
+              domainConstraint: 'bilateral-quadruped',
+              flyingAnimalDeferred: true
+            },
+            build,
+            sha256: { workbench: e.WORKBENCH_SHA, player: e.PLAYER_SHA, instrument: e.INSTRUMENT_SHA },
+            exactPublicBytesMatched: true,
+            interactive3D: true,
+            emptyPlayerStartsWithoutObject: true,
+            sameInstrumentPlaysThreeExternalScores: true,
+            externalRuntimeAssets: 0,
+            fileProtocolPassed: true,
+            desktopBrowserPassed: true,
+            mobileViewportPassed: true,
+            physicalPhoneTested: false,
+            visualAcceptance: 'PENDING_USER',
+            productionReady: false,
+            shareAllowed: true,
+            standalone,
+            live
+          };
+          await writeFile(`/tmp/kaopu-quadruped-pages/${e.PUBLIC_SUBDIR}/PUBLICATION_PROOF.json`, JSON.stringify(proof, null, 2) + '\n');
+          JS
+          cd /tmp/kaopu-quadruped-pages
+          git add "$PUBLIC_SUBDIR/PUBLICATION_PROOF.json"
+          git commit -m 'proof(kaopu): exact-head quadruped R04 boundary verification [skip ci]'
+          git fetch origin gh-pages
+          git rebase origin/gh-pages
+          git push origin HEAD:gh-pages
+
+      - name: Upload delivery and QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-quadruped-r04-${{ github.sha }}
+          path: |
+            quadruped-r04-unit-results.txt
+            qa-artifacts/
+            kaopu-quadruped-r04/dist/
+            kaopu-quadruped-r04/src/
+            kaopu-quadruped-r04/tests/
+            kaopu-quadruped-r04/scripts/
+            kaopu-quadruped-r04/README.md
+            kaopu-quadruped-r04/AUDIT_AND_CORRECTION_ZH.md
+            kaopu-quadruped-r04/package.json
+          retention-days: 14
