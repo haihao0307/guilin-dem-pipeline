@@ -1,0 +1,98 @@
+{
+  "studyId": "N43",
+  "candidateId": "DECLARED-RUNNABLE-SOURCE-CLOSURE-001",
+  "historicalSubjectHeadSha": "49dbcffe70ee2014efb6f563610bcbf8ee1a7062",
+  "historicalDecision": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE",
+  "checksPassed": 9,
+  "checksTotal": 9,
+  "allPassed": true,
+  "checks": [
+    {
+      "id": "01-historical-head-holds-both-gaps",
+      "actual": {
+        "verdict": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE",
+        "missingScriptTargets": ["tests/smoke.mjs"],
+        "missingLocalSourceInputs": ["src/app.js"]
+      },
+      "expected": {
+        "verdict": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE",
+        "missingScriptTargets": ["tests/smoke.mjs"],
+        "missingLocalSourceInputs": ["src/app.js"]
+      },
+      "pass": true
+    },
+    {
+      "id": "02-missing-test-target-holds",
+      "actual": {
+        "verdict": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE",
+        "missingScriptTargets": ["tests/smoke.mjs"],
+        "missingLocalSourceInputs": []
+      },
+      "expected": {
+        "verdict": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE",
+        "missingScriptTargets": ["tests/smoke.mjs"],
+        "missingLocalSourceInputs": []
+      },
+      "pass": true
+    },
+    {
+      "id": "03-missing-build-input-holds",
+      "actual": {
+        "verdict": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE",
+        "missingScriptTargets": [],
+        "missingLocalSourceInputs": ["src/app.js"]
+      },
+      "expected": {
+        "verdict": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE",
+        "missingScriptTargets": [],
+        "missingLocalSourceInputs": ["src/app.js"]
+      },
+      "pass": true
+    },
+    {
+      "id": "04-built-artifact-does-not-replace-source",
+      "actual": {
+        "verdict": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE",
+        "missingScriptTargets": [],
+        "missingLocalSourceInputs": ["src/app.js"]
+      },
+      "expected": {
+        "verdict": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE",
+        "missingScriptTargets": [],
+        "missingLocalSourceInputs": ["src/app.js"]
+      },
+      "pass": true
+    },
+    {
+      "id": "05-stale-receipt-head-holds",
+      "actual": {"verdict": "HOLD_SUBJECT_HEAD_MISMATCH"},
+      "expected": {"verdict": "HOLD_SUBJECT_HEAD_MISMATCH"},
+      "pass": true
+    },
+    {
+      "id": "06-path-escape-holds",
+      "actual": {"verdict": "HOLD_PROJECT_PATH_ESCAPE", "escapedPaths": ["../borrowed/app.js"]},
+      "expected": {"verdict": "HOLD_PROJECT_PATH_ESCAPE", "escapedPaths": ["../borrowed/app.js"]},
+      "pass": true
+    },
+    {
+      "id": "07-absolute-borrow-holds",
+      "actual": {"verdict": "HOLD_PROJECT_PATH_ESCAPE", "escapedPaths": ["/tmp/smoke.mjs"]},
+      "expected": {"verdict": "HOLD_PROJECT_PATH_ESCAPE", "escapedPaths": ["/tmp/smoke.mjs"]},
+      "pass": true
+    },
+    {
+      "id": "08-dynamic-input-remains-unknown",
+      "actual": {"verdict": "UNKNOWN_DYNAMIC_SOURCE_CLOSURE"},
+      "expected": {"verdict": "UNKNOWN_DYNAMIC_SOURCE_CLOSURE"},
+      "pass": true
+    },
+    {
+      "id": "09-closed-control-verifies-narrowly",
+      "actual": {"verdict": "SOURCE_CLOSURE_VERIFIED_ONLY"},
+      "expected": {"verdict": "SOURCE_CLOSURE_VERIFIED_ONLY"},
+      "pass": true
+    }
+  ],
+  "generatedAt": "2026-09-29T04:14:00Z"
+}

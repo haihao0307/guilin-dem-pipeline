@@ -1,0 +1,129 @@
+{
+  "historicalSubjectHeadSha": "49dbcffe70ee2014efb6f563610bcbf8ee1a7062",
+  "cases": [
+    {
+      "id": "historical-head-holds-both-gaps",
+      "subject": {
+        "subjectHeadSha": "49dbcffe70ee2014efb6f563610bcbf8ee1a7062",
+        "observedHeadSha": "49dbcffe70ee2014efb6f563610bcbf8ee1a7062",
+        "files": ["package.json", "scripts/build.mjs", "src/index.template.html"],
+        "scriptTargets": ["scripts/build.mjs", "tests/smoke.mjs"],
+        "localSourceInputs": ["src/app.js", "src/index.template.html"],
+        "dynamicSourceClosureKnown": true
+      },
+      "expected": {
+        "verdict": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE",
+        "missingScriptTargets": ["tests/smoke.mjs"],
+        "missingLocalSourceInputs": ["src/app.js"]
+      }
+    },
+    {
+      "id": "missing-test-target-holds",
+      "subject": {
+        "subjectHeadSha": "a",
+        "observedHeadSha": "a",
+        "files": ["package.json", "scripts/build.mjs", "src/app.js", "src/index.template.html"],
+        "scriptTargets": ["scripts/build.mjs", "tests/smoke.mjs"],
+        "localSourceInputs": ["src/app.js", "src/index.template.html"],
+        "dynamicSourceClosureKnown": true
+      },
+      "expected": {
+        "verdict": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE",
+        "missingScriptTargets": ["tests/smoke.mjs"],
+        "missingLocalSourceInputs": []
+      }
+    },
+    {
+      "id": "missing-build-input-holds",
+      "subject": {
+        "subjectHeadSha": "a",
+        "observedHeadSha": "a",
+        "files": ["package.json", "scripts/build.mjs", "tests/smoke.mjs", "src/index.template.html"],
+        "scriptTargets": ["scripts/build.mjs", "tests/smoke.mjs"],
+        "localSourceInputs": ["src/app.js", "src/index.template.html"],
+        "dynamicSourceClosureKnown": true
+      },
+      "expected": {
+        "verdict": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE",
+        "missingScriptTargets": [],
+        "missingLocalSourceInputs": ["src/app.js"]
+      }
+    },
+    {
+      "id": "built-artifact-does-not-replace-source",
+      "subject": {
+        "subjectHeadSha": "a",
+        "observedHeadSha": "a",
+        "files": ["package.json", "scripts/build.mjs", "tests/smoke.mjs", "src/index.template.html", "dist/index.html"],
+        "scriptTargets": ["scripts/build.mjs", "tests/smoke.mjs"],
+        "localSourceInputs": ["src/app.js", "src/index.template.html"],
+        "dynamicSourceClosureKnown": true
+      },
+      "expected": {
+        "verdict": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE",
+        "missingScriptTargets": [],
+        "missingLocalSourceInputs": ["src/app.js"]
+      }
+    },
+    {
+      "id": "stale-receipt-head-holds",
+      "subject": {
+        "subjectHeadSha": "a",
+        "observedHeadSha": "b",
+        "files": ["package.json", "scripts/build.mjs", "tests/smoke.mjs", "src/app.js", "src/index.template.html"],
+        "scriptTargets": ["scripts/build.mjs", "tests/smoke.mjs"],
+        "localSourceInputs": ["src/app.js", "src/index.template.html"],
+        "dynamicSourceClosureKnown": true
+      },
+      "expected": {"verdict": "HOLD_SUBJECT_HEAD_MISMATCH"}
+    },
+    {
+      "id": "path-escape-holds",
+      "subject": {
+        "subjectHeadSha": "a",
+        "observedHeadSha": "a",
+        "files": ["package.json", "scripts/build.mjs", "tests/smoke.mjs", "src/app.js", "src/index.template.html"],
+        "scriptTargets": ["scripts/build.mjs", "tests/smoke.mjs"],
+        "localSourceInputs": ["../borrowed/app.js", "src/index.template.html"],
+        "dynamicSourceClosureKnown": true
+      },
+      "expected": {"verdict": "HOLD_PROJECT_PATH_ESCAPE", "escapedPaths": ["../borrowed/app.js"]}
+    },
+    {
+      "id": "absolute-borrow-holds",
+      "subject": {
+        "subjectHeadSha": "a",
+        "observedHeadSha": "a",
+        "files": ["package.json", "scripts/build.mjs", "tests/smoke.mjs", "src/app.js", "src/index.template.html"],
+        "scriptTargets": ["/tmp/smoke.mjs"],
+        "localSourceInputs": ["src/app.js", "src/index.template.html"],
+        "dynamicSourceClosureKnown": true
+      },
+      "expected": {"verdict": "HOLD_PROJECT_PATH_ESCAPE", "escapedPaths": ["/tmp/smoke.mjs"]}
+    },
+    {
+      "id": "dynamic-input-remains-unknown",
+      "subject": {
+        "subjectHeadSha": "a",
+        "observedHeadSha": "a",
+        "files": ["package.json", "scripts/build.mjs", "tests/smoke.mjs", "src/app.js", "src/index.template.html"],
+        "scriptTargets": ["scripts/build.mjs", "tests/smoke.mjs"],
+        "localSourceInputs": ["src/app.js", "src/index.template.html"],
+        "dynamicSourceClosureKnown": false
+      },
+      "expected": {"verdict": "UNKNOWN_DYNAMIC_SOURCE_CLOSURE"}
+    },
+    {
+      "id": "closed-control-verifies-narrowly",
+      "subject": {
+        "subjectHeadSha": "a",
+        "observedHeadSha": "a",
+        "files": ["package.json", "scripts/build.mjs", "tests/smoke.mjs", "src/app.js", "src/index.template.html"],
+        "scriptTargets": ["scripts/build.mjs", "tests/smoke.mjs"],
+        "localSourceInputs": ["src/app.js", "src/index.template.html"],
+        "dynamicSourceClosureKnown": true
+      },
+      "expected": {"verdict": "SOURCE_CLOSURE_VERIFIED_ONLY"}
+    }
+  ]
+}
