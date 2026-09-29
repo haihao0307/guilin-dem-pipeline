@@ -1,0 +1,32 @@
+{
+  "candidateId": "DISCLOSED-INFERENCE-NOT-AUTHORIZED-REFERENCE-001",
+  "subjectHeadSha": "46946c33c89ed05170d38992d86dd0a615627bbf",
+  "summary": { "total": 10, "passed": 10, "failed": 0 },
+  "historicalReplay": {
+    "verdict": "HOLD_REFERENCE_CLAIM_AUTHORIZATION",
+    "reasons": [
+      "TASK_MODE_UNDECLARED",
+      "REFERENCE_COVERAGE_INCOMPLETE",
+      "VISIBLE_INFERENCE_UNAUTHORIZED",
+      "INDEPENDENT_REFERENCE_VERIFIER_MISSING"
+    ],
+    "preservedEvidence": [
+      "PORTABLE_REPLAY_VERIFIED",
+      "PUBLIC_BROWSER_VERIFIED",
+      "EXACT_PUBLIC_BYTES_VERIFIED"
+    ]
+  },
+  "cases": [
+    { "id": "01-current-history-disclosure-does-not-authorize-visible-inference", "verdict": "HOLD_REFERENCE_CLAIM_AUTHORIZATION", "pass": true },
+    { "id": "02-more-disclosure-remains-non-authorization", "verdict": "HOLD_REFERENCE_CLAIM_AUTHORIZATION", "pass": true },
+    { "id": "03-structural-claim-preserves-valid-green-evidence", "verdict": "STRUCTURAL_EVIDENCE_PRESERVED_ONLY", "pass": true },
+    { "id": "04-explicit-scoped-authorization-allows-approximate-not-reference-claim", "verdict": "AUTHORIZED_APPROXIMATE_CANDIDATE_NOT_REFERENCE_VERIFIED", "pass": true },
+    { "id": "05-authorization-scope-overrun-holds", "verdict": "HOLD_REFERENCE_CLAIM_AUTHORIZATION", "pass": true },
+    { "id": "06-unknown-hidden-region-left-unrendered-can-pass-reference-gate", "verdict": "REFERENCE_CANDIDATE_READY_NOT_USER_ACCEPTED", "pass": true },
+    { "id": "07-self-approval-holds-even-with-complete-map", "verdict": "HOLD_REFERENCE_CLAIM_AUTHORIZATION", "pass": true },
+    { "id": "08-invalid-visible-delta-basis-holds", "verdict": "HOLD_REFERENCE_CLAIM_AUTHORIZATION", "pass": true },
+    { "id": "09-independent-verifier-must-actually-pass", "verdict": "HOLD_REFERENCE_CLAIM_AUTHORIZATION", "pass": true },
+    { "id": "10-stale-receipt-cannot-promote-any-claim", "verdict": "HOLD_SUBJECT_HEAD_MISMATCH", "pass": true }
+  ],
+  "generatedAt": "2026-09-29T07:38:09Z"
+}

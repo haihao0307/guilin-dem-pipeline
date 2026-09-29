@@ -1,0 +1,218 @@
+{
+  "candidateId": "DISCLOSED-INFERENCE-NOT-AUTHORIZED-REFERENCE-001",
+  "subjectHeadSha": "46946c33c89ed05170d38992d86dd0a615627bbf",
+  "cases": [
+    {
+      "id": "01-current-history-disclosure-does-not-authorize-visible-inference",
+      "input": {
+        "receiptHeadSha": "46946c33c89ed05170d38992d86dd0a615627bbf",
+        "claimType": "REFERENCE_RESULT",
+        "userInstructionRequiresReplication": true,
+        "declaredTaskMode": null,
+        "creativeAuthorization": false,
+        "inferenceAuthorizationScope": [],
+        "visibleInferences": ["hiddenSurfaces", "scale", "tortoiseSpecies"],
+        "referenceCoverageComplete": false,
+        "visibleDeltaBases": [],
+        "independentReferenceVerifier": false,
+        "referenceVerifierPassed": false,
+        "disclosures": ["APPROXIMATE", "INFERRED", "ASSUMED", "UNRESOLVED"],
+        "machineEvidence": ["PORTABLE_REPLAY_VERIFIED", "PUBLIC_BROWSER_VERIFIED", "EXACT_PUBLIC_BYTES_VERIFIED"]
+      },
+      "expected": {
+        "verdict": "HOLD_REFERENCE_CLAIM_AUTHORIZATION",
+        "reasons": ["TASK_MODE_UNDECLARED", "REFERENCE_COVERAGE_INCOMPLETE", "VISIBLE_INFERENCE_UNAUTHORIZED", "INDEPENDENT_REFERENCE_VERIFIER_MISSING"],
+        "preservedEvidence": ["PORTABLE_REPLAY_VERIFIED", "PUBLIC_BROWSER_VERIFIED", "EXACT_PUBLIC_BYTES_VERIFIED"]
+      }
+    },
+    {
+      "id": "02-more-disclosure-remains-non-authorization",
+      "input": {
+        "receiptHeadSha": "46946c33c89ed05170d38992d86dd0a615627bbf",
+        "claimType": "REFERENCE_RESULT",
+        "userInstructionRequiresReplication": true,
+        "declaredTaskMode": "REPLICATION_LOCKED",
+        "creativeAuthorization": false,
+        "inferenceAuthorizationScope": [],
+        "visibleInferences": ["occludedAnatomy"],
+        "referenceCoverageComplete": true,
+        "visibleDeltaBases": ["REFERENCE_MATCH"],
+        "independentReferenceVerifier": true,
+        "referenceVerifierPassed": true,
+        "disclosures": ["APPROXIMATE", "INFERRED", "NOT_A_SCAN"],
+        "machineEvidence": ["PORTABLE_REPLAY_VERIFIED"]
+      },
+      "expected": {
+        "verdict": "HOLD_REFERENCE_CLAIM_AUTHORIZATION",
+        "reasons": ["VISIBLE_INFERENCE_UNAUTHORIZED"],
+        "preservedEvidence": ["PORTABLE_REPLAY_VERIFIED"]
+      }
+    },
+    {
+      "id": "03-structural-claim-preserves-valid-green-evidence",
+      "input": {
+        "receiptHeadSha": "46946c33c89ed05170d38992d86dd0a615627bbf",
+        "claimType": "STRUCTURAL_REPLAY",
+        "userInstructionRequiresReplication": true,
+        "declaredTaskMode": null,
+        "visibleInferences": ["hiddenSurfaces"],
+        "machineEvidence": ["PORTABLE_REPLAY_VERIFIED", "PUBLIC_BROWSER_VERIFIED", "EXACT_PUBLIC_BYTES_VERIFIED"]
+      },
+      "expected": {
+        "verdict": "STRUCTURAL_EVIDENCE_PRESERVED_ONLY",
+        "reasons": [],
+        "preservedEvidence": ["PORTABLE_REPLAY_VERIFIED", "PUBLIC_BROWSER_VERIFIED", "EXACT_PUBLIC_BYTES_VERIFIED"]
+      }
+    },
+    {
+      "id": "04-explicit-scoped-authorization-allows-approximate-not-reference-claim",
+      "input": {
+        "receiptHeadSha": "46946c33c89ed05170d38992d86dd0a615627bbf",
+        "claimType": "AUTHORIZED_APPROXIMATION",
+        "userInstructionRequiresReplication": true,
+        "declaredTaskMode": "REPLICATION_LOCKED",
+        "creativeAuthorization": true,
+        "inferenceAuthorizationScope": ["hiddenSurfaces"],
+        "visibleInferences": ["hiddenSurfaces"],
+        "referenceCoverageComplete": true,
+        "visibleDeltaBases": ["APPROVED_CONSTRAINT"],
+        "independentReferenceVerifier": true,
+        "referenceVerifierPassed": true,
+        "machineEvidence": ["PORTABLE_REPLAY_VERIFIED"]
+      },
+      "expected": {
+        "verdict": "AUTHORIZED_APPROXIMATE_CANDIDATE_NOT_REFERENCE_VERIFIED",
+        "reasons": [],
+        "preservedEvidence": ["PORTABLE_REPLAY_VERIFIED"]
+      }
+    },
+    {
+      "id": "05-authorization-scope-overrun-holds",
+      "input": {
+        "receiptHeadSha": "46946c33c89ed05170d38992d86dd0a615627bbf",
+        "claimType": "REFERENCE_RESULT",
+        "userInstructionRequiresReplication": true,
+        "declaredTaskMode": "REPLICATION_LOCKED",
+        "creativeAuthorization": true,
+        "inferenceAuthorizationScope": ["hiddenSurfaces"],
+        "visibleInferences": ["hiddenSurfaces", "speciesIdentity"],
+        "referenceCoverageComplete": true,
+        "visibleDeltaBases": ["REFERENCE_MATCH", "APPROVED_CONSTRAINT"],
+        "independentReferenceVerifier": true,
+        "referenceVerifierPassed": true,
+        "machineEvidence": ["PUBLIC_BROWSER_VERIFIED"]
+      },
+      "expected": {
+        "verdict": "HOLD_REFERENCE_CLAIM_AUTHORIZATION",
+        "reasons": ["VISIBLE_INFERENCE_SCOPE_EXCEEDED"],
+        "preservedEvidence": ["PUBLIC_BROWSER_VERIFIED"]
+      }
+    },
+    {
+      "id": "06-unknown-hidden-region-left-unrendered-can-pass-reference-gate",
+      "input": {
+        "receiptHeadSha": "46946c33c89ed05170d38992d86dd0a615627bbf",
+        "claimType": "REFERENCE_RESULT",
+        "userInstructionRequiresReplication": true,
+        "declaredTaskMode": "REPLICATION_LOCKED",
+        "creativeAuthorization": false,
+        "inferenceAuthorizationScope": [],
+        "visibleInferences": [],
+        "referenceCoverageComplete": true,
+        "visibleDeltaBases": ["REFERENCE_MATCH", "MEASURED_RELATION"],
+        "independentReferenceVerifier": true,
+        "referenceVerifierPassed": true,
+        "machineEvidence": ["PUBLIC_BROWSER_VERIFIED"]
+      },
+      "expected": {
+        "verdict": "REFERENCE_CANDIDATE_READY_NOT_USER_ACCEPTED",
+        "reasons": [],
+        "preservedEvidence": ["PUBLIC_BROWSER_VERIFIED"]
+      }
+    },
+    {
+      "id": "07-self-approval-holds-even-with-complete-map",
+      "input": {
+        "receiptHeadSha": "46946c33c89ed05170d38992d86dd0a615627bbf",
+        "claimType": "REFERENCE_RESULT",
+        "userInstructionRequiresReplication": true,
+        "declaredTaskMode": "REPLICATION_LOCKED",
+        "creativeAuthorization": false,
+        "visibleInferences": [],
+        "referenceCoverageComplete": true,
+        "visibleDeltaBases": ["REFERENCE_MATCH"],
+        "independentReferenceVerifier": false,
+        "referenceVerifierPassed": true,
+        "machineEvidence": ["PUBLIC_BROWSER_VERIFIED"]
+      },
+      "expected": {
+        "verdict": "HOLD_REFERENCE_CLAIM_AUTHORIZATION",
+        "reasons": ["INDEPENDENT_REFERENCE_VERIFIER_MISSING"],
+        "preservedEvidence": ["PUBLIC_BROWSER_VERIFIED"]
+      }
+    },
+    {
+      "id": "08-invalid-visible-delta-basis-holds",
+      "input": {
+        "receiptHeadSha": "46946c33c89ed05170d38992d86dd0a615627bbf",
+        "claimType": "REFERENCE_RESULT",
+        "userInstructionRequiresReplication": true,
+        "declaredTaskMode": "REPLICATION_LOCKED",
+        "creativeAuthorization": false,
+        "visibleInferences": [],
+        "referenceCoverageComplete": true,
+        "visibleDeltaBases": ["AESTHETIC_GUESS"],
+        "independentReferenceVerifier": true,
+        "referenceVerifierPassed": true,
+        "machineEvidence": ["PORTABLE_REPLAY_VERIFIED"]
+      },
+      "expected": {
+        "verdict": "HOLD_REFERENCE_CLAIM_AUTHORIZATION",
+        "reasons": ["VISIBLE_DELTA_BASIS_INVALID"],
+        "preservedEvidence": ["PORTABLE_REPLAY_VERIFIED"]
+      }
+    },
+    {
+      "id": "09-independent-verifier-must-actually-pass",
+      "input": {
+        "receiptHeadSha": "46946c33c89ed05170d38992d86dd0a615627bbf",
+        "claimType": "REFERENCE_RESULT",
+        "userInstructionRequiresReplication": true,
+        "declaredTaskMode": "REPLICATION_LOCKED",
+        "creativeAuthorization": false,
+        "visibleInferences": [],
+        "referenceCoverageComplete": true,
+        "visibleDeltaBases": ["REFERENCE_MATCH"],
+        "independentReferenceVerifier": true,
+        "referenceVerifierPassed": false,
+        "machineEvidence": ["PUBLIC_BROWSER_VERIFIED"]
+      },
+      "expected": {
+        "verdict": "HOLD_REFERENCE_CLAIM_AUTHORIZATION",
+        "reasons": ["REFERENCE_VERIFIER_NOT_PASSED"],
+        "preservedEvidence": ["PUBLIC_BROWSER_VERIFIED"]
+      }
+    },
+    {
+      "id": "10-stale-receipt-cannot-promote-any-claim",
+      "input": {
+        "receiptHeadSha": "1b35486156fc7cf8c8d401e7de193205557d5fb2",
+        "claimType": "REFERENCE_RESULT",
+        "userInstructionRequiresReplication": true,
+        "declaredTaskMode": "REPLICATION_LOCKED",
+        "creativeAuthorization": false,
+        "visibleInferences": [],
+        "referenceCoverageComplete": true,
+        "visibleDeltaBases": ["REFERENCE_MATCH"],
+        "independentReferenceVerifier": true,
+        "referenceVerifierPassed": true,
+        "machineEvidence": ["PUBLIC_BROWSER_VERIFIED"]
+      },
+      "expected": {
+        "verdict": "HOLD_SUBJECT_HEAD_MISMATCH",
+        "reasons": ["SUBJECT_HEAD_MISMATCH"],
+        "preservedEvidence": []
+      }
+    }
+  ]
+}
