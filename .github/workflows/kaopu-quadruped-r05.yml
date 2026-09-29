@@ -1,0 +1,230 @@
+name: KAOPU Quadruped R05 Frozen-Instrument Wolf Score
+
+on:
+  push:
+    branches:
+      - work/kaopu-quadruped-r05-wolf-score-only-20260929
+    paths:
+      - 'kaopu-quadruped-r05/**'
+      - '.github/workflows/kaopu-quadruped-r05.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: kaopu-quadruped-r05-publish
+  cancel-in-progress: false
+
+env:
+  PROJECT_DIR: kaopu-quadruped-r05
+  PUBLIC_SUBDIR: kaopu-score-instrument/quadruped-r05-wolf-20260929
+  PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-score-instrument/quadruped-r05-wolf-20260929/
+  R04_INSTRUMENT_SHA256: e0f6c35710561dad66e8ffbc748fc28d2bac61a6771549eb89611db165669435
+
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Check out R05 branch
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pinned dependencies
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: npm install --no-audit --no-fund
+
+      - name: Audit frozen instrument and score ownership
+        working-directory: ${{ env.PROJECT_DIR }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm test | tee ../quadruped-r05-unit-results.txt
+
+      - name: Install real browser
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: npx playwright install --with-deps chromium
+
+      - name: Build unchanged instrument and R05 score package
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: npm run build
+
+      - name: Verify output package boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          DIST="$PROJECT_DIR/dist"
+          for file in index.html KAOPU_QUADRUPED_PLAYER.html KAOPU_QUADRUPED_K4.js KAOPU_POLAR_BEAR_K4.score KAOPU_TORTOISE_K4.score KAOPU_NEUTRAL_QUADRUPED_K4.score KAOPU_GRAY_WOLF_K4.score BUILD.json README.txt LICENSE_THREE.txt; do
+            test -s "$DIST/$file"
+          done
+          grep -q 'KAOPU · Quadruped Instrument R05' "$DIST/index.html"
+          grep -q 'KAOPU · Empty Quadruped Player K4' "$DIST/KAOPU_QUADRUPED_PLAYER.html"
+          grep -q 'KAOPUQuadruped' "$DIST/KAOPU_QUADRUPED_K4.js"
+          test "$(sha256sum "$DIST/KAOPU_QUADRUPED_K4.js" | awk '{print $1}')" = "$R04_INSTRUMENT_SHA256"
+          ! grep -Eqi 'polar bear|polarbear|tortoise|eagle|gray wolf|graywolf|北极熊|陆龟|老鹰|灰狼' "$DIST/KAOPU_QUADRUPED_K4.js"
+          grep -q '^K4|' "$DIST/KAOPU_GRAY_WOLF_K4.score"
+          test "$(node -e "const b=require('./$PROJECT_DIR/dist/BUILD.json');process.stdout.write(String(b.instrumentChangedBytes))")" = 0
+          if grep -Eqi '<script[^>]+src=' "$DIST/index.html" "$DIST/KAOPU_QUADRUPED_PLAYER.html"; then
+            echo 'External script reference found.'
+            exit 1
+          fi
+          if grep -Eqi '<link[^>]+stylesheet' "$DIST/index.html" "$DIST/KAOPU_QUADRUPED_PLAYER.html"; then
+            echo 'External stylesheet reference found.'
+            exit 1
+          fi
+
+      - name: Test standalone workbench and empty player
+        shell: bash
+        run: |
+          set -euo pipefail
+          WORKBENCH_URL=$(node -e "console.log(require('node:url').pathToFileURL(process.argv[1]).href)" "$GITHUB_WORKSPACE/$PROJECT_DIR/dist/index.html")
+          PLAYER_URL=$(node -e "console.log(require('node:url').pathToFileURL(process.argv[1]).href)" "$GITHUB_WORKSPACE/$PROJECT_DIR/dist/KAOPU_QUADRUPED_PLAYER.html")
+          WORKBENCH_URL="$WORKBENCH_URL" PLAYER_URL="$PLAYER_URL" node "$PROJECT_DIR/tests/browser.mjs"
+
+      - name: Publish isolated R05 directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          rm -rf /tmp/kaopu-quadruped-r05-pages
+          git worktree add --detach /tmp/kaopu-quadruped-r05-pages origin/gh-pages
+          TARGET="/tmp/kaopu-quadruped-r05-pages/$PUBLIC_SUBDIR"
+          rm -rf "$TARGET"
+          mkdir -p "$TARGET"
+          cp "$PROJECT_DIR/dist/"* "$TARGET/"
+          cd /tmp/kaopu-quadruped-r05-pages
+          git config user.name 'KAOPU Quadruped R05 CI'
+          git config user.email 'kaopu-quadruped-r05-ci@users.noreply.github.com'
+          git add "$PUBLIC_SUBDIR"
+          git commit -m 'publish(kaopu): R05 frozen K4 instrument with external gray-wolf score [skip ci]'
+          git push origin HEAD:gh-pages
+
+      - name: Request Pages build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          type=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.build_type' || echo unknown)
+          echo "Pages build type: $type"
+          if [ "$type" = legacy ]; then
+            gh api --method POST "repos/$GITHUB_REPOSITORY/pages/builds" --jq '.status' || true
+          fi
+
+      - name: Verify exact public payloads
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=(index.html KAOPU_QUADRUPED_PLAYER.html KAOPU_QUADRUPED_K4.js KAOPU_POLAR_BEAR_K4.score KAOPU_TORTOISE_K4.score KAOPU_NEUTRAL_QUADRUPED_K4.score KAOPU_GRAY_WOLF_K4.score)
+          for file in "${files[@]}"; do
+            expected=$(sha256sum "$PROJECT_DIR/dist/$file" | awk '{print $1}')
+            ok=0
+            for attempt in $(seq 1 90); do
+              code=$(curl --max-time 20 -L -sS -H 'Cache-Control: no-cache' -o "/tmp/$file" -w '%{http_code}' "$PUBLIC_URL$file" || true)
+              actual=$(sha256sum "/tmp/$file" 2>/dev/null | awk '{print $1}' || true)
+              if [ "$code" = 200 ] && [ "$actual" = "$expected" ]; then ok=1; break; fi
+              echo "Waiting for $file ($attempt/90) HTTP=$code actual=$actual expected=$expected"
+              sleep 5
+            done
+            test "$ok" = 1
+          done
+
+      - name: Test live workbench and empty player
+        env:
+          WORKBENCH_URL: ${{ env.PUBLIC_URL }}index.html
+          PLAYER_URL: ${{ env.PUBLIC_URL }}KAOPU_QUADRUPED_PLAYER.html
+        run: node "$PROJECT_DIR/tests/browser.mjs"
+
+      - name: Write publication proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          export WORKBENCH_SHA=$(sha256sum "$PROJECT_DIR/dist/index.html" | awk '{print $1}')
+          export PLAYER_SHA=$(sha256sum "$PROJECT_DIR/dist/KAOPU_QUADRUPED_PLAYER.html" | awk '{print $1}')
+          export INSTRUMENT_SHA=$(sha256sum "$PROJECT_DIR/dist/KAOPU_QUADRUPED_K4.js" | awk '{print $1}')
+          export WOLF_SCORE_SHA=$(sha256sum "$PROJECT_DIR/dist/KAOPU_GRAY_WOLF_K4.score" | awk '{print $1}')
+          export BUILD_JSON="$PROJECT_DIR/dist/BUILD.json"
+          node --input-type=module <<'JS'
+          import { readFile, writeFile } from 'node:fs/promises';
+          const e = process.env;
+          const build = JSON.parse(await readFile(e.BUILD_JSON, 'utf8'));
+          const standalone = JSON.parse(await readFile('qa-artifacts/standalone-results.json', 'utf8'));
+          const live = JSON.parse(await readFile('qa-artifacts/public-results.json', 'utf8'));
+          const proof = {
+            project: 'KAOPU Quadruped Instrument R05 — Gray Wolf Score-Only Test',
+            instrumentVersion: 'K4.0.0',
+            sourceRepository: e.GITHUB_REPOSITORY,
+            sourceBranch: e.GITHUB_REF_NAME,
+            sourceSha: e.GITHUB_SHA,
+            publicUrl: e.PUBLIC_URL,
+            instrumentUrl: e.PUBLIC_URL + 'KAOPU_QUADRUPED_K4.js',
+            grayWolfScoreUrl: e.PUBLIC_URL + 'KAOPU_GRAY_WOLF_K4.score',
+            emptyPlayerUrl: e.PUBLIC_URL + 'KAOPU_QUADRUPED_PLAYER.html',
+            verifiedAt: new Date().toISOString(),
+            architectureAudit: {
+              r04InstrumentFrozen: true,
+              instrumentChangedBytes: 0,
+              exactR04InstrumentShaMatched: e.INSTRUMENT_SHA === e.R04_INSTRUMENT_SHA256,
+              instrumentIdentityPresets: 0,
+              grayWolfDataExistsOnlyOutsideInstrument: true,
+              sameInstrumentPlaysFourExternalScores: true,
+              flyingAnimalDeferred: true
+            },
+            evidenceBoundary: {
+              referenceReconstruction: 'APPROXIMATE',
+              dimensions: 'PUBLIC_RANGE_GUIDED',
+              hiddenSurfaces: 'INFERRED',
+              visualAcceptance: 'PENDING_USER',
+              productionReady: false
+            },
+            build,
+            sha256: {
+              workbench: e.WORKBENCH_SHA,
+              player: e.PLAYER_SHA,
+              instrument: e.INSTRUMENT_SHA,
+              grayWolfScore: e.WOLF_SCORE_SHA
+            },
+            exactPublicBytesMatched: true,
+            interactive3D: true,
+            emptyPlayerStartsWithoutObject: true,
+            externalRuntimeAssets: 0,
+            fileProtocolPassed: true,
+            desktopBrowserPassed: true,
+            mobileViewportPassed: true,
+            physicalPhoneTested: false,
+            shareAllowed: true,
+            standalone,
+            live
+          };
+          await writeFile(`/tmp/kaopu-quadruped-r05-pages/${e.PUBLIC_SUBDIR}/PUBLICATION_PROOF.json`, JSON.stringify(proof, null, 2) + '\n');
+          JS
+          cd /tmp/kaopu-quadruped-r05-pages
+          git add "$PUBLIC_SUBDIR/PUBLICATION_PROOF.json"
+          git commit -m 'proof(kaopu): R05 frozen-instrument gray-wolf score verification [skip ci]'
+          git fetch origin gh-pages
+          git rebase origin/gh-pages
+          git push origin HEAD:gh-pages
+
+      - name: Upload delivery and QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-quadruped-r05-${{ github.sha }}
+          path: |
+            quadruped-r05-unit-results.txt
+            qa-artifacts/
+            kaopu-quadruped-r05/dist/
+            kaopu-quadruped-r05/src/
+            kaopu-quadruped-r05/tests/
+            kaopu-quadruped-r05/scripts/
+            kaopu-quadruped-r05/README.md
+            kaopu-quadruped-r05/R05_WOLF_SCORE_EVIDENCE_ZH.md
+            kaopu-quadruped-r05/package.json
+          retention-days: 14
