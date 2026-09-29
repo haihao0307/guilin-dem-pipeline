@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="description" content="KAOPU Quadruped Instrument R04 — 四足乐器只提供计算框架，动物属性由谱子提供。">
+  <meta name="kaopu-instrument-bytes" content="__INSTRUMENT_BYTES__">
+  <meta name="kaopu-workbench-bytes" content="__WORKBENCH_BYTES__">
+  <link rel="icon" href="data:,">
+  <title>KAOPU · Quadruped Instrument R04</title>
+  <style>
+    :root{color-scheme:dark;--bg:#090b0e;--panel:rgba(17,21,26,.97);--soft:rgba(31,37,44,.82);--line:rgba(255,255,255,.11);--line2:rgba(255,255,255,.22);--text:#f2f5f7;--muted:#98a3ae;--accent:#e4b85b;--ok:#8fd8af;--bad:#ff9292;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}
+    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--text)}button,textarea,input{font:inherit}
+    #app{width:100%;height:100%;display:grid;grid-template-columns:minmax(335px,400px) 1fr}
+    .panel{position:relative;z-index:3;height:100%;overflow:auto;padding:20px;background:var(--panel);border-right:1px solid var(--line);backdrop-filter:blur(18px)}
+    .eyebrow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase}.badge{padding:4px 8px;border:1px solid var(--line2);border-radius:999px;color:var(--accent);white-space:nowrap}
+    h1{margin:0;font-size:31px;line-height:1.04;letter-spacing:-.04em;font-weight:700}.lead{margin:11px 0 16px;color:var(--muted);font-size:13px;line-height:1.65}.lead strong{color:var(--text);font-weight:650}
+    .audit{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:16px}.audit-item{padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:rgba(7,9,12,.5)}.audit-item span{display:block;color:var(--muted);font-size:10px}.audit-item strong{display:block;margin-top:3px;font-size:14px;font-weight:650}.audit-item strong.ok{color:var(--ok)}
+    .section{margin:17px 0 8px;color:var(--muted);font-size:11px;letter-spacing:.08em}.presets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+    button{min-height:38px;border:1px solid var(--line);border-radius:9px;background:var(--soft);color:var(--text);cursor:pointer;transition:120ms ease}button:hover{border-color:var(--line2);background:rgba(49,57,67,.94)}button:active{transform:translateY(1px)}button.primary{border-color:transparent;background:var(--accent);color:#171208;font-weight:730}button[aria-pressed=true]{border-color:rgba(228,184,91,.8);color:var(--accent)}
+    textarea{width:100%;min-height:168px;resize:vertical;padding:12px 13px;border:1px solid var(--line);border-radius:10px;outline:none;background:#07090b;color:#f3dfa9;font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;font-size:11.5px;line-height:1.5;word-break:break-all}textarea:focus{border-color:rgba(228,184,91,.76);box-shadow:0 0 0 3px rgba(228,184,91,.08)}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.actions.secondary-row{grid-template-columns:repeat(3,1fr)}
+    .status{min-height:38px;margin:8px 0 0;color:var(--ok);font-size:11.5px;line-height:1.55}.status.error{color:var(--bad)}
+    .metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.metric{min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:rgba(7,9,12,.5)}.metric span{display:block;overflow:hidden;color:var(--muted);font-size:10px;text-overflow:ellipsis;white-space:nowrap}.metric strong{display:block;margin-top:2px;overflow:hidden;font-size:15px;font-weight:650;text-overflow:ellipsis;white-space:nowrap}
+    details{margin-top:15px;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:11.5px;line-height:1.7}summary{cursor:pointer;color:var(--text)}code{color:#f1d38d;font-family:"SFMono-Regular",Consolas,monospace}
+    .world{position:relative;min-width:0;min-height:0;overflow:hidden;background:radial-gradient(circle at 52% 28%,#28313a 0,#11151a 48%,#07090c 100%)}#viewport{position:absolute;inset:0;touch-action:none}#viewport canvas{display:block;width:100%;height:100%}
+    .world-note{position:absolute;right:15px;bottom:13px;z-index:2;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:rgba(7,9,12,.68);color:var(--muted);font-size:10.5px;pointer-events:none;backdrop-filter:blur(10px)}.world-note strong{color:var(--text)}
+    .warning{position:absolute;left:16px;top:14px;z-index:2;max-width:410px;padding:9px 11px;border:1px solid rgba(228,184,91,.3);border-radius:9px;background:rgba(15,13,8,.66);color:#d8c99f;font-size:11px;line-height:1.5;pointer-events:none;backdrop-filter:blur(10px)}
+    .hidden{display:none!important}
+    @media(max-width:780px){html,body{overflow:auto}#app{height:auto;min-height:100%;grid-template-columns:1fr;grid-template-rows:minmax(56vh,64vh) auto}.world{grid-row:1}.panel{grid-row:2;height:auto;overflow:visible;padding:17px 15px calc(24px + env(safe-area-inset-bottom));border-top:1px solid var(--line);border-right:0}.warning{left:10px;right:10px;top:10px;max-width:none}.world-note{right:10px;bottom:10px}.presets{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:410px){.actions.secondary-row{grid-template-columns:1fr}.audit{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+  <main id="app">
+    <aside class="panel" aria-label="四足乐器控制台">
+      <div class="eyebrow"><span>KAOPU / SCORE → FRAMEWORK → BODY</span><span class="badge">R04 · K4</span></div>
+      <h1>四足乐器</h1>
+      <p class="lead"><strong>乐器不再保存物种成品。</strong>它只实现连续体、四肢链、左右镜像、表面覆盖和材料计算；具体身体数据全部写在谱子里。</p>
+
+      <div class="audit">
+        <div class="audit-item"><span>乐器内物种预设</span><strong class="ok" id="preset-count">0</strong></div>
+        <div class="audit-item"><span>约束范围</span><strong>左右对称四足</strong></div>
+        <div class="audit-item"><span>谱子拥有</span><strong>形体 · 比例 · 表面</strong></div>
+        <div class="audit-item"><span>乐器拥有</span><strong>解析 · 计算 · 成面</strong></div>
+      </div>
+
+      <div class="section">验证谱（不属于乐器）</div>
+      <div class="presets">
+        <button type="button" data-score-key="polarBear">北极熊谱</button>
+        <button type="button" data-score-key="tortoise">陆龟谱</button>
+        <button type="button" data-score-key="neutral">中性四足谱</button>
+      </div>
+
+      <div class="section">当前谱子</div>
+      <textarea id="score" spellcheck="false" aria-label="K4 四足谱"></textarea>
+      <div class="actions"><button class="primary" id="play" type="button">把谱子交给乐器</button><button id="verify" type="button">独立重演校验</button></div>
+      <div class="actions secondary-row"><button id="camera" type="button">镜头归位</button><button id="download-score" type="button">导出当前谱</button><button id="download-instrument" type="button">导出纯乐器</button></div>
+      <p class="status" id="status" role="status">等待谱子。</p>
+
+      <div class="section">信息账本</div>
+      <div class="metrics">
+        <div class="metric"><span>谱子体量</span><strong id="score-bytes">0 B</strong></div>
+        <div class="metric"><span>纯乐器体量</span><strong id="instrument-bytes">0 B</strong></div>
+        <div class="metric"><span>网格数量</span><strong id="meshes">0</strong></div>
+        <div class="metric"><span>三角面数量</span><strong id="triangles">0</strong></div>
+        <div class="metric"><span>几何缓冲</span><strong id="geometry-bytes">0 B</strong></div>
+        <div class="metric"><span>结果指纹</span><strong id="hash">—</strong></div>
+      </div>
+
+      <details>
+        <summary>K4 谱段说明</summary>
+        <p><code>M</code> 材质；<code>V</code> 躯干/颈/头控制体；<code>F</code> 前肢链；<code>H</code> 后肢链；<code>T</code> 尾链。</p>
+        <p><code>S</code> 左右镜像细节；<code>D</code> 中央细节；<code>K</code> 可选覆盖甲面；<code>R</code> 可选纤维覆盖。</p>
+        <p>位置、半径、颜色、表面类型和随机种子都来自谱。乐器只负责把这些属性计算成连续三维结果。</p>
+      </details>
+    </aside>
+
+    <section class="world" aria-label="实时三维世界">
+      <div id="viewport"></div>
+      <div class="warning">这是“谱—乐器边界”验证，不是物种外观批准。当前照片不可见区域仍含推断，陆龟具体物种未确定。</div>
+      <div class="world-note"><strong>拖动</strong> 旋转　<strong>滚轮 / 双指</strong> 缩放　单位：m</div>
+    </section>
+  </main>
+  <script id="kaopu-instrument-payload" type="application/octet-stream">__INSTRUMENT_B64__</script>
+  <!--KAOPU_APP_BUNDLE-->
+</body>
+</html>
