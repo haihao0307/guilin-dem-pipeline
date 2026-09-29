@@ -1,0 +1,50 @@
+{
+  "taskId": "KAOPU_SCORE_INSTRUMENT_R01_20260929",
+  "dispatchTime": "2026-09-29T00:00:00+08:00",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "work/kaopu-score-instrument-r01-20260929",
+  "baseSha": "9691221d473278c05a1502e6265c4770a86e8b96",
+  "userDirectiveVerbatimOrLosslessSummary": "从头建立一套干净、清晰的谱子与三维乐器实验。谱子必须非常精简，先用简单几何体验证：一小串谱能否由同一件三维乐器稳定复述为对象。",
+  "targetObject": "KAOPU K1 score grammar and generic 3D instrument",
+  "targetDefectOrChange": "Create the first falsifiable score-to-world vertical slice without inheriting any prior object-production implementation.",
+  "referenceSet": [
+    "User concept image and directive from 2026-09-29",
+    "knowledge/MOTHER_PRODUCTION_OPERATING_SYSTEM_R2_ZH.md",
+    "knowledge/REAL_3D_WORKBENCH_ONLY_GATE.md",
+    "knowledge/PUBLIC_WEB_DELIVERY_GATE.md",
+    "knowledge/SINGLE_FILE_DOUBLE_CLICK_HTML_DELIVERY_GATE.md"
+  ],
+  "acceptedBaseline": null,
+  "expectedArtifact": "One standalone, double-clickable HTML containing a real interactive Three.js instrument, an editable compact K1 score, deterministic replay, metrics, presets, and no required runtime network requests.",
+  "allowedPaths": [
+    "kaopu-score-instrument-r01/**",
+    ".github/workflows/kaopu-score-instrument-r01.yml"
+  ],
+  "protectedInvariants": [
+    "World units are metres and Y is up.",
+    "Score stores no vertices, triangle indices, textures, images, GLB files, or external asset URLs.",
+    "Identical K1 score and instrument version produce identical deterministic identity hash.",
+    "Final runtime is one standalone HTML and makes zero required dependency requests.",
+    "Existing gh-pages directories are not modified outside the unique KAOPU R01 publication path."
+  ],
+  "forbiddenRoutes": [
+    "Reuse of old Fish, Coral, Bird, Landscape, Object DNA, or other object-production code",
+    "Static image, video, Canvas fake, or screenshot used as the 3D result",
+    "CDN or external model/texture/data dependency at runtime",
+    "Claim that short score eliminates information rather than moving shared knowledge into the instrument",
+    "Claim that primitive success proves real species compression"
+  ],
+  "acceptanceGates": {
+    "sourceModified": true,
+    "interactive3D": true,
+    "singleFileHtml": true,
+    "fileProtocolTestRequired": true,
+    "desktopBrowserRequired": true,
+    "mobileViewportRequired": true,
+    "publicHttp200Required": true,
+    "requiredNetworkRequests": 0,
+    "consoleErrors": 0,
+    "visualAcceptance": "PENDING_USER",
+    "productionReady": false
+  }
+}
