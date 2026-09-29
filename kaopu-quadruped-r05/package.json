@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "pretest": "node scripts/link-frozen-deps.mjs",
     "test": "node tests/unit.mjs",
+    "prebuild": "node scripts/link-frozen-deps.mjs",
     "build": "node scripts/build.mjs",
     "test:browser": "node tests/browser.mjs"
   },
