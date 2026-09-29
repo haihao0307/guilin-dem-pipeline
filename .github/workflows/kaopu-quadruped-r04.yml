@@ -41,8 +41,11 @@ jobs:
         run: npm install --no-audit --no-fund
 
       - name: Audit score and instrument boundary
+        shell: bash
         working-directory: ${{ env.PROJECT_DIR }}
-        run: npm test | tee ../quadruped-r04-unit-results.txt
+        run: |
+          set -euo pipefail
+          npm test | tee ../quadruped-r04-unit-results.txt
 
       - name: Install real browser
         working-directory: ${{ env.PROJECT_DIR }}
