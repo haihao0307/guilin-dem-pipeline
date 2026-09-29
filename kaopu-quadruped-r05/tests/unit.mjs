@@ -94,17 +94,17 @@ await check('four external scores produce four distinct calculated results', () 
   assert.equal(new Set(hashes).size, hashes.length);
 });
 
-await check('gray-wolf score has a plausible current envelope for its intended scale', () => {
+await check('gray-wolf score stays inside the corrected physical envelope', () => {
   const metrics = results.get('grayWolf').metrics;
   const span = metrics.bounds.max.map((value, index) => value - metrics.bounds.min[index]);
-  assert.ok(span[0] > 0.35 && span[0] < 0.9, `unexpected width ${span[0]}`);
-  assert.ok(span[1] > 0.8 && span[1] < 1.5, `unexpected height ${span[1]}`);
-  assert.ok(span[2] > 1.4 && span[2] < 2.4, `unexpected length ${span[2]}`);
+  assert.ok(span[0] > 0.45 && span[0] < 0.70, `unexpected width ${span[0]}`);
+  assert.ok(span[1] > 0.70 && span[1] < 0.95, `unexpected height ${span[1]}`);
+  assert.ok(span[2] > 1.35 && span[2] < 1.85, `unexpected length ${span[2]}`);
 });
 
 await check('editing wolf score changes actual geometry without instrument edit', () => {
   const original = SCORE_LIBRARY.grayWolf.score;
-  const changed = original.replace('0,.58,-.03,.22,.22,.32', '0,.58,-.03,.28,.22,.32');
+  const changed = original.replace('0,.435,-.025,.187,.165,.262', '0,.435,-.025,.237,.165,.262');
   const first = buildScore(original);
   const second = buildScore(changed);
   try {
