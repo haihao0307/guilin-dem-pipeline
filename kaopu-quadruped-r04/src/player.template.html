@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="description" content="KAOPU Quadruped K4 Empty Player — 不含动物预设的四足乐器播放器。">
+  <meta name="kaopu-instrument-bytes" content="__INSTRUMENT_BYTES__">
+  <link rel="icon" href="data:,">
+  <title>KAOPU · Empty Quadruped Player K4</title>
+  <style>
+    :root{color-scheme:dark;--bg:#090b0e;--panel:#15191f;--soft:#222931;--line:rgba(255,255,255,.12);--text:#f1f4f6;--muted:#9ba6b1;--accent:#e4b85b;--ok:#8ed4ad;--bad:#ff9292;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;background:var(--bg);color:var(--text);overflow:hidden}button,textarea,input{font:inherit}#app{width:100%;height:100%;display:grid;grid-template-columns:minmax(310px,370px) 1fr}.panel{height:100%;overflow:auto;padding:20px;background:var(--panel);border-right:1px solid var(--line)}h1{margin:0;font-size:28px;letter-spacing:-.035em}.lead{color:var(--muted);font-size:13px;line-height:1.65}.badge{display:inline-block;margin-bottom:10px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;color:var(--accent);font-size:11px;letter-spacing:.1em}.blank{padding:10px;border:1px solid var(--line);border-radius:9px;color:var(--ok);font-size:12px;line-height:1.5}textarea{width:100%;min-height:210px;margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:9px;outline:none;background:#07090b;color:#f2dfa9;font-family:Consolas,"SFMono-Regular",monospace;font-size:11.5px;line-height:1.5;word-break:break-all}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}button,.file-label{display:flex;align-items:center;justify-content:center;min-height:38px;border:1px solid var(--line);border-radius:9px;background:var(--soft);color:var(--text);cursor:pointer}button.primary{border-color:transparent;background:var(--accent);color:#171208;font-weight:700}.file-label input{display:none}.status{min-height:36px;color:var(--ok);font-size:11.5px;line-height:1.5}.status.error{color:var(--bad)}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:7px}.metric{padding:9px;border:1px solid var(--line);border-radius:8px;background:#0e1115}.metric span{display:block;color:var(--muted);font-size:10px}.metric strong{display:block;margin-top:2px;font-size:15px}.world{position:relative;min-width:0;min-height:0;background:radial-gradient(circle at 50% 30%,#27303a 0,#11151a 48%,#07090c 100%)}#viewport{position:absolute;inset:0;touch-action:none}#viewport canvas{display:block;width:100%;height:100%}.empty-note{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:12px 15px;border:1px solid var(--line);border-radius:10px;background:rgba(8,10,13,.72);color:var(--muted);font-size:12px;pointer-events:none}.world-note{position:absolute;right:12px;bottom:12px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:rgba(8,10,13,.7);color:var(--muted);font-size:10px;pointer-events:none}@media(max-width:760px){html,body{overflow:auto}#app{height:auto;min-height:100%;grid-template-columns:1fr;grid-template-rows:58vh auto}.world{grid-row:1}.panel{grid-row:2;height:auto;border-top:1px solid var(--line);border-right:0}}
+  </style>
+</head>
+<body>
+  <main id="app">
+    <aside class="panel">
+      <span class="badge">EMPTY PLAYER · K4</span>
+      <h1>空四足乐器</h1>
+      <p class="lead">这个文件没有内置任何动物谱或物种选择。没有谱子时，它不会生成对象。</p>
+      <div class="blank">乐器状态：<strong>框架已加载，结果为空，物种预设为 0。</strong></div>
+      <textarea id="score" placeholder="在这里粘贴 K4 谱，或导入 .score 文件。" spellcheck="false"></textarea>
+      <div class="actions"><button class="primary" id="play" type="button">演奏导入的谱子</button><label class="file-label">导入 .score<input id="file" type="file" accept=".score,.txt,text/plain"></label></div>
+      <div class="actions"><button id="camera" type="button">镜头归位</button><button id="download-instrument" type="button">导出纯乐器</button></div>
+      <p class="status" id="status">等待谱子；当前三维结果为空。</p>
+      <div class="metrics"><div class="metric"><span>谱子字节</span><strong id="score-bytes">0</strong></div><div class="metric"><span>网格数量</span><strong id="meshes">0</strong></div><div class="metric"><span>三角面</span><strong id="triangles">0</strong></div><div class="metric"><span>结果指纹</span><strong id="hash">—</strong></div></div>
+    </aside>
+    <section class="world"><div id="viewport"></div><div class="empty-note" id="empty-note">没有谱子，所以没有动物。</div><div class="world-note">拖动旋转 · 滚轮/双指缩放</div></section>
+  </main>
+  <script id="kaopu-instrument-payload" type="application/octet-stream">__INSTRUMENT_B64__</script>
+  <!--KAOPU_PLAYER_BUNDLE-->
+</body>
+</html>
