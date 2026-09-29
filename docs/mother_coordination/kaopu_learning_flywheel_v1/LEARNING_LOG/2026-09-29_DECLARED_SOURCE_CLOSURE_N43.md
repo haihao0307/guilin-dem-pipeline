@@ -62,9 +62,10 @@ If any replay case is misclassified, reject the Candidate.
 
 ## 5. Minimal historical replay
 
-`declared_source_closure_gate_n43.mjs` evaluated nine cases from `declared_source_closure_fixture_n43.json`; result: `9/9` expected verdicts.
+`declared_source_closure_gate_n43.mjs` evaluated ten cases from `declared_source_closure_fixture_n43.json`; result: `10/10` expected verdicts.
 
 - historical exact head → `HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE`, missing `tests/smoke.mjs` and `src/app.js`;
+- same-cycle follow-up head `b37d208aa730615b77a2f953f40db8e909276694` contains both previously missing files and receives only `SOURCE_CLOSURE_VERIFIED_ONLY`;
 - missing test target only → HOLD;
 - missing build input only → HOLD;
 - generated `dist/index.html` with missing source → HOLD;
@@ -73,7 +74,13 @@ If any replay case is misclassified, reject the Candidate.
 - unresolved dynamic source inputs → `UNKNOWN_DYNAMIC_SOURCE_CLOSURE`;
 - fully closed control → `SOURCE_CLOSURE_VERIFIED_ONLY`.
 
-This proves only the state classifier. It is not a real branch gate run and it does not repair or implement the 3D instrument.
+The follow-up is a real exact-head static source-closure trial, not a build or browser run. It does not repair or implement the 3D instrument.
+
+### Same-cycle exact-head update
+
+After the historical HOLD was recorded, the project branch advanced to `b37d208aa730615b77a2f953f40db8e909276694` with `src/app.js`, `tests/smoke.mjs`, a Task Anchor, README and a workflow declaration. The exact-head declared script targets and the two local build inputs are now present. The prior HOLD is not inherited across the head change.
+
+No commit status or associated workflow run was observed for `b37d208aa730615b77a2f953f40db8e909276694`. Therefore the current evidence supports only `SOURCE_CLOSURE_VERIFIED_ONLY`; build, test, browser, standalone, public runtime and user acceptance remain unverified.
 
 ## 6. Applicability boundary
 
@@ -90,7 +97,7 @@ Decision: `CANDIDATE_SINGLE_PROJECT_TRIAL_ONLY`.
 
 Route only to the execution ledger for the new score-instrument branch. On its next candidate, the producer should emit one exact-head source-closure receipt before claiming `STARTED` or `BUILDABLE`; an independent verifier must run it. Do not patch the project branch, main, R2, Canonical Truth or any existing publication. Rollback is removal of the candidate gate/receipt requirement from this one project line.
 
-Lifecycle before targeted routing: `POSTED=false`, `ACKNOWLEDGED=false`, `IMPLEMENTED=false`, `GATE-RUN=false`, `ADOPTED=false`, `USER-ACCEPTED=false`.
+Lifecycle after targeted routing and exact-head external trial: `POSTED=true`, `GATE-RUN=true`; `ACKNOWLEDGED=false`, `IMPLEMENTED=false`, `ADOPTED=false`, `USER-ACCEPTED=false`. `IMPLEMENTED` remains false because the project has not integrated the Candidate gate or emitted its own receipt; adding the missing source files is remediation, not gate adoption.
 
 Institutional KPI effect: `Unknown`; no real Mother trial or post-adoption sample exists. First-pass acceptance, user correction count, recurrence, rejected-lineage inheritance, stale delivery, internal iterations and time-to-legal-candidate remain `Unknown`.
 

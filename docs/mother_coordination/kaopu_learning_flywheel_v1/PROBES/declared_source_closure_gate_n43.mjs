@@ -59,7 +59,15 @@ const result = {
   checksTotal: checks.length,
   allPassed: checks.every((check) => check.pass),
   checks,
-  generatedAt: '2026-09-29T04:14:00Z'
+  realSubjectTrial: {
+    subjectHeadSha: fixture.cases[1].subject.subjectHeadSha,
+    verdict: checks[1].actual.verdict,
+    evidenceLayer: 'EXACT_HEAD_STATIC_SOURCE_CLOSURE_ONLY',
+    buildExecuted: false,
+    browserExecuted: false,
+    workflowRunObserved: false
+  },
+  generatedAt: '2026-09-29T04:23:00Z'
 };
 
 process.stdout.write(JSON.stringify(result, null, 2) + '\n');
