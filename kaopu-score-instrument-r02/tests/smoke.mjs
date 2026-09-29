@@ -103,14 +103,17 @@ async function verifyViewport(browser, name, viewport) {
 
     const hashBeforeCamera = explicitHash;
     const cameraBefore = await page.evaluate(() => window.__KAOPU_R02__.state().camera);
+    await canvas.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(120);
     const box = await canvas.boundingBox();
-    if (box) {
-      await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5);
-      await page.mouse.down();
-      await page.mouse.move(box.x + box.width * 0.72, box.y + box.height * 0.34, { steps: 10 });
-      await page.mouse.up();
-      await page.mouse.wheel(0, -260);
-    }
+    assert(box && box.width > 250 && box.height > 250, `${name}: canvas unavailable for camera interaction`);
+    assert(box.y < viewport.height && box.y + box.height > 0, `${name}: canvas remained outside the viewport`);
+    await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width * 0.72, box.y + box.height * 0.34, { steps: 10 });
+    await page.mouse.up();
+    await page.mouse.wheel(0, -260);
+    await page.waitForTimeout(120);
     const cameraAfter = await page.evaluate(() => window.__KAOPU_R02__.state().camera);
     assert(JSON.stringify(cameraBefore) !== JSON.stringify(cameraAfter), `${name}: camera interaction did not move`);
     assert((await page.locator('#hash').textContent())?.trim() === hashBeforeCamera, `${name}: camera movement changed object identity`);
