@@ -31,32 +31,40 @@ const [template, bundleResult] = await Promise.all([
   })
 ]);
 
-const bundle = bundleResult.outputFiles[0].text.replaceAll('</script', '<\\/script');
-if (!template.includes('<!--KAOPU_BUNDLE-->')) {
-  throw new Error('index.template.html is missing <!--KAOPU_BUNDLE-->');
+const rawBundle = bundleResult.outputFiles[0].text;
+new Function(rawBundle);
+
+const bundle = rawBundle.replaceAll('</script', '<\\/script');
+new Function(bundle);
+
+const bundleMarker = '<!--KAOPU_BUNDLE-->';
+if (!template.includes(bundleMarker)) {
+  throw new Error(`index.template.html is missing ${bundleMarker}`);
 }
+
+const inlineScript = `<script>${bundle}</script>`;
+const renderHtml = (instrumentBytes) => template
+  .replace('__INSTRUMENT_BYTES__', String(instrumentBytes))
+  .replace(bundleMarker, () => inlineScript);
 
 let instrumentBytes = 0;
 let html = '';
 for (let pass = 0; pass < 5; pass += 1) {
-  html = template
-    .replace('__INSTRUMENT_BYTES__', String(instrumentBytes))
-    .replace('<!--KAOPU_BUNDLE-->', `<script>${bundle}</script>`);
+  html = renderHtml(instrumentBytes);
   const measured = Buffer.byteLength(html, 'utf8');
   if (measured === instrumentBytes) break;
   instrumentBytes = measured;
 }
 
-html = template
-  .replace('__INSTRUMENT_BYTES__', String(instrumentBytes))
-  .replace('<!--KAOPU_BUNDLE-->', `<script>${bundle}</script>`);
-
+html = renderHtml(instrumentBytes);
 const finalBytes = Buffer.byteLength(html, 'utf8');
 if (finalBytes !== instrumentBytes) {
   instrumentBytes = finalBytes;
-  html = template
-    .replace('__INSTRUMENT_BYTES__', String(instrumentBytes))
-    .replace('<!--KAOPU_BUNDLE-->', `<script>${bundle}</script>`);
+  html = renderHtml(instrumentBytes);
+}
+
+if (html.includes(bundleMarker)) {
+  throw new Error('Standalone HTML still contains an unresolved bundle marker.');
 }
 
 await writeFile(outputPath, html, 'utf8');
