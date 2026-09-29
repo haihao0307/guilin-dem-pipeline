@@ -1,11 +1,11 @@
 name: Fractal Wave Full Handoff
 on:
-  workflow_dispatch:
   push:
-    branches: [gh-pages]
+    branches:
+      - gh-pages
     paths:
-      - 'game-coral-mother-wave-r03/FRACTAL_WAVE_HANDOFF_20260929_ZH.md'
-      - '.github/workflows/fractal-wave-full-handoff-20260929.yml'
+      - game-coral-mother-wave-r03/FRACTAL_WAVE_HANDOFF_20260929_ZH.md
+      - .github/workflows/fractal-wave-full-handoff-20260929.yml
 permissions:
   contents: read
 jobs:
@@ -14,6 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build scoped full package
+        shell: bash
         run: |
           set -euo pipefail
           ROOT=FRACTAL_WAVE_FULL_HANDOFF_20260929
@@ -23,16 +24,7 @@ jobs:
             mkdir -p "$ROOT/source/$d"
             cp "game-coral-mother-wave-r03/$d/index.html" "$ROOT/source/$d/index.html"
           done
-          cat > "$ROOT/ONLINE_ENTRIES.txt" <<'EOF'
-R01 https://haihao0307.github.io/guilin-dem-pipeline/game-coral-mother-wave-r03/tree-wave/
-R02 https://haihao0307.github.io/guilin-dem-pipeline/game-coral-mother-wave-r03/tree-wave-r02/
-R03 https://haihao0307.github.io/guilin-dem-pipeline/game-coral-mother-wave-r03/tree-wave-r03/
-R04 https://haihao0307.github.io/guilin-dem-pipeline/game-coral-mother-wave-r03/tree-wave-r04/
-R05 https://haihao0307.github.io/guilin-dem-pipeline/game-coral-mother-wave-r03/tree-wave-r05/
-R06 https://haihao0307.github.io/guilin-dem-pipeline/game-coral-mother-wave-r03/tree-wave-r06/
-R07 https://haihao0307.github.io/guilin-dem-pipeline/game-coral-mother-wave-r03/tree-wave-r07/
-R08 https://haihao0307.github.io/guilin-dem-pipeline/game-coral-mother-wave-r03/tree-wave-r08/
-EOF
+          printf '%s\n'             'R01 https://haihao0307.github.io/guilin-dem-pipeline/game-coral-mother-wave-r03/tree-wave/'             'R02 https://haihao0307.github.io/guilin-dem-pipeline/game-coral-mother-wave-r03/tree-wave-r02/'             'R03 https://haihao0307.github.io/guilin-dem-pipeline/game-coral-mother-wave-r03/tree-wave-r03/'             'R04 https://haihao0307.github.io/guilin-dem-pipeline/game-coral-mother-wave-r03/tree-wave-r04/'             'R05 https://haihao0307.github.io/guilin-dem-pipeline/game-coral-mother-wave-r03/tree-wave-r05/'             'R06 https://haihao0307.github.io/guilin-dem-pipeline/game-coral-mother-wave-r03/tree-wave-r06/'             'R07 https://haihao0307.github.io/guilin-dem-pipeline/game-coral-mother-wave-r03/tree-wave-r07/'             'R08 https://haihao0307.github.io/guilin-dem-pipeline/game-coral-mother-wave-r03/tree-wave-r08/' > "$ROOT/ONLINE_ENTRIES.txt"
           (cd "$ROOT" && find . -type f -print0 | sort -z | xargs -0 sha256sum > MANIFEST_SHA256.txt)
           zip -qr "${ROOT}.zip" "$ROOT"
           sha256sum "${ROOT}.zip" > "${ROOT}.zip.sha256"
