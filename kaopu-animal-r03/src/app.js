@@ -4,7 +4,10 @@ const A=globalThis.KAOPUAnimal,T=A.THREE,$=s=>document.querySelector(s),data=glo
 const viewport=$('#viewport'),input=$('#score'),status=$('#status'),canvas=document.createElement('canvas');
 const scene=new T.Scene();scene.background=new T.Color('#e9edef');
 let renderer;try{renderer=new T.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});}catch(e){status.textContent='当前浏览器不能建立 WebGL2 渲染器。';throw e;}
-renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.setSize(600,600);renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;viewport.append(canvas);
+// Never let renderer.setSize write fixed inline CSS dimensions. The CSS
+// canvas must track its entire host on desktop and portrait mobile alike.
+canvas.style.width='100%';canvas.style.height='100%';
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.setSize(600,600,false);renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;viewport.append(canvas);
 const camera=new T.PerspectiveCamera(34,1,.01,100),target=new T.Vector3(0,.7,0);let radius=5,azimuth=.38,elevation=.18,frames=0,current=null,key='B',busy=false;
 scene.add(new T.HemisphereLight('#ebf3ff','#a8a18e',2.05));
 const keyLight=new T.DirectionalLight('#fff4df',3.8);keyLight.position.set(-3,5,4);keyLight.castShadow=true;keyLight.shadow.mapSize.set(2048,2048);keyLight.shadow.bias=-.00012;keyLight.shadow.normalBias=.016;keyLight.shadow.camera.left=-3.5;keyLight.shadow.camera.right=3.5;keyLight.shadow.camera.top=3.5;keyLight.shadow.camera.bottom=-3.5;scene.add(keyLight);
@@ -18,8 +21,9 @@ function fit(view='reference'){
  const angles={reference:[key==='E'?0:.38,key==='E'?.13:.14],front:[0,.06],side:[Math.PI/2,.1],back:[Math.PI,.15],top:[0,1.43]};[azimuth,elevation]=angles[view]||angles.reference;updateCam();}
 function message(text,error=false){status.textContent=text;status.classList.toggle('error',error);}
 function metrics(){if(!current)return;const m=A.measure(current.root,current.score);$('#bytes').textContent=m.scoreBytes+' B';$('#triangles').textContent=Math.round(m.triangles).toLocaleString();$('#hash').textContent=A.fingerprint(current.root);$('#time').textContent=Math.round(current.buildMs)+' ms';$('#species').textContent=A.SCHEMA[current.kind].name;return m;}
+const ledger=document.createElement('p');ledger.className='compact-note';const libraryBytes=Number(document.querySelector('meta[name="instrument-bytes"]')?.content||0);ledger.textContent=`共享生成乐器 ${(libraryBytes/1024).toFixed(1)} KiB · ${A.VERSION} · 不含当前谱`;$('.metrics').after(ledger);
 async function play(text=input.value){if(busy)return;busy=true;message('正在由谱生成连续曲面与表面细节…');await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
- try{const candidate=A.buildScore(text);if(current)A.dispose(current.root);current=candidate;key=candidate.kind;scene.add(candidate.root);input.value=text;metrics();fit();message('演奏完成 · 照片引导的程序化近似，非实测扫描');$('#empty').hidden=true;for(const b of document.querySelectorAll('[data-kind]'))b.setAttribute('aria-pressed',String(b.dataset.kind===key));if(data[key]&&$('#observation'))$('#observation').textContent=data[key].observed;}
+ try{const candidate=A.buildScore(text);if(current)A.dispose(current.root);current=candidate;key=candidate.kind;scene.add(candidate.root);input.value=text;metrics();fit();message('演奏完成 · 照片引导的程序化近似，非实测扫描');$('#empty').hidden=true;$('#wire').checked=false;for(const b of document.querySelectorAll('[data-kind]'))b.setAttribute('aria-pressed',String(b.dataset.kind===key));if(data[key]&&$('#observation'))$('#observation').textContent=data[key].observed;}
  catch(e){message(e.message,true);}finally{busy=false;}
 }
 function download(name,text,mime='text/plain'){const a=document.createElement('a'),url=URL.createObjectURL(new Blob([text],{type:mime}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
@@ -31,7 +35,7 @@ $('#import').onchange=async e=>{const f=e.target.files[0];if(!f)return;if(f.size
 input.oninput=()=>message('尚未演奏修改后的谱；当前画面仍为上一份已生成结果');
 for(const b of document.querySelectorAll('[data-view]'))b.onclick=()=>fit(b.dataset.view);
 $('#wire').onchange=e=>{if(!current)return;current.root.traverse(o=>{if(o.material){o.material.wireframe=e.target.checked;o.material.needsUpdate=true;}});};
-let pointer=null;canvas.addEventListener('pointerdown',e=>{pointer={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId);});canvas.addEventListener('pointermove',e=>{if(!pointer)return;azimuth-=(e.clientX-pointer.x)*.007;elevation= Math.max(-.2,Math.min(1.5,elevation+(e.clientY-pointer.y)*.006));pointer.x=e.clientX;pointer.y=e.clientY;updateCam();});for(const ev of ['pointerup','pointercancel'])canvas.addEventListener(ev,()=>pointer=null);
+let pointer=null;canvas.addEventListener('pointerdown',e=>{pointer={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId);});canvas.addEventListener('pointermove',e=>{if(!pointer)return;azimuth-=(e.clientX-pointer.x)*.007;elevation=Math.max(-.2,Math.min(1.5,elevation+(e.clientY-pointer.y)*.006));pointer.x=e.clientX;pointer.y=e.clientY;updateCam();});for(const ev of ['pointerup','pointercancel'])canvas.addEventListener(ev,()=>pointer=null);
 canvas.addEventListener('wheel',e=>{e.preventDefault();radius=Math.max(.2,Math.min(30,radius*Math.exp(e.deltaY*.001)));updateCam();},{passive:false});
 $('#zoom-in').onclick=()=>{radius*=.85;updateCam();};$('#zoom-out').onclick=()=>{radius*=1.18;updateCam();};
 new ResizeObserver(()=>{let w=viewport.clientWidth,h=viewport.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();fit();}).observe(viewport);
