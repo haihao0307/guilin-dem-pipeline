@@ -1,5 +1,6 @@
 import {chromium} from 'playwright';
 import {mkdir,readFile,writeFile} from 'node:fs/promises';
+import {VERSION} from '../src/instrument.js';
 const url=process.env.TARGET_URL;if(!url)throw Error('TARGET_URL required');
 const prefix=url.startsWith('file:')?'standalone':'public';await mkdir('qa-artifacts',{recursive:true});
 const assert=(v,m)=>{if(!v)throw Error(m);};
@@ -13,7 +14,7 @@ try{for(const viewport of [{width:1440,height:960},{width:390,height:844}]){
   await page.waitForFunction(()=>window.__ANIMAL_QA__?.info().kind==='B',null,{timeout:90000});
   const frame=await page.locator('#viewport').boundingBox(),screen=await page.locator('#viewport canvas').boundingBox();
   assert(Math.abs(frame.width-screen.width)<2&&Math.abs(frame.height-screen.height)<2,'canvas does not fill viewport');
-  assert(await page.evaluate(()=>__ANIMAL_QA__.info().version)==='K3.0.1','stale version');
+  assert(await page.evaluate(()=>__ANIMAL_QA__.info().version)===VERSION,'stale version');
   const animals=[];
   for(const kind of ['B','E','T']){
    await page.locator(`[data-kind="${kind}"]`).click();await page.waitForFunction(k=>window.__ANIMAL_QA__?.info().kind===k,kind,{timeout:90000});

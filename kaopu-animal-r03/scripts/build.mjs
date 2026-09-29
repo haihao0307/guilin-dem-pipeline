@@ -18,6 +18,6 @@ await writeFile(resolve(out,'KAOPU_ANIMAL_PLAYER.html'),render('<style>.referenc
 await writeFile(resolve(out,'KAOPU_ANIMAL_K3.js'),pure);await writeFile(resolve(out,'LICENSE_THREE.txt'),license);
 for(const [kind,item] of Object.entries(JSON.parse(examples)))await writeFile(resolve(out,'KAOPU_'+kind+'_K3.score'),item.score+'\n');
 await writeFile(resolve(out,'README.txt'),(await readFile(resolve(root,'README.md'),'utf8')).replaceAll('K3.0.0',VERSION));
-const coreSourceBytes=Buffer.byteLength(await readFile(resolve(root,'src/instrument.js')))+Buffer.byteLength(await readFile(resolve(root,'src/anatomy.js')));
+let coreSourceBytes=0;for(const f of ['instrument.js','anatomy.js','covering.js'])coreSourceBytes+=Buffer.byteLength(await readFile(resolve(root,'src',f)));
 const summary={version:VERSION,instrumentBytes:Buffer.byteLength(pure),coreSourceBytes,workbenchBytes:Buffer.byteLength(await readFile(resolve(out,'index.html'))),playerBytes:Buffer.byteLength(await readFile(resolve(out,'KAOPU_ANIMAL_PLAYER.html'))),scores:Object.fromEntries(Object.entries(JSON.parse(examples)).map(([k,v])=>[k,Buffer.byteLength(v.score)])),sourceSha:process.env.GITHUB_SHA||'local'};
 await writeFile(resolve(out,'BUILD.json'),JSON.stringify(summary,null,2)+'\n');console.log(JSON.stringify(summary,null,2));
