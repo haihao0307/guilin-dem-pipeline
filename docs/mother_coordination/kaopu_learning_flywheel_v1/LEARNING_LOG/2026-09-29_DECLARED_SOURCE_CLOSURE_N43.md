@@ -80,7 +80,9 @@ The follow-up is a real exact-head static source-closure trial, not a build or b
 
 After the historical HOLD was recorded, the project branch advanced to `b37d208aa730615b77a2f953f40db8e909276694` with `src/app.js`, `tests/smoke.mjs`, a Task Anchor, README and a workflow declaration. The exact-head declared script targets and the two local build inputs are now present. The prior HOLD is not inherited across the head change.
 
-No commit status or associated workflow run was observed for `b37d208aa730615b77a2f953f40db8e909276694`. Therefore the current evidence supports only `SOURCE_CLOSURE_VERIFIED_ONLY`; build, test, browser, standalone, public runtime and user acceptance remain unverified.
+Workflow run `36518891204` later completed for `b37d208aa730615b77a2f953f40db8e909276694`. Dependency installation, standalone build and standalone-package shape passed; file-protocol desktop/mobile browser QA failed; publication and live verification were skipped. This confirms the Candidate's boundary: source closure may pass while a downstream browser gate still fails. The valid claims for that head are `SOURCE_CLOSURE_VERIFIED_ONLY` plus the named successful workflow steps, not browser readiness or publication.
+
+The branch then advanced to `ffb5bc5ae49e419f9b821dbc4e9797275708fc16`; workflow run `36519120050` was still in progress at observation. No verdict from `b37d208…` is inherited by that new head.
 
 ## 6. Applicability boundary
 

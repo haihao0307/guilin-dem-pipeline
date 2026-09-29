@@ -63,11 +63,24 @@ const result = {
     subjectHeadSha: fixture.cases[1].subject.subjectHeadSha,
     verdict: checks[1].actual.verdict,
     evidenceLayer: 'EXACT_HEAD_STATIC_SOURCE_CLOSURE_ONLY',
-    buildExecuted: false,
-    browserExecuted: false,
-    workflowRunObserved: false
+    workflowRunObserved: true,
+    workflowRunId: 36518891204,
+    workflowConclusion: 'failure',
+    buildExecuted: true,
+    buildConclusion: 'success',
+    standaloneShapeConclusion: 'success',
+    browserExecuted: true,
+    browserConclusion: 'failure',
+    publishConclusion: 'skipped',
+    liveVerificationConclusion: 'skipped'
   },
-  generatedAt: '2026-09-29T04:23:00Z'
+  subsequentHeadAtObservation: {
+    subjectHeadSha: 'ffb5bc5ae49e419f9b821dbc4e9797275708fc16',
+    workflowRunId: 36519120050,
+    workflowStatus: 'in_progress',
+    workflowConclusion: null
+  },
+  generatedAt: '2026-09-29T04:28:00Z'
 };
 
 process.stdout.write(JSON.stringify(result, null, 2) + '\n');
