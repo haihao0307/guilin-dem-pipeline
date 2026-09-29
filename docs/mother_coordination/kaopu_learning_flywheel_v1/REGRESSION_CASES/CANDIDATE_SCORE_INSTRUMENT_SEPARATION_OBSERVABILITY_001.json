@@ -1,0 +1,86 @@
+{
+  "id": "ARCHITECTURE-INVARIANTS-MUST-BE-OBSERVED-001",
+  "state": "Candidate",
+  "title": "Score-instrument separation must be observed, not self-reported",
+  "boundedQuestion": "Does the current KB2 bird instrument compute morphology from score data, or does it hide species presets behind a score selector?",
+  "realSubject": {
+    "headSha": "a56fd42ba8d7b155cf68fe1808e1c7fa1cf27ec9",
+    "path": "kaopu-score-instrument/r03-20260929/",
+    "decodedHtmlSha256": "4d06011997eedc73f5ea5e8003dea72054b395425b47027473b9fffe3f45e503",
+    "instrumentSha256": "c9912cb9ea70af2be7ede11d4077c7b08c5bc4d38645910c1b697fc116ec379a",
+    "scoreSha256": "21f9456a081863a134c1c196c93a91941e684bb1dbf2586d5fb085018c86d70c"
+  },
+  "existingFailureMechanism": "The workbench displays speciesSwitchPresent=false and finalVerticesStored=false, but those values are returned by the instrument itself. A hidden identity branch or ignored morphology slot can keep the same self-report and still violate the architecture.",
+  "hypothesis": "A claim-scoped metamorphic gate will distinguish a genuinely score-driven instrument from a self-reporting preset selector: identity-only changes preserve geometry, morphology changes alter geometry, identical input replays byte-equivalently, unknown slots reject, and the instrument contains no known species literal.",
+  "metamorphicRelations": [
+    {
+      "id": "MR_IDENTITY_INVARIANCE",
+      "inputChange": "Change identity labels and instance id only",
+      "requiredOutputRelation": "Geometry arrays remain identical"
+    },
+    {
+      "id": "MR_MORPHOLOGY_SENSITIVITY",
+      "inputChange": "Change bill-axis length and body-section width in score only",
+      "requiredOutputRelation": "Geometry arrays change"
+    },
+    {
+      "id": "MR_DETERMINISTIC_REPLAY",
+      "inputChange": "Replay identical complete score",
+      "requiredOutputRelation": "All output arrays remain byte-equivalent"
+    },
+    {
+      "id": "MR_UNKNOWN_SLOT_REJECTION",
+      "inputChange": "Add undeclared root selector",
+      "requiredOutputRelation": "Build rejects instead of silently selecting a preset"
+    },
+    {
+      "id": "MR_SPECIES_LITERAL_ABSENCE",
+      "inputChange": "Inspect exact instrument source",
+      "requiredOutputRelation": "No known object-specific species literal appears"
+    }
+  ],
+  "historicalReplay": {
+    "currentVerdict": "OBSERVED_SCORE_DRIVEN_INSTRUMENT",
+    "baselineGeometryDigest": "cf13ebe174d47e55ffa515416d8baeafd1e4d0ca2e8e3b1bc513e05a5646a8ba",
+    "total": 10,
+    "passed": 10,
+    "failed": 0,
+    "counterfactualsDetected": [
+      "IDENTITY_BRANCH_DETECTED",
+      "SCORE_MORPHOLOGY_NOT_EFFECTIVE",
+      "UNKNOWN_SLOT_NOT_REJECTED",
+      "SPECIES_LITERAL_IN_INSTRUMENT"
+    ]
+  },
+  "deliveryReceiptFields": [
+    "subjectHeadSha",
+    "instrumentSha256",
+    "scoreSha256",
+    "metamorphicRelationResults",
+    "geometryDigest",
+    "architectureVerdict",
+    "visualAcceptance",
+    "productionReady"
+  ],
+  "applicability": "Instrument-score systems claiming that object-specific knowledge lives in the score while the instrument contains only category capabilities. It does not validate visual fidelity, anatomy, motion naturalness, or user acceptance.",
+  "comparisonToCurrentRules": "R2 and N42 already prohibit self-approval and require evidence for claims. The novel executable increment is the score-instrument-specific observable relation set; it replaces a tautological boolean with behavior that can be falsified.",
+  "rollbackPoint": "d6fed62b7620cd312ea284cc705cd9ff18f9a296",
+  "adoptionDecision": "CANDIDATE_ONLY_NEXT_BIRD_INSTRUMENT_TRIAL",
+  "lifecycle": {
+    "POSTED": true,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  },
+  "kpiEffect": {
+    "firstPassCandidateRate": "unknown",
+    "userCorrectionCount": "unknown",
+    "sameClassRecurrenceRate": "unknown",
+    "rejectedLineageInheritanceCount": "unknown",
+    "staleDeliveryCount": "unknown",
+    "internalIterationsPerAcceptedDelta": "unknown",
+    "instructionToLegalCandidateTime": "unknown"
+  }
+}
