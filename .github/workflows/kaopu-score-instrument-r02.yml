@@ -1,0 +1,204 @@
+name: Publish KAOPU Score Instrument R02
+on:
+  push:
+    branches: [work/kaopu-score-instrument-r01-20260929]
+    paths: ['kaopu-score-instrument-r02/**', '.github/workflows/kaopu-score-instrument-r02.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+concurrency:
+  group: kaopu-score-instrument-r02-publish
+  cancel-in-progress: false
+env:
+  PROJECT_DIR: kaopu-score-instrument-r02
+  PUBLIC_SUBDIR: kaopu-score-instrument/r02-20260929
+  PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-score-instrument/r02-20260929/
+jobs:
+  build-publish-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install project dependencies
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: npm install --no-audit --no-fund
+      - name: Instrument unit and regression tests
+        run: node "$PROJECT_DIR/tests/unit.mjs" | tee unit-results-r02.txt
+      - name: Install real browser
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: npx playwright install --with-deps chromium
+      - name: Build standalone workbench and separate instrument
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: npm run build
+      - name: Verify package boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          DIST="$PROJECT_DIR/dist"
+          test "$(find "$DIST" -maxdepth 1 -type f | wc -l)" -eq 4
+          test -s "$DIST/index.html"
+          test -s "$DIST/KAOPU_INSTRUMENT_K2.js"
+          test -s "$DIST/KAOPU_SPATIAL_SCORE_K2.txt"
+          test -s "$DIST/KAOPU_INSTRUMENT_K2_README.txt"
+          grep -q 'KAOPU · Spatial Score Instrument R02' "$DIST/index.html"
+          grep -q 'KAOPU_INSTRUMENT_K2' "$DIST/KAOPU_INSTRUMENT_K2.js"
+          grep -q '^K2|' "$DIST/KAOPU_SPATIAL_SCORE_K2.txt"
+          if grep -Eqi '<script[^>]+src=' "$DIST/index.html"; then echo 'External script reference found.'; exit 1; fi
+          if grep -Eqi '<link[^>]+stylesheet' "$DIST/index.html"; then echo 'External stylesheet reference found.'; exit 1; fi
+          test "$(wc -c < "$DIST/KAOPU_INSTRUMENT_K2.js")" -gt 400000
+          test "$(head -c -1 "$DIST/KAOPU_SPATIAL_SCORE_K2.txt" | wc -c)" -eq 1012
+          echo "WORKBENCH_SHA256 $(sha256sum "$DIST/index.html" | awk '{print $1}')"
+          echo "INSTRUMENT_SHA256 $(sha256sum "$DIST/KAOPU_INSTRUMENT_K2.js" | awk '{print $1}')"
+      - name: Standalone desktop and mobile-viewport QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          LOCAL_URL=$(node -e "console.log(require('node:url').pathToFileURL(process.argv[1]).href)" "$GITHUB_WORKSPACE/$PROJECT_DIR/dist/index.html")
+          TARGET_URL="$LOCAL_URL" node "$PROJECT_DIR/tests/smoke.mjs"
+      - name: Publish only isolated R02 path
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          rm -rf /tmp/kaopu-pages-r02
+          git worktree add --detach /tmp/kaopu-pages-r02 origin/gh-pages
+          TARGET="/tmp/kaopu-pages-r02/$PUBLIC_SUBDIR"
+          rm -rf "$TARGET"
+          mkdir -p "$TARGET"
+          cp "$PROJECT_DIR/dist/"* "$TARGET/"
+          cd /tmp/kaopu-pages-r02
+          git config user.name 'KAOPU Score Instrument CI'
+          git config user.email 'kaopu-score-ci@users.noreply.github.com'
+          git add "$PUBLIC_SUBDIR"
+          if ! git diff --cached --quiet; then
+            git commit -m 'publish(kaopu-score): R02 spatial composition and separate K2 instrument [skip ci]'
+            git push origin HEAD:gh-pages
+          fi
+      - name: Request Pages build when branch publishing is configured
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          type=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.build_type' || echo unknown)
+          echo "Pages build type: $type"
+          if [ "$type" = legacy ]; then
+            gh api --method POST "repos/$GITHUB_REPOSITORY/pages/builds" --jq '.status' || echo 'Pages build request unavailable; exact public payload still required below.'
+          fi
+      - name: Verify exact live workbench instrument and score
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected_html=$(sha256sum "$PROJECT_DIR/dist/index.html" | awk '{print $1}')
+          expected_instrument=$(sha256sum "$PROJECT_DIR/dist/KAOPU_INSTRUMENT_K2.js" | awk '{print $1}')
+          expected_score=$(sha256sum "$PROJECT_DIR/dist/KAOPU_SPATIAL_SCORE_K2.txt" | awk '{print $1}')
+          ok=0
+          for attempt in $(seq 1 100); do
+            code_html=$(curl --max-time 20 -L -sS -H 'Cache-Control: no-cache' -o /tmp/kaopu-r02-live.html -w '%{http_code}' "$PUBLIC_URL" || true)
+            code_instrument=$(curl --max-time 20 -L -sS -H 'Cache-Control: no-cache' -o /tmp/kaopu-r02-instrument.js -w '%{http_code}' "${PUBLIC_URL}KAOPU_INSTRUMENT_K2.js" || true)
+            code_score=$(curl --max-time 20 -L -sS -H 'Cache-Control: no-cache' -o /tmp/kaopu-r02-score.txt -w '%{http_code}' "${PUBLIC_URL}KAOPU_SPATIAL_SCORE_K2.txt" || true)
+            actual_html=$(sha256sum /tmp/kaopu-r02-live.html 2>/dev/null | awk '{print $1}' || true)
+            actual_instrument=$(sha256sum /tmp/kaopu-r02-instrument.js 2>/dev/null | awk '{print $1}' || true)
+            actual_score=$(sha256sum /tmp/kaopu-r02-score.txt 2>/dev/null | awk '{print $1}' || true)
+            if [ "$code_html" = 200 ] && [ "$code_instrument" = 200 ] && [ "$code_score" = 200 ] \
+              && [ "$actual_html" = "$expected_html" ] && [ "$actual_instrument" = "$expected_instrument" ] && [ "$actual_score" = "$expected_score" ]; then
+              ok=1
+              break
+            fi
+            echo "Waiting exact R02 payload ($attempt/100): html=$code_html/$actual_html instrument=$code_instrument/$actual_instrument score=$code_score/$actual_score"
+            sleep 5
+          done
+          test "$ok" = 1
+          echo "EXACT_R02_WORKBENCH_SHA256 $expected_html"
+          echo "EXACT_R02_INSTRUMENT_SHA256 $expected_instrument"
+          echo "EXACT_R02_SCORE_SHA256 $expected_score"
+      - name: Live desktop and mobile-viewport QA
+        run: TARGET_URL="$PUBLIC_URL" node "$PROJECT_DIR/tests/smoke.mjs"
+      - name: Write exact-head publication proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          export HTML_BYTES=$(wc -c < "$PROJECT_DIR/dist/index.html" | tr -d ' ')
+          export HTML_SHA256=$(sha256sum "$PROJECT_DIR/dist/index.html" | awk '{print $1}')
+          export INSTRUMENT_BYTES=$(wc -c < "$PROJECT_DIR/dist/KAOPU_INSTRUMENT_K2.js" | tr -d ' ')
+          export INSTRUMENT_SHA256=$(sha256sum "$PROJECT_DIR/dist/KAOPU_INSTRUMENT_K2.js" | awk '{print $1}')
+          export SCORE_BYTES=$(head -c -1 "$PROJECT_DIR/dist/KAOPU_SPATIAL_SCORE_K2.txt" | wc -c | tr -d ' ')
+          export SCORE_SHA256=$(sha256sum "$PROJECT_DIR/dist/KAOPU_SPATIAL_SCORE_K2.txt" | awk '{print $1}')
+          node --input-type=module <<'JS'
+          import { writeFile, readFile } from 'node:fs/promises';
+          const e = process.env;
+          const standalone = JSON.parse(await readFile('qa-artifacts/standalone-results.json', 'utf8'));
+          const live = JSON.parse(await readFile('qa-artifacts/public-results.json', 'utf8'));
+          const proof = {
+            project: 'KAOPU Score Instrument R02',
+            instrumentVersion: 'K2.0.0',
+            sourceRepository: e.GITHUB_REPOSITORY,
+            sourceBranch: e.GITHUB_REF_NAME,
+            sourceSha: e.GITHUB_SHA,
+            publicUrl: e.PUBLIC_URL,
+            instrumentUrl: `${e.PUBLIC_URL}KAOPU_INSTRUMENT_K2.js`,
+            scoreUrl: `${e.PUBLIC_URL}KAOPU_SPATIAL_SCORE_K2.txt`,
+            verifiedAtUtc: new Date().toISOString(),
+            workbench: { bytes: Number(e.HTML_BYTES), sha256: e.HTML_SHA256, exactPublicBytesMatched: true },
+            instrument: { bytes: Number(e.INSTRUMENT_BYTES), sha256: e.INSTRUMENT_SHA256, separateOneFile: true, containsUI: false, containsCamera: false, containsExampleScore: false, exactPublicBytesMatched: true },
+            score: { bytes: Number(e.SCORE_BYTES), sha256: e.SCORE_SHA256, defaultObjects: 259, exactPublicBytesMatched: true },
+            interactive3D: true,
+            staticImageSubstitute: false,
+            standaloneHtml: true,
+            fileProtocolTested: true,
+            requiredNetworkRequests: 0,
+            externalModels: 0,
+            externalTextures: 0,
+            outputReplayByteComparison: true,
+            equivalentScoresSameOutput: true,
+            instrumentDownloadVerified: true,
+            desktopStandalonePassed: true,
+            mobileViewportStandalonePassed: true,
+            publicHttpsPassed: true,
+            browserPassed: true,
+            physicalMobileDeviceTested: false,
+            pixelIdenticalAcrossGPUsClaimed: false,
+            visualAcceptance: 'PENDING_USER',
+            productionReady: false,
+            shareAllowed: true,
+            standalone,
+            live
+          };
+          await writeFile(`/tmp/kaopu-pages-r02/${e.PUBLIC_SUBDIR}/PUBLICATION_PROOF.json`, JSON.stringify(proof, null, 2) + '\n');
+          JS
+          cd /tmp/kaopu-pages-r02
+          git add "$PUBLIC_SUBDIR/PUBLICATION_PROOF.json"
+          git commit -m 'proof(kaopu-score): exact-head R02 workbench and separate instrument [skip ci]'
+          git fetch origin gh-pages
+          git rebase origin/gh-pages
+          git push origin HEAD:gh-pages
+          for attempt in $(seq 1 40); do
+            code=$(curl --max-time 20 -L -sS -H 'Cache-Control: no-cache' -o /tmp/kaopu-r02-proof.json -w '%{http_code}' "${PUBLIC_URL}PUBLICATION_PROOF.json" || true)
+            if [ "$code" = 200 ] && grep -q '"shareAllowed": true' /tmp/kaopu-r02-proof.json && grep -q '"sourceSha": "'"$GITHUB_SHA"'"' /tmp/kaopu-r02-proof.json; then
+              echo "VERIFIED_PUBLIC_R02 $PUBLIC_URL"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo 'R02 publication proof did not become readable.'
+          exit 1
+      - name: Upload internal evidence and separate instrument
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-score-instrument-r02-${{ github.sha }}
+          path: |
+            unit-results-r02.txt
+            qa-artifacts/
+            kaopu-score-instrument-r02/dist/
+            kaopu-score-instrument-r02/src/
+            kaopu-score-instrument-r02/tests/
+            kaopu-score-instrument-r02/scripts/
+            kaopu-score-instrument-r02/package.json
+            kaopu-score-instrument-r02/README.md
+            kaopu-score-instrument-r02/TASK_ANCHOR_R02.json
+          retention-days: 14
