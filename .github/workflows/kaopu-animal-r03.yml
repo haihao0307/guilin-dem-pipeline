@@ -1,0 +1,136 @@
+name: KAOPU Animals R03 build and verify
+on:
+  push:
+    branches: [work/kaopu-score-instrument-r01-20260929]
+    paths: ['kaopu-animal-r03/**', '.github/workflows/kaopu-animal-r03.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+concurrency:
+  group: kaopu-animal-r03
+  cancel-in-progress: false
+env:
+  PROJECT_DIR: kaopu-animal-r03
+  PUBLIC_SUBDIR: kaopu-score-instrument/animals-r03-20260929
+  PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-score-instrument/animals-r03-20260929/
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned dependencies
+        working-directory: kaopu-animal-r03
+        run: npm install --no-audit --no-fund
+      - name: Actual geometry and grammar regression tests
+        working-directory: kaopu-animal-r03
+        run: npm test
+      - name: Install browser
+        working-directory: kaopu-animal-r03
+        run: npx playwright install --with-deps chromium
+      - name: Build pure instrument and two standalone players
+        working-directory: kaopu-animal-r03
+        run: npm run build
+      - name: Test file protocol and empty player with all three scores
+        run: TARGET_URL="file://$GITHUB_WORKSPACE/$PROJECT_DIR/dist/index.html" node "$PROJECT_DIR/tests/browser.mjs"
+      - name: Package independent instrument and scores
+        run: |
+          python - <<'PY'
+          import zipfile,os
+          from pathlib import Path
+          d=Path(os.environ['PROJECT_DIR'])/'dist'
+          files=['KAOPU_ANIMAL_PLAYER.html','KAOPU_ANIMAL_K3.js','KAOPU_B_K3.score','KAOPU_E_K3.score','KAOPU_T_K3.score','README.txt','LICENSE_THREE.txt']
+          with zipfile.ZipFile(d/'KAOPU_ANIMAL_K3_KIT.zip','w',zipfile.ZIP_DEFLATED) as z:
+            for f in files:z.write(d/f,f)
+          PY
+      - name: Save inspection evidence before publishing
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: animals-r03-inspection-${{ github.sha }}
+          path: |
+            qa-artifacts/
+            kaopu-animal-r03/dist/
+            kaopu-animal-r03/src/
+            kaopu-animal-r03/tests/
+            kaopu-animal-r03/scripts/
+            kaopu-animal-r03/README.md
+          retention-days: 14
+      - name: Publish isolated animal directory without changing R01 or R02
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          git worktree add --detach /tmp/animal-pages origin/gh-pages
+          target="/tmp/animal-pages/$PUBLIC_SUBDIR"
+          mkdir -p "$target"
+          cp "$PROJECT_DIR/dist/"* "$target/"
+          cd /tmp/animal-pages
+          git config user.name 'KAOPU Animal Instrument CI'
+          git config user.email 'kaopu-ci@users.noreply.github.com'
+          git add "$PUBLIC_SUBDIR"
+          if ! git diff --cached --quiet; then
+            git commit -m 'publish(animals): three short scores and standalone K3 instrument [skip ci]'
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            git push origin HEAD:gh-pages
+          fi
+      - name: Request Pages build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api --method POST "repos/$GITHUB_REPOSITORY/pages/builds" --jq '.status' || true
+      - name: Verify exact published payloads
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected=$(sha256sum "$PROJECT_DIR/dist/index.html" | cut -d' ' -f1)
+          ok=0
+          for attempt in $(seq 1 90); do
+            code=$(curl --max-time 20 -LsS -H 'Cache-Control: no-cache' -o /tmp/animals-live.html -w '%{http_code}' "$PUBLIC_URL" || true)
+            actual=$(sha256sum /tmp/animals-live.html 2>/dev/null | cut -d' ' -f1 || true)
+            if [ "$code" = 200 ] && [ "$actual" = "$expected" ]; then ok=1; break; fi
+            sleep 5
+          done
+          test "$ok" = 1
+          for f in KAOPU_ANIMAL_PLAYER.html KAOPU_ANIMAL_K3.js KAOPU_B_K3.score KAOPU_E_K3.score KAOPU_T_K3.score; do
+            curl --retry 3 --fail -LsS "${PUBLIC_URL}${f}" -o "/tmp/$f"
+            cmp "$PROJECT_DIR/dist/$f" "/tmp/$f"
+          done
+      - name: Test live public 3D and the separately hosted instrument player
+        run: TARGET_URL="$PUBLIC_URL" node "$PROJECT_DIR/tests/browser.mjs"
+      - name: Write exact-head publication proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'JS'
+          import {readFile,writeFile} from 'node:fs/promises';
+          import {createHash} from 'node:crypto';
+          const e=process.env,d=e.PROJECT_DIR+'/dist/';
+          const build=JSON.parse(await readFile(d+'BUILD.json','utf8'));
+          const local=JSON.parse(await readFile('qa-artifacts/standalone.json','utf8'));
+          const live=JSON.parse(await readFile('qa-artifacts/public.json','utf8'));
+          const files={};
+          for(const f of ['index.html','KAOPU_ANIMAL_PLAYER.html','KAOPU_ANIMAL_K3.js','KAOPU_B_K3.score','KAOPU_E_K3.score','KAOPU_T_K3.score','KAOPU_ANIMAL_K3_KIT.zip']){const b=await readFile(d+f);files[f]={bytes:b.length,sha256:createHash('sha256').update(b).digest('hex')};}
+          const proof={project:'KAOPU Animals R03',sourceSha:e.GITHUB_SHA,sourceBranch:e.GITHUB_REF_NAME,publicUrl:e.PUBLIC_URL,verifiedAt:new Date().toISOString(),build,files,exactPublicBytesMatched:true,interactive3D:true,generatedImageSubstitute:false,standalonePlayer:true,emptyPlayerThreeIndependentScoresPassed:true,externalRuntimeAssets:0,referenceReconstruction:'APPROXIMATE',hiddenSurfaces:'INFERRED',scale:'ASSUMED',tortoiseSpecies:'UNRESOLVED',physicalPhoneTested:false,visualAcceptance:'PENDING_USER',productionReady:false,shareAllowed:true,local,live};
+          await writeFile('/tmp/animal-pages/'+e.PUBLIC_SUBDIR+'/PUBLICATION_PROOF.json',JSON.stringify(proof,null,2)+'\n');
+          JS
+          cd /tmp/animal-pages
+          git add "$PUBLIC_SUBDIR/PUBLICATION_PROOF.json"
+          git commit -m 'proof(animals): exact-head real-browser and independent-score verification [skip ci]'
+          git fetch origin gh-pages
+          git rebase origin/gh-pages
+          git push origin HEAD:gh-pages
+      - name: Upload final proof and delivery files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: animals-r03-delivery-${{ github.sha }}
+          path: |
+            qa-artifacts/
+            kaopu-animal-r03/dist/
+            /tmp/animal-pages/kaopu-score-instrument/animals-r03-20260929/PUBLICATION_PROOF.json
+          retention-days: 14
