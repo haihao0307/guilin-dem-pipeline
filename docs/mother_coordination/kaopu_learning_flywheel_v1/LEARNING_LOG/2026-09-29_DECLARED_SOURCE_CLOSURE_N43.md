@@ -104,3 +104,13 @@ Lifecycle after targeted routing and exact-head external trial: `POSTED=true`, `
 Institutional KPI effect: `Unknown`; no real Mother trial or post-adoption sample exists. First-pass acceptance, user correction count, recurrence, rejected-lineage inheritance, stale delivery, internal iterations and time-to-legal-candidate remain `Unknown`.
 
 No first-tier external expert AI was called.
+## Post-observation exact-head validation
+
+This is new verification evidence for the same N43 Candidate, not a new Candidate or regression case.
+
+- The formerly in-progress exact subject `ffb5bc5ae49e419f9b821dbc4e9797275708fc16` completed workflow run [36519120050](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/36519120050) successfully. Dependency installation, standalone build, package-shape verification, `file://` desktop/mobile QA, isolated publication, live HTTP payload verification, live desktop/mobile browser QA, publication-proof save and evidence upload all completed successfully.
+- The project then changed only `kaopu-score-instrument-r01/README.md` in `0898b9240b819ca8354be1ddbc981bdde9c5c01c` to record those gates. Because a new head is a new subject, it was not credited from its parent. Its own exact-head workflow run [36519906541](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/36519906541) independently completed the same named steps successfully.
+- The live [PUBLICATION_PROOF.json](https://github.com/haihao0307/guilin-dem-pipeline/blob/gh-pages/kaopu-score-instrument/r01-20260929/PUBLICATION_PROOF.json) binds the publication to source SHA `0898b9240b819ca8354be1ddbc981bdde9c5c01c`, records the HTML digest `1395207d78a08113e43c92dce176a9943ea4c33e002e5ac91501f04b33751a9b`, zero required network requests, passed standalone/live browser gates and `shareAllowed=true`. It separately retains `visualAcceptance=PENDING_USER` and `productionReady=false`.
+
+This supplies the falsifiable positive path that was still open at the original observation: the historical incomplete source graph was correctly held, remediation closed it without inheriting the old rejection, and later exact-head downstream runs could succeed. It does not promote source closure into proof of every downstream property, and it does not mean the project adopted the N43 Candidate gate. Lifecycle remains `POSTED=true`, `GATE-RUN=true`; `ACKNOWLEDGED=false`, `IMPLEMENTED=false`, `ADOPTED=false`, `USER-ACCEPTED=false`. KPI effect remains `Unknown` until a real project integrates the gate and yields comparative samples.
+

@@ -11,32 +11,48 @@
       "id": "01-historical-head-holds-both-gaps",
       "actual": {
         "verdict": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE",
-        "missingScriptTargets": ["tests/smoke.mjs"],
-        "missingLocalSourceInputs": ["src/app.js"]
+        "missingScriptTargets": [
+          "tests/smoke.mjs"
+        ],
+        "missingLocalSourceInputs": [
+          "src/app.js"
+        ]
       },
       "expected": {
         "verdict": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE",
-        "missingScriptTargets": ["tests/smoke.mjs"],
-        "missingLocalSourceInputs": ["src/app.js"]
+        "missingScriptTargets": [
+          "tests/smoke.mjs"
+        ],
+        "missingLocalSourceInputs": [
+          "src/app.js"
+        ]
       },
       "pass": true
     },
     {
       "id": "02-current-exact-head-closes-declared-source",
-      "actual": {"verdict": "SOURCE_CLOSURE_VERIFIED_ONLY"},
-      "expected": {"verdict": "SOURCE_CLOSURE_VERIFIED_ONLY"},
+      "actual": {
+        "verdict": "SOURCE_CLOSURE_VERIFIED_ONLY"
+      },
+      "expected": {
+        "verdict": "SOURCE_CLOSURE_VERIFIED_ONLY"
+      },
       "pass": true
     },
     {
       "id": "03-missing-test-target-holds",
       "actual": {
         "verdict": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE",
-        "missingScriptTargets": ["tests/smoke.mjs"],
+        "missingScriptTargets": [
+          "tests/smoke.mjs"
+        ],
         "missingLocalSourceInputs": []
       },
       "expected": {
         "verdict": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE",
-        "missingScriptTargets": ["tests/smoke.mjs"],
+        "missingScriptTargets": [
+          "tests/smoke.mjs"
+        ],
         "missingLocalSourceInputs": []
       },
       "pass": true
@@ -46,12 +62,16 @@
       "actual": {
         "verdict": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE",
         "missingScriptTargets": [],
-        "missingLocalSourceInputs": ["src/app.js"]
+        "missingLocalSourceInputs": [
+          "src/app.js"
+        ]
       },
       "expected": {
         "verdict": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE",
         "missingScriptTargets": [],
-        "missingLocalSourceInputs": ["src/app.js"]
+        "missingLocalSourceInputs": [
+          "src/app.js"
+        ]
       },
       "pass": true
     },
@@ -60,43 +80,79 @@
       "actual": {
         "verdict": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE",
         "missingScriptTargets": [],
-        "missingLocalSourceInputs": ["src/app.js"]
+        "missingLocalSourceInputs": [
+          "src/app.js"
+        ]
       },
       "expected": {
         "verdict": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE",
         "missingScriptTargets": [],
-        "missingLocalSourceInputs": ["src/app.js"]
+        "missingLocalSourceInputs": [
+          "src/app.js"
+        ]
       },
       "pass": true
     },
     {
       "id": "06-stale-receipt-head-holds",
-      "actual": {"verdict": "HOLD_SUBJECT_HEAD_MISMATCH"},
-      "expected": {"verdict": "HOLD_SUBJECT_HEAD_MISMATCH"},
+      "actual": {
+        "verdict": "HOLD_SUBJECT_HEAD_MISMATCH"
+      },
+      "expected": {
+        "verdict": "HOLD_SUBJECT_HEAD_MISMATCH"
+      },
       "pass": true
     },
     {
       "id": "07-path-escape-holds",
-      "actual": {"verdict": "HOLD_PROJECT_PATH_ESCAPE", "escapedPaths": ["../borrowed/app.js"]},
-      "expected": {"verdict": "HOLD_PROJECT_PATH_ESCAPE", "escapedPaths": ["../borrowed/app.js"]},
+      "actual": {
+        "verdict": "HOLD_PROJECT_PATH_ESCAPE",
+        "escapedPaths": [
+          "../borrowed/app.js"
+        ]
+      },
+      "expected": {
+        "verdict": "HOLD_PROJECT_PATH_ESCAPE",
+        "escapedPaths": [
+          "../borrowed/app.js"
+        ]
+      },
       "pass": true
     },
     {
       "id": "08-absolute-borrow-holds",
-      "actual": {"verdict": "HOLD_PROJECT_PATH_ESCAPE", "escapedPaths": ["/tmp/smoke.mjs"]},
-      "expected": {"verdict": "HOLD_PROJECT_PATH_ESCAPE", "escapedPaths": ["/tmp/smoke.mjs"]},
+      "actual": {
+        "verdict": "HOLD_PROJECT_PATH_ESCAPE",
+        "escapedPaths": [
+          "/tmp/smoke.mjs"
+        ]
+      },
+      "expected": {
+        "verdict": "HOLD_PROJECT_PATH_ESCAPE",
+        "escapedPaths": [
+          "/tmp/smoke.mjs"
+        ]
+      },
       "pass": true
     },
     {
       "id": "09-dynamic-input-remains-unknown",
-      "actual": {"verdict": "UNKNOWN_DYNAMIC_SOURCE_CLOSURE"},
-      "expected": {"verdict": "UNKNOWN_DYNAMIC_SOURCE_CLOSURE"},
+      "actual": {
+        "verdict": "UNKNOWN_DYNAMIC_SOURCE_CLOSURE"
+      },
+      "expected": {
+        "verdict": "UNKNOWN_DYNAMIC_SOURCE_CLOSURE"
+      },
       "pass": true
     },
     {
       "id": "10-closed-control-verifies-narrowly",
-      "actual": {"verdict": "SOURCE_CLOSURE_VERIFIED_ONLY"},
-      "expected": {"verdict": "SOURCE_CLOSURE_VERIFIED_ONLY"},
+      "actual": {
+        "verdict": "SOURCE_CLOSURE_VERIFIED_ONLY"
+      },
+      "expected": {
+        "verdict": "SOURCE_CLOSURE_VERIFIED_ONLY"
+      },
       "pass": true
     }
   ],
@@ -121,5 +177,37 @@
     "workflowStatus": "in_progress",
     "workflowConclusion": null
   },
-  "generatedAt": "2026-09-29T04:28:00Z"
+  "generatedAt": "2026-09-29T05:40:41Z",
+  "postObservationVerification": {
+    "recordedAt": "2026-09-29T05:40:41Z",
+    "priorExactSubject": {
+      "subjectHeadSha": "ffb5bc5ae49e419f9b821dbc4e9797275708fc16",
+      "workflowRunId": 36519120050,
+      "workflowConclusion": "success",
+      "allNamedStepsConclusion": "success"
+    },
+    "currentExactSubject": {
+      "subjectHeadSha": "0898b9240b819ca8354be1ddbc981bdde9c5c01c",
+      "parentHeadSha": "ffb5bc5ae49e419f9b821dbc4e9797275708fc16",
+      "netChange": [
+        "kaopu-score-instrument-r01/README.md"
+      ],
+      "workflowRunId": 36519906541,
+      "workflowConclusion": "success",
+      "allNamedStepsConclusion": "success",
+      "publicationProof": {
+        "path": "kaopu-score-instrument/r01-20260929/PUBLICATION_PROOF.json",
+        "proofBlobSha": "058f64802710fbae82fad73809dbb43b34da2756",
+        "sourceSha": "0898b9240b819ca8354be1ddbc981bdde9c5c01c",
+        "htmlSha256": "1395207d78a08113e43c92dce176a9943ea4c33e002e5ac91501f04b33751a9b",
+        "browserPassed": true,
+        "requiredNetworkRequests": 0,
+        "shareAllowed": true,
+        "visualAcceptance": "PENDING_USER",
+        "productionReady": false
+      }
+    },
+    "candidateImpact": "VALIDATED_NEGATIVE_TO_POSITIVE_PATH_NO_ADOPTION",
+    "duplicateRegressionCaseCreated": false
+  }
 }
