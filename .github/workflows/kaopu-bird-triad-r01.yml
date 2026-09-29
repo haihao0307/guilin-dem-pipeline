@@ -23,17 +23,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Decode self-contained workbench
+      - name: Decode and verify exact workbench
         run: |
           python - <<'PY'
           import gzip, base64, hashlib
           from pathlib import Path
           p=Path('kaopu-bird-triad-r01'); (p/'output').mkdir(exist_ok=True)
-          parts=sorted(p.glob('payload.*.b64'))
-          data=gzip.decompress(base64.b64decode(''.join(x.read_text().strip() for x in parts)))
+          data=gzip.decompress(base64.b64decode(''.join(x.read_text().strip() for x in sorted(p.glob('payload.*.b64')))))
           assert hashlib.sha256(data).hexdigest()=='1f393abc88f005f328d76da214345061ab5f396b647b49065bf1c2d73cb6ad48'
           (p/'output/index.html').write_bytes(data)
           PY
+          python kaopu-bird-triad-r01/fix_ui.py
       - name: Install isolated browser testing tools
         run: |
           pip install playwright==1.57.0 pillow
