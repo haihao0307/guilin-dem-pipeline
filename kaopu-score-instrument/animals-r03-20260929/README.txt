@@ -1,4 +1,4 @@
-# KAOPU Animal Instrument R03 / K3.0.1
+# KAOPU Animal Instrument R03 / K3.0.2
 
 Three short independent animal scores share one procedural instrument. R03 is isolated from older Fish/Bird/Coral production lines; K1/K2 remain unchanged.
 
