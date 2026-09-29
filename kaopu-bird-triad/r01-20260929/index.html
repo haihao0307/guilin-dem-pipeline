@@ -1,0 +1,1409 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>KAOPU · 鸟类三方制谱工作台 R01</title><link rel="icon" href="data:,"><style>:root{--bg:#10181f;--panel:#17222b;--line:#2d3b45;--muted:#91a5b1;--text:#e7eef1;--accent:#afc9b4;--warm:#d7bc80;--input:#0e1922;--mono:ui-monospace,SFMono-Regular,Consolas,monospace}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,"Segoe UI","Microsoft YaHei",system-ui,sans-serif;font-size:13px}button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid #3b505c;border-radius:5px;background:#21323e;color:var(--text);padding:8px 11px;transition:background .15s}button:hover{background:#304654}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}button:disabled{opacity:.43;cursor:not-allowed}.primary{background:var(--accent);border-color:var(--accent);color:#172920;font-weight:650}.primary:hover{background:#c9dfca}.quiet{background:transparent}.full{width:100%}.topbar{height:86px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);gap:18px}.brand{display:flex;align-items:center;gap:13px}.brandmark{width:38px;height:43px;border:1px solid #799488;display:grid;place-items:center;font-size:23px;font-weight:450;color:var(--accent);border-radius:7px}.eyebrow{font:10px var(--mono);letter-spacing:2px;color:#9ab4ad;margin-bottom:6px}h1{font-size:21px;font-weight:620;margin:0;letter-spacing:1px}.flow{display:flex;align-items:center;gap:14px;color:#a5b6bf;font-size:12px}.flow i{font-style:normal;color:#526b77}.head-actions{display:flex;gap:10px;align-items:center}.version{font:11px var(--mono);color:#9cb3bc;padding:5px 7px}.contextbar{height:39px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid var(--line);background:#131e27;font-size:11px;color:#a7b8c2;gap:12px}.contextbar>div{display:flex;align-items:center;gap:10px;min-width:0}.status-dot{width:6px;height:6px;border-radius:100%;background:#adcab4;flex-shrink:0}#projectName{color:#d7e1e6;max-width:270px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sep{color:#536571}.candidate{font-size:11px;color:var(--warm);white-space:nowrap}.workspace{height:calc(100dvh - 125px);min-height:670px;display:grid;grid-template-columns:286px minmax(400px,1fr) 284px}.panel{background:var(--panel);display:flex;flex-direction:column;min-width:0;min-height:0}.author-panel{border-right:1px solid var(--line)}.score-panel{border-left:1px solid var(--line)}.panel-head{min-height:74px;padding:17px 16px;display:flex;align-items:center;gap:11px;border-bottom:1px solid var(--line)}.step{font:11px var(--mono);color:var(--accent);background:#24392f;border:1px solid #3a5045;padding:5px;border-radius:4px}.panel-head h2,.stage-heading h2{margin:0;font-size:14px;font-weight:600}.panel-head small,.stage-heading small{display:block;font-size:10px;color:var(--muted);margin-top:5px}.undo{margin-left:auto;display:flex;gap:3px}.undo button{font-size:16px;padding:2px 6px;background:transparent}.panel-scroll{padding:17px 16px;overflow:auto;min-height:0;flex:1;scrollbar-width:thin;scrollbar-color:#476070 transparent}.panel-footer{min-height:44px;padding:9px 13px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line);gap:8px;font-size:10px;color:#95ada4}.panel-footer button{font-size:11px;padding:6px 8px}.field-label{color:#b6c5ce;display:block;font-size:11px;margin-bottom:7px}input[type=text],input[type=number],select,textarea{width:100%;background:var(--input);color:#dce8ed;border:1px solid #3b505b;border-radius:4px;padding:8px;outline:none}input[type=number]{font-family:var(--mono);padding:5px 6px}input[type=range]{accent-color:var(--accent);width:100%;height:15px;margin:8px 0 0}input[type=checkbox]{accent-color:var(--accent);vertical-align:middle}textarea{resize:vertical;line-height:1.6}select{font-size:11px}.brief{margin-top:14px;border-bottom:1px solid var(--line);padding-bottom:13px}summary{cursor:pointer;color:#cad8df;font-size:12px;padding:7px 0;list-style-position:inside}summary .tiny{float:right;color:#7f98a5}.brief textarea{margin-top:6px;font-size:11px}.ref-entry{display:flex;gap:8px;align-items:center;margin-top:8px}.ref-entry button{font-size:10px;padding:7px;white-space:nowrap}.ref-entry span{font-size:10px;color:var(--muted);line-height:1.5}.hint{font-size:10px;color:var(--muted);line-height:1.7;margin:8px 0}.section-title{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:550;margin:22px 0 14px}.tiny{font-size:9px;font-weight:400;color:var(--muted)}.control{margin:0 0 14px}.control-top{display:grid;grid-template-columns:1fr 69px 18px;gap:6px;align-items:center}.control-top label{font-size:11px;color:#c0cfd6}.control-top span{font-size:10px;color:var(--muted)}.control .path{font:9px var(--mono);color:#6f8a97;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}.advanced{border-top:1px solid var(--line);margin-top:16px;padding-top:7px}.advanced p{font-size:10px;line-height:1.7;color:var(--muted)}#sections{display:grid;grid-template-columns:18px repeat(4,minmax(0,1fr));gap:4px;margin:8px 0;font:9px var(--mono)}#sections input{font-size:9px;padding:4px 2px;width:100%;min-width:0}#sections span{color:#95aab5;align-self:center}.color-row{display:grid;grid-template-columns:1fr 29px 57px;align-items:center;gap:6px}.color-row input[type=color]{width:28px;height:29px;padding:1px;background:var(--input);border:1px solid #53616b;border-radius:4px}.color-row span{font:9px var(--mono);color:var(--muted)}.check-row{display:flex;gap:6px;margin-top:10px;font-size:10px;color:#b5c6cf}.two-fields{display:grid;grid-template-columns:1fr 78px;gap:9px}.two-fields label{font-size:10px;color:var(--muted);line-height:2}.two-fields input,.two-fields select{height:31px}#reset{margin-top:10px;font-size:11px}.stage-panel{display:flex;flex-direction:column;min-width:0;min-height:0}.stage-head{min-height:74px;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line)}.stage-heading{display:flex;align-items:center;gap:10px}.view-tools{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}.view-tools button{font-size:10px;padding:6px 7px;background:transparent;border-color:transparent}.view-tools button.active{border-color:#4e685d;color:#c3dfc8;background:#21332d}.view-options{height:47px;display:flex;align-items:center;gap:9px;padding:8px 15px;background:#131e26;flex-shrink:0}.view-options label{font-size:10px;color:var(--muted);margin-left:auto;white-space:nowrap}.view-options>button{font-size:10px;padding:5px 7px;background:transparent}.segmented{display:flex;border:1px solid #354954;border-radius:4px;overflow:hidden}.segmented button{border:0;border-right:1px solid #354954;border-radius:0;background:transparent;font-size:10px;padding:6px 9px}.segmented button:last-child{border:0}.segmented .active{background:#324851;color:#fff}.canvases{display:flex;flex:1;min-height:365px;position:relative;background:#0e1319}.viewport{width:50%;min-width:0;position:relative;overflow:hidden}.viewport:first-child{border-right:1px solid #2a3943}.viewport canvas{width:100%;height:100%;display:block;touch-action:none}.viewport-label{position:absolute;top:15px;left:14px;right:14px;display:flex;align-items:center;justify-content:space-between;gap:7px;z-index:2;font:9px var(--mono);color:#9eb2be;pointer-events:none;letter-spacing:.4px}.viewport-label select{width:auto;max-width:150px;padding:5px;background:#13222be6;border-color:#344752;font-size:9px;pointer-events:auto}#dirtyBadge{background:#24382e;color:#b7d3bd;padding:5px 6px;border-radius:4px;letter-spacing:0}.view-bottom{position:absolute;bottom:16px;left:15px;right:15px;font-size:10px;color:#7e97a5;display:flex;flex-direction:column;gap:6px;pointer-events:none}#liveName{color:#b9ccd5;font-size:11px}.canvases.hide-reference .reference-view{display:none}.canvases.hide-reference .result-view{width:100%}#photoHolder{position:absolute;inset:50px 10px 40px;align-items:center;justify-content:center;background:#101a22}#photoHolder:not([hidden]){display:flex}#photoHolder img{max-height:100%;max-width:100%;object-fit:contain}#photoMissing{font-size:11px;color:var(--muted);position:absolute}#bootError{position:absolute;inset:50px 20px;padding:30px;background:#271e1e;color:#f0b6a8;z-index:20;line-height:1.8}.stage-metrics{min-height:75px;padding:13px 17px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--line)}.stage-metrics small{display:block;font-size:9px;color:#819ba8;margin-bottom:7px}.stage-metrics strong{font:12px var(--mono);color:#cbdce4}.stage-metrics button{font-size:11px;padding:8px;white-space:nowrap}.stage-notice{min-height:31px;display:flex;align-items:center;padding:8px 17px;font-size:10px;color:#8b9fa9;background:#141e27;border-top:1px solid #24343d;line-height:1.6}.instrument-card{border:1px solid #395047;border-radius:6px;background:#1a2a27;padding:13px}.card-top{display:flex;justify-content:space-between;align-items:center;font:9px var(--mono);color:#90ab9c;margin-bottom:12px}.lock{border:1px solid #4c6857;padding:3px 5px;border-radius:3px}.instrument-card strong{display:block;font-size:13px;color:#cadfcc;margin-bottom:8px}.instrument-card code{font:9px var(--mono);color:#a8c2b0;word-break:break-all}.instrument-card p{font-size:10px;color:#a2b7ad;line-height:1.8;margin:10px 0}.instrument-card details{border-top:1px solid #354d40;margin-top:10px}.instrument-card summary{font-size:10px;color:#b3cdb9}.instrument-card button{margin-top:7px;font-size:10px;border-color:#4c6657;color:#bbd2c0}.score-stats{display:grid;grid-template-columns:1fr 1fr;margin-top:20px;gap:10px}.score-stats>div{padding:12px 10px;border:1px solid var(--line);border-radius:4px}.score-stats strong{font:21px var(--mono);font-weight:500;color:#d7e5eb;display:block}.score-stats small{display:block;font-size:10px;color:var(--muted);margin-top:8px}.diff-list{max-height:198px;overflow:auto;scrollbar-width:thin}.diff-item{padding:9px 8px;border:1px solid #30444f;border-radius:3px;background:#122029;margin-bottom:6px}.diff-item code{display:block;word-break:break-all;color:#9fb8c4;font:9px/1.5 var(--mono)}.diff-item div{margin-top:4px;color:#d4dbc1;font:10px var(--mono);overflow:hidden;text-overflow:ellipsis}.export-grid{display:grid;grid-template-columns:1fr;gap:7px;margin-top:18px}.export-grid button{font-size:11px;padding:10px}#scoreJSON{height:270px;font:10px/1.65 var(--mono);margin:7px 0;white-space:pre;overflow:auto}.mono{font-family:var(--mono)}.mobile-nav{display:none}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);max-width:min(680px,90vw);z-index:50;background:#294437;color:#dfefe1;border:1px solid #5d8168;border-radius:6px;padding:13px 20px;font-size:12px;line-height:1.6;box-shadow:0 10px 30px #0006}.toast.error{background:#422a26;border-color:#8b6256;color:#f6ccbd}
+@media(min-width:1750px){.workspace{grid-template-columns:326px minmax(500px,1fr) 316px}.panel-scroll{padding:20px}.stage-head{padding:15px 24px}.viewport-label{left:23px;right:23px}}@media(max-width:1280px){.workspace{grid-template-columns:265px minmax(320px,1fr) 258px}.flow{display:none}.stage-head{align-items:flex-start;flex-direction:column;gap:9px;padding:12px}.stage-heading{gap:8px}.view-tools{justify-content:flex-start}.stage-head{min-height:97px}.stage-heading small{font-size:9px}.view-options{gap:5px;padding:8px}.segmented button{padding:6px}.view-options label{font-size:9px}.stage-metrics{gap:8px;padding:12px}.stage-metrics strong{font-size:10px}.stage-metrics small{font-size:8px}.viewport-label{flex-direction:column;align-items:flex-start}.viewport-label select{max-width:130px}}
+@media(max-width:960px){.topbar{height:75px;padding:0 14px}.brandmark{display:none}.eyebrow{font-size:9px}h1{font-size:18px}.version{display:none}.head-actions{gap:6px}.head-actions button{font-size:11px;padding:8px}.contextbar{padding:0 14px;height:39px}.candidate{display:none}#projectName{max-width:160px}.contextbar #compileStatus{font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mobile-nav{display:flex;height:43px;border-bottom:1px solid var(--line);background:#17222b}.mobile-nav button{width:33.33%;background:transparent;border:0;border-radius:0;font-size:12px;color:#93aab5}.mobile-nav .active{color:#cfdfd0;border-bottom:2px solid #b0ceb5}.workspace{display:block;height:calc(100dvh - 157px);min-height:620px}.workspace>.panel,.workspace>.stage-panel{display:none;height:100%}.workspace[data-active=author]>.author-panel,.workspace[data-active=stage]>.stage-panel,.workspace[data-active=score]>.score-panel{display:flex}.panel-head{min-height:62px}.panel-scroll{padding:18px 23px}.panel-footer{min-height:45px}.stage-head{flex-direction:row;align-items:center;min-height:66px;padding:10px 12px}.stage-heading{flex-shrink:0}.stage-heading h2{font-size:12px}.stage-heading small{font-size:8px}.stage-heading .step{display:none}.view-tools{justify-content:flex-end;gap:1px}.view-tools button{font-size:9px;padding:5px}.view-options{height:42px;padding:7px 10px}.view-options label{font-size:9px}.view-options>button{font-size:9px}.canvases{min-height:360px}.viewport-label{top:13px;left:9px;right:9px;font-size:8px;gap:8px}.viewport-label select{font-size:8px;max-width:125px}.view-bottom{font-size:8px;left:9px;right:9px;bottom:13px}#liveName{font-size:9px}.stage-metrics{min-height:68px;gap:9px;padding:11px}.stage-metrics div:nth-child(3){display:none}.stage-metrics button{font-size:10px}.stage-notice{font-size:9px;padding:8px 11px;min-height:39px}.control-top{grid-template-columns:1fr 92px 24px}.control{margin-bottom:17px}.control-top label{font-size:12px}.hint{font-size:11px}.score-stats{margin-top:15px}.score-stats strong{font-size:23px}.export-grid{grid-template-columns:1fr 1fr}.diff-list{max-height:270px}.instrument-card{padding:17px}.instrument-card code{font-size:10px}.instrument-card p{font-size:11px}.section-title{font-size:13px}.tiny{font-size:10px}.brief textarea{font-size:12px}#sections input{font-size:11px;padding:6px}#sections{grid-template-columns:22px repeat(4,minmax(0,1fr))}.canvases:not(.hide-reference) .view-bottom span+span{display:none}}
+@media(max-width:420px){.topbar{height:70px}.brand h1{font-size:16px}.eyebrow{font-size:8px;letter-spacing:1px}.head-actions button{font-size:10px;padding:7px}.contextbar{height:37px}.workspace{height:calc(100dvh - 150px)}.stage-heading small{max-width:110px}.view-tools button{padding:4px;font-size:9px}.stage-head{gap:6px}.view-options>label{margin-left:auto}.view-options{gap:5px}.segmented button{font-size:9px;padding:6px}.viewport-label select{max-width:114px}#geometryHash{font-size:10px}.stage-metrics strong{font-size:11px}}
+</style></head><body>
+<header class="topbar"><div class="brand"><span class="brandmark">K</span><div><div class="eyebrow">KAOPU / BIRD STUDIO</div><h1>鸟类制谱工作台</h1></div></div><div class="flow"><span>观察与制谱</span><i>→</i><span>差异谱</span><i>→</i><span>正式乐器</span><i>→</i><span>独立重演</span></div><div class="head-actions"><span class="version">三方协作 R01</span><button id="newProject">新建对象</button><button id="independent" class="primary export-action">独立重演 ↗</button></div></header>
+<div class="contextbar"><div><span class="status-dot"></span><span id="projectName">苍鹭 · 原包形态保留</span><span class="sep">/</span><span id="compileStatus">正在初始化正式乐器…</span></div><span class="candidate">工程候选 · 未经视觉验收</span></div>
+<nav class="mobile-nav"><button data-panel="author">制谱</button><button class="active" data-panel="stage">演奏</button><button data-panel="score">乐谱</button></nav>
+<main class="workspace" data-active="stage">
+<aside class="panel author-panel"><div class="panel-head"><span class="step">01</span><div><h2>制谱工作台</h2><small>制作工具不直接修改网格</small></div><div class="undo"><button id="undo" title="撤销参数修改">↶</button><button id="redo" title="重做参数修改">↷</button></div></div><div class="panel-scroll">
+<label class="field-label" for="objectName">对象名称</label><input id="objectName" type="text" maxlength="256">
+<details class="brief" open><summary>制作要求与参考 <span class="tiny">人工制谱</span></summary><textarea id="intent" rows="2" placeholder="记录要还原的对象、比例与细节要求；不会自动识图生成。"></textarea><div class="ref-entry"><button id="importReference">＋ 添加参考照片</button><span id="referenceCount">原包未附实物照片</span></div><input id="referenceFile" type="file" accept="image/png,image/jpeg,image/webp" hidden><p class="hint">参考图只在本机使用；保存项目可一并保留。左侧对照默认是原包模型，不是实物照片。</p></details>
+<div class="section-title"><span>结构差异</span><span class="tiny">单位 m · 实际生成参数</span></div>
+<div id="controls"></div>
+<details class="advanced"><summary>身体截面编辑 <span class="tiny">8 个结构站位</span></summary><p class="hint">Z 为前后轴，Y 为高度；Rx / Ry 是截面半径。这里改变的是谱中的曲线数据。</p><div id="sections"></div></details>
+<div class="section-title"><span>表面与花纹</span><span class="tiny">原着色算法保留</span></div>
+<div class="color-row"><select id="paletteKey" aria-label="选择颜色区域"><option value="mantle">躯干底色</option><option value="neck">颈部底色</option><option value="wing">折翼底色</option><option value="upperBill">上喙色</option><option value="lowerBill">下喙色</option><option value="iris">虹膜色</option><option value="crest">冠羽色</option><option value="eyeStripe">眼后条纹色</option></select><input type="color" id="paletteColor" aria-label="区域颜色"><span id="paletteValue"></span></div>
+<div class="check-row"><label><input id="eyeStripe" type="checkbox" checked> 显示眼后条纹</label><label><input id="neckStripe" type="checkbox" checked> 显示颈部细纹</label></div>
+<div class="section-title"><span>姿态与实例</span><span class="tiny">不是飞行系统</span></div>
+<div id="poseControls"></div><div class="two-fields"><label>模式<select id="motionMode"><option value="shape">静态形态</option><option value="idle">原 idle 诊断</option></select></label><label>时间（秒）<input id="motionTime" type="number" value="0" min="0" max="60" step=".25"></label></div><p class="hint">只保留原有姿态与小幅诊断；自然行走、飞行、起降未验证。</p>
+<button id="reset" class="full quiet">恢复原包基线参数</button>
+</div><div class="panel-footer"><span id="localStatus">参数未写入云端</span><button id="saveProject">保存项目</button></div></aside>
+<section class="stage-panel"><div class="stage-head"><div class="stage-heading"><span class="step">02</span><div><h2>正式乐器演奏</h2><small>KBI 2.0.0 · 折翼 / 轴向鸟体</small></div></div><div class="view-tools"><button data-view="side" class="active">侧面</button><button data-view="front">正面</button><button data-view="three">斜侧</button><button data-view="head">头部</button><button data-view="top">俯视</button><button id="fit">全貌</button></div></div>
+<div class="view-options"><div class="segmented"><button data-mode="species" class="active">原材质</button><button data-mode="white">白模</button><button data-mode="anatomy">结构</button><button data-mode="wire">线框</button></div><label><input id="syncCamera" type="checkbox" checked> 联动镜头</label><button id="toggleReference">隐藏对照</button></div>
+<div class="canvases" id="canvases"><div class="viewport reference-view"><div class="viewport-label"><span>参考 / BEFORE</span><select id="referenceMode" aria-label="参考类型"><option value="baseline">原包迁移基线</option><option value="photo">本机参考照片</option></select></div><canvas id="baselineCanvas" aria-label="原包苍鹭三维对照"></canvas><div id="photoHolder" hidden><img id="referencePhoto" alt="用户提供的本机参考照片"><p id="photoMissing">尚未添加实物参考照片</p></div><div class="view-bottom">冻结对照 · 非实物扫描</div></div><div class="viewport result-view"><div class="viewport-label"><span>演奏 / AFTER</span><span id="dirtyBadge">初始化</span></div><canvas id="liveCanvas" aria-label="完整谱驱动的实时三维鸟"></canvas><div class="view-bottom"><span id="liveName">谱驱动结果</span><span>拖动旋转 · 滚轮缩放</span></div></div><div id="bootError" hidden role="alert"></div></div>
+<div class="stage-metrics"><div><small>可见三角面</small><strong id="triangleCount">—</strong></div><div><small>几何指纹</small><strong id="geometryHash">—</strong></div><div><small>本次生成</small><strong id="buildTime">—</strong></div><div><small>独立核对</small><strong id="replayResult">尚未执行</strong></div><button id="verify">核对重演</button></div><div class="stage-notice" id="diagnosticNotice">检查的是演奏一致性，不自动代表生物学正确或外观通过。</div></section>
+<aside class="panel score-panel"><div class="panel-head"><span class="step">03</span><div><h2>乐谱与交付</h2><small>差异可追踪 · 结果可独立重演</small></div></div><div class="panel-scroll">
+<div class="instrument-card"><div class="card-top"><span class="lock">版本锁定</span><span>KBS2</span></div><strong>折翼 · 长颈轴向鸟体</strong><code>kaopu.bird.folded-axial @ 2.0.0</code><p>共用：连续截面、固定颈链、双侧细节、羽区、腿部 IK。物种结构数据在谱中。</p><details><summary>能力边界</summary><p>当前源自这份苍鹭基线。可编辑该结构范围内的差异，不宣称覆盖所有鸟类。没有自动识图、飞行、起降或已验证自然步态。</p></details><button id="exportInstrument" class="quiet full">导出独立乐器 JS</button></div>
+<div class="score-stats"><div><strong id="differenceCount">0</strong><small>差异字段</small></div><div><strong id="completeSize">—</strong><small>完整谱</small></div></div>
+<div class="section-title"><span>差异路径</span><span class="tiny">不存生成后的顶点</span></div><div id="diffList" class="diff-list"><p class="hint">与原包基谱相同。调整左侧参数后，这里会显示具体变化。</p></div>
+<div class="export-grid"><button id="exportResolved" class="primary export-action">导出完整谱</button><button id="exportSource" class="export-action">导出差异源谱</button><button id="exportPlayer" class="export-action">导出单体播放器</button><button id="exportWorkbench" class="export-action">保存工作台 HTML</button><button id="importData">导入谱 / 项目</button></div><input id="dataFile" type="file" accept=".kscore,.ksource,.kproject,.json,.txt" hidden>
+<p class="hint">完整谱可直接给乐器；差异源谱需匹配基谱。单体播放器包含当前完整谱与运行代码，不含制谱工作台。</p>
+<details class="advanced" id="jsonDetails"><summary>高级：完整谱 JSON</summary><textarea id="scoreJSON" spellcheck="false" aria-label="完整谱 JSON"></textarea><button id="applyJSON" class="full">校验 JSON 并演奏</button></details>
+<details class="advanced"><summary>报告与版本</summary><p class="hint">原包 R62-T1A 外观保持；基线迁移通过不等于视觉验收。谱含锁定版本、对象参数与来源状态。</p><button id="exportReport" class="full export-action">导出当前核对报告</button><div id="instrumentSize" class="mono hint"></div></details>
+</div><div class="panel-footer"><span id="sourceStatus">基谱 + 差异 → 完整谱</span></div></aside>
+</main><div class="toast" id="toast" role="status" hidden></div>
+<script type="application/json" id="baseScore">{
+  "schema": "kaopu.bird.resolved/2",
+  "instrument": {
+    "id": "kaopu.bird.folded-axial",
+    "version": "2.0.0",
+    "abi": "KBS2"
+  },
+  "id": "grey-heron-r62-migrated",
+  "label": "苍鹭 · 原包形态保留",
+  "construction": {
+    "body": {
+      "sections": [
+        [
+          -0.322,
+          0.486,
+          0.002,
+          0.002
+        ],
+        [
+          -0.278,
+          0.505,
+          0.03,
+          0.031
+        ],
+        [
+          -0.222,
+          0.53,
+          0.063,
+          0.058
+        ],
+        [
+          -0.154,
+          0.55,
+          0.093,
+          0.074
+        ],
+        [
+          -0.079,
+          0.563,
+          0.108,
+          0.083
+        ],
+        [
+          -0.003,
+          0.574,
+          0.105,
+          0.085
+        ],
+        [
+          0.068,
+          0.594,
+          0.09,
+          0.078
+        ],
+        [
+          0.128,
+          0.619,
+          0.063,
+          0.068
+        ]
+      ]
+    },
+    "neck": {
+      "extendedGuide": [
+        [
+          0.128,
+          0.619
+        ],
+        [
+          0.181,
+          0.654
+        ],
+        [
+          0.221,
+          0.701
+        ],
+        [
+          0.207,
+          0.751
+        ],
+        [
+          0.163,
+          0.802
+        ],
+        [
+          0.145,
+          0.852
+        ],
+        [
+          0.173,
+          0.896
+        ],
+        [
+          0.224,
+          0.916
+        ]
+      ],
+      "foldedGuide": [
+        [
+          0.128,
+          0.619
+        ],
+        [
+          0.205,
+          0.646
+        ],
+        [
+          0.244,
+          0.678
+        ],
+        [
+          0.219,
+          0.713
+        ],
+        [
+          0.158,
+          0.729
+        ],
+        [
+          0.097,
+          0.748
+        ],
+        [
+          0.073,
+          0.781
+        ],
+        [
+          0.103,
+          0.814
+        ],
+        [
+          0.159,
+          0.827
+        ]
+      ],
+      "segmentCount": 11,
+      "lengthM": 0.373,
+      "lateralRadiiM": [
+        0.05,
+        0.041,
+        0.031,
+        0.023,
+        0.0215,
+        0.0255
+      ],
+      "sagittalRadiiM": [
+        0.062,
+        0.052,
+        0.037,
+        0.027,
+        0.024,
+        0.0285
+      ],
+      "foldBulge": 0.045
+    },
+    "head": {
+      "angleRad": [
+        -0.075,
+        -0.125
+      ],
+      "stations": [
+        [
+          0,
+          0.0225,
+          0.022
+        ],
+        [
+          0.022,
+          0.023,
+          0.0205
+        ],
+        [
+          0.046,
+          0.0215,
+          0.0175
+        ],
+        [
+          0.069,
+          0.015,
+          0.0115
+        ],
+        [
+          0.086,
+          0.0115,
+          0.0085
+        ],
+        [
+          0.122,
+          0.0082,
+          0.0058
+        ],
+        [
+          0.163,
+          0.0045,
+          0.0031
+        ],
+        [
+          0.205,
+          0.00045,
+          0.0005
+        ]
+      ],
+      "eyeOffset": [
+        0.0188,
+        0.0004,
+        0.022
+      ],
+      "irisRadiiM": [
+        0.0033,
+        0.0046,
+        0.0046
+      ],
+      "pupilOffset": [
+        0.0029,
+        0,
+        0.0005
+      ],
+      "pupilRadiiM": [
+        0.0012,
+        0.0022,
+        0.0022
+      ],
+      "glintOffset": [
+        0.0036,
+        0.0012,
+        0.0012
+      ],
+      "glintRadiiM": [
+        0.00055,
+        0.00072,
+        0.00062
+      ],
+      "gape": {
+        "lateralM": [
+          0.0135,
+          0.008,
+          0.0007
+        ],
+        "verticalM": [
+          -0.002,
+          -0.001,
+          0
+        ],
+        "longitudinalM": [
+          -0.014,
+          0,
+          -0.007
+        ],
+        "radiiM": [
+          0.0008,
+          0.00048,
+          0.00012
+        ]
+      },
+      "crest": {
+        "count": 2,
+        "root": [
+          0.009,
+          0.008,
+          -0.02
+        ],
+        "rootStep": [
+          0.004,
+          -0.0013,
+          0
+        ],
+        "tip": [
+          0.02,
+          -0.043,
+          -0.112
+        ],
+        "tipStep": [
+          0.0035,
+          -0.006,
+          -0.016
+        ],
+        "widthM": 0.0024,
+        "widthStepM": -0.00045,
+        "camberM": 0.0015,
+        "skewM": 0.0004
+      }
+    },
+    "throat": {
+      "count": 5,
+      "rootSpreadM": 0.01,
+      "rootY": 0.651,
+      "rootZ": 0.163,
+      "rootBendM": 0.007,
+      "tipSpreadM": 0.019,
+      "tipY": 0.541,
+      "tipZ": 0.124,
+      "tipBendM": 0.008,
+      "widthM": 0.0058,
+      "widthTaperM": 0.0007,
+      "darkExtent": 0.18,
+      "camberM": 0.0011,
+      "skewM": 0.00035
+    },
+    "girdle": {
+      "sternumWidthM": 0.0939,
+      "sternumDepthM": 0.0504,
+      "pelvisWidthM": 0.0785,
+      "pelvisDepthM": 0.0398,
+      "sternumCranial": [
+        0,
+        0.536,
+        0.101
+      ],
+      "sternumCaudal": [
+        0,
+        0.516,
+        -0.01
+      ],
+      "sternumKeel": [
+        0,
+        0.482,
+        0.04
+      ],
+      "coracoidY": 0.552,
+      "coracoidZ": 0.079,
+      "coracoidWidthRatio": 0.72,
+      "scapula": [
+        0.073,
+        0.61,
+        -0.024
+      ],
+      "shoulder": [
+        0.091,
+        0.616,
+        0.055
+      ],
+      "pelvisY": 0.535,
+      "pelvisZ": -0.154
+    },
+    "wings": {
+      "elbow": [
+        0.119,
+        0.589,
+        0
+      ],
+      "wrist": [
+        0.112,
+        0.553,
+        -0.162
+      ],
+      "tip": [
+        0.071,
+        0.52,
+        -0.315
+      ],
+      "halfHeight": {
+        "rootM": 0.0045,
+        "bulgeM": 0.049,
+        "power": 0.72,
+        "taper": 0.14,
+        "epsilonM": 0.0005
+      },
+      "halfThickness": {
+        "bulgeM": 0.022,
+        "taper": 0.22,
+        "power": 0.52,
+        "epsilonM": 0.00035
+      },
+      "remiges": {
+        "count": 12,
+        "widthM": 0.015,
+        "widthVariationM": 0.0028
+      },
+      "coverts": {
+        "rows": 4,
+        "firstCount": 9,
+        "widthM": 0.0182,
+        "rowWidthM": 0.00175,
+        "widthVariationM": 0.001
+      },
+      "scapular": {
+        "count": 8,
+        "widthM": 0.019,
+        "widthTaperM": 0.0035
+      },
+      "pectoral": {
+        "count": 3,
+        "rootX": 0.061,
+        "spreadX": 0.012,
+        "rootY": 0.61,
+        "spreadY": 0.002,
+        "rootZ": 0.116,
+        "spreadZ": 0.005
+      }
+    },
+    "tail": {
+      "count": 9,
+      "rootSpreadM": 0.01,
+      "rootY": 0.505,
+      "rootZ": -0.214,
+      "tipSpreadM": 0.036,
+      "tipY": 0.455,
+      "tipZ": -0.313,
+      "tipFanM": 0.013,
+      "widthM": 0.0118,
+      "camberM": 0.0013,
+      "skewM": 0.001
+    },
+    "legs": {
+      "hip": [
+        0.051,
+        0.468,
+        0
+      ],
+      "footX": 0.061,
+      "footY": 0.009,
+      "footZ": 0.024,
+      "footStagger": 0.012,
+      "ankleLiftM": 0.006,
+      "segmentLengthsM": [
+        0.232,
+        0.243
+      ],
+      "upperRadiiM": [
+        0.0115,
+        0.0093,
+        0.0066,
+        0.0071
+      ],
+      "lowerRadiiM": [
+        0.0073,
+        0.0058,
+        0.0047,
+        0.005
+      ],
+      "cuffRadiiM": [
+        0.0155,
+        0.0105,
+        0.0064
+      ],
+      "toes": [
+        {
+          "d": [
+            0,
+            1
+          ],
+          "len": 0.12
+        },
+        {
+          "d": [
+            -0.49,
+            0.87
+          ],
+          "len": 0.091
+        },
+        {
+          "d": [
+            0.51,
+            0.86
+          ],
+          "len": 0.087
+        },
+        {
+          "d": [
+            -0.1,
+            -1
+          ],
+          "len": 0.057
+        }
+      ],
+      "toeBaseM": 0.0041,
+      "toeArchM": 0.004,
+      "toeRadiiM": [
+        0.004,
+        0.0011
+      ],
+      "clawLengthM": 0.008,
+      "clawDropM": -0.0013,
+      "clawRadiiM": [
+        0.0017,
+        0.0011,
+        0.00025
+      ]
+    },
+    "palette": {
+      "mantle": [
+        0.54,
+        0.585,
+        0.615
+      ],
+      "neck": [
+        0.86,
+        0.855,
+        0.81
+      ],
+      "belly": [
+        0.78,
+        0.79,
+        0.75
+      ],
+      "neckStreak": [
+        0.31,
+        0.33,
+        0.33
+      ],
+      "eyeStripe": [
+        0.12,
+        0.15,
+        0.18
+      ],
+      "upperBill": [
+        0.67,
+        0.6,
+        0.4
+      ],
+      "lowerBill": [
+        0.88,
+        0.65,
+        0.32
+      ],
+      "tailCap": [
+        0.44,
+        0.47,
+        0.49
+      ],
+      "billTip": [
+        0.57,
+        0.44,
+        0.27
+      ],
+      "bibDark": [
+        0.3,
+        0.32,
+        0.31
+      ],
+      "bibLight": [
+        0.81,
+        0.81,
+        0.77
+      ],
+      "iris": [
+        0.8,
+        0.72,
+        0.35
+      ],
+      "pupil": [
+        0.016,
+        0.019,
+        0.017
+      ],
+      "glint": [
+        0.95,
+        0.97,
+        0.91
+      ],
+      "gape": [
+        0.29,
+        0.27,
+        0.23
+      ],
+      "crest": [
+        0.105,
+        0.13,
+        0.16
+      ],
+      "wing": [
+        0.465,
+        0.505,
+        0.545
+      ],
+      "remiges": [
+        0.255,
+        0.285,
+        0.305
+      ],
+      "coverts": [
+        0.612,
+        0.636,
+        0.655
+      ],
+      "scapular": [
+        0.648,
+        0.667,
+        0.68
+      ],
+      "pectoral": [
+        0.815,
+        0.815,
+        0.785
+      ],
+      "tail": [
+        0.405,
+        0.44,
+        0.46
+      ],
+      "upperLeg": [
+        0.54,
+        0.49,
+        0.39
+      ],
+      "lowerLeg": [
+        0.5,
+        0.46,
+        0.36
+      ],
+      "cuff": [
+        0.71,
+        0.72,
+        0.67
+      ],
+      "toe": [
+        0.53,
+        0.47,
+        0.36
+      ],
+      "claw": [
+        0.23,
+        0.24,
+        0.2
+      ],
+      "covertChannelOffsets": [
+        0,
+        0.024,
+        0.043
+      ],
+      "scapularChannelOffsets": [
+        0,
+        0.019,
+        0.032
+      ],
+      "tailChannelOffsets": [
+        0,
+        0.035,
+        0.055
+      ]
+    },
+    "markings": {
+      "neckStreakStrength": 1,
+      "eyeStripeStrength": 1
+    },
+    "motion": {
+      "stridePeriodS": 1.4,
+      "idleScanM": 0.007,
+      "idleFrequency": 0.42,
+      "walkBobM": 0.0018
+    },
+    "bindPose": {
+      "name": "natural-standing-bind",
+      "tuck": 0.4,
+      "mode": "shape",
+      "fixedTopology": true
+    },
+    "weights": {
+      "wingZ": 0.065,
+      "wingSpanM": 0.38,
+      "legUpperY": 0.31,
+      "legLowerY": 0.08,
+      "legBlendM": 0.23
+    }
+  },
+  "performance": {
+    "mode": "shape",
+    "time": 0,
+    "tuck": 0.4,
+    "individualScale": 0.9737718369322829,
+    "ground": {
+      "type": "sine-local",
+      "amplitudesM": [
+        0.018,
+        0.014,
+        0.009
+      ],
+      "frequencies": [
+        1.17,
+        0.91,
+        2.14
+      ],
+      "footClearanceM": 0.0001
+    }
+  },
+  "instances": [
+    {
+      "id": "bird-001",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    }
+  ],
+  "provenance": {
+    "source": "user-upload/KAOPU_BIRD_INSTRUMENT_AND_SCORE_KB1(1).zip",
+    "sourceRevision": "GreyHeron R62-T1A",
+    "referenceStatus": "legacy-engineering-candidate",
+    "measuredSpecimen": false,
+    "visualAcceptance": false,
+    "naturalMotionValidated": false,
+    "notes": "原样迁移，不新增生物学精确性声明。固定折翼、轴向身体与两节可见腿链。没有参考照片或标本扫描随包提供。"
+  }
+}
+</script>
+<script id="instrumentCore">/* KAOPU Bird Instrument KBI2.0.0 — geometry engine only. No UI, camera, species registry, score defaults or network. */
+(function(g,f){const api=f();if(typeof module!=="undefined"&&module.exports)module.exports=api;else g.KaopuBirdInstrument=api})(typeof globalThis!=="undefined"?globalThis:this,function(){"use strict";
+const CONTRACT={"schema":"string","instrument":{"id":"string","version":"string","abi":"string"},"id":"string","label":"string","construction":{"body":{"sections":{"$array":8,"items":[{"$array":4,"items":["number","number","number","number"]},{"$array":4,"items":["number","number","number","number"]},{"$array":4,"items":["number","number","number","number"]},{"$array":4,"items":["number","number","number","number"]},{"$array":4,"items":["number","number","number","number"]},{"$array":4,"items":["number","number","number","number"]},{"$array":4,"items":["number","number","number","number"]},{"$array":4,"items":["number","number","number","number"]}]}},"neck":{"extendedGuide":{"$array":8,"items":[{"$array":2,"items":["number","number"]},{"$array":2,"items":["number","number"]},{"$array":2,"items":["number","number"]},{"$array":2,"items":["number","number"]},{"$array":2,"items":["number","number"]},{"$array":2,"items":["number","number"]},{"$array":2,"items":["number","number"]},{"$array":2,"items":["number","number"]}]},"foldedGuide":{"$array":9,"items":[{"$array":2,"items":["number","number"]},{"$array":2,"items":["number","number"]},{"$array":2,"items":["number","number"]},{"$array":2,"items":["number","number"]},{"$array":2,"items":["number","number"]},{"$array":2,"items":["number","number"]},{"$array":2,"items":["number","number"]},{"$array":2,"items":["number","number"]},{"$array":2,"items":["number","number"]}]},"segmentCount":"number","lengthM":"number","lateralRadiiM":{"$array":6,"items":["number","number","number","number","number","number"]},"sagittalRadiiM":{"$array":6,"items":["number","number","number","number","number","number"]},"foldBulge":"number"},"head":{"angleRad":{"$array":2,"items":["number","number"]},"stations":{"$array":8,"items":[{"$array":3,"items":["number","number","number"]},{"$array":3,"items":["number","number","number"]},{"$array":3,"items":["number","number","number"]},{"$array":3,"items":["number","number","number"]},{"$array":3,"items":["number","number","number"]},{"$array":3,"items":["number","number","number"]},{"$array":3,"items":["number","number","number"]},{"$array":3,"items":["number","number","number"]}]},"eyeOffset":{"$array":3,"items":["number","number","number"]},"irisRadiiM":{"$array":3,"items":["number","number","number"]},"pupilOffset":{"$array":3,"items":["number","number","number"]},"pupilRadiiM":{"$array":3,"items":["number","number","number"]},"glintOffset":{"$array":3,"items":["number","number","number"]},"glintRadiiM":{"$array":3,"items":["number","number","number"]},"gape":{"lateralM":{"$array":3,"items":["number","number","number"]},"verticalM":{"$array":3,"items":["number","number","number"]},"longitudinalM":{"$array":3,"items":["number","number","number"]},"radiiM":{"$array":3,"items":["number","number","number"]}},"crest":{"count":"number","root":{"$array":3,"items":["number","number","number"]},"rootStep":{"$array":3,"items":["number","number","number"]},"tip":{"$array":3,"items":["number","number","number"]},"tipStep":{"$array":3,"items":["number","number","number"]},"widthM":"number","widthStepM":"number","camberM":"number","skewM":"number"}},"throat":{"count":"number","rootSpreadM":"number","rootY":"number","rootZ":"number","rootBendM":"number","tipSpreadM":"number","tipY":"number","tipZ":"number","tipBendM":"number","widthM":"number","widthTaperM":"number","darkExtent":"number","camberM":"number","skewM":"number"},"girdle":{"sternumWidthM":"number","sternumDepthM":"number","pelvisWidthM":"number","pelvisDepthM":"number","sternumCranial":{"$array":3,"items":["number","number","number"]},"sternumCaudal":{"$array":3,"items":["number","number","number"]},"sternumKeel":{"$array":3,"items":["number","number","number"]},"coracoidY":"number","coracoidZ":"number","coracoidWidthRatio":"number","scapula":{"$array":3,"items":["number","number","number"]},"shoulder":{"$array":3,"items":["number","number","number"]},"pelvisY":"number","pelvisZ":"number"},"wings":{"elbow":{"$array":3,"items":["number","number","number"]},"wrist":{"$array":3,"items":["number","number","number"]},"tip":{"$array":3,"items":["number","number","number"]},"halfHeight":{"rootM":"number","bulgeM":"number","power":"number","taper":"number","epsilonM":"number"},"halfThickness":{"bulgeM":"number","taper":"number","power":"number","epsilonM":"number"},"remiges":{"count":"number","widthM":"number","widthVariationM":"number"},"coverts":{"rows":"number","firstCount":"number","widthM":"number","rowWidthM":"number","widthVariationM":"number"},"scapular":{"count":"number","widthM":"number","widthTaperM":"number"},"pectoral":{"count":"number","rootX":"number","spreadX":"number","rootY":"number","spreadY":"number","rootZ":"number","spreadZ":"number"}},"tail":{"count":"number","rootSpreadM":"number","rootY":"number","rootZ":"number","tipSpreadM":"number","tipY":"number","tipZ":"number","tipFanM":"number","widthM":"number","camberM":"number","skewM":"number"},"legs":{"hip":{"$array":3,"items":["number","number","number"]},"footX":"number","footY":"number","footZ":"number","footStagger":"number","ankleLiftM":"number","segmentLengthsM":{"$array":2,"items":["number","number"]},"upperRadiiM":{"$array":4,"items":["number","number","number","number"]},"lowerRadiiM":{"$array":4,"items":["number","number","number","number"]},"cuffRadiiM":{"$array":3,"items":["number","number","number"]},"toes":{"$array":4,"items":[{"d":{"$array":2,"items":["number","number"]},"len":"number"},{"d":{"$array":2,"items":["number","number"]},"len":"number"},{"d":{"$array":2,"items":["number","number"]},"len":"number"},{"d":{"$array":2,"items":["number","number"]},"len":"number"}]},"toeBaseM":"number","toeArchM":"number","toeRadiiM":{"$array":2,"items":["number","number"]},"clawLengthM":"number","clawDropM":"number","clawRadiiM":{"$array":3,"items":["number","number","number"]}},"palette":{"mantle":{"$array":3,"items":["number","number","number"]},"neck":{"$array":3,"items":["number","number","number"]},"belly":{"$array":3,"items":["number","number","number"]},"neckStreak":{"$array":3,"items":["number","number","number"]},"eyeStripe":{"$array":3,"items":["number","number","number"]},"upperBill":{"$array":3,"items":["number","number","number"]},"lowerBill":{"$array":3,"items":["number","number","number"]},"tailCap":{"$array":3,"items":["number","number","number"]},"billTip":{"$array":3,"items":["number","number","number"]},"bibDark":{"$array":3,"items":["number","number","number"]},"bibLight":{"$array":3,"items":["number","number","number"]},"iris":{"$array":3,"items":["number","number","number"]},"pupil":{"$array":3,"items":["number","number","number"]},"glint":{"$array":3,"items":["number","number","number"]},"gape":{"$array":3,"items":["number","number","number"]},"crest":{"$array":3,"items":["number","number","number"]},"wing":{"$array":3,"items":["number","number","number"]},"remiges":{"$array":3,"items":["number","number","number"]},"coverts":{"$array":3,"items":["number","number","number"]},"scapular":{"$array":3,"items":["number","number","number"]},"pectoral":{"$array":3,"items":["number","number","number"]},"tail":{"$array":3,"items":["number","number","number"]},"upperLeg":{"$array":3,"items":["number","number","number"]},"lowerLeg":{"$array":3,"items":["number","number","number"]},"cuff":{"$array":3,"items":["number","number","number"]},"toe":{"$array":3,"items":["number","number","number"]},"claw":{"$array":3,"items":["number","number","number"]},"covertChannelOffsets":{"$array":3,"items":["number","number","number"]},"scapularChannelOffsets":{"$array":3,"items":["number","number","number"]},"tailChannelOffsets":{"$array":3,"items":["number","number","number"]}},"markings":{"neckStreakStrength":"number","eyeStripeStrength":"number"},"motion":{"stridePeriodS":"number","idleScanM":"number","idleFrequency":"number","walkBobM":"number"},"bindPose":{"name":"string","tuck":"number","mode":"string","fixedTopology":"boolean"},"weights":{"wingZ":"number","wingSpanM":"number","legUpperY":"number","legLowerY":"number","legBlendM":"number"}},"performance":{"mode":"string","time":"number","tuck":"number","individualScale":"number","ground":{"type":"string","amplitudesM":{"$array":3,"items":["number","number","number"]},"frequencies":{"$array":3,"items":["number","number","number"]},"footClearanceM":"number"}},"instances":{"$array":1,"items":[{"id":"string","position":{"$array":3,"items":["number","number","number"]},"rotation":{"$array":3,"items":["number","number","number"]},"scale":"number"}]},"provenance":{"source":"string","sourceRevision":"string","referenceStatus":"string","measuredSpecimen":"boolean","visualAcceptance":"boolean","naturalMotionValidated":"boolean","notes":"string"}};
+function createGeometry(C){
+"use strict";
+ const TAU=Math.PI*2,cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),mix=(a,b,t)=>a+(b-a)*t,
+ sm=(a,b,x)=>{const t=cl((x-a)/(b-a));return t*t*(3-2*t)},
+ add=(a,b)=>a.map((x,i)=>x+b[i]),sub=(a,b)=>a.map((x,i)=>x-b[i]),mul=(a,t)=>a.map(x=>x*t),
+ dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],
+ norm=a=>mul(a,1/(Math.hypot(...a)||1));
+ const profile={motionCalibration:C.motion,bindPose:C.bindPose};
+ const bodySections=C.body.sections;
+ const osteologyReference=C.girdle;
+ const neckGuideExtended=C.neck.extendedGuide,neckGuideFolded=C.neck.foldedGuide;
+ const cervicalSegmentCount=C.neck.segmentCount,cervicalLengthM=C.neck.lengthM,cervicalSegmentLengthM=cervicalLengthM/cervicalSegmentCount;
+ function resamplePolyline(points,count){
+  const lens=[0];for(let i=1;i<points.length;i++)lens.push(lens.at(-1)+Math.hypot(points[i][0]-points[i-1][0],points[i][1]-points[i-1][1]));
+  const total=lens.at(-1),out=[];
+  for(let j=0;j<count;j++){const d=total*j/(count-1);let i=0;while(i<lens.length-2&&lens[i+1]<d)i++;const den=lens[i+1]-lens[i]||1,t=(d-lens[i])/den;out.push([mix(points[i][0],points[i+1][0],t),mix(points[i][1],points[i+1][1],t)])}
+  return out;
+ }
+ function angleSet(points){const q=resamplePolyline(points,cervicalSegmentCount+1),a=[];for(let i=0;i<cervicalSegmentCount;i++)a.push(Math.atan2(q[i+1][1]-q[i][1],q[i+1][0]-q[i][0]));return a}
+ const cervicalAnglesExtended=angleSet(neckGuideExtended),cervicalAnglesFoldedRaw=angleSet(neckGuideFolded),cervicalAnglesFolded=cervicalAnglesFoldedRaw.map((a,i)=>{const r=cervicalAnglesExtended[i];while(a-r>Math.PI)a-=TAU;while(a-r<-Math.PI)a+=TAU;return a});
+ function cervicalChain(tuck){
+  const p=[[bodySections.at(-1)[0],bodySections.at(-1)[1]]];
+  for(let i=0;i<cervicalSegmentCount;i++){const a=mix(cervicalAnglesExtended[i],cervicalAnglesFolded[i],tuck),q=p.at(-1);p.push([q[0]+Math.cos(a)*cervicalSegmentLengthM,q[1]+Math.sin(a)*cervicalSegmentLengthM])}
+  return p;
+ }
+ function sampleChain(points,t){const u=cl(t)*(points.length-1),i=Math.min(points.length-2,Math.floor(u)),f=u-i;return [mix(points[i][0],points[i+1][0],f),mix(points[i][1],points[i+1][1],f)]}
+ function deriveSections(tuck){
+  const chain=cervicalChain(tuck),out=bodySections.map(q=>q.slice()),lat=C.neck.lateralRadiiM,sag=C.neck.sagittalRadiiM;
+  for(let i=0;i<6;i++){const q=sampleChain(chain,(i+1)/7),fold=1+C.neck.foldBulge*tuck*Math.sin(Math.PI*(i+1)/7);out.push([q[0],q[1],lat[i]*fold,sag[i]*fold])}
+  const occ=chain.at(-1),headAngle=mix(...C.head.angleRad,tuck),dz=Math.cos(headAngle),dy=Math.sin(headAngle);
+  // Retained algorithm; object-specific coefficients are supplied by the score.
+  const stations=C.head.stations;
+  for(const [d,rx,ry] of stations)out.push([occ[0]+dz*d,occ[1]+dy*d,rx,ry]);
+  return {sections:out,chain,headAngle};
+ }
+ const extended=deriveSections(0).sections,folded=deriveSections(1).sections;
+ function spline(points){
+  const N=points.length,M=points[0].length,second=points.map(()=>Array(M).fill(0));
+  // Natural C2 cubic interpolation, retaining every recorded section at its knot.
+  for(let d=0;d<M;d++){const lo=[],rhs=[];for(let i=1;i<N-1;i++){
+   const den=4-(i>1?lo[i-1]:0);lo[i]=1/den;rhs[i]=(6*(points[i+1][d]-2*points[i][d]+points[i-1][d])-(i>1?rhs[i-1]:0))/den;
+  }for(let i=N-2;i>=1;i--)second[i][d]=rhs[i]-lo[i]*second[i+1][d];}
+  return t=>{const u=cl(t,0,N-1-1e-8),i=Math.floor(u),b=u-i,a=1-b,v=[],d1=[],d2=[];
+   for(let k=0;k<M;k++){const x=points[i][k],y=points[i+1][k],p=second[i][k],q=second[i+1][k];v[k]=a*x+b*y+((a*a*a-a)*p+(b*b*b-b)*q)/6;d1[k]=y-x+((-3*a*a+1)*p+(3*b*b-1)*q)/6;d2[k]=a*p+b*q;}
+   return {v,d1,d2};};
+ }
+ function bezier3(a,b,c,d,t){const u=1-t,u2=u*u,t2=t*t;return [u2*u*a[0]+3*u2*t*b[0]+3*u*t2*c[0]+t2*t*d[0],u2*u*a[1]+3*u2*t*b[1]+3*u*t2*c[1]+t2*t*d[1],u2*u*a[2]+3*u2*t*b[2]+3*u*t2*c[2]+t2*t*d[2]]}
+ function bezier3d(a,b,c,d,t){const u=1-t;return [3*u*u*(b[0]-a[0])+6*u*t*(c[0]-b[0])+3*t*t*(d[0]-c[0]),3*u*u*(b[1]-a[1])+6*u*t*(c[1]-b[1])+3*t*t*(d[1]-c[1]),3*u*u*(b[2]-a[2])+6*u*t*(c[2]-b[2])+3*t*t*(d[2]-c[2])]}
+ function builder(){
+  const p=[],c=[],uv=[],kind=[],idx=[],parts={};
+  const vert=(a,col,tex=[0,0],k=0)=>{const i=p.length/3;p.push(...a);c.push(...col);uv.push(...tex);kind.push(k);return i};
+  const face=(a,b,c0)=>idx.push(a,b,c0);
+  function mark(name,start){parts[name]={startVertex:start,vertexCount:p.length/3-start}}
+  function tube(points,radii,col,k=4,sides=9){
+   const start=p.length/3;
+   for(let j=0;j<points.length;j++){
+    const prev=points[Math.max(0,j-1)],next=points[Math.min(points.length-1,j+1)],t=norm(sub(next,prev));
+    const ax=norm(cross(t,Math.abs(t[0])<.85?[1,0,0]:[0,1,0])),ay=cross(t,ax),r=radii[j];
+    for(let i=0;i<sides;i++){const a=TAU*i/sides;vert(add(points[j],add(mul(ax,Math.cos(a)*r),mul(ay,Math.sin(a)*r))),col,[j/(points.length-1),i/sides],k)}
+   }
+   for(let j=0;j<points.length-1;j++)for(let i=0;i<sides;i++){const a=start+j*sides+i,b=start+j*sides+(i+1)%sides,d=a+sides,e=b+sides;face(a,d,e);face(a,e,b)}
+   const cap0=vert(points[0],col,[0,0],k),cap1=vert(points.at(-1),col,[1,0],k);
+   for(let i=0;i<sides;i++){face(cap0,start+(i+1)%sides,start+i);const z=start+(points.length-1)*sides;face(cap1,z+i,z+(i+1)%sides)}
+  }
+  function ellipsoid(center,rad,col,k=6,lat=10,lon=16){
+   const start=p.length/3;
+   // Pole fans avoid repeated zero-area pole triangles.
+   const top=vert(add(center,[0,rad[1],0]),col,[0,0],k);
+   for(let j=1;j<lat;j++)for(let i=0;i<lon;i++){const ph=Math.PI*j/lat,th=TAU*i/lon;vert(add(center,[rad[0]*Math.sin(ph)*Math.cos(th),rad[1]*Math.cos(ph),rad[2]*Math.sin(ph)*Math.sin(th)]),col,[j/lat,i/lon],k)}
+   const bottom=vert(add(center,[0,-rad[1],0]),col,[1,0],k);
+   for(let i=0;i<lon;i++){face(top,start+1+i,start+1+(i+1)%lon);const a=start+1+(lat-2)*lon;face(bottom,a+(i+1)%lon,a+i)}
+   for(let j=0;j<lat-2;j++)for(let i=0;i<lon;i++){const a=start+1+j*lon+i,b=start+1+j*lon+(i+1)%lon;face(a,a+lon,b+lon);face(a,b+lon,b)}
+  }
+  function feather(a,b,width,col,k=5,out=[1,0,0],bend=.003,steps=9){
+   const dir=norm(sub(b,a)),side=norm(cross(out,dir)),up=norm(cross(dir,side));
+   // One vertex at each pole; interior diamond-section rings have real thickness.
+   const first=vert(a,col,[0,.5],k),st=p.length/3;
+   for(let j=1;j<steps;j++){
+    const t=.5-.5*Math.cos(Math.PI*j/steps),w=width*Math.pow(Math.sin(Math.PI*t),.46)*(.78+.22*t);
+    const ctr=add(add(a,mul(sub(b,a),t)),mul(up,bend*Math.sin(Math.PI*t)));
+    for(let r=0;r<4;r++){const sidePos=r===0?-1:r===2?1:0,depth=r===1?1:r===3?-1:0;
+     vert(add(ctr,add(mul(side,w*sidePos),mul(up,depth*.0007*Math.sin(Math.PI*t)))),col,[t,sidePos*.5+.5],k)}
+   }
+   for(let i=0;i<4;i++)face(first,st+(i+1)%4,st+i);
+   for(let j=0;j<steps-2;j++)for(let i=0;i<4;i++){const x=st+j*4+i,y=st+j*4+(i+1)%4;face(x,x+4,y+4);face(x,y+4,y)}
+   const last=vert(b,col,[1,.5],k),end=st+(steps-2)*4;for(let i=0;i<4;i++)face(last,end+i,end+(i+1)%4);
+  }
+  // A thin, cambered vane reads as an overlapping feather surface rather than a round rod.
+  // Culling is disabled by the workbench renderer, so one indexed surface remains visible from both sides.
+  function vane(a,b,width,col,k=5,out=[1,0,0],camber=.0025,steps=11,skew=0){
+   const dir=norm(sub(b,a)),side=norm(cross(out,dir)),normal=norm(cross(dir,side));
+   const first=vert(a,col,[0,.5],k),st=p.length/3;
+   for(let j=1;j<steps;j++){
+    const t=j/steps,e=t*t*(3-2*t),w=width*Math.pow(Math.sin(Math.PI*t),.58)*(1-.12*t);
+    const ctr=add(add(add(a,mul(sub(b,a),e)),mul(out,camber*Math.sin(Math.PI*t))),mul(side,skew*Math.sin(Math.PI*t)));
+    vert(add(ctr,mul(side,-w)),col,[t,0],k);vert(add(ctr,mul(side,w)),col,[t,1],k);
+   }
+   const last=vert(b,col,[1,.5],k);
+   face(first,st,st+1);
+   for(let j=0;j<steps-2;j++){const l=st+j*2,r=l+1,nl=l+2,nr=l+3;face(l,nl,nr);face(l,nr,r)}
+   const end=st+(steps-2)*2;face(end,last,end+1);
+  }
+  return {p,c,uv,kind,idx,parts,vert,face,tube,ellipsoid,feather,vane,mark};
+ }
+ function build(o={}){
+  const b=builder(),tuck=cl(o.tuck||0),tm=o.time||0,mode=o.mode||'shape',bob=mode==='walk'?C.motion.walkBobM*Math.cos(tm/profile.motionCalibration.stridePeriodS*TAU*2):0;
+  const derived=deriveSections(tuck),st=derived.sections,cervical=derived.chain;
+  const neckScan=mode==='idle'?C.motion.idleScanM*Math.sin(tm*C.motion.idleFrequency)*sm(1,3,tm):0;
+  const head=st[15],headY=head[1]+bob,headZ=head[0],poseAnchors={head:[neckScan,headY,headZ],billTip:[neckScan,st.at(-1)[1]+bob,st.at(-1)[0]]},landmarks={tail_tip:[0,st[0][1]+bob,st[0][0]],body_center:[0,bodySections[4][1]+bob,bodySections[4][0]],neck_root:[0,bodySections.at(-1)[1]+bob,bodySections.at(-1)[0]],occiput:[0,cervical.at(-1)[1]+bob,cervical.at(-1)[0]],head_center:[...poseAnchors.head],bill_base:[0,st[17][1]+bob,st[17][0]],bill_tip:[...poseAnchors.billTip]};
+  const curve=spline(st),ringN=40,steps=(st.length-1)*6,start=b.p.length/3;let maxRadiusReduction=0,maxCurvatureRadiusProduct=0;
+  for(let j=0;j<=steps;j++){
+   const u=j/steps,k=u*(st.length-1),cs=curve(k),q=cs.v,dz=cs.d1[0],dy=cs.d1[1],L=Math.hypot(dz,dy)||1;
+   const curvature=Math.abs(dz*cs.d2[1]-dy*cs.d2[0])/(L*L*L),rawR=Math.max(.0004,q[3]);
+   // Geometric guard only: keep local tubular Jacobian from reversing at tight
+   // bends. This does NOT prove global self-intersection-free anatomy.
+   const safeR=rawR/Math.pow(1+Math.pow(rawR*curvature/.90,6),1/6);
+   maxRadiusReduction=Math.max(maxRadiusReduction,rawR-safeR);maxCurvatureRadiusProduct=Math.max(maxCurvatureRadiusProduct,safeR*curvature);q[3]=safeR;
+   let n=[0,dz/L,-dy/L];
+   // Head and bill sections are orthogonal to their own near-horizontal axis.
+   for(let i=0;i<ringN;i++){
+    const th=TAU*i/ringN,co=Math.cos(th),si=Math.sin(th),headMask=sm(11,15,k),skullMask=sm(13.25,14.15,k)*(1-sm(17.0,17.65,k)),billMask=sm(17.0,19.0,k),billSi=mix(si,Math.sign(si)*Math.pow(Math.abs(si),.86),billMask);
+    const trunkMask=sm(1.15,2.75,k)*(1-sm(7.0,8.35,k)),pectoralMask=sm(1.75,3.05,k)*(1-sm(6.05,7.05,k)),shoulderMask=sm(2.75,4.05,k)*(1-sm(6.75,7.85,k)),upper=cl(si),lower=cl(-si);
+    // Retained algorithm; object-specific coefficients are supplied by the score.
+    // pectoral fullness and a narrow midline keel. This is a soft-tissue candidate
+    // Retained algorithm; object-specific coefficients are supplied by the score.
+    const coSuper=Math.sign(co)*Math.pow(Math.abs(co),mix(.84,.64,trunkMask*.88));
+    const upperShelf=shoulderMask*Math.pow(upper,.72),lowerTaper=pectoralMask*Math.pow(lower,1.18),lobe=Math.exp(-Math.pow((Math.abs(co)-.58)/.24,2))*lower*pectoralMask;
+    const latScale=1+.235*upperShelf-.215*lowerTaper+.052*lobe;
+    const siUpper=upper>0?Math.pow(upper,.70):0,siLower=lower>0?Math.pow(lower,1.55):0,siBody=mix(si,siUpper-siLower,trunkMask*.90);
+    const latR=Math.max(.0004,q[2])*latScale;
+    const headCo=Math.sign(co)*Math.pow(Math.abs(co),.72),billCo=Math.sign(co)*Math.pow(Math.abs(co),.92);
+    const headSi=si>=0?Math.pow(si,.66)*.93:-Math.pow(-si,1.02)*.92;
+    const lateralShape=mix(mix(coSuper,headCo,skullMask),billCo,billMask),verticalShape=mix(mix(billSi,siBody,trunkMask),headSi,skullMask*(1-billMask));
+    const x=lateralShape*latR*(1-.07*billMask)+neckScan*headMask;let y=q[1]+verticalShape*n[1]*Math.max(.0004,q[3])+bob,z=q[0]+verticalShape*n[2]*Math.max(.0004,q[3]);
+    const keelCenter=Math.pow(Math.max(0,1-Math.abs(co)),3.4),keel=lower*keelCenter*pectoralMask;
+    const muscleLobe=lobe*(.35+.65*Math.abs(co));y-=.0225*keel+.0035*muscleLobe;z+=.0052*keel+.0012*muscleLobe;
+    let col=C.palette.mantle,zone=0;
+    const frontNeck=sm(6.75,8.25,k),white=C.palette.neck;col=col.map((v,i)=>mix(v,white[i],frontNeck));
+    const underside=cl(-si)* (1-sm(5.8,7.5,k));col=col.map((v,i)=>mix(v,C.palette.belly[i],underside*.72));
+    if(k>6.2&&k<14.2){zone=1;const f=sm(.40,.93,-si),streak=sm(.42,.88,Math.sin(th*6+Math.sin(k*3.2)*.42))*sm(6.6,7.6,k)*(1-sm(11.7,12.9,k));const w=f*streak*.42*C.markings.neckStreakStrength;col=col.map((v,i)=>mix(v,C.palette.neckStreak[i],w));}
+    if(k>=13.1&&k<17.8){zone=2;const stripe=sm(-.004,.002,y-headY)*(1-sm(.017,.025,y-headY))*sm(.010,.018,Math.abs(x))*(1-sm(headZ+.001,headZ+.014,z))*sm(12.9,13.8,k);col=col.map((v,i)=>mix(v,C.palette.eyeStripe[i],stripe*C.markings.eyeStripeStrength));}
+    if(k>17.35){zone=3;const blend=sm(17.35,18.0,k),v=cl((k-18)/3),base=si>0?C.palette.upperBill:C.palette.lowerBill;col=col.map((x,i)=>mix(x,base[i]*(1-.10*v),blend));}
+    b.vert([x,y,z],col,[u,i/ringN],zone);
+   }
+  }
+  for(let j=0;j<steps;j++)for(let i=0;i<ringN;i++){const a=start+j*ringN+i,c=start+j*ringN+(i+1)%ringN; b.face(a,a+ringN,c+ringN);b.face(a,c+ringN,c)}
+  const cap0=b.vert([0,st[0][1]+bob,st[0][0]],C.palette.tailCap,[0,0],0),cap1=b.vert(poseAnchors.billTip,C.palette.billTip,[1,0],3);
+  for(let i=0;i<ringN;i++){b.face(cap0,(i+1)%ringN,i);const x=steps*ringN;b.face(cap1,x+i,x+(i+1)%ringN)}
+  b.mark('continuousBodyNeckHeadBill',start);
+  // Layered throat and breast vanes soften the neck-to-chest junction without hiding it in colour.
+  let bibStart=b.p.length/3;
+  for(let i=0;i<C.throat.count;i++){
+   const f=(i-(C.throat.count-1)/2)/Math.max(1,(C.throat.count-1)/2),root=[f*C.throat.rootSpreadM,C.throat.rootY+bob,C.throat.rootZ-C.throat.rootBendM*Math.abs(f)],tip=[f*C.throat.tipSpreadM,C.throat.tipY+bob,C.throat.tipZ-C.throat.tipBendM*Math.abs(f)],dark=Math.abs(f)<C.throat.darkExtent;
+   b.vane(root,tip,C.throat.widthM-C.throat.widthTaperM*Math.abs(f),dark?C.palette.bibDark:C.palette.bibLight,dark?1:5,[f<0?-1:1,.08,0],C.throat.camberM,9,C.throat.skewM*f);
+  }
+  b.mark('throatBreastVanes',bibStart);
+  // Eyes, gape and swept-back occipital plumes share the skull landmark.
+  let ix=b.p.length/3;
+  for(const sign of [-1,1]){
+   const eye=[neckScan+sign*C.head.eyeOffset[0],headY+C.head.eyeOffset[1],headZ+C.head.eyeOffset[2]];landmarks['eye_'+(sign<0?'L':'R')]=[...eye];
+   b.ellipsoid(eye,C.head.irisRadiiM,C.palette.iris,6,10,16);
+   b.ellipsoid([eye[0]+sign*C.head.pupilOffset[0],eye[1]+C.head.pupilOffset[1],eye[2]+C.head.pupilOffset[2]],C.head.pupilRadiiM,C.palette.pupil,7,8,12);
+   b.ellipsoid([eye[0]+sign*C.head.glintOffset[0],eye[1]+C.head.glintOffset[1],eye[2]+C.head.glintOffset[2]],C.head.glintRadiiM,C.palette.glint,7,6,8);
+   const lower=st[18],tip=st.at(-1);
+   b.tube([[neckScan+sign*C.head.gape.lateralM[0],lower[1]+bob+C.head.gape.verticalM[0],lower[0]+C.head.gape.longitudinalM[0]],[neckScan+sign*C.head.gape.lateralM[1],st[19][1]+bob+C.head.gape.verticalM[1],st[19][0]+C.head.gape.longitudinalM[1]],[neckScan+sign*C.head.gape.lateralM[2],tip[1]+bob+C.head.gape.verticalM[2],tip[0]+C.head.gape.longitudinalM[2]]],C.head.gape.radiiM,C.palette.gape,3,6);
+   // Retained algorithm; object-specific coefficients are supplied by the score.
+   for(let i=0;i<C.head.crest.count;i++){
+    const cr=C.head.crest,a=[neckScan+sign*(cr.root[0]+i*cr.rootStep[0]),headY+cr.root[1]+i*cr.rootStep[1],headZ+cr.root[2]+i*cr.rootStep[2]],bb=[neckScan+sign*(cr.tip[0]+i*cr.tipStep[0]),headY+cr.tip[1]+i*cr.tipStep[1],headZ+cr.tip[2]+i*cr.tipStep[2]];
+    b.vane(a,bb,C.head.crest.widthM+i*C.head.crest.widthStepM,C.palette.crest,8,[sign,0,0],C.head.crest.camberM,10,sign*C.head.crest.skewM);
+   }
+  } b.mark('headDetail',ix);
+  // Retained algorithm; object-specific coefficients are supplied by the score.
+  // Retained algorithm; object-specific coefficients are supplied by the score.
+  // bone coordinate system or the missing ribs/coracoids/scapulae surfaces.
+  ix=b.p.length/3;
+  const sternumHalf=osteologyReference.sternumWidthM*.5,pelvisHalf=osteologyReference.pelvisWidthM*.5;
+  const girdle={
+   sternumPlateCranial:add(C.girdle.sternumCranial,[0,bob,0]),sternumPlateCaudal:add(C.girdle.sternumCaudal,[0,bob,0]),sternumKeel:add(C.girdle.sternumKeel,[0,bob,0]),
+   coracoidL:[-sternumHalf*C.girdle.coracoidWidthRatio,C.girdle.coracoidY+bob,C.girdle.coracoidZ],coracoidR:[sternumHalf*C.girdle.coracoidWidthRatio,C.girdle.coracoidY+bob,C.girdle.coracoidZ],
+   scapulaL:[-C.girdle.scapula[0],C.girdle.scapula[1]+bob,C.girdle.scapula[2]],scapulaR:[C.girdle.scapula[0],C.girdle.scapula[1]+bob,C.girdle.scapula[2]],
+   shoulderL:[-C.girdle.shoulder[0],C.girdle.shoulder[1]+bob,C.girdle.shoulder[2]],shoulderR:[C.girdle.shoulder[0],C.girdle.shoulder[1]+bob,C.girdle.shoulder[2]],
+   pelvisL:[-pelvisHalf,C.girdle.pelvisY+bob,C.girdle.pelvisZ],pelvisR:[pelvisHalf,C.girdle.pelvisY+bob,C.girdle.pelvisZ]
+  };
+  landmarks.sternum_keel=[...girdle.sternumKeel];landmarks.shoulder_L=[...girdle.shoulderL];landmarks.shoulder_R=[...girdle.shoulderR];landmarks.scapula_L=[...girdle.scapulaL];landmarks.scapula_R=[...girdle.scapulaR];landmarks.pelvis_L=[...girdle.pelvisL];landmarks.pelvis_R=[...girdle.pelvisR];
+  const anatomyStart=b.p.length/3,bone=[.91,.82,.58],jointCol=[.94,.37,.22],ribCol=[.82,.73,.50],muscleCol=[.72,.22,.15];
+  // Retained algorithm; object-specific coefficients are supplied by the score.
+  b.vane(girdle.sternumPlateCranial,girdle.sternumPlateCaudal,sternumHalf,bone,10,[0,1,0],.0008,11,0);
+  b.vane([0,.531+bob,.092],girdle.sternumKeel,.0185,bone,10,[1,0,0],.0004,10,0);
+  // Paired pectoral soft-tissue envelopes are diagnostic only; the visible body is still the continuous core.
+  b.ellipsoid([-.033,.531+bob,.048],[.038,.049,.071],muscleCol,16,10,16);
+  b.ellipsoid([ .033,.531+bob,.048],[.038,.049,.071],muscleCol,16,10,16);
+  // Ribs are grouped arcs. They show the intended thoracic volume but are not claimed
+  // Retained algorithm; object-specific coefficients are supplied by the score.
+  for(let r=0;r<5;r++)for(const sign of [-1,1]){
+   const z=.075-r*.038,a=[sign*.010,.615+bob,z-.012],c1=[sign*(.052+.003*r),.607-r*.004+bob,z],c2=[sign*(.071-.004*r),.557-r*.004+bob,z+.006],d=[sign*(sternumHalf*(.80-.10*r)),.526-r*.003+bob,z+.006],pts=[];
+   for(let j=0;j<=8;j++)pts.push(bezier3(a,c1,c2,d,j/8));b.tube(pts,pts.map(()=>.00145),ribCol,11,7);
+  }
+  // Coracoids, scapulae and furcula are engineering connectors attached to the same frame.
+  for(const sign of [-1,1]){
+   const cor=sign<0?girdle.coracoidL:girdle.coracoidR,sho=sign<0?girdle.shoulderL:girdle.shoulderR,sca=sign<0?girdle.scapulaL:girdle.scapulaR;
+   b.tube([cor,mixPoint(cor,sho,.52),sho],[.0032,.0028,.0025],bone,12,8);
+   b.tube([sho,mixPoint(sho,sca,.55),sca,[sign*.058,.602+bob,-.135]],[.0025,.0022,.0019,.0015],bone,13,8);
+   b.tube([sho,[sign*.048,.590+bob,.089],[sign*.017,.564+bob,.093]],[.0023,.0020,.0015],[.72,.86,.78],14,8);
+   b.ellipsoid(sho,[.0055,.0055,.0055],jointCol,15,7,10);
+  }
+  // Retained algorithm; object-specific coefficients are supplied by the score.
+  b.tube([girdle.pelvisL,[0,.548+bob,-.118],girdle.pelvisR],[.0030,.0035,.0030],bone,17,9);
+  b.mark('thoracicAnatomy',anatomyStart);
+  ix=b.p.length/3;
+  const wingSkeletons=[];
+  for(const sign of [-1,1]){
+   const shoulder=sign<0?girdle.shoulderL:girdle.shoulderR,elbow=[sign*C.wings.elbow[0],C.wings.elbow[1]+bob,C.wings.elbow[2]],wrist=[sign*C.wings.wrist[0],C.wings.wrist[1]+bob,C.wings.wrist[2]],tip=[sign*C.wings.tip[0],C.wings.tip[1]+bob,C.wings.tip[2]],outward=[sign,0,0];
+   const path=t=>bezier3(shoulder,elbow,wrist,tip,cl(t)),tangent=t=>norm(bezier3d(shoulder,elbow,wrist,tip,cl(t)));
+   const halfHeight=t=>C.wings.halfHeight.rootM*(1-t)+C.wings.halfHeight.bulgeM*Math.pow(Math.sin(Math.PI*Math.min(.999,t*.96+.03)),C.wings.halfHeight.power)*(1-C.wings.halfHeight.taper*t)+C.wings.halfHeight.epsilonM;
+   const halfThick=t=>C.wings.halfThickness.bulgeM*(1-C.wings.halfThickness.taper*t)*Math.pow(Math.sin(Math.PI*Math.min(.999,t*.98+.01)),C.wings.halfThickness.power)+C.wings.halfThickness.epsilonM;
+   const spanAxis=t=>{const d=tangent(t);return norm([0,-d[2],d[1]])};
+   const surface=(t,v=0,offset=.0018)=>add(add(path(t),mul(spanAxis(t),halfHeight(t)*v)),mul(outward,halfThick(t)+offset));
+   const wingSide=sign<0?'L':'R';wingSkeletons.push({side:wingSide,shoulder,elbow,wrist,tip});landmarks['wing_elbow_'+wingSide]=[...elbow];landmarks['wing_wrist_'+wingSide]=[...wrist];landmarks['wing_tip_'+wingSide]=[...tip];
+   const wStart=b.p.length/3,N=24,M=26;
+   for(let j=0;j<=N;j++){
+    const t=j/N,ctr=path(t),span=spanAxis(t),hh=halfHeight(t),th=halfThick(t);
+    for(let i=0;i<M;i++){
+     const a=TAU*i/M,shade=.018*Math.sin(a)-.012*t,pos=add(add(ctr,mul(outward,Math.cos(a)*th)),mul(span,Math.sin(a)*hh));
+     b.vert(pos,[C.palette.wing[0]+shade,C.palette.wing[1]+shade,C.palette.wing[2]+shade],[t,i/M],5)
+    }
+   }
+   for(let j=0;j<N;j++)for(let i=0;i<M;i++){const a=wStart+j*M+i,c=wStart+j*M+(i+1)%M;b.face(a,a+M,c+M);b.face(a,c+M,c)}
+   for(let i=1;i<M-1;i++){b.face(wStart,wStart+i+1,wStart+i);const q=wStart+N*M;b.face(q,q+i,q+i+1)}
+   // Remiges: roots follow the forearm/hand path; tips converge toward the tail in a fan.
+   for(let i=0;i<C.wings.remiges.count;i++){
+    const f=i/Math.max(1,C.wings.remiges.count-1),rt=.34+.40*f,tt=.95-.085*f,root=surface(rt,.04+.10*Math.sin(f*Math.PI),.0022),base=surface(tt,-.30+.22*f,.0010);
+    const scallop=.010+.016*(1-f)+.0035*Math.sin(i*1.71),end=add(base,[sign*(.002-.002*f),-.006-.009*f,-scallop+.039*f]),w=C.wings.remiges.widthM+C.wings.remiges.widthVariationM*Math.sin((i+.6)*1.19);
+    b.vane(root,end,w,[C.palette.remiges[0]+.008*Math.sin(i),C.palette.remiges[1]+.008*Math.sin(i),C.palette.remiges[2]+.008*Math.sin(i)],5,outward,.0025,12,sign*.0008*Math.sin(i*1.31));
+   }
+   // Coverts: four shingle tracts sampled in wing coordinates. Their direction changes
+   // with the folded skeleton, so the layers remain attached when anchors are revised.
+   for(let row=0;row<C.wings.coverts.rows;row++)for(let i=0;i<C.wings.coverts.firstCount-row;i++){
+    const count=C.wings.coverts.firstCount-row,f=i/Math.max(1,count-1),stagger=.010*Math.sin((i+1.7*row)*1.31),u=.075+.515*f+.036*row+stagger,root=surface(u,.57-.17*row,.0040),end=surface(Math.min(.93,u+.205+.018*row),.12-.145*row,.0046);
+    end[1]-=.006+.0045*row+.002*Math.sin(i*1.4);end[2]-=.012+.010*f+.003*Math.sin(i*1.73+row);const tone=C.palette.coverts[0]-row*.013+.010*Math.sin(i*1.37+row);
+    b.vane(root,end,C.wings.coverts.widthM+C.wings.coverts.rowWidthM*row+C.wings.coverts.widthVariationM*Math.sin(i*1.1),[tone,tone+C.palette.covertChannelOffsets[1],tone+C.palette.covertChannelOffsets[2]],5,outward,.0020+row*.00025,10,sign*.00085*Math.sin(i+row));
+   }
+   // Scapular tract bridges the candidate scapula/shoulder region into the carrier.
+   const scap=sign<0?girdle.scapulaL:girdle.scapulaR;
+   for(let i=0;i<C.wings.scapular.count;i++){
+    const f=i/Math.max(1,C.wings.scapular.count-1),a=add(mixPoint(scap,shoulder,f),[sign*(.005+.004*f),.005-.006*f,.009-.017*f]),e=surface(.19+.54*f,.38-.26*f,.0050),tone=C.palette.scapular[0]+.010*Math.sin(i*1.43);
+    b.vane(a,e,C.wings.scapular.widthM-C.wings.scapular.widthTaperM*f,[tone,tone+C.palette.scapularChannelOffsets[1],tone+C.palette.scapularChannelOffsets[2]],5,outward,.0023,11,sign*.0009*Math.sin(i*1.2));
+   }
+   // Sparse pectoral plumes start from the breast/shoulder boundary, not the wing tip.
+   for(let i=0;i<C.wings.pectoral.count;i++){
+    const f=i/Math.max(1,C.wings.pectoral.count-1),a=[sign*(C.wings.pectoral.rootX+C.wings.pectoral.spreadX*f),C.wings.pectoral.rootY+C.wings.pectoral.spreadY*f+bob,C.wings.pectoral.rootZ+C.wings.pectoral.spreadZ*f],e=add(a,[sign*(.004+.001*f),-.010-.002*f,-.014-.003*f]);
+    b.vane(a,e,.0015+.0002*f,C.palette.pectoral,1,outward,.0004,9,sign*.00015*Math.sin(i));
+   }
+  } b.mark('foldedWingsAndPlumes',ix);
+  ix=b.p.length/3;
+  for(let i=0;i<C.tail.count;i++){
+   const f=(i-(C.tail.count-1)/2)/Math.max(1,(C.tail.count-1)/2),a=[f*C.tail.rootSpreadM,C.tail.rootY+bob,C.tail.rootZ],e=[f*C.tail.tipSpreadM,C.tail.tipY+bob,C.tail.tipZ+C.tail.tipFanM*Math.abs(f)],tone=C.palette.tail[0]+.015*Math.cos(i*1.6);
+   b.vane(a,e,C.tail.widthM,[tone,tone+C.palette.tailChannelOffsets[1],tone+C.palette.tailChannelOffsets[2]],9,[0,1,0],C.tail.camberM,9,C.tail.skewM*f);
+  }
+  b.mark('shortTail',ix);
+  // Two-link IK is solved in three dimensions with a backward-bending plane. The backward-pointing
+  // visible joint is the hock, NOT a human-like knee. The femur is concealed.
+  const footReport=[],jointReport=[];ix=b.p.length/3;
+  for(let side=0;side<2;side++){
+   const footPartStart=b.p.length/3;const sign=side===0?-1:1,sideName=side===0?'L':'R',xx=sign*C.legs.footX,ft=o.feet?.[side]||[xx,C.legs.footY,C.legs.footZ+(side?C.legs.footStagger:-C.legs.footStagger)],hip=[sign*C.legs.hip[0],C.legs.hip[1]+bob,C.legs.hip[2]],foot=[ft[0],ft[1]+C.legs.ankleLiftM,ft[2]],L1=C.legs.segmentLengthsM[0],L2=C.legs.segmentLengthsM[1];
+   const delta=sub(foot,hip),d=Math.hypot(...delta),D=cl(d,Math.abs(L1-L2)+.00001,L1+L2-.00005),h=(L1*L1-L2*L2+D*D)/(2*D),off=Math.sqrt(Math.max(0,L1*L1-h*h)),u=norm(delta),bend=norm(cross([1,0,0],u));
+   const solvedEnd=add(hip,mul(u,D)),joint=add(add(hip,mul(u,h)),mul(bend,off));landmarks['leg_root_'+sideName]=[...hip];landmarks['hock_'+sideName]=[...joint];landmarks['ankle_'+sideName]=[...foot];
+   const len1=Math.hypot(...sub(joint,hip)),len2=Math.hypot(...sub(solvedEnd,joint));
+   const upper=[hip,mixPoint(hip,joint,.20),mixPoint(hip,joint,.65),joint],lower=[joint,mixPoint(joint,foot,.2),mixPoint(joint,foot,.72),foot];
+   b.tube(upper,C.legs.upperRadiiM,C.palette.upperLeg,4,10);b.tube(lower,C.legs.lowerRadiiM,C.palette.lowerLeg,4,10);
+   // Feathered upper tibial cuff, smoothly tapered into the exposed leg.
+   b.tube([hip,mixPoint(hip,joint,.17),mixPoint(hip,joint,.29)],C.legs.cuffRadiiM,C.palette.cuff,1,12);
+   const toePartStart=b.p.length/3;const toes=C.legs.toes;
+   for(let ti=0;ti<toes.length;ti++){
+    const q=toes[ti],pp=[],r=[];
+    for(let j=0;j<=7;j++){const u=j/7,ground=o.toeGround?.(side,q.d[0]*q.len*u,q.d[1]*q.len*u)||0;
+     pp.push([foot[0]+q.d[0]*q.len*u,ft[1]+ground+C.legs.toeBaseM+Math.sin(Math.PI*u)*C.legs.toeArchM,foot[2]+q.d[1]*q.len*u]);r.push(mix(C.legs.toeRadiiM[0],C.legs.toeRadiiM[1],u))}
+    b.tube(pp,r,C.palette.toe,4,8);
+    const tip=pp.at(-1),end=add(tip,[q.d[0]*C.legs.clawLengthM,C.legs.clawDropM,q.d[1]*C.legs.clawLengthM]);if(ti===0)landmarks['toe_tip_'+sideName+'2']=[...end];b.tube([pp.at(-2),tip,end],C.legs.clawRadiiM,C.palette.claw,4,7);
+   }
+   b.mark('toes'+(side?'R':'L'),toePartStart);b.mark('leg'+(side?'R':'L'),footPartStart);
+   footReport.push({side:side?'R':'L',ankle:foot,support:o.support?.[side]??true,plantErrorM:o.footError?.[side]??null});
+   jointReport.push({side:side?'R':'L',visibleTibiaRoot:hip,hock:joint,tarsalEnd:foot,lengthErrorM:Math.max(Math.abs(len1-L1),Math.abs(Math.hypot(...sub(foot,joint))-L2)),reachClamped:Math.abs(d-D)>1e-9,reachErrorM:Math.abs(d-D)});
+  } b.mark('legsFeet',ix);
+  const positions=new Float32Array(b.p),indices=new Uint16Array(b.idx),normals=new Float32Array(positions.length),surfaceIdx=[],anatomyIdx=[];
+  for(let i=0;i<b.idx.length;i+=3){const tri=[b.idx[i],b.idx[i+1],b.idx[i+2]],isAnatomy=tri.every(v=>b.kind[v]>=10);(isAnatomy?anatomyIdx:surfaceIdx).push(...tri)}
+  let zeroArea=0;
+  for(let i=0;i<indices.length;i+=3){const a=indices[i]*3,b0=indices[i+1]*3,c=indices[i+2]*3,x=positions[b0]-positions[a],y=positions[b0+1]-positions[a+1],z=positions[b0+2]-positions[a+2],u=positions[c]-positions[a],v=positions[c+1]-positions[a+1],w=positions[c+2]-positions[a+2],nx=y*w-z*v,ny=z*u-x*w,nz=x*v-y*u;if(Math.hypot(nx,ny,nz)<1e-12)zeroArea++;for(const k of [a,b0,c]){normals[k]+=nx;normals[k+1]+=ny;normals[k+2]+=nz}}
+  for(let i=0;i<normals.length;i+=3){const n=Math.hypot(normals[i],normals[i+1],normals[i+2])||1;normals[i]/=n;normals[i+1]/=n;normals[i+2]/=n}
+  const mn=[Infinity,Infinity,Infinity],mx=[-Infinity,-Infinity,-Infinity];let finite=true;
+  for(let i=0;i<positions.length;i++){const k=i%3;finite&&=Number.isFinite(positions[i]);mn[k]=Math.min(mn[k],positions[i]);mx[k]=Math.max(mx[k],positions[i])}
+  const cervicalLengths=[];for(let i=1;i<cervical.length;i++)cervicalLengths.push(Math.hypot(cervical[i][0]-cervical[i-1][0],cervical[i][1]-cervical[i-1][1]));
+  function coreRingAt(kTarget){const j=Math.max(0,Math.min(steps,Math.round(kTarget/(st.length-1)*steps))),base=start+j*ringN,pts=[];for(let i=0;i<ringN;i++)pts.push([positions[(base+i)*3],positions[(base+i)*3+1],positions[(base+i)*3+2]]);return pts}
+  const chestRing=coreRingAt(4.55),xAt=i=>chestRing[i][0],yAt=i=>chestRing[i][1],frontEnvelope={sampleSectionK:4.55,lateralWidthM:xAt(0)-xAt(20),upperShoulderWidthM:xAt(5)-xAt(15),lowerPectoralWidthM:xAt(35)-xAt(25),dorsalY:yAt(10),lateralY:(yAt(0)+yAt(20))*.5,ventralY:yAt(30),keelDepthFromLateralM:(yAt(0)+yAt(20))*.5-yAt(30)};
+  const metrics={vertexCount:positions.length/3,triangleCount:indices.length/3,surfaceTriangleCount:surfaceIdx.length/3,anatomyTriangleCount:anatomyIdx.length/3,bounds:[mn,mx],standingHeightM:mx[1]-mn[1],finite,zeroAreaTriangles:zeroArea,
+   continuousCore:{wrappedRings:ringN,longitudinalIntervals:steps,periodicSeam:'shared vertex indices; no duplicate seam',sectionRecordCount:st.length,spline:'natural C2 cubic',maxRadiusReductionM:maxRadiusReduction,maxLocalCurvatureRadiusProduct:maxCurvatureRadiusProduct,globalSelfIntersectionChecked:false},
+   cervicalChain:{controlNodeCount:cervical.length,groupedControlSegments:cervicalSegmentCount,literalVertebrae:false,fixedTotalLengthM:cervicalLengthM,targetSegmentLengthM:cervicalSegmentLengthM,maxSegmentLengthErrorM:Math.max(...cervicalLengths.map(x=>Math.abs(x-cervicalSegmentLengthM))),joints:cervical.map(q=>[0,q[1]+bob,q[0]]),headAxisAngleRad:derived.headAngle},
+   pectoralGirdle:{anchors:girdle,wingSkeletons,specimenMatched:false,catalogueReference:osteologyReference,sternumInternalWidthM:Math.hypot(girdle.coracoidR[0]-girdle.coracoidL[0],0),frontEnvelope,featherTracts:'remiges + four covert rows + scapular tract sampled from folded-wing coordinates',thoracicAnatomy:'sternum plate/keel + five grouped rib arcs per side + coracoid/scapula/furcula connectors + pelvic bound'},
+   footReport,jointReport,maxLegSegmentErrorM:Math.max(...jointReport.map(q=>q.lengthErrorM)),parts:b.parts,poseAnchors,landmarks,posture:tuck,mode,
+   referenceSurfaceMeasured:false,referenceChecks:{candidateSkullAxisM:Math.hypot(st.at(-1)[0]-st[14][0],st.at(-1)[1]-st[14][1]),scoreHeadAxisM:C.head.stations.at(-1)[0],billAxisM:Math.hypot(st.at(-1)[0]-st[17][0],st.at(-1)[1]-st[17][1]),billReferenceStatus:'skull/bill axis is a soft reference; surface is still a candidate'},headEvidenceFit:'user-supplied-score; not a measured reconstruction',visualAcceptance:false,productionReady:false};
+  return {positions,normals,indices,surfaceIndices:new Uint16Array(surfaceIdx),anatomyIndices:new Uint16Array(anatomyIdx),colors:new Float32Array(b.c),uv:new Float32Array(b.uv),kind:new Float32Array(b.kind),metrics};
+ }
+ function mixPoint(a,b,t){return a.map((v,i)=>mix(v,b[i],t))}
+ const rigJointIds=['root','body','chest','tail',...Array.from({length:12},(_,i)=>'neck_'+String(i).padStart(2,'0')),'head','bill',
+  'wing_L_shoulder','wing_L_elbow','wing_L_wrist','wing_L_tip','wing_R_shoulder','wing_R_elbow','wing_R_wrist','wing_R_tip',
+  'leg_L_root','leg_L_hock','leg_L_ankle','toe_L','leg_R_root','leg_R_hock','leg_R_ankle','toe_R'];
+ const rigIndex=Object.fromEntries(rigJointIds.map((id,i)=>[id,i]));
+ function hashTyped(a){const bytes=new Uint8Array(a.buffer,a.byteOffset,a.byteLength);let h=2166136261>>>0;for(let i=0;i<bytes.length;i++)h=Math.imul(h^bytes[i],16777619)>>>0;return h.toString(16).padStart(8,'0')}
+ function buildSkinWeights(mesh){
+  const n=mesh.positions.length/3,ji=new Uint16Array(n*4),jw=new Float32Array(n*4),P=mesh.metrics.parts;
+  function set(i,pairs){pairs=pairs.filter(q=>q[1]>1e-8).sort((a,b)=>b[1]-a[1]).slice(0,4);let sum=pairs.reduce((a,q)=>a+q[1],0)||1;for(let k=0;k<4;k++){const q=pairs[k]||[rigIndex.body,0];ji[i*4+k]=q[0];jw[i*4+k]=q[1]/sum}}
+  for(let i=0;i<n;i++)set(i,[[rigIndex.body,1]]);
+  const core=P.continuousBodyNeckHeadBill,ringN=mesh.metrics.continuousCore.wrappedRings,intervals=mesh.metrics.continuousCore.longitudinalIntervals,sectionCount=mesh.metrics.continuousCore.sectionRecordCount;
+  const ringVerts=(intervals+1)*ringN;
+  for(let local=0;local<core.vertexCount;local++){
+   const i=core.startVertex+local,k=local<ringVerts?(Math.floor(local/ringN)/intervals*(sectionCount-1)):(local===ringVerts?0:sectionCount-1);
+   if(k<1.4){const t=cl(k/1.4);set(i,[[rigIndex.tail,1-t],[rigIndex.body,t]])}
+   else if(k<5.2){const t=cl((k-1.4)/3.8);set(i,[[rigIndex.body,1-t],[rigIndex.chest,t]])}
+   else if(k<7.6){const t=cl((k-5.2)/2.4);set(i,[[rigIndex.chest,1-t],[rigIndex.neck_00,t]])}
+   else if(k<14){const u=cl((k-7.6)/(14-7.6))*11,j=Math.min(10,Math.floor(u)),f=u-j;set(i,[[rigIndex['neck_'+String(j).padStart(2,'0')],1-f],[rigIndex['neck_'+String(j+1).padStart(2,'0')],f]])}
+   else if(k<17.4){const t=cl((k-14)/3.4);set(i,[[rigIndex.neck_11,1-t],[rigIndex.head,t]])}
+   else {const t=cl((k-17.4)/Math.max(.001,sectionCount-1-17.4));set(i,[[rigIndex.head,1-t],[rigIndex.bill,t]])}
+  }
+  function range(name,fn){const q=P[name];if(!q)return;for(let i=q.startVertex;i<q.startVertex+q.vertexCount;i++)fn(i)}
+  range('throatBreastVanes',i=>set(i,[[rigIndex.chest,.35],[rigIndex.neck_00,.65]]));
+  range('headDetail',i=>set(i,[[rigIndex.head,1]]));
+  range('thoracicAnatomy',i=>set(i,[[rigIndex.chest,1]]));
+  range('shortTail',i=>set(i,[[rigIndex.tail,.84],[rigIndex.body,.16]]));
+  range('foldedWingsAndPlumes',i=>{const x=mesh.positions[i*3],z=mesh.positions[i*3+2],side=x<0?'L':'R',u=cl((C.weights.wingZ-z)/C.weights.wingSpanM);let a,b,f;if(u<.34){a='wing_'+side+'_shoulder';b='wing_'+side+'_elbow';f=u/.34}else if(u<.73){a='wing_'+side+'_elbow';b='wing_'+side+'_wrist';f=(u-.34)/.39}else{a='wing_'+side+'_wrist';b='wing_'+side+'_tip';f=(u-.73)/.27}set(i,[[rigIndex[a],1-f],[rigIndex[b],f]])});
+  for(const side of ['L','R']){
+   range('leg'+side,i=>{const y=mesh.positions[i*3+1];if(y>C.weights.legUpperY)set(i,[[rigIndex['leg_'+side+'_root'],1]]);else if(y>C.weights.legLowerY){const f=cl((C.weights.legUpperY-y)/C.weights.legBlendM);set(i,[[rigIndex['leg_'+side+'_root'],1-f],[rigIndex['leg_'+side+'_hock'],f]])}else set(i,[[rigIndex['leg_'+side+'_hock'],.28],[rigIndex['leg_'+side+'_ankle'],.72]])});
+   range('toes'+side,i=>set(i,[[rigIndex['leg_'+side+'_ankle'],.15],[rigIndex['toe_'+side],.85]]));
+  }
+  let maxSumError=0,unweighted=0,maxInfluences=0;
+  for(let i=0;i<n;i++){let sum=0,count=0;for(let k=0;k<4;k++){sum+=jw[i*4+k];if(jw[i*4+k]>0)count++}maxSumError=Math.max(maxSumError,Math.abs(sum-1));if(sum<.999)unweighted++;maxInfluences=Math.max(maxInfluences,count)}
+  return {jointIndices:ji,weights:jw,metrics:{jointCount:rigJointIds.length,vertexCount:n,maxInfluences,maxWeightSumError:maxSumError,unweightedVertexCount:unweighted,weightsNormalized:maxSumError<1e-6&&unweighted===0}};
+ }
+ function createCarrier(){
+  const bindOptions={tuck:profile.bindPose.tuck,time:0,mode:profile.bindPose.mode,support:[true,true]};
+  const bindGenerated=build(bindOptions),skin=buildSkinWeights(bindGenerated);
+  const topology={schema:'bird/surface-carrier-contract@1.0',revision:'KBI2.0.0',vertexCount:bindGenerated.positions.length/3,triangleCount:bindGenerated.indices.length/3,surfaceTriangleCount:bindGenerated.surfaceIndices.length/3,anatomyTriangleCount:bindGenerated.anatomyIndices.length/3,indexHash:hashTyped(bindGenerated.indices),surfaceIndexHash:hashTyped(bindGenerated.surfaceIndices),anatomyIndexHash:hashTyped(bindGenerated.anatomyIndices),uvHash:hashTyped(bindGenerated.uv),kindHash:hashTyped(bindGenerated.kind),colorHash:hashTyped(bindGenerated.colors),parts:JSON.parse(JSON.stringify(bindGenerated.metrics.parts)),bindPose:profile.bindPose,rigJointIds:[...rigJointIds],skinning:skin.metrics,topologyFrozen:true,staticAttributeBuffers:['indices','surfaceIndices','anatomyIndices','uv','kind','colors'],dynamicAttributeBuffers:['positions','normals']};
+  let deformationCount=0,lastSignature=null;
+  function deform(o={}){
+   const dynamic=build(o),sig={vertexCount:dynamic.positions.length/3,indexHash:hashTyped(dynamic.indices),surfaceIndexHash:hashTyped(dynamic.surfaceIndices),anatomyIndexHash:hashTyped(dynamic.anatomyIndices),uvHash:hashTyped(dynamic.uv),kindHash:hashTyped(dynamic.kind)};
+   const stable=sig.vertexCount===topology.vertexCount&&sig.indexHash===topology.indexHash&&sig.surfaceIndexHash===topology.surfaceIndexHash&&sig.anatomyIndexHash===topology.anatomyIndexHash&&sig.uvHash===topology.uvHash&&sig.kindHash===topology.kindHash;
+   if(!stable)throw new Error('Bird carrier topology changed during deformation');
+   deformationCount++;lastSignature=sig;
+   dynamic.indices=bindGenerated.indices;dynamic.surfaceIndices=bindGenerated.surfaceIndices;dynamic.anatomyIndices=bindGenerated.anatomyIndices;dynamic.uv=bindGenerated.uv;dynamic.kind=bindGenerated.kind;dynamic.colors=bindGenerated.colors;
+   dynamic.bindPositions=bindGenerated.positions;dynamic.bindNormals=bindGenerated.normals;dynamic.skinJointIndices=skin.jointIndices;dynamic.skinWeights=skin.weights;
+   dynamic.carrier={topologyFrozen:true,topologyHash:topology.indexHash,contract:topology,deformationCount,lastSignature,bridgeOnly:true,fullRigMatricesApplied:false};
+   dynamic.metrics.surfaceCarrier={topologyFrozen:true,topologyHash:topology.indexHash,deformationCount,staticAttributesPreserved:true,skinWeights:skin.metrics,bridgeOnly:true,fullRigMatricesApplied:false};
+   return dynamic;
+  }
+  return {deform,topology,bindMesh:bindGenerated,bindPositions:bindGenerated.positions,bindNormals:bindGenerated.normals,skinJointIndices:skin.jointIndices,skinWeights:skin.weights,rigJointIds:[...rigJointIds],getDeformationCount:()=>deformationCount};
+ }
+
+return {build,createCarrier,rigJointIds};
+}
+function identity(){return new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1])}
+function multiply(a,b){const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];return o}
+function translation(x,y,z){const m=identity();m[12]=x;m[13]=y;m[14]=z;return m}
+function rotate(axis,a){const m=identity(),c=Math.cos(a),s=Math.sin(a);if(axis===0){m[5]=c;m[6]=s;m[9]=-s;m[10]=c}if(axis===1){m[0]=c;m[2]=-s;m[8]=s;m[10]=c}if(axis===2){m[0]=c;m[1]=s;m[4]=-s;m[5]=c}return m}
+function compose(n){const a=n.rotation.map(v=>v*Math.PI/180);return multiply(translation(...n.position),multiply(rotate(0,a[0]),multiply(rotate(1,a[1]),rotate(2,a[2]))))}
+function transformPoint(m,p,s=1){const x=p[0]*s,y=p[1]*s,z=p[2]*s;return [m[0]*x+m[4]*y+m[8]*z+m[12],m[1]*x+m[5]*y+m[9]*z+m[13],m[2]*x+m[6]*y+m[10]*z+m[14]]}
+const VERSION='2.0.0',ID='kaopu.bird.folded-axial';
+const OUTPUT_ARRAYS=Object.freeze(['positions','normals','indices','surfaceIndices','anatomyIndices','colors','uv','kind','skinJointIndices','skinWeights']);
+const LIMITS=Object.freeze({scoreBytes:262144,instances:16,depth:24,coordinate:100,vertexCount:65000});
+const CAPABILITIES=Object.freeze({id:ID,version:VERSION,abi:'KBS2',units:'m',up:'Y',forward:'Z',angles:'XYZ degrees; head/neck rad',
+ family:'折翼・长颈轴向鸟体 / Folded axial bird',
+ accepts:'kaopu.bird.resolved/2', operations:['axial-sections','fixed-length-cervical-chain','head-stations','bilateral-eye-detail','feather-tracts','two-link-leg-IK','toe-curves','palette','static-pose','idle-diagnostic'],
+ unsupported:['flight','takeoff','landing','automatic-photo-reconstruction','all-bird-species','natural-walk-validation'],
+ contract:'8 trunk sections + 6 neck samples + 8 head stations; fixed surface semantics',
+ noSpeciesSwitch:true,noEmbeddedSpeciesDefaults:true,noExternalDependencies:true});
+function fail(s){throw new Error(s)}
+function bytes(s){return new TextEncoder().encode(s).length}
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function canonical(x){if(Array.isArray(x))return '['+x.map(canonical).join(',')+']';if(x&&typeof x==='object')return '{'+Object.keys(x).sort().map(k=>JSON.stringify(k)+':'+canonical(x[k])).join(',')+'}';return JSON.stringify(x)}
+function scan(x,path='',depth=0){if(depth>LIMITS.depth)fail(path+'：嵌套过深');if(typeof x==='number'&&!Number.isFinite(x))fail(path+'：数值必须有限');if(typeof x==='function'||typeof x==='undefined')fail(path+'：只能包含数据');if(x&&typeof x==='object')for(const k of Object.keys(x)){if(['__proto__','prototype','constructor'].includes(k))fail(path+'：非法字段 '+k);scan(x[k],path+'/'+k,depth+1)}}
+function shape(x,t,path){
+ if(typeof t==='string'){if(typeof x!==t)fail(path+'：需要 '+t);return}
+ if(t.$array!==undefined){if(!Array.isArray(x))fail(path+'：需要数组');let min=t.$array,max=t.$array;
+ if(path.endsWith('/instances')){min=1;max=16}if(path.endsWith('extendedGuide')||path.endsWith('foldedGuide')){min=3;max=32}if(path.endsWith('/toes')){min=1;max=6}
+ if(x.length<min||x.length>max)fail(path+'：数组长度应为 '+(min===max?min:min+'–'+max));
+ x.forEach((v,i)=>shape(v,t.items[Math.min(i,t.items.length-1)],path+'/'+i));return}
+ if(!x||Array.isArray(x)||typeof x!=='object')fail(path+'：需要对象');
+ for(const k of Object.keys(t))if(!(k in x))fail(path+'/'+k+'：缺少必需字段');else shape(x[k],t[k],path+'/'+k);
+ for(const k of Object.keys(x))if(!(k in t))fail(path+'/'+k+'：未知字段，不会静默忽略');
+}
+function range(v,a,b,path){if(typeof v!=='number'||!Number.isFinite(v)||v<a||v>b)fail(path+'：范围 '+a+'–'+b)}
+function integer(v,a,b,path){range(v,a,b,path);if(!Number.isInteger(v))fail(path+'：需要整数')}
+function validate(input){
+ if(typeof input==='string'){if(bytes(input)>LIMITS.scoreBytes)fail('谱文件超过 256 KiB');try{input=JSON.parse(input)}catch(e){if(input.startsWith('KB1|'))fail('KB1 是旧快捷指令；请先在制谱工作台迁移为完整 KBS2 谱');fail('谱必须是有效 JSON：'+e.message)}}
+ if(!input||typeof input!=='object'||Array.isArray(input))fail('谱必须是对象');scan(input);
+ if(bytes(JSON.stringify(input))>LIMITS.scoreBytes)fail('谱文件超过 256 KiB');
+ if(input.schema!=='kaopu.bird.resolved/2')fail('只接受 kaopu.bird.resolved/2 完整谱；差异源谱请先编译');
+ if(input.instrument?.id!==ID||input.instrument?.version!==VERSION||input.instrument?.abi!=='KBS2')fail('乐器 ID / 版本 / ABI 不匹配；不自动替换');
+ for(const k of Object.keys(input))if(!['schema','instrument','id','label','construction','performance','instances','provenance'].includes(k))fail('未知谱字段 '+k);
+ if(typeof input.id!=='string'||!input.id.trim()||input.id.length>128)fail('需要 1–128 字符对象 ID');
+ if(typeof input.label!=='string'||input.label.length>256)fail('对象名称长度不能超过 256');
+ shape(input.construction,CONTRACT.construction,'/construction');shape(input.performance,CONTRACT.performance,'/performance');shape(input.instances,CONTRACT.instances,'/instances');
+ const c=input.construction,p=input.performance;
+ range(p.tuck,0,1,'收颈');range(p.time,0,3600,'时间');range(p.individualScale,.05,5,'个体尺度');
+ if(!['shape','idle'].includes(p.mode))fail('该版只支持静态姿态和 idle 诊断，不支持飞行或自然行走');
+ if(!['sine-local','flat'].includes(p.ground.type))fail('未知地面输入类型');
+ p.ground.amplitudesM.forEach(x=>range(x,-.1,.1,'地面振幅'));p.ground.frequencies.forEach(x=>range(x,0,20,'地面频率'));range(p.ground.footClearanceM,0,.02,'足底余量');
+ c.body.sections.forEach((r,i)=>{r.slice(0,2).forEach(x=>range(x,-10,10,'体轴位置'));r.slice(2).forEach(x=>range(x,.0001,1,'体轴半径'));if(i&&r[0]<=c.body.sections[i-1][0])fail('躯干截面沿 Z 必须严格递增')});
+ integer(c.neck.segmentCount,11,11,'颈部控制段数量（当前 ABI 固定）');range(c.neck.lengthM,.10,1.2,'颈长');
+ [c.neck.lateralRadiiM,c.neck.sagittalRadiiM].flat().forEach(x=>range(x,.0001,.15,'颈部半径'));
+ c.neck.extendedGuide.concat(c.neck.foldedGuide).forEach(r=>r.forEach(x=>range(x,-10,10,'颈部引导点')));
+ c.head.stations.forEach((r,i)=>{range(r[0],0,1,'头喙轴线');r.slice(1).forEach(x=>range(x,.00005,.2,'头喙半径'));if(i&&r[0]<=c.head.stations[i-1][0])fail('头喙截面轴线必须严格递增')});
+ if(c.head.stations[0][0]!==0)fail('头喙首截面从 0 开始');
+ c.legs.segmentLengthsM.forEach(x=>range(x,.05,1,'腿段长'));range(c.legs.footX,.01,.5,'足横距');c.legs.toes.forEach(t=>{range(t.len,.005,.3,'趾长');if(Math.hypot(...t.d)<.01)fail('脚趾方向不能为零')});
+ for(const [k,v] of Object.entries(c.palette))v.forEach(x=>range(x,0,1,'颜色 '+k));
+ integer(c.head.crest.count,0,8,'冠羽数量');integer(c.throat.count,1,16,'喉羽数量');integer(c.tail.count,2,24,'尾羽数量');
+ integer(c.wings.remiges.count,2,24,'飞羽数量');integer(c.wings.coverts.rows,1,6,'覆羽行数');integer(c.wings.coverts.firstCount,c.wings.coverts.rows,16,'覆羽第一行数量');integer(c.wings.scapular.count,1,16,'肩羽数量');integer(c.wings.pectoral.count,0,8,'胸羽数量');
+ range(c.motion.stridePeriodS,.25,10,'步态周期');range(c.motion.idleScanM,0,.015,'idle 幅度');range(c.motion.idleFrequency,0,2,'idle 频率');range(c.motion.walkBobM,0,.01,'躯干幅度');
+ range(c.bindPose.tuck,0,1,'绑定颈姿');if(c.bindPose.mode!=='shape'||!c.bindPose.fixedTopology)fail('绑定姿态必须为固定拓扑 shape');
+ range(c.markings.neckStreakStrength,0,1,'颈部纹理强度');range(c.markings.eyeStripeStrength,0,1,'眼纹强度');
+ // All remaining recipe coefficients must remain finite and bounded before allocation.
+ function bounded(v,path){if(typeof v==='number')range(v,-100,100,path);else if(v&&typeof v==='object')for(const [k,x] of Object.entries(v))bounded(x,path+'/'+k)}bounded(c,'construction');
+ // Conservative upper bound on expansion. Geometry uses Uint16 indices.
+ const plumeCount=2*(c.head.crest.count+c.wings.remiges.count+c.wings.coverts.rows*c.wings.coverts.firstCount+c.wings.scapular.count+c.wings.pectoral.count)+c.tail.count+c.throat.count;
+ if(10500+plumeCount*48>LIMITS.vertexCount)fail('羽毛展开超过顶点预算');
+ const ids=new Set();for(const v of input.instances){if(typeof v.id!=='string'||!v.id||v.id.length>128||ids.has(v.id))fail('实例 ID 必须非空且唯一');ids.add(v.id);v.position.forEach(x=>range(x,-100,100,'位置'));v.rotation.forEach(x=>range(x,-360,360,'角度'));range(v.scale,.05,5,'实例缩放')}
+ return clone(input);
+}
+function pose(c,p){
+ const feet=[],world=[],s=p.individualScale;
+ function ground(x,z){const a=p.ground.amplitudesM,f=p.ground.frequencies;return p.ground.type==='flat'?0:a[0]*Math.sin(x*f[0])+a[1]*Math.sin(z*f[1])+a[2]*Math.sin((x+z)*f[2])}
+ for(let side=0;side<2;side++){const x=(side?-1:1)*-c.legs.footX,z=c.legs.footZ+(side?c.legs.footStagger:-c.legs.footStagger),wx=x*s,wz=z*s,gy=ground(wx,wz),y=gy/s+p.ground.footClearanceM;feet.push([x,y,z]);world.push([wx,gy+p.ground.footClearanceM*s,wz])}
+ return {tuck:p.tuck,time:p.time,mode:p.mode,feet,support:[true,true],toeGround:(side,dx,dz)=>{const q=world[side];return (ground(q[0]+dx*s,q[2]+dz*s)-ground(q[0],q[2]))/s}};
+}
+function build(input){
+ const score=validate(input),G=createGeometry(score.construction),carrier=G.createCarrier(),mesh=carrier.deform(pose(score.construction,score.performance));
+ if(!mesh.metrics.finite||mesh.positions.length/3>LIMITS.vertexCount)fail('生成结果非有限或超过顶点预算');
+ const instances=score.instances.map(n=>({id:n.id,voice:ID,scale:score.performance.individualScale*n.scale,matrix:compose(n),mesh}));
+ return {schema:'kaopu.bird.performance/2',instrument:VERSION,score:JSON.stringify(score),resolved:score,instances,visualAcceptance:false,naturalMotionValidated:false};
+}
+function snapshot(result){const chunks=[];const text=v=>chunks.push(new TextEncoder().encode(JSON.stringify(v)));text({renderer:'source-shader-retained',instances:result.instances.length});for(const o of result.instances){text({scale:o.scale});chunks.push(new Uint8Array(o.matrix.buffer).slice());for(const key of OUTPUT_ARRAYS){const a=o.mesh[key];text([key,a.constructor.name,a.length]);chunks.push(new Uint8Array(a.buffer,a.byteOffset,a.byteLength).slice())}}return chunks}
+function equalSnapshots(a,b){return a.length===b.length&&a.every((chunk,i)=>chunk.length===b[i].length&&chunk.every((v,j)=>v===b[i][j]))}
+function fingerprint(chunks){let h=2166136261;for(const a of chunks){h=Math.imul(h^a.length,16777619);for(const v of a)h=Math.imul(h^v,16777619)}return(h>>>0).toString(16).padStart(8,'0')}
+function measure(result){const unique=new Set();let vertices=0,triangles=0,residentBytes=0;for(const o of result.instances){vertices+=o.mesh.positions.length/3;triangles+=o.mesh.surfaceIndices.length/3;for(const k of OUTPUT_ARRAYS)if(!unique.has(o.mesh[k].buffer)){unique.add(o.mesh[k].buffer);residentBytes+=o.mesh[k].byteLength}}return {scoreBytes:bytes(result.score),instances:result.instances.length,visibleTriangles:triangles,verticesIncludingDiagnostics:vertices,residentTypedArrayBytes:residentBytes,outputFingerprint:fingerprint(snapshot(result))}}
+return Object.freeze({VERSION,ID,LIMITS,capabilities:CAPABILITIES,validate,parseScore:validate,build,snapshot,equalSnapshots,fingerprint,measure,canonicalStringify:canonical,OUTPUT_ARRAYS});
+
+});
+</script>
+<script id="stageCore">/* KAOPU generic WebGL stage. Original shader retained verbatim. */
+(function(g){"use strict";
+const K=g.KaopuBirdInstrument,buildScore=K.build,measure=K.measure,snapshot=K.snapshot,equalSnapshots=K.equalSnapshots;
+function identity(){return new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1])}
+function multiply(a,b){const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];return o}
+function translation(x,y,z){const m=identity();m[12]=x;m[13]=y;m[14]=z;return m}
+function rotate(axis,a){const m=identity(),c=Math.cos(a),s=Math.sin(a);if(axis===0){m[5]=c;m[6]=s;m[9]=-s;m[10]=c}if(axis===1){m[0]=c;m[2]=-s;m[8]=s;m[10]=c}if(axis===2){m[0]=c;m[1]=s;m[4]=-s;m[5]=c}return m}
+function compose(n){const a=n.rotation.map(v=>v*Math.PI/180);return multiply(translation(...n.position),multiply(rotate(0,a[0]),multiply(rotate(1,a[1]),rotate(2,a[2]))))}
+function transformPoint(m,p,s=1){const x=p[0]*s,y=p[1]*s,z=p[2]*s;return [m[0]*x+m[4]*y+m[8]*z+m[12],m[1]*x+m[5]*y+m[9]*z+m[13],m[2]*x+m[6]*y+m[10]*z+m[14]]}
+ const vs=`attribute vec3 aP,aN,aC;attribute vec2 aUV;attribute float aK;uniform mat4 uVP,uRoot;uniform mat3 uN;uniform float uScale;varying vec3 vN,vC,vW;varying vec2 vUV;varying float vK;void main(){vec4 w=uRoot*vec4(aP*uScale,1.0);vW=w.xyz;vN=normalize(uN*aN);vC=aC;vUV=aUV;vK=aK;gl_Position=uVP*w;}`;
+ const fs=`precision highp float;varying vec3 vN,vC,vW;varying vec2 vUV;varying float vK;uniform vec3 uEye;uniform float uMode,uAlpha;void main(){vec3 n=normalize(vN);if(!gl_FrontFacing)n=-n;vec3 v=normalize(uEye-vW),l=normalize(vec3(.32,.88,.46)),f=normalize(vec3(-.74,.35,.18));float eye=step(5.5,vK)*(1.-step(7.5,vK));vec3 col=vC;if(uMode>.5&&uMode<1.5)col=vec3(.74,.74,.71);if(uMode>1.5&&uMode<2.5){col=.42+.30*cos(vec3(0.,2.,4.)+vK*.71);}if(uMode>2.5&&uMode<3.5){gl_FragColor=vec4(.045,.055,.065,1.);return;}if(uMode>3.5&&uMode<4.5)col=vec3(.54,.59,.61);if(uMode>4.5){float d=.82+.18*max(dot(n,l),0.);gl_FragColor=vec4(col*d,1.);return;}float feather=(1.-step(2.5,vK))+step(4.5,vK)*(1.-step(5.5,vK))+step(7.5,vK);float barb=.5+.5*sin(vUV.x*220.+abs(vUV.y-.5)*95.);float shaft=1.-smoothstep(.009,.021,abs(vUV.y-.5));if(uMode<.5){col*=1.+feather*(barb-.5)*.023;col+=step(4.5,vK)*(1.-step(5.5,vK))*shaft*.022;}float diffuse=max(dot(n,l),0.),fill=max(dot(n,f),0.),hemi=.72+.28*clamp(n.y*.5+.5,0.,1.);vec3 h=normalize(l+v);float spec=pow(max(dot(n,h),0.),mix(32.,86.,eye));vec3 lit=col*(.62+.43*diffuse+.13*fill)*hemi+spec*mix(.009,.32,eye)*vec3(1.,.96,.88);float fog=clamp((length(uEye-vW)-6.)/8.,0.,1.);gl_FragColor=vec4(mix(lit,vec3(.70,.77,.77),fog),uAlpha);}`;
+ function renderer(gl,helpers){
+  const {prog,attr,normalMat,rootMatrix}=helpers,P=prog(gl,vs,fs),loc={};for(const n of ['uVP','uRoot','uN','uScale','uEye','uMode','uAlpha'])loc[n]=gl.getUniformLocation(P,n);
+  const buffers={},names={positions:'aP',normals:'aN',colors:'aC',uv:'aUV',kind:'aK'};for(const n of Object.keys(names))buffers[n]=gl.createBuffer();const ibSurface=gl.createBuffer(),ibAnatomy=gl.createBuffer(),wireBuffer=gl.createBuffer();let mesh=null,wireCount=0,surfaceCount=0,anatomyCount=0,capacity=0;
+  function upload(m){const first=!mesh||m.positions.length!==capacity;mesh=m;for(const n of Object.keys(names)){gl.bindBuffer(gl.ARRAY_BUFFER,buffers[n]);if(first)gl.bufferData(gl.ARRAY_BUFFER,m[n],n==='positions'||n==='normals'?gl.DYNAMIC_DRAW:gl.STATIC_DRAW);else if(n==='positions'||n==='normals')gl.bufferSubData(gl.ARRAY_BUFFER,0,m[n])}if(first){surfaceCount=m.surfaceIndices.length;anatomyCount=m.anatomyIndices.length;gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ibSurface);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,m.surfaceIndices,gl.STATIC_DRAW);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ibAnatomy);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,m.anatomyIndices,gl.STATIC_DRAW);const e=[];for(let i=0;i<m.surfaceIndices.length;i+=3){const [a,b,c]=m.surfaceIndices.slice(i,i+3);e.push(a,b,b,c,c,a)}wireCount=e.length;gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,wireBuffer);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(e),gl.STATIC_DRAW)}capacity=m.positions.length;return m.metrics}
+  function uniforms(bird,VP,eye){gl.useProgram(P);for(const [n,an] of Object.entries(names))attr(gl,P,an,buffers[n],n==='uv'?2:n==='kind'?1:3);const M=rootMatrix(bird);gl.uniformMatrix4fv(loc.uVP,false,VP);gl.uniformMatrix4fv(loc.uRoot,false,M);gl.uniformMatrix3fv(loc.uN,false,normalMat(M));gl.uniform1f(loc.uScale,bird.baseScale||1);gl.uniform3fv(loc.uEye,eye)}
+  function draw(bird,VP,eye,state){if(!mesh)return;uniforms(bird,VP,eye);gl.disable(gl.CULL_FACE);if(state.material==='anatomy'){
+    gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);gl.uniform1f(loc.uMode,4);gl.uniform1f(loc.uAlpha,.18);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ibSurface);gl.drawElements(gl.TRIANGLES,surfaceCount,gl.UNSIGNED_SHORT,0);gl.depthMask(true);gl.disable(gl.BLEND);gl.disable(gl.DEPTH_TEST);gl.uniform1f(loc.uMode,5);gl.uniform1f(loc.uAlpha,1);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ibAnatomy);gl.drawElements(gl.TRIANGLES,anatomyCount,gl.UNSIGNED_SHORT,0);gl.enable(gl.DEPTH_TEST);return;}
+    gl.uniform1f(loc.uMode,state.material==='white'?1:state.material==='regions'?2:state.material==='silhouette'?3:0);gl.uniform1f(loc.uAlpha,1);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,state.wire?wireBuffer:ibSurface);gl.drawElements(state.wire?gl.LINES:gl.TRIANGLES,state.wire?wireCount:surfaceCount,gl.UNSIGNED_SHORT,0)}
+  return {upload,draw,getMesh:()=>mesh,metrics:()=>mesh?.metrics,dispose:()=>{for(const b of Object.values(buffers))gl.deleteBuffer(b);for(const b of [ibSurface,ibAnatomy,wireBuffer])gl.deleteBuffer(b);gl.deleteProgram(P);mesh=null}};
+ }
+function createStage(canvas){
+ if(!canvas||typeof canvas.getContext!=='function')throw new TypeError('createStage needs a canvas');
+ const gl=canvas.getContext('webgl',{alpha:false,antialias:false,preserveDrawingBuffer:true});
+ if(!gl)throw new Error('此浏览器没有可用 WebGL，请开启硬件加速或换用支持 WebGL 的浏览器');
+ let current=null,renderers=[],disposed=false,frame=0;
+ const camera={yaw:Math.PI/2,pitch:.10,distance:1.58,target:[0,.48,.04],fov:.76};
+ const state={material:'species',wire:false},listeners=[];
+ function compile(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){const message=gl.getShaderInfoLog(s);gl.deleteShader(s);throw new Error(message)}return s}
+ function prog(g,vs,fs){const p=g.createProgram(),v=compile(g.VERTEX_SHADER,vs),f=compile(g.FRAGMENT_SHADER,fs);g.attachShader(p,v);g.attachShader(p,f);g.linkProgram(p);g.deleteShader(v);g.deleteShader(f);if(!g.getProgramParameter(p,g.LINK_STATUS)){const message=g.getProgramInfoLog(p);g.deleteProgram(p);throw new Error(message)}return p}
+ function attr(g,p,name,buffer,size){const l=g.getAttribLocation(p,name);if(l<0)return;g.bindBuffer(g.ARRAY_BUFFER,buffer);g.enableVertexAttribArray(l);g.vertexAttribPointer(l,size,g.FLOAT,false,0,0)}
+ function normalMat(m){return new Float32Array([m[0],m[1],m[2],m[4],m[5],m[6],m[8],m[9],m[10]])}
+ function perspective(fov,aspect,near=.01,far=1000){const q=1/Math.tan(fov/2),m=new Float32Array(16);m[0]=q/aspect;m[5]=q;m[10]=(far+near)/(near-far);m[11]=-1;m[14]=2*far*near/(near-far);return m}
+ const normalize=v=>{const l=Math.hypot(...v)||1;return v.map(x=>x/l)};
+ const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+ function look(eye,target){const z=normalize(eye.map((v,i)=>v-target[i])),x=normalize(cross([0,1,0],z)),y=cross(z,x),m=identity();m[0]=x[0];m[1]=y[0];m[2]=z[0];m[4]=x[1];m[5]=y[1];m[6]=z[1];m[8]=x[2];m[9]=y[2];m[10]=z[2];m[12]=-x.reduce((s,v,i)=>s+v*eye[i],0);m[13]=-y.reduce((s,v,i)=>s+v*eye[i],0);m[14]=-z.reduce((s,v,i)=>s+v*eye[i],0);return m}
+ function draw(){
+  if(disposed)return;
+  const width=Math.max(1,Math.round(canvas.clientWidth*(globalThis.devicePixelRatio||1))),height=Math.max(1,Math.round(canvas.clientHeight*(globalThis.devicePixelRatio||1)));
+  if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height}
+  gl.viewport(0,0,canvas.width,canvas.height);gl.clearColor(.055,.076,.097,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.BLEND);gl.depthMask(true);
+  const cp=Math.cos(camera.pitch),eye=[camera.target[0]+Math.sin(camera.yaw)*cp*camera.distance,camera.target[1]+Math.sin(camera.pitch)*camera.distance,camera.target[2]+Math.cos(camera.yaw)*cp*camera.distance];
+  const vp=multiply(perspective(camera.fov,canvas.width/canvas.height),look(eye,camera.target));
+  for(let i=0;i<renderers.length;i++){const o=current.instances[i];renderers[i].draw({matrix:o.matrix,baseScale:o.scale},vp,eye,state)}
+ }
+ function schedule(){if(!disposed&&!frame)frame=requestAnimationFrame(()=>{frame=0;draw()})}
+ function show(result,{fit=true}={}){
+  if(disposed)throw new Error('舞台已释放');
+  const next=[];
+  try{for(const o of result.instances){const r=renderer(gl,{prog,attr,normalMat,rootMatrix:b=>b.matrix});next.push(r);r.upload(o.mesh)}}catch(e){next.forEach(r=>r.dispose());throw e}
+  renderers.forEach(r=>r.dispose());renderers=next;current=result;if(fit)fitAll();draw();return measure(result);
+ }
+ function perform(score,options){return show(buildScore(score),options)}
+ function fitAll(){
+  if(!current)return;
+  const lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity];
+  for(const o of current.instances){const a=o.mesh.positions;for(let i=0;i<a.length;i+=3){const p=transformPoint(o.matrix,[a[i],a[i+1],a[i+2]],o.scale);for(let k=0;k<3;k++){lo[k]=Math.min(lo[k],p[k]);hi[k]=Math.max(hi[k],p[k])}}}
+  camera.target=lo.map((v,i)=>(v+hi[i])/2);const h=hi.map((v,i)=>(v-lo[i])/2),r=Math.hypot(...h),aspect=Math.max(.15,canvas.clientWidth/canvas.clientHeight),half=Math.atan(Math.tan(camera.fov/2)*Math.min(1,aspect));camera.distance=Math.max(.28,1.12*r/Math.sin(half));
+ }
+ function view(name){
+  if(!['front','side','back','other','top','three','head'].includes(name))throw new Error('未知视角');
+  camera.yaw={front:0,side:Math.PI/2,back:Math.PI,other:-Math.PI/2,top:Math.PI/2,three:.78,head:Math.PI/2}[name];camera.pitch=name==='top'?1.43:.10;fitAll();
+  if(name==='head'&&current?.instances.length===1){const o=current.instances[0],p=o.mesh.metrics.landmarks.head_center;camera.target=transformPoint(o.matrix,p,o.scale);camera.target[2]+=.055*o.scale;camera.distance=.49*o.scale;camera.pitch=.03}
+  draw();
+ }
+ function setMaterial(mode){if(!['species','white','regions','silhouette','anatomy','wire'].includes(mode))throw new Error('未知显示模式');state.wire=mode==='wire';state.material=state.wire?'white':mode;draw()}
+ function verify(){if(!current)throw new Error('请先演奏谱子');const next=buildScore(current.score);return{equal:equalSnapshots(snapshot(current),snapshot(next)),...measure(next)}}
+ function on(target,type,handler,options){target.addEventListener(type,handler,options);listeners.push(()=>target.removeEventListener(type,handler,options))}
+ let drag=null;
+ on(canvas,'pointerdown',e=>{drag=[e.clientX,e.clientY];canvas.setPointerCapture(e.pointerId)});
+ on(canvas,'pointermove',e=>{if(!drag)return;camera.yaw-=(e.clientX-drag[0])*.007;camera.pitch=Math.max(-1.48,Math.min(1.48,camera.pitch+(e.clientY-drag[1])*.006));drag=[e.clientX,e.clientY];schedule()});
+ on(canvas,'pointerup',()=>drag=null);on(canvas,'pointercancel',()=>drag=null);
+ on(canvas,'wheel',e=>{e.preventDefault();camera.distance=Math.max(.12,Math.min(300,camera.distance*Math.exp(e.deltaY*.001)));schedule()},{passive:false});
+ on(canvas,'webglcontextlost',e=>{e.preventDefault();disposed=true;canvas.dispatchEvent(new CustomEvent('instrumenterror',{detail:'WebGL 上下文丢失，请重新打开播放器'}))});
+ const observer=typeof ResizeObserver==='function'?new ResizeObserver(schedule):null;observer?.observe(canvas);
+ function dispose(){if(disposed)return;disposed=true;cancelAnimationFrame(frame);observer?.disconnect();listeners.forEach(fn=>fn());renderers.forEach(r=>r.dispose());renderers=[];current=null}
+ draw();
+ return {perform,show,view,setMaterial,verify,fit:()=>{fitAll();draw()},draw,camera,getResult:()=>current,measure:()=>current?measure(current):null,dispose,gl};
+}
+
+g.KaopuBirdStage=Object.freeze({createStage});
+})(globalThis);
+</script>
+<script id="composerCore">/* Composer/compiler: project data -> resolved score. Never generates or edits mesh buffers. */
+(function(g,f){if(typeof module!=="undefined"&&module.exports)module.exports=f(require('../dist/bird-instrument.js'));else g.KaopuComposer=f(g.KaopuBirdInstrument)})(globalThis,function(K){'use strict';
+const clone=x=>JSON.parse(JSON.stringify(x));
+async function sha256(value){const text=typeof value==='string'?value:K.canonicalStringify(value);const h=await globalThis.crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+function safePath(path){if(typeof path!=='string'||!/^\/(construction|performance|instances)(\/|$)/.test(path))throw new Error('差异路径不在允许范围：'+path);const keys=path.slice(1).split('/');if(keys.some(k=>!k||['__proto__','prototype','constructor'].includes(k)))throw new Error('非法差异路径');return keys}
+function set(target,path,value){const keys=safePath(path);let q=target;for(const k of keys.slice(0,-1)){if(!q||typeof q!=='object'||!(k in q))throw new Error('差异路径不存在：'+path);q=q[k]}const last=keys.at(-1);if(!q||typeof q!=='object'||!(last in q))throw new Error('差异路径不存在：'+path);q[last]=clone(value)}
+function difference(a,b,path=''){if(K.canonicalStringify(a)===K.canonicalStringify(b))return [];
+ if(Array.isArray(a)&&Array.isArray(b)){if(a.length!==b.length)return [{path,value:clone(b)}];return b.flatMap((v,i)=>difference(a[i],v,path+'/'+i))}
+ if(a&&b&&typeof a==='object'&&typeof b==='object'&&!Array.isArray(a)&&!Array.isArray(b)){return Object.keys(b).flatMap(k=>difference(a[k],b[k],path+'/'+k))}
+ return [{path,value:clone(b)}]
+}
+async function sourceFromResolved(base,resolved,reference={intent:'',notes:'',assets:[]}){K.validate(base);K.validate(resolved);return {schema:'kaopu.bird.source/2',instrument:clone(base.instrument),base:{id:base.id,version:'1.0.0',sha256:await sha256(base)},object:{id:resolved.id,label:resolved.label},changes:['construction','performance','instances'].flatMap(k=>difference(base[k],resolved[k],'/'+k)),reference:clone(reference)}}
+async function compile(source,library){
+ if(source?.schema!=='kaopu.bird.source/2')throw new Error('不是 KBS2 差异源谱');
+ if(source.instrument?.id!==K.ID||source.instrument?.version!==K.VERSION||source.instrument?.abi!=='KBS2')throw new Error('源谱乐器版本不匹配');
+ if(!source.base||!Array.isArray(library))throw new Error('源谱需要锁定的基谱库');
+ if(!Array.isArray(source.changes)||source.changes.length>3000)throw new Error('差异条数超过预算');
+ const base=library.find(x=>x.id===source.base.id&&x.version===source.base.version);
+ if(!base)throw new Error('缺少基谱：'+source.base.id+' @ '+source.base.version);
+ if(await sha256(base.score)!==source.base.sha256)throw new Error('基谱 SHA-256 不匹配；拒绝静默换版');
+ const out=clone(base.score),seen=new Set();for(const change of source.changes){if(!change||!Object.hasOwn(change,'value'))throw new Error('差异缺少 value');const path=change.path;safePath(path);if(seen.has(path)||[...seen].some(p=>p.startsWith(path+'/')||path.startsWith(p+'/')))throw new Error('重复或重叠的差异路径：'+path);seen.add(path);set(out,path,change.value)}
+ out.id=source.object?.id;out.label=source.object?.label;
+ out.provenance={...out.provenance,baseScore:{id:source.base.id,version:source.base.version,sha256:source.base.sha256},authorship:{intent:source.reference?.intent||'',notes:source.reference?.notes||'',assets:(source.reference?.assets||[]).map(({dataUrl,...metadata})=>metadata)},visualAcceptance:false,naturalMotionValidated:false};
+ return K.validate(out);
+}
+function setBillLength(score,value){const s=score.construction.head.stations,origin=s[3][0],old=s.at(-1)[0]-origin;for(let i=4;i<s.length;i++)s[i][0]=origin+(s[i][0]-origin)*(value/old)}
+function setHeadWidth(score,value){const c=score.construction,old=Math.max(...c.head.stations.slice(0,4).map(s=>s[1]))*2,f=value/old;for(let i=0;i<4;i++)c.head.stations[i][1]*=f;c.head.eyeOffset[0]*=f;c.head.gape.lateralM=c.head.gape.lateralM.map(x=>x*f);c.head.crest.root[0]*=f;c.head.crest.rootStep[0]*=f;c.head.crest.tip[0]*=f;c.head.crest.tipStep[0]*=f}
+function setBodyWidth(score,value){const c=score.construction,old=Math.max(...c.body.sections.map(q=>q[2]))*2,f=value/old;c.body.sections.forEach(q=>q[2]*=f);c.girdle.sternumWidthM*=f;c.girdle.pelvisWidthM*=f;for(const k of ['scapula','shoulder'])c.girdle[k][0]*=f;for(const k of ['elbow','wrist','tip'])c.wings[k][0]*=f;c.wings.pectoral.rootX*=f;c.wings.pectoral.spreadX*=f;c.legs.hip[0]*=f;c.legs.footX*=f;c.throat.rootSpreadM*=f;c.throat.tipSpreadM*=f;c.tail.rootSpreadM*=f;c.tail.tipSpreadM*=f}
+function setEyeDiameter(score,value){const h=score.construction.head,f=value/(h.irisRadiiM[1]*2);for(const k of ['irisRadiiM','pupilRadiiM','glintRadiiM','pupilOffset','glintOffset'])h[k]=h[k].map(x=>x*f)}
+function setInstances(score,count,spacing=1.2){if(!Number.isInteger(count)||count<1||count>16)throw new Error('实例数量应为 1–16');score.instances=Array.from({length:count},(_,i)=>({id:'bird-'+String(i+1).padStart(3,'0'),position:[(i-(count-1)/2)*spacing,0,0],rotation:[0,0,0],scale:1}))}
+function migrateLegacy(text,base){const simple=/^KB1\|h(0(?:\.\d+)?|1(?:\.0+)?|\.\d+)?$/.exec(text.trim()),line=/^KB1\|L(\d+),([\d.]+)\{h\}$/.exec(text.trim());if(!simple&&!line)throw new Error('此迁移入口支持 KB1|h、h0–h1 与 L数量,间距{h}；复杂旧谱请在原包播放器保留查看');const out=clone(base);if(simple)out.performance.tuck=simple[1]===undefined?.4:Number(simple[1]);if(line)setInstances(out,Number(line[1]),Number(line[2]));return K.validate(out)}
+return Object.freeze({VERSION:'1.0.0',sha256,sourceFromResolved,compile,difference,clone,set,setBillLength,setHeadWidth,setBodyWidth,setEyeDiameter,setInstances,migrateLegacy});
+});
+</script>
+<script id="appCore">'use strict';
+const K=KaopuBirdInstrument,A=KaopuComposer,$=id=>document.getElementById(id);
+const BASE=JSON.parse($('baseScore').textContent),KEY='kaopu-bird-triad-r01';
+const state={draft:A.clone(BASE),source:null,resolved:null,result:null,valid:false,baseStage:null,liveStage:null,history:[],future:[],reference:{intent:'',notes:'',assets:[]},revision:0,lastReport:null};
+let timer=null,toastTimer=null;
+function toast(text,error=false){const e=$('toast');e.hidden=false;e.classList.toggle('error',error);e.textContent=text;clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.hidden=true,error?9000:4500)}
+function setValid(ok){state.valid=ok;document.querySelectorAll('.export-action').forEach(e=>e.disabled=!ok);$('dirtyBadge').textContent=ok?'谱已演奏':'草稿未通过';$('dirtyBadge').style.background=ok?'':'#4b352b';$('compileStatus').textContent=ok?'工作台 → 完整谱 → 正式乐器':'保留上一有效画面 · 当前草稿待校验'}
+function save(text,name,type='application/json'){const u=URL.createObjectURL(new Blob([text],{type})),a=document.createElement('a');a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000)}
+function safeName(){return (state.resolved?.id||'bird').replace(/[^a-zA-Z0-9_-]/g,'-').slice(0,100)||'bird'}
+function push(){state.history.push(A.clone(state.draft));if(state.history.length>50)state.history.shift();state.future=[];updateUndo()}
+function updateUndo(){$('undo').disabled=!state.history.length;$('redo').disabled=!state.future.length}
+function mutate(fn,{sync=true}={}){push();try{fn(state.draft);state.lastReport=null;if(sync)refreshControls();queueCompile()}catch(e){state.draft=state.history.pop();updateUndo();refreshControls();toast(e.message,true)}}
+function queueCompile(){clearTimeout(timer);setValid(false);state.revision++;const rev=state.revision;timer=setTimeout(()=>compileNow(rev),120)}
+function size(n){return n<1024?n+' B':(n/1024).toFixed(1)+' KiB'}
+function syncCamera(from,to){if(!$('syncCamera').checked||!from||!to)return;for(const k of ['yaw','pitch','distance','fov'])to.camera[k]=from.camera[k];to.camera.target=[...from.camera.target];to.draw()}
+function trace(source){const changes=source.changes;$('differenceCount').textContent=changes.length;$('diffList').replaceChildren();if(!changes.length){const p=document.createElement('p');p.className='hint';p.textContent='没有形态差异。当前完整谱保持原包鸟形；新增对象的修改会记录在这里。';$('diffList').append(p)}for(const item of changes.slice(0,70)){const box=document.createElement('div');box.className='diff-item';const path=document.createElement('code'),v=document.createElement('div');path.textContent=item.path;v.textContent=JSON.stringify(item.value);box.append(path,v);$('diffList').append(box)}if(changes.length>70){const p=document.createElement('p');p.className='hint';p.textContent='另有 '+(changes.length-70)+' 处差异；导出的源谱完整保留。';$('diffList').append(p)}}
+async function compileNow(rev=++state.revision){
+ clearTimeout(timer);const input=A.clone(state.draft),ref=A.clone(state.reference);setValid(false);
+ try{const start=performance.now();const source=await A.sourceFromResolved(BASE,input,ref),resolved=await A.compile(source,[{id:BASE.id,version:'1.0.0',score:BASE}]);
+ if(rev!==state.revision)return false;const result=K.build(resolved);if(rev!==state.revision)return false;
+ const m=state.liveStage.show(result,{fit:!state.result});if(!state.result)syncCamera(state.liveStage,state.baseStage);
+ state.source=source;state.resolved=resolved;state.result=result;setValid(true);
+ $('projectName').textContent=resolved.label;$('liveName').textContent=resolved.label;$('triangleCount').textContent=m.visibleTriangles.toLocaleString();$('geometryHash').textContent=m.outputFingerprint;$('buildTime').textContent=Math.round(performance.now()-start)+' ms';$('completeSize').textContent=size(new TextEncoder().encode(JSON.stringify(resolved)).length);$('replayResult').textContent='待核对';
+ $('scoreJSON').value=JSON.stringify(resolved,null,2);trace(source);
+ const md=result.instances[0].mesh.metrics;const legMm=md.maxLegSegmentErrorM*1000;
+ $('diagnosticNotice').textContent='原包形态候选；非生物学验收。'+(legMm>.05?'可见腿链长度误差 '+legMm.toFixed(2)+' mm，需复核。':'')+(md.zeroAreaTriangles?' 包含 '+md.zeroAreaTriangles+' 个退化三角形，需复核。':'')+' 飞行与自然步态未验证。';
+ try{localStorage.setItem(KEY,JSON.stringify({schema:'kaopu.bird.project/1',base:BASE,source,reference:{...ref,assets:ref.assets.map(({dataUrl,...m})=>m)}}));$('localStatus').textContent='参数已本机缓存；参考图另存项目'}catch(e){$('localStatus').textContent='本机缓存不可用，请保存项目'}
+ $('sourceStatus').textContent='基谱 '+source.base.sha256.slice(0,8)+'… · '+changesLabel(source);
+ return true;
+ }catch(e){if(rev!==state.revision)return false;setValid(false);$('compileStatus').textContent='校验失败：'+e.message;toast(e.message+'；上一有效画面保留，当前草稿不能发布。',true);return false}
+}
+function changesLabel(s){return s.changes.length+' 处差异'}
+const defs=[
+ {id:'bodyWidth',label:'躯干最大宽',unit:'m',min:.14,max:.34,step:.001,path:'body.sections[*].Rx + attached anchors',get:s=>Math.max(...s.construction.body.sections.map(q=>q[2]))*2,set:A.setBodyWidth},
+ {id:'neckLength',label:'颈链总长',unit:'m',min:.15,max:.70,step:.001,path:'neck.lengthM',get:s=>s.construction.neck.lengthM,set:(s,v)=>s.construction.neck.lengthM=v},
+ {id:'headWidth',label:'头部最大宽',unit:'m',min:.026,max:.075,step:.001,path:'head.stations[0…3] + eye offsets',get:s=>Math.max(...s.construction.head.stations.slice(0,4).map(q=>q[1]))*2,set:A.setHeadWidth},
+ {id:'billLength',label:'喙轴长度',unit:'m',min:.06,max:.24,step:.001,path:'head.stations[4…7].axis',get:s=>s.construction.head.stations.at(-1)[0]-s.construction.head.stations[3][0],set:A.setBillLength},
+ {id:'eyeDiameter',label:'虹膜竖向直径',unit:'m',min:.005,max:.018,step:.0002,path:'head.iris / pupil / glint',get:s=>s.construction.head.irisRadiiM[1]*2,set:A.setEyeDiameter},
+ {id:'tailLength',label:'尾羽轴向长度',unit:'m',min:.04,max:.22,step:.001,path:'tail.tipZ',get:s=>s.construction.tail.rootZ-s.construction.tail.tipZ,set:(s,v)=>s.construction.tail.tipZ=s.construction.tail.rootZ-v},
+ {id:'crestCount',label:'每侧冠羽数量',unit:'根',min:0,max:8,step:1,path:'head.crest.count',get:s=>s.construction.head.crest.count,set:(s,v)=>s.construction.head.crest.count=v},
+ {id:'remiges',label:'每侧飞羽数量',unit:'根',min:2,max:24,step:1,path:'wings.remiges.count',get:s=>s.construction.wings.remiges.count,set:(s,v)=>s.construction.wings.remiges.count=v}
+];
+const poseDefs=[{id:'tuck',label:'收颈程度',unit:'',min:0,max:1,step:.01,path:'performance.tuck',get:s=>s.performance.tuck,set:(s,v)=>s.performance.tuck=v},{id:'instanceScale',label:'实例等比尺度',unit:'×',min:.3,max:2,step:.01,path:'instances[*].scale',get:s=>s.instances[0].scale,set:(s,v)=>s.instances.forEach(i=>i.scale=v)},{id:'copies',label:'场景实例数',unit:'只',min:1,max:8,step:1,path:'instances[]',get:s=>s.instances.length,set:(s,v)=>A.setInstances(s,v)}];
+function makeControl(d,parent){const box=document.createElement('div');box.className='control';const top=document.createElement('div');top.className='control-top';const label=document.createElement('label');label.htmlFor=d.id+'Number';label.textContent=d.label;const num=document.createElement('input');num.type='number';num.id=d.id+'Number';num.min=d.min;num.max=d.max;num.step=d.step;const unit=document.createElement('span');unit.textContent=d.unit;top.append(label,num,unit);const range=document.createElement('input');range.type='range';range.id=d.id;range.min=d.min;range.max=d.max;range.step=d.step;range.setAttribute('aria-label',d.label);const path=document.createElement('div');path.className='path';path.textContent=d.path;box.append(top,range,path);parent.append(box);
+ function edit(e){if(e.target.value==='')return;const v=Number(e.target.value);if(!Number.isFinite(v))return;mutate(s=>d.set(s,v),{sync:false});num.value=v;range.value=v}
+ range.addEventListener('input',edit);num.addEventListener('change',edit);
+}
+function refreshControls(){for(const d of defs.concat(poseDefs)){const v=d.get(state.draft);$(d.id+'Number').value=Number(v.toFixed(d.step<.001?4:d.step<1?3:0));$(d.id).value=v}$('objectName').value=state.draft.label;$('motionMode').value=state.draft.performance.mode;$('motionTime').value=state.draft.performance.time;$('eyeStripe').checked=state.draft.construction.markings.eyeStripeStrength>0;$('neckStripe').checked=state.draft.construction.markings.neckStreakStrength>0;refreshPalette();renderSections();updateUndo()}
+function renderSections(){const box=$('sections');box.replaceChildren();for(const label of ['#','Z','Y','Rx','Ry']){const x=document.createElement('span');x.textContent=label;box.append(x)}state.draft.construction.body.sections.forEach((row,i)=>{const label=document.createElement('span');label.textContent=i+1;box.append(label);row.forEach((value,j)=>{const input=document.createElement('input');input.type='number';input.step='.001';input.value=value;input.setAttribute('aria-label','截面 '+(i+1)+' '+['Z','Y','Rx','Ry'][j]);input.onchange=()=>{if(input.value!=='')mutate(s=>s.construction.body.sections[i][j]=Number(input.value),{sync:false})};box.append(input)})})}
+function refreshPalette(){const c=state.draft.construction.palette[$('paletteKey').value],hex='#'+c.map(v=>Math.round(v*255).toString(16).padStart(2,'0')).join('');$('paletteColor').value=hex;$('paletteValue').textContent=hex.toUpperCase()}
+function escJSON(x){return JSON.stringify(x).replace(/</g,'\\u003c')}
+function playerHTML(resolved){
+ const core=$('instrumentCore').textContent,stage=$('stageCore').textContent;
+ const script=`'use strict';const K=KaopuBirdInstrument,canvas=document.getElementById('canvas'),message=document.getElementById('message');let stage;try{stage=KaopuBirdStage.createStage(canvas)}catch(e){message.textContent=e.message;throw e}let score=JSON.parse(document.getElementById('score').textContent);function play(s){const r=K.build(s);stage.show(r);score=r.resolved;document.getElementById('name').textContent=score.label;message.textContent=K.measure(r).outputFingerprint+' · '+K.measure(r).visibleTriangles.toLocaleString()+' 可见三角面 · 仅正式乐器与完整谱';window.KB2Player={getResult:()=>stage.getResult(),score,stage,verify:()=>stage.verify()}}play(score);document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>stage.view(b.dataset.view));document.getElementById('verify').onclick=()=>{try{const r=stage.verify();message.textContent=r.equal?'独立重演一致 · '+r.outputFingerprint:'不一致'}catch(e){message.textContent=e.message}};document.getElementById('import').onclick=()=>document.getElementById('file').click();document.getElementById('file').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;if(f.size>K.LIMITS.scoreBytes)throw new Error('谱文件超过预算');play(await f.text())}catch(e){message.textContent=e.message+'；上一有效画面保留'}};window.KB2PlayerReady=true;`;
+ return '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><title>KAOPU · 独立鸟类播放器</title><style>*{box-sizing:border-box}body{margin:0;background:#101923;color:#dce7ed;font:13px system-ui,sans-serif}header{padding:17px 22px;border-bottom:1px solid #34434e;display:flex;justify-content:space-between;align-items:center;gap:12px}h1{font-size:18px;margin:0 0 6px}small{color:#92a9b7}button{padding:8px 10px;background:#203440;color:#dce7ed;border:1px solid #4c6670;border-radius:4px;cursor:pointer}.tools{display:flex;flex-wrap:wrap;gap:7px}canvas{display:block;width:100%;height:calc(100dvh - 140px);min-height:350px;touch-action:none}footer{padding:14px 22px;border-top:1px solid #34434e;color:#b2c9b6;font-size:12px;line-height:1.8}#message{word-break:break-all}@media(max-width:600px){header{align-items:flex-start;flex-direction:column;padding:14px}h1{font-size:16px}canvas{height:calc(100dvh - 196px)}footer{padding:12px 14px}}</style></head><body><header><div><h1 id="name">正在读谱</h1><small>独立播放器 / KBI 2.0.0 · 没有制谱工作台 · 没有物种注册表</small></div><div class="tools"><button data-view="side">侧面</button><button data-view="front">正面</button><button data-view="head">头部</button><button id="verify">核对重演</button><button id="import">导入完整谱</button><input id="file" type="file" accept=".kscore,.json" hidden></div></header><canvas id="canvas" aria-label="独立完整谱驱动的三维鸟"></canvas><footer><div id="message">初始化</div><small>这是工程形态候选，不代表视觉或自然动作已验收。拖动旋转 · 滚轮缩放。</small></footer><script id="score" type="application/json">'+escJSON(resolved)+'</scr'+'ipt><script>'+core+'</scr'+'ipt><script>'+stage+'</scr'+'ipt><script>'+script+'</scr'+'ipt></body></html>';
+}
+async function report(){if(!state.valid)throw new Error('当前草稿尚未校验');const r=state.liveStage.verify();state.lastReport={schema:'kaopu.bird.delivery/1',createdAt:new Date().toISOString(),instrument:{id:K.ID,version:K.VERSION,sha256:await A.sha256($('instrumentCore').textContent)},scoreId:state.resolved.id,scoreSha256:await A.sha256(state.resolved),base:state.source.base,differenceCount:state.source.changes.length,actualTypedArraysEqual:r.equal,metrics:r,visualAcceptance:false,naturalMotionValidated:false,scope:K.capabilities,reference:state.reference.assets.map(({dataUrl,...x})=>x),browserUserAgent:navigator.userAgent,notes:'本页核对是在同一浏览器中新建生成结果。发布前还需独立播放器文件核对。'};$('replayResult').textContent=r.equal?'数组一致':'不一致';return state.lastReport}
+function exportWorkbench(){const copy=document.documentElement.cloneNode(true);copy.querySelector('#projectSeed')?.remove();const tag=document.createElement('script');tag.type='application/json';tag.id='projectSeed';tag.textContent=escJSON(project());copy.querySelector('#baseScore').before(tag);copy.querySelector('#toast').hidden=true;save('<!doctype html>\n'+copy.outerHTML,'KAOPU_BIRD_TRIAD_R01.html','text/html')}
+function project(){return {schema:'kaopu.bird.project/1',base:BASE,source:state.source,reference:state.reference}}
+async function loadData(file){if(!file)return;try{if(file.size>20*1024*1024)throw new Error('文件超过 20 MiB');const text=await file.text();let next,ref=null;if(text.trim().startsWith('KB1|'))next=A.migrateLegacy(text,BASE);else{const data=JSON.parse(text);if(data.schema==='kaopu.bird.resolved/2')next=K.validate(data);else if(data.schema==='kaopu.bird.source/2'){next=await A.compile(data,[{id:BASE.id,version:'1.0.0',score:BASE}]);ref=data.reference}else if(data.schema==='kaopu.bird.project/1'){if(!data.base||await A.sha256(data.base)!==await A.sha256(BASE))throw new Error('项目使用不同基谱；本版不静默替换');next=await A.compile(data.source,[{id:BASE.id,version:'1.0.0',score:BASE}]);ref=data.reference||data.source.reference}else throw new Error('不支持的谱/项目版本')}
+ push();state.draft=next;if(ref){state.reference=ref;$('intent').value=ref.intent||'';updateReference()}refreshControls();const ok=await compileNow();if(ok){state.liveStage.fit();syncCamera(state.liveStage,state.baseStage);toast('文件已导入，并由正式乐器重新生成。')}}catch(e){toast(e.message,true)}}
+function updateReference(){const a=state.reference.assets||[];const latest=a.at(-1);$('referenceCount').textContent=a.length?a.length+' 份本机参考':'原包未附实物照片';if(latest?.dataUrl){$('referencePhoto').src=latest.dataUrl;$('referencePhoto').hidden=false;$('photoMissing').hidden=true}else{$('referencePhoto').removeAttribute('src');$('referencePhoto').hidden=true;$('photoMissing').hidden=false;$('photoMissing').textContent=a.length?'缓存仅保留证据索引，请重新选择照片或导入含图项目。':'尚未添加实物参考照片'}}
+async function importReference(file){if(!file)return;try{if(!['image/png','image/jpeg','image/webp'].includes(file.type))throw new Error('参考仅支持 PNG、JPEG、WebP');if(file.size>10*1024*1024)throw new Error('单张参考图上限 10 MiB');const buf=await file.arrayBuffer(),hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',buf))].map(x=>x.toString(16).padStart(2,'0')).join('');if(state.reference.assets.some(x=>x.sha256===hash)){toast('这张参考图已经在项目中。');return}const dataUrl=await new Promise((resolve,reject)=>{const fr=new FileReader();fr.onload=()=>resolve(fr.result);fr.onerror=reject;fr.readAsDataURL(file)});const img=new Image();await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(new Error('参考图片无法解码'));img.src=dataUrl});if(img.width>16000||img.height>16000)throw new Error('参考图片尺寸过大');state.reference.assets.push({name:file.name,type:file.type,size:file.size,width:img.width,height:img.height,sha256:hash,dataUrl,evidenceStatus:'user-reference-not-measured'});updateReference();$('referenceMode').value='photo';setReferenceMode();queueCompile();toast('已加入本机参考；没有自动识图或自动造型。')}catch(e){toast(e.message,true)}}
+function setReferenceMode(){const photo=$('referenceMode').value==='photo';$('photoHolder').hidden=!photo;$('baselineCanvas').style.visibility=photo?'hidden':'visible'}
+function install(){
+ $('controls').replaceChildren();$('poseControls').replaceChildren();defs.forEach(d=>makeControl(d,$('controls')));poseDefs.forEach(d=>makeControl(d,$('poseControls')));
+ $('objectName').onchange=()=>mutate(s=>s.label=$('objectName').value);
+ $('intent').onchange=()=>{state.reference.intent=$('intent').value;queueCompile()};
+ $('paletteKey').onchange=refreshPalette;$('paletteColor').oninput=()=>{const h=$('paletteColor').value;mutate(s=>s.construction.palette[$('paletteKey').value]=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255),{sync:false});$('paletteValue').textContent=h.toUpperCase()};
+ $('eyeStripe').onchange=()=>mutate(s=>s.construction.markings.eyeStripeStrength=$('eyeStripe').checked?1:0,{sync:false});$('neckStripe').onchange=()=>mutate(s=>s.construction.markings.neckStreakStrength=$('neckStripe').checked?1:0,{sync:false});
+ $('motionMode').onchange=()=>mutate(s=>s.performance.mode=$('motionMode').value);$('motionTime').onchange=()=>mutate(s=>s.performance.time=Number($('motionTime').value));
+ $('reset').onclick=()=>{mutate(s=>{state.draft=A.clone(BASE)});toast('已恢复原包谱参数；可以撤销。')};
+ $('newProject').onclick=()=>{mutate(s=>{s.id='bird-project-'+Date.now();s.label='新鸟类项目 · 待制谱'});toast('已建立新项目。初始仍是基谱形态，尚未制作或验收新的物种。');setPanel('author')};
+ $('undo').onclick=()=>{if(!state.history.length)return;state.future.push(A.clone(state.draft));state.draft=state.history.pop();refreshControls();queueCompile()};$('redo').onclick=()=>{if(!state.future.length)return;state.history.push(A.clone(state.draft));state.draft=state.future.pop();refreshControls();queueCompile()};
+ document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!['INPUT','TEXTAREA'].includes(document.activeElement.tagName)){e.preventDefault();$(e.shiftKey?'redo':'undo').click()}});
+ document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{for(const stage of [state.baseStage,state.liveStage])stage.view(b.dataset.view);syncCamera(state.liveStage,state.baseStage);document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x===b))});
+ document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{for(const stage of [state.baseStage,state.liveStage])stage.setMaterial(b.dataset.mode);document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('active',x===b))});
+ $('fit').onclick=()=>{state.liveStage.fit();syncCamera(state.liveStage,state.baseStage)};
+ $('toggleReference').onclick=()=>{$('canvases').classList.toggle('hide-reference');$('toggleReference').textContent=$('canvases').classList.contains('hide-reference')?'显示对照':'隐藏对照';requestAnimationFrame(()=>{state.liveStage.fit();state.liveStage.draw()})};
+ for(const [id,from,to] of [['baselineCanvas','baseStage','liveStage'],['liveCanvas','liveStage','baseStage']])for(const event of ['pointermove','wheel'])$(id).addEventListener(event,()=>requestAnimationFrame(()=>syncCamera(state[from],state[to])),{passive:true});
+ $('verify').onclick=async()=>{try{const r=await report();toast(r.actualTypedArraysEqual?'完整谱重新构建通过，实际数组一致。':'重演不一致，请保存报告。',!r.actualTypedArraysEqual)}catch(e){toast(e.message,true)}};
+ $('exportResolved').onclick=()=>{if(state.valid)save(JSON.stringify(state.resolved,null,2),safeName()+'.kscore')};$('exportSource').onclick=()=>{if(state.valid)save(JSON.stringify(state.source,null,2),safeName()+'.ksource')};
+ $('exportInstrument').onclick=()=>save($('instrumentCore').textContent,'bird-instrument-KBI2.0.0.js','text/javascript');
+ $('exportPlayer').onclick=()=>{if(state.valid)save(playerHTML(state.resolved),safeName()+'-player.html','text/html')};
+ $('independent').onclick=()=>{if(!state.valid)return;const url=URL.createObjectURL(new Blob([playerHTML(state.resolved)],{type:'text/html'}));const win=window.open(url,'_blank');if(win)win.opener=null;else toast('浏览器阻止了新标签页；请使用“导出单体播放器”。',true);setTimeout(()=>URL.revokeObjectURL(url),300000)};
+ $('saveProject').onclick=()=>{if(!state.valid){toast('先修正当前谱再保存可重放项目。',true);return}save(JSON.stringify(project()),safeName()+'.kproject')};
+ $('exportReport').onclick=async()=>{try{save(JSON.stringify(await report(),null,2),safeName()+'-report.json')}catch(e){toast(e.message,true)}};
+ $('exportWorkbench').onclick=()=>{if(!state.valid)return toast('当前谱未通过校验',true);exportWorkbench()};
+ $('importData').onclick=()=>$('dataFile').click();$('dataFile').onchange=e=>loadData(e.target.files[0]);$('importReference').onclick=()=>$('referenceFile').click();$('referenceFile').onchange=e=>importReference(e.target.files[0]);$('referenceMode').onchange=setReferenceMode;
+ $('applyJSON').onclick=()=>{try{const next=K.validate($('scoreJSON').value);push();state.draft=next;refreshControls();queueCompile()}catch(e){toast(e.message+'；当前有效谱和画面未改变。',true)}};
+ document.querySelectorAll('[data-panel]').forEach(b=>b.onclick=()=>setPanel(b.dataset.panel));
+ $('instrumentSize').textContent='乐器 '+size(new TextEncoder().encode($('instrumentCore').textContent).length)+' / 不含工作台、基谱、相机';
+ document.addEventListener('dragover',e=>e.preventDefault());document.addEventListener('drop',e=>{e.preventDefault();const file=e.dataTransfer.files[0];if(file?.type.startsWith('image/'))importReference(file);else loadData(file)});
+ for(const c of [$('baselineCanvas'),$('liveCanvas')])c.addEventListener('instrumenterror',e=>{setValid(false);toast(e.detail,true)});
+}
+function setPanel(name){document.querySelector('.workspace').dataset.active=name;document.querySelectorAll('[data-panel]').forEach(b=>b.classList.toggle('active',b.dataset.panel===name));if(name==='stage')requestAnimationFrame(()=>{state.liveStage?.fit();state.baseStage?.fit();syncCamera(state.liveStage,state.baseStage)})}
+async function init(){try{
+ state.baseStage=KaopuBirdStage.createStage($('baselineCanvas'));state.liveStage=KaopuBirdStage.createStage($('liveCanvas'));state.baseStage.show(K.build(BASE));install();
+ let stored=null;try{stored=$('projectSeed')?JSON.parse($('projectSeed').textContent):JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){toast('本机项目缓存无法读取，已保留原包基线。',true)}
+ if(stored){try{if(await A.sha256(stored.base)!==await A.sha256(BASE))throw new Error('缓存基谱不匹配');state.draft=await A.compile(stored.source,[{id:BASE.id,version:'1.0.0',score:BASE}]);state.reference=stored.reference||stored.source.reference||state.reference;$('intent').value=state.reference.intent||'';updateReference()}catch(e){toast('未恢复缓存：'+e.message,true)}}
+ refreshControls();const ok=await compileNow();if(!ok)throw new Error('初始谱未通过校验');state.baseStage.view('side');state.liveStage.view('side');syncCamera(state.liveStage,state.baseStage);updateReference();
+ window.KAOPUBirdTriad={state,base:BASE,compile:compileNow,loadData,playerHTML,report,composer:A,instrument:K};window.KB2Ready=true;
+ }catch(e){$('bootError').hidden=false;$('bootError').textContent='工作台未能启动：'+e.message+'。请确认浏览器支持 WebGL 与本地加密摘要；原包不会被改写。';setValid(false);console.error(e)}}
+init();
+</script>
+</body></html>
