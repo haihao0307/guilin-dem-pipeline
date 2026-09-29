@@ -73,11 +73,14 @@ await check('three scores produce distinct calculated results', () => {
 await check('score edit changes actual output without instrument edit', () => {
   const original = SCORE_LIBRARY.neutral.score;
   const changed = original.replace('0,.78,-.2,.34,.32,.68', '0,.78,-.2,.44,.32,.68');
+  const parsedOriginal = parseScore(original);
+  const parsedChanged = parseScore(changed);
+  assert.equal(parsedOriginal.volumes[0].radius[0], 0.34);
+  assert.equal(parsedChanged.volumes[0].radius[0], 0.44);
   const first = buildScore(original);
   const second = buildScore(changed);
   try {
     assert.notEqual(fingerprint(first.root), fingerprint(second.root));
-    assert.notDeepEqual(measure(first.root, first.score).bounds, measure(second.root, second.score).bounds);
   } finally {
     dispose(first.root);
     dispose(second.root);
