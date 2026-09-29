@@ -60,7 +60,7 @@ jobs:
             echo 'External script reference found in standalone HTML.'
             exit 1
           fi
-          if grep -Eqi '<link[^>]+rel=["'"']stylesheet["'"']' "$DIST/index.html"; then
+          if grep -Eqi '<link[^>]+stylesheet' "$DIST/index.html"; then
             echo 'External stylesheet reference found in standalone HTML.'
             exit 1
           fi
