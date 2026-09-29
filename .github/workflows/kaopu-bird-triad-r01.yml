@@ -1,0 +1,57 @@
+name: KAOPU Bird Triad R01 Verify
+on:
+  push:
+    branches: [work/kaopu-bird-triad-r01-20260929]
+    paths: ['kaopu-bird-triad-r01/**']
+permissions:
+  contents: write
+concurrency:
+  group: kaopu-bird-triad-r01
+  cancel-in-progress: true
+jobs:
+  verify:
+    if: contains(github.event.head_commit.message, 'release payload')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-bird-triad-r01
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Decode self-contained workbench
+        run: |
+          python - <<'PY'
+          import gzip, base64
+          from pathlib import Path
+          p=Path('kaopu-bird-triad-r01'); (p/'output').mkdir(exist_ok=True)
+          (p/'output/index.html').write_bytes(gzip.decompress(base64.b64decode((p/'payload.gz.b64').read_text())))
+          PY
+      - name: Install isolated browser testing tools
+        run: |
+          pip install playwright==1.57.0 pillow
+          python -m playwright install --with-deps chromium
+      - name: Real browser, independent replay, and source extraction
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python kaopu-bird-triad-r01/verify.py local
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: KAOPU_BIRD_TRIAD_R01_EVIDENCE
+          path: kaopu-bird-triad-r01/output/
+          retention-days: 14
+      - name: Verify exact public bytes and live browser after coordinator promotion
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python kaopu-bird-triad-r01/verify.py public
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: KAOPU_BIRD_TRIAD_R01_PUBLIC_PROOF
+          path: kaopu-bird-triad-r01/output/PUBLICATION_PROOF.json
+          retention-days: 14
