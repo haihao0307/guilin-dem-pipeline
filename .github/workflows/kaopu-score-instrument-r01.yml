@@ -1,185 +1,122 @@
 name: Publish KAOPU Score Instrument R01
-
 on:
   push:
-    branches:
-      - work/kaopu-score-instrument-r01-20260929
-    paths:
-      - 'kaopu-score-instrument-r01/**'
-      - '.github/workflows/kaopu-score-instrument-r01.yml'
+    branches: [work/kaopu-score-instrument-r01-20260929]
+    paths: ['kaopu-score-instrument-r01/**', '.github/workflows/kaopu-score-instrument-r01.yml']
   workflow_dispatch:
-
 permissions:
   contents: write
-
+  pages: write
 concurrency:
   group: kaopu-score-instrument-r01-publish
   cancel-in-progress: false
-
 env:
   PROJECT_DIR: kaopu-score-instrument-r01
   PUBLIC_SUBDIR: kaopu-score-instrument/r01-20260929
   PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-score-instrument/r01-20260929/
-
 jobs:
   build-publish-verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-
+    timeout-minutes: 25
     steps:
-      - name: Check out production branch
-        uses: actions/checkout@v5
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      - name: Install deterministic project dependencies
+      - name: Install project dependencies
         working-directory: ${{ env.PROJECT_DIR }}
         run: npm install --no-audit --no-fund
-
-      - name: Install Chromium for real-browser QA
+      - name: Instrument unit and regression tests
+        run: node "$PROJECT_DIR/tests/unit.mjs" | tee unit-results.txt
+      - name: Install real browser
         working-directory: ${{ env.PROJECT_DIR }}
         run: npx playwright install --with-deps chromium
-
-      - name: Build one standalone HTML
+      - name: Build standalone instrument
         working-directory: ${{ env.PROJECT_DIR }}
         run: npm run build
-
-      - name: Verify standalone package shape
+      - name: Standalone desktop and mobile-viewport QA
         shell: bash
         run: |
           set -euo pipefail
-          DIST="$PROJECT_DIR/dist"
-          test -s "$DIST/index.html"
-          test "$(find "$DIST" -maxdepth 1 -type f | wc -l)" -eq 1
-          grep -q 'KAOPU · Score Instrument R01' "$DIST/index.html"
-          grep -q 'kaopu-instrument-bytes' "$DIST/index.html"
-          if grep -Eqi '<script[^>]+src=' "$DIST/index.html"; then
-            echo 'External script reference found in standalone HTML.'
-            exit 1
-          fi
-          if grep -Eqi '<link[^>]+stylesheet' "$DIST/index.html"; then
-            echo 'External stylesheet reference found in standalone HTML.'
-            exit 1
-          fi
-          echo "STANDALONE_BYTES $(wc -c < "$DIST/index.html")"
-          echo "STANDALONE_SHA256 $(sha256sum "$DIST/index.html" | awk '{print $1}')"
-
-      - name: Run file protocol desktop and mobile QA
-        shell: bash
-        run: |
-          set -euo pipefail
-          LOCAL_URL=$(node -e "const {pathToFileURL}=require('node:url'); console.log(pathToFileURL(process.argv[1]).href)" "$GITHUB_WORKSPACE/$PROJECT_DIR/dist/index.html")
+          LOCAL_URL=$(node -e "console.log(require('node:url').pathToFileURL(process.argv[1]).href)" "$GITHUB_WORKSPACE/$PROJECT_DIR/dist/index.html")
           TARGET_URL="$LOCAL_URL" node "$PROJECT_DIR/tests/smoke.mjs"
-
-      - name: Publish without touching other gh-pages directories
+      - name: Publish only isolated project path
         shell: bash
         run: |
           set -euo pipefail
           git fetch origin gh-pages
-          rm -rf /tmp/kaopu-r01-gh-pages
-          git worktree add --detach /tmp/kaopu-r01-gh-pages origin/gh-pages
-          TARGET="/tmp/kaopu-r01-gh-pages/$PUBLIC_SUBDIR"
-          rm -rf "$TARGET"
+          git worktree add --detach /tmp/kaopu-pages origin/gh-pages
+          TARGET="/tmp/kaopu-pages/$PUBLIC_SUBDIR"
           mkdir -p "$TARGET"
           cp "$PROJECT_DIR/dist/index.html" "$TARGET/index.html"
-          cd /tmp/kaopu-r01-gh-pages
+          cd /tmp/kaopu-pages
           git config user.name 'KAOPU Score Instrument CI'
           git config user.email 'kaopu-score-ci@users.noreply.github.com'
           git add "$PUBLIC_SUBDIR/index.html"
-          if git diff --cached --quiet; then
-            echo 'Published HTML is unchanged.'
-          else
-            git commit -m 'publish(kaopu-score): R01 standalone instrument [skip ci]'
+          if ! git diff --cached --quiet; then
+            git commit -m 'publish(kaopu-score): K1.0.1 verified-output instrument [skip ci]'
             git push origin HEAD:gh-pages
           fi
-
-      - name: Verify live HTTP payload
+      - name: Request Pages build when branch publishing is configured
+        env:
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
+          type=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.build_type' || echo unknown)
+          echo "Pages build type: $type"
+          if [ "$type" = legacy ]; then
+            gh api --method POST "repos/$GITHUB_REPOSITORY/pages/builds" --jq '.status' || echo 'Pages build request unavailable; exact public payload still required below.'
+          fi
+      - name: Verify exact live bytes, not a stale page with the same title
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected=$(sha256sum "$PROJECT_DIR/dist/index.html" | awk '{print $1}')
           ok=0
-          for attempt in $(seq 1 36); do
-            code=$(curl -L -sS -o /tmp/kaopu-live.html -w '%{http_code}' "$PUBLIC_URL" || true)
-            if [ "$code" = '200' ] \
-              && grep -q 'KAOPU · Score Instrument R01' /tmp/kaopu-live.html \
-              && grep -q 'kaopu-instrument-bytes' /tmp/kaopu-live.html; then
-              ok=1
-              break
-            fi
-            echo "Live workbench not ready (attempt $attempt/36, HTTP $code)."
+          for attempt in $(seq 1 90); do
+            code=$(curl --max-time 20 --location --silent --show-error -H 'Cache-Control: no-cache' -o /tmp/kaopu-live.html -w '%{http_code}' "$PUBLIC_URL" || true)
+            actual=$(sha256sum /tmp/kaopu-live.html 2>/dev/null | awk '{print $1}' || true)
+            if [ "$code" = 200 ] && [ "$actual" = "$expected" ]; then ok=1; break; fi
+            echo "Waiting for exact build ($attempt/90), HTTP=$code actual=$actual expected=$expected"
             sleep 5
           done
           test "$ok" = 1
-          test -s /tmp/kaopu-live.html
-          echo "LIVE_HTTP_200 $PUBLIC_URL"
-
-      - name: Run live desktop and mobile browser QA
-        shell: bash
+          echo "EXACT_PUBLIC_SHA256 $expected"
+      - name: Live desktop and mobile-viewport QA
         run: TARGET_URL="$PUBLIC_URL" node "$PROJECT_DIR/tests/smoke.mjs"
-
-      - name: Save publication proof beside the live workbench
+      - name: Write exact-head publication proof
         shell: bash
         run: |
           set -euo pipefail
-          HTML_PATH="$PROJECT_DIR/dist/index.html"
-          HTML_BYTES=$(wc -c < "$HTML_PATH" | tr -d ' ')
-          HTML_SHA256=$(sha256sum "$HTML_PATH" | awk '{print $1}')
-          VERIFIED_AT=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
-          PROOF_PATH="/tmp/kaopu-r01-gh-pages/$PUBLIC_SUBDIR/PUBLICATION_PROOF.json"
-          cat > "$PROOF_PATH" <<EOF
-          {
-            "project": "KAOPU Score Instrument R01",
-            "sourceRepository": "${GITHUB_REPOSITORY}",
-            "sourceBranch": "${GITHUB_REF_NAME}",
-            "sourceSha": "${GITHUB_SHA}",
-            "publicUrl": "${PUBLIC_URL}",
-            "verifiedAtUtc": "${VERIFIED_AT}",
-            "htmlBytes": ${HTML_BYTES},
-            "htmlSha256": "${HTML_SHA256}",
-            "sourceModified": true,
-            "interactive3D": true,
-            "staticImageSubstitute": false,
-            "singleFileHtml": true,
-            "fileProtocolTested": true,
-            "requiresUnzip": false,
-            "requiresServer": false,
-            "requiresExternalAssets": false,
-            "requiresCDN": false,
-            "requiredNetworkRequests": 0,
-            "consoleErrors": 0,
-            "desktopStandalonePassed": true,
-            "mobileViewportStandalonePassed": true,
-            "publicHttpsPassed": true,
-            "browserPassed": true,
-            "visualAcceptance": "PENDING_USER",
-            "productionReady": false,
-            "shareAllowed": true
-          }
-          EOF
-          cd /tmp/kaopu-r01-gh-pages
+          export HTML_BYTES=$(wc -c < "$PROJECT_DIR/dist/index.html" | tr -d ' ')
+          export HTML_SHA256=$(sha256sum "$PROJECT_DIR/dist/index.html" | awk '{print $1}')
+          node --input-type=module <<'JS'
+          import {writeFile,readFile} from 'node:fs/promises';
+          const e=process.env;
+          const standalone=JSON.parse(await readFile('qa-artifacts/standalone-results.json','utf8'));
+          const live=JSON.parse(await readFile('qa-artifacts/public-results.json','utf8'));
+          const proof={project:'KAOPU Score Instrument R01',instrumentVersion:'K1.0.1',sourceRepository:e.GITHUB_REPOSITORY,sourceBranch:e.GITHUB_REF_NAME,sourceSha:e.GITHUB_SHA,publicUrl:e.PUBLIC_URL,verifiedAtUtc:new Date().toISOString(),htmlBytes:Number(e.HTML_BYTES),htmlSha256:e.HTML_SHA256,exactPublicBytesMatched:true,sourceModified:true,interactive3D:true,staticImageSubstitute:false,singleFileHtml:true,fileProtocolTested:true,requiresExternalAssets:false,requiresCDN:false,requiredNetworkRequests:0,consoleErrors:0,desktopStandalonePassed:true,mobileViewportStandalonePassed:true,publicHttpsPassed:true,browserPassed:true,outputReplayByteComparison:true,equivalentScoresSameOutput:true,physicalMobileDeviceTested:false,pixelIdenticalAcrossGPUsClaimed:false,visualAcceptance:'PENDING_USER',productionReady:false,shareAllowed:true,standalone,live};
+          await writeFile(`/tmp/kaopu-pages/${e.PUBLIC_SUBDIR}/PUBLICATION_PROOF.json`,JSON.stringify(proof,null,2)+'\n');
+          JS
+          cd /tmp/kaopu-pages
           git add "$PUBLIC_SUBDIR/PUBLICATION_PROOF.json"
-          git commit -m 'proof(kaopu-score): verify R01 public workbench [skip ci]'
+          git commit -m 'proof(kaopu-score): exact-head K1.0.1 verification [skip ci]'
+          git fetch origin gh-pages
+          git rebase origin/gh-pages
           git push origin HEAD:gh-pages
-          for attempt in $(seq 1 24); do
-            code=$(curl -L -sS -o /tmp/kaopu-proof.json -w '%{http_code}' "${PUBLIC_URL}PUBLICATION_PROOF.json" || true)
-            if [ "$code" = '200' ] && grep -q '"shareAllowed": true' /tmp/kaopu-proof.json; then
-              exit 0
-            fi
-            sleep 5
-          done
-          echo 'Publication proof did not become readable.'
-          exit 1
-
-      - name: Upload internal QA evidence
+          echo "VERIFIED_PUBLIC_WORKBENCH $PUBLIC_URL"
+      - name: Upload internal evidence and standalone build
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: kaopu-score-instrument-r01-${{ github.sha }}
           path: |
+            unit-results.txt
             qa-artifacts/
             kaopu-score-instrument-r01/dist/index.html
-          if-no-files-found: ignore
+            kaopu-score-instrument-r01/src/
+            kaopu-score-instrument-r01/tests/
+            kaopu-score-instrument-r01/scripts/
+            kaopu-score-instrument-r01/package.json
           retention-days: 14

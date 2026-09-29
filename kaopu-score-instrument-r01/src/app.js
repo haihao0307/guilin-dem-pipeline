@@ -1,575 +1,154 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { VERSION, buildScore, dispose, measure, snapshot, equalSnapshots, byteLength } from './instrument.js';
 
-const INSTRUMENT_VERSION = 'K1.0.0';
-const MAX_MESHES = 1200;
-const MAX_REPEAT = 256;
-
-const viewport = document.querySelector('#viewport');
-const scoreInput = document.querySelector('#score');
-const playButton = document.querySelector('#play');
-const cameraButton = document.querySelector('#camera');
-const statusNode = document.querySelector('#status');
-const presetButtons = [...document.querySelectorAll('[data-score]')];
-const instrumentBytes = Number(document.querySelector('meta[name="kaopu-instrument-bytes"]')?.content || 0);
-
-const metricNodes = {
-  bytes: document.querySelector('#bytes'),
-  instrument: document.querySelector('#instrument'),
-  objects: document.querySelector('#objects'),
-  vertices: document.querySelector('#vertices'),
-  triangles: document.querySelector('#triangles'),
-  ratio: document.querySelector('#ratio'),
-  hash: document.querySelector('#hash'),
-  network: document.querySelector('#network')
-};
-
-const defaultColors = {
-  b: '#d69a5a',
-  s: '#5b9bd5',
-  c: '#6ea870',
-  n: '#b98a62',
-  t: '#c87883',
-  p: '#6f7d8c'
-};
-
+const $ = (id) => document.getElementById(id);
+const viewport = $('viewport');
+const input = $('score');
+const buttons = [...document.querySelectorAll('[data-score]')];
+const bytes = (n) => n < 1024 ? `${n} B` : `${(n / 1024).toFixed(1)} KiB`;
+const integer = (n) => n.toLocaleString('zh-CN');
+const instrumentBytes = Number(document.querySelector('meta[name="kaopu-instrument-bytes"]').content);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#101419');
 scene.fog = new THREE.Fog('#101419', 15, 38);
-
 const camera = new THREE.PerspectiveCamera(42, 1, 0.01, 500);
-camera.position.set(4.2, 3.2, 5.2);
-
 let renderer;
-try {
-  renderer = new THREE.WebGLRenderer({
-    antialias: true,
-    alpha: false,
-    powerPreference: 'high-performance'
-  });
-} catch (error) {
-  showFatal(`无法建立实时三维渲染器：${error instanceof Error ? error.message : String(error)}`);
-  throw error;
-}
-
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+try { renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' }); }
+catch (e) { $('status').textContent = `无法启动三维渲染：${e.message}`; $('status').classList.add('error'); throw e; }
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.06;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 viewport.appendChild(renderer.domElement);
-
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.dampingFactor = 0.065;
-controls.minDistance = 0.35;
-controls.maxDistance = 80;
-controls.target.set(0, 0.55, 0);
-
 scene.add(new THREE.HemisphereLight('#dceaff', '#2b251e', 1.48));
-
 const key = new THREE.DirectionalLight('#fff0d2', 4.25);
 key.position.set(4.5, 7.5, 5.2);
 key.castShadow = true;
-key.shadow.mapSize.set(2048, 2048);
-key.shadow.camera.left = -7;
-key.shadow.camera.right = 7;
-key.shadow.camera.top = 7;
-key.shadow.camera.bottom = -7;
-key.shadow.camera.near = 0.1;
-key.shadow.camera.far = 32;
+key.shadow.mapSize.set(1024, 1024);
+Object.assign(key.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: 0.1, far: 32 });
 scene.add(key);
-
 const rim = new THREE.DirectionalLight('#90baff', 1.42);
 rim.position.set(-4.5, 3.2, -5.5);
 scene.add(rim);
-
-const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(200, 200),
-  new THREE.ShadowMaterial({ color: '#000000', opacity: 0.32 })
-);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.ShadowMaterial({ opacity: 0.32 }));
 ground.rotation.x = -Math.PI / 2;
 ground.position.y = -0.002;
 ground.receiveShadow = true;
 scene.add(ground);
-
 const grid = new THREE.GridHelper(20, 20, '#697481', '#303741');
 grid.position.y = 0.001;
-for (const material of Array.isArray(grid.material) ? grid.material : [grid.material]) {
-  material.transparent = true;
-  material.opacity = 0.52;
-}
+grid.material.transparent = true;
+grid.material.opacity = 0.5;
 scene.add(grid);
 
-let activeRoot = new THREE.Group();
-activeRoot.name = 'KAOPU_SCORE_OUTPUT';
-scene.add(activeRoot);
-let lastBounds = null;
-
-function showFatal(message) {
-  viewport.innerHTML = `<div style="padding:24px;color:#ff9b9b;font:14px/1.6 system-ui">${escapeHtml(message)}</div>`;
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
-}
-
-function setStatus(message, isError = false) {
-  statusNode.textContent = message;
-  statusNode.classList.toggle('error', isError);
-}
-
-function splitTopLevel(source, delimiter = ';') {
-  const parts = [];
-  let depth = 0;
-  let start = 0;
-
-  for (let index = 0; index < source.length; index += 1) {
-    const char = source[index];
-    if (char === '{') depth += 1;
-    if (char === '}') depth -= 1;
-    if (depth < 0) throw new Error(`第 ${index + 1} 位出现多余的 }`);
-
-    if (char === delimiter && depth === 0) {
-      parts.push(source.slice(start, index));
-      start = index + 1;
-    }
-  }
-
-  if (depth !== 0) throw new Error('花括号没有闭合');
-  parts.push(source.slice(start));
-  return parts.map((part) => part.trim()).filter(Boolean);
-}
-
-function parseNumberList(text, defaults, label, options = {}) {
-  const value = text.trim();
-  if (!value) return [...defaults];
-
-  const rawParts = value.split(',').map((part) => part.trim());
-  if (rawParts.some((part) => part === '')) throw new Error(`${label} 中存在空参数`);
-  if (rawParts.length > defaults.length) throw new Error(`${label} 最多允许 ${defaults.length} 个参数`);
-
-  const parsed = rawParts.map((part) => Number(part));
-  if (parsed.some((number) => !Number.isFinite(number))) throw new Error(`${label} 必须是有限数字`);
-
-  if (options.uniform && parsed.length === 1) return defaults.map(() => parsed[0]);
-
-  const output = [...defaults];
-  parsed.forEach((number, index) => {
-    output[index] = number;
-  });
-  return output;
-}
-
-function positive(value, label, minimum = 0.0001) {
-  if (value < minimum) throw new Error(`${label} 必须大于 ${minimum}`);
-  return value;
-}
-
-function clamp01(value, label) {
-  if (value < 0 || value > 1) throw new Error(`${label} 必须在 0 到 1 之间`);
-  return value;
-}
-
-function parseSections(token) {
-  const markers = new Set(['#', '!', '@', '/', '%']);
-  const sections = { dims: '' };
-  let active = 'dims';
-  let start = 1;
-
-  for (let index = 1; index <= token.length; index += 1) {
-    const char = token[index];
-    const boundary = index === token.length || markers.has(char);
-    if (!boundary) continue;
-
-    sections[active] = token.slice(start, index).trim();
-    if (index < token.length) {
-      active = char;
-      if (Object.hasOwn(sections, active)) throw new Error(`属性 ${active} 重复出现`);
-      start = index + 1;
-    }
-  }
-
-  return sections;
-}
-
-function validateColor(raw, fallback) {
-  if (!raw) return fallback;
-  const normalized = raw.startsWith('#') ? raw : `#${raw}`;
-  if (!/^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/.test(normalized)) {
-    throw new Error(`颜色 ${normalized} 不是 3 位或 6 位十六进制颜色`);
-  }
-  return normalized;
-}
-
-function primitiveDefaults(shape) {
-  switch (shape) {
-    case 'b': return [1, 1, 1];
-    case 's': return [0.5];
-    case 'c': return [0.5, 1];
-    case 'n': return [0.5, 1];
-    case 't': return [0.65, 0.18];
-    case 'p': return [1, 1];
-    default: throw new Error(`K1 不认识几何 ${shape}`);
-  }
-}
-
-function createGeometry(shape, dimensions) {
-  let geometry;
-
-  switch (shape) {
-    case 'b': {
-      const width = positive(dimensions[0], '方体宽');
-      const height = positive(dimensions[1], '方体高');
-      const depth = positive(dimensions[2], '方体深');
-      geometry = new THREE.BoxGeometry(width, height, depth, 1, 1, 1);
-      geometry.translate(0, height / 2, 0);
-      break;
-    }
-    case 's': {
-      const radius = positive(dimensions[0], '球体半径');
-      geometry = new THREE.SphereGeometry(radius, 40, 24);
-      geometry.translate(0, radius, 0);
-      break;
-    }
-    case 'c': {
-      const radius = positive(dimensions[0], '圆柱半径');
-      const height = positive(dimensions[1], '圆柱高度');
-      geometry = new THREE.CylinderGeometry(radius, radius, height, 40, 1, false);
-      geometry.translate(0, height / 2, 0);
-      break;
-    }
-    case 'n': {
-      const radius = positive(dimensions[0], '圆锥半径');
-      const height = positive(dimensions[1], '圆锥高度');
-      geometry = new THREE.ConeGeometry(radius, height, 40, 1, false);
-      geometry.translate(0, height / 2, 0);
-      break;
-    }
-    case 't': {
-      const radius = positive(dimensions[0], '圆环主半径');
-      const tube = positive(dimensions[1], '圆环管半径');
-      if (tube >= radius) throw new Error('圆环管半径必须小于主半径');
-      geometry = new THREE.TorusGeometry(radius, tube, 20, 64);
-      geometry.translate(0, radius + tube, 0);
-      break;
-    }
-    case 'p': {
-      const width = positive(dimensions[0], '平面宽度');
-      const depth = positive(dimensions[1], '平面深度');
-      geometry = new THREE.PlaneGeometry(width, depth, 1, 1);
-      geometry.rotateX(-Math.PI / 2);
-      break;
-    }
-    default:
-      throw new Error(`未知几何 ${shape}`);
-  }
-
-  geometry.computeVertexNormals();
-  geometry.computeBoundingBox();
-  geometry.computeBoundingSphere();
-  return geometry;
-}
-
-function addPrimitive(token, parent, state) {
-  const shape = token[0]?.toLowerCase();
-  if (!shape || !Object.hasOwn(defaultColors, shape)) throw new Error(`节点“${token}”没有有效的几何字母`);
-
-  const sections = parseSections(token);
-  const dimensions = parseNumberList(sections.dims, primitiveDefaults(shape), `${shape} 尺寸`);
-  const materialParams = parseNumberList(sections['!'] || '', [0.66, 0.06], '材质');
-  const position = parseNumberList(sections['@'] || '', [0, 0, 0], '位置');
-  const rotation = parseNumberList(sections['/'] || '', [0, 0, 0], '旋转');
-  const scale = parseNumberList(sections['%'] || '', [1, 1, 1], '缩放', { uniform: true });
-
-  scale.forEach((value) => positive(value, '缩放'));
-  const roughness = clamp01(materialParams[0], '粗糙度');
-  const metalness = clamp01(materialParams[1], '金属度');
-  const color = validateColor(sections['#'], defaultColors[shape]);
-
-  const geometry = createGeometry(shape, dimensions);
-  const material = new THREE.MeshStandardMaterial({
-    color,
-    roughness,
-    metalness,
-    side: shape === 'p' ? THREE.DoubleSide : THREE.FrontSide
-  });
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.name = `${shape.toUpperCase()}_${state.meshes + 1}`;
-  mesh.position.fromArray(position);
-  mesh.rotation.set(...rotation.map((value) => THREE.MathUtils.degToRad(value)));
-  mesh.scale.fromArray(scale);
-  mesh.castShadow = shape !== 'p';
-  mesh.receiveShadow = true;
-  parent.add(mesh);
-
-  state.meshes += 1;
-  if (state.meshes > MAX_MESHES) throw new Error(`单次演奏最多生成 ${MAX_MESHES} 个几何对象`);
-}
-
-function findClosingBrace(token, openingIndex) {
-  let depth = 0;
-  for (let index = openingIndex; index < token.length; index += 1) {
-    if (token[index] === '{') depth += 1;
-    if (token[index] === '}') depth -= 1;
-    if (depth === 0) return index;
-  }
-  return -1;
-}
-
-function addOperator(token, parent, state) {
-  const type = token[0].toUpperCase();
-  const opening = token.indexOf('{');
-  if (opening < 0) throw new Error(`${type} 算子缺少 {子谱}`);
-  const closing = findClosingBrace(token, opening);
-  if (closing < 0) throw new Error(`${type} 算子的花括号没有闭合`);
-  if (closing !== token.length - 1) throw new Error(`${type} 算子的 } 后面存在多余内容`);
-
-  const header = token.slice(1, opening).trim();
-  const childSource = token.slice(opening + 1, closing).trim();
-  if (!childSource) throw new Error(`${type} 算子的子谱不能为空`);
-
-  const args = header ? header.split(',').map((part) => Number(part.trim())) : [];
-  if (args.some((number) => !Number.isFinite(number))) throw new Error(`${type} 算子参数必须是数字`);
-
-  const rawCount = args[0] ?? 6;
-  if (!Number.isInteger(rawCount)) throw new Error(`${type} 数量必须是整数`);
-  const count = rawCount;
-  if (count < 1 || count > MAX_REPEAT) throw new Error(`${type} 数量必须在 1 到 ${MAX_REPEAT} 之间`);
-
-  if (type === 'A') {
-    const radius = positive(args[1] ?? 1, '环阵半径');
-    for (let index = 0; index < count; index += 1) {
-      const angle = (index / count) * Math.PI * 2;
-      const slot = new THREE.Group();
-      slot.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
-      slot.rotation.y = -angle;
-      parent.add(slot);
-      parseSequence(childSource, slot, state);
-    }
-    return;
-  }
-
-  if (type === 'L') {
-    const spacing = positive(args[1] ?? 0.5, '线阵间距');
-    const center = (count - 1) / 2;
-    for (let index = 0; index < count; index += 1) {
-      const slot = new THREE.Group();
-      slot.position.x = (index - center) * spacing;
-      parent.add(slot);
-      parseSequence(childSource, slot, state);
-    }
-    return;
-  }
-
-  throw new Error(`未知逻辑算子 ${type}`);
-}
-
-function parseNode(token, parent, state) {
-  const type = token[0]?.toUpperCase();
-  if (type === 'A' || type === 'L') addOperator(token, parent, state);
-  else addPrimitive(token, parent, state);
-}
-
-function parseSequence(source, parent, state) {
-  const nodes = splitTopLevel(source);
-  if (nodes.length === 0) throw new Error('谱子中没有可演奏节点');
-  for (const node of nodes) parseNode(node, parent, state);
-}
-
-function parseScore(rawScore) {
-  const score = rawScore.trim();
-  if (!score) throw new Error('谱子不能为空');
-
-  const separator = score.indexOf('|');
-  if (separator < 0) throw new Error('谱子必须以 K1| 开始');
-  const version = score.slice(0, separator).trim();
-  if (version !== 'K1') throw new Error(`当前乐器只支持 K1，收到的是 ${version || '空版本'}`);
-
-  const body = score.slice(separator + 1).trim();
-  if (!body) throw new Error('K1| 后面没有对象节点');
-
-  const root = new THREE.Group();
-  root.name = 'KAOPU_SCORE_OUTPUT';
-  const state = { meshes: 0 };
-
-  try {
-    parseSequence(body, root, state);
-    root.updateMatrixWorld(true);
-    return { score, root, meshCount: state.meshes };
-  } catch (error) {
-    disposeRoot(root);
-    throw error;
-  }
-}
-
-function disposeRoot(root) {
-  root.traverse((object) => {
-    if (!object.isMesh) return;
-    object.geometry?.dispose();
-    if (Array.isArray(object.material)) object.material.forEach((material) => material.dispose());
-    else object.material?.dispose();
-  });
-}
-
-function collectMetrics(root, score) {
-  let objects = 0;
-  let vertices = 0;
-  let triangles = 0;
-
-  root.traverse((object) => {
-    if (!object.isMesh) return;
-    objects += 1;
-    const position = object.geometry.getAttribute('position');
-    vertices += position?.count ?? 0;
-    triangles += object.geometry.index ? object.geometry.index.count / 3 : (position?.count ?? 0) / 3;
-  });
-
-  const bytes = new TextEncoder().encode(score).length;
-  return {
-    bytes,
-    objects,
-    vertices: Math.round(vertices),
-    triangles: Math.round(triangles),
-    ratio: bytes > 0 ? triangles / bytes : 0,
-    hash: fnv1a(`${INSTRUMENT_VERSION}|${score}`)
-  };
-}
-
-function fnv1a(value) {
-  const bytes = new TextEncoder().encode(value);
-  let hash = 0x811c9dc5;
-  for (const byte of bytes) {
-    hash ^= byte;
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return (hash >>> 0).toString(16).padStart(8, '0').toUpperCase();
-}
-
-function formatInteger(value) {
-  return new Intl.NumberFormat('zh-CN').format(value);
-}
-
-function formatBytes(value) {
-  if (value < 1024) return `${formatInteger(value)} B`;
-  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
-  return `${(value / (1024 * 1024)).toFixed(2)} MB`;
-}
-
-function updateMetrics(metrics) {
-  metricNodes.bytes.textContent = formatBytes(metrics.bytes);
-  metricNodes.instrument.textContent = formatBytes(instrumentBytes);
-  metricNodes.objects.textContent = formatInteger(metrics.objects);
-  metricNodes.vertices.textContent = formatInteger(metrics.vertices);
-  metricNodes.triangles.textContent = formatInteger(metrics.triangles);
-  metricNodes.ratio.textContent = `${metrics.ratio.toFixed(metrics.ratio >= 100 ? 0 : 1)}×`;
-  metricNodes.hash.textContent = metrics.hash;
-  metricNodes.network.textContent = '0';
-}
-
-function updatePresetState(score) {
-  for (const button of presetButtons) button.setAttribute('aria-pressed', String(button.dataset.score === score));
-}
-
-function computeBounds(root) {
-  root.updateMatrixWorld(true);
-  const box = new THREE.Box3().setFromObject(root);
-  if (box.isEmpty()) throw new Error('生成结果没有有效包围盒');
-  const sphere = box.getBoundingSphere(new THREE.Sphere());
-  if (!Number.isFinite(sphere.radius) || sphere.radius <= 0) throw new Error('生成结果尺寸无效');
-  return { box, sphere };
-}
-
-function fitCamera(bounds = lastBounds) {
-  if (!bounds) return;
-  const { sphere } = bounds;
-  const radius = Math.max(sphere.radius, 0.25);
-  const halfFov = THREE.MathUtils.degToRad(camera.fov * 0.5);
-  const distance = (radius / Math.tan(halfFov)) * 1.35;
-  const direction = new THREE.Vector3(1.25, 0.86, 1.45).normalize();
-  camera.position.copy(sphere.center).addScaledVector(direction, distance);
-  camera.near = Math.max(distance / 500, 0.005);
-  camera.far = Math.max(distance * 80, 80);
-  camera.updateProjectionMatrix();
+let current = null;
+let currentMetrics = null;
+let lastError = null;
+let draft = false;
+let frames = 0;
+const status = (text, error = false) => { $('status').textContent = text; $('status').classList.toggle('error', error); };
+function fit() {
+  if (!current) return;
+  const sphere = new THREE.Box3().setFromObject(current.root).getBoundingSphere(new THREE.Sphere());
+  const radius = Math.max(sphere.radius, 0.1);
+  const vertical = THREE.MathUtils.degToRad(camera.fov / 2);
+  const horizontal = Math.atan(Math.tan(vertical) * camera.aspect);
+  const distance = radius / Math.sin(Math.min(vertical, horizontal)) * 1.15;
   controls.target.copy(sphere.center);
-  controls.minDistance = Math.max(radius * 0.2, 0.12);
-  controls.maxDistance = Math.max(radius * 18, 20);
-  controls.update();
-}
-
-function playScore({ resetCamera = true } = {}) {
-  let parsed;
-  try {
-    parsed = parseScore(scoreInput.value);
-    const bounds = computeBounds(parsed.root);
-    const metrics = collectMetrics(parsed.root, parsed.score);
-
-    scene.remove(activeRoot);
-    disposeRoot(activeRoot);
-    activeRoot = parsed.root;
-    scene.add(activeRoot);
-    lastBounds = bounds;
-
-    updateMetrics(metrics);
-    updatePresetState(parsed.score);
-    setStatus(`演奏完成：${formatBytes(metrics.bytes)} 谱子展开为 ${formatInteger(metrics.objects)} 个对象、${formatInteger(metrics.triangles)} 个三角面。`);
-    if (resetCamera) fitCamera(bounds);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    setStatus(`谱子未执行：${message}`, true);
-  }
-}
-
-function updateDraftByteCount() {
-  const score = scoreInput.value.trim();
-  metricNodes.bytes.textContent = formatBytes(new TextEncoder().encode(score).length);
-  updatePresetState(score);
-  setStatus('谱子已修改，按“演奏谱子”生成新的三维结果。');
-}
-
-for (const button of presetButtons) {
-  button.addEventListener('click', () => {
-    scoreInput.value = button.dataset.score || '';
-    playScore();
-  });
-}
-
-playButton.addEventListener('click', () => playScore());
-cameraButton.addEventListener('click', () => fitCamera());
-scoreInput.addEventListener('input', updateDraftByteCount);
-scoreInput.addEventListener('keydown', (event) => {
-  if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-    event.preventDefault();
-    playScore();
-  }
-});
-
-const resizeObserver = new ResizeObserver(() => {
-  const width = Math.max(viewport.clientWidth, 1);
-  const height = Math.max(viewport.clientHeight, 1);
-  renderer.setSize(width, height, false);
-  camera.aspect = width / height;
+  camera.position.copy(sphere.center).addScaledVector(new THREE.Vector3(1.25, 0.86, 1.45).normalize(), distance);
+  camera.near = Math.max(distance / 2000, 0.001);
+  camera.far = Math.max(distance * 80, 80);
+  controls.minDistance = radius * 0.15;
+  controls.maxDistance = Math.max(distance * 8, 20);
+  scene.fog.near = Math.max(distance * 2, 15);
+  scene.fog.far = Math.max(distance * 6, 38);
   camera.updateProjectionMatrix();
-});
-resizeObserver.observe(viewport);
-
-renderer.setAnimationLoop(() => {
   controls.update();
-  renderer.render(scene, camera);
-});
-
-window.__KAOPU_R01__ = {
-  version: INSTRUMENT_VERSION,
-  playScore: (score) => {
-    scoreInput.value = score;
-    playScore();
+}
+function updateMetrics() {
+  const m = currentMetrics;
+  $('bytes').textContent = bytes(m.bytes);
+  $('instrument').textContent = bytes(instrumentBytes);
+  $('objects').textContent = integer(m.objects);
+  $('vertices').textContent = integer(m.vertices);
+  $('triangles').textContent = integer(m.triangles);
+  $('ratio').textContent = `${(m.triangles / m.bytes).toFixed(1)} 面/B`;
+  $('hash').textContent = m.hash;
+  $('network').textContent = '0';
+  $('draft').textContent = `已演奏 ${bytes(m.bytes)} · 几何缓冲区 ${bytes(m.geometryBytes)}`;
+  buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.score === current.score)));
+}
+function play(text = input.value) {
+  let candidate = null;
+  try {
+    candidate = buildScore(text);
+    const box = new THREE.Box3().setFromObject(candidate.root);
+    if (![...box.min.toArray(), ...box.max.toArray()].every(Number.isFinite)) throw new Error('生成结果超出数值范围');
+    const metrics = measure(candidate.root, candidate.score);
+    if (current) { scene.remove(current.root); dispose(current.root); }
+    current = candidate;
+    currentMetrics = metrics;
+    scene.add(current.root);
+    draft = false;
+    lastError = null;
+    $('verify').disabled = false;
+    updateMetrics();
+    fit();
+    status(`演奏完成：${bytes(metrics.bytes)} 谱子 → ${metrics.objects} 个对象。`);
+    return true;
+  } catch (e) {
+    if (candidate && candidate !== current) dispose(candidate.root);
+    lastError = e.message;
+    status(`谱子未执行：${e.message}。保留上次有效结果。`, true);
+    return false;
   }
+}
+function verify() {
+  if (!current || draft) { status('先演奏当前草稿，再校验结果。', true); return false; }
+  const before = snapshot(current.root);
+  let rebuilt;
+  try {
+    rebuilt = buildScore(current.score);
+    const passed = equalSnapshots(before, snapshot(rebuilt.root));
+    status(passed ? '重演校验通过：顶点、法线、UV、索引、世界变换和材质逐项一致。' : '重演校验失败：实际输出不一致。', !passed);
+    return passed;
+  } finally { if (rebuilt) dispose(rebuilt.root); }
+}
+$('play').onclick = () => play();
+$('camera').onclick = fit;
+$('verify').onclick = verify;
+$('copy').onclick = async () => {
+  try { await navigator.clipboard.writeText(input.value.trim()); status('谱子已复制。只需这串文本和同版本乐器即可复述。'); }
+  catch { input.focus(); input.select(); status('谱子已选中，可以直接复制。'); }
 };
-
-playScore();
+for (const b of buttons) b.onclick = () => { input.value = b.dataset.score; play(); };
+input.addEventListener('input', () => {
+  draft = !current || input.value.trim() !== current.score;
+  $('verify').disabled = draft;
+  $('draft').textContent = `草稿 ${bytes(byteLength(input.value.trim()))}；下方账本仍对应已演奏结果。`;
+  status('谱子已修改。按“演奏谱子”应用；三维结果尚未改变。');
+});
+input.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); play(); } });
+function resize() {
+  renderer.setSize(Math.max(viewport.clientWidth, 1), Math.max(viewport.clientHeight, 1), false);
+  camera.aspect = Math.max(viewport.clientWidth, 1) / Math.max(viewport.clientHeight, 1);
+  camera.updateProjectionMatrix();
+  fit();
+}
+new ResizeObserver(resize).observe(viewport);
+resize();
+renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); frames++; });
+window.__KAOPU_R01__ = {
+  version: VERSION,
+  playScore: (text) => { input.value = text; return play(text); },
+  verify,
+  metrics: () => ({ ...currentMetrics }),
+  state: () => ({ error: lastError, draft, frames, camera: camera.position.toArray(), calls: renderer.info.render.calls, geometries: renderer.info.memory.geometries }),
+  bounds: () => { const b = new THREE.Box3().setFromObject(current.root); return { min: b.min.toArray(), max: b.max.toArray() }; }
+};
+play();
