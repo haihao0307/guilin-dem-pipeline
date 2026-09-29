@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="kaopu-version" content="K2.0.0">
+<meta name="kaopu-workbench-bytes" content="__WORKBENCH_BYTES__">
+<meta name="kaopu-instrument-file-bytes" content="__INSTRUMENT_FILE_BYTES__">
+<meta name="kaopu-instrument-core-bytes" content="__INSTRUMENT_CORE_BYTES__">
+<meta name="kaopu-source-sha" content="__SOURCE_SHA__">
+<link rel="icon" href="data:,">
+<title>KAOPU · Spatial Score Instrument R02</title>
+<style>
+:root{color-scheme:dark;--bg:#080b0f;--panel:#11161c;--soft:#1c242d;--line:#ffffff1c;--line2:#ffffff3a;--text:#f3f6f8;--muted:#98a5b2;--accent:#e4bb66;--ok:#8fd8af;--danger:#ff9898;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif}*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--text)}button,textarea{font:inherit}button{touch-action:manipulation}#app{width:100%;height:100%;display:grid;grid-template-columns:minmax(330px,390px) 1fr}.panel{height:100%;overflow:auto;padding:22px 20px 28px;background:linear-gradient(180deg,#151b22 0,#0f141a 100%);border-right:1px solid var(--line)}.eyebrow{display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--muted);font-size:10px;letter-spacing:.11em;text-transform:uppercase}.badge{padding:4px 8px;border:1px solid var(--line2);border-radius:999px;color:var(--accent);white-space:nowrap}h1{margin:13px 0 8px;font-size:34px;line-height:1.04;letter-spacing:-.045em}.lead{margin:0 0 18px;color:var(--muted);font-size:12.5px;line-height:1.7}.lead strong{color:var(--text);font-weight:650}.section{margin:18px 0 8px;color:var(--muted);font-size:10.5px;letter-spacing:.09em}.presets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.preset,.secondary,.primary,.download{min-height:40px;padding:8px 9px;border:1px solid var(--line);border-radius:9px;background:var(--soft);color:var(--text);cursor:pointer;transition:120ms ease}.preset:hover,.secondary:hover,.download:hover{border-color:var(--line2);background:#293440}.preset[aria-pressed=true]{border-color:var(--accent);color:var(--accent)}.primary{border-color:transparent;background:var(--accent);color:#171108;font-weight:720}.primary:hover{filter:brightness(1.06)}button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}button:disabled{opacity:.42;cursor:default}.score-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:7px}.score-name{font-size:14px;font-weight:650}.score-note{margin-top:3px;color:var(--muted);font-size:10.5px;line-height:1.45}.score-byte-pill{flex:0 0 auto;padding:4px 7px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font:10px/1.2 Consolas,monospace}textarea{width:100%;min-height:138px;resize:vertical;padding:12px;border:1px solid var(--line);border-radius:9px;outline:none;background:#06090c;color:#f4dfad;font:12px/1.65 Consolas,"SFMono-Regular",monospace;word-break:break-all}textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px #e4bb6616}.actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.wide{grid-column:1/-1}.download{background:#26313b;border-color:#d6aa5755;color:#f5dba8}.status{min-height:37px;margin:8px 0 0;color:var(--ok);font-size:11.5px;line-height:1.55}.status.error{color:var(--danger)}.draft{min-height:17px;margin:5px 0;color:var(--muted);font-size:10.5px}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:7px}.metric{min-width:0;padding:10px 11px;border:1px solid var(--line);border-radius:9px;background:#070a0e88}.metric span{display:block;overflow:hidden;color:var(--muted);font-size:9.8px;text-overflow:ellipsis;white-space:nowrap}.metric strong{display:block;margin-top:3px;overflow:hidden;font-size:16px;font-weight:650;text-overflow:ellipsis;white-space:nowrap}.hint,details{color:var(--muted);font-size:10.8px;line-height:1.75}.hint{margin:10px 0}.hint strong{color:var(--text)}details{margin-top:15px;padding-top:12px;border-top:1px solid var(--line)}summary{cursor:pointer;color:var(--text)}code{color:#f1d18b}.world{position:relative;min-width:0;min-height:0;overflow:hidden;background:radial-gradient(circle at 50% 27%,#27313c 0,#11171e 45%,#070a0e 100%)}#viewport{position:absolute;inset:0;touch-action:none}#viewport canvas{display:block;width:100%;height:100%}.world-label{position:absolute;left:16px;top:15px;z-index:2;max-width:min(420px,70%);padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#070a0db8;backdrop-filter:blur(12px);pointer-events:none}.world-label strong{display:block;font-size:12px}.world-label span{display:block;margin-top:3px;color:var(--muted);font-size:10px;line-height:1.45}.world-note{position:absolute;right:14px;bottom:13px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#070a0db8;color:var(--muted);font-size:10.5px;pointer-events:none;backdrop-filter:blur(10px)}.world-note strong{color:var(--text)}@media(max-width:760px){html,body{overflow:auto}#app{height:auto;min-height:100%;grid-template-columns:1fr;grid-template-rows:58vh auto}.world{grid-row:1}.panel{grid-row:2;height:auto;overflow:visible;padding:18px 16px calc(25px + env(safe-area-inset-bottom));border-top:1px solid var(--line);border-right:0}.world-label{left:9px;top:9px;max-width:78%;padding:8px 9px}.world-note{right:8px;bottom:8px}.presets{grid-template-columns:repeat(2,1fr)}textarea{min-height:120px}}@media(max-width:390px){h1{font-size:30px}.metrics{grid-template-columns:1fr 1fr}.actions{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<main id="app">
+<aside class="panel" aria-label="谱子与乐器控制台">
+<div class="eyebrow"><span>KAOPU / SCORE → INSTRUMENT → SPACE</span><span class="badge">R02 · K2.0.0</span></div>
+<h1>空间组合乐器</h1>
+<p class="lead"><strong>这次不再只演奏一个几何体。</strong><br>仍然只用方体、球体、圆柱、圆锥、圆环和平面，通过组、环阵、向量线阵、三维点阵和螺旋阵列，搭出一座完整空间构筑。</p>
+
+<div class="section">01 / 分层查看空间组合</div>
+<div class="presets">
+<button class="preset" data-score-key="full">完整空间</button>
+<button class="preset" data-score-key="core">中心与螺旋</button>
+<button class="preset" data-score-key="gates">十二门环</button>
+<button class="preset" data-score-key="bridges">四向桥群</button>
+<button class="preset" data-score-key="lattice">顶部点阵</button>
+<button class="preset" data-score-key="group">变换组</button>
+<button class="preset wide" data-score-key="helix">单独螺旋阵列</button>
+</div>
+
+<div class="section">02 / 当前谱子</div>
+<div class="score-head"><div><div class="score-name" id="score-name">完整空间组合</div><div class="score-note" id="score-note"></div></div><div class="score-byte-pill">UTF-8</div></div>
+<textarea id="score" spellcheck="false" maxlength="8192" aria-label="K2 谱子"></textarea>
+<div class="draft" id="draft"></div>
+<div class="actions">
+<button class="primary" id="play">演奏谱子</button>
+<button class="secondary" id="camera">镜头归位</button>
+<button class="secondary" id="verify">重演并校验</button>
+<button class="secondary" id="copy">复制谱子</button>
+<button class="download wide" id="download-instrument">单独导出“乐器”</button>
+<button class="secondary wide" id="download-score">单独导出当前谱子</button>
+</div>
+<p class="status" id="status" role="status">正在装载 K2 乐器…</p>
+
+<div class="section">03 / 信息账本</div>
+<div class="metrics" aria-live="polite">
+<div class="metric"><span>当前谱子</span><strong id="score-bytes">—</strong></div>
+<div class="metric"><span>纯乐器源代码</span><strong id="instrument-core">—</strong></div>
+<div class="metric"><span>纯乐器单文件</span><strong id="instrument-file">—</strong></div>
+<div class="metric"><span>完整工作台 HTML</span><strong id="workbench-bytes">—</strong></div>
+<div class="metric"><span>生成对象数</span><strong id="objects">—</strong></div>
+<div class="metric"><span>三角面数</span><strong id="triangles">—</strong></div>
+<div class="metric"><span>几何缓冲区</span><strong id="geometry-bytes">—</strong></div>
+<div class="metric"><span>实际输出校验码</span><strong id="hash">—</strong></div>
+</div>
+<p class="hint"><strong>重要：</strong>短谱并不等于全部系统只有一千字节。公共几何知识放在乐器里，谱子只记录这一座空间与其他空间之间的差异。</p>
+<details><summary>K2 新增语法</summary>
+<p><code>G@位置/旋转%缩放{子谱}</code> 建立可整体变换的几何组。</p>
+<p><code>A数量,半径,起始角,朝向角{子谱}</code> 环阵；半径可以为零，此时只做旋转复制。</p>
+<p><code>L数量,dx,dy,dz{子谱}</code> 沿任意三维向量排列；两参数写法仍表示沿 X 轴。</p>
+<p><code>X nx,ny,nz,sx,sy,sz{子谱}</code> 生成居中的三维点阵。</p>
+<p><code>H数量,半径,高度,圈数,起始角{子谱}</code> 生成螺旋阵列。</p>
+<p>基础几何仍是 <code>b s c n t p</code>。单位 m，Y↑。谱中没有顶点、三角面、贴图和外部模型。</p>
+</details>
+</aside>
+<section class="world" aria-label="实时三维空间">
+<div id="viewport"></div>
+<div class="world-label"><strong>259 个简单几何体</strong><span>默认谱子约 1 KiB。中心塔、轨道、桥、门廊、外塔和点阵全部由同一件 K2 乐器实时生成。</span></div>
+<div class="world-note"><strong>拖动</strong> 旋转　<strong>滚轮 / 双指</strong> 缩放　m · Y↑</div>
+</section>
+</main>
+<script id="kaopu-instrument-payload" type="application/octet-stream">__INSTRUMENT_BASE64__</script>
+<script>
+(()=>{const t=document.getElementById('kaopu-instrument-payload').textContent.trim(),b=atob(t),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);const s=new TextDecoder().decode(u);window.__KAOPU_INSTRUMENT_BYTES__=u;window.__KAOPU_INSTRUMENT_SOURCE__=s;(0,eval)(s)})();
+</script>
+<script>__APP_BUNDLE__</script>
+</body>
+</html>
