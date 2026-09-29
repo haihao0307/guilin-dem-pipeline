@@ -140,12 +140,15 @@ const browser = await chromium.launch({ headless: true, args: ['--use-angle=swif
 try {
   const desktop = await verifyWorkbench(browser, 'desktop-1440x960', { width: 1440, height: 960 });
   const mobile = await verifyWorkbench(browser, 'mobile-390x844', { width: 390, height: 844 });
-  const scores = await browser.newPage().then(async (page) => {
-    try {
-      await page.goto(workbenchUrl, { waitUntil: 'load', timeout: 120_000 });
-      return page.evaluate(() => Object.fromEntries(Object.entries(window.__KAOPU_QUADRUPED_R04__.scores).map(([key, value]) => [key, value.score])));
-    } finally { await page.close(); }
-  });
+  const scorePage = await browser.newPage();
+  let scores;
+  try {
+    await scorePage.goto(workbenchUrl, { waitUntil: 'load', timeout: 120_000 });
+    await scorePage.waitForFunction(() => Boolean(window.__KAOPU_QUADRUPED_R04__?.scores), null, { timeout: 45_000 });
+    scores = await scorePage.evaluate(() => Object.fromEntries(Object.entries(window.__KAOPU_QUADRUPED_R04__.scores).map(([key, value]) => [key, value.score])));
+  } finally {
+    await scorePage.close();
+  }
   const emptyDesktop = await verifyEmptyPlayer(browser, 'empty-desktop-1280x800', { width: 1280, height: 800 }, scores);
   const emptyMobile = await verifyEmptyPlayer(browser, 'empty-mobile-390x844', { width: 390, height: 844 }, scores);
   const mode = workbenchUrl.startsWith('file:') ? 'standalone' : 'public';
