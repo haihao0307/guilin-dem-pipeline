@@ -1,0 +1,45 @@
+{
+  "taskId": "KAOPU_FISH_MUSKELLUNGE_FULL_SURFACE_R02_20260930",
+  "taskMode": "REPLICATION_LOCKED",
+  "baseBranch": "work/kaopu-fish-muskellunge-r01-20260930",
+  "sourcePackage": "muskellunge+fish+3d+model.zip",
+  "sourcePackageSha256": "b998f32ffe3fb5e0aa5c55b62eb0f894dfa0dc86397758846127898ff5656ef1",
+  "targetSystem": "KAOPU Fish Composer + Surface Score + Fish Instrument",
+  "instrumentId": "kaopu.fish.surface-chart",
+  "primaryDefect": "R01 used sparse hand-authored sections and separate primitive/anatomical geometry instead of deriving the complete surface from the uploaded FBX mesh.",
+  "requiredMethod": [
+    "decode every FBX position, polygon index, normal index and UV index",
+    "treat the complete uploaded surface as the sole static-shape teacher",
+    "parameterize every UV chart as a continuous surface function P_chart(u,v)",
+    "reconstruct all body, fin, mouth, tooth and small-surface regions through the same source-derived parameterization",
+    "measure pointwise position and normal error against the complete source surface",
+    "do not begin rigging until the static surface comparison is accepted"
+  ],
+  "forbidden": [
+    "ellipsoid or capsule fish body substitute",
+    "manually guessed longitudinal sections",
+    "separately invented fins, mouth, eyes or teeth",
+    "using fish-species knowledge to fill missing source geometry",
+    "reusing the R01 geometry as the R02 baseline",
+    "claiming visual or motion acceptance automatically"
+  ],
+  "sourceSurface": {
+    "vertices": 482095,
+    "triangles": 964285,
+    "normalSamples": 820996,
+    "uvParameterPoints": 497701,
+    "uvCharts": 145,
+    "textureResolution": [4096, 4096]
+  },
+  "acceptanceGates": [
+    "complete-surface extraction reproducible from source FBX",
+    "no original XYZ vertex cache used as runtime truth",
+    "no hand-authored fish geometry in formal reconstruction",
+    "pointwise error report over all 497701 UV parameter points",
+    "multi-view teacher versus reconstruction comparison",
+    "static surface user acceptance before skeleton and motion"
+  ],
+  "visualAcceptance": false,
+  "motionAcceptance": false,
+  "productionReady": false
+}
