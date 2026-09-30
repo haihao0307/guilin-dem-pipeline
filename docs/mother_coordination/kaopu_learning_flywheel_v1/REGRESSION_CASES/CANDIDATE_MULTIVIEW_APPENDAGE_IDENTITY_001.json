@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "1.0",
+  "candidateId": "MULTIVIEW-APPENDAGE-IDENTITY-CONSISTENCY-001",
+  "status": "CANDIDATE",
+  "scope": "articulated multi-view reference sets",
+  "boundedQuestion": "Can several generated views be admitted as one 3D teacher without a persistent appendage identity ledger across all views?",
+  "rollbackPoint": "7d2c6c8c79f2731030947ba5e29d8e7f65dbd6b7",
+  "sourceSet": {
+    "name": "coconut-crab-generated-four-view-set-2026-09-30",
+    "assets": [
+      "image-gen-1(20260930-042156).png",
+      "image-gen-2(20260930-042157).png",
+      "image-gen-3(20260930-042158).png",
+      "image-gen-4(20260930-042159).png"
+    ],
+    "sourceClass": "GENERATED_DERIVATIVE_CANDIDATE",
+    "userCorrection": "Appendage count is wrong and would produce a severely incorrect model.",
+    "userVerdict": "REJECTED",
+    "independentExactDiscrepancy": "UNKNOWN_IMAGE_BYTES_TEMPORARILY_UNAVAILABLE",
+    "eligibleAsModelTeacher": false
+  },
+  "requiredTaskAnchorFields": [
+    "sourceSetId",
+    "anatomyTopologyId",
+    "appendageIdentityLedger",
+    "crossViewTopologyVerdict",
+    "modelGenerationAllowed"
+  ],
+  "appendageRecordFields": [
+    "appendageId",
+    "side",
+    "role",
+    "attachmentRegion",
+    "segmentCount",
+    "visibility"
+  ],
+  "visibilityStates": [
+    "VISIBLE",
+    "OCCLUDED",
+    "CROPPED",
+    "UNKNOWN"
+  ],
+  "verdicts": {
+    "pass": "MULTIVIEW_TOPOLOGY_CONSISTENT",
+    "conflict": "HOLD_MULTIVIEW_TOPOLOGY_CONFLICT",
+    "incomplete": "HOLD_MULTIVIEW_COVERAGE_INCOMPLETE"
+  },
+  "decisionRules": [
+    "Every view must account for every locked appendageId.",
+    "VISIBLE and OCCLUDED preserve topology identity; CROPPED and UNKNOWN hold coverage.",
+    "Missing, extra, duplicated, side-swapped, role-drifted, attachment-drifted, or segment-count-drifted records hold topology.",
+    "A user-rejected source set is not eligible for model generation even if a synthetic contract replay passes.",
+    "Generated views never become biological Canonical Truth without an independent real-source Observation Root."
+  ],
+  "adoption": {
+    "level": "LOCAL_CANDIDATE_ONLY",
+    "target": "kaopu-crab-triad-r01 next Task Anchor or pre-model source intake",
+    "globalEnforcement": false,
+    "requiresSingleMotherTrial": true,
+    "requiresIndependentVerifier": true
+  }
+}
