@@ -24,7 +24,32 @@ jobs:
           fetch-depth: 1
           sparse-checkout: quick-shorts-r4
 
-      - name: Publish into the proven gh-pages site
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Vendor browser modules locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .quick-shorts-deps
+          npm install --prefix .quick-shorts-deps --no-save --ignore-scripts --no-audit --no-fund \
+            three@0.182.0 pako@2.1.0 playwright-core@1.55.0
+
+          mkdir -p source/quick-shorts-r4/vendor
+          cp .quick-shorts-deps/node_modules/three/build/three.module.js \
+            source/quick-shorts-r4/vendor/three.module.js
+          cp .quick-shorts-deps/node_modules/three/examples/jsm/controls/OrbitControls.js \
+            source/quick-shorts-r4/vendor/OrbitControls.js
+          cp .quick-shorts-deps/node_modules/pako/dist/pako.esm.mjs \
+            source/quick-shorts-r4/vendor/pako.esm.mjs
+
+          test -s source/quick-shorts-r4/vendor/three.module.js
+          test -s source/quick-shorts-r4/vendor/OrbitControls.js
+          test -s source/quick-shorts-r4/vendor/pako.esm.mjs
+
+      - name: Assemble the Pages tree
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -46,15 +71,113 @@ jobs:
 
           test -s quick-shorts-r4/index.html
           test -s quick-shorts-r4/main.js
+          test -s quick-shorts-r4/human.js
+          test -s quick-shorts-r4/shorts.js
           test -s quick-shorts-r4/card-data.json
           test -s quick-shorts-r4/data/data-13.js
+          test -s quick-shorts-r4/vendor/three.module.js
+          test -s quick-shorts-r4/vendor/OrbitControls.js
+          test -s quick-shorts-r4/vendor/pako.esm.mjs
 
+          ! grep -R "cdn.jsdelivr.net\|unpkg.com\|esm.sh" quick-shorts-r4/index.html quick-shorts-r4/*.js
+          grep -q 'window.__QUICK_SHORTS_READY__ = true' quick-shorts-r4/main.js
+          grep -q '"three": "./vendor/three.module.js"' quick-shorts-r4/index.html
+
+      - name: Run real Chromium smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 --directory site >/tmp/quick-shorts-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill ${SERVER_PID} 2>/dev/null || true' EXIT
+
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4173/quick-shorts-r4/ >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:4173/quick-shorts-r4/vendor/three.module.js >/dev/null
+          curl -fsS http://127.0.0.1:4173/quick-shorts-r4/vendor/OrbitControls.js >/dev/null
+          curl -fsS http://127.0.0.1:4173/quick-shorts-r4/vendor/pako.esm.mjs >/dev/null
+
+          CHROME_PATH="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "${CHROME_PATH}"
+          export CHROME_PATH
+
+          node <<'NODE'
+          const { chromium } = require('./.quick-shorts-deps/node_modules/playwright-core');
+
+          (async () => {
+            const browser = await chromium.launch({
+              headless: true,
+              executablePath: process.env.CHROME_PATH,
+              args: [
+                '--no-sandbox',
+                '--disable-dev-shm-usage',
+                '--use-gl=angle',
+                '--use-angle=swiftshader-webgl',
+                '--enable-unsafe-swiftshader'
+              ]
+            });
+            const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+            const errors = [];
+            page.on('pageerror', error => errors.push(`pageerror: ${error.message}`));
+            page.on('console', message => {
+              if (message.type() === 'error') errors.push(`console: ${message.text()}`);
+            });
+
+            const response = await page.goto('http://127.0.0.1:4173/quick-shorts-r4/?smoke=1', {
+              waitUntil: 'domcontentloaded',
+              timeout: 45000
+            });
+            if (!response || !response.ok()) throw new Error(`HTTP ${response?.status()}`);
+            await page.waitForFunction(() => window.__QUICK_SHORTS_READY__ === true, null, { timeout: 45000 });
+
+            const result = await page.evaluate(() => ({
+              ready: window.__QUICK_SHORTS_READY__,
+              version: window.__QUICK_SHORTS_VERSION__,
+              state: document.querySelector('#state')?.textContent,
+              sliderCount: document.querySelectorAll('#sliders input[type="range"]').length,
+              canvasWidth: document.querySelector('#canvas')?.width,
+              canvasHeight: document.querySelector('#canvas')?.height,
+              loadingHidden: document.querySelector('#loading')?.classList.contains('hide')
+            }));
+
+            if (result.ready !== true) throw new Error('readiness flag missing');
+            if (result.sliderCount !== 8) throw new Error(`expected 8 sliders, got ${result.sliderCount}`);
+            if (!String(result.state).includes('READY')) throw new Error(`unexpected state: ${result.state}`);
+            if (!(result.canvasWidth > 0 && result.canvasHeight > 0)) throw new Error('WebGL canvas has no rendered size');
+            if (result.loadingHidden !== true) throw new Error('loading overlay is still visible');
+            if (errors.length) throw new Error(errors.join('\n'));
+
+            await page.screenshot({ path: 'quick-shorts-r4-smoke.png', fullPage: true });
+            console.log(JSON.stringify(result, null, 2));
+            await browser.close();
+          })().catch(error => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
+
+      - name: Publish into the proven gh-pages site
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd site
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add -A quick-shorts-r4
           if git diff --cached --quiet; then
             echo "Quick Shorts R4 is already current."
           else
-            git commit -m "publish: Quick Shorts R4 stable public preview"
+            git commit -m "publish: Quick Shorts R4 browser-verified public preview"
             git push origin HEAD:gh-pages
           fi
+
+      - name: Upload browser proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: quick-shorts-r4-browser-proof
+          path: quick-shorts-r4-smoke.png
+          if-no-files-found: error
