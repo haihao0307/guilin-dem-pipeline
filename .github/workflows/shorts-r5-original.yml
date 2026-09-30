@@ -1,0 +1,24 @@
+name: Shorts R5 Original Human
+on:
+  push:
+    branches: [work/shorts-r5-original-human-20260930]
+    paths: [.github/workflows/shorts-r5-original.yml, shorts-r5/**]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: haihao0307/Humanoid-Rig-Lab-Next
+          ref: 3c3e9a4b7b250f4c8db20c15e2e5fab4ca9ce568
+          path: human
+          fetch-depth: 1
+      - name: Package frozen source
+        run: tar --exclude=.git -czf original-human-r2.tar.gz -C human .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shorts-r5-original-source
+          path: original-human-r2.tar.gz
