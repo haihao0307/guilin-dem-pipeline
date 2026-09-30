@@ -48,6 +48,7 @@ jobs:
           git update-ref refs/heads/gh-pages FETCH_HEAD
           git symbolic-ref HEAD refs/heads/gh-pages
           git reset --mixed HEAD >/dev/null
+          git sparse-checkout set --no-cone '/shorts-r24-reviewed/**'
           mkdir -p shorts-r24-reviewed
           cp -a ../dist/shorts-r24-reviewed/. shorts-r24-reviewed/
           git add shorts-r24-reviewed
