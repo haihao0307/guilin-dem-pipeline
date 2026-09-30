@@ -1,0 +1,72 @@
+name: Original linen shorts R2.4 reviewed web
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: shorts-r24-reviewed-web
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: shorts-r24
+      - uses: actions/checkout@v4
+        with:
+          repository: haihao0307/Humanoid-Rig-Lab-Next
+          ref: c595390448b7c307ebf1fcd26566bd947411c319
+          path: human
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build exact reviewed source and test standalone
+        run: |
+          npm install --prefix .r54-build --no-save --ignore-scripts --no-audit --no-fund esbuild@0.25.10
+          npm install --prefix .r5-deps --no-save --ignore-scripts --no-audit --no-fund playwright-core@1.55.0
+          node --test human/tools/test-shorts-rise-r24.mjs
+          node shorts-r24/build.mjs human dist/shorts-r24-reviewed
+          export CHROME_PATH="$(command -v google-chrome || command -v chromium)"
+          export PLAYWRIGHT_ROOT="$PWD/.r5-deps/node_modules/playwright-core"
+          REVIEW_URL="file://$PWD/dist/shorts-r24-reviewed/index.html" PROOF_DIR=proof-offline node shorts-r24/qa.cjs
+      - name: Publish only the R2.4 directory
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp proof-offline/QA.json dist/shorts-r24-reviewed/OFFLINE_QA.json
+          git init site
+          cd site
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --depth=1 --filter=blob:none origin gh-pages
+          git update-ref refs/heads/gh-pages FETCH_HEAD
+          git symbolic-ref HEAD refs/heads/gh-pages
+          git reset --mixed HEAD >/dev/null
+          mkdir -p shorts-r24-reviewed
+          cp -a ../dist/shorts-r24-reviewed/. shorts-r24-reviewed/
+          git add shorts-r24-reviewed
+          if ! git diff --cached --quiet; then
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'publish: selected original R2.4 linen shorts checkpoint'
+            git push origin HEAD:gh-pages
+          fi
+      - name: Validate public HTML and interactive workbench
+        run: |
+          EXPECTED=$(node -p "require('./dist/shorts-r24-reviewed/BUILD.json').htmlSHA256")
+          for attempt in $(seq 1 60); do
+            curl -fsS "https://haihao0307.github.io/guilin-dem-pipeline/shorts-r24-reviewed/BUILD.json?run=${GITHUB_RUN_ID}-${attempt}" -o /tmp/public-build.json || true
+            if test -f /tmp/public-build.json && grep -q "$EXPECTED" /tmp/public-build.json; then break; fi
+            sleep 10
+          done
+          grep -q "$EXPECTED" /tmp/public-build.json
+          export CHROME_PATH="$(command -v google-chrome || command -v chromium)"
+          export PLAYWRIGHT_ROOT="$PWD/.r5-deps/node_modules/playwright-core"
+          REVIEW_URL=https://haihao0307.github.io/guilin-dem-pipeline/shorts-r24-reviewed/ PROOF_DIR=proof-public node shorts-r24/qa.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shorts-r24-reviewed-web-proof
+          path: |
+            proof-offline/
+            proof-public/
+            dist/
