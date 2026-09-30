@@ -1,0 +1,208 @@
+name: KAOPU Mammal Instrument R06
+
+on:
+  push:
+    branches:
+      - work/kaopu-mammal-r06-cat-dog-integration-20260930
+    paths:
+      - 'kaopu-mammal-r06/**'
+      - '.github/workflows/kaopu-mammal-r06.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: kaopu-mammal-r06-publish
+  cancel-in-progress: false
+
+env:
+  PROJECT_DIR: kaopu-mammal-r06
+  PUBLIC_SUBDIR: kaopu-score-instrument/mammal-r06-cat-dog-20260930
+  PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-score-instrument/mammal-r06-cat-dog-20260930/
+
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out R06 branch
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pinned dependencies
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: npm install --no-audit --no-fund
+
+      - name: Audit score ownership and shared operators
+        working-directory: ${{ env.PROJECT_DIR }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm test | tee ../mammal-r06-unit-results.txt
+
+      - name: Install real browser
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: npx playwright install --with-deps chromium
+
+      - name: Build pure instrument and standalone players
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: npm run build
+
+      - name: Verify package boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          DIST="$PROJECT_DIR/dist"
+          for file in index.html KAOPU_MAMMAL_PLAYER.html KAOPU_MAMMAL_K5.js KAOPU_GREY_TABBY_K5.score KAOPU_NEUTRAL_DOG_K5.score KAOPU_GRAY_WOLF_K5.score KAOPU_UNSEEN_MAMMAL_K5.score BUILD.json README.txt LICENSE_THREE.txt; do
+            test -s "$DIST/$file"
+          done
+          grep -q 'KAOPU · Mammal Instrument R06' "$DIST/index.html"
+          grep -q 'KAOPU · Empty Mammal Player K5' "$DIST/KAOPU_MAMMAL_PLAYER.html"
+          grep -q 'KAOPUMammal' "$DIST/KAOPU_MAMMAL_K5.js"
+          ! grep -Eqi 'grey tabby|greytabby|neutral dog|neutraldog|gray wolf|graywolf|polar bear|polarbear|tortoise|灰虎斑|中型短毛犬|灰狼|北极熊|陆龟' "$DIST/KAOPU_MAMMAL_K5.js"
+          for score in KAOPU_GREY_TABBY_K5.score KAOPU_NEUTRAL_DOG_K5.score KAOPU_GRAY_WOLF_K5.score KAOPU_UNSEEN_MAMMAL_K5.score; do grep -q '^K5|' "$DIST/$score"; done
+          if grep -Eqi '<script[^>]+src=' "$DIST/index.html" "$DIST/KAOPU_MAMMAL_PLAYER.html"; then echo 'External script reference found.'; exit 1; fi
+          if grep -Eqi '<link[^>]+stylesheet' "$DIST/index.html" "$DIST/KAOPU_MAMMAL_PLAYER.html"; then echo 'External stylesheet reference found.'; exit 1; fi
+
+      - name: Test standalone workbench and empty player
+        shell: bash
+        run: |
+          set -euo pipefail
+          WORKBENCH_URL=$(node -e "console.log(require('node:url').pathToFileURL(process.argv[1]).href)" "$GITHUB_WORKSPACE/$PROJECT_DIR/dist/index.html")
+          PLAYER_URL=$(node -e "console.log(require('node:url').pathToFileURL(process.argv[1]).href)" "$GITHUB_WORKSPACE/$PROJECT_DIR/dist/KAOPU_MAMMAL_PLAYER.html")
+          WORKBENCH_URL="$WORKBENCH_URL" PLAYER_URL="$PLAYER_URL" node "$PROJECT_DIR/tests/browser.mjs"
+
+      - name: Publish isolated R06 directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          rm -rf /tmp/kaopu-mammal-pages
+          git worktree add --detach /tmp/kaopu-mammal-pages origin/gh-pages
+          TARGET="/tmp/kaopu-mammal-pages/$PUBLIC_SUBDIR"
+          rm -rf "$TARGET"
+          mkdir -p "$TARGET"
+          cp "$PROJECT_DIR/dist/"* "$TARGET/"
+          cd /tmp/kaopu-mammal-pages
+          git config user.name 'KAOPU Mammal R06 CI'
+          git config user.email 'kaopu-mammal-r06-ci@users.noreply.github.com'
+          git add "$PUBLIC_SUBDIR"
+          git commit -m 'publish(kaopu): R06 cat dog knowledge integration [skip ci]'
+          git push origin HEAD:gh-pages
+
+      - name: Request Pages build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          type=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.build_type' || echo unknown)
+          echo "Pages build type: $type"
+          if [ "$type" = legacy ]; then gh api --method POST "repos/$GITHUB_REPOSITORY/pages/builds" --jq '.status' || true; fi
+
+      - name: Verify exact public payloads
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=(index.html KAOPU_MAMMAL_PLAYER.html KAOPU_MAMMAL_K5.js KAOPU_GREY_TABBY_K5.score KAOPU_NEUTRAL_DOG_K5.score KAOPU_GRAY_WOLF_K5.score KAOPU_UNSEEN_MAMMAL_K5.score)
+          for file in "${files[@]}"; do
+            expected=$(sha256sum "$PROJECT_DIR/dist/$file" | awk '{print $1}')
+            ok=0
+            for attempt in $(seq 1 100); do
+              code=$(curl --max-time 20 -L -sS -H 'Cache-Control: no-cache' -o "/tmp/$file" -w '%{http_code}' "$PUBLIC_URL$file" || true)
+              actual=$(sha256sum "/tmp/$file" 2>/dev/null | awk '{print $1}' || true)
+              if [ "$code" = 200 ] && [ "$actual" = "$expected" ]; then ok=1; break; fi
+              echo "Waiting for $file ($attempt/100) HTTP=$code actual=$actual expected=$expected"
+              sleep 5
+            done
+            test "$ok" = 1
+          done
+
+      - name: Test live workbench and empty player
+        env:
+          WORKBENCH_URL: ${{ env.PUBLIC_URL }}index.html
+          PLAYER_URL: ${{ env.PUBLIC_URL }}KAOPU_MAMMAL_PLAYER.html
+        run: node "$PROJECT_DIR/tests/browser.mjs"
+
+      - name: Write publication proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          export WORKBENCH_SHA=$(sha256sum "$PROJECT_DIR/dist/index.html" | awk '{print $1}')
+          export PLAYER_SHA=$(sha256sum "$PROJECT_DIR/dist/KAOPU_MAMMAL_PLAYER.html" | awk '{print $1}')
+          export INSTRUMENT_SHA=$(sha256sum "$PROJECT_DIR/dist/KAOPU_MAMMAL_K5.js" | awk '{print $1}')
+          export BUILD_JSON="$PROJECT_DIR/dist/BUILD.json"
+          node --input-type=module <<'JS'
+          import { readFile, writeFile } from 'node:fs/promises';
+          const e = process.env;
+          const build = JSON.parse(await readFile(e.BUILD_JSON, 'utf8'));
+          const standalone = JSON.parse(await readFile('qa-artifacts/standalone-results.json', 'utf8'));
+          const live = JSON.parse(await readFile('qa-artifacts/public-results.json', 'utf8'));
+          const proof = {
+            project: 'KAOPU Mammal Instrument R06 — Cat/Dog Knowledge Integration',
+            instrumentVersion: 'K5.0.0',
+            sourceRepository: e.GITHUB_REPOSITORY,
+            sourceBranch: e.GITHUB_REF_NAME,
+            sourceSha: e.GITHUB_SHA,
+            publicUrl: e.PUBLIC_URL,
+            instrumentUrl: e.PUBLIC_URL + 'KAOPU_MAMMAL_K5.js',
+            emptyPlayerUrl: e.PUBLIC_URL + 'KAOPU_MAMMAL_PLAYER.html',
+            verifiedAt: new Date().toISOString(),
+            architectureAudit: {
+              instrumentIdentityPresets: 0,
+              scoreOwnsIdentityData: true,
+              sameInstrumentPlaysFourExternalScores: true,
+              emptyPlayerStartsWithoutObject: true,
+              catProjectRuntimeAssetCopied: false,
+              dogTeacherRuntimeAssetCopied: false,
+              dogTeacherUsedForMeasurementOnly: true,
+              domainConstraint: 'digitigrade-mammal'
+            },
+            integrationAudit: build.integrations,
+            build,
+            sha256: { workbench: e.WORKBENCH_SHA, player: e.PLAYER_SHA, instrument: e.INSTRUMENT_SHA },
+            exactPublicBytesMatched: true,
+            interactive3D: true,
+            externalRuntimeAssets: 0,
+            fileProtocolPassed: true,
+            desktopBrowserPassed: true,
+            mobileViewportPassed: true,
+            physicalPhoneTested: false,
+            visualAcceptance: 'PENDING_USER',
+            productionReady: false,
+            shareAllowed: true,
+            standalone,
+            live
+          };
+          await writeFile(`/tmp/kaopu-mammal-pages/${e.PUBLIC_SUBDIR}/PUBLICATION_PROOF.json`, JSON.stringify(proof, null, 2) + '\n');
+          JS
+          cd /tmp/kaopu-mammal-pages
+          git add "$PUBLIC_SUBDIR/PUBLICATION_PROOF.json"
+          git commit -m 'proof(kaopu): exact-head R06 integration verification [skip ci]'
+          git fetch origin gh-pages
+          git rebase origin/gh-pages
+          git push origin HEAD:gh-pages
+
+      - name: Upload delivery and QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-mammal-r06-${{ github.sha }}
+          path: |
+            mammal-r06-unit-results.txt
+            qa-artifacts/
+            kaopu-mammal-r06/dist/
+            kaopu-mammal-r06/src/
+            kaopu-mammal-r06/tests/
+            kaopu-mammal-r06/scripts/
+            kaopu-mammal-r06/README.md
+            kaopu-mammal-r06/R06_CAT_DOG_INTEGRATION_AUDIT_ZH.md
+            kaopu-mammal-r06/package.json
+          retention-days: 14
