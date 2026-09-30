@@ -1,0 +1,51 @@
+{
+  "id": "EPHEMERAL-PUBLIC-PARENT-NOT-REPLAYABLE-001",
+  "status": "Candidate",
+  "scope": "KaoPu Coast World staged publication lineage only",
+  "problem": "A next-version build reads its parent from a mutable public branch URL and then deletes that parent path. The first run may pass, while the same exact workflow can no longer recover the input it declared.",
+  "falsifiableHypothesis": "A parent-input replayability gate that requires an immutable revision plus content identity and readback availability will preserve the successful R03 historical run while refusing rerun or lineage claims for the current mutable-and-deleted R02 parent reference.",
+  "requiredFields": [
+    "childSubjectSha",
+    "workflowBlobSha",
+    "historicalRunId",
+    "parentLogicalVersion",
+    "parentRepository",
+    "parentPath",
+    "parentResolvedRevision",
+    "parentContentDigest",
+    "parentReadbackAtResolvedRevision",
+    "mutableAliasReadback",
+    "publisherDeletesMutableAlias",
+    "lineageDecision",
+    "rerunDecision"
+  ],
+  "gate": [
+    "A public branch URL, stable URL, filename, version label, or one successful historical run is not an immutable parent identity.",
+    "Before child build, resolve the parent to a commit/tree/blob revision and record a content digest.",
+    "After publication cleanup, the parent must remain readable at the recorded immutable revision and must match the recorded digest.",
+    "Deleting a mutable alias is allowed only after immutable parent readback succeeds; deleting the sole parent input yields HOLD.",
+    "Historical run success remains valid for that run, but rerun reproducibility and parent lineage are separate claims."
+  ],
+  "decisions": [
+    "HISTORICAL_RUN_VERIFIED_ONLY",
+    "HOLD_PARENT_REFERENCE_MUTABLE",
+    "HOLD_PARENT_DIGEST_MISSING",
+    "HOLD_PARENT_DIGEST_MISMATCH",
+    "HOLD_PARENT_ARTIFACT_NOT_REPLAYABLE",
+    "PARENT_INPUT_REPLAYABLE"
+  ],
+  "activation": {
+    "global": false,
+    "motherTrialRequired": true,
+    "independentVerifierRequired": true,
+    "rollbackPoint": "Do not modify main or gh-pages. Keep current R03 historical success; remove this Candidate if a single Coast Mother trial shows immutable readback adds no discriminating value."
+  },
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": true,
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}
