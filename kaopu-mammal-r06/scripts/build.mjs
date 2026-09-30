@@ -28,7 +28,7 @@ const bundle = async (entry, options = {}) => {
   return result.outputFiles[0].text;
 };
 
-const [instrumentRaw, appRaw, playerRaw, workbenchTemplate, playerTemplate, license] = await Promise.all([
+const [instrumentRaw, appBundle, playerRaw, workbenchTemplate, playerTemplate, license] = await Promise.all([
   bundle('src/instrument.js', { format: 'iife', globalName: 'KAOPUMammal' }),
   bundle('src/app.js', { format: 'iife' }),
   bundle('src/player.js', { format: 'iife' }),
@@ -37,6 +37,7 @@ const [instrumentRaw, appRaw, playerRaw, workbenchTemplate, playerTemplate, lice
   readFile(resolve(root, 'node_modules/three/LICENSE'), 'utf8'),
 ]);
 
+const appRaw = `globalThis.__KAOPU_SCORE_LIBRARY__ = Object.freeze(${JSON.stringify(SCORE_LIBRARY)});\n${appBundle}`;
 new Function(instrumentRaw);
 new Function(appRaw);
 new Function(playerRaw);
@@ -65,6 +66,15 @@ workbenchHtml = render(workbenchTemplate, '<!--KAOPU_APP_BUNDLE-->', appRaw, wor
 workbenchBytes = Buffer.byteLength(workbenchHtml, 'utf8');
 workbenchHtml = render(workbenchTemplate, '<!--KAOPU_APP_BUNDLE-->', appRaw, workbenchBytes);
 const playerHtml = render(playerTemplate, '<!--KAOPU_PLAYER_BUNDLE-->', playerRaw, 0);
+
+function validateEmbeddedExecutable(html, label) {
+  const open = html.lastIndexOf('<script>');
+  const close = html.lastIndexOf('</script>');
+  if (open < 0 || close <= open) throw new Error(`${label}: executable script not found`);
+  new Function(html.slice(open + '<script>'.length, close));
+}
+validateEmbeddedExecutable(workbenchHtml, 'workbench');
+validateEmbeddedExecutable(playerHtml, 'empty-player');
 
 const scoreFiles = {
   greyTabby: 'KAOPU_GREY_TABBY_K5.score',
