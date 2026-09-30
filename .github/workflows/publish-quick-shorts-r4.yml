@@ -91,12 +91,15 @@ jobs:
           SERVER_PID=$!
           trap 'kill ${SERVER_PID} 2>/dev/null || true' EXIT
 
+          SERVER_READY=false
           for attempt in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:4173/quick-shorts-r4/ >/dev/null; then
+              SERVER_READY=true
               break
             fi
             sleep 1
           done
+          test "${SERVER_READY}" = true
           curl -fsS http://127.0.0.1:4173/quick-shorts-r4/vendor/three.module.js >/dev/null
           curl -fsS http://127.0.0.1:4173/quick-shorts-r4/vendor/OrbitControls.js >/dev/null
           curl -fsS http://127.0.0.1:4173/quick-shorts-r4/vendor/pako.esm.mjs >/dev/null
@@ -122,9 +125,15 @@ jobs:
             });
             const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
             const errors = [];
+            const consoleMessages = [];
             page.on('pageerror', error => errors.push(`pageerror: ${error.message}`));
             page.on('console', message => {
+              consoleMessages.push(`${message.type()}: ${message.text()}`);
               if (message.type() === 'error') errors.push(`console: ${message.text()}`);
+            });
+            page.on('requestfailed', request => errors.push(`requestfailed: ${request.url()} :: ${request.failure()?.errorText}`));
+            page.on('response', response => {
+              if (response.status() >= 400) errors.push(`http ${response.status()}: ${response.url()}`);
             });
 
             const response = await page.goto('http://127.0.0.1:4173/quick-shorts-r4/?smoke=1', {
@@ -132,27 +141,37 @@ jobs:
               timeout: 45000
             });
             if (!response || !response.ok()) throw new Error(`HTTP ${response?.status()}`);
-            await page.waitForFunction(() => window.__QUICK_SHORTS_READY__ === true, null, { timeout: 45000 });
+
+            const ready = await page.waitForFunction(
+              () => window.__QUICK_SHORTS_READY__ === true,
+              null,
+              { timeout: 20000 }
+            ).then(() => true).catch(() => false);
 
             const result = await page.evaluate(() => ({
               ready: window.__QUICK_SHORTS_READY__,
               version: window.__QUICK_SHORTS_VERSION__,
               state: document.querySelector('#state')?.textContent,
+              loadingText: document.querySelector('#loading')?.textContent,
               sliderCount: document.querySelectorAll('#sliders input[type="range"]').length,
               canvasWidth: document.querySelector('#canvas')?.width,
               canvasHeight: document.querySelector('#canvas')?.height,
-              loadingHidden: document.querySelector('#loading')?.classList.contains('hide')
+              loadingHidden: document.querySelector('#loading')?.classList.contains('hide'),
+              webgl: Boolean(document.createElement('canvas').getContext('webgl2') || document.createElement('canvas').getContext('webgl')),
+              scripts: Array.from(document.scripts).map(script => script.src || '[inline]')
             }));
 
-            if (result.ready !== true) throw new Error('readiness flag missing');
+            await page.screenshot({ path: 'quick-shorts-r4-smoke.png', fullPage: true });
+            console.log('QUICK_SHORTS_DIAGNOSTIC');
+            console.log(JSON.stringify({ result, errors, consoleMessages }, null, 2));
+
+            if (!ready || result.ready !== true) throw new Error(`page did not become ready: ${JSON.stringify({ result, errors })}`);
             if (result.sliderCount !== 8) throw new Error(`expected 8 sliders, got ${result.sliderCount}`);
             if (!String(result.state).includes('READY')) throw new Error(`unexpected state: ${result.state}`);
             if (!(result.canvasWidth > 0 && result.canvasHeight > 0)) throw new Error('WebGL canvas has no rendered size');
             if (result.loadingHidden !== true) throw new Error('loading overlay is still visible');
             if (errors.length) throw new Error(errors.join('\n'));
 
-            await page.screenshot({ path: 'quick-shorts-r4-smoke.png', fullPage: true });
-            console.log(JSON.stringify(result, null, 2));
             await browser.close();
           })().catch(error => {
             console.error(error);
@@ -176,8 +195,9 @@ jobs:
           fi
 
       - name: Upload browser proof
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: quick-shorts-r4-browser-proof
           path: quick-shorts-r4-smoke.png
-          if-no-files-found: error
+          if-no-files-found: warn
