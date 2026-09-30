@@ -1,0 +1,131 @@
+{
+  "candidateId": "TRANSFER-ONLY-ZERO-SEMANTIC-DELTA-001",
+  "cases": [
+    {
+      "id": "01-historical-coral-r01-expanded-during-transfer",
+      "input": {
+        "taskMode": "TRANSFER_ONLY",
+        "subjectHeadSha": "140866769794646fcebd25de3fa30aded1c2ab01",
+        "receiptHeadSha": "140866769794646fcebd25de3fa30aded1c2ab01",
+        "sourceCommit": "967f975e2f10e5895b4c8a09005a2d8d6e313dc1",
+        "sourcePath": "kaopu-tree-fractal-wave-lab/",
+        "sourceTreeSha": "2086790b58585d483fbdd087e57aceaa28fa7cd7",
+        "destinationTreeSha": "2086790b58585d483fbdd087e57aceaa28fa7cd7",
+        "sourceEntrypointBlob": "e21e138dd313084b13164ef79e392f2936fa3794",
+        "activeEntrypointBlob": "dae7204ba916246386f3c21ba9053eb14d1b1fe9",
+        "authorizedDeltaPaths": [],
+        "semanticDeltaPaths": ["CORAL_MASTER.md", "app.js", "coral-functions.js", "qa.py", "scores.json", "coral-fractal-r01-qa.yml", "index.html"],
+        "independentVerifier": true,
+        "verifierPassed": false
+      },
+      "expected": {
+        "verdict": "HOLD_TRANSFER_ONLY_CONTRACT",
+        "reasons": ["ACTIVE_ENTRYPOINT_BLOB_MISMATCH", "UNAUTHORIZED_SEMANTIC_DELTA", "TRANSFER_VERIFIER_NOT_PASSED"],
+        "preservedEvidence": ["SOURCE_SNAPSHOT_TREE_VERIFIED"]
+      }
+    },
+    {
+      "id": "02-latest-remediation-exact-entrypoint-residue-remains",
+      "input": {
+        "taskMode": "TRANSFER_ONLY",
+        "subjectHeadSha": "01ede951e61a83567ba530570936cdd91dfdcfed",
+        "receiptHeadSha": "01ede951e61a83567ba530570936cdd91dfdcfed",
+        "sourceCommit": "967f975e2f10e5895b4c8a09005a2d8d6e313dc1",
+        "sourcePath": "kaopu-tree-fractal-wave-lab/",
+        "sourceTreeSha": "2086790b58585d483fbdd087e57aceaa28fa7cd7",
+        "destinationTreeSha": "2086790b58585d483fbdd087e57aceaa28fa7cd7",
+        "sourceEntrypointBlob": "e21e138dd313084b13164ef79e392f2936fa3794",
+        "activeEntrypointBlob": "e21e138dd313084b13164ef79e392f2936fa3794",
+        "authorizedDeltaPaths": ["TRANSFER_ONLY_20261001.md"],
+        "semanticDeltaPaths": ["CORAL_MASTER.md", "app.js", "coral-functions.js", "qa.py", "scores.json", "coral-fractal-r01-qa.yml"],
+        "independentVerifier": true,
+        "verifierPassed": false
+      },
+      "expected": {
+        "verdict": "HOLD_TRANSFER_ONLY_CONTRACT",
+        "reasons": ["UNAUTHORIZED_SEMANTIC_DELTA", "TRANSFER_VERIFIER_NOT_PASSED"],
+        "preservedEvidence": ["SOURCE_SNAPSHOT_TREE_VERIFIED", "ACTIVE_ENTRYPOINT_BLOB_VERIFIED"]
+      }
+    },
+    {
+      "id": "03-exact-copy-no-delta-control",
+      "input": {
+        "taskMode": "TRANSFER_ONLY", "subjectHeadSha": "control-03", "receiptHeadSha": "control-03",
+        "sourceCommit": "source-03", "sourcePath": "source/", "sourceTreeSha": "tree-03", "destinationTreeSha": "tree-03",
+        "sourceEntrypointBlob": "blob-03", "activeEntrypointBlob": "blob-03", "authorizedDeltaPaths": [], "semanticDeltaPaths": [],
+        "independentVerifier": true, "verifierPassed": true
+      },
+      "expected": {"verdict": "TRANSFER_ONLY_VERIFIED_NOT_USER_ACCEPTED", "reasons": [], "preservedEvidence": ["SOURCE_SNAPSHOT_TREE_VERIFIED", "ACTIVE_ENTRYPOINT_BLOB_VERIFIED"]}
+    },
+    {
+      "id": "04-allowlisted-receipt-only-control",
+      "input": {
+        "taskMode": "TRANSFER_ONLY", "subjectHeadSha": "control-04", "receiptHeadSha": "control-04",
+        "sourceCommit": "source-04", "sourcePath": "source/", "sourceTreeSha": "tree-04", "destinationTreeSha": "tree-04",
+        "sourceEntrypointBlob": "blob-04", "activeEntrypointBlob": "blob-04", "authorizedDeltaPaths": ["TRANSFER_RECEIPT.json"], "semanticDeltaPaths": ["TRANSFER_RECEIPT.json"],
+        "independentVerifier": true, "verifierPassed": true
+      },
+      "expected": {"verdict": "TRANSFER_ONLY_VERIFIED_NOT_USER_ACCEPTED", "reasons": [], "preservedEvidence": ["SOURCE_SNAPSHOT_TREE_VERIFIED", "ACTIVE_ENTRYPOINT_BLOB_VERIFIED"]}
+    },
+    {
+      "id": "05-source-tree-mismatch",
+      "input": {
+        "taskMode": "TRANSFER_ONLY", "subjectHeadSha": "control-05", "receiptHeadSha": "control-05",
+        "sourceCommit": "source-05", "sourcePath": "source/", "sourceTreeSha": "tree-a", "destinationTreeSha": "tree-b",
+        "sourceEntrypointBlob": "blob-05", "activeEntrypointBlob": "blob-05", "authorizedDeltaPaths": [], "semanticDeltaPaths": [],
+        "independentVerifier": true, "verifierPassed": false
+      },
+      "expected": {"verdict": "HOLD_TRANSFER_ONLY_CONTRACT", "reasons": ["SOURCE_TREE_MISMATCH", "TRANSFER_VERIFIER_NOT_PASSED"], "preservedEvidence": ["ACTIVE_ENTRYPOINT_BLOB_VERIFIED"]}
+    },
+    {
+      "id": "06-active-entrypoint-mismatch",
+      "input": {
+        "taskMode": "TRANSFER_ONLY", "subjectHeadSha": "control-06", "receiptHeadSha": "control-06",
+        "sourceCommit": "source-06", "sourcePath": "source/", "sourceTreeSha": "tree-06", "destinationTreeSha": "tree-06",
+        "sourceEntrypointBlob": "blob-a", "activeEntrypointBlob": "blob-b", "authorizedDeltaPaths": [], "semanticDeltaPaths": [],
+        "independentVerifier": true, "verifierPassed": false
+      },
+      "expected": {"verdict": "HOLD_TRANSFER_ONLY_CONTRACT", "reasons": ["ACTIVE_ENTRYPOINT_BLOB_MISMATCH", "TRANSFER_VERIFIER_NOT_PASSED"], "preservedEvidence": ["SOURCE_SNAPSHOT_TREE_VERIFIED"]}
+    },
+    {
+      "id": "07-anchor-incomplete",
+      "input": {
+        "taskMode": "TRANSFER_ONLY", "subjectHeadSha": "control-07", "receiptHeadSha": "control-07",
+        "sourceCommit": null, "sourcePath": null, "sourceTreeSha": null, "destinationTreeSha": null,
+        "sourceEntrypointBlob": null, "activeEntrypointBlob": null, "authorizedDeltaPaths": [], "semanticDeltaPaths": [],
+        "independentVerifier": true, "verifierPassed": false
+      },
+      "expected": {"verdict": "HOLD_TRANSFER_ONLY_CONTRACT", "reasons": ["TRANSFER_ANCHOR_INCOMPLETE", "TRANSFER_VERIFIER_NOT_PASSED"], "preservedEvidence": []}
+    },
+    {
+      "id": "08-self-verification-not-independent",
+      "input": {
+        "taskMode": "TRANSFER_ONLY", "subjectHeadSha": "control-08", "receiptHeadSha": "control-08",
+        "sourceCommit": "source-08", "sourcePath": "source/", "sourceTreeSha": "tree-08", "destinationTreeSha": "tree-08",
+        "sourceEntrypointBlob": "blob-08", "activeEntrypointBlob": "blob-08", "authorizedDeltaPaths": [], "semanticDeltaPaths": [],
+        "independentVerifier": false, "verifierPassed": true
+      },
+      "expected": {"verdict": "HOLD_TRANSFER_ONLY_CONTRACT", "reasons": ["INDEPENDENT_TRANSFER_VERIFIER_MISSING"], "preservedEvidence": ["SOURCE_SNAPSHOT_TREE_VERIFIED", "ACTIVE_ENTRYPOINT_BLOB_VERIFIED"]}
+    },
+    {
+      "id": "09-explicit-adaptation-is-not-transfer-only",
+      "input": {
+        "taskMode": "ADAPTATION_AUTHORIZED", "subjectHeadSha": "control-09", "receiptHeadSha": "control-09",
+        "sourceCommit": "source-09", "sourcePath": "source/", "sourceTreeSha": "tree-09", "destinationTreeSha": "tree-09",
+        "sourceEntrypointBlob": "blob-09", "activeEntrypointBlob": "adapted-09", "authorizedDeltaPaths": ["app.js", "index.html"], "semanticDeltaPaths": ["app.js", "index.html"],
+        "independentVerifier": true, "verifierPassed": true
+      },
+      "expected": {"verdict": "NOT_APPLICABLE_ADAPTATION_PHASE", "reasons": [], "preservedEvidence": ["SOURCE_SNAPSHOT_TREE_VERIFIED"]}
+    },
+    {
+      "id": "10-stale-receipt",
+      "input": {
+        "taskMode": "TRANSFER_ONLY", "subjectHeadSha": "control-10", "receiptHeadSha": "old-control-10",
+        "sourceCommit": "source-10", "sourcePath": "source/", "sourceTreeSha": "tree-10", "destinationTreeSha": "tree-10",
+        "sourceEntrypointBlob": "blob-10", "activeEntrypointBlob": "blob-10", "authorizedDeltaPaths": [], "semanticDeltaPaths": [],
+        "independentVerifier": true, "verifierPassed": true
+      },
+      "expected": {"verdict": "HOLD_SUBJECT_HEAD_MISMATCH", "reasons": ["SUBJECT_HEAD_MISMATCH"], "preservedEvidence": []}
+    }
+  ]
+}

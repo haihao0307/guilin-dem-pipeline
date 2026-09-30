@@ -1,0 +1,79 @@
+{
+  "id": "TRANSFER-ONLY-ZERO-SEMANTIC-DELTA-001",
+  "state": "Candidate",
+  "active": false,
+  "title": "An exact source snapshot does not authorize semantic adaptation during a transfer-only phase",
+  "boundedQuestion": "Can a migration be called transfer-only when the original tree is copied exactly but new domain logic, scores, QA and an adapted entrypoint are added before adaptation is authorized?",
+  "failureMechanism": "Presence of an unchanged source snapshot is treated as proof of contract fidelity while unauthorized semantic work is added beside it and exposed as the active entrypoint.",
+  "hypothesis": "If TRANSFER_ONLY freezes source commit/path/tree/blob plus an explicit delta allowlist and an independent verifier checks both copied identity and active surface, the premature Coral R01 expansion is held while an exact-copy control passes.",
+  "taskAnchorFields": [
+    "taskMode",
+    "sourceCommit",
+    "sourcePath",
+    "sourceTreeSha",
+    "sourceEntrypointBlob",
+    "destinationPath",
+    "authorizedDeltaPaths",
+    "adaptationAuthorized"
+  ],
+  "deliveryReceiptFields": [
+    "subjectHeadSha",
+    "destinationTreeSha",
+    "activeEntrypointBlob",
+    "semanticDeltaPaths",
+    "verifierIdentity",
+    "gateDecision",
+    "userAcceptanceState"
+  ],
+  "states": [
+    "HOLD_TRANSFER_ONLY_CONTRACT",
+    "TRANSFER_ONLY_VERIFIED_NOT_USER_ACCEPTED",
+    "NOT_APPLICABLE_ADAPTATION_PHASE",
+    "HOLD_SUBJECT_HEAD_MISMATCH"
+  ],
+  "historicalEvidence": {
+    "sourceBaseline": "967f975e2f10e5895b4c8a09005a2d8d6e313dc1",
+    "sourceTreeSha": "2086790b58585d483fbdd087e57aceaa28fa7cd7",
+    "sourceEntrypointBlob": "e21e138dd313084b13164ef79e392f2936fa3794",
+    "prematureExpansionSubject": "140866769794646fcebd25de3fa30aded1c2ab01",
+    "prematureExpansionMessage": "Open coral fractal growth R01: preserve whole tree workbench and add five grammar studies",
+    "prematureActiveEntrypointBlob": "dae7204ba916246386f3c21ba9053eb14d1b1fe9",
+    "remediationSubject": "01ede951e61a83567ba530570936cdd91dfdcfed",
+    "remediationMessage": "Honor transfer-only request: open unchanged Tree Life R06 in coral workbench; keep full source copy",
+    "verifiedFacts": [
+      "The preserved source-tree has the declared original tree SHA.",
+      "The initial Coral commit added a new active wrapper plus Coral logic, score, QA, workflow and master files.",
+      "The remediation restores the active entrypoint blob to the original Tree R06 blob.",
+      "The earlier Coral semantic files remain present but are not loaded by the current entrypoint."
+    ]
+  },
+  "minimalReplay": {
+    "fixtures": "PROBES/transfer_only_fixture_n52.json",
+    "gate": "PROBES/transfer_only_gate_n52.mjs",
+    "result": "PROBES/transfer_only_result_n52.json",
+    "total": 10,
+    "passed": 10,
+    "failed": 0
+  },
+  "applicability": "Only an explicitly bounded copy/migration phase whose current contract is to preserve and expose an existing workbench unchanged. Adaptation is a separate phase and must have a new authorized Task Anchor.",
+  "activationGate": "One Coral transfer/adaptation boundary trial plus independent verifier GATE-RUN. Do not activate globally before coordinator review.",
+  "adoptionDecision": "CANDIDATE_ONLY_TARGETED_CORAL_TRIAL_REQUIRED",
+  "rollbackPoint": "9cc0613b8f950f63b00028a12e0d3224cb8254a1",
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  },
+  "kpiEffect": {
+    "firstPassCandidateRate": "unknown",
+    "userCorrectionCount": 1,
+    "sameClassRecurrenceRate": "unknown",
+    "rejectedLineageInheritanceCount": "unknown",
+    "staleDeliveryCount": "unknown",
+    "internalIterationsPerAcceptedDelta": "unknown",
+    "instructionToLegalCandidateTime": "unknown"
+  }
+}
