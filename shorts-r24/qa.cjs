@@ -11,7 +11,10 @@ page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()
 let result={url:target,checkedAt:new Date().toISOString()},stage='startup';const shot=async name=>{stage=name;console.log('CHECK '+name);await page.screenshot({path:path.join(output,name+'.png')});};
 try{
  console.log('OPEN '+target);const response=await page.goto(target,{waitUntil:'domcontentloaded'});if(response&&!response.ok())throw Error('HTTP '+response.status());result.httpStatus=response?.status()||null;
- const local=target.startsWith('file:'),bytes=local?fs.readFileSync(fileURLToPath(target)):await response.body(),build=local?JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(target)),'BUILD.json'),'utf8')):await (await context.request.get(new URL('BUILD.json',target).href)).json();
+ // Read large standalone HTML through the HTTP client. Chromium's inspector
+ // may evict a 14 MB document body even while the actual page loads correctly.
+ const local=target.startsWith('file:'),readback=local?null:await context.request.get(target);if(readback&&!readback.ok())throw Error('Readback HTTP '+readback.status());
+ const bytes=local?fs.readFileSync(fileURLToPath(target)):await readback.body(),build=local?JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(target)),'BUILD.json'),'utf8')):await (await context.request.get(new URL('BUILD.json',target).href)).json();
  result.htmlSHA256=crypto.createHash('sha256').update(bytes).digest('hex');result.build=build;if(result.htmlSHA256!==build.htmlSHA256||build.source!=='c595390448b7c307ebf1fcd26566bd947411c319')throw Error('Published content/build provenance mismatch');
  await page.waitForFunction(()=>window.ShortsR24?.ready||window.__startupError||window.__humanStartup?.status==='ready');await page.waitForFunction(()=>window.ShortsR24?.ready||window.__startupError,{},{timeout:10000});
  const state=await page.evaluate(()=>({version:ShortsR24.version,source:ShortsR24.source,report:ShortsR24.report(),embedded:window.__SHORTS_R54_EMBEDDED__}));Object.assign(result,state);const r=state.report.rise;
