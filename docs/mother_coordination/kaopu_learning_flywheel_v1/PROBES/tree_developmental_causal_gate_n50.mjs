@@ -93,11 +93,34 @@ function evaluate(c) {
     collar.tangentAngleDegrees <= collar.maxTangentAngleDegrees;
   if (!collarPass) holds.push('HOLD_COLLAR_DISCONTINUITY');
 
+  const receipt = c.verifierReceipt;
+  const receiptComplete = Boolean(
+    receipt &&
+    c.producerIdentity &&
+    c.producerExecutionRoot &&
+    receipt.verifierIdentity &&
+    receipt.verifierExecutionRoot &&
+    receipt.verificationRunId &&
+    receipt.evidenceDigest
+  );
+  let verifierIndependent = null;
+  if (!receiptComplete) {
+    holds.push('HOLD_VERIFIER_EVIDENCE_MISSING');
+  } else {
+    verifierIndependent = c.producerIdentity !== receipt.verifierIdentity &&
+      c.producerExecutionRoot !== receipt.verifierExecutionRoot;
+    if (!verifierIndependent) holds.push('HOLD_VERIFIER_NOT_INDEPENDENT');
+    if (!c.subjectSha || receipt.verificationSubjectSha !== c.subjectSha) {
+      holds.push('HOLD_VERIFIED_SUBJECT_MISMATCH');
+    }
+    if (receipt.result !== 'PASS') holds.push('HOLD_VERIFIER_GATE_NOT_PASSED');
+  }
+
   return {
     decision: holds.length ? holds[0] : 'TREE_CAUSAL_SEPARATION_VERIFIED_ONLY',
     holds: [...new Set(holds)],
     notes,
-    diagnostics: { directCosine, reflectedCosine, shootLight, rootSoil }
+    diagnostics: { directCosine, reflectedCosine, shootLight, rootSoil, verifierIndependent }
   };
 }
 

@@ -19,7 +19,14 @@
     "shootResponseSignature",
     "rootResponseSignature",
     "collarContinuity",
-    "independentVerifier"
+    "producerIdentity",
+    "producerExecutionRoot",
+    "verifierReceipt.verifierIdentity",
+    "verifierReceipt.verifierExecutionRoot",
+    "verifierReceipt.verificationSubjectSha",
+    "verifierReceipt.verificationRunId",
+    "verifierReceipt.result",
+    "verifierReceipt.evidenceDigest"
   ],
   "gate": [
     "Only apply the developmental assertion when the tested time pair crosses a source-backed stage boundary; nearby times inside one stage are NOT_APPLICABLE rather than automatic failures.",
@@ -28,6 +35,7 @@
     "Reverse a non-uniform light field and a non-uniform soil-moisture field separately. Shoot allocation must show a light-specific response and root allocation a soil-specific response, within source-backed tolerances.",
     "Root and shoot response signatures may be coupled but may not be identical, sign-reflected copies driven by one generic recursion without declared causal channels.",
     "Seed-root-collar-trunk truth-layer continuity must pass the declared position/tangent tolerances.",
+    "A verifier receipt is not independent merely because it is labeled verifier. Producer and verifier identities and execution roots must both differ; the receipt must bind the exact subject SHA, run ID, result, and evidence digest.",
     "Passing this gate verifies causal separation only; it does not approve species identity, 3A appearance, browser delivery or user acceptance."
   ],
   "states": [
@@ -41,7 +49,11 @@
     "HOLD_SHOOT_LIGHT_RESPONSE_MISSING",
     "HOLD_ROOT_SOIL_RESPONSE_MISSING",
     "HOLD_ROOT_SHOOT_RESPONSE_CONFLATED",
-    "HOLD_COLLAR_DISCONTINUITY"
+    "HOLD_COLLAR_DISCONTINUITY",
+    "HOLD_VERIFIER_EVIDENCE_MISSING",
+    "HOLD_VERIFIER_NOT_INDEPENDENT",
+    "HOLD_VERIFIED_SUBJECT_MISMATCH",
+    "HOLD_VERIFIER_GATE_NOT_PASSED"
   ],
   "activation": {
     "global": false,
@@ -49,6 +61,22 @@
     "independentVerifierRequired": true,
     "rollbackPoint": "Delete or ignore this Candidate; keep Tree R03 rejected and do not alter main, gh-pages or any production branch."
   },
+  "revisionHistory": [
+    {
+      "revision": "N50",
+      "change": "Initial developmental topology, environmental response, root-shoot separation and collar continuity gate.",
+      "POSTED": true,
+      "receipt": "https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-5918506982"
+    },
+    {
+      "revision": "N51",
+      "change": "Require machine-checkable producer/verifier identity separation, execution-root separation and exact verified-subject binding.",
+      "POSTED": false,
+      "ACKNOWLEDGED": false,
+      "ADOPTED": false,
+      "USER-ACCEPTED": false
+    }
+  ],
   "lifecycle": {
     "POSTED": true,
     "postedReceipt": "https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-5918506982",

@@ -1,0 +1,79 @@
+{
+  "runId": "TREE-VERIFIER-INDEPENDENCE-GAP-N51",
+  "generatedAt": "2026-09-30T21:48:20.644Z",
+  "cases": [
+    {
+      "id": "independent-verifier-exact-subject",
+      "expectedDecision": "TREE_CAUSAL_SEPARATION_VERIFIED_ONLY",
+      "expectedHolds": [],
+      "observed": {
+        "decision": "TREE_CAUSAL_SEPARATION_VERIFIED_ONLY",
+        "holds": [],
+        "notes": [],
+        "diagnostics": {
+          "directCosine": 0,
+          "reflectedCosine": 0,
+          "shootLight": 0.4,
+          "rootSoil": 0.4
+        }
+      },
+      "pass": true
+    },
+    {
+      "id": "producer-self-verifies",
+      "expectedDecision": "HOLD_VERIFIER_NOT_INDEPENDENT",
+      "expectedHolds": [],
+      "observed": {
+        "decision": "TREE_CAUSAL_SEPARATION_VERIFIED_ONLY",
+        "holds": [],
+        "notes": [],
+        "diagnostics": {
+          "directCosine": 0,
+          "reflectedCosine": 0,
+          "shootLight": 0.4,
+          "rootSoil": 0.4
+        }
+      },
+      "pass": false
+    },
+    {
+      "id": "verifier-checks-wrong-subject",
+      "expectedDecision": "HOLD_VERIFIED_SUBJECT_MISMATCH",
+      "expectedHolds": [],
+      "observed": {
+        "decision": "TREE_CAUSAL_SEPARATION_VERIFIED_ONLY",
+        "holds": [],
+        "notes": [],
+        "diagnostics": {
+          "directCosine": 0,
+          "reflectedCosine": 0,
+          "shootLight": 0.4,
+          "rootSoil": 0.4
+        }
+      },
+      "pass": false
+    },
+    {
+      "id": "missing-verifier-receipt",
+      "expectedDecision": "HOLD_VERIFIER_EVIDENCE_MISSING",
+      "expectedHolds": [],
+      "observed": {
+        "decision": "TREE_CAUSAL_SEPARATION_VERIFIED_ONLY",
+        "holds": [],
+        "notes": [],
+        "diagnostics": {
+          "directCosine": 0,
+          "reflectedCosine": 0,
+          "shootLight": 0.4,
+          "rootSoil": 0.4
+        }
+      },
+      "pass": false
+    }
+  ],
+  "summary": {
+    "total": 4,
+    "passed": 1,
+    "failed": 3
+  }
+}

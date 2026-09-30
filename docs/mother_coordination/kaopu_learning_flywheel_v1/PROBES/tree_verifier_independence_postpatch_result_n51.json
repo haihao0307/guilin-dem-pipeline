@@ -1,0 +1,89 @@
+{
+  "runId": "TREE-VERIFIER-INDEPENDENCE-GAP-N51",
+  "generatedAt": "2026-09-30T21:49:02.040Z",
+  "cases": [
+    {
+      "id": "independent-verifier-exact-subject",
+      "expectedDecision": "TREE_CAUSAL_SEPARATION_VERIFIED_ONLY",
+      "expectedHolds": [],
+      "observed": {
+        "decision": "TREE_CAUSAL_SEPARATION_VERIFIED_ONLY",
+        "holds": [],
+        "notes": [],
+        "diagnostics": {
+          "directCosine": 0,
+          "reflectedCosine": 0,
+          "shootLight": 0.4,
+          "rootSoil": 0.4,
+          "verifierIndependent": true
+        }
+      },
+      "pass": true
+    },
+    {
+      "id": "producer-self-verifies",
+      "expectedDecision": "HOLD_VERIFIER_NOT_INDEPENDENT",
+      "expectedHolds": [],
+      "observed": {
+        "decision": "HOLD_VERIFIER_NOT_INDEPENDENT",
+        "holds": [
+          "HOLD_VERIFIER_NOT_INDEPENDENT"
+        ],
+        "notes": [],
+        "diagnostics": {
+          "directCosine": 0,
+          "reflectedCosine": 0,
+          "shootLight": 0.4,
+          "rootSoil": 0.4,
+          "verifierIndependent": false
+        }
+      },
+      "pass": true
+    },
+    {
+      "id": "verifier-checks-wrong-subject",
+      "expectedDecision": "HOLD_VERIFIED_SUBJECT_MISMATCH",
+      "expectedHolds": [],
+      "observed": {
+        "decision": "HOLD_VERIFIED_SUBJECT_MISMATCH",
+        "holds": [
+          "HOLD_VERIFIED_SUBJECT_MISMATCH"
+        ],
+        "notes": [],
+        "diagnostics": {
+          "directCosine": 0,
+          "reflectedCosine": 0,
+          "shootLight": 0.4,
+          "rootSoil": 0.4,
+          "verifierIndependent": true
+        }
+      },
+      "pass": true
+    },
+    {
+      "id": "missing-verifier-receipt",
+      "expectedDecision": "HOLD_VERIFIER_EVIDENCE_MISSING",
+      "expectedHolds": [],
+      "observed": {
+        "decision": "HOLD_VERIFIER_EVIDENCE_MISSING",
+        "holds": [
+          "HOLD_VERIFIER_EVIDENCE_MISSING"
+        ],
+        "notes": [],
+        "diagnostics": {
+          "directCosine": 0,
+          "reflectedCosine": 0,
+          "shootLight": 0.4,
+          "rootSoil": 0.4,
+          "verifierIndependent": null
+        }
+      },
+      "pass": true
+    }
+  ],
+  "summary": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0
+  }
+}
