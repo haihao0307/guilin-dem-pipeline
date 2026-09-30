@@ -83,7 +83,7 @@ node PROBES/tree_developmental_causal_gate_n50.mjs \
 
 状态：
 
-- `POSTED`: false（路由前）
+- `POSTED`: true（Tree 定向路由：[#91 comment 5918506982](https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-5918506982)）
 - `ACKNOWLEDGED`: false
 - `IMPLEMENTED`: true（仅 Candidate 检查器）
 - `GATE-RUN`: true（10/10 历史／合成回放）
