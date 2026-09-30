@@ -1,0 +1,86 @@
+{
+  "runId": "COAST-R03-PUBLIC-RUNTIME-N49-20260930T113838Z",
+  "status": "GATE-RUN",
+  "classification": "VALIDATION_RESULT / EXISTING_GATE_FAILURE / NO_NEW_CANDIDATE",
+  "boundedQuestion": "Does the final Coast World R03 public URL enter an interactive runtime in an independent hosted browser?",
+  "subject": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "mainObservedHead": "38513d5410e374a0262bdcd80897dba9a9921c88",
+    "workflow": ".github/workflows/publish-kaopu-coast-world-r03.yml",
+    "workflowCommit": "38513d5410e374a0262bdcd80897dba9a9921c88",
+    "publishedGhPagesCommit": "d18138553098e40e1ddcd105376edea9d7c1a23c",
+    "publicUrl": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-coast-world/r03-20260930/"
+  },
+  "observedEnvironment": {
+    "evidenceExecutionKind": "hostedBrowser",
+    "browserService": "cloud Chrome via CDP",
+    "physicalDevice": false,
+    "userDeviceRetested": false,
+    "browserVersion": "unknown",
+    "hostPlatform": "unknown"
+  },
+  "attempts": [
+    {
+      "kind": "fresh navigation",
+      "observedAt": "2026-09-30T11:38:38Z",
+      "result": "HOLD_PUBLIC_BROWSER_RUNTIME_FAILED"
+    },
+    {
+      "kind": "same-environment reload",
+      "observedAt": "2026-09-30T11:38:52Z",
+      "result": "HOLD_PUBLIC_BROWSER_RUNTIME_FAILED"
+    }
+  ],
+  "observations": {
+    "documentTitle": "KaoPu Coast World R03",
+    "visibleVersionMarker": "KAOPU · WORLD SCORE R03",
+    "loadingPercent": 8,
+    "loadingText": "正在准备 / Preparing",
+    "loadingButtonDisabled": true,
+    "visibleError": "此设备未提供 WebGL2",
+    "readyMarker": null,
+    "modeStateText": "WALK",
+    "fieldAtlasButtonCount": 4,
+    "canvasIntrinsicWidth": 300,
+    "canvasIntrinsicHeight": 150,
+    "canvasCssWidth": 1363,
+    "canvasCssHeight": 936,
+    "fatalPageError": "Error: WebGL2 unavailable",
+    "fatalPageErrorLocation": "public R03 index line 96",
+    "nonSubjectNoise": "Chrome extension metadata error was observed and excluded from the subject failure decision"
+  },
+  "decision": {
+    "publicHtmlReachableInObservedBrowser": true,
+    "interactive3DRuntimeInObservedBrowser": false,
+    "criticalInteractionExecuted": false,
+    "browserPassed": false,
+    "shareAllowed": false,
+    "physicalDeviceOperational": "unknown",
+    "otherBrowserOperational": "unknown",
+    "rootCause": "unknown",
+    "gateState": "HOLD_PUBLIC_BROWSER_RUNTIME_FAILED",
+    "candidateDecision": "NO-NOVELTY / REJECT_DUPLICATE_CANDIDATE"
+  },
+  "applicableExistingControls": [
+    "knowledge/PUBLIC_WEB_DELIVERY_GATE.md",
+    "CANDIDATE_VIEWPORT_NOT_PHYSICAL_DEVICE_001",
+    "N47 Quick Shorts public runtime validation"
+  ],
+  "lifecycle": {
+    "POSTED": true,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  },
+  "kpi": {
+    "firstCandidatePassRate": "unknown",
+    "userCorrectionCount": "unknown",
+    "sameClassRecurrenceRate": "unknown",
+    "rejectedLineageInheritanceCount": "unknown",
+    "staleDeliveryCount": "unknown",
+    "internalIterationsPerAcceptedDelta": "unknown",
+    "instructionToLegalCandidateTime": "unknown"
+  }
+}
