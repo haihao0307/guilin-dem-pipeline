@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#0b2630" />
-<title>KaoPu Coast World R02</title>
+<title>KaoPu Coast World R03</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%230b2630%27/%3E%3Cpath d=%27M8 37c9-10 17 8 27-2s15 4 21-4v15H8z%27 fill=%27%237cc8cf%27/%3E%3Ccircle cx=%2742%27 cy=%2719%27 r=%277%27 fill=%27%23e4d0a5%27/%3E%3C/svg%3E">
 
 <style>
@@ -86,7 +86,7 @@ button,select,input{font:inherit}button{cursor:pointer}#world{position:fixed;ins
 
 <div id="touchMove" class="touch-pad"><i></i></div>
 <div id="touchLook" class="touch-look"></div>
-<div class="caption"><span id="zoneState">THE BEACH</span><span>KAOPU · WORLD SCORE R02</span></div>
+<div class="caption"><span id="zoneState">THE BEACH</span><span>KAOPU · WORLD SCORE R03</span></div>
 
 <script type="module">
 const canvas = document.getElementById('world');
@@ -132,7 +132,8 @@ function terrainHeight(x, z) {
   let h = mix(sea, beach, smoothstep(-10, 2.5, z));
   const face = smoothstep(-12, 28, z);
   h += (0.11 * Math.sin(x * 0.17 + Math.sin(z * 0.11)) + 0.045 * Math.sin(x * 0.43 + z * 0.21)) * face;
-  h += 0.00072 * x * x * smoothstep(-5, 16, z);
+  h += 0.00135 * x * x * smoothstep(-7, 15, z);
+  h += 0.11 * Math.sin(x * 0.075 + 0.5 * Math.sin(x * 0.031)) * smoothstep(-9, 4, z);
   h += gaussian(x, z, -21, 33, 22, 10, 5.2);
   h += gaussian(x, z, 22, 37, 20, 12, 3.8);
   h += gaussian(x, z, 0, 25, 28, 9, 0.8);
@@ -165,7 +166,7 @@ const fieldPixels = new Uint8Array(N * 4), wetPixels = new Uint8Array(N * 4);
 
 const ROCKS = [
   { x: 7.4, z: -5.8, r: 2.45, scale: [2.85, 1.85, 2.55], rot: 0.38 },
-  { x: -14.2, z: -2.2, r: 1.2, scale: [1.45, .88, 1.25], rot: -0.72 },
+  { x: -9.6, z: -2.4, r: 1.18, scale: [1.42, .86, 1.22], rot: -0.72 },
   { x: 19.5, z: -1.4, r: .9, scale: [1.0, .62, 1.2], rot: .18 },
   { x: -23.5, z: 1.5, r: .82, scale: [.9, .55, .78], rot: 1.08 }
 ];
@@ -457,7 +458,7 @@ float terrainH(vec2 p){
   float h=mix(sea,beach,t);
   float f=clamp((z+12.0)/40.0,0.0,1.0);f=f*f*(3.0-2.0*f);
   h+=(.11*sin(x*.17+sin(z*.11))+.045*sin(x*.43+z*.21))*f;
-  float q=clamp((z+5.0)/21.0,0.0,1.0);q=q*q*(3.0-2.0*q);h+=.00072*x*x*q;
+  float q=clamp((z+7.0)/22.0,0.0,1.0);q=q*q*(3.0-2.0*q);h+=.00135*x*x*q;float sh=clamp((z+9.0)/13.0,0.0,1.0);sh=sh*sh*(3.0-2.0*sh);h+=.11*sin(x*.075+.5*sin(x*.031))*sh;
   vec2 d=(p-vec2(-21.,33.))/vec2(22.,10.);h+=5.2*exp(-dot(d,d));
   d=(p-vec2(22.,37.))/vec2(20.,12.);h+=3.8*exp(-dot(d,d));
   d=(p-vec2(0.,25.))/vec2(28.,9.);h+=.8*exp(-dot(d,d));
@@ -478,7 +479,7 @@ precision highp float;layout(location=0)in vec3 aPosition;layout(location=1)in v
 const terrainFS = `#version 300 es
 precision highp float;in vec3 vWorld,vNormal;out vec4 outColor;uniform sampler2D uWet;uniform vec4 uDomain;uniform vec3 uCamera,uLightDir,uFogColor;uniform float uTime,uTide;
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);}float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<4;i++){v+=a*noise(p);p=mat2(1.7,1.2,-1.2,1.7)*p;a*=.5;}return v;}
-void main(){vec3 N=normalize(vNormal),V=normalize(uCamera-vWorld);vec2 uv=(vWorld.xz-uDomain.xy)/uDomain.zw;vec2 hist=texture(uWet,uv).rg;float px=max(length(dFdx(vWorld.xz)),length(dFdy(vWorld.xz)));float fineKeep=1.-smoothstep(.055,.52,px);float macro=fbm(vWorld.xz*.12+3.7),mid=fbm(vWorld.xz*.72-8.1),fine=fbm(vWorld.xz*4.2+17.)*fineKeep;float nearWater=1.-smoothstep(.05,.58,vWorld.y-uTide);float wet=max(hist.r,nearWater*.58);float foam=hist.g;float ripple=.5+.5*sin(vWorld.z*10.5+1.7*sin(vWorld.x*.42)+mid*2.2);ripple*=fineKeep*smoothstep(-1.4,.6,vWorld.z)*(1.-smoothstep(4.,9.,vWorld.z));float e=.055;float hx=fbm((vWorld.xz+vec2(e,0))*4.2)-fbm((vWorld.xz-vec2(e,0))*4.2),hz=fbm((vWorld.xz+vec2(0,e))*4.2)-fbm((vWorld.xz-vec2(0,e))*4.2);N=normalize(N+vec3(-hx*.45*fineKeep,0.,-hz*.45*fineKeep));vec3 dry=mix(vec3(.43,.365,.255),vec3(.61,.515,.345),macro*.55+mid*.25);dry*=.92+.14*fine+.055*ripple;vec3 wetSand=mix(vec3(.105,.125,.12),vec3(.22,.215,.18),macro*.35);vec3 col=mix(dry,wetSand,wet*.86);float pebble=smoothstep(.78,.9,noise(vWorld.xz*7.4+4.))*fineKeep*smoothstep(-.8,4.5,vWorld.z);col=mix(col,vec3(.11,.105,.095),pebble*.35);float veg=smoothstep(9.5,17.,vWorld.z)*smoothstep(.28,1.5,vWorld.y)*(1.-smoothstep(.22,.62,1.-N.y));vec3 green=mix(vec3(.055,.13,.06),vec3(.18,.28,.10),fbm(vWorld.xz*.34));col=mix(col,green,veg*.9);float cliff=clamp(smoothstep(.25,.64,1.-N.y)+smoothstep(3.2,5.8,vWorld.y),0.,1.);vec3 rock=mix(vec3(.13,.125,.115),vec3(.23,.205,.17),macro);col=mix(col,rock,cliff*.78);col=mix(col,vec3(.92,.945,.91),foam*.68);float ndl=max(dot(N,uLightDir),0.);vec3 H=normalize(V+uLightDir);float rough=mix(.9,.28,wet);float spec=pow(max(dot(N,H),0.),mix(18.,135.,wet))*wet*(.25+.75*nearWater);col*=.28+.98*ndl;col+=vec3(1.,.82,.52)*spec*.9;float dist=length(uCamera-vWorld);float fog=1.-exp(-dist*.013);outColor=vec4(mix(col,uFogColor,clamp(fog,0.,.79)),1);}`;
+void main(){vec3 N=normalize(vNormal),V=normalize(uCamera-vWorld);vec2 uv=(vWorld.xz-uDomain.xy)/uDomain.zw;vec2 hist=texture(uWet,uv).rg;float px=max(length(dFdx(vWorld.xz)),length(dFdy(vWorld.xz)));float fineKeep=1.-smoothstep(.055,.52,px);float macro=fbm(vWorld.xz*.12+3.7),mid=fbm(vWorld.xz*.72-8.1),fine=fbm(vWorld.xz*4.2+17.)*fineKeep;float nearWater=1.-smoothstep(.035,1.08,vWorld.y-uTide);float wet=max(hist.r,nearWater*.58);float foam=hist.g;float ripple=.5+.5*sin(vWorld.z*10.5+1.7*sin(vWorld.x*.42)+mid*2.2);ripple*=fineKeep*smoothstep(-1.4,.6,vWorld.z)*(1.-smoothstep(4.,9.,vWorld.z));float e=.055;float hx=fbm((vWorld.xz+vec2(e,0))*4.2)-fbm((vWorld.xz-vec2(e,0))*4.2),hz=fbm((vWorld.xz+vec2(0,e))*4.2)-fbm((vWorld.xz-vec2(0,e))*4.2);N=normalize(N+vec3(-hx*.45*fineKeep,0.,-hz*.45*fineKeep));vec3 dry=mix(vec3(.43,.365,.255),vec3(.61,.515,.345),macro*.55+mid*.25);dry*=.92+.14*fine+.055*ripple;vec3 wetSand=mix(vec3(.105,.125,.12),vec3(.22,.215,.18),macro*.35);vec3 col=mix(dry,wetSand,wet*.86);float pebble=smoothstep(.78,.9,noise(vWorld.xz*7.4+4.))*fineKeep*smoothstep(-.8,4.5,vWorld.z);col=mix(col,vec3(.11,.105,.095),pebble*.35);float veg=smoothstep(9.5,17.,vWorld.z)*smoothstep(.28,1.5,vWorld.y)*(1.-smoothstep(.22,.62,1.-N.y));vec3 green=mix(vec3(.055,.13,.06),vec3(.18,.28,.10),fbm(vWorld.xz*.34));col=mix(col,green,veg*.9);float cliff=clamp(smoothstep(.25,.64,1.-N.y)+smoothstep(3.2,5.8,vWorld.y),0.,1.);vec3 rock=mix(vec3(.13,.125,.115),vec3(.23,.205,.17),macro);col=mix(col,rock,cliff*.78);col=mix(col,vec3(.92,.945,.91),foam*.68);float ndl=max(dot(N,uLightDir),0.);vec3 H=normalize(V+uLightDir);float rough=mix(.9,.28,wet);float spec=pow(max(dot(N,H),0.),mix(18.,135.,wet))*wet*(.25+.75*nearWater);col*=.28+.98*ndl;col+=vec3(1.,.82,.52)*spec*.9;float dist=length(uCamera-vWorld);float fog=1.-exp(-dist*.013);outColor=vec4(mix(col,uFogColor,clamp(fog,0.,.79)),1);}`;
 const terrainProgram = program(litVS, terrainFS); const terrainU = locs(terrainProgram, ['uViewProj','uModel','uWet','uDomain','uCamera','uLightDir','uFogColor','uTime','uTide']);
 
 const objectFS = `#version 300 es
@@ -501,7 +502,7 @@ const waterFS = `#version 300 es
 precision highp float;in vec3 vWorld,vField;out vec4 outColor;uniform vec3 uCamera,uLightDir,uFogColor;uniform float uTime,uTide;
 ${TERRAIN_GLSL}
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);}float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}float micro(vec2 p){return .018*sin(p.x*2.8+p.y*3.9-uTime*4.2)+.011*sin(-p.x*5.1+p.y*4.4-uTime*5.7)+.006*sin(p.x*9.2-p.y*7.3+uTime*7.1);}
-void main(){float bed=terrainH(vWorld.xz);float depth=vWorld.y-bed;if(depth<.012)discard;vec3 dx=dFdx(vWorld),dy=dFdy(vWorld);vec3 N=normalize(cross(dx,dy));if(N.y<0.)N=-N;float e=.06,hx=micro(vWorld.xz+vec2(e,0))-micro(vWorld.xz-vec2(e,0)),hz=micro(vWorld.xz+vec2(0,e))-micro(vWorld.xz-vec2(0,e));N=normalize(N+vec3(-hx/e*.22,0.,-hz/e*.22));vec3 V=normalize(uCamera-vWorld);float nv=max(dot(N,V),0.),fres=.035+.965*pow(1.-nv,5.);float d=clamp(depth/3.6,0.,1.);vec3 trans=mix(vec3(.10,.48,.48),vec3(.008,.075,.13),d);vec3 R=reflect(-V,N);float skyT=clamp(R.y*.55+.45,0.,1.);vec3 refl=mix(vec3(.42,.59,.62),vec3(.065,.18,.27),skyT);vec3 col=mix(trans,refl,.18+.68*fres);float sun=pow(max(dot(reflect(-uLightDir,N),V),0.),150.);float glitter=pow(max(dot(reflect(-uLightDir,normalize(N+vec3((noise(vWorld.xz*8.+uTime*.2)-.5)*.1,0.,(noise(vWorld.zx*9.-uTime*.17)-.5)*.1))),V),0.),42.);col+=vec3(1.,.78,.43)*(sun*1.55+glitter*.13);float shore=1.-smoothstep(.025,.40,depth);float crest=smoothstep(.55,.78,vField.r);float breakBand=exp(-pow((depth-.16)/.13,2.))*smoothstep(.47,.66,vField.r);float rock=exp(-pow((length(vWorld.xz-vec2(7.4,-5.8))-2.45)/.62,2.));float lace=.62+.38*noise(vWorld.xz*2.7+vec2(uTime*.12,-uTime*.17));float foam=clamp((shore*(.10+.48*crest)+breakBand*.75+vField.b*.72+rock*(.12+vField.b*1.25))*lace,0.,1.);col=mix(col,vec3(.91,.96,.94),foam*.93);float caust=.5+.5*sin(vWorld.x*2.3+sin(vWorld.z*2.7-uTime*1.5));col+=vec3(.06,.12,.09)*caust*(1.-d)*(.18-foam*.1);float fog=1.-exp(-length(uCamera-vWorld)*.011);col=mix(col,uFogColor,clamp(fog,0.,.78));float alpha=clamp(.44+d*.39+foam*.18,0.,.98);outColor=vec4(col,alpha);}`;
+void main(){float bed=terrainH(vWorld.xz);float depth=vWorld.y-bed;if(depth<.012)discard;vec3 dx=dFdx(vWorld),dy=dFdy(vWorld);vec3 N=normalize(cross(dx,dy));if(N.y<0.)N=-N;float e=.06,hx=micro(vWorld.xz+vec2(e,0))-micro(vWorld.xz-vec2(e,0)),hz=micro(vWorld.xz+vec2(0,e))-micro(vWorld.xz-vec2(0,e));N=normalize(N+vec3(-hx/e*.22,0.,-hz/e*.22));vec3 V=normalize(uCamera-vWorld);float nv=max(dot(N,V),0.),fres=.035+.965*pow(1.-nv,5.);float d=clamp(depth/3.6,0.,1.);vec3 trans=mix(vec3(.10,.48,.48),vec3(.008,.075,.13),d);vec3 R=reflect(-V,N);float skyT=clamp(R.y*.55+.45,0.,1.);vec3 refl=mix(vec3(.42,.59,.62),vec3(.065,.18,.27),skyT);vec3 col=mix(trans,refl,.18+.68*fres);float sun=pow(max(dot(reflect(-uLightDir,N),V),0.),150.);float glitter=pow(max(dot(reflect(-uLightDir,normalize(N+vec3((noise(vWorld.xz*8.+uTime*.2)-.5)*.1,0.,(noise(vWorld.zx*9.-uTime*.17)-.5)*.1))),V),0.),42.);col+=vec3(1.,.78,.43)*(sun*1.55+glitter*.13);float shore=1.-smoothstep(.025,.40,depth);float crest=smoothstep(.55,.78,vField.r);float breakBand=exp(-pow((depth-.16)/.13,2.))*smoothstep(.47,.66,vField.r);float rock=exp(-pow((length(vWorld.xz-vec2(7.4,-5.8))-2.45)/.62,2.));float lace=.62+.38*noise(vWorld.xz*2.7+vec2(uTime*.12,-uTime*.17));float swashBand=exp(-pow((depth-(.055+.035*sin(vWorld.x*.12-uTime*.75)))/.05,2.))*smoothstep(.35,.72,noise(vWorld.xz*1.8+vec2(uTime*.08,0.)));float foam=clamp((shore*(.10+.48*crest)+breakBand*.75+vField.b*.72+rock*(.12+vField.b*1.25)+swashBand*.78)*lace,0.,1.);col=mix(col,vec3(.91,.96,.94),foam*.93);float caust=.5+.5*sin(vWorld.x*2.3+sin(vWorld.z*2.7-uTime*1.5));col+=vec3(.06,.12,.09)*caust*(1.-d)*(.18-foam*.1);float fog=1.-exp(-length(uCamera-vWorld)*.011);col=mix(col,uFogColor,clamp(fog,0.,.78));float alpha=clamp(.44+d*.39+foam*.18,0.,.98);outColor=vec4(col,alpha);}`;
 const waterProgram = program(waterVS, waterFS); const waterU = locs(waterProgram, ['uViewProj','uField','uDomain','uFieldScale','uTime','uTide','uWave','uCamera','uLightDir','uFogColor']);
 
 const particleProgram = program(`#version 300 es
@@ -520,7 +521,7 @@ const identity = mat4();
 const palmTransforms = [], rockTransforms = [];
 
 function buildMeshes() {
-  const t = makeGrid(-60, 60, -38, 62, 220, 176, terrainHeight);
+  const t = makeGrid(-72, 72, -108, 62, 230, 228, terrainHeight);
   terrainMesh = makeMesh([{ loc: 0, size: 3, data: t.pos }, { loc: 1, size: 3, data: t.nor }], t.indices);
   const w = makeGrid(-72, 72, -108, 9, 220, 156, null);
   waterMesh = makeMesh([{ loc: 0, size: 3, data: w.pos }], w.indices);
@@ -532,8 +533,9 @@ function buildMeshes() {
     { loc: 3, size: 3, data: p.leaves.root }, { loc: 4, size: 1, data: p.leaves.weight }, { loc: 5, size: 1, data: p.leaves.phase }
   ], p.leaves.indices);
   const palmData = [
-    [-34,7,.15,.91],[-28,9,-.42,1.04],[-22,13,.55,.92],[-38,16,.86,1.10],[-30,20,-1.0,.94],
-    [27,7,-.48,.88],[34,10,.35,1.03],[23,14,1.06,.94],[40,17,-.34,.92],[15,22,-.72,.84],[-12,24,.62,.82]
+    [-6.4,5.8,.12,.96],[6.8,6.5,-.34,1.02],[-13,10,.55,.88],[14,11,-.62,.92],
+    [-27,8,-.42,1.04],[-22,14,.55,.92],[-35,18,.86,1.10],
+    [27,9,-.48,.88],[34,13,.35,1.03],[23,17,1.06,.94],[15,23,-.72,.84],[-12,25,.62,.82]
   ];
   for (const [x,z,r,s] of palmData) { const m = mat4(); mat4Compose(m, x, terrainHeight(x,z), z, r, s); palmTransforms.push(m); }
   for (const r of ROCKS) { const m = mat4(); mat4Compose(m, r.x, terrainHeight(r.x,r.z)+r.scale[1]*.39, r.z, r.rot, r.scale[0], r.scale[1], r.scale[2]); rockTransforms.push(m); }
@@ -579,7 +581,7 @@ function updateParticles(dt) {
   gl.bindBuffer(gl.ARRAY_BUFFER,particleMesh.lb);gl.bufferSubData(gl.ARRAY_BUFFER,0,particleLife.subarray(0,particleCount));
 }
 
-const camera = { pos: [-7.5, 2.35, 11.2], yaw: .025, pitch: -.075, speed: 5.2, mode: 'WALK', waterDepth: 0 };
+const camera = { pos: [0, 2.42, 13.8], yaw: .0, pitch: -.07, speed: 5.2, mode: 'WALK', waterDepth: 0 };
 const keys = new Set(); let pointerLocked = false, touchMove = [0,0], touchLookPrev = null;
 addEventListener('keydown', e => { keys.add(e.code); if(e.code==='KeyM') toggleAtlas(); if(e.code==='Space') e.preventDefault(); });
 addEventListener('keyup', e => keys.delete(e.code));
@@ -605,12 +607,12 @@ function updateCamera(dt){
   modeState.textContent=camera.mode;depthState.textContent=`depth ${camera.waterDepth.toFixed(2)} m`;zoneState.textContent=camera.pos[2]>18?'THE CANOPY':camera.pos[2]<-10?'THE OPEN SEA':'THE BEACH';
 }
 
-function bindCommon(p,u,viewProj,model,baseColor){gl.useProgram(p);if(u.uViewProj)gl.uniformMatrix4fv(u.uViewProj,false,viewProj);if(u.uModel)gl.uniformMatrix4fv(u.uModel,false,model);if(u.uCamera)gl.uniform3fv(u.uCamera,camera.pos);if(u.uLightDir)gl.uniform3fv(u.uLightDir,[.42,.79,.45]);if(u.uFogColor)gl.uniform3fv(u.uFogColor,[.43,.62,.66]);if(u.uTime)gl.uniform1f(u.uTime,worldTime);if(u.uDomain)gl.uniform4f(u.uDomain,WORLD.minX,WORLD.minZ,WORLD.maxX-WORLD.minX,WORLD.maxZ-WORLD.minZ);if(u.uTide)gl.uniform1f(u.uTide,Number(tideRange.value));if(u.uFieldScale)gl.uniform1f(u.uFieldScale,FIELD_SCALE);if(u.uBaseColor&&baseColor)gl.uniform3fv(u.uBaseColor,baseColor);}
+function bindCommon(p,u,viewProj,model,baseColor){gl.useProgram(p);if(u.uViewProj)gl.uniformMatrix4fv(u.uViewProj,false,viewProj);if(u.uModel)gl.uniformMatrix4fv(u.uModel,false,model);if(u.uCamera)gl.uniform3fv(u.uCamera,camera.pos);if(u.uLightDir)gl.uniform3fv(u.uLightDir,[.42,.79,.45]);if(u.uFogColor)gl.uniform3fv(u.uFogColor,[.47,.68,.70]);if(u.uTime)gl.uniform1f(u.uTime,worldTime);if(u.uDomain)gl.uniform4f(u.uDomain,WORLD.minX,WORLD.minZ,WORLD.maxX-WORLD.minX,WORLD.maxZ-WORLD.minZ);if(u.uTide)gl.uniform1f(u.uTide,Number(tideRange.value));if(u.uFieldScale)gl.uniform1f(u.uFieldScale,FIELD_SCALE);if(u.uBaseColor&&baseColor)gl.uniform3fv(u.uBaseColor,baseColor);}
 function drawIndexed(mesh){gl.bindVertexArray(mesh.vao);gl.drawElements(gl.TRIANGLES,mesh.count,mesh.indexType,0);}
 
 const proj=mat4(),view=mat4(),viewProj=mat4();
 function render(){
-  gl.viewport(0,0,canvas.width,canvas.height);gl.clearColor(.055,.18,.25,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  gl.viewport(0,0,canvas.width,canvas.height);gl.clearColor(.055,.20,.27,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
   gl.disable(gl.DEPTH_TEST);gl.depthMask(false);gl.useProgram(skyProgram);gl.uniform1f(skyU.uTime,worldTime);gl.bindVertexArray(null);gl.drawArrays(gl.TRIANGLES,0,3);
   gl.enable(gl.DEPTH_TEST);gl.depthMask(true);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);
   const forward=[Math.sin(camera.yaw)*Math.cos(camera.pitch),Math.sin(camera.pitch),-Math.cos(camera.yaw)*Math.cos(camera.pitch)];
