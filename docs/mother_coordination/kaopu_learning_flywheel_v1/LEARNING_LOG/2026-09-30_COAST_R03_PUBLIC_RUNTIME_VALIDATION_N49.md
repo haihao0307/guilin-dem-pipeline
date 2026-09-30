@@ -88,3 +88,60 @@ Coast World R03 的最终公网 URL，是否在独立浏览器真实进入可交
 ## Frozen
 
 生产源、main、gh-pages、R2 OS、Canonical Truth、现有 regression cases 与用户验收状态均未由本轮修改。
+
+
+---
+
+## 2026-09-30T13:40Z 同一 URL 的新 subject 复验
+
+### 新事实
+
+N49 初次验证后，main 仍停在 `38513d5410e374a0262bdcd80897dba9a9921c88`，但 `gh-pages` 已继续推进。固定 R03 URL 的内容发生了真实非 metadata 变化：
+
+- 初次 subject：`gh-pages@d1813855…`，`index.html` blob `1c063f0da69d3c3d856365aa83611150ef510b09`，58,367 bytes。
+- `562b8810864aa999508e67f87fe73906028a54c6` 以 “Publish KaoPu Coast World R03 public browser build” 覆盖相同路径。
+- `5975dc832c78512d1028715822252b99a202809a` 再修改 shader precision。
+- 复验时 `gh-pages` head 为 `6ee57dd038f68a6dc2e60f640ffb3e03a63cdfd6`，该 URL 当前 `index.html` blob 为 `6fcba3fa9a8be6412a102ab96ef00cb0b3d7223d`，12,718 bytes。
+- 当前目录只有 `.nojekyll` 与 `index.html`，没有新的 `PUBLICATION_PROOF.json`。
+
+因此 N49 初次 browser evidence 只属于旧 blob，不得继承给当前固定 URL。
+
+### 对新 subject 的 cache-busted 最小验证
+
+独立 hosted Chrome 以新查询参数重新导航后：
+
+- 页面显示 `图形初始化失败`；
+- `#fail.show = true`；
+- `canvas#getContext('webgl') = null`；
+- canvas intrinsic size 仍为 `300 × 150`；
+- 页面源码已不包含 `__KAOPU_READY__`，运行时值仍为 `null`；
+- 5 个视角按钮和 4 个 Field Atlas 模式按钮存在，但失败遮罩下没有合法 3D 关键交互可计为通过；
+- 当前 subject 没有进入可交互运行态。
+
+当前判定仍为 `HOLD_PUBLIC_BROWSER_RUNTIME_FAILED`、`browserPassed=false`、`shareAllowed=false`。这是新 artifact 的新验证结果，不是旧失败的重复刷新。
+
+### 与现有制度比较
+
+仍为 `no-novelty`，不创建新 regression case：
+
+- N30 / `TESTED-SUBJECT-NOT-MUTABLE-HEAD-001` 已规定：runtime/public artifact 的非 metadata 变化必须重新测试，旧 tested subject 不能把 “tested” 传给移动 head。
+- N32 / `SHARED-PUBLICATION-TARGET-CAS-001` 已规定：覆盖共享固定入口需要 target identity 前置条件和新 subject 回执；缺失时保持 HOLD。
+- `PUBLIC_WEB_DELIVERY_GATE` 已要求每个实际发布 subject 在最终公网 URL 完成浏览器启动与关键交互。
+
+应用现有状态语义：
+
+- `HOLD_UNTESTED_NONMETADATA_DELTA`
+- `HOLD_RECEIPT_BINDING_INCOMPLETE`
+- `HOLD_MUTATION_PRECONDITION_MISSING`
+- `HOLD_PUBLIC_BROWSER_RUNTIME_FAILED`
+
+### 可反驳假设与解除条件
+
+如果当前 blob `6fcba3f…` 获得精确 source/build lineage、发布回执，并在最终公网 URL 进入真实 WebGL 运行态、无致命错误且完成一个视角/Field Atlas 交互，则上述 HOLD 应针对该 subject 解除。任何后续固定 URL 覆盖都必须产生新的 subject identity 与浏览器回执，不能沿用本次结果。
+
+### 边界与 Unknown
+
+- 不把旧 blob 的 WebGL2 错误写成当前 blob 的同一根因；当前只确认 observed browser 无 WebGL context。
+- 其他浏览器、用户物理设备、iOS Safari 修复有效性、视觉质量、参考保真和用户验收仍为 `unknown`。
+- main 未变化；本轮没有修改 `gh-pages`、生产 Mother、R2 OS、Canonical Truth 或既有 regression cases。
+- 生命周期仍为 `POSTED=true / GATE-RUN=true`；`ACKNOWLEDGED / IMPLEMENTED / ADOPTED / USER-ACCEPTED=false`。
