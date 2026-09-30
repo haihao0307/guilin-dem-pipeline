@@ -1,0 +1,60 @@
+name: Publish Quick Shorts R4
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/publish-quick-shorts-r4.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Quick Shorts source only
+        uses: actions/checkout@v4
+        with:
+          repository: haihao0307/Humanoid-Rig-Lab-Next
+          ref: main
+          path: source
+          fetch-depth: 1
+          sparse-checkout: quick-shorts-r4
+
+      - name: Publish into the proven gh-pages site
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          rm -rf site
+          git init site
+          cd site
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git -c protocol.version=2 fetch --depth=1 --filter=blob:none origin gh-pages
+          git update-ref refs/heads/gh-pages FETCH_HEAD
+          git symbolic-ref HEAD refs/heads/gh-pages
+          git reset --mixed HEAD
+
+          rm -rf quick-shorts-r4
+          mkdir -p quick-shorts-r4
+          cp -a ../source/quick-shorts-r4/. quick-shorts-r4/
+          : > quick-shorts-r4/.nojekyll
+
+          test -s quick-shorts-r4/index.html
+          test -s quick-shorts-r4/main.js
+          test -s quick-shorts-r4/card-data.json
+          test -s quick-shorts-r4/data/data-13.js
+
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A quick-shorts-r4
+          if git diff --cached --quiet; then
+            echo "Quick Shorts R4 is already current."
+          else
+            git commit -m "publish: Quick Shorts R4 stable public preview"
+            git push origin HEAD:gh-pages
+          fi
