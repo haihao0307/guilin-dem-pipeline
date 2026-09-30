@@ -1,0 +1,77 @@
+{
+  "schema": "kaopu.fish.surface-parameterization-audit/2",
+  "method": "COMPLETE_FBX_SURFACE_UV_CHART_PARAMETRIC_RECONSTRUCTION",
+  "source": {
+    "vertices": 482095,
+    "triangles": 964285,
+    "normalSamples": 820996,
+    "uvParameterPoints": 497701,
+    "uvCharts": 145,
+    "boundsM": {
+      "min": [-0.4907227158546448, 0.0, -0.11252595484256744],
+      "max": [0.4907227158546448, 0.2882537841796875, 0.11252595484256744],
+      "size": [0.9814454317092896, 0.2882537841796875, 0.2250519096851349]
+    }
+  },
+  "errorsAgainstEverySourceUvPoint": {
+    "positionM": {
+      "mean": 0.0000932246612757582,
+      "rms": 0.0001215414140056239,
+      "p95": 0.00021102512321434334,
+      "p99": 0.00040510321022857633,
+      "max": 0.0024230612865307325
+    },
+    "normalAngleDeg": {
+      "mean": 3.2791406130197776,
+      "rms": 8.214007506499492,
+      "p95": 13.258908065205812,
+      "p99": 31.008787446857678,
+      "max": 178.89579951429414
+    }
+  },
+  "generatedBoundsM": {
+    "min": [-0.49123725295066833, -5.862220291419362e-7, -0.11245217174291611],
+    "max": [0.49062803387641907, 0.28828245401382446, 0.11240676790475845],
+    "size": [0.9818652868270874, 0.2882830500602722, 0.22485893964767456]
+  },
+  "gates": {
+    "surfaceDerivedOnly": true,
+    "riggingBlockedUntilSurfaceAccepted": true,
+    "visualAcceptance": false,
+    "motionAcceptance": false,
+    "productionReady": false
+  },
+  "status": "PARAMETRIC_SURFACE_BUILT_AWAITING_VISUAL_COMPARISON",
+  "artifacts": {
+    "MUSKELLUNGE_SURFACE_SCORE_R02.bin": {
+      "bytes": 17183766,
+      "sha256": "d99fafcf65e0411ad9e477fc265d941c77c8f9828a5d9aa456e502d434cc88ad"
+    },
+    "VALIDATION_RECONSTRUCTED_SURFACE_R02.npz": {
+      "bytes": 17046252,
+      "sha256": "df62b683557d125c8f5177870a564ac2218c0e9ef4eda5a13006a4dba55ee431"
+    }
+  },
+  "runtimeRepresentation": {
+    "chartBasisCounts": {
+      "CUBIC_TENSOR_BSPLINE": 126,
+      "POLYNOMIAL_2D": 19
+    },
+    "controlCoefficients": 218843,
+    "parameterVertices": 497701,
+    "triangles": 964285,
+    "parameterCoordinates": "PER_CHART_UINT16_UV",
+    "storesOriginalXYZVertexCacheAsTruth": false,
+    "usesPrimitiveFishBody": false,
+    "usesHandAuthoredAnatomyGeometry": false,
+    "usesOriginalFbxAtRuntime": false,
+    "chartCount": 145
+  },
+  "perChartSummary": {
+    "maxChartFitRmsM": 0.0003457017247617804,
+    "maxChartFitP99M": 0.0011213518554506505,
+    "maxChartFitMaxM": 0.0024235450542569345,
+    "polynomialCharts": 19,
+    "bsplineCharts": 126
+  }
+}
