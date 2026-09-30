@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="description" content="KAOPU Mammal Instrument R06 — 将猫项目的参数化解剖能力与狗项目的老师证据流程并入谱—乐器工作流。">
+  <meta name="kaopu-instrument-bytes" content="__INSTRUMENT_BYTES__">
+  <meta name="kaopu-workbench-bytes" content="__WORKBENCH_BYTES__">
+  <link rel="icon" href="data:,">
+  <title>KAOPU · Mammal Instrument R06</title>
+  <style>
+    :root{color-scheme:dark;--bg:#090b0e;--panel:rgba(16,20,25,.97);--soft:rgba(31,38,46,.84);--line:rgba(255,255,255,.11);--line2:rgba(255,255,255,.23);--text:#f2f5f7;--muted:#97a3af;--accent:#e6ba61;--ok:#8fd8af;--bad:#ff9292;--info:#a9c8ef;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}
+    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--text)}button,textarea,input{font:inherit}
+    #app{width:100%;height:100%;display:grid;grid-template-columns:minmax(360px,430px) 1fr}
+    .panel{position:relative;z-index:3;height:100%;overflow:auto;padding:20px;background:var(--panel);border-right:1px solid var(--line);backdrop-filter:blur(18px)}
+    .eyebrow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase}.badge{padding:4px 8px;border:1px solid var(--line2);border-radius:999px;color:var(--accent);white-space:nowrap}
+    h1{margin:0;font-size:31px;line-height:1.04;letter-spacing:-.04em;font-weight:700}.lead{margin:11px 0 15px;color:var(--muted);font-size:13px;line-height:1.65}.lead strong{color:var(--text);font-weight:660}
+    .audit{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:14px}.audit-item{padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:rgba(7,9,12,.52)}.audit-item span{display:block;color:var(--muted);font-size:10px}.audit-item strong{display:block;margin-top:3px;font-size:13px;font-weight:650}.audit-item strong.ok{color:var(--ok)}
+    .inheritance{display:grid;gap:7px;margin:10px 0 14px}.source-card{padding:10px 11px;border:1px solid var(--line);border-radius:9px;background:rgba(21,27,34,.72);font-size:11.5px;line-height:1.55}.source-card strong{color:var(--info)}.source-card span{color:var(--muted)}
+    .section{margin:16px 0 8px;color:var(--muted);font-size:11px;letter-spacing:.08em}.scores{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+    button,.file-label{min-height:38px;border:1px solid var(--line);border-radius:9px;background:var(--soft);color:var(--text);cursor:pointer;transition:120ms ease}button:hover,.file-label:hover{border-color:var(--line2);background:rgba(50,58,69,.95)}button:active{transform:translateY(1px)}button.primary{border-color:transparent;background:var(--accent);color:#171208;font-weight:730}button[aria-pressed=true]{border-color:rgba(230,186,97,.82);color:var(--accent)}
+    textarea{width:100%;min-height:165px;resize:vertical;padding:12px 13px;border:1px solid var(--line);border-radius:10px;outline:none;background:#07090b;color:#f3dfa9;font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;font-size:11px;line-height:1.48;word-break:break-all}textarea:focus{border-color:rgba(230,186,97,.76);box-shadow:0 0 0 3px rgba(230,186,97,.08)}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.views{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}.views button{min-height:33px;padding:0 3px;font-size:10.5px}
+    .source-line{margin:8px 0 0;padding:8px 9px;border-left:2px solid rgba(169,200,239,.65);background:rgba(20,27,35,.55);color:var(--muted);font-size:10.8px;line-height:1.5}.source-line strong{color:var(--info)}
+    .status{min-height:36px;margin:8px 0 0;color:var(--ok);font-size:11.5px;line-height:1.55}.status.error{color:var(--bad)}
+    .metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.metric{min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:rgba(7,9,12,.52)}.metric span{display:block;overflow:hidden;color:var(--muted);font-size:10px;text-overflow:ellipsis;white-space:nowrap}.metric strong{display:block;margin-top:2px;overflow:hidden;font-size:14px;font-weight:650;text-overflow:ellipsis;white-space:nowrap}
+    details{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:11.3px;line-height:1.68}summary{cursor:pointer;color:var(--text)}code{color:#f0d28d;font-family:"SFMono-Regular",Consolas,monospace}
+    .world{position:relative;min-width:0;min-height:0;overflow:hidden;background:radial-gradient(circle at 52% 28%,#2c3640 0,#11161b 49%,#07090c 100%)}#viewport{position:absolute;inset:0;touch-action:none}#viewport canvas{display:block;width:100%;height:100%}
+    .world-note{position:absolute;right:15px;bottom:13px;z-index:2;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:rgba(7,9,12,.68);color:var(--muted);font-size:10.5px;pointer-events:none;backdrop-filter:blur(10px)}.world-note strong{color:var(--text)}
+    .warning{position:absolute;left:16px;top:14px;z-index:2;max-width:520px;padding:9px 11px;border:1px solid rgba(230,186,97,.30);border-radius:9px;background:rgba(15,13,8,.68);color:#dacba4;font-size:11px;line-height:1.5;pointer-events:none;backdrop-filter:blur(10px)}
+    @media(max-width:800px){html,body{overflow:auto}#app{height:auto;min-height:100%;grid-template-columns:1fr;grid-template-rows:minmax(56vh,64vh) auto}.world{grid-row:1}.panel{grid-row:2;height:auto;overflow:visible;padding:17px 15px calc(24px + env(safe-area-inset-bottom));border-top:1px solid var(--line);border-right:0}.warning{left:10px;right:10px;top:10px;max-width:none}.world-note{right:10px;bottom:10px}}
+    @media(max-width:420px){.audit{grid-template-columns:1fr 1fr}.scores{grid-template-columns:1fr 1fr}.views{grid-template-columns:repeat(5,1fr)}h1{font-size:28px}}
+  </style>
+</head>
+<body>
+  <main id="app">
+    <aside class="panel" aria-label="谱子与乐器控制台">
+      <div class="eyebrow"><span>KAOPU / SCORE → MAMMAL</span><span class="badge">R06 · K5.0.0</span></div>
+      <h1>趾行哺乳四足乐器</h1>
+      <p class="lead">这一版把猫项目中已经验证过的<strong>参数化解剖与固定长度站姿</strong>，以及狗项目中的<strong>老师原件、许可与来源证据流程</strong>，接入同一套“谱子负责对象、乐器负责计算”的工作流。</p>
+
+      <div class="audit">
+        <div class="audit-item"><span>乐器内身份预设</span><strong class="ok" id="preset-count">0</strong></div>
+        <div class="audit-item"><span>运行时外部模型</span><strong class="ok">0</strong></div>
+        <div class="audit-item"><span>领域约束</span><strong>digitigrade-mammal</strong></div>
+        <div class="audit-item"><span>谱子头</span><strong>K5</strong></div>
+      </div>
+
+      <div class="inheritance">
+        <div class="source-card"><strong>猫项目继承：</strong> <span>DNA 尺寸、胸腰骨盆分段、固定长度两骨 IK、椭圆肢体载体、掌趾展开、耳廓与吻部参数。</span></div>
+        <div class="source-card"><strong>狗项目继承：</strong> <span>固定老师版本、可追溯原件、权利说明与“老师只能测量，不能进入运行时”的边界。</span></div>
+      </div>
+
+      <div class="section">四份外部谱</div>
+      <div class="scores">
+        <button type="button" data-score-key="greyTabby">灰虎斑猫谱</button>
+        <button type="button" data-score-key="neutralDog">中型短毛犬谱</button>
+        <button type="button" data-score-key="grayWolf">灰狼复测谱</button>
+        <button type="button" data-score-key="unseenMammal">未命名新谱</button>
+      </div>
+
+      <div class="section">当前谱子</div>
+      <textarea id="score" spellcheck="false" aria-label="K5 谱子"></textarea>
+      <div class="actions"><button class="primary" id="play" type="button">演奏谱子</button><button id="verify" type="button">独立重演校验</button></div>
+      <div class="actions"><button id="skeleton" type="button" aria-pressed="false">解剖锚点</button><button id="camera" type="button">镜头归位</button></div>
+      <div class="views" aria-label="镜头视角">
+        <button type="button" data-view="quarter">3/4</button><button type="button" data-view="front">正面</button><button type="button" data-view="left">左侧</button><button type="button" data-view="right">右侧</button><button type="button" data-view="top">俯视</button>
+      </div>
+      <div class="actions"><button id="download-score" type="button">导出当前谱</button><button id="download-instrument" type="button">导出纯乐器</button></div>
+      <p class="source-line"><strong>当前谱来源：</strong> <span id="active-source">等待演奏。</span></p>
+      <p class="status" id="status" role="status">正在装载默认犬谱。</p>
+
+      <div class="section">实际展开结果</div>
+      <div class="metrics">
+        <div class="metric"><span>谱子体量</span><strong id="score-bytes">0 B</strong></div>
+        <div class="metric"><span>纯乐器体量</span><strong id="instrument-bytes">0 B</strong></div>
+        <div class="metric"><span>网格数量</span><strong id="meshes">0</strong></div>
+        <div class="metric"><span>三角面</span><strong id="triangles">0</strong></div>
+        <div class="metric"><span>几何缓冲</span><strong id="geometry-bytes">0 B</strong></div>
+        <div class="metric"><span>采样网格</span><strong id="grid-size">—</strong></div>
+        <div class="metric"><span>结果指纹</span><strong id="hash">—</strong></div>
+        <div class="metric"><span>工作台体量</span><strong>__WORKBENCH_BYTES__ B</strong></div>
+      </div>
+
+      <details>
+        <summary>K5 分工与谱段</summary>
+        <p><code>G</code> 全局尺度；<code>B</code> 胸廓、腰段、骨盆；<code>N</code> 颈部；<code>C</code> 头颅和吻部；<code>F/H</code> 前后肢长度、截面和关节角；<code>P</code> 掌趾；<code>T</code> 尾；<code>E</code> 耳廓；<code>S/D</code> 对称与中央细节；<code>A/R/W</code> 毛色、微形态与触须。</p>
+        <p>乐器内部只保存公共计算声部，不保存猫、狗、狼的完成形，也不读取两个旧项目中的网格。</p>
+      </details>
+    </aside>
+
+    <section class="world" aria-label="实时三维世界">
+      <div id="viewport"></div>
+      <div class="warning">本轮首先验证“旧知识能否转成公共声部与外部谱”。视觉仍待人工验收；狗老师和猫项目结果都只用于蒸馏知识，不作为运行时资产。</div>
+      <div class="world-note"><strong>拖动</strong> 旋转　<strong>滚轮 / 双指</strong> 缩放　单位：m</div>
+    </section>
+  </main>
+  <script id="kaopu-instrument-payload" type="application/octet-stream">__INSTRUMENT_B64__</script>
+  <!--KAOPU_APP_BUNDLE-->
+</body>
+</html>
