@@ -109,7 +109,7 @@ await check('fixed-length skeleton solver stays within reach correction gate', (
 
 await check('editing only the dog score changes actual geometry', () => {
   const original = SCORE_LIBRARY.neutralDog.score;
-  const changed = original.replace('C.17,.15,.14,.105', 'C.17,.18,.14,.105');
+  const changed = original.replace('T.36,.032,.010', 'T.52,.032,.010');
   assert.notEqual(original, changed);
   const first = buildScore(original);
   const second = buildScore(changed);
