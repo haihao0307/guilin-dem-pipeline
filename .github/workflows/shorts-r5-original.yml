@@ -6,19 +6,55 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: shorts-r5-review
+  cancel-in-progress: true
 jobs:
-  source:
+  review:
     runs-on: ubuntu-latest
+    timeout-minutes: 12
     steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: shorts-r5
       - uses: actions/checkout@v4
         with:
           repository: haihao0307/Humanoid-Rig-Lab-Next
           ref: 3c3e9a4b7b250f4c8db20c15e2e5fab4ca9ce568
           path: human
           fetch-depth: 1
-      - name: Package frozen source
-        run: tar --exclude=.git -czf original-human-r2.tar.gz -C human .
-      - uses: actions/upload-artifact@v4
+      - uses: actions/setup-node@v4
         with:
-          name: shorts-r5-original-source
-          path: original-human-r2.tar.gz
+          node-version: 22
+      - name: Build the original-body garment review
+        run: |
+          node shorts-r5/build.mjs human dist/shorts-original-r5
+          npm install --prefix .r5-deps --no-save --ignore-scripts --no-audit --no-fund playwright-core@1.55.0
+      - name: Real Chromium rendering and original action checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 --directory dist >/tmp/r5-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill ${SERVER_PID} 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4173/shorts-original-r5/ >/dev/null; then break; fi
+            sleep 1
+          done
+          export CHROME_PATH="$(command -v google-chrome || command -v chromium || true)"
+          test -n "$CHROME_PATH"
+          node shorts-r5/qa.cjs
+      - name: Preserve actual browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shorts-r5-browser-proof
+          path: proof/
+          if-no-files-found: warn
+      - name: Preserve build for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shorts-r5-built-site
+          path: dist/
+          if-no-files-found: warn
