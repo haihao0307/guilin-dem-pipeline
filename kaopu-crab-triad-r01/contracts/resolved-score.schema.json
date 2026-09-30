@@ -1,0 +1,319 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kaopu.local/schema/crab/resolved-score-1.json",
+  "title": "KAOPU Crab Resolved Score KCS1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "version",
+    "object",
+    "world",
+    "instrument",
+    "source",
+    "surface",
+    "regions",
+    "appendages",
+    "appearance",
+    "rig",
+    "motion",
+    "evidence",
+    "unknowns",
+    "acceptance"
+  ],
+  "properties": {
+    "schema": { "const": "kaopu.crab.resolved/1" },
+    "id": { "type": "string", "minLength": 1 },
+    "version": { "type": "string", "minLength": 1 },
+    "object": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "identityStatus", "parentScore"],
+      "properties": {
+        "label": { "type": "string" },
+        "identityStatus": { "enum": ["UNRESOLVED", "TEACHER_LABEL_ONLY", "VERIFIED"] },
+        "taxon": { "type": ["string", "null"] },
+        "parentScore": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "version", "sha256", "resolved"],
+          "properties": {
+            "id": { "type": "string" },
+            "version": { "type": "string" },
+            "sha256": { "$ref": "#/$defs/sha256" },
+            "resolved": { "const": true }
+          }
+        }
+      }
+    },
+    "world": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["units", "upAxis", "forwardAxis", "origin"],
+      "properties": {
+        "units": { "const": "metre" },
+        "upAxis": { "const": "Y" },
+        "forwardAxis": { "const": "+Z" },
+        "origin": { "$ref": "#/$defs/vec3" }
+      }
+    },
+    "instrument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "abi"],
+      "properties": {
+        "id": { "const": "kaopu.crab.exoskeleton-appendage" },
+        "version": { "type": "string" },
+        "abi": { "const": "KCR1" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["packageName", "sha256", "role", "formalRuntimeAllowed", "decoded"],
+      "properties": {
+        "packageName": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "role": { "const": "REFERENCE_TEACHER_ONLY" },
+        "formalRuntimeAllowed": { "const": false },
+        "decoded": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["positions", "triangles", "normals", "uvPoints", "materials", "hierarchyNodes"],
+          "properties": {
+            "positions": { "type": "integer", "minimum": 1 },
+            "triangles": { "type": "integer", "minimum": 1 },
+            "normals": { "type": "integer", "minimum": 1 },
+            "uvPoints": { "type": "integer", "minimum": 0 },
+            "materials": { "type": "integer", "minimum": 0 },
+            "hierarchyNodes": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    },
+    "surface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "charts", "seams", "coverage", "error"],
+      "properties": {
+        "method": { "const": "SOURCE_DERIVED_CONTINUOUS_CHARTS" },
+        "charts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 512,
+          "items": { "$ref": "#/$defs/surfaceChart" }
+        },
+        "seams": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/seam" }
+        },
+        "coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["formalSurfaceFraction", "excludedRegions"],
+          "properties": {
+            "formalSurfaceFraction": { "type": "number", "minimum": 0, "maximum": 1 },
+            "excludedRegions": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "error": { "$ref": "#/$defs/errorReport" }
+      }
+    },
+    "regions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "role", "chartIds", "rigidity", "confidence"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "role": { "type": "string", "minLength": 1 },
+          "chartIds": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+          "rigidity": { "enum": ["RIGID", "HINGED", "FLEXIBLE_MICROSTRUCTURE"] },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+    "appendages": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": { "$ref": "#/$defs/appendage" }
+    },
+    "appearance": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["materials", "microrelief", "spines", "setae"],
+      "properties": {
+        "materials": { "type": "array" },
+        "microrelief": { "type": "array" },
+        "spines": { "type": "array" },
+        "setae": { "type": "array" }
+      }
+    },
+    "rig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "rootFrame", "jointCount"],
+      "properties": {
+        "status": { "enum": ["PENDING_STATIC_ACCEPTANCE", "DIAGNOSTIC", "FROZEN"] },
+        "rootFrame": { "$ref": "#/$defs/frame" },
+        "jointCount": { "type": "integer", "minimum": 0, "maximum": 512 }
+      }
+    },
+    "motion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "clips", "contactModel"],
+      "properties": {
+        "status": { "enum": ["PENDING_STATIC_ACCEPTANCE", "DIAGNOSTIC", "USER_ACCEPTED"] },
+        "clips": { "type": "array" },
+        "contactModel": { "type": ["object", "null"] }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id", "source", "canProve", "cannotProve", "confidence"],
+        "properties": {
+          "id": { "type": "string" },
+          "source": { "type": "string" },
+          "canProve": { "type": "array", "items": { "type": "string" } },
+          "cannotProve": { "type": "array", "items": { "type": "string" } },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+    "unknowns": { "type": "array", "items": { "type": "string" } },
+    "acceptance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["staticSurfaceAccepted", "rigAccepted", "motionAccepted", "productionReady"],
+      "properties": {
+        "staticSurfaceAccepted": { "type": "boolean" },
+        "rigAccepted": { "type": "boolean" },
+        "motionAccepted": { "type": "boolean" },
+        "productionReady": { "type": "boolean" }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "vec2": {
+      "type": "array",
+      "prefixItems": [{ "type": "number" }, { "type": "number" }],
+      "items": false
+    },
+    "vec3": {
+      "type": "array",
+      "prefixItems": [{ "type": "number" }, { "type": "number" }, { "type": "number" }],
+      "items": false
+    },
+    "quat": {
+      "type": "array",
+      "prefixItems": [{ "type": "number" }, { "type": "number" }, { "type": "number" }, { "type": "number" }],
+      "items": false
+    },
+    "frame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["position", "rotation"],
+      "properties": {
+        "position": { "$ref": "#/$defs/vec3" },
+        "rotation": { "$ref": "#/$defs/quat" }
+      }
+    },
+    "surfaceChart": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "regionId", "domain", "basis", "coefficients", "sourceSampleCount", "confidence"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "regionId": { "type": "string", "minLength": 1 },
+        "domain": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["u", "v"],
+          "properties": {
+            "u": { "$ref": "#/$defs/vec2" },
+            "v": { "$ref": "#/$defs/vec2" }
+          }
+        },
+        "basis": { "type": "string", "minLength": 1 },
+        "coefficients": { "type": "array", "minItems": 1, "items": { "type": "number" } },
+        "sourceSampleCount": { "type": "integer", "minimum": 3 },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "seam": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["a", "b", "continuity"],
+      "properties": {
+        "a": { "type": "string" },
+        "b": { "type": "string" },
+        "continuity": { "enum": ["C0", "C1", "HINGE", "OPEN_BOUNDARY"] }
+      }
+    },
+    "errorReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sampleCount", "positionRmsM", "positionMaxM", "normalMeanDeg", "normalMaxDeg", "silhouetteViews"],
+      "properties": {
+        "sampleCount": { "type": "integer", "minimum": 1 },
+        "positionRmsM": { "type": "number", "minimum": 0 },
+        "positionMaxM": { "type": "number", "minimum": 0 },
+        "normalMeanDeg": { "type": "number", "minimum": 0, "maximum": 180 },
+        "normalMaxDeg": { "type": "number", "minimum": 0, "maximum": 180 },
+        "silhouetteViews": { "type": "array", "minItems": 6 }
+      }
+    },
+    "segment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "regionIds", "proximalFrame", "distalFrame", "joint"],
+      "properties": {
+        "id": { "type": "string" },
+        "regionIds": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "proximalFrame": { "$ref": "#/$defs/frame" },
+        "distalFrame": { "$ref": "#/$defs/frame" },
+        "joint": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["axis", "minDeg", "maxDeg", "restDeg"],
+          "properties": {
+            "axis": { "$ref": "#/$defs/vec3" },
+            "minDeg": { "type": "number" },
+            "maxDeg": { "type": "number" },
+            "restDeg": { "type": "number" }
+          }
+        }
+      }
+    },
+    "appendage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role", "side", "pairId", "attachmentFrame", "segments", "confidence"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "role": { "type": "string", "minLength": 1 },
+        "side": { "enum": ["LEFT", "RIGHT", "MIDLINE"] },
+        "pairId": { "type": ["string", "null"] },
+        "attachmentFrame": { "$ref": "#/$defs/frame" },
+        "segments": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": { "$ref": "#/$defs/segment" }
+        },
+        "asymmetryOverride": { "type": ["object", "null"] },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}

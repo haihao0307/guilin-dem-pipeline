@@ -1,0 +1,73 @@
+{
+  "taskId": "KAOPU_CRAB_TRIAD_R01_20260930",
+  "taskMode": "REPLICATION_LOCKED",
+  "branch": "work/kaopu-crab-triad-r01-20260930",
+  "baseBranch": "work/kaopu-fish-muskellunge-surface-r02-20260930",
+  "targetSystem": "KAOPU Crab Composer + Resolved Score + Crab Instrument",
+  "composerId": "kaopu.crab.composer@1.0.0-dev",
+  "instrumentId": "kaopu.crab.exoskeleton-appendage@1.0.0-dev",
+  "instrumentAbi": "KCR1",
+  "scoreSchema": "kaopu.crab.resolved/1",
+  "domain": {
+    "name": "decapod-crab-form",
+    "status": "PROVISIONAL_UNTIL_FIRST_TEACHER",
+    "candidateCoverage": [
+      "Brachyura crab forms",
+      "Anomura crab-like forms only when separately validated"
+    ],
+    "notClaimed": [
+      "universal crustacean instrument",
+      "shrimp or lobster form",
+      "arachnid or insect form"
+    ]
+  },
+  "firstObject": "PENDING_USER_SOURCE",
+  "secondValidationObject": "PENDING_AFTER_FIRST_STATIC_ACCEPTANCE",
+  "sourcePackage": null,
+  "sourcePackageSha256": null,
+  "requiredMethod": [
+    "freeze the first teacher source, version, hash, rights and evidence limits",
+    "decode the complete teacher surface: positions, triangle indices, normals, UVs, materials, hierarchy and connectivity",
+    "segment every formal surface region and every appendage from source evidence rather than category guessing",
+    "fit source-derived continuous surface charts P_chart(u,v) with explicit seams and adjacency",
+    "express every leg, chela, eyestalk, antenna and mouthpart as score-defined articulated chains",
+    "measure pointwise position, normal and silhouette error against the complete source",
+    "obtain user static-surface acceptance before skeleton, gait or behaviour work",
+    "validate shared instrument operators with a second independently scored crab-form object"
+  ],
+  "preserve": [
+    "metre units, Y-up, +Z forward",
+    "Composer, external Score and pure Instrument as separate modules",
+    "blank player before an external score is imported",
+    "deterministic replay and result fingerprint",
+    "fixed public one-click workbench after the first executable build",
+    "desktop and mobile browser QA",
+    "teacher asset as comparison-only and absent from formal runtime"
+  ],
+  "forbidden": [
+    "sphere, ellipsoid, capsule, cylinder or box assembly as final crab anatomy",
+    "species-name or common-name preset dispatch",
+    "hidden completed crab geometry inside the instrument",
+    "manual invention of missing legs, chelae, eyes, mouthparts, spines or shell boundaries",
+    "sparse hand-picked sections used as a substitute for complete-surface fitting",
+    "original teacher mesh, textures or XYZ vertex cache retained as formal runtime truth",
+    "rigging or gait work before static-surface acceptance",
+    "automatic visual, motion or production acceptance",
+    "claiming universal crab or decapod coverage from a single teacher"
+  ],
+  "acceptanceGates": [
+    "complete source extraction is reproducible and covered by a reference ledger",
+    "formal surface chart coverage and excluded unknown regions are reported explicitly",
+    "no hand-authored anatomy exists in the formal reconstruction",
+    "pointwise position and normal error is reported over all fitted source samples",
+    "front, rear, left, right, top and underside teacher-versus-result comparison exists",
+    "appendage count, side, role, segment count and joint frames are source-evidenced",
+    "empty player contains zero crab identity and creates zero animal",
+    "same score replays deterministically",
+    "static surface is accepted by the user before rig and motion",
+    "a second object proves which operators are genuinely shared"
+  ],
+  "visualAcceptance": false,
+  "motionAcceptance": false,
+  "productionReady": false
+}

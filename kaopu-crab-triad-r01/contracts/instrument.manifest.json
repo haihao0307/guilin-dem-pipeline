@@ -1,0 +1,89 @@
+{
+  "instrument": {
+    "id": "kaopu.crab.exoskeleton-appendage",
+    "version": "0.1.0-dev",
+    "abi": "KCR1"
+  },
+  "status": "CONTRACT_SCAFFOLD_NO_IDENTITY",
+  "parent": null,
+  "units": "metre",
+  "axis": "Y_UP",
+  "forward": "+Z",
+  "domain": {
+    "name": "decapod-crab-form",
+    "status": "PROVISIONAL_UNTIL_FIRST_TEACHER",
+    "candidateClades": [
+      "Brachyura",
+      "Anomura crab-like forms only after separate validation"
+    ],
+    "excluded": [
+      "universal crustacean",
+      "shrimp-form",
+      "lobster-form",
+      "arachnid",
+      "insect"
+    ]
+  },
+  "declaredCapabilityEnvelope": [
+    "source-derived continuous surface-chart evaluation",
+    "surface-chart seam stitching and adjacency",
+    "rigid exoskeleton region assembly",
+    "score-defined segmented appendage chains",
+    "paired mirroring with explicit asymmetry overrides",
+    "score-defined joint frames and constraints",
+    "articulated chela open-close solving",
+    "eyestalk and antenna chain driving",
+    "contact-aware crab gait phase solving",
+    "procedural exoskeleton material, spines and setae",
+    "formal validation, measurement, fingerprint, snapshot and disposal"
+  ],
+  "operators": [
+    "chartSurface",
+    "stitchSurfaceCharts",
+    "assembleRigidRegion",
+    "buildAppendageChain",
+    "mirrorPairWithAsymmetryOverride",
+    "solveConstrainedJointFrames",
+    "solveChela",
+    "solveSensoryAppendage",
+    "solveFootContact",
+    "solveCrabGaitPhase",
+    "evaluateExoskeletonMaterial",
+    "emitScoreDefinedSpinesAndSetae"
+  ],
+  "scoreSchemas": [
+    "kaopu.crab.resolved/1"
+  ],
+  "worldInputs": [
+    "timeSeconds",
+    "groundPlaneY",
+    "groundNormal",
+    "waterFlowMps"
+  ],
+  "determinism": {
+    "seedRequired": true,
+    "fixedTimeReplay": true
+  },
+  "limits": {
+    "scoreBytes": 2000000,
+    "maxSurfaceCharts": 512,
+    "maxExoskeletonRegions": 256,
+    "maxAppendages": 32,
+    "maxSegmentsPerAppendage": 16,
+    "maxJointChannels": 512,
+    "maxExpandedElements": 5000
+  },
+  "identityPresets": 0,
+  "exampleScoresEmbedded": 0,
+  "emptyPlayerProducesObject": false,
+  "unsupported": [
+    "species-name or common-name preset dispatch",
+    "hidden completed crab geometry",
+    "automatic anatomy invention at runtime",
+    "primitive assembly as final anatomy",
+    "external teacher mesh, texture or XYZ cache in formal runtime",
+    "automatic visual or motion acceptance",
+    "universal crab or decapod coverage before second-object validation"
+  ],
+  "acceptanceFixtures": []
+}
