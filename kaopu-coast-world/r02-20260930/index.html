@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#0b2630" />
-<title>KaoPu Coast World R01</title>
+<title>KaoPu Coast World R02</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%230b2630%27/%3E%3Cpath d=%27M8 37c9-10 17 8 27-2s15 4 21-4v15H8z%27 fill=%27%237cc8cf%27/%3E%3Ccircle cx=%2742%27 cy=%2719%27 r=%277%27 fill=%27%23e4d0a5%27/%3E%3C/svg%3E">
 
 <style>
@@ -86,7 +86,7 @@ button,select,input{font:inherit}button{cursor:pointer}#world{position:fixed;ins
 
 <div id="touchMove" class="touch-pad"><i></i></div>
 <div id="touchLook" class="touch-look"></div>
-<div class="caption"><span id="zoneState">THE BEACH</span><span>KAOPU · WORLD SCORE R01</span></div>
+<div class="caption"><span id="zoneState">THE BEACH</span><span>KAOPU · WORLD SCORE R02</span></div>
 
 <script type="module">
 const canvas = document.getElementById('world');
@@ -164,10 +164,17 @@ const wetness = new Float32Array(N), foamHistory = new Float32Array(N), flowMag 
 const fieldPixels = new Uint8Array(N * 4), wetPixels = new Uint8Array(N * 4);
 
 const ROCKS = [
-  { x: 8.2, z: -4.4, r: 3.3, scale: [3.6, 2.8, 3.2], rot: 0.4 },
-  { x: -13.5, z: -1.5, r: 1.55, scale: [1.8, 1.15, 1.5], rot: -0.7 },
-  { x: 21.0, z: 1.0, r: 1.2, scale: [1.25, .8, 1.5], rot: .2 },
-  { x: -23.0, z: 2.7, r: 1.05, scale: [1.1, .7, .9], rot: 1.1 }
+  { x: 7.4, z: -5.8, r: 2.45, scale: [2.85, 1.85, 2.55], rot: 0.38 },
+  { x: -14.2, z: -2.2, r: 1.2, scale: [1.45, .88, 1.25], rot: -0.72 },
+  { x: 19.5, z: -1.4, r: .9, scale: [1.0, .62, 1.2], rot: .18 },
+  { x: -23.5, z: 1.5, r: .82, scale: [.9, .55, .78], rot: 1.08 }
+];
+const DECOR_ROCKS = [
+  [-5.2,-.3,.22,.58,.34,.52],[-9.1,1.1,-.4,.42,.24,.38],[13.4,-.4,.8,.55,.3,.48],
+  [16.5,1.2,-.2,.34,.2,.42],[-19.1,.1,.55,.38,.23,.32],[3.0,2.4,-.7,.28,.18,.34]
+];
+const FAR_STACKS = [
+  [-27,-78,.15,13.5,8.4,10.5],[30,-88,-.22,10.0,12.5,8.2],[3,-96,.42,6.4,8.7,5.8]
 ];
 
 function rebuildBathymetry() {
@@ -309,54 +316,135 @@ function makeGrid(minX, maxX, minZ, maxZ, sx, sz, heightFn) {
   return { pos, nor, indices };
 }
 
+function computeNormals(pos, indices) {
+  const nor = new Float32Array(pos.length);
+  for (let q = 0; q < indices.length; q += 3) {
+    const ia = indices[q] * 3, ib = indices[q + 1] * 3, ic = indices[q + 2] * 3;
+    const ax = pos[ia], ay = pos[ia + 1], az = pos[ia + 2];
+    const ux = pos[ib] - ax, uy = pos[ib + 1] - ay, uz = pos[ib + 2] - az;
+    const vx = pos[ic] - ax, vy = pos[ic + 1] - ay, vz = pos[ic + 2] - az;
+    const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+    for (const i of [ia, ib, ic]) { nor[i] += nx; nor[i + 1] += ny; nor[i + 2] += nz; }
+  }
+  for (let i = 0; i < nor.length; i += 3) {
+    const l = Math.hypot(nor[i], nor[i + 1], nor[i + 2]) || 1;
+    nor[i] /= l; nor[i + 1] /= l; nor[i + 2] /= l;
+  }
+  return nor;
+}
+
 function makeBoulder(seed = 1) {
-  const lon = 26, lat = 14, pos = [], nor = [], indices = [];
+  const lon = 42, lat = 24, pos = [], indices = [];
   for (let j = 0; j <= lat; j++) {
     const v = j / lat, phi = v * Math.PI;
     for (let i = 0; i <= lon; i++) {
       const u = i / lon, th = u * Math.PI * 2;
-      const noise = 1 + .13 * Math.sin(th * 3 + seed) * Math.sin(phi * 2.1) + .08 * Math.sin(th * 7.1 - phi * 3 + seed * 2);
-      const r = noise * (0.92 + .08 * Math.sin(phi));
-      const x = Math.sin(phi) * Math.cos(th) * r, y = Math.cos(phi) * r * .86, z = Math.sin(phi) * Math.sin(th) * r;
-      pos.push(x, y, z); const l = Math.hypot(x, y / .86, z) || 1; nor.push(x / l, (y / .86) / l, z / l);
+      const n = 1 + .10 * Math.sin(th * 3.0 + seed * 1.7) * Math.sin(phi * 1.8)
+        + .055 * Math.sin(th * 7.0 - phi * 2.6 + seed * 2.1)
+        + .025 * Math.sin(th * 13.0 + phi * 7.0 + seed);
+      const shoulder = .88 + .14 * Math.sin(phi) - .05 * Math.cos(phi * 2.0);
+      let x = Math.sin(phi) * Math.cos(th) * n * shoulder;
+      let y = Math.cos(phi) * n * .84;
+      let z = Math.sin(phi) * Math.sin(th) * n * (.94 + .06 * Math.cos(th * 2.0));
+      if (y < -.42) y = -.42 + (y + .42) * .12;
+      y += .055 * Math.sin(th * 4.0 + seed) * Math.sin(phi);
+      pos.push(x, y, z);
     }
   }
   const row = lon + 1;
-  for (let j = 0; j < lat; j++) for (let i = 0; i < lon; i++) { const a = j * row + i, b = a + 1, c = a + row, d = c + 1; indices.push(a, c, b, b, c, d); }
-  return { pos: new Float32Array(pos), nor: new Float32Array(nor), indices: new Uint32Array(indices) };
+  for (let j = 0; j < lat; j++) for (let i = 0; i < lon; i++) {
+    const a = j * row + i, b = a + 1, c = a + row, d = c + 1;
+    indices.push(a, c, b, b, c, d);
+  }
+  const pp = new Float32Array(pos), ii = new Uint32Array(indices);
+  return { pos: pp, nor: computeNormals(pp, ii), indices: ii };
 }
 
 function makePalm(seed = 1) {
-  const trunkP = [], trunkN = [], trunkI = [], rings = 18, sides = 9, height = 10.5;
-  const center = (t) => [0.9 * t * t + .18 * Math.sin(t * 4 + seed), height * t, .25 * Math.sin(t * Math.PI + seed)];
+  const trunkP = [], trunkI = [], rings = 30, sides = 12, height = 10.8;
+  const center = (t) => [0.62 * t * t + .12 * Math.sin(t * 4.2 + seed), height * t, .18 * Math.sin(t * Math.PI + seed)];
+  const radius = (t) => .43 * (1 - .62 * t) + .105 + .025 * Math.sin(t * 19 + seed);
   for (let j = 0; j <= rings; j++) {
-    const t = j / rings, c = center(t), r = .48 * (1 - .6 * t) + .08;
-    for (let i = 0; i <= sides; i++) { const a = i / sides * Math.PI * 2; trunkP.push(c[0] + Math.cos(a) * r, c[1], c[2] + Math.sin(a) * r); trunkN.push(Math.cos(a), .04, Math.sin(a)); }
+    const t = j / rings, c = center(t), r = radius(t);
+    for (let i = 0; i <= sides; i++) {
+      const a = i / sides * Math.PI * 2;
+      const scar = 1 + .045 * Math.sin(j * 2.35 + i * 1.7 + seed);
+      trunkP.push(c[0] + Math.cos(a) * r * scar, c[1], c[2] + Math.sin(a) * r * scar);
+    }
   }
   const row = sides + 1;
-  for (let j = 0; j < rings; j++) for (let i = 0; i < sides; i++) { const a = j * row + i, b = a + 1, c = a + row, d = c + 1; trunkI.push(a, c, b, b, c, d); }
+  for (let j = 0; j < rings; j++) for (let i = 0; i < sides; i++) {
+    const a = j * row + i, b = a + 1, c = a + row, d = c + 1;
+    trunkI.push(a, c, b, b, c, d);
+  }
+  const trunkPos = new Float32Array(trunkP), trunkIdx = new Uint32Array(trunkI);
 
-  const lp = [], ln = [], lc = [], lr = [], lw = [], lph = [], li = [];
-  const top = center(1), fronds = 22, segs = 10;
-  for (let f = 0; f < fronds; f++) {
-    const age = f / (fronds - 1), angle = f * 2.399963 + seed * .31, length = 3.4 + 1.7 * Math.sin((age + .1) * Math.PI);
-    const root = [top[0], top[1] - age * .55, top[2]], base = lp.length / 3;
-    const pts = [];
-    for (let s = 0; s <= segs; s++) {
-      const t = s / segs, radial = length * (t - .1 * t * t), droop = (.15 + age * 2.2) * t * t, lift = (1 - age) * 1.3 * Math.sin(t * Math.PI);
-      pts.push([root[0] + Math.cos(angle) * radial, root[1] + lift - droop, root[2] + Math.sin(angle) * radial]);
-    }
-    for (let s = 0; s <= segs; s++) {
-      const t = s / segs, p = pts[s], width = .48 * Math.pow(Math.sin(Math.PI * t), .72) * (1 - .22 * age);
-      const side = [-Math.sin(angle) * width, 0, Math.cos(angle) * width];
-      const green = [0.23 + .08 * (1 - age), 0.36 + .14 * (1 - age), 0.16 + .04 * age];
-      for (let k = -1; k <= 1; k++) { lp.push(p[0] + side[0] * k, p[1] + (k === 0 ? width * .15 : 0), p[2] + side[2] * k); ln.push(0, 1, 0); lc.push(...green); lr.push(...root); lw.push(t); lph.push(angle); }
-      if (s > 0) { const a = base + s * 3, b = a - 3; li.push(b, b + 1, a, b + 1, a + 1, a, b + 1, b + 2, a + 1, b + 2, a + 2, a + 1); }
+  const lp = [], lc = [], lr = [], lw = [], lph = [], li = [];
+  function addRibbon(points, widths, color, root, phase, weightBase = 0) {
+    const base = lp.length / 3;
+    for (let j = 0; j < points.length; j++) {
+      const p = points[j], prev = points[Math.max(0, j - 1)], next = points[Math.min(points.length - 1, j + 1)];
+      let tx = next[0] - prev[0], ty = next[1] - prev[1], tz = next[2] - prev[2];
+      const tl = Math.hypot(tx, ty, tz) || 1; tx /= tl; ty /= tl; tz /= tl;
+      let sx = -tz, sy = 0, sz = tx; const sl = Math.hypot(sx, sz) || 1; sx /= sl; sz /= sl;
+      for (const side of [-1, 0, 1]) {
+        const w = widths[j], rib = side === 0 ? w * .23 : 0;
+        lp.push(p[0] + sx * w * side, p[1] + rib, p[2] + sz * w * side);
+        const fac = side === 0 ? 1.08 : .88; lc.push(color[0] * fac, color[1] * fac, color[2] * fac);
+        lr.push(root[0], root[1], root[2]);
+        lw.push(clamp(weightBase + (1 - weightBase) * j / Math.max(1, points.length - 1), 0, 1));
+        lph.push(phase);
+      }
+      if (j > 0) {
+        const a = base + j * 3, b = a - 3;
+        if (widths[j - 1] > 1e-5) li.push(b, b + 1, a, b + 1, a + 1, a);
+        if (widths[j] > 1e-5) li.push(b + 1, b + 2, a + 1, b + 2, a + 2, a + 1);
+      }
     }
   }
+  const top = center(1), fronds = 30, axisSegs = 12, leafletPairs = 18;
+  for (let f = 0; f < fronds; f++) {
+    const age = f / (fronds - 1), angle = f * 2.399963 + seed * .37;
+    const length = 4.15 + 1.0 * Math.sin((age + .06) * Math.PI) + .22 * Math.sin(f * 3.1 + seed);
+    const root = [top[0] + Math.cos(angle) * .16, top[1] - age * .78, top[2] + Math.sin(angle) * .16];
+    const axis = [];
+    for (let s = 0; s <= axisSegs; s++) {
+      const t = s / axisSegs, radial = length * (t - .09 * t * t);
+      const lift = (1 - age) * 1.35 * Math.sin(t * Math.PI) - (.18 + age * 2.05) * t * t;
+      const curl = .18 * Math.sin(t * Math.PI) * Math.sin(f * 1.7 + seed);
+      axis.push([root[0] + Math.cos(angle) * radial - Math.sin(angle) * curl,
+        root[1] + lift, root[2] + Math.sin(angle) * radial + Math.cos(angle) * curl]);
+    }
+    addRibbon(axis, axis.map((_, i) => i === 0 || i === axis.length - 1 ? 0 : .045 * Math.sin(i / (axis.length - 1) * Math.PI)), [.24, .36, .12], root, angle, 0);
+
+    for (let j = 0; j < leafletPairs; j++) {
+      const t = .21 + j / (leafletPairs - 1) * .74, u = t * axisSegs, i0 = Math.floor(u), f0 = u - i0;
+      const a0 = axis[Math.min(i0, axis.length - 2)], a1 = axis[Math.min(i0 + 1, axis.length - 1)];
+      const attach = [mix(a0[0], a1[0], f0), mix(a0[1], a1[1], f0), mix(a0[2], a1[2], f0)];
+      const envelope = Math.pow(Math.sin((t - .18) / .8 * Math.PI), .62);
+      const span = (.34 + 1.05 * envelope) * (1 - age * .12);
+      for (const side of [-1, 1]) {
+        const sideDir = [-Math.sin(angle) * side, 0, Math.cos(angle) * side];
+        const forward = [Math.cos(angle), 0, Math.sin(angle)];
+        const dir = [sideDir[0] + forward[0] * (.18 + .12 * age), .10 - .16 * age, sideDir[2] + forward[2] * (.18 + .12 * age)];
+        const dl = Math.hypot(...dir); dir[0] /= dl; dir[1] /= dl; dir[2] /= dl;
+        const pts = [], widths = [];
+        for (let q = 0; q <= 4; q++) {
+          const v = q / 4;
+          pts.push([attach[0] + dir[0] * span * v + forward[0] * .06 * Math.sin(v * Math.PI),
+            attach[1] + dir[1] * span * v + .055 * Math.sin(v * Math.PI) - (.06 + age * .18) * v * v,
+            attach[2] + dir[2] * span * v + forward[2] * .06 * Math.sin(v * Math.PI)]);
+          widths.push(q === 0 || q === 4 ? 0 : (.028 + .018 * envelope) * Math.sin(v * Math.PI) ** .72);
+        }
+        const hue = .20 + .025 * Math.sin(j * .7 + f), brightness = .78 + .16 * (1 - age);
+        addRibbon(pts, widths, [.25 * brightness, (.41 + hue * .08) * brightness, .13 * brightness], root, angle + side * .7, t);
+      }
+    }
+  }
+  const leafPos = new Float32Array(lp), leafIdx = new Uint32Array(li);
   return {
-    trunk: { pos: new Float32Array(trunkP), nor: new Float32Array(trunkN), indices: new Uint32Array(trunkI) },
-    leaves: { pos: new Float32Array(lp), nor: new Float32Array(ln), color: new Float32Array(lc), root: new Float32Array(lr), weight: new Float32Array(lw), phase: new Float32Array(lph), indices: new Uint32Array(li) }
+    trunk: { pos: trunkPos, nor: computeNormals(trunkPos, trunkIdx), indices: trunkIdx },
+    leaves: { pos: leafPos, nor: computeNormals(leafPos, leafIdx), color: new Float32Array(lc), root: new Float32Array(lr), weight: new Float32Array(lw), phase: new Float32Array(lph), indices: leafIdx }
   };
 }
 
@@ -381,37 +469,39 @@ const skyProgram = program(`#version 300 es
 precision highp float;out vec2 vUv;void main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);vUv=p;gl_Position=vec4(p*2.-1.,0.,1.);}`,
 `#version 300 es
 precision highp float;in vec2 vUv;out vec4 outColor;uniform float uTime;
-float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+1.),f.x),f.y);}float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<4;i++){v+=a*noise(p);p*=2.03;a*=.5;}return v;}
-void main(){vec2 uv=vUv;float h=clamp((uv.y-.18)/.82,0.,1.);vec3 horizon=vec3(.64,.76,.77),top=vec3(.12,.34,.43);vec3 col=mix(horizon,top,pow(h,.72));vec2 sun=uv-vec2(.72,.74);float disc=smoothstep(.045,.0,length(sun));col+=vec3(1.0,.78,.42)*disc*1.4;float cloud=fbm(vec2(uv.x*3.3+uTime*.004,uv.y*7.0));cloud=smoothstep(.56,.78,cloud)*(1.-smoothstep(.52,.9,uv.y));col=mix(col,col+vec3(.28,.31,.31),cloud*.35);outColor=vec4(col,1);}`);
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);}float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*noise(p);p=mat2(1.7,1.2,-1.2,1.7)*p;a*=.5;}return v;}
+void main(){vec2 uv=vUv;float h=clamp((uv.y-.12)/.88,0.,1.);vec3 horizon=vec3(.62,.74,.74),mid=vec3(.29,.52,.61),top=vec3(.055,.18,.28);vec3 col=mix(horizon,mid,smoothstep(0.,.52,h));col=mix(col,top,smoothstep(.42,1.,h));float haze=exp(-pow((uv.y-.30)/.065,2.));col+=vec3(.18,.19,.17)*haze*.36;vec2 sunPos=vec2(.72,.73),sd=uv-sunPos;float r=length(sd);float disc=smoothstep(.027,.019,r),halo=exp(-r*r*170.);col+=vec3(1.,.76,.38)*(disc*1.5+halo*.42);vec2 q=vec2(uv.x*3.1+uTime*.0026,uv.y*5.3);float c1=fbm(q),c2=fbm(q*1.9+7.2);float cloud=smoothstep(.55,.76,c1*.72+c2*.28)*(1.-smoothstep(.64,.98,uv.y))*smoothstep(.22,.42,uv.y);vec3 cc=mix(vec3(.34,.38,.38),vec3(.78,.79,.75),smoothstep(.55,.8,c1));col=mix(col,cc,cloud*.44);float high=smoothstep(.63,.78,fbm(vec2(uv.x*5.5-uTime*.0015,uv.y*9.)+12.))*smoothstep(.52,.78,uv.y);col=mix(col,col+vec3(.16,.17,.17),high*.15);outColor=vec4(col,1);}`);
 const skyU = locs(skyProgram, ['uTime']);
 
 const litVS = `#version 300 es
 precision highp float;layout(location=0)in vec3 aPosition;layout(location=1)in vec3 aNormal;uniform mat4 uViewProj,uModel;out vec3 vWorld,vNormal;void main(){vec4 w=uModel*vec4(aPosition,1);vWorld=w.xyz;vNormal=normalize(mat3(uModel)*aNormal);gl_Position=uViewProj*w;}`;
 const terrainFS = `#version 300 es
-precision highp float;in vec3 vWorld,vNormal;out vec4 outColor;uniform sampler2D uWet;uniform vec4 uDomain;uniform vec3 uCamera,uLightDir,uFogColor;uniform float uTime;
-float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}void main(){vec3 N=normalize(vNormal),V=normalize(uCamera-vWorld);vec2 uv=(vWorld.xz-uDomain.xy)/uDomain.zw;vec2 hist=texture(uWet,uv).rg;float wet=hist.r,foam=hist.g;float n=hash(floor(vWorld.xz*2.5));vec3 dry=mix(vec3(.42,.36,.27),vec3(.56,.48,.34),n);vec3 wetSand=vec3(.16,.18,.17);vec3 col=mix(dry,wetSand,wet*.78);float veg=smoothstep(11.,20.,vWorld.z)*smoothstep(.35,1.6,vWorld.y)*(1.-smoothstep(.18,.48,1.-N.y));vec3 green=mix(vec3(.08,.16,.075),vec3(.17,.28,.11),n);col=mix(col,green,veg*.88);float cliff=smoothstep(.22,.58,1.-N.y)+smoothstep(3.4,5.8,vWorld.y);col=mix(col,vec3(.17,.15,.13)*(1.+n*.2),clamp(cliff,0.,1.)*.72);col=mix(col,vec3(.92,.94,.91),foam*.72);float ndl=max(dot(N,uLightDir),0.);vec3 H=normalize(V+uLightDir);float spec=pow(max(dot(N,H),0.),mix(24.,130.,wet))*wet*.8;col*=.32+.92*ndl;col+=vec3(1.,.85,.6)*spec;float dist=length(uCamera-vWorld);float fog=1.-exp(-dist*.014);outColor=vec4(mix(col,uFogColor,clamp(fog,0.,.78)),1);}`;
-const terrainProgram = program(litVS, terrainFS); const terrainU = locs(terrainProgram, ['uViewProj','uModel','uWet','uDomain','uCamera','uLightDir','uFogColor','uTime']);
+precision highp float;in vec3 vWorld,vNormal;out vec4 outColor;uniform sampler2D uWet;uniform vec4 uDomain;uniform vec3 uCamera,uLightDir,uFogColor;uniform float uTime,uTide;
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);}float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<4;i++){v+=a*noise(p);p=mat2(1.7,1.2,-1.2,1.7)*p;a*=.5;}return v;}
+void main(){vec3 N=normalize(vNormal),V=normalize(uCamera-vWorld);vec2 uv=(vWorld.xz-uDomain.xy)/uDomain.zw;vec2 hist=texture(uWet,uv).rg;float px=max(length(dFdx(vWorld.xz)),length(dFdy(vWorld.xz)));float fineKeep=1.-smoothstep(.055,.52,px);float macro=fbm(vWorld.xz*.12+3.7),mid=fbm(vWorld.xz*.72-8.1),fine=fbm(vWorld.xz*4.2+17.)*fineKeep;float nearWater=1.-smoothstep(.05,.58,vWorld.y-uTide);float wet=max(hist.r,nearWater*.58);float foam=hist.g;float ripple=.5+.5*sin(vWorld.z*10.5+1.7*sin(vWorld.x*.42)+mid*2.2);ripple*=fineKeep*smoothstep(-1.4,.6,vWorld.z)*(1.-smoothstep(4.,9.,vWorld.z));float e=.055;float hx=fbm((vWorld.xz+vec2(e,0))*4.2)-fbm((vWorld.xz-vec2(e,0))*4.2),hz=fbm((vWorld.xz+vec2(0,e))*4.2)-fbm((vWorld.xz-vec2(0,e))*4.2);N=normalize(N+vec3(-hx*.45*fineKeep,0.,-hz*.45*fineKeep));vec3 dry=mix(vec3(.43,.365,.255),vec3(.61,.515,.345),macro*.55+mid*.25);dry*=.92+.14*fine+.055*ripple;vec3 wetSand=mix(vec3(.105,.125,.12),vec3(.22,.215,.18),macro*.35);vec3 col=mix(dry,wetSand,wet*.86);float pebble=smoothstep(.78,.9,noise(vWorld.xz*7.4+4.))*fineKeep*smoothstep(-.8,4.5,vWorld.z);col=mix(col,vec3(.11,.105,.095),pebble*.35);float veg=smoothstep(9.5,17.,vWorld.z)*smoothstep(.28,1.5,vWorld.y)*(1.-smoothstep(.22,.62,1.-N.y));vec3 green=mix(vec3(.055,.13,.06),vec3(.18,.28,.10),fbm(vWorld.xz*.34));col=mix(col,green,veg*.9);float cliff=clamp(smoothstep(.25,.64,1.-N.y)+smoothstep(3.2,5.8,vWorld.y),0.,1.);vec3 rock=mix(vec3(.13,.125,.115),vec3(.23,.205,.17),macro);col=mix(col,rock,cliff*.78);col=mix(col,vec3(.92,.945,.91),foam*.68);float ndl=max(dot(N,uLightDir),0.);vec3 H=normalize(V+uLightDir);float rough=mix(.9,.28,wet);float spec=pow(max(dot(N,H),0.),mix(18.,135.,wet))*wet*(.25+.75*nearWater);col*=.28+.98*ndl;col+=vec3(1.,.82,.52)*spec*.9;float dist=length(uCamera-vWorld);float fog=1.-exp(-dist*.013);outColor=vec4(mix(col,uFogColor,clamp(fog,0.,.79)),1);}`;
+const terrainProgram = program(litVS, terrainFS); const terrainU = locs(terrainProgram, ['uViewProj','uModel','uWet','uDomain','uCamera','uLightDir','uFogColor','uTime','uTide']);
 
 const objectFS = `#version 300 es
 precision highp float;in vec3 vWorld,vNormal;out vec4 outColor;uniform sampler2D uField;uniform vec4 uDomain;uniform vec3 uCamera,uLightDir,uFogColor,uBaseColor;uniform float uTide,uFieldScale,uTime;
-void main(){vec3 N=normalize(vNormal),V=normalize(uCamera-vWorld);vec2 uv=(vWorld.xz-uDomain.xy)/uDomain.zw;float f=(texture(uField,uv).r*2.-1.)*uFieldScale;float wy=uTide+f;float wet=1.-smoothstep(-.1,.8,vWorld.y-wy);float n=.5+.5*sin(vWorld.x*5.2+sin(vWorld.z*4.7));vec3 col=uBaseColor*(.78+.22*n);col*=mix(1.,.43,wet*.85);float ndl=max(dot(N,uLightDir),0.);vec3 H=normalize(V+uLightDir);col*=.3+.95*ndl;col+=vec3(.9,.93,.9)*pow(max(dot(N,H),0.),mix(20.,90.,wet))*wet*.45;float fog=1.-exp(-length(uCamera-vWorld)*.014);outColor=vec4(mix(col,uFogColor,clamp(fog,0.,.8)),1);}`;
+float hash(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453123);}float noise(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);float n000=hash(i),n100=hash(i+vec3(1,0,0)),n010=hash(i+vec3(0,1,0)),n110=hash(i+vec3(1,1,0)),n001=hash(i+vec3(0,0,1)),n101=hash(i+vec3(1,0,1)),n011=hash(i+vec3(0,1,1)),n111=hash(i+1.);return mix(mix(mix(n000,n100,f.x),mix(n010,n110,f.x),f.y),mix(mix(n001,n101,f.x),mix(n011,n111,f.x),f.y),f.z);}void main(){vec3 N=normalize(vNormal),V=normalize(uCamera-vWorld);vec2 uv=(vWorld.xz-uDomain.xy)/uDomain.zw;float f=(texture(uField,uv).r*2.-1.)*uFieldScale;float wy=uTide+f;float wet=1.-smoothstep(-.12,.72,vWorld.y-wy);float n=noise(vWorld*.82)+.45*noise(vWorld*2.7+7.);vec3 col=uBaseColor*(.67+.42*n);float strata=.5+.5*sin(vWorld.y*4.8+n*2.4);col*=.9+.10*strata;col*=mix(1.,.42,wet*.88);float ndl=max(dot(N,uLightDir),0.);vec3 H=normalize(V+uLightDir);float rim=pow(1.-max(dot(N,V),0.),2.5);col*=.25+.98*ndl;col+=vec3(.86,.91,.87)*pow(max(dot(N,H),0.),mix(22.,105.,wet))*wet*.38;col+=uBaseColor*rim*.08;float fog=1.-exp(-length(uCamera-vWorld)*.0125);outColor=vec4(mix(col,uFogColor,clamp(fog,0.,.84)),1);}`;
 const objectProgram = program(litVS, objectFS); const objectU = locs(objectProgram, ['uViewProj','uModel','uField','uDomain','uCamera','uLightDir','uFogColor','uBaseColor','uTide','uFieldScale','uTime']);
 
 const leafVS = `#version 300 es
-precision highp float;layout(location=0)in vec3 aPosition;layout(location=1)in vec3 aNormal;layout(location=2)in vec3 aColor;layout(location=3)in vec3 aRoot;layout(location=4)in float aWeight;layout(location=5)in float aPhase;uniform mat4 uViewProj,uModel;uniform float uTime;out vec3 vWorld,vNormal,vColor;void main(){vec3 p=aPosition,q=p-aRoot;float gust=.65+.35*sin(uTime*.23+aPhase*1.7);float a=(.08*sin(uTime*.72+aPhase)+.025*sin(uTime*1.31-aPhase*1.3))*aWeight*aWeight*gust;p+=vec3(.72,0.,.35)*a*length(q.xz);p.y-=abs(a)*aWeight*.24;vec4 w=uModel*vec4(p,1);vWorld=w.xyz;vNormal=normalize(mat3(uModel)*aNormal);vColor=aColor;gl_Position=uViewProj*w;}`;
+precision highp float;layout(location=0)in vec3 aPosition;layout(location=1)in vec3 aNormal;layout(location=2)in vec3 aColor;layout(location=3)in vec3 aRoot;layout(location=4)in float aWeight;layout(location=5)in float aPhase;uniform mat4 uViewProj,uModel;uniform float uTime;out vec3 vWorld,vNormal,vColor;void main(){vec3 p=aPosition,q=p-aRoot;float gust=.72+.28*sin(uTime*.23+aPhase*1.7);float a=(.045*sin(uTime*.72+aPhase)+.018*sin(uTime*1.31-aPhase*1.3))*aWeight*aWeight*gust;float c=cos(a),s=sin(a);q=vec3(q.x,c*q.y-s*q.z,s*q.y+c*q.z);p=aRoot+q;p.x+=.32*a*length(q.xz);p.z+=.17*a*length(q.xz);p.y-=abs(a)*aWeight*.16;vec4 w=uModel*vec4(p,1);vWorld=w.xyz;vNormal=normalize(mat3(uModel)*aNormal);vColor=aColor;gl_Position=uViewProj*w;}`;
 const leafFS = `#version 300 es
-precision highp float;in vec3 vWorld,vNormal,vColor;out vec4 outColor;uniform vec3 uCamera,uLightDir,uFogColor;void main(){vec3 N=normalize(vNormal);if(!gl_FrontFacing)N=-N;float ndl=max(dot(N,uLightDir),0.);float through=pow(max(dot(-N,uLightDir),0.),1.5);vec3 col=vColor*(.32+.95*ndl)+vColor*vec3(.65,.85,.32)*through*.22;float fog=1.-exp(-length(uCamera-vWorld)*.014);outColor=vec4(mix(col,uFogColor,clamp(fog,0.,.82)),1);}`;
+precision highp float;in vec3 vWorld,vNormal,vColor;out vec4 outColor;uniform vec3 uCamera,uLightDir,uFogColor;void main(){vec3 N=normalize(vNormal);if(!gl_FrontFacing)N=-N;float ndl=max(dot(N,uLightDir),0.);float through=pow(max(dot(-N,uLightDir),0.),1.45);vec3 col=vColor*(.24+1.02*ndl)+vColor*vec3(.78,1.0,.42)*through*.28;vec3 V=normalize(uCamera-vWorld),H=normalize(V+uLightDir);col+=vec3(.36,.43,.18)*pow(max(dot(N,H),0.),28.)*.08;float fog=1.-exp(-length(uCamera-vWorld)*.013);outColor=vec4(mix(col,uFogColor,clamp(fog,0.,.84)),1);}`;
 const leafProgram = program(leafVS, leafFS); const leafU = locs(leafProgram, ['uViewProj','uModel','uTime','uCamera','uLightDir','uFogColor']);
 
 const waterVS = `#version 300 es
 precision highp float;layout(location=0)in vec3 aPosition;uniform mat4 uViewProj;uniform sampler2D uField;uniform vec4 uDomain;uniform float uFieldScale,uTime,uTide,uWave;out vec3 vWorld;out vec3 vField;
 ${TERRAIN_GLSL}
-float sw(vec2 p){return uWave*(.055*sin(p.x*.42+p.y*.63-uTime*2.45)+.032*sin(-p.x*.73+p.y*1.05-uTime*3.3+1.1)+.018*sin(p.x*1.3+p.y*1.7-uTime*4.9));}
-void main(){vec2 uv=(aPosition.xz-uDomain.xy)/uDomain.zw;vec3 ft=texture(uField,uv).rgb;float coast=(ft.r*2.-1.)*uFieldScale;float deep=1.-smoothstep(-31.,-18.,aPosition.z);float y=uTide+coast+sw(aPosition.xz)*mix(.35,1.,deep);vWorld=vec3(aPosition.x,y,aPosition.z);vField=ft;gl_Position=uViewProj*vec4(vWorld,1);}`;
+float sw(vec2 p){float a=.13*uWave;return a*(.55*sin(p.x*.19+p.y*.42-uTime*1.45)+.27*sin(-p.x*.36+p.y*.71-uTime*2.05+1.1)+.13*sin(p.x*.92+p.y*1.18-uTime*3.4));}
+void main(){vec2 uv=(aPosition.xz-uDomain.xy)/uDomain.zw;vec3 ft=texture(uField,uv).rgb;float coast=(ft.r*2.-1.)*uFieldScale;float deep=1.-smoothstep(-31.,-16.,aPosition.z);vec3 p=aPosition;float h=sw(p.xz);float eps=.18,gx=(sw(p.xz+vec2(eps,0))-sw(p.xz-vec2(eps,0)))/(2.*eps),gz=(sw(p.xz+vec2(0,eps))-sw(p.xz-vec2(0,eps)))/(2.*eps);float chop=mix(.16,.38,deep);p.x-=gx*chop;p.z-=gz*chop;float y=uTide+coast+h*mix(.32,1.,deep);vWorld=vec3(p.x,y,p.z);vField=ft;gl_Position=uViewProj*vec4(vWorld,1);}`;
 const waterFS = `#version 300 es
 precision highp float;in vec3 vWorld,vField;out vec4 outColor;uniform vec3 uCamera,uLightDir,uFogColor;uniform float uTime,uTide;
 ${TERRAIN_GLSL}
-void main(){float bed=terrainH(vWorld.xz);float depth=vWorld.y-bed;if(depth<.015)discard;vec3 dx=dFdx(vWorld),dy=dFdy(vWorld);vec3 N=normalize(cross(dx,dy));if(N.y<0.)N=-N;vec3 V=normalize(uCamera-vWorld);float fres=pow(1.-max(dot(N,V),0.),3.);float d=clamp(depth/3.2,0.,1.);vec3 shallow=vec3(.08,.44,.48),deep=vec3(.015,.12,.19);vec3 col=mix(shallow,deep,d);vec3 sky=mix(vec3(.45,.62,.66),vec3(.12,.25,.31),N.y);col=mix(col,sky,.22+.48*fres);float sun=pow(max(dot(reflect(-uLightDir,N),V),0.),180.);col+=vec3(1.,.85,.56)*sun*1.4;float shore=1.-smoothstep(.03,.42,depth);float crest=smoothstep(.54,.78,vField.r)+vField.b*.9;float rock=exp(-pow((length(vWorld.xz-vec2(8.2,-4.4))-3.3)/.72,2.));float foam=clamp(shore*(.25+crest)+rock*(.22+vField.b*1.5),0.,1.);float grain=.5+.5*sin(vWorld.x*6.+uTime*2.)*sin(vWorld.z*7.-uTime*2.6);foam*=.74+.26*grain;col=mix(col,vec3(.92,.97,.96),foam*.9);float fog=1.-exp(-length(uCamera-vWorld)*.012);col=mix(col,uFogColor,clamp(fog,0.,.76));float alpha=clamp(.46+d*.34+foam*.2,0.,.96);outColor=vec4(col,alpha);}`;
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);}float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}float micro(vec2 p){return .018*sin(p.x*2.8+p.y*3.9-uTime*4.2)+.011*sin(-p.x*5.1+p.y*4.4-uTime*5.7)+.006*sin(p.x*9.2-p.y*7.3+uTime*7.1);}
+void main(){float bed=terrainH(vWorld.xz);float depth=vWorld.y-bed;if(depth<.012)discard;vec3 dx=dFdx(vWorld),dy=dFdy(vWorld);vec3 N=normalize(cross(dx,dy));if(N.y<0.)N=-N;float e=.06,hx=micro(vWorld.xz+vec2(e,0))-micro(vWorld.xz-vec2(e,0)),hz=micro(vWorld.xz+vec2(0,e))-micro(vWorld.xz-vec2(0,e));N=normalize(N+vec3(-hx/e*.22,0.,-hz/e*.22));vec3 V=normalize(uCamera-vWorld);float nv=max(dot(N,V),0.),fres=.035+.965*pow(1.-nv,5.);float d=clamp(depth/3.6,0.,1.);vec3 trans=mix(vec3(.10,.48,.48),vec3(.008,.075,.13),d);vec3 R=reflect(-V,N);float skyT=clamp(R.y*.55+.45,0.,1.);vec3 refl=mix(vec3(.42,.59,.62),vec3(.065,.18,.27),skyT);vec3 col=mix(trans,refl,.18+.68*fres);float sun=pow(max(dot(reflect(-uLightDir,N),V),0.),150.);float glitter=pow(max(dot(reflect(-uLightDir,normalize(N+vec3((noise(vWorld.xz*8.+uTime*.2)-.5)*.1,0.,(noise(vWorld.zx*9.-uTime*.17)-.5)*.1))),V),0.),42.);col+=vec3(1.,.78,.43)*(sun*1.55+glitter*.13);float shore=1.-smoothstep(.025,.40,depth);float crest=smoothstep(.55,.78,vField.r);float breakBand=exp(-pow((depth-.16)/.13,2.))*smoothstep(.47,.66,vField.r);float rock=exp(-pow((length(vWorld.xz-vec2(7.4,-5.8))-2.45)/.62,2.));float lace=.62+.38*noise(vWorld.xz*2.7+vec2(uTime*.12,-uTime*.17));float foam=clamp((shore*(.10+.48*crest)+breakBand*.75+vField.b*.72+rock*(.12+vField.b*1.25))*lace,0.,1.);col=mix(col,vec3(.91,.96,.94),foam*.93);float caust=.5+.5*sin(vWorld.x*2.3+sin(vWorld.z*2.7-uTime*1.5));col+=vec3(.06,.12,.09)*caust*(1.-d)*(.18-foam*.1);float fog=1.-exp(-length(uCamera-vWorld)*.011);col=mix(col,uFogColor,clamp(fog,0.,.78));float alpha=clamp(.44+d*.39+foam*.18,0.,.98);outColor=vec4(col,alpha);}`;
 const waterProgram = program(waterVS, waterFS); const waterU = locs(waterProgram, ['uViewProj','uField','uDomain','uFieldScale','uTime','uTide','uWave','uCamera','uLightDir','uFogColor']);
 
 const particleProgram = program(`#version 300 es
@@ -430,9 +520,9 @@ const identity = mat4();
 const palmTransforms = [], rockTransforms = [];
 
 function buildMeshes() {
-  const t = makeGrid(-60, 60, -38, 62, 180, 150, terrainHeight);
+  const t = makeGrid(-60, 60, -38, 62, 220, 176, terrainHeight);
   terrainMesh = makeMesh([{ loc: 0, size: 3, data: t.pos }, { loc: 1, size: 3, data: t.nor }], t.indices);
-  const w = makeGrid(-65, 65, -52, 8, 180, 100, null);
+  const w = makeGrid(-72, 72, -108, 9, 220, 156, null);
   waterMesh = makeMesh([{ loc: 0, size: 3, data: w.pos }], w.indices);
   const b = makeBoulder(3); boulderMesh = makeMesh([{ loc: 0, size: 3, data: b.pos }, { loc: 1, size: 3, data: b.nor }], b.indices);
   const p = makePalm(2);
@@ -442,11 +532,13 @@ function buildMeshes() {
     { loc: 3, size: 3, data: p.leaves.root }, { loc: 4, size: 1, data: p.leaves.weight }, { loc: 5, size: 1, data: p.leaves.phase }
   ], p.leaves.indices);
   const palmData = [
-    [-30, 13, .2, .86],[-25,16,-.5,1.02],[-19,19,.6,.9],[-13,23,-.7,.82],[-35,21,.9,1.08],[-28,27,-1.2,.92],
-    [28,20,-.5,.82],[34,24,.4,1.0],[20,27,1.2,.9],[10,31,-.8,.78],[39,31,-.4,.92]
+    [-34,7,.15,.91],[-28,9,-.42,1.04],[-22,13,.55,.92],[-38,16,.86,1.10],[-30,20,-1.0,.94],
+    [27,7,-.48,.88],[34,10,.35,1.03],[23,14,1.06,.94],[40,17,-.34,.92],[15,22,-.72,.84],[-12,24,.62,.82]
   ];
   for (const [x,z,r,s] of palmData) { const m = mat4(); mat4Compose(m, x, terrainHeight(x,z), z, r, s); palmTransforms.push(m); }
-  for (const r of ROCKS) { const m = mat4(); mat4Compose(m, r.x, terrainHeight(r.x,r.z)+r.scale[1]*.45, r.z, r.rot, r.scale[0], r.scale[1], r.scale[2]); rockTransforms.push(m); }
+  for (const r of ROCKS) { const m = mat4(); mat4Compose(m, r.x, terrainHeight(r.x,r.z)+r.scale[1]*.39, r.z, r.rot, r.scale[0], r.scale[1], r.scale[2]); rockTransforms.push(m); }
+  for (const [x,z,r,sx,sy,sz] of DECOR_ROCKS) { const m=mat4(); mat4Compose(m,x,terrainHeight(x,z)+sy*.36,z,r,sx,sy,sz); rockTransforms.push(m); }
+  for (const [x,z,r,sx,sy,sz] of FAR_STACKS) { const m=mat4(); mat4Compose(m,x,-1.4+sy*.34,z,r,sx,sy,sz); rockTransforms.push(m); }
 }
 
 const MAX_PARTICLES = 1000;
@@ -487,7 +579,7 @@ function updateParticles(dt) {
   gl.bindBuffer(gl.ARRAY_BUFFER,particleMesh.lb);gl.bufferSubData(gl.ARRAY_BUFFER,0,particleLife.subarray(0,particleCount));
 }
 
-const camera = { pos: [-8, 2.2, 13], yaw: 0, pitch: -.11, speed: 5.2, mode: 'WALK', waterDepth: 0 };
+const camera = { pos: [-7.5, 2.35, 11.2], yaw: .025, pitch: -.075, speed: 5.2, mode: 'WALK', waterDepth: 0 };
 const keys = new Set(); let pointerLocked = false, touchMove = [0,0], touchLookPrev = null;
 addEventListener('keydown', e => { keys.add(e.code); if(e.code==='KeyM') toggleAtlas(); if(e.code==='Space') e.preventDefault(); });
 addEventListener('keyup', e => keys.delete(e.code));
@@ -513,12 +605,12 @@ function updateCamera(dt){
   modeState.textContent=camera.mode;depthState.textContent=`depth ${camera.waterDepth.toFixed(2)} m`;zoneState.textContent=camera.pos[2]>18?'THE CANOPY':camera.pos[2]<-10?'THE OPEN SEA':'THE BEACH';
 }
 
-function bindCommon(p,u,viewProj,model,baseColor){gl.useProgram(p);if(u.uViewProj)gl.uniformMatrix4fv(u.uViewProj,false,viewProj);if(u.uModel)gl.uniformMatrix4fv(u.uModel,false,model);if(u.uCamera)gl.uniform3fv(u.uCamera,camera.pos);if(u.uLightDir)gl.uniform3fv(u.uLightDir,[.38,.82,.42]);if(u.uFogColor)gl.uniform3fv(u.uFogColor,[.47,.66,.69]);if(u.uTime)gl.uniform1f(u.uTime,worldTime);if(u.uDomain)gl.uniform4f(u.uDomain,WORLD.minX,WORLD.minZ,WORLD.maxX-WORLD.minX,WORLD.maxZ-WORLD.minZ);if(u.uTide)gl.uniform1f(u.uTide,Number(tideRange.value));if(u.uFieldScale)gl.uniform1f(u.uFieldScale,FIELD_SCALE);if(u.uBaseColor&&baseColor)gl.uniform3fv(u.uBaseColor,baseColor);}
+function bindCommon(p,u,viewProj,model,baseColor){gl.useProgram(p);if(u.uViewProj)gl.uniformMatrix4fv(u.uViewProj,false,viewProj);if(u.uModel)gl.uniformMatrix4fv(u.uModel,false,model);if(u.uCamera)gl.uniform3fv(u.uCamera,camera.pos);if(u.uLightDir)gl.uniform3fv(u.uLightDir,[.42,.79,.45]);if(u.uFogColor)gl.uniform3fv(u.uFogColor,[.43,.62,.66]);if(u.uTime)gl.uniform1f(u.uTime,worldTime);if(u.uDomain)gl.uniform4f(u.uDomain,WORLD.minX,WORLD.minZ,WORLD.maxX-WORLD.minX,WORLD.maxZ-WORLD.minZ);if(u.uTide)gl.uniform1f(u.uTide,Number(tideRange.value));if(u.uFieldScale)gl.uniform1f(u.uFieldScale,FIELD_SCALE);if(u.uBaseColor&&baseColor)gl.uniform3fv(u.uBaseColor,baseColor);}
 function drawIndexed(mesh){gl.bindVertexArray(mesh.vao);gl.drawElements(gl.TRIANGLES,mesh.count,mesh.indexType,0);}
 
 const proj=mat4(),view=mat4(),viewProj=mat4();
 function render(){
-  gl.viewport(0,0,canvas.width,canvas.height);gl.clearColor(.08,.25,.3,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  gl.viewport(0,0,canvas.width,canvas.height);gl.clearColor(.055,.18,.25,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
   gl.disable(gl.DEPTH_TEST);gl.depthMask(false);gl.useProgram(skyProgram);gl.uniform1f(skyU.uTime,worldTime);gl.bindVertexArray(null);gl.drawArrays(gl.TRIANGLES,0,3);
   gl.enable(gl.DEPTH_TEST);gl.depthMask(true);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);
   const forward=[Math.sin(camera.yaw)*Math.cos(camera.pitch),Math.sin(camera.pitch),-Math.cos(camera.yaw)*Math.cos(camera.pitch)];
