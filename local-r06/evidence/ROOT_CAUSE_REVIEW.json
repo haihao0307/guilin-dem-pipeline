@@ -1,0 +1,16 @@
+{
+  "state": "ROOT_CAUSE_IDENTIFIED_AND_REPAIRED",
+  "reviewedAt": "2026-09-30T10:27:00Z",
+  "failure": "Native GPU sin/cos displaced spine sections relative to the CPU material evaluator beyond the 2e-6 m parity gate.",
+  "initialMaxDifferenceM": 0.000024415915739183185,
+  "isolation": {"mode": "PITCH_UP", "vertex": 32330, "gpuPitchRad": 0.09177001565694809, "cpuPitchRad": 0.09177001548497365, "gpuNativeSinPitch": 0.0916290134191513, "cpuSinPitch": 0.09164125924457503, "finOnlyMaxDifferenceM": 4.085693012503027e-8},
+  "ruledOut": ["score or source geometry mismatch", "fin direction vector normalization", "spine field coordinate mismatch", "field sampler precision"],
+  "rootCause": "SwiftShader native sine approximation: field pitch matches within 2e-10 rad but sine differs by 1.22e-5.",
+  "repair": "Evaluate guarded spine angles with degree-11 sine and degree-12 cosine polynomials in the production vertex shader. Keep highp field sampler. No geometry, gain, drive or acceptance threshold changed.",
+  "angleGuardRad": 1.35,
+  "unchangedParityGateM": 0.000002,
+  "referenceSufficient": true,
+  "taskAnchorAmbiguous": false,
+  "baselinePolluted": false,
+  "noWorkerOrModelReplacement": true
+}

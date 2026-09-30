@@ -18,9 +18,9 @@ const receipt = {
   sha256: crypto.createHash('sha256').update(data).digest('hex'),
   expectedSha256: crypto.createHash('sha256').update(expected).digest('hex'),
   exactPayloadMatched: data.equals(expected),
-  r05MarkerMatched: data.includes(Buffer.from('R06 · KFC6')),
+  versionMarkerMatched: data.includes(Buffer.from('R06 · KFC6')),
 };
-receipt.passed = receipt.httpStatus === 200 && receipt.exactPayloadMatched && receipt.r05MarkerMatched;
+receipt.passed = receipt.httpStatus === 200 && receipt.exactPayloadMatched && receipt.versionMarkerMatched;
 fs.writeFileSync(path.join(root, 'evidence/PUBLIC_HTTP_RECEIPT.json'), JSON.stringify(receipt, null, 2) + '\n');
 console.log(JSON.stringify(receipt, null, 2));
 if (!receipt.passed) process.exitCode = 1;
