@@ -1,0 +1,24 @@
+name: Coral Fractal R01 QA
+on:
+  push:
+    branches: ['work/coral-fractal-growth-r01-20261001']
+    paths: ['kaopu-coral-fractal-lab/**', '.github/workflows/coral-fractal-r01-qa.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install playwright==1.57.0 pillow==12.3.0
+      - run: python -m playwright install --with-deps chromium
+      - run: python kaopu-coral-fractal-lab/qa.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coral-r01-qa-evidence
+          path: coral-qa-evidence/
