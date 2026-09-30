@@ -1,6 +1,27 @@
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import {
+const viewport = document.querySelector('#viewport');
+const scoreInput = document.querySelector('#score');
+const statusNode = document.querySelector('#status');
+const sourceNode = document.querySelector('#active-source');
+const instrumentBytes = Number(document.querySelector('meta[name="kaopu-instrument-bytes"]')?.content || 0);
+const instrumentPayload = document.querySelector('#kaopu-instrument-payload')?.textContent?.trim() || '';
+
+function decodeBase64(base64) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+  return bytes;
+}
+
+function loadEmbeddedInstrument(payload) {
+  if (!payload) throw new Error('缺少内嵌纯乐器数据');
+  const source = new TextDecoder().decode(decodeBase64(payload));
+  new Function(`${source}\n;globalThis.KAOPUMammal = KAOPUMammal;`)();
+  if (!globalThis.KAOPUMammal) throw new Error('纯乐器加载失败');
+  return globalThis.KAOPUMammal;
+}
+
+const {
+  THREE,
   VERSION,
   CONTRACT,
   buildScore,
@@ -9,15 +30,68 @@ import {
   fingerprint,
   verifyReplay,
   parseScore,
-} from './instrument.js';
-import { SCORE_LIBRARY } from './scores.js';
+} = loadEmbeddedInstrument(instrumentPayload);
+const SCORE_LIBRARY = globalThis.__KAOPU_SCORE_LIBRARY__;
+if (!SCORE_LIBRARY) throw new Error('工作台缺少外部谱库；纯乐器本身没有内置谱');
 
-const viewport = document.querySelector('#viewport');
-const scoreInput = document.querySelector('#score');
-const statusNode = document.querySelector('#status');
-const sourceNode = document.querySelector('#active-source');
-const instrumentBytes = Number(document.querySelector('meta[name="kaopu-instrument-bytes"]')?.content || 0);
-const instrumentPayload = document.querySelector('#kaopu-instrument-payload')?.textContent?.trim() || '';
+function createOrbitController(camera, domElement) {
+  const target = new THREE.Vector3();
+  const spherical = new THREE.Spherical();
+  const offset = new THREE.Vector3();
+  let dragging = false;
+  let previousX = 0;
+  let previousY = 0;
+  const controller = {
+    target,
+    minDistance: 0.25,
+    maxDistance: 60,
+    sync() {
+      offset.copy(camera.position).sub(target);
+      spherical.setFromVector3(offset);
+      spherical.radius = THREE.MathUtils.clamp(spherical.radius || 1, controller.minDistance, controller.maxDistance);
+      spherical.phi = THREE.MathUtils.clamp(spherical.phi, 0.03, Math.PI - 0.03);
+      camera.lookAt(target);
+    },
+    update() {
+      spherical.radius = THREE.MathUtils.clamp(spherical.radius, controller.minDistance, controller.maxDistance);
+      spherical.phi = THREE.MathUtils.clamp(spherical.phi, 0.03, Math.PI - 0.03);
+      camera.position.copy(offset.setFromSpherical(spherical)).add(target);
+      camera.lookAt(target);
+    },
+  };
+  domElement.addEventListener('pointerdown', (event) => {
+    dragging = true;
+    previousX = event.clientX;
+    previousY = event.clientY;
+    domElement.setPointerCapture?.(event.pointerId);
+    controller.sync();
+  });
+  domElement.addEventListener('pointermove', (event) => {
+    if (!dragging) return;
+    const width = Math.max(domElement.clientWidth, 1);
+    const height = Math.max(domElement.clientHeight, 1);
+    spherical.theta -= ((event.clientX - previousX) / width) * Math.PI * 1.8;
+    spherical.phi -= ((event.clientY - previousY) / height) * Math.PI * 1.35;
+    previousX = event.clientX;
+    previousY = event.clientY;
+    controller.update();
+  });
+  const stop = (event) => {
+    dragging = false;
+    domElement.releasePointerCapture?.(event.pointerId);
+  };
+  domElement.addEventListener('pointerup', stop);
+  domElement.addEventListener('pointercancel', stop);
+  domElement.addEventListener('wheel', (event) => {
+    event.preventDefault();
+    controller.sync();
+    spherical.radius *= Math.exp(event.deltaY * 0.0012);
+    controller.update();
+  }, { passive: false });
+  controller.sync();
+  return controller;
+}
+
 const presetButtons = [...document.querySelectorAll('[data-score-key]')];
 const nodes = {
   scoreBytes: document.querySelector('#score-bytes'),
@@ -47,12 +121,9 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 viewport.appendChild(renderer.domElement);
 
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.06;
-controls.minDistance = 0.25;
-controls.maxDistance = 60;
+const controls = createOrbitController(camera, renderer.domElement);
 controls.target.set(0, 0.55, 0);
+controls.sync();
 
 scene.add(new THREE.HemisphereLight('#e1efff', '#30281f', 1.65));
 const key = new THREE.DirectionalLight('#fff0d2', 4.1);
@@ -100,21 +171,15 @@ function setStatus(message, error = false) {
   statusNode.textContent = message;
   statusNode.classList.toggle('error', error);
 }
-
-function formatInteger(value) {
-  return new Intl.NumberFormat('zh-CN').format(value);
-}
-
+function formatInteger(value) { return new Intl.NumberFormat('zh-CN').format(value); }
 function formatBytes(value) {
   if (value < 1024) return `${formatInteger(value)} B`;
   if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
   return `${(value / 1024 / 1024).toFixed(2)} MB`;
 }
-
 function updatePresetButtons() {
   for (const button of presetButtons) button.setAttribute('aria-pressed', String(button.dataset.scoreKey === activeKey));
 }
-
 function updateMetrics(metrics, hash) {
   nodes.scoreBytes.textContent = formatBytes(metrics.scoreBytes);
   nodes.meshes.textContent = formatInteger(metrics.meshes);
@@ -123,7 +188,6 @@ function updateMetrics(metrics, hash) {
   nodes.hash.textContent = hash;
   nodes.grid.textContent = metrics.grid ? `${metrics.grid.nx}×${metrics.grid.ny}×${metrics.grid.nz}` : '—';
 }
-
 function computeBounds(root) {
   root.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(root);
@@ -132,7 +196,6 @@ function computeBounds(root) {
   if (!Number.isFinite(sphere.radius) || sphere.radius <= 0) throw new Error('生成结果尺寸无效');
   return { box, sphere };
 }
-
 function fitCamera(bounds = lastBounds, direction = new THREE.Vector3(1.1, 0.55, 1.55)) {
   if (!bounds) return;
   const radius = Math.max(bounds.sphere.radius, 0.18);
@@ -145,9 +208,8 @@ function fitCamera(bounds = lastBounds, direction = new THREE.Vector3(1.1, 0.55,
   controls.target.copy(bounds.sphere.center);
   controls.minDistance = Math.max(radius * 0.2, 0.08);
   controls.maxDistance = Math.max(radius * 18, 18);
-  controls.update();
+  controls.sync();
 }
-
 function setView(name) {
   if (!lastBounds) return;
   const directions = {
@@ -159,7 +221,6 @@ function setView(name) {
   };
   fitCamera(lastBounds, directions[name] ?? directions.quarter);
 }
-
 function disposeHelper() {
   if (!skeletonHelper) return;
   skeletonHelper.removeFromParent();
@@ -170,7 +231,6 @@ function disposeHelper() {
   });
   skeletonHelper = null;
 }
-
 function buildSkeletonHelper(result) {
   const helper = new THREE.Group();
   helper.name = 'ANATOMY_AUDIT_HELPER';
@@ -179,25 +239,17 @@ function buildSkeletonHelper(result) {
   const vertices = [];
   const addSegment = (a, b) => vertices.push(...a, ...b);
   const a = result.anchors;
-  addSegment(a.pelvis, a.lumbar);
-  addSegment(a.lumbar, a.thorax);
-  addSegment(a.thorax, a.neckBase);
-  addSegment(a.neckBase, a.neckTip);
-  addSegment(a.neckTip, a.head);
-  addSegment(a.head, a.muzzle);
+  addSegment(a.pelvis, a.lumbar); addSegment(a.lumbar, a.thorax); addSegment(a.thorax, a.neckBase);
+  addSegment(a.neckBase, a.neckTip); addSegment(a.neckTip, a.head); addSegment(a.head, a.muzzle);
   for (const side of [-1, 1]) {
-    addSegment(a[`shoulder${side}`], a[`elbow${side}`]);
-    addSegment(a[`elbow${side}`], a[`wrist${side}`]);
-    addSegment(a[`wrist${side}`], a[`forePaw${side}`]);
-    addSegment(a[`hip${side}`], a[`stifle${side}`]);
-    addSegment(a[`stifle${side}`], a[`hock${side}`]);
-    addSegment(a[`hock${side}`], a[`hindPaw${side}`]);
+    addSegment(a[`shoulder${side}`], a[`elbow${side}`]); addSegment(a[`elbow${side}`], a[`wrist${side}`]); addSegment(a[`wrist${side}`], a[`forePaw${side}`]);
+    addSegment(a[`hip${side}`], a[`stifle${side}`]); addSegment(a[`stifle${side}`], a[`hock${side}`]); addSegment(a[`hock${side}`], a[`hindPaw${side}`]);
   }
   const lineGeometry = new THREE.BufferGeometry();
   lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
   helper.add(new THREE.LineSegments(lineGeometry, material));
-  for (const [key, point] of Object.entries(a)) {
-    if (!Array.isArray(point) || point.length !== 3 || key.includes('Correction')) continue;
+  for (const [name, point] of Object.entries(a)) {
+    if (!Array.isArray(point) || point.length !== 3 || name.includes('Correction')) continue;
     const marker = new THREE.Mesh(new THREE.SphereGeometry(Math.max(0.0035, result.spec.global.bodyLength * 0.007), 10, 8), pointMaterial);
     marker.position.fromArray(point);
     helper.add(marker);
@@ -205,8 +257,7 @@ function buildSkeletonHelper(result) {
   helper.visible = skeletonVisible;
   return helper;
 }
-
-function play(score = scoreInput.value, { resetCamera = true, key = null } = {}) {
+function play(score = scoreInput.value, { resetCamera = true, key: scoreKey = null } = {}) {
   let next = null;
   try {
     const parsed = parseScore(score);
@@ -214,22 +265,13 @@ function play(score = scoreInput.value, { resetCamera = true, key = null } = {})
     const bounds = computeBounds(next.root);
     const metrics = measure(next.root, next.score);
     const hash = fingerprint(next.root);
-    if (activeResult) {
-      scene.remove(activeResult.root);
-      dispose(activeResult.root);
-    }
+    if (activeResult) { scene.remove(activeResult.root); dispose(activeResult.root); }
     disposeHelper();
-    activeResult = next;
-    next = null;
-    scene.add(activeResult.root);
-    skeletonHelper = buildSkeletonHelper(activeResult);
-    scene.add(skeletonHelper);
-    lastBounds = bounds;
-    activeKey = key;
-    scoreInput.value = activeResult.score;
-    updatePresetButtons();
-    updateMetrics(metrics, hash);
-    const entry = key ? SCORE_LIBRARY[key] : null;
+    activeResult = next; next = null; scene.add(activeResult.root);
+    skeletonHelper = buildSkeletonHelper(activeResult); scene.add(skeletonHelper);
+    lastBounds = bounds; activeKey = scoreKey; scoreInput.value = activeResult.score;
+    updatePresetButtons(); updateMetrics(metrics, hash);
+    const entry = scoreKey ? SCORE_LIBRARY[scoreKey] : null;
     sourceNode.textContent = entry?.source ?? '手工输入的新谱；没有修改乐器。';
     setStatus(`演奏完成：谱子携带形体与表面差异，K5 公共声部计算出 ${formatInteger(metrics.triangles)} 个三角面。`);
     if (resetCamera) fitCamera(bounds);
@@ -238,26 +280,12 @@ function play(score = scoreInput.value, { resetCamera = true, key = null } = {})
     setStatus(`谱子未执行：${error instanceof Error ? error.message : String(error)}`, true);
   }
 }
-
 function downloadText(filename, text, type = 'text/plain;charset=utf-8') {
   const blob = new Blob([text], { type });
   const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  const anchor = document.createElement('a'); anchor.href = url; anchor.download = filename;
+  document.body.appendChild(anchor); anchor.click(); anchor.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-
-function decodeBase64(base64) {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
-  return bytes;
-}
-
 for (const button of presetButtons) {
   button.addEventListener('click', () => {
     const keyName = button.dataset.scoreKey;
@@ -266,7 +294,6 @@ for (const button of presetButtons) {
   });
 }
 for (const button of document.querySelectorAll('[data-view]')) button.addEventListener('click', () => setView(button.dataset.view));
-
 document.querySelector('#play').addEventListener('click', () => play(scoreInput.value, { key: null }));
 document.querySelector('#verify').addEventListener('click', () => {
   if (!activeResult) return setStatus('当前没有可校验结果。', true);
@@ -281,50 +308,30 @@ document.querySelector('#skeleton').addEventListener('click', (event) => {
   setStatus(skeletonVisible ? '已显示由谱子计算出的骨性锚点和固定长度肢体链。' : '已隐藏解剖锚点。');
 });
 document.querySelector('#download-score').addEventListener('click', () => {
-  const score = scoreInput.value.trim();
-  parseScore(score);
-  downloadText('KAOPU_MAMMAL_K5.score', `${score}\n`);
+  const score = scoreInput.value.trim(); parseScore(score); downloadText('KAOPU_MAMMAL_K5.score', `${score}\n`);
 });
 document.querySelector('#download-instrument').addEventListener('click', () => {
   const bytes = decodeBase64(instrumentPayload);
   const blob = new Blob([bytes], { type: 'text/javascript;charset=utf-8' });
   const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = 'KAOPU_MAMMAL_K5.js';
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'KAOPU_MAMMAL_K5.js';
+  document.body.appendChild(anchor); anchor.click(); anchor.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
 scoreInput.addEventListener('input', () => {
-  activeKey = null;
-  updatePresetButtons();
+  activeKey = null; updatePresetButtons();
   nodes.scoreBytes.textContent = formatBytes(new TextEncoder().encode(scoreInput.value.trim()).length);
   sourceNode.textContent = '编辑中的谱子；尚未重新演奏。';
   setStatus('谱子已修改；当前三维结果尚未改变。');
 });
 scoreInput.addEventListener('keydown', (event) => {
-  if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-    event.preventDefault();
-    play(scoreInput.value, { key: null });
-  }
+  if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); play(scoreInput.value, { key: null }); }
 });
-
 const resizeObserver = new ResizeObserver(() => {
-  const width = Math.max(viewport.clientWidth, 1);
-  const height = Math.max(viewport.clientHeight, 1);
-  renderer.setSize(width, height, false);
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
+  const width = Math.max(viewport.clientWidth, 1); const height = Math.max(viewport.clientHeight, 1);
+  renderer.setSize(width, height, false); camera.aspect = width / height; camera.updateProjectionMatrix();
 });
 resizeObserver.observe(viewport);
-renderer.setAnimationLoop(() => {
-  frameCount += 1;
-  controls.update();
-  renderer.render(scene, camera);
-});
-
+renderer.setAnimationLoop(() => { frameCount += 1; renderer.render(scene, camera); });
 window.__KAOPU_MAMMAL_R06__ = {
   version: VERSION,
   contract: CONTRACT,
@@ -342,5 +349,4 @@ window.__KAOPU_MAMMAL_R06__ = {
     skeletonVisible,
   }),
 };
-
 play(SCORE_LIBRARY.neutralDog.score, { key: 'neutralDog' });
