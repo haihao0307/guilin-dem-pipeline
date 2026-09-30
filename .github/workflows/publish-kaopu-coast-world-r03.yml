@@ -1,0 +1,139 @@
+name: Publish KaoPu Coast World R03
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/publish-kaopu-coast-world-r03.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout publisher
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Upgrade the verified R02 world to R03
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          curl -fsSL \
+            https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/gh-pages/kaopu-coast-world/r02-20260930/index.html \
+            -o /tmp/index.html
+          grep -q 'KaoPu Coast World R02' /tmp/index.html
+
+          printf '%s' '/Td6WFoAAATm1rRGBMC5Cs8WIQEcAAAAAAAAAASv2fjgC04FMV0AMxyKIm+qnx0ilWKYfZUC2stRgXJLHG0AFdP5fCd4b1h+oPVxmfyJ34uzxRcNAgsatmUu/+YwpfN7lY+iTNpmjkcZvZFfV+nnU5PmUKgmDWVVZ3bopjXc5O+Oj+Pr6ohsM8BW9z68XsfcTW2wNQIKMbvW7/7uNuOn6wbVaZaLAQmeWBpoch281lhj+AJi4Y2zmrIWOx440XA+kYamRgS004EhWurT7kLXq1ed2G6w9cV0sWZlfD0MXreaw0jHSSl4TfBlcATCqFAB2XDNTsL7/IpqOO+Av4siDr6vz1MjbJe+0O1ZzHJYD4njgpugMGzw+mb7fC6g4nU7ALv/ItmZNKH/Zjb4YinrlT2FRksI7ZhT8jUww+UB1DUCajhNdrtkrgBD8Fo5MkhwWNxW5gzQxWDapbW53DPl7lqrcShLIuET0pfh8+cWDkYtQw2nSt1bnrp0X9Uz6PPOk6OfuB2B11qGnZQO092UKVDxESMWceUN2q3EmW0/FVgZcgqScrQzxTrgZjcN8eAKUFyJ0XVmPj3rP41idd9SEKPsdV0TTY12J/uIsbeuhD1sU5WmW9Wycn33P2N+nrIO64yCD4kSdGpKJI2d56YWEDP14qKJXphLQ9Ba4ACsXl+3fvl9vw/G9k5OdW1vKP+zoXtSRqCB+evVSbiCBNiSLToPZMJdaL1Hh44YyU/lTUaOT1aNV+inX4QND50ZACJBmh1jE2eDlpiVkFlKYUYszyrDklG2XttC0sQsDOisUoSrLMOgfqpeiCRaqCI71RiCI50wuNOQMzzFPi4eZ51fOcnLyPrR/WWtAzWXZUPQauKlVZvIjuXZIRmbVuh+Z8MwfrK6bGYBHMQ92w0y4gtvRzSVidP0nwuii6uSLEyIUZR6yKxa84zMbyUkx9IVoOCMI9nhsHyiyvTZhZQHy6NBx1lFq8YwSUo8pVT1Gm7DmxtYGYbEKqBcd7cyK5vsdqLUr5ssGPqQ32Y32dv2CCD4rWMQqU/u8/zR6l6zRGVvwagi3fb8DRvKk2E986Kevpc4LLYcWlg9dkjDLZpnZwChv4Q4l571rKXNxbaDjw9el+0tdjM1RAoA6gwnmQsQOehk0w+wRkxBVgNlqBugudmIXZuT72GGdhgVp4rGplvxe0b9qYKivabwmKyrawRxBkdPkhWnGQk0HhNx8D/PlaQa4qqTEsGTRh59CJNPsjjJP4vrv5mRLv1JZ2ECIo/4qgC17KM3sWijqqNgIeJksA3iAQN8mV5roWDsNHhieQQoMFWZgXxZfAd4skHQyCDZvdTp3vicmIFsZpBWsDvm6fl6aqM6V3G2KOFCSXDmOeuH05TlKReH/2o5BSrCveghFSH75hXrPeV/OrNW1hbGTiMjPLwMLdn7bJXymHy/On37irBPlR9+pV1V0s8wJuQgY6hrKJMXO7XWJVKOsqX8LFWesg65EzML0MfPkjJh3TWXy2doqHub4HMc/VqZEdCFxCVOhssfTJoEMJokRM6S0fLIfZO445wDr3JrT2Q9X98j+9fGG9oQirU05fnI4au8NIWXMGfj1zppY7pPFzMs9Yn15RoRmHgXyGjR3fLevrMmIX6x9EBzohA/SoGUdYCfvbhjStHAe2btJxkNVQm7c8FryYS2vpE4Od885cODYoWyKeW8uoho+I/zg3iIVIyEO5ztRUtqiFdEwFvrRBNs+dFm2A5C30A7cxKGfB4InTjtwIdpnNR8pvX2adp0YKBz3gWSCLd+BecEX1gSjN4vS00s8Hp2qNvA3jQAAAAAAF8Dyye9F40AAAHVCs8WAAByYJP9scRn+wIAAAAABFla' | base64 -d | xz -d > /tmp/upgrade.py
+          sed -i 's#/mnt/data/KAOPU_COAST_WORLD_R03/main.js#/tmp/index.html#' /tmp/upgrade.py
+          python3 /tmp/upgrade.py
+
+          grep -q 'KaoPu Coast World R03' /tmp/index.html
+          grep -q 'WORLD SCORE R03' /tmp/index.html
+          grep -q '__KAOPU_READY__' /tmp/index.html
+          grep -q 'FIELD ATLAS' /tmp/index.html
+
+          rm -rf site
+          git init site
+          cd site
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git -c protocol.version=2 fetch --depth=1 --filter=blob:none origin gh-pages
+          git update-ref refs/heads/gh-pages FETCH_HEAD
+          git symbolic-ref HEAD refs/heads/gh-pages
+          git reset --mixed HEAD
+          rm -rf kaopu-coast-world/r03-20260930
+          mkdir -p kaopu-coast-world/r03-20260930
+          cp /tmp/index.html kaopu-coast-world/r03-20260930/index.html
+          : > kaopu-coast-world/r03-20260930/.nojekyll
+          rm -rf kaopu-coast-world/r02-20260930
+
+      - name: Install browser smoke-test tool
+        shell: bash
+        run: npm install --no-save --ignore-scripts --no-audit --no-fund playwright-core@1.55.0
+
+      - name: Real Chromium smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 --directory site >/tmp/kaopu-coast-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill ${SERVER_PID} 2>/dev/null || true' EXIT
+          SERVER_READY=false
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4173/kaopu-coast-world/r03-20260930/ >/dev/null; then
+              SERVER_READY=true
+              break
+            fi
+            sleep 1
+          done
+          test "${SERVER_READY}" = true
+          CHROME_PATH="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "${CHROME_PATH}"
+          export CHROME_PATH
+          node <<'NODE'
+          const { chromium } = require('playwright-core');
+          (async () => {
+            const browser = await chromium.launch({
+              headless: true,
+              executablePath: process.env.CHROME_PATH,
+              args: ['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader-webgl','--enable-unsafe-swiftshader']
+            });
+            const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+            const errors = [];
+            page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
+            page.on('console', m => { const text=m.text(); if (m.type()==='error' && !text.startsWith('Failed to load resource:')) errors.push(`console: ${text}`); });
+            page.on('requestfailed', r => errors.push(`requestfailed: ${r.url()} :: ${r.failure()?.errorText}`));
+            page.on('response', r => { if (r.status() >= 400 && !r.url().endsWith('/favicon.ico')) errors.push(`http ${r.status()}: ${r.url()}`); });
+            const response = await page.goto('http://127.0.0.1:4173/kaopu-coast-world/r03-20260930/?smoke=1', { waitUntil: 'domcontentloaded', timeout: 45000 });
+            if (!response || !response.ok()) throw new Error(`HTTP ${response?.status()}`);
+            await page.waitForFunction(() => window.__KAOPU_READY__ === true, null, { timeout: 30000 });
+            await page.evaluate(() => document.getElementById('loading')?.classList.add('hide'));
+            await page.waitForTimeout(2800);
+            const result = await page.evaluate(() => ({
+              ready: window.__KAOPU_READY__, webgl2: Boolean(document.querySelector('#world')?.getContext('webgl2')),
+              canvas: [document.querySelector('#world')?.width, document.querySelector('#world')?.height],
+              mode: document.querySelector('#modeState')?.textContent, atlasButtons: document.querySelectorAll('[data-field]').length,
+              title: document.title, versionMarker: document.documentElement.innerHTML.includes('WORLD SCORE R03')
+            }));
+            await page.screenshot({ path: 'kaopu-coast-world-r03-proof.png', fullPage: true });
+            console.log(JSON.stringify({ result, errors }, null, 2));
+            if (!result.ready || !result.webgl2 || !result.versionMarker) throw new Error(`not ready: ${JSON.stringify(result)}`);
+            if (!(result.canvas[0] > 0 && result.canvas[1] > 0)) throw new Error('canvas has no size');
+            if (result.atlasButtons !== 4) throw new Error('Field Atlas incomplete');
+            if (errors.length) throw new Error(errors.join('\n'));
+            await browser.close();
+          })().catch(error => { console.error(error); process.exit(1); });
+          NODE
+
+      - name: Publish verified R03 and retire R02
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd site
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A kaopu-coast-world/r03-20260930 kaopu-coast-world/r02-20260930
+          if git diff --cached --quiet; then
+            echo "KaoPu Coast World R03 already current."
+          else
+            git commit -m "publish: KaoPu Coast World R03 completed preview"
+            git push origin HEAD:gh-pages
+          fi
+
+      - name: Upload browser proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-coast-world-r03-browser-proof
+          path: kaopu-coast-world-r03-proof.png
+          if-no-files-found: warn
