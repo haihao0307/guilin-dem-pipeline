@@ -1,0 +1,64 @@
+{
+  "caseId": "EPHEMERAL-PUBLIC-PARENT-NOT-REPLAYABLE-001",
+  "cycle": "N48",
+  "observedAt": "2026-09-30T09:46:00Z",
+  "subject": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "mainHead": "38513d5410e374a0262bdcd80897dba9a9921c88",
+    "workflowPath": ".github/workflows/publish-kaopu-coast-world-r03.yml",
+    "workflowBlobSha": "20da9dee95a457dc8240d72966109c47ce30d667",
+    "historicalRunId": 36697100665,
+    "historicalRunConclusion": "success",
+    "publishedCommit": "d18138553098e40e1ddcd105376edea9d7c1a23c",
+    "mutableParentUrl": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/gh-pages/kaopu-coast-world/r02-20260930/index.html",
+    "parentPath": "kaopu-coast-world/r02-20260930/index.html",
+    "currentMutableAliasReadback": "HTTP_404_NOT_FOUND",
+    "immutableParentCommit": "42ce957cb5b24ca2ae1b0ffaf91d40b8760fd7b4",
+    "immutableParentBlobSha": "b214b91798dc71e96215d947198c5188bbb24e85",
+    "immutableParentReadback": true,
+    "publisherDeletesMutableAlias": true
+  },
+  "decision": {
+    "historicalRun": "HISTORICAL_RUN_VERIFIED_ONLY",
+    "rerun": "HOLD_PARENT_REFERENCE_MUTABLE",
+    "parentLineage": "HOLD_PARENT_INPUT_NOT_BOUND_IN_WORKFLOW",
+    "currentR03PublicArtifact": "OBSERVED_PRESENT_NOT_VISUALLY_ACCEPTED",
+    "shareAllowed": "UNKNOWN_NOT_TESTED_THIS_CYCLE"
+  },
+  "replay": {
+    "passed": 10,
+    "total": 10
+  },
+  "overlapReview": {
+    "RUN-SUCCESS-NOT-RERUN-REPRODUCIBILITY-001": "partial overlap: toolchain closure; does not require parent artifact survival/readback",
+    "PARTIAL-TRANSFER-NOT-PARENT-001": "partial overlap: corrupt staged transfer; does not cover valid parent deleted after child publication",
+    "TESTED-SUBJECT-NOT-MUTABLE-HEAD-001": "partial overlap: tested code lineage; does not bind generated build inputs"
+  },
+  "candidate": {
+    "scope": "Coast Mother only",
+    "global": false,
+    "requiredTaskAnchorFields": [
+      "parentResolvedRevision",
+      "parentContentDigest",
+      "parentReadbackAtResolvedRevision"
+    ],
+    "verifierGate": "post-cleanup immutable parent readback must match recorded digest"
+  },
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": true,
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  },
+  "metrics": {
+    "firstCandidatePassRate": "unknown",
+    "userCorrections": "unknown",
+    "sameClassRecurrenceRate": "unknown",
+    "rejectedLineageInheritanceCount": "unknown",
+    "staleDeliveryCount": "unknown",
+    "internalIterationsPerAcceptedDelta": "unknown",
+    "instructionToLegalCandidateTime": "unknown"
+  }
+}
