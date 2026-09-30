@@ -1,5 +1,8 @@
 name: Original linen shorts R2.4 reviewed web
 on:
+  push:
+    branches: [work/shorts-r24-reviewed-web-20260930]
+    paths: [shorts-r24/**, .github/workflows/shorts-r24-reviewed-web.yml]
   workflow_dispatch:
 permissions:
   contents: write
@@ -24,6 +27,8 @@ jobs:
           node-version: 22
       - name: Build exact reviewed source and test standalone
         run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y fonts-noto-cjk >/dev/null
           npm install --prefix .r54-build --no-save --ignore-scripts --no-audit --no-fund esbuild@0.25.10
           npm install --prefix .r5-deps --no-save --ignore-scripts --no-audit --no-fund playwright-core@1.55.0
           node --test human/tools/test-shorts-rise-r24.mjs
