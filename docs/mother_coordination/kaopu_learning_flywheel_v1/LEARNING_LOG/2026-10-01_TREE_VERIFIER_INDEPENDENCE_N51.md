@@ -74,7 +74,7 @@ R2 OS 已明确 Producer 不能批准自己，机器 QA 后仍需独立 verifier
 
 决定：更新现有 Tree N50 Candidate，作为 Tree R04 单 Mother 试验的 verifier 子门；不改 R2 OS，不全局强制，不修改生产分支。
 
-- `POSTED`: false（N51 revision 路由前）
+- `POSTED`: true（Tree 定向路由：[#91 comment 5920349204](https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-5920349204)）
 - `ACKNOWLEDGED`: false
 - `IMPLEMENTED`: true（Candidate checker revision only）
 - `GATE-RUN`: true（prepatch 1/4；postpatch 4/4；原 N50 10/10）
