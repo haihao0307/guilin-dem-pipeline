@@ -40,12 +40,15 @@ jobs:
           mkdir -p source/quick-shorts-r4/vendor
           cp .quick-shorts-deps/node_modules/three/build/three.module.js \
             source/quick-shorts-r4/vendor/three.module.js
+          cp .quick-shorts-deps/node_modules/three/build/three.core.js \
+            source/quick-shorts-r4/vendor/three.core.js
           cp .quick-shorts-deps/node_modules/three/examples/jsm/controls/OrbitControls.js \
             source/quick-shorts-r4/vendor/OrbitControls.js
           cp .quick-shorts-deps/node_modules/pako/dist/pako.esm.mjs \
             source/quick-shorts-r4/vendor/pako.esm.mjs
 
           test -s source/quick-shorts-r4/vendor/three.module.js
+          test -s source/quick-shorts-r4/vendor/three.core.js
           test -s source/quick-shorts-r4/vendor/OrbitControls.js
           test -s source/quick-shorts-r4/vendor/pako.esm.mjs
 
@@ -76,6 +79,7 @@ jobs:
           test -s quick-shorts-r4/card-data.json
           test -s quick-shorts-r4/data/data-13.js
           test -s quick-shorts-r4/vendor/three.module.js
+          test -s quick-shorts-r4/vendor/three.core.js
           test -s quick-shorts-r4/vendor/OrbitControls.js
           test -s quick-shorts-r4/vendor/pako.esm.mjs
 
@@ -101,6 +105,7 @@ jobs:
           done
           test "${SERVER_READY}" = true
           curl -fsS http://127.0.0.1:4173/quick-shorts-r4/vendor/three.module.js >/dev/null
+          curl -fsS http://127.0.0.1:4173/quick-shorts-r4/vendor/three.core.js >/dev/null
           curl -fsS http://127.0.0.1:4173/quick-shorts-r4/vendor/OrbitControls.js >/dev/null
           curl -fsS http://127.0.0.1:4173/quick-shorts-r4/vendor/pako.esm.mjs >/dev/null
 
