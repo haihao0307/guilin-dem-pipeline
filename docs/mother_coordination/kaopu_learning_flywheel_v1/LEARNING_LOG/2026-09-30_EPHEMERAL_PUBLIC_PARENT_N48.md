@@ -81,7 +81,7 @@ R2 OS 已禁止 rejected lineage 继续成为父节点，N40 已区分一次成�
 
 状态：
 
-- `POSTED=false`
+- `POSTED=true`（Ocean / Coast 总账 #63，comment `5908816995`）
 - `ACKNOWLEDGED=false`
 - `IMPLEMENTED(candidate)=true`
 - `GATE-RUN=true`
