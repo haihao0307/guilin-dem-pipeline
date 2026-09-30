@@ -1,0 +1,48 @@
+{
+  "taskId": "FISH_R06_CENTRAL_SPINE_FIN_ONLY_WEIGHTS_20260930",
+  "taskMode": "REFERENCE_LOCKED_MOTION_CORRECTION",
+  "baseSha": "299973e",
+  "branch": "work/fish-r06-spine-fins-20260930",
+  "userDirective": "把躯干回退到前面的中心脊椎运动方式；所有鱼鳍采用权重方式，而不是整个身体采用部件权重；重新做一版并提供网页检查。",
+  "targetDefect": "R05 mixes spine-derived body/head deformation with per-part motion response, changing cross-sectional following and distorting the body.",
+  "allowedPaths": [
+    "local-r06/",
+    "gh-pages:kaopu-fish-r06/"
+  ],
+  "protectedInvariants": [
+    "R05 surface connectivity and atlases",
+    "continuous source-driven spine force propagation",
+    "complete seven fin domains and tips",
+    "independent R05 eyes",
+    "R05 baseline and published URL",
+    "mouse remains untouched"
+  ],
+  "motionPolicy": {
+    "body": "one full central spine transform per fixed material section",
+    "fins": "seven independent weighted local bends carried by the central spine",
+    "mouthAndGill": "existing local anatomical attachment masks; no body/head response weighting",
+    "eyes": "independent gaze carried by the same spine"
+  },
+  "acceptanceGates": [
+    "non-fin body shape independent of fin gains and obsolete body/head weights",
+    "all seven fins respond to their own gain",
+    "fixed spine material addresses",
+    "CPU and rendered shader consistency",
+    "center section distances preserved",
+    "geometry/topology/atlases preserved",
+    "desktop and mobile file and public browser QA",
+    "exact public payload hash"
+  ],
+  "visualAcceptance": false,
+  "motionAcceptance": false,
+  "productionReady": false,
+  "checks": {
+    "generatedImageSubstitute": false,
+    "productionSourceModified": true,
+    "interactive3D": true,
+    "live3DRuntime": true,
+    "publicVerified": false,
+    "screenshotOnlyIsFailure": true
+  },
+  "anchoredAt": "2026-09-30T10:07:51.300Z"
+}
