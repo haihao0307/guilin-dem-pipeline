@@ -1,4 +1,4 @@
-name: Publish KaoPu Coast World R01
+name: Publish KaoPu Coast World R02
 
 on:
   push:
@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: 22
 
-      - name: Recover and assemble the self-contained coast world
+      - name: Assemble the self-contained R02 coast world
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -52,12 +52,16 @@ jobs:
                   '<title>KaoPu Coast World R01</title>\n<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%230b2630%27/%3E%3Cpath d=%27M8 37c9-10 17 8 27-2s15 4 21-4v15H8z%27 fill=%27%237cc8cf%27/%3E%3Ccircle cx=%2742%27 cy=%2719%27 r=%277%27 fill=%27%23e4d0a5%27/%3E%3C/svg%3E">'
               )
           p.write_text(s, encoding='utf-8')
-          assert 'init().then(()=>requestAnimationFrame(animate))' in s
           PY
 
-          grep -q 'KaoPu Coast World R01' /tmp/index.html
+          printf '%s' '/Td6WFoAAATm1rRGBMC/NMGoASEBHAAAAAAAAIXQJJPgVEAaN10AMxyKIm+qnx0ilWKYfZUC2stRgXJLHG0AFdP5fCd4b1h+oPVxmfyJ34uzxRcNAgsatmUu/+YwpfN7lY+iTNpmjkcZvVPqV+nnU5PmUKgmDWVVZ3bopjXc5O+Oj+OGlMBHL7biaRvnZP7/TkArDe2x+NFtlFgpj9KJE96OzMNKKR9c/+DMraHWfPZQkawMeTGDL4I34bisn3uSh67Ne054EVjc629cyXmRY1ReYvH0m4iPg9Snrt1h0rPXr0G6r3o0kAZ0R1uflpvZbkbQdsOfAYr1FlaaPAUtIzT0UpIYaspGI0X8v38lVkS7edAjliykoonc7bUXwjksP06ZB2Rlhl7c7+fKU/drZYE7b+s3Dv8/BtROfdGf6vGrKnD3DTlpCRRvxnbXffhfzkTq4Jhrn1povAJnLVN+tiy4wV6PWn18+vgb0bmAQvHAHSdxtwEoo4pTJQhobjYPHk02g+TGBhZHdLZ1eJTf7LXV3VIYkzKMoJz0mxpRooykfmkgqAvrR1CluNpanTIbI1bjmrCAdZX1rHBqUvTB7CvyLVcMC0ckK9FtyzrT92Fen7VxjtmhCCHOYkKJmGZfP3eyXiKc3bokVG8VpuTISIgRnIEz/l0zRWl4ZH9fYmFs93mlzarg66QgJeNyZcFhP1WkP3AsHBpWPQUn3shQOm082NtMUj02JTWLgMBBzDK8+aiBU80YdIdnm/FzM6srm4iRaUtEJKZeGvkfaEV8jM27U4lKKbAARDnjQKgxRNeQeutyjGcPdswgIokTuf3ILuaatRsJLowolbiqe4azRvel7qVYmnboVqZSf59hivtW8muV6GDb9yPxHBPXiTxMMm8QVY9kFaL9tQCTUfZ2AF0i/vP+8zlx0I3wsKL9xTYfhII4LFJAJ6paHlc78sGGRZs0vN84ZTFCha6mQ9Ua11DUGYlhJMQR/aRLLij1RIitZLvQMHUpBPGEMolfPlhLIarXSbLkgtSnTYmkJdwcyXuwu/rhbjRU6R9hw7aIAbilphsMJjps3mdDn1wVup8J4vikf+qXQ/LNQKV12q9Ny/KRZnxwiezXjcyjhMboZKXWJrMW6rtii5m1n7ZEmwM/KcpPye/JmD4hKfuD5Id1EsRttcLBqslBXw/ZIvsXTb7/l5YwJQbS1eZzVTIvyMoTQj0Z2YotEiZ7GVO8494j3KU5qfpokjBN2xOv8Wp9q+ejEFYuo+yK8fEztbpxtAzO/minSiI7X76S5H4sOrmZ0SfWpXDKYDFdiPY4nZneT9njFdjHQEFb3xwei5B48oNB2nDfcGlxwACrpbzKmG9UiNTK3hcAVRMu8P04Od6D+l/HPl2h8YUwE7g7GOxCs73IiizR/o12KNOzcLUJKAg81gJaQ5anIK2eG7BKTSuSQh/May8rUjv65h42cujZTFzxUurQYBHzxb6qbz2CYz8Cyar5fg8phXx8LGd2XVqE6zGerhsfMpb9swvP6cHS20CGGkRLxdoiaUjUlcR/2saif5QxgL+PoT3/JQJvr0aSG+VMJJWDi0Xm2vf88ymq7BSmz32EvmW2hE7BunWkxTOzWKhy+hHnto0m+LgghjV0/tiAXnzX288j/0zVH/+B48HNwscvLjdoi6TRLQAJsdDWQLXqPASn6Qa2YrCB1kgnnyQrh9wn+ZwuRSUXxI+voRjfygszlUyg+8RhoiQbQY/FRT7f0kXaz3/+1Gu4wj1SJazNeod2DI/p+MGuQScLqZU4blDZTcvLUlWHMvie/UV0pmrrq82m1hZc0CKjweP68qWmY0WQX8zt7YeYVNHhvVvc/5nmWGNnfGKT0a1vdRh8HDCN1V9kS/8AiIP3cCClHwB/ncyKyEMj/Fp34tSPJqritjRb2RxY2NbYIRHxlNiUEbwCnqIlGMOAyK8/VRse8Ob43TiEZ5ol92ZaINAX3NhOtenJ3PAmEO9fKDvCU17mNYtQcisQuqNrtUOJIGyN3uKeuvug7JJO8FZ4mCgpa55zDdaYqZaxfG76tFrPo7aJ5cbSywcvJLgcTF6dPqnDn5yIkQjeJpclZnQo8cOdGQ+uXm4F/OMIBXhzTABLysrgUrUSQRNctQTE1dNMirRPynd9j0gbARG1Bogy4Zc+3ycmX+T3qx9HDPFW2nCuIwwzdZ0SoRKELcNrP3FyaMitT//eC9q6iq1C/CoUmJ/LPY4XGFlPiVjV2CjL7yy23UhQj6jkm8/JtFFnNls/vWLIzobEiQtmq4luGT/I40kY0UwGd2AUQ3yZkOed2kXuUkqKt+AiewwkiK0XSJgYSQSs7hyOyIhgj4W+OSs+O7ag8VAx7RgK9WrRJNDW9soEP5bAhB9dXpT7CCfmewstiWqOu7N/psky8e/zbEIgW6OvBTnryNo/gDyR1JVLYnAyPJ7H2ndJcwVpyoa+JMXZyg0SDlFcZYITztCEwAY23vEN9XeRa/XrwDc3CICp4XLYQ4guIjFpRD9EcCjWbv0PuH5b78S5Kh2cM7xARR3IRljyUHgj1UuiSkOd/5Z5iGwhL3D3kQ+Ewqfp9i9NUI51Sp0O0b12ifFId5coBuvfQR/kXAla5MMqySXb00ENkot2+yTvscZI6SsPrGGD3UJ7eoTneJZAbhp6W5V/ahilBAiKL5vYgcy9pM4I9yFNkNY/flgm179LPI5oimoxgKdF6HqpmyOD+wGRMB/cTfgI41M1GjmEhGNXEImPgZ7U/O/79Wn12MEvV8eQNmMqVioYDvzMWNW9NXKFeR6KfbJ/UxLLboApW845oGMwQZlzB0VdgOTpu14GE73KXaF5MZxzTk3YFOryTdllPUWhTDo+qT1CtqT222tJ6mR0udOJpmdh0xXC5kUXikR3S5Zr/tkpnFoaOkmC1CY8mLIAZSMW6uahHMXdfRgqEhVY+eiJ7efSFJ6NrbUps9D0a5UR8d8BxWN2E8x07XT/xKFXHTuIWaAtHo0zF/a1APzqLfwF7RolZ325YBhf/zb81HnL+mRpPRzB6vU176gz2I+F3IhKJh5ZIZM3q8iiK1qg/Q0mGAagTAMHDnv6bZTnYRMxxjcN1CnYDtJcTtBC0ampi272MPMpfE42X/dIzlWWT0J5P/gpz8bxjHdqN61sqqKD4jOqqCJWMgMYmdXF4M5TC3/82nMDATva8ci03/8qhOGXH2xOS6mXksbWBI7F7ea1fiPlxUy5BhDw3ysxoJZCF5Xk4uRqTlh9rWHxooSnY+YfOtKyw6QhHdpz9iIPwggv6QQy5AQczY0MfIEHbyQ6FnKBu3oQxHsbK7GfRqIyMyE6xuVG5ctfoHM7VBs24PrJgPHKTZLwyo4EkCCTBvUMQQT0HJeV9ireifto+ZPgzERzrU3tYPIlkVnrQZbkeLZ/UdLVp6B5u0UKbRNAp8kyMyVTycLJPTYtaNtnibk6VWDRNC7Kh8c+Da3N5NugIUFAbxv9mV31RPVO/BxbS7Pto8GsuGM3wim6Ra00kpPHwMB8tBRvexMlGp9QPKu5nMM/KukBC9Y9vlTGjbmvfqx6WEvydnzUy3XsjGYV//eZwoNHc0dTLFbXcv8OHCb0qR53lISPsHR1DwToVyW8AIWptbJJ6JJpD+rkqLMRUr5cX28unN7ywWmoTudqyo/Z1kXxt2+c9nOMz+V7IrX5dl8/4KqXfjADwXXw37b04j9RgOfLChNcKxa5Ru3LkSwGwozN8dgxRbzCl7xWirKbP1UnUnaUHIpoXpofBpPUc66syKERqTso+P7Axmv7dsHJQQdOJX2+OytGV6d9oab6YtqA+QnZiSbwkR5YD8xEdVOi/qI+YihqHTu+OPVrJ6O4xcdTtvOmUZRwpr7FWBGTgqiGfX7t3noyYF3YyzlD/5ro83ntAIKOzxnxakGGSBuLT6ipbe/e9Cm4XIh9qLpc7uN8jn5IYqMNOqw4U97y/99qr5Oeuc07JNDegg1XvUWUka/uIODKAWQMbyJBXBld2GFO1HsswbRlCaAtxRUIOEZdph78R3aFrrowWMHQKM/ZVMlPEA8A/GuZjFG33fDczOBFFJZUyRM8b7eLxvvhyG9CF8esRW9ThoFtiXN4ZalxOPthP1KWf45cdAZE5XlwDMhLBmqhyOOaAQuaSjDmUL712JvSCGvCGVFQ2/d5H+l/8VI+xALg6oB1OsPXgfD39aNbsstVuObH92CJMgS+wIXNZi40DMtqRLSoGjtLENhJKkU19vwdfTaex99HrepXBhL+YAytNFYWX6stqjbzPCtIdQq8cXYQiv3oo/AcNEJJWtRC4ulbx5RszQJ4v/8fYsRwS27z6NM2eClWdPjfV8mRo3ErVUqurnEXlhQutSZbpDwBe5K8qdNv/KhNEbZEJHzkqQZZCzv2kO6r1N+DIaZuOLBI7CO9ZeCSkLVK/rfz5S4nQ3WthYhA9n6jfQPMnz3oZpgF/yiCWFkAEta9YelXpZSUEciPca/h9tUtm1PH02TiiXFViFwf2OAYRR20KZxkV8PUsjjDyHvbryZsgdSjoD4hHwlna7Vp/Wek84d0hZXCLxyyy5SKKNxyxtODIj3JNPjERdFySpR33jZVyL9GHZK72U6p4ZkI+eh8AgggB09b4x4Iq3Ph830mRv6e8MKQcX2d2vrmJn4hLbBXdMkrmDggjPK+vCB6BInI0QU35B7H0gEj+Xxs2HI4O+NP9oo34I9T/Spr+ll15JnGqwIMX9SOECBJd4wrojtoQnChjue0Kca+LKYdbYuYPgdI972SfBJc6wFmO4RZl+K6ySBn4tSlsRmU2oevGybvYyUesjwl4WWdlW5eSaCyMkREJhg5Jz9mcMGTi2TaIVbrP29/u6EZo+DPCl0QAIJt43X9i3Rv3lW0rtb4RVTaQgJ0pH/luWnRATFpM6TJhQKf2npHzGGVDAir5J+PceRx+JFQOa+98gLkmrAsD16Jjh+c2KxJwYnqdyRzT62kRkBTScv88aFvWO3FHLpc6qUMqcgfHj4lNC6ivx9jTxcc97zTzCxLsh5lEiDeFKLb9xC8ocYbOvD55YRZX8E1yHzlBf+4Cn2pw84/VdzujTBuf3KyMJ5wk/dI5l4sXSC6Dhf/GX67r6cYGsSp3KdiMt5k5N1PSH1B8E2UNJziisFWBC0W/w6LyK9EZeYOsfd4taLUchFjUjGNBWueT9f1jpwxewZiyDrgzS7ovDb4tyNrO7G//XJopOmf0xqzmoEofXgzU43OMhMu6RsX7R5v6jPUmC47lqz3LezRYTqPPBOSMed1O7wY0Bj8kwRhp1tNJSYheOG2lzsrMi2iv6HNq/+GsU0LBDw/MCrn7+nQkqINV9A2ZwTupCc9lFXNFoj0uUeUzTAS6fTqsBSKUEfgRnyrDnzpUcCLbM20hQhijMALX5TudjMjxfCMeSgv317kgWFqgr2c4xqItizAzmUhPRqrrJJpFcJaz3Xe6rRpU3aTaLT7LwfaHq2dQSejM6Nce7nB0CsXhB1HwLiMXt0TCo02sNzZdgBf7QuHGCiHg1REMj8lDYoGt3C0AIRpCJ4nQHiHJT2KqNpKxu+LqC1XJHxwaFZ/IASNw9nZZ8tEhBPyBwMRKSSbiDx4Ybuyx+insewEBR6eAj7hnKsTq4OXA40/3NW6Ez7IjLSAzu89SRm1UU9micdvCs1pSk2pUHU9LCKNAAAvEfqW/US7PBdgLRZQZ9OrxJecm9YPJzmA1TTnhEQLzAQVJYf7nRQsEnIQ982E81oIOCDh3alp7FcE6pcUzz/AIdsOUpXySKhn/feS0xzGL0bpNwOavQcKLIAhnwa9HiwHANjoAwnkBNdoUVvzdG2uFzWLG1WozBmhBhel5oXtAYWkySMyaWQrY4nQE6MBe2cg5svi1qduJT/b/N6gTEOuZ2VS0CBLuf+dTpk3yFsC+PWYPSJV8XV1SFj88O+zy0BgPm24HiFVXhB0to5paVz7OHi3vfCJn813TI31ZZ7k07DR3o8/6avVJmBhlQJaCDg32ZX0EoJRarth7/VNzm7nSSmiCBFZG0SGXeLjfrFT1mfhA1PXYGBtRd3mjdl2hcQ3NbL8LVe9ZglP+GO9ry1cVNOaRW1MwrA9JB12AAjQFt3FRGPD4fTfw7ivFo9tMX4uxSuIl388X8mpGL3I1uMkMFJn17wajyPNJGdOv4Q561o9FyIGeSg8JvCi9OVJLb3SUxl6ZZ7OGSxq6C1+DA7ZNC5hJpklhYzGG19E8ZZKKJkYbKoq3zhBGjyHMsIDNQp4LstJqjaixjunzFjtLsM5LzNQ48/4e85f0JNP0A+RObJ7OSclX2k0OBuyM3cGDghZ9Kf5PUgEoLvumC1Cf4AiRHBtP7VaSvnt+pePNu5HtfVY/6BG7xEeGiIXXhqALUdq1rYYdSpUETetiHVzILeX5qlIs7KYs+e/wNH5UMR3gD+mA10iGoDg7j8AvupHYZkO2QyRu10vOhqLGkqkFHRTIW/BcAd5xJYQGKPqwpzX2TcjLmHiW1x+h5DhXncGykaAU4DGRE9fdom+rPq4p8hbZUfjg5pmmIsytDw9b1Y6Dr49L7jXTJxF1opWJKtt+y0XdDMDt+pg/xcubVMdz7eAI3ctNjrzqziNIbJ3IWb0oMRjljZ2TfS7xgigCR96vhMAnzax8k+6cXKa0sDLgJD8t7wuIbaMkL8cVYfQqig+nofftWY89kHrR9jS5o12gFPHtiBEeM1ZpxHy/jL1UAuij054Fh0sz1j/Pe1tka+8fjSxhlPhR/Vdu0RdpI1xombOyjnYQabfezqBdlRnSy0v1g1iGppejz6KtER7Ahj3kocMJnfw8eyokXHCJNtYkv3Yl3aJW0ui/e7ovbDslL2bj8P2FWAcwzTw3O1+PzMo3sbrSRsTf3zsd76O9VlTvY3A6vq4GXgvyiXLi913TBKxz+LYnX0TZvne69bBKm9olca7XVlfclWoKU5JZqPn7MTeORCMs3fkZjECUaWFWjzUv1fa3VFNIXqXhpEZNnaTfR03mKQiH7Oifk/r/Ausbw9ahvTDkjGrbP4CoH9klL5CH27nS1Np2GuuwTOBZKlOK4USAkoSD5k73ZOuCKSdVIVLrfRoQcRbl6a0eOfagE6CE0a7DAuER2nOwvYmePaQZz5krPtkSpDn4NIDTYGTRsyXrfeeqqJoE6EXcVt1VN1KUzOquqzERigb/OyQ3n9uweqN/2tZ1QdViHSC0N2dJX/gLJBs6NZYoYBEsaj5BrRT7AI7Fxg7vrOcOvz5dE7ECJBBXoWxHtNBV+lYArzGxZ2w8Nv0Q+oDHhyWBvxdTYiklvX/se8Sb41TcSoy2OLInmCQbhtkCHMWmEhzQIeBkwOV0WDABk9rE+9zccWQOXjLTfnfp1ijchPfEDSGlllrz/K7HQgI0AGUFuqtkEiPnu8hvOuD7PT5rXb3Ha1atX3cGiNSqL3/VSKlHhpCefMloEM9FGgy1qTc0bl0jc+FI1d+UJe5ra1V8XoHnp3V0mdWx+4gCWyLEDb0l8OLxi3WZvqhH2hh9q9KtGww/ADLhowCuReMmH/XZPYLbsvw95aKlcYd6uKcIvnqiVytU2NWdLFc5pWQwk24yq8HO3OxBICT5AQWA6j7/kWuOCS0eJggp/45Y/zzesvClpLME/Tr7snI/qL1wuyVDcbQVO3Ih4VvCyb753oq2Rs8X60pC0rSHM9myIKwwvi+32cwCRFG48pKppxlBlMxbJRfrK0bJOtUKhn9d0Kl/8MNzy4XxkQKDq96Nvk+2u7XHmL8fgBBid5yrdp5+xgbyK8xF/UOMQPhMnvzZ75IH8Wfq+vRq+Q9dtNSClDBahGmUytBVGtRdP+z6/3KN8dj8Wi6ANB2Jw+8ogvfq6j5EOaEisjBZOr2ly60hlHw/8KWnfZ8FkHQl0r+mUo4epJPfZ/XrzfpErrLSMKZQhvsrgURgsNQF3dGeNFxFGYZiljaGBNKDI1c/suKsFtGmaw7kXMUnmdqUEepxuMbALXR2t0FBoCnxzreAG2PkRx5tCEOlqWO4A9vmYW+TFTmBRK4tSl5GFO8t6VbLYcbMksn1tOcvtJdJ/we+ELb9pF21Q1CJmKV2SEcBHLvfei0t0pkkQ3AL6sVCbejTVf1RV9HQH5vSmjFDvSvGH0hO0kLdVgT+OZ/ptTejaDOgeSBK9hiLXwocpHo/fiLc4XjH9F/Re8BEvou6MxJG3XzdJ+Renmh0LmKLrkBBCXBF+ga8cm3OV0qQFOcRQ1gMd4/DhPJ17i/vKQ4sP3q/NGf4/j6Hu2hv8XcDX+ar2PbUYdbLDZmR27ckSoFrvDJF+YbYlumAXlt17ugiwbIyJlZIDPIMmQyOaowlAj8S/eyeTjH1rxWYJUJ5IKioUbUlGayAsNnABoJGTophzoCvae6uUVSlLls6jTbub+bG6wP9amaMUcltVXgoP4bm2sCQqK1tj2jRic5r78dDxaXoy8JCPjC6NjipIJOLVeduTSOS9CPS/jri4HSZF/BVLgBAQLdYv7m/mCpwg+T6gEM5zMIzDSUUCRkvhx6JFy7LUayGo2hdiurMJJQYn9fSs2I7D2wVeo5CRcVffKu2NJXkay7GS6mOcJiSzVrZlbX9lreGstgU7ocsqty8T7MsXexeljgzaqvwe+HfRYZi98vxoPzdpDFluv2rIVe+c0W5VmLRbielXkxGGcMZDiUHtaD6JcLe6KdyLtxRxOlNgbO3fb0uQFByfkNIemeDCgkK4AuqN6hWYebuUgnf54wsmNB6b0VY7vECm5yvaVHb0MjD0QwXUAbAVBSXsMOjbD42mo5OcuPQOMsWMwKd7v2sN+NNktBa+AVaoCmvanYYdJepE4787BqAxyNXq0arI51XuGTThMYET6tSSs6qBajmop+0YCmbQh9DZM+x9GhqI1mpE/CGDowK1Unz29b9b8IzDF72qlIEAEgbg0LNwkDjx9Iif8qYgsTDc40Lc0CVbHHuBIPREzR8lwAAAAFqh534+GzfwAB2zTBqAEAjZKM77HEZ/sCAAAAAARZWg==' | base64 -d | xz -d > /tmp/upgrade.py
+          sed -i 's#/mnt/data/KAOPU_COAST_WORLD_R02/main.js#/tmp/index.html#' /tmp/upgrade.py
+          python3 /tmp/upgrade.py
+
+          grep -q 'KaoPu Coast World R02' /tmp/index.html
           grep -q '__KAOPU_READY__' /tmp/index.html
           grep -q 'FIELD ATLAS' /tmp/index.html
+          grep -q 'FAR_STACKS' /tmp/index.html
 
           rm -rf site
           git init site
@@ -67,10 +71,11 @@ jobs:
           git update-ref refs/heads/gh-pages FETCH_HEAD
           git symbolic-ref HEAD refs/heads/gh-pages
           git reset --mixed HEAD
-          rm -rf kaopu-coast-world/r01-20260930
-          mkdir -p kaopu-coast-world/r01-20260930
-          cp /tmp/index.html kaopu-coast-world/r01-20260930/index.html
-          : > kaopu-coast-world/r01-20260930/.nojekyll
+          rm -rf kaopu-coast-world/r02-20260930
+          mkdir -p kaopu-coast-world/r02-20260930
+          cp /tmp/index.html kaopu-coast-world/r02-20260930/index.html
+          : > kaopu-coast-world/r02-20260930/.nojekyll
+          rm -rf kaopu-coast-world/r01-20260930 kaopu-coast-lab/r00-20260930
 
       - name: Install browser smoke-test tool
         shell: bash
@@ -85,7 +90,7 @@ jobs:
           trap 'kill ${SERVER_PID} 2>/dev/null || true' EXIT
           SERVER_READY=false
           for attempt in $(seq 1 30); do
-            if curl -fsS http://127.0.0.1:4173/kaopu-coast-world/r01-20260930/ >/dev/null; then
+            if curl -fsS http://127.0.0.1:4173/kaopu-coast-world/r02-20260930/ >/dev/null; then
               SERVER_READY=true
               break
             fi
@@ -112,22 +117,23 @@ jobs:
             });
             page.on('requestfailed', r => errors.push(`requestfailed: ${r.url()} :: ${r.failure()?.errorText}`));
             page.on('response', r => { if (r.status() >= 400 && !r.url().endsWith('/favicon.ico')) errors.push(`http ${r.status()}: ${r.url()}`); });
-            const response = await page.goto('http://127.0.0.1:4173/kaopu-coast-world/r01-20260930/?smoke=1', { waitUntil: 'domcontentloaded', timeout: 45000 });
+            const response = await page.goto('http://127.0.0.1:4173/kaopu-coast-world/r02-20260930/?smoke=1', { waitUntil: 'domcontentloaded', timeout: 45000 });
             if (!response || !response.ok()) throw new Error(`HTTP ${response?.status()}`);
             await page.waitForFunction(() => window.__KAOPU_READY__ === true, null, { timeout: 30000 });
             await page.evaluate(() => document.getElementById('loading')?.classList.add('hide'));
-            await page.waitForTimeout(2200);
+            await page.waitForTimeout(2600);
             const result = await page.evaluate(() => ({
               ready: window.__KAOPU_READY__,
               webgl2: Boolean(document.querySelector('#world')?.getContext('webgl2')),
               canvas: [document.querySelector('#world')?.width, document.querySelector('#world')?.height],
               mode: document.querySelector('#modeState')?.textContent,
               atlasButtons: document.querySelectorAll('[data-field]').length,
-              title: document.title
+              title: document.title,
+              versionMarker: document.documentElement.innerHTML.includes('WORLD SCORE R02')
             }));
-            await page.screenshot({ path: 'kaopu-coast-world-r01-proof.png', fullPage: true });
+            await page.screenshot({ path: 'kaopu-coast-world-r02-proof.png', fullPage: true });
             console.log(JSON.stringify({ result, errors }, null, 2));
-            if (!result.ready || !result.webgl2) throw new Error(`not ready: ${JSON.stringify(result)}`);
+            if (!result.ready || !result.webgl2 || !result.versionMarker) throw new Error(`not ready: ${JSON.stringify(result)}`);
             if (!(result.canvas[0] > 0 && result.canvas[1] > 0)) throw new Error('canvas has no size');
             if (result.atlasButtons !== 4) throw new Error('Field Atlas incomplete');
             if (errors.length) throw new Error(errors.join('\n'));
@@ -135,18 +141,18 @@ jobs:
           })().catch(error => { console.error(error); process.exit(1); });
           NODE
 
-      - name: Publish verified world into gh-pages
+      - name: Publish verified R02 and remove superseded runtimes
         shell: bash
         run: |
           set -euo pipefail
           cd site
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add -A kaopu-coast-world/r01-20260930
+          git add -A kaopu-coast-world/r02-20260930 kaopu-coast-world/r01-20260930 kaopu-coast-lab/r00-20260930
           if git diff --cached --quiet; then
-            echo "KaoPu Coast World R01 already current."
+            echo "KaoPu Coast World R02 already current."
           else
-            git commit -m "publish: KaoPu Coast World R01 browser-verified preview"
+            git commit -m "publish: KaoPu Coast World R02 completed preview"
             git push origin HEAD:gh-pages
           fi
 
@@ -154,6 +160,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: kaopu-coast-world-r01-browser-proof
-          path: kaopu-coast-world-r01-proof.png
+          name: kaopu-coast-world-r02-browser-proof
+          path: kaopu-coast-world-r02-proof.png
           if-no-files-found: warn
