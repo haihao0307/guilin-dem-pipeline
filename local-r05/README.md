@@ -40,6 +40,6 @@ GitHub 上可查到的最后记录在 `work/kaopu-fish-continuum-r04-20260930`�
 - [x] 已恢复实际生产运行源码，并验证可重建；本轮没有新的视觉生产变化。
 - [x] 工作台是可交互 WebGL2 实时三维，非静态图或视频。
 - [x] `file://` 桌面与移动视口、16 动作有限状态和确定性重演已检查。
-- [ ] 公网固定入口通过 HTTP 回读和真实浏览器检查后，以 `evidence/PUBLICATION_PROOF.json` 为准。
+- [x] 公网固定入口已通过 HTTP 200、完整字节哈希回读和桌面/移动视口真实浏览器检查，见 `evidence/PUBLICATION_PROOF.json`。测试入口：https://haihao0307.github.io/guilin-dem-pipeline/kaopu-fish-r05/ 。
 - [x] 截图仅为内部证据，不代替工作台。
 - [ ] 用户视觉/运动验收与实体手机性能检查。
