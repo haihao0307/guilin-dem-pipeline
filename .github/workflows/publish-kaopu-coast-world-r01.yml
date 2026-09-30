@@ -36,6 +36,25 @@ jobs:
             /tmp/old-publisher.yml > /tmp/kaopu-coast-world.xz.b64
           test -s /tmp/kaopu-coast-world.xz.b64
           base64 -d /tmp/kaopu-coast-world.xz.b64 | xz -d > /tmp/index.html
+
+          python3 <<'PY'
+          from pathlib import Path
+          p = Path('/tmp/index.html')
+          s = p.read_text(encoding='utf-8')
+          old = "init().catch(err=>{console.error(err);loadText.textContent='初始化失败：'+err.message;enterBtn.textContent='Initialization failed'});\nrequestAnimationFrame(animate);"
+          new = "init().then(()=>requestAnimationFrame(animate)).catch(err=>{console.error(err);loadText.textContent='初始化失败：'+err.message;enterBtn.textContent='Initialization failed'});"
+          if old not in s:
+              raise SystemExit('startup race pattern not found')
+          s = s.replace(old, new)
+          if '<link rel="icon"' not in s:
+              s = s.replace(
+                  '<title>KaoPu Coast World R01</title>',
+                  '<title>KaoPu Coast World R01</title>\n<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%230b2630%27/%3E%3Cpath d=%27M8 37c9-10 17 8 27-2s15 4 21-4v15H8z%27 fill=%27%237cc8cf%27/%3E%3Ccircle cx=%2742%27 cy=%2719%27 r=%277%27 fill=%27%23e4d0a5%27/%3E%3C/svg%3E">'
+              )
+          p.write_text(s, encoding='utf-8')
+          assert 'init().then(()=>requestAnimationFrame(animate))' in s
+          PY
+
           grep -q 'KaoPu Coast World R01' /tmp/index.html
           grep -q '__KAOPU_READY__' /tmp/index.html
           grep -q 'FIELD ATLAS' /tmp/index.html
@@ -87,7 +106,10 @@ jobs:
             const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
             const errors = [];
             page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
-            page.on('console', m => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });
+            page.on('console', m => {
+              const text = m.text();
+              if (m.type() === 'error' && !text.startsWith('Failed to load resource:')) errors.push(`console: ${text}`);
+            });
             page.on('requestfailed', r => errors.push(`requestfailed: ${r.url()} :: ${r.failure()?.errorText}`));
             page.on('response', r => { if (r.status() >= 400 && !r.url().endsWith('/favicon.ico')) errors.push(`http ${r.status()}: ${r.url()}`); });
             const response = await page.goto('http://127.0.0.1:4173/kaopu-coast-world/r01-20260930/?smoke=1', { waitUntil: 'domcontentloaded', timeout: 45000 });
