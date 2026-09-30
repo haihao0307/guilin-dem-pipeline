@@ -1,5 +1,6 @@
-/* R5: connected shorts fitted to the original R2 source body.
- * DQS and measured elliptical thigh clearance, not a cloth force solver.
+/* R5.2: connected shorts fitted to the original R2 body.
+ * Transient geometry, retained fit card. DQS and measured elliptical clearance,
+ * not a physical sewing simulation or a real-world cutting pattern.
  */
 const SHORTS_R5_SOURCE='3c3e9a4b7b250f4c8db20c15e2e5fab4ca9ce568';
 const shortsSmooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);};
@@ -47,8 +48,8 @@ function shortsFitR5(surface,meshes){
  const quantile=a=>{a.sort((x,y)=>x-y);return a[Math.floor((a.length-1)*.995)];};
  const ellipses=radiusBins.map(bins=>bins.map((a,i)=>a.length?[quantile(a.map(p=>p[0]))+.008*s,quantile(a.map(p=>p[1]))+.009*s]:null).map((p,i,all)=>p||all.map((p,j)=>({p,d:Math.abs(j-i)})).filter(o=>o.p).sort((a,b)=>a.d-b.d)[0]?.p||[.07*s,.095*s]));
  const radii=ellipses.map(a=>a.map(p=>Math.max(...p)));
- const card={schema:'hrl-shorts-fit-card@5',source:{repository:'haihao0307/Humanoid-Rig-Lab-Next',commit:SHORTS_R5_SOURCE,body:'original-R2',heightM:h.bodyMetrics.statureM},units:'m',
-  construction:{panels:['front-left','back-left','front-right','back-right'],seams:['left-side','right-side','left-inseam','right-inseam','front-rise','back-rise'],waist:'continuous folded elastic casing',hem:'two separately turned leg hems',openings:['waist','left-leg','right-leg'],gusset:'integrated crotch junction; no separate floating patch'},
+ const card={schema:'hrl-shorts-fit-card@5',revision:'R5.2-bridge',source:{repository:'haihao0307/Humanoid-Rig-Lab-Next',commit:SHORTS_R5_SOURCE,body:'original-R2',heightM:h.bodyMetrics.statureM},units:'m',
+  construction:{panels:['front-left','back-left','front-right','back-right'],seams:['left-side','right-side','left-inseam','right-inseam','front-rise','back-rise'],waist:'continuous folded elastic casing',hem:'two separately turned leg hems',openings:['waist','left-leg','right-leg'],gusset:'continuous front-to-back crotch bridge and sewn inseam panels'},
   fit:{waistY,crotchY,hemY,waistCircumference:perimeter(waist.rx,waist.rz),hipCircumference:perimeter(hipRx,hipRz),outseam:waistY-hemY,waistbandHeight:.035*s,bodyClearance:.014*s,hipEaseRadial:.023*s,scale:s,hipCentre:[...hip],waist:{rx:waist.rx,rz:waist.rz,cz:waist.cz},hip:{rx:hipRx,rz:hipRz,cz:pelvisZ},thighRadii:radii,thighEllipsesM:ellipses},
   evidence:{surfaceSamplesUsed:used,armHandSamplesExcluded:rejected},limits:{physicalClothSolved:false,realWorldCutPattern:false,fullTriangleCollisionCertified:false}};
  return {card,hip,fem,knees,jointIds,radii,ellipses,sections};
@@ -60,28 +61,35 @@ function shortsMeshR5(fit){
  const triangle=(a,b,c,flip)=>{if(a===b||b===c||c===a)return;if(flip)faces.push(a,c,b);else faces.push(a,b,c);};
  const quad=(a,b,c,d,flip)=>{triangle(a,c,b,flip);triangle(b,c,d,flip);};
  const point=(side,u,y)=>{
-  const up=y>=f.crotchY,hipBlend=shortsSmooth((f.waistY-y)/(.15*s));
+  const down=shortsSmooth((f.crotchY-y)/(f.crotchY-f.hemY)),hipBlend=shortsSmooth((f.waistY-y)/(.15*s));
   const rx=f.waist.rx*(1-hipBlend)+f.hip.rx*hipBlend+(.011+.012*hipBlend)*s;
   const rz=f.waist.rz*(1-hipBlend)+f.hip.rz*hipBlend+(.012+.012*hipBlend)*s;
-  const cz=f.waist.cz*(1-hipBlend)+f.hip.cz*hipBlend;
-  const gather=.0018*s*(Math.sin(24*Math.PI*u)+.45*Math.sin(42*Math.PI*u+.7))*Math.exp(-Math.max(0,f.waistY-y)/(.12*s));
-  if(up){
-   const medial=Math.pow(Math.abs(Math.cos(Math.PI*u)),6),onset=cy+(.015-.135*medial)*s;
-   const join=shortsSmooth((onset-y)/(onset-f.crotchY));
-   const lx=(f.hip.rx+.030*s)*.5,lz=Math.max(.097*s,f.hip.rz*.90)+.009*s;
-   const ax=rx*Math.sin(Math.PI*u),az=rz*Math.cos(Math.PI*u),bx=lx*(1-Math.cos(2*Math.PI*u)),bz=lz*Math.sin(2*Math.PI*u);
-   return[cx+side*(ax*(1-join)+bx*join+gather*(1-join)*Math.sin(Math.PI*u)),y,cz*(1-join)+fit.hip[2]*join+az*(1-join)+bz*join+gather*(1-join)*Math.cos(Math.PI*u)];
-  }
-  const v=shortsSmooth((f.crotchY-y)/(f.crotchY-f.hemY));
-  const lx=(f.hip.rx+.030*s)*.5,rxLeg=lx*(1-v)+.093*s*v,centre=lx*(1-v)+.103*s*v;
-  const rzLeg=(Math.max(.097*s,f.hip.rz*.90)+.009*s)*(1-v)+.105*s*v,fold=.0017*s*Math.sin(6*Math.PI*u+.8)*(1-.5*v);
-  return[cx+side*(centre-(rxLeg+fold)*Math.cos(2*Math.PI*u)),y,fit.hip[2]+(rzLeg+fold)*Math.sin(2*Math.PI*u)];
+  const inner=.013*s*down,outer=rx*(1-down)+.204*s*down;
+  const width=outer-inner,x=inner+width*Math.sin(Math.PI*u);
+  const legMix=shortsSmooth((cy+.035*s-y)/(.20*s));
+  const q=(x-(inner+width*.40))/(width*.60);
+  const crotchBlend=shortsSmooth((cy-.065*s-y)/(.12*s));
+  const upperDepth=(f.hip.rz+.046*s)*(1-crotchBlend)+.122*s*crotchBlend;
+  const legZ=(upperDepth*(1-down)+.103*s*down)*Math.sqrt(Math.max(0,1-q*q))*Math.sign(Math.cos(Math.PI*u));
+  const bodyZ=rz*Math.cos(Math.PI*u),cz=f.waist.cz*(1-hipBlend)+f.hip.cz*hipBlend;
+  const gather=.0015*s*(Math.sin(24*Math.PI*u)+.4*Math.sin(42*Math.PI*u+.7))*Math.exp(-Math.max(0,f.waistY-y)/(.11*s));
+  const fold=.0012*s*Math.sin(Math.PI*u*6+.6)*legMix;
+  return[cx+side*(x+gather*Math.sin(Math.PI*u)),y,cz+bodyZ*(1-legMix)+legZ*legMix+(gather+fold)*Math.cos(Math.PI*u)];
  };
  const weights=(side,u,y)=>{const leg=shortsSmooth((cy+.025*s-y)/(.19*s)),medial=Math.pow(Math.abs(Math.cos(Math.PI*u)),12)*(1-shortsSmooth((f.crotchY-y)/(.07*s))),own=leg*(1-medial*.55),other=leg*medial*.55;return side<0?[1-leg,own,other]:[1-leg,other,own];};
  for(const side of [-1,1]){const grid=[];
   for(let row=0;row<=UP+DOWN;row++){const y=row<=UP?f.waistY-(f.waistY-f.crotchY)*row/UP:f.crotchY-(f.crotchY-f.hemY)*(row-UP)/DOWN;const ring=[];
    for(let i=0;i<=N;i++){const u=i/N;let w=weights(side,u,y);if((i===0||i===N)&&row<=UP)w=[w[0],(1-w[0])/2,(1-w[0])/2];ring.push(add(point(side,u,y),u,(f.waistY-y)/s,w));}grid.push(ring);}
   for(let row=0;row<UP+DOWN;row++)for(let i=0;i<N;i++)quad(grid[row][i],grid[row][i+1],grid[row+1][i],grid[row+1][i+1],side<0);grids.push(grid);
+ }
+ // Two inseam panels share a real front-to-back crotch edge, not a collapsed pole.
+ for(let sideIndex=0;sideIndex<2;sideIndex++){
+  const side=sideIndex===0?-1:1,grid=grids[sideIndex],inner=[];
+  for(let row=UP;row<=UP+DOWN;row++){
+   const front=values[grid[row][0]],back=values[grid[row][N]],ring=[];
+   for(let k=0;k<=24;k++){const t=k/24,p=front.p.map((v,i)=>v*(1-t)+back.p[i]*t),w=front.w.map((v,i)=>v*(1-t)+back.w[i]*t);ring.push(add(p,t,front.uv[1],w));}inner.push(ring);
+  }
+  for(let r=0;r<DOWN;r++)for(let k=0;k<24;k++)quad(inner[r][k],inner[r][k+1],inner[r+1][k],inner[r+1][k+1],side>0);
  }
  const baseVertices=values.length,baseFaces=faces.length;
  const turnEdge=(loop,kind,down,sideCentre)=>{let prev=loop;
@@ -104,7 +112,7 @@ layout(location=0)in vec3 position;layout(location=1)in vec3 normal;layout(locat
 uniform mat4 viewProjection;uniform sampler2D compactPalette;uniform ivec3 shortsJoints;uniform vec4 thighEnds[4];uniform vec4 thighRadii[6],thighWidths[6];uniform float hipY,scale;
 out vec3 P,N;out vec2 UV;out float K;
 vec3 spin(vec4 q,vec3 p){return p+2.*cross(q.xyz,cross(q.xyz,p)+q.w*p);}
-vec3 clearLeg(vec3 p,int side,vec3 fallback){vec3 a=thighEnds[side*2].xyz,b=thighEnds[side*2+1].xyz,axis=b-a;float raw=dot(p-a,axis)/max(dot(axis,axis),1e-9);if(raw<.12||raw>.95)return p;float t=clamp(raw,0.,1.),f=t*8.;int i=int(floor(f)),j=min(8,i+1);float rz=mix(thighRadii[side*3+i/4][i%4],thighRadii[side*3+j/4][j%4],fract(f)),rx=mix(thighWidths[side*3+i/4][i%4],thighWidths[side*3+j/4][j%4],fract(f));vec3 forward=spin(texelFetch(compactPalette,ivec2(0,shortsJoints[side+1]),0),vec3(0,0,1)),lateral=normalize(cross(forward,axis)),front=normalize(cross(axis,lateral)),c=a+t*axis,d=p-c;float x=dot(d,lateral),z=dot(d,front),r=length(vec2(x/rx,z/rz));return r<1.&&r>1e-5?c+(lateral*x+front*z)/r:p;}
+vec3 clearLeg(vec3 p,int side,vec3 fallback){vec3 a=thighEnds[side*2].xyz,b=thighEnds[side*2+1].xyz,axis=b-a;float raw=dot(p-a,axis)/max(dot(axis,axis),1e-9);if(raw<.12||raw>.95)return p;float t=clamp(raw,0.,1.),f=t*8.;int i=int(floor(f)),j=min(8,i+1);float rz=mix(thighRadii[side*3+i/4][i%4],thighRadii[side*3+j/4][j%4],fract(f)),rx=mix(thighWidths[side*3+i/4][i%4],thighWidths[side*3+j/4][j%4],fract(f));float layerClearance=kind<.5?.0015*scale:0.;rx+=layerClearance;rz+=layerClearance;vec3 forward=spin(texelFetch(compactPalette,ivec2(0,shortsJoints[side+1]),0),vec3(0,0,1)),lateral=normalize(cross(forward,axis)),front=normalize(cross(axis,lateral)),c=a+t*axis,d=p-c;float x=dot(d,lateral),z=dot(d,front),r=length(vec2(x/rx,z/rz));return r<1.&&r>1e-5?c+(lateral*x+front*z)/r:p;}
 void main(){vec4 qr=vec4(0),qd=vec4(0),reference=texelFetch(compactPalette,ivec2(0,shortsJoints.x),0);for(int i=0;i<3;i++){int id=shortsJoints[i];vec4 q=texelFetch(compactPalette,ivec2(0,id),0),d=texelFetch(compactPalette,ivec2(1,id),0);float w=weights[i]*(dot(reference,q)<0.?-1.:1.);qr+=w*q;qd+=w*d;}float l=length(qr);qr/=l;qd/=l;qd-=qr*dot(qr,qd);P=spin(qr,position)+2.*(qr.w*qd.xyz-qd.w*qr.xyz+cross(qr.xyz,qd.xyz));N=spin(qr,normal);
 float clearance=smoothstep(.075,.15,(hipY-position.y)/scale);if(clearance>0.){vec3 original=P;for(int k=0;k<2;k++){P=clearLeg(P,0,N);P=clearLeg(P,1,N);}P=mix(original,P,clearance);}
 UV=uv;K=kind;gl_Position=viewProjection*vec4(P,1.);}`;
@@ -117,7 +125,7 @@ float sideSeam=1.-smoothstep(.0015,.005,abs(UV.x-.5));float centre=1.-smoothstep
 if(UV.y<waistbandHeight)colour*=.96+.018*sin(UV.y*1000.);
 float spec=pow(max(0.,dot(reflect(-normalize(vec3(-.45,.85,.65)),n),view)),18.)*.018;frag=vec4(colour*light*ambient+spec,1.);}`;
 class TailoredShortsR5{
- constructor(surface,meshes){this.surface=surface;this.gl=surface.gl;this.buffers=[];this.fit=shortsFitR5(surface,meshes);const mesh=shortsMeshR5(this.fit);this.card=this.fit.card;this.card.topology=mesh.report;this.report={generator:'tailored-shorts-r5',...mesh.report,cardDriven:true,clothDynamics:false};this.count=mesh.indices.length;this.geometryBytes=mesh.packed.byteLength+mesh.indices.byteLength;this.ends=new Float32Array(16);this.radii=new Float32Array(24);this.widths=new Float32Array(24);for(let side=0;side<2;side++){this.radii.set(this.fit.ellipses[side].map(p=>p[1]),side*12);this.widths.set(this.fit.ellipses[side].map(p=>p[0]),side*12);}
+ constructor(surface,meshes){this.surface=surface;this.gl=surface.gl;this.buffers=[];this.fit=shortsFitR5(surface,meshes);const mesh=shortsMeshR5(this.fit);this.card=this.fit.card;this.card.topology=mesh.report;this.report={generator:'tailored-shorts-r5.2',...mesh.report,cardDriven:true,clothDynamics:false};this.count=mesh.indices.length;this.geometryBytes=mesh.packed.byteLength+mesh.indices.byteLength;this.ends=new Float32Array(16);this.radii=new Float32Array(24);this.widths=new Float32Array(24);for(let side=0;side<2;side++){this.radii.set(this.fit.ellipses[side].map(p=>p[1]),side*12);this.widths.set(this.fit.ellipses[side].map(p=>p[0]),side*12);}
  const gl=this.gl;try{this.main=program(gl,SHORTS_R5_VS,SHORTS_R5_FS);this.depth=program(gl,SHORTS_R5_VS,'#version 300 es\nprecision highp float;void main(){}');for(const p of [this.main,this.depth])for(const name of ['compactPalette','shortsJoints','thighEnds[0]','thighRadii[0]','thighWidths[0]','hipY','scale','waistbandHeight'])p.u[name]=gl.getUniformLocation(p.p,name);
  this.vao=gl.createVertexArray();gl.bindVertexArray(this.vao);for(const [target,data]of [[gl.ARRAY_BUFFER,mesh.packed],[gl.ELEMENT_ARRAY_BUFFER,mesh.indices]]){const b=gl.createBuffer();this.buffers.push(b);gl.bindBuffer(target,b);gl.bufferData(target,data,gl.STATIC_DRAW);}for(const [at,size,offset]of [[0,3,0],[1,3,3],[2,2,6],[3,3,8],[4,1,11]]){gl.enableVertexAttribArray(at);gl.vertexAttribPointer(at,size,gl.FLOAT,false,48,offset*4);}gl.bindVertexArray(null);
  }catch(e){this.dispose();throw e;}}
