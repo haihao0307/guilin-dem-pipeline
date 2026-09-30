@@ -1,50 +1,36 @@
-const {chromium}=require('../.r5-deps/node_modules/playwright-core');
-const fs=require('node:fs');
+const {chromium}=require('../.r5-deps/node_modules/playwright-core');const fs=require('node:fs');
 const url=process.env.REVIEW_URL||'http://127.0.0.1:4173/shorts-original-r5/';
 (async()=>{
- fs.mkdirSync('proof',{recursive:true});
+ fs.mkdirSync('proof',{recursive:true});let stage='launch';
+ const timeout=setTimeout(()=>{fs.writeFileSync('proof/TIMEOUT.json',JSON.stringify({stage,url}));process.exit(2);},600000);
  const browser=await chromium.launch({executablePath:process.env.CHROME_PATH,headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
- const page=await browser.newPage({viewport:{width:1440,height:1000}});page.setDefaultTimeout(180000);
- const errors=[],warnings=[],actions=[];
- page.on('pageerror',e=>errors.push(e.stack||e.message));
- page.on('console',m=>{if(m.type()==='error')errors.push(m.text());else if(m.type()==='warning')warnings.push(m.text());});
- page.on('requestfailed',r=>errors.push(r.url()+': '+r.failure()?.errorText));
- page.on('response',r=>{if(r.status()>=400&&!r.url().endsWith('/favicon.ico'))errors.push(r.status()+' '+r.url());});
- let result={url};
+ const page=await browser.newPage({viewport:{width:1200,height:900}});page.setDefaultTimeout(120000);
+ const errors=[],warnings=[],actions=[];let result={url};
+ page.on('pageerror',e=>errors.push(e.stack||e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());else if(m.type()==='warning')warnings.push(m.text());});
+ page.on('requestfailed',r=>errors.push(r.url()+': '+r.failure()?.errorText));page.on('response',r=>{if(r.status()>=400&&!r.url().endsWith('/favicon.ico'))errors.push(r.status()+' '+r.url());});
+ const shot=async name=>{stage=name;await page.screenshot({path:'proof/'+name+'.png',timeout:30000});};
+ const settle=async(max=15)=>{for(let t=0;t<max;t++){const a=await page.evaluate(()=>{HumanLab.setAuto(false);HumanLab.advance(1);return HumanLab.agent.activity();});if(a.error)throw Error(a.error);if(a.readyForTask)return a;}throw Error('Original motion did not settle');};
  try{
-  const response=await page.goto(url,{waitUntil:'domcontentloaded',timeout:180000});
-  if(!response?.ok())throw Error('Entry HTTP '+response?.status());
+  stage='navigate';const response=await page.goto(url,{waitUntil:'domcontentloaded',timeout:120000});if(!response?.ok())throw Error('Entry HTTP '+response?.status());
   await page.waitForFunction(()=>window.__SHORTS_R5_READY__===true||window.__startupError,{},{timeout:180000});
-  result=await page.evaluate(()=>({ready:window.__SHORTS_R5_READY__,startup:window.__humanStartup,card:window.ShortsR5?.card(),mesh:window.ShortsR5?.report(),status:document.getElementById('r5-status')?.textContent,uiSliders:document.querySelectorAll('#r5-ui input[type=range]').length}));
-  if(!result.ready)throw Error(JSON.stringify(result));
-  await page.evaluate(()=>{HumanLab.setAuto(false);ShortsR5.camera('front');});
-  await page.screenshot({path:'proof/01-full-front.png'});
-  for(const v of ['front','back','left','right','quarter']){
-   await page.evaluate(v=>ShortsR5.camera(v,true),v);
-   await page.screenshot({path:'proof/02-close-'+v+'.png'});
+  result=await page.evaluate(()=>({ready:window.__SHORTS_R5_READY__,startup:window.__humanStartup,card:window.ShortsR5?.card(),mesh:window.ShortsR5?.report(),version:window.ShortsR5?.version,uiSliders:document.querySelectorAll('#r5-ui input[type=range]').length}));if(!result.ready)throw Error(JSON.stringify(result));
+  await settle();await page.evaluate(()=>ShortsR5.camera('quarter'));await shot('01-full');
+  for(const v of ['front','back','left']){await page.evaluate(v=>ShortsR5.camera(v,true),v);await shot('02-close-'+v);}
+  fs.writeFileSync('proof/STATIC.json',JSON.stringify(result,null,2));
+  if(process.env.PUBLIC_SMOKE!=='1')for(const name of ['walk','turn','sit','stand']){
+   stage='action-'+name;await settle();const response=await page.evaluate(name=>{const r=ShortsR5.action(name);HumanLab.setAuto(false);return r;},name);
+   if(!response?.accepted)throw Error(name+': '+response?.error);
+   await page.evaluate(()=>HumanLab.advance(.65));await page.evaluate(()=>ShortsR5.camera('quarter',true));await shot('03-'+name+'-during');
+   await settle(18);const state=await page.evaluate(()=>({pos:[...HumanLab.agent.pos],yaw:HumanLab.agent.yaw,error:HumanLab.agent.error||null,activity:HumanLab.agent.activity(),evidence:HumanLab.agent.evidence.slice(-2)}));
+   if(name==='sit'&&state.activity.posture!=='sitting')throw Error('Sit command never reached sitting');
+   if(name==='stand'&&state.activity.posture!=='standing')throw Error('Stand command never reached standing');
+   actions.push({name,state});await page.evaluate(()=>ShortsR5.camera('quarter',true));await shot('04-'+name+'-end');
   }
-  for(const [name,seconds]of [['walk',5],['turn',3],['sit',6],['stand',6]]){
-   await page.evaluate(name=>{if(name==='walk'||name==='sit')ShortsR5.action('reset');ShortsR5.action(name);HumanLab.setAuto(false);},name);
-   for(let t=0;t<seconds;t+=.25)await page.evaluate(()=>HumanLab.advance(.25));
-   const state=await page.evaluate(()=>({pos:[...HumanLab.agent.pos],yaw:HumanLab.agent.yaw,error:HumanLab.agent.error||null,status:HumanLab.status,report:ShortsR5.report()}));
-   actions.push({name,seconds,state});
-   await page.evaluate(()=>ShortsR5.camera('quarter',true));
-   await page.screenshot({path:'proof/03-'+name+'.png'});
-  }
-  await page.evaluate(()=>{ShortsR5.action('reset');ShortsR5.camera('quarter');});
-  await page.setViewportSize({width:390,height:844});await page.evaluate(()=>HumanLab.render());
-  await page.screenshot({path:'proof/04-mobile.png'});
-  if(result.mesh.openings!==3||result.mesh.nonManifoldEdges!==0||result.mesh.degenerateTriangles!==0)throw Error('Invalid garment topology');
-  if(result.uiSliders!==0)throw Error('User sizing sliders are not allowed');
-  if(result.card.source.commit!=='3c3e9a4b7b250f4c8db20c15e2e5fab4ca9ce568')throw Error('Wrong body source');
-  if(errors.length)throw Error(errors.join('\n'));
-  result.browserChecksPassed=true;
- }catch(e){result.failure=e.stack||String(e);await page.screenshot({path:'proof/failure.png'}).catch(()=>{});}
- finally{
-  result.url=url;result.errors=errors;result.warnings=[...new Set(warnings)];result.actions=actions;result.checkedAt=new Date().toISOString();
-  fs.writeFileSync('proof/QA.json',JSON.stringify(result,null,2));if(result.card)fs.writeFileSync('proof/FIT_CARD.json',JSON.stringify(result.card,null,2));
-  console.log(JSON.stringify({ready:result.ready,passed:result.browserChecksPassed,failure:result.failure,errors,actions:actions.map(a=>({name:a.name,error:a.state.error,pos:a.state.pos,yaw:a.state.yaw}))},null,2));
-  await browser.close();
- }
+  await page.evaluate(()=>ShortsR5.camera('quarter'));await page.setViewportSize({width:390,height:844});await page.evaluate(()=>HumanLab.render());await shot('05-mobile');
+  if(result.mesh.openings!==3||result.mesh.nonManifoldEdges||result.mesh.degenerateTriangles||result.uiSliders)throw Error('Topology or UI invalid');
+  if(result.card.source.commit!=='3c3e9a4b7b250f4c8db20c15e2e5fab4ca9ce568')throw Error('Wrong source');
+  if(errors.length)throw Error(errors.join('\n'));result.browserChecksPassed=true;
+ }catch(e){result.failure=e.stack||String(e);await shot('failure').catch(()=>{});}
+ finally{result.url=url;result.stage=stage;result.errors=errors;result.warnings=[...new Set(warnings)];result.actions=actions;result.checkedAt=new Date().toISOString();fs.writeFileSync('proof/QA.json',JSON.stringify(result,null,2));if(result.card)fs.writeFileSync('proof/FIT_CARD.json',JSON.stringify(result.card,null,2));console.log(JSON.stringify({ready:result.ready,passed:result.browserChecksPassed,failure:result.failure,actions},null,2));await browser.close();clearTimeout(timeout);}
  if(!result.browserChecksPassed)process.exitCode=1;
 })().catch(e=>{console.error(e);process.exit(1)});
