@@ -1,0 +1,58 @@
+{
+  "schema": "kaopu.fish.source-base/1",
+  "id": "kaopu.fish.base.axial-loft-kf1",
+  "version": "1.0.0",
+  "instrument": {
+    "id": "kaopu.fish.axial-loft",
+    "version": "1.0.0",
+    "abi": "KF1"
+  },
+  "units": "metre",
+  "axis": "Y_UP",
+  "construction": {
+    "sections": {
+      "longitudinalSegments": 128,
+      "radialSegments": 48,
+      "interpolation": "LINEAR_MEASURED_STATIONS"
+    },
+    "constraints": {
+      "closedBody": true,
+      "minimumStationCount": 8,
+      "symmetryPlane": "XY",
+      "allowObjectPresetLookup": false
+    }
+  },
+  "surface": {
+    "microstructure": {
+      "mode": "PROCEDURAL_SCALE_FIELD",
+      "scaleRows": 92,
+      "scaleColumns": 240,
+      "normalStrength": 0.12
+    },
+    "covering": {
+      "type": "wet_fish_skin",
+      "roughness": 0.43,
+      "metalness": 0.035,
+      "clearcoat": 0.18
+    }
+  },
+  "motion": {
+    "coupling": {
+      "propagation": "TRAVELLING_WAVE",
+      "pectoralCoupling": true,
+      "jawBreathing": true
+    },
+    "limits": {
+      "maxBodyYawDeg": 18,
+      "maxRollDeg": 8,
+      "maxJawDeg": 12
+    }
+  },
+  "performance": {
+    "time": 0,
+    "seed": 20260930,
+    "initialState": {
+      "mode": "CRUISE_DIAGNOSTIC"
+    }
+  }
+}

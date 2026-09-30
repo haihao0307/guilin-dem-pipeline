@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kaopu.fish.resolved/1",
+  "title": "KAOPU Fish Resolved Score KF1",
+  "type": "object",
+  "required": ["schema", "instrument", "object", "units", "axis", "construction", "appearance", "motion", "performance", "evidence", "uncertainty", "provenance"],
+  "properties": {
+    "schema": { "const": "kaopu.fish.resolved/1" },
+    "instrument": {
+      "type": "object",
+      "required": ["id", "version", "abi"],
+      "properties": {
+        "id": { "const": "kaopu.fish.axial-loft" },
+        "version": { "const": "1.0.0" },
+        "abi": { "const": "KF1" }
+      }
+    },
+    "units": { "const": "metre" },
+    "axis": { "const": "Y_UP" },
+    "object": { "type": "object", "required": ["id", "label", "class", "parentScore"] },
+    "construction": {
+      "type": "object",
+      "required": ["axes", "sections", "parts", "constraints"],
+      "properties": {
+        "sections": {
+          "type": "object",
+          "required": ["longitudinalSegments", "radialSegments", "stations"],
+          "properties": {
+            "longitudinalSegments": { "type": "integer", "minimum": 16, "maximum": 512 },
+            "radialSegments": { "type": "integer", "minimum": 12, "maximum": 128 },
+            "stations": {
+              "type": "array",
+              "minItems": 8,
+              "maxItems": 128,
+              "items": {
+                "type": "object",
+                "required": ["xM", "centerYM", "halfHeightM", "halfWidthM", "superellipseExponent"],
+                "properties": {
+                  "xM": { "type": "number" },
+                  "centerYM": { "type": "number" },
+                  "halfHeightM": { "type": "number", "exclusiveMinimum": 0 },
+                  "halfWidthM": { "type": "number", "exclusiveMinimum": 0 },
+                  "superellipseExponent": { "type": "number", "minimum": 1.4, "maximum": 5 }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "motion": { "type": "object", "required": ["skeleton", "modes", "limits"] },
+    "performance": { "type": "object", "required": ["time", "seed", "initialState"] },
+    "evidence": { "type": "array" },
+    "uncertainty": { "type": "array" },
+    "provenance": {
+      "type": "object",
+      "required": ["externalAssetInFormalBuild", "visualAcceptance", "motionAcceptance", "productionReady"],
+      "properties": {
+        "externalAssetInFormalBuild": { "const": false },
+        "visualAcceptance": { "type": "boolean" },
+        "motionAcceptance": { "type": "boolean" },
+        "productionReady": { "type": "boolean" }
+      }
+    }
+  },
+  "additionalProperties": true
+}

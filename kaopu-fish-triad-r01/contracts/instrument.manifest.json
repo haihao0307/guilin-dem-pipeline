@@ -1,0 +1,57 @@
+{
+  "instrument": {
+    "id": "kaopu.fish.axial-loft",
+    "version": "1.0.0",
+    "abi": "KF1"
+  },
+  "parent": null,
+  "units": "metre",
+  "axis": "Y_UP",
+  "declaredCapabilityEnvelope": [
+    "continuous axial superellipse loft",
+    "score-defined fins and head parts",
+    "actual Three.js body bone chain and branch bones",
+    "travelling-wave diagnostic deformation",
+    "procedural wet-skin colour and scale field",
+    "formal score validation, measure, snapshot and dispose"
+  ],
+  "operators": [
+    "axialLoft",
+    "sectionInterpolation",
+    "skinnedBody",
+    "extrudedFin",
+    "pairedEye",
+    "jawAndDentition",
+    "curveTube",
+    "proceduralFishSurface",
+    "travellingWaveMotion"
+  ],
+  "scoreSchemas": [
+    "kaopu.fish.resolved/1"
+  ],
+  "worldInputs": [
+    "timeSeconds",
+    "waterFlowMps"
+  ],
+  "determinism": {
+    "seedRequired": true,
+    "fixedTimeReplay": true
+  },
+  "limits": {
+    "scoreBytes": 200000,
+    "maxStations": 128,
+    "maxBodyBones": 32,
+    "maxFins": 24,
+    "maxExpandedElements": 600
+  },
+  "unsupported": [
+    "species-name preset dispatch",
+    "automatic anatomy inference at runtime",
+    "fluid simulation",
+    "biologically accepted motion",
+    "external FBX/GLB/textures in formal build"
+  ],
+  "acceptanceFixtures": [
+    "fish.reference.muskellunge-labelled.r01"
+  ]
+}
