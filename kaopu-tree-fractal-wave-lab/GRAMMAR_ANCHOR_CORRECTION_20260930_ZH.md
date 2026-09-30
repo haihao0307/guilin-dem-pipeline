@@ -48,3 +48,42 @@ Substance 值得学习的是 procedural masks / shared facts / channel relations
 5. 每次升级明确写出“继承了什么、增加了什么、没有改变什么”。
 
 一句话：先守住正确的 Grammar Anchor，再把 Color、Leaf、Microscope 作为可插拔函数声部叠加；不是把锚点重新建成一堆面。
+
+
+# TREE LIFE GRAMMAR｜完整生命逻辑增补（2026-09-30）
+
+## 核心状态
+树不是成年形体的参数化变体，而是一个从 Seed 到死亡/更新的时间函数。统一状态建议为：
+
+T = 年龄/生命时间；E = 环境事实；S = 物种/个体 Score；History = 已发生事件。
+
+Tree(T,E,S,History) 同时演奏 Root、Shoot/Trunk、Crown、Cambium/Rings、Bark、Leaf、Damage/Weathering、Reproduction。
+
+## 1. Seed / Ground Anchor
+种子/萌发点是上下两个系统的共同锚点。透明地面只属于观察层，不属于树本体。地表以下 Root 向水分、养分、空间阻力场生长；地表以上 Shoot 向光、重力反方向、空间竞争场生长。二者同步，不是先做树再补根。
+
+## 2. Root ↔ Shoot 同步耦合
+Root 与 Crown 必须交换状态：根系获取能力约束地上生长；冠层光合/资源又支持根系继续扩张。不同 Score 可让根冠比、主根/侧根、板根/浅根等完全不同。部分根可以越过地表函数，因此允许露根，而不是人为摆一段根在地上。
+
+## 3. Cambium / Rings / Thickness
+年轮不是贴在截面上的图案。每个生长周期向 cambium 状态累积一次径向增量；主干和枝条半径由历史累积与承载共同决定。年龄 1、5、100、200 年应来自同一时间函数，不是不同模型。气候/资源可改变每年的增量，因此年轮宽度可记录历史。
+
+## 4. Bark Life
+Bark 是 cambium 外侧随年龄演化的函数层：嫩皮 → 成熟皮 → 老皮。Warp、纵裂、横裂、脱落、愈伤等读取年龄、局部膨胀、方向、湿度、损伤历史。不得把 bark 简化为固定贴图。
+
+## 5. Branch Life / Damage
+Branch 有 birth、growth、load、competition、dormancy、break、wound、weathering 状态。断枝不是删掉一段函数：断点进入 wound，随后可风化、愈伤包覆或成为腐朽入口。事件写入 History，后续形态读取历史。
+
+## 6. Leaf Life
+叶片同样是时间函数：bud → unfold → expand → mature → senesce → abscise/fall。Midrib/vein/width/camber/twist/color 都随 leaf age 与环境演奏。黄叶与落叶不是换贴图；颜色与脱落条件读取同一生命周期事实。
+
+## 7. Tree Types
+所有树共享上述生命合同，但 Score 不同：寿命、根冠比、分枝语法、叶型、落叶/常绿、树皮演化、损伤恢复、成熟时间等都由 Score 决定。因此“大叶树/针叶树/巨大根系树”不需要各建一套世界逻辑。
+
+## 8. 时间尺度
+演示可把 200 年压缩到几十秒，但必须明确这是 time compression。运行世界中 T 仍是事实时间；不能把演示速度误写进生物规律。
+
+## 9. 下一工作台验收顺序
+Seed/Ground → Root+Shoot 同步 → Crown → Thickness/Rings → Bark Age/Warp → Branch Damage → Leaf Lifecycle → Color/Material Function → Wind/Environment。
+
+原则：每个声部都可关闭；关闭新增声部必须回到 Grammar Anchor。知识层仍只保存函数、Score、初始条件和事件历史，不保存展开后的 mesh 结果。
