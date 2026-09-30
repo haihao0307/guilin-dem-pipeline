@@ -1,0 +1,33 @@
+{
+  "archive": "KAOPU_CRAB_R04_TEXT_HANDOFF.tar.xz",
+  "archiveBytes": 130568,
+  "archiveSha256": "bacfe31d1199e4315a88ac935b4a07feecac487a122cab6ad2c09700ba7d934b",
+  "base64Chars": 174092,
+  "parts": [
+    {
+      "file": "KAOPU_CRAB_R04_TEXT_HANDOFF.tar.xz.b64.part-000",
+      "chars": 45000,
+      "sha256": "6cc0a93c374d504689a3ce53e6928ff275f5342b041f2ce469e24261ae351375"
+    },
+    {
+      "file": "KAOPU_CRAB_R04_TEXT_HANDOFF.tar.xz.b64.part-001",
+      "chars": 45000,
+      "sha256": "68af6798e5dde5c1099da636d3c817c5dbfbbd65ec97a3b8069c363b19f13bbc"
+    },
+    {
+      "file": "KAOPU_CRAB_R04_TEXT_HANDOFF.tar.xz.b64.part-002",
+      "chars": 45000,
+      "sha256": "aa5dd8378c3a4d18381996591f2c690c35c207ac45a9a208438e4566b319ddc6"
+    },
+    {
+      "file": "KAOPU_CRAB_R04_TEXT_HANDOFF.tar.xz.b64.part-003",
+      "chars": 39092,
+      "sha256": "91e42fbcd13768a167554e9577668d2047b45e91e1a34d7aebfc448fd3918b41"
+    }
+  ],
+  "reassemble": [
+    "cat KAOPU_CRAB_R04_TEXT_HANDOFF.tar.xz.b64.part-* > KAOPU_CRAB_R04_TEXT_HANDOFF.tar.xz.b64",
+    "base64 -d KAOPU_CRAB_R04_TEXT_HANDOFF.tar.xz.b64 > KAOPU_CRAB_R04_TEXT_HANDOFF.tar.xz",
+    "tar -xJf KAOPU_CRAB_R04_TEXT_HANDOFF.tar.xz"
+  ]
+}
