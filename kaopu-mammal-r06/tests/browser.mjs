@@ -89,15 +89,17 @@ async function verifyWorkbench(browser, name, viewport, comprehensive) {
     }
 
     const canvas = page.locator('#viewport canvas');
+    await canvas.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(150);
     const before = await page.evaluate(() => window.__KAOPU_MAMMAL_R06__.state().camera);
     const box = await canvas.boundingBox();
-    if (box) {
-      await page.mouse.move(box.x + box.width * .5, box.y + box.height * .5);
-      await page.mouse.down();
-      await page.mouse.move(box.x + box.width * .72, box.y + box.height * .34, { steps: 10 });
-      await page.mouse.up();
-      await page.mouse.wheel(0, -180);
-    }
+    assert(box && box.width > 200 && box.height > 200, `${name}: canvas is not interactable`);
+    await page.mouse.move(box.x + box.width * .5, box.y + box.height * .5);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width * .72, box.y + box.height * .34, { steps: 10 });
+    await page.mouse.up();
+    await page.mouse.wheel(0, -180);
+    await page.waitForTimeout(100);
     const after = await page.evaluate(() => window.__KAOPU_MAMMAL_R06__.state().camera);
     assert(JSON.stringify(before) !== JSON.stringify(after), `${name}: camera did not move`);
     assertClean(report, name);
