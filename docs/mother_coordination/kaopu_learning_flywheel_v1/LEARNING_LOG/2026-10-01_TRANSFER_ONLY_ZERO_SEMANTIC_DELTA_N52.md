@@ -57,6 +57,6 @@ Apply only to an explicitly declared copy/migration phase. Do not use it to forb
 
 Decision: `Candidate`, not adopted. Route only to the Coral fractal growth line for the next transfer-to-adaptation boundary. Suggested Task Anchor fields: `taskMode`, `sourceCommit`, `sourcePath`, `sourceTreeSha`, `sourceEntrypointBlob`, `destinationPath`, `authorizedDeltaPaths`, `adaptationAuthorized`. Suggested receipt fields: exact subject head, destination tree, active entrypoint blob, semantic delta paths, verifier identity, gate decision and user acceptance state.
 
-Rollback point: coordination head `9cc0613b8f950f63b00028a12e0d3224cb8254a1`. Lifecycle before routing: `GATE-RUN=true`; all of `POSTED`, `ACKNOWLEDGED`, `IMPLEMENTED`, `ADOPTED`, `USER-ACCEPTED` are false. Only one real user correction is counted; all other requested KPIs remain `unknown`.
+Rollback point: coordination head `9cc0613b8f950f63b00028a12e0d3224cb8254a1`. Routing receipt: issue #91 comment `5921793379`. Lifecycle after routing: `POSTED=true`, `GATE-RUN=true`; all of `ACKNOWLEDGED`, `IMPLEMENTED`, `ADOPTED`, `USER-ACCEPTED` remain false. Only one real user correction is counted; all other requested KPIs remain `unknown`.
 
 No external AI was claimed or invoked as a participant.
