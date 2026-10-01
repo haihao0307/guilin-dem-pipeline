@@ -33,7 +33,9 @@
           "VERIFIER_EVIDENCE_DIGEST_MISSING",
           "CURRENT_PUBLIC_BROWSER_FAILED"
         ],
-        "preservedClaims": ["EXACT_PUBLIC_PAYLOAD_IDENTITY_VERIFIED"]
+        "preservedClaims": [
+          "EXACT_PUBLIC_PAYLOAD_IDENTITY_VERIFIED"
+        ]
       }
     },
     {
@@ -58,7 +60,9 @@
       "expected": {
         "verdict": "CLAIM_SCOPE_VERIFIED_NOT_USER_ACCEPTED",
         "reasons": [],
-        "preservedClaims": ["EXACT_PUBLIC_PAYLOAD_IDENTITY_VERIFIED"]
+        "preservedClaims": [
+          "EXACT_PUBLIC_PAYLOAD_IDENTITY_VERIFIED"
+        ]
       }
     },
     {
@@ -82,8 +86,12 @@
       },
       "expected": {
         "verdict": "HOLD_CLAIM_SCOPE_INCOMPLETE",
-        "reasons": ["CURRENT_PUBLIC_BROWSER_FAILED"],
-        "preservedClaims": ["EXACT_PUBLIC_PAYLOAD_IDENTITY_VERIFIED"]
+        "reasons": [
+          "CURRENT_PUBLIC_BROWSER_FAILED"
+        ],
+        "preservedClaims": [
+          "EXACT_PUBLIC_PAYLOAD_IDENTITY_VERIFIED"
+        ]
       }
     },
     {
@@ -107,7 +115,54 @@
       },
       "expected": {
         "verdict": "HOLD_CLAIM_SCOPE_INCOMPLETE",
-        "reasons": ["PUBLIC_PAYLOAD_SUBJECT_MISMATCH"],
+        "reasons": [
+          "PUBLIC_PAYLOAD_SUBJECT_MISMATCH"
+        ],
+        "preservedClaims": []
+      }
+    },
+    {
+      "id": "05-current-r12-no-proof-and-failed-browser",
+      "input": {
+        "subjectHeadSha": "59bedc432bda44f8683ac3cbc5511df4da715a93",
+        "publishedCommit": "59bedc432bda44f8683ac3cbc5511df4da715a93",
+        "publishedBlobSha": "1237d3480d6e87ce311a7c1d8473d7cb1eb94c2b",
+        "currentBlobSha": "1237d3480d6e87ce311a7c1d8473d7cb1eb94c2b",
+        "exactPayloadMatched": null,
+        "candidateSourceSha": null,
+        "sourceRepository": null,
+        "sourceObjectResolved": false,
+        "verifierResult": null,
+        "verifierIdentity": null,
+        "verifierExecutionRoot": null,
+        "verifierRunId": null,
+        "verificationSubjectSha": null,
+        "verifierEvidenceDigest": null,
+        "currentPublicBrowserPassed": false,
+        "currentPublicBrowserReason": "WEBGL2_UNAVAILABLE",
+        "declaredVisualAcceptance": false,
+        "declaredMotionAcceptance": false,
+        "declaredProductionReady": false,
+        "genericCheckRuns": [
+          "build:success",
+          "report-build-status:success",
+          "deploy:success"
+        ]
+      },
+      "expected": {
+        "verdict": "HOLD_CLAIM_SCOPE_INCOMPLETE",
+        "reasons": [
+          "PUBLIC_PAYLOAD_IDENTITY_UNVERIFIED",
+          "SOURCE_REPOSITORY_UNDECLARED",
+          "SOURCE_REVISION_UNRESOLVABLE",
+          "VERIFIER_IDENTITY_MISSING",
+          "VERIFIER_EXECUTION_ROOT_MISSING",
+          "VERIFIER_RUN_ID_MISSING",
+          "VERIFIED_SUBJECT_MISSING",
+          "VERIFIER_EVIDENCE_DIGEST_MISSING",
+          "VERIFIER_GATE_NOT_PASSED",
+          "CURRENT_PUBLIC_BROWSER_FAILED"
+        ],
         "preservedClaims": []
       }
     }

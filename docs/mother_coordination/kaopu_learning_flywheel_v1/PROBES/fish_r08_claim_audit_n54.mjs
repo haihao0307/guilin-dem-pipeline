@@ -7,8 +7,10 @@ function evaluate(input) {
   const preservedClaims = [];
   if (input.exactPayloadMatched === true && input.publishedBlobSha && input.publishedBlobSha === input.currentBlobSha) {
     preservedClaims.push("EXACT_PUBLIC_PAYLOAD_IDENTITY_VERIFIED");
-  } else {
+  } else if (input.exactPayloadMatched === false) {
     reasons.push("PUBLIC_PAYLOAD_SUBJECT_MISMATCH");
+  } else {
+    reasons.push("PUBLIC_PAYLOAD_IDENTITY_UNVERIFIED");
   }
   if (!input.sourceRepository) reasons.push("SOURCE_REPOSITORY_UNDECLARED");
   if (!input.candidateSourceSha || input.sourceObjectResolved !== true) reasons.push("SOURCE_REVISION_UNRESOLVABLE");
@@ -32,7 +34,7 @@ const output = {
   auditId: fixture.auditId,
   summary: { total: results.length, passed: results.filter((r) => r.pass).length, failed: results.filter((r) => !r.pass).length },
   results,
-  generatedAt: "2026-10-01T03:48:00Z"
+  generatedAt: "2026-10-01T07:52:00Z"
 };
 console.log(JSON.stringify(output, null, 2));
 if (output.summary.failed) process.exitCode = 1;

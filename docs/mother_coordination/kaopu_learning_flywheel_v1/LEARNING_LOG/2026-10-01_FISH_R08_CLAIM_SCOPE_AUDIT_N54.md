@@ -57,3 +57,21 @@ Decision: `no-novelty`; save the new validation and route it only to the Fish ex
 Routing receipt: issue #91 comment `5924332047`; audit commit `2cb092b9c127695cbf9fc55769b00bb80afc5579`. Lifecycle: `POSTED=true`, `GATE-RUN=true`; `ACKNOWLEDGED`, `IMPLEMENTED`, `ADOPTED`, and `USER-ACCEPTED` remain false. Reliable KPI deltas remain `unknown`.
 
 No external AI was claimed or invoked as a participant.
+
+## Evidence update — Fish R12: missing proof is UNKNOWN, not a byte mismatch
+
+Fish R12 advanced `gh-pages` to `59bedc432bda44f8683ac3cbc5511df4da715a93` with commit claim `publish verified thirty-fish dynamic 3D school R12`. The exact R12 directory contains only `index.html` (blob `1237d3480d6e87ce311a7c1d8473d7cb1eb94c2b`, 30,113,266 bytes); `PUBLICATION_PROOF.json` returns 404. GitHub reports successful generic `build`, `report-build-status`, and `deploy` checks, but none is a Fish semantic or public-runtime verifier.
+
+A fresh public-browser run reached the R12 page but stopped at `启动失败：此浏览器未提供 WebGL2`. The page itself remained `visualAcceptance=false`, `motionAcceptance=false`, and `productionReady=false`. This result is environment-scoped: it does not prove that R12 fails on a capable device, but it cannot support a portable/current `verified` claim.
+
+SLSA verification requires provenance whose subject digest matches the artifact and whose builder/source expectations are checked; GitHub likewise requires an attestation to be cryptographically verified and signer identity validated. Inference for KAOPU: when no exact subject-bound proof exists, identity is **unverified**, not positively mismatched. Sources: <https://slsa.dev/spec/v1.2/verifying-artifacts>, <https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations>.
+
+The existing N54 regression was therefore updated rather than duplicated. Its evaluator now preserves three states:
+
+- `exactPayloadMatched=true` with equal digests → `EXACT_PUBLIC_PAYLOAD_IDENTITY_VERIFIED`;
+- `exactPayloadMatched=false` → `PUBLIC_PAYLOAD_SUBJECT_MISMATCH`;
+- absent/`null` exact proof → `PUBLIC_PAYLOAD_IDENTITY_UNVERIFIED`.
+
+Falsifiable replay: the prior four cases must remain unchanged, while current R12 must hold the combined claim for `PUBLIC_PAYLOAD_IDENTITY_UNVERIFIED`, missing source/verifier evidence, and `CURRENT_PUBLIC_BROWSER_FAILED`. Result: `5/5 passed`.
+
+Decision: Candidate evaluator refinement validated only in the coordination regression harness. It is not globally enforced, does not alter R2 or production branches, and does not judge fish anatomy, motion quality, a user's device, or user acceptance. Rollback is the parent coordination commit `0c5b220353da835c9d2fab109c0bb9cdd4a3b787`. Routing target is Fish issue #91; at this commit `IMPLEMENTED_CANDIDATE=true`, `GATE-RUN=true`; `POSTED` awaits the issue receipt, while `ACKNOWLEDGED`, `ADOPTED`, and `USER-ACCEPTED` remain false. Reliable KPI deltas remain `unknown`.
