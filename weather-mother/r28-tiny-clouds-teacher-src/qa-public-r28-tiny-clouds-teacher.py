@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import math
 import os
 import pathlib
 import time
@@ -56,7 +55,7 @@ def teacher_frame(page):
     return frame
 
 
-def r27_frame(page):
+def aircraft_frame(page):
     page.wait_for_selector('iframe[data-key="aircraft"]', timeout=120000)
     handle = page.locator('iframe[data-key="aircraft"]').element_handle()
     assert handle is not None
@@ -120,14 +119,18 @@ with sync_playwright() as p:
     desktop_shot = OUT / "PUBLIC_R28_TINY_CLOUDS_DESKTOP_960x540.png"
     desktop.screenshot(path=str(desktop_shot), full_page=False, timeout=120000)
 
-    # Leave the teacher, prove the accepted R27 cloud is still alive, then reopen
-    # the same teacher iframe rather than spawning a second Weather app.
+    # Desktop R27 uses the original AircraftWorld surface; the dedicated mobile
+    # R27 regression is run as its own preceding workflow gate. Here we prove
+    # that leaving the teacher resumes the accepted Weather workbench and that
+    # reopening the teacher reuses the same iframe rather than spawning another app.
     desktop.locator('button[data-scene="silver"]').click()
     desktop.wait_for_function("!WeatherR28TinyCloudsWorkbench.isTeacherActive()", timeout=30000)
-    r27 = r27_frame(desktop)
-    r27.wait_for_function("window.WeatherMobileR27CumulusDNA && WeatherMobileR27CumulusDNA.qa.ready", timeout=180000)
-    r27q = r27.evaluate("WeatherMobileR27CumulusDNA.qa")
-    assert r27q["cumulusCloudDNA"] is True and r27q["sameCloudForObserveAndFlight"] is True, r27q
+    aircraft = aircraft_frame(desktop)
+    aircraft.wait_for_function("window.AircraftWorld && AircraftWorld.qa.ready", timeout=120000)
+    desktop_aircraft_q = aircraft.evaluate("AircraftWorld.qa")
+    assert desktop_aircraft_q["ready"] is True and desktop_aircraft_q.get("errors", []) == [], desktop_aircraft_q
+    coordinator_q = desktop.evaluate("AircraftClouds.qa")
+    assert coordinator_q.get("active") == "silver" and coordinator_q.get("errors", []) == [], coordinator_q
     reuse = desktop.evaluate(
         """async()=>{
           const f0=WeatherR28TinyCloudsWorkbench.frame();
@@ -141,7 +144,8 @@ with sync_playwright() as p:
     report["desktop960x540"] = {
         "teacherQA": tq,
         "shellQA": shell_q,
-        "r27QA": r27q,
+        "desktopAircraftQA": desktop_aircraft_q,
+        "coordinatorQA": coordinator_q,
         "readyMs": ready_ms,
         "timeAdvanceS": state1["timeS"] - state0["timeS"],
         "frozenTimeDeltaS": frozen1 - frozen0,
