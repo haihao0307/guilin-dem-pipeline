@@ -1,0 +1,21 @@
+import fs from 'node:fs';import path from 'node:path';import crypto from 'node:crypto';import {createRequire} from 'node:module';import {fileURLToPath,pathToFileURL} from 'node:url';
+const require=createRequire(import.meta.url),{chromium}=require('C:/Users/Administrator/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright'),root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),html=path.join(root,'dist/KAOPU_FISH_POINTER_SCHOOL_R13.html');
+const report={capturedAt:new Date().toISOString(),htmlSha256:crypto.createHash('sha256').update(fs.readFileSync(html)).digest('hex'),errors:[],samples:[]},browser=await chromium.launch({headless:true,args:['--enable-webgl','--use-angle=d3d11']});
+try{
+ const ctx=await browser.newContext({viewport:{width:1440,height:1000},recordVideo:{dir:path.join(root,'evidence/school-video'),size:{width:1440,height:1000}}}),page=await ctx.newPage();page.on('pageerror',e=>report.errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')report.errors.push(m.text());});
+ await page.goto(pathToFileURL(html).href);await page.waitForFunction(()=>window.__KAOPU_R13__?.ready);await page.waitForTimeout(500);
+ const start=await page.evaluate(()=>({frames:__KAOPU_R13__.renderer.frames,time:performance.now()}));
+ for(let i=0;i<4;i++){
+  const box=await page.locator('#gl').boundingBox();
+  if(i===1){await page.mouse.move(box.x+box.width*.45,box.y+box.height*.5);await page.waitForTimeout(8000);}
+  if(i===2){await page.mouse.click(box.x+box.width*.55,box.y+box.height*.5);await page.waitForTimeout(1500);}
+  if(i===3){await page.mouse.move(0,0);await page.waitForTimeout(8000);}
+  report.samples.push(await page.evaluate(()=>{const r=__KAOPU_R13__.renderer,fish=r.school.fish,center=fish.reduce((c,f)=>c.map((x,k)=>x+f.p[k]/30),[0,0,0]),m=r.camera.mvp(r.canvas.width/r.canvas.height).mvp;let maxNdcExtent=0;for(const f of fish){for(const row of [0,1]){const projection=m[row]*f.p[0]+m[row+4]*f.p[1]+m[row+8]*f.p[2]+m[row+12];const bound=f.radius*Math.hypot(m[row],m[row+4],m[row+8]);maxNdcExtent=Math.max(maxNdcExtent,Math.abs(projection)+bound);}}return{time:r.school.time,count:fish.length,center,height:Math.max(...fish.map(f=>f.p[1]))-Math.min(...fish.map(f=>f.p[1])),maxNdcExtent,contactCorrections:r.school.contactCorrections,glError:r.gl.getError(),fish:fish.map(f=>({p:f.p.slice(),yaw:f.yaw,pitch:f.pitch,roll:f.roll,speed:Math.hypot(...f.v),gaitFrequency:f.gaitFrequency,gaitAmplitude:f.gaitAmplitude,neighbors:f.neighborIds.slice()})),poseRows:r.poseAtlas.length/(r.h.metadata.continuum.body.samples*4*9),gpuAttributeBuffers:r.buffers.length};}));
+  await page.screenshot({path:path.join(root,'evidence','school-motion-'+i+'.png')});
+ }
+ const end=await page.evaluate(()=>({frames:__KAOPU_R13__.renderer.frames,time:performance.now()}));report.fps=(end.frames-start.frames)/((end.time-start.time)/1000);report.video=await page.video().path();
+ await page.locator('#singleFish').click();await page.locator('#fishSelect').selectOption('29');await page.locator('[data-view=eyePos]').click();await page.waitForTimeout(300);report.lastFish=await page.evaluate(()=>{const r=__KAOPU_R13__.renderer;return{selected:r.state.selected,handle:r.h===r.actors[29],states:r.actors.length,finite:r.h.state.tailTipPosition.every(Number.isFinite),eyeFrames:[1,-1].map(s=>__KAOPU_R13__.instrument.eyeFrame(r.h,s,true).center.every(Number.isFinite))};});await page.screenshot({path:path.join(root,'evidence','fish30-eye.png')});
+ report.passed=report.samples.every(s=>s.count===30&&s.poseRows===30&&s.height>.5&&s.glError===0&&s.maxNdcExtent<1.02)&&report.fps>=30&&report.lastFish.selected===29&&report.lastFish.handle&&report.lastFish.finite&&report.lastFish.eyeFrames.every(Boolean)&&!report.errors.length;
+ await ctx.close();
+}catch(e){report.passed=false;report.error=String(e.stack||e);}finally{await browser.close();fs.writeFileSync(path.join(root,'evidence/SCHOOL_CAPTURE_REPORT.json'),JSON.stringify(report,null,2)+'\n');}
+console.log(JSON.stringify({passed:report.passed,fps:report.fps,samples:report.samples.map(s=>({time:s.time,count:s.count,height:s.height,extent:s.maxNdcExtent,glError:s.glError})),lastFish:report.lastFish,errors:report.errors,error:report.error}));if(!report.passed)process.exitCode=1;
