@@ -1,0 +1,146 @@
+name: build-verify-weather-r28-tiny-clouds-teacher
+
+on:
+  push:
+    branches:
+      - feature/weather-mother-r28-tiny-clouds-teacher-20261001
+    paths:
+      - weather-mother/r28-tiny-clouds-teacher-src/**
+      - .github/workflows/build-verify-weather-r28-tiny-clouds-teacher.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: weather-mother-r28-tiny-clouds-teacher
+  cancel-in-progress: false
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build exact teacher replica and run static gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python weather-mother/r28-tiny-clouds-teacher-src/qa-r28-tiny-clouds-teacher.py | tee /tmp/r28-tiny-clouds-static-qa.txt
+
+      - name: Freeze single-file Weather Mother page
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT=weather-mother/full-weather-r28-tiny-clouds-teacher-20261001
+          git config user.name "Weather Mother CI"
+          git config user.email "weather-mother-ci@users.noreply.github.com"
+          git add "$OUT/index.html"
+          if git diff --cached --quiet; then
+            echo "generated R28 page already current"
+          else
+            git commit -m "build(weather-mother): add exact Tiny Clouds teacher voice [skip ci]"
+            git push origin HEAD:feature/weather-mother-r28-tiny-clouds-teacher-20261001
+          fi
+          PAGE_SHA=$(git rev-parse HEAD)
+          PUBLIC_URL="https://raw.githack.com/haihao0307/guilin-dem-pipeline/$PAGE_SHA/$OUT/index.html"
+          echo "PAGE_SHA=$PAGE_SHA" >> "$GITHUB_ENV"
+          echo "PUBLIC_URL=$PUBLIC_URL" >> "$GITHUB_ENV"
+          echo "fixed page: $PUBLIC_URL?scene=tiny"
+
+      - name: Wait for immutable public page
+        shell: bash
+        run: |
+          set -euo pipefail
+          ok=0
+          for attempt in $(seq 1 45); do
+            code=$(curl -L -sS -o /tmp/r28-tiny-clouds.html -w '%{http_code}' --connect-timeout 10 --max-time 60 "$PUBLIC_URL?scene=tiny&probe=$attempt" || true)
+            if [ "$code" = 200 ] && grep -q "r28-exact-formula" /tmp/r28-tiny-clouds.html; then
+              ok=1
+              break
+            fi
+            sleep 5
+          done
+          test "$ok" = 1
+          echo "fixed public R28 teacher page is live: $PUBLIC_URL?scene=tiny"
+
+      - name: Install Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install playwright==1.55.0 >/dev/null
+          python -m playwright install chromium >/dev/null
+
+      - name: Re-run accepted R27 cloud regression on the integrated workbench
+        shell: bash
+        run: |
+          set -euo pipefail
+          xvfb-run -a python -u weather-mother/r27-cumulus-clouddna-src/qa-public-r27-cumulus-clouddna.py
+
+      - name: Verify exact teacher voice on desktop and mobile public browsers
+        shell: bash
+        run: |
+          set -euo pipefail
+          xvfb-run -a python -u weather-mother/r28-tiny-clouds-teacher-src/qa-public-r28-tiny-clouds-teacher.py
+
+      - name: Commit R28 public evidence
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT=weather-mother/full-weather-r28-tiny-clouds-teacher-20261001
+          cat > "$OUT/PUBLICATION_PROOF_R28_TINY_CLOUDS_TEACHER.json" <<JSON
+          {
+            "schema": "weather-mother-r28-tiny-clouds-teacher-publication-proof/1",
+            "pageCommit": "$PAGE_SHA",
+            "url": "$PUBLIC_URL?scene=tiny",
+            "r27BaseCommit": "eb3a7c5480ba4aed851c41f7cab42212e013816c",
+            "singleWeatherMotherWorkbench": true,
+            "teacherFormula": "Shadertoy lsBfDz Tiny Clouds mainImage",
+            "teacherFormulaExact": true,
+            "teacherConstantsFrozen": true,
+            "reverseMarchSteps": "199-200",
+            "textureTapsPerStep": 4,
+            "noiseBytes": 264082,
+            "noiseGitBlob": "32a561c7f6847e7c0a668e9a684af5dc969c72fc",
+            "singleFileRuntime": true,
+            "r27PublicRegressionReRun": true,
+            "publicDesktop960x540": true,
+            "publicMobile390x844": true,
+            "realDeviceQA": false,
+            "pixelIdentityToUploadedVideo": false,
+            "visualAcceptance": false,
+            "productionReady": false
+          }
+          JSON
+          git config user.name "Weather Mother CI"
+          git config user.email "weather-mother-ci@users.noreply.github.com"
+          git add \
+            "$OUT/PUBLIC_QA_R28_TINY_CLOUDS_TEACHER_2026-10-01.json" \
+            "$OUT/PUBLIC_R28_TINY_CLOUDS_DESKTOP_960x540.png" \
+            "$OUT/PUBLIC_R28_TINY_CLOUDS_MOBILE_390x844.png" \
+            "$OUT/PUBLICATION_PROOF_R28_TINY_CLOUDS_TEACHER.json"
+          git commit -m "qa(weather-mother): prove Tiny Clouds teacher voice publicly [skip ci]"
+          git push origin HEAD:feature/weather-mother-r28-tiny-clouds-teacher-20261001
+
+      - name: Upload R28 teacher evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weather-mother-r28-tiny-clouds-teacher-evidence
+          path: |
+            /tmp/r28-tiny-clouds-static-qa.txt
+            weather-mother/full-weather-r28-tiny-clouds-teacher-20261001/index.html
+            weather-mother/full-weather-r28-tiny-clouds-teacher-20261001/PUBLIC_QA_R28_TINY_CLOUDS_TEACHER_2026-10-01.json
+            weather-mother/full-weather-r28-tiny-clouds-teacher-20261001/PUBLIC_R28_TINY_CLOUDS_DESKTOP_960x540.png
+            weather-mother/full-weather-r28-tiny-clouds-teacher-20261001/PUBLIC_R28_TINY_CLOUDS_MOBILE_390x844.png
+            weather-mother/full-weather-r28-tiny-clouds-teacher-20261001/PUBLICATION_PROOF_R28_TINY_CLOUDS_TEACHER.json
+          if-no-files-found: warn
