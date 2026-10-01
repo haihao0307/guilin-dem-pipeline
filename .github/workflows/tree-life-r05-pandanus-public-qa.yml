@@ -2,7 +2,10 @@ name: Tree Life R05 Pandanus public browser QA
 on:
   push:
     branches: [gh-pages]
-    paths: [.github/workflows/tree-life-r05-pandanus-public-qa.yml]
+    paths:
+      - .github/workflows/tree-life-r05-pandanus-public-qa.yml
+      - kaopu-tree-fractal-wave-lab/mobile-r05-seasons/index.html
+      - kaopu-tree-fractal-wave-lab/mobile-r05-seasons/runtime-pandanus-r05.js
   workflow_dispatch:
 permissions:
   contents: read
@@ -29,24 +32,28 @@ jobs:
           root=pathlib.Path('evidence')
           sha=os.environ['SOURCE_SHA']
           url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tree-fractal-wave-lab/mobile-r05-seasons/'
+          runtime=url+'runtime-pandanus-r05.js'
           report={'sourceCommit':sha,'url':url,'physicalDeviceTested':False,'checks':{},'errors':[]}
           C=report['checks']
 
           def request_text(u):
-            req=urllib.request.Request(u,headers={'User-Agent':'KAOPU-TREE-R05-QA/1.0','Cache-Control':'no-cache'})
+            req=urllib.request.Request(u,headers={'User-Agent':'KAOPU-TREE-R05-QA/1.1','Cache-Control':'no-cache'})
             return urllib.request.urlopen(req,timeout=35).read().decode('utf-8','replace')
 
           for attempt in range(45):
             try:
-              text=request_text(url+'?deploy='+sha+'&n='+str(attempt))
-              if 'PANDANUS TECTORIUS TEACHER' in text and '支柱根强度' in text:
+              html=request_text(url+'?deploy='+sha+'&n='+str(attempt))
+              js=request_text(runtime+'?deploy='+sha+'&n='+str(attempt))
+              if ('PANDANUS TECTORIUS TEACHER' in html and
+                  '支柱根强度' in html and
+                  'window.__treeReady = true' in js):
                 C['publicDeploymentContainsTeacher']=True
                 break
             except Exception as e:
               report['lastDeploymentError']=repr(e)
             time.sleep(8)
           else:
-            raise AssertionError('Public deployment did not expose the Pandanus R05 workbench')
+            raise AssertionError('Public deployment did not expose matching R05 HTML and runtime')
 
           def digest(data,name):
             (root/name).write_bytes(data)
@@ -61,7 +68,7 @@ jobs:
               page.on('pageerror',lambda e:report['errors'].append('pageerror: '+str(e)))
               page.on('console',lambda m: report['errors'].append('console: '+m.text) if m.type=='error' else None)
               page.goto(url+'?qa='+sha,wait_until='domcontentloaded',timeout=90000)
-              page.wait_for_function("document.querySelector('canvas') && document.getElementById('status') && document.getElementById('status').textContent.includes('支柱根')",timeout=120000)
+              page.wait_for_function('window.__treeReady===true',timeout=120000)
               page.wait_for_timeout(2500)
               C['titleCorrect']='Pandanus Teacher' in page.title()
               C['desktopNoOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth')
@@ -87,6 +94,8 @@ jobs:
               mature=digest(page.screenshot(full_page=False),'desktop-mature.png')
               C['lifeStageChangesTopologyPixels']=young['sha256']!=mature['sha256']
               C['statusReportsGeneratedOrgans']='叶丛' in page.locator('#status').inner_text()
+              state=page.evaluate('TreeLifeR05.getState()')
+              C['generatedOrganCountsValid']=state['roots']>=4 and state['rosettes']>=1
 
               page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(900)
               C['mobileNoHorizontalOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth')
@@ -94,6 +103,7 @@ jobs:
               C['mobilePixelsNonBlank']=mobile['stddev']>10 and mobile['mean']>10
               C['pageErrorsZero']=not report['errors']
               report['screens']={'base':base,'noRoots':no_roots,'noLeaves':no_leaves,'young':young,'mature':mature,'mobile':mobile}
+              report['state']=state
               browser.close()
           except Exception:
             report['failure']=traceback.format_exc()
