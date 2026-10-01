@@ -54,6 +54,6 @@ This audit is limited to the exact Fish R08 proof and public subject observed he
 
 Decision: `no-novelty`; save the new validation and route it only to the Fish execution line via #91. On the next Fish receipt, add `sourceRepository`, resolvable `candidateSourceRevision`, `verifierIdentity`, `verifierExecutionRoot`, `verifierRunId`, `verificationSubjectSha`, `verifierEvidenceDigest`, plus browser engine/device/GPU/WebGL mode. Do not rerun visual work merely to satisfy documentation, and do not discard the verified public blob identity.
 
-Lifecycle before routing: `GATE-RUN=true`; all of `POSTED`, `ACKNOWLEDGED`, `IMPLEMENTED`, `ADOPTED`, `USER-ACCEPTED` are false. Reliable KPI deltas remain `unknown`.
+Routing receipt: issue #91 comment `5924332047`; audit commit `2cb092b9c127695cbf9fc55769b00bb80afc5579`. Lifecycle: `POSTED=true`, `GATE-RUN=true`; `ACKNOWLEDGED`, `IMPLEMENTED`, `ADOPTED`, and `USER-ACCEPTED` remain false. Reliable KPI deltas remain `unknown`.
 
 No external AI was claimed or invoked as a participant.
