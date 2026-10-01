@@ -1,0 +1,1 @@
+Read ../knowledge/fish-motion/README.md and TASK_ANCHOR.json. R10 removes shipping waste only; source samples, geometry, motion, fifteen variants, eye renderer and decoded texture pixels are protected. Keep R09/archive unchanged. No mouse; independent verification required.
