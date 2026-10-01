@@ -55,6 +55,6 @@ Apply only to the shorts R2.4 Mother when a closure/join gate reads both current
 
 Decision: retain as a local Candidate and route through issue #91 for the next relevant shorts Task Anchor or Delivery Receipt. Required receipt fields are enumerated in `REGRESSION_CASES/CANDIDATE_AUTHORING_NATIVE_HISTORY_SEPARATION_001.json`. Rollback point: coordination commit `bd38212ef1037579fdfba36a35509372ebd8da17`.
 
-At the Candidate commit: `IMPLEMENTED_CANDIDATE=true`, `GATE-RUN=true`; `POSTED` awaits the routing receipt. `ACKNOWLEDGED`, `ADOPTED` and `USER-ACCEPTED` remain false. Reliable KPI deltas are `unknown`.
+Routing receipt: issue #91 comment <https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-5928984159>. Lifecycle: `POSTED=true`, `IMPLEMENTED_CANDIDATE=true`, `GATE-RUN=true`; `ACKNOWLEDGED=false`, `ADOPTED=false`, and `USER-ACCEPTED=false`. Reliable KPI deltas are `unknown`.
 
 No external AI is claimed or invoked as a participant.
