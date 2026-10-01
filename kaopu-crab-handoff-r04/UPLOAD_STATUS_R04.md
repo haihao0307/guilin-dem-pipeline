@@ -2,39 +2,53 @@
 
 ## 已建立的权威位置
 
-- 仓库：`haihao0307/guilin-dem-pipeline`
-- 分支：`handoff/kaopu-crab-full-context-r04-20260930`
-- 目录：`kaopu-crab-handoff-r04/`
+- 公共生产与协调仓库：`haihao0307/guilin-dem-pipeline`
+- 公共分支：`handoff/kaopu-crab-full-context-r04-20260930`
+- 公共目录：`kaopu-crab-handoff-r04/`
+- 私有老师资产仓库：`haihao0307/KAOPU-REFERENCE-CACHE`
+- 私有来源分支：`intake/crab-r04-source-assets-20261001`
+- 私有目录：`crab-r04/`
 
-现有螃蟹项目已经有独立工作线，因此本轮没有转去人物项目，也没有在人形项目中另开分支。
+现有螃蟹项目已经有独立工作线，因此没有转去人物项目。
 
-## 已经可直接浏览的协调资料
+## 已完成
 
-- `README.md`：代理起点、两套老师的角色与冻结规则；
-- `coordination/PROJECT_STATE_R04_ZH.md`：R01—R03 状态与用户最新裁决；
+### 公共协调层
+
+以下资料可直接读取：
+
+- `README.md`：代理起点、两套老师角色与冻结规则；
+- `coordination/PROJECT_STATE_R04_ZH.md`：R01—R03 状态及用户最新裁决；
 - `coordination/EXECUTION_ORDER_R04_ZH.md`：普通螃蟹一比一重构、骨架蒸馏、椰子蟹修正顺序；
-- `coordination/BINARY_SOURCE_ASSET_GATE.md`：禁止虚报的大文件边界；
-- `source_registry/SOURCE_REGISTRY_R04.json`：所有上传原件、工作台和全量包的尺寸、角色与 SHA-256；
-- `animated_teacher/ANIMATED_CRAB_SUMMARY_R04.json`：普通螃蟹老师的网格、skin、126 个 joints、66 条动画通道及许可摘要。
+- `source_registry/SOURCE_REGISTRY_R04.json`：当前会话中所有关键原件和成果的字节数、角色与 SHA-256；
+- `animated_teacher/ANIMATED_CRAB_SUMMARY_R04.json`：普通螃蟹老师的网格、skin、126 个 joints、66 条动画通道和许可摘要；
+- `BINARY_CACHE_LOCATION_R04.md`：私有来源资料库和后续代理入口。
 
-## 文本全量包状态
+### 私有来源缓存层
 
-`core_handoff/` 用于保存完整文本资料、脚本、审计、骨架层级、inverse bind matrices、权重统计、动画关键帧、glTF JSON 分片以及 R01—R03 的源码、状态和 QA。上传采用带 SHA-256 的可重组分片。
+已经完成：
 
-在 `CORE_HANDOFF_MANIFEST.json` 的所有分片都存在并通过归档 SHA-256 校验之前，不得把该归档标记为完成。`text_handoff/` 和 `text_handoff_v2/` 是前两次分片尝试，不是权威全量包，协调代理应忽略它们。
+- 独立私有分支；
+- 两套老师及历史全量包的准确路径、字节数和 SHA-256 清单；
+- Git LFS 路由；
+- Linux/macOS 和 Windows 精确上传脚本；
+- 自动校验工作流；
+- `core-handoff-fixed/` 完整核心交接包：11 个分片全部存在，清单声明 86,092 个 Base64 字符，可恢复 64,568 字节归档；归档 SHA-256 为 `4619d1a1589344979ef299e1fbcf83576c191a6a475b44b9435e1d9d2e54b0b3`。
 
-## 尚未进入 GitHub 的大型二进制
+这个完整核心包取代公共分支里此前不完整或尺寸不一致的 `core_handoff/`、`text_handoff/` 与 `text_handoff_v2/`。后续代理必须忽略旧分片。
 
-当前 GitHub 连接不接受本地挂载文件直接作为附件，因此以下大文件尚未真正进入 GitHub：
+## 尚未完成：原始大二进制本体
+
+以下文件仍未成为 GitHub 中真实存在且通过 SHA-256 校验的对象：
 
 - `crab+3d+model.zip`；
 - `animated_crab_rigged_free.zip`；
-- `scene.bin` 和三张原始纹理；
-- R01／R02／R03 全量 ZIP；
-- 大型单文件工作台、PBR 图集和二进制表面谱。
+- R01、R02、R03 三个全量 ZIP。
 
-它们的准确字节数与 SHA-256 已冻结在 `SOURCE_REGISTRY_R04.json`。后续必须通过 Git LFS、GitHub Release 资产或支持本地二进制上传的连接补齐；仅有同名文件不能视为同一来源。
+当前聊天 GitHub 写入接口只接受文本内容，不接受 `/mnt/data` 本地文件参数，也没有 Release 资产上传动作。因此不能把本地大二进制直接送进 GitHub。私有分支已经准备好 Git LFS 接收路径、校验脚本和 CI；必须由能够同时访问这些本地文件和 Git 凭据的环境执行一次 LFS push。
 
-## 可执行结论
+任何“同名文件”“下载链接”“LFS 指针”或“SHA-256 记录”都不能被描述成二进制已经上传。只有私有库中的对象存在，并且自动校验通过，才算闭环。
 
-Podas／其他代理现在可以先从本分支读取方向、工程边界、历史代码和老师骨架知识；要执行第二只普通螃蟹的完整一比一表面重构，仍必须取得与登记 SHA-256 相符的原始二进制源。
+## 当前可执行结论
+
+Podas 或其他代理现在已经可以完整读取项目方向、历史代码、审计、glTF JSON、骨架层级、inverse bind matrices、皮肤权重统计、动画通道和执行顺序。要重新从老师原始完整表面取样，仍需补齐与清单 SHA-256 完全一致的原始 ZIP 本体。
