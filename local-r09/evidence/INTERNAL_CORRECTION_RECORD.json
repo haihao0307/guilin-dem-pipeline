@@ -1,0 +1,23 @@
+{
+  "taskId": "FISH_R09_PARAMETRIC_SURFACE_SCHOOL_20261001",
+  "finalHtmlSha256": "978fa67653af8be31606aba624097926b7d0025a8f3ada16a8e83a86215f7ce8",
+  "corrections": [
+    {
+      "cause": "A periodic school returns near start after 120s; endpoint-distance assertion did not measure travel",
+      "repair": "Measure accumulated root displacement over whole simulation; all fish travel more than 5 source units"
+    },
+    {
+      "cause": "Fifteen full meshes time out in software rasterization capture",
+      "repair": "Headless D3D11 actual GPU capture; no simplification or sample deletion"
+    },
+    {
+      "cause": "Source coordinate camera and diagnostics not transformed with variant",
+      "repair": "Use same instance matrix for eye/closeup target, diagnostic path and body; zoom follows size"
+    },
+    {
+      "cause": "Initial GPU instance test accessed readiness variable before definition",
+      "repair": "Wait on window.__KAOPU_R09__ readiness"
+    }
+  ],
+  "failedCandidateNeverSharedWithUser": true
+}

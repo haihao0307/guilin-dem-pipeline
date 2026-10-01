@@ -12,7 +12,7 @@
 - [x] 已实际修改生产源码。
 - [x] 用户看到的是可交互三维工作台。
 - [x] 画面来自实时三维运行时。
-- [ ] 公网固定链接和真实浏览器已验证。
+- [x] 公网固定链接和真实浏览器已验证。
 - [x] 如果只有截图而没有工作台，本轮判定失败。
 
 visualAcceptance=false、motionAcceptance=false、productionReady=false，等待用户视觉验收。
