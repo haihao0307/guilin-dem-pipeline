@@ -16,7 +16,9 @@
 - [x] 已实际修改生产源码。
 - [x] 用户看到的是可交互三维工作台。
 - [x] 画面来自实时三维运行时。
-- [ ] 公网固定链接和真实浏览器已验证（待 PUBLICATION_PROOF）。
+- [x] 公网固定链接和真实浏览器已验证（见 evidence/PUBLICATION_PROOF.json）。
 - [x] 如果只有截图而没有工作台，本轮判定失败。
 
 人工visualAcceptance、motionAcceptance、productionReady继续为false，等待用户查看实际效果。
+
+独立正式复核与公网桌面／390视口运行均通过，见 PUBLICATION_PROOF 与 INDEPENDENT_REPORT。上传网络采用 GitHub 接口保存同一文件树的独立快照，见 SOURCE_SYNC_PLAN；本地工作分支及历史保留。

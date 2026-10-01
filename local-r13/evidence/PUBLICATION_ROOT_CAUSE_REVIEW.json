@@ -1,0 +1,12 @@
+{
+ "reviewedAt":"2026-10-01T08:57:40Z",
+ "scope":"Publication tooling only; frozen production unchanged",
+ "observations":["Current gh-pages SHA verified by GitHub connector; parent tree fetched with blob:none","A repeated HTTPS fetch was reset","Alternate-index write-tree attempted implicit lazy fetch of prior Pages workflow blob d26bc405c11c1efad898d8b7ec23b98dc91ad39b using default unreachable GitHub resolution","Following push referenced an absent publication ref, was rejected locally and updated no remote refs"],
+ "identifiedCause":"write-tree object-presence checking in partial clone downloads unrelated existing blobs, although their exact IDs are already known and exist on the verified remote parent",
+ "fix":"Use write-tree --missing-ok for exact inherited remote-parent entries. The sole new HTML blob exists locally, is hash bound, and the resulting commit adds only kaopu-fish-r13/index.html. No remote force update, no removed paths, no missing new artifact.",
+ "preparedCommit":"42b70464c2daecd3a6f91d0e46a8d79ec7d9fa6d",
+ "productionSourceSha":"d5fdf0807bbc6bcd58290f9d0bd7384a970e57d6",
+ "htmlSha256":"04ecbd730b5f01c4737f52e12fc72cdf660c4cd4dcbfed31484ba5de2de3d379",
+ "candidateQualityGatesUnaffected":true,
+ "passed":true
+}
