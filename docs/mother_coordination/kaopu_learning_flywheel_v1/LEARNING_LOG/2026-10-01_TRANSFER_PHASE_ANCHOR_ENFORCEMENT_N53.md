@@ -55,6 +55,6 @@ Apply only at a declared transfer-to-adaptation boundary. This Candidate does no
 
 Decision: retain the same Candidate and update its checker; targeted Coral trial only. Suggested adaptation-phase fields: `taskMode=ADAPTATION_AUTHORIZED`, `adaptationAuthorized=true`, `adaptationAuthorizationSource`, `adaptationBaseSha`, `subjectHeadSha`, independent verifier identity and verifier result.
 
-Lifecycle before the new routing receipt: `IMPLEMENTED=true` for the Candidate checker revision and `GATE-RUN=true`; `ACKNOWLEDGED`, `ADOPTED` and `USER-ACCEPTED` remain false. Reliable KPI deltas are unknown. Evidence count: one same-class recurrence after the original correction; a recurrence rate is not computed because the denominator is unknown.
+Routing receipt: issue #91 comment `5923108577`; Candidate revision commit `9ac4a01c187337ef3f8a8a8c0939269b99813386`. Lifecycle: `POSTED=true`, `IMPLEMENTED=true` for the Candidate checker revision and `GATE-RUN=true`; `ACKNOWLEDGED`, `ADOPTED` and `USER-ACCEPTED` remain false. Reliable KPI deltas are unknown. Evidence count: one same-class recurrence after the original correction; a recurrence rate is not computed because the denominator is unknown.
 
 No external AI was claimed or invoked as a participant.
