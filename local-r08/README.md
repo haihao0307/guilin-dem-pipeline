@@ -6,7 +6,7 @@
 
 知识库：`knowledge/fish-motion/README.md`，记录参考来源与许可、骨骼节律实测、坐标差异、不能直接继承硬蒙皮的原因、根因、函数归属、必跑回归与后续生态边界。
 
-构建：先 `node scripts/build-reference.mjs`，再 `node scripts/build.mjs`。单体 HTML `dist/KAOPU_FISH_TAIL_DRIVE_R08_WORKBENCH.html` 完全内嵌主鱼与参考的运行资源，可 file:// 直开。生产验证使用 `verify-motion.mjs`、`measure-gait.mjs`、`verify-extremes.mjs`、`verify-surface.mjs`、`verify-gpu-surface.mjs`、`verify-browser.mjs`。内部截图及视频来自真实 WebGL，不是三维交付替代品。公网版本 `kaopu-fish-r08/` 保留旧版本入口。
+构建：先 `node scripts/build-reference.mjs`，再 `node scripts/build.mjs`。单体 HTML `dist/KAOPU_FISH_TAIL_DRIVE_R08_WORKBENCH.html` 以无损封装完全内嵌主鱼与参考的运行资源，可 file:// 直开。生产验证使用 `verify-motion.mjs`、`measure-gait.mjs`、`verify-extremes.mjs`、`verify-surface.mjs`、`verify-gpu-surface.mjs`、`verify-browser.mjs`。内部截图及视频来自真实 WebGL，不是三维交付替代品。公网版本 `kaopu-fish-r08/` 保留旧版本入口。
 
 参考：School of Herring by radiator，CC-BY-4.0；完整原始许可在 `reference/herring/license.txt`，网页参考栏包含署名和来源。原始资产只用于可切换的参考播放，不替换我们的鱼。群聚/避碰代码未存在于附件，也未在本轮虚构实现。推进响应依然是未标定估计。人工视觉与动作验收仍待用户，不能从测试自动置 true。
 
