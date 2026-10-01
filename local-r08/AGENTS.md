@@ -1,0 +1,1 @@
+鱼的脊椎、鱼鳍绑定、表面连续性或群体行为工作先读取 `../knowledge/fish-motion/README.md`，保留原表面/拓扑/UV/图集。用户拒绝 R07 的破碎动态表面；旧版只能作 BEFORE。运行 `verify-surface.mjs` 与 `verify-gpu-surface.mjs`，不得只验证位置而忽略鳍根无效法线。不要操纵用户鼠标。遵循仓库 R2 独立 verifier 和单体 HTML 门禁。

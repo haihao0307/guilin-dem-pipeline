@@ -1,0 +1,18 @@
+// Source-derived appendage skin. No surface coordinates, UVs or triangles change.
+import zlib from 'node:zlib';
+export function deriveFinSkin(h) {
+ const N=h.positions.length/3,p=h.positions,pi=h.partInfo.slice(),roots=h.partRoot.slice(),weights=h.weights.slice(),parent=Int32Array.from({length:N},(_,i)=>i),grid=new Map(),cell=1e-6,tol=2e-7;
+ const find=i=>{while(parent[i]!==i){parent[i]=parent[parent[i]];i=parent[i];}return i;};
+ for(let i=0;i<N;i++){const x=Math.floor(p[i*3]/cell),y=Math.floor(p[i*3+1]/cell),z=Math.floor(p[i*3+2]/cell);for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)for(let c=-1;c<=1;c++){const list=grid.get(`${x+a},${y+b},${z+c}`);if(list)for(const j of list)if(Math.hypot(p[i*3]-p[j*3],p[i*3+1]-p[j*3+1],p[i*3+2]-p[j*3+2])<tol)parent[find(i)]=find(j);}const key=`${x},${y},${z}`;if(!grid.has(key))grid.set(key,[]);grid.get(key).push(i);}
+ const groups=new Map();for(let i=0;i<N;i++){const id=find(i);if(!groups.has(id))groups.set(id,[]);groups.get(id).push(i);}
+ const outward=[[0,0,0],[0,0,1],[0,0,-1],[0,1,0],[0,1,0],[0,-1,0],[0,-1,0],[1,0,0]],distance=i=>{const id=pi[i*2],axis=outward[id];return id?axis.reduce((s,v,k)=>s+v*(p[i*3+k]-roots[i*3+k]),0):0;},extents=Array(8).fill(0);
+ for(let i=0;i<N;i++)extents[pi[i*2]]=Math.max(extents[pi[i*2]],distance(i));
+ const width=.006*(h.metadata.continuum.body.endXM-h.metadata.continuum.body.sourceXM),smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*t*(10+t*(-15+6*t));};
+ let bodyExcluded=0,mixedSeams=0,sharedGroups=0;const seamGrid=new Map(),seams=[];
+ for(const group of groups.values())if(group.length>1){sharedGroups++;const ids=new Set(group.map(i=>pi[i*2]));if(ids.size>1){mixedSeams++;const i=group[0],q=Array.from(p.subarray(i*3,i*3+3));seams.push(q);const key=q.map(v=>Math.floor(v/width)).join(',');if(!seamGrid.has(key))seamGrid.set(key,[]);seamGrid.get(key).push(q);}}
+ for(let i=0;i<N;i++){const id=pi[i*2];if(!id)continue;const d=distance(i);if(d<=0)bodyExcluded++;let seamDistance=width;const x=Math.floor(p[i*3]/width),y=Math.floor(p[i*3+1]/width),z=Math.floor(p[i*3+2]/width);for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)for(let c=-1;c<=1;c++){const list=seamGrid.get(`${x+a},${y+b},${z+c}`);if(list)for(const q of list)seamDistance=Math.min(seamDistance,Math.hypot(p[i*3]-q[0],p[i*3+1]-q[1],p[i*3+2]-q[2]));}weights[i*12+id+4]=Math.round(weights[i*12+id+4]*smooth(d/width)*smooth(seamDistance/width));pi[i*2+1]=Math.round(Math.max(0,Math.min(1,d/extents[id]))*65535);}
+ // UV/chart duplicates share ONE appendage mapping; chart identity has no authority over motion.
+ for(const group of groups.values())if(group.length>1){const ids=new Set(group.map(i=>pi[i*2])),i=group[0];if(ids.size>1){for(const j of group){pi[j*2]=0;pi[j*2+1]=0;for(let c=5;c<12;c++)weights[j*12+c]=0;}}else{const id=pi[i*2];if(!id)continue;const root=[0,1,2].map(k=>group.reduce((s,j)=>s+roots[j*3+k],0)/group.length),w=Math.min(...group.map(j=>weights[j*12+id+4])),t=Math.round(group.reduce((s,j)=>s+pi[j*2+1],0)/group.length);for(const j of group){roots.set(root,j*3);weights[j*12+id+4]=w;pi[j*2+1]=t;}}}
+ const active=Array(8).fill(0);for(let i=0;i<N;i++)if(pi[i*2]&&weights[i*12+pi[i*2]+4])active[pi[i*2]]++;
+ return {chunks:[['continuousWeightsGzip',weights],['continuousPartInfoGzip',pi],['continuousPartRootGzip',roots]].map(([name,data])=>({name,data:zlib.gzipSync(new Uint8Array(data.buffer,data.byteOffset,data.byteLength),{level:9})})),report:{method:'OUTWARD_FIN_COORDINATE_C2_ROOT_AND_SEAM_FEATHER_SHARED_MATERIAL_ADDRESS',sourcePositionToleranceM:tol,featherWidthM:width,sharedGroups,mixedSeams,bodyExcluded,finOutwardExtentsM:extents,activeFinVertices:active,outwardDirections:outward,sourceGeometryUnchanged:true}};
+}

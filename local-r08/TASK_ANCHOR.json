@@ -1,0 +1,49 @@
+{
+  "taskId": "FISH_R08_REFERENCE_SKIN_CONTINUITY_20261001",
+  "taskMode": "REPLICATION_LOCKED",
+  "creativeAuthorization": false,
+  "baseSha": "842d1482aafb7918c881a5cdfd124688d5ad9936",
+  "branch": "work/fish-r08-continuous-surface-20261001",
+  "anchoredAt": "2026-10-01T02:37:37.019Z",
+  "userDirective": "检查用户 school_of_herring.zip 的单鱼骨骼与动画，学习并应用运动方法，先解决 R07 鱼表面块面破碎与明显断层，保持连续完整，将证据和方法形成项目知识库。群体后续处理。",
+  "targetDefect": "Single fish deformation must preserve surface seam continuity and smooth shading while maintaining spine-driven body and weighted fins.",
+  "referenceSet": [
+    {
+      "path": "C:/Users/Administrator/Downloads/school_of_herring.zip",
+      "sha256": "3e12e4edc1a8dd30ce7706504ad19fe9c9dd4bb2e069121d77fe203fd0123586"
+    },
+    {
+      "path": "local-r07/",
+      "role": "rejected-deformation BEFORE only; original rest surface preserved"
+    }
+  ],
+  "acceptedBaseline": "Original R05/R06 rest surface and source payload, not the rejected R07 deformed surface",
+  "allowedPaths": [
+    "local-r08/",
+    "knowledge/fish-motion/",
+    "gh-pages:kaopu-fish-r08/"
+  ],
+  "protectedInvariants": [
+    "Original geometry, indices, UV and atlases unchanged",
+    "Central spine drives complete body",
+    "Only seven fin weight gains",
+    "Independent eyes",
+    "No mouse interaction",
+    "Existing public versions preserved"
+  ],
+  "acceptanceGates": [
+    "Reference animated rendered observation and numerical rig analysis",
+    "Measured root cause of R07 surface defect",
+    "Geometric seam and shading regression against rest and R07",
+    "All 16 modes and extreme UI combinations",
+    "Exact final build local/public desktop/mobile browser",
+    "Independent verifier"
+  ],
+  "unknowns": [
+    "Specimen identity and measured biological calibration",
+    "True reactive schooling behavior outside authored animation"
+  ],
+  "visualAcceptance": false,
+  "motionAcceptance": false,
+  "productionReady": false
+}
