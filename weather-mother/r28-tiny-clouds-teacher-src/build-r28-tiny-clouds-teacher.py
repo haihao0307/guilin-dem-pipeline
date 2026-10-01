@@ -26,6 +26,14 @@ def once(text: str, old: str, new: str, label: str) -> str:
     return text.replace(old, new, 1)
 
 
+def insert_before_final_html(text: str, payload: str) -> str:
+    marker = "</html>"
+    idx = text.lower().rfind(marker)
+    if idx < 0:
+        raise SystemExit("R28 Tiny Clouds patch: final closing html not found")
+    return text[:idx] + payload + text[idx:]
+
+
 def git_blob_sha(data: bytes) -> str:
     return hashlib.sha1(f"blob {len(data)}\0".encode("ascii") + data).hexdigest()
 
@@ -72,7 +80,7 @@ r28 = once(r27, nav_old, nav_new, "single Weather Mother navigation")
 shell_style = '<style id="weather-mother-r28-tiny-clouds-shell">nav{max-width:calc(100vw - 18px);overflow-x:auto;scrollbar-width:none}nav::-webkit-scrollbar{display:none}body.teacher-active #drive{display:none!important}@media(max-width:700px){body.teacher-active nav{top:145px;left:50%;right:auto;transform:translateX(-50%);max-width:calc(100vw - 16px)}}</style>'
 r28 = once(r28, '<nav aria-label="选择体验">', shell_style + '<nav aria-label="选择体验">', "teacher shell style")
 bridge = f'''<script id="weather-mother-r28-tiny-clouds-teacher">(()=>{{'use strict';document.documentElement.dataset.weatherTinyCloudsTeacher='r28-exact-formula';const teacherSource=decodeURIComponent(escape(atob('{teacher64}')));const button=document.getElementById('tinyTeacherTab');let frame=null,loadPromise=null,active=false;const shellQA={{version:'WM-R28-TINY-CLOUDS-WORKBENCH-20261001',r27Preserved:true,oneWeatherMotherWorkbench:true,teacherFormulaExact:true,teacherFrameReused:true,errors:[],visualAcceptance:false,realDeviceQA:false,productionReady:false}};function pauseFrame(f){{try{{f.contentWindow.cloudModuleHidden=true;f.contentWindow.dispatchEvent(new Event('blur'));f.contentDocument.dispatchEvent(new Event('visibilitychange'))}}catch(e){{shellQA.errors.push(String(e))}}}}function resumeFrame(f){{try{{f.contentWindow.cloudModuleHidden=false;f.contentDocument.dispatchEvent(new Event('visibilitychange'))}}catch(e){{shellQA.errors.push(String(e))}}}}function ensureFrame(){{if(frame)return loadPromise||Promise.resolve(frame);frame=document.createElement('iframe');frame.hidden=true;frame.dataset.key='tiny-teacher';frame.title='2017 Tiny Clouds 老师原式复刻';loadPromise=new Promise(resolve=>frame.onload=()=>resolve(frame));frame.srcdoc=teacherSource;document.body.append(frame);return loadPromise}}async function showTeacher(){{active=true;document.body.classList.remove('weather-active');document.body.classList.add('teacher-active');for(const f of document.querySelectorAll('iframe[data-key]'))if(f!==frame){{f.hidden=true;pauseFrame(f)}}document.querySelectorAll('button[data-scene]').forEach(b=>b.setAttribute('aria-pressed','false'));button.setAttribute('aria-pressed','true');document.getElementById('drive').hidden=true;const f=await ensureFrame();if(!active)return f;f.hidden=false;resumeFrame(f);try{{f.contentWindow.WeatherTinyCloudsTeacher?.setPlaying(true);f.contentWindow.focus()}}catch(e){{shellQA.errors.push(String(e))}}return f}}function hideTeacher(){{active=false;document.body.classList.remove('teacher-active');button.setAttribute('aria-pressed','false');if(frame){{frame.hidden=true;pauseFrame(frame);try{{frame.contentWindow.WeatherTinyCloudsTeacher?.setPlaying(false)}}catch(e){{shellQA.errors.push(String(e))}}}}}}document.querySelectorAll('button[data-scene]').forEach(b=>b.addEventListener('click',hideTeacher,true));button.addEventListener('click',e=>{{e.preventDefault();showTeacher().catch(err=>shellQA.errors.push(String(err)))}});window.WeatherR28TinyCloudsWorkbench={{qa:shellQA,showTeacher,hideTeacher,frame:()=>frame,isTeacherActive:()=>active,teacherSourceBytes:teacherSource.length}};const params=new URLSearchParams(location.search);if(params.get('scene')==='tiny'||params.get('teacher')==='tiny-clouds')setTimeout(()=>showTeacher().catch(err=>shellQA.errors.push(String(err))),0)}})();</script>'''
-r28 = once(r28, "</html>", bridge + "</html>", "teacher workbench bridge")
+r28 = insert_before_final_html(r28, bridge)
 
 OUT.parent.mkdir(parents=True, exist_ok=True)
 OUT.write_text(r28, encoding="utf-8")
