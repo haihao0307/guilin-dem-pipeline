@@ -1,0 +1,63 @@
+name: Build Stone Money R05 Pandanus Codex Handoff
+
+on:
+  push:
+    branches:
+      - handoff/stone-money-r05-pandanus-codex-20261001
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact handoff branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Assemble editable source handoff
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="STONE_MONEY_R05_PANDANUS_CODEX_SOURCE_20261001"
+          rm -rf "$ROOT"
+          mkdir -p "$ROOT/01_CURRENT_WORKBENCH" "$ROOT/02_R05_ANCHOR" "$ROOT/03_WORKFLOWS" "$ROOT/04_HANDOFF"
+
+          test -d kaopu-coral-fractal-lab
+          cp -a kaopu-coral-fractal-lab/. "$ROOT/01_CURRENT_WORKBENCH/"
+
+          if [ -d artifacts/tree_life_root_r05 ]; then
+            cp -a artifacts/tree_life_root_r05/. "$ROOT/02_R05_ANCHOR/"
+          fi
+
+          for f in \
+            .github/workflows/coral-fractal-r01-qa.yml \
+            .github/workflows/tree-life-root-r05-release.yml \
+            .github/workflows/tree-life-root-r05-verify.yml; do
+            if [ -f "$f" ]; then cp "$f" "$ROOT/03_WORKFLOWS/$(basename "$f")"; fi
+          done
+
+          cp CODEX_HANDOFF_TASK_ZH.md "$ROOT/04_HANDOFF/"
+          cp SOURCE_PROVENANCE.md "$ROOT/04_HANDOFF/"
+
+          printf '%s\n' "$GITHUB_SHA" > "$ROOT/EXACT_COMMIT_SHA.txt"
+          printf '%s\n' "$GITHUB_REF_NAME" > "$ROOT/EXACT_BRANCH.txt"
+          git log -n 20 --date=iso-strict --pretty=format:'%H%x09%ad%x09%s' > "$ROOT/RECENT_COMMITS.tsv"
+          git ls-tree -r --name-only HEAD -- kaopu-coral-fractal-lab artifacts/tree_life_root_r05 .github/workflows/coral-fractal-r01-qa.yml .github/workflows/tree-life-root-r05-release.yml .github/workflows/tree-life-root-r05-verify.yml > "$ROOT/TRACKED_SOURCE_FILES.txt"
+
+          find "$ROOT" -type f -print0 | sort -z | xargs -0 sha256sum > "$ROOT/SHA256SUMS.txt"
+          zip -r -9 "${ROOT}.zip" "$ROOT"
+          sha256sum "${ROOT}.zip" > "${ROOT}.zip.sha256"
+
+      - name: Upload full editable source handoff
+        uses: actions/upload-artifact@v4
+        with:
+          name: STONE_MONEY_R05_PANDANUS_CODEX_SOURCE_20261001
+          path: |
+            STONE_MONEY_R05_PANDANUS_CODEX_SOURCE_20261001.zip
+            STONE_MONEY_R05_PANDANUS_CODEX_SOURCE_20261001.zip.sha256
+          if-no-files-found: error
+          retention-days: 90
