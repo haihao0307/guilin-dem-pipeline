@@ -1,0 +1,107 @@
+ b}
+ o.p=buf(pos);o.nm=buf(nor);o.c=buf(col);o.i=G.createBuffer();G.bindBuffer(G.ELEMENT_ARRAY_BUFFER,o.i);G.bufferData(G.ELEMENT_ARRAY_BUFFER,new Uint16Array(idx),G.STATIC_DRAW);return o
+}
+function grid(nx,nz,dx,dz,water){
+ const p=[],n=[],c=[],idx=[],x0=-72,z0=-42;
+ for(let j=0;j<=nz;j++)for(let i=0;i<=nx;i++){
+   const x=x0+i*dx,z=z0+j*dz,y=water?.08:terrainY(x,z);
+   p.push(x,y,z);
+   if(water){n.push(0,1,0);c.push(.12,.28,.29,1)}
+   else{
+     const e=.22, yx1=terrainY(x+e,z),yx0=terrainY(x-e,z),yz1=terrainY(x,z+e),yz0=terrainY(x,z-e);
+     const nn=normalise([-(yx1-yx0)/(2*e),1,-(yz1-yz0)/(2*e)]);
+     n.push(...nn);c.push(...rgbaForTerrain(x,z,y));
+   }
+ }
+ for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){const a=j*(nx+1)+i,b=a+1,d=a+nx+1,e=d+1;idx.push(a,d,b,b,d,e)}
+ return mesh(p,n,c,idx,water?2:1)
+}
+const land=grid(140,88,1.48,1.34,false),water=grid(126,84,1.62,1.46,true);
+
+function rock(cx,cz,h,rx,rz,seg=18,rings=13,seed=1){
+ const p=[],n=[],c=[],idx=[];
+ for(let j=0;j<=rings;j++){
+   const v=j/rings, yy=.05+h*v;
+   const taper=Math.pow(Math.sin(Math.min(.96,v)*Math.PI*.78+.24),.35)*(1-.28*v);
+   for(let i=0;i<seg;i++){
+     const a=i/seg*Math.PI*2;
+     const jag=1+.10*Math.sin(a*3+seed)+.055*Math.sin(a*7-seed*.4)+.035*Math.sin(j*1.7+i*.8);
+     const x=cx+Math.cos(a)*rx*taper*jag,z=cz+Math.sin(a)*rz*taper*jag;
+     p.push(x,yy,z);
+     const nn=normalise([Math.cos(a),.18,Math.sin(a)]);n.push(...nn);
+     const shade=.105+.028*Math.sin(i*2.1+j*.7+seed);
+     c.push(shade,shade*.98,shade*.92,1);
+   }
+ }
+ const top=p.length/3;p.push(cx,h*1.04,cz);n.push(0,1,0);c.push(.09,.09,.085,1);
+ for(let j=0;j<rings;j++)for(let i=0;i<seg;i++){const a=j*seg+i,b=j*seg+(i+1)%seg,d=(j+1)*seg+i,e=(j+1)*seg+(i+1)%seg;idx.push(a,d,b,b,d,e)}
+ for(let i=0;i<seg;i++)idx.push(rings*seg+i,top,rings*seg+(i+1)%seg);
+ return mesh(p,n,c,idx,3)
+}
+const stacks=[
+ rock(49,25,31,8.4,6.4,28,30,2.7),
+ rock(54.7,26.2,32.5,5.7,5.1,24,28,4.4),
+ rock(83,34,23.5,3.0,2.25,22,28,5.1),
+ rock(28,9,4.2,4.0,2.8,18,12,7.3),
+ rock(17,5.2,2.1,2.5,1.65,16,10,3.2),
+ rock(6,2.1,1.35,1.8,1.2,14,9,1.7),
+ rock(-6,-.4,.85,1.25,.85,14,8,8.1),
+ rock(38,11.0,1.5,2.0,1.15,14,9,6.6)
+];
+
+function cliff(){
+ const p=[],n=[],c=[],idx=[],cols=64,sides=6;
+ for(let q=0;q<cols;q++){
+   const x=-82+q*1.55,z=-31+1.45*Math.sin(q*.19)+.32*Math.sin(q*.71);
+   const base=terrainY(x,z+2),H=19+15*Math.pow(q/(cols-1),.70)+4.5*Math.sin(q*.22)+1.6*Math.sin(q*.93);
+   const r=.95*(.82+.18*Math.sin(q*.73));
+   const baseIdx=p.length/3;
+   for(let y=0;y<2;y++)for(let s=0;s<sides;s++){
+     const a=s/sides*Math.PI*2+(q%2)*.18,rr=r*(.9+.1*Math.sin(s*1.7+q*.3));
+     p.push(x+Math.cos(a)*rr,base+(y?H:0),z+Math.sin(a)*rr*.72);
+     n.push(...normalise([Math.cos(a),.04,Math.sin(a)]));
+     let v=.048+.015*Math.sin(q*.61+s*1.8);c.push(v,v*.98,v*.93,1);
+   }
+   const top=p.length/3;p.push(x,base+H+r*.25,z);n.push(0,1,0);c.push(.055,.055,.052,1);
+   for(let s=0;s<sides;s++){const s2=(s+1)%sides,a=baseIdx+s,b=baseIdx+s2,d=baseIdx+sides+s,e=baseIdx+sides+s2;idx.push(a,d,b,b,d,e,d,top,e)}
+ }
+ return mesh(p,n,c,idx,3)
+}
+const cliffs=cliff();
+
+const all=[land,cliffs,...stacks,water];
+
+function sub(a,b){return[a[0]-b[0],a[1]-b[1],a[2]-b[2]]}
+function dot(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]}
+function cross(a,b){return[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}
+function look(e,t){let z=normalise(sub(e,t)),x=normalise(cross([0,1,0],z)),y=cross(z,x),o=new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,0,0,0,1]);o[12]=-dot(x,e);o[13]=-dot(y,e);o[14]=-dot(z,e);return o}
+function perspective(f,a,n,F){const s=1/Math.tan(f/2),o=new Float32Array(16);o[0]=s/a;o[5]=s;o[10]=(F+n)/(n-F);o[11]=-1;o[14]=2*F*n/(n-F);return o}
+function mul(a,b){const o=new Float32Array(16);for(let r=0;r<4;r++)for(let cc=0;cc<4;cc++)o[cc*4+r]=a[r]*b[cc*4]+a[4+r]*b[cc*4+1]+a[8+r]*b[cc*4+2]+a[12+r]*b[cc*4+3];return o}
+
+let cams={
+ world:[[-70,1.48,-8.2],[52,4.2,24]],
+ shore:[[-50,1.55,-5.5],[28,.22,4.5]],
+ breaker:[[-37,1.45,-1.2],[25,.20,7.2]],
+ stack:[[-29,3.7,-1.5],[53,12,27]],
+ top:[[12,112,-2],[15,0,8]]
+},view="world",cam=cams.world.map(x=>x.slice()),mode=0,t=0,last=performance.now(),drag=null,pinch=0,touches=new Map();
+
+function makeTex(unit){
+ const tex=G.createTexture();G.activeTexture(G.TEXTURE0+unit);G.bindTexture(G.TEXTURE_2D,tex);
+ G.texImage2D(G.TEXTURE_2D,0,G.RGBA,1,1,0,G.RGBA,G.UNSIGNED_BYTE,new Uint8Array([128,128,128,255]));
+ G.texParameteri(G.TEXTURE_2D,G.TEXTURE_WRAP_S,G.REPEAT);G.texParameteri(G.TEXTURE_2D,G.TEXTURE_WRAP_T,G.REPEAT);
+ G.texParameteri(G.TEXTURE_2D,G.TEXTURE_MIN_FILTER,G.LINEAR_MIPMAP_LINEAR);G.texParameteri(G.TEXTURE_2D,G.TEXTURE_MAG_FILTER,G.LINEAR);
+ return tex;
+}
+const sandTex=makeTex(0),rockTex=makeTex(1);let texReady=0;
+function loadTex(tex,unit,url){
+ const im=new Image();im.crossOrigin="anonymous";
+ im.onload=()=>{G.activeTexture(G.TEXTURE0+unit);G.bindTexture(G.TEXTURE_2D,tex);G.pixelStorei(G.UNPACK_FLIP_Y_WEBGL,1);
+ G.texImage2D(G.TEXTURE_2D,0,G.RGBA,G.RGBA,G.UNSIGNED_BYTE,im);G.generateMipmap(G.TEXTURE_2D);texReady=Math.min(1,texReady+.5);};
+ im.src=url;
+}
+loadTex(sandTex,0,"https://raw.githubusercontent.com/cryptomanavan/ShoreBreak/main/public/assets/coast-r8/sand-diff.webp");
+loadTex(rockTex,1,"https://raw.githubusercontent.com/cryptomanavan/ShoreBreak/main/public/assets/coast-r8/rock-diff.webp");
+
+const SW=192,SH=128,stateA=new Uint8Array(SW*SH*4),stateB=new Uint8Array(SW*SH*4);
+const stateTex=G.createTexture();G.activeTexture(G.TEXTURE2);G.bindTexture(G.TEXTURE_2D,st
