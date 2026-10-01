@@ -1,0 +1,71 @@
+name: Build Tree Life R05 Pandanus Codex Source
+
+on:
+  push:
+    branches:
+      - handoff/tree-life-r05-pandanus-codex-source-20261001
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact Pandanus source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Verify and assemble editable full source
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC="kaopu-tree-fractal-wave-lab/mobile-r05-seasons"
+          ROOT="TREE_LIFE_R05_PANDANUS_CODEX_SOURCE_20261001"
+
+          test -f "$SRC/index.html"
+          test -f "$SRC/runtime-pandanus-r05.js"
+          grep -q "PANDANUS TECTORIUS TEACHER" "$SRC/index.html"
+          grep -q "window.__treeReady = true" "$SRC/runtime-pandanus-r05.js"
+          grep -q "TreeLifeR05" "$SRC/runtime-pandanus-r05.js"
+
+          rm -rf "$ROOT"
+          mkdir -p "$ROOT/01_FULL_TREE_LAB" "$ROOT/02_EXACT_R05_PANDANUS" "$ROOT/03_QA" "$ROOT/04_HANDOFF"
+
+          cp -a kaopu-tree-fractal-wave-lab/. "$ROOT/01_FULL_TREE_LAB/"
+          cp -a "$SRC"/. "$ROOT/02_EXACT_R05_PANDANUS/"
+
+          if [ -f .github/workflows/tree-life-r05-pandanus-public-qa.yml ]; then
+            cp .github/workflows/tree-life-r05-pandanus-public-qa.yml "$ROOT/03_QA/"
+          fi
+          if [ -f .github/workflows/tree-life-root-r05-release.yml ]; then
+            cp .github/workflows/tree-life-root-r05-release.yml "$ROOT/03_QA/"
+          fi
+          if [ -f .github/workflows/tree-life-root-r05-verify.yml ]; then
+            cp .github/workflows/tree-life-root-r05-verify.yml "$ROOT/03_QA/"
+          fi
+
+          cp CODEX_STONE_MONEY_INTEGRATION_TASK_ZH.md "$ROOT/04_HANDOFF/"
+          cp PANDANUS_SOURCE_PROVENANCE.md "$ROOT/04_HANDOFF/"
+
+          printf '%s\n' "$GITHUB_SHA" > "$ROOT/EXACT_COMMIT_SHA.txt"
+          printf '%s\n' "$GITHUB_REF_NAME" > "$ROOT/EXACT_BRANCH.txt"
+          printf '%s\n' "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tree-fractal-wave-lab/mobile-r05-seasons/" > "$ROOT/PUBLIC_PREVIEW_URL.txt"
+          git ls-tree -r --name-only HEAD -- kaopu-tree-fractal-wave-lab .github/workflows/tree-life-r05-pandanus-public-qa.yml .github/workflows/tree-life-root-r05-release.yml .github/workflows/tree-life-root-r05-verify.yml > "$ROOT/TRACKED_SOURCE_FILES.txt"
+          git log -n 20 --date=iso-strict --pretty=format:'%H%x09%ad%x09%s' > "$ROOT/RECENT_COMMITS.tsv"
+
+          find "$ROOT" -type f -print0 | sort -z | xargs -0 sha256sum > "$ROOT/SHA256SUMS.txt"
+          zip -r -9 "${ROOT}.zip" "$ROOT"
+          sha256sum "${ROOT}.zip" > "${ROOT}.zip.sha256"
+
+      - name: Upload exact editable Pandanus source
+        uses: actions/upload-artifact@v4
+        with:
+          name: TREE_LIFE_R05_PANDANUS_CODEX_SOURCE_20261001
+          path: |
+            TREE_LIFE_R05_PANDANUS_CODEX_SOURCE_20261001.zip
+            TREE_LIFE_R05_PANDANUS_CODEX_SOURCE_20261001.zip.sha256
+          if-no-files-found: error
+          retention-days: 90
