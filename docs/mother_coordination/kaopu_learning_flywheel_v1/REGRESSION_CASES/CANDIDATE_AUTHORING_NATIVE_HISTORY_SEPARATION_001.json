@@ -1,0 +1,48 @@
+{
+  "caseId": "AUTHORING-NATIVE-HISTORY-SEPARATION-001",
+  "status": "CANDIDATE",
+  "scope": "shorts-r24 Mother only",
+  "trigger": "requirePreviousClosure or equivalent check at an authoring-to-native boundary",
+  "requiredFields": [
+    "phaseKind",
+    "requirePreviousClosurePurpose",
+    "stateSyncPerformed",
+    "currentGapM",
+    "previousGapBeforeSyncM",
+    "previousGapAfterSyncM",
+    "physicsTimeBefore",
+    "physicsTimeAfter",
+    "substepIdBefore",
+    "substepIdAfter",
+    "claimedNativeContinuity"
+  ],
+  "allowedPhaseKinds": ["AUTHORING_INITIALIZATION", "NATIVE_STEP"],
+  "authoringRule": "A one-time previous=current and velocity=0 synchronization may establish authoring boundary continuity only when physics time and substep identity are unchanged. It is never native-step evidence.",
+  "nativeRule": "A native continuity claim requires the exact previous accepted native substep; an authoring reset invalidates that claim.",
+  "failClosedStatuses": [
+    "HOLD_STATE_PHASE_UNDECLARED",
+    "HOLD_STATE_PHASE_PURPOSE_MISMATCH",
+    "HOLD_AUTHORING_PREVIOUS_STALE",
+    "HOLD_AUTHORING_SYNC_CHANGED_CLOCK",
+    "HOLD_NATIVE_EVIDENCE_FROM_AUTHORING_RESET",
+    "HOLD_NATIVE_HISTORY_RESET",
+    "HOLD_NATIVE_STEP_SEQUENCE_INVALID",
+    "HOLD_NATIVE_PREVIOUS_CLOSURE_OPEN"
+  ],
+  "nonClaims": [
+    "does not prove garment fit",
+    "does not prove body or self contact",
+    "does not prove a native solver substep",
+    "does not authorize promotion",
+    "does not lower any existing strain, stitch, contact, browser or user-acceptance gate"
+  ],
+  "rollbackPoint": "bd38212ef1037579fdfba36a35509372ebd8da17",
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED_CANDIDATE": true,
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}
