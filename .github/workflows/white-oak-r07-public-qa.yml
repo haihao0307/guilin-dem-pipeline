@@ -1,0 +1,51 @@
+name: White Oak R07 Public QA
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - 'kaopu-tree-fractal-wave-lab/white-oak-r07/**'
+      - '.github/workflows/white-oak-r07-public-qa.yml'
+permissions:
+  contents: read
+jobs:
+  public-mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Wait for exact public page
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tree-fractal-wave-lab/white-oak-r07/'
+          mkdir -p evidence
+          for i in $(seq 1 36); do
+            code=$(curl -L -sS -o evidence/public.html -w '%{http_code}' "$URL?qa=$RANDOM") || code=000
+            if [ "$code" = 200 ] && grep -q 'KAOPU · WHITE OAK TEACHER R07' evidence/public.html; then
+              echo "public page ready on attempt $i"
+              break
+            fi
+            if [ "$i" = 36 ]; then
+              echo "public page did not become ready; last HTTP $code"
+              exit 1
+            fi
+            sleep 10
+          done
+          sha256sum evidence/public.html | tee evidence/public.sha256
+          grep -q 'Quercus alba' evidence/public.html
+          grep -q 'white-oak-r07' <<< "$URL"
+      - name: Mobile Chrome render
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tree-fractal-wave-lab/white-oak-r07/?qa=browser'
+          BROWSER=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
+          "$BROWSER" --headless=new --no-sandbox --disable-gpu --hide-scrollbars \
+            --window-size=390,844 --virtual-time-budget=12000 \
+            --screenshot=evidence/mobile.png "$URL"
+          test -s evidence/mobile.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: white-oak-r07-public-qa
+          path: evidence/
+          retention-days: 30
