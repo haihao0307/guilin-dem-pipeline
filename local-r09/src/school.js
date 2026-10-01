@@ -1,0 +1,18 @@
+(function(){
+const TAU=2*Math.PI,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function random(seed){return()=>{seed|=0;seed=seed+0x6d2b79f5|0;let n=Math.imul(seed^seed>>>15,1|seed);n^=n+Math.imul(n^n>>>7,61|n);return((n^n>>>14)>>>0)/4294967296;};}
+function variants(count=15,seed=90401){const r=random(seed),tones=[[.91,1.02,1.10],[1.08,1.02,.91],[.94,1.07,1.01],[1.03,.98,1.04],[1,1,1]];return Array.from({length:count},(_,i)=>{const size=i? .76+.30*r():1,length=i?.94+.12*r():1,depth=i?.94+.12*r():1,width=i?.93+.14*r():1;return{id:i,size,length,depth,width,scale:[size*length,size*depth,size*width],tint:i?tones[i%tones.length].map(v=>v*(.98+.04*r())):[1,1,1],brightness:i?.92+.17*r():1,saturation:i?.88+.24*r():1,phase:TAU*i/count,tempo:.94+.12*r(),eyeOffset:(r()-.5)*.06};});}
+function target(t,offset){const a=.105*t,c=Math.cos(a),s=Math.sin(a);return{p:[2.5*s+c*offset[0]-s*offset[2],.14+offset[1]+.10*Math.sin(.22*t),2.5*(1-c)+s*offset[0]+c*offset[2]],yaw:Math.PI-a};}
+function create(count=15,seed=90401){const fish=variants(count,seed).map((v,i)=>{const slot=[(i%5-2)*1.27,.08*Math.sin(i*2.4),(Math.floor(i/5)-1)*1.31],p=target(0,slot).p;return{variant:v,slot,p,v:[.2625,0,0],yaw:Math.PI,radius:.56*Math.max(...v.scale)};});return{fish,time:0,accumulator:0,steps:0,minClearance:Infinity};}
+function step(s,dt){const next=[];for(let i=0;i<s.fish.length;i++){const f=s.fish[i],g=target(s.time+dt,f.slot),acc=[0,0,0],align=[0,0,0],cohere=[0,0,0];let n=0;for(let j=0;j<s.fish.length;j++){if(i===j)continue;const q=s.fish[j],d=f.p.map((x,k)=>x-q.p[k]),L=Math.hypot(...d),safe=f.radius+q.radius+.10;if(L<2.2){n++;for(let k=0;k<3;k++){align[k]+=q.v[k]-f.v[k];cohere[k]+=q.p[k]-f.p[k];}}if(L<safe+.30){const force=6*Math.max(0,safe+.30-L);for(let k=0;k<3;k++)acc[k]+=force*d[k]/Math.max(L,1e-6);}}
+ for(let k=0;k<3;k++){const feed=(g.p[k]-target(s.time,f.slot).p[k])/dt;acc[k]+=1.7*(g.p[k]-f.p[k])+2.6*(feed-f.v[k])+(n?.16*align[k]/n+.025*cohere[k]/n:0);}const v=f.v.map((x,k)=>x+acc[k]*dt),speed=Math.hypot(...v);if(speed>.85)for(let k=0;k<3;k++)v[k]*=.85/speed;next.push({p:f.p.map((x,k)=>x+v[k]*dt),v});}
+ for(let i=0;i<s.fish.length;i++){const f=s.fish[i];f.p=next[i].p;f.v=next[i].v;const desired=target(s.time+dt,f.slot).yaw,d=Math.atan2(Math.sin(desired-f.yaw),Math.cos(desired-f.yaw));f.yaw+=clamp(d,-.45*dt,.45*dt);}
+ // Conservative enclosing spheres protect the complete animated fish, not
+ // only root points. Projection is a contact guard after soft steering.
+ for(let pass=0;pass<4;pass++)for(let i=0;i<s.fish.length;i++)for(let j=i+1;j<s.fish.length;j++){const a=s.fish[i],b=s.fish[j],d=a.p.map((x,k)=>x-b.p[k]),L=Math.hypot(...d),min=a.radius+b.radius+.035;if(L<min){const axis=L>1e-8?d.map(x=>x/L):[1,0,0],push=(min-L)/2;for(let k=0;k<3;k++){a.p[k]+=axis[k]*push;b.p[k]-=axis[k]*push;}const closing=a.v.reduce((v,x,k)=>v+(x-b.v[k])*axis[k],0);if(closing<0)for(let k=0;k<3;k++){a.v[k]-=axis[k]*closing/2;b.v[k]+=axis[k]*closing/2;}}}
+ s.time+=dt;s.steps++;for(let i=0;i<s.fish.length;i++)for(let j=i+1;j<s.fish.length;j++)s.minClearance=Math.min(s.minClearance,Math.hypot(...s.fish[i].p.map((x,k)=>x-s.fish[j].p[k]))-s.fish[i].radius-s.fish[j].radius);
+}
+function update(s,delta,speed=1){s.accumulator+=Math.min(.12,Math.max(0,delta))*speed;while(s.accumulator+1e-12>=1/60){s.accumulator-=1/60;step(s,1/60);}return s;}
+function model(f,school=true){const v=f.variant,sc=v.scale,p=school?f.p:[0,.14,0],yaw=school?f.yaw:0,c=Math.cos(yaw),s=Math.sin(yaw);return new Float32Array([c*sc[0],0,-s*sc[0],0,0,sc[1],0,0,s*sc[2],0,c*sc[2],0,p[0],p[1]-.14*sc[1],p[2],1]);}
+globalThis.KaopuSchoolMotion=Object.freeze({variants,create,update,model});
+})();

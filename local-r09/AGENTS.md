@@ -1,0 +1,1 @@
+先读 ../knowledge/fish-motion/README.md。保留 145 源参数曲面及一比一残差表面、UV、拓扑、图集和 R08 连续鳍绑定。禁止用 primitive 重新搭鱼。当前 KFE1 眼睛必须跟随同一实例变换。15 条鱼共享 GPU 表面资源，各有独立动作状态；变体只能做用户授权的小幅连续参数变化。不得抢鼠标；遵守根 AGENTS 的独立 verifier、file:// 单体与公网门禁。
