@@ -69,7 +69,7 @@ White Oak R07 的公网页面与绿色 CI，是否足以证明它满足 KAOPU �
 
 ## Lifecycle
 
-- POSTED: pending
+- POSTED: true — https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-5925533140
 - ACKNOWLEDGED: false
 - IMPLEMENTED: true（Candidate checker only）
 - GATE-RUN: true
