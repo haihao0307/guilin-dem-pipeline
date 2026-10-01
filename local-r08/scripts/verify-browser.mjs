@@ -26,6 +26,7 @@ try {
     const ready = await page.evaluate(() => ({ ready: window.__KAOPU_R08__.ready, error: window.__KAOPU_R08__.error }));
     if (!ready.ready) throw new Error(ready.error);
     await page.waitForFunction(() => window.__KAOPU_R08__.renderer.frames > 1, null, { timeout: 60000 });
+    const initialViewport=await page.evaluate(()=>{const r=window.__KAOPU_R08__.renderer;return {width:r.canvas.width,height:r.canvas.height,expectedWidth:Math.round(r.canvas.clientWidth*r.dpr),expectedHeight:Math.round(r.canvas.clientHeight*r.dpr)};});if(initialViewport.width!==initialViewport.expectedWidth||initialViewport.height!==initialViewport.expectedHeight)throw Error('Default reference viewport distorts fish proportions');
     const frame=page.frames().find(f=>f!==page.mainFrame());if(!frame)throw Error('Missing embedded reference');await frame.waitForFunction(()=>window.__HERRING_REFERENCE__?.ready,null,{timeout:120000});
     const reference=await frame.evaluate(()=>{const r=window.__HERRING_REFERENCE__,a=r.pose(0)[30],b=r.pose(.25)[30];return {ready:r.ready,time:r.state.time,poseChanges:a.some((v,k)=>Math.abs(v-b[k])>1e-6),singleFishObjects:r.objects.filter(o=>o.id<=7).length};});if(!reference.poseChanges||reference.singleFishObjects!==2)throw Error('Reference clip not replaying');
     await page.locator('#showReference').check();await page.waitForTimeout(250);await page.screenshot({path:path.join(root,'evidence',label+'-'+viewport.width+'-reference.png'),fullPage:true});await page.locator('#showReference').uncheck();
@@ -108,7 +109,7 @@ try {
       return { mode: r.state.mode, yawOffset: r.state.eyeYawOffset, eye: A.snapshot(h).eye, cameraZoom: r.camera.zoom, finite: A.snapshot(h).eye.every(Number.isFinite), glError: r.gl.getError() };
     });
     await page.screenshot({ path: path.join(root, 'evidence', `${label}-${viewport.width}-eye.png`), fullPage: true });
-    const entry = { reference,viewport, httpStatus: response?.status() ?? null, ready: true, checks, driveInteraction, eyeInteraction, errors, failedRequests, externalRequests };
+    const entry = { initialViewport,reference,viewport, httpStatus: response?.status() ?? null, ready: true, checks, driveInteraction, eyeInteraction, errors, failedRequests, externalRequests };
     report.views.push(entry);
     console.log(JSON.stringify({ viewport, modeCount: checks.modes.length, deterministicReplay: checks.deterministicReplay, glError: checks.glError, errors, failedRequests, externalRequests }));
     await context.close();
