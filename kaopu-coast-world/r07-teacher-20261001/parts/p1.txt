@@ -1,0 +1,114 @@
+,V=normalize(cam-vP);
+ vec3 fog=vec3(.64,.69,.70);
+ vec3 col=vC.rgb;float alpha=1.0;vec2 state=texture2D(uState,stateUV(vP.xz)).rg;
+ if(kind>1.5&&kind<2.5){
+   float sd=vP.z-coast(vP.x);
+   float depth=clamp(sd/46.0,0.0,1.0);
+   vec3 shallow=vec3(.30,.39,.39),deep=vec3(.115,.19,.20);
+   float fres=pow(1.0-max(dot(N,V),0.0),4.0);
+   vec3 sky=mix(vec3(.56,.59,.59),vec3(.82,.84,.83),clamp(N.y*.55+.35,0.0,1.0));
+   col=mix(shallow,deep,depth*.90);
+   col=mix(col,sky,.16+.49*fres);
+   float crest=smoothstep(.42,.76,1.0-N.y);
+   float b0=2.6+1.25*sin(vP.x*.052+t*.23);
+   float b1=exp(-pow((sd-b0)/1.00,2.0));
+   float b2=.58*exp(-pow((sd-(6.7+1.45*sin(vP.x*.044+t*.20)))/1.48,2.0));
+   float b3=.28*exp(-pow((sd-(10.8+1.7*sin(vP.x*.038+t*.16)))/1.85,2.0));
+   float lace=.42+.58*fbm(vP.xz*.43+vec2(t*.07,-t*.05));
+   float holes=smoothstep(.35,.68,fbm(vP.xz*.91+vec2(2.7,-1.3)));
+   float analyticFoam=clamp((b1+b2+b3)*lace*(.52+.48*holes)+crest*.12,0.0,1.0);
+   float foam=clamp(max(analyticFoam,state.g),0.0,1.0);
+   col=mix(col,vec3(.88,.895,.88),foam*.84);
+   // Shallow water becomes a real thin film over the sand rather than an opaque cyan sheet.
+   float shoreAlpha=smoothstep(-.35,5.0,sd);
+   alpha=mix(.34,.93,clamp(depth*.72+shoreAlpha*.28,0.0,1.0));
+   if(mode>.5&&mode<1.5)col=mix(vec3(.18,.45,.46),vec3(.035,.08,.095),depth);
+   if(mode>2.5)col=mix(col,vec3(.79,.88,.88),(.5+.5*sin(vP.x*.18+vP.z*.21+t*1.7))*.22);
+ }else{
+   vec3 L=normalize(vec3(-.25,.82,.42));
+   float diff=.30+.70*max(dot(N,L),0.0);
+   float spec=pow(max(dot(reflect(-L,N),V),0.0),22.0);
+   col*=diff; col+=spec*.11;
+   if(vC.a>.52&&vC.a<.80){ // black sand + moving swash film
+     float d=coast(vP.x)-vP.z;
+     vec2 uv=vP.xz*.50;
+     mat2 rot=mat2(.6,.8,-.8,.6);
+     vec3 ph1=texture2D(uSand,uv).rgb;
+     vec3 ph2=texture2D(uSand,rot*uv*.73+vec2(.317,.671)).rgb;
+     float lum1=dot(ph1,vec3(.2126,.7152,.0722));
+     float lum2=dot(ph2,vec3(.2126,.7152,.0722));
+     float blend=smoothstep(.28,.72,noise(vP.xz*.14+17.3));
+     float photographic=mix(lum1,lum2,blend);
+     float proc=.76+.24*fbm(vP.xz*2.6)+.07*noise(vP.xz*9.0);
+     float grain=mix(proc,clamp(photographic/.48,.45,1.65),texReady*.72);
+
+     // One continuous swash phase: uprush -> stall -> backwash. The boundary
+     // meanders alongshore instead of being a painted static dark strip.
+     float phase=t*.42 + vP.x*.025 + .42*sin(vP.x*.061);
+     float run=5.7 + 3.25*sin(phase) + .75*sin(phase*2.03+.7);
+     float front=d-run;
+     float recent=1.0-smoothstep(-.4,5.8,front);
+     float longWet=1.0-smoothstep(3.0,12.5,d);
+     float wet=max(max(longWet*.72,recent),state.r);
+     float film=1.0-smoothstep(-.15,2.3,abs(front));
+     film*=smoothstep(-1.4,.4,front+1.1);
+     vec3 dry=vec3(.073,.071,.068)*grain;
+     vec3 soaked=vec3(.022,.024,.024)*(.88+.12*grain);
+     col=mix(dry,soaked,clamp(wet*.80+film*.20,0.,1.));
+
+     float gl=pow(max(dot(reflect(-L,N),V),0.0),76.0);
+     col+=gl*(.015+.31*film+.08*wet);
+
+     // Thin lace left by the receding film.
+     float laceNoise=.45+.55*fbm(vP.xz*.62+vec2(t*.07,-t*.04));
+     float shoreLace=max(exp(-pow(front/.42,2.0))*smoothstep(.48,.72,laceNoise),state.g*.72);
+     col=mix(col,vec3(.82,.84,.82),shoreLace*.55);
+     col*=.96+.04*sin(vP.x*18.0+2.2*noise(vP.xz*5.0));
+   }
+   if(kind>2.5&&kind<3.5){ // rock / basalt
+     vec2 ruv=vP.xz*.22 + vec2(vP.y*.07,0.);
+     float photo=dot(texture2D(uRock,ruv).rgb,vec3(.2126,.7152,.0722));
+     float mineral=mix(1.0,clamp(photo/.45,.55,1.35),texReady*.42);
+     float stripe=.80+.20*sin(vP.y*5.9+vP.x*.17+vP.z*.11);
+     col*=stripe*mineral;
+   }
+   if(mode>1.5&&mode<2.5){
+     float wet=1.0-smoothstep(.0,8.0,coast(vP.x)-vP.z);
+     col=mix(col,vec3(.10,.52,.41),wet*.60);
+   }
+ }
+ float haze=1.0-exp(-vD*vD*.000045);
+ col=mix(col,fog,clamp(haze,0.0,.82));
+ gl_FragColor=vec4(col,alpha);
+}`;
+function fail(s){document.getElementById("fail").classList.add("show");document.getElementById("failmsg").textContent=s}
+function shader(type,src){const x=G.createShader(type);G.shaderSource(x,src);G.compileShader(x);if(!G.getShaderParameter(x,G.COMPILE_STATUS))throw Error(G.getShaderInfoLog(x));return x}
+let P;
+try{P=G.createProgram();G.attachShader(P,shader(G.VERTEX_SHADER,VS));G.attachShader(P,shader(G.FRAGMENT_SHADER,FS));G.linkProgram(P);if(!G.getProgramParameter(P,G.LINK_STATUS))throw Error(G.getProgramInfoLog(P))}
+catch(e){fail(e.message);return}
+const AP=G.getAttribLocation(P,"p"),AN=G.getAttribLocation(P,"n"),AC=G.getAttribLocation(P,"c");
+const UM=G.getUniformLocation(P,"m"),UCAM=G.getUniformLocation(P,"cam"),UT=G.getUniformLocation(P,"t"),UK=G.getUniformLocation(P,"kind"),UMODE=G.getUniformLocation(P,"mode"),
+USAND=G.getUniformLocation(P,"uSand"),UROCK=G.getUniformLocation(P,"uRock"),USTATE=G.getUniformLocation(P,"uState"),UTEX=G.getUniformLocation(P,"texReady");
+
+function normalise(a){const l=Math.hypot(a[0],a[1],a[2])||1;return[a[0]/l,a[1]/l,a[2]/l]}
+function coast(x){return -4.5+.050*x+1.45*Math.sin(x*.052)+.48*Math.sin(x*.121+1.7)}
+function terrainY(x,z){
+ const d=coast(x)-z;
+ if(d<0)return -Math.min(13,0.085*(-d)+0.0035*(-d)*(-d));
+ let y=.035*d+.0017*d*d;
+ y+=.19*Math.sin(x*.055+z*.031)+.08*Math.sin(x*.17-z*.11);
+ if(z<-25)y+=Math.max(0,(-z-25))*.24;
+ return y;
+}
+function rgbaForTerrain(x,z,y){
+ const d=coast(x)-z;
+ if(d<-1.0)return [.07,.10,.10,0];
+ if(d<2.0)return [.030,.031,.030,.72];
+ if(d<7.0)return [.050,.049,.046,.66];
+ if(d<14.0)return [.078,.074,.068,.60];
+ return [.100,.096,.088,.56];
+}
+function mesh(pos,nor,col,idx,kind){
+ const o={kind,n:idx.length};
+ function buf(data){const b=G.createBuffer();G.bindBuffer(G.ARRAY_BUFFER,b);G.bufferData(G.ARRAY_BUFFER,new Float32Array(data),G.STATIC_DRAW);return b}
+ o.p=buf(pos);o.nm=buf(nor);o.c=buf(col);o.i=G.createBuffer();G.bindBuffer(G.ELEMENT_ARRAY_BUFFER,o.i);G.bufferData(G.ELEMENT_ARRAY_BUFFER,new Uint16Array(idx),G.STATIC_DRAW);return 
