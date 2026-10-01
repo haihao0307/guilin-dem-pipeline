@@ -1,0 +1,558 @@
+{
+  "schema": "kaopu.mother-delivery-receipt/2.0",
+  "taskId": "FISH_R08_REFERENCE_SKIN_CONTINUITY_20261001",
+  "baseSha": "842d1482aafb7918c881a5cdfd124688d5ad9936",
+  "headSha": "a4e48540a1405439fb5a8b20c7ca2d64822fa35a",
+  "targetObject": "Original source-derived fish surface",
+  "targetDefectOrChange": "Single fish deformation must preserve surface seam continuity and smooth shading while maintaining spine-driven body and weighted fins.",
+  "productionFilesChanged": [
+    "local-r08/src/instrument.js",
+    "local-r08/src/app.js",
+    "local-r08/src/workbench.template.html",
+    "local-r08/data/MUSKELLUNGE_RESOLVED_TAIL_DRIVE_SCORE_R08.kfc8"
+  ],
+  "tests": [
+    {
+      "name": "sourceGeometryAtlasAndBindingsUnchanged",
+      "passed": true
+    },
+    {
+      "name": "finGainsCannotAlterBody",
+      "passed": true
+    },
+    {
+      "name": "obsoleteBodyHeadMasksCannotAlterTransport",
+      "passed": true
+    },
+    {
+      "name": "modeSwitchPreservesSpineAndVelocity",
+      "passed": true
+    },
+    {
+      "name": "fullSectionsRemainRigid",
+      "passed": true
+    },
+    {
+      "name": "allSevenFinsIndependent",
+      "passed": true
+    },
+    {
+      "name": "sixteenModesFinite",
+      "passed": true
+    },
+    {
+      "name": "fixedStepReplay",
+      "passed": true
+    },
+    {
+      "name": "eyesIndependentOfBody",
+      "passed": true
+    }
+  ],
+  "browserDesktop": {
+    "initialViewport": {
+      "width": 636,
+      "height": 898,
+      "expectedWidth": 636,
+      "expectedHeight": 898
+    },
+    "reference": {
+      "ready": true,
+      "time": 0.05,
+      "poseChanges": true,
+      "singleFishObjects": 2
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "httpStatus": 200,
+    "ready": true,
+    "checks": {
+      "measure": {
+        "vertices": 497701,
+        "triangles": 964285,
+        "weightChannels": 12,
+        "adjustableFinChannels": 7,
+        "bodyTransport": "FULL_CENTRAL_SPINE",
+        "weightedAddresses": 497701,
+        "appendageAddresses": 217795,
+        "eyeOperator": "PARAMETRIC_LAYERED_EYE_KFE1",
+        "staticGeometryBytes": 47405892
+      },
+      "bodyNodes": 23,
+      "finChains": 7,
+      "modes": [
+        {
+          "mode": "REST",
+          "label": "静止／脊椎基准",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "IDLE",
+          "label": "呼吸待机",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "CRUISE",
+          "label": "连续巡游",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "GLIDE",
+          "label": "收力滑行",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "BURST",
+          "label": "爆发推进",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "STARTLE",
+          "label": "惊逃反应",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "TURN_LEFT",
+          "label": "左转脊椎",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "TURN_RIGHT",
+          "label": "右转脊椎",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "BRAKE",
+          "label": "展鳍制动",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "FEED",
+          "label": "扑食／眼口鳃联动",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "FIN_FAN",
+          "label": "全鳍权重检查",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "JAW",
+          "label": "下颌开合检查",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "EYE_TRACK",
+          "label": "独立眼球追踪",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "IMPULSE",
+          "label": "单点力传递／衰减",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "PITCH_UP",
+          "label": "上仰多部件耦合",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "PITCH_DOWN",
+          "label": "下俯多部件耦合",
+          "finite": true,
+          "time": 1
+        }
+      ],
+      "deterministicReplay": true,
+      "gpuModes": [
+        {
+          "mode": "CRUISE",
+          "samples": 87,
+          "maxDeltaM": 6.3081719618404e-8
+        },
+        {
+          "mode": "TURN_LEFT",
+          "samples": 87,
+          "maxDeltaM": 5.2617018312093756e-8
+        },
+        {
+          "mode": "FIN_FAN",
+          "samples": 87,
+          "maxDeltaM": 4.48267048481485e-8
+        },
+        {
+          "mode": "PITCH_UP",
+          "samples": 87,
+          "maxDeltaM": 5.6350880417170345e-8
+        }
+      ],
+      "gpuErrorM": 6.3081719618404e-8,
+      "finSliderCount": 7,
+      "finSelectCount": 7,
+      "eyes": 2,
+      "glError": 0,
+      "frames": 33,
+      "canvas": [
+        1060,
+        898
+      ],
+      "instrumentAbi": "KFC8",
+      "version": "R08 · KFC8 · posterior wave + coupled tail + KFE1 eye"
+    },
+    "driveInteraction": [
+      {
+        "phase": 4.44643353,
+        "frequencyHz": 0.86625,
+        "strength": 0.5,
+        "speedMps": 0.09324266,
+        "distanceM": 0.74205608,
+        "caudalInput": 0.00657425
+      },
+      {
+        "phase": 1.83675178,
+        "frequencyHz": 1.23375,
+        "strength": 1.5,
+        "speedMps": 0.62400161,
+        "distanceM": 5.96753959,
+        "caudalInput": 0.03592158
+      }
+    ],
+    "eyeInteraction": {
+      "mode": "EYE_TRACK",
+      "yawOffset": 0.15,
+      "eye": [
+        0.32055775,
+        0.1273725,
+        0.55032517
+      ],
+      "cameraZoom": 11.5,
+      "finite": true,
+      "glError": 0
+    },
+    "errors": [],
+    "failedRequests": [],
+    "externalRequests": []
+  },
+  "browser390x844": {
+    "initialViewport": {
+      "width": 390,
+      "height": 426,
+      "expectedWidth": 390,
+      "expectedHeight": 426
+    },
+    "reference": {
+      "ready": true,
+      "time": 0.06659999999999996,
+      "poseChanges": true,
+      "singleFishObjects": 2
+    },
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "httpStatus": 200,
+    "ready": true,
+    "checks": {
+      "measure": {
+        "vertices": 497701,
+        "triangles": 964285,
+        "weightChannels": 12,
+        "adjustableFinChannels": 7,
+        "bodyTransport": "FULL_CENTRAL_SPINE",
+        "weightedAddresses": 497701,
+        "appendageAddresses": 217795,
+        "eyeOperator": "PARAMETRIC_LAYERED_EYE_KFE1",
+        "staticGeometryBytes": 47405892
+      },
+      "bodyNodes": 23,
+      "finChains": 7,
+      "modes": [
+        {
+          "mode": "REST",
+          "label": "静止／脊椎基准",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "IDLE",
+          "label": "呼吸待机",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "CRUISE",
+          "label": "连续巡游",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "GLIDE",
+          "label": "收力滑行",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "BURST",
+          "label": "爆发推进",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "STARTLE",
+          "label": "惊逃反应",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "TURN_LEFT",
+          "label": "左转脊椎",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "TURN_RIGHT",
+          "label": "右转脊椎",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "BRAKE",
+          "label": "展鳍制动",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "FEED",
+          "label": "扑食／眼口鳃联动",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "FIN_FAN",
+          "label": "全鳍权重检查",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "JAW",
+          "label": "下颌开合检查",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "EYE_TRACK",
+          "label": "独立眼球追踪",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "IMPULSE",
+          "label": "单点力传递／衰减",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "PITCH_UP",
+          "label": "上仰多部件耦合",
+          "finite": true,
+          "time": 1
+        },
+        {
+          "mode": "PITCH_DOWN",
+          "label": "下俯多部件耦合",
+          "finite": true,
+          "time": 1
+        }
+      ],
+      "deterministicReplay": true,
+      "gpuModes": [
+        {
+          "mode": "CRUISE",
+          "samples": 87,
+          "maxDeltaM": 6.3081719618404e-8
+        },
+        {
+          "mode": "TURN_LEFT",
+          "samples": 87,
+          "maxDeltaM": 5.2617018312093756e-8
+        },
+        {
+          "mode": "FIN_FAN",
+          "samples": 87,
+          "maxDeltaM": 4.48267048481485e-8
+        },
+        {
+          "mode": "PITCH_UP",
+          "samples": 87,
+          "maxDeltaM": 5.6350880417170345e-8
+        }
+      ],
+      "gpuErrorM": 6.3081719618404e-8,
+      "finSliderCount": 7,
+      "finSelectCount": 7,
+      "eyes": 2,
+      "glError": 0,
+      "frames": 36,
+      "canvas": [
+        390,
+        426
+      ],
+      "instrumentAbi": "KFC8",
+      "version": "R08 · KFC8 · posterior wave + coupled tail + KFE1 eye"
+    },
+    "driveInteraction": [
+      {
+        "phase": 4.44643353,
+        "frequencyHz": 0.86625,
+        "strength": 0.5,
+        "speedMps": 0.09324266,
+        "distanceM": 0.74205608,
+        "caudalInput": 0.00657425
+      },
+      {
+        "phase": 1.83675178,
+        "frequencyHz": 1.23375,
+        "strength": 1.5,
+        "speedMps": 0.62400161,
+        "distanceM": 5.96753959,
+        "caudalInput": 0.03592158
+      }
+    ],
+    "eyeInteraction": {
+      "mode": "EYE_TRACK",
+      "yawOffset": 0.15,
+      "eye": [
+        0.32055775,
+        0.1273725,
+        0.55032517
+      ],
+      "cameraZoom": 11.5,
+      "finite": true,
+      "glError": 0
+    },
+    "errors": [],
+    "failedRequests": [],
+    "externalRequests": []
+  },
+  "referenceViews": [
+    "Original Herring single-fish rig and original school clip",
+    "R07 BEFORE versus R08 textured/clay/normal fixed views"
+  ],
+  "regressionCasesRun": [
+    "FISH_NO_FRAGMENTED_SKIN_001",
+    "FISH_R07_COHERENT_POSTERIOR_GAIT_20261001"
+  ],
+  "failedGates": [],
+  "knownLimitations": [
+    "Gait parameters and reduced propulsion coefficients are not specimen-calibrated measurements or CFD.",
+    "Visual and motion feeling await user review.",
+    "Reference school uses authored baked paths; no reactive school AI implemented this round."
+  ],
+  "fallbackActive": false,
+  "freshArtifactProven": true,
+  "creativeSubstituteDetected": false,
+  "staleOrWrongTargetDetected": false,
+  "visualAcceptance": false,
+  "motionAcceptance": false,
+  "productionReady": false,
+  "status": "PROMOTED_PUBLIC_VERIFIED_USER_REVIEW_PENDING",
+  "nextAction": "User tests the R08 workbench and decides motion direction.",
+  "publicationProof": {
+    "schema": "kaopu.fish.publication-proof/8",
+    "verifiedAt": "2026-10-01T03:39:23.594Z",
+    "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-fish-r08/",
+    "publishedCommit": "84fe31242475cdcfc28b0ad644a7aa180c72233a",
+    "candidateSourceSha": "a4e48540a1405439fb5a8b20c7ca2d64822fa35a",
+    "gitBlobSha": "b7241def724254ebd029d17244fc2b70b692d2c6",
+    "htmlSha256": "12041b91a05911fb55b1fa80e7b8cec3cb0c0ceebb95d7db7120b521d6149051",
+    "httpStatus": 200,
+    "exactPayloadMatched": true,
+    "version": "R08",
+    "abi": "KFC8",
+    "surfaceContinuityPassed": true,
+    "worstSharedAddressGapM": 1.0765844552927737e-7,
+    "allVertexGpuNormalsFinite": true,
+    "sourceHerringReferenceReplayPassed": true,
+    "knowledgePath": "kaopu-fish-r08/knowledge/README.md",
+    "bodyMotion": "POSTERIOR_TRAVELING_WAVE_FULL_CENTRAL_SPINE_SECTIONS",
+    "gaitChecks": {
+      "posteriorDominates": true,
+      "posteriorLateralIncreases": true,
+      "posteriorPhaseTravels": true,
+      "caudalConsumesPeduncle": true,
+      "driveControlsBeatFrequency": true,
+      "driveControlsAmplitude": true,
+      "driveControlsSpeedResponse": true,
+      "zeroDriveRelaxes": true
+    },
+    "extremeUiCombinationsPassed": true,
+    "renderedPeduncleAndTipKinematicsExact": true,
+    "realPoseCapturePassed": true,
+    "weightedFinChannels": 7,
+    "modelVertices": 497701,
+    "modelTriangles": 964285,
+    "sourceGeometryAndAtlasesUnchanged": true,
+    "localSingleFileBrowserPassed": true,
+    "publicBrowserPassed": true,
+    "publicViews": [
+      {
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "httpStatus": 200,
+        "modes": 16,
+        "gpuCpuMaxDifferenceM": 6.3081719618404e-8,
+        "finSliderCount": 7,
+        "consoleErrors": 0,
+        "missingRequests": 0,
+        "externalCoreRequests": 0,
+        "glError": 0
+      },
+      {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "httpStatus": 200,
+        "modes": 16,
+        "gpuCpuMaxDifferenceM": 6.3081719618404e-8,
+        "finSliderCount": 7,
+        "consoleErrors": 0,
+        "missingRequests": 0,
+        "externalCoreRequests": 0,
+        "glError": 0
+      }
+    ],
+    "independentVerifier": "PASS",
+    "visualAcceptance": false,
+    "motionAcceptance": false,
+    "productionReady": false,
+    "shareAllowed": true
+  },
+  "checks": {
+    "generatedImageSubstitute": false,
+    "productionSourceModified": true,
+    "interactive3D": true,
+    "live3DRuntime": true,
+    "publicVerified": true,
+    "screenshotOnlyIsFailure": true
+  }
+}

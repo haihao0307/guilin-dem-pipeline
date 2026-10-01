@@ -17,7 +17,14 @@ const apiBase='https://api.github.com/repos/haihao0307/guilin-dem-pipeline';
 async function api(endpoint,method='GET',body){const res=await fetch(apiBase+endpoint,{method,headers:{Authorization:'Bearer '+fields.password,Accept:'application/vnd.github+json','User-Agent':'Codex-fish-R08','Content-Type':'application/json','X-GitHub-Api-Version':'2022-11-28'},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(120000)});const data=await res.json();if(!res.ok)throw Error(`GitHub ${method} ${endpoint}: ${res.status} ${data.message||''}`);return data;}
 const ref=await api('/git/ref/heads/gh-pages'),parent=ref.object.sha,base=await api('/git/commits/'+parent);
 console.log('Publishing verified R08 through official GitHub API, parent',parent);
-const blob=await api('/git/blobs','POST',{encoding:'utf-8',content:html.toString('utf8')});
+const expectedBlobSha=crypto.createHash('sha1').update(`blob ${html.length}\0`).update(html).digest('hex');
+// A timed-out upload may already have stored the immutable blob. Recover it
+// before resending the large payload; no branch has changed at this stage.
+const existingBlob=await fetch(apiBase+'/git/blobs/'+expectedBlobSha,{headers:{Authorization:'Bearer '+fields.password,Accept:'application/vnd.github+json','User-Agent':'Codex-fish-R08'},signal:AbortSignal.timeout(120000)});
+await existingBlob.body?.cancel();
+if(!existingBlob.ok&&existingBlob.status!==404)throw Error('GitHub blob recovery status '+existingBlob.status);
+const blob=existingBlob.ok?{sha:expectedBlobSha}:await api('/git/blobs','POST',{encoding:'utf-8',content:html.toString('utf8')});
+if(blob.sha!==expectedBlobSha)throw Error('GitHub stored a different HTML blob');
 console.log('Stored exact HTML blob',blob.sha);
 const knowledge=await api('/git/blobs','POST',{encoding:'utf-8',content:fs.readFileSync(path.join(root,'../knowledge/fish-motion/README.md'),'utf8')});
 const measurements=await api('/git/blobs','POST',{encoding:'utf-8',content:fs.readFileSync(path.join(root,'evidence/REFERENCE_RIG_MEASUREMENTS.json'),'utf8')});

@@ -1,0 +1,40 @@
+{
+  "taskId": "FISH_R08_REFERENCE_SKIN_CONTINUITY_20261001",
+  "productionRootCauses": [
+    "Fin domains included body surface and chart shared-address operator mismatch",
+    "GPU normalization of zero appendage rotation axis caused NaN normals"
+  ],
+  "repair": [
+    "Source outward-distance mask and C2 seam feather/common mapping",
+    "Zero-angle/weight/axis guard preserves root normal"
+  ],
+  "publicationFailure": {
+    "httpStatus": 422,
+    "message": "input was too large to process",
+    "beforeHtmlBytes": 52207035,
+    "triedEncodings": [
+      "base64",
+      "utf-8"
+    ],
+    "resolution": "Exact skin fields losslessly XOR-encoded against retained original; complete runtime gzip + printable base85, file:// verified",
+    "rejectedHtmlSizes": [
+      52207035,
+      47236270
+    ],
+    "gitTransportError": "Recv failure: Connection was reset"
+  },
+  "afterHtmlBytes": 41144493,
+  "sourceScoreByteIdenticalBeforeAfterPackaging": false,
+  "unverifiedCandidateNeverSharedWithUser": true,
+  "finalUploadRecovery": "GitHub 504/502 left the exact immutable HTML blob stored. Its Git blob hash was checked before reusing it; final ref updated without force.",
+  "runtimeSkinFieldsByteIdenticalBeforeAfterPackaging": true,
+  "viewportCorrection": {
+    "before": {
+      "canvasWidth": 1060,
+      "cssWidth": 636
+    },
+    "cause": "Missing initial resize after enabling comparison",
+    "repair": "Initialize canvas pixels from current CSS rectangle",
+    "regression": "Default desktop/mobile width/height equal CSS*dpr"
+  }
+}
