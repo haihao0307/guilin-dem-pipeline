@@ -16,7 +16,9 @@
 - [x] 已实际修改生产源码。
 - [x] 用户看到的是可交互三维工作台。
 - [x] 画面来自实时三维运行时。
-- [ ] 公网固定链接和真实浏览器已验证（以最终 PUBLICATION_PROOF 为准）。
+- [x] 公网固定链接和真实浏览器已验证（PUBLICATION_PROOF 绑定精确最终文件）。
 - [x] 如果只有截图而没有工作台，本轮判定失败。
 
 人工 visualAcceptance、motionAcceptance 和 productionReady 仍为 false；技术等值与性能证据不替代用户验收。
+
+最终结果：独立源数据/动作/浏览器解码/八组冻结画面对照均 PASS。单 HTML 30,106,552 字节（R09 为41,149,408）；归档24,364,531字节。45秒相同条件暖机后的浏览器整套进程提交内存984,711,168→656,650,240字节。单鱼主线程约7.76→0.99ms，鱼群仍约60FPS。公网入口：https://haihao0307.github.io/guilin-dem-pipeline/kaopu-fish-r10/ 。数字为本机实验，口径见 receipt。
