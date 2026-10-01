@@ -8,7 +8,7 @@ const html=fs.readFileSync(path.join(root,'dist/KAOPU_FISH_TAIL_DRIVE_R08_WORKBE
 const build=JSON.parse(fs.readFileSync(path.join(root,'evidence/BUILD_RECEIPT.json'))),qa=JSON.parse(fs.readFileSync(path.join(root,'evidence/local-BROWSER_REPORT.json')));
 const hash=crypto.createHash('sha256').update(html).digest('hex');
 if(hash!==build.sha256||hash!==qa.sourceHtmlSha256||!qa.passed)throw Error('Candidate not verified');
-for(const file of ['SURFACE_CONTINUITY_REPORT.json','GPU_SURFACE_REPORT.json','REFERENCE_BROWSER_REPORT.json','INDEPENDENT_VERIFIER.json']){const gate=JSON.parse(fs.readFileSync(path.join(root,'evidence',file)));if(!(gate.passed||gate.verdict==='PASS_LOCAL_PROMOTE'))throw Error('Missing publish gate '+file);}
+for(const file of ['SURFACE_CONTINUITY_REPORT.json','GPU_SURFACE_REPORT.json','REFERENCE_BROWSER_REPORT.json','INDEPENDENT_VERIFIER.json']){const gate=JSON.parse(fs.readFileSync(path.join(root,'evidence',file)));if(!(gate.passed||gate.verdict==='PASS_LOCAL_PROMOTE'))throw Error('Missing publish gate '+file);if(file==='INDEPENDENT_VERIFIER.json'&&gate.htmlSha256!==hash)throw Error('Verifier build hash mismatch');}
 const credential=spawnSync('git',['credential','fill'],{input:'protocol=https\nhost=github.com\n\n',encoding:'utf8',env:{...process.env,GIT_TERMINAL_PROMPT:'0',GCM_INTERACTIVE:'Never'},windowsHide:true});
 if(credential.status!==0)throw Error('GitHub credential helper unavailable');
 const fields=Object.fromEntries(credential.stdout.trim().split(/\r?\n/).map(s=>{const i=s.indexOf('=');return [s.slice(0,i),s.slice(i+1)];}));
@@ -17,7 +17,7 @@ const apiBase='https://api.github.com/repos/haihao0307/guilin-dem-pipeline';
 async function api(endpoint,method='GET',body){const res=await fetch(apiBase+endpoint,{method,headers:{Authorization:'Bearer '+fields.password,Accept:'application/vnd.github+json','User-Agent':'Codex-fish-R08','Content-Type':'application/json','X-GitHub-Api-Version':'2022-11-28'},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(120000)});const data=await res.json();if(!res.ok)throw Error(`GitHub ${method} ${endpoint}: ${res.status} ${data.message||''}`);return data;}
 const ref=await api('/git/ref/heads/gh-pages'),parent=ref.object.sha,base=await api('/git/commits/'+parent);
 console.log('Publishing verified R08 through official GitHub API, parent',parent);
-const blob=await api('/git/blobs','POST',{encoding:'base64',content:html.toString('base64')});
+const blob=await api('/git/blobs','POST',{encoding:'utf-8',content:html.toString('utf8')});
 console.log('Stored exact HTML blob',blob.sha);
 const knowledge=await api('/git/blobs','POST',{encoding:'utf-8',content:fs.readFileSync(path.join(root,'../knowledge/fish-motion/README.md'),'utf8')});
 const measurements=await api('/git/blobs','POST',{encoding:'utf-8',content:fs.readFileSync(path.join(root,'evidence/REFERENCE_RIG_MEASUREMENTS.json'),'utf8')});
