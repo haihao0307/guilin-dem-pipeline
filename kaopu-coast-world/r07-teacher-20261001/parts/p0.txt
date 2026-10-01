@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#aeb7b9">
+<title>KaoPu Coast Teacher Replica R07</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:
+radial-gradient(ellipse at 68% 14%,rgba(255,255,255,.60),transparent 33%),
+radial-gradient(ellipse at 28% 24%,rgba(255,255,255,.24),transparent 28%),
+linear-gradient(#b9c2c4 0%,#aeb9bb 43%,#899a9d 65%,#667d82 100%);
+font-family:system-ui,-apple-system,"PingFang SC",sans-serif;color:#eef5f5}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:
+radial-gradient(ellipse at 50% 10%,transparent 0 34%,rgba(37,48,52,.08) 72%,rgba(11,21,24,.18) 100%)}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.glass{background:rgba(18,29,33,.50);border:1px solid rgba(255,255,255,.18);
+box-shadow:0 12px 36px rgba(5,12,15,.18);backdrop-filter:blur(13px);-webkit-backdrop-filter:blur(13px)}
+#brand{position:fixed;z-index:8;left:14px;top:max(14px,env(safe-area-inset-top));padding:9px 12px;border-radius:12px}
+#brand b{font-size:11px;letter-spacing:.12em} #brand small{display:block;margin-top:2px;color:#c6d1d2;font-size:8px;letter-spacing:.08em}
+#views{position:fixed;z-index:8;left:50%;bottom:max(13px,env(safe-area-inset-bottom));transform:translateX(-50%);
+display:flex;gap:5px;padding:5px;border-radius:999px;max-width:calc(100vw - 18px);overflow:auto;scrollbar-width:none}
+button{border:1px solid rgba(255,255,255,.14);background:rgba(10,22,27,.56);color:#edf5f5;border-radius:999px;padding:8px 12px;white-space:nowrap}
+button.on{background:rgba(224,239,239,.18);border-color:rgba(255,255,255,.46)}
+#atlasBtn{position:fixed;right:14px;top:max(14px,env(safe-area-inset-top));z-index:9}
+#atlas{position:fixed;z-index:10;right:12px;top:62px;bottom:65px;width:min(330px,calc(100vw - 24px));padding:14px;border-radius:18px;
+transform:translateX(calc(100% + 24px));opacity:0;pointer-events:none;transition:.22s}
+#atlas.open{transform:none;opacity:1;pointer-events:auto}
+#atlas h2{font-size:17px;margin:0 0 5px}#atlas p{font-size:10px;color:#c3d0d1;line-height:1.55}
+.row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+#status{position:fixed;z-index:7;left:14px;bottom:66px;padding:7px 10px;border-radius:11px;font-size:9px;color:#d4dede;max-width:310px}
+#fail{display:none;position:fixed;inset:0;z-index:30;place-items:center;background:#21373c;text-align:center;padding:30px}
+#fail.show{display:grid}#fail h1{font-size:21px}#fail p{color:#c5d2d4;line-height:1.55}
+@media(max-width:700px){#brand small,#status{display:none}button{font-size:10px;padding:8px 10px}#atlasBtn{font-size:0;width:42px;height:38px;padding:0}#atlasBtn:after{content:"≡";font-size:18px}}
+
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+
+<div id="fail"><div><h1>图形初始化失败</h1><p id="failmsg">请刷新页面。</p></div></div>
+<div id="brand" class="glass"><b>KAOPU COAST · TEACHER R07</b><small>PERSISTENT WETNESS · FOAM HISTORY · BLACK SAND · SEA STACKS</small></div>
+<button id="atlasBtn" class="glass">Field Atlas</button>
+<div id="status" class="glass">拖动观察 · 双指 / 滚轮缩放 · Teacher Match R06：固定老师镜头 + 真实砂粒来源 + 动态冲滩湿痕</div>
+<nav id="views" class="glass">
+<button class="on" data-v="world">老师构图</button><button data-v="shore">海岸</button><button data-v="breaker">破浪</button><button data-v="stack">海蚀柱</button><button data-v="top">俯视</button>
+</nav>
+<aside id="atlas" class="glass">
+<h2>Field Atlas</h2>
+<p>同一世界的第二层诊断，不替代最终画面。</p>
+<div class="row"><button class="on" data-m="0">World</button><button data-m="1">Depth</button><button data-m="2">Wetness</button><button data-m="3">Wave</button></div>
+<p><b>R07 在固定老师构图上增加可持续状态场：水退后湿砂不立刻消失，泡沫从破浪出生、随冲滩移动、变薄并衰减；同源 CC0 沙/岩纹理继续只提供颗粒与矿物信息。</p>
+</aside>
+<script>
+(()=>{"use strict";
+const C=document.getElementById("gl");
+const G=C.getContext("webgl",{alpha:true,antialias:true,powerPreference:"high-performance"});
+if(!G){fail("Safari/Chrome 没有提供可用 WebGL context。");return}
+const ext=G.getExtension("OES_standard_derivatives");
+const VS=`precision mediump float;
+attribute vec3 p,n;attribute vec4 c;
+uniform mat4 m;uniform vec3 cam;uniform float t,kind;
+varying vec3 vP,vN;varying vec4 vC;varying float vD;
+float coast(float x){return -4.5+.050*x+1.45*sin(x*.052)+.48*sin(x*.121+1.7);}
+void main(){
+ vec3 q=p; vec3 nn=n;
+ if(kind>1.5&&kind<2.5){
+   float w1=.34*sin(q.x*.105+t*.86+q.z*.030);
+   float w2=.19*sin(q.x*.035-q.z*.125+t*.58);
+   float w3=.095*sin((q.x+q.z)*.26+t*1.42);
+   float w4=.045*sin(q.x*.58-q.z*.41+t*2.05);
+   q.y+=w1+w2+w3+w4;
+   float dx=.34*.105*cos(q.x*.105+t*.86+q.z*.030)+.19*.035*cos(q.x*.035-q.z*.125+t*.58)+.095*.26*cos((q.x+q.z)*.26+t*1.42)+.045*.58*cos(q.x*.58-q.z*.41+t*2.05);
+   float dz=.34*.030*cos(q.x*.105+t*.86+q.z*.030)-.19*.125*cos(q.x*.035-q.z*.125+t*.58)+.095*.26*cos((q.x+q.z)*.26+t*1.42)-.045*.41*cos(q.x*.58-q.z*.41+t*2.05);
+   nn=normalize(vec3(-dx,1.0,-dz));
+ }
+ vP=q;vN=nn;vC=c;vD=distance(cam,q);gl_Position=m*vec4(q,1.0);
+}`;
+const FS=`precision mediump float;
+varying vec3 vP,vN;varying vec4 vC;varying float vD;
+uniform vec3 cam;uniform float t,kind,mode,texReady;uniform sampler2D uSand,uRock,uState;
+float coast(float x){return -4.5+.050*x+1.45*sin(x*.052)+.48*sin(x*.121+1.7);}
+vec2 stateUV(vec2 xz){return clamp((xz-vec2(-86.0,-46.0))/vec2(231.0,136.0),0.0,1.0);}
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}float fbm(vec2 p){float s=0.,a=.5;for(int i=0;i<4;i++){s+=a*noise(p);p*=2.03;a*=.5;}return s;}
+void main(){
+ vec3 N=normalize(vN)
