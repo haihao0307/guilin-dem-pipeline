@@ -1,0 +1,112 @@
+name: Tree Life R05 Pandanus public browser QA
+on:
+  push:
+    branches: [gh-pages]
+    paths: [.github/workflows/tree-life-r05-pandanus-public-qa.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Install QA dependencies
+        run: pip install playwright==1.55.0 pillow
+      - name: Install Chinese system glyphs
+        continue-on-error: true
+        run: sudo apt-get update && sudo apt-get install -y fonts-noto-cjk
+      - name: Verify public workbench and interactions
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          mkdir -p evidence
+          cat > /tmp/qa.py <<'PY'
+          import hashlib, io, json, os, pathlib, time, traceback, urllib.request
+          from PIL import Image, ImageStat
+          from playwright.sync_api import sync_playwright
+
+          root=pathlib.Path('evidence')
+          sha=os.environ['SOURCE_SHA']
+          url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tree-fractal-wave-lab/mobile-r05-seasons/'
+          report={'sourceCommit':sha,'url':url,'physicalDeviceTested':False,'checks':{},'errors':[]}
+          C=report['checks']
+
+          def request_text(u):
+            req=urllib.request.Request(u,headers={'User-Agent':'KAOPU-TREE-R05-QA/1.0','Cache-Control':'no-cache'})
+            return urllib.request.urlopen(req,timeout=35).read().decode('utf-8','replace')
+
+          for attempt in range(45):
+            try:
+              text=request_text(url+'?deploy='+sha+'&n='+str(attempt))
+              if 'PANDANUS TECTORIUS TEACHER' in text and '支柱根强度' in text:
+                C['publicDeploymentContainsTeacher']=True
+                break
+            except Exception as e:
+              report['lastDeploymentError']=repr(e)
+            time.sleep(8)
+          else:
+            raise AssertionError('Public deployment did not expose the Pandanus R05 workbench')
+
+          def digest(data,name):
+            (root/name).write_bytes(data)
+            im=Image.open(io.BytesIO(data)).convert('RGB')
+            stat=ImageStat.Stat(im)
+            return {'sha256':hashlib.sha256(data).hexdigest(),'size':im.size,'stddev':sum(stat.stddev)/3,'mean':sum(stat.mean)/3}
+
+          try:
+            with sync_playwright() as pw:
+              browser=pw.chromium.launch(executable_path='/usr/bin/google-chrome',headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-webgl'])
+              page=browser.new_page(viewport={'width':1440,'height':900},device_scale_factor=1)
+              page.on('pageerror',lambda e:report['errors'].append('pageerror: '+str(e)))
+              page.on('console',lambda m: report['errors'].append('console: '+m.text) if m.type=='error' else None)
+              page.goto(url+'?qa='+sha,wait_until='domcontentloaded',timeout=90000)
+              page.wait_for_function("document.querySelector('canvas') && document.getElementById('status') && document.getElementById('status').textContent.includes('支柱根')",timeout=120000)
+              page.wait_for_timeout(2500)
+              C['titleCorrect']='Pandanus Teacher' in page.title()
+              C['desktopNoOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+              C['canvasHasSize']=page.evaluate("(()=>{const c=document.querySelector('canvas');return c.width>800&&c.height>400})()")
+              base=digest(page.screenshot(full_page=False),'desktop-base.png')
+              C['desktopPixelsNonBlank']=base['stddev']>12 and base['mean']>12
+
+              page.locator('#roots').click();page.wait_for_timeout(700)
+              no_roots=digest(page.screenshot(full_page=False),'desktop-no-roots.png')
+              C['rootToggleChangesPixels']=no_roots['sha256']!=base['sha256']
+              page.locator('#roots').click();page.wait_for_timeout(500)
+
+              page.locator('#leaves').click();page.wait_for_timeout(700)
+              no_leaves=digest(page.screenshot(full_page=False),'desktop-no-leaves.png')
+              C['leafToggleChangesPixels']=no_leaves['sha256']!=base['sha256']
+              page.locator('#leaves').click();page.wait_for_timeout(500)
+
+              page.evaluate("(()=>{const e=document.getElementById('age');e.value=18;e.dispatchEvent(new Event('input',{bubbles:true}))})()")
+              page.wait_for_timeout(1400)
+              young=digest(page.screenshot(full_page=False),'desktop-young.png')
+              page.evaluate("(()=>{const e=document.getElementById('age');e.value=110;e.dispatchEvent(new Event('input',{bubbles:true}))})()")
+              page.wait_for_timeout(1600)
+              mature=digest(page.screenshot(full_page=False),'desktop-mature.png')
+              C['lifeStageChangesTopologyPixels']=young['sha256']!=mature['sha256']
+              C['statusReportsGeneratedOrgans']='叶丛' in page.locator('#status').inner_text()
+
+              page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(900)
+              C['mobileNoHorizontalOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+              mobile=digest(page.screenshot(full_page=False),'mobile-mature.png')
+              C['mobilePixelsNonBlank']=mobile['stddev']>10 and mobile['mean']>10
+              C['pageErrorsZero']=not report['errors']
+              report['screens']={'base':base,'noRoots':no_roots,'noLeaves':no_leaves,'young':young,'mature':mature,'mobile':mobile}
+              browser.close()
+          except Exception:
+            report['failure']=traceback.format_exc()
+            raise
+          finally:
+            (root/'PUBLIC_BROWSER_QA.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+            print(json.dumps(report,ensure_ascii=False,indent=2))
+          assert all(C.values()),C
+          PY
+          python /tmp/qa.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: TREE-LIFE-R05-PANDANUS-PUBLIC-EVIDENCE
+          path: evidence/
+          retention-days: 30
