@@ -1,0 +1,1 @@
+Read ../knowledge/fish-motion/README.md and TASK_ANCHOR.json. Only blue-family material and gaze rhythm change. Preserve source sampling, gait, shapes, KFE1 eye geometry and lean memory. No mouse; independent verifier required.
