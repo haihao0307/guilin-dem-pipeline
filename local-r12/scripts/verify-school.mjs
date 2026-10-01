@@ -1,0 +1,16 @@
+import fs from 'node:fs';import vm from 'node:vm';import path from 'node:path';import crypto from 'node:crypto';import {fileURLToPath} from 'node:url';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),sandbox={};vm.createContext(sandbox);vm.runInContext(fs.readFileSync(path.join(root,'src/school.js'),'utf8'),sandbox);const School=sandbox.KaopuSchoolMotion;
+const report={verifiedAt:new Date().toISOString(),htmlSha256:crypto.createHash('sha256').update(fs.readFileSync(path.join(root,'dist/KAOPU_FISH_SCHOOL30_R12.html'))).digest('hex'),settings:School.SETTINGS,runs:[]};
+const angle=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
+for(const seed of [90401,19357,77623]){
+ const s=School.create(30,seed),replay=School.create(30,seed),initial=s.fish.map(f=>f.p.slice()),firstNeighbors=new Map(),changed=new Set();let finite=true,minHeight=Infinity,minSpeed=Infinity,maxSpeed=0,maxAcceleration=0,maxTurn=0,maxHeadingError=0,maxPitch=0,maxRoll=0,maxGroupRadius=0,gaitMin=Infinity,gaitMax=0,maxStep=0;
+ for(let frame=0;frame<7200;frame++){
+  const old=s.fish.map(f=>({p:f.p.slice(),v:f.v.slice()}));School.update(s,1/60);School.update(replay,1/60);
+  const center=s.fish.reduce((c,f)=>c.map((x,k)=>x+f.p[k]/30),[0,0,0]),height=Math.max(...s.fish.map(f=>f.p[1]))-Math.min(...s.fish.map(f=>f.p[1]));minHeight=Math.min(minHeight,height);
+  s.fish.forEach((f,i)=>{finite&&=[...f.p,...f.v,f.yaw,f.pitch,f.roll,f.gaitFrequency,f.gaitAmplitude].every(Number.isFinite);const speed=Math.hypot(...f.v);minSpeed=Math.min(minSpeed,speed);maxSpeed=Math.max(maxSpeed,speed);maxAcceleration=Math.max(maxAcceleration,Math.hypot(...f.v.map((x,k)=>(x-old[i].v[k])*60)));maxStep=Math.max(maxStep,Math.hypot(...f.p.map((x,k)=>x-old[i].p[k])));maxTurn=Math.max(maxTurn,Math.abs(f.turnRate));maxHeadingError=Math.max(maxHeadingError,Math.abs(angle(Math.atan2(f.v[2],-f.v[0]),f.yaw)));maxPitch=Math.max(maxPitch,Math.abs(f.pitch));maxRoll=Math.max(maxRoll,Math.abs(f.roll));maxGroupRadius=Math.max(maxGroupRadius,Math.hypot(...f.p.map((x,k)=>x-center[k])));gaitMin=Math.min(gaitMin,f.gaitFrequency);gaitMax=Math.max(gaitMax,f.gaitFrequency);if(frame===60)firstNeighbors.set(i,JSON.stringify(f.neighborIds));if(frame>60&&JSON.stringify(f.neighborIds)!==firstNeighbors.get(i))changed.add(i);});
+ }
+ const deterministic=JSON.stringify(s)===JSON.stringify(replay),row={seed,seconds:s.time,count:s.fish.length,finite,deterministic,minClearance:s.minClearance,minHeight,minSpeed,maxSpeed,maxAcceleration,maxTurn,maxHeadingError,maxPitch,maxRoll,maxGroupRadius,gaitMin,gaitMax,maxStep,neighborRelationsChanged:changed.size,rootsMoved:s.fish.every((f,i)=>Math.hypot(...f.p.map((x,k)=>x-initial[i][k]))>1),contactCorrections:s.contactCorrections,maxContactDisplacement:s.maxContactDisplacement};
+ row.passed=row.count===30&&finite&&deterministic&&row.minClearance>=.0349&&minHeight>.5&&minSpeed>=.19999&&maxSpeed<=.50001&&maxAcceleration<=.2501&&maxTurn<=.42001&&maxHeadingError<.10&&maxPitch<=.24001&&maxRoll<=.11001&&maxStep<.025&&changed.size>=20&&row.rootsMoved&&s.maxContactDisplacement<.006;
+ report.runs.push(row);console.log(JSON.stringify(row));
+}
+report.passed=report.runs.every(r=>r.passed);fs.writeFileSync(path.join(root,'evidence/SCHOOL_REPORT.json'),JSON.stringify(report,null,2)+'\n');if(!report.passed)process.exitCode=1;
