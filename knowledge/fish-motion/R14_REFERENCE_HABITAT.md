@@ -89,7 +89,7 @@ habitat.render(matrices, timeSeconds, schoolCenter, (fishMatrices, pass) => {
 - [x] 已实际修改海底生产源码。
 - [x] 画面来自完整实时三维环境运行时。
 - [x] 由同一gl context执行环境、鱼、shadow、postprocess，核心无CDN/外部场景资产。
-- [ ] 整体交互工作台、固定公网和desktop/mobile浏览器由assembly实际验证。
+- [x] 整体工作台已部署；HTTP200逐字节回读与desktop/mobile真实浏览器由assembly实际验证，最终交付见 PUBLICATION_PROOF.json。
 - [x] 只有截图而没有工作台时必须判定失败。
 
 人工 `visualAcceptance/motionAcceptance/productionReady` 均保持false。本工位证据不能自行批准整个R14，也不构成鱼品种生物尺度或真实海洋流体求解认证。
