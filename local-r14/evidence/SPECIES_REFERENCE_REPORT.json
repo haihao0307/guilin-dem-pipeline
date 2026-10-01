@@ -1,0 +1,112 @@
+{
+  "taskId": "FISH_R14_DENSE_REFERENCE_HABITAT_UI_20261001",
+  "lane": "species-schooling-research",
+  "status": "RESEARCH_COMPLETE_WITH_IDENTITY_UNKNOWN",
+  "observedDate": "2026-10-01",
+  "artifact": "knowledge/fish-motion/R14_SPECIES_SCHOOLING.md",
+  "identity": {
+    "userLabel": "海狼",
+    "sourceFilename": "muskellunge+fish+3d+model.zip",
+    "confirmedModelTaxon": null,
+    "targetArchetype": "Thirty comparatively large fish in a coherent dense marine school",
+    "behaviorReferenceCandidate": "Sphyraena qenie",
+    "confusionSet": ["Sphyraena barracuda", "Sphyraena qenie", "Sphyraena putnamae", "Sphyraena viridensis", "Esox masquinongy"],
+    "clarificationStatus": "PENDING_COORDINATOR_USER_REPLY"
+  },
+  "sources": [
+    {
+      "id": "FAO_QENIE",
+      "url": "https://www.fao.org/4/y0870e/y0870e33.pdf",
+      "sourceType": "authoritative-species-identification-guide",
+      "locator": "PDF page index 3; printed page 3697",
+      "verifiedRelation": "S. qenie inhabits clear coral-reef waters; large semi-stationary daytime schools",
+      "biologicalSpacingMeasured": false
+    },
+    {
+      "id": "NOAA_DIRECT_SURVEY",
+      "url": "https://repository.library.noaa.gov/view/noaa/12299/noaa_12299_DS1.pdf",
+      "sourceType": "primary-diver-survey-cruise-report",
+      "date": "2006-08-14",
+      "locator": "PDF page index 49-50; Jarvis Southern Reef Slope",
+      "verifiedRelation": "Approximately 65 S. qenie in one observed school; 150 individuals in another school",
+      "biologicalSpacingMeasured": false
+    },
+    {
+      "id": "FLORIDA_MUSEUM_BARRACUDA",
+      "url": "https://www.floridamuseum.ufl.edu/discover-fish/species-profiles/great-barracuda/",
+      "sourceType": "authoritative-natural-history-museum",
+      "locator": "Habitat section",
+      "verifiedRelation": "S. barracuda tends to solitary behavior, sometimes small aggregations over reefs/sand"
+    },
+    {
+      "id": "MINNESOTA_DNR_MUSKELLUNGE",
+      "url": "https://www.dnr.state.mn.us/gofishing/how-catch-muskellunge.html",
+      "sourceType": "direct-state-natural-resources-agency",
+      "locator": "Where to fish; What's important to know",
+      "verifiedRelation": "Freshwater ambush habitat; muskellunge sometimes form small schools",
+      "correctsUnsupportedAbsoluteClaim": "Do not describe muskellunge as always solitary"
+    },
+    {
+      "id": "KATZ_2011",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3219116/",
+      "doi": "10.1073/pnas.1107583108",
+      "sourceType": "primary-experimental-paper",
+      "studyTaxon": "Notemigonus crysoleucas",
+      "verifiedRelation": "Short-range repulsion, longer-range attraction, anisotropic speed and turning response; qualitative relation in 10 and 30 fish groups",
+      "transfer": "Qualitative algorithm relation only; not a barracuda biological fit"
+    },
+    {
+      "id": "TUNSTROM_2013",
+      "url": "https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1002915",
+      "doi": "10.1371/journal.pcbi.1002915",
+      "sourceType": "primary-experimental-paper",
+      "studyTaxon": "Notemigonus crysoleucas",
+      "verifiedRelation": "Swarm, polarized swimming and milling are distinct collective states",
+      "transfer": "Do not force all species to a permanent rigid ring"
+    },
+    {
+      "id": "LAUDER_2025",
+      "url": "https://bpb-us-e1.wpmucdn.com/sites.harvard.edu/dist/6/58/files/2025/11/Lauder.etal_.Schooling.Chapter.2025.pdf",
+      "doi": "10.1016/bs.fp.2025.06.001",
+      "sourceType": "author-posted-scholarly-review",
+      "locator": "Fig. 1E names S. qenie; introduction and kinematics",
+      "verifiedRelation": "Three-dimensional relative arrangements and ongoing repositioning within schools",
+      "imageMeasurement": "NOT_PERFORMED; screenshot tool did not return image"
+    },
+    {
+      "id": "USER_REFERENCE_DEMO",
+      "url": "https://threejs-fish.vercel.app/",
+      "sourceType": "user-specified-animation-reference",
+      "evidenceSource": "knowledge/fish-motion/R13_REFERENCE_POINTER_SCHOOL.md and local-r13/src/school.js",
+      "verifiedRelation": "Local boids attraction/repulsion/alignment and source demo ball/ring/split transitions; ray repulsion and decaying click disturbance",
+      "ecologyEvidence": false
+    }
+  ],
+  "implementationConstraints": [
+    "Keep 30 full sampled fish and KFE1 eyes",
+    "Dense connected three-dimensional initial school, not a fixed-slot grid",
+    "Use measured elongated animated envelope for narrow-phase spacing; do not simply remove overlap protection",
+    "Preserve bounded acceleration, yaw, predictive collision avoidance and continuous position integration",
+    "Prefer common slow trajectory with local position and speed coordination",
+    "Restore cohesion after disturbance decays; measure recovery, not just coefficient values",
+    "Keep engineering weight and individual controls out of default school UI"
+  ],
+  "unknowns": [
+    "Current model exact species",
+    "Species-calibrated nearest-neighbor spacing",
+    "Species-calibrated cruising speed and yaw limits",
+    "Species-calibrated disturbance propagation and recovery seconds",
+    "Original observed schools exact 3D dimensions"
+  ],
+  "productionVerification": {
+    "thisLaneModifiedProductionSource": false,
+    "thisLaneRanGpu": false,
+    "thisLaneUsedDesktopMouse": false,
+    "thisLaneUsedImageGeneration": false,
+    "independentProducerApproval": false,
+    "assemblyVerificationRequired": true
+  },
+  "visualAcceptance": false,
+  "motionAcceptance": false,
+  "productionReady": false
+}

@@ -126,3 +126,9 @@ R11 `school.js` 对照：十五条鱼永久保持5×3的 slot 网格，高度偏
 适配大型鱼：把所有驱动力与原预测分离合并后限实际加速度0.20m/s²和水平yaw0.28rad/s，安全速度范围0.16–0.64m/s，正常偏好约0.34m/s。使用当前正交相机basis、缩放、视口尺寸计算射线，避免把屏幕XY当世界XY；鼠标互动与Alt旋转/右键平移分工，触摸松开、取消和暂停等不积压输入。输入API不会直接改位置/速度，没有复制参考环境或把其电影式涡旋编排当实际海洋生态。数值是工程设置，具体物种和带尺度行为标定仍未知。
 
 完整紧凑payload与R12逐字节一致；原鱼体/眼球shader、变体配色和单鱼solver保持。技术交付与最终冻结绑定见 `local-r13/evidence`，回归见 `local-r13/R13_POINTER_REGRESSION.json`。本轮无生成图片替代，已实际修改生产源码和实时可交互三维工作台；公网门禁以最终PUBLICATION_PROOF为准，人工visualAcceptance/motionAcceptance/productionReady仍为false。
+
+## R14：紧密鱼群、完整参考海底与行为 UI（2026-10-01）
+
+本轮以完整动画包络 OBB 取代横向过宽的体长包围球约束，让 30 条鱼从启动就形成紧密三维群体。保留原全表面 carrier、KFC13 中心脊椎/鱼鳍乐器和 KFE1 眼睛；受扰逐渐避让后重新聚拢，不用固定槽位。默认 UI 只看群游活动，详细权重和逐鱼控制通过单鱼工作台显式进入。
+
+行为身份与自然证据见 [R14_SPECIES_SCHOOLING.md](R14_SPECIES_SCHOOLING.md)；指定参考站海底/光学的完整组件、数学重建、源版本与同镜头几何比对见 [R14_REFERENCE_HABITAT.md](R14_REFERENCE_HABITAT.md)；源资产继承、碰撞投影限制、透视交互、UI 和验证范围见 [R14_ASSEMBLY.md](R14_ASSEMBLY.md)。最终独立冻结与部署绑定以 `local-r14/evidence` 回执为准；当前人工验收三个标志仍为 false。
