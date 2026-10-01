@@ -1,0 +1,24 @@
+{
+  "candidateId": "TRANSFER-ONLY-ZERO-SEMANTIC-DELTA-001",
+  "revision": "N53_PHASE_ANCHOR_FAIL_CLOSED",
+  "prePatch": {
+    "implementation": "N52 taskMode !== TRANSFER_ONLY => NOT_APPLICABLE_ADAPTATION_PHASE",
+    "summary": {"total": 4, "passed": 1, "failed": 3},
+    "falseBypasses": [
+      "01-current-r03-task-mode-undeclared",
+      "02-adaptation-declared-without-authorization-anchor",
+      "03-typo-task-mode"
+    ]
+  },
+  "postPatch": {
+    "summary": {"total": 4, "passed": 4, "failed": 0},
+    "cases": [
+      {"id": "01-current-r03-task-mode-undeclared", "verdict": "HOLD_PHASE_CONTRACT", "reasons": ["PHASE_TASK_MODE_UNDECLARED"], "pass": true},
+      {"id": "02-adaptation-declared-without-authorization-anchor", "verdict": "HOLD_PHASE_CONTRACT", "reasons": ["ADAPTATION_AUTHORIZATION_MISSING", "ADAPTATION_AUTHORIZATION_SOURCE_MISSING", "ADAPTATION_BASE_MISSING"], "pass": true},
+      {"id": "03-typo-task-mode", "verdict": "HOLD_PHASE_CONTRACT", "reasons": ["PHASE_TASK_MODE_INVALID"], "pass": true},
+      {"id": "04-fully-anchored-adaptation-control", "verdict": "NOT_APPLICABLE_ADAPTATION_PHASE", "reasons": [], "pass": true}
+    ]
+  },
+  "legacyRegression": {"total": 11, "passed": 11, "failed": 0},
+  "generatedAt": "2026-10-01T01:46:47Z"
+}

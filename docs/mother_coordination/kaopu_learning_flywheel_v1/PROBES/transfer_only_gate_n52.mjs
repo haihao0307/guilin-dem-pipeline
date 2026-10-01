@@ -9,8 +9,21 @@ function evaluate(input) {
   const preservedEvidence = [];
   if (input.sourceTreeSha && input.sourceTreeSha === input.destinationTreeSha) preservedEvidence.push("SOURCE_SNAPSHOT_TREE_VERIFIED");
   if (input.sourceEntrypointBlob && input.sourceEntrypointBlob === input.activeEntrypointBlob) preservedEvidence.push("ACTIVE_ENTRYPOINT_BLOB_VERIFIED");
-  if (input.taskMode !== "TRANSFER_ONLY") {
+  if (input.taskMode == null || input.taskMode === "") {
+    return { verdict: "HOLD_PHASE_CONTRACT", reasons: ["PHASE_TASK_MODE_UNDECLARED"], preservedEvidence };
+  }
+  if (input.taskMode === "ADAPTATION_AUTHORIZED") {
+    const reasons = [];
+    if (input.adaptationAuthorized !== true) reasons.push("ADAPTATION_AUTHORIZATION_MISSING");
+    if (!input.adaptationAuthorizationSource) reasons.push("ADAPTATION_AUTHORIZATION_SOURCE_MISSING");
+    if (!input.adaptationBaseSha) reasons.push("ADAPTATION_BASE_MISSING");
+    if (input.independentVerifier !== true) reasons.push("INDEPENDENT_PHASE_VERIFIER_MISSING");
+    else if (input.verifierPassed !== true) reasons.push("PHASE_VERIFIER_NOT_PASSED");
+    if (reasons.length) return { verdict: "HOLD_PHASE_CONTRACT", reasons, preservedEvidence };
     return { verdict: "NOT_APPLICABLE_ADAPTATION_PHASE", reasons: [], preservedEvidence };
+  }
+  if (input.taskMode !== "TRANSFER_ONLY") {
+    return { verdict: "HOLD_PHASE_CONTRACT", reasons: ["PHASE_TASK_MODE_INVALID"], preservedEvidence };
   }
   const reasons = [];
   const anchorComplete = [input.sourceCommit, input.sourcePath, input.sourceTreeSha, input.destinationTreeSha, input.sourceEntrypointBlob, input.activeEntrypointBlob].every(Boolean);
@@ -35,7 +48,7 @@ const output = {
   candidateId: fixture.candidateId,
   summary: { total: results.length, passed: results.filter((r) => r.pass).length, failed: results.filter((r) => !r.pass).length },
   results,
-  generatedAt: "2026-09-30T23:52:00Z"
+  generatedAt: "2026-10-01T01:46:47Z"
 };
 console.log(JSON.stringify(output, null, 2));
 if (output.summary.failed) process.exitCode = 1;

@@ -113,6 +113,7 @@
         "taskMode": "ADAPTATION_AUTHORIZED", "subjectHeadSha": "control-09", "receiptHeadSha": "control-09",
         "sourceCommit": "source-09", "sourcePath": "source/", "sourceTreeSha": "tree-09", "destinationTreeSha": "tree-09",
         "sourceEntrypointBlob": "blob-09", "activeEntrypointBlob": "adapted-09", "authorizedDeltaPaths": ["app.js", "index.html"], "semanticDeltaPaths": ["app.js", "index.html"],
+        "adaptationAuthorized": true, "adaptationAuthorizationSource": "user-instruction-control-09", "adaptationBaseSha": "base-control-09",
         "independentVerifier": true, "verifierPassed": true
       },
       "expected": {"verdict": "NOT_APPLICABLE_ADAPTATION_PHASE", "reasons": [], "preservedEvidence": ["SOURCE_SNAPSHOT_TREE_VERIFIED"]}
@@ -126,6 +127,24 @@
         "independentVerifier": true, "verifierPassed": true
       },
       "expected": {"verdict": "HOLD_SUBJECT_HEAD_MISMATCH", "reasons": ["SUBJECT_HEAD_MISMATCH"], "preservedEvidence": []}
+    },
+    {
+      "id": "11-current-r03-without-phase-task-anchor",
+      "input": {
+        "subjectHeadSha": "0ca20b2f555f7fbf1c9b0acbddbd93465f959948",
+        "receiptHeadSha": "0ca20b2f555f7fbf1c9b0acbddbd93465f959948",
+        "sourceCommit": "967f975e2f10e5895b4c8a09005a2d8d6e313dc1",
+        "sourcePath": "kaopu-tree-fractal-wave-lab/",
+        "sourceTreeSha": "2086790b58585d483fbdd087e57aceaa28fa7cd7",
+        "destinationTreeSha": "2086790b58585d483fbdd087e57aceaa28fa7cd7",
+        "sourceEntrypointBlob": "e21e138dd313084b13164ef79e392f2936fa3794",
+        "activeEntrypointBlob": "26d1bb7c35891fc54ced21a942b3cf8654f6d73f",
+        "authorizedDeltaPaths": [],
+        "semanticDeltaPaths": ["index.html", "r03-app.js", "r03-core.js", "r03-catalog.js"],
+        "independentVerifier": false,
+        "verifierPassed": false
+      },
+      "expected": {"verdict": "HOLD_PHASE_CONTRACT", "reasons": ["PHASE_TASK_MODE_UNDECLARED"], "preservedEvidence": ["SOURCE_SNAPSHOT_TREE_VERIFIED"]}
     }
   ]
 }

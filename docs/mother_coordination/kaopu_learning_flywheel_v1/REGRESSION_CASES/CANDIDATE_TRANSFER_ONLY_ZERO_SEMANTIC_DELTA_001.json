@@ -27,6 +27,7 @@
   ],
   "states": [
     "HOLD_TRANSFER_ONLY_CONTRACT",
+    "HOLD_PHASE_CONTRACT",
     "TRANSFER_ONLY_VERIFIED_NOT_USER_ACCEPTED",
     "NOT_APPLICABLE_ADAPTATION_PHASE",
     "HOLD_SUBJECT_HEAD_MISMATCH"
@@ -40,20 +41,36 @@
     "prematureActiveEntrypointBlob": "dae7204ba916246386f3c21ba9053eb14d1b1fe9",
     "remediationSubject": "01ede951e61a83567ba530570936cdd91dfdcfed",
     "remediationMessage": "Honor transfer-only request: open unchanged Tree Life R06 in coral workbench; keep full source copy",
+    "currentAdaptationSubject": "0ca20b2f555f7fbf1c9b0acbddbd93465f959948",
+    "currentAdaptationMessage": "R03: grow rock-attached branching and blue-coral forms in the copied workbench",
+    "currentActiveEntrypointBlob": "26d1bb7c35891fc54ced21a942b3cf8654f6d73f",
     "verifiedFacts": [
       "The preserved source-tree has the declared original tree SHA.",
       "The initial Coral commit added a new active wrapper plus Coral logic, score, QA, workflow and master files.",
       "The remediation restores the active entrypoint blob to the original Tree R06 blob.",
-      "The earlier Coral semantic files remain present but are not loaded by the current entrypoint."
+      "The earlier Coral semantic files remain present but are not loaded by the remediation entrypoint.",
+      "The later R03 active entrypoint exposes Coral adaptation and preserves the declared source tree, but no explicit phase Task Anchor or independent phase-transition receipt was found in the Coral tree."
     ]
   },
   "minimalReplay": {
     "fixtures": "PROBES/transfer_only_fixture_n52.json",
     "gate": "PROBES/transfer_only_gate_n52.mjs",
     "result": "PROBES/transfer_only_result_n52.json",
-    "total": 10,
-    "passed": 10,
+    "total": 11,
+    "passed": 11,
     "failed": 0
+  },
+  "revisionN53": {
+    "failureMechanism": "The original checker treated every taskMode other than exact TRANSFER_ONLY—including missing and misspelled values—as an already-authorized adaptation phase, creating a fail-open bypass at the transfer-to-adaptation boundary.",
+    "externalMethod": "NASA life-cycle guidance uses explicit entrance/exit criteria and a decision authority to determine readiness to progress to the next phase.",
+    "falsifiableHypothesis": "If undeclared or invalid taskMode values fail closed and ADAPTATION_AUTHORIZED requires an authorization source, immutable base and independent phase verifier, missing/typo anchors will be held while a fully anchored adaptation control remains not applicable to the transfer-only gate.",
+    "fixture": "PROBES/transfer_phase_anchor_gap_fixture_n53.json",
+    "result": "PROBES/transfer_phase_anchor_gap_result_n53.json",
+    "prePatch": {"total": 4, "passed": 1, "failed": 3},
+    "postPatch": {"total": 4, "passed": 4, "failed": 0},
+    "currentR03Verdict": "HOLD_PHASE_CONTRACT",
+    "currentR03Reasons": ["PHASE_TASK_MODE_UNDECLARED"],
+    "scope": "Candidate checker and Coral boundary trial only; no judgment of R03 visual or biological quality and no global OS enforcement."
   },
   "applicability": "Only an explicitly bounded copy/migration phase whose current contract is to preserve and expose an existing workbench unchanged. Adaptation is a separate phase and must have a new authorized Task Anchor.",
   "activationGate": "One Coral transfer/adaptation boundary trial plus independent verifier GATE-RUN. Do not activate globally before coordinator review.",
@@ -62,7 +79,7 @@
   "lifecycle": {
     "POSTED": true,
     "ACKNOWLEDGED": false,
-    "IMPLEMENTED": false,
+    "IMPLEMENTED": true,
     "GATE-RUN": true,
     "ADOPTED": false,
     "USER-ACCEPTED": false
@@ -76,6 +93,7 @@
   "kpiEffect": {
     "firstPassCandidateRate": "unknown",
     "userCorrectionCount": 1,
+    "sameClassRecurrenceCount": 1,
     "sameClassRecurrenceRate": "unknown",
     "rejectedLineageInheritanceCount": "unknown",
     "staleDeliveryCount": "unknown",

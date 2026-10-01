@@ -1,0 +1,84 @@
+{
+  "candidateId": "TRANSFER-ONLY-ZERO-SEMANTIC-DELTA-001",
+  "revision": "N53_PHASE_ANCHOR_FAIL_CLOSED",
+  "cases": [
+    {
+      "id": "01-current-r03-task-mode-undeclared",
+      "input": {
+        "subjectHeadSha": "0ca20b2f555f7fbf1c9b0acbddbd93465f959948",
+        "receiptHeadSha": "0ca20b2f555f7fbf1c9b0acbddbd93465f959948",
+        "sourceCommit": "967f975e2f10e5895b4c8a09005a2d8d6e313dc1",
+        "sourcePath": "kaopu-tree-fractal-wave-lab/",
+        "sourceTreeSha": "2086790b58585d483fbdd087e57aceaa28fa7cd7",
+        "destinationTreeSha": "2086790b58585d483fbdd087e57aceaa28fa7cd7",
+        "sourceEntrypointBlob": "e21e138dd313084b13164ef79e392f2936fa3794",
+        "activeEntrypointBlob": "26d1bb7c35891fc54ced21a942b3cf8654f6d73f",
+        "semanticDeltaPaths": ["index.html", "r03-app.js", "r03-core.js", "r03-catalog.js"],
+        "independentVerifier": false,
+        "verifierPassed": false
+      },
+      "expected": {
+        "verdict": "HOLD_PHASE_CONTRACT",
+        "reasons": ["PHASE_TASK_MODE_UNDECLARED"],
+        "preservedEvidence": ["SOURCE_SNAPSHOT_TREE_VERIFIED"]
+      }
+    },
+    {
+      "id": "02-adaptation-declared-without-authorization-anchor",
+      "input": {
+        "taskMode": "ADAPTATION_AUTHORIZED",
+        "subjectHeadSha": "control-gap-02",
+        "receiptHeadSha": "control-gap-02",
+        "sourceTreeSha": "tree-gap-02",
+        "destinationTreeSha": "tree-gap-02",
+        "adaptationAuthorized": false,
+        "adaptationAuthorizationSource": null,
+        "adaptationBaseSha": null,
+        "independentVerifier": true,
+        "verifierPassed": true
+      },
+      "expected": {
+        "verdict": "HOLD_PHASE_CONTRACT",
+        "reasons": ["ADAPTATION_AUTHORIZATION_MISSING", "ADAPTATION_AUTHORIZATION_SOURCE_MISSING", "ADAPTATION_BASE_MISSING"],
+        "preservedEvidence": ["SOURCE_SNAPSHOT_TREE_VERIFIED"]
+      }
+    },
+    {
+      "id": "03-typo-task-mode",
+      "input": {
+        "taskMode": "ADAPTATION_AUTORIZED",
+        "subjectHeadSha": "control-gap-03",
+        "receiptHeadSha": "control-gap-03",
+        "sourceTreeSha": "tree-gap-03",
+        "destinationTreeSha": "tree-gap-03",
+        "independentVerifier": true,
+        "verifierPassed": true
+      },
+      "expected": {
+        "verdict": "HOLD_PHASE_CONTRACT",
+        "reasons": ["PHASE_TASK_MODE_INVALID"],
+        "preservedEvidence": ["SOURCE_SNAPSHOT_TREE_VERIFIED"]
+      }
+    },
+    {
+      "id": "04-fully-anchored-adaptation-control",
+      "input": {
+        "taskMode": "ADAPTATION_AUTHORIZED",
+        "subjectHeadSha": "control-gap-04",
+        "receiptHeadSha": "control-gap-04",
+        "sourceTreeSha": "tree-gap-04",
+        "destinationTreeSha": "tree-gap-04",
+        "adaptationAuthorized": true,
+        "adaptationAuthorizationSource": "user-instruction-2026-10-01",
+        "adaptationBaseSha": "base-gap-04",
+        "independentVerifier": true,
+        "verifierPassed": true
+      },
+      "expected": {
+        "verdict": "NOT_APPLICABLE_ADAPTATION_PHASE",
+        "reasons": [],
+        "preservedEvidence": ["SOURCE_SNAPSHOT_TREE_VERIFIED"]
+      }
+    }
+  ]
+}
