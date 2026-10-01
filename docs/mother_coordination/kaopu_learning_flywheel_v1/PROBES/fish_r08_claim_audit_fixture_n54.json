@@ -1,0 +1,115 @@
+{
+  "auditId": "FISH-R08-CLAIM-AUDIT-N54",
+  "cases": [
+    {
+      "id": "01-current-r08-proof-and-independent-recheck",
+      "input": {
+        "subjectHeadSha": "2624c62b498c57851955bd8876a25c06f5bb98c8",
+        "publishedCommit": "84fe31242475cdcfc28b0ad644a7aa180c72233a",
+        "publishedBlobSha": "b7241def724254ebd029d17244fc2b70b692d2c6",
+        "currentBlobSha": "b7241def724254ebd029d17244fc2b70b692d2c6",
+        "exactPayloadMatched": true,
+        "candidateSourceSha": "a4e48540a1405439fb5a8b20c7ca2d64822fa35a",
+        "sourceRepository": null,
+        "sourceObjectResolved": false,
+        "verifierResult": "PASS",
+        "verifierIdentity": null,
+        "verifierExecutionRoot": null,
+        "verifierRunId": null,
+        "verificationSubjectSha": null,
+        "verifierEvidenceDigest": null,
+        "currentPublicBrowserPassed": false,
+        "currentPublicBrowserReason": "WEBGL2_UNAVAILABLE"
+      },
+      "expected": {
+        "verdict": "HOLD_CLAIM_SCOPE_INCOMPLETE",
+        "reasons": [
+          "SOURCE_REPOSITORY_UNDECLARED",
+          "SOURCE_REVISION_UNRESOLVABLE",
+          "VERIFIER_IDENTITY_MISSING",
+          "VERIFIER_EXECUTION_ROOT_MISSING",
+          "VERIFIER_RUN_ID_MISSING",
+          "VERIFIED_SUBJECT_MISSING",
+          "VERIFIER_EVIDENCE_DIGEST_MISSING",
+          "CURRENT_PUBLIC_BROWSER_FAILED"
+        ],
+        "preservedClaims": ["EXACT_PUBLIC_PAYLOAD_IDENTITY_VERIFIED"]
+      }
+    },
+    {
+      "id": "02-complete-independent-control",
+      "input": {
+        "subjectHeadSha": "control-02",
+        "publishedCommit": "control-publish-02",
+        "publishedBlobSha": "blob-02",
+        "currentBlobSha": "blob-02",
+        "exactPayloadMatched": true,
+        "candidateSourceSha": "source-02",
+        "sourceRepository": "owner/repository",
+        "sourceObjectResolved": true,
+        "verifierResult": "PASS",
+        "verifierIdentity": "verifier-02",
+        "verifierExecutionRoot": "root-verifier-02",
+        "verifierRunId": "run-02",
+        "verificationSubjectSha": "control-02",
+        "verifierEvidenceDigest": "digest-02",
+        "currentPublicBrowserPassed": true
+      },
+      "expected": {
+        "verdict": "CLAIM_SCOPE_VERIFIED_NOT_USER_ACCEPTED",
+        "reasons": [],
+        "preservedClaims": ["EXACT_PUBLIC_PAYLOAD_IDENTITY_VERIFIED"]
+      }
+    },
+    {
+      "id": "03-complete-lineage-browser-failed-control",
+      "input": {
+        "subjectHeadSha": "control-03",
+        "publishedCommit": "control-publish-03",
+        "publishedBlobSha": "blob-03",
+        "currentBlobSha": "blob-03",
+        "exactPayloadMatched": true,
+        "candidateSourceSha": "source-03",
+        "sourceRepository": "owner/repository",
+        "sourceObjectResolved": true,
+        "verifierResult": "PASS",
+        "verifierIdentity": "verifier-03",
+        "verifierExecutionRoot": "root-verifier-03",
+        "verifierRunId": "run-03",
+        "verificationSubjectSha": "control-03",
+        "verifierEvidenceDigest": "digest-03",
+        "currentPublicBrowserPassed": false
+      },
+      "expected": {
+        "verdict": "HOLD_CLAIM_SCOPE_INCOMPLETE",
+        "reasons": ["CURRENT_PUBLIC_BROWSER_FAILED"],
+        "preservedClaims": ["EXACT_PUBLIC_PAYLOAD_IDENTITY_VERIFIED"]
+      }
+    },
+    {
+      "id": "04-public-payload-subject-mismatch-control",
+      "input": {
+        "subjectHeadSha": "control-04",
+        "publishedCommit": "control-publish-04",
+        "publishedBlobSha": "blob-a",
+        "currentBlobSha": "blob-b",
+        "exactPayloadMatched": false,
+        "candidateSourceSha": "source-04",
+        "sourceRepository": "owner/repository",
+        "sourceObjectResolved": true,
+        "verifierResult": "PASS",
+        "verifierIdentity": "verifier-04",
+        "verifierExecutionRoot": "root-verifier-04",
+        "verifierRunId": "run-04",
+        "verificationSubjectSha": "control-04",
+        "verifierEvidenceDigest": "digest-04",
+        "currentPublicBrowserPassed": true
+      },
+      "expected": {
+        "verdict": "HOLD_CLAIM_SCOPE_INCOMPLETE",
+        "reasons": ["PUBLIC_PAYLOAD_SUBJECT_MISMATCH"],
+        "preservedClaims": []
+      }
+    }
+  ]
+}
