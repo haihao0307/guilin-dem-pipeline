@@ -1,0 +1,81 @@
+ateTex);
+G.texImage2D(G.TEXTURE_2D,0,G.RGBA,SW,SH,0,G.RGBA,G.UNSIGNED_BYTE,stateA);
+G.texParameteri(G.TEXTURE_2D,G.TEXTURE_WRAP_S,G.CLAMP_TO_EDGE);G.texParameteri(G.TEXTURE_2D,G.TEXTURE_WRAP_T,G.CLAMP_TO_EDGE);
+G.texParameteri(G.TEXTURE_2D,G.TEXTURE_MIN_FILTER,G.LINEAR);G.texParameteri(G.TEXTURE_2D,G.TEXTURE_MAG_FILTER,G.LINEAR);
+let stateClock=0,statePing=0;
+function hsh(x,y){let s=Math.sin(x*12.9898+y*78.233)*43758.5453;return s-Math.floor(s)}
+function updateCoastState(time,dt){
+ const src=statePing?stateB:stateA,dst=statePing?stateA:stateB;
+ const wetDecay=Math.exp(-dt/34.0),foamDecay=Math.exp(-dt/5.8);
+ for(let j=0;j<SH;j++){
+   const z=-46+(j+.5)/SH*136;
+   for(let i=0;i<SW;i++){
+     const x=-86+(i+.5)/SW*231, k=(j*SW+i)*4;
+     const d=coast(x)-z, sd=-d;
+     const phase=time*.42+x*.025+.42*Math.sin(x*.061);
+     const run=5.7+3.25*Math.sin(phase)+.75*Math.sin(phase*2.03+.7);
+     const front=d-run;
+     let wet=src[k]/255*wetDecay;
+     let foam=src[k+1]/255*foamDecay;
+     if(d>0&&d<run+.65)wet=Math.max(wet,.94);
+     if(d>0&&d<13)wet=Math.max(wet,.16*(1-d/13));
+     const lace=.42+.58*hsh(i*.37+Math.floor(time*3),j*.41);
+     const shore=Math.exp(-(front*front)/.32)*lace;
+     const b0=2.6+1.25*Math.sin(x*.052+time*.23);
+     const ocean=Math.exp(-((sd-b0)*(sd-b0))/1.0)
+       +.55*Math.exp(-((sd-(6.7+1.45*Math.sin(x*.044+time*.20)))**2)/2.2)
+       +.25*Math.exp(-((sd-(10.8+1.7*Math.sin(x*.038+time*.16)))**2)/3.4);
+     foam=Math.max(foam,Math.min(1,shore*.85+ocean*.54));
+     const back=Math.cos(phase)<-.15 ? 1 : 0;
+     if(back&&j+1<SH)foam=Math.max(foam,src[((j+1)*SW+i)*4+1]/255*.90);
+     dst[k]=Math.min(255,wet*255);
+     dst[k+1]=Math.min(255,foam*255);
+     dst[k+2]=0;dst[k+3]=255;
+   }
+ }
+ statePing=1-statePing;
+ G.activeTexture(G.TEXTURE2);G.bindTexture(G.TEXTURE_2D,stateTex);
+ G.texSubImage2D(G.TEXTURE_2D,0,0,0,SW,SH,G.RGBA,G.UNSIGNED_BYTE,statePing?stateB:stateA);
+}
+
+function resize(){const d=Math.min(devicePixelRatio||1,1.35),w=Math.max(2,innerWidth*d|0),h=Math.max(2,innerHeight*d|0);if(C.width!==w||C.height!==h){C.width=w;C.height=h;G.viewport(0,0,w,h)}}
+function bind(o,M){
+ G.bindBuffer(G.ARRAY_BUFFER,o.p);G.enableVertexAttribArray(AP);G.vertexAttribPointer(AP,3,G.FLOAT,false,0,0);
+ G.bindBuffer(G.ARRAY_BUFFER,o.nm);G.enableVertexAttribArray(AN);G.vertexAttribPointer(AN,3,G.FLOAT,false,0,0);
+ G.bindBuffer(G.ARRAY_BUFFER,o.c);G.enableVertexAttribArray(AC);G.vertexAttribPointer(AC,4,G.FLOAT,false,0,0);
+ G.bindBuffer(G.ELEMENT_ARRAY_BUFFER,o.i);G.uniformMatrix4fv(UM,false,M);G.uniform1f(UK,o.kind);G.drawElements(G.TRIANGLES,o.n,G.UNSIGNED_SHORT,0);
+}
+function frame(now){
+ resize();const dtFrame=Math.min(.04,(now-last)/1000);t+=dtFrame;last=now;
+ const target=cams[view];for(let j=0;j<3;j++){cam[0][j]+=(target[0][j]-cam[0][j])*.075;cam[1][j]+=(target[1][j]-cam[1][j])*.075}
+ G.clearColor(0,0,0,0);G.clear(G.COLOR_BUFFER_BIT|G.DEPTH_BUFFER_BIT);G.enable(G.DEPTH_TEST);G.enable(G.CULL_FACE);G.useProgram(P);
+ G.uniform3f(UCAM,cam[0][0],cam[0][1],cam[0][2]);G.uniform1f(UT,t);G.uniform1f(UMODE,mode);G.uniform1f(UTEX,texReady);
+ G.activeTexture(G.TEXTURE0);G.bindTexture(G.TEXTURE_2D,sandTex);G.uniform1i(USAND,0);
+ G.activeTexture(G.TEXTURE1);G.bindTexture(G.TEXTURE_2D,rockTex);G.uniform1i(UROCK,1);
+ G.activeTexture(G.TEXTURE2);G.bindTexture(G.TEXTURE_2D,stateTex);G.uniform1i(USTATE,2);
+ stateClock+=dtFrame;if(stateClock>=.05){updateCoastState(t,stateClock);stateClock=0;}
+ const M=mul(perspective(Math.PI/3.72,C.width/C.height,.12,460),look(cam[0],cam[1]));
+ for(const o of all){
+   if(o.kind===2){G.enable(G.BLEND);G.blendFunc(G.SRC_ALPHA,G.ONE_MINUS_SRC_ALPHA);G.depthMask(false);G.disable(G.CULL_FACE)}
+   else{G.disable(G.BLEND);G.depthMask(true);G.enable(G.CULL_FACE)}
+   bind(o,M)
+ }
+ G.depthMask(true);requestAnimationFrame(frame)
+}
+requestAnimationFrame(frame);
+
+document.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{view=b.dataset.v;document.querySelectorAll("[data-v]").forEach(x=>x.classList.toggle("on",x===b))});
+const atlas=document.getElementById("atlas"),ab=document.getElementById("atlasBtn");ab.onclick=()=>{atlas.classList.toggle("open");ab.classList.toggle("on",atlas.classList.contains("open"))};
+document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{mode=+b.dataset.m;document.querySelectorAll("[data-m]").forEach(x=>x.classList.toggle("on",x===b))});
+C.onpointerdown=e=>{C.setPointerCapture(e.pointerId);drag=[e.pointerId,e.clientX,e.clientY];if(e.pointerType==="touch"){touches.set(e.pointerId,[e.clientX,e.clientY]);if(touches.size===2){const a=[...touches.values()];pinch=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1])}}};
+C.onpointermove=e=>{
+ if(e.pointerType==="touch"&&touches.has(e.pointerId)){touches.set(e.pointerId,[e.clientX,e.clientY]);if(touches.size===2){const a=[...touches.values()],d=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]);if(pinch){const q=cams[view],dir=sub(q[0],q[1]),s=pinch/d;q[0]=q[1].map((v,k)=>v+dir[k]*s)}pinch=d;return}}
+ if(!drag||drag[0]!==e.pointerId)return;const dx=e.clientX-drag[1],dy=e.clientY-drag[2];drag=[e.pointerId,e.clientX,e.clientY];const q=cams[view],dir=sub(q[0],q[1]),r=Math.hypot(dir[0],dir[2]),a=Math.atan2(dir[2],dir[0])-dx*.0046;q[0]=[q[1][0]+Math.cos(a)*r,q[1][1]+dir[1]+dy*.11,q[1][2]+Math.sin(a)*r]
+};
+C.onpointerup=e=>{drag=null;touches.delete(e.pointerId);pinch=0};C.onpointercancel=C.onpointerup;
+C.onwheel=e=>{e.preventDefault();const q=cams[view],dir=sub(q[0],q[1]),s=Math.exp(e.deltaY*.001);q[0]=q[1].map((v,k)=>v+dir[k]*s)},{passive:false};
+addEventListener("resize",resize,{passive:true});
+})();
+</script>
+</body>
+</html>
