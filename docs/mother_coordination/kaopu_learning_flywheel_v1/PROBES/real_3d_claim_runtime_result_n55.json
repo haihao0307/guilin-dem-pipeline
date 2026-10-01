@@ -1,0 +1,97 @@
+{
+  "schema": "kaopu.real-3d-claim-runtime-gate/1",
+  "checkedAt": "2026-10-01T05:44:46.206Z",
+  "caseId": "TREE-NO-2D-CANVAS-AS-3D-001",
+  "outcomes": [
+    {
+      "id": "WHITE_OAK_R07_HISTORY",
+      "input": {
+        "taskRequiresReal3D": true,
+        "declares3D": true,
+        "runtime3DContextObserved": false,
+        "canvas2DOnly": true,
+        "ciSuccess": true,
+        "ciAssertsRuntime3D": false,
+        "screenshotExists": true,
+        "criticalInteractionVerified": false
+      },
+      "expect": "REJECTED_2D_CANVAS_SUBSTITUTE",
+      "actual": {
+        "status": "REJECTED_2D_CANVAS_SUBSTITUTE",
+        "reasons": [
+          "DECLARED_3D_WITHOUT_3D_RUNTIME",
+          "CANVAS_2D_ONLY_RENDERER",
+          "CI_GREEN_NON_3D_SCOPE_ONLY",
+          "SCREENSHOT_NOT_INTERACTION_EVIDENCE"
+        ]
+      },
+      "passed": true
+    },
+    {
+      "id": "VALID_WEBGL",
+      "input": {
+        "taskRequiresReal3D": true,
+        "declares3D": true,
+        "runtime3DContextObserved": true,
+        "canvas2DOnly": false,
+        "ciSuccess": true,
+        "ciAssertsRuntime3D": true,
+        "screenshotExists": true,
+        "criticalInteractionVerified": true
+      },
+      "expect": "PASS_REAL_3D_RUNTIME_EVIDENCE",
+      "actual": {
+        "status": "PASS_REAL_3D_RUNTIME_EVIDENCE",
+        "reasons": []
+      },
+      "passed": true
+    },
+    {
+      "id": "SCREENSHOT_ONLY_3D_CLAIM",
+      "input": {
+        "taskRequiresReal3D": true,
+        "declares3D": true,
+        "runtime3DContextObserved": false,
+        "canvas2DOnly": false,
+        "ciSuccess": true,
+        "ciAssertsRuntime3D": false,
+        "screenshotExists": true,
+        "criticalInteractionVerified": false
+      },
+      "expect": "REJECTED_2D_CANVAS_SUBSTITUTE",
+      "actual": {
+        "status": "REJECTED_2D_CANVAS_SUBSTITUTE",
+        "reasons": [
+          "DECLARED_3D_WITHOUT_3D_RUNTIME",
+          "CI_GREEN_NON_3D_SCOPE_ONLY",
+          "SCREENSHOT_NOT_INTERACTION_EVIDENCE"
+        ]
+      },
+      "passed": true
+    },
+    {
+      "id": "NON_3D_CHART",
+      "input": {
+        "taskRequiresReal3D": false,
+        "declares3D": false,
+        "runtime3DContextObserved": false,
+        "canvas2DOnly": true,
+        "ciSuccess": true,
+        "ciAssertsRuntime3D": false,
+        "screenshotExists": true,
+        "criticalInteractionVerified": false
+      },
+      "expect": "NOT_APPLICABLE",
+      "actual": {
+        "status": "NOT_APPLICABLE",
+        "reasons": []
+      },
+      "passed": true
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "total": 4,
+    "allPassed": true
+  }
+}

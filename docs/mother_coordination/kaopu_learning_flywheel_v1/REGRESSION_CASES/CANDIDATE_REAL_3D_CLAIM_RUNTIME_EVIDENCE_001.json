@@ -1,0 +1,116 @@
+{
+  "schema": "kaopu.regression-case/2",
+  "caseId": "TREE-NO-2D-CANVAS-AS-3D-001",
+  "status": "CANDIDATE",
+  "scope": {
+    "mother": "Tree",
+    "taskClass": "REAL_3D_WORKBENCH_REQUIRED",
+    "globalAdoption": false
+  },
+  "failure": {
+    "summary": "A Canvas2D renderer was labeled Mobile 3D and its screenshot-only workflow completed successfully.",
+    "historicalSubject": {
+      "branch": "gh-pages",
+      "headSha": "2391451bf5b4e03f34642656df337d1b547b7415",
+      "pagePath": "kaopu-tree-fractal-wave-lab/white-oak-r07/index.html",
+      "pageCommit": "c3c1a557cfb6c9be219f4fa8e659b05f2e2171a2",
+      "workflowRunId": 36814221195
+    },
+    "observed": [
+      "page declares Mobile 3D",
+      "two getContext('2d') calls",
+      "zero WebGL/WebGL2/WebGPU/Three runtime signals",
+      "CI asserts HTTP, text and non-empty screenshot only",
+      "CI has no 3D-context or critical-interaction assertion"
+    ]
+  },
+  "mustNeverRepeat": [
+    "count a perspective-projected Canvas2D drawing as a real 3D workbench",
+    "promote a green screenshot job as proof of a requirement the job does not test",
+    "use a 2D substitute as the parent of the next 3D Tree candidate"
+  ],
+  "gate": {
+    "decisionOnHistoricalSubject": "REJECTED_2D_CANVAS_SUBSTITUTE",
+    "preserve": [
+      "PUBLIC_HTTP_AND_UI_REACHABILITY",
+      "WHITE_OAK_RESEARCH_DOCUMENT_AS_OBSERVATION"
+    ],
+    "requiredForPass": [
+      "taskRequiresReal3D=true",
+      "runtime3DContextObserved=true",
+      "canvas2DOnly=false",
+      "CI asserts exact 3D runtime subject and context",
+      "CI executes at least one critical 3D interaction",
+      "independent verifier receipt binds the exact subject"
+    ],
+    "notSatisfiedBy": [
+      "3D text labels",
+      "custom perspective projection math",
+      "non-empty screenshots",
+      "HTTP 200",
+      "green workflow status without requirement-linked assertions"
+    ]
+  },
+  "cases": [
+    {
+      "id": "WHITE_OAK_R07_HISTORY",
+      "input": {
+        "taskRequiresReal3D": true,
+        "declares3D": true,
+        "runtime3DContextObserved": false,
+        "canvas2DOnly": true,
+        "ciSuccess": true,
+        "ciAssertsRuntime3D": false,
+        "screenshotExists": true,
+        "criticalInteractionVerified": false
+      },
+      "expect": "REJECTED_2D_CANVAS_SUBSTITUTE"
+    },
+    {
+      "id": "VALID_WEBGL",
+      "input": {
+        "taskRequiresReal3D": true,
+        "declares3D": true,
+        "runtime3DContextObserved": true,
+        "canvas2DOnly": false,
+        "ciSuccess": true,
+        "ciAssertsRuntime3D": true,
+        "screenshotExists": true,
+        "criticalInteractionVerified": true
+      },
+      "expect": "PASS_REAL_3D_RUNTIME_EVIDENCE"
+    },
+    {
+      "id": "SCREENSHOT_ONLY_3D_CLAIM",
+      "input": {
+        "taskRequiresReal3D": true,
+        "declares3D": true,
+        "runtime3DContextObserved": false,
+        "canvas2DOnly": false,
+        "ciSuccess": true,
+        "ciAssertsRuntime3D": false,
+        "screenshotExists": true,
+        "criticalInteractionVerified": false
+      },
+      "expect": "REJECTED_2D_CANVAS_SUBSTITUTE"
+    },
+    {
+      "id": "NON_3D_CHART",
+      "input": {
+        "taskRequiresReal3D": false,
+        "declares3D": false,
+        "runtime3DContextObserved": false,
+        "canvas2DOnly": true,
+        "ciSuccess": true,
+        "ciAssertsRuntime3D": false,
+        "screenshotExists": true,
+        "criticalInteractionVerified": false
+      },
+      "expect": "NOT_APPLICABLE"
+    }
+  ],
+  "rollback": {
+    "coordinationBaseSha": "91c47b7f1d57b8c1008741e0562630e1eef59bca",
+    "productionBranchesModified": false
+  }
+}
