@@ -11,7 +11,7 @@
   const unit = v => { const l = Math.hypot(...v); return l > 1e-10 ? v.map(x => x / l) : [0, 0, 0]; };
   const smooth = (a, b, dt, response) => mix(a, b, 1 - Math.exp(-dt * response));
   const profiles = Object.freeze({
-    herring: { id:'herring', gait:'source-retargeted-continuous-chain-candidate', speed:0.65, burst:1.7, frequency:0.9983360022306442, amplitude:0.36, flexStart:0.22, flexPower:1.55, wave:0.95, maxTurn:0.75, fin:0.13, eye:0.095, strainLimit:.12, collisionBendBound:.45, radii:[.043554,.066344,.074139,.076638,.091325,.109415,.113044,.074651,.084109,.084245,.08393,.08251,.075974,.037166,.038224,.094632,.09993], sourceChain:[{u:.2935993447,a:.196873,phase:-1.7788396},{u:.4168671998,a:.347495,phase:-2.8255145},{u:.5317024856,a:.348368,phase:-3.8779489},{u:.6877285976,a:.34959,phase:-4.9204322},{u:.8138419432,a:.347495,phase:-5.9671062},{u:.9166352809,a:.349415,phase:-4.9204322}], sourceTiming:'R08 original local-joint phase/amplitude fit and source-measured canonical joint positions; continuous curvature-limited retarget, not raw clip playback' },
+    herring: { id:'herring', gait:'source-harmonic-continuous-spine-candidate', speed:0.65, burst:1.7, frequency:0.9983360022306442, amplitude:0.36, flexStart:0.22, flexPower:1.55, wave:0.95, maxTurn:0.75, fin:0.13, eye:0.095, strainLimit:.12, collisionBendBound:.45, radii:[.043554,.066344,.074139,.076638,.091325,.109415,.113044,.074651,.084109,.084245,.08393,.08251,.075974,.037166,.038224,.094632,.09993], sourceChain:[{u:.2935993447,a:.196873,phase:-1.7788396},{u:.4168671998,a:.347495,phase:-2.8255145},{u:.5317024856,a:.348368,phase:-3.8779489},{u:.6877285976,a:.34959,phase:-4.9204322},{u:.8138419432,a:.347495,phase:-5.9671062},{u:.9166352809,a:.349415,phase:-4.9204322}], sourceTiming:'R08 original local-joint phase/amplitude fit and measured canonical positions; cubic cumulative harmonic angle field with smooth visible-surface curvature constraint; not raw clip playback' },
     'tuna-yellow-label': { id:'tuna-yellow-label', gait:'posterior-BCF-candidate', speed:0.82, burst:2.2, frequency:0.9215409755706787, amplitude:0.28, flexStart:0.43, flexPower:2, wave:0.78, envelopeGain:1.45, maxTurn:0.5, fin:0.08, eye:0.06, strainLimit:.16, collisionBendBound:.24, radii:[.035503,.057146,.074296,.093559,.171841,.206222,.248594,.248594,.083501,.073928,.066569,.051906,.040285,.020953,.015,.015,.015], sourceTiming:'Source central quaternion channels measured at 0.9215409756 Hz; smooth posterior envelope gain preserves measured R01 tail excursion rather than hiding strain with a small swing' },
     'tuna-blue-label': { id:'tuna-blue-label', gait:'posterior-BCF-candidate', speed:0.9, burst:2.4, frequency:1.2, amplitude:0.27, flexStart:0.44, flexPower:2.1, wave:0.78, maxTurn:0.48, fin:0.08, eye:0.06, sourceTiming:'Source normal/fast clips 1.1667 s; engineering interpolation, actual species unconfirmed' },
     colorful: { id:'colorful', gait:'mixed-BCF-MPF-candidate', speed:0.45, burst:1.15, frequency:1.1, amplitude:0.3, flexStart:0.32, flexPower:1.6, wave:0.86, maxTurn:0.92, fin:0.22, eye:0.115, sourceTiming:'Source baked 21.6667 s clip; source specimen selection and gait calibration remain explicit' },
@@ -39,16 +39,14 @@
     return {center:actor.position,axes,half:[e[0]+f,e[1]+f,e[2]+bend+f]};
   }
   function separation(a,b,gap=0) {
-    const d=b.center.map((v,k)=>v-a.center[k]),candidates=[...a.axes,...b.axes];
-    let largest=-Infinity,normal=[1,0,0];
-    for(let n=0;n<15;n++){
-      if(n===6)for(const ax of a.axes)for(const bx of b.axes){const c=cross(ax,bx);if(Math.hypot(...c)>1e-7)candidates.push(unit(c));}
-      if(n>=candidates.length)break;const axis=candidates[n],signed=dot(d,axis),support=a.half.reduce((sum,h,k)=>sum+h*Math.abs(dot(a.axes[k],axis)),0)+b.half.reduce((sum,h,k)=>sum+h*Math.abs(dot(b.axes[k],axis)),0),clearance=Math.abs(signed)-support-gap;
-      if(clearance>largest){largest=clearance;normal=axis.map(v=>v*(signed<0?-1:1));}
-      // Any separating axis is a valid non-overlap certificate; only contacts need all 15.
-      if(clearance>=0)return {clearance,normal};
-    }
-    return {clearance:largest,normal};
+    const dx=b.center[0]-a.center[0],dy=b.center[1]-a.center[1],dz=b.center[2]-a.center[2];
+    let largest=-Infinity,nx=1,ny=0,nz=0;
+    function test(x,y,z,normalized=true){const length=normalized?1:Math.hypot(x,y,z);if(length<1e-7)return;const signed=dx*x+dy*y+dz*z;let support=0;for(let k=0;k<3;k++){const A=a.axes[k],B=b.axes[k];support+=a.half[k]*Math.abs(A[0]*x+A[1]*y+A[2]*z)+b.half[k]*Math.abs(B[0]*x+B[1]*y+B[2]*z);}const clearance=(Math.abs(signed)-support)/length-gap;if(clearance>largest){largest=clearance;const sign=(signed<0?-1:1)/length;nx=x*sign;ny=y*sign;nz=z*sign;}}
+    // Read all face axes before accepting separation: the old first-positive-axis
+    // normal jumped between weak certificates and repeatedly stopped swimming.
+    for(let k=0;k<3;k++){test(...a.axes[k]);test(...b.axes[k]);}
+    if(largest<0)for(const A of a.axes)for(const B of b.axes)test(A[1]*B[2]-A[2]*B[1],A[2]*B[0]-A[0]*B[2],A[0]*B[1]-A[1]*B[0],false);
+    return {clearance:largest,normal:[nx,ny,nz]};
   }
   function groupClearance(state) {
     let minimum=Infinity;const boxes=state.actors.map(a=>box(a,state));
@@ -184,7 +182,10 @@
       const pitchTarget=centered?.025*Math.sin(s.time*.47+a.ownClock):clamp(Math.atan2(desired[1],Math.hypot(desired[0],desired[2])),-.28,.28);
       a.pitch=smooth(a.pitch,pitchTarget,dt,2); a.roll=smooth(a.roll,clamp(a.turnRate*.18,-.15,.15),dt,3);
       a.speed=smooth(a.speed,drive,dt,1.6);
-      a.velocity=[-Math.cos(a.yaw)*Math.cos(a.pitch)*a.speed,Math.sin(a.pitch)*a.speed,Math.sin(a.yaw)*Math.cos(a.pitch)*a.speed];
+      const commanded=[-Math.cos(a.yaw)*Math.cos(a.pitch)*a.speed,Math.sin(a.pitch)*a.speed,Math.sin(a.yaw)*Math.cos(a.pitch)*a.speed];
+      // Keep the accepted translation velocity between contact solves. Discarding
+      // it each frame regenerated the same opposing impulses at school contacts.
+      a.velocity=s.count>1?a.velocity.map((v,k)=>smooth(v,commanded[k],dt,2)):commanded;
       if(centered) a.position=[0,0,0];
       else if(s.count===1) for(let k=0;k<3;k++) a.position[k]+=a.velocity[k]*dt;
       const speedRatio=a.speed/p.speed, bodyRest=s.mode==='rest'?.18:s.mode==='hover'?.35:1;
@@ -194,11 +195,14 @@
       a.amplitude=smooth(a.amplitude,clamp(amp,0,.72),dt,3);
       a.beatPhase=(a.beatPhase+TAU*a.frequency*dt)%TAU;
       a.finPhase=(a.finPhase+TAU*(p.id==='picasso'?p.frequency*1.15:a.frequency*.73)*dt)%TAU;
-      const hover=s.mode==='hover' || s.mode==='rest', f=p.fin*(hover?1.25:.75)*(p.id==='tuna-yellow-label'?(.9+.1*a.thrust+.15*Math.abs(a.turnRate)):1), trim=a.turnRate*.12;
+      const hover=s.mode==='hover' || s.mode==='rest';
+      a._finGain=smooth(a._finGain??.75,hover?1.25:.75,dt,3);
+      a._medianGain=smooth(a._medianGain??1,hover?1.1:1,dt,3);
+      const f=p.fin*a._finGain*(p.id==='tuna-yellow-label'?(.9+.1*a.thrust+.15*Math.abs(a.turnRate)):1), trim=a.turnRate*.12;
       a.finAngles.pectoralLeft=f*Math.sin(a.finPhase)+trim;
       a.finAngles.pectoralRight=-f*Math.sin(a.finPhase+.22)+trim;
       a.finAngles.pelvic=f*.25*Math.sin(a.finPhase+.5);
-      const median=p.id==='picasso'?p.fin*(hover?1.1:1):f*.25;
+      const median=p.id==='picasso'?p.fin*a._medianGain:f*.25;
       a.finAngles.dorsal=median*Math.sin(a.finPhase);
       a.finAngles.anal=median*Math.sin(a.finPhase+.08);
       a.finAngles.caudal=a.amplitude*.3*Math.sin(a.beatPhase-.8);
@@ -216,7 +220,6 @@
         a.caudalPeduncle={angle:peduncle,angularVelocity:smooth(a.caudalPeduncle.angularVelocity,velocity,dt,8)};
         const tail=clamp(-.24*peduncle-.025*a.caudalPeduncle.angularVelocity,-.34,.34);
         a.finAngles.caudal=tail;a.finWaves.caudal={amplitude:0,phase:0,bias:tail};
-        a._collisionBend=Math.max(...spine.centers.map(v=>Math.abs(v[2])));
       }
       a.eyeTimer-=dt;
       if(a.eyeTimer<=0) {
@@ -228,31 +231,53 @@
       a.eyes.pitch=smooth(a.eyes.pitch,a.eyeTarget[1],dt,8);
       a.eyes.leftYaw=a.eyes.yaw; a.eyes.rightYaw=a.eyes.yaw*.84;
     }
-    if(s.count>1){constrainContactVelocities(s,dt);resolveContacts(s,dt);}
+    if(s.count>1){constrainContactVelocities(s,dt);resolveContacts(s,dt);for(const a of s.actors)for(let k=0;k<3;k++)a.velocity[k]=(a.position[k]-prior[a.index].position[k])/dt;}
+  }
+  const spineFields=new Map();
+  function sourceKnots(p){
+    const knots=[{u:p.flexStart,c:[0,0]}];let sum=[0,0];
+    // At a measured joint, the cross-section spans half its local rotation.
+    // The cumulative harmonic coefficients retain the last source joint's
+    // return to the fourth joint phase rather than inventing an equal lag.
+    for(const j of p.sourceChain){const v=[j.a*Math.cos(j.phase),j.a*Math.sin(j.phase)];knots.push({u:j.u,c:sum.map((x,k)=>x+v[k]*.5)});sum=sum.map((x,k)=>x+v[k]);}
+    knots.push({u:1,c:sum});
+    for(let i=0;i<knots.length;i++)knots[i].d=i===0||i===knots.length-1?[0,0]:knots[i].c.map((_,k)=>(knots[i+1].c[k]-knots[i-1].c[k])/(knots[i+1].u-knots[i-1].u));
+    return knots;
+  }
+  function spineField(p,samples){
+    const key=p.id+':'+samples;if(spineFields.has(key))return spineFields.get(key);
+    const knots=p.sourceChain?sourceKnots(p):null,field=[],step=1/(samples-1);
+    for(let i=0;i<samples;i++){
+      const u=i*step,q=clamp((u-p.flexStart)/(1-p.flexStart),0,1),n=p.flexPower+2,envelope=p.strainLimit?(p.envelopeGain||1)*Math.pow(q,n)*(n+1-n*q):Math.pow(q,p.flexPower)*(3-2*q);let coefficients=null;
+      if(knots){coefficients=[0,0];if(u>p.flexStart){let j=0;while(j<knots.length-2&&knots[j+1].u<u)j++;const a=knots[j],b=knots[j+1],w=b.u-a.u,t=(u-a.u)/w,t2=t*t,t3=t2*t;coefficients=a.c.map((v,k)=>(2*t3-3*t2+1)*v+(t3-2*t2+t)*w*a.d[k]+(-2*t3+3*t2)*b.c[k]+(t3-t2)*w*b.d[k]);}}
+      field.push({q,envelope,sine:Math.sin(TAU*p.wave*u),cosine:Math.cos(TAU*p.wave*u),coefficients,maxDelta:p.strainLimit&&i>0?p.strainLimit/Math.max(.015,radiusAt(p,u),radiusAt(p,u-step))*step:0});
+    }
+    spineFields.set(key,field);return field;
   }
   function sampleSpine(actor, profile, samples=65) {
     const p=profileOf(profile), centers=[],tangents=[],normals=[],binormals=[];
     if(!p) throw new Error('Spine requires a known specimen profile');
-    samples=Math.max(3,Math.floor(samples)); const step=1/(samples-1), flex=p.flexStart;
+    samples=Math.max(3,Math.floor(samples));
+    const cached=actor._spineCache;if(cached&&cached.profile===p&&cached.samples===samples&&cached.phase===actor.beatPhase&&cached.amplitude===actor.amplitude&&cached.turn===actor.turnRate)return cached.spine;
+    const step=1/(samples-1),field=spineField(p,samples),sinPhase=Math.sin(actor.beatPhase),cosPhase=Math.cos(actor.beatPhase);
     let c=[-.5,0,0], previous=[1,0,0],previousTheta=0;
     for(let i=0;i<samples;i++) {
-      const u=i*step, q=clamp((u-flex)/(1-flex),0,1);
-      // C1 envelope keeps anterior cranium stable; turn curvature remains posterior too.
-      const n=p.flexPower+2,envelope=p.strainLimit?(p.envelopeGain||1)*Math.pow(q,n)*(n+1-n*q):Math.pow(q,p.flexPower)*(3-2*q);
-      let theta=actor.amplitude*envelope*Math.sin(TAU*p.wave*u-actor.beatPhase)+actor.turnRate*.09*q*q;
+      const f=field[i],q=f.q;
+      let theta=actor.amplitude*f.envelope*(f.sine*cosPhase-f.cosine*sinPhase)+actor.turnRate*.09*q*q;
       if(p.sourceChain) {
-        theta=actor.turnRate*.09*q*q;
-        for(const joint of p.sourceChain){const ramp=clamp((u-joint.u+.055)/.11,0,1),weight=ramp*ramp*ramp*(10+ramp*(-15+6*ramp));theta+=joint.a*(actor.amplitude/p.amplitude)*Math.sin(actor.beatPhase+joint.phase)*weight;}
+        theta=(f.coefficients[0]*sinPhase+f.coefficients[1]*cosPhase)*(actor.amplitude/p.amplitude)+actor.turnRate*.09*q*q;
       }
       if(p.strainLimit && i>0) {
-        const r0=radiusAt(p,u),r1=radiusAt(p,u-step),maxDelta=p.strainLimit/Math.max(.015,r0,r1)*step;
-        theta=previousTheta+clamp(theta-previousTheta,-maxDelta,maxDelta);
+        // C-infinity bounded increment: no hard clamp active-set changes during
+        // a beat. The full visible source-fin radii remain the strain constraint.
+        const x=(theta-previousTheta)/f.maxDelta;
+        theta=previousTheta+f.maxDelta*x/Math.sqrt(Math.sqrt(1+x*x*x*x));
       }
       const tangent=[Math.cos(theta),0,Math.sin(theta)], side=[-tangent[2],0,tangent[0]];
       if(i>0) { const mid=unit(previous.map((v,k)=>v+tangent[k])); c=c.map((v,k)=>v+mid[k]*step); }
       centers.push(c.slice()); tangents.push(tangent); normals.push([0,1,0]); binormals.push(side); previous=tangent;previousTheta=theta;
     }
-    return {centers,tangents,normals,binormals,length:1,headX:-.5,tailX:.5};
+    const spine={centers,tangents,normals,binormals,length:1,headX:-.5,tailX:.5};actor._spineCache={profile:p,samples,phase:actor.beatPhase,amplitude:actor.amplitude,turn:actor.turnRate,spine};return spine;
   }
   function radiusAt(profile,u){const q=clamp(u,0,1)*(profile.radii.length-1),i=Math.min(profile.radii.length-2,Math.floor(q));return mix(profile.radii[i],profile.radii[i+1],q-i);}
   function deform(point,actor,profile,spine) {

@@ -1,6 +1,16 @@
-# 统一鱼类制作系统（海狼与五份来源）
+# 鱼类的制谱师
 
-## 当前修订：共用鱼类制作系统 R02
+## 当前修订 R03
+
+同一个鱼类制作系统负责原表面采样重构、脊椎与鳍绑定、动画、活动及群体行为。六来源共用中央实时三维与缩略图阵列；新模型从统一接口继续接入。当前单体为 `dist/KAOPU_FISH_SCOREMAKER_R03.html`，构建脚本 `scripts/build-r03.mjs`，固定入口仍为 https://haihao0307.github.io/guilin-dem-pipeline/kaopu-fish-system/ 。
+
+本轮处理异步切换闪现、主线程数据解析、隐藏模块空转、重复眼睛提交和阴影通道开销；鲱鱼采用连续、平滑限弯的脊椎，五种鱼群保留接触后的速度，海狼显示插值独立于原求解器。原鱼体、拓扑、UV、贴图与眼睛控制保留，未通过删面或降贴图优化。
+
+最终门禁见R03_BUILD_RECEIPT、INDEPENDENT_R03_REPORT、R03_PUBLICATION_PROOF及R03_DELIVERY_RECEIPT；运行原因与共用接口见 `knowledge/fish-motion/R03_RUNTIME_AND_SYSTEM.md`。用户视觉和动作验收不自动通过。
+
+## R02 历史修订
+
+### 共用鱼类制作系统 R02
 
 用户纠正后的当前版本是 `dist/KAOPU_FISH_UNIFIED_R02.html`，由 `scripts/build-r02.mjs` 构建。海狼原R14完整乐器与海底环境内嵌，和五份来源共用一个选择窗口、单鱼/同种鱼群及活动接口，只有当前选择类型绘制；旧R01与R14独立HTML保留为历史基线。
 
