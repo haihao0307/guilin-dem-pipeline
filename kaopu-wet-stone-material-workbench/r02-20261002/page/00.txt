@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>KAOPU Wet Stone Material Workbench R02 Online</title>
+<style>
+:root{--bg:#080a0c;--panel:#101419;--panel2:#0c0f13;--line:#28313a;--text:#eef3f7;--muted:#98a4b0;--accent:#dfc8a2;--ok:#5bc889;--warn:#f4bd5f;--bad:#ef6a73}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,"PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+body{padding:12px}.app{max-width:1800px;margin:auto}
+header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin:0 0 10px}
+h1{font-size:18px;margin:0 0 4px}.sub{color:var(--muted);font-size:12px;line-height:1.5}.lock{border:1px solid #5a472a;background:#1b160f;color:#f0d09c;border-radius:999px;padding:7px 11px;font-size:11px;white-space:nowrap}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:9px;background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:10px}
+button,select,input{font:inherit}button,select{border:1px solid #38434f;background:#182029;color:var(--text);border-radius:7px;padding:7px 10px}button{cursor:pointer}button.primary{background:var(--accent);color:#17130e;border-color:var(--accent);font-weight:700}button:hover,select:hover{border-color:#667383}.time{min-width:128px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}.timeline{flex:1;min-width:180px}input[type=range]{accent-color:#d6b37a}.field{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:11px}.field input{width:130px}
+.stage{display:grid;grid-template-columns:1fr 1fr;gap:10px}.pane{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden;min-width:0}.paneHead{height:38px;display:flex;align-items:center;justify-content:space-between;padding:0 11px;border-bottom:1px solid var(--line);font-size:12px}.paneHead strong{font-size:13px}.state{color:var(--muted);font-size:10px}.viewport{position:relative;aspect-ratio:16/9;background:#fff;overflow:hidden}video,canvas{display:block;width:100%;height:100%;object-fit:contain;background:#fff}.tag{position:absolute;left:9px;top:9px;z-index:5;background:rgba(0,0,0,.62);padding:5px 7px;border-radius:6px;font-size:10px;letter-spacing:.03em}.error{position:absolute;inset:0;display:none;place-items:center;background:#2a0c10;color:#ffd9dc;padding:20px;text-align:center;z-index:10}
+.compare{margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;display:none}.compare.active{display:block}.compareView{position:relative;aspect-ratio:16/9;background:#fff;max-height:72vh;margin:auto}.compareView canvas{position:absolute;inset:0}#overlayReplica{opacity:.5}
+.bottom{display:grid;grid-template-columns:1.25fr 1fr;gap:10px;margin-top:10px}.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:11px;color:var(--muted);line-height:1.6}.card strong{color:var(--text)}.channels{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.channel{background:#0d1116;border:1px solid #29313a;border-radius:8px;padding:8px}.channel b{display:block;color:var(--text);margin-bottom:3px;font-size:11px}.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:10px;word-break:break-all}
+@media(max-width:900px){body{padding:7px}.stage,.bottom{grid-template-columns:1fr}.lock{display:none}.channels{grid-template-columns:1fr}.field{width:100%}.field input{flex:1}}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div><h1>KAOPU Wet Stone｜材质复刻工作台 R02 ONLINE</h1><div class="sub">左：老师原录屏画面。右：按老师源码同构运行的 GLSL 复刻。第一阶段只对齐与复刻，不替换算法、不美化、不创造。</div></div><div class="lock">STAGE 1 · TEACHER COPY LOCKED</div></header>
+<div class="toolbar">
+<button id="play" class="primary">播放</button><button id="prev">−1 帧</button><button id="next">+1 帧</button><button id="zero">回到开头</button>
+<span id="clock" class="time">00.000 / 10.800</span><input id="timeline" class="timeline" type="range" min="0" max="10.800000" step="0.001" value="0">
+<label class="field">复刻时间偏移 <input id="offset" type="range" min="-6" max="6" step="0.001" value="3.850"><span id="offsetText">3.850s</span></label>
+<label class="field">时间倍率 <input id="timeScale" type="range" min="0.90" max="1.05" step="0.001" value="0.955"><span id="timeScaleText">0.955×</span></label>
+<select id="mode"><option value="side">并排</option><option value="overlay">叠加</option><option value="diff">差异</option></select>
+<label id="opacityField" class="field" style="display:none">复刻透明度 <input id="opacity" type="range" min="0" max="1" step="0.01" value="0.5"><span id="opacityText">50%</span></label>
+</div>
+<div id="side" class="stage">
+<section class="pane"><div class="paneHead"><strong>老师｜原视频</strong><span id="videoState" class="state">准备中</span></div><div class="viewport"><div class="tag">TEACHER</div><video id="tea
