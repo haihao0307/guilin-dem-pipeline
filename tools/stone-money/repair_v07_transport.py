@@ -27,12 +27,12 @@ s=s[:a]+''' def do_POST(self):
    with temp.open('wb' if offset==0 else 'ab') as dst:dst.write(data)
   self.send_response(200);self.end_headers();self.wfile.write(b'OK')
 '''+s[b:]
-s=s.replace("t=time.monotonic();result=page.evaluate('e=>bakeEntry(e)',entry);assert result['glError']==0,result", "t=time.monotonic();result=page.evaluate('e=>bakeEntry(e)',entry);assert result['glError']==0,result")
 p.write_text(s)
-# Snapshot parameters when computing a new fixed surface, not mutable UI state.
 for name in ['index.html','bake.html']:
  p=root/name;s=p.read_text();s=s.replace('const result={report:data.report,parts:[]};let done=', 'view={...view};recipe={...recipe};const result={report:data.report,parts:[]};let done=')
  s=s.replace('原台内核已连接','等待地形首帧').replace('原内核已连接','等待地形首帧')
  s=s.replace('生成耗时 ${','发布前生产耗时 ${')
  p.write_text(s)
 print('Bounded binary transport to 256 KiB; original geometry unchanged.')
+import subprocess,sys
+subprocess.run([sys.executable,str(Path(__file__).with_name('split_v07_fragment_fields.py'))],check=True)
