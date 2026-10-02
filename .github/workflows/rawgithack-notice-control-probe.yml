@@ -1,0 +1,46 @@
+name: RawGitHack Notice Control Probe
+
+on:
+  push:
+    branches:
+      - feature/stone-money-landscape-influence-tool-v05-20261002
+    paths:
+      - .github/workflows/rawgithack-notice-control-probe.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - run: python -m pip install -q playwright
+      - name: Inspect notice and attempt proceed
+        env:
+          PUBLIC: https://raw.githack.com/haihao0307/guilin-dem-pipeline/fbaa49e0e0ef076bb72734a9b48862dcd57329e1/workbenches/landscape-terrain-influence-tool-v06/index.html
+        run: |
+          CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)
+          export PUBLIC CHROME
+          python - <<'PY'
+          import json,os
+          from playwright.sync_api import sync_playwright
+          with sync_playwright() as p:
+              b=p.chromium.launch(headless=True,executable_path=os.environ['CHROME'],args=['--no-sandbox','--disable-dev-shm-usage'])
+              page=b.new_page(viewport={'width':1280,'height':800})
+              page.goto(os.environ['PUBLIC'],wait_until='domcontentloaded',timeout=60000)
+              page.wait_for_timeout(1500)
+              print('TITLE',page.title())
+              print('TEXT',(page.locator('body').inner_text() or '')[:1200])
+              controls=page.locator('a,button,input').evaluate_all("els => els.map((e,i)=>({i,tag:e.tagName,text:(e.innerText||e.value||'').trim(),href:e.href||'',type:e.type||'',id:e.id||'',cls:e.className||''}))")
+              print('CONTROLS',json.dumps(controls,ensure_ascii=False,indent=2))
+              page.screenshot(path='/tmp/rawgithack-notice.png',full_page=True)
+              b.close()
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rawgithack-notice-probe
+          path: /tmp/rawgithack-notice.png
+          retention-days: 3
