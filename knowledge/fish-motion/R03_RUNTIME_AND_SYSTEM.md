@@ -23,8 +23,8 @@ R03将解压、JSON解析移入内嵌Worker；原GPU数值字段用对应TypedAr
 - [x] 没有用生成图片代替真实三维实现，缩略图是用户明确要求的对象目录。
 - [x] 已实际修改生产源码和运行接口。
 - [x] 当前候选为同一入口的可交互实时三维工作台。
-- [ ] 最终冻结单体HTML与独立浏览器通过：以R03回执为准。
-- [ ] 固定公网入口回读与实际浏览器通过：以R03_PUBLICATION_PROOF为准。
+- [x] 最终冻结单体HTML与独立浏览器通过：见INDEPENDENT_R03_REPORT和R03_DELIVERY_RECEIPT。
+- [x] 固定公网入口回读与实际浏览器通过：见R03_PUBLICATION_PROOF。
 - [x] 只有截图没有工作台不能交付。
 
 visualAcceptance与productionReady由用户决定，不自动置true。
