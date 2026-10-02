@@ -1,6 +1,10 @@
 # 鱼类的制谱师
 
-## 当前修订 R03
+## 当前修订 R04
+
+保留已验证的 R03 连续脊椎、群游与性能改进，增强源眼形内的扫视/停留，接入海狼现有下颌与两种金枪鱼原下颌骨的口部活动。其余三个来源口部结构未确认，保持原姿态，详见 R04_MOUTH_SOURCE_AUDIT。当前构建为 `scripts/build-r04.mjs`，单体为 `dist/KAOPU_FISH_SCOREMAKER_R04.html`，同一公开入口不变。最终门禁以 R04 独立和公开报告为准。
+
+## 已验证修订 R03
 
 同一个鱼类制作系统负责原表面采样重构、脊椎与鳍绑定、动画、活动及群体行为。六来源共用中央实时三维与缩略图阵列；新模型从统一接口继续接入。当前单体为 `dist/KAOPU_FISH_SCOREMAKER_R03.html`，构建脚本 `scripts/build-r03.mjs`，固定入口仍为 https://haihao0307.github.io/guilin-dem-pipeline/kaopu-fish-system/ 。
 

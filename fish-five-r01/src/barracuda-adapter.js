@@ -1,10 +1,11 @@
 import {batchLegacyEyes} from './legacy-eye-batch.js';
 import {specializeLegacyShadow} from './legacy-shadow-pass.js';
 import {interpolateLegacyPresentation} from './legacy-presentation.js';
+import {installLegacyCranial} from './legacy-cranial-r04.js';
 // Re-use the accepted R14 instrument byte-for-byte under the shared Fish registry.
 // ABI isolation protects its custom WebGL habitat; no new window or remote page.
 export function createBarracudaModule(stage){
- let frame=null,api=null,visible=false,running=false,batch=null,shadow=null,presentation=null,mounting=null,lastDraw=-1;
+ let frame=null,api=null,visible=false,running=false,batch=null,shadow=null,presentation=null,cranial=null,mounting=null,lastDraw=-1;
  const modeMap={cruise:'CRUISE',hover:'GLIDE',burst:'BURST',turn:'TURN_LEFT',rest:'REST'};
  async function mountOnce(){
   if(api)return api;
@@ -21,7 +22,7 @@ export function createBarracudaModule(stage){
    await new Promise(r=>setTimeout(r,30));
   }
   api=frame.contentWindow.__KAOPU_R14__;
-  const r=api.renderer,originalFrame=r.frame.bind(r);batch=batchLegacyEyes(api);shadow=specializeLegacyShadow(api);presentation=interpolateLegacyPresentation(api);
+  const r=api.renderer,originalFrame=r.frame.bind(r);frame.contentWindow.cancelAnimationFrame(r.raf);cranial=await installLegacyCranial(api);batch=batchLegacyEyes(api);shadow=specializeLegacyShadow(api);presentation=interpolateLegacyPresentation(api);cranial.attach();
   r.frame=now=>{if(!visible||document.hidden){r.last=now;running=false;return;}if(lastDraw===now)return;lastDraw=now;running=true;try{originalFrame(now);}finally{presentation.restore();}};
   // ResizeObserver may report hidden zero dimensions. Never clear a valid buffer
   // merely because the module was hidden or its size did not change.
@@ -33,7 +34,7 @@ export function createBarracudaModule(stage){
  function activate(on){visible=on;if(frame)frame.style.display=on?'block':'none';if(!on&&api){frame.contentWindow.cancelAnimationFrame(api.renderer.raf);running=false;}else if(on){api?.renderer.resize();resume();}}
  document.addEventListener('visibilitychange',()=>{if(document.hidden&&api){frame.contentWindow.cancelAnimationFrame(api.renderer.raf);running=false;}else resume();});
  function configure(state){if(!api)return;const r=api.renderer;if(r.state.school!==state.group)r.setSchool(state.group);const mode=modeMap[state.mode]||'CRUISE';if(r.state.mode!==mode)r.setMode(mode);r.state.playing=state.playing;r.state.paths=state.bones;r.state.compare=false;r.state.pointer=state.group;}
- function view(value){if(!api)return;const c=api.renderer.camera;c.setView(value==='side'?'left':value==='top'?'top':'oblique');if(api.renderer.state.school){c.halfWidth=3.3;c.distance=5.5;c.perspective=true;}}
+ function view(value){if(!api)return;const c=api.renderer.camera;c.setView(value==='side'||value==='head'?'left':value==='top'?'top':'oblique');if(value==='head'){const h=api.renderer.h,e=h.metadata.continuum.eyes.eyes,center=e.reduce((v,x)=>v.map((q,k)=>q+x.globeCenterM[k]/e.length),[0,0,0]);c.target=[(h.metadata.continuum.body.sourceXM+center[0])*.5,center[1]-.01,0];c.zoom=3.8;c.halfWidth=.58;c.distance=1.55;c.perspective=false;}if(api.renderer.state.school){c.halfWidth=3.3;c.distance=5.5;c.perspective=true;}}
  function reset(){api?.renderer.resetAll();}
- return {mount,activate,configure,view,reset,get api(){return api;},get frame(){return frame;},get visible(){return visible;},get eyeBatch(){return batch;},get shadowPass(){return shadow;},get presentation(){return presentation;}};
+ return {mount,activate,configure,view,reset,get api(){return api;},get frame(){return frame;},get visible(){return visible;},get eyeBatch(){return batch;},get shadowPass(){return shadow;},get presentation(){return presentation;},get cranial(){return cranial;}};
 }
