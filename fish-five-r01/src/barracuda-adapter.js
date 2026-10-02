@@ -2,7 +2,8 @@ import {batchLegacyEyes} from './legacy-eye-batch.js';
 import {specializeLegacyShadow} from './legacy-shadow-pass.js';
 import {interpolateLegacyPresentation} from './legacy-presentation.js';
 import {installLegacyCranial} from './legacy-cranial-r04.js';
-// Re-use the accepted R14 instrument byte-for-byte under the shared Fish registry.
+import {patchLegacySampling} from './legacy-sampling-r04.js';
+// Preserve the accepted R14 carrier; runtime sampling skips only unread fin rows.
 // ABI isolation protects its custom WebGL habitat; no new window or remote page.
 export function createBarracudaModule(stage){
  let frame=null,api=null,visible=false,running=false,batch=null,shadow=null,presentation=null,cranial=null,mounting=null,lastDraw=-1;
@@ -14,7 +15,7 @@ export function createBarracudaModule(stage){
   frame=document.createElement('iframe');frame.title='海狼鱼 · 共用制作系统';frame.id='barracudaViewport';frame.style.cssText='position:absolute;inset:0;width:100%;height:100%;border:0;display:none';
   stage.prepend(frame);
   const style='<style>html,body,.app,.main,.stage{height:100%!important;width:100%!important;margin:0!important}.app,.main{display:block!important}.topbar,.controls,.footer,.school-dock,.behavior,.hint,.panel-label{display:none!important}#gl{height:100%!important;width:100%!important}</style>';
-  frame.srcdoc=html.replace('</head>',style+'<script>globalThis.__FISH_KEEP_CPU_COPY__=true;</script></head>');
+  frame.srcdoc=patchLegacySampling(html).replace('</head>',style+'<script>globalThis.__FISH_KEEP_CPU_COPY__=true;</script></head>');
   const started=performance.now();
   while(!frame.contentWindow?.__KAOPU_R14__?.ready){
    const error=frame.contentWindow?.__KAOPU_R14__?.error;if(error)throw Error(error);

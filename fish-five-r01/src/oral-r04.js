@@ -4,7 +4,7 @@ const clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),TAU=Math.PI*2;
 const supported=new Set(['barracuda','tuna-yellow-label','tuna-blue-label']);
 export function create(id,seed=90401,index=0,maxAngle=.03){
  const h=((seed+Math.imul(index+1,7411))>>>0),phase=(h%997)/997*TAU;
- return {id,index,time:0,phase,frequency:.78+(h%113)/113*.24,maxAngle,enabled:supported.has(id),effort:0,jawValue:0,gillValue:0,output:{lower:0,upper:0,gill:0,status:supported.has(id)?'SOURCE_BOUND_ARTICULATION':'HOLD_LOCAL_SOURCE_ANATOMY'}};
+ return {id,index,time:0,phase,frequency:.78+(h%113)/113*.24,maxAngle,enabled:supported.has(id),jawEnabled:supported.has(id)&&id!=='barracuda',effort:0,jawValue:0,gillValue:0,output:{lower:0,upper:0,gill:0,status:id==='barracuda'?'SOURCE_BOUND_GILL_ONLY_JAW_HOLD_LOCAL':supported.has(id)?'SOURCE_BOUND_ARTICULATION':'HOLD_LOCAL_SOURCE_ANATOMY'}};
 }
 export function update(c,dt,{mode='cruise',paused=false,effort=0}={}){
  if(paused||!Number.isFinite(dt)||dt<=0)return c.output;
@@ -14,8 +14,9 @@ export function update(c,dt,{mode='cruise',paused=false,effort=0}={}){
  c.effort+=(clamp(Math.max(target,effort),0,1)-c.effort)*(1-Math.exp(-dt*3));
  const wave=.5-.5*Math.cos(TAU*c.frequency*c.time+c.phase),e=c.effort;
  if(c.id==='barracuda'){
-  // Coupled buccal/opercular pump with a lag; no synthetic cavity or teeth.
-  c.output.lower=Math.min(c.maxAngle,.008+( .012+.017*e)*wave);
+  // Original jaw field fails full-surface strain. Keep the mouth neutral;
+  // only the independently verified original-surface gill field can move.
+  c.output.lower=0;
   c.output.gill=(.00035+.0010*e)*(.5-.5*Math.cos(TAU*c.frequency*c.time+c.phase-TAU*.18));
  }else{
   // Scombrid ram-ventilation candidate: retain a small gape during swimming,
@@ -25,7 +26,7 @@ export function update(c,dt,{mode='cruise',paused=false,effort=0}={}){
  }
  c.jawValue+=(c.output.lower-c.jawValue)*(1-Math.exp(-dt*10));c.gillValue+=(c.output.gill-c.gillValue)*(1-Math.exp(-dt*10));c.output.lower=c.jawValue;c.output.gill=c.gillValue;c.output.upper=0;return c.output;
 }
-export function snapshot(c){return {id:c.id,index:c.index,time:c.time,phase:c.phase,frequency:c.frequency,effort:c.effort,maxAngle:c.maxAngle,enabled:c.enabled,...c.output};}
+export function snapshot(c){return {id:c.id,index:c.index,time:c.time,phase:c.phase,frequency:c.frequency,effort:c.effort,maxAngle:c.maxAngle,enabled:c.enabled,jawEnabled:c.jawEnabled,...c.output};}
 
 // Piecewise-linear source skin-weight gradients, area-weighted at vertices.
 // Same original position aliases are averaged to the same gradient. No mesh

@@ -2,7 +2,7 @@
 
 ## 当前修订 R04
 
-保留已验证的 R03 连续脊椎、群游与性能改进，增强源眼形内的扫视/停留，接入海狼现有下颌与两种金枪鱼原下颌骨的口部活动。其余三个来源口部结构未确认，保持原姿态，详见 R04_MOUTH_SOURCE_AUDIT。当前构建为 `scripts/build-r04.mjs`，单体为 `dist/KAOPU_FISH_SCOREMAKER_R04.html`，同一公开入口不变。最终门禁以 R04 独立和公开报告为准。
+保留已验证的 R03 连续脊椎、群游与性能改进，增强源眼形内的扫视/停留，接入两种金枪鱼原下颌骨的口部活动和海狼来源鳃盖起伏。海狼下颌未过表面应变门禁，其余三个来源口部结构未确认，四个嘴部保持原姿态，详见 R04_CRANIAL_INTEGRATION 和 R04_MOUTH_SOURCE_AUDIT。当前构建为 `scripts/build-r04.mjs`，单体为 `dist/KAOPU_FISH_SCOREMAKER_R04.html`，同一公开入口不变。最终门禁以 R04 独立和公开报告为准。
 
 ## 已验证修订 R03
 
