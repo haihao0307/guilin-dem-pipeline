@@ -1,0 +1,62 @@
+name: Stone Money Landscape Influence Tool V06 jsDelivr Proof
+
+on:
+  push:
+    branches:
+      - feature/stone-money-landscape-influence-tool-v05-20261002
+    paths:
+      - .github/workflows/stone-money-landscape-influence-tool-v06-jsdelivr-proof.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-jsdelivr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Install browser harness
+        run: python -m pip install -q playwright
+
+      - name: Verify jsDelivr route through real terrain generation
+        env:
+          PUBLIC: https://cdn.jsdelivr.net/gh/haihao0307/guilin-dem-pipeline@fbaa49e0e0ef076bb72734a9b48862dcd57329e1/workbenches/landscape-terrain-influence-tool-v06/index.html
+          WORKER: https://cdn.jsdelivr.net/gh/haihao0307/guilin-dem-pipeline@fbaa49e0e0ef076bb72734a9b48862dcd57329e1/workbenches/landscape-terrain-influence-tool-v06/landscape-terrain-worker-v06.js
+        run: |
+          curl -fsS "$PUBLIC" >/tmp/lti-v06-source.html
+          grep -q '地形影响工具体系 V0.6' /tmp/lti-v06-source.html
+          curl -fsS "$WORKER" >/tmp/lti-v06-worker.js
+          grep -q 'self.onmessage' /tmp/lti-v06-worker.js
+          CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)
+          if [ -z "$CHROME" ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq chromium || sudo apt-get install -y -qq chromium-browser
+            CHROME=$(command -v chromium || command -v chromium-browser)
+          fi
+          export PUBLIC CHROME
+          python - <<'PY'
+          import json, os, time
+          from playwright.sync_api import sync_playwright
+          url=os.environ['PUBLIC']; chrome=os.environ['CHROME']
+          errors=[]
+          with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True,executable_path=chrome,args=['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--disable-background-timer-throttling','--disable-renderer-backgrounding'])
+              page=browser.new_page(viewport={'width':1280,'height':800})
+              page.on('pageerror',lambda e:errors.append(str(e)))
+              r=page.goto(url,wait_until='domcontentloaded',timeout=60000)
+              if r and r.status>=400: raise RuntimeError(f'HTTP {r.status}')
+              start=time.monotonic(); state={}
+              while time.monotonic()-start<300:
+                  state=page.evaluate("""() => ({ready:window.__LM_READY__===true,error:window.__LM_ERROR__||null,step:document.getElementById('step')?.textContent||'',progress:document.getElementById('progress')?.style.width||'',mode:document.documentElement.dataset.landscapeWorkerMode||'',redirects:window.__LTI_WORKER_REDIRECTS__||0,triangles:window.__LM__?.report?.parts?.reduce((s,p)=>s+(p.triangles||0),0)||0})""")
+                  print(json.dumps({'elapsed_s':round(time.monotonic()-start,1),**state},ensure_ascii=False),flush=True)
+                  if state['error']: raise RuntimeError(str(state))
+                  if state['ready']: break
+                  time.sleep(2)
+              else: raise TimeoutError(str(state))
+              page.wait_for_timeout(800)
+              if state['mode']!='external-same-origin' or state['redirects']<1 or state['triangles']<1000000 or errors:
+                  raise RuntimeError(json.dumps({'state':state,'errors':errors},ensure_ascii=False))
+              browser.close()
+          print(json.dumps({'url':url,'state':state},ensure_ascii=False))
+          PY
