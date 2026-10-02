@@ -1,0 +1,13 @@
+import fs from 'node:fs';import path from 'node:path';import zlib from 'node:zlib';import crypto from 'node:crypto';import {createRequire} from 'node:module';import {fileURLToPath} from 'node:url';import {execFileSync} from 'node:child_process';
+const require=createRequire(import.meta.url);let esbuild;try{esbuild=require('esbuild');}catch{esbuild=require('G:/Three.js/Human/Crab-Static-R05/node_modules/esbuild');}const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const manifest=JSON.parse(fs.readFileSync(path.join(root,'data/scores.json'),'utf8'));
+const items=(manifest.items||manifest.specimens||manifest).map(item=>{const metadata=JSON.parse(fs.readFileSync(path.join(root,'data',item.metadataFile),'utf8'));return {...item,source:metadata.source};});
+if(!Array.isArray(items)||items.length!==5)throw Error('Exactly five production sources required');
+const head=execFileSync('git',['-c','core.fsmonitor=false','rev-parse','HEAD'],{cwd:path.dirname(root),windowsHide:true}).toString().trim();
+const carriers=items.map(item=>{const bytes=fs.readFileSync(path.join(root,'data',item.file));return `<script type="application/octet-stream" id="score-${item.id}" data-bytes="${bytes.length}">${bytes.toString('base64')}</script>`}).join('\n')+`\n<script type="application/json" id="manifest">${JSON.stringify({items,buildSourceHead:head,taskId:'FISH_FIVE_PROCEDURAL_FACTORY_R01_20261002',buildTime:new Date().toISOString()}).replace(/</g,'\\u003c')}</script>`;
+const bundle=await esbuild.build({entryPoints:[path.join(root,'src/app.js')],bundle:true,format:'iife',target:['chrome120'],minify:true,write:false,legalComments:'inline'});
+const html=fs.readFileSync(path.join(root,'src/workbench.template.html'),'utf8').replace('__DATA_CARRIERS__',()=>carriers).replace('__BEHAVIOR__',()=>fs.readFileSync(path.join(root,'src/behavior.js'),'utf8')).replace('__APP_BUNDLE__',()=>bundle.outputFiles[0].text.replace(/<\/script/gi,'<\\/script'));
+if(/__(?:DATA_CARRIERS|BEHAVIOR|APP_BUNDLE)__/.test(html))throw Error('Unresolved build tokens');
+fs.mkdirSync(path.join(root,'dist'),{recursive:true});fs.writeFileSync(path.join(root,'dist/KAOPU_FIVE_FISH_R01.html'),html);
+const receipt={taskId:'FISH_FIVE_PROCEDURAL_FACTORY_R01_20261002',builtAt:new Date().toISOString(),sourceHead:head,htmlSha256:crypto.createHash('sha256').update(html).digest('hex'),htmlBytes:Buffer.byteLength(html),sourceIds:items.map(x=>x.id),allCoreResourcesInline:true,sourceModified:true,interactive3D:true,staticImageSubstitute:false,visualAcceptance:false,motionAcceptance:false,productionReady:false};
+fs.writeFileSync(path.join(root,'evidence/BUILD_RECEIPT.json'),JSON.stringify(receipt,null,2)+'\n');console.log(JSON.stringify(receipt));
