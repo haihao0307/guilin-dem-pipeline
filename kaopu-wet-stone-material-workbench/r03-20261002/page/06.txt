@@ -1,0 +1,15 @@
+ShaderInfoLog(s));return s}
+function initGL(){
+ try{gl=canvas.getContext('webgl2',{antialias:false,alpha:false,preserveDrawingBuffer:true,powerPreference:'high-performance'});if(!gl)throw new Error('此浏览器没有启用 WebGL2。');
+ const vs=compile(gl.VERTEX_SHADER,document.getElementById('vs').textContent), fs=compile(gl.FRAGMENT_SHADER,document.getElementById('fs').textContent);
+ program=gl.createProgram();gl.attachShader(program,vs);gl.attachShader(program,fs);gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(program));
+ vao=gl.createVertexArray();gl.bindVertexArray(vao);uTime=gl.getUniformLocation(program,'iTime');uRes=gl.getUniformLocation(program,'iResolution');uMouse=gl.getUniformLocation(program,'iMouse');gpuState.textContent='WebGL2 已就绪';
+ }catch(e){gpuError.style.display='grid';gpuError.textContent='复刻画面启动失败：'+e.message;gpuState.textContent='错误';console.error(e)}
+}
+function render(t){if(!gl||!program)return;gl.viewport(0,0,canvas.width,canvas.height);gl.useProgram(program);gl.bindVertexArray(vao);gl.uniform1f(uTime,t);gl.uniform3f(uRes,canvas.width,canvas.height,1);gl.uniform4f(uMouse,0,0,0,0);gl.drawArrays(gl.TRIANGLES,0,3);}
+function drawCompare(){if(mode.value==='side')return;const tc=overlayTeacher.getContext('2d',{willReadFrequently:true}), rc=overlayReplica.getContext('2d',{willReadFrequently:true});tc.clearRect(0,0,960,540);rc.clearRect(0,0,960,540);try{tc.drawImage(teacher,0,0,960,540)}catch(e){}rc.drawImage(canvas,0,0,960,540);if(mode.value==='diff'){const dc=diffCanvas.getContext('2d',{willReadFrequently:true});try{const a=tc.getImageData(0,0,960,540),b=rc.getImageData(0,0,960,540),o=dc.createImageData(960,540);for(let i=0;i<o.data.length;i+=4){o.data[i]=Math.min(255,Math.abs(a.data[i]-b.data[i])*4);o.data[i+1]=Math.min(255,Math.abs(a.data[i+1]-b.data[i+1])*4);o.data[i+2]=Math.min(255,Math.abs(a.data[i+2]-b.data[i+2])*4);o.data[i+3]=255}dc.putImageData(o,0,0)}catch(e){console.warn(e)}}}
+function refresh(){updateClock();render(replicaTime());drawCompare()}
+function loop(){if(playing){if(teacher.ended||teacher.currentTime>=DURATION-.001){playing=false;teacher.pause();play.textContent='播放'}refresh();requestAnimationFrame(loop)}}
+async function setPlay(v){playing=v;if(v){try{await teacher.play();play.textContent='暂停';requestAnimationFrame(loop)}catch(e){playing=false;videoError.style.display='grid';videoError.textContent='浏览器阻止播放，请再次点击播放。';}}else{teacher.pause();play.textContent='播放';refresh()}}
+play.onclick=()=>setPlay(!playing);prev.onclick=()=>{setPlay(false);teacher.currentTime=Math.max(0,teacher.currentTime-1/FPS)};next.onclick=()=>{setPlay(false);teacher.currentTime=Math.min(teacher.duration||DURATION,teacher.currentTime+1/FPS)};zero.onclick=()=>{setPlay(false);teacher.currentTime=0};
+timeline.oninput=()=>{dragging=true;setPlay(false);teacher.currentTime=parseFloat(timeline.value)};timeline.onchange=()=>{dragging=false;refresh()};offset.oninput=refresh;timeScale.oninput=refre

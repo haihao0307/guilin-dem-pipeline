@@ -1,0 +1,8 @@
+sh;
+mode.onchange=()=>{const m=mode.value;side.style.display=m==='side'?'grid':'none';compare.classList.toggle('active',m!=='side');overlayTeacher.style.display=m==='overlay'?'block':'none';overlayReplica.style.display=m==='overlay'?'block':'none';diffCanvas.style.display=m==='diff'?'block':'none';opacityField.style.display=m==='overlay'?'flex':'none';refresh()};
+opacity.oninput=()=>{overlayReplica.style.opacity=opacity.value;opacityText.textContent=Math.round(opacity.value*100)+'%'};
+teacher.addEventListener('loadedmetadata',()=>{timeline.max=teacher.duration;videoState.textContent=`${teacher.videoWidth}×${teacher.videoHeight} · ${teacher.duration.toFixed(3)}s`;refresh()});teacher.addEventListener('seeked',refresh);teacher.addEventListener('timeupdate',()=>{if(!dragging)refresh()});teacher.addEventListener('error',()=>{videoError.style.display='grid';videoError.textContent='老师视频无法播放。';videoState.textContent='错误'});
+initGL();render(0);refresh();loadTeacherVideo();
+})();
+</script>
+</body></html>

@@ -1,0 +1,19 @@
+eacherVideo(){
+  videoState && (videoState.textContent='加载在线观察副本…');
+  try{
+    const parts=await Promise.all(VIDEO_CHUNKS.map(async n=>{const r=await fetch(`../r02-20261002/video/${n}.txt`,{cache:'no-store'});if(!r.ok)throw new Error(`video/${n}.txt HTTP ${r.status}`);return (await r.text()).trim();}));
+    const bin=atob(parts.join('')), bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+    if(teacherBlobUrl)URL.revokeObjectURL(teacherBlobUrl);teacherBlobUrl=URL.createObjectURL(new Blob([bytes],{type:'video/mp4'}));teacher.src=teacherBlobUrl;teacher.load();
+  }catch(e){videoError.style.display='grid';videoError.textContent='在线老师视频加载失败：'+e.message;videoState.textContent='错误';}
+}
+localTeacher.addEventListener('change',()=>{const f=localTeacher.files&&localTeacher.files[0];if(!f)return;if(teacherBlobUrl)URL.revokeObjectURL(teacherBlobUrl);teacherBlobUrl=URL.createObjectURL(f);teacher.src=teacherBlobUrl;teacher.load();qualityWarn.textContent='已载入本机老师原片：'+f.name+'。当前逐帧、叠加和差异检查均以该原片为准。';qualityWarn.style.borderColor='#276a45';qualityWarn.style.background='#0d2419';qualityWarn.style.color='#8fe0b1';videoError.style.display='none';});
+const play=document.getElementById('play'), prev=document.getElementById('prev'), next=document.getElementById('next'), zero=document.getElementById('zero');
+const timeline=document.getElementById('timeline'), clock=document.getElementById('clock'), offset=document.getElementById('offset'), offsetText=document.getElementById('offsetText'), timeScale=document.getElementById('timeScale'), timeScaleText=document.getElementById('timeScaleText');
+const mode=document.getElementById('mode'), side=document.getElementById('side'), compare=document.getElementById('compare'), opacityField=document.getElementById('opacityField'), opacity=document.getElementById('opacity'), opacityText=document.getElementById('opacityText');
+const overlayTeacher=document.getElementById('overlayTeacher'), overlayReplica=document.getElementById('overlayReplica'), diffCanvas=document.getElementById('diffCanvas');
+const gpuState=document.getElementById('gpuState'), videoState=document.getElementById('videoState'), gpuError=document.getElementById('gpuError'), videoError=document.getElementById('videoError');
+let playing=false, dragging=false, gl=null, program=null, vao=null, uTime=null, uRes=null, uMouse=null;
+function fmt(t){return t.toFixed(3).padStart(6,'0')}
+function replicaTime(){return Math.max(0,teacher.currentTime*parseFloat(timeScale.value||1)+parseFloat(offset.value||0))}
+function updateClock(){clock.textContent=`${fmt(teacher.currentTime)} / ${fmt(teacher.duration||DURATION)}`;timeline.value=teacher.currentTime;offsetText.textContent=`${Number(offset.value).toFixed(3)}s`;timeScaleText.textContent=`${Number(timeScale.value).toFixed(3)}×`;}
+function compile(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.get
