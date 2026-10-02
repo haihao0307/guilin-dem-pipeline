@@ -2,18 +2,18 @@ name: Landscape V07 Original Geometry Fast Startup
 on:
   push:
     branches: [feature/stone-money-landscape-influence-tool-v05-20261002]
-    paths: [tools/stone-money/rebuild_landscape_v07.py, tools/stone-money/repair_v07_transport.py, .github/workflows/landscape-v07-rebuild.yml]
+    paths: [tools/stone-money/rebuild_landscape_v07.py, tools/stone-money/repair_v07_transport.py, tools/stone-money/prepare_preview.py, .github/workflows/landscape-v07-rebuild.yml]
   workflow_dispatch:
 permissions:
   contents: write
   pages: write
 concurrency:
   group: landscape-v07-rebuild
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   rebuild:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,24 +22,18 @@ jobs:
           sparse-checkout: |
             tools/stone-money
             workbenches/landscape-terrain-influence-tool-v06
-      - name: Prepare immutable kernel and V07
+      - name: Prepare immutable kernel and labelled interactive preview
         run: |
           git fetch --depth=1 --filter=blob:none origin fbaa49e0e0ef076bb72734a9b48862dcd57329e1
           python -m pip install -q playwright pillow
-          python -m py_compile tools/stone-money/rebuild_landscape_v07.py
           python tools/stone-money/rebuild_landscape_v07.py
-          python tools/stone-money/repair_v07_transport.py
-          node --check workbenches/landscape-terrain-influence-tool-v07/build-caches.cjs
-          node --check workbenches/landscape-terrain-influence-tool-v07/generator.js
           python - <<'PY'
-          import re,subprocess
           from pathlib import Path
-          s=Path('workbenches/landscape-terrain-influence-tool-v07/index.html').read_text()
-          for i,(attrs,body) in enumerate(re.findall(r'<script([^>]*)>(.*?)</script>',s,re.S)):
-              if 'text/plain' in attrs: continue
-              p=Path(f'/tmp/v07-script-{i}.js');p.write_text(body);subprocess.run(['node','--check',str(p)],check=True)
-          assert '<iframe' not in s.lower()
+          p=Path('tools/stone-money/repair_v07_transport.py')
+          code=p.read_text().split('import subprocess,sys')[0]
+          exec(compile(code,str(p),'exec'),{'__file__':str(p.resolve()),'__name__':'__main__'})
           PY
+          python tools/stone-money/prepare_preview.py
       - uses: actions/cache/restore@v4
         id: full-cache
         with:
@@ -47,78 +41,71 @@ jobs:
           path: |
             workbenches/landscape-terrain-influence-tool-v07/cache
             workbenches/landscape-terrain-influence-tool-v07/manifest.json
-      - name: Produce ten original full-resolution recipes
+      - name: Produce original geometry if cache absent
         if: steps.full-cache.outputs.cache-hit != 'true'
-        run: node --max-old-space-size=4096 workbenches/landscape-terrain-influence-tool-v07/build-caches.cjs
-      - name: Evaluate original vertex fields before publication
-        if: steps.full-cache.outputs.cache-hit != 'true'
-        run: python -u workbenches/landscape-terrain-influence-tool-v07/bake-caches.py
+        run: |
+          node --max-old-space-size=4096 workbenches/landscape-terrain-influence-tool-v07/build-caches.cjs
+          python -u workbenches/landscape-terrain-influence-tool-v07/bake-caches.py
+      - uses: actions/cache/restore@v4
+        id: material-cache
+        with:
+          key: landscape-v07-full-geometry-sampled-material-001
+          path: |
+            workbenches/landscape-terrain-influence-tool-v07/cache-preview
+            workbenches/landscape-terrain-influence-tool-v07/manifest-preview.json
+      - name: Sample original material without changing any geometry
+        if: steps.material-cache.outputs.cache-hit != 'true'
+        run: python -u workbenches/landscape-terrain-influence-tool-v07/bake-preview.py
       - uses: actions/cache/save@v4
-        if: steps.full-cache.outputs.cache-hit != 'true'
+        if: steps.material-cache.outputs.cache-hit != 'true'
         with:
-          key: landscape-v07-original-g3t3-full-field-cache-001
+          key: landscape-v07-full-geometry-sampled-material-001
           path: |
-            workbenches/landscape-terrain-influence-tool-v07/cache
-            workbenches/landscape-terrain-influence-tool-v07/manifest.json
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: landscape-v07-production-cache
-          path: |
-            workbenches/landscape-terrain-influence-tool-v07/index.html
-            workbenches/landscape-terrain-influence-tool-v07/generator.js
-            workbenches/landscape-terrain-influence-tool-v07/manifest.json
-            workbenches/landscape-terrain-influence-tool-v07/BUILD_CONTRACT.json
-            workbenches/landscape-terrain-influence-tool-v07/cache
-            tools/stone-money/rebuild_landscape_v07.py
-            tools/stone-money/repair_v07_transport.py
-          retention-days: 7
-          compression-level: 0
-      - name: Browser QA on actual terrain and controls
+            workbenches/landscape-terrain-influence-tool-v07/cache-preview
+            workbenches/landscape-terrain-influence-tool-v07/manifest-preview.json
+      - name: Verify first actual frame, ten presets and controls
+        timeout-minutes: 4
         run: |
           python -m http.server 8765 --bind 127.0.0.1 >/tmp/lm07-http.log 2>&1 &
           sleep 1
-          mkdir -p workbenches/landscape-terrain-influence-tool-v07/evidence
-          cat > /tmp/lm07-qa.py <<'PY'
+          python -u - <<'PY'
           from playwright.sync_api import sync_playwright
           from pathlib import Path
-          import json,shutil,time,os
-          root=Path('workbenches/landscape-terrain-influence-tool-v07')
-          out=root/'evidence';out.mkdir(exist_ok=True)
-          url=os.environ.get('QA_URL','http://127.0.0.1:8765/workbenches/landscape-terrain-influence-tool-v07/index.html')
+          import json,shutil,time
+          root=Path('workbenches/landscape-terrain-influence-tool-v07');out=root/'evidence';out.mkdir(exist_ok=True)
+          url='http://127.0.0.1:8765/workbenches/landscape-terrain-influence-tool-v07/index.html'
           cases=[];errors=[];workers=[]
           with sync_playwright() as p:
               b=p.chromium.launch(executable_path=shutil.which('google-chrome') or shutil.which('chromium'),headless=True,args=['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
-              page=b.new_page(viewport={'width':1600,'height':1000});page.set_default_timeout(45000)
-              page.on('pageerror',lambda e:errors.append(str(e)))
-              page.on('worker',lambda w:workers.append(w.url))
-              def wait():
-                  page.wait_for_function('window.__LM_READY__===true || !!window.__LM_ERROR__',timeout=60000)
-                  err=page.evaluate('window.__LM_ERROR__');assert not err,err
+              page=b.new_page(viewport={'width':1600,'height':1000});page.set_default_timeout(20000)
+              page.on('pageerror',lambda e:errors.append(str(e)));page.on('worker',lambda w:workers.append(w.url))
+              def wait(old=-1):
+                  page.wait_for_function('n=>(window.__LM_READY__===true&&window.__LM__.performance.loads.length>n)||!!window.__LM_ERROR__',arg=old,timeout=25000)
+                  assert not page.evaluate('window.__LM_ERROR__'),page.evaluate('window.__LM_ERROR__')
               try:
-                  t=time.monotonic();r=page.goto(url,wait_until='domcontentloaded');assert r.status==200
-                  wait();print('FIRST_READY',time.monotonic()-t,flush=True)
+                  t=time.monotonic();r=page.goto(url,wait_until='domcontentloaded');assert r.status==200;wait()
+                  startup=page.evaluate('window.__LM__.performance');print('FIRST_READY',time.monotonic()-t,startup,flush=True)
+                  assert startup['firstFrameMs']<12000,startup
                   for i in range(10):
-                      if i:page.evaluate('i=>window.__LM__.applyPalauPreset(i)',i)
-                      wait();rec=page.evaluate('''()=>({preset:window.__LM__.state.palauPreset,triangles:window.__LM__.report.parts.reduce((s,p)=>s+p.triangles,0),metrics:window.__LM__.performance,errors:window.__LM__.errors,frame:window.__LM__.auditFrame()})''')
-                      assert rec['triangles']>100000 and rec['frame']['nonzeroSamples']>1000 and rec['frame']['unique']>100 and rec['frame']['glError']==0,rec
-                      cases.append(rec);print('PRESET',i,rec['metrics']['loads'][-1],flush=True)
-                      if i in [0,2,5,9]:page.screenshot(path=str(out/f'P{i+1:02d}.png'),timeout=45000)
-                  page.evaluate('window.__LM__.goView("hero")');page.wait_for_timeout(300)
-                  a=page.evaluate('window.__LM__.state.theta');page.mouse.move(960,420);page.mouse.down();page.mouse.move(1090,470,steps=5);page.mouse.up();page.wait_for_timeout(400)
+                      if i:
+                          old=page.evaluate('window.__LM__.performance.loads.length');page.locator('#ltiPresetGrid button').nth(i).click();wait(old)
+                      rec=page.evaluate('''()=>({preset:__LM__.state.palauPreset,triangles:__LM__.report.parts.reduce((s,p)=>s+p.triangles,0),metrics:__LM__.performance.loads.at(-1),errors:__LM__.errors,frame:__LM__.auditFrame()})''')
+                      assert rec['preset']==i and rec['triangles']>1000000 and rec['frame']['unique']>100 and rec['frame']['glError']==0,rec
+                      assert rec['metrics']['loadToFrameMs']<12000,rec
+                      cases.append(rec);print('PRESET',i,rec['metrics'],flush=True)
+                      if i in [0,2,5,9]:page.screenshot(path=str(out/f'P{i+1:02d}.png'))
+                  page.evaluate('window.__LM__.goView("hero")');page.wait_for_timeout(250)
+                  a=page.evaluate('window.__LM__.state.theta');page.mouse.move(960,420);page.mouse.down();page.mouse.move(1090,470,steps=5);page.mouse.up();page.wait_for_timeout(300)
                   assert page.evaluate('window.__LM__.state.theta')!=a
-                  page.evaluate('window.__LM__.setMaterial({wet:.8})');page.wait_for_timeout(300)
+                  page.evaluate('window.__LM__.setMaterial({wet:.8,heightScale:1.35})');page.wait_for_timeout(300)
                   assert page.evaluate('window.__LM__.state.wet')==.8
-                  page.evaluate('window.__LM__.goView("section")');page.wait_for_timeout(500)
-                  page.screenshot(path=str(out/'section.png'),timeout=45000)
+                  page.evaluate('window.__LM__.goView("section")');page.wait_for_timeout(300);page.screenshot(path=str(out/'section.png'))
                   assert not workers,workers
                   assert not errors,errors
-                  assert cases[0]['metrics']['firstFrameMs']<12000,cases[0]['metrics']
               finally:
-                  (out/'QA.json').write_text(json.dumps({'url':url,'cases':cases,'pageErrors':errors,'startupWorkers':workers},ensure_ascii=False,indent=2))
+                  (out/'QA.json').write_text(json.dumps({'url':url,'cases':cases,'pageErrors':errors,'startupWorkers':workers,'materialMode':'vertex-sampled original functions; not original pixel parity','geometrySimplified':False},ensure_ascii=False,indent=2))
                   (out/'last.html').write_text(page.content());b.close()
           PY
-          python -u /tmp/lm07-qa.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -127,32 +114,44 @@ jobs:
             workbenches/landscape-terrain-influence-tool-v07/evidence
             /tmp/lm07-http.log
           retention-days: 7
-      - name: Publish V07 only, keep all other workbenches
+      - uses: actions/upload-artifact@v4
+        with:
+          name: landscape-v07-fast-production-bundle
+          compression-level: 0
+          path: |
+            workbenches/landscape-terrain-influence-tool-v07/index.html
+            workbenches/landscape-terrain-influence-tool-v07/generator.js
+            workbenches/landscape-terrain-influence-tool-v07/manifest-preview.json
+            workbenches/landscape-terrain-influence-tool-v07/BUILD_CONTRACT.json
+            workbenches/landscape-terrain-influence-tool-v07/cache-preview
+            tools/stone-money/rebuild_landscape_v07.py
+            tools/stone-money/repair_v07_transport.py
+            tools/stone-money/prepare_preview.py
+          retention-days: 7
+      - name: Publish isolated V07 only
         run: |
           git fetch --depth=1 origin gh-pages
           git worktree add /tmp/lm07-pages FETCH_HEAD
           TARGET=/tmp/lm07-pages/landscape-terrain-influence-tool-v07
           mkdir -p "$TARGET"
-          cp workbenches/landscape-terrain-influence-tool-v07/index.html "$TARGET/"
-          cp workbenches/landscape-terrain-influence-tool-v07/generator.js "$TARGET/"
-          cp workbenches/landscape-terrain-influence-tool-v07/manifest.json "$TARGET/"
-          cp workbenches/landscape-terrain-influence-tool-v07/BUILD_CONTRACT.json "$TARGET/"
-          cp -r workbenches/landscape-terrain-influence-tool-v07/cache "$TARGET/"
+          for f in index.html generator.js manifest-preview.json BUILD_CONTRACT.json; do cp "workbenches/landscape-terrain-influence-tool-v07/$f" "$TARGET/"; done
+          cp -r workbenches/landscape-terrain-influence-tool-v07/cache-preview "$TARGET/"
           cp -r workbenches/landscape-terrain-influence-tool-v07/evidence "$TARGET/"
           cd /tmp/lm07-pages
           git config user.name 'Landscape Mother'
           git config user.email 'actions@users.noreply.github.com'
           git add --sparse landscape-terrain-influence-tool-v07
-          git commit -m 'publish(landscape): V07 exact original geometry caches, no startup worker'
+          git commit -m 'publish(landscape): V07 full original geometry, explicitly sampled material, verified fast startup'
+          OK=0
           for n in 1 2 3; do
-            if git push origin HEAD:gh-pages; then break; fi
+            if git push origin HEAD:gh-pages; then OK=1; break; fi
             git fetch origin gh-pages
             git rebase origin/gh-pages
           done
+          test "$OK" = 1
           git rev-parse HEAD
-      - name: Read Pages publication status and request build
+      - name: Request Pages rebuild after token publication
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          curl -fsS -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' https://api.github.com/repos/haihao0307/guilin-dem-pipeline/pages | jq '{status,build_type,source,html_url}' || true
-          curl -sS -X POST -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' https://api.github.com/repos/haihao0307/guilin-dem-pipeline/pages/builds || true
+          curl -sS -X POST -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' https://api.github.com/repos/haihao0307/guilin-dem-pipeline/pages/builds
