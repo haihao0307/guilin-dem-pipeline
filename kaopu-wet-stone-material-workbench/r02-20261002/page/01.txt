@@ -1,0 +1,108 @@
+cher" muted playsinline preload="auto"></video><div id="videoError" class="error"></div></div></section>
+<section class="pane"><div class="paneHead"><strong>KAOPU｜1:1 源码复刻</strong><span id="gpuState" class="state">准备中</span></div><div class="viewport"><div class="tag">REPLICA · LIVE GLSL</div><canvas id="replica" width="960" height="540"></canvas><div id="gpuError" class="error"></div></div></section>
+</div>
+<section id="compare" class="compare"><div class="compareView"><canvas id="overlayTeacher" width="960" height="540"></canvas><canvas id="overlayReplica" width="960" height="540"></canvas><canvas id="diffCanvas" width="960" height="540" style="display:none"></canvas></div></section>
+<div class="bottom">
+<div class="card"><strong>第一阶段观察通道</strong><div class="channels"><div class="channel"><b>形体</b>球体母体、9 次球体平滑削切、地面并集、sphere tracing。</div><div class="channel"><b>表面</b>低频 <span class="mono">noise_3</span> 位移与 5 层 <span class="mono">fbm3_high</span> 法线细节。</div><div class="channel"><b>色彩 / 湿感</b>base/sand 混合、AO/凹角、宽与尖两级高光、Fresnel、明度方向项。</div></div></div>
+<div class="card"><strong>源锁定</strong><br>老师原录屏 SHA-256：<span class="mono">891a0782eb9fc9d678602bb70a67c5f32dfa4f4d33c030b02330bf6b6bf18138</span><br>复刻片元源码 SHA-256：<span class="mono">f03a5c354f54bef8d9c7d3e9b1b406e34e8a93759e592fb4d30ef1558a09e4db</span><br>说明：页面内视频为原录屏的浏览器兼容观察副本（320×180 / 15fps，仅用于在线并排学习）；原始 WebM 指纹保留在此。默认时间偏移与倍率用于画面对齐，不改变老师算法。</div>
+</div>
+</div>
+<script id="vs" type="x-shader/x-vertex">#version 300 es
+precision highp float;
+const vec2 POS[3] = vec2[3](vec2(-1.0,-1.0),vec2(3.0,-1.0),vec2(-1.0,3.0));
+void main(){gl_Position=vec4(POS[gl_VertexID],0.0,1.0);}
+</script>
+<script id="fs" type="x-shader/x-fragment">#version 300 es
+precision highp float;
+out vec4 outColor;
+uniform vec3 iResolution;
+uniform float iTime;
+uniform vec4 iMouse;
+
+/*
+"Wet stone" by Alexander Alekseev aka TDM - 2014
+License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+Contact: tdmaav@gmail.com
+*/
+
+#define SMOOTH
+//#define AA
+
+const int NUM_STEPS = 32;
+const int AO_SAMPLES = 4;
+const vec2 AO_PARAM = vec2(1.2, 3.5);
+const vec2 CORNER_PARAM = vec2(0.25, 40.0);
+const float INV_AO_SAMPLES = 1.0 / float(AO_SAMPLES);
+const float TRESHOLD = 0.1;
+const float EPSILON = 1e-3;
+const float LIGHT_INTENSITY = 0.25;
+const vec3 RED = vec3(1.0,0.7,0.7) * LIGHT_INTENSITY;
+const vec3 ORANGE = vec3(1.0,0.67,0.43) * LIGHT_INTENSITY;
+const vec3 BLUE = vec3(0.54,0.77,1.0) * LIGHT_INTENSITY;
+const vec3 WHITE = vec3(1.2,1.07,0.98) * LIGHT_INTENSITY;
+const float DISPLACEMENT = 0.1;
+
+mat3 fromEuler(vec3 ang) {
+  vec2 a1 = vec2(sin(ang.x),cos(ang.x));
+  vec2 a2 = vec2(sin(ang.y),cos(ang.y));
+  vec2 a3 = vec2(sin(ang.z),cos(ang.z));
+  mat3 m;
+  m[0] = vec3(a1.y*a3.y+a1.x*a2.x*a3.x,a1.y*a2.x*a3.x+a3.y*a1.x,-a2.y*a3.x);
+  m[1] = vec3(-a2.y*a1.x,a1.y*a2.y,a2.x);
+  m[2] = vec3(a3.y*a1.x*a2.x+a1.y*a3.x,a1.x*a3.x-a1.y*a3.y*a2.x,a2.y*a3.y);
+  return m;
+}
+vec3 saturation(vec3 c, float t) {return mix(vec3(dot(c,vec3(0.2126,0.7152,0.0722))),c,t);}
+float hash11(float p) {return fract(sin(p * 727.1)*435.545);}
+float hash12(vec2 p) {float h = dot(p,vec2(127.1,311.7));return fract(sin(h)*437.545);}
+vec3 hash31(float p) {vec3 h = vec3(127.231,491.7,718.423) * p;return fract(sin(h)*435.543);}
+
+float noise_3(in vec3 p) {
+  vec3 i = floor(p);
+  vec3 f = fract(p);
+  vec3 u = f*f*(3.0-2.0*f);
+  vec2 ii = i.xy + i.z * vec2(5.0);
+  float a = hash12(ii + vec2(0.0,0.0));
+  float b = hash12(ii + vec2(1.0,0.0));
+  float c = hash12(ii + vec2(0.0,1.0));
+  float d = hash12(ii + vec2(1.0,1.0));
+  float v1 = mix(mix(a,b,u.x), mix(c,d,u.x), u.y);
+  ii += vec2(5.0);
+  a = hash12(ii + vec2(0.0,0.0));
+  b = hash12(ii + vec2(1.0,0.0));
+  c = hash12(ii + vec2(0.0,1.0));
+  d = hash12(ii + vec2(1.0,1.0));
+  float v2 = mix(mix(a,b,u.x), mix(c,d,u.x), u.y);
+  return max(mix(v1,v2,u.z),0.0);
+}
+
+float fbm3(vec3 p, float a, float f) {return noise_3(p);}
+float fbm3_high(vec3 p, float a, float f) {
+  float ret = 0.0;
+  float amp = 1.0;
+  float frq = 1.0;
+  for(int i = 0; i < 5; i++) {
+    float n = pow(noise_3(p * frq),2.0);
+    ret += n * amp;
+    frq *= f;
+    amp *= a * (pow(n,0.2));
+  }
+  return ret;
+}
+
+float diffuse(vec3 n,vec3 l,float p) {return pow(max(dot(n,l),0.0),p);}
+float specular(vec3 n,vec3 l,vec3 e,float s) {
+  float nrm = (s + 8.0) / (3.1415 * 8.0);
+  return pow(max(dot(reflect(e,n),l),0.0),s) * nrm;
+}
+
+float plane(vec3 gp, vec4 p) {return dot(p.xyz,gp+p.xyz*p.w);}
+float sphere(vec3 p,float r) {return length(p)-r;}
+float capsule(vec3 p,float r,float h) {p.y -= clamp(p.y,-h,h);return length(p)-r;}
+float cylinder(vec3 p,float r,float h) {return max(abs(p.y/h),capsule(p,r,h));}
+float box(vec3 p,vec3 s) {p = abs(p)-s;return max(max(p.x,p.y),p.z);}
+float rbox(vec3 p,vec3 s) {p = abs(p)-s;return length(p-min(p,0.0));}
+float quad(vec3 p,vec2 s) {p = abs(p) - vec3(s.x,0.0,s.y);return max(max(p.x,p.y),p.z);}
+
+float boolUnion(float a,float b) {return min(a,b);}
+float boolIntersect(float a,float b) {return max(a
