@@ -1,3 +1,4 @@
+import {installLegacyEyeRim} from './legacy-eye-fit-r05.js';
 import {batchLegacyEyes} from './legacy-eye-batch.js';
 import {specializeLegacyShadow} from './legacy-shadow-pass.js';
 import {interpolateLegacyPresentation} from './legacy-presentation.js';
@@ -23,7 +24,7 @@ export function createBarracudaModule(stage){
    await new Promise(r=>setTimeout(r,30));
   }
   api=frame.contentWindow.__KAOPU_R14__;
-  const r=api.renderer,originalFrame=r.frame.bind(r);frame.contentWindow.cancelAnimationFrame(r.raf);cranial=await installLegacyCranial(api);batch=batchLegacyEyes(api);shadow=specializeLegacyShadow(api);presentation=interpolateLegacyPresentation(api);cranial.attach();
+  const r=api.renderer,originalFrame=r.frame.bind(r);frame.contentWindow.cancelAnimationFrame(r.raf);cranial=await installLegacyCranial(api);const eyeRim=installLegacyEyeRim(api);api.eyeRimR05=eyeRim;batch=batchLegacyEyes(api);shadow=specializeLegacyShadow(api);presentation=interpolateLegacyPresentation(api);cranial.attach();
   r.frame=now=>{if(!visible||document.hidden){r.last=now;running=false;return;}if(lastDraw===now)return;lastDraw=now;running=true;try{originalFrame(now);}finally{presentation.restore();}};
   // ResizeObserver may report hidden zero dimensions. Never clear a valid buffer
   // merely because the module was hidden or its size did not change.
