@@ -54,7 +54,103 @@ jobs:
           node --check /tmp/lti-v06-monitor.js
           node --check workbenches/landscape-terrain-influence-tool-v06/landscape-terrain-worker-v06.js
 
-      - name: Capture local browser generation diagnostics
+      - name: Install browser verification harness
+        run: |
+          python -m pip install -q playwright pillow
+          cat > /tmp/lti_v06_browser_check.py <<'PY'
+          from __future__ import annotations
+          import json, os, time
+          from pathlib import Path
+          from PIL import Image, ImageStat
+          from playwright.sync_api import sync_playwright
+
+          url=os.environ['LTI_URL']
+          chrome=os.environ['LTI_CHROME']
+          prefix=Path(os.environ['LTI_PREFIX'])
+          timeout_s=int(os.environ.get('LTI_TIMEOUT_SECONDS','420'))
+          prefix.parent.mkdir(parents=True,exist_ok=True)
+          console=[]
+          page_errors=[]
+          with sync_playwright() as p:
+              browser=p.chromium.launch(
+                  headless=True,
+                  executable_path=chrome,
+                  args=[
+                      '--no-sandbox','--disable-dev-shm-usage',
+                      '--use-gl=angle','--use-angle=swiftshader',
+                      '--enable-unsafe-swiftshader','--ignore-gpu-blocklist',
+                      '--disable-background-timer-throttling',
+                      '--disable-renderer-backgrounding'
+                  ],
+              )
+              page=browser.new_page(viewport={'width':1600,'height':1000},device_scale_factor=1)
+              page.on('console',lambda msg: console.append(f'{msg.type}: {msg.text}'))
+              page.on('pageerror',lambda error: page_errors.append(str(error)))
+              response=page.goto(url,wait_until='domcontentloaded',timeout=60000)
+              if response is not None and response.status>=400:
+                  raise RuntimeError(f'HTTP {response.status}: {url}')
+              start=time.monotonic()
+              last=''
+              state={}
+              while time.monotonic()-start<timeout_s:
+                  state=page.evaluate("""() => ({
+                    ready: window.__LM_READY__ === true,
+                    error: window.__LM_ERROR__ || null,
+                    step: document.getElementById('step')?.textContent || '',
+                    status: document.getElementById('status')?.textContent || '',
+                    toolStatus: document.getElementById('ltiStatus')?.textContent || '',
+                    progress: document.getElementById('progress')?.style.width || '',
+                    workerMode: document.documentElement.dataset.landscapeWorkerMode || '',
+                    workerRedirects: window.__LTI_WORKER_REDIRECTS__ || 0,
+                    failure: document.documentElement.dataset.landscapeGenerationFailure || ''
+                  })""")
+                  marker=f"{state.get('step')}|{state.get('progress')}|{state.get('toolStatus')}"
+                  if marker!=last:
+                      print(json.dumps({'elapsed_s':round(time.monotonic()-start,1),**state},ensure_ascii=False),flush=True)
+                      last=marker
+                  if state.get('error') or state.get('failure'):
+                      raise RuntimeError(f"terrain generation failed: {state}")
+                  if state.get('ready'):
+                      break
+                  time.sleep(1)
+              else:
+                  raise TimeoutError(f'terrain generation did not finish in {timeout_s}s; last state={state}')
+              page.wait_for_timeout(1200)
+              report=page.evaluate("""() => ({
+                ready: window.__LM_READY__ === true,
+                error: window.__LM_ERROR__ || null,
+                workerMode: document.documentElement.dataset.landscapeWorkerMode || '',
+                workerRedirects: window.__LTI_WORKER_REDIRECTS__ || 0,
+                generationReady: document.documentElement.dataset.landscapeGenerationReady || '',
+                builtInMs: window.__LM__?.report?.builtInMs || null,
+                geometryGridM: window.__LM__?.report?.geometryGridM || null,
+                partCount: window.__LM__?.report?.parts?.length || 0,
+                triangles: window.__LM__?.report?.parts?.reduce((s,p)=>s+(p.triangles||0),0) || 0,
+                signatures: window.__LM__?.signatures || [],
+                runtimeErrors: window.__LM__?.errors || []
+              })""")
+              prefix.with_suffix('.html').write_text(page.content(),encoding='utf-8')
+              prefix.with_suffix('.json').write_text(json.dumps({'state':state,'report':report,'console':console,'pageErrors':page_errors},ensure_ascii=False,indent=2),encoding='utf-8')
+              screenshot=prefix.with_suffix('.png')
+              page.screenshot(path=str(screenshot),full_page=True)
+              browser.close()
+          if not report['ready'] or report['error']:
+              raise RuntimeError(f'not ready after wait: {report}')
+          if report['workerMode']!='external-same-origin' or report['workerRedirects']<1:
+              raise RuntimeError(f'worker bridge not used: {report}')
+          if report['partCount']<2 or report['triangles']<1000:
+              raise RuntimeError(f'generated scene is empty: {report}')
+          if page_errors:
+              raise RuntimeError(f'page errors: {page_errors}')
+          image=Image.open(screenshot).convert('RGB')
+          stat=ImageStat.Stat(image)
+          spread=sum(hi-lo for lo,hi in stat.extrema)
+          if spread<80:
+              raise RuntimeError(f'screenshot has insufficient visual spread: {stat.extrema}')
+          print(json.dumps({'url':url,'report':report,'screenshotBytes':screenshot.stat().st_size,'spread':spread},ensure_ascii=False),flush=True)
+          PY
+
+      - name: Verify actual local terrain generation
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/lti-v06-http.log 2>&1 &
           SERVER=$!
@@ -71,64 +167,21 @@ jobs:
             sudo apt-get install -y -qq chromium || sudo apt-get install -y -qq chromium-browser
             CHROME=$(command -v chromium || command -v chromium-browser)
           fi
-          URL=http://127.0.0.1:8765/workbenches/landscape-terrain-influence-tool-v06/index.html
-          set +e
-          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage \
-            --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist \
-            --run-all-compositor-stages-before-draw --virtual-time-budget=90000 \
-            --window-size=1600,1000 --dump-dom "$URL" >/tmp/lti-v06-local-dom.html 2>/tmp/lti-v06-local-chrome.log
-          DUMP_STATUS=$?
-          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage \
-            --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist \
-            --run-all-compositor-stages-before-draw --virtual-time-budget=90000 \
-            --window-size=1600,1000 --screenshot=/tmp/lti-v06-local.png "$URL" >/tmp/lti-v06-local-shot.log 2>&1
-          SHOT_STATUS=$?
-          set -e
-          echo "dump_status=$DUMP_STATUS screenshot_status=$SHOT_STATUS"
-          python - <<'PY'
-          from pathlib import Path
-          import re
-          p=Path('/tmp/lti-v06-local-dom.html')
-          s=p.read_text(encoding='utf-8',errors='replace') if p.exists() else ''
-          root=re.search(r'<html[^>]*>',s,re.I)
-          err=re.search(r'<div id="error"[^>]*>(.*?)</div>',s,re.S|re.I)
-          step=re.search(r'<small id="step"[^>]*>(.*?)</small>',s,re.S|re.I)
-          status=re.search(r'<span id="ltiStatus"[^>]*>(.*?)</span>',s,re.S|re.I)
-          clean=lambda x:re.sub('<[^>]+>','',x or '').strip()
-          print('ROOT=',root.group(0) if root else 'MISSING')
-          print('ERROR=',clean(err.group(1) if err else ''))
-          print('STEP=',clean(step.group(1) if step else ''))
-          print('LTI_STATUS=',clean(status.group(1) if status else ''))
-          print('DOM_BYTES=',len(s))
-          PY
-          echo '--- chrome log ---'
-          tail -120 /tmp/lti-v06-local-chrome.log || true
-          echo '--- screenshot log ---'
-          tail -120 /tmp/lti-v06-local-shot.log || true
-          echo '--- http log ---'
-          tail -60 /tmp/lti-v06-http.log || true
+          LTI_URL=http://127.0.0.1:8765/workbenches/landscape-terrain-influence-tool-v06/index.html \
+          LTI_CHROME="$CHROME" LTI_PREFIX=/tmp/lti-v06-local LTI_TIMEOUT_SECONDS=420 \
+          python /tmp/lti_v06_browser_check.py
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: stone-money-landscape-influence-tool-v06-local-diagnostics
+          name: stone-money-landscape-influence-tool-v06-local-proof
           path: |
-            /tmp/lti-v06-local-dom.html
+            /tmp/lti-v06-local.html
+            /tmp/lti-v06-local.json
             /tmp/lti-v06-local.png
-            /tmp/lti-v06-local-chrome.log
-            /tmp/lti-v06-local-shot.log
             /tmp/lti-v06-http.log
             workbenches/landscape-terrain-influence-tool-v06/build.json
           retention-days: 7
-
-      - name: Assert actual local terrain generation
-        run: |
-          test -s /tmp/lti-v06-local-dom.html
-          grep -q 'data-landscape-generation-ready="true"' /tmp/lti-v06-local-dom.html
-          grep -q 'data-landscape-worker-mode="external-same-origin"' /tmp/lti-v06-local-dom.html
-          ! grep -q 'data-landscape-generation-failure' /tmp/lti-v06-local-dom.html
-          test -s /tmp/lti-v06-local.png
-          test $(stat -c%s /tmp/lti-v06-local.png) -gt 100000
 
       - name: Commit generated V06 bundle
         run: |
@@ -162,32 +215,29 @@ jobs:
             git push origin HEAD:gh-pages
           fi
 
-      - name: Verify public GitHub Pages route and generation
+      - name: Verify public GitHub Pages route and actual generation
         run: |
           PUBLIC=https://haihao0307.github.io/guilin-dem-pipeline/landscape-terrain-influence-tool-v06/index.html
           WORKER=https://haihao0307.github.io/guilin-dem-pipeline/landscape-terrain-influence-tool-v06/landscape-terrain-worker-v06.js
           for i in $(seq 1 120); do
-            if curl -fsS "$PUBLIC" >/tmp/lti-v06-public.html && grep -q '地形影响工具体系 V0.6' /tmp/lti-v06-public.html && curl -fsS "$WORKER" >/tmp/lti-v06-public-worker.js; then break; fi
+            if curl -fsS "$PUBLIC" >/tmp/lti-v06-public-source.html && grep -q '地形影响工具体系 V0.6' /tmp/lti-v06-public-source.html && curl -fsS "$WORKER" >/tmp/lti-v06-public-worker.js; then break; fi
             sleep 2
           done
-          grep -q '地形影响工具体系 V0.6' /tmp/lti-v06-public.html
+          grep -q '地形影响工具体系 V0.6' /tmp/lti-v06-public-source.html
           grep -q 'self.onmessage' /tmp/lti-v06-public-worker.js
           CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)
-          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage \
-            --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist \
-            --run-all-compositor-stages-before-draw --virtual-time-budget=90000 \
-            --window-size=1600,1000 --dump-dom "$PUBLIC" >/tmp/lti-v06-public-dom.html 2>/tmp/lti-v06-public-chrome.log
-          grep -q 'data-landscape-generation-ready="true"' /tmp/lti-v06-public-dom.html
-          ! grep -q 'data-landscape-generation-failure' /tmp/lti-v06-public-dom.html
+          LTI_URL="$PUBLIC" LTI_CHROME="$CHROME" LTI_PREFIX=/tmp/lti-v06-public LTI_TIMEOUT_SECONDS=420 \
+          python /tmp/lti_v06_browser_check.py
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: stone-money-landscape-influence-tool-v06-final-proof
+          name: stone-money-landscape-influence-tool-v06-public-proof
           path: |
-            /tmp/lti-v06-public-dom.html
-            /tmp/lti-v06-public-chrome.log
             /tmp/lti-v06-public.html
+            /tmp/lti-v06-public.json
+            /tmp/lti-v06-public.png
+            /tmp/lti-v06-public-source.html
             /tmp/lti-v06-public-worker.js
             workbenches/landscape-terrain-influence-tool-v06/build.json
           retention-days: 7
