@@ -1,0 +1,142 @@
+{
+  "schema": "kaopu.mother-delivery-receipt/2.0",
+  "taskId": "FISH_UNIFIED_SURFACE_MOTION_R02_20261002",
+  "baseSha": "e6c15feb0ad7b3c8ef369f3a2e0fdd05f889fc49",
+  "headSha": "f075ee89c1803a01e1c4aea688bcce6f5fa0987f",
+  "targetObject": [
+    "barracuda",
+    "herring",
+    "tuna-yellow-label",
+    "tuna-blue-label",
+    "colorful",
+    "picasso"
+  ],
+  "targetDefectOrChange": "Fix source-material/visual precision, Picasso fin tearing, herring dorsal stretch/spine motion, mechanical yellow tuna motion; freeze eyes. Integrate all fish into the established barracuda production system, one entry and selection viewport.",
+  "productionFilesChanged": [
+    "fish-five-r01/data/colorful.metadata.json",
+    "fish-five-r01/data/colorful.score.json.gz",
+    "fish-five-r01/data/herring.metadata.json",
+    "fish-five-r01/data/herring.score.json.gz",
+    "fish-five-r01/data/picasso.metadata.json",
+    "fish-five-r01/data/picasso.score.json.gz",
+    "fish-five-r01/data/scores.json",
+    "fish-five-r01/data/tuna-blue-label.metadata.json",
+    "fish-five-r01/data/tuna-blue-label.score.json.gz",
+    "fish-five-r01/data/tuna-yellow-label.metadata.json",
+    "fish-five-r01/data/tuna-yellow-label.score.json.gz",
+    "fish-five-r01/src/app.js",
+    "fish-five-r01/src/barracuda-adapter.js",
+    "fish-five-r01/src/behavior.js",
+    "fish-five-r01/src/workbench.template.html"
+  ],
+  "tests": [
+    {
+      "report": "R02_SOURCE_REBUILD_REPORT.json",
+      "passed": true
+    },
+    {
+      "report": "MOTION_R02_REPORT.json",
+      "passed": true
+    },
+    {
+      "report": "R02_BEHAVIOR_REPORT.json",
+      "passed": true
+    },
+    {
+      "report": "R02_GPU_SURFACE_REPORT.json",
+      "passed": true
+    },
+    {
+      "report": "INDEPENDENT_R02_GPU_REPORT.json",
+      "passed": true
+    },
+    {
+      "report": "INDEPENDENT_R02_REPORT.json",
+      "passed": true
+    },
+    {
+      "report": "R02-local-BROWSER_REPORT.json",
+      "passed": true
+    },
+    {
+      "report": "R02_PUBLIC_HTTP_REPORT.json",
+      "passed": true
+    },
+    {
+      "report": "R02-public-BROWSER_REPORT.json",
+      "passed": true
+    }
+  ],
+  "browserDesktop": {
+    "viewport": {
+      "width": 1440,
+      "height": 950
+    },
+    "passed": true
+  },
+  "browser390x844": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "passed": true
+  },
+  "referenceViews": [
+    "side",
+    "oblique",
+    "top",
+    "fourburstphases"
+  ],
+  "regressionCasesRun": [
+    {
+      "caseId": "FISH_DYNAMIC_TRIANGLE_STRAIN",
+      "passed": true
+    },
+    {
+      "caseId": "FISH_SOURCE_MATERIAL_PRECISION",
+      "passed": true
+    },
+    {
+      "caseId": "FISH_SOURCE_GAIT_AND_VISIBLE_RADIUS",
+      "passed": true
+    },
+    {
+      "caseId": "FISH_SAME_SYSTEM_SIX_TYPES",
+      "passed": true
+    },
+    {
+      "caseId": "FISH_EYES_FREEZE_R02",
+      "passed": true
+    },
+    {
+      "caseId": "FISH_CONTACT_VELOCITY_BUDGET",
+      "passed": true
+    }
+  ],
+  "failedGates": [],
+  "knownLimitations": [
+    "Blue original body texture512²/1746bodyvertices; Colorful128²/6018bodyvertices remain intrinsic source limits.",
+    "Original thin triangles retain nonzero deformation; full measured edge/area extrema are preserved in independent report.",
+    "Eye natural-shape issues explicitly deferred; current eye code and source data frozen.",
+    "Gait tuning and grouping remain engineering candidates, no biological field calibration.",
+    "Mobileviewport tested on actual desktop Chromium, physical mobile device not tested.",
+    "R14 custom ABI is preserved inside the unified standalone system."
+  ],
+  "fallbackActive": false,
+  "freshArtifactProven": true,
+  "creativeSubstituteDetected": false,
+  "staleOrWrongTargetDetected": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "status": "CANDIDATE_READY",
+  "nextAction": "User visual and motion review in the unified Fish system",
+  "artifact": {
+    "path": "dist/KAOPU_FISH_UNIFIED_R02.html",
+    "htmlSha256": "453915b0177deba629fcb3ec8216edf7821af6d3d04ea132902074f651eda6b5",
+    "sourceHead": "f075ee89c1803a01e1c4aea688bcce6f5fa0987f",
+    "publishedCommit": "3084d080ad7d288b165679fdc4ce1ed55e37388c",
+    "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-fish-system/",
+    "shareAllowed": true
+  },
+  "completedAt": "2026-10-02T05:03:39.217Z"
+}

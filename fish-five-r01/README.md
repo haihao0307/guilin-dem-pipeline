@@ -1,4 +1,4 @@
-# 五鱼生物制作工作台 R01
+# 统一鱼类制作系统（海狼与五份来源）
 
 ## 当前修订：共用鱼类制作系统 R02
 
@@ -10,7 +10,11 @@
 
 当前验收以带R02前缀的报告、`INDEPENDENT_R02_REPORT.json`和`R02_PUBLICATION_PROOF.json`为准；旧R01机器通过不等于本轮视觉批准。新增框架见 `knowledge/fish-motion/R02_RENDER_AND_UNIFIED_FRAMEWORK.md` 和绑定/动作修订记录。
 
-当前任务：五份原模型的完整表面参数化重构、连续脊椎、独立鱼鳍、眼睛、程序动画和自主活动。海狼 R14 保持暂停；不修改其源码、文件或页面。
+当前入口：https://haihao0307.github.io/guilin-dem-pipeline/kaopu-fish-system/ 。统一显示海狼及五份来源；原海狼R14源码、文件和旧页面保留。眼睛本轮冻结，后续统一处理。
+
+## R01 历史基线（以下记录不代表当前发布）
+
+R01任务：五份原模型的完整表面参数化重构、连续脊椎、独立鱼鳍、眼睛、程序动画和自主活动。海狼 R14 保持暂停；不修改其源码、文件或页面。
 
 选择窗口包含鲱鱼、黄鳍标签 Tuna、蓝鳍标签 Animated Tuna、Colorfull Fish、Picasso 来源标签模型。中间一次只显示当前一种鱼；支持单鱼、30 条同种演示、巡游、缓游、加速、转向、驻留、骨架和相机操作。具体物种与自然动作标定未确认的项目保留候选状态。
 
@@ -35,6 +39,6 @@
 - [x] 公网固定链接与真实浏览器：PUBLICATION_PROOF.json 已记录 HTTP 200、同版本全文哈希与桌面/手机视口交互通过。
 - [x] 只有截图没有工作台不能交付；截图只作内部 QA。
 
-固定测试入口：https://haihao0307.github.io/guilin-dem-pipeline/kaopu-fish-factory-r01/
+R01历史入口：https://haihao0307.github.io/guilin-dem-pipeline/kaopu-fish-factory-r01/
 
 本次冻结生产源码 head 与网页哈希绑定在 BUILD_RECEIPT.json；后续回执提交只追加交付文件与文档，不改变已复核生产代码。

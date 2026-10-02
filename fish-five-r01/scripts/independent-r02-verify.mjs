@@ -87,13 +87,13 @@ const diff=execFileSync('git',['-c','core.fsmonitor=false','diff',anchor.baseSha
 const app=fs.readFileSync(path.join(root,'src/app.js'),'utf8'),behavior=fs.readFileSync(path.join(root,'src/behavior.js'),'utf8');check('procedural-controller-instead-of-raw-clip-playback',/sampleSpine/.test(app)&&/finWaves/.test(app)&&/FishBehavior/.test(app)&&!/AnimationMixer/.test(app),{analyticSpine:true,independentFinDomains:true,sourceClipsAreReferenceOnly:true});
 
 const baselineApp=execFileSync('git',['show',anchor.baseSha+':fish-five-r01/src/app.js'],{cwd:repo,encoding:'utf8'});
-const eyeBlock=s=>s.slice(s.indexOf('function makeEyes'),s.indexOf('function ',s.indexOf('function makeEyes')+10));
+const eyeBlock=s=>s.slice(s.indexOf('function makeEyes'),s.indexOf('function ',s.indexOf('function makeEyes')+10)).replace(/\r\n/g,'\n');
 check('eye-renderer-frozen',eyeBlock(app)===eyeBlock(baselineApp),{oldSha:sha(eyeBlock(baselineApp)),newSha:sha(eyeBlock(app))});
 const zlib=await import('node:zlib');
-for(const id of targets){const baseline=JSON.parse(zlib.gunzipSync(execFileSync('git',['show',anchor.baseSha+':fish-five-r01/data/'+id+'.score.json.gz'],{cwd:repo,maxBuffer:30*1024*1024}))),current=JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(root,'data/'+id+'.score.json.gz'))));check('eye-source-data-frozen-'+id,JSON.stringify(baseline.eyes)===JSON.stringify(current.eyes),{baselineSha:sha(JSON.stringify(baseline.eyes)),currentSha:sha(JSON.stringify(current.eyes))});}
+for(const id of targets){const baseline=JSON.parse(zlib.gunzipSync(execFileSync('git',['show',anchor.baseSha+':fish-five-r01/data/'+id+'.score.json.gz'],{cwd:repo,maxBuffer:80*1024*1024}))),current=JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(root,'data/'+id+'.score.json.gz'))));check('eye-source-data-frozen-'+id,JSON.stringify(baseline.eyes)===JSON.stringify(current.eyes),{baselineSha:sha(JSON.stringify(baseline.eyes)),currentSha:sha(JSON.stringify(current.eyes))});}
 
 
-const eyeTransport=s=>s.slice(s.indexOf('const eyeHead=eyes[i]'),s.indexOf('if(state.bones&&i===0)'));
+const eyeTransport=s=>s.slice(s.indexOf('const eyeHead=eyes[i]'),s.indexOf('if(state.bones&&i===0)')).replace(/\r\n/g,'\n');
 check('eye-transport-render-block-frozen',eyeTransport(app)===eyeTransport(baselineApp),{oldSha:sha(eyeTransport(baselineApp)),newSha:sha(eyeTransport(app))});
 const vm=await import('node:vm'),baselineBehavior=execFileSync('git',['show',anchor.baseSha+':fish-five-r01/src/behavior.js'],{cwd:repo,encoding:'utf8'});
 function loadBehavior(code){const ctx={module:{exports:{}},console};vm.runInNewContext(code,ctx);return ctx.module.exports;}

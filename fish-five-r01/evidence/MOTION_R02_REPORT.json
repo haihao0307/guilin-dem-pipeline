@@ -1,0 +1,283 @@
+{
+  "schema": "fish.motion-r02/1",
+  "taskId": "FISH_UNIFIED_SURFACE_MOTION_R02_20261002",
+  "verifiedAt": "2026-10-02T04:36:24.266Z",
+  "baselineSha": "e6c15fe",
+  "pass": true,
+  "behaviorSha256": "a72d61063db5ee4153d9affce4f6d10d8839f7f4e8b00dd1ddae5cee3d504c1a",
+  "sourceHashes": {
+    "herring": "a78728677739d9aea4d79556c1aa917c62b24fefe9db1a7dc0f3bc2b8843d81b",
+    "tuna-yellow-label": "18fbfbc4bf4e22e41a48b23fb73cd8a0331fea9915c220b4a3fcb63decffe966"
+  },
+  "tests": [
+    {
+      "label": "herring source-body edges: R01 versus R02, amplitude retained",
+      "pass": true,
+      "old": {
+        "testedBodyEdges": 6144,
+        "poses": 64,
+        "minRatio": 0.858014888045492,
+        "maxRatio": 1.141874043989007,
+        "p99Ratio": 1.0592522679418204,
+        "maxCenterArcError": 0,
+        "tailLateralAmplitude": 0.09543909715793997,
+        "worst": {
+          "mesh": 0,
+          "indices": [
+            59,
+            292
+          ],
+          "positions": [
+            [
+              0.1667523980172571,
+              0.022801173715468304,
+              0.08114075913859053
+            ],
+            [
+              0.141730584847453,
+              0.02372994081081159,
+              0.08251042226170617
+            ]
+          ],
+          "phase": 0.39269908169872414
+        }
+      },
+      "current": {
+        "testedBodyEdges": 6144,
+        "poses": 64,
+        "minRatio": 0.880207452617865,
+        "maxRatio": 1.119678092181469,
+        "p99Ratio": 1.0761851187754643,
+        "maxCenterArcError": 0,
+        "tailLateralAmplitude": 0.19202806992262894,
+        "worst": {
+          "mesh": 0,
+          "indices": [
+            240,
+            250
+          ],
+          "positions": [
+            [
+              0.07050155365121337,
+              0.026234942438622542,
+              0.0840125726537836
+            ],
+            [
+              0.04680657183854635,
+              0.026325973302786316,
+              0.0841087159300884
+            ]
+          ],
+          "phase": 2.1598449493429825
+        }
+      },
+      "unchangedAmplitude": 0.36,
+      "excludesFinDeformation": true,
+      "bodyStretchImproved": true
+    },
+    {
+      "label": "herring 120-second continuous propulsion with independent demand",
+      "pass": true,
+      "seconds": 120,
+      "minFrequency": 0.9286046220870624,
+      "maxFrequency": 1.0253571654243585,
+      "minAmplitude": 0.3366509430018126,
+      "maxAmplitude": 0.3690478444319941,
+      "maxPhaseStep": 0.1073751512734269,
+      "maxTailStep": 0.08936197837871937,
+      "independentFrames": 6372
+    },
+    {
+      "label": "tuna-yellow-label source-body edges: R01 versus R02, amplitude retained",
+      "pass": true,
+      "old": {
+        "testedBodyEdges": 5038,
+        "poses": 64,
+        "minRatio": 0.9587211571450436,
+        "maxRatio": 1.0412990322718472,
+        "p99Ratio": 1.0147658329082199,
+        "maxCenterArcError": 0,
+        "tailLateralAmplitude": 0.06671188175961304,
+        "worst": {
+          "mesh": 0,
+          "indices": [
+            2068,
+            2069
+          ],
+          "positions": [
+            [
+              0.07885813982274438,
+              -0.01035440514634296,
+              0.06656945977545872
+            ],
+            [
+              0.10798682954074065,
+              -0.011834521489970178,
+              0.06194249295788985
+            ]
+          ],
+          "phase": 4.908738521234052
+        }
+      },
+      "current": {
+        "testedBodyEdges": 5038,
+        "poses": 64,
+        "minRatio": 0.9660608593867488,
+        "maxRatio": 1.033880788914339,
+        "p99Ratio": 1.0078311000386395,
+        "maxCenterArcError": 0,
+        "tailLateralAmplitude": 0.06886565964726862,
+        "worst": {
+          "mesh": 0,
+          "indices": [
+            2082,
+            2083
+          ],
+          "positions": [
+            [
+              0.24695747381903185,
+              -0.01564131475813381,
+              0.030627497747494042
+            ],
+            [
+              0.20602482845105777,
+              -0.02313547424827801,
+              0.04028496346443378
+            ]
+          ],
+          "phase": 5.595961914206819
+        }
+      },
+      "unchangedAmplitude": 0.28,
+      "excludesFinDeformation": true,
+      "bodyStretchImproved": true
+    },
+    {
+      "label": "tuna-yellow-label 120-second continuous propulsion with independent demand",
+      "pass": true,
+      "seconds": 120,
+      "minFrequency": 0.8571735442230911,
+      "maxFrequency": 0.9464835891145679,
+      "minAmplitude": 0.26183962233474295,
+      "maxAmplitude": 0.28703721233599533,
+      "maxPhaseStep": 0.09911552967685466,
+      "maxTailStep": 0.031135263332824306,
+      "independentFrames": 6306
+    },
+    {
+      "label": "R02 eyes remain exactly the R01 implementation",
+      "pass": true,
+      "eyeImplementationSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "noEyeRNGConsumptionAdded": true
+    },
+    {
+      "label": "All five eye output streams equal R01 over 60 seconds",
+      "pass": true,
+      "streams": [
+        {
+          "id": "herring",
+          "frames": 3600,
+          "eyeStreamSha256": "aa5bd238f84f30354ce466c59a6333328a3188d76c0947afea26e46ea50af0c2"
+        },
+        {
+          "id": "tuna-yellow-label",
+          "frames": 3600,
+          "eyeStreamSha256": "1338c7d85f5d6c160c99b0622bcce6fcca156bc5c0ef2e5b5f28382ab883941a"
+        },
+        {
+          "id": "tuna-blue-label",
+          "frames": 3600,
+          "eyeStreamSha256": "1338c7d85f5d6c160c99b0622bcce6fcca156bc5c0ef2e5b5f28382ab883941a"
+        },
+        {
+          "id": "colorful",
+          "frames": 3600,
+          "eyeStreamSha256": "1adaad1b2b0b0eac64dfbf2c202e5b83b91e4b14278d0d9d90ea9172c771d66f"
+        },
+        {
+          "id": "picasso",
+          "frames": 3600,
+          "eyeStreamSha256": "1366d0cfad405cade29a51501aa015f1f6454a45ca6873b22e1026bdd935222a"
+        }
+      ]
+    },
+    {
+      "label": "Herring full-visible-source radius, stable anterior and bounded discrete curvature",
+      "pass": true,
+      "maxHeadErrorBL": 0,
+      "maxDiscreteCurvaturePerBL": 3.205941678577645,
+      "maxTangentRadians": 0.9544335047522563,
+      "maxCurvatureRadiusProduct": 0.12000000000000113,
+      "visibleCaudalMaxAbsZ": 0.09993004376317208,
+      "radiiIncludeSourceFins": true
+    },
+    {
+      "label": "Herring original joint locations and nonuniform last-joint phase are retained",
+      "pass": true,
+      "jointU": [
+        0.2935993447,
+        0.4168671998,
+        0.5317024856,
+        0.6877285976,
+        0.8138419432,
+        0.9166352809
+      ],
+      "jointLocalAmplitude": [
+        0.196873,
+        0.347495,
+        0.348368,
+        0.34959,
+        0.347495,
+        0.349415
+      ],
+      "jointPhase": [
+        -1.7788396,
+        -2.8255145,
+        -3.8779489,
+        -4.9204322,
+        -5.9671062,
+        -4.9204322
+      ],
+      "meaning": "Original local-joint gait retargeted as curvature-bounded smooth hinge field; not exact raw skin or zoological calibration"
+    },
+    {
+      "label": "Fixed source-chain envelopes cover amplitude, phase and turn with analytic sampling margin",
+      "pass": true,
+      "rows": [
+        {
+          "id": "herring",
+          "maximumSampledBend": 0.28530028250643996,
+          "amplitudeGridStep": 0.03,
+          "phaseGridSamples": 512,
+          "turnGrid": [
+            -0.75,
+            0,
+            0.75
+          ],
+          "lipschitzMargin": 0.1383495061374096,
+          "provedUpper": 0.42364978864384956,
+          "fixedBendBound": 0.45
+        },
+        {
+          "id": "tuna-yellow-label",
+          "maximumSampledBend": 0.17048943597793612,
+          "amplitudeGridStep": 0.03,
+          "phaseGridSamples": 512,
+          "turnGrid": [
+            -0.5,
+            0,
+            0.5
+          ],
+          "lipschitzMargin": 0.05065590377021044,
+          "provedUpper": 0.22114533974814654,
+          "fixedBendBound": 0.24
+        }
+      ],
+      "proof": "Clamp/projection of scalar angle is 1-Lipschitz; integrated unit-tangent displacement is bounded by max angle-field perturbation. Margin covers half-grid spacing in all three input axes."
+    }
+  ],
+  "failures": [],
+  "scope": "Independent raw-source edge and continuous motion validation; GPU fins/normals/public/visual by root verifier",
+  "visualAcceptance": false,
+  "productionReady": false
+}

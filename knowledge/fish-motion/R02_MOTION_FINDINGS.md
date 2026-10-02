@@ -32,8 +32,8 @@ R02 接触更新顺序为：`旧位置/新朝向的固定动作包围 → SAT分
 
 - [x] 没有用生成图片替代真实三维。
 - [x] 已实际修改动作生产源码并运行原源数据量测。
-- [ ] 当前工作台来自最终冻结源码并经真实浏览器验收：由总装完成。
-- [ ] 公网当前版本、统一海狼入口与 standalone 已验证：由总装完成。
+- [x] 当前工作台来自最终冻结源码并经真实浏览器验收：见INDEPENDENT_R02_REPORT.json与R02-local/public-BROWSER_REPORT.json。
+- [x] 公网当前版本、统一海狼入口与 standalone 已验证：见R02_PUBLICATION_PROOF.json。
 - [x] 只有截图而无工作台即本轮失败；此知识文件不替代生产交付。
 
 `visualAcceptance`、`motionAcceptance`、`productionReady` 仍由实际独立门禁和用户判断决定，不由本文自动置真。
