@@ -1,0 +1,154 @@
+{
+  "schema": "kaopu.mother-delivery-receipt/2.0",
+  "taskId": "FISH_FIVE_PROCEDURAL_FACTORY_R01_20261002",
+  "baseSha": "81a22234de24160fcbfab26b9be2a7c488e14ef9",
+  "headSha": "bc39ae35e2bc10e292550329842a2f0f2b812c2d",
+  "targetObject": [
+    "herring",
+    "tuna-yellow-label",
+    "tuna-blue-label",
+    "colorful",
+    "picasso"
+  ],
+  "targetDefectOrChange": "Rebuild all five source fish parametrically with measured rigs, procedural locomotion, fins, lively eyes and behavior. One central viewport showing only selected fish type; selection window. Document shared fish anatomy and reusable production knowledge.",
+  "productionFilesChanged": [
+    "fish-five-r01/data/colorful.metadata.json",
+    "fish-five-r01/data/colorful.score.json.gz",
+    "fish-five-r01/data/herring.metadata.json",
+    "fish-five-r01/data/herring.score.json.gz",
+    "fish-five-r01/data/picasso.metadata.json",
+    "fish-five-r01/data/picasso.score.json.gz",
+    "fish-five-r01/data/scores.json",
+    "fish-five-r01/data/tuna-blue-label.metadata.json",
+    "fish-five-r01/data/tuna-blue-label.score.json.gz",
+    "fish-five-r01/data/tuna-yellow-label.metadata.json",
+    "fish-five-r01/data/tuna-yellow-label.score.json.gz",
+    "fish-five-r01/src/app.js",
+    "fish-five-r01/src/behavior.js",
+    "fish-five-r01/src/workbench.template.html",
+    "knowledge/fish-motion/FISH_FACTORY_FRAMEWORK_R01.md"
+  ],
+  "tests": [
+    {
+      "report": "SOURCE_REBUILD_REPORT.json",
+      "passed": true
+    },
+    {
+      "report": "BEHAVIOR_REPORT.json",
+      "passed": true
+    },
+    {
+      "report": "GPU_SURFACE_REPORT.json",
+      "passed": true
+    },
+    {
+      "report": "local-BROWSER_REPORT.json",
+      "passed": true
+    },
+    {
+      "report": "INDEPENDENT_REPORT.json",
+      "passed": true
+    },
+    {
+      "report": "PUBLIC_HTTP_REPORT.json",
+      "passed": true
+    },
+    {
+      "report": "public-BROWSER_REPORT.json",
+      "passed": true
+    }
+  ],
+  "browserDesktop": {
+    "viewport": {
+      "width": 1440,
+      "height": 950
+    },
+    "passed": true
+  },
+  "browser390x844": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "passed": true
+  },
+  "referenceViews": [
+    {
+      "view": "side",
+      "allFiveSourcesCompared": true,
+      "evidence": "INDEPENDENT_REPORT.json"
+    },
+    {
+      "view": "oblique",
+      "allFiveSourcesCompared": true,
+      "evidence": "INDEPENDENT_REPORT.json"
+    },
+    {
+      "view": "top",
+      "allFiveSourcesCompared": true,
+      "evidence": "INDEPENDENT_REPORT.json"
+    }
+  ],
+  "regressionCasesRun": [
+    {
+      "caseId": "FISH_CONTINUOUS_SURFACE_FIN_SCOPE",
+      "passed": true,
+      "evidence": [
+        "SOURCE_REBUILD_REPORT.json",
+        "GPU_SURFACE_REPORT.json",
+        "INDEPENDENT_REPORT.json"
+      ]
+    },
+    {
+      "caseId": "FISH_SOURCE_PARAMETRIC_FIDELITY",
+      "passed": true,
+      "evidence": [
+        "SOURCE_REBUILD_REPORT.json",
+        "INDEPENDENT_REPORT.json"
+      ]
+    },
+    {
+      "caseId": "FISH_ONE_SELECTED_KIND",
+      "passed": true,
+      "evidence": [
+        "local-BROWSER_REPORT.json",
+        "public-BROWSER_REPORT.json"
+      ]
+    },
+    {
+      "caseId": "FISH_SHARED_FRAMEWORK_SPECIES_LIMITS",
+      "passed": true,
+      "evidence": [
+        "SOURCE_REBUILD_REPORT.json",
+        "BEHAVIOR_REPORT.json",
+        "INDEPENDENT_REPORT.json"
+      ]
+    }
+  ],
+  "failedGates": [],
+  "knownLimitations": [
+    "Source labels do not establish biological identity.",
+    "Gait speeds, fish grouping and MPF candidate are engineering envelopes, not field-calibrated biology.",
+    "30same-kind group is an interaction demonstration, not evidence all five sources naturally form such schools.",
+    "Dimensions are normalized body lengths, not measured meters.",
+    "Desktop browser with mobile viewport tested; physical mobile hardware not tested.",
+    "Source4K textures preserved losslessly; standalone HTML is72,108,917bytes."
+  ],
+  "fallbackActive": false,
+  "freshArtifactProven": true,
+  "creativeSubstituteDetected": false,
+  "staleOrWrongTargetDetected": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "status": "CANDIDATE_READY",
+  "nextAction": "User review of the current public interactive workbench",
+  "artifact": {
+    "path": "dist/KAOPU_FIVE_FISH_R01.html",
+    "htmlSha256": "dbe8670e73576a1302c7006b041df8b834f18ef8eae6cf9f18101ac8b00eeb86",
+    "sourceHead": "bc39ae35e2bc10e292550329842a2f0f2b812c2d",
+    "publishedCommit": "fee3efa331ab7116806a279e586f6a9f726e3071",
+    "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-fish-factory-r01/",
+    "shareAllowed": true
+  },
+  "completedAt": "2026-10-02T03:52:10.351Z"
+}

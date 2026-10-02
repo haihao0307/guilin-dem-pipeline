@@ -1,0 +1,122 @@
+[
+  {
+    "schema": "kaopu.mother-regression-case/2.0",
+    "caseId": "FISH_CONTINUOUS_SURFACE_FIN_SCOPE",
+    "domain": "Fish",
+    "source": "user_correction",
+    "createdAt": "2026-10-02T03:52:10.351Z",
+    "failureClass": "Surface discontinuity / incorrect whole-body skin weights",
+    "failureDescription": "User requires a continuous intact sampled exterior; weighting applies to independent fins, while body motion uses the continuous center spine.",
+    "rejectedArtifact": null,
+    "mustNeverRepeat": [
+      "No primitive fish substitute",
+      "No fractured surface at duplicated source positions",
+      "No whole-body fin weight deformation"
+    ],
+    "requiredEvidence": [
+      "SOURCE_REBUILD_REPORT.json",
+      "GPU_SURFACE_REPORT.json",
+      "INDEPENDENT_REPORT.json"
+    ],
+    "gateLogic": [
+      "Current frozen artifact and corresponding reports must pass"
+    ],
+    "appliesTo": [
+      "herring",
+      "tuna-yellow-label",
+      "tuna-blue-label",
+      "colorful",
+      "picasso"
+    ],
+    "active": true
+  },
+  {
+    "schema": "kaopu.mother-regression-case/2.0",
+    "caseId": "FISH_SOURCE_PARAMETRIC_FIDELITY",
+    "domain": "Fish",
+    "source": "user_correction",
+    "createdAt": "2026-10-02T03:52:10.351Z",
+    "failureClass": "Creative substitute for source shape",
+    "failureDescription": "User requires one-to-one source surface sampling and parameterized reproduction, retaining the new lively eyes.",
+    "rejectedArtifact": null,
+    "mustNeverRepeat": [
+      "Retain complete source addresses, indices, UV and residual",
+      "Measure source eye shape separately from optical axis"
+    ],
+    "requiredEvidence": [
+      "SOURCE_REBUILD_REPORT.json",
+      "INDEPENDENT_REPORT.json"
+    ],
+    "gateLogic": [
+      "Current frozen artifact and corresponding reports must pass"
+    ],
+    "appliesTo": [
+      "herring",
+      "tuna-yellow-label",
+      "tuna-blue-label",
+      "colorful",
+      "picasso"
+    ],
+    "active": true
+  },
+  {
+    "schema": "kaopu.mother-regression-case/2.0",
+    "caseId": "FISH_ONE_SELECTED_KIND",
+    "domain": "Fish",
+    "source": "user_correction",
+    "createdAt": "2026-10-02T03:52:10.351Z",
+    "failureClass": "Wrong workbench presentation",
+    "failureDescription": "User requires a selector and one selected species in the central display; no all-species comparison.",
+    "rejectedArtifact": null,
+    "mustNeverRepeat": [
+      "One selected source type per viewport",
+      "Single and30same-kind group switch reliably"
+    ],
+    "requiredEvidence": [
+      "local-BROWSER_REPORT.json",
+      "public-BROWSER_REPORT.json"
+    ],
+    "gateLogic": [
+      "Current frozen artifact and corresponding reports must pass"
+    ],
+    "appliesTo": [
+      "herring",
+      "tuna-yellow-label",
+      "tuna-blue-label",
+      "colorful",
+      "picasso"
+    ],
+    "active": true
+  },
+  {
+    "schema": "kaopu.mother-regression-case/2.0",
+    "caseId": "FISH_SHARED_FRAMEWORK_SPECIES_LIMITS",
+    "domain": "Fish",
+    "source": "user_correction",
+    "createdAt": "2026-10-02T03:52:10.351Z",
+    "failureClass": "Overgeneralized anatomy / behavior",
+    "failureDescription": "User requires shared anatomy and a reusable production framework while preserving source-specific shape differences.",
+    "rejectedArtifact": null,
+    "mustNeverRepeat": [
+      "Do not invent absent fins",
+      "Do not treat source label as confirmed taxonomy",
+      "Keep engineered gait envelopes separate from biological calibration"
+    ],
+    "requiredEvidence": [
+      "SOURCE_REBUILD_REPORT.json",
+      "BEHAVIOR_REPORT.json",
+      "INDEPENDENT_REPORT.json"
+    ],
+    "gateLogic": [
+      "Current frozen artifact and corresponding reports must pass"
+    ],
+    "appliesTo": [
+      "herring",
+      "tuna-yellow-label",
+      "tuna-blue-label",
+      "colorful",
+      "picasso"
+    ],
+    "active": true
+  }
+]
