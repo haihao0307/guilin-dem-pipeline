@@ -1,3 +1,4 @@
+import {readCarrierBytes,loadPhase} from './asset-reader-r06.js';
 import {installLegacyEyeRim} from './legacy-eye-fit-r05.js';
 import {batchLegacyEyes} from './legacy-eye-batch.js';
 import {specializeLegacyShadow} from './legacy-shadow-pass.js';
@@ -12,14 +13,15 @@ export function createBarracudaModule(stage){
  async function mountOnce(){
   if(api)return api;
   const carrier=document.getElementById('barracudaModule');let html;
-  if(carrier.dataset.encoding==='gzip-base64'){const binary=atob(carrier.textContent.trim()),bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);html=await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text();}else html=JSON.parse(carrier.textContent);
+  if(carrier.dataset.encoding==='gzip-base64'){const bytes=await readCarrierBytes(carrier,'barracuda');loadPhase('barracuda','decode');html=await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text();}else html=JSON.parse(carrier.textContent);
   frame=document.createElement('iframe');frame.title='海狼鱼 · 共用制作系统';frame.id='barracudaViewport';frame.style.cssText='position:absolute;inset:0;width:100%;height:100%;border:0;display:none';
   stage.prepend(frame);
+  loadPhase('barracuda','prepare');
   const style='<style>html,body,.app,.main,.stage{height:100%!important;width:100%!important;margin:0!important}.app,.main{display:block!important}.topbar,.controls,.footer,.school-dock,.behavior,.hint,.panel-label{display:none!important}#gl{height:100%!important;width:100%!important}</style>';
-  frame.srcdoc=patchLegacySampling(html).replace('</head>',style+'<script>globalThis.__FISH_KEEP_CPU_COPY__=true;</script></head>');
+  frame.srcdoc=patchLegacySampling(html).replace('</head>',style+'<script>globalThis.__FISH_KEEP_CPU_COPY__=true;addEventListener("error",e=>{globalThis.__FISH_IFRAME_BOOT_ERROR__=e.message;});addEventListener("unhandledrejection",e=>{globalThis.__FISH_IFRAME_BOOT_ERROR__=String(e.reason?.message||e.reason);});</script></head>');
   const started=performance.now();
   while(!frame.contentWindow?.__KAOPU_R14__?.ready){
-   const error=frame.contentWindow?.__KAOPU_R14__?.error;if(error)throw Error(error);
+   const error=frame.contentWindow?.__FISH_IFRAME_BOOT_ERROR__||frame.contentWindow?.__KAOPU_R14__?.error;if(error)throw Error(error);
    if(performance.now()-started>120000)throw Error('海狼鱼模块启动超时');
    await new Promise(r=>setTimeout(r,30));
   }
@@ -31,7 +33,7 @@ export function createBarracudaModule(stage){
   r.resize=()=>{const rect=r.canvas.getBoundingClientRect();if(rect.width<1||rect.height<1)return;r.dpr=Math.min(devicePixelRatio||1,1.35);const w=Math.max(1,Math.round(rect.width*r.dpr)),h=Math.max(1,Math.round(rect.height*r.dpr));if(r.canvas.width!==w)r.canvas.width=w;if(r.canvas.height!==h)r.canvas.height=h;};
   return api;
  }
- function mount(){return mounting||(mounting=mountOnce().catch(error=>{mounting=null;throw error;}));}
+ function mount(){return mounting||(mounting=mountOnce().catch(error=>{mounting=null;if(!api&&frame){frame.remove();frame=null;}throw error;}));}
  function resume(){if(!visible||!api||document.hidden||running)return;running=true;api.renderer.last=0;api.renderer.raf=frame.contentWindow.requestAnimationFrame(t=>api.renderer.frame(t));}
  function activate(on){visible=on;if(frame)frame.style.display=on?'block':'none';if(!on&&api){frame.contentWindow.cancelAnimationFrame(api.renderer.raf);running=false;}else if(on){api?.renderer.resize();resume();}}
  document.addEventListener('visibilitychange',()=>{if(document.hidden&&api){frame.contentWindow.cancelAnimationFrame(api.renderer.raf);running=false;}else resume();});
