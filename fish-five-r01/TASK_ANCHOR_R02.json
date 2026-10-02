@@ -1,0 +1,64 @@
+{
+  "schema": "kaopu.mother-task-anchor/2.0",
+  "taskId": "FISH_UNIFIED_SURFACE_MOTION_R02_20261002",
+  "dispatchTime": "2026-10-02T04:00:19.136Z",
+  "baseSha": "e6c15feb0ad7b3c8ef369f3a2e0fdd05f889fc49",
+  "branch": "work/fish-unified-r02-20261002",
+  "userDirective": "Fix source-material/visual precision, Picasso fin tearing, herring dorsal stretch/spine motion, mechanical yellow tuna motion; freeze eyes. Integrate all fish into the established barracuda production system, one entry and selection viewport.",
+  "targets": [
+    "barracuda-r14",
+    "herring",
+    "tuna-yellow-label",
+    "tuna-blue-label",
+    "colorful",
+    "picasso"
+  ],
+  "protectedInvariants": [
+    "Original model surfaces/UV/topology unchanged",
+    "All existing eye geometry/data/shaders frozen; no eye polish this round",
+    "R14 production source unchanged; re-use via shared system adapter",
+    "No desktop mouse control",
+    "Keep old publicly usable versions"
+  ],
+  "taskMode": "REPLICATION_LOCKED",
+  "creativeAuthorization": false,
+  "allowedPaths": [
+    "fish-five-r01",
+    "knowledge/fish-motion"
+  ],
+  "workbenchRequirements": {
+    "noGeneratedImage": true,
+    "actualProductionCode": true,
+    "realtime3D": true,
+    "interactive": true,
+    "standalone": true,
+    "publicAndBrowserValidationRequired": true,
+    "screenshotOnlyFails": true
+  },
+  "coverage": [
+    {
+      "system": "materials/lighting",
+      "owner": "root"
+    },
+    {
+      "system": "source-fin bindings",
+      "owner": "five_source_scores"
+    },
+    {
+      "system": "spine/gait",
+      "owner": "five_behavior_core"
+    },
+    {
+      "system": "unified six-fish system",
+      "owner": "root"
+    },
+    {
+      "system": "eyes",
+      "status": "FROZEN_BY_USER"
+    },
+    {
+      "system": "independent verification",
+      "owner": "five_independent_verify"
+    }
+  ]
+}

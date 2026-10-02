@@ -1,6 +1,7 @@
 """Exact source-address fish factory compiler; original ZIPs are read only."""
 import json, pathlib, zipfile, io, base64, posixpath, hashlib, gzip, math, re
 import numpy as np
+import heapq
 from datetime import datetime, timezone
 
 ROOT=pathlib.Path(__file__).resolve().parents[1]
@@ -231,7 +232,8 @@ def main(only=None):
   reports=[i for i in json.loads((ROOT/'evidence/SOURCE_REBUILD_REPORT.json').read_text(encoding='utf8'))['fiveScores'] if i['id'] not in only]
  for id,s in selected():
   if only and id not in only:continue
-  score,meta=compile_score(id,s);raw=json.dumps(score,ensure_ascii=False,separators=(',',':')).encode();gz=gzip.compress(raw,9,mtime=0);file=id+'.score.json.gz';(ROOT/'data'/file).write_bytes(gz);(ROOT/'data'/(id+'.metadata.json')).write_text(json.dumps(meta,ensure_ascii=False,indent=2)+'\n',encoding='utf8');items.append({'id':id,'label':meta['label'],'file':file,'metadataFile':id+'.metadata.json','vertices':meta['vertices'],'triangles':meta['triangles'],'bytes':len(gz),'sha256':sha(gz)});reports.append(meta);print(id,meta['vertices'],meta['triangles'],len(gz),meta['bindingVertexCounts'],flush=True)
+  score,meta=compile_score(id,s);meta['bindingR02']=refine_fin_bindings_r02(score);meta['bindingVertexCounts']={str(i):sum(int(np.sum((np.array(p['finId'])==i)&(np.array(p['finWeight'])>0))) for p in score['primitives']) for i in range(8)}
+  raw=json.dumps(score,ensure_ascii=False,separators=(',',':')).encode();gz=gzip.compress(raw,9,mtime=0);file=id+'.score.json.gz';(ROOT/'data'/file).write_bytes(gz);(ROOT/'data'/(id+'.metadata.json')).write_text(json.dumps(meta,ensure_ascii=False,indent=2)+'\n',encoding='utf8');items.append({'id':id,'label':meta['label'],'file':file,'metadataFile':id+'.metadata.json','vertices':meta['vertices'],'triangles':meta['triangles'],'bytes':len(gz),'sha256':sha(gz)});reports.append(meta);print(id,meta['vertices'],meta['triangles'],len(gz),meta['bindingVertexCounts'],flush=True)
  order=['herring','tuna-yellow-label','tuna-blue-label','colorful','picasso'];items.sort(key=lambda i:order.index(i['id']));reports.sort(key=lambda i:order.index(i['id']))
  (ROOT/'data/scores.json').write_text(json.dumps({'schema':'FISH_FIVE_SOURCE_SCORES_1','items':items},ensure_ascii=False,indent=2)+'\n',encoding='utf8')
  (ROOT/'evidence/SOURCE_REBUILD_REPORT.json').write_text(json.dumps({'checkedAt':datetime.now(timezone.utc).isoformat(),'stage':'SOURCE_PARAMETRIC_COMPILATION','fiveScores':reports,'pass':all(r['allPositionsNormalsFinite'] and r['parameterization']['maxFloat32ReconstructionError']<2e-7 for r in reports),'sourceSkinRest':'worldJoint * inverseBind * originalVertex; normals inverse transpose of blended linear transform','noOriginalWrites':True,'sourceTexturePixelsRetainedLosslessly':True,'sourceTextureByteHashesRetained':True,'noPrimitiveSubstitution':True,'anatomicalRigBindingsRequireVisualReview':True,'productionReady':False},ensure_ascii=False,indent=2)+'\n',encoding='utf8')
@@ -252,6 +254,72 @@ def revise_eyes_only():
    if row['id']==item['id']:row['eyes']=score['eyes']
   print(item['id'],[(eye['localRadii'],eye['center']) for eye in score['eyes']],flush=True)
  report['sourceOcularShapeRevised']='Exact source ocular cluster local bounds; tangent radius never substituted for ocular depth. Picasso source UV patch engineering eyes kept .009L thickness.';report['checkedAt']=datetime.now(timezone.utc).isoformat();(ROOT/'data/scores.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf8');(ROOT/'evidence/SOURCE_REBUILD_REPORT.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+def fin_topology(score):
+ positions=np.concatenate([np.array(p['positions']).reshape(-1,3) for p in score['primitives']]);labels=np.concatenate([np.array(p['finId'],int) for p in score['primitives']]);weights=np.concatenate([np.array(p['finWeight'],float) for p in score['primitives']]);offset=0;triangles=[]
+ for p in score['primitives']:triangles.extend((np.array(p['indices'],int).reshape(-1,3)+offset).tolist());offset+=len(p['positions'])//3
+ triangles=np.array(triangles,int);_,first,inverse=np.unique(np.round(positions,7),axis=0,return_index=True,return_inverse=True);points=positions[first];fid=labels[first];w=weights[first];tri=inverse[triangles];edges=np.unique(np.sort(np.concatenate([tri[:,[0,1]],tri[:,[1,2]],tri[:,[2,0]]]),axis=1),axis=0);edges=edges[edges[:,0]!=edges[:,1]];length=np.linalg.norm(points[edges[:,0]]-points[edges[:,1]],axis=1);adj=[[] for _ in points]
+ for (a,b),d in zip(edges,length):adj[a].append((int(b),float(d)));adj[b].append((int(a),float(d)))
+ return positions,triangles,points,fid,w,tri,edges,length,adj,inverse
+def refine_fin_bindings_r02(score):
+ pos,triRaw,p,fid,w,tri,edges,length,adj,inv=fin_topology(score);old=w.copy();different=np.any(fid[tri]!=fid[tri[:,0]][:,None],axis=1);boundary=np.zeros(len(p),bool);boundary[np.unique(tri[different])]=True
+ # Every cross-class original triangle is entirely body-fixed for fin motion. Exact source topology is not edited.
+ w[boundary]=0.;zeroSeeds=boundary|(w<=.02)
+ rootDetails=[]
+ for f in score['rig']['fins']:
+  id=f['id'];members=np.where(fid==id)[0]
+  if not len(members):continue
+  sources=members[zeroSeeds[members]]
+  if not len(sources):
+   root=np.array(f['root']);dist=np.linalg.norm(p[members]-root,axis=1);sources=members[dist<=np.quantile(dist,.12)];w[sources]=0
+  # Smooth geodesic hinge band anchored in measured triangle boundaries, independent of UV islands.
+  dist=np.full(len(p),np.inf);dist[sources]=0.;heap=[(0.,int(k)) for k in sources];heapq.heapify(heap)
+  while heap:
+   d,k=heapq.heappop(heap)
+   if d!=dist[k]:continue
+   for j,L in adj[k]:
+    if fid[j]!=id:continue
+    nd=d+L
+    if nd<dist[j]:dist[j]=nd;heapq.heappush(heap,(nd,j))
+  band=.045 if id<5 else .060 if id<7 else .065;target=np.minimum(w[members],smooth(dist[members]/band));target[~np.isfinite(dist[members])]=0.;w[members]=target
+  # Lipschitz envelope: limiter only reduces weights, so no new body skin is recruited into a fin.
+  gain=3.0 if score['id']=='picasso' else 6.0 if score['id']=='colorful' else 12.0;heap=[(float(w[k]),int(k)) for k in members];heapq.heapify(heap)
+  while heap:
+   value,k=heapq.heappop(heap)
+   if value!=w[k]:continue
+   for j,L in adj[k]:
+    if fid[j]!=id:continue
+    nv=value+gain*L
+    if nv<w[j]:w[j]=nv;heapq.heappush(heap,(nv,j))
+  roots=p[sources];previousRoot=list(f['root'])
+  if score['id']=='picasso':
+   # Static source has no anatomical joint. Replace the former generic X pivot with an actual zero-hinge source address.
+   c=np.median(roots,axis=0);f['root']=roots[np.argmin(np.linalg.norm(roots-c,axis=1))].tolist()
+  active=members[w[members]>1e-8]
+  if len(active):f['tip']=p[active[np.argmax(np.linalg.norm(p[active]-np.array(f['root']),axis=1))]].tolist()
+  f['bindingR02']={'kind':'TOPOLOGY_ZERO_HINGE_PLUS_GEODESIC_C2_FIELD','zeroHingeSourceAddresses':len(sources),'transitionBodyLengths':band,'maxEdgeWeightGradientPerBodyLength':gain,'previousRoot':previousRoot,'rootMeaning':'Static source exact zero-hinge vertex, engineering-derived joint' if score['id']=='picasso' else 'Source rig/chart measured root retained; topology-root support constrained separately','axisMeaning':'Existing source-derived fin orientation retained; static axis is an engineering hinge candidate, no native rig or biological measurement claimed','bodySkinRecruitment':False};rootDetails.append({'id':id,**f['bindingR02'],'activeAddresses':int(np.sum(w[members]>1e-8))})
+ # Edge slope alone misses skinny source triangles. Constrain the actual barycentric surface-field gradient too.
+ gradient=np.zeros((len(p),3));areaSum=np.zeros(len(p));triP=p[tri];e1=triP[:,1]-triP[:,0];e2=triP[:,2]-triP[:,0];cross=np.cross(e1,e2);a2=np.linalg.norm(cross,axis=1);g11=np.einsum('ij,ij->i',e1,e1);g12=np.einsum('ij,ij->i',e1,e2);g22=np.einsum('ij,ij->i',e2,e2);den=g11*g22-g12*g12;valid=den>1e-20
+ def triangle_gradient():
+  d1=w[tri[:,1]]-w[tri[:,0]];d2=w[tri[:,2]]-w[tri[:,0]];c1=np.zeros(len(tri));c2=c1.copy();c1[valid]=(d1[valid]*g22[valid]-d2[valid]*g12[valid])/den[valid];c2[valid]=(d2[valid]*g11[valid]-d1[valid]*g12[valid])/den[valid];result=e1*c1[:,None]+e2*c2[:,None];result[different]=0;return result
+ cap=3. if score['id']=='picasso' else 6. if score['id']=='colorful' else 4.
+ for iteration in range(120):
+  tg=triangle_gradient();norm=np.linalg.norm(tg,axis=1);bad=(norm>cap*(1+1e-6))&valid
+  if not np.any(bad):break
+  q=w[tri[bad]];minimum=q.min(1);factor=np.minimum(1,cap/norm[bad]);target=minimum[:,None]+(q-minimum[:,None])*factor[:,None];np.minimum.at(w,tri[bad].ravel(),target.ravel())
+ # Finish with a uniform per-fin scale only for any remaining constrained skinny-face gradients.
+ tg=triangle_gradient();norm=np.linalg.norm(tg,axis=1)
+ for f in score['rig']['fins']:
+  if 'bindingR02' not in f:continue
+  mask=(fid[tri[:,0]]==f['id'])&~different;maximum=float(norm[mask].max()) if np.any(mask) else 0.;factor=min(1.,cap/max(maximum,1e-12));w[fid==f['id']]*=factor;f['bindingR02']['triangleGradientFinalScale']=factor;f['bindingR02']['triangleSurfaceGradientCap']=cap
+ tg=triangle_gradient()
+ for k in range(3):np.add.at(gradient,tri[:,k],tg*a2[:,None]);np.add.at(areaSum,tri[:,k],a2)
+ gradient/=np.maximum(areaSum[:,None],1e-20);gradient[boundary]=0;offset=0
+ for primitive in score['primitives']:
+  n=len(primitive['positions'])//3;indices=inv[offset:offset+n];primitive['finWeight']=w[indices].tolist();primitive['finGradient']=gradient[indices].ravel().tolist();offset+=n
+ rootDetails=[]
+ for f in score['rig']['fins']:
+  if 'bindingR02' in f:rootDetails.append({'id':f['id'],**f['bindingR02'],'finalActiveAddresses':int(np.sum((fid==f['id'])&(w>1e-8)))})
+ return {'crossClassTriangles':int(different.sum()),'crossClassActiveTrianglesAfter':int(np.sum(different&np.any(w[tri]>0,axis=1))),'weightsOnlyReduced':bool((w<=old+1e-12).all()),'rootDetails':rootDetails,'sourceTriangleGradientMax':float(np.linalg.norm(tg,axis=1).max()),'vertexGradientMax':float(np.linalg.norm(gradient,axis=1).max()),'finGradientFinite':bool(np.isfinite(gradient).all())}
 if __name__=='__main__':
  import sys
  if '--inspect' in sys.argv:

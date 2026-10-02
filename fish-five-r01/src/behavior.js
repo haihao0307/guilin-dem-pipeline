@@ -11,8 +11,8 @@
   const unit = v => { const l = Math.hypot(...v); return l > 1e-10 ? v.map(x => x / l) : [0, 0, 0]; };
   const smooth = (a, b, dt, response) => mix(a, b, 1 - Math.exp(-dt * response));
   const profiles = Object.freeze({
-    herring: { id:'herring', gait:'subcarangiform-candidate', speed:0.65, burst:1.7, frequency:1, amplitude:0.36, flexStart:0.22, flexPower:1.55, wave:0.95, maxTurn:0.75, fin:0.13, eye:0.095, sourceTiming:'R08 source single-fish phase fit about 1 Hz; autonomous speed envelope uncalibrated' },
-    'tuna-yellow-label': { id:'tuna-yellow-label', gait:'posterior-BCF-candidate', speed:0.82, burst:2.2, frequency:1.1, amplitude:0.28, flexStart:0.43, flexPower:2, wave:0.78, maxTurn:0.5, fin:0.08, eye:0.06, sourceTiming:'Source Swim clip 2.1667 s; clip duration is not a measured beat rate' },
+    herring: { id:'herring', gait:'source-retargeted-continuous-chain-candidate', speed:0.65, burst:1.7, frequency:0.9983360022306442, amplitude:0.36, flexStart:0.22, flexPower:1.55, wave:0.95, maxTurn:0.75, fin:0.13, eye:0.095, strainLimit:.12, collisionBendBound:.45, radii:[.043554,.066344,.074139,.076638,.091325,.109415,.113044,.074651,.084109,.084245,.08393,.08251,.075974,.037166,.038224,.094632,.09993], sourceChain:[{u:.2935993447,a:.196873,phase:-1.7788396},{u:.4168671998,a:.347495,phase:-2.8255145},{u:.5317024856,a:.348368,phase:-3.8779489},{u:.6877285976,a:.34959,phase:-4.9204322},{u:.8138419432,a:.347495,phase:-5.9671062},{u:.9166352809,a:.349415,phase:-4.9204322}], sourceTiming:'R08 original local-joint phase/amplitude fit and source-measured canonical joint positions; continuous curvature-limited retarget, not raw clip playback' },
+    'tuna-yellow-label': { id:'tuna-yellow-label', gait:'posterior-BCF-candidate', speed:0.82, burst:2.2, frequency:0.9215409755706787, amplitude:0.28, flexStart:0.43, flexPower:2, wave:0.78, envelopeGain:1.45, maxTurn:0.5, fin:0.08, eye:0.06, strainLimit:.16, collisionBendBound:.24, radii:[.035503,.057146,.074296,.093559,.171841,.206222,.248594,.248594,.083501,.073928,.066569,.051906,.040285,.020953,.015,.015,.015], sourceTiming:'Source central quaternion channels measured at 0.9215409756 Hz; smooth posterior envelope gain preserves measured R01 tail excursion rather than hiding strain with a small swing' },
     'tuna-blue-label': { id:'tuna-blue-label', gait:'posterior-BCF-candidate', speed:0.9, burst:2.4, frequency:1.2, amplitude:0.27, flexStart:0.44, flexPower:2.1, wave:0.78, maxTurn:0.48, fin:0.08, eye:0.06, sourceTiming:'Source normal/fast clips 1.1667 s; engineering interpolation, actual species unconfirmed' },
     colorful: { id:'colorful', gait:'mixed-BCF-MPF-candidate', speed:0.45, burst:1.15, frequency:1.1, amplitude:0.3, flexStart:0.32, flexPower:1.6, wave:0.86, maxTurn:0.92, fin:0.22, eye:0.115, sourceTiming:'Source baked 21.6667 s clip; source specimen selection and gait calibration remain explicit' },
     picasso: { id:'picasso', gait:'MPF-alternative-candidate', speed:0.34, burst:1.15, frequency:1.35, amplitude:0.09, flexStart:0.48, flexPower:2.25, wave:0.82, maxTurn:0.9, fin:0.27, eye:0.13, sourceTiming:'Static source title Picasso Fish does not confirm taxonomy. Dorsal/anal candidate gait is experimental, not a verified species claim' }
@@ -32,7 +32,9 @@
     const axes=[[cy*cp,-sp,-sy*cp],[cy*sp*cr+sy*sr,cp*cr,-sy*sp*cr+cy*sr],[-cy*sp*sr+sy*cr,-cp*sr,sy*sp*sr+cy*cr]];
     // Analytic upper bound for integral of the flexibility envelope. Fin sweep margin
     // encloses local source-fin rotations; this is an exhibition constraint, not CFD.
-    const bend=actor.amplitude*(1-p.flexStart)*(3/(p.flexPower+1)-2/(p.flexPower+2))+Math.abs(actor.turnRate)*.03;
+    // Fixed whole-gait envelope prevents shape inflation during a beat from outrunning
+    // contact correction. Source-chain bounds include a phase/amplitude grid Lipschitz margin.
+    const bend=p.collisionBendBound??(.72*(1-p.flexStart)*(3/(p.flexPower+1)-2/(p.flexPower+2))+p.maxTurn*.03);
     const f=state.shape.finSweepMargin,e=state.shape.extents;
     return {center:actor.position,axes,half:[e[0]+f,e[1]+f,e[2]+bend+f]};
   }
@@ -52,6 +54,25 @@
     let minimum=Infinity;const boxes=state.actors.map(a=>box(a,state));
     for(let i=0;i<boxes.length;i++)for(let j=i+1;j<boxes.length;j++)minimum=Math.min(minimum,separation(boxes[i],boxes[j],state.shape.gap).clearance);
     return minimum;
+  }
+  function constrainContactVelocities(state,dt) {
+    // Remove closing velocity before integration. A bounded position correction alone
+    // cannot resolve sustained crowd pressure from thirty commanded swimming velocities.
+    const boxes=state.actors.map(a=>box(a,state));
+    for(let iteration=0;iteration<12;iteration++) {
+      let changed=false;
+      for(let i=0;i<boxes.length;i++)for(let j=i+1;j<boxes.length;j++) {
+        const contact=separation(boxes[i],boxes[j],state.shape.gap);
+        if(contact.clearance>.12)continue;
+        const vi=state.actors[i].velocity,vj=state.actors[j].velocity,
+          relative=dot(vj.map((v,k)=>v-vi[k]),contact.normal),minimum=-Math.max(0,contact.clearance)*.85/dt;
+        if(relative>=minimum)continue;
+        const impulse=(minimum-relative)*.5;changed=true;
+        for(let k=0;k<3;k++){vi[k]-=contact.normal[k]*impulse;vj[k]+=contact.normal[k]*impulse;}
+      }
+      if(!changed)break;
+    }
+    for(const a of state.actors)for(let k=0;k<3;k++)a.position[k]+=a.velocity[k]*dt;
   }
   function resolveContacts(state,dt,iterations=18,initial=false) {
     if(state.count<2)return;
@@ -86,7 +107,11 @@
         speed:p.speed, frequency:p.frequency, amplitude:p.amplitude, beatPhase:random()*TAU,
         turnRate:0, finPhase:random()*TAU, finAngles:{pectoralLeft:0,pectoralRight:0,pelvic:0,dorsal:0,anal:0,caudal:0}, finWaves:{},
         eyes:{yaw:0,pitch:0,leftYaw:0,rightYaw:0}, eyeTarget:[0,0], eyeTimer:.4+random()*2.5,
-        ownClock:random()*100, variation:.94+random()*.12, threat:0, _random:rng(seed+i*997+1777) };
+        ownClock:random()*100, variation:.94+random()*.12, threat:0, _random:rng(seed+i*997+1777),
+        thrust:1,thrustTarget:1,effortTimer:2.4+(i%7)*.37,_motionRandom:rng(seed+i*997+41477),caudalPeduncle:{angle:0,angularVelocity:0} };
+      const initialSpine=sampleSpine(a,p),initialPeduncle=initialSpine.tangents[Math.round(.84*(initialSpine.tangents.length-1))];
+      a._collisionBend=Math.max(...initialSpine.centers.map(v=>Math.abs(v[2])));
+      a.caudalPeduncle.angle=Math.atan2(initialPeduncle[2],initialPeduncle[0]);
       actors.push(a);
     }
     const state={id,count,seed,time:0,actors,profile:profiles[id],mode:'cruise',bounds:[7,2.8,5],pointer:null,shape:shapeOf(id,shape)};
@@ -135,6 +160,13 @@
         }
       }
       a.threat = smooth(a.threat,danger,dt,danger>a.threat?5:1.1);
+      // Independent smoothly varying propulsion demand; no eye RNG or eye clock changes.
+      if(p.id==='herring'||p.id==='tuna-yellow-label') {
+        a.effortTimer-=dt;
+        if(a.effortTimer<=0){a.effortTimer=3+a._motionRandom()*4;a.thrustTarget=.84+a._motionRandom()*.32;}
+        a.thrust=smooth(a.thrust,a.thrustTarget,dt,.75);
+        if(s.mode==='cruise'||s.mode==='turn')drive*=a.thrust;
+      }
       if(s.mode==='rest') drive *= .09;
       if(s.mode==='hover') drive *= p.id==='picasso'?.08:.22;
       if(s.mode==='burst') drive=p.burst;
@@ -153,8 +185,8 @@
       a.pitch=smooth(a.pitch,pitchTarget,dt,2); a.roll=smooth(a.roll,clamp(a.turnRate*.18,-.15,.15),dt,3);
       a.speed=smooth(a.speed,drive,dt,1.6);
       a.velocity=[-Math.cos(a.yaw)*Math.cos(a.pitch)*a.speed,Math.sin(a.pitch)*a.speed,Math.sin(a.yaw)*Math.cos(a.pitch)*a.speed];
-      if(!centered) for(let k=0;k<3;k++) a.position[k]+=a.velocity[k]*dt;
-      else a.position=[0,0,0];
+      if(centered) a.position=[0,0,0];
+      else if(s.count===1) for(let k=0;k<3;k++) a.position[k]+=a.velocity[k]*dt;
       const speedRatio=a.speed/p.speed, bodyRest=s.mode==='rest'?.18:s.mode==='hover'?.35:1;
       a.frequency=smooth(a.frequency,p.frequency*(.3+.7*Math.sqrt(Math.max(.02,speedRatio))),dt,3);
       let amp=p.amplitude*(.35+.65*Math.sqrt(Math.max(.02,speedRatio)))*bodyRest;
@@ -162,7 +194,7 @@
       a.amplitude=smooth(a.amplitude,clamp(amp,0,.72),dt,3);
       a.beatPhase=(a.beatPhase+TAU*a.frequency*dt)%TAU;
       a.finPhase=(a.finPhase+TAU*(p.id==='picasso'?p.frequency*1.15:a.frequency*.73)*dt)%TAU;
-      const hover=s.mode==='hover' || s.mode==='rest', f=p.fin*(hover?1.25:.75), trim=a.turnRate*.12;
+      const hover=s.mode==='hover' || s.mode==='rest', f=p.fin*(hover?1.25:.75)*(p.id==='tuna-yellow-label'?(.9+.1*a.thrust+.15*Math.abs(a.turnRate)):1), trim=a.turnRate*.12;
       a.finAngles.pectoralLeft=f*Math.sin(a.finPhase)+trim;
       a.finAngles.pectoralRight=-f*Math.sin(a.finPhase+.22)+trim;
       a.finAngles.pelvic=f*.25*Math.sin(a.finPhase+.5);
@@ -179,6 +211,13 @@
         anal:{amplitude:median,phase:a.finPhase+.08,bias:0},
         caudal:{amplitude:a.amplitude*.3,phase:a.beatPhase-.8,bias:0}
       };
+      if(p.id==='herring'||p.id==='tuna-yellow-label') {
+        const spine=sampleSpine(a,p),j=Math.round(.84*(spine.tangents.length-1)),t=spine.tangents[j],peduncle=Math.atan2(t[2],t[0]),velocity=(peduncle-a.caudalPeduncle.angle)/dt;
+        a.caudalPeduncle={angle:peduncle,angularVelocity:smooth(a.caudalPeduncle.angularVelocity,velocity,dt,8)};
+        const tail=clamp(-.24*peduncle-.025*a.caudalPeduncle.angularVelocity,-.34,.34);
+        a.finAngles.caudal=tail;a.finWaves.caudal={amplitude:0,phase:0,bias:tail};
+        a._collisionBend=Math.max(...spine.centers.map(v=>Math.abs(v[2])));
+      }
       a.eyeTimer-=dt;
       if(a.eyeTimer<=0) {
         a.eyeTimer=.8+a._random()*2.8;
@@ -189,24 +228,33 @@
       a.eyes.pitch=smooth(a.eyes.pitch,a.eyeTarget[1],dt,8);
       a.eyes.leftYaw=a.eyes.yaw; a.eyes.rightYaw=a.eyes.yaw*.84;
     }
-    if(s.count>1)resolveContacts(s,dt);
+    if(s.count>1){constrainContactVelocities(s,dt);resolveContacts(s,dt);}
   }
   function sampleSpine(actor, profile, samples=65) {
     const p=profileOf(profile), centers=[],tangents=[],normals=[],binormals=[];
     if(!p) throw new Error('Spine requires a known specimen profile');
     samples=Math.max(3,Math.floor(samples)); const step=1/(samples-1), flex=p.flexStart;
-    let c=[-.5,0,0], previous=[1,0,0];
+    let c=[-.5,0,0], previous=[1,0,0],previousTheta=0;
     for(let i=0;i<samples;i++) {
       const u=i*step, q=clamp((u-flex)/(1-flex),0,1);
       // C1 envelope keeps anterior cranium stable; turn curvature remains posterior too.
-      const envelope=Math.pow(q,p.flexPower)*(3-2*q);
-      const theta=actor.amplitude*envelope*Math.sin(TAU*p.wave*u-actor.beatPhase)+actor.turnRate*.09*q*q;
+      const n=p.flexPower+2,envelope=p.strainLimit?(p.envelopeGain||1)*Math.pow(q,n)*(n+1-n*q):Math.pow(q,p.flexPower)*(3-2*q);
+      let theta=actor.amplitude*envelope*Math.sin(TAU*p.wave*u-actor.beatPhase)+actor.turnRate*.09*q*q;
+      if(p.sourceChain) {
+        theta=actor.turnRate*.09*q*q;
+        for(const joint of p.sourceChain){const ramp=clamp((u-joint.u+.055)/.11,0,1),weight=ramp*ramp*ramp*(10+ramp*(-15+6*ramp));theta+=joint.a*(actor.amplitude/p.amplitude)*Math.sin(actor.beatPhase+joint.phase)*weight;}
+      }
+      if(p.strainLimit && i>0) {
+        const r0=radiusAt(p,u),r1=radiusAt(p,u-step),maxDelta=p.strainLimit/Math.max(.015,r0,r1)*step;
+        theta=previousTheta+clamp(theta-previousTheta,-maxDelta,maxDelta);
+      }
       const tangent=[Math.cos(theta),0,Math.sin(theta)], side=[-tangent[2],0,tangent[0]];
       if(i>0) { const mid=unit(previous.map((v,k)=>v+tangent[k])); c=c.map((v,k)=>v+mid[k]*step); }
-      centers.push(c.slice()); tangents.push(tangent); normals.push([0,1,0]); binormals.push(side); previous=tangent;
+      centers.push(c.slice()); tangents.push(tangent); normals.push([0,1,0]); binormals.push(side); previous=tangent;previousTheta=theta;
     }
     return {centers,tangents,normals,binormals,length:1,headX:-.5,tailX:.5};
   }
+  function radiusAt(profile,u){const q=clamp(u,0,1)*(profile.radii.length-1),i=Math.min(profile.radii.length-2,Math.floor(q));return mix(profile.radii[i],profile.radii[i+1],q-i);}
   function deform(point,actor,profile,spine) {
     spine=spine||sampleSpine(actor,profile); const n=spine.centers.length;
     const q=clamp(point[0]+.5,0,1)*(n-1), i=Math.min(n-2,Math.floor(q)), t=q-i;
@@ -218,7 +266,7 @@
   function snapshot(state) {
     return {id:state.id,count:state.count,time:state.time,mode:state.mode,pointer:state.pointer,shape:state.shape,contact:state.contact,actors:state.actors.map(a=>({
       position:a.position.slice(),velocity:a.velocity.slice(),yaw:a.yaw,pitch:a.pitch,roll:a.roll,speed:a.speed,
-      beatPhase:a.beatPhase,finPhase:a.finPhase,amplitude:a.amplitude,frequency:a.frequency,turnRate:a.turnRate,threat:a.threat,
+      beatPhase:a.beatPhase,finPhase:a.finPhase,amplitude:a.amplitude,frequency:a.frequency,turnRate:a.turnRate,threat:a.threat,thrust:a.thrust,caudalPeduncle:{...a.caudalPeduncle},
       finAngles:{...a.finAngles},finWaves:JSON.parse(JSON.stringify(a.finWaves)),eyes:{...a.eyes}
     }))};
   }

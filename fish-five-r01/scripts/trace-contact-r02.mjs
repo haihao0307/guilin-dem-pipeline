@@ -1,0 +1,18 @@
+import fs from 'node:fs';import vm from 'node:vm';import crypto from 'node:crypto';import {createRequire} from 'node:module';
+const require=createRequire(import.meta.url),B=require('../src/behavior.js'),source=fs.readFileSync(new URL('../src/behavior.js',import.meta.url),'utf8'),hash=s=>crypto.createHash('sha256').update(s).digest('hex');
+const start=source.indexOf('  function constrainContactVelocities('),end=source.indexOf('  function resolveContacts(',start);
+let fixedOnly=source.slice(0,start)+source.slice(end);
+fixedOnly=fixedOnly.replace('      if(centered) a.position=[0,0,0];\n      else if(s.count===1) for(let k=0;k<3;k++) a.position[k]+=a.velocity[k]*dt;','      if(!centered) for(let k=0;k<3;k++) a.position[k]+=a.velocity[k]*dt;\n      else a.position=[0,0,0];');
+fixedOnly=fixedOnly.replace('if(s.count>1){constrainContactVelocities(s,dt);resolveContacts(s,dt);}','if(s.count>1)resolveContacts(s,dt);');
+fixedOnly=fixedOnly.replace('    s.time += dt;', '    s._attemptedMax=0; s.time += dt;').replace('let amount=(-sep.clearance+1e-5)*.5;','let amount=(-sep.clearance+1e-5)*.5;state._attemptedMax=Math.max(state._attemptedMax||0,amount);');
+const ctx={module:{exports:{}}};vm.runInNewContext(fixedOnly,ctx);const A=ctx.module.exports;
+const rows=[];for(const id of ['herring','tuna-yellow-label','tuna-blue-label']){
+  const old=A.create(id,30,73),current=B.create(id,30,73);let firstFailure=null,oldMinimum=Infinity,currentMinimum=Infinity,oldMaxCorrection=0,currentMaxCorrection=0;
+  for(let f=0;f<7200;f++){
+    const input={mode:['cruise','burst','turn','rest','hover'][Math.floor(f/1440)],pointer:f>1900&&f<2150?[0,0,0]:null},positions=old.actors.map(a=>a.position.slice());A.update(old,1/60,input);B.update(current,1/60,input);
+    const oldGap=old.contact.minimumClearance+old.shape.gap,newGap=current.contact.minimumClearance+current.shape.gap;oldMinimum=Math.min(oldMinimum,oldGap);currentMinimum=Math.min(currentMinimum,newGap);oldMaxCorrection=Math.max(oldMaxCorrection,old.contact.maxCorrection);currentMaxCorrection=Math.max(currentMaxCorrection,current.contact.maxCorrection);
+    if(oldGap<.0125&&!firstFailure){const corrections=old.actors.map((a,i)=>({i,position:a.position,velocity:a.velocity,yaw:a.yaw,correction:Math.hypot(...a.position.map((v,k)=>v-positions[i][k]-a.velocity[k]/60)),box:A.collisionBox(a,old)})).sort((a,b)=>b.correction-a.correction);firstFailure={frame:f,timeSeconds:(f+1)/60,mode:input.mode,actualMinimumBoxGap:oldGap,requiredActualGap:.0125,maxActualCorrection:old.contact.maxCorrection,allowedCorrection:3.5/60,maxRequestedHalfPenetration:old._attemptedMax,largestCorrections:corrections.slice(0,4)};}
+  }
+  rows.push({id,frames:7200,fixedEnvelopeOnly:{minimumActualBoxGap:oldMinimum,maxCorrection:oldMaxCorrection,firstFailure},currentVelocityConstraint:{minimumActualBoxGap:currentMinimum,maxCorrection:currentMaxCorrection,pass:currentMinimum>=.0125&&currentMaxCorrection<=3.5/60+1e-8}});console.log(id,rows.at(-1).currentVelocityConstraint);
+}
+const report={schema:'fish.contact-root-cause/1',taskId:'FISH_UNIFIED_SURFACE_MOTION_R02_20261002',createdAt:new Date().toISOString(),behaviorSha256:hash(source),reconstructedFixedEnvelopeOnlySha256:hash(fixedOnly),pass:rows.every(r=>r.currentVelocityConstraint.pass),rootCause:'Fixed shape alone does not remove sustained closing command velocity. Per-actor position budgets saturate under crowd pressure; closing-velocity constraint before integration addresses the input.',unchangedGates:{positivePhysicalBoxGap:.0125,desiredGap:.025,maxCorrectionSpeed:3.5},rows};fs.writeFileSync(new URL('../evidence/R02_CONTACT_ROOT_CAUSE.json',import.meta.url),JSON.stringify(report,null,2));if(!report.pass)process.exitCode=1;
