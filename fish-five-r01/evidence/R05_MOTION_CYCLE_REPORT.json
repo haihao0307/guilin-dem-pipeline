@@ -1,0 +1,206 @@
+{
+  "schema": "fish.motion-cycle-r05/1",
+  "taskId": "FISH_SCOREMAKER_EYE_FIT_AUTOCYCLE_R05_20261002",
+  "baseSha": "5263229e1ec5a04d6541b69f99f79e74e5fa1ba7",
+  "dispatchTime": "2026-10-02T09:22:16.272Z",
+  "verifiedAt": "2026-10-02T09:28:08.232Z",
+  "version": "R05_MOTION_CYCLE_1",
+  "controllerSha256": "dc3701c59c71f6c278348937b37d73734603afc4ddb1ad51ce040cdcddbd8dc5",
+  "behaviorSha256": "db8702cc5e3d4470bc925105ec24213105f774442288423b187cd5ccfd80e747",
+  "pass": true,
+  "tests": [
+    {
+      "label": "Default automatically visits four modes at exact active-time boundaries",
+      "pass": true,
+      "visited": [
+        "cruise",
+        "hover",
+        "burst",
+        "turn",
+        "cruise"
+      ],
+      "durations": {
+        "cruise": 12,
+        "hover": 8,
+        "burst": 5,
+        "turn": 9,
+        "rest": 3
+      }
+    },
+    {
+      "label": "Pause, hidden and unready frames accumulate no time or transition debt",
+      "pass": true,
+      "gatedCalls": 400,
+      "resumeConsumesOnlyNewDelta": true
+    },
+    {
+      "label": "Manual selection suspends automatic mode and auto resumes current dwell",
+      "pass": true,
+      "manualHoldExact": true,
+      "autoResumeWithoutImmediateModeJump": true
+    },
+    {
+      "label": "Manual REST remains supported without inserting REST into default rolling loop",
+      "pass": true,
+      "manualRestDwell": 3,
+      "optionalCycleDuration": 37
+    },
+    {
+      "label": "Scheduler reset restores only its own deterministic initial state",
+      "pass": true,
+      "initialMode": "turn",
+      "initialAutomatic": false
+    },
+    {
+      "label": "Fixed, irregular and one-shot simulation deltas give equivalent cycle positions",
+      "pass": true,
+      "cases": 5,
+      "secondsPerCase": 237.625,
+      "maxElapsedError": 8.121303629593513e-11
+    },
+    {
+      "label": "Large accepted simulation delta is retained with bounded arithmetic work",
+      "pass": true,
+      "seconds": 3400000017.25,
+      "transitions": 400000001,
+      "elapsed": 5.25,
+      "costMilliseconds": 0.0037999999999982492
+    },
+    {
+      "label": "Invalid deltas and malformed mode/dwell cannot silently change controller state",
+      "pass": true,
+      "invalidDeltaNoOp": true,
+      "configurationFailsClosed": true
+    },
+    {
+      "label": "Scheduling does not touch the continuous solver, actor identities or independent clocks",
+      "pass": true,
+      "cases": [
+        {
+          "id": "herring",
+          "seconds": 68,
+          "maxPhaseStep": 0.1500179823026464,
+          "maxYawStep": 0.012020446740538095,
+          "actorObjectPreserved": true,
+          "manualOracleStateExact": true
+        },
+        {
+          "id": "tuna-yellow-label",
+          "seconds": 68,
+          "maxPhaseStep": 0.13988331316196767,
+          "maxYawStep": 0.00831910229494974,
+          "actorObjectPreserved": true,
+          "manualOracleStateExact": true
+        },
+        {
+          "id": "tuna-blue-label",
+          "seconds": 68,
+          "maxPhaseStep": 0.18171302285280255,
+          "maxYawStep": 0.007997472689762142,
+          "actorObjectPreserved": true,
+          "manualOracleStateExact": true
+        },
+        {
+          "id": "colorful",
+          "seconds": 68,
+          "maxPhaseStep": 0.16379090877315683,
+          "maxYawStep": 0.014225333671800233,
+          "actorObjectPreserved": true,
+          "manualOracleStateExact": true
+        },
+        {
+          "id": "picasso",
+          "seconds": 68,
+          "maxPhaseStep": 0.22487372449467458,
+          "maxYawStep": 0.013978542316739173,
+          "actorObjectPreserved": true,
+          "manualOracleStateExact": true
+        }
+      ]
+    },
+    {
+      "label": "herring 30-member rolling school retains strict contact and independent gait under variable delta",
+      "pass": true,
+      "seconds": 68,
+      "count": 30,
+      "frames": 3320,
+      "minSourceBoxClearance": 0.024843496768105534,
+      "strictGate": 0.0125,
+      "maxCorrectionRate": 0.9129927816347693,
+      "maxTurn": 0.7499999999999931,
+      "maxPhaseStep": 0.30595774259669994,
+      "independentPhases": 30
+    },
+    {
+      "label": "tuna-yellow-label 30-member rolling school retains strict contact and independent gait under variable delta",
+      "pass": true,
+      "seconds": 68,
+      "count": 30,
+      "frames": 3320,
+      "minSourceBoxClearance": 0.024999000535730342,
+      "strictGate": 0.0125,
+      "maxCorrectionRate": 0.4455610687067818,
+      "maxTurn": 0.49999999999999967,
+      "maxPhaseStep": 0.28530351213939564,
+      "independentPhases": 30
+    },
+    {
+      "label": "tuna-blue-label 30-member rolling school retains strict contact and independent gait under variable delta",
+      "pass": true,
+      "seconds": 68,
+      "count": 30,
+      "frames": 3320,
+      "minSourceBoxClearance": 0.024999000426896973,
+      "strictGate": 0.0125,
+      "maxCorrectionRate": 0.41853599643617573,
+      "maxTurn": 0.47999999999999965,
+      "maxPhaseStep": 0.37061411580498493,
+      "independentPhases": 30
+    },
+    {
+      "label": "colorful 30-member rolling school retains strict contact and independent gait under variable delta",
+      "pass": true,
+      "seconds": 68,
+      "count": 30,
+      "frames": 3320,
+      "minSourceBoxClearance": 0.024999000173847034,
+      "strictGate": 0.0125,
+      "maxCorrectionRate": 0.4468248965045629,
+      "maxTurn": 0.9199999937595009,
+      "maxPhaseStep": 0.33403216925960777,
+      "independentPhases": 30
+    },
+    {
+      "label": "picasso 30-member rolling school retains strict contact and independent gait under variable delta",
+      "pass": true,
+      "seconds": 68,
+      "count": 30,
+      "frames": 3320,
+      "minSourceBoxClearance": 0.0249990001237006,
+      "strictGate": 0.0125,
+      "maxCorrectionRate": 0.6938971315207496,
+      "maxTurn": 0.8999999976841155,
+      "maxPhaseStep": 0.45885428800821515,
+      "independentPhases": 30
+    },
+    {
+      "label": "Scheduler overhead is bounded independently of fish count",
+      "pass": true,
+      "calls": 200000,
+      "totalMilliseconds": 3.5658000000039465,
+      "meanMicroseconds": 0.017829000000019732,
+      "scope": "Node CPU scheduler only; no browser FPS claim"
+    }
+  ],
+  "failures": [],
+  "defaultOrder": [
+    "cruise",
+    "hover",
+    "burst",
+    "turn"
+  ],
+  "modeDurationsMeaning": "Engineering demonstration dwell times; not species observations",
+  "scope": "Pure simulation-clock scheduling plus existing five-source locomotion/contact CPU integration. Legacy integration, visible transitions and standalone/public acceptance belong to the root verifier.",
+  "visualAcceptance": false,
+  "productionReady": false
+}

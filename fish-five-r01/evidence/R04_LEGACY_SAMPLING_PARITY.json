@@ -1,0 +1,767 @@
+{
+  "schema": "fish.legacy-sampling-r04/1",
+  "taskId": "FISH_SCOREMAKER_OCULAR_ORAL_R04_20261002",
+  "baseSha": "ed919109faa468dfc40f282dbc2d6b18e3b30403",
+  "verifiedAt": "2026-10-02T07:36:04.450Z",
+  "adapterVersion": "R04_LEGACY_SAMPLING_1",
+  "adapterSha256": "924455425f68adec86a12274270b5d92a4a830429da46b611c26a88510b978ec",
+  "sourceInstrumentSha256": "83ded686563c8546e859a6d73c9071c13f406c7af35930aaa6761b9de3e0407a",
+  "originalCarrierByteLength": 24013102,
+  "pass": true,
+  "tests": [
+    {
+      "label": "Immutable original HTML carrier and fail-closed source ABI",
+      "pass": true,
+      "originalSourceSha256": "83ded686563c8546e859a6d73c9071c13f406c7af35930aaa6761b9de3e0407a",
+      "originalHtmlSha256": "e95397d73062f8cef2bc613fdf77ee10e2c70576678d8c6799094b7555224b4e",
+      "carrierSha256": "fa5cafe2c0387f0d983799f0d38a89c8cec39f4734edeef68973437fd401da5e",
+      "patchedSourceSha256": "e11066e05f590c057d256c4e3525347b05afe61dda838dfd0890331da2b3e8dd",
+      "protectedSourceUnmodified": true,
+      "carrierByteIdentical": true
+    },
+    {
+      "label": "Retained actual source tail binding equals complete original vertex",
+      "pass": true,
+      "sourceVertexCount": 497701,
+      "sourceTriangleCount": 964285,
+      "tipVertex": 441261,
+      "tipPartId": 7,
+      "tipFieldRow": 8,
+      "tipWeights": [
+        255,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        255
+      ],
+      "partRows": [
+        {
+          "id": 1,
+          "row": 2
+        },
+        {
+          "id": 2,
+          "row": 3
+        },
+        {
+          "id": 3,
+          "row": 4
+        },
+        {
+          "id": 4,
+          "row": 5
+        },
+        {
+          "id": 5,
+          "row": 6
+        },
+        {
+          "id": 6,
+          "row": 7
+        },
+        {
+          "id": 7,
+          "row": 8
+        }
+      ]
+    },
+    {
+      "label": "Intermediate field consumer trace reads only the selected tail and body rows",
+      "pass": true,
+      "rows": [
+        {
+          "name": "original",
+          "intermediateSamples": 8,
+          "consumers": [
+            [
+              8,
+              0,
+              1
+            ],
+            [
+              8,
+              0,
+              1
+            ],
+            [
+              8,
+              0,
+              1
+            ],
+            [
+              8,
+              0,
+              1
+            ],
+            [
+              8,
+              0,
+              1
+            ],
+            [
+              8,
+              0,
+              1
+            ],
+            [
+              8,
+              0,
+              1
+            ],
+            [
+              8,
+              0,
+              1
+            ]
+          ],
+          "finalSample": {
+            "kind": "sample",
+            "bodyOnly": false,
+            "onlyPart": 0
+          }
+        },
+        {
+          "name": "optimized",
+          "intermediateSamples": 8,
+          "consumers": [
+            [
+              8,
+              0,
+              1
+            ],
+            [
+              8,
+              0,
+              1
+            ],
+            [
+              8,
+              0,
+              1
+            ],
+            [
+              8,
+              0,
+              1
+            ],
+            [
+              8,
+              0,
+              1
+            ],
+            [
+              8,
+              0,
+              1
+            ],
+            [
+              8,
+              0,
+              1
+            ],
+            [
+              8,
+              0,
+              1
+            ]
+          ],
+          "finalSample": {
+            "kind": "sample",
+            "bodyOnly": false,
+            "onlyPart": 0
+          }
+        }
+      ],
+      "onlyIntermediateConsumer": "Actual caudal tip deformPoint → its fin fieldRow, then source material spine rows 0/1"
+    },
+    {
+      "label": "REST speed 0.5 full-source fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 2.6500000000000266,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "REST speed 0.5 retained-tip fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 2.6500000000000266,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "REST speed 1 full-source fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 5.300000000000019,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "REST speed 1 retained-tip fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 5.300000000000019,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "REST speed 2.5 full-source fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 13.249999999999568,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "REST speed 2.5 retained-tip fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 13.249999999999568,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "CRUISE speed 0.5 full-source fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 2.6500000000000266,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "CRUISE speed 0.5 retained-tip fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 2.6500000000000266,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "CRUISE speed 1 full-source fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 5.300000000000019,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "CRUISE speed 1 retained-tip fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 5.300000000000019,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "CRUISE speed 2.5 full-source fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 13.249999999999568,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "CRUISE speed 2.5 retained-tip fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 13.249999999999568,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "BURST speed 0.5 full-source fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 2.6500000000000266,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "BURST speed 0.5 retained-tip fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 2.6500000000000266,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "BURST speed 1 full-source fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 5.300000000000019,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "BURST speed 1 retained-tip fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 5.300000000000019,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "BURST speed 2.5 full-source fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 13.249999999999568,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "BURST speed 2.5 retained-tip fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 13.249999999999568,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "TURN_LEFT speed 0.5 full-source fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 2.6500000000000266,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "TURN_LEFT speed 0.5 retained-tip fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 2.6500000000000266,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "TURN_LEFT speed 1 full-source fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 5.300000000000019,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "TURN_LEFT speed 1 retained-tip fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 5.300000000000019,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "TURN_LEFT speed 2.5 full-source fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 13.249999999999568,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "TURN_LEFT speed 2.5 retained-tip fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 13.249999999999568,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "JAW speed 0.5 full-source fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 2.6500000000000266,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "JAW speed 0.5 retained-tip fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 2.6500000000000266,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "JAW speed 1 full-source fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 5.300000000000019,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "JAW speed 1 retained-tip fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 5.300000000000019,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "JAW speed 2.5 full-source fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 13.249999999999568,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "JAW speed 2.5 retained-tip fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 13.249999999999568,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "EYE_TRACK speed 0.5 full-source fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 2.6500000000000266,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "EYE_TRACK speed 0.5 retained-tip fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 2.6500000000000266,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "EYE_TRACK speed 1 full-source fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 5.300000000000019,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "EYE_TRACK speed 1 retained-tip fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 5.300000000000019,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "EYE_TRACK speed 2.5 full-source fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 13.249999999999568,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "EYE_TRACK speed 2.5 retained-tip fixed/variable frame parity",
+      "pass": true,
+      "frames": 240,
+      "physicsSeconds": 13.249999999999568,
+      "allStateCompared": true,
+      "float32BitExact": true,
+      "float64ArraysBitExact": true,
+      "float64NumbersExact": true,
+      "numbers": 13440,
+      "float32Arrays": 720,
+      "float64Arrays": 4320,
+      "maxAbs": 0
+    },
+    {
+      "label": "Unsupported retained source binding fails closed",
+      "pass": true
+    },
+    {
+      "label": "Actual 30-source-handle CPU benchmark at nominal and stalled frames",
+      "pass": true,
+      "rows": [
+        {
+          "before": {
+            "actors": 30,
+            "frames": 120,
+            "delta": 0.016666666666666666,
+            "speed": 1,
+            "medianMilliseconds": 89.95899999998801,
+            "p95Milliseconds": 149.37639999999374,
+            "physicsStepsPerActor": 4
+          },
+          "after": {
+            "actors": 30,
+            "frames": 120,
+            "delta": 0.016666666666666666,
+            "speed": 1,
+            "medianMilliseconds": 58.478699999992386,
+            "p95Milliseconds": 86.67130000000179,
+            "physicsStepsPerActor": 4
+          },
+          "medianReduction": 0.3499405284629644
+        },
+        {
+          "before": {
+            "actors": 30,
+            "frames": 120,
+            "delta": 0.05,
+            "speed": 1,
+            "medianMilliseconds": 326.77800000002026,
+            "p95Milliseconds": 395.80890000000363,
+            "physicsStepsPerActor": 12
+          },
+          "after": {
+            "actors": 30,
+            "frames": 120,
+            "delta": 0.05,
+            "speed": 1,
+            "medianMilliseconds": 227.20470000000205,
+            "p95Milliseconds": 251.70470000000205,
+            "physicsStepsPerActor": 12
+          },
+          "medianReduction": 0.30471237353803515
+        },
+        {
+          "before": {
+            "actors": 30,
+            "frames": 120,
+            "delta": 0.05,
+            "speed": 2.5,
+            "medianMilliseconds": 588.719700000016,
+            "p95Milliseconds": 885.6385000000009,
+            "physicsStepsPerActor": 30
+          },
+          "after": {
+            "actors": 30,
+            "frames": 120,
+            "delta": 0.05,
+            "speed": 2.5,
+            "medianMilliseconds": 541.4482999999891,
+            "p95Milliseconds": 602.7614000000176,
+            "physicsStepsPerActor": 30
+          },
+          "medianReduction": 0.08029525765831458
+        }
+      ],
+      "scope": "Node VM CPU sampling benchmark on the actual original source; not a browser frame-rate claim"
+    }
+  ],
+  "failures": [],
+  "scope": "Exact KFC13 simulation parity with actual decoded source bindings; no skipped delta/substeps, no reduced rows or precision in final fields",
+  "visualAcceptance": false,
+  "productionReady": false
+}

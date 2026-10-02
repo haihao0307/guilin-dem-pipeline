@@ -1,0 +1,1232 @@
+{
+  "schema": "fish.ocular-r04/1",
+  "taskId": "FISH_SCOREMAKER_OCULAR_ORAL_R04_20261002",
+  "baseSha": "ed919109faa468dfc40f282dbc2d6b18e3b30403",
+  "dispatchTime": "2026-10-02T06:14:30Z",
+  "verifiedAt": "2026-10-02T07:01:10.778Z",
+  "controllerVersion": "R04_OCULAR_1",
+  "controllerSha256": "6070b4b4256b6102400518c3c969ca29846b7dce51e6b7fe57d8246932715dae",
+  "sourceHashes": {
+    "herring": "a78728677739d9aea4d79556c1aa917c62b24fefe9db1a7dc0f3bc2b8843d81b",
+    "tuna-yellow-label": "18fbfbc4bf4e22e41a48b23fb73cd8a0331fea9915c220b4a3fcb63decffe966",
+    "tuna-blue-label": "a4355eab135a154d02cf966b915bd63643681a784492706f8be5bb9cd4401521",
+    "colorful": "379761b2a608b8bcb1cb8f346dbb6c85b963263bb2e82c5b02e34d99f3de821e",
+    "picasso": "c407d243fe8594e7c3b3e4d39e6afd60932d78074285eccb876a48183f444fae"
+  },
+  "pass": true,
+  "tests": [
+    {
+      "label": "barracuda measured frame and aperture-constrained limits",
+      "pass": true,
+      "rows": [
+        {
+          "side": -1,
+          "basis": {
+            "optic": [
+              -0.2908820166683129,
+              0.028526618674300373,
+              -0.9563335633585106
+            ],
+            "anterior": [
+              -0.9567589311728296,
+              -0.008672906098233759,
+              0.29075269271467785
+            ],
+            "up": [
+              1.73478877514196e-18,
+              0.9995554075321801,
+              0.029815889609027656
+            ],
+            "localOptic": [
+              0,
+              -3.469446951953614e-18,
+              1
+            ],
+            "localAnterior": [
+              0.9999623590110289,
+              -0.008676437120062061,
+              0
+            ],
+            "localUp": [
+              0.008676437120062061,
+              0.999962359011029,
+              0
+            ],
+            "center": [
+              -0.3439690038286795,
+              0.1588865528939851,
+              -0.05745166076802582
+            ],
+            "frame": [
+              [
+                -0.9567229178204533,
+                0,
+                0.2910004441871495
+              ],
+              [
+                0.008301258705378843,
+                0.9995930332025185,
+                0.027292069853628087
+              ],
+              [
+                -0.2908820166683129,
+                0.028526618674300373,
+                -0.9563335633585106
+              ]
+            ]
+          },
+          "limits": {
+            "yaw": 0.18,
+            "pitch": 0.075,
+            "cone": 0.18,
+            "irisRatio": 0.584,
+            "frontMargin": 0.8671487165513418,
+            "corneaMargin": 0.33845992564321814,
+            "geometryBasis": "existing KFE iris/globe/cornea ratio",
+            "speciesCalibration": "UNKNOWN"
+          }
+        },
+        {
+          "side": 1,
+          "basis": {
+            "optic": [
+              -0.2524229896465173,
+              -0.013279004319645992,
+              0.9675258664977351
+            ],
+            "anterior": [
+              -0.9676169873963119,
+              0.0034641040965118918,
+              -0.2523992188674409
+            ],
+            "up": [
+              -4.336834715654833e-19,
+              0.9999058295795097,
+              0.013723409667886748
+            ],
+            "localOptic": [
+              2.7755575615628914e-17,
+              1.734723475976807e-18,
+              1
+            ],
+            "localAnterior": [
+              -0.9999939989152181,
+              0.003464409553033875,
+              0
+            ],
+            "localUp": [
+              0.0034644095530338755,
+              0.9999939989152181,
+              3.469446951953614e-18
+            ],
+            "center": [
+              -0.3421265553593377,
+              0.159596099481425,
+              0.05917875960013845
+            ],
+            "frame": [
+              [
+                0.967611180644734,
+                0,
+                0.2524452477098832
+              ],
+              [
+                -0.003352221534813641,
+                0.9999118301351769,
+                0.012848913047519181
+              ],
+              [
+                -0.2524229896465173,
+                -0.013279004319645992,
+                0.9675258664977351
+              ]
+            ]
+          },
+          "limits": {
+            "yaw": 0.18,
+            "pitch": 0.075,
+            "cone": 0.18,
+            "irisRatio": 0.584,
+            "frontMargin": 0.8671487165513418,
+            "corneaMargin": 0.33845992564321814,
+            "geometryBasis": "existing KFE iris/globe/cornea ratio",
+            "speciesCalibration": "UNKNOWN"
+          }
+        }
+      ]
+    },
+    {
+      "label": "barracuda 120 seconds, 30 asynchronous reproducible gaze controllers",
+      "pass": true,
+      "seconds": 120,
+      "count": 30,
+      "maxAngularSpeed": 1.6494066276681039,
+      "maxStep": 0.013743393070828792,
+      "holdFraction": 0.9015173611111111,
+      "maxYaw": 0.173077575287316,
+      "minYaw": -0.17591021563857792,
+      "maxPitch": 0.07222421258247833,
+      "minPitch": -0.07341279189800844,
+      "minDistinctActorGazes": 30,
+      "binocularDifferentFraction": 0.8980462962962963,
+      "minPerEyeYawExcursion": 0.12975290636066344
+    },
+    {
+      "label": "barracuda variable dt resolves events at exact times",
+      "pass": true,
+      "timeError": 4.938272013532696e-13
+    },
+    {
+      "label": "barracuda pause, exact neutral REST, and continuous resume",
+      "pass": true,
+      "pauseExact": true,
+      "restExact": true,
+      "resumeWithoutFirstFrameJump": true
+    },
+    {
+      "label": "barracuda saccades are C2 at start/end and moving attention remains bounded",
+      "pass": true,
+      "exactSaccadeEndpoints": 12,
+      "derivatives": "zero first and second derivatives at both ends"
+    },
+    {
+      "label": "herring measured frame and aperture-constrained limits",
+      "pass": true,
+      "rows": [
+        {
+          "side": -1,
+          "basis": {
+            "optic": [
+              -0.2155604611925531,
+              -0.003455926856633651,
+              -0.9764843798750779
+            ],
+            "anterior": [
+              -0.9764904953815239,
+              0.0007628965059947838,
+              0.2155591111933507
+            ],
+            "up": [
+              1.0842024879982485e-19,
+              0.9999937372596306,
+              -0.0035391300509109297
+            ],
+            "localOptic": [
+              0,
+              0,
+              0.9999999999999999
+            ],
+            "localAnterior": [
+              0.9999997089909426,
+              0.0007629010618362688,
+              0
+            ],
+            "localUp": [
+              -0.0007629010618362689,
+              0.9999997089909428,
+              0
+            ],
+            "center": [
+              -0.4104240272391799,
+              0.017425227726219492,
+              -0.04650146002494871
+            ],
+            "frame": [
+              [
+                -0.9764902112139452,
+                0,
+                0.21556174846977075
+              ],
+              [
+                -0.0007449656357995886,
+                0.99999402826695,
+                -0.00337467874617414
+              ],
+              [
+                -0.2155604611925531,
+                -0.003455926856633651,
+                -0.9764843798750779
+              ]
+            ]
+          },
+          "limits": {
+            "yaw": 0.18,
+            "pitch": 0.075,
+            "cone": 0.18,
+            "irisRatio": 0.81,
+            "frontMargin": 0.5466442116407405,
+            "corneaMargin": null,
+            "geometryBasis": "unchanged score shader iris domain .81 + fixed measured ellipsoid",
+            "speciesCalibration": "UNKNOWN"
+          }
+        },
+        {
+          "side": 1,
+          "basis": {
+            "optic": [
+              -0.11760028417195867,
+              -0.013028329943123196,
+              0.9929755464167119
+            ],
+            "anterior": [
+              -0.9930610118027363,
+              0.0015428410594994463,
+              -0.11759016318889329
+            ],
+            "up": [
+              -4.336813852407288e-19,
+              0.9999139374267959,
+              0.013119365062447111
+            ],
+            "localOptic": [
+              -1.3877787807814457e-17,
+              -3.469446951953614e-18,
+              0.9999999999999999
+            ],
+            "localAnterior": [
+              -0.9999988096179718,
+              0.0015429720150711757,
+              0
+            ],
+            "localUp": [
+              0.0015429720150711755,
+              0.9999988096179717,
+              0
+            ],
+            "center": [
+              -0.4075660792185541,
+              0.016370703383095864,
+              0.01943085591214761
+            ],
+            "frame": [
+              [
+                0.9930598296807551,
+                0,
+                0.1176102660248232
+              ],
+              [
+                -0.0015322653504698885,
+                0.9999151277077934,
+                0.0129379111143426
+              ],
+              [
+                -0.11760028417195867,
+                -0.013028329943123196,
+                0.9929755464167119
+              ]
+            ]
+          },
+          "limits": {
+            "yaw": 0.18,
+            "pitch": 0.075,
+            "cone": 0.18,
+            "irisRatio": 0.81,
+            "frontMargin": 0.5466442116407405,
+            "corneaMargin": null,
+            "geometryBasis": "unchanged score shader iris domain .81 + fixed measured ellipsoid",
+            "speciesCalibration": "UNKNOWN"
+          }
+        }
+      ]
+    },
+    {
+      "label": "herring 120 seconds, 30 asynchronous reproducible gaze controllers",
+      "pass": true,
+      "seconds": 120,
+      "count": 30,
+      "maxAngularSpeed": 1.649958195687219,
+      "maxStep": 0.013740122347178196,
+      "holdFraction": 0.9013414351851852,
+      "maxYaw": 0.17627356020268053,
+      "minYaw": -0.17230953389313072,
+      "maxPitch": 0.07283674693666399,
+      "minPitch": -0.07269608579063672,
+      "minDistinctActorGazes": 29,
+      "binocularDifferentFraction": 0.8970925925925926,
+      "minPerEyeYawExcursion": 0.12403675291221589
+    },
+    {
+      "label": "herring variable dt resolves events at exact times",
+      "pass": true,
+      "timeError": 4.938272013532696e-13
+    },
+    {
+      "label": "herring pause, exact neutral REST, and continuous resume",
+      "pass": true,
+      "pauseExact": true,
+      "restExact": true,
+      "resumeWithoutFirstFrameJump": true
+    },
+    {
+      "label": "herring saccades are C2 at start/end and moving attention remains bounded",
+      "pass": true,
+      "exactSaccadeEndpoints": 12,
+      "derivatives": "zero first and second derivatives at both ends"
+    },
+    {
+      "label": "tuna-yellow-label measured frame and aperture-constrained limits",
+      "pass": true,
+      "rows": [
+        {
+          "side": -1,
+          "basis": {
+            "optic": [
+              -3.7403279531046674e-12,
+              -1.1644856641048155e-15,
+              -1
+            ],
+            "anterior": [
+              -1,
+              4.355558280440894e-27,
+              3.7403279531046674e-12
+            ],
+            "up": [
+              0,
+              1,
+              -1.1644856641048155e-15
+            ],
+            "localOptic": [
+              0.9963623576937757,
+              -0.05754524281315855,
+              0.06285377634220013
+            ],
+            "localAnterior": [
+              0.08521767522586315,
+              0.6728171550258087,
+              -0.734884360788877
+            ],
+            "localUp": [
+              1.1602496817877049e-15,
+              0.7375673670469374,
+              0.6752735586911786
+            ],
+            "center": [
+              -0.38180171351553976,
+              0.011589688473926506,
+              -0.035752577045107654
+            ],
+            "frame": [
+              [
+                -0.08521767522958988,
+                0,
+                -0.9963623576934569
+              ],
+              [
+                -0.6728171550255935,
+                0.7375673670469375,
+                0.05754524281567425
+              ],
+              [
+                0.7348843607886418,
+                0.6752735586911784,
+                -0.06285377634494962
+              ]
+            ]
+          },
+          "limits": {
+            "yaw": 0.18,
+            "pitch": 0.075,
+            "cone": 0.18,
+            "irisRatio": 0.81,
+            "frontMargin": 0.5466442116407405,
+            "corneaMargin": null,
+            "geometryBasis": "unchanged score shader iris domain .81 + fixed measured ellipsoid",
+            "speciesCalibration": "UNKNOWN"
+          }
+        },
+        {
+          "side": 1,
+          "basis": {
+            "optic": [
+              3.7403279531046674e-12,
+              1.1644856641048155e-15,
+              1
+            ],
+            "anterior": [
+              -1,
+              4.355558280440894e-27,
+              3.7403279531046674e-12
+            ],
+            "up": [
+              0,
+              1,
+              -1.1644856641048155e-15
+            ],
+            "localOptic": [
+              -0.9963623576799588,
+              -0.0575452428340579,
+              0.06285377654208946
+            ],
+            "localAnterior": [
+              -0.08521767538740779,
+              0.6728171539854138,
+              -0.7348843617226688
+            ],
+            "localUp": [
+              1.1602496817723578e-15,
+              0.7375673679943664,
+              0.6752735576563493
+            ],
+            "center": [
+              -0.3818017135152723,
+              0.01158968847392659,
+              0.0357525770444423
+            ],
+            "frame": [
+              [
+                0.08521767538368107,
+                0,
+                -0.9963623576802776
+              ],
+              [
+                -0.672817153985629,
+                0.7375673679943663,
+                -0.05754524283154221
+              ],
+              [
+                0.734884361722904,
+                0.6752735576563494,
+                0.06285377653933996
+              ]
+            ]
+          },
+          "limits": {
+            "yaw": 0.18,
+            "pitch": 0.075,
+            "cone": 0.18,
+            "irisRatio": 0.81,
+            "frontMargin": 0.5466442116407405,
+            "corneaMargin": null,
+            "geometryBasis": "unchanged score shader iris domain .81 + fixed measured ellipsoid",
+            "speciesCalibration": "UNKNOWN"
+          }
+        }
+      ]
+    },
+    {
+      "label": "tuna-yellow-label 120 seconds, 30 asynchronous reproducible gaze controllers",
+      "pass": true,
+      "seconds": 120,
+      "count": 30,
+      "maxAngularSpeed": 1.6499804809737915,
+      "maxStep": 0.013744670243387304,
+      "holdFraction": 0.9006145833333333,
+      "maxYaw": 0.17472218534443526,
+      "minYaw": -0.17058388309087605,
+      "maxPitch": 0.07343612238764763,
+      "minPitch": -0.07207269231788814,
+      "minDistinctActorGazes": 30,
+      "binocularDifferentFraction": 0.8991689814814815,
+      "minPerEyeYawExcursion": 0.12092579077463599
+    },
+    {
+      "label": "tuna-yellow-label variable dt resolves events at exact times",
+      "pass": true,
+      "timeError": 4.938272013532696e-13
+    },
+    {
+      "label": "tuna-yellow-label pause, exact neutral REST, and continuous resume",
+      "pass": true,
+      "pauseExact": true,
+      "restExact": true,
+      "resumeWithoutFirstFrameJump": true
+    },
+    {
+      "label": "tuna-yellow-label saccades are C2 at start/end and moving attention remains bounded",
+      "pass": true,
+      "exactSaccadeEndpoints": 12,
+      "derivatives": "zero first and second derivatives at both ends"
+    },
+    {
+      "label": "tuna-blue-label measured frame and aperture-constrained limits",
+      "pass": true,
+      "rows": [
+        {
+          "side": -1,
+          "basis": {
+            "optic": [
+              -0.23594800585171327,
+              0.28071442181725487,
+              -0.9303375473011956
+            ],
+            "anterior": [
+              -0.9717656808791922,
+              -0.0681584144664109,
+              0.2258891143964779
+            ],
+            "up": [
+              0,
+              0.9573681861860823,
+              0.28887048322521763
+            ],
+            "localOptic": [
+              0,
+              0,
+              1
+            ],
+            "localAnterior": [
+              0.9974753342968197,
+              -0.0710137836581609,
+              -2.7755575615628914e-17
+            ],
+            "localUp": [
+              0.07101378365816091,
+              0.9974753342968193,
+              0
+            ],
+            "center": [
+              -0.4192198097144408,
+              0.013184860710807598,
+              -0.06611409943043596
+            ],
+            "frame": [
+              [
+                -0.9693122973931486,
+                0,
+                0.24583260589762326
+              ],
+              [
+                0.06900875782838038,
+                0.9597913384605031,
+                0.2720999411230727
+              ],
+              [
+                -0.23594800585171327,
+                0.28071442181725487,
+                -0.9303375473011956
+              ]
+            ]
+          },
+          "limits": {
+            "yaw": 0.18,
+            "pitch": 0.075,
+            "cone": 0.18,
+            "irisRatio": 0.81,
+            "frontMargin": 0.5466442116407405,
+            "corneaMargin": null,
+            "geometryBasis": "unchanged score shader iris domain .81 + fixed measured ellipsoid",
+            "speciesCalibration": "UNKNOWN"
+          }
+        },
+        {
+          "side": 1,
+          "basis": {
+            "optic": [
+              -0.34316467980398385,
+              0.2807134662042837,
+              0.8963470044723783
+            ],
+            "anterior": [
+              -0.9392752538713182,
+              -0.10255880408817511,
+              -0.3274808225972539
+            ],
+            "up": [
+              0,
+              0.9542964118111205,
+              -0.29886177140012443
+            ],
+            "localOptic": [
+              0,
+              2.7755575615628914e-17,
+              1
+            ],
+            "localAnterior": [
+              -0.9942745841509366,
+              -0.1068552820944384,
+              -5.551115123125783e-17
+            ],
+            "localUp": [
+              -0.10685528209443847,
+              0.9942745841509364,
+              -5.551115123125783e-17
+            ],
+            "center": [
+              -0.4236519462743778,
+              0.013185045623714326,
+              0.009404128891407258
+            ],
+            "frame": [
+              [
+                0.9338975124461704,
+                0,
+                0.35754081759549516
+              ],
+              [
+                0.10036652221674497,
+                0.9597916179523429,
+                -0.26215760779832264
+              ],
+              [
+                -0.34316467980398385,
+                0.2807134662042837,
+                0.8963470044723783
+              ]
+            ]
+          },
+          "limits": {
+            "yaw": 0.18,
+            "pitch": 0.075,
+            "cone": 0.18,
+            "irisRatio": 0.81,
+            "frontMargin": 0.5466442116407405,
+            "corneaMargin": null,
+            "geometryBasis": "unchanged score shader iris domain .81 + fixed measured ellipsoid",
+            "speciesCalibration": "UNKNOWN"
+          }
+        }
+      ]
+    },
+    {
+      "label": "tuna-blue-label 120 seconds, 30 asynchronous reproducible gaze controllers",
+      "pass": true,
+      "seconds": 120,
+      "count": 30,
+      "maxAngularSpeed": 1.6491101891537447,
+      "maxStep": 0.013742954044834964,
+      "holdFraction": 0.9015925925925926,
+      "maxYaw": 0.1739447600953281,
+      "minYaw": -0.17377288529416546,
+      "maxPitch": 0.0725591771118343,
+      "minPitch": -0.07294469891348854,
+      "minDistinctActorGazes": 30,
+      "binocularDifferentFraction": 0.8935532407407407,
+      "minPerEyeYawExcursion": 0.12572089187800883
+    },
+    {
+      "label": "tuna-blue-label variable dt resolves events at exact times",
+      "pass": true,
+      "timeError": 4.938272013532696e-13
+    },
+    {
+      "label": "tuna-blue-label pause, exact neutral REST, and continuous resume",
+      "pass": true,
+      "pauseExact": true,
+      "restExact": true,
+      "resumeWithoutFirstFrameJump": true
+    },
+    {
+      "label": "tuna-blue-label saccades are C2 at start/end and moving attention remains bounded",
+      "pass": true,
+      "exactSaccadeEndpoints": 12,
+      "derivatives": "zero first and second derivatives at both ends"
+    },
+    {
+      "label": "colorful measured frame and aperture-constrained limits",
+      "pass": true,
+      "rows": [
+        {
+          "side": -1,
+          "basis": {
+            "optic": [
+              0.002203189387834476,
+              -0.0008728175644132363,
+              -0.999997192069068
+            ],
+            "anterior": [
+              -0.9999975729753156,
+              -0.0000019229870625678453,
+              -0.0022031885486238374
+            ],
+            "up": [
+              0,
+              0.9999996190928281,
+              -0.0008728196827681516
+            ],
+            "localOptic": [
+              0,
+              1.0842021724855044e-19,
+              0.9999999999999999
+            ],
+            "localAnterior": [
+              0.9999999999981511,
+              -0.000001922987795044133,
+              0
+            ],
+            "localUp": [
+              0.000001922987795044133,
+              0.999999999998151,
+              1.0842021724855044e-19
+            ],
+            "center": [
+              -0.38190288393193955,
+              0.028216919978563324,
+              -0.028180876057255083
+            ],
+            "frame": [
+              [
+                -0.9999975729734666,
+                0,
+                -0.0022031902270413612
+              ],
+              [
+                0.0000019229831279052863,
+                0.999999619094677,
+                -0.0008728154460618487
+              ],
+              [
+                0.002203189387834476,
+                -0.0008728175644132363,
+                -0.999997192069068
+              ]
+            ]
+          },
+          "limits": {
+            "yaw": 0.18,
+            "pitch": 0.075,
+            "cone": 0.18,
+            "irisRatio": 0.81,
+            "frontMargin": 0.5466442116407405,
+            "corneaMargin": null,
+            "geometryBasis": "unchanged score shader iris domain .81 + fixed measured ellipsoid",
+            "speciesCalibration": "UNKNOWN"
+          }
+        },
+        {
+          "side": 1,
+          "basis": {
+            "optic": [
+              -0.0005405971930397471,
+              -0.0008728175644126882,
+              0.9999994729719481
+            ],
+            "anterior": [
+              -0.9999998538773268,
+              4.718427943042184e-7,
+              -0.0005405969871233385
+            ],
+            "up": [
+              1.0587911840679934e-22,
+              0.9999996190945658,
+              0.0008728176919511426
+            ],
+            "localOptic": [
+              -1.0842021724855044e-19,
+              0,
+              0.9999999999999999
+            ],
+            "localAnterior": [
+              -0.9999999999998888,
+              4.7184297403171875e-7,
+              1.0842021724855044e-19
+            ],
+            "localUp": [
+              4.7184297403171885e-7,
+              0.9999999999998888,
+              -1.0842021724855044e-19
+            ],
+            "center": [
+              -0.38197784747863583,
+              0.028216919978563345,
+              0.026461436299379113
+            ],
+            "frame": [
+              [
+                0.9999998538772155,
+                0,
+                0.000540597398956174
+              ],
+              [
+                -4.7184290508476203e-7,
+                0.999999619094677,
+                0.0008728174368741552
+              ],
+              [
+                -0.0005405971930397471,
+                -0.0008728175644126882,
+                0.9999994729719481
+              ]
+            ]
+          },
+          "limits": {
+            "yaw": 0.18,
+            "pitch": 0.075,
+            "cone": 0.18,
+            "irisRatio": 0.81,
+            "frontMargin": 0.5466442116407405,
+            "corneaMargin": null,
+            "geometryBasis": "unchanged score shader iris domain .81 + fixed measured ellipsoid",
+            "speciesCalibration": "UNKNOWN"
+          }
+        }
+      ]
+    },
+    {
+      "label": "colorful 120 seconds, 30 asynchronous reproducible gaze controllers",
+      "pass": true,
+      "seconds": 120,
+      "count": 30,
+      "maxAngularSpeed": 1.629977784427148,
+      "maxStep": 0.01357858442304103,
+      "holdFraction": 0.9016273148148148,
+      "maxYaw": 0.1720632651343505,
+      "minYaw": -0.17448219777317717,
+      "maxPitch": 0.07184714490405163,
+      "minPitch": -0.07264740989310668,
+      "minDistinctActorGazes": 29,
+      "binocularDifferentFraction": 0.8882106481481481,
+      "minPerEyeYawExcursion": 0.12319098279811441
+    },
+    {
+      "label": "colorful variable dt resolves events at exact times",
+      "pass": true,
+      "timeError": 4.938272013532696e-13
+    },
+    {
+      "label": "colorful pause, exact neutral REST, and continuous resume",
+      "pass": true,
+      "pauseExact": true,
+      "restExact": true,
+      "resumeWithoutFirstFrameJump": true
+    },
+    {
+      "label": "colorful saccades are C2 at start/end and moving attention remains bounded",
+      "pass": true,
+      "exactSaccadeEndpoints": 12,
+      "derivatives": "zero first and second derivatives at both ends"
+    },
+    {
+      "label": "picasso measured frame and aperture-constrained limits",
+      "pass": true,
+      "rows": [
+        {
+          "side": -1,
+          "basis": {
+            "optic": [
+              -0.31628966290775873,
+              0.14249128480349538,
+              -0.9379003587230071
+            ],
+            "anterior": [
+              -0.9486626635098994,
+              -0.04750742510624876,
+              0.3127014477454139
+            ],
+            "up": [
+              -2.0840701225885283e-17,
+              0.9886552879112231,
+              0.15020226924110258
+            ],
+            "localOptic": [
+              5.551115123125783e-17,
+              -2.7755575615628914e-17,
+              1
+            ],
+            "localAnterior": [
+              0.9988474709222471,
+              -0.04799718566990123,
+              0
+            ],
+            "localUp": [
+              0.04799718566990125,
+              0.9988474709222469,
+              0
+            ],
+            "center": [
+              -0.348310836,
+              0.1009124852,
+              -0.0511026624
+            ],
+            "frame": [
+              [
+                -0.9475693022052255,
+                0,
+                0.3195503364390375
+              ],
+              [
+                0.045533137998587665,
+                0.9897960566475544,
+                0.13502036731157416
+              ],
+              [
+                -0.31628966290775873,
+                0.14249128480349538,
+                -0.9379003587230071
+              ]
+            ]
+          },
+          "limits": {
+            "yaw": 0.18,
+            "pitch": 0.075,
+            "cone": 0.18,
+            "irisRatio": 0.81,
+            "frontMargin": 0.5466442116407405,
+            "corneaMargin": null,
+            "geometryBasis": "unchanged score shader iris domain .81 + fixed measured ellipsoid",
+            "speciesCalibration": "UNKNOWN"
+          }
+        },
+        {
+          "side": 1,
+          "basis": {
+            "optic": [
+              -0.30395385549562676,
+              0.1695381460975607,
+              0.9374800641865116
+            ],
+            "anterior": [
+              -0.9526867553027824,
+              -0.05409099357485726,
+              -0.29910217432299135
+            ],
+            "up": [
+              1.3898738030859155e-17,
+              0.9840380995834902,
+              -0.17795791235040126
+            ],
+            "localOptic": [
+              0,
+              0,
+              1.0000000000000002
+            ],
+            "localAnterior": [
+              -0.9984926528582535,
+              -0.054885537148570085,
+              -5.551115123125783e-17
+            ],
+            "localUp": [
+              -0.054885537148570106,
+              0.9984926528582536,
+              -2.7755575615628914e-17
+            ],
+            "center": [
+              -0.3547531622,
+              0.1008931012,
+              0.0515058339
+            ],
+            "frame": [
+              [
+                0.9512507256451972,
+                0,
+                0.30841863912462536
+              ],
+              [
+                0.052288724299121576,
+                0.9855236258039693,
+                -0.16127328449984607
+              ],
+              [
+                -0.30395385549562676,
+                0.1695381460975607,
+                0.9374800641865116
+              ]
+            ]
+          },
+          "limits": {
+            "yaw": 0.18,
+            "pitch": 0.075,
+            "cone": 0.18,
+            "irisRatio": 0.81,
+            "frontMargin": 0.5466442116407405,
+            "corneaMargin": null,
+            "geometryBasis": "unchanged score shader iris domain .81 + fixed measured ellipsoid",
+            "speciesCalibration": "UNKNOWN"
+          }
+        }
+      ]
+    },
+    {
+      "label": "picasso 120 seconds, 30 asynchronous reproducible gaze controllers",
+      "pass": true,
+      "seconds": 120,
+      "count": 30,
+      "maxAngularSpeed": 1.6499266999686446,
+      "maxStep": 0.013742952200747944,
+      "holdFraction": 0.901238425925926,
+      "maxYaw": 0.16998708446044475,
+      "minYaw": -0.1710003397730179,
+      "maxPitch": 0.07326303562615068,
+      "minPitch": -0.06888713896740228,
+      "minDistinctActorGazes": 30,
+      "binocularDifferentFraction": 0.8988055555555555,
+      "minPerEyeYawExcursion": 0.12634050510590894
+    },
+    {
+      "label": "picasso variable dt resolves events at exact times",
+      "pass": true,
+      "timeError": 4.938272013532696e-13
+    },
+    {
+      "label": "picasso pause, exact neutral REST, and continuous resume",
+      "pass": true,
+      "pauseExact": true,
+      "restExact": true,
+      "resumeWithoutFirstFrameJump": true
+    },
+    {
+      "label": "picasso saccades are C2 at start/end and moving attention remains bounded",
+      "pass": true,
+      "exactSaccadeEndpoints": 12,
+      "derivatives": "zero first and second derivatives at both ends"
+    },
+    {
+      "label": "Geometry invariance and legacy iris stays under unchanged cornea aperture",
+      "pass": true,
+      "samples": [
+        {
+          "id": "barracuda",
+          "side": -1,
+          "radii": [
+            0.0125,
+            0.0125,
+            0.0125
+          ],
+          "unitRotationError": 4.440892098500626e-16,
+          "corneaClearance": 0.001397210533141768,
+          "outerEnvelopeIsFixed": true
+        },
+        {
+          "id": "barracuda",
+          "side": 1,
+          "radii": [
+            0.0125,
+            0.0125,
+            0.0125
+          ],
+          "unitRotationError": 4.440892098500626e-16,
+          "corneaClearance": 0.001397210533141768,
+          "outerEnvelopeIsFixed": true
+        },
+        {
+          "id": "herring",
+          "side": -1,
+          "radii": [
+            0.03079838365182913,
+            0.03071689923938815,
+            0.014569749493498214
+          ],
+          "unitRotationError": 4.440892098500626e-16,
+          "corneaClearance": null,
+          "outerEnvelopeIsFixed": true
+        },
+        {
+          "id": "herring",
+          "side": 1,
+          "radii": [
+            0.030231721573171944,
+            0.03037477199777529,
+            0.013888612716753238
+          ],
+          "unitRotationError": 4.440892098500626e-16,
+          "corneaClearance": null,
+          "outerEnvelopeIsFixed": true
+        },
+        {
+          "id": "tuna-yellow-label",
+          "side": -1,
+          "radii": [
+            0.020638613545151504,
+            0.021898655347408744,
+            0.021620875236463805
+          ],
+          "unitRotationError": 4.440892098500626e-16,
+          "corneaClearance": null,
+          "outerEnvelopeIsFixed": true
+        },
+        {
+          "id": "tuna-yellow-label",
+          "side": 1,
+          "radii": [
+            0.020638613544652528,
+            0.021898655345728338,
+            0.021620875235043857
+          ],
+          "unitRotationError": 4.440892098500626e-16,
+          "corneaClearance": null,
+          "outerEnvelopeIsFixed": true
+        },
+        {
+          "id": "tuna-blue-label",
+          "side": -1,
+          "radii": [
+            0.01695042507864042,
+            0.016824921389190815,
+            0.008715250399035923
+          ],
+          "unitRotationError": 4.440892098500626e-16,
+          "corneaClearance": null,
+          "outerEnvelopeIsFixed": true
+        },
+        {
+          "id": "tuna-blue-label",
+          "side": 1,
+          "radii": [
+            0.016950426231964633,
+            0.016824922931430317,
+            0.008715250755856108
+          ],
+          "unitRotationError": 4.440892098500626e-16,
+          "corneaClearance": null,
+          "outerEnvelopeIsFixed": true
+        },
+        {
+          "id": "colorful",
+          "side": -1,
+          "radii": [
+            0.042235382255477266,
+            0.04251839110660273,
+            0.011956999989204204
+          ],
+          "unitRotationError": 4.440892098500626e-16,
+          "corneaClearance": null,
+          "outerEnvelopeIsFixed": true
+        },
+        {
+          "id": "colorful",
+          "side": 1,
+          "radii": [
+            0.04223538225547724,
+            0.042518391106602736,
+            0.011956999989204246
+          ],
+          "unitRotationError": 4.440892098500626e-16,
+          "corneaClearance": null,
+          "outerEnvelopeIsFixed": true
+        },
+        {
+          "id": "picasso",
+          "side": -1,
+          "radii": [
+            0.02,
+            0.02,
+            0.009
+          ],
+          "unitRotationError": 4.440892098500626e-16,
+          "corneaClearance": null,
+          "outerEnvelopeIsFixed": true
+        },
+        {
+          "id": "picasso",
+          "side": 1,
+          "radii": [
+            0.02,
+            0.02,
+            0.009
+          ],
+          "unitRotationError": 4.440892098500626e-16,
+          "corneaClearance": null,
+          "outerEnvelopeIsFixed": true
+        }
+      ]
+    },
+    {
+      "label": "Invalid delta never advances and large stalls are bounded",
+      "pass": true,
+      "maximumAcceptedDelta": 0.5
+    },
+    {
+      "label": "Thirty-eye-pair CPU update cost stays below the frame budget",
+      "pass": true,
+      "frames": 12000,
+      "controllers": 30,
+      "medianMilliseconds": 0.0009999999999763531,
+      "p99Milliseconds": 0.0039000000001578883,
+      "meaning": "Node CPU probe only, not a browser performance acceptance"
+    }
+  ],
+  "failures": [],
+  "scope": "Numerical ocular controller and fixed original/adapted geometry bounds; app/legacy mapping and real visual legibility require independent browser verification",
+  "speciesCalibration": "UNKNOWN",
+  "visualAcceptance": false,
+  "productionReady": false
+}

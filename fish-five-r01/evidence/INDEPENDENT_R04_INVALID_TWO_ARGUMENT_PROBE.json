@@ -1,0 +1,448 @@
+{
+  "schema": "FISH_R04_INDEPENDENT_ROOT_CAUSE_REVIEW_1",
+  "createdAt": "2026-10-02T07:12:59.894Z",
+  "status": "INVALID_QA_INSTRUMENTATION",
+  "method": "Back-to-back immutable R03 then frozen R04, same browser/GPU/1440x950, 30 legacy fish CRUISE, 2000ms shader warmup and 3500ms trace. Driver dispatch wall time is not hardware GPU time. Timer query reported only if supported and non-disjoint.",
+  "rows": [
+    {
+      "version": "R03",
+      "htmlSha256": "4114b8bc7c557730a566c453dabcb4630e30752250f1700055cb8f663345d9e6",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "RAFms": {
+        "count": 99,
+        "median": 33.30000000000109,
+        "p95": 50,
+        "max": 66.70000000000073
+      },
+      "advanceWallMs": {
+        "count": 99,
+        "median": 28.69999998807907,
+        "p95": 42.80000001192093,
+        "max": 57.60000002384186
+      },
+      "uploadWallMs": {
+        "count": 99,
+        "median": 0.10000002384185791,
+        "p95": 0.20000004768371582,
+        "max": 0.30000001192092896
+      },
+      "shadowDispatchWallMs": {
+        "count": 0,
+        "median": null,
+        "p95": null,
+        "max": null
+      },
+      "mainDispatchWallMs": {
+        "count": 198,
+        "median": 0.10000002384185791,
+        "p95": 0.30000001192092896,
+        "max": 0.5999999642372131
+      },
+      "actualGPUTimerAvailable": true,
+      "shadowGPUms": {
+        "count": 0,
+        "median": null,
+        "p95": null,
+        "max": null
+      },
+      "mainGPUms": {
+        "count": 198,
+        "median": 13.391872,
+        "p95": 13.572096,
+        "max": 14.222336
+      },
+      "unresolvedQueries": 0,
+      "programs": {
+        "single": [
+          {
+            "name": "aPosition",
+            "type": 35665,
+            "size": 1
+          },
+          {
+            "name": "aNormalOct",
+            "type": 35664,
+            "size": 1
+          },
+          {
+            "name": "aUv",
+            "type": 35664,
+            "size": 1
+          },
+          {
+            "name": "aW0",
+            "type": 35666,
+            "size": 1
+          },
+          {
+            "name": "aW1",
+            "type": 35666,
+            "size": 1
+          },
+          {
+            "name": "aW2",
+            "type": 35666,
+            "size": 1
+          },
+          {
+            "name": "aPartInfo",
+            "type": 36294,
+            "size": 1
+          },
+          {
+            "name": "aPartRoot",
+            "type": 35665,
+            "size": 1
+          },
+          {
+            "name": "gl_InstanceID",
+            "type": 5124,
+            "size": 1
+          }
+        ],
+        "main": [
+          {
+            "name": "aPosition",
+            "type": 35665,
+            "size": 1
+          },
+          {
+            "name": "aNormalOct",
+            "type": 35664,
+            "size": 1
+          },
+          {
+            "name": "aUv",
+            "type": 35664,
+            "size": 1
+          },
+          {
+            "name": "aW0",
+            "type": 35666,
+            "size": 1
+          },
+          {
+            "name": "aW1",
+            "type": 35666,
+            "size": 1
+          },
+          {
+            "name": "aW2",
+            "type": 35666,
+            "size": 1
+          },
+          {
+            "name": "aPartInfo",
+            "type": 36294,
+            "size": 1
+          },
+          {
+            "name": "aPartRoot",
+            "type": 35665,
+            "size": 1
+          },
+          {
+            "name": "gl_InstanceID",
+            "type": 5124,
+            "size": 1
+          }
+        ],
+        "shadow": [
+          {
+            "name": "aPosition",
+            "type": 35665,
+            "size": 1
+          },
+          {
+            "name": "aNormalOct",
+            "type": 35664,
+            "size": 1
+          },
+          {
+            "name": "aUv",
+            "type": 35664,
+            "size": 1
+          },
+          {
+            "name": "aW0",
+            "type": 35666,
+            "size": 1
+          },
+          {
+            "name": "aW1",
+            "type": 35666,
+            "size": 1
+          },
+          {
+            "name": "aW2",
+            "type": 35666,
+            "size": 1
+          },
+          {
+            "name": "aPartInfo",
+            "type": 36294,
+            "size": 1
+          },
+          {
+            "name": "aPartRoot",
+            "type": 35665,
+            "size": 1
+          },
+          {
+            "name": "gl_InstanceID",
+            "type": 5124,
+            "size": 1
+          }
+        ]
+      },
+      "mainVertex": "#version 300 es\nprecision highp float;precision highp int;\nlayout(location=0) in vec3 aPosition;\nlayout(location=1) in vec2 aNormalOct;\nlayout(location=2) in vec2 aUv;\nlayout(location=3) in vec4 aW0;\nlayout(location=4) in vec4 aW1;\nlayout(location=5) in vec4 aW2;\nlayout(location=6) in uvec2 aPartInfo;\nlayout(location=7) in vec3 aPartRoot;\nuniform mat4 uMvp,uView;\nuniform highp sampler2D uField,uInstances;\nuniform bool uSchool;uniform int uPoseIndex;\nflat out vec4 vTint;\nuniform vec2 uBodyRange;\nuniform vec3 uJawPivot;\nuniform vec3 uPartBend[7];\nuniform vec4 uResponse0,uResponse1,uResponse2;\nuniform float uJaw,uGill,uEyeRecess;\nuniform int uSamples;\nuniform bool uAnimate;\nout vec3 vNormal,vViewPos,vWorldPos;\nout vec4 vW0,vW1,vW2;\nout vec2 vUv;\nflat out uint vPartId;\nvec4 field(int row,float t){float f=clamp(t,0.0,1.0)*float(uSamples-1);int i=int(floor(f));return mix(texelFetch(uField,ivec2(i,row+9*(uSchool?gl_InstanceID:uPoseIndex)),0),texelFetch(uField,ivec2(min(i+1,uSamples-1),row+9*(uSchool?gl_InstanceID:uPoseIndex)),0),fract(f));}\nvec3 octNormal(vec2 e){vec3 n=vec3(e,1.0-abs(e.x)-abs(e.y));if(n.z<0.0)n.xy=(1.0-abs(n.yx))*sign(n.xy+1e-8);return normalize(n);}\nvec3 rotateAxis(vec3 n,vec3 axis,float a){return n*cos(a)+cross(axis,n)*sin(a)+axis*dot(axis,n)*(1.0-cos(a));}\nfloat partWeight(uint id){if(id==1u)return aW1.y;if(id==2u)return aW1.z;if(id==3u)return aW1.w;if(id==4u)return aW2.x;if(id==5u)return aW2.y;if(id==6u)return aW2.z;if(id==7u)return aW2.w;return 0.0;}\n// Spine angles are guarded to +/-1.35 radians. Polynomial evaluation avoids\n// driver-specific native sin/cos approximations displacing complete sections.\nfloat spineSin(float x){float q=x*x;return x*(1.0+q*(-1.0/6.0+q*(1.0/120.0+q*(-1.0/5040.0+q*(1.0/362880.0-q/39916800.0)))));}\nfloat spineCos(float x){float q=x*x;return 1.0+q*(-1.0/2.0+q*(1.0/24.0+q*(-1.0/720.0+q*(1.0/40320.0+q*(-1.0/3628800.0+q/479001600.0)))));}\nvoid main(){\n int fish=uSchool?gl_InstanceID:uPoseIndex;vec4 root=texelFetch(uInstances,ivec2(0,fish),0),shape=texelFetch(uInstances,ivec2(1,fish),0),color=texelFetch(uInstances,ivec2(2,fish),0),local=texelFetch(uInstances,ivec2(3,fish),0);vTint=vec4(color.rgb*shape.w,color.w);\n vec3 p=aPosition,n=octNormal(aNormalOct);\n p-=n*(uEyeRecess*aW1.x);\n if(uAnimate){\n  float j=(uSchool?local.x:uJaw)*aW0.z;vec3 q=p-uJawPivot;p=uJawPivot+vec3(cos(j)*q.x-sin(j)*q.y,sin(j)*q.x+cos(j)*q.y,q.z);n=rotateAxis(n,vec3(0,0,1),j);\n  p.z+=sign(p.z+1e-8)*(uSchool?local.y:uGill)*aW0.w;\n  uint pid=aPartInfo.x;\n  if(pid>0u&&pid<=7u){float t=float(aPartInfo.y)/65535.0;vec4 f=field(int(pid)+1,t);vec3 ray=p-aPartRoot;float L=length(ray);vec3 T=ray/max(L,1e-9),U=normalize(uPartBend[int(pid)-1]);float w=partWeight(pid);vec3 pd=aPartRoot+ray*f.x+U*L*f.y;p=mix(p,pd,w);vec3 rawAxis=cross(T,U);float axisLength=length(rawAxis);if(w>0.0&&abs(f.z)>1e-8&&axisLength>1e-8)n=rotateAxis(n,rawAxis/axisLength,f.z*w);}\n  float anchorX=clamp(aPosition.x,uBodyRange.x,uBodyRange.y);float s=(anchorX-uBodyRange.x)/(uBodyRange.y-uBodyRange.x);vec4 f=field(0,s),g=field(1,s);float ca=spineCos(f.w),sa=spineSin(f.w),cb=spineCos(g.x),sb=spineSin(g.x);vec3 T=vec3(ca*cb,sb,sa*cb),U=vec3(-ca*sb,cb,-sa*sb),N=vec3(-sa,0,ca);mat3 frame=mat3(T,U,N);p=vec3(anchorX+f.x,g.y+f.y,g.z+f.z)+frame*(p-vec3(anchorX,g.y,g.z));n=normalize(frame*n);\n }\n p.y-=.14;p*=shape.xyz;n=normalize(n/shape.xyz);float c=cos(root.w),ss=sin(root.w),cp=cos(local.z),sp=sin(local.z),cr=cos(local.w),sr=sin(local.w);mat3 rot=mat3(vec3(c*cp,-sp,-ss*cp),vec3(c*sp*cr+ss*sr,cp*cr,-ss*sp*cr+c*sr),vec3(-c*sp*sr+ss*cr,-cp*sr,ss*sp*sr+c*cr));p=rot*p+root.xyz;n=normalize(rot*n);\n vNormal=normalize(mat3(uView)*n);vViewPos=(uView*vec4(p,1)).xyz;vWorldPos=p;vUv=aUv;vW0=aW0;vW1=aW1;vW2=aW2;vPartId=aPartInfo.x;gl_Position=uMvp*vec4(p,1);\n}",
+      "shadowVertex": "#version 300 es\nprecision highp float;precision highp int;\nlayout(location=0) in vec3 aPosition;\nlayout(location=1) in vec2 aNormalOct;\nlayout(location=2) in vec2 aUv;\nlayout(location=3) in vec4 aW0;\nlayout(location=4) in vec4 aW1;\nlayout(location=5) in vec4 aW2;\nlayout(location=6) in uvec2 aPartInfo;\nlayout(location=7) in vec3 aPartRoot;\nuniform mat4 uMvp,uView;\nuniform highp sampler2D uField,uInstances;\nuniform bool uSchool;uniform int uPoseIndex;\nflat out vec4 vTint;\nuniform vec2 uBodyRange;\nuniform vec3 uJawPivot;\nuniform vec3 uPartBend[7];\nuniform vec4 uResponse0,uResponse1,uResponse2;\nuniform float uJaw,uGill,uEyeRecess;\nuniform int uSamples;\nuniform bool uAnimate;\nout vec3 vNormal,vViewPos,vWorldPos;\nout vec4 vW0,vW1,vW2;\nout vec2 vUv;\nflat out uint vPartId;\nvec4 field(int row,float t){float f=clamp(t,0.0,1.0)*float(uSamples-1);int i=int(floor(f));return mix(texelFetch(uField,ivec2(i,row+9*(uSchool?gl_InstanceID:uPoseIndex)),0),texelFetch(uField,ivec2(min(i+1,uSamples-1),row+9*(uSchool?gl_InstanceID:uPoseIndex)),0),fract(f));}\nvec3 octNormal(vec2 e){vec3 n=vec3(e,1.0-abs(e.x)-abs(e.y));if(n.z<0.0)n.xy=(1.0-abs(n.yx))*sign(n.xy+1e-8);return normalize(n);}\nvec3 rotateAxis(vec3 n,vec3 axis,float a){return n*cos(a)+cross(axis,n)*sin(a)+axis*dot(axis,n)*(1.0-cos(a));}\nfloat partWeight(uint id){if(id==1u)return aW1.y;if(id==2u)return aW1.z;if(id==3u)return aW1.w;if(id==4u)return aW2.x;if(id==5u)return aW2.y;if(id==6u)return aW2.z;if(id==7u)return aW2.w;return 0.0;}\n// Spine angles are guarded to +/-1.35 radians. Polynomial evaluation avoids\n// driver-specific native sin/cos approximations displacing complete sections.\nfloat spineSin(float x){float q=x*x;return x*(1.0+q*(-1.0/6.0+q*(1.0/120.0+q*(-1.0/5040.0+q*(1.0/362880.0-q/39916800.0)))));}\nfloat spineCos(float x){float q=x*x;return 1.0+q*(-1.0/2.0+q*(1.0/24.0+q*(-1.0/720.0+q*(1.0/40320.0+q*(-1.0/3628800.0+q/479001600.0)))));}\nvoid main(){\n int fish=uSchool?gl_InstanceID:uPoseIndex;vec4 root=texelFetch(uInstances,ivec2(0,fish),0),shape=texelFetch(uInstances,ivec2(1,fish),0),color=texelFetch(uInstances,ivec2(2,fish),0),local=texelFetch(uInstances,ivec2(3,fish),0);vTint=vec4(color.rgb*shape.w,color.w);\n vec3 p=aPosition,n=octNormal(aNormalOct);\n p-=n*(uEyeRecess*aW1.x);\n if(uAnimate){\n  float j=(uSchool?local.x:uJaw)*aW0.z;vec3 q=p-uJawPivot;p=uJawPivot+vec3(cos(j)*q.x-sin(j)*q.y,sin(j)*q.x+cos(j)*q.y,q.z);n=rotateAxis(n,vec3(0,0,1),j);\n  p.z+=sign(p.z+1e-8)*(uSchool?local.y:uGill)*aW0.w;\n  uint pid=aPartInfo.x;\n  if(pid>0u&&pid<=7u){float t=float(aPartInfo.y)/65535.0;vec4 f=field(int(pid)+1,t);vec3 ray=p-aPartRoot;float L=length(ray);vec3 T=ray/max(L,1e-9),U=normalize(uPartBend[int(pid)-1]);float w=partWeight(pid);vec3 pd=aPartRoot+ray*f.x+U*L*f.y;p=mix(p,pd,w);vec3 rawAxis=cross(T,U);float axisLength=length(rawAxis);if(w>0.0&&abs(f.z)>1e-8&&axisLength>1e-8)n=rotateAxis(n,rawAxis/axisLength,f.z*w);}\n  float anchorX=clamp(aPosition.x,uBodyRange.x,uBodyRange.y);float s=(anchorX-uBodyRange.x)/(uBodyRange.y-uBodyRange.x);vec4 f=field(0,s),g=field(1,s);float ca=spineCos(f.w),sa=spineSin(f.w),cb=spineCos(g.x),sb=spineSin(g.x);vec3 T=vec3(ca*cb,sb,sa*cb),U=vec3(-ca*sb,cb,-sa*sb),N=vec3(-sa,0,ca);mat3 frame=mat3(T,U,N);p=vec3(anchorX+f.x,g.y+f.y,g.z+f.z)+frame*(p-vec3(anchorX,g.y,g.z));n=normalize(frame*n);\n }\n p.y-=.14;p*=shape.xyz;n=normalize(n/shape.xyz);float c=cos(root.w),ss=sin(root.w),cp=cos(local.z),sp=sin(local.z),cr=cos(local.w),sr=sin(local.w);mat3 rot=mat3(vec3(c*cp,-sp,-ss*cp),vec3(c*sp*cr+ss*sr,cp*cr,-ss*sp*cr+c*sr),vec3(-c*sp*sr+ss*cr,-cp*sr,ss*sp*sr+c*cr));p=rot*p+root.xyz;n=normalize(rot*n);\n vNormal=normalize(mat3(uView)*n);vViewPos=(uView*vec4(p,1)).xyz;vWorldPos=p;vUv=aUv;vW0=aW0;vW1=aW1;vW2=aW2;vPartId=aPartInfo.x;gl_Position=uMvp*vec4(p,1);\n}",
+      "shadowActiveMouthGrad": [],
+      "sourceVertexCount": 497701,
+      "bodyTrianglesPerPass": 28928550,
+      "cranialVersion": false
+    },
+    {
+      "version": "R04",
+      "htmlSha256": "4584f096be9e80ed2f381827413dbd68a474422b450dbf07c3c9bcdae25c5253",
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "RAFms": {
+        "count": 88,
+        "median": 33.399999999999636,
+        "p95": 50.100000000000364,
+        "max": 133.30000000000018
+      },
+      "advanceWallMs": {
+        "count": 88,
+        "median": 29.400000035762787,
+        "p95": 56.60000002384186,
+        "max": 100.5
+      },
+      "uploadWallMs": {
+        "count": 88,
+        "median": 0.10000002384185791,
+        "p95": 0.20000004768371582,
+        "max": 0.30000001192092896
+      },
+      "shadowDispatchWallMs": {
+        "count": 0,
+        "median": null,
+        "p95": null,
+        "max": null
+      },
+      "mainDispatchWallMs": {
+        "count": 176,
+        "median": 0.10000002384185791,
+        "p95": 0.30000001192092896,
+        "max": 0.40000003576278687
+      },
+      "actualGPUTimerAvailable": true,
+      "shadowGPUms": {
+        "count": 0,
+        "median": null,
+        "p95": null,
+        "max": null
+      },
+      "mainGPUms": {
+        "count": 176,
+        "median": 14.681088,
+        "p95": 14.937088,
+        "max": 15.183872
+      },
+      "unresolvedQueries": 0,
+      "programs": {
+        "single": [
+          {
+            "name": "aPosition",
+            "type": 35665,
+            "size": 1
+          },
+          {
+            "name": "aNormalOct",
+            "type": 35664,
+            "size": 1
+          },
+          {
+            "name": "aUv",
+            "type": 35664,
+            "size": 1
+          },
+          {
+            "name": "aW0",
+            "type": 35666,
+            "size": 1
+          },
+          {
+            "name": "aW1",
+            "type": 35666,
+            "size": 1
+          },
+          {
+            "name": "aW2",
+            "type": 35666,
+            "size": 1
+          },
+          {
+            "name": "aPartInfo",
+            "type": 36294,
+            "size": 1
+          },
+          {
+            "name": "aPartRoot",
+            "type": 35665,
+            "size": 1
+          },
+          {
+            "name": "aJawGradient",
+            "type": 35665,
+            "size": 1
+          },
+          {
+            "name": "aGillGradient",
+            "type": 35665,
+            "size": 1
+          },
+          {
+            "name": "gl_InstanceID",
+            "type": 5124,
+            "size": 1
+          }
+        ],
+        "main": [
+          {
+            "name": "aPosition",
+            "type": 35665,
+            "size": 1
+          },
+          {
+            "name": "aNormalOct",
+            "type": 35664,
+            "size": 1
+          },
+          {
+            "name": "aUv",
+            "type": 35664,
+            "size": 1
+          },
+          {
+            "name": "aW0",
+            "type": 35666,
+            "size": 1
+          },
+          {
+            "name": "aW1",
+            "type": 35666,
+            "size": 1
+          },
+          {
+            "name": "aW2",
+            "type": 35666,
+            "size": 1
+          },
+          {
+            "name": "aPartInfo",
+            "type": 36294,
+            "size": 1
+          },
+          {
+            "name": "aPartRoot",
+            "type": 35665,
+            "size": 1
+          },
+          {
+            "name": "aJawGradient",
+            "type": 35665,
+            "size": 1
+          },
+          {
+            "name": "aGillGradient",
+            "type": 35665,
+            "size": 1
+          },
+          {
+            "name": "gl_InstanceID",
+            "type": 5124,
+            "size": 1
+          }
+        ],
+        "shadow": [
+          {
+            "name": "aPosition",
+            "type": 35665,
+            "size": 1
+          },
+          {
+            "name": "aNormalOct",
+            "type": 35664,
+            "size": 1
+          },
+          {
+            "name": "aUv",
+            "type": 35664,
+            "size": 1
+          },
+          {
+            "name": "aW0",
+            "type": 35666,
+            "size": 1
+          },
+          {
+            "name": "aW1",
+            "type": 35666,
+            "size": 1
+          },
+          {
+            "name": "aW2",
+            "type": 35666,
+            "size": 1
+          },
+          {
+            "name": "aPartInfo",
+            "type": 36294,
+            "size": 1
+          },
+          {
+            "name": "aPartRoot",
+            "type": 35665,
+            "size": 1
+          },
+          {
+            "name": "aJawGradient",
+            "type": 35665,
+            "size": 1
+          },
+          {
+            "name": "aGillGradient",
+            "type": 35665,
+            "size": 1
+          },
+          {
+            "name": "gl_InstanceID",
+            "type": 5124,
+            "size": 1
+          }
+        ]
+      },
+      "mainVertex": "#version 300 es\nprecision highp float;precision highp int;\nlayout(location=0) in vec3 aPosition;\nlayout(location=1) in vec2 aNormalOct;\nlayout(location=2) in vec2 aUv;\nlayout(location=3) in vec4 aW0;\nlayout(location=4) in vec4 aW1;\nlayout(location=5) in vec4 aW2;\nlayout(location=6) in uvec2 aPartInfo;\nlayout(location=7) in vec3 aPartRoot;\nlayout(location=8) in vec3 aJawGradient;layout(location=9) in vec3 aGillGradient;\nuniform mat4 uMvp,uView;\nuniform highp sampler2D uField,uInstances;\nuniform bool uSchool;uniform int uPoseIndex;\nflat out vec4 vTint;\nuniform vec2 uBodyRange;\nuniform vec3 uJawPivot;\nuniform vec3 uPartBend[7];\nuniform vec4 uResponse0,uResponse1,uResponse2;\nuniform float uJaw,uGill,uEyeRecess;\nuniform int uSamples;\nuniform bool uAnimate;\nout vec3 vNormal,vViewPos,vWorldPos;\nout vec4 vW0,vW1,vW2;\nout vec2 vUv;\nflat out uint vPartId;\nvec4 field(int row,float t){float f=clamp(t,0.0,1.0)*float(uSamples-1);int i=int(floor(f));return mix(texelFetch(uField,ivec2(i,row+9*(uSchool?gl_InstanceID:uPoseIndex)),0),texelFetch(uField,ivec2(min(i+1,uSamples-1),row+9*(uSchool?gl_InstanceID:uPoseIndex)),0),fract(f));}\nvec3 octNormal(vec2 e){vec3 n=vec3(e,1.0-abs(e.x)-abs(e.y));if(n.z<0.0)n.xy=(1.0-abs(n.yx))*sign(n.xy+1e-8);return normalize(n);}\nvec3 rotateAxis(vec3 n,vec3 axis,float a){return n*cos(a)+cross(axis,n)*sin(a)+axis*dot(axis,n)*(1.0-cos(a));}\nfloat partWeight(uint id){if(id==1u)return aW1.y;if(id==2u)return aW1.z;if(id==3u)return aW1.w;if(id==4u)return aW2.x;if(id==5u)return aW2.y;if(id==6u)return aW2.z;if(id==7u)return aW2.w;return 0.0;}\n// Spine angles are guarded to +/-1.35 radians. Polynomial evaluation avoids\n// driver-specific native sin/cos approximations displacing complete sections.\nfloat spineSin(float x){float q=x*x;return x*(1.0+q*(-1.0/6.0+q*(1.0/120.0+q*(-1.0/5040.0+q*(1.0/362880.0-q/39916800.0)))));}\nfloat spineCos(float x){float q=x*x;return 1.0+q*(-1.0/2.0+q*(1.0/24.0+q*(-1.0/720.0+q*(1.0/40320.0+q*(-1.0/3628800.0+q/479001600.0)))));}\nvoid main(){\n int fish=uSchool?gl_InstanceID:uPoseIndex;vec4 root=texelFetch(uInstances,ivec2(0,fish),0),shape=texelFetch(uInstances,ivec2(1,fish),0),color=texelFetch(uInstances,ivec2(2,fish),0),local=texelFetch(uInstances,ivec2(3,fish),0);vTint=vec4(color.rgb*shape.w,color.w);\n vec3 p=aPosition,n=octNormal(aNormalOct);\n p-=n*(uEyeRecess*aW1.x);\n if(uAnimate){\n  float jaw=(uSchool?local.x:uJaw),j=jaw*aW0.z;vec3 q=p-uJawPivot,qr=vec3(cos(j)*q.x-sin(j)*q.y,sin(j)*q.x+cos(j)*q.y,q.z);p=uJawPivot+qr;\n  float gill=sign(p.z+1e-8)*(uSchool?local.y:uGill);p.z+=gill*aW0.w;\n  if(aW0.z>0.0||aW0.w>0.0||dot(aJawGradient,aJawGradient)+dot(aGillGradient,aGillGradient)>0.0){\n  vec3 angular=cross(vec3(0,0,1),qr),X=rotateAxis(vec3(1,0,0),vec3(0,0,1),j)+angular*jaw*aJawGradient.x,Y=rotateAxis(vec3(0,1,0),vec3(0,0,1),j)+angular*jaw*aJawGradient.y,Z=vec3(0,0,1)+angular*jaw*aJawGradient.z;X.z+=gill*aGillGradient.x;Y.z+=gill*aGillGradient.y;Z.z+=gill*aGillGradient.z;\n  n=normalize(n.x*cross(Y,Z)+n.y*cross(Z,X)+n.z*cross(X,Y));}\n  uint pid=aPartInfo.x;\n  if(pid>0u&&pid<=7u){float t=float(aPartInfo.y)/65535.0;vec4 f=field(int(pid)+1,t);vec3 ray=p-aPartRoot;float L=length(ray);vec3 T=ray/max(L,1e-9),U=normalize(uPartBend[int(pid)-1]);float w=partWeight(pid);vec3 pd=aPartRoot+ray*f.x+U*L*f.y;p=mix(p,pd,w);vec3 rawAxis=cross(T,U);float axisLength=length(rawAxis);if(w>0.0&&abs(f.z)>1e-8&&axisLength>1e-8)n=rotateAxis(n,rawAxis/axisLength,f.z*w);}\n  float anchorX=clamp(aPosition.x,uBodyRange.x,uBodyRange.y);float s=(anchorX-uBodyRange.x)/(uBodyRange.y-uBodyRange.x);vec4 f=field(0,s),g=field(1,s);float ca=spineCos(f.w),sa=spineSin(f.w),cb=spineCos(g.x),sb=spineSin(g.x);vec3 T=vec3(ca*cb,sb,sa*cb),U=vec3(-ca*sb,cb,-sa*sb),N=vec3(-sa,0,ca);mat3 frame=mat3(T,U,N);p=vec3(anchorX+f.x,g.y+f.y,g.z+f.z)+frame*(p-vec3(anchorX,g.y,g.z));n=normalize(frame*n);\n }\n p.y-=.14;p*=shape.xyz;n=normalize(n/shape.xyz);float c=cos(root.w),ss=sin(root.w),cp=cos(local.z),sp=sin(local.z),cr=cos(local.w),sr=sin(local.w);mat3 rot=mat3(vec3(c*cp,-sp,-ss*cp),vec3(c*sp*cr+ss*sr,cp*cr,-ss*sp*cr+c*sr),vec3(-c*sp*sr+ss*cr,-cp*sr,ss*sp*sr+c*cr));p=rot*p+root.xyz;n=normalize(rot*n);\n vNormal=normalize(mat3(uView)*n);vViewPos=(uView*vec4(p,1)).xyz;vWorldPos=p;vUv=aUv;vW0=aW0;vW1=aW1;vW2=aW2;vPartId=aPartInfo.x;gl_Position=uMvp*vec4(p,1);\n}",
+      "shadowVertex": "#version 300 es\nprecision highp float;precision highp int;\nlayout(location=0) in vec3 aPosition;\nlayout(location=1) in vec2 aNormalOct;\nlayout(location=2) in vec2 aUv;\nlayout(location=3) in vec4 aW0;\nlayout(location=4) in vec4 aW1;\nlayout(location=5) in vec4 aW2;\nlayout(location=6) in uvec2 aPartInfo;\nlayout(location=7) in vec3 aPartRoot;\nlayout(location=8) in vec3 aJawGradient;layout(location=9) in vec3 aGillGradient;\nuniform mat4 uMvp,uView;\nuniform highp sampler2D uField,uInstances;\nuniform bool uSchool;uniform int uPoseIndex;\nflat out vec4 vTint;\nuniform vec2 uBodyRange;\nuniform vec3 uJawPivot;\nuniform vec3 uPartBend[7];\nuniform vec4 uResponse0,uResponse1,uResponse2;\nuniform float uJaw,uGill,uEyeRecess;\nuniform int uSamples;\nuniform bool uAnimate;\nout vec3 vNormal,vViewPos,vWorldPos;\nout vec4 vW0,vW1,vW2;\nout vec2 vUv;\nflat out uint vPartId;\nvec4 field(int row,float t){float f=clamp(t,0.0,1.0)*float(uSamples-1);int i=int(floor(f));return mix(texelFetch(uField,ivec2(i,row+9*(uSchool?gl_InstanceID:uPoseIndex)),0),texelFetch(uField,ivec2(min(i+1,uSamples-1),row+9*(uSchool?gl_InstanceID:uPoseIndex)),0),fract(f));}\nvec3 octNormal(vec2 e){vec3 n=vec3(e,1.0-abs(e.x)-abs(e.y));if(n.z<0.0)n.xy=(1.0-abs(n.yx))*sign(n.xy+1e-8);return normalize(n);}\nvec3 rotateAxis(vec3 n,vec3 axis,float a){return n*cos(a)+cross(axis,n)*sin(a)+axis*dot(axis,n)*(1.0-cos(a));}\nfloat partWeight(uint id){if(id==1u)return aW1.y;if(id==2u)return aW1.z;if(id==3u)return aW1.w;if(id==4u)return aW2.x;if(id==5u)return aW2.y;if(id==6u)return aW2.z;if(id==7u)return aW2.w;return 0.0;}\n// Spine angles are guarded to +/-1.35 radians. Polynomial evaluation avoids\n// driver-specific native sin/cos approximations displacing complete sections.\nfloat spineSin(float x){float q=x*x;return x*(1.0+q*(-1.0/6.0+q*(1.0/120.0+q*(-1.0/5040.0+q*(1.0/362880.0-q/39916800.0)))));}\nfloat spineCos(float x){float q=x*x;return 1.0+q*(-1.0/2.0+q*(1.0/24.0+q*(-1.0/720.0+q*(1.0/40320.0+q*(-1.0/3628800.0+q/479001600.0)))));}\nvoid main(){\n int fish=uSchool?gl_InstanceID:uPoseIndex;vec4 root=texelFetch(uInstances,ivec2(0,fish),0),shape=texelFetch(uInstances,ivec2(1,fish),0),color=texelFetch(uInstances,ivec2(2,fish),0),local=texelFetch(uInstances,ivec2(3,fish),0);vTint=vec4(color.rgb*shape.w,color.w);\n vec3 p=aPosition,n=octNormal(aNormalOct);\n p-=n*(uEyeRecess*aW1.x);\n if(uAnimate){\n  float jaw=(uSchool?local.x:uJaw),j=jaw*aW0.z;vec3 q=p-uJawPivot,qr=vec3(cos(j)*q.x-sin(j)*q.y,sin(j)*q.x+cos(j)*q.y,q.z);p=uJawPivot+qr;\n  float gill=sign(p.z+1e-8)*(uSchool?local.y:uGill);p.z+=gill*aW0.w;\n  if(aW0.z>0.0||aW0.w>0.0||dot(aJawGradient,aJawGradient)+dot(aGillGradient,aGillGradient)>0.0){\n  vec3 angular=cross(vec3(0,0,1),qr),X=rotateAxis(vec3(1,0,0),vec3(0,0,1),j)+angular*jaw*aJawGradient.x,Y=rotateAxis(vec3(0,1,0),vec3(0,0,1),j)+angular*jaw*aJawGradient.y,Z=vec3(0,0,1)+angular*jaw*aJawGradient.z;X.z+=gill*aGillGradient.x;Y.z+=gill*aGillGradient.y;Z.z+=gill*aGillGradient.z;\n  n=normalize(n.x*cross(Y,Z)+n.y*cross(Z,X)+n.z*cross(X,Y));}\n  uint pid=aPartInfo.x;\n  if(pid>0u&&pid<=7u){float t=float(aPartInfo.y)/65535.0;vec4 f=field(int(pid)+1,t);vec3 ray=p-aPartRoot;float L=length(ray);vec3 T=ray/max(L,1e-9),U=normalize(uPartBend[int(pid)-1]);float w=partWeight(pid);vec3 pd=aPartRoot+ray*f.x+U*L*f.y;p=mix(p,pd,w);vec3 rawAxis=cross(T,U);float axisLength=length(rawAxis);if(w>0.0&&abs(f.z)>1e-8&&axisLength>1e-8)n=rotateAxis(n,rawAxis/axisLength,f.z*w);}\n  float anchorX=clamp(aPosition.x,uBodyRange.x,uBodyRange.y);float s=(anchorX-uBodyRange.x)/(uBodyRange.y-uBodyRange.x);vec4 f=field(0,s),g=field(1,s);float ca=spineCos(f.w),sa=spineSin(f.w),cb=spineCos(g.x),sb=spineSin(g.x);vec3 T=vec3(ca*cb,sb,sa*cb),U=vec3(-ca*sb,cb,-sa*sb),N=vec3(-sa,0,ca);mat3 frame=mat3(T,U,N);p=vec3(anchorX+f.x,g.y+f.y,g.z+f.z)+frame*(p-vec3(anchorX,g.y,g.z));n=normalize(frame*n);\n }\n p.y-=.14;p*=shape.xyz;n=normalize(n/shape.xyz);float c=cos(root.w),ss=sin(root.w),cp=cos(local.z),sp=sin(local.z),cr=cos(local.w),sr=sin(local.w);mat3 rot=mat3(vec3(c*cp,-sp,-ss*cp),vec3(c*sp*cr+ss*sr,cp*cr,-ss*sp*cr+c*sr),vec3(-c*sp*sr+ss*cr,-cp*sr,ss*sp*sr+c*cr));p=rot*p+root.xyz;n=normalize(rot*n);\n vNormal=normalize(mat3(uView)*n);vViewPos=(uView*vec4(p,1)).xyz;vWorldPos=p;vUv=aUv;vW0=aW0;vW1=aW1;vW2=aW2;vPartId=aPartInfo.x;gl_Position=uMvp*vec4(p,1);\n}",
+      "shadowActiveMouthGrad": [
+        {
+          "name": "aJawGradient",
+          "type": 35665,
+          "size": 1
+        },
+        {
+          "name": "aGillGradient",
+          "type": 35665,
+          "size": 1
+        }
+      ],
+      "sourceVertexCount": 497701,
+      "bodyTrianglesPerPass": 28928550,
+      "cranialVersion": true
+    }
+  ],
+  "errors": [],
+  "visualAcceptance": false,
+  "invalidReason": "Temporary two-argument drawFish wrapper dropped third pass argument and disabled shadow specialization. Excluded from all gates."
+}
