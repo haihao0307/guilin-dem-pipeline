@@ -1,0 +1,159 @@
+name: build-verify-weather-r29-protean-clouds-teacher
+
+on:
+  push:
+    branches:
+      - feature/weather-mother-r29-protean-clouds-teacher-20261002
+    paths:
+      - weather-mother/r29-protean-clouds-teacher-src/**
+      - .github/workflows/build-verify-weather-r29-protean-clouds-teacher.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: weather-mother-r29-protean-clouds-teacher
+  cancel-in-progress: false
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build Protean teacher and run static relationship gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python weather-mother/r29-protean-clouds-teacher-src/qa-r29-protean-clouds-teacher.py | tee /tmp/r29-protean-static-qa.txt
+
+      - name: Freeze single-file Weather Mother page
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT=weather-mother/full-weather-r29-protean-clouds-teacher-20261002
+          git config user.name "Weather Mother CI"
+          git config user.email "weather-mother-ci@users.noreply.github.com"
+          git add "$OUT/index.html"
+          if git diff --cached --quiet; then
+            echo "generated R29 page already current"
+          else
+            git commit -m "build(weather-mother): add exact Protean Clouds teacher [skip ci]"
+            git push origin HEAD:feature/weather-mother-r29-protean-clouds-teacher-20261002
+          fi
+          PAGE_SHA=$(git rev-parse HEAD)
+          PUBLIC_URL="https://raw.githack.com/haihao0307/guilin-dem-pipeline/$PAGE_SHA/$OUT/index.html"
+          echo "PAGE_SHA=$PAGE_SHA" >> "$GITHUB_ENV"
+          echo "PUBLIC_URL=$PUBLIC_URL" >> "$GITHUB_ENV"
+          echo "fixed page: $PUBLIC_URL?scene=protean"
+
+      - name: Wait for immutable public page
+        shell: bash
+        run: |
+          set -euo pipefail
+          ok=0
+          for attempt in $(seq 1 50); do
+            code=$(curl -L -sS -o /tmp/r29-protean.html -w '%{http_code}' --connect-timeout 10 --max-time 60 "$PUBLIC_URL?scene=protean&probe=$attempt" || true)
+            if [ "$code" = 200 ] && grep -q "r29-exact-formula" /tmp/r29-protean.html; then
+              ok=1
+              break
+            fi
+            sleep 5
+          done
+          test "$ok" = 1
+          echo "fixed public R29 Protean page is live: $PUBLIC_URL?scene=protean"
+
+      - name: Install Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install playwright==1.55.0 >/dev/null
+          python -m playwright install chromium >/dev/null
+
+      - name: Re-run accepted R27 Cloud DNA regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          xvfb-run -a python -u weather-mother/r27-cumulus-clouddna-src/qa-public-r27-cumulus-clouddna.py
+
+      - name: Re-run frozen Tiny Clouds teacher regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          xvfb-run -a python -u weather-mother/r28-tiny-clouds-teacher-src/qa-public-r28-tiny-clouds-teacher.py
+
+      - name: Verify Protean teacher on desktop and mobile public browsers
+        shell: bash
+        run: |
+          set -euo pipefail
+          xvfb-run -a python -u weather-mother/r29-protean-clouds-teacher-src/qa-public-r29-protean-clouds-teacher.py
+
+      - name: Commit R29 public evidence
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT=weather-mother/full-weather-r29-protean-clouds-teacher-20261002
+          cat > "$OUT/PUBLICATION_PROOF_R29_PROTEAN_CLOUDS_TEACHER.json" <<JSON
+          {
+            "schema": "weather-mother-r29-protean-clouds-teacher-publication-proof/1",
+            "pageCommit": "$PAGE_SHA",
+            "url": "$PUBLIC_URL?scene=protean",
+            "r27BaseCommit": "eb3a7c5480ba4aed851c41f7cab42212e013816c",
+            "tinyTeacherEvidenceCommit": "6aa6e608d0cfeb4b493fe079d8a43671fe9fff0c",
+            "singleWeatherMotherWorkbench": true,
+            "tinyTeacherPreserved": true,
+            "proteanTeacherFormula": "Shadertoy 3l23Rh Protean Clouds",
+            "proteanTeacherFormulaExact": true,
+            "proteanTeacherConstantsFrozen": true,
+            "raySteps": 130,
+            "mapLayers": 5,
+            "dynamicMarchStepPreserved": true,
+            "differentialFogIntegralPreserved": true,
+            "mouseSteeringPreserved": true,
+            "externalRuntimeAssets": false,
+            "license": "CC BY-NC-SA 3.0 Unported",
+            "commercialProductionAllowedByCurrentLicense": false,
+            "singleFileRuntime": true,
+            "r27PublicRegressionReRun": true,
+            "tinyTeacherPublicRegressionReRun": true,
+            "publicDesktop960x540": true,
+            "publicMobile390x844": true,
+            "realDeviceQA": false,
+            "pixelIdentityToUploadedVideo": false,
+            "visualAcceptance": false,
+            "productionReady": false
+          }
+          JSON
+          git config user.name "Weather Mother CI"
+          git config user.email "weather-mother-ci@users.noreply.github.com"
+          git add \
+            "$OUT/PUBLIC_QA_R29_PROTEAN_CLOUDS_TEACHER_2026-10-02.json" \
+            "$OUT/PUBLIC_R29_PROTEAN_CLOUDS_DESKTOP_960x540.png" \
+            "$OUT/PUBLIC_R29_PROTEAN_CLOUDS_MOBILE_390x844.png" \
+            "$OUT/PUBLICATION_PROOF_R29_PROTEAN_CLOUDS_TEACHER.json"
+          git commit -m "qa(weather-mother): prove Protean Clouds teacher publicly [skip ci]"
+          git push origin HEAD:feature/weather-mother-r29-protean-clouds-teacher-20261002
+
+      - name: Upload R29 Protean evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weather-mother-r29-protean-clouds-teacher-evidence
+          path: |
+            /tmp/r29-protean-static-qa.txt
+            weather-mother/full-weather-r29-protean-clouds-teacher-20261002/index.html
+            weather-mother/full-weather-r29-protean-clouds-teacher-20261002/PUBLIC_QA_R29_PROTEAN_CLOUDS_TEACHER_2026-10-02.json
+            weather-mother/full-weather-r29-protean-clouds-teacher-20261002/PUBLIC_R29_PROTEAN_CLOUDS_DESKTOP_960x540.png
+            weather-mother/full-weather-r29-protean-clouds-teacher-20261002/PUBLIC_R29_PROTEAN_CLOUDS_MOBILE_390x844.png
+            weather-mother/full-weather-r29-protean-clouds-teacher-20261002/PUBLICATION_PROOF_R29_PROTEAN_CLOUDS_TEACHER.json
+          if-no-files-found: warn
