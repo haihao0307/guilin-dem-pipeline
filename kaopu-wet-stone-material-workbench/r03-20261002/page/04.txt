@@ -1,0 +1,92 @@
+;
+    float hc = 0.01+f*CORNER_PARAM.x;
+    float dao = map(p + n * hao) - TRESHOLD;
+    float dc = map(p - n * hc) - TRESHOLD;
+    r.x += clamp(hao-dao,0.0,1.0) * (1.0-f);
+    r.y += clamp(hc+dc,0.0,1.0) * (1.0-f);
+  }
+  r.x = clamp(1.0-r.x*INV_AO_SAMPLES*AO_PARAM.y,0.0,1.0);
+  r.y = clamp(r.y*INV_AO_SAMPLES*CORNER_PARAM.y,0.0,1.0);
+  return r;
+}
+vec2 spheretracing(vec3 ori, vec3 dir, out vec3 p) {
+  vec2 td = vec2(0.0);
+  for(int i = 0; i < NUM_STEPS; i++) {
+    p = ori + dir * td.x;
+    td.y = map(p);
+    if(td.y < TRESHOLD) break;
+    td.x += (td.y-TRESHOLD) * 0.9;
+  }
+  return td;
+}
+
+vec3 getStoneColor(vec3 p, float c, vec3 l, vec3 n, vec3 e) {
+  c = min(c + pow(noise_3(vec3(p.x*20.0,0.0,p.z*20.0)),70.0) * 8.0, 1.0);
+  float ic = pow(1.0-c,0.5);
+  vec3 base = vec3(0.42,0.3,0.2) * 0.35;
+  vec3 sand = vec3(0.51,0.41,0.32)*0.9;
+  vec3 color = mix(base,sand,c);
+  float f = pow(1.0 - max(dot(n,-e),0.0), 5.0) * 0.75 * ic;
+  color += vec3(diffuse(n,l,0.5) * WHITE);
+  color += vec3(specular(n,l,e,8.0) * WHITE * 1.5 * ic);
+  n = normalize(n - normalize(p) * 0.4);
+  color += vec3(specular(n,l,e,80.0) * WHITE * 1.5 * ic);
+  color = mix(color,vec3(1.0),f);
+  color *= sqrt(abs(p.y*0.5+0.5)) * 0.4 + 0.6;
+  color *= (n.y * 0.5 + 0.5) * 0.4 + 0.6;
+  return color;
+}
+
+vec3 getPixel(in vec2 coord, float time) {
+  vec2 iuv = coord / iResolution.xy * 2.0 - 1.0;
+  vec2 uv = iuv;
+  uv.x *= iResolution.x / iResolution.y;
+  vec3 ang = vec3(0.0,0.2,time);
+  if(iMouse.z > 0.0) ang = vec3(0.0,clamp(2.0-iMouse.y*0.01,0.0,3.1415),iMouse.x*0.01);
+  mat3 rot = fromEuler(ang);
+  vec3 ori = vec3(0.0,0.0,2.8);
+  vec3 dir = normalize(vec3(uv.xy,-2.0));
+  ori = ori * rot;
+  dir = dir * rot;
+  vec3 p;
+  vec2 td = spheretracing(ori,dir,p);
+  vec3 n = getNormal(p,td.y);
+  vec2 occ = getOcclusion(p,n);
+  vec3 light = normalize(vec3(0.0,1.0,0.0));
+  vec3 color = vec3(1.0);
+  if(td.x < 3.5 && p.y > -0.89) color = getStoneColor(p,occ.y,light,n,dir);
+  color *= occ.x;
+  return color;
+}
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+  float time = iTime * 0.3;
+  #ifdef AA
+  vec3 color = vec3(0.0);
+  for(int i = -1; i <= 1; i++)
+  for(int j = -1; j <= 1; j++) {
+    vec2 uv = fragCoord+vec2(i,j)/3.0;
+    color += getPixel(uv, time);
+  }
+  color /= 9.0;
+  #else
+  vec3 color = getPixel(fragCoord, time);
+  #endif
+  color = sqrt(color);
+  color = saturation(color,1.7);
+  vec2 iuv = fragCoord / iResolution.xy * 2.0 - 1.0;
+  float vgn = smoothstep(1.2,0.7,abs(iuv.y)) * smoothstep(1.1,0.8,abs(iuv.x));
+  color *= 1.0 - (1.0 - vgn) * 0.15;
+  fragColor = vec4(color,1.0);
+}
+
+void main(){mainImage(outColor,gl_FragCoord.xy);}
+</script>
+<script>
+(()=>{
+const DURATION=10.800000, FPS=30;
+const teacher=document.getElementById('teacher'), canvas=document.getElementById('replica');
+const localTeacher=document.getElementById('localTeacher'), qualityWarn=document.getElementById('qualityWarn');
+const VIDEO_CHUNKS=['00','01','02','03','04','05','06','07'];
+let teacherBlobUrl=null;
+async function loadT

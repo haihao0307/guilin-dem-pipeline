@@ -1,0 +1,19 @@
+line);border-radius:12px;padding:10px;display:none}.compare.active{display:block}.compareView{position:relative;aspect-ratio:16/9;background:#fff;max-height:72vh;margin:auto}.compareView canvas{position:absolute;inset:0}#overlayReplica{opacity:.5}
+.bottom{display:grid;grid-template-columns:1.25fr 1fr;gap:10px;margin-top:10px}.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:11px;color:var(--muted);line-height:1.6}.card strong{color:var(--text)}.channels{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.channel{background:#0d1116;border:1px solid #29313a;border-radius:8px;padding:8px}.channel b{display:block;color:var(--text);margin-bottom:3px;font-size:11px}.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:10px;word-break:break-all}
+@media(max-width:900px){body{padding:7px}.stage,.bottom{grid-template-columns:1fr}.lock{display:none}.channels{grid-template-columns:1fr}.field{width:100%}.field input{flex:1}}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div><a class="home" href="../../kaopu-material-workbench/">← 返回 KAOPU 材质总工作台</a><h1>KAOPU Wet Stone｜材质复刻工作台 R03</h1><div class="sub">左：老师原录屏。右：按老师源码同构运行的 GLSL 复刻。第一阶段只对齐与复刻，不替换算法、不美化、不创造。</div></div><div class="lock">MATERIAL-001 · STAGE 1</div></header><div id="qualityWarn" class="sourceWarn">当前默认在线缓存仅用于快速时间对齐；表面颗粒、高光边界与湿润细节验收，请载入 960×540 老师原片。载入后本页立即使用原片，不上传、不改色。</div>
+<div class="toolbar">
+<button id="play" class="primary">播放</button><label class="filepick">载入老师原片<input id="localTeacher" type="file" accept="video/*" hidden></label><button id="prev">−1 帧</button><button id="next">+1 帧</button><button id="zero">回到开头</button>
+<span id="clock" class="time">00.000 / 10.800</span><input id="timeline" class="timeline" type="range" min="0" max="10.800000" step="0.001" value="0">
+<label class="field">复刻时间偏移 <input id="offset" type="range" min="-6" max="6" step="0.001" value="3.850"><span id="offsetText">3.850s</span></label>
+<label class="field">时间倍率 <input id="timeScale" type="range" min="0.90" max="1.05" step="0.001" value="0.955"><span id="timeScaleText">0.955×</span></label>
+<select id="mode"><option value="side">并排</option><option value="overlay">叠加</option><option value="diff">差异</option></select>
+<label id="opacityField" class="field" style="display:none">复刻透明度 <input id="opacity" type="range" min="0" max="1" step="0.01" value="0.5"><span id="opacityText">50%</span></label>
+</div>
+<div id="side" class="stage">
+<section class="pane"><div class="paneHead"><strong>老师｜原视频</strong><span id="videoState" class="state">准备中</span></div><div class="viewport"><div class="tag">TEACHER</div><video id="teacher" muted playsinline preload="auto" ></video><div id="videoError" class="error"></div></div></section>
+<section class="pane"><div class="paneHead"><strong>KAOPU｜1:1 源码复刻</strong><span id="gpuState" class="state">准备中</span></div><div class="viewport"><div class="tag">REPLICA · LIVE GLSL</div><canvas id="replica" width="96
