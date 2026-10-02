@@ -2,7 +2,7 @@ name: Landscape V07 Original Geometry Fast Startup
 on:
   push:
     branches: [feature/stone-money-landscape-influence-tool-v05-20261002]
-    paths: [tools/stone-money/rebuild_landscape_v07.py, .github/workflows/landscape-v07-rebuild.yml]
+    paths: [tools/stone-money/rebuild_landscape_v07.py, tools/stone-money/repair_v07_transport.py, .github/workflows/landscape-v07-rebuild.yml]
   workflow_dispatch:
 permissions:
   contents: write
@@ -28,6 +28,7 @@ jobs:
           python -m pip install -q playwright pillow
           python -m py_compile tools/stone-money/rebuild_landscape_v07.py
           python tools/stone-money/rebuild_landscape_v07.py
+          python tools/stone-money/repair_v07_transport.py
           node --check workbenches/landscape-terrain-influence-tool-v07/build-caches.cjs
           node --check workbenches/landscape-terrain-influence-tool-v07/generator.js
           python - <<'PY'
@@ -39,11 +40,28 @@ jobs:
               p=Path(f'/tmp/v07-script-{i}.js');p.write_text(body);subprocess.run(['node','--check',str(p)],check=True)
           assert '<iframe' not in s.lower()
           PY
+      - uses: actions/cache/restore@v4
+        id: full-cache
+        with:
+          key: landscape-v07-original-g3t3-full-field-cache-001
+          path: |
+            workbenches/landscape-terrain-influence-tool-v07/cache
+            workbenches/landscape-terrain-influence-tool-v07/manifest.json
       - name: Produce ten original full-resolution recipes
+        if: steps.full-cache.outputs.cache-hit != 'true'
         run: node --max-old-space-size=4096 workbenches/landscape-terrain-influence-tool-v07/build-caches.cjs
       - name: Evaluate original vertex fields before publication
+        if: steps.full-cache.outputs.cache-hit != 'true'
         run: python -u workbenches/landscape-terrain-influence-tool-v07/bake-caches.py
+      - uses: actions/cache/save@v4
+        if: steps.full-cache.outputs.cache-hit != 'true'
+        with:
+          key: landscape-v07-original-g3t3-full-field-cache-001
+          path: |
+            workbenches/landscape-terrain-influence-tool-v07/cache
+            workbenches/landscape-terrain-influence-tool-v07/manifest.json
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: landscape-v07-production-cache
           path: |
@@ -53,6 +71,7 @@ jobs:
             workbenches/landscape-terrain-influence-tool-v07/BUILD_CONTRACT.json
             workbenches/landscape-terrain-influence-tool-v07/cache
             tools/stone-money/rebuild_landscape_v07.py
+            tools/stone-money/repair_v07_transport.py
           retention-days: 7
           compression-level: 0
       - name: Browser QA on actual terrain and controls
@@ -82,7 +101,7 @@ jobs:
                   for i in range(10):
                       if i:page.evaluate('i=>window.__LM__.applyPalauPreset(i)',i)
                       wait();rec=page.evaluate('''()=>({preset:window.__LM__.state.palauPreset,triangles:window.__LM__.report.parts.reduce((s,p)=>s+p.triangles,0),metrics:window.__LM__.performance,errors:window.__LM__.errors,frame:window.__LM__.auditFrame()})''')
-                      assert rec['triangles']>100000 and rec['frame']['nonzeroSamples']>1000 and rec['frame']['glError']==0,rec
+                      assert rec['triangles']>100000 and rec['frame']['nonzeroSamples']>1000 and rec['frame']['unique']>100 and rec['frame']['glError']==0,rec
                       cases.append(rec);print('PRESET',i,rec['metrics']['loads'][-1],flush=True)
                       if i in [0,2,5,9]:page.screenshot(path=str(out/f'P{i+1:02d}.png'),timeout=45000)
                   page.evaluate('window.__LM__.goView("hero")');page.wait_for_timeout(300)
@@ -123,7 +142,7 @@ jobs:
           cd /tmp/lm07-pages
           git config user.name 'Landscape Mother'
           git config user.email 'actions@users.noreply.github.com'
-          git add landscape-terrain-influence-tool-v07
+          git add --sparse landscape-terrain-influence-tool-v07
           git commit -m 'publish(landscape): V07 exact original geometry caches, no startup worker'
           for n in 1 2 3; do
             if git push origin HEAD:gh-pages; then break; fi
