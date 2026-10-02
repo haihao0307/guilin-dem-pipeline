@@ -24,11 +24,9 @@ jobs:
           PUBLIC: https://raw.githack.com/haihao0307/guilin-dem-pipeline/fbaa49e0e0ef076bb72734a9b48862dcd57329e1/workbenches/landscape-terrain-influence-tool-v06/index.html
           WORKER: https://raw.githack.com/haihao0307/guilin-dem-pipeline/fbaa49e0e0ef076bb72734a9b48862dcd57329e1/workbenches/landscape-terrain-influence-tool-v06/landscape-terrain-worker-v06.js
         run: |
-          for i in $(seq 1 90); do
-            if curl -fsS "$PUBLIC" >/tmp/lti-v06-source.html && grep -q '地形影响工具体系 V0.6' /tmp/lti-v06-source.html && curl -fsS "$WORKER" >/tmp/lti-v06-worker.js; then break; fi
-            sleep 2
-          done
+          curl -fsS "$PUBLIC" >/tmp/lti-v06-source.html
           grep -q '地形影响工具体系 V0.6' /tmp/lti-v06-source.html
+          curl -fsS "$WORKER" >/tmp/lti-v06-worker.js
           grep -q 'self.onmessage' /tmp/lti-v06-worker.js
           CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)
           if [ -z "$CHROME" ]; then
@@ -52,10 +50,16 @@ jobs:
               page.on('pageerror',lambda err:page_errors.append(str(err)))
               response=page.goto(url,wait_until='domcontentloaded',timeout=60000)
               if response and response.status>=400: raise RuntimeError(f'HTTP {response.status}')
+              if page.title().startswith('External Content Notice'):
+                  page.get_by_role('button',name='Open the page').click()
+                  page.wait_for_load_state('domcontentloaded',timeout=60000)
+                  page.wait_for_timeout(500)
+              if not page.locator('#view').count():
+                  raise RuntimeError(f'actual workbench did not open; title={page.title()} text={(page.locator("body").inner_text() or "")[:300]}')
               start=time.monotonic(); last=''; state={}
               while time.monotonic()-start<420:
                   state=page.evaluate("""() => ({ready:window.__LM_READY__===true,error:window.__LM_ERROR__||null,step:document.getElementById('step')?.textContent||'',progress:document.getElementById('progress')?.style.width||'',workerMode:document.documentElement.dataset.landscapeWorkerMode||'',workerRedirects:window.__LTI_WORKER_REDIRECTS__||0,failure:document.documentElement.dataset.landscapeGenerationFailure||''})""")
-                  marker=f"{state['step']}|{state['progress']}"
+                  marker=f"{state['step']}|{state['progress']}|{state['workerMode']}"
                   if marker!=last:
                       print(json.dumps({'elapsed_s':round(time.monotonic()-start,1),**state},ensure_ascii=False),flush=True);last=marker
                   if state['error'] or state['failure']: raise RuntimeError(str(state))
