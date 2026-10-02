@@ -21,8 +21,8 @@ jobs:
 
       - name: Verify fixed raw.githack route through real worker completion
         env:
-          PUBLIC: https://raw.githack.com/haihao0307/guilin-dem-pipeline/fbaa49e0d3e7eb290af2d15c77da1bdaf9970711/workbenches/landscape-terrain-influence-tool-v06/index.html
-          WORKER: https://raw.githack.com/haihao0307/guilin-dem-pipeline/fbaa49e0d3e7eb290af2d15c77da1bdaf9970711/workbenches/landscape-terrain-influence-tool-v06/landscape-terrain-worker-v06.js
+          PUBLIC: https://raw.githack.com/haihao0307/guilin-dem-pipeline/fbaa49e0e0ef076bb72734a9b48862dcd57329e1/workbenches/landscape-terrain-influence-tool-v06/index.html
+          WORKER: https://raw.githack.com/haihao0307/guilin-dem-pipeline/fbaa49e0e0ef076bb72734a9b48862dcd57329e1/workbenches/landscape-terrain-influence-tool-v06/landscape-terrain-worker-v06.js
         run: |
           for i in $(seq 1 90); do
             if curl -fsS "$PUBLIC" >/tmp/lti-v06-source.html && grep -q '地形影响工具体系 V0.6' /tmp/lti-v06-source.html && curl -fsS "$WORKER" >/tmp/lti-v06-worker.js; then break; fi
