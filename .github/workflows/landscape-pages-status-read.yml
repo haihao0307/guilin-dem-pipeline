@@ -1,0 +1,20 @@
+name: Landscape Pages Publication Status Read
+on:
+  push:
+    branches: [feature/stone-money-landscape-influence-tool-v05-20261002]
+    paths: [.github/workflows/landscape-pages-status-read.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: read
+jobs:
+  read-status:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Read actual Pages configuration and current host response
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          curl -fsS -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' https://api.github.com/repos/haihao0307/guilin-dem-pipeline/pages | jq '{status,build_type,source,html_url,cname}'
+          curl -sSI https://haihao0307.github.io/guilin-dem-pipeline/landscape-terrain-influence-tool-v06/index.html
