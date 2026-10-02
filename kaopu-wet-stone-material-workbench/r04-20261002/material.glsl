@@ -1,0 +1,168 @@
+// KAOPU Material Lab R04 — derived research shader, 2026-10-02.
+// Composed with TDM Wet stone (2014), CC BY-NC-SA 3.0. Baseline stays separate.
+// BRDF equations: Khronos glTF 2.0 Appendix B; Google Filament documentation.
+// Procedural weather masks are artistic hypotheses, not a growth/fracture simulation.
+uniform vec3 uBase;
+uniform vec3 uGrain;
+uniform float uRoughness;
+uniform float uWet;
+uniform float uCrack;
+uniform float uCrackWidth;
+uniform float uCrackScale;
+uniform float uMoss;
+uniform float uRelief;
+uniform float uLichen;
+uniform float uSeed;
+uniform float uExposure;
+uniform float uLight;
+uniform float uZoom;
+uniform int uView;
+uniform int uPBR;
+uniform int uBaseline;
+const float KP_PI=3.14159265359;
+struct SurfaceSample {vec3 baseColor;float roughness;float metallic;float occlusion;float coat;float coatRoughness;float crack;float moss;float lichen;float height;};
+float sat(float x){return clamp(x,0.0,1.0);}
+vec3 toLinear(vec3 c){return mix(c/12.92,pow((c+0.055)/1.055,vec3(2.4)),step(vec3(0.04045),c));}
+vec3 toSRGB(vec3 c){c=max(c,vec3(0));return mix(c*12.92,1.055*pow(c,vec3(1.0/2.4))-0.055,step(vec3(0.0031308),c));}
+float detailNoise(vec3 p){return .57*noise_3(p)+.29*noise_3(p*2.03+7.1)+.14*noise_3(p*4.11-3.2);}
+// Four warped fracture families in OBJECT coordinates. Never screen-space lines.
+float crackMask(vec3 p){
+ vec3 q=p*uCrackScale+vec3(uSeed*.137,0,uSeed*.073);
+ float warp=(noise_3(q*2.7+11.0)-.5)*.29;
+ float d=2.0;
+ d=min(d,abs(sin(dot(q,normalize(vec3(1,.37,.62)))*4.2+warp*5.0)));
+ d=min(d,abs(sin(dot(q,normalize(vec3(-.33,1,.24)))*3.4+warp*4.1+1.7)));
+ d=min(d,abs(sin(dot(q,normalize(vec3(.4,-.2,1)))*3.8+warp*4.3+2.8)));
+ float width=max(.009,uCrackWidth*8.0);
+ return 1.0-smoothstep(0.0,width,d);
+}
+float mossMask(vec3 p){
+ if(uMoss<=0.0)return 0.0;
+ float patchValue=detailNoise(p*4.7+vec3(6.0+uSeed*.3,1.0,4.0));
+ // Broad position/up-facing proxy; declared heuristic, not measured humidity.
+ float shelter=.08*sat(.7-p.y)+.07*sat(p.z+.5);
+ float threshold=.99-uMoss*.58;
+ return smoothstep(threshold-.075,threshold+.075,patchValue+shelter)*smoothstep(-1.05,-.82,p.y);
+}
+float lichenMask(vec3 p){
+ if(uLichen<=0.0)return 0.0;
+ float v=detailNoise(p*14.0+uSeed);
+ return smoothstep(.69-uLichen*.14,.77-uLichen*.14,v)*uLichen;
+}
+float heightDelta(vec3 p){
+ float cracks=uCrack>0.0?uCrack*crackMask(p):0.0;
+ float moss=uMoss>0.0?uRelief*mossMask(p)*(.55+.45*noise_3(p*75.0)):0.0;
+ return moss-cracks;
+}
+// Teacher ray surface is the TRESHOLD isosurface. Keep it when adding relief.
+float surfaceField(vec3 p){return rock(p)+noise_3(p*4.0)*DISPLACEMENT-TRESHOLD-heightDelta(p);}
+float worldField(vec3 p){return min(surfaceField(p),p.y+.9);}
+vec3 fieldNormal(vec3 p){
+ vec2 e=vec2(.001,0.0);
+ return normalize(vec3(worldField(p+e.xyy)-worldField(p-e.xyy),worldField(p+e.yxy)-worldField(p-e.yxy),worldField(p+e.yyx)-worldField(p-e.yyx)));
+}
+vec3 shadingNormal(vec3 p){
+ // Original high-frequency normal layer retained; separately labeled from geometry.
+ vec2 e=vec2(.001,0.0);vec3 g;
+ g.x=map_detailed(p+e.xyy)-map_detailed(p-e.xyy)-heightDelta(p+e.xyy)+heightDelta(p-e.xyy);
+ g.y=map_detailed(p+e.yxy)-map_detailed(p-e.yxy)-heightDelta(p+e.yxy)+heightDelta(p-e.yxy);
+ g.z=map_detailed(p+e.yyx)-map_detailed(p-e.yyx)-heightDelta(p+e.yyx)+heightDelta(p-e.yyx);
+ return normalize(g);
+}
+float traceSurface(vec3 ro,vec3 rd,out vec3 p){
+ if(uCrack<=0.0&&(uMoss<=0.0||uRelief<=0.0)){vec2 td=spheretracing(ro,rd,p);return td.x;}
+ float t=0.0;float previous=0.0;
+ for(int i=0;i<112;i++){
+  p=ro+rd*t;float d=worldField(p);
+  if(d<.0007){
+   if(d<0.0){float lo=previous,hi=t;for(int j=0;j<7;j++){float m=(lo+hi)*.5;if(worldField(ro+rd*m)>0.0)lo=m;else hi=m;}t=(lo+hi)*.5;p=ro+rd*t;}
+   return t;
+  }
+  previous=t;t+=clamp(d*.43,.0003,.28);if(t>9.0)break;
+ }
+ p=ro+rd*t;return 99.0;
+}
+float localAO(vec3 p,vec3 n){float occ=0.0;for(int i=1;i<=4;i++){float h=.032*float(i*i);occ+=max(0.0,h-worldField(p+n*h))/float(i);}return sat(1.0-occ*.95);}
+SurfaceSample evaluateMaterial(vec3 p,vec3 n,float cavity){
+ SurfaceSample m;
+ float grains=detailNoise(p*30.0)+.14*noise_3(p*160.0);
+ float bands=detailNoise(p*4.3+7.0);
+ float mixture=sat(.23+.5*grains+.25*cavity+.16*(bands-.5));
+ m.baseColor=mix(uBase,uGrain,mixture);
+ m.crack=uCrack>0.0?crackMask(p):0.0;
+ m.moss=mossMask(p);m.lichen=lichenMask(p)*(1.0-m.moss);
+ float wet=uWet*sat(.6+.4*bands+.18*m.crack);
+ m.baseColor*=mix(1.0,.55,wet); // calibrated artist control, not a fluid simulation
+ m.baseColor*=1.0-.36*m.crack;
+ vec3 mossColor=mix(toLinear(vec3(.075,.15,.025)),toLinear(vec3(.36,.45,.115)),sat(grains));
+ m.baseColor=mix(m.baseColor,mossColor,m.moss);
+ m.baseColor=mix(m.baseColor,toLinear(vec3(.66,.7,.44))*(.65+.45*grains),m.lichen);
+ m.roughness=clamp(uRoughness+.19*(grains-.5),.1,.98);
+ m.roughness=mix(m.roughness,max(.16,m.roughness*.53),wet);
+ m.roughness=mix(m.roughness,.93,m.moss);m.roughness=mix(m.roughness,.86,m.lichen);
+ m.metallic=0.0; // stone, moss, lichen and water are not metallic conductors
+ m.occlusion=localAO(p,n)*(1.0-.25*m.crack);
+ m.coat=wet*(1.0-.72*m.moss)*(1.0-.5*m.lichen);m.coatRoughness=.12+.06*grains;
+ m.height=heightDelta(p);return m;
+}
+vec3 fresnelSchlick(float hv,vec3 f0){return f0+(1.0-f0)*pow(1.0-hv,5.0);}
+float Dggx(float nh,float alpha){float a2=alpha*alpha;float d=nh*nh*(a2-1.0)+1.0;return a2/max(KP_PI*d*d,1e-6);}
+float Vsmith(float nv,float nl,float alpha){float a2=alpha*alpha;return .5/max(nl*sqrt(nv*nv*(1.0-a2)+a2)+nv*sqrt(nl*nl*(1.0-a2)+a2),1e-5);}
+vec3 lightBRDF(SurfaceSample m,vec3 n,vec3 v,vec3 l,vec3 radiance){
+ float nv=max(dot(n,v),.001),nl=max(dot(n,l),0.0);vec3 h=normalize(v+l);float nh=max(dot(n,h),0.0),hv=max(dot(h,v),0.0);
+ vec3 F=fresnelSchlick(hv,mix(vec3(.04),m.baseColor,m.metallic));float a=m.roughness*m.roughness;
+ vec3 spec=Dggx(nh,a)*Vsmith(nv,nl,a)*F;
+ vec3 diff=(1.0-F)*(1.0-m.metallic)*m.baseColor/KP_PI;
+ // Water-like thin coat, IOR 1.333 gives F0 about 0.0204; attenuate underlying layer.
+ float Fc=.0204+.9796*pow(1.0-hv,5.0);
+ float coat=Dggx(nh,m.coatRoughness*m.coatRoughness)*Vsmith(nv,nl,m.coatRoughness*m.coatRoughness)*Fc;
+ return ((diff+spec)*(1.0-m.coat*Fc)+vec3(coat*m.coat))*radiance*nl;
+}
+vec3 shadePBR(SurfaceSample m,vec3 n,vec3 v){
+ float a=uLight;vec3 l=normalize(vec3(sin(a)*.85,.85,cos(a)*.85));
+ vec3 color=lightBRDF(m,n,v,l,vec3(3.0,2.85,2.7));
+ color+=lightBRDF(m,n,v,normalize(vec3(-.7,.3,-.7)),vec3(.65,.78,1.0));
+ color+=lightBRDF(m,n,v,normalize(vec3(.7,.6,-.4)),vec3(.95,.96,1.0));
+ // Analytic studio environment approximation; NOT a prefiltered HDRI/GI solution.
+ vec3 ambient=mix(vec3(.14,.15,.17),vec3(.6,.67,.73),n.y*.5+.5);
+ color+=m.baseColor*ambient*m.occlusion*.68;
+ vec3 r=reflect(-v,n);float rough=mix(m.roughness,m.coatRoughness,m.coat);
+ float softbox=pow(max(dot(r,normalize(vec3(-.6,1.0,.6))),0.0),mix(120.0,4.0,rough));
+ vec3 envF=fresnelSchlick(max(dot(n,v),0.0),vec3(.04));
+ color+=envF*(.12+softbox*.85)*(.6+.4*m.coat)*mix(.4,1.0,m.occlusion);
+ return color;
+}
+vec3 shadeLegacy(SurfaceSample m,vec3 p,vec3 n,vec3 v,float cavity){
+ // Original visual vocabulary, recolored; intentionally not labeled physical PBR.
+ float c=sat(cavity);float ic=sqrt(1.0-c);vec3 l=vec3(0,1,0);
+ vec3 color=m.baseColor*(.75+.45*c);
+ color+=diffuse(n,l,.5)*WHITE;
+ color+=specular(n,l,-v,8.0)*WHITE*1.5*ic;
+ vec3 nn=normalize(n-normalize(p)*.4);
+ color+=specular(nn,l,-v,80.0)*WHITE*1.5*ic;
+ color=mix(color,vec3(1),pow(1.0-max(dot(n,v),0.0),5.0)*.75*ic);
+ color*=sqrt(abs(p.y*.5+.5))*.4+.6;
+ color*=(nn.y*.5+.5)*.4+.6;
+ return color*m.occlusion;
+}
+void main(){
+ if(uBaseline==1){mainImage(outColor,gl_FragCoord.xy);return;}
+ vec2 uv=gl_FragCoord.xy/iResolution.xy*2.0-1.0;uv.x*=iResolution.x/iResolution.y;
+ vec3 ang=vec3(0,.2,iTime*.3);if(iMouse.z>0.0)ang=vec3(0,clamp(2.0-iMouse.y*.01,0.0,3.1415),iMouse.x*.01);
+ mat3 rot=fromEuler(ang);vec3 ro=vec3(0,0,2.8)*rot;vec3 rd=normalize(vec3(uv/uZoom,-2.0))*rot;
+ vec3 p;float t=traceSurface(ro,rd,p);vec3 color=vec3(.965,.973,.98);
+ if(t<3.5&&p.y>-.887){
+  vec3 n=shadingNormal(p),v=-rd;float cavity=getOcclusion(p,n).y;
+  SurfaceSample m=evaluateMaterial(p,n,cavity);
+  if(uView==1)color=toSRGB(m.baseColor);
+  else if(uView==2)color=vec3(m.roughness);
+  else if(uView==3)color=n*.5+.5;
+  else if(uView==4)color=mix(vec3(.18),mix(vec3(.85,.28,.07),vec3(.07,.75,.25),m.moss),max(m.crack,m.moss));
+  else if(uView==5){vec3 gn=fieldNormal(p);color=vec3(.64)*(.24+.76*max(dot(gn,normalize(vec3(-.5,1,1))),0.0))*m.occlusion;}
+  else if(uView==6)color=vec3(m.occlusion);
+  else{vec3 linear=uPBR==1?shadePBR(m,n,v):shadeLegacy(m,p,n,v,cavity);linear*=uExposure;color=toSRGB(linear/(1.0+linear));}
+ }else if(t<9.0){
+  float ao=localAO(p,vec3(0,1,0));float shadow=1.0-.27*exp(-dot(p.xz,p.xz)*2.0);color*=mix(.52,1.0,ao)*shadow;
+ }
+ outColor=vec4(clamp(color,0.0,1.0),1.0);
+}
