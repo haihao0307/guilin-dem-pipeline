@@ -1,0 +1,86 @@
+name: Stone Money Landscape Influence Tool V06 RawGitHack Proof
+
+on:
+  push:
+    branches:
+      - feature/stone-money-landscape-influence-tool-v05-20261002
+    paths:
+      - .github/workflows/stone-money-landscape-influence-tool-v06-rawgithack-proof.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-fixed-route:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Install browser harness
+        run: python -m pip install -q playwright pillow
+
+      - name: Verify fixed raw.githack route through real worker completion
+        env:
+          PUBLIC: https://raw.githack.com/haihao0307/guilin-dem-pipeline/fbaa49e0d3e7eb290af2d15c77da1bdaf9970711/workbenches/landscape-terrain-influence-tool-v06/index.html
+          WORKER: https://raw.githack.com/haihao0307/guilin-dem-pipeline/fbaa49e0d3e7eb290af2d15c77da1bdaf9970711/workbenches/landscape-terrain-influence-tool-v06/landscape-terrain-worker-v06.js
+        run: |
+          for i in $(seq 1 90); do
+            if curl -fsS "$PUBLIC" >/tmp/lti-v06-source.html && grep -q '地形影响工具体系 V0.6' /tmp/lti-v06-source.html && curl -fsS "$WORKER" >/tmp/lti-v06-worker.js; then break; fi
+            sleep 2
+          done
+          grep -q '地形影响工具体系 V0.6' /tmp/lti-v06-source.html
+          grep -q 'self.onmessage' /tmp/lti-v06-worker.js
+          CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)
+          if [ -z "$CHROME" ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq chromium || sudo apt-get install -y -qq chromium-browser
+            CHROME=$(command -v chromium || command -v chromium-browser)
+          fi
+          export PUBLIC CHROME
+          python - <<'PY'
+          import json, os, time
+          from pathlib import Path
+          from PIL import Image, ImageStat
+          from playwright.sync_api import sync_playwright
+          url=os.environ['PUBLIC']; chrome=os.environ['CHROME']
+          console=[]; page_errors=[]
+          with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True,executable_path=chrome,args=['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--disable-background-timer-throttling','--disable-renderer-backgrounding'])
+              page=browser.new_page(viewport={'width':1600,'height':1000},device_scale_factor=1)
+              page.set_default_timeout(180000)
+              page.on('console',lambda msg:console.append(f'{msg.type}: {msg.text}'))
+              page.on('pageerror',lambda err:page_errors.append(str(err)))
+              response=page.goto(url,wait_until='domcontentloaded',timeout=60000)
+              if response and response.status>=400: raise RuntimeError(f'HTTP {response.status}')
+              start=time.monotonic(); last=''; state={}
+              while time.monotonic()-start<420:
+                  state=page.evaluate("""() => ({ready:window.__LM_READY__===true,error:window.__LM_ERROR__||null,step:document.getElementById('step')?.textContent||'',progress:document.getElementById('progress')?.style.width||'',workerMode:document.documentElement.dataset.landscapeWorkerMode||'',workerRedirects:window.__LTI_WORKER_REDIRECTS__||0,failure:document.documentElement.dataset.landscapeGenerationFailure||''})""")
+                  marker=f"{state['step']}|{state['progress']}"
+                  if marker!=last:
+                      print(json.dumps({'elapsed_s':round(time.monotonic()-start,1),**state},ensure_ascii=False),flush=True);last=marker
+                  if state['error'] or state['failure']: raise RuntimeError(str(state))
+                  if state['ready']: break
+                  time.sleep(1)
+              else: raise TimeoutError(str(state))
+              page.wait_for_timeout(1200)
+              report=page.evaluate("""() => ({ready:window.__LM_READY__===true,error:window.__LM_ERROR__||null,workerMode:document.documentElement.dataset.landscapeWorkerMode||'',workerRedirects:window.__LTI_WORKER_REDIRECTS__||0,generationReady:document.documentElement.dataset.landscapeGenerationReady||'',builtInMs:window.__LM__?.report?.builtInMs||null,geometryGridM:window.__LM__?.report?.geometryGridM||null,partCount:window.__LM__?.report?.parts?.length||0,triangles:window.__LM__?.report?.parts?.reduce((s,p)=>s+(p.triangles||0),0)||0,runtimeErrors:window.__LM__?.errors||[]})""")
+              Path('/tmp/lti-v06-fixed.json').write_text(json.dumps({'state':state,'report':report,'console':console,'pageErrors':page_errors},ensure_ascii=False,indent=2),encoding='utf-8')
+              page.screenshot(path='/tmp/lti-v06-fixed.png',full_page=False,timeout=180000,animations='disabled')
+              browser.close()
+          if not report['ready'] or report['error'] or report['workerMode']!='external-same-origin' or report['workerRedirects']<1 or report['triangles']<1000000 or page_errors:
+              raise RuntimeError(json.dumps({'report':report,'pageErrors':page_errors},ensure_ascii=False))
+          image=Image.open('/tmp/lti-v06-fixed.png').convert('RGB');stat=ImageStat.Stat(image);spread=sum(hi-lo for lo,hi in stat.extrema)
+          if spread<80: raise RuntimeError(f'visual spread too low: {stat.extrema}')
+          print(json.dumps({'url':url,'report':report,'screenshotBytes':Path('/tmp/lti-v06-fixed.png').stat().st_size,'spread':spread},ensure_ascii=False))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stone-money-landscape-influence-tool-v06-fixed-route-proof
+          path: |
+            /tmp/lti-v06-fixed.json
+            /tmp/lti-v06-fixed.png
+            /tmp/lti-v06-source.html
+            /tmp/lti-v06-worker.js
+          retention-days: 7
