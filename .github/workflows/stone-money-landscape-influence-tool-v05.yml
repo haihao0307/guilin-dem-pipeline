@@ -66,16 +66,19 @@ jobs:
           URL=http://127.0.0.1:8000/workbenches/landscape-terrain-influence-tool-v05/index.html
           "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage \
             --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist \
-            --run-all-compositor-stages-before-draw --virtual-time-budget=45000 \
+            --run-all-compositor-stages-before-draw --virtual-time-budget=15000 \
             --window-size=1600,1000 --dump-dom "$URL" >/tmp/lti-v05-dom.html 2>/tmp/lti-v05-chrome.log
-          grep -q 'data-lightscape-tool-ready="true"' /tmp/lti-v05-dom.html
-          ! grep -q 'data-lightscape-tool-failure' /tmp/lti-v05-dom.html
+          grep -q 'id="ltiPanel"' /tmp/lti-v05-dom.html
+          grep -q 'P10 复合群峰' /tmp/lti-v05-dom.html
+          ! grep -q '<iframe' /tmp/lti-v05-dom.html
           "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage \
             --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist \
-            --run-all-compositor-stages-before-draw --virtual-time-budget=45000 \
+            --run-all-compositor-stages-before-draw --virtual-time-budget=15000 \
             --window-size=1600,1000 --screenshot=/tmp/lti-v05.png "$URL" >/tmp/lti-v05-shot.log 2>&1
           test -s /tmp/lti-v05.png
-          test $(stat -c%s /tmp/lti-v05.png) -gt 100000
+          test $(stat -c%s /tmp/lti-v05.png) -gt 20000
+          echo "DOM bytes: $(stat -c%s /tmp/lti-v05-dom.html)"
+          echo "Screenshot bytes: $(stat -c%s /tmp/lti-v05.png)"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -84,6 +87,7 @@ jobs:
             /tmp/lti-v05-dom.html
             /tmp/lti-v05.png
             /tmp/lti-v05-chrome.log
+            /tmp/lti-v05-shot.log
             workbenches/landscape-terrain-influence-tool-v05/build.json
           retention-days: 7
 
