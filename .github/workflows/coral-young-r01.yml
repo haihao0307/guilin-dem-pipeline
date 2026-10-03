@@ -20,8 +20,10 @@ jobs:
       - name: Build exact tested source and preserve R05
         run: |
           mkdir -p /tmp/young-evidence
+          python tools/coral-young-r01/fix_queue.py
           cp -r tools/coral-young-r01 /tmp/young-tools
           python tools/coral-young-r01/build.py coral-mother-core-seed-r01 /tmp/young-site
+          git restore tools/coral-young-r01/study.html tools/coral-young-r01/build.py tools/coral-young-r01/qa.py
       - name: Install browser
         run: |
           python -m pip install playwright==1.55.0
@@ -49,7 +51,7 @@ jobs:
           git config user.name 'Coral Mother Source Study'
           git config user.email 'actions@users.noreply.github.com'
           git add coral-mother-core-seed-r01/index.html coral-mother-core-seed-r01/runtime.js coral-mother-core-seed-r01/young-coral-r01/ coral-mother-core-seed-r01/YOUNG_MANIFEST.json coral-mother-core-seed-r01/archive-r05-before-young-r01/
-          git commit -m 'feat(coral): integrate actual compact shader study, preserve accepted R05 and flower source'
+          git commit -m 'feat(coral): integrate actual compact shader study with bounded GPU queue, preserve accepted R05'
           git push origin HEAD:gh-pages
           git rev-parse HEAD > /tmp/young-evidence/PUBLISHED_COMMIT.txt
       - name: Verify deployed bytes and actual public rendering
