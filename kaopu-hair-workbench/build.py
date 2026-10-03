@@ -10,6 +10,21 @@ bundle={'commit':'cca0432bef548a9853f34d89788c5d2761e57d56','modules':modules,'a
 # Script data is escaped to make arbitrary embedded strings safe inside HTML.
 escape=lambda s:s.replace('<','\\u003c').replace('>','\\u003e').replace('&','\\u0026')
 html=(ROOT/'src/workbench.html').read_text().replace('/*__BUNDLE__*/', 'window.WORKBENCH_BUNDLE='+escape(json.dumps(bundle,separators=(',',':')))+';').replace('/*__FRAME_RUNTIME__*/','window.FRAME_RUNTIME='+escape(json.dumps((ROOT/'src/frame.js').read_text()))+';').replace('/*__HOST_RUNTIME__*/',(ROOT/'src/host.js').read_text())
+
+# Frozen r02 rabbit source stays unchanged; r03 adds an isolated module wrapper.
+reference=(ROOT/'references/anemone/oist-anemones-official-display.png').read_bytes()
+panel=(ROOT/'src/anemone-panel.html').read_text().replace('/*__ANEMONE_REFERENCE__*/','data:image/png;base64,'+base64.b64encode(reference).decode())
+nav,panel=panel.split('<section id="anemoneModule"',1)
+panel='<section id="anemoneModule"'+panel
+html=html.replace('content="2026-10-03-seddi-baseline-r02"','content="2026-10-03-anemone-r03"',1)
+html=html.replace('</style>','\n'+(ROOT/'src/anemone.css').read_text()+'\n</style>',1)
+html=html.replace('<body>','<body data-module="anemone">',1)
+html=html.replace('本版是离线封装与交互工作台，尚未实现独立程序兔子、长发动力学、触手或引擎蒙皮绑定。','兔子模块保留原始参考资产；海葵见上方页签。尚未实现独立程序兔子、长发动力学或引擎蒙皮绑定。')
+html=html.replace('当前没有独立动态阴影、长发物理、碰撞、骨骼蒙皮、触手或 Unity/Unreal 导出。','该兔子模块没有独立动态阴影、长发物理、碰撞、骨骼蒙皮或 Unity/Unreal 导出；海葵为独立程序模块。')
+html=html.replace('<div class="layout">',nav+panel+'<div id="rabbitModule"><div class="layout">',1)
+html=html.replace('<input id="importFile"','</div><input id="importFile"',1)
+runtime='\n'.join((ROOT/'src'/name).read_text() for name in ['anemone-core.js','anemone-renderer.js','anemone-host.js'])
+html=('<script>'+runtime.replace('</script','<\\/script')+'</script>\n</body>').join(html.rsplit('</body>',1))
 (ROOT/'dist/KAOPU-毛发工作台.html').write_text(html)
 (ROOT/'source-manifest.json').write_text(json.dumps({'commit':bundle['commit'],'sha256':manifest},indent=2))
 print('Built',len(html.encode()),'bytes')
