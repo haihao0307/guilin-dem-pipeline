@@ -1,0 +1,87 @@
+name: Material R11 public UI check
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/material-r11-ui-check.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser
+        run: |
+          npm init -y
+          npm install --save-dev playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Verify fixed public R11
+        run: |
+          cat > verify.cjs <<'JS'
+          const {chromium}=require('playwright');
+          const url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-material-workbench/?case=wet&v=r11';
+          const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+          const assert=(v,m)=>{if(!v)throw Error(m)};
+          async function sparseHash(page){
+            return page.evaluate(()=>{
+              const p=KAOPU10.pixels('result');let h=2166136261;
+              for(let i=0;i<p.length;i+=4096)h=Math.imul(h^p[i],16777619);
+              return h>>>0;
+            });
+          }
+          (async()=>{
+            let html='';
+            for(let i=0;i<36;i++){
+              const r=await fetch(url+'&probe='+Date.now());
+              html=await r.text();
+              if(r.status===200&&html.includes('MATERIAL STUDIO / R11')&&html.includes('lab-r11/app.js'))break;
+              await sleep(10000);
+            }
+            assert(html.includes('MATERIAL STUDIO / R11'),'R11 public source not propagated');
+            const browser=await chromium.launch({headless:true,args:['--no-sandbox','--enable-unsafe-swiftshader','--use-angle=swiftshader']});
+            const page=await browser.newPage({viewport:{width:1440,height:960}});
+            const errs=[];page.on('pageerror',e=>errs.push(e.message));
+            await page.goto(url,{waitUntil:'load',timeout:90000});
+            await page.waitForFunction(()=>window.KAOPU10?.ready&&KAOPU10.frames()>0,{timeout:90000});
+            assert(await page.locator('#resultCanvas').isVisible(),'stone canvas not visible');
+            assert((await page.locator('header nav button:visible').count())===2,'header should show only two stone buttons');
+            for(const id of ['resetAll','compare','restoreWindows','export','import']) assert(!(await page.locator('#'+id).isVisible()),id+' should be hidden');
+            assert(await page.locator('#inspector').isVisible(),'inspector not visible');
+            const h0=await sparseHash(page);
+            await page.locator('#palettes button').nth(1).click();
+            await sleep(500);
+            const h1=await sparseHash(page);
+            assert(h0!==h1,'color control did not change rendered stone');
+            const z0=await page.locator('#resultZoom').textContent();
+            await page.locator('[data-pane="result"][data-act="in"]').click();
+            await sleep(500);
+            const z1=await page.locator('#resultZoom').textContent();
+            assert(z0!==z1,'zoom control did not change zoom');
+            await page.locator('header nav button[data-go="iq"]').click();
+            await page.waitForFunction(()=>document.getElementById('objectTitle')?.textContent.includes('IQ'));
+            assert((await page.locator('#inspector .inspectorTabs button:visible').count())===5,'IQ should expose five adjustment groups');
+            assert(await page.locator('#shapeControls input').first().isVisible(),'shape controls not visible in IQ shape panel?');
+            await page.locator('#inspector .inspectorTabs button[data-tab="shape"]').click();
+            assert(await page.locator('#shapeControls input').first().isVisible(),'shape controls unavailable');
+            await page.setViewportSize({width:390,height:844});
+            await sleep(500);
+            assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'mobile viewport horizontal overflow');
+            assert(await page.locator('#resultCanvas').isVisible(),'mobile canvas not visible');
+            assert(errs.length===0,'page errors: '+errs.join(' | '));
+            const report={version:'R11',url,httpStatus:200,desktop:{canvas:true,twoStoneButtons:true,clutterHidden:true,colorChangesRender:true,zoom:true,iqFiveControlGroups:true,shapeControls:true},mobile:{type:'390px Chromium viewport, not physical phone',noOverflow:true,canvasVisible:true},errors:errs,browserPassed:true,shareAllowed:true,checkedAt:new Date().toISOString()};
+            require('fs').writeFileSync('PUBLICATION_PROOF_R11.json',JSON.stringify(report,null,2));
+            console.log(JSON.stringify(report,null,2));
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          node verify.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: material-r11-public-proof
+          path: PUBLICATION_PROOF_R11.json
+          retention-days: 14
