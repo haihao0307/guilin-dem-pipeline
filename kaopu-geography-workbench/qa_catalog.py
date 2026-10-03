@@ -1,56 +1,85 @@
-"""R16.1 catalog-only checks against the actual public page. No renderer substitution."""
+"""KAOPU R16.2 responsive-shell verification. Scene shaders are Gram-anchored and must not regress."""
 import os,time,json,hashlib,urllib.request,traceback
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 BASE=os.environ.get('KAOPU_PUBLIC_URL','https://haihao0307.github.io/guilin-dem-pipeline/kaopu-geography-workbench/')
-OUT=Path('geography-qa/catalog-r16-1');OUT.mkdir(parents=True,exist_ok=True)
-EXPECTED={'settings.js':'0ba24c343cefbb20eba8dd5d6d86e1d288e88253','post.js':'048305b127bfb6770e3df2541cd4bbaf398c9645','crater.js':'1316fd4c4b56f941cab0e90aaa4f39730bd87111','underwater.js':'1f97a36952ebfd04969e2c7d2f61e68a1c4198a5','cave.js':'811e69b450d63f0ffea627f9da2322a9b78e6606','canyon.js':'d9e12711c4186356b34f9e458f029b771b837622','runtime.js':'4563dd3bd7ceaba97ce42de8960d075382793ca6','style.css':'7f48293ed2ce65cea1fded7bea1997ac692a8aae','caveBake.js':'c88a4dd81a7ca7bf5325080900d52f6847d7223d','more.js':'53316a56059e122246d293b6c1b6d94aff91db8f','snow.js':'6b5fe324549596c52b47bda1f5d53a723b569fed'}
-report={'ui_version':'R16.1','scene_version':'R16','public_url':BASE,'physical_phone_tested':False,'tests':[],'errors':[],'passed':False}
+OUT=Path('geography-qa/responsive-r16-2');OUT.mkdir(parents=True,exist_ok=True)
+FROZEN={
+'settings.js':'0ba24c343cefbb20eba8dd5d6d86e1d288e88253',
+'post.js':'048305b127bfb6770e3df2541cd4bbaf398c9645',
+'crater.js':'1316fd4c4b56f941cab0e90aaa4f39730bd87111',
+'underwater.js':'1f97a36952ebfd04969e2c7d2f61e68a1c4198a5',
+'cave.js':'811e69b450d63f0ffea627f9da2322a9b78e6606',
+'canyon.js':'d9e12711c4186356b34f9e458f029b771b837622',
+'style.css':'7f48293ed2ce65cea1fded7bea1997ac692a8aae',
+'caveBake.js':'c88a4dd81a7ca7bf5325080900d52f6847d7223d',
+'more.js':'53316a56059e122246d293b6c1b6d94aff91db8f',
+'snow.js':'6b5fe324549596c52b47bda1f5d53a723b569fed'}
+EXPECTED_INDEX='2db85004db80b083c06962960558bcc0a481616a'
+EXPECTED_RUNTIME='c98bf2ba62a77a7c602356d26ee15fa6b9a4f85f'
+EXPECTED_DETAIL_CSS='321f9e1b75ae0b700162913c16abb161912208ed'
+report={'ui_version':'R16.2','scene_anchor':'R16/R16.1','public_url':BASE,'physical_phone_tested':False,'tests':[],'errors':[],'passed':False}
 def get(name=''):
- with urllib.request.urlopen(urllib.request.Request(BASE+name+'?catalog='+str(time.time()),headers={'Cache-Control':'no-cache'}),timeout=30) as response:
-  assert response.status==200
-  return response.read()
+ with urllib.request.urlopen(urllib.request.Request(BASE+name+'?r162='+str(time.time()),headers={'Cache-Control':'no-cache'}),timeout=30) as r:
+  assert r.status==200
+  return r.read()
 def blob_sha(b):return hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
+def wait_ready(p,scene='underwater',count=-1,timeout=180000):
+ p.wait_for_function('(a)=>window.KaoPuDiagnostics&&KaoPuDiagnostics().scene===a.scene&&KaoPuDiagnostics().renderReady&&KaoPuDiagnostics().renderCount>a.count',arg={'scene':scene,'count':count},timeout=timeout)
+ assert not p.locator('#notice.error').is_visible(),p.locator('#notice').inner_text()
 try:
- for attempt in range(72):
+ for _ in range(72):
   try:
    html=get()
-   if blob_sha(html)=='275e9cb0cd1ef2f8078b7f349ff5ce625a37bc55':break
-  except Exception as e:print('Waiting for exact public UI:',e,flush=True)
+   if blob_sha(html)==EXPECTED_INDEX:break
+  except Exception as e:print('waiting for R16.2 Pages',e,flush=True)
   time.sleep(10)
- else:raise RuntimeError('Exact R16.1 index did not reach public hosting')
- for name,sha in EXPECTED.items():assert blob_sha(get(name))==sha,('Unexpected scene file change',name)
- tail=html.decode().split('<section hidden id="detail">',1)[1]
- assert hashlib.sha256(('<section hidden id="detail">'+tail).encode()).hexdigest()=='0c49e758d8821973359e1aa839d9e3ce1956b58f9c490f2c82486c539f52fab3'
- report['unchanged_original_files']=EXPECTED;report['detail_markup_and_scripts_unchanged']=True
+ else:raise RuntimeError('Exact R16.2 index did not reach public hosting')
+ assert blob_sha(get('runtime.js'))==EXPECTED_RUNTIME
+ assert blob_sha(get('detail-r16-2.css'))==EXPECTED_DETAIL_CSS
+ for name,sha in FROZEN.items():
+  actual=blob_sha(get(name));assert actual==sha,('Gram anchor changed',name,actual,sha)
+ report['frozen_scene_files']=FROZEN
  with sync_playwright() as pw:
   browser=pw.chromium.launch(headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--disable-dev-shm-usage'])
-  for width,height,dpr in [(1470,1024,1),(1440,1000,2),(390,844,2),(360,800,2)]:
-   p=browser.new_page(viewport={'width':width,'height':height},device_scale_factor=dpr,is_mobile=width<500,has_touch=width<500)
-   errors=[];p.on('pageerror',lambda e:errors.append(str(e)))
-   p.goto(BASE+'?ui=R16.1',wait_until='load',timeout=120000)
-   p.wait_for_function('window.KaoPuDiagnostics&&KaoPuDiagnostics().renderReady&&KaoPuDiagnostics().renderCount>0',timeout=120000)
-   assert p.locator('#home').get_attribute('data-ui-version')=='R16.1'
-   p.locator('#backBtn').click();p.wait_for_function('KaoPuDiagnostics().homeVisible')
-   p.locator('#home .thumb').evaluate_all('(xs)=>Promise.all(xs.map(x=>x.decode()))')
-   previews=p.locator('#home .thumb').evaluate_all('(xs)=>xs.map(x=>({path:x.getAttribute("src"),naturalWidth:x.naturalWidth,naturalHeight:x.naturalHeight,width:x.width,height:x.height,density:x.naturalWidth/x.width}))')
-   assert len(previews)==6 and all(x['naturalWidth']==384 and x['naturalHeight']==240 and x['width']<=148 and x['density']>=2.5 for x in previews),previews
-   assert p.locator('[data-scene]').count()==6
-   assert p.evaluate('document.documentElement.scrollWidth<=innerWidth+2')
-   if width>1000:
-    a=p.locator('[data-scene="crater"]').bounding_box();b=p.locator('[data-scene="underwater"]').bounding_box();assert abs(a['y']-b['y'])<1
-   p.screenshot(path=str(OUT/f'home_{width}_dpr{dpr}.png'),full_page=True,timeout=120000)
-   for key in ['crater','underwater']:
-    count=p.evaluate('KaoPuDiagnostics().renderCount');p.locator('[data-scene="'+key+'"]').click()
-    p.wait_for_function('(v)=>KaoPuDiagnostics().scene===v.key&&KaoPuDiagnostics().renderReady&&KaoPuDiagnostics().renderCount>v.count',arg={'key':key,'count':count},timeout=120000)
-    p.locator('#backBtn').click();p.wait_for_function('KaoPuDiagnostics().homeVisible')
-   assert not errors,errors
-   report['tests'].append({'viewport':[width,height],'device_pixel_ratio':dpr,'real_phone':False,'previews':previews,'original_and_underwater_navigation':'passed','runtime_errors':errors})
-   p.close()
-  browser.close()
- report['passed']=True
+  # Desktop: established desktop arrangement remains controls-before-canvas and 16:9.
+  p=browser.new_page(viewport={'width':1440,'height':1000},device_scale_factor=1)
+  errors=[];p.on('pageerror',lambda e:errors.append(str(e)))
+  p.goto(BASE+'?ui=R16.2',wait_until='load',timeout=120000);wait_ready(p)
+  assert p.locator('#home').get_attribute('data-ui-version')=='R16.2'
+  canvas=p.locator('#liveCanvas').bounding_box();controls=p.locator('#detail>.controls').first.bounding_box()
+  assert controls['y'] < canvas['y'],(controls,canvas)
+  assert abs(canvas['width']/canvas['height']-16/9)<.03,canvas
+  assert p.evaluate('document.documentElement.scrollWidth<=innerWidth+2')
+  p.screenshot(path=str(OUT/'detail_desktop_1440.png'),full_page=True)
+  report['tests'].append({'mode':'desktop','viewport':[1440,1000],'canvas':canvas,'controls':controls,'aspect':canvas['width']/canvas['height']})
+  p.locator('#backBtn').click();p.wait_for_function('KaoPuDiagnostics().homeVisible');assert p.locator('[data-scene]').count()==6
+  p.screenshot(path=str(OUT/'home_desktop_1440.png'),full_page=True);p.close()
+  # Mobile portrait: canvas is promoted above controls and rendered 4:3 for more usable visual area.
+  m=browser.new_page(viewport={'width':390,'height':844},device_scale_factor=2,is_mobile=True,has_touch=True)
+  merr=[];m.on('pageerror',lambda e:merr.append(str(e)))
+  m.goto(BASE+'?ui=R16.2',wait_until='load',timeout=120000);wait_ready(m)
+  canvas=m.locator('#liveCanvas').bounding_box();controls=m.locator('#detail>.controls').first.bounding_box();nav=m.locator('.nav').bounding_box()
+  assert canvas['y'] < controls['y'],(canvas,controls)
+  assert canvas['width'] >= 388,canvas
+  assert abs(canvas['width']/canvas['height']-4/3)<.03,canvas
+  assert nav['height'] <= 54,nav
+  assert m.evaluate('document.documentElement.scrollWidth<=innerWidth+2')
+  assert not merr,merr
+  m.screenshot(path=str(OUT/'detail_mobile_390_dpr2.png'),full_page=True)
+  report['tests'].append({'mode':'mobile_portrait_viewport','viewport':[390,844],'dpr':2,'real_phone':False,'canvas':canvas,'controls':controls,'nav':nav,'aspect':canvas['width']/canvas['height']})
+  # Exercise controls after canvas and return.
+  before=m.evaluate('KaoPuDiagnostics().renderCount');m.locator('#quality').select_option('720');wait_ready(m,'underwater',before)
+  r=m.locator('#renderState').inner_text();assert '720×540' in r,r
+  m.locator('#backBtn').click();m.wait_for_function('KaoPuDiagnostics().homeVisible');assert m.locator('[data-scene]').count()==6
+  m.screenshot(path=str(OUT/'home_mobile_390_dpr2.png'),full_page=True)
+  # Re-enter canyon and return: responsive shell must not break scene navigation.
+  before=m.evaluate('KaoPuDiagnostics().renderCount');m.locator('[data-scene="canyon"]').click();wait_ready(m,'canyon',before);assert m.locator('#liveCanvas').bounding_box()['width']>=388
+  m.locator('#backBtn').click();m.wait_for_function('KaoPuDiagnostics().homeVisible')
+  m.close();browser.close()
+  report['passed']=True
 except Exception as e:
  report['errors'].append(str(e));report['traceback']=traceback.format_exc();print(traceback.format_exc(),flush=True)
 finally:
- (OUT/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2));print('CATALOG_QA',json.dumps(report,ensure_ascii=False),flush=True)
+ (OUT/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2));print('R16_2_RESPONSIVE_QA',json.dumps(report,ensure_ascii=False),flush=True)
 if not report['passed']:raise SystemExit(1)

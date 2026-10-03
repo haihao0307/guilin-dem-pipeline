@@ -1,0 +1,45 @@
+/* KAOPU R16.2 — responsive shell only. Scene shaders are frozen. */
+@media (max-width:760px){
+  #detail:not([hidden]){display:flex;flex-direction:column;min-height:100svh;overflow-x:hidden;background:#070b10}
+  .nav{order:0;min-height:48px;padding:6px 8px;gap:8px;border-bottom:1px solid #274150;background:#0b141c}
+  .nav #backBtn{padding:7px 9px;min-height:34px;font-size:12px;border-radius:8px}
+  .nav .sceneID{display:none}
+  .nav #sceneName{margin:0;max-width:calc(100vw - 126px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px;line-height:1.2}
+  .work{order:1;display:flex;flex-direction:column;width:100%;max-width:none;padding:0;gap:0;margin:0}
+  .livePanel{width:100%;border-left:0;border-right:0;border-radius:0}
+  .panelHeader{min-height:34px;padding:6px 9px}
+  .panelHeader h2{font-size:12px;letter-spacing:.02em}
+  .panelHeader .meta{font-size:9px}
+  .liveBox{width:100%;background:#000}
+  #liveCanvas{display:block;width:100%;height:auto;aspect-ratio:4/3}
+  .identity{display:none}
+  .notice,.noteMini{padding:7px 9px;font-size:11px}
+  #teacherPanel{order:2;width:100%;max-width:none;margin:6px 0 0;border-left:0;border-right:0;border-radius:0}
+  #detail>.controls{order:2;width:100%;padding:6px 7px;gap:5px;background:#0d1821}
+  #detail>.controls>.group{width:100%;display:flex;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:none;padding-bottom:1px}
+  #detail>.controls>.group::-webkit-scrollbar{display:none}
+  #detail>.controls button,#detail>.controls select{flex:0 0 auto;min-height:34px;padding:7px 9px;font-size:12px;white-space:nowrap}
+  #detail>.controls label,.scaleNote{font-size:11px;white-space:nowrap}
+  .timeControl{order:4;width:100%;flex-basis:100%;min-width:0;margin:1px 0 0;padding:2px 3px;gap:6px}
+  .timeControl label{font-size:10px;flex:0 0 auto}
+  .timeControl input{min-width:0}
+  #clock{width:64px;font-size:10px}
+  #underwaterControls{order:3}
+  #underwaterControls .scaleNote{width:100%;white-space:normal;line-height:1.35;padding:1px 3px 2px}
+  #sourceDetails{order:4;width:100%;margin:0;padding:6px 9px 18px;font-size:10px}
+  #sourceDetails summary{padding:5px 0}
+  .referenceActions{gap:5px;padding:0 7px 8px}
+  .referenceActions button,.referenceActions label{font-size:11px;padding:6px 8px}
+}
+@media (min-width:761px){
+  #detail:not([hidden]){display:block}
+  .work{max-width:1760px}
+  #teacherPanel{width:auto}
+}
+@media (max-width:760px) and (orientation:landscape){
+  .nav{min-height:42px;padding:4px 7px}
+  .panelHeader{display:none}
+  #liveCanvas{aspect-ratio:16/9}
+  #detail>.controls{padding:4px 6px}
+  #detail>.controls button,#detail>.controls select{min-height:30px;padding:5px 8px}
+}
