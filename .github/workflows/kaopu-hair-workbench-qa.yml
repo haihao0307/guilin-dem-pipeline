@@ -1,0 +1,40 @@
+name: QA isolated KAOPU hair workbench
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - kaopu-hair-workbench/index.html
+      - kaopu-hair-workbench/tests/browser-qa.cjs
+      - .github/workflows/kaopu-hair-workbench-qa.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  standalone-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: kaopu-hair-workbench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install pinned official browser test dependency
+        run: |
+          npm install --prefix .hair-qa --no-save --ignore-scripts --no-audit --no-fund playwright@1.55.0
+          ./.hair-qa/node_modules/.bin/playwright install chromium
+      - name: Test standalone file and desktop/mobile viewports
+        env:
+          NODE_PATH: ${{ github.workspace }}/.hair-qa/node_modules
+          HAIR_HTML: ${{ github.workspace }}/kaopu-hair-workbench/index.html
+          HAIR_QA_OUT: ${{ github.workspace }}/hair-qa-results
+        run: node kaopu-hair-workbench/tests/browser-qa.cjs
+      - name: Keep actual browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-hair-browser-${{ github.sha }}
+          path: hair-qa-results/
+          if-no-files-found: warn
