@@ -31,6 +31,7 @@
       "crossViewStable=true OR temporalStable=true",
       "anatomicalOrGeometricSupport=true",
       "at least two independentEvidenceRoots",
+      "when requireBoundEvidenceRoots=true, at least two distinct roots directly bind the same subjectId and every requiredClaimId",
       "relationInvariantsDefined=true",
       "conflict=false"
     ],
@@ -134,6 +135,10 @@
     {
       "id": "ANATOMY_PLUS_DENSE_MULTI_VIEW",
       "input": {
+        "subjectId": "synthetic-subject-001",
+        "requiredClaimIds": [
+          "part-boundary-is-anatomical"
+        ],
         "objectIdentityBound": true,
         "uncertaintyState": "OBSERVED",
         "visualCorrespondence": true,
@@ -145,6 +150,25 @@
         "independentEvidenceRoots": [
           "dinov3",
           "anatomy-reference"
+        ],
+        "requireBoundEvidenceRoots": true,
+        "evidenceRootBindings": [
+          {
+            "rootId": "dinov3",
+            "subjectId": "synthetic-subject-001",
+            "claimIds": [
+              "part-boundary-is-anatomical"
+            ],
+            "directSupport": true
+          },
+          {
+            "rootId": "anatomy-reference",
+            "subjectId": "synthetic-subject-001",
+            "claimIds": [
+              "part-boundary-is-anatomical"
+            ],
+            "directSupport": true
+          }
         ],
         "relationInvariantsDefined": true
       },
@@ -167,6 +191,62 @@
         "relationInvariantsDefined": true
       },
       "expect": "OBSERVATION_INDEPENDENCE_INSUFFICIENT"
+    },
+    {
+      "id": "YELLOWFIN_R011_PECTORAL_EXTERNAL_ANATOMY_NOT_BOUND_TO_EXACT_MESH",
+      "provenance": {
+        "exactSubject": "sha256:5603d4b676f28fb89a205637881dc12856b61d24a0ba49d6f1e6a7d015580bec",
+        "productionEvidence": [
+          "fish-mother-yellowfin/pectoral-r011/PECTORAL_QA.json",
+          "fish-mother-yellowfin/pectoral-r011/pectoral-evidence.json",
+          "fish-mother-yellowfin/pectoral-r011/SOURCE_IDENTITY_PROOF.json"
+        ],
+        "externalEvidence": [
+          "https://www.fao.org/4/ac478e/ac478e02.pdf",
+          "https://spo.nmfs.noaa.gov/content/morphology-and-possible-swimming-mode-yellowfin-tuna-thunnus-albacares-lacking-one-pectoral"
+        ]
+      },
+      "input": {
+        "subjectId": "sha256:5603d4b676f28fb89a205637881dc12856b61d24a0ba49d6f1e6a7d015580bec",
+        "requiredClaimIds": [
+          "source-regions-sidefin-l-r-are-biological-pectoral-pair"
+        ],
+        "objectIdentityBound": true,
+        "uncertaintyState": "OBSERVED",
+        "visualCorrespondence": false,
+        "anatomicalOrGeometricSupport": true,
+        "partIdentityBound": true,
+        "boundaryDefined": true,
+        "crossViewStable": true,
+        "temporalStable": false,
+        "independentEvidenceRoots": [
+          "r011-source-topology",
+          "fao-yellowfin-diagnosis"
+        ],
+        "requireBoundEvidenceRoots": true,
+        "evidenceRootBindings": [
+          {
+            "rootId": "r011-source-topology",
+            "subjectId": "sha256:5603d4b676f28fb89a205637881dc12856b61d24a0ba49d6f1e6a7d015580bec",
+            "claimIds": [
+              "source-regions-sidefin-l-r-are-biological-pectoral-pair"
+            ],
+            "directSupport": false,
+            "reason": "Exact topology and author labels are bound to the source artifact, but SOURCE_IDENTITY_PROOF marks semanticApproval and biologicalTruth false."
+          },
+          {
+            "rootId": "fao-yellowfin-diagnosis",
+            "subjectId": "taxon:Thunnus-albacares",
+            "claimIds": [
+              "yellowfin-has-pectoral-fins"
+            ],
+            "directSupport": true,
+            "reason": "Species-level anatomy does not identify the exact triangle partition in this source model."
+          }
+        ],
+        "relationInvariantsDefined": true
+      },
+      "expect": "OBSERVATION_EVIDENCE_NOT_BOUND_TO_SUBJECT"
     },
     {
       "id": "MISSING_UNCERTAINTY",
