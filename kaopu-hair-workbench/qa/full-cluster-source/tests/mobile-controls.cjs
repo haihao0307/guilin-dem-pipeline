@@ -93,7 +93,20 @@ module.exports = async function mobileControls(browser, url, outDir, check) {
   const layout = async (name, width, height) => {
     if (width && height) await page.setViewportSize({ width, height });
     await settle();
-    await page.evaluate(() => anemone.redraw());
+    await page.evaluate(() => { anemone.redraw(); window.__qaResizeStable = { key: '', count: 0 }; });
+    // ResizeObserver/visualViewport updates can land after the first two RAFs.
+    // Observe the completed native backing-store transition, without changing
+    // dimensions, forcing extra draws, sleeping a guessed duration, or relaxing
+    // any DPR assertion. A broken resize implementation still times out.
+    await page.waitForFunction(() => {
+      const r=anemone.renderer,c=r.canvas,d=r.display,w=c.clientWidth,h=c.clientHeight;
+      const ratio=Math.min(devicePixelRatio,r.maxSurfaceSize/w,r.maxSurfaceSize/h);
+      const ok=w>0&&h>0&&c.width===Math.round(w*ratio)&&c.height===Math.round(h*ratio)&&
+        d?.cssWidth===w&&d?.cssHeight===h&&d?.backingWidth===c.width&&d?.backingHeight===c.height;
+      const key=[w,h,c.width,c.height,visualViewport?.width,visualViewport?.height].join('/');
+      const s=window.__qaResizeStable;s.count=ok&&s.key===key?s.count+1:(ok?1:0);s.key=key;
+      return ok&&s.count>=3;
+    },null,{polling:'raf',timeout:15000});
     const l = await page.evaluate(() => {
       const c = anemone.renderer.canvas, rect = c.getBoundingClientRect(), gl = anemone.renderer.gl;
       const viewport = { width: visualViewport?.width || innerWidth, height: visualViewport?.height || innerHeight,
