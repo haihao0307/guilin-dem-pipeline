@@ -30,15 +30,15 @@ body[data-mode="tree"] .teacher-card{display:none}body[data-mode="tree"] .frames
 @media(max-width:620px){header{padding:11px 13px}.anchor{display:none}.toolbar{padding:8px}.toolbar button,.toolbar a{padding:7px 8px;font-size:11px}.workspace{padding:8px}.frames{gap:8px}.frame-card iframe{height:66svh;min-height:500px}.frame-head{padding:8px}.side{padding:15px}.map-view{padding:15px;min-height:520px}}
 </style>
 </head>
-<body data-mode="compare">
+<body data-mode="tree">
 <header>
   <div><h1>KAOPU · 分形造波树 综合工作台 R01</h1><div class="sub">TREE LIFE GRAMMAR × KUKO DAY 123 BRANCHING VOICE</div></div>
   <div class="anchor">Grammar Anchors：R05 树生命母台 + KuKo 老师原谱</div>
 </header>
 <nav class="toolbar" aria-label="工作台模式">
-  <button data-mode="tree">树生命母台</button>
+  <button data-mode="tree" class="on">树生命母台</button>
   <button data-mode="teacher">分枝语法老师</button>
-  <button data-mode="compare" class="on">并排听音</button>
+  <button data-mode="compare">并排听音</button>
   <button data-mode="map">知识映射</button>
   <span class="spacer"></span>
   <a href="./mobile-r05-seasons/" target="_blank" rel="noopener">树母台单独打开</a>
@@ -53,7 +53,7 @@ body[data-mode="tree"] .teacher-card{display:none}body[data-mode="tree"] .frames
         <iframe id="treeFrame" title="Tree Life R05" src="./mobile-r05-seasons/" allow="fullscreen"></iframe>
       </article>
       <article class="frame-card teacher-card">
-        <div class="frame-head"><b>KuKo Day 123 · 二维分枝语法老师</b><span>原谱冻结，不冒充三维</span></div>
+        <div class="frame-head"><b>KuKo Day 123 · 二维分枝语法老师</b><span>原谱冻结；嵌入时默认只绘制一帧</span></div>
         <iframe id="teacherFrame" title="KuKo Day 123 teacher" src="./kuko-day123-branching-r01/" allow="fullscreen"></iframe>
       </article>
     </section>
@@ -74,7 +74,7 @@ body[data-mode="tree"] .teacher-card{display:none}body[data-mode="tree"] .frames
   <aside class="side">
     <h2>分枝谱地址解码器</h2>
     <p class="intro">这里不是截图说明，而是把老师的整数寻址逻辑拆出来现场演奏。选择一棵老师树和枝号，就能看到每一层的路径数字。</p>
-    <div class="gate"><b>当前冻结关系：</b><br><span class="ok">✓</span> R05 三维生命锚点不改<br><span class="ok">✓</span> KuKo 原谱常量不改<br><span class="ok">✓</span> 新增的只是综合工作台与知识桥</div>
+    <div class="gate"><b>当前冻结关系：</b><br><span class="ok">✓</span> R05 三维生命锚点不改<br><span class="ok">✓</span> KuKo 原谱常量不改<br><span class="ok">✓</span> 新增的是综合工作台、路径解码和省算力播放桥</div>
     <section class="decoder">
       <div class="row"><label for="teacherSelect">老师声部 <output id="teacherMeta"></output></label><select id="teacherSelect"><option value="C">中央树 tree()</option><option value="L">左树 treeL()</option><option value="R">右树 treeR()</option></select></div>
       <div class="row"><label for="branchIndex">枝号 c <output id="branchValue">0</output></label><input id="branchIndex" type="range" min="0" max="2186" value="0"></div>
