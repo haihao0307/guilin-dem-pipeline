@@ -1,0 +1,30 @@
+name: Coral original loader and artifact trace
+on:
+  push:
+    branches: [work/coral-original-artifact-trace-20261003]
+    paths: [.github/workflows/coral-original-artifact-trace.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  recover-originals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fetch previous PR sources read-only
+        run: git fetch --no-tags origin '+refs/pull/*/head:refs/remotes/recovery-pr/*'
+      - name: Recover complete loaders and inspect original build outputs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python tools/coral-original-artifact-trace.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coral-original-loader-artifact-trace
+          path: /tmp/coral-original-trace/
+          retention-days: 30
