@@ -172,8 +172,8 @@ jobs:
               nativeshot=root/'desktop-native-r02.png'; page.screenshot(path=str(nativeshot),full_page=False)
               C['nativePixelsNonBlank']=digest(nativeshot)['stddev']>8
 
-              page.evaluate("FractalWaveTreeWorkbenchR01.setMode('life4')")
-              page.wait_for_timeout(1500)
+              page.evaluate("FractalWaveTreeWorkbenchR01.setMode('native3')")
+              page.wait_for_timeout(900)
               C['native3IsLargeIntegratedMode']=page.evaluate("getComputedStyle(document.querySelector('.native3-card')).display!=='none' && getComputedStyle(document.querySelector('.side')).display==='none'")
               r03=page.evaluate("document.getElementById('native3Frame').contentWindow.Native3DFractalR03.getState()")
               C['r03SpatialHash']=r03['signature']['spatialHash'] is True
@@ -229,8 +229,8 @@ jobs:
               C['desktopPixelsNonBlank']=digest(compare)['stddev']>8
 
               page.set_viewport_size({'width':390,'height':844})
-              page.evaluate("FractalWaveTreeWorkbenchR01.setMode('native3')")
-              page.wait_for_timeout(900)
+              page.evaluate("FractalWaveTreeWorkbenchR01.setMode('life4')")
+              page.wait_for_timeout(1500)
               C['mobileNoHorizontalOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth')
               mobile=root/'mobile-tree.png'; page.screenshot(path=str(mobile),full_page=False)
               C['mobilePixelsNonBlank']=digest(mobile)['stddev']>8
