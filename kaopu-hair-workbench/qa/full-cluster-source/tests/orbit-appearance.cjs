@@ -247,9 +247,13 @@ module.exports = async function orbitAppearance(browser, url, outDir, check) {
 
     await select('rabbit');
     await page.locator('#resetCamera').click(); await waitRabbit({ angles: [0, 0], size: 1 });
+    // Appearance regression retains the exact original single-lamp reference.
+    // Default side-light behavior is tested independently by lighting-geometry.
+    await page.evaluate(() => objectLighting.set('rabbit', { mode: 'legacy' }));
+    await waitRabbit({ lighting: await page.evaluate(() => objectLighting.get('rabbit')) });
     const teacherStart = await probe('rabbit', 'canonical frozen teacher', 'teacher', true);
     const candidateStart = await probe('rabbit', 'canonical default rabbit', 'candidate', true);
-    assert('width1 original default renders exact canonical teacher pixels', candidateStart.state.maskWidth === 1 && equal(rabbitShape(candidateStart.state), rabbitShape(teacherStart.state)) && candidateStart.pixels.hash === teacherStart.pixels.hash && [candidateStart, teacherStart].every(x => x.pixels.width === 600 && x.pixels.height === 600), { teacher: teacherStart.pixels, candidate: candidateStart.pixels });
+    assert('width1 with explicit legacy lights renders exact canonical teacher pixels', candidateStart.state.maskWidth === 1 && equal(rabbitShape(candidateStart.state), rabbitShape(teacherStart.state)) && candidateStart.pixels.hash === teacherStart.pixels.hash && [candidateStart, teacherStart].every(x => x.pixels.width === 600 && x.pixels.height === 600), { teacher: teacherStart.pixels, candidate: candidateStart.pixels });
     const defaultExport = await page.evaluate(() => workbench.exportState());
     const teacherNormals = await normals('teacher', 'frozen teacher baseline');
     // Common appearance now stays on the first screen, outside the drawer.
@@ -294,20 +298,20 @@ module.exports = async function orbitAppearance(browser, url, outDir, check) {
     const roundtripFrame = await probe('rabbit', 'edited JSON source', 'candidate', true);
     await page.locator('#rabbitControlsToggle').click();
     const downloadPromise = page.waitForEvent('download'); await page.locator('#exportButton').click();
-    const download = await downloadPromise, jsonPath = path.join(outDir, 'rabbit-appearance-v2.json'); await download.saveAs(jsonPath);
+    const download = await downloadPromise, jsonPath = path.join(outDir, 'rabbit-appearance-v3.json'); await download.saveAs(jsonPath);
     const exported = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-    assert('actual export button writes version2 width and honest grooming exclusion', exported.version === 2 && exported.state.maskWidth === 1.4 && exported.groomingIncluded === false && equal(exported, await page.evaluate(() => workbench.exportState())), exported);
+    assert('actual export button writes version3 width/lighting and honest grooming exclusion', exported.version === 3 && exported.lighting.mode === 'legacy' && exported.state.maskWidth === 1.4 && exported.groomingIncluded === false && equal(exported, await page.evaluate(() => workbench.exportState())), exported);
     await page.evaluate(() => { rabbitAppearance.setPalette('graphite'); rabbitAppearance.setWidth(.6); rabbitAppearance.setDensity(.7); });
     await page.locator('#importFile').setInputFiles({ name: 'rabbit-appearance-roundtrip.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(exported)) });
     await waitRabbit(exported.state);
-    const imported = await probe('rabbit', 'actual v2 JSON import', 'candidate', true);
+    const imported = await probe('rabbit', 'actual v3 JSON import', 'candidate', true);
     assert('actual JSON import restores exact edited state and pixels', imported.pixels.hash === roundtripFrame.pixels.hash && equal(exported, await page.evaluate(() => workbench.exportState())));
     const immediateControls = await page.evaluate(() => ({ width: Number(document.getElementById('rabbitMaskWidth').value), widthNumber: Number(document.getElementById('rabbitMaskWidthNumber').value), density: Number(document.getElementById('rabbitVisualDensity').value) }));
     assert('import synchronizes new appearance controls', near(immediateControls.width, 1.4) && near(immediateControls.widthNumber, 1.4) && near(immediateControls.density, 1.5), immediateControls);
-    const legacy = { ...defaultExport, version: 1, state: { ...defaultExport.state } }; delete legacy.state.maskWidth;
+    const legacy = { ...defaultExport, version: 1, state: { ...defaultExport.state } }; delete legacy.state.maskWidth; delete legacy.lighting;
     await page.evaluate(data => workbench.importState(data), legacy); await waitRabbit({ ...legacy.state, maskWidth: 1 });
     const legacyFrame = await probe('rabbit', 'legacy version1 width migration', 'candidate', true);
-    assert('legacy JSON missing width migrates to exact source default', legacyFrame.state.maskWidth === 1 && legacyFrame.pixels.hash === teacherStart.pixels.hash && (await page.evaluate(() => workbench.exportState())).version === 2);
+    assert('legacy JSON missing width migrates to exact source default', legacyFrame.state.maskWidth === 1 && legacyFrame.pixels.hash === teacherStart.pixels.hash && (await page.evaluate(() => workbench.exportState())).version === 3);
     await page.locator('#rabbitControlsClose').click();
 
     // Confirm a real GPU comb stroke first, then demand bit-exact buffer survival.
@@ -341,7 +345,7 @@ module.exports = async function orbitAppearance(browser, url, outDir, check) {
       }
       return results;
     });
-    assert('invalid version2 width imports reject before any host mutation', invalidResults.every(r => r.rejected && r.unchanged), invalidResults);
+    assert('invalid version3 width imports reject before any host mutation', invalidResults.every(r => r.rejected && r.unchanged), invalidResults);
     await rafWindow(3);
     const atomicAfter = await probe('rabbit', 'invalid import atomic GPU result', 'candidate', true);
     assert('invalid imports preserve baseline orbit pixels and grooming atomically', equal(atomicBefore, await page.evaluate(() => ({ exported: workbench.exportState(), baseline: workbench.baseline, orbit: rabbitUI.orbit }))) && atomicAfter.pixels.hash === groomedMaterial.pixels.hash && equal(combed, await normals('candidate', 'invalid import grooming atomicity')));

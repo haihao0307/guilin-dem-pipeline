@@ -1,6 +1,6 @@
 /* KAOPU r03 mesh / KuKo material transfer, 2026-10-03.
  * The r03 tube profile, body positions/normals/indices and camera are unchanged.
- * Regional aperiodic flow replaces the old shared sine driver; segment lengths stay fixed.
+ * Corrected golden-angle/radial initial layout with certified bounded regional flow; segment lengths stay fixed.
  * KuKo-derived broad rim and distance-softened color; four species-informed tissue
  * palettes plus two explicitly artistic presets. Body-region metadata colors the
  * column separately from the oral disc without moving vertices.
@@ -13,14 +13,14 @@
  * whole-tentacle alpha fallback remains approximate where bent tubes interleave.
  */
 (function(root){'use strict';
-const C=root.AnemoneCurrent||root.AnemoneCore;
+const C=root.AnemoneSafeLayout;
 const mul=(a,b)=>{const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)for(let k=0;k<4;k++)o[c*4+r]+=a[k*4+r]*b[c*4+k];return o;};
 const norm=v=>{const l=Math.hypot(...v);return v.map(x=>x/l);},cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0);
 function matrix(eye,target,aspect){const z=norm(eye.map((v,i)=>v-target[i])),x=norm(cross([0,1,0],z)),y=cross(z,x);const view=new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-dot(x,eye),-dot(y,eye),-dot(z,eye),1]);const f=1/Math.tan(.6/2),n=.05,far=50;const p=new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+n)/(n-far),-1,0,0,2*far*n/(n-far),0]);return mul(p,view);}
 const vertex=`#version 300 es
 precision highp float;
 layout(location=0) in vec2 param;
-uniform sampler2D joints;
+uniform highp sampler2D joints;
 uniform mat4 vp;
 out vec3 world; out vec3 normal; out float axial; out float variation;
 vec3 center(int j,int id){return texelFetch(joints,ivec2(clamp(j,0,28),id),0).xyz;}
@@ -163,14 +163,14 @@ function bodyMesh(){const positions=[],normals=[],regions=[],indices=[],steps=C.
  return {positions:new Float32Array(positions),normals:new Float32Array(normals),regions:new Float32Array(regions),indices:new Uint16Array(indices)};
 }
 class Renderer{
- constructor(canvas){this.canvas=canvas;this.gl=canvas.getContext('webgl2',{alpha:false,antialias:true,preserveDrawingBuffer:true});if(!this.gl)throw Error('此浏览器无法创建 WebGL 2');const g=this.gl;this.errors=[];this.frames=0;this.drawMsTotal=0;this.drawMsMax=0;this.drawMsLast=0;this.camera={azimuth:.25,elevation:.84,distance:4.6};this.maxSurfaceSize=Math.min(g.getParameter(g.MAX_TEXTURE_SIZE),g.getParameter(g.MAX_RENDERBUFFER_SIZE),...g.getParameter(g.MAX_VIEWPORT_DIMS));this.program=program(g,vertex,fragment);this.bodyProgram=program(g,bodyVertex,fragment);this.materialProgram=program(g,vertex,materialFragment);this.materialBodyProgram=program(g,bodyVertex,materialFragment);this.compositeProgram=program(g,compositeVertex,compositeFragment);this.compositeVao=g.createVertexArray();this._material=Object.freeze({palette:'green',translucency:.68,mode:'kuko'});this.peelingAvailable=true;this.transparency={method:'two-layer-depth-peeling',available:true,layers:2,deepLayers:'omitted approximation',depthFormat:'DEPTH_COMPONENT24',floatColorRequired:false,reason:null};this.targets=null;this.texture=g.createTexture();g.bindTexture(g.TEXTURE_2D,this.texture);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_MIN_FILTER,g.NEAREST);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_MAG_FILTER,g.NEAREST);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_WRAP_S,g.CLAMP_TO_EDGE);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_WRAP_T,g.CLAMP_TO_EDGE);
+ constructor(canvas){this.canvas=canvas;this.gl=canvas.getContext('webgl2',{alpha:false,antialias:true,preserveDrawingBuffer:true});if(!this.gl)throw Error('此浏览器无法创建 WebGL 2');const g=this.gl;this.errors=[];this.frames=0;this.drawMsTotal=0;this.drawMsMax=0;this.drawMsLast=0;this.camera={azimuth:.25,elevation:.84,distance:4.6};this.maxSurfaceSize=Math.min(g.getParameter(g.MAX_TEXTURE_SIZE),g.getParameter(g.MAX_RENDERBUFFER_SIZE),...g.getParameter(g.MAX_VIEWPORT_DIMS));this.program=program(g,vertex,fragment);this.bodyProgram=program(g,bodyVertex,fragment);this.lighting=StudioLighting.createController();const litFragment=StudioLighting.transformAnemoneMaterialFragment(materialFragment);this.materialProgram=program(g,vertex,litFragment);this.materialBodyProgram=program(g,bodyVertex,litFragment);this.compositeProgram=program(g,compositeVertex,compositeFragment);this.compositeVao=g.createVertexArray();this._material=Object.freeze({palette:'green',translucency:.68,mode:'kuko'});this.peelingAvailable=true;this.transparency={method:'two-layer-depth-peeling',available:true,layers:2,deepLayers:'omitted approximation',depthFormat:'DEPTH_COMPONENT24',floatColorRequired:false,reason:null};this.targets=null;this.texture=g.createTexture();g.bindTexture(g.TEXTURE_2D,this.texture);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_MIN_FILTER,g.NEAREST);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_MAG_FILTER,g.NEAREST);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_WRAP_S,g.CLAMP_TO_EDGE);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_WRAP_T,g.CLAMP_TO_EDGE);
  const params=[],indices=[],rings=42,sides=12;for(let i=0;i<=rings;i++)for(let a=0;a<=sides;a++){params.push(i/rings,a/sides*Math.PI*2);if(i<rings&&a<sides){const k=i*(sides+1)+a;indices.push(k,k+sides+1,k+1,k+1,k+sides+1,k+sides+2);}}this.tube=g.createVertexArray();g.bindVertexArray(this.tube);this.buffer(0,new Float32Array(params),2);this.index(indices);this.tubeCount=indices.length;
  const body=bodyMesh();this.body=g.createVertexArray();g.bindVertexArray(this.body);this.buffer(0,body.positions,3);this.buffer(1,body.normals,3);this.buffer(2,body.regions,1);this.index(body.indices);this.bodyCount=body.indices.length;g.bindVertexArray(null);g.enable(g.DEPTH_TEST);g.disable(g.CULL_FACE);this.reset({...C.DEFAULTS});
  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();this.errors.push('WebGL context lost');this.onError?.('WebGL 上下文已丢失，请重新打开');});
  }
  buffer(location,data,size){const g=this.gl,b=g.createBuffer();g.bindBuffer(g.ARRAY_BUFFER,b);g.bufferData(g.ARRAY_BUFFER,data,g.STATIC_DRAW);g.enableVertexAttribArray(location);g.vertexAttribPointer(location,size,g.FLOAT,false,0,0);}
  index(data){const g=this.gl,b=g.createBuffer();g.bindBuffer(g.ELEMENT_ARRAY_BUFFER,b);g.bufferData(g.ELEMENT_ARRAY_BUFFER,new Uint16Array(data),g.STATIC_DRAW);}
- reset(state){this.state={...state};this.roots=C.roots(state);this.data=C.solve(state,this.roots,0);this.time=0;this.upload(true);}
+ reset(state){const nextState=C.validate(state),nextRoots=C.roots(nextState),nextData=C.solve(nextState,nextRoots,0);this.state=nextState;this.roots=nextRoots;this.data=nextData;this.time=0;this.upload(true);}
  upload(allocate=false){const g=this.gl;g.activeTexture(g.TEXTURE0);g.bindTexture(g.TEXTURE_2D,this.texture);if(allocate)g.texImage2D(g.TEXTURE_2D,0,g.RGBA32F,C.SEGMENTS+1,this.roots.length,0,g.RGBA,g.FLOAT,this.data);else g.texSubImage2D(g.TEXTURE_2D,0,0,0,C.SEGMENTS+1,this.roots.length,g.RGBA,g.FLOAT,this.data);}
 
  static validateMaterial(values){
@@ -218,7 +218,7 @@ class Renderer{
   g.bindFramebuffer(g.FRAMEBUFFER,null);return true;
  }
  uniforms(p,vp,eye,pass,dist){
-  const g=this.gl;g.useProgram(p);g.uniformMatrix4fv(g.getUniformLocation(p,'vp'),false,vp);g.uniform3fv(g.getUniformLocation(p,'eye'),eye);
+  const g=this.gl;g.useProgram(p);if(p===this.materialProgram||p===this.materialBodyProgram)StudioLighting.bindUniforms(g,p,this.lighting.getState());g.uniformMatrix4fv(g.getUniformLocation(p,'vp'),false,vp);g.uniform3fv(g.getUniformLocation(p,'eye'),eye);
   if(pass!==undefined){const palette=PALETTES[this._material.palette].map(linearHex);
    for(const [i,name] of ['rootColor','midColor','tipColor','columnColor'].entries())g.uniform3fv(g.getUniformLocation(p,name),palette[i]);
    g.uniform1i(g.getUniformLocation(p,'colorStudyLegacy'),this.colorStudyLegacy===true?1:0);g.uniform1i(g.getUniformLocation(p,'colorStudyPrevious'),this.colorStudyPrevious===true?1:0);g.uniform1f(g.getUniformLocation(p,'translucency'),this._material.translucency);g.uniform1f(g.getUniformLocation(p,'focusDistance'),dist);g.uniform1i(g.getUniformLocation(p,'materialPass'),pass);
@@ -242,7 +242,7 @@ class Renderer{
   g.texSubImage2D(g.TEXTURE_2D,0,0,0,C.SEGMENTS+1,this.roots.length,g.RGBA,g.FLOAT,this.sortedData);
   g.drawElementsInstanced(g.TRIANGLES,this.tubeCount,g.UNSIGNED_SHORT,0,this.roots.length);
  }
- draw(time=this.time){const started=performance.now();this.time=time;C.solve(this.state,this.roots,time,this.data);this.upload();const g=this.gl,c=this.canvas;const cssWidth=Math.max(1,c.clientWidth),cssHeight=Math.max(1,c.clientHeight),requestedDpr=Math.max(1,window.devicePixelRatio||1),effectiveDpr=Math.min(requestedDpr,this.maxSurfaceSize/cssWidth,this.maxSurfaceSize/cssHeight);const w=Math.max(1,Math.round(cssWidth*effectiveDpr)),h=Math.max(1,Math.round(cssHeight*effectiveDpr));this.display={cssWidth,cssHeight,backingWidth:w,backingHeight:h,requestedDpr,effectiveDpr,limit:this.maxSurfaceSize};if(c.width!==w)c.width=w;if(c.height!==h)c.height=h;g.viewport(0,0,w,h);
+ draw(time=this.time){const started=performance.now();C.solve(this.state,this.roots,time,this.data);this.time=time;this.upload();const g=this.gl,c=this.canvas;const cssWidth=Math.max(1,c.clientWidth),cssHeight=Math.max(1,c.clientHeight),requestedDpr=Math.max(1,window.devicePixelRatio||1),effectiveDpr=Math.min(requestedDpr,this.maxSurfaceSize/cssWidth,this.maxSurfaceSize/cssHeight);const w=Math.max(1,Math.round(cssWidth*effectiveDpr)),h=Math.max(1,Math.round(cssHeight*effectiveDpr));this.display={cssWidth,cssHeight,backingWidth:w,backingHeight:h,requestedDpr,effectiveDpr,limit:this.maxSurfaceSize};if(c.width!==w)c.width=w;if(c.height!==h)c.height=h;g.viewport(0,0,w,h);
   const cam=this.camera,dist=cam.distance*Math.max(1,1.28/(w/h)),eye=[Math.sin(cam.azimuth)*Math.cos(cam.elevation)*dist,.55+Math.sin(cam.elevation)*dist,Math.cos(cam.azimuth)*Math.cos(cam.elevation)*dist],vp=matrix(eye,[0,.55,0],w/h);
   g.bindFramebuffer(g.FRAMEBUFFER,null);g.depthMask(true);g.enable(g.DEPTH_TEST);g.depthFunc(g.LESS);g.disable(g.BLEND);g.disable(g.CULL_FACE);
   if(this._material.mode==='baseline'){

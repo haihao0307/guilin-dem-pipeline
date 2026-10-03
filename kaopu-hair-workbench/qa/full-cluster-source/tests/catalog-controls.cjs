@@ -347,7 +347,7 @@ module.exports = async function catalogControls(browser, url, outDir, check) {
     const chosen = await lifecycle('Anemone first selection');
     assert('choosing Anemone initializes no Rabbit or KuKo', chosen.anemoneReady && !chosen.kukoReady && !chosen.rabbitStarted &&
       !chosen.candidate.srcdoc && !chosen.teacher.srcdoc && chosen.contexts === 1 && chosen.gpu.find(x => x.role === 'top').contexts === 1, chosen);
-    assert('Anemone-first selection requests no Rabbit asset bundle', report.requests.slice(requestsBefore).every(r => !/rabbit.*bundle|bundle.*rabbit/i.test(r.url)), report.requests.slice(requestsBefore));
+    assert('Anemone-first selection requests no Rabbit asset bundle', report.requests.slice(requestsBefore).every(r => !/rabbit.*bundle|bundle.*rabbit|catalog-assets\/rabbit-[a-f0-9]+\.json/i.test(r.url)), report.requests.slice(requestsBefore));
     const rendered = await page.evaluate(() => ({ pixels: anemone.pixels(), metrics: anemone.metrics(), state: anemone.state }));
     assert('chosen Anemone keeps actual 240-tentacle WebGL rendering', rendered.pixels.glError === 0 && rendered.pixels.changed > 500 && rendered.metrics.tentacles === 240, rendered);
     await wait(time => anemone.state.time > time + .035, rendered.state.time);

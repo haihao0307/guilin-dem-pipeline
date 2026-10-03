@@ -1,9 +1,14 @@
 'use strict';
-const fs=require('fs'),path=require('path');
+const fs=require('fs'),path=require('path'),crypto=require('crypto');
 module.exports=async function(p,out,check){
-const result={scope:'Same geometry/camera/light/palette/exposure; only the bounded tissue color response changes; prior published mode retained as a QA-only A/B branch. Mask is real nearest-tube framebuffer alpha, never the first image pixel.',samples:{}};
+const savedLighting=await p.evaluate(()=>objectLighting.get('anemone'));
+await p.evaluate(()=>objectLighting.set('anemone',{mode:'legacy'}));
+const materialSource=await p.evaluate(()=>{const source=[...document.scripts].map(s=>s.textContent).join('\n'),match=source.match(/const materialFragment=`([\s\S]*?)`;/);if(!match)throw Error('Embedded tissue material source missing');return match[1];});
+const materialSourceSha256=crypto.createHash('sha256').update(materialSource).digest('hex');
+check('tissue color response source exactly preserved from stage1',materialSourceSha256==='bd0f85b47528e64b277afe8c83db7b5131417242270be4ff57ddfdcf12595c96',materialSourceSha256);
+const result={materialSourceSha256,retiredImageHashes:{legacy:25763340,previous:4266477299,reason:'Those hashes encode the old intersecting geometry. Exact preserved material source plus same-frame relative geometry/mask/palette/exposure controls replace them for the safe preset; no chroma thresholds are relaxed.'},scope:'Same current safe geometry/camera/legacy light/palette/exposure; only the bounded tissue color response changes; prior published mode retained as a QA-only A/B branch. Mask is real nearest-tube framebuffer alpha, never the first image pixel.',samples:{}};
 const probe=()=>p.evaluate(()=>{const r=anemone.renderer,g=r.gl;r.draw(anemone.state.time);const w=r.canvas.width,h=r.canvas.height,bytes=new Uint8Array(w*h*4),mask=new Uint8Array(w*h*4);g.readPixels(0,0,w,h,g.RGBA,g.UNSIGNED_BYTE,bytes);g.bindFramebuffer(g.FRAMEBUFFER,r.targets.framebuffers[1]);g.readPixels(0,0,w,h,g.RGBA,g.UNSIGNED_BYTE,mask);g.bindFramebuffer(g.FRAMEBUFFER,null);let count=0,sat=0,luma=0,rgb=[0,0,0],bins=Array(10).fill(0),purplePixels=0,geometry=2166136261,maskHash=2166136261;for(const b of new Uint8Array(r.data.buffer))geometry=Math.imul(geometry^b,16777619)>>>0;for(let i=0;i<bytes.length;i+=4){const a=bytes[i]/255,b=bytes[i+1]/255,c=bytes[i+2]/255;if(a>b*1.18&&c>b*1.12&&a>.16)purplePixels++;maskHash=Math.imul(maskHash^mask[i+3],16777619)>>>0;if(mask[i+3]<80)continue;count++;const max=Math.max(a,b,c),min=Math.min(a,b,c),s=max?(max-min)/max:0;sat+=s;luma+=.2126*a+.7152*b+.0722*c;rgb[0]+=a;rgb[1]+=b;rgb[2]+=c;bins[Math.min(9,Math.floor(s*10))]++;}return{count,meanSaturation:sat/count,meanDisplayLuma:luma/count,meanRGB:rgb.map(x=>x/count),saturationBins:bins,purplePixels,maskHash,geometry,glError:g.getError(),pixels:anemone.pixels(),state:anemone.state};});
-const snap=async(name)=>{const d=await probe();result.samples[name]=d;fs.writeFileSync(path.join(out,'color-response-results.json'),JSON.stringify(result,null,2));await p.locator('#anemoneCanvas').screenshot({path:path.join(out,'color-response-'+name+'.png')});return d;};
+const snap=async(name)=>{const d=await probe();result.samples[name]=d;fs.writeFileSync(path.join(out,'color-response-results.json'),JSON.stringify(result,null,2));await p.locator('#anemoneCanvas').screenshot({path:path.join(out,'color-response-'+name+'.jpg'),type:'jpeg',quality:88});return d;};
 await p.evaluate(()=>{anemone.pause();anemone.seek(0);anemone.setMaterial({palette:'green',mode:'kuko',translucency:.7});anemone.renderer.colorStudyLegacy=true;anemone.redraw();});
 const legacy=await snap('legacy-wide');
 await p.evaluate(()=>{anemone.renderer.colorStudyLegacy=false;anemone.renderer.colorStudyPrevious=true;anemone.redraw();});const previous=await snap('previous-wide');
@@ -12,12 +17,13 @@ await p.locator('#clusterMacro').click();await p.evaluate(()=>{anemone.renderer.
 await p.evaluate(()=>{anemone.renderer.camera={azimuth:.25,elevation:.22,distance:4.6};anemone.redraw();});const side=await snap('low-side-column');
 await p.locator('#anemoneCamera').click();await p.evaluate(()=>{anemone.renderer.colorStudyLegacy=false;anemone.renderer.colorStudyPrevious=false;anemone.redraw();});check('color diagnostic restores current default image',(await probe()).pixels.hash===current.pixels.hash);
 for(const [name,d] of Object.entries(result.samples))check('color response '+name+' actual GPU/mask',d.count>1000&&d.glError===0&&d.pixels.glError===0,d);
-check('legacy tint reproduces prior exact displayed image',legacy.pixels.hash===25763340,legacy.pixels);
-check('previous branch reproduces published image',previous.pixels.hash===4266477299,previous.pixels);
+check('legacy tint and retained previous branch have distinct same-geometry images',legacy.pixels.hash!==previous.pixels.hash&&legacy.geometry===previous.geometry&&legacy.maskHash===previous.maskHash,{legacy:legacy.pixels,previous:previous.pixels});
+check('retained previous branch still differs from current tissue response',previous.pixels.hash!==current.pixels.hash,{previous:previous.pixels,current:current.pixels});
 check('new chroma response keeps published geometry and mask',previous.geometry===current.geometry&&previous.maskHash===current.maskHash);
 check('chroma increases over latest published response',current.meanSaturation>previous.meanSaturation*1.07&&current.meanDisplayLuma>previous.meanDisplayLuma*.9&&current.meanDisplayLuma<previous.meanDisplayLuma*1.1,{previous:previous.meanSaturation,current:current.meanSaturation,lumaRatio:current.meanDisplayLuma/previous.meanDisplayLuma});
 check('color correction keeps exact geometry and coverage',legacy.geometry===current.geometry&&legacy.maskHash===current.maskHash,{legacy:legacy.geometry,current:current.geometry,mask:current.maskHash});
 check('tissue return restores yellow-green chroma without global exposure',current.meanSaturation>legacy.meanSaturation*1.08&&current.meanDisplayLuma>=legacy.meanDisplayLuma*.95&&current.meanDisplayLuma<legacy.meanDisplayLuma*1.3,{legacy:legacy.meanSaturation,current:current.meanSaturation,lumaRatio:current.meanDisplayLuma/legacy.meanDisplayLuma});
 check('low side reveals purple-red column separately',side.purplePixels>500,side.purplePixels);
+await p.evaluate(value=>objectLighting.set('anemone',value),savedLighting);
 fs.writeFileSync(path.join(out,'color-response-results.json'),JSON.stringify(result,null,2));return result;
 };

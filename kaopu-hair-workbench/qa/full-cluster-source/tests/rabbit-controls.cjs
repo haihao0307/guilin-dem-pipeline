@@ -302,7 +302,7 @@ module.exports = async function rabbitControls(browser, url, outDir, check) {
     await boot(report.context);
     const baseline = await layout('portrait-390x844'), teacherBaseline = await probe(false, 'teacher');
     report.baseline = { candidate: baseline.state, teacher: teacherBaseline.state, pixels: baseline.pixels };
-    assert('baseline rabbit and original parameters match teacher', baseline.state.mesh === 'rabbit' && equal(baseline.state, teacherBaseline.state), report.baseline);
+    assert('baseline rabbit original parameters match teacher with explicit candidate-only side lights', baseline.state.mesh === 'rabbit' && equal({ ...baseline.state, lighting: undefined }, { ...teacherBaseline.state, lighting: undefined }) && baseline.state.lighting.mode === 'side' && teacherBaseline.state.lighting.mode === 'legacy', report.baseline);
     assert('original advanced controls remain in dialog and common appearance is first-screen', await page.evaluate(() => {
       const d = document.getElementById('rabbitControlsDrawer');
       const keys = ['layers', 'curlyness', 'shellTextureSize', 'finTextureSize', 'persistence', 'lacunarity',
@@ -424,7 +424,7 @@ module.exports = async function rabbitControls(browser, url, outDir, check) {
         candidate: structuredClone(workbench.candidate), exported: workbench.exportState() };
     }, saved);
     assert('JSON import immediately synchronizes open controls', immediate.open && close(immediate.zoom, saved.state.size) &&
-      close(immediate.hair, saved.state.hairLength) && equal(immediate.candidate, saved.state) && equal(immediate.exported, saved), immediate);
+      close(immediate.hair, saved.state.hairLength) && equal(immediate.candidate, { ...saved.state, lighting: saved.lighting }) && equal(immediate.exported, saved), immediate);
     await waitState(saved.state, beforeImportFrames);
     const restored = await probe(true);
     assert('JSON roundtrip restores exact original renderer image', restored.pixels.hash === rangeBaseline.pixels.hash,

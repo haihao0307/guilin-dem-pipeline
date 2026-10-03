@@ -1,0 +1,85 @@
+{
+  "version": "bounded-radial-prefix-1",
+  "preset": {
+    "count": 240,
+    "length": 0.7,
+    "thickness": 0.03,
+    "curvature": 0.7,
+    "seed": 73
+  },
+  "certified": true,
+  "renderRings": 43,
+  "renderSegments": 42,
+  "solverSegments": 28,
+  "allowedAmplitude": 0.06302649444678007,
+  "prefixFactor": 0.06507729121341703,
+  "maxJointDisplacementBound": 0.017745095200499352,
+  "numericalMargin": 0.00001,
+  "interTentacle": {
+    "minStaticClearance": 0.019935346228229046,
+    "minMotionClearance": 0.003142963979374039,
+    "reservedMotionClearance": 0.003132963979374039,
+    "minPrefixRatio": 0.07668717618925687,
+    "examinedPairs": 327475,
+    "excludedStaticGapLowerBound": 0.1,
+    "excludedPrefixRatioLowerBound": 0.18336698247633448,
+    "worst": {
+      "tentacles": [
+        176,
+        231
+      ],
+      "segments": [
+        37,
+        23
+      ]
+    }
+  },
+  "selfContact": {
+    "minStaticClearance": 0.026191844955858645,
+    "minMotionClearance": 0.02297661913066633,
+    "reservedMotionClearance": 0.02296661913066633,
+    "examinedPairs": 153081,
+    "worst": {
+      "tentacle": 71,
+      "segments": [
+        29,
+        34
+      ]
+    },
+    "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+  },
+  "body": {
+    "minStaticClearance": 0.005889590673000926,
+    "minMotionClearance": 0.005875324329330721,
+    "reservedMotionClearance": 0.005865324329330721,
+    "examinedPairs": 60462,
+    "worst": {
+      "tentacle": 227,
+      "segment": 3
+    },
+    "socketSegments": 3,
+    "socket": "First three render strips intentionally embed into shallow tissue; no watertight union is claimed",
+    "excludedStaticGapLowerBound": 0.1
+  },
+  "localBendGuard": {
+    "maxTurnBoundRadians": 0.1382989043676371,
+    "minCurvatureRadiusBound": 0.13903629195643963,
+    "minRadiusMargin": 0.10611284900126422,
+    "minAngleMargin": 0.42291026057676284,
+    "scope": "Conservative discrete solver-edge bend guard; not a proof of triangle manifold quality or local cap triangulation"
+  },
+  "limitations": [
+    "Only this exact geometry preset is accepted",
+    "Finite first-three-strip root socket is intentional",
+    "Local triangle manifold and watertight welding are not certified",
+    "Bounded kinematics is not a contact or physical fluid solver"
+  ],
+  "flow": {
+    "rawAmplitude": 0.4201766296452005,
+    "allowedAmplitude": 0.06302649444678007,
+    "effectiveAmplitude": 0.06302649444678007,
+    "effectiveScale": 0.15,
+    "restricted": true,
+    "mode": "受限区域微动"
+  }
+}
