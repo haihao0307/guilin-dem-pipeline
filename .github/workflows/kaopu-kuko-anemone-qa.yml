@@ -43,6 +43,7 @@ jobs:
           path: hair-kuko-file-results/
           if-no-files-found: warn
       - name: Verify exact public mirror and actual browser
+        if: always()
         env:
           NODE_PATH: ${{ github.workspace }}/.hair-qa/node_modules
           HAIR_KUKO_HTML: ${{ github.workspace }}/kaopu-hair-workbench/qa/kuko-anemone-candidate.html
