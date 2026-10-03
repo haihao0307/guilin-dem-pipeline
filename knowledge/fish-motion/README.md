@@ -132,3 +132,16 @@ R11 `school.js` 对照：十五条鱼永久保持5×3的 slot 网格，高度偏
 本轮以完整动画包络 OBB 取代横向过宽的体长包围球约束，让 30 条鱼从启动就形成紧密三维群体。保留原全表面 carrier、KFC13 中心脊椎/鱼鳍乐器和 KFE1 眼睛；受扰逐渐避让后重新聚拢，不用固定槽位。默认 UI 只看群游活动，详细权重和逐鱼控制通过单鱼工作台显式进入。
 
 行为身份与自然证据见 [R14_SPECIES_SCHOOLING.md](R14_SPECIES_SCHOOLING.md)；指定参考站海底/光学的完整组件、数学重建、源版本与同镜头几何比对见 [R14_REFERENCE_HABITAT.md](R14_REFERENCE_HABITAT.md)；源资产继承、碰撞投影限制、透视交互、UI 和验证范围见 [R14_ASSEMBLY.md](R14_ASSEMBLY.md)。最终独立冻结与部署绑定以 `local-r14/evidence` 回执为准；当前人工验收三个标志仍为 false。
+
+
+## 统一系统 R08：参数化群游（2026-10-03，候选执行中）
+
+本节任务是 `FISH_PARAMETERIZED_COLLECTIVE_MOTION_R08_20261003`，对应 `fish-five-r01` 共用六鱼系统，区别于历史 `local-r08` 单鱼版本。原研究、量纲、局部转向方程、候选区间与移植限制见 [R08_COLLECTIVE_MOTION_MODELS.md](R08_COLLECTIVE_MOTION_MODELS.md)；R07 的完整源参数图/残差、二进制源封装、精确实例法线和资源所有权继续继承，见 [R07_MATHEMATICAL_SHARED_PIPELINE.md](R07_MATHEMATICAL_SHARED_PIPELINE.md)。
+
+本轮基线已测到五源接触速度投影的不连续及海狼活动模式未进入群体求解器。共享模型将局部吸引/对齐作用到有惯性的转向状态，按源体长和完整鱼鳍扫掠包络做预测安全约束；没有永久领袖或固定槽位。论文物种与本系统来源不同，所有控制参数保持 ENGINEERING_CANDIDATE；原外形/眼睛/嘴部 HOLD 决策不因群游更新而改写。
+
+首轮末端安全因子虽防住包围体交叠，却产生过大加速度，已拒绝并进入 R08_ROOT_CAUSE_REVIEW。正式判定必须绑定最终源码与实际HTML，量最终accepted速度、角速、源包络间距、邻域连通和CPU/GPU成本。当前实现及独立验收进行中；公网发布还需解开自动审批拒绝及完成PUBLICATION_PROOF，不用旧页面冒充新效果。
+
+- [x] 无生成图片替代；实际源码已修改，产物为实时可交互三维工作台。
+- [ ] 本轮实际浏览器、file://零核心网络及公网固定链接的最终验证。
+- [ ] 用户视觉/动作批准，productionReady=false。

@@ -1,6 +1,20 @@
 # 鱼类的制谱师
 
-## 当前修订 R04
+## R08 当前候选：参数化鱼群运动
+
+同一六来源系统采用共享的局部感知、方向对齐、距离吸引、预测避碰和有界转向/加速度模型。原表面参数图与完整残差、拓扑、UV、原贴图、脊椎/鱼鳍、独立眼睛以及两种已确认的口部机制保留。群体运动数值是工程候选，不能当作六个物种的实测标定。
+
+构建脚本为 `scripts/build-r08.mjs`，交付本体为 `dist/KAOPU_FISH_SCOREMAKER_R08.html`，在线镜像在 `dist/online-r08`。模型来源和参数量纲见 `../knowledge/fish-motion/R08_COLLECTIVE_MOTION_MODELS.md`；行为、全表面、性能及启动状态须读 `evidence/INDEPENDENT_R08_REPORT.json`。当前正在实现和验证；公开部署此前被自动审批拒绝，只有本轮 `R08_PUBLICATION_PROOF.json` 存在且 shareAllowed=true 才能宣称发布并分享入口。
+
+R07 已完成独立本地验收，保留完整来源的二进制封装、眼睛实例化、刚体数学缓存、当前源缓存及隐藏海底释放。其独立记录 `INDEPENDENT_R07_REPORT.json` 已归档；R07 没有完成公开部署，不把旧 R06 页面作为新成果。
+
+- [x] 未用生成图片代替真实三维实现。
+- [x] 已修改真实生产源码。
+- [x] 候选是实时可交互三维工作台。
+- [ ] 本轮真实 file://、公网入口和浏览器完整门禁。
+- [ ] 用户视觉和动作接受；productionReady 仍为 false。
+
+## R04 历史修订
 
 保留已验证的 R03 连续脊椎、群游与性能改进，增强源眼形内的扫视/停留，接入两种金枪鱼原下颌骨的口部活动。海狼下颌与鳃盖未过实际表面应变门禁，其余三个来源口部结构未确认，四个嘴部保持原姿态，详见 R04_CRANIAL_INTEGRATION 和 R04_MOUTH_SOURCE_AUDIT。当前构建为 `scripts/build-r04.mjs`，单体为 `dist/KAOPU_FISH_SCOREMAKER_R04.html`，同一公开入口不变。最终门禁以 R04 独立和公开报告为准。
 

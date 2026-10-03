@@ -26,7 +26,7 @@
     if(extents.length!==3||!extents.every(x=>Number.isFinite(x)&&x>0))throw Error('Invalid measured source extents');
     return {extents,finSweepMargin:shape?.finSweepMargin??.12,gap:shape?.gap??.025};
   }
-  function configureShape(state,shape) {state.shape=shapeOf(state.id,shape);if(state.count>1)resolveContacts(state,1/60,160,true);return state;}
+  function configureShape(state,shape) {state.shape=shapeOf(state.id,shape);if(state.count>1){for(const a of state.actors)a.half=box(a,state).half;schoolModule().initialize(state.school);state.contact={...state.school.contact,model:'R08 local prediction + bounded admissible pose step; full source OBB'};}return state;}
   function box(actor,state) {
     const cy=Math.cos(actor.yaw),sy=Math.sin(actor.yaw),cp=Math.cos(actor.pitch),sp=Math.sin(actor.pitch),cr=Math.cos(actor.roll),sr=Math.sin(actor.roll),p=state.profile;
     const axes=[[cy*cp,-sp,-sy*cp],[cy*sp*cr+sy*sr,cp*cr,-sy*sp*cr+cy*sr],[-cy*sp*sr+sy*cr,-cp*sr,sy*sp*sr+cy*cr]];
@@ -113,7 +113,14 @@
       actors.push(a);
     }
     const state={id,count,seed,time:0,actors,profile:profiles[id],mode:'cruise',bounds:[7,2.8,5],pointer:null,shape:shapeOf(id,shape)};
-    if(count>1)resolveContacts(state,1/60,240,true);
+    if(count>1){
+      const p=state.profile;for(const a of actors){a.half=box(a,state).half;a.length=1;}
+      // Camera follows the school in the uniform ocean. An invisible exhibition
+      // box compressed slow-turning actors into an infeasible braking density.
+      // Single-fish workspace bounds and the native finite habitat stay separate.
+      state.school=schoolModule().create(actors,{speed:p.speed,burst:p.burst,maxTurn:p.maxTurn,maxAngularAcceleration:p.maxTurn*1.8,maxAcceleration:Math.max(.5,p.burst*.55),bounds:null,hoverRatio:p.id==='picasso'?.08:.22,gap:state.shape.gap},seed);
+      schoolModule().initialize(state.school);state.contact={...state.school.contact,model:'R08 local prediction + bounded admissible pose step; full source OBB'};
+    }
     return state;
   }
   function reset(state) { const fresh = create(state.id,state.count,state.seed,state.shape); Object.assign(state,fresh); return state; }
@@ -124,7 +131,62 @@
     while (remaining > 1e-9) { const step = Math.min(remaining,1/60); tick(state,step,input); remaining -= step; }
     return state;
   }
-  function tick(s, dt, input) {
+  let schoolAPI=null;
+  function schoolModule(){if(!schoolAPI)schoolAPI=globalThis.FishSchoolingR08||(typeof require==='function'?require('./schooling-r08.js'):null);if(!schoolAPI)throw Error('Missing shared FishSchoolingR08 runtime');return schoolAPI;}
+  function tick(s,dt,input){if(s.count>1)return tickSchool(s,dt,input);return tickSingle(s,dt,input);}
+  function tickSchool(s,dt,input){
+    s.time+=dt;s.mode=input.mode||'cruise';s.pointer=input.pointer&&input.pointer.length===3&&input.pointer.every(Number.isFinite)?input.pointer.slice():null;
+    const p=s.profile;
+    for(const a of s.actors)if(p.id==='herring'||p.id==='tuna-yellow-label'){
+      a.effortTimer-=dt;if(a.effortTimer<=0){a.effortTimer=3+a._motionRandom()*4;a.thrustTarget=.84+a._motionRandom()*.32;}a.thrust=smooth(a.thrust,a.thrustTarget,dt,.75);
+    }
+    schoolModule().step(s.school,dt,{mode:s.mode,pointer:s.pointer,pointerRay:input.pointerRay,disturbance:input.disturbance});s.contact={...s.school.contact,model:'R08 local prediction + bounded admissible pose step; full source OBB'};
+    for(const a of s.actors){const yawTarget=a.desiredYaw;
+      const speedRatio=a.speed/p.speed, bodyRest=s.mode==='rest'?.18:s.mode==='hover'?.35:1;
+      a.frequency=smooth(a.frequency,p.frequency*(.3+.7*Math.sqrt(Math.max(.02,speedRatio))),dt,3);
+      let amp=p.amplitude*(.35+.65*Math.sqrt(Math.max(.02,speedRatio)))*bodyRest;
+      if(p.id==='picasso') amp*=s.mode==='burst'?2.7:1;
+      a.amplitude=smooth(a.amplitude,clamp(amp,0,.72),dt,3);
+      a.beatPhase=(a.beatPhase+TAU*a.frequency*dt)%TAU;
+      a.finPhase=(a.finPhase+TAU*(p.id==='picasso'?p.frequency*1.15:a.frequency*.73)*dt)%TAU;
+      const hover=s.mode==='hover' || s.mode==='rest';
+      a._finGain=smooth(a._finGain??.75,hover?1.25:.75,dt,3);
+      a._medianGain=smooth(a._medianGain??1,hover?1.1:1,dt,3);
+      const f=p.fin*a._finGain*(p.id==='tuna-yellow-label'?(.9+.1*a.thrust+.15*Math.abs(a.turnRate)):1), trim=a.turnRate*.12;
+      a.finAngles.pectoralLeft=f*Math.sin(a.finPhase)+trim;
+      a.finAngles.pectoralRight=-f*Math.sin(a.finPhase+.22)+trim;
+      a.finAngles.pelvic=f*.25*Math.sin(a.finPhase+.5);
+      const median=p.id==='picasso'?p.fin*a._medianGain:f*.25;
+      a.finAngles.dorsal=median*Math.sin(a.finPhase);
+      a.finAngles.anal=median*Math.sin(a.finPhase+.08);
+      a.finAngles.caudal=a.amplitude*.3*Math.sin(a.beatPhase-.8);
+      // Renderer can evaluate a spatial fin wave without multiplying two oscillators.
+      a.finWaves={
+        pectoralLeft:{amplitude:f,phase:a.finPhase,bias:trim},
+        pectoralRight:{amplitude:-f,phase:a.finPhase+.22,bias:trim},
+        pelvic:{amplitude:f*.25,phase:a.finPhase+.5,bias:0},
+        dorsal:{amplitude:median,phase:a.finPhase,bias:0},
+        anal:{amplitude:median,phase:a.finPhase+.08,bias:0},
+        caudal:{amplitude:a.amplitude*.3,phase:a.beatPhase-.8,bias:0}
+      };
+      if(p.id==='herring'||p.id==='tuna-yellow-label') {
+        const spine=sampleSpine(a,p),j=Math.round(.84*(spine.tangents.length-1)),t=spine.tangents[j],peduncle=Math.atan2(t[2],t[0]),velocity=(peduncle-a.caudalPeduncle.angle)/dt;
+        a.caudalPeduncle={angle:peduncle,angularVelocity:smooth(a.caudalPeduncle.angularVelocity,velocity,dt,8)};
+        const tail=clamp(-.24*peduncle-.025*a.caudalPeduncle.angularVelocity,-.34,.34);
+        a.finAngles.caudal=tail;a.finWaves.caudal={amplitude:0,phase:0,bias:tail};
+      }
+      a.eyeTimer-=dt;
+      if(a.eyeTimer<=0) {
+        a.eyeTimer=.8+a._random()*2.8;
+        a.eyeTarget=[(a._random()*2-1)*p.eye,(a._random()*2-1)*p.eye*.52];
+        if(s.pointer) { a.eyeTarget[0]=clamp(angle(yawTarget-a.yaw)*.22,-p.eye,p.eye); }
+      }
+      a.eyes.yaw=smooth(a.eyes.yaw,a.eyeTarget[0],dt,9);
+      a.eyes.pitch=smooth(a.eyes.pitch,a.eyeTarget[1],dt,8);
+      a.eyes.leftYaw=a.eyes.yaw; a.eyes.rightYaw=a.eyes.yaw*.84;
+    }
+  }
+  function tickSingle(s, dt, input) {
     s.time += dt; s.mode = input.mode || 'cruise';
     s.pointer = input.pointer && input.pointer.length === 3 && input.pointer.every(Number.isFinite) ? input.pointer.slice() : null;
     const p = s.profile, prior = s.actors.map(a => ({position:a.position.slice(), velocity:a.velocity.slice()}));
@@ -295,5 +357,5 @@
       finAngles:{...a.finAngles},finWaves:JSON.parse(JSON.stringify(a.finWaves)),eyes:{...a.eyes}
     }))};
   }
-  return {profiles,create,configureShape,collisionBox:box,groupClearance,update,reset,snapshot,sampleSpine,deform,convention:'Head -X; tail +X; Ry(yaw)*Rz(-pitch)*Rx(roll) with forward [-cos(yaw)*cos(pitch),sin(pitch),sin(yaw)*cos(pitch)]; body-length units; angular spine amplitude radians; profile envelopes are engineering candidates'};
+  return {profiles,create,configureShape,collisionBox:box,groupClearance,update,reset,snapshot,sampleSpine,deform,getSchool(state){return state.school?schoolModule().snapshot(state.school):null;},convention:'Head -X; tail +X; Ry(yaw)*Rz(-pitch)*Rx(roll) with forward [-cos(yaw)*cos(pitch),sin(pitch),sin(yaw)*cos(pitch)]; body-length units; angular spine amplitude radians; profile envelopes are engineering candidates'};
 });
