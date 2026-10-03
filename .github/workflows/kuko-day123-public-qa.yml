@@ -24,8 +24,8 @@ jobs:
           base = 'https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tree-fractal-wave-lab/kuko-day123-branching-r01/'
           expected = {
               'index.html': ['KuKo Day 123', 'teacherCanvas', 'runtime.js'],
-              'runtime.js': ['REFERENCE_WIDTH = 960', 'REFERENCE_HEIGHT = 540', 'window.__teacherReady'],
-              'teacher.frag': ['const int   TOTAL   = 2187', 'const int   TOTAL   = 1024', 'const int   TOTAL   = 729'],
+              'runtime.js': ['REFERENCE_WIDTH = 960', 'REFERENCE_HEIGHT = 540', 'window.__kukoDay123Ready = true'],
+              'teacher-original.glsl': ['const int   TOTAL   = 2187', 'const int   TOTAL   = 1024', 'const int   TOTAL   = 729'],
               'SOURCE_LOCK.json': ['KAOPU.fractal-wave.teacher-lock/1', 'teacher_replication_only']
           }
           report = {'base': base, 'files': {}, 'attempts': 0}
@@ -36,7 +36,7 @@ jobs:
                   ok = True
                   current = {}
                   for name, markers in expected.items():
-                      req = urllib.request.Request(base + name + '?qa=' + str(attempt), headers={'User-Agent':'KAOPU-KUKO-DAY123-QA/1.0','Cache-Control':'no-cache'})
+                      req = urllib.request.Request(base + name + '?qa=' + str(attempt), headers={'User-Agent':'KAOPU-KUKO-DAY123-QA/1.1','Cache-Control':'no-cache'})
                       with urllib.request.urlopen(req, timeout=35) as response:
                           data = response.read()
                           status = response.status
