@@ -20,6 +20,14 @@ const JsonLoader=get('framework/JsonDataLoader');
 JsonLoader.load=(url,callback)=>{if(!(url in B.assets))throw Error('Missing embedded model '+url);setTimeout(()=>callback(JSON.parse(B.assets[url])),0);};
 const TextureLoader=get('framework/UncompressedTextureLoader'),loadTexture=TextureLoader.load;
 TextureLoader.load=(url,callback)=>{if(!(url in B.assets))throw Error('Missing embedded texture '+url);return loadTexture.call(TextureLoader,B.assets[url],callback);};
+// Compatibility repair: inactive GLSL attributes return -1; original truthy checks
+// attempt to bind them and produce INVALID_VALUE. Bind only active attributes.
+// Original source files, shader text, mesh bytes and material equations remain unchanged.
+const FullModel=get('framework/FullModel');
+function bindActive(shader,name,buffer,size){const location=shader[name];if(Number.isInteger(location)&&location>=0){gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.enableVertexAttribArray(location);gl.vertexAttribPointer(location,size,gl.FLOAT,false,size*Float32Array.BYTES_PER_ELEMENT,0);}}
+FullModel.prototype.bindBuffersExtended=function(shader){gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,this.bufferIndices);for(const [name,buffer,size]of [['rm_Vertex',this.bufferStrides,3],['rm_TexCoord0',this.UVs,2],['rm_Normal',this.bufferNormals,3],['rm_C_Normal',this.bufferCombNormals,3],['rm_Tangent',this.bufferTangents,3]])bindActive(shader,name,buffer,size);};
+FullModel.prototype.bindFinsBuffersExtended=function(shader){gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,this.finBufferIdices);for(const [name,buffer,size]of [['rm_Vertex',this.finBufferPos,3],['rm_Normal',this.finBufferNormals,3],['rm_C_Normal',this.finBufferCombedNormals,3],['rm_TexCoord0',this.finUVs,2],['rm_Extrudable',this.finExtrudableBuffer,1]])bindActive(shader,name,buffer,size);};
+FullModel.prototype.bindTransformFeedbackBuffers=function(shader,type){gl.bindBuffer(gl.ARRAY_BUFFER,this.TFOutput);gl.bufferData(gl.ARRAY_BUFFER,type?this.shellVertexDataLength:this.finVertexDataLength,gl.STATIC_DRAW);for(const [name,buffer]of [['rm_Vertex',type?this.bufferStrides:this.finBufferPos],['rm_Normal',type?this.bufferNormals:this.finBufferNormals],['rm_C_Normal',type?this.bufferCombNormals:this.finBufferCombedNormals]])bindActive(shader,name,buffer,3);};
 const FurRenderer=get('FurRenderer'), Presets=get('FurPresets');
 const renderer=window.renderer=new FurRenderer();
 const canvas=document.getElementById('canvasGL');
@@ -28,7 +36,7 @@ let meshLoading=false, pendingMesh=null;
 // Original has no animated fur update. Render on demand to avoid continuous GPU work at rest.
 renderer.boundTick=()=>requestDraw();
 renderer.resizeCanvas=function(){const w=this.canvas.clientWidth,h=this.canvas.clientHeight;if(this.canvas.width!==w)this.canvas.width=w;if(this.canvas.height!==h)this.canvas.height=h;};
-function draw(){scheduled=false;if(!active)return; const start=performance.now();renderer.resizeCanvas();renderer.drawScene();renderer.animate();if(renderer.loaded){frames++; const err=gl.getError();if(err)send('gl-error',{code:err});send('frame',{frames,ms:Math.round((performance.now()-start)*10)/10,width:canvas.width,height:canvas.height});}if(auto&&renderer.loaded){renderer.dragAngles[1]+=.004;send('camera',{angles:renderer.dragAngles.slice(),size:renderer.size});requestDraw();}}
+function draw(){scheduled=false;if(!active)return; const start=performance.now();renderer.resizeCanvas();renderer.drawScene();renderer.animate();if(renderer.loaded){frames++; const err=gl.getError();if(err)send('gl-error',{code:err});send('frame',{frames,ms:Math.round((performance.now()-start)*10)/10,width:canvas.width,height:canvas.height});if(frames===1)requestDraw();}if(auto&&renderer.loaded){renderer.dragAngles[1]+=.004;send('camera',{angles:renderer.dragAngles.slice(),size:renderer.size});requestDraw();}}
 function requestDraw(){if(!scheduled){scheduled=true;requestAnimationFrame(draw);}}
 renderer.onPresetLoaded=()=>{meshLoading=false;send('ready',{state:state(),mesh:renderer.currentPreset.mesh,vertices:renderer.models.get(renderer.currentPreset.mesh).numVertices});requestDraw();if(pendingMesh){const next=pendingMesh;pendingMesh=null;if(next!==renderer.currentPreset.mesh)queueMicrotask(()=>changeMesh(next));}};
 function changeMesh(mesh){if(meshLoading){pendingMesh=mesh;return;}if(renderer.currentPreset?.mesh===mesh){send('ready',{state:state(),mesh});return;}meshLoading=true;Presets._current=mesh==='cloth'?1:0;renderer.loadPreset(Presets.current());const deadline=performance.now()+30000;const check=setInterval(()=>{if(!renderer.loadingNextFur){clearInterval(check);requestDraw();}else if(performance.now()>deadline){clearInterval(check);meshLoading=false;send('error',{message:'模型纹理加载超时，请重新打开页面。'});}},25);}
@@ -51,3 +59,5 @@ canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();active=false;s
 new ResizeObserver(requestDraw).observe(canvas);
 window.runtime={state,apply,resetComb,requestDraw,renderer,get frameCount(){return frames;}};
 renderer.init('canvasGL',true);
+// Match the teacher's steady-state fin blend on the very first visible frame.
+if(window.gl)gl.blendFuncSeparate(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA,gl.ZERO,gl.ONE);
