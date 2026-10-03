@@ -1,0 +1,14 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KAOPU · 石头实验 R05</title><style>html,body{margin:0;min-height:100%;background:#090e12;color:#eaf0f2;font:15px/1.7 system-ui,'Microsoft YaHei',sans-serif}.load{max-width:620px;margin:12vh auto;padding:24px;border:1px solid #30414b;border-radius:12px}a{color:#dfbd87}small{color:#a1b2bc}</style></head><body><div class="load"><h2>KAOPU 石头材质实验台</h2><div id="status">正在载入公式、源码与三维演示…</div><p><small>源码使用无损压缩传输；不降低渲染精度，不压缩老师画面。</small></p><a href="../">返回材质总工作台</a></div><script>
+(async()=>{try{
+const names=['00','01','020','021','022','023','030','031','032','033'];
+const pieces=await Promise.all(names.map(async n=>{const r=await fetch('payload/'+n+'.txt');if(!r.ok)throw Error(n+' HTTP '+r.status);return r.text();}));
+const bytes=Uint8Array.from(atob(pieces.join('').trim()),c=>c.charCodeAt(0));
+if(crypto.subtle){const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(n=>n.toString(16).padStart(2,'0')).join('');if(hash!=='b26d83e9f6fdc4b6d8794843bb717a33f6b9ba2bada3f94238df5532cbd358f0')throw Error('源码包校验失败，请刷新');}
+if(!window.DecompressionStream)throw Error('浏览器不支持解压，请使用新版 Chrome、Edge 或 Safari');
+const b=JSON.parse(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text());
+const close='<'+'/script>', bundle=JSON.stringify(b).replace(/<\//g,'<\\/');
+let page=b['index.html'].replace('<link rel="stylesheet" href="common.css">','<style>'+b['common.css']+'</style>');
+page=page.replace('<script src="app.js">'+close,'<script>window.KP_BUNDLED='+bundle+';'+close+'<script>'+b['app.js']+close);
+document.open();document.write(page);document.close();
+}catch(e){document.getElementById('status').textContent='加载未完成：'+e.message;console.error(e);}})();
+</script></body></html>
