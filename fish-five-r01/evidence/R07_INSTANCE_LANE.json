@@ -1,0 +1,378 @@
+{
+  "schema": "fish.instance-lane-r07/1",
+  "taskId": "FISH_MATH_MEMORY_PERFORMANCE_R07_20261003",
+  "baseSha": "ff667ab44d6eaf3baf05d03a7bd42664b45cd3a9",
+  "dispatchTime": "2026-10-03T02:43:50.188Z",
+  "verifiedAt": "2026-10-03T03:14:31.200Z",
+  "version": "R07_OCULAR_BATCH_1",
+  "sourceHashes": {
+    "app": "7e65c1675fc80f9610a24ba558ef90d331becb3a8c7893b2113b140350f8e2f8",
+    "ocularBatch": "9a6ac87933f4b63d12ad15911aedc670d3ce4e13f5de9c8177543ff5885cf95c"
+  },
+  "pass": true,
+  "tests": [
+    {
+      "label": "Protected source-position reconstruction and deformation shader are byte unchanged",
+      "pass": true,
+      "sourcePositionsSha256": "bf9d4550b63384ddee934e9859480cfcb9a82012a52ae1faf39d3c15576d1c6d",
+      "bodyShaderSha256": "0c1cda9f4e4538508e7bd26e50a85ca9ea4add2f5f7d08c62202aa82b229ab66"
+    },
+    {
+      "label": "herring exact body GPU attributes and zero-copy typed source buffers",
+      "pass": true,
+      "primitives": 2,
+      "avoidedCpuCopyBytes": 224256,
+      "positionsStillSourceParameterized": true,
+      "allGpuAttributesBitExact": true,
+      "referenceSharesGeometry": true
+    },
+    {
+      "label": "herring original full eye geometry, uniforms and physical fragment material retained",
+      "pass": true,
+      "eyesPerFish": 2,
+      "count": 30,
+      "eyeDrawsBefore": 60,
+      "eyeDrawsAfter": 2,
+      "eyeSphereTriangles": 1656,
+      "fragmentShaderByteExact": true,
+      "sourceAttributesBitExact": true,
+      "normalRoute": "CPU exact inverse-transpose; float32 instance columns"
+    },
+    {
+      "label": "herring R06 original pose/camera numerical equivalence across single/group, states, extreme gazes and skeleton",
+      "pass": true,
+      "frames": 640,
+      "maxWorldMatrixError": 0,
+      "maxFloat32WorldMatrixError": 2.364123821152475e-7,
+      "maxNormalDirectionError": 4.5128991454498636e-8,
+      "maxCameraError": 0,
+      "maxDeformError": 0,
+      "poseAndFinTexturesBitExact": true,
+      "bodyInstanceMatricesBitExact": true,
+      "skeletonFloat32BitExact": true,
+      "pausedUploadsZero": true,
+      "allocationRows": [
+        {
+          "count": 1,
+          "frames": 30,
+          "before": {
+            "Vector3": 540,
+            "Matrix4": 30,
+            "Quaternion": 60
+          },
+          "after": {
+            "Vector3": 0,
+            "Matrix4": 0,
+            "Quaternion": 0
+          }
+        },
+        {
+          "count": 30,
+          "frames": 30,
+          "before": {
+            "Vector3": 16230,
+            "Matrix4": 900,
+            "Quaternion": 1800
+          },
+          "after": {
+            "Vector3": 0,
+            "Matrix4": 0,
+            "Quaternion": 0
+          }
+        }
+      ]
+    },
+    {
+      "label": "tuna-yellow-label exact body GPU attributes and zero-copy typed source buffers",
+      "pass": true,
+      "primitives": 3,
+      "avoidedCpuCopyBytes": 243712,
+      "positionsStillSourceParameterized": true,
+      "allGpuAttributesBitExact": true,
+      "referenceSharesGeometry": true
+    },
+    {
+      "label": "tuna-yellow-label original full eye geometry, uniforms and physical fragment material retained",
+      "pass": true,
+      "eyesPerFish": 2,
+      "count": 30,
+      "eyeDrawsBefore": 60,
+      "eyeDrawsAfter": 2,
+      "eyeSphereTriangles": 1656,
+      "fragmentShaderByteExact": true,
+      "sourceAttributesBitExact": true,
+      "normalRoute": "CPU exact inverse-transpose; float32 instance columns"
+    },
+    {
+      "label": "tuna-yellow-label R06 original pose/camera numerical equivalence across single/group, states, extreme gazes and skeleton",
+      "pass": true,
+      "frames": 640,
+      "maxWorldMatrixError": 0,
+      "maxFloat32WorldMatrixError": 2.3833269935380486e-7,
+      "maxNormalDirectionError": 4.943851249425664e-8,
+      "maxCameraError": 0,
+      "maxDeformError": 0,
+      "poseAndFinTexturesBitExact": true,
+      "bodyInstanceMatricesBitExact": true,
+      "skeletonFloat32BitExact": true,
+      "pausedUploadsZero": true,
+      "allocationRows": [
+        {
+          "count": 1,
+          "frames": 30,
+          "before": {
+            "Vector3": 540,
+            "Matrix4": 30,
+            "Quaternion": 60
+          },
+          "after": {
+            "Vector3": 0,
+            "Matrix4": 0,
+            "Quaternion": 0
+          }
+        },
+        {
+          "count": 30,
+          "frames": 30,
+          "before": {
+            "Vector3": 16230,
+            "Matrix4": 900,
+            "Quaternion": 1800
+          },
+          "after": {
+            "Vector3": 0,
+            "Matrix4": 0,
+            "Quaternion": 0
+          }
+        }
+      ]
+    },
+    {
+      "label": "tuna-blue-label exact body GPU attributes and zero-copy typed source buffers",
+      "pass": true,
+      "primitives": 2,
+      "avoidedCpuCopyBytes": 96624,
+      "positionsStillSourceParameterized": true,
+      "allGpuAttributesBitExact": true,
+      "referenceSharesGeometry": true
+    },
+    {
+      "label": "tuna-blue-label original full eye geometry, uniforms and physical fragment material retained",
+      "pass": true,
+      "eyesPerFish": 2,
+      "count": 30,
+      "eyeDrawsBefore": 60,
+      "eyeDrawsAfter": 2,
+      "eyeSphereTriangles": 1656,
+      "fragmentShaderByteExact": true,
+      "sourceAttributesBitExact": true,
+      "normalRoute": "CPU exact inverse-transpose; float32 instance columns"
+    },
+    {
+      "label": "tuna-blue-label R06 original pose/camera numerical equivalence across single/group, states, extreme gazes and skeleton",
+      "pass": true,
+      "frames": 640,
+      "maxWorldMatrixError": 0,
+      "maxFloat32WorldMatrixError": 2.3830284678894031e-7,
+      "maxNormalDirectionError": 4.799255945824038e-8,
+      "maxCameraError": 0,
+      "maxDeformError": 0,
+      "poseAndFinTexturesBitExact": true,
+      "bodyInstanceMatricesBitExact": true,
+      "skeletonFloat32BitExact": true,
+      "pausedUploadsZero": true,
+      "allocationRows": [
+        {
+          "count": 1,
+          "frames": 30,
+          "before": {
+            "Vector3": 540,
+            "Matrix4": 30,
+            "Quaternion": 60
+          },
+          "after": {
+            "Vector3": 0,
+            "Matrix4": 0,
+            "Quaternion": 0
+          }
+        },
+        {
+          "count": 30,
+          "frames": 30,
+          "before": {
+            "Vector3": 16230,
+            "Matrix4": 900,
+            "Quaternion": 1800
+          },
+          "after": {
+            "Vector3": 0,
+            "Matrix4": 0,
+            "Quaternion": 0
+          }
+        }
+      ]
+    },
+    {
+      "label": "colorful exact body GPU attributes and zero-copy typed source buffers",
+      "pass": true,
+      "primitives": 7,
+      "avoidedCpuCopyBytes": 429696,
+      "positionsStillSourceParameterized": true,
+      "allGpuAttributesBitExact": true,
+      "referenceSharesGeometry": true
+    },
+    {
+      "label": "colorful original full eye geometry, uniforms and physical fragment material retained",
+      "pass": true,
+      "eyesPerFish": 2,
+      "count": 30,
+      "eyeDrawsBefore": 60,
+      "eyeDrawsAfter": 2,
+      "eyeSphereTriangles": 1656,
+      "fragmentShaderByteExact": true,
+      "sourceAttributesBitExact": true,
+      "normalRoute": "CPU exact inverse-transpose; float32 instance columns"
+    },
+    {
+      "label": "colorful R06 original pose/camera numerical equivalence across single/group, states, extreme gazes and skeleton",
+      "pass": true,
+      "frames": 640,
+      "maxWorldMatrixError": 0,
+      "maxFloat32WorldMatrixError": 2.3681078165083136e-7,
+      "maxNormalDirectionError": 4.861119330453444e-8,
+      "maxCameraError": 0,
+      "maxDeformError": 0,
+      "poseAndFinTexturesBitExact": true,
+      "bodyInstanceMatricesBitExact": true,
+      "skeletonFloat32BitExact": true,
+      "pausedUploadsZero": true,
+      "allocationRows": [
+        {
+          "count": 1,
+          "frames": 30,
+          "before": {
+            "Vector3": 540,
+            "Matrix4": 30,
+            "Quaternion": 60
+          },
+          "after": {
+            "Vector3": 0,
+            "Matrix4": 0,
+            "Quaternion": 0
+          }
+        },
+        {
+          "count": 30,
+          "frames": 30,
+          "before": {
+            "Vector3": 16230,
+            "Matrix4": 900,
+            "Quaternion": 1800
+          },
+          "after": {
+            "Vector3": 0,
+            "Matrix4": 0,
+            "Quaternion": 0
+          }
+        }
+      ]
+    },
+    {
+      "label": "picasso exact body GPU attributes and zero-copy typed source buffers",
+      "pass": true,
+      "primitives": 1,
+      "avoidedCpuCopyBytes": 466984,
+      "positionsStillSourceParameterized": true,
+      "allGpuAttributesBitExact": true,
+      "referenceSharesGeometry": true
+    },
+    {
+      "label": "picasso original full eye geometry, uniforms and physical fragment material retained",
+      "pass": true,
+      "eyesPerFish": 2,
+      "count": 30,
+      "eyeDrawsBefore": 60,
+      "eyeDrawsAfter": 2,
+      "eyeSphereTriangles": 1656,
+      "fragmentShaderByteExact": true,
+      "sourceAttributesBitExact": true,
+      "normalRoute": "CPU exact inverse-transpose; float32 instance columns"
+    },
+    {
+      "label": "picasso R06 original pose/camera numerical equivalence across single/group, states, extreme gazes and skeleton",
+      "pass": true,
+      "frames": 640,
+      "maxWorldMatrixError": 0,
+      "maxFloat32WorldMatrixError": 2.3800937754003826e-7,
+      "maxNormalDirectionError": 4.762341501783913e-8,
+      "maxCameraError": 0,
+      "maxDeformError": 0,
+      "poseAndFinTexturesBitExact": true,
+      "bodyInstanceMatricesBitExact": true,
+      "skeletonFloat32BitExact": true,
+      "pausedUploadsZero": true,
+      "allocationRows": [
+        {
+          "count": 1,
+          "frames": 30,
+          "before": {
+            "Vector3": 540,
+            "Matrix4": 30,
+            "Quaternion": 60
+          },
+          "after": {
+            "Vector3": 0,
+            "Matrix4": 0,
+            "Quaternion": 0
+          }
+        },
+        {
+          "count": 30,
+          "frames": 30,
+          "before": {
+            "Vector3": 16230,
+            "Matrix4": 900,
+            "Quaternion": 1800
+          },
+          "after": {
+            "Vector3": 0,
+            "Matrix4": 0,
+            "Quaternion": 0
+          }
+        }
+      ]
+    },
+    {
+      "label": "Shared geometry, materials, textures and instance storage are disposed exactly once",
+      "pass": true,
+      "counts": {
+        "eyeGeometry": 2,
+        "eyeMaterial": 2,
+        "eyeInstances": 2,
+        "bodyGeometry": 1,
+        "bodyMaterial": 1,
+        "bodyTexture": 1,
+        "bodyInstances": 1,
+        "pose": 1,
+        "fin": 1
+      },
+      "sharedResourcesReleasedOnce": true
+    },
+    {
+      "label": "Bounded texture ownership, late completion disposal and exact descriptor sharing",
+      "pass": true,
+      "sameSourcePromiseDecodedOnce": true,
+      "sameDescriptorTextureShared": true,
+      "differentColorSpaceAndTransformSeparated": true,
+      "staleResultDisposed": true,
+      "partialDecodeFailureReleased": true,
+      "encodedBytesViaBlobURL": true,
+      "urlsCreated": 1,
+      "urlsRevoked": 1
+    }
+  ],
+  "failures": [],
+  "scope": "R06 source/CPU mathematics, exact sphere attributes, material fragment/uniform equivalence, full inverse-transpose normal matrices and simulated texture ownership. GPU floating point/rasterization, source-loader worker lifecycle and published HTML require independent actual-browser evidence.",
+  "visualAcceptance": false,
+  "productionReady": false
+}
