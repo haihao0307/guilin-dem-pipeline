@@ -326,7 +326,7 @@ const materialFragment=`#version 300 es
 precision highp float;
 in vec3 world;in vec3 normal;in float axial;in float variation;
 uniform vec3 eye;uniform vec3 rootColor;uniform vec3 midColor;uniform vec3 tipColor;uniform vec3 columnColor;
-uniform float translucency;uniform float focusDistance;uniform int materialPass;
+uniform float translucency;uniform float focusDistance;uniform int materialPass;uniform bool colorStudyLegacy;
 uniform highp sampler2D bodyDepth;uniform highp sampler2D frontDepth;
 out vec4 color;
 void main(){
@@ -365,7 +365,13 @@ void main(){
    lit=base*(softAmbient+.52*diff*teacherCoverage*sharp);
    // Reference-led correction: edges respond to light instead of a uniform white outline.
    float rimLight=.40+.60*smoothstep(-.2,.85,dot(n,l));
-   lit+=mix(base,milk,.30)*effectiveRim*.62*rimLight*sharp;
+   // A broad tissue return keeps its hue. The former 30% neutral-white mix
+   // disproportionately raised the blue channel of yellow/green tissue.
+   // Keep the same light magnitude/direction terms and a small milky component.
+   float peak=max(max(base.r,base.g),base.b);
+   vec3 coloredReturn=mix(base,base/max(peak,.12),.45);
+   vec3 rimReturn=colorStudyLegacy?mix(base,milk,.30):mix(coloredReturn,milk,.04);
+   lit+=rimReturn*effectiveRim*.62*rimLight*sharp;
    // Camera-facing rounded caps keep a colored, filled center rather than a dark hole.
    lit+=base*pow(facing,1.5)*(.13+.18*tip);
    lit+=mix(base,milk,.25)*back*.06;
@@ -478,7 +484,7 @@ class Renderer{
   const g=this.gl;g.useProgram(p);g.uniformMatrix4fv(g.getUniformLocation(p,'vp'),false,vp);g.uniform3fv(g.getUniformLocation(p,'eye'),eye);
   if(pass!==undefined){const palette=PALETTES[this._material.palette].map(linearHex);
    for(const [i,name] of ['rootColor','midColor','tipColor','columnColor'].entries())g.uniform3fv(g.getUniformLocation(p,name),palette[i]);
-   g.uniform1f(g.getUniformLocation(p,'translucency'),this._material.translucency);g.uniform1f(g.getUniformLocation(p,'focusDistance'),dist);g.uniform1i(g.getUniformLocation(p,'materialPass'),pass);
+   g.uniform1i(g.getUniformLocation(p,'colorStudyLegacy'),this.colorStudyLegacy===true?1:0);g.uniform1f(g.getUniformLocation(p,'translucency'),this._material.translucency);g.uniform1f(g.getUniformLocation(p,'focusDistance'),dist);g.uniform1i(g.getUniformLocation(p,'materialPass'),pass);
    // Inactive branches still have active samplers: bind harmless joint data there
    // so an attached current-layer depth texture is never a sampling feedback loop.
    for(const [unit,name,tex]of [[1,'bodyDepth',(pass===1||pass===2)?this.targets.depthTextures[0]:this.texture],[2,'frontDepth',pass===2?this.targets.depthTextures[1]:this.texture]]){
