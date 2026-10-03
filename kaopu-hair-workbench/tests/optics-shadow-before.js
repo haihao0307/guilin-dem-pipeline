@@ -166,69 +166,19 @@ float tissuePath(vec3 direction){
  return hit<9999.?clamp(hit,0.,tubeShaftLength+h):0.;
 }
 
-// Receiver-plane-aware comparison filtering over the existing orthographic
-// DEPTH_COMPONENT map. Never interpolate raw depths across separate blockers.
-// The four continuous weights per axis are a [1,2,1] tent convolved with
-// bilinear comparison reconstruction: 16 fetches, rather than 36 duplicates.
-float shadowVisibility(vec3 point,vec3 receiverNormal,float localRadius){
+// Manual 3x3 PCF over a DEPTH_COMPONENT texture. The transmitted-light query
+// is made at the source-side EXIT of the local chord, not the visible surface;
+// otherwise an opaque shadow map would wrongly reject the tube's own light.
+float shadowVisibility(vec3 point){
  vec4 clip=uLightVP*vec4(point,1.);
  vec3 q=clip.xyz/clip.w*.5+.5;
  if(any(lessThan(q,vec3(0.)))||any(greaterThan(q,vec3(1.))))return 0.;
- vec3 rx=vec3(uLightVP[0][0],uLightVP[1][0],uLightVP[2][0]);
- vec3 ry=vec3(uLightVP[0][1],uLightVP[1][1],uLightVP[2][1]);
- vec3 rz=vec3(uLightVP[0][2],uLightVP[1][2],uLightVP[2][2]);
- float sx=length(rx),sy=length(ry),sz=length(rz);
- vec3 receiver=normalize(receiverNormal);
- float nz=dot(receiver,rz/sz);
- float safeNz=(nz<0.?-1.:1.)*max(abs(nz),.12);
- // d(normalized depth)/d(shadow UV), not a single centre depth reused at
- // neighbouring texels. For an orthographic map this follows the plane equation.
- vec2 plane=-vec2(dot(receiver,rx/sx)*sz/sx,dot(receiver,ry/sy)*sz/sy)/safeNz;
- float worldTexel=max(2.*uShadowTexel/sx,2.*uShadowTexel/sy);
- float depthPerWorld=.5*sz;
- float radiusLimit=localRadius>0.?localRadius*.08:worldTexel*.5;
- float biasLimit=min(worldTexel*.5,radiusLimit);
- float slope=min(sqrt(max(0.,1.-nz*nz))/max(abs(nz),.12),2.);
- // uShadowBias remains an upper bound, not an unbounded additional offset.
- // Additional comparison bias <= 0.5 texel AND 8% of local tube radius.
- float biasWorld=min(min(uShadowBias/depthPerWorld,biasLimit),worldTexel*(.10+.18*slope));
- float bias=biasWorld*depthPerWorld;
- // Near a silhouette a plane is a poor model for a curved tube. Bound its
- // extrapolation separately; this is not permission to move the receiver.
- float planeLimit=min(worldTexel*2.,localRadius>0.?localRadius*.5:worldTexel*2.)*depthPerWorld;
- vec2 pixel=q.xy/uShadowTexel-.5;
- ivec2 base=ivec2(floor(pixel));
- vec2 f=fract(pixel);
- vec4 wx=vec4(1.-f.x,2.-f.x,1.+f.x,f.x);
- vec4 wy=vec4(1.-f.y,2.-f.y,1.+f.y,f.y);
- ivec2 size=textureSize(uShadowDepth,0);
  float result=0.;
- for(int y=0;y<4;y++)for(int x=0;x<4;x++){
-  ivec2 texel=base+ivec2(x-1,y-1);
-  if(any(lessThan(texel,ivec2(0)))||any(greaterThanEqual(texel,size)))continue;
-  vec2 offset=(vec2(texel)+.5)*uShadowTexel-q.xy;
-  float receiverDepth=q.z+clamp(dot(plane,offset),-planeLimit,planeLimit);
-  float depth=texelFetch(uShadowDepth,texel,0).r;
-  result+=wx[x]*wy[y]*step(receiverDepth-bias,depth);
+ for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){
+  float depth=texture(uShadowDepth,q.xy+vec2(float(x),float(y))*uShadowTexel*1.25).r;
+  result+=step(q.z-uShadowBias,depth);
  }
- return result/16.;
-}
-// Source-side EXIT of the unchanged local chord. Its normal is distinct from
-// the visible-side normal; reusing that normal would correct the wrong plane.
-// No derivatives are evaluated inside the non-uniform transmission branch.
-float shadowVisibility(vec3 point){
- vec3 t=normalize(tubeTangent),l=normalize(uLightDirection);
- vec3 radial=normalize(tubeRadial-t*dot(tubeRadial,t));
- float escape=max(.002,tubeShape.x*.14);
- float chord=max(0.,dot(point-world,l)-escape);
- float z=tubeShape.w+chord*dot(l,t);
- vec3 p=radial*tubeShape.y+chord*(l-t*dot(l,t));
- vec3 entryNormal;
- if(z>0.)entryNormal=p/max(tubeShape.x*tubeShape.x,.00000001)+t*z/max(tubeShape.z*tubeShape.z,.00000001);
- else if(z<=-tubeShaftLength+.00001)entryNormal=-t;
- else entryNormal=p;
- if(dot(entryNormal,entryNormal)<.000000000001)entryNormal=l;
- return shadowVisibility(point,entryNormal,tubeShape.x);
+ return result/9.;
 }
 vec3 fresnel(float cosine){return vec3(uWetness)+(vec3(1.)-vec3(uWetness))*pow(1.-cosine,5.);}
 float ggx(vec3 n,vec3 v,vec3 l,float roughness){
@@ -252,10 +202,6 @@ vec3 linearToSRGB(vec3 c){
 }
 void main(){
  vec3 n=normalize(normal),v=normalize(eye-world),l=normalize(uLightDirection);
- // Compute the actual rasterized receiver plane before any divergent branch.
- // Analytic shading normals remain untouched; only shadow comparisons use it.
- vec3 receiverNormal=cross(dFdx(world),dFdy(world));
- receiverNormal=dot(receiverNormal,receiverNormal)>.000000000001?normalize(receiverNormal):n;
  float nv=max(dot(n,v),.001),nl=dot(n,l);
  bool tentacle=axial>=0.;
  vec2 uv=tissueCoordinates;
@@ -273,7 +219,7 @@ void main(){
  float roughness=clamp(uRoughness+tip*.06+mottling*.023+(variation-.5)*.025,.32,.72);
  // Artistic falloff for the dim environmental fill, not ambient occlusion.
  float ambientAccess=mix(.24,1.,smoothstep(.38,1.06,world.y));
- float shadow=uShadowEnabled>.5?shadowVisibility(world,receiverNormal,tentacle?tubeShape.x:0.):1.;
+ float shadow=uShadowEnabled>.5?shadowVisibility(world+n*.0015):1.;
  vec3 surfaceF=fresnel(max(dot(v,normalize(l+v+vec3(.000001))),0.));
  vec3 reflected=base*(vec3(1.)-surfaceF)*(.82*max(nl,0.)/PI)*uKeyRadiance*shadow;
  reflected+=surfaceF*ggx(n,v,l,roughness)*uKeyRadiance*shadow;
@@ -382,35 +328,7 @@ function localPath({radialRadius:r,capRadius:h,radialPosition:rho,axialPosition:
  if(dz<-1e-6){const q=(-shaftLength-z)/dz;if(q>1e-6&&Math.hypot(rho+q*dx,q*dy)<=r+1e-5)hit=Math.min(hit,q);}
  return hit<9999?clamp(hit,0,shaftLength+h):0;
 }
-// CPU mirrors of the shadow comparison kernel only. These are test oracles for
-// the plane/footprint/weight arithmetic, not evidence of GPU image quality.
-function shadowReceiver(lightVP,receiverNormal,localRadius,texel,depthBias){
- const n=norm(receiverNormal),rx=[lightVP[0],lightVP[4],lightVP[8]],ry=[lightVP[1],lightVP[5],lightVP[9]],rz=[lightVP[2],lightVP[6],lightVP[10]];
- const sx=Math.hypot(...rx),sy=Math.hypot(...ry),sz=Math.hypot(...rz);
- if(![sx,sy,sz].every(x=>Number.isFinite(x)&&x>0))throw Error('Invalid orthographic shadow frame');
- checkedNumber(localRadius,'localRadius',0,100);checkedNumber(texel,'shadow texel',.000001,1);checkedNumber(depthBias,'shadow bias',0,1);
- const nz=dot(n,rz.map(x=>x/sz)),safeNz=(nz<0?-1:1)*Math.max(Math.abs(nz),.12);
- const plane=[-dot(n,rx.map(x=>x/sx))*sz/sx/safeNz,-dot(n,ry.map(x=>x/sy))*sz/sy/safeNz];
- const worldTexel=Math.max(2*texel/sx,2*texel/sy),depthPerWorld=.5*sz;
- const biasLimit=Math.min(worldTexel*.5,localRadius>0?localRadius*.08:worldTexel*.5);
- const slope=Math.min(Math.sqrt(Math.max(0,1-nz*nz))/Math.max(Math.abs(nz),.12),2);
- const biasWorld=Math.min(depthBias/depthPerWorld,biasLimit,worldTexel*(.10+.18*slope));
- const planeLimitWorld=Math.min(worldTexel*2,localRadius>0?localRadius*.5:worldTexel*2);
- return {plane,worldTexel,depthPerWorld,biasLimit,biasWorld,bias:biasWorld*depthPerWorld,planeLimitWorld,planeLimit:planeLimitWorld*depthPerWorld};
-}
-function shadowVisibilityReference({uv,depth,width,height,receiver,depthAt}){
- if(uv.some(x=>x<0||x>1)||depth<0||depth>1)return 0;
- const pixel=[uv[0]*width-.5,uv[1]*height-.5],base=pixel.map(Math.floor),f=pixel.map((x,i)=>x-base[i]);
- const weights=f.map(x=>[1-x,2-x,1+x,x]);let result=0;
- for(let y=0;y<4;y++)for(let x=0;x<4;x++){
-  const tx=base[0]+x-1,ty=base[1]+y-1;if(tx<0||ty<0||tx>=width||ty>=height)continue;
-  const offset=[(tx+.5)/width-uv[0],(ty+.5)/height-uv[1]];
-  const receiverDepth=depth+clamp(dot(receiver.plane,offset),-receiver.planeLimit,receiver.planeLimit);
-  result+=weights[0][x]*weights[1][y]*(receiverDepth-receiver.bias<=depthAt(tx,ty)?1:0);
- }
- return result/16;
-}
 const api={revision:'r04-tissue-optics',tentacleVertex,vertex:tentacleVertex,bodyVertex,fragment,shadowFragment,
- PALETTES,DEFAULTS,DEBUG_MODES,options,lighting,lightMatrix,applyUniforms,beerLambert,localPath,srgbToLinear,shadowReceiver,shadowVisibilityReference};
+ PALETTES,DEFAULTS,DEBUG_MODES,options,lighting,lightMatrix,applyUniforms,beerLambert,localPath,srgbToLinear};
 root.AnemoneOptics=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);
