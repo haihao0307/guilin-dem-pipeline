@@ -1,0 +1,185 @@
+{
+  "schema": "kaopu.regression-case/2",
+  "caseId": "VERIFIER-CAPABILITY-PRECONDITION-001",
+  "status": "CANDIDATE",
+  "scope": {
+    "mother": "Material",
+    "taskClass": "PUBLIC_WEB_RUNTIME_ROOT_CAUSE_ATTRIBUTION",
+    "globalAdoption": false
+  },
+  "failure": {
+    "summary": "A runtime failure observed in an environment with unknown or absent required capability is promoted into an artifact defect or global browser failure claim.",
+    "realSubjects": [
+      "Material R11 fixed public URL in the default hosted browser",
+      "Coast R03 fixed public URL in the default hosted browser"
+    ]
+  },
+  "mustNeverRepeat": [
+    "turn getContext null into proof that shader, geometry or material code is defective",
+    "turn one incapable verifier environment into all-device failure",
+    "turn SwiftShader pass into default-browser or physical-device pass",
+    "treat PRECONDITION_FAILED as PASS or as artifact FAIL",
+    "allow an attribution result to override PUBLIC_WEB_DELIVERY_GATE"
+  ],
+  "requiredReceiptFields": [
+    "artifactIdentityBound",
+    "environmentIdentityBound",
+    "environmentId",
+    "requiredCapability",
+    "requiredContextAttributes",
+    "capabilityFixtureId",
+    "capabilityFixtureIsolated",
+    "requiredCapabilityId",
+    "requiredContextFingerprint",
+    "fixtureCapabilityId",
+    "fixtureContextFingerprint",
+    "capabilityPreflightStatus",
+    "artifactRuntimeStatus",
+    "criticalInteractionStatus",
+    "requestedClaimScope"
+  ],
+  "cases": [
+    {
+      "id": "MATERIAL_R11_HISTORY_NO_ISOLATED_PREFLIGHT",
+      "input": {
+        "artifactIdentityBound": true,
+        "environmentIdentityBound": true,
+        "artifactRuntimeStatus": "FAIL",
+        "capabilityPreflightStatus": "NOT_RUN",
+        "requestedClaimScope": "EXACT_ENVIRONMENT"
+      },
+      "expect": "HOLD_CAPABILITY_PREFLIGHT_MISSING"
+    },
+    {
+      "id": "COAST_R03_HISTORY_NO_ISOLATED_PREFLIGHT",
+      "input": {
+        "artifactIdentityBound": true,
+        "environmentIdentityBound": true,
+        "artifactRuntimeStatus": "FAIL",
+        "capabilityPreflightStatus": "NOT_RUN",
+        "requestedClaimScope": "EXACT_ENVIRONMENT"
+      },
+      "expect": "HOLD_CAPABILITY_PREFLIGHT_MISSING"
+    },
+    {
+      "id": "MATCHING_FIXTURE_FAILS_AND_ARTIFACT_FAILS",
+      "input": {
+        "artifactIdentityBound": true,
+        "environmentIdentityBound": true,
+        "capabilityFixtureIsolated": true,
+        "requiredCapabilityId": "webgl2",
+        "requiredContextFingerprint": "alpha=false;antialias=false;preserveDrawingBuffer=true;powerPreference=high-performance",
+        "fixtureCapabilityId": "webgl2",
+        "fixtureContextFingerprint": "alpha=false;antialias=false;preserveDrawingBuffer=true;powerPreference=high-performance",
+        "capabilityPreflightStatus": "FAIL",
+        "artifactRuntimeStatus": "FAIL",
+        "requestedClaimScope": "EXACT_ENVIRONMENT"
+      },
+      "expect": "ENVIRONMENT_CAPABILITY_BLOCKER_ARTIFACT_UNKNOWN"
+    },
+    {
+      "id": "MATCHING_FIXTURE_PASSES_ARTIFACT_FAILS",
+      "input": {
+        "artifactIdentityBound": true,
+        "environmentIdentityBound": true,
+        "capabilityFixtureIsolated": true,
+        "requiredCapabilityId": "webgl2",
+        "requiredContextFingerprint": "alpha=false;antialias=false;preserveDrawingBuffer=true;powerPreference=high-performance",
+        "fixtureCapabilityId": "webgl2",
+        "fixtureContextFingerprint": "alpha=false;antialias=false;preserveDrawingBuffer=true;powerPreference=high-performance",
+        "capabilityPreflightStatus": "PASS",
+        "artifactRuntimeStatus": "FAIL",
+        "requestedClaimScope": "EXACT_ENVIRONMENT"
+      },
+      "expect": "SCOPED_ARTIFACT_RUNTIME_FAILURE"
+    },
+    {
+      "id": "MATCHING_FIXTURE_AND_ARTIFACT_INTERACTION_PASS",
+      "input": {
+        "artifactIdentityBound": true,
+        "environmentIdentityBound": true,
+        "capabilityFixtureIsolated": true,
+        "requiredCapabilityId": "webgl2",
+        "requiredContextFingerprint": "alpha=false;antialias=false;preserveDrawingBuffer=true;powerPreference=high-performance",
+        "fixtureCapabilityId": "webgl2",
+        "fixtureContextFingerprint": "alpha=false;antialias=false;preserveDrawingBuffer=true;powerPreference=high-performance",
+        "capabilityPreflightStatus": "PASS",
+        "artifactRuntimeStatus": "PASS",
+        "criticalInteractionStatus": "PASS",
+        "requestedClaimScope": "EXACT_ENVIRONMENT"
+      },
+      "expect": "SCOPED_ARTIFACT_RUNTIME_PASS"
+    },
+    {
+      "id": "SWIFTSHADER_PASS_GENERALIZED_TO_ALL_BROWSERS",
+      "input": {
+        "artifactIdentityBound": true,
+        "environmentIdentityBound": true,
+        "capabilityFixtureIsolated": true,
+        "requiredCapabilityId": "webgl2",
+        "requiredContextFingerprint": "alpha=false;antialias=false;preserveDrawingBuffer=true;powerPreference=high-performance",
+        "fixtureCapabilityId": "webgl2",
+        "fixtureContextFingerprint": "alpha=false;antialias=false;preserveDrawingBuffer=true;powerPreference=high-performance",
+        "capabilityPreflightStatus": "PASS",
+        "artifactRuntimeStatus": "PASS",
+        "criticalInteractionStatus": "PASS",
+        "requestedClaimScope": "ALL_BROWSERS_AND_DEVICES"
+      },
+      "expect": "REJECT_UNSCOPED_RUNTIME_CLAIM"
+    },
+    {
+      "id": "INCAPABLE_ENVIRONMENT_GENERALIZED_TO_GLOBAL_FAILURE",
+      "input": {
+        "artifactIdentityBound": true,
+        "environmentIdentityBound": true,
+        "capabilityFixtureIsolated": true,
+        "requiredCapabilityId": "webgl2",
+        "requiredContextFingerprint": "alpha=false;antialias=false;preserveDrawingBuffer=true;powerPreference=high-performance",
+        "fixtureCapabilityId": "webgl2",
+        "fixtureContextFingerprint": "alpha=false;antialias=false;preserveDrawingBuffer=true;powerPreference=high-performance",
+        "capabilityPreflightStatus": "FAIL",
+        "artifactRuntimeStatus": "FAIL",
+        "requestedClaimScope": "ALL_BROWSERS_AND_DEVICES"
+      },
+      "expect": "REJECT_UNSCOPED_RUNTIME_CLAIM"
+    },
+    {
+      "id": "ARTIFACT_IDENTITY_NOT_BOUND",
+      "input": {
+        "artifactIdentityBound": false,
+        "environmentIdentityBound": true,
+        "capabilityPreflightStatus": "PASS",
+        "artifactRuntimeStatus": "FAIL",
+        "requestedClaimScope": "EXACT_ENVIRONMENT"
+      },
+      "expect": "HOLD_ARTIFACT_IDENTITY_UNBOUND"
+    },
+    {
+      "id": "ENVIRONMENT_IDENTITY_NOT_BOUND",
+      "input": {
+        "artifactIdentityBound": true,
+        "environmentIdentityBound": false,
+        "capabilityPreflightStatus": "PASS",
+        "artifactRuntimeStatus": "FAIL",
+        "requestedClaimScope": "EXACT_ENVIRONMENT"
+      },
+      "expect": "HOLD_ENVIRONMENT_IDENTITY_UNBOUND"
+    },
+    {
+      "id": "FIXTURE_CONTEXT_REQUIREMENTS_DO_NOT_MATCH",
+      "input": {
+        "artifactIdentityBound": true,
+        "environmentIdentityBound": true,
+        "capabilityFixtureIsolated": true,
+        "requiredCapabilityId": "webgl2",
+        "requiredContextFingerprint": "alpha=false;antialias=false;preserveDrawingBuffer=true;powerPreference=high-performance",
+        "fixtureCapabilityId": "webgl2",
+        "fixtureContextFingerprint": "default-context-attributes",
+        "capabilityPreflightStatus": "PASS",
+        "artifactRuntimeStatus": "FAIL",
+        "requestedClaimScope": "EXACT_ENVIRONMENT"
+      },
+      "expect": "HOLD_CAPABILITY_PREFLIGHT_SCOPE_MISMATCH"
+    }
+  ]
+}
