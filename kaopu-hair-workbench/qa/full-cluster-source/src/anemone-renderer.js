@@ -54,9 +54,18 @@ const materialFragment=`#version 300 es
 precision highp float;
 in vec3 world;in vec3 normal;in float axial;in float variation;
 uniform vec3 eye;uniform vec3 rootColor;uniform vec3 midColor;uniform vec3 tipColor;uniform vec3 columnColor;
-uniform float translucency;uniform float focusDistance;uniform int materialPass;uniform bool colorStudyLegacy;
+uniform float translucency;uniform float focusDistance;uniform int materialPass;uniform bool colorStudyLegacy;uniform bool colorStudyPrevious;
 uniform highp sampler2D bodyDepth;uniform highp sampler2D frontDepth;
 out vec4 color;
+// Keep tissue hue at the prior local linear-light luminance. A photographed
+// color-response fit, not emission, exposure gain or measured reflectance.
+vec3 tissueMilk(vec3 tissue,vec3 milk,float amount){
+ vec3 soft=mix(tissue,milk,amount);
+ if(colorStudyLegacy||colorStudyPrevious)return soft;
+ const vec3 luminance=vec3(.2126,.7152,.0722);
+ vec3 colored=tissue*(dot(soft,luminance)/max(dot(tissue,luminance),.00001));
+ return mix(soft,colored,.78);
+}
 void main(){
  vec3 n=normalize(normal),v=normalize(eye-world),l=normalize(vec3(.6,.6,.5));
  float facing=clamp(abs(dot(n,v)),0.,1.),diff=max(dot(n,l),0.);
@@ -77,12 +86,12 @@ void main(){
  }else{
    float tissue=smoothstep(.0,.82,axial);
    base=mix(rootColor,midColor,tissue*.88+.04+variation*.07);
-   base=mix(base,milk,.04+variation*.025);
+   base=tissueMilk(base,milk,.04+variation*.025);
    // Hue occupies only the last eight percent, with zero-slope smooth ends.
    // Broad milk lift precedes it, avoiding an abruptly painted tip cap.
    float tip=smoothstep(.92,1.,axial);
    base=mix(base,mix(tipColor,milk,.32),tip*.86);
-   base=mix(base,milk,.16*smoothstep(.74,1.,axial));
+   base=tissueMilk(base,milk,.16*smoothstep(.74,1.,axial));
    float back=pow(max(dot(-n,l),0.),1.5);
    // Transfer the teacher's *combined* rim/edge response, rather than its raw
    // 9.6 multiplier alone. Its smooth off-silhouette lobe is bounded (~.54).
@@ -212,7 +221,7 @@ class Renderer{
   const g=this.gl;g.useProgram(p);g.uniformMatrix4fv(g.getUniformLocation(p,'vp'),false,vp);g.uniform3fv(g.getUniformLocation(p,'eye'),eye);
   if(pass!==undefined){const palette=PALETTES[this._material.palette].map(linearHex);
    for(const [i,name] of ['rootColor','midColor','tipColor','columnColor'].entries())g.uniform3fv(g.getUniformLocation(p,name),palette[i]);
-   g.uniform1i(g.getUniformLocation(p,'colorStudyLegacy'),this.colorStudyLegacy===true?1:0);g.uniform1f(g.getUniformLocation(p,'translucency'),this._material.translucency);g.uniform1f(g.getUniformLocation(p,'focusDistance'),dist);g.uniform1i(g.getUniformLocation(p,'materialPass'),pass);
+   g.uniform1i(g.getUniformLocation(p,'colorStudyLegacy'),this.colorStudyLegacy===true?1:0);g.uniform1i(g.getUniformLocation(p,'colorStudyPrevious'),this.colorStudyPrevious===true?1:0);g.uniform1f(g.getUniformLocation(p,'translucency'),this._material.translucency);g.uniform1f(g.getUniformLocation(p,'focusDistance'),dist);g.uniform1i(g.getUniformLocation(p,'materialPass'),pass);
    // Inactive branches still have active samplers: bind harmless joint data there
    // so an attached current-layer depth texture is never a sampling feedback loop.
    for(const [unit,name,tex]of [[1,'bodyDepth',(pass===1||pass===2)?this.targets.depthTextures[0]:this.texture],[2,'frontDepth',pass===2?this.targets.depthTextures[1]:this.texture]]){

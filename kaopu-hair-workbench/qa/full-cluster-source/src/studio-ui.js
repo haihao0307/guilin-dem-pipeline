@@ -9,9 +9,12 @@ const reference=drawer('referenceDrawer','摄影参考与来源'),controls=drawe
 reference.querySelector('.drawer-content').append(document.querySelector('.anemone-reference'));
 for(const q of ['.cluster-sources','.anemone-boundary'])reference.querySelector('.drawer-content').append(document.querySelector(q));
 const inspector=document.querySelector('.anemone-inspector');inspector.open=true;controls.querySelector('.drawer-content').append(inspector);
-const quick=document.createElement('div');quick.className='studio-quick-controls';quick.innerHTML='<div class="control"><label for="studioZoom">镜头远近 <output id="studioZoomValue"></output></label><input type="range" id="studioZoom" min="2" max="8" step=".01" aria-label="镜头远近"></div><div class="control"><label for="studioTranslucency">侧缘透光 <output id="studioTranslucencyValue"></output></label><input type="range" id="studioTranslucency" min="0" max="1" step=".01" aria-label="侧缘透光"></div>';
+const quick=document.createElement('div');quick.className='studio-quick-controls';quick.innerHTML='<div class="control"><label for="studioZoom">镜头远近 <output id="studioZoomValue"></output></label><input type="range" id="studioZoom" min="2" max="8" step=".01" aria-label="镜头远近"></div><div class="control"><label for="anemoneOrbitSpeed">环绕速度</label><select id="anemoneOrbitSpeed" aria-label="海葵自动环绕速度"><option value="0.06">很慢</option><option value="0.12" selected>慢速</option><option value="0.24">常速</option></select></div><div class="control"><label for="studioTranslucency">侧缘透光 <output id="studioTranslucencyValue"></output></label><input type="range" id="studioTranslucency" min="0" max="1" step=".01" aria-label="侧缘透光"></div>';
 inspector.insertBefore(quick,inspector.querySelector('.anemone-controls'));
 for(const k of ['length','thickness','current','turbulence'])quick.append($('anemone-'+k).closest('.control'));
+const orbitButton=document.createElement('button');orbitButton.id='anemoneAutoRotate';orbitButton.type='button';orbitButton.setAttribute('aria-controls','anemoneCanvas');$('anemonePause').before(orbitButton);
+function syncOrbit(){const s=anemone.orbit;orbitButton.textContent=s.playing?'Ⅱ 暂停环绕':'▶ 自动环绕';orbitButton.setAttribute('aria-label',s.playing?'暂停海葵相机自动环绕':'播放海葵相机自动环绕');orbitButton.setAttribute('aria-pressed',String(s.playing));orbitButton.classList.toggle('active',s.playing);$('anemoneOrbitSpeed').value=String(s.speed);}
+orbitButton.onclick=()=>anemone.setOrbit({playing:!anemone.orbit.playing});$('anemoneOrbitSpeed').onchange=e=>anemone.setOrbit({speed:Number(e.target.value)});window.addEventListener('anemoneorbit',syncOrbit);syncOrbit();
 const more=document.createElement('details');more.className='studio-more-controls';more.innerHTML='<summary>更多形态与水流</summary>';inspector.append(more);more.append(inspector.querySelector('.anemone-controls'));
 learning.querySelector('.drawer-content').innerHTML='<p>老师与旧基线保留在这里，关闭后回到自己的作品</p>';
 for(const id of ['speciesKuko','speciesRabbit'])learning.querySelector('.drawer-content').append($(id));
@@ -19,7 +22,7 @@ learning.querySelector('.drawer-content').append($('clusterBaseline'));
 function sync(){if(!anemone.ready)return;$('studioZoom').value=anemone.state.camera.distance;$('studioZoomValue').textContent=anemone.state.camera.distance.toFixed(2);$('studioTranslucency').value=anemone.material.translucency;$('studioTranslucencyValue').textContent=Math.round(anemone.material.translucency*100)+'%';}
 const drawers=[reference,controls,learning];function closeAll(){drawers.forEach(d=>{if(d.open)d.close()});}
 for(const [id,d]of [['referenceToggle',reference],['controlsToggle',controls],['learningToggle',learning]])$(id).onclick=()=>{const was=d.open;closeAll();anemone.clearPointers();if(!was){sync();d.showModal();}};
-$('studioZoom').oninput=e=>{anemone.renderer.camera.distance=Number(e.target.value);anemone.redraw();sync();};$('studioTranslucency').oninput=e=>{anemone.setMaterial({translucency:Number(e.target.value)});sync();};
+$('studioZoom').oninput=e=>{anemone.pauseOrbit();anemone.renderer.camera.distance=Number(e.target.value);anemone.redraw();sync();};$('studioTranslucency').oninput=e=>{anemone.setMaterial({translucency:Number(e.target.value)});sync();};
 window.addEventListener('anemonecamera',sync);window.addEventListener('anemonestate',sync);for(const id of ['anemoneCamera','anemoneReset','clusterMacro'])$(id).addEventListener('click',sync);
 for(const id of ['speciesKuko','speciesRabbit','speciesAnemone'])$(id).addEventListener('click',closeAll);
 $('clusterBaseline').addEventListener('click',()=>learning.close());
