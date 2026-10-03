@@ -7,15 +7,17 @@ const fullscreenButton = document.querySelector('#fullscreen');
 
 const REFERENCE_WIDTH = 960;
 const REFERENCE_HEIGHT = 540;
+const EMBEDDED = window.parent !== window;
 canvas.width = REFERENCE_WIDTH;
 canvas.height = REFERENCE_HEIGHT;
 
 let gl;
 let program;
 let startTime = performance.now();
-let pauseStartedAt = 0;
+let pauseStartedAt = startTime;
 let accumulatedPause = 0;
-let playing = true;
+let playing = !EMBEDDED;
+let needsRender = true;
 let frameCount = 0;
 let lastFpsSample = performance.now();
 let lastFpsFrame = 0;
@@ -54,6 +56,40 @@ function linkProgram(vertexSource, fragmentSource) {
     fail('老师 Shader 链接失败。', log);
   }
   return linked;
+}
+
+function updatePlaybackUi() {
+  playButton.textContent = playing ? '暂停' : '继续';
+  playButton.setAttribute('aria-pressed', playing ? 'false' : 'true');
+  const mode = EMBEDDED ? '嵌入省算力' : '独立老师';
+  statusEl.textContent = `老师锁定 · 960×540 · SPEED = iTime × 0.3 · ${playing ? '播放' : '暂停'} · ${mode}`;
+}
+
+function setPlaying(next) {
+  const now = performance.now();
+  const wanted = Boolean(next);
+  if (wanted === playing) {
+    needsRender = true;
+    updatePlaybackUi();
+    return;
+  }
+  if (wanted) {
+    accumulatedPause += now - pauseStartedAt;
+    playing = true;
+  } else {
+    pauseStartedAt = now;
+    playing = false;
+  }
+  needsRender = true;
+  updatePlaybackUi();
+}
+
+function restartTeacher() {
+  const now = performance.now();
+  startTime = now;
+  accumulatedPause = 0;
+  pauseStartedAt = now;
+  needsRender = true;
 }
 
 async function boot() {
@@ -98,20 +134,29 @@ async function boot() {
   gl.uniform3f(resolutionLocation, REFERENCE_WIDTH, REFERENCE_HEIGHT, 1);
 
   window.__kukoDay123Ready = true;
+  window.KuKoDay123Teacher = {
+    play: () => setPlaying(true),
+    pause: () => setPlaying(false),
+    restart: restartTeacher,
+    getState: () => ({ playing, embedded: EMBEDDED, width: REFERENCE_WIDTH, height: REFERENCE_HEIGHT })
+  };
   document.documentElement.dataset.ready = 'true';
-  statusEl.textContent = '老师锁定 · 960×540 · SPEED = iTime × 0.3 · 正在实时演奏';
+  updatePlaybackUi();
 
   function draw(now) {
-    const elapsedMs = playing
-      ? now - startTime - accumulatedPause
-      : pauseStartedAt - startTime - accumulatedPause;
-    gl.uniform1f(timeLocation, Math.max(0, elapsedMs) / 1000);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
-    frameCount += 1;
+    if (playing || needsRender) {
+      const elapsedMs = playing
+        ? now - startTime - accumulatedPause
+        : pauseStartedAt - startTime - accumulatedPause;
+      gl.uniform1f(timeLocation, Math.max(0, elapsedMs) / 1000);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      frameCount += 1;
+      needsRender = false;
+    }
 
-    if (now - lastFpsSample > 1500) {
+    if (playing && now - lastFpsSample > 1500) {
       const fps = ((frameCount - lastFpsFrame) * 1000) / (now - lastFpsSample);
-      statusEl.textContent = `老师锁定 · 960×540 · SPEED = iTime × 0.3 · ${playing ? '播放' : '暂停'} · ${fps.toFixed(1)} FPS`;
+      statusEl.textContent = `老师锁定 · 960×540 · SPEED = iTime × 0.3 · 播放 · ${fps.toFixed(1)} FPS`;
       lastFpsSample = now;
       lastFpsFrame = frameCount;
     }
@@ -120,26 +165,13 @@ async function boot() {
   requestAnimationFrame(draw);
 }
 
-playButton.addEventListener('click', () => {
-  const now = performance.now();
-  if (playing) {
-    playing = false;
-    pauseStartedAt = now;
-    playButton.textContent = '继续';
-    playButton.setAttribute('aria-pressed', 'true');
-  } else {
-    playing = true;
-    accumulatedPause += now - pauseStartedAt;
-    playButton.textContent = '暂停';
-    playButton.setAttribute('aria-pressed', 'false');
-  }
-});
+playButton.addEventListener('click', () => setPlaying(!playing));
+restartButton.addEventListener('click', restartTeacher);
 
-restartButton.addEventListener('click', () => {
-  const now = performance.now();
-  startTime = now;
-  accumulatedPause = 0;
-  pauseStartedAt = now;
+window.addEventListener('message', (event) => {
+  if (event.source !== window.parent || !event.data || typeof event.data !== 'object') return;
+  if (event.data.type === 'KAOPU_KUKO_PLAY') setPlaying(Boolean(event.data.playing));
+  if (event.data.type === 'KAOPU_KUKO_RESTART') restartTeacher();
 });
 
 fullscreenButton.addEventListener('click', async () => {

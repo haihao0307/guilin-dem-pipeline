@@ -33,12 +33,32 @@ const teachers = {
   }
 };
 
+let currentMode = body.dataset.mode || 'tree';
+
+function setTeacherPlayback(playing) {
+  try {
+    teacherFrame.contentWindow?.postMessage({
+      type: 'KAOPU_KUKO_PLAY',
+      playing: Boolean(playing)
+    }, location.origin);
+  } catch (_) {}
+}
+
+function applyPlaybackPolicy() {
+  // Teacher-only mode may animate. Tree, compare and map keep the exact teacher
+  // frame visible but frozen, so the heavy shader does not compete with the 3D tree.
+  setTeacherPlayback(currentMode === 'teacher');
+}
+
 function setMode(mode) {
+  currentMode = mode;
   body.dataset.mode = mode;
   for (const button of modeButtons) {
     button.classList.toggle('on', button.dataset.mode === mode);
   }
+  applyPlaybackPolicy();
   try { localStorage.setItem('kaopu-fractal-tree-mode', mode); } catch (_) {}
+  updateReadyState();
 }
 
 for (const button of modeButtons) {
@@ -50,7 +70,7 @@ const storedMode = (() => {
 })();
 if (storedMode && ['tree','teacher','compare','map'].includes(storedMode)) {
   setMode(storedMode);
-} else if (matchMedia('(max-width: 980px)').matches) {
+} else {
   setMode('tree');
 }
 
@@ -135,18 +155,28 @@ function childReady(frame, marker) {
 function updateReadyState() {
   treeReady = childReady(treeFrame, '__treeReady');
   teacherReady = childReady(teacherFrame, '__kukoDay123Ready');
+  if (teacherReady) applyPlaybackPolicy();
+  const teacherMotion = currentMode === 'teacher' ? '老师动画开启' : '老师冻结帧省算力';
   const parts = [
     treeReady ? '树母台已就绪' : '树母台加载中',
-    teacherReady ? 'KuKo 老师已就绪' : 'KuKo 老师加载中',
+    teacherReady ? `KuKo 老师已就绪（${teacherMotion}）` : 'KuKo 老师加载中',
     manifestReady ? '知识桥已登记' : '知识桥加载中'
   ];
   workbenchState.textContent = parts.join(' · ');
   const ready = treeReady && teacherReady && manifestReady;
   window.__fractalTreeWorkbenchReady = ready;
+  window.FractalWaveTreeWorkbenchR01 = {
+    setMode,
+    decodePath: (teacherId, branchId) => decodePath(teachers[teacherId], branchId),
+    getState: () => ({ mode: currentMode, treeReady, teacherReady, manifestReady })
+  };
   document.documentElement.dataset.ready = ready ? 'true' : 'false';
 }
 
 treeFrame.addEventListener('load', updateReadyState);
-teacherFrame.addEventListener('load', updateReadyState);
+teacherFrame.addEventListener('load', () => {
+  updateReadyState();
+  applyPlaybackPolicy();
+});
 loadManifest().finally(updateReadyState);
 setInterval(updateReadyState, 1000);
