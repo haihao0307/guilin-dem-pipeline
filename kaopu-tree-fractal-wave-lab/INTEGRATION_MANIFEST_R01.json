@@ -1,7 +1,7 @@
 {
   "schema": "KAOPU.fractal-wave.tree-workbench/1",
   "name": "KAOPU Fractal Wave Tree Workbench R01",
-  "stage": "integrated_learning_workbench",
+  "stage": "integrated_learning_workbench_with_projection_locked_3d_lift",
   "grammarAnchors": {
     "treeLife": {
       "id": "TreeLifeR05.Pandanus",
@@ -14,6 +14,13 @@
       "path": "kuko-day123-branching-r01/",
       "role": "exact 2D branching-address/SDF/wind-phase teacher",
       "frozen": true
+    },
+    "threeDLift": {
+      "id": "KuKoDay123.ProjectionLockedLift.R01",
+      "path": "kuko-day123-3d-lift-r01/",
+      "role": "reversible forward-node 3D learning voice; keeps teacher XY projection fixed",
+      "frozen": false,
+      "appliesToSpecies": false
     }
   },
   "learnedVoices": [
@@ -41,6 +48,11 @@
       "id": "branch.localWindPhase",
       "source": "wind0 / wind1 inserted at selected grammar nodes",
       "use": "node-local motion phase seed; must be upgraded before 3D force claims"
+    },
+    {
+      "id": "branch.projectionLocked3DLift",
+      "source": "inverse teacher chain -> forward node graph -> independent local Z",
+      "use": "learn a reversible 3D branching technique without forcing it onto Pandanus or any species"
     }
   ],
   "treeKnowledgeKept": [
@@ -54,6 +66,9 @@
     "The KuKo teacher remains an exact regression anchor and is not edited by the integrated shell.",
     "A 2D SDF image is not evidence of correct 3D geometry, biology or mechanics.",
     "The teacher's wind phases are not yet a physical force-propagation model.",
-    "The integrated workbench registers learned voices; it does not silently replace Tree Life R05."
+    "The 3D lift preserves teacher-derived X/Y and adds Z separately; Z is a hypothesis, not a fact learned from the 2D image.",
+    "The lifted grammar is not assigned to Pandanus tectorius or any species until an applicability review is performed.",
+    "A 2D SDF image is not evidence of correct 3D biology, load paths or mechanics.",
+    "The teacher wind phases remain animation grammar; they are not yet a physical force-propagation model."
   ]
 }
