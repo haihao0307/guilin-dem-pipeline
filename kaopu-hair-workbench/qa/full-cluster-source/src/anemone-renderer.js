@@ -70,11 +70,11 @@ void main(){
  }else{
    float tissue=smoothstep(.0,.82,axial);
    base=mix(rootColor,midColor,tissue*.88+.04+variation*.07);
-   base=mix(base,milk,.12+variation*.045);
+   base=mix(base,milk,.04+variation*.025);
    // Hue occupies only the last eight percent, with zero-slope smooth ends.
    // Broad milk lift precedes it, avoiding an abruptly painted tip cap.
    float tip=smoothstep(.92,1.,axial);
-   base=mix(base,mix(tipColor,milk,.48),tip*.86);
+   base=mix(base,mix(tipColor,milk,.32),tip*.86);
    base=mix(base,milk,.16*smoothstep(.74,1.,axial));
    float back=pow(max(dot(-n,l),0.),1.5);
    // Transfer the teacher's *combined* rim/edge response, rather than its raw
@@ -84,13 +84,17 @@ void main(){
    float softAmbient=.20+.8*coc;
    // A colored volume floor keeps the center substantial instead of black glass.
    lit=base*(softAmbient+.52*diff*teacherCoverage*sharp);
-   lit+=mix(base,milk,.66)*effectiveRim*.68*sharp;
-   lit+=base*pow(facing,1.5)*.08;
+   // Reference-led correction: edges respond to light instead of a uniform white outline.
+   float rimLight=.40+.60*smoothstep(-.2,.85,dot(n,l));
+   lit+=mix(base,milk,.30)*effectiveRim*.62*rimLight*sharp;
+   // Camera-facing rounded caps keep a colored, filled center rather than a dark hole.
+   lit+=base*pow(facing,1.5)*(.13+.18*tip);
    lit+=mix(base,milk,.25)*back*.06;
    lit*=mix(.78,1.,smoothstep(.38,1.12,world.y));
-   // At the default .70: solid-looking centers ~.80, soft silhouettes ~.44.
+   // At the default .70: tissue centers ~.94, soft silhouettes ~.54.
+   // Preserve only limited back-layer visibility through the side, not across the core.
    // Only local surface coverage changes; roots, radii and normals are untouched.
-   float transmission=mix(.80,.285714,smoothstep(0.,.72,facing));
+   float transmission=mix(.66,.085714,smoothstep(0.,.72,facing));
    alpha=clamp(1.-translucency*transmission+tip*.035*translucency,.12,1.);
  }
  lit=max(lit,vec3(0.));

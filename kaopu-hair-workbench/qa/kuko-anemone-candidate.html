@@ -19,6 +19,8 @@ body[data-module=kuko] #rabbitModule{height:0;overflow:hidden;visibility:hidden}
 .study-controls{padding:15px;background:#152228;font-size:11px;color:#aac2c8}.study-controls label{display:flex;gap:9px;align-items:center;margin-bottom:11px}.study-controls input{flex:1;accent-color:#63cdd2}.study-controls output{font:10px var(--mono);width:35px}.study-controls select{background:#183038;color:#d4f0f3;padding:6px;border-radius:5px;border:1px solid #41616b}.study-controls p{line-height:1.7;margin-top:10px;color:#88a7b0}.study-controls button{font-size:11px;padding:7px 10px}
 .study-colors{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:15px}.study-colors button{flex:1;white-space:nowrap}.study-controls a{color:#9bd3d4}
 .anemone-grid{grid-template-columns:230px minmax(300px,1fr)}.anemone-inspector{grid-column:1/-1}.anemone-inspector>summary{cursor:pointer}.anemone-controls{display:grid;grid-template-columns:1fr 1fr;gap:20px}.anemone-controls .section-title{grid-column:1/-1}.cluster-palette{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px 14px 0}.cluster-palette button{padding:10px 4px;font-size:12px}.cluster-palette button.active{background:#2e5b51;border-color:#83bbab}.cluster-sources{font-size:10px;line-height:1.7;color:#9db8a7;padding:0 14px 12px}.cluster-sources a{color:#bfd9c5}.anemone-canvas-wrap{height:clamp(470px,calc(100vh - 310px),740px)}@media(max-width:800px){.anemone-grid{grid-template-columns:1fr}.anemone-controls{display:block}.anemone-canvas-wrap{height:430px}.cluster-palette{gap:5px;padding:10px 10px 0}.cluster-palette button{font-size:11px}.anemone-inspector{grid-column:auto}}
+.cluster-palette button.active{color:#eff8ea}
+
 </style>
 </head>
 <body data-module="kuko">
@@ -241,11 +243,11 @@ void main(){
  }else{
    float tissue=smoothstep(.0,.82,axial);
    base=mix(rootColor,midColor,tissue*.88+.04+variation*.07);
-   base=mix(base,milk,.12+variation*.045);
+   base=mix(base,milk,.04+variation*.025);
    // Hue occupies only the last eight percent, with zero-slope smooth ends.
    // Broad milk lift precedes it, avoiding an abruptly painted tip cap.
    float tip=smoothstep(.92,1.,axial);
-   base=mix(base,mix(tipColor,milk,.48),tip*.86);
+   base=mix(base,mix(tipColor,milk,.32),tip*.86);
    base=mix(base,milk,.16*smoothstep(.74,1.,axial));
    float back=pow(max(dot(-n,l),0.),1.5);
    // Transfer the teacher's *combined* rim/edge response, rather than its raw
@@ -255,13 +257,17 @@ void main(){
    float softAmbient=.20+.8*coc;
    // A colored volume floor keeps the center substantial instead of black glass.
    lit=base*(softAmbient+.52*diff*teacherCoverage*sharp);
-   lit+=mix(base,milk,.66)*effectiveRim*.68*sharp;
-   lit+=base*pow(facing,1.5)*.08;
+   // Reference-led correction: edges respond to light instead of a uniform white outline.
+   float rimLight=.40+.60*smoothstep(-.2,.85,dot(n,l));
+   lit+=mix(base,milk,.30)*effectiveRim*.62*rimLight*sharp;
+   // Camera-facing rounded caps keep a colored, filled center rather than a dark hole.
+   lit+=base*pow(facing,1.5)*(.13+.18*tip);
    lit+=mix(base,milk,.25)*back*.06;
    lit*=mix(.78,1.,smoothstep(.38,1.12,world.y));
-   // At the default .70: solid-looking centers ~.80, soft silhouettes ~.44.
+   // At the default .70: tissue centers ~.94, soft silhouettes ~.54.
+   // Preserve only limited back-layer visibility through the side, not across the core.
    // Only local surface coverage changes; roots, radii and normals are untouched.
-   float transmission=mix(.80,.285714,smoothstep(0.,.72,facing));
+   float transmission=mix(.66,.085714,smoothstep(0.,.72,facing));
    alpha=clamp(1.-translucency*transmission+tip*.035*translucency,.12,1.);
  }
  lit=max(lit,vec3(0.));
