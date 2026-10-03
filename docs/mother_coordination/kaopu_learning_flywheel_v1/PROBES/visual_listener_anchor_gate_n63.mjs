@@ -21,6 +21,30 @@ function decide(x) {
     return "OBSERVATION_CORRESPONDENCE_CANDIDATE";
   }
   if (roots < 2) return "OBSERVATION_INDEPENDENCE_INSUFFICIENT";
+  if (x.requireBoundEvidenceRoots === true) {
+    const requiredClaims = new Set(
+      Array.isArray(x.requiredClaimIds) ? x.requiredClaimIds : []
+    );
+    const boundRoots = new Set(
+      (Array.isArray(x.evidenceRootBindings) ? x.evidenceRootBindings : [])
+        .filter(binding => {
+          const coveredClaims = new Set(
+            Array.isArray(binding.claimIds) ? binding.claimIds : []
+          );
+          const coversRequiredClaims = requiredClaims.size > 0 &&
+            [...requiredClaims].every(claimId => coveredClaims.has(claimId));
+          return roots > 0 &&
+            x.independentEvidenceRoots.includes(binding.rootId) &&
+            binding.subjectId === x.subjectId &&
+            binding.directSupport === true &&
+            coversRequiredClaims;
+        })
+        .map(binding => binding.rootId)
+    );
+    if (!x.subjectId || requiredClaims.size === 0 || boundRoots.size < 2) {
+      return "OBSERVATION_EVIDENCE_NOT_BOUND_TO_SUBJECT";
+    }
+  }
   if (!x.relationInvariantsDefined) {
     return "OBSERVATION_RELATION_ANCHOR_INCOMPLETE";
   }
