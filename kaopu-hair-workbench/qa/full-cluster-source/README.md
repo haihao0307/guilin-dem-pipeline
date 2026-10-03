@@ -13,7 +13,7 @@ References observed:
 
 Video previews were decoded and inspected at timestamped samples. They support relatively equal-width visible upper shafts and blunt/slightly expanded tips, not needle taper. Roots are partly occluded and exact all-shaft radii are unknown. Videos and additional photographer images are observation-only and are not embedded or uploaded.
 
-The four palettes are cross-species photographic art translations, not measured H. magnifica albedos. Material compositing is a visual approximation, not measured subsurface scattering or refraction. Original r03 curve intersections remain a separate known limitation; transparent shading does not resolve them.
+The four palettes are cross-species photographic art translations, not measured H. magnifica albedos. Material compositing keeps the nearest two front-facing transparent layers in depth order over the opaque body; deeper transparent layers are omitted. It is a visual approximation, not measured subsurface scattering or refraction. Original r03 curve intersections remain a separate known limitation; transparent shading does not resolve them.
 
 Verification must separately establish source/geometry preservation, actual WebGL output and interactions, standalone no-network behavior, exact public bytes, and independent visual review. The producer does not mark visual acceptance or production readiness automatically.
 

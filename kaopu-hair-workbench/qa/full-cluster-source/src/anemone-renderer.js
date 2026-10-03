@@ -1,11 +1,13 @@
 /* KAOPU r03 mesh / KuKo material transfer, 2026-10-03.
  * The r03 tube profile, bodyMesh, joint solve, camera and indices are unchanged.
  * KuKo-derived broad rim and distance-softened color, with four study palettes.
- * Weighted blended OIT: opaque body depth -> weighted color -> revealage ->
- * linear-light composite. Transparent tentacles test body depth but never write it.
- * This is layered surface translucency, not refraction / volumetric transport or
- * a collision solver. Without renderable RGBA16F, use explicit back-to-front
- * whole-tentacle alpha compositing (approximate where bent tubes interleave).
+ * Two visible front-facing layers: opaque body depth -> nearest tube depth/color
+ * -> second distinct tube depth/color -> ordered linear-light alpha composite.
+ * Every layer has its own DEPTH_COMPONENT24 texture and nearest-surface depth test.
+ * Deeper tube layers are deliberately omitted: this is a two-layer approximation,
+ * not refraction / volumetric transport or a collision solver. WebGL2 depth textures
+ * need no float-color extension. If framebuffer creation fails, explicit sorted
+ * whole-tentacle alpha fallback remains approximate where bent tubes interleave.
  */
 (function(root){'use strict';
 const C=root.AnemoneCore;
@@ -46,6 +48,7 @@ precision highp float;
 in vec3 world;in vec3 normal;in float axial;in float variation;
 uniform vec3 eye;uniform vec3 rootColor;uniform vec3 midColor;uniform vec3 tipColor;
 uniform float translucency;uniform float focusDistance;uniform int materialPass;
+uniform highp sampler2D bodyDepth;uniform highp sampler2D frontDepth;
 out vec4 color;
 void main(){
  vec3 n=normalize(normal),v=normalize(eye-world),l=normalize(vec3(.6,.6,.5));
@@ -74,22 +77,35 @@ void main(){
    base=mix(base,mix(tipColor,milk,.48),tip*.86);
    base=mix(base,milk,.16*smoothstep(.74,1.,axial));
    float back=pow(max(dot(-n,l),0.),1.5);
-   float softAmbient=.48+1.8*coc;
-   lit=base*(softAmbient+.37*diff*sharp)+mix(base,milk,.65)*rim*.28*sharp;
-   lit+=mix(base,milk,.3)*back*.105;
+   // Transfer the teacher's *combined* rim/edge response, rather than its raw
+   // 9.6 multiplier alone. Its smooth off-silhouette lobe is bounded (~.54).
+   float teacherCoverage=1.-pow(max(0.,1.-facing),.2);
+   float effectiveRim=9.6*rim*teacherCoverage;
+   float softAmbient=.20+.8*coc;
+   // A colored volume floor keeps the center substantial instead of black glass.
+   lit=base*(softAmbient+.52*diff*teacherCoverage*sharp);
+   lit+=mix(base,milk,.66)*effectiveRim*.68*sharp;
+   lit+=base*pow(facing,1.5)*.08;
+   lit+=mix(base,milk,.25)*back*.06;
    lit*=mix(.78,1.,smoothstep(.38,1.12,world.y));
-   // Nonzero opacity always. Facing/distance soften the edge, not the mesh.
-   float edgeOpacity=.20*mix(.58,1.,pow(facing,.30));
-   float tissueOpacity=(edgeOpacity+tip*.075)*mix(.88,1.,sharp);
-   alpha=mix(1.,clamp(tissueOpacity,.08,.32),translucency);
+   // At the default .70: solid-looking centers ~.80, soft silhouettes ~.44.
+   // Only local surface coverage changes; roots, radii and normals are untouched.
+   float transmission=mix(.80,.285714,smoothstep(0.,.72,facing));
+   alpha=clamp(1.-translucency*transmission+tip*.035*translucency,.12,1.);
  }
  lit=max(lit,vec3(0.));
- if(materialPass==1){
-   // Depth preference improves separation without depending on submission order.
-   float weight=clamp(pow(focusDistance/max(dt,.1),4.),.15,6.);
-   color=vec4(lit*alpha,alpha)*weight;
- }else if(materialPass==2){color=vec4(alpha);}
- else if(materialPass==3){color=vec4(pow(lit,vec3(1./2.2)),alpha);}
+ if(materialPass==1||materialPass==2){
+   // Evaluate derivatives above before discarding, keeping rim shading stable.
+   ivec2 pixel=ivec2(gl_FragCoord.xy);
+   if(gl_FragCoord.z>=texelFetch(bodyDepth,pixel,0).r)discard;
+   if(materialPass==2){
+     float first=texelFetch(frontDepth,pixel,0).r;
+     // Three normalized DEPTH_COMPONENT24 units reject only the same surface.
+     const float peelEpsilon=3.0/16777215.0;
+     if(gl_FragCoord.z<=first+peelEpsilon)discard;
+   }
+ }
+ if(materialPass==3){color=vec4(pow(lit,vec3(1./2.2)),alpha);}
  else{color=vec4(lit,alpha);}
 }`;
 const compositeVertex=`#version 300 es
@@ -98,9 +114,16 @@ out vec2 uv;
 void main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));uv=p;gl_Position=vec4(p*2.-1.,0.,1.);}`;
 const compositeFragment=`#version 300 es
 precision highp float;
-in vec2 uv;uniform sampler2D sceneColor;uniform sampler2D accumulation;uniform sampler2D revealage;
+in vec2 uv;uniform sampler2D sceneColor;uniform sampler2D frontColor;uniform sampler2D secondColor;
 out vec4 color;
-void main(){vec3 scene=texture(sceneColor,uv).rgb;vec4 a=texture(accumulation,uv);float reveal=clamp(texture(revealage,uv).r,0.,1.);vec3 layers=a.rgb/max(a.a,1e-5);vec3 linearColor=mix(layers,scene,reveal);color=vec4(pow(max(linearColor,vec3(0.)),vec3(1./2.2)),1.);}`;
+void main(){
+ vec3 scene=texture(sceneColor,uv).rgb;
+ vec4 front=texture(frontColor,uv),second=texture(secondColor,uv);
+ // Correct surface ordering. Never average every tube intersected by the ray.
+ vec3 behindFront=second.rgb*second.a+scene*(1.-second.a);
+ vec3 linearColor=front.rgb*front.a+behindFront*(1.-front.a);
+ color=vec4(pow(max(linearColor,vec3(0.)),vec3(1./2.2)),1.);
+}`;
 
 function shader(gl,type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
 function program(gl,v,f){const p=gl.createProgram();gl.attachShader(p,shader(gl,gl.VERTEX_SHADER,v));gl.attachShader(p,shader(gl,gl.FRAGMENT_SHADER,f));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return p;}
@@ -114,7 +137,7 @@ function bodyMesh(){const positions=[],normals=[],indices=[],steps=C.DISC_SIDES,
  return {positions:new Float32Array(positions),normals:new Float32Array(normals),indices:new Uint16Array(indices)};
 }
 class Renderer{
- constructor(canvas){this.canvas=canvas;this.gl=canvas.getContext('webgl2',{alpha:false,antialias:true,preserveDrawingBuffer:true});if(!this.gl)throw Error('此浏览器无法创建 WebGL 2');const g=this.gl;this.errors=[];this.frames=0;this.drawMsTotal=0;this.drawMsMax=0;this.drawMsLast=0;this.camera={azimuth:.25,elevation:.84,distance:4.6};this.program=program(g,vertex,fragment);this.bodyProgram=program(g,bodyVertex,fragment);this.materialProgram=program(g,vertex,materialFragment);this.materialBodyProgram=program(g,bodyVertex,materialFragment);this.compositeProgram=program(g,compositeVertex,compositeFragment);this.compositeVao=g.createVertexArray();this._material=Object.freeze({palette:'green',translucency:.68,mode:'kuko'});this.floatColor=!!g.getExtension('EXT_color_buffer_float');this.transparency={method:this.floatColor?'weighted-blended-oit':'sorted-alpha-fallback',available:this.floatColor,reason:this.floatColor?null:'EXT_color_buffer_float unavailable; sorted whole-tentacle alpha is approximate at interleaving surfaces'};this.targets=null;this.texture=g.createTexture();g.bindTexture(g.TEXTURE_2D,this.texture);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_MIN_FILTER,g.NEAREST);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_MAG_FILTER,g.NEAREST);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_WRAP_S,g.CLAMP_TO_EDGE);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_WRAP_T,g.CLAMP_TO_EDGE);
+ constructor(canvas){this.canvas=canvas;this.gl=canvas.getContext('webgl2',{alpha:false,antialias:true,preserveDrawingBuffer:true});if(!this.gl)throw Error('此浏览器无法创建 WebGL 2');const g=this.gl;this.errors=[];this.frames=0;this.drawMsTotal=0;this.drawMsMax=0;this.drawMsLast=0;this.camera={azimuth:.25,elevation:.84,distance:4.6};this.program=program(g,vertex,fragment);this.bodyProgram=program(g,bodyVertex,fragment);this.materialProgram=program(g,vertex,materialFragment);this.materialBodyProgram=program(g,bodyVertex,materialFragment);this.compositeProgram=program(g,compositeVertex,compositeFragment);this.compositeVao=g.createVertexArray();this._material=Object.freeze({palette:'green',translucency:.68,mode:'kuko'});this.peelingAvailable=true;this.transparency={method:'two-layer-depth-peeling',available:true,layers:2,deepLayers:'omitted approximation',depthFormat:'DEPTH_COMPONENT24',floatColorRequired:false,reason:null};this.targets=null;this.texture=g.createTexture();g.bindTexture(g.TEXTURE_2D,this.texture);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_MIN_FILTER,g.NEAREST);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_MAG_FILTER,g.NEAREST);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_WRAP_S,g.CLAMP_TO_EDGE);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_WRAP_T,g.CLAMP_TO_EDGE);
  const params=[],indices=[],rings=42,sides=12;for(let i=0;i<=rings;i++)for(let a=0;a<=sides;a++){params.push(i/rings,a/sides*Math.PI*2);if(i<rings&&a<sides){const k=i*(sides+1)+a;indices.push(k,k+sides+1,k+1,k+1,k+sides+1,k+sides+2);}}this.tube=g.createVertexArray();g.bindVertexArray(this.tube);this.buffer(0,new Float32Array(params),2);this.index(indices);this.tubeCount=indices.length;
  const body=bodyMesh();this.body=g.createVertexArray();g.bindVertexArray(this.body);this.buffer(0,body.positions,3);this.buffer(1,body.normals,3);this.index(body.indices);this.bodyCount=body.indices.length;g.bindVertexArray(null);g.enable(g.DEPTH_TEST);g.disable(g.CULL_FACE);this.reset({...C.DEFAULTS});
  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();this.errors.push('WebGL context lost');this.onError?.('WebGL 上下文已丢失，请重新打开');});
@@ -142,34 +165,43 @@ class Renderer{
  releaseTargets(){
   if(!this.targets)return;const g=this.gl,t=this.targets;
   for(const f of t.framebuffers)g.deleteFramebuffer(f);
-  for(const texture of t.textures)g.deleteTexture(texture);
-  g.deleteRenderbuffer(t.depth);this.targets=null;
+  for(const texture of [...t.textures,...t.depthTextures])g.deleteTexture(texture);
+  this.targets=null;
  }
  ensureTargets(w,h){
-  if(!this.floatColor)return false;
+  if(!this.peelingAvailable)return false;
   if(this.targets?.width===w&&this.targets?.height===h)return true;
-  this.releaseTargets();const g=this.gl,t={width:w,height:h,textures:[],framebuffers:[],depth:g.createRenderbuffer()};this.targets=t;
-  g.bindRenderbuffer(g.RENDERBUFFER,t.depth);g.renderbufferStorage(g.RENDERBUFFER,g.DEPTH_COMPONENT24,w,h);
-  for(const floating of [false,true,false]){
-   const texture=g.createTexture();t.textures.push(texture);g.bindTexture(g.TEXTURE_2D,texture);
+  this.releaseTargets();const g=this.gl,t={width:w,height:h,textures:[],depthTextures:[],framebuffers:[]};this.targets=t;
+  const texture=(internal,format,type)=>{
+   const tex=g.createTexture();g.bindTexture(g.TEXTURE_2D,tex);
    g.texParameteri(g.TEXTURE_2D,g.TEXTURE_MIN_FILTER,g.NEAREST);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_MAG_FILTER,g.NEAREST);
    g.texParameteri(g.TEXTURE_2D,g.TEXTURE_WRAP_S,g.CLAMP_TO_EDGE);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_WRAP_T,g.CLAMP_TO_EDGE);
-   g.texImage2D(g.TEXTURE_2D,0,floating?g.RGBA16F:g.RGBA8,w,h,0,g.RGBA,floating?g.HALF_FLOAT:g.UNSIGNED_BYTE,null);
+   g.texImage2D(g.TEXTURE_2D,0,internal,w,h,0,format,type,null);return tex;
+  };
+  for(let i=0;i<3;i++){
+   const color=texture(g.RGBA8,g.RGBA,g.UNSIGNED_BYTE);t.textures.push(color);
+   const depth=texture(g.DEPTH_COMPONENT24,g.DEPTH_COMPONENT,g.UNSIGNED_INT);t.depthTextures.push(depth);
    const f=g.createFramebuffer();t.framebuffers.push(f);g.bindFramebuffer(g.FRAMEBUFFER,f);
-   g.framebufferTexture2D(g.FRAMEBUFFER,g.COLOR_ATTACHMENT0,g.TEXTURE_2D,texture,0);
-   g.framebufferRenderbuffer(g.FRAMEBUFFER,g.DEPTH_ATTACHMENT,g.RENDERBUFFER,t.depth);
+   g.framebufferTexture2D(g.FRAMEBUFFER,g.COLOR_ATTACHMENT0,g.TEXTURE_2D,color,0);
+   g.framebufferTexture2D(g.FRAMEBUFFER,g.DEPTH_ATTACHMENT,g.TEXTURE_2D,depth,0);
    if(g.checkFramebufferStatus(g.FRAMEBUFFER)!==g.FRAMEBUFFER_COMPLETE){
-    this.releaseTargets();this.floatColor=false;this.transparency={method:'sorted-alpha-fallback',available:false,reason:'RGBA16F framebuffer incomplete; sorted whole-tentacle alpha is approximate at interleaving surfaces'};
+    this.releaseTargets();this.peelingAvailable=false;this.transparency={method:'sorted-alpha-fallback',available:false,layers:null,deepLayers:'sorted whole-tube approximation',reason:'WebGL2 depth-texture framebuffer incomplete; whole-tentacle sorting is approximate at interleaving surfaces'};
     g.bindFramebuffer(g.FRAMEBUFFER,null);return false;
    }
   }
-  g.bindFramebuffer(g.FRAMEBUFFER,null);g.bindRenderbuffer(g.RENDERBUFFER,null);return true;
+  g.bindFramebuffer(g.FRAMEBUFFER,null);return true;
  }
  uniforms(p,vp,eye,pass,dist){
   const g=this.gl;g.useProgram(p);g.uniformMatrix4fv(g.getUniformLocation(p,'vp'),false,vp);g.uniform3fv(g.getUniformLocation(p,'eye'),eye);
   if(pass!==undefined){const palette=PALETTES[this._material.palette].map(linearHex);
    for(const [i,name] of ['rootColor','midColor','tipColor'].entries())g.uniform3fv(g.getUniformLocation(p,name),palette[i]);
    g.uniform1f(g.getUniformLocation(p,'translucency'),this._material.translucency);g.uniform1f(g.getUniformLocation(p,'focusDistance'),dist);g.uniform1i(g.getUniformLocation(p,'materialPass'),pass);
+   // Inactive branches still have active samplers: bind harmless joint data there
+   // so an attached current-layer depth texture is never a sampling feedback loop.
+   for(const [unit,name,tex]of [[1,'bodyDepth',(pass===1||pass===2)?this.targets.depthTextures[0]:this.texture],[2,'frontDepth',pass===2?this.targets.depthTextures[1]:this.texture]]){
+    g.activeTexture(g.TEXTURE0+unit);g.bindTexture(g.TEXTURE_2D,tex);g.uniform1i(g.getUniformLocation(p,name),unit);
+   }
+   g.activeTexture(g.TEXTURE0);
   }
  }
  drawBody(p,vp,eye,pass,dist){const g=this.gl;this.uniforms(p,vp,eye,pass,dist);g.bindVertexArray(this.body);g.drawElements(g.TRIANGLES,this.bodyCount,g.UNSIGNED_SHORT,0);}
@@ -198,16 +230,16 @@ class Renderer{
   }else if(this.ensureTargets(w,h)){
    const t=this.targets;g.bindFramebuffer(g.FRAMEBUFFER,t.framebuffers[0]);g.clearColor(.0023,.0061,.0055,1);g.clear(g.COLOR_BUFFER_BIT|g.DEPTH_BUFFER_BIT);
    this.drawBody(this.materialBodyProgram,vp,eye,0,dist);
-   g.depthMask(false);g.enable(g.CULL_FACE);g.cullFace(g.BACK);g.enable(g.BLEND);g.blendEquation(g.FUNC_ADD);
-   g.bindFramebuffer(g.FRAMEBUFFER,t.framebuffers[1]);g.clearBufferfv(g.COLOR,0,new Float32Array([0,0,0,0]));g.blendFunc(g.ONE,g.ONE);
-   this.drawTubes(this.materialProgram,vp,eye,1,dist);
-   g.bindFramebuffer(g.FRAMEBUFFER,t.framebuffers[2]);g.clearBufferfv(g.COLOR,0,new Float32Array([1,1,1,1]));g.blendFunc(g.ZERO,g.ONE_MINUS_SRC_ALPHA);
-   this.drawTubes(this.materialProgram,vp,eye,2,dist);
-   g.bindFramebuffer(g.FRAMEBUFFER,null);g.disable(g.BLEND);g.disable(g.DEPTH_TEST);g.disable(g.CULL_FACE);g.useProgram(this.compositeProgram);g.bindVertexArray(this.compositeVao);
-   for(const [i,name]of ['sceneColor','accumulation','revealage'].entries()){g.activeTexture(g.TEXTURE0+i);g.bindTexture(g.TEXTURE_2D,t.textures[i]);g.uniform1i(g.getUniformLocation(this.compositeProgram,name),i);}
+   g.depthMask(true);g.enable(g.CULL_FACE);g.cullFace(g.BACK);g.disable(g.BLEND);
+   for(let layer=1;layer<=2;layer++){
+    g.bindFramebuffer(g.FRAMEBUFFER,t.framebuffers[layer]);g.clearColor(0,0,0,0);g.clear(g.COLOR_BUFFER_BIT|g.DEPTH_BUFFER_BIT);
+    this.drawTubes(this.materialProgram,vp,eye,layer,dist);
+   }
+   g.bindFramebuffer(g.FRAMEBUFFER,null);g.disable(g.DEPTH_TEST);g.disable(g.CULL_FACE);g.useProgram(this.compositeProgram);g.bindVertexArray(this.compositeVao);
+   for(const [i,name]of ['sceneColor','frontColor','secondColor'].entries()){g.activeTexture(g.TEXTURE0+i);g.bindTexture(g.TEXTURE_2D,t.textures[i]);g.uniform1i(g.getUniformLocation(this.compositeProgram,name),i);}
    g.drawArrays(g.TRIANGLES,0,3);
   }else{
-   // Explicit non-float path: conventional sorted alpha with opaque body depth.
+   // Explicit framebuffer fallback: sorted alpha with opaque body depth.
    g.clearColor(Math.pow(.0023,1/2.2),Math.pow(.0061,1/2.2),Math.pow(.0055,1/2.2),1);g.clear(g.COLOR_BUFFER_BIT|g.DEPTH_BUFFER_BIT);
    this.drawBody(this.materialBodyProgram,vp,eye,3,dist);
    g.depthMask(false);g.enable(g.CULL_FACE);g.cullFace(g.BACK);g.enable(g.BLEND);g.blendEquation(g.FUNC_ADD);g.blendFunc(g.SRC_ALPHA,g.ONE_MINUS_SRC_ALPHA);
