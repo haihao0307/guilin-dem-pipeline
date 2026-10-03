@@ -9,6 +9,7 @@ import {decodeLegacyPacket,stageLegacyPacket} from './legacy-packet-r07.js';
 import {installLegacyMath,releaseLegacySourceCopies} from './legacy-math-r07.js';
 import {installLegacySchool} from './legacy-school-r08.js';
 import {fitLegacyOverview} from './legacy-overview-r08.js';
+import {patchCompactLegacyR10} from './compact-legacy-r10.js';
 // Preserve the accepted R14 carrier; runtime sampling skips only unread fin rows.
 // ABI isolation protects its custom WebGL habitat; no new window or remote page.
 export function createBarracudaModule(stage){
@@ -17,7 +18,7 @@ export function createBarracudaModule(stage){
  async function mountOnce(){
   if(api)return api;
   const attempt=++epoch,carrier=document.getElementById('barracudaModule');let html;
-  if(carrier.dataset.encoding==='fbr7-gzip-base64'){const bytes=await readCarrierBytes(carrier,'barracuda');loadPhase('barracuda','decode');const unpacked=new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());if(attempt!==epoch)throw new DOMException('Selection cancelled','AbortError');staged=stageLegacyPacket(decodeLegacyPacket(unpacked));html=staged.html;
+  if(carrier.dataset.format==='FCP10_LEGACY_GZIP'){const bytes=await readCarrierBytes(carrier,'barracuda');loadPhase('barracuda','decode');const raw=new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());if(attempt!==epoch)throw new DOMException('Selection cancelled','AbortError');const program=JSON.parse(document.getElementById('compactLegacyProgram').textContent);staged=stageLegacyPacket({html:program,scoreBytes:raw});html=staged.html;}else if(carrier.dataset.encoding==='fbr7-gzip-base64'){const bytes=await readCarrierBytes(carrier,'barracuda');loadPhase('barracuda','decode');const unpacked=new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());if(attempt!==epoch)throw new DOMException('Selection cancelled','AbortError');staged=stageLegacyPacket(decodeLegacyPacket(unpacked));html=staged.html;
   }else if(carrier.dataset.encoding==='gzip-base64'){const bytes=await readCarrierBytes(carrier,'barracuda');loadPhase('barracuda','decode');html=await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text();}else html=JSON.parse(carrier.textContent);
   if(attempt!==epoch)throw new DOMException('Selection cancelled','AbortError');
   frame=document.createElement('iframe');frame.title='海狼鱼 · 共用制作系统';frame.id='barracudaViewport';frame.style.cssText='position:absolute;inset:0;width:100%;height:100%;border:0;display:none';
@@ -26,6 +27,7 @@ export function createBarracudaModule(stage){
   const style='<style>html,body,.app,.main,.stage{height:100%!important;width:100%!important;margin:0!important}.app,.main{display:block!important}.topbar,.controls,.footer,.school-dock,.behavior,.hint,.panel-label{display:none!important}#gl{height:100%!important;width:100%!important}</style>';
   html=patchLegacySampling(html).replace('</head>',style+'<script>globalThis.__FISH_KEEP_CPU_COPY__=true;globalThis.__FISH_BOOT_CONTEXTS_R07__=new Set();const fishGetContextR07=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){const context=fishGetContextR07.call(this,type,...args);if(context&&/webgl/i.test(type))__FISH_BOOT_CONTEXTS_R07__.add(context);return context;};addEventListener("error",e=>{globalThis.__FISH_IFRAME_BOOT_ERROR__=e.message;});addEventListener("unhandledrejection",e=>{globalThis.__FISH_IFRAME_BOOT_ERROR__=String(e.reason?.message||e.reason);});</script></head>');
   // A file iframe inherits its creator through srcdoc. Its FBR7 program is only
+  if(carrier.dataset.format==='FCP10_LEGACY_GZIP')html=patchCompactLegacyR10(html);
   // about1MB. Online Blob navigation avoids retaining the HTML in a DOM attribute.
   if(location.protocol==='file:')frame.srcdoc=html;else{blobUrl=URL.createObjectURL(new Blob([html],{type:'text/html'}));frame.src=blobUrl;}
   const started=performance.now();

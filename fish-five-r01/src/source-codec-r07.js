@@ -2,6 +2,21 @@
 export function decodeSourceR07(raw, expectedFormat = '') {
   if(new Uint8Array(new Uint32Array([1]).buffer)[0]!==1)throw Error('FSP7 requires little-endian typed-array storage');
   const bytes = raw instanceof Uint8Array ? raw : new Uint8Array(raw);
+  if(expectedFormat==='FCP10_GZIP'){
+    if(bytes.length<16||new TextDecoder().decode(bytes.subarray(0,4))!=='FCP1')throw Error('Compact product magic mismatch');
+    const v=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength),n=v.getUint32(8,true),start=Math.ceil((16+n)/8)*8;
+    if(v.getUint32(4,true)!==1||start+v.getUint32(12,true)!==bytes.length)throw Error('Compact product length mismatch');
+    const head=JSON.parse(new TextDecoder().decode(bytes.subarray(16,16+n)));
+    if(head.schema!=='FISH_COMPACT_PRODUCT_10'||head.score.schema!==head.schema)throw Error('Compact product schema mismatch');
+    const types={Float32Array,Uint32Array},seen=new Set();let end=0;
+    for(const b of head.blocks){const T=types[b.type],p=head.score.primitives[b.primitive],key=b.primitive+':'+b.field;
+      if(!T||!p||seen.has(key)||!['positions','normals','uvs','indices','finId','finWeight','finGradient'].includes(b.field)||b.offset<end||b.offset<0||start+b.offset+b.bytes>bytes.length||b.bytes!==b.length*T.BYTES_PER_ELEMENT)throw Error('Compact product block invalid');
+      p[b.field]=new T(bytes.buffer,bytes.byteOffset+start+b.offset,b.length);seen.add(key);end=b.offset+b.bytes;
+    }
+    for(const p of head.score.primitives){if(p.base||p.residual||p.paramAddress)throw Error('Source reconstruction data is forbidden in product');for(const k of ['positions','normals','uvs','indices','finId','finWeight','finGradient'])if(!ArrayBuffer.isView(p[k]))throw Error('Incomplete compact product');}
+    const images=[];for(const i of head.images){if(!head.score.textures[i.texture]||i.offset<end||start+i.offset+i.length>bytes.length)throw Error('Compact image invalid');images.push({texture:i.texture,prefix:'data:'+i.mime+';base64,',encodedBytes:bytes.subarray(start+i.offset,start+i.offset+i.length)});end=i.offset+i.length;}
+    return {score:head.score,images,format:expectedFormat};
+  }
   const magic = bytes.length >= 4 && bytes[0]===70 && bytes[1]===83 && bytes[2]===80 && bytes[3]===55;
   const float=['positions','normals','uvs','finWeight','finGradient'],double=['base','paramAddress','residual'],integer=['indices','finId'];
   if(!magic){

@@ -8,7 +8,7 @@ export function mountProductionContext({getFishId, labels}) {
   const tabs=document.getElementById('knowledgeStages'), title=document.getElementById('knowledgeFish');
   const status=document.getElementById('knowledgeStatus');
   let stage='behavior', current=null, renders=0;
-  const componentNames={surface:'完整原表面',axis:'中心轴与截面',fins:'鳍根与鳍区',eyes:'眼窝与视轴',mouth:'下颌与口部',gills:'鳃部',envelope:'完整动画包络',gait:'推进与节律',physicalUnits:'真实物理尺寸'};
+  const componentNames={surface:'离线来源与紧凑成品',axis:'中心轴与截面',fins:'鳍根与鳍区',eyes:'眼窝与视轴',mouth:'下颌与口部',gills:'鳃部',envelope:'完整动画包络',gait:'推进与节律',physicalUnits:'真实物理尺寸'};
   const statusNames={SOURCE_MEASURED:'来源已测',SOURCE_DERIVED:'来源推导',ENGINEERING_CANDIDATE:'工程候选',CONFIRMED_ABSENT:'证实缺失',UNKNOWN:'待确认',HOLD_LOCAL:'局部待测',MEASUREMENT_REQUIRED:'需要测量',SOURCE_ENTRY_REQUIRED:'需要完整来源',INVALID_CARD:'卡片无效'};
   const append=(parent,tag,text,className)=>{const el=document.createElement(tag);el.textContent=text;if(className)el.className=className;parent.append(el);return el;};
   const describe=v=>typeof v==='string'?v: v?.text||v?.description||(v?.label?[componentNames[v.label]||v.label,v.status?statusNames[v.status]||v.status:'',v.met===false?'当前需补证据':''].filter(Boolean).join(' · '):JSON.stringify(v));

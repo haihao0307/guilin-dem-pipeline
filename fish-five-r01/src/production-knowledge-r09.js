@@ -19,7 +19,7 @@
   const rules = [
     {id:'identity.no-name-inference',stages:['identity'],text:'来源标题是素材标签；具体物种、软骨/硬骨母型和群游习性需要独立证据，不从文件名推定。未知身份不妨碍已证据化的原表面复刻。',source:docs+'FISH_FACTORY_FRAMEWORK_R01.md'},
     {id:'identity.no-universal-template',stages:['identity','spine','fins'],text:'共同接口复用，组件数量、根部、融合或缺失由来源决定。软骨鱼、无颌类或不同鳍推进母型不能套用当前硬骨鱼运动配置。',source:docs+'FISH_FACTORY_FRAMEWORK_R01.md'},
-    {id:'surface.original-is-truth',stages:['surface','verify'],text:'保留原索引、UV、法线、材质通道、原像素和完整细节残差；数学函数组织原信息，不能以通用几何体、减面或降低纹理代替来源。',source:docs+'R02_RENDER_AND_UNIFIED_FRAMEWORK.md'},
+    {id:'surface.original-is-truth',stages:['surface','verify'],text:'来源离线测量与对照；运行时只用经过误差门禁的紧凑派生成品，不能携带完整源 chart/residual 包，不能用通用几何替代原形体。R10 用户最新指令覆盖旧版逐点原像素存储。',source:docs+'R02_RENDER_AND_UNIFIED_FRAMEWORK.md'},
     {id:'surface.dynamic-continuity',stages:['surface','spine','fins','verify'],text:'静止恒等不能代替动态验收。原重合点、鳍根、三角形应变和精确法线都要在完整动作周期检查；源已有嘴缝、薄鳍边不能盲目补洞。',source:'fish-five-r01/evidence/R02_REGRESSION_CASES.json'},
     {id:'spine.one-transport',stages:['spine','fins','cranial'],text:'身体用连续中心线与正交截面运输；头段稳定，摆动向后传导。鳍局部权重不能扩散到身体，局部器官与身体使用同一空间运输。',source:docs+'FISH_FACTORY_FRAMEWORK_R01.md'},
     {id:'fins.root-zero',stages:['fins'],text:'已测鳍根零位移、鳍尖递增柔性；左右胸鳍分别控制。背/臀鳍的推进角色依母型及证据确定，不能统一当装饰或把所有鱼设为尾鳍推进。',source:docs+'R02_RENDER_AND_UNIFIED_FRAMEWORK.md'},
@@ -32,7 +32,7 @@
     {id:'acceptance.not-self-approved',stages:['verify'],text:'当前工位可制作不等于已科学标定、视觉接受或发布通过；独立核查绑定新源码和真实运行产物，用户视觉接受不得由制作端自动置真。',source:'knowledge/MOTHER_PRODUCTION_OPERATING_SYSTEM_R2_ZH.md'}
   ];
   const formulas = [
-    {id:'surface.chart-residual',stages:['surface'],expression:'p₀(u,θ) = chart(u,θ) + residual(u,θ)',units:'u 无量纲；p₀/residual 为规范 BL 坐标',meaning:'全源地址与残差逐点保留；不是有限系数消除任意源细节。',owner:'fish-five-r01/src/app.js#sourcePositions (CPU exact chart/residual reconstruction before GPU upload)',verification:'fish-five-r01/scripts/verify-gpu-r02.mjs'},
+    {id:'surface.chart-residual',stages:['surface'],expression:'p₀(u,θ) = chart(u,θ) + residual(u,θ)',units:'u 无量纲；p₀/residual 为规范 BL 坐标',meaning:'此公式为离线采样参考；R10 成品不保存全源地址与残差，当前仍为紧凑形体/材质资产，尚非全部外观数学合成。',owner:'fish-five-r01/src/app.js#sourcePositions (CPU exact chart/residual reconstruction before GPU upload)',verification:'fish-five-r01/scripts/verify-gpu-r02.mjs'},
     {id:'spine.phase-transport',stages:['spine'],expression:'φ(t+Δt)=φ(t)+2π f Δt; Cᵢ=Cᵢ₋₁+normalize(Tᵢ₋₁+Tᵢ)Δs; p=C(u)+N(u)y+B(u)z',units:'f Hz；φ rad；Δs/y/z BL；T/N/B 单位正交',meaning:'实际 sampleSpine 以源拟合或柔性包络求角度，按半径限制曲率；不是将各段独立线性摆动。',owner:'fish-five-r01/src/behavior.js#sampleSpine / deform; 海狼保留原 R14 对应函数',verification:'fish-five-r01/scripts/verify-behavior-r03.mjs'},
     {id:'fins.local-wave',stages:['fins'],expression:'q = root + R(axis, w(ξ)·[A sin(φ+kξ)+bias])(p₀-root), w(0)=0',units:'ξ/w 无量纲；A/φ/bias rad；p₀/root BL',meaning:'局部鳍条波先应用，再接身体运输；轴、根、权重必须来自当前来源。公式描述接口，具体鳍 shader 使用来源映射。',owner:'fish-five-r01/src/app.js (fin deformation shader); fish-five-r01/src/behavior.js#update',verification:'fish-five-r01/scripts/verify-gpu-r02.mjs'},
     {id:'cranial.eye-quintic-scan',stages:['cranial'],components:['eyes'],expression:'e(u)=10u³−15u⁴+6u⁵; q=q_from+(q_target−q_from)e(u), u=clamp((t−start)/duration,0,1)',units:'q rad；t/start/duration s；u/e 无量纲',meaning:'实际独立眼睛限幅扫视/停留实现；边界速度/加速度连续，工程参数不是鱼眼生理标定。',type:'CURRENT_IMPLEMENTATION',owner:'fish-five-r01/src/ocular-r04.js#evaluate / update',verification:'fish-five-r01/scripts/verify-ocular-r04.mjs'},
@@ -43,12 +43,12 @@
   ];
   const checks = {
     identity:['核对完整源条目、哈希、许可和原作者；标题与科学身份分开','记录 TARGET_ARCHETYPE、CONFUSION_SET 和最大偏差；未知不臆测'],
-    surface:['静止源索引/UV/纹理逐项对应','完整动作周期检查源重合点、三角形应变、法线与新裂缝','图像/通用形体不能替代真实源表面'],
+    surface:['核对离线来源与成品误差、UV/鳍/口映射；运行时不含完整来源重建数据','完整动作周期检查源重合点、三角形应变、法线与新裂缝','图像/通用形体不能替代真实源表面'],
     spine:['头段稳定；单位切线及正交截面；静止运输恒等','相位切换连续；身体传导沿中心线；检查可见体长与曲率'],
     fins:['逐鳍根、轴、顶点域；根零位移','左右与中线鳍分别检验；曲率最大时无破碎'],
     cranial:['眼：源外形/视轴分离、限幅和眼窝接触','口：只转确认的独立源下颌；下唇不可重复叠加','鳃：无确认局部映射则保持源姿态'],
     behavior:['真实接受速度/角速输入脊椎和鳍；固定种子可复现','邻居、鼠标进入/离开、恢复、完整包络间距与保护计数','报告 30 条容量范围；工程参数与生物标定分开'],
-    verify:['独立核查当前源码与原表面/完整纹理保留','真实桌面/移动运行，交互、首帧、file:// 零核心网络请求','公网版本/资源与当前冻结版本一致；人工接受保持待确认']
+    verify:['独立核查当前紧凑成品形体/材质误差及运行时来源依赖已经解除','真实桌面/移动运行，交互、首帧、file:// 零核心网络请求','公网版本/资源与当前冻结版本一致；人工接受保持待确认']
   };
   for(const formula of formulas) if(!formula.type) formula.type = formula.id==='surface.chart-residual'||formula.id==='fins.local-wave'?'MATHEMATICAL_CONTRACT':'CURRENT_IMPLEMENTATION';
   const measurementKeys = ['surface','axis','fins','eyes','mouth','gills','envelope','gait','physicalUnits'];
