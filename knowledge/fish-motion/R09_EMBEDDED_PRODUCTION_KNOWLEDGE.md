@@ -54,7 +54,7 @@ node scripts/production-stage-r09.mjs --card ./incoming-fish.json --stage source
 
 - [x] 没有用生成图片代替真实三维实现。
 - [x] 本工位新增可执行生产入口，而不只是写知识文章。
-- [ ] 当前头的交互三维工作台和实时画面：由整合工位验证。
-- [ ] 当前头的公网固定链接和真实浏览器：由发布回执证明。
+- [x] 冻结生产源码的交互三维与实时画面：`INDEPENDENT_R09_REPORT.json` 的 39 项知识、54 项网页、52 项绑定检查通过；原来源与 R08 运动保留。
+- [x] 当前公网固定链接和真实浏览器：`INDEPENDENT_R09_PUBLIC_REPORT.json` 及 `R09_PUBLICATION_PROOF.json` 已回读当前入口与六资源，检查桌面和手机视口；`shareAllowed=true`。
 - [x] 如果只有截图而没有工作台，本轮判定失败。
 - [x] 用户视觉接受与 `productionReady` 不由本工位自动批准。
