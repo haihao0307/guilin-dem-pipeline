@@ -53,7 +53,7 @@ let rootLines=new THREE.LineSegments(new THREE.BufferGeometry(),skeletonRootMat)
 let waterLines=new THREE.LineSegments(new THREE.BufferGeometry(),waterFlowMat);scene.add(waterLines);
 let carbonLines=new THREE.LineSegments(new THREE.BufferGeometry(),carbonFlowMat);scene.add(carbonLines);
 
-const leafMat=new THREE.MeshStandardMaterial({color:0x6b9553,roughness:.58,side:THREE.DoubleSide,vertexColors:true});
+const leafMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.58,side:THREE.DoubleSide,vertexColors:true,emissive:0x071006,emissiveIntensity:.10});
 const leafGeo=(()=>{
   const pos=[
     0,0,0, -.10,.15,0, -.075,.34,.015, 0,.46,.025, .075,.34,.015, .10,.15,0,
@@ -158,10 +158,10 @@ function growLife(){
   const seedPos=new THREE.Vector3(0,0,0);
   shootTips.push({pos:seedPos.clone(),frame:makeFrame(new THREE.Vector3(0,1,0),new THREE.Vector3(1,0,0)),length:1.35,depth:0,order:0,key:'S0',energy:1});
   rootTips.push({pos:seedPos.clone(),frame:makeFrame(new THREE.Vector3(0,-1,0),new THREE.Vector3(1,0,0)),length:.86,depth:0,order:0,key:'R0',energy:1});
-  let leafProxy=0,rootUptake=.55,reserve=1.25;
+  let leafProxy=.45,rootUptake=.85,reserve=4.50;
   for(let pass=1;pass<=P.pass;pass++){
     const leafCarbon=leafProxy*.045*P.leafSource;
-    const total=Math.max(.45,reserve+rootUptake*.28+leafCarbon);
+    const total=Math.max(1.2,reserve+rootUptake*.75+leafCarbon*1.10);
     let rootBudget=total*P.alloc,shootBudget=total*(1-P.alloc);
     const newRoots=[],newShoots=[];
     let uptakeThis=0,newLeafProxy=0;
@@ -170,7 +170,7 @@ function growLife(){
     for(const tip of rootTips){
       const cs=rootFieldDirection(tip,tip.key+':p'+pass,rootSegments);
       for(let rank=0;rank<Math.min(3,cs.length);rank++){
-        const c=cs[rank],cost=.12+tip.length*.08+(c.type==='lateral'?.05:0);
+        const c=cs[rank],cost=.075+tip.length*.045+(c.type==='lateral'?.035:0);
         rootCandidates.push({tip,c,cost,rank});
       }
     }
@@ -179,7 +179,7 @@ function growLife(){
     for(const item of rootCandidates){
       const {tip,c,cost}=item;if(rootBudget<cost)continue;
       const count=usedRootTip.get(tip.key)||0,max=tip.depth<2?2:1;if(count>=max)continue;
-      if(c.type==='lateral'&&c.score<.48)continue;
+      if(c.type==='lateral'&&c.score<.42)continue;
       rootBudget-=cost;usedRootTip.set(tip.key,count+1);
       const len=tip.length*(c.type==='leader'?.78:.66)*(1-.035*Math.min(tip.order,4)),end=tip.pos.clone().addScaledVector(c.dir,len);
       const idx=rootSegments.length;rootSegments.push({a:tip.pos.clone(),b:end,depth:tip.depth,order:tip.order+(c.type==='lateral'?1:0),parent:tip.parent??-1,children:[],support:.6,key:tip.key+':'+c.type+':'+item.rank,terminal:true});
@@ -193,7 +193,7 @@ function growLife(){
     for(const tip of shootTips){
       const cs=proposeShoot(tip,shootSegments,tip.key+':p'+pass);
       for(let rank=0;rank<Math.min(4,cs.length);rank++){
-        const c=cs[rank],cost=.13+tip.length*.085+(c.type==='lateral'?.06:0);
+        const c=cs[rank],cost=.085+tip.length*.050+(c.type==='lateral'?.040:0);
         shootCandidates.push({tip,c,cost,rank});
       }
     }
@@ -202,7 +202,7 @@ function growLife(){
     for(const item of shootCandidates){
       const {tip,c,cost}=item;if(shootBudget<cost)continue;
       const count=usedShootTip.get(tip.key)||0,max=tip.depth<2?3:(tip.depth<5?2:1);if(count>=max)continue;
-      if(c.type==='lateral'&&c.score<P.threshold)continue;
+      if(c.type==='lateral'&&c.score<P.threshold-.05)continue;
       if(c.type==='leader'&&c.score<P.threshold-.16)continue;
       shootBudget-=cost;usedShootTip.set(tip.key,count+1);
       const len=tip.length*(c.type==='leader'?.74:.64)*(1-.045*Math.min(tip.order,5)),end=tip.pos.clone().addScaledVector(c.dir,len);
@@ -213,11 +213,11 @@ function growLife(){
       if(pass>=4)newLeafProxy+=((c.dir.dot(lightVec())+1)*.5)*(.6+.4*e);
     }
 
-    shootTips.splice(0,shootTips.length,...newShoots.slice(0,380));
-    rootTips.splice(0,rootTips.length,...newRoots.slice(0,260));
-    rootUptake=.65*rootUptake+.35*uptakeThis;
-    leafProxy=.65*leafProxy+.35*(newLeafProxy+shootTips.length*.08);
-    reserve=Math.max(.15,reserve*.84);
+    shootTips.splice(0,shootTips.length,...newShoots.slice(0,520));
+    rootTips.splice(0,rootTips.length,...newRoots.slice(0,360));
+    rootUptake=.55*rootUptake+.45*uptakeThis;
+    leafProxy=.56*leafProxy+.44*(newLeafProxy+shootTips.length*.12);
+    reserve=Math.max(.60,reserve*.93);
     ledger.push({pass,total,rootUptake,leafCarbon,leafProxy,shootBudgetLeft:shootBudget,rootBudgetLeft:rootBudget,shootTips:shootTips.length,rootTips:rootTips.length});
     if(!shootTips.length&&!rootTips.length)break;
   }
@@ -249,11 +249,11 @@ function addSegmentField(effect,s,rootMode,bounds,span){
   for(let i=0;i<=steps;i++){
     const t=i/steps,p=s.a.clone().lerp(s.b,t),radius=lerp(r0,r1,Math.pow(t,.88));
     const n=p.clone().sub(bounds.min).divideScalar(span);
-    const rn=Math.max(.0025,radius/span),strength=Math.max(.00055,subtract*rn*rn*4.5);
+    const rn=Math.max(.0025,radius/span),fieldScale=(implicit?.isolation||80)+subtract,strength=Math.max(.0012,fieldScale*rn*rn*1.45);
     effect.addBall(clamp(n.x,.01,.99),clamp(n.y,.01,.99),clamp(n.z,.01,.99),strength,subtract,color);
   }
   const p=s.a,n=p.clone().sub(bounds.min).divideScalar(span),jr=Math.max(r0,r1)*1.06/span;
-  effect.addBall(clamp(n.x,.01,.99),clamp(n.y,.01,.99),clamp(n.z,.01,.99),Math.max(.0006,subtract*jr*jr*4.5),subtract,color);
+  effect.addBall(clamp(n.x,.01,.99),clamp(n.y,.01,.99),clamp(n.z,.01,.99),Math.max(.0014,((implicit?.isolation||80)+subtract)*jr*jr*1.55),subtract,color);
 }
 function rebuildImplicit(graph){
   ensureImplicit(P.surfaceRes);implicit.reset();
@@ -266,6 +266,9 @@ function rebuildImplicit(graph){
   let balls=0;
   for(const s of graph.shootSegments){addSegmentField(implicit,s,false,bounds,span);balls+=4;if(balls>2600)break;}
   if(showRoots)for(const s of graph.rootSegments){addSegmentField(implicit,s,true,bounds,span);balls+=4;if(balls>3200)break;}
+  const seedN=new THREE.Vector3(0,0,0).sub(bounds.min).divideScalar(span);
+  const seedR=.13/span,seedStrength=((implicit?.isolation||80)+12)*seedR*seedR*1.8;
+  implicit.addBall(clamp(seedN.x,.01,.99),clamp(seedN.y,.01,.99),clamp(seedN.z,.01,.99),Math.max(.0016,seedStrength),12,new THREE.Color(0x806b57));
   implicit.position.copy(center);implicit.scale.setScalar(span*.5);implicit.update();implicit.visible=showSurface;
   implicit.userData={span,center: center.toArray(),ballBudget:balls};
 }
@@ -318,7 +321,7 @@ function signature(graph,organs){
     pass:P.pass,implicitSurface:true,rootShootConnected:true,terminalTaper:true,apicalMeristem:true,resourceFlow:true,
     continuousSkinVisible:showSurface,rootField:true,shootField:true,appliesToSpecies:false,
     zSpan:Number((box.max.z-box.min.z).toFixed(3)),yMin:Number(box.min.y.toFixed(3)),yMax:Number(box.max.y.toFixed(3)),
-    lastBudget:Number((last.total||0).toFixed(3)),surfaceResolution:implicitRes
+    lastBudget:Number((last.total||0).toFixed(3)),surfaceResolution:implicitRes,implicitVertices:implicit?.count||0
   };
 }
 
