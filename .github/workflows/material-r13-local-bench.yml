@@ -1,0 +1,53 @@
+name: Material R13 local performance benchmark
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/material-r13-local-bench.yml']
+permissions:
+  contents: read
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Fetch R13 source and install Chromium
+        run: |
+          mkdir -p site/lab-r13
+          base=https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/gh-pages/kaopu-material-workbench
+          curl -fsSL "$base/index.html" -o site/index.html
+          for f in app.js iq-raster.js ui.css iq-merged.frag wet-material.frag iq-baseline.frag wet-material-baseline.frag wet-baseline.frag; do curl -fsSL "$base/lab-r13/$f" -o "site/lab-r13/$f"; done
+          npm init -y
+          npm install --save-dev playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Benchmark
+        run: |
+          python3 -m http.server 8877 --directory site >/tmp/r13-http.log 2>&1 &
+          cat > bench.cjs <<'JS'
+          const {chromium}=require('playwright');const fs=require('fs');
+          const url='http://127.0.0.1:8877/index.html?case=iq&v=r13-local';
+          const wait=ms=>new Promise(r=>setTimeout(r,ms));
+          async function measure(page){
+            await page.waitForFunction(()=>window.KAOPU10?.ready&&KAOPU10.frames()>0,{timeout:90000});
+            await page.locator('#rotate').click();await wait(700);
+            const r=await page.evaluate(()=>new Promise(resolve=>{
+              let n=0,s=performance.now(),prev=s,worst=0;
+              function f(t){n++;worst=Math.max(worst,t-prev);prev=t;if(t-s>=2500)resolve({fps:n*1000/(t-s),n,worst,perf:KAOPU10.performance()});else requestAnimationFrame(f)}
+              requestAnimationFrame(f);
+            }));
+            await page.locator('#rotate').click();await wait(400);r.after=await page.evaluate(()=>KAOPU10.performance());return r;
+          }
+          (async()=>{const browser=await chromium.launch({headless:true,args:['--no-sandbox','--enable-unsafe-swiftshader','--use-angle=swiftshader']});try{
+            const d=await browser.newPage({viewport:{width:1440,height:960}});await d.goto(url);const desktop=await measure(d);
+            const m=await browser.newPage({viewport:{width:390,height:844}});await m.goto(url);const mobile=await measure(m);
+            const out={desktop,mobile,checkedAt:new Date().toISOString()};fs.writeFileSync('R13_LOCAL_BENCH.json',JSON.stringify(out,null,2));console.log(JSON.stringify(out,null,2));
+          }finally{await browser.close()}})().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          node bench.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: material-r13-local-bench
+          path: R13_LOCAL_BENCH.json
+          retention-days: 7
