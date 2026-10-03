@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0c1111">
 <meta name="color-scheme" content="dark">
 <link rel="icon" href="data:,">
-<title>KAOPU 分形造波树 · 综合工作台 R02</title>
+<title>KAOPU 分形造波树 · 综合工作台 R03</title>
 <style>
 :root{
   --bg:#0b1010;--panel:#111818;--panel2:#151e1d;--line:#2f3c39;
@@ -25,29 +25,31 @@ h1{font-size:19px;line-height:1.25;margin:0;font-weight:650;letter-spacing:.3px}
 .map-view{display:none;min-height:690px;border:1px solid var(--line);border-radius:9px;background:linear-gradient(145deg,#111918,#0c1212);padding:22px}.map-view.on{display:block}.map-view h2{font-size:18px;margin:0 0 8px}.map-view>p{color:#a8b5b0;margin:0 0 18px;max-width:900px}.voice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.voice{border:1px solid #30413d;border-radius:8px;background:#121b1a;padding:14px}.voice h3{font-size:13px;margin:0 0 7px;color:#e1ece7}.voice code{font-size:11px;color:#76e0cd}.voice p{font-size:11px;color:#9eaca7;margin:7px 0 0}.voice strong{color:#c9d9d1}.boundary{margin-top:15px;border-left:3px solid #8e5f72;background:#1b1518;padding:12px 14px;color:#c7b7bd;font-size:11px}
 .side{border-left:1px solid var(--line);background:var(--panel);padding:17px 18px 26px;overflow:auto}.side h2{font-size:15px;margin:0 0 5px}.side .intro{font-size:11px;color:#96a39f;margin:0 0 14px}.gate{border:1px solid #344540;border-radius:8px;background:#101716;padding:11px 12px;margin-bottom:15px;font-size:11px;color:#aebbb6}.gate b{color:#e2ebe7}.gate .ok{color:#77dbc0}.decoder{border-top:1px solid var(--line);padding-top:15px}.decoder h3{font-size:13px;margin:0 0 4px}.decoder .hint{font-size:10px;color:#879590;margin-bottom:12px}.row{margin-bottom:13px}.row label{display:flex;justify-content:space-between;gap:10px;font-size:11px;color:#b8c5c0}.row output{color:#d9e6df;font-variant-numeric:tabular-nums}.row input,.row select{width:100%;margin-top:6px}.row input[type=range]{accent-color:var(--accent)}.row select{background:#16201e;color:#e5eeea;border:1px solid #41514d;border-radius:6px;padding:7px}
 .path{display:flex;gap:6px;flex-wrap:wrap;margin:9px 0 13px}.digit{min-width:31px;height:31px;border-radius:6px;display:grid;place-items:center;background:#25332f;border:1px solid #4d615a;color:#dce8e2;font-weight:650}.digit.wind{border-color:#558d83;color:#72ead4}.digit.turn{border-color:#8c5970;color:#e387ad}.decoder-note{font-size:10px;color:#8f9d98;border:1px solid #2e3d39;border-radius:7px;padding:10px;background:#0f1615}.ledger{margin-top:17px;border-top:1px solid var(--line);padding-top:14px}.ledger h3{font-size:13px;margin:0 0 7px}.ledger p{font-size:10px;color:#8f9d98;margin:5px 0}.ledger a{color:#9bd5c4}
-body[data-mode="tree"] .teacher-card,body[data-mode="tree"] .lift-card,body[data-mode="tree"] .native-card{display:none}body[data-mode="tree"] .frames{grid-template-columns:1fr}body[data-mode="teacher"] .tree-card,body[data-mode="teacher"] .lift-card,body[data-mode="teacher"] .native-card{display:none}body[data-mode="teacher"] .frames{grid-template-columns:1fr}body[data-mode="compare"] .lift-card,body[data-mode="compare"] .native-card{display:none}body[data-mode="lift"] .tree-card,body[data-mode="lift"] .native-card{display:none}body[data-mode="lift"] .frames{grid-template-columns:1fr 1fr}body[data-mode="native"] .tree-card,body[data-mode="native"] .teacher-card,body[data-mode="native"] .lift-card{display:none}body[data-mode="native"] .frames{grid-template-columns:1fr}body[data-mode="nativecompare"] .tree-card,body[data-mode="nativecompare"] .teacher-card{display:none}body[data-mode="nativecompare"] .frames{grid-template-columns:1fr 1fr}body[data-mode="map"] .frames{display:none}body[data-mode="map"] .map-view{display:block}
+body[data-mode="tree"] .teacher-card,body[data-mode="tree"] .lift-card,body[data-mode="tree"] .native-card,body[data-mode="tree"] .native3-card{display:none}body[data-mode="tree"] .frames{grid-template-columns:1fr}body[data-mode="teacher"] .tree-card,body[data-mode="teacher"] .lift-card,body[data-mode="teacher"] .native-card,body[data-mode="teacher"] .native3-card{display:none}body[data-mode="teacher"] .frames{grid-template-columns:1fr}body[data-mode="compare"] .lift-card,body[data-mode="compare"] .native-card,body[data-mode="compare"] .native3-card{display:none}body[data-mode="lift"] .tree-card,body[data-mode="lift"] .native-card,body[data-mode="lift"] .native3-card{display:none}body[data-mode="lift"] .frames{grid-template-columns:1fr 1fr}body[data-mode="native"] .tree-card,body[data-mode="native"] .teacher-card,body[data-mode="native"] .lift-card,body[data-mode="native"] .native3-card{display:none}body[data-mode="native"] .frames{grid-template-columns:1fr}body[data-mode="nativecompare"] .tree-card,body[data-mode="nativecompare"] .teacher-card,body[data-mode="nativecompare"] .native3-card{display:none}body[data-mode="nativecompare"] .frames{grid-template-columns:1fr 1fr}body[data-mode="native3"] .tree-card,body[data-mode="native3"] .teacher-card,body[data-mode="native3"] .lift-card,body[data-mode="native3"] .native-card{display:none}body[data-mode="native3"] .frames{grid-template-columns:1fr;min-height:calc(100vh - 140px)}body[data-mode="native3"] .native3-card iframe{height:calc(100vh - 176px);min-height:720px}body[data-mode="native3"] .shell{grid-template-columns:1fr}body[data-mode="native3"] .side{display:none}body[data-mode="native3"] .workspace{padding:8px}body[data-mode="nativecompare3"] .tree-card,body[data-mode="nativecompare3"] .teacher-card,body[data-mode="nativecompare3"] .lift-card{display:none}body[data-mode="nativecompare3"] .frames{grid-template-columns:1fr 1fr}body[data-mode="map"] .frames{display:none}body[data-mode="map"] .map-view{display:block}
 @media(max-width:980px){.shell{grid-template-columns:1fr}.side{border-left:0;border-top:1px solid var(--line)}.frames{grid-template-columns:1fr}.frame-card iframe{height:620px}.voice-grid{grid-template-columns:1fr}}
 @media(max-width:620px){header{padding:11px 13px}.anchor{display:none}.toolbar{padding:8px}.toolbar button,.toolbar a{padding:7px 8px;font-size:11px}.workspace{padding:8px}.frames{gap:8px}.frame-card iframe{height:66svh;min-height:500px}.frame-head{padding:8px}.side{padding:15px}.map-view{padding:15px;min-height:520px}}
 </style>
 </head>
-<body data-mode="tree">
+<body data-mode="native3">
 <header>
-  <div><h1>KAOPU · 分形造波树 综合工作台 R02</h1><div class="sub">TREE LIFE GRAMMAR × KUKO DAY 123 × NATIVE 3D FRACTAL GRAMMAR</div></div>
+  <div><h1>KAOPU · 分形造波树 综合工作台 R03</h1><div class="sub">TREE LIFE GRAMMAR × KUKO DAY 123 × NATIVE 3D SPATIAL GROWTH</div></div>
   <div class="anchor">Grammar Anchors：R05 树生命母台 + KuKo 老师原谱</div>
 </header>
 <nav class="toolbar" aria-label="工作台模式">
-  <button data-mode="tree" class="on">树生命母台</button>
+  <button data-mode="native3" class="on">三维总台 R03</button>
+  <button data-mode="tree">树生命母台</button>
   <button data-mode="teacher">分枝语法老师</button>
-  <button data-mode="compare">并排听音</button>
+  <button data-mode="compare">老师 ↔ 树</button>
   <button data-mode="lift">二维→三维 R01</button>
   <button data-mode="native">原生三维 R02</button>
-  <button data-mode="nativecompare">R01 ↔ R02</button>
+  <button data-mode="nativecompare3">R02 ↔ R03</button>
   <button data-mode="map">知识映射</button>
   <span class="spacer"></span>
   <a href="./mobile-r05-seasons/" target="_blank" rel="noopener">树母台单独打开</a>
   <a href="./kuko-day123-branching-r01/" target="_blank" rel="noopener">老师单独打开</a>
   <a href="./kuko-day123-3d-lift-r01/" target="_blank" rel="noopener">Lift R01</a>
   <a href="./kuko-day123-native-3d-r02/" target="_blank" rel="noopener">Native R02</a>
+  <a href="./kuko-day123-native-3d-r03/" target="_blank" rel="noopener">Native R03</a>
   <span class="state" id="workbenchState">正在核对两个锚点…</span>
 </nav>
 <div class="shell">
@@ -69,6 +71,10 @@ body[data-mode="tree"] .teacher-card,body[data-mode="tree"] .lift-card,body[data
         <div class="frame-head"><b>Native 3D Fractal Grammar R02</b><span>Bud → 3D Frame → Field / Occupancy → Shoot</span></div>
         <iframe id="nativeFrame" title="Native 3D Fractal Grammar R02" src="./kuko-day123-native-3d-r02/" allow="fullscreen"></iframe>
       </article>
+      <article class="frame-card native3-card">
+        <div class="frame-head"><b>Native 3D Fractal Grammar R03 · 三维总台</b><span>Spatial Hash · Bud Perception Volume · Load Back-Prop</span></div>
+        <iframe id="native3Frame" title="Native 3D Fractal Grammar R03" src="./kuko-day123-native-3d-r03/" allow="fullscreen"></iframe>
+      </article>
     </section>
     <section class="map-view" id="mapView">
       <h2>声部已经并入，但没有偷换锚点</h2>
@@ -81,15 +87,17 @@ body[data-mode="tree"] .teacher-card,body[data-mode="tree"] .lift-card,body[data
         <article class="voice"><h3>⑤ 节点风相位</h3><code>wind0 / wind1</code><p>风进入指定语法节点，而不是整体平移画面；进入三维树前还要升级为从主干到枝叶的<strong>力传导</strong>。</p></article>
         <article class="voice"><h3>⑥ 二维→三维 Lift</h3><code>XY teacher lock + independent Z</code><p>先把老师的逆查询链重建成正向节点图，再给每个局部节点增加 Z 自由度。<strong>二维投影不随 Z 改变</strong>，所以可以随时压回老师平面检查；Z 目前只是假设声部，不冒充物种事实。</p></article>
         <article class="voice"><h3>⑦ 原生三维 Bud / Field</h3><code>Bud(T,N,B) → 3D Field → Shoot</code><p>不再固定 XY。潜在芽先在三维局部框架中产生，再读取光、空间占据、重力、障碍和父轴连续性；只有被释放的芽才真正生成枝条。</p></article>
+        <article class="voice"><h3>⑧ 三维空间哈希 / 感知体积</h3><code>Bud Perception → SpatialHash → Occupancy feedback</code><p>R03 不再让每个芽全局扫描整棵树，而是在局部三维感知体积里查询已占据空间；新 Shoot 立刻写回哈希，后来的芽看到的是一个已经被改变的世界。</p></article>
+        <article class="voice"><h3>⑨ 下游支撑反传</h3><code>tip load → parent support → radius</code><p>枝条生成后，从末梢向基部反传支撑需求，让粗细开始服从三维拓扑与下游负载，而不是简单按递归层级缩放。</p></article>
         <article class="voice"><h3>树知识继续保留</h3><code>Seed → Root + Shoot → History</code><p>根和冠不是镜像；年龄改变拓扑；受光只影响地上、水分只影响地下；根、干、枝、叶继续由三维函数生成。</p></article>
       </div>
-      <div class="boundary">当前阶段分成三层：老师 R01 保持二维原谱；Lift R01 负责证明我们没有误解二维拓扑；Native 3D R02 则让芽直接在三维空间中决定生长。R02 仍然是“演奏技巧实验”，没有被指定给 Pandanus 或任何具体树种。</div>
+      <div class="boundary">当前阶段已经分成四层：老师 R01 保持二维原谱；Lift R01 验证二维理解；Native 3D R02 建立三维 Bud / Field 因果关系；Native 3D R03 把三维感知体积、空间哈希、占据反馈和支撑反传并成可继续扩展的三维总台。R03 仍然只是演奏技巧，不绑定 Pandanus 或任何具体树种。</div>
     </section>
   </main>
   <aside class="side">
     <h2>分枝谱地址解码器</h2>
     <p class="intro">这里不是截图说明，而是把老师的整数寻址逻辑拆出来现场演奏。选择一棵老师树和枝号，就能看到每一层的路径数字。</p>
-    <div class="gate"><b>当前冻结关系：</b><br><span class="ok">✓</span> R05 三维生命锚点不改<br><span class="ok">✓</span> KuKo 原谱常量不改<br><span class="ok">✓</span> 新增的是综合工作台、路径解码和省算力播放桥<br><span class="ok">✓</span> 三维 Lift 与物种语法分离，不强行套给 Pandanus</div>
+    <div class="gate"><b>当前冻结关系：</b><br><span class="ok">✓</span> R05 三维生命锚点不改<br><span class="ok">✓</span> KuKo 原谱常量不改<br><span class="ok">✓</span> 新增的是综合工作台、路径解码和省算力播放桥<br><span class="ok">✓</span> 三维 Lift 与物种语法分离，不强行套给 Pandanus<br><span class="ok">✓</span> R03 空间场 / 感知体积 / 支撑反传已进入综合体系</div>
     <section class="decoder">
       <div class="row"><label for="teacherSelect">老师声部 <output id="teacherMeta"></output></label><select id="teacherSelect"><option value="C">中央树 tree()</option><option value="L">左树 treeL()</option><option value="R">右树 treeR()</option></select></div>
       <div class="row"><label for="branchIndex">枝号 c <output id="branchValue">0</output></label><input id="branchIndex" type="range" min="0" max="2186" value="0"></div>
@@ -102,6 +110,7 @@ body[data-mode="tree"] .teacher-card,body[data-mode="tree"] .lift-card,body[data
       <p>老师学习图：<a href="./kuko-day123-branching-r01/LEARNING_MAP_ZH.md" target="_blank" rel="noopener">LEARNING_MAP_ZH.md</a></p>
       <p>三维提升规则：<a href="./kuko-day123-3d-lift-r01/LIFT_RULES_R01.json" target="_blank" rel="noopener">LIFT_RULES_R01.json</a></p>
       <p>原生三维规则：<a href="./kuko-day123-native-3d-r02/NATIVE_3D_GRAMMAR_R02.json" target="_blank" rel="noopener">NATIVE_3D_GRAMMAR_R02.json</a></p>
+      <p>三维总台规则：<a href="./kuko-day123-native-3d-r03/NATIVE_3D_GRAMMAR_R03.json" target="_blank" rel="noopener">NATIVE_3D_GRAMMAR_R03.json</a></p>
       <p>树方法：<a href="./KAOPU_TREE_FRACTAL_WAVE_METHOD_20260930_ZH.md" target="_blank" rel="noopener">TREE FRACTAL WAVE METHOD</a></p>
       <p id="manifestStatus">正在读取综合清单…</p>
     </section>
