@@ -9,13 +9,18 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
-# Recovery tag is used only after exact-byte file evidence has already passed.
-# Normal pushes run both independent phases with unchanged tests and timeout.
+# Identical assertions are partitioned by purpose. The aggregate job requires
+# all eight exact-byte reports; timeout, omission or a failed group cannot pass.
 jobs:
-  standalone-file:
-    if: ${{ !contains(github.event.head_commit.message, '[verified-file-public-only]') }}
+  browser-groups:
     runs-on: ubuntu-latest
     timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        phase: [file, public]
+        group: [core, catalog, orbit, touch]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -31,21 +36,24 @@ jobs:
           ./.hair-qa/node_modules/.bin/playwright install chromium
       - name: Install readable Chinese test fonts
         run: sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk
-      - name: Test file exact standalone/browser interactions
+      - name: Run exact-byte browser group
         env:
           NODE_PATH: ${{ github.workspace }}/.hair-qa/node_modules
           HAIR_KUKO_HTML: ${{ github.workspace }}/kaopu-hair-workbench/qa/kuko-anemone-candidate.html
-          HAIR_QA_OUT: ${{ github.workspace }}/hair-kuko-file-results
-          HAIR_KUKO_PHASE: file
+          HAIR_QA_OUT: ${{ github.workspace }}/hair-kuko-${{ matrix.phase }}-${{ matrix.group }}-results
+          HAIR_KUKO_PHASE: ${{ matrix.phase }}
+          HAIR_QA_GROUP: ${{ matrix.group }}
         run: node kaopu-hair-workbench/qa/full-cluster-source/tests/browser-qa.cjs
-      - name: Keep file browser evidence
+      - name: Keep browser group evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: kaopu-cluster-file-${{ github.sha }}
-          path: hair-kuko-file-results/
-          if-no-files-found: warn
-  standalone-public:
+          name: kaopu-cluster-${{ matrix.phase }}-${{ matrix.group }}-${{ github.sha }}
+          path: hair-kuko-${{ matrix.phase }}-${{ matrix.group }}-results/
+          if-no-files-found: error
+  aggregate:
+    if: always()
+    needs: browser-groups
     runs-on: ubuntu-latest
     timeout-minutes: 18
     steps:
@@ -57,23 +65,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install pinned official browser test dependency
-        run: |
-          npm install --prefix .hair-qa --no-save --ignore-scripts --no-audit --no-fund playwright@1.55.0
-          ./.hair-qa/node_modules/.bin/playwright install chromium
-      - name: Install readable Chinese test fonts
-        run: sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk
-      - name: Test public exact standalone/browser interactions
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: kaopu-cluster-*-${{ github.sha }}
+          path: hair-kuko-group-evidence
+      - name: Require every unchanged assertion group and exact runtime hashes
         env:
-          NODE_PATH: ${{ github.workspace }}/.hair-qa/node_modules
-          HAIR_KUKO_HTML: ${{ github.workspace }}/kaopu-hair-workbench/qa/kuko-anemone-candidate.html
-          HAIR_QA_OUT: ${{ github.workspace }}/hair-kuko-public-results
-          HAIR_KUKO_PHASE: public
-        run: node kaopu-hair-workbench/qa/full-cluster-source/tests/browser-qa.cjs
-      - name: Keep public browser evidence
+          HAIR_QA_MATRIX_RESULT: ${{ needs.browser-groups.result }}
+        run: |
+          node kaopu-hair-workbench/qa/full-cluster-source/tests/aggregate-groups.cjs hair-kuko-group-evidence kaopu-hair-workbench/qa/kuko-anemone-candidate.html kaopu-hair-workbench/qa/kuko-anemone-standalone.html
+      - name: Keep aggregate evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: kaopu-cluster-public-${{ github.sha }}
-          path: hair-kuko-public-results/
-          if-no-files-found: warn
+          name: kaopu-cluster-aggregate-${{ github.sha }}
+          path: hair-kuko-group-evidence/aggregate-results.json
+          if-no-files-found: error
