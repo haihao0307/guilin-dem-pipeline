@@ -31,7 +31,12 @@ jobs:
             cp -a "$f" "$ROOT/00_REPO_ROOT/"
           done
 
-          cp -a weather-mother/handoffs/2026-09-13/. "$ROOT/01_HANDOFF_BASE/"
+          HANDOFF_BASE="https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/a4cda7b9bf1e27651942e77a62282e00e45deb97/weather-mother/handoffs/2026-09-13"
+          curl -L --fail --retry 4 -o "$ROOT/01_HANDOFF_BASE/00_START_HERE.md" "$HANDOFF_BASE/00_START_HERE.md"
+          curl -L --fail --retry 4 -o "$ROOT/01_HANDOFF_BASE/README.md" "$HANDOFF_BASE/README.md"
+          curl -L --fail --retry 4 -o "$ROOT/01_HANDOFF_BASE/WEATHER_MOTHER_FULL_HANDOFF_R26_TO_R27_2026-09-13.zip" "$HANDOFF_BASE/WEATHER_MOTHER_FULL_HANDOFF_R26_TO_R27_2026-09-13.zip"
+          curl -L --fail --retry 4 -o "$ROOT/01_HANDOFF_BASE/WEATHER_MOTHER_FULL_HANDOFF_R26_TO_R27_2026-09-13.zip.sha256" "$HANDOFF_BASE/WEATHER_MOTHER_FULL_HANDOFF_R26_TO_R27_2026-09-13.zip.sha256"
+          (cd "$ROOT/01_HANDOFF_BASE" && sha256sum -c WEATHER_MOTHER_FULL_HANDOFF_R26_TO_R27_2026-09-13.zip.sha256)
 
           for d in weather-mother/r26*src weather-mother/r27*src weather-mother/r28*src weather-mother/r29*src; do
             if [ -d "$d" ]; then cp -a "$d" "$ROOT/02_SOURCE_CHAIN/"; fi
@@ -49,13 +54,14 @@ jobs:
           source_repository=haihao0307/guilin-dem-pipeline
           source_commit=$(git rev-parse HEAD)
           source_branch=handoff/weather-mother-current-full-r29-20261003
+          r26_r27_handoff_commit=a4cda7b9bf1e27651942e77a62282e00e45deb97
           exported_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)
           scope=Weather Mother R26-R29 repository payload only
           EOF
 
           find "$ROOT" -type f -print0 | sort -z | xargs -0 sha256sum > "$ROOT/MANIFEST.sha256"
           python - <<'PY'
-          import json, pathlib, hashlib, os
+          import json, pathlib, hashlib
           root=pathlib.Path('WEATHER_MOTHER_REPOSITORY_PAYLOAD_R29_20261003')
           rows=[]
           for p in sorted(x for x in root.rglob('*') if x.is_file()):
