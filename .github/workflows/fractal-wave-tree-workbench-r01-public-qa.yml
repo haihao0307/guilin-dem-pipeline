@@ -10,6 +10,8 @@ on:
       - kaopu-tree-fractal-wave-lab/workbench-r01.js
       - kaopu-tree-fractal-wave-lab/INTEGRATION_MANIFEST_R01.json
       - kaopu-tree-fractal-wave-lab/INTEGRATION_R01_ZH.md
+      - kaopu-tree-fractal-wave-lab/kuko-day123-branching-r01/runtime.js
+      - kaopu-tree-fractal-wave-lab/kuko-day123-branching-r01/SOURCE_LOCK.json
   workflow_dispatch:
 
 permissions:
@@ -27,10 +29,12 @@ jobs:
           base='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tree-fractal-wave-lab/'
           expected={
             'index.html':['分形造波树 综合工作台 R01','treeFrame','teacherFrame','workbench-r01.js'],
-            'workbench-r01.js':['window.__fractalTreeWorkbenchReady','decodePath','__kukoDay123Ready','__treeReady'],
+            'workbench-r01.js':['window.__fractalTreeWorkbenchReady','decodePath','KAOPU_KUKO_PLAY','__treeReady'],
             'INTEGRATION_MANIFEST_R01.json':['KAOPU.fractal-wave.tree-workbench/1','branch.pathAddressing','TreeLifeR05.Pandanus'],
             'mobile-r05-seasons/index.html':['PANDANUS TECTORIUS TEACHER','runtime-pandanus-r05.js'],
-            'kuko-day123-branching-r01/index.html':['KuKo Day 123','teacherCanvas','runtime.js']
+            'kuko-day123-branching-r01/index.html':['KuKo Day 123','teacherCanvas','runtime.js'],
+            'kuko-day123-branching-r01/runtime.js':['const EMBEDDED = window.parent !== window','KuKoDay123Teacher','needsRender'],
+            'kuko-day123-branching-r01/SOURCE_LOCK.json':['stop repeated draw calls while paused','teacher_replication_only']
           }
           report={'base':base,'files':{},'attempts':0}
           last=None
@@ -39,7 +43,7 @@ jobs:
             try:
               ok=True; current={}
               for name,markers in expected.items():
-                req=urllib.request.Request(base+name+'?qa='+str(attempt),headers={'User-Agent':'KAOPU-FRACTAL-TREE-R01-QA/1.0','Cache-Control':'no-cache'})
+                req=urllib.request.Request(base+name+'?qa='+str(attempt),headers={'User-Agent':'KAOPU-FRACTAL-TREE-R01-QA/1.1','Cache-Control':'no-cache'})
                 with urllib.request.urlopen(req,timeout=35) as response:
                   data=response.read(); status=response.status
                 text=data.decode('utf-8','replace')
@@ -87,34 +91,49 @@ jobs:
               page=browser.new_page(viewport={'width':1440,'height':900},device_scale_factor=1)
               page.on('pageerror',lambda e:report['errors'].append('pageerror: '+str(e)))
               page.on('console',lambda m:report['errors'].append('console: '+m.text) if m.type=='error' else None)
-              page.goto(url+'?browserqa=1',wait_until='domcontentloaded',timeout=120000)
-              page.wait_for_function('window.__fractalTreeWorkbenchReady===true',timeout=180000)
-              page.wait_for_timeout(2500)
-              C['titleCorrect']='分形造波树' in page.title()
-              C['bothFramesPresent']=page.locator('iframe').count()==2
-              C['desktopNoHorizontalOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth')
-              compare=root/'desktop-compare.png'; page.screenshot(path=str(compare),full_page=False)
-              page.get_by_role('button',name='知识映射').click(); page.wait_for_timeout(500)
-              C['mapModeVisible']=page.locator('#mapView').is_visible()
-              mapshot=root/'desktop-map.png'; page.screenshot(path=str(mapshot),full_page=False)
-              page.get_by_role('button',name='树生命母台').click(); page.wait_for_timeout(500)
-              C['treeModeHidesTeacher']=not page.locator('.teacher-card').is_visible()
-              page.get_by_role('button',name='分枝语法老师').click(); page.wait_for_timeout(500)
-              C['teacherModeHidesTree']=not page.locator('.tree-card').is_visible()
-              page.get_by_role('button',name='并排听音').click(); page.wait_for_timeout(500)
-              C['compareRestored']=page.locator('.tree-card').is_visible() and page.locator('.teacher-card').is_visible()
-              page.locator('#branchIndex').evaluate("el=>{el.value='137';el.dispatchEvent(new Event('input',{bubbles:true}))}")
-              page.wait_for_timeout(150)
-              C['decoderProducesSevenDigits']=page.locator('#pathDigits .digit').count()==7
-              C['desktopPixelsNonBlank']=digest(compare)['stddev']>8
-              page.set_viewport_size({'width':390,'height':844}); page.reload(wait_until='domcontentloaded',timeout=120000)
+              page.goto(url+'?browserqa=2',wait_until='domcontentloaded',timeout=120000)
               page.wait_for_function('window.__fractalTreeWorkbenchReady===true',timeout=180000)
               page.wait_for_timeout(1800)
+              C['titleCorrect']='分形造波树' in page.title()
+              C['bothFramesPresent']=page.locator('iframe').count()==2
+              C['defaultTreeMode']=page.evaluate("document.body.dataset.mode==='tree'")
+              C['desktopNoHorizontalOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+              C['embeddedTeacherInitiallyPaused']=page.evaluate("document.getElementById('teacherFrame').contentWindow.KuKoDay123Teacher.getState().playing===false")
+              compare=root/'desktop-tree.png'; page.screenshot(path=str(compare),full_page=False)
+
+              page.evaluate("FractalWaveTreeWorkbenchR01.setMode('map')")
+              page.wait_for_timeout(150)
+              C['mapModeVisible']=page.evaluate("getComputedStyle(document.getElementById('mapView')).display!=='none'")
+              mapshot=root/'desktop-map.png'; page.screenshot(path=str(mapshot),full_page=False)
+
+              page.evaluate("FractalWaveTreeWorkbenchR01.setMode('tree')")
+              page.wait_for_timeout(100)
+              C['treeModeHidesTeacher']=page.evaluate("getComputedStyle(document.querySelector('.teacher-card')).display==='none'")
+
+              page.evaluate("FractalWaveTreeWorkbenchR01.setMode('teacher')")
+              page.wait_for_timeout(250)
+              C['teacherModeHidesTree']=page.evaluate("getComputedStyle(document.querySelector('.tree-card')).display==='none'")
+              C['teacherModePlaysTeacher']=page.evaluate("document.getElementById('teacherFrame').contentWindow.KuKoDay123Teacher.getState().playing===true")
+
+              page.evaluate("FractalWaveTreeWorkbenchR01.setMode('compare')")
+              page.wait_for_timeout(250)
+              C['compareRestored']=page.evaluate("getComputedStyle(document.querySelector('.tree-card')).display!=='none' && getComputedStyle(document.querySelector('.teacher-card')).display!=='none'")
+              C['compareFreezesTeacher']=page.evaluate("document.getElementById('teacherFrame').contentWindow.KuKoDay123Teacher.getState().playing===false")
+
+              page.locator('#branchIndex').evaluate("el=>{el.value='137';el.dispatchEvent(new Event('input',{bubbles:true}))}")
+              page.wait_for_timeout(100)
+              C['decoderProducesSevenDigits']=page.locator('#pathDigits .digit').count()==7
+              C['desktopPixelsNonBlank']=digest(compare)['stddev']>8
+
+              page.set_viewport_size({'width':390,'height':844})
+              page.evaluate("FractalWaveTreeWorkbenchR01.setMode('tree')")
+              page.wait_for_timeout(800)
               C['mobileNoHorizontalOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth')
               mobile=root/'mobile-tree.png'; page.screenshot(path=str(mobile),full_page=False)
               C['mobilePixelsNonBlank']=digest(mobile)['stddev']>8
               C['pageErrorsZero']=not report['errors']
-              report['screens']={'compare':digest(compare),'map':digest(mapshot),'mobile':digest(mobile)}
+              report['screens']={'tree':digest(compare),'map':digest(mapshot),'mobile':digest(mobile)}
+              report['state']=page.evaluate('FractalWaveTreeWorkbenchR01.getState()')
               browser.close()
           except Exception:
             report['failure']=traceback.format_exc()
