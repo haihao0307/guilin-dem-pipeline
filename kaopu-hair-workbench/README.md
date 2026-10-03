@@ -45,7 +45,8 @@ node tests/controller.cjs
 7. Pointer Events 提供旋转/双指缩放/梳理输入；梳理仍调用原项目 Transform Feedback
 8. GPU 梳理方向可以还原，但当前不会序列化到 JSON；导入明确还原梳理
 9. 模型切换串行处理，等待两边同一模型 ready；切换期间禁止专注视图隐藏老师，以避免原 drawScene 内部提交预设的状态停顿
-10. `textureDensity`、`shadowsEnabled` 没有有效绘制路径，不提供可操作功能；`diffusePower` 当前着色公式未使用，保留禁用数值并注明；布片 `useColorText=true`，颜色编辑在该预设中禁用
+10. 真实 Chromium 测试发现原 FullModel 会把无效属性位置 -1 交给 WebGL。适配层仅绑定整数且非负的 active attribute；原始模块文字、着色器、材质公式与模型仍保持不变。初始化时设置老师后续帧本就使用的透明混合规则，并完成两帧后检查，避免第一帧 Fin 使用默认混合造成左右显示不一致
+11. `textureDensity`、`shadowsEnabled` 没有有效绘制路径，不提供可操作功能；`diffusePower` 当前着色公式未使用，保留禁用数值并注明；布片 `useColorText=true`，颜色编辑在该预设中禁用
 
 未实现长发物理、毛束碰撞、触手、骨骼/皮肤绑定、Unity/Unreal 导出、独立程序兔子或生产级视觉质量认证。
 
