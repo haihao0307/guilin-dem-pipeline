@@ -30,7 +30,7 @@ jobs:
               R['checks'][n]=bool(v)
               assert v,n
           def settled(f):
-              f.wait_for_function('''()=>{const s=window.YoungStudyState,r=document.querySelector('#studentView').getBoundingClientRect();return s?.ready&&!s.error&&s.resolution[0]===Math.ceil(r.width*devicePixelRatio*s.quality)&&s.resolution[1]===Math.ceil(r.height*devicePixelRatio*s.quality)}''',timeout=60000)
+              f.wait_for_function('''()=>{const s=window.YoungStudyState,el=document.querySelector('#studentView');if(!s||!el)return false;const r=el.getBoundingClientRect();return s.ready&&!s.error&&s.resolution[0]===Math.ceil(r.width*devicePixelRatio*s.quality)&&s.resolution[1]===Math.ceil(r.height*devicePixelRatio*s.quality)}''',timeout=60000)
               f.evaluate('YoungStudy.pixelSignature()')
           try:
               with sync_playwright() as pw:
