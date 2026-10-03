@@ -1,0 +1,152 @@
+{
+  "schema": "FISH_R10_ROOT_CAUSE_REVIEW_1",
+  "createdAt": "2026-10-03T10:28:58.583Z",
+  "status": "ROOT_CAUSE_REVIEW",
+  "sourceHead": "83ef414aa04355d40055532d479acdae3fe951c4",
+  "testedHtmlSha256": "65bdec6f37e9d60a6d7de0ee204717bcfd8624165423f1ce45bc20a06a24806e",
+  "onlineEntrySha256": "42016239d73f5d14150ee722d23efbe9e52b10df72898192a830ee3baa2d174a",
+  "failures": [
+    "HOLD_LOCAL_RENDER_FIDELITY"
+  ],
+  "passed": false,
+  "shareAllowed": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "publication": "NOT_RUN",
+  "boundedFailureCount": 2,
+  "scope": {
+    "primaryDefect": "Adopted compact fish product loads without full source reconstruction data while preserving appearance and motion",
+    "firstRejectedCandidate": "5d33c48a55220858b4cd17b7cf9460c63dd3f4fa",
+    "secondRejectedCandidate": "83ef414aa04355d40055532d479acdae3fe951c4",
+    "existingRenderLimits": {
+      "meanAbsoluteChannelErrorLessThan": 2,
+      "over32FractionLessThan": 0.01,
+      "silhouetteThresholdIoUGreaterThan": 0.99
+    }
+  },
+  "evidence": {
+    "originalGeometryDerivedTexturesMAE": [
+      0.5248757818906881,
+      0.46926498455608173
+    ],
+    "compactGeometryOriginalTexturesMAE": [
+      4.995164624736903,
+      5.351867380506999
+    ],
+    "secondCandidateRows": [
+      {
+        "mode": "REST",
+        "view": "side",
+        "mae": 2.275263133937919,
+        "iou": 0.9974938349947386,
+        "over32": 0.0009317792968279341,
+        "passed": false
+      },
+      {
+        "mode": "REST",
+        "view": "head",
+        "mae": 0.761648397430484,
+        "iou": 0.9987374803654974,
+        "over32": 0.0002195686320874221,
+        "passed": true
+      },
+      {
+        "mode": "REST",
+        "view": "oblique",
+        "mae": 2.1006572295247725,
+        "iou": 0.9961071789686552,
+        "over32": 0.0008392315470171891,
+        "passed": false
+      },
+      {
+        "mode": "CRUISE",
+        "view": "side",
+        "mae": 2.254749048563901,
+        "iou": 0.9974872328660183,
+        "over32": 0.0008213251797157076,
+        "passed": false
+      },
+      {
+        "mode": "CRUISE",
+        "view": "head",
+        "mae": 0.761967695806873,
+        "iou": 0.9987163896770707,
+        "over32": 0.000215342521280908,
+        "passed": true
+      },
+      {
+        "mode": "CRUISE",
+        "view": "oblique",
+        "mae": 2.0963318896478413,
+        "iou": 0.9962938223189468,
+        "over32": 0.001077377232864315,
+        "passed": false
+      },
+      {
+        "mode": "BURST",
+        "view": "side",
+        "mae": 2.27345187494476,
+        "iou": 0.997718087371542,
+        "over32": 0.0009722233381810585,
+        "passed": false
+      },
+      {
+        "mode": "BURST",
+        "view": "head",
+        "mae": 0.7619763428873838,
+        "iou": 0.9987290354181093,
+        "over32": 0.0002153461583934332,
+        "passed": true
+      },
+      {
+        "mode": "BURST",
+        "view": "oblique",
+        "mae": 2.096205660860311,
+        "iou": 0.9963221921351494,
+        "over32": 0.0007982055530857212,
+        "passed": false
+      },
+      {
+        "mode": "TURN_LEFT",
+        "view": "side",
+        "mae": 2.2985075439987144,
+        "iou": 0.997736391792173,
+        "over32": 0.0008989057865017038,
+        "passed": false
+      },
+      {
+        "mode": "TURN_LEFT",
+        "view": "head",
+        "mae": 0.7615766153776862,
+        "iou": 0.9987417028391913,
+        "over32": 0.0002195686320874221,
+        "passed": true
+      },
+      {
+        "mode": "TURN_LEFT",
+        "view": "oblique",
+        "mae": 2.139099133537207,
+        "iou": 0.9963780581039755,
+        "over32": 0.0009078746177370031,
+        "passed": false
+      }
+    ],
+    "historicalArchive": "evidence/r10-rejected-5d33c48/"
+  },
+  "conclusion": "Attribute-aware QEM changes triangle interpolation and geometric/material derivatives. Stronger UV/normal constraints greatly reduce measured drift but eight side/oblique captures still exceed the unchanged MAE limit. Global geometry error and source-subset vertex exactness do not certify rendered fidelity.",
+  "nextBoundedStrategy": "Stop additional weight tuning. Keep adopted rest product topology/attributes exact and remove original chart/residual/source decoder from runtime; retain verified derived materials/cache/buffer release. If bandwidth still needs reduction, use independently verified lossless geometry encoding. Keep QEM as HOLD_LOCAL research candidate; freeze a new exact-rest-product task before implementation.",
+  "checks": {
+    "noGeneratedImageSubstitute": true,
+    "productionSourceModifiedByProducer": true,
+    "realInteractive3DExists": true,
+    "actualRealtimeRenderCompared": true,
+    "publicFixedUrlVerified": false,
+    "screenshotsAloneDoNotPass": true
+  },
+  "currentNewCandidateVerification": {
+    "renderPixels": "FAIL",
+    "fullBrowser": "NOT_RUN_AFTER_RENDER_FAILURE",
+    "gpu": "NOT_RUN_AFTER_RENDER_FAILURE",
+    "cpuFields": "NOT_RUN_NEW_QEM"
+  }
+}

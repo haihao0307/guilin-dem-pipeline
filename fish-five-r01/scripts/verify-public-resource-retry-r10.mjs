@@ -1,0 +1,12 @@
+import fs from 'node:fs';import crypto from 'node:crypto';import {spawn} from 'node:child_process';
+const root='fish-five-r01',sha=b=>crypto.createHash('sha256').update(b).digest('hex'),reportPath=root+'/evidence/R10_PUBLIC_HTTP_REPORT.json',original=fs.readFileSync(reportPath),report=JSON.parse(original),build=JSON.parse(fs.readFileSync(root+'/evidence/R10_BUILD_RECEIPT.json')),id=process.argv[2];
+const asset=build.assets.find(a=>a.id===id),row=report.resources.find(a=>new URL(a.url).pathname.endsWith('/'+asset?.file));
+if(!asset||!row||row.passed)throw Error('Only a failed known-source HTTPS request may be retried');
+fs.writeFileSync(root+'/evidence/R10_PUBLIC_HTTP_FIRST_ATTEMPT.json',original);
+const cache=root+'/temporary/public-r10-'+id+'.bin',at=new Date().toISOString();
+const result=await new Promise(resolve=>{const p=spawn('curl.exe',['--silent','--show-error','--location','--compressed','--noproxy','*','--resolve','haihao0307.github.io:443:185.199.108.153','--connect-timeout','15','--max-time','60','--dump-header',cache+'.headers','--output',cache,'--write-out','%{http_code}',row.url],{windowsHide:true});let out='',err='';p.stdout.on('data',d=>out+=d);p.stderr.on('data',d=>err+=d);p.on('close',code=>resolve({code,httpStatus:Number(out.trim()),err}));});
+const body=fs.readFileSync(cache),attempt={verifiedAt:at,httpStatus:result.httpStatus,responseBytes:body.length,bodySha256:sha(body),curlExit:result.code,error:result.err,transport:'Actual same origin HTTPS GET through alternate official GitHub Pages DNS IP185.199.108.153; response untouched'};
+row.attempts=[{...row},attempt];Object.assign(row,attempt);row.passed=attempt.curlExit===0&&attempt.httpStatus===200&&attempt.bodySha256===asset.sha256&&attempt.responseBytes===asset.bytes;
+const entry=fs.readFileSync(root+'/temporary/public-r10-entry.html');
+report.passed=sha(entry)===build.onlineEntrySha256&&entry.includes(Buffer.from(build.taskId))&&entry.includes(Buffer.from(build.sourceHead))&&report.httpStatus===200&&report.resources.length===6&&report.resources.every(r=>{const a=build.assets.find(a=>new URL(r.url).pathname.endsWith('/'+a.file));return a&&r.passed&&sha(fs.readFileSync(root+'/temporary/public-r10-'+a.id+'.bin'))===a.sha256;});report.verifiedAt=new Date().toISOString();report.shareAllowed=false;
+fs.writeFileSync(reportPath,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({id,attempt,passed:report.passed}));if(!report.passed)process.exitCode=1;
