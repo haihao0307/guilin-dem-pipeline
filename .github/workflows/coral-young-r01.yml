@@ -1,0 +1,77 @@
+name: Coral Young R01 actual source replay
+on:
+  push:
+    branches: [work/coral-young-source-r01-20261003]
+    paths: [.github/workflows/coral-young-r01.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  verify-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build exact tested source and preserve R05
+        run: |
+          mkdir -p /tmp/young-evidence
+          cp -r tools/coral-young-r01 /tmp/young-tools
+          python tools/coral-young-r01/build.py coral-mother-core-seed-r01 /tmp/young-site
+      - name: Install browser
+        run: |
+          python -m pip install playwright==1.55.0
+          python -m playwright install --with-deps chromium
+      - name: Actual shader HTTP tests before publishing
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 --directory /tmp >/tmp/young-http.log 2>&1 &
+          python /tmp/young-tools/qa.py http://127.0.0.1:8765/young-site/ /tmp/young-evidence/prepublish
+      - name: Publish only new study and its navigation
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          git checkout -B young-publish origin/gh-pages
+          python - <<'PY'
+          from pathlib import Path
+          import json,hashlib,shutil
+          p=Path('coral-mother-core-seed-r01');s=Path('/tmp/young-site');m=json.loads((s/'YOUNG_MANIFEST.json').read_text())
+          for n,h in m['base'].items():assert hashlib.sha256((p/n).read_bytes()).hexdigest()==h,('concurrent coral change: stop',n)
+          a=p/'archive-r05-before-young-r01';a.mkdir(exist_ok=True)
+          for n in ['index.html','runtime.js']:shutil.copyfile(p/n,a/n)
+          (p/'young-coral-r01').mkdir(exist_ok=True)
+          for n in ['index.html','runtime.js','young-coral-r01/index.html','YOUNG_MANIFEST.json']:shutil.copyfile(s/n,p/n)
+          shutil.copyfile(s/'YOUNG_MANIFEST.json','/tmp/young-evidence/YOUNG_MANIFEST.json')
+          PY
+          git config user.name 'Coral Mother Source Study'
+          git config user.email 'actions@users.noreply.github.com'
+          git add coral-mother-core-seed-r01/index.html coral-mother-core-seed-r01/runtime.js coral-mother-core-seed-r01/young-coral-r01/ coral-mother-core-seed-r01/YOUNG_MANIFEST.json coral-mother-core-seed-r01/archive-r05-before-young-r01/
+          git commit -m 'feat(coral): integrate actual compact shader study, preserve accepted R05 and flower source'
+          git push origin HEAD:gh-pages
+          git rev-parse HEAD > /tmp/young-evidence/PUBLISHED_COMMIT.txt
+      - name: Verify deployed bytes and actual public rendering
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from urllib.request import urlopen,Request
+          import json,hashlib,time
+          m=json.loads(Path('/tmp/young-site/YOUNG_MANIFEST.json').read_text());base='https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-core-seed-r01/';ready=False
+          for attempt in range(65):
+              try:
+                  checks={n:hashlib.sha256(urlopen(Request(base+n+'?verify='+str(time.time_ns()),headers={'Cache-Control':'no-cache'}),timeout=20).read()).hexdigest()==h for n,h in m['files'].items()}
+                  if all(checks.values()):ready=True;break
+              except Exception as e:print('Awaiting deployment:',str(e),flush=True)
+              time.sleep(8)
+          assert ready,'Public files do not match tested build; delivery not complete'
+          Path('/tmp/young-evidence/PUBLIC_HASHES.json').write_text(json.dumps(checks,indent=2))
+          PY
+          python /tmp/young-tools/qa.py https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-core-seed-r01/ /tmp/young-evidence/public
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coral-young-r01-actual-evidence
+          path: /tmp/young-evidence/
+          retention-days: 30
