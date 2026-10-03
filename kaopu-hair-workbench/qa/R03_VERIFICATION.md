@@ -19,7 +19,7 @@
 - SHA-256: 2b0392ab64f1a8c69d92af8cde640348196f9ea630140b18718f6d6fba0108ed
 - HTML bytes: 14,121,309
 - GitHub Actions: https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37091142867
-- Status: 86 项真实 Chromium 检查通过，候选实际 file://、HTTP 与公网零 JS/GL 错误。固定主入口尚未晋级，first-look 复核中。
+- Status: 86 项真实 Chromium 检查通过，候选实际 file://、HTTP 与公网零 JS/GL 错误。同一 HTML 已晋级固定主入口，最终 run 37091747115 再次通过全部 86 项。
 
 ## 清楚的边界
 
@@ -35,11 +35,13 @@
 - [x] 没有用生成图片代替真实三维实现
 - [x] 已实际修改生产源码
 - [x] 可见候选由原生 WebGL2 几何和着色器实时绘制
-- [ ] 当前头的公网固定入口与真实浏览器已验证
+- [x] 当前头的公网固定入口与真实浏览器已验证
 - [x] 当前头 file:// 首帧和交互、零核心网络依赖验证
-- [ ] 独立 first-look 形态复核
+- [x] 独立 first-look：仅“可操作学习样件”阶段通过
 - [ ] 用户视觉验收；productionReady=false
 
 只有截图而没有工作台，本轮判定失败。QA 截图只用于运行与对照证据。
 
 自动播放观测：在此 Chromium SwiftShader 测试机，1.213 秒窗口新增 27 帧，约 22.26 fps；不是实体手机性能。drawMs 是 CPU 加 WebGL 提交耗时，不是隔离 GPU 时长。
+
+最终固定入口提交 e4d7cc80edd6e268b633a05d21be599f36843f86；Pages 37091746377成功；QA https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37091747115。HTTP200完整字节与SHA一致。最终测试机观察约15.72fps，前一轮约22.26fps，均非手机性能承诺。

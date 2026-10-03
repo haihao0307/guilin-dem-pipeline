@@ -13,7 +13,7 @@ Build：`2026-10-03-anemone-r03`
 
 单 HTML：14,121,309 字节；SHA-256：`2b0392ab64f1a8c69d92af8cde640348196f9ea630140b18718f6d6fba0108ed`。
 
-候选提交：`8a5d9f682f98d30ab417bd42a683d0f322f3b25f`。同内容的隔离候选在 [Chromium CI 37091142867](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37091142867) 通过 86 项检查；固定主入口的最终公开验证状态单独记录在 `qa/PUBLICATION_PROOF.json`，不能拿旧版记录替代。
+候选提交：`8a5d9f682f98d30ab417bd42a683d0f322f3b25f`。同内容的隔离候选在 [Chromium CI 37091142867](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37091142867) 通过 86 项检查；同一内容已晋级固定主入口，最终 [CI 37091747115](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37091747115) 再次通过86项；Pages 37091746377成功，HTTP200完整字节匹配。详见 `qa/PUBLICATION_PROOF.json`。
 
 已独立检查桌面、390×844 视口与两个时间姿态。当前形态通过“可供观察和操作的海葵学习样件”阶段检查；这不是真实成品、物种一比一复刻或 AAA 验收。
 
@@ -26,7 +26,7 @@ Build：`2026-10-03-anemone-r03`
 - 自动播放确实推进时间与帧数，暂停冻结；相机与运动独立；反复切换及兔子换模型期间切走不会卡住
 - 两种模块均实际下载 PNG；系统文件选择器和触屏手势没有验收
 
-在该 Chromium SwiftShader 测试机，自动播放观测窗口 1.213 秒新增 27 帧，约22.26 fps。这只是测试机观测。drawMs 是 CPU 加 WebGL 提交耗时，不是独立 GPU 时长。没有实体 iPhone/Safari 或硬件性能认证。
+在 Chromium SwiftShader 测试机，候选自动播放观测约22.26 fps，最终主入口运行约15.72 fps。这只是测试机观测。drawMs 是 CPU 加 WebGL 提交耗时，不是独立 GPU 时长。没有实体 iPhone/Safari 或硬件性能认证。
 
 ## 形态与算法边界
 
@@ -75,4 +75,4 @@ GitHub在线目录中的 index.html 本身已包含全部核心资源。完整�
 - [x] 同内容候选的 file://、HTTP、公网真实浏览器已验证
 - [ ] 用户视觉验收与 productionReady
 
-固定主入口是否完成本次晋级，以当前 PUBLICATION_PROOF 为准。若只有截图而没有工作台，本轮不能作为交付。没有同步或修改 ChatGPT Game 项目文件。
+固定主入口已完成本次晋级和真实浏览器检查。若只有截图而没有工作台，本轮不能作为交付。没有同步或修改 ChatGPT Game 项目文件。
