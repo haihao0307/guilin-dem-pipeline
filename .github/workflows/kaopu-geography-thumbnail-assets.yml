@@ -1,0 +1,52 @@
+name: KAOPU Geography catalog preview assets
+on:
+  push:
+    branches: [gh-pages]
+    paths: ['.github/workflows/kaopu-geography-thumbnail-assets.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  previews:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: kaopu-geography-r16-public-qa
+          run-id: 37112547294
+          github-token: ${{ github.token }}
+          path: evidence
+      - name: Create preview images and immutable Git blobs; do not move any branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          python -m pip install pillow
+          python - <<'PY'
+          import os,json,base64,hashlib,urllib.request
+          from pathlib import Path
+          from PIL import Image,ImageOps
+          out=Path('preview-assets');out.mkdir(exist_ok=True)
+          names={'more':'more_entry','cave':'cave_entry','canyon':'canyon_entry','crater':'crater_entry','underwater':'underwater_overview','snow':'snow_entry'}
+          manifest={'ui_version':'R16.1','source_run':37112547294,'transform':'crop letterboxing; Lanczos downsample; WebP quality 85; no generated or invented scenery','files':[]}
+          for key,name in names.items():
+              source=Path('evidence')/(name+'.png')
+              im=Image.open(source).convert('RGB')
+              if key=='more':im=im.crop((0,round(im.height*.152),im.width,round(im.height*.851)))
+              if key=='snow':im=im.crop((0,round(im.height*.12),im.width,round(im.height*.88)))
+              im=ImageOps.fit(im,(384,240),method=Image.Resampling.LANCZOS)
+              target=out/(key+'.webp');im.save(target,'WEBP',quality=85,method=6)
+              raw=target.read_bytes()
+              request=urllib.request.Request('https://api.github.com/repos/'+os.environ['GH_REPO']+'/git/blobs',data=json.dumps({'encoding':'base64','content':base64.b64encode(raw).decode()}).encode(),headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','Content-Type':'application/json'},method='POST')
+              with urllib.request.urlopen(request,timeout=30) as response:blob=json.load(response)
+              manifest['files'].append({'path':'kaopu-geography-workbench/previews-r16-1/'+key+'.webp','sha':blob['sha'],'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'sha256':hashlib.sha256(raw).hexdigest(),'bytes':len(raw),'width':384,'height':240})
+          (out/'manifest.json').write_text(json.dumps(manifest,indent=2))
+          print(json.dumps(manifest,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-geography-r16-1-previews
+          path: preview-assets
+          retention-days: 14
