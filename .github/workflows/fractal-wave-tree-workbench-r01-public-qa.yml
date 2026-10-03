@@ -1,9 +1,9 @@
-name: Fractal Wave Tree Workbench R03 public QA
+name: Fractal Wave Tree Workbench R04 public QA
 
 on:
   push:
     branches:
-      - work/fractal-wave-native-3d-r03-20261003
+      - work/fractal-wave-life-flow-r04-20261004
     paths:
       - .github/workflows/fractal-wave-tree-workbench-r01-public-qa.yml
       - kaopu-tree-fractal-wave-lab/index.html
@@ -21,6 +21,9 @@ on:
       - kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r03/index.html
       - kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r03/runtime.js
       - kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r03/NATIVE_3D_GRAMMAR_R03.json
+      - kaopu-tree-fractal-wave-lab/native-3d-life-r04/index.html
+      - kaopu-tree-fractal-wave-lab/native-3d-life-r04/runtime.js
+      - kaopu-tree-fractal-wave-lab/native-3d-life-r04/LIVING_TREE_R04.json
   workflow_dispatch:
 
 permissions:
@@ -37,7 +40,7 @@ jobs:
           import hashlib, json, time, urllib.request
           base='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tree-fractal-wave-lab/'
           expected={
-            'index.html':['分形造波树 综合工作台 R03','treeFrame','teacherFrame','liftFrame','nativeFrame','native3Frame','workbench-r01.js'],
+            'index.html':['分形造波树 综合工作台 R04','treeFrame','teacherFrame','liftFrame','nativeFrame','native3Frame','life4Frame','workbench-r01.js'],
             'workbench-r01.js':['window.__fractalTreeWorkbenchReady','decodePath','KAOPU_KUKO_PLAY','__treeReady'],
             'INTEGRATION_MANIFEST_R01.json':['KAOPU.fractal-wave.tree-workbench/1','branch.pathAddressing','TreeLifeR05.Pandanus'],
             'mobile-r05-seasons/index.html':['PANDANUS TECTORIUS TEACHER','runtime-pandanus-r05.js'],
@@ -52,7 +55,10 @@ jobs:
             'kuko-day123-native-3d-r02/NATIVE_3D_GRAMMAR_R02.json':['KAOPU.fractal-wave.native-3d/2','camera orientation never participates in generation','Pandanus tectorius'],
             'kuko-day123-native-3d-r03/index.html':['Native 3D Fractal Grammar R03','SPATIAL HASH','runtime.js'],
             'kuko-day123-native-3d-r03/runtime.js':['window.__native3dR03Ready','spatialHash:true','supportBackprop:true'],
-            'kuko-day123-native-3d-r03/NATIVE_3D_GRAMMAR_R03.json':['KAOPU.fractal-wave.native-3d/3','SpatialHash occupancy index','support is back-propagated']
+            'kuko-day123-native-3d-r03/NATIVE_3D_GRAMMAR_R03.json':['KAOPU.fractal-wave.native-3d/3','SpatialHash occupancy index','support is back-propagated'],
+            'native-3d-life-r04/index.html':['Living 3D Tree R04','RESOURCE FLOW','CONTINUOUS IMPLICIT SKIN'],
+            'native-3d-life-r04/runtime.js':['window.__livingTreeR04Ready','MarchingCubes','rootShootConnected:true','terminalTaper:true'],
+            'native-3d-life-r04/LIVING_TREE_R04.json':['KAOPU.fractal-wave.living-tree/4','rootUptakeParticipatesInFutureGrowthBudget','continuousWoodSurfaceUsesImplicitField']
           }
           report={'base':base,'files':{},'attempts':0}
           last=None
@@ -93,7 +99,7 @@ jobs:
           from PIL import Image, ImageStat
           from playwright.sync_api import sync_playwright
 
-          root=Path('evidence-fractal-tree-r03'); root.mkdir(exist_ok=True)
+          root=Path('evidence-fractal-tree-r04'); root.mkdir(exist_ok=True)
           url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tree-fractal-wave-lab/'
           report={'url':url,'checks':{},'errors':[]}
           C=report['checks']
@@ -113,8 +119,8 @@ jobs:
               page.wait_for_function('window.__fractalTreeWorkbenchReady===true',timeout=180000)
               page.wait_for_timeout(1800)
               C['titleCorrect']='分形造波树' in page.title()
-              C['fiveFramesPresent']=page.locator('iframe').count()==5
-              C['defaultNativeR03Mode']=page.evaluate("document.body.dataset.mode==='native3'")
+              C['sixFramesPresent']=page.locator('iframe').count()==6
+              C['defaultLivingR04Mode']=page.evaluate("document.body.dataset.mode==='life4'")
               C['desktopNoHorizontalOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth')
               C['embeddedTeacherInitiallyPaused']=page.evaluate("document.getElementById('teacherFrame').contentWindow.KuKoDay123Teacher.getState().playing===false")
               compare=root/'desktop-tree.png'; page.screenshot(path=str(compare),full_page=False)
@@ -166,8 +172,8 @@ jobs:
               nativeshot=root/'desktop-native-r02.png'; page.screenshot(path=str(nativeshot),full_page=False)
               C['nativePixelsNonBlank']=digest(nativeshot)['stddev']>8
 
-              page.evaluate("FractalWaveTreeWorkbenchR01.setMode('native3')")
-              page.wait_for_timeout(900)
+              page.evaluate("FractalWaveTreeWorkbenchR01.setMode('life4')")
+              page.wait_for_timeout(1500)
               C['native3IsLargeIntegratedMode']=page.evaluate("getComputedStyle(document.querySelector('.native3-card')).display!=='none' && getComputedStyle(document.querySelector('.side')).display==='none'")
               r03=page.evaluate("document.getElementById('native3Frame').contentWindow.Native3DFractalR03.getState()")
               C['r03SpatialHash']=r03['signature']['spatialHash'] is True
@@ -191,6 +197,32 @@ jobs:
               page.wait_for_timeout(400)
               C['r02R03CompareVisible']=page.evaluate("getComputedStyle(document.querySelector('.native-card')).display!=='none' && getComputedStyle(document.querySelector('.native3-card')).display!=='none' && getComputedStyle(document.querySelector('.teacher-card')).display==='none'")
 
+              page.evaluate("FractalWaveTreeWorkbenchR01.setMode('life4')")
+              page.wait_for_timeout(1800)
+              C['life4LargeIntegratedMode']=page.evaluate("getComputedStyle(document.querySelector('.life4-card')).display!=='none' && getComputedStyle(document.querySelector('.side')).display==='none'")
+              life=page.evaluate("document.getElementById('life4Frame').contentWindow.LivingTreeR04.getState()")
+              sig=life['signature']
+              C['life4RootShoot']=sig['rootSegments']>0 and sig['shootSegments']>0 and sig['rootShootConnected'] is True
+              C['life4Resources']=sig['waterUptake']>0 and sig['resourceFlow'] is True
+              C['life4ContinuousSkin']=sig['implicitSurface'] is True and sig['continuousSkinVisible'] is True
+              C['life4TerminalTaper']=sig['terminalTaper'] is True and sig['apicalMeristem'] is True
+              C['life4RootsBelowGround']=sig['yMin']<0 and sig['rootSegments']>3
+              C['life4Leaves']=sig['leafCount']>0
+              C['life4SpeciesBoundary']=sig['appliesToSpecies'] is False
+              before_alloc=(sig['shootSegments'],sig['rootSegments'],sig['lastBudget'])
+              page.evaluate("document.getElementById('life4Frame').contentWindow.LivingTreeR04.setAllocation(0.58)")
+              page.wait_for_timeout(1400)
+              after_alloc=page.evaluate("(() => { const s=document.getElementById('life4Frame').contentWindow.LivingTreeR04.getState().signature; return [s.shootSegments,s.rootSegments,s.lastBudget]; })()")
+              C['resourceAllocationChangesGrowth']=before_alloc!=tuple(after_alloc)
+              page.evaluate("document.getElementById('life4Frame').contentWindow.LivingTreeR04.setAllocation(0.38)")
+              page.wait_for_timeout(1400)
+              life4shot=root/'desktop-life-r04.png'; page.screenshot(path=str(life4shot),full_page=False)
+              C['life4PixelsNonBlank']=digest(life4shot)['stddev']>8
+
+              page.evaluate("FractalWaveTreeWorkbenchR01.setMode('lifecompare')")
+              page.wait_for_timeout(500)
+              C['r03R04CompareVisible']=page.evaluate("getComputedStyle(document.querySelector('.native3-card')).display!=='none' && getComputedStyle(document.querySelector('.life4-card')).display!=='none'")
+
               page.locator('#branchIndex').evaluate("el=>{el.value='137';el.dispatchEvent(new Event('input',{bubbles:true}))}")
               page.wait_for_timeout(100)
               C['decoderProducesSevenDigits']=page.locator('#pathDigits .digit').count()==7
@@ -203,7 +235,7 @@ jobs:
               mobile=root/'mobile-tree.png'; page.screenshot(path=str(mobile),full_page=False)
               C['mobilePixelsNonBlank']=digest(mobile)['stddev']>8
               C['pageErrorsZero']=not report['errors']
-              report['screens']={'tree':digest(compare),'map':digest(mapshot),'lift':digest(liftshot),'nativeR02':digest(nativeshot),'nativeR03':digest(r03shot),'mobile':digest(mobile)}
+              report['screens']={'tree':digest(compare),'map':digest(mapshot),'lift':digest(liftshot),'nativeR02':digest(nativeshot),'nativeR03':digest(r03shot),'livingR04':digest(life4shot),'mobile':digest(mobile)}
               report['state']=page.evaluate('FractalWaveTreeWorkbenchR01.getState()')
               browser.close()
           except Exception:
@@ -216,7 +248,7 @@ jobs:
       - name: Upload integrated workbench evidence
         uses: actions/upload-artifact@v4
         with:
-          name: FRACTAL_WAVE_TREE_WORKBENCH_R03_QA
-          path: evidence-fractal-tree-r03
+          name: FRACTAL_WAVE_TREE_WORKBENCH_R04_QA
+          path: evidence-fractal-tree-r04
           if-no-files-found: error
           retention-days: 90
