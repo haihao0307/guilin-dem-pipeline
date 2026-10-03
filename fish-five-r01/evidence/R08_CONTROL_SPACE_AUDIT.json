@@ -1,0 +1,243 @@
+{
+  "schema": "R08_CONTROL_SPACE_AUDIT_1",
+  "status": "READ_ONLY_LOCAL_MATH_AUDIT_COMPLETE",
+  "sourceSha256": "2050012987e118cce77a2ec8fe06866bd61da21a2b54935ad092d08e69b45223",
+  "createdAt": "2026-10-03T05:29:10.268Z",
+  "probe": {
+    "scope": "isolated CPU fixed separating-plane endpoint check, source half extents preserved, independent randomized poses/controls, not claimed reachable full trajectory",
+    "cases": 1000,
+    "dt": 0.016666666666666666,
+    "predictionOverestimates": 533,
+    "maxAbsoluteGapError": 7.042977312465837e-16,
+    "maxTranslationRateMismatch": 0.025049520364705397,
+    "maxYawGradientMismatch": 2.2460227011578127e-8,
+    "maxAbsoluteOmittedAffineOffset": 0.4880502921004246,
+    "worst": {
+      "sample": 534,
+      "normal": [
+        0.7036596864859632,
+        0.5502260277908587,
+        -0.44957131131331013
+      ],
+      "start": 0.000050000000000237355,
+      "predicted": -0.00015257114360939933,
+      "exact": -0.00015257114361009322,
+      "predictionOverestimate": 6.938893903907228e-16,
+      "modelRate": -0.012154268616578201,
+      "oldTranslation": 0.1053156430197092,
+      "newTranslation": 0.10627387156534651,
+      "affineOffset": -0.006179772455471966,
+      "poses": [
+        {
+          "yaw": 2.6744902971531714,
+          "pitch": 0.11358940355479719,
+          "roll": -0.14241958202328533,
+          "speed": 0.9909674694295972,
+          "yawRate": 0.6426775184227154,
+          "pitchRate": -0.13981818817555905,
+          "rollRate": 0.3626238150522113
+        },
+        {
+          "yaw": -1.6131751529802547,
+          "pitch": 0.05510262561962009,
+          "roll": 0.12327190870419144,
+          "speed": 1.1530520046828314,
+          "yawRate": -0.5387556671630591,
+          "pitchRate": 0.030886947317048906,
+          "rollRate": 0.05016492605209351
+        }
+      ]
+    },
+    "predictionOverestimatesInterpretation": "533 positive signed differences were roundoff only; max absolute error 7.04e-16BL. This field is not a failure count.",
+    "maxTranslationRateMismatchInterpretation": "Illustration of superseded old-axis velocity projection; current exact method accounts for new heading. Not a current endpoint defect.",
+    "maxAbsoluteOmittedAffineOffsetInterpretation": "Old trace omitted F-G*u; current reviewPair and guard diagnostics have been corrected. Tangent box estimate is still not a global nonlinear maximum."
+  },
+  "currentSourceSha256": "f2e27027c0ea36055d6c7c3bdd9ef2c053205d05a83882235f597e42628e0713",
+  "currentSourceStillMatches": true,
+  "additionalEndpointJacobianProbe": {
+    "cases": 500,
+    "dt": 0.016666666666666666,
+    "epsilon": 0.000001,
+    "controls": [
+      "iSpeed",
+      "iYawRate",
+      "iPitchRate",
+      "iRollRate",
+      "jSpeed",
+      "jYawRate",
+      "jPitchRate",
+      "jRollRate"
+    ],
+    "maxAbsoluteDerivativeError": [
+      2.4324062875002994e-8,
+      2.3334488008508458e-8,
+      2.6634115857238072e-8,
+      2.245885843965567e-8,
+      2.3948224625591763e-8,
+      2.6738716241148097e-8,
+      2.8568315546539935e-8,
+      1.763310591984535e-8
+    ],
+    "maxAbsoluteEndpointGapError": 1.0200174038743626e-15,
+    "scope": "Randomized isolated mathematical states, not all reachable trajectories; nondifferentiable abs corners are not included in a universal derivative guarantee"
+  },
+  "acceptedStepSweptBounds": [
+    {
+      "id": "herring",
+      "seconds": 3,
+      "seed": 723,
+      "count": 30,
+      "modes": "1s cruise,1s turn,1s burst; kernel-only persistent full-source views, no rendering or gait update",
+      "bounds": null,
+      "steps": 180,
+      "checks": 78300,
+      "minimumEndpointBL": 0.10709298575832435,
+      "minimumFixedPlaneSweptBoundBL": 0.0999429926011888,
+      "maxConservativePairSweepBL": 0.06281945005433541,
+      "inconclusiveIntervals": 0,
+      "guardClamps": 0,
+      "maxThreeDimensionalHeadingSlipRad": 2.9802322387695312e-8,
+      "maxSpeedNormMismatchBLPerSecond": 2.6756374893466273e-14,
+      "emptyControlBoxes": 0
+    },
+    {
+      "id": "tuna-yellow-label",
+      "seconds": 3,
+      "seed": 723,
+      "count": 30,
+      "modes": "1s cruise,1s turn,1s burst; kernel-only persistent full-source views, no rendering or gait update",
+      "bounds": null,
+      "steps": 180,
+      "checks": 78300,
+      "minimumEndpointBL": 0.13485020797073602,
+      "minimumFixedPlaneSweptBoundBL": 0.1280981984023773,
+      "maxConservativePairSweepBL": 0.06591649364827887,
+      "inconclusiveIntervals": 0,
+      "guardClamps": 0,
+      "maxThreeDimensionalHeadingSlipRad": 2.9802322387695312e-8,
+      "maxSpeedNormMismatchBLPerSecond": 2.90878432451791e-14,
+      "emptyControlBoxes": 0
+    },
+    {
+      "id": "tuna-blue-label",
+      "seconds": 3,
+      "seed": 723,
+      "count": 30,
+      "modes": "1s cruise,1s turn,1s burst; kernel-only persistent full-source views, no rendering or gait update",
+      "bounds": null,
+      "steps": 180,
+      "checks": 78300,
+      "minimumEndpointBL": 0.14466764981742194,
+      "minimumFixedPlaneSweptBoundBL": 0.13364755431540415,
+      "maxConservativePairSweepBL": 0.06682969603329258,
+      "inconclusiveIntervals": 0,
+      "guardClamps": 0,
+      "maxThreeDimensionalHeadingSlipRad": 2.9802322387695312e-8,
+      "maxSpeedNormMismatchBLPerSecond": 2.6756374893466273e-14,
+      "emptyControlBoxes": 0
+    },
+    {
+      "id": "colorful",
+      "seconds": 3,
+      "seed": 723,
+      "count": 30,
+      "modes": "1s cruise,1s turn,1s burst; kernel-only persistent full-source views, no rendering or gait update",
+      "bounds": null,
+      "steps": 180,
+      "checks": 78300,
+      "minimumEndpointBL": 0.13184937951092204,
+      "minimumFixedPlaneSweptBoundBL": 0.11959645411326164,
+      "maxConservativePairSweepBL": 0.04847378680077809,
+      "inconclusiveIntervals": 0,
+      "guardClamps": 0,
+      "maxThreeDimensionalHeadingSlipRad": 2.9802322387695312e-8,
+      "maxSpeedNormMismatchBLPerSecond": 2.6423307986078726e-14,
+      "emptyControlBoxes": 0
+    },
+    {
+      "id": "picasso",
+      "seconds": 3,
+      "seed": 723,
+      "count": 30,
+      "modes": "1s cruise,1s turn,1s burst; kernel-only persistent full-source views, no rendering or gait update",
+      "bounds": null,
+      "steps": 180,
+      "checks": 78300,
+      "minimumEndpointBL": 0.10701540507576349,
+      "minimumFixedPlaneSweptBoundBL": 0.09460568050512184,
+      "maxConservativePairSweepBL": 0.05616626668023275,
+      "inconclusiveIntervals": 0,
+      "guardClamps": 0,
+      "maxThreeDimensionalHeadingSlipRad": 2.9802322387695312e-8,
+      "maxSpeedNormMismatchBLPerSecond": 2.6867397195928788e-14,
+      "emptyControlBoxes": 0
+    }
+  ],
+  "completedAt": "2026-10-03T05:44:48.943Z",
+  "taskId": "FISH_PARAMETERIZED_COLLECTIVE_MOTION_R08_20261003",
+  "productionApproval": false,
+  "sourceSnapshots": {
+    "fish-five-r01/src/schooling-r08.js": "f2e27027c0ea36055d6c7c3bdd9ef2c053205d05a83882235f597e42628e0713",
+    "fish-five-r01/src/behavior.js": "fc5c5fb33474f9d09bd5eee499212751ca2e0820f1d54cee1b47119280c144af",
+    "fish-five-r01/src/legacy-school-r08.js": "b3bd25b8908ff219c44ce883e17092bc507164e265a7c8ad9ecaeab15e6198f9",
+    "fish-five-r01/evidence/R08_CONTROL_ROOT_CAUSE_TRACE.json": "167067eebff09673b33e2ec8bd759e46b8605bb4ec40746e00ada39ff029a059",
+    "fish-five-r01/evidence/R08_ROOT_CAUSE_REVIEW.json": "2ed6e155d307d87f74fcdb9c03dfc70ddb33df5355bcaccd6244da8e1d4c4b31",
+    "fish-five-r01/evidence/R08_ENVIRONMENT_ROOT_CAUSE.json": "11e341240d14d4c78bacf0e240dede46380055446de7b375413ba08c535fd438",
+    "knowledge/fish-motion/R08_CONTROL_SPACE_AUDIT.md": "b65c3bd2bf8417b6a5b6d1aeb37fc9f51d967d1ede5f2e6c0eabfb78cffc9e4c"
+  },
+  "sweptCertificate": {
+    "formula": "C_old + min(0,n dot (deltaCenter_j-deltaCenter_i)) - norm(half_i)*angularPath_i - norm(half_j)*angularPath_j",
+    "angularPath": "abs(deltaYawShortest)+abs(deltaPitch)+abs(deltaRoll)",
+    "assumptions": [
+      "linearly interpolated source actor centers",
+      "short-arc yaw and continuous Euler pitch/roll interpolation",
+      "inherited complete whole-gait source OBB encloses displayed fish",
+      "only accepted 1/60s kernel steps"
+    ],
+    "scope": "5 species,seed723,30 actors,3s each; kernel-only no per-species thrust updates, no GPU/native adapter test",
+    "totalPairSteps": 391500,
+    "inconclusiveIntervals": 0,
+    "notGlobalGuarantee": true
+  },
+  "findings": [
+    {
+      "id": "EXACT_ENDPOINT_AND_JACOBIAN",
+      "status": "LOCAL_NUMERICAL_MATCH",
+      "maxGapError": 1.0200174038743626e-15,
+      "maxGradientError": 2.8568315546539935e-8
+    },
+    {
+      "id": "TRACE_AFFINE_OFFSET",
+      "status": "CORRECTED_IN_CURRENT_SOURCE",
+      "restriction": "tangentUpperBound is a local tangent-box estimate, not a nonlinear feasibility proof"
+    },
+    {
+      "id": "INVISIBLE_BOUNDS",
+      "status": "MATCHED_AB_ROOT_CAUSE_EXTERNAL_CORE_EVIDENCE",
+      "evidence": "R08_ENVIRONMENT_ROOT_CAUSE.json",
+      "restriction": "matched evidence supports tested environment root cause; no blanket infeasibility theorem"
+    },
+    {
+      "id": "FINITE_SOLVER",
+      "status": "NO_GLOBAL_CERTIFICATE",
+      "recommendation": "measure exact final barrier residual, guard counts and empty control boxes"
+    },
+    {
+      "id": "POSE_VIABILITY_INPUT",
+      "status": "HYPOTHETICAL_EXTERNAL_INPUT_BOUNDARY",
+      "observedEmptyBoxes": 0,
+      "recommendation": "validate imported pose/braking viability and lower<=upper; no current initialized failure claimed"
+    },
+    {
+      "id": "LONGITUDINAL_NEUTRAL_MODE",
+      "status": "CURRENT_SPEED_COORDINATION_ADDED",
+      "restriction": "engineering feedback, not biological species calibration"
+    },
+    {
+      "id": "NATIVE_FINITE_HABITAT",
+      "status": "SEPARATE_VALIDATION_REQUIRED",
+      "restriction": "not covered by five-species short-window sweep"
+    }
+  ],
+  "reviewMetricsInfeasibleMeaning": "Count of finite-iteration final residuals above 1e-5; not a proof of nonlinear infeasible control pairs"
+}

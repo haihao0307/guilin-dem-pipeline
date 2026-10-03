@@ -1,0 +1,60 @@
+{
+  "schema": "FISH_R08_INDEPENDENT_PLAN_1",
+  "taskId": "FISH_PARAMETERIZED_COLLECTIVE_MOTION_R08_20261003",
+  "baselineSourceHead": "413e7c10b20110a2d1adfd397e83eeeab1b492b4",
+  "baselineHtmlSha256": "83277c546ce9e2fcc945b0a8ec659ae24f2de24c9ba28ba7b77fc7904445894d",
+  "scope": "Independent QA only; no production edits, build, commit or deployment",
+  "baselineSequence": {
+    "actorsPerSource": 30,
+    "seedFive": 2601002,
+    "seedBarracuda": 90401,
+    "cases": ["cruise 8s", "turn 8s", "burst 8s", "rest 4s", "pointer at 2..8s with recovery until 20s", "variable delta 12s", "long cruise 45s"],
+    "dt": "1/60 except variable 1/120, 1/30, 1/60, 1/75, 1/24, 1/60 repeating",
+    "trajectorySampling": "Every tenth update; kinematic peaks measured every update"
+  },
+  "candidateGates": [
+    {
+      "name": "frozen freshness and scope",
+      "criterion": "Source/head, offline/online hashes and all actual resources bind final receipt. Producer does not approve implementation. No source mutation during test."
+    },
+    {
+      "name": "original source fidelity",
+      "criterion": "Independent binary decode and actual GPU readback preserve complete source positions, normals, UVs, triangle tuples and original encoded image pixels. Original R14 carrier remains byte-identical. No removal, downsampling or invented anatomy."
+    },
+    {
+      "name": "finite independent collective state",
+      "criterion": "Six sources, 30 independent actors, all vectors/quaternions and solver clocks finite. Pause and zero delta leave state unchanged. No permanent invisible individual leader or target-slot pose lock. Different actor states remain present."
+    },
+    {
+      "name": "bounded continuity",
+      "criterion": "Measure velocity, yaw/pitch/roll rate, acceleration and actual position corrections. Candidate must obey its declared per-species limits with numerical tolerance, or clearly documented initial-contact handling isolated from live updates. Inspect actual display poses for fixed-step interpolation artifacts. Compare p95 and maxima to R07; no improvement claim based solely on output smoothing hiding solver teleports."
+    },
+    {
+      "name": "source-aware contact",
+      "criterion": "Measured full source envelope, source variant scale and actual frame orientation determine SAT clearance. No sustained overlap worse than -1e-5 body lengths after initialization; specific extremely narrow transient tolerance requires source-scale diagnosis rather than gate reduction. Mesh envelope is conservative and must be labelled as such, not mesh-exact collision."
+    },
+    {
+      "name": "cohesion, response and recovery",
+      "criterion": "Report nearest distance distribution, perception degrees, largest connected component, polarization, group radius and pointer excitation. All fish must stay finite and remain represented. Coordinated turn/burst must reach distinct actual collective states; pointer produces bounded response and excitation decays after removal. Separation/contact safety must not be traded for graph connectivity. Biological calibration remains unverified."
+    },
+    {
+      "name": "delta and long trajectory",
+      "criterion": "Fixed 30/60/120Hz and bounded variable frame deltas run same accepted-time schedule. Assert preserved accumulated simulation time, finite state and bounded step/heading/contact values, without requiring exact new-school poses to match R07. Longer trajectory remains stable without school collapse or stationary all-fish locking."
+    },
+    {
+      "name": "behavior cost and frame time",
+      "criterion": "Same-realm CPU baseline/current update costs separately measured from graph/contact analysis. Same hardware, full body geometry, 30 actors and same controlled browser sequence measure update/upload/render dispatch, draw calls, triangles and RAF median/p95. Preserve R07 eye batching and full draw budget; no lower source detail as shortcut. Any sustained frame regression needs a diagnosed root cause before promotion."
+    },
+    {
+      "name": "R07 memory and startup invariants",
+      "criterion": "Only active decoded source cached; hidden legacy iframe unmounted/context released; returning source works. Same GC page heap and explicit GL accounting. Slow streaming shell/catalog/progress, integrity failure/retry/cancel, desktop/mobile and offline zero core HTTP retained. JS heap is not total process/GPU memory."
+    },
+    {
+      "name": "actual visual sequence",
+      "criterion": "Actual GPU browser evidence for all six schools through cruise/turn/burst/rest/pointer/recovery and pause. Review new temporal motion, original source surface continuity, bounded source eyes and two supported tuna mouths. New collective poses are intentionally not forced to pixel-match old poses. User visualAcceptance and productionReady remain false."
+    }
+  ],
+  "releaseRestriction": "Automatic approval currently rejects Pages writes. Verifier performs no publish or workaround. Parent must resolve approval before external deployment.",
+  "visualAcceptance": false,
+  "productionReady": false
+}

@@ -39,7 +39,7 @@ Gautrais 的相关角速度思想用于设计连续转向。本实现的独立�
 
 ## 验收状态
 
-生产 CPU 26 项与海狼 3 seeds ×120 秒测试通过；最终独立浏览器、全源精度、连续运动、性能、资源生命周期及公网闭环以 `INDEPENDENT_R08_REPORT.json`、`R08_PUBLICATION_PROOF.json` 为准。用户动作与视觉接受仍待确认。`visualAcceptance=false`，`productionReady=false`。
+生产 CPU 26 项与海狼 3 seeds ×120 秒测试通过。最终冻结 ce30d403 的独立 25 个汇总门禁通过，覆盖 42 条数学轨迹、233 封装检查、360 次实际完整群包络检查、9 海狼相机交互、66 启动检查、12 性能/内存场景、六来源单鱼零像素差和完整原表面/眼睛 GPU 回读。真实硬件为 RTX 4070 Ti SUPER，1440×950；五来源群游 RAF p95 为 16.7–16.8ms，海狼为 33.4ms、median16.7ms，与 R07 高密度源基线相当，不能外推到实际手机硬件。详见 `INDEPENDENT_R08_REPORT.json`。公网闭环以 `R08_PUBLICATION_PROOF.json` 为准，用户动作与视觉接受仍待确认。`visualAcceptance=false`，`productionReady=false`。
 
 - [x] 没有用生成图片代替真实三维实现；
 - [x] 已实际修改生产源码；

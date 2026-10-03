@@ -1,0 +1,26 @@
+{
+  "taskId": "FISH_PARAMETERIZED_COLLECTIVE_MOTION_R08_20261003",
+  "recordedAt": "2026-10-03T05:04:45.530Z",
+  "status": "ROOT_CAUSE_REVIEW",
+  "boundedDefect": "simultaneous contact safety and continuous collective trajectories",
+  "evidence": [
+    "R08_ROOT_LEGACY_INITIAL_FAILURE.json",
+    "R08_R07_BEHAVIOR_BASELINE.json"
+  ],
+  "producerCandidateNotApproved": true,
+  "observations": [
+    "Initial shared candidate maintained source OBB clearance but frequently shortened accepted step factors.",
+    "Multiplying accepted speed and angular rate by contact factors caused large derivative jumps and excessive stopping.",
+    "Five source and native barracuda failures have the same safety-layer cause; no visual release or parameter-only tweak is allowed."
+  ],
+  "cause": "Closest-approach line support does not bound actual separating OBB face under turning. Late safety correction cannot substitute for feasible bounded acceleration decisions made before the step.",
+  "nextBoundedChange": "Use separating-face distance/stopping margin and rotation support growth to constrain a bounded acceleration proposal in advance, then independently measure emergency clamp frequency, acceleration and full-source clearance.",
+  "invariants": [
+    "do not shrink full source collision envelope",
+    "do not smooth display to hide solver discontinuities",
+    "do not lower source geometry or pixels",
+    "do not approve producer result"
+  ],
+  "visualAcceptance": false,
+  "productionReady": false
+}

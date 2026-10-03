@@ -1,0 +1,379 @@
+{
+  "schema": "fish.r08.environment-rca/1",
+  "taskId": "FISH_PARAMETERIZED_COLLECTIVE_MOTION_R08_20261003",
+  "createdAt": "2026-10-03T05:40:39.700Z",
+  "sourceHashes": {
+    "src/behavior.js": "fc5c5fb33474f9d09bd5eee499212751ca2e0820f1d54cee1b47119280c144af",
+    "src/schooling-r08.js": "f2e27027c0ea36055d6c7c3bdd9ef2c053205d05a83882235f597e42628e0713"
+  },
+  "status": "ROOT_CAUSE_REVIEW_MATCHED_EXPERIMENT",
+  "method": "Same source, seed, 30 actors, full envelope, initial positions/margins, modes, 120s; only solver bounds differ. Old-box failures are negative controls, not candidates.",
+  "experiments": [
+    {
+      "id": "herring",
+      "seed": 723,
+      "seconds": 120,
+      "environment": "old-invisible-box",
+      "bounds": [
+        7,
+        2.8,
+        5
+      ],
+      "sameFullSourceHalf": [
+        0.62,
+        0.2964285247415566,
+        0.6830435120053966
+      ],
+      "initialGap": 0.24,
+      "sourceGap": 0.025,
+      "minFullBoxClearance": 0.024999999227150276,
+      "safetyClamps": 96,
+      "maxScalarAcceleration": 0.9350000000000003,
+      "maxWorldAcceleration": 1.04231873674865,
+      "maxBarrierResidual": 0.6549305946705594,
+      "maxInfeasibleCachedPairs": 23,
+      "meanCruiseSpeed": 0.09629617185899281,
+      "finalMeanSpeed": 0.03981146136938351,
+      "firstGuard": {
+        "time": 111.13333333332831,
+        "i": 5,
+        "j": 14,
+        "old": 0.0000033772505282810006,
+        "future": -0.0000850483281353634,
+        "factor": 0.030551057204033463,
+        "normal": [
+          -0.5968020631544699,
+          0.0011792771315023863,
+          0.8023876287181996
+        ],
+        "actualEndpointRate": -0.006985366970485145,
+        "allowed": 0,
+        "tangentUpperBound": 0.049901803466722114,
+        "remainingResidual": 0.006985366970485145,
+        "qp": {
+          "worst": 0.06939142772470097,
+          "infeasible": 15,
+          "pairCount": 98
+        },
+        "gradient": [
+          0.9884971478961636,
+          -0.5841325000583462,
+          -0.28776517503309706,
+          -0.04474724569259566,
+          -0.999999994572571,
+          -0.6846653257270564,
+          -0.2925965629818492,
+          0.0000711634794695802
+        ],
+        "actors": [
+          {
+            "position": [
+              -4.9524381060793115,
+              -1.1983548771139712,
+              -2.12928289800742
+            ],
+            "velocity": [
+              0.0017188794073952351,
+              -0.000009382375396604914,
+              -0.003238453460383539
+            ],
+            "half": [
+              0.62,
+              0.2964285247415566,
+              0.6830435120053966
+            ],
+            "yaw": -2.0587571710222035,
+            "pitch": -0.002559044610569862,
+            "roll": 0.008944836580618813,
+            "oldSpeed": 0.0036663626745300298,
+            "nextSpeed": 0.011127433369643787,
+            "oldRate": 0.00532135666953838,
+            "nextRate": 0.016073303747818086,
+            "oldPitchRate": 0.0016642994652692272,
+            "nextPitchRate": 0.00791447004899921,
+            "oldRollRate": -0.0008124139964501704,
+            "nextRollRate": -0.0036615101034873265,
+            "lower": [
+              0,
+              -0.017178643330461624,
+              -0.006669033868064106,
+              -0.012479080663116836
+            ],
+            "upper": [
+              0.019249696007863363,
+              0.02782135666953838,
+              0.00999763279860256,
+              0.010854252670216495
+            ]
+          },
+          {
+            "position": [
+              -5.792048553642154,
+              -0.8750502312223492,
+              -1.0579951717812954
+            ],
+            "velocity": [
+              0.0010772957742410938,
+              -0.000001940665814714748,
+              -0.0014484028979389052
+            ],
+            "half": [
+              0.62,
+              0.2964285247415566,
+              0.6830435120053966
+            ],
+            "yaw": -2.210305921553502,
+            "pitch": -0.001075092705426487,
+            "roll": 0.005508982685286876,
+            "oldSpeed": 0.0018051152057737168,
+            "nextSpeed": 0.0064806463351864355,
+            "oldRate": -0.0007594906584873199,
+            "nextRate": 1.0852699278309672e-7,
+            "oldPitchRate": 0.000004173663831204963,
+            "nextPitchRate": 2.1566520148868346e-8,
+            "oldRollRate": 8.241699741690652e-7,
+            "nextRollRate": 1.8143829397256833e-8,
+            "lower": [
+              0,
+              -0.02325949065848732,
+              -0.008329159669502128,
+              -0.011665842496692497
+            ],
+            "upper": [
+              0.01738844853910705,
+              0.021740509341512684,
+              0.008337506997164538,
+              0.011667490836640834
+            ]
+          }
+        ],
+        "explanation": "Actual exact endpoint plane rate includes heading and rotated support; tangentUpperBound is not a nonlinear global-optimum certificate."
+      }
+    },
+    {
+      "id": "herring",
+      "seed": 723,
+      "seconds": 120,
+      "environment": "camera-follow-open-ocean",
+      "bounds": null,
+      "sameFullSourceHalf": [
+        0.62,
+        0.2964285247415566,
+        0.6830435120053966
+      ],
+      "initialGap": 0.24,
+      "sourceGap": 0.025,
+      "minFullBoxClearance": 0.10711037082908209,
+      "safetyClamps": 0,
+      "maxScalarAcceleration": 0.9350000000000003,
+      "maxWorldAcceleration": 1.0500478797643575,
+      "maxBarrierResidual": 0.6611259361085549,
+      "maxInfeasibleCachedPairs": 9,
+      "meanCruiseSpeed": 0.6211441395494534,
+      "finalMeanSpeed": 0.6625123453684331,
+      "firstGuard": null
+    },
+    {
+      "id": "tuna-yellow-label",
+      "seed": 723,
+      "seconds": 120,
+      "environment": "old-invisible-box",
+      "bounds": [
+        7,
+        2.8,
+        5
+      ],
+      "sameFullSourceHalf": [
+        0.62,
+        0.4055072659631451,
+        0.6085939961906148
+      ],
+      "initialGap": 0.24,
+      "sourceGap": 0.025,
+      "minFullBoxClearance": 0.05283378584877163,
+      "safetyClamps": 0,
+      "maxScalarAcceleration": 1.2100000000000133,
+      "maxWorldAcceleration": 1.614380463100012,
+      "maxBarrierResidual": 0.8403351905857426,
+      "maxInfeasibleCachedPairs": 16,
+      "meanCruiseSpeed": 0.39294434969961384,
+      "finalMeanSpeed": 0.2984929772358766,
+      "firstGuard": null
+    },
+    {
+      "id": "tuna-yellow-label",
+      "seed": 723,
+      "seconds": 120,
+      "environment": "camera-follow-open-ocean",
+      "bounds": null,
+      "sameFullSourceHalf": [
+        0.62,
+        0.4055072659631451,
+        0.6085939961906148
+      ],
+      "initialGap": 0.24,
+      "sourceGap": 0.025,
+      "minFullBoxClearance": 0.10536743442240215,
+      "safetyClamps": 0,
+      "maxScalarAcceleration": 1.2100000000000133,
+      "maxWorldAcceleration": 1.2879086395467352,
+      "maxBarrierResidual": 0.17382059314524437,
+      "maxInfeasibleCachedPairs": 7,
+      "meanCruiseSpeed": 0.7850103236800797,
+      "finalMeanSpeed": 0.8480242798390722,
+      "firstGuard": null
+    },
+    {
+      "id": "tuna-blue-label",
+      "seed": 723,
+      "seconds": 120,
+      "environment": "old-invisible-box",
+      "bounds": [
+        7,
+        2.8,
+        5
+      ],
+      "sameFullSourceHalf": [
+        0.62,
+        0.31905742156384775,
+        0.4694188960386333
+      ],
+      "initialGap": 0.24,
+      "sourceGap": 0.025,
+      "minFullBoxClearance": 0.08767196560444479,
+      "safetyClamps": 0,
+      "maxScalarAcceleration": 1.3200000000000012,
+      "maxWorldAcceleration": 1.7963149294708796,
+      "maxBarrierResidual": 1.2023439551998276,
+      "maxInfeasibleCachedPairs": 19,
+      "meanCruiseSpeed": 0.31387511572060856,
+      "finalMeanSpeed": 0.15654487605618195,
+      "firstGuard": null
+    },
+    {
+      "id": "tuna-blue-label",
+      "seed": 723,
+      "seconds": 120,
+      "environment": "camera-follow-open-ocean",
+      "bounds": null,
+      "sameFullSourceHalf": [
+        0.62,
+        0.31905742156384775,
+        0.4694188960386333
+      ],
+      "initialGap": 0.24,
+      "sourceGap": 0.025,
+      "minFullBoxClearance": 0.11345411956656593,
+      "safetyClamps": 0,
+      "maxScalarAcceleration": 1.3200000000000012,
+      "maxWorldAcceleration": 1.4016785419410673,
+      "maxBarrierResidual": 0.4153374476175463,
+      "maxInfeasibleCachedPairs": 5,
+      "meanCruiseSpeed": 0.8585492399109382,
+      "finalMeanSpeed": 0.8986943144326719,
+      "firstGuard": null
+    },
+    {
+      "id": "colorful",
+      "seed": 723,
+      "seconds": 120,
+      "environment": "old-invisible-box",
+      "bounds": [
+        7,
+        2.8,
+        5
+      ],
+      "sameFullSourceHalf": [
+        0.62,
+        0.40744069308992165,
+        0.534860724429298
+      ],
+      "initialGap": 0.24,
+      "sourceGap": 0.025,
+      "minFullBoxClearance": 0.04148203857709387,
+      "safetyClamps": 0,
+      "maxScalarAcceleration": 0.6325000000000003,
+      "maxWorldAcceleration": 1.032335766538119,
+      "maxBarrierResidual": 1.099460362221152,
+      "maxInfeasibleCachedPairs": 18,
+      "meanCruiseSpeed": 0.2176229450747495,
+      "finalMeanSpeed": 0.19809690352756917,
+      "firstGuard": null
+    },
+    {
+      "id": "colorful",
+      "seed": 723,
+      "seconds": 120,
+      "environment": "camera-follow-open-ocean",
+      "bounds": null,
+      "sameFullSourceHalf": [
+        0.62,
+        0.40744069308992165,
+        0.534860724429298
+      ],
+      "initialGap": 0.24,
+      "sourceGap": 0.025,
+      "minFullBoxClearance": 0.1228758242154736,
+      "safetyClamps": 0,
+      "maxScalarAcceleration": 0.6325000000000003,
+      "maxWorldAcceleration": 0.7208717881781749,
+      "maxBarrierResidual": 0.4993974135124224,
+      "maxInfeasibleCachedPairs": 6,
+      "meanCruiseSpeed": 0.43124483089127524,
+      "finalMeanSpeed": 0.4430692552353589,
+      "firstGuard": null
+    },
+    {
+      "id": "picasso",
+      "seed": 723,
+      "seconds": 120,
+      "environment": "old-invisible-box",
+      "bounds": [
+        7,
+        2.8,
+        5
+      ],
+      "sameFullSourceHalf": [
+        0.62,
+        0.4599933276235436,
+        0.5723268399226609
+      ],
+      "initialGap": 0.24,
+      "sourceGap": 0.025,
+      "minFullBoxClearance": 0.04629994378482882,
+      "safetyClamps": 0,
+      "maxScalarAcceleration": 0.6325000000000003,
+      "maxWorldAcceleration": 0.8884654478227628,
+      "maxBarrierResidual": 0.6715319182355941,
+      "maxInfeasibleCachedPairs": 15,
+      "meanCruiseSpeed": 0.08747131502218382,
+      "finalMeanSpeed": 0.014801076897745706,
+      "firstGuard": null
+    },
+    {
+      "id": "picasso",
+      "seed": 723,
+      "seconds": 120,
+      "environment": "camera-follow-open-ocean",
+      "bounds": null,
+      "sameFullSourceHalf": [
+        0.62,
+        0.4599933276235436,
+        0.5723268399226609
+      ],
+      "initialGap": 0.24,
+      "sourceGap": 0.025,
+      "minFullBoxClearance": 0.10921067458467903,
+      "safetyClamps": 0,
+      "maxScalarAcceleration": 0.6325000000000003,
+      "maxWorldAcceleration": 0.730804821578258,
+      "maxBarrierResidual": 0.6715317335224458,
+      "maxInfeasibleCachedPairs": 11,
+      "meanCruiseSpeed": 0.322304717106123,
+      "finalMeanSpeed": 0.3378832511994206,
+      "firstGuard": null
+    }
+  ],
+  "visualAcceptance": false,
+  "productionReady": false
+}

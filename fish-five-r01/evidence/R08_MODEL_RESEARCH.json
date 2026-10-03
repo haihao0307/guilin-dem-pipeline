@@ -1,0 +1,622 @@
+{
+  "schema": "FISH_COLLECTIVE_MODEL_RESEARCH_R08_1",
+  "taskId": "FISH_PARAMETERIZED_COLLECTIVE_MOTION_R08_20261003",
+  "createdAt": "2026-10-03T05:08:10.634Z",
+  "dispatchTime": "2026-10-03T04:27:00Z",
+  "productionBaseline": "413e7c10b20110a2d1adfd397e83eeeab1b492b4",
+  "evidenceClasses": [
+    "RESEARCH_EVIDENCE",
+    "SOURCE_MEASURED",
+    "ENGINEERING_CANDIDATE"
+  ],
+  "document": "knowledge/fish-motion/R08_COLLECTIVE_MOTION_MODELS.md",
+  "documentSha256": "4e6728716f64bf4c6d5d0d63e1767a715402a6cc6339f0bdfb9c1ba9688e81f2",
+  "sourceFilesModified": false,
+  "productionRuntimeModifiedByThisLane": false,
+  "gpuUsed": false,
+  "browserUsed": false,
+  "built": false,
+  "published": false,
+  "sources": [
+    {
+      "id": "couzin2002",
+      "title": "Collective memory and spatial sorting in animal groups",
+      "doi": "10.1006/jtbi.2002.3065",
+      "requestedUrl": "https://eprints.gla.ac.uk/10628/",
+      "requestedEntryHasFullText": false,
+      "readUrl": "https://jmvidal.cse.sc.edu/library/couzin02a.pdf",
+      "sourceKind": "Original paper university-hosted PDF",
+      "sectionsRead": [
+        "The Model",
+        "Equations 1-3",
+        "bounded turning paragraph"
+      ],
+      "applicable": "Local repulsion priority, orientation and attraction; finite turns; no permanent leader required",
+      "limits": "Phenomenological 3D model; numerical parameters are not six-source empirical measurements"
+    },
+    {
+      "id": "gautrais2012",
+      "title": "Deciphering Interactions in Moving Animal Groups",
+      "doi": "10.1371/journal.pcbi.1002678",
+      "readUrl": "https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1002678",
+      "pdfReadUrl": "https://horizon.documentation.ird.fr/exl-doc/pleins_textes/divers17-09/010057267.pdf",
+      "sourceKind": "Original open-access research article/author institutional PDF",
+      "sectionsRead": [
+        "single-fish behavior",
+        "pair interactions",
+        "multiple neighbors",
+        "equations 1,3,6"
+      ],
+      "experimentTaxon": "Kuhlia mugil",
+      "experimentDimension": "quasi-2D shallow tank",
+      "applicable": "Angular-velocity OU response, normalized positional+orientation inputs, first-shell Voronoi neighborhood",
+      "limits": "Linear positional distance term cannot extend indefinitely; confinement and density alter inferred coupling; no six-source parameter transfer"
+    },
+    {
+      "id": "calovi2018",
+      "title": "Disentangling and modeling interactions in fish with burst-and-coast swimming reveal distinct alignment and attraction behaviors",
+      "doi": "10.1371/journal.pcbi.1005933",
+      "readUrl": "https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005933",
+      "pdfReadUrl": "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1005933&type=printable",
+      "sourceKind": "Original open-access research article and publisher PDF",
+      "sectionsRead": [
+        "burst-and-coast dynamics",
+        "pair interaction equations 12-15",
+        "anisotropic angular factors",
+        "discussion"
+      ],
+      "experimentTaxon": "Hemigrammus rhodostomus",
+      "experimentDimension": "quasi-2D circular tank, isolated/pairs",
+      "applicable": "Independent attraction/alignment products; parity-aware angular kernels; continuous distance weighting",
+      "limits": "Kick response is angle per event, not angular velocity per second; original biological times/ranges are not barracuda/tuna calibration; 3D adaptation engineering only"
+    }
+  ],
+  "equations": [
+    {
+      "id": "normalized_social_turn",
+      "evidenceClass": "ENGINEERING_CANDIDATE",
+      "formula": "omegaSocial=kAlign*sum(W*V*B*sin(deltaHeading))/(epsilon+sum(W*V*B))+kAttract*sum(W*V*A*sin(bearing))/(epsilon+sum(W*V))",
+      "units": "rad/s",
+      "note": "Own bounded kernels and normalization; no hard geometry replacement"
+    },
+    {
+      "id": "angular_response",
+      "evidenceClass": "ENGINEERING_CANDIDATE",
+      "formula": "omegaNext=omegaTarget+(omega-omegaTarget)*exp(-dt/tauTurn); constrain abs(deltaOmega)<=alphaYaw*dt; thetaNext=wrap(theta+omegaNext*dt)",
+      "units": "seconds,radians,rad/s,rad/s^2",
+      "note": "Check committed yaw/pitch/roll after every safety guard, not target only"
+    },
+    {
+      "id": "speed_response",
+      "evidenceClass": "ENGINEERING_CANDIDATE",
+      "formula": "acceleration=clamp((uTarget-u)/tauSpeed,-aBrake,aThrust); uNext=max(0,u+acceleration*dt); v=sourceLength*uNext*acceptedHeading",
+      "units": "BL/s,BL/s^2",
+      "note": "Separate propulsion demand from accepted translation and gait observables"
+    },
+    {
+      "id": "bounded_distance_kernels",
+      "evidenceClass": "ENGINEERING_CANDIDATE",
+      "formula": "A(q)=tanh((q-q0)/sGap)/(1+(q/lAttract)^2); B(q)=1/(1+(q/lAlign)^2); W=1-quintic(clamp((q-rFull)/(rSight-rFull),0,1))",
+      "units": "dimensionless q=d/Lpair and kernels",
+      "note": "Not literal fitted Calovi equations; q0 derived from source support"
+    },
+    {
+      "id": "predictive_safety",
+      "evidenceClass": "ENGINEERING_CANDIDATE",
+      "formula": "tCPA=clamp(-dot(r,vRelative)/(dot(vRelative,vRelative)+epsilon),0,predictSeconds); rCPA=r+tCPA*vRelative",
+      "units": "world length,seconds,world length/s",
+      "note": "Constant-velocity CPA needs separate full-source rotation/gait-sweep support and head-on tiebreak"
+    },
+    {
+      "id": "stopping_feasibility",
+      "evidenceClass": "ENGINEERING_CANDIDATE",
+      "formula": "closingSpeed^2/(2*reachableRelativeBrake)+closingSpeed*tauResponse <= surfaceClearance-rotationSweepReserve",
+      "units": "all lengths same world units",
+      "note": "Necessary viability condition, not complete collision guarantee. Impossible initial state cannot satisfy hard safety plus bounded acceleration by instant velocity scaling"
+    },
+    {
+      "id": "correlated_noise",
+      "evidenceClass": "ENGINEERING_CANDIDATE",
+      "formula": "rho=exp(-dt/tauNoise); etaNext=rho*eta+sigmaOmega*sqrt(1-rho^2)*Normal(0,1)",
+      "units": "sigmaOmega stationary rad/s; tauNoise seconds",
+      "note": "Distinct from SDE diffusion sigma rad/s^(3/2); post-limit process not exact OU"
+    }
+  ],
+  "parameterUnits": {
+    "sourceLength": "world units; no unverified meter claim",
+    "uCruise": "BL/s",
+    "omegaMax": "rad/s",
+    "tauTurn": "s",
+    "alphaYaw": "rad/s^2",
+    "tauSpeed": "s",
+    "aThrust": "BL/s^2",
+    "aBrake": "BL/s^2",
+    "kAlign": "rad/s",
+    "kAttract": "rad/s",
+    "lAlign": "BL",
+    "lAttract": "BL",
+    "predictSeconds": "s"
+  },
+  "engineeringCandidates": [
+    {
+      "id": "barracuda",
+      "evidenceClass": "ENGINEERING_CANDIDATE",
+      "empiricallyCalibrated": false,
+      "exposeInUI": false,
+      "ranges": {
+        "uCruise": [
+          0.45,
+          0.85
+        ],
+        "omegaMax": [
+          0.35,
+          0.65
+        ],
+        "tauTurn": [
+          0.6,
+          1
+        ],
+        "alphaYaw": [
+          0.8,
+          1.8
+        ],
+        "tauSpeed": [
+          0.8,
+          1.4
+        ],
+        "aThrust": [
+          0.35,
+          0.7
+        ],
+        "kAlign": [
+          1.8,
+          2.5
+        ],
+        "kAttract": [
+          0.6,
+          1
+        ],
+        "lAlign": [
+          2.5,
+          4
+        ],
+        "lAttract": [
+          4,
+          6
+        ],
+        "predictSeconds": [
+          1.2,
+          2
+        ]
+      },
+      "preferredSpacing": "Derived from actual source directional support plus comfort gap, not universal fixed BL",
+      "taxonomy": "SOURCE_LABEL_IDENTITY_NOT_SPECIES_CALIBRATION"
+    },
+    {
+      "id": "herring",
+      "evidenceClass": "ENGINEERING_CANDIDATE",
+      "empiricallyCalibrated": false,
+      "exposeInUI": false,
+      "ranges": {
+        "uCruise": [
+          0.6,
+          0.9
+        ],
+        "omegaMax": [
+          0.65,
+          1
+        ],
+        "tauTurn": [
+          0.3,
+          0.6
+        ],
+        "alphaYaw": [
+          1.5,
+          3
+        ],
+        "tauSpeed": [
+          0.5,
+          0.9
+        ],
+        "aThrust": [
+          0.6,
+          1
+        ],
+        "kAlign": [
+          2,
+          2.7
+        ],
+        "kAttract": [
+          0.8,
+          1.2
+        ],
+        "lAlign": [
+          2,
+          3.5
+        ],
+        "lAttract": [
+          3.5,
+          5.5
+        ],
+        "predictSeconds": [
+          0.8,
+          1.3
+        ]
+      },
+      "preferredSpacing": "Derived from actual source directional support plus comfort gap, not universal fixed BL",
+      "taxonomy": "Atlantic herring source label"
+    },
+    {
+      "id": "tuna-yellow-label",
+      "evidenceClass": "ENGINEERING_CANDIDATE",
+      "empiricallyCalibrated": false,
+      "exposeInUI": false,
+      "ranges": {
+        "uCruise": [
+          0.75,
+          1.1
+        ],
+        "omegaMax": [
+          0.4,
+          0.65
+        ],
+        "tauTurn": [
+          0.65,
+          1
+        ],
+        "alphaYaw": [
+          0.9,
+          1.6
+        ],
+        "tauSpeed": [
+          0.8,
+          1.3
+        ],
+        "aThrust": [
+          0.5,
+          0.9
+        ],
+        "kAlign": [
+          2,
+          2.8
+        ],
+        "kAttract": [
+          0.6,
+          1
+        ],
+        "lAlign": [
+          3,
+          4.5
+        ],
+        "lAttract": [
+          4.5,
+          6.5
+        ],
+        "predictSeconds": [
+          1.2,
+          2
+        ]
+      },
+      "preferredSpacing": "Derived from actual source directional support plus comfort gap, not universal fixed BL",
+      "taxonomy": "SOURCE_LABEL_IDENTITY_NOT_SPECIES_CALIBRATION"
+    },
+    {
+      "id": "tuna-blue-label",
+      "evidenceClass": "ENGINEERING_CANDIDATE",
+      "empiricallyCalibrated": false,
+      "exposeInUI": false,
+      "ranges": {
+        "uCruise": [
+          0.8,
+          1.15
+        ],
+        "omegaMax": [
+          0.4,
+          0.65
+        ],
+        "tauTurn": [
+          0.65,
+          1
+        ],
+        "alphaYaw": [
+          0.9,
+          1.6
+        ],
+        "tauSpeed": [
+          0.8,
+          1.3
+        ],
+        "aThrust": [
+          0.5,
+          0.9
+        ],
+        "kAlign": [
+          2,
+          2.8
+        ],
+        "kAttract": [
+          0.6,
+          1
+        ],
+        "lAlign": [
+          3,
+          4.5
+        ],
+        "lAttract": [
+          4.5,
+          6.5
+        ],
+        "predictSeconds": [
+          1.2,
+          2
+        ]
+      },
+      "preferredSpacing": "Derived from actual source directional support plus comfort gap, not universal fixed BL",
+      "taxonomy": "SOURCE_LABEL_IDENTITY_NOT_SPECIES_CALIBRATION"
+    },
+    {
+      "id": "colorful",
+      "evidenceClass": "ENGINEERING_CANDIDATE",
+      "empiricallyCalibrated": false,
+      "exposeInUI": false,
+      "ranges": {
+        "uCruise": [
+          0.35,
+          0.6
+        ],
+        "omegaMax": [
+          0.85,
+          1.3
+        ],
+        "tauTurn": [
+          0.25,
+          0.5
+        ],
+        "alphaYaw": [
+          1.8,
+          3.5
+        ],
+        "tauSpeed": [
+          0.45,
+          0.9
+        ],
+        "aThrust": [
+          0.4,
+          0.8
+        ],
+        "kAlign": [
+          1.1,
+          1.8
+        ],
+        "kAttract": [
+          0.6,
+          1
+        ],
+        "lAlign": [
+          1.8,
+          3
+        ],
+        "lAttract": [
+          2.5,
+          4.5
+        ],
+        "predictSeconds": [
+          0.7,
+          1.2
+        ]
+      },
+      "preferredSpacing": "Derived from actual source directional support plus comfort gap, not universal fixed BL",
+      "taxonomy": "SOURCE_LABEL_IDENTITY_NOT_SPECIES_CALIBRATION"
+    },
+    {
+      "id": "picasso",
+      "evidenceClass": "ENGINEERING_CANDIDATE",
+      "empiricallyCalibrated": false,
+      "exposeInUI": false,
+      "ranges": {
+        "uCruise": [
+          0.25,
+          0.5
+        ],
+        "omegaMax": [
+          0.85,
+          1.3
+        ],
+        "tauTurn": [
+          0.25,
+          0.5
+        ],
+        "alphaYaw": [
+          1.8,
+          3.5
+        ],
+        "tauSpeed": [
+          0.45,
+          0.9
+        ],
+        "aThrust": [
+          0.35,
+          0.7
+        ],
+        "kAlign": [
+          1,
+          1.7
+        ],
+        "kAttract": [
+          0.5,
+          0.9
+        ],
+        "lAlign": [
+          1.8,
+          3
+        ],
+        "lAttract": [
+          2.5,
+          4.5
+        ],
+        "predictSeconds": [
+          0.7,
+          1.2
+        ]
+      },
+      "preferredSpacing": "Derived from actual source directional support plus comfort gap, not universal fixed BL",
+      "taxonomy": "SOURCE_LABEL_IDENTITY_NOT_SPECIES_CALIBRATION"
+    }
+  ],
+  "additionalCandidateRanges": {
+    "rearWeight": {
+      "range": [
+        0.1,
+        0.3
+      ],
+      "unit": "dimensionless"
+    },
+    "tauNoise": {
+      "range": [
+        1.5,
+        4
+      ],
+      "unit": "s"
+    },
+    "sigmaOmega": {
+      "range": [
+        0.03,
+        0.12
+      ],
+      "unit": "rad/s"
+    },
+    "pointerRise": {
+      "range": [
+        0.2,
+        0.4
+      ],
+      "unit": "s"
+    },
+    "pointerRecovery": {
+      "range": [
+        1,
+        2.5
+      ],
+      "unit": "s"
+    }
+  },
+  "cpuBaselineProbe": {
+    "evidenceClass": "SOURCE_MEASURED",
+    "sourceHead": "413e7c10b20110a2d1adfd397e83eeeab1b492b4",
+    "behaviorSourceSha256": "db8702cc5e3d4470bc925105ec24213105f774442288423b187cd5ccfd80e747",
+    "runtime": "Node v8 VM instrumented immutable git-show behavior with separation-call counter",
+    "seed": 723,
+    "fishCount": 30,
+    "mode": "cruise",
+    "steps": 60,
+    "stepSeconds": 0.016666666666666666,
+    "simulatedSeconds": 1,
+    "results": [
+      {
+        "id": "herring",
+        "initialMs": 38.1481,
+        "initialSAT": 7830,
+        "tickTotalMs": 1206.8341,
+        "tickSAT": 257955,
+        "meanActualSpeed": 0.6649129188290174,
+        "meanCommandedSpeed": 0.6450959080076067,
+        "meanSlipRad": 0.3547964785916839,
+        "maxSlipRad": 2.789064163556658,
+        "maxCorrectionBL": 0.011429323322559427,
+        "finalMinimumClearance": -5.603975980310316e-7
+      },
+      {
+        "id": "tuna-yellow-label",
+        "initialMs": 35.7835,
+        "initialSAT": 7830,
+        "tickTotalMs": 1151.8302,
+        "tickSAT": 253170,
+        "meanActualSpeed": 0.8226149599340021,
+        "meanCommandedSpeed": 0.813588318080742,
+        "meanSlipRad": 0.23105074448196408,
+        "maxSlipRad": 0.7584077499851876,
+        "maxCorrectionBL": 0.008139750076782552,
+        "finalMinimumClearance": -7.566301042163937e-7
+      },
+      {
+        "id": "tuna-blue-label",
+        "initialMs": 19.536,
+        "initialSAT": 4350,
+        "tickTotalMs": 1217.3354,
+        "tickSAT": 287535,
+        "meanActualSpeed": 0.9037276630094042,
+        "meanCommandedSpeed": 0.895759801254507,
+        "meanSlipRad": 0.19816893015162637,
+        "maxSlipRad": 0.5647174203272094,
+        "maxCorrectionBL": 0.005499990294867361,
+        "finalMinimumClearance": -6.278770199180661e-7
+      },
+      {
+        "id": "colorful",
+        "initialMs": 26.3636,
+        "initialSAT": 6090,
+        "tickTotalMs": 1207.5464,
+        "tickSAT": 287970,
+        "meanActualSpeed": 0.4801571651958695,
+        "meanCommandedSpeed": 0.44654831234467596,
+        "meanSlipRad": 0.48185053154330704,
+        "maxSlipRad": 2.772159154566306,
+        "maxCorrectionBL": 0.007947585779787771,
+        "finalMinimumClearance": 2.4205170037067125e-7
+      },
+      {
+        "id": "picasso",
+        "initialMs": 36.3504,
+        "initialSAT": 8700,
+        "tickTotalMs": 1202.3346,
+        "tickSAT": 284925,
+        "meanActualSpeed": 0.4039267769777195,
+        "meanCommandedSpeed": 0.3360330636120214,
+        "meanSlipRad": 0.6947844977810838,
+        "maxSlipRad": 3.1170901082162805,
+        "maxCorrectionBL": 0.009546484760930254,
+        "finalMinimumClearance": 4.837939605803476e-7
+      }
+    ],
+    "scope": "Initial one-second numerical window, not steady state or real-browser frame-time evidence; commanded-heading compared to accepted velocity",
+    "maxContactSATPerSubstepExcludingDiagnostics": 13050,
+    "diagnosticSATPerSubstep": 435
+  },
+  "productionHazards": [
+    "Permanent sinusoidal moving leader biases entire group independent of local visibility",
+    "Hard metric radii cause neighborhood jumps",
+    "World-position multiplicative speed brake ignores turn-radius/response viability",
+    "Independent filtered velocity and separately commanded heading permit visible slip/backward translation",
+    "12 velocity+18 positional contact sweeps regenerate closing velocity and expensive OBB-SAT workload",
+    "Commanded speed remains gait input after contact changes actual speed",
+    "Constant-velocity CPA omits changing global orientation support",
+    "Emergency velocity multiplier can violate committed acceleration despite bounded targets",
+    "Nearest-6 approximation is engineering, not measured fish universal sensory law"
+  ],
+  "implementationBudget": {
+    "n30UnorderedPairScan": 435,
+    "socialNeighborCapacityCandidate": 6,
+    "allDangerousPairsMustBeChecked": true,
+    "preferPreallocatedArrays": true,
+    "fullVoronoiPerFrameRequired": false,
+    "fullMeshCollisionRequired": false,
+    "spatialHash": "Benchmark only if scale grows; do not assume benefit at 30",
+    "perSubstepAndPerFrameBudgetsSeparate": true
+  },
+  "acceptanceMeasurements": [
+    "source hashes/full vertices/UV/pixels/material/eye/mouth unchanged",
+    "actual committed delta speed/velocity/angular rates/angular accelerations after guards",
+    "source-enclosing clearance and rotation sweep",
+    "contact corrections/emergency override counts",
+    "heading versus actual velocity slip",
+    "local connectivity and polarization plus group extent",
+    "pointer perturbation and recovery",
+    "cruise/turn/rest/pause/source-switch controlled sequences",
+    "same hardware/30fullmesh browser CPU,GPU,frame-time,allocation comparison",
+    "internal framework parameters only, no weight UI"
+  ],
+  "empiricallyCalibratedSixSpecies": false,
+  "visualAcceptance": false,
+  "motionAcceptance": false,
+  "productionReady": false
+}
