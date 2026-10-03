@@ -1,5 +1,6 @@
 // Online mirror reads only selected, content-addressed source bytes. Standalone
 // uses its inline carriers. Neither path changes any source sample or pixel.
+import {decodeRadix85} from './radix85-r07.js';
 const active = new Map(),failed = new Set();
 export function loadPhase(id,phase,detail={}){
  document.dispatchEvent(new CustomEvent('fish-load-progress',{detail:{id,phase,...detail}}));
@@ -7,14 +8,15 @@ export function loadPhase(id,phase,detail={}){
 export function cancelPendingAssets(keepId){
  for(const [id,controller] of active)if(id!==keepId)controller.abort();
 }
-export async function readCarrierBytes(el,id){
+export async function readCarrierBytes(el,id,{signal}={}){
  if(!el)throw Error('原模型数据未找到');
- if(!el.dataset.url){const binary=atob(el.textContent.trim()),bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);return bytes;}
+ if(!el.dataset.url){if(el.dataset.inlineEncoding==='radix85-r07'){loadPhase(id,'decode');return decodeRadix85(el.textContent.trim(),Number(el.dataset.bytes),signal);}const binary=atob(el.textContent.trim()),bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);return bytes;}
  const url=new URL(el.dataset.url,document.baseURI);
  if(url.origin!==location.origin)throw Error('原模型数据地址不属于当前网站');
  const expected=Number(el.dataset.bytes),hash=el.dataset.sha256;
  if(!Number.isSafeInteger(expected)||expected<=0||!/^[0-9a-f]{64}$/.test(hash||''))throw Error('原模型完整性记录缺失');
  const controller=new AbortController();active.set(id,controller);
+ const abort=()=>controller.abort();if(signal?.aborted)abort();else signal?.addEventListener('abort',abort,{once:true});
  let timer,stalled=false;const heartbeat=()=>{clearTimeout(timer);timer=setTimeout(()=>{stalled=true;controller.abort();},30000);};
  try{
   loadPhase(id,'download',{loaded:0,total:expected});heartbeat();
@@ -29,5 +31,5 @@ export async function readCarrierBytes(el,id){
   if(actual!==hash)throw Error('模型校验未通过，请重新下载');
   failed.delete(id);return bytes;
  }catch(error){if(error.name!=='AbortError'||stalled)failed.add(id);if(stalled)throw Error('模型下载已30秒没有进展，请重试');throw error;}
- finally{clearTimeout(timer);if(active.get(id)===controller)active.delete(id);}
+ finally{clearTimeout(timer);signal?.removeEventListener('abort',abort);if(active.get(id)===controller)active.delete(id);}
 }
