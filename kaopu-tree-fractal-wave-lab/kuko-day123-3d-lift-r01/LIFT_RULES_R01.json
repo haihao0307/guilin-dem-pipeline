@@ -1,0 +1,40 @@
+{
+  "schema": "KAOPU.fractal-wave.kuko-3d-lift/1",
+  "id": "KuKoDay123.ProjectionLockedLift.R01",
+  "sourceTeacher": "KuKoDay123.BranchingR01",
+  "purpose": "learn a reversible 2D-to-3D branching technique without assigning it to any tree species",
+  "frozenTeacherFacts": [
+    "tree/treeL/treeR branch counts and depths",
+    "TOTAL / BR / off / dec / path addressing",
+    "LEN0 and l *= 0.5 length schedule",
+    "ANG constants",
+    "wind0 and wind1 phase equations",
+    "2D local inverse transform order",
+    "leaf query depth and planar center/radius rules"
+  ],
+  "forwardReconstruction": {
+    "derivation": "For teacher query p_child = R(queryRot) * (p_parent - attachment), child-to-parent uses attachment plus inverse rotation.",
+    "childOriginXY": "parentOriginXY + parentFrame2D * vec2(0, attachmentOffset)",
+    "childThetaXY": "parentThetaXY - queryRot",
+    "segmentXY": "child local +Y from 0 to 2*l",
+    "projectionInvariant": true
+  },
+  "threeDLiftHypothesis": {
+    "rule": "keep every teacher-derived X/Y coordinate unchanged; add Z as a separate path-local degree of freedom",
+    "attachmentContinuity": "child Z starts by interpolation on the parent segment at the same attachment fraction",
+    "depthPattern": "path/level/prefix-coded local depth slope with inherited continuity",
+    "reversible": "depth=0 returns every generated node to the teacher plane",
+    "status": "learning hypothesis, not botanical evidence"
+  },
+  "notAssignedTo": [
+    "Pandanus tectorius",
+    "any specific tree species",
+    "coral or other branching organism until later applicability review"
+  ],
+  "nextQuestions": [
+    "How should a species score choose among branching voices?",
+    "How should 3D radius/load continuity constrain a lifted grammar?",
+    "How should wind change from phase animation into force propagation?",
+    "Which teacher voices survive projection-independent 3D validation?"
+  ]
+}
