@@ -1,0 +1,131 @@
+name: Fractal Wave Tree Workbench R01 public QA
+
+on:
+  push:
+    branches:
+      - work/fractal-wave-kuko-day123-r01-20261003
+    paths:
+      - .github/workflows/fractal-wave-tree-workbench-r01-public-qa.yml
+      - kaopu-tree-fractal-wave-lab/index.html
+      - kaopu-tree-fractal-wave-lab/workbench-r01.js
+      - kaopu-tree-fractal-wave-lab/INTEGRATION_MANIFEST_R01.json
+      - kaopu-tree-fractal-wave-lab/INTEGRATION_R01_ZH.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-public:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Wait for matching public files
+        shell: python
+        run: |
+          import hashlib, json, time, urllib.request
+          base='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tree-fractal-wave-lab/'
+          expected={
+            'index.html':['分形造波树 综合工作台 R01','treeFrame','teacherFrame','workbench-r01.js'],
+            'workbench-r01.js':['window.__fractalTreeWorkbenchReady','decodePath','__kukoDay123Ready','__treeReady'],
+            'INTEGRATION_MANIFEST_R01.json':['KAOPU.fractal-wave.tree-workbench/1','branch.pathAddressing','TreeLifeR05.Pandanus'],
+            'mobile-r05-seasons/index.html':['PANDANUS TECTORIUS TEACHER','runtime-pandanus-r05.js'],
+            'kuko-day123-branching-r01/index.html':['KuKo Day 123','teacherCanvas','runtime.js']
+          }
+          report={'base':base,'files':{},'attempts':0}
+          last=None
+          for attempt in range(1,121):
+            report['attempts']=attempt
+            try:
+              ok=True; current={}
+              for name,markers in expected.items():
+                req=urllib.request.Request(base+name+'?qa='+str(attempt),headers={'User-Agent':'KAOPU-FRACTAL-TREE-R01-QA/1.0','Cache-Control':'no-cache'})
+                with urllib.request.urlopen(req,timeout=35) as response:
+                  data=response.read(); status=response.status
+                text=data.decode('utf-8','replace')
+                checks={m:(m in text) for m in markers}
+                current[name]={'status':status,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest(),'markers':checks}
+                ok=ok and status==200 and all(checks.values())
+              report['files']=current
+              if ok:
+                report['success']=True; break
+            except Exception as exc:
+              last=repr(exc); report['last_error']=last
+            time.sleep(10)
+          else:
+            report['success']=False
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          if not report.get('success'):
+            raise SystemExit('Public integrated workbench did not become ready: '+str(last))
+
+      - name: Install browser QA dependencies
+        run: |
+          python -m pip install --disable-pip-version-check playwright pillow
+          python -m playwright install --with-deps chromium
+
+      - name: Verify desktop and mobile workbench
+        shell: python
+        run: |
+          from pathlib import Path
+          import json, traceback
+          from PIL import Image, ImageStat
+          from playwright.sync_api import sync_playwright
+
+          root=Path('evidence-fractal-tree-r01'); root.mkdir(exist_ok=True)
+          url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tree-fractal-wave-lab/'
+          report={'url':url,'checks':{},'errors':[]}
+          C=report['checks']
+
+          def digest(path):
+            image=Image.open(path).convert('RGB')
+            stat=ImageStat.Stat(image)
+            return {'bytes':path.stat().st_size,'mean':sum(stat.mean)/3,'stddev':sum(stat.stddev)/3}
+
+          try:
+            with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True)
+              page=browser.new_page(viewport={'width':1440,'height':900},device_scale_factor=1)
+              page.on('pageerror',lambda e:report['errors'].append('pageerror: '+str(e)))
+              page.on('console',lambda m:report['errors'].append('console: '+m.text) if m.type=='error' else None)
+              page.goto(url+'?browserqa=1',wait_until='domcontentloaded',timeout=120000)
+              page.wait_for_function('window.__fractalTreeWorkbenchReady===true',timeout=180000)
+              page.wait_for_timeout(2500)
+              C['titleCorrect']='分形造波树' in page.title()
+              C['bothFramesPresent']=page.locator('iframe').count()==2
+              C['desktopNoHorizontalOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+              compare=root/'desktop-compare.png'; page.screenshot(path=str(compare),full_page=False)
+              page.get_by_role('button',name='知识映射').click(); page.wait_for_timeout(500)
+              C['mapModeVisible']=page.locator('#mapView').is_visible()
+              mapshot=root/'desktop-map.png'; page.screenshot(path=str(mapshot),full_page=False)
+              page.get_by_role('button',name='树生命母台').click(); page.wait_for_timeout(500)
+              C['treeModeHidesTeacher']=not page.locator('.teacher-card').is_visible()
+              page.get_by_role('button',name='分枝语法老师').click(); page.wait_for_timeout(500)
+              C['teacherModeHidesTree']=not page.locator('.tree-card').is_visible()
+              page.get_by_role('button',name='并排听音').click(); page.wait_for_timeout(500)
+              C['compareRestored']=page.locator('.tree-card').is_visible() and page.locator('.teacher-card').is_visible()
+              page.locator('#branchIndex').fill('137'); page.wait_for_timeout(150)
+              C['decoderProducesSevenDigits']=page.locator('#pathDigits .digit').count()==7
+              C['desktopPixelsNonBlank']=digest(compare)['stddev']>8
+              page.set_viewport_size({'width':390,'height':844}); page.reload(wait_until='domcontentloaded',timeout=120000)
+              page.wait_for_function('window.__fractalTreeWorkbenchReady===true',timeout=180000)
+              page.wait_for_timeout(1800)
+              C['mobileNoHorizontalOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+              mobile=root/'mobile-tree.png'; page.screenshot(path=str(mobile),full_page=False)
+              C['mobilePixelsNonBlank']=digest(mobile)['stddev']>8
+              C['pageErrorsZero']=not report['errors']
+              report['screens']={'compare':digest(compare),'map':digest(mapshot),'mobile':digest(mobile)}
+              browser.close()
+          except Exception:
+            report['failure']=traceback.format_exc()
+          (root/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          if report.get('failure') or not all(C.values()):
+            raise SystemExit('Integrated browser QA failed')
+
+      - name: Upload integrated workbench evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: FRACTAL_WAVE_TREE_WORKBENCH_R01_QA
+          path: evidence-fractal-tree-r01
+          if-no-files-found: error
+          retention-days: 90
