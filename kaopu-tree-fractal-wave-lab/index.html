@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0c1111">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:,">
+<title>KAOPU 分形造波树 · 综合工作台 R01</title>
+<style>
+:root{
+  --bg:#0b1010;--panel:#111818;--panel2:#151e1d;--line:#2f3c39;
+  --ink:#edf3f0;--muted:#96a39f;--accent:#9fc2b1;--cyan:#39dbc5;--magenta:#c3447e;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft Yahei",sans-serif}
+button,input,select{font:inherit}
+body{overflow-x:hidden}
+header{min-height:72px;padding:12px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:18px;background:#0c1212}
+h1{font-size:19px;line-height:1.25;margin:0;font-weight:650;letter-spacing:.3px}.sub{font-size:11px;color:var(--muted);margin-top:4px}.anchor{border:1px solid #43534f;border-radius:999px;padding:5px 10px;color:#c2d0cb;font-size:10px;white-space:nowrap}
+.toolbar{position:sticky;top:0;z-index:20;display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--line);background:#101716ef;backdrop-filter:blur(12px)}
+.toolbar button,.toolbar a{border:1px solid #43534f;background:#17201f;color:#dce6e2;border-radius:7px;padding:8px 11px;min-height:38px;text-decoration:none;cursor:pointer}.toolbar button.on{background:#3d564c;border-color:#91ad9f}.toolbar .spacer{flex:1}.toolbar .state{font-size:10px;color:#94a29e}
+.shell{display:grid;grid-template-columns:minmax(0,1fr) 365px;min-height:calc(100vh - 131px)}
+.workspace{min-width:0;padding:12px;background:#0b1010}.frames{display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:690px}.frame-card{min-width:0;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#0c1212;box-shadow:0 18px 60px #0008}.frame-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;border-bottom:1px solid #263330;background:#121a19}.frame-head b{font-size:12px}.frame-head span{font-size:9px;color:#8f9d98}.frame-card iframe{display:block;width:100%;height:650px;border:0;background:#050707}.frame-card.hidden{display:none}
+.map-view{display:none;min-height:690px;border:1px solid var(--line);border-radius:9px;background:linear-gradient(145deg,#111918,#0c1212);padding:22px}.map-view.on{display:block}.map-view h2{font-size:18px;margin:0 0 8px}.map-view>p{color:#a8b5b0;margin:0 0 18px;max-width:900px}.voice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.voice{border:1px solid #30413d;border-radius:8px;background:#121b1a;padding:14px}.voice h3{font-size:13px;margin:0 0 7px;color:#e1ece7}.voice code{font-size:11px;color:#76e0cd}.voice p{font-size:11px;color:#9eaca7;margin:7px 0 0}.voice strong{color:#c9d9d1}.boundary{margin-top:15px;border-left:3px solid #8e5f72;background:#1b1518;padding:12px 14px;color:#c7b7bd;font-size:11px}
+.side{border-left:1px solid var(--line);background:var(--panel);padding:17px 18px 26px;overflow:auto}.side h2{font-size:15px;margin:0 0 5px}.side .intro{font-size:11px;color:#96a39f;margin:0 0 14px}.gate{border:1px solid #344540;border-radius:8px;background:#101716;padding:11px 12px;margin-bottom:15px;font-size:11px;color:#aebbb6}.gate b{color:#e2ebe7}.gate .ok{color:#77dbc0}.decoder{border-top:1px solid var(--line);padding-top:15px}.decoder h3{font-size:13px;margin:0 0 4px}.decoder .hint{font-size:10px;color:#879590;margin-bottom:12px}.row{margin-bottom:13px}.row label{display:flex;justify-content:space-between;gap:10px;font-size:11px;color:#b8c5c0}.row output{color:#d9e6df;font-variant-numeric:tabular-nums}.row input,.row select{width:100%;margin-top:6px}.row input[type=range]{accent-color:var(--accent)}.row select{background:#16201e;color:#e5eeea;border:1px solid #41514d;border-radius:6px;padding:7px}
+.path{display:flex;gap:6px;flex-wrap:wrap;margin:9px 0 13px}.digit{min-width:31px;height:31px;border-radius:6px;display:grid;place-items:center;background:#25332f;border:1px solid #4d615a;color:#dce8e2;font-weight:650}.digit.wind{border-color:#558d83;color:#72ead4}.digit.turn{border-color:#8c5970;color:#e387ad}.decoder-note{font-size:10px;color:#8f9d98;border:1px solid #2e3d39;border-radius:7px;padding:10px;background:#0f1615}.ledger{margin-top:17px;border-top:1px solid var(--line);padding-top:14px}.ledger h3{font-size:13px;margin:0 0 7px}.ledger p{font-size:10px;color:#8f9d98;margin:5px 0}.ledger a{color:#9bd5c4}
+body[data-mode="tree"] .teacher-card{display:none}body[data-mode="tree"] .frames{grid-template-columns:1fr}body[data-mode="teacher"] .tree-card{display:none}body[data-mode="teacher"] .frames{grid-template-columns:1fr}body[data-mode="map"] .frames{display:none}body[data-mode="map"] .map-view{display:block}
+@media(max-width:980px){.shell{grid-template-columns:1fr}.side{border-left:0;border-top:1px solid var(--line)}.frames{grid-template-columns:1fr}.frame-card iframe{height:620px}.voice-grid{grid-template-columns:1fr}}
+@media(max-width:620px){header{padding:11px 13px}.anchor{display:none}.toolbar{padding:8px}.toolbar button,.toolbar a{padding:7px 8px;font-size:11px}.workspace{padding:8px}.frames{gap:8px}.frame-card iframe{height:66svh;min-height:500px}.frame-head{padding:8px}.side{padding:15px}.map-view{padding:15px;min-height:520px}}
+</style>
+</head>
+<body data-mode="compare">
+<header>
+  <div><h1>KAOPU · 分形造波树 综合工作台 R01</h1><div class="sub">TREE LIFE GRAMMAR × KUKO DAY 123 BRANCHING VOICE</div></div>
+  <div class="anchor">Grammar Anchors：R05 树生命母台 + KuKo 老师原谱</div>
+</header>
+<nav class="toolbar" aria-label="工作台模式">
+  <button data-mode="tree">树生命母台</button>
+  <button data-mode="teacher">分枝语法老师</button>
+  <button data-mode="compare" class="on">并排听音</button>
+  <button data-mode="map">知识映射</button>
+  <span class="spacer"></span>
+  <a href="./mobile-r05-seasons/" target="_blank" rel="noopener">树母台单独打开</a>
+  <a href="./kuko-day123-branching-r01/" target="_blank" rel="noopener">老师单独打开</a>
+  <span class="state" id="workbenchState">正在核对两个锚点…</span>
+</nav>
+<div class="shell">
+  <main class="workspace">
+    <section class="frames" id="frames">
+      <article class="frame-card tree-card">
+        <div class="frame-head"><b>树生命母台 R05 · 三维 Root / Trunk / Leaf</b><span>真实生长知识锚点</span></div>
+        <iframe id="treeFrame" title="Tree Life R05" src="./mobile-r05-seasons/" allow="fullscreen"></iframe>
+      </article>
+      <article class="frame-card teacher-card">
+        <div class="frame-head"><b>KuKo Day 123 · 二维分枝语法老师</b><span>原谱冻结，不冒充三维</span></div>
+        <iframe id="teacherFrame" title="KuKo Day 123 teacher" src="./kuko-day123-branching-r01/" allow="fullscreen"></iframe>
+      </article>
+    </section>
+    <section class="map-view" id="mapView">
+      <h2>声部已经并入，但没有偷换锚点</h2>
+      <p>KuKo 老师带来的，是确定性路径寻址、局部变换链、SDF 并集、查询剪枝和节点风相位。R05 树生命母台继续负责 Seed、Root↔Shoot、主干与半径、生命历史、树叶和三维连接。两个系统在这个工作台里共同训练，但老师的二维画面不会被误写成真实三维树。</p>
+      <div class="voice-grid">
+        <article class="voice"><h3>① 分枝路径寻址</h3><code>TOTAL / BR / off / dec / path</code><p>把整数枝号解码成每一层的选择，成为可复现的<strong>谱面地址</strong>；不必先把全部节点烘焙成模型。</p></article>
+        <article class="voice"><h3>② 局部变换链</h3><code>R(angle) × disp(distance)</code><p>每一级只在自己的局部框架里转向与前进，适合作为<strong>分枝演奏指令</strong>；三维版仍需补局部正交框架。</p></article>
+        <article class="voice"><h3>③ SDF 并集</h3><code>min(branchDistance, leafDistance)</code><p>适合轻量老师预览、结构对比和像素查询；它<strong>不能证明</strong>三维截面、连接与受力正确。</p></article>
+        <article class="voice"><h3>④ 整组后代剪枝</h3><code>c += off - 1; break</code><p>当前像素不可能命中时跳过整个子树，是运行期查询优化；它不是“近处换高模”的传统 LOD。</p></article>
+        <article class="voice"><h3>⑤ 节点风相位</h3><code>wind0 / wind1</code><p>风进入指定语法节点，而不是整体平移画面；进入三维树前还要升级为从主干到枝叶的<strong>力传导</strong>。</p></article>
+        <article class="voice"><h3>树知识继续保留</h3><code>Seed → Root + Shoot → History</code><p>根和冠不是镜像；年龄改变拓扑；受光只影响地上、水分只影响地下；根、干、枝、叶继续由三维函数生成。</p></article>
+      </div>
+      <div class="boundary">当前阶段的正确结论是“KuKo 分枝声部已登记并可与树母台并排演奏”。还不能宣称它已经替代三维树的生物生长、半径传递或物理风场。</div>
+    </section>
+  </main>
+  <aside class="side">
+    <h2>分枝谱地址解码器</h2>
+    <p class="intro">这里不是截图说明，而是把老师的整数寻址逻辑拆出来现场演奏。选择一棵老师树和枝号，就能看到每一层的路径数字。</p>
+    <div class="gate"><b>当前冻结关系：</b><br><span class="ok">✓</span> R05 三维生命锚点不改<br><span class="ok">✓</span> KuKo 原谱常量不改<br><span class="ok">✓</span> 新增的只是综合工作台与知识桥</div>
+    <section class="decoder">
+      <div class="row"><label for="teacherSelect">老师声部 <output id="teacherMeta"></output></label><select id="teacherSelect"><option value="C">中央树 tree()</option><option value="L">左树 treeL()</option><option value="R">右树 treeR()</option></select></div>
+      <div class="row"><label for="branchIndex">枝号 c <output id="branchValue">0</output></label><input id="branchIndex" type="range" min="0" max="2186" value="0"></div>
+      <div class="path" id="pathDigits" aria-label="分枝路径"></div>
+      <div class="decoder-note" id="decoderNote"></div>
+    </section>
+    <section class="ledger">
+      <h3>工作台总账</h3>
+      <p>综合清单：<a href="./INTEGRATION_MANIFEST_R01.json" target="_blank" rel="noopener">INTEGRATION_MANIFEST_R01.json</a></p>
+      <p>老师学习图：<a href="./kuko-day123-branching-r01/LEARNING_MAP_ZH.md" target="_blank" rel="noopener">LEARNING_MAP_ZH.md</a></p>
+      <p>树方法：<a href="./KAOPU_TREE_FRACTAL_WAVE_METHOD_20260930_ZH.md" target="_blank" rel="noopener">TREE FRACTAL WAVE METHOD</a></p>
+      <p id="manifestStatus">正在读取综合清单…</p>
+    </section>
+  </aside>
+</div>
+<script src="./workbench-r01.js"></script>
+</body>
+</html>
