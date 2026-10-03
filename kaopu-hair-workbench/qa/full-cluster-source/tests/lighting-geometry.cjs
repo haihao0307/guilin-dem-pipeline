@@ -141,7 +141,7 @@ module.exports=async function lightingGeometry(browser,url,outDir,check) {
         window.__lightingQaFrames??={};window.__lightingQaFrames[object+'-'+name]={bytes,width:c.width,height:c.height};
         return {object,name,role,state,geometry,alphaMasks,vertexSources,pixels:{hash:hash(bytes),alphaHash,minRGB,maxRGB,channelStdDev,width:c.width,height:c.height,glError:g.getError()}};
       },{object,name,role});
-      if(value.vertexSources.length){value.vertexSourceSha256=value.vertexSources.map(hash);delete value.vertexSources;}
+      if(value.vertexSources.length){value.vertexSourceSha256=value.vertexSources.map(hash);value.originalPrecisionVertexSha256=value.vertexSources.map(source=>hash(source.replace('uniform highp sampler2D joints;','uniform sampler2D joints;')));delete value.vertexSources;}
       assert(object+' '+name+' actual fixed-pose GPU pixels',value.pixels.glError===0&&Math.max(...value.pixels.channelStdDev)>4,value.pixels);
       report.shots.push(value);
       if(capture){const target=object==='rabbit'?page.frameLocator('#'+role+'Frame').locator('#canvasGL'):page.locator('#anemoneCanvas');const file=object+'-'+name+'.jpg';await target.screenshot({path:path.join(outDir,file),type:'jpeg',quality:88});report.screenshots.push(file);}
@@ -180,7 +180,8 @@ module.exports=async function lightingGeometry(browser,url,outDir,check) {
     await page.evaluate(()=>{platform.select('anemone');anemone.pause();anemone.seek(0);anemone.pauseOrbit();});
     await page.waitForFunction(()=>anemone.ready&&anemone.renderer.frames>=1);
     const anemone=await lampSet('anemone');
-    assert('actual material vertex sources retain original geometry and normal equations',equal(anemone.both.vertexSourceSha256,['62d1caa713683e74690fb6ea8d74967cd4bf3dbb0479597a9f95d45aac8e218a','355fce73deb14be871c8f7d503812724dcf5ae4a747dc30bef62c090ef700f76']),anemone.both.vertexSourceSha256);
+    assert('actual material vertex uses explicit highp joint sampling',equal(anemone.both.vertexSourceSha256,['4659305efb5e081e788a706e52b05096c06965f8df60007ff9719f66557bd7cc','355fce73deb14be871c8f7d503812724dcf5ae4a747dc30bef62c090ef700f76']),anemone.both.vertexSourceSha256);
+    assert('only joint sampler precision differs from preserved vertex geometry equations',equal(anemone.both.originalPrecisionVertexSha256,['62d1caa713683e74690fb6ea8d74967cd4bf3dbb0479597a9f95d45aac8e218a','355fce73deb14be871c8f7d503812724dcf5ae4a747dc30bef62c090ef700f76']),anemone.both.originalPrecisionVertexSha256);
     await page.locator('#clusterMacro').click();await shot('anemone','macro-both');
     await setLight('anemone',{warmPower:1,coolPower:0});await shot('anemone','macro-warm-only');
     await setLight('anemone',{warmPower:0,coolPower:1});await shot('anemone','macro-cool-only');
