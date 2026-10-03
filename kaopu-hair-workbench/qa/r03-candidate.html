@@ -116,20 +116,21 @@ $('inspector').inert=true;$('importButton').disabled=true;updateUI();createFrame
    Motion is constrained kinematics driven by smooth seeded noise, NOT FSI. */
 (function(root){'use strict';
 const TAU=Math.PI*2, SEGMENTS=28;
-const DEFAULTS=Object.freeze({count:320,length:0.7,thickness:0.022,current:0.45,direction:35,frequency:0.42,turbulence:0.3,seed:73,paused:false});
-const RANGES={count:[120,560],length:[0.35,1.05],thickness:[0.012,0.036],current:[0,1],direction:[-180,180],frequency:[0.08,0.9],turbulence:[0,0.8],seed:[1,9999]};
+const DEFAULTS=Object.freeze({count:360,length:0.7,thickness:0.03,curvature:1.4,current:0.45,direction:35,frequency:0.42,turbulence:0.3,seed:73,paused:false});
+const RANGES={count:[120,560],length:[0.35,1.05],thickness:[0.015,0.045],curvature:[0.5,2.1],current:[0,1],direction:[-180,180],frequency:[0.08,0.9],turbulence:[0,0.8],seed:[1,9999]};
 function clamp(x,a,b){return Math.max(a,Math.min(b,x));}
 function rng(seed){let n=seed>>>0;return()=>((n=(Math.imul(n,1664525)+1013904223)>>>0)/4294967296);}
 function noise(x,seed){const i=Math.floor(x),t=x-i,u=t*t*(3-2*t);const hash=n=>{n=Math.imul(n^seed,0x45d9f3b);n=Math.imul(n^(n>>>16),0x45d9f3b);return ((n^(n>>>16))>>>0)/4294967295*2-1;};return hash(i)*(1-u)+hash(i+1)*u;}
-function discHeight(x,z){const r=Math.hypot(x,z),a=Math.atan2(z,x);return .48-.055*r*r+.036*Math.cos(a*3+.8)*r*r;}
+function discHeight(x,z){const r=Math.hypot(x,z),a=Math.atan2(z,x);return .48-.04*r*r+(.08*Math.cos(a*3+.8)+.045*Math.sin(a*5-.3))*r*r;}
 const DISC_RADIUS=1.1,DISC_RINGS=20,DISC_SIDES=96;
-function discPoint(row,side){const r=DISC_RADIUS*(1-row/DISC_RINGS),a=side/DISC_SIDES*TAU,x=r*Math.cos(a),z=r*Math.sin(a);return [x,discHeight(x,z),z];}
-function discAttachment(x,z){let a=Math.atan2(z,x);if(a<0)a+=TAU;const side=Math.min(DISC_SIDES-1,Math.floor(a/TAU*DISC_SIDES)),guess=Math.floor((1-Math.hypot(x,z)/DISC_RADIUS)*DISC_RINGS);
+function discRadius(a){return DISC_RADIUS*(1+.055*Math.cos(3*a+.4)+.035*Math.sin(5*a-.6));}
+function discPoint(row,side){const a=side/DISC_SIDES*TAU,r=discRadius(a)*(1-row/DISC_RINGS),x=r*Math.cos(a),z=r*Math.sin(a);return [x,discHeight(x,z),z];}
+function discAttachment(x,z){let a=Math.atan2(z,x);if(a<0)a+=TAU;const side=Math.min(DISC_SIDES-1,Math.floor(a/TAU*DISC_SIDES)),guess=Math.floor((1-Math.hypot(x,z)/discRadius(a))*DISC_RINGS);
  for(let row=Math.max(0,guess-1);row<=Math.min(DISC_RINGS-1,guess+1);row++){const p=discPoint(row,side),q=discPoint(row+1,side),r=discPoint(row,side+1),t=discPoint(row+1,side+1);for(const [a,b,c]of [[p,q,r],[r,q,t]]){const den=(b[2]-c[2])*(a[0]-c[0])+(c[0]-b[0])*(a[2]-c[2]);if(Math.abs(den)<1e-12)continue;const u=((b[2]-c[2])*(x-c[0])+(c[0]-b[0])*(z-c[2]))/den,v=((c[2]-a[2])*(x-c[0])+(a[0]-c[0])*(z-c[2]))/den,w=1-u-v;if(Math.min(u,v,w)>-1e-7)return u*a[1]+v*b[1]+w*c[1];}}
  throw Error('Tentacle root is outside oral-disc triangles');
 }
 function validate(data){const s={...DEFAULTS};for(const k in RANGES){const v=data[k];if(!Number.isFinite(v)||v<RANGES[k][0]||v>RANGES[k][1])throw Error('海葵参数越界: '+k);s[k]=['seed','count'].includes(k)?Math.round(v):v;}if(typeof data.paused!=='boolean')throw Error('无效暂停状态');s.paused=data.paused;return s;}
-function roots(s){const random=rng(s.seed),out=[];for(let i=0;i<s.count;i++){const r=Math.sqrt(.035+(i+.5)/s.count*.965)*1.095;const a=i*2.399963229728653+(random()-.5)*.23;const x=Math.cos(a)*r,z=Math.sin(a)*r;out.push({x,y:discAttachment(x,z),z,a,r,length:s.length*(.73+random()*.39),radius:s.thickness*(.82+random()*.34),phase:random()*TAU,variation:random(),lean:.2+random()*.35});}return out;}
+function roots(s){const random=rng(s.seed),out=[];for(let i=0;i<s.count;i++){const a=i*2.399963229728653+(random()-.5)*.4;const fraction=clamp(Math.sqrt(.003+(i+.5)/s.count*.997)+(random()-.5)*.035,.095,.985);const r=fraction*discRadius(a),x=Math.cos(a)*r,z=Math.sin(a)*r;const heading=Math.atan2(.5*Math.sin(a)+.75*Math.sin(2.6*x+1.7*z+.4),.5*Math.cos(a)+.75*Math.cos(2.6*x-1.8*z));out.push({x,y:discAttachment(x,z),z,a,r,heading:heading+(random()-.5)*.2,length:s.length*(.77+random()*.4),radius:s.thickness*(.84+random()*.3),phase:random()*TAU,variation:random(),lean:.13+random()*.2,curve:s.curvature*(.77+random()*.46)});}return out;}
 function solve(s,rs,time,out=new Float32Array(rs.length*(SEGMENTS+1)*4)){
  const d=s.direction*Math.PI/180,dx=Math.cos(d),dz=Math.sin(d),t=time*s.frequency;
  const swell=Math.sin(t*TAU*.55)*.7+Math.sin(t*TAU*.217+1)*.3;
@@ -138,16 +139,17 @@ function solve(s,rs,time,out=new Float32Array(rs.length*(SEGMENTS+1)*4)){
    const local=noise(t*1.9-u*.9+r.x*.7+r.z*.5,s.seed+i%11);
    const shared=Math.sin(t*TAU*.55-u*1.5)+.23*Math.sin(t*TAU*.217+r.x*.5);
    const flow=s.current*(.55+shared*.6+swell*.15);const turb=s.turbulence*local;
-   const lean=r.lean*(.45+u*.7);
-   let vx=Math.cos(r.a)*lean+flex*(dx*flow*1.7-dz*turb+.16*Math.sin(phase+u*3));
-   let vz=Math.sin(r.a)*lean+flex*(dz*flow*1.7+dx*turb+.16*Math.cos(phase+u*3));
-   let vy=1-flex*.25;const norm=Math.hypot(vx,vy,vz);x+=vx/norm*step;y+=vy/norm*step;z+=vz/norm*step;
-   const o=base+j*4;out[o]=x;out[o+1]=y;out[o+2]=z;out[o+3]=r.radius;
+   // Reference-led rest curvature is present even without motion/noise.
+   const bend=clamp(r.lean+r.curve*Math.pow(u,.82),0,2.3),heading=r.heading+.16*Math.sin(u*2.7+phase);
+   let vx=Math.cos(heading)*Math.sin(bend)+flex*(dx*flow*.7-dz*turb*.5);
+   let vz=Math.sin(heading)*Math.sin(bend)+flex*(dz*flow*.7+dx*turb*.5);
+   let vy=Math.cos(bend);const norm=Math.hypot(vx,vy,vz);x+=vx/norm*step;y+=vy/norm*step;z+=vz/norm*step;
+   const o=base+j*4;out[o]=x;out[o+1]=y;out[o+2]=z;out[o+3]=j===SEGMENTS?r.length:r.radius;
   }
  }return out;
 }
 function metrics(s,rs,data){let lengthError=0,rootError=0,attachmentError=0,minY=Infinity,maxY=-Infinity;for(let i=0;i<rs.length;i++){const b=i*(SEGMENTS+1)*4,r=rs[i];attachmentError=Math.max(attachmentError,Math.abs(r.y-discAttachment(r.x,r.z)));rootError=Math.max(rootError,Math.hypot(data[b]-r.x,data[b+1]-r.y,data[b+2]-r.z));let length=0;for(let j=0;j<=SEGMENTS;j++){const o=b+j*4;minY=Math.min(minY,data[o+1]);maxY=Math.max(maxY,data[o+1]);if(j)length+=Math.hypot(data[o]-data[o-4],data[o+1]-data[o-3],data[o+2]-data[o-2]);}lengthError=Math.max(lengthError,Math.abs(length-r.length));}return {rootError,lengthError,attachmentError,minY,maxY,finite:[...data].every(Number.isFinite),tentacles:rs.length,segments:SEGMENTS};}
-const api={DEFAULTS,RANGES,SEGMENTS,clamp,rng,noise,discHeight,discAttachment,discPoint,DISC_RADIUS,DISC_RINGS,DISC_SIDES,validate,roots,solve,metrics};root.AnemoneCore=api;if(typeof module!=='undefined')module.exports=api;
+const api={DEFAULTS,RANGES,SEGMENTS,clamp,rng,noise,discHeight,discAttachment,discPoint,discRadius,DISC_RADIUS,DISC_RINGS,DISC_SIDES,validate,roots,solve,metrics};root.AnemoneCore=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);
 
 /* Original KAOPU WebGL2 renderer. Geometry is generated at runtime. */
@@ -163,7 +165,7 @@ uniform sampler2D joints;
 uniform mat4 vp;
 out vec3 world; out vec3 normal; out float axial; out float variation;
 vec3 center(int j,int id){return texelFetch(joints,ivec2(clamp(j,0,28),id),0).xyz;}
-void main(){int id=gl_InstanceID;float s=param.x;float v=s*28.0;int j=int(floor(v));vec3 p=mix(center(j,id),center(j+1,id),fract(v));vec3 t=normalize(center(min(j+1,28),id)-center(max(j-1,0),id));vec3 b=normalize(cross(t,vec3(0.,0.,1.)));vec3 n=normalize(cross(b,t));vec3 ring=b*cos(param.y)+n*sin(param.y);float cap=clamp((s-.93)/.07,0.,1.);float radius=texelFetch(joints,ivec2(0,id),0).w;float profile=(1.-.1*s)*(1.+.07*exp(-pow((s-.9)/.06,2.)))*sqrt(max(0.,1.-cap*cap));world=p+ring*radius*profile;normal=normalize(ring*sqrt(max(0.,1.-cap*cap))+t*cap);axial=s;variation=fract(sin(float(id)*127.1)*43758.5453);gl_Position=vp*vec4(world,1.);}`;
+void main(){int id=gl_InstanceID;float radius=texelFetch(joints,ivec2(0,id),0).w;float curveLength=texelFetch(joints,ivec2(28,id),0).w;float capLength=radius/curveLength;float s=param.x<.85?param.x/.85*(1.-capLength):(1.-capLength)+capLength*(param.x-.85)/.15;float v=s*28.0;int j=int(floor(v));vec3 p=mix(center(j,id),center(j+1,id),fract(v));vec3 t=normalize(center(min(j+1,28),id)-center(max(j-1,0),id));vec3 n;vec3 b;if(t.z<-.99999){n=vec3(0.,-1.,0.);b=vec3(-1.,0.,0.);}else{float k=1./(1.+t.z);n=vec3(1.-t.x*t.x*k,-t.x*t.y*k,-t.x);b=vec3(-t.x*t.y*k,1.-t.y*t.y*k,-t.y);}vec3 ring=b*cos(param.y)+n*sin(param.y);float cap=clamp((s-(1.-capLength))/capLength,0.,1.);float profile=(1.-.1*s)*(1.+.07*exp(-pow((s-.9)/.06,2.)))*sqrt(max(0.,1.-cap*cap));world=p+ring*radius*profile;normal=normalize(ring*sqrt(max(0.,1.-cap*cap))+t*cap);axial=s;variation=fract(sin(float(id)*127.1)*43758.5453);gl_Position=vp*vec4(world,1.);}`;
 const bodyVertex=`#version 300 es
 precision highp float;
 layout(location=0) in vec3 position;layout(location=1) in vec3 vertexNormal;
@@ -173,14 +175,14 @@ const fragment=`#version 300 es
 precision highp float;
 in vec3 world;in vec3 normal;in float axial;in float variation;uniform vec3 eye;out vec4 color;
 void main(){vec3 n=normalize(normal),v=normalize(eye-world),l=normalize(vec3(-2.,5.,3.));float diffuse=max(0.,dot(n,l));float wrap=clamp((dot(n,l)+.5)/1.5,0.,1.);float fres=pow(1.-max(dot(n,v),0.),3.);float spec=pow(max(dot(n,normalize(l+v)),0.),42.);vec3 base;
-if(axial<0.){base=mix(vec3(.25,.28,.15),vec3(.43,.46,.22),smoothstep(.2,.5,world.y));if(length(world.xz)<.13&&world.y>.47)base*=.28;}
-else{base=mix(vec3(.34,.39,.15),vec3(.53,.58,.29),.35+variation*.35);base=mix(base,vec3(.54,.79,.64),smoothstep(.89,.99,axial));}
+if(axial<0.){base=mix(vec3(.25,.28,.15),vec3(.43,.46,.22),smoothstep(.2,.5,world.y));if(length(world.xz)<.04&&world.y>.47)base*=.28;}
+else{base=mix(vec3(.34,.39,.15),vec3(.53,.58,.29),.35+variation*.35);base=mix(base,vec3(.54,.79,.64),smoothstep(.947,.988,axial));}
 vec3 c=base*(.32+diffuse*.55+wrap*.25)+vec3(.39,.64,.55)*fres*.14+vec3(.75,.91,.8)*spec*.3;
 float ao=mix(.64,1.,smoothstep(.4,1.1,world.y));c*=ao;color=vec4(pow(c,vec3(1./2.2)),1.);}`;
 function shader(gl,type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
 function program(gl,v,f){const p=gl.createProgram();gl.attachShader(p,shader(gl,gl.VERTEX_SHADER,v));gl.attachShader(p,shader(gl,gl.FRAGMENT_SHADER,f));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return p;}
 function bodyMesh(){const positions=[],normals=[],indices=[],steps=C.DISC_SIDES,columnRows=14,totalRows=columnRows+C.DISC_RINGS;
- const point=(row,side)=>{const a=side/steps*Math.PI*2;if(row>=columnRows)return C.discPoint(row-columnRows,side);const t=row/columnRows,r=.63+.47*t*t*t;const top=C.discHeight(C.DISC_RADIUS*Math.cos(a),C.DISC_RADIUS*Math.sin(a));return [r*Math.cos(a),top*t,r*Math.sin(a)];};
+ const point=(row,side)=>{const a=side/steps*Math.PI*2;if(row>=columnRows)return C.discPoint(row-columnRows,side);const t=row/columnRows,r=.63+(C.discRadius(a)-.63)*t*t*t;const top=C.discPoint(0,side)[1];return [r*Math.cos(a),top*t,r*Math.sin(a)];};
  for(let row=0;row<=totalRows;row++)for(let side=0;side<=steps;side++){const p=point(row,side);positions.push(...p);normals.push(0,0,0);if(row<totalRows&&side<steps){const k=row*(steps+1)+side;indices.push(k,k+steps+1,k+1,k+1,k+steps+1,k+steps+2);}}
  // Closed pedal attachment face uses the same boundary ring as the column.
  const center=positions.length/3;positions.push(0,0,0);normals.push(0,0,0);for(let j=0;j<steps;j++)indices.push(center,j,j+1);
@@ -198,7 +200,7 @@ class Renderer{
  index(data){const g=this.gl,b=g.createBuffer();g.bindBuffer(g.ELEMENT_ARRAY_BUFFER,b);g.bufferData(g.ELEMENT_ARRAY_BUFFER,new Uint16Array(data),g.STATIC_DRAW);}
  reset(state){this.state={...state};this.roots=C.roots(state);this.data=C.solve(state,this.roots,0);this.time=0;this.upload(true);}
  upload(allocate=false){const g=this.gl;g.activeTexture(g.TEXTURE0);g.bindTexture(g.TEXTURE_2D,this.texture);if(allocate)g.texImage2D(g.TEXTURE_2D,0,g.RGBA32F,C.SEGMENTS+1,this.roots.length,0,g.RGBA,g.FLOAT,this.data);else g.texSubImage2D(g.TEXTURE_2D,0,0,0,C.SEGMENTS+1,this.roots.length,g.RGBA,g.FLOAT,this.data);}
- draw(time=this.time){const started=performance.now();this.time=time;C.solve(this.state,this.roots,time,this.data);this.upload();const g=this.gl,c=this.canvas;const w=Math.max(1,Math.round(c.clientWidth)),h=Math.max(1,Math.round(c.clientHeight));if(c.width!==w)c.width=w;if(c.height!==h)c.height=h;g.viewport(0,0,w,h);g.clearColor(.035,.075,.071,1);g.clear(g.COLOR_BUFFER_BIT|g.DEPTH_BUFFER_BIT);const cam=this.camera,dist=cam.distance,eye=[Math.sin(cam.azimuth)*Math.cos(cam.elevation)*dist,.55+Math.sin(cam.elevation)*dist,Math.cos(cam.azimuth)*Math.cos(cam.elevation)*dist],vp=matrix(eye,[0,.55,0],w/h);
+ draw(time=this.time){const started=performance.now();this.time=time;C.solve(this.state,this.roots,time,this.data);this.upload();const g=this.gl,c=this.canvas;const w=Math.max(1,Math.round(c.clientWidth)),h=Math.max(1,Math.round(c.clientHeight));if(c.width!==w)c.width=w;if(c.height!==h)c.height=h;g.viewport(0,0,w,h);g.clearColor(.035,.075,.071,1);g.clear(g.COLOR_BUFFER_BIT|g.DEPTH_BUFFER_BIT);const cam=this.camera,dist=cam.distance*Math.max(1,1.42/(w/h)),eye=[Math.sin(cam.azimuth)*Math.cos(cam.elevation)*dist,.55+Math.sin(cam.elevation)*dist,Math.cos(cam.azimuth)*Math.cos(cam.elevation)*dist],vp=matrix(eye,[0,.55,0],w/h);
  for(const [p,vao,count]of [[this.bodyProgram,this.body,this.bodyCount],[this.program,this.tube,this.tubeCount]]){g.useProgram(p);g.uniformMatrix4fv(g.getUniformLocation(p,'vp'),false,vp);g.uniform3fv(g.getUniformLocation(p,'eye'),eye);g.bindVertexArray(vao);if(p===this.program){g.uniform1i(g.getUniformLocation(p,'joints'),0);g.drawElementsInstanced(g.TRIANGLES,count,g.UNSIGNED_SHORT,0,this.roots.length);}else g.drawElements(g.TRIANGLES,count,g.UNSIGNED_SHORT,0);}
  g.bindVertexArray(null);this.frames++;const err=g.getError();if(err){this.errors.push(err);this.onError?.('WebGL 错误 '+err);}this.drawMsLast=performance.now()-started;this.drawMsTotal+=this.drawMsLast;this.drawMsMax=Math.max(this.drawMsMax,this.drawMsLast);return err;
  }
@@ -209,14 +211,14 @@ root.AnemoneRenderer=Renderer;
 })(window);
 
 (function(){'use strict';const C=AnemoneCore,el=id=>document.getElementById(id);let renderer=null,active='anemone',running=false,last=0,time=0,requestedRabbit=false;const errors=[];let failed=false;
-const descriptors=[['count','触手数量',120,560,20,'Shape'],['length','相对触手长度',.35,1.05,.01,'Shape'],['thickness','触手半径',.012,.036,.001,'Shape'],['seed','固定种子',1,9999,1,'Shape'],['current','水流强度',0,1,.01,'Flow'],['direction','水流方向',-180,180,1,'Flow'],['frequency','水流节奏',.08,.9,.01,'Flow'],['turbulence','局部噪声',0,.8,.01,'Flow']];
+const descriptors=[['count','触手数量',120,560,20,'Shape'],['length','相对触手长度',.35,1.05,.01,'Shape'],['thickness','触手半径',.015,.045,.001,'Shape'],['curvature','静态弯曲',.5,2.1,.05,'Shape'],['seed','固定种子',1,9999,1,'Shape'],['current','水流强度',0,1,.01,'Flow'],['direction','水流方向',-180,180,1,'Flow'],['frequency','水流节奏',.08,.9,.01,'Flow'],['turbulence','局部噪声',0,.8,.01,'Flow']];
 let params={...C.DEFAULTS};
 function error(message){failed=true;el('anemoneCapture').disabled=true;errors.push(String(message));el('anemoneError').hidden=false;el('anemoneError').textContent=message;el('anemoneStatus').textContent='3D 启动或运行异常';}
 function ui(){for(const [k]of descriptors){el('anemone-'+k).value=params[k];el('anemone-number-'+k).value=params[k];}el('anemonePause').textContent=params.paused?'▶ 继续水流':'Ⅱ 暂停水流';el('anemonePause').classList.toggle('active',params.paused);}
 function draw(){if(!renderer||active!=='anemone'||failed)return;renderer.draw(time);if(failed)return;el('anemoneStats').textContent=renderer.roots.length+' TENTACLES · '+Math.round((renderer.tubeCount/3*renderer.roots.length+renderer.bodyCount/3)/1000)+'K TRIANGLES';el('anemoneStatus').textContent=params.paused?'WebGL 2 · 已暂停':'WebGL 2 · 实时水流';}
 function tick(now){running=false;if(active!=='anemone'||!renderer||failed)return;if(!params.paused){if(last)time+=Math.min(.05,(now-last)/1000);last=now;draw();schedule();}else last=0;}
 function schedule(){if(!running&&active==='anemone'&&renderer&&!params.paused&&!failed){running=true;requestAnimationFrame(tick);}}
-function set(values){const next=C.validate({...params,...values});const rebuild=['count','length','thickness','seed'].some(k=>next[k]!==params[k]);params=next;if(renderer){if(rebuild){renderer.reset(params);time=0;}else renderer.state={...params};}ui();draw();last=0;schedule();}
+function set(values){const next=C.validate({...params,...values});const rebuild=['count','length','thickness','curvature','seed'].some(k=>next[k]!==params[k]);params=next;if(renderer){if(rebuild){renderer.reset(params);time=0;}else renderer.state={...params};}ui();draw();last=0;schedule();}
 function initialize(){if(renderer||failed)return;try{renderer=new AnemoneRenderer(el('anemoneCanvas'));renderer.onError=error;el('anemoneCapture').disabled=false;renderer.state={...params};draw();schedule();}catch(e){error(e.message);}}
 function rabbitActive(on){if(!on&&(!window.workbench?.ready.teacher||!workbench.ready.candidate||(workbench.frameStats.teacher?.frames||0)<2||(workbench.frameStats.candidate?.frames||0)<2))return;for(const role of ['teacher','candidate']){const w=el(role+'Frame').contentWindow;if(w)w.postMessage({kaopu:true,type:'active',active:on&&(role!=='teacher'||!el('viewports').classList.contains('single'))},'*');}}
 function select(module){if(!['rabbit','anemone'].includes(module))throw Error('Unknown module');active=module;requestedRabbit=module==='rabbit';document.body.dataset.module=module;el('speciesRabbit').classList.toggle('active',module==='rabbit');el('speciesAnemone').classList.toggle('active',module==='anemone');rabbitActive(module==='rabbit');last=0;if(module==='anemone'){initialize();draw();schedule();}else{for(const role of ['teacher','candidate'])el(role+'Frame').contentWindow.postMessage({kaopu:true,type:'resize'},'*');}}
