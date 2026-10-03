@@ -23,8 +23,8 @@ float studyMap(vec3 p){
     // Every lateral component vanishes at the root. Horizontal displacement
     // norm is bounded by .10 + .04*current + .03*noise <= .17 world units.
     vec2 rest=vec2(cos(r.w),sin(r.w))*(.10*sin(s*2.25));
-    vec2 flow=vec2(.894427,.447214)*(.04*uCurrent*sin(T*.9-s*1.4)*s*s);
-    float n=studyNoise(vec2(r.x*.48+T*.23,r.y*.48-T*.16));
+    vec2 flow=vec2(0.);if(uCurrent>0.)flow=vec2(.894427,.447214)*(.04*uCurrent*sin(T*.9-s*1.4)*s*s);
+    float n=0.;if(uNoise>0.)n=studyNoise(vec2(r.x*.48+T*.23,r.y*.48-T*.16));
     vec2 eddy=vec2(-.447214,.894427)*(.03*uNoise*n*s*s);
     wp.xz-=rest+flow+eddy;
     float h=clamp(wp.y,0.,len);
