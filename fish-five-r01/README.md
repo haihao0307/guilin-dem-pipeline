@@ -1,10 +1,10 @@
 # 鱼类的制谱师
 
-## R08：参数化鱼群运动，本地独立验收通过
+## R08：参数化鱼群运动，已发布并验证
 
 同一六来源系统采用共享的局部感知、方向对齐、距离吸引、预测避碰和有界转向/加速度模型。原表面参数图与完整残差、拓扑、UV、原贴图、脊椎/鱼鳍、独立眼睛以及两种已确认的口部机制保留。群体运动数值是工程候选，不能当作六个物种的实测标定。
 
-构建脚本为 `scripts/build-r08.mjs`，交付本体为 `dist/KAOPU_FISH_SCOREMAKER_R08.html`，在线镜像在 `dist/online-r08`。模型来源和参数量纲见 `../knowledge/fish-motion/R08_COLLECTIVE_MOTION_MODELS.md`，实际参数、接入与复用见 `R08_IMPLEMENTATION_AND_REUSE.md`。冻结源码 ce30d403 已通过 `evidence/INDEPENDENT_R08_REPORT.json` 的 25 个汇总门禁，包含 42 行为场景、233 封装检查、360 真实帧完整群包络、66 启动检查和 12 组性能/内存检查。公开部署此前被自动审批拒绝，只有本轮 `R08_PUBLICATION_PROOF.json` 存在且 shareAllowed=true 才能宣称发布并分享入口。
+构建脚本为 `scripts/build-r08.mjs`，交付本体为 `dist/KAOPU_FISH_SCOREMAKER_R08.html`，在线镜像在 `dist/online-r08`。模型来源和参数量纲见 `../knowledge/fish-motion/R08_COLLECTIVE_MOTION_MODELS.md`，实际参数、接入与复用见 `../knowledge/fish-motion/R08_IMPLEMENTATION_AND_REUSE.md`。冻结源码 ce30d403 已通过 `evidence/INDEPENDENT_R08_REPORT.json` 的 25 个汇总门禁，包含 42 行为场景、233 封装检查、360 真实帧完整群包络、66 启动检查和 12 组性能/内存检查。公开部署此前的自动审批拒绝已在补齐独立/范围证据后解决；同一普通 git push 成功，实际入口与六资源 HTTP200/完整哈希、桌面1440×950和390×844手机视口真实浏览器均通过。本轮 `R08_PUBLICATION_PROOF.json` 的 shareAllowed=true，人工接受仍待用户。
 
 R07 已完成独立本地验收，保留完整来源的二进制封装、眼睛实例化、刚体数学缓存、当前源缓存及隐藏海底释放。其独立记录 `INDEPENDENT_R07_REPORT.json` 已归档；R07 没有完成公开部署，不把旧 R06 页面作为新成果。
 
@@ -12,7 +12,7 @@ R07 已完成独立本地验收，保留完整来源的二进制封装、眼睛�
 - [x] 已修改真实生产源码。
 - [x] 候选是实时可交互三维工作台。
 - [x] 本轮真实 file:// 与本地镜像浏览器完整门禁。
-- [ ] 本轮公网入口和浏览器完整门禁。
+- [x] 本轮公网入口和浏览器完整门禁。
 - [ ] 用户视觉和动作接受；productionReady 仍为 false。
 
 ## R04 历史修订

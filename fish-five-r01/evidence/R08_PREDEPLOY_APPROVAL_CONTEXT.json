@@ -1,0 +1,52 @@
+{
+  "schema": "FISH_R08_PREDEPLOY_APPROVAL_CONTEXT_1",
+  "createdAt": "2026-10-03T06:46:15.445Z",
+  "sourceHead": "ce30d403798dbb8920a82873a234dd90201c5a01",
+  "offlineSha256": "83b4a0cdb69d983e55e05105a9060b18acf0960c77106123a46c676efe0e513b",
+  "onlineEntrySha256": "607c0f6d4baaf4eeed9ce7ccb6c00dc5cf7071897f95461b63371e510e118a67",
+  "independentGates": 25,
+  "independentStatus": "PASS_LOCAL_PROMOTE",
+  "allIndependentGatesPassed": true,
+  "userAuthorization": [
+    {
+      "quote": "做完上传GitHub库",
+      "scope": "existing fish development branch archival"
+    },
+    {
+      "quote": "开发完这个版本过后，给我一个网站我来测试",
+      "scope": "publish same fish workbench for user review"
+    },
+    {
+      "quote": "你先去好好的去学一下这个里面的这些东西，然后做出来弄一个网页，我看一下效果",
+      "scope": "continuing same interactive fish workbench implementation and test page"
+    }
+  ],
+  "previousAutomaticRejection": {
+    "attempt": "R07 Pages push",
+    "reason": "predeployment shareAllowed=false and public checks not yet completed",
+    "noPublicWritePerformed": true
+  },
+  "policy": "knowledge/PUBLIC_WEB_DELIVERY_GATE.md steps3-12 require actual deployment first, then actual HTTP/version/resources/browser checks. shareAllowed means link sharing after these checks; it cannot truthfully be true before deployment.",
+  "requestedAction": {
+    "transport": "ordinary git push, no alternate API or workaround",
+    "refspec": "refs/heads/publish/fish-scoremaker-r08-20261003:refs/heads/gh-pages",
+    "commit": "5d8acb64503775ce8b0bee9d848f761d471d8455",
+    "parent": "1eae44b69e540a59e5ca0a601b464f5e1d26f4af",
+    "changedPaths": [
+      "A\tkaopu-fish-system/assets/barracuda.9fee7bf5874ce04c.bin",
+      "A\tkaopu-fish-system/assets/colorful.21d9c31ee0ded6f8.bin",
+      "A\tkaopu-fish-system/assets/herring.f85ad8dd8d05450e.bin",
+      "A\tkaopu-fish-system/assets/picasso.1618ee054f62742c.bin",
+      "A\tkaopu-fish-system/assets/tuna-blue-label.0631c9357253859e.bin",
+      "A\tkaopu-fish-system/assets/tuna-yellow-label.d37f3082d7d2dfbd.bin",
+      "M\tkaopu-fish-system/index.html"
+    ],
+    "force": false,
+    "protectedOtherPagesUnchanged": true,
+    "oldDependenciesRetained": true
+  },
+  "preDeploymentGatesPassed": true,
+  "publicChecksPendingUntilDeployment": true,
+  "shareAllowed": false,
+  "linkWillNotBeSharedBeforeActualPublicValidation": true
+}
