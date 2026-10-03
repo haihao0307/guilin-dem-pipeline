@@ -1,0 +1,87 @@
+name: Material R12 IQ 60fps check
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/material-r12-fps.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser
+        run: |
+          npm init -y
+          npm install --save-dev playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Verify public R12 rotation performance
+        run: |
+          cat > perf.cjs <<'JS'
+          const {chromium}=require('playwright');
+          const fs=require('fs');
+          const url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-material-workbench/?case=iq&v=r12';
+          const wait=ms=>new Promise(r=>setTimeout(r,ms));
+          const assert=(x,m)=>{if(!x)throw Error(m)};
+          async function waitPublic(){
+            for(let i=0;i<36;i++){
+              const r=await fetch(url+'&probe='+Date.now());
+              const t=await r.text();
+              if(r.status===200&&t.includes('MATERIAL STUDIO / R12')&&t.includes('lab-r12/app.js'))return;
+              await wait(10000);
+            }
+            throw Error('R12 public source not propagated');
+          }
+          async function measure(page,ms=3000){
+            await page.locator('#rotate').click();
+            await wait(800);
+            const out=await page.evaluate(ms=>new Promise(resolve=>{
+              let n=0,start=performance.now(),prev=start,min=999,max=0;
+              function f(t){n++;const d=t-prev;prev=t;min=Math.min(min,d);max=Math.max(max,d);if(t-start>=ms)resolve({fps:n*1000/(t-start),n,elapsed:t-start,min,max,perf:KAOPU10.performance()});else requestAnimationFrame(f)}
+              requestAnimationFrame(f);
+            }),ms);
+            await page.locator('#rotate').click();
+            await wait(500);
+            out.staticPerf=await page.evaluate(()=>KAOPU10.performance());
+            return out;
+          }
+          (async()=>{
+            await waitPublic();
+            const browser=await chromium.launch({headless:true,args:['--no-sandbox','--enable-unsafe-swiftshader','--use-angle=swiftshader','--disable-frame-rate-limit']});
+            const errors=[];
+            try{
+              const desktop=await browser.newPage({viewport:{width:1440,height:960}});
+              desktop.on('pageerror',e=>errors.push(e.message));
+              await desktop.goto(url,{waitUntil:'load',timeout:90000});
+              await desktop.waitForFunction(()=>window.KAOPU10?.ready&&KAOPU10.frames()>0,{timeout:90000});
+              const d=await measure(desktop,2500);
+              const mobile=await browser.newPage({viewport:{width:390,height:844}});
+              mobile.on('pageerror',e=>errors.push(e.message));
+              await mobile.goto(url,{waitUntil:'load',timeout:90000});
+              await mobile.waitForFunction(()=>window.KAOPU10?.ready&&KAOPU10.frames()>0,{timeout:90000});
+              const m=await measure(mobile,2500);
+              const report={version:'R12',url,environment:'Public HTTPS Chromium + ANGLE SwiftShader',desktop:d,mobile:m,errors,checkedAt:new Date().toISOString()};
+              report.desktopPass=d.fps>=58; report.mobilePass=m.fps>=58;
+              report.staticHDRestored=d.staticPerf.width>=960&&m.staticPerf.width>=960;
+              report.browserPassed=report.desktopPass&&report.mobilePass&&report.staticHDRestored&&errors.length===0;
+              report.shareAllowed=report.browserPassed;
+              fs.writeFileSync('R12_FPS_PROOF.json',JSON.stringify(report,null,2));
+              console.log(JSON.stringify(report,null,2));
+              assert(report.desktopPass,'desktop rotation below 58 fps: '+d.fps);
+              assert(report.mobilePass,'mobile viewport rotation below 58 fps: '+m.fps);
+              assert(report.staticHDRestored,'static HD did not restore');
+              assert(errors.length===0,'page errors: '+errors.join(' | '));
+            }finally{await browser.close();}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          node perf.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: material-r12-fps-proof
+          path: R12_FPS_PROOF.json
+          retention-days: 14
