@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08100f">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:,">
+<title>KAOPU · Native 3D Fractal Grammar R02</title>
+<style>
+:root{--bg:#08100f;--panel:#111918;--line:#30413d;--ink:#edf4f1;--muted:#91a19c;--accent:#9fc2b1;--cyan:#36dbc7;--magenta:#cf4d86;--amber:#d6bc73}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:14px/1.52 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft Yahei",sans-serif}button,input,select{font:inherit}
+header{min-height:66px;padding:10px 15px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:14px}.title{font-size:17px;font-weight:650}.sub{font-size:10px;color:var(--muted);margin-top:2px}.tag{border:1px solid #42544f;border-radius:999px;padding:4px 9px;font-size:9px;color:#bdcbc6;white-space:nowrap}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 350px;min-height:calc(100vh - 66px)}.stage{position:relative;min-height:660px;overflow:hidden;background:radial-gradient(circle at 50% 40%,#152421,#08100f 72%)}.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}.bar{position:absolute;z-index:4;left:10px;top:10px;right:10px;display:flex;gap:6px;flex-wrap:wrap}.bar button{border:1px solid #435651;background:#111b19dd;color:#e8f0ed;border-radius:6px;padding:7px 9px;min-height:36px}.bar button.on{background:#38544b;border-color:#89a89b}.caption{position:absolute;z-index:3;left:13px;top:58px;max-width:640px;font-size:10px;color:#a8b7b1;pointer-events:none;text-shadow:0 1px 8px #000}.caption b{display:block;color:#f1f6f3;font-size:13px;margin-bottom:2px}.info{position:absolute;z-index:3;left:13px;bottom:10px;font-size:9px;color:#9db0a9;pointer-events:none}.error{position:absolute;z-index:8;left:14px;right:14px;top:110px;padding:12px;background:#3a1d24;border:1px solid #95506a;border-radius:7px;white-space:pre-wrap}.error[hidden]{display:none}
+.panel{background:var(--panel);border-left:1px solid var(--line);padding:16px 17px 24px;overflow:auto}.panel h2{font-size:14px;margin:0 0 5px}.note{font-size:10px;color:var(--muted);margin:0 0 12px}.gate{border:1px solid #344640;border-radius:8px;background:#0f1716;padding:10px 11px;margin-bottom:13px;font-size:10px;color:#aebdb7}.gate b{color:#e4ece9}.row{margin:0 0 12px}.row label{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#bcc9c4}.row output{color:#dce7e3;font-variant-numeric:tabular-nums}.row input,.row select{width:100%;margin-top:5px}.row input[type=range]{accent-color:var(--accent)}.row select{background:#14201d;color:#e4ece9;border:1px solid #40534e;border-radius:6px;padding:7px}.checkrow{display:flex;gap:8px;align-items:center;margin:0 0 10px;font-size:11px;color:#bdc9c5}.checkrow input{accent-color:var(--accent)}.status{border-top:1px solid var(--line);padding-top:11px;margin-top:5px;font-size:10px;color:#a5b9b1;min-height:62px}.legend{font-size:9px;color:#84948f;margin-top:10px;line-height:1.7}.sw{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:4px}.cyan{background:var(--cyan)}.magenta{background:var(--magenta)}.amber{background:var(--amber)}.gray{background:#71817c}
+@media(max-width:780px){header{padding:10px 12px}.tag{display:none}.wrap{display:block}.stage{height:64svh;min-height:520px}.panel{border-left:0;border-top:1px solid var(--line);padding:15px}.caption{max-width:79%}.bar{gap:4px}.bar button{font-size:11px;padding:7px 8px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.0/examples/jsm/"}}</script>
+</head>
+<body>
+<header>
+  <div><div class="title">KAOPU · Native 3D Fractal Grammar R02</div><div class="sub">BUD → 3D LOCAL FRAME → FIELD / OCCUPANCY → SHOOT → NEW WORLD</div></div>
+  <div class="tag">KuKo Voice 学习 · 不绑定任何物种</div>
+</header>
+<div class="wrap">
+<main class="stage" id="stage">
+  <div class="bar">
+    <button id="orbit" class="on">自由三维</button>
+    <button id="front">正面</button>
+    <button id="side">侧面</button>
+    <button id="top">顶部</button>
+    <button id="rebuild">重新生长</button>
+    <button id="buds" class="on">芽状态</button>
+    <button id="auto">自动转动</button>
+  </div>
+  <div class="caption"><b>R02：分枝决定直接发生在三维空间</b>这一版不再锁 XY。每个 Bud 都携带三维局部框架，在候选球面方向上读取光场、自由空间、重力、父轴连续性和障碍物，再决定是否释放与往哪里长。</div>
+  <div class="info" id="info">正在进行原生三维生长…</div>
+  <pre class="error" id="error" hidden></pre>
+</main>
+<aside class="panel">
+  <h2>Native 3D Grammar Core</h2>
+  <p class="note">老师提供“分枝声部”，世界负责三维条件，Species Score 以后再决定什么物种该调用哪种声部。本轮只练三维生长方法。</p>
+  <div class="gate"><b>关键验收：</b><br>✓ 相机只改变观察，不改变生长事实<br>✓ Light / Space / Obstacle 在三维里参与芽释放<br>✓ 候选芽 ≠ 最终分枝<br>✓ KuKo 只影响候选槽与局部语法，不冒充树种事实</div>
+
+  <div class="row"><label>KuKo 声部 <output id="voiceO"></output></label>
+    <select id="voice">
+      <option value="C">C · 三槽 / 40°</option>
+      <option value="L">L · 三槽 / 20°</option>
+      <option value="R">R · 四槽 / 25.7°</option>
+    </select>
+  </div>
+  <div class="row"><label>生长代数 <output id="depthO"></output></label><input id="depth" type="range" min="4" max="8" step="1" value="7"></div>
+  <div class="row"><label>空间竞争 <output id="spaceO"></output></label><input id="space" type="range" min="0" max="2.2" step="0.05" value="1.25"></div>
+  <div class="row"><label>光场权重 <output id="lightO"></output></label><input id="light" type="range" min="0" max="2.2" step="0.05" value="0.9"></div>
+  <div class="row"><label>光场方位 <output id="lightAzO"></output></label><input id="lightAz" type="range" min="-180" max="180" step="1" value="55"></div>
+  <div class="row"><label>重力 / 向上性 <output id="gravityO"></output></label><input id="gravity" type="range" min="0" max="1.8" step="0.05" value="0.65"></div>
+  <div class="row"><label>父轴连续性 <output id="parentO"></output></label><input id="parent" type="range" min="0.3" max="2.2" step="0.05" value="1.15"></div>
+  <div class="row"><label>芽释放阈值 <output id="thresholdO"></output></label><input id="threshold" type="range" min="0.25" max="0.9" step="0.01" value="0.56"></div>
+  <label class="checkrow"><input id="obstacle" type="checkbox" checked> 三维障碍球参与生长</label>
+  <div class="row"><label>障碍 X <output id="obsXO"></output></label><input id="obsX" type="range" min="-2.2" max="2.2" step="0.05" value="0.65"></div>
+  <div class="row"><label>障碍 Z <output id="obsZO"></output></label><input id="obsZ" type="range" min="-2.2" max="2.2" step="0.05" value="0.35"></div>
+
+  <div class="status" id="status">等待三维生长图…</div>
+  <div class="legend"><span class="sw cyan"></span>已生长 Shoot　<span class="sw magenta"></span>已释放 Bud　<span class="sw amber"></span>休眠 Bud　<span class="sw gray"></span>障碍 / 占据</div>
+</aside>
+</div>
+<script type="module" src="./runtime.js"></script>
+</body>
+</html>
