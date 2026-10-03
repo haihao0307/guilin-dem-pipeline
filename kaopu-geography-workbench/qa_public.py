@@ -5,7 +5,7 @@ from PIL import Image,ImageStat
 from playwright.sync_api import sync_playwright
 OUT=Path('geography-qa');OUT.mkdir(exist_ok=True)
 BASE=os.environ.get('KAOPU_PUBLIC_URL','https://haihao0307.github.io/guilin-dem-pipeline/kaopu-geography-workbench/')
-report={'version':'R16','url':BASE,'commit':os.environ.get('GITHUB_SHA'),'tests':[],'errors':[],'phone_hardware_tested':False,'environment':'GitHub Actions Ubuntu Chromium, SwiftShader software GPU','passed':False}
+report={'version':'R16.5','url':BASE,'commit':os.environ.get('GITHUB_SHA'),'tests':[],'errors':[],'phone_hardware_tested':False,'environment':'GitHub Actions Ubuntu Chromium, SwiftShader software GPU','passed':False}
 def record(name,data=True):
  report['tests'].append({'name':name,'result':data});print(name,json.dumps(data,ensure_ascii=False),flush=True)
  (OUT/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
@@ -51,7 +51,10 @@ try:
   browser=pw.chromium.launch(headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--disable-dev-shm-usage'])
   p=browser.new_page(viewport={'width':1440,'height':1100},device_scale_factor=1);p.set_default_timeout(120000)
   errors=[];p.on('pageerror',lambda e:errors.append(str(e)))
-  p.goto(BASE,wait_until='load',timeout=90000);rendered(p,'underwater');pause(p);record('desktop_browser',{'version':browser.version,'diagnostics':diag(p)})
+  p.goto(BASE,wait_until='load',timeout=90000)
+  assert diag(p)['homeVisible'] and not diag(p)['detailVisible'] and p.locator('[data-scene]').count()==6
+  record('home_first_desktop',{'diagnostics':diag(p),'entries':p.locator('[data-scene]').count()})
+  before=diag(p)['renderCount'];p.locator('[data-scene="underwater"]').click();rendered(p,'underwater',before);pause(p);record('desktop_browser',{'version':browser.version,'diagnostics':diag(p)})
   gpu=p.evaluate('''()=>{const g=document.getElementById('liveCanvas').getContext('webgl2'),x=g.getExtension('WEBGL_debug_renderer_info');return{version:g.getParameter(g.VERSION),renderer:x?g.getParameter(x.UNMASKED_RENDERER_WEBGL):g.getParameter(g.RENDERER)};}''');record('actual_gpu_backend',gpu)
   assert abs(diag(p)['underwater']['horizontal']-2/3)<1e-10 and diag(p)['underwater']['depth']==2
   seek(p,72);shot(p,'underwater_overview');layout(p,'desktop_button_layout')
@@ -78,7 +81,10 @@ try:
    old=diag(p)['renderCount'];p.locator('[data-scene="underwater"]').click();rendered(p,'underwater',old);back(p)
   record('repeated_return');assert not errors,errors
   mobile=browser.new_page(viewport={'width':390,'height':844},device_scale_factor=1,is_mobile=True,has_touch=True);mobile.set_default_timeout(120000)
-  mobile.goto(BASE,wait_until='load',timeout=90000);rendered(mobile,'underwater');pause(mobile);layout(mobile,'mobile_viewport_layout_390x844');seek(mobile,72);shot(mobile,'mobile_viewport_underwater');mobile.screenshot(path=str(OUT/'mobile_viewport_page.png'),full_page=True);back(mobile);mobile.screenshot(path=str(OUT/'mobile_viewport_home.png'),full_page=True);record('mobile_viewport_not_real_phone',True);browser.close()
+  mobile.goto(BASE,wait_until='load',timeout=90000)
+  assert diag(mobile)['homeVisible'] and mobile.locator('[data-scene]').count()==6
+  mobile.screenshot(path=str(OUT/'mobile_viewport_home_first.png'),full_page=True)
+  before=diag(mobile)['renderCount'];mobile.locator('[data-scene="underwater"]').click();rendered(mobile,'underwater',before);pause(mobile);layout(mobile,'mobile_viewport_layout_390x844');seek(mobile,72);shot(mobile,'mobile_viewport_underwater');mobile.screenshot(path=str(OUT/'mobile_viewport_page.png'),full_page=True);back(mobile);mobile.screenshot(path=str(OUT/'mobile_viewport_home.png'),full_page=True);record('mobile_viewport_not_real_phone',True);browser.close()
  report['passed']=True
 except Exception as e:
  report['errors'].append(str(e));report['traceback']=traceback.format_exc();print(traceback.format_exc(),flush=True)
