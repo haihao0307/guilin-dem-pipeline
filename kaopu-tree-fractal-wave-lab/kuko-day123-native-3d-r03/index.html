@@ -43,7 +43,7 @@ header{min-height:68px;padding:10px 16px;border-bottom:1px solid var(--line);dis
 <div class="wrap">
 <main class="stage" id="stage">
   <div class="bar">
-    <button id="orbit" class="on">自由三维</button><button id="front">正面</button><button id="side">侧面</button><button id="top">顶部</button>
+    <button id="orbit" class="on">自由三维</button><button id="front">正面</button><button id="side">侧面</button><button id="top">顶部</button><button id="fit">适配视野</button>
     <button id="grow">播放生长</button><button id="rebuild">重新生长</button><button id="buds" class="on">芽</button><button id="field" class="on">空间场</button><button id="probe" class="on">芽感知</button><button id="auto">自动转动</button>
   </div>
   <div class="caption"><b>R03：不是“画一棵三维树”，而是让三维空间参与每一次分枝决定</b>枝条生成以前，Bud 先在父枝局部球面里提出候选方向；每个候选方向都读取光、三维占据、障碍、向上性和父轴连续性。被选中的 Shoot 会立即写回空间哈希，改变后续 Bud 的世界。</div>
@@ -57,18 +57,18 @@ header{min-height:68px;padding:10px 16px;border-bottom:1px solid var(--line);dis
   <div class="gate"><b>本轮新增：</b><br>✓ 空间哈希替代全局逐点扫描<br>✓ 每个 Bud 有三维感知体积和多候选方向<br>✓ 已生长结构实时写回 Occupancy<br>✓ 下游支撑需求反传到枝条粗细<br>✓ 可把 Growth Pass 从骨架逐步长到完整空间结构</div>
 
   <div class="row"><label>KuKo 分枝声部 <output id="voiceO"></output></label><select id="voice"><option value="C">C · 3 slots / 40°</option><option value="L">L · 3 slots / 20°</option><option value="R">R · 4 slots / 25.7°</option></select></div>
-  <div class="row"><label>Growth Pass <output id="passO"></output></label><input id="pass" type="range" min="1" max="11" step="1" value="9"></div>
-  <div class="row"><label>空间竞争 <output id="spaceO"></output></label><input id="space" type="range" min="0" max="2.4" step=".05" value="1.45"></div>
-  <div class="row"><label>光场权重 <output id="lightO"></output></label><input id="light" type="range" min="0" max="2.4" step=".05" value="1.05"></div>
+  <div class="row"><label>Growth Pass <output id="passO"></output></label><input id="pass" type="range" min="1" max="11" step="1" value="10"></div>
+  <div class="row"><label>空间竞争 <output id="spaceO"></output></label><input id="space" type="range" min="0" max="2.4" step=".05" value="1.18"></div>
+  <div class="row"><label>光场权重 <output id="lightO"></output></label><input id="light" type="range" min="0" max="2.4" step=".05" value=".92"></div>
   <div class="row"><label>光场方位 <output id="lightAzO"></output></label><input id="lightAz" type="range" min="-180" max="180" step="1" value="48"></div>
   <div class="row"><label>光场高度 <output id="lightElO"></output></label><input id="lightEl" type="range" min="5" max="85" step="1" value="42"></div>
-  <div class="row"><label>向上性 <output id="gravityO"></output></label><input id="gravity" type="range" min="0" max="2.0" step=".05" value=".72"></div>
-  <div class="row"><label>父轴连续性 <output id="parentO"></output></label><input id="parent" type="range" min=".2" max="2.4" step=".05" value="1.15"></div>
-  <div class="row"><label>芽释放阈值 <output id="thresholdO"></output></label><input id="threshold" type="range" min=".28" max=".88" step=".01" value=".54"></div>
-  <div class="row"><label>感知半径 <output id="perceptionO"></output></label><input id="perception" type="range" min=".35" max="1.6" step=".05" value=".9"></div>
-  <div class="row"><label>冠层开放度 <output id="opennessO"></output></label><input id="openness" type="range" min=".55" max="1.45" step=".02" value="1.0"></div>
-  <div class="row"><label>障碍位置 X <output id="obsXO"></output></label><input id="obsX" type="range" min="-2.8" max="2.8" step=".05" value=".85"></div>
-  <div class="row"><label>障碍位置 Z <output id="obsZO"></output></label><input id="obsZ" type="range" min="-2.8" max="2.8" step=".05" value=".55"></div>
+  <div class="row"><label>向上性 <output id="gravityO"></output></label><input id="gravity" type="range" min="0" max="2.0" step=".05" value=".62"></div>
+  <div class="row"><label>父轴连续性 <output id="parentO"></output></label><input id="parent" type="range" min=".2" max="2.4" step=".05" value="1.08"></div>
+  <div class="row"><label>芽释放阈值 <output id="thresholdO"></output></label><input id="threshold" type="range" min=".28" max=".88" step=".01" value=".46"></div>
+  <div class="row"><label>感知半径 <output id="perceptionO"></output></label><input id="perception" type="range" min=".35" max="1.6" step=".05" value=".82"></div>
+  <div class="row"><label>冠层开放度 <output id="opennessO"></output></label><input id="openness" type="range" min=".55" max="1.45" step=".02" value="1.08"></div>
+  <div class="row"><label>障碍位置 X <output id="obsXO"></output></label><input id="obsX" type="range" min="-2.8" max="2.8" step=".05" value="2.15"></div>
+  <div class="row"><label>障碍位置 Z <output id="obsZO"></output></label><input id="obsZ" type="range" min="-2.8" max="2.8" step=".05" value="1.35"></div>
 
   <div class="checkgrid">
     <label><input id="obstacle" type="checkbox" checked>障碍参与</label>
