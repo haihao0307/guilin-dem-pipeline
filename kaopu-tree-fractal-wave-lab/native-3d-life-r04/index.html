@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07100f">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:,">
+<title>KAOPU · Living 3D Tree R04 · Resource Flow / Root + Shoot / Continuous Skin</title>
+<style>
+:root{--bg:#07100f;--panel:#101817;--line:#30413d;--ink:#eef4f1;--muted:#91a19c;--accent:#9fc2b1;--cyan:#3ad8c2;--root:#b28a68;--leaf:#668f52;--bud:#d65c90;--water:#6da7d8;--carbon:#d6c57a}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:14px/1.52 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft Yahei",sans-serif}button,input,select{font:inherit}
+header{min-height:68px;padding:10px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:14px}.title{font-size:18px;font-weight:650}.sub{font-size:10px;color:var(--muted);margin-top:2px}.tag{border:1px solid #435650;border-radius:999px;padding:4px 10px;font-size:9px;color:#bdcbc6;white-space:nowrap}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 388px;min-height:calc(100vh - 68px)}.stage{position:relative;min-height:790px;overflow:hidden;background:radial-gradient(circle at 48% 34%,#1b2824,#07100f 72%)}.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.bar{position:absolute;z-index:6;left:10px;top:10px;right:10px;display:flex;gap:6px;flex-wrap:wrap}.bar button{border:1px solid #435650;background:#101a18dd;color:#e9f0ee;border-radius:6px;padding:7px 10px;min-height:36px;cursor:pointer}.bar button.on{background:#38544b;border-color:#8aa99d}
+.caption{position:absolute;z-index:5;left:14px;top:58px;max-width:690px;font-size:10px;color:#aab8b3;pointer-events:none;text-shadow:0 1px 8px #000}.caption b{display:block;color:#f2f7f4;font-size:14px;margin-bottom:2px}
+.info{position:absolute;z-index:5;left:14px;bottom:12px;font-size:9px;color:#9eb0aa;pointer-events:none}.badges{position:absolute;right:12px;bottom:12px;z-index:5;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;pointer-events:none}.badge{border:1px solid #364943;background:#0b1211cc;border-radius:999px;padding:4px 7px;font-size:9px;color:#a8b8b2}
+.error{position:absolute;z-index:10;left:14px;right:14px;top:112px;padding:12px;background:#3a1d24;border:1px solid #95506a;border-radius:7px;white-space:pre-wrap}.error[hidden]{display:none}
+.panel{background:var(--panel);border-left:1px solid var(--line);padding:17px 18px 26px;overflow:auto}.panel h2{font-size:14px;margin:0 0 5px}.note{font-size:10px;color:var(--muted);margin:0 0 13px}.gate{border:1px solid #344640;border-radius:8px;background:#0e1615;padding:10px 11px;margin-bottom:14px;font-size:10px;color:#aebdb7}.gate b{color:#e4ece9}
+.row{margin:0 0 13px}.row label{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#bcc9c4}.row output{color:#dce7e3;font-variant-numeric:tabular-nums}.row input,.row select{width:100%;margin-top:5px}.row input[type=range]{accent-color:var(--accent)}.row select{background:#14201d;color:#e4ece9;border:1px solid #40534e;border-radius:6px;padding:7px}
+.checkgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px 10px;margin:4px 0 13px}.checkgrid label{font-size:10px;color:#b8c6c1;display:flex;gap:6px;align-items:center}.checkgrid input{accent-color:var(--accent)}
+.status{border-top:1px solid var(--line);padding-top:11px;margin-top:5px;font-size:10px;color:#a5b9b1;min-height:78px}.legend{font-size:9px;color:#84948f;margin-top:10px;line-height:1.8}.sw{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:4px}.shoot{background:var(--cyan)}.root{background:var(--root)}.leaf{background:var(--leaf)}.bud{background:var(--bud)}.water{background:var(--water)}.carbon{background:var(--carbon)}
+@media(max-width:840px){header{padding:10px 12px}.tag{display:none}.wrap{display:block}.stage{height:70svh;min-height:590px}.panel{border-left:0;border-top:1px solid var(--line);padding:15px}.caption{max-width:82%}.bar{gap:4px}.bar button{font-size:11px;padding:7px 8px}.badges{display:none}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.0/examples/jsm/"}}</script>
+</head>
+<body>
+<header>
+  <div><div class="title">KAOPU · Living 3D Tree R04</div><div class="sub">RESOURCE FLOW · ROOT + SHOOT · CONTINUOUS IMPLICIT SKIN · APICAL MERISTEM · LEAF SOURCE</div></div>
+  <div class="tag">三维生命核心 · 暂不绑定物种</div>
+</header>
+<div class="wrap">
+<main class="stage" id="stage">
+  <div class="bar">
+    <button id="fit" class="on">适配视野</button><button id="front">正面</button><button id="side">侧面</button><button id="top">顶部</button>
+    <button id="grow">播放生命</button><button id="rebuild">重新生长</button><button id="roots" class="on">根系</button><button id="leaves" class="on">叶器官</button><button id="flows" class="on">资源流</button><button id="surface" class="on">连续生命面</button><button id="auto">自动转动</button>
+  </div>
+  <div class="caption"><b>R04：一棵树上下同时活着</b>Seed 是 Root 与 Shoot 的共同锚点。根在地下读取水分、重力、岩石和地表条件；叶与冠层读取光；水矿物流向上，叶端碳源向下，资源预算反过来决定下一轮芽与根尖是否继续生长。木质外形不再由一节节圆柱拼接，而由同一隐式场生成连续外表面。</div>
+  <div class="info" id="info">正在建立 Root ↔ Shoot 生命循环…</div>
+  <div class="badges"><span class="badge" id="shootBadge">Shoot --</span><span class="badge" id="rootBadge">Root --</span><span class="badge" id="resBadge">Resource --</span><span class="badge" id="skinBadge">Skin --</span></div>
+  <pre class="error" id="error" hidden></pre>
+</main>
+<aside class="panel">
+  <h2>Living Tree 总控</h2>
+  <p class="note">R03 的三维 Bud / Field 继续保留；R04 新增上下资源循环、根系、连续外表面、末端收口和通用叶器官。通用叶只证明生命接口，不冒充某个物种的叶形。</p>
+  <div class="gate"><b>本轮生命门：</b><br>✓ Seed 同时释放 Root / Shoot<br>✓ Root uptake 参与下一轮地上生长预算<br>✓ 叶端 light capture 回流为 carbon source<br>✓ 末端不是硬截面，而收束到 apical meristem zone<br>✓ 连续木质表面由 implicit field 联合 Root / Trunk / Branch<br>✓ 根会受水分、岩石和地表趋向影响</div>
+  <div class="row"><label>生命阶段 Pass <output id="passO"></output></label><input id="pass" type="range" min="1" max="10" step="1" value="9"></div>
+  <div class="row"><label>Root ↔ Shoot 分配 <output id="allocO"></output></label><input id="alloc" type="range" min=".18" max=".62" step=".01" value=".38"><small style="color:#7f918a">数值越大越偏地下投入</small></div>
+  <div class="row"><label>水分场方向 <output id="waterAzO"></output></label><input id="waterAz" type="range" min="-180" max="180" step="1" value="-38"></div>
+  <div class="row"><label>水分梯度 <output id="waterO"></output></label><input id="water" type="range" min=".2" max="2.0" step=".05" value="1.15"></div>
+  <div class="row"><label>根横向倾向 <output id="rootLateralO"></output></label><input id="rootLateral" type="range" min="0" max="1.4" step=".05" value=".72"></div>
+  <div class="row"><label>地表根倾向 <output id="surfaceRootO"></output></label><input id="surfaceRoot" type="range" min="0" max="1.3" step=".05" value=".34"></div>
+  <div class="row"><label>光场方向 <output id="lightAzO"></output></label><input id="lightAz" type="range" min="-180" max="180" step="1" value="52"></div>
+  <div class="row"><label>冠层空间竞争 <output id="spaceO"></output></label><input id="space" type="range" min=".2" max="2.2" step=".05" value="1.12"></div>
+  <div class="row"><label>芽释放阈值 <output id="thresholdO"></output></label><input id="threshold" type="range" min=".28" max=".82" step=".01" value=".47"></div>
+  <div class="row"><label>叶源强度 <output id="leafSourceO"></output></label><input id="leafSource" type="range" min=".2" max="1.8" step=".05" value="1.0"></div>
+  <div class="row"><label>连续面精度 <output id="surfaceResO"></output></label><input id="surfaceRes" type="range" min="34" max="62" step="2" value="48"></div>
+  <div class="checkgrid">
+    <label><input id="rock" type="checkbox" checked>地下岩石</label>
+    <label><input id="meristem" type="checkbox" checked>末端分生组织</label>
+    <label><input id="rootField" type="checkbox" checked>地下场参与</label>
+    <label><input id="shootField" type="checkbox" checked>地上场参与</label>
+  </div>
+  <div class="status" id="status">等待生命循环…</div>
+  <div class="legend"><span class="sw shoot"></span>Shoot / wood　<span class="sw root"></span>Root　<span class="sw leaf"></span>Leaf source　<span class="sw bud"></span>Apical / Bud　<span class="sw water"></span>Water/mineral flow　<span class="sw carbon"></span>Carbon flow</div>
+</aside>
+</div>
+<script type="module" src="./runtime.js"></script>
+</body>
+</html>
