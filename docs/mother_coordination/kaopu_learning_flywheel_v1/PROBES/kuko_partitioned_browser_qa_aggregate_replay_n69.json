@@ -1,0 +1,94 @@
+{
+  "schema": "kaopu.partitioned-browser-qa-aggregate-replay/1",
+  "trialId": "KUKO-PARTITIONED-BROWSER-QA-AGGREGATE-N69",
+  "status": "GATE-RUN",
+  "scope": {
+    "mother": "Kuko/anemone",
+    "taskClass": "EXACT_BYTE_FILE_PUBLIC_BROWSER_QA",
+    "globalAdoption": false
+  },
+  "subject": {
+    "productionBranch": "gh-pages",
+    "commit": "fcde9be8420c67cac059815e2c1d34ecfc0a8efa",
+    "workflow": ".github/workflows/kaopu-kuko-anemone-qa.yml",
+    "aggregateProgram": "kaopu-hair-workbench/qa/full-cluster-source/tests/aggregate-groups.cjs",
+    "fileHtmlSha256": "914f2a2b41e4aba85c989ef3a1df4a74b2c8ab68973025cc4f24bec889dd781f",
+    "publicHtmlSha256": "000ad857751d66fccae81b3ed5a4bea70d7a4dc9f198c0d2c849d7b68e44906d"
+  },
+  "expectedCells": {
+    "phases": ["file", "public"],
+    "groups": ["core", "catalog", "orbit", "touch"],
+    "total": 8
+  },
+  "hypothesis": "The exact aggregate accepts one complete valid eight-cell result set and rejects missing, duplicate, unsuccessful, failed, misbound, incomplete, wrong-byte or empty/failed-test evidence.",
+  "replay": {
+    "total": 12,
+    "passed": 12,
+    "failed": 0,
+    "cases": [
+      {"id": "complete-eight-cells", "expected": "PASS", "observed": "PASS", "passed": true},
+      {"id": "matrix-failure", "expected": "REJECT", "observed": "REJECT", "passed": true},
+      {"id": "missing-public-touch", "expected": "REJECT", "observed": "REJECT", "passed": true},
+      {"id": "duplicate-file-core", "expected": "REJECT", "observed": "REJECT", "passed": true},
+      {"id": "cell-passed-false", "expected": "REJECT", "observed": "REJECT", "passed": true},
+      {"id": "wrong-phase", "expected": "REJECT", "observed": "REJECT", "passed": true},
+      {"id": "wrong-group", "expected": "REJECT", "observed": "REJECT", "passed": true},
+      {"id": "incomplete-section", "expected": "REJECT", "observed": "REJECT", "passed": true},
+      {"id": "wrong-runtime-html-hash", "expected": "REJECT", "observed": "REJECT", "passed": true},
+      {"id": "invalid-helper-evidence", "expected": "REJECT", "observed": "REJECT", "passed": true},
+      {"id": "empty-tests", "expected": "REJECT", "observed": "REJECT", "passed": true},
+      {"id": "failed-test", "expected": "REJECT", "observed": "REJECT", "passed": true}
+    ]
+  },
+  "publicRun": {
+    "url": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37160332094",
+    "runNumber": 20,
+    "status": "SUCCESS",
+    "totalDuration": "13m13s",
+    "matrixJobsCompleted": 8,
+    "aggregateJobStatus": "SUCCESS",
+    "aggregateJobDuration": "10s",
+    "artifactCount": 9
+  },
+  "comparisonRuns": [
+    {
+      "runNumber": 19,
+      "commit": "7074af5c",
+      "status": "CANCELLED",
+      "totalDuration": "18m23s"
+    },
+    {
+      "runNumber": 18,
+      "commit": "57d2273f",
+      "status": "FAILURE",
+      "totalDuration": "7m36s"
+    }
+  ],
+  "decision": "KEEP_IMPLEMENTED_KUKO_LOCAL_GATE",
+  "claimBoundary": {
+    "visualAcceptance": false,
+    "physicalIPhoneTested": false,
+    "userAccepted": false,
+    "causalRuntimeImprovementEstablished": false
+  },
+  "lifecycle": {
+    "POSTED": false,
+    "routingReceipt": null,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": true,
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  },
+  "metrics": {
+    "observedRunDuration": "13m13s",
+    "causalRuntimeImprovement": "unknown",
+    "firstPassCandidatePassRate": "unknown",
+    "userCorrections": "unknown",
+    "sameClassRecurrenceRate": "unknown",
+    "rejectedLineageInheritance": "unknown",
+    "staleDeliveryCount": "unknown",
+    "internalIterationsPerAcceptedDelta": "unknown",
+    "instructionToLegalCandidateTime": "unknown"
+  }
+}
