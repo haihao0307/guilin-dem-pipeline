@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07110f">
+<title>Coral Mother · 本机原文件运行器</title>
+<style>
+:root{color-scheme:dark;--bg:#07110f;--panel:#0d1a16;--panel2:#12241e;--line:#2e493f;--ink:#eef5f1;--muted:#93a99f;--accent:#bed9cc;--warn:#deb978}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--ink);font:14px/1.55 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;overflow:hidden}
+button,label{font:inherit;color:inherit}.app{height:100%;display:grid;grid-template-rows:64px minmax(0,1fr)}header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:#0a1512}.brand b{display:block;font-size:18px}.brand span{font-size:10px;letter-spacing:.12em;color:var(--muted)}.tools{display:flex;gap:8px}.btn{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:8px 12px;border:1px solid #456258;border-radius:8px;background:#162720;cursor:pointer;text-decoration:none}.btn:hover{background:#29453a}.btn.danger{border-color:#754f49;background:#2b1c1a}.stage{position:relative;min-height:0}.welcome{position:absolute;inset:0;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 35%,#153027,#07110f 62%)}.panel{width:min(760px,100%);border:1px solid var(--line);border-radius:16px;background:#0d1916;padding:26px;box-shadow:0 30px 90px #0008}.eyebrow{font-size:10px;letter-spacing:.15em;color:#86a397}.panel h1{font-size:28px;margin:5px 0 8px}.panel p{color:#a1b4ac}.drop{margin-top:18px;min-height:190px;border:1px dashed #537467;border-radius:13px;background:#0a1512;display:grid;place-items:center;text-align:center;padding:25px;transition:.15s}.drop.over{border-color:#d7eadf;background:#183027}.drop b{display:block;font-size:18px;margin-bottom:7px}.drop small{display:block;color:#81988f}.actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:16px}.note{margin-top:15px;border-left:3px solid var(--warn);background:#211d15;padding:11px 13px;color:#d6c59f;font-size:11px}.status{margin-top:11px;font-size:11px;color:#9db1a8;min-height:18px}.runtime{position:absolute;inset:0;display:none}.runtime.active{display:block}.runtime iframe{width:100%;height:100%;border:0;background:#07110f}.loading{position:absolute;inset:0;display:none;place-items:center;background:#07110fee;z-index:3}.loading.active{display:grid}.spinner{width:42px;height:42px;border:2px solid #3d5c50;border-top-color:#d4e7dd;border-radius:50%;animation:r .9s linear infinite}@keyframes r{to{transform:rotate(360deg)}}
+@media(max-width:700px){header{padding:9px 10px}.brand b{font-size:15px}.brand span{font-size:8px}.tools .btn:first-child{display:none}.panel{padding:18px}.panel h1{font-size:22px}.drop{min-height:170px}.btn{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div class="brand"><span>KAOPU / CORAL MOTHER / LOCAL SOURCE RUNNER</span><b>Coral Mother · 本机原文件运行器</b></div><div class="tools"><a class="btn" href="../coral-mother-core-seed-r01/">在线总台</a><button class="btn danger" id="forget" hidden>清除本机版本</button></div></header>
+<main class="stage">
+<section class="welcome" id="welcome"><div class="panel"><div class="eyebrow">ONE-TIME LOCAL LOAD</div><h1>不要再用 ChatGPT 的 HTML 预览</h1><p>HTML 附件在 ChatGPT 里会显示源码。请在这里选择下载到电脑里的 <b>CORAL_MOTHER_ORIGINAL_SOURCE_RECOVERY.html</b>。文件只在你的浏览器本机读取，不会上传；成功一次后，本浏览器会记住，下次打开这个网址直接进入工作台。</p>
+<div class="drop" id="drop"><div><b>拖入恢复 HTML，或点下面按钮选择</b><small>只接受本机 .html 文件 · 不上传网络</small><div class="actions"><label class="btn" for="file">选择恢复文件</label><input id="file" type="file" accept=".html,text/html" hidden><button class="btn" id="resume" hidden>打开已保存版本</button></div></div></div>
+<div class="note">受限老师代码不能公开托管，所以采用“在线启动器 + 本机原文件”的方式。不是让你看源码，也不是把截图冒充运行体。</div><div class="status" id="status"></div></div></section>
+<section class="runtime" id="runtime"><iframe id="frame" title="Coral Mother Local Runtime" sandbox="allow-scripts allow-same-origin allow-downloads allow-modals allow-pointer-lock"></iframe></section>
+<div class="loading" id="loading"><div><div class="spinner"></div><p>正在装入本机 Coral Mother…</p></div></div>
+</main></div>
+<script>
+(()=>{'use strict';
+const DB='coral-mother-local-runtime', STORE='files', KEY='recovery-html';
+const $=id=>document.getElementById(id), file=$('file'), drop=$('drop'), status=$('status'), welcome=$('welcome'), runtime=$('runtime'), frame=$('frame'), loading=$('loading'), resume=$('resume'), forget=$('forget');
+let blobURL=null;
+function db(){return new Promise((ok,no)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore(STORE);r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})}
+async function get(){const d=await db();return new Promise((ok,no)=>{const r=d.transaction(STORE).objectStore(STORE).get(KEY);r.onsuccess=()=>ok(r.result||null);r.onerror=()=>no(r.error)})}
+async function put(text){const d=await db();return new Promise((ok,no)=>{const r=d.transaction(STORE,'readwrite').objectStore(STORE).put(text,KEY);r.onsuccess=()=>ok();r.onerror=()=>no(r.error)})}
+async function del(){const d=await db();return new Promise((ok,no)=>{const r=d.transaction(STORE,'readwrite').objectStore(STORE).delete(KEY);r.onsuccess=()=>ok();r.onerror=()=>no(r.error)})}
+function valid(s){return /<html[\s>]/i.test(s)&&/<script[\s>]/i.test(s)&&/Coral Mother|花盘卷层|Mandelbulb/i.test(s)}
+function run(s){if(!valid(s)){status.textContent='这个文件不是 Coral Mother 恢复 HTML。';return}loading.classList.add('active');if(blobURL)URL.revokeObjectURL(blobURL);blobURL=URL.createObjectURL(new Blob([s],{type:'text/html'}));frame.onload=()=>{loading.classList.remove('active');welcome.style.display='none';runtime.classList.add('active');forget.hidden=false};frame.src=blobURL}
+async function loadFile(f){try{status.textContent='正在读取 '+f.name+'…';const s=await f.text();if(!valid(s))throw Error('文件身份不符');await put(s);status.textContent='已保存到本机浏览器，正在启动。';run(s)}catch(e){status.textContent='未启动：'+(e.message||e)}}
+file.onchange=()=>file.files[0]&&loadFile(file.files[0]);
+['dragenter','dragover'].forEach(n=>drop.addEventListener(n,e=>{e.preventDefault();drop.classList.add('over')}));['dragleave','drop'].forEach(n=>drop.addEventListener(n,e=>{e.preventDefault();drop.classList.remove('over')}));drop.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)loadFile(f)});
+resume.onclick=async()=>{const s=await get();if(s)run(s)};
+forget.onclick=async()=>{await del();if(blobURL)URL.revokeObjectURL(blobURL);frame.src='about:blank';runtime.classList.remove('active');welcome.style.display='grid';forget.hidden=true;resume.hidden=true;status.textContent='已清除本机保存版本。'};
+(async()=>{try{const s=await get();if(s){resume.hidden=false;status.textContent='已找到上次保存的本机版本。';run(s)}}catch(e){status.textContent='本机存储不可用：'+(e.message||e)}})();
+})();
+</script>
+</body></html>
