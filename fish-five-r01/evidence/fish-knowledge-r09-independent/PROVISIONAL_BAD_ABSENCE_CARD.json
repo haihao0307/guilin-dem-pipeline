@@ -1,0 +1,617 @@
+{
+  "checkedAt": "2026-10-03T07:41:47.133Z",
+  "formalApproval": false,
+  "validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [
+      "SPECIES_IDENTITY_UNCONFIRMED",
+      "BEHAVIOR_NOT_BIOLOGICALLY_CALIBRATED"
+    ]
+  },
+  "spine": {
+    "knowledgeVersion": "1.0.0",
+    "cardId": "test-unknown-fish",
+    "stage": "spine",
+    "component": null,
+    "label": "连续脊椎与截面",
+    "readyToBuild": true,
+    "status": "BOUNDED_WORK_ALLOWED",
+    "rules": [
+      {
+        "id": "identity.no-universal-template",
+        "stages": [
+          "identity",
+          "spine",
+          "fins"
+        ],
+        "text": "共同接口复用，组件数量、根部、融合或缺失由来源决定。软骨鱼、无颌类或不同鳍推进母型不能套用当前硬骨鱼运动配置。",
+        "source": "knowledge/fish-motion/FISH_FACTORY_FRAMEWORK_R01.md"
+      },
+      {
+        "id": "surface.dynamic-continuity",
+        "stages": [
+          "surface",
+          "spine",
+          "fins",
+          "verify"
+        ],
+        "text": "静止恒等不能代替动态验收。原重合点、鳍根、三角形应变和精确法线都要在完整动作周期检查；源已有嘴缝、薄鳍边不能盲目补洞。",
+        "source": "fish-five-r01/evidence/R02_REGRESSION_CASES.json"
+      },
+      {
+        "id": "spine.one-transport",
+        "stages": [
+          "spine",
+          "fins",
+          "cranial"
+        ],
+        "text": "身体用连续中心线与正交截面运输；头段稳定，摆动向后传导。鳍局部权重不能扩散到身体，局部器官与身体使用同一空间运输。",
+        "source": "knowledge/fish-motion/FISH_FACTORY_FRAMEWORK_R01.md"
+      },
+      {
+        "id": "units.no-metres-inference",
+        "stages": [
+          "identity",
+          "spine",
+          "behavior",
+          "verify"
+        ],
+        "text": "规范体长 BL 不证明真实厘米。速度区分源世界长度/s 与 BL/s，转速为 rad/s；动画片段时长不能直接当摆尾频率。",
+        "source": "knowledge/fish-motion/R08_IMPLEMENTATION_AND_REUSE.md"
+      }
+    ],
+    "formulas": [
+      {
+        "id": "spine.phase-transport",
+        "stages": [
+          "spine"
+        ],
+        "expression": "φ(t+Δt)=φ(t)+2π f Δt; Cᵢ=Cᵢ₋₁+normalize(Tᵢ₋₁+Tᵢ)Δs; p=C(u)+N(u)y+B(u)z",
+        "units": "f Hz；φ rad；Δs/y/z BL；T/N/B 单位正交",
+        "meaning": "实际 sampleSpine 以源拟合或柔性包络求角度，按半径限制曲率；不是将各段独立线性摆动。",
+        "owner": "fish-five-r01/src/behavior.js#sampleSpine / deform; 海狼保留原 R14 对应函数",
+        "verification": "fish-five-r01/scripts/verify-behavior-r03.mjs"
+      }
+    ],
+    "dependencies": [
+      "surface"
+    ],
+    "requirements": [
+      {
+        "id": "source.entry",
+        "label": "完整来源、哈希、许可与作者",
+        "path": "source",
+        "status": "SOURCE_MEASURED",
+        "reference": "qa-missing-source.json",
+        "met": true,
+        "scope": "stage"
+      },
+      {
+        "id": "measurement.surface",
+        "label": "surface",
+        "path": "measurements.surface",
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json",
+        "met": true,
+        "scope": "stage"
+      },
+      {
+        "id": "measurement.axis",
+        "label": "axis",
+        "path": "measurements.axis",
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json",
+        "met": true,
+        "scope": "stage"
+      }
+    ],
+    "required": [
+      {
+        "id": "source.entry",
+        "label": "完整来源、哈希、许可与作者",
+        "path": "source",
+        "status": "SOURCE_MEASURED",
+        "reference": "qa-missing-source.json",
+        "met": true,
+        "scope": "stage"
+      },
+      {
+        "id": "measurement.surface",
+        "label": "surface",
+        "path": "measurements.surface",
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json",
+        "met": true,
+        "scope": "stage"
+      },
+      {
+        "id": "measurement.axis",
+        "label": "axis",
+        "path": "measurements.axis",
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json",
+        "met": true,
+        "scope": "stage"
+      }
+    ],
+    "blocked": [],
+    "unknowns": [
+      {
+        "id": "identity.species",
+        "label": "具体物种身份",
+        "path": "identity.speciesStatus",
+        "status": "UNKNOWN",
+        "scope": "biology"
+      },
+      {
+        "id": "measurement.eyes",
+        "label": "eyes",
+        "path": "measurements.eyes",
+        "status": "UNKNOWN",
+        "reference": null,
+        "scope": "eyes"
+      },
+      {
+        "id": "measurement.mouth",
+        "label": "mouth",
+        "path": "measurements.mouth",
+        "status": "UNKNOWN",
+        "reference": null,
+        "scope": "mouth"
+      },
+      {
+        "id": "measurement.gills",
+        "label": "gills",
+        "path": "measurements.gills",
+        "status": "UNKNOWN",
+        "reference": null,
+        "scope": "gills"
+      },
+      {
+        "id": "measurement.physicalUnits",
+        "label": "physicalUnits",
+        "path": "measurements.physicalUnits",
+        "status": "UNKNOWN",
+        "reference": null,
+        "scope": "physicalUnits"
+      },
+      {
+        "id": "behavior.grouping",
+        "label": "物种真实群游习性",
+        "path": "behavior.groupingEvidence",
+        "status": "UNKNOWN",
+        "scope": "biology"
+      }
+    ],
+    "components": {},
+    "checks": [
+      "头段稳定；单位切线及正交截面；静止运输恒等",
+      "相位切换连续；身体传导沿中心线；检查可见体长与曲率"
+    ],
+    "verification": [
+      {
+        "id": "spine.phase-transport",
+        "script": "fish-five-r01/scripts/verify-behavior-r03.mjs"
+      }
+    ],
+    "acceptanceState": {
+      "visualAcceptance": false,
+      "productionReady": false,
+      "scientificCalibration": false,
+      "independentVerification": "NOT_RUN",
+      "publication": "NOT_RUN"
+    },
+    "validation": {
+      "valid": true,
+      "errors": [],
+      "warnings": [
+        "SPECIES_IDENTITY_UNCONFIRMED",
+        "BEHAVIOR_NOT_BIOLOGICALLY_CALIBRATED"
+      ]
+    },
+    "identity": {
+      "speciesStatus": "UNKNOWN",
+      "speciesName": null,
+      "targetArchetype": "UNKNOWN",
+      "confusionSet": [],
+      "evidence": [],
+      "largestDeviation": "SOURCE_ENTRY_REQUIRED"
+    },
+    "source": {
+      "title": "Unknown",
+      "entrySha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "payloadSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "metadata": "qa-missing-source.json",
+      "license": "unknown",
+      "attribution": "qa"
+    },
+    "evidence": {
+      "surface": {
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json"
+      },
+      "axis": {
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json"
+      },
+      "fins": {
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json"
+      },
+      "eyes": {
+        "status": "UNKNOWN",
+        "reference": null,
+        "summary": "待来源进入与测量；不按名字猜测。"
+      },
+      "mouth": {
+        "status": "UNKNOWN",
+        "reference": null,
+        "summary": "待来源进入与测量；不按名字猜测。"
+      },
+      "gills": {
+        "status": "UNKNOWN",
+        "reference": null,
+        "summary": "待来源进入与测量；不按名字猜测。"
+      },
+      "envelope": {
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json"
+      },
+      "gait": {
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json"
+      },
+      "physicalUnits": {
+        "status": "UNKNOWN",
+        "reference": null,
+        "summary": "待来源进入与测量；不按名字猜测。"
+      }
+    }
+  },
+  "behavior": {
+    "knowledgeVersion": "1.0.0",
+    "cardId": "test-unknown-fish",
+    "stage": "behavior",
+    "component": null,
+    "label": "个体与群体行为",
+    "readyToBuild": true,
+    "status": "BOUNDED_WORK_ALLOWED",
+    "rules": [
+      {
+        "id": "behavior.not-universal-school",
+        "stages": [
+          "behavior",
+          "verify"
+        ],
+        "text": "30 条是展示容量，不是全部来源天然紧密群游的断言。BCF/MPF、速度、转弯和群游策略保留物种证据与工程候选的区别。",
+        "source": "knowledge/fish-motion/R08_COLLECTIVE_MOTION_MODELS.md"
+      },
+      {
+        "id": "behavior.accepted-controls",
+        "stages": [
+          "behavior"
+        ],
+        "text": "邻居对齐、吸引和前后调速经推进/转向加速度限制及完整源包络预测避碰；身体和鳍读取实际接受速度与转向，相位连续，不用位置瞬移维持队形。",
+        "source": "knowledge/fish-motion/R08_CONTROL_SPACE_AUDIT.md"
+      },
+      {
+        "id": "units.no-metres-inference",
+        "stages": [
+          "identity",
+          "spine",
+          "behavior",
+          "verify"
+        ],
+        "text": "规范体长 BL 不证明真实厘米。速度区分源世界长度/s 与 BL/s，转速为 rad/s；动画片段时长不能直接当摆尾频率。",
+        "source": "knowledge/fish-motion/R08_IMPLEMENTATION_AND_REUSE.md"
+      },
+      {
+        "id": "performance.bounded-cost",
+        "stages": [
+          "surface",
+          "behavior",
+          "verify"
+        ],
+        "text": "完整表面与纹理共享、每鱼只保留独立状态。30 条最多 435 对；当前仍是平方配对。约 34 KB 是求解器数值缓冲，不是整个项目或显存。",
+        "source": "knowledge/fish-motion/R08_IMPLEMENTATION_AND_REUSE.md"
+      }
+    ],
+    "formulas": [
+      {
+        "id": "behavior.acceleration-integration",
+        "stages": [
+          "behavior"
+        ],
+        "expression": "v_next = v + a Δt; ω_next = ω + α Δt; ψ_next = ψ + ω_next Δt; x_next = x + v_next direction(ψ_next,pitch_next) Δt",
+        "units": "v 源长度/s；a 源长度/s²；ω rad/s；α rad/s²；Δt s",
+        "meaning": "实际新朝向/完整旋转包络进入有限控制空间投影；不把单个速度上限当向心加速度界。",
+        "owner": "fish-five-r01/src/schooling-r08.js#step; behavior.js#update; legacy-school-r08.js",
+        "verification": "fish-five-r01/scripts/verify-schooling-r08.mjs"
+      },
+      {
+        "id": "behavior.nearest-approach",
+        "stages": [
+          "behavior"
+        ],
+        "expression": "t_CPA=clamp(-r·v_rel / |v_rel|²,0,horizon)",
+        "units": "r 源长度；v_rel 源长度/s；t_CPA s",
+        "meaning": "近邻预测候选与旋转 OBB 的分离判据联合使用；有限测试不是任意外部输入安全定理。",
+        "owner": "fish-five-r01/src/schooling-r08.js#step / clearance",
+        "verification": "fish-five-r01/scripts/verify-schooling-r08.mjs"
+      }
+    ],
+    "dependencies": [
+      "spine",
+      "fins"
+    ],
+    "requirements": [
+      {
+        "id": "source.entry",
+        "label": "完整来源、哈希、许可与作者",
+        "path": "source",
+        "status": "SOURCE_MEASURED",
+        "reference": "qa-missing-source.json",
+        "met": true,
+        "scope": "stage"
+      },
+      {
+        "id": "measurement.surface",
+        "label": "surface",
+        "path": "measurements.surface",
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json",
+        "met": true,
+        "scope": "stage"
+      },
+      {
+        "id": "measurement.axis",
+        "label": "axis",
+        "path": "measurements.axis",
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json",
+        "met": true,
+        "scope": "stage"
+      },
+      {
+        "id": "measurement.fins",
+        "label": "fins",
+        "path": "measurements.fins",
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json",
+        "met": true,
+        "scope": "stage"
+      },
+      {
+        "id": "measurement.envelope",
+        "label": "envelope",
+        "path": "measurements.envelope",
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json",
+        "met": true,
+        "scope": "stage"
+      },
+      {
+        "id": "measurement.gait",
+        "label": "gait",
+        "path": "measurements.gait",
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json",
+        "met": true,
+        "scope": "stage"
+      },
+      {
+        "id": "behavior.profile",
+        "label": "有证据分类的行为配置",
+        "path": "behavior.profileRef",
+        "status": "ENGINEERING_CANDIDATE",
+        "reference": "qa-profile.js",
+        "met": true,
+        "scope": "stage"
+      }
+    ],
+    "required": [
+      {
+        "id": "source.entry",
+        "label": "完整来源、哈希、许可与作者",
+        "path": "source",
+        "status": "SOURCE_MEASURED",
+        "reference": "qa-missing-source.json",
+        "met": true,
+        "scope": "stage"
+      },
+      {
+        "id": "measurement.surface",
+        "label": "surface",
+        "path": "measurements.surface",
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json",
+        "met": true,
+        "scope": "stage"
+      },
+      {
+        "id": "measurement.axis",
+        "label": "axis",
+        "path": "measurements.axis",
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json",
+        "met": true,
+        "scope": "stage"
+      },
+      {
+        "id": "measurement.fins",
+        "label": "fins",
+        "path": "measurements.fins",
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json",
+        "met": true,
+        "scope": "stage"
+      },
+      {
+        "id": "measurement.envelope",
+        "label": "envelope",
+        "path": "measurements.envelope",
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json",
+        "met": true,
+        "scope": "stage"
+      },
+      {
+        "id": "measurement.gait",
+        "label": "gait",
+        "path": "measurements.gait",
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json",
+        "met": true,
+        "scope": "stage"
+      },
+      {
+        "id": "behavior.profile",
+        "label": "有证据分类的行为配置",
+        "path": "behavior.profileRef",
+        "status": "ENGINEERING_CANDIDATE",
+        "reference": "qa-profile.js",
+        "met": true,
+        "scope": "stage"
+      }
+    ],
+    "blocked": [],
+    "unknowns": [
+      {
+        "id": "identity.species",
+        "label": "具体物种身份",
+        "path": "identity.speciesStatus",
+        "status": "UNKNOWN",
+        "scope": "biology"
+      },
+      {
+        "id": "measurement.eyes",
+        "label": "eyes",
+        "path": "measurements.eyes",
+        "status": "UNKNOWN",
+        "reference": null,
+        "scope": "eyes"
+      },
+      {
+        "id": "measurement.mouth",
+        "label": "mouth",
+        "path": "measurements.mouth",
+        "status": "UNKNOWN",
+        "reference": null,
+        "scope": "mouth"
+      },
+      {
+        "id": "measurement.gills",
+        "label": "gills",
+        "path": "measurements.gills",
+        "status": "UNKNOWN",
+        "reference": null,
+        "scope": "gills"
+      },
+      {
+        "id": "measurement.physicalUnits",
+        "label": "physicalUnits",
+        "path": "measurements.physicalUnits",
+        "status": "UNKNOWN",
+        "reference": null,
+        "scope": "physicalUnits"
+      },
+      {
+        "id": "behavior.grouping",
+        "label": "物种真实群游习性",
+        "path": "behavior.groupingEvidence",
+        "status": "UNKNOWN",
+        "scope": "biology"
+      }
+    ],
+    "components": {},
+    "checks": [
+      "真实接受速度/角速输入脊椎和鳍；固定种子可复现",
+      "邻居、鼠标进入/离开、恢复、完整包络间距与保护计数",
+      "报告 30 条容量范围；工程参数与生物标定分开"
+    ],
+    "verification": [
+      {
+        "id": "behavior.acceleration-integration",
+        "script": "fish-five-r01/scripts/verify-schooling-r08.mjs"
+      },
+      {
+        "id": "behavior.nearest-approach",
+        "script": "fish-five-r01/scripts/verify-schooling-r08.mjs"
+      }
+    ],
+    "acceptanceState": {
+      "visualAcceptance": false,
+      "productionReady": false,
+      "scientificCalibration": false,
+      "independentVerification": "NOT_RUN",
+      "publication": "NOT_RUN"
+    },
+    "validation": {
+      "valid": true,
+      "errors": [],
+      "warnings": [
+        "SPECIES_IDENTITY_UNCONFIRMED",
+        "BEHAVIOR_NOT_BIOLOGICALLY_CALIBRATED"
+      ]
+    },
+    "identity": {
+      "speciesStatus": "UNKNOWN",
+      "speciesName": null,
+      "targetArchetype": "UNKNOWN",
+      "confusionSet": [],
+      "evidence": [],
+      "largestDeviation": "SOURCE_ENTRY_REQUIRED"
+    },
+    "source": {
+      "title": "Unknown",
+      "entrySha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "payloadSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "metadata": "qa-missing-source.json",
+      "license": "unknown",
+      "attribution": "qa"
+    },
+    "evidence": {
+      "surface": {
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json"
+      },
+      "axis": {
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json"
+      },
+      "fins": {
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json"
+      },
+      "eyes": {
+        "status": "UNKNOWN",
+        "reference": null,
+        "summary": "待来源进入与测量；不按名字猜测。"
+      },
+      "mouth": {
+        "status": "UNKNOWN",
+        "reference": null,
+        "summary": "待来源进入与测量；不按名字猜测。"
+      },
+      "gills": {
+        "status": "UNKNOWN",
+        "reference": null,
+        "summary": "待来源进入与测量；不按名字猜测。"
+      },
+      "envelope": {
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json"
+      },
+      "gait": {
+        "status": "CONFIRMED_ABSENT",
+        "reference": "qa-no-evidence.json"
+      },
+      "physicalUnits": {
+        "status": "UNKNOWN",
+        "reference": null,
+        "summary": "待来源进入与测量；不按名字猜测。"
+      }
+    }
+  }
+}
