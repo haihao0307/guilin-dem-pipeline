@@ -29,6 +29,10 @@ jobs:
         run: |
           python -m pip install playwright pillow
           python -m playwright install --with-deps chromium
+      - name: Verify exact R16.1 catalog, HiDPI previews and unchanged scene files
+        env:
+          KAOPU_PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-geography-workbench/
+        run: python kaopu-geography-workbench/qa_catalog.py
       - name: Verify deployed HTTPS workbench and interactions
         env:
           KAOPU_PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-geography-workbench/
