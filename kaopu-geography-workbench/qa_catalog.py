@@ -24,7 +24,8 @@ try:
  for _ in range(72):
   try:
    html=get().decode()
-   if 'data-ui-version="R16.3"' in html and '0.10× 极慢' in html:break
+   runtime_bytes=get('runtime.js')
+   if 'data-ui-version="R16.3"' in html and '0.10× 极慢' in html and blob_sha(runtime_bytes)=='4748c183ebbaba3328ab59129d8dfa0e8d4b9ed3':break
   except Exception as e:print('waiting R16.3',e,flush=True)
   time.sleep(10)
  else:raise RuntimeError('R16.3 did not reach public hosting')
