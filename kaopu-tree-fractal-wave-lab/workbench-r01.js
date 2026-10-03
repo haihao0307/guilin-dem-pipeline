@@ -34,6 +34,9 @@ const teachers = {
 };
 
 let currentMode = body.dataset.mode || 'tree';
+let manifestReady = false;
+let treeReady = false;
+let teacherReady = false;
 
 function setTeacherPlayback(playing) {
   try {
@@ -125,10 +128,6 @@ teacherSelect.addEventListener('change', () => {
 });
 branchIndex.addEventListener('input', renderDecoder);
 renderDecoder();
-
-let manifestReady = false;
-let treeReady = false;
-let teacherReady = false;
 
 async function loadManifest() {
   try {
