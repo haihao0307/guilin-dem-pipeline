@@ -1,0 +1,60 @@
+{
+  "schema": "KAOPU.fractal-wave.living-tree/4",
+  "id": "Living3DTree.R04",
+  "stage": "resource_flow_root_shoot_continuous_skin",
+  "inherits": [
+    "KuKoDay123.BranchingR01",
+    "KuKoDay123.ProjectionLockedLift.R01",
+    "Native3DFractalGrammar.R02",
+    "Native3DFractalGrammar.R03"
+  ],
+  "lifeContract": {
+    "seedIsSharedRootShootAnchor": true,
+    "rootAndShootGrowInSameLifePass": true,
+    "rootUptakeParticipatesInFutureGrowthBudget": true,
+    "leafLightCaptureParticipatesAsCarbonSource": true,
+    "rootShootAllocationIsDynamicParameter": true,
+    "terminalShootTapersIntoApicalMeristemZone": true,
+    "continuousWoodSurfaceUsesImplicitField": true,
+    "rootsRespondToWaterGravityRockAndSurfaceBias": true
+  },
+  "surfaceModel": {
+    "method": "MarchingCubes implicit metaball field over root/trunk/branch skeleton",
+    "purpose": "remove segmented-cylinder appearance and create smooth unions at branch/root junctions",
+    "knowledgeBoundary": "implicit skin is a rendering/evaluation surface generated from life-state radii; the skeleton/resource graph remains the truth layer"
+  },
+  "resourceFlow": {
+    "waterMineralSource": "root tip uptake weighted by moisture-direction fit and root growth",
+    "carbonSource": "terminal shoot/leaf proxy weighted by light capture after juvenile passes",
+    "allocation": "shared budget is divided between Root and Shoot each life pass",
+    "effectOnTopology": "bud/root-tip proposals are accepted only while their side of the resource budget remains available"
+  },
+  "apex": {
+    "factBasis": "shoot apical meristem is a persistent organ-generating zone at shoot tips",
+    "renderRule": "terminal woody radius tapers continuously; a small meristem-zone marker remains rather than ending in a hard flat cylinder cap",
+    "speciesBoundary": "visible terminal-bud morphology is not claimed until a Species Score supplies it"
+  },
+  "rootCore": {
+    "voices": [
+      "downward/gravitropic exploration",
+      "lateral spreading",
+      "surface-root tendency",
+      "hydrotropic steering",
+      "rock/obstacle avoidance"
+    ],
+    "speciesBoundary": "these are reusable root voices, not a claim that every species uses the same root architecture"
+  },
+  "genericLeaves": {
+    "enabled": true,
+    "role": "prove the organ/resource interface and light-source logic",
+    "notSpeciesLeafShape": true
+  },
+  "notYetClosed": [
+    "species-calibrated phyllotaxis and leaf morphology",
+    "flower and fruit lifecycle",
+    "true hormone transport and dormancy history",
+    "physical wind force propagation",
+    "secondary cambial growth over long age histories",
+    "validated hydraulic transport resistance"
+  ]
+}
