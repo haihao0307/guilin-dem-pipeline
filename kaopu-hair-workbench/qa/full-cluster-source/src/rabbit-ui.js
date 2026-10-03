@@ -37,7 +37,7 @@ $('rabbitTeacherToggle').onclick=()=>showTeacher(!teacher.open);$('rabbitControl
 $('rabbitBack').onclick=()=>platform.select('anemone');$('rabbitZoom').oninput=e=>setCamera(Number(e.target.value));macro.onclick=()=>setCamera(1.65);
 teacher.addEventListener('close',()=>{clearPointers();post('teacher','active',{active:false});sync();});controls.addEventListener('close',()=>{clearPointers();redraw();});
 for(const id of ['resetCamera','sourceReset','resetAll'])$(id).addEventListener('click',()=>{clearPointers();sync();});
-const oldMode=setMode;setMode=function(next){oldMode(next);$('interactionHint').textContent=next==='comb'?'单指梳理毛发 · 双指缩放 · 还原梳理恢复方向':'单指旋转 · 双指缩放 · 鼠标拖动 / 滚轮';};workbench.setMode=setMode;
+const oldMode=setMode;setMode=function(next){if(!['orbit','comb'].includes(next))throw Error('Invalid interaction mode');oldMode(next);$('candidateFrame').contentWindow?.runtime?.setMode(next);$('interactionHint').textContent=next==='comb'?'单指梳理毛发 · 双指缩放 · 还原梳理恢复方向':'单指旋转 · 双指缩放 · 鼠标拖动 / 滚轮';};workbench.setMode=setMode;
 const oldUI=updateUI;updateUI=function(){oldUI();sync();};
 const oldImport=workbench.importState;workbench.importState=async data=>{await oldImport(data);sync();};
 const originalSelect=platform.select;platform.select=function(module){if(module!==platform.module)stopAuto();closeAll();originalSelect(module);if(module==='rabbit'){document.body.dataset.module='rabbit';post('candidate','active',{active:true});post('teacher','active',{active:false});redraw();sync();}};
@@ -45,7 +45,7 @@ $('speciesRabbit').onclick=()=>platform.select('rabbit');$('speciesAnemone').onc
 window.addEventListener('message',e=>{const d=e.data;if(!d?.kaopu||!['teacher','candidate'].includes(d.role)||e.source!==$(d.role+'Frame').contentWindow)return;if(d.type==='orbit-paused'){stopAuto();}if(d.type==='camera'){sync();}if(d.type==='ready'){clearPointers();sync();if(d.role==='teacher'&&(teacher.open||workbench.frameStats.teacher?.frames>=2))post('teacher','active',{active:teacher.open});}});
 window.addEventListener('blur',()=>{if(!['teacherFrame','candidateFrame'].includes(document.activeElement?.id))clearPointers();});document.addEventListener('visibilitychange',()=>{if(document.hidden){stopAuto();clearPointers();}});window.addEventListener('pagehide',()=>{stopAuto();clearPointers();});
 window.visualViewport?.addEventListener('resize',redraw);window.addEventListener('resize',redraw);
-window.rabbitUI={clearPointers,sync,closeAll,showTeacher,setCamera,setOrbit,pauseOrbit:()=>setOrbit({playing:false}),get orbit(){return orbitState();}};
+window.rabbitUI={clearPointers,sync,closeAll,showTeacher,setCamera,setOrbit,get interactionMode(){return mode;},pauseOrbit:()=>setOrbit({playing:false}),get orbit(){return orbitState();}};
 $('aboutDialog').innerHTML=$('aboutDialog').innerHTML.replace('采用按需绘制、1:1 CSS 像素渲染','采用按需绘制、设备像素比清晰渲染，颜色与深度缓冲同尺寸');$('closeAbout').onclick=()=>$('aboutDialog').close();
 sync();
 })();

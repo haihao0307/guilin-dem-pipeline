@@ -304,11 +304,17 @@ module.exports = async function orbitAppearance(browser, url, outDir, check) {
     // Confirm a real GPU comb stroke first, then demand bit-exact buffer survival.
     const beforeComb = await normals('candidate', 'candidate before native comb');
     await page.locator('#combButton').click();
+    assert('native mode button synchronizes iframe immediately',await page.evaluate(()=>document.getElementById('candidateFrame').contentWindow.runtime.mode==='comb'));
+    const combCamera=await page.evaluate(()=>document.getElementById('candidateFrame').contentWindow.runtime.state().angles);
     const combAt = await center('rabbit');
     await page.mouse.move(combAt.x, combAt.y); await page.mouse.down(); await waitPointers('rabbit', 1);
+    assert('native comb pointer is truly held in renderer',await page.evaluate(()=>document.getElementById('candidateFrame').contentWindow.runtime.renderer.combing));
+    await page.evaluate(()=>document.getElementById('candidateFrame').contentWindow.postMessage({kaopu:true,type:'mode',mode:'comb'},'*'));await rafWindow(2);
+    assert('duplicate delayed comb mode keeps held gesture',await page.evaluate(()=>{const r=document.getElementById('candidateFrame').contentWindow.runtime;return r.pointerCount===1&&r.mode==='comb'&&r.renderer.combing}));
     for (let i = 1; i <= 5; i++) { await page.mouse.move(combAt.x + i * 8, combAt.y + i * 3); await rafWindow(2); }
     await page.mouse.up(); await waitPointers('rabbit', 0); await rafWindow(2);
     const combed = await normals('candidate', 'candidate native GPU comb');
+    assert('native comb never rotates the camera',equal(combCamera,await page.evaluate(()=>document.getElementById('candidateFrame').contentWindow.runtime.state().angles)));
     assert('native comb really changed GPU grooming normals', !equal(beforeComb.bufferCombNormals, combed.bufferCombNormals) || !equal(beforeComb.finBufferCombedNormals, combed.finBufferCombedNormals), { beforeComb, combed });
     await page.evaluate(() => { rabbitAppearance.setPalette('lavender'); rabbitAppearance.setWidth(1.3); rabbitAppearance.setDensity(1.4); });
     await waitRabbit(await page.evaluate(() => workbench.candidate));
