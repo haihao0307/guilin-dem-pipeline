@@ -7,15 +7,15 @@ const lerp = (a,b,t) => a+(b-a)*t;
 const rad = (d) => THREE.MathUtils.degToRad(d);
 
 const VOICES={
-  C:{id:'C',name:'C · 3 slots / 40°',slots:3,angle:40,baseLength:2.05,decay:0.68},
-  L:{id:'L',name:'L · 3 slots / 20°',slots:3,angle:20,baseLength:2.10,decay:0.685},
-  R:{id:'R',name:'R · 4 slots / 25.7°',slots:4,angle:25.7,baseLength:2.12,decay:0.69}
+  C:{id:'C',name:'C · 3 slots / 40°',slots:3,angle:40,baseLength:2.15,decay:0.705},
+  L:{id:'L',name:'L · 3 slots / 20°',slots:3,angle:20,baseLength:2.20,decay:0.71},
+  R:{id:'R',name:'R · 4 slots / 25.7°',slots:4,angle:25.7,baseLength:2.22,decay:0.715}
 };
 
 const P={
-  voice:'C',pass:9,space:1.45,light:1.05,lightAz:48,lightEl:42,
-  gravity:0.72,parent:1.15,threshold:0.54,perception:0.90,openness:1.0,
-  obstacle:true,lightField:true,spaceField:true,upField:true,obsX:0.85,obsZ:0.55
+  voice:'C',pass:10,space:1.18,light:0.92,lightAz:48,lightEl:42,
+  gravity:0.62,parent:1.08,threshold:0.46,perception:0.82,openness:1.08,
+  obstacle:true,lightField:true,spaceField:true,upField:true,obsX:2.15,obsZ:1.35
 };
 
 const seed=123303;
@@ -133,8 +133,8 @@ function lightVec(){
 }
 function obstacleCenter(){return new THREE.Vector3(P.obsX,0.45,P.obsZ);}
 
-function freeSpaceScore(probe,hash){
-  const r=P.perception,near=hash.nearby(probe,r),repel=new THREE.Vector3(),safe=0.19;
+function freeSpaceScore(probe,hash,radius=P.perception){
+  const r=clamp(radius,0.24,P.perception),near=hash.nearby(probe,r),repel=new THREE.Vector3(),safe=Math.min(0.12,r*0.22);
   let minD=r*2;
   for(const p of near){
     const d=probe.clone().sub(p),len=d.length();
@@ -169,13 +169,14 @@ function scoreDirection(pos,frame,baseDir,length,depth,order,key,hash){
       .addScaledVector(baseFrame.B,Math.tan(spread*b))
       .normalize();
     let probe=pos.clone().addScaledVector(d,length*0.82);
-    const sf=freeSpaceScore(probe,hash);
+    const localPerception=clamp(Math.max(length*0.92,0.28),0.28,P.perception);
+    const sf=freeSpaceScore(probe,hash,localPerception);
     if(P.spaceField&&sf.repel.lengthSq())d.addScaledVector(sf.repel,P.space*0.48).normalize();
     if(P.lightField)d.addScaledVector(lv,P.light*0.20).normalize();
     if(P.upField)d.addScaledVector(up,P.gravity*0.14).normalize();
     d.addScaledVector(frame.T,P.parent*0.18).normalize();
     probe=pos.clone().addScaledVector(d,length*0.82);
-    const sf2=freeSpaceScore(probe,hash);
+    const sf2=freeSpaceScore(probe,hash,localPerception);
     const lightFit=(d.dot(lv)+1)*0.5,continuity=(d.dot(frame.T)+1)*0.5,upFit=(d.y+1)*0.5;
     let score=0.18+0.24*hash01(key+':'+i);
     if(P.spaceField)score+=0.33*sf2.free*P.space;
@@ -215,7 +216,7 @@ function growGraph(){
     const candidateBuds=[];
     const leaderBase=dirLocal(nodeFrame,rad(3+6*hash01(shoot.key+':li')),sh(shoot.key+':la')*.14);
     const leaderEval=scoreDirection(end,nodeFrame,leaderBase,nextLen,shoot.depth+1,shoot.order,shoot.key+':leader',hash);
-    candidateBuds.push({type:'leader',pos:end.clone(),frame:nodeFrame,eval:leaderEval,depth:shoot.depth+1,order:shoot.order,key:shoot.key+'L',length:nextLen,energy:shoot.energy*.88,parent:idx});
+    candidateBuds.push({type:'leader',pos:end.clone(),frame:nodeFrame,eval:leaderEval,depth:shoot.depth+1,order:shoot.order,key:shoot.key+'L',length:nextLen,energy:shoot.energy*.91,parent:idx});
 
     const phase=hash01(shoot.key+':phase')*Math.PI*2+shoot.depth*rad(31.5);
     for(let slot=0;slot<voice.slots;slot++){
@@ -226,17 +227,21 @@ function growGraph(){
       const base=dirLocal(nodeFrame,incl,az);
       const len=nextLen*(.78+.18*hash01(shoot.key+':len:'+slot));
       const ev=scoreDirection(pos,nodeFrame,base,len,shoot.depth+1,shoot.order+1,shoot.key+':bud:'+slot,hash);
-      candidateBuds.push({type:'lateral',slot,pos,frame:nodeFrame,eval:ev,depth:shoot.depth+1,order:shoot.order+1,key:shoot.key+'B'+slot,length:len,energy:shoot.energy*.69,parent:idx});
+      candidateBuds.push({type:'lateral',slot,pos,frame:nodeFrame,eval:ev,depth:shoot.depth+1,order:shoot.order+1,key:shoot.key+'B'+slot,length:len,energy:shoot.energy*.74,parent:idx});
     }
 
     const laterals=candidateBuds.filter(b=>b.type==='lateral').sort((a,b)=>b.eval.best.score-a.eval.best.score);
-    const maxLat=shoot.depth<2?2:(shoot.depth<5?2:1);
+    const maxLat=shoot.depth<2?3:(shoot.depth<5?2:(shoot.depth<8?2:1));
     const allowed=new Set(laterals.slice(0,maxLat).map(b=>b.key));
     for(const b of candidateBuds){
       const best=b.eval.best;
       let active=false;
-      if(b.type==='leader')active=best.score>P.threshold-.13&&b.energy>.09;
-      else active=allowed.has(b.key)&&best.score>P.threshold&&best.free>.10&&b.energy>.055;
+      if(b.type==='leader')active=best.score>P.threshold-.22&&b.energy>.055;
+      else {
+        const earlyRelease=b.depth<=4 && allowed.has(b.key) && best.score>P.threshold-.16 && best.free>.08;
+        const normalRelease=allowed.has(b.key)&&best.score>P.threshold&&best.free>.10;
+        active=(earlyRelease||normalRelease)&&b.energy>.035;
+      }
       buds.push({pos:b.pos.clone(),state:active?'active':'dormant',score:best.score,type:b.type,key:b.key,dir:best.dir.clone(),depth:b.depth});
       if(showProbe && probeRecords.length<1 && b.type==='lateral' && b.depth>=3 && b.depth<=5){
         probeRecords.push({pos:b.pos.clone(),candidates:b.eval.candidates.slice(0,9)});
