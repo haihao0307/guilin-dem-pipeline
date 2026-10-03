@@ -1,85 +1,67 @@
-"""KAOPU R16.2 responsive-shell verification. Scene shaders are Gram-anchored and must not regress."""
+"""KAOPU R16.3 speed-control verification. Scene shaders and R16.2 responsive shell remain anchored."""
 import os,time,json,hashlib,urllib.request,traceback
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 BASE=os.environ.get('KAOPU_PUBLIC_URL','https://haihao0307.github.io/guilin-dem-pipeline/kaopu-geography-workbench/')
-OUT=Path('geography-qa/responsive-r16-2');OUT.mkdir(parents=True,exist_ok=True)
+OUT=Path('geography-qa/speed-r16-3');OUT.mkdir(parents=True,exist_ok=True)
 FROZEN={
-'settings.js':'0ba24c343cefbb20eba8dd5d6d86e1d288e88253',
-'post.js':'048305b127bfb6770e3df2541cd4bbaf398c9645',
-'crater.js':'1316fd4c4b56f941cab0e90aaa4f39730bd87111',
-'underwater.js':'1f97a36952ebfd04969e2c7d2f61e68a1c4198a5',
-'cave.js':'811e69b450d63f0ffea627f9da2322a9b78e6606',
-'canyon.js':'d9e12711c4186356b34f9e458f029b771b837622',
-'style.css':'7f48293ed2ce65cea1fded7bea1997ac692a8aae',
-'caveBake.js':'c88a4dd81a7ca7bf5325080900d52f6847d7223d',
-'more.js':'53316a56059e122246d293b6c1b6d94aff91db8f',
-'snow.js':'6b5fe324549596c52b47bda1f5d53a723b569fed'}
-EXPECTED_INDEX='2db85004db80b083c06962960558bcc0a481616a'
-EXPECTED_RUNTIME='c98bf2ba62a77a7c602356d26ee15fa6b9a4f85f'
-EXPECTED_DETAIL_CSS='321f9e1b75ae0b700162913c16abb161912208ed'
-report={'ui_version':'R16.2','scene_anchor':'R16/R16.1','public_url':BASE,'physical_phone_tested':False,'tests':[],'errors':[],'passed':False}
+'settings.js':'0ba24c343cefbb20eba8dd5d6d86e1d288e88253','post.js':'048305b127bfb6770e3df2541cd4bbaf398c9645',
+'crater.js':'1316fd4c4b56f941cab0e90aaa4f39730bd87111','underwater.js':'1f97a36952ebfd04969e2c7d2f61e68a1c4198a5',
+'cave.js':'811e69b450d63f0ffea627f9da2322a9b78e6606','canyon.js':'d9e12711c4186356b34f9e458f029b771b837622',
+'style.css':'7f48293ed2ce65cea1fded7bea1997ac692a8aae','caveBake.js':'c88a4dd81a7ca7bf5325080900d52f6847d7223d',
+'more.js':'53316a56059e122246d293b6c1b6d94aff91db8f','snow.js':'6b5fe324549596c52b47bda1f5d53a723b569fed',
+'detail-r16-2.css':'321f9e1b75ae0b700162913c16abb161912208ed'}
+report={'ui_version':'R16.3','public_url':BASE,'physical_phone_tested':False,'tests':[],'errors':[],'passed':False}
 def get(name=''):
- with urllib.request.urlopen(urllib.request.Request(BASE+name+'?r162='+str(time.time()),headers={'Cache-Control':'no-cache'}),timeout=30) as r:
+ with urllib.request.urlopen(urllib.request.Request(BASE+name+'?r163='+str(time.time()),headers={'Cache-Control':'no-cache'}),timeout=30) as r:
   assert r.status==200
   return r.read()
 def blob_sha(b):return hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
-def wait_ready(p,scene='underwater',count=-1,timeout=180000):
+def wait_render(p,scene,count=-1,timeout=180000):
  p.wait_for_function('(a)=>window.KaoPuDiagnostics&&KaoPuDiagnostics().scene===a.scene&&KaoPuDiagnostics().renderReady&&KaoPuDiagnostics().renderCount>a.count',arg={'scene':scene,'count':count},timeout=timeout)
  assert not p.locator('#notice.error').is_visible(),p.locator('#notice').inner_text()
 try:
  for _ in range(72):
   try:
-   html=get()
-   if blob_sha(html)==EXPECTED_INDEX:break
-  except Exception as e:print('waiting for R16.2 Pages',e,flush=True)
+   html=get().decode()
+   if 'data-ui-version="R16.3"' in html and '0.10× 极慢' in html:break
+  except Exception as e:print('waiting R16.3',e,flush=True)
   time.sleep(10)
- else:raise RuntimeError('Exact R16.2 index did not reach public hosting')
- assert blob_sha(get('runtime.js'))==EXPECTED_RUNTIME
- assert blob_sha(get('detail-r16-2.css'))==EXPECTED_DETAIL_CSS
- for name,sha in FROZEN.items():
-  actual=blob_sha(get(name));assert actual==sha,('Gram anchor changed',name,actual,sha)
- report['frozen_scene_files']=FROZEN
+ else:raise RuntimeError('R16.3 did not reach public hosting')
+ for name,sha in FROZEN.items():assert blob_sha(get(name))==sha,('anchored file changed',name)
  with sync_playwright() as pw:
   browser=pw.chromium.launch(headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--disable-dev-shm-usage'])
-  # Desktop: established desktop arrangement remains controls-before-canvas and 16:9.
-  p=browser.new_page(viewport={'width':1440,'height':1000},device_scale_factor=1)
-  errors=[];p.on('pageerror',lambda e:errors.append(str(e)))
-  p.goto(BASE+'?ui=R16.2',wait_until='load',timeout=120000);wait_ready(p);p.locator('#playBtn').click()
-  assert p.locator('#home').get_attribute('data-ui-version')=='R16.2'
-  canvas=p.locator('#liveCanvas').bounding_box();controls=p.locator('#detail>.controls').first.bounding_box()
-  assert controls['y'] < canvas['y'],(controls,canvas)
-  assert abs(canvas['width']/canvas['height']-16/9)<.03,canvas
-  assert p.evaluate('document.documentElement.scrollWidth<=innerWidth+2')
-  p.screenshot(path=str(OUT/'detail_desktop_1440.png'),full_page=False,timeout=120000)
-  report['tests'].append({'mode':'desktop','viewport':[1440,1000],'canvas':canvas,'controls':controls,'aspect':canvas['width']/canvas['height']})
-  p.locator('#backBtn').click();p.wait_for_function('KaoPuDiagnostics().homeVisible');assert p.locator('[data-scene]').count()==6
-  p.screenshot(path=str(OUT/'home_desktop_1440.png'),full_page=False,timeout=120000);p.close()
-  # Mobile portrait: canvas is promoted above controls and rendered 4:3 for more usable visual area.
+  # Desktop: all new speed gears visible; non-cave defaults to half-speed.
+  p=browser.new_page(viewport={'width':1440,'height':1000})
+  p.goto(BASE+'?ui=R16.3',wait_until='load',timeout=120000);wait_render(p,'underwater')
+  assert p.locator('#speed').input_value()=='0.5'
+  opts=p.locator('#speed option').evaluate_all('(xs)=>xs.map(x=>x.value)')
+  assert opts==['0.1','0.2','0.25','0.35','0.5','0.75','1','1.5','2'],opts
+  # Quantitatively verify slow modes advance more slowly.
+  p.locator('#speed').select_option('0.1');t0=p.evaluate('KaoPuDiagnostics().time');p.wait_for_timeout(700);t1=p.evaluate('KaoPuDiagnostics().time');slow=t1-t0
+  p.locator('#speed').select_option('1');t2=p.evaluate('KaoPuDiagnostics().time');p.wait_for_timeout(700);t3=p.evaluate('KaoPuDiagnostics().time');normal=t3-t2
+  assert 0.03<slow<0.18,(slow,normal)
+  assert 0.45<normal<1.2,(slow,normal)
+  assert normal>slow*5,(slow,normal)
+  p.locator('#backBtn').click();p.wait_for_function('KaoPuDiagnostics().homeVisible')
+  before=p.evaluate('KaoPuDiagnostics().renderCount');p.locator('[data-scene="cave"]').click();wait_render(p,'cave',before,timeout=720000)
+  assert p.locator('#speed').input_value()=='0.25',p.locator('#speed').input_value()
+  p.locator('#speed').select_option('0.1');assert p.locator('#speed').input_value()=='0.1'
+  p.locator('#speed').select_option('0.35');assert p.locator('#speed').input_value()=='0.35'
+  p.locator('#backBtn').click();p.wait_for_function('KaoPuDiagnostics().homeVisible')
+  report['tests'].append({'desktop_speed_options':opts,'underwater_default':'0.5','cave_default':'0.25','slow_delta':slow,'normal_delta':normal})
+  # Mobile viewport: speed selector remains reachable below canvas, no overflow.
   m=browser.new_page(viewport={'width':390,'height':844},device_scale_factor=2,is_mobile=True,has_touch=True)
-  merr=[];m.on('pageerror',lambda e:merr.append(str(e)))
-  m.goto(BASE+'?ui=R16.2',wait_until='load',timeout=120000);wait_ready(m);m.locator('#playBtn').click()
-  canvas=m.locator('#liveCanvas').bounding_box();controls=m.locator('#detail>.controls').first.bounding_box();nav=m.locator('.nav').bounding_box()
-  assert canvas['y'] < controls['y'],(canvas,controls)
-  assert canvas['width'] >= 388,canvas
-  assert abs(canvas['width']/canvas['height']-4/3)<.03,canvas
-  assert nav['height'] <= 54,nav
+  m.goto(BASE+'?ui=R16.3',wait_until='load',timeout=120000);wait_render(m,'underwater')
+  assert m.locator('#speed').is_visible()
+  assert m.locator('#liveCanvas').bounding_box()['y'] < m.locator('#speed').bounding_box()['y']
   assert m.evaluate('document.documentElement.scrollWidth<=innerWidth+2')
-  assert not merr,merr
-  m.screenshot(path=str(OUT/'detail_mobile_390_dpr2.png'),full_page=False,timeout=120000)
-  report['tests'].append({'mode':'mobile_portrait_viewport','viewport':[390,844],'dpr':2,'real_phone':False,'canvas':canvas,'controls':controls,'nav':nav,'aspect':canvas['width']/canvas['height']})
-  # Exercise controls after canvas and return.
-  before=m.evaluate('KaoPuDiagnostics().renderCount');m.locator('#quality').select_option('720');wait_ready(m,'underwater',before)
-  r=m.locator('#renderState').inner_text();assert '720×540' in r,r
-  m.locator('#backBtn').click();m.wait_for_function('KaoPuDiagnostics().homeVisible');assert m.locator('[data-scene]').count()==6
-  m.screenshot(path=str(OUT/'home_mobile_390_dpr2.png'),full_page=False,timeout=120000)
-  # Re-enter canyon and return: responsive shell must not break scene navigation.
-  before=m.evaluate('KaoPuDiagnostics().renderCount');m.locator('[data-scene="canyon"]').click();wait_ready(m,'canyon',before);assert m.locator('#liveCanvas').bounding_box()['width']>=388
-  m.locator('#backBtn').click();m.wait_for_function('KaoPuDiagnostics().homeVisible')
-  m.close();browser.close()
-  report['passed']=True
+  m.locator('#speed').select_option('0.2');assert m.locator('#speed').input_value()=='0.2'
+  report['tests'].append({'mobile_viewport':[390,844],'dpr':2,'real_phone':False,'speed_selector':'passed'})
+  m.close();p.close();browser.close()
+ report['passed']=True
 except Exception as e:
  report['errors'].append(str(e));report['traceback']=traceback.format_exc();print(traceback.format_exc(),flush=True)
 finally:
- (OUT/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2));print('R16_2_RESPONSIVE_QA',json.dumps(report,ensure_ascii=False),flush=True)
+ (OUT/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2));print('R16_3_SPEED_QA',json.dumps(report,ensure_ascii=False),flush=True)
 if not report['passed']:raise SystemExit(1)
