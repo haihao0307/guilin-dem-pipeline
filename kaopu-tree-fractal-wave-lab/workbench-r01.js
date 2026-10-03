@@ -7,6 +7,7 @@ const teacherFrame = document.querySelector('#teacherFrame');
 const liftFrame = document.querySelector('#liftFrame');
 const nativeFrame = document.querySelector('#nativeFrame');
 const native3Frame = document.querySelector('#native3Frame');
+const life4Frame = document.querySelector('#life4Frame');
 
 const teachers = {
   C: {
@@ -36,13 +37,14 @@ const teachers = {
   }
 };
 
-let currentMode = body.dataset.mode || 'native3';
+let currentMode = body.dataset.mode || 'life4';
 let manifestReady = false;
 let treeReady = false;
 let teacherReady = false;
 let liftReady = false;
 let nativeReady = false;
 let native3Ready = false;
+let life4Ready = false;
 
 function setTeacherPlayback(playing) {
   try {
@@ -66,7 +68,7 @@ function setMode(mode) {
     button.classList.toggle('on', button.dataset.mode === mode);
   }
   applyPlaybackPolicy();
-  try { localStorage.setItem('kaopu-fractal-tree-mode-r03', mode); } catch (_) {}
+  try { localStorage.setItem('kaopu-fractal-tree-mode-r04', mode); } catch (_) {}
   updateReadyState();
 }
 
@@ -75,12 +77,12 @@ for (const button of modeButtons) {
 }
 
 const storedMode = (() => {
-  try { return localStorage.getItem('kaopu-fractal-tree-mode-r03'); } catch (_) { return null; }
+  try { return localStorage.getItem('kaopu-fractal-tree-mode-r04'); } catch (_) { return null; }
 })();
-if (storedMode && ['tree','teacher','compare','lift','native','native3','nativecompare3','map'].includes(storedMode)) {
+if (storedMode && ['tree','teacher','compare','lift','native','native3','nativecompare3','life4','lifecompare','map'].includes(storedMode)) {
   setMode(storedMode);
 } else {
-  setMode('native3');
+  setMode('life4');
 }
 
 const teacherSelect = document.querySelector('#teacherSelect');
@@ -163,6 +165,7 @@ function updateReadyState() {
   liftReady = childReady(liftFrame, '__kuko3dLiftReady');
   nativeReady = childReady(nativeFrame, '__native3dR02Ready');
   native3Ready = childReady(native3Frame, '__native3dR03Ready');
+  life4Ready = childReady(life4Frame, '__livingTreeR04Ready');
   if (teacherReady) applyPlaybackPolicy();
   const teacherMotion = currentMode === 'teacher' ? '老师动画开启' : '老师冻结帧省算力';
   const parts = [
@@ -171,18 +174,20 @@ function updateReadyState() {
     liftReady ? '三维 Lift 已就绪' : '三维 Lift 加载中',
     nativeReady ? 'Native 3D R02 已就绪' : 'Native 3D R02 加载中',
     native3Ready ? 'Native 3D R03 总台已就绪' : 'Native 3D R03 加载中',
+    life4Ready ? 'Living Tree R04 已就绪' : 'Living Tree R04 加载中',
     manifestReady ? '知识桥已登记' : '知识桥加载中'
   ];
   workbenchState.textContent = parts.join(' · ');
-  const ready = treeReady && teacherReady && liftReady && nativeReady && native3Ready && manifestReady;
+  const ready = treeReady && teacherReady && liftReady && nativeReady && native3Ready && life4Ready && manifestReady;
   window.__fractalTreeWorkbenchReady = ready;
   const api = {
     setMode,
     decodePath: (teacherId, branchId) => decodePath(teachers[teacherId], branchId),
-    getState: () => ({ mode: currentMode, treeReady, teacherReady, liftReady, nativeReady, native3Ready, manifestReady })
+    getState: () => ({ mode: currentMode, treeReady, teacherReady, liftReady, nativeReady, native3Ready, life4Ready, manifestReady })
   };
   window.FractalWaveTreeWorkbenchR01 = api;
   window.FractalWaveTreeWorkbenchR03 = api;
+  window.FractalWaveTreeWorkbenchR04 = api;
   document.documentElement.dataset.ready = ready ? 'true' : 'false';
 }
 
@@ -194,5 +199,6 @@ teacherFrame.addEventListener('load', () => {
 liftFrame.addEventListener('load', updateReadyState);
 nativeFrame.addEventListener('load', updateReadyState);
 native3Frame.addEventListener('load', updateReadyState);
+life4Frame.addEventListener('load', updateReadyState);
 loadManifest().finally(updateReadyState);
 setInterval(updateReadyState, 1000);
