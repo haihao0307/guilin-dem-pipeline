@@ -1,0 +1,83 @@
+name: Coral Studio R04 reference controls
+on:
+  push:
+    branches: [work/coral-studio-reference-r04-20261003]
+    paths: [.github/workflows/coral-studio-r04.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  validate-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build only from accepted host baseline
+        run: |
+          mkdir -p /tmp/studio-evidence
+          cp -r tools/coral-studio-r04 /tmp/studio-tools
+          python tools/coral-studio-r04/build.py coral-mother-core-seed-r01 /tmp/studio-site
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          expected={'studio.css':'6d047634f10f9b148c9c9d34ed4fa9af1a2b56130ba9e24fd7c811b54e25c822','studio.js':'2600ceed590a9beaf0d960c5f0f2e6a57f4a5bcb5661eb31417631df148515b7'}
+          for n,h in expected.items():assert hashlib.sha256(Path('/tmp/studio-site',n).read_bytes()).hexdigest()==h,n
+          PY
+      - name: Install test browser
+        run: |
+          python -m pip install playwright==1.55.0
+          python -m playwright install --with-deps chromium
+      - name: Test reference controls on real HTTP before publishing
+        run: |
+          python -m http.server 8765 --directory /tmp --bind 127.0.0.1 >/tmp/studio-http.log 2>&1 &
+          python /tmp/studio-tools/qa.py http://127.0.0.1:8765/studio-site/ /tmp/studio-evidence/prepublish
+      - name: Publish four host files without touching shader or other projects
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          git checkout -B studio-publish origin/gh-pages
+          python - <<'PY'
+          import hashlib,shutil,json
+          from pathlib import Path
+          p=Path('coral-mother-core-seed-r01');expected={'index.html':'4faa56edfc793f00d8ced91a657f5a8b74675ab0ea7f1660d3d8149bf6f6afac','runtime.js':'a619ea4154349bcd810d43d97974ab997d3ba9b662682e8d68acfcf7ad746890'}
+          for n,h in expected.items():assert hashlib.sha256((p/n).read_bytes()).hexdigest()==h,('concurrent coral change; stop',n)
+          archive=p/'archive-accepted-before-studio-r04';archive.mkdir(exist_ok=True)
+          for n in expected:shutil.copyfile(p/n,archive/n)
+          for n in ['index.html','runtime.js','studio.css','studio.js','STUDIO_MANIFEST.json']:shutil.copyfile(Path('/tmp/studio-site')/n,p/n)
+          shutil.copyfile('/tmp/studio-site/STUDIO_MANIFEST.json','/tmp/studio-evidence/STUDIO_MANIFEST.json')
+          PY
+          git config user.name 'Coral Mother Studio'
+          git config user.email 'actions@users.noreply.github.com'
+          git add coral-mother-core-seed-r01/index.html coral-mother-core-seed-r01/runtime.js coral-mother-core-seed-r01/studio.css coral-mother-core-seed-r01/studio.js coral-mother-core-seed-r01/STUDIO_MANIFEST.json coral-mother-core-seed-r01/archive-accepted-before-studio-r04/
+          git commit -m 'feat(coral): student-primary studio, bounded closable reference, accepted source unchanged'
+          git push origin HEAD:gh-pages
+          git rev-parse HEAD > /tmp/studio-evidence/PUBLISHED_COMMIT.txt
+      - name: Verify exact public bytes then test public controls
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from urllib.request import Request,urlopen
+          import time,hashlib,json
+          d=json.loads(Path('/tmp/studio-site/STUDIO_MANIFEST.json').read_text());base='https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-core-seed-r01/'
+          ready=False
+          for _ in range(60):
+              try:
+                  checks={n:hashlib.sha256(urlopen(Request(base+n+'?verify='+str(time.time_ns()),headers={'Cache-Control':'no-cache'}),timeout=20).read()).hexdigest()==h for n,h in d['files'].items()}
+                  if all(checks.values()):ready=True;break
+              except Exception as e:print(str(e),flush=True)
+              time.sleep(8)
+          assert ready,'Public deployment has not matched; cannot claim delivered'
+          Path('/tmp/studio-evidence/PUBLIC_HASHES.json').write_text(json.dumps(checks,indent=2))
+          PY
+          python /tmp/studio-tools/qa.py https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-core-seed-r01/ /tmp/studio-evidence/public
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coral-studio-r04-evidence
+          path: /tmp/studio-evidence/
+          retention-days: 30
