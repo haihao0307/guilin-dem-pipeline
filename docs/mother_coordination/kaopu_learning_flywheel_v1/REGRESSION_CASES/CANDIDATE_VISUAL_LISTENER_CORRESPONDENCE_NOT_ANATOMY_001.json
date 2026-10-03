@@ -1,0 +1,190 @@
+{
+  "schema": "kaopu.regression-case/2",
+  "caseId": "VISUAL-LISTENER-CORRESPONDENCE-NOT-ANATOMY-001",
+  "status": "CANDIDATE",
+  "scope": {
+    "mother": "VisualListener",
+    "taskClass": "OBSERVATION_TO_GRAMMAR_ANCHOR_PROMOTION",
+    "globalAdoption": false
+  },
+  "failure": {
+    "summary": "Dense visual similarity, segmentation, tracking or surface correspondence can be mistakenly promoted into anatomical identity or a stable Grammar Anchor without independent structural evidence.",
+    "observedRisk": [
+      "DINOv3 patch similarity can be spatially coherent without proving anatomy",
+      "SAM2 mask continuity can preserve an object or part mask without proving left/right or joint identity",
+      "DensePose/CSE correspondence can map pixels to template geometry while remaining a correspondence claim",
+      "occlusion can be mistaken for absence when persistent part identity is not anchored"
+    ]
+  },
+  "mustNeverRepeat": [
+    "promote DINO/SAM/CSE output alone to anatomical truth",
+    "treat occluded or unresolved part as absent",
+    "merge contradictory left/right or part identities into one anchor",
+    "promote an anchor without declared uncertainty and evidence roots"
+  ],
+  "gate": {
+    "requiredForGrammarAnchorCandidate": [
+      "objectIdentityBound=true",
+      "uncertaintyState=OBSERVED",
+      "partIdentityBound=true",
+      "boundaryDefined=true",
+      "crossViewStable=true OR temporalStable=true",
+      "anatomicalOrGeometricSupport=true",
+      "at least two independentEvidenceRoots",
+      "relationInvariantsDefined=true",
+      "conflict=false"
+    ],
+    "correspondenceOnlyDecision": "OBSERVATION_CORRESPONDENCE_CANDIDATE",
+    "uncertainDecision": "OBSERVATION_UNCERTAIN_NOT_ANCHOR",
+    "conflictDecision": "HOLD_OBSERVATION_CONFLICT"
+  },
+  "cases": [
+    {
+      "id": "DINO_SIMILARITY_ONLY",
+      "input": {
+        "objectIdentityBound": true,
+        "uncertaintyState": "OBSERVED",
+        "visualCorrespondence": true,
+        "anatomicalOrGeometricSupport": false,
+        "partIdentityBound": true,
+        "boundaryDefined": true,
+        "crossViewStable": true,
+        "temporalStable": false,
+        "independentEvidenceRoots": [
+          "dinov3"
+        ],
+        "relationInvariantsDefined": false
+      },
+      "expect": "OBSERVATION_CORRESPONDENCE_CANDIDATE"
+    },
+    {
+      "id": "SAM2_TRACK_ONLY",
+      "input": {
+        "objectIdentityBound": true,
+        "uncertaintyState": "OBSERVED",
+        "visualCorrespondence": true,
+        "anatomicalOrGeometricSupport": false,
+        "partIdentityBound": true,
+        "boundaryDefined": true,
+        "crossViewStable": false,
+        "temporalStable": true,
+        "independentEvidenceRoots": [
+          "sam2"
+        ],
+        "relationInvariantsDefined": false
+      },
+      "expect": "OBSERVATION_CORRESPONDENCE_CANDIDATE"
+    },
+    {
+      "id": "CSE_ANIMAL_NO_ANATOMY",
+      "input": {
+        "objectIdentityBound": true,
+        "uncertaintyState": "OBSERVED",
+        "visualCorrespondence": true,
+        "anatomicalOrGeometricSupport": false,
+        "partIdentityBound": true,
+        "boundaryDefined": true,
+        "crossViewStable": true,
+        "temporalStable": false,
+        "independentEvidenceRoots": [
+          "cse"
+        ],
+        "relationInvariantsDefined": false
+      },
+      "expect": "OBSERVATION_CORRESPONDENCE_CANDIDATE"
+    },
+    {
+      "id": "OCCLUDED_APPENDAGE",
+      "input": {
+        "objectIdentityBound": true,
+        "uncertaintyState": "OCCLUDED",
+        "visualCorrespondence": false,
+        "anatomicalOrGeometricSupport": false,
+        "partIdentityBound": false,
+        "boundaryDefined": false,
+        "crossViewStable": false,
+        "temporalStable": false,
+        "independentEvidenceRoots": [
+          "image-A"
+        ],
+        "relationInvariantsDefined": false
+      },
+      "expect": "OBSERVATION_UNCERTAIN_NOT_ANCHOR"
+    },
+    {
+      "id": "CONFLICTING_LEFT_RIGHT",
+      "input": {
+        "objectIdentityBound": true,
+        "uncertaintyState": "OBSERVED",
+        "conflict": true,
+        "visualCorrespondence": true,
+        "anatomicalOrGeometricSupport": true,
+        "partIdentityBound": true,
+        "boundaryDefined": true,
+        "crossViewStable": false,
+        "temporalStable": false,
+        "independentEvidenceRoots": [
+          "dinov3",
+          "anatomy"
+        ],
+        "relationInvariantsDefined": true
+      },
+      "expect": "HOLD_OBSERVATION_CONFLICT"
+    },
+    {
+      "id": "ANATOMY_PLUS_DENSE_MULTI_VIEW",
+      "input": {
+        "objectIdentityBound": true,
+        "uncertaintyState": "OBSERVED",
+        "visualCorrespondence": true,
+        "anatomicalOrGeometricSupport": true,
+        "partIdentityBound": true,
+        "boundaryDefined": true,
+        "crossViewStable": true,
+        "temporalStable": false,
+        "independentEvidenceRoots": [
+          "dinov3",
+          "anatomy-reference"
+        ],
+        "relationInvariantsDefined": true
+      },
+      "expect": "GRAMMAR_ANCHOR_CANDIDATE"
+    },
+    {
+      "id": "SINGLE_ROOT_GEOMETRY",
+      "input": {
+        "objectIdentityBound": true,
+        "uncertaintyState": "OBSERVED",
+        "visualCorrespondence": false,
+        "anatomicalOrGeometricSupport": true,
+        "partIdentityBound": true,
+        "boundaryDefined": true,
+        "crossViewStable": true,
+        "temporalStable": false,
+        "independentEvidenceRoots": [
+          "one-root"
+        ],
+        "relationInvariantsDefined": true
+      },
+      "expect": "OBSERVATION_INDEPENDENCE_INSUFFICIENT"
+    },
+    {
+      "id": "MISSING_UNCERTAINTY",
+      "input": {
+        "objectIdentityBound": true,
+        "visualCorrespondence": true,
+        "anatomicalOrGeometricSupport": true,
+        "partIdentityBound": true,
+        "boundaryDefined": true,
+        "crossViewStable": true,
+        "temporalStable": false,
+        "independentEvidenceRoots": [
+          "dinov3",
+          "anatomy"
+        ],
+        "relationInvariantsDefined": true
+      },
+      "expect": "HOLD_UNCERTAINTY_UNDECLARED"
+    }
+  ]
+}
