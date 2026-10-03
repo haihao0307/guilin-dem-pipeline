@@ -1,7 +1,7 @@
 {
   "schema": "KAOPU.fractal-wave.tree-workbench/1",
-  "name": "KAOPU Fractal Wave Tree Workbench R03",
-  "stage": "integrated_native_3d_spatial_growth_workbench",
+  "name": "KAOPU Fractal Wave Tree Workbench R04",
+  "stage": "integrated_living_3d_tree_with_resource_flow_root_shoot_and_continuous_skin",
   "grammarAnchors": {
     "treeLife": {
       "id": "TreeLifeR05.Pandanus",
@@ -36,6 +36,13 @@
       "role": "large integrated 3D growth workbench with spatial hash, bud perception volume, occupancy feedback and load back-propagation",
       "frozen": false,
       "projectionLocked": false,
+      "appliesToSpecies": false
+    },
+    "livingTreeR04": {
+      "id": "Living3DTree.R04",
+      "path": "native-3d-life-r04/",
+      "role": "Root/Shoot simultaneous growth, resource budget, continuous implicit skin, apical taper and leaf source interface",
+      "frozen": false,
       "appliesToSpecies": false
     }
   },
@@ -84,23 +91,50 @@
       "id": "branch.loadBackPropagation",
       "source": "tip-to-base support accumulation",
       "use": "derive branch radius from downstream structural support demand instead of recursion depth alone"
+    },
+    {
+      "id": "life.resourceFlow",
+      "source": "Root uptake + leaf light capture -> shared pass budget",
+      "use": "make water/mineral and carbon sources participate in later Root/Shoot topology"
+    },
+    {
+      "id": "life.rootShootAllocation",
+      "source": "one Seed + independent Root/Shoot growth proposals + allocation budget",
+      "use": "grow above and below ground as one life while preserving different grammars"
+    },
+    {
+      "id": "surface.continuousImplicitSkin",
+      "source": "MarchingCubes field over root/trunk/branch radii",
+      "use": "replace segmented-cylinder final surface with smooth unions and continuous taper"
+    },
+    {
+      "id": "apex.meristemTaper",
+      "source": "terminal radius taper + apical meristem zone",
+      "use": "close shoot tips as growing organs rather than blunt cylinder caps"
+    },
+    {
+      "id": "root.environmentVoices",
+      "source": "hydrotropism/gravity/lateral/surface-root/rock avoidance",
+      "use": "let root tips choose 3D underground directions from local conditions"
     }
   ],
   "treeKnowledgeKept": [
-    "one Seed anchor with distinct Root and Shoot rules",
-    "trunk and branch radius/load continuity",
-    "age and history change topology rather than uniformly scaling an adult tree",
-    "environment fields are separated: light above ground, water below ground",
-    "roots, trunk, branches and leaves remain 3D function-generated organs"
+    "one Seed anchor with distinct Root and Shoot grammars",
+    "Root and Shoot grow in the same life passes but do not mirror each other",
+    "resource availability participates in later topology",
+    "trunk/branch/root radii are evaluated from downstream support and life state",
+    "terminal shoot remains a meristematic growth zone instead of a hard cap",
+    "environment fields are separated: light above ground, water/rock/soil below ground",
+    "species-specific leaves, roots, flowers and fruits remain Score decisions rather than universal presets"
   ],
   "boundaries": [
     "The exact KuKo 2D teacher remains frozen as the regression anchor.",
-    "Projection-Locked Lift R01 remains a bridge for validating the 2D interpretation; it is not the native 3D answer.",
-    "Native 3D R02 establishes direct 3D Bud/Field decisions.",
-    "Native 3D R03 adds local perception volume, spatial hash occupancy feedback and support back-propagation.",
-    "Camera orientation never participates in generation in R02 or R03.",
-    "KuKo BR/ANG are branching voices, not species facts.",
-    "R03 is not assigned to Pandanus tectorius or any species.",
-    "Resource/hormone signaling, physical wind propagation and species-calibrated bud phyllotaxis remain incomplete."
+    "Projection-Locked Lift R01 remains a bridge for validating the 2D interpretation.",
+    "Native 3D R03 remains the spatial branching grammar anchor.",
+    "Living R04 adds resource flow, root/shoot coupling and a continuous evaluation surface without changing the frozen teachers.",
+    "The implicit skin is a derived evaluation surface; the life graph and resource state remain the truth layer.",
+    "R04 is not assigned to Pandanus tectorius or any other species.",
+    "Generic R04 leaves only prove the organ/resource interface and are not a species leaf model.",
+    "Flowers/fruits, true hormone transport, hydraulic resistance and physical wind propagation remain incomplete."
   ]
 }
