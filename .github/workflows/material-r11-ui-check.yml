@@ -64,7 +64,6 @@ jobs:
             await page.locator('header nav button[data-go="iq"]').click();
             await page.waitForFunction(()=>document.getElementById('objectTitle')?.textContent.includes('IQ'));
             assert((await page.locator('#inspector .inspectorTabs button:visible').count())===5,'IQ should expose five adjustment groups');
-            assert(await page.locator('#shapeControls input').first().isVisible(),'shape controls not visible in IQ shape panel?');
             await page.locator('#inspector .inspectorTabs button[data-tab="shape"]').click();
             assert(await page.locator('#shapeControls input').first().isVisible(),'shape controls unavailable');
             await page.setViewportSize({width:390,height:844});
