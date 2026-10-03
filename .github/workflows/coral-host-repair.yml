@@ -1,0 +1,100 @@
+name: Coral source host repair
+on:
+  push:
+    branches: [work/coral-original-recovery-20261003]
+    paths: [.github/workflows/coral-host-repair.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  verify-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify source-host bytes
+        shell: python
+        run: |
+          from pathlib import Path
+          import hashlib,json
+          expected={'index.html':'4faa56edfc793f00d8ced91a657f5a8b74675ab0ea7f1660d3d8149bf6f6afac','runtime.js':'a619ea4154349bcd810d43d97974ab997d3ba9b662682e8d68acfcf7ad746890'}
+          for name,h in expected.items():
+              b=(Path('coral-host-recovery')/name).read_bytes()
+              assert hashlib.sha256(b).hexdigest()==h,(name,hashlib.sha256(b).hexdigest())
+              assert b'float map(' not in b and b'data:video' not in b and b'input type="file"' not in b
+          Path('/tmp/coral-host-src').mkdir(exist_ok=True)
+          import shutil
+          for name in ['index.html','runtime.js','qa_host.py']:shutil.copyfile(Path('coral-host-recovery')/name,Path('/tmp/coral-host-src')/name)
+          Path('/tmp/coral-host-src/MANIFEST.json').write_text(json.dumps(expected,indent=2))
+      - name: Install browser test tools
+        run: |
+          python -m pip install playwright==1.55.0
+          python -m playwright install --with-deps chromium
+      - name: Test real HTTP loading before publication
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 > /tmp/coral-http.log 2>&1 &
+          python coral-host-recovery/qa_host.py http://127.0.0.1:8765/coral-host-recovery/ /tmp/coral-host-evidence/prepublish
+      - name: Publish only the coral host and old-entry redirects
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          git checkout -B coral-host-publish origin/gh-pages
+          current=$(git hash-object coral-mother-core-seed-r01/index.html)
+          if [ "$current" != "3598bfa2b37391b93c4d9040ebe8af1bff6a556c" ]; then
+            echo "Coral hub changed concurrently: $current. Stop instead of overwriting it."
+            exit 1
+          fi
+          mkdir -p coral-mother-core-seed-r01/archive-before-20261003
+          cp coral-mother-core-seed-r01/index.html coral-mother-core-seed-r01/archive-before-20261003/index.html
+          cp coral-mother-core-seed-r01/rosette-foliose-r03/index.html coral-mother-core-seed-r01/archive-before-20261003/rosette-static.html
+          cp /tmp/coral-host-src/index.html coral-mother-core-seed-r01/index.html
+          cp /tmp/coral-host-src/runtime.js coral-mother-core-seed-r01/runtime.js
+          cp /tmp/coral-host-src/MANIFEST.json coral-mother-core-seed-r01/SOURCE_HOST_MANIFEST.json
+          python - <<'PY'
+          from pathlib import Path
+          for name in ['coral-mother-core','coral-mother-local-runner']:
+              d=Path(name);d.mkdir(exist_ok=True)
+              d.joinpath('index.html').write_text('''<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Coral Mother</title><body style="background:#07110f;color:#edf4ef;font-family:system-ui"><p>正在返回 Coral Mother 总台，不需要导入文件。</p><a style="color:#c5ddcf" href="../coral-mother-core-seed-r01/">返回总台</a><script>location.replace('../coral-mother-core-seed-r01/?v=original-recovery-20261003'+location.hash);</script></body></html>''')
+          Path('coral-mother-core-seed-r01/rosette-foliose-r03/index.html').write_text('''<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Coral Mother · 花盘原程序</title><body style="background:#07110f;color:#edf4ef;font-family:system-ui"><p>正在返回总台内的花盘原程序。</p><a style="color:#c5ddcf" href="../#view=rosette">返回总台</a><script>const p=new URLSearchParams(location.hash.slice(1));p.set('view','rosette');location.replace('../?v=original-recovery-20261003#'+p.toString());</script></body></html>''')
+          PY
+          git config user.name 'Coral Mother Recovery'
+          git config user.email 'actions@users.noreply.github.com'
+          git add coral-mother-core-seed-r01/index.html coral-mother-core-seed-r01/runtime.js coral-mother-core-seed-r01/SOURCE_HOST_MANIFEST.json coral-mother-core-seed-r01/archive-before-20261003/ coral-mother-core-seed-r01/rosette-foliose-r03/index.html coral-mother-core/index.html coral-mother-local-runner/index.html
+          git commit -m "fix(coral): direct source-link replay, no screenshot substitution or manual import"
+          git push origin HEAD:gh-pages
+          git rev-parse HEAD > /tmp/coral-host-evidence/PUBLISHED_COMMIT.txt
+      - name: Wait for matching public bytes, then verify public host
+        run: |
+          python - <<'PY'
+          from urllib.request import urlopen,Request
+          from pathlib import Path
+          import time,hashlib,json
+          manifest=json.loads(Path('/tmp/coral-host-src/MANIFEST.json').read_text())
+          base='https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-core-seed-r01/'
+          success=False
+          for attempt in range(50):
+              try:
+                  ok=True
+                  for n,h in manifest.items():
+                      b=urlopen(Request(base+n+'?verify='+str(time.time_ns()),headers={'Cache-Control':'no-cache'}),timeout=20).read()
+                      ok=ok and hashlib.sha256(b).hexdigest()==h
+                  if ok:success=True;break
+              except Exception as e:print('Waiting for public host:',str(e),flush=True)
+              time.sleep(10)
+          assert success,'Matching public deployment did not arrive; not claiming it works.'
+          Path('/tmp/coral-host-evidence/PUBLIC_BYTES.json').write_text(json.dumps({'matched':True,'files':manifest},indent=2))
+          PY
+          python /tmp/coral-host-src/qa_host.py https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-core-seed-r01/ /tmp/coral-host-evidence/public
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coral-direct-source-host-evidence
+          path: /tmp/coral-host-evidence/
+          retention-days: 30
