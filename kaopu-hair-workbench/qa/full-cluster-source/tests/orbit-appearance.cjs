@@ -120,9 +120,15 @@ module.exports = async function orbitAppearance(browser, url, outDir, check) {
     return Math.abs(s.angles[1] - from.angles[1]) > minimum;
   }, { module, from, minimum });
   const select = async module => {
-    await page.evaluate(module => platform.select(module), module); currentModule = module;
-    await wait(module => platform.module === module, module);
-    if (module === 'rabbit') await waitRabbit(await page.evaluate(() => workbench.candidate));
+    await page.evaluate(async module => { platform.select(module); if (module === 'rabbit') { await workbench.ensureStarted(); await workbench.ensureTeacher(); } }, module); currentModule = module;
+    await wait(module => platform.module === module && (module === 'anemone' ? anemone.ready :
+      workbench.ready.teacher && workbench.ready.candidate && workbench.frameStats.teacher?.frames >= 2 && workbench.frameStats.candidate?.frames >= 2), module);
+    if (module === 'rabbit') {
+      await wait(() => window.rabbitUI?.setOrbit && window.rabbitAppearance?.setWidth &&
+        ['teacher', 'candidate'].every(role => document.getElementById(role + 'Frame').contentWindow.runtime?.renderer.loaded));
+      await waitRabbit(await page.evaluate(() => workbench.candidate));
+    }
+    await installTrace();
   };
   const center = async module => {
     const locator = module === 'anemone' ? page.locator('#anemoneCanvas') : page.frameLocator('#candidateFrame').locator('#canvasGL');
@@ -137,10 +143,13 @@ module.exports = async function orbitAppearance(browser, url, outDir, check) {
     report.touchTrace.push({ type, label, points, ...await page.evaluate(() => ({ scrollX, scrollY, scale: visualViewport?.scale || 1 })) });
   };
   const installTrace = async () => page.evaluate(() => {
-    window.__orbitQaEvents = [];
+    window.__orbitQaEvents ||= [];
     for (const module of ['anemone', 'rabbit']) {
+      if (module === 'anemone' ? !window.anemone?.ready : !window.workbench?.ready.candidate) continue;
       const w = module === 'anemone' ? window : document.getElementById('candidateFrame').contentWindow;
       const canvas = module === 'anemone' ? anemone.renderer.canvas : w.document.getElementById('canvasGL');
+      if (canvas.__orbitQaTraceInstalled) continue;
+      canvas.__orbitQaTraceInstalled = true;
       const read = () => module === 'anemone' ? { camera: anemone.state.camera, orbit: anemone.orbit } : { camera: { angles: w.runtime.state().angles, size: w.runtime.state().size }, orbit: w.runtime.orbit };
       // Capture and bubble observe one native event, removing RAF race ambiguity.
       canvas.addEventListener('pointerdown', e => { e.__qaBefore = read(); }, true);
@@ -168,11 +177,10 @@ module.exports = async function orbitAppearance(browser, url, outDir, check) {
     page.on('request', r => { if (!/^(data|blob):/.test(r.url())) report.requests.push(r.url()); });
     page.on('requestfailed', r => report.requestFailures.push({ phase: sourcePhase, url: r.url(), error: r.failure()?.errorText }));
     await page.goto(url, { waitUntil: 'load', timeout: 120000 });
-    await page.waitForFunction(() => window.anemone?.ready && window.workbench?.ready.teacher && workbench.ready.candidate &&
-      window.rabbitUI?.setOrbit && window.rabbitAppearance?.setWidth && typeof anemone.setOrbit === 'function' &&
-      ['teacher', 'candidate'].every(role => document.getElementById(role + 'Frame').contentWindow.runtime?.renderer.loaded) &&
-      workbench.frameStats.teacher?.frames >= 2 && workbench.frameStats.candidate?.frames >= 2, null, { timeout: 120000 });
-    await page.evaluate(() => { platform.select('anemone'); anemone.pauseOrbit(); anemone.pause(); anemone.seek(0); });
+    await page.waitForFunction(() => window.platform?.module === 'home' && window.catalogUI, null, { timeout: 120000 });
+    await page.evaluate(() => platform.select('anemone'));
+    await page.waitForFunction(() => window.anemone?.ready && typeof anemone.setOrbit === 'function', null, { timeout: 120000 });
+    await page.evaluate(() => { anemone.pauseOrbit(); anemone.pause(); anemone.seek(0); });
     currentModule = 'anemone'; await installTrace();
     if (phase === 'mobile') cdp = await context.newCDPSession(page);
   };
@@ -244,7 +252,7 @@ module.exports = async function orbitAppearance(browser, url, outDir, check) {
     assert('width1 original default renders exact canonical teacher pixels', candidateStart.state.maskWidth === 1 && equal(rabbitShape(candidateStart.state), rabbitShape(teacherStart.state)) && candidateStart.pixels.hash === teacherStart.pixels.hash && [candidateStart, teacherStart].every(x => x.pixels.width === 600 && x.pixels.height === 600), { teacher: teacherStart.pixels, candidate: candidateStart.pixels });
     const defaultExport = await page.evaluate(() => workbench.exportState());
     const teacherNormals = await normals('teacher', 'frozen teacher baseline');
-    await page.locator('#rabbitControlsToggle').click();
+    // Common appearance now stays on the first screen, outside the drawer.
     const colors = [];
     for (const color of ['cream', 'ivory', 'graphite', 'honey', 'lavender', 'teal']) {
       const before = await page.evaluate(() => document.getElementById('candidateFrame').contentWindow.runtime.frameCount);
@@ -284,6 +292,7 @@ module.exports = async function orbitAppearance(browser, url, outDir, check) {
     await page.evaluate(() => { rabbitAppearance.setPalette('teal'); rabbitAppearance.setWidth(1.4); rabbitAppearance.setDensity(1.5); });
     await waitRabbit(await page.evaluate(() => workbench.candidate));
     const roundtripFrame = await probe('rabbit', 'edited JSON source', 'candidate', true);
+    await page.locator('#rabbitControlsToggle').click();
     const downloadPromise = page.waitForEvent('download'); await page.locator('#exportButton').click();
     const download = await downloadPromise, jsonPath = path.join(outDir, 'rabbit-appearance-v2.json'); await download.saveAs(jsonPath);
     const exported = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));

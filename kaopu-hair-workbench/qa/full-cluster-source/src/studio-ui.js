@@ -21,7 +21,7 @@ for(const id of ['speciesKuko','speciesRabbit'])learning.querySelector('.drawer-
 learning.querySelector('.drawer-content').append($('clusterBaseline'));
 function sync(){if(!anemone.ready)return;$('studioZoom').value=anemone.state.camera.distance;$('studioZoomValue').textContent=anemone.state.camera.distance.toFixed(2);$('studioTranslucency').value=anemone.material.translucency;$('studioTranslucencyValue').textContent=Math.round(anemone.material.translucency*100)+'%';}
 const drawers=[reference,controls,learning];function closeAll(){drawers.forEach(d=>{if(d.open)d.close()});}
-for(const [id,d]of [['referenceToggle',reference],['controlsToggle',controls],['learningToggle',learning]])$(id).onclick=()=>{const was=d.open;closeAll();anemone.clearPointers();if(!was){sync();d.showModal();}};
+for(const [id,d]of [['referenceToggle',reference],['controlsToggle',controls],['learningToggle',learning]])$(id).onclick=()=>{const was=d.open;closeAll();anemone.clearPointers();if(!was){if(d===reference)for(const image of d.querySelectorAll('img[data-reference-src]')){image.src=image.dataset.referenceSrc;delete image.dataset.referenceSrc;}sync();d.showModal();}};
 $('studioZoom').oninput=e=>{anemone.pauseOrbit();anemone.renderer.camera.distance=Number(e.target.value);anemone.redraw();sync();};$('studioTranslucency').oninput=e=>{anemone.setMaterial({translucency:Number(e.target.value)});sync();};
 window.addEventListener('anemonecamera',sync);window.addEventListener('anemonestate',sync);for(const id of ['anemoneCamera','anemoneReset','clusterMacro'])$(id).addEventListener('click',sync);
 for(const id of ['speciesKuko','speciesRabbit','speciesAnemone'])$(id).addEventListener('click',closeAll);

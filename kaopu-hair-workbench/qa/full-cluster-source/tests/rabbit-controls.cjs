@@ -196,7 +196,8 @@ module.exports = async function rabbitControls(browser, url, outDir, check) {
     const landscape = l.viewport.width > l.viewport.height;
     assert(name + ' candidate fills first screen', l.module === 'rabbit' && l.iframe.top >= -1 && l.iframe.top <= 95 &&
       l.iframe.bottom <= l.viewport.height + 1 && l.iframe.left >= -1 && l.iframe.right <= l.viewport.width + 1 &&
-      l.iframe.width >= l.viewport.width * (landscape ? .72 : .92) && l.iframe.height >= l.viewport.height * (landscape ? .45 : .6), l);
+      l.iframe.width >= (landscape ? Math.max(300, l.viewport.width * .5) : l.viewport.width * .92) &&
+      l.iframe.height >= (landscape ? l.viewport.height * .45 : Math.max(300, l.viewport.height * .4)), l);
     assert(name + ' no document or iframe overflow', !Object.values(l.overflow).some(Boolean) && close(l.viewport.scale, 1, 1e-4), l.overflow);
     assert(name + ' teacher and optional controls initially hidden', !l.teacherVisible && l.drawers.every(d => d.exists && !d.open), l);
     assert(name + ' primary actions stay in first screen', l.controls.every(c => c.visible && c.bounds.top >= -1 && c.bounds.bottom <= l.viewport.height + 1 &&
@@ -276,13 +277,14 @@ module.exports = async function rabbitControls(browser, url, outDir, check) {
     page.on('request', request => { if (!/^(data|blob):/.test(request.url())) report.requests.push(request.url()); });
     page.on('requestfailed', request => report.requestFailures.push({ phase: sourcePhase, url: request.url(), error: request.failure()?.errorText }));
     await page.goto(url, { waitUntil: 'load', timeout: 120000 });
+    await page.waitForFunction(() => window.platform?.module === 'home' && window.catalogUI, null, { timeout: 120000 });
+    await page.evaluate(async () => { platform.select('rabbit'); await workbench.ensureStarted(); await workbench.ensureTeacher(); });
     await page.waitForFunction(() => window.workbench?.ready.teacher && workbench.ready.candidate && window.platform?.select &&
       window.rabbitUI && typeof rabbitUI.clearPointers === 'function' && typeof rabbitUI.sync === 'function' &&
       ['teacher', 'candidate'].every(role => {
         const r = document.getElementById(role + 'Frame')?.contentWindow?.runtime;
         return r?.renderer.loaded && typeof r.pointerCount === 'number' && typeof r.clearPointers === 'function';
       }), null, { timeout: 120000 });
-    await page.evaluate(() => platform.select('rabbit'));
     await page.waitForFunction(() => platform.module === 'rabbit' && workbench.frameStats.candidate?.frames >= 2);
     await waitState(await page.evaluate(() => workbench.candidate));
     await page.evaluate(() => {
@@ -301,13 +303,15 @@ module.exports = async function rabbitControls(browser, url, outDir, check) {
     const baseline = await layout('portrait-390x844'), teacherBaseline = await probe(false, 'teacher');
     report.baseline = { candidate: baseline.state, teacher: teacherBaseline.state, pixels: baseline.pixels };
     assert('baseline rabbit and original parameters match teacher', baseline.state.mesh === 'rabbit' && equal(baseline.state, teacherBaseline.state), report.baseline);
-    assert('original shape controls remain inside optional dialog', await page.evaluate(() => {
+    assert('original advanced controls remain in dialog and common appearance is first-screen', await page.evaluate(() => {
       const d = document.getElementById('rabbitControlsDrawer');
-      const keys = ['layers', 'hairLength', 'curlyness', 'shellTextureSize', 'finTextureSize', 'persistence', 'lacunarity',
+      const keys = ['layers', 'curlyness', 'shellTextureSize', 'finTextureSize', 'persistence', 'lacunarity',
         'lightX', 'lightY', 'lightZ', 'lightIntensity', 'ambientStrength', 'diffusePower', 'specularPower', 'combRadius'];
       return keys.every(key => ['range-', 'number-'].every(prefix => d.contains(document.getElementById(prefix + key)))) &&
         ['renderFur', 'renderFins', 'renderShells', 'finOpacity', 'proceduralText'].every(key => d.contains(document.getElementById('toggle-' + key))) &&
-        ['furColor', 'resetAll', 'sourceReset'].every(id => d.contains(document.getElementById(id)));
+        ['resetAll', 'sourceReset'].every(id => d.contains(document.getElementById(id))) &&
+        ['range-hairLength', 'number-hairLength', 'furColor', 'rabbitMaskWidth', 'rabbitVisualDensity'].every(id =>
+          document.getElementById('rabbitQuickPanel').contains(document.getElementById(id)));
     }));
     await orbit('single-finger orbit');
     await screenshot('mobile-orbit', 'candidate');
@@ -402,6 +406,7 @@ module.exports = async function rabbitControls(browser, url, outDir, check) {
     assert('zoom range updates original frame and image', close(afterZoom.state.size, zoom) && afterZoom.pixels.hash !== rangeBaseline.pixels.hash,
       { zoom, state: afterZoom.state, pixels: afterZoom.pixels });
     immutable('zoom slider preserves original shape', rangeBaseline, afterZoom);
+    await drawer('Controls', false);
     const hair = await dragRange('#range-hairLength', .7, 'original hair-length range');
     await waitState({ hairLength: hair }, afterZoom.frames);
     const altered = await probe(true);
@@ -411,6 +416,7 @@ module.exports = async function rabbitControls(browser, url, outDir, check) {
     await screenshot('native-range-controls');
     const editedExport = await page.evaluate(() => JSON.parse(JSON.stringify(workbench.exportState())));
     const beforeImportFrames = altered.frames;
+    await drawer('Controls', true);
     const immediate = await page.evaluate(async saved => {
       await workbench.importState(saved);
       return { open: document.getElementById('rabbitControlsDrawer').open,

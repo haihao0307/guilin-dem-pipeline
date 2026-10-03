@@ -179,7 +179,7 @@
   workbench.resetAll = resetAll;
   const originalLoadMesh = loadMesh;
   loadMesh = function (...args) {
-    if (!loadedMesh.teacher || !loadedMesh.candidate) return originalLoadMesh(...args);
+    if (!loadedMesh.candidate || (workbench.teacherStarted && !loadedMesh.teacher)) return originalLoadMesh(...args);
     const result = originalLoadMesh(...args);
     candidate.maskWidth = 1;
     post('candidate', 'apply', {values: {maskWidth: 1}});

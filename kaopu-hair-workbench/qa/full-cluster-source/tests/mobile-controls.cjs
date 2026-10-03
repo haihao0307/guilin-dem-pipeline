@@ -186,9 +186,11 @@ module.exports = async function mobileControls(browser, url, outDir, check) {
     });
     page.on('requestfailed', request => report.requestFailures.push({ url: request.url(), error: request.failure()?.errorText }));
     await page.goto(url, { waitUntil: 'load', timeout: 120000 });
+    await page.waitForFunction(() => window.platform?.module === 'home' && window.catalogUI, null, { timeout: 120000 });
+    // Catalog/lazy startup is independently tested; this suite requests only Anemone.
+    await page.evaluate(() => platform.select('anemone'));
     await page.waitForFunction(() => window.anemone?.ready && window.platform?.module === 'anemone' &&
       typeof anemone.redraw === 'function' && typeof anemone.pointerCount === 'number', null, { timeout: 120000 });
-    // Do not select a module here: this must catch a broken default entry.
     await page.evaluate(() => { anemone.pause(); anemone.seek(0); });
     cdp = await context.newCDPSession(page);
     await page.evaluate(() => {

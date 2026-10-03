@@ -1,5 +1,5 @@
 (function(){'use strict';
-const $=id=>document.getElementById(id),source=window.KUKO_TEACHER_SOURCE,errors=[],renderers=[];let time=0,paused=false,active=true,frame=null,last=null,failed=false,width=960,mode='compare',experiment={current:.65,noise:.6,lengthScale:1,variant:'anemone',palette:'green'};
+const $=id=>document.getElementById(id),source=window.KUKO_TEACHER_SOURCE,errors=[],renderers=[];let time=0,paused=false,active=false,frame=null,last=null,failed=false,width=960,mode='compare',experiment={current:.65,noise:.6,lengthScale:1,variant:'anemone',palette:'green'};
 const palettes={green:['5C7A48','A6CA64','AC6AB7'],red:['A34C3F','E99177','F4B5A4'],blue:['565769','8CBBCE','CFDFE3'],yellow:['AE722B','E3B657','F5E7C4']};const rgb=h=>[0,2,4].map(i=>parseInt(h.slice(i,i+2),16)/255);
 const experimentDefaults=Object.freeze({...experiment});const lengths=[1.9,1.7,2.05,1.85,1.55,2.1,1.6,1.95,1.75];const roots=Array.from({length:9},(_,i)=>{const a=(i-1)*Math.PI/4;return[i?1.1*Math.cos(a):0,i?1.1*Math.sin(a):0,lengths[i],i*.79+.3]});
 const vertex='#version 300 es\nvoid main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));gl_Position=vec4(p*2.-1.,0.,1.);}';
@@ -20,7 +20,7 @@ pixels(){const g=this.gl,p=new Uint8Array(this.canvas.width*this.canvas.height*4
 function ui(){ $('kukoClock').textContent=time.toFixed(2)+' s';$('kukoTime').value=time%12;$('kukoPlay').textContent=paused?'▶ 播放':'Ⅱ 暂停';$('kukoStatus').textContent=failed?'运行异常':paused?'WebGL 2 · 已暂停':'WebGL 2 · 原版实时运行';for(let i=0;i<renderers.length;i++)$(i?'kukoCopyStats':'kukoTeacherStats').textContent=width+'×'+width*9/16+' · WEBGL 2 · '+renderers[i].frames+' FRAMES · t='+time.toFixed(3);}
 function draw(){if(failed||!active)return;try{for(const r of renderers)r.draw();ui();}catch(e){fatal(e);}}
 function tick(now){frame=null;if(!active||paused||failed)return;if(last!==null)time+=(now-last)/1000;last=now;draw();schedule();}
-function schedule(){if(active&&!paused&&!failed&&frame===null)frame=requestAnimationFrame(tick);}
+function schedule(){if(active&&renderers.length===2&&!paused&&!failed&&frame===null)frame=requestAnimationFrame(tick);}
 function pause(value=true){paused=!!value;stop();ui();schedule();}
 function seek(t){if(!Number.isFinite(t)||t<0||t>1e6)throw Error('播放时间越界');time=t;last=null;draw();}
 function reset(){pause(true);seek(0);}
@@ -31,8 +31,8 @@ function experimentUI(){document.querySelectorAll('[data-study-color]').forEach(
 function setExperiment(value){const next=validateExperiment({...experiment,...value});experiment=next;experimentUI();draw();}
 function importState(s){if(s?.format!=='kaopu-kuko-day114'||![1,2].includes(s.version)||!Number.isFinite(s.time)||s.time<0||s.time>1e6||typeof s.paused!=='boolean'||![640,960].includes(s.width)||!['compare','focus'].includes(s.mode)||Object.keys(s).some(k=>!['format','version','time','paused','width','mode','experiment'].includes(k)))throw Error('播放状态格式或范围无效');const next=validateExperiment(s.version===1?experimentDefaults:s.experiment);stop();experiment=next;experimentUI();time=s.time;paused=s.paused;width=s.width;setMode(s.mode);$('kukoResolution').value=width;draw();schedule();}
 function setMode(v){mode=v;$('kukoViews').classList.toggle('focus',v==='focus');$('kukoCompare').classList.toggle('active',v==='compare');$('kukoFocus').classList.toggle('active',v==='focus');}
-const base=window.platform;function rabbitOff(){if(!window.workbench?.ready.teacher||!workbench.ready.candidate||(workbench.frameStats.teacher?.frames||0)<2||(workbench.frameStats.candidate?.frames||0)<2)return;for(const role of ['teacher','candidate'])$(role+'Frame').contentWindow.postMessage({kaopu:true,type:'active',active:false},'*');}
-function select(module){if(module==='kuko'){base.select('rabbit');active=true;document.body.dataset.module='kuko';$('speciesRabbit').classList.remove('active');$('speciesAnemone').classList.remove('active');$('speciesKuko').classList.add('active');rabbitOff();last=null;draw();schedule();}else{active=false;stop();$('speciesKuko').classList.remove('active');base.select(module);}}
+const base=window.platform;function rabbitOff(){for(const role of ['teacher','candidate'])$(role+'Frame').contentWindow.postMessage({kaopu:true,type:'active',active:false},'*');}
+function select(module){if(module==='kuko'){base.select('home');active=true;initialize();document.body.dataset.module='kuko';$('speciesRabbit').classList.remove('active');$('speciesAnemone').classList.remove('active');$('speciesKuko').classList.add('active');rabbitOff();last=null;draw();schedule();}else{active=false;stop();$('speciesKuko').classList.remove('active');base.select(module);}}
 window.platform={select,get module(){return active?'kuko':base.module;},get errors(){return [...base.errors,...errors];}};
 $('speciesRabbit').onclick=()=>select('rabbit');$('speciesAnemone').onclick=()=>select('anemone');$('speciesKuko').onclick=()=>select('kuko');window.addEventListener('message',e=>{if(active&&e.data?.kaopu&&['frame','ready'].includes(e.data.type))rabbitOff();});
 $('kukoPlay').onclick=()=>pause(!paused);$('kukoReset').onclick=()=>{reset();pause(false)};$('kukoTime').oninput=e=>{pause();seek(Number(e.target.value))};$('kukoCompare').onclick=()=>setMode('compare');$('kukoFocus').onclick=()=>setMode('focus');$('kukoResolution').onchange=e=>{width=Number(e.target.value);draw()};
@@ -41,5 +41,5 @@ document.addEventListener('visibilitychange',()=>{stop();if(!document.hidden)sch
 window.kuko={source,fragment,vertex,experimentFragment,preDerivativeFragment,roots,renderers,errors,setExperiment,get experiment(){return{...experiment}},get ready(){return renderers.length===2&&!failed},get state(){return snapshot()},draw,pause,seek,reset,importState,exportState:snapshot,select,setMode,pixels:()=>renderers.map(r=>r.pixels())};
 document.querySelectorAll('[data-study-color]').forEach(b=>b.onclick=()=>setExperiment({palette:b.dataset.studyColor}));
 for(const key of ['current','noise','lengthScale'])$('study-'+key).oninput=e=>setExperiment({[key]:Number(e.target.value)});$('studyVariant').onchange=e=>setExperiment({variant:e.target.value});$('studyReset').onclick=()=>setExperiment(experimentDefaults);experimentUI();
-try{renderers.push(new View($('kukoTeacher')),new View($('kukoCopy'),true));select('kuko');}catch(e){fatal(e);}
+function initialize(){if(renderers.length||failed)return;try{renderers.push(new View($('kukoTeacher')),new View($('kukoCopy'),true));}catch(e){fatal(e);}}
 })();
