@@ -36,7 +36,7 @@ jobs:
               function f(t){n++;worst=Math.max(worst,t-prev);prev=t;if(t-s>=2500)resolve({fps:n*1000/(t-s),n,worst,perf:KAOPU10.performance()});else requestAnimationFrame(f)}
               requestAnimationFrame(f);
             }));
-            await page.locator('#rotate').click();await wait(400);r.after=await page.evaluate(()=>KAOPU10.performance());r.direct=await page.evaluate(()=>KAOPU10.rasterBench(3));return r;
+            r.directVisible=await page.evaluate(()=>KAOPU10.rasterBench(1));await page.locator('#rotate').click();await wait(400);r.after=await page.evaluate(()=>KAOPU10.performance());return r;
           }
           (async()=>{const browser=await chromium.launch({headless:true,args:['--no-sandbox','--enable-unsafe-swiftshader','--use-angle=swiftshader']});try{
             const d=await browser.newPage({viewport:{width:1440,height:960}});await d.goto(url);const desktop=await measure(d);
