@@ -1,0 +1,42 @@
+{
+  "version": "R09",
+  "environment": "Local Chromium + ANGLE SwiftShader; identical camera/time/settings; not a public-host or physical-device test",
+  "source_sha256": {
+    "app.js": "b67c666a8fb2651b303a457ab48a3d89eacea213efba1cf74005b11b1ab2551e",
+    "iq-merged.frag": "af46bc0291e305deac8fc919d814204970b2f09e495668b226eb179046d0c0b4",
+    "wet-material.frag": "4f4eddeaf2aa71a75fa50e5de975289da94a4e6f2ddeb791fb1dc9b5a97ca0d7"
+  },
+  "original_R07_comparison_960x540": {
+    "wet_original_01": {"different_pixels": 0, "max_channel_delta_8bit": 0},
+    "iq_original_03": {"different_pixels": 0, "max_channel_delta_8bit": 0},
+    "dark_original_02": {"different_pixels": 2, "max_channel_delta_8bit": 1}
+  },
+  "three_pose_comparison_320x180": {
+    "wet": "zero difference at all three measured poses",
+    "iq": "zero difference at all three measured poses",
+    "dark": "zero difference at all three measured poses"
+  },
+  "ten_color_gallery": {
+    "wet": {"count": 10, "unique_images": 10, "original_score_unchanged": true, "original_buffer_restored": [320,180]},
+    "iq": {"count": 10, "unique_images": 10, "original_score_unchanged": true, "original_buffer_restored": [320,180]},
+    "console_errors": [],
+    "gl_error_codes": [0,0],
+    "note": "Gallery renders at 384x216; this test used a 320x180 result buffer before and after gallery. Published main views remain 960x540."
+  },
+  "remaining_controls": {
+    "key_light_changes_rendering": true,
+    "fill_light_changes_rendering": true,
+    "wet_shared_two_lights": true,
+    "mobile_390_viewport_no_overflow": true,
+    "functions_collapsed_at_bottom": true,
+    "no_iframes": true,
+    "page_errors": [],
+    "gl_error_codes": [0,0]
+  },
+  "limits": [
+    "No claim of identical output on every GPU, every view, or all values.",
+    "The old 02 dark appearance has two one-step pixel differences in the measured full-resolution frame; it is not labeled bit-identical.",
+    "390px viewport is not a physical phone.",
+    "Actual fixed-public-URL proof is stored separately after CI completion."
+  ]
+}
