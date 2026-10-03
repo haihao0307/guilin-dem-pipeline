@@ -1,0 +1,117 @@
+name: KAOPU Geography R16.5 full package
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - 'kaopu-geography-workbench/package-r16-5.trigger'
+permissions:
+  contents: write
+  actions: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PACKAGE_NAME: KAOPU_GEOGRAPHY_R16_5_FULL_20261004
+      QA_ARTIFACT_ID: '11284859153'
+      PUBLIC_URL: 'https://haihao0307.github.io/guilin-dem-pipeline/kaopu-geography-workbench/?ui=R16.5'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+      - name: Verify frozen R16.5 workbench
+        run: |
+          set -euo pipefail
+          grep -q 'data-ui-version="R16.5"' kaopu-geography-workbench/index.html
+          grep -q "version:'R16.5'" kaopu-geography-workbench/runtime.js
+          ! grep -q "openScene('underwater');" kaopu-geography-workbench/runtime.js
+          grep -q 'value="0.01"' kaopu-geography-workbench/index.html
+          grep -q 'value="0.02"' kaopu-geography-workbench/index.html
+          grep -q 'value="0.05"' kaopu-geography-workbench/index.html
+      - name: Assemble full stable package
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          rm -rf _kaopu_package
+          mkdir -p "_kaopu_package/$PACKAGE_NAME/kaopu-geography-workbench"
+          mkdir -p "_kaopu_package/$PACKAGE_NAME/.github/workflows"
+          mkdir -p "_kaopu_package/$PACKAGE_NAME/QA"
+          rsync -a             --exclude 'releases/'             --exclude 'package-r16-5.trigger'             kaopu-geography-workbench/ "_kaopu_package/$PACKAGE_NAME/kaopu-geography-workbench/"
+          cp .github/workflows/kaopu-geography-r16-check.yml "_kaopu_package/$PACKAGE_NAME/.github/workflows/"
+          cp .github/workflows/kaopu-geography-r16-5-package.yml "_kaopu_package/$PACKAGE_NAME/.github/workflows/"
+          curl -fL             -H "Authorization: Bearer $GH_TOKEN"             -H "Accept: application/vnd.github+json"             "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$QA_ARTIFACT_ID/zip"             -o "_kaopu_package/$PACKAGE_NAME/QA/KAOPU_R16_5_PUBLIC_QA_PASSED.zip"
+          unzip -q "_kaopu_package/$PACKAGE_NAME/QA/KAOPU_R16_5_PUBLIC_QA_PASSED.zip"             -d "_kaopu_package/$PACKAGE_NAME/QA/public_qa_unpacked"
+          cat > "_kaopu_package/$PACKAGE_NAME/FULL_PACKAGE_MANIFEST.md" <<EOF
+          # KAOPU Geography R16.5 — Full Stable Package
+
+          Package date: 2026-10-04
+          Frozen baseline: R16.5
+          Source branch at packaging: gh-pages
+          Packaging trigger commit: $GITHUB_SHA
+          Public workbench: $PUBLIC_URL
+
+          ## Gram anchors
+          - Entry page is the six-card overview workbench.
+          - Scene entry occurs only after clicking a card.
+          - Six accepted scene shaders, geometry/material behavior and established grain are frozen.
+          - Speed gears: 0.01x, 0.02x, 0.05x, 0.10x, 0.20x, 0.25x, 0.35x, 0.50x, 0.75x, 1x, 1.5x, 2x.
+          - Cave Passage II default: 0.25x. Other scenes default: 0.50x.
+          - RME4 Crater remains intact. Underwater Crater remains a separate derived entry.
+          - Reference video is optional and does not drive world time.
+          - Mobile layout is canvas-first; desktop retains wide-screen controls/layout.
+
+          ## Package contents
+          - Complete kaopu-geography-workbench source
+          - Six preview images
+          - Runtime, shaders, responsive CSS
+          - Public QA scripts
+          - GitHub QA workflow
+          - Packaging workflow
+          - Successful R16.5 public QA artifact, both original ZIP and unpacked evidence
+
+          ## R16.5 public QA
+          Workflow run: 37154267853
+          Artifact ID: 11284859153
+          Artifact digest: sha256:d5b8c2b0e84af054a8e64b750a667b9209ae26010a2cd05500c6682a5b576b82
+          Result: PASS
+          Mobile scope: browser viewport QA; not a physical-phone test.
+
+          ## Rights
+          Original source attribution and license notes remain in README.md and source comments.
+          Packaging, renaming or KAOPU derivation does not remove upstream license restrictions.
+          EOF
+          printf '%s\n' "$PUBLIC_URL" > "_kaopu_package/$PACKAGE_NAME/PUBLIC_URL.txt"
+          find "_kaopu_package/$PACKAGE_NAME" -type f -print0 | sort -z | xargs -0 sha256sum > "_kaopu_package/$PACKAGE_NAME/SHA256SUMS.txt"
+          (cd _kaopu_package && zip -qr "../$PACKAGE_NAME.zip" "$PACKAGE_NAME")
+          sha256sum "$PACKAGE_NAME.zip" > "$PACKAGE_NAME.zip.sha256"
+          ls -lh "$PACKAGE_NAME.zip"
+      - name: Commit full package archive to GitHub
+        run: |
+          set -euo pipefail
+          mkdir -p kaopu-geography-workbench/releases
+          cp "$PACKAGE_NAME.zip" kaopu-geography-workbench/releases/
+          cp "$PACKAGE_NAME.zip.sha256" kaopu-geography-workbench/releases/
+          cp "_kaopu_package/$PACKAGE_NAME/FULL_PACKAGE_MANIFEST.md"              kaopu-geography-workbench/releases/KAOPU_GEOGRAPHY_R16_5_FULL_MANIFEST.md
+          git config user.name "KAOPU Package Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add kaopu-geography-workbench/releases/
+          if git diff --cached --quiet; then
+            echo "Package already committed."
+            exit 0
+          fi
+          git commit -m "archive(geography): freeze R16.5 full stable package"
+          for i in 1 2 3 4 5; do
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            git pull --rebase origin gh-pages
+            sleep 3
+          done
+          exit 1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-geography-r16-5-full-package
+          path: |
+            ${{ env.PACKAGE_NAME }}.zip
+            ${{ env.PACKAGE_NAME }}.zip.sha256
+          retention-days: 30
