@@ -166,19 +166,69 @@ float tissuePath(vec3 direction){
  return hit<9999.?clamp(hit,0.,tubeShaftLength+h):0.;
 }
 
-// Manual 3x3 PCF over a DEPTH_COMPONENT texture. The transmitted-light query
-// is made at the source-side EXIT of the local chord, not the visible surface;
-// otherwise an opaque shadow map would wrongly reject the tube's own light.
-float shadowVisibility(vec3 point){
+// Receiver-plane-aware comparison filtering over the existing orthographic
+// DEPTH_COMPONENT map. Never interpolate raw depths across separate blockers.
+// The four continuous weights per axis are a [1,2,1] tent convolved with
+// bilinear comparison reconstruction: 16 fetches, rather than 36 duplicates.
+float shadowVisibility(vec3 point,vec3 receiverNormal,float localRadius){
  vec4 clip=uLightVP*vec4(point,1.);
  vec3 q=clip.xyz/clip.w*.5+.5;
  if(any(lessThan(q,vec3(0.)))||any(greaterThan(q,vec3(1.))))return 0.;
+ vec3 rx=vec3(uLightVP[0][0],uLightVP[1][0],uLightVP[2][0]);
+ vec3 ry=vec3(uLightVP[0][1],uLightVP[1][1],uLightVP[2][1]);
+ vec3 rz=vec3(uLightVP[0][2],uLightVP[1][2],uLightVP[2][2]);
+ float sx=length(rx),sy=length(ry),sz=length(rz);
+ vec3 receiver=normalize(receiverNormal);
+ float nz=dot(receiver,rz/sz);
+ float safeNz=(nz<0.?-1.:1.)*max(abs(nz),.12);
+ // d(normalized depth)/d(shadow UV), not a single centre depth reused at
+ // neighbouring texels. For an orthographic map this follows the plane equation.
+ vec2 plane=-vec2(dot(receiver,rx/sx)*sz/sx,dot(receiver,ry/sy)*sz/sy)/safeNz;
+ float worldTexel=max(2.*uShadowTexel/sx,2.*uShadowTexel/sy);
+ float depthPerWorld=.5*sz;
+ float radiusLimit=localRadius>0.?localRadius*.08:worldTexel*.5;
+ float biasLimit=min(worldTexel*.5,radiusLimit);
+ float slope=min(sqrt(max(0.,1.-nz*nz))/max(abs(nz),.12),2.);
+ // uShadowBias remains an upper bound, not an unbounded additional offset.
+ // Additional comparison bias <= 0.5 texel AND 8% of local tube radius.
+ float biasWorld=min(min(uShadowBias/depthPerWorld,biasLimit),worldTexel*(.10+.18*slope));
+ float bias=biasWorld*depthPerWorld;
+ // Near a silhouette a plane is a poor model for a curved tube. Bound its
+ // extrapolation separately; this is not permission to move the receiver.
+ float planeLimit=min(worldTexel*2.,localRadius>0.?localRadius*.5:worldTexel*2.)*depthPerWorld;
+ vec2 pixel=q.xy/uShadowTexel-.5;
+ ivec2 base=ivec2(floor(pixel));
+ vec2 f=fract(pixel);
+ vec4 wx=vec4(1.-f.x,2.-f.x,1.+f.x,f.x);
+ vec4 wy=vec4(1.-f.y,2.-f.y,1.+f.y,f.y);
+ ivec2 size=textureSize(uShadowDepth,0);
  float result=0.;
- for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){
-  float depth=texture(uShadowDepth,q.xy+vec2(float(x),float(y))*uShadowTexel*1.25).r;
-  result+=step(q.z-uShadowBias,depth);
+ for(int y=0;y<4;y++)for(int x=0;x<4;x++){
+  ivec2 texel=base+ivec2(x-1,y-1);
+  if(any(lessThan(texel,ivec2(0)))||any(greaterThanEqual(texel,size)))continue;
+  vec2 offset=(vec2(texel)+.5)*uShadowTexel-q.xy;
+  float receiverDepth=q.z+clamp(dot(plane,offset),-planeLimit,planeLimit);
+  float depth=texelFetch(uShadowDepth,texel,0).r;
+  result+=wx[x]*wy[y]*step(receiverDepth-bias,depth);
  }
- return result/9.;
+ return result/16.;
+}
+// Source-side EXIT of the unchanged local chord. Its normal is distinct from
+// the visible-side normal; reusing that normal would correct the wrong plane.
+// No derivatives are evaluated inside the non-uniform transmission branch.
+float shadowVisibility(vec3 point){
+ vec3 t=normalize(tubeTangent),l=normalize(uLightDirection);
+ vec3 radial=normalize(tubeRadial-t*dot(tubeRadial,t));
+ float escape=max(.002,tubeShape.x*.14);
+ float chord=max(0.,dot(point-world,l)-escape);
+ float z=tubeShape.w+chord*dot(l,t);
+ vec3 p=radial*tubeShape.y+chord*(l-t*dot(l,t));
+ vec3 entryNormal;
+ if(z>0.)entryNormal=p/max(tubeShape.x*tubeShape.x,.00000001)+t*z/max(tubeShape.z*tubeShape.z,.00000001);
+ else if(z<=-tubeShaftLength+.00001)entryNormal=-t;
+ else entryNormal=p;
+ if(dot(entryNormal,entryNormal)<.000000000001)entryNormal=l;
+ return shadowVisibility(point,entryNormal,tubeShape.x);
 }
 vec3 fresnel(float cosine){return vec3(uWetness)+(vec3(1.)-vec3(uWetness))*pow(1.-cosine,5.);}
 float ggx(vec3 n,vec3 v,vec3 l,float roughness){
@@ -202,6 +252,10 @@ vec3 linearToSRGB(vec3 c){
 }
 void main(){
  vec3 n=normalize(normal),v=normalize(eye-world),l=normalize(uLightDirection);
+ // Compute the actual rasterized receiver plane before any divergent branch.
+ // Analytic shading normals remain untouched; only shadow comparisons use it.
+ vec3 receiverNormal=cross(dFdx(world),dFdy(world));
+ receiverNormal=dot(receiverNormal,receiverNormal)>.000000000001?normalize(receiverNormal):n;
  float nv=max(dot(n,v),.001),nl=dot(n,l);
  bool tentacle=axial>=0.;
  vec2 uv=tissueCoordinates;
@@ -219,7 +273,7 @@ void main(){
  float roughness=clamp(uRoughness+tip*.06+mottling*.023+(variation-.5)*.025,.32,.72);
  // Artistic falloff for the dim environmental fill, not ambient occlusion.
  float ambientAccess=mix(.24,1.,smoothstep(.38,1.06,world.y));
- float shadow=uShadowEnabled>.5?shadowVisibility(world+n*.0015):1.;
+ float shadow=uShadowEnabled>.5?shadowVisibility(world,receiverNormal,tentacle?tubeShape.x:0.):1.;
  vec3 surfaceF=fresnel(max(dot(v,normalize(l+v+vec3(.000001))),0.));
  vec3 reflected=base*(vec3(1.)-surfaceF)*(.82*max(nl,0.)/PI)*uKeyRadiance*shadow;
  reflected+=surfaceF*ggx(n,v,l,roughness)*uKeyRadiance*shadow;
@@ -328,7 +382,147 @@ function localPath({radialRadius:r,capRadius:h,radialPosition:rho,axialPosition:
  if(dz<-1e-6){const q=(-shaftLength-z)/dz;if(q>1e-6&&Math.hypot(rho+q*dx,q*dy)<=r+1e-5)hit=Math.min(hit,q);}
  return hit<9999?clamp(hit,0,shaftLength+h):0;
 }
+// CPU mirrors of the shadow comparison kernel only. These are test oracles for
+// the plane/footprint/weight arithmetic, not evidence of GPU image quality.
+function shadowReceiver(lightVP,receiverNormal,localRadius,texel,depthBias){
+ const n=norm(receiverNormal),rx=[lightVP[0],lightVP[4],lightVP[8]],ry=[lightVP[1],lightVP[5],lightVP[9]],rz=[lightVP[2],lightVP[6],lightVP[10]];
+ const sx=Math.hypot(...rx),sy=Math.hypot(...ry),sz=Math.hypot(...rz);
+ if(![sx,sy,sz].every(x=>Number.isFinite(x)&&x>0))throw Error('Invalid orthographic shadow frame');
+ checkedNumber(localRadius,'localRadius',0,100);checkedNumber(texel,'shadow texel',.000001,1);checkedNumber(depthBias,'shadow bias',0,1);
+ const nz=dot(n,rz.map(x=>x/sz)),safeNz=(nz<0?-1:1)*Math.max(Math.abs(nz),.12);
+ const plane=[-dot(n,rx.map(x=>x/sx))*sz/sx/safeNz,-dot(n,ry.map(x=>x/sy))*sz/sy/safeNz];
+ const worldTexel=Math.max(2*texel/sx,2*texel/sy),depthPerWorld=.5*sz;
+ const biasLimit=Math.min(worldTexel*.5,localRadius>0?localRadius*.08:worldTexel*.5);
+ const slope=Math.min(Math.sqrt(Math.max(0,1-nz*nz))/Math.max(Math.abs(nz),.12),2);
+ const biasWorld=Math.min(depthBias/depthPerWorld,biasLimit,worldTexel*(.10+.18*slope));
+ const planeLimitWorld=Math.min(worldTexel*2,localRadius>0?localRadius*.5:worldTexel*2);
+ return {plane,worldTexel,depthPerWorld,biasLimit,biasWorld,bias:biasWorld*depthPerWorld,planeLimitWorld,planeLimit:planeLimitWorld*depthPerWorld};
+}
+function shadowVisibilityReference({uv,depth,width,height,receiver,depthAt}){
+ if(uv.some(x=>x<0||x>1)||depth<0||depth>1)return 0;
+ const pixel=[uv[0]*width-.5,uv[1]*height-.5],base=pixel.map(Math.floor),f=pixel.map((x,i)=>x-base[i]);
+ const weights=f.map(x=>[1-x,2-x,1+x,x]);let result=0;
+ for(let y=0;y<4;y++)for(let x=0;x<4;x++){
+  const tx=base[0]+x-1,ty=base[1]+y-1;if(tx<0||ty<0||tx>=width||ty>=height)continue;
+  const offset=[(tx+.5)/width-uv[0],(ty+.5)/height-uv[1]];
+  const receiverDepth=depth+clamp(dot(receiver.plane,offset),-receiver.planeLimit,receiver.planeLimit);
+  result+=weights[0][x]*weights[1][y]*(receiverDepth-receiver.bias<=depthAt(tx,ty)?1:0);
+ }
+ return result/16;
+}
+// Independent opt-in front/side tissue-return study. The original shadow-only
+// shader and uploads above remain untouched for an exact old/new entry point.
+// Standard finite-layer two-flux reflectance, independently implemented:
+// Hebert & Becker (2008), DOI 10.1088/1464-4258/10/3/035006, equations 4-6.
+// https://lspwww.epfl.ch/publications/colour/cbcad2fmfratodl_08.pdf
+// Mapping artist tissue coefficients to a homogeneous slab is an approximation,
+// not measured anemone tissue, a full BSSRDF, or simulated lateral transport.
+const FRONT_RETURN_DEFAULTS=freezeDeep({frontReturn:.65,frontReturnView:'beauty'});
+const FRONT_RETURN_VIEWS=freezeDeep({beauty:0,'return-only':1,'layer-reflectance':2,'normal-thickness':3});
+const frontReturnGLSL=`
+// Finite equivalent slab: K=absorption, S=reduced scattering, D=normal
+// chord/reference diameter. All coefficients remain the existing artist values.
+float tissueLayerReturn(float K,float S,float D){
+ if(S<=0.||D<=0.)return 0.;
+ if(K<=0.){float sd=S*D;return sd/(1.+sd);}
+ float gamma=sqrt(K*(K+2.*S)),x=gamma*D;
+ // Stable 1-exp(-2*x), including optically very thin layers.
+ float e=x<.001?2.*x*(1.-x+(2./3.)*x*x):1.-exp(-2.*x);
+ return clamp(S*e/max((K+S)*e+gamma*(2.-e),.00000000000000000001),0.,1.);
+}
+float returnHemisphereIntegral(float mu){
+ if(mu<=0.)return 1.;
+ return 1.-mu*log(1.+1./mu);
+}
+float tissueReturnLobe(float muI,float muO){
+ if(muI<=0.||muO<=0.)return 0.;
+ // Reciprocal softened-return lobe. Using the larger hemisphere integral
+ // conservatively bounds its integrated projected reflectance by one.
+ // It redistributes a finite diffuse budget; it does not add a white light.
+ float Q=max(returnHemisphereIntegral(muI),returnHemisphereIntegral(muO));
+ return 1./(2.*PI*max(Q,.30685)*max(muI+muO,.000001));
+}
+`;
+const diffuseStatement=' vec3 reflected=base*(vec3(1.)-surfaceF)*(.82*max(nl,0.)/PI)*uKeyRadiance*shadow;';
+const frontReturnStatement=`${diffuseStatement}
+ vec3 frontReturned=vec3(0.),frontLayer=vec3(0.);
+ float frontThickness=0.;
+ if(tentacle&&nl>0.&&uFrontReturn>0.){
+  frontThickness=tissuePath(-n);
+  float D=frontThickness/uReferenceDiameter;
+  vec3 K=mix(uAbsorption,uTipAbsorption,tip)*(1.+mottling*.075);
+  float S=uScattering*mix(1.,.90,tip)*(1.-uPhaseG);
+  frontLayer=vec3(tissueLayerReturn(K.r,S,D),tissueLayerReturn(K.g,S,D),tissueLayerReturn(K.b,S,D));
+  float muI=clamp(nl,0.,1.),muO=clamp(dot(n,v),0.,1.);
+  frontReturned=frontLayer*(vec3(1.)-surfaceF)*(.82*uFrontReturn*muI*tissueReturnLobe(muI,muO))*uKeyRadiance*shadow;
+  // Split the old direct diffuse budget. Specular, ambient and back transmission
+  // are outside this allocation and remain byte-for-byte the old expressions.
+  reflected=reflected*(1.-uFrontReturn)+frontReturned;
+ }
+`;
+const frontReturnFragment=fragment
+ .replace('uniform vec3 eye;','uniform vec3 eye;\nuniform float uFrontReturn;\nuniform int uFrontReturnDebug;')
+ .replace('void main(){',frontReturnGLSL+'\nvoid main(){')
+ .replace(diffuseStatement,frontReturnStatement)
+ .replace(' // Exponential shoulder in linear light, then exact sRGB transfer.',` // Opt-in front-return diagnostics override the old debug view only when selected.
+ if(uFrontReturnDebug==1)result=frontReturned;
+ if(uFrontReturnDebug==2){color=vec4(frontLayer,1.);return;}
+ if(uFrontReturnDebug==3){color=vec4(vec3(clamp(frontThickness/uReferenceDiameter,0.,1.)),1.);return;}
+ // Exponential shoulder in linear light, then exact sRGB transfer.`)
+ .replaceAll('if(uDebugMode==','if(uFrontReturnDebug==0&&uDebugMode==');
+function frontReturnOptions(input={}){
+ const o={...options(input),frontReturn:input.frontReturn===undefined?FRONT_RETURN_DEFAULTS.frontReturn:input.frontReturn,
+  frontReturnView:input.frontReturnView===undefined?FRONT_RETURN_DEFAULTS.frontReturnView:input.frontReturnView};
+ checkedNumber(o.frontReturn,'front-return fraction',0,1);
+ if(!Object.hasOwn(FRONT_RETURN_VIEWS,o.frontReturnView))throw Error('Unknown front-return diagnostic');
+ return o;
+}
+function applyFrontReturnUniforms(gl,program,input={},view={}){
+ const o=frontReturnOptions(input),frame=applyUniforms(gl,program,o,view),cache=locationCache.get(program);
+ const loc=name=>{if(!cache.has(name))cache.set(name,gl.getUniformLocation(program,name));return cache.get(name);};
+ gl.uniform1f(loc('uFrontReturn'),o.frontReturn);
+ gl.uniform1i(loc('uFrontReturnDebug'),FRONT_RETURN_VIEWS[o.frontReturnView]);
+ return {...frame,options:o};
+}
+function finiteLayerReturn(absorption,scattering,depth){
+ checkedNumber(scattering,'layer scattering',0,100);checkedNumber(depth,'layer depth',0,10000);
+ if(!Array.isArray(absorption)||absorption.length!==3)throw Error('layer absorption must be RGB');
+ return absorption.map(K=>{
+  checkedNumber(K,'layer absorption',0,100);const S=scattering,D=depth;
+  if(S<=0||D<=0)return 0;
+  if(K<=0){const sd=S*D;return sd/(1+sd);}
+  const gamma=Math.sqrt(K*(K+2*S)),x=gamma*D;
+  const e=x<.001?2*x*(1-x+(2/3)*x*x):1-Math.exp(-2*x);
+  return clamp(S*e/Math.max((K+S)*e+gamma*(2-e),1e-20),0,1);
+ });
+}
+function tissueReturnLobe(muI,muO){
+ checkedNumber(muI,'incident cosine',0,1);checkedNumber(muO,'exit cosine',0,1);
+ if(muI<=0||muO<=0)return 0;
+ const Q=mu=>1-mu*Math.log(1+1/mu);
+ return 1/(2*Math.PI*Math.max(Q(muI),Q(muO),.30685)*Math.max(muI+muO,.000001));
+}
+function evaluateFrontReturn({base,absorption,scattering,thickness,referenceDiameter=.06,phaseG=.32,muI,muO,amount=.65,visibility=1,key=[1,1,1],fresnel=[0,0,0]}){
+ for(const [name,v,min,max]of [['amount',amount,0,1],['visibility',visibility,0,1],['muI',muI,-1,1],['muO',muO,0,1],['thickness',thickness,0,100],['referenceDiameter',referenceDiameter,.00001,100],['phaseG',phaseG,0,.65]])checkedNumber(v,name,min,max);
+ for(const [name,a,max]of [['base',base,1],['key',key,100],['fresnel',fresnel,1]]){
+  if(!Array.isArray(a)||a.length!==3)throw Error(name+' must be RGB');a.forEach(v=>checkedNumber(v,name,0,max));
+ }
+ const layer=finiteLayerReturn(absorption,scattering*(1-phaseG),thickness/referenceDiameter);
+ const incident=Math.max(muI,0),old=base.map((c,i)=>c*(1-fresnel[i])*.82*incident/Math.PI*key[i]*visibility);
+ const returned=layer.map((r,i)=>muI>0?r*(1-fresnel[i])*.82*amount*incident*tissueReturnLobe(incident,muO)*key[i]*visibility:0);
+ const direct=old.map((c,i)=>muI>0?c*(1-amount)+returned[i]:c);
+ return {layer,old,returned,direct,diffuseBudget:base.map((b,i)=>.82*((1-amount)*b+amount*layer[i]))};
+}
+const frontReturnDefaults=freezeDeep({...DEFAULTS,...FRONT_RETURN_DEFAULTS});
+// Complete replacement set: select explicitly BEFORE constructing the frozen
+// base renderer. Its DEFAULTS/options retain and validate both extra JSON fields.
+const frontReturn=Object.freeze({revision:'r04-front-return-study',fragment:frontReturnFragment,
+ tentacleVertex,vertex:tentacleVertex,bodyVertex,shadowFragment,DEFAULTS:frontReturnDefaults,
+ defaults:frontReturnDefaults,parameters:FRONT_RETURN_DEFAULTS,views:FRONT_RETURN_VIEWS,PALETTES,DEBUG_MODES,
+ options:frontReturnOptions,applyUniforms:applyFrontReturnUniforms,lighting,lightMatrix,
+ beerLambert,localPath,srgbToLinear,shadowReceiver,shadowVisibilityReference,
+ finiteLayerReturn,tissueReturnLobe,evaluate:evaluateFrontReturn});
 const api={revision:'r04-tissue-optics',tentacleVertex,vertex:tentacleVertex,bodyVertex,fragment,shadowFragment,
- PALETTES,DEFAULTS,DEBUG_MODES,options,lighting,lightMatrix,applyUniforms,beerLambert,localPath,srgbToLinear};
+ PALETTES,DEFAULTS,DEBUG_MODES,options,lighting,lightMatrix,applyUniforms,beerLambert,localPath,srgbToLinear,shadowReceiver,shadowVisibilityReference,frontReturn};
 root.AnemoneOptics=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

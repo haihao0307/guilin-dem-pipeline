@@ -1,0 +1,9 @@
+{
+  "issue": "first-pixel-used-as-background-in-macro",
+  "status": "fixed-in-current-browser-tests",
+  "affectedClaim": "The earlier approximate 0.04% display brightness claim is withdrawn; it was not a physical transmittance measurement.",
+  "rootCause": "Macro subjects covered pixel0, so the old mask treated foreground color as background.",
+  "fix": "Read GL COLOR_CLEAR_VALUE. Diagnose source entry using explicit backlit-tentacle eligibility in shader blue channel, with green visibility.",
+  "test": "tests/macro-background-regression.cjs",
+  "historicalResults": "Existing captures and old reports are preserved; no retroactive relabeling of their photometric validity."
+}
