@@ -1,0 +1,1265 @@
+{
+  "schema": "FISH_PRODUCTION_REGISTRY_R09_1",
+  "knowledgeVersion": "1.0.0",
+  "sourceRegistry": "fish-five-r01/data/r07/registry.json",
+  "cards": [
+    {
+      "schema": "FISH_PRODUCTION_CARD_R09_1",
+      "knowledgeVersion": "1.0.0",
+      "id": "barracuda",
+      "label": "海狼来源",
+      "source": {
+        "title": "海狼 / muskellunge 来源文件标签",
+        "entrySha256": "f4b361948661fe423babc9572cd369336d881ec5827d1f37a3b91cbd59ac6a18",
+        "payloadSha256": "9fee7bf5874ce04c83993a9df52bf3da146f717183ea3fe468ef83f56edb9e0b",
+        "metadata": "fish-five-r01/data/r07/legacy-registry.json",
+        "license": "SOURCE_ARCHIVE_LICENSE_RECORD_REQUIRES_REVIEW",
+        "attribution": "来源档案原作者记录待复核；保留原工程资产信息",
+        "sourceUrl": null,
+        "licenseStatus": "REVIEW_REQUIRED",
+        "metadataSha256": "c8dbbdeb8dcb1521db7ffb17e807afa27683d48b013943d0cb4517ad901a5bf5"
+      },
+      "identity": {
+        "speciesStatus": "SOURCE_LABEL_ONLY",
+        "speciesName": null,
+        "targetArchetype": "RETAINED_R14_SOURCE_AXIAL_CANDIDATE",
+        "confusionSet": [
+          "BARRACUDA_RUNTIME_ID_IS_NOT_SPECIES_CONFIRMATION",
+          "MUSKELLUNGE_SOURCE_FILENAME_ONLY"
+        ],
+        "evidence": [
+          {
+            "class": "SOURCE_MEASURED",
+            "reference": "fish-five-r01/data/r07/legacy-registry.json",
+            "meaning": "原 R14 保留来源与程序；不是科学身份确认"
+          }
+        ],
+        "largestDeviation": "海狼与 muskellunge 为来源/项目标签；静态归档无 native skin/animation，口鳃驱动尚须独立来源确认。"
+      },
+      "measurements": {
+        "surface": {
+          "status": "SOURCE_MEASURED",
+          "reference": "fish-five-r01/data/r07/legacy-registry.json#sourceSamplesTexturesUnchanged",
+          "summary": "不可变 R14 完整来源采样/纹理与程序保留，原文件不得改写。",
+          "referenceSha256": "c8dbbdeb8dcb1521db7ffb17e807afa27683d48b013943d0cb4517ad901a5bf5"
+        },
+        "axis": {
+          "status": "SOURCE_DERIVED",
+          "reference": "local-r14/dist/KAOPU_FISH_DENSE_HABITAT_R14.html",
+          "summary": "保留原 R14 已来源采样连续身体轴；不是 native skin 或已测椎骨。",
+          "referenceSha256": "e95397d73062f8cef2bc613fdf77ee10e2c70576678d8c6799094b7555224b4e"
+        },
+        "fins": {
+          "status": "SOURCE_DERIVED",
+          "reference": "local-r14/dist/KAOPU_FISH_DENSE_HABITAT_R14.html",
+          "summary": "原鳍域和根部候选控制保留；新母型不得复制其映射。",
+          "referenceSha256": "e95397d73062f8cef2bc613fdf77ee10e2c70576678d8c6799094b7555224b4e"
+        },
+        "eyes": {
+          "status": "SOURCE_DERIVED",
+          "reference": "fish-five-r01/src/legacy-cranial-r04.js",
+          "summary": "保留原来源眼映射与当前眼控制，形状不由通用球替代。",
+          "referenceSha256": "b8492962f30e934585224d0d4311bbb963861af4240a79e3b08221d7be05236e"
+        },
+        "mouth": {
+          "status": "HOLD_LOCAL",
+          "reference": "fish-five-r01/data/oral-runtime-r04.json#barracuda",
+          "summary": "R14 谐和口区为来源采样工程控制；归档静态，无已确认 native jaw skin/animation，当前任务不新增开合。",
+          "referenceSha256": "b4f22443a9b58149a584f6170e5fa4309e5df8f20d9f989fb7d9a4985fbaf8da"
+        },
+        "gills": {
+          "status": "HOLD_LOCAL",
+          "reference": "fish-five-r01/data/oral-runtime-r04.json#barracuda",
+          "summary": "已有工程鳃字段不等于已确认解剖鳃盖；独立绑定证据待测，当前任务不新增鳃开合。",
+          "referenceSha256": "b4f22443a9b58149a584f6170e5fa4309e5df8f20d9f989fb7d9a4985fbaf8da"
+        },
+        "envelope": {
+          "status": "SOURCE_DERIVED",
+          "reference": "fish-five-r01/src/legacy-school-r08.js",
+          "summary": "完整原动画包络随来源变体尺度运输；不能缩小碰撞体掩盖穿插。",
+          "referenceSha256": "b3bd25b8908ff219c44ce883e17092bc507164e265a7c8ad9ecaeab15e6198f9"
+        },
+        "gait": {
+          "status": "ENGINEERING_CANDIDATE",
+          "reference": "fish-five-r01/src/legacy-school-r08.js",
+          "summary": "原 R14 身体/鳍规律保留，实际接受速度和转速接共用群游解算；未生物校准。",
+          "referenceSha256": "b3bd25b8908ff219c44ce883e17092bc507164e265a7c8ad9ecaeab15e6198f9"
+        },
+        "physicalUnits": {
+          "status": "UNKNOWN",
+          "reference": "knowledge/fish-motion/R08_IMPLEMENTATION_AND_REUSE.md",
+          "summary": "源世界尺度不自动视为实测米制。",
+          "referenceSha256": "70757afd62268cf1c14eb24a42ab2440a439d5e0f572e15f1c7e46779017bb6c"
+        }
+      },
+      "behavior": {
+        "status": "ENGINEERING_CANDIDATE",
+        "profileRef": "fish-five-r01/src/legacy-school-r08.js",
+        "groupingEvidence": "UNKNOWN",
+        "parameterEvidence": [
+          {
+            "class": "ENGINEERING_CANDIDATE",
+            "reference": "knowledge/fish-motion/R08_IMPLEMENTATION_AND_REUSE.md",
+            "meaning": "有限海底展示域与低转速是项目候选，身份和自然群游待证据"
+          },
+          {
+            "key": "speed",
+            "value": 0.32,
+            "unit": "source-length/s",
+            "evidenceClass": "ENGINEERING_CANDIDATE",
+            "reference": "fish-five-r01/src/legacy-school-r08.js"
+          },
+          {
+            "key": "maxTurn",
+            "value": 0.28,
+            "unit": "rad/s",
+            "evidenceClass": "ENGINEERING_CANDIDATE",
+            "reference": "fish-five-r01/src/legacy-school-r08.js"
+          }
+        ]
+      },
+      "acceptance": {
+        "visualAcceptance": false,
+        "productionReady": false,
+        "scientificCalibration": false,
+        "independentVerification": "NOT_RUN",
+        "publication": "NOT_RUN"
+      },
+      "evidenceBindings": [
+        {
+          "path": "fish-five-r01/data/r07/legacy-registry.json",
+          "sha256": "c8dbbdeb8dcb1521db7ffb17e807afa27683d48b013943d0cb4517ad901a5bf5"
+        },
+        {
+          "path": "local-r14/dist/KAOPU_FISH_DENSE_HABITAT_R14.html",
+          "sha256": "e95397d73062f8cef2bc613fdf77ee10e2c70576678d8c6799094b7555224b4e"
+        },
+        {
+          "path": "fish-five-r01/src/legacy-cranial-r04.js",
+          "sha256": "b8492962f30e934585224d0d4311bbb963861af4240a79e3b08221d7be05236e"
+        },
+        {
+          "path": "fish-five-r01/data/oral-runtime-r04.json",
+          "sha256": "b4f22443a9b58149a584f6170e5fa4309e5df8f20d9f989fb7d9a4985fbaf8da"
+        },
+        {
+          "path": "fish-five-r01/src/legacy-school-r08.js",
+          "sha256": "b3bd25b8908ff219c44ce883e17092bc507164e265a7c8ad9ecaeab15e6198f9"
+        },
+        {
+          "path": "knowledge/fish-motion/R08_IMPLEMENTATION_AND_REUSE.md",
+          "sha256": "70757afd62268cf1c14eb24a42ab2440a439d5e0f572e15f1c7e46779017bb6c"
+        }
+      ]
+    },
+    {
+      "schema": "FISH_PRODUCTION_CARD_R09_1",
+      "knowledgeVersion": "1.0.0",
+      "id": "herring",
+      "label": "鲱鱼来源",
+      "source": {
+        "title": "School of Herring",
+        "entrySha256": "7d89f6e9908aa0611e1818be75da1645c78d47caa8d17d5dbb4723a905a8e4bd",
+        "payloadSha256": "f85ad8dd8d05450e0fcc7781177862f6164a7362f29f76796ea7cbe0e3c15707",
+        "metadata": "fish-five-r01/data/herring.metadata.json",
+        "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+        "attribution": "radiator (https://sketchfab.com/radiator)",
+        "sourceUrl": "https://sketchfab.com/3d-models/school-of-herring-9805dabc1d3f4cc1a09367fb5afad980",
+        "licenseStatus": "SOURCE_RECORDED",
+        "metadataSha256": "1d30c678aa1ee6ed995423765924b5846603b3d608ee8e362288696c782384bf"
+      },
+      "identity": {
+        "speciesStatus": "SOURCE_LABEL_ONLY",
+        "speciesName": null,
+        "targetArchetype": "SOURCE_AXIAL_BCF_CANDIDATE",
+        "confusionSet": [
+          "SOURCE_LABEL_IS_NOT_TAXONOMY",
+          "BCF_MPF_MIXTURE_UNCALIBRATED"
+        ],
+        "evidence": [
+          {
+            "class": "SOURCE_MEASURED",
+            "reference": "fish-five-r01/data/herring.metadata.json#source.asset",
+            "meaning": "原资产标题、作者和许可；不是科学物种确认"
+          }
+        ],
+        "largestDeviation": "原群体素材已取单体；规范化单位不等于真实体长，口鳃独立控制未确认。"
+      },
+      "measurements": {
+        "surface": {
+          "status": "SOURCE_MEASURED",
+          "reference": "fish-five-r01/data/herring.metadata.json#parameterization",
+          "summary": "原索引/UV/贴图与全细节残差保留；静止重建精度已记录。",
+          "values": {
+            "vertices": 4548,
+            "triangles": 6560,
+            "kind": "CUBIC_AXIAL_RADIAL_CHART_PLUS_FULL_SOURCE_RESIDUAL",
+            "maxFloat32ReconstructionError": 1.4892539257349569e-8
+          },
+          "referenceSha256": "1d30c678aa1ee6ed995423765924b5846603b3d608ee8e362288696c782384bf"
+        },
+        "axis": {
+          "status": "SOURCE_MEASURED",
+          "reference": "fish-five-r01/data/herring.metadata.json#canonical",
+          "summary": "已量来源规范坐标与主轴；程序中心线是工程控制，不宣称原椎骨数量。",
+          "values": {
+            "bodyLength": 1,
+            "axis": "X head -0.5 to tail +0.5; Y dorsal; Z lateral",
+            "sourceLength": 0.18698903355357105
+          },
+          "referenceSha256": "1d30c678aa1ee6ed995423765924b5846603b3d608ee8e362288696c782384bf"
+        },
+        "fins": {
+          "status": "SOURCE_DERIVED",
+          "reference": "fish-five-r01/data/herring.metadata.json#fins",
+          "summary": "来源鳍区、根与控制映射已登记，分类和柔性有工程估计；不能将候选值称为生物标定。",
+          "values": {
+            "mappedNames": [
+              "pectoral-left",
+              "pectoral-right",
+              "pelvic-left",
+              "pelvic-right",
+              "dorsal",
+              "anal",
+              "caudal"
+            ],
+            "roots": [
+              [
+                -0.21451643102686066,
+                -0.04261195329928747,
+                0.013101053813309706
+              ],
+              [
+                -0.25423129198729855,
+                -0.04176940069848374,
+                -0.06259132613209135
+              ],
+              [
+                0.029758468542206915,
+                -0.059279588780231984,
+                0.050143325179606055
+              ],
+              [
+                0.03459922667693324,
+                -0.05945981022187242,
+                0.01754026254370479
+              ],
+              [
+                0.002800193910652142,
+                0.10153136889667479,
+                0.02508086940485952
+              ],
+              [
+                0.22456314850250128,
+                -0.022544923204564197,
+                0.035538806983870436
+              ],
+              [
+                0.31080953395213795,
+                0.014109157470706188,
+                0.012940670847128488
+              ]
+            ]
+          },
+          "referenceSha256": "1d30c678aa1ee6ed995423765924b5846603b3d608ee8e362288696c782384bf"
+        },
+        "eyes": {
+          "status": "SOURCE_DERIVED",
+          "reference": "fish-five-r01/data/herring.metadata.json#eyes",
+          "summary": "保留来源眼区域与当前独立眼控制；外形、轴和贴合需要运行图像检查，候选半径不冒充生理实测。",
+          "values": {
+            "count": 2
+          },
+          "referenceSha256": "1d30c678aa1ee6ed995423765924b5846603b3d608ee8e362288696c782384bf"
+        },
+        "mouth": {
+          "status": "HOLD_LOCAL",
+          "reference": "fish-five-r01/data/oral-runtime-r04.json#herring",
+          "summary": "原模型未确认独立下颌映射；通用头骨和闭合表面均不能补出开口。",
+          "referenceSha256": "b4f22443a9b58149a584f6170e5fa4309e5df8f20d9f989fb7d9a4985fbaf8da"
+        },
+        "gills": {
+          "status": "HOLD_LOCAL",
+          "reference": "fish-five-r01/data/oral-runtime-r04.json#herring",
+          "summary": "未确认独立鳃盖区域/关节/源动画，保持原表面合法姿态，不编造鳃开合。",
+          "referenceSha256": "b4f22443a9b58149a584f6170e5fa4309e5df8f20d9f989fb7d9a4985fbaf8da"
+        },
+        "envelope": {
+          "status": "SOURCE_DERIVED",
+          "reference": "fish-five-r01/src/behavior.js#configureShape",
+          "summary": "完整源边界加脊椎/鳍整个周期解析裕量，不缩小以假装紧密；新来源必须重新测。",
+          "referenceSha256": "fc5c5fb33474f9d09bd5eee499212751ca2e0820f1d54cee1b47119280c144af"
+        },
+        "gait": {
+          "status": "ENGINEERING_CANDIDATE",
+          "reference": "fish-five-r01/src/behavior.js#profiles.herring",
+          "summary": "共用数学接口的来源候选配置；原通道频率独立登记，不等于自然游动已校准。",
+          "values": {
+            "sourceAnimationAvailable": true,
+            "sourceReference": "fish-five-r01/data/herring.metadata.json#gaitReference"
+          },
+          "referenceSha256": "fc5c5fb33474f9d09bd5eee499212751ca2e0820f1d54cee1b47119280c144af"
+        },
+        "physicalUnits": {
+          "status": "UNKNOWN",
+          "reference": "fish-five-r01/data/herring.metadata.json#canonical.physicalMetres",
+          "summary": "来源真实米制单位未确认；1 BL 是规范尺度。",
+          "referenceSha256": "1d30c678aa1ee6ed995423765924b5846603b3d608ee8e362288696c782384bf"
+        }
+      },
+      "behavior": {
+        "status": "ENGINEERING_CANDIDATE",
+        "profileRef": "fish-five-r01/src/behavior.js#profiles.herring",
+        "groupingEvidence": "UNKNOWN",
+        "parameterEvidence": [
+          {
+            "class": "ENGINEERING_CANDIDATE",
+            "reference": "knowledge/fish-motion/R08_IMPLEMENTATION_AND_REUSE.md",
+            "meaning": "速度、加速度、转弯和30条展示容量尚非此物种生物标定"
+          },
+          {
+            "key": "speed",
+            "value": 0.65,
+            "unit": "source-length/s",
+            "evidenceClass": "ENGINEERING_CANDIDATE",
+            "reference": "fish-five-r01/src/behavior.js#profiles.herring"
+          },
+          {
+            "key": "maxTurn",
+            "value": 0.75,
+            "unit": "rad/s",
+            "evidenceClass": "ENGINEERING_CANDIDATE",
+            "reference": "fish-five-r01/src/behavior.js#profiles.herring"
+          }
+        ]
+      },
+      "acceptance": {
+        "visualAcceptance": false,
+        "productionReady": false,
+        "scientificCalibration": false,
+        "independentVerification": "NOT_RUN",
+        "publication": "NOT_RUN"
+      },
+      "evidenceBindings": [
+        {
+          "path": "fish-five-r01/data/herring.metadata.json",
+          "sha256": "1d30c678aa1ee6ed995423765924b5846603b3d608ee8e362288696c782384bf"
+        },
+        {
+          "path": "fish-five-r01/data/oral-runtime-r04.json",
+          "sha256": "b4f22443a9b58149a584f6170e5fa4309e5df8f20d9f989fb7d9a4985fbaf8da"
+        },
+        {
+          "path": "fish-five-r01/src/behavior.js",
+          "sha256": "fc5c5fb33474f9d09bd5eee499212751ca2e0820f1d54cee1b47119280c144af"
+        }
+      ]
+    },
+    {
+      "schema": "FISH_PRODUCTION_CARD_R09_1",
+      "knowledgeVersion": "1.0.0",
+      "id": "tuna-yellow-label",
+      "label": "黄鳍标签金枪鱼",
+      "source": {
+        "title": "Tuna Fish",
+        "entrySha256": "59a12a8af3fcf47a8a8598253f8a9363049d70a75344097ea2641409117e33ff",
+        "payloadSha256": "d37f3082d7d2dfbd00b543888af5529b7db97289ac0e085724151ed45cd9e82f",
+        "metadata": "fish-five-r01/data/tuna-yellow-label.metadata.json",
+        "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+        "attribution": "GoldenZtuff (https://sketchfab.com/dhjwdwd)",
+        "sourceUrl": "https://sketchfab.com/3d-models/tuna-fish-642c6515d893474a8fc8f129491efcac",
+        "licenseStatus": "SOURCE_RECORDED",
+        "metadataSha256": "eac6453d80f44495ebde0a4ddc1eb74081f30ee92bf5aff25c7e0906b990683d"
+      },
+      "identity": {
+        "speciesStatus": "SOURCE_LABEL_ONLY",
+        "speciesName": null,
+        "targetArchetype": "SOURCE_POSTERIOR_BCF_CANDIDATE",
+        "confusionSet": [
+          "SOURCE_LABEL_IS_NOT_TAXONOMY",
+          "BCF_MPF_MIXTURE_UNCALIBRATED"
+        ],
+        "evidence": [
+          {
+            "class": "SOURCE_MEASURED",
+            "reference": "fish-five-r01/data/tuna-yellow-label.metadata.json#source.asset",
+            "meaning": "原资产标题、作者和许可；不是科学物种确认"
+          }
+        ],
+        "largestDeviation": "黄鳍为目录标签，生物种未确认；源下颌映射支持局部候选，数值开合不是生物呼吸标定。"
+      },
+      "measurements": {
+        "surface": {
+          "status": "SOURCE_MEASURED",
+          "reference": "fish-five-r01/data/tuna-yellow-label.metadata.json#parameterization",
+          "summary": "原索引/UV/贴图与全细节残差保留；静止重建精度已记录。",
+          "values": {
+            "vertices": 4637,
+            "triangles": 7944,
+            "kind": "CUBIC_AXIAL_RADIAL_CHART_PLUS_FULL_SOURCE_RESIDUAL",
+            "maxFloat32ReconstructionError": 2.3618611177944615e-8
+          },
+          "referenceSha256": "eac6453d80f44495ebde0a4ddc1eb74081f30ee92bf5aff25c7e0906b990683d"
+        },
+        "axis": {
+          "status": "SOURCE_MEASURED",
+          "reference": "fish-five-r01/data/tuna-yellow-label.metadata.json#canonical",
+          "summary": "已量来源规范坐标与主轴；程序中心线是工程控制，不宣称原椎骨数量。",
+          "values": {
+            "bodyLength": 1,
+            "axis": "X head -0.5 to tail +0.5; Y dorsal; Z lateral",
+            "sourceLength": 3.003417610840286
+          },
+          "referenceSha256": "eac6453d80f44495ebde0a4ddc1eb74081f30ee92bf5aff25c7e0906b990683d"
+        },
+        "fins": {
+          "status": "SOURCE_DERIVED",
+          "reference": "fish-five-r01/data/tuna-yellow-label.metadata.json#fins",
+          "summary": "来源鳍区、根与控制映射已登记，分类和柔性有工程估计；不能将候选值称为生物标定。",
+          "values": {
+            "mappedNames": [
+              "pectoral-left",
+              "pectoral-right",
+              "pelvic-left",
+              "pelvic-right",
+              "dorsal",
+              "anal",
+              "caudal"
+            ],
+            "roots": [
+              [
+                -0.21487442107150395,
+                -0.019870172510225364,
+                0.08310657866254902
+              ],
+              [
+                -0.21487442107150395,
+                -0.019870172510225364,
+                -0.08310657866254902
+              ],
+              [
+                -0.18720660622535124,
+                -0.12456531875365241,
+                0.03507850186301358
+              ],
+              [
+                -0.18720660622535124,
+                -0.12456531875365241,
+                -0.03507850186301359
+              ],
+              [
+                -0.09449150572939852,
+                0.11184910218101683,
+                -5.6853322118795025e-18
+              ],
+              [
+                0.026435949229853182,
+                -0.11631513822391386,
+                -3.666372434785012e-17
+              ],
+              [
+                0.35940176526119216,
+                -0.017180708790939914,
+                -5.415218867115965e-18
+              ]
+            ]
+          },
+          "referenceSha256": "eac6453d80f44495ebde0a4ddc1eb74081f30ee92bf5aff25c7e0906b990683d"
+        },
+        "eyes": {
+          "status": "SOURCE_DERIVED",
+          "reference": "fish-five-r01/data/tuna-yellow-label.metadata.json#eyes",
+          "summary": "保留来源眼区域与当前独立眼控制；外形、轴和贴合需要运行图像检查，候选半径不冒充生理实测。",
+          "values": {
+            "count": 2
+          },
+          "referenceSha256": "eac6453d80f44495ebde0a4ddc1eb74081f30ee92bf5aff25c7e0906b990683d"
+        },
+        "mouth": {
+          "status": "SOURCE_DERIVED",
+          "reference": "fish-five-r01/data/oral-runtime-r04.json#tuna-yellow-label",
+          "summary": "源下颌骨、蒙皮与动作支持局部控制；下唇包含于下颌子树，禁止重复变换。",
+          "values": {
+            "nativeStatus": "NATIVE_JAW_SKIN_AND_ANIMATION",
+            "rangeRad": 0.03
+          },
+          "referenceSha256": "b4f22443a9b58149a584f6170e5fa4309e5df8f20d9f989fb7d9a4985fbaf8da"
+        },
+        "gills": {
+          "status": "HOLD_LOCAL",
+          "reference": "fish-five-r01/data/oral-runtime-r04.json#tuna-yellow-label",
+          "summary": "未确认独立鳃盖区域/关节/源动画，保持原表面合法姿态，不编造鳃开合。",
+          "referenceSha256": "b4f22443a9b58149a584f6170e5fa4309e5df8f20d9f989fb7d9a4985fbaf8da"
+        },
+        "envelope": {
+          "status": "SOURCE_DERIVED",
+          "reference": "fish-five-r01/src/behavior.js#configureShape",
+          "summary": "完整源边界加脊椎/鳍整个周期解析裕量，不缩小以假装紧密；新来源必须重新测。",
+          "referenceSha256": "fc5c5fb33474f9d09bd5eee499212751ca2e0820f1d54cee1b47119280c144af"
+        },
+        "gait": {
+          "status": "ENGINEERING_CANDIDATE",
+          "reference": "fish-five-r01/src/behavior.js#profiles.tuna-yellow-label",
+          "summary": "共用数学接口的来源候选配置；原通道频率独立登记，不等于自然游动已校准。",
+          "values": {
+            "sourceAnimationAvailable": true,
+            "sourceReference": "fish-five-r01/data/tuna-yellow-label.metadata.json#gaitReference"
+          },
+          "referenceSha256": "fc5c5fb33474f9d09bd5eee499212751ca2e0820f1d54cee1b47119280c144af"
+        },
+        "physicalUnits": {
+          "status": "UNKNOWN",
+          "reference": "fish-five-r01/data/tuna-yellow-label.metadata.json#canonical.physicalMetres",
+          "summary": "来源真实米制单位未确认；1 BL 是规范尺度。",
+          "referenceSha256": "eac6453d80f44495ebde0a4ddc1eb74081f30ee92bf5aff25c7e0906b990683d"
+        }
+      },
+      "behavior": {
+        "status": "ENGINEERING_CANDIDATE",
+        "profileRef": "fish-five-r01/src/behavior.js#profiles.tuna-yellow-label",
+        "groupingEvidence": "UNKNOWN",
+        "parameterEvidence": [
+          {
+            "class": "ENGINEERING_CANDIDATE",
+            "reference": "knowledge/fish-motion/R08_IMPLEMENTATION_AND_REUSE.md",
+            "meaning": "速度、加速度、转弯和30条展示容量尚非此物种生物标定"
+          },
+          {
+            "key": "speed",
+            "value": 0.82,
+            "unit": "source-length/s",
+            "evidenceClass": "ENGINEERING_CANDIDATE",
+            "reference": "fish-five-r01/src/behavior.js#profiles.tuna-yellow-label"
+          },
+          {
+            "key": "maxTurn",
+            "value": 0.5,
+            "unit": "rad/s",
+            "evidenceClass": "ENGINEERING_CANDIDATE",
+            "reference": "fish-five-r01/src/behavior.js#profiles.tuna-yellow-label"
+          }
+        ]
+      },
+      "acceptance": {
+        "visualAcceptance": false,
+        "productionReady": false,
+        "scientificCalibration": false,
+        "independentVerification": "NOT_RUN",
+        "publication": "NOT_RUN"
+      },
+      "evidenceBindings": [
+        {
+          "path": "fish-five-r01/data/tuna-yellow-label.metadata.json",
+          "sha256": "eac6453d80f44495ebde0a4ddc1eb74081f30ee92bf5aff25c7e0906b990683d"
+        },
+        {
+          "path": "fish-five-r01/data/oral-runtime-r04.json",
+          "sha256": "b4f22443a9b58149a584f6170e5fa4309e5df8f20d9f989fb7d9a4985fbaf8da"
+        },
+        {
+          "path": "fish-five-r01/src/behavior.js",
+          "sha256": "fc5c5fb33474f9d09bd5eee499212751ca2e0820f1d54cee1b47119280c144af"
+        }
+      ]
+    },
+    {
+      "schema": "FISH_PRODUCTION_CARD_R09_1",
+      "knowledgeVersion": "1.0.0",
+      "id": "tuna-blue-label",
+      "label": "蓝鳍标签金枪鱼",
+      "source": {
+        "title": "Animated Tuna – 3D Animal Model",
+        "entrySha256": "73893db0c9fb771fae0deec587e509008ab90d1fc7bc9f15049b39240c2fc6c2",
+        "payloadSha256": "0631c9357253859e64550a7426ca80a82a5435d67c896043f471c6c5cd0eb1a2",
+        "metadata": "fish-five-r01/data/tuna-blue-label.metadata.json",
+        "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+        "attribution": "AnimalMesh 3D (https://sketchfab.com/AnimalMesh3D)",
+        "sourceUrl": "https://sketchfab.com/3d-models/animated-tuna-3d-animal-model-270a57fa91a946379505c4c683311c1b",
+        "licenseStatus": "SOURCE_RECORDED",
+        "metadataSha256": "829f1a00a38f16bff21402cc636d850afaf8fd356e8b50bd256ce3e40c29ee71"
+      },
+      "identity": {
+        "speciesStatus": "SOURCE_LABEL_ONLY",
+        "speciesName": null,
+        "targetArchetype": "SOURCE_POSTERIOR_BCF_CANDIDATE",
+        "confusionSet": [
+          "SOURCE_LABEL_IS_NOT_TAXONOMY",
+          "BCF_MPF_MIXTURE_UNCALIBRATED"
+        ],
+        "evidence": [
+          {
+            "class": "SOURCE_MEASURED",
+            "reference": "fish-five-r01/data/tuna-blue-label.metadata.json#source.asset",
+            "meaning": "原资产标题、作者和许可；不是科学物种确认"
+          }
+        ],
+        "largestDeviation": "蓝鳍为目录标签，生物种未确认；源下颌骨与皮肤存在，但源下颌动画通道为静止。"
+      },
+      "measurements": {
+        "surface": {
+          "status": "SOURCE_MEASURED",
+          "reference": "fish-five-r01/data/tuna-blue-label.metadata.json#parameterization",
+          "summary": "原索引/UV/贴图与全细节残差保留；静止重建精度已记录。",
+          "values": {
+            "vertices": 1878,
+            "triangles": 3044,
+            "kind": "CUBIC_AXIAL_RADIAL_CHART_PLUS_FULL_SOURCE_RESIDUAL",
+            "maxFloat32ReconstructionError": 1.487737683047996e-8
+          },
+          "referenceSha256": "829f1a00a38f16bff21402cc636d850afaf8fd356e8b50bd256ce3e40c29ee71"
+        },
+        "axis": {
+          "status": "SOURCE_MEASURED",
+          "reference": "fish-five-r01/data/tuna-blue-label.metadata.json#canonical",
+          "summary": "已量来源规范坐标与主轴；程序中心线是工程控制，不宣称原椎骨数量。",
+          "values": {
+            "bodyLength": 1,
+            "axis": "X head -0.5 to tail +0.5; Y dorsal; Z lateral",
+            "sourceLength": 0.5673379971827841
+          },
+          "referenceSha256": "829f1a00a38f16bff21402cc636d850afaf8fd356e8b50bd256ce3e40c29ee71"
+        },
+        "fins": {
+          "status": "SOURCE_DERIVED",
+          "reference": "fish-five-r01/data/tuna-blue-label.metadata.json#fins",
+          "summary": "来源鳍区、根与控制映射已登记，分类和柔性有工程估计；不能将候选值称为生物标定。",
+          "values": {
+            "mappedNames": [
+              "pectoral-left",
+              "pectoral-right",
+              "pelvic-left",
+              "pelvic-right",
+              "dorsal",
+              "anal",
+              "caudal"
+            ],
+            "roots": [
+              [
+                -0.22492413048871582,
+                -0.031954475458048054,
+                0.047308086864334874
+              ],
+              [
+                -0.21084153926392918,
+                -0.03195450927289704,
+                -0.08447999031812557
+              ],
+              [
+                -0.2293644739403725,
+                -0.11358418308185633,
+                -0.0074798210806398405
+              ],
+              [
+                -0.22675885699335763,
+                -0.1135841502763249,
+                -0.03186741981584766
+              ],
+              [
+                -0.03317375067607845,
+                0.11324930445471187,
+                0.01629710449965555
+              ],
+              [
+                0.1599651865643742,
+                -0.0913918482447884,
+                0.05502037191119971
+              ],
+              [
+                0.3710034962728726,
+                -0.010461870150416781,
+                0.018445502982663897
+              ]
+            ]
+          },
+          "referenceSha256": "829f1a00a38f16bff21402cc636d850afaf8fd356e8b50bd256ce3e40c29ee71"
+        },
+        "eyes": {
+          "status": "SOURCE_DERIVED",
+          "reference": "fish-five-r01/data/tuna-blue-label.metadata.json#eyes",
+          "summary": "保留来源眼区域与当前独立眼控制；外形、轴和贴合需要运行图像检查，候选半径不冒充生理实测。",
+          "values": {
+            "count": 2
+          },
+          "referenceSha256": "829f1a00a38f16bff21402cc636d850afaf8fd356e8b50bd256ce3e40c29ee71"
+        },
+        "mouth": {
+          "status": "SOURCE_DERIVED",
+          "reference": "fish-five-r01/data/oral-runtime-r04.json#tuna-blue-label",
+          "summary": "源下颌骨、皮肤权重已确认；原片段下颌静止，程序开合仅候选。",
+          "values": {
+            "nativeStatus": "NATIVE_JAW_LIP_SKIN_STATIC_CLIPS",
+            "rangeRad": 0.05
+          },
+          "referenceSha256": "b4f22443a9b58149a584f6170e5fa4309e5df8f20d9f989fb7d9a4985fbaf8da"
+        },
+        "gills": {
+          "status": "HOLD_LOCAL",
+          "reference": "fish-five-r01/data/oral-runtime-r04.json#tuna-blue-label",
+          "summary": "未确认独立鳃盖区域/关节/源动画，保持原表面合法姿态，不编造鳃开合。",
+          "referenceSha256": "b4f22443a9b58149a584f6170e5fa4309e5df8f20d9f989fb7d9a4985fbaf8da"
+        },
+        "envelope": {
+          "status": "SOURCE_DERIVED",
+          "reference": "fish-five-r01/src/behavior.js#configureShape",
+          "summary": "完整源边界加脊椎/鳍整个周期解析裕量，不缩小以假装紧密；新来源必须重新测。",
+          "referenceSha256": "fc5c5fb33474f9d09bd5eee499212751ca2e0820f1d54cee1b47119280c144af"
+        },
+        "gait": {
+          "status": "ENGINEERING_CANDIDATE",
+          "reference": "fish-five-r01/src/behavior.js#profiles.tuna-blue-label",
+          "summary": "共用数学接口的来源候选配置；原通道频率独立登记，不等于自然游动已校准。",
+          "values": {
+            "sourceAnimationAvailable": true,
+            "sourceReference": "fish-five-r01/data/tuna-blue-label.metadata.json#gaitReference"
+          },
+          "referenceSha256": "fc5c5fb33474f9d09bd5eee499212751ca2e0820f1d54cee1b47119280c144af"
+        },
+        "physicalUnits": {
+          "status": "UNKNOWN",
+          "reference": "fish-five-r01/data/tuna-blue-label.metadata.json#canonical.physicalMetres",
+          "summary": "来源真实米制单位未确认；1 BL 是规范尺度。",
+          "referenceSha256": "829f1a00a38f16bff21402cc636d850afaf8fd356e8b50bd256ce3e40c29ee71"
+        }
+      },
+      "behavior": {
+        "status": "ENGINEERING_CANDIDATE",
+        "profileRef": "fish-five-r01/src/behavior.js#profiles.tuna-blue-label",
+        "groupingEvidence": "UNKNOWN",
+        "parameterEvidence": [
+          {
+            "class": "ENGINEERING_CANDIDATE",
+            "reference": "knowledge/fish-motion/R08_IMPLEMENTATION_AND_REUSE.md",
+            "meaning": "速度、加速度、转弯和30条展示容量尚非此物种生物标定"
+          },
+          {
+            "key": "speed",
+            "value": 0.9,
+            "unit": "source-length/s",
+            "evidenceClass": "ENGINEERING_CANDIDATE",
+            "reference": "fish-five-r01/src/behavior.js#profiles.tuna-blue-label"
+          },
+          {
+            "key": "maxTurn",
+            "value": 0.48,
+            "unit": "rad/s",
+            "evidenceClass": "ENGINEERING_CANDIDATE",
+            "reference": "fish-five-r01/src/behavior.js#profiles.tuna-blue-label"
+          }
+        ]
+      },
+      "acceptance": {
+        "visualAcceptance": false,
+        "productionReady": false,
+        "scientificCalibration": false,
+        "independentVerification": "NOT_RUN",
+        "publication": "NOT_RUN"
+      },
+      "evidenceBindings": [
+        {
+          "path": "fish-five-r01/data/tuna-blue-label.metadata.json",
+          "sha256": "829f1a00a38f16bff21402cc636d850afaf8fd356e8b50bd256ce3e40c29ee71"
+        },
+        {
+          "path": "fish-five-r01/data/oral-runtime-r04.json",
+          "sha256": "b4f22443a9b58149a584f6170e5fa4309e5df8f20d9f989fb7d9a4985fbaf8da"
+        },
+        {
+          "path": "fish-five-r01/src/behavior.js",
+          "sha256": "fc5c5fb33474f9d09bd5eee499212751ca2e0820f1d54cee1b47119280c144af"
+        }
+      ]
+    },
+    {
+      "schema": "FISH_PRODUCTION_CARD_R09_1",
+      "knowledgeVersion": "1.0.0",
+      "id": "colorful",
+      "label": "彩色珊瑚鱼来源",
+      "source": {
+        "title": "Colorfull Fish",
+        "entrySha256": "fd9b759999b2d5ba2e3a03068391dadc5105505464ef40794a206ab49a6ff7f6",
+        "payloadSha256": "21d9c31ee0ded6f823e313ea80172807d714090053a916e1eb560d7150913af3",
+        "metadata": "fish-five-r01/data/colorful.metadata.json",
+        "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+        "attribution": "Erina eka syaharani (https://sketchfab.com/erinaekasyaharani)",
+        "sourceUrl": "https://sketchfab.com/3d-models/colorfull-fish-e4b53e289e4d4db09d94ee8cfa4cafaa",
+        "licenseStatus": "SOURCE_RECORDED",
+        "metadataSha256": "5e97ab5968f6d42628051d1989603326c6f871e9b7f8967bbd6f6bc957b4c68a"
+      },
+      "identity": {
+        "speciesStatus": "SOURCE_LABEL_ONLY",
+        "speciesName": null,
+        "targetArchetype": "SOURCE_MIXED_BCF_MPF_CANDIDATE",
+        "confusionSet": [
+          "SOURCE_LABEL_IS_NOT_TAXONOMY",
+          "BCF_MPF_MIXTURE_UNCALIBRATED"
+        ],
+        "evidence": [
+          {
+            "class": "SOURCE_MEASURED",
+            "reference": "fish-five-r01/data/colorful.metadata.json#source.asset",
+            "meaning": "原资产标题、作者和许可；不是科学物种确认"
+          }
+        ],
+        "largestDeviation": "源有多个网格形态；当前仅复刻选定单体，前部环形网格为眼部，不能据此造口。"
+      },
+      "measurements": {
+        "surface": {
+          "status": "SOURCE_MEASURED",
+          "reference": "fish-five-r01/data/colorful.metadata.json#parameterization",
+          "summary": "原索引/UV/贴图与全细节残差保留；静止重建精度已记录。",
+          "values": {
+            "vertices": 7692,
+            "triangles": 15296,
+            "kind": "CUBIC_AXIAL_RADIAL_CHART_PLUS_FULL_SOURCE_RESIDUAL",
+            "maxFloat32ReconstructionError": 2.4130384745912892e-8
+          },
+          "referenceSha256": "5e97ab5968f6d42628051d1989603326c6f871e9b7f8967bbd6f6bc957b4c68a"
+        },
+        "axis": {
+          "status": "SOURCE_MEASURED",
+          "reference": "fish-five-r01/data/colorful.metadata.json#canonical",
+          "summary": "已量来源规范坐标与主轴；程序中心线是工程控制，不宣称原椎骨数量。",
+          "values": {
+            "bodyLength": 1,
+            "axis": "X head -0.5 to tail +0.5; Y dorsal; Z lateral",
+            "sourceLength": 3.007879346074672
+          },
+          "referenceSha256": "5e97ab5968f6d42628051d1989603326c6f871e9b7f8967bbd6f6bc957b4c68a"
+        },
+        "fins": {
+          "status": "SOURCE_DERIVED",
+          "reference": "fish-five-r01/data/colorful.metadata.json#fins",
+          "summary": "来源鳍区、根与控制映射已登记，分类和柔性有工程估计；不能将候选值称为生物标定。",
+          "values": {
+            "mappedNames": [
+              "pectoral-left",
+              "pectoral-right",
+              "pelvic-left",
+              "pelvic-right",
+              "dorsal",
+              "anal",
+              "caudal"
+            ],
+            "roots": [
+              [
+                -0.3172015531879702,
+                -0.0249365509007888,
+                0.04493244083355102
+              ],
+              [
+                -0.31707736165696043,
+                -0.024936550900788817,
+                -0.04559305760622741
+              ],
+              [
+                -0.19913383421377778,
+                -0.10161008419870315,
+                0.0399479276218808
+              ],
+              [
+                -0.19902376354597254,
+                -0.1016100841987032,
+                -0.04028461308078953
+              ],
+              [
+                -0.06099335571873286,
+                0.20453944553723352,
+                -0.00041941409515111063
+              ],
+              [
+                -0.04544612735637704,
+                -0.18315567322398038,
+                -0.000398084921309913
+              ],
+              [
+                0.40006676054177137,
+                0.0037710270674806493,
+                0.0002131122395591721
+              ]
+            ]
+          },
+          "referenceSha256": "5e97ab5968f6d42628051d1989603326c6f871e9b7f8967bbd6f6bc957b4c68a"
+        },
+        "eyes": {
+          "status": "SOURCE_DERIVED",
+          "reference": "fish-five-r01/data/colorful.metadata.json#eyes",
+          "summary": "保留来源眼区域与当前独立眼控制；外形、轴和贴合需要运行图像检查，候选半径不冒充生理实测。",
+          "values": {
+            "count": 2
+          },
+          "referenceSha256": "5e97ab5968f6d42628051d1989603326c6f871e9b7f8967bbd6f6bc957b4c68a"
+        },
+        "mouth": {
+          "status": "HOLD_LOCAL",
+          "reference": "fish-five-r01/data/oral-runtime-r04.json#colorful",
+          "summary": "原模型未确认独立下颌映射；通用头骨和闭合表面均不能补出开口。",
+          "referenceSha256": "b4f22443a9b58149a584f6170e5fa4309e5df8f20d9f989fb7d9a4985fbaf8da"
+        },
+        "gills": {
+          "status": "HOLD_LOCAL",
+          "reference": "fish-five-r01/data/oral-runtime-r04.json#colorful",
+          "summary": "未确认独立鳃盖区域/关节/源动画，保持原表面合法姿态，不编造鳃开合。",
+          "referenceSha256": "b4f22443a9b58149a584f6170e5fa4309e5df8f20d9f989fb7d9a4985fbaf8da"
+        },
+        "envelope": {
+          "status": "SOURCE_DERIVED",
+          "reference": "fish-five-r01/src/behavior.js#configureShape",
+          "summary": "完整源边界加脊椎/鳍整个周期解析裕量，不缩小以假装紧密；新来源必须重新测。",
+          "referenceSha256": "fc5c5fb33474f9d09bd5eee499212751ca2e0820f1d54cee1b47119280c144af"
+        },
+        "gait": {
+          "status": "ENGINEERING_CANDIDATE",
+          "reference": "fish-five-r01/src/behavior.js#profiles.colorful",
+          "summary": "共用数学接口的来源候选配置；原通道频率独立登记，不等于自然游动已校准。",
+          "values": {
+            "sourceAnimationAvailable": true,
+            "sourceReference": "fish-five-r01/data/colorful.metadata.json#gaitReference"
+          },
+          "referenceSha256": "fc5c5fb33474f9d09bd5eee499212751ca2e0820f1d54cee1b47119280c144af"
+        },
+        "physicalUnits": {
+          "status": "UNKNOWN",
+          "reference": "fish-five-r01/data/colorful.metadata.json#canonical.physicalMetres",
+          "summary": "来源真实米制单位未确认；1 BL 是规范尺度。",
+          "referenceSha256": "5e97ab5968f6d42628051d1989603326c6f871e9b7f8967bbd6f6bc957b4c68a"
+        }
+      },
+      "behavior": {
+        "status": "ENGINEERING_CANDIDATE",
+        "profileRef": "fish-five-r01/src/behavior.js#profiles.colorful",
+        "groupingEvidence": "UNKNOWN",
+        "parameterEvidence": [
+          {
+            "class": "ENGINEERING_CANDIDATE",
+            "reference": "knowledge/fish-motion/R08_IMPLEMENTATION_AND_REUSE.md",
+            "meaning": "速度、加速度、转弯和30条展示容量尚非此物种生物标定"
+          },
+          {
+            "key": "speed",
+            "value": 0.45,
+            "unit": "source-length/s",
+            "evidenceClass": "ENGINEERING_CANDIDATE",
+            "reference": "fish-five-r01/src/behavior.js#profiles.colorful"
+          },
+          {
+            "key": "maxTurn",
+            "value": 0.92,
+            "unit": "rad/s",
+            "evidenceClass": "ENGINEERING_CANDIDATE",
+            "reference": "fish-five-r01/src/behavior.js#profiles.colorful"
+          }
+        ]
+      },
+      "acceptance": {
+        "visualAcceptance": false,
+        "productionReady": false,
+        "scientificCalibration": false,
+        "independentVerification": "NOT_RUN",
+        "publication": "NOT_RUN"
+      },
+      "evidenceBindings": [
+        {
+          "path": "fish-five-r01/data/colorful.metadata.json",
+          "sha256": "5e97ab5968f6d42628051d1989603326c6f871e9b7f8967bbd6f6bc957b4c68a"
+        },
+        {
+          "path": "fish-five-r01/data/oral-runtime-r04.json",
+          "sha256": "b4f22443a9b58149a584f6170e5fa4309e5df8f20d9f989fb7d9a4985fbaf8da"
+        },
+        {
+          "path": "fish-five-r01/src/behavior.js",
+          "sha256": "fc5c5fb33474f9d09bd5eee499212751ca2e0820f1d54cee1b47119280c144af"
+        }
+      ]
+    },
+    {
+      "schema": "FISH_PRODUCTION_CARD_R09_1",
+      "knowledgeVersion": "1.0.0",
+      "id": "picasso",
+      "label": "毕加索标签鱼",
+      "source": {
+        "title": "Picasso Fish (for the ScubeVerse)",
+        "entrySha256": "0df3caaaf503a0b53c48f38ed2217ccbc4afaf43aaaeccf569e87f0e32dca21c",
+        "payloadSha256": "1618ee054f62742ca25bd48d6729a0c6d1208ba67a997b3f6219849e99803690",
+        "metadata": "fish-five-r01/data/picasso.metadata.json",
+        "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+        "attribution": "Drone-Services.Biz (https://sketchfab.com/MKSZ)",
+        "sourceUrl": "https://sketchfab.com/3d-models/picasso-fish-for-the-scubeverse-b163d8c6bcad4fa6b79b8e5f34c7305a",
+        "licenseStatus": "SOURCE_RECORDED",
+        "metadataSha256": "b08001fa2c4e6c426fe986d5c7feb6484ca6f9f52d485efed21148098313f2d0"
+      },
+      "identity": {
+        "speciesStatus": "SOURCE_LABEL_ONLY",
+        "speciesName": null,
+        "targetArchetype": "SOURCE_MPF_ALTERNATIVE_CANDIDATE",
+        "confusionSet": [
+          "SOURCE_LABEL_IS_NOT_TAXONOMY",
+          "BCF_MPF_MIXTURE_UNCALIBRATED"
+        ],
+        "evidence": [
+          {
+            "class": "SOURCE_MEASURED",
+            "reference": "fish-five-r01/data/picasso.metadata.json#source.asset",
+            "meaning": "原资产标题、作者和许可；不是科学物种确认"
+          }
+        ],
+        "largestDeviation": "静态来源，无原骨架动画；物种及 MPF 习性未确认，闭合表面不能证明没有嘴或鳃。"
+      },
+      "measurements": {
+        "surface": {
+          "status": "SOURCE_MEASURED",
+          "reference": "fish-five-r01/data/picasso.metadata.json#parameterization",
+          "summary": "原索引/UV/贴图与全细节残差保留；静止重建精度已记录。",
+          "values": {
+            "vertices": 9161,
+            "triangles": 14486,
+            "kind": "CUBIC_AXIAL_RADIAL_CHART_PLUS_FULL_SOURCE_RESIDUAL",
+            "maxFloat32ReconstructionError": 2.708523860750489e-8
+          },
+          "referenceSha256": "b08001fa2c4e6c426fe986d5c7feb6484ca6f9f52d485efed21148098313f2d0"
+        },
+        "axis": {
+          "status": "SOURCE_MEASURED",
+          "reference": "fish-five-r01/data/picasso.metadata.json#canonical",
+          "summary": "已量来源规范坐标与主轴；程序中心线是工程控制，不宣称原椎骨数量。",
+          "values": {
+            "bodyLength": 1,
+            "axis": "X head -0.5 to tail +0.5; Y dorsal; Z lateral",
+            "sourceLength": 0.010011848527938128
+          },
+          "referenceSha256": "b08001fa2c4e6c426fe986d5c7feb6484ca6f9f52d485efed21148098313f2d0"
+        },
+        "fins": {
+          "status": "SOURCE_DERIVED",
+          "reference": "fish-five-r01/data/picasso.metadata.json#fins",
+          "summary": "来源鳍区、根与控制映射已登记，分类和柔性有工程估计；不能将候选值称为生物标定。",
+          "values": {
+            "mappedNames": [
+              "pectoral-left",
+              "pectoral-right",
+              "pelvic-left",
+              "pelvic-right",
+              "dorsal",
+              "anal",
+              "caudal"
+            ],
+            "roots": [
+              [
+                -0.06268138716419566,
+                0.007670381762975579,
+                0.09383893188637273
+              ],
+              [
+                -0.0760705668218941,
+                -0.015799935031953795,
+                -0.09581575797558768
+              ],
+              [
+                -0.12,
+                -0.13878537996637114,
+                0.0676848783649327
+              ],
+              [
+                -0.12,
+                -0.13878537996637114,
+                -0.0676848783649327
+              ],
+              [
+                -0.053375854715573254,
+                0.1917399861904712,
+                0.023643267932027152
+              ],
+              [
+                0.011402060280049362,
+                -0.2363444188459095,
+                0.013066763722617147
+              ],
+              [
+                0.3202998835224526,
+                -0.04529211643646658,
+                -0.01033093919577731
+              ]
+            ]
+          },
+          "referenceSha256": "b08001fa2c4e6c426fe986d5c7feb6484ca6f9f52d485efed21148098313f2d0"
+        },
+        "eyes": {
+          "status": "SOURCE_DERIVED",
+          "reference": "fish-five-r01/data/picasso.metadata.json#eyes",
+          "summary": "保留来源眼区域与当前独立眼控制；外形、轴和贴合需要运行图像检查，候选半径不冒充生理实测。",
+          "values": {
+            "count": 2
+          },
+          "referenceSha256": "b08001fa2c4e6c426fe986d5c7feb6484ca6f9f52d485efed21148098313f2d0"
+        },
+        "mouth": {
+          "status": "HOLD_LOCAL",
+          "reference": "fish-five-r01/data/oral-runtime-r04.json#picasso",
+          "summary": "原模型未确认独立下颌映射；通用头骨和闭合表面均不能补出开口。",
+          "referenceSha256": "b4f22443a9b58149a584f6170e5fa4309e5df8f20d9f989fb7d9a4985fbaf8da"
+        },
+        "gills": {
+          "status": "HOLD_LOCAL",
+          "reference": "fish-five-r01/data/oral-runtime-r04.json#picasso",
+          "summary": "未确认独立鳃盖区域/关节/源动画，保持原表面合法姿态，不编造鳃开合。",
+          "referenceSha256": "b4f22443a9b58149a584f6170e5fa4309e5df8f20d9f989fb7d9a4985fbaf8da"
+        },
+        "envelope": {
+          "status": "SOURCE_DERIVED",
+          "reference": "fish-five-r01/src/behavior.js#configureShape",
+          "summary": "完整源边界加脊椎/鳍整个周期解析裕量，不缩小以假装紧密；新来源必须重新测。",
+          "referenceSha256": "fc5c5fb33474f9d09bd5eee499212751ca2e0820f1d54cee1b47119280c144af"
+        },
+        "gait": {
+          "status": "ENGINEERING_CANDIDATE",
+          "reference": "fish-five-r01/src/behavior.js#profiles.picasso",
+          "summary": "共用数学接口的来源候选配置；原通道频率独立登记，不等于自然游动已校准。",
+          "values": {
+            "sourceAnimationAvailable": false,
+            "sourceReference": "fish-five-r01/data/picasso.metadata.json#gaitReference"
+          },
+          "referenceSha256": "fc5c5fb33474f9d09bd5eee499212751ca2e0820f1d54cee1b47119280c144af"
+        },
+        "physicalUnits": {
+          "status": "UNKNOWN",
+          "reference": "fish-five-r01/data/picasso.metadata.json#canonical.physicalMetres",
+          "summary": "来源真实米制单位未确认；1 BL 是规范尺度。",
+          "referenceSha256": "b08001fa2c4e6c426fe986d5c7feb6484ca6f9f52d485efed21148098313f2d0"
+        }
+      },
+      "behavior": {
+        "status": "ENGINEERING_CANDIDATE",
+        "profileRef": "fish-five-r01/src/behavior.js#profiles.picasso",
+        "groupingEvidence": "UNKNOWN",
+        "parameterEvidence": [
+          {
+            "class": "ENGINEERING_CANDIDATE",
+            "reference": "knowledge/fish-motion/R08_IMPLEMENTATION_AND_REUSE.md",
+            "meaning": "速度、加速度、转弯和30条展示容量尚非此物种生物标定"
+          },
+          {
+            "key": "speed",
+            "value": 0.34,
+            "unit": "source-length/s",
+            "evidenceClass": "ENGINEERING_CANDIDATE",
+            "reference": "fish-five-r01/src/behavior.js#profiles.picasso"
+          },
+          {
+            "key": "maxTurn",
+            "value": 0.9,
+            "unit": "rad/s",
+            "evidenceClass": "ENGINEERING_CANDIDATE",
+            "reference": "fish-five-r01/src/behavior.js#profiles.picasso"
+          }
+        ]
+      },
+      "acceptance": {
+        "visualAcceptance": false,
+        "productionReady": false,
+        "scientificCalibration": false,
+        "independentVerification": "NOT_RUN",
+        "publication": "NOT_RUN"
+      },
+      "evidenceBindings": [
+        {
+          "path": "fish-five-r01/data/picasso.metadata.json",
+          "sha256": "b08001fa2c4e6c426fe986d5c7feb6484ca6f9f52d485efed21148098313f2d0"
+        },
+        {
+          "path": "fish-five-r01/data/oral-runtime-r04.json",
+          "sha256": "b4f22443a9b58149a584f6170e5fa4309e5df8f20d9f989fb7d9a4985fbaf8da"
+        },
+        {
+          "path": "fish-five-r01/src/behavior.js",
+          "sha256": "fc5c5fb33474f9d09bd5eee499212751ca2e0820f1d54cee1b47119280c144af"
+        }
+      ]
+    }
+  ],
+  "implementationBindings": [
+    {
+      "path": "fish-five-r01/src/behavior.js",
+      "sha256": "fc5c5fb33474f9d09bd5eee499212751ca2e0820f1d54cee1b47119280c144af"
+    },
+    {
+      "path": "fish-five-r01/src/schooling-r08.js",
+      "sha256": "f2e27027c0ea36055d6c7c3bdd9ef2c053205d05a83882235f597e42628e0713"
+    },
+    {
+      "path": "fish-five-r01/src/legacy-school-r08.js",
+      "sha256": "b3bd25b8908ff219c44ce883e17092bc507164e265a7c8ad9ecaeab15e6198f9"
+    },
+    {
+      "path": "fish-five-r01/src/ocular-r04.js",
+      "sha256": "6070b4b4256b6102400518c3c969ca29846b7dce51e6b7fe57d8246932715dae"
+    },
+    {
+      "path": "fish-five-r01/src/oral-r04.js",
+      "sha256": "7b5a9a12eff682e5b9c72fa2edc98a01114b2a269f856b2085e6a6e706f34488"
+    },
+    {
+      "path": "fish-five-r01/src/legacy-cranial-r04.js",
+      "sha256": "b8492962f30e934585224d0d4311bbb963861af4240a79e3b08221d7be05236e"
+    },
+    {
+      "path": "fish-five-r01/src/app.js",
+      "sha256": "52e527063d667690fe5ea24d448f72f220294313de02e1fac2c86a061548ebbe"
+    },
+    {
+      "path": "fish-five-r01/scripts/verify-gpu-r02.mjs",
+      "sha256": "a9d3cc52b7b92851ef36a3fc587f8816d51192113aa6d76f2dc3b96762a29fd6"
+    },
+    {
+      "path": "fish-five-r01/scripts/verify-behavior-r03.mjs",
+      "sha256": "29963850b02a855253af591723a16637528be14beddbe7c9bbc6555c6e9da05e"
+    },
+    {
+      "path": "fish-five-r01/scripts/verify-ocular-r04.mjs",
+      "sha256": "1f3818ab5363105ddcaffc9a7273aa9ce68da23c8a5758e5ccf4812a2d2a0114"
+    },
+    {
+      "path": "fish-five-r01/scripts/verify-oral-r04.mjs",
+      "sha256": "25475d7b6e69f12633a8767d8a4324b1b7ce65c1fab3dd77b38085b1c8050df9"
+    },
+    {
+      "path": "fish-five-r01/scripts/verify-schooling-r08.mjs",
+      "sha256": "6008db7df3282304c231ef2e2619d586722a510f73e41304e9db3e5c83448d51"
+    },
+    {
+      "path": "fish-five-r01/scripts/verify-runtime-r08.mjs",
+      "sha256": "725af6f37a81844e27edc8d8c4b03c7f264685bf11977b82b8b389e974a15e75"
+    },
+    {
+      "path": "knowledge/fish-motion/FISH_FACTORY_FRAMEWORK_R01.md",
+      "sha256": "7c4fb094ca37cba6b75a187fb99cb515fbf183f449449b85eebb0cf9a6ef5767"
+    },
+    {
+      "path": "knowledge/fish-motion/R02_RENDER_AND_UNIFIED_FRAMEWORK.md",
+      "sha256": "2b248407374c1304ffa941698ba5626a9e9f6ee93f71cacfc62645135f6c0f8c"
+    },
+    {
+      "path": "fish-five-r01/evidence/R02_REGRESSION_CASES.json",
+      "sha256": "4e9986744d53d66994fefad138af9c3b76d6ef62fdb1a6257cc91b54f880e242"
+    },
+    {
+      "path": "fish-five-r01/data/oral-runtime-r04.json",
+      "sha256": "b4f22443a9b58149a584f6170e5fa4309e5df8f20d9f989fb7d9a4985fbaf8da"
+    },
+    {
+      "path": "knowledge/fish-motion/R08_COLLECTIVE_MOTION_MODELS.md",
+      "sha256": "4e6728716f64bf4c6d5d0d63e1767a715402a6cc6339f0bdfb9c1ba9688e81f2"
+    },
+    {
+      "path": "knowledge/fish-motion/R08_CONTROL_SPACE_AUDIT.md",
+      "sha256": "b65c3bd2bf8417b6a5b6d1aeb37fc9f51d967d1ede5f2e6c0eabfb78cffc9e4c"
+    },
+    {
+      "path": "knowledge/fish-motion/R08_IMPLEMENTATION_AND_REUSE.md",
+      "sha256": "70757afd62268cf1c14eb24a42ab2440a439d5e0f572e15f1c7e46779017bb6c"
+    },
+    {
+      "path": "knowledge/MOTHER_PRODUCTION_OPERATING_SYSTEM_R2_ZH.md",
+      "sha256": "c121a219b2a217836da8ceabf854d4b2dc41dec7448045dd12285b43e2c2294a"
+    }
+  ]
+}
