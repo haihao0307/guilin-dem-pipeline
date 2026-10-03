@@ -1,0 +1,74 @@
+name: Publish Fractal Wave Tree Workbench R01
+
+on:
+  push:
+    branches:
+      - work/fractal-wave-kuko-day123-r01-20261003
+    paths:
+      - .github/workflows/publish-fractal-wave-tree-workbench-r01.yml
+      - kaopu-tree-fractal-wave-lab/index.html
+      - kaopu-tree-fractal-wave-lab/workbench-r01.js
+      - kaopu-tree-fractal-wave-lab/INTEGRATION_MANIFEST_R01.json
+      - kaopu-tree-fractal-wave-lab/INTEGRATION_R01_ZH.md
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-fractal-wave-tree-workbench-r01
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout source branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify source anchors and integrated shell
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f kaopu-tree-fractal-wave-lab/index.html
+          test -f kaopu-tree-fractal-wave-lab/workbench-r01.js
+          test -f kaopu-tree-fractal-wave-lab/INTEGRATION_MANIFEST_R01.json
+          test -f kaopu-tree-fractal-wave-lab/mobile-r05-seasons/index.html
+          test -f kaopu-tree-fractal-wave-lab/kuko-day123-branching-r01/index.html
+          grep -q '分形造波树 综合工作台 R01' kaopu-tree-fractal-wave-lab/index.html
+          grep -q 'window.__fractalTreeWorkbenchReady' kaopu-tree-fractal-wave-lab/workbench-r01.js
+          grep -q 'KAOPU.fractal-wave.tree-workbench/1' kaopu-tree-fractal-wave-lab/INTEGRATION_MANIFEST_R01.json
+          grep -q 'PANDANUS TECTORIUS TEACHER' kaopu-tree-fractal-wave-lab/mobile-r05-seasons/index.html
+          grep -q 'KuKo Day 123' kaopu-tree-fractal-wave-lab/kuko-day123-branching-r01/index.html
+
+      - name: Copy only integrated workbench files onto latest gh-pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC="$GITHUB_WORKSPACE"
+          git fetch origin gh-pages
+          git worktree add /tmp/gh-pages origin/gh-pages
+          cd /tmp/gh-pages
+          git switch -c publish-fractal-tree-r01
+          mkdir -p kaopu-tree-fractal-wave-lab
+          cp "$SRC/kaopu-tree-fractal-wave-lab/index.html" kaopu-tree-fractal-wave-lab/index.html
+          cp "$SRC/kaopu-tree-fractal-wave-lab/workbench-r01.js" kaopu-tree-fractal-wave-lab/workbench-r01.js
+          cp "$SRC/kaopu-tree-fractal-wave-lab/INTEGRATION_MANIFEST_R01.json" kaopu-tree-fractal-wave-lab/INTEGRATION_MANIFEST_R01.json
+          cp "$SRC/kaopu-tree-fractal-wave-lab/INTEGRATION_R01_ZH.md" kaopu-tree-fractal-wave-lab/INTEGRATION_R01_ZH.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-tree-fractal-wave-lab/index.html \
+                  kaopu-tree-fractal-wave-lab/workbench-r01.js \
+                  kaopu-tree-fractal-wave-lab/INTEGRATION_MANIFEST_R01.json \
+                  kaopu-tree-fractal-wave-lab/INTEGRATION_R01_ZH.md
+          git diff --cached --quiet || git commit -m 'publish(fractal-wave): integrate Tree Life R05 and KuKo Day123 workbench R01'
+          for attempt in 1 2 3 4 5; do
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            sleep $((attempt * 3))
+          done
+          exit 1
