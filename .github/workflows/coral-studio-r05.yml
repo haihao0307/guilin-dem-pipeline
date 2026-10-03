@@ -1,0 +1,103 @@
+name: Coral Studio R05 full view and continuous camera
+on:
+  push:
+    branches: [work/coral-studio-fullview-r05-20261003]
+    paths: [.github/workflows/coral-studio-r05.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  validate-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build from approved R04 only
+        run: |
+          mkdir -p /tmp/r05-evidence
+          cp -r tools/coral-studio-r05 /tmp/r05-tools
+          python tools/coral-studio-r05/build.py coral-mother-core-seed-r01 /tmp/r05-site
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('/tmp/r05-site/STUDIO_MANIFEST.json').read_text())
+          expected={'index.html':'09f79eff26831fbf7ad8245923f3b8225a456fa921724830a9019bef0c8c97e8','runtime.js':'1141e15415ce0fac43a6d3b8bec07d65eb71b9d3fcb35cb25d9cfc253f8d4dac','studio.css':'72d082d5240ec8c0e2ba115f727b624d9699fa4e0f067bd1ada09aa3151cae14','studio.js':'317a3a5f2de487d888ce6de954ff676fd95ae3b4b05510d7662f1a6af50546e5'}
+          assert d['files']==expected,(d,expected)
+          PY
+      - name: Install Chromium
+        run: |
+          python -m pip install playwright==1.55.0
+          python -m playwright install --with-deps chromium
+      - name: HTTP regression tests before publication
+        run: |
+          python -m http.server 8765 --directory /tmp --bind 127.0.0.1 >/tmp/r05-http.log 2>&1 &
+          python /tmp/r05-tools/qa.py http://127.0.0.1:8765/r05-site/ /tmp/r05-evidence/prepublish
+      - name: Publish only verified Coral host files
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          git checkout -B r05-publish origin/gh-pages
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,shutil,json
+          d=json.loads(Path('/tmp/r05-site/STUDIO_MANIFEST.json').read_text());p=Path('coral-mother-core-seed-r01')
+          for n,h in d['base'].items():assert hashlib.sha256((p/n).read_bytes()).hexdigest()==h,('concurrent coral change, stopping',n)
+          a=p/'archive-accepted-r04-before-r05';a.mkdir(exist_ok=True)
+          for n in d['base']:shutil.copyfile(p/n,a/n)
+          for n in list(d['files'])+['STUDIO_MANIFEST.json']:shutil.copyfile(Path('/tmp/r05-site')/n,p/n)
+          shutil.copyfile('/tmp/r05-site/STUDIO_MANIFEST.json','/tmp/r05-evidence/STUDIO_MANIFEST.json')
+          PY
+          git config user.name 'Coral Mother Studio'
+          git config user.email 'actions@users.noreply.github.com'
+          git add coral-mother-core-seed-r01/index.html coral-mother-core-seed-r01/runtime.js coral-mother-core-seed-r01/studio.css coral-mother-core-seed-r01/studio.js coral-mother-core-seed-r01/STUDIO_MANIFEST.json coral-mother-core-seed-r01/archive-accepted-r04-before-r05/
+          git commit -m 'fix(coral): full-width top-tab studio, continuous native camera and physical-pixel rendering'
+          git push origin HEAD:gh-pages
+          git rev-parse HEAD > /tmp/r05-evidence/PUBLISHED_COMMIT.txt
+      - name: Wait for matching public bytes and verify public behavior
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from urllib.request import Request,urlopen
+          import json,hashlib,time
+          d=json.loads(Path('/tmp/r05-site/STUDIO_MANIFEST.json').read_text());base='https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-core-seed-r01/';ready=False
+          for _ in range(70):
+              try:
+                  checks={n:hashlib.sha256(urlopen(Request(base+n+'?verify='+str(time.time_ns()),headers={'Cache-Control':'no-cache'}),timeout=20).read()).hexdigest()==h for n,h in d['files'].items()}
+                  if all(checks.values()):ready=True;break
+              except Exception as e:print(str(e),flush=True)
+              time.sleep(8)
+          assert ready,'Public deployment did not match the tested files'
+          Path('/tmp/r05-evidence/PUBLIC_HASHES.json').write_text(json.dumps(checks,indent=2))
+          PY
+          python /tmp/r05-tools/qa.py https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-core-seed-r01/ /tmp/r05-evidence/public
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coral-studio-r05-evidence
+          path: /tmp/r05-evidence/
+          retention-days: 30
+  encoded-source-recovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fetch original PR heads read-only
+        run: git fetch --no-tags origin '+refs/pull/*/head:refs/remotes/recovery-pr/*'
+      - name: Inspect nested and encoded source without executing it
+        run: python tools/coral-studio-r05/recover_encoded.py /tmp/r05-encoded --git
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coral-r05-encoded-source-audit
+          path: /tmp/r05-encoded/
+          retention-days: 30
