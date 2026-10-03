@@ -1,0 +1,65 @@
+name: Coral Young public native viewport verification
+on:
+  push:
+    branches: [work/coral-young-source-r01-20261003]
+    paths: [.github/workflows/coral-young-mobile-verify.yml]
+permissions:
+  contents: read
+jobs:
+  verify-public-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install browser
+        run: |
+          python -m pip install playwright==1.55.0
+          python -m playwright install --with-deps chromium
+      - name: Verify actual public study at native physical pixels
+        shell: python
+        run: |
+          import json,hashlib
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          O=Path('/tmp/young-native-qa');O.mkdir(exist_ok=True)
+          R={'scope':'Actual live URL; fresh desktop and mobile-size contexts; not physical phone tests','checks':{},'sizes':[],'errors':[]}
+          url='https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-core-seed-r01/?v=native-verify-20261003#view=young'
+          def check(n,v):
+              R['checks'][n]=bool(v)
+              assert v,n
+          def settled(f):
+              f.wait_for_function('''()=>{const s=window.YoungStudyState,r=document.querySelector('#studentView').getBoundingClientRect();return s?.ready&&!s.error&&s.resolution[0]===Math.ceil(r.width*devicePixelRatio*s.quality)&&s.resolution[1]===Math.ceil(r.height*devicePixelRatio*s.quality)}''',timeout=60000)
+              f.evaluate('YoungStudy.pixelSignature()')
+          try:
+              with sync_playwright() as pw:
+                  b=pw.chromium.launch(headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+                  for w,h,dpr in [(390,844,1),(390,844,2),(1440,1000,1)]:
+                      key=str(w)+'-dpr'+str(dpr)
+                      c=b.new_context(viewport={'width':w,'height':h},device_scale_factor=dpr);p=c.new_page();p.on('pageerror',lambda e:R['errors'].append(str(e)))
+                      response=p.goto(url,wait_until='domcontentloaded',timeout=60000);check('http200-'+key,response.status==200)
+                      p.locator('#youngFrame').wait_for(state='visible');f=p.locator('#youngFrame').element_handle().content_frame();settled(f)
+                      check('source-hash-'+key,hashlib.sha256(f.locator('#shader').text_content().strip().encode()).hexdigest()=='60f2ed28f199c435ffac60a6f9fde0426ff64246e69d5016eaf7fe65b5f5da2f')
+                      check('equal-teacher-student-'+key,f.evaluate('YoungStudy.pixelSignature()===YoungStudy.pixelSignature("teacher")'))
+                      check('no-root-overflow-'+key,p.evaluate('document.documentElement.scrollWidth<=innerWidth'))
+                      check('no-child-overflow-'+key,f.evaluate('document.documentElement.scrollWidth<=innerWidth'))
+                      z=f.evaluate('YoungStudy.measure()');check('teacher-bounds-'+key,z['teacherPanel']['width']<=z['studentPanel']['width']+2 and z['teacherPanel']['height']<=z['studentPanel']['height']+2)
+                      R['sizes'].append({'viewport':[w,h],'dpr':dpr,'state':f.evaluate('YoungStudyState')})
+                      p.screenshot(path=str(O/('LIVE-'+key+'.png')))
+                      f.locator('#refClose').click();check('reference-close-'+key,not f.locator('#teacherPanel').is_visible());settled(f)
+                      p.set_viewport_size({'width':844 if w==390 else 1280,'height':700 if w==390 else 900});settled(f);check('resized-native-'+key,True)
+                      p.screenshot(path=str(O/('RESIZED-'+key+'.png')))
+                      c.close()
+                  b.close()
+              check('no-script-errors',not R['errors']);R['passed']=True
+          except Exception as e:
+              R['passed']=False;R['exception']=str(e);raise
+          finally:
+              (O/'NATIVE_PUBLIC_QA.json').write_text(json.dumps(R,ensure_ascii=False,indent=2));print(json.dumps(R,ensure_ascii=False,indent=2))
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coral-young-native-public-qa
+          path: /tmp/young-native-qa/
+          retention-days: 30
