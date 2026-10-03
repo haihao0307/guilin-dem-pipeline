@@ -1,9 +1,9 @@
-name: Publish Fractal Wave Tree Workbench R02
+name: Publish Fractal Wave Tree Workbench R03
 
 on:
   push:
     branches:
-      - work/fractal-wave-native-3d-r02-20261003
+      - work/fractal-wave-native-3d-r03-20261003
     paths:
       - .github/workflows/publish-fractal-wave-tree-workbench-r01.yml
       - kaopu-tree-fractal-wave-lab/index.html
@@ -18,13 +18,16 @@ on:
       - kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r02/index.html
       - kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r02/runtime.js
       - kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r02/NATIVE_3D_GRAMMAR_R02.json
+      - kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r03/index.html
+      - kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r03/runtime.js
+      - kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r03/NATIVE_3D_GRAMMAR_R03.json
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: publish-fractal-wave-tree-workbench-r02
+  group: publish-fractal-wave-tree-workbench-r03
   cancel-in-progress: false
 
 jobs:
@@ -54,7 +57,10 @@ jobs:
           test -f kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r02/index.html
           test -f kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r02/runtime.js
           test -f kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r02/NATIVE_3D_GRAMMAR_R02.json
-          grep -q '分形造波树 综合工作台 R02' kaopu-tree-fractal-wave-lab/index.html
+          test -f kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r03/index.html
+          test -f kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r03/runtime.js
+          test -f kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r03/NATIVE_3D_GRAMMAR_R03.json
+          grep -q '分形造波树 综合工作台 R03' kaopu-tree-fractal-wave-lab/index.html
           grep -q 'window.__fractalTreeWorkbenchReady' kaopu-tree-fractal-wave-lab/workbench-r01.js
           grep -q 'KAOPU.fractal-wave.tree-workbench/1' kaopu-tree-fractal-wave-lab/INTEGRATION_MANIFEST_R01.json
           grep -q 'PANDANUS TECTORIUS TEACHER' kaopu-tree-fractal-wave-lab/mobile-r05-seasons/index.html
@@ -68,6 +74,9 @@ jobs:
           grep -q 'window.__native3dR02Ready' kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r02/runtime.js
           grep -q 'cameraAffectsGeneration' kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r02/runtime.js
           grep -q 'KAOPU.fractal-wave.native-3d/2' kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r02/NATIVE_3D_GRAMMAR_R02.json
+          grep -q 'Native 3D Fractal Grammar R03' kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r03/index.html
+          grep -q 'window.__native3dR03Ready' kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r03/runtime.js
+          grep -q 'KAOPU.fractal-wave.native-3d/3' kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r03/NATIVE_3D_GRAMMAR_R03.json
 
       - name: Copy only integrated workbench files onto latest gh-pages
         shell: bash
@@ -81,6 +90,7 @@ jobs:
           mkdir -p kaopu-tree-fractal-wave-lab/kuko-day123-branching-r01
           mkdir -p kaopu-tree-fractal-wave-lab/kuko-day123-3d-lift-r01
           mkdir -p kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r02
+          mkdir -p kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r03
           cp "$SRC/kaopu-tree-fractal-wave-lab/index.html" kaopu-tree-fractal-wave-lab/index.html
           cp "$SRC/kaopu-tree-fractal-wave-lab/workbench-r01.js" kaopu-tree-fractal-wave-lab/workbench-r01.js
           cp "$SRC/kaopu-tree-fractal-wave-lab/INTEGRATION_MANIFEST_R01.json" kaopu-tree-fractal-wave-lab/INTEGRATION_MANIFEST_R01.json
@@ -93,6 +103,9 @@ jobs:
           cp "$SRC/kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r02/index.html" kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r02/index.html
           cp "$SRC/kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r02/runtime.js" kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r02/runtime.js
           cp "$SRC/kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r02/NATIVE_3D_GRAMMAR_R02.json" kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r02/NATIVE_3D_GRAMMAR_R02.json
+          cp "$SRC/kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r03/index.html" kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r03/index.html
+          cp "$SRC/kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r03/runtime.js" kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r03/runtime.js
+          cp "$SRC/kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r03/NATIVE_3D_GRAMMAR_R03.json" kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r03/NATIVE_3D_GRAMMAR_R03.json
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add kaopu-tree-fractal-wave-lab/index.html \
@@ -106,8 +119,11 @@ jobs:
                   kaopu-tree-fractal-wave-lab/kuko-day123-3d-lift-r01/LIFT_RULES_R01.json \
                   kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r02/index.html \
                   kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r02/runtime.js \
-                  kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r02/NATIVE_3D_GRAMMAR_R02.json
-          git diff --cached --quiet || git commit -m 'publish(fractal-wave): add Native 3D branching grammar R02'
+                  kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r02/NATIVE_3D_GRAMMAR_R02.json \
+                  kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r03/index.html \
+                  kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r03/runtime.js \
+                  kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r03/NATIVE_3D_GRAMMAR_R03.json
+          git diff --cached --quiet || git commit -m 'publish(fractal-wave): integrate large Native 3D spatial growth R03'
           for attempt in 1 2 3 4 5; do
             git fetch origin gh-pages
             git rebase origin/gh-pages
