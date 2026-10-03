@@ -20,7 +20,7 @@ const P={
 
 const seed=123303;
 let showBuds=true,showField=true,showProbe=true,autoRotate=false,growTimer=null,currentSignature=null;
-let lastGraph=null;
+let lastGraph=null,firstFit=true;
 
 const stage=$('stage'),errorEl=$('error'),infoEl=$('info'),statusEl=$('status');
 const scene=new THREE.Scene();
@@ -331,6 +331,7 @@ function rebuild(){
   $('segBadge').textContent='Shoot '+currentSignature.segmentCount;$('budBadge').textContent='Bud '+currentSignature.budCount;$('volBadge').textContent='Z '+currentSignature.zSpan.toFixed(2);
   statusEl.textContent=`R03 已直接在三维空间生长。当前 ${VOICES[P.voice].name} 只提供候选槽；Space / Light / Obstacle 会在枝条出生以前改变 Bud 的选择。分枝粗细来自下游 support 反传，不再只按递归层级缩放。`;
   updateOutputs();window.__native3dR03Signature=currentSignature;
+  if(firstFit){firstFit=false;requestAnimationFrame(fitToGraph);}
 }
 
 function updateOutputs(){
@@ -355,6 +356,17 @@ $('grow').addEventListener('click',()=>{
 });
 
 function setView(p,target=new THREE.Vector3(0,.55,0)){camera.position.copy(p);controls.target.copy(target);controls.update();}
+function fitToGraph(){
+  if(!currentSignature)return;
+  const b=currentSignature.bounds;
+  const min=new THREE.Vector3(...b.min),max=new THREE.Vector3(...b.max),center=min.clone().add(max).multiplyScalar(.5);
+  const size=max.clone().sub(min),span=Math.max(size.x,size.y,size.z,2);
+  const direction=new THREE.Vector3(1.05,.62,1.18).normalize();
+  controls.target.copy(center);
+  camera.position.copy(center).addScaledVector(direction,span*1.55);
+  camera.near=Math.max(.02,span/180);camera.far=Math.max(60,span*12);camera.updateProjectionMatrix();controls.update();
+}
+$('fit').addEventListener('click',fitToGraph);
 $('orbit').addEventListener('click',()=>setView(new THREE.Vector3(8.2,5.1,9.1)));
 $('front').addEventListener('click',()=>setView(new THREE.Vector3(0,.6,13)));
 $('side').addEventListener('click',()=>setView(new THREE.Vector3(13,.6,0)));
@@ -375,6 +387,7 @@ try{
     setVoice(id){if(!VOICES[id])return;P.voice=id;$('voice').value=id;rebuild();},
     front(){setView(new THREE.Vector3(0,.6,13));},
     side(){setView(new THREE.Vector3(13,.6,0));},
+    fit:fitToGraph,
     getState(){return {params:{...P},signature:currentSignature,showBuds,showField,showProbe,autoRotate};}
   };
   document.documentElement.dataset.ready='true';
