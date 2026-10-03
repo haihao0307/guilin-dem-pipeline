@@ -2,11 +2,21 @@
 
 ## 当前状态
 
-**代码与静态结构检查已完成；真实浏览器/WebGL 验证尚未完成。不要将本候选称为已验收成品。**
+**SEDDI 基线工作台已发布，并通过真实 Chromium 的 56 项运行检查。**
 
-当前云端环境启动独立 Chromium 时出现 socket() Operation not permitted；支持的云浏览器内部预览地址返回 502 Connection refused。没有以图片、假模型、替换算法或关闭安全策略绕过验证。
+在线入口：https://haihao0307.github.io/guilin-dem-pipeline/kaopu-hair-workbench/
+
+本次验证包括同一单文件的 file://、HTTP 与公网运行，桌面 1440×1000 和手机尺寸 390×844，真实像素一致性、毛长、重置、相机、GPU 梳理及还原、参数状态导入与 PNG 下载。JS 与 WebGL 错误为 0；file:// 核心外部网络请求为 0。
+
+版本：2026-10-03-seddi-baseline-r02。HTML SHA-256：`a232020fc17beacaa66899a8d4f901ff2e9b6783b8542decaeaac9e440b931c8`。
+
+验证工作流：https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37085184854
+
+这是老师原始算法与参考资产的运行基线及编辑工作台，不是完整毛发生产平台。没有完成实体 iPhone/Safari、触摸手势、GPU 梳理持久化、长发动力学或生产级视觉验收。
 
 ## 文件
+
+下面列出完整源码 ZIP 的目录。GitHub 在线目录保存单文件、适配源码和清单；完整未改动的老师原档位于随交接保存的源码 ZIP 中。
 
 - `dist/KAOPU-毛发工作台.html`：单文件候选，原始兔子/布片、所需纹理、20 个原始渲染模块与新界面内嵌
 - `src/workbench.html`：中文工作台界面
@@ -28,7 +38,7 @@ node tests/static.cjs
 node tests/controller.cjs
 ```
 
-`tests/smoke.cjs` 需要已安装的 Playwright 与 Chromium。它是本测试环境准备的 file:// 浏览器检查，当前因执行环境权限未能启动。实际运行验证和视觉审查必须继续，不能由静态检查代替。
+`tests/browser-qa.cjs` 是已执行的真实浏览器检查，使用 Playwright 1.55.0 与 Chromium 140。测试机安装 Noto CJK 字体用于可靠检查中文布局。`tests/smoke.cjs` 保留最初不可用执行环境的检查草稿，不代表通过记录。运行主测试时指定 HAIR_HTML 为 dist 中的单文件路径。
 
 ## 实现与准确边界
 
@@ -50,7 +60,7 @@ node tests/controller.cjs
 
 未实现长发物理、毛束碰撞、触手、骨骼/皮肤绑定、Unity/Unreal 导出、独立程序兔子或生产级视觉质量认证。
 
-## 真实浏览器下一验收项
+## 真实浏览器检查范围
 
 1. 两个 WebGL2 上下文成功创建，兔子实际出现，没有 JS/GL 错误
 2. 同 viewport、DPR=1、种子、参数与相机，比较左右像素
@@ -72,3 +82,15 @@ node tests/controller.cjs
 - 原档内 gl-matrix 等第三方许可注释原样保留
 
 没有复制 Unity Companion 受限源码，也没有以 Unity/Unreal 标签声称实现对应引擎功能。
+
+## 真实三维交付检查
+
+- [x] 没有用生成图片代替真实三维实现
+- [x] 已实际修改工作台适配源码
+- [x] 工作台显示实时可交互 WebGL 兔子
+- [x] 公网固定链接与真实浏览器已验证
+- [x] 源码、单 HTML 与运行证据保持同一内容哈希
+- [ ] 实体 iPhone/Safari 与触摸手势验收
+- [ ] 用户视觉验收与生产级批准
+
+若只有截图而没有工作台，不能作为本次交付。截图仅是运行 QA 证据。
