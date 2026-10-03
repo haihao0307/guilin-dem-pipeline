@@ -1,0 +1,59 @@
+name: KuKo Day123 public QA
+
+on:
+  push:
+    branches:
+      - work/fractal-wave-kuko-day123-r01-20261003
+    paths:
+      - .github/workflows/kuko-day123-public-qa.yml
+      - kaopu-tree-fractal-wave-lab/kuko-day123-branching-r01/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-public:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Poll public page and verify exact teacher assets
+        shell: python
+        run: |
+          import hashlib, json, time, urllib.request
+          base = 'https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tree-fractal-wave-lab/kuko-day123-branching-r01/'
+          expected = {
+              'index.html': ['KuKo Day 123', 'teacherCanvas', 'runtime.js'],
+              'runtime.js': ['REFERENCE_WIDTH = 960', 'REFERENCE_HEIGHT = 540', 'window.__teacherReady'],
+              'teacher.frag': ['const int   TOTAL   = 2187', 'const int   TOTAL   = 1024', 'const int   TOTAL   = 729'],
+              'SOURCE_LOCK.json': ['KAOPU.fractal-wave.teacher-lock/1', 'teacher_replication_only']
+          }
+          report = {'base': base, 'files': {}, 'attempts': 0}
+          last_error = None
+          for attempt in range(1, 91):
+              report['attempts'] = attempt
+              try:
+                  ok = True
+                  current = {}
+                  for name, markers in expected.items():
+                      req = urllib.request.Request(base + name + '?qa=' + str(attempt), headers={'User-Agent':'KAOPU-KUKO-DAY123-QA/1.0','Cache-Control':'no-cache'})
+                      with urllib.request.urlopen(req, timeout=35) as response:
+                          data = response.read()
+                          status = response.status
+                      text = data.decode('utf-8', 'replace')
+                      checks = {m: (m in text) for m in markers}
+                      current[name] = {'status': status, 'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest(), 'markers': checks}
+                      ok = ok and status == 200 and all(checks.values())
+                  report['files'] = current
+                  if ok:
+                      report['success'] = True
+                      break
+              except Exception as exc:
+                  last_error = repr(exc)
+                  report['last_error'] = last_error
+              time.sleep(10)
+          else:
+              report['success'] = False
+          print(json.dumps(report, ensure_ascii=False, indent=2))
+          if not report.get('success'):
+              raise SystemExit('Public page did not become ready: ' + str(last_error))
