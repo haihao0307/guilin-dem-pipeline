@@ -1,0 +1,73 @@
+name: export-weather-mother-current-full-r29-20261003
+
+on:
+  push:
+    branches:
+      - handoff/weather-mother-current-full-r29-20261003
+    paths:
+      - .github/workflows/export-weather-mother-current-full-r29-20261003.yml
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Assemble Weather Mother repository payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="WEATHER_MOTHER_REPOSITORY_PAYLOAD_R29_20261003"
+          mkdir -p "$ROOT/00_REPO_ROOT" "$ROOT/01_HANDOFF_BASE" "$ROOT/02_SOURCE_CHAIN" "$ROOT/03_WORKBENCH_HISTORY" "$ROOT/04_CI_WORKFLOWS"
+
+          find weather-mother -maxdepth 1 -type f -print0 | while IFS= read -r -d '' f; do
+            cp -a "$f" "$ROOT/00_REPO_ROOT/"
+          done
+
+          cp -a weather-mother/handoffs/2026-09-13/. "$ROOT/01_HANDOFF_BASE/"
+
+          for d in weather-mother/r26*src weather-mother/r27*src weather-mother/r28*src weather-mother/r29*src; do
+            if [ -d "$d" ]; then cp -a "$d" "$ROOT/02_SOURCE_CHAIN/"; fi
+          done
+
+          for d in weather-mother/full-weather-r26* weather-mother/full-weather-r27* weather-mother/full-weather-r28* weather-mother/full-weather-r29*; do
+            if [ -d "$d" ]; then cp -a "$d" "$ROOT/03_WORKBENCH_HISTORY/"; fi
+          done
+
+          find .github/workflows -maxdepth 1 -type f \( -iname '*weather*r26*' -o -iname '*weather*r27*' -o -iname '*weather*r28*' -o -iname '*weather*r29*' \) -print0 | while IFS= read -r -d '' f; do
+            cp -a "$f" "$ROOT/04_CI_WORKFLOWS/"
+          done
+
+          cat > "$ROOT/REPOSITORY_EXPORT_RECEIPT.txt" <<EOF
+          source_repository=haihao0307/guilin-dem-pipeline
+          source_commit=$(git rev-parse HEAD)
+          source_branch=handoff/weather-mother-current-full-r29-20261003
+          exported_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          scope=Weather Mother R26-R29 repository payload only
+          EOF
+
+          find "$ROOT" -type f -print0 | sort -z | xargs -0 sha256sum > "$ROOT/MANIFEST.sha256"
+          python - <<'PY'
+          import json, pathlib, hashlib, os
+          root=pathlib.Path('WEATHER_MOTHER_REPOSITORY_PAYLOAD_R29_20261003')
+          rows=[]
+          for p in sorted(x for x in root.rglob('*') if x.is_file()):
+              b=p.read_bytes()
+              rows.append({'path':p.relative_to(root).as_posix(),'bytes':len(b),'sha256':hashlib.sha256(b).hexdigest()})
+          (root/'MANIFEST.json').write_text(json.dumps({'schema':'weather-mother-repository-payload/1','files':rows},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+
+      - name: Upload repository payload
+        uses: actions/upload-artifact@v4
+        with:
+          name: weather-mother-repository-payload-r29-20261003
+          path: WEATHER_MOTHER_REPOSITORY_PAYLOAD_R29_20261003
+          if-no-files-found: error
+          compression-level: 6
