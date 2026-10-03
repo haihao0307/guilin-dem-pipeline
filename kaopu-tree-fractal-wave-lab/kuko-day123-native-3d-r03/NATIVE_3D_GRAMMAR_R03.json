@@ -1,0 +1,57 @@
+{
+  "schema": "KAOPU.fractal-wave.native-3d/3",
+  "id": "Native3DFractalGrammar.R03",
+  "stage": "integrated_native_3d_spatial_growth_lab",
+  "inherits": [
+    "KuKoDay123.BranchingR01",
+    "KuKoDay123.ProjectionLockedLift.R01",
+    "Native3DFractalGrammar.R02"
+  ],
+  "coreAdditions": [
+    "SpatialHash occupancy index for local 3D queries",
+    "Bud perception volume with multiple candidate directions",
+    "growth decisions occur before Shoot creation",
+    "new Shoot occupancy feeds back into later Bud decisions",
+    "downstream support is back-propagated to branch radius",
+    "Growth Pass exposes the structure from early skeleton to larger spatial crown"
+  ],
+  "generationContract": {
+    "cameraAffectsGeneration": false,
+    "projectionLocked": false,
+    "native3D": true,
+    "appliesToSpecies": false,
+    "potentialBudEqualsFinalBranch": false,
+    "occupancyParticipatesBeforeBranchBirth": true,
+    "supportBackPropagation": true
+  },
+  "teacherBoundary": {
+    "KuKoContributes": [
+      "candidate branch slot count",
+      "branch angle voice",
+      "hierarchical local transform habit",
+      "deterministic branch identity"
+    ],
+    "KuKoDoesNotProve": [
+      "species-specific branch release",
+      "species-specific 3D azimuth",
+      "real botanical radius",
+      "physical wind force",
+      "root architecture"
+    ]
+  },
+  "speciesBoundary": {
+    "assigned": false,
+    "notAssignedTo": [
+      "Pandanus tectorius",
+      "any specific tree species"
+    ],
+    "nextGate": "A Species Score must explicitly choose whether this voice is applicable."
+  },
+  "remainingWork": [
+    "true resource and hormone signaling",
+    "neighbor plant competition using the same occupancy field",
+    "wind force propagation rather than phase-only motion",
+    "continuous branch-junction implicit geometry",
+    "species-calibrated bud phyllotaxis and shedding"
+  ]
+}
