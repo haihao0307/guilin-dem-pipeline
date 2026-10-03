@@ -3,7 +3,7 @@
    Camera rotation/zoom then uses normal rasterization. No textures, no external models. */
 'use strict';
 window.createIQRasterRuntime=function(canvas){
- const gl=canvas.getContext('webgl2',{alpha:true,antialias:true,preserveDrawingBuffer:true,powerPreference:'high-performance'});
+ const gl=canvas.getContext('webgl2',{alpha:true,antialias:false,preserveDrawingBuffer:false,powerPreference:'high-performance'});
  if(!gl)throw Error('IQ raster path: WebGL2 unavailable');
  const VS=`#version 300 es
  precision highp float;
@@ -79,14 +79,14 @@ window.createIQRasterRuntime=function(canvas){
  function normal(q,s){const e=.00045,dirs=[[1,-1,-1],[-1,-1,1],[-1,1,-1],[1,1,1]];let n=[0,0,0];for(const d of dirs){const k=.5773;const ee=[d[0]*k,d[1]*k,d[2]*k],v=sdf([q[0]+e*ee[0],q[1]+e*ee[1],q[2]+e*ee[2]],s);n[0]+=ee[0]*v;n[1]+=ee[1]*v;n[2]+=ee[2]*v}n=[n[0]/s.scale[0],n[1]/s.scale[1],n[2]/s.scale[2]];const l=Math.hypot(...n)||1;return n.map(x=>x/l)}
  function shapeKey(s){return JSON.stringify([s.k,s.method,s.displacement,s.planes,s.shapeSeed,s.noiseSeed,s.cut,s.scale,s.micro])}
  function materialKey(s){return JSON.stringify(s.layers.map(x=>[x.scale,x.seed]))}
- function buildMesh(s){const t=performance.now(),LAT=96,LON=192,N=(LAT+1)*(LON+1),pos=new Float32Array(N*3),nor=new Float32Array(N*3),obj=new Float32Array(N*3);let o=0;
+ function buildMesh(s){const t=performance.now(),LAT=80,LON=160,N=(LAT+1)*(LON+1),pos=new Float32Array(N*3),nor=new Float32Array(N*3),obj=new Float32Array(N*3);let o=0;
    for(let j=0;j<=LAT;j++){const th=Math.PI*j/LAT,yy=Math.cos(th),rr=Math.sin(th);for(let i=0;i<=LON;i++){const ph=2*Math.PI*i/LON,dir=[rr*Math.cos(ph),yy,rr*Math.sin(ph)];let lo=0,hi=1.35;while(sdf([dir[0]*hi,dir[1]*hi,dir[2]*hi],s)<0&&hi<2)hi*=1.15;for(let k=0;k<14;k++){const m=(lo+hi)*.5;if(sdf([dir[0]*m,dir[1]*m,dir[2]*m],s)>0)hi=m;else lo=m}const r=(lo+hi)*.5,q=[dir[0]*r,dir[1]*r,dir[2]*r],nn=normal(q,s);obj.set(q,o);pos.set([q[0]*s.scale[0],q[1]*s.scale[1],q[2]*s.scale[2]],o);nor.set(nn,o);o+=3;}}
    const idx=new Uint16Array(LAT*LON*6);let k=0;for(let j=0;j<LAT;j++)for(let i=0;i<LON;i++){const a=j*(LON+1)+i,b=a+1,c=a+LON+1,d=c+1;idx[k++]=a;idx[k++]=c;idx[k++]=b;idx[k++]=b;idx[k++]=c;idx[k++]=d}
    gl.bindVertexArray(vao);gl.bindBuffer(gl.ARRAY_BUFFER,posB);gl.bufferData(gl.ARRAY_BUFFER,pos,gl.STATIC_DRAW);gl.bindBuffer(gl.ARRAY_BUFFER,norB);gl.bufferData(gl.ARRAY_BUFFER,nor,gl.STATIC_DRAW);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,idxB);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,idx,gl.STATIC_DRAW);gl.bindVertexArray(null);objPositions=obj;indexCount=idx.length;rawKey='';buildMs=performance.now()-t;}
  function buildRaw(s){const key=materialKey(s);if(key===rawKey&&rawData)return;const n=objPositions.length/3,raw=new Float32Array(n*4);for(let i=0;i<n;i++){const p=[objPositions[i*3],objPositions[i*3+1],objPositions[i*3+2]];for(let l=0;l<4;l++){const z=s.layers[l],off=offset(z.seed),base=l===1?8:0,q=[p[0]*z.scale+base+off[0],p[1]*z.scale+base+off[1],p[2]*z.scale+base+off[2]];raw[i*4+l]=fbm(q,l===3?3:4)}}gl.bindBuffer(gl.ARRAY_BUFFER,rawB);gl.bufferData(gl.ARRAY_BUFFER,raw,gl.STATIC_DRAW);rawData=raw;rawKey=key}
  function ensure(s){const key=shapeKey(s);if(key!==meshKey){buildMesh(s);meshKey=key;}buildRaw(s)}
  function uni3(loc,v){gl.uniform3fv(loc,v)}function uni4(loc,v){gl.uniform4fv(loc,v)}
- function draw(s,inspect,rig){ensure(s);const box=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2),w=Math.max(320,Math.min(1440,Math.round(box.width*dpr))),h=Math.round(w*9/16);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}gl.viewport(0,0,w,h);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.disable(gl.BLEND);gl.useProgram(prog);gl.bindVertexArray(vao);
+ function draw(s,inspect,rig){ensure(s);const box=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,1.25),w=Math.max(320,Math.min(720,Math.round(box.width*dpr))),h=Math.round(w*9/16);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}gl.viewport(0,0,w,h);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.disable(gl.BLEND);gl.useProgram(prog);gl.bindVertexArray(vao);
    gl.uniform2f(U.uRes,w,h);gl.uniform2fv(U.uPan,inspect.pan);gl.uniform1f(U.uYaw,s.yaw);gl.uniform1f(U.uPitch,s.pitch);gl.uniform1f(U.uTime,s.time);gl.uniform1f(U.uZoom,inspect.zoom);
    for(const [k,v] of [['uBaseRaw',s.base],['uMineralLow',s.low],['uMineralHigh',s.high],['uPatinaColor',s.patina],['uMicaTint',s.mica],['uGrainColor',s.grain],['uKeyTint',rig.keyTint],['uFillTint',rig.fillTint]])uni3(U[k],v);
    uni4(U.uLayerOn,s.layers.map(x=>x.on?1:0));uni4(U.uLayerStrength,s.layers.map(x=>x.strength));uni4(U.uLayerCover,s.layers.map(x=>x.cover));
