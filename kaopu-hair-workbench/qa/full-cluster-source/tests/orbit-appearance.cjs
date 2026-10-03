@@ -48,8 +48,8 @@ module.exports = async function orbitAppearance(browser, url, outDir, check) {
     await wait(() => window.__orbitQaWindow.count >= window.__orbitQaWindow.target);
   };
   const snapshot = async name => {
-    const file = path.join(outDir, phase + '-' + name + '.png');
-    await page.screenshot({ path: file, fullPage: false });
+    const file = path.join(outDir, phase + '-' + name + '.jpg');
+    await page.screenshot({ path: file, fullPage: false, type:'jpeg',quality:90 });
     report.screenshots.push({ name, phase, path: file });
   };
   const probe = async (module, label, role = 'candidate', canonical = false) => {

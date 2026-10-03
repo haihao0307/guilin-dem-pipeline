@@ -20,3 +20,6 @@ body[data-module=rabbit] #autoRotate{display:inline-flex;align-items:center;just
 .rabbit-color-presets{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
 .rabbit-color-presets button{font-size:12px;padding:9px 6px;min-height:40px}
 .rabbit-fur-palette{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:10px}.rabbit-color-choice{display:flex;align-items:center;gap:8px;text-align:left;font-size:12px;min-height:41px;padding:7px 9px}.rabbit-color-chip{width:19px;height:19px;flex:0 0 19px;border-radius:50%;border:1px solid #ffffff55}.rabbit-appearance .control-note{line-height:1.55}#rabbitAppearanceControls{margin-top:17px}
+/* Status notices must never cover or intercept the observation controls. */
+#toast{pointer-events:none}
+body[data-module=rabbit] #toast{bottom:calc(110px + env(safe-area-inset-bottom));max-width:calc(100vw - 28px);text-align:center}
