@@ -1,10 +1,10 @@
-name: QA KuKo finite anemone color study
+name: QA KuKo full cluster material transfer
 on:
   push:
     branches: [gh-pages]
     paths:
       - kaopu-hair-workbench/qa/kuko-anemone-candidate.html
-      - kaopu-hair-workbench/qa/kuko-anemone-source/tests/browser-qa.cjs
+      - kaopu-hair-workbench/qa/full-cluster-source/tests/browser-qa.cjs
       - .github/workflows/kaopu-kuko-anemone-qa.yml
   workflow_dispatch:
 permissions:
@@ -34,12 +34,12 @@ jobs:
           HAIR_KUKO_HTML: ${{ github.workspace }}/kaopu-hair-workbench/qa/kuko-anemone-candidate.html
           HAIR_QA_OUT: ${{ github.workspace }}/hair-kuko-file-results
           HAIR_KUKO_PHASE: file
-        run: node kaopu-hair-workbench/qa/kuko-anemone-source/tests/browser-qa.cjs
+        run: node kaopu-hair-workbench/qa/full-cluster-source/tests/browser-qa.cjs
       - name: Keep first visible standalone evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: kaopu-kuko-anemone-file-${{ github.sha }}
+          name: kaopu-cluster-file-${{ github.sha }}
           path: hair-kuko-file-results/
           if-no-files-found: warn
       - name: Verify exact public mirror and actual browser
@@ -49,11 +49,11 @@ jobs:
           HAIR_KUKO_HTML: ${{ github.workspace }}/kaopu-hair-workbench/qa/kuko-anemone-candidate.html
           HAIR_QA_OUT: ${{ github.workspace }}/hair-kuko-public-results
           HAIR_KUKO_PHASE: public
-        run: node kaopu-hair-workbench/qa/kuko-anemone-source/tests/browser-qa.cjs
+        run: node kaopu-hair-workbench/qa/full-cluster-source/tests/browser-qa.cjs
       - name: Keep public browser evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: kaopu-kuko-anemone-public-${{ github.sha }}
+          name: kaopu-cluster-public-${{ github.sha }}
           path: hair-kuko-public-results/
           if-no-files-found: warn
