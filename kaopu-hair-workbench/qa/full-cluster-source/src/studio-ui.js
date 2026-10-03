@@ -20,7 +20,7 @@ function sync(){if(!anemone.ready)return;$('studioZoom').value=anemone.state.cam
 const drawers=[reference,controls,learning];function closeAll(){drawers.forEach(d=>{if(d.open)d.close()});}
 for(const [id,d]of [['referenceToggle',reference],['controlsToggle',controls],['learningToggle',learning]])$(id).onclick=()=>{const was=d.open;closeAll();anemone.clearPointers();if(!was){sync();d.showModal();}};
 $('studioZoom').oninput=e=>{anemone.renderer.camera.distance=Number(e.target.value);anemone.redraw();sync();};$('studioTranslucency').oninput=e=>{anemone.setMaterial({translucency:Number(e.target.value)});sync();};
-window.addEventListener('anemonecamera',sync);for(const id of ['anemoneCamera','anemoneReset','clusterMacro'])$(id).addEventListener('click',sync);
+window.addEventListener('anemonecamera',sync);window.addEventListener('anemonestate',sync);for(const id of ['anemoneCamera','anemoneReset','clusterMacro'])$(id).addEventListener('click',sync);
 for(const id of ['speciesKuko','speciesRabbit','speciesAnemone'])$(id).addEventListener('click',closeAll);
 $('clusterBaseline').addEventListener('click',()=>learning.close());
 const stage=document.querySelector('.anemone-stage');stage.querySelector('.anemone-hint').textContent='单指旋转 · 双指缩放 · 鼠标拖动 / 滚轮';

@@ -264,6 +264,96 @@ module.exports = async function mobileControls(browser, url, outDir, check) {
       assert(kind + ' drawer closes', !(await page.locator(drawer).evaluate(d => d.open)));
       await orbit('canvas after ' + kind + ' close', 20, -10);
     }
+    // Native range drags exercise the browser's range input, then the app's
+    // input handler. Do not use locator.fill(), DOM events, or direct values.
+    await tap('#controlsToggle', 'open native range controls');
+    const savedControlsState = await page.evaluate(() => anemone.exportState());
+    const beforeRanges = await probe(true);
+    const rangeValues = async () => page.evaluate(() => ({
+      open: document.getElementById('controlsDrawer').open,
+      camera: anemone.state.camera,
+      material: anemone.material,
+      zoom: Number(document.getElementById('studioZoom').value),
+      zoomOutput: document.getElementById('studioZoomValue').textContent.trim(),
+      translucency: Number(document.getElementById('studioTranslucency').value),
+      translucencyOutput: document.getElementById('studioTranslucencyValue').textContent.trim()
+    }));
+    const dragRange = async (selector, targetFraction, label) => {
+      const input = page.locator(selector);
+      await input.waitFor({ state: 'visible' });
+      const initial = await input.evaluate(el => {
+        const bounds = el.getBoundingClientRect();
+        el.__nativeRangeInputEvents = [];
+        el.addEventListener('input', event => el.__nativeRangeInputEvents.push({ trusted: event.isTrusted, value: Number(el.value) }), { passive: true });
+        return { type: el.type, min: Number(el.min), max: Number(el.max), value: Number(el.value),
+          direction: getComputedStyle(el).direction, x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height };
+      });
+      assert(label + ' is a visible horizontal range', initial.type === 'range' && initial.direction === 'ltr' && initial.width > 60,
+        { selector, initial });
+      // The production stylesheet defines a 20 CSS-pixel thumb. Both endpoints
+      // stay inside its center travel, so the first contact grabs the thumb.
+      const inset = 10, travel = initial.width - inset * 2;
+      const fromX = initial.x + inset + travel * (initial.value - initial.min) / (initial.max - initial.min);
+      const toX = initial.x + inset + travel * targetFraction, y = initial.y + initial.height / 2;
+      const hit = await page.evaluate(({ selector, x, y }) => document.elementFromPoint(x, y) === document.querySelector(selector),
+        { selector, x: fromX, y });
+      assert(label + ' thumb is unobstructed', hit, { selector, fromX, toX, y });
+      await touch('touchStart', [{ id: 31, x: fromX, y }], label + ' thumb down');
+      for (let i = 1; i <= 4; ++i) await touch('touchMove', [{ id: 31, x: fromX + (toX - fromX) * i / 4, y }], label + ' drag ' + i);
+      await touch('touchEnd', [], label + ' thumb up');
+      const final = await input.evaluate(el => ({ value: Number(el.value), inputEvents: el.__nativeRangeInputEvents }));
+      const expected = initial.min + (initial.max - initial.min) * targetFraction;
+      assert(label + ' changes value through trusted native input', Math.abs(final.value - initial.value) > (initial.max - initial.min) * .1 &&
+        Math.abs(final.value - expected) <= (initial.max - initial.min) * .04 && final.inputEvents.length >= 2 && final.inputEvents.every(e => e.trusted),
+      { initial: initial.value, expected, final });
+      return final;
+    };
+    const sameShapeAndTime = (name, before, after) => assert(name,
+      before.paused && after.paused && before.time === after.time && before.geometryHash === after.geometryHash &&
+      before.geometryBytes === after.geometryBytes && JSON.stringify(before.params) === JSON.stringify(after.params),
+    { before: { time: before.time, geometryHash: before.geometryHash }, after: { time: after.time, geometryHash: after.geometryHash } });
+    await dragRange('#studioZoom', .78, 'native zoom slider');
+    const zoomControls = await rangeValues(), afterZoomRange = await probe(true);
+    assert('zoom range updates camera and displayed value', zoomControls.open && close(zoomControls.zoom, zoomControls.camera.distance) &&
+      zoomControls.zoomOutput === zoomControls.camera.distance.toFixed(2) && afterZoomRange.pixels.hash !== beforeRanges.pixels.hash,
+      zoomControls);
+    immutable('zoom range preserves paused time, geometry, and material', beforeRanges, afterZoomRange);
+    await dragRange('#studioTranslucency', .27, 'native translucency slider');
+    const translucentControls = await rangeValues(), afterTranslucencyRange = await probe(true);
+    assert('translucency range updates material and displayed value', translucentControls.open &&
+      close(translucentControls.translucency, translucentControls.material.translucency) &&
+      translucentControls.translucencyOutput === Math.round(translucentControls.material.translucency * 100) + '%' &&
+      afterTranslucencyRange.pixels.hash !== afterZoomRange.pixels.hash && sameCamera(afterZoomRange.camera, afterTranslucencyRange.camera) &&
+      afterZoomRange.material.palette === afterTranslucencyRange.material.palette && afterZoomRange.material.mode === afterTranslucencyRange.material.mode,
+      translucentControls);
+    sameShapeAndTime('translucency range preserves paused time and geometry', beforeRanges, afterTranslucencyRange);
+    await screenshot('mobile-native-range-controls');
+    // Read inside the import call's same JS turn: re-opening the dialog, waiting
+    // for RAF, or manually refreshing controls must not hide stale UI values.
+    const restoredControls = await page.evaluate(saved => {
+      anemone.importState(saved);
+      return {
+        open: document.getElementById('controlsDrawer').open,
+        camera: anemone.state.camera, material: anemone.material,
+        zoom: Number(document.getElementById('studioZoom').value),
+        zoomOutput: document.getElementById('studioZoomValue').textContent.trim(),
+        translucency: Number(document.getElementById('studioTranslucency').value),
+        translucencyOutput: document.getElementById('studioTranslucencyValue').textContent.trim()
+      };
+    }, savedControlsState);
+    assert('state import immediately synchronizes both open-drawer controls', restoredControls.open &&
+      sameCamera(restoredControls.camera, savedControlsState.camera) &&
+      close(restoredControls.zoom, savedControlsState.camera.distance) && restoredControls.zoomOutput === savedControlsState.camera.distance.toFixed(2) &&
+      close(restoredControls.translucency, savedControlsState.material.translucency) &&
+      close(restoredControls.material.translucency, savedControlsState.material.translucency) &&
+      restoredControls.translucencyOutput === Math.round(savedControlsState.material.translucency * 100) + '%',
+      { savedCamera: savedControlsState.camera, savedMaterial: savedControlsState.material, restoredControls });
+    const restoredRanges = await probe(true);
+    immutable('state import restores range-test time, geometry, and material', beforeRanges, restoredRanges);
+    assert('state import restores exact pre-range pixels', beforeRanges.pixels.hash === restoredRanges.pixels.hash,
+      { before: beforeRanges.pixels.hash, restored: restoredRanges.pixels.hash });
+    await tap('#controlsClose', 'close native range controls');
+    assert('range controls drawer closes', !(await page.locator('#controlsDrawer').evaluate(d => d.open)));
     await tap('#anemoneCamera', 'reset before viewport resize');
     await layout('short-390x650', 390, 650);
     await orbit('short viewport gesture', 23, 12);
