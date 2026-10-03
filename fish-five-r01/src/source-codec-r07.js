@@ -9,9 +9,13 @@ export function decodeSourceR07(raw, expectedFormat = '') {
     const head=JSON.parse(new TextDecoder().decode(bytes.subarray(16,16+n)));
     if(head.schema!=='FISH_COMPACT_PRODUCT_10'||head.score.schema!==head.schema)throw Error('Compact product schema mismatch');
     const types={Float32Array,Uint32Array},seen=new Set();let end=0;
+    const numericLength=Math.max(0,...head.blocks.map(b=>b.offset+b.bytes));
+    if(!Number.isSafeInteger(numericLength)||numericLength<0||start+numericLength>bytes.length)throw Error('Compact numeric range invalid');
+    // Geometry must not keep tens of MB of already decoded encoded images alive.
+    const numericStorage=bytes.buffer.slice(bytes.byteOffset+start,bytes.byteOffset+start+numericLength);
     for(const b of head.blocks){const T=types[b.type],p=head.score.primitives[b.primitive],key=b.primitive+':'+b.field;
       if(!T||!p||seen.has(key)||!['positions','normals','uvs','indices','finId','finWeight','finGradient'].includes(b.field)||b.offset<end||b.offset<0||start+b.offset+b.bytes>bytes.length||b.bytes!==b.length*T.BYTES_PER_ELEMENT)throw Error('Compact product block invalid');
-      p[b.field]=new T(bytes.buffer,bytes.byteOffset+start+b.offset,b.length);seen.add(key);end=b.offset+b.bytes;
+      p[b.field]=new T(numericStorage,b.offset,b.length);seen.add(key);end=b.offset+b.bytes;
     }
     for(const p of head.score.primitives){if(p.base||p.residual||p.paramAddress)throw Error('Source reconstruction data is forbidden in product');for(const k of ['positions','normals','uvs','indices','finId','finWeight','finGradient'])if(!ArrayBuffer.isView(p[k]))throw Error('Incomplete compact product');}
     const images=[];for(const i of head.images){if(!head.score.textures[i.texture]||i.offset<end||start+i.offset+i.length>bytes.length)throw Error('Compact image invalid');images.push({texture:i.texture,prefix:'data:'+i.mime+';base64,',encodedBytes:bytes.subarray(start+i.offset,start+i.offset+i.length)});end=i.offset+i.length;}
@@ -69,7 +73,7 @@ export function decodeSourceR07(raw, expectedFormat = '') {
 export function restoreSourceTexturesR07(score,images=[]){
   for(const image of images){
     const t=score.textures[image.texture],encoded=image.encodedBytes,prefix=image.prefix;
-    Object.defineProperty(t,'encodedBytes',{value:encoded,enumerable:false});
+    Object.defineProperty(t,'encodedBytes',{value:encoded,enumerable:false,configurable:true});
     Object.defineProperty(t,'uri',{enumerable:true,configurable:true,get(){
       let result=prefix;
       for(let start=0;start<encoded.length;start+=24576){let chunk='';for(let i=start;i<Math.min(start+24576,encoded.length);i++)chunk+=String.fromCharCode(encoded[i]);result+=btoa(chunk);}

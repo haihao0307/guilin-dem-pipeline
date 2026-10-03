@@ -134,6 +134,9 @@ async function select(id,options={}){
    state.orbit.distance=group?10:2.15;state.orbit.yaw=0;state.orbit.pitch=.10;state.pointer=null;target.set(0,0,0);
    for(const actor of behavior.actors){target.x+=actor.position[0];target.y+=actor.position[1];target.z+=actor.position[2];}target.multiplyScalar(1/behavior.actors.length);
    updatePoses();canvas.style.display='block';resize();updateCamera(0);renderer.render(scene,camera);
+   // The texture cache owns decoded images for shared materials/context restore.
+   // Adopted products no longer retain a second encoded image package in JS RAM.
+   if(data.schema==='FISH_COMPACT_PRODUCT_10')for(const image of data.textures){delete image.encodedBytes;delete image.uri;}
   }
   updateUI();catalog.setActive(id);state.loaded=true;api.ready=true;state.loading=false;state.requested=null;lastReadout='';frame.last=performance.now();$('loading').classList.add('done');globalThis.__FISH_BOOT__?.ready();
  }catch(error){if(stamp!==generation)return;state.loading=false;console.error(error);$('loadingText').textContent='加载失败：'+error.message;api.error=String(error.stack||error);globalThis.__FISH_BOOT__?.fail(error);}
