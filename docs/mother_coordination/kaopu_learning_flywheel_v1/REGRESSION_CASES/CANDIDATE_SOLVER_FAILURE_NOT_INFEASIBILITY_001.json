@@ -1,0 +1,174 @@
+{
+  "schema": "kaopu.regression-case/2",
+  "caseId": "SOLVER-FAILURE-NOT-INFEASIBILITY-001",
+  "status": "CANDIDATE",
+  "scope": {
+    "mother": "Tailor01",
+    "taskClass": "NONCONVEX_FORMING_AND_COMPATIBILITY_CLAIMS",
+    "globalAdoption": false
+  },
+  "failure": {
+    "summary": "A bounded local nonconvex solver failure or repeated bad local minimum is promoted into a claim that the source design is mathematically incompatible.",
+    "realSubject": "Humanoid-Rig-Lab-Next PR #16, shorts V9 source-only sewing/forming diagnosis"
+  },
+  "mustNeverRepeat": [
+    "write cut-shape incompatible from NO_ACCEPTED_STEP alone",
+    "call two coarse-mesh local minima an energy lower bound",
+    "call a low-strain self-intersecting immersion wearable",
+    "prescribe dart or repartition without a scoped necessary witness or controlled construction comparison"
+  ],
+  "gate": {
+    "inconclusiveStates": [
+      "NO_ACCEPTED_STEP",
+      "MAX_ITERATIONS",
+      "TINY_STEP",
+      "LOCAL_INFEASIBILITY",
+      "RESTORATION_FAILURE",
+      "DIVERGING_ITERATES"
+    ],
+    "certifiableWitnesses": [
+      "ANCHOR_DISTANCE_LIPSCHITZ",
+      "PRESCRIBED_BOUNDARY_ARC_RATIO",
+      "EXACT_INFEASIBILITY_CERTIFICATE"
+    ],
+    "requiredForCertifiedClaim": [
+      "modelIdentityBound=true",
+      "witness checker passed",
+      "witness scope matches the exact source model and constraints",
+      "numeric violation exceeds declared tolerance, or an exact certificate verifies"
+    ]
+  },
+  "cases": [
+    {
+      "id": "V9_ARMIJO_NO_ACCEPTED_STEP",
+      "input": {
+        "modelIdentityBound": true,
+        "problemClass": "NONCONVEX_LOCAL",
+        "solverTermination": "NO_ACCEPTED_STEP",
+        "requestedClaim": "CUT_SHAPE_INCOMPATIBLE"
+      },
+      "expect": "SEWING_INCONCLUSIVE"
+    },
+    {
+      "id": "TWO_REMESH_LEVELS_SAME_LOCAL_MINIMUM",
+      "input": {
+        "modelIdentityBound": true,
+        "problemClass": "NONCONVEX_LOCAL",
+        "solverTermination": "LOCAL_INFEASIBILITY",
+        "coarseLevels": 2,
+        "requestedClaim": "CUT_SHAPE_INCOMPATIBLE"
+      },
+      "expect": "SEWING_INCONCLUSIVE"
+    },
+    {
+      "id": "METRIC_PASS_BUT_SELF_INTERSECTION",
+      "input": {
+        "modelIdentityBound": true,
+        "metricWithinLimit": true,
+        "selfIntersectionDetected": true,
+        "bodyContactChecked": false,
+        "requestedClaim": "WEARABLE"
+      },
+      "expect": "IMMERSION_NOT_EMBEDDING"
+    },
+    {
+      "id": "STRICT_ANCHOR_DISTANCE_VIOLATION",
+      "input": {
+        "modelIdentityBound": true,
+        "requestedClaim": "CUT_SHAPE_INCOMPATIBLE",
+        "necessaryWitness": {
+          "type": "ANCHOR_DISTANCE_LIPSCHITZ",
+          "sourceGeodesicM": 0.5,
+          "targetEuclideanM": 0.54,
+          "sigmaMax": 1.05,
+          "toleranceM": 0.001,
+          "checkerPassed": true
+        }
+      },
+      "expect": "CERTIFIED_INCOMPATIBLE_SCOPED"
+    },
+    {
+      "id": "ANCHOR_DISTANCE_WITHIN_LIMIT",
+      "input": {
+        "modelIdentityBound": true,
+        "problemClass": "NONCONVEX_LOCAL",
+        "solverTermination": "NO_ACCEPTED_STEP",
+        "requestedClaim": "CUT_SHAPE_INCOMPATIBLE",
+        "necessaryWitness": {
+          "type": "ANCHOR_DISTANCE_LIPSCHITZ",
+          "sourceGeodesicM": 0.5,
+          "targetEuclideanM": 0.52,
+          "sigmaMax": 1.05,
+          "toleranceM": 0.001,
+          "checkerPassed": true
+        }
+      },
+      "expect": "SEWING_INCONCLUSIVE"
+    },
+    {
+      "id": "BOUNDARY_SHORTER_BUT_GATHERING_ALLOWED",
+      "input": {
+        "modelIdentityBound": true,
+        "problemClass": "NONCONVEX_LOCAL",
+        "solverTermination": "NO_ACCEPTED_STEP",
+        "requestedClaim": "CUT_SHAPE_INCOMPATIBLE",
+        "necessaryWitness": {
+          "type": "PRESCRIBED_BOUNDARY_ARC_RATIO",
+          "sourceArcM": 0.8628,
+          "targetArcM": 0.544,
+          "sigmaMin": 0.95,
+          "sigmaMax": 1.05,
+          "toleranceM": 0.001,
+          "continuousBijectionRequired": false,
+          "gatheringOrSlidingAllowed": true,
+          "checkerPassed": true
+        }
+      },
+      "expect": "SEWING_INCONCLUSIVE"
+    },
+    {
+      "id": "PRESCRIBED_BIJECTIVE_BOUNDARY_VIOLATION",
+      "input": {
+        "modelIdentityBound": true,
+        "requestedClaim": "CUT_SHAPE_INCOMPATIBLE",
+        "necessaryWitness": {
+          "type": "PRESCRIBED_BOUNDARY_ARC_RATIO",
+          "sourceArcM": 0.6,
+          "targetArcM": 0.7,
+          "sigmaMin": 0.95,
+          "sigmaMax": 1.05,
+          "toleranceM": 0.001,
+          "continuousBijectionRequired": true,
+          "gatheringOrSlidingAllowed": false,
+          "checkerPassed": true
+        }
+      },
+      "expect": "CERTIFIED_INCOMPATIBLE_SCOPED"
+    },
+    {
+      "id": "EXACT_CERTIFICATE_MATCHES_MODEL",
+      "input": {
+        "modelIdentityBound": true,
+        "requestedClaim": "CUT_SHAPE_INCOMPATIBLE",
+        "necessaryWitness": {
+          "type": "EXACT_INFEASIBILITY_CERTIFICATE",
+          "certificateVerified": true,
+          "scopeMatchesExactModel": true,
+          "checkerPassed": true
+        }
+      },
+      "expect": "CERTIFIED_INCOMPATIBLE_SCOPED"
+    },
+    {
+      "id": "LOW_STRAIN_NO_SELF_BODY_CHECKED",
+      "input": {
+        "modelIdentityBound": true,
+        "metricWithinLimit": true,
+        "selfIntersectionDetected": false,
+        "bodyContactChecked": true,
+        "requestedClaim": "WEARABLE"
+      },
+      "expect": "WEARABLE_EMBEDDING_CANDIDATE"
+    }
+  ]
+}
