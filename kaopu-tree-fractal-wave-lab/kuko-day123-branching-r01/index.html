@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050707">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:,">
+<title>KAOPU 分形造波 · KuKo Day 123 分枝语法老师 R01</title>
+<style>
+:root{--bg:#050707;--panel:#101515;--line:#263030;--ink:#ecf3f1;--muted:#95a3a0;--cyan:#33e6cc;--magenta:#cc2a78}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft Yahei",sans-serif}
+body{display:flex;justify-content:center}
+.shell{width:min(1180px,100%);padding:18px clamp(12px,3vw,32px) 34px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin:0 0 14px}
+h1{font-size:18px;line-height:1.25;margin:0;font-weight:650;letter-spacing:.3px}.sub{font-size:11px;color:var(--muted);margin-top:4px}.lock{border:1px solid #3a4947;border-radius:999px;padding:5px 9px;color:#b9c6c3;font-size:10px;white-space:nowrap}
+.frame{position:relative;margin:auto;width:min(960px,100%);aspect-ratio:16/9;background:#000;box-shadow:0 0 0 1px #1e2927,0 24px 80px #000}
+canvas{display:block;width:100%;height:100%;background:#000;image-rendering:auto}
+.frame:fullscreen{display:grid;place-items:center;background:#000}.frame:fullscreen canvas{width:min(100vw,177.777vh);height:min(100vh,56.25vw)}
+.error{position:absolute;inset:16px;white-space:pre-wrap;background:#351a20e8;border:1px solid #9d425d;border-radius:8px;padding:14px;color:#ffd9e4;overflow:auto}.error[hidden]{display:none}
+.toolbar{width:min(960px,100%);margin:12px auto 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+button{appearance:none;border:1px solid #344441;background:#111918;color:#eaf2ef;border-radius:7px;padding:8px 12px;min-height:38px;cursor:pointer}button:hover{border-color:#60736f}.status{margin-left:auto;color:#9fb0ac;font-size:11px;font-variant-numeric:tabular-nums}
+.grid{width:min(960px,100%);margin:16px auto 0;display:grid;grid-template-columns:1.1fr .9fr;gap:12px}
+.card{border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:13px 15px}.card h2{font-size:13px;margin:0 0 5px}.card p{margin:0;color:var(--muted);font-size:11px}.swatch{display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 4px 0 10px}.swatch:first-child{margin-left:0}.cyan{background:var(--cyan)}.magenta{background:var(--magenta)}code{color:#c8d5d2}
+footer{width:min(960px,100%);margin:14px auto 0;color:#687572;font-size:10px}
+@media(max-width:720px){.shell{padding-top:12px}header{align-items:flex-start}.lock{display:none}.toolbar{gap:6px}.status{width:100%;margin-left:0}.grid{grid-template-columns:1fr}.card{padding:12px}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header>
+<div><h1>KAOPU · KuKo Day 123 分枝语法老师 R01</h1><div class="sub">分形造波知识体系 / 2D SDF Branching / Teacher-Locked Replication</div></div>
+<div class="lock">老师算法锁定 · 未创新</div>
+</header>
+<div class="frame" id="teacherFrame">
+<canvas id="teacherCanvas" width="960" height="540" aria-label="KuKo Day 123 分枝动画"></canvas>
+<pre class="error" id="error" hidden></pre>
+</div>
+<div class="toolbar">
+<button id="play" aria-pressed="false">暂停</button>
+<button id="restart">从头播放</button>
+<button id="fullscreen">全屏</button>
+<div class="status" id="status">正在编译老师 Shader…</div>
+</div>
+<section class="grid">
+<div class="card"><h2>本环节的名字</h2><p><b>KuKo Day 123 分枝语法老师 R01</b>。当前只做原样复刻，不把它误称为三维树，也暂不改参数。</p></div>
+<div class="card"><h2>锁定范围</h2><p><span class="swatch cyan"></span>分枝 SDF <span class="swatch magenta"></span>叶端 SDF + Glow。原始 <code>TOTAL / DEPTH / BR / ANG / SPEED</code> 全部保持。</p></div>
+</section>
+<footer>Source supplied by user · KuKo Day 123 · Based on @sillsm / Shadertoy XtyGzh. WebGL2 wrapper only; teacher algorithm is preserved verbatim in teacher-original.glsl.</footer>
+</div>
+<script type="module" src="./runtime.js"></script>
+</body>
+</html>
