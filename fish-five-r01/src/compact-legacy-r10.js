@@ -23,6 +23,9 @@ export function patchCompactLegacyR10(html){
  if(parseStart<0||parseEnd<0)throw Error('Compact source parser removal ABI changed');
  html=html.slice(0,parseStart)+html.slice(parseEnd);
  html=html.replace('parseScore,build,reset','build,reset');
- html=html.replace("h.textures.base,'image/jpeg'","h.textures.base,h.metadata.package.baseMime").replace("h.textures.rm,'image/jpeg'","h.textures.rm,h.metadata.package.rmMime");
+ // MIME describes disk encoding, not GPU channels. Preserve the original RGB
+ // base/RM upload instead of expanding opaque WebP products to RGBA in VRAM.
+ html=html.replace('async function texture(gl,b,mime){','async function texture(gl,b,mime,channels=4){').replace("const format=mime==='image/jpeg'?gl.RGB:gl.RGBA;",'const format=channels===3?gl.RGB:gl.RGBA;');
+ html=html.replace("h.textures.base,'image/jpeg'","h.textures.base,h.metadata.package.baseMime,3").replace("h.textures.rm,'image/jpeg'","h.textures.rm,h.metadata.package.rmMime,3");
  return html;
 }
