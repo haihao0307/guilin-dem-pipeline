@@ -45,20 +45,20 @@ try:
   # Desktop: established desktop arrangement remains controls-before-canvas and 16:9.
   p=browser.new_page(viewport={'width':1440,'height':1000},device_scale_factor=1)
   errors=[];p.on('pageerror',lambda e:errors.append(str(e)))
-  p.goto(BASE+'?ui=R16.2',wait_until='load',timeout=120000);wait_ready(p)
+  p.goto(BASE+'?ui=R16.2',wait_until='load',timeout=120000);wait_ready(p);p.locator('#playBtn').click()
   assert p.locator('#home').get_attribute('data-ui-version')=='R16.2'
   canvas=p.locator('#liveCanvas').bounding_box();controls=p.locator('#detail>.controls').first.bounding_box()
   assert controls['y'] < canvas['y'],(controls,canvas)
   assert abs(canvas['width']/canvas['height']-16/9)<.03,canvas
   assert p.evaluate('document.documentElement.scrollWidth<=innerWidth+2')
-  p.screenshot(path=str(OUT/'detail_desktop_1440.png'),full_page=True)
+  p.screenshot(path=str(OUT/'detail_desktop_1440.png'),full_page=False,timeout=120000)
   report['tests'].append({'mode':'desktop','viewport':[1440,1000],'canvas':canvas,'controls':controls,'aspect':canvas['width']/canvas['height']})
   p.locator('#backBtn').click();p.wait_for_function('KaoPuDiagnostics().homeVisible');assert p.locator('[data-scene]').count()==6
-  p.screenshot(path=str(OUT/'home_desktop_1440.png'),full_page=True);p.close()
+  p.screenshot(path=str(OUT/'home_desktop_1440.png'),full_page=False,timeout=120000);p.close()
   # Mobile portrait: canvas is promoted above controls and rendered 4:3 for more usable visual area.
   m=browser.new_page(viewport={'width':390,'height':844},device_scale_factor=2,is_mobile=True,has_touch=True)
   merr=[];m.on('pageerror',lambda e:merr.append(str(e)))
-  m.goto(BASE+'?ui=R16.2',wait_until='load',timeout=120000);wait_ready(m)
+  m.goto(BASE+'?ui=R16.2',wait_until='load',timeout=120000);wait_ready(m);m.locator('#playBtn').click()
   canvas=m.locator('#liveCanvas').bounding_box();controls=m.locator('#detail>.controls').first.bounding_box();nav=m.locator('.nav').bounding_box()
   assert canvas['y'] < controls['y'],(canvas,controls)
   assert canvas['width'] >= 388,canvas
@@ -66,13 +66,13 @@ try:
   assert nav['height'] <= 54,nav
   assert m.evaluate('document.documentElement.scrollWidth<=innerWidth+2')
   assert not merr,merr
-  m.screenshot(path=str(OUT/'detail_mobile_390_dpr2.png'),full_page=True)
+  m.screenshot(path=str(OUT/'detail_mobile_390_dpr2.png'),full_page=False,timeout=120000)
   report['tests'].append({'mode':'mobile_portrait_viewport','viewport':[390,844],'dpr':2,'real_phone':False,'canvas':canvas,'controls':controls,'nav':nav,'aspect':canvas['width']/canvas['height']})
   # Exercise controls after canvas and return.
   before=m.evaluate('KaoPuDiagnostics().renderCount');m.locator('#quality').select_option('720');wait_ready(m,'underwater',before)
   r=m.locator('#renderState').inner_text();assert '720×540' in r,r
   m.locator('#backBtn').click();m.wait_for_function('KaoPuDiagnostics().homeVisible');assert m.locator('[data-scene]').count()==6
-  m.screenshot(path=str(OUT/'home_mobile_390_dpr2.png'),full_page=True)
+  m.screenshot(path=str(OUT/'home_mobile_390_dpr2.png'),full_page=False,timeout=120000)
   # Re-enter canyon and return: responsive shell must not break scene navigation.
   before=m.evaluate('KaoPuDiagnostics().renderCount');m.locator('[data-scene="canyon"]').click();wait_ready(m,'canyon',before);assert m.locator('#liveCanvas').bounding_box()['width']>=388
   m.locator('#backBtn').click();m.wait_for_function('KaoPuDiagnostics().homeVisible')
