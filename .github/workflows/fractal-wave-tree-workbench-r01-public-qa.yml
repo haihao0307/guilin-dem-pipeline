@@ -202,12 +202,12 @@ jobs:
               C['life4LargeIntegratedMode']=page.evaluate("getComputedStyle(document.querySelector('.life4-card')).display!=='none' && getComputedStyle(document.querySelector('.side')).display==='none'")
               life=page.evaluate("document.getElementById('life4Frame').contentWindow.LivingTreeR04.getState()")
               sig=life['signature']
-              C['life4RootShoot']=sig['rootSegments']>0 and sig['shootSegments']>0 and sig['rootShootConnected'] is True
+              C['life4RootShoot']=sig['rootSegments']>=10 and sig['shootSegments']>=25 and sig['rootShootConnected'] is True
               C['life4Resources']=sig['waterUptake']>0 and sig['resourceFlow'] is True
-              C['life4ContinuousSkin']=sig['implicitSurface'] is True and sig['continuousSkinVisible'] is True
+              C['life4ContinuousSkin']=sig['implicitSurface'] is True and sig['continuousSkinVisible'] is True and sig['implicitVertices']>300
               C['life4TerminalTaper']=sig['terminalTaper'] is True and sig['apicalMeristem'] is True
-              C['life4RootsBelowGround']=sig['yMin']<0 and sig['rootSegments']>3
-              C['life4Leaves']=sig['leafCount']>0
+              C['life4RootsBelowGround']=sig['yMin']<-0.25 and sig['rootSegments']>=10
+              C['life4Leaves']=sig['leafCount']>=8
               C['life4SpeciesBoundary']=sig['appliesToSpecies'] is False
               before_alloc=(sig['shootSegments'],sig['rootSegments'],sig['lastBudget'])
               page.evaluate("document.getElementById('life4Frame').contentWindow.LivingTreeR04.setAllocation(0.58)")
@@ -217,7 +217,8 @@ jobs:
               page.evaluate("document.getElementById('life4Frame').contentWindow.LivingTreeR04.setAllocation(0.38)")
               page.wait_for_timeout(1400)
               life4shot=root/'desktop-life-r04.png'; page.screenshot(path=str(life4shot),full_page=False)
-              C['life4PixelsNonBlank']=digest(life4shot)['stddev']>8
+              C['life4PixelsNonBlank']=digest(life4shot)['stddev']>10
+              C['life4VisuallyDistinctFromR03']=digest(life4shot)['bytes']!=digest(r03shot)['bytes']
 
               page.evaluate("FractalWaveTreeWorkbenchR01.setMode('lifecompare')")
               page.wait_for_timeout(500)
