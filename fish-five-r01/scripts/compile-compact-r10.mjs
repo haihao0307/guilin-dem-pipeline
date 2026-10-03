@@ -4,7 +4,7 @@ import zlib from 'node:zlib';
 import crypto from 'node:crypto';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
-import {MeshoptSimplifier,MeshoptEncoder,MeshoptDecoder} from 'meshoptimizer';
+import {MeshoptSimplifier} from 'meshoptimizer';
 import {readLegacySource} from './legacy-oral-source-r04.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const require=createRequire(import.meta.url),{chromium}=require('C:/Users/Administrator/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
@@ -19,7 +19,7 @@ const adoptedLegacy=legacyOnly?zlib.gunzipSync(fs.readFileSync(path.join(dir,'ba
 const adoptedHeader=adoptedLegacy?JSON.parse(adoptedLegacy.subarray(16,16+adoptedLegacy.readUInt32LE(8)).toString()):null;
 const adoptedBegin=adoptedLegacy?Math.ceil((16+adoptedLegacy.readUInt32LE(8))/8)*8:0;
 await MeshoptSimplifier.ready;
-await Promise.all([MeshoptEncoder.ready,MeshoptDecoder.ready]);
+
 const browser=await chromium.launch({headless:true});
 const page=await browser.newPage();
 await page.goto('about:blank');
@@ -53,7 +53,13 @@ async function imageProduct(bytes,mime,role){
 }
 function pack(magic,header,streams,images){
  let offset=0;const chunks=[],blocks=[];
- for(const s of streams){const padding=(8-offset%8)%8;if(padding){chunks.push(Buffer.alloc(padding));offset+=padding;}const original=asBytes(s.values);let b=original;if(s.encoding==='MESHOPT_VERTEX_LOSSLESS')b=MeshoptEncoder.encodeVertexBufferLevel(original,s.count,s.stride,3,0);else if(s.encoding==='MESHOPT_SEQUENCE_LOSSLESS')b=MeshoptEncoder.encodeIndexSequence(original,s.values.length,4);if(b!==original){const round=new Uint8Array(original.length);if(s.encoding==='MESHOPT_VERTEX_LOSSLESS')MeshoptDecoder.decodeVertexBuffer(round,s.count,s.stride,b);else MeshoptDecoder.decodeIndexSequence(round,s.values.length,4,b);if(!Buffer.from(round).equals(original))throw Error('Numeric lossless roundtrip '+s.field+' '+JSON.stringify({sourceType:s.values.constructor.name,stride:s.stride,count:s.count,first:original.findIndex((v,i)=>v!==round[i]),original:Array.from(original.subarray(0,20)),round:Array.from(round.subarray(0,20))}));}blocks.push({...s,values:undefined,offset,bytes:b.length,decodedBytes:original.length,length:s.values.length});chunks.push(Buffer.from(b));offset+=b.length;}
+ for(const s of streams){const padding=(8-offset%8)%8;if(padding){chunks.push(Buffer.alloc(padding));offset+=padding;}const original=asBytes(s.values);let b=original;
+  if(s.encoding==='BYTE_PLANE_DELTA_1'){const width=s.values.BYTES_PER_ELEMENT,L=s.values.length,out=Buffer.alloc(original.length),round=Buffer.alloc(original.length);
+   for(let lane=0;lane<width;lane++){let previous=0,sum=0;for(let i=0;i<L;i++){const next=original[i*width+lane],delta=(next-previous)&255;out[lane*L+i]=delta;previous=next;sum=(sum+delta)&255;round[i*width+lane]=sum;}}
+   if(!round.equals(original))throw Error('Numeric lossless roundtrip '+s.field);b=out;
+  }
+  blocks.push({...s,values:undefined,offset,bytes:b.length,decodedBytes:original.length,length:s.values.length});chunks.push(b);offset+=b.length;
+ }
  const imageRecords=[];for(const im of images){imageRecords.push({...im,bytes:undefined,offset,length:im.bytes.length});chunks.push(im.bytes);offset+=im.bytes.length;}
  const head=Buffer.from(JSON.stringify({...header,blocks,images:imageRecords})),prefix=Buffer.alloc(16);prefix.write(magic);prefix.writeUInt32LE(1,4);prefix.writeUInt32LE(head.length,8);prefix.writeUInt32LE(offset,12);const pad=Buffer.alloc((8-(16+head.length)%8)%8);
  return zlib.gzipSync(Buffer.concat([prefix,head,pad,...chunks]),{level:9});
@@ -76,13 +82,13 @@ try{
  locks[h.metadata.continuum.axialGait.caudalTipVertex]=1;
  const [indices,error]=experimentalQem?MeshoptSimplifier.simplifyWithAttributes(h.indices,h.positions,3,attrs,20,weights,locks,100000*3,.0001,['LockBorder']):[h.indices,0];
  const [remap,count]=experimentalQem?MeshoptSimplifier.compactMesh(indices):[Uint32Array.from({length:N},(_,i)=>i),N],fields={positions:3,normalOct:2,uv:2,weights:12,partInfo:2,partRoot:3},streams=[],products={};
- for(const [field,stride] of Object.entries(fields)){const a=h[field],v=new a.constructor(count*stride);for(let i=0;i<N;i++)if(remap[i]!==0xffffffff)v.set(a.subarray(i*stride,(i+1)*stride),remap[i]*stride);products[field]=v;streams.push({field,type:a.constructor.name,values:v,encoding:'MESHOPT_VERTEX_LOSSLESS',count,stride:stride*v.BYTES_PER_ELEMENT});}
- streams.push({field:'indices',type:'Uint32Array',values:indices,encoding:'MESHOPT_SEQUENCE_LOSSLESS'});
+ for(const [field,stride] of Object.entries(fields)){const a=h[field],v=new a.constructor(count*stride);for(let i=0;i<N;i++)if(remap[i]!==0xffffffff)v.set(a.subarray(i*stride,(i+1)*stride),remap[i]*stride);products[field]=v;streams.push({field,type:a.constructor.name,values:v,encoding:v.BYTES_PER_ELEMENT>1?'BYTE_PLANE_DELTA_1':'RAW'});}
+ streams.push({field:'indices',type:'Uint32Array',values:indices,encoding:'BYTE_PLANE_DELTA_1'});
  const meta=structuredClone(h.metadata);meta.counts={...meta.counts,vertices:count,triangles:indices.length/3};
  const oldTip=meta.continuum.axialGait.caudalTipVertex;if(remap[oldTip]===0xffffffff)throw Error('Protected tail diagnostic point removed');meta.continuum.axialGait.caudalTipVertex=remap[oldTip];
  const images=[];for(const [field,mime] of [['base','image/jpeg'],['normal',meta.package.normalMime],['rm','image/jpeg']]){if(adoptedHeader){const im=adoptedHeader.images.find(i=>i.field===field);images.push({...im,bytes:Buffer.from(adoptedLegacy.subarray(adoptedBegin+im.offset,adoptedBegin+im.offset+im.length))});}else{const p=await imageProduct(Buffer.from(h.textures[field]),mime,field==='normal'?'normal':'color');images.push({field,mime:p.mime,bytes:p.bytes,proof:p.proof});}}
  meta.package={...meta.package,chunks:undefined,normalMime:images.find(i=>i.field==='normal').mime,baseMime:images.find(i=>i.field==='base').mime,rmMime:images.find(i=>i.field==='rm').mime};
- meta.surface={...meta.surface,method:experimentalQem?'EXPERIMENTAL_QEM_NOT_APPROVED':'OFFLINE_ADOPTED_EXACT_REST_PRODUCT',originalSurfaceAtRuntime:false,originalChartResidualAtRuntime:false,compactErrorNormalized:error,restGeometryBitIdentical:!experimentalQem,losslessNumericEncoding:'MESHOPT_LOSSLESS'};
+ meta.surface={...meta.surface,method:experimentalQem?'EXPERIMENTAL_QEM_NOT_APPROVED':'OFFLINE_ADOPTED_EXACT_REST_PRODUCT',originalSurfaceAtRuntime:false,originalChartResidualAtRuntime:false,compactErrorNormalized:error,restGeometryBitIdentical:!experimentalQem,losslessNumericEncoding:'BYTE_PLANE_DELTA_1'};
  const compressed=pack('FCP0',{schema:'FISH_COMPACT_LEGACY_10',metadata:meta},streams,images),file='barracuda.fcp10.gz';fs.writeFileSync(path.join(dir,file),compressed);
  items.push({id:'barracuda',file:'r10/'+file,bytes:compressed.length,sha256:sha(compressed),format:'FCP10_LEGACY_GZIP',originalBytes:legacy.bytes,vertices:count,triangles:indices.length/3,originalVertices:N,originalTriangles:h.indices.length/3,errorNormalized:error,originalSourceOnlyOffline:true,sourceProof,images:images.map(i=>({field:i.field,mime:i.mime,...i.proof}))});console.log(JSON.stringify(items.at(-1)));
  const registry=JSON.parse(fs.readFileSync(path.join(root,'data/r07/registry.json')));

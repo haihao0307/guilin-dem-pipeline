@@ -1,7 +1,7 @@
 // Adopted product reader. Source fitting and original residuals exist only in the offline compiler.
-import {MeshoptDecoder} from 'meshoptimizer';
+
 export function patchCompactLegacyR10(html){
- globalThis.__FISH_COMPACT_DECODER_R10__=MeshoptDecoder;
+
  const start=html.indexOf('async function build(bytes,progress=()=>{}){'),end=html.indexOf('function measure(h)',start);
  if(start<0||end<0)throw Error('Compact legacy build ABI changed');
  const code=`async function build(bytes,progress=()=>{}){
@@ -13,8 +13,8 @@ export function patchCompactLegacyR10(html){
  const head=JSON.parse(new TextDecoder().decode(bytes.subarray(16,16+n)));
  if(head.schema!=='FISH_COMPACT_LEGACY_10')throw Error('Compact fish product schema mismatch');
  const meta=head.metadata,h={metadata:meta,binding:null,textures:{},disposed:false},types={Float32Array,Int16Array,Uint16Array,Uint8Array,Uint32Array};
- const decoder=parent.__FISH_COMPACT_DECODER_R10__;await decoder.ready;
- for(const b of head.blocks){const T=types[b.type],decoded=b.decodedBytes??b.bytes;if(!T||!['positions','normalOct','uv','weights','partInfo','partRoot','indices'].includes(b.field)||b.offset<0||o+b.offset+b.bytes>bytes.length||b.length*T.BYTES_PER_ELEMENT!==decoded)throw Error('Compact fish block invalid');const src=bytes.subarray(o+b.offset,o+b.offset+b.bytes),raw=new Uint8Array(decoded);if(b.encoding==='MESHOPT_VERTEX_LOSSLESS'){if(b.count*b.stride!==decoded)throw Error('Compact vertex stride mismatch');decoder.decodeVertexBuffer(raw,b.count,b.stride,src);}else if(b.encoding==='MESHOPT_SEQUENCE_LOSSLESS')decoder.decodeIndexSequence(raw,b.length,4,src);else if(!b.encoding||b.encoding==='RAW')raw.set(src);else throw Error('Unknown compact numeric encoding');h[b.field]=new T(raw.buffer);}
+
+ for(const b of head.blocks){const T=types[b.type],decoded=b.decodedBytes??b.bytes;if(!T||!['positions','normalOct','uv','weights','partInfo','partRoot','indices'].includes(b.field)||b.offset<0||o+b.offset+b.bytes>bytes.length||b.bytes!==decoded||b.length*T.BYTES_PER_ELEMENT!==decoded)throw Error('Compact fish block invalid');const src=bytes.subarray(o+b.offset,o+b.offset+b.bytes),raw=new Uint8Array(decoded);if(b.encoding==='BYTE_PLANE_DELTA_1'){const width=T.BYTES_PER_ELEMENT,L=b.length;for(let lane=0;lane<width;lane++){let sum=0;for(let i=0;i<L;i++){sum=(sum+src[lane*L+i])&255;raw[i*width+lane]=sum;}}}else if(!b.encoding||b.encoding==='RAW')raw.set(src);else throw Error('Unknown compact numeric encoding');h[b.field]=new T(raw.buffer);}
  for(const i of head.images){if(i.offset<0||o+i.offset+i.length>bytes.length)throw Error('Compact fish image invalid');h.textures[i.field]=bytes.subarray(o+i.offset,o+i.offset+i.length);}
  const N=meta.counts.vertices;if(h.positions.length!==N*3||h.weights.length!==N*12||h.partInfo.length!==N*2||h.partRoot.length!==N*3||h.indices.length!==meta.counts.triangles*3)throw Error('Compact field length mismatch');
  const tip=meta.continuum.axialGait.caudalTipVertex;
