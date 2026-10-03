@@ -1,0 +1,79 @@
+name: Coral original source recovery
+on:
+  push:
+    branches: [work/coral-original-recovery-20261003]
+    paths: [.github/workflows/coral-original-recovery.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fetch historical PR heads, read-only
+        run: |
+          git fetch --no-tags origin '+refs/pull/*/head:refs/remotes/recovery-pr/*'
+      - name: Inspect historical source and archived packages
+        shell: python
+        run: |
+          import subprocess, pathlib, hashlib, json, re, zipfile, io, datetime, time
+          out=pathlib.Path('coral-recovery-evidence');out.mkdir(exist_ok=True)
+          (out/'candidates').mkdir(exist_ok=True)
+          report={'started_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'scope':'Reachable local heads, remote heads, tags, and fetched PR heads in this repository; not deleted unreachable objects or external local-only files.','refs':subprocess.check_output(['git','for-each-ref','--format=%(refname) %(objectname)'],text=True).splitlines(),'matches':[],'errors':[],'skipped':[],'inspected_objects':0,'inspected_archive_members':0,'bytes_inspected':0,'production_changed':False}
+          needles={'blue-r41':['BLUE CORAL / R41','Blue Coral R41','沿着生长，让细节有起伏','大形保留'],'color-r02':['COLOR CORAL / R02','Color Coral R02','老师完整源码，直接运行'],'rosette-r01':['CORAL_ROSETTE_FOLIOSE_R01_TEACHER_REPLAY','花盘卷层珊瑚','Rosette Foliose']}
+          def inspect(data,path,sha,member=None):
+              text=data.decode('utf-8',errors='replace')
+              matched={k:[v for v in vs if v.lower() in text.lower()] for k,vs in needles.items()}
+              matched={k:v for k,v in matched.items() if v}
+              if not matched:return
+              item={'path':path,'git_blob':sha,'archive_member':member,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest(),'matches':matched,'canvas_tags':len(re.findall(r'<canvas\b',text,re.I)),'video_tags':len(re.findall(r'<video\b',text,re.I)),'has_webgl_calls':bool(re.search(r'drawArrays|drawElements|WebGLRenderer|webgl2',text)),'known_recovery_wrapper':bool(re.search(r'R41-target-runtime-pending|源码：待定位|运行体：待恢复|R02-target-source-pending|target-screen|source runner',text,re.I)),'title':re.findall(r'<title[^>]*>(.*?)</title>',text,re.S|re.I)[:2]}
+              name=sha[:12]+'-'+hashlib.sha256((member or path).encode()).hexdigest()[:8]+pathlib.Path(member or path).suffix
+              dest=out/'candidates'/name
+              if len(data)<80_000_000:dest.write_bytes(data);item['saved']=str(dest)
+              report['matches'].append(item)
+              print(json.dumps(item,ensure_ascii=False),flush=True)
+          objects=subprocess.check_output(['git','rev-list','--objects','--all'],text=True).splitlines()
+          selected=[]
+          for line in objects:
+              bits=line.split(' ',1)
+              if len(bits)<2:continue
+              sha,path=bits;low=path.lower();suffix=pathlib.Path(low).suffix
+              related=any(s in low for s in ['coral','rosette','珊瑚'])
+              if suffix in ['.html','.htm','.glsl'] or (related and suffix in ['.js','.mjs','.ts','.txt','.json','.md','.zip']):selected.append((sha,path))
+          report['selected_objects']=len(selected)
+          p=subprocess.Popen(['git','cat-file','--batch'],stdin=subprocess.PIPE,stdout=subprocess.PIPE)
+          for sha,path in selected:
+              try:
+                  p.stdin.write((sha+'\n').encode());p.stdin.flush();header=p.stdout.readline().decode().strip().split()
+                  if len(header)!=3:report['errors'].append({'path':path,'error':' '.join(header)});continue
+                  size=int(header[2]);data=p.stdout.read(size);p.stdout.read(1)
+                  if len(data)!=size:raise RuntimeError('truncated git blob')
+                  report['inspected_objects']+=1;report['bytes_inspected']+=size
+                  if path.lower().endswith('.zip'):
+                      if size>180_000_000:report['skipped'].append({'path':path,'reason':'archive exceeds 180 MB inspection limit'});continue
+                      with zipfile.ZipFile(io.BytesIO(data)) as z:
+                          for m in z.infolist():
+                              if pathlib.Path(m.filename.lower()).suffix not in ['.html','.htm','.js','.mjs','.glsl','.md','.json','.txt']:continue
+                              if m.file_size>80_000_000:report['skipped'].append({'path':path,'member':m.filename,'reason':'member exceeds 80 MB'});continue
+                              report['inspected_archive_members']+=1;inspect(z.read(m),path,sha,m.filename)
+                  else:inspect(data,path,sha)
+              except Exception as e:report['errors'].append({'path':path,'error':str(e)})
+          p.stdin.close();p.wait()
+          report['completed_utc']=datetime.datetime.now(datetime.timezone.utc).isoformat()
+          report['candidate_count']=len(report['matches'])
+          (out/'REPORT.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+          summary={k:v for k,v in report.items() if k not in ['refs','matches']}
+          print('RECOVERY_SUMMARY '+json.dumps(summary,ensure_ascii=False),flush=True)
+          with open(__import__('os').environ['GITHUB_STEP_SUMMARY'],'a') as f:
+              f.write('# Coral original-source recovery\n\nRead-only search. No workbench replaced or approved.\n\n```json\n'+json.dumps(summary,ensure_ascii=False,indent=2)+'\n```\n')
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coral-original-source-recovery
+          path: coral-recovery-evidence/
+          retention-days: 30
