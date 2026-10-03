@@ -8,10 +8,11 @@ import {patchLegacySampling} from './legacy-sampling-r04.js';
 import {decodeLegacyPacket,stageLegacyPacket} from './legacy-packet-r07.js';
 import {installLegacyMath,releaseLegacySourceCopies} from './legacy-math-r07.js';
 import {installLegacySchool} from './legacy-school-r08.js';
+import {fitLegacyOverview} from './legacy-overview-r08.js';
 // Preserve the accepted R14 carrier; runtime sampling skips only unread fin rows.
 // ABI isolation protects its custom WebGL habitat; no new window or remote page.
 export function createBarracudaModule(stage){
- let frame=null,api=null,visible=false,running=false,batch=null,shadow=null,presentation=null,cranial=null,mounting=null,lastDraw=-1,blobUrl=null,staged=null,epoch=0,math=null,memory=null,school=null;
+ let frame=null,api=null,visible=false,running=false,batch=null,shadow=null,presentation=null,cranial=null,mounting=null,lastDraw=-1,blobUrl=null,staged=null,epoch=0,math=null,memory=null,school=null,overview=null;
  const modeMap={cruise:'CRUISE',hover:'GLIDE',burst:'BURST',turn:'TURN_LEFT',rest:'REST'};
  async function mountOnce(){
   if(api)return api;
@@ -35,7 +36,7 @@ export function createBarracudaModule(stage){
   }
   if(attempt!==epoch)throw new DOMException('Selection cancelled','AbortError');
   api=frame.contentWindow.__KAOPU_R14__;
-  const r=api.renderer,originalFrame=r.frame.bind(r);frame.contentWindow.cancelAnimationFrame(r.raf);cranial=await installLegacyCranial(api);const eyeRim=installLegacyEyeRim(api);api.eyeRimR05=eyeRim;batch=batchLegacyEyes(api);math=installLegacyMath(api);shadow=specializeLegacyShadow(api);school=installLegacySchool(api);presentation=interpolateLegacyPresentation(api);cranial.attach();memory=releaseLegacySourceCopies(api,cranial);api.mathR07=math;api.memoryR07=memory;for(const p of cranial.programs)r.gl.deleteProgram(p.original);
+  const r=api.renderer,originalFrame=r.frame.bind(r);frame.contentWindow.cancelAnimationFrame(r.raf);cranial=await installLegacyCranial(api);const eyeRim=installLegacyEyeRim(api);api.eyeRimR05=eyeRim;batch=batchLegacyEyes(api);math=installLegacyMath(api);shadow=specializeLegacyShadow(api);school=installLegacySchool(api);presentation=interpolateLegacyPresentation(api);overview=fitLegacyOverview(api);cranial.attach();memory=releaseLegacySourceCopies(api,cranial);api.mathR07=math;api.memoryR07=memory;for(const p of cranial.programs)r.gl.deleteProgram(p.original);
   if(blobUrl){URL.revokeObjectURL(blobUrl);blobUrl=null;}staged?.release();staged=null;
   r.frame=now=>{if(!visible||document.hidden){r.last=now;running=false;return;}if(lastDraw===now)return;lastDraw=now;running=true;try{originalFrame(now);}finally{presentation.restore();}};
   // ResizeObserver may report hidden zero dimensions. Never clear a valid buffer
@@ -44,12 +45,12 @@ export function createBarracudaModule(stage){
   return api;
  }
  function mount(){if(mounting)return mounting;const job=mountOnce();mounting=job;job.catch(()=>{if(mounting===job){unmount();}});return job;}
- function unmount(){epoch++;visible=false;running=false;if(api){const r=api.renderer;frame?.contentWindow.cancelAnimationFrame(r.raf);try{presentation?.dispose();school?.dispose();batch?.dispose();shadow?.dispose();r.dispose();}catch(error){console.warn('Legacy release',error);}}try{for(const gl of frame?.contentWindow?.__FISH_BOOT_CONTEXTS_R07__||[])gl.getExtension('WEBGL_lose_context')?.loseContext();}catch{}if(blobUrl)URL.revokeObjectURL(blobUrl);blobUrl=null;staged?.release();staged=null;frame?.remove();frame=null;api=null;batch=shadow=presentation=cranial=math=memory=school=null;mounting=null;lastDraw=-1;}
+ function unmount(){epoch++;visible=false;running=false;if(api){const r=api.renderer;frame?.contentWindow.cancelAnimationFrame(r.raf);try{overview?.dispose();presentation?.dispose();school?.dispose();batch?.dispose();shadow?.dispose();r.dispose();}catch(error){console.warn('Legacy release',error);}}try{for(const gl of frame?.contentWindow?.__FISH_BOOT_CONTEXTS_R07__||[])gl.getExtension('WEBGL_lose_context')?.loseContext();}catch{}if(blobUrl)URL.revokeObjectURL(blobUrl);blobUrl=null;staged?.release();staged=null;frame?.remove();frame=null;api=null;batch=shadow=presentation=cranial=math=memory=school=overview=null;mounting=null;lastDraw=-1;}
  function resume(){if(!visible||!api||document.hidden||running)return;running=true;api.renderer.last=0;api.renderer.raf=frame.contentWindow.requestAnimationFrame(t=>api.renderer.frame(t));}
  function activate(on){if(!on){unmount();return;}visible=true;if(frame)frame.style.display='block';api?.renderer.resize();resume();}
  document.addEventListener('visibilitychange',()=>{if(document.hidden&&api){frame.contentWindow.cancelAnimationFrame(api.renderer.raf);running=false;}else resume();});
  function configure(state){if(!api)return;const r=api.renderer;if(r.state.school!==state.group)r.setSchool(state.group);const mode=modeMap[state.mode]||'CRUISE';if(r.state.mode!==mode)r.setMode(mode);r.state.playing=state.playing;r.state.paths=state.bones;r.state.compare=false;r.state.pointer=state.group;}
  function view(value){if(!api)return;const c=api.renderer.camera;c.setView(value==='side'||value==='head'?'left':value==='top'?'top':'oblique');if(value==='head'){const h=api.renderer.h,e=h.metadata.continuum.eyes.eyes,center=e.reduce((v,x)=>v.map((q,k)=>q+x.globeCenterM[k]/e.length),[0,0,0]);c.target=[(h.metadata.continuum.body.sourceXM+center[0])*.5,center[1]-.01,0];c.zoom=3.8;c.halfWidth=.58;c.distance=1.55;c.perspective=false;}if(api.renderer.state.school){c.halfWidth=3.3;c.distance=5.5;c.perspective=true;}}
  function reset(){api?.renderer.resetAll();}
- return {mount,activate,configure,view,reset,dispose:unmount,get api(){return api;},get frame(){return frame;},get visible(){return visible;},get eyeBatch(){return batch;},get shadowPass(){return shadow;},get presentation(){return presentation;},get cranial(){return cranial;},get math(){return math;},get memory(){return memory;}};
+ return {mount,activate,configure,view,reset,dispose:unmount,get api(){return api;},get frame(){return frame;},get visible(){return visible;},get eyeBatch(){return batch;},get shadowPass(){return shadow;},get presentation(){return presentation;},get overview(){return overview;},get cranial(){return cranial;},get math(){return math;},get memory(){return memory;}};
 }
