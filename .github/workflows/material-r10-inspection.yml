@@ -1,0 +1,56 @@
+name: Material R10 HD inspection and visible controls
+on:
+  push:
+    branches: [main]
+    paths: ['ops/material/r10/**', '.github/workflows/material-r10-inspection.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: material-r10-inspection
+  cancel-in-progress: false
+jobs:
+  build-verify-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Read bounded patch source
+        run: |
+          python3 - <<'PY'
+          import os,json,base64,urllib.request,pathlib
+          for n in ['build.py','verify.cjs']:
+            url='https://api.github.com/repos/haihao0307/guilin-dem-pipeline/contents/ops/material/r10/'+n+'?ref='+os.environ['GITHUB_SHA']
+            req=urllib.request.Request(url,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+            with urllib.request.urlopen(req,timeout=60) as r:d=json.load(r)
+            pathlib.Path(n).write_bytes(base64.b64decode(d['content']))
+          PY
+      - name: Patch only hash-locked R09 source
+        run: |
+          python3 build.py build
+          node --check r10_build/app.js
+          npm init -y
+          npm install --save-dev playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Real browser baseline regression and new interactions before release
+        run: |
+          python3 -m http.server 8793 --directory r10_build >/tmp/r10-http.log 2>&1 &
+          node verify.cjs local
+      - name: Publish passed candidate to fixed entrance, preserving old versions
+        run: python3 build.py publish
+      - name: Verify exact public source, actual render and controls
+        run: node verify.cjs public
+      - name: Archive publication proof
+        run: python3 build.py archive
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: material-r10-verification-and-source
+          path: |
+            evidence/
+            r10_build/
+          retention-days: 30
