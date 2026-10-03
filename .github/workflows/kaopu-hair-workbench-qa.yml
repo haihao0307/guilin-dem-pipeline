@@ -32,8 +32,8 @@ jobs:
       - name: Test standalone file and desktop/mobile viewports
         env:
           NODE_PATH: ${{ github.workspace }}/.hair-qa/node_modules
-          HAIR_HTML: ${{ github.workspace }}/kaopu-hair-workbench/qa/r03-candidate.html
-          HAIR_PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-hair-workbench/qa/r03-candidate.html
+          HAIR_HTML: ${{ github.workspace }}/kaopu-hair-workbench/index.html
+          HAIR_PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-hair-workbench/
           HAIR_QA_OUT: ${{ github.workspace }}/hair-qa-results
         run: node kaopu-hair-workbench/tests/browser-qa.cjs
       - name: Keep actual browser evidence
