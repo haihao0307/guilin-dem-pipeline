@@ -24,7 +24,7 @@ html=html.replace('content="2026-10-03-seddi-baseline-r02"','content="2026-10-03
 css=(S/'anemone.css').read_text()+'\n.reference-photo img{width:100%;object-fit:cover}\n'+(ROOT/'kuko-adapt/src/style.css').read_text()+'\n'+(ROOT/'full-cluster/src/style.css').read_text()
 html=html.replace('</style>',css+'\n</style>',1).replace('<body>','<body data-module="kuko">',1)
 html=html.replace('<div class="layout">',nav+panel+(ROOT/'kuko-adapt/src/panel.html').read_text()+'<div id="rabbitModule"><div class="layout">',1).replace('<input id="importFile"','</div><input id="importFile"',1)
-runtime=(S/'anemone-core.js').read_text()+'\n'+'\n'.join((ROOT/'full-cluster/src'/n).read_text() for n in ['anemone-renderer.js','anemone-host.js'])
+runtime=(S/'anemone-core.js').read_text()+'\n'+'\n'.join((ROOT/'full-cluster/src'/n).read_text() for n in ['anemone-current.js','anemone-renderer.js','anemone-host.js'])
 runtime+='\nwindow.KUKO_EXPERIMENT_SOURCE='+escape(json.dumps((ROOT/'kuko-adapt/src/experiment.glsl').read_text()))+';\nwindow.KUKO_TEACHER_SOURCE='+escape(json.dumps((ROOT/'kuko/src/teacher.frag').read_text()))+';\n'+(ROOT/'kuko-adapt/src/runtime.js').read_text()
 runtime+='\n'+(ROOT/'full-cluster/src/studio-ui.js').read_text()+'\n'+(ROOT/'full-cluster/src/rabbit-ui.js').read_text()+'\nplatform.select("anemone");'
 html=('<script>'+runtime.replace('</script','<\\/script')+'</script>\n</body>').join(html.rsplit('</body>',1))

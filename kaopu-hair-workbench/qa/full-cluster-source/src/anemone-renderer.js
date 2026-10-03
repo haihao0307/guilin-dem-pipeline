@@ -1,6 +1,9 @@
 /* KAOPU r03 mesh / KuKo material transfer, 2026-10-03.
- * The r03 tube profile, bodyMesh, joint solve, camera and indices are unchanged.
- * KuKo-derived broad rim and distance-softened color, with four study palettes.
+ * The r03 tube profile, body positions/normals/indices and camera are unchanged.
+ * Regional aperiodic flow replaces the old shared sine driver; segment lengths stay fixed.
+ * KuKo-derived broad rim and distance-softened color; four species-informed tissue
+ * palettes plus two explicitly artistic presets. Body-region metadata colors the
+ * column separately from the oral disc without moving vertices.
  * Two visible front-facing layers: opaque body depth -> nearest tube depth/color
  * -> second distinct tube depth/color -> ordered linear-light alpha composite.
  * Every layer has its own DEPTH_COMPONENT24 texture and nearest-surface depth test.
@@ -10,7 +13,7 @@
  * whole-tentacle alpha fallback remains approximate where bent tubes interleave.
  */
 (function(root){'use strict';
-const C=root.AnemoneCore;
+const C=root.AnemoneCurrent||root.AnemoneCore;
 const mul=(a,b)=>{const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)for(let k=0;k<4;k++)o[c*4+r]+=a[k*4+r]*b[c*4+k];return o;};
 const norm=v=>{const l=Math.hypot(...v);return v.map(x=>x/l);},cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0);
 function matrix(eye,target,aspect){const z=norm(eye.map((v,i)=>v-target[i])),x=norm(cross([0,1,0],z)),y=cross(z,x);const view=new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-dot(x,eye),-dot(y,eye),-dot(z,eye),1]);const f=1/Math.tan(.6/2),n=.05,far=50;const p=new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+n)/(n-far),-1,0,0,2*far*n/(n-far),0]);return mul(p,view);}
@@ -24,9 +27,9 @@ vec3 center(int j,int id){return texelFetch(joints,ivec2(clamp(j,0,28),id),0).xy
 void main(){int id=gl_InstanceID;float radius=texelFetch(joints,ivec2(0,id),0).w;float curveLength=texelFetch(joints,ivec2(28,id),0).w;float capLength=radius/curveLength;float s=param.x<.85?param.x/.85*(1.-capLength):(1.-capLength)+capLength*(param.x-.85)/.15;float v=s*28.0;int j=int(floor(v));vec3 p=mix(center(j,id),center(j+1,id),fract(v));vec3 t=normalize(center(min(j+1,28),id)-center(max(j-1,0),id));vec3 n;vec3 b;if(t.z<-.99999){n=vec3(0.,-1.,0.);b=vec3(-1.,0.,0.);}else{float k=1./(1.+t.z);n=vec3(1.-t.x*t.x*k,-t.x*t.y*k,-t.x);b=vec3(-t.x*t.y*k,1.-t.y*t.y*k,-t.y);}vec3 ring=b*cos(param.y)+n*sin(param.y);float cap=clamp((s-(1.-capLength))/capLength,0.,1.);float profile=(1.-.1*s)*(1.+.07*exp(-pow((s-.9)/.06,2.)))*sqrt(max(0.,1.-cap*cap));world=p+ring*radius*profile;normal=normalize(ring*sqrt(max(0.,1.-cap*cap))+t*cap);axial=s;variation=fract(sin(float(id)*127.1)*43758.5453);gl_Position=vp*vec4(world,1.);}`;
 const bodyVertex=`#version 300 es
 precision highp float;
-layout(location=0) in vec3 position;layout(location=1) in vec3 vertexNormal;
+layout(location=0) in vec3 position;layout(location=1) in vec3 vertexNormal;layout(location=2) in float oralDisc;
 uniform mat4 vp;out vec3 world;out vec3 normal;out float axial;out float variation;
-void main(){world=position;normal=vertexNormal;axial=-1.;variation=0.;gl_Position=vp*vec4(world,1.);}`;
+void main(){world=position;normal=vertexNormal;axial=-1.-oralDisc;variation=0.;gl_Position=vp*vec4(world,1.);}`;
 const fragment=`#version 300 es
 precision highp float;
 in vec3 world;in vec3 normal;in float axial;in float variation;uniform vec3 eye;out vec4 color;
@@ -36,17 +39,21 @@ else{base=mix(vec3(.34,.39,.15),vec3(.53,.58,.29),.35+variation*.35);base=mix(ba
 vec3 c=base*(.32+diffuse*.55+wrap*.25)+vec3(.39,.64,.55)*fres*.14+vec3(.75,.91,.8)*spec*.3;
 float ao=mix(.64,1.,smoothstep(.4,1.1,world.y));c*=ao;color=vec4(pow(c,vec3(1./2.2)),1.);}`;
 
+// Tissue-zone color fits from species descriptions and macrophotography. These
+// are display art values, not NOAA/PICRC measurements or calibrated albedos.
 const PALETTES=Object.freeze({
- green:Object.freeze(['#5C7A48','#A6CA64','#AC6AB7']),
- red:Object.freeze(['#A34C3F','#E99177','#F4B5A4']),
- blue:Object.freeze(['#565769','#8CBBCE','#CFDFE3']),
- yellow:Object.freeze(['#AE722B','#E3B657','#F5E7C4'])
+ green:Object.freeze(['#5B6734','#ADC858','#E1E8A0','#A74585']),
+ yellow:Object.freeze(['#89702F','#D4BA5D','#EFE7AD','#964185']),
+ brown:Object.freeze(['#8A6A40','#C2A575','#F0DAA6','#96514B']),
+ purple:Object.freeze(['#665163','#A88AAE','#E9C4E4','#973657']),
+ red:Object.freeze(['#A34C3F','#E99177','#F4B5A4','#9E424F']),
+ blue:Object.freeze(['#565769','#8CBBCE','#CFDFE3','#655173'])
 });
 const linearHex=h=>[1,3,5].map(i=>{const c=parseInt(h.slice(i,i+2),16)/255;return c<=.04045?c/12.92:Math.pow((c+.055)/1.055,2.4);});
 const materialFragment=`#version 300 es
 precision highp float;
 in vec3 world;in vec3 normal;in float axial;in float variation;
-uniform vec3 eye;uniform vec3 rootColor;uniform vec3 midColor;uniform vec3 tipColor;
+uniform vec3 eye;uniform vec3 rootColor;uniform vec3 midColor;uniform vec3 tipColor;uniform vec3 columnColor;
 uniform float translucency;uniform float focusDistance;uniform int materialPass;
 uniform highp sampler2D bodyDepth;uniform highp sampler2D frontDepth;
 out vec4 color;
@@ -62,8 +69,8 @@ void main(){
  vec3 milk=vec3(.86,.90,.85),base,lit;float alpha=1.;
  if(axial<0.){
    // The complete original column and oral disc remain opaque depth occluders.
-   base=mix(rootColor,midColor,.20)*.58;
-   base=mix(base,tipColor*.42,.06*smoothstep(.15,.52,world.y));
+   float disc=clamp(-axial-1.,0.,1.);
+   base=mix(columnColor,mix(rootColor,midColor,.16),disc)*.76;
    if(length(world.xz)<.04&&world.y>.47)base*=.28;
    lit=base*(.62+.34*diff)+mix(midColor,milk,.2)*rim*.035;
    lit*=mix(.74,1.,smoothstep(0.,.5,world.y));
@@ -131,19 +138,19 @@ void main(){
 
 function shader(gl,type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
 function program(gl,v,f){const p=gl.createProgram();gl.attachShader(p,shader(gl,gl.VERTEX_SHADER,v));gl.attachShader(p,shader(gl,gl.FRAGMENT_SHADER,f));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return p;}
-function bodyMesh(){const positions=[],normals=[],indices=[],steps=C.DISC_SIDES,columnRows=14,totalRows=columnRows+C.DISC_RINGS;
+function bodyMesh(){const positions=[],normals=[],regions=[],indices=[],steps=C.DISC_SIDES,columnRows=14,totalRows=columnRows+C.DISC_RINGS;
  const point=(row,side)=>{const a=side/steps*Math.PI*2;if(row>=columnRows)return C.discPoint(row-columnRows,side);const t=row/columnRows,r=.63+(C.discRadius(a)-.63)*t*t*t;const top=C.discPoint(0,side)[1];return [r*Math.cos(a),top*t,r*Math.sin(a)];};
- for(let row=0;row<=totalRows;row++)for(let side=0;side<=steps;side++){const p=point(row,side);positions.push(...p);normals.push(0,0,0);if(row<totalRows&&side<steps){const k=row*(steps+1)+side;indices.push(k,k+steps+1,k+1,k+1,k+steps+1,k+steps+2);}}
+ for(let row=0;row<=totalRows;row++)for(let side=0;side<=steps;side++){const p=point(row,side);positions.push(...p);normals.push(0,0,0);regions.push(row>=columnRows?1:0);if(row<totalRows&&side<steps){const k=row*(steps+1)+side;indices.push(k,k+steps+1,k+1,k+1,k+steps+1,k+steps+2);}}
  // Closed pedal attachment face uses the same boundary ring as the column.
- const center=positions.length/3;positions.push(0,0,0);normals.push(0,0,0);for(let j=0;j<steps;j++)indices.push(center,j,j+1);
+ const center=positions.length/3;positions.push(0,0,0);normals.push(0,0,0);regions.push(0);for(let j=0;j<steps;j++)indices.push(center,j,j+1);
  for(let i=0;i<indices.length;i+=3){const [a,b,c]=indices.slice(i,i+3),p=positions.slice(a*3,a*3+3),q=positions.slice(b*3,b*3+3),r=positions.slice(c*3,c*3+3),n=cross(q.map((x,k)=>x-p[k]),r.map((x,k)=>x-p[k]));for(const idx of [a,b,c])for(let k=0;k<3;k++)normals[idx*3+k]+=n[k];}
  for(let i=0;i<normals.length;i+=3){const v=norm(normals.slice(i,i+3));for(let k=0;k<3;k++)normals[i+k]=Number.isFinite(v[k])?v[k]:k===1?1:0;}
- return {positions:new Float32Array(positions),normals:new Float32Array(normals),indices:new Uint16Array(indices)};
+ return {positions:new Float32Array(positions),normals:new Float32Array(normals),regions:new Float32Array(regions),indices:new Uint16Array(indices)};
 }
 class Renderer{
  constructor(canvas){this.canvas=canvas;this.gl=canvas.getContext('webgl2',{alpha:false,antialias:true,preserveDrawingBuffer:true});if(!this.gl)throw Error('此浏览器无法创建 WebGL 2');const g=this.gl;this.errors=[];this.frames=0;this.drawMsTotal=0;this.drawMsMax=0;this.drawMsLast=0;this.camera={azimuth:.25,elevation:.84,distance:4.6};this.maxSurfaceSize=Math.min(g.getParameter(g.MAX_TEXTURE_SIZE),g.getParameter(g.MAX_RENDERBUFFER_SIZE),...g.getParameter(g.MAX_VIEWPORT_DIMS));this.program=program(g,vertex,fragment);this.bodyProgram=program(g,bodyVertex,fragment);this.materialProgram=program(g,vertex,materialFragment);this.materialBodyProgram=program(g,bodyVertex,materialFragment);this.compositeProgram=program(g,compositeVertex,compositeFragment);this.compositeVao=g.createVertexArray();this._material=Object.freeze({palette:'green',translucency:.68,mode:'kuko'});this.peelingAvailable=true;this.transparency={method:'two-layer-depth-peeling',available:true,layers:2,deepLayers:'omitted approximation',depthFormat:'DEPTH_COMPONENT24',floatColorRequired:false,reason:null};this.targets=null;this.texture=g.createTexture();g.bindTexture(g.TEXTURE_2D,this.texture);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_MIN_FILTER,g.NEAREST);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_MAG_FILTER,g.NEAREST);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_WRAP_S,g.CLAMP_TO_EDGE);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_WRAP_T,g.CLAMP_TO_EDGE);
  const params=[],indices=[],rings=42,sides=12;for(let i=0;i<=rings;i++)for(let a=0;a<=sides;a++){params.push(i/rings,a/sides*Math.PI*2);if(i<rings&&a<sides){const k=i*(sides+1)+a;indices.push(k,k+sides+1,k+1,k+1,k+sides+1,k+sides+2);}}this.tube=g.createVertexArray();g.bindVertexArray(this.tube);this.buffer(0,new Float32Array(params),2);this.index(indices);this.tubeCount=indices.length;
- const body=bodyMesh();this.body=g.createVertexArray();g.bindVertexArray(this.body);this.buffer(0,body.positions,3);this.buffer(1,body.normals,3);this.index(body.indices);this.bodyCount=body.indices.length;g.bindVertexArray(null);g.enable(g.DEPTH_TEST);g.disable(g.CULL_FACE);this.reset({...C.DEFAULTS});
+ const body=bodyMesh();this.body=g.createVertexArray();g.bindVertexArray(this.body);this.buffer(0,body.positions,3);this.buffer(1,body.normals,3);this.buffer(2,body.regions,1);this.index(body.indices);this.bodyCount=body.indices.length;g.bindVertexArray(null);g.enable(g.DEPTH_TEST);g.disable(g.CULL_FACE);this.reset({...C.DEFAULTS});
  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();this.errors.push('WebGL context lost');this.onError?.('WebGL 上下文已丢失，请重新打开');});
  }
  buffer(location,data,size){const g=this.gl,b=g.createBuffer();g.bindBuffer(g.ARRAY_BUFFER,b);g.bufferData(g.ARRAY_BUFFER,data,g.STATIC_DRAW);g.enableVertexAttribArray(location);g.vertexAttribPointer(location,size,g.FLOAT,false,0,0);}
@@ -198,7 +205,7 @@ class Renderer{
  uniforms(p,vp,eye,pass,dist){
   const g=this.gl;g.useProgram(p);g.uniformMatrix4fv(g.getUniformLocation(p,'vp'),false,vp);g.uniform3fv(g.getUniformLocation(p,'eye'),eye);
   if(pass!==undefined){const palette=PALETTES[this._material.palette].map(linearHex);
-   for(const [i,name] of ['rootColor','midColor','tipColor'].entries())g.uniform3fv(g.getUniformLocation(p,name),palette[i]);
+   for(const [i,name] of ['rootColor','midColor','tipColor','columnColor'].entries())g.uniform3fv(g.getUniformLocation(p,name),palette[i]);
    g.uniform1f(g.getUniformLocation(p,'translucency'),this._material.translucency);g.uniform1f(g.getUniformLocation(p,'focusDistance'),dist);g.uniform1i(g.getUniformLocation(p,'materialPass'),pass);
    // Inactive branches still have active samplers: bind harmless joint data there
    // so an attached current-layer depth texture is never a sampling feedback loop.
