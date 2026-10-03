@@ -4,6 +4,7 @@ const workbenchState = document.querySelector('#workbenchState');
 const manifestStatus = document.querySelector('#manifestStatus');
 const treeFrame = document.querySelector('#treeFrame');
 const teacherFrame = document.querySelector('#teacherFrame');
+const liftFrame = document.querySelector('#liftFrame');
 
 const teachers = {
   C: {
@@ -37,6 +38,7 @@ let currentMode = body.dataset.mode || 'tree';
 let manifestReady = false;
 let treeReady = false;
 let teacherReady = false;
+let liftReady = false;
 
 function setTeacherPlayback(playing) {
   try {
@@ -71,7 +73,7 @@ for (const button of modeButtons) {
 const storedMode = (() => {
   try { return localStorage.getItem('kaopu-fractal-tree-mode'); } catch (_) { return null; }
 })();
-if (storedMode && ['tree','teacher','compare','map'].includes(storedMode)) {
+if (storedMode && ['tree','teacher','compare','lift','map'].includes(storedMode)) {
   setMode(storedMode);
 } else {
   setMode('tree');
@@ -154,20 +156,22 @@ function childReady(frame, marker) {
 function updateReadyState() {
   treeReady = childReady(treeFrame, '__treeReady');
   teacherReady = childReady(teacherFrame, '__kukoDay123Ready');
+  liftReady = childReady(liftFrame, '__kuko3dLiftReady');
   if (teacherReady) applyPlaybackPolicy();
   const teacherMotion = currentMode === 'teacher' ? '老师动画开启' : '老师冻结帧省算力';
   const parts = [
     treeReady ? '树母台已就绪' : '树母台加载中',
     teacherReady ? `KuKo 老师已就绪（${teacherMotion}）` : 'KuKo 老师加载中',
+    liftReady ? '三维 Lift 已就绪' : '三维 Lift 加载中',
     manifestReady ? '知识桥已登记' : '知识桥加载中'
   ];
   workbenchState.textContent = parts.join(' · ');
-  const ready = treeReady && teacherReady && manifestReady;
+  const ready = treeReady && teacherReady && liftReady && manifestReady;
   window.__fractalTreeWorkbenchReady = ready;
   window.FractalWaveTreeWorkbenchR01 = {
     setMode,
     decodePath: (teacherId, branchId) => decodePath(teachers[teacherId], branchId),
-    getState: () => ({ mode: currentMode, treeReady, teacherReady, manifestReady })
+    getState: () => ({ mode: currentMode, treeReady, teacherReady, liftReady, manifestReady })
   };
   document.documentElement.dataset.ready = ready ? 'true' : 'false';
 }
@@ -177,5 +181,6 @@ teacherFrame.addEventListener('load', () => {
   updateReadyState();
   applyPlaybackPolicy();
 });
+liftFrame.addEventListener('load', updateReadyState);
 loadManifest().finally(updateReadyState);
 setInterval(updateReadyState, 1000);
