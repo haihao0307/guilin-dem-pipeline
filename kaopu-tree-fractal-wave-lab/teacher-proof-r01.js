@@ -1,5 +1,8 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js';
 
+const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+const TEACHER_PROOF_BUILD = '20261004-r01-fix1';
+
 const host = document.querySelector('#videoTeacherProofStage');
 const info = document.querySelector('#videoTeacherProofInfo');
 const status = document.querySelector('#videoTeacherProofStatus');
