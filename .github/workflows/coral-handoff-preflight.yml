@@ -1,0 +1,50 @@
+name: Coral handoff preflight
+on:
+  push:
+    branches: [handoff/coral-mother-full-20261004]
+    paths: [.github/workflows/coral-handoff-preflight.yml]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          fetch-depth: 1
+          sparse-checkout: CORAL_HANDOFF_20261004
+      - name: Verify archived cumulative log and count selected repository data
+        shell: python
+        run: |
+          from pathlib import Path
+          import subprocess,json,base64,gzip,hashlib
+          d=Path('/tmp/coral-preflight');d.mkdir()
+          r={}
+          try:
+              p=Path('CORAL_HANDOFF_20261004/knowledge');a=[(p/('master-%02d.b64'%i)).read_text().strip() for i in range(3)]
+              t=a[2]
+              if 'VVC30vUK55czb' in t:
+                  x=t.index('VVC30vUK55czb');y=t.index('VVC30vUK18Y',x);t=t[:x]+t[y:]
+              if 'SPwsTq3' in t:
+                  x=t.index('SPwsTq3');y=t.index('SPwsq6',x);t=t[:x]+t[y:]
+              a[2]=t
+              b=gzip.decompress(base64.b64decode(''.join(a),validate=True));r['log_sha256']=hashlib.sha256(b).hexdigest();r['log_bytes']=len(b)
+              assert r['log_sha256']=='b466be4fe17c23463cd8d085ea44c927ed8b11e36770d4a9d4fb2734f91a6f84'
+              (d/'CORAL_MASTER_PROGRESS.md').write_bytes(b);r['log_valid']=True
+          except Exception as e:r['log_valid']=False;r['log_error']=str(e)
+          raw=subprocess.check_output(['git','ls-tree','-r','-l','-z','HEAD'])
+          groups={}
+          for row in raw.split(b'\0'):
+              if not row:continue
+              m,p=row.split(b'\t',1);f=m.decode().split();name=p.decode();root=name.split('/')[0]
+              if 'coral' in root.lower() or root=='kaopu-tree-fractal-wave-lab':
+                  n=0 if f[3]=='-' else int(f[3]);g=groups.setdefault(root,{'bytes':0,'files':0});g['bytes']+=n;g['files']+=1
+          r['groups']=groups;r['total_bytes']=sum(g['bytes'] for g in groups.values())
+          (d/'PREFLIGHT.json').write_text(json.dumps(r,ensure_ascii=False,indent=2));print(json.dumps(r,ensure_ascii=False,indent=2))
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coral-handoff-preflight
+          path: /tmp/coral-preflight/
+          retention-days: 90
