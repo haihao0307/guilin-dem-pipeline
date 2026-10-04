@@ -1,0 +1,64 @@
+name: Publish Fractal Wave Architecture R06
+
+on:
+  push:
+    branches:
+      - work/fractal-wave-architecture-r06-20261004
+    paths:
+      - .github/workflows/publish-fractal-wave-architecture-r06.yml
+      - kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06/**
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-fractal-wave-architecture-r06
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout source branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify R06 source anchors
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06/index.html
+          test -f kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06/runtime.js
+          test -f kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06/ARCHITECTURE_R06.json
+          grep -q 'Teacher-Aligned Living Tree R06' kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06/index.html
+          grep -q 'window.__teacherArchitectureR06Ready' kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06/runtime.js
+          grep -q 'globalMetaballDisabled:true' kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06/runtime.js
+          grep -q 'KAOPU.fractal-wave.teacher-aligned-architecture/6' kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06/ARCHITECTURE_R06.json
+
+      - name: Copy R06 onto latest gh-pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC="$GITHUB_WORKSPACE"
+          git fetch origin gh-pages
+          git worktree add /tmp/gh-pages origin/gh-pages
+          cd /tmp/gh-pages
+          git switch -c publish-fractal-architecture-r06
+          mkdir -p kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06
+          cp "$SRC/kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06/index.html" kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06/index.html
+          cp "$SRC/kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06/runtime.js" kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06/runtime.js
+          cp "$SRC/kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06/ARCHITECTURE_R06.json" kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06/ARCHITECTURE_R06.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06
+          git diff --cached --quiet || git commit -m 'publish(fractal-wave): teacher-aligned architecture R06'
+          for attempt in 1 2 3 4 5; do
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            sleep $((attempt * 3))
+          done
+          exit 1
