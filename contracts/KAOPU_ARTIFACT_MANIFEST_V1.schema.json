@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kaopu.local/schema/artifact-manifest-v1.json",
+  "title": "KAOPU Frozen Generative Artifact Manifest V1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "objectId",
+    "artifactId",
+    "generatorVersion",
+    "seedDNA",
+    "parameterDNAHash",
+    "sourceTruthHash",
+    "coordinateSystem",
+    "unitScale",
+    "qualityContract",
+    "files",
+    "visualAcceptance",
+    "productionReady",
+    "immutable",
+    "runtimeCompatibility"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "kaopu.artifact-manifest.v1"},
+    "objectId": {"type": "string", "minLength": 1},
+    "artifactId": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "parentArtifactId": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+    "generatorVersion": {"type": "string", "minLength": 1},
+    "seedDNA": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"type": ["integer", "string"]}
+    },
+    "parameterDNAHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "sourceTruthHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "coordinateSystem": {"type": "string", "minLength": 1},
+    "unitScale": {
+      "type": "object",
+      "required": ["unit", "metersPerUnit"],
+      "properties": {
+        "unit": {"type": "string"},
+        "metersPerUnit": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "qualityContract": {
+      "type": "object",
+      "required": ["profile", "generationMode"],
+      "properties": {
+        "profile": {"type": "string"},
+        "generationMode": {"enum": ["offline", "authoring", "runtime-import"]},
+        "notes": {"type": "string"}
+      }
+    },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["path", "role", "bytes", "sha256"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "role": {"type": "string", "minLength": 1},
+          "bytes": {"type": "integer", "minimum": 0},
+          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "compression": {"type": ["string", "null"]},
+          "mimeType": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "visualAcceptance": {"type": "boolean"},
+    "productionReady": {"type": "boolean"},
+    "acceptedBy": {"type": ["string", "null"]},
+    "acceptedAt": {"type": ["string", "null"], "format": "date-time"},
+    "immutable": {"const": true},
+    "runtimeCompatibility": {
+      "type": "object",
+      "required": ["targets"],
+      "properties": {
+        "targets": {"type": "array", "items": {"type": "string"}},
+        "minimumVersion": {"type": ["string", "null"]}
+      }
+    },
+    "dynamicLayers": {
+      "type": "array",
+      "description": "Runtime states that may evolve without changing the frozen macro identity.",
+      "items": {"type": "string"}
+    },
+    "provenance": {"type": "object"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"visualAcceptance": {"const": true}}},
+      "then": {"required": ["acceptedBy", "acceptedAt"]}
+    }
+  ]
+}
