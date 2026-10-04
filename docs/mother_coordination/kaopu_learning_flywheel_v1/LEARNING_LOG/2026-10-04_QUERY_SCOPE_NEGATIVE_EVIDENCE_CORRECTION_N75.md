@@ -51,4 +51,6 @@ Apply to negative conclusions derived from filtered or paginated queries, initia
 
 `CANDIDATE / HISTORY_REPLAY_PASSED / NOT_ADOPTED`. Explicitly retract N73, preserve its Git history, correct the existing claim evidence, and route only the scoped result to Material via #91. Candidate remains inactive pending one real downstream use and independent verifier receipt. KPIs remain `unknown` except this audit records one corrected false-negative evidence event; no rate is inferred.
 
+Routing receipt: issue #91 comment <https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-5979603278>. Lifecycle: `POSTED=true`, Candidate `IMPLEMENTED=true`, Candidate `GATE-RUN=true`; downstream Material `ACKNOWLEDGED`, `ADOPTED` and `USER-ACCEPTED` remain false.
+
 No external AI was claimed or invoked as a participant.
