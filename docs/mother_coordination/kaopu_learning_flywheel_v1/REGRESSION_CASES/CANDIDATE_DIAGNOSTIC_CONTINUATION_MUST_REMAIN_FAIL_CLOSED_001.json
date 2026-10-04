@@ -1,0 +1,48 @@
+{
+  "schema": "kaopu.mother-regression-case/2.0",
+  "caseId": "DIAGNOSTIC-CONTINUATION-FAIL-CLOSED-001",
+  "title": "Continuing independent diagnostics must not turn a failed gate into a pass",
+  "status": "CANDIDATE_LOCAL_REPLAY_PASSED_PRODUCTION_TRIAL_PENDING",
+  "active": false,
+  "source": {
+    "failedWorkflowRun": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37167179914",
+    "failedRunNumber": 23,
+    "failedHeadSha": "c1a75170",
+    "candidateWorkflowRun": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37168616478",
+    "candidateRunNumber": 24,
+    "candidateHeadSha": "21e4a025b82fa8a32c1323ed83d3bee186150d76"
+  },
+  "failureClass": "VERIFIER_EVIDENCE_STARVATION",
+  "failureDescription": "Both core cells failed in run 23 while the other six cells passed. In that revision, a failed assertion inside a diagnostic helper could stop the core cell before later material and first-entry observations were collected. The exact failed assertion is not available here; this candidate targets the source-confirmed evidence-starvation path, not a claimed root cause for run 23.",
+  "mustNeverRepeat": [
+    "Treat an independent diagnostic mismatch as permission to skip later safe observations.",
+    "Treat a nonfatal diagnostic record as ignored or passing evidence.",
+    "Let Producer set passed=true when any recorded required check is false.",
+    "Continue after a failed prerequisite when later execution would be invalid or unsafe."
+  ],
+  "requiredEvidence": [
+    "exact tested commit and workflow run",
+    "explicit fatal prerequisite versus independent diagnostic classification",
+    "all safely reachable diagnostic records, including failures",
+    "required helper presence and helper final verdict",
+    "aggregate proof that every required recorded check passed"
+  ],
+  "gateLogic": {
+    "fatal": "Abort only when a prerequisite failure makes later execution invalid, unsafe, or semantically meaningless.",
+    "diagnostic": "Record the failure and continue to later independent safe observations.",
+    "pass": "The cell and aggregate pass only when every recorded required check is true and every required helper exists and passes.",
+    "hold": "Any recorded false check, missing helper, failed helper, unsafe prerequisite, incomplete result, or wrong subject identity rejects the candidate."
+  },
+  "appliesTo": [
+    "Kuko/anemone full-cluster core browser QA",
+    "Other Mother verifier suites only after a local trial classifies safe independent diagnostics"
+  ],
+  "historyReplay": {
+    "oldFatalNegative": "REJECT_WITH_LATER_EVIDENCE_MISSING",
+    "stagedDiagnosticNegative": "REJECT_WITH_LATER_EVIDENCE_PRESENT",
+    "allChecksPass": "PASS",
+    "unsafePrerequisite": "REJECT_AND_ABORT",
+    "forcedProducerPassWithRecordedFailure": "REJECT"
+  },
+  "activationRequirement": "Run the exact Kuko candidate in the public workflow, confirm all eight matrix cells and the aggregate, then obtain a routed Mother receipt before local adoption. Global adoption requires a separate trial in another Mother."
+}
