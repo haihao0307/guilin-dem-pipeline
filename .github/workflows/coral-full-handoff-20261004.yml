@@ -6,12 +6,32 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
-  actions: read
+  actions: write
+concurrency:
+  group: coral-mother-handoff-20261004
+  cancel-in-progress: true
 jobs:
   archive:
     runs-on: ubuntu-latest
-    timeout-minutes: 28
+    timeout-minutes: 24
     steps:
+      - name: Stop only the superseded archive attempt
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: python
+        run: |
+          from urllib.request import Request,urlopen
+          from urllib.error import HTTPError
+          import os,json
+          root='https://api.github.com/repos/haihao0307/guilin-dem-pipeline/actions/runs/37187715373'
+          headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'}
+          with urlopen(Request(root,headers=headers),timeout=20) as r: job=json.load(r)
+          assert job['head_branch']=='handoff/coral-mother-full-20261004'
+          if job['status']!='completed':
+              try:
+                  with urlopen(Request(root+'/cancel',data=b'',method='POST',headers=headers),timeout=20) as r:print('Superseded archive stopped',r.status)
+              except HTTPError as e:
+                  if e.code not in [409,422]:raise
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
@@ -23,10 +43,12 @@ jobs:
           python-version: '3.12'
       - name: Fetch frozen source object
         run: git fetch --depth=1 --filter=blob:none origin 71204339af530ff3da9d8f717bf0434e799b55b2
+      - name: Validate cumulative log and prepare selected-source export
+        run: python CORAL_HANDOFF_20261004/prepare_package.py
       - name: Archive verify and publish release assets
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python CORAL_HANDOFF_20261004/package.py
+        run: python CORAL_HANDOFF_20261004/package-execute.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
