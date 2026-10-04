@@ -1,0 +1,51 @@
+{
+  "schema": "KAOPU.fractal-wave.living-tree/5",
+  "id": "Living3DTree.R05",
+  "stage": "organ_lifecycle_source_sink_and_secondary_growth",
+  "inherits": [
+    "Living3DTree.R04",
+    "Native3DFractalGrammar.R03",
+    "KuKoDay123.BranchingR01"
+  ],
+  "lifeContract": {
+    "fineTwigsConsumeResources": true,
+    "matureLeavesActAsCarbonSources": true,
+    "rootsShootsCambiumAndFruitCompeteAsSinks": true,
+    "storageReserveBuffersGrowth": true,
+    "reproductiveInvestmentCanReduceVegetativeGrowth": true,
+    "leafLifecycleStates": ["primordium","unfolding","mature","senescent","abscised"],
+    "secondaryGrowthThickensOlderSupportedSegments": true,
+    "continuousImplicitSkinRemainsDerivedFromLifeState": true
+  },
+  "phyllotaxisVoices": {
+    "spiral": "generic spiral teaching voice",
+    "opposite": "generic opposite-pair teaching voice",
+    "whorl3": "generic three-leaf whorl teaching voice",
+    "speciesBoundary": "A Species Score selects a voice; none is universal."
+  },
+  "reproductiveSink": {
+    "enabledByMaturityAndCarbon": true,
+    "genericFlowerFruitGeometry": true,
+    "effect": "fruit investment is deducted before vegetative root/shoot allocation",
+    "speciesBoundary": "Flower and fruit geometry are placeholders for sink logic, not species morphology."
+  },
+  "resourceModel": {
+    "sources": ["root water/mineral uptake","mature leaf carbon assimilation","stored reserve"],
+    "sinks": ["maintenance","root growth","shoot growth","fine twig growth","secondary thickening","reproductive organs"],
+    "note": "R05 is a causal source-sink budget model, not a validated hydraulic/phloem transport simulator."
+  },
+  "secondaryGrowth": {
+    "driver": "segment age plus downstream support demand, modulated by cambium voice",
+    "rendering": "updated radius feeds the same implicit wood field",
+    "boundary": "does not yet model real cambial cell division, ring anatomy or species-specific wood."
+  },
+  "remainingWork": [
+    "species-specific leaf shape and phyllotaxis",
+    "flowering induction and pollination",
+    "species-specific fruit development",
+    "explicit hormone and dormancy histories",
+    "validated xylem/phloem resistance networks",
+    "secondary growth rings and wound response",
+    "true force-propagating wind"
+  ]
+}
