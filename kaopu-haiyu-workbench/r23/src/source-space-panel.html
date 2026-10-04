@@ -1,0 +1,14 @@
+<section id="sourceSpace" hidden>
+ <div class="experiment-head"><h2>06 · 三维相位实验</h2><span id="phaseStatus" class="quiet"></span></div>
+ <div class="exp-grid"><div>
+ <div class="scene-tools"><button id="phaseView">俯视对齐</button><button id="phaseOrbit">立体视角</button><button id="phaseLight" aria-pressed="true">冷暖光</button><span class="quiet">拖动旋转 · 滚轮缩放</span></div>
+ <div class="exp-scene"><canvas id="phaseCanvas" width="800" height="800" aria-label="06的真实三维相位点云，可旋转与冷暖照明"></canvas><span class="scene-hint">原式 x / y 不变 · z = q cos(c)</span></div>
+ </div><aside>
+ <div class="controls"><button id="phasePlay">播放</button><button id="phaseReset">回到起点</button></div>
+ <label for="phaseTime">源帧 · 每帧 π/120</label><input id="phaseTime" type="range" min="1" max="480" value="1"><div class="source-space-meta"><span id="phaseClock"></span><span id="phaseState">暂停</span></div>
+ <label for="phaseDepth">相位深度 <output id="phaseDepthValue">1.00</output></label><input id="phaseDepth" type="range" min="0" max="150" value="100">
+ <label for="phaseSize">观察点径 <output id="phaseSizeValue">2.2</output></label><input id="phaseSize" type="range" min="10" max="50" value="22">
+ <figure class="source-space-reference" style="margin:12px 0 0"><iframe id="phaseReference" title="06 同帧二维原式，精确p5参考"></iframe><figcaption class="reference-label">同帧老师原式<br>400×400 · 20,000点<br>俯视坐标逐点相同</figcaption></figure>
+ <details><summary>这一步怎样增加深度</summary><p class="quiet">保持老师的 x=q+30cos(c)+200、y=q sin(c)+39d，补一个正交分量 z=q cos(c)。这是相位空间实验，点的三维位置随原时钟变化；不把它当作已确认的动物身体。相位深度调为0可回到原平面。照明采用有法线的微小球点，只改变观察，不改原式坐标。</p></details>
+ </aside></div>
+</section>

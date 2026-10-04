@@ -1,0 +1,2 @@
+a=(y,d=mag(k=(5+3*sin(y+4))*cos(i/7),e=y/5-9)-2.8+sin(t*3-k*k/8))=>point((q=3*sin(k*2)+k*y/25*(9+2*sin(e*6-d*5+t*6)))+30*cos(c=d-t)+200,q*sin(c)+d*39);
+t=0,draw=$=>{t||createCanvas(w=400,w);background(9).stroke(w,46);for(t+=PI/480,i=2e4;i--;)a(i/885)}//[#つぶやきProcessing](https://x.com/hashtag/%E3%81%A4%E3%81%B6%E3%82%84%E3%81%8DProcessing?src=hashtag_click)  
