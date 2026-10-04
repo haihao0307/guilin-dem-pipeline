@@ -52,7 +52,7 @@ fiber_html=(ROOT/'full-cluster/fiber-study/index.html').read_text()
 assert hashlib.sha256(fiber_html.encode()).hexdigest()=='cfe95c28d27a1ee80ca65feda27c1806489f12fb7cdf9a3d3cd64c6ca57f9e8d'
 fiber_embed='window.FIBER_MODULE_HTML='+escape(json.dumps(fiber_html))+';'
 groom_html=(ROOT/'full-cluster/groom-study/index.html').read_text()
-assert hashlib.sha256(groom_html.encode()).hexdigest()=='adffa72b698836fdc8ff024b09916fa9b6b410a23f25e8b58ec5e054b9faa597'
+assert hashlib.sha256(groom_html.encode()).hexdigest()=='0b4812dc194a3fc3b399c95f6c79c1d394c5c02099676480965c7663c2d4efbb'
 groom_embed='window.GROOM_MODULE_HTML='+escape(json.dumps(groom_html))+';'
 runtime=groom_embed+'\n'+fiber_embed+'\n'+runtime
 html=('<script>'+runtime.replace('</script','<\\/script')+'</script>\n</body>').join(html.rsplit('</body>',1))
