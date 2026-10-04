@@ -116,11 +116,17 @@ void r13SideLamp(int lamp, highp vec3 p, out highp vec3 L, out highp vec3 E) {
  }
 `, 'anemone normal setup');
     const body = 'lit=base*(.62+.34*diff)+mix(midColor,milk,.2)*rim*.035;';
-    source = once(source, body, 'if(r13LightingMode==1){lit=base*(vec3(.62)+.34*r13Diffuse)+mix(midColor,milk,.2)*rim*.035;}else{' + body + '}', 'anemone body light');
+    // Side mode redistributes the existing tissue response toward incident light.
+    // The former fixed body/volume/rim/cap floors hid the weaker cool lamp. Keep
+    // a small volume floor and the exact soft KuKo silhouette/coverage functions;
+    // neither the shared lamp gain nor the original-light comparison is changed.
+    source = once(source, body, 'if(r13LightingMode==1){lit=base*(vec3(.16)+.90*r13Diffuse)+mix(midColor,milk,.2)*rim*(vec3(.008)+.035*r13Rim);}else{' + body + '}', 'anemone body light');
     const diffuse = 'lit=base*(softAmbient+.52*diff*teacherCoverage*sharp);';
-    source = once(source, diffuse, 'if(r13LightingMode==1){lit=base*(vec3(softAmbient)+.52*r13Diffuse*teacherCoverage*sharp);}else{' + diffuse + '}', 'anemone diffuse');
+    source = once(source, diffuse, 'if(r13LightingMode==1){lit=base*(vec3(.085+.20*coc)+.85*r13Diffuse*teacherCoverage*sharp);}else{' + diffuse + '}', 'anemone diffuse');
     const rim = 'lit+=rimReturn*effectiveRim*.62*rimLight*sharp;';
-    source = once(source, rim, 'if(r13LightingMode==1){lit+=rimReturn*effectiveRim*.62*(vec3(.40)+.60*r13Rim)*sharp;}else{' + rim + '}', 'anemone rim');
+    source = once(source, rim, 'if(r13LightingMode==1){lit+=rimReturn*effectiveRim*.62*(vec3(.055)+1.10*r13Rim)*sharp;}else{' + rim + '}', 'anemone rim');
+    const cap = 'lit+=base*pow(facing,1.5)*(.13+.18*tip);';
+    source = once(source, cap, 'if(r13LightingMode==1){lit+=base*pow(facing,1.5)*(vec3(.035)+(.22+.24*tip)*r13Rim);}else{' + cap + '}', 'anemone cap light');
     const back = 'lit+=mix(base,milk,.25)*back*.06;';
     source = once(source, back, 'if(r13LightingMode==1){lit+=mix(base,milk,.25)*r13Back*.06;}else{' + back + '}', 'anemone back light');
     return source;

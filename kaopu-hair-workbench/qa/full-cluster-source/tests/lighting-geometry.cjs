@@ -191,7 +191,7 @@ module.exports=async function lightingGeometry(browser,url,outDir,check) {
     // pass merely by mutating an API state that the visible controls ignore.
     for(const object of ['rabbit','anemone']) {
       await page.evaluate(object=>platform.select(object),object);
-      await page.locator(object==='rabbit'?'#rabbitControlsToggle':'#controlsToggle').click();
+      if(object==='rabbit')await page.locator('#rabbitControlsToggle').click();else assert('anemone dual lights visible without opening a drawer',await page.locator('#anemoneLightingMode').isVisible());
       if(object==='anemone'){
         await page.evaluate(()=>anemone.setMaterial({mode:'baseline'}));
         assert('anemone original material reference explicitly disables inapplicable rig controls',await page.locator('#anemoneLightingMode').isDisabled()&&await page.locator('#anemone-warmPower').isDisabled()&&await page.locator('#anemone-coolPower').isDisabled());
@@ -210,7 +210,7 @@ module.exports=async function lightingGeometry(browser,url,outDir,check) {
       await range.focus();await range.press('ArrowLeft');await range.press('ArrowLeft');
       const controls=await page.evaluate(object=>({state:objectLighting.get(object),modeEvents:document.getElementById(object+'LightingMode').__events,powerEvents:document.getElementById(object+'-warmPower').__events}),object);
       assert(object+' real mode and lamp UI handles trusted input',controls.modeEvents.length>=2&&controls.modeEvents.every(e=>e.trusted)&&controls.powerEvents.length===2&&controls.powerEvents.every(e=>e.trusted)&&Math.abs(controls.state.warmPower-.9)<1e-9,controls);
-      await setLight(object,defaults);await page.locator(object==='rabbit'?'#rabbitControlsClose':'#controlsClose').click();
+      await setLight(object,defaults);if(object==='rabbit')await page.locator('#rabbitControlsClose').click();
     }
 
     // Import invalid lighting before any camera, shape, material or GPU mutation.

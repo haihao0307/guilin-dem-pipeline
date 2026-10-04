@@ -10,28 +10,9 @@
   home.id = 'catalogHome';
   home.className = 'catalog-home';
   home.setAttribute('aria-labelledby', 'catalogTitle');
-  home.innerHTML = '<div class="catalog-intro"><p class="catalog-eyebrow">KAOPU / OBJECT STUDIO</p>' +
-    '<h1 id="catalogTitle">选择一个对象开始</h1><p>打开工作台，观察细节，调整自己的作品</p></div>' +
-    '<div class="catalog-grid">' +
-      '<button id="catalogRabbit" class="catalog-card catalog-rabbit" type="button" data-catalog-object="rabbit" aria-label="打开 Rabbit 兔子工作台">' +
-        '<span class="catalog-preview" aria-hidden="true"><span class="catalog-number">01</span>' +
-          '<svg viewBox="0 0 320 210" focusable="false"><defs><radialGradient id="catalogFur"><stop stop-color="#f6ebd4"/><stop offset="1" stop-color="#caba95"/></radialGradient></defs>' +
-          '<ellipse cx="162" cy="184" rx="83" ry="9" fill="#000" opacity=".14"/>' +
-          '<g fill="url(#catalogFur)"><ellipse cx="191" cy="131" rx="64" ry="49"/><circle cx="248" cy="145" r="16"/><ellipse cx="148" cy="174" rx="37" ry="10"/><ellipse cx="209" cy="174" rx="32" ry="11"/><ellipse cx="118" cy="72" rx="13" ry="47" transform="rotate(-12 118 72)"/><ellipse cx="143" cy="68" rx="13" ry="48" transform="rotate(10 143 68)"/><ellipse cx="128" cy="122" rx="35" ry="33"/></g>' +
-          '<path d="M114 99 Q107 61 115 43 M140 95 Q151 59 145 35" fill="none" stroke="#b3927b" stroke-width="7" stroke-linecap="round" opacity=".38"/><circle cx="113" cy="116" r="3" fill="#3c3c32"/><path d="M96 132l-4 3 5 2" fill="#8f776d"/>' +
-          '</svg><span class="catalog-object-tag">毛发 / FUR</span></span>' +
-        '<span class="catalog-card-copy"><span class="catalog-card-title">Rabbit <span>兔子</span></span><span class="catalog-card-description">毛色 · 毛长 · 毛感 · 梳理</span><span class="catalog-open">打开工作台 <span aria-hidden="true">↗</span></span></span>' +
-      '</button>' +
-      '<button id="catalogAnemone" class="catalog-card catalog-anemone" type="button" data-catalog-object="anemone" aria-label="打开 Anemone 海葵工作台">' +
-        '<span class="catalog-preview" aria-hidden="true"><span class="catalog-number">02</span>' +
-          '<svg viewBox="0 0 320 210" focusable="false"><ellipse cx="162" cy="184" rx="86" ry="10" fill="#000" opacity=".24"/><ellipse cx="162" cy="158" rx="66" ry="23" fill="#427467"/>' +
-          '<g fill="none" stroke-linecap="round"><g stroke="#668f78" stroke-width="15"><path d="M121 160Q78 115 80 79M140 160Q114 111 118 54M168 162Q172 108 158 64M187 160Q217 113 215 68M209 161Q249 137 248 103"/></g>' +
-          '<g stroke="#b7c59c" stroke-width="13"><path d="M106 164Q63 144 63 107M125 167Q98 132 107 97M147 169Q149 122 136 95M169 169Q195 133 182 93M189 170Q221 154 231 126M167 152Q165 119 184 59"/></g>' +
-          '<g stroke="#d8d3a3" stroke-width="10"><path d="M134 172Q116 162 114 139M157 174Q148 145 158 121M183 172Q188 151 207 144"/></g></g></svg>' +
-          '<span class="catalog-object-tag">水流 / FLOW</span></span>' +
-        '<span class="catalog-card-copy"><span class="catalog-card-title">Anemone <span>海葵</span></span><span class="catalog-card-description">自然色型 · 触手 · 实时水流</span><span class="catalog-open">打开工作台 <span aria-hidden="true">↗</span></span></span>' +
-      '</button>' +
-    '</div><p class="catalog-foot">选择对象后载入 3D · 随时返回首页切换</p>';
+  home.innerHTML = '<div class="catalog-intro"><p class="catalog-eyebrow">KAOPU / OBJECT STUDIO</p><h1 id="catalogTitle">选择一个对象开始</h1><p>打开工作台，观察细节，调整自己的作品</p></div><div class="catalog-grid">'+
+    '<button id="catalogRabbit" class="catalog-card catalog-rabbit" type="button" data-catalog-object="rabbit" aria-label="打开 Rabbit 兔子工作台"><span class="catalog-preview"><img src="/*__RABBIT_PREVIEW__*/" alt="工作台中实际渲染的小兔子"></span><span class="catalog-card-copy"><span class="catalog-card-title">兔子 <span>Rabbit</span></span><span class="catalog-card-description">毛色 · 毛长 · 毛感 · 梳理</span><span class="catalog-open">打开工作台</span></span></button>'+
+    '<button id="catalogAnemone" class="catalog-card catalog-anemone" type="button" data-catalog-object="anemone" aria-label="打开 Anemone 海葵工作台"><span class="catalog-preview"><img src="/*__ANEMONE_PREVIEW__*/" alt="工作台中实际渲染的整株海葵"></span><span class="catalog-card-copy"><span class="catalog-card-title">海葵 <span>Anemone</span></span><span class="catalog-card-description">自然色型 · 触手 · 实时水流</span><span class="catalog-open">打开工作台</span></span></button></div><p class="catalog-foot">选择对象后载入 3D · 随时返回首页切换</p>';
   header.after(home);
 
   const homeButton = document.createElement('button');

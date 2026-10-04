@@ -23,3 +23,59 @@ body[data-module=rabbit] #autoRotate{display:inline-flex;align-items:center;just
 /* Status notices must never cover or intercept the observation controls. */
 #toast{pointer-events:none}
 body[data-module=rabbit] #toast{bottom:calc(110px + env(safe-area-inset-bottom));max-width:calc(100vw - 28px);text-align:center}
+
+/* Anemone's absolute zoom and existing light inputs live on the first screen. */
+body[data-module=anemone] .anemone-stage>*:not(.anemone-canvas-wrap){flex-shrink:0}
+.anemone-quick-panel{flex-shrink:0;width:min(100%,800px);align-self:center;padding:6px max(14px,env(safe-area-inset-right)) 0 max(14px,env(safe-area-inset-left))}
+.anemone-zoom-presets{display:flex;align-items:center;gap:10px;min-width:0}
+.anemone-zoom-presets>span{flex:1;white-space:nowrap;font-size:11px;color:#bbcbb0}
+#anemoneQuickZoomValue{font:11px var(--mono);color:var(--accent);margin-left:5px}
+#anemoneZoomPresets{display:flex;gap:6px}
+#anemoneZoomPresets button{min-height:36px;min-width:62px;padding:6px 10px;font:12px var(--mono);touch-action:manipulation}
+.anemone-quick-lighting{display:grid;grid-template-columns:112px repeat(2,minmax(0,1fr));gap:15px;margin-top:5px;padding-top:5px;border-top:1px solid #53634550}
+#anemoneQuickLighting .control{min-width:0;margin:0}
+#anemoneQuickLighting .control label{font-size:11px;line-height:16px;gap:5px;margin:0;white-space:nowrap}
+#anemoneQuickLighting output{font:10px var(--mono);color:var(--accent)}
+#anemoneQuickLighting .anemone-light-mode label{position:relative;font-size:0;line-height:0}
+#anemoneLightingMode{width:100%;min-width:0;min-height:40px;padding:5px;color:var(--ink);background:#243527;border:1px solid #51654e;border-radius:7px;font-size:16px;line-height:1.3}
+#anemoneQuickLighting input[type=range]{display:block;height:28px;min-height:28px;margin:0;background:transparent;touch-action:pan-y;cursor:pointer}
+#anemoneQuickLighting input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:3px;background:#53614b}
+#anemoneQuickLighting input[type=range]::-webkit-slider-thumb{width:20px;height:20px;margin-top:-8px;background:var(--accent);border:2px solid #ccefaa}
+#anemoneQuickLighting input[type=range]::-moz-range-track{height:4px;border-radius:3px;background:#53614b}
+#anemoneQuickLighting input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:var(--accent);border:2px solid #ccefaa}
+#anemoneQuickLighting input:disabled,#anemoneLightingMode:disabled{opacity:.45;cursor:default}
+@media(max-width:600px){
+  .anemone-quick-panel{padding:5px max(10px,env(safe-area-inset-right)) 0 max(10px,env(safe-area-inset-left))}
+  #anemoneZoomPresets{gap:5px}
+  #anemoneZoomPresets button{min-width:57px;min-height:36px;font-size:11px;padding:5px 8px}
+  .anemone-quick-lighting{grid-template-columns:112px repeat(2,minmax(0,1fr));gap:10px;margin-top:4px;padding-top:4px}
+  #anemoneQuickLighting .control label{font-size:10px;gap:3px}
+  #anemoneQuickLighting output{font-size:10px}
+}
+@media(max-width:350px){
+  .anemone-quick-lighting{grid-template-columns:110px repeat(2,minmax(0,1fr));gap:7px}
+  #anemoneZoomPresets button{min-width:51px}
+  #anemoneQuickLighting .control label{font-size:9px}
+  #anemoneQuickLighting output{font-size:9px}
+}
+@media(max-height:460px) and (orientation:landscape){
+  body[data-module=anemone] .anemone-stage{position:relative;grid-template-columns:minmax(0,1fr) min(28vw,200px);grid-template-rows:auto auto minmax(0,1fr)}
+  body[data-module=anemone] .anemone-canvas-wrap{grid-row:1/4;grid-column:1}
+  body[data-module=anemone] .anemone-quick-panel{grid-row:1;grid-column:2;align-self:start;padding:5px 7px 0;min-width:0}
+  .anemone-zoom-presets{flex-wrap:wrap;gap:3px}
+  .anemone-zoom-presets>span{font-size:10px;flex-basis:100%}
+  #anemoneQuickZoomValue{font-size:10px}
+  #anemoneZoomPresets{width:100%;gap:4px}
+  #anemoneZoomPresets button{flex:1;min-width:0;min-height:30px;padding:4px 3px;font-size:10px}
+  .anemone-quick-lighting{grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 9px;margin-top:4px;padding-top:4px}
+  #anemoneQuickLighting .anemone-light-mode{grid-column:1/-1}
+  #anemoneLightingMode{min-height:30px;font-size:16px;padding:3px 5px}
+  #anemoneQuickLighting .control label{font-size:9px;gap:2px}
+  #anemoneQuickLighting output{font-size:9px}
+  #anemoneQuickLighting input[type=range]{height:25px;min-height:25px}
+  body[data-module=anemone] .cluster-palette{grid-row:2;grid-column:2;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:5px 7px 0}
+  body[data-module=anemone] .cluster-palette button{font-size:9px;min-height:28px;padding:3px 2px}
+  body[data-module=anemone] .anemone-tools{grid-row:3;grid-column:2;align-self:start;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:5px 7px;gap:4px;overflow-y:auto;max-height:100%;min-height:0}
+  body[data-module=anemone] .anemone-tools button{font-size:9px;min-height:28px;padding:3px 2px;white-space:nowrap}
+  body[data-module=anemone] .anemone-stage-foot{position:absolute;bottom:0;left:0;width:calc(100% - min(28vw,200px));min-height:19px;padding:3px 7px;flex-direction:row;pointer-events:none;background:#18231cbf}
+}
