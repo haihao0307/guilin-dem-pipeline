@@ -37,3 +37,11 @@ Wootton’s macro photo retains CC BY 2.0 attribution. SEDDI MIT source/assets a
 ## Verification
 
 Static: `node full-cluster/tests/lighting-static.cjs` and `node full-cluster/tests/safe-layout.cjs`. Exact-version Actions QA covers offline/public bytes, genuine GPU pixels, native simulated touch, state round trips and interrupted flows. Use each build’s receipt; static checks and screenshots do not imply natural appearance, AAA quality or production readiness. Chromium mobile emulation is not physical iPhone/Safari validation.
+
+## Mobile loading and high magnification update
+
+The first online Rabbit bundle is3,983,565 bytes. The two original static shell PNGs are fetched only when procedural mode is disabled; their original bytes are SHA-256 checked. Download stages, byte progress, timeouts and an in-page retry replace indefinite loading. The same4096² nine-octave Perlin shader is rendered in64 scissored512² tiles into oneRGBA8 texture, removing a duplicate64MiB surface. Geometry, texture quality and default original-light pixels are retained.
+
+Rabbit +/− controls add/subtract100 percentage points within100–600%; original quick presets remain. Manual pinch/import retains30–600% for compatibility. Above250%, geometry scale stays capped while the lens narrows, avoiding near-plane intrusion. Two-finger translation and Shift-drag pan the lens; reset restores centered100%.
+
+The Anemone two-light branch now uses a fixed, world-space ellipsoidal bulk attenuation proxy before surface response. It represents average intervening tissue/gaps with fitted extinction, not exact per-tube shadows, calibrated thickness or a fluid/SSS solver. Lamp positions and RGB remain pinned; an object-specific response compensation and hue-preserving highlight shoulder avoid treating unattenuated light as ubiquitous ambient. Camera/screen coordinates do not enter this attenuation. Geometry and alpha/depth remain unchanged.

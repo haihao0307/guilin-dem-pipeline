@@ -18,7 +18,9 @@ module.exports=async(page,out)=>{
       const pattern=kind==='thin'?/lit\+=(mix\(coloredReturn,milk,\.035\)[^;]+);/:/lit\+=(mix\(vec3\(1\.\),base,\.12\)\*r13Wet[^;]+);/;
       const match=s.match(pattern);if(!match)throw Error('Diagnostic '+kind+' anchor missing');s=s.replace(match[0],match[0]+'studyComponent='+match[1]+';');
      }
-     s=s.replace('lit=max(lit,vec3(0.));','lit=max(studyComponent,vec3(0.));');
+     const shoulder='if(r13LightingMode==1){float peak=max(max(lit.r,lit.g),lit.b);';
+     if(s.includes(shoulder))s=s.replace(shoulder,'lit=max(studyComponent,vec3(0.));'+shoulder);
+     else s=s.replace('lit=max(lit,vec3(0.));','lit=max(studyComponent,vec3(0.));');
     }
     return s;
    }

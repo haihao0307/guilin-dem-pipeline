@@ -163,7 +163,7 @@ module.exports=async function lightingGeometry(browser,url,outDir,check) {
       const stats=await compareLamps(object);report[object+'LampResponse']=stats;
       assert(object+' each light adds visible independent radiance',Object.values(stats).filter(x=>typeof x==='object').every(x=>x.changed>200&&x.meanLuma>.08),stats);
       assert(object+' warm and cool increments have distinct RGB ratio',stats.warm.redBlue>stats.cool.redBlue*1.2,stats);
-      assert(object+' opposite light contributions occupy separated lateral regions',Math.abs(stats.warm.centroidX-stats.cool.centroidX)>stats.width*.04,stats);
+      report.directionalChecks??=[];report.directionalChecks.push({object,pass:Math.abs(stats.warm.centroidX-stats.cool.centroidX)>stats.width*.04,stats});
       await setLight(object,defaults);const restored=await shot(object,'default-restored', 'candidate',false);
       assert(object+' restoring default lamps returns exact pixels',restored.pixels.hash===both.pixels.hash);
       return {both,off,warm,cool,legacy};
@@ -188,7 +188,7 @@ module.exports=async function lightingGeometry(browser,url,outDir,check) {
     // Match a lower photographic macro angle without changing production defaults.
     await page.evaluate(()=>{anemone.renderer.camera={azimuth:.25,elevation:.28,distance:2.8};anemone.redraw();});
     for(const [label,power]of [['both',{warmPower:1,coolPower:1}],['ambient',{warmPower:0,coolPower:0}],['warm',{warmPower:1,coolPower:0}],['cool',{warmPower:0,coolPower:1}]]){await setLight('anemone',power);await shot('anemone','side-macro-'+label);}
-    await setLight('anemone',defaults);report.materialComponents=await require('./material-components.cjs')(page,path.join(outDir,'components'));assert('final material component diagnostics render without GL error',report.materialComponents.samples.length===6&&report.materialComponents.samples.every(x=>x.glError===0));
+    await setLight('anemone',defaults);report.materialComponents=await require('./material-components.cjs')(page,path.join(outDir,'components'));assert('final material component diagnostics render without GL error',report.materialComponents.samples.length===6&&report.materialComponents.samples.every(x=>x.glError===0));for(const item of report.directionalChecks)assert(item.object+' opposite light contributions occupy separated lateral regions',item.pass,item.stats);
     await setLight('anemone',defaults);await page.locator('#anemoneCamera').click();
 
     // Actual controls use trusted native keyboard input; range handlers cannot

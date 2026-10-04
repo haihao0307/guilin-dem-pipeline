@@ -102,13 +102,26 @@ void r13SideLamp(int lamp, highp vec3 p, out highp vec3 L, out highp vec3 E) {
   // depth peeling, alpha, geometry, tissue colors and camera remain untouched.
   function transformAnemoneMaterialFragment(source) {
     if (typeof source !== 'string' || source.includes('r13SideLighting')) throw Error('Anemone lighting adapter already installed or source invalid');
-    source = afterPrecision(source, glsl + '\nuniform highp vec3 r13Center;\nuniform highp float r13Radius;\n', 'anemone material');
+    source = afterPrecision(source, glsl + `
+uniform highp vec3 r13Center;uniform highp float r13Radius;
+// A bounded, world-space bulk attenuation proxy for this fixed240-tube cluster.
+// It is not exact per-tube shadowing or measured tissue thickness. Air gaps are
+// represented by a fitted effective extinction; no camera/screen coordinate enters.
+vec3 r13ClusterTransmission(vec3 p,vec3 L){
+ vec3 q=(p-vec3(0.,.12,0.))/vec3(1.05,.68,1.05),d=L/vec3(1.05,.68,1.05);
+ float a=dot(d,d),b=dot(q,d),c=dot(q,q)-1.,disc=b*b-a*c;
+ if(disc<=0.)return vec3(1.);
+ float root=sqrt(disc),entry=(-b-root)/a,exitDistance=(-b+root)/a;
+ float pathLength=max(0.,exitDistance-max(0.,entry));
+ return exp(-vec3(1.80,1.35,2.15)*pathLength);
+}
+`, 'anemone material');
     const setup = 'vec3 n=normalize(normal),v=normalize(eye-world),l=normalize(vec3(.6,.6,.5));';
     source = once(source, setup, setup + `
  vec3 r13P=(world-r13Center)/r13Radius,r13Diffuse=vec3(0.),r13Back=vec3(0.),r13Rim=vec3(0.),r13Thin=vec3(0.),r13Wet=vec3(0.);
  if(r13LightingMode==1){
   for(int lamp=0;lamp<2;lamp++){
-   vec3 L,E;r13SideLamp(lamp,r13P,L,E);E*=r13DisplayGain;
+   vec3 L,E;r13SideLamp(lamp,r13P,L,E);E*=r13DisplayGain*1.65*r13ClusterTransmission(r13P,L);
    r13Diffuse+=E*max(dot(n,L),0.);
    r13Back+=E*pow(max(dot(-n,L),0.),1.5);
    r13Rim+=E*smoothstep(-.2,.85,dot(n,L));
@@ -131,6 +144,8 @@ void r13SideLamp(int lamp, highp vec3 p, out highp vec3 L, out highp vec3 E) {
     source = once(source, cap, 'if(r13LightingMode==1){lit+=base*pow(facing,1.5)*(vec3(.035)+(.22+.24*tip)*r13Rim);}else{' + cap + '}', 'anemone cap light');
     const back = 'lit+=mix(base,milk,.25)*back*.06;';
     source = once(source, back, 'if(r13LightingMode==1){lit+=mix(coloredReturn,milk,.035)*r13Thin*.30*(.35+.65*(1.-facing)+.35*tip)*sharp;lit+=mix(vec3(1.),base,.12)*r13Wet*.065*sharp;}else{' + back + '}', 'anemone back light');
+    source=once(source,'lit=max(lit,vec3(0.));',`if(r13LightingMode==1){float peak=max(max(lit.r,lit.g),lit.b);if(peak>.85){float shoulder=.85+.15*(1.-exp(-(peak-.85)/.15));lit*=shoulder/peak;}}
+ lit=max(lit,vec3(0.));`, 'anemone hue-preserving highlight shoulder');
     return source;
   }
   const locations = new WeakMap();
