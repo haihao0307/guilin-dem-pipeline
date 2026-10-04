@@ -34,10 +34,14 @@ def build(output,assets_dir,download):
   'gnm-model':data_url((ROOT/'src/GNMModel.js').read_text()),
   'gnm-samplers':data_url((ROOT/'src/SemanticSampler.js').read_text().replace("'./GNMModel.js'","'gnm-model'")),
   'gnm-scalp':data_url((ROOT/'src/ScalpBinding.js').read_text().replace("'./SemanticSampler.js'","'gnm-samplers'")),
-  'gnm-hair':data_url((ROOT/'src/HairLayer.js').read_text().replace("'./ScalpBinding.js'","'gnm-scalp'")),
+  'gnm-hair':data_url((ROOT/'src/HairLayer.js').read_text().replace("'./ScalpBinding.js'","'gnm-scalp'").replace("'./SemanticSampler.js'","'gnm-samplers'")),
   'gnm-facial-hair':data_url((ROOT/'src/FacialHairLayer.js').read_text().replace("'./HairLayer.js'","'gnm-hair'").replace("'./ScalpBinding.js'","'gnm-scalp'").replace("'./SemanticSampler.js'","'gnm-samplers'")),
   'gnm-expression-data':data_url((ROOT/'src/ExpressionSourceData.js').read_text()),
   'gnm-expression-sources':data_url((ROOT/'src/ExpressionSources.js').read_text().replace("'./ExpressionSourceData.js'","'gnm-expression-data'"))}
+ for name,url in modules.items():
+  code=base64.b64decode(url.split(',',1)[1]).decode()
+  unresolved=re.findall(r'''(?:from\s*|import\s*\()(["'])(\.{1,2}/[^"']+)\1''',code)
+  if unresolved: raise RuntimeError(f'{name}: unresolved relative imports in offline module: {unresolved}')
  html=(ROOT/'index.html').read_text()
  html=html.replace('<link rel="stylesheet" href="style.css">','<style>'+(ROOT/'style.css').read_text()+'</style>')
  html=re.sub(r'<script type="importmap">.*?</script>','<script type="importmap">'+json.dumps({'imports':modules})+'</script>',html,flags=re.S)

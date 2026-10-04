@@ -1,3 +1,4 @@
+// R6 offline dependency mapping is validated at build time.
 // R6 independent GNM groom-editor assertions run in the existing touch group.
 // Five-item first-entry assertion preserves the original image and lazy-load checks.
 // Fiber playback wait reads its documented exportState().time, not stats.
