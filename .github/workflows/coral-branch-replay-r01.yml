@@ -1,0 +1,84 @@
+name: Coral Branch Replay R01
+on:
+  push:
+    branches: [work/coral-branch-replay-r01-20261004]
+    paths: [.github/workflows/coral-branch-replay-r01.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  verify-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            coral-mother-core-seed-r01
+            tools/coral-branch-replay-r01
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build original-video-guided replica and guard accepted workbenches
+        run: |
+          mkdir -p /tmp/branch-evidence /tmp/branch-tools
+          cp tools/coral-branch-replay-r01/integrate.py tools/coral-branch-replay-r01/qa.py tools/coral-branch-replay-r01/teacher-images.json /tmp/branch-tools/
+          cp -r tools/coral-branch-replay-r01/branch-growth-r01 /tmp/branch-tools/
+          python /tmp/branch-tools/integrate.py coral-mother-core-seed-r01 /tmp/branch-site
+          cp -r /tmp/branch-site /tmp/branch-evidence/source
+          cp -r /tmp/branch-tools /tmp/branch-evidence/build-tools
+      - name: Install actual browser test tools
+        run: |
+          python -m pip install playwright==1.55.0
+          python -m playwright install --with-deps chromium
+      - name: Actual mesh and growth tests over HTTP before publication
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 --directory /tmp >/tmp/branch-http.log 2>&1 &
+          python /tmp/branch-tools/qa.py http://127.0.0.1:8765/branch-site/ /tmp/branch-evidence/prepublish
+      - name: Publish only tested coral additions, preserving all other lines
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages --depth=1
+          git checkout -B branch-replay-publish origin/gh-pages
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json,shutil
+          p=Path('coral-mother-core-seed-r01');s=Path('/tmp/branch-site');m=json.loads((s/'BRANCH_R01_MANIFEST.json').read_text())
+          for n,h in m['base'].items():assert hashlib.sha256((p/n).read_bytes()).hexdigest()==h,('concurrent coral modification; stop',n)
+          a=p/'archive-before-branch-replay-r01';a.mkdir(exist_ok=True)
+          for n in ['index.html','runtime.js']:shutil.copyfile(p/n,a/n)
+          for n in ['index.html','runtime.js','BRANCH_R01_MANIFEST.json']:shutil.copyfile(s/n,p/n)
+          shutil.copytree(s/'branch-growth-r01',p/'branch-growth-r01',dirs_exist_ok=True)
+          shutil.copyfile(s/'BRANCH_R01_MANIFEST.json','/tmp/branch-evidence/BRANCH_R01_MANIFEST.json')
+          PY
+          git config user.name 'Coral Mother Branch Replay'
+          git config user.email 'actions@users.noreply.github.com'
+          git add coral-mother-core-seed-r01/index.html coral-mother-core-seed-r01/runtime.js coral-mother-core-seed-r01/BRANCH_R01_MANIFEST.json coral-mother-core-seed-r01/branch-growth-r01/ coral-mother-core-seed-r01/archive-before-branch-replay-r01/
+          git commit -m 'feat(coral): actual procedural branch growth, blue/clear outputs, source-rule replay inside existing hub'
+          git push origin HEAD:gh-pages
+          git rev-parse HEAD > /tmp/branch-evidence/PUBLISHED_COMMIT.txt
+      - name: Match public bytes then verify actual rendering and interactions
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from urllib.request import Request,urlopen
+          import json,hashlib,time
+          m=json.loads(Path('/tmp/branch-site/BRANCH_R01_MANIFEST.json').read_text());base='https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-core-seed-r01/';ready=False
+          for _ in range(90):
+              try:
+                  checks={n:hashlib.sha256(urlopen(Request(base+n+'?verify='+str(time.time_ns()),headers={'Cache-Control':'no-cache'}),timeout=20).read()).hexdigest()==h for n,h in m['files'].items()}
+                  if all(checks.values()):ready=True;break
+              except Exception as e:print('Waiting for exact public deployment:',str(e),flush=True)
+              time.sleep(8)
+          assert ready,'Public bytes differ; delivery is not complete'
+          Path('/tmp/branch-evidence/PUBLIC_HASHES.json').write_text(json.dumps(checks,indent=2))
+          PY
+          python /tmp/branch-tools/qa.py https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-core-seed-r01/ /tmp/branch-evidence/public
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coral-branch-replay-r01-evidence
+          path: /tmp/branch-evidence/
+          retention-days: 30
