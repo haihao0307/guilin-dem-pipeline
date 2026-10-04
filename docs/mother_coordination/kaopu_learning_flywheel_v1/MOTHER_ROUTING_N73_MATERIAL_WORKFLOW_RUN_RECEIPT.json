@@ -1,0 +1,32 @@
+{
+  "schema": "kaopu.mother-routing/1",
+  "routingId": "N73-MATERIAL-WORKFLOW-RUN-RECEIPT",
+  "status": "NOT_POSTED",
+  "targetMother": "Material",
+  "targetIssue": 91,
+  "candidateRegression": "CI-GREEN-SKIPPED-CLAIM-001",
+  "boundedAction": "Run the existing Material R15 same-stone workflow once against the intended current subject and record exact runId, headSha, job/step conclusions and proof artifact. Until then use HOLD_CLAIM_NO_WORKFLOW_RUN.",
+  "doNot": [
+    "do not call a workflow YAML file or test-named commit GATE-RUN",
+    "do not reject the R15 source delta solely because CI is absent",
+    "do not change unrelated Material source or lower the same-SDF gate",
+    "do not promote POSTED to ACKNOWLEDGED or IMPLEMENTED without a real downstream receipt"
+  ],
+  "lifecycle": {
+    "posted": false,
+    "acknowledged": false,
+    "implemented": false,
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false
+  },
+  "metrics": {
+    "firstCandidatePassRate": "unknown",
+    "userCorrectionCount": "unknown",
+    "sameClassRecurrenceRate": "unknown",
+    "rejectedLineageInheritanceCount": "unknown",
+    "staleDeliveryCount": "unknown",
+    "internalIterationsPerAcceptedDelta": "unknown",
+    "instructionToLegalCandidateTime": "unknown"
+  }
+}

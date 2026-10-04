@@ -2,7 +2,7 @@
   "schema": "kaopu.mother-regression-case/2.0",
   "caseId": "CI-GREEN-SKIPPED-CLAIM-001",
   "title": "Green workflow must not promote a claim whose critical steps were skipped",
-  "status": "CANDIDATE_HISTORY_REPLAY_PASSED_NOT_ADOPTED",
+  "status": "CANDIDATE_MULTI_MOTHER_HISTORY_REPLAY_PASSED_NOT_ADOPTED",
   "active": false,
   "source": {
     "issue": "https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-5807198398",
@@ -10,12 +10,30 @@
     "jobId": 107435412791,
     "headSha": "7d60191bd8cf2d7e5138dab30873d8e59cca044b"
   },
+  "additionalEvidence": [
+    {
+      "observedAt": "2026-10-04T07:41:00Z",
+      "mother": "Material",
+      "workflowPath": ".github/workflows/material-r15-same-stone.yml",
+      "productionSha": "d6cecae2527a259082b5a5b97d74d4223e4d10f9",
+      "workflowDefinitionShas": [
+        "2f4639c9d73ff58303072697f5c10e541e0703fa",
+        "c3f0ecb7eed797000c4131d82f3f8c644be73ef0",
+        "4fdc1213914a668e6d63017081c128c7ef3edc4b"
+      ],
+      "workflowRunsPerCommit": [0, 0, 0],
+      "combinedStatusesPerCommit": [0, 0, 0],
+      "derivedClaimState": "HOLD_CLAIM_NO_WORKFLOW_RUN",
+      "note": "The source delta may still be valid. This evidence blocks only claims that the public same-SDF workflow ran or passed."
+    }
+  ],
   "failureClass": "CLAIM_SCOPE_OVERPROMOTION",
   "failureDescription": "The workflow and job concluded success while both publication-critical steps were skipped. The run supported VERIFIED_SETUP only, not PUBLICATION_COMPLETE.",
   "mustNeverRepeat": [
     "Quote an overall green workflow as deployment, browser verification, publication, or user delivery evidence without checking the named claim manifest.",
     "Count a preflight or evidence artifact as the outcome-bearing delivery.",
-    "Hide skipped claim-critical steps behind the workflow conclusion."
+    "Hide skipped claim-critical steps behind the workflow conclusion.",
+    "Count a committed workflow definition, a rerun-comment commit, or a test-named commit as GATE-RUN when no exact workflow run exists."
   ],
   "requiredEvidence": [
     "exact workflow run, job, and tested commit",
@@ -27,7 +45,7 @@
   ],
   "gateLogic": {
     "pass": "All claim-required steps conclude success and all claim proof predicates match.",
-    "hold": "Any claim-required step is skipped, missing, failed, or cancelled, or any proof predicate mismatches.",
+    "hold": "The exact workflow run is absent, or any claim-required step is skipped, missing, failed, or cancelled, or any proof predicate mismatches.",
     "scopeBoundary": "A skipped step is not globally fatal; it blocks only claims that declare that step critical.",
     "workflowConclusion": "Transport/execution metadata only; it never promotes the claim by itself."
   },
@@ -38,7 +56,8 @@
   "historyReplay": {
     "verifiedSetup": "CLAIM_VERIFIED",
     "publicationComplete": "HOLD_CLAIM_INCOMPLETE",
-    "falsificationControl": "CLAIM_VERIFIED"
+    "falsificationControl": "CLAIM_VERIFIED",
+    "materialR15NoRun": "HOLD_CLAIM_NO_WORKFLOW_RUN"
   },
   "activationRequirement": "Run once in an actual affected Mother workflow and obtain an independent verifier receipt before adoption."
 }
