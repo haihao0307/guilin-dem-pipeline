@@ -1,3 +1,4 @@
+var clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const body = document.body;
 
 function installVideoTeacherProof() {
