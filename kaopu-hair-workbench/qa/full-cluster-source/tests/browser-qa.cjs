@@ -1,3 +1,4 @@
+// Fiber playback wait reads its documented exportState().time, not stats.
 // Startup failure snapshots deliberately permit an uninitialized preset.
 // Joint-sampler precision is explicitly highp; geometry equations remain source-pinned.
 // Mobile layouts await the native ResizeObserver backing-store transition before strict DPR checks.
