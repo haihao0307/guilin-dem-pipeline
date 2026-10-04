@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07100f">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:,">
+<title>KAOPU · 分叉生长老师 R02 · 分阶段可验证</title>
+<style>
+:root{--bg:#07100f;--panel:#101817;--line:#30413d;--ink:#edf4f1;--muted:#91a19c;--accent:#9fc2b1;--trunk:#b8c4a8;--primary:#55cbbb;--secondary:#6baaa0;--target:#6d94d0;--tip:#d25b89;--split:#d9bc6e;--territory:#8aadd8}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:14px/1.52 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft Yahei",sans-serif}button,input,select{font:inherit}
+header{min-height:68px;padding:10px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:14px}.title{font-size:18px;font-weight:650}.sub{font-size:10px;color:var(--muted);margin-top:2px}.tag{border:1px solid #435650;border-radius:999px;padding:4px 10px;font-size:9px;color:#bdcbc6;white-space:nowrap}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 382px;min-height:calc(100vh - 68px)}.stage{position:relative;min-height:760px;overflow:hidden;background:radial-gradient(circle at 50% 40%,#172724,#07100f 72%)}.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}.bar{position:absolute;z-index:5;left:10px;top:10px;right:10px;display:flex;gap:6px;flex-wrap:wrap}.bar button{border:1px solid #435650;background:#101a18e8;color:#e9f0ee;border-radius:6px;padding:7px 10px;min-height:36px}.bar button.on{background:#38544b;border-color:#8aa99d}.caption{position:absolute;z-index:4;left:14px;top:58px;max-width:700px;font-size:10px;color:#aab8b3;pointer-events:none;text-shadow:0 1px 8px #000}.caption b{display:block;color:#f2f7f4;font-size:14px;margin-bottom:2px}.info{position:absolute;z-index:4;left:14px;bottom:12px;font-size:9px;color:#9eb0aa;pointer-events:none}.badges{position:absolute;z-index:4;right:12px;bottom:12px;display:flex;gap:6px;flex-wrap:wrap}.badge{border:1px solid #364943;background:#0b1211cc;border-radius:999px;padding:4px 7px;font-size:9px;color:#a8b8b2}.error{position:absolute;z-index:10;left:14px;right:14px;top:112px;padding:12px;background:#3a1d24;border:1px solid #95506a;border-radius:7px;white-space:pre-wrap}.error[hidden]{display:none}
+.panel{background:var(--panel);border-left:1px solid var(--line);padding:17px 18px 26px;overflow:auto}.panel h2{font-size:14px;margin:0 0 5px}.note{font-size:10px;color:var(--muted);margin:0 0 13px}.gate{border:1px solid #344640;border-radius:8px;background:#0e1615;padding:10px 11px;margin-bottom:14px;font-size:10px;color:#aebdb7}.gate b{color:#e4ece9}.pipeline{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:14px}.pipeline button{border:1px solid #40534e;background:#14201d;color:#dce7e3;border-radius:7px;padding:9px 7px;text-align:left}.pipeline button.on{background:#3d574d;border-color:#91ad9f}.pipeline button small{display:block;color:#94a39e;font-size:9px;margin-top:2px}.row{margin:0 0 13px}.row label{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#bcc9c4}.row output{color:#dce7e3;font-variant-numeric:tabular-nums}.row input,.row select{width:100%;margin-top:5px}.row input[type=range]{accent-color:var(--accent)}.row select{background:#14201d;color:#e4ece9;border:1px solid #40534e;border-radius:6px;padding:7px}.status{border-top:1px solid var(--line);padding-top:11px;margin-top:5px;font-size:10px;color:#a5b9b1;min-height:86px}.legend{font-size:9px;color:#84948f;margin-top:10px;line-height:1.8}.sw{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:4px}.trunk{background:var(--trunk)}.primary{background:var(--primary)}.secondary{background:var(--secondary)}.target{background:var(--target)}.tip{background:var(--tip)}.split{background:var(--split)}
+@media(max-width:820px){header{padding:10px 12px}.tag{display:none}.wrap{display:block}.stage{height:68svh;min-height:560px}.panel{border-left:0;border-top:1px solid var(--line);padding:15px}.caption{max-width:82%}.bar{gap:4px}.bar button{font-size:11px;padding:7px 8px}.badges{display:none}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.0/examples/jsm/"}}</script>
+</head>
+<body>
+<header><div><div class="title">KAOPU · 分叉生长老师 R02</div><div class="sub">SCAFFOLD → TARGET FIELD → TERRITORY ALLOCATION → CONSTRAINED SPLIT → LOAD BACK-PROP</div></div><div class="tag">R01 神经错乱曲冻结为失败证据 · R02 重建观察方法</div></header>
+<div class="wrap">
+<main class="stage" id="stage">
+  <div class="bar"><button id="fit" class="on">适配视野</button><button id="front">正面</button><button id="side">侧面</button><button id="play">播放生长</button><button id="rebuild">换种子</button><button id="auto">自动转动</button></div>
+  <div class="caption"><b>不再让几千根线在空间里乱窜</b>老师的新知识必须分阶段看见：先建立主轴/基底骨架，再生成有组织的目标场；目标先分配给多个活跃端；生长方向受前向锥、最大转角、自避让和层级限制；只有目标群真正分离时才分叉；最后才由下游负载决定粗细。</div>
+  <div class="info" id="info">正在建立可解释分枝…</div>
+  <div class="badges"><span class="badge" id="segBadge">Segment --</span><span class="badge" id="targetBadge">Target --</span><span class="badge" id="tipBadge">Tip --</span><span class="badge" id="splitBadge">Split --</span><span class="badge" id="turnBadge">Turn --</span></div>
+  <pre class="error" id="error" hidden></pre>
+</main>
+<aside class="panel">
+  <h2>老师管线解剖</h2>
+  <p class="note">默认先使用“树线”解释镜头。珊瑚镜头调用同一台乐器，但用扇面约束和不同停止条件；不再用一个随机球冒充所有对象。</p>
+  <div class="gate"><b>R02 纠错门：</b><br>✓ R01 作废：禁止全空间回头、打结和无限自交<br>✓ 主轴/基底先存在，目标场不能直接替代结构语法<br>✓ 每个 Active Tip 只能认领前向锥内的目标<br>✓ 每步最大转角受限，不能突然折返<br>✓ Split 需要目标群分离、最小枝龄和层级许可<br>✓ 新段若侵入既有结构，会避让或停止<br>✓ 老师知识通过四个阶段显式呈现</div>
+  <div class="pipeline">
+    <button data-stage="field"><b>① 目标场</b><small>看 Supply / Opportunity</small></button>
+    <button data-stage="allocation" class="on"><b>② 目标分配</b><small>看 Active Tips 与 Territory</small></button>
+    <button data-stage="skeleton"><b>③ 分枝骨架</b><small>看主轴、层级与真实 Split</small></button>
+    <button data-stage="load"><b>④ 负载粗细</b><small>看下游 Load Back-prop</small></button>
+  </div>
+  <div class="row"><label>解释镜头 <output id="scoreO"></output></label><select id="score"><option value="tree">树线：主轴 + 体积冠层</option><option value="coral">珊瑚线：基底 + 扇面</option><option value="neutral">中性：共享能力检查</option></select></div>
+  <div class="row"><label>目标数量 <output id="densityO"></output></label><input id="density" type="range" min="80" max="320" step="10" value="170"></div>
+  <div class="row"><label>影响半径 <output id="influenceO"></output></label><input id="influence" type="range" min=".7" max="2.2" step=".05" value="1.25"></div>
+  <div class="row"><label>占领半径 <output id="killO"></output></label><input id="kill" type="range" min=".10" max=".38" step=".01" value=".20"></div>
+  <div class="row"><label>步长 <output id="stepO"></output></label><input id="step" type="range" min=".14" max=".34" step=".01" value=".23"></div>
+  <div class="row"><label>分裂目标阈值 <output id="splitO"></output></label><input id="split" type="range" min="8" max="28" step="1" value="15"></div>
+  <div class="row"><label>最大转角 <output id="turnO"></output></label><input id="turn" type="range" min="10" max="34" step="1" value="19"></div>
+  <div class="row"><label>母方向继承 <output id="inertiaO"></output></label><input id="inertia" type="range" min=".2" max="1.4" step=".05" value=".86"></div>
+  <div class="row"><label>空间避让 <output id="spaceO"></output></label><input id="space" type="range" min=".2" max="1.6" step=".05" value="1.05"></div>
+  <div class="row"><label>生长进度 <output id="growthO"></output></label><input id="growth" type="range" min="0" max="1" step=".005" value=".66"></div>
+  <div class="status" id="status">等待老师演奏…</div>
+  <div class="legend"><span class="sw trunk"></span>主轴/基底　<span class="sw primary"></span>一级枝　<span class="sw secondary"></span>二级及末端　<span class="sw target"></span>未占领目标　<span class="sw tip"></span>Active Tip　<span class="sw split"></span>Split Node</div>
+</aside>
+</div>
+<script type="module" src="./runtime.js"></script>
+</body>
+</html>
