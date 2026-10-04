@@ -1,0 +1,82 @@
+name: Coral Young Color R02
+on:
+  push:
+    branches: [work/coral-young-color-r02-20261004]
+    paths: [.github/workflows/coral-young-color-r02.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  color-verify-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            coral-mother-core-seed-r01
+            tools/coral-young-color-r02
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build pigment layer without changing accepted teacher
+        run: |
+          mkdir -p /tmp/color-evidence
+          cp -r tools/coral-young-color-r02 /tmp/color-tools
+          python /tmp/color-tools/build.py coral-mother-core-seed-r01 /tmp/color-site
+      - name: Install test browser
+        run: |
+          python -m pip install playwright==1.55.0
+          python -m playwright install --with-deps chromium
+      - name: Actual palette and original-rollback HTTP tests
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 --directory /tmp >/tmp/color-http.log 2>&1 &
+          python /tmp/color-tools/qa.py http://127.0.0.1:8765/color-site/ /tmp/color-evidence/prepublish
+      - name: Publish guarded young revision, preserve R01 and unrelated projects
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages --depth=1
+          git checkout -B color-publish origin/gh-pages
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json,shutil
+          p=Path('coral-mother-core-seed-r01');s=Path('/tmp/color-site');m=json.loads((s/'COLOR_R02_MANIFEST.json').read_text())
+          for n,h in m['base'].items():assert hashlib.sha256((p/n).read_bytes()).hexdigest()==h,('Concurrent coral modification; stop',n)
+          archive=p/'archive-young-r01-before-color-r02';archive.mkdir(exist_ok=True)
+          for n in ['index.html','runtime.js']:shutil.copyfile(p/n,archive/n)
+          for n in ['index.html','runtime.js','young-coral-r01/index.html','young-coral-r01/baseline-r01.html','COLOR_R02_MANIFEST.json']:shutil.copyfile(s/n,p/n)
+          source=p/'young-coral-r01/color-r02-source';source.mkdir(exist_ok=True)
+          for n in ['build.py','ui.py','qa.py','student-color.frag']:shutil.copyfile(Path('/tmp/color-tools')/n,source/n)
+          shutil.copyfile(s/'COLOR_R02_MANIFEST.json','/tmp/color-evidence/COLOR_R02_MANIFEST.json')
+          PY
+          git config user.name 'Coral Mother Color Study'
+          git config user.email 'actions@users.noreply.github.com'
+          git add coral-mother-core-seed-r01/index.html coral-mother-core-seed-r01/runtime.js coral-mother-core-seed-r01/young-coral-r01/index.html coral-mother-core-seed-r01/young-coral-r01/baseline-r01.html coral-mother-core-seed-r01/young-coral-r01/color-r02-source/ coral-mother-core-seed-r01/COLOR_R02_MANIFEST.json coral-mother-core-seed-r01/archive-young-r01-before-color-r02/
+          git commit -m 'feat(coral): four evidence-inspired pigment studies, frozen R01 teacher and exact original rollback'
+          git push origin HEAD:gh-pages
+          git rev-parse HEAD > /tmp/color-evidence/PUBLISHED_COMMIT.txt
+      - name: Verify public files and actual public shader controls
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from urllib.request import Request,urlopen
+          import time,json,hashlib
+          m=json.loads(Path('/tmp/color-site/COLOR_R02_MANIFEST.json').read_text());base='https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-core-seed-r01/';ready=False
+          for _ in range(60):
+              try:
+                  checks={n:hashlib.sha256(urlopen(Request(base+n+'?verify='+str(time.time_ns()),headers={'Cache-Control':'no-cache'}),timeout=20).read()).hexdigest()==h for n,h in m['files'].items()}
+                  if all(checks.values()):ready=True;break
+              except Exception as e:print(str(e),flush=True)
+              time.sleep(8)
+          assert ready,'Public bytes do not match; delivery is not complete'
+          Path('/tmp/color-evidence/PUBLIC_HASHES.json').write_text(json.dumps(checks,indent=2))
+          PY
+          python /tmp/color-tools/qa.py https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-core-seed-r01/ /tmp/color-evidence/public
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coral-young-color-r02-actual-qa
+          path: /tmp/color-evidence/
+          retention-days: 30
