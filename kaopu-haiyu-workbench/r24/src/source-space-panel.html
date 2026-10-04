@@ -1,0 +1,14 @@
+<section id="sourceSpace" hidden>
+ <div class="experiment-head"><h2 id="phaseTitle">06 · 相位体量研究</h2><span id="phaseStatus" class="quiet"></span></div>
+ <div class="scene-tools volume-tools" aria-label="三维观察控制">
+ <button id="phasePlay">播放形变</button><button id="phaseSpin" aria-pressed="false">自动旋转</button>
+ <button id="phaseView">俯视原式</button><button id="phaseFront">正视</button><button id="phaseSide">侧视</button><button id="phaseBack">后视</button><button id="phaseOrbit">立体视角</button>
+ <button id="phaseUp" aria-label="向上旋转">↑</button><button id="phaseDown" aria-label="向下旋转">↓</button><button id="phaseZoomOut" aria-label="缩小">−</button><button id="phaseZoomIn" aria-label="放大">＋</button><button id="phaseLight" aria-pressed="true">冷暖光</button>
+ </div>
+ <div class="exp-scene volume-scene"><canvas id="phaseCanvas" width="1200" height="800" aria-label="原式三维点场、推断体量与体内学习轴，可手动旋转"></canvas></div>
+ <div class="volume-playbar"><input id="phaseTime" type="range" min="1" max="480" value="1" aria-label="源帧"><span id="phaseClock"></span><button id="phaseReset">起点</button></div>
+ <div class="scene-tools"><button id="phaseCloud" aria-pressed="true">完整原式点场</button><button id="phaseBody" aria-pressed="true">胸腔包络</button><button id="phaseSpine" aria-pressed="true">体内学习轴</button><button id="phaseCut" aria-pressed="false">切开观察</button><button id="phaseSections" aria-pressed="false">横截面</button><span id="phaseState" class="quiet">暂停</span></div>
+ <div class="volume-secondary"><details id="phaseReferenceBox"><summary>同帧二维老师</summary><figure class="source-space-reference"><iframe id="phaseReference" title="同帧原式，精确p5参考"></iframe><figcaption class="reference-label">原式 20,000 点完整保留<br>俯视 XY 坐标不改</figcaption></figure></details>
+ <details><summary>厚度与显示</summary><label for="phaseOpening">截面张开 <output id="phaseOpeningValue">30%</output></label><input id="phaseOpening" type="range" min="10" max="35" value="30"><label for="phaseDepth">体量深度 <output id="phaseDepthValue">1.00</output></label><input id="phaseDepth" type="range" min="25" max="150" value="100"><label for="phaseSize">点径 <output id="phaseSizeValue">1.6</output></label><input id="phaseSize" type="range" min="7" max="35" value="16"></details>
+ <details><summary>学习轴与体量怎样推断</summary><p class="quiet" id="phaseExplanation">原作提供俯视的点场。这里保留每个原点，以相位补深度，再从点场的连续横截面推断非对称胸腔包络。粉色线是位于包络内部的学习轴，并非原作指定的解剖脊椎。包络及厚度属于研究假设。</p><p class="quiet" id="phaseMetrics"></p></details></div>
+</section>
