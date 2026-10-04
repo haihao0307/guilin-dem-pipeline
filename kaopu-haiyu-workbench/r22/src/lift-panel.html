@@ -1,0 +1,22 @@
+<section id="axisLift" hidden>
+  <div class="experiment-head"><div><div class="eyebrow">三维工作台 · 髓线、椎列和环周胸廓</div><h2 id="liftTitle">骨架研究 A · 多频羽化</h2></div><span class="quiet" id="liftStatus"></span></div>
+  <p class="quiet" id="liftCandidateNote">结构候选：髓线穿过中空椎列，肋骨从背侧绕胸腔连接到腹侧胸骨。默认打开骨架，观察完整环周关系。</p>
+  <div class="exp-grid">
+    <div>
+      <div class="exp-scene"><canvas id="liftCanvas" width="1080" height="720" aria-label="有内部髓线、椎列、环周肋骨与胸骨的三维结构，可拖动旋转"></canvas><span class="scene-hint">拖动旋转 · 滚轮缩放 · 相机只观察三维对象</span></div>
+      <div class="exp-projections"><figure><canvas id="liftSide" width="600" height="240" aria-label="同一三维对象的正面投影"></canvas><figcaption>正面轮廓 · X / Y</figcaption></figure><figure><canvas id="liftTop" width="600" height="240" aria-label="真实三维网格的轴向横切"></canvas><figcaption>同一份网格 · 真实横截面</figcaption></figure></div>
+    </div>
+    <aside>
+      <div class="controls"><button id="liftPlay">播放小样</button><button id="liftReset">回到起点</button><button id="liftView">复位视角</button><button id="liftExport">保存三维谱</button></div>
+      <label for="liftSpeed">观察速度</label><select id="liftSpeed"><option value="0.25">¼ 速</option><option value="0.5" selected>½ 速</option><option value="1">原速</option></select>
+      <label for="liftTime">共同时间 · 原式 t</label><input id="liftTime" type="range" min="0" max="480" value="0"><div class="meta"><span id="liftClock">t = 0.000</span><span id="liftState">暂停</span></div>
+      <div class="controls"><button id="liftSpine" aria-pressed="true">显示骨架</button><button id="liftSections" aria-pressed="false">结构线</button><button id="liftLight" aria-pressed="true">冷暖光</button></div>
+      <label for="liftThickness">骨骼截面厚度 <output id="liftThicknessValue">0.50</output></label><input id="liftThickness" type="range" min="0" max="100" value="50">
+      <label for="liftDepth">胸廓深度 <output id="liftDepthValue">0.50</output></label><input id="liftDepth" type="range" min="0" max="100" value="50">
+      <label for="liftMotion">全身联动幅度 <output id="liftMotionValue">1.00</output></label><input id="liftMotion" type="range" min="0" max="100" value="100">
+      <label for="liftSectionPosition">横切位置 <output id="liftSectionPositionValue">0.42</output></label><input id="liftSectionPosition" type="range" min="15" max="77" value="42"><div class="score-route"><span>原式参数场</span><b>→</b><span>髓线 / 椎列</span><b>→</b><span>环周肋架 / 胸骨</span><b>→</b><span>共同时间</span></div>
+      <p class="quiet" id="liftBoundary">原式决定轴势、局部谐波和时间关系；胸廓比例、骨架连接和环周拓扑是本次结构解释，不是已测量解剖。去掉整体转圈后，内部波动每 2π 重复；全源时钟仍保留 16π。</p>
+      <details><summary>二维关系怎样升成三维</summary><pre id="liftFormula"></pre><p class="quiet">01–06 原式都可在上方独立运行。这里是在完整原式旁展开的骨架研究，不覆盖原有生成关系。</p></details>
+    </aside>
+  </div>
+</section>
