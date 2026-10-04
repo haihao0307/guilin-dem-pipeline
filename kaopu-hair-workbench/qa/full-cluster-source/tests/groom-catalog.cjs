@@ -55,7 +55,7 @@ module.exports = async function groomCatalog(browser, url, outDir, check) {
     page.on('console', m => {if (m.type() === 'error') errors.push({phase: name, message: m.text()});});
     page.on('request', r => report.requests.push({phase: name, url: r.url()}));
     const response=await page.goto(url,{waitUntil:'load',timeout:120000});
-    if(url.startsWith('http')){const local=fs.readFileSync(path.join(path.dirname(process.env.HAIR_KUKO_HTML),'houdini-integrated-candidate.html'));const served=await response.body();assert('exact public integration candidate bytes',response.status()===200&&crypto.createHash('sha256').update(local).digest('hex')===crypto.createHash('sha256').update(served).digest('hex'),{status:response.status(),bytes:served.length});}
+    if(url.startsWith('http')){const local=fs.readFileSync(path.join(path.dirname(process.env.HAIR_KUKO_HTML),path.basename(new URL(url).pathname)));const served=await response.body();assert('exact public integration candidate bytes',response.status()===200&&crypto.createHash('sha256').update(local).digest('hex')===crypto.createHash('sha256').update(served).digest('hex'),{status:response.status(),bytes:served.length});}
     await wait(() => window.catalogUI && window.groomCatalog && platform.module === 'home');
     return context;
   };
@@ -158,8 +158,9 @@ module.exports = async function groomCatalog(browser, url, outDir, check) {
     await page.locator('#catalogHomeButton').click();
     await page.locator('#catalogAnemone').click();
     await wait(() => platform.module === 'anemone' && anemone.ready);
-    const ap = await page.evaluate(() => anemone.pixels());
+    const ap = await page.evaluate(() => {anemone.pause();anemone.seek(0);return anemone.pixels()});
     assert('Anemone still renders real GL after groom', ap.glError === 0 && ap.changed > 500, ap);
+    assert('accepted Anemone default pixels remain exact after grooming',ap.hash===159461793&&ap.width===1440&&ap.height===685,ap);
     await page.locator('#catalogHomeButton').click();await page.locator('#catalogFiber').click();await wait(()=>fiberCatalog.ready&&document.getElementById('fiberFrame').contentWindow.FiberStudy.ready);assert('Fiber still renders real GL after groom',await page.evaluate(()=>document.getElementById('fiberFrame').contentWindow.FiberStudy.diagnostics().glError===0));
     await page.locator('#catalogHomeButton').click();
     await page.locator('#catalogGroom').click();

@@ -42,18 +42,21 @@ panel=panel.replace('© OIST, 2022','Neville Wootton').replace('licenses/by/4.0'
 panel=panel.replace('<span>短毛可编辑','<button id="speciesKuko">KuKo · 原版触手 <small>TEACHER / Day 114</small></button><span>短毛可编辑',1)
 nav,panel=panel.split('<section id="anemoneModule"',1); panel='<section id="anemoneModule"'+panel
 html=html.replace('content="2026-10-03-seddi-baseline-r02"','content="2026-10-03-bounded-layout-side-light-studio"',1)
-css=(S/'anemone.css').read_text()+'\n.reference-photo img{width:100%;object-fit:cover}\n'+(ROOT/'kuko-adapt/src/style.css').read_text()+'\n'+(ROOT/'full-cluster/src/style.css').read_text()+'\n'+(ROOT/'full-cluster/src/catalog.css').read_text()+'\n'+(ROOT/'full-cluster/src/fiber-catalog.css').read_text()
+css=(S/'anemone.css').read_text()+'\n.reference-photo img{width:100%;object-fit:cover}\n'+(ROOT/'kuko-adapt/src/style.css').read_text()+'\n'+(ROOT/'full-cluster/src/style.css').read_text()+'\n'+(ROOT/'full-cluster/src/catalog.css').read_text()+'\n'+(ROOT/'full-cluster/src/fiber-catalog.css').read_text()+'\n'+(ROOT/'full-cluster/src/groom-catalog.css').read_text()
 html=html.replace('</style>',css+'\n</style>',1).replace('<body>','<body data-module="home">',1)
 html=html.replace('<div class="layout">',nav+panel+(ROOT/'kuko-adapt/src/panel.html').read_text()+'<div id="rabbitModule"><div class="layout">',1).replace('<input id="importFile"','</div><input id="importFile"',1)
 runtime=(S/'anemone-core.js').read_text()+'\n'+'\n'.join((ROOT/'full-cluster/src'/n).read_text() for n in ['anemone-current.js','anemone-safe-layout.js','studio-lighting.js','anemone-renderer.js','anemone-host.js'])
 runtime+='\nwindow.KUKO_EXPERIMENT_SOURCE='+escape(json.dumps((ROOT/'kuko-adapt/src/experiment.glsl').read_text()))+';\nwindow.KUKO_TEACHER_SOURCE='+escape(json.dumps((ROOT/'kuko/src/teacher.frag').read_text()))+';\n'+(ROOT/'kuko-adapt/src/runtime.js').read_text()
-runtime+='\n'+(ROOT/'full-cluster/src/studio-ui.js').read_text()+'\n'+(ROOT/'full-cluster/src/rabbit-ui.js').read_text()+'\n'+(ROOT/'full-cluster/src/rabbit-appearance.js').read_text()+'\n'+(ROOT/'full-cluster/src/object-lighting-ui.js').read_text()+'\n'+(ROOT/'full-cluster/src/catalog-ui.js').read_text()+'\n'+(ROOT/'full-cluster/src/fiber-catalog.js').read_text()+'\nplatform.select("home");'
+runtime+='\n'+(ROOT/'full-cluster/src/studio-ui.js').read_text()+'\n'+(ROOT/'full-cluster/src/rabbit-ui.js').read_text()+'\n'+(ROOT/'full-cluster/src/rabbit-appearance.js').read_text()+'\n'+(ROOT/'full-cluster/src/object-lighting-ui.js').read_text()+'\n'+(ROOT/'full-cluster/src/catalog-ui.js').read_text()+'\n'+(ROOT/'full-cluster/src/fiber-catalog.js').read_text()+'\n'+(ROOT/'full-cluster/src/groom-catalog.js').read_text()+'\nplatform.select("home");'
 fiber_html=(ROOT/'full-cluster/fiber-study/index.html').read_text()
 assert hashlib.sha256(fiber_html.encode()).hexdigest()=='cfe95c28d27a1ee80ca65feda27c1806489f12fb7cdf9a3d3cd64c6ca57f9e8d'
 fiber_embed='window.FIBER_MODULE_HTML='+escape(json.dumps(fiber_html))+';'
-runtime=fiber_embed+'\n'+runtime
+groom_html=(ROOT/'full-cluster/groom-study/index.html').read_text()
+assert hashlib.sha256(groom_html.encode()).hexdigest()=='0b4812dc194a3fc3b399c95f6c79c1d394c5c02099676480965c7663c2d4efbb'
+groom_embed='window.GROOM_MODULE_HTML='+escape(json.dumps(groom_html))+';'
+runtime=groom_embed+'\n'+fiber_embed+'\n'+runtime
 html=('<script>'+runtime.replace('</script','<\\/script')+'</script>\n</body>').join(html.rsplit('</body>',1))
-for token,name in [('RABBIT','rabbit-render.jpg'),('ANEMONE','anemone-render.jpg'),('FIBER','fiber-render.jpg')]:
+for token,name in [('RABBIT','rabbit-render.jpg'),('ANEMONE','anemone-render.jpg'),('FIBER','fiber-render.jpg'),('GROOM','groom-render.jpg')]:
     html=html.replace('/*__'+token+'_PREVIEW__*/','data:image/jpeg;base64,'+base64.b64encode((ROOT/'references/previews'/name).read_bytes()).decode())
 # Compact only CSS whitespace/comments; never rewrite teacher modules or shaders.
 import re
@@ -61,7 +64,7 @@ style_start=html.index('<style>')+len('<style>');style_end=html.index('</style>'
 style=html[style_start:style_end];style=re.sub(r'/\*[\s\S]*?\*/','',style);style=re.sub(r'\s*([{}:;,])\s*',r'\1',style)
 html=html[:style_start]+style+html[style_end:]
 # One self-contained offline file and an object-lazy online shell share the same code.
-output=ROOT/'dist/KAOPU-整株海葵-轻透四色.html';output.write_text(html)
+output=ROOT/'dist/KAOPU-毛发工作台-四案例.html';output.write_text(html)
 standalone=ROOT/'dist/kuko-anemone-standalone.html';standalone.write_text(html)
 assetdir=ROOT/'dist/catalog-assets';assetdir.mkdir(exist_ok=True)
 online_bundle={**bundle,'assets':dict(bundle['assets']),'assetMeta':{}}
@@ -75,12 +78,24 @@ photo_sha=hashlib.sha256(reference).hexdigest();photo_name='wootton-'+photo_sha[
 stub={k:bundle[k] for k in ['commit','sha256','license']}
 loader=""";window.ensureRabbitBundle=(()=>{let pending=null;return()=>{if(WORKBENCH_BUNDLE.modules)return Promise.resolve(WORKBENCH_BUNDLE);if(!pending)pending=(async()=>{const bytes=await rabbitLoadProgress.fetchBytes('./catalog-assets/"""+bundle_name+"""',"""+str(len(bundle_bytes))+""",'下载原始兔子必要资源','"""+bundle_sha+"""');rabbitLoadProgress.emit({stage:'parse',message:'解析原始模型与着色器',loaded:0,total:1});await new Promise(resolve=>setTimeout(resolve,0));Object.assign(WORKBENCH_BUNDLE,JSON.parse(new TextDecoder().decode(bytes)));return WORKBENCH_BUNDLE;})().catch(e=>{pending=null;throw e});return pending;};})();"""
 public=html.replace('window.WORKBENCH_BUNDLE='+bundle_json+';window.ensureRabbitBundle=()=>Promise.resolve(WORKBENCH_BUNDLE);','window.WORKBENCH_BUNDLE='+escape(json.dumps(stub,separators=(',',':')))+loader,1)
-public=public.replace(fiber_embed,'',1)
+public=public.replace(fiber_embed,'',1).replace(groom_embed,'',1)
+assert 'window.GROOM_MODULE_HTML=' not in public
 assert 'window.FIBER_MODULE_HTML=' not in public
 module_dir=ROOT/'dist/c4d-fiber-study';module_dir.mkdir(exist_ok=True);(module_dir/'index.html').write_text(fiber_html)
 photo_data='data:image/jpeg;base64,'+base64.b64encode(reference).decode()
 assert public.count(photo_data)==1
 public=public.replace('src="'+photo_data+'"','data-reference-src="./catalog-assets/'+photo_name+'"',1)
 public_path=ROOT/'dist/kuko-anemone-candidate.html';public_path.write_text(public)
-receipt={'timestamp':__import__('datetime').datetime.now(__import__('datetime').timezone.utc).isoformat(),'bytes':len(public.encode()),'sha256':hashlib.sha256(public.encode()).hexdigest(),'standaloneBytes':len(html.encode()),'standaloneSha256':hashlib.sha256(html.encode()).hexdigest(),'rabbitBundleBytes':len(bundle_bytes),'rabbitBundleSha256':bundle_sha,'rabbitBundleFile':'catalog-assets/'+bundle_name,'referenceFile':'catalog-assets/'+photo_name,'referenceBytes':len(reference),'referenceSha256':photo_sha,'teacherSha256':hashlib.sha256((ROOT/'kuko/src/teacher.frag').read_bytes()).hexdigest(),'originalTeacherFunctionsUnchanged':True,'adapters':['verified staged download with in-page retry','deferred original static shell masks','4096 RGBA8 tiled noise with no quality reduction','lazy object initialization','separate same-origin immutable online assets','DPR and input adapters','candidate visual fur-mask remap','R13 two-side-light material adapters','fixed certified radial initial layout with continuous-bound shared sway and regional microflow'],'deferredOriginalMaskBytes':sum((ORIG/'data/textures'/name).stat().st_size for name in ['bunnyalpha_base.png','bunnyalpha_tip.png']),'geometryModel':'bounded-shared-yaw-2','lightingModel':'r13-two-side-rgb-v1','lightingSourceBlob':'d241380ef267d5afbbcc0633d2b0666d44e6cb29','visualAcceptance':False,'productionReady':False,'videoEmbedded':False,'gameSynced':False,'rabbitAnchorCommit':'21e4a025b82fa8a32c1323ed83d3bee186150d76','rabbitFrameRuntimeSha256':'019a2371d87139af19c5fbc4048a87eb490586143271b4528ab8158ed52435d7','fiberSha256':'cfe95c28d27a1ee80ca65feda27c1806489f12fb7cdf9a3d3cd64c6ca57f9e8d'}
+# Preserve the exact model strings while avoiding a second layer of newline
+# escapes in the portable HTML. Data contains no template substitutions.
+raw_bundle=bundle_json
+for model in ['data/models/bunnyUV.json','data/models/cloth.json']:
+    model_text=bundle['assets'][model]
+    assert '`' not in model_text and '${' not in model_text and '</script' not in model_text.lower()
+    encoded=escape(json.dumps(model_text))
+    assert raw_bundle.count(encoded)==1
+    raw_bundle=raw_bundle.replace(encoded,'String.raw`'+model_text+'`',1)
+html=html.replace('window.WORKBENCH_BUNDLE='+bundle_json+';','window.WORKBENCH_BUNDLE='+raw_bundle+';',1)
+output.write_text(html);standalone.write_text(html)
+receipt={'timestamp':__import__('datetime').datetime.now(__import__('datetime').timezone.utc).isoformat(),'bytes':len(public.encode()),'sha256':hashlib.sha256(public.encode()).hexdigest(),'standaloneBytes':len(html.encode()),'standaloneSha256':hashlib.sha256(html.encode()).hexdigest(),'rabbitBundleBytes':len(bundle_bytes),'rabbitBundleSha256':bundle_sha,'rabbitBundleFile':'catalog-assets/'+bundle_name,'referenceFile':'catalog-assets/'+photo_name,'referenceBytes':len(reference),'referenceSha256':photo_sha,'teacherSha256':hashlib.sha256((ROOT/'kuko/src/teacher.frag').read_bytes()).hexdigest(),'originalTeacherFunctionsUnchanged':True,'adapters':['verified staged download with in-page retry','deferred original static shell masks','4096 RGBA8 tiled noise with no quality reduction','lazy object initialization','separate same-origin immutable online assets','DPR and input adapters','candidate visual fur-mask remap','R13 two-side-light material adapters','fixed certified radial initial layout with continuous-bound shared sway and regional microflow'],'deferredOriginalMaskBytes':sum((ORIG/'data/textures'/name).stat().st_size for name in ['bunnyalpha_base.png','bunnyalpha_tip.png']),'geometryModel':'bounded-shared-yaw-2','lightingModel':'r13-two-side-rgb-v1','lightingSourceBlob':'d241380ef267d5afbbcc0633d2b0666d44e6cb29','visualAcceptance':False,'productionReady':False,'videoEmbedded':False,'gameSynced':False,'rabbitAnchorCommit':'21e4a025b82fa8a32c1323ed83d3bee186150d76','rabbitFrameRuntimeSha256':'019a2371d87139af19c5fbc4048a87eb490586143271b4528ab8158ed52435d7','fiberSha256':'cfe95c28d27a1ee80ca65feda27c1806489f12fb7cdf9a3d3cd64c6ca57f9e8d','groomSha256':hashlib.sha256(groom_html.encode()).hexdigest(),'isolatedIntegrationCandidate':False}
 (ROOT/'full-cluster/qa/build.json').write_text(json.dumps(receipt,indent=2));print(json.dumps(receipt))

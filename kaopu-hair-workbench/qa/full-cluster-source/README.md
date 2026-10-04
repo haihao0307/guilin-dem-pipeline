@@ -53,3 +53,12 @@ The next candidate separates neutral bulk cluster visibility from local palette-
 ## Accepted baseline and requested speed extension
 
 The user accepted runtime38cc5b3f0e33c86f0e3db87ac8da1b5075b305db4a6ebfc90216a03e8a009456 as the visual/functional baseline. Subsequent work stops material/palette/layout polish. This revision only expands the independent accumulated motion-clock multiplier from0–2 to0–6, keeping default1, the same phase at any fixed motion time, and the exact existing geometry certificate. The validated amplitude interval is unchanged; near-flat strong-current deformation remains separate research and is not silently enabled. No fluid-measurement or physically exact tissue claim is made.
+
+
+## 2026-10-04：第四项「梳理」
+
+首页顺序为兔子、海葵、毛束、梳理。第四项按需创建独立 WebGL 2 页面，离开即暂停，回到页面保留参数和镜头。预览为实际渲染的原生截图。
+
+该案例以原创程序化头像学习 Houdini 的分区、导向、多层聚束与局部 Frizz 方法。它包含头顶、短发、胡须、上唇胡和眉毛五个生长区域；成稿、引导线、分区、发束视图共用曲线函数。未使用原教程的人头、纹理或工程，不在浏览器内运行 Houdini，也未实现头皮动画绑定、风力或碰撞仿真。独立模块 SHA-256：`0b4812dc194a3fc3b399c95f6c79c1d394c5c02099676480965c7663c2d4efbb`。
+
+原兔子渲染代码、SEDDI 模块与资产不变；海葵保持已接受形态、配色、灯光和 0–6 倍独立水流时钟。离线文件将两份模型 JSON 原字符串用 `String.raw` 包装，避免重复转义；所有原始模块、模型、纹理和元数据的运行值逐字节相同，无新增解压依赖。QA 分别验证 file/public、真实 WebGL 输出、参数往返、隐藏零 RAF、重入与错误重试、Chromium 原生触控；这些不能代替 iPhone/Safari 实机测试。
