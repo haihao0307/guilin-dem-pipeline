@@ -230,7 +230,7 @@ module.exports = async function firstEntry(browser, url, outDir, check) {
         loaded: !!img?.complete && img.naturalWidth > 0, width: img?.naturalWidth, height: img?.naturalHeight,
         raster: !!img && /^data:image\/(jpeg|png|webp);base64,/.test(img.currentSrc) };
     }));
-    assert('home shows four decoded raster render thumbnails in Rabbit Anemone Fiber Groom order', thumbnails.length === 4 && thumbnails.map(t=>t.id).join(',')==='catalogRabbit,catalogAnemone,catalogFiber,catalogGroom' && thumbnails.every(t =>
+    assert('home shows five decoded raster render thumbnails in Rabbit Anemone Fiber Groom Feather order', thumbnails.length === 5 && thumbnails.map(t=>t.id).join(',')==='catalogRabbit,catalogAnemone,catalogFiber,catalogGroom,catalogFeather' && thumbnails.every(t =>
       t.images === 1 && !t.svg && t.loaded && t.raster && t.width >= 200 && t.height >= 150), thumbnails);
     await screenshot('home');
     await tap('#catalogRabbit');

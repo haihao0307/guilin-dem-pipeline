@@ -42,7 +42,7 @@ module.exports = async function featherCatalog(browser, url, outDir, check) {
   });
   const capture = async name => {
     const file = path.join(outDir, phase + '-' + name + '.jpg');
-    await page.screenshot({path: file, type: 'jpeg', quality: 86});
+    await page.screenshot({path: file, type: 'jpeg', quality: 86, fullPage: name === 'home-five-thumbnails'});
     report.screenshots.push(file);
   };
   const openPage = async (name, options = {}, expectedFailure = false) => {

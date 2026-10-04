@@ -116,13 +116,13 @@ module.exports = async function fiberCatalog(browser, url, outDir, check) {
       started: workbench.started, anemone: anemone.ready, kuko: kuko.ready,
       overflow: document.documentElement.scrollWidth > innerWidth + 1
     }));
-    assert('home has ordered Rabbit, Anemone, Fiber and Groom real thumbnails and no renderers',
-      JSON.stringify(home.cards.map(c => c.object)) === JSON.stringify(['rabbit','anemone','fiber','groom']) &&
+    assert('home has ordered Rabbit, Anemone, Fiber, Groom and Feather real thumbnails and no renderers',
+      JSON.stringify(home.cards.map(c => c.object)) === JSON.stringify(['rabbit','anemone','fiber','groom','feather']) &&
       home.cards.every(c => c.complete && c.width >= 200 && c.height >= 100 && c.image.startsWith('data:image/jpeg;')) &&
-      new Set(home.cards.map(c => c.image)).size === 4 && !home.frame && !home.fiber && !home.started && !home.anemone && !home.kuko && !home.overflow,
+      new Set(home.cards.map(c => c.image)).size === 5 && !home.frame && !home.fiber && !home.started && !home.anemone && !home.kuko && !home.overflow,
       {...home, cards: home.cards.map(c => ({...c, image: c.image?.slice(0, 30)}))});
     assert('home never requests the fiber module', !report.requests.some(r => r.phase === phase && /c4d-fiber-study/.test(r.url)), report.requests);
-    await capture('home-four-thumbnails');
+    await capture('home-five-thumbnails');
     await page.locator('#catalogFiber').click();
     await ready();
     await gl();
