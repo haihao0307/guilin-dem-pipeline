@@ -1,4 +1,4 @@
-"""KAOPU R16.5 speed-control verification. Scene shaders and R16.2 responsive shell remain anchored."""
+"""KAOPU R17 speed-control verification. Scene shaders and R16.2 responsive shell remain anchored."""
 import os,time,json,hashlib,urllib.request,traceback
 from pathlib import Path
 from playwright.sync_api import sync_playwright
@@ -11,7 +11,7 @@ FROZEN={
 'style.css':'7f48293ed2ce65cea1fded7bea1997ac692a8aae','caveBake.js':'c88a4dd81a7ca7bf5325080900d52f6847d7223d',
 'more.js':'53316a56059e122246d293b6c1b6d94aff91db8f','snow.js':'6b5fe324549596c52b47bda1f5d53a723b569fed',
 'detail-r16-2.css':'321f9e1b75ae0b700162913c16abb161912208ed'}
-report={'ui_version':'R16.5','public_url':BASE,'physical_phone_tested':False,'tests':[],'errors':[],'passed':False}
+report={'ui_version':'R17','public_url':BASE,'physical_phone_tested':False,'tests':[],'errors':[],'passed':False}
 def get(name=''):
  with urllib.request.urlopen(urllib.request.Request(BASE+name+'?r165='+str(time.time()),headers={'Cache-Control':'no-cache'}),timeout=30) as r:
   assert r.status==200
@@ -25,18 +25,18 @@ try:
   try:
    html=get().decode()
    runtime_bytes=get('runtime.js')
-   if 'data-ui-version="R16.5"' in html and '0.01× 极慢观察' in html and blob_sha(runtime_bytes)=='b31a83d473607f0bf08480ae9f05efcad673d84f':break
-  except Exception as e:print('waiting R16.5',e,flush=True)
+   if 'data-ui-version="R17"' in html and '0.01× 极慢观察' in html and blob_sha(runtime_bytes)=='06904231c24537f81dba620d9e1472a6c7fae30c':break
+  except Exception as e:print('waiting R17',e,flush=True)
   time.sleep(10)
- else:raise RuntimeError('R16.5 did not reach public hosting')
+ else:raise RuntimeError('R17 did not reach public hosting')
  for name,sha in FROZEN.items():assert blob_sha(get(name))==sha,('anchored file changed',name)
  with sync_playwright() as pw:
   browser=pw.chromium.launch(headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--disable-dev-shm-usage'])
   # Desktop: all new speed gears visible; non-cave defaults to half-speed.
   p=browser.new_page(viewport={'width':1440,'height':1000})
-  p.goto(BASE+'?ui=R16.5',wait_until='load',timeout=120000)
+  p.goto(BASE+'?ui=R17',wait_until='load',timeout=120000)
   assert p.evaluate('KaoPuDiagnostics().homeVisible') and not p.evaluate('KaoPuDiagnostics().detailVisible')
-  assert p.locator('[data-scene]').count()==6
+  assert p.locator('[data-scene]').count()==7
   before=p.evaluate('KaoPuDiagnostics().renderCount');p.locator('[data-scene="underwater"]').click();wait_render(p,'underwater',before)
   assert p.locator('#speed').input_value()=='0.5'
   opts=p.locator('#speed option').evaluate_all('(xs)=>xs.map(x=>x.value)')
@@ -59,8 +59,8 @@ try:
   report['tests'].append({'desktop_speed_options':opts,'underwater_default':'0.5','cave_default':'0.25','runtime_speed_selection':'passed'})
   # Mobile viewport: speed selector remains reachable below canvas, no overflow.
   m=browser.new_page(viewport={'width':390,'height':844},device_scale_factor=2,is_mobile=True,has_touch=True)
-  m.goto(BASE+'?ui=R16.5',wait_until='load',timeout=120000)
-  assert m.evaluate('KaoPuDiagnostics().homeVisible') and m.locator('[data-scene]').count()==6
+  m.goto(BASE+'?ui=R17',wait_until='load',timeout=120000)
+  assert m.evaluate('KaoPuDiagnostics().homeVisible') and m.locator('[data-scene]').count()==7
   before=m.evaluate('KaoPuDiagnostics().renderCount');m.locator('[data-scene="underwater"]').click();wait_render(m,'underwater',before)
   assert m.locator('#speed').is_visible()
   assert m.locator('#liveCanvas').bounding_box()['y'] < m.locator('#speed').bounding_box()['y']
