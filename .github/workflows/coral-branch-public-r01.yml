@@ -21,11 +21,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Build from exact approved hub, preserve original two-output generator
+      - name: Build additively from current approved workbenches
         run: |
           mkdir -p /tmp/branch-evidence
           cp -r tools/coral-branch-public-r01 /tmp/branch-tools
-          python /tmp/branch-tools/build.py coral-mother-core-seed-r01 /tmp/branch-site
+          python /tmp/branch-tools/build_current.py coral-mother-core-seed-r01 /tmp/branch-site
       - name: Install browser for actual geometry and user input tests
         run: |
           python -m pip install playwright==1.55.0
@@ -33,8 +33,8 @@ jobs:
       - name: Test actual mesh and interactions over HTTP before publication
         run: |
           python -m http.server 8765 --bind 127.0.0.1 --directory /tmp >/tmp/branch-http.log 2>&1 &
-          python /tmp/branch-tools/qa.py http://127.0.0.1:8765/branch-site/ /tmp/branch-evidence/prepublish
-      - name: Publish only new branch workbench and two hub integration files
+          python /tmp/branch-site/qa-current.py http://127.0.0.1:8765/branch-site/ /tmp/branch-evidence/prepublish
+      - name: Publish only new reconstruction and additive hub navigation
         run: |
           set -euo pipefail
           git fetch origin gh-pages --depth=1
@@ -42,18 +42,18 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import hashlib,json,shutil
-          p=Path('coral-mother-core-seed-r01');s=Path('/tmp/branch-site');m=json.loads((s/'BRANCH_R01_MANIFEST.json').read_text())
+          p=Path('coral-mother-core-seed-r01');s=Path('/tmp/branch-site');m=json.loads((s/'BRANCH_REPRODUCTION_R01_MANIFEST.json').read_text())
           for n,h in m['base'].items():assert hashlib.sha256((p/n).read_bytes()).hexdigest()==h,('concurrent coral modification, stopping',n)
-          a=p/'archive-inspect-r03-before-branch-r01';a.mkdir(exist_ok=True)
+          a=p/'archive-before-branch-reconstruction-r01';a.mkdir(exist_ok=True)
           for n in ['index.html','runtime.js']:shutil.copyfile(p/n,a/n);shutil.copyfile(s/n,p/n)
           shutil.copytree(s/'branch-reproduction-r01',p/'branch-reproduction-r01',dirs_exist_ok=True)
-          shutil.copyfile(s/'BRANCH_R01_MANIFEST.json',p/'BRANCH_R01_MANIFEST.json')
-          shutil.copyfile(s/'BRANCH_R01_MANIFEST.json','/tmp/branch-evidence/BRANCH_R01_MANIFEST.json')
+          shutil.copyfile(s/'BRANCH_REPRODUCTION_R01_MANIFEST.json',p/'BRANCH_REPRODUCTION_R01_MANIFEST.json')
+          shutil.copyfile(s/'BRANCH_REPRODUCTION_R01_MANIFEST.json','/tmp/branch-evidence/BRANCH_REPRODUCTION_R01_MANIFEST.json')
           PY
           git config user.name 'Coral Mother Branch Delivery'
           git config user.email 'actions@users.noreply.github.com'
-          git add coral-mother-core-seed-r01/index.html coral-mother-core-seed-r01/runtime.js coral-mother-core-seed-r01/branch-reproduction-r01/ coral-mother-core-seed-r01/BRANCH_R01_MANIFEST.json coral-mother-core-seed-r01/archive-inspect-r03-before-branch-r01/
-          git commit -m 'feat(coral): deliver real branching reconstruction studio, two outputs and source provenance'
+          git add coral-mother-core-seed-r01/index.html coral-mother-core-seed-r01/runtime.js coral-mother-core-seed-r01/branch-reproduction-r01/ coral-mother-core-seed-r01/BRANCH_REPRODUCTION_R01_MANIFEST.json coral-mother-core-seed-r01/archive-before-branch-reconstruction-r01/
+          git commit -m 'feat(coral): deliver two-output reconstruction beside existing branch replay, preserve all prior modules'
           git push origin HEAD:gh-pages
           git rev-parse HEAD > /tmp/branch-evidence/PUBLISHED_COMMIT.txt
       - name: Verify deployed files and real public workbench interactions
@@ -62,7 +62,7 @@ jobs:
           from pathlib import Path
           from urllib.request import Request,urlopen
           import json,hashlib,time
-          m=json.loads(Path('/tmp/branch-site/BRANCH_R01_MANIFEST.json').read_text());base='https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-core-seed-r01/';ready=False
+          m=json.loads(Path('/tmp/branch-site/BRANCH_REPRODUCTION_R01_MANIFEST.json').read_text());base='https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-core-seed-r01/';ready=False
           for _ in range(85):
               try:
                   checks={n:hashlib.sha256(urlopen(Request(base+n+'?verify='+str(time.time_ns()),headers={'Cache-Control':'no-cache'}),timeout=20).read()).hexdigest()==h for n,h in m['files'].items()}
@@ -72,7 +72,7 @@ jobs:
           assert ready,'Public version does not match tested files: delivery not complete'
           Path('/tmp/branch-evidence/PUBLIC_HASHES.json').write_text(json.dumps(checks,indent=2))
           PY
-          python /tmp/branch-tools/qa.py https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-core-seed-r01/ /tmp/branch-evidence/public
+          python /tmp/branch-site/qa-current.py https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-core-seed-r01/ /tmp/branch-evidence/public
       - uses: actions/upload-artifact@v4
         if: always()
         with:
