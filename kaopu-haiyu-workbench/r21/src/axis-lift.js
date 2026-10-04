@@ -136,12 +136,10 @@
       const margin=1.65*caliber,radius=frame(s).curvatureRadius;
       const rawExtent=Math.hypot(W*(1+Math.abs(asym))+boneOuter,D+margin);
       const fit=Math.min(1,0.42*radius/rawExtent);W*=fit;D*=fit;
-      // Envelopes retain a positive cavity even at minimum depth/caliber.
+      // Rib cages retain a positive cavity even at minimum depth/caliber.
       W=Math.max(W,3.6*caliber);D=Math.max(D,5.3*caliber);
       const left=W*(1+asym),right=W*(1-asym),pedicle=0.86*boneOuter;
-      const skinWidth=Math.max(left,right)+0.5*pedicle+margin;
-      const skinHeight=(D+boneOuter+2*margin)/2,skinOffset=(D-boneOuter)/2;
-      const out={W,D,left,right,pedicle,skinWidth,skinHeight,skinOffset,margin,sourceOdd:odd,sourceEven:q,sourcePhase:f.c,fit};dimensionCache.set(s,out);return out;
+      const out={W,D,left,right,pedicle,margin,sourceOdd:odd,sourceEven:q,sourcePhase:f.c,fit};dimensionCache.set(s,out);return out;
     }
     function point(P,s){vertexS.push(s);positions.push(P);return positions.length-1;}
     function face(a,b,c,tag,id){faces.push([a,b,c]);faceKinds.push(tag);faceComponents.push(id);}
@@ -211,27 +209,19 @@
         widths:{left:d.left,right:d.right,ventral:d.D},area:PI*(d.left+d.right)/2*d.D/2,boneId:'vertebra-'+bi,
         sectionSource:'actual center-station bone/marrow rings and actual rib tube center curves; no independently generated diagram'});
     }
-    const envelopeLevels=unique([0,1,...vertebralStations,...vertebralStations.slice(1).map((s,i)=>(s+vertebralStations[i])/2)]);
-    const envelope=tube('body-envelope','body-envelope',envelopeLevels,16,s=>{
-      const f=frame(s),d=dims(s);return {center:add(axisPoint(kind,s,t,p),scale(f.V,d.skinOffset)),normal:f.L,binormal:f.V,width:d.skinWidth,depth:d.skinHeight,s};
-    },{role:'closed enclosing volume around complete thoracic skeleton',defaultVisible:false});
-    for(const section of sections){const i=envelopeLevels.findIndex(v=>Math.abs(v-section.s)<1e-10);section.envelope=envelope.rings[i].map(j=>positions[j]);section.points=section.envelope;section.skin=dims(section.s);}
+    // Bone-only scope: center curves are taken from the actual rib tubes.
+    for(const section of sections)section.points=section.ribLeft.concat(section.ribRight.slice().reverse());
     const spine=marrow.centers;
     const bounds={min:[Infinity,Infinity,Infinity],max:[-Infinity,-Infinity,-Infinity]};for(const a of positions)for(let j=0;j<3;j++){bounds.min[j]=Math.min(bounds.min[j],a[j]);bounds.max[j]=Math.max(bounds.max[j],a[j]);}
     const origin=positions[0];
     for(const component of components){let volume=0;for(let i=component.startFace;i<component.startFace+component.faceCount;i++){const f=faces[i];volume+=dot(sub(positions[f[0]],origin),cross(sub(positions[f[1]],origin),sub(positions[f[2]],origin)))/6;}component.signedVolume=volume;}
-    let maxEnvelopeRadius=0;
-    for(let i=0;i<positions.length;i++){
-      if(i>=envelope.startVertex)continue;const s=vertexS[i],f=frame(s),d=dims(s),v=sub(positions[i],add(axisPoint(kind,s,t,p),scale(f.V,d.skinOffset)));
-      maxEnvelopeRadius=Math.max(maxEnvelopeRadius,Math.hypot(dot(v,f.L)/d.skinWidth,dot(v,f.V)/d.skinHeight));
-    }
     const defaultSection=sections.reduce((a,b)=>Math.abs(b.s-0.42)<Math.abs(a.s-0.42)?b:a);
     return {positions,faces,faceKinds,faceComponents,vertexS,components,junctions,lines,spine,sections,section:defaultSection,
       diagnostics:{kind,authorTime:t,authorPeriod:AUTHOR_PERIOD,periodFrames:480,params:p,vertexCount:positions.length,faceCount:faces.length,bounds,
         vertebraCount:vertebralStations.length,ribPairs:ribIndices.length,ribStations,marrowRadius,canalRadius,canalClearance:canalRadius-marrowRadius,
-        maxEnvelopeNormalizedRadius:maxEnvelopeRadius,minRibArea:Math.min(...sections.map(s=>s.area)),maxDepth:Math.max(Math.abs(bounds.min[2]),Math.abs(bounds.max[2])),
+        minRibArea:Math.min(...sections.map(s=>s.area)),maxDepth:Math.max(Math.abs(bounds.min[2]),Math.abs(bounds.max[2])),
         localFrame:'rotation-minimizing parallel transport; T longitudinal, L left/right, V dorsal to ventral; T cross L = V',
-        candidate:'Three-dimensional thoracic skeleton: real annular vertebrae around marrow, paired tubular rib half-hoops and a ventral sternum, enclosed by a separate closed envelope; an explicit interpretation, not measured anatomy or a species',
+        candidate:'Three-dimensional thoracic skeleton: real annular vertebrae around marrow, paired tubular rib half-hoops and a ventral sternum; no soft-tissue envelope is included; an explicit interpretation, not measured anatomy or a species',
         sourceFidelity:'Exact source scalar/projection APIs retained; even phase span and qEven drive cavity dimensions, signed qOdd drives differentiated rib span; local pose removes rigid -t/8 spin; 05 correction also drives bounded depth bending',
         motionMeaning:'0 freezes all geometry; source internal phase motion is blended from rest and repeats exactly over 16π',
         depthMeaning:'Changes positive chest depth and 05 depth bend; minimum stays volumetric',thicknessMeaning:'Positive bone/tube caliber range, never a planar-ribbon collapse',

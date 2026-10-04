@@ -10,12 +10,12 @@
       <div class="controls"><button id="liftPlay">播放小样</button><button id="liftReset">回到起点</button><button id="liftView">复位视角</button><button id="liftExport">保存三维谱</button></div>
       <label for="liftSpeed">观察速度</label><select id="liftSpeed"><option value="0.25">¼ 速</option><option value="0.5" selected>½ 速</option><option value="1">原速</option></select>
       <label for="liftTime">共同时间 · 原式 t</label><input id="liftTime" type="range" min="0" max="480" value="0"><div class="meta"><span id="liftClock">t = 0.000</span><span id="liftState">暂停</span></div>
-      <div class="controls"><button id="liftSpine" aria-pressed="true">显示骨架</button><button id="liftSections" aria-pressed="false">结构线</button><button id="liftSurface" aria-pressed="false">胸腔外包络</button><button id="liftLight" aria-pressed="true">冷暖光</button></div>
+      <div class="controls"><button id="liftSpine" aria-pressed="true">显示骨架</button><button id="liftSections" aria-pressed="false">结构线</button><button id="liftLight" aria-pressed="true">冷暖光</button></div>
       <label for="liftThickness">骨骼截面厚度 <output id="liftThicknessValue">0.50</output></label><input id="liftThickness" type="range" min="0" max="100" value="50">
       <label for="liftDepth">胸廓深度 <output id="liftDepthValue">0.50</output></label><input id="liftDepth" type="range" min="0" max="100" value="50">
       <label for="liftMotion">全身联动幅度 <output id="liftMotionValue">1.00</output></label><input id="liftMotion" type="range" min="0" max="100" value="100">
       <label for="liftSectionPosition">横切位置 <output id="liftSectionPositionValue">0.42</output></label><input id="liftSectionPosition" type="range" min="15" max="77" value="42"><div class="score-route"><span>原式参数场</span><b>→</b><span>髓线 / 椎列</span><b>→</b><span>环周肋架 / 胸骨</span><b>→</b><span>共同时间</span></div>
-      <p class="quiet" id="liftBoundary">原式决定发生位置、谐波分叶和时间关系；躯干截面、骨骼截面厚度与区域分工是本次三维解释。去掉整体转圈后，内部波动每 2π 重复；全源时钟仍保留 16π。</p>
+      <p class="quiet" id="liftBoundary">原式决定轴势、局部谐波和时间关系；胸廓比例、骨架连接和环周拓扑是本次结构解释，不是已测量解剖。去掉整体转圈后，内部波动每 2π 重复；全源时钟仍保留 16π。</p>
       <details><summary>二维关系怎样升成三维</summary><pre id="liftFormula"></pre><p class="quiet">01–03 继续保留原二维运行。04/05 原程序仍保留在本工作台源码和历史版本中；这里只对这两项做三维升档。</p></details>
     </aside>
   </div>
@@ -158,12 +158,10 @@
       const margin=1.65*caliber,radius=frame(s).curvatureRadius;
       const rawExtent=Math.hypot(W*(1+Math.abs(asym))+boneOuter,D+margin);
       const fit=Math.min(1,0.42*radius/rawExtent);W*=fit;D*=fit;
-      // Envelopes retain a positive cavity even at minimum depth/caliber.
+      // Rib cages retain a positive cavity even at minimum depth/caliber.
       W=Math.max(W,3.6*caliber);D=Math.max(D,5.3*caliber);
       const left=W*(1+asym),right=W*(1-asym),pedicle=0.86*boneOuter;
-      const skinWidth=Math.max(left,right)+0.5*pedicle+margin;
-      const skinHeight=(D+boneOuter+2*margin)/2,skinOffset=(D-boneOuter)/2;
-      const out={W,D,left,right,pedicle,skinWidth,skinHeight,skinOffset,margin,sourceOdd:odd,sourceEven:q,sourcePhase:f.c,fit};dimensionCache.set(s,out);return out;
+      const out={W,D,left,right,pedicle,margin,sourceOdd:odd,sourceEven:q,sourcePhase:f.c,fit};dimensionCache.set(s,out);return out;
     }
     function point(P,s){vertexS.push(s);positions.push(P);return positions.length-1;}
     function face(a,b,c,tag,id){faces.push([a,b,c]);faceKinds.push(tag);faceComponents.push(id);}
@@ -233,27 +231,19 @@
         widths:{left:d.left,right:d.right,ventral:d.D},area:PI*(d.left+d.right)/2*d.D/2,boneId:'vertebra-'+bi,
         sectionSource:'actual center-station bone/marrow rings and actual rib tube center curves; no independently generated diagram'});
     }
-    const envelopeLevels=unique([0,1,...vertebralStations,...vertebralStations.slice(1).map((s,i)=>(s+vertebralStations[i])/2)]);
-    const envelope=tube('body-envelope','body-envelope',envelopeLevels,16,s=>{
-      const f=frame(s),d=dims(s);return {center:add(axisPoint(kind,s,t,p),scale(f.V,d.skinOffset)),normal:f.L,binormal:f.V,width:d.skinWidth,depth:d.skinHeight,s};
-    },{role:'closed enclosing volume around complete thoracic skeleton',defaultVisible:false});
-    for(const section of sections){const i=envelopeLevels.findIndex(v=>Math.abs(v-section.s)<1e-10);section.envelope=envelope.rings[i].map(j=>positions[j]);section.points=section.envelope;section.skin=dims(section.s);}
+    // Bone-only scope: center curves are taken from the actual rib tubes.
+    for(const section of sections)section.points=section.ribLeft.concat(section.ribRight.slice().reverse());
     const spine=marrow.centers;
     const bounds={min:[Infinity,Infinity,Infinity],max:[-Infinity,-Infinity,-Infinity]};for(const a of positions)for(let j=0;j<3;j++){bounds.min[j]=Math.min(bounds.min[j],a[j]);bounds.max[j]=Math.max(bounds.max[j],a[j]);}
     const origin=positions[0];
     for(const component of components){let volume=0;for(let i=component.startFace;i<component.startFace+component.faceCount;i++){const f=faces[i];volume+=dot(sub(positions[f[0]],origin),cross(sub(positions[f[1]],origin),sub(positions[f[2]],origin)))/6;}component.signedVolume=volume;}
-    let maxEnvelopeRadius=0;
-    for(let i=0;i<positions.length;i++){
-      if(i>=envelope.startVertex)continue;const s=vertexS[i],f=frame(s),d=dims(s),v=sub(positions[i],add(axisPoint(kind,s,t,p),scale(f.V,d.skinOffset)));
-      maxEnvelopeRadius=Math.max(maxEnvelopeRadius,Math.hypot(dot(v,f.L)/d.skinWidth,dot(v,f.V)/d.skinHeight));
-    }
     const defaultSection=sections.reduce((a,b)=>Math.abs(b.s-0.42)<Math.abs(a.s-0.42)?b:a);
     return {positions,faces,faceKinds,faceComponents,vertexS,components,junctions,lines,spine,sections,section:defaultSection,
       diagnostics:{kind,authorTime:t,authorPeriod:AUTHOR_PERIOD,periodFrames:480,params:p,vertexCount:positions.length,faceCount:faces.length,bounds,
         vertebraCount:vertebralStations.length,ribPairs:ribIndices.length,ribStations,marrowRadius,canalRadius,canalClearance:canalRadius-marrowRadius,
-        maxEnvelopeNormalizedRadius:maxEnvelopeRadius,minRibArea:Math.min(...sections.map(s=>s.area)),maxDepth:Math.max(Math.abs(bounds.min[2]),Math.abs(bounds.max[2])),
+        minRibArea:Math.min(...sections.map(s=>s.area)),maxDepth:Math.max(Math.abs(bounds.min[2]),Math.abs(bounds.max[2])),
         localFrame:'rotation-minimizing parallel transport; T longitudinal, L left/right, V dorsal to ventral; T cross L = V',
-        candidate:'Three-dimensional thoracic skeleton: real annular vertebrae around marrow, paired tubular rib half-hoops and a ventral sternum, enclosed by a separate closed envelope; an explicit interpretation, not measured anatomy or a species',
+        candidate:'Three-dimensional thoracic skeleton: real annular vertebrae around marrow, paired tubular rib half-hoops and a ventral sternum; no soft-tissue envelope is included; an explicit interpretation, not measured anatomy or a species',
         sourceFidelity:'Exact source scalar/projection APIs retained; even phase span and qEven drive cavity dimensions, signed qOdd drives differentiated rib span; local pose removes rigid -t/8 spin; 05 correction also drives bounded depth bending',
         motionMeaning:'0 freezes all geometry; source internal phase motion is blended from rest and repeats exactly over 16π',
         depthMeaning:'Changes positive chest depth and 05 depth bend; minimum stays volumetric',thicknessMeaning:'Positive bone/tube caliber range, never a planar-ribbon collapse',
@@ -328,7 +318,7 @@ function drawSection(target){
 function render(){if(!state.active)return;const renderStart=performance.now();if(!state.fitPoints){state.fitPoints=[0,Math.PI/2,Math.PI,3*Math.PI/2].flatMap(t=>window.HaiyuAxisLift.evaluate(state.kind,t,params()).positions);state.fitCache.clear()}if(state.geometryDirty||!state.packet){state.packet=window.HaiyuAxisLift.evaluate(state.kind,state.t,params());state.faceCache=state.packet.faces.map((ids,i)=>{const[a,b,c]=ids.map(j=>state.packet.positions[j]),normal=cross(sub(b,a),sub(c,a)),kind=state.packet.faceKinds[i]||'body';return {ids,normal,kind,color:color(normal,kind,'orbit',false),z:0}}).filter(f=>Math.hypot(...f.normal)>1e-12);state.geometryDirty=false}draw(main,'orbit');draw(by('liftSide'),'front');drawSection(by('liftTop'));const p=state.packet;panel.dataset.kind=state.kind;panel.dataset.time=state.t;panel.dataset.vertices=p.positions.length;panel.dataset.triangles=p.faces.length;panel.dataset.native3d='true';panel.dataset.cameraAffectsGeneration='false';by('liftStatus').textContent=`${depthRenderer?'三维深度渲染':'软件三维预览'} · ${p.positions.length.toLocaleString()} 顶点 / ${p.faces.length.toLocaleString()} 面`;by('liftTime').value=Math.round(state.t/(16*Math.PI)*480);by('liftClock').textContent='t = '+state.t.toFixed(3)+' / '+(16*Math.PI).toFixed(3);by('liftState').textContent=state.playing?'运行中':'暂停';by('liftPlay').textContent=state.playing?'暂停小样':'播放小样';panel.dataset.renderMs=(performance.now()-renderStart).toFixed(2);panel.dataset.renderCount=String(++state.renderCount);if(!depthRenderer){panel.dataset.renderer='Canvas3D-fallback';panel.dataset.depthTest='false';panel.dataset.glError='not-run'}state.dirty=false}
 function on(id,type,fn){by(id).addEventListener(type,fn)}
 on('liftPlay','click',()=>{state.playing=!state.playing;state.last=performance.now();state.dirty=true});on('liftReset','click',()=>{state.t=0;state.playing=false;state.geometryDirty=state.dirty=true});on('liftView','click',()=>{state.yaw=.63;state.pitch=.28;state.zoom=1;state.dirty=true});on('liftTime','input',e=>{state.t=Number(e.target.value)/480*16*Math.PI;state.playing=false;state.geometryDirty=state.dirty=true});
-for(const[id,key]of[['liftSpine','showSpine'],['liftSections','showSections'],['liftSurface','showSurface']])on(id,'click',()=>{state[key]=!state[key];by(id).setAttribute('aria-pressed',String(state[key]));state.dirty=true});on('liftLight','click',()=>{state.neutral=!state.neutral;by('liftLight').textContent=state.neutral?'中性检查':'冷暖光';by('liftLight').setAttribute('aria-pressed',String(!state.neutral));state.dirty=true});for(const id of['liftThickness','liftDepth','liftMotion'])on(id,'input',()=>{by(id+'Value').textContent=(Number(by(id).value)/100).toFixed(2);state.fitPoints=null;state.geometryDirty=state.dirty=true});
+for(const[id,key]of[['liftSpine','showSpine'],['liftSections','showSections']])on(id,'click',()=>{state[key]=!state[key];by(id).setAttribute('aria-pressed',String(state[key]));state.dirty=true});on('liftLight','click',()=>{state.neutral=!state.neutral;by('liftLight').textContent=state.neutral?'中性检查':'冷暖光';by('liftLight').setAttribute('aria-pressed',String(!state.neutral));state.dirty=true});for(const id of['liftThickness','liftDepth','liftMotion'])on(id,'input',()=>{by(id+'Value').textContent=(Number(by(id).value)/100).toFixed(2);state.fitPoints=null;state.geometryDirty=state.dirty=true});
 main.addEventListener('pointerdown',e=>{state.drag=[e.clientX,e.clientY,state.yaw,state.pitch];main.setPointerCapture(e.pointerId);main.style.cursor='grabbing'});main.addEventListener('pointermove',e=>{if(!state.drag)return;state.yaw=state.drag[2]+(e.clientX-state.drag[0])*.008;state.pitch=clamp(state.drag[3]+(e.clientY-state.drag[1])*.008,-1.4,1.4);state.dirty=true});for(const ev of['pointerup','pointercancel','lostpointercapture'])main.addEventListener(ev,()=>{state.drag=null;main.style.cursor='grab'});main.addEventListener('wheel',e=>{e.preventDefault();state.zoom=clamp(state.zoom*Math.exp(-e.deltaY*.001),.55,2.4);state.dirty=true},{passive:false});
 on('liftSectionPosition','input',()=>{state.dirty=true});
 on('liftExport','click',()=>{const data={schema:'KAOPU.Haiyu.axis-lift/1',version:'R21',kind:state.kind,time:state.t,parameters:params(),diagnostics:state.packet?.diagnostics,source:'Source scalar fields drive a constrained thoracic skeleton around an internal marrow canal; circumferential rib topology and proportions are explicit interpretations',cameraAffectsGeneration:false};const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.href=url;a.download='海羽-R21-'+state.kind+'-三维谱.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
