@@ -1,7 +1,7 @@
 # KAOPU Learning Flywheel N70 — Kuko diagnostic assertion staging
 
 Date: 2026-10-04  
-Status: CANDIDATE / POSTED / LOCAL-REPLAY-PASSED / PUBLIC-TRIAL-RUNNING  
+Status: CANDIDATE / POSTED / GATE-RUN / KUKO-LOCAL / NOT-ADOPTED  
 Global R2 adoption: false
 
 ## 1. Existing real failure
@@ -86,10 +86,12 @@ Public production trial:
 
 - https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37168616478
 - run `#24`, exact commit `21e4a025b82fa8a32c1323ed83d3bee186150d76`;
-- at observation time the run was still `in_progress`;
-- `file/core` had completed successfully, but `public/core` and the aggregate had not completed.
+- completed `success` in `15m21s` (`2026-10-04T01:38:22Z` to `01:53:43Z`);
+- all eight exact-subject file/public matrix cells completed successfully;
+- the aggregate completed successfully;
+- nine commit-scoped artifacts were retained: eight cell artifacts plus one aggregate artifact.
 
-This is not yet a passed production gate and cannot support `ADOPTED`.
+This supplies a real Kuko-local production `GATE-RUN`. It still cannot support visual acceptance, physical-device acceptance, user acceptance or global adoption.
 
 ## 6. Applicability boundary
 
@@ -99,10 +101,12 @@ The replay does not prove visual fidelity, physical iPhone/Safari behavior, user
 
 ## 7. Adoption decision
 
-Decision: keep `DIAGNOSTIC-CONTINUATION-FAIL-CLOSED-001` inactive as a Kuko-local Candidate. The local replay passed, but public run `#24` is still incomplete. Promote to Kuko-local `GATE-RUN` only after all eight exact-subject cells and the aggregate complete successfully; require a separate affected-Mother trial before any global adoption.
+Decision: retain the implemented assertion staging as a validated Kuko-local gate and keep `DIAGNOSTIC-CONTINUATION-FAIL-CLOSED-001` inactive for other Mothers. The local replay and exact-subject public run passed, but one Kuko run does not justify a global R2 rule. Require a separately scoped affected-Mother trial before any wider adoption.
 
 Routing receipt: https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-5975551770
 
-Lifecycle at this commit: `POSTED=true`, `ACKNOWLEDGED=false`, `IMPLEMENTED=true` for the production candidate source, `GATE-RUN=false` for the public production trial, `ADOPTED=false`, `USER-ACCEPTED=false`.
+Gate-run follow-up receipt: https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-5975559293
 
-Metrics: user corrections `unknown`; same-class recurrence `unknown`; rejected-lineage inheritance `unknown`; stale delivery `unknown`; internal iterations per accepted delta `unknown`; first-pass candidate pass rate `unknown`; instruction-to-legal-candidate time `unknown`. The observed `file/core` success is one cell, not a KPI.
+Lifecycle at this commit: `POSTED=true`, `ACKNOWLEDGED=false`, `IMPLEMENTED=true`, `GATE-RUN=true`, `ADOPTED=false`, `USER-ACCEPTED=false`.
+
+Metrics: observed run duration `15m21s` for this run only; user corrections `unknown`; same-class recurrence `unknown`; rejected-lineage inheritance `unknown`; stale delivery `unknown`; internal iterations per accepted delta `unknown`; first-pass candidate pass rate `unknown`; instruction-to-legal-candidate time `unknown`. No causal runtime improvement is claimed.
