@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>海羽 · 二维关系与中轴三维 R19</title><style>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="haiyu-build" content="R19-axis-monotonic-20261004"><meta name="viewport" content="width=device-width,initial-scale=1"><title>海羽 · 二维关系与中轴三维 R19</title><style>
 :root{color-scheme:dark;--ink:#e7e7e0;--muted:#a8afab;--line:#353b38;--gold:#dcc694}*{box-sizing:border-box}body{margin:0;background:#101211;color:var(--ink);font:15px/1.65 system-ui,'Microsoft YaHei',sans-serif}main{max-width:1260px;margin:auto;padding:24px 26px}header{border-bottom:1px solid var(--line);padding-bottom:18px}small,.quiet{color:var(--muted);font-size:12px}h1{font-size:28px;font-weight:500;margin:4px 0}h2{font-size:23px;font-weight:500;margin:8px 0}p{margin:8px 0 16px}.eyebrow{color:var(--gold);letter-spacing:.12em;font-size:11px}nav{display:flex;gap:7px;flex-wrap:wrap;margin:20px 0}button,a.action,select{font:inherit;border:1px solid var(--line);background:#171b18;color:inherit;border-radius:6px;padding:9px 12px;cursor:pointer}button[aria-pressed=true]{background:var(--gold);color:#161a17}button:hover,a.action:hover{border-color:var(--gold)}a{color:var(--gold);text-decoration:none}a:hover{text-decoration:underline}.layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr);gap:28px}.viewport{background:#000;aspect-ratio:1;position:relative;overflow:hidden;border:1px solid #282e2a}.viewport>img{width:100%;height:100%;object-fit:contain;display:block}iframe{width:100%;height:100%;border:0;display:block}.side{align-self:center}.controls{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0}label{display:block;font-size:13px;color:var(--muted);margin-top:14px}input[type=range]{width:100%;accent-color:var(--gold);min-height:30px}.meta{display:flex;justify-content:space-between;color:var(--muted);font:12px/1.8 monospace;margin:8px 0}.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px}.compare figure{margin:0}figcaption{font-size:12px;color:var(--muted);margin-top:7px}.compare .viewport{aspect-ratio:1}details{border-top:1px solid var(--line);padding-top:13px;margin-top:20px}summary{cursor:pointer;color:#c5cec7}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.75 Consolas,monospace;color:#bbcbbf}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:14px}.grid figure{margin:0}.grid img{width:100%;display:block}.refs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.refs img{width:100%;max-height:600px;object-fit:contain;background:#000}.save{display:flex;gap:9px;flex-wrap:wrap;margin-top:22px}.action{font-size:12px!important;display:inline-block}footer{margin-top:28px;border-top:1px solid var(--line);padding-top:13px;font-size:12px;color:var(--muted)}[hidden]{display:none!important}button:focus-visible,a:focus-visible{outline:2px solid var(--gold);outline-offset:3px}#status{min-height:24px}.comparison-controls{max-width:620px;margin:20px auto}@media(max-width:760px){main{padding:16px}.layout{grid-template-columns:1fr;gap:18px}h1{font-size:24px}nav button{font-size:12px;padding:8px}nav{gap:5px}.compare{gap:8px}.refs{grid-template-columns:1fr}h2{font-size:21px}}
 #oldAnimation svg{width:100%;height:100%}#oldAnimation .trace{fill:none;stroke:#eee;stroke-width:.08;stroke-opacity:.8}.experiment-head{display:flex;justify-content:space-between;gap:16px;align-items:center}.exp-grid{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(260px,1fr);gap:24px}.exp-scene{position:relative;border:1px solid #303a33;background:#0a0e0d}.exp-scene canvas{display:block;width:100%;touch-action:none;cursor:grab}.scene-hint{position:absolute;bottom:12px;left:16px;color:#a3aea4;font-size:11px;pointer-events:none}.exp-projections{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.exp-projections figure{margin:0}.exp-projections canvas{width:100%;display:block;border:1px solid #303a33}.score-route{display:flex;flex-wrap:wrap;gap:7px;font-size:11px;margin:20px 0}.score-route span{padding:4px 7px;border:1px solid #41483e;border-radius:4px}.score-route b{color:#dcc694}@media(max-width:760px){.exp-grid{grid-template-columns:1fr}.experiment-head{display:block}.exp-projections{gap:7px}}.dimension-navigation{margin:20px 0 26px}.dimension-navigation section+section{margin-top:14px}.dimension-label{font-size:14px;color:var(--gold)}.dimension-label span{font-size:12px;color:var(--muted);margin-left:12px}.dimension-navigation nav{margin:8px 0 0}.dimension-navigation section:last-child{border-top:1px solid var(--line);padding-top:14px}@media(max-width:760px){.dimension-label span{display:block;margin:0}nav button{min-height:42px}.exp-projections{grid-template-columns:1fr 1fr}}
 </style></head><body><main>
@@ -9,6 +9,7 @@
 </div>
 <section id="axisLift" hidden>
   <div class="experiment-head"><div><div class="eyebrow">三维工作台 · 从中轴向两侧展开</div><h2 id="liftTitle">04 多频羽化 · 中轴立体</h2></div><span class="quiet" id="liftStatus"></span></div>
+  <p class="quiet" id="liftCandidateNote">三维升档候选：原 q / d / c 驱动沿材料中轴展开的实体；新增截面深度为参数假设，未做生物结构验收。</p>
   <div class="exp-grid">
     <div>
       <div class="exp-scene"><canvas id="liftCanvas" width="1080" height="720" aria-label="中轴与双侧体积的三维函数结构，可拖动旋转"></canvas><span class="scene-hint">拖动旋转 · 滚轮缩放 · 相机只观察三维对象</span></div>
@@ -130,16 +131,17 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
 /* Haiyu R19: a candidate, axis-organized lift of author stages 04 and 05.
  *
  * The source is the supplied R18/author-source.txt, not anatomical 3D data.
- * Author screen coordinates are retained: XY is the source plane, +Z is depth.
+ * Exact author screen coordinates remain available through sourceSample and
+ * sourcePointByIndex. The solid deliberately remaps longitudinal material y.
  * The source's rapid cos(i/7) is resolved as a continuous phase u in [-1, 1].
  * Inserting y=i/598 and u=cos(i/7) recovers every original source point.
  *
- * The even-in-k part gives the spine/bilateral midpoint; the odd harmonic
- * part gives the two outward branches. Its sign only orders the two sides:
- * changing that sign swaps +k/-k and does not change the source point set.
- * A separately declared candidate thickness inflates the field into closed
- * curved sections and builds an actual tubular central column. Thickness=0
- * collapses BOTH meshes exactly onto source samples (depth need not be zero).
+ * Every ring occupies a different plane normal to a straight, monotonic axis.
+ * Exact qEven and RMS qOdd drive positive elliptical section dimensions; the
+ * exact k=0 c drives frame twist. This avoids the longitudinal backtracking of
+ * a direct sweep through the original XY trace. Thickness=0 collapses section
+ * area, but does NOT reproduce the original XY point projection. The remapping,
+ * positive width floor and finite depth are declared candidate design choices.
  * No camera, view angle, lighting, random number or accumulated frame state
  * participates in this construction. This is not a biological reconstruction.
  */
@@ -222,32 +224,21 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
   }
 
   function localFrame(kind, y, t) {
-    // Central finite difference uses the same continuous author field. The
-    // derivative is evaluated just outside the endpoint, not by clamping it.
-    const h = 0.0001;
-    const at = fields(kind, y, 0, t);
-    const derivative = sub(fields(kind, y + h, 0, t).point, fields(kind, y - h, 0, t).point);
-    const tangent = unit(derivative, [-Math.cos(at.c), Math.sin(at.c), 0]);
-    const normal = [tangent[1], -tangent[0], 0];
+    const phase = fields(kind, y, 0, t).c;
+    const tangent = [0, 1, 0];
+    const normal = [Math.cos(phase), 0, -Math.sin(phase)];
     const binormal = cross(tangent, normal);
     return { tangent, normal, binormal };
   }
 
-  function orderedSource(kind, y, u, t) {
-    const probe = fields(kind, y, Math.abs(u), t);
-    // Only swaps which original phase is called the left or right branch.
-    const sourceU = u * (probe.harmonic < 0 ? -1 : 1);
-    return { sample: fields(kind, y, sourceU, t), sourceU };
-  }
-
   function sectionPoint(kind, y, u, half, t, params, frame, section) {
-    const ordered = orderedSource(kind, y, u, t);
-    // A small thickness-dependent separation prevents zero-width sections at
-    // the source harmonic's nodes. It is candidate geometry, not source data.
-    const normalOffset = params.thickness * section.outwardFloor * u;
+    // Positive ellipse: all branches are radial in the same axis-normal plane.
+    // RMS retains the full q harmonic as a scalar width driver without letting
+    // the original screen trace reverse longitudinal material order.
+    const normalOffset = section.halfWidth * u;
     const depthOffset = section.fieldDepth * half * Math.sqrt(Math.max(0, 1 - u * u));
-    const point = add(ordered.sample.point, add(scale(frame.normal, normalOffset), scale(frame.binormal, depthOffset)));
-    return { point, sourceU: ordered.sourceU };
+    const point = add(section.center, add(scale(frame.normal, normalOffset), scale(frame.binormal, depthOffset)));
+    return { point, sourceU: u };
   }
 
   function projectedArea(points, center, frame) {
@@ -260,18 +251,17 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
   }
 
   function triangulateSection(points, center, frame) {
-    // End sections can be crescent-shaped. A center fan would bridge outside
-    // their concavity; ear clipping in the N/B plane respects the actual loop.
+    // Triangulate in the section's own normal/binormal plane.
     const plane = points.map(function (p) { const delta = sub(p, center); return [dot(delta, frame.normal), dot(delta, frame.binormal)]; });
     function turn(a, b, c) { return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]); }
     let area = 0;
     for (let i = 0; i < plane.length; i++) area += plane[i][0] * plane[(i + 1) % plane.length][1] - plane[(i + 1) % plane.length][0] * plane[i][1];
     const order = plane.map(function (_, i) { return i; });
-    if (area < 0) order.reverse();
+    if (area < -1e-10) order.reverse();
     const tolerance = Math.abs(area) * 1e-14;
     const triangles = [];
-    if (area === 0) {
-      // Exact zero thickness intentionally collapses a solid to a source curve.
+    if (Math.abs(area) < 1e-10) {
+      // Exact zero thickness intentionally collapses a section to a segment.
       for (let i = 1; i < order.length - 1; i++) triangles.push([order[0], order[i], order[i + 1]]);
       return triangles;
     }
@@ -313,7 +303,10 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
         const next = (col + 1) % around;
         const a = rings[row][col], b = rings[row][next];
         const c = rings[row + 1][next], d = rings[row + 1][col];
-        faces.push([a, b, c], [a, c, d]);
+        // Match the upper/lower material-u diagonals. Opposite diagonals on a
+        // twisted zero-thickness quad would create a spurious enclosed wedge.
+        if (col < around / 2) faces.push([a, b, c], [a, c, d]);
+        else faces.push([a, b, d], [b, c, d]);
         const kind = kindForFace(row, col);
         faceKinds.push(kind, kind);
       }
@@ -353,14 +346,16 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
     const around = 24 + 4 * Math.round(5 * params.detail);
     const columnAround = 8 + 2 * Math.round(2 * params.detail);
     const positions = [], faces = [], faceKinds = [], lines = [], spine = [], sections = [];
-    const fieldRings = [], columnRings = [], fieldSourceCoordinates = [];
+    const fieldRings = [], columnRings = [];
     let minArea = Infinity, minFrameHandedness = Infinity;
     let minBilateralSeparation = Infinity, maxDepth = 0;
 
     for (let row = 0; row < rows; row++) {
       const s = row / (rows - 1), y = s * SOURCE_MAX_Y;
       const axis = fields(kind, y, 0, t);
-      const center = axis.point.slice();
+      // A fixed 3.2×99 author-unit length is an explicitly chosen display
+      // scale. The strictly increasing material coordinate is never deformed.
+      const center = [200, 200 + (s - 0.5) * 3.2 * 99, 0];
       const frame = localFrame(kind, y, t);
       let harmonicEnergy = 0;
       for (let j = 1; j <= 8; j++) {
@@ -372,11 +367,12 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
       // All parameters below are explicit design assumptions. motion only
       // articulates inferred depth and leaves the source time/phase untouched.
       const articulation = 1 + 0.12 * params.motion * Math.sin(t - axis.d);
-      const outwardFloor = (1 + 1.8 * params.depth) * longitudinalEnvelope;
-      const fieldDepth = params.thickness * (0.75 + 3.4 * params.depth) * longitudinalEnvelope * articulation;
+      const outwardFloor = 0.04 * axis.qEven;
+      const halfWidth = outwardFloor + envelope;
+      const fieldDepth = params.thickness * (0.7 + 1.7 * params.depth) * (1 + 0.012 * envelope) * articulation;
       const columnWidth = params.thickness * (1.7 + 0.013 * envelope) * longitudinalEnvelope;
       const columnDepth = params.thickness * (2.4 + 5.5 * params.depth) * longitudinalEnvelope * articulation;
-      const section = { y, material: s, center, frame, envelope, outwardFloor, fieldDepth, columnWidth, columnDepth,
+      const section = { y, material: s, center, frame, sourceAxis: axis, envelope, outwardFloor, halfWidth, fieldDepth, columnWidth, columnDepth,
         points: [], sourceU: [], plus: [], minus: [], ringIndices: [], columnIndices: [] };
       spine.push(center);
 
@@ -390,7 +386,6 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
         ring.push(positions.length);
         section.points.push(vertex.point);
         section.sourceU.push(vertex.sourceU);
-        fieldSourceCoordinates.push({ index: positions.length, y, u: vertex.sourceU });
         positions.push(vertex.point);
         maxDepth = Math.max(maxDepth, Math.abs(vertex.point[2]));
       }
@@ -413,8 +408,7 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
         section.plus.push(sectionPoint(kind, y, u, 1, t, params, frame, section).point);
         section.minus.push(sectionPoint(kind, y, -u, 1, t, params, frame, section).point);
       }
-      // A bilateral width is measured around the source pair's even midpoint,
-      // not incorrectly around k=0: the even source term also bends with |k|.
+      // Both sides now extend from exactly the same monotonic material axis.
       const right = section.plus[10], left = section.minus[10];
       section.bilateralMidpoint = scale(add(right, left), 0.5);
       section.bilateralSeparation = dot(sub(right, left), frame.normal);
@@ -459,15 +453,13 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
         columnSignedVolume, fieldSignedVolume: allSignedVolume - columnSignedVolume,
         columnVolume: Math.abs(columnSignedVolume), fieldVolume: Math.abs(allSignedVolume - columnSignedVolume),
         fieldCaps, columnCaps,
-        // The field's zero-thickness XY coordinates are exactly these source
-        // samples. Column and cap vertices collapse onto their k=0 spine.
-        fieldSourceCoordinates,
-        sourcePlane: 'XY; author coordinates include the original +200,+200 framing',
-        candidate: 'Closed bilateral source-field lift plus finite tubular k=0 column; depth and minimum-width regularization are inferred design parameters, not anatomy or teacher-supplied 3D',
+        axisDirection: [0, 1, 0], axisLength: 3.2 * 99,
+        sourcePlane: 'Original XY projection, including +200,+200 framing, is preserved only in sourceSample/sourcePointByIndex',
+        candidate: 'Monotonic material-axis lift: qEven and RMS qOdd drive positive ellipse widths, exact k=0 c twists orthonormal frames, and candidate depth closes the sections; not anatomy or teacher-supplied 3D',
         motionMeaning: 'Scales only inferred depth articulation; preserves exact author time and 16π loop',
-        depthMeaning: 'Shapes finite candidate depth; thickness=0 removes all candidate offsets for every depth value',
+        depthMeaning: 'Shapes finite candidate cross-section depth; thickness=0 gives zero-area twisted ribbon sections, not the original XY projection',
         overlapNote: 'The column and bilateral field are separate closed overlapping shells, not a watertight Boolean union or a claim of anatomically valid topology',
-        sourceFoldNote: 'The original harmonic field can fold longitudinally; positive sections and oriented volume do not prove the absence of global surface self-intersections'
+        sourceFoldNote: 'Original XY longitudinal folds are intentionally removed by distinct axis-normal ring planes; exact source projection equivalence is deliberately relinquished'
       }
     };
   }
@@ -501,7 +493,7 @@ on('liftPlay','click',()=>{state.playing=!state.playing;state.last=performance.n
 for(const[id,key]of[['liftSpine','showSpine'],['liftSections','showSections'],['liftSurface','showSurface']])on(id,'click',()=>{state[key]=!state[key];by(id).setAttribute('aria-pressed',String(state[key]));state.dirty=true});on('liftLight','click',()=>{state.neutral=!state.neutral;by('liftLight').textContent=state.neutral?'中性检查':'冷暖光';by('liftLight').setAttribute('aria-pressed',String(!state.neutral));state.dirty=true});for(const id of['liftThickness','liftDepth','liftMotion'])on(id,'input',()=>{by(id+'Value').textContent=(Number(by(id).value)/100).toFixed(2);state.geometryDirty=state.dirty=true});
 main.addEventListener('pointerdown',e=>{state.drag=[e.clientX,e.clientY,state.yaw,state.pitch];main.setPointerCapture(e.pointerId);main.style.cursor='grabbing'});main.addEventListener('pointermove',e=>{if(!state.drag)return;state.yaw=state.drag[2]+(e.clientX-state.drag[0])*.008;state.pitch=clamp(state.drag[3]+(e.clientY-state.drag[1])*.008,-1.4,1.4);state.dirty=true});for(const ev of['pointerup','pointercancel','lostpointercapture'])main.addEventListener(ev,()=>{state.drag=null;main.style.cursor='grab'});main.addEventListener('wheel',e=>{e.preventDefault();state.zoom=clamp(state.zoom*Math.exp(-e.deltaY*.001),.55,2.4);state.dirty=true},{passive:false});
 on('liftExport','click',()=>{const data={schema:'KAOPU.Haiyu.axis-lift/1',version:'R19',kind:state.kind,time:state.t,parameters:params(),diagnostics:state.packet?.diagnostics,source:'Preserved q,d,c scalar relationships from R17/R18 author-source.txt; new thickness/depth are candidate extensions',cameraAffectsGeneration:false};const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.href=url;a.download='海羽-R19-'+state.kind+'-三维谱.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
-window.HaiyuLiftUI={setActive(value,kind){state.active=!!value;state.playing=false;state.drag=null;if(!value)return;state.kind=kind;state.t=0;state.yaw=.63;state.pitch=.28;state.zoom=1;state.geometryDirty=state.dirty=true;by('liftTitle').textContent=kind==='biomotion'?'05 仿生游动 · 中轴立体':'04 多频羽化 · 中轴立体';by('liftFormula').textContent='材料地址：y 沿中轴，u ∈ [−1,1] 向左右展开。\nk=(5+sin(y))·u；e=y/5−11；d=hypot(k,e)/0.6−6。\nq=99+d·sin(t−d)+y/23·k·(3sin(e)+e·sin(2e)+sin(4d))。\nc=d/4−t/8'+(kind==='biomotion'?' + cos(t+e)/9':'')+'。\n三维化：相同材料地址 → 中轴 / 局部架 → 有厚度的闭合截面；相机最后观察。\n新增厚度、截面深度为可替换候选。厚度归零可检查与原二维投影的关系。';render()}};
+window.HaiyuLiftUI={setActive(value,kind,initialTime=0){state.active=!!value;state.playing=false;state.drag=null;if(!value)return;state.kind=kind;state.t=Number.isFinite(initialTime)?((initialTime%(16*Math.PI))+(16*Math.PI))%(16*Math.PI):0;state.yaw=.63;state.pitch=.28;state.zoom=1;state.geometryDirty=state.dirty=true;by('liftTitle').textContent=kind==='biomotion'?'05 仿生游动 · 中轴立体':'04 多频羽化 · 中轴立体';by('liftFormula').textContent='材料地址：y 沿中轴，u ∈ [−1,1] 向左右展开。\nk=(5+sin(y))·u；e=y/5−11；d=hypot(k,e)/0.6−6。\nq=99+d·sin(t−d)+y/23·k·(3sin(e)+e·sin(2e)+sin(4d))。\nc=d/4−t/8'+(kind==='biomotion'?' + cos(t+e)/9':'')+'。\n三维化：相同材料地址 → 中轴 / 局部架 → 有厚度的闭合截面；相机最后观察。\n纵向按材料地址 y 单调重排，避免直接沿原二维回折曲线扫掠；q/d/c 作为截面宽度、波动与扭转的驱动。\n新增厚度、截面深度为可替换候选；不声称压平后等于原二维投影。';render()}};
 function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-state.last>42){const dt=Math.min(.08,(now-state.last)/1000);state.t=(state.t+dt*2*Math.PI)%(16*Math.PI);state.last=now;state.geometryDirty=state.dirty=true}if(state.dirty)render()}else state.last=now;requestAnimationFrame(tick)}requestAnimationFrame(tick);
 })();
 </script><script>
@@ -514,7 +506,7 @@ const times=[0];for(let n=1;n<=480;n++)times.push(times[n-1]+Math.PI/30);
 const descriptions=['','让索引决定环形轨迹上的半径和角度。','距离 d 同时决定半径与角度；这张截图对应的公式输出弧线。','半径随 t−d 的相位变化，曲线开始收展。','加入空间谐波，羽丝轮廓与半径运动同时出现。','在第四步基础上加入随位置变化的角度项，产生局部形变。'];
 function childSource(s,id,token){return '<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#090909;overflow:hidden;width:100%;height:100%}canvas{display:block!important;width:100%!important;height:100%!important;object-fit:contain}</style></head><body><script src="'+D.p5+'"><\/script><script>'+D.codes[s-1]+'\nconst rawDraw=draw;let sourceFrame=0;setup=()=>{pixelDensity(2);noLoop()};draw=()=>{rawDraw();sourceFrame++;document.body.dataset.sourceFrame=sourceFrame;document.body.dataset.time=t;parent.postMessage({marine:true,token:'+token+',id:'+JSON.stringify(id)+',frame:sourceFrame},"*")};window.addEventListener("message",ev=>{if(ev.source!==parent||!ev.data.marineSeek)return; t=ev.data.before;sourceFrame=ev.data.frame-1;redraw()});<\/script></body></html>'}
 let active=[],waiting=new Set();
-function load(){playing=false;serial++;pending=0;active=[];['live','left','right'].forEach(id=>$(id).removeAttribute('srcdoc'));const lifted=stage===4||stage===5;$('axisLift').hidden=!lifted;window.HaiyuLiftUI.setActive(lifted,stage===5?'biomotion':'multifrequency');$('experiment').hidden=stage<7;window.KaopuExperiment.setActive(stage>=7,stage===8?'fish':'feather');if(stage===8)$('expSurface').textContent='显示三维面';if(lifted){$('single').hidden=true;$('comparison').hidden=true;document.body.dataset.stage=stage;document.querySelectorAll('[data-stage]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.stage)===stage)));return;}if(stage>=7){$('single').hidden=true;$('comparison').hidden=true;document.body.dataset.stage=stage;document.querySelectorAll('[data-stage]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.stage)===stage)));return;}$('single').hidden=stage===6;$('comparison').hidden=stage!==6;$('controls').hidden=stage===0;(stage===6?$('compareHome'):$('controlHome')).append($('controls'));$('oldAnimation').hidden=stage!==0;$('legacyControls').hidden=stage!==0;$('oldToggle').textContent='看原截图对照';$('photo').hidden=true;$('live').hidden=stage===0;$('formulaBox').hidden=stage===0;document.querySelectorAll('[data-stage]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.stage)===stage)));if(stage===0){$('title').textContent='羽片已恢复运行';$('description').textContent='旧版羽片本体已恢复。可以播放、暂停、拖动观察变化，也可以回到原截图对照。';$('boundary').textContent='沿用旧版 R03 的路径与变形动画，放大取景并减细显示线宽。老师原式另列在 01—05 中。';$('badge').textContent='RESTORED / LIVE FEATHER';$('viewLabel').textContent='旧版 R03 · 原路径变形动画';$('status').textContent='羽片由矢量路径实时变形显示，不播放截图。';}else{active=stage===6?['left','right']:['live'];$('title').textContent=D.names[stage-1]||'同帧对照';$('description').textContent=descriptions[stage]||'';$('boundary').textContent=stage===5?'直接执行作者完整程序；原视频画面对照仍未完成。':'按教学截图转写；保留截图与原码的区别。';$('badge').textContent='SOURCE REPLAY / 0'+stage;$('formula').textContent=D.codes[stage-1]||'';$('viewLabel').textContent='20,000 points · p5.js';$('status').textContent='正在载入原式…';waiting=new Set(active);pending=waiting.size;active.forEach((id,j)=>{$(id).srcdoc=childSource(stage===6?4+j:stage,id,serial)});}meta();}
+function load(){playing=false;serial++;pending=0;active=[];['live','left','right'].forEach(id=>$(id).removeAttribute('srcdoc'));const lifted=stage===4||stage===5;$('axisLift').hidden=!lifted;window.HaiyuLiftUI.setActive(lifted,stage===5?'biomotion':'multifrequency',P.has('frame')?times[frame]:0);$('experiment').hidden=stage<7;window.KaopuExperiment.setActive(stage>=7,stage===8?'fish':'feather');if(stage===8)$('expSurface').textContent='显示三维面';if(lifted){$('single').hidden=true;$('comparison').hidden=true;document.body.dataset.stage=stage;document.querySelectorAll('[data-stage]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.stage)===stage)));return;}if(stage>=7){$('single').hidden=true;$('comparison').hidden=true;document.body.dataset.stage=stage;document.querySelectorAll('[data-stage]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.stage)===stage)));return;}$('single').hidden=stage===6;$('comparison').hidden=stage!==6;$('controls').hidden=stage===0;(stage===6?$('compareHome'):$('controlHome')).append($('controls'));$('oldAnimation').hidden=stage!==0;$('legacyControls').hidden=stage!==0;$('oldToggle').textContent='看原截图对照';$('photo').hidden=true;$('live').hidden=stage===0;$('formulaBox').hidden=stage===0;document.querySelectorAll('[data-stage]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.stage)===stage)));if(stage===0){$('title').textContent='羽片已恢复运行';$('description').textContent='旧版羽片本体已恢复。可以播放、暂停、拖动观察变化，也可以回到原截图对照。';$('boundary').textContent='沿用旧版 R03 的路径与变形动画，放大取景并减细显示线宽。老师原式另列在 01—05 中。';$('badge').textContent='RESTORED / LIVE FEATHER';$('viewLabel').textContent='旧版 R03 · 原路径变形动画';$('status').textContent='羽片由矢量路径实时变形显示，不播放截图。';}else{active=stage===6?['left','right']:['live'];$('title').textContent=D.names[stage-1]||'同帧对照';$('description').textContent=descriptions[stage]||'';$('boundary').textContent=stage===5?'直接执行作者完整程序；原视频画面对照仍未完成。':'按教学截图转写；保留截图与原码的区别。';$('badge').textContent='SOURCE REPLAY / 0'+stage;$('formula').textContent=D.codes[stage-1]||'';$('viewLabel').textContent='20,000 points · p5.js';$('status').textContent='正在载入原式…';waiting=new Set(active);pending=waiting.size;active.forEach((id,j)=>{$(id).srcdoc=childSource(stage===6?4+j:stage,id,serial)});}meta();}
 const ready=new Set();
 window.addEventListener('message',e=>{const m=e.data;if(!m||!m.marine||m.token!==serial||!active.includes(m.id)||e.source!==$(m.id).contentWindow)return;if(m.frame===1&&!ready.has(serial+':'+m.id)){ready.add(serial+':'+m.id);if(frame!==1){$(m.id).contentWindow.postMessage({marineSeek:true,frame,before:times[frame-1]},'*');return;}}if(m.frame!==frame)return;waiting.delete(m.id);pending=waiting.size;if(!pending)$('status').textContent='原式已绘制 · 源帧 '+frame;meta();});
 function meta(){$('play').textContent=playing?'暂停':'播放';$('timeline').value=frame;$('frameText').textContent='源帧 '+frame+' / 480';$('timeText').textContent='t = '+times[frame].toFixed(6);document.body.dataset.stage=stage;document.body.dataset.frame=frame;document.body.dataset.pending=pending;}
