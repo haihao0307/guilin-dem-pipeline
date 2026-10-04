@@ -1,0 +1,97 @@
+{
+  "schema": "kaopu.attempt-matrix-fixture/1.0",
+  "task": "Kuko full-cluster Anemone/Fiber integration",
+  "rootCauseThreshold": 2,
+  "expectedRunIds": [37170827682, 37171413749, 37172382735, 37172690396],
+  "expectedCells": [
+    "file/core", "file/catalog", "file/orbit", "file/touch",
+    "public/core", "public/catalog", "public/orbit", "public/touch"
+  ],
+  "authoritativeAttempts": [
+    {
+      "ordinal": 1,
+      "runId": 37170827682,
+      "headSha": "e0067296705449e8f3eedbe71c382b53e3791b37",
+      "conclusion": "failure",
+      "aggregateJobId": 111345407473,
+      "matrixJobs": [
+        {"jobId": 111343265166, "cell": "file/core", "conclusion": "failure", "failureSignature": "drawer-pointer-interception"},
+        {"jobId": 111343265177, "cell": "file/catalog", "conclusion": "success", "failureSignature": null},
+        {"jobId": 111343265084, "cell": "file/orbit", "conclusion": "failure", "failureSignature": "landscape-controls-not-hit"},
+        {"jobId": 111343265217, "cell": "file/touch", "conclusion": "failure", "failureSignature": "state-import-control-sync"},
+        {"jobId": 111343265211, "cell": "public/core", "conclusion": "failure", "failureSignature": "drawer-pointer-interception"},
+        {"jobId": 111343265167, "cell": "public/catalog", "conclusion": "failure", "failureSignature": "fiber-playback-state-static"},
+        {"jobId": 111343265160, "cell": "public/orbit", "conclusion": "failure", "failureSignature": "landscape-controls-not-hit"},
+        {"jobId": 111343265185, "cell": "public/touch", "conclusion": "failure", "failureSignature": "state-import-control-sync"}
+      ]
+    },
+    {
+      "ordinal": 2,
+      "runId": 37171413749,
+      "headSha": "04ffd14a8286636c5b18ac0c8ac539b5782c907d",
+      "conclusion": "failure",
+      "aggregateJobId": 111347458727,
+      "matrixJobs": [
+        {"jobId": 111344937667, "cell": "file/core", "conclusion": "failure", "failureSignature": "first-entry-control-disabled"},
+        {"jobId": 111344937596, "cell": "file/catalog", "conclusion": "success", "failureSignature": null},
+        {"jobId": 111344937493, "cell": "file/orbit", "conclusion": "failure", "failureSignature": "landscape-controls-not-hit"},
+        {"jobId": 111344937598, "cell": "file/touch", "conclusion": "failure", "failureSignature": "short-viewport-canvas-dominance"},
+        {"jobId": 111344937605, "cell": "public/core", "conclusion": "failure", "failureSignature": "first-entry-control-disabled"},
+        {"jobId": 111344937584, "cell": "public/catalog", "conclusion": "failure", "failureSignature": "fiber-playback-state-static"},
+        {"jobId": 111344937621, "cell": "public/orbit", "conclusion": "failure", "failureSignature": "landscape-controls-not-hit"},
+        {"jobId": 111344937623, "cell": "public/touch", "conclusion": "failure", "failureSignature": "short-viewport-canvas-dominance"}
+      ]
+    },
+    {
+      "ordinal": 3,
+      "runId": 37172382735,
+      "headSha": "39a597e17399d5e6d880aca39a8f42cb19c5b5d4",
+      "conclusion": "failure",
+      "aggregateJobId": 111350302071,
+      "matrixJobs": [
+        {"jobId": 111347815635, "cell": "file/core", "conclusion": "success", "failureSignature": null},
+        {"jobId": 111347815748, "cell": "file/catalog", "conclusion": "failure", "failureSignature": "fiber-playback-time-not-advancing"},
+        {"jobId": 111347815736, "cell": "file/orbit", "conclusion": "success", "failureSignature": null},
+        {"jobId": 111347815758, "cell": "file/touch", "conclusion": "success", "failureSignature": null},
+        {"jobId": 111347815782, "cell": "public/core", "conclusion": "success", "failureSignature": null},
+        {"jobId": 111347815709, "cell": "public/catalog", "conclusion": "failure", "failureSignature": "fiber-playback-time-not-advancing"},
+        {"jobId": 111347815812, "cell": "public/orbit", "conclusion": "success", "failureSignature": null},
+        {"jobId": 111347815796, "cell": "public/touch", "conclusion": "success", "failureSignature": null}
+      ]
+    },
+    {
+      "ordinal": 4,
+      "runId": 37172690396,
+      "headSha": "59a3e722aca845170ca2e51db8b64c828858a128",
+      "conclusion": "success",
+      "aggregateJobId": 111351848067,
+      "matrixJobs": [
+        {"jobId": 111348734819, "cell": "file/core", "conclusion": "success", "failureSignature": null},
+        {"jobId": 111348734948, "cell": "file/catalog", "conclusion": "success", "failureSignature": null},
+        {"jobId": 111348734928, "cell": "file/orbit", "conclusion": "success", "failureSignature": null},
+        {"jobId": 111348734926, "cell": "file/touch", "conclusion": "success", "failureSignature": null},
+        {"jobId": 111348735028, "cell": "public/core", "conclusion": "success", "failureSignature": null},
+        {"jobId": 111348735026, "cell": "public/catalog", "conclusion": "success", "failureSignature": null},
+        {"jobId": 111348735010, "cell": "public/orbit", "conclusion": "success", "failureSignature": null},
+        {"jobId": 111348735003, "cell": "public/touch", "conclusion": "success", "failureSignature": null}
+      ]
+    }
+  ],
+  "observedCommitDeltas": [
+    {
+      "to": "04ffd14a8286636c5b18ac0c8ac539b5782c907d",
+      "changedPaths": ["kaopu-hair-workbench/qa/full-cluster-source/src/studio-ui.js", "kaopu-hair-workbench/qa/full-cluster-source/tests/browser-qa.cjs"],
+      "addresses": ["drawer-pointer-interception", "state-import-control-sync"]
+    },
+    {
+      "to": "39a597e17399d5e6d880aca39a8f42cb19c5b5d4",
+      "changedPaths": ["kaopu-hair-workbench/qa/full-cluster-source/src/anemone-panel.html", "kaopu-hair-workbench/qa/full-cluster-source/src/style.css", "kaopu-hair-workbench/qa/full-cluster-source/tests/first-entry.cjs"],
+      "addresses": ["first-entry-control-disabled", "landscape-controls-not-hit", "short-viewport-canvas-dominance"]
+    },
+    {
+      "to": "59a3e722aca845170ca2e51db8b64c828858a128",
+      "changedPaths": ["kaopu-hair-workbench/qa/full-cluster-source/tests/fiber-catalog.cjs"],
+      "addresses": ["fiber-playback-state-static", "fiber-playback-time-not-advancing"]
+    }
+  ]
+}

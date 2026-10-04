@@ -1,14 +1,15 @@
 {
   "id": "SUCCESS-MUST-NOT-ERASE-FAILED-ATTEMPTS-001",
   "status": "Candidate",
-  "scope": "single Mother trial: Fish delivery receipt after two or more bounded failures",
+  "scope": "single Mother trial: delivery receipt after two or more bounded failures, including matrix workflows",
   "trigger": "same bounded task reaches the configured Root Cause Review threshold and later obtains a successful terminal run",
   "assertions": [
     "each attempt remains an immutable record bound to runId, jobId, headSha, gate conclusion and failure signature",
     "the terminal success may supersede the current technical gate but must not rewrite or omit prior failures",
     "a separate learning-closure state remains HOLD until the review covers every observed failure signature",
     "each corrective action binds a failure signature to an observed repair delta",
-    "the terminal success explicitly retests the covered signatures and names the attempts it supersedes"
+    "the terminal success explicitly retests the covered signatures and names the attempts it supersedes",
+    "for matrix workflows each expected job cell remains an independent immutable observation and review/retest coverage uses cell:failureSignature keys"
   ],
   "states": [
     "VERIFIED_FINAL_ATTEMPT",
@@ -19,7 +20,20 @@
     "HOLD_ROOT_CAUSE_SIGNATURE_COVERAGE",
     "HOLD_CORRECTIVE_DELTA_UNBOUND",
     "HOLD_FINAL_RETEST_COVERAGE",
-    "HOLD_SUPERSESSION_LINK_INCOMPLETE"
+    "HOLD_SUPERSESSION_LINK_INCOMPLETE",
+    "HOLD_MATRIX_JOB_LEDGER_INCOMPLETE",
+    "HOLD_MATRIX_JOB_RECORD_MUTATED",
+    "HOLD_MATRIX_SIGNATURE_COVERAGE"
+  ],
+  "evidenceUpdates": [
+    {
+      "round": "N71",
+      "mother": "Kuko",
+      "runs": [37170827682, 37171413749, 37172382735, 37172690396],
+      "failedMatrixJobsByRun": [7, 7, 2, 0],
+      "result": "9/9 history replay passed",
+      "novelty": "the prior run-level scalar jobId/failureSignature cannot preserve multiple concurrent matrix failures"
+    }
   ],
   "activation": {
     "implemented": false,

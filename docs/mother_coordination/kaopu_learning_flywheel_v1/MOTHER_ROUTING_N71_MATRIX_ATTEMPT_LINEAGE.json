@@ -1,0 +1,33 @@
+{
+  "schema": "kaopu.mother-routing/1.0",
+  "round": "N71",
+  "status": "CANDIDATE_READY_TO_POST",
+  "target": {
+    "mother": "Kuko",
+    "entry": "https://github.com/haihao0307/guilin-dem-pipeline/issues/91",
+    "comment": null
+  },
+  "increment": {
+    "candidateRegression": "SUCCESS-MUST-NOT-ERASE-FAILED-ATTEMPTS-001",
+    "schemaDelta": "attemptLedger[].matrixJobs[].{jobId,cell,conclusion,failureSignature}",
+    "technicalGate": "VERIFIED_FINAL_ATTEMPT",
+    "learningClosure": "HOLD_ROOT_CAUSE_REVIEW_MISSING",
+    "recommendation": "On the next comparable Kuko multi-run matrix delivery, trial the job-level ledger and require RCA/retest coverage by cell:signature; do not retroactively downgrade run 37172690396."
+  },
+  "evidence": {
+    "runs": [37170827682, 37171413749, 37172382735, 37172690396],
+    "failedMatrixJobsByRun": [7, 7, 2, 0],
+    "probe": "9/9 passed"
+  },
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE_RUN": true,
+    "ADOPTED": false,
+    "USER_ACCEPTED": false
+  },
+  "productionMutation": false,
+  "globalR2Mutation": false,
+  "firstTierExpertAI": "not called"
+}
