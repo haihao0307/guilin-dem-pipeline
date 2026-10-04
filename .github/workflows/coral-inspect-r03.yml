@@ -1,0 +1,90 @@
+name: Coral Inspection R03
+on:
+  push:
+    branches: [work/coral-inspection-r03-20261004]
+    paths: [.github/workflows/coral-inspect-r03.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  verify-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            coral-mother-core-seed-r01
+            tools/coral-inspect-r03
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build strictly from accepted color R02
+        run: |
+          mkdir -p /tmp/inspect-evidence
+          cp -r tools/coral-inspect-r03 /tmp/inspect-tools
+          python /tmp/inspect-tools/build.py coral-mother-core-seed-r01 /tmp/inspect-site
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          m=json.loads(Path('/tmp/inspect-site/INSPECT_R03_MANIFEST.json').read_text())
+          expected={'index.html':'2bf0bae667a5df698f1ed821f899214f2b1479d09fe368fd4363e3ef6b813d42','runtime.js':'c0a4502df9eba668c59398328bfe3ea72a1f2c0cc79d15693329b99660168663','studio.css':'72d082d5240ec8c0e2ba115f727b624d9699fa4e0f067bd1ada09aa3151cae14','studio.js':'317a3a5f2de487d888ce6de954ff676fd95ae3b4b05510d7662f1a6af50546e5','young-coral-r01/index.html':'7ddf22e3b5b030b50e6c57ba48022990ade26b1ca41a897ad31aca778801a854'}
+          assert m['files']==expected,('not locally tested source bytes',m['files'])
+          PY
+      - name: Install browser for actual-shader input tests
+        run: |
+          python -m pip install playwright==1.55.0
+          python -m playwright install --with-deps chromium
+      - name: Actual HTTP camera light and regression tests
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 --directory /tmp >/tmp/inspect-http.log 2>&1 &
+          python /tmp/inspect-tools/qa.py http://127.0.0.1:8765/inspect-site/ /tmp/inspect-evidence/prepublish
+      - name: Publish only verified coral inspection files
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages --depth=1
+          git checkout -B inspect-publish origin/gh-pages
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json,shutil
+          p=Path('coral-mother-core-seed-r01');s=Path('/tmp/inspect-site');m=json.loads((s/'INSPECT_R03_MANIFEST.json').read_text())
+          for n,h in m['base'].items():assert hashlib.sha256((p/n).read_bytes()).hexdigest()==h,('concurrent coral change; stop',n)
+          a=p/'archive-color-r02-before-inspect-r03';a.mkdir(exist_ok=True)
+          for n in ['index.html','runtime.js']:shutil.copyfile(p/n,a/n)
+          for n in ['index.html','runtime.js','young-coral-r01/index.html','young-coral-r01/baseline-color-r02.html','young-coral-r01/BRANCH_SOURCE_STUDY.json','INSPECT_R03_MANIFEST.json']:shutil.copyfile(s/n,p/n)
+          d=p/'young-coral-r01/inspection-r03-source';d.mkdir(exist_ok=True)
+          for f in Path('/tmp/inspect-tools').glob('*'):
+              if f.is_file():shutil.copyfile(f,d/f.name)
+          shutil.copyfile(s/'INSPECT_R03_MANIFEST.json','/tmp/inspect-evidence/INSPECT_R03_MANIFEST.json')
+          PY
+          git config user.name 'Coral Mother Inspection'
+          git config user.email 'actions@users.noreply.github.com'
+          git add coral-mother-core-seed-r01/index.html coral-mother-core-seed-r01/runtime.js coral-mother-core-seed-r01/young-coral-r01/index.html coral-mother-core-seed-r01/young-coral-r01/baseline-color-r02.html coral-mother-core-seed-r01/young-coral-r01/BRANCH_SOURCE_STUDY.json coral-mother-core-seed-r01/INSPECT_R03_MANIFEST.json coral-mother-core-seed-r01/archive-color-r02-before-inspect-r03/ coral-mother-core-seed-r01/young-coral-r01/inspection-r03-source/
+          git commit -m 'feat(coral): live manual inspection, 1-100x zoom, reversible dual lights and video-source knowledge'
+          git push origin HEAD:gh-pages
+          git rev-parse HEAD > /tmp/inspect-evidence/PUBLISHED_COMMIT.txt
+      - name: Verify public bytes then actual public interactions
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from urllib.request import Request,urlopen
+          import json,hashlib,time
+          m=json.loads(Path('/tmp/inspect-site/INSPECT_R03_MANIFEST.json').read_text());base='https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-core-seed-r01/';ready=False
+          for _ in range(85):
+              try:
+                  checks={n:hashlib.sha256(urlopen(Request(base+n+'?verify='+str(time.time_ns()),headers={'Cache-Control':'no-cache'}),timeout=20).read()).hexdigest()==h for n,h in m['files'].items()}
+                  if all(checks.values()):ready=True;break
+              except Exception as e:print(str(e),flush=True)
+              time.sleep(8)
+          assert ready,'Public delivery has not matched tested source'
+          Path('/tmp/inspect-evidence/PUBLIC_HASHES.json').write_text(json.dumps(checks,indent=2))
+          PY
+          python /tmp/inspect-tools/qa.py https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-core-seed-r01/ /tmp/inspect-evidence/public
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coral-inspect-r03-evidence
+          path: /tmp/inspect-evidence/
+          retention-days: 30
