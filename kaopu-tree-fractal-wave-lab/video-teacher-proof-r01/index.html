@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07100f">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:,">
+<title>KAOPU · Video Teacher 01 学习验证台 R01</title>
+<style>
+:root{--bg:#07100f;--panel:#101817;--line:#30413d;--ink:#eef5f2;--muted:#92a29d;--accent:#9fc2b1;--field:#6d95c9;--skeleton:#d6e0dc;--wood:#6ed3c2;--tip:#da7698;--surface:#d9d6cf}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft Yahei",sans-serif}button,input,select{font:inherit}
+header{min-height:68px;padding:10px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:14px}.title{font-size:18px;font-weight:650}.sub{font-size:10px;color:var(--muted);margin-top:2px}.tag{border:1px solid #435650;border-radius:999px;padding:4px 10px;font-size:9px;color:#bdcbc6;white-space:nowrap}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 390px;min-height:calc(100vh - 68px)}.stage{position:relative;min-height:760px;overflow:hidden;background:radial-gradient(circle at 50% 40%,#172724,#07100f 74%)}.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}.bar{position:absolute;z-index:7;left:10px;top:10px;right:10px;display:flex;gap:6px;flex-wrap:wrap}.bar button{border:1px solid #435650;background:#101a18e8;color:#e9f1ee;border-radius:6px;padding:7px 10px;min-height:36px;cursor:pointer}.bar button.on{background:#3b564d;border-color:#93afa2}.caption{position:absolute;z-index:5;left:14px;top:60px;max-width:720px;font-size:10px;color:#aab8b3;pointer-events:none;text-shadow:0 1px 8px #000}.caption b{display:block;color:#f2f7f4;font-size:14px;margin-bottom:2px}.info{position:absolute;z-index:5;left:14px;bottom:12px;font-size:9px;color:#a0b1ab;pointer-events:none}.badges{position:absolute;z-index:5;right:12px;bottom:12px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;pointer-events:none}.badge{border:1px solid #364943;background:#0b1211d9;border-radius:999px;padding:4px 7px;font-size:9px;color:#a8b8b2}.evidence{position:absolute;z-index:6;left:14px;right:14px;bottom:48px;display:none;gap:12px;align-items:stretch;background:#0d1514e8;border:1px solid #3b4e49;border-radius:9px;padding:10px;backdrop-filter:blur(10px)}.evidence.show{display:grid;grid-template-columns:minmax(260px,520px) 1fr}.evidence img{width:100%;height:190px;object-fit:cover;border-radius:6px;border:1px solid #30413d}.evidence h3{font-size:12px;margin:0 0 6px}.evidence p{font-size:10px;color:#aab7b2;margin:0 0 6px}.evidence strong{color:#e8efec}.error{position:absolute;z-index:10;left:14px;right:14px;top:118px;padding:12px;background:#3a1d24;border:1px solid #95506a;border-radius:7px;white-space:pre-wrap}.error[hidden]{display:none}
+.panel{background:var(--panel);border-left:1px solid var(--line);padding:17px 18px 26px;overflow:auto}.panel h2{font-size:14px;margin:0 0 5px}.note{font-size:10px;color:var(--muted);margin:0 0 13px}.gate{border:1px solid #344640;border-radius:8px;background:#0e1615;padding:10px 11px;margin-bottom:14px;font-size:10px;color:#aebdb7}.gate b{color:#e4ece9}.row{margin:0 0 13px}.row label{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#bcc9c4}.row output{color:#dce7e3;font-variant-numeric:tabular-nums}.row input,.row select{width:100%;margin-top:5px}.row input[type=range]{accent-color:var(--accent)}.row select{background:#14201d;color:#e4ece9;border:1px solid #40534e;border-radius:6px;padding:7px}.status{border-top:1px solid var(--line);padding-top:11px;margin-top:5px;font-size:10px;color:#a5b9b1;min-height:90px}.legend{font-size:9px;color:#84948f;margin-top:10px;line-height:1.8}.sw{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:4px}.field{background:var(--field)}.skeleton{background:var(--skeleton)}.wood{background:var(--wood)}.tip{background:var(--tip)}
+@media(max-width:840px){header{padding:10px 12px}.tag{display:none}.wrap{display:block}.stage{height:70svh;min-height:590px}.panel{border-left:0;border-top:1px solid var(--line);padding:15px}.caption{max-width:82%}.bar{gap:4px}.bar button{font-size:11px;padding:7px 8px}.badges{display:none}.evidence.show{grid-template-columns:1fr;max-height:64%;overflow:auto}.evidence img{height:145px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.0/examples/jsm/"}}</script>
+</head>
+<body>
+<header><div><div class="title">KAOPU · Video Teacher 01 学习验证台 R01</div><div class="sub">EVIDENCE → ENVELOPE → SKELETON → THICKNESS → TERMINAL → SURFACE</div></div><div class="tag">R02/R03 Clean Baseline · Teacher Proof Only</div></header>
+<div class="wrap">
+<main class="stage" id="stage">
+  <div class="bar">
+    <button id="evidenceBtn">老师证据</button><button data-mode="field">目标包络</button><button data-mode="skeleton">骨架</button><button data-mode="thickness">厚度</button><button data-mode="terminal">末端</button><button data-mode="surface" class="on">最终表面</button><button id="play">播放生长</button><button id="fit">适配视野</button><button id="auto">自动转动</button>
+  </div>
+  <div class="caption"><b>不靠汇报证明学习，靠六层工作台逐层验收</b>老师视频能直接证明的是：先有对象参考和空间包络，再有阶段骨架、厚度、圆钝末端和最终连续表面。它没有证明完整源算法，所以这里做“安全复述”，不伪造源码，不恢复 R04–R08。</div>
+  <div class="evidence" id="evidence"><img src="./evidence/contact_sheet.jpg" alt="Video Teacher 01 contact sheet"><div><h3>老师视频直接可见</h3><p><strong>0–5.5s：</strong>有层级的三维分枝、清晰空隙、圆钝末端、连续材质。</p><p><strong>6–11.5s：</strong>Data preparation、Space Colonization 与 L-System/Turtle 资料出现。</p><p><strong>12–24.4s：</strong>结构从稀疏锚点逐步增长到完整表面。</p><p><strong>禁止宣称：</strong>视频没有给出完整节点图、负载公式、资源网络或原作者源码。</p></div></div>
+  <div class="info" id="info">正在生成安全复述…</div>
+  <div class="badges"><span class="badge" id="segmentBadge">Segment --</span><span class="badge" id="tipBadge">Terminal --</span><span class="badge" id="fieldBadge">Field --</span><span class="badge" id="stageBadge">Surface</span></div>
+  <pre class="error" id="error" hidden></pre>
+</main>
+<aside class="panel">
+  <h2>Teacher Proof 总控</h2>
+  <p class="note">同一个 Core 分别演奏 Tree Score 与 Coral Score。共享流程，不共享对象参数。当前默认展示珊瑚 Score，因为老师视频的最终形体更接近珊瑚状殖体。</p>
+  <div class="gate"><b>本轮必须看见：</b><br>✓ Target / Envelope 只是条件，不直接连成乱线<br>✓ 骨架是无环父子图，不允许回头打结<br>✓ Thickness 在骨架正确后才出现<br>✓ Terminal 是独立组织层，不是无限细线<br>✓ Surface 隐藏调试骨架后仍能读出层级与方向<br>✓ Growth 改变真实可见拓扑，不是裁剪最终模型</div>
+  <div class="row"><label>对象 Score <output id="scoreO"></output></label><select id="score"><option value="coral">Coral · 扇团 / 圆钝末端</option><option value="tree">Tree · 主轴 / 合法侧枝</option></select></div>
+  <div class="row"><label>生长进度 <output id="growthO"></output></label><input id="growth" type="range" min="0" max="1" step=".005" value="1"></div>
+  <div class="row"><label>包络宽度 <output id="widthO"></output></label><input id="width" type="range" min=".65" max="1.35" step=".01" value="1"></div>
+  <div class="row"><label>包络深度 <output id="depthO"></output></label><input id="depth" type="range" min=".25" max="1.2" step=".01" value=".58"></div>
+  <div class="row"><label>分枝展开 <output id="spreadO"></output></label><input id="spread" type="range" min=".55" max="1.25" step=".01" value=".92"></div>
+  <div class="row"><label>末端密度 <output id="terminalO"></output></label><input id="terminal" type="range" min="1" max="4" step="1" value="3"></div>
+  <div class="row"><label>粗细传递 <output id="thicknessO"></output></label><input id="thickness" type="range" min=".55" max="1.35" step=".01" value=".92"></div>
+  <div class="status" id="status">等待工作台…</div>
+  <div class="legend"><span class="sw field"></span>Target / Envelope　<span class="sw skeleton"></span>Skeleton　<span class="sw wood"></span>Thickness / Surface　<span class="sw tip"></span>Terminal Organ</div>
+</aside>
+</div>
+<script type="module" src="./runtime.js"></script>
+</body>
+</html>
