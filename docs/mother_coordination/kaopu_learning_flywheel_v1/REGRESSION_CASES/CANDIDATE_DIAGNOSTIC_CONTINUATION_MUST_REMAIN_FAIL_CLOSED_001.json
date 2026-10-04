@@ -2,7 +2,7 @@
   "schema": "kaopu.mother-regression-case/2.0",
   "caseId": "DIAGNOSTIC-CONTINUATION-FAIL-CLOSED-001",
   "title": "Continuing independent diagnostics must not turn a failed gate into a pass",
-  "status": "CANDIDATE_LOCAL_REPLAY_PASSED_PRODUCTION_TRIAL_PENDING",
+  "status": "CANDIDATE_KUKO_PUBLIC_TRIAL_PASSED_NOT_GLOBALLY_ADOPTED",
   "active": false,
   "source": {
     "failedWorkflowRun": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37167179914",
@@ -11,7 +11,8 @@
     "candidateWorkflowRun": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37168616478",
     "candidateRunNumber": 24,
     "candidateHeadSha": "21e4a025b82fa8a32c1323ed83d3bee186150d76",
-    "routingReceipt": "https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-5975551770"
+    "routingReceipt": "https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-5975551770",
+    "gateRunReceipt": "https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-5975559293"
   },
   "failureClass": "VERIFIER_EVIDENCE_STARVATION",
   "failureDescription": "Both core cells failed in run 23 while the other six cells passed. In that revision, a failed assertion inside a diagnostic helper could stop the core cell before later material and first-entry observations were collected. The exact failed assertion is not available here; this candidate targets the source-confirmed evidence-starvation path, not a claimed root cause for run 23.",
@@ -45,5 +46,13 @@
     "unsafePrerequisite": "REJECT_AND_ABORT",
     "forcedProducerPassWithRecordedFailure": "REJECT"
   },
-  "activationRequirement": "Run the exact Kuko candidate in the public workflow, confirm all eight matrix cells and the aggregate, then obtain a routed Mother receipt before local adoption. Global adoption requires a separate trial in another Mother."
+  "publicTrial": {
+    "run": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37168616478",
+    "status": "SUCCESS",
+    "duration": "15m21s",
+    "matrixCellsPassed": 8,
+    "aggregate": "SUCCESS",
+    "artifactCount": 9
+  },
+  "activationRequirement": "Kuko-local implementation has a passed exact-subject public run. Keep this case inactive for other Mothers; global adoption requires a separate trial in another affected Mother and an independent receipt."
 }
