@@ -1,0 +1,21 @@
+<section id="axisLift" hidden>
+  <div class="experiment-head"><div><div class="eyebrow">三维工作台 · 从中轴向两侧展开</div><h2 id="liftTitle">04 多频羽化 · 中轴立体</h2></div><span class="quiet" id="liftStatus"></span></div>
+  <p class="quiet" id="liftCandidateNote">三维升档候选：原 q / d / c 驱动沿材料中轴展开的实体；新增截面深度为参数假设，未做生物结构验收。</p>
+  <div class="exp-grid">
+    <div>
+      <div class="exp-scene"><canvas id="liftCanvas" width="1080" height="720" aria-label="中轴与双侧体积的三维函数结构，可拖动旋转"></canvas><span class="scene-hint">拖动旋转 · 滚轮缩放 · 相机只观察三维对象</span></div>
+      <div class="exp-projections"><figure><canvas id="liftSide" width="600" height="240" aria-label="同一三维对象的正面投影"></canvas><figcaption>正面 · X / Y</figcaption></figure><figure><canvas id="liftTop" width="600" height="240" aria-label="同一三维对象的厚度投影"></canvas><figcaption>厚度 · X / Z</figcaption></figure></div>
+    </div>
+    <aside>
+      <div class="controls"><button id="liftPlay">播放小样</button><button id="liftReset">回到起点</button><button id="liftView">复位视角</button><button id="liftExport">保存三维谱</button></div>
+      <label for="liftTime">共同时间 · 原式 t</label><input id="liftTime" type="range" min="0" max="480" value="0"><div class="meta"><span id="liftClock">t = 0.000</span><span id="liftState">暂停</span></div>
+      <div class="controls"><button id="liftSpine" aria-pressed="true">显示中轴</button><button id="liftSections" aria-pressed="true">显示截面</button><button id="liftSurface" aria-pressed="true">显示实体</button><button id="liftLight" aria-pressed="true">冷暖光</button></div>
+      <label for="liftThickness">双侧体积厚度 <output id="liftThicknessValue">0.50</output></label><input id="liftThickness" type="range" min="0" max="100" value="50">
+      <label for="liftDepth">截面立体深度 <output id="liftDepthValue">0.50</output></label><input id="liftDepth" type="range" min="0" max="100" value="50">
+      <label for="liftMotion">深度运动幅度 <output id="liftMotionValue">1.00</output></label><input id="liftMotion" type="range" min="0" max="100" value="100">
+      <div class="score-route"><span>原式参数场</span><b>→</b><span>中轴 / 局部架</span><b>→</b><span>双侧立体截面</span><b>→</b><span>共同时间</span></div>
+      <p class="quiet" id="liftBoundary">保留老师的 q、d、c 函数关系；新增厚度与截面深度是可替换的三维候选参数，不代表真实胸腔、鳍或尾巴的生物测量。</p>
+      <details><summary>二维关系怎样升成三维</summary><pre id="liftFormula"></pre><p class="quiet">01–03 继续保留原二维运行。04/05 原程序仍保留在本工作台源码和历史版本中；这里只对这两项做三维升档。</p></details>
+    </aside>
+  </div>
+</section>
