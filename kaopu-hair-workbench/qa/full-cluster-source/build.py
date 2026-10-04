@@ -2,6 +2,7 @@ from pathlib import Path
 import json,base64,hashlib,os
 ROOT=Path(__file__).parent.parent
 ORIG=ROOT/'teacher-original'
+(ROOT/'dist').mkdir(exist_ok=True)
 modules={str(p.relative_to(ORIG/'js/app')).removesuffix('.js'):p.read_text() for p in sorted((ORIG/'js/app').rglob('*.js')) if p.name!='main.js'}
 paths=['data/models/bunnyUV.json','data/models/cloth.json']+[str(p.relative_to(ORIG)) for p in sorted((ORIG/'data/textures').glob('*.png'))]
 assets={p:('data:image/png;base64,'+base64.b64encode((ORIG/p).read_bytes()).decode() if p.endswith('.png') else (ORIG/p).read_text()) for p in paths}
@@ -81,7 +82,9 @@ public=html.replace('window.WORKBENCH_BUNDLE='+bundle_json+';window.ensureRabbit
 public=public.replace(fiber_embed,'',1).replace(groom_embed,'',1)
 assert 'window.GROOM_MODULE_HTML=' not in public
 assert 'window.FIBER_MODULE_HTML=' not in public
-module_dir=ROOT/'dist/c4d-fiber-study';module_dir.mkdir(exist_ok=True);(module_dir/'index.html').write_text(fiber_html)
+import shutil
+shutil.copytree(ROOT/'full-cluster/fiber-study',ROOT/'dist/c4d-fiber-study',dirs_exist_ok=True)
+shutil.copytree(ROOT/'full-cluster/groom-study',ROOT/'dist/houdini-groom-study',dirs_exist_ok=True)
 photo_data='data:image/jpeg;base64,'+base64.b64encode(reference).decode()
 assert public.count(photo_data)==1
 public=public.replace('src="'+photo_data+'"','data-reference-src="./catalog-assets/'+photo_name+'"',1)
