@@ -160,7 +160,7 @@ module.exports = async function fiberCatalog(browser, url, outDir, check) {
     await ready();
     await page.waitForTimeout(120);
     const othersBefore = await snapshot();
-    await page.waitForTimeout(400);
+    await page.waitForFunction(before=>{const r=document.getElementById('fiberFrame')?.contentWindow?.FiberStudy;return r?.stats.frames>=before.frames+2&&r.stats.time>before.time;},{frames:othersBefore.stats.frames,time:othersBefore.stats.time},{timeout:20000});
     const othersAfter = await snapshot();
     assert('fiber resumes previous playback and other objects remain paused', othersAfter.stats.active && othersAfter.stats.frames > othersBefore.stats.frames &&
       othersAfter.rabbitFrames === othersBefore.rabbitFrames && othersAfter.anemoneFrames === othersBefore.anemoneFrames && othersAfter.anemoneTime === othersBefore.anemoneTime, {othersBefore, othersAfter});

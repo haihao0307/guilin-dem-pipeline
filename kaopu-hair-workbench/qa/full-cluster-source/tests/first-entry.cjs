@@ -45,7 +45,7 @@ module.exports = async function firstEntry(browser, url, outDir, check) {
     await page.screenshot({ path: file, fullPage: false });
     report.screenshots.push({ phase, name, path: file });
   };
-  const visible = async selector => {
+  const visible = async (selector, allowDisabled=false) => {
     const row = await page.locator(selector).evaluate(el => {
       const r = el.getBoundingClientRect(), top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
       return { selector: el.id || el.outerHTML.slice(0, 160), x: r.x, y: r.y, width: r.width, height: r.height,
@@ -53,7 +53,7 @@ module.exports = async function firstEntry(browser, url, outDir, check) {
           r.width > 0 && r.height > 0 && r.left >= -1 && r.top >= -1 && r.right <= innerWidth + 1 && r.bottom <= innerHeight + 1 &&
           (el === top || el.contains(top)), disabled: !!el.disabled };
     });
-    assert(selector + ' is visible and unobstructed in the first screen', row.visible && !row.disabled, row);
+    assert(selector + ' is visible and unobstructed in the first screen', row.visible && (allowDisabled || !row.disabled), row);
     return row;
   };
   const tap = async selector => { await visible(selector); await page.locator(selector).tap(); };
@@ -347,7 +347,8 @@ module.exports = async function firstEntry(browser, url, outDir, check) {
     await wait(() => platform.module === 'anemone' && anemone.ready && anemone.renderer.frames > 0);
     await page.evaluate(() => { anemone.pauseOrbit(); anemone.pause(); anemone.seek(0); });
     for (const selector of ['[data-anemone-zoom="1"]', '[data-anemone-zoom="1.5"]', '[data-anemone-zoom="2"]',
-      '#anemoneZoomIn','#anemoneZoomOut','#anemoneLightingMode', '#anemone-warmPower', '#anemone-coolPower']) await visible(selector);
+      '#anemoneZoomIn','#anemoneLightingMode', '#anemone-warmPower', '#anemone-coolPower']) await visible(selector);
+    await visible('#anemoneZoomOut',true);assert('Anemone100% correctly disables decrement',await page.locator('#anemoneZoomOut').isDisabled());
     const anemoneInitial = await page.evaluate(() => ({ state: anemone.state, pixels: anemone.pixels(), drawers: ['controlsDrawer', 'learningDrawer', 'referenceDrawer'].map(id => document.getElementById(id).open) }));
     assert('Anemone quick controls work with optional drawers closed', anemoneInitial.drawers.every(x => !x) &&
       anemoneInitial.pixels.glError === 0 && anemoneInitial.pixels.changed > 500, anemoneInitial);
