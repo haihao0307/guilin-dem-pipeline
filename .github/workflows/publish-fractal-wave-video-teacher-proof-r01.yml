@@ -1,0 +1,180 @@
+name: Publish Video Teacher Proof in Original R03 Workbench
+
+on:
+  push:
+    branches:
+      - work/fractal-wave-video-teacher-proof-r01-20261004
+    paths:
+      - .github/workflows/publish-fractal-wave-video-teacher-proof-r01.yml
+      - kaopu-tree-fractal-wave-lab/workbench-r01.js
+      - kaopu-tree-fractal-wave-lab/teacher-proof-r01.js
+      - kaopu-tree-fractal-wave-lab/INTEGRATION_MANIFEST_R01.json
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-fractal-wave-video-teacher-proof-r01
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify in-place proof files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f kaopu-tree-fractal-wave-lab/index.html
+          test -f kaopu-tree-fractal-wave-lab/workbench-r01.js
+          test -f kaopu-tree-fractal-wave-lab/teacher-proof-r01.js
+          test -f kaopu-tree-fractal-wave-lab/INTEGRATION_MANIFEST_R01.json
+          grep -q 'videoTeacherProofView' kaopu-tree-fractal-wave-lab/workbench-r01.js
+          grep -q 'window.__videoTeacherProofReady' kaopu-tree-fractal-wave-lab/teacher-proof-r01.js
+          grep -q 'targetEnvelope: true' kaopu-tree-fractal-wave-lab/teacher-proof-r01.js
+          grep -q 'loadBackPropagation: true' kaopu-tree-fractal-wave-lab/teacher-proof-r01.js
+          grep -q 'separateWorkbench": false' kaopu-tree-fractal-wave-lab/INTEGRATION_MANIFEST_R01.json
+
+      - name: Publish into existing R03 workbench path
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC="$GITHUB_WORKSPACE"
+          git fetch origin gh-pages
+          git worktree add /tmp/gh-pages origin/gh-pages
+          cd /tmp/gh-pages
+          git switch -c publish-video-teacher-proof-r01
+          mkdir -p kaopu-tree-fractal-wave-lab
+          cp "$SRC/kaopu-tree-fractal-wave-lab/workbench-r01.js" kaopu-tree-fractal-wave-lab/workbench-r01.js
+          cp "$SRC/kaopu-tree-fractal-wave-lab/teacher-proof-r01.js" kaopu-tree-fractal-wave-lab/teacher-proof-r01.js
+          cp "$SRC/kaopu-tree-fractal-wave-lab/INTEGRATION_MANIFEST_R01.json" kaopu-tree-fractal-wave-lab/INTEGRATION_MANIFEST_R01.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-tree-fractal-wave-lab/workbench-r01.js kaopu-tree-fractal-wave-lab/teacher-proof-r01.js kaopu-tree-fractal-wave-lab/INTEGRATION_MANIFEST_R01.json
+          git diff --cached --quiet || git commit -m 'publish(fractal-wave): add video-teacher proof inside original R03 workbench'
+          for attempt in 1 2 3 4 5; do
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            sleep $((attempt * 3))
+          done
+          exit 1
+
+  verify-public:
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - name: Wait for public proof files
+        shell: python
+        run: |
+          import json,time,urllib.request
+          base='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tree-fractal-wave-lab/'
+          expected={
+            'workbench-r01.js':['videoTeacherProofView','视频老师验证','window.__videoTeacherProofReady'],
+            'teacher-proof-r01.js':['window.__videoTeacherProofReady','targetEnvelope: true','loadBackPropagation: true','terminalOrganization: true'],
+            'INTEGRATION_MANIFEST_R01.json':['VideoTeacherProof.R01','separateWorkbench','teacher.targetEnvelope']
+          }
+          report={'base':base,'attempts':0,'files':{}}
+          for attempt in range(1,151):
+            report['attempts']=attempt;ok=True;current={}
+            try:
+              for name,markers in expected.items():
+                req=urllib.request.Request(base+name+'?qa='+str(attempt),headers={'User-Agent':'KAOPU-VIDEO-PROOF-QA','Cache-Control':'no-cache'})
+                with urllib.request.urlopen(req,timeout=35) as response:
+                  data=response.read();status=response.status
+                text=data.decode('utf-8','replace');checks={m:(m in text) for m in markers}
+                current[name]={'status':status,'bytes':len(data),'markers':checks}
+                ok=ok and status==200 and all(checks.values())
+              report['files']=current
+              if ok: report['success']=True;break
+            except Exception as exc: report['last_error']=repr(exc)
+            time.sleep(10)
+          else: report['success']=False
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          if not report.get('success'): raise SystemExit('public proof files not ready')
+
+      - name: Install browser QA
+        run: |
+          python -m pip install --disable-pip-version-check playwright pillow
+          python -m playwright install --with-deps chromium
+
+      - name: Browser-test proof inside original workbench
+        shell: python
+        run: |
+          from pathlib import Path
+          import json,traceback
+          from PIL import Image,ImageStat
+          from playwright.sync_api import sync_playwright
+          root=Path('evidence-video-teacher-proof-r01');root.mkdir(exist_ok=True)
+          url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tree-fractal-wave-lab/'
+          report={'url':url,'checks':{},'errors':[]};C=report['checks']
+          def digest(path):
+            im=Image.open(path).convert('RGB');st=ImageStat.Stat(im)
+            return {'bytes':path.stat().st_size,'mean':sum(st.mean)/3,'stddev':sum(st.stddev)/3}
+          try:
+            with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True)
+              page=browser.new_page(viewport={'width':1440,'height':900},device_scale_factor=1)
+              page.on('pageerror',lambda e:report['errors'].append('pageerror: '+str(e)))
+              page.on('console',lambda m:report['errors'].append('console: '+m.text) if m.type=='error' else None)
+              page.goto(url+'?browserqa=video-proof-1',wait_until='domcontentloaded',timeout=120000)
+              page.wait_for_function('window.__videoTeacherProofReady===true',timeout=180000)
+              page.wait_for_timeout(1200)
+              C['sameOriginalWorkbench']=page.evaluate("location.pathname.endsWith('/kaopu-tree-fractal-wave-lab/') && !!document.querySelector('#native3Frame') && !!document.querySelector('#videoTeacherProofView')")
+              C['defaultProofMode']=page.evaluate("document.body.dataset.mode==='videoproof'")
+              state=page.evaluate('VideoTeacherProofR01.getState()')
+              sig=state['signature']
+              C['fourStages']=sig['stageCount']==4 and sig['targetEnvelope'] and sig['growthHistory'] and sig['terminalOrganization'] and sig['surfaceStage']
+              C['organizedHierarchy']=sig['segmentCount']>30 and sig['segmentCount']<420 and sig['terminalCount']>3 and sig['maxOrder']>=2
+              C['noBacktracking']=sig['backtrackCount']==0
+              C['loadBackprop']=sig['loadBackPropagation'] is True
+              C['notExactSourceClaim']=sig['exactTeacherSourceClaim'] is False and sig['speciesAssigned'] is False
+              page.evaluate("VideoTeacherProofR01.setStage('targets')")
+              page.wait_for_timeout(250)
+              C['targetStage']=page.evaluate("document.querySelector('[data-proof-stage=targets]').classList.contains('on')")
+              page.evaluate("VideoTeacherProofR01.setStage('skeleton')")
+              page.evaluate("VideoTeacherProofR01.setGrowth(0.55)")
+              page.wait_for_timeout(250)
+              C['growthHistoryControl']=page.evaluate("Math.abs(VideoTeacherProofR01.getState().params.growth-0.55)<0.001")
+              page.evaluate("VideoTeacherProofR01.setStage('thickness')")
+              page.wait_for_timeout(250)
+              page.evaluate("VideoTeacherProofR01.setStage('surface')")
+              page.evaluate("VideoTeacherProofR01.setGrowth(1)")
+              page.wait_for_timeout(400)
+              treeShot=root/'tree-proof-desktop.png';page.screenshot(path=str(treeShot),full_page=False)
+              C['treePixels']=digest(treeShot)['stddev']>10
+              treeSig=page.evaluate('VideoTeacherProofR01.getState().signature')
+              page.evaluate("VideoTeacherProofR01.setScore('coral')")
+              page.wait_for_timeout(500)
+              coralSig=page.evaluate('VideoTeacherProofR01.getState().signature')
+              C['separateScores']=treeSig['score']=='tree' and coralSig['score']=='coral' and treeSig['targetCount']!=coralSig['targetCount']
+              C['coralNoBacktracking']=coralSig['backtrackCount']==0
+              coralShot=root/'coral-proof-desktop.png';page.screenshot(path=str(coralShot),full_page=False)
+              C['coralPixels']=digest(coralShot)['stddev']>10
+              page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(650)
+              C['mobileNoOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+              mobile=root/'proof-mobile.png';page.screenshot(path=str(mobile),full_page=False)
+              C['mobilePixels']=digest(mobile)['stddev']>10
+              C['pageErrorsZero']=not report['errors']
+              report['states']={'tree':treeSig,'coral':coralSig}
+              report['screens']={'tree':digest(treeShot),'coral':digest(coralShot),'mobile':digest(mobile)}
+              browser.close()
+          except Exception:
+            report['failure']=traceback.format_exc()
+          (root/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          if report.get('failure') or not all(C.values()): raise SystemExit('video teacher proof QA failed')
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VIDEO_TEACHER_PROOF_R01_QA
+          path: evidence-video-teacher-proof-r01
+          if-no-files-found: error
+          retention-days: 90
