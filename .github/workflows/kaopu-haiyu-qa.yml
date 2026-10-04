@@ -36,6 +36,7 @@ jobs:
           HAIYU_QA_OUT: ${{ github.workspace }}/haiyu-r24-browser-results
         run: |
           node kaopu-haiyu-workbench/r24/tests/phase-volume.test.cjs kaopu-haiyu-workbench/r24
+          node kaopu-haiyu-workbench/r24/tests/angular-volume.test.cjs
           node kaopu-haiyu-workbench/r24/tests/browser-qa.cjs
       - name: Preserve browser verification evidence
         if: always()

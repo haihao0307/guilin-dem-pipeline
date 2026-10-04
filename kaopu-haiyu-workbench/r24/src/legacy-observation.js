@@ -19,7 +19,9 @@
   const initialCamera = () => state.kind === 'fish'
     ? { yaw: .4, pitch: .3, zoom: 1 }
     : { yaw: .58, pitch: .25, zoom: 1 };
-  const tools = document.createElement('div');
+  const tools = by('expCameraTools') || document.createElement('div');
+  // A downloaded single-file workbench can already contain the generated toolbar.
+  tools.textContent = ''; 
   tools.id = 'expCameraTools';
   tools.className = 'scene-tools';
   tools.hidden = true;
