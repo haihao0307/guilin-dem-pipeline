@@ -34,7 +34,6 @@ jobs:
             assert((await page.locator('#iqMeshCanvas').count())===0,'substitute mesh canvas still exists');
             await page.locator('#rotate').click();await wait(1200);
             const during=await page.evaluate(()=>KAOPU10.performance());
-            await page.screenshot({path:'r15-mobile-same-stone.png'});
             await page.locator('#rotate').click();await wait(300);
             const after=await page.evaluate(()=>KAOPU10.performance());
             const report={version:'R15',url,environment:'Public HTTPS Chromium 390px viewport + SwiftShader (not physical iPhone)',before,during,after,errors,checkedAt:new Date().toISOString()};
@@ -54,5 +53,4 @@ jobs:
           name: material-r15-same-stone-proof
           path: |
             R15_SAME_STONE_PROOF.json
-            r15-mobile-same-stone.png
           retention-days: 14
