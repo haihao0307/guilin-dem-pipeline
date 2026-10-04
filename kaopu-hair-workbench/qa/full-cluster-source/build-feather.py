@@ -17,7 +17,7 @@ escape=lambda s:s.replace('<','\\u003c').replace('>','\\u003e').replace('&','\\u
 embed='window.FEATHER_MODULE_HTML='+escape(json.dumps(module))+';\n'
 def augment(html,portable):
  html=html.replace('</head>','<style>'+css+'</style></head>',1)
- return html.replace('</body>','<script>'+(embed if portable else '')+runtime.replace('</script','<\\/script')+'</script></body>',1)
+ return ('<script>'+(embed if portable else '')+runtime.replace('</script','<\\/script')+'</script></body>').join(html.rsplit('</body>',1))
 public=augment(online,False);standalone=augment(offline,True)
 (ROOT/'dist/feather-integrated-candidate.html').write_text(public)
 (ROOT/'dist/feather-integrated-standalone.html').write_text(standalone)
