@@ -1,7 +1,7 @@
 {
   "schema": "KAOPU.fractal-wave.tree-workbench/1",
-  "name": "KAOPU Fractal Wave Tree Workbench R04",
-  "stage": "integrated_living_3d_tree_with_resource_flow_root_shoot_and_continuous_skin",
+  "name": "KAOPU Fractal Wave Tree Workbench R05",
+  "stage": "integrated_living_tree_with_organ_lifecycle_source_sink_secondary_growth",
   "grammarAnchors": {
     "treeLife": {
       "id": "TreeLifeR05.Pandanus",
@@ -42,6 +42,13 @@
       "id": "Living3DTree.R04",
       "path": "native-3d-life-r04/",
       "role": "Root/Shoot simultaneous growth, resource budget, continuous implicit skin, apical taper and leaf source interface",
+      "frozen": false,
+      "appliesToSpecies": false
+    },
+    "livingTreeR05": {
+      "id": "Living3DTree.R05",
+      "path": "native-3d-life-r05/",
+      "role": "fine twigs, leaf lifecycle, source-sink competition, reproductive sink, reserve pool and secondary growth",
       "frozen": false,
       "appliesToSpecies": false
     }
@@ -116,25 +123,56 @@
       "id": "root.environmentVoices",
       "source": "hydrotropism/gravity/lateral/surface-root/rock avoidance",
       "use": "let root tips choose 3D underground directions from local conditions"
+    },
+    {
+      "id": "life.leafLifecycle",
+      "source": "primordium -> unfolding -> mature -> senescent -> abscised",
+      "use": "make leaves time-dependent organs; mature leaves contribute carbon source"
+    },
+    {
+      "id": "life.sourceSinkCompetition",
+      "source": "leaf/root sources -> maintenance/reserve/root/shoot/cambium/fruit sinks",
+      "use": "let allocation choices change later topology and reproduction"
+    },
+    {
+      "id": "life.reproductiveSink",
+      "source": "maturity + reproductive investment",
+      "use": "spawn generic flower/fruit sink only when carbon budget permits"
+    },
+    {
+      "id": "life.secondaryGrowth",
+      "source": "segment age + support + cambium voice",
+      "use": "thicken older supported axes and feed the new radii back into the continuous implicit skin"
+    },
+    {
+      "id": "life.phyllotaxisVoices",
+      "source": "spiral / opposite / whorl-3 organ placement voices",
+      "use": "keep organ-arrangement techniques in the instrument while species Score selects the appropriate voice"
+    },
+    {
+      "id": "branch.fineTwigBudget",
+      "source": "reserve-limited fine twig extension",
+      "use": "add finer branching only when remaining resources can pay for it"
     }
   ],
   "treeKnowledgeKept": [
     "one Seed anchor with distinct Root and Shoot grammars",
     "Root and Shoot grow in the same life passes but do not mirror each other",
-    "resource availability participates in later topology",
-    "trunk/branch/root radii are evaluated from downstream support and life state",
-    "terminal shoot remains a meristematic growth zone instead of a hard cap",
-    "environment fields are separated: light above ground, water/rock/soil below ground",
-    "species-specific leaves, roots, flowers and fruits remain Score decisions rather than universal presets"
+    "mature leaves are carbon sources while roots, shoots, cambium and reproductive organs compete as sinks",
+    "storage reserve buffers source-sink mismatches across life passes",
+    "fine twigs are resource-limited rather than decorative density",
+    "terminal shoot remains an apical meristematic growth zone instead of a hard cap",
+    "continuous wood surface is derived from life-state radii, age and support",
+    "phyllotaxis, leaf shape, flower/fruit morphology and root strategy remain Species Score decisions"
   ],
   "boundaries": [
     "The exact KuKo 2D teacher remains frozen as the regression anchor.",
-    "Projection-Locked Lift R01 remains a bridge for validating the 2D interpretation.",
-    "Native 3D R03 remains the spatial branching grammar anchor.",
-    "Living R04 adds resource flow, root/shoot coupling and a continuous evaluation surface without changing the frozen teachers.",
-    "The implicit skin is a derived evaluation surface; the life graph and resource state remain the truth layer.",
-    "R04 is not assigned to Pandanus tectorius or any other species.",
-    "Generic R04 leaves only prove the organ/resource interface and are not a species leaf model.",
-    "Flowers/fruits, true hormone transport, hydraulic resistance and physical wind propagation remain incomplete."
+    "R03 remains the native 3D spatial branching anchor.",
+    "R04 remains the Root/Shoot + resource + continuous-skin anchor.",
+    "R05 adds organ lifecycle, source-sink competition, reproductive sink and secondary-growth voices without overwriting earlier anchors.",
+    "R05 generic leaves, flowers and fruits only prove organ/resource interfaces; they are not species morphology.",
+    "R05 source-sink accounting is causal but not a validated xylem/phloem transport simulator.",
+    "R05 is not assigned to Pandanus tectorius or any other species.",
+    "True hormones, hydraulic resistance, pollination, wood anatomy, annual rings and force-propagating wind remain incomplete."
   ]
 }
