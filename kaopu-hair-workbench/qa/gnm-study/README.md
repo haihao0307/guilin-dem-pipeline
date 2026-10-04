@@ -129,3 +129,11 @@ The numerical suite checks root and guide domains and sampled shaft clearance
 on selected neutral/expression/identity/pose cases. This is not a proof of
 collision freedom for every possible 636-dimensional coefficient combination.
 No physical millimetre calibration is claimed for native GNM coordinates.
+
+
+## R6 grooming refinement
+Three scalp styles share the original GNM root union and deforming triangle bindings. Position controls adjust a feathered neutral-template hairline and front/side/back root coverage. Density filters existing roots; thickness changes the strand radius. Each style caches its own surface-guided direction field. Scalp lift is reduced and varies by strand and region.
+
+The grooming panel shows one independent region at a time: scalp, brows or beard. Beard moustache/chin coverage is independently filtered. Facial guide samples are redistributed across the permitted surface prefix so they no longer accumulate repeated endpoints at a mask edge. Shared two-side lighting, 100–600% camera controls, expressions and original model dimensions remain available. Model units are not calibrated millimetres. This is a real-time grooming study, not photoreal skin.
+
+R6 numerical and browser evidence is recorded separately from R5. The browser helper retains existing model/camera/source tests; new grooming-editor assertions run in the existing touch group to keep each job within its original time budget. No workflow permission changes.

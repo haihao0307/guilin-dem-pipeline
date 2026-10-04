@@ -19,8 +19,8 @@ const point=(p,v)=>[p[v*3],p[v*3+1],p[v*3+2]];
 function polylineDistance(p,line,dimensions=3){let best=Infinity;for(let i=1;i<line.length;i++){const a=line[i-1],b=line[i];let d=0,n=0;for(let k=0;k<dimensions;k++){d+=(b[k]-a[k])**2;n+=(p[k]-a[k])*(b[k]-a[k]);}const u=clamp(n/(d||1),0,1);let v=0;for(let k=0;k<dimensions;k++)v+=(p[k]-a[k]-(b[k]-a[k])*u)**2;best=Math.min(best,Math.sqrt(v));}return best;}
 function lineHeight(x,line){for(let i=1;i<line.length;i++){const a=line[i-1],b=line[i];if(x>=a[0]&&x<=b[0])return a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0]);}return line[x<line[0][0]?0:line.length-1][1];}
 const DEFAULTS={
- brows:{visible:true,density:.85,length:.006,color:'#21170f',count:1600,segments:12,seed:9341,radius:.00015,roughness:.50},
- beard:{visible:false,density:.6,length:.0035,color:'#21170f',count:3600,segments:9,seed:5837,radius:.00012,roughness:.56},
+ brows:{visible:true,density:.85,length:.0045,width:1,color:'#21170f',count:1600,segments:12,seed:9341,radius:.00015,roughness:.50,specular:.025},
+ beard:{visible:false,density:.6,length:.0035,width:1,moustacheCoverage:1,chinCoverage:1,color:'#21170f',count:3600,segments:9,seed:5837,radius:.00012,roughness:.56,specular:.035},
 };
 
 class FacialRegion{
@@ -76,37 +76,47 @@ class FacialRegion{
   * Rebinding is needed only for a length change, never for density/color/pose. */
  bindGuides(){
   const {count,segments,length}=this.options,per=segments+1;
-  this.guideTriangles ||=new Int32Array(count*per);this.guideBarycentrics ||=new Float32Array(count*per*3);this.templateGuidePoints ||=new Float32Array(count*per*3);this.clippedGuideCount=0;
+  this.guideTriangles ||=new Int32Array(count*per);this.guideBarycentrics ||=new Float32Array(count*per*3);this.templateGuidePoints ||=new Float32Array(count*per*3);this.guideLengths ||=new Float32Array(count);this.clippedGuideCount=0;this.collapsedGuideCount=0;
   for(let i=0;i<count;i++){
-   let t=this.triangleIndices[i],b=Array.from(this.barycentrics.subarray(i*3,i*3+3)),stopped=false;
-   const direction=Array.from(this.directions.subarray(i*3,i*3+3)),step=length*(.75+.35*this.random[i])/segments;
-   for(let j=0;j<per;j++){
-    const q=i*per+j;this.guideTriangles[q]=t;this.guideBarycentrics.set(b,q*3);this.templateGuidePoints.set(this.walker.point(t,b),q*3);
-    if(j===segments||stopped)continue;
-    let next=this.walker.advance(t,b,step,direction);
-    if(this.mask(this.walker.point(next.t,next.b))<.025){
-     // Keep a finite safe prefix and never put a shaft endpoint on a lid/lip.
-     let lo=0,hi=step;next={t,b};for(let k=0;k<8;k++){const mid=(lo+hi)/2,probe=this.walker.advance(t,b,mid,direction);if(this.mask(this.walker.point(probe.t,probe.b))>=.025){lo=mid;next=probe;}else hi=mid;}stopped=true;this.clippedGuideCount++;
-    }
-    t=next.t;b=next.b;
+   const rootT=this.triangleIndices[i],rootB=Array.from(this.barycentrics.subarray(i*3,i*3+3)),direction=Array.from(this.directions.subarray(i*3,i*3+3));
+   // First find the actual permitted prefix. Then redistribute all samples on
+   // that prefix, instead of piling repeated endpoints against the mask edge.
+   const requested=length*(.48+.62*this.random[i]),step=requested/segments;let t=rootT,b=rootB,allowed=0;
+   for(let j=0;j<segments;j++){
+    let next=this.walker.advance(t,b,step,direction),used=step;
+    if(this.mask(this.walker.point(next.t,next.b))<.025){let lo=0,hi=step;next={t,b};for(let k=0;k<10;k++){const mid=(lo+hi)/2,probe=this.walker.advance(t,b,mid,direction);if(this.mask(this.walker.point(probe.t,probe.b))>=.025){lo=mid;next=probe;}else hi=mid;}used=lo;this.clippedGuideCount++;allowed+=used;break;}
+    allowed+=used;t=next.t;b=next.b;
    }
+   this.guideLengths[i]=allowed;if(allowed<.00003)this.collapsedGuideCount++;
+   t=rootT;b=rootB;for(let j=0;j<per;j++){const q=i*per+j;this.guideTriangles[q]=t;this.guideBarycentrics.set(b,q*3);this.templateGuidePoints.set(this.walker.point(t,b),q*3);if(j<segments){const next=this.walker.advance(t,b,allowed/segments,direction);t=next.t;b=next.b;}}
   }
  }
+
  createBuffers(){
   const {count,segments}=this.options,per=segments+1,n=count*per*2;this.p=new Float32Array(n*3);this.t=new Float32Array(n*3);this.n=new Float32Array(n*3);this.latestPoints=new Float32Array(count*per*3);this.currentRoots=new Float32Array(count*3);
   const sides=new Float32Array(n),along=new Float32Array(n),random=new Float32Array(n),indices=new Uint32Array(count*segments*6);let ix=0;
   for(let i=0;i<count;i++){for(let j=0;j<per;j++)for(let k=0;k<2;k++){const q=(i*per+j)*2+k;sides[q]=k?1:-1;along[q]=j/segments;random[q]=this.random[i];}for(let j=0;j<segments;j++){const a=(i*per+j)*2;for(const q of [a,a+1,a+2,a+1,a+3,a+2])indices[ix++]=q;}}
   for(const [name,array]of [['position',this.p],['tangent',this.t],['scalpNormal',this.n]])this.geometry.setAttribute(name,new THREE.BufferAttribute(array,3).setUsage(THREE.DynamicDrawUsage));
-  this.geometry.setAttribute('strandSide',new THREE.BufferAttribute(sides,1));this.geometry.setAttribute('along',new THREE.BufferAttribute(along,1));this.geometry.setAttribute('strandRandom',new THREE.BufferAttribute(random,1));this.geometry.setIndex(new THREE.BufferAttribute(indices,1));
+  this.geometry.setAttribute('strandSide',new THREE.BufferAttribute(sides,1));this.geometry.setAttribute('along',new THREE.BufferAttribute(along,1));this.geometry.setAttribute('strandRandom',new THREE.BufferAttribute(random,1));this.fullIndices=indices;this.visibleIndices=new Uint32Array(indices.length);this.visibleIndex=new THREE.BufferAttribute(this.visibleIndices,1).setUsage(THREE.DynamicDrawUsage);this.geometry.setIndex(this.visibleIndex);
  }
- applyDrawRange(){this.activeCount=Math.round(this.options.count*this.options.density);this.geometry.setDrawRange(0,this.activeCount*this.options.segments*6);if(this.mesh)this.mesh.visible=!!this.options.visible;}
+ applyDrawRange(){
+  const limit=Math.round(this.options.count*this.options.density),per=this.options.segments*6;let offset=0;this.activeCount=0;this.activeMoustacheCount=0;this.activeChinCount=0;
+  for(let i=0;i<limit;i++){
+   const coverage=this.name==='beard'?(this.rootKinds[i]?this.options.moustacheCoverage:this.options.chinCoverage):1;
+   const value=((Math.imul(i+1,1597334677)>>>0)%1048576)/1048576;
+   if(value>=coverage)continue;
+   this.visibleIndices.set(this.fullIndices.subarray(i*per,(i+1)*per),offset);offset+=per;this.activeCount++;if(this.rootKinds[i])this.activeMoustacheCount++;else this.activeChinCount++;
+  }
+  this.visibleIndex.needsUpdate=true;this.geometry.setDrawRange(0,offset);if(this.mesh)this.mesh.visible=!!this.options.visible;
+ }
+
  update(positions,normals){
   const start=performance.now(),{count,segments}=this.options,per=segments+1,tr=this.model.triangles;this.minNormalLength=Infinity;this.minSignedSurfaceOffset=Infinity;
   for(let i=0;i<count;i++)for(let j=0;j<per;j++){
    const q=i*per+j,triangle=this.guideTriangles[q],ids=[0,1,2].map(k=>tr[triangle*3+k]*3);let surface=[0,0,0],normal=[0,0,0];
    for(let k=0;k<3;k++)for(let a=0;a<3;a++){surface[a]+=positions[ids[k]+a]*this.guideBarycentrics[q*3+k];normal[a]+=normals[ids[k]+a]*this.guideBarycentrics[q*3+k];}
    this.minNormalLength=Math.min(this.minNormalLength,Math.hypot(...normal));normal=normalize(normal);if(j===0)this.currentRoots.set(surface,i*3);
-   const s=j/segments,lift=.00013+(this.name==='brows'?.00038*Math.sin(Math.PI*s):.00048*s)+.00012*s*s*this.random[i];
+   const s=j/segments,lift=.00013+(this.name==='brows'?.00025*Math.sin(Math.PI*s):(.00022+this.options.length*.19)*s)+.00009*s*s*this.random[i];
    const a=point(positions,tr[triangle*3]),b=point(positions,tr[triangle*3+1]),c=point(positions,tr[triangle*3+2]),faceNormal=normalize(cross(sub(b,a),sub(c,a)));this.minSignedSurfaceOffset=Math.min(this.minSignedSurfaceOffset,lift*dot(normal,faceNormal));
    for(let a=0;a<3;a++)this.latestPoints[q*3+a]=surface[a]+normal[a]*lift;
    for(let k=0;k<2;k++){const v=q*6+k*3;for(let a=0;a<3;a++){this.p[v+a]=this.latestPoints[q*3+a];this.n[v+a]=normal[a];}}
@@ -118,13 +128,22 @@ class FacialRegion{
   }
   for(const name of ['position','tangent','scalpNormal'])this.geometry.attributes[name].needsUpdate=true;this.surfacePositions=positions;this.surfaceNormals=normals;this.lastUpdateMs=performance.now()-start;
  }
- setAppearance(patch={}){const oldLength=this.options.length;for(const name of ['visible','color','roughness'])if(patch[name]!==undefined)this.options[name]=patch[name];if(Number.isFinite(patch.density))this.options.density=clamp(patch.density,0,1);if(Number.isFinite(patch.length))this.options.length=clamp(patch.length,.0008,this.name==='brows'?.012:.008);if(patch.color)this.material.uniforms.hairColor.value.set(patch.color);this.material.uniforms.roughness.value=this.options.roughness;this.applyDrawRange();if(oldLength!==this.options.length){this.bindGuides();this.update(this.surfacePositions,this.surfaceNormals);}}
+ setAppearance(patch={}){
+  const oldLength=this.options.length;
+  for(const name of ['visible','color','roughness'])if(patch[name]!==undefined)this.options[name]=patch[name];
+  for(const name of ['density','moustacheCoverage','chinCoverage'])if(Number.isFinite(patch[name]))this.options[name]=clamp(patch[name],0,1);
+  if(Number.isFinite(patch.width))this.options.width=clamp(patch.width,.5,2);
+  if(Number.isFinite(patch.length))this.options.length=clamp(patch.length,.0008,this.name==='brows'?.012:.008);
+  if(patch.color)this.material.uniforms.hairColor.value.set(patch.color);this.material.uniforms.roughness.value=this.options.roughness;this.material.uniforms.radius.value=this.options.radius*this.options.width;this.applyDrawRange();
+  if(oldLength!==this.options.length){this.bindGuides();this.update(this.surfacePositions,this.surfaceNormals);}
+ }
+
  diagnostics(){
   const {count,segments}=this.options,per=segments+1,m=this.model,bits=new Uint32Array(this.latestPoints.buffer);let invalidTriangles=0,invalidTemplateRoots=0,minWeight=1,maxWeight=0,maxSumError=0,maxRootSurfaceDistance=0,rootHash=2166136261,moustacheCount=0,minEyeGap=Infinity,minLipGap=Infinity,invalidGuideTriangles=0,invalidTemplateGuidePoints=0,minGuideEyeGap=Infinity,minGuideLipGap=Infinity;
   for(let i=0;i<count;i++){const t=this.triangleIndices[i];if(t<0||t>=m.triangles.length/3||[0,1,2].some(k=>m.componentId[m.triangles[t*3+k]]!==0))invalidTriangles++;const b=this.barycentrics.subarray(i*3,i*3+3);maxSumError=Math.max(maxSumError,Math.abs(b[0]+b[1]+b[2]-1));for(const w of b){minWeight=Math.min(minWeight,w);maxWeight=Math.max(maxWeight,w);}const template=Array.from(this.templateRoots.subarray(i*3,i*3+3));if(!this.mask(template))invalidTemplateRoots++;minEyeGap=Math.min(minEyeGap,polylineDistance(template,template[0]<0?this.landmarks.leftEye:this.landmarks.rightEye));minLipGap=Math.min(minLipGap,polylineDistance(template,this.landmarks.upperLip),polylineDistance(template,this.landmarks.lowerLip));
    let distance=0;for(let a=0;a<3;a++){distance+=(this.latestPoints[i*per*3+a]-this.currentRoots[i*3+a])**2;rootHash=Math.imul(rootHash^bits[i*per*3+a],16777619);}maxRootSurfaceDistance=Math.max(maxRootSurfaceDistance,Math.sqrt(distance));moustacheCount+=this.rootKinds[i];}
   for(let q=0;q<this.guideTriangles.length;q++){const triangle=this.guideTriangles[q],p=Array.from(this.templateGuidePoints.subarray(q*3,q*3+3));if([0,1,2].some(k=>m.componentId[m.triangles[triangle*3+k]]!==0))invalidGuideTriangles++;if(!this.mask(p))invalidTemplateGuidePoints++;minGuideEyeGap=Math.min(minGuideEyeGap,polylineDistance(p,p[0]<0?this.landmarks.leftEye:this.landmarks.rightEye));minGuideLipGap=Math.min(minGuideLipGap,polylineDistance(p,this.landmarks.upperLip),polylineDistance(p,this.landmarks.lowerLip));}
-  return {region:this.name,visible:this.mesh.visible,count,activeCount:this.activeCount,density:this.options.density,length:this.options.length,color:this.options.color,segments,vertices:this.p.length/3,triangles:this.geometry.drawRange.count/3,candidateTriangleCount:this.candidateTriangleCount,invalidGuideTriangles,invalidTemplateGuidePoints,clippedGuideCount:this.clippedGuideCount,minSignedSurfaceOffset:this.minSignedSurfaceOffset,minTemplateGuideEyeGap:minGuideEyeGap,minTemplateGuideLipGap:minGuideLipGap,invalidTriangles,invalidTemplateRoots,minWeight,maxWeight,maxSumError,maxRootSurfaceDistance,rootHash:rootHash>>>0,finite:this.p.every(Number.isFinite)&&this.t.every(Number.isFinite)&&this.n.every(Number.isFinite),minScalpNormalLength:this.minNormalLength,minTemplateEyeGap:minEyeGap,minTemplateLipGap:minLipGap,moustacheCount,chinCount:this.name==='beard'?count-moustacheCount:0,radius:this.material.uniforms.radius.value,lighting:strandLightingDiagnostics(this.material),lastUpdateMs:this.lastUpdateMs};
+  return {width:this.options.width,moustacheCoverage:this.options.moustacheCoverage,chinCoverage:this.options.chinCoverage,activeMoustacheCount:this.activeMoustacheCount,activeChinCount:this.activeChinCount,collapsedGuideCount:this.collapsedGuideCount,region:this.name,visible:this.mesh.visible,count,activeCount:this.activeCount,density:this.options.density,length:this.options.length,color:this.options.color,segments,vertices:this.p.length/3,triangles:this.geometry.drawRange.count/3,candidateTriangleCount:this.candidateTriangleCount,invalidGuideTriangles,invalidTemplateGuidePoints,clippedGuideCount:this.clippedGuideCount,minSignedSurfaceOffset:this.minSignedSurfaceOffset,minTemplateGuideEyeGap:minGuideEyeGap,minTemplateGuideLipGap:minGuideLipGap,invalidTriangles,invalidTemplateRoots,minWeight,maxWeight,maxSumError,maxRootSurfaceDistance,rootHash:rootHash>>>0,finite:this.p.every(Number.isFinite)&&this.t.every(Number.isFinite)&&this.n.every(Number.isFinite),minScalpNormalLength:this.minNormalLength,minTemplateEyeGap:minEyeGap,minTemplateLipGap:minLipGap,moustacheCount,chinCount:this.name==='beard'?count-moustacheCount:0,radius:this.material.uniforms.radius.value,lighting:strandLightingDiagnostics(this.material),lastUpdateMs:this.lastUpdateMs};
  }
  dispose(){this.geometry.dispose();this.material.dispose();}
 }
