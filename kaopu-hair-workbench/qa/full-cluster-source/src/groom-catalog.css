@@ -1,0 +1,15 @@
+/* Narrow fourth-object host. Preserve the catalog grid and child UI unchanged. */
+#groomToolbar,#groomModule[hidden]{display:none}
+body[data-module=groom]{height:var(--groom-viewport-height,100dvh);overflow:hidden;overscroll-behavior:none}
+body[data-module=groom] #rabbitModule,body[data-module=groom] #anemoneModule,body[data-module=groom] #kukoModule{display:none!important}
+body[data-module=groom] header{height:calc(58px + env(safe-area-inset-top));padding:env(safe-area-inset-top) max(12px,env(safe-area-inset-right)) 0 max(12px,env(safe-area-inset-left));gap:12px}
+body[data-module=groom] header>:not(#catalogHomeButton):not(#groomToolbar){display:none!important}
+body[data-module=groom] #groomToolbar{display:flex;align-items:center;flex:1;min-width:0}
+body[data-module=groom] #catalogHomeButton{min-height:44px}
+#groomModule{position:relative;width:100%;height:calc(var(--groom-viewport-height,100dvh) - var(--groom-header-height,58px));min-width:0;min-height:0;overflow:hidden;background:#11150f}
+#groomFrame{display:block;width:100%;height:100%;border:0;background:#11150f}
+.groom-load-status{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center;background:#11150f;color:#c6d4bc}
+.groom-load-status p{max-width:35em;line-height:1.8;font-size:13px}
+#groomRetry{min-height:44px;padding:9px 18px}
+@media(max-width:650px){body[data-module=groom] header{gap:9px;padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}}
+@media(max-height:460px) and (orientation:landscape){body[data-module=groom] header{height:48px;padding-top:0}}
