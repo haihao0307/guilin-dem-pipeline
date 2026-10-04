@@ -3,6 +3,7 @@ on:
   push:
     branches: [gh-pages]
     paths:
+      - kaopu-haiyu-workbench/index.html
       - kaopu-haiyu-workbench/r23/index.html
       - kaopu-haiyu-workbench/r23/tests/browser-qa.cjs
       - .github/workflows/kaopu-haiyu-qa.yml
@@ -32,6 +33,7 @@ jobs:
         env:
           NODE_PATH: ${{ github.workspace }}/.haiyu-qa/node_modules
           HAIYU_HTML: ${{ github.workspace }}/kaopu-haiyu-workbench/r23/index.html
+          HAIYU_PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-haiyu-workbench/
           HAIYU_QA_OUT: ${{ github.workspace }}/haiyu-r23-browser-results
         run: node kaopu-haiyu-workbench/r23/tests/browser-qa.cjs
       - name: Preserve browser verification evidence
