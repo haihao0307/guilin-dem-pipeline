@@ -1,0 +1,42 @@
+{
+  "schema": "kaopu.diagnostic-assertion-staging-replay/1",
+  "trialId": "KUKO-DIAGNOSTIC-ASSERTION-STAGING-N70",
+  "status": "CANDIDATE_LOCAL_REPLAY_PASSED",
+  "subjects": {
+    "before": "c1a75170",
+    "candidate": "21e4a025",
+    "browserQa": "kaopu-hair-workbench/qa/full-cluster-source/tests/browser-qa.cjs",
+    "aggregate": "kaopu-hair-workbench/qa/full-cluster-source/tests/aggregate-groups.cjs",
+    "beforeBrowserQaSha256": "35a573191c000c446cf543fc550b688d40b8b00e2e7d212d045778555fdaf0ac",
+    "candidateBrowserQaSha256": "e6ae7c992f6fa67f204549d823c63619d6e291db41a94f6b81091b6eb602896e",
+    "candidateAggregateSha256": "65a50900a7553410d4fa3856652b5d63bb55bff964efa3ee6cc0c2bea6dd5218"
+  },
+  "hypothesis": "Independent diagnostic failures may continue collecting evidence, but every recorded failure and every failed or missing required helper must still reject the cell and aggregate.",
+  "sourceVerification": {
+    "total": 8,
+    "passed": 8,
+    "checks": [
+      {"name": "before has no nonfatal recorder", "pass": true},
+      {"name": "before passes fatal check into lighting helper", "pass": true},
+      {"name": "candidate declares nonfatal recorder", "pass": true},
+      {"name": "candidate passes recorder into lighting helper", "pass": true},
+      {"name": "candidate passes recorder into first-entry helper", "pass": true},
+      {"name": "candidate retains hard lighting verdict", "pass": true},
+      {"name": "candidate retains hard first-entry verdict", "pass": true},
+      {"name": "aggregate rejects every recorded failed test", "pass": true}
+    ]
+  },
+  "replay": {
+    "total": 7,
+    "passed": 7,
+    "cases": [
+      {"id": "old-fatal-negative-starves-later-evidence", "expectedAggregate": "REJECT", "observedAggregate": "REJECT", "expectedLaterEvidence": false, "observedLaterEvidence": false, "recordedFailures": ["directional separation"], "pass": true},
+      {"id": "staged-negative-collects-later-evidence-but-rejects", "expectedAggregate": "REJECT", "observedAggregate": "REJECT", "expectedLaterEvidence": true, "observedLaterEvidence": true, "recordedFailures": ["directional separation"], "pass": true},
+      {"id": "all-independent-checks-pass", "expectedAggregate": "PASS", "observedAggregate": "PASS", "expectedLaterEvidence": true, "observedLaterEvidence": true, "recordedFailures": [], "pass": true},
+      {"id": "unsafe-prerequisite-remains-fatal", "expectedAggregate": "REJECT", "observedAggregate": "REJECT", "expectedLaterEvidence": false, "observedLaterEvidence": false, "recordedFailures": ["safe prerequisite"], "pass": true},
+      {"id": "producer-pass-flag-cannot-hide-recorded-failure", "expectedAggregate": "REJECT", "observedAggregate": "REJECT", "expectedLaterEvidence": true, "observedLaterEvidence": true, "recordedFailures": ["directional separation"], "pass": true},
+      {"id": "missing-first-entry-helper-rejects", "expectedAggregate": "REJECT", "observedAggregate": "REJECT", "expectedLaterEvidence": true, "observedLaterEvidence": true, "recordedFailures": ["first-entry helper final verdict"], "pass": true},
+      {"id": "failed-lighting-helper-rejects", "expectedAggregate": "REJECT", "observedAggregate": "REJECT", "expectedLaterEvidence": true, "observedLaterEvidence": true, "recordedFailures": ["lighting helper final verdict"], "pass": true}
+    ]
+  }
+}
