@@ -230,7 +230,7 @@ module.exports = async function firstEntry(browser, url, outDir, check) {
         loaded: !!img?.complete && img.naturalWidth > 0, width: img?.naturalWidth, height: img?.naturalHeight,
         raster: !!img && /^data:image\/(jpeg|png|webp);base64,/.test(img.currentSrc) };
     }));
-    assert('home shows two decoded raster render thumbnails rather than SVG icons', thumbnails.length === 2 && thumbnails.every(t =>
+    assert('home shows three decoded raster render thumbnails in Rabbit Anemone Fiber order', thumbnails.length === 3 && thumbnails.map(t=>t.id).join(',')==='catalogRabbit,catalogAnemone,catalogFiber' && thumbnails.every(t =>
       t.images === 1 && !t.svg && t.loaded && t.raster && t.width >= 200 && t.height >= 150), thumbnails);
     await screenshot('home');
     await tap('#catalogRabbit');
@@ -347,7 +347,7 @@ module.exports = async function firstEntry(browser, url, outDir, check) {
     await wait(() => platform.module === 'anemone' && anemone.ready && anemone.renderer.frames > 0);
     await page.evaluate(() => { anemone.pauseOrbit(); anemone.pause(); anemone.seek(0); });
     for (const selector of ['[data-anemone-zoom="1"]', '[data-anemone-zoom="1.5"]', '[data-anemone-zoom="2"]',
-      '#anemoneLightingMode', '#anemone-warmPower', '#anemone-coolPower']) await visible(selector);
+      '#anemoneZoomIn','#anemoneZoomOut','#anemoneLightingMode', '#anemone-warmPower', '#anemone-coolPower']) await visible(selector);
     const anemoneInitial = await page.evaluate(() => ({ state: anemone.state, pixels: anemone.pixels(), drawers: ['controlsDrawer', 'learningDrawer', 'referenceDrawer'].map(id => document.getElementById(id).open) }));
     assert('Anemone quick controls work with optional drawers closed', anemoneInitial.drawers.every(x => !x) &&
       anemoneInitial.pixels.glError === 0 && anemoneInitial.pixels.changed > 500, anemoneInitial);
@@ -366,6 +366,38 @@ module.exports = async function firstEntry(browser, url, outDir, check) {
     }
     report.anemoneZooms = zooms;
     assert('three Anemone zoom levels visibly differ', new Set(zooms.map(x => x.pixels.hash)).size === 3, zooms);
+    const largeZoomHashes=[];
+    for(const expected of [2,3,4,5,6]){
+      await tap('#anemoneZoomIn');
+      const q=await page.evaluate(()=>({state:anemone.state,pixels:anemone.pixels(),projection:anemone.renderer.cameraProjection,label:document.getElementById('anemoneQuickZoomValue').textContent}));
+      assert('Anemone plus reaches '+expected*100+'% with real safe-distance projection',near(q.state.camera.distance,4.6/expected)&&q.label===expected*100+'%'&&q.pixels.glError===0&&q.pixels.changed>500&&q.projection.physicalDistance>=2,q);
+      largeZoomHashes.push(q.pixels.hash);
+    }
+    assert('Anemone600% caps plus and each step changes pixels',await page.locator('#anemoneZoomIn').isDisabled()&&new Set(largeZoomHashes).size===5,largeZoomHashes);
+    await screenshot('anemone-600-percent');
+    const anBox=await page.locator('#anemoneCanvas').boundingBox(),anX=anBox.x+anBox.width/2,anY=anBox.y+anBox.height/2;
+    const anPoints=(dx,dy)=>[{id:1,x:anX-30+dx,y:anY+dy,radiusX:3,radiusY:3,force:1},{id:2,x:anX+30+dx,y:anY+dy,radiusX:3,radiusY:3,force:1}];
+    await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:anPoints(0,0)});await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:anPoints(24,12)});await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    assert('Anemone native two-finger translation pans600% without scaling drift',await page.evaluate(()=>Math.abs(studioUI.zoom-6)<1e-5&&anemone.state.camera.pan.some(x=>Math.abs(x)>.01)&&anemone.pixels().glError===0));await screenshot('anemone-600-panned');
+    const highState=await page.evaluate(()=>anemone.exportState());
+    await tap('#anemoneCamera');await page.evaluate(s=>anemone.importState(s),highState);
+    assert('Anemone600% JSON restores exact projection',near(await page.evaluate(()=>studioUI.zoom),6)&&await page.evaluate(()=>anemone.pixels().glError===0));
+    await tap('#anemoneCamera');
+    assert('Anemone camera reset restores100% exact pixels',await page.evaluate(()=>anemone.pixels().hash)===anemoneInitial.pixels.hash);
+    await tap('[data-anemone-zoom="1.5"]');await tap('#anemoneZoomIn');
+    assert('Anemone step adds100 points to150 rather than multiplying',near(await page.evaluate(()=>studioUI.zoom),2.5));await tap('#anemoneCamera');
+    for(const color of ['blue','red','yellow','purple']){await tap('[data-cluster-color="'+color+'"]');assert('first-screen '+color+' palette changes real pixels',await page.evaluate(color=>anemone.material.palette===color&&anemone.pixels().glError===0,color));}
+    await tap('[data-cluster-color="green"]');
+    const bg=await page.evaluate(()=>{const r=anemone.renderer,g=r.gl,b=new Uint8Array(4);r.draw();g.readPixels(0,0,1,1,g.RGBA,g.UNSIGNED_BYTE,b);return Array.from(b)});
+    assert('Anemone shares accepted Rabbit neutral gray corner',bg.slice(0,3).every(x=>Math.abs(x-55)<=1)&&bg[0]===bg[1]&&bg[1]===bg[2],bg);
+    for(const id of ['anemone-swayAmplitude','anemone-flowSpeed'])await visible('#'+id);
+    const beforeSpeed=await page.evaluate(()=>{anemone.seek(3);anemone.set({paused:false,flowSpeed:0});return{state:anemone.state,pixels:anemone.pixels(),frames:anemone.renderer.frames}});
+    await page.waitForTimeout(350);
+    assert('zero water speed freezes actual geometry clock independently of camera',await page.evaluate(t=>anemone.state.time===t,beforeSpeed.state.time));
+    await page.locator('#anemone-flowSpeed').focus();await page.locator('#anemone-flowSpeed').press('ArrowRight');
+    await wait(()=>anemone.state.time>3.001);
+    assert('native speed control resumes the accumulated motion clock',await page.evaluate(()=>anemone.state.params.flowSpeed===.05&&anemone.state.time>3&&anemone.pixels().glError===0));
+    await page.evaluate(()=>{anemone.pause();anemone.set({flowSpeed:1});anemone.seek(0)});
     for (const key of ['warmPower', 'coolPower']) {
       const before = await page.evaluate(() => ({ state: anemone.state, pixels: anemone.pixels() }));
       await page.locator('#anemone-' + key).focus(); await page.locator('#anemone-' + key).press('ArrowLeft');

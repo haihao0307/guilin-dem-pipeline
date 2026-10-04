@@ -1,0 +1,1684 @@
+{
+  "format": "kaopu-anemone-yaw-certificate",
+  "version": 2,
+  "motionModel": "bounded-shared-yaw-2",
+  "generatedBy": "node full-cluster/src/anemone-safe-layout.js --audit",
+  "sourceSha256": {
+    "full-cluster/src/anemone-safe-layout.js": "0abfdd52453ffcdf2325dc140ce2ddfbce578b8116e17e9b0eb8e06bad7c7502",
+    "full-cluster/src/anemone-current.js": "b14e262e52bafd8b8a91e50a95c417c17bf9c3c765f5762cc2de97d1608010bb",
+    "baselines/r03-restored/src/anemone-core.js": "3e8bc2b2e1b4b07f911246cf5b23346330584cbc8f3d5ae371fad0c0b97d3722"
+  },
+  "rendererGeometrySha256": "12e533304f6c8eb049f5cc2aa01359614ffe3239c188672834f60ddc9b55cff8",
+  "independentAuditReference": {
+    "interTubeContinuousBound": 0.003692910697356693,
+    "bodyAfterSocketContinuousBound": 0.005844331704013637,
+    "nonlocalSelfContinuousBound": 0.026167131086901115,
+    "difference": "Reference reconstructs tangents from Float32 rest edges; actual kernel rotates the original analytic tangent. Compare within 1e-6; actual kernel margins below are authoritative."
+  },
+  "audit": {
+    "summary": {
+      "version": "bounded-shared-yaw-2",
+      "preset": {
+        "count": 240,
+        "length": 0.7,
+        "thickness": 0.03,
+        "curvature": 0.7,
+        "seed": 73
+      },
+      "certified": true,
+      "renderRings": 43,
+      "renderSegments": 42,
+      "solverSegments": 28,
+      "allowedAmplitude": 0.02,
+      "prefixFactor": 0.020202020202020204,
+      "yawRange": [
+        -0.3,
+        0.6
+      ],
+      "thetaGridStep": 0.02,
+      "thetaSampleCount": 46,
+      "maxLocalDisplacementBound": 0.005508630814881708,
+      "maxJointDisplacementBound": 0.1197224993800639,
+      "maxYawResponseCoefficient": 0.19035644760863699,
+      "maxLocalResponseCoefficient": 0.2726772253366445,
+      "numericalMargin": 1e-05,
+      "interTentacle": {
+        "minStaticClearance": 0.01045417059117577,
+        "minMotionClearance": 0.0036928723568988952,
+        "reservedMotionClearance": 0.003682872356898895,
+        "minPrefixRatio": 0.04108758937951906,
+        "examinedPairs": 16992,
+        "excludedStaticGapLowerBound": 0.03,
+        "excludedMotionGapLowerBound": 0.015175609418063844,
+        "excludedPrefixRatioLowerBound": 0.05501009474290034,
+        "worst": {
+          "tentacles": [
+            176,
+            231
+          ],
+          "segments": [
+            37,
+            23
+          ]
+        },
+        "worstTheta": -0.3
+      },
+      "selfContact": {
+        "minStaticClearance": 0.026191757608277102,
+        "minMotionClearance": 0.026167119358579374,
+        "reservedMotionClearance": 0.026157119358579374,
+        "examinedPairs": 153081,
+        "worst": {
+          "tentacle": 71,
+          "segments": [
+            0,
+            5
+          ]
+        },
+        "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard",
+        "worstTheta": -0.3
+      },
+      "body": {
+        "minStaticClearance": 0.005889590673000926,
+        "minMotionClearance": 0.005844331386927037,
+        "reservedMotionClearance": 0.005834331386927037,
+        "examinedPairs": 275270,
+        "worst": {
+          "tentacle": 227,
+          "segment": 3
+        },
+        "socketSegments": 3,
+        "socket": "First three render strips intentionally embed into shallow tissue; no watertight union is claimed",
+        "excludedStaticGapLowerBound": 0.25
+      },
+      "localBendGuard": {
+        "maxTurnBoundRadians": 0.0995164969803306,
+        "minCurvatureRadiusBound": 0.19336870808015127,
+        "minRadiusMargin": 0.16044526512497587,
+        "minAngleMargin": 0.4616926679640693,
+        "scope": "Conservative discrete solver-edge bend guard; not a proof of triangle manifold quality or local cap triangulation"
+      },
+      "proof": {
+        "kind": "offline continuous-interval capsule/triangle bounds",
+        "inter": "sampleGap - .01*(Ya+Yb) - K*(Ba+Bb)",
+        "self": "sampleGap - .01*(YlaterEnd-YearlierStart) - K*(BlaterEnd-BearlierStart)",
+        "body": "restGap - .6*Ystrip - K*Bstrip after socket strip 2",
+        "local": "Each normalized local tangent perturbation has norm <= A*u^2; K=A/(1-A/2)",
+        "reserve": "1e-5 is subtracted once for Float32 joints, shader parameter/radius/length rounding, and numerical distance error",
+        "runtime": "Fixed kernel fingerprint plus lightweight rest/endpoint geometry guards; no offline sweep at startup"
+      },
+      "limitations": [
+        "Only this exact geometry preset is accepted",
+        "Finite first-three-strip root socket is intentional",
+        "Local triangle manifold and watertight welding are not certified",
+        "Bounded kinematics is not a contact or physical fluid solver"
+      ]
+    },
+    "baseline": {
+      "version": "bounded-radial-prefix-1",
+      "allowedAmplitude": 0.06302649444678007,
+      "prefixFactor": 0.06507729121341703,
+      "interTentacle": {
+        "minStaticClearance": 0.019935346228229046,
+        "minMotionClearance": 0.003142963979374039,
+        "reservedMotionClearance": 0.003132963979374039,
+        "minPrefixRatio": 0.07668717618925687,
+        "examinedPairs": 327475,
+        "excludedStaticGapLowerBound": 0.1,
+        "excludedMotionGapLowerBound": 0.0645098095990013,
+        "excludedPrefixRatioLowerBound": 0.18336698247633448,
+        "worst": {
+          "tentacles": [
+            176,
+            231
+          ],
+          "segments": [
+            37,
+            23
+          ]
+        }
+      },
+      "selfContact": {
+        "minStaticClearance": 0.026191844955858645,
+        "minMotionClearance": 0.02297661913066633,
+        "reservedMotionClearance": 0.02296661913066633,
+        "examinedPairs": 153081,
+        "worst": {
+          "tentacle": 71,
+          "segments": [
+            29,
+            34
+          ]
+        },
+        "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+      },
+      "body": {
+        "minStaticClearance": 0.005889590673000926,
+        "minMotionClearance": 0.005875324329330721,
+        "reservedMotionClearance": 0.005865324329330721,
+        "examinedPairs": 60462,
+        "worst": {
+          "tentacle": 227,
+          "segment": 3
+        },
+        "socketSegments": 3,
+        "socket": "First three render strips intentionally embed into shallow tissue; no watertight union is claimed",
+        "excludedStaticGapLowerBound": 0.1
+      },
+      "localBendGuard": {
+        "maxTurnBoundRadians": 0.1382989043676371,
+        "minCurvatureRadiusBound": 0.13903629195643963,
+        "minRadiusMargin": 0.10611284900126422,
+        "minAngleMargin": 0.42291026057676284,
+        "scope": "Conservative discrete solver-edge bend guard; not a proof of triangle manifold quality or local cap triangulation"
+      }
+    },
+    "samples": [
+      {
+        "theta": -0.3,
+        "interTentacle": {
+          "minStaticClearance": 0.01045417059117577,
+          "minMotionClearance": 0.0036928723568988952,
+          "reservedMotionClearance": 0.003682872356898895,
+          "minPrefixRatio": 0.04108758937951906,
+          "examinedPairs": 16992,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              176,
+              231
+            ],
+            "segments": [
+              37,
+              23
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191757608277102,
+          "minMotionClearance": 0.026167119358579374,
+          "reservedMotionClearance": 0.026157119358579374,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": -0.27999999999999997,
+        "interTentacle": {
+          "minStaticClearance": 0.010769634764659773,
+          "minMotionClearance": 0.00386036782411615,
+          "reservedMotionClearance": 0.00385036782411615,
+          "minPrefixRatio": 0.041736702241261345,
+          "examinedPairs": 16890,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              176,
+              231
+            ],
+            "segments": [
+              37,
+              23
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.02619177089315101,
+          "minMotionClearance": 0.026167132643453283,
+          "reservedMotionClearance": 0.026157132643453283,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": -0.26,
+        "interTentacle": {
+          "minStaticClearance": 0.011007741829761254,
+          "minMotionClearance": 0.004098474889217631,
+          "reservedMotionClearance": 0.004088474889217632,
+          "minPrefixRatio": 0.04265946368070141,
+          "examinedPairs": 16769,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              176,
+              231
+            ],
+            "segments": [
+              37,
+              23
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191768483005206,
+          "minMotionClearance": 0.026167130233307478,
+          "reservedMotionClearance": 0.026157130233307478,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": -0.24,
+        "interTentacle": {
+          "minStaticClearance": 0.01131564459545887,
+          "minMotionClearance": 0.0044063776549152466,
+          "reservedMotionClearance": 0.004396377654915247,
+          "minPrefixRatio": 0.04385271176496809,
+          "examinedPairs": 16661,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              176,
+              231
+            ],
+            "segments": [
+              37,
+              23
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191776395708365,
+          "minMotionClearance": 0.026167138146010637,
+          "reservedMotionClearance": 0.026157138146010638,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": -0.21999999999999997,
+        "interTentacle": {
+          "minStaticClearance": 0.011692366482890827,
+          "minMotionClearance": 0.004783099542347204,
+          "reservedMotionClearance": 0.004773099542347205,
+          "minPrefixRatio": 0.04531266185492923,
+          "examinedPairs": 16559,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              176,
+              231
+            ],
+            "segments": [
+              37,
+              23
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.02619177854700609,
+          "minMotionClearance": 0.02616714029730836,
+          "reservedMotionClearance": 0.02615714029730836,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": -0.19999999999999998,
+        "interTentacle": {
+          "minStaticClearance": 0.012136832043691557,
+          "minMotionClearance": 0.005227565103147935,
+          "reservedMotionClearance": 0.005217565103147935,
+          "minPrefixRatio": 0.04703514615202984,
+          "examinedPairs": 16448,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              176,
+              231
+            ],
+            "segments": [
+              37,
+              23
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191789641399687,
+          "minMotionClearance": 0.02616715139170196,
+          "reservedMotionClearance": 0.02615715139170196,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": -0.18,
+        "interTentacle": {
+          "minStaticClearance": 0.012647525756042909,
+          "minMotionClearance": 0.005738258815499286,
+          "reservedMotionClearance": 0.005728258815499286,
+          "minPrefixRatio": 0.049014291394618395,
+          "examinedPairs": 16301,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              176,
+              231
+            ],
+            "segments": [
+              37,
+              23
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191796220261323,
+          "minMotionClearance": 0.026167157970563595,
+          "reservedMotionClearance": 0.026157157970563595,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": -0.15999999999999998,
+        "interTentacle": {
+          "minStaticClearance": 0.01322291184235861,
+          "minMotionClearance": 0.0063136449018149875,
+          "reservedMotionClearance": 0.006303644901814988,
+          "minPrefixRatio": 0.05124414582172736,
+          "examinedPairs": 16227,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              176,
+              231
+            ],
+            "segments": [
+              37,
+              23
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191804929834927,
+          "minMotionClearance": 0.0261671666801372,
+          "reservedMotionClearance": 0.0261571666801372,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": -0.13999999999999999,
+        "interTentacle": {
+          "minStaticClearance": 0.013861467850373212,
+          "minMotionClearance": 0.006952200909829589,
+          "reservedMotionClearance": 0.006942200909829589,
+          "minPrefixRatio": 0.05371880931341132,
+          "examinedPairs": 16151,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              176,
+              231
+            ],
+            "segments": [
+              37,
+              23
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191803717461184,
+          "minMotionClearance": 0.026167165467763456,
+          "reservedMotionClearance": 0.026157165467763456,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": -0.12,
+        "interTentacle": {
+          "minStaticClearance": 0.014561204116353553,
+          "minMotionClearance": 0.00765193717580993,
+          "reservedMotionClearance": 0.0076419371758099305,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 16117,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              176,
+              231
+            ],
+            "segments": [
+              37,
+              23
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191806861968227,
+          "minMotionClearance": 0.0261671686122705,
+          "reservedMotionClearance": 0.0261571686122705,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": -0.09999999999999998,
+        "interTentacle": {
+          "minStaticClearance": 0.015320453945935779,
+          "minMotionClearance": 0.008411187005392156,
+          "reservedMotionClearance": 0.008401187005392156,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 16070,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              176,
+              231
+            ],
+            "segments": [
+              37,
+              23
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.0261918177915659,
+          "minMotionClearance": 0.02616717954186817,
+          "reservedMotionClearance": 0.02615717954186817,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": -0.07999999999999999,
+        "interTentacle": {
+          "minStaticClearance": 0.016136947919725773,
+          "minMotionClearance": 0.00922768097918215,
+          "reservedMotionClearance": 0.009217680979182151,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 16030,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              176,
+              231
+            ],
+            "segments": [
+              37,
+              23
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191821334558812,
+          "minMotionClearance": 0.026167183084861084,
+          "reservedMotionClearance": 0.026157183084861084,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": -0.06,
+        "interTentacle": {
+          "minStaticClearance": 0.01700884010872617,
+          "minMotionClearance": 0.010099573168182548,
+          "reservedMotionClearance": 0.010089573168182549,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 16011,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              176,
+              231
+            ],
+            "segments": [
+              37,
+              23
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191820921697886,
+          "minMotionClearance": 0.026167182672000158,
+          "reservedMotionClearance": 0.026157182672000158,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": -0.03999999999999998,
+        "interTentacle": {
+          "minStaticClearance": 0.017933940698303487,
+          "minMotionClearance": 0.011024673757759864,
+          "reservedMotionClearance": 0.011014673757759864,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 16016,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              176,
+              231
+            ],
+            "segments": [
+              37,
+              23
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191834851614717,
+          "minMotionClearance": 0.02616719660191699,
+          "reservedMotionClearance": 0.02615719660191699,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": -0.019999999999999962,
+        "interTentacle": {
+          "minStaticClearance": 0.018910119465316698,
+          "minMotionClearance": 0.012000852524773075,
+          "reservedMotionClearance": 0.011990852524773075,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 16045,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              176,
+              231
+            ],
+            "segments": [
+              37,
+              23
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191840618157988,
+          "minMotionClearance": 0.02616720236846026,
+          "reservedMotionClearance": 0.02615720236846026,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0,
+        "interTentacle": {
+          "minStaticClearance": 0.019935346228229046,
+          "minMotionClearance": 0.013026079287685424,
+          "reservedMotionClearance": 0.013016079287685424,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 16088,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              176,
+              231
+            ],
+            "segments": [
+              37,
+              23
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191844955858645,
+          "minMotionClearance": 0.026167206706160916,
+          "reservedMotionClearance": 0.026157206706160917,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.020000000000000018,
+        "interTentacle": {
+          "minStaticClearance": 0.02100733758244811,
+          "minMotionClearance": 0.014098070641904489,
+          "reservedMotionClearance": 0.014088070641904489,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 16116,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              176,
+              231
+            ],
+            "segments": [
+              37,
+              23
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191845341569705,
+          "minMotionClearance": 0.026167207091871977,
+          "reservedMotionClearance": 0.026157207091871977,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.040000000000000036,
+        "interTentacle": {
+          "minStaticClearance": 0.02210203171448545,
+          "minMotionClearance": 0.015175609418063844,
+          "reservedMotionClearance": 0.015165609418063844,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 16162,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": null
+        },
+        "selfContact": {
+          "minStaticClearance": 0.02619185007642628,
+          "minMotionClearance": 0.026167211826728553,
+          "reservedMotionClearance": 0.026157211826728553,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.06,
+        "interTentacle": {
+          "minStaticClearance": 0.023222117184152513,
+          "minMotionClearance": 0.015175609418063844,
+          "reservedMotionClearance": 0.015165609418063844,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 16263,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": null
+        },
+        "selfContact": {
+          "minStaticClearance": 0.02619185086122838,
+          "minMotionClearance": 0.02616721261153065,
+          "reservedMotionClearance": 0.02615721261153065,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.08000000000000002,
+        "interTentacle": {
+          "minStaticClearance": 0.024357825774169447,
+          "minMotionClearance": 0.015175609418063844,
+          "reservedMotionClearance": 0.015165609418063844,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 16389,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": null
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191862942812696,
+          "minMotionClearance": 0.026167224693114968,
+          "reservedMotionClearance": 0.026157224693114968,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.10000000000000003,
+        "interTentacle": {
+          "minStaticClearance": 0.025514765893400845,
+          "minMotionClearance": 0.015175609418063844,
+          "reservedMotionClearance": 0.015165609418063844,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 16592,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": null
+        },
+        "selfContact": {
+          "minStaticClearance": 0.02619186814332752,
+          "minMotionClearance": 0.026167229893629792,
+          "reservedMotionClearance": 0.026157229893629792,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.12,
+        "interTentacle": {
+          "minStaticClearance": 0.026705900526398912,
+          "minMotionClearance": 0.015175609418063844,
+          "reservedMotionClearance": 0.015165609418063844,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 16871,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": null
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191867847935087,
+          "minMotionClearance": 0.02616722959823736,
+          "reservedMotionClearance": 0.02615722959823736,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.14,
+        "interTentacle": {
+          "minStaticClearance": 0.02792957026894181,
+          "minMotionClearance": 0.015175609418063844,
+          "reservedMotionClearance": 0.015165609418063844,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 17133,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": null
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191873575422336,
+          "minMotionClearance": 0.026167235325724608,
+          "reservedMotionClearance": 0.026157235325724608,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.16000000000000003,
+        "interTentacle": {
+          "minStaticClearance": 0.029184235509272304,
+          "minMotionClearance": 0.015175609418063844,
+          "reservedMotionClearance": 0.015165609418063844,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 17387,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": null
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191881144164344,
+          "minMotionClearance": 0.026167242894466616,
+          "reservedMotionClearance": 0.026157242894466616,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.18,
+        "interTentacle": {
+          "minStaticClearance": 0.03,
+          "minMotionClearance": 0.015175609418063844,
+          "reservedMotionClearance": 0.015165609418063844,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 17667,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": null
+        },
+        "selfContact": {
+          "minStaticClearance": 0.02619188312711541,
+          "minMotionClearance": 0.026167244877417683,
+          "reservedMotionClearance": 0.026157244877417683,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.2,
+        "interTentacle": {
+          "minStaticClearance": 0.03,
+          "minMotionClearance": 0.015175609418063844,
+          "reservedMotionClearance": 0.015165609418063844,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 17880,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": null
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191885310097345,
+          "minMotionClearance": 0.026167247060399617,
+          "reservedMotionClearance": 0.026157247060399617,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.22000000000000003,
+        "interTentacle": {
+          "minStaticClearance": 0.03,
+          "minMotionClearance": 0.015175609418063844,
+          "reservedMotionClearance": 0.015165609418063844,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 18117,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": null
+        },
+        "selfContact": {
+          "minStaticClearance": 0.02619189183351364,
+          "minMotionClearance": 0.02616725358381591,
+          "reservedMotionClearance": 0.02615725358381591,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.24000000000000005,
+        "interTentacle": {
+          "minStaticClearance": 0.03,
+          "minMotionClearance": 0.015175609418063844,
+          "reservedMotionClearance": 0.015165609418063844,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 18313,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": null
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191892448818362,
+          "minMotionClearance": 0.026167254199120634,
+          "reservedMotionClearance": 0.026157254199120634,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.26000000000000006,
+        "interTentacle": {
+          "minStaticClearance": 0.03,
+          "minMotionClearance": 0.015175609418063844,
+          "reservedMotionClearance": 0.015165609418063844,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 18545,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": null
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191901019052385,
+          "minMotionClearance": 0.026167262769354657,
+          "reservedMotionClearance": 0.026157262769354657,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.27999999999999997,
+        "interTentacle": {
+          "minStaticClearance": 0.03,
+          "minMotionClearance": 0.015175609418063844,
+          "reservedMotionClearance": 0.015165609418063844,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 18759,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": null
+        },
+        "selfContact": {
+          "minStaticClearance": 0.02619190400022472,
+          "minMotionClearance": 0.026167265750526993,
+          "reservedMotionClearance": 0.026157265750526994,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.3,
+        "interTentacle": {
+          "minStaticClearance": 0.03,
+          "minMotionClearance": 0.015175609418063844,
+          "reservedMotionClearance": 0.015165609418063844,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 18977,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": null
+        },
+        "selfContact": {
+          "minStaticClearance": 0.02619189952249348,
+          "minMotionClearance": 0.026167261272795752,
+          "reservedMotionClearance": 0.026157261272795752,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.32,
+        "interTentacle": {
+          "minStaticClearance": 0.03,
+          "minMotionClearance": 0.015175609418063844,
+          "reservedMotionClearance": 0.015165609418063844,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 19247,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": null
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191902902862104,
+          "minMotionClearance": 0.026167264653164376,
+          "reservedMotionClearance": 0.026157264653164376,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.34,
+        "interTentacle": {
+          "minStaticClearance": 0.029766479749896883,
+          "minMotionClearance": 0.015175609418063844,
+          "reservedMotionClearance": 0.015165609418063844,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 19514,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": null
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191910617851973,
+          "minMotionClearance": 0.026167272368154245,
+          "reservedMotionClearance": 0.026157272368154245,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.36000000000000004,
+        "interTentacle": {
+          "minStaticClearance": 0.02851204649806414,
+          "minMotionClearance": 0.015175609418063844,
+          "reservedMotionClearance": 0.015165609418063844,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 19742,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": null
+        },
+        "selfContact": {
+          "minStaticClearance": 0.02619191821387799,
+          "minMotionClearance": 0.02616727996418026,
+          "reservedMotionClearance": 0.026157279964180262,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.38000000000000006,
+        "interTentacle": {
+          "minStaticClearance": 0.027149543002313873,
+          "minMotionClearance": 0.015175609418063844,
+          "reservedMotionClearance": 0.015165609418063844,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 20007,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": null
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191922192405608,
+          "minMotionClearance": 0.02616728394270788,
+          "reservedMotionClearance": 0.02615728394270788,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.4000000000000001,
+        "interTentacle": {
+          "minStaticClearance": 0.025771630068369727,
+          "minMotionClearance": 0.015175609418063844,
+          "reservedMotionClearance": 0.015165609418063844,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 20272,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": null
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191926370963858,
+          "minMotionClearance": 0.02616728812126613,
+          "reservedMotionClearance": 0.02615728812126613,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.42,
+        "interTentacle": {
+          "minStaticClearance": 0.024393088932683545,
+          "minMotionClearance": 0.015175609418063844,
+          "reservedMotionClearance": 0.015165609418063844,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 20496,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": null
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191923085439186,
+          "minMotionClearance": 0.026167284835741458,
+          "reservedMotionClearance": 0.026157284835741458,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.44,
+        "interTentacle": {
+          "minStaticClearance": 0.023040132136311144,
+          "minMotionClearance": 0.015175609418063844,
+          "reservedMotionClearance": 0.015165609418063844,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 20771,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": null
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191932298002134,
+          "minMotionClearance": 0.026167294048304406,
+          "reservedMotionClearance": 0.026157294048304407,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.46,
+        "interTentacle": {
+          "minStaticClearance": 0.021714372651150112,
+          "minMotionClearance": 0.015175609418063844,
+          "reservedMotionClearance": 0.015165609418063844,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 21035,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": null
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191931092853445,
+          "minMotionClearance": 0.026167292843155717,
+          "reservedMotionClearance": 0.026157292843155718,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.48000000000000004,
+        "interTentacle": {
+          "minStaticClearance": 0.02041752215000168,
+          "minMotionClearance": 0.014375786075117976,
+          "reservedMotionClearance": 0.014365786075117976,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 21319,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              93,
+              127
+            ],
+            "segments": [
+              37,
+              22
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.02619193008639128,
+          "minMotionClearance": 0.026167291836693553,
+          "reservedMotionClearance": 0.026157291836693554,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.5,
+        "interTentacle": {
+          "minStaticClearance": 0.01915135926880226,
+          "minMotionClearance": 0.013109963524596053,
+          "reservedMotionClearance": 0.013099963524596053,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 21579,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              93,
+              127
+            ],
+            "segments": [
+              37,
+              21
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191939261278146,
+          "minMotionClearance": 0.026167301011580418,
+          "reservedMotionClearance": 0.026157301011580418,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.52,
+        "interTentacle": {
+          "minStaticClearance": 0.01791778520460231,
+          "minMotionClearance": 0.0118763894603961,
+          "reservedMotionClearance": 0.011866389460396101,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 21829,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              93,
+              127
+            ],
+            "segments": [
+              37,
+              21
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.02619193284350876,
+          "minMotionClearance": 0.026167294593811032,
+          "reservedMotionClearance": 0.026157294593811033,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.54,
+        "interTentacle": {
+          "minStaticClearance": 0.016718686504606586,
+          "minMotionClearance": 0.010677290760400377,
+          "reservedMotionClearance": 0.010667290760400377,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 22063,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              93,
+              127
+            ],
+            "segments": [
+              37,
+              21
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.02619193823249027,
+          "minMotionClearance": 0.026167299982792543,
+          "reservedMotionClearance": 0.026157299982792544,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.56,
+        "interTentacle": {
+          "minStaticClearance": 0.015556090079126558,
+          "minMotionClearance": 0.009514694334920349,
+          "reservedMotionClearance": 0.00950469433492035,
+          "minPrefixRatio": 0.05501009474290034,
+          "examinedPairs": 22265,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              93,
+              127
+            ],
+            "segments": [
+              37,
+              21
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191944009148104,
+          "minMotionClearance": 0.026167305759450376,
+          "reservedMotionClearance": 0.026157305759450376,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.5800000000000001,
+        "interTentacle": {
+          "minStaticClearance": 0.014432104150066235,
+          "minMotionClearance": 0.008390708405860026,
+          "reservedMotionClearance": 0.008380708405860027,
+          "minPrefixRatio": 0.05377526956502359,
+          "examinedPairs": 22486,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              93,
+              127
+            ],
+            "segments": [
+              37,
+              21
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191943997946023,
+          "minMotionClearance": 0.026167305748248295,
+          "reservedMotionClearance": 0.026157305748248295,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      },
+      {
+        "theta": 0.6000000000000001,
+        "interTentacle": {
+          "minStaticClearance": 0.013015519394847876,
+          "minMotionClearance": 0.006775145712435669,
+          "reservedMotionClearance": 0.00676514571243567,
+          "minPrefixRatio": 0.0498988015947871,
+          "examinedPairs": 22727,
+          "excludedStaticGapLowerBound": 0.03,
+          "excludedMotionGapLowerBound": 0.015175609418063844,
+          "excludedPrefixRatioLowerBound": 0.05501009474290034,
+          "worst": {
+            "tentacles": [
+              150,
+              184
+            ],
+            "segments": [
+              37,
+              21
+            ]
+          }
+        },
+        "selfContact": {
+          "minStaticClearance": 0.026191942502129164,
+          "minMotionClearance": 0.026167304252431436,
+          "reservedMotionClearance": 0.026157304252431436,
+          "examinedPairs": 153081,
+          "worst": {
+            "tentacle": 71,
+            "segments": [
+              0,
+              5
+            ]
+          },
+          "localContinuation": "Intervals with arc gap <= 3 original root radii are excluded; see localBendGuard"
+        }
+      }
+    ],
+    "kernelFingerprint": "ca6c123d"
+  }
+}

@@ -15,7 +15,7 @@ module.exports=async(page,out)=>{
       if(!s.includes(anchor))throw Error('Diagnostic diffuse anchor missing');
       s=s.replace(anchor,anchor+'studyComponent='+(kind==='ambient'?'base*vec3(.085+.20*coc)':'base*.85*r13Diffuse*teacherCoverage*sharp')+';');
      }else{
-      const pattern=kind==='thin'?/lit\+=(mix\(coloredReturn,milk,\.035\)[^;]+);/:/lit\+=(mix\(vec3\(1\.\),base,\.12\)\*r13Wet[^;]+);/;
+      const pattern=kind==='thin'?/lit\+=(r13Through\*sharp);/:/lit\+=(r13Wet\*\.85\*sharp);/;
       const match=s.match(pattern);if(!match)throw Error('Diagnostic '+kind+' anchor missing');s=s.replace(match[0],match[0]+'studyComponent='+match[1]+';');
      }
      const shoulder='if(r13LightingMode==1){float peak=max(max(lit.r,lit.g),lit.b);';

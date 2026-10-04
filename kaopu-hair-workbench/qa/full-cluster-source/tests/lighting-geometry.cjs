@@ -141,7 +141,7 @@ module.exports=async function lightingGeometry(browser,url,outDir,check) {
         window.__lightingQaFrames??={};window.__lightingQaFrames[object+'-'+name]={bytes,width:c.width,height:c.height};
         return {object,name,role,state,geometry,alphaMasks,vertexSources,pixels:{hash:hash(bytes),alphaHash,minRGB,maxRGB,channelStdDev,width:c.width,height:c.height,glError:g.getError()}};
       },{object,name,role});
-      if(value.vertexSources.length){value.vertexSourceSha256=value.vertexSources.map(hash);value.originalPrecisionVertexSha256=value.vertexSources.map(source=>hash(source.replace('uniform highp sampler2D joints;','uniform sampler2D joints;')));delete value.vertexSources;}
+      if(value.vertexSources.length){value.vertexSourceSha256=value.vertexSources.map(hash);value.geometryOnlyVertexSha256=value.vertexSources.map(source=>hash(source.replace('\nout vec3 tissueShape;out vec3 tubeAxis;','').replace('tissueShape=vec3(radius*profile,radius*(1.-.1*s)*(1.+.07*exp(-pow((s-.9)/.06,2.))),cap);tubeAxis=t;','').replace('tissueShape=vec3(0.);tubeAxis=vec3(0.,1.,0.);','')));value.originalPrecisionVertexSha256=value.vertexSources.map(source=>hash(source.replace('\nout vec3 tissueShape;out vec3 tubeAxis;','').replace('tissueShape=vec3(radius*profile,radius*(1.-.1*s)*(1.+.07*exp(-pow((s-.9)/.06,2.))),cap);tubeAxis=t;','').replace('tissueShape=vec3(0.);tubeAxis=vec3(0.,1.,0.);','').replace('uniform highp sampler2D joints;','uniform sampler2D joints;')));delete value.vertexSources;}
       assert(object+' '+name+' actual fixed-pose GPU pixels',value.pixels.glError===0&&Math.max(...value.pixels.channelStdDev)>4,value.pixels);
       report.shots.push(value);
       if(capture){const target=object==='rabbit'?page.frameLocator('#'+role+'Frame').locator('#canvasGL'):page.locator('#anemoneCanvas');const file=object+'-'+name+'.jpg';await target.screenshot({path:path.join(outDir,file),type:'jpeg',quality:88});report.screenshots.push(file);}
@@ -180,7 +180,7 @@ module.exports=async function lightingGeometry(browser,url,outDir,check) {
     await page.evaluate(()=>{platform.select('anemone');anemone.pause();anemone.seek(0);anemone.pauseOrbit();});
     await page.waitForFunction(()=>anemone.ready&&anemone.renderer.frames>=1);
     const anemone=await lampSet('anemone');
-    assert('actual material vertex uses explicit highp joint sampling',equal(anemone.both.vertexSourceSha256,['4659305efb5e081e788a706e52b05096c06965f8df60007ff9719f66557bd7cc','355fce73deb14be871c8f7d503812724dcf5ae4a747dc30bef62c090ef700f76']),anemone.both.vertexSourceSha256);
+    assert('actual material vertex carries bounded tissue radius and tangent',equal(anemone.both.vertexSourceSha256,['acfbf773c18d892c5c3b50f0bf15c7d7028a3a813f5fd57c836af7e9b1b597ed','5b339230f87211085b3d66c75cb79a102e83da3faf8ac980bf16974117b3f05a']),anemone.both.vertexSourceSha256);assert('removing optical varyings exactly restores prior vertex geometry and highp sampler source',equal(anemone.both.geometryOnlyVertexSha256,['4659305efb5e081e788a706e52b05096c06965f8df60007ff9719f66557bd7cc','355fce73deb14be871c8f7d503812724dcf5ae4a747dc30bef62c090ef700f76']),anemone.both.geometryOnlyVertexSha256);
     assert('only joint sampler precision differs from preserved vertex geometry equations',equal(anemone.both.originalPrecisionVertexSha256,['62d1caa713683e74690fb6ea8d74967cd4bf3dbb0479597a9f95d45aac8e218a','355fce73deb14be871c8f7d503812724dcf5ae4a747dc30bef62c090ef700f76']),anemone.both.originalPrecisionVertexSha256);
     await page.locator('#clusterMacro').click();await shot('anemone','macro-both');
     await setLight('anemone',{warmPower:1,coolPower:0});await shot('anemone','macro-warm-only');
@@ -188,7 +188,7 @@ module.exports=async function lightingGeometry(browser,url,outDir,check) {
     // Match a lower photographic macro angle without changing production defaults.
     await page.evaluate(()=>{anemone.renderer.camera={azimuth:.25,elevation:.28,distance:2.8};anemone.redraw();});
     for(const [label,power]of [['both',{warmPower:1,coolPower:1}],['ambient',{warmPower:0,coolPower:0}],['warm',{warmPower:1,coolPower:0}],['cool',{warmPower:0,coolPower:1}]]){await setLight('anemone',power);await shot('anemone','side-macro-'+label);}
-    await setLight('anemone',defaults);report.materialComponents=await require('./material-components.cjs')(page,path.join(outDir,'components'));assert('final material component diagnostics render without GL error',report.materialComponents.samples.length===6&&report.materialComponents.samples.every(x=>x.glError===0));for(const item of report.directionalChecks)assert(item.object+' opposite light contributions occupy separated lateral regions',item.pass,item.stats);
+    await setLight('anemone',defaults);report.materialComponents=await require('./material-components.cjs')(page,path.join(outDir,'components'));for(const palette of ['purple','yellow','blue']){await page.evaluate(palette=>anemone.setMaterial({palette}),palette);await shot('anemone','side-macro-'+palette);}await page.evaluate(()=>anemone.setMaterial({palette:'green'}));assert('final material component diagnostics render without GL error',report.materialComponents.samples.length===6&&report.materialComponents.samples.every(x=>x.glError===0));for(const item of report.directionalChecks)assert(item.object+' opposite light contributions occupy separated lateral regions',item.pass,item.stats);
     await setLight('anemone',defaults);await page.locator('#anemoneCamera').click();
 
     // Actual controls use trusted native keyboard input; range handlers cannot
@@ -240,7 +240,7 @@ module.exports=async function lightingGeometry(browser,url,outDir,check) {
         results.push({label:'public invalid patch',rejected,unchanged:JSON.stringify(get())===before});
         return {version:saved.version,results};
       },object);
-      assert(object+' current schema and every invalid light import are atomic',checks.version===(object==='rabbit'?3:4)&&checks.results.every(r=>r.rejected&&r.unchanged),checks);
+      assert(object+' current schema and every invalid light import are atomic',checks.version===(object==='rabbit'?3:5)&&checks.results.every(r=>r.rejected&&r.unchanged),checks);
       const afterInvalid=await shot(object,'after-invalid-imports','candidate',false);
       assert(object+' rejected imports preserve actual pixels and all GPU geometry/normal buffers',beforeInvalid.pixels.hash===afterInvalid.pixels.hash&&equal(beforeInvalid.geometry,afterInvalid.geometry));
       const before=await shot(object,'before-roundtrip','candidate',false);
@@ -256,19 +256,20 @@ module.exports=async function lightingGeometry(browser,url,outDir,check) {
         const migration=await page.evaluate(async({object,saved,version})=>{
           const api=object==='rabbit'?workbench:anemone,old=structuredClone(saved);old.version=version;delete old.lighting;
           if(object==='rabbit'&&version===1)delete old.state.maskWidth;
-          if(object==='anemone'){delete old.geometryModel;if(version<3)delete old.motionModel;else old.motionModel=AnemoneCurrent.VERSION;}
+          if(object==='anemone'){delete old.params.swayAmplitude;delete old.params.flowSpeed;delete old.geometryModel;if(version<3)delete old.motionModel;else old.motionModel=AnemoneCurrent.VERSION;}
           await api.importState(old);const result=api.exportState();await api.importState(saved);return result;
         },{object,saved,version});
-        assert(object+' v'+version+' supported geometry migrates to explicit legacy lights',migration.version===(object==='rabbit'?3:4)&&migration.lighting.mode==='legacy',migration.lighting);
+        assert(object+' v'+version+' supported geometry migrates to explicit legacy lights',migration.version===(object==='rabbit'?3:5)&&migration.lighting.mode==='legacy',migration.lighting);
       }
     }
 
     await page.evaluate(()=>{platform.select('anemone');anemone.pause();anemone.pauseOrbit();anemone.seek(0);});
     const original=await page.evaluate(()=>anemone.exportState());
     const certificate=await page.evaluate(()=>AnemoneSafeLayout.certificate(anemone.state.params));report.certificate=certificate;
-    assert('export v4 identifies exact bounded geometry/motion and certified default',original.version===4&&original.geometryModel===certificate.version&&original.motionModel===certificate.version&&certificate.certified&&equal(certificate.preset,{count:240,length:.7,thickness:.03,curvature:.7,seed:73})&&certificate.renderRings===43&&certificate.solverSegments===28,certificate);
+    const migratedV4=await page.evaluate(()=>{const saved=anemone.exportState(),old=structuredClone(saved);old.version=4;old.motionModel=old.geometryModel=AnemoneSafeLayout.LEGACY_VERSION;delete old.params.swayAmplitude;delete old.params.flowSpeed;anemone.importState(old);const migrated=anemone.exportState();anemone.importState(saved);return{old,migrated};});assert('v4 import keeps lamps and opts out of new large sway',migratedV4.migrated.version===5&&migratedV4.migrated.params.swayAmplitude===0&&migratedV4.migrated.params.flowSpeed===1&&equal(migratedV4.old.lighting,migratedV4.migrated.lighting),migratedV4);
+    assert('export v5 identifies exact certified shared sway and fixed geometry',original.version===5&&original.geometryModel===certificate.version&&original.motionModel===certificate.version&&certificate.certified&&equal(certificate.preset,{count:240,length:.7,thickness:.03,curvature:.7,seed:73})&&certificate.renderRings===43&&certificate.solverSegments===28,certificate);
     assert('certificate declares positive conservative rendered-capsule margins', ['interTentacle','selfContact','body'].every(k=>certificate[k].minMotionClearance>certificate.numericalMargin&&certificate[k].reservedMotionClearance>0)&&certificate.localBendGuard.minRadiusMargin>certificate.numericalMargin,certificate);
-    assert('default actual regional motion has 15 percent prior vector envelope',Math.abs(certificate.flow.effectiveScale-.15)<1e-12&&Math.abs(certificate.flow.effectiveAmplitude/certificate.flow.rawAmplitude-.15)<1e-12,certificate.flow);
+    assert('shared sway and smaller local perturbations stay in certified interval',certificate.allowedAmplitude===.02&&certificate.flow.effectiveAmplitude<=.02+1e-12&&equal(certificate.yawRange,[-.3,.6])&&certificate.thetaSampleCount===46&&original.params.swayAmplitude===1&&original.params.flowSpeed===1,certificate);
     const rest=await page.evaluate(()=>{const r=anemone.renderer,C=AnemoneSafeLayout;return Array.from(C.solve({...anemone.state.params,current:0,turbulence:0},r.roots,0));});
     const gpuBody=await page.evaluate(()=>{
       const r=anemone.renderer,g=r.gl,vao=g.getParameter(g.VERTEX_ARRAY_BINDING),copy=g.getParameter(g.COPY_READ_BUFFER_BINDING);
@@ -283,7 +284,7 @@ module.exports=async function lightingGeometry(browser,url,outDir,check) {
     const actualRoots=await page.evaluate(()=>anemone.renderer.roots);
     const restAudit=independentClearances(actualRoots,rest),restBody=sampledBodyClearance(restAudit.capsules,triangles,bodyIds);delete restAudit.capsules;
     report.restAudit={...restAudit,body:restBody};
-    assert('independent zero-flow rendered capsules reproduce declared static certificate minima',Math.abs(restAudit.interTentacle.minClearance-certificate.interTentacle.minStaticClearance)<1e-7&&Math.abs(restAudit.selfContact.minClearance-certificate.selfContact.minStaticClearance)<1e-7&&Math.abs(restBody.minClearance-certificate.body.minStaticClearance)<1e-7,report.restAudit);
+    assert('independent zero-flow rendered capsules reproduce declared static certificate minima',Math.abs(restAudit.interTentacle.minClearance- .019935346228229046)<1e-7&&Math.abs(restAudit.selfContact.minClearance-.026191844955858645)<1e-7&&Math.abs(restBody.minClearance-certificate.body.minStaticClearance)<1e-7,report.restAudit);
     const cases=[...[0,3,8,14].map(time=>({name:'default-t'+time,time,patch:{}})),{name:'extreme-minus180',time:3,patch:{current:1,turbulence:.8,direction:-180,frequency:.9}},{name:'extreme-plus180',time:8,patch:{current:1,turbulence:.8,direction:180,frequency:.08}},{name:'extreme-cross90',time:14,patch:{current:1,turbulence:.8,direction:90,frequency:.9}}];
     for(const test of cases) {
       const actual=await page.evaluate(({test,params})=>{anemone.set({...params,...test.patch,paused:true});anemone.seek(test.time);const r=anemone.renderer;return {roots:r.roots,data:Array.from(r.data),state:anemone.state,metrics:anemone.metrics(),pixels:anemone.pixels(),safety:AnemoneSafeLayout.certificate(anemone.state.params)};},{test,params:original.params});
@@ -304,7 +305,7 @@ module.exports=async function lightingGeometry(browser,url,outDir,check) {
       const fingerprint=()=>{let h=2166136261;for(const b of new Uint8Array(r.data.buffer))h=Math.imul(h^b,16777619)>>>0;return h;},geometry=fingerprint(),out=[];
       const shapes=[{count:241},{length:.70001},{thickness:.03001},{curvature:.71},{seed:74}];
       for(const patch of shapes)for(const route of ['set','import','old-v3']){
-        let rejected=false;try{if(route==='set')anemone.set(patch);else{const data=structuredClone(saved);data.params={...data.params,...patch};data.camera.azimuth+=1;data.material.palette='blue';if(route==='old-v3'){data.version=3;data.motionModel=AnemoneCurrent.VERSION;delete data.geometryModel;delete data.lighting;}anemone.importState(data);}}catch(e){rejected=true;}
+        let rejected=false;try{if(route==='set')anemone.set(patch);else{const data=structuredClone(saved);data.params={...data.params,...patch};data.camera.azimuth+=1;data.material.palette='blue';if(route==='old-v3'){data.version=3;data.motionModel=AnemoneCurrent.VERSION;delete data.geometryModel;delete data.lighting;delete data.params.swayAmplitude;delete data.params.flowSpeed;}anemone.importState(data);}}catch(e){rejected=true;}
         out.push({route,patch,rejected,stateUnchanged:JSON.stringify(anemone.exportState())===before,geometryUnchanged:fingerprint()===geometry});
       }
       for(const field of ['geometryModel','motionModel'])for(const value of [undefined,'unknown']){const data=structuredClone(saved);data[field]=value;let rejected=false;try{anemone.importState(data);}catch(e){rejected=true;}out.push({field,value:String(value),rejected,stateUnchanged:JSON.stringify(anemone.exportState())===before,geometryUnchanged:fingerprint()===geometry});}

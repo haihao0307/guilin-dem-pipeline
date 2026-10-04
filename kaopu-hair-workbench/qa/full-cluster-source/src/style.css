@@ -79,3 +79,11 @@ body[data-module=anemone] .anemone-stage>*:not(.anemone-canvas-wrap){flex-shrink
   body[data-module=anemone] .anemone-tools button{font-size:9px;min-height:28px;padding:3px 2px;white-space:nowrap}
   body[data-module=anemone] .anemone-stage-foot{position:absolute;bottom:0;left:0;width:calc(100% - min(28vw,200px));min-height:19px;padding:3px 7px;flex-direction:row;pointer-events:none;background:#18231cbf}
 }
+
+/* Anemone-only requested inspection additions; Rabbit styling is frozen. */
+body[data-module=anemone] .cluster-palette{grid-template-columns:repeat(6,minmax(0,1fr))}
+#anemoneZoomIn,#anemoneZoomOut{min-width:34px;padding:5px 8px;font-size:18px;font-weight:600}
+@media(max-width:600px){#anemoneZoomPresets{gap:4px}#anemoneZoomPresets button{min-width:38px;padding:5px 6px}#anemoneZoomIn,#anemoneZoomOut{min-width:32px}body[data-module=anemone] .cluster-palette button{font-size:10px}}
+@media(max-height:460px) and (orientation:landscape){body[data-module=anemone] .cluster-palette{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.anemone-quick-flow{display:grid;grid-template-columns:1fr 1fr;gap:12px}.anemone-quick-flow .control{margin:0}.anemone-quick-flow label{font-size:10px}.anemone-quick-flow input[type=range]{margin:5px 0 3px;min-height:12px}.anemone-quick-flow input[type=number]{width:52px;font-size:12px}

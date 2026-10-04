@@ -106,47 +106,14 @@ void r13SideLamp(int lamp, highp vec3 p, out highp vec3 L, out highp vec3 E) {
 uniform highp vec3 r13Center;uniform highp float r13Radius;
 // A bounded, world-space bulk attenuation proxy for this fixed240-tube cluster.
 // It is not exact per-tube shadowing or measured tissue thickness. Air gaps are
-// represented by fitted neutral visibility; tissue pigment absorption is separate.
-// No camera/screen coordinate enters the cluster visibility.
-float r13ClusterVisibility(vec3 p,vec3 L){
+// represented by a fitted effective extinction; no camera/screen coordinate enters.
+vec3 r13ClusterTransmission(vec3 p,vec3 L){
  vec3 q=(p-vec3(0.,.12,0.))/vec3(1.05,.68,1.05),d=L/vec3(1.05,.68,1.05);
  float a=dot(d,d),b=dot(q,d),c=dot(q,q)-1.,disc=b*b-a*c;
- if(disc<=0.)return 1.;
+ if(disc<=0.)return vec3(1.);
  float root=sqrt(disc),entry=(-b-root)/a,exitDistance=(-b+root)/a;
  float pathLength=max(0.,exitDistance-max(0.,entry));
- return exp(-1.65*pathLength);
-}
-// Isotropic wet dielectric surface: normalized GGX D, correlated Smith V and
-// Schlick Fresnel. Untinted reflection keeps the incident lamp's RGB. The .30
-// roughness and .85 film coverage are appearance fits, not measured tissue data.
-float r13WetBRDF(vec3 n,vec3 v,vec3 L){
- float NoL=max(dot(n,L),0.),NoV=max(dot(n,v),0.);
- if(NoL<=0.||NoV<=0.)return 0.;
- vec3 H=normalize(L+v);float NoH=max(dot(n,H),0.),VoH=max(dot(v,H),0.);
- const float a2=.0081;
- float d=NoH*NoH*(a2-1.)+1.;float D=a2/(3.14159265*d*d);
- float V=.5/max(NoL*sqrt(NoV*NoV*(1.-a2)+a2)+NoV*sqrt(NoL*NoL*(1.-a2)+a2),.00001);
- float F=.0204+.9796*pow(1.-VoH,5.);
- return D*V*F*NoL;
-}
-// Single local chord absorption. Side path is the straight-cylinder quadratic;
-// the rounded cap blend/6r bound approximate the curved, tapered geometry.
-// Sigma is fitted from palette at a FIXED .06-world-unit reference diameter.
-// The actual interpolated radius remains in d, so thickness is not cancelled.
-vec3 r13TissueThrough(vec3 p,vec3 n,vec3 v,vec3 pigment,vec3 shape,vec3 axis,float amount){
- if(shape.y<=0.||amount<=0.)return vec3(0.);
- vec3 Tfit=clamp(sqrt(max(pigment,vec3(.001))),vec3(.08),vec3(.96));
- vec3 sigma=-log(Tfit)/.06,result=vec3(0.);axis=normalize(axis);
- float exitF=.0204+.9796*pow(1.-clamp(dot(n,v),0.,1.),5.);
- for(int lamp=0;lamp<2;lamp++){
-  vec3 L,E;r13SideLamp(lamp,p,L,E);E*=r13DisplayGain*1.65*r13ClusterVisibility(p,L);
-  float back=max(-dot(n,L),0.);float axialL=dot(axis,L);
-  float cylinder=2.*shape.x*back/max(1.-axialL*axialL,.10),sphere=2.*shape.y*back;
-  float distanceInTissue=clamp(mix(cylinder,sphere,smoothstep(0.,.5,shape.z)),0.,6.*shape.y);
-  float phase=.5+.5*pow(max(dot(-L,v),0.),2.);
-  result+=E*exp(-sigma*distanceInTissue)*back*phase*(1.-exitF);
- }
- return result*(.55*amount);
+ return exp(-vec3(1.80,1.35,2.15)*pathLength);
 }
 `, 'anemone material');
     const setup = 'vec3 n=normalize(normal),v=normalize(eye-world),l=normalize(vec3(.6,.6,.5));';
@@ -154,12 +121,12 @@ vec3 r13TissueThrough(vec3 p,vec3 n,vec3 v,vec3 pigment,vec3 shape,vec3 axis,flo
  vec3 r13P=(world-r13Center)/r13Radius,r13Diffuse=vec3(0.),r13Back=vec3(0.),r13Rim=vec3(0.),r13Thin=vec3(0.),r13Wet=vec3(0.);
  if(r13LightingMode==1){
   for(int lamp=0;lamp<2;lamp++){
-   vec3 L,E;r13SideLamp(lamp,r13P,L,E);E*=r13DisplayGain*1.65*r13ClusterVisibility(r13P,L);
+   vec3 L,E;r13SideLamp(lamp,r13P,L,E);E*=r13DisplayGain*1.65*r13ClusterTransmission(r13P,L);
    r13Diffuse+=E*max(dot(n,L),0.);
    r13Back+=E*pow(max(dot(-n,L),0.),1.5);
    r13Rim+=E*smoothstep(-.2,.85,dot(n,L));
    r13Thin+=E*pow(clamp((.45-dot(n,L))/1.45,0.,1.),1.2);
-   r13Wet+=E*r13WetBRDF(n,v,L);
+   r13Wet+=E*pow(max(dot(n,normalize(L+v)),0.),12.)*max(dot(n,L),0.);
   }
  }
 `, 'anemone normal setup');
@@ -176,7 +143,7 @@ vec3 r13TissueThrough(vec3 p,vec3 n,vec3 v,vec3 pigment,vec3 shape,vec3 axis,flo
     const cap = 'lit+=base*pow(facing,1.5)*(.13+.18*tip);';
     source = once(source, cap, 'if(r13LightingMode==1){lit+=base*pow(facing,1.5)*(vec3(.035)+(.22+.24*tip)*r13Rim);}else{' + cap + '}', 'anemone cap light');
     const back = 'lit+=mix(base,milk,.25)*back*.06;';
-    source = once(source, back, 'if(r13LightingMode==1){vec3 r13Through=r13TissueThrough(r13P,n,v,base,tissueShape,tubeAxis,translucency);lit+=r13Through*sharp;lit+=r13Wet*.85*sharp;}else{' + back + '}', 'anemone back light');
+    source = once(source, back, 'if(r13LightingMode==1){lit+=mix(coloredReturn,milk,.035)*r13Thin*.30*(.35+.65*(1.-facing)+.35*tip)*sharp;lit+=mix(vec3(1.),base,.12)*r13Wet*.065*sharp;}else{' + back + '}', 'anemone back light');
     source=once(source,'lit=max(lit,vec3(0.));',`if(r13LightingMode==1){float peak=max(max(lit.r,lit.g),lit.b);if(peak>.85){float shoulder=.85+.15*(1.-exp(-(peak-.85)/.15));lit*=shoulder/peak;}}
  lit=max(lit,vec3(0.));`, 'anemone hue-preserving highlight shoulder');
     return source;

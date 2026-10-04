@@ -1,0 +1,15 @@
+/* Narrow third-object host. Preserve the catalog grid and child UI unchanged. */
+#fiberToolbar,#fiberModule[hidden]{display:none}
+body[data-module=fiber]{height:var(--fiber-viewport-height,100dvh);overflow:hidden;overscroll-behavior:none}
+body[data-module=fiber] #rabbitModule,body[data-module=fiber] #anemoneModule,body[data-module=fiber] #kukoModule{display:none!important}
+body[data-module=fiber] header{height:calc(58px + env(safe-area-inset-top));padding:env(safe-area-inset-top) max(12px,env(safe-area-inset-right)) 0 max(12px,env(safe-area-inset-left));gap:12px}
+body[data-module=fiber] header>:not(#catalogHomeButton):not(#fiberToolbar){display:none!important}
+body[data-module=fiber] #fiberToolbar{display:flex;align-items:center;flex:1;min-width:0}
+body[data-module=fiber] #catalogHomeButton{min-height:44px}
+#fiberModule{position:relative;width:100%;height:calc(var(--fiber-viewport-height,100dvh) - var(--fiber-header-height,58px));min-width:0;min-height:0;overflow:hidden;background:#11150f}
+#fiberFrame{display:block;width:100%;height:100%;border:0;background:#11150f}
+.fiber-load-status{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center;background:#11150f;color:#c6d4bc}
+.fiber-load-status p{max-width:35em;line-height:1.8;font-size:13px}
+#fiberRetry{min-height:44px;padding:9px 18px}
+@media(max-width:650px){body[data-module=fiber] header{gap:9px;padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}}
+@media(max-height:460px) and (orientation:landscape){body[data-module=fiber] header{height:48px;padding-top:0}}

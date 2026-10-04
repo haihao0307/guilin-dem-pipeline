@@ -1,0 +1,184 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#131811"><meta name="description" content="基于导向曲线、毛束和稳定噪声的实时绞束毛发研究。所有细丝由参数生成。"><title>绞束毛发 · KAOPU 毛发工作台</title><style>
+:root{color-scheme:dark;--bg:#11150f;--panel:#1b2117;--line:#394331;--muted:#a3ae98;--ink:#eff1e9;--accent:#c7e99d}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-serif}button,input,select{font:inherit}button,select{color:var(--ink);background:#263020;border:1px solid var(--line);border-radius:7px;padding:8px 13px;cursor:pointer}button:hover{border-color:#90a576}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:3px}button.active{background:var(--accent);color:#223117;border-color:var(--accent)}header{height:76px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:20px;padding:0 27px}.brand{font-size:19px;letter-spacing:2px;font-weight:600}.brand small{font-size:11px;display:block;letter-spacing:2px;color:var(--muted);font-weight:400}.header-title{border-left:1px solid var(--line);padding-left:20px;color:#c8d1be}.spacer{flex:1}.status{font-size:12px;color:var(--muted)}main{display:grid;grid-template-columns:minmax(0,1fr) 310px;min-height:calc(100vh - 76px)}.workspace{padding:24px 24px 18px;min-width:0}.top{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:17px}.eyebrow{font-size:11px;color:var(--accent);letter-spacing:2px}h1{font-size:25px;font-weight:500;margin:2px 0 0}p{margin:0}.sub{font-size:12px;color:var(--muted)}.views{display:flex;border:1px solid var(--line);border-radius:8px;padding:3px;gap:3px}.views button{font-size:12px;border:0;background:transparent;padding:6px 10px}.views button.active{background:#3b482d;color:var(--accent)}.stage{height:calc(100vh - 278px);min-height:490px;max-height:850px;position:relative;border:1px solid #4d5a40;border-radius:11px;overflow:hidden;background:#eae7df}canvas{display:block;width:100%;height:100%;touch-action:none}.label{position:absolute;left:15px;top:13px;background:#ffffffb5;border:1px solid #fff6;border-radius:4px;color:#656a59;padding:4px 8px;font-size:11px;pointer-events:none}#curvesLabel{top:calc(67% + 12px);color:#bcc7b3;background:#263326aa;border-color:#3d4c3b}.stage-meta{position:absolute;right:14px;bottom:10px;color:#95a78b;font-size:11px;pointer-events:none}.toolbar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:13px}.toolbar button{font-size:12px;padding:7px 11px}.hint{font-size:11px;color:var(--muted);margin-left:auto}.explain{font-size:11px;color:#91a184;margin-top:12px;display:flex;justify-content:space-between;gap:12px}.inspector{background:var(--panel);border-left:1px solid var(--line);max-height:calc(100vh - 76px);overflow:auto}.panel-head{padding:22px 20px 17px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}.panel-head strong{font-weight:500;font-size:14px}.tag{font-size:10px;color:var(--accent);border:1px solid #536444;padding:2px 6px;border-radius:4px}.section{padding:17px 20px;border-bottom:1px solid var(--line)}h2{font-weight:500;font-size:13px;margin:0 0 16px;color:#c8d3bf}.control{margin:0 0 14px}.control:last-child{margin-bottom:0}label{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:6px}output{color:var(--accent);font:11px ui-monospace,monospace;background:#232c1d;border:1px solid #3b4a31;border-radius:4px;padding:1px 5px;min-width:44px;text-align:right}input[type=range]{width:100%;height:3px;accent-color:var(--accent);appearance:none;background:#4a553f;border-radius:3px;cursor:pointer;margin:7px 0}input[type=range]::-webkit-slider-thumb{appearance:none;background:var(--accent);width:12px;height:12px;border-radius:50%}select{width:100%;font-size:12px}details{padding:15px 20px;color:var(--muted);font-size:11px}summary{cursor:pointer;font-size:12px;color:#d1dbca}details p{margin-top:12px}details a{color:var(--accent)}.seed-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted)}.seed-row button{font-size:11px;padding:4px 8px}.note{font-size:11px;color:#87977a;margin-top:9px}#notice{min-height:22px;color:var(--accent);font-size:11px;padding:8px 20px}.error{padding:14px;background:#5c3027;border:1px solid #ce9778;border-radius:8px;margin:0 0 12px}.foot{font:10px ui-monospace,monospace;color:#708063;padding:9px 20px 16px}[hidden]{display:none!important}
+@media(max-width:1000px){main{grid-template-columns:minmax(0,1fr) 275px}.workspace{padding:20px 14px}.top{align-items:flex-start;flex-direction:column}.stage{height:calc(100vh - 310px);min-height:470px}.hint{width:100%;margin-left:0}.section{padding:16px}.explain{flex-direction:column;gap:0}}
+@media(max-width:700px){header{height:62px;padding:0 15px;gap:12px}.brand{font-size:16px}.brand small{font-size:9px}.header-title{font-size:12px;padding-left:12px}.status{display:none}main{display:block}.workspace{padding:18px 11px 15px}.top{flex-direction:row;align-items:center;gap:8px}h1{font-size:22px}.sub{display:none}.eyebrow{font-size:9px}.views button{font-size:11px;padding:5px 7px}.stage{height:490px;min-height:0;border-radius:9px}.label{left:10px;font-size:10px}.toolbar{gap:6px}.toolbar button{font-size:11px;padding:8px 9px}.inspector{max-height:none;border-left:0;border-top:1px solid var(--line)}.panel-head{padding:15px 17px}.sections{display:grid;grid-template-columns:1fr 1fr}.section{padding:17px;border-right:1px solid var(--line)}.sections .section:last-child{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px 25px}.sections .section:last-child h2{grid-column:1/-1;margin-bottom:2px}.explain{font-size:10px}details{font-size:12px}.foot{font-size:10px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style></head><body>
+<header><div class="brand">KAOPU<small>HAIR WORKBENCH</small></div><div class="header-title">毛发生产线 · 独立研究</div><div class="spacer"></div><span class="status" id="status">正在生成细丝…</span></header>
+<main><section class="workspace"><div class="top"><div><span class="eyebrow">C4D HAIR STUDY / 03</span><h1>绞束与散端</h1><p class="sub">米白细丝 · 曲线生成 · 受光对照</p></div><nav class="views" aria-label="显示方式"><button data-view="split" class="active">对照</button><button data-view="beauty">受光</button><button data-view="curves">曲线</button></nav></div>
+<div id="error" class="error" role="alert" hidden></div><div class="stage"><canvas id="fiberCanvas" aria-label="可旋转的三维绞束毛发，拖动旋转，滚轮或双指缩放"></canvas><span class="label" id="beautyLabel">受光 · 实时细丝</span><span class="label" id="curvesLabel">曲线 · 同一套形态函数</span><div class="stage-meta"><span id="count"></span> · <span id="fps">实时</span></div></div>
+<div class="toolbar"><button id="play">暂停</button><button id="resetCamera">相机归位</button><button id="capture">保存画面</button><button id="export">导出参数</button><button id="import">导入参数</button><button id="reset">还原参考</button><input id="file" type="file" accept="application/json,.json" hidden><span class="hint">拖动旋转 · 滚轮 / 双指缩放</span></div><div class="explain"><span>外形、曲线与动画共用参数；无需逐根维护模型</span><span>按截图可见结构重建 · 运动为可控演绎</span></div>
+</section><aside class="inspector"><div class="panel-head"><strong>纤维参数</strong><span class="tag">可重现 · 可导出</span></div><div class="sections">
+<section class="section"><h2>01　束形与末端</h2>
+<div class="control"><label for="turns">绞转圈数 <output id="turnsOut"></output></label><input id="turns" type="range" min="0" max="6" step=".05"></div>
+<div class="control"><label for="radius">束体半径 <output id="radiusOut"></output></label><input id="radius" type="range" min=".1" max=".6" step=".005"></div>
+<div class="control"><label for="spread">末端散开 <output id="spreadOut"></output></label><input id="spread" type="range" min=".25" max="2.5" step=".01"></div>
+<div class="control"><label for="noise">细丝扰动 <output id="noiseOut"></output></label><input id="noise" type="range" min="0" max=".13" step=".001"></div>
+</section><section class="section"><h2>02　密度与受光</h2>
+<div class="control"><label for="strands">细丝数量 <output id="strandsOut"></output></label><input id="strands" type="range" min="300" max="2600" step="50"></div>
+<div class="control"><label for="diameter">细丝粗细 <output id="diameterOut"></output></label><input id="diameter" type="range" min=".5" max="2.5" step=".05"></div>
+<div class="control"><label for="roughness">高光柔度 <output id="roughnessOut"></output></label><input id="roughness" type="range" min=".08" max=".7" step=".01"></div>
+<div class="control"><label for="tone">纤维颜色</label><select id="tone"><option value="ivory">暖米白</option><option value="silver">冷银灰</option><option value="copper">暖铜棕</option></select></div>
+</section><section class="section"><h2>03　缓慢运动</h2>
+<div class="control"><label for="motion">摆动幅度 <output id="motionOut"></output></label><input id="motion" type="range" min="0" max=".5" step=".01"></div>
+<div class="control"><label for="speed">运动速度 <output id="speedOut"></output></label><input id="speed" type="range" min=".1" max="1.7" step=".05"></div>
+<div class="seed-row"><span>分布种子 <span id="seed"></span></span><button id="reseed">换一组细丝</button></div>
+</section></div><div id="notice" role="status"></div>
+<details><summary>这个复刻学了什么</summary><p>少量导向规则决定收束、绞转与散端；稳定种子生成大量细丝。细丝扰动、粗细轮廓与缓慢摆动共享根到尖坐标。下方曲线是同源抽样显示。</p><p>这是根据截图可见结构做的程序化复刻，没有原作者工程。受光使用实时各向异性近似；并非 Cinema 4D 或 Redshift 的离线渲染。摆动是可控函数动画，未加入碰撞仿真。</p><p>学习依据：<a href="https://help.maxon.net/c4d/2026/en-us/Content/html/OHAIR.html" target="_blank" rel="noopener">Maxon Hair Object</a> · <a href="https://help.maxon.net/c4d/2026/en-us/Content/html/6255.html" target="_blank" rel="noopener">形态通道</a> · <a href="https://help.maxon.net/c4d/2026/en-us/Content/html/COM_REDSHIFT3D_REDSHIFT4C4D_NODES_CORE_HAIR2.html" target="_blank" rel="noopener">毛发受光</a></p></details><div class="foot">KAOPU FIBER STUDY · 2026.10.04 · v1</div></aside></main>
+<script>(()=>{'use strict';
+const $=id=>document.getElementById(id), canvas=$('fiberCanvas');
+const defaults=Object.freeze({seed:317,turns:3.35,radius:.30,spread:1.66,noise:.032,strands:1450,diameter:1,roughness:.29,motion:.12,speed:.55,tone:'ivory',view:'split'});
+let state={...defaults},camera={yaw:0,pitch:.045,zoom:1},running=!matchMedia('(prefers-reduced-motion: reduce)').matches,hostActive=true,active=true,disposed=false,contextLost=false,ready=false,t=0,last=0,raf=0,frames=0,fps=0,lastFps=0,frameCounter=0;
+const errors=[];const events=new AbortController(); const gl=canvas.getContext('webgl2',{antialias:true,alpha:false,preserveDrawingBuffer:true,powerPreference:'high-performance'});
+function emit(type,detail={}){const data={kaopuFiber:true,type,...detail}; if(parent!==window)parent.postMessage(data,location.origin==='null'?'*':location.origin);window.dispatchEvent(new CustomEvent('fiber:'+type,{detail:data}));}
+function fail(message){ready=false;errors.push(message);$('error').hidden=false;$('error').textContent=message;$('status').textContent='画面未能启动';emit('error',{message});}
+if(!gl){fail('此设备未能建立 WebGL 2，请换一个支持 WebGL 2 的浏览器打开');return;}
+const VS=`#version 300 es
+precision highp float;
+precision highp int;
+uniform mat4 uVP;
+uniform vec3 uEye;
+uniform float uTime,uTurns,uRadius,uSpread,uNoise,uDiameter,uMotion,uPixel;
+uniform uint uSeed;
+uniform int uSegments;
+out vec3 vTangent,vSide,vView,vRadial,vP;
+out float vAcross,vRand,vCover,vS,vR;
+uint hash(uint x){x^=x>>16;x*=0x7feb352du;x^=x>>15;x*=0x846ca68bu;x^=x>>16;return x;}
+float rnd(uint x){return float(hash(x))/4294967295.;}
+vec3 strand(float s,vec4 r,vec3 q){
+ float pin=smoothstep(.714,.81,s),f=smoothstep(.805,1.,s);
+ float a=r.x*6.2831853+uTurns*6.2831853*(1.-s)+.04*sin(s*19.+q.z*9.);
+ float rr=sqrt(r.y)*uRadius*(1.+.075*sin(s*19.+r.z*3.));
+ rr*=1.-.73*exp(-pow((s-.802)/.025,2.));
+ rr+=.045*exp(-pow((s-.715)/.048,2.));
+ float guide=floor(r.x*7.);
+ float fan=guide*.897598+q.x*.32;
+ a=mix(a,fan+1.05*sin(f*2.4+q.y*3.),f);
+ rr+=uSpread*pow(f,1.04)*(.30+.70*r.w);
+ rr+=step(.975,r.w)*(.09+.13*q.x)*sin(s*3.14159265);
+ float x=4.65-s*9.1+f*f*(1.65*(q.y-.5)+.65*sin(guide*1.3));
+ float y=rr*cos(a),z=rr*sin(a);
+ y+=.018*sin(s*9.)+uMotion*pow(s,1.9)*(.35+.65*f)*sin(uTime*.79-s*5.+q.x*.55);
+ z+=uMotion*pow(s,2.)*(.32+.68*f)*cos(uTime*.61-s*6.+q.y*.65);
+ float detail=uNoise*(.07+.25*sqrt(s))*(1.+f*3.2);
+ y+=detail*(sin(s*47.+q.x*20.)*.57+sin(s*113.+r.w*20.)*.27+sin(s*193.+q.y*22.)*.12);
+ z+=detail*(cos(s*53.+q.y*20.)*.57+cos(s*107.+q.x*20.)*.27+cos(s*181.+r.z*22.)*.12);
+ y+=f*f*(.29*sin(f*6.+q.z*9.)+.28*sin(guide*2.1));
+ z+=f*f*(.29*cos(f*6.+q.x*9.)+.18*cos(guide*2.3));
+ x+=f*f*.30*sin(f*5.+q.y*9.);
+ return vec3(x,y,z);
+}
+void main(){
+ uint id=uint(gl_InstanceID)+uSeed*991u;
+ vec4 r=vec4(rnd(id*7u+1u),rnd(id*11u+3u),rnd(id*13u+5u),rnd(id*19u+7u));
+ vec3 q=vec3(rnd(id*23u+2u),rnd(id*29u+4u),rnd(id*31u+6u));
+ int k=gl_VertexID%6; int seg=gl_VertexID/6;
+ float ss=(k==2||k==3||k==5)?1.:0.;
+ float side=(k==1||k==4||k==5)?1.:-1.;
+ float s=(float(seg)+ss)/float(uSegments);
+ vec3 p=strand(s,r,q),a=strand(max(0.,s-.001),r,q),b=strand(min(1.,s+.001),r,q);
+ vec3 tangent=normalize(b-a),view=normalize(uEye),right=normalize(cross(tangent,view));
+ float taper=mix(1.,.44,pow(s,11.));
+ float radius=.0031*uDiameter*(.7+r.z*.55)*taper;
+ float minRadius=uPixel*.54,displayRadius=max(radius,minRadius);
+ vCover=min(1.,radius/minRadius); vAcross=side;vTangent=tangent;vSide=right;vView=view;vRand=r.z;vS=s;vR=sqrt(r.y);vP=p;
+ vRadial=normalize(vec3(0.,p.y,p.z)+vec3(0.,.0001,.0001));
+ gl_Position=uVP*vec4(p+right*side*displayRadius,1.);
+}`;
+const FS=`#version 300 es
+precision highp float;
+in vec3 vTangent,vSide,vView,vRadial,vP;
+in float vAcross,vRand,vCover,vS,vR;
+uniform float uRoughness;
+uniform vec3 uColor;
+uniform int uMode,uMSAA;
+out vec4 outColor;
+void main(){
+ float edge=1.-smoothstep(.73,1.,abs(vAcross));
+ if(uMode==1){float alpha=edge*.42*vCover;outColor=vec4(vec3(.72,.76,.73),alpha);return;}
+ vec3 T=normalize(vTangent),V=normalize(vView),S=normalize(vSide);
+ vec3 N=normalize(V*sqrt(max(.001,1.-vAcross*vAcross))+S*vAcross);
+ vec3 key=normalize(vec3(-.35,.84,1.2)),fill=normalize(vec3(.45,.20,-.8));
+ float ndl=max(0.,dot(N,key));
+ vec3 H=normalize(key+V);
+ float ht=dot(T,H);
+ float broad=pow(max(.0,1.-ht*ht),mix(85.,11.,uRoughness));
+ float h2=dot(T,normalize(fill+V));
+ float back=pow(max(0.,1.-h2*h2),22.);
+ float facing=dot(normalize(vRadial),V);
+ float occlusion=mix(.43,1.,smoothstep(-.35,.85,facing))*(.69+.31*vR);
+ occlusion=mix(occlusion,1.,smoothstep(.80,.96,vS));
+ float stripe=.9+.1*sin(vRand*40.);
+ vec3 base=uColor*(.70+.25*vRand)*stripe;
+ vec3 col=base*(.55+ndl*.40)*occlusion+vec3(1.,.965,.88)*broad*.34*occlusion+base*back*.10;
+ col=pow(max(vec3(0.),col),vec3(1./2.2));
+ float alpha=edge*vCover;
+ if(alpha<.002)discard;
+ float threshold=fract(52.9829189*fract(dot(gl_FragCoord.xy+vec2(vRand*4096.,vRand*7919.),vec2(.06711056,.00583715))));
+ if(uMSAA==0){if(alpha<threshold)discard;alpha=1.;}else{alpha=floor(alpha*float(uMSAA)+threshold)/float(uMSAA);if(alpha<=0.)discard;}
+ outColor=vec4(col,alpha);
+}`;
+const BVS=`#version 300 es
+precision highp float;out vec2 uv;void main(){vec2 p=vec2((gl_VertexID==1)?3.:-1.,(gl_VertexID==2)?3.:-1.);uv=p*.5+.5;gl_Position=vec4(p,1.,1.);}`;
+const BFS=`#version 300 es
+precision highp float;in vec2 uv;uniform int mode;out vec4 col;void main(){if(mode==1){col=vec4(.105,.119,.116,1.);return;}vec3 c=mix(vec3(.968,.957,.933),vec3(.883,.859,.818),smoothstep(.1,1.3,uv.y)*.47);float shadow=exp(-pow((uv.y-.40)/.04,2.))*exp(-pow((uv.x-.64)/.49,4.))*.037;c-=shadow;col=vec4(c,1.);}`;
+function shader(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
+function program(v,f){const p=gl.createProgram(),a=shader(gl.VERTEX_SHADER,v),b=shader(gl.FRAGMENT_SHADER,f);gl.attachShader(p,a);gl.attachShader(p,b);gl.linkProgram(p);gl.deleteShader(a);gl.deleteShader(b);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return p;}
+let strands,bg;try{strands=program(VS,FS);bg=program(BVS,BFS);}catch(e){fail('着色程序编译失败：'+e.message);return;}
+const locs={}; for(const n of ['uVP','uEye','uTime','uTurns','uRadius','uSpread','uNoise','uDiameter','uMotion','uPixel','uSeed','uSegments','uRoughness','uColor','uMode','uMSAA'])locs[n]=gl.getUniformLocation(strands,n);
+const samples=gl.getParameter(gl.SAMPLES);const bgMode=gl.getUniformLocation(bg,'mode');const vao=gl.createVertexArray();gl.bindVertexArray(vao);
+function cross(a,b){return [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];}
+function norm(a){let n=Math.hypot(...a)||1;return a.map(x=>x/n);}
+function dot(a,b){return a.reduce((s,x,i)=>s+x*b[i],0);}
+function multiply(a,b){const c=new Float32Array(16);for(let col=0;col<4;col++)for(let row=0;row<4;row++)for(let k=0;k<4;k++)c[col*4+row]+=a[k*4+row]*b[col*4+k];return c;}
+function matrices(w,h){const aspect=w/h,half=(4.2/aspect)/camera.zoom;
+ const e=[Math.sin(camera.yaw)*Math.cos(camera.pitch)*11,Math.sin(camera.pitch)*11,Math.cos(camera.yaw)*Math.cos(camera.pitch)*11];
+ const z=norm(e),x=norm(cross([0,1,0],z)),y=cross(z,x);
+ const view=new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-dot(x,e),-dot(y,e),-dot(z,e),1]);
+ const proj=new Float32Array([1/(half*aspect),0,0,0,0,1/half,0,0,0,0,-2/40,0,0,0,-1,1]);
+ return {vp:multiply(proj,view),eye:e,pixel:half*2/h};}
+function drawPass(x,y,w,h,mode){if(h<1)return;gl.viewport(x,y,w,h);gl.scissor(x,y,w,h);gl.disable(gl.DEPTH_TEST);gl.disable(gl.BLEND);gl.disable(gl.SAMPLE_ALPHA_TO_COVERAGE);gl.useProgram(bg);gl.uniform1i(bgMode,mode);gl.drawArrays(gl.TRIANGLES,0,3);
+ gl.depthMask(true);gl.clear(gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.depthMask(true);gl.clear(gl.DEPTH_BUFFER_BIT);
+ if(mode){gl.depthMask(false);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);}else{gl.disable(gl.BLEND);if(samples>0)gl.enable(gl.SAMPLE_ALPHA_TO_COVERAGE);}
+ gl.useProgram(strands);let m=matrices(w,h);gl.uniformMatrix4fv(locs.uVP,false,m.vp);gl.uniform3fv(locs.uEye,m.eye);gl.uniform1f(locs.uPixel,m.pixel);
+ for(const [k,v]of Object.entries({uTime:(t*state.speed)%628.3185307179587,uTurns:state.turns,uRadius:state.radius,uSpread:state.spread,uNoise:state.noise,uDiameter:state.diameter,uMotion:state.motion,uRoughness:state.roughness}))gl.uniform1f(locs[k],v);
+ gl.uniform1ui(locs.uSeed,state.seed);gl.uniform1i(locs.uSegments,128);gl.uniform1i(locs.uMode,mode);gl.uniform1i(locs.uMSAA,samples);
+ const colors={ivory:[.66,.57,.40],silver:[.52,.58,.63],copper:[.47,.20,.085]};gl.uniform3fv(locs.uColor,colors[state.tone]);
+ gl.drawArraysInstanced(gl.TRIANGLES,0,128*6,mode?Math.min(state.strands,620):state.strands);
+}
+function draw(){if(!active||disposed||contextLost)return;gl.enable(gl.SCISSOR_TEST);let w=canvas.width,h=canvas.height;if(state.view==='split'){let split=Math.round(h*.33);drawPass(0,split,w,h-split,0);drawPass(0,0,w,split-2,1);}else drawPass(0,0,w,h,state.view==='curves'?1:0);gl.disable(gl.SCISSOR_TEST);frames++;}
+function resize(){if(disposed)return;const r=canvas.getBoundingClientRect(),d=Math.min(Math.max(devicePixelRatio||1,1.5),2);const w=Math.max(1,Math.round(r.width*d)),h=Math.max(1,Math.round(r.height*d));if(w!==canvas.width||h!==canvas.height){canvas.width=w;canvas.height=h;}draw();}
+function loop(now){raf=0;if(!active||disposed||!running)return;if(last)t+=Math.min(.07,(now-last)/1000);last=now;draw();frameCounter++;if(now-lastFps>1000){fps=Math.round(frameCounter*1000/(now-lastFps));lastFps=now;frameCounter=0;$('fps').textContent=fps+' FPS';}raf=requestAnimationFrame(loop);}
+function schedule(){if(active&&running&&!disposed&&!contextLost&&!raf){last=0;lastFps=performance.now();frameCounter=0;raf=requestAnimationFrame(loop);}}
+function stop(){if(raf)cancelAnimationFrame(raf);raf=0;last=0;}
+function pause(){if(disposed)return;hostActive=false;active=false;stop();emit('paused');}
+function resume(){if(disposed||contextLost)return;hostActive=true;active=!document.hidden;resize();schedule();emit('resumed');}
+function dispose(){if(disposed)return;stop();hostActive=false;active=false;disposed=true;observer.disconnect();events.abort();for(const el of [canvas,...document.querySelectorAll('button,input,select')])for(const event of ['onclick','onchange','onpointerdown','onpointermove','onpointerup','onpointercancel','onlostpointercapture','onwheel'])el[event]=null;pointers.clear();gl.deleteProgram(strands);gl.deleteProgram(bg);gl.deleteVertexArray(vao);emit('disposed');}
+function updateUI(){for(const k of ['turns','radius','spread','noise','strands','diameter','roughness','motion','speed']){$(k).value=state[k];$(k+'Out').textContent=k==='strands'?state[k].toLocaleString():Number(state[k]).toFixed((k==='noise'||k==='radius')?3:2);}$('tone').value=state.tone;document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view===state.view));$('curvesLabel').hidden=state.view!=='split';$('beautyLabel').textContent=state.view==='curves'?'曲线 · 同一套形态函数':'受光 · 实时细丝';$('count').textContent=state.strands.toLocaleString()+' 根 · 128 段';$('seed').textContent=state.seed;$('play').textContent=running?'暂停':'播放';}
+function set(p){if(disposed)return;Object.assign(state,p);updateUI();draw();}
+function reset(){if(disposed)return;state={...defaults};camera={yaw:0,pitch:.045,zoom:1};t=0;running=true;updateUI();resize();schedule();emit('reset');}
+function exportState(){return {format:'kaopu-c4d-fiber-study',version:1,state:{...state},camera:{...camera},time:t,running};}
+const ranges={seed:[1,1e7],turns:[0,6],radius:[.1,.6],spread:[.25,2.5],noise:[0,.13],strands:[300,2600],diameter:[.5,2.5],roughness:[.08,.7],motion:[0,.5],speed:[.1,1.7]};
+function importState(data){if(disposed)throw Error('模块已释放');if(data?.format!=='kaopu-c4d-fiber-study'||data.version!==1)throw Error('请选择本模块导出的参数文件');const s=data.state,c=data.camera;if(!s||!c)throw Error('参数文件不完整');for(const [k,[a,b]]of Object.entries(ranges))if(!Number.isFinite(s[k])||s[k]<a||s[k]>b)throw Error('无效参数：'+k);if(!Number.isInteger(s.seed)||!Number.isInteger(s.strands))throw Error('数量和种子必须为整数');if(!['ivory','silver','copper'].includes(s.tone)||!['split','beauty','curves'].includes(s.view))throw Error('无效视图');if(!Number.isFinite(c.yaw)||Math.abs(c.yaw)>Math.PI||!Number.isFinite(c.pitch)||Math.abs(c.pitch)>1.2||!Number.isFinite(c.zoom)||c.zoom<.65||c.zoom>2.5||!Number.isFinite(data.time)||data.time<0||data.time>1e8||typeof data.running!=='boolean')throw Error('无效相机或时间参数');state={...s};camera={...c};t=data.time;running=data.running;stop();updateUI();resize();schedule();emit('imported');return exportState();}
+function download(blob,name){let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+function capture(){draw();canvas.toBlob(b=>{if(b)download(b,'KAOPU-绞束毛发.png');});}
+for(const k of Object.keys(ranges).filter(k=>k!=='seed'))$(k).addEventListener('input',e=>set({[k]:+e.target.value}),{signal:events.signal});
+$('tone').onchange=e=>set({tone:e.target.value});document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>set({view:b.dataset.view}));
+$('play').onclick=()=>{running=!running;stop();updateUI();schedule();};$('reset').onclick=reset;$('resetCamera').onclick=()=>{camera={yaw:0,pitch:.045,zoom:1};draw();};
+$('export').onclick=()=>download(new Blob([JSON.stringify(exportState(),null,2)],{type:'application/json'}),'KAOPU-绞束参数.json');$('capture').onclick=capture;
+$('import').onclick=()=>$('file').click();$('file').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{if(f.size>50000)throw Error('文件过大');importState(JSON.parse(await f.text()));$('notice').textContent='参数已恢复';}catch(err){$('notice').textContent=err.message;}e.target.value='';};
+$('reseed').onclick=()=>set({seed:(((state.seed*1664525+1013904223)>>>0)%1000000)+1});
+// Pointer orbit and two-finger zoom. A drag stops at a safe, recoverable pitch.
+const pointers=new Map();let lastPinch=0;
+canvas.onpointerdown=e=>{canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,[e.clientX,e.clientY]);lastPinch=0;};
+canvas.onpointermove=e=>{if(!pointers.has(e.pointerId))return;const old=pointers.get(e.pointerId);pointers.set(e.pointerId,[e.clientX,e.clientY]);if(pointers.size===2){const p=[...pointers.values()],dist=Math.hypot(p[0][0]-p[1][0],p[0][1]-p[1][1]);if(lastPinch)camera.zoom=Math.min(2.5,Math.max(.65,camera.zoom*dist/lastPinch));lastPinch=dist;}else{camera.yaw=Math.max(-Math.PI,Math.min(Math.PI,camera.yaw+(e.clientX-old[0])*.005));camera.pitch=Math.max(-1.2,Math.min(1.2,camera.pitch+(e.clientY-old[1])*.004));}draw();};
+function endPointer(e){pointers.delete(e.pointerId);lastPinch=0;}canvas.onpointerup=endPointer;canvas.onpointercancel=endPointer;canvas.onlostpointercapture=endPointer;
+canvas.onwheel=e=>{e.preventDefault();camera.zoom=Math.min(2.5,Math.max(.65,camera.zoom*Math.exp(-e.deltaY*.001)));draw();};
+canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();if(disposed)return;contextLost=true;stop();active=false;fail('图形上下文暂时中断，请刷新此模块恢复');},{signal:events.signal});
+const observer=new ResizeObserver(resize);observer.observe(canvas);
+document.addEventListener('visibilitychange',()=>{if(document.hidden){active=false;stop();}else if(hostActive&&!contextLost){active=true;resize();schedule();}},{signal:events.signal});
+window.addEventListener('message',e=>{if(e.source!==parent||!e.data?.kaopuFiber)return;const d=e.data;try{if(d.type==='pause')pause();else if(d.type==='resume')resume();else if(d.type==='resize')resize();else if(d.type==='reset')reset();else if(d.type==='dispose')dispose();else if(d.type==='export')emit('state',{requestId:d.requestId,data:exportState()});else if(d.type==='import'){importState(d.data);emit('state',{requestId:d.requestId,data:exportState()});}}catch(err){emit('error',{requestId:d.requestId,message:err.message});}},{signal:events.signal});
+window.FiberStudy={pause,resume,resize,dispose,reset,exportState,importState,set,diagnostics(){const bytes=new Uint8Array(canvas.width*canvas.height*4);gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,bytes);let hash=2166136261,nonBackground=0;for(let i=0;i<bytes.length;i+=4){hash=Math.imul(hash^bytes[i],16777619)>>>0;if(bytes[i]<180&&bytes[i]>50)nonBackground++;}return {glError:gl.getError(),hash,nonBackground,samples};},get ready(){return ready;},get errors(){return [...errors];},get stats(){return {frames,fps,active,running,raf,disposed,width:canvas.width,height:canvas.height};},renderAt(time){if(disposed)throw Error('模块已释放');if(!Number.isFinite(time)||time<0||time>1e8)throw RangeError('时间超出有效范围');t=time;draw();}};
+updateUI();ready=true;resize();$('status').textContent='函数生成 · WebGL 2';emit('ready',{version:1,capabilities:['pause','resume','resize','dispose','reset','export','import']});schedule();
+})();
+</script></body></html>

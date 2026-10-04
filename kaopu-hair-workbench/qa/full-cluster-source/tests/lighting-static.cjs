@@ -93,6 +93,18 @@ check('Anemone changes only bounded material lighting, with legacy branches', ()
   assert.throws(() => S.transformAnemoneMaterialFragment(adapted)); assert.throws(() => S.transformAnemoneMaterialFragment(f.replace('lit+=mix(base,milk,.25)*back*.06;', 'changed;')));
   for (const name of ['vertex', 'bodyVertex']) pairs.push({name: 'anemone-' + name, vertexShaderCode: constantSource('full-cluster/src/anemone-renderer.js', name), fragmentShaderCode: adapted});
 });
+check('Optical varyings preserve exact prior vertex geometry and separate surface visibility from absorption', () => {
+  const strip=s=>s.replace('\nout vec3 tissueShape;out vec3 tubeAxis;','').replace('tissueShape=vec3(radius*profile,radius*(1.-.1*s)*(1.+.07*exp(-pow((s-.9)/.06,2.))),cap);tubeAxis=t;','').replace('tissueShape=vec3(0.);tubeAxis=vec3(0.,1.,0.);','');
+  const expected=['4659305efb5e081e788a706e52b05096c06965f8df60007ff9719f66557bd7cc','355fce73deb14be871c8f7d503812724dcf5ae4a747dc30bef62c090ef700f76'];
+  ['vertex','bodyVertex'].forEach((name,i)=>assert.equal(crypto.createHash('sha256').update(strip(constantSource('full-cluster/src/anemone-renderer.js',name))).digest('hex'),expected[i]));
+  const shader=S.transformAnemoneMaterialFragment(constantSource('full-cluster/src/anemone-renderer.js','materialFragment'));
+  assert.ok(shader.includes('return exp(-1.65*pathLength);'));
+  assert.ok(shader.includes('vec3 sigma=-log(Tfit)/.06'));
+  assert.ok(shader.includes('if(shape.y<=0.||amount<=0.)return vec3(0.);'));
+  assert.ok(shader.includes('r13Wet+=E*r13WetBRDF(n,v,L);'));
+  assert.ok(shader.includes('lit+=r13Wet*.85*sharp;'));
+  assert.ok(!shader.includes('exp(-vec3(1.80,1.35,2.15)*pathLength)'));
+});
 check('Prototype adapter uploads live state and bounds without teacher edits', () => {
   const calls = [], gl = {getUniformLocation: (_, name) => name, uniform1i: (...a) => calls.push(a), uniform1f: (...a) => calls.push(a), uniform2f: (...a) => calls.push(a), uniform3fv: (...a) => calls.push(a)};
   class Base { getUniform(name) {return name;} getAttrib() {return 0;} use() {} }

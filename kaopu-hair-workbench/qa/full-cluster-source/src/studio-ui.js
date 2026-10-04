@@ -9,7 +9,7 @@ const reference=drawer('referenceDrawer','摄影参考与来源'),controls=drawe
 reference.querySelector('.drawer-content').append(document.querySelector('.anemone-reference'));
 for(const q of ['.cluster-sources','.anemone-boundary'])reference.querySelector('.drawer-content').append(document.querySelector(q));
 const inspector=document.querySelector('.anemone-inspector');inspector.open=true;controls.querySelector('.drawer-content').append(inspector);
-const quick=document.createElement('div');quick.className='studio-quick-controls';quick.innerHTML='<div class="control"><label for="studioZoom">镜头远近 <output id="studioZoomValue"></output></label><input type="range" id="studioZoom" min="2" max="8" step=".01" aria-label="镜头远近"></div><div class="control"><label for="anemoneOrbitSpeed">环绕速度</label><select id="anemoneOrbitSpeed" aria-label="海葵自动环绕速度"><option value="0.06">很慢</option><option value="0.12" selected>慢速</option><option value="0.24">常速</option></select></div><div class="control"><label for="studioTranslucency">侧缘透光 <output id="studioTranslucencyValue"></output></label><input type="range" id="studioTranslucency" min="0" max="1" step=".01" aria-label="侧缘透光"></div>';
+const quick=document.createElement('div');quick.className='studio-quick-controls';quick.innerHTML='<div class="control"><label for="studioZoom">镜头远近 <output id="studioZoomValue"></output></label><input type="range" id="studioZoom" min="0.7666666666666666" max="8" step=".01" aria-label="镜头远近"></div><div class="control"><label for="anemoneOrbitSpeed">环绕速度</label><select id="anemoneOrbitSpeed" aria-label="海葵自动环绕速度"><option value="0.06">很慢</option><option value="0.12" selected>慢速</option><option value="0.24">常速</option></select></div><div class="control"><label for="studioTranslucency">侧缘透光 <output id="studioTranslucencyValue"></output></label><input type="range" id="studioTranslucency" min="0" max="1" step=".01" aria-label="侧缘透光"></div>';
 inspector.insertBefore(quick,inspector.querySelector('.anemone-controls'));
 for(const k of ['length','thickness','current','turbulence'])quick.append($('anemone-'+k).closest('.control'));
 const orbitButton=document.createElement('button');orbitButton.id='anemoneAutoRotate';orbitButton.type='button';orbitButton.setAttribute('aria-controls','anemoneCanvas');$('anemonePause').before(orbitButton);
@@ -28,11 +28,12 @@ const observation=document.createElement('section');
 observation.id='anemoneQuickPanel';
 observation.className='anemone-quick-panel';
 observation.setAttribute('aria-label','海葵镜头与冷暖灯光');
-observation.innerHTML='<div class="anemone-zoom-presets"><span>镜头 <output id="anemoneQuickZoomValue" aria-label="当前海葵镜头缩放">100%</output></span><div id="anemoneZoomPresets" role="group" aria-label="海葵镜头绝对缩放">'+[1,1.5,2].map(value=>'<button type="button" data-anemone-zoom="'+value+'" aria-label="海葵镜头缩放至 '+value*100+'%" aria-controls="anemoneCanvas" aria-pressed="false">'+value*100+'%</button>').join('')+'</div></div><div id="anemoneQuickLighting" class="anemone-quick-lighting" role="group" aria-label="海葵冷暖双侧光" hidden></div>';
+observation.innerHTML='<div class="anemone-zoom-presets"><span>镜头 <output id="anemoneQuickZoomValue" aria-label="当前海葵镜头缩放">100%</output></span><div id="anemoneZoomPresets" role="group" aria-label="海葵镜头绝对缩放"><button id="anemoneZoomOut" type="button" data-anemone-step="-1" aria-label="海葵镜头缩小100个百分点">−</button>'+[1,1.5,2].map(value=>'<button type="button" data-anemone-zoom="'+value+'" aria-label="海葵镜头缩放至 '+value*100+'%" aria-controls="anemoneCanvas" aria-pressed="false">'+value*100+'%</button>').join('')+'<button id="anemoneZoomIn" type="button" data-anemone-step="1" aria-label="海葵镜头放大100个百分点，最高600%">+</button></div></div><div id="anemoneQuickLighting" class="anemone-quick-lighting" role="group" aria-label="海葵冷暖双侧光" hidden></div>';
 stage.querySelector('.cluster-palette').after(observation);
+const flowQuick=document.createElement('div');flowQuick.id='anemoneQuickFlow';flowQuick.className='anemone-quick-flow';for(const key of ['swayAmplitude','flowSpeed'])flowQuick.append($('anemone-'+key).closest('.control'));observation.querySelector('#anemoneQuickLighting').before(flowQuick);
 function zoomRatio(){return HOME_CAMERA_DISTANCE/anemone.state.camera.distance;}
 function setZoom(value){
-  if(!Number.isFinite(value)||value<HOME_CAMERA_DISTANCE/8||value>HOME_CAMERA_DISTANCE/2)throw Error('海葵镜头缩放超出范围');
+  if(!Number.isFinite(value)||value<HOME_CAMERA_DISTANCE/8||value>6)throw Error('海葵镜头缩放超出范围');
   if(!anemone.ready)return false;
   anemone.pauseOrbit();
   anemone.clearPointers();
@@ -43,8 +44,10 @@ function setZoom(value){
   return true;
 }
 for(const button of observation.querySelectorAll('[data-anemone-zoom]'))button.onclick=()=>setZoom(Number(button.dataset.anemoneZoom));
+for(const button of observation.querySelectorAll('[data-anemone-step]'))button.onclick=()=>setZoom(Math.max(1,Math.min(6,zoomRatio()+Number(button.dataset.anemoneStep))));
 function sync(){
   const ratio=zoomRatio();
+  $('anemoneZoomOut').disabled=!anemone.ready||ratio<=1.000001;$('anemoneZoomIn').disabled=!anemone.ready||ratio>=5.999999;
   $('anemoneQuickZoomValue').textContent=Math.round(ratio*100)+'%';
   for(const button of observation.querySelectorAll('[data-anemone-zoom]')){
     const active=Math.abs(Number(button.dataset.anemoneZoom)-ratio)<.000001;
@@ -87,7 +90,7 @@ $('studioZoom').oninput=e=>{anemone.pauseOrbit();anemone.renderer.camera.distanc
 window.addEventListener('anemonecamera',sync);window.addEventListener('anemonestate',sync);for(const id of ['anemoneCamera','anemoneReset','clusterMacro'])$(id).addEventListener('click',sync);
 for(const id of ['speciesKuko','speciesRabbit','speciesAnemone'])$(id).addEventListener('click',closeAll);
 $('clusterBaseline').addEventListener('click',()=>learning.close());
-stage.querySelector('.anemone-hint').textContent='单指旋转 · 双指缩放 · 鼠标拖动 / 滚轮';
+stage.querySelector('.anemone-hint').textContent='单指旋转 · 双指缩放/平移 · 鼠标拖动 / 滚轮';
 $('anemoneCamera').textContent='视角归位';$('clusterMacro').textContent='微距';$('anemoneResetTime').textContent='时间归零';$('anemoneCapture').textContent='保存画面';
 const status=$('anemoneStatus');document.querySelector('.anemone-stage-foot').lastElementChild.replaceWith(status);
 function viewport(){document.documentElement.style.setProperty('--studio-height',(window.visualViewport?.height||window.innerHeight)+'px');anemone.redraw();sync();}
