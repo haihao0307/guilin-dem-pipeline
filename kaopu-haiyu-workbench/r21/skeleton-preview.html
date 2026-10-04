@@ -1,0 +1,339 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="haiyu-build" content="R21-thorax-preview-20261004"><title>海羽 R21 · 环周胸廓结构候选</title><style>*{box-sizing:border-box}body{margin:0;background:#0c1419;color:#dce7ea;font:15px/1.55 system-ui}main{max-width:1280px;padding:24px;margin:auto}h1{font-size:25px}h2{font-size:22px;margin:3px 0}.quiet{color:#9aafb5;font-size:13px}.eyebrow{color:#99d0c8;font-size:12px;letter-spacing:.07em}.experiment-head{display:flex;justify-content:space-between;gap:15px;align-items:center}.exp-grid{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(255px,1fr);gap:20px}.exp-scene{position:relative;background:#0a1114;border:1px solid #344750;border-radius:12px;overflow:hidden}.exp-scene canvas{display:block;width:100%;height:auto;touch-action:none;cursor:grab}.scene-hint{position:absolute;bottom:10px;left:14px;color:#8babb1;font-size:12px;pointer-events:none}.exp-projections{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.exp-projections figure{margin:0;border:1px solid #30444a;border-radius:9px;overflow:hidden}.exp-projections canvas{width:100%;display:block}.exp-projections figcaption{padding:8px;font-size:12px;color:#9eb2b8}button,select{background:#1d343e;border:1px solid #486572;border-radius:8px;padding:8px 11px;color:#e4eff1;margin:3px;cursor:pointer}button[aria-pressed=true]{border-color:#c6b38e;background:#30434a}.controls{display:flex;flex-wrap:wrap;margin:8px 0}label{display:block;margin-top:13px;font-size:13px}input{width:100%;accent-color:#bdb28a}output{float:right;color:#b9d0d4}aside{padding:14px;border:1px solid #34464d;border-radius:12px}.meta{display:flex;justify-content:space-between;color:#b4c6cc;font-size:12px}.score-route{display:flex;flex-wrap:wrap;gap:6px;font-size:11px;margin-top:12px}pre{font-size:11px;white-space:pre-wrap;line-height:1.5}.experiment-head+.quiet{max-width:950px}nav{margin:15px 0}a{color:#b7d3dd}@media(max-width:800px){main{padding:12px}.exp-grid{grid-template-columns:1fr}.experiment-head{display:block}.exp-projections{grid-template-columns:1fr}h1{font-size:21px}}</style></head><body><main><p class="eyebrow">海羽 / 结构学习候选</p><h1>围绕髓线生成完整胸廓</h1><p class="quiet">原式标量驱动结构变化，骨架拓扑与胸廓比例是明确新增的三维解释。仍待形态观察验收。</p><nav><button id="choose04" aria-pressed="true">04 多频羽化 · 环周肋架</button><button id="choose05" aria-pressed="false">05 仿生游动 · 胸廓相位波</button></nav><section id="axisLift">
+  <div class="experiment-head"><div><div class="eyebrow">三维工作台 · 髓线、椎列和环周胸廓</div><h2 id="liftTitle">04 多频羽化 · 环周肋架</h2></div><span class="quiet" id="liftStatus"></span></div>
+  <p class="quiet" id="liftCandidateNote">结构候选：髓线穿过中空椎列，肋骨从背侧绕胸腔连接到腹侧胸骨。默认打开骨架，观察完整环周关系。</p>
+  <div class="exp-grid">
+    <div>
+      <div class="exp-scene"><canvas id="liftCanvas" width="1080" height="720" aria-label="有内部髓线、椎列、环周肋骨与胸骨的三维结构，可拖动旋转"></canvas><span class="scene-hint">拖动旋转 · 滚轮缩放 · 相机只观察三维对象</span></div>
+      <div class="exp-projections"><figure><canvas id="liftSide" width="600" height="240" aria-label="同一三维对象的正面投影"></canvas><figcaption>正面轮廓 · X / Y</figcaption></figure><figure><canvas id="liftTop" width="600" height="240" aria-label="真实三维网格的轴向横切"></canvas><figcaption>同一份网格 · 真实横截面</figcaption></figure></div>
+    </div>
+    <aside>
+      <div class="controls"><button id="liftPlay">播放小样</button><button id="liftReset">回到起点</button><button id="liftView">复位视角</button><button id="liftExport">保存三维谱</button></div>
+      <label for="liftSpeed">观察速度</label><select id="liftSpeed"><option value="0.25">¼ 速</option><option value="0.5" selected>½ 速</option><option value="1">原速</option></select>
+      <label for="liftTime">共同时间 · 原式 t</label><input id="liftTime" type="range" min="0" max="480" value="0"><div class="meta"><span id="liftClock">t = 0.000</span><span id="liftState">暂停</span></div>
+      <div class="controls"><button id="liftSpine" aria-pressed="true">显示骨架</button><button id="liftSections" aria-pressed="false">结构线</button><button id="liftSurface" aria-pressed="false">胸腔外包络</button><button id="liftLight" aria-pressed="true">冷暖光</button></div>
+      <label for="liftThickness">骨骼截面厚度 <output id="liftThicknessValue">0.50</output></label><input id="liftThickness" type="range" min="0" max="100" value="50">
+      <label for="liftDepth">胸廓深度 <output id="liftDepthValue">0.50</output></label><input id="liftDepth" type="range" min="0" max="100" value="50">
+      <label for="liftMotion">全身联动幅度 <output id="liftMotionValue">1.00</output></label><input id="liftMotion" type="range" min="0" max="100" value="100">
+      <label for="liftSectionPosition">横切位置 <output id="liftSectionPositionValue">0.42</output></label><input id="liftSectionPosition" type="range" min="15" max="77" value="42"><div class="score-route"><span>原式参数场</span><b>→</b><span>髓线 / 椎列</span><b>→</b><span>环周肋架 / 胸骨</span><b>→</b><span>共同时间</span></div>
+      <p class="quiet" id="liftBoundary">原式决定发生位置、谐波分叶和时间关系；躯干截面、骨骼截面厚度与区域分工是本次三维解释。去掉整体转圈后，内部波动每 2π 重复；全源时钟仍保留 16π。</p>
+      <details><summary>二维关系怎样升成三维</summary><pre id="liftFormula"></pre><p class="quiet">01–03 继续保留原二维运行。04/05 原程序仍保留在本工作台源码和历史版本中；这里只对这两项做三维升档。</p></details>
+    </aside>
+  </div>
+</section>
+</main><script>/* R21 candidate thoracic skeleton. Exact source APIs are preserved; skeletal
+ * interpretation, dimensions, transport frames and depth are explicit design
+ * choices, not measured anatomy or a species claim. Camera-independent. */
+(function (root) {
+  'use strict';
+
+  const PI = Math.PI;
+  const TWO_PI = 2 * PI;
+  const AUTHOR_PERIOD = 16 * PI;
+  const AUTHOR_STEP = PI / 30;
+  const SOURCE_COUNT = 20000;
+  const SOURCE_MAX_Y = (SOURCE_COUNT - 1) / 598;
+  const EPS = 1e-12;
+  const defaults = Object.freeze({ thickness: 0.5, depth: 0.5, detail: 0.5, motion: 1 });
+
+  function add(a, b) { return [a[0] + b[0], a[1] + b[1], a[2] + b[2]]; }
+  function sub(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
+  function scale(a, s) { return [a[0] * s, a[1] * s, a[2] * s]; }
+  function dot(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+  function cross(a, b) {
+    return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  }
+  function length(a) { return Math.hypot(a[0], a[1], a[2]); }
+  function unit(a, fallback) {
+    const n = length(a);
+    return n > EPS && Number.isFinite(n) ? scale(a, 1 / n) : fallback.slice();
+  }
+  function clamp01(value, fallback) {
+    return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : fallback;
+  }
+  function parameters(params) {
+    params = params || {};
+    return {
+      thickness: clamp01(params.thickness, defaults.thickness),
+      depth: clamp01(params.depth, defaults.depth),
+      detail: clamp01(params.detail, defaults.detail),
+      motion: clamp01(params.motion, defaults.motion)
+    };
+  }
+  function checkKind(kind) {
+    if (kind !== 'multifrequency' && kind !== 'biomotion') {
+      throw new TypeError('HaiyuAxisLift kind must be multifrequency or biomotion');
+    }
+  }
+  function authorTime(t) {
+    if (typeof t !== 'number' || !Number.isFinite(t)) throw new TypeError('HaiyuAxisLift requires finite author time');
+    // Preserve the author's 480-frame/16π loop; do not multiply t by motion.
+    const wrapped = t % AUTHOR_PERIOD;
+    return wrapped < 0 ? wrapped + AUTHOR_PERIOD : wrapped;
+  }
+
+  // The source equations are kept together, with no candidate geometry mixed in.
+  function fields(kind, y, u, t) {
+    const e = y / 5 - 11;
+    const k = (5 + Math.sin(y)) * u;
+    const d = Math.hypot(k, e) / 0.6 - 6;
+    const harmonic = 3 * Math.sin(e) + e * Math.sin(2 * e) + Math.sin(4 * d);
+    const qEven = 99 + d * Math.sin(t - d);
+    const qOdd = y / 23 * k * harmonic;
+    const q = qEven + qOdd;
+    const basePhase = d / 4 - t / 8;
+    // This is the sole formula difference between 04 and 05.
+    const phaseCorrection = kind === 'biomotion' ? Math.cos(t + e) / 9 : 0;
+    const c = basePhase + phaseCorrection;
+    return { y, u, e, k, d, harmonic, qEven, qOdd, q, c, basePhase, phaseCorrection,
+      point: [q * Math.sin(c) + 200, q * Math.cos(c) + 200, 0] };
+  }
+
+  function sourceSample(kind, y, u, t) {
+    checkKind(kind);
+    if (!Number.isFinite(y) || y < 0 || y > SOURCE_MAX_Y || !Number.isFinite(u) || Math.abs(u) > 1) {
+      throw new RangeError('Source material coordinates require 0 <= y <= SOURCE_MAX_Y and -1 <= u <= 1');
+    }
+    return fields(kind, y, u, authorTime(t));
+  }
+
+  function sourcePointByIndex(kind, i, t) {
+    if (!Number.isInteger(i) || i < 0 || i >= SOURCE_COUNT) throw new RangeError('Source index outside 0..19999');
+    return sourceSample(kind, i / 598, Math.cos(i / 7), t).point;
+  }
+
+  const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+  const vertebralStations=Array.from({length:24},(_,i)=>0.03+0.94*i/23);
+  const ribIndices=Array.from({length:16},(_,i)=>i+3);
+  function axisPoint(kind,s,t,p){
+    const f=fields(kind,s*SOURCE_MAX_Y,0,t),rest=fields(kind,s*SOURCE_MAX_Y,0,0);
+    const q=rest.qEven+p.motion*(f.qEven-rest.qEven);
+    const correction=rest.phaseCorrection+p.motion*(f.phaseCorrection-rest.phaseCorrection);
+    const c=f.d/4+correction;
+    const z=kind==='biomotion'&&p.motion!==0?12*p.depth*p.motion*(f.phaseCorrection-rest.phaseCorrection)*Math.sin(PI*s):0;
+    return [200+q*Math.sin(c),200+q*Math.cos(c),z];
+  }
+  function rotate(v,axis,angle){const c=Math.cos(angle),s=Math.sin(angle);return add(add(scale(v,c),scale(cross(axis,v),s)),scale(axis,dot(axis,v)*(1-c)));}
+  function makeFrames(kind,t,p){
+    const sample=[];
+    function tangentAt(s){const h=1e-5;return unit(sub(axisPoint(kind,s+h,t,p),axisPoint(kind,s-h,t,p)),[0,1,0]);}
+    let previousT=tangentAt(0),V=unit([previousT[1],-previousT[0],0],[1,0,0]);
+    for(let i=0;i<=128;i++){
+      const s=i/128,T=tangentAt(s),turn=cross(previousT,T),n=length(turn);
+      if(n>1e-12)V=rotate(V,scale(turn,1/n),Math.atan2(n,clamp(dot(previousT,T),-1,1)));
+      V=unit(sub(V,scale(T,dot(T,V))),V);sample.push({T,V});previousT=T;
+    }
+    const cache=new Map();
+    return function frame(s){
+      if(cache.has(s))return cache.get(s);
+      const q=clamp(s,0,1)*128,i=Math.min(127,Math.floor(q)),u=q-i,T=tangentAt(s);
+      let V=add(scale(sample[i].V,1-u),scale(sample[i+1].V,u));V=unit(sub(V,scale(T,dot(T,V))),sample[i].V);
+      const L=unit(cross(V,T),[0,0,1]),h=0.0001,A=axisPoint(kind,s,t,p),before=axisPoint(kind,s-h,t,p),after=axisPoint(kind,s+h,t,p);
+      const d1=scale(sub(after,before),1/(2*h)),d2=scale(add(sub(after,scale(A,2)),before),1/(h*h));
+      const curvatureRadius=length(d1)**3/Math.max(1e-10,length(cross(d1,d2)));
+      const out={T,L,V,tangent:T,normal:L,binormal:V,curvatureRadius,speed:length(d1)};cache.set(s,out);return out;
+    };
+  }
+  function unique(values){return Array.from(new Set(values.map(s=>+s.toFixed(12)))).sort((a,b)=>a-b);}
+
+  function evaluate(kind,t,inputParams){
+    checkKind(kind);t=Number(authorTime(t).toFixed(12));if(t>=AUTHOR_PERIOD)t=0;
+    // Canonicalize only mesh time so finite-difference curvature is stable at
+    // repeated loop phases. The original source sampling APIs stay untouched.
+    const p=parameters(inputParams),frame=makeFrames(kind,t,p);
+    const positions=[],faces=[],faceKinds=[],faceComponents=[],vertexS=[],components=[],junctions=[],lines=[],sections=[];
+    const caliber=0.65+0.65*p.thickness,marrowRadius=0.65*caliber,canalRadius=1.14*caliber;
+    const boneOuter=2.40*caliber,boneHalfSpan=0.94/23*0.285;
+    const boneAround=8+2*Math.round(2*p.detail),ribRows=10+Math.round(8*p.detail),ribAround=6;
+    const dimensionCache=new Map();
+    function dims(s){
+      if(dimensionCache.has(s))return dimensionCache.get(s);
+      const f=fields(kind,s*SOURCE_MAX_Y,0,t),r=fields(kind,s*SOURCE_MAX_Y,0,0),edge=fields(kind,s*SOURCE_MAX_Y,1,t),odd=fields(kind,s*SOURCE_MAX_Y,0.75,t).qOdd;
+      const q=r.qEven+p.motion*(f.qEven-r.qEven),span=2*q*Math.sin((edge.d-f.d)/8);
+      const chest=Math.max(0,Math.sin(PI*clamp((s-0.08)/0.80,0,1)))**0.58;
+      const signed=Math.tanh(odd/22),fine=Math.sin(4*f.d);
+      const asym=(kind==='multifrequency'?0.105:0.055)*signed;
+      const wave=1+p.motion*(kind==='multifrequency'?0.055:0.025)*(Math.sin(t-f.d)-Math.sin(-f.d));
+      let W=(4.4+0.18*span*chest)*(kind==='multifrequency'?1+0.075*fine:1.05)*wave;
+      let D=(7.5+0.24*span*chest)*(0.82+0.36*p.depth)*(kind==='biomotion'?1.10:1-0.035*fine)*wave;
+      const margin=1.65*caliber,radius=frame(s).curvatureRadius;
+      const rawExtent=Math.hypot(W*(1+Math.abs(asym))+boneOuter,D+margin);
+      const fit=Math.min(1,0.42*radius/rawExtent);W*=fit;D*=fit;
+      // Envelopes retain a positive cavity even at minimum depth/caliber.
+      W=Math.max(W,3.6*caliber);D=Math.max(D,5.3*caliber);
+      const left=W*(1+asym),right=W*(1-asym),pedicle=0.86*boneOuter;
+      const skinWidth=Math.max(left,right)+0.5*pedicle+margin;
+      const skinHeight=(D+boneOuter+2*margin)/2,skinOffset=(D-boneOuter)/2;
+      const out={W,D,left,right,pedicle,skinWidth,skinHeight,skinOffset,margin,sourceOdd:odd,sourceEven:q,sourcePhase:f.c,fit};dimensionCache.set(s,out);return out;
+    }
+    function point(P,s){vertexS.push(s);positions.push(P);return positions.length-1;}
+    function face(a,b,c,tag,id){faces.push([a,b,c]);faceKinds.push(tag);faceComponents.push(id);}
+    function tube(id,tag,levels,around,sectionAt,metadata={}){
+      const startVertex=positions.length,startFace=faces.length,rings=[],centers=[],sectionFrames=[];
+      for(const v of levels){const q=sectionAt(v),ring=[];centers.push(q.center);sectionFrames.push(q);
+        for(let j=0;j<around;j++){const a=TWO_PI*j/around;ring.push(point(add(q.center,add(scale(q.normal,q.width*Math.cos(a)),scale(q.binormal,q.depth*Math.sin(a)))),q.s));}rings.push(ring);}
+      for(let row=0;row<rings.length-1;row++)for(let j=0;j<around;j++){
+        const k=(j+1)%around,a=rings[row][j],b=rings[row][k],c=rings[row+1][k],d=rings[row+1][j];
+        if(j<around/2){face(a,b,c,tag,id);face(a,c,d,tag,id);}else{face(a,b,d,tag,id);face(b,c,d,tag,id);}
+      }
+      const lower=point(centers[0].slice(),sectionFrames[0].s),upper=point(centers.at(-1).slice(),sectionFrames.at(-1).s);
+      for(let j=0;j<around;j++){let k=(j+1)%around;face(lower,rings[0][k],rings[0][j],tag,id);face(upper,rings.at(-1)[j],rings.at(-1)[k],tag,id);}
+      const c={id,kind:tag,startVertex,vertexCount:positions.length-startVertex,startFace,faceCount:faces.length-startFace,rings,centers,...metadata};components.push(c);return c;
+    }
+    const marrowLevels=unique([0,1,...vertebralStations.flatMap(s=>[s-boneHalfSpan,s,s+boneHalfSpan])]);
+    const marrow=tube('marrow','marrow',marrowLevels,8,s=>{const f=frame(s);return {center:axisPoint(kind,s,t,p),normal:f.L,binormal:f.V,width:marrowRadius,depth:marrowRadius,s};},{radius:marrowRadius,role:'continuous marrow inside vertebral canals',cutawayVisible:true});
+    const boneByStation=[];
+    for(let bi=0;bi<vertebralStations.length;bi++){
+      const s=vertebralStations[bi],id='vertebra-'+bi,tag='vertebra',startVertex=positions.length,startFace=faces.length;
+      const outer=[],inner=[],levels=[s-boneHalfSpan,s,s+boneHalfSpan];
+      for(const [li,at]of levels.entries()){
+        const A=axisPoint(kind,at,t,p),f=frame(at),ro=boneOuter*(li===1?1.045:0.96),outside=[],inside=[];
+        for(let j=0;j<boneAround;j++){const a=TWO_PI*j/boneAround,radial=add(scale(f.L,Math.cos(a)),scale(f.V,Math.sin(a)));outside.push(point(add(A,scale(radial,ro)),at));inside.push(point(add(A,scale(radial,canalRadius)),at));}
+        outer.push(outside);inner.push(inside);
+      }
+      for(let row=0;row<2;row++)for(let j=0;j<boneAround;j++){
+        const k=(j+1)%boneAround,a=outer[row][j],b=outer[row][k],c=outer[row+1][k],d=outer[row+1][j];face(a,b,c,tag,id);face(a,c,d,tag,id);
+        const e=inner[row][j],f=inner[row][k],g=inner[row+1][k],h=inner[row+1][j];face(e,g,f,tag,id);face(e,h,g,tag,id);
+      }
+      for(const row of [0,2])for(let j=0;j<boneAround;j++){
+        const k=(j+1)%boneAround,a=outer[row][j],b=outer[row][k],c=inner[row][k],d=inner[row][j];
+        if(row===0){face(a,c,b,tag,id);face(a,d,c,tag,id);}else{face(a,b,c,tag,id);face(a,c,d,tag,id);}
+      }
+      const bone={id,kind:tag,startVertex,vertexCount:positions.length-startVertex,startFace,faceCount:faces.length-startFace,s,levels,outerRings:outer,innerRings:inner,canalRadius,outerRadius:1.045*boneOuter,role:'closed annular vertebral shell; marrow is inside its real canal'};components.push(bone);boneByStation.push(bone);
+    }
+    const ribStations=ribIndices.map(i=>vertebralStations[i]);
+    const sternumLevels=unique([...ribStations,...ribStations.slice(1).map((s,i)=>(s+ribStations[i])/2)]);
+    function sternumPoint(s){return add(axisPoint(kind,s,t,p),scale(frame(s).V,dims(s).D));}
+    const sternumRadius=0.80*caliber;
+    const sternum=tube('sternum','sternum',sternumLevels,8,s=>{
+      const h=1e-5,T=unit(sub(sternumPoint(s+h),sternumPoint(s-h)),frame(s).T),L=unit(sub(frame(s).L,scale(T,dot(T,frame(s).L))),frame(s).L),V=cross(T,L);
+      return {center:sternumPoint(s),normal:L,binormal:V,width:sternumRadius,depth:sternumRadius,s};
+    },{radius:sternumRadius,role:'continuous ventral sternum joining all left/right rib tips'});
+    for(let ri=0;ri<ribIndices.length;ri++){
+      const bi=ribIndices[ri],s=vertebralStations[bi],A=axisPoint(kind,s,t,p),f=frame(s),d=dims(s),ribs={};
+      const source=fields(kind,s*SOURCE_MAX_Y,0,t),ribRadius=(0.49+0.035*Math.sin(4*source.d))*caliber;
+      for(const side of [-1,1]){
+        const id='rib-'+(side<0?'left-':'right-')+ri,tag=side<0?'rib-left':'rib-right',W=side<0?d.left:d.right;
+        function center(u){return add(A,add(scale(f.L,side*(d.pedicle*(1-u)**2+W*Math.sin(PI*u))),scale(f.V,d.D*(1-Math.cos(PI*u))/2)));}
+        const levels=Array.from({length:ribRows+1},(_,j)=>j/ribRows);
+        const rib=tube(id,tag,levels,ribAround,u=>{
+          const derivative=add(scale(f.L,side*(-2*d.pedicle*(1-u)+W*PI*Math.cos(PI*u))),scale(f.V,d.D*PI*Math.sin(PI*u)/2));
+          const T=unit(derivative,f.L),normal=f.T,binormal=cross(T,normal),gauge=ribRadius*(1+0.12*(1-u)**3);
+          return {center:center(u),normal,binormal,width:gauge,depth:gauge,s};
+        },{s,side,sourceOdd:d.sourceOdd,radius:ribRadius,root:center(0),ventralJoin:center(1),role:'volumetric half-hoop; dorsal vertebral root to ventral sternum'});
+        ribs[side<0?'left':'right']=rib;
+        junctions.push({id:id+'-vertebra',components:[id,'vertebra-'+bi],center:center(0),radius:2.2*ribRadius+(boneOuter-d.pedicle),kind:'dorsal-costovertebral',rule:'actual intersection point must be inside this sphere'});
+        junctions.push({id:id+'-sternum',components:[id,'sternum'],center:sternumPoint(s),radius:sternumRadius+ribRadius+0.10*caliber,kind:'ventral-costosternal',rule:'actual intersection point must be inside this sphere'});
+      }
+      junctions.push({id:'ventral-rib-pair-'+ri,components:[ribs.left.id,ribs.right.id],center:sternumPoint(s),radius:2.1*ribRadius,kind:'shared-ventral-junction',rule:'actual intersection point must be inside this sphere'});
+      const marrowIndex=marrowLevels.findIndex(v=>Math.abs(v-s)<1e-10),sternumIndex=sternumLevels.findIndex(v=>Math.abs(v-s)<1e-10);
+      sections.push({s,y:s*SOURCE_MAX_Y,material:s,origin:A,A,center:A,T:f.T,L:f.L,V:f.V,frame:f,
+        marrow:marrow.rings[marrowIndex].map(i=>positions[i]),vertebraOuter:boneByStation[bi].outerRings[1].map(i=>positions[i]),vertebraInner:boneByStation[bi].innerRings[1].map(i=>positions[i]),
+        ribLeft:ribs.left.centers,ribRight:ribs.right.centers,ribLeftIndices:ribs.left.rings,ribRightIndices:ribs.right.rings,
+        sternum:sternum.rings[sternumIndex].map(i=>positions[i]),sternumPoint:sternumPoint(s),dorsalRootLeft:ribs.left.root,dorsalRootRight:ribs.right.root,
+        widths:{left:d.left,right:d.right,ventral:d.D},area:PI*(d.left+d.right)/2*d.D/2,boneId:'vertebra-'+bi,
+        sectionSource:'actual center-station bone/marrow rings and actual rib tube center curves; no independently generated diagram'});
+    }
+    const envelopeLevels=unique([0,1,...vertebralStations,...vertebralStations.slice(1).map((s,i)=>(s+vertebralStations[i])/2)]);
+    const envelope=tube('body-envelope','body-envelope',envelopeLevels,16,s=>{
+      const f=frame(s),d=dims(s);return {center:add(axisPoint(kind,s,t,p),scale(f.V,d.skinOffset)),normal:f.L,binormal:f.V,width:d.skinWidth,depth:d.skinHeight,s};
+    },{role:'closed enclosing volume around complete thoracic skeleton',defaultVisible:false});
+    for(const section of sections){const i=envelopeLevels.findIndex(v=>Math.abs(v-section.s)<1e-10);section.envelope=envelope.rings[i].map(j=>positions[j]);section.points=section.envelope;section.skin=dims(section.s);}
+    const spine=marrow.centers;
+    const bounds={min:[Infinity,Infinity,Infinity],max:[-Infinity,-Infinity,-Infinity]};for(const a of positions)for(let j=0;j<3;j++){bounds.min[j]=Math.min(bounds.min[j],a[j]);bounds.max[j]=Math.max(bounds.max[j],a[j]);}
+    const origin=positions[0];
+    for(const component of components){let volume=0;for(let i=component.startFace;i<component.startFace+component.faceCount;i++){const f=faces[i];volume+=dot(sub(positions[f[0]],origin),cross(sub(positions[f[1]],origin),sub(positions[f[2]],origin)))/6;}component.signedVolume=volume;}
+    let maxEnvelopeRadius=0;
+    for(let i=0;i<positions.length;i++){
+      if(i>=envelope.startVertex)continue;const s=vertexS[i],f=frame(s),d=dims(s),v=sub(positions[i],add(axisPoint(kind,s,t,p),scale(f.V,d.skinOffset)));
+      maxEnvelopeRadius=Math.max(maxEnvelopeRadius,Math.hypot(dot(v,f.L)/d.skinWidth,dot(v,f.V)/d.skinHeight));
+    }
+    const defaultSection=sections.reduce((a,b)=>Math.abs(b.s-0.42)<Math.abs(a.s-0.42)?b:a);
+    return {positions,faces,faceKinds,faceComponents,vertexS,components,junctions,lines,spine,sections,section:defaultSection,
+      diagnostics:{kind,authorTime:t,authorPeriod:AUTHOR_PERIOD,periodFrames:480,params:p,vertexCount:positions.length,faceCount:faces.length,bounds,
+        vertebraCount:vertebralStations.length,ribPairs:ribIndices.length,ribStations,marrowRadius,canalRadius,canalClearance:canalRadius-marrowRadius,
+        maxEnvelopeNormalizedRadius:maxEnvelopeRadius,minRibArea:Math.min(...sections.map(s=>s.area)),maxDepth:Math.max(Math.abs(bounds.min[2]),Math.abs(bounds.max[2])),
+        localFrame:'rotation-minimizing parallel transport; T longitudinal, L left/right, V dorsal to ventral; T cross L = V',
+        candidate:'Three-dimensional thoracic skeleton: real annular vertebrae around marrow, paired tubular rib half-hoops and a ventral sternum, enclosed by a separate closed envelope; an explicit interpretation, not measured anatomy or a species',
+        sourceFidelity:'Exact source scalar/projection APIs retained; even phase span and qEven drive cavity dimensions, signed qOdd drives differentiated rib span; local pose removes rigid -t/8 spin; 05 correction also drives bounded depth bending',
+        motionMeaning:'0 freezes all geometry; source internal phase motion is blended from rest and repeats exactly over 16π',
+        depthMeaning:'Changes positive chest depth and 05 depth bend; minimum stays volumetric',thicknessMeaning:'Positive bone/tube caliber range, never a planar-ribbon collapse',
+        contactRule:'Only actual intersection points inside an explicit junction sphere for that component pair are intentional; no broad root-fraction exclusions',
+        crossSectionMeaning:'Snaps to an actual rib and vertebral station; curves come from the same packet mesh'} };
+  }
+  function crossSection(kind,t,params,s=0.42){
+    if(!Number.isFinite(s))throw new TypeError('Section station must be finite');
+    const packet=evaluate(kind,t,params),selected=packet.sections.reduce((a,b)=>Math.abs(b.s-s)<Math.abs(a.s-s)?b:a);
+    return {...selected,requestedS:s,snapped:true,stationIndex:packet.sections.indexOf(selected),availableStations:packet.diagnostics.ribStations};
+  }
+  const api=Object.freeze({evaluate,crossSection,sourceSample,sourcePointByIndex,defaults,AUTHOR_PERIOD,AUTHOR_STEP,SOURCE_COUNT,SOURCE_MAX_Y});
+  root.HaiyuAxisLift=api;if(typeof module==='object'&&module.exports)module.exports=api;
+})(typeof globalThis==='undefined'?this:globalThis);
+
+/* R21 depth-tested renderer. No geometry generation and no third-party engine. */
+(()=>{'use strict';
+function create(canvas){
+ const gl=canvas.getContext('webgl',{alpha:false,antialias:true,preserveDrawingBuffer:true})||canvas.getContext('experimental-webgl',{alpha:false,antialias:true,preserveDrawingBuffer:true});
+ if(!gl)return null;
+ const shader=(type,src)=>{const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s};
+ const program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,'attribute vec3 a_position;attribute vec3 a_color;varying vec3 v_color;void main(){gl_Position=vec4(a_position,1.0);v_color=a_color;}'));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,'precision mediump float;varying vec3 v_color;void main(){gl_FragColor=vec4(v_color,1.0);}'));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));
+ const buffer=gl.createBuffer(),pos=gl.getAttribLocation(program,'a_position'),color=gl.getAttribLocation(program,'a_color');gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);
+ const rgb=value=>{if(value[0]==='#'){const n=parseInt(value.slice(1),16);return[(n>>16&255)/255,(n>>8&255)/255,(n&255)/255]}const n=value.match(/[\d.]+/g).slice(0,3).map(Number);return n.map(x=>x/255)};
+ const sub=(a,b)=>a.map((x,i)=>x-b[i]),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+ function draw(packet,options){
+  const {project,shade,showSurface,showSpine,showSections,neutral}=options,w=canvas.width,h=canvas.height,screen=packet.positions.map(project);
+  let near=Infinity,far=-Infinity;for(const p of screen){near=Math.min(near,p[2]);far=Math.max(far,p[2]);}const span=Math.max(1,far-near),mid=(near+far)/2;
+  const clip=(p,bias=0)=>[2*p[0]/w-1,1-2*p[1]/h,-1.8*(p[2]-mid)/span+bias];
+  const triangles=[];for(let i=0;i<packet.faces.length;i++){const kind=packet.faceKinds[i]||'body';if(options.faceVisible?!options.faceVisible(kind,i):(kind==='spine'?!showSpine:!showSurface))continue;const ids=packet.faces[i],p=ids.map(k=>packet.positions[k]),normal=cross(sub(p[1],p[0]),sub(p[2],p[0])),c=rgb(shade(normal,kind));for(const k of ids)triangles.push(...clip(screen[k]),...c)}
+  const lines=[];function addLine(points,c){if(!points||points.length<2)return;const value=rgb(c);for(let i=1;i<points.length;i++)for(const p of[points[i-1],points[i]])lines.push(...clip(project(p),-.0013),...value)}
+  if(showSections)for(const section of packet.sections||[])addLine(Array.isArray(section)?section:section.points,'#8ba5a6');
+  for(const l of packet.lines||[]){if(l.kind==='spine'||l.kind==='axis')continue;if(!showSections&&!['fin-vein','fin-rib','tail-ray'].includes(l.kind))continue;addLine(l.points,l.color||'#9fc5c3')}
+  
+  gl.viewport(0,0,w,h);gl.clearColor(neutral?.062:.031,neutral?.071:.052,neutral?.074:.060,1);gl.clearDepth(1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(program);gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.enableVertexAttribArray(pos);gl.vertexAttribPointer(pos,3,gl.FLOAT,false,24,0);gl.enableVertexAttribArray(color);gl.vertexAttribPointer(color,3,gl.FLOAT,false,24,12);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(triangles),gl.DYNAMIC_DRAW);gl.drawArrays(gl.TRIANGLES,0,triangles.length/6);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(lines),gl.DYNAMIC_DRAW);gl.drawArrays(gl.LINES,0,lines.length/6);
+  return {engine:'WebGL',depthTest:gl.isEnabled(gl.DEPTH_TEST),error:gl.getError(),triangles:triangles.length/18};
+ }
+ return {draw,gl};
+}
+window.HaiyuDepthRenderer={create};
+})();
+
+/* R21 thoracic controls, depth-tested rendering and explicit software fallback. Geometry comes only from HaiyuAxisLift. */
+(()=>{'use strict';
+const by=id=>document.getElementById(id),main=by('liftCanvas'),panel=by('axisLift'),TAU=Math.PI*2;
+const state={active:false,kind:'multifrequency',t:0,playing:false,yaw:.63,pitch:.28,zoom:1,showSpine:true,showSections:false,showSurface:false,neutral:false,dirty:true,geometryDirty:true,packet:null,faceCache:null,last:0,renderCount:0,drag:null,fitPoints:null,fitCache:new Map()};
+const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],sub=(a,b)=>a.map((x,i)=>x-b[i]),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=v=>{const n=Math.hypot(...v)||1;return v.map(x=>x/n)},clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const params=()=>({thickness:Number(by('liftThickness').value)/100,depth:Number(by('liftDepth').value)/100,detail:.5,motion:Number(by('liftMotion').value)/100});
+const depthRenderer=window.HaiyuDepthRenderer.create(main);
+const warm=norm([-.55,.7,.6]),cool=norm([.6,.25,-.75]);
+function transform(p,view){const[x,y,z]=p;if(view==='top')return[x,z,y];if(view==='front')return[x,y,z];const cy=Math.cos(state.yaw),sy=Math.sin(state.yaw),cp=Math.cos(state.pitch),sp=Math.sin(state.pitch),a=x*cy+z*sy,b=-x*sy+z*cy;return[a,y*cp-b*sp,y*sp+b*cp]}
+function makeProjector(packet,view,w,h){const key=view==='orbit'?view+':'+state.yaw+':'+state.pitch:view;let bounds=state.fitCache.get(key);if(!bounds){let loX=Infinity,hiX=-Infinity,loY=Infinity,hiY=-Infinity;for(const raw of state.fitPoints||packet.positions){const p=transform(raw,view);loX=Math.min(loX,p[0]);hiX=Math.max(hiX,p[0]);loY=Math.min(loY,p[1]);hiY=Math.max(hiY,p[1])}bounds={dx:Math.max(1e-4,hiX-loX),dy:Math.max(1e-4,hiY-loY),cx:(loX+hiX)/2,cy:(loY+hiY)/2};if(state.fitCache.size>12)state.fitCache.clear();state.fitCache.set(key,bounds)}const scale=Math.min(w*.82/bounds.dx,h*.77/bounds.dy)*state.zoom;return p=>{const a=transform(p,view);return[w/2+(a[0]-bounds.cx)*scale,h*.5-(a[1]-bounds.cy)*scale,a[2]]}}
+function color(normal,kind,view,neutral=state.neutral){const n=norm(normal);if(kind==='marrow')return neutral?'#eab778':'#ffaf50';if(kind==='sternum')return neutral?'#aebcba':'#86c7c0';if(neutral){const v=Math.round(110+90*Math.abs(transform(n,view)[2]));return `rgb(${v},${v},${v})`}const a=Math.max(0,dot(n,warm)),b=Math.max(0,dot(n,cool)),back=.18*Math.max(0,-dot(n,warm)),base=kind?.includes('rib')?[209,194,164]:kind==='vertebra'?[214,207,187]:[158,185,191],light=.34+.55*a+.37*b+back;return`rgb(${Math.round(base[0]*light+39*a)},${Math.round(base[1]*light+13*a+12*b)},${Math.round(base[2]*light+46*b)})`}
+function visible(kind){return kind==='body-envelope'?state.showSurface:state.showSpine}
+function draw(target,view){const w=target.width,h=target.height,packet=state.packet,project=makeProjector(packet,view,w,h);if(target===main&&depthRenderer){const result=depthRenderer.draw(packet,{project,shade:(n,k)=>color(n,k,view),showSurface:state.showSurface,showSpine:state.showSpine,showSections:state.showSections,neutral:state.neutral,faceVisible:visible});panel.dataset.renderer=result.engine;panel.dataset.depthTest=String(result.depthTest);panel.dataset.glError=String(result.error);return;}const ctx=target.getContext('2d'),screen=packet.positions.map(project);ctx.fillStyle=state.neutral?'#111315':'#090f11';ctx.fillRect(0,0,w,h);if(!state.neutral){const g=ctx.createLinearGradient(0,0,w,0);g.addColorStop(0,'rgba(150,75,34,.14)');g.addColorStop(.5,'rgba(15,20,22,0)');g.addColorStop(1,'rgba(42,90,143,.18)');ctx.fillStyle=g;ctx.fillRect(0,0,w,h)}
+const ordered=[];for(const f of state.faceCache){if(!visible(f.kind))continue;f.z=(screen[f.ids[0]][2]+screen[f.ids[1]][2]+screen[f.ids[2]][2])/3;ordered.push(f)}ordered.sort((a,b)=>a.z-b.z);for(const f of ordered){const a=screen[f.ids[0]],b=screen[f.ids[1]],c=screen[f.ids[2]];ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.lineTo(c[0],c[1]);ctx.closePath();ctx.fillStyle=state.neutral?color(f.normal,f.kind,view):f.color;ctx.fill()}
+function line(points,stroke,width){if(!points?.length)return;ctx.beginPath();points.forEach((p,i)=>{const a=project(p);i?ctx.lineTo(a[0],a[1]):ctx.moveTo(a[0],a[1])});ctx.strokeStyle=stroke;ctx.lineWidth=width*(view==='orbit'?1:.7);ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke()}
+if(state.showSections)for(const s of packet.sections||[])line(Array.isArray(s)?s:s.points,'rgba(180,211,217,.42)',1.0);
+for(const l of packet.lines||[]){if(l.kind==='spine'||l.kind==='axis')continue;if(!state.showSections&&!['fin-vein','fin-rib','tail-ray'].includes(l.kind))continue;line(l.points,l.color||'rgba(191,213,206,.38)',Math.max(.55,Math.min(1.2,l.width||.7)))}
+
+ctx.fillStyle='#a8b5b1';ctx.font=(view==='orbit'?'18':'16')+'px system-ui';ctx.fillText(view==='orbit'?'髓线 → 椎列 → 环周肋架 → 胸骨':view==='front'?'同一对象 · X/Y':'同一对象 · X/Z',16,28);if(view==='orbit'){ctx.font='16px system-ui';const s=state.neutral?'中性结构检查':'暖主光 + 冷辅光';ctx.fillText(s,w-ctx.measureText(s).width-16,28)}}
+function drawSection(target){
+ const ctx=target.getContext('2d'),w=target.width,h=target.height,s=Number(by('liftSectionPosition').value)/100;
+ const sec=state.packet.sections.reduce((a,b)=>Math.abs(b.s-s)<Math.abs(a.s-s)?b:a),origin=sec.origin||sec.A||sec.center,T=sec.T,L=sec.L,V=sec.V;
+ if(!origin||!T||!L||!V)throw Error('Cross-section requires actual transported origin/T/L/V');
+ const segments=[];for(let f=0;f<state.packet.faces.length;f++){const kind=state.packet.faceKinds[f];if(!visible(kind))continue;const ps=state.packet.faces[f].map(i=>state.packet.positions[i]),ds=ps.map(p=>dot(sub(p,origin),T)),hits=[];for(let j=0;j<3;j++){const k=(j+1)%3;if(ds[j]*ds[k]<0){const q=ds[j]/(ds[j]-ds[k]);hits.push(ps[j].map((x,a)=>x+q*(ps[k][a]-x)))}else if(Math.abs(ds[j])<1e-8)hits.push(ps[j]);}if(hits.length>=2)segments.push({kind,points:hits.slice(0,2).map(p=>[dot(sub(p,origin),L),dot(sub(p,origin),V)])});}
+ const all=segments.flatMap(x=>x.points);ctx.fillStyle='#0b1114';ctx.fillRect(0,0,w,h);if(all.length){const xs=all.map(p=>p[0]),ys=all.map(p=>p[1]),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),scale=Math.min(w*.76/Math.max(1,maxX-minX),h*.7/Math.max(1,maxY-minY)),cx=(minX+maxX)/2,cy=(minY+maxY)/2;for(const seg of segments){ctx.beginPath();for(let i=0;i<2;i++){const p=seg.points[i],x=w/2+(p[0]-cx)*scale,y=h*.52+(p[1]-cy)*scale;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.strokeStyle=seg.kind==='marrow'?'#ffb558':seg.kind==='sternum'?'#8acac1':seg.kind==='body-envelope'?'#4b6c79':'#e7d6b5';ctx.lineWidth=2;ctx.stroke();}}
+ ctx.fillStyle='#bac8ca';ctx.font='15px system-ui';ctx.fillText('真实网格横切 · 背侧在上 / 腹侧在下',12,22);ctx.fillStyle='#849c9f';ctx.fillText('实际肋节 s='+sec.s.toFixed(3)+' · '+segments.length+' 条交线',12,h-12);by('liftSectionPositionValue').textContent=sec.s.toFixed(3);panel.dataset.sectionStation=sec.s;panel.dataset.sectionSegments=segments.length;
+}
+function render(){if(!state.active)return;const renderStart=performance.now();if(!state.fitPoints){state.fitPoints=[0,Math.PI/2,Math.PI,3*Math.PI/2].flatMap(t=>window.HaiyuAxisLift.evaluate(state.kind,t,params()).positions);state.fitCache.clear()}if(state.geometryDirty||!state.packet){state.packet=window.HaiyuAxisLift.evaluate(state.kind,state.t,params());state.faceCache=state.packet.faces.map((ids,i)=>{const[a,b,c]=ids.map(j=>state.packet.positions[j]),normal=cross(sub(b,a),sub(c,a)),kind=state.packet.faceKinds[i]||'body';return {ids,normal,kind,color:color(normal,kind,'orbit',false),z:0}}).filter(f=>Math.hypot(...f.normal)>1e-12);state.geometryDirty=false}draw(main,'orbit');draw(by('liftSide'),'front');drawSection(by('liftTop'));const p=state.packet;panel.dataset.kind=state.kind;panel.dataset.time=state.t;panel.dataset.vertices=p.positions.length;panel.dataset.triangles=p.faces.length;panel.dataset.native3d='true';panel.dataset.cameraAffectsGeneration='false';by('liftStatus').textContent=`${depthRenderer?'三维深度渲染':'软件三维预览'} · ${p.positions.length.toLocaleString()} 顶点 / ${p.faces.length.toLocaleString()} 面`;by('liftTime').value=Math.round(state.t/(16*Math.PI)*480);by('liftClock').textContent='t = '+state.t.toFixed(3)+' / '+(16*Math.PI).toFixed(3);by('liftState').textContent=state.playing?'运行中':'暂停';by('liftPlay').textContent=state.playing?'暂停小样':'播放小样';panel.dataset.renderMs=(performance.now()-renderStart).toFixed(2);panel.dataset.renderCount=String(++state.renderCount);if(!depthRenderer){panel.dataset.renderer='Canvas3D-fallback';panel.dataset.depthTest='false';panel.dataset.glError='not-run'}state.dirty=false}
+function on(id,type,fn){by(id).addEventListener(type,fn)}
+on('liftPlay','click',()=>{state.playing=!state.playing;state.last=performance.now();state.dirty=true});on('liftReset','click',()=>{state.t=0;state.playing=false;state.geometryDirty=state.dirty=true});on('liftView','click',()=>{state.yaw=.63;state.pitch=.28;state.zoom=1;state.dirty=true});on('liftTime','input',e=>{state.t=Number(e.target.value)/480*16*Math.PI;state.playing=false;state.geometryDirty=state.dirty=true});
+for(const[id,key]of[['liftSpine','showSpine'],['liftSections','showSections'],['liftSurface','showSurface']])on(id,'click',()=>{state[key]=!state[key];by(id).setAttribute('aria-pressed',String(state[key]));state.dirty=true});on('liftLight','click',()=>{state.neutral=!state.neutral;by('liftLight').textContent=state.neutral?'中性检查':'冷暖光';by('liftLight').setAttribute('aria-pressed',String(!state.neutral));state.dirty=true});for(const id of['liftThickness','liftDepth','liftMotion'])on(id,'input',()=>{by(id+'Value').textContent=(Number(by(id).value)/100).toFixed(2);state.fitPoints=null;state.geometryDirty=state.dirty=true});
+main.addEventListener('pointerdown',e=>{state.drag=[e.clientX,e.clientY,state.yaw,state.pitch];main.setPointerCapture(e.pointerId);main.style.cursor='grabbing'});main.addEventListener('pointermove',e=>{if(!state.drag)return;state.yaw=state.drag[2]+(e.clientX-state.drag[0])*.008;state.pitch=clamp(state.drag[3]+(e.clientY-state.drag[1])*.008,-1.4,1.4);state.dirty=true});for(const ev of['pointerup','pointercancel','lostpointercapture'])main.addEventListener(ev,()=>{state.drag=null;main.style.cursor='grab'});main.addEventListener('wheel',e=>{e.preventDefault();state.zoom=clamp(state.zoom*Math.exp(-e.deltaY*.001),.55,2.4);state.dirty=true},{passive:false});
+on('liftSectionPosition','input',()=>{state.dirty=true});
+on('liftExport','click',()=>{const data={schema:'KAOPU.Haiyu.axis-lift/1',version:'R21',kind:state.kind,time:state.t,parameters:params(),diagnostics:state.packet?.diagnostics,source:'Source scalar fields drive a constrained thoracic skeleton around an internal marrow canal; circumferential rib topology and proportions are explicit interpretations',cameraAffectsGeneration:false};const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.href=url;a.download='海羽-R21-'+state.kind+'-三维谱.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
+window.HaiyuLiftUI={setActive(value,kind,initialTime=0){state.active=!!value;state.playing=false;state.drag=null;if(!value)return;state.kind=kind;state.fitPoints=null;state.t=Number.isFinite(initialTime)?((initialTime%(16*Math.PI))+(16*Math.PI))%(16*Math.PI):0;state.yaw=.63;state.pitch=.28;state.zoom=1;state.geometryDirty=state.dirty=true;by('liftTitle').textContent=kind==='biomotion'?'05 仿生游动 · 胸廓相位波':'04 多频羽化 · 环周肋架';by('liftFormula').textContent='材料地址：y 沿躯轴，u ∈ [−1,1] 向左右展开。\nk=(5+sin(y))·u；e=y/5−11；d=hypot(k,e)/0.6−6。\nq=99+d·sin(t−d)+y/23·k·(3sin(e)+e·sin(2e)+sin(4d))。\nc=d/4−t/8'+(kind==='biomotion'?' + cos(t+e)/9':'')+'。\n发生关系：弯曲髓线 → 中空椎列 → 背侧肋根 → 环绕胸腔 → 腹侧胸骨。\n04 多频场驱动分组肋拱；05 的相位波进入髓线的横向和深向弯曲，椎列、肋架、胸骨共同运动。\n去掉整只刚性转圈，保留内部形变；胸廓比例、骨架拓扑和连接是新增的结构解释，不对应已测量物种。\n原始二维点函数完整保留；不声称新形体是原投影的唯一三维答案。';render()}};
+function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-state.last>42){const dt=Math.min(.08,(now-state.last)/1000);state.t=(state.t+dt*2*Math.PI*Number(by('liftSpeed').value))%(16*Math.PI);state.last=now;state.geometryDirty=state.dirty=true}if(state.dirty)render()}else state.last=now;requestAnimationFrame(tick)}requestAnimationFrame(tick);
+})();
+
+function choose(k){document.querySelector('#choose04').setAttribute('aria-pressed',String(k==='multifrequency'));document.querySelector('#choose05').setAttribute('aria-pressed',String(k==='biomotion'));HaiyuLiftUI.setActive(true,k)};document.querySelector('#choose04').onclick=()=>choose('multifrequency');document.querySelector('#choose05').onclick=()=>choose('biomotion');choose('multifrequency');</script></body></html>
