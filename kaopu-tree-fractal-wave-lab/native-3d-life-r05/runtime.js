@@ -36,7 +36,7 @@ scene.add(new THREE.HemisphereLight(0xc7ded6,0x2a1d1c,1.75));
 const sun=new THREE.DirectionalLight(0xe8fff8,2.65);sun.position.set(7,12,6);scene.add(sun);
 const rim=new THREE.DirectionalLight(0xff8dad,1.0);rim.position.set(-6,4,-5);scene.add(rim);
 
-const groundMat=new THREE.MeshStandardMaterial({color:0x7e755f,roughness:1,transparent:true,opacity:.18,side:THREE.DoubleSide,depthWrite:false});
+const groundMat=new THREE.MeshStandardMaterial({color:0x7e755f,roughness:1,transparent:true,opacity:.10,side:THREE.DoubleSide,depthWrite:false});
 const ground=new THREE.Mesh(new THREE.CircleGeometry(7.5,72),groundMat);ground.rotation.x=-Math.PI/2;ground.position.y=0;scene.add(ground);
 const grid=new THREE.GridHelper(15,30,0x39504a,0x1b2d29);grid.position.y=.008;scene.add(grid);
 const soilBox=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(10,3.8,10)),new THREE.LineBasicMaterial({color:0x4d5146,transparent:true,opacity:.28}));
@@ -54,7 +54,7 @@ let rootLines=new THREE.LineSegments(new THREE.BufferGeometry(),skeletonRootMat)
 let waterLines=new THREE.LineSegments(new THREE.BufferGeometry(),waterFlowMat);scene.add(waterLines);
 let carbonLines=new THREE.LineSegments(new THREE.BufferGeometry(),carbonFlowMat);scene.add(carbonLines);
 
-const leafMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.58,side:THREE.DoubleSide,vertexColors:true,emissive:0x071006,emissiveIntensity:.10});
+const leafMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.62,side:THREE.DoubleSide,vertexColors:true,emissive:0x102112,emissiveIntensity:.32});
 const leafGeo=(()=>{
   const pos=[
     0,0,0, -.10,.15,0, -.075,.34,.015, 0,.46,.025, .075,.34,.015, .10,.15,0,
@@ -70,8 +70,8 @@ const MAX_TIPS=1200;
 const meristemMesh=new THREE.InstancedMesh(meristemGeo,meristemMat,MAX_TIPS);meristemMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);scene.add(meristemMesh);
 const flowerMat=new THREE.MeshStandardMaterial({color:0xd66a99,emissive:0x2f0614,emissiveIntensity:.24,roughness:.5});
 const fruitMat=new THREE.MeshStandardMaterial({color:0xc9904c,roughness:.68,metalness:0});
-const flowerGeo=new THREE.IcosahedronGeometry(.055,1);
-const fruitGeo=new THREE.DodecahedronGeometry(.095,1);
+const flowerGeo=new THREE.IcosahedronGeometry(.030,1);
+const fruitGeo=new THREE.DodecahedronGeometry(.050,1);
 const MAX_REPRO=900;
 const flowerMesh=new THREE.InstancedMesh(flowerGeo,flowerMat,MAX_REPRO);flowerMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);scene.add(flowerMesh);
 const fruitMesh=new THREE.InstancedMesh(fruitGeo,fruitMat,MAX_REPRO);fruitMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);scene.add(fruitMesh);
@@ -334,10 +334,10 @@ function phylloAngle(index,groupIndex,key){
 }
 function leafLifeState(tip,index){
   const age=clamp(P.phenology + .055*Math.max(0,P.pass-tip.depth) + sh(tip.key+':leafage:'+index)*.10,0,1.12);
-  if(age<.16)return {name:'primordium',scale:.18+.9*age,color:new THREE.Color().setHSL(.24,.45,.48),source:.02};
-  if(age<.34)return {name:'unfolding',scale:.45+(age-.16)*2.4,color:new THREE.Color().setHSL(.27,.50,.40),source:.20};
-  if(age<.83)return {name:'mature',scale:.88+.18*hash01(tip.key+':leafsize:'+index),color:new THREE.Color().setHSL(.29+.025*hash01(tip.key+':leafh:'+index),.46,.26),source:1};
-  if(age<1.0)return {name:'senescent',scale:.98,color:new THREE.Color().setHSL(.15,.52,.38),source:.18};
+  if(age<.16)return {name:'primordium',scale:.15+.72*age,color:new THREE.Color().setHSL(.24,.42,.52),source:.02};
+  if(age<.34)return {name:'unfolding',scale:.36+(age-.16)*1.9,color:new THREE.Color().setHSL(.27,.46,.43),source:.20};
+  if(age<.83)return {name:'mature',scale:.62+.15*hash01(tip.key+':leafsize:'+index),color:new THREE.Color().setHSL(.29+.025*hash01(tip.key+':leafh:'+index),.42,.34),source:1};
+  if(age<1.0)return {name:'senescent',scale:.68,color:new THREE.Color().setHSL(.15,.48,.43),source:.18};
   return {name:'abscised',scale:0,color:new THREE.Color(0x332b22),source:0};
 }
 function rebuildLeaves(graph){
@@ -374,9 +374,9 @@ function rebuildLeaves(graph){
       dummy.position.copy(tip.pos).addScaledVector(tip.frame.T,.06);
       dummy.quaternion.identity();
       if(phase<.46){
-        const sc=.65+.55*phase;dummy.scale.setScalar(sc);dummy.updateMatrix();flowerMesh.setMatrixAt(fi++,dummy.matrix);
+        const sc=.65+.55*phase;dummy.scale.setScalar(.72*sc);dummy.updateMatrix();flowerMesh.setMatrixAt(fi++,dummy.matrix);
       }else{
-        const sc=.45+1.35*(phase-.46)/.54;dummy.scale.setScalar(sc);dummy.updateMatrix();fruitMesh.setMatrixAt(fr++,dummy.matrix);
+        const sc=.45+1.35*(phase-.46)/.54;dummy.scale.setScalar(.64*sc);dummy.updateMatrix();fruitMesh.setMatrixAt(fr++,dummy.matrix);
       }
     }
   }
@@ -398,7 +398,7 @@ function rebuildFlows(graph){
 function fitGraph(graph){
   const box=new THREE.Box3();for(const s of graph.shootSegments){box.expandByPoint(s.a);box.expandByPoint(s.b)}for(const s of graph.rootSegments){box.expandByPoint(s.a);box.expandByPoint(s.b)}
   if(box.isEmpty())return;const center=box.getCenter(new THREE.Vector3()),size=box.getSize(new THREE.Vector3()),span=Math.max(size.x,size.y,size.z,3);
-  controls.target.copy(center);camera.position.copy(center).addScaledVector(new THREE.Vector3(1.05,.62,1.16).normalize(),span*1.55);camera.near=Math.max(.02,span/180);camera.far=Math.max(80,span*12);camera.updateProjectionMatrix();controls.update();
+  controls.target.copy(center);camera.position.copy(center).addScaledVector(new THREE.Vector3(1.05,.62,1.16).normalize(),span*1.72);camera.near=Math.max(.02,span/180);camera.far=Math.max(80,span*12);camera.updateProjectionMatrix();controls.update();
 }
 function signature(graph,organs){
   const box=new THREE.Box3();for(const s of [...graph.shootSegments,...graph.rootSegments]){box.expandByPoint(s.a);box.expandByPoint(s.b)}
