@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0d0c">
+<title>海羽 R18 · 原生三维羽片工作台</title>
+<style>
+:root{color-scheme:dark;--bg:#0a0d0c;--panel:#111614;--line:#2c3732;--ink:#eef2ee;--muted:#8f9b95;--gold:#e2c98d;--cold:#9fd9ff;--brown:#8f633b}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:14px/1.55 system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+body{overflow-x:hidden}button,input{font:inherit}.app{min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) 320px}
+main{min-width:0;padding:18px}.top{display:flex;align-items:flex-start;gap:16px;margin-bottom:14px}.eyebrow{color:var(--gold);font-size:10px;letter-spacing:.18em}.top h1{font-size:22px;font-weight:560;margin:3px 0}.sub{font-size:12px;color:var(--muted)}.status{margin-left:auto;text-align:right;font-size:11px;color:var(--muted)}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#7fd4a7;margin-right:6px}
+.stage{position:relative;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:radial-gradient(circle at 55% 40%,#17211d,#080b0a 68%);height:min(66vh,720px);min-height:430px}
+canvas{display:block;width:100%;height:100%;touch-action:none}.badge{position:absolute;top:12px;left:12px;padding:5px 8px;border:1px solid #516059;border-radius:6px;background:#0d1210cc;color:#cad5cf;font:10px ui-monospace,monospace;pointer-events:none}
+.hint{position:absolute;bottom:10px;left:12px;color:#98a49e;font-size:11px;pointer-events:none}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.proj{border:1px solid var(--line);background:#090c0b;border-radius:10px;overflow:hidden}.proj canvas{height:170px}.cap{font-size:10px;color:var(--muted);padding:6px 9px;border-top:1px solid var(--line)}
+aside{border-left:1px solid var(--line);background:var(--panel);padding:17px 16px;overflow:auto;max-height:100vh;position:sticky;top:0}.aside-head{display:flex;align-items:center;justify-content:space-between}.aside-head strong{font-size:14px}.aside-head small{display:block;color:var(--muted);font-size:10px}.sec{border-top:1px solid var(--line);padding-top:15px;margin-top:15px}.sec h2{font-size:12px;font-weight:600;margin:0 0 11px;color:#d7ded9}.row{display:flex;gap:7px;flex-wrap:wrap}.row button{flex:1;min-width:88px}.b{border:1px solid #3a4741;border-radius:7px;padding:8px 9px;background:#171d1a;color:#e7ece8;cursor:pointer}.b:hover{border-color:#6e8178}.b.active{background:#263229;border-color:#7d927f;color:#dff3df}.b.warm{border-color:#755e36}.b.cold{border-color:#3d6375}
+.ctrl{margin:12px 0}.ctrl label{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;color:#c6cec9;font-size:12px}.ctrl output{font:11px ui-monospace,monospace;color:var(--gold)}input[type=range]{width:100%;accent-color:#c7aa6b}.note{font-size:10px;color:var(--muted);margin-top:8px}.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{border:1px solid #33413a;border-radius:5px;padding:3px 6px;color:#aebbb4;font-size:9px}.route{font-size:10px;color:#9caaa2;line-height:1.8}.route b{color:var(--gold)}
+@media(max-width:900px){.app{display:block}.stage{height:58vh;min-height:360px}.grid{gap:8px}.proj canvas{height:135px}aside{position:static;max-height:none;border-left:0;border-top:1px solid var(--line)}.status{display:none}}
+@media(max-width:460px){main{padding:12px}.top h1{font-size:19px}.stage{height:52vh;min-height:320px}.grid{grid-template-columns:1fr}.proj canvas{height:120px}.row button{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="app">
+<main>
+  <div class="top">
+    <div><div class="eyebrow">KAOPU · HAIYU R18 · NATIVE 3D LIFT</div><h1>海羽 R18 · 原生三维羽片</h1><div class="sub">二维对象谱 → 棕色主轴/羽轴 → 局部参考架 → 三维羽片薄体 → 羽枝</div></div>
+    <div class="status"><span class="dot"></span><span id="status">初始化三维函数</span></div>
+  </div>
+  <div class="stage" id="stage"><span class="badge">NATIVE 3D · CAMERA ≠ GENERATOR</span><span class="hint">拖动旋转 · 滚轮/双指缩放 · 双击复位</span></div>
+  <div class="grid">
+    <div class="proj"><canvas id="side"></canvas><div class="cap">侧视 · 同一三维状态 X / Y</div></div>
+    <div class="proj"><canvas id="top"></canvas><div class="cap">顶视 · 同一三维状态 X / Z</div></div>
+  </div>
+</main>
+<aside>
+  <div class="aside-head"><div><strong>函数羽片参数</strong><small>R18 ONLINE · 真实三维数据先生成，相机只观察</small></div><button class="b" id="reset">复位</button></div>
+  <div class="sec">
+    <h2>观察</h2>
+    <div class="row"><button class="b active" id="surface">三维羽片</button><button class="b active" id="barbs">羽枝</button><button class="b active" id="axis">棕色羽轴</button></div>
+    <div class="row" style="margin-top:7px"><button class="b warm active" id="warm">暖主光</button><button class="b cold active" id="cold">冷辅光</button><button class="b" id="neutral">中性检查</button></div>
+  </div>
+  <div class="sec">
+    <h2>主轴与三维升档</h2>
+    <div class="ctrl"><label>整体展开 <output id="oWidth">1.00</output></label><input id="width" type="range" min="60" max="145" value="100"></div>
+    <div class="ctrl"><label>三维拱度 <output id="oCamber">0.16</output></label><input id="camber" type="range" min="0" max="40" value="16"></div>
+    <div class="ctrl"><label>空间扭转 <output id="oTwist">0.24</output></label><input id="twist" type="range" min="-60" max="80" value="24"></div>
+    <div class="ctrl"><label>羽轴弯曲 <output id="oBend">0.18</output></label><input id="bend" type="range" min="-35" max="45" value="18"></div>
+    <div class="ctrl"><label>羽片厚度 <output id="oThick">0.025</output></label><input id="thick" type="range" min="5" max="60" value="25"></div>
+    <p class="note">这些深度参数是三维升档候选，不冒充单张正面参考中不存在的真实测量。</p>
+  </div>
+  <div class="sec">
+    <h2>生命活动</h2>
+    <div class="row"><button class="b" id="play">播放轻摆</button><button class="b" id="zero">回到起点</button></div>
+    <div class="ctrl"><label>共同时间 <output id="oTime">0.00 s</output></label><input id="time" type="range" min="0" max="1000" value="0"></div>
+    <div class="ctrl"><label>摆动幅度 <output id="oMotion">0.22</output></label><input id="motion" type="range" min="0" max="55" value="22"></div>
+  </div>
+  <div class="sec">
+    <h2>当前三维合同</h2>
+    <div class="chips"><span class="chip">主轴先于表面</span><span class="chip">局部参考架</span><span class="chip">相机不参与生成</span><span class="chip">侧/顶视同源</span></div>
+    <p class="route">对象谱 <b>→</b> 羽轴函数 <b>→</b> 平行移动参考架 <b>→</b> 左右宽度/拱度/扭转 <b>→</b> 三维羽片与羽枝</p>
+  </div>
+</aside>
+</div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js';
+
+const stage=document.getElementById('stage'),statusEl=document.getElementById('status');
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.8));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;
+stage.prepend(renderer.domElement);
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x090c0b);
+const camera=new THREE.PerspectiveCamera(36,1,.05,100);camera.position.set(4.7,1.2,7.8);
+let yaw=.08,pitch=.03,dist=8.9,target=new THREE.Vector3(0,1.55,0),drag=false,lastX=0,lastY=0;
+function updateCamera(){camera.position.set(target.x+dist*Math.sin(yaw)*Math.cos(pitch),target.y+dist*Math.sin(pitch),target.z+dist*Math.cos(yaw)*Math.cos(pitch));camera.lookAt(target)}
+updateCamera();
+const hemi=new THREE.HemisphereLight(0xdde7e2,0x2b221d,1.4);scene.add(hemi);
+const warm=new THREE.DirectionalLight(0xffc884,3.3);warm.position.set(4.5,7,5);scene.add(warm);
+const cold=new THREE.DirectionalLight(0x95d8ff,2.15);cold.position.set(-5,3,-4);scene.add(cold);
+const rim=new THREE.DirectionalLight(0xffdfb5,.75);rim.position.set(1,-1,-6);scene.add(rim);
+
+const root=new THREE.Group();scene.add(root);
+const mat=new THREE.MeshStandardMaterial({color:0xe6e1d3,roughness:.76,metalness:0,side:THREE.DoubleSide,transparent:true,opacity:.94});
+const edgeMat=new THREE.LineBasicMaterial({color:0xbec8c2,transparent:true,opacity:.62});
+const barbMat=new THREE.LineBasicMaterial({color:0xc9c5b8,transparent:true,opacity:.66});
+const shaftMat=new THREE.MeshStandardMaterial({color:0x8f633b,roughness:.72});
+let vane=null,edge=null,shaft=null,barbLines=null;
+const P={width:1,camber:.16,twist:.24,bend:.18,thick:.025,motion:.22,t:0,play:false,surface:true,barbs:true,axis:true,warm:true,cold:true,neutral:false};
+
+function widthProfile(u){const a=Math.sin(Math.PI*Math.pow(u,.82));const taper=Math.pow(1-u,.16);return Math.max(.025,a*taper*(.78+.22*Math.sin(Math.PI*u)))}
+function axisPoint(u){
+  const y=-1.7+6.7*u;
+  const bend=P.bend*(u*u)*1.45;
+  const wave=P.motion*Math.sin(P.t*2.25-u*3.2)*Math.pow(u,.72);
+  return new THREE.Vector3(bend+wave,y,.12*Math.sin(u*2.8+P.t*.35)*u);
+}
+function frameAt(u){
+  const e=.002,a=axisPoint(Math.max(0,u-e)),b=axisPoint(Math.min(1,u+e)),T=b.sub(a).normalize();
+  let N=new THREE.Vector3(1,0,0);N.addScaledVector(T,-N.dot(T)).normalize();
+  let B=new THREE.Vector3().crossVectors(T,N).normalize();
+  const roll=P.twist*(u-.2)*1.65;
+  N.applyAxisAngle(T,roll);B.crossVectors(T,N).normalize();
+  return {T,N,B};
+}
+function sidePoint(u,s){
+  const c=axisPoint(u),f=frameAt(u),w=1.72*P.width*widthProfile(u);
+  const asym=s<0?1.0:.84;const x=w*asym*s;
+  const cam=P.camber*Math.sin(Math.PI*Math.min(1,Math.abs(s)))*(0.4+0.6*Math.sin(Math.PI*u));
+  return c.clone().addScaledVector(f.N,x).addScaledVector(f.B,cam*(s<0?.82:1.0));
+}
+function dispose(o){if(!o)return;root.remove(o);o.geometry?.dispose()}
+function rebuild(){
+  [vane,edge,shaft,barbLines].forEach(dispose);
+  const N=92,verts=[],idx=[],edgePts=[],barbPts=[];
+  for(let i=0;i<N;i++){
+    const u=i/(N-1),c=axisPoint(u),f=frameAt(u),wl=1.72*P.width*widthProfile(u),wr=wl*.84;
+    const cam=P.camber*(0.32+.68*Math.sin(Math.PI*u));
+    const L=c.clone().addScaledVector(f.N,-wl).addScaledVector(f.B,cam*.82);
+    const R=c.clone().addScaledVector(f.N,wr).addScaledVector(f.B,cam);
+    const th=P.thick;
+    const Lt=L.clone().addScaledVector(f.B,th),Rt=R.clone().addScaledVector(f.B,th),Lb=L.clone().addScaledVector(f.B,-th),Rb=R.clone().addScaledVector(f.B,-th);
+    [Lt,Rt,Lb,Rb].forEach(p=>verts.push(p.x,p.y,p.z));
+    if(i<N-1){const a=i*4,b=a+4;idx.push(a,a+1,b,a+1,b+1,b, a+2,b+2,a+3,a+3,b+2,b+3, a,a+2,b,a+2,b+2,b, a+1,b+1,a+3,a+3,b+1,b+3)}
+    edgePts.push(Lt,Rt);
+    if(i>7&&i<N-3&&i%2===0){
+      const base=c.clone().addScaledVector(f.N,-.05*wl),tl=L.clone().lerp(c,.035),tr=R.clone().lerp(c,.035);
+      const droop=.05*Math.sin(u*18+P.t*1.3);
+      tl.addScaledVector(f.B,droop);tr.addScaledVector(f.B,-droop*.7);
+      barbPts.push(base,tl,base.clone().addScaledVector(f.N,.1*wr),tr);
+    }
+  }
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));g.setIndex(idx);g.computeVertexNormals();
+  vane=new THREE.Mesh(g,mat);root.add(vane);
+  const eg=new THREE.BufferGeometry().setFromPoints(edgePts);edge=new THREE.LineSegments(eg,edgeMat);root.add(edge);
+  const curve=new THREE.CatmullRomCurve3(Array.from({length:36},(_,i)=>axisPoint(i/35)));
+  shaft=new THREE.Mesh(new THREE.TubeGeometry(curve,64,.055,9,false),shaftMat);root.add(shaft);
+  const bg=new THREE.BufferGeometry().setFromPoints(barbPts);barbLines=new THREE.LineSegments(bg,barbMat);root.add(barbLines);
+  vane.visible=P.surface;edge.visible=P.surface;shaft.visible=P.axis;barbLines.visible=P.barbs;
+}
+rebuild();
+
+const side=document.getElementById('side'),top=document.getElementById('top'),sctx=side.getContext('2d'),tctx=top.getContext('2d');
+function drawProjection(canvas,ctx,mode){
+  const dpr=Math.min(devicePixelRatio||1,2),w=canvas.clientWidth||300,h=canvas.clientHeight||140;
+  if(canvas.width!==w*dpr||canvas.height!==h*dpr){canvas.width=w*dpr;canvas.height=h*dpr}
+  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);ctx.fillStyle='#090c0b';ctx.fillRect(0,0,w,h);
+  const pts=[];for(let i=0;i<70;i++){const u=i/69,c=axisPoint(u),l=sidePoint(u,-1),r=sidePoint(u,1);pts.push({c,l,r})}
+  const vals=pts.flatMap(q=>[q.c,q.l,q.r]);let minA=1e9,maxA=-1e9,minB=1e9,maxB=-1e9;
+  const ab=p=>mode==='side'?[p.x,p.y]:[p.x,p.z];
+  vals.forEach(p=>{const [a,b]=ab(p);minA=Math.min(minA,a);maxA=Math.max(maxA,a);minB=Math.min(minB,b);maxB=Math.max(maxB,b)});
+  const pad=18,sc=Math.min((w-2*pad)/(maxA-minA||1),(h-2*pad)/(maxB-minB||1)),to=p=>{const[a,b]=ab(p);return[pad+(a-minA)*sc,h-pad-(b-minB)*sc]};
+  ctx.lineWidth=1;ctx.strokeStyle='#d4d9d5';ctx.globalAlpha=.6;
+  ctx.beginPath();pts.forEach((q,i)=>{let [x,y]=to(q.l);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});for(let i=pts.length-1;i>=0;i--){let[x,y]=to(pts[i].r);ctx.lineTo(x,y)}ctx.closePath();ctx.fillStyle='rgba(224,220,208,.08)';ctx.fill();ctx.stroke();
+  ctx.globalAlpha=1;ctx.lineWidth=2.1;ctx.strokeStyle='#8f633b';ctx.beginPath();pts.forEach((q,i)=>{let[x,y]=to(q.c);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke();
+}
+function resize(){const r=stage.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix()}new ResizeObserver(resize).observe(stage);resize();
+function lightState(){if(P.neutral){hemi.intensity=2.0;warm.intensity=0;cold.intensity=0;rim.intensity=.25}else{hemi.intensity=1.4;warm.intensity=P.warm?3.3:0;cold.intensity=P.cold?2.15:0;rim.intensity=.75}}
+function tick(){
+  if(P.play){P.t+=.0115;document.getElementById('time').value=(P.t%5)/5*1000;document.getElementById('oTime').textContent=(P.t%5).toFixed(2)+' s';rebuild()}
+  renderer.render(scene,camera);drawProjection(side,sctx,'side');drawProjection(top,tctx,'top');requestAnimationFrame(tick)
+}tick();statusEl.textContent='三维函数已运行';
+
+renderer.domElement.addEventListener('pointerdown',e=>{drag=true;lastX=e.clientX;lastY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});
+renderer.domElement.addEventListener('pointermove',e=>{if(!drag)return;yaw-=(e.clientX-lastX)*.006;pitch=Math.max(-1.1,Math.min(1.1,pitch+(e.clientY-lastY)*.005));lastX=e.clientX;lastY=e.clientY;updateCamera()});
+renderer.domElement.addEventListener('pointerup',()=>drag=false);
+renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();dist=Math.max(4.4,Math.min(14,dist*(1+e.deltaY*.0012)));updateCamera()},{passive:false});
+renderer.domElement.addEventListener('dblclick',()=>{yaw=.08;pitch=.03;dist=8.9;updateCamera()});
+
+const bind=(id,key,scale,out,fmt=v=>v.toFixed(2))=>{const el=document.getElementById(id);el.oninput=()=>{P[key]=Number(el.value)*scale;document.getElementById(out).textContent=fmt(P[key]);rebuild()}};
+bind('width','width',.01,'oWidth');bind('camber','camber',.01,'oCamber');bind('twist','twist',.01,'oTwist');bind('bend','bend',.01,'oBend');bind('thick','thick',.001,'oThick',v=>v.toFixed(3));bind('motion','motion',.01,'oMotion');
+document.getElementById('time').oninput=e=>{P.play=false;document.getElementById('play').textContent='播放轻摆';P.t=Number(e.target.value)/1000*5;document.getElementById('oTime').textContent=P.t.toFixed(2)+' s';rebuild()};
+function toggle(id,key){const b=document.getElementById(id);b.onclick=()=>{P[key]=!P[key];b.classList.toggle('active',P[key]);rebuild();lightState()}}
+toggle('surface','surface');toggle('barbs','barbs');toggle('axis','axis');toggle('warm','warm');toggle('cold','cold');
+document.getElementById('neutral').onclick=e=>{P.neutral=!P.neutral;e.currentTarget.classList.toggle('active',P.neutral);lightState()};
+document.getElementById('play').onclick=e=>{P.play=!P.play;e.currentTarget.textContent=P.play?'暂停轻摆':'播放轻摆'};
+document.getElementById('zero').onclick=()=>{P.play=false;P.t=0;document.getElementById('time').value=0;document.getElementById('oTime').textContent='0.00 s';document.getElementById('play').textContent='播放轻摆';rebuild()};
+document.getElementById('reset').onclick=()=>{location.reload()};
+</script>
+</body></html>
