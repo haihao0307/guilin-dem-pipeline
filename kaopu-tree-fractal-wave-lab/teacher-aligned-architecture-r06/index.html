@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#09100f">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:,">
+<title>KAOPU · Teacher-Aligned Living Tree R06</title>
+<style>
+:root{--bg:#09100f;--panel:#111918;--line:#30413d;--ink:#edf4f1;--muted:#91a19c;--accent:#9fc2b1;--wood:#8b7357;--root:#775f48;--leaf:#52743f;--bud:#c85a83;--flow:#77a9d0}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:14px/1.52 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft Yahei",sans-serif}button,input,select{font:inherit}
+header{min-height:68px;padding:10px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:14px}.title{font-size:18px;font-weight:650}.sub{font-size:10px;color:var(--muted);margin-top:2px}.tag{border:1px solid #435650;border-radius:999px;padding:4px 10px;font-size:9px;color:#bdcbc6;white-space:nowrap}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 390px;min-height:calc(100vh - 68px)}.stage{position:relative;min-height:800px;overflow:hidden;background:radial-gradient(circle at 50% 38%,#192623,#09100f 72%)}.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}.bar{position:absolute;z-index:6;left:10px;top:10px;right:10px;display:flex;gap:6px;flex-wrap:wrap}.bar button{border:1px solid #435650;background:#111a18df;color:#e9f0ee;border-radius:6px;padding:7px 10px;min-height:36px}.bar button.on{background:#38544b;border-color:#8aa99d}.caption{position:absolute;z-index:5;left:14px;top:58px;max-width:730px;font-size:10px;color:#aab8b3;pointer-events:none;text-shadow:0 1px 8px #000}.caption b{display:block;color:#f2f7f4;font-size:14px;margin-bottom:2px}.info{position:absolute;z-index:5;left:14px;bottom:12px;font-size:9px;color:#9eb0aa;pointer-events:none}.badges{position:absolute;right:12px;bottom:12px;z-index:5;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;pointer-events:none}.badge{border:1px solid #364943;background:#0b1211cc;border-radius:999px;padding:4px 7px;font-size:9px;color:#a8b8b2}.error{position:absolute;z-index:10;left:14px;right:14px;top:112px;padding:12px;background:#3a1d24;border:1px solid #95506a;border-radius:7px;white-space:pre-wrap}.error[hidden]{display:none}
+.panel{background:var(--panel);border-left:1px solid var(--line);padding:17px 18px 26px;overflow:auto}.panel h2{font-size:14px;margin:0 0 5px}.note{font-size:10px;color:var(--muted);margin:0 0 13px}.gate{border:1px solid #344640;border-radius:8px;background:#0e1615;padding:10px 11px;margin-bottom:14px;font-size:10px;color:#aebdb7}.gate b{color:#e4ece9}.row{margin:0 0 13px}.row label{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#bcc9c4}.row output{color:#dce7e3;font-variant-numeric:tabular-nums}.row input,.row select{width:100%;margin-top:5px}.row input[type=range]{accent-color:var(--accent)}.row select{background:#14201d;color:#e4ece9;border:1px solid #40534e;border-radius:6px;padding:7px}.checkgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px 10px;margin:4px 0 13px}.checkgrid label{font-size:10px;color:#b8c6c1;display:flex;gap:6px;align-items:center}.checkgrid input{accent-color:var(--accent)}.status{border-top:1px solid var(--line);padding-top:11px;margin-top:5px;font-size:10px;color:#a5b9b1;min-height:82px}.legend{font-size:9px;color:#84948f;margin-top:10px;line-height:1.8}.sw{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:4px}.wood{background:var(--wood)}.root{background:var(--root)}.leaf{background:var(--leaf)}.bud{background:var(--bud)}.flow{background:var(--flow)}
+@media(max-width:840px){header{padding:10px 12px}.tag{display:none}.wrap{display:block}.stage{height:70svh;min-height:590px}.panel{border-left:0;border-top:1px solid var(--line);padding:15px}.caption{max-width:82%}.bar{gap:4px}.bar button{font-size:11px;padding:7px 8px}.badges{display:none}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.0/examples/jsm/"}}</script>
+</head>
+<body>
+<header><div><div class="title">KAOPU · Teacher-Aligned Living Tree R06</div><div class="sub">PANDANUS TEACHER METHOD → AXIS / TIER / TERMINAL / ROOT-COLLAR / ORGAN-ZONE</div></div><div class="tag">方法对齐 · 不把露兜树形态强装给所有物种</div></header>
+<div class="wrap">
+<main class="stage" id="stage">
+  <div class="bar"><button id="fit" class="on">适配视野</button><button id="front">正面</button><button id="side">侧面</button><button id="top">顶部</button><button id="grow">播放生长</button><button id="rebuild">重新生长</button><button id="roots" class="on">根系</button><button id="leaves" class="on">叶器官</button><button id="fruit" class="on">花果</button><button id="flow" class="on">资源路径</button><button id="teacher" class="on">结构锚点</button><button id="auto">自动转动</button></div>
+  <div class="caption"><b>R06：先把“树的组织关系”做对，再加生命细节</b>修正 R05 的错误观察法：主干不是资源越多就无限鼓成团块；枝条不是在任何位置随意冒出；叶与花果也不是铺满所有分枝。这里沿用露兜树老师已经验证过的方法——先建立主轴、分枝层级、枝端器官区和独立根系，再让资源流决定哪些结构被激活。最终外形使用连续扫掠面与局部连接领圈，不再用全树 metaball 把结构熔成一团。</div>
+  <div class="info" id="info">正在重建 Axis → Tier → Terminal → Organ Zones…</div>
+  <div class="badges"><span class="badge" id="axisBadge">Axis --</span><span class="badge" id="terminalBadge">Terminal --</span><span class="badge" id="rootBadge">Root --</span><span class="badge" id="organBadge">Organ --</span></div>
+  <pre class="error" id="error" hidden></pre>
+</main>
+<aside class="panel">
+  <h2>Architecture Teacher 总控</h2>
+  <p class="note">R05 的资源、叶龄、花果 Sink 和次生加粗继续保留，但它们只能在正确的结构槽位上工作。R06 的核心不是“换一棵树”，而是修正观察和模仿方法。</p>
+  <div class="gate"><b>这一版冻结六条结构锚点：</b><br>✓ 主轴先于冠层存在<br>✓ 一级枝只从允许的 tier / node zone 释放<br>✓ 二级枝从一级枝自身的 node zone 释放<br>✓ 叶片集中在 terminal / recent-twig organ zone<br>✓ 花果稀疏占用成熟 terminal，不能铺满全树<br>✓ 根颈、结构根、地表/地下延伸是独立语法，不镜像树冠</div>
+  <div class="row"><label>生命阶段 <output id="ageO"></output></label><input id="age" type="range" min="3" max="120" step="1" value="72"></div>
+  <div class="row"><label>教师架构声部 <output id="voiceO"></output></label><select id="voice"><option value="pandanus">露兜树老师：主轴 + 上部层级 + 枝端叶丛</option><option value="tiered">通用单轴层级：主轴 + 规则层级 + 枝端叶簇</option></select></div>
+  <div class="row"><label>主轴高度 <output id="heightO"></output></label><input id="height" type="range" min="3.5" max="10" step=".1" value="7.1"></div>
+  <div class="row"><label>主干基径 <output id="trunkO"></output></label><input id="trunk" type="range" min=".12" max=".38" step=".01" value=".23"></div>
+  <div class="row"><label>分枝层数 <output id="tiersO"></output></label><input id="tiers" type="range" min="1" max="6" step="1" value="4"></div>
+  <div class="row"><label>冠层开放度 <output id="spaceO"></output></label><input id="space" type="range" min=".55" max="1.35" step=".02" value=".88"></div>
+  <div class="row"><label>顶端优势 <output id="apicalO"></output></label><input id="apical" type="range" min=".35" max=".9" step=".01" value=".66"></div>
+  <div class="row"><label>Root ↔ Shoot 分配 <output id="allocO"></output></label><input id="alloc" type="range" min=".2" max=".58" step=".01" value=".37"></div>
+  <div class="row"><label>根系策略 <output id="rootVoiceO"></output></label><select id="rootVoice"><option value="mixed">混合：根颈 + 地表结构根 + 地下延伸</option><option value="prop">支柱根倾向</option><option value="lateral">浅层横向根倾向</option><option value="deep">深根倾向</option></select></div>
+  <div class="row"><label>根系展开 <output id="rootSpreadO"></output></label><input id="rootSpread" type="range" min=".55" max="1.65" step=".02" value="1.0"></div>
+  <div class="row"><label>枝端叶密度 <output id="leafDensityO"></output></label><input id="leafDensity" type="range" min=".35" max="1.35" step=".02" value=".78"></div>
+  <div class="row"><label>叶龄 <output id="phenologyO"></output></label><input id="phenology" type="range" min="0" max="1" step=".01" value=".56"></div>
+  <div class="row"><label>结果 Sink <output id="fruitLoadO"></output></label><input id="fruitLoad" type="range" min="0" max=".45" step=".01" value=".10"></div>
+  <div class="row"><label>次生加粗 <output id="cambiumO"></output></label><input id="cambium" type="range" min="0" max="1.2" step=".05" value=".62"></div>
+  <div class="checkgrid"><label><input id="secondary" type="checkbox" checked>二级枝</label><label><input id="collars" type="checkbox" checked>连接领圈</label><label><input id="scars" type="checkbox" checked>历史叶痕</label><label><input id="resource" type="checkbox" checked>资源限制</label></div>
+  <div class="status" id="status">等待教师架构重建…</div>
+  <div class="legend"><span class="sw wood"></span>连续轴面　<span class="sw root"></span>结构根　<span class="sw leaf"></span>枝端器官区　<span class="sw bud"></span>成熟生殖器官　<span class="sw flow"></span>资源路径 / 教师锚点</div>
+</aside>
+</div>
+<script type="module" src="./runtime.js"></script>
+</body>
+</html>
