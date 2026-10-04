@@ -3,7 +3,7 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),https=require('node:https'),assert=require('node:assert/strict');
 const {chromium}=require('playwright');
 const html=path.resolve(process.env.HAIYU_HTML||'kaopu-haiyu-workbench/r20/index.html');
-const url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-haiyu-workbench/r20/';
+const url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-haiyu-workbench/';
 const out=path.resolve(process.env.HAIYU_QA_OUT||'haiyu-r20-browser-results');fs.mkdirSync(out,{recursive:true});
 const hash=b=>crypto.createHash('sha256').update(b).digest('hex'),expected=hash(fs.readFileSync(html));
 const report={commit:process.env.GITHUB_SHA,expectedSha256:expected,source:'Official Playwright Chromium with SwiftShader software WebGL',physicalGPU:false,physicalMobileDevice:false,checks:[],errors:[],public:{},file:{}};
