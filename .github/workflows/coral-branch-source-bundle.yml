@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Capture exact published workbench and related source code
+      - name: Capture exact workbench and related source code
         shell: python
         run: |
           from pathlib import Path
@@ -30,37 +30,16 @@ jobs:
               assert not name.startswith('/') and '..' not in Path(name).parts
               b=read(root+name);assert hashlib.sha256(b).hexdigest()==h,('workbench source mismatch',name)
               p=out/'site'/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(b)
-          refs=[
-              ('nicknikolov/pex-space-colonization','README.md','0de44919003d241774f2dac5265e4e60416cb93f'),
-              ('nicknikolov/pex-space-colonization','package.json','0cf4b0767016c6cc992dcb8843ae715bc75925de'),
-              ('nicknikolov/pex-space-colonization','index.js','51e2b4b4dc2eb03e9e6588a60f1327e5a4db896f'),
-              ('nicknikolov/space-colonization','README.md','efc597489fba3e6acafcbb5cced2367045696ca6'),
-              ('nicknikolov/space-colonization','package.json','170c9dfcf48bb15261a84088233ab4f002d3a6cc'),
-              ('nicknikolov/space-colonization','index.js','c2c1a1c1bcf554e1caf49d285fc485e48a63e58b')]
+          refs=[('nicknikolov/pex-space-colonization','README.md','0de44919003d241774f2dac5265e4e60416cb93f'),('nicknikolov/pex-space-colonization','package.json','0cf4b0767016c6cc992dcb8843ae715bc75925de'),('nicknikolov/pex-space-colonization','index.js','51e2b4b4dc2eb03e9e6588a60f1327e5a4db896f'),('nicknikolov/space-colonization','README.md','efc597489fba3e6acafcbb5cced2367045696ca6'),('nicknikolov/space-colonization','package.json','170c9dfcf48bb15261a84088233ab4f002d3a6cc'),('nicknikolov/space-colonization','index.js','c2c1a1c1bcf554e1caf49d285fc485e48a63e58b')]
           records=[]
           for repo,name,h in refs:
               b=read('https://raw.githubusercontent.com/'+repo+'/master/'+name)
               assert hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()==h,('reference changed since verification',repo,name)
               p=out/'external-reference-source'/repo/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(b)
               records.append({'repository':repo,'file':name,'git_blob':h,'sha256':hashlib.sha256(b).hexdigest(),'bytes':len(b)})
-          source_trace={'date':'2026-10-04','workbench_commit':sha,'video_final_author_project_found':False,'reference_source_installed_into_workbench':False,'references':records,'findings':[
-              {'kind':'matched documentation','url':'https://help.maxon.net/c4d/s26/en-us/Content/html/OMOSPLINE-MGMOSPLINEOBJECT_TURTLE_GROUP_TURTLE.html','note':'MoSpline/Turtle rule examples matching the documentary frames; not the creator final C4D scene'},
-              {'kind':'matched research article lineage','url':'https://medium.com/thelabs/how-i-used-space-colonisation-to-build-an-alien-planet-db9c6fb73e34','note':'Lucas Milner / QUT, Marcin Ignac leaf venation and A.L. Bicho references match source-frame content'},
-              {'kind':'related source','url':'https://github.com/nicknikolov/pex-space-colonization','note':'README credits Marcin Ignac and deprecates this package in favor of space-colonization'},
-              {'kind':'successor source','url':'https://github.com/nicknikolov/space-colonization','note':'Actual source read and archived. package.json declares MIT. This is not proof of the video creator using this library.'}]}
-          (out/'SOURCE_TRACE.json').write_text(json.dumps(source_trace,ensure_ascii=False,indent=2))
-          (out/'README.md').write_text('''# Coral Mother — branching workbench source archive
-
-The site folder contains the exact hashed public workbench snapshot. Start with the existing public URL, not a chat HTML attachment.
-
-The external-reference-source folder contains unmodified upstream research code and its package metadata. It is NOT imported into the working branching generator. Preserve upstream attribution and package license declarations. Dependencies are not bundled or execution-tested here.
-
-The original video creator final .c4d scene, complete growth parameters and materials remain unlocated. The two student outputs remain our visual reconstruction, not an exact original scene recovery.
-
-Upstream pex-space-colonization is deprecated; its README points to nicknikolov/space-colonization. Neither repository establishes authorship of the user-supplied video.
-
-Original user video and actual browser QA evidence are supplied separately in the conversation's full delivery archive.
-''')
+          trace={'date':'2026-10-04','workbench_commit':sha,'video_final_author_project_found':False,'reference_source_installed_into_workbench':False,'references':records,'findings':[{'kind':'matched documentation','url':'https://help.maxon.net/c4d/s26/en-us/Content/html/OMOSPLINE-MGMOSPLINEOBJECT_TURTLE_GROUP_TURTLE.html','note':'MoSpline/Turtle rule examples matching documentary frames, not the creator final C4D scene'},{'kind':'matched research article lineage','url':'https://medium.com/thelabs/how-i-used-space-colonisation-to-build-an-alien-planet-db9c6fb73e34','note':'Lucas Milner / QUT, Marcin Ignac leaf venation and A.L. Bicho references match source-frame content'},{'kind':'related source','url':'https://github.com/nicknikolov/pex-space-colonization','note':'README credits Marcin Ignac and deprecates this package in favor of space-colonization'},{'kind':'successor source','url':'https://github.com/nicknikolov/space-colonization','note':'Actual source read and archived. package.json declares MIT. This is not proof of the video creator using this library.'}]}
+          (out/'SOURCE_TRACE.json').write_text(json.dumps(trace,ensure_ascii=False,indent=2))
+          (out/'README.md').write_text('\n\n'.join(['# Coral Mother: branching workbench source archive','site/ contains the exact hashed public workbench snapshot. Use the existing public URL for delivery, not a chat HTML attachment.','external-reference-source/ contains unmodified upstream research code and package metadata, NOT imported into the current branching generator. Preserve upstream attribution and license declarations. Dependencies are not bundled or tested here.','The original video creator final .c4d scene, complete parameters and materials remain unlocated. The two student outputs are our visual reconstruction, not original scene recovery.','pex-space-colonization is deprecated; its README points to nicknikolov/space-colonization. Neither repository establishes authorship of the user video.','Original user video and actual browser QA are supplied separately in the conversation full package.']))
           print(json.dumps({'workbenchFiles':len(manifest['files']),'referenceFiles':len(records),'sourceHashesVerified':True,'productionModified':False},indent=2))
       - uses: actions/upload-artifact@v4
         with:
