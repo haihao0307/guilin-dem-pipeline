@@ -49,3 +49,7 @@ The Anemone two-light branch now uses a fixed, world-space ellipsoidal bulk atte
 ## Local tissue/surface correction
 
 The next candidate separates neutral bulk cluster visibility from local palette-derived tissue absorption. Wet surface return uses untinted GGX/Smith/Schlick with a fitted roughness of .30; light RGB, positions and powers remain the pinned R13 rig. Added optical varyings carry the actual ring radius, nominal cap radius, cap fraction and tangent without changing vertex position or normal equations. The local cylinder chord/cap blend and fixed .06-world-unit absorption reference are bounded appearance approximations, not measured subsurface scattering. Existing ordered two-layer alpha coverage remains an approximation and still scales reflected light at silhouettes; the combined KuKo-style response is not a complete energy-conserving transport model. Visual acceptance remains pending real GPU images.
+
+## Accepted baseline and requested speed extension
+
+The user accepted runtime38cc5b3f0e33c86f0e3db87ac8da1b5075b305db4a6ebfc90216a03e8a009456 as the visual/functional baseline. Subsequent work stops material/palette/layout polish. This revision only expands the independent accumulated motion-clock multiplier from0–2 to0–6, keeping default1, the same phase at any fixed motion time, and the exact existing geometry certificate. The validated amplitude interval is unchanged; near-flat strong-current deformation remains separate research and is not silently enabled. No fluid-measurement or physically exact tissue claim is made.

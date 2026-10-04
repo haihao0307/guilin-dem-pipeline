@@ -1,5 +1,5 @@
 (function(){'use strict';const C=AnemoneSafeLayout,el=id=>document.getElementById(id);let renderer=null,active='home',frame=null,last=null,time=0,requestedRabbit=false;const errors=[];let failed=false;
-const descriptors=[['count','触手数量',120,560,20,'Shape'],['length','相对触手长度',.35,1.05,.01,'Shape'],['thickness','触手半径',.015,.045,.001,'Shape'],['curvature','静态弯曲',.5,2.1,.05,'Shape'],['seed','固定种子',1,9999,1,'Shape'],['swayAmplitude','水流摆幅',0,1,.01,'Flow'],['flowSpeed','水流速度',0,2,.05,'Flow'],['current','局部微流',0,1,.01,'Flow'],['direction','水流方向',-180,180,1,'Flow'],['frequency','水流节奏',.08,.9,.01,'Flow'],['turbulence','局部噪声',0,.8,.01,'Flow']];
+const descriptors=[['count','触手数量',120,560,20,'Shape'],['length','相对触手长度',.35,1.05,.01,'Shape'],['thickness','触手半径',.015,.045,.001,'Shape'],['curvature','静态弯曲',.5,2.1,.05,'Shape'],['seed','固定种子',1,9999,1,'Shape'],['swayAmplitude','水流摆幅',0,1,.01,'Flow'],['flowSpeed','水流速度',0,6,.05,'Flow'],['current','局部微流',0,1,.01,'Flow'],['direction','水流方向',-180,180,1,'Flow'],['frequency','水流节奏',.08,.9,.01,'Flow'],['turbulence','局部噪声',0,.8,.01,'Flow']];
 const DEFAULTS=Object.freeze({...C.DEFAULTS,count:240});
 let params={...DEFAULTS};
 let orbitPlaying=false,orbitSpeed=.12,orbitLast=null;

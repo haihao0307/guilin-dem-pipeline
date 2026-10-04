@@ -399,6 +399,18 @@ module.exports = async function firstEntry(browser, url, outDir, check) {
     await wait(()=>anemone.state.time>3.001);
     assert('native speed control resumes the accumulated motion clock',await page.evaluate(()=>anemone.state.params.flowSpeed===.05&&anemone.state.time>3&&anemone.pixels().glError===0));
     await page.evaluate(()=>{anemone.pause();anemone.set({flowSpeed:1});anemone.seek(0)});
+    const normalRate=await page.evaluate(()=>{anemone.seek(3);return{state:anemone.exportState(),pixels:anemone.pixels()};});
+    await page.locator('#anemone-flowSpeed').focus();await page.locator('#anemone-flowSpeed').press('End');
+    const fastRate=await page.evaluate(()=>({state:anemone.exportState(),pixels:anemone.pixels(),max:document.getElementById('anemone-flowSpeed').max}));
+    assert('native maximum selects6x without changing the paused pose',fastRate.max==='6'&&fastRate.state.params.flowSpeed===6&&fastRate.state.time===normalRate.state.time&&fastRate.pixels.hash===normalRate.pixels.hash&&fastRate.state.params.swayAmplitude===normalRate.state.params.swayAmplitude,fastRate);
+    await tap('#anemonePause');await wait(()=>anemone.state.time>3.02);await tap('#anemonePause');
+    const runningFast=await page.evaluate(()=>({state:anemone.exportState(),pixels:anemone.pixels(),metrics:anemone.metrics()}));
+    assert('6x playback advances real motion and remains rooted and fixed-length',runningFast.state.params.flowSpeed===6&&runningFast.state.time>3.02&&runningFast.pixels.hash!==fastRate.pixels.hash&&runningFast.metrics.rootError<1e-6&&runningFast.metrics.lengthError<1e-5&&runningFast.pixels.glError===0,runningFast);
+    await screenshot('anemone-speed6');
+    await page.evaluate(s=>{anemone.set({flowSpeed:1});anemone.importState(s)},runningFast.state);
+    assert('6x JSON state roundtrip restores speed time and pixels',await page.evaluate(s=>anemone.state.params.flowSpeed===6&&anemone.state.time===s.state.time&&anemone.pixels().hash===s.pixels.hash,runningFast));
+    const invalidSpeed=await page.evaluate(()=>{const before=JSON.stringify(anemone.exportState()),pixels=anemone.pixels().hash;let rejected=false;try{anemone.set({flowSpeed:6.001})}catch(e){rejected=true}return rejected&&JSON.stringify(anemone.exportState())===before&&anemone.pixels().hash===pixels});assert('speed above6 rejects atomically',invalidSpeed);
+    await page.evaluate(()=>{anemone.pause();anemone.set({flowSpeed:1});anemone.seek(0)});
     for (const key of ['warmPower', 'coolPower']) {
       const before = await page.evaluate(() => ({ state: anemone.state, pixels: anemone.pixels() }));
       await page.locator('#anemone-' + key).focus(); await page.locator('#anemone-' + key).press('ArrowLeft');

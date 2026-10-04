@@ -103,7 +103,7 @@ for(const [key,value]of [['count',241],['count',240.1],['length',.701],['thickne
 for(const key of ['current','direction','frequency','turbulence','swayAmplitude','flowSpeed']) {
   for(const value of [NaN,Infinity,-Infinity,'1',null,undefined])assert.throws(()=>S.validate({...state,[key]:value}));
 }
-for(const [key,value] of [['swayAmplitude',-1e-10],['swayAmplitude',1+1e-10],['flowSpeed',-1e-10],['flowSpeed',2+1e-10]])assert.throws(()=>S.validate({...state,[key]:value}));
+for(const [key,value] of [['swayAmplitude',-1e-10],['swayAmplitude',1+1e-10],['flowSpeed',-1e-10],['flowSpeed',6+1e-10]])assert.throws(()=>S.validate({...state,[key]:value}));
 assert.throws(()=>S.validate({...state,current:1.001}));
 assert.throws(()=>S.validate({...state,paused:'false'}));
 assert.throws(()=>S.validate(null));
@@ -137,7 +137,7 @@ assert.deepEqual(rest,S.solve({...zero,swayAmplitude:1},roots,0),'time-zero yaw 
 assert.equal(S.certificate(zero).flow.effectiveScale,1);
 assert.equal(S.certificate(zero).flow.effectiveAmplitude,0);
 const phase=Math.asin(-1/3),maxTime=(Math.PI/2-phase)/.65,minTime=(Math.PI*1.5-phase)/.65;
-for(const amplitude of [0,.001,.25,.5,1])for(const speed of [0,.2,1,2]) {
+for(const amplitude of [0,.001,.25,.5,1])for(const speed of [0,.2,1,2,4,6]) {
   const p={...state,swayAmplitude:amplitude,flowSpeed:speed};
   assert.equal(S.swayAngle(p,0),0);
   near(S.swayAngle(p,maxTime),.6*amplitude);near(S.swayAngle(p,minTime),-.3*amplitude);

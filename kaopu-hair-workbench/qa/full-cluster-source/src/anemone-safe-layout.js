@@ -16,7 +16,7 @@
   const LEGACY_VERSION = 'bounded-radial-prefix-1';
   const PRESET = Object.freeze({count:240,length:.7,thickness:.03,curvature:.7,seed:73});
   const DEFAULTS = Object.freeze({...C.DEFAULTS,...PRESET,swayAmplitude:1,flowSpeed:1});
-  const RANGES=Object.freeze({...C.RANGES,swayAmplitude:Object.freeze([0,1]),flowSpeed:Object.freeze([0,2])});
+  const RANGES=Object.freeze({...C.RANGES,swayAmplitude:Object.freeze([0,1]),flowSpeed:Object.freeze([0,6])});
   const GEOMETRY_KEYS = Object.freeze(Object.keys(PRESET));
   const RINGS=42, SOCKET_SEGMENTS=3, NUMERICAL_MARGIN=1e-5, FAR_GAP=.1;
   const rawAmplitude = s => Math.hypot(.7*s.current*(1.21+.12*s.turbulence),.5*s.turbulence);
