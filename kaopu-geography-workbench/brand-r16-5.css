@@ -1,0 +1,25 @@
+/* KAOPU R16.5 brand mark only. Scene shaders, geometry, materials and runtime remain unchanged. */
+#home .brandTitle{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  min-height:72px;
+  margin:0 0 10px;
+}
+#home .brandTitle::before{
+  content:"";
+  display:block;
+  flex:0 0 64px;
+  width:64px;
+  height:64px;
+  background:url("brand/kaopu-terrain-production-logo.png?v=1") center/contain no-repeat;
+  filter:drop-shadow(0 8px 15px rgba(0,0,0,.34));
+}
+@media(max-width:760px){
+  #home .brandTitle{gap:12px;min-height:58px;margin:0 0 9px}
+  #home .brandTitle::before{flex-basis:56px;width:56px;height:56px}
+}
+@media(max-width:410px){
+  #home .brandTitle{gap:10px;min-height:52px}
+  #home .brandTitle::before{flex-basis:50px;width:50px;height:50px}
+}

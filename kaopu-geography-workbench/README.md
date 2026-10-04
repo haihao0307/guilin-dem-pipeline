@@ -1,4 +1,8 @@
-# KAOPU Geography R16
+<p align="center">
+  <img src="brand/kaopu-terrain-production-logo.png" width="96" alt="KAOPU 地形构建生产线标志">
+</p>
+
+# KAOPU Geography R16.5
 
 This publication adds only an isolated geography-workbench directory and its scoped QA workflow. Other hosted projects are untouched.
 
@@ -7,6 +11,10 @@ RME4 Crater remains a separate original entry. Underwater Crater uses the inheri
 Six entries: Layered Relief, Cave Passage II, Desert Canyon 2017, RME4 Crater, Underwater Crater, Snow Fractal Ridge. Persistent DOM navigation; only one active render. Drag/zoom and view/ratio controls apply to the new underwater entry. Teacher video does not drive the simulation clock.
 
 The web edition is a lightweight deployment. Reference recordings and experimental replacement textures remain in the conversation's complete companion package. Local video can be opened in the optional reference panel. The canyon loads the original public channel images rather than substitutes.
+
+## Brand mark
+
+The selected terrain-production icon is stored in `brand/` and appears at the front of the overview workbench and as the browser icon. This branding layer does not modify any scene shader, geometry, material, grain, camera path, or interaction logic.
 
 ## Sources and rights
 - Moon Surface II, Nikos Papadopoulos / 4rknova, 2015, Creative Commons Attribution-NonCommercial-ShareAlike 3.0. https://www.shadertoy.com/view/4tlXzr
