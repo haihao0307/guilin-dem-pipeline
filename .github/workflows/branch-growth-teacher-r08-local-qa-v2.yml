@@ -1,0 +1,105 @@
+name: Branch Growth Teacher R08 local QA v2
+
+on:
+  push:
+    branches:
+      - work/fractal-wave-branch-growth-teacher-r08-20261004
+    paths:
+      - .github/workflows/branch-growth-teacher-r08-local-qa-v2.yml
+      - kaopu-tree-fractal-wave-lab/branch-growth-hybrid-teacher-r02/**
+      - kaopu-tree-fractal-wave-lab/teacher-integrated-r08/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-local:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install browser QA
+        run: |
+          python -m pip install --disable-pip-version-check playwright pillow
+          python -m playwright install --with-deps chromium
+      - name: Serve and test corrected teacher
+        shell: bash
+        run: |
+          python -m http.server 4173 --bind 127.0.0.1 > /tmp/r08-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          python - <<'PY'
+          from pathlib import Path
+          import json,traceback
+          from PIL import Image,ImageStat
+          from playwright.sync_api import sync_playwright
+          root=Path('evidence-teacher-r08-local-v2');root.mkdir(exist_ok=True)
+          teacher='http://127.0.0.1:4173/kaopu-tree-fractal-wave-lab/branch-growth-hybrid-teacher-r02/'
+          integrated='http://127.0.0.1:4173/kaopu-tree-fractal-wave-lab/teacher-integrated-r08/'
+          report={'checks':{},'errors':[]};C=report['checks']
+          def digest(path):
+              im=Image.open(path).convert('RGB');st=ImageStat.Stat(im)
+              return {'bytes':path.stat().st_size,'mean':sum(st.mean)/3,'stddev':sum(st.stddev)/3}
+          try:
+            with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True)
+              page=browser.new_page(viewport={'width':1440,'height':900},device_scale_factor=1)
+              page.on('pageerror',lambda e:report['errors'].append('pageerror: '+str(e)))
+              page.on('console',lambda m:report['errors'].append('console: '+m.text) if m.type=='error' else None)
+              page.goto(teacher,wait_until='domcontentloaded',timeout=120000)
+              page.wait_for_function('window.__branchGrowthTeacherR02Ready===true',timeout=180000)
+              page.wait_for_timeout(1000)
+              tree=page.evaluate('BranchGrowthTeacherR02.getState()')
+              sig=tree['signature'];params=tree['params']
+              C['r01Retired']=sig['r01Retired'] is True
+              C['stagedLearningVisible']=sig['stagedLearningVisible'] is True
+              C['segmentCountBounded']=25<=sig['segmentCount']<900
+              C['realSplitsBounded']=0<sig['splitCount']<80
+              C['noBackwardSegments']=sig['backwardSegments']==0
+              C['turnBounded']=sig['maxTurnDeg']<=params['turn']*2.05
+              C['hierarchyVisible']=sig['maxOrder']>=2 and str(0) in sig['orderCounts'] and str(1) in sig['orderCounts']
+              C['constraintsActive']=sig['forwardCone'] and sig['boundedTurn'] and sig['selfAvoidance'] and sig['scaffoldFirst']
+              C['teacherBoundary']=sig['teacherLayer'] and not sig['runtimeTruth'] and sig['sharedWithCoral'] and not sig['speciesAssigned']
+              stage_shots={}
+              for stage in ['field','allocation','skeleton','load']:
+                page.evaluate('(s)=>BranchGrowthTeacherR02.setStage(s)',stage)
+                page.wait_for_timeout(300)
+                C['stage_'+stage]=page.evaluate('(s)=>BranchGrowthTeacherR02.getState().params.stage===s',stage)
+                shot=root/f'{stage}.png';page.screenshot(path=str(shot),full_page=False);stage_shots[stage]=digest(shot)
+                C['pixels_'+stage]=stage_shots[stage]['stddev']>9
+              page.evaluate("BranchGrowthTeacherR02.setScore('coral')")
+              page.wait_for_timeout(600)
+              coral=page.evaluate('BranchGrowthTeacherR02.getState().signature')
+              C['scoreChangesStructure']=coral['score']=='coral' and (coral['segmentCount']!=sig['segmentCount'] or coral['splitCount']!=sig['splitCount'])
+              C['coralStillConstrained']=coral['backwardSegments']==0 and coral['maxTurnDeg']<=params['turn']*1.55
+              page.goto(integrated,wait_until='domcontentloaded',timeout=120000)
+              page.wait_for_function('window.__branchTeacherIntegratedR08Ready===true',timeout=180000)
+              page.wait_for_timeout(700)
+              integ=page.evaluate('BranchTeacherIntegratedR08.getState()')
+              C['integrationReady']=integ['treeReady'] and integ['teacherReady'] and integ['mode']=='compare'
+              page.evaluate("BranchTeacherIntegratedR08.setTeacherStage('allocation')")
+              page.wait_for_timeout(250)
+              C['integrationControlsTeacher']=page.evaluate("BranchTeacherIntegratedR08.getState().teacher.params.stage==='allocation'")
+              integrated_shot=root/'integrated.png';page.screenshot(path=str(integrated_shot),full_page=False)
+              C['integratedPixels']=digest(integrated_shot)['stddev']>9
+              page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(500)
+              C['mobileNoOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+              mobile=root/'mobile.png';page.screenshot(path=str(mobile),full_page=False)
+              C['mobilePixels']=digest(mobile)['stddev']>9
+              C['errorsZero']=not report['errors']
+              report['tree']=tree;report['coral']=coral;report['integration']=integ;report['screens']={**stage_shots,'integrated':digest(integrated_shot),'mobile':digest(mobile)}
+              browser.close()
+          except Exception:
+            report['failure']=traceback.format_exc()
+          (root/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          if report.get('failure') or not all(C.values()): raise SystemExit('R08 local QA v2 failed')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: BRANCH_GROWTH_TEACHER_R08_LOCAL_QA_V2
+          path: evidence-teacher-r08-local-v2
+          if-no-files-found: error
+          retention-days: 90
