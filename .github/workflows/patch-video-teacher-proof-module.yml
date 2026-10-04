@@ -1,0 +1,41 @@
+name: Patch Video Teacher Proof Module
+
+on:
+  push:
+    branches:
+      - work/fractal-wave-video-teacher-proof-r01-20261004
+    paths:
+      - .github/workflows/patch-video-teacher-proof-module.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Add module-local clamp and cache-bust marker
+        shell: python
+        run: |
+          from pathlib import Path
+          path=Path('kaopu-tree-fractal-wave-lab/teacher-proof-r01.js')
+          text=path.read_text(encoding='utf-8')
+          needle="import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js';\n"
+          addition="\nconst clamp = (value, min, max) => Math.max(min, Math.min(max, value));\nconst TEACHER_PROOF_BUILD = '20261004-r01-fix1';\n"
+          if "const TEACHER_PROOF_BUILD = '20261004-r01-fix1'" not in text:
+              if needle not in text:
+                  raise SystemExit('import anchor not found')
+              text=text.replace(needle,needle+addition,1)
+              path.write_text(text,encoding='utf-8')
+      - name: Commit patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-tree-fractal-wave-lab/teacher-proof-r01.js
+          git diff --cached --quiet || git commit -m 'fix(fractal-wave): make video teacher proof module self-contained'
+          git push origin HEAD:work/fractal-wave-video-teacher-proof-r01-20261004
