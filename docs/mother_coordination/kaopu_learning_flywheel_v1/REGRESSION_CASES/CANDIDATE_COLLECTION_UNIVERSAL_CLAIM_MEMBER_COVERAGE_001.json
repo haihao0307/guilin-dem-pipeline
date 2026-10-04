@@ -1,0 +1,176 @@
+{
+  "schema": "kaopu.regression-case/2",
+  "caseId": "COLLECTION-UNIVERSAL-CLAIM-MEMBER-COVERAGE-001",
+  "status": "CANDIDATE",
+  "scope": {
+    "mother": "Fish",
+    "taskClass": "MULTI_MEMBER_PRODUCTION_CLAIM",
+    "globalAdoption": false
+  },
+  "failure": {
+    "summary": "A collection-level claim can say that every member uses the new production route while one member is present only as an undisclosed legacy or fallback mode.",
+    "observedSubject": {
+      "ghPagesHead": "f0bb39c8b73a67d2c3d537c3d3583ea8455232c2",
+      "fishPageBlob": "b06c9edf7bc44e44e4fb0e5f2a28e84addfe3530",
+      "fishCommit": "ad5c30d074332bbd07d10b111024c26dff863771",
+      "taskId": "FISH_FUNCTION_SURFACE_R11_20261004",
+      "collectionClaim": "generate all fish rest surfaces from reference-fitted functions",
+      "declaredMemberIds": [
+        "barracuda",
+        "herring",
+        "tuna-yellow-label",
+        "tuna-blue-label",
+        "colorful",
+        "picasso"
+      ],
+      "newRouteReceiptIds": [
+        "herring",
+        "tuna-yellow-label",
+        "tuna-blue-label",
+        "colorful",
+        "picasso"
+      ],
+      "exception": {
+        "id": "barracuda",
+        "format": "FCP11_LEGACY_GZIP",
+        "positionsFunctionGenerated": "UNDECLARED",
+        "fallbackDisclosure": "ABSENT_FROM_COLLECTION_CLAIM"
+      }
+    }
+  },
+  "mustNeverRepeat": [
+    "promote an all-members claim from a page-level version or task label alone",
+    "allow a member that lacks a new-route receipt to inherit collection-level success",
+    "hide a legacy or fallback member inside a new collection without explicit member status",
+    "treat a new digest as proof that the member used the newly claimed production method"
+  ],
+  "candidateGate": {
+    "requiredFields": [
+      "collectionId",
+      "claimId",
+      "claimQuantifier",
+      "declaredMemberIds",
+      "memberReceipts",
+      "fallbackActive",
+      "fallbackMemberIds",
+      "fallbackDisclosure",
+      "userAcceptance"
+    ],
+    "memberReceiptFields": [
+      "memberId",
+      "artifactSha256",
+      "productionMode",
+      "satisfiesClaim"
+    ],
+    "rule": "ALL quantifies over declaredMemberIds; every declared member must have an exact receipt with satisfiesClaim=true. A mixed-mode collection may remain deliverable only under an explicitly narrowed claim with visible fallback disclosure.",
+    "holdMissingReceipt": "HOLD_COLLECTION_MEMBER_RECEIPT_MISSING",
+    "holdSilentFallback": "HOLD_COLLECTION_SILENT_FALLBACK",
+    "holdDisclosedExceptionUnderAllClaim": "HOLD_COLLECTION_CLAIM_NOT_UNIVERSAL",
+    "mixedModeDecision": "COLLECTION_MIXED_MODE_DISCLOSED_NOT_UNIVERSAL",
+    "passDecision": "COLLECTION_CLAIM_VERIFIED_NOT_USER_ACCEPTED"
+  },
+  "cases": [
+    {
+      "id": "FISH_R11_ALL_FUNCTION_SURFACE_CLAIM_WITH_BARRACUDA_LEGACY_MEMBER",
+      "input": {
+        "collectionId": "sha1:b06c9edf7bc44e44e4fb0e5f2a28e84addfe3530",
+        "claimId": "all-rest-surfaces-reference-fitted-functions",
+        "claimQuantifier": "ALL",
+        "declaredMemberIds": ["barracuda", "herring", "tuna-yellow-label", "tuna-blue-label", "colorful", "picasso"],
+        "memberReceipts": [
+          {"memberId": "barracuda", "artifactSha256": "bb8b8a8c88195be5f7acea7110eaaed1967a1ee8b1083aee385d01c3a945cbe5", "productionMode": "FCP11_LEGACY_GZIP", "satisfiesClaim": false},
+          {"memberId": "herring", "artifactSha256": "ef2f25fd629fbca8968678147f95fa98689b5f15270c49982003e278d2226f6b", "productionMode": "FITTED_SURFACE_PROGRAM_R11", "satisfiesClaim": true},
+          {"memberId": "tuna-yellow-label", "artifactSha256": "b94baf007866bd30466592c8256fdb969c42cc62e20423ace770c8c75d3980f8", "productionMode": "FITTED_SURFACE_PROGRAM_R11", "satisfiesClaim": true},
+          {"memberId": "tuna-blue-label", "artifactSha256": "94cf27e83f9462278909245c6f0bd26d4046b6900affd007793440bed4b1c9bd", "productionMode": "FITTED_SURFACE_PROGRAM_R11", "satisfiesClaim": true},
+          {"memberId": "colorful", "artifactSha256": "7277fd9cd4067622fb0a76d4506adf26e6dd27124fbfc77584daf96a714747ba", "productionMode": "FITTED_SURFACE_PROGRAM_R11", "satisfiesClaim": true},
+          {"memberId": "picasso", "artifactSha256": "b85a1fd9ce98594aef0a3a591ee0efa2a13fa2e812790aecc7ca16f309f9d06d", "productionMode": "FITTED_SURFACE_PROGRAM_R11", "satisfiesClaim": true}
+        ],
+        "fallbackActive": true,
+        "fallbackMemberIds": ["barracuda"],
+        "fallbackDisclosure": false,
+        "userAcceptance": "UNKNOWN"
+      },
+      "expect": "HOLD_COLLECTION_SILENT_FALLBACK"
+    },
+    {
+      "id": "CONTROL_ALL_SIX_MEMBERS_HAVE_NEW_ROUTE_RECEIPTS",
+      "input": {
+        "collectionId": "control:all-six-new-route",
+        "claimId": "all-rest-surfaces-reference-fitted-functions",
+        "claimQuantifier": "ALL",
+        "declaredMemberIds": ["barracuda", "herring", "tuna-yellow-label", "tuna-blue-label", "colorful", "picasso"],
+        "memberReceipts": [
+          {"memberId": "barracuda", "artifactSha256": "01", "productionMode": "FITTED_SURFACE_PROGRAM_R11", "satisfiesClaim": true},
+          {"memberId": "herring", "artifactSha256": "02", "productionMode": "FITTED_SURFACE_PROGRAM_R11", "satisfiesClaim": true},
+          {"memberId": "tuna-yellow-label", "artifactSha256": "03", "productionMode": "FITTED_SURFACE_PROGRAM_R11", "satisfiesClaim": true},
+          {"memberId": "tuna-blue-label", "artifactSha256": "04", "productionMode": "FITTED_SURFACE_PROGRAM_R11", "satisfiesClaim": true},
+          {"memberId": "colorful", "artifactSha256": "05", "productionMode": "FITTED_SURFACE_PROGRAM_R11", "satisfiesClaim": true},
+          {"memberId": "picasso", "artifactSha256": "06", "productionMode": "FITTED_SURFACE_PROGRAM_R11", "satisfiesClaim": true}
+        ],
+        "fallbackActive": false,
+        "fallbackMemberIds": [],
+        "fallbackDisclosure": false,
+        "userAcceptance": "UNKNOWN"
+      },
+      "expect": "COLLECTION_CLAIM_VERIFIED_NOT_USER_ACCEPTED"
+    },
+    {
+      "id": "CONTROL_MIXED_MODE_EXPLICITLY_NARROWED_AND_DISCLOSED",
+      "input": {
+        "collectionId": "control:five-new-one-legacy",
+        "claimId": "five-named-rest-surfaces-reference-fitted-functions",
+        "claimQuantifier": "NAMED_SUBSET",
+        "declaredMemberIds": ["barracuda", "herring", "tuna-yellow-label", "tuna-blue-label", "colorful", "picasso"],
+        "claimedMemberIds": ["herring", "tuna-yellow-label", "tuna-blue-label", "colorful", "picasso"],
+        "memberReceipts": [
+          {"memberId": "barracuda", "artifactSha256": "01", "productionMode": "LEGACY", "satisfiesClaim": false},
+          {"memberId": "herring", "artifactSha256": "02", "productionMode": "NEW", "satisfiesClaim": true},
+          {"memberId": "tuna-yellow-label", "artifactSha256": "03", "productionMode": "NEW", "satisfiesClaim": true},
+          {"memberId": "tuna-blue-label", "artifactSha256": "04", "productionMode": "NEW", "satisfiesClaim": true},
+          {"memberId": "colorful", "artifactSha256": "05", "productionMode": "NEW", "satisfiesClaim": true},
+          {"memberId": "picasso", "artifactSha256": "06", "productionMode": "NEW", "satisfiesClaim": true}
+        ],
+        "fallbackActive": true,
+        "fallbackMemberIds": ["barracuda"],
+        "fallbackDisclosure": true,
+        "userAcceptance": "UNKNOWN"
+      },
+      "expect": "COLLECTION_MIXED_MODE_DISCLOSED_NOT_UNIVERSAL"
+    },
+    {
+      "id": "CONTROL_ALL_CLAIM_WITH_DISCLOSED_LEGACY_EXCEPTION",
+      "input": {
+        "collectionId": "control:all-claim-one-disclosed-legacy",
+        "claimId": "all-members-new-route",
+        "claimQuantifier": "ALL",
+        "declaredMemberIds": ["a", "b"],
+        "memberReceipts": [
+          {"memberId": "a", "artifactSha256": "01", "productionMode": "NEW", "satisfiesClaim": true},
+          {"memberId": "b", "artifactSha256": "02", "productionMode": "LEGACY", "satisfiesClaim": false}
+        ],
+        "fallbackActive": true,
+        "fallbackMemberIds": ["b"],
+        "fallbackDisclosure": true,
+        "userAcceptance": "UNKNOWN"
+      },
+      "expect": "HOLD_COLLECTION_CLAIM_NOT_UNIVERSAL"
+    },
+    {
+      "id": "CONTROL_DECLARED_MEMBER_WITHOUT_RECEIPT",
+      "input": {
+        "collectionId": "control:missing-member-receipt",
+        "claimId": "all-members-new-route",
+        "claimQuantifier": "ALL",
+        "declaredMemberIds": ["a", "b"],
+        "memberReceipts": [
+          {"memberId": "a", "artifactSha256": "01", "productionMode": "NEW", "satisfiesClaim": true}
+        ],
+        "fallbackActive": false,
+        "fallbackMemberIds": [],
+        "fallbackDisclosure": false,
+        "userAcceptance": "UNKNOWN"
+      },
+      "expect": "HOLD_COLLECTION_MEMBER_RECEIPT_MISSING"
+    }
+  ]
+}
