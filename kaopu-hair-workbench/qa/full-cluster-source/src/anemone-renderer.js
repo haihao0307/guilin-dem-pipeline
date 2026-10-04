@@ -42,7 +42,7 @@ float ao=mix(.64,1.,smoothstep(.4,1.1,world.y));c*=ao;color=vec4(pow(c,vec3(1./2
 // Tissue-zone color fits from species descriptions and macrophotography. These
 // are display art values, not NOAA/PICRC measurements or calibrated albedos.
 const PALETTES=Object.freeze({
- green:Object.freeze(['#5B6734','#ADC858','#E1E8A0','#A74585']),
+ green:Object.freeze(['#649631','#ABE357','#E3F3A0','#A74585']),
  yellow:Object.freeze(['#89702F','#D4BA5D','#EFE7AD','#964185']),
  brown:Object.freeze(['#8A6A40','#C2A575','#F0DAA6','#96514B']),
  purple:Object.freeze(['#665163','#A88AAE','#E9C4E4','#973657']),

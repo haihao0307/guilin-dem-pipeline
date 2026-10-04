@@ -132,8 +132,9 @@ module.exports = async function firstEntry(browser, url, outDir, check) {
       // Read the FIRST completed application frame before Chromium can discard
       // its default framebuffer. No test draw can manufacture this first frame.
       if (!audit.firstFrame && window.runtime?.frameCount > 0 && window.gl) {
-        audit.firstFrame = { at: now(), frames: runtime.frameCount, startup: runtime.startup,
-          pixels: audit.readPixels(), defaultDraws: audit.contexts.reduce((n, row) => n + row.defaultDraws, 0) };
+        const submittedAt=now(),pixels=audit.readPixels();
+        audit.firstFrame = { at: now(), submittedAt, frames: runtime.frameCount, startup: runtime.startup,
+          pixels, defaultDraws: audit.contexts.reduce((n, row) => n + row.defaultDraws, 0) };
       }
       return value;
     });
@@ -193,7 +194,7 @@ module.exports = async function firstEntry(browser, url, outDir, check) {
       return { module: platform.module, ready: { ...workbench.ready }, startupStatus: workbench.startupStatus,
         started: workbench.started, teacherStarted: workbench.teacherStarted,
         otherReady: { anemone: anemone.ready, kuko: kuko.ready }, parentProgress: { ...rabbitLoadProgress.state },
-        runtime: r ? { frames: r.frameCount, state: r.state(), startup: r.startup, noiseSize: r.renderer.noiseTextSize } : null,
+        runtime: r ? { frames: r.frameCount, state: r.renderer.currentPreset ? r.state() : null, startup: r.startup, noiseSize: r.renderer.noiseTextSize } : null,
         epoch: window.FRAME_EPOCHS?.candidate, host: compact(window.__firstEntryAudit), frame: compact(w.__firstEntryAudit),
         marks: performance.getEntriesByType('mark').filter(x => x.name.startsWith('rabbit-')).map(x => ({ name: x.name, at: performance.timeOrigin + x.startTime })),
         fault: window.__firstEntryFault,
@@ -347,6 +348,10 @@ module.exports = async function firstEntry(browser, url, outDir, check) {
         before.pixels.hash !== after.pixels.hash && after.pixels.glError === 0 && JSON.stringify(before.state.camera) === JSON.stringify(after.state.camera), { before, after });
     }
     await screenshot('anemone-first-screen');
+    await page.setViewportSize({width:390,height:667});
+    await wait(()=>Math.abs(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--studio-height'))-innerHeight)<1);
+    for(const selector of ['[data-anemone-zoom=\"1\"]','[data-anemone-zoom=\"1.5\"]','[data-anemone-zoom=\"2\"]','#anemoneLightingMode','#anemone-warmPower','#anemone-coolPower'])await visible(selector);
+    await screenshot('anemone-short-phone');
     await context.close();
 
     phase = 'causal-retry'; await boot(true);

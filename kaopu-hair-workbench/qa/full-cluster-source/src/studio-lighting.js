@@ -105,13 +105,15 @@ void r13SideLamp(int lamp, highp vec3 p, out highp vec3 L, out highp vec3 E) {
     source = afterPrecision(source, glsl + '\nuniform highp vec3 r13Center;\nuniform highp float r13Radius;\n', 'anemone material');
     const setup = 'vec3 n=normalize(normal),v=normalize(eye-world),l=normalize(vec3(.6,.6,.5));';
     source = once(source, setup, setup + `
- vec3 r13P=(world-r13Center)/r13Radius,r13Diffuse=vec3(0.),r13Back=vec3(0.),r13Rim=vec3(0.);
+ vec3 r13P=(world-r13Center)/r13Radius,r13Diffuse=vec3(0.),r13Back=vec3(0.),r13Rim=vec3(0.),r13Thin=vec3(0.),r13Wet=vec3(0.);
  if(r13LightingMode==1){
   for(int lamp=0;lamp<2;lamp++){
    vec3 L,E;r13SideLamp(lamp,r13P,L,E);E*=r13DisplayGain;
    r13Diffuse+=E*max(dot(n,L),0.);
    r13Back+=E*pow(max(dot(-n,L),0.),1.5);
    r13Rim+=E*smoothstep(-.2,.85,dot(n,L));
+   r13Thin+=E*pow(clamp((.45-dot(n,L))/1.45,0.,1.),1.2);
+   r13Wet+=E*pow(max(dot(n,normalize(L+v)),0.),12.)*max(dot(n,L),0.);
   }
  }
 `, 'anemone normal setup');
@@ -124,11 +126,11 @@ void r13SideLamp(int lamp, highp vec3 p, out highp vec3 L, out highp vec3 E) {
     const diffuse = 'lit=base*(softAmbient+.52*diff*teacherCoverage*sharp);';
     source = once(source, diffuse, 'if(r13LightingMode==1){lit=base*(vec3(.085+.20*coc)+.85*r13Diffuse*teacherCoverage*sharp);}else{' + diffuse + '}', 'anemone diffuse');
     const rim = 'lit+=rimReturn*effectiveRim*.62*rimLight*sharp;';
-    source = once(source, rim, 'if(r13LightingMode==1){lit+=rimReturn*effectiveRim*.62*(vec3(.055)+1.10*r13Rim)*sharp;}else{' + rim + '}', 'anemone rim');
+    source = once(source, rim, 'if(r13LightingMode==1){lit+=rimReturn*effectiveRim*.62*(vec3(.055)+1.10*r13Rim+.45*r13Thin)*sharp;}else{' + rim + '}', 'anemone rim');
     const cap = 'lit+=base*pow(facing,1.5)*(.13+.18*tip);';
     source = once(source, cap, 'if(r13LightingMode==1){lit+=base*pow(facing,1.5)*(vec3(.035)+(.22+.24*tip)*r13Rim);}else{' + cap + '}', 'anemone cap light');
     const back = 'lit+=mix(base,milk,.25)*back*.06;';
-    source = once(source, back, 'if(r13LightingMode==1){lit+=mix(base,milk,.25)*r13Back*.06;}else{' + back + '}', 'anemone back light');
+    source = once(source, back, 'if(r13LightingMode==1){lit+=mix(coloredReturn,milk,.035)*r13Thin*.30*(.35+.65*(1.-facing)+.35*tip)*sharp;lit+=mix(vec3(1.),base,.12)*r13Wet*.065*sharp;}else{' + back + '}', 'anemone back light');
     return source;
   }
   const locations = new WeakMap();
