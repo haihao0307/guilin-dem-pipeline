@@ -74,7 +74,7 @@ jobs:
               page=browser.new_page(viewport={'width':1440,'height':900},device_scale_factor=1)
               page.on('pageerror',lambda e:report['errors'].append('pageerror: '+str(e)))
               page.on('console',lambda m:report['errors'].append('console: '+m.text) if m.type=='error' else None)
-              page.goto(url+'?browserqa=1',wait_until='domcontentloaded',timeout=120000)
+              page.goto(url+'?browserqa=2',wait_until='domcontentloaded',timeout=120000)
               page.wait_for_function('window.__teacherArchitectureR06Ready===true',timeout=180000)
               page.wait_for_timeout(1600)
               state=page.evaluate('TeacherArchitectureR06.getState()')
@@ -92,15 +92,15 @@ jobs:
               desktop=root/'desktop-r06.png';page.screenshot(path=str(desktop),full_page=False)
               C['desktopPixels']=digest(desktop)['stddev']>10
 
-              before=(sig['rootCount'],sig['terminalCount'],sig['height'])
               page.evaluate("TeacherArchitectureR06.setRootVoice('deep')")
               page.wait_for_timeout(700)
               deep=page.evaluate('TeacherArchitectureR06.getState().signature')
               C['rootVoiceWorks']=deep['rootCount']>0 and deep['rootUptake']!=sig['rootUptake']
               page.evaluate("TeacherArchitectureR06.setVoice('tiered')")
               page.wait_for_timeout(700)
-              tiered=page.evaluate('TeacherArchitectureR06.getState().signature')
-              C['architectureVoiceWorks']=tiered['appliesToSpecies']=='generic tiered voice' and (tiered['terminalCount']!=sig['terminalCount'] or tiered['primaryBranches']!=sig['primaryBranches'])
+              tiered_state=page.evaluate('TeacherArchitectureR06.getState()')
+              tiered=tiered_state['signature']
+              C['architectureVoiceWorks']=tiered_state['params']['voice']=='tiered' and tiered['appliesToSpecies']=='generic tiered voice' and tiered['leafCount']!=sig['leafCount']
               page.evaluate("TeacherArchitectureR06.setVoice('pandanus')")
               page.evaluate("TeacherArchitectureR06.setRootVoice('mixed')")
               page.wait_for_timeout(700)
