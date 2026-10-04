@@ -3,7 +3,7 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),https=require('node:https'),assert=require('node:assert/strict');
 const {chromium}=require('playwright');
 const html=path.resolve(process.env.HAIYU_HTML||'kaopu-haiyu-workbench/r21/index.html');
-const url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-haiyu-workbench/r21/';
+const url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-haiyu-workbench/';
 const out=path.resolve(process.env.HAIYU_QA_OUT||'haiyu-r21-browser-results');fs.mkdirSync(out,{recursive:true});
 const hash=b=>crypto.createHash('sha256').update(b).digest('hex'),expected=hash(fs.readFileSync(html));
 const report={commit:process.env.GITHUB_SHA,expectedSha256:expected,source:'Official Playwright Chromium with SwiftShader software WebGL',physicalGPU:false,physicalMobileDevice:false,checks:[],errors:[],public:{},file:{}};
@@ -32,7 +32,7 @@ async function depthFixture(p){return p.evaluate(()=>{const c=document.createEle
   for(const stage of [1,7,8,4]){await p.locator(`button[data-stage="${stage}"]`).click();if(stage===1)await p.frameLocator('#live').locator('canvas').waitFor();else await p.locator(stage===4?'#axisLift':'#experiment').waitFor({state:'visible'})}
   assert.equal(await p.locator('button[data-stage="6"]').count(),0);
   await p.locator('button[data-stage="9"]').click();await p.frameLocator('#live').locator('canvas').waitFor();await p.waitForFunction(()=>document.body.dataset.pending==='0');
-  assert.equal(await p.locator('#title').textContent(),'06 新原式学习');
+  assert.equal(await p.locator('#title').textContent(),'06 新原式学习');assert.equal(await p.locator('#sourceVersion').textContent(),'新原式 / 2026.10.04');
   const originalFrames=[];for(const f of [1,60,120,180]){await p.locator('#timeline').fill(String(f));await p.waitForFunction(f=>document.body.dataset.pending==='0'&&Number(document.body.dataset.frame)===f,f);const time=Number(await p.frameLocator('#live').locator('body').getAttribute('data-time'));assert.ok(Math.abs(time-f*Math.PI/120)<1e-10);const c=p.frameLocator('#live').locator('canvas');assert.equal(await c.getAttribute('width'),'400');assert.equal(await c.getAttribute('height'),'400');originalFrames.push(hash(await c.evaluate(c=>c.toDataURL())));await c.screenshot({path:path.join(out,`${phase}-source06-frame${f}.png`)});}
   assert.equal(new Set(originalFrames).size,4);report[phase].source06={sourceFrameStep:'PI/120',pointCount:20000,canvas:[400,400],frameHashes:originalFrames};
   await p.locator('button[data-stage="4"]').click();await seek(p,0);
