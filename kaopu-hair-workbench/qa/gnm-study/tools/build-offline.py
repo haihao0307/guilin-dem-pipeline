@@ -35,6 +35,7 @@ def build(output,assets_dir,download):
   'gnm-samplers':data_url((ROOT/'src/SemanticSampler.js').read_text().replace("'./GNMModel.js'","'gnm-model'")),
   'gnm-scalp':data_url((ROOT/'src/ScalpBinding.js').read_text().replace("'./SemanticSampler.js'","'gnm-samplers'")),
   'gnm-hair':data_url((ROOT/'src/HairLayer.js').read_text().replace("'./ScalpBinding.js'","'gnm-scalp'")),
+  'gnm-facial-hair':data_url((ROOT/'src/FacialHairLayer.js').read_text().replace("'./HairLayer.js'","'gnm-hair'").replace("'./ScalpBinding.js'","'gnm-scalp'").replace("'./SemanticSampler.js'","'gnm-samplers'")),
   'gnm-expression-data':data_url((ROOT/'src/ExpressionSourceData.js').read_text()),
   'gnm-expression-sources':data_url((ROOT/'src/ExpressionSources.js').read_text().replace("'./ExpressionSourceData.js'","'gnm-expression-data'"))}
  html=(ROOT/'index.html').read_text()

@@ -16,7 +16,7 @@ const functionBlock=(start,end)=>app.slice(app.indexOf('function '+start+'('),ap
 vm.runInContext(`let ready=true,selectedExpressionSource='maya-semantic',sourceExpressionSelection=null,sourceExpressionStrength=1,expressionTarget=null,identityTarget=null;
 let state={components:[true,true,true,true,true,true],hair:true,expressionStrength:1};
 let evaluated=0,built=0,stopped=0,label='';
-function stopAnimation(){stopped++;}function buildControls(){built++;}function changed(s){label=s;}
+function stopAnimation(){stopped++;}function setAutoRotate(){}function validateGroom(){}function setGroom(){}const hairOptions={},facialOptions={brows:{},beard:{}};function buildControls(){built++;}function changed(s){label=s;}
 function evaluate(){evaluated++;const o=new Float32Array(model.numVertices*3);model.computeVertices(o);if(!o.every(Number.isFinite))throw Error('Nonfinite mesh');}
 function diagnostics(){return {expressionSource:sourceExpressionSelection,selectedExpressionSource,hair:state.hair,evaluated,built,stopped};}
 ${functionBlock('applySourceExpression','parameterGroups')}

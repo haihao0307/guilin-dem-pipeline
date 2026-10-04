@@ -1,6 +1,6 @@
 {
   "title": "GNM Head browser study",
-  "version": "2026-10-04-r4",
+  "version": "2026-10-04-r5",
   "sources": {
     "googleGNM": {
       "url": "https://github.com/google/GNM",
@@ -79,24 +79,44 @@
       "sha256": "1dd728c227de1922aa4a59c5ccaee86dca06611a280a938b184c70ffba4e5d53"
     },
     "src/app.js": {
-      "bytes": 32557,
-      "sha256": "e3063acd6def5839d05696e52a6fff0fdeb0af92268cad5ab008787f06261f16"
+      "bytes": 38391,
+      "sha256": "bd633f6b15af45b431d7c5d296608440c6db960dc44b4e25a6aac50ca3c1cafb"
     },
     "src/HairLayer.js": {
-      "bytes": 8803,
-      "sha256": "1b88f02220b9d7101ad8583686e04c57508495245d4f9c6778b05c3a0cf14128"
+      "bytes": 14332,
+      "sha256": "885818a3e5ab8d251364008ab92edb7652680dffd237d609a78f842476c40cca"
     },
     "index.html": {
-      "bytes": 4872,
-      "sha256": "dcafddfde560ba46eb63216186ce3d0a5d65f6afd95cab784ecf6dd1be2c3af9"
+      "bytes": 5635,
+      "sha256": "44f8cccf3ba07fd04d8c07f1986daa79abc5caf54a162ac6cef49f5ef3df8b06"
     },
     "style.css": {
-      "bytes": 6421,
-      "sha256": "268e7b015105c68074ba37743265dc7a558d96e999b8aa10379d5536d1b78dfd"
+      "bytes": 9336,
+      "sha256": "2d59bfae21881517bff8e55de03cea1c15aede2851e89760c88dd61aa71029f7"
     },
     "tests/browser-qa.cjs": {
-      "bytes": 18822,
-      "sha256": "7a65af83346942b54da90a35dae45005288b412ec090e0a9382944cdb582cdd3"
+      "bytes": 20575,
+      "sha256": "6cd7ab01a5621d07b163ba3c93848418362df993e3a5a6c9153c6c5cf18c5dad"
+    },
+    "src/FacialHairLayer.js": {
+      "bytes": 16595,
+      "sha256": "4e6ef1ee3e522a84eb389a05a218540e3eb0cc4f9c3e4e8e1963c9b319341a3a"
+    },
+    "src/ScalpBinding.js": {
+      "bytes": 6843,
+      "sha256": "3951e1eabc85f6ef45ebd5aa08e6771b062e6d9813e484888c7c2edd958dbfa9"
+    },
+    "tests/facial-groom-browser.cjs": {
+      "bytes": 5708,
+      "sha256": "9b82b33f8d358f3b7514d564fcd3fd46c805b675d7c0b00e0704f688fccbc0a5"
+    },
+    "tests/mobile-camera.cjs": {
+      "bytes": 20714,
+      "sha256": "69adb0471bfa83469e63f9e660460a466ae162b759d969c4e5af830a3129189e"
+    },
+    "tools/build-offline.py": {
+      "bytes": 3603,
+      "sha256": "9dd3ec9b3a6900e5b23895a3bcc8b2c9ec4b8f2949a0dd79289ef902a4b434cf"
     }
   },
   "scope": "Full identity/expression/pose model and 20 semantic expression classes. New desktop/mobile wrapper, not an exact clone of the XRBlocks application, no Houdini execution. Photo/webcam fitting and XR are not part of this head-and-hair study.",
@@ -190,5 +210,25 @@
       "cool-toggle"
     ],
     "mobileQA": "Chromium touch emulation390x844, not iPhone hardware; pendingCI"
+  },
+  "r5": {
+    "changes": [
+      "controls below independent canvas",
+      "human image catalog card",
+      "projection zoom 100-600 percent",
+      "native manual orbit and pinch/pan",
+      "independent automatic camera orbit",
+      "denser adjustable scalp coverage",
+      "surface-bound eyebrows and optional short beard"
+    ],
+    "hairCapacity": 18000,
+    "defaultHairDensity": 0.9,
+    "defaultActiveHair": 16200,
+    "browsDefaultVisible": true,
+    "beardDefaultVisible": false,
+    "oldFiveCaseRuntimesChanged": false,
+    "physicalIPhoneTested": false,
+    "visualAcceptance": "pending GPU inspection",
+    "numericBoundary": "Sampled adjacent-surface checks on named test cases; not arbitrary-expression collision proof."
   }
 }

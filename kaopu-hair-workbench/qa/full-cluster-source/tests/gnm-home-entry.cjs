@@ -13,14 +13,46 @@ module.exports=async function(browser,url,out){
     await page.goto(url,{waitUntil:'load',timeout:120000});
     await page.waitForFunction(()=>window.platform?.module==='home');
     const link=page.locator('#catalogGnmExperiment');
-    check('existing five object cards remain',await page.locator('#catalogHome .catalog-card').count()===5);
-    check('experiment is discoverable on desktop',await link.isVisible()&&await link.getAttribute('href')===target);
+    const order=await page.locator('#catalogHome .catalog-grid > *').evaluateAll(cards=>cards.map(card=>card.id));
+    check('existing five object cards remain in order before the human card',
+      await page.locator('#catalogHome .catalog-card').count()===5&&
+      JSON.stringify(order)===JSON.stringify(['catalogRabbit','catalogAnemone','catalogFiber','catalogGroom','catalogFeather','catalogGnmExperiment']),order);
+    check('human is a single large image card labelled 人',
+      await page.locator('#catalogHome .gnm-catalog-card').count()===1&&
+      await link.locator('.catalog-card-title').evaluate(e=>e.firstChild.textContent.trim()==='人')&&
+      await link.getAttribute('href')===target);
+    await link.locator('img').evaluate(img=>img.decode());
+    const preview=await link.locator('img').evaluate(img=>({
+      complete:img.complete,width:img.naturalWidth,height:img.naturalHeight,
+      embedded:img.src.startsWith('data:image/jpeg;base64,'),alt:img.alt
+    }));
+    check('human preview contains the embedded actual-render JPEG',preview.complete&&preview.embedded&&preview.width>=600&&preview.height>=500&&preview.alt.includes('实际渲染'),preview);
+    check('the one-line intro link is gone',await page.locator('.catalog-intro #catalogGnmExperiment, .catalog-experiment-link').count()===0);
+    const desktopStyle=await link.evaluate(card=>{
+      const existing=document.getElementById('catalogRabbit'),a=getComputedStyle(card),b=getComputedStyle(existing);
+      return {width:card.getBoundingClientRect().width,existingWidth:existing.getBoundingClientRect().width,
+        previewHeight:card.querySelector('.catalog-preview').getBoundingClientRect().height,
+        existingPreviewHeight:existing.querySelector('.catalog-preview').getBoundingClientRect().height,
+        radius:a.borderRadius,existingRadius:b.borderRadius,background:a.backgroundColor,existingBackground:b.backgroundColor};
+    });
+    check('human card matches existing desktop card scale and surface',desktopStyle.width>400&&Math.abs(desktopStyle.width-desktopStyle.existingWidth)<1&&desktopStyle.previewHeight===desktopStyle.existingPreviewHeight&&desktopStyle.radius===desktopStyle.existingRadius&&desktopStyle.background===desktopStyle.existingBackground,desktopStyle);
+    await link.scrollIntoViewIfNeeded();
+    check('human card is discoverable by scrolling on desktop',await link.isVisible()&&await link.evaluate(e=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight&&r.left>=0&&r.right<=innerWidth;}));
     check('home does not load GNM or existing renderers',await page.evaluate(()=>!window.gnmStudy&&!workbench.started&&!anemone.ready&&!kuko.ready));
     await page.screenshot({path:path.join(out,'home-desktop.png'),fullPage:true});result.screenshots.push('home-desktop.png');
     await page.setViewportSize({width:390,height:844});
-    check('experiment is in mobile first screen',await link.evaluate(e=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<innerHeight;}));
+    await page.evaluate(()=>scrollTo(0,0));
     check('mobile home has no horizontal overflow',await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     await page.screenshot({path:path.join(out,'home-mobile.png'),fullPage:true});result.screenshots.push('home-mobile.png');
+    await link.scrollIntoViewIfNeeded();
+    const mobileCard=await link.evaluate(e=>{
+      const r=e.getBoundingClientRect(),preview=e.querySelector('.catalog-preview').getBoundingClientRect();
+      return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,width:r.width,previewHeight:preview.height,
+        viewportWidth:innerWidth,viewportHeight:innerHeight,radius:getComputedStyle(e).borderRadius,
+        existingRadius:getComputedStyle(document.getElementById('catalogRabbit')).borderRadius};
+    });
+    check('sixth human card is reachable by scrolling on mobile',mobileCard.top>=0&&mobileCard.bottom<=mobileCard.viewportHeight&&mobileCard.left>=0&&mobileCard.right<=mobileCard.viewportWidth&&mobileCard.width>=150&&mobileCard.previewHeight>=140&&mobileCard.radius===mobileCard.existingRadius,mobileCard);
+    await page.screenshot({path:path.join(out,'home-mobile-human.png')});result.screenshots.push('home-mobile-human.png');
     if(url.startsWith('http')){
       await Promise.all([page.waitForURL(target,{timeout:120000}),link.click()]);
       await page.waitForFunction(()=>window.gnmStudy?.ready||document.querySelector('#error:not([hidden])'),null,{timeout:120000});
@@ -29,7 +61,7 @@ module.exports=async function(browser,url,out){
       await page.screenshot({path:path.join(out,'opened-from-home-mobile.png'),fullPage:true});result.screenshots.push('opened-from-home-mobile.png');
       await page.locator('a.back').click();
       await page.waitForFunction(()=>window.platform?.module==='home');
-      check('back returns to the same five-case home and experiment link',await page.locator('#catalogHome .catalog-card').count()===5&&await page.locator('#catalogGnmExperiment').isVisible());
+      check('back returns to the same five-case home plus human card',await page.locator('#catalogHome .catalog-card').count()===5&&await page.locator('#catalogHome .gnm-catalog-card').count()===1&&await page.locator('#catalogGnmExperiment img').isVisible());
     }else result.onlineExperimentRequiresNetwork=true;
     check('entry route has no JS or console errors',result.errors.length===0,result.errors);result.passed=true;
   }catch(e){result.errors.push(e.stack||String(e));if(page)try{await page.screenshot({path:path.join(out,'failure.png'),fullPage:true});}catch{}}

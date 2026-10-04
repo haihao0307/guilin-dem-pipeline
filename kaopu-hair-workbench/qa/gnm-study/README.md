@@ -111,3 +111,21 @@ Local r3 syntax, complete offline import chain and numeric checks pass.
 Chromium could not launch because socket creation is not permitted in this
 execution sandbox, so there are no new local visual screenshots. CI must run
 the browser helper and inspect those images before publishing/acceptance.
+
+## R5 mobile layout and grooming
+
+All normal controls are below the independent canvas. The camera has fitted
+100% reset, native drag/pinch/pan, lens zoom in 100% steps up to 600%, and
+independent play/pause for camera orbit. Projection zoom leaves the camera
+outside the head. Browser QA uses Chromium touch emulation, not physical iPhone.
+
+Default scalp coverage uses 16,200 active strands from a deterministic 18,000
+root pool, a frontal/crown grooming mask with ear exclusions, and a .00028
+model-unit radius. Density changes the submitted strand range; length follows
+a prebound surface-guide prefix. Eyebrows are visible by default; optional
+short beard covers upper-lip skin and chin with separate visibility, density,
+length and color. All guide points bind original skin triangles/barycentrics.
+The numerical suite checks root and guide domains and sampled shaft clearance
+on selected neutral/expression/identity/pose cases. This is not a proof of
+collision freedom for every possible 636-dimensional coefficient combination.
+No physical millimetre calibration is claimed for native GNM coordinates.
