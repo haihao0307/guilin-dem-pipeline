@@ -56,6 +56,6 @@ Apply only when a Mother has a declared fixed public entry and a user correction
 
 `CANDIDATE_SINGLE_MOTHER_TRIAL_ONLY`. Route only to Haiyu through #91: preserve R21 as rollback, promote R22 (or an exact equivalent) to the fixed `kaopu-haiyu-workbench/` entry, then read back that fixed URL and record marker, content identity, 04/05 original-entry invariants and browser evidence. Until then state is `HOLD_CANONICAL_ENTRY_STALE`; do not ask the user to choose the hidden `/r22/` URL and do not claim the correction is delivered.
 
-Lifecycle before routing receipt: `POSTED=false`, candidate `IMPLEMENTED=true`, local replay `GATE-RUN=true`; `ACKNOWLEDGED`, `ADOPTED`, and `USER-ACCEPTED` remain false. KPI effects are `unknown` except one observed stale canonical delivery; no rate is inferred.
+Routing receipt: issue #91 comment <https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-5978752597>. Lifecycle: `POSTED=true`, candidate `IMPLEMENTED=true`, local replay `GATE-RUN=true`; `ACKNOWLEDGED`, `ADOPTED`, and `USER-ACCEPTED` remain false. KPI effects are `unknown` except one observed stale canonical delivery; no rate is inferred.
 
 No external AI was claimed or invoked as a participant.
