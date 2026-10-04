@@ -1,0 +1,129 @@
+name: Fractal Wave Architecture R06 public QA
+
+on:
+  push:
+    branches:
+      - work/fractal-wave-architecture-r06-20261004
+    paths:
+      - .github/workflows/fractal-wave-architecture-r06-public-qa.yml
+      - kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-public:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Wait for public R06 files
+        shell: python
+        run: |
+          import json,time,urllib.request
+          base='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06/'
+          expected={
+            'index.html':['Teacher-Aligned Living Tree R06','主轴先于冠层存在','runtime.js'],
+            'runtime.js':['window.__teacherArchitectureR06Ready','globalMetaballDisabled:true','organZonesTerminalOnly:true'],
+            'ARCHITECTURE_R06.json':['KAOPU.fractal-wave.teacher-aligned-architecture/6','primary axis','global whole-tree metaball']
+          }
+          report={'base':base,'attempts':0,'files':{}}
+          for attempt in range(1,121):
+            report['attempts']=attempt
+            ok=True; current={}
+            try:
+              for name,markers in expected.items():
+                req=urllib.request.Request(base+name+'?qa='+str(attempt),headers={'User-Agent':'KAOPU-R06-QA','Cache-Control':'no-cache'})
+                with urllib.request.urlopen(req,timeout=35) as response:
+                  data=response.read(); status=response.status
+                text=data.decode('utf-8','replace')
+                checks={m:(m in text) for m in markers}
+                current[name]={'status':status,'bytes':len(data),'markers':checks}
+                ok=ok and status==200 and all(checks.values())
+              report['files']=current
+              if ok:
+                report['success']=True;break
+            except Exception as exc:
+              report['last_error']=repr(exc)
+            time.sleep(10)
+          else: report['success']=False
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          if not report.get('success'): raise SystemExit('R06 public files not ready')
+
+      - name: Install browser QA
+        run: |
+          python -m pip install --disable-pip-version-check playwright pillow
+          python -m playwright install --with-deps chromium
+
+      - name: Verify architecture and mobile rendering
+        shell: python
+        run: |
+          from pathlib import Path
+          import json,traceback
+          from PIL import Image,ImageStat
+          from playwright.sync_api import sync_playwright
+          root=Path('evidence-r06');root.mkdir(exist_ok=True)
+          url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06/'
+          report={'url':url,'checks':{},'errors':[]};C=report['checks']
+          def digest(path):
+            im=Image.open(path).convert('RGB');st=ImageStat.Stat(im)
+            return {'bytes':path.stat().st_size,'mean':sum(st.mean)/3,'stddev':sum(st.stddev)/3}
+          try:
+            with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True)
+              page=browser.new_page(viewport={'width':1440,'height':900},device_scale_factor=1)
+              page.on('pageerror',lambda e:report['errors'].append('pageerror: '+str(e)))
+              page.on('console',lambda m:report['errors'].append('console: '+m.text) if m.type=='error' else None)
+              page.goto(url+'?browserqa=1',wait_until='domcontentloaded',timeout=120000)
+              page.wait_for_function('window.__teacherArchitectureR06Ready===true',timeout=180000)
+              page.wait_for_timeout(1600)
+              state=page.evaluate('TeacherArchitectureR06.getState()')
+              sig=state['signature']
+              C['teacherAligned']=sig['teacherAligned'] is True
+              C['organZonesTerminalOnly']=sig['organZonesTerminalOnly'] is True
+              C['globalMetaballDisabled']=sig['globalMetaballDisabled'] is True
+              C['continuousAxisSweep']=sig['continuousAxisSweep'] is True
+              C['trunkProportionSane']=sig['baseRadius']/sig['height']<0.065
+              C['hasPrimaryHierarchy']=sig['tierCount']>=2 and sig['primaryBranches']>=3 and sig['terminalCount']>sig['primaryBranches']
+              C['rootsPresent']=sig['rootCount']>=3 and sig['rootUptake']>0
+              C['organsSparse']=sig['fruitCount']<=3 and sig['leafCount']>0
+              C['junctionCollars']=sig['junctionCollars'] is True
+              C['desktopNoOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+              desktop=root/'desktop-r06.png';page.screenshot(path=str(desktop),full_page=False)
+              C['desktopPixels']=digest(desktop)['stddev']>10
+
+              before=(sig['rootCount'],sig['terminalCount'],sig['height'])
+              page.evaluate("TeacherArchitectureR06.setRootVoice('deep')")
+              page.wait_for_timeout(700)
+              deep=page.evaluate('TeacherArchitectureR06.getState().signature')
+              C['rootVoiceWorks']=deep['rootCount']>0 and deep['rootUptake']!=sig['rootUptake']
+              page.evaluate("TeacherArchitectureR06.setVoice('tiered')")
+              page.wait_for_timeout(700)
+              tiered=page.evaluate('TeacherArchitectureR06.getState().signature')
+              C['architectureVoiceWorks']=tiered['appliesToSpecies']=='generic tiered voice' and (tiered['terminalCount']!=sig['terminalCount'] or tiered['primaryBranches']!=sig['primaryBranches'])
+              page.evaluate("TeacherArchitectureR06.setVoice('pandanus')")
+              page.evaluate("TeacherArchitectureR06.setRootVoice('mixed')")
+              page.wait_for_timeout(700)
+
+              page.set_viewport_size({'width':390,'height':844})
+              page.wait_for_timeout(650)
+              C['mobileNoOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+              mobile=root/'mobile-r06.png';page.screenshot(path=str(mobile),full_page=False)
+              C['mobilePixels']=digest(mobile)['stddev']>10
+              C['pageErrorsZero']=not report['errors']
+              report['state']=page.evaluate('TeacherArchitectureR06.getState()')
+              report['screens']={'desktop':digest(desktop),'mobile':digest(mobile)}
+              browser.close()
+          except Exception:
+            report['failure']=traceback.format_exc()
+          (root/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          if report.get('failure') or not all(C.values()): raise SystemExit('R06 browser QA failed')
+
+      - name: Upload R06 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: FRACTAL_WAVE_ARCHITECTURE_R06_QA
+          path: evidence-r06
+          if-no-files-found: error
+          retention-days: 90
