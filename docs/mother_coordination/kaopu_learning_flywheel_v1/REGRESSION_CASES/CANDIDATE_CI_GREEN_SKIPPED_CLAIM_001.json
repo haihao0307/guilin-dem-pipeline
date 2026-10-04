@@ -16,15 +16,64 @@
       "mother": "Material",
       "workflowPath": ".github/workflows/material-r15-same-stone.yml",
       "productionSha": "d6cecae2527a259082b5a5b97d74d4223e4d10f9",
-      "workflowDefinitionShas": [
-        "2f4639c9d73ff58303072697f5c10e541e0703fa",
-        "c3f0ecb7eed797000c4131d82f3f8c644be73ef0",
-        "4fdc1213914a668e6d63017081c128c7ef3edc4b"
-      ],
-      "workflowRunsPerCommit": [0, 0, 0],
-      "combinedStatusesPerCommit": [0, 0, 0],
-      "derivedClaimState": "HOLD_CLAIM_NO_WORKFLOW_RUN",
-      "note": "The source delta may still be valid. This evidence blocks only claims that the public same-SDF workflow ran or passed."
+      "status": "RETRACTED_AND_CORRECTED_2026-10-04T11:40:25Z",
+      "retractedAssertion": {
+        "workflowDefinitionShas": [
+          "2f4639c9d73ff58303072697f5c10e541e0703fa",
+          "c3f0ecb7eed797000c4131d82f3f8c644be73ef0",
+          "4fdc1213914a668e6d63017081c128c7ef3edc4b"
+        ],
+        "workflowRunsPerCommit": [0, 0, 0],
+        "derivedClaimState": "HOLD_CLAIM_NO_WORKFLOW_RUN",
+        "whyInvalid": "The connector used for the negative observation filters to pull_request-triggered runs, while this workflow is triggered by push. Empty combined commit statuses are also not an Actions workflow-run query."
+      },
+      "correctedObservation": {
+        "workflowRuns": [
+          {
+            "runNumber": 1,
+            "runId": 37184229167,
+            "headSha": "2f4639c9d73ff58303072697f5c10e541e0703fa",
+            "event": "push",
+            "conclusion": "failure"
+          },
+          {
+            "runNumber": 2,
+            "runId": 37184666164,
+            "headSha": "c3f0ecb7eed797000c4131d82f3f8c644be73ef0",
+            "event": "push",
+            "conclusion": "failure"
+          },
+          {
+            "runNumber": 3,
+            "runId": 37184764939,
+            "jobId": 111384288074,
+            "headSha": "4fdc1213914a668e6d63017081c128c7ef3edc4b",
+            "event": "push",
+            "conclusion": "success",
+            "verifyStepConclusion": "success",
+            "artifactId": 11296088174,
+            "artifactName": "material-r15-same-stone-proof",
+            "artifactDigest": "sha256:bcf2959b15b9e771e9121be3ec572b9781be980e8ce2b40a527027b3abd5d6df"
+          }
+        ],
+        "proofPredicates": {
+          "sameSdf": true,
+          "noSubstituteCanvas": true,
+          "mobileMotionWidth": 448,
+          "mobileStaticWidth": 448,
+          "noErrors": true
+        },
+        "environment": "Public HTTPS Chromium 390px viewport + SwiftShader; not physical iPhone",
+        "derivedClaimState": "CLAIM_VERIFIED_SCOPED",
+        "verifiedClaim": "R15 public HTTPS Chromium+SwiftShader interaction retained the same SDF path without substitute canvas at head 4fdc1213914a668e6d63017081c128c7ef3edc4b.",
+        "excludedClaims": [
+          "physical iPhone acceptance",
+          "default browser hardware acceleration",
+          "global browser or device performance",
+          "user acceptance"
+        ]
+      },
+      "correctionRegression": "QUERY-SCOPE-NEGATIVE-EVIDENCE-001"
     }
   ],
   "failureClass": "CLAIM_SCOPE_OVERPROMOTION",
@@ -57,7 +106,8 @@
     "verifiedSetup": "CLAIM_VERIFIED",
     "publicationComplete": "HOLD_CLAIM_INCOMPLETE",
     "falsificationControl": "CLAIM_VERIFIED",
-    "materialR15NoRun": "HOLD_CLAIM_NO_WORKFLOW_RUN"
+    "materialR15PriorNoRunAssertion": "RETRACTED_QUERY_SCOPE_MISMATCH",
+    "materialR15ExactRun": "CLAIM_VERIFIED_SCOPED"
   },
   "activationRequirement": "Run once in an actual affected Mother workflow and obtain an independent verifier receipt before adoption."
 }

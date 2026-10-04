@@ -1,23 +1,27 @@
 {
   "schema": "kaopu.mother-routing/1",
   "routingId": "N73-MATERIAL-WORKFLOW-RUN-RECEIPT",
-  "status": "POSTED",
+  "status": "RETRACTED_SUPERSEDED",
   "targetMother": "Material",
   "targetIssue": 91,
   "issueCommentId": 5977850272,
   "issueCommentUrl": "https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-5977850272",
   "candidateRegression": "CI-GREEN-SKIPPED-CLAIM-001",
-  "boundedAction": "Run the existing Material R15 same-stone workflow once against the intended current subject and record exact runId, headSha, job/step conclusions and proof artifact. Until then use HOLD_CLAIM_NO_WORKFLOW_RUN.",
+  "retractionReason": "The negative query used in N73 returned only pull_request-triggered runs, while the Material workflow uses push; three push runs existed.",
+  "supersededBy": "N75-MATERIAL-QUERY-SCOPE-CORRECTION",
+  "supersedingIssueCommentUrl": "PENDING_POST",
+  "boundedAction": "Withdraw the zero-run assertion. Preserve the exact run #3 scoped verification and do not extend it to physical iPhone, default GPU/browser performance or user acceptance.",
   "doNot": [
     "do not call a workflow YAML file or test-named commit GATE-RUN",
     "do not reject the R15 source delta solely because CI is absent",
     "do not change unrelated Material source or lower the same-SDF gate",
-    "do not promote POSTED to ACKNOWLEDGED or IMPLEMENTED without a real downstream receipt"
+    "do not promote POSTED to ACKNOWLEDGED or IMPLEMENTED without a real downstream receipt",
+    "do not infer absence from a query that excludes the workflow trigger event"
   ],
   "lifecycle": {
     "posted": true,
     "acknowledged": false,
-    "implemented": false,
+    "implemented": true,
     "gateRun": true,
     "adopted": false,
     "userAccepted": false

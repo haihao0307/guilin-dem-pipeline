@@ -1,0 +1,162 @@
+{
+  "schema": "kaopu.regression-case/2",
+  "caseId": "QUERY-SCOPE-NEGATIVE-EVIDENCE-001",
+  "status": "CANDIDATE_COORDINATION_HISTORY_REPLAY_PASSED_NOT_ADOPTED",
+  "active": false,
+  "scope": {
+    "mother": "Coordination",
+    "taskClass": "NEGATIVE_EVIDENCE_FROM_FILTERED_QUERY",
+    "globalAdoption": false
+  },
+  "failure": {
+    "summary": "A query that only returned pull_request-triggered runs was used to assert that a push-triggered workflow had no runs; a different commit-status surface was treated as corroboration.",
+    "source": "N73 Material R15 workflow receipt",
+    "targetWorkflowPath": ".github/workflows/material-r15-same-stone.yml",
+    "targetEventTypes": ["push"],
+    "observationEventTypes": ["pull_request"],
+    "retractedState": "HOLD_CLAIM_NO_WORKFLOW_RUN",
+    "actualRuns": [37184229167, 37184666164, 37184764939]
+  },
+  "externalEvidence": [
+    {
+      "source": "GitHub REST workflow runs",
+      "url": "https://docs.github.com/en/rest/actions/workflow-runs?apiVersion=2022-11-28#list-workflow-runs-for-a-repository",
+      "fact": "The endpoint can filter by event and head_sha and is paginated; an absence claim therefore depends on declared event coverage, exact subject binding and pagination completeness."
+    },
+    {
+      "source": "GitHub REST commit statuses",
+      "url": "https://docs.github.com/en/rest/commits/statuses?apiVersion=2022-11-28",
+      "fact": "Commit statuses are a separate evidence surface and an empty status list is not a substitute for an Actions workflow-run or check-run query."
+    }
+  ],
+  "requiredReceiptFields": [
+    "negativeClaim",
+    "targetWorkflowPath",
+    "targetHeadSha",
+    "targetEventTypes",
+    "observationMethod",
+    "observationEvidenceSurface",
+    "observationEventTypes",
+    "workflowBound",
+    "headShaBound",
+    "paginationComplete",
+    "returnedRunIds",
+    "derivedObservationState"
+  ],
+  "gate": [
+    "Before asserting that a run does not exist, the observation event set must cover every target trigger event named by the claim.",
+    "The observation must bind the exact workflow and head SHA; repository-wide or wrong-head emptiness is insufficient.",
+    "Pagination must be complete for the declared search scope before an empty result may support absence within that scope.",
+    "Commit statuses and Actions workflow/check runs are distinct evidence surfaces; emptiness on one cannot establish emptiness on another.",
+    "Even a complete empty query supports only NO_MATCHING_RUN_OBSERVED_IN_DECLARED_SCOPE, not universal nonexistence outside that scope."
+  ],
+  "states": [
+    "HOLD_QUERY_SCOPE_MISMATCH",
+    "HOLD_EVIDENCE_SURFACE_MISMATCH",
+    "HOLD_WORKFLOW_UNBOUND",
+    "HOLD_HEAD_SHA_UNBOUND",
+    "HOLD_QUERY_PAGINATION_INCOMPLETE",
+    "NO_MATCHING_RUN_OBSERVED_IN_DECLARED_SCOPE",
+    "MATCHING_RUN_OBSERVED"
+  ],
+  "cases": [
+    {
+      "id": "N73_PR_ONLY_QUERY_FOR_PUSH_WORKFLOW",
+      "input": {
+        "claimSurface": "actions_workflow_runs",
+        "observationSurface": "actions_workflow_runs",
+        "targetEventTypes": ["push"],
+        "observationEventTypes": ["pull_request"],
+        "workflowBound": true,
+        "headShaBound": true,
+        "paginationComplete": true,
+        "returnedRunIds": []
+      },
+      "expect": "HOLD_QUERY_SCOPE_MISMATCH"
+    },
+    {
+      "id": "N73_EMPTY_COMMIT_STATUSES_FOR_ACTIONS_CLAIM",
+      "input": {
+        "claimSurface": "actions_workflow_runs",
+        "observationSurface": "commit_statuses",
+        "targetEventTypes": ["push"],
+        "observationEventTypes": ["push"],
+        "workflowBound": true,
+        "headShaBound": true,
+        "paginationComplete": true,
+        "returnedRunIds": []
+      },
+      "expect": "HOLD_EVIDENCE_SURFACE_MISMATCH"
+    },
+    {
+      "id": "MATERIAL_R15_CORRECT_QUERY_FINDS_RUN_3",
+      "input": {
+        "claimSurface": "actions_workflow_runs",
+        "observationSurface": "actions_workflow_runs",
+        "targetEventTypes": ["push"],
+        "observationEventTypes": ["push"],
+        "workflowBound": true,
+        "headShaBound": true,
+        "paginationComplete": true,
+        "returnedRunIds": [37184764939]
+      },
+      "expect": "MATCHING_RUN_OBSERVED"
+    },
+    {
+      "id": "CONTROL_EMPTY_CORRECT_SCOPE_INCOMPLETE_PAGINATION",
+      "input": {
+        "claimSurface": "actions_workflow_runs",
+        "observationSurface": "actions_workflow_runs",
+        "targetEventTypes": ["push"],
+        "observationEventTypes": ["push"],
+        "workflowBound": true,
+        "headShaBound": true,
+        "paginationComplete": false,
+        "returnedRunIds": []
+      },
+      "expect": "HOLD_QUERY_PAGINATION_INCOMPLETE"
+    },
+    {
+      "id": "CONTROL_EMPTY_COMPLETE_DECLARED_SCOPE",
+      "input": {
+        "claimSurface": "actions_workflow_runs",
+        "observationSurface": "actions_workflow_runs",
+        "targetEventTypes": ["push"],
+        "observationEventTypes": ["push"],
+        "workflowBound": true,
+        "headShaBound": true,
+        "paginationComplete": true,
+        "returnedRunIds": []
+      },
+      "expect": "NO_MATCHING_RUN_OBSERVED_IN_DECLARED_SCOPE"
+    },
+    {
+      "id": "CONTROL_RUN_FOUND_WRONG_HEAD_BINDING",
+      "input": {
+        "claimSurface": "actions_workflow_runs",
+        "observationSurface": "actions_workflow_runs",
+        "targetEventTypes": ["push"],
+        "observationEventTypes": ["push"],
+        "workflowBound": true,
+        "headShaBound": false,
+        "paginationComplete": true,
+        "returnedRunIds": [37184764939]
+      },
+      "expect": "HOLD_HEAD_SHA_UNBOUND"
+    }
+  ],
+  "activation": {
+    "global": false,
+    "singleMotherTrialRequired": true,
+    "independentVerifierRequired": true,
+    "rollbackPoint": "Keep this Candidate inactive; remove it if a later exact-query implementation adds no discrimination beyond existing evidence gates."
+  },
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": true,
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}

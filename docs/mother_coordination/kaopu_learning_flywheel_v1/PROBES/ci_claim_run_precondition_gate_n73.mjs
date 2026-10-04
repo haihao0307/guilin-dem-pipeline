@@ -14,7 +14,7 @@ function decide(x) {
 
 const fixtures = [
   {
-    name: 'material-r15-current-three-commits-no-run',
+    name: 'hypothetical-zero-run-precondition-control-not-current-r15-evidence',
     claimedHeadSha: '4fdc1213914a668e6d63017081c128c7ef3edc4b',
     runs: [], requiredSteps: ['verify'], proofPredicatesMatch: false,
     expected: 'HOLD_CLAIM_NO_WORKFLOW_RUN'
