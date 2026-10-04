@@ -7,7 +7,7 @@ function emit(type,detail={}){const data={kaopuGroom:true,type,...detail};if(par
 function fail(message){ready=false;errors.push(message);$('error').hidden=false;$('error').textContent=message;$('status').textContent='画面未能启动';emit('error',{message});}
 if(!gl){fail('此设备未能建立 WebGL 2，请使用支持 WebGL 2 的浏览器');return;}
 const VS=`#version 300 es
-precision highp float;
+precision highp float;precision highp int;
 layout(location=0) in vec4 aRoot;layout(location=1) in vec4 aRand;
 uniform mat4 uVP;uniform vec3 uEye;uniform float uSweep,uVolume,uLength,uBeard,uCurl,uClump,uFrizz,uPixel;uniform int uSegments,uView;
 out vec3 vP,vTangent,vView,vSide;out float vAcross,vRand,vCover,vS,vRegion,vClump;
@@ -35,7 +35,7 @@ void main(){int k=gl_VertexID%6,seg=gl_VertexID/6;float tail=(k==2||k==3||k==5)?
  gl_Position=uVP*vec4(p+R*side*displayR,1.);
 }`;
 const FS=`#version 300 es
-precision highp float;
+precision highp float;precision highp int;
 in vec3 vP,vTangent,vView,vSide;in float vAcross,vRand,vCover,vS,vRegion,vClump;uniform vec3 uColor;uniform float uRoughness;uniform int uView,uMSAA;out vec4 outColor;
 vec3 palette(float t){return .54+.37*cos(6.2831853*(vec3(.03,.36,.66)+t));}
 void main(){float edge=1.-smoothstep(.65,1.,abs(vAcross)),alpha=edge*vCover;if(alpha<.002)discard;
@@ -48,13 +48,13 @@ void main(){float edge=1.-smoothstep(.65,1.,abs(vAcross)),alpha=edge*vCover;if(a
  if(uMSAA==0){if(alpha<d)discard;alpha=1.;}else{alpha=floor(alpha*float(uMSAA)+d)/float(uMSAA);if(alpha<=0.)discard;}outColor=vec4(col,alpha);
 }`;
 const MVS=`#version 300 es
-precision highp float;layout(location=0)in vec3 aP;layout(location=1)in vec3 aN;layout(location=2)in vec3 aC;uniform mat4 uVP;out vec3 P,N,C;void main(){P=aP;N=aN;C=aC;gl_Position=uVP*vec4(aP,1.);}`;
+precision highp float;precision highp int;layout(location=0)in vec3 aP;layout(location=1)in vec3 aN;layout(location=2)in vec3 aC;uniform mat4 uVP;out vec3 P,N,C;void main(){P=aP;N=aN;C=aC;gl_Position=uVP*vec4(aP,1.);}`;
 const MFS=`#version 300 es
-precision highp float;in vec3 P,N,C;uniform vec3 uEye;out vec4 outColor;void main(){vec3 n=normalize(N),v=normalize(uEye-P),l=normalize(vec3(-.8,1.3,1.7)),b=normalize(vec3(1.1,.8,-1.4));float diffuse=max(0.,dot(n,l)),fill=max(0.,dot(n,normalize(vec3(1.,.25,1.))));float spec=pow(max(0.,dot(n,normalize(l+v))),65.);float rim=pow(max(0.,dot(n,b)),2.);float ao=.91-.10*exp(-pow((P.y+1.12)/.22,2.));vec3 col=C*(.28+diffuse*.64+fill*.14+rim*.20)*ao+vec3(.75,.71,.63)*spec*.065;outColor=vec4(pow(max(col,vec3(0.)),vec3(1./2.2)),1.);}`;
+precision highp float;precision highp int;in vec3 P,N,C;uniform vec3 uEye;out vec4 outColor;void main(){vec3 n=normalize(N),v=normalize(uEye-P),l=normalize(vec3(-.8,1.3,1.7)),b=normalize(vec3(1.1,.8,-1.4));float diffuse=max(0.,dot(n,l)),fill=max(0.,dot(n,normalize(vec3(1.,.25,1.))));float spec=pow(max(0.,dot(n,normalize(l+v))),65.);float rim=pow(max(0.,dot(n,b)),2.);float ao=.91-.10*exp(-pow((P.y+1.12)/.22,2.));vec3 col=C*(.28+diffuse*.64+fill*.14+rim*.20)*ao+vec3(.75,.71,.63)*spec*.065;outColor=vec4(pow(max(col,vec3(0.)),vec3(1./2.2)),1.);}`;
 const BVS=`#version 300 es
-precision highp float;out vec2 uv;void main(){vec2 p=vec2(gl_VertexID==1?3.:-1.,gl_VertexID==2?3.:-1.);uv=p*.5+.5;gl_Position=vec4(p,1.,1.);}`;
+precision highp float;precision highp int;out vec2 uv;void main(){vec2 p=vec2(gl_VertexID==1?3.:-1.,gl_VertexID==2?3.:-1.);uv=p*.5+.5;gl_Position=vec4(p,1.,1.);}`;
 const BFS=`#version 300 es
-precision highp float;in vec2 uv;out vec4 col;void main(){float v=length((uv-vec2(.5,.55))*vec2(.8,.65));vec3 c=mix(vec3(.89,.89,.85),vec3(.60,.65,.61),smoothstep(.04,.68,v));float shadow=exp(-pow((uv.y-.08)/.018,2.))*exp(-pow((uv.x-.5)/.20,4.));c-=shadow*.09;col=vec4(c,1.);}`;
+precision highp float;precision highp int;in vec2 uv;out vec4 col;void main(){float v=length((uv-vec2(.5,.55))*vec2(.8,.65));vec3 c=mix(vec3(.89,.89,.85),vec3(.60,.65,.61),smoothstep(.04,.68,v));float shadow=exp(-pow((uv.y-.08)/.018,2.))*exp(-pow((uv.x-.5)/.20,4.));c-=shadow*.09;col=vec4(c,1.);}`;
 function shader(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
 function program(v,f){const p=gl.createProgram(),a=shader(gl.VERTEX_SHADER,v),b=shader(gl.FRAGMENT_SHADER,f);gl.attachShader(p,a);gl.attachShader(p,b);gl.linkProgram(p);gl.deleteShader(a);gl.deleteShader(b);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return p;}
 let hair,mesh,bg;try{hair=program(VS,FS);mesh=program(MVS,MFS);bg=program(BVS,BFS);}catch(e){fail('着色程序编译失败：'+e.message);return;}
