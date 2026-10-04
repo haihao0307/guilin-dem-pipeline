@@ -1,7 +1,7 @@
 # KAOPU Learning Flywheel N70 — Kuko diagnostic assertion staging
 
 Date: 2026-10-04  
-Status: CANDIDATE / POSTED / GATE-RUN / KUKO-LOCAL / NOT-ADOPTED  
+Status: CANDIDATE / POSTED / GATE-RUN / KUKO-LOCAL / NOT-ADOPTED
 Global R2 adoption: false
 
 ## 1. Existing real failure
