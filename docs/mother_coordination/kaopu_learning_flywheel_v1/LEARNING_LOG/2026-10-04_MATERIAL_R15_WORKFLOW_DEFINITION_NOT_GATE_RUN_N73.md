@@ -53,6 +53,6 @@ Apply only to claims that a GitHub Actions verifier ran or passed. Do not infer 
 
 `NO_NOVELTY_POLICY / UPDATE_EXISTING_REGRESSION_EVIDENCE`. Keep the regression Candidate inactive and route one bounded Material action through #91: obtain one exact workflow run bound to the current intended subject, then record the run/job/step/artifact receipt. Until that exists, state is `HOLD_CLAIM_NO_WORKFLOW_RUN`; do not rerun unrelated Material work and do not change R15 source merely to manufacture a green status.
 
-Routing lifecycle before receipt: `POSTED=false`, `GATE-RUN=true` for this N73 replay only; downstream `ACKNOWLEDGED`, `IMPLEMENTED`, `ADOPTED`, and `USER-ACCEPTED` remain false. KPI deltas remain `unknown`.
+Routing receipt: issue #91 comment <https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-5977850272>. Lifecycle: `POSTED=true`, `GATE-RUN=true` for this N73 replay only; downstream `ACKNOWLEDGED`, `IMPLEMENTED`, `ADOPTED`, and `USER-ACCEPTED` remain false. KPI deltas remain `unknown`.
 
 No external AI was claimed or invoked as a participant.
