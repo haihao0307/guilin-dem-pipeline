@@ -1,7 +1,7 @@
 # KAOPU Learning Flywheel N70 — Kuko diagnostic assertion staging
 
 Date: 2026-10-04  
-Status: CANDIDATE / LOCAL-REPLAY-PASSED / PUBLIC-TRIAL-RUNNING  
+Status: CANDIDATE / POSTED / LOCAL-REPLAY-PASSED / PUBLIC-TRIAL-RUNNING  
 Global R2 adoption: false
 
 ## 1. Existing real failure
@@ -101,6 +101,8 @@ The replay does not prove visual fidelity, physical iPhone/Safari behavior, user
 
 Decision: keep `DIAGNOSTIC-CONTINUATION-FAIL-CLOSED-001` inactive as a Kuko-local Candidate. The local replay passed, but public run `#24` is still incomplete. Promote to Kuko-local `GATE-RUN` only after all eight exact-subject cells and the aggregate complete successfully; require a separate affected-Mother trial before any global adoption.
 
-Lifecycle at this commit: `POSTED=false`, `ACKNOWLEDGED=false`, `IMPLEMENTED=true` for the production candidate source, `GATE-RUN=false` for the public production trial, `ADOPTED=false`, `USER-ACCEPTED=false`.
+Routing receipt: https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-5975551770
+
+Lifecycle at this commit: `POSTED=true`, `ACKNOWLEDGED=false`, `IMPLEMENTED=true` for the production candidate source, `GATE-RUN=false` for the public production trial, `ADOPTED=false`, `USER-ACCEPTED=false`.
 
 Metrics: user corrections `unknown`; same-class recurrence `unknown`; rejected-lineage inheritance `unknown`; stale delivery `unknown`; internal iterations per accepted delta `unknown`; first-pass candidate pass rate `unknown`; instruction-to-legal-candidate time `unknown`. The observed `file/core` success is one cell, not a KPI.
