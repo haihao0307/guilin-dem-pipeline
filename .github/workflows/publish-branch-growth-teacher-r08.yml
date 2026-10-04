@@ -1,0 +1,182 @@
+name: Publish and Verify Branch Growth Teacher R08
+
+on:
+  push:
+    branches:
+      - work/fractal-wave-branch-growth-teacher-r08-20261004
+    paths:
+      - .github/workflows/publish-branch-growth-teacher-r08.yml
+      - kaopu-tree-fractal-wave-lab/branch-growth-hybrid-teacher-r02/**
+      - kaopu-tree-fractal-wave-lab/teacher-integrated-r08/**
+      - kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06/ARCHITECTURE_R06.json
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-branch-growth-teacher-r08
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify R08 anchors
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f kaopu-tree-fractal-wave-lab/branch-growth-hybrid-teacher-r02/index.html
+          test -f kaopu-tree-fractal-wave-lab/branch-growth-hybrid-teacher-r02/runtime.js
+          test -f kaopu-tree-fractal-wave-lab/branch-growth-hybrid-teacher-r02/TEACHER_CONTRACT.json
+          test -f kaopu-tree-fractal-wave-lab/teacher-integrated-r08/index.html
+          test -f kaopu-tree-fractal-wave-lab/teacher-integrated-r08/runtime.js
+          grep -q '分叉生长老师 R02' kaopu-tree-fractal-wave-lab/branch-growth-hybrid-teacher-r02/index.html
+          grep -q 'window.__branchGrowthTeacherR02Ready' kaopu-tree-fractal-wave-lab/branch-growth-hybrid-teacher-r02/runtime.js
+          grep -q 'backwardSegments' kaopu-tree-fractal-wave-lab/branch-growth-hybrid-teacher-r02/runtime.js
+          grep -q 'stagedLearningVisible: true' kaopu-tree-fractal-wave-lab/branch-growth-hybrid-teacher-r02/runtime.js
+          grep -q 'KAOPU.teacher.branch-growth-hybrid/2' kaopu-tree-fractal-wave-lab/branch-growth-hybrid-teacher-r02/TEACHER_CONTRACT.json
+          grep -q 'window.__branchTeacherIntegratedR08Ready' kaopu-tree-fractal-wave-lab/teacher-integrated-r08/runtime.js
+          grep -q 'BranchGrowthHybridTeacher.R02' kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06/ARCHITECTURE_R06.json
+      - name: Publish R02 teacher and R08 integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC="$GITHUB_WORKSPACE"
+          git fetch origin gh-pages
+          git worktree add /tmp/gh-pages origin/gh-pages
+          cd /tmp/gh-pages
+          git switch -c publish-branch-growth-teacher-r08
+          mkdir -p kaopu-tree-fractal-wave-lab/branch-growth-hybrid-teacher-r02
+          mkdir -p kaopu-tree-fractal-wave-lab/teacher-integrated-r08
+          mkdir -p kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06
+          cp "$SRC/kaopu-tree-fractal-wave-lab/branch-growth-hybrid-teacher-r02/index.html" kaopu-tree-fractal-wave-lab/branch-growth-hybrid-teacher-r02/index.html
+          cp "$SRC/kaopu-tree-fractal-wave-lab/branch-growth-hybrid-teacher-r02/runtime.js" kaopu-tree-fractal-wave-lab/branch-growth-hybrid-teacher-r02/runtime.js
+          cp "$SRC/kaopu-tree-fractal-wave-lab/branch-growth-hybrid-teacher-r02/TEACHER_CONTRACT.json" kaopu-tree-fractal-wave-lab/branch-growth-hybrid-teacher-r02/TEACHER_CONTRACT.json
+          cp "$SRC/kaopu-tree-fractal-wave-lab/teacher-integrated-r08/index.html" kaopu-tree-fractal-wave-lab/teacher-integrated-r08/index.html
+          cp "$SRC/kaopu-tree-fractal-wave-lab/teacher-integrated-r08/runtime.js" kaopu-tree-fractal-wave-lab/teacher-integrated-r08/runtime.js
+          cp "$SRC/kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06/ARCHITECTURE_R06.json" kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06/ARCHITECTURE_R06.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-tree-fractal-wave-lab/branch-growth-hybrid-teacher-r02 kaopu-tree-fractal-wave-lab/teacher-integrated-r08 kaopu-tree-fractal-wave-lab/teacher-aligned-architecture-r06/ARCHITECTURE_R06.json
+          git diff --cached --quiet || git commit -m 'publish(fractal-wave): corrected staged branch-growth teacher R08'
+          for attempt in 1 2 3 4 5; do
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            sleep $((attempt * 3))
+          done
+          exit 1
+
+  verify-public:
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - name: Wait for public R08 files
+        shell: python
+        run: |
+          import json,time,urllib.request
+          base='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tree-fractal-wave-lab/'
+          expected={
+            'branch-growth-hybrid-teacher-r02/index.html':['分叉生长老师 R02','① 目标场','④ 负载粗细'],
+            'branch-growth-hybrid-teacher-r02/runtime.js':['window.__branchGrowthTeacherR02Ready','stagedLearningVisible: true','r01Retired: true'],
+            'branch-growth-hybrid-teacher-r02/TEACHER_CONTRACT.json':['KAOPU.teacher.branch-growth-hybrid/2','corrected_after_R01_failure','antiCollapseConstraints'],
+            'teacher-integrated-r08/index.html':['树线 × 分叉生长老师 R08','teacherFrame','treeFrame'],
+            'teacher-integrated-r08/runtime.js':['window.__branchTeacherIntegratedR08Ready','BranchTeacherIntegratedR08'],
+            'teacher-aligned-architecture-r06/ARCHITECTURE_R06.json':['BranchGrowthHybridTeacher.R02','retiredTeacherFailure','teacher-integrated-r08']
+          }
+          report={'base':base,'attempts':0,'files':{}}
+          for attempt in range(1,151):
+            report['attempts']=attempt;ok=True;current={}
+            try:
+              for name,markers in expected.items():
+                req=urllib.request.Request(base+name+'?qa='+str(attempt),headers={'User-Agent':'KAOPU-R08-QA','Cache-Control':'no-cache'})
+                with urllib.request.urlopen(req,timeout=35) as response:
+                  data=response.read();status=response.status
+                text=data.decode('utf-8','replace');checks={m:(m in text) for m in markers}
+                current[name]={'status':status,'bytes':len(data),'markers':checks}
+                ok=ok and status==200 and all(checks.values())
+              report['files']=current
+              if ok: report['success']=True;break
+            except Exception as exc: report['last_error']=repr(exc)
+            time.sleep(10)
+          else: report['success']=False
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          if not report.get('success'): raise SystemExit('R08 public files not ready')
+      - name: Install browser QA
+        run: |
+          python -m pip install --disable-pip-version-check playwright pillow
+          python -m playwright install --with-deps chromium
+      - name: Browser-test corrected teacher and integration
+        shell: python
+        run: |
+          from pathlib import Path
+          import json,traceback
+          from PIL import Image,ImageStat
+          from playwright.sync_api import sync_playwright
+          root=Path('evidence-teacher-r08-public');root.mkdir(exist_ok=True)
+          teacher='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tree-fractal-wave-lab/branch-growth-hybrid-teacher-r02/'
+          integrated='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tree-fractal-wave-lab/teacher-integrated-r08/'
+          report={'checks':{},'errors':[]};C=report['checks']
+          def digest(path):
+              im=Image.open(path).convert('RGB');st=ImageStat.Stat(im)
+              return {'bytes':path.stat().st_size,'mean':sum(st.mean)/3,'stddev':sum(st.stddev)/3}
+          try:
+            with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True)
+              page=browser.new_page(viewport={'width':1440,'height':900},device_scale_factor=1)
+              page.on('pageerror',lambda e:report['errors'].append('pageerror: '+str(e)))
+              page.on('console',lambda m:report['errors'].append('console: '+m.text) if m.type=='error' else None)
+              page.goto(teacher+'?browserqa=1',wait_until='domcontentloaded',timeout=120000)
+              page.wait_for_function('window.__branchGrowthTeacherR02Ready===true',timeout=180000)
+              page.wait_for_timeout(1000)
+              tree=page.evaluate('BranchGrowthTeacherR02.getState()');sig=tree['signature'];params=tree['params']
+              C['r01Retired']=sig['r01Retired'] is True
+              C['noBackwardSegments']=sig['backwardSegments']==0
+              C['boundedStructure']=25<=sig['segmentCount']<900 and 0<sig['splitCount']<80
+              C['turnBounded']=sig['maxTurnDeg']<=params['turn']*2.05
+              C['hierarchyVisible']=sig['maxOrder']>=2
+              C['constraintsActive']=sig['scaffoldFirst'] and sig['forwardCone'] and sig['boundedTurn'] and sig['selfAvoidance']
+              C['teacherBoundary']=sig['teacherLayer'] and not sig['runtimeTruth'] and sig['sharedWithCoral'] and not sig['speciesAssigned']
+              stage_shots={}
+              for stage in ['field','allocation','skeleton','load']:
+                page.evaluate('(s)=>BranchGrowthTeacherR02.setStage(s)',stage);page.wait_for_timeout(300)
+                C['stage_'+stage]=page.evaluate('(s)=>BranchGrowthTeacherR02.getState().params.stage===s',stage)
+                shot=root/f'{stage}.png';page.screenshot(path=str(shot),full_page=False);stage_shots[stage]=digest(shot)
+                C['pixels_'+stage]=stage_shots[stage]['stddev']>9
+              page.evaluate("BranchGrowthTeacherR02.setScore('coral')");page.wait_for_timeout(600)
+              coral=page.evaluate('BranchGrowthTeacherR02.getState().signature')
+              C['scoreChangesStructure']=coral['score']=='coral' and (coral['segmentCount']!=sig['segmentCount'] or coral['splitCount']!=sig['splitCount'])
+              C['coralNoBackward']=coral['backwardSegments']==0
+              page.goto(integrated+'?browserqa=1',wait_until='domcontentloaded',timeout=120000)
+              page.wait_for_function('window.__branchTeacherIntegratedR08Ready===true',timeout=180000);page.wait_for_timeout(700)
+              integ=page.evaluate('BranchTeacherIntegratedR08.getState()')
+              C['integrationReady']=integ['treeReady'] and integ['teacherReady'] and integ['mode']=='compare'
+              page.evaluate("BranchTeacherIntegratedR08.setTeacherStage('allocation')");page.wait_for_timeout(250)
+              C['integrationControlsTeacher']=page.evaluate("BranchTeacherIntegratedR08.getState().teacher.params.stage==='allocation'")
+              integrated_shot=root/'integrated.png';page.screenshot(path=str(integrated_shot),full_page=False)
+              C['integratedPixels']=digest(integrated_shot)['stddev']>9
+              page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(500)
+              C['mobileNoOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+              mobile=root/'mobile.png';page.screenshot(path=str(mobile),full_page=False)
+              C['mobilePixels']=digest(mobile)['stddev']>9
+              C['errorsZero']=not report['errors']
+              report['tree']=tree;report['coral']=coral;report['integration']=integ;report['screens']={**stage_shots,'integrated':digest(integrated_shot),'mobile':digest(mobile)}
+              browser.close()
+          except Exception:
+            report['failure']=traceback.format_exc()
+          (root/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          if report.get('failure') or not all(C.values()): raise SystemExit('R08 public QA failed')
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: BRANCH_GROWTH_TEACHER_R08_PUBLIC_QA
+          path: evidence-teacher-r08-public
+          if-no-files-found: error
+          retention-days: 90
