@@ -75,6 +75,6 @@ This audit does not judge the Barracuda's visual quality, freshness of its bytes
 
 Retain as a Fish-local Candidate and route through #91. The affected Mother may satisfy it by either producing and receipt-binding the sixth fitted-function member, or narrowing the claim to the five proved members while setting `FALLBACK_ACTIVE=true` and visibly naming Barracuda as legacy. Do not rerun unrelated fish work.
 
-Lifecycle after a real issue receipt: `POSTED=true`, `GATE-RUN=true`; `ACKNOWLEDGED`, `IMPLEMENTED`, `ADOPTED`, and `USER-ACCEPTED` remain false until downstream evidence exists. KPI deltas remain `unknown`.
+Routing receipt: issue #91 comment <https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-5977125912>. Lifecycle: `POSTED=true`, `GATE-RUN=true`; `ACKNOWLEDGED`, `IMPLEMENTED`, `ADOPTED`, and `USER-ACCEPTED` remain false until downstream evidence exists. KPI deltas remain `unknown`.
 
 No external AI was claimed or invoked as a participant.
