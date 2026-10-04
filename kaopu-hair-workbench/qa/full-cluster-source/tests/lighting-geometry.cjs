@@ -185,6 +185,10 @@ module.exports=async function lightingGeometry(browser,url,outDir,check) {
     await page.locator('#clusterMacro').click();await shot('anemone','macro-both');
     await setLight('anemone',{warmPower:1,coolPower:0});await shot('anemone','macro-warm-only');
     await setLight('anemone',{warmPower:0,coolPower:1});await shot('anemone','macro-cool-only');
+    // Match a lower photographic macro angle without changing production defaults.
+    await page.evaluate(()=>{anemone.renderer.camera={azimuth:.25,elevation:.28,distance:2.8};anemone.redraw();});
+    for(const [label,power]of [['both',{warmPower:1,coolPower:1}],['ambient',{warmPower:0,coolPower:0}],['warm',{warmPower:1,coolPower:0}],['cool',{warmPower:0,coolPower:1}]]){await setLight('anemone',power);await shot('anemone','side-macro-'+label);}
+    await setLight('anemone',defaults);report.materialComponents=await require('./material-components.cjs')(page,path.join(outDir,'components'));assert('final material component diagnostics render without GL error',report.materialComponents.samples.length===6&&report.materialComponents.samples.every(x=>x.glError===0));
     await setLight('anemone',defaults);await page.locator('#anemoneCamera').click();
 
     // Actual controls use trusted native keyboard input; range handlers cannot

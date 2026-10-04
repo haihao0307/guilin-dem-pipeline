@@ -285,6 +285,32 @@ module.exports = async function firstEntry(browser, url, outDir, check) {
     const procedural = await pixels();
     assert('default procedural Rabbit has real pixels and no GL error', procedural.changed > 500 && procedural.glError === 0, procedural);
     await screenshot('rabbit-first-frame');
+    // New high-magnification controls remain native, absolute and reversible.
+    await visible('#rabbitZoomIn');
+    assert('100% is the decrement button floor',await page.locator('#rabbitZoomOut').isDisabled());
+    const magnified=[];
+    for(const expected of [2,3,4,5,6]){
+      await tap('#rabbitZoomIn');await wait(value=>document.getElementById('candidateFrame').contentWindow.runtime.state()?.size===value,expected);
+      const view=await page.evaluate(()=>{const w=document.getElementById('candidateFrame').contentWindow,r=w.renderer;r.drawScene();return{state:w.runtime.state(),matrix:Array.from(r.mMMatrix),projection:Array.from(r.mProjMatrix),pixels:w.__firstEntryAudit.readPixels()};});
+      assert('plus reaches '+expected*100+'% with actual finite rendered pixels',view.state.size===expected&&view.pixels.glError===0&&view.pixels.changed>500&&view.projection.every(Number.isFinite),view);
+      const physicalScale=Math.hypot(...view.matrix.slice(0,3));assert('high zoom does not enlarge world geometry through camera near plane',Math.abs(physicalScale-Math.min(expected,2.5))<1e-5,physicalScale);magnified.push(view.pixels.hash);
+    }
+    assert('every magnification changes the rendered view and 600% is capped',new Set(magnified).size===5&&await page.locator('#rabbitZoomIn').isDisabled(),magnified);
+    await screenshot('rabbit-600-percent');
+    const frameBox=await page.locator('#candidateFrame').boundingBox(),x=frameBox.x+frameBox.width*.5,y=frameBox.y+frameBox.height*.5;
+    const touch=await context.newCDPSession(page);const points=(dx,dy)=>[{id:1,x:x-30+dx,y:y+dy,radiusX:3,radiusY:3,force:1},{id:2,x:x+30+dx,y:y+dy,radiusX:3,radiusY:3,force:1}];
+    await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:points(0,0)});await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:points(28,15)});await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    await wait(()=>document.getElementById('candidateFrame').contentWindow.runtime.state()?.pan.some(x=>Math.abs(x)>.01));
+    const panned=await page.evaluate(()=>({state:document.getElementById('candidateFrame').contentWindow.runtime.state(),host:workbench.candidate,exported:workbench.exportState()}));
+    assert('two-finger translation pans real camera at600% without zoom drift',near(panned.state.size,6)&&panned.state.pan.some(x=>Math.abs(x)>.01)&&JSON.stringify(panned.host.pan)===JSON.stringify(panned.state.pan),panned.state);
+    await screenshot('rabbit-600-panned');
+    await page.evaluate(async state=>{await workbench.importState(state)},panned.exported);await wait(state=>{const r=document.getElementById('candidateFrame').contentWindow.runtime.state();return r?.size===6&&JSON.stringify(r.pan)===JSON.stringify(state.pan)},panned.state);
+    await tap('#resetCamera');await wait(()=>{const r=document.getElementById('candidateFrame').contentWindow.runtime.state();return r?.size===1&&r.pan.every(x=>x===0)});
+    assert('camera reset restores centered100% exact image after600% pan/import',(await pixels()).hash===procedural.hash);
+    await tap('[data-rabbit-zoom="1.5"]');await tap('#rabbitZoomIn');await wait(()=>document.getElementById('candidateFrame').contentWindow.runtime.state()?.size===2.5);
+    assert('150% plus adds exactly100 percentage points',await page.evaluate(()=>workbench.candidate.size===2.5));
+    await tap('#resetCamera');await wait(()=>document.getElementById('candidateFrame').contentWindow.runtime.state()?.size===1);
+
 
     // Exercise the real original checkbox in its optional drawer. Native tap
     // reveals the drawer; Playwright uncheck performs trusted browser input.

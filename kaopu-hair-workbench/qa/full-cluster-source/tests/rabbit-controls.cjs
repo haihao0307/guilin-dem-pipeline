@@ -36,7 +36,7 @@ module.exports = async function rabbitControls(browser, url, outDir, check) {
   const equal = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   const sameCamera = (a, b) => close(a.size, b.size) && a.angles.every((v, i) => close(v, b.angles[i]));
   const orbitDelta = (a, b) => Math.hypot(...a.angles.map((v, i) => v - b.angles[i]));
-  const shape = state => Object.fromEntries(Object.entries(state).filter(([key]) => !['angles', 'size'].includes(key)));
+  const shape = state => Object.fromEntries(Object.entries(state).filter(([key]) => !['angles', 'size', 'pan'].includes(key)));
   const settle = async () => page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   const canvas = (role = 'candidate') => page.frameLocator('#' + role + 'Frame').locator('#canvasGL');
   const probe = async (pixels = false, role = 'candidate') => page.evaluate(({ pixels, role }) => {
@@ -399,7 +399,7 @@ module.exports = async function rabbitControls(browser, url, outDir, check) {
     await drawer('Controls', true);
     const rangeBaseline = await probe(true), saved = await page.evaluate(() => JSON.parse(JSON.stringify(workbench.exportState())));
     assert('zoom slider has original scale limits and current value', await page.locator('#rabbitZoom').evaluate(el =>
-      el.type === 'range' && Number(el.min) === .3 && Number(el.max) === 2.5 && Math.abs(Number(el.value) - workbench.candidate.size) < 1e-9));
+      el.type === 'range' && Number(el.min) === .3 && Number(el.max) === 6 && Math.abs(Number(el.value) - workbench.candidate.size) < 1e-9));
     const zoom = await dragRange('#rabbitZoom', .35, 'zoom range');
     await waitCamera({ size: zoom, angles: rangeBaseline.state.angles }, rangeBaseline.frames);
     const afterZoom = await probe(true);

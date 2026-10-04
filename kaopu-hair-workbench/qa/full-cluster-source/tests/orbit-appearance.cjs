@@ -29,7 +29,7 @@ module.exports = async function orbitAppearance(browser, url, outDir, check) {
   const camera = (module, state) => module === 'anemone' ? state.camera : { angles: state.angles, size: state.size };
   const delta = (module, a, b) => module === 'anemone' ? Math.hypot(a.azimuth - b.azimuth, a.elevation - b.elevation) : Math.hypot(...a.angles.map((v, i) => v - b.angles[i]));
   const sameCamera = (module, a, b) => delta(module, a, b) <= 1e-10 && near(module === 'anemone' ? a.distance : a.size, module === 'anemone' ? b.distance : b.size);
-  const rabbitShape = state => Object.fromEntries(Object.entries(state).filter(([key]) => !['angles', 'size', 'maskWidth'].includes(key)));
+  const rabbitShape = state => Object.fromEntries(Object.entries(state).filter(([key]) => !['angles', 'size', 'pan', 'maskWidth'].includes(key)));
   const assert = (name, pass, detail) => {
     const test = { name: 'orbit/appearance ' + phase + ': ' + name, pass: Boolean(pass), detail };
     report.tests.push(test);

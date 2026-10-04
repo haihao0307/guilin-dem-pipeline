@@ -14,6 +14,15 @@ original_host=(ROOT/'src/host.js').read_text()
 startup="createFrame('teacher');setTimeout(()=>createFrame('candidate'),150);"
 assert original_host.count(startup)==1
 host=original_host.replace(startup,'')
+# Optional lens pan is additive; old JSON files default to a centered lens.
+host=host.replace('size:1,combRadius:50','size:1,pan:[0,0],combRadius:50')
+host=host.replace('s.size>2.5','s.size>6').replace('const s=data.state;', 'const s={...data.state,pan:data.state?.pan??[0,0]};')
+host=host.replace("['angles',2,-1e4,1e4]","['angles',2,-1e4,1e4],['pan',2,-2,2]")
+host=host.replace('candidate.size=1;baseline.angles=[0,0];baseline.size=1;', 'candidate.size=1;candidate.pan=[0,0];baseline.angles=[0,0];baseline.size=1;baseline.pan=[0,0];')
+host=host.replace('values:{angles:[0,0],size:1}', 'values:{angles:[0,0],size:1,pan:[0,0]}')
+host=host.replace('angles:s.angles,size:s.size,', 'angles:s.angles,size:s.size,pan:s.pan,')
+host=host.replace('candidate.angles=d.angles;candidate.size=d.size;baseline.angles=d.angles;baseline.size=d.size;', 'candidate.angles=d.angles;candidate.size=d.size;candidate.pan=d.pan??[0,0];baseline.angles=d.angles;baseline.size=d.size;baseline.pan=candidate.pan.slice();')
+host=host.replace('values:{angles:d.angles,size:d.size}', 'values:{angles:d.angles,size:d.size,pan:d.pan??[0,0]}')
 # Readiness stays truthful: the teacher renderer exists only after explicit opening.
 host=host.replace('if(!loadedMesh.teacher||!loadedMesh.candidate)', 'if(!loadedMesh.candidate||(window.rabbitTeacherStarted&&!loadedMesh.teacher))')
 host=host.replace('if(loadedMesh.teacher===mesh&&loadedMesh.candidate===mesh&&ready.teacher&&ready.candidate)', 'if(loadedMesh.candidate===mesh&&ready.candidate&&(!window.rabbitTeacherStarted||(loadedMesh.teacher===mesh&&ready.teacher)))')

@@ -45,10 +45,13 @@
   quick.setAttribute('aria-label', '兔子常用调整');
   quick.innerHTML = '<div class="rabbit-quick-heading"><strong>毛色与毛感</strong><span id="rabbitQuickStatus" role="status" aria-live="polite"></span></div>' +
     '<div id="rabbitQuickControls"></div><div class="rabbit-quick-footer"><p>粗细＝遮罩覆盖 · 疏密＝纹理重复</p><button id="rabbitAppearanceHelp" class="ghost" type="button">说明</button></div>' +
-    '<div class="rabbit-zoom-presets"><span>镜头 <output id="rabbitQuickZoomValue">100%</output></span><div id="rabbitZoomPresets" role="group" aria-label="兔子镜头绝对缩放">' +
+    '<div class="rabbit-zoom-presets"><span>镜头 <output id="rabbitQuickZoomValue" aria-live="polite" aria-atomic="true">100%</output></span><div class="rabbit-zoom-buttons" role="group" aria-label="兔子镜头缩放，100% 至 600%">' +
+    '<button id="rabbitZoomOut" class="rabbit-zoom-step" type="button" data-rabbit-zoom-step="-1" aria-label="镜头缩小 100 个百分点" title="缩小 100 个百分点，最低 100%">−</button>' +
+    '<div id="rabbitZoomPresets" role="group" aria-label="兔子镜头绝对缩放">' +
     '<button type="button" data-rabbit-zoom="1" aria-label="镜头缩放至 100%">100%</button>' +
     '<button type="button" data-rabbit-zoom="1.5" aria-label="镜头缩放至 150%">150%</button>' +
-    '<button type="button" data-rabbit-zoom="2" aria-label="镜头缩放至 200%">200%</button></div></div>';
+    '<button type="button" data-rabbit-zoom="2" aria-label="镜头缩放至 200%">200%</button></div>' +
+    '<button id="rabbitZoomIn" class="rabbit-zoom-step" type="button" data-rabbit-zoom-step="1" aria-label="镜头放大 100 个百分点" title="放大 100 个百分点，最高 600%">+</button></div></div>';
   workspace.insertBefore(quick, actions);
   const quickControls = byId('rabbitQuickControls');
   quickControls.append(byId('rabbitAppearance'));
@@ -111,6 +114,8 @@
       button.classList.toggle('active', current);
       button.setAttribute('aria-pressed', String(current));
     }
+    byId('rabbitZoomOut').disabled = !candidateReady || hasCandidateError || size <= 1;
+    byId('rabbitZoomIn').disabled = !candidateReady || hasCandidateError || size >= 6;
     if (previous && previous !== module) {
       if (module === 'home') home.querySelector('[data-catalog-object="' + lastObject + '"]')?.focus({preventScroll: true});
       else {
@@ -126,6 +131,12 @@
   for (const button of quick.querySelectorAll('[data-rabbit-zoom]')) button.onclick = () => {
     // Absolute values. Repeating 150% leaves the camera at 1.5, never 2.25.
     window.rabbitUI.setCamera(Number(button.dataset.rabbitZoom));
+    sync();
+  };
+  for (const button of quick.querySelectorAll('[data-rabbit-zoom-step]')) button.onclick = () => {
+    // Add percentage points to the live camera value; never compound presets.
+    const current = window.workbench.candidate.size;
+    window.rabbitUI.setCamera(Math.max(1, Math.min(6, current + Number(button.dataset.rabbitZoomStep))));
     sync();
   };
   window.addEventListener('platformchange', event => sync(event.detail?.module));

@@ -285,13 +285,13 @@ module.exports = async function catalogControls(browser, url, outDir, check) {
       const dense = await probe('density actual image');
       assert('first-screen density controls original texture repeats and true pixels', near(dense.state.shellTextureSize, density) &&
         near(dense.state.finTextureSize, .7 * density, 1e-4) && dense.pixels.hash !== widened.pixels.hash && equal(dense.teacherState, baseline.teacherState));
-      const appearance = Object.fromEntries(Object.entries(dense.state).filter(([key]) => !['angles', 'size'].includes(key)));
+      const appearance = Object.fromEntries(Object.entries(dense.state).filter(([key]) => !['angles', 'size', 'pan'].includes(key)));
       for (const size of [2, 1.5, 1.5, 1, 2, 2, 1]) {
         await click(selectors.zoom(size), Math.round(size * 100) + '% absolute zoom');
         await waitRabbit({ size });
         const zoomed = await probe('absolute zoom ' + size);
         assert('zoom ' + size + ' is absolute and preserves appearance', near(zoomed.state.size, size) &&
-          equal(appearance, Object.fromEntries(Object.entries(zoomed.state).filter(([key]) => !['angles', 'size'].includes(key)))), zoomed.state);
+          equal(appearance, Object.fromEntries(Object.entries(zoomed.state).filter(([key]) => !['angles', 'size', 'pan'].includes(key)))), zoomed.state);
       }
       if (phase === 'portrait') {
         const c = await page.frameLocator('#candidateFrame').locator('#canvasGL').boundingBox();
