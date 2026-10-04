@@ -7,6 +7,7 @@ main{padding:10px 16px}.compact-brand{height:30px;display:flex;align-items:cente
 @media(max-width:760px){main{padding:6px 10px}.compact-brand{height:27px}.dimension-navigation{margin:3px 0 10px}.dimension-navigation section{grid-template-columns:54px 1fr;gap:5px}.dimension-label{font-size:10px}.dimension-navigation nav{gap:4px}.dimension-navigation button{padding:5px 7px;font-size:11px;min-height:33px}.exp-grid{gap:12px}.experiment-head{gap:5px}.experiment-head h2{font-size:15px}.experiment-head .quiet{font-size:9px}.layout{gap:10px}.exp-projections{margin-top:7px}.scene-hint{font-size:9px;left:8px;bottom:6px}.controls{margin:9px 0}#sourceSpace .exp-projections{display:block}#phaseReference{width:180px;height:180px}.source-space-reference{display:flex;align-items:center;gap:12px}.source-space-reference figcaption{max-width:130px}}
 
 body.spatialMode main{max-width:none;padding-left:8px;padding-right:8px}.volume-scene{width:100%}.volume-scene canvas{width:100%;height:min(65vh,760px);min-height:350px}.volume-tools{gap:5px;margin-bottom:6px}.volume-tools button{min-height:34px}.volume-playbar{display:flex;align-items:center;gap:10px;margin:5px 0}.volume-playbar input{flex:1;min-width:80px;max-width:900px}.volume-playbar span{font:12px monospace;white-space:nowrap}.volume-playbar button{font-size:11px;padding:4px 8px}.volume-secondary{display:flex;gap:25px;align-items:flex-start;flex-wrap:wrap}.volume-secondary details{margin:5px 0;flex:1;min-width:230px;max-width:550px;padding-top:7px}.volume-secondary p{margin:8px 0}.volume-secondary .source-space-reference{display:flex;gap:12px;margin:8px 0}.volume-secondary summary{font-size:12px}#sourceSpace .scene-hint{display:none}@media(max-width:760px){body.spatialMode main{padding:4px}.volume-scene canvas{height:48vh;min-height:300px}.volume-tools{gap:3px}.volume-tools button{font-size:11px;padding:4px 7px;min-height:31px}.volume-secondary{gap:8px}.volume-secondary details{min-width:150px}.volume-playbar{gap:6px}.volume-playbar span{font-size:10px}.volume-playbar input{margin:0}.volume-secondary .source-space-reference{display:block}#sourceSpace .experiment-head{display:flex}.volume-tools+.volume-scene{border-left:0;border-right:0}}
+.volume-slice{display:flex;align-items:center;gap:20px;margin:8px 0}.volume-slice canvas{width:240px;height:154px;max-width:48%;border:1px solid #354046}.volume-slice>div{width:min(360px,50%)}@media(max-width:760px){.volume-slice{gap:10px}.volume-slice canvas{width:180px;height:115px}.volume-slice p{font-size:10px}}
 </style></head><body><main>
 <header class="compact-brand"><span role="img" aria-label="海羽" title="海羽学习台">🪶</span><a href="#studyInfo" aria-label="查看工作台说明" title="说明">ⓘ</a></header>
 <div class="dimension-navigation">
@@ -23,8 +24,8 @@ body.spatialMode main{max-width:none;padding-left:8px;padding-right:8px}.volume-
  <div class="exp-scene volume-scene"><canvas id="phaseCanvas" width="1200" height="800" aria-label="原式三维点场、推断体量与体内学习轴，可手动旋转"></canvas></div>
  <div class="volume-playbar"><input id="phaseTime" type="range" min="1" max="480" value="1" aria-label="源帧"><span id="phaseClock"></span><button id="phaseReset">起点</button></div>
  <div class="scene-tools"><button id="phaseCloud" aria-pressed="true">完整原式点场</button><button id="phaseBody" aria-pressed="true">胸腔包络</button><button id="phaseSpine" aria-pressed="true">体内学习轴</button><button id="phaseCut" aria-pressed="false">切开观察</button><button id="phaseSections" aria-pressed="false">横截面</button><span id="phaseState" class="quiet">暂停</span></div>
- <div class="volume-secondary"><details id="phaseReferenceBox"><summary>同帧二维老师</summary><figure class="source-space-reference"><iframe id="phaseReference" title="同帧原式，精确p5参考"></iframe><figcaption class="reference-label">原式 20,000 点完整保留<br>俯视 XY 坐标不改</figcaption></figure></details>
- <details><summary>厚度与显示</summary><label for="phaseOpening">截面张开 <output id="phaseOpeningValue">30%</output></label><input id="phaseOpening" type="range" min="10" max="35" value="30"><label for="phaseDepth">体量深度 <output id="phaseDepthValue">1.00</output></label><input id="phaseDepth" type="range" min="25" max="150" value="100"><label for="phaseSize">点径 <output id="phaseSizeValue">1.6</output></label><input id="phaseSize" type="range" min="7" max="35" value="16"></details>
+ <div id="phaseSlicePanel" class="volume-slice" hidden><canvas id="phaseSliceCanvas" width="360" height="230" aria-label="真实环截面与内部学习轴"></canvas><div><label for="phaseSlicePosition">真实横截面 · 粉色为体内学习轴</label><input id="phaseSlicePosition" type="range" min="10" max="90" value="50"><p class="quiet" id="phaseSliceInfo"></p></div></div><div class="volume-secondary"><details id="phaseReferenceBox"><summary>同帧二维老师</summary><figure class="source-space-reference"><iframe id="phaseReference" title="同帧原式，精确p5参考"></iframe><figcaption class="reference-label">原式 20,000 点完整保留<br>俯视 XY 坐标不改</figcaption></figure></details>
+ <details><summary>厚度与显示</summary><label for="phaseOpening">背腹拱度 <output id="phaseOpeningValue">65%</output></label><input id="phaseOpening" type="range" min="30" max="100" value="65"><label for="phaseDepth">体量深度 <output id="phaseDepthValue">1.00</output></label><input id="phaseDepth" type="range" min="25" max="150" value="100"><label for="phaseSize">点径 <output id="phaseSizeValue">1.6</output></label><input id="phaseSize" type="range" min="7" max="35" value="16"></details>
  <details><summary>学习轴与体量怎样推断</summary><p class="quiet" id="phaseExplanation">原作提供俯视的点场。这里保留每个原点，以相位补深度，再从点场的连续横截面推断非对称胸腔包络。粉色线是位于包络内部的学习轴，并非原作指定的解剖脊椎。包络及厚度属于研究假设。</p><p class="quiet" id="phaseMetrics"></p></details></div>
 </section>
 
@@ -56,7 +57,7 @@ t=0,draw=$=&gt;{t||createCanvas(w=400,w);background(9).stroke(w,96);for(t+=PI/30
 \u7FBD\u8F74 \u2192 \u5DE6\u53F3\u7FBD\u7247 \u2192 \u7FBD\u679D\uFF1B\u6839\u90E8\u76F8\u4F4D\u5E45\u5EA6\u4E3A\u96F6\u3002
 A(s)=0.055s\xB2\uFF0C\u03C6=2\u03C0t/4\u22122.5s\uFF08\u5B9E\u9A8C\u53C2\u6570\uFF09`},fish:{title:"Fish / Tuna",period:t1,owner:"Fish Mother",status:"R037\u4E3B\u8F74 + \u622A\u9762\u5B9E\u9A8C + R039\u9CCD\u652F\u6301\u57DF",reference:"\u8F74/\u52A8\u4F5C\u53CA\u9CCD\u63A5\u7EED\u73B0\u6709\u51FD\u6570\uFF1B\u692D\u5706\u622A\u9762\u6765\u81EA\u6570\u5B57\u6E90\u9759\u6001\u5206\u533A\u5916\u5305\u7EDC\u3002\u81EA\u7136\u9AA8\u4F4D\u3001\u6839\u90E8\u63A5\u89E6\u4E0E\u7269\u7406\u5C3A\u5EA6\u672A\u9A8C\u8BC1\u3002",formula:`Body(s,\u03B8,t) = Axis_R037(s,t) + Frame(s,t) \xB7 Section(s,\u03B8)
 \u4FA7\u9762=[X,Y]\uFF1B\u9876\u9762=[X,Z]\uFF1B\u540C\u4E00t\uFF0C\u540C\u4E00\u4E09\u7EF4\u5BF9\u8C61\u3002
-\u4FDD\u7559R037\u8F74\u53CAR039\u6E90\u51FD\u6570\u7CFB\u6570\uFF1B\u5E76\u975E\u7CBE\u786E\u9C7C\u76AE\u590D\u8FF0\u3002`}};function j0(e,w,s=0){let n=[],t=[],a=[],l=e==="fish"?o1:i1,o=[];for(let c=0;c<=64;c++)o.push(l.point(c/64,w));if(e==="feather"){for(let c=0;c<89;c++){let f=.145+c/89*.85;for(let p of[-1,1]){let b=q0(f)*(p<0?.58:.42),r=[];for(let u=0;u<=10;u++){let d=u/10,m=Math.min(.1*(1-f),.045)*d,i=f+m;r.push(i0(l,i,w,[0,p*b*d,.007*Math.sin(Math.PI*d)*Math.sin(3*f)]))}a.push({points:r,color:p<0?"#d6dac9":"#a5c7c0",width:1})}}for(let c of[-1,1]){let f=n.length;for(let p=0;p<=64;p++){let b=.14+.86*p/64,r=q0(b)*(c<0?.58:.42);if(n.push(l.point(b,w),i0(l,b,w,[0,c*r,0])),p){let u=f+2*p;t.push([u-2,u-1,u],[u-1,u+1,u])}}}}else{for(let r=0;r<49;r++){let u=r/48;for(let d=0;d<24;d++){let m=a0*d/24,i=Math.cos(m),h=Math.sin(m),x=Q(u,i>=0?"up":"down"),M=Q(u,h>=0?"left":"right");if(n.push(i0(l,u,w,[0,i*x,h*M])),r){let y=(r-1)*24+d,k=(r-1)*24+(d+1)%24,I=r*24+d,C=r*24+(d+1)%24;t.push([y,I,k],[k,I,C])}}}for(let r=0;r<44;r++){let u=a0*r/44,d=[];for(let m=0;m<=128;m++){let i=m/128,h=Math.cos(u),x=Math.sin(u),M=1+s*.015*Math.sin(Math.PI*i)**2*(Math.sin(6*Math.PI*i)+.45*Math.sin(14*Math.PI*i));d.push(i0(l,i,w,[0,h*Q(i,h>=0?"up":"down")*M,x*Q(i,x>=0?"left":"right")*M]))}a.push({points:d,color:"#d3dfdc",width:.7})}for(let r=1;r<24;r++){let u=r/24,d=[];for(let m=0;m<=48;m++){let i=a0*m/48,h=Math.cos(i),x=Math.sin(i),M=1+s*.015*Math.sin(Math.PI*u)**2*(Math.sin(6*Math.PI*u)+.45*Math.sin(14*Math.PI*u));d.push(i0(l,u,w,[0,h*Q(u,h>=0?"up":"down")*M,x*Q(u,x>=0?"left":"right")*M]))}a.push({points:d,color:"rgba(159,190,185,.35)",width:.5})}let p=$0.evaluate(w,!1,!1),b=new Set;for(let r of p.rays)a.push({points:r.points,color:"#edd6a8",width:1.15});for(let r of p.surfaces){let u=x0.get(r.key);for(let d of u)a.push({points:d.map(m=>r.controls[m.a].map((i,h)=>i+(r.controls[m.b][h]-i)*m.u)),color:"#b8d9de",width:.8})}for(let r of p.surfaces){let u=n.length;n.push(...r.controls);for(let d of r.faces){let m=d.map(i=>r.pointIndices?.[i]??`${r.key}:${i}`).sort((i,h)=>i-h).join("/");b.has(m)||(b.add(m),t.push(d.map(i=>u+i)))}}}return{kind:e,t:w,positions:n,faces:t,lines:a,spine:o}}var x0=new Map,B0=$0.evaluate(0,!0,!1),r1=[];for(let e of B0.surfaces){let w=[],s=new Map;for(let r of e.faces)for(let u=0;u<3;u++){let d=r[u],m=r[(u+1)%3],i=[Math.min(d,m),Math.max(d,m)].join("/"),h=s.get(i);h?h.n++:s.set(i,{a:d,b:m,n:1})}for(let r of s.values())r.n===1&&w.push([{a:r.a,b:r.b,u:0},{a:r.a,b:r.b,u:1}]);let n=e.key==="caudal",t=e.roots.reduce((r,u)=>r.map((d,m)=>d+u[m]/e.roots.length),[0,0,0]),a=B0.rays.filter(r=>r.key.startsWith(e.key+"-chain-")),l=c0(a.reduce((r,u)=>V0(r,c0(r0(u.points.at(-1),u.points[0]))),[0,0,0])),o=[0,0,0],c=0;for(let r of e.controls){let u=r0(r,t),d=r0(u,M0(l,e0(u,l))),m=e0(d,d);m>c&&(c=m,o=d)}o=c0(o),r1.push({fin:e.key,guideKeys:a.map(r=>r.key),outward:l,across:o,orthogonality:e0(l,o),method:n?"retained tail angular field":"local parallel family from mean digital guide; candidate"});let f=e.controls.map(r=>n?Math.atan2(r[1]-t[1],r[0]-t[0]):e0(r0(r,t),o)),p=n?-1.43:Math.min(...f),b=n?1.43:Math.max(...f);for(let r=1;r<19;r++){let u=p+(b-p)*r/19;for(let d of e.faces){if(n&&(Math.max(...d.map(i=>f[i]))-Math.min(...d.map(i=>f[i]))>Math.PI||d.every(i=>e.controls[i][0]<t[0]-.003)))continue;let m=[];for(let i=0;i<3;i++){let h=d[i],x=d[(i+1)%3],M=f[h],y=f[x];(M<=u&&y>u||y<=u&&M>u)&&m.push({a:h,b:x,u:(u-M)/(y-M)})}m.length===2&&w.push(m)}}x0.set(e.key,w)}var O1=x0.size;var N={...O},R=e=>document.getElementById(e),q=R("expCanvas"),A="feather",z=0,u0=!1,_=!1,w0=!0,h0=!1,H=.4,Y=.3,l0=0,U=null,W=!0,G=null;function a1(e,w,s,n){let t=e[0],a=e[1],l=e[2];if(w==="top")a=l,l=e[1];else if(w==="orbit"){let c=t*Math.cos(H)+l*Math.sin(H),f=-t*Math.sin(H)+l*Math.cos(H);t=c,a=e[1]*Math.cos(Y)-f*Math.sin(Y),l=e[1]*Math.sin(Y)+f*Math.cos(Y)}let o=Math.min(s*.8,n*(w==="orbit"?1.65:1.35));return[s*.5+t*o,n*.52-a*o,l]}function b0(e,w){let s=e.getContext("2d"),n=e.width,t=e.height;s.fillStyle="#0a0e0d",s.fillRect(0,0,n,t);let a=c=>a1(c,w,n,t),l=U.positions.map(a);if(h0){let c=U.faces.map(f=>({ids:f,z:f.reduce((p,b)=>p+l[b][2],0)/3}));c.sort((f,p)=>f.z-p.z);for(let{ids:f}of c){let p=l[f[0]],b=l[f[1]],r=l[f[2]];s.beginPath(),s.moveTo(p[0],p[1]),s.lineTo(b[0],b[1]),s.lineTo(r[0],r[1]),s.closePath();let u=U.positions[f[0]],d=U.positions[f[1]],m=U.positions[f[2]],i=d.map((k,I)=>k-u[I]),h=m.map((k,I)=>k-u[I]),x=[i[1]*h[2]-i[2]*h[1],i[2]*h[0]-i[0]*h[2],i[0]*h[1]-i[1]*h[0]],M=Math.hypot(...x)||1,y=.42+.5*Math.abs((x[0]*.3+x[1]*.8+x[2]*.4)/M);s.fillStyle=A==="fish"&&window.HaiyuLegacyObservation?.shadeFish?window.HaiyuLegacyObservation.shadeFish(x,w,H,Y):(A==="fish"?`rgb(${Math.round(116*y)},${Math.round(171*y)},${Math.round(154*y)})`:`rgb(${Math.round(98*y)},${Math.round(117*y)},${Math.round(110*y)})`),s.fill()}}function o(c,f,p){s.beginPath(),c.forEach((b,r)=>{let u=a(b);r?s.lineTo(u[0],u[1]):s.moveTo(u[0],u[1])}),s.strokeStyle=f,s.lineWidth=p,s.stroke()}for(let c of U.lines)o(c.points,c.color,(w==="orbit"?c.width:Math.max(.45,c.width*.6))*N.lineWidth/.8);if(w0){o(U.spine,"#edc88c",w==="orbit"?N.shaftWidth:N.shaftWidth*.65);for(let c of[0,16,32,48,64]){let f=a(U.spine[c]);s.fillStyle="#ffe8b8",s.beginPath(),s.arc(f[0],f[1],w==="orbit"?3:2,0,Math.PI*2),s.fill()}}}function _0(){u0&&(A==="feather"?C0(q,z,{...N,speed:1},w0):(U=j0(A,z,N.detail),b0(q,"orbit"),b0(R("expSide"),"side"),b0(R("expTop"),"top")),R("expClock").textContent=z.toFixed(3)+" / "+s0[A].period.toFixed(3)+" \u79D2",R("expTime").value=Math.min(1e3,Math.round(z/s0[A].period*1e3)),R("expPlay").textContent=_?"\u6682\u505C\u5C0F\u6837":"\u64AD\u653E\u5C0F\u6837",R("expState").textContent=_?"\u8FD0\u884C\u4E2D":"\u6682\u505C",R("experiment").dataset.kind=A,R("experiment").dataset.time=z,R("experiment").dataset.vertices=A==="fish"?U.positions.length:0,R("experiment").dataset.triangles=A==="fish"?U.faces.length:0,W=!1)}function c1(e,w){u0=e,_=!1,A!==w&&(A=w,z=0);let s=A==="feather";w0=!0,R("expAxis").setAttribute("aria-pressed","true"),q.setAttribute("aria-label",s?"\u7FBD\u8F74\u4E0E\u4E24\u4FA7\u51FD\u6570\u7FBD\u679D":"\u51FD\u6570\u9C7C\u6D41\u7EBF\u4E0E\u5168\u90E8\u9CCD"),q.width=1080,q.height=s?1100:640,R("expProjections").hidden=s,R("featherExtra").hidden=!s,R("expView").hidden=s,R("expSurface").hidden=s,R("sceneHint").textContent=s?"\u6BCF\u6839\u7EBF\u8FDE\u63A5\u7FBD\u8F74 \xB7 \u66F2\u7EBF\u5B9E\u65F6\u6C42\u503C":"\u540C\u4E00\u4E3B\u8F74\u3001\u8EAB\u4F53\u4E0E\u5168\u90E8\u9CCD \xB7 \u62D6\u52A8\u8F6C\u5411",R("expTitle").textContent=s?"\u51FD\u6570\u7FBD\u6BDB \xB7 \u7FBD\u8F74\u4E0E\u7FBD\u679D":"\u51FD\u6570\u9C7C \xB7 \u6062\u590D\u7B80\u5316\u524D\u7684\u5B8C\u6574\u5F62\u6001",R("expStatus").textContent=s?"\u4E00\u79CD\u7ED3\u6784 \xB7 \u4E0D\u540C\u53C2\u6570":"\u53D6\u56DE\u622A\u56FE\u5BF9\u5E94 R13 \xB7 \u672C\u8F6E\u4E0D\u6539\u5F62",R("expReference").textContent=s?"\u5DE6\u53F3\u7FBD\u679D\u5206\u522B\u8BA1\u6570\uFF1B\u6839\u90E8\u7ED2\u7FBD\u5206\u522B\u8C03\u6839\u6570\u3001\u5BBD\u5EA6\u548C\u957F\u5EA6\u3002\u4E0B\u6BB5\u56FA\u5B9A\uFF0C\u4E0A\u6BB5\u8F7B\u5F2F\uFF1B\u4FDD\u7559\u5DF2\u8BA4\u53EF\u7684\u5168\u957F\u7FBD\u8F74\u622A\u9762\u53D8\u5316\u3002":"\u76F4\u63A5\u6062\u590D\u622A\u56FE\u5BF9\u5E94\u7684 R13 \u51FD\u6570\u3001\u5B8C\u6574\u9CCD\u57DF\u548C\u52A8\u4F5C\u3002\u5C3E\u5DF4\u53CA\u5404\u9CCD\u672A\u91CD\u65B0\u88C1\u526A\u3001\u5E73\u6ED1\u6216\u62DF\u5F62\u3002\u539F\u6709\u4EA4\u53E0\u7EBF\u4E5F\u4E00\u5E76\u4FDD\u7559\u3002",R("expOwner").textContent="\u56FA\u5B9A\u8FDE\u63A5 \u2192 \u7A7A\u95F4\u5F62\u4F53 \u2192 \u5171\u540C\u65F6\u95F4",R("expFormula").textContent=s?`\u7FBD\u8F74 A(s,t)\uFF1B\u5DE6\u53F3\u5BBD\u5EA6 W\u2212(s)\u3001W+(s)\uFF1B\u7FBD\u679D B(s\u2080,\xB1,v,t)\u3002
+\u4FDD\u7559R037\u8F74\u53CAR039\u6E90\u51FD\u6570\u7CFB\u6570\uFF1B\u5E76\u975E\u7CBE\u786E\u9C7C\u76AE\u590D\u8FF0\u3002`}};function j0(e,w,s=0){let n=[],t=[],a=[],l=e==="fish"?o1:i1,o=[];for(let c=0;c<=64;c++)o.push(l.point(c/64,w));if(e==="feather"){for(let c=0;c<89;c++){let f=.145+c/89*.85;for(let p of[-1,1]){let b=q0(f)*(p<0?.58:.42),r=[];for(let u=0;u<=10;u++){let d=u/10,m=Math.min(.1*(1-f),.045)*d,i=f+m;r.push(i0(l,i,w,[0,p*b*d,.007*Math.sin(Math.PI*d)*Math.sin(3*f)]))}a.push({points:r,color:p<0?"#d6dac9":"#a5c7c0",width:1})}}for(let c of[-1,1]){let f=n.length;for(let p=0;p<=64;p++){let b=.14+.86*p/64,r=q0(b)*(c<0?.58:.42);if(n.push(l.point(b,w),i0(l,b,w,[0,c*r,0])),p){let u=f+2*p;t.push([u-2,u-1,u],[u-1,u+1,u])}}}}else{for(let r=0;r<49;r++){let u=r/48;for(let d=0;d<24;d++){let m=a0*d/24,i=Math.cos(m),h=Math.sin(m),x=Q(u,i>=0?"up":"down"),M=Q(u,h>=0?"left":"right");if(n.push(i0(l,u,w,[0,i*x,h*M])),r){let y=(r-1)*24+d,k=(r-1)*24+(d+1)%24,I=r*24+d,C=r*24+(d+1)%24;t.push([y,I,k],[k,I,C])}}}for(let r=0;r<44;r++){let u=a0*r/44,d=[];for(let m=0;m<=128;m++){let i=m/128,h=Math.cos(u),x=Math.sin(u),M=1+s*.015*Math.sin(Math.PI*i)**2*(Math.sin(6*Math.PI*i)+.45*Math.sin(14*Math.PI*i));d.push(i0(l,i,w,[0,h*Q(i,h>=0?"up":"down")*M,x*Q(i,x>=0?"left":"right")*M]))}a.push({points:d,color:"#d3dfdc",width:.7})}for(let r=1;r<24;r++){let u=r/24,d=[];for(let m=0;m<=48;m++){let i=a0*m/48,h=Math.cos(i),x=Math.sin(i),M=1+s*.015*Math.sin(Math.PI*u)**2*(Math.sin(6*Math.PI*u)+.45*Math.sin(14*Math.PI*u));d.push(i0(l,u,w,[0,h*Q(u,h>=0?"up":"down")*M,x*Q(u,x>=0?"left":"right")*M]))}a.push({points:d,color:"rgba(159,190,185,.35)",width:.5})}let p=$0.evaluate(w,!1,!1),b=new Set;for(let r of p.rays)a.push({points:r.points,color:"#edd6a8",width:1.15});for(let r of p.surfaces){let u=x0.get(r.key);for(let d of u)a.push({points:d.map(m=>r.controls[m.a].map((i,h)=>i+(r.controls[m.b][h]-i)*m.u)),color:"#b8d9de",width:.8})}for(let r of p.surfaces){let u=n.length;n.push(...r.controls);for(let d of r.faces){let m=d.map(i=>r.pointIndices?.[i]??`${r.key}:${i}`).sort((i,h)=>i-h).join("/");b.has(m)||(b.add(m),t.push(d.map(i=>u+i)))}}}return{kind:e,t:w,positions:n,faces:t,lines:a,spine:o}}var x0=new Map,B0=$0.evaluate(0,!0,!1),r1=[];for(let e of B0.surfaces){let w=[],s=new Map;for(let r of e.faces)for(let u=0;u<3;u++){let d=r[u],m=r[(u+1)%3],i=[Math.min(d,m),Math.max(d,m)].join("/"),h=s.get(i);h?h.n++:s.set(i,{a:d,b:m,n:1})}for(let r of s.values())r.n===1&&w.push([{a:r.a,b:r.b,u:0},{a:r.a,b:r.b,u:1}]);let n=e.key==="caudal",t=e.roots.reduce((r,u)=>r.map((d,m)=>d+u[m]/e.roots.length),[0,0,0]),a=B0.rays.filter(r=>r.key.startsWith(e.key+"-chain-")),l=c0(a.reduce((r,u)=>V0(r,c0(r0(u.points.at(-1),u.points[0]))),[0,0,0])),o=[0,0,0],c=0;for(let r of e.controls){let u=r0(r,t),d=r0(u,M0(l,e0(u,l))),m=e0(d,d);m>c&&(c=m,o=d)}o=c0(o),r1.push({fin:e.key,guideKeys:a.map(r=>r.key),outward:l,across:o,orthogonality:e0(l,o),method:n?"retained tail angular field":"local parallel family from mean digital guide; candidate"});let f=e.controls.map(r=>n?Math.atan2(r[1]-t[1],r[0]-t[0]):e0(r0(r,t),o)),p=n?-1.43:Math.min(...f),b=n?1.43:Math.max(...f);for(let r=1;r<19;r++){let u=p+(b-p)*r/19;for(let d of e.faces){if(n&&(Math.max(...d.map(i=>f[i]))-Math.min(...d.map(i=>f[i]))>Math.PI||d.every(i=>e.controls[i][0]<t[0]-.003)))continue;let m=[];for(let i=0;i<3;i++){let h=d[i],x=d[(i+1)%3],M=f[h],y=f[x];(M<=u&&y>u||y<=u&&M>u)&&m.push({a:h,b:x,u:(u-M)/(y-M)})}m.length===2&&w.push(m)}}x0.set(e.key,w)}var O1=x0.size;var N={...O},R=e=>document.getElementById(e),q=R("expCanvas"),A="feather",z=0,u0=!1,_=!1,w0=!0,h0=!1,H=.4,Y=.3,l0=0,U=null,W=!0,G=null;function a1(e,w,s,n){let t=e[0],a=e[1],l=e[2];if(w==="top")a=l,l=e[1];else if(w==="orbit"){let c=t*Math.cos(H)+l*Math.sin(H),f=-t*Math.sin(H)+l*Math.cos(H);t=c,a=e[1]*Math.cos(Y)-f*Math.sin(Y),l=e[1]*Math.sin(Y)+f*Math.cos(Y)}let o=Math.min(s*.8,n*(w==="orbit"?1.65:1.35))*(w==="orbit"?haiyuFishZoom:1);return[s*.5+t*o,n*.52-a*o,l]}function b0(e,w){let s=e.getContext("2d"),n=e.width,t=e.height;s.fillStyle="#0a0e0d",s.fillRect(0,0,n,t);let a=c=>a1(c,w,n,t),l=U.positions.map(a);if(h0){let c=U.faces.map(f=>({ids:f,z:f.reduce((p,b)=>p+l[b][2],0)/3}));c.sort((f,p)=>f.z-p.z);for(let{ids:f}of c){let p=l[f[0]],b=l[f[1]],r=l[f[2]];s.beginPath(),s.moveTo(p[0],p[1]),s.lineTo(b[0],b[1]),s.lineTo(r[0],r[1]),s.closePath();let u=U.positions[f[0]],d=U.positions[f[1]],m=U.positions[f[2]],i=d.map((k,I)=>k-u[I]),h=m.map((k,I)=>k-u[I]),x=[i[1]*h[2]-i[2]*h[1],i[2]*h[0]-i[0]*h[2],i[0]*h[1]-i[1]*h[0]],M=Math.hypot(...x)||1,y=.42+.5*Math.abs((x[0]*.3+x[1]*.8+x[2]*.4)/M);s.fillStyle=A==="fish"&&window.HaiyuLegacyObservation?.shadeFish?window.HaiyuLegacyObservation.shadeFish(x,w,H,Y):(A==="fish"?`rgb(${Math.round(116*y)},${Math.round(171*y)},${Math.round(154*y)})`:`rgb(${Math.round(98*y)},${Math.round(117*y)},${Math.round(110*y)})`),s.fill()}}function o(c,f,p){s.beginPath(),c.forEach((b,r)=>{let u=a(b);r?s.lineTo(u[0],u[1]):s.moveTo(u[0],u[1])}),s.strokeStyle=f,s.lineWidth=p,s.stroke()}for(let c of U.lines)o(c.points,c.color,(w==="orbit"?c.width:Math.max(.45,c.width*.6))*N.lineWidth/.8);if(w0){o(U.spine,"#edc88c",w==="orbit"?N.shaftWidth:N.shaftWidth*.65);for(let c of[0,16,32,48,64]){let f=a(U.spine[c]);s.fillStyle="#ffe8b8",s.beginPath(),s.arc(f[0],f[1],w==="orbit"?3:2,0,Math.PI*2),s.fill()}}}function _0(){u0&&(A==="feather"?C0(q,z,{...N,speed:1},w0):(U=j0(A,z,N.detail),b0(q,"orbit"),b0(R("expSide"),"side"),b0(R("expTop"),"top")),R("expClock").textContent=z.toFixed(3)+" / "+s0[A].period.toFixed(3)+" \u79D2",R("expTime").value=Math.min(1e3,Math.round(z/s0[A].period*1e3)),R("expPlay").textContent=_?"\u6682\u505C\u5C0F\u6837":"\u64AD\u653E\u5C0F\u6837",R("expState").textContent=_?"\u8FD0\u884C\u4E2D":"\u6682\u505C",R("experiment").dataset.kind=A,R("experiment").dataset.time=z,R("experiment").dataset.vertices=A==="fish"?U.positions.length:0,R("experiment").dataset.triangles=A==="fish"?U.faces.length:0,W=!1)}function c1(e,w){u0=e,_=!1,A!==w&&(A=w,z=0);let s=A==="feather";w0=!0,R("expAxis").setAttribute("aria-pressed","true"),q.setAttribute("aria-label",s?"\u7FBD\u8F74\u4E0E\u4E24\u4FA7\u51FD\u6570\u7FBD\u679D":"\u51FD\u6570\u9C7C\u6D41\u7EBF\u4E0E\u5168\u90E8\u9CCD"),q.width=1080,q.height=s?1100:640,R("expProjections").hidden=s,R("featherExtra").hidden=!s,R("expView").hidden=s,R("expSurface").hidden=s,R("sceneHint").textContent=s?"\u6BCF\u6839\u7EBF\u8FDE\u63A5\u7FBD\u8F74 \xB7 \u66F2\u7EBF\u5B9E\u65F6\u6C42\u503C":"\u540C\u4E00\u4E3B\u8F74\u3001\u8EAB\u4F53\u4E0E\u5168\u90E8\u9CCD \xB7 \u62D6\u52A8\u8F6C\u5411",R("expTitle").textContent=s?"\u51FD\u6570\u7FBD\u6BDB \xB7 \u7FBD\u8F74\u4E0E\u7FBD\u679D":"\u51FD\u6570\u9C7C \xB7 \u6062\u590D\u7B80\u5316\u524D\u7684\u5B8C\u6574\u5F62\u6001",R("expStatus").textContent=s?"\u4E00\u79CD\u7ED3\u6784 \xB7 \u4E0D\u540C\u53C2\u6570":"\u53D6\u56DE\u622A\u56FE\u5BF9\u5E94 R13 \xB7 \u672C\u8F6E\u4E0D\u6539\u5F62",R("expReference").textContent=s?"\u5DE6\u53F3\u7FBD\u679D\u5206\u522B\u8BA1\u6570\uFF1B\u6839\u90E8\u7ED2\u7FBD\u5206\u522B\u8C03\u6839\u6570\u3001\u5BBD\u5EA6\u548C\u957F\u5EA6\u3002\u4E0B\u6BB5\u56FA\u5B9A\uFF0C\u4E0A\u6BB5\u8F7B\u5F2F\uFF1B\u4FDD\u7559\u5DF2\u8BA4\u53EF\u7684\u5168\u957F\u7FBD\u8F74\u622A\u9762\u53D8\u5316\u3002":"\u76F4\u63A5\u6062\u590D\u622A\u56FE\u5BF9\u5E94\u7684 R13 \u51FD\u6570\u3001\u5B8C\u6574\u9CCD\u57DF\u548C\u52A8\u4F5C\u3002\u5C3E\u5DF4\u53CA\u5404\u9CCD\u672A\u91CD\u65B0\u88C1\u526A\u3001\u5E73\u6ED1\u6216\u62DF\u5F62\u3002\u539F\u6709\u4EA4\u53E0\u7EBF\u4E5F\u4E00\u5E76\u4FDD\u7559\u3002",R("expOwner").textContent="\u56FA\u5B9A\u8FDE\u63A5 \u2192 \u7A7A\u95F4\u5F62\u4F53 \u2192 \u5171\u540C\u65F6\u95F4",R("expFormula").textContent=s?`\u7FBD\u8F74 A(s,t)\uFF1B\u5DE6\u53F3\u5BBD\u5EA6 W\u2212(s)\u3001W+(s)\uFF1B\u7FBD\u679D B(s\u2080,\xB1,v,t)\u3002
 B(s\u2080,\xB1,0,t)=A(s\u2080,t)\uFF0C\u6839\u4F4D\u56FA\u5B9A\u3002
 \u5916\u7F18\u5730\u5740e\u7531 e\u2212s\u2080=cot\u03B8(s\u2080)W(e) \u6C42\u89E3\uFF1B\u6A2A\u5411=\xB1vW(e)\uFF0C\u6CBF\u7A0B\u8F7B\u5F2F\u3002
 \u7EBF\u5BBDr(s,v)=r\u2080(1\u22120.36s)[0.13+0.87(1\u2212v)^0.9]\u3002
@@ -65,7 +66,7 @@ B(s\u2080,\xB1,0,t)=A(s\u2080,t)\uFF0C\u6839\u4F4D\u56FA\u5B9A\u3002
 \u5355\u4E00\u65F6\u95F4\u76F8\u4F4D\uFF1Aq=max(0,(s\u2212\u56FA\u5B9A\u6BB5)/(1\u2212\u56FA\u5B9A\u6BB5))\uFF0CD=q\xB2 sin(2\u03C0t/4)\u3002\u56FA\u5B9A\u6BB5\u5185D=0\u3002
 \u7FBD\u8F74/\u5BBD\u5EA6\u4EE517\u7EC4\u7A00\u758F\u53C2\u6570\u4F5C\u4E09\u6B21Hermite\u63D2\u503C\uFF1B\u975E\u7167\u7247\u50CF\u7D20\u8272\u573A\u3002`:s0.fish.formula+`
 \u8EAB\u4F53\u622A\u9762\u2192\u7EB5\u5411\u6D41\u7EBF/\u6A2A\u622A\u7EBF\uFF1B\u9CCD\u9762\u7528\u56FA\u5B9A\u91CD\u5FC3\u5730\u5740\u7684\u7B49\u53C2\u6570\u7EBF\u3002
-\u591A\u9891\u5019\u9009\u4EC5\u8C03\u8EAB\u4F53\u622A\u9762\u5305\u7EDC\uFF1B\u539F\u4E3B\u8F74\u4E0E\u5168\u90E8\u9CCD\u6E90\u51FD\u6570\u4E0D\u6539\u3002`,W=!0,u0&&_0()}R("expPlay").onclick=()=>{_=!_,l0=performance.now(),W=!0};R("expReset").onclick=()=>{z=0,_=!1,W=!0};R("expView").onclick=()=>{H=.4,Y=.3,W=!0};R("expTime").oninput=e=>{_=!1,z=Number(e.target.value)/1e3*s0[A].period,W=!0};R("expAxis").onclick=()=>{w0=!w0,R("expAxis").setAttribute("aria-pressed",String(w0)),W=!0};R("expSurface").onclick=()=>{h0=!h0,R("expSurface").setAttribute("aria-pressed",String(h0)),W=!0};q.onpointerdown=e=>{A!=="feather"&&(G=[e.clientX,e.clientY,H,Y],q.setPointerCapture(e.pointerId))};q.onpointermove=e=>{G&&(H=G[2]+(e.clientX-G[0])*.008,Y=Math.max(-1.4,Math.min(1.4,G[3]+(e.clientY-G[1])*.008)),W=!0)};q.onpointerup=q.onpointercancel=()=>G=null;R("alignPhoto").onclick=()=>{N.amplitude=0,z=0,_=!1,R("motionStrength").value=0,R("amplitudeValue").textContent="0.00",W=!0};var l1=(e,w,s=1)=>{R(e).value=N[w]*s,R(w+"Value").textContent=Number(N[w]).toFixed(/Count|^count/.test(w)?0:2),R(e).oninput=n=>{N[w]=Number(n.target.value)/s,R(w+"Value").textContent=Number(N[w]).toFixed(/Count|^count/.test(w)?0:2),W=!0}};for(let[e,w,s]of[["lineThickness","lineWidth",10],["shaftThickness","shaftWidth",10],["countLeft","countLeft",1],["countRight","countRight",1],["fluffCountLeft","fluffCountLeft",1],["fluffCountRight","fluffCountRight",1],["fluffWidthLeft","fluffWidthLeft",100],["fluffWidthRight","fluffWidthRight",100],["fluffLengthLeft","fluffLengthLeft",100],["fluffLengthRight","fluffLengthRight",100],["lock","lock",100],["quillWidth","quillWidth",100],["vaneWidth","width",100],["asymmetry","asymmetry",100],["sweep","sweep",100],["spatialDetail","detail",100],["motionStrength","amplitude",100],["motionSpeed","speed",100],["opacityLeft","opacityLeft",100],["opacityRight","opacityRight",100],["fluff","fluff",100]])l1(e,w,s);R("featherColor").onchange=e=>{N.color=e.target.value,W=!0};R("featherShape").onchange=e=>{N.shape=e.target.value,W=!0};R("saveScore").onclick=()=>{let e={version:"R17-recovery",kind:A,parameters:{...N},time:z,shapeAnchors:A==="feather"?g0:void 0,fishBaseline:A==="fish"?"R037 axis / R039 fins / R10 local body correction":void 0,status:"parameter study; natural motion not verified"},w=document.createElement("a"),s=URL.createObjectURL(new Blob([JSON.stringify(e,null,2)],{type:"application/json"}));w.href=s,w.download="KAOPU-"+A+"-score-R17.json",w.click(),setTimeout(()=>URL.revokeObjectURL(s),1e3)};function K0(e){u0&&!document.hidden?(_&&e-l0>=40&&(z=(z+Math.min(.08,(e-l0)/1e3)*N.speed)%s0[A].period,l0=e,W=!0),W&&_0()):l0=e,requestAnimationFrame(K0)}requestAnimationFrame(K0);window.HaiyuLegacyFish={invalidate:()=>{W=!0},getState:()=>({active:u0,kind:A,time:z,playing:_,yaw:H,pitch:Y,surface:h0}),setSurface:value=>{h0=!!value;R("expSurface").setAttribute("aria-pressed",String(h0));W=!0},snapshot:()=>U?JSON.parse(JSON.stringify(U)):null};window.KaopuExperiment={setActive:c1};})();
+\u591A\u9891\u5019\u9009\u4EC5\u8C03\u8EAB\u4F53\u622A\u9762\u5305\u7EDC\uFF1B\u539F\u4E3B\u8F74\u4E0E\u5168\u90E8\u9CCD\u6E90\u51FD\u6570\u4E0D\u6539\u3002`,W=!0,u0&&_0()}R("expPlay").onclick=()=>{_=!_,l0=performance.now(),W=!0};R("expReset").onclick=()=>{z=0,_=!1,W=!0};R("expView").onclick=()=>{H=.4,Y=.3,W=!0};R("expTime").oninput=e=>{_=!1,z=Number(e.target.value)/1e3*s0[A].period,W=!0};R("expAxis").onclick=()=>{w0=!w0,R("expAxis").setAttribute("aria-pressed",String(w0)),W=!0};R("expSurface").onclick=()=>{h0=!h0,R("expSurface").setAttribute("aria-pressed",String(h0)),W=!0};q.onpointerdown=e=>{A!=="feather"&&(G=[e.clientX,e.clientY,H,Y],q.setPointerCapture(e.pointerId))};q.onpointermove=e=>{G&&(H=G[2]+(e.clientX-G[0])*.008,Y=Math.max(-1.4,Math.min(1.4,G[3]+(e.clientY-G[1])*.008)),W=!0)};q.onpointerup=q.onpointercancel=()=>G=null;R("alignPhoto").onclick=()=>{N.amplitude=0,z=0,_=!1,R("motionStrength").value=0,R("amplitudeValue").textContent="0.00",W=!0};var l1=(e,w,s=1)=>{R(e).value=N[w]*s,R(w+"Value").textContent=Number(N[w]).toFixed(/Count|^count/.test(w)?0:2),R(e).oninput=n=>{N[w]=Number(n.target.value)/s,R(w+"Value").textContent=Number(N[w]).toFixed(/Count|^count/.test(w)?0:2),W=!0}};for(let[e,w,s]of[["lineThickness","lineWidth",10],["shaftThickness","shaftWidth",10],["countLeft","countLeft",1],["countRight","countRight",1],["fluffCountLeft","fluffCountLeft",1],["fluffCountRight","fluffCountRight",1],["fluffWidthLeft","fluffWidthLeft",100],["fluffWidthRight","fluffWidthRight",100],["fluffLengthLeft","fluffLengthLeft",100],["fluffLengthRight","fluffLengthRight",100],["lock","lock",100],["quillWidth","quillWidth",100],["vaneWidth","width",100],["asymmetry","asymmetry",100],["sweep","sweep",100],["spatialDetail","detail",100],["motionStrength","amplitude",100],["motionSpeed","speed",100],["opacityLeft","opacityLeft",100],["opacityRight","opacityRight",100],["fluff","fluff",100]])l1(e,w,s);R("featherColor").onchange=e=>{N.color=e.target.value,W=!0};R("featherShape").onchange=e=>{N.shape=e.target.value,W=!0};R("saveScore").onclick=()=>{let e={version:"R17-recovery",kind:A,parameters:{...N},time:z,shapeAnchors:A==="feather"?g0:void 0,fishBaseline:A==="fish"?"R037 axis / R039 fins / R10 local body correction":void 0,status:"parameter study; natural motion not verified"},w=document.createElement("a"),s=URL.createObjectURL(new Blob([JSON.stringify(e,null,2)],{type:"application/json"}));w.href=s,w.download="KAOPU-"+A+"-score-R17.json",w.click(),setTimeout(()=>URL.revokeObjectURL(s),1e3)};function K0(e){u0&&!document.hidden?(_&&e-l0>=40&&(z=(z+Math.min(.08,(e-l0)/1e3)*N.speed)%s0[A].period,l0=e,W=!0),W&&_0()):l0=e,requestAnimationFrame(K0)}requestAnimationFrame(K0);var haiyuFishZoom=1;window.HaiyuLegacyFish=Object.freeze({invalidate:()=>{W=!0},getState:()=>({active:u0,kind:A,time:z,playing:_,yaw:H,pitch:Y,zoom:haiyuFishZoom,surface:h0}),getCamera:()=>({yaw:H,pitch:Y,zoom:haiyuFishZoom}),setCamera:camera=>{if(Number.isFinite(camera?.yaw))H=camera.yaw;if(Number.isFinite(camera?.pitch))Y=Math.max(-Math.PI/2,Math.min(Math.PI/2,camera.pitch));if(Number.isFinite(camera?.zoom))haiyuFishZoom=Math.max(.62,Math.min(2.25,camera.zoom));W=!0},cancelDrag:()=>{G=null},setSurface:value=>{h0=!!value;R("expSurface").setAttribute("aria-pressed",String(h0));W=!0},snapshot:()=>U?JSON.parse(JSON.stringify(U)):null});window.KaopuExperiment={setActive:c1};})();
 
 /* KAOPU 海羽 R18：原生三维羽片覆盖层。
    保留 R17 全部内容；只在 stage=7 接管羽片渲染。
@@ -120,6 +121,7 @@ function draw(target,view){const packet=state.packet,ctx=target.getContext('2d')
 function geometryKey(t,p){return JSON.stringify([Math.round(t*10000),p.countLeft,p.countRight,p.fluffCountLeft,p.fluffCountRight,p.fluffWidthLeft,p.fluffWidthRight,p.fluffLengthLeft,p.fluffLengthRight,p.lock,p.quillWidth,p.shaftWidth,p.width,p.asymmetry,p.sweep,p.detail,p.amplitude,p.color,p.shape,p.opacityLeft,p.opacityRight,p.fluff]);}
 function render(){if(!state.active)return;const p=readParams(),key=geometryKey(state.t,p);if(key!==state.packetKey){state.packet=buildFeather(state.t,p);state.packetKey=key;}draw(canvas,'orbit');draw(by('expSide'),'side');draw(by('expTop'),'top');by('expClock').textContent=state.t.toFixed(3)+' / 4.000 秒';by('expTime').value=Math.round(state.t/4*1000);by('expPlay').textContent=state.playing?'暂停小样':'播放小样';by('expState').textContent=state.playing?'运行中':'暂停';const ex=by('experiment');ex.dataset.kind='feather';ex.dataset.time=state.t;ex.dataset.vertices=state.packet.positions.length;ex.dataset.triangles=state.packet.faces.length;ex.dataset.native3d='true';ex.dataset.cameraAffectsGeneration='false';by('expStatus').textContent=`原生三维候选 · ${state.packet.positions.length.toLocaleString()} 顶点 / ${state.packet.faces.length.toLocaleString()} 三角面 · ${state.neutral?'中性检查':'冷暖光'}`;state.dirty=false;}
 function configure(){state.showAxis=true;state.showSurface=true;state.neutral=false;state.yaw=.58;state.pitch=.25;state.zoom=1;state.packetKey='';canvas.width=1080;canvas.height=720;canvas.style.cursor='grab';canvas.setAttribute('aria-label','原生三维羽片：羽轴、薄体羽片和函数羽枝，可拖动旋转');by('expProjections').hidden=false;by('featherExtra').hidden=false;by('expView').hidden=false;by('expSurface').hidden=false;by('expSurface').textContent='显示三维羽片';by('expSurface').setAttribute('aria-pressed','true');by('expAxis').setAttribute('aria-pressed','true');if(by('expLight')){by('expLight').hidden=false;by('expLight').textContent='冷暖光';by('expLight').setAttribute('aria-pressed','true');}by('sceneHint').textContent='拖动旋转 · 滚轮缩放 · 相机只观察，不参与生成';by('expTitle').textContent='原生三维羽片 · 中轴升档';by('expReference').textContent='保留 R17 已认可的羽轴与左右轮廓参数；以羽轴局部参考架生成薄体羽片、羽枝和羽根。单张正面图不能证明真实厚度与扭转，当前深度是显式候选。';by('expOwner').textContent='二维谱 → 羽轴局部架 → 原生三维薄体 → 同一状态三投影';by('expFormula').textContent='先生成三维，再投影：\nA(s,t)=羽轴；F(s,t)={T,N,B}=沿羽轴的局部参考架。\nV(s,±,u,ℓ,t)=A+±uW±(s)Nθ+C(s,u)Bθ+ℓH(s,u)Bθ。\n羽枝与羽片共享同一材料地址 s、同一时间 t；相机不进入 A、F 或 V。\nℓ=±1 形成上下薄层，外缘封边形成可旋转薄体。\n冷暖光只负责观察；中性模式用于检查几何，不能用灯光掩盖形体错误。\n边界：深度/扭转来自升档候选，不是单张照片测量结果。';state.dirty=true;}
+window.HaiyuLegacyFeather=Object.freeze({invalidate:()=>{state.dirty=true},getState:()=>({active:state.active,kind:"feather",time:state.t,playing:state.playing,yaw:state.yaw,pitch:state.pitch,zoom:state.zoom,neutral:state.neutral}),getCamera:()=>({yaw:state.yaw,pitch:state.pitch,zoom:state.zoom}),setCamera:camera=>{if(Number.isFinite(camera?.yaw))state.yaw=camera.yaw;if(Number.isFinite(camera?.pitch))state.pitch=Math.max(-Math.PI/2,Math.min(Math.PI/2,camera.pitch));if(Number.isFinite(camera?.zoom))state.zoom=Math.max(.62,Math.min(2.25,camera.zoom));state.dirty=true},cancelDrag:()=>{state.drag=null},snapshot:()=>state.packet?JSON.parse(JSON.stringify(state.packet)):null});
 window.KaopuExperiment={setActive(value,next){if(next==='feather'){original.setActive(false,'feather');state.active=!!value;state.playing=false;if(value){state.t=0;configure();render();}}else{state.active=false;state.playing=false;if(by('expLight'))by('expLight').hidden=true;canvas.style.cursor='';const ex=by('experiment');delete ex.dataset.native3d;delete ex.dataset.cameraAffectsGeneration;original.setActive(value,next);}}};
 function capture(id,type,handler){const el=by(id);if(!el)return;el.addEventListener(type,e=>{if(!state.active)return;e.preventDefault();e.stopImmediatePropagation();handler(e);},true);}
 capture('expPlay','click',()=>{state.playing=!state.playing;state.last=performance.now();state.dirty=true;});capture('expReset','click',()=>{state.t=0;state.playing=false;state.packetKey='';state.dirty=true;});capture('expView','click',()=>{state.yaw=.58;state.pitch=.25;state.zoom=1;state.dirty=true;});capture('expAxis','click',()=>{state.showAxis=!state.showAxis;by('expAxis').setAttribute('aria-pressed',String(state.showAxis));state.dirty=true;});capture('expSurface','click',()=>{state.showSurface=!state.showSurface;by('expSurface').setAttribute('aria-pressed',String(state.showSurface));state.dirty=true;});capture('expLight','click',()=>{state.neutral=!state.neutral;by('expLight').textContent=state.neutral?'中性检查':'冷暖光';by('expLight').setAttribute('aria-pressed',String(!state.neutral));state.dirty=true;});capture('expTime','input',e=>{state.playing=false;state.t=Number(e.target.value)/1000*4;state.packetKey='';state.dirty=true;});capture('alignPhoto','click',()=>{by('motionStrength').value=0;by('amplitudeValue').textContent='0.00';state.t=0;state.playing=false;state.packetKey='';state.dirty=true;});capture('saveScore','click',()=>{const data={schema:'KAOPU.marine-feather.native-3d/1',version:'R18-native-3d-feather-candidate',parameters:readParams(),time:state.t,generationContract:state.packet?.generationContract,axisSemantics:{feather:'rachis / 羽轴，不是脊髓',sharedInstrument:'axis + transported local frame + section/surface'},sourceBoundary:'17组稀疏正面轮廓锚点；真实深度与扭转未由单图证明'};const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.href=url;a.download='KAOPU-海羽-R18-原生三维谱.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
@@ -128,8 +130,8 @@ canvas.addEventListener('pointerdown',e=>{if(!state.active)return;state.drag=[e.
 function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-state.last>=32){const p=readParams();state.t=(state.t+Math.min(.07,(now-state.last)/1000)*p.speed)%4;state.last=now;state.packetKey='';state.dirty=true;}if(state.dirty)render();}else state.last=now;requestAnimationFrame(tick);}requestAnimationFrame(tick);
 })();
 
-/* R23 observation adapter for the original native feather and function fish.
- * Requires the narrow generated-bundle bridge from patch-legacy-bundle.py.
+/* R24 observation adapter for the original native feather and function fish.
+ * Requires the narrow generated-copy bridges from patch-legacy-{bundle,feather}.py.
  * Geometry, time, source inputs, and drag rotation remain owned by the originals.
  * The feather already has real normal-based lighting; only fish needs a shader.
  */
@@ -138,11 +140,137 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
   const by = id => document.getElementById(id);
   const original = window.KaopuExperiment;
   const bridge = window.HaiyuLegacyFish;
+  const featherBridge = window.HaiyuLegacyFeather;
   const canvas = by('expCanvas');
   const light = by('expLight');
   if (!original || !canvas || !light) return;
 
-  const state = { active: false, kind: 'feather', fishNeutral: false };
+  const state = { active: false, kind: 'feather', fishNeutral: false, spinning: false };
+  let spinFrame = 0, spinLast = null, pointerId = null;
+  const cameraBridge = () => state.kind === 'fish' ? bridge : featherBridge;
+  const initialCamera = () => state.kind === 'fish'
+    ? { yaw: .4, pitch: .3, zoom: 1 }
+    : { yaw: .58, pitch: .25, zoom: 1 };
+  const tools = document.createElement('div');
+  tools.id = 'expCameraTools';
+  tools.className = 'scene-tools';
+  tools.hidden = true;
+  tools.setAttribute('role', 'group');
+  tools.setAttribute('aria-label', '三维观察相机');
+  const buttons = {};
+  for (const [id, label, title] of [
+    ['expSpin', '自动旋转', '自动环绕观察；不改变形态时间'],
+    ['expManual', '手动', '停止自动旋转，可拖动画面或使用视角按钮'],
+    ['expTopView', '顶视', '从上方观察'],
+    ['expFrontView', '正视', '从正面观察'],
+    ['expSideView', '侧视', '从侧面观察'],
+    ['expBackView', '背视', '从背面观察'],
+    ['expUp', '向上', '向上旋转视角'],
+    ['expDown', '向下', '向下旋转视角'],
+    ['expZoomIn', '放大', '放大观察'],
+    ['expZoomOut', '缩小', '缩小观察']
+  ]) {
+    const button = document.createElement('button');
+    button.id = id;
+    button.type = 'button';
+    button.textContent = label;
+    button.title = title;
+    button.setAttribute('aria-controls', 'expCanvas');
+    tools.append(button);
+    buttons[id] = button;
+  }
+  const cameraStatus = document.createElement('span');
+  cameraStatus.id = 'expCameraStatus';
+  cameraStatus.className = 'quiet';
+  tools.append(cameraStatus);
+  canvas.parentElement.parentElement.insertBefore(tools, canvas.parentElement);
+
+  function syncCamera() {
+    const camera = cameraBridge()?.getCamera();
+    buttons.expSpin.setAttribute('aria-pressed', String(state.spinning));
+    buttons.expManual.setAttribute('aria-pressed', String(!state.spinning));
+    const available = !!camera;
+    for (const button of Object.values(buttons)) button.disabled = !available;
+    cameraStatus.textContent = available
+      ? `${state.spinning ? '自动环绕' : '手动观察'} · ${Math.round(camera.zoom * 100)}%`
+      : '观察相机暂不可用';
+    buttons.expZoomIn.disabled = !available || camera.zoom >= 2.25;
+    buttons.expZoomOut.disabled = !available || camera.zoom <= .62;
+    const panel = by('experiment');
+    if (panel) {
+      panel.dataset.cameraMode = state.spinning ? 'auto' : 'manual';
+      panel.dataset.cameraAffectsGeneration = 'false';
+    }
+  }
+
+  function stopSpin() {
+    state.spinning = false;
+    if (spinFrame) cancelAnimationFrame(spinFrame);
+    spinFrame = 0;
+    spinLast = null;
+    syncCamera();
+  }
+
+  function spin(now) {
+    spinFrame = 0;
+    if (!state.active || !state.spinning || document.hidden) {
+      stopSpin();
+      return;
+    }
+    const current = cameraBridge()?.getCamera();
+    if (!current) {
+      stopSpin();
+      return;
+    }
+    const elapsed = spinLast === null ? 0 : Math.min(.05, Math.max(0, (now - spinLast) / 1000));
+    spinLast = now;
+    cameraBridge().setCamera({ yaw: current.yaw + elapsed * .36 });
+    // These bridges invalidate the view only. The original play buttons retain
+    // exclusive ownership of time, geometry evaluation, and frame advancement.
+    spinFrame = requestAnimationFrame(spin);
+  }
+
+  function setCamera(camera) {
+    if (!state.active || !cameraBridge()) return;
+    stopSpin();
+    cameraBridge().cancelDrag();
+    cameraBridge().setCamera(camera);
+    syncCamera();
+  }
+
+  buttons.expSpin.addEventListener('click', () => {
+    if (!state.active || !cameraBridge()) return;
+    if (state.spinning) return stopSpin();
+    cameraBridge().cancelDrag();
+    state.spinning = true;
+    spinLast = null;
+    spinFrame = requestAnimationFrame(spin);
+    syncCamera();
+  });
+  buttons.expManual.addEventListener('click', stopSpin);
+  buttons.expTopView.addEventListener('click', () => setCamera({ yaw: 0, pitch: -Math.PI / 2 }));
+  buttons.expFrontView.addEventListener('click', () => setCamera({ yaw: 0, pitch: 0 }));
+  buttons.expSideView.addEventListener('click', () => setCamera({ yaw: Math.PI / 2, pitch: 0 }));
+  buttons.expBackView.addEventListener('click', () => setCamera({ yaw: Math.PI, pitch: 0 }));
+  for (const [id, field, update] of [
+    ['expUp', 'pitch', value => value - Math.PI / 18],
+    ['expDown', 'pitch', value => value + Math.PI / 18],
+    ['expZoomIn', 'zoom', value => value * 1.15],
+    ['expZoomOut', 'zoom', value => value / 1.15]
+  ]) buttons[id].addEventListener('click', () => {
+    const camera = cameraBridge()?.getCamera();
+    if (camera) setCamera({ [field]: update(camera[field]) });
+  });
+
+  // Capture at the parent so R18's own target-level capture handler does not
+  // bypass the shared reset/autorotation cancellation behavior.
+  const reset = by('expView');
+  reset?.parentElement.addEventListener('click', event => {
+    if (!state.active || event.target !== reset) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    setCamera(initialCamera());
+  }, true);
   const normalize = v => {
     const length = Math.hypot(...v) || 1;
     return v.map(component => component / length);
@@ -202,18 +330,28 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
         ? (state.fishNeutral ? 'neutral' : 'warm-cool')
         : (light.getAttribute('aria-pressed') === 'true' ? 'warm-cool' : 'neutral'),
       fishBridgeAvailable: !!bridge,
+      featherBridgeAvailable: !!featherBridge,
+      spinning: state.spinning,
+      camera: cameraBridge()?.getCamera() || null,
       cameraAffectsGeneration: false,
-      fish: bridge?.getState() || null
+      fish: bridge?.getState() || null,
+      feather: featherBridge?.getState() || null
     })
   });
 
   window.KaopuExperiment = {
     ...original,
     setActive(value, kind) {
+      stopSpin();
+      bridge?.cancelDrag();
+      featherBridge?.cancelDrag();
+      if (pointerId !== null && canvas.hasPointerCapture?.(pointerId)) canvas.releasePointerCapture(pointerId);
+      pointerId = null;
       state.active = !!value;
       state.kind = kind;
       if (value && kind === 'fish') state.fishNeutral = false;
       original.setActive(value, kind);
+      tools.hidden = !value;
       if (!value) return;
       canvas.style.touchAction = 'none';
       canvas.style.cursor = 'grab';
@@ -233,6 +371,7 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
         canvas.setAttribute('aria-label', '原函数鱼与全部鱼鳍：拖动旋转，左暖右冷面光照');
         bridge.invalidate();
       }
+      syncCamera();
     }
   };
 
@@ -244,6 +383,28 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
     syncFishLight();
     bridge.invalidate();
   }, true);
+
+  canvas.addEventListener('pointerdown', event => {
+    if (!state.active) return;
+    pointerId = event.pointerId;
+    stopSpin();
+  }, true);
+  canvas.addEventListener('pointermove', () => { if (state.active) syncCamera(); });
+  canvas.addEventListener('pointerup', () => { pointerId = null; });
+  canvas.addEventListener('pointercancel', () => { pointerId = null; });
+  canvas.addEventListener('wheel', event => {
+    if (!state.active) return;
+    stopSpin();
+    // Native feather already owns wheel zoom. Fish gains the same range here.
+    if (state.kind === 'fish' && bridge) {
+      event.preventDefault();
+      const camera = bridge.getCamera();
+      bridge.setCamera({ zoom: camera.zoom * Math.exp(-event.deltaY * .001) });
+    }
+    syncCamera();
+  }, { passive: false });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stopSpin(); });
+  window.addEventListener('blur', stopSpin);
 
   // Let the original handlers clear drag state even when capture is interrupted.
   canvas.addEventListener('lostpointercapture', () => {
@@ -262,12 +423,12 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
  * envelopes. A disclosed width-relative support floor closes thin directions.
  * No original point is moved, filtered, duplicated, or replaced by the shell.
  *
- * Shell rings all share angular directions. Between rings, every triangle
- * remains in its angular wedge about the interpolated center. Consequently a
- * disk of radius min(adjacent radial samples)*cos(pi/angularSamples) remains
- * inside each transverse section. The finite spine tube uses only 20% of this
- * conservative clearance, and avoids shell tips. Strict monotone Y prevents
- * nonadjacent slices from folding through one another.
+ * The fitted section's exact X range is retained. Its upper/lower convex Z
+ * envelopes receive +/−h*sqrt(1-u*u), u being normalized local X, and h being
+ * archedThicknessRatio times measured X half-width. Only Z changes with this control.
+ * The finite spine uses conservative distance bounds against every relevant
+ * actual shell triangle and avoids shell tips. Strict monotone Y prevents nonadjacent
+ * slices from folding through one another.
  *
  * Browser: window.HaiyuPhaseVolume. Node: require('./phase-volume.js').
  * evaluate(6|7|'06'|'07', positiveIntegerFrame, options) returns typed geometry
@@ -290,7 +451,7 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
     longitudinalSections: 64, angularSamples: 48, supportQuantile: 0.95,
     sliceBandwidth: 1.75, fitSampleLimit: 256, minimumThicknessRatio: 0.12,
     axisSmoothingPasses: 3, radialSmoothingPasses: 2,
-    spineFraction: 0.20, spineSides: 16, depth: 1
+    spineFraction: 0.20, spineSides: 16, depth: 1, archedThicknessRatio: 0.65
   });
   function sourceId(value) {
     const id = Number(String(value).replace(/^source/, ''));
@@ -363,6 +524,131 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
     }
     return {positions: p, indices: ix, normals};
   }
+  function convexXZ(points) {
+    const sorted = points.map(p => [p[0], p[2]]).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    const turn = (a, b, c) => (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+    const lower = [], upper = [];
+    for (const p of sorted) { while (lower.length > 1 && turn(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop(); lower.push(p); }
+    for (let j = sorted.length - 1; j >= 0; j--) { const p = sorted[j]; while (upper.length > 1 && turn(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop(); upper.push(p); }
+    lower.pop(); upper.pop(); return lower.concat(upper);
+  }
+  function verticalBounds(hull, x) {
+    let low = Infinity, high = -Infinity;
+    for (let k = 0; k < hull.length; k++) {
+      const a = hull[k], b = hull[(k + 1) % hull.length];
+      if (x < Math.min(a[0], b[0]) - 1e-8 || x > Math.max(a[0], b[0]) + 1e-8) continue;
+      if (Math.abs(a[0] - b[0]) < 1e-10) { low = Math.min(low, a[1], b[1]); high = Math.max(high, a[1], b[1]); }
+      else { const t = Math.max(0, Math.min(1, (x - a[0]) / (b[0] - a[0]))), z = a[1] * (1 - t) + b[1] * t; low = Math.min(low, z); high = Math.max(high, z); }
+    }
+    return [low, high];
+  }
+  function polygonClearance(poly, point) {
+    const x = point[0], z = point[1]; let inside = false, distance = Infinity;
+    for (let j = 0, k = poly.length - 1; j < poly.length; k = j++) {
+      const a = poly[k], b = poly[j], dx = b[0] - a[0], dz = b[1] - a[1], sq = dx * dx + dz * dz;
+      const t = sq ? Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / sq)) : 0;
+      distance = Math.min(distance, Math.hypot(x - a[0] - t * dx, z - a[1] - t * dz));
+      if ((a[1] > z) !== (b[1] > z) && x < (b[0] - a[0]) * (z - a[1]) / (b[1] - a[1]) + a[0]) inside = !inside;
+    }
+    return inside ? distance : -distance;
+  }
+  function archSections(rings, options) {
+    const bodies = rings.slice(1, -1), hulls = bodies.map(r => convexXZ(r.points));
+    const ranges = hulls.map(h => [Math.min(...h.map(p => p[0])), Math.max(...h.map(p => p[0]))]);
+    const heights = smoothScalars(ranges.map(r => (r[1] - r[0]) / 2 * options.archedThicknessRatio), 2, false);
+    for (let j = 0; j < bodies.length; j++) {
+      const ring = bodies[j], hull = hulls[j], [left, right] = ranges[j], mid = (left + right) / 2, half = (right - left) / 2, m = ring.points.length;
+      ring.preArchXRange = [left, right]; ring.archHeight = heights[j]; ring.preArchPoints = ring.points.map(p => p.slice());
+      // The same normalized-X schedule is used for every height and arch ratio.
+      // Neither source points nor shell X/Y can change when this control moves.
+      ring.points = Array.from({length: m}, (_, k) => {
+        const theta = TAU * k / m, u = cos(theta), x = mid + half * u;
+        const bounds = verticalBounds(hull, x), arch = heights[j] * sqrt(Math.max(0, 1 - u * u));
+        return [x, ring.y, sin(theta) >= 0 ? bounds[1] + arch : bounds[0] - arch];
+      });
+      ring.radii = ring.points.map(p => Math.hypot(p[0] - ring.center[0], p[2] - ring.center[2]));
+      ring.clearanceBound = polygonClearance(ring.points.map(p => [p[0], p[2]]), [ring.center[0], ring.center[2]]);
+      if (!(ring.clearanceBound > 0)) throw new Error('Source median axis escaped arched section ' + j);
+      ring.transverseClearance = ring.clearanceBound;
+    }
+  }
+  const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+  const dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  const cross3 = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const clamp01 = x => Math.max(0, Math.min(1, x));
+  function pointSegmentSq(p, a, b) {
+    const ab = sub(b, a), ap = sub(p, a), len = dot3(ab, ab), t = len ? clamp01(dot3(ap, ab) / len) : 0;
+    return (ap[0] - t * ab[0]) ** 2 + (ap[1] - t * ab[1]) ** 2 + (ap[2] - t * ab[2]) ** 2;
+  }
+  function inTriangle(p, a, b, c) {
+    const u = sub(b, a), v = sub(c, a), w = sub(p, a), uu = dot3(u, u), uv = dot3(u, v), vv = dot3(v, v), wu = dot3(w, u), wv = dot3(w, v), den = uu * vv - uv * uv;
+    if (Math.abs(den) < 1e-15) return false;
+    const s = (vv * wu - uv * wv) / den, t = (uu * wv - uv * wu) / den;
+    return s >= -1e-10 && t >= -1e-10 && s + t <= 1 + 1e-10;
+  }
+  function pointTriangleSq(p, a, b, c) {
+    const normal = cross3(sub(b, a), sub(c, a)), nn = dot3(normal, normal), delta = dot3(sub(p, a), normal);
+    if (nn > 1e-15) {
+      const projection = p.map((v, i) => v - normal[i] * delta / nn);
+      if (inTriangle(projection, a, b, c)) return delta * delta / nn;
+    }
+    return Math.min(pointSegmentSq(p, a, b), pointSegmentSq(p, b, c), pointSegmentSq(p, c, a));
+  }
+  function segmentSegmentSq(p, q, a, b) {
+    const u = sub(q, p), v = sub(b, a), w = sub(p, a), aa = dot3(u, u), bb = dot3(u, v), cc = dot3(v, v), dd = dot3(u, w), ee = dot3(v, w), den = aa * cc - bb * bb;
+    if (aa < 1e-15) return pointSegmentSq(p, a, b);
+    if (cc < 1e-15) return pointSegmentSq(a, p, q);
+    let s = den > 1e-15 ? clamp01((bb * ee - cc * dd) / den) : 0;
+    let t = (bb * s + ee) / cc;
+    if (t < 0) { t = 0; s = clamp01(-dd / aa); }
+    else if (t > 1) { t = 1; s = clamp01((bb - dd) / aa); }
+    return w.reduce((sum, value, i) => sum + (value + s * u[i] - t * v[i]) ** 2, 0);
+  }
+  function segmentTriangleSq(p, q, a, b, c) {
+    const normal = cross3(sub(b, a), sub(c, a)), direction = sub(q, p), den = dot3(normal, direction);
+    if (Math.abs(den) > 1e-12) {
+      const t = dot3(normal, sub(a, p)) / den;
+      if (t >= 0 && t <= 1 && inTriangle(p.map((v, i) => v + t * direction[i]), a, b, c)) return 0;
+    }
+    return Math.min(pointTriangleSq(p, a, b, c), pointTriangleSq(q, a, b, c), segmentSegmentSq(p, q, a, b), segmentSegmentSq(p, q, b, c), segmentSegmentSq(p, q, c, a));
+  }
+  function boundAxisAgainstMesh(rings, shell, exact) {
+    const p = shell.positions, ix = shell.indices, segmentClearance = [], faces = [], buckets = Array.from({length: rings.length - 1}, () => []);
+    const m = rings[1].points.length;
+    for (let k = 0; k < ix.length; k += 3) {
+      const a = Array.from(p.subarray(ix[k] * 3, ix[k] * 3 + 3)), b = Array.from(p.subarray(ix[k + 1] * 3, ix[k + 1] * 3 + 3)), c = Array.from(p.subarray(ix[k + 2] * 3, ix[k + 2] * 3 + 3));
+      const normal = cross3(sub(b, a), sub(c, a));
+      const face = {a, b, c, normal, normalSq: dot3(normal, normal), low: [0, 1, 2].map(i => Math.min(a[i], b[i], c[i])), high: [0, 1, 2].map(i => Math.max(a[i], b[i], c[i]))};
+      const triangle = k / 3, slab = triangle < m ? 0 : Math.min(rings.length - 2, 1 + Math.floor((triangle - m) / (2 * m)));
+      faces.push(face); buckets[slab].push(face);
+    }
+    for (let j = 1; j < rings.length - 2; j++) {
+      const a = rings[j].center, b = rings[j + 1].center;
+      let best = Math.min(rings[j].transverseClearance, rings[j + 1].transverseClearance) ** 2;
+      const low = [0, 1, 2].map(i => Math.min(a[i], b[i])), high = [0, 1, 2].map(i => Math.max(a[i], b[i]));
+      const reach = sqrt(best), start = Math.max(0, j - Math.ceil(reach / (rings[j + 1].y - rings[j].y)) - 1), end = Math.min(buckets.length - 1, j + Math.ceil(reach / (rings[j + 1].y - rings[j].y)) + 1);
+      for (let slab = start; slab <= end; slab++) for (const face of buckets[slab]) {
+        let lowerBound = 0;
+        for (let i = 0; i < 3; i++) { const gap = Math.max(0, face.low[i] - high[i], low[i] - face.high[i]); lowerBound += gap * gap; }
+        if (lowerBound >= best) continue;
+        const nn = face.normal;
+        const da = nn[0] * (a[0] - face.a[0]) + nn[1] * (a[1] - face.a[1]) + nn[2] * (a[2] - face.a[2]);
+        const db = nn[0] * (b[0] - face.a[0]) + nn[1] * (b[1] - face.a[1]) + nn[2] * (b[2] - face.a[2]);
+        if (da * db > 0 && face.normalSq > 1e-15) lowerBound = Math.max(lowerBound, Math.min(da * da, db * db) / face.normalSq);
+        if (lowerBound >= best) continue;
+        // Plane and box distances are independently valid lower bounds. Their
+        // maximum stays a lower bound; minima across faces bound the wall.
+        // Exact geometry is retained for a zero bound and for offline audits.
+        best = Math.min(best, exact || lowerBound < 1e-10 ? segmentTriangleSq(a, b, face.a, face.b, face.c) : lowerBound);
+      }
+      if (!(best > 1e-10)) throw new Error('Learned axis intersects actual shell near section ' + j);
+      segmentClearance[j] = sqrt(best) * (exact ? 1 : .999);
+    }
+    for (let j = 1; j < rings.length - 1; j++) {
+      rings[j].axisMeshClearance = Math.min(segmentClearance[j - 1] || Infinity, segmentClearance[j] || Infinity);
+      rings[j].clearanceBound = Math.min(rings[j].transverseClearance, rings[j].axisMeshClearance);
+    }
+  }
   function buildShell(rings, m) {
     const p = [], ix = [];
     p.push(...rings[0].center);
@@ -404,7 +690,7 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
     for (const [key, lo, hi] of [['longitudinalSections', 12, 128], ['angularSamples', 16, 96], ['fitSampleLimit', 64, 1024], ['spineSides', 8, 32], ['axisSmoothingPasses', 0, 8], ['radialSmoothingPasses', 0, 8]]) {
       if (!Number.isInteger(o[key]) || o[key] < lo || o[key] > hi) throw new RangeError(key + ' outside bounded range ' + lo + '..' + hi);
     }
-    for (const [key, lo, hi] of [['supportQuantile', 0.75, 0.99], ['sliceBandwidth', 0.75, 4], ['minimumThicknessRatio', 0.01, 0.35], ['spineFraction', 0.01, 0.45], ['depth', 0.05, 4]]) {
+    for (const [key, lo, hi] of [['supportQuantile', 0.75, 0.99], ['sliceBandwidth', 0.75, 4], ['minimumThicknessRatio', 0.01, 0.35], ['spineFraction', 0.01, 0.45], ['depth', 0.05, 4], ['archedThicknessRatio', 0.3, 1]]) {
       if (!Number.isFinite(o[key]) || o[key] < lo || o[key] > hi) throw new RangeError(key + ' outside bounded range ' + lo + '..' + hi);
     }
     return o;
@@ -481,7 +767,10 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
         clearanceBound: Math.min(...radii) * cos(Math.PI / m), sourcePopulation: samples[j].population, fitSampleCount: samples[j].ids.length, thicknessFloor: floors[j]});
     }
     rings.push(endpoint(last));
-    const shell = buildShell(rings, m), spine = buildSpine(rings, options);
+    archSections(rings, options);
+    const shell = buildShell(rings, m);
+    boundAxisAgainstMesh(rings, shell);
+    const spine = buildSpine(rings, options);
     const sectionPositions = [], sectionIndices = [];
     for (let j = 1; j < rings.length - 1; j++) for (let k = 0; k < m; k++) {
       const index = sectionPositions.length / 3; sectionPositions.push(...rings[j].points[k]);
@@ -499,7 +788,10 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
         minimumThicknessRatio: options.minimumThicknessRatio, thicknessFloorRange: [Math.min(...floors), Math.max(...floors)],
         minimumRingClearanceBound: Math.min(...rings.slice(1, -1).map(r => r.clearanceBound)), spineRadiusRange: [Math.min(...spine.radii), Math.max(...spine.radii)],
         spineClearanceLowerBound: Math.min(...spine.radii) * (1 / options.spineFraction - 1), axisLength, axisChord, axisLengthRatio: axisLength / axisChord,
-        unsmoothedSectionAreaRange: [Math.min(...sampleAreas), Math.max(...sampleAreas)], shellCoverage: 'robust core only; not guaranteed to enclose all original points', supportQuantile: options.supportQuantile},
+        unsmoothedSectionAreaRange: [Math.min(...sampleAreas), Math.max(...sampleAreas)], shellCoverage: 'robust core plus explicitly inferred Z arches; not guaranteed to enclose all original points', supportQuantile: options.supportQuantile,
+        archedThicknessRatio: options.archedThicknessRatio, chestArchHeightRange: [Math.min(...rings.slice(1, -1).map(r => r.archHeight)), Math.max(...rings.slice(1, -1).map(r => r.archHeight))],
+        shellXYInvariantAcrossChestArc: true, minimumAxisMeshClearance: Math.min(...rings.slice(1, -1).map(r => r.axisMeshClearance)),
+        axisClearanceMethod: 'Conservative triangle-plane/AABB lower bounds; exact segment-triangle fallback for zero bounds; exact audit available in validate(...,true).'},
       assumptions: [
         'The original 20,000-point cloud is retained exactly, in original descending-i order; its XY projection is untouched.',
         'Quadrature depth z=q*cos(c) is an inferred phase lift. Fixed-d points lie on a line; the lift alone is a sheet.',
@@ -508,8 +800,10 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
         options.supportQuantile + ' directional quantiles form a robust convex core before mild angular/longitudinal smoothing; outlying branches remain in the full cloud.',
         'Fitting uses at most ' + options.fitSampleLimit + ' deterministic equal-rank samples per slice, from the full Y-sorted source field.',
         'Missing support is floored at ' + options.minimumThicknessRatio + ' times each slice\'s 90th-percentile source radius; this is explicit inferred thickness.',
-        'The solid is star-shaped in each monotone-Y section; extreme actual source points cap the two ends.',
-        'The colored spine is a finite tube around the learned internal axis, restricted to ' + options.spineFraction + ' of a conservative local clearance bound.'
+        'Each fitted section keeps its X bounds and convex source Z envelope; additional Z-only arches have height ' + options.archedThicknessRatio + ' times smoothed local X half-width, with sqrt(1-u²) profile.',
+        'Chest-arc changes preserve every shell X/Y coordinate. This arch is an explicit front/back thickness hypothesis, not source-observed depth or biological anatomy.',
+        'The solid has monotone-Y sections; extreme actual source points cap the two ends.',
+        'The colored spine is a finite tube around the learned internal axis, restricted to ' + options.spineFraction + ' of a conservative bound on actual axis-segment-to-shell-triangle distance.'
       ]
     };
     // One invertible affine transform is applied to every packet. It cannot
@@ -529,6 +823,10 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
       for (const ring of rings) {
         ring.center[2] *= depth;
         for (const p of ring.points) p[2] *= depth;
+        if (ring.preArchPoints) for (const p of ring.preArchPoints) p[2] *= depth;
+        if (ring.archHeight) ring.archHeight *= depth;
+        if (ring.axisMeshClearance) ring.axisMeshClearance *= minorScale;
+        if (ring.transverseClearance) ring.transverseClearance *= minorScale;
         ring.radii = ring.points.map(p => Math.hypot(p[0] - ring.center[0], p[2] - ring.center[2]));
         ring.clearanceBound *= minorScale;
       }
@@ -546,6 +844,10 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
     result.stats.minimumRingClearanceBound *= minorScale;
     result.stats.spineClearanceLowerBound *= minorScale;
     result.stats.spineTransverseClearanceLowerBound = result.stats.spineClearanceLowerBound;
+    result.stats.spineEuclideanClearanceLowerBound = result.stats.spineClearanceLowerBound;
+    result.stats.minimumAxisMeshClearance *= minorScale;
+    result.stats.chestArchHeightBeforeDepthRange = result.stats.chestArchHeightRange.slice();
+    result.stats.chestArchHeightRange = result.stats.chestArchHeightRange.map(h => h * depth);
     result.stats.spineDepthRadiusRange = result.stats.spineRadiusRange.map(r => r * depth);
     result.stats.thicknessFloorBeforeDepthRange = result.stats.thicknessFloorRange.slice();
     result.stats.thicknessFloorZRange = result.stats.thicknessFloorRange.map(r => r * depth);
@@ -569,14 +871,7 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
   function clearance(volume, point) {
     const poly = sectionPolygon(volume, point[1]);
     if (!poly) return -Infinity;
-    const x = point[0], z = point[2]; let inside = false, distance = Infinity;
-    for (let j = 0, k = poly.length - 1; j < poly.length; k = j++) {
-      const a = poly[k], b = poly[j], dx = b[0] - a[0], dz = b[1] - a[1], sq = dx * dx + dz * dz;
-      const t = sq ? Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / sq)) : 0;
-      distance = Math.min(distance, Math.hypot(x - a[0] - t * dx, z - a[1] - t * dz));
-      if ((a[1] > z) !== (b[1] > z) && x < (b[0] - a[0]) * (z - a[1]) / (b[1] - a[1]) + a[0]) inside = !inside;
-    }
-    return inside ? distance : -distance;
+    return polygonClearance(poly, [point[0], point[2]]);
   }
   function contains(volume, point, margin) { return clearance(volume, point) >= (margin || 0); }
   function validate(volume, thorough) {
@@ -602,6 +897,9 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
       if (!(free > 0)) errors.push('spine ring not strictly internal at ' + j);
     }
     if (thorough) {
+      const auditRings = volume.rings.map(r => ({center: r.center, y: r.y, points: r.points, transverseClearance: r.transverseClearance}));
+      boundAxisAgainstMesh(auditRings, volume.shell, true);
+      for (let j = 1; j < auditRings.length - 1; j++) if (volume.rings[j].axisMeshClearance > auditRings[j].axisMeshClearance + 1e-4) { errors.push('conservative wall bound exceeds exact mesh clearance at ' + j); break; }
       const mesh = volume.spine;
       for (let k = 0; k < mesh.positions.length; k += 3) if (!contains(volume, [mesh.positions[k], mesh.positions[k + 1], mesh.positions[k + 2]])) { errors.push('spine vertex outside shell'); break; }
       for (let k = 0; k < mesh.indices.length; k += 3) {
@@ -624,7 +922,7 @@ function tick(now){if(state.active&&!document.hidden){if(state.playing&&now-stat
     }
     return {ok: cases.every(c => c.ok), cases};
   }
-  return Object.freeze({version: 'r24-volume-1', defaults, sourcePoint, frameTime, evaluate, sectionPolygon, clearance, contains, validate, selfTest});
+  return Object.freeze({version: 'r24-volume-2-arched', defaults, sourcePoint, frameTime, evaluate, sectionPolygon, clearance, contains, validate, selfTest});
 });
 
 /* Depth-tested view of source samples and independently inferred volume. */
@@ -633,23 +931,23 @@ const sub=(a,b)=>a.map((v,i)=>v-b[i]),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0
 function create(canvas){
  const gl=canvas.getContext('webgl',{alpha:false,antialias:true,preserveDrawingBuffer:true});
  const ctx=gl?null:canvas.getContext('2d');let program,buffer,locations;
- if(gl){const shader=(kind,src)=>{const s=gl.createShader(kind);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s};program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,'attribute vec3 p;attribute vec4 color;varying vec4 col;uniform float size;void main(){gl_Position=vec4(p,1.);gl_PointSize=size;col=color;}'));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,'precision mediump float;varying vec4 col;uniform float points;void main(){if(points>.5){vec2 uv=gl_PointCoord*2.-1.;if(dot(uv,uv)>1.)discard;}gl_FragColor=col;}'));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));buffer=gl.createBuffer();locations={p:gl.getAttribLocation(program,'p'),color:gl.getAttribLocation(program,'color'),size:gl.getUniformLocation(program,'size'),points:gl.getUniformLocation(program,'points')};gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);}
+ if(gl){const shader=(kind,src)=>{const s=gl.createShader(kind);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s};program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,'attribute vec3 p;attribute vec4 color;varying vec4 col;uniform float size;uniform float perspective;void main(){float w=1.+p.z*perspective;gl_Position=vec4(p,w);gl_PointSize=size/w;col=color;}'));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,'precision mediump float;varying vec4 col;uniform float points;void main(){if(points>.5){vec2 uv=gl_PointCoord*2.-1.;if(dot(uv,uv)>1.)discard;}gl_FragColor=col;}'));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));buffer=gl.createBuffer();locations={p:gl.getAttribLocation(program,'p'),color:gl.getAttribLocation(program,'color'),size:gl.getUniformLocation(program,'size'),points:gl.getUniformLocation(program,'points'),perspective:gl.getUniformLocation(program,'perspective')};gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);}
  const warm=unit([-.8,.4,.7]),cool=unit([.9,.18,.65]);
  function draw(packet,o){
-  const w=canvas.width,h=canvas.height,aspect=w/h,scale=o.zoom/200;
-  const project=p=>{const r=o.rotate(p);return[r[0]*scale/aspect,r[1]*scale,-r[2]/650]}, screen=p=>{const r=project(p);return[(r[0]+1)*w/2,(1-r[1])*h/2,-r[2]]};
+  const w=canvas.width,h=canvas.height,aspect=w/h;let maxX=1,maxY=1;for(const p of packet.cloud||[]){const r=o.rotate(p);const factor=o.perspective?1/(1-r[2]/1000):1;maxX=Math.max(maxX,Math.abs(r[0])*factor);maxY=Math.max(maxY,Math.abs(r[1])*factor);}const scale=o.zoom*Math.min(.86*aspect/maxX,.82/maxY);
+  const project=p=>{const r=o.rotate(p);return[r[0]*scale/aspect,r[1]*scale,-r[2]/650]}, screen=p=>{const r=project(p);const pw=o.perspective?1+r[2]*.65:1;return[(r[0]/pw+1)*w/2,(1-r[1]/pw)*h/2,-r[2]/pw]};
   const color=(n,kind,alpha=1)=>{n=unit(o.rotate(n));if(n[2]<0)n=n.map(v=>-v);const dot=d=>Math.max(0,n.reduce((s,x,i)=>s+x*d[i],0));if(kind==='axis')return[1,.27,.46,1];const base=kind==='rib'?[.63,.81,.82]:[.58,.75,.72];if(!o.lit){const v=.3+.65*Math.max(0,n[2]);return[v,v,v,alpha]}const a=dot(warm),b=dot(cool);return base.map((v,i)=>Math.min(1,v*(.2+a*[1.4,.85,.43][i]+b*[.4,.85,1.5][i]))).concat(alpha)};
   const vertices=packet.positions||[],faces=packet.faces||[],kinds=packet.faceKinds||[];
   const triangles=[];for(let j=0;j<faces.length;j++){const kind=kinds[j]||'body';if(kind==='body'&&!o.body||kind==='axis'&&!o.spine)continue;const ps=faces[j].map(i=>vertices[i]),normal=cross(sub(ps[1],ps[0]),sub(ps[2],ps[0]));if(o.cut&&kind==='body'&&o.rotate(ps.reduce((a,p)=>a.map((v,k)=>v+p[k]/3),[0,0,0]))[2]>0&&o.rotate(normal)[2]>0)continue;const alpha=kind==='body'?(o.cut?.82:.26):1,c=color(normal,kind,alpha);triangles.push({ps,c,depth:ps.reduce((a,p)=>a+o.rotate(p)[2]/3,0),kind});}
   const cloud=o.cloud?(packet.cloud||[]):[];
-  if(gl){gl.viewport(0,0,w,h);gl.clearColor(.035,.042,.045,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(program);gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.enableVertexAttribArray(locations.p);gl.enableVertexAttribArray(locations.color);gl.vertexAttribPointer(locations.p,3,gl.FLOAT,false,28,0);gl.vertexAttribPointer(locations.color,4,gl.FLOAT,false,28,12);gl.uniform1f(locations.size,Math.max(1,o.pointSize*w/800));gl.uniform1f(locations.points,0);gl.disable(gl.BLEND);gl.depthMask(true);
+  if(gl){gl.viewport(0,0,w,h);gl.clearColor(.035,.042,.045,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(program);gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.enableVertexAttribArray(locations.p);gl.enableVertexAttribArray(locations.color);gl.vertexAttribPointer(locations.p,3,gl.FLOAT,false,28,0);gl.vertexAttribPointer(locations.color,4,gl.FLOAT,false,28,12);gl.uniform1f(locations.size,Math.max(1,o.pointSize*w/800));gl.uniform1f(locations.perspective,o.perspective?.65:0);gl.uniform1f(locations.points,0);gl.disable(gl.BLEND);gl.depthMask(true);
    const batch=(items,mode)=>{const data=[];for(const item of items)for(const p of item.ps)data.push(...project(p),...item.c);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.DYNAMIC_DRAW);gl.drawArrays(mode,0,data.length/7)};
    batch(triangles.filter(t=>t.c[3]===1),gl.TRIANGLES);
    gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);batch(triangles.filter(t=>t.c[3]<1).sort((a,b)=>a.depth-b.depth),gl.TRIANGLES);
-   const lines=[];if(o.sections)for(const ring of packet.rings||[]){const ps=ring.points||ring;for(let i=1;i<ps.length;i++)lines.push({ps:[ps[i-1],ps[i]],c:[.61,.79,.80,.55]})}batch(lines,gl.LINES);
+   const lines=[];if(o.sections)for(const ring of packet.rings||[]){const ps=ring.points||ring;for(let i=0;i<ps.length;i++)lines.push({ps:[ps[i],ps[(i+1)%ps.length]],c:[.61,.79,.80,.55]})}batch(lines,gl.LINES);
    gl.uniform1f(locations.points,1);const dots=cloud.map(p=>({ps:[p],c:[.76,.86,.84,.48]}));batch(dots,gl.POINTS);gl.depthMask(true);gl.disable(gl.BLEND);return{engine:'WebGL',depthTest:gl.isEnabled(gl.DEPTH_TEST),error:gl.getError(),triangles:triangles.length};
   }
-  ctx.fillStyle='#090b0c';ctx.fillRect(0,0,w,h);const items=triangles.map(t=>({kind:'face',depth:t.depth,t}));for(let i=0;i<cloud.length;i+=2){const p=cloud[i];items.push({kind:'point',depth:o.rotate(p)[2],p})}items.sort((a,b)=>a.depth-b.depth);for(const item of items){if(item.kind==='point'){const p=screen(item.p);ctx.fillStyle='rgba(192,218,214,.47)';ctx.fillRect(p[0],p[1],o.pointSize,o.pointSize)}else{const {ps,c}=item.t,p=ps.map(screen);ctx.beginPath();ctx.moveTo(p[0][0],p[0][1]);ctx.lineTo(p[1][0],p[1][1]);ctx.lineTo(p[2][0],p[2][1]);ctx.closePath();ctx.fillStyle=`rgba(${c.slice(0,3).map(v=>Math.round(v*255)).join(',')},${c[3]})`;ctx.fill();}}return{engine:'Canvas3D-fallback',depthTest:false,error:0,triangles:triangles.length};
+  ctx.fillStyle='#090b0c';ctx.fillRect(0,0,w,h);const items=triangles.map(t=>({kind:'face',depth:t.depth,t}));for(let i=0;i<cloud.length;i++){const p=cloud[i];items.push({kind:'point',depth:o.rotate(p)[2],p})}items.sort((a,b)=>a.depth-b.depth);for(const item of items){if(item.kind==='point'){const p=screen(item.p);ctx.fillStyle='rgba(192,218,214,.47)';ctx.fillRect(p[0],p[1],o.pointSize,o.pointSize)}else{const {ps,c}=item.t,p=ps.map(screen);ctx.beginPath();ctx.moveTo(p[0][0],p[0][1]);ctx.lineTo(p[1][0],p[1][1]);ctx.lineTo(p[2][0],p[2][1]);ctx.closePath();ctx.fillStyle=`rgba(${c.slice(0,3).map(v=>Math.round(v*255)).join(',')},${c[3]})`;ctx.fill();}}return{engine:'Canvas3D-fallback',depthTest:false,error:0,triangles:triangles.length};
  }
  return{draw,gl};
 }
@@ -659,23 +957,24 @@ window.HaiyuVolumeRenderer={create};
 /* R24: preserved source cloud, explicitly inferred volume, contained learning axis. */
 (()=>{'use strict';
 const $=id=>document.getElementById(id),panel=$('sourceSpace'),canvas=$('phaseCanvas');
-const state={active:false,source:6,frame:1,playing:false,spin:false,yaw:.68,pitch:.16,roll:-Math.PI/2,zoom:1,depth:1,opening:.30,lit:true,size:1.6,dirty:true,geometryDirty:true,packet:null,sourceReady:false,drag:null,last:0,lastSpin:0,pending:false,cloud:true,body:true,spine:true,cut:false,sections:false,referenceSource:null};
+const state={active:false,source:6,frame:1,playing:false,spin:false,yaw:.68,pitch:.16,roll:-Math.PI/2,zoom:1,perspective:true,depth:1,opening:.65,lit:true,size:1.6,dirty:true,geometryDirty:true,packet:null,sourceReady:false,drag:null,last:0,lastSpin:0,pending:false,cloud:true,body:true,spine:true,cut:false,sections:false,referenceSource:null};
 const clocks={};for(const n of[4,5,6,7]){const c=clocks[n]=[0],step=n===6?Math.PI/120:n===7?Math.PI/480:Math.PI/30;for(let f=1;f<=(n===7?960:480);f++)c.push(c[f-1]+step)}
 const rotate=p=>{const cy=Math.cos(state.yaw),sy=Math.sin(state.yaw),cp=Math.cos(state.pitch),sp=Math.sin(state.pitch),x=p[0]*cy+p[2]*sy,z=-p[0]*sy+p[2]*cy;const y=p[1]*cp-z*sp;return[x*Math.cos(state.roll)-y*Math.sin(state.roll),x*Math.sin(state.roll)+y*Math.cos(state.roll),p[1]*sp+z*cp]};
 const renderer=window.HaiyuVolumeRenderer.create(canvas);
 function triple(a){const p=[];for(let i=0;i<a.length;i+=3)p.push([a[i],a[i+1],a[i+2]]);return p}
 function convert(raw){const positions=[],faces=[],faceKinds=[];for(const key of['shell','spine']){const m=raw[key],offset=positions.length;positions.push(...triple(m.positions));for(let i=0;i<m.indices.length;i+=3){faces.push([offset+m.indices[i],offset+m.indices[i+1],offset+m.indices[i+2]]);faceKinds.push(key==='spine'?'axis':'body')}}return{raw,positions,faces,faceKinds,cloud:triple(raw.cloud.positions),rings:raw.rings,axis:raw.axis}}
 function resize(){const width=Math.max(320,Math.round(canvas.clientWidth)),height=Math.max(300,Math.round(canvas.clientHeight));if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;state.dirty=true}}
-function render(){if(!state.active)return;resize();const start=performance.now();if(state.geometryDirty){state.packet=convert(window.HaiyuPhaseVolume.evaluate(state.source,state.frame,{depth:state.depth,minimumThicknessRatio:state.opening}));state.validation=window.HaiyuPhaseVolume.validate(state.packet.raw,false);state.geometryDirty=false}const result=renderer.draw(state.packet,{rotate,zoom:state.zoom,lit:state.lit,pointSize:state.size,...Object.fromEntries(['cloud','body','spine','cut','sections'].map(k=>[k,state[k]]))});const raw=state.packet.raw,z=state.packet.cloud.map(p=>p[2]);panel.dataset.frame=state.frame;panel.dataset.time=clocks[state.source][state.frame];panel.dataset.source=state.source;panel.dataset.depthSpan=Math.max(...z)-Math.min(...z);panel.dataset.renderer=result.engine;panel.dataset.depthTest=result.depthTest;panel.dataset.glError=result.error;panel.dataset.lit=state.lit;panel.dataset.yaw=state.yaw;panel.dataset.pitch=state.pitch;panel.dataset.renderCount=String(Number(panel.dataset.renderCount||0)+1);panel.dataset.renderMs=(performance.now()-start).toFixed(2);panel.dataset.axisContained=String(state.validation.ok);$('phaseStatus').textContent='20,000 原点 · '+(result.engine==='WebGL'?'三维深度渲染':'软件三维预览');$('phaseMetrics').textContent='64 个横截面 · 95% 方向支持分位 · 薄向闭合下限为局部半径的 '+Math.round(state.opening*100)+'%。包络只拟合核心，外侧原式细节完整保留。内部轴截面余量：'+state.validation.minimumMeasuredSpineClearance.toFixed(2)+'。';$('phaseTime').value=state.frame;$('phaseClock').textContent=state.frame+' / '+(state.source===7?960:480);$('phaseState').textContent=state.playing?'形变播放中':'形变暂停';$('phasePlay').textContent=state.playing?'暂停形变':'播放形变';$('phaseSpin').textContent=state.spin?'停止旋转':'自动旋转';$('phaseSpin').setAttribute('aria-pressed',String(state.spin));state.dirty=false;}
+function render(){if(!state.active)return;resize();const start=performance.now();if(state.geometryDirty){state.packet=convert(window.HaiyuPhaseVolume.evaluate(state.source,state.frame,{depth:state.depth,archedThicknessRatio:state.opening}));const clearance=state.packet.raw.stats.spineEuclideanClearanceLowerBound;state.validation={ok:Number.isFinite(clearance)&&clearance>0,minimumMeasuredSpineClearance:clearance};state.geometryDirty=false}const result=renderer.draw(state.packet,{rotate,zoom:state.zoom,perspective:state.perspective,lit:state.lit,pointSize:state.size,...Object.fromEntries(['cloud','body','spine','cut','sections'].map(k=>[k,state[k]]))});const raw=state.packet.raw,z=state.packet.cloud.map(p=>p[2]);panel.dataset.frame=state.frame;panel.dataset.time=clocks[state.source][state.frame];panel.dataset.source=state.source;panel.dataset.depthSpan=Math.max(...z)-Math.min(...z);panel.dataset.renderer=result.engine;panel.dataset.depthTest=result.depthTest;panel.dataset.glError=result.error;panel.dataset.lit=state.lit;panel.dataset.yaw=state.yaw;panel.dataset.pitch=state.pitch;panel.dataset.renderCount=String(Number(panel.dataset.renderCount||0)+1);panel.dataset.renderMs=(performance.now()-start).toFixed(2);panel.dataset.axisContained=String(state.validation.ok);$('phaseStatus').textContent='20,000 原点 · '+(result.engine==='WebGL'?'三维深度渲染':'软件三维预览');$('phaseMetrics').textContent='64 个横截面 · 95% 方向支持分位 · 背腹拱度为局部半宽的 '+Math.round(state.opening*100)+'%。包络只拟合核心，外侧原式细节完整保留。有限轴管的内壁间距下界：'+state.validation.minimumMeasuredSpineClearance.toFixed(2)+'。';$('phaseTime').value=state.frame;$('phaseClock').textContent=state.frame+' / '+(state.source===7?960:480);$('phaseState').textContent=(state.playing?'形变播放中':'形变暂停')+' · '+(state.cut?'切开体量':'半透明体量');$('phasePlay').textContent=state.playing?'暂停形变':'播放形变';$('phaseSpin').textContent=state.spin?'停止旋转':'自动旋转';$('phaseSpin').setAttribute('aria-pressed',String(state.spin));drawSlice();state.dirty=false;}
+function drawSlice(){const raw=state.packet.raw,n=Math.max(1,Math.min(raw.rings.length-2,Math.round(Number($('phaseSlicePosition').value)/100*(raw.rings.length-1)))),ring=raw.rings[n],c=$('phaseSliceCanvas'),ctx=c.getContext('2d'),pts=ring.points;let nearest=0;for(let i=1;i<raw.spine.centers.length;i++)if(Math.abs(raw.spine.centers[i][1]-ring.y)<Math.abs(raw.spine.centers[nearest][1]-ring.y))nearest=i;const center=raw.axis[n]||ring.center,rx=raw.spine.radiiX?.[nearest]||raw.spine.radii[nearest],rz=raw.spine.radiiZ?.[nearest]||rx;const xs=pts.map(p=>p[0]),zs=pts.map(p=>p[2]),x0=Math.min(...xs),x1=Math.max(...xs),z0=Math.min(...zs),z1=Math.max(...zs),scale=Math.min(300/(x1-x0),175/(z1-z0)),px=x=>180+(x-(x0+x1)/2)*scale,py=z=>115-(z-(z0+z1)/2)*scale;ctx.fillStyle='#101719';ctx.fillRect(0,0,360,230);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(px(p[0]),py(p[2])):ctx.moveTo(px(p[0]),py(p[2])));ctx.closePath();ctx.fillStyle='#34575f';ctx.fill();ctx.strokeStyle='#8cc4cb';ctx.lineWidth=2;ctx.stroke();ctx.beginPath();ctx.ellipse(px(center[0]),py(center[2]),rx*scale,rz*scale,0,0,Math.PI*2);ctx.fillStyle='#ff557f';ctx.fill();$('phaseSliceInfo').textContent='截面 '+(n+1)+' / '+raw.rings.length+' · 原式局部宽度 '+(x1-x0).toFixed(1)+' · 背腹深度 '+(z1-z0).toFixed(1);panel.dataset.sliceIndex=n;}
 function seekReference(){if(!state.sourceReady)return;state.pending=true;$('phaseReference').contentWindow.postMessage({phaseSeek:true,frame:state.frame,before:clocks[state.source][state.frame-1]},'*')}
 function setFrame(n){state.frame=Math.max(1,Math.min(state.source===7?960:480,n));state.geometryDirty=state.dirty=true;seekReference()}
-function view(yaw,pitch,roll=-Math.PI/2){state.spin=false;state.yaw=yaw;state.pitch=pitch;state.roll=roll;state.zoom=1;state.dirty=true}
-$('phaseTime').oninput=e=>{state.playing=false;setFrame(Number(e.target.value))};$('phasePlay').onclick=()=>{state.playing=!state.playing;state.last=performance.now();state.dirty=true};$('phaseSpin').onclick=()=>{state.spin=!state.spin;state.lastSpin=performance.now();state.dirty=true};$('phaseReset').onclick=()=>{state.playing=false;setFrame(1)};
-$('phaseView').onclick=()=>view(0,0,0);$('phaseFront').onclick=()=>view(0,Math.PI/2);$('phaseSide').onclick=()=>view(Math.PI/2,0);$('phaseBack').onclick=()=>view(Math.PI,0);$('phaseOrbit').onclick=()=>view(.68,.16);$('phaseUp').onclick=()=>{state.pitch+=.18;state.dirty=true};$('phaseDown').onclick=()=>{state.pitch-=.18;state.dirty=true};$('phaseZoomOut').onclick=()=>{state.zoom=Math.max(.35,state.zoom/1.2);state.dirty=true};$('phaseZoomIn').onclick=()=>{state.zoom=Math.min(4,state.zoom*1.2);state.dirty=true};
-$('phaseLight').onclick=()=>{state.lit=!state.lit;$('phaseLight').setAttribute('aria-pressed',String(state.lit));$('phaseLight').textContent=state.lit?'冷暖光':'中性光';state.dirty=true};for(const k of['cloud','body','spine','cut','sections'])$('phase'+k[0].toUpperCase()+k.slice(1)).onclick=()=>{state[k]=!state[k];$('phase'+k[0].toUpperCase()+k.slice(1)).setAttribute('aria-pressed',String(state[k]));state.dirty=true};$('phaseDepth').oninput=e=>{state.depth=Number(e.target.value)/100;$('phaseDepthValue').textContent=state.depth.toFixed(2);state.geometryDirty=state.dirty=true};$('phaseOpening').oninput=e=>{state.opening=Number(e.target.value)/100;$('phaseOpeningValue').textContent=Math.round(state.opening*100)+'%';state.geometryDirty=state.dirty=true};$('phaseSize').oninput=e=>{state.size=Number(e.target.value)/10;$('phaseSizeValue').textContent=state.size.toFixed(1);state.dirty=true};
+function view(yaw,pitch,roll=-Math.PI/2){state.spin=false;state.yaw=yaw;state.pitch=pitch;state.roll=roll;state.perspective=false;state.zoom=1;state.dirty=true}
+$('phaseSlicePosition').oninput=()=>state.dirty=true;$('phaseTime').oninput=e=>{state.playing=false;setFrame(Number(e.target.value))};$('phasePlay').onclick=()=>{state.playing=!state.playing;state.last=performance.now();state.dirty=true};$('phaseSpin').onclick=()=>{state.spin=!state.spin;state.lastSpin=performance.now();state.dirty=true};$('phaseReset').onclick=()=>{state.playing=false;setFrame(1)};
+$('phaseView').onclick=()=>view(0,0,0);$('phaseFront').onclick=()=>view(0,Math.PI/2);$('phaseSide').onclick=()=>view(Math.PI/2,0);$('phaseBack').onclick=()=>view(Math.PI,0);$('phaseOrbit').onclick=()=>{view(.68,.16);state.perspective=true};$('phaseUp').onclick=()=>{state.pitch+=.18;state.dirty=true};$('phaseDown').onclick=()=>{state.pitch-=.18;state.dirty=true};$('phaseZoomOut').onclick=()=>{state.zoom=Math.max(.35,state.zoom/1.2);state.dirty=true};$('phaseZoomIn').onclick=()=>{state.zoom=Math.min(4,state.zoom*1.2);state.dirty=true};
+$('phaseLight').onclick=()=>{state.lit=!state.lit;$('phaseLight').setAttribute('aria-pressed',String(state.lit));$('phaseLight').textContent=state.lit?'冷暖光':'中性光';state.dirty=true};for(const k of['cloud','body','spine','cut','sections'])$('phase'+k[0].toUpperCase()+k.slice(1)).onclick=()=>{state[k]=!state[k];if(k==='sections')$('phaseSlicePanel').hidden=!state[k];$('phase'+k[0].toUpperCase()+k.slice(1)).setAttribute('aria-pressed',String(state[k]));state.dirty=true};$('phaseDepth').oninput=e=>{state.depth=Number(e.target.value)/100;$('phaseDepthValue').textContent=state.depth.toFixed(2);state.geometryDirty=state.dirty=true};$('phaseOpening').oninput=e=>{state.opening=Number(e.target.value)/100;$('phaseOpeningValue').textContent=Math.round(state.opening*100)+'%';state.geometryDirty=state.dirty=true};$('phaseSize').oninput=e=>{state.size=Number(e.target.value)/10;$('phaseSizeValue').textContent=state.size.toFixed(1);state.dirty=true};
 canvas.addEventListener('pointerdown',e=>{state.spin=false;state.drag=[e.clientX,e.clientY,state.yaw,state.pitch];canvas.setPointerCapture(e.pointerId)});canvas.addEventListener('pointermove',e=>{if(!state.drag)return;state.yaw=state.drag[2]+(e.clientX-state.drag[0])*.008;state.pitch=state.drag[3]+(e.clientY-state.drag[1])*.008;state.dirty=true});for(const type of['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(type,()=>state.drag=null);canvas.addEventListener('wheel',e=>{e.preventDefault();state.zoom=Math.max(.35,Math.min(4,state.zoom*Math.exp(-e.deltaY*.001)));state.dirty=true},{passive:false});window.addEventListener('resize',()=>state.dirty=true);
 window.addEventListener('message',e=>{if(e.source!==$('phaseReference').contentWindow||!e.data?.phaseVolume)return;if(e.data.source!==state.source)return;if(e.data.ready){state.sourceReady=true;seekReference()}else if(e.data.frame===state.frame){state.pending=false;panel.dataset.referenceFrame=e.data.frame;}});
-window.HaiyuSourceSpace={evaluate:(frame,depth=1,source=6)=>triple(window.HaiyuPhaseVolume.evaluate(source,frame,{depth}).cloud.positions),getState:()=>({source:state.source,frame:state.frame,playing:state.playing,spin:state.spin,yaw:state.yaw,pitch:state.pitch,zoom:state.zoom,depth:state.depth,stats:state.packet?.raw.stats}),getPacket:()=>state.packet?.raw,clock:clocks[6],setSources(p5,sources){state.p5=p5;state.sources=sources},setActive(value,frame=1,source=6){state.active=!!value;state.playing=state.spin=false;if(!value)return;state.source=source;state.yaw=.68;state.pitch=.16;state.roll=-Math.PI/2;state.zoom=1;state.frame=Math.min(frame,source===7?960:480);state.geometryDirty=state.dirty=true;$('phaseTime').max=source===7?960:480;$('phaseTitle').textContent=String(source).padStart(2,'0')+' · 相位体量研究';if(state.referenceSource!==source){state.referenceSource=source;state.sourceReady=false;state.pending=false;delete panel.dataset.referenceFrame;const literal=state.sources[source];$('phaseReference').srcdoc='<!doctype html><html><head><style>html,body{margin:0;background:#090909;overflow:hidden}canvas{display:block!important;width:100%!important;height:100%!important}</style></head><body><script src="'+state.p5+'"><\/script><script>'+literal+'\nconst originalDraw=draw;setup=()=>{pixelDensity('+(source<6?2:1)+');noLoop()};draw=()=>{originalDraw();parent.postMessage({phaseVolume:true,source:'+source+',ready:true},"*")};window.addEventListener("message",e=>{if(e.source!==parent||!e.data.phaseSeek)return;t=e.data.before;originalDraw();document.body.dataset.frame=e.data.frame;document.body.dataset.time=t;parent.postMessage({phaseVolume:true,source:'+source+',frame:e.data.frame},"*")});<\/script></body></html>'}else seekReference();render();}};
+window.HaiyuSourceSpace={evaluate:(frame,depth=1,source=6)=>triple(window.HaiyuPhaseVolume.evaluate(source,frame,{depth}).cloud.positions),getState:()=>({source:state.source,frame:state.frame,playing:state.playing,spin:state.spin,yaw:state.yaw,pitch:state.pitch,zoom:state.zoom,perspective:state.perspective,depth:state.depth,stats:state.packet?.raw.stats}),getPacket:()=>state.packet?.raw,clock:clocks[6],setSources(p5,sources){state.p5=p5;state.sources=sources},setActive(value,frame=1,source=6){state.active=!!value;state.playing=state.spin=false;if(!value)return;state.source=source;state.yaw=.68;state.pitch=.16;state.roll=-Math.PI/2;state.perspective=true;state.zoom=1;state.frame=Math.min(frame,source===7?960:480);state.geometryDirty=state.dirty=true;$('phaseTime').max=source===7?960:480;$('phaseTitle').textContent=String(source).padStart(2,'0')+' · 相位体量研究';if(state.referenceSource!==source){state.referenceSource=source;state.sourceReady=false;state.pending=false;delete panel.dataset.referenceFrame;const literal=state.sources[source];$('phaseReference').srcdoc='<!doctype html><html><head><style>html,body{margin:0;background:#090909;overflow:hidden}canvas{display:block!important;width:100%!important;height:100%!important}</style></head><body><script src="'+state.p5+'"><\/script><script>'+literal+'\nconst originalDraw=draw;setup=()=>{pixelDensity('+(source<6?2:1)+');noLoop()};draw=()=>{originalDraw();parent.postMessage({phaseVolume:true,source:'+source+',ready:true},"*")};window.addEventListener("message",e=>{if(e.source!==parent||!e.data.phaseSeek)return;t=e.data.before;originalDraw();document.body.dataset.frame=e.data.frame;document.body.dataset.time=t;parent.postMessage({phaseVolume:true,source:'+source+',frame:e.data.frame},"*")});<\/script></body></html>'}else seekReference();render();}};
 function tick(now){if(state.active&&!document.hidden){if(state.playing&&!state.pending&&now-state.last>1000/24){state.last=now;setFrame(state.frame%(state.source===7?960:480)+1)}if(state.spin){state.yaw+=(now-state.lastSpin)*.00023;state.lastSpin=now;state.dirty=true}if(state.dirty)render()}requestAnimationFrame(tick)}requestAnimationFrame(tick);
 })();
 </script><script>
