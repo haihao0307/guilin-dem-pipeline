@@ -1,10 +1,11 @@
 import fs from 'node:fs';
+import path from 'node:path';
 import crypto from 'node:crypto';
 import assert from 'node:assert/strict';
 import {GNMHeadModel,parseContainer} from '../src/GNMModel.js';
 import {GNMSamplers} from '../src/SemanticSampler.js';
 const root=new URL('../',import.meta.url),checks=[];
-function load(name,expected){const b=fs.readFileSync(new URL('assets/'+name,root));assert.equal(crypto.createHash('sha256').update(b).digest('hex'),expected);return parseContainer(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength));}
+function load(name,expected){const b=fs.readFileSync(process.env.GNM_ASSETS_DIR?path.join(process.env.GNM_ASSETS_DIR,name):new URL('assets/'+name,root));assert.equal(crypto.createHash('sha256').update(b).digest('hex'),expected);return parseContainer(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength));}
 const h=load('gnm_head_web.bin','fd19f46eef6f8bfb725fceab581e1bc8837209997ca3fd43f3c1735003c86961'),s=load('gnm_samplers_web.bin','827fc7850022cbc62d4401c6f6782b876c4dfa48f2a6f446d9644b0ba2b8122b');
 const model=new GNMHeadModel(h.meta,h.sections),samplers=new GNMSamplers(s.meta,s.sections),out=new Float32Array(model.numVertices*3);
 assert.deepEqual([model.numVertices,model.triangles.length/3,model.identityDim,model.expressionDim,model.numJoints],[17821,35324,253,383,4]);

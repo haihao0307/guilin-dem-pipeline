@@ -1,6 +1,6 @@
 {
   "title": "GNM Head browser study",
-  "version": "2026-10-04-r2",
+  "version": "2026-10-04-r4",
   "sources": {
     "googleGNM": {
       "url": "https://github.com/google/GNM",
@@ -69,6 +69,34 @@
     "vendor/OrbitControls.js": {
       "bytes": 32134,
       "sha256": "80efaadea4f8a636a65fb0bd08bfef62f3d93a0bb94e2e7500f23176c5c07f4e"
+    },
+    "src/ExpressionSources.js": {
+      "bytes": 4436,
+      "sha256": "bad1128fd54a8e64b29f4e0b6caa1f605e436f8f44b5ef4003c27e792a5ea988"
+    },
+    "src/ExpressionSourceData.js": {
+      "bytes": 167271,
+      "sha256": "1dd728c227de1922aa4a59c5ccaee86dca06611a280a938b184c70ffba4e5d53"
+    },
+    "src/app.js": {
+      "bytes": 32557,
+      "sha256": "e3063acd6def5839d05696e52a6fff0fdeb0af92268cad5ab008787f06261f16"
+    },
+    "src/HairLayer.js": {
+      "bytes": 8803,
+      "sha256": "1b88f02220b9d7101ad8583686e04c57508495245d4f9c6778b05c3a0cf14128"
+    },
+    "index.html": {
+      "bytes": 4872,
+      "sha256": "dcafddfde560ba46eb63216186ce3d0a5d65f6afd95cab784ecf6dd1be2c3af9"
+    },
+    "style.css": {
+      "bytes": 6421,
+      "sha256": "268e7b015105c68074ba37743265dc7a558d96e999b8aa10379d5536d1b78dfd"
+    },
+    "tests/browser-qa.cjs": {
+      "bytes": 18822,
+      "sha256": "7a65af83346942b54da90a35dae45005288b412ec090e0a9382944cdb582cdd3"
     }
   },
   "scope": "Full identity/expression/pose model and 20 semantic expression classes. New desktop/mobile wrapper, not an exact clone of the XRBlocks application, no Houdini execution. Photo/webcam fitting and XR are not part of this head-and-hair study.",
@@ -78,8 +106,89 @@
     "sourceFile": "houdini-groom-study/src/study.js",
     "headReplacement": false,
     "binding": "actual model.triangles with fixed triangle index and barycentric weights at every guide point",
-    "count": 5400,
+    "count": 12000,
     "pointsPerStrand": 19,
-    "anatomicalScalpLabel": false
+    "anatomicalScalpLabel": false,
+    "radius": 0.00023,
+    "normalTopology": "Complete cached model.triangles BufferAttribute for normal computation; visible component index restored afterwards"
+  },
+  "expressionAdapters": {
+    "provenance": "EXPRESSION-SOURCES-PROVENANCE.json",
+    "maya": {
+      "commit": "87948c08670ffea1fed82bb7af97f76245dd6644",
+      "license": "licenses/GNM-MAYA-MIT.txt",
+      "fixedSamples": 20,
+      "kind": "Maya source workflow, official semantic decoder, seedBase0"
+    },
+    "max": {
+      "commit": "7388a269cd414a8103bb42e6f21e89d1712edfec",
+      "license": "licenses/GNM-MAX-MIT.txt",
+      "presets": 9,
+      "kind": "Original PCA fallback mouth recipes, experimental; not FACS"
+    },
+    "replacement": "Presets replace383 expression coefficients only; identity, pose, translation and hair configuration retained; source selection alone only changes list",
+    "excluded": [
+      "DCC runtimes",
+      "Max misleading78+6 decoder",
+      "Maya vertex-masked ARKit/viseme channels"
+    ],
+    "visualAcceptance": "Not run: local Chromium launch is blocked by socket permissions. Pending integrator CI."
+  },
+  "verification": {
+    "numericTests": "Original model invariants,7source groups,7host contracts passed",
+    "realHairNumeric": "12000 strands,4lighting states; finite normals/vertices and invariant roots; actualuniforms match head colors and directions",
+    "offlineBytes": 52362704,
+    "offlineSha256": "454477111569ed68c92851bdcd4a6620f89063a2823116349828e8e742d0fd0d",
+    "offlineRemovedAfterHash": true,
+    "browserVisualAcceptance": false,
+    "pending": "Integrator Actions screenshots, mobile taps and4light pixel ablations",
+    "hiddenSkinRegression": {
+      "report": "tests/r4-hidden-skin-regression.json",
+      "passed": true,
+      "kind": "real THREE geometry and 12000 strands, numeric only",
+      "oldFilteredIndexMinScalpNormalLength": 0,
+      "fixedMinScalpNormalLength": 0.847597687800074,
+      "defaultNormalsUnchanged": true,
+      "neutralGeometryAndRootsExact": true,
+      "visibleIndexRestoredEvenOnFailure": true,
+      "browserUIFlow": "Added real head-skin checkbox off, quick surprise, finite/nonzero scalp normals, checkbox on and exact neutral reset; pending CI"
+    }
+  },
+  "look": {
+    "default": "studio",
+    "material": "neutral clay",
+    "warmDirection": [
+      1,
+      0.45,
+      0.75
+    ],
+    "coolDirection": [
+      -1,
+      0.35,
+      0.55
+    ],
+    "directionNormalization": true,
+    "warmColor": "#ffb473",
+    "coolColor": "#7caaff",
+    "warmPower": 3.2,
+    "coolPower": 3,
+    "ambientHemisphere": 0.35,
+    "hairSameLinearLightInputs": true,
+    "legacyBlueSelectable": true
+  },
+  "firstScreen": {
+    "hairDefault": true,
+    "readyAwaitsHairCreation": true,
+    "quickControls": [
+      "smile",
+      "surprise",
+      "open-PCA-experiment",
+      "clear-expression",
+      "hair-toggle",
+      "look-toggle",
+      "warm-toggle",
+      "cool-toggle"
+    ],
+    "mobileQA": "Chromium touch emulation390x844, not iPhone hardware; pendingCI"
   }
 }

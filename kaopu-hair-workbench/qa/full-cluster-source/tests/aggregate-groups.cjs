@@ -13,7 +13,7 @@ for(const phase of ['file','public'])for(const group of ['core','catalog','orbit
  const r=JSON.parse(fs.readFileSync(matches[0]));
  const ok=r.passed===true&&r.phase===phase&&r.group===group&&JSON.stringify(r.completedSections)==JSON.stringify([group])&&r.htmlSha256===expected[phase==='file'?'offline':'online']&&r.onlineHtmlSha256===expected.online&&r.standaloneHtmlSha256===expected.offline&&r.errors.length===0&&r.tests.length>0&&r.tests.every(t=>t.pass===true);
  summary.groups.push({phase,group,passed:ok,tests:r.tests.length,htmlSha256:r.htmlSha256,result:matches[0]});if(!ok)summary.errors.push(`${phase}/${group}: incomplete, failing or mismatched-byte evidence`);
- const helperKeys={core:['featherStudy','firstEntry','colorResponse','startupProfile','lightingGeometry'],catalog:['catalog','c4dFiber','fiberCatalog','houdiniGroom'],orbit:['orbitAppearance','groomCatalog'],touch:['featherCatalog','mobileTouch','rabbitTouch']}[group];
+ const helperKeys={core:['featherStudy','firstEntry','colorResponse','startupProfile','lightingGeometry'],catalog:['catalog','c4dFiber','fiberCatalog','houdiniGroom'],orbit:['gnmHome','gnmStudy','orbitAppearance','groomCatalog'],touch:['featherCatalog','mobileTouch','rabbitTouch']}[group];
  for(const key of helperKeys){const h=r[key];if(!h||h.passed===false||h.errors?.length||h.tests?.some(t=>!t.pass))summary.errors.push(`${phase}/${group}: invalid ${key}`);}
  if(phase==='file'&&group==='core'&&r.baselineStartupProfile?.passed!==true)summary.errors.push('missing exact historical startup check');
 }

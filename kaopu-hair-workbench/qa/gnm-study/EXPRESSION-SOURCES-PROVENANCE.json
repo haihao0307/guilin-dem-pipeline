@@ -1,0 +1,92 @@
+{
+  "schema": 1,
+  "underlyingModel": "Google GNM Head v3, existing official browser evaluator",
+  "adapterVersion": "2026-10-04-r1",
+  "hostDimensions": {
+    "vertices": 17821,
+    "identity": 253,
+    "expression": 383,
+    "joints": 4
+  },
+  "maya": {
+    "repo": "https://github.com/enriquevelmai/gnm-maya",
+    "commit": "87948c08670ffea1fed82bb7af97f76245dd6644",
+    "recipeFile": "gnm-maya/external/_semantic.py",
+    "exportRecipeFile": "gnm-maya/external/_gnm_core.py",
+    "license": "licenses/GNM-MAYA-MIT.txt",
+    "presets": 20,
+    "latentDim": 64,
+    "conditionDim": 20,
+    "seedRule": "NumPy default_rng(classIndex), .normal(size=64).astype(float32), baseSeed=0",
+    "notIncluded": [
+      "vertex masks",
+      "ARKit channels",
+      "masked visemes",
+      "Maya runtime"
+    ]
+  },
+  "max": {
+    "repo": "https://github.com/imanshirani/GNM-Bridge-for-3ds-Max",
+    "commit": "7388a269cd414a8103bb42e6f21e89d1712edfec",
+    "recipeFile": "constants.py",
+    "license": "licenses/GNM-MAX-MIT.txt",
+    "presets": 9,
+    "scope": "PHONEME_EXPR fallback150 inserted at dimensions200..349, all other expression coefficients0",
+    "notIncluded": [
+      "78+6 pseudo-label decoder",
+      "empty calibration",
+      "audio analysis",
+      "Max runtime",
+      "geometry scale conversion"
+    ]
+  },
+  "officialSamplerSha256": "827fc7850022cbc62d4401c6f6782b876c4dfa48f2a6f446d9644b0ba2b8122b",
+  "officialHeadSha256": "fd19f46eef6f8bfb725fceab581e1bc8837209997ca3fd43f3c1735003c86961",
+  "officialLicense": "licenses/GNM-LICENSE.txt",
+  "binaryCaveat": "Full dimension int8 web basis; no pose correctives or UVs; not exact NumPy DCC output",
+  "inputs": [
+    {
+      "file": "sources/enriquevelmai/LICENSE",
+      "sha256": "3f30c551a430014b1a9bed836ca9542ae252a2a531ee40d0749482a0e569914c"
+    },
+    {
+      "file": "sources/enriquevelmai/gnm-maya__external___gnm_core.py",
+      "sha256": "643b5053c2db9f3ac6456b8e2a39148e74f59fd129f3b6931567d7b2e5c20dd5"
+    },
+    {
+      "file": "sources/enriquevelmai/gnm-maya__external___semantic.py",
+      "sha256": "e27664d5378ef451d27bead703fd78095f9a6d4c58ae58ed243cf20ea25a2cd2"
+    },
+    {
+      "file": "sources/enriquevelmai/gnm-maya__external___zones.py",
+      "sha256": "7b4a5c630873608e29821ab58ee7bf7744d0d1b2822a53d4bbdac6bf7954e818"
+    },
+    {
+      "file": "sources/enriquevelmai/manifest.json",
+      "sha256": "de2e5ccdf45d1a43eff6687322c5635078c83833f13c4b61658467f995a9749d"
+    },
+    {
+      "file": "sources/imanshirani/LICENSE",
+      "sha256": "799ed20010d72d34338bc712fa7eee652946586a7983e5685404aa905decdcbd"
+    },
+    {
+      "file": "sources/imanshirani/constants.py",
+      "sha256": "1e92d997e9742d5189589fe66beaa9a942d1661802850ccf82c266f33b544ce1"
+    },
+    {
+      "file": "sources/imanshirani/gnm_bridge.py",
+      "sha256": "6b0d3563eebd2f209f32843b1a1ebc283b5c71082fde0789e0aad04d1ff157a5"
+    },
+    {
+      "file": "sources/imanshirani/manifest.json",
+      "sha256": "59e382459f250df6bae17085f04a704c2dd02a279a633735b1667ee36a8df666"
+    },
+    {
+      "file": "sources/imanshirani/phoneme_calibration.json",
+      "sha256": "98faf1aee5d2cf69f799a7b777a59ec554f88a47c975caa20fd3af731a2b13b1"
+    }
+  ],
+  "moduleSha256": "bad1128fd54a8e64b29f4e0b6caa1f605e436f8f44b5ef4003c27e792a5ea988",
+  "dataSha256": "1dd728c227de1922aa4a59c5ccaee86dca06611a280a938b184c70ffba4e5d53",
+  "verification": "7 node test groups passed, all29 actual GNM mesh deformations finite and neutral restoration exact; repeated at strength1.5 with changed identity/pose/translation; no visual acceptance yet"
+}

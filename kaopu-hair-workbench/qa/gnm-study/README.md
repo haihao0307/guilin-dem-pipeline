@@ -68,3 +68,46 @@ not treated as an anatomical scalp region. No legacy ellipsoid head is used.
 The strand ribbons adapt the existing regional-groom study's sweep/lift/frizz
 and tangent-lighting approach. This is a new attachment experiment, not a
 claim to reproduce a particular teacher's hairstyle or a scalp simulation.
+
+## r4: visible hair, quick expressions and shared side lights
+
+The initial view now creates and shows 12,000 scalp-bound strands before reporting ready. Smile, surprise, open mouth, expression reset and hair visibility are available over the canvas, including on narrow screens. The full source-expression controls remain available.
+
+The default clay view uses warm and cool world-space directional lights. The strand shader receives the same directions, linear RGB colors and powers as the head. Its scalp-facing attenuation and tangent highlights are appearance approximations, not a complete hair scattering or shadow simulation. The original blue material and lighting remain selectable. No original GNM model coefficients, topology or evaluators were changed.
+
+The 0.00023 strand radius and increased strand count improve screen coverage; they are display/grooming settings rather than measured human hair dimensions. This remains a head-and-hair binding experiment, not a finished photoreal portrait. The browser tests include native Chromium touch emulation, but do not establish physical iPhone or Safari compatibility.
+
+## r3: source expression presets
+
+The new Sources tab retains the official sampling controls unchanged. Changing
+the source selector only changes the list. A preset click replaces the full383
+expression vector, preserving identity, rotations, translation and hair. Clear
+sets only the expression vector to zero. No new Undo feature is provided.
+
+- Maya workflow:20 fixed samples using NumPy PCG64 class seeds and the same
+  official64+20 semantic decoder. This is not a second model or a Maya runtime.
+- Max workflow:9 original lower-face PCA fallback recipes. Nonzero components
+  occupy200–349; all other expression coefficients are cleared. Labels are
+  experimental, not accurate phonemes or FACS. X is source rest, not zero.
+
+Both MIT licenses and exact commits are preserved. See
+`EXPRESSION-SOURCES-PROVENANCE.json`. Source-selection metadata is exported
+for tracing. Import restores its preset association only when recomputing that
+exact source/preset/strength matches every saved coefficient; mismatching
+metadata is ignored. The coefficient vectors remain the authoritative state.
+
+`npm test` retains every original model check and adds source-adapter tests.
+Use `GNM_ASSETS_DIR=/absolute/path/to/existing/assets npm test` when the pinned
+weights live outside this folder.
+
+The browser helper retains the original r2 checks and screenshot-call order,
+then appends09–16 for Maya smile/tongue, Max A/B/E, source/parameter round trips,
+source switching, custom identity/pose/hair retention and mobile controls.
+It records the exact built offline file SHA and removes only its own temporary
+offline file and newly-created asset cache in finally; shared external weights
+are never removed. A runner may reuse local weights with GNM_ASSETS_DIR.
+
+Local r3 syntax, complete offline import chain and numeric checks pass.
+Chromium could not launch because socket creation is not permitted in this
+execution sandbox, so there are no new local visual screenshots. CI must run
+the browser helper and inspect those images before publishing/acceptance.
