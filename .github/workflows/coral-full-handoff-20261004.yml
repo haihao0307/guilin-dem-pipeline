@@ -1,0 +1,36 @@
+name: Coral Mother Frozen Handoff 20261004
+on:
+  push:
+    branches: [handoff/coral-mother-full-20261004]
+    paths: [.github/workflows/coral-full-handoff-20261004.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            CORAL_HANDOFF_20261004
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch frozen source object
+        run: git fetch --depth=1 --filter=blob:none origin 71204339af530ff3da9d8f717bf0434e799b55b2
+      - name: Archive verify and publish release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python CORAL_HANDOFF_20261004/package.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coral-mother-frozen-handoff-20261004
+          path: /tmp/coral-release/
+          retention-days: 90
+          if-no-files-found: warn
