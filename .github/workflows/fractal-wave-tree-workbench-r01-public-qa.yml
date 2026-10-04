@@ -1,9 +1,9 @@
-name: Fractal Wave Tree Workbench R04 public QA
+name: Fractal Wave Tree Workbench R05 public QA
 
 on:
   push:
     branches:
-      - work/fractal-wave-life-flow-r04-20261004
+      - work/fractal-wave-organ-life-r05-20261004
     paths:
       - .github/workflows/fractal-wave-tree-workbench-r01-public-qa.yml
       - kaopu-tree-fractal-wave-lab/index.html
@@ -24,6 +24,10 @@ on:
       - kaopu-tree-fractal-wave-lab/native-3d-life-r04/index.html
       - kaopu-tree-fractal-wave-lab/native-3d-life-r04/runtime.js
       - kaopu-tree-fractal-wave-lab/native-3d-life-r04/LIVING_TREE_R04.json
+      - kaopu-tree-fractal-wave-lab/native-3d-life-r05/index.html
+      - kaopu-tree-fractal-wave-lab/native-3d-life-r05/runtime.js
+      - kaopu-tree-fractal-wave-lab/native-3d-life-r05/LIVING_TREE_R05.json
+      - kaopu-tree-fractal-wave-lab/native-3d-life-r05/RESEARCH_NOTES.md
   workflow_dispatch:
 
 permissions:
@@ -40,7 +44,7 @@ jobs:
           import hashlib, json, time, urllib.request
           base='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tree-fractal-wave-lab/'
           expected={
-            'index.html':['分形造波树 综合工作台 R04','treeFrame','teacherFrame','liftFrame','nativeFrame','native3Frame','life4Frame','workbench-r01.js'],
+            'index.html':['分形造波树 综合工作台 R05','treeFrame','teacherFrame','liftFrame','nativeFrame','native3Frame','life4Frame','life5Frame','workbench-r01.js'],
             'workbench-r01.js':['window.__fractalTreeWorkbenchReady','decodePath','KAOPU_KUKO_PLAY','__treeReady'],
             'INTEGRATION_MANIFEST_R01.json':['KAOPU.fractal-wave.tree-workbench/1','branch.pathAddressing','TreeLifeR05.Pandanus'],
             'mobile-r05-seasons/index.html':['PANDANUS TECTORIUS TEACHER','runtime-pandanus-r05.js'],
@@ -58,7 +62,11 @@ jobs:
             'kuko-day123-native-3d-r03/NATIVE_3D_GRAMMAR_R03.json':['KAOPU.fractal-wave.native-3d/3','SpatialHash occupancy index','support is back-propagated'],
             'native-3d-life-r04/index.html':['Living 3D Tree R04','RESOURCE FLOW','CONTINUOUS IMPLICIT SKIN'],
             'native-3d-life-r04/runtime.js':['window.__livingTreeR04Ready','MarchingCubes','rootShootConnected:true','terminalTaper:true'],
-            'native-3d-life-r04/LIVING_TREE_R04.json':['KAOPU.fractal-wave.living-tree/4','rootUptakeParticipatesInFutureGrowthBudget','continuousWoodSurfaceUsesImplicitField']
+            'native-3d-life-r04/LIVING_TREE_R04.json':['KAOPU.fractal-wave.living-tree/4','rootUptakeParticipatesInFutureGrowthBudget','continuousWoodSurfaceUsesImplicitField'],
+            'native-3d-life-r05/index.html':['Living 3D Tree R05','叶龄 / Phenology','花果 Sink 强度'],
+            'native-3d-life-r05/runtime.js':['window.__livingTreeR05Ready','sourceSinkCompetition:true','fineTwigs:true','secondaryGrowth:P.secondary'],
+            'native-3d-life-r05/LIVING_TREE_R05.json':['KAOPU.fractal-wave.living-tree/5','leafLifecycleStates','reproductiveInvestmentCanReduceVegetativeGrowth'],
+            'native-3d-life-r05/RESEARCH_NOTES.md':['叶片不是永久装饰','果实是强 sink','次生加粗']
           }
           report={'base':base,'files':{},'attempts':0}
           last=None
@@ -99,7 +107,7 @@ jobs:
           from PIL import Image, ImageStat
           from playwright.sync_api import sync_playwright
 
-          root=Path('evidence-fractal-tree-r04'); root.mkdir(exist_ok=True)
+          root=Path('evidence-fractal-tree-r05'); root.mkdir(exist_ok=True)
           url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tree-fractal-wave-lab/'
           report={'url':url,'checks':{},'errors':[]}
           C=report['checks']
@@ -119,8 +127,8 @@ jobs:
               page.wait_for_function('window.__fractalTreeWorkbenchReady===true',timeout=180000)
               page.wait_for_timeout(1800)
               C['titleCorrect']='分形造波树' in page.title()
-              C['sixFramesPresent']=page.locator('iframe').count()==6
-              C['defaultLivingR04Mode']=page.evaluate("document.body.dataset.mode==='life4'")
+              C['sevenFramesPresent']=page.locator('iframe').count()==7
+              C['defaultLivingR05Mode']=page.evaluate("document.body.dataset.mode==='life5'")
               C['desktopNoHorizontalOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth')
               C['embeddedTeacherInitiallyPaused']=page.evaluate("document.getElementById('teacherFrame').contentWindow.KuKoDay123Teacher.getState().playing===false")
               compare=root/'desktop-tree.png'; page.screenshot(path=str(compare),full_page=False)
@@ -224,19 +232,54 @@ jobs:
               page.wait_for_timeout(500)
               C['r03R04CompareVisible']=page.evaluate("getComputedStyle(document.querySelector('.native3-card')).display!=='none' && getComputedStyle(document.querySelector('.life4-card')).display!=='none'")
 
+              page.evaluate("FractalWaveTreeWorkbenchR01.setMode('life5')")
+              page.wait_for_timeout(2200)
+              C['life5LargeIntegratedMode']=page.evaluate("getComputedStyle(document.querySelector('.life5-card')).display!=='none' && getComputedStyle(document.querySelector('.side')).display==='none'")
+              life5=page.evaluate("document.getElementById('life5Frame').contentWindow.LivingTreeR05.getState()")
+              s5=life5['signature']
+              C['life5FineTwigs']=s5['fineTwigs'] is True and s5['shootSegments']>=25
+              C['life5OrganLifecycle']=s5['organLifecycle'] is True and sum(s5['leafStates'].values())>0
+              C['life5SourceSink']=s5['sourceSinkCompetition'] is True and s5['reserveCarbon']>0
+              C['life5SecondaryGrowth']=s5['secondaryGrowth'] is True and s5['implicitVertices']>300
+              C['life5PhyllotaxisVoice']=s5['phyllotaxisVoice'] in ['spiral','opposite','whorl3']
+              C['life5ReproductiveBudget']=s5['reproductiveInvestment']>=0
+              C['life5StillHasRoots']=s5['rootSegments']>=10 and s5['yMin']<0
+              beforeFruit=(s5['fruitCount'],s5['shootSegments'],s5['reserveCarbon'])
+              page.evaluate("document.getElementById('life5Frame').contentWindow.LivingTreeR05.setFruitLoad(0.55)")
+              page.wait_for_timeout(1600)
+              highFruit=page.evaluate("document.getElementById('life5Frame').contentWindow.LivingTreeR05.getState().signature")
+              C['fruitSinkChangesAllocation']=highFruit['reproductiveInvestment']>s5['reproductiveInvestment'] and (highFruit['shootSegments']!=s5['shootSegments'] or highFruit['reserveCarbon']!=s5['reserveCarbon'])
+              page.evaluate("document.getElementById('life5Frame').contentWindow.LivingTreeR05.setFruitLoad(0.18)")
+              page.evaluate("document.getElementById('life5Frame').contentWindow.LivingTreeR05.setPhenology(0.92)")
+              page.wait_for_timeout(1400)
+              late=page.evaluate("document.getElementById('life5Frame').contentWindow.LivingTreeR05.getState().signature")
+              C['phenologyChangesLeafStates']=late['leafStates']!=s5['leafStates']
+              page.evaluate("document.getElementById('life5Frame').contentWindow.LivingTreeR05.setPhenology(0.58)")
+              page.evaluate("document.getElementById('life5Frame').contentWindow.LivingTreeR05.setPhyllotaxis('opposite')")
+              page.wait_for_timeout(1000)
+              C['phyllotaxisSwitchWorks']=page.evaluate("document.getElementById('life5Frame').contentWindow.LivingTreeR05.getState().signature.phyllotaxisVoice==='opposite'")
+              page.evaluate("document.getElementById('life5Frame').contentWindow.LivingTreeR05.setPhyllotaxis('spiral')")
+              page.wait_for_timeout(900)
+              life5shot=root/'desktop-life-r05.png'; page.screenshot(path=str(life5shot),full_page=False)
+              C['life5PixelsNonBlank']=digest(life5shot)['stddev']>10
+
+              page.evaluate("FractalWaveTreeWorkbenchR01.setMode('lifecompare5')")
+              page.wait_for_timeout(600)
+              C['r04R05CompareVisible']=page.evaluate("getComputedStyle(document.querySelector('.life4-card')).display!=='none' && getComputedStyle(document.querySelector('.life5-card')).display!=='none'")
+
               page.locator('#branchIndex').evaluate("el=>{el.value='137';el.dispatchEvent(new Event('input',{bubbles:true}))}")
               page.wait_for_timeout(100)
               C['decoderProducesSevenDigits']=page.locator('#pathDigits .digit').count()==7
               C['desktopPixelsNonBlank']=digest(compare)['stddev']>8
 
               page.set_viewport_size({'width':390,'height':844})
-              page.evaluate("FractalWaveTreeWorkbenchR01.setMode('life4')")
-              page.wait_for_timeout(1500)
+              page.evaluate("FractalWaveTreeWorkbenchR01.setMode('life5')")
+              page.wait_for_timeout(1800)
               C['mobileNoHorizontalOverflow']=page.evaluate('document.documentElement.scrollWidth<=innerWidth')
               mobile=root/'mobile-tree.png'; page.screenshot(path=str(mobile),full_page=False)
               C['mobilePixelsNonBlank']=digest(mobile)['stddev']>8
               C['pageErrorsZero']=not report['errors']
-              report['screens']={'tree':digest(compare),'map':digest(mapshot),'lift':digest(liftshot),'nativeR02':digest(nativeshot),'nativeR03':digest(r03shot),'livingR04':digest(life4shot),'mobile':digest(mobile)}
+              report['screens']={'tree':digest(compare),'map':digest(mapshot),'lift':digest(liftshot),'nativeR02':digest(nativeshot),'nativeR03':digest(r03shot),'livingR04':digest(life4shot),'livingR05':digest(life5shot),'mobile':digest(mobile)}
               report['state']=page.evaluate('FractalWaveTreeWorkbenchR01.getState()')
               browser.close()
           except Exception:
@@ -249,7 +292,7 @@ jobs:
       - name: Upload integrated workbench evidence
         uses: actions/upload-artifact@v4
         with:
-          name: FRACTAL_WAVE_TREE_WORKBENCH_R04_QA
-          path: evidence-fractal-tree-r04
+          name: FRACTAL_WAVE_TREE_WORKBENCH_R05_QA
+          path: evidence-fractal-tree-r05
           if-no-files-found: error
           retention-days: 90
