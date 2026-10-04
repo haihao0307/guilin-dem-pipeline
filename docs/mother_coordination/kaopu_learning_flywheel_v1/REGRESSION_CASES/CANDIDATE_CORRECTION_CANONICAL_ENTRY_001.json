@@ -1,0 +1,144 @@
+{
+  "schema": "kaopu.regression-case/2",
+  "caseId": "CORRECTION-CANONICAL-ENTRY-001",
+  "status": "CANDIDATE_HAIYU_HISTORY_REPLAY_PASSED_NOT_ADOPTED",
+  "active": false,
+  "scope": {
+    "mother": "Haiyu",
+    "taskClass": "FIXED_PUBLIC_WORKBENCH_CORRECTION_PROMOTION",
+    "globalAdoption": false
+  },
+  "failure": {
+    "summary": "A user-requested correction exists and works at a side-version path, while the fixed public entry continues serving the superseded behavior and does not link to the correction.",
+    "observedSubject": {
+      "ghPagesHead": "e541449ac9d332e17e6bafb49a1e4ccfa9d914ea",
+      "correctionCommit": "1646a284fcebccb01d5ab19c65a1ad01e625e065",
+      "fixedEntryPath": "kaopu-haiyu-workbench/index.html",
+      "fixedEntryBlob": "7fc85185daec334f6cae2ec9bb62c5ef15ce2d8d",
+      "fixedEntryBuild": "R21-thorax-20261004",
+      "fixedEntryPublicTitle": "海羽 · 环周胸廓与原式学习 R21",
+      "correctedCandidatePath": "kaopu-haiyu-workbench/r22/index.html",
+      "correctedCandidateBlob": "0aade10a5adc556e4f6386da7044a04def072d9c",
+      "correctedCandidateBuild": "R22-source-and-research-20261004",
+      "correctedCandidatePublicTitle": "海羽 · 原式与骨架研究 R22",
+      "requiredCorrection": "Keep original 04/05 independently runnable and separate additive skeleton research.",
+      "fixedEntryHasOriginal04": false,
+      "fixedEntryHasOriginal05": false,
+      "candidateHasOriginal04": true,
+      "candidateHasOriginal05": true,
+      "fixedEntryLinksToCandidate": false
+    }
+  },
+  "mustNeverRepeat": [
+    "Count a corrected file under a side-version directory as delivered while the fixed public entry still serves the superseded behavior.",
+    "Treat a commit subject, directory count, or successful candidate URL as proof that the canonical user entry was promoted.",
+    "Let a fixed entry inherit a correction claim without a post-promotion readback bound to the corrected identity.",
+    "Ask the user to discover or choose a hidden side-version URL as the first layer of QA."
+  ],
+  "requiredReceiptFields": [
+    "correctionId",
+    "correctionInvariantDigest",
+    "candidateSubjectSha",
+    "candidatePath",
+    "candidateArtifactDigest",
+    "fixedEntryUrl",
+    "fixedEntryExpectedBuildMarker",
+    "fixedEntryObservedBuildMarker",
+    "fixedEntryObservedArtifactDigestOrContentDigest",
+    "fixedEntryInvariantResults",
+    "promotionCommitSha",
+    "publicReadbackAt",
+    "browserRunId",
+    "rollbackEntryIdentity",
+    "independentVerifier",
+    "userAcceptance"
+  ],
+  "gate": [
+    "A candidate path may be CORRECTION_CANDIDATE_VERIFIED, but it is not the current delivery until the fixed public entry resolves to the corrected identity.",
+    "The fixed entry must be read back after promotion and its build marker, content identity and every correction-critical invariant must match the candidate receipt.",
+    "A fixed entry that still serves the previous build is HOLD_CANONICAL_ENTRY_STALE even when the candidate path passes.",
+    "A redirect or link is acceptable only when it is the declared fixed-entry behavior and a fresh public readback proves that users automatically reach the corrected identity; an undisclosed side link is not promotion.",
+    "Keep the previous fixed-entry identity as rollback evidence until the corrected fixed entry passes public and browser gates.",
+    "This gate does not prove reference fidelity, visual acceptance, device acceptance or user acceptance."
+  ],
+  "states": [
+    "CORRECTION_CANDIDATE_VERIFIED",
+    "HOLD_CORRECTION_RECEIPT_INCOMPLETE",
+    "HOLD_CANONICAL_ENTRY_STALE",
+    "HOLD_CANONICAL_ENTRY_IDENTITY_MISMATCH",
+    "HOLD_CORRECTION_INVARIANT_FAILED",
+    "CORRECTION_PROMOTED_NOT_USER_ACCEPTED"
+  ],
+  "cases": [
+    {
+      "id": "HAIYU_R22_SIDE_PATH_FIXED_ENTRY_STILL_R21",
+      "input": {
+        "candidateVerified": true,
+        "candidateIdentity": "blob:0aade10a5adc556e4f6386da7044a04def072d9c",
+        "candidateBuildMarker": "R22-source-and-research-20261004",
+        "candidateInvariantsPass": true,
+        "fixedEntryReadbackPerformed": true,
+        "fixedEntryIdentity": "blob:7fc85185daec334f6cae2ec9bb62c5ef15ce2d8d",
+        "fixedEntryBuildMarker": "R21-thorax-20261004",
+        "fixedEntryInvariantsPass": false,
+        "fixedEntryAutomaticallyResolvesCandidate": false
+      },
+      "expect": "HOLD_CANONICAL_ENTRY_STALE"
+    },
+    {
+      "id": "CONTROL_FIXED_ENTRY_MATCHES_CORRECTED_CANDIDATE",
+      "input": {
+        "candidateVerified": true,
+        "candidateIdentity": "sha256:candidate-r22",
+        "candidateBuildMarker": "R22-source-and-research-20261004",
+        "candidateInvariantsPass": true,
+        "fixedEntryReadbackPerformed": true,
+        "fixedEntryIdentity": "sha256:candidate-r22",
+        "fixedEntryBuildMarker": "R22-source-and-research-20261004",
+        "fixedEntryInvariantsPass": true,
+        "fixedEntryAutomaticallyResolvesCandidate": true
+      },
+      "expect": "CORRECTION_PROMOTED_NOT_USER_ACCEPTED"
+    },
+    {
+      "id": "CONTROL_CANDIDATE_EXISTS_NO_PUBLIC_READBACK",
+      "input": {
+        "candidateVerified": true,
+        "candidateIdentity": "sha256:candidate-r22",
+        "candidateBuildMarker": "R22-source-and-research-20261004",
+        "candidateInvariantsPass": true,
+        "fixedEntryReadbackPerformed": false
+      },
+      "expect": "HOLD_CORRECTION_RECEIPT_INCOMPLETE"
+    },
+    {
+      "id": "CONTROL_FIXED_ENTRY_MARKER_MATCHES_BUT_INVARIANT_FAILS",
+      "input": {
+        "candidateVerified": true,
+        "candidateIdentity": "sha256:candidate-r22",
+        "candidateBuildMarker": "R22-source-and-research-20261004",
+        "candidateInvariantsPass": true,
+        "fixedEntryReadbackPerformed": true,
+        "fixedEntryIdentity": "sha256:candidate-r22",
+        "fixedEntryBuildMarker": "R22-source-and-research-20261004",
+        "fixedEntryInvariantsPass": false,
+        "fixedEntryAutomaticallyResolvesCandidate": true
+      },
+      "expect": "HOLD_CORRECTION_INVARIANT_FAILED"
+    }
+  ],
+  "activation": {
+    "global": false,
+    "singleMotherTrialRequired": true,
+    "independentVerifierRequired": true,
+    "rollbackPoint": "Keep the current R21 fixed-entry identity unchanged until Haiyu promotes and independently verifies the corrected entry; remove this Candidate if it adds no discrimination beyond PUBLIC_WEB_DELIVERY_GATE."
+  },
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": true,
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}
