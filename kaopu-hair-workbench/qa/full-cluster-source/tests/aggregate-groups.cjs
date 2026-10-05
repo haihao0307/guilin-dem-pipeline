@@ -5,6 +5,12 @@ const hash=p=>crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex
 const expected={online:hash(online),offline:hash(offline)};
 const files=[];function walk(p){for(const e of fs.readdirSync(p,{withFileTypes:true})){const q=path.join(p,e.name);if(e.isDirectory())walk(q);else if(/^cluster-(file|public)-(core|catalog|orbit|touch)-results\.json$/.test(e.name))files.push(q);}}walk(root);
 const supplementalReports=files.map(f=>({file:f,value:JSON.parse(fs.readFileSync(f))}));
+if(supplementalReports.length===8&&supplementalReports.every(x=>x.value.scope==='platform-home-navigation-sync')){
+ const errors=[],matrixResult=process.env.HAIR_QA_MATRIX_RESULT;if(matrixResult!=='success')errors.push('Source matrix incomplete: '+matrixResult);
+ for(const phase of ['file','public'])for(const group of ['core','catalog','orbit','touch']){const a=supplementalReports.filter(x=>x.value.phase===phase&&x.value.group===group);if(a.length!==1){errors.push(phase+'/'+group+' missing or duplicate');continue;}const r=a[0].value;if(r.htmlSha256!==expected[phase==='file'?'offline':'online']||r.onlineHtmlSha256!==expected.online||r.standaloneHtmlSha256!==expected.offline||r.errors.length||!r.entrySourcePassed||!r.sourceProof?.passed||r.notRerun!==true||r.fullRegressionPassed!==false||r.contactAcceptance!==false)errors.push(phase+'/'+group+' invalid exact-source evidence');}
+ const report={scope:'platform-home-navigation-sync',entrySourcePassed:errors.length===0,entryBrowserWorkflow:'kaopu-hair-workbench-qa.yml',passed:false,fullRegressionPassed:false,contactAcceptance:false,productionReady:false,physicalIPhoneTested:false,unrelatedRuntimeSuitesNotRerun:true,errors,groups:supplementalReports.map(x=>({phase:x.value.phase,group:x.value.group,sourcePassed:x.value.entrySourcePassed,protectedFiles:x.value.sourceProof?.protectedFiles}))};fs.writeFileSync(path.join(root,'aggregate-results.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));if(errors.length)process.exitCode=1;return;
+}
+
 if(supplementalReports.length===8&&supplementalReports.every(x=>x.value.scope==='skin-file-preview-r1')){
  const errors=[],matrixResult=process.env.HAIR_QA_MATRIX_RESULT;
  if(matrixResult!=='success')errors.push('Skin preview matrix incomplete: '+matrixResult);

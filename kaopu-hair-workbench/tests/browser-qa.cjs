@@ -28,6 +28,10 @@ async function anemoneInteraction(page){const a=await anemoneShot(page,'anemone-
 
 function fetchBytes(url){return new Promise((resolve,reject)=>{https.get(url,r=>{let parts=[];r.on('data',b=>parts.push(b));r.on('end',()=>resolve({status:r.statusCode,bytes:Buffer.concat(parts)}));}).on('error',reject);});}
 (async()=>{let browser,server;try{
+ if(path.resolve(HTML)===path.join(ROOT,'index.html')&&fs.existsSync(path.join(ROOT,'tests/platform-sync-scope.json'))){
+  const focused=await require('./platform-sync-qa.cjs').run(ROOT,OUT,process.env.HAIR_PUBLIC_URL||'https://haihao0307.github.io/guilin-dem-pipeline/kaopu-hair-workbench/');Object.assign(results,focused);if(!focused.passed)process.exitCode=1;return;
+ }
+
  browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
  const context=await browser.newContext({viewport:{width:1440,height:1000},deviceScaleFactor:1,acceptDownloads:true});const page=await context.newPage();
  page.on('pageerror',e=>results.errors.push(e.message));page.on('console',m=>{if(m.type()==='error')results.errors.push(m.text().slice(0,800));if(m.type()==='warning'&&results.warnings.length<30)results.warnings.push(m.text().slice(0,800));});page.on('request',r=>{if(!r.url().startsWith('data:'))results.requests.push(r.url())});

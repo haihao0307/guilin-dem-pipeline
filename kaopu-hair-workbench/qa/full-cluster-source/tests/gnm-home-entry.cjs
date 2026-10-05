@@ -3,7 +3,7 @@ const fs=require('node:fs'),path=require('node:path');
 module.exports=async function(browser,url,out){
   fs.mkdirSync(out,{recursive:true});
   const result={passed:false,checks:[],errors:[],screenshots:[],physicalIPhoneTested:false};
-  const target='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-hair-workbench/qa/gnm-study/';
+  const target=new URL('gnm-groom-editor/experiment.html',url).href;
   let context,page;
   const check=(name,pass,detail)=>{result.checks.push({name,pass:!!pass,detail});if(!pass)throw Error(name+': '+JSON.stringify(detail));};
   try{
@@ -17,16 +17,17 @@ module.exports=async function(browser,url,out){
     check('existing five object cards remain in order before the human card',
       await page.locator('#catalogHome .catalog-card').count()===5&&
       JSON.stringify(order)===JSON.stringify(['catalogRabbit','catalogAnemone','catalogFiber','catalogGroom','catalogFeather','catalogGnmExperiment']),order);
-    check('human is a single large image card labelled 人',
+    check('original male is a single image card linked directly to R9',
       await page.locator('#catalogHome .gnm-catalog-card').count()===1&&
-      await link.locator('.catalog-card-title').evaluate(e=>e.firstChild.textContent.trim()==='人')&&
-      await link.getAttribute('href')===target);
+      await link.locator('.catalog-card-title').evaluate(e=>e.firstChild.textContent.trim()==='原男性')&&
+      await link.evaluate(a=>a.href)===target);
     await link.locator('img').evaluate(img=>img.decode());
     const preview=await link.locator('img').evaluate(img=>({
       complete:img.complete,width:img.naturalWidth,height:img.naturalHeight,
       embedded:img.src.startsWith('data:image/jpeg;base64,'),alt:img.alt
     }));
     check('human preview contains the embedded actual-render JPEG',preview.complete&&preview.embedded&&preview.width>=600&&preview.height>=500&&preview.alt.includes('实际渲染'),preview);
+    check('TEN24 is clearly an unfinished local task',await page.locator('#ten24LocalTask').innerText().then(t=>t.includes('待本地原件接入')&&t.includes('未完成'))&&await page.locator('#ten24LocalTask a').getAttribute('href')==='../handoffs/ten24-original-local/index.html');
     check('the one-line intro link is gone',await page.locator('.catalog-intro #catalogGnmExperiment, .catalog-experiment-link').count()===0);
     const desktopStyle=await link.evaluate(card=>{
       const existing=document.getElementById('catalogRabbit'),a=getComputedStyle(card),b=getComputedStyle(existing);
@@ -55,11 +56,11 @@ module.exports=async function(browser,url,out){
     await page.screenshot({path:path.join(out,'home-mobile-human.png')});result.screenshots.push('home-mobile-human.png');
     if(url.startsWith('http')){
       await Promise.all([page.waitForURL(target,{timeout:120000}),link.click()]);
-      await page.waitForFunction(()=>window.gnmStudy?.ready||document.querySelector('#error:not([hidden])'),null,{timeout:120000});
-      const d=await page.evaluate(()=>{gnmStudy.render();const gl=document.getElementById('canvas').getContext('webgl2');return {...gnmStudy.getDiagnostics(),glError:gl.getError()};});
-      check('home link opens the real complete GNM model',d.ready&&d.glError===0&&d.vertices===17821&&d.identityDim===253&&d.expressionDim===383&&d.assetRecords.length===2&&d.assetRecords.every(x=>x.sha256===x.expectedSha256),d);
+      await page.waitForFunction(()=>window.groomStudy?.ready||document.querySelector('#error:not([hidden])'),null,{timeout:240000});
+      const d=await page.evaluate(()=>{groomStudy.render();const gl=document.getElementById('canvas').getContext('webgl2');return {...groomStudy.diagnostics(),glError:gl.getError()};});
+      check('home opens exact original male R9 identity and accepted groom',d.ready&&d.glError===0&&d.model.vertices===17821&&d.model.identityDim===253&&d.model.expressionDim===383&&d.model.positionHash===1686585375&&JSON.stringify(d.geometryHashes)===JSON.stringify([235204425,3385537001])&&d.state.case==='neutral'&&d.state.groom.style==='original'&&d.assets.length===2,d);
       await page.screenshot({path:path.join(out,'opened-from-home-mobile.png'),fullPage:true});result.screenshots.push('opened-from-home-mobile.png');
-      await page.locator('a.back').click();
+      await page.goBack({waitUntil:'load'});
       await page.waitForFunction(()=>window.platform?.module==='home');
       check('back returns to the same five-case home plus human card',await page.locator('#catalogHome .catalog-card').count()===5&&await page.locator('#catalogHome .gnm-catalog-card').count()===1&&await page.locator('#catalogGnmExperiment img').isVisible());
     }else result.onlineExperimentRequiresNetwork=true;

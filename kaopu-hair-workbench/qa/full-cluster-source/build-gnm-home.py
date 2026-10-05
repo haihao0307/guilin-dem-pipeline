@@ -7,7 +7,7 @@ import runpy
 
 HERE = Path(__file__).parent
 ROOT = HERE.parent
-URL = 'https://haihao0307.github.io/guilin-dem-pipeline/kaopu-hair-workbench/qa/gnm-study/'
+URL = 'gnm-groom-editor/experiment.html'
 PREVIEW = ROOT / 'references/previews/gnm-human-render.jpg'
 # Only the new anchor needs these rules. Its contents use the existing preview,
 # copy and title classes, including their established responsive styles.
@@ -16,6 +16,8 @@ STYLE = '''<style id="gnmCatalogCardStyle">
 .gnm-catalog-card:hover{background:#1f291e;border-color:#9db58a;transform:translateY(-2px)}
 .gnm-catalog-card:focus-visible{outline:2px solid #c1dfa2;outline-offset:3px}
 @media(max-width:650px){.gnm-catalog-card{border-radius:13px}}
+
+.ten24-local-task{margin:18px 0 6px;padding:14px 16px;border:1px solid #635c39;border-radius:12px;background:#242419;display:flex;gap:10px 18px;align-items:center;flex-wrap:wrap}.ten24-local-task strong{color:#e8e9cd}.ten24-local-task span{color:#d6c991;font-size:13px}.ten24-local-task a{margin-left:auto;color:#c1dfa2;font-size:13px}
 </style>'''
 PINNED = {
     'kuko-anemone-candidate.html': '5d5f6dc5c1f7af152740a7afae59c47e460260cc76102d6e66bba830c8644c41',
@@ -28,12 +30,13 @@ def augment(before, preview):
     """Add only scoped CSS and an independent card after all five registrations."""
     source = 'data:image/jpeg;base64,' + base64.b64encode(preview).decode()
     card = ('<a id="catalogGnmExperiment" class="gnm-catalog-card" href="' + URL + '" '
-            'aria-label="打开人工作台（需要联网）">'
+            'aria-label="打开原男性 R9 毛发编辑页">'
             '<span class="catalog-preview"><img src="' + source + '" '
             'alt="人工作台中实际渲染的人头与头发" width="640" height="603"></span>'
-            '<span class="catalog-card-copy"><span class="catalog-card-title">人 <span>Human</span></span>'
-            '<span class="catalog-card-description">人头 · 表情 · 头发 · 灯光</span>'
-            '<span class="catalog-open">打开工作台 · 联网</span></span></a>')
+            '<span class="catalog-card-copy"><span class="catalog-card-title">原男性 <span>R9 Groom</span></span>'
+            '<span class="catalog-card-description">发型 · 发色 · 眉毛 · 胡须</span>'
+            '<span class="catalog-open">打开原男性毛发编辑</span></span></a>')
+    local_task = '<section id="ten24LocalTask" class="ten24-local-task"><strong>指定原女性 · TEN24</strong><span>待本地原件接入 · 未完成</span><a href="../handoffs/ten24-original-local/index.html">本地任务与原件核验 ↗</a></section>'
     # Append within the existing final script, preserving its complete source
     # and the five-script contract. No renderer or lifecycle handler is wrapped.
     extra = ('\n/* Independent Human homepage card. */\n(function () {\n'
@@ -41,6 +44,7 @@ def augment(before, preview):
              "  const grid = document.querySelector('#catalogHome .catalog-grid');\n"
              "  if (grid && !document.getElementById('catalogGnmExperiment')) {\n"
              "    grid.insertAdjacentHTML('beforeend', " + json.dumps(card, ensure_ascii=False) + ");\n"
+             "    grid.insertAdjacentHTML('afterend', " + json.dumps(local_task, ensure_ascii=False) + ");\n"
              "  }\n})();\n")
     text = before.decode()
     assert 'catalogGnmExperiment' not in text, 'Input must be the pinned five-case home'
