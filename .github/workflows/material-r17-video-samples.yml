@@ -30,7 +30,6 @@ jobs:
           (async()=>{await waitPublic();const browser=await chromium.launch({headless:true,args:['--no-sandbox','--enable-unsafe-swiftshader','--use-angle=swiftshader']});const errors=[];try{
             const page=await browser.newPage({viewport:{width:1280,height:900}});page.on('pageerror',e=>errors.push(e.message));await page.goto(url,{waitUntil:'load',timeout:90000});await page.waitForFunction(()=>window.KAOPU_STUDIO?.ready,{timeout:90000});
             await page.waitForTimeout(300);
-            assert(KAOPU_STUDIO===undefined?true:true,'noop');
             const tabs=await page.locator('[data-tab="study"]').count();assert(tabs===1,'study tab missing');
             await page.locator('[data-tab="study"]').click();await page.waitForTimeout(100);
             const cards=await page.locator('#studyCards .studyCard').count();assert(cards===7,'expected original + six study cards');
