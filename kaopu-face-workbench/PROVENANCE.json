@@ -1,0 +1,115 @@
+{
+  "title": "KAOPU Face Workbench R01 local candidate",
+  "repoBaselineChecked": "84edc5ca67dc8f30c17427645232ab07275fdea1",
+  "scope": "New kaopu-face-workbench directory plus dedicated read-only QA workflow; no navigation/Hair/production ref edits",
+  "model": {
+    "name": "GNM Head v3",
+    "version": "official web int8",
+    "vertices": 17821,
+    "triangles": 35324,
+    "identityDimensions": 253,
+    "expressionDimensions": 383,
+    "joints": 4,
+    "assetURL": "https://raw.githubusercontent.com/xrblocks/assets-gnm/134feb02b11fa642a43ff5e7e880246255a74e86/gnm_head_web.bin",
+    "bytes": 34937952,
+    "sha256": "fd19f46eef6f8bfb725fceab581e1bc8837209997ca3fd43f3c1735003c86961",
+    "license": "Apache-2.0; original tongue MIT notice preserved"
+  },
+  "sources": {
+    "gnm": "https://github.com/google/GNM/tree/940c36b850d951f14203e751463bc9b422900fad",
+    "evaluator": "https://github.com/google/xrblocks/tree/863004acf49f3f815b43f2191db214513a735f78/samples/avatar_lab/gnm",
+    "three": "https://github.com/mrdoob/three.js/tree/r170"
+  },
+  "verification": {
+    "contractTests": 19,
+    "realModelCPU": "passed; exact baseline reset; expression preserves identity; OBJ topology counts",
+    "realBrowser": "NOT RUN: Chromium socket() Operation not permitted, including approved escalation",
+    "physicalPhone": "not tested",
+    "published": false
+  },
+  "privacy": {
+    "input": "local browser object URLs only",
+    "uploaded": false,
+    "runtimeDependency": "profile JSON requires shared same-version GNM model",
+    "photoFit": "not implemented"
+  },
+  "files": {
+    "README.md": {
+      "bytes": 4705,
+      "sha256": "dd23456ebead94cd2cfd35434727fcceb09d407394a7c0ce831b21a3a7c81b0a"
+    },
+    "index.html": {
+      "bytes": 5483,
+      "sha256": "e6ba44531e2d56acc07d7597ae6c2ba8ba032be6b0cb3a2306ca488589efd553"
+    },
+    "licenses/GNM-LICENSE.txt": {
+      "bytes": 12823,
+      "sha256": "ba12fffb7f905c67daa3e0d9656e8638d3a0d0eee70862ec17da7db429be19f0"
+    },
+    "licenses/THREE-LICENSE.txt": {
+      "bytes": 1081,
+      "sha256": "4c40a1ef62450b857c3b2aaf294936304cd552d965fbcd9d32d4c5bcf4ba4454"
+    },
+    "licenses/XRBLOCKS-LICENSE.txt": {
+      "bytes": 11347,
+      "sha256": "33eef1d0689b439ecb31fe3eb3e14cc5a0c31c5d1489087fe45fb2d2ad13f084"
+    },
+    "package.json": {
+      "bytes": 64,
+      "sha256": "36c92d5574b3f75e0d24e10cc8d81793c5971a1268f8c00464ded482d3c86b46"
+    },
+    "src/GNMModel.js": {
+      "bytes": 20105,
+      "sha256": "e9619714dc5a975f66fc8c9cef76220441fd8e644cf9d14e43022b4705579c5f"
+    },
+    "src/app.js": {
+      "bytes": 13674,
+      "sha256": "d0ce9d939ad48c70a46e16142e04a4f1e92fd40d374b1172d23a2a7aec7ebd2c"
+    },
+    "src/profile.js": {
+      "bytes": 1756,
+      "sha256": "3aaf0aea3d3f9e38881f04b12388f846a60bcaafcfa5869f3016ea3ebe3fe283"
+    },
+    "style.css": {
+      "bytes": 3705,
+      "sha256": "c2c0dbcdd4f652287ab587802c1d3ae1b7c00208a54ef10a37e3313ae4898cbb"
+    },
+    "tests/browser.cjs": {
+      "bytes": 6719,
+      "sha256": "9c9e059c7d2a9ab90ce72b4151b32fafb1a6070f62c6399b28e37c0607990fc9"
+    },
+    "tests/contracts.mjs": {
+      "bytes": 2849,
+      "sha256": "e05c9104eb5dc9ec31bea4b75efc276b13e95a7de211073485fb0bf1e81bfbe0"
+    },
+    "tests/model.mjs": {
+      "bytes": 1539,
+      "sha256": "6f8104612bc116ded2d69d0254f37938064f6e75aac337b609d7e04e980d1e2a"
+    },
+    "vendor/OrbitControls.js": {
+      "bytes": 32134,
+      "sha256": "80efaadea4f8a636a65fb0bd08bfef62f3d93a0bb94e2e7500f23176c5c07f4e"
+    },
+    "vendor/three.module.js": {
+      "bytes": 1314681,
+      "sha256": "ce1fa418de16a19495a9f72495580e3015d7745c296d3ce0485897f902ddedfb"
+    }
+  },
+  "qa": {
+    "branch": "qa/face-workbench-r01-20261005",
+    "workflow": ".github/workflows/face-workbench-r01-qa.yml",
+    "permissions": {
+      "contents": "read"
+    },
+    "persistCredentials": false,
+    "trigger": "PR or manual only; no push trigger; no PR or dispatch created during outage",
+    "playwright": {
+      "version": "1.57.0",
+      "registry": "https://registry.npmjs.org/playwright/1.57.0",
+      "integrity": "sha512-ilYQj1s8sr2ppEJ2YVadYBN0Mb3mdo9J0wQ+UuDhzYqURwSoW4n1Xs5vs7ORwgDGmyEh33tRMeS8KhdkMoLXQw==",
+      "coreVersion": "1.57.0",
+      "coreIntegrity": "sha512-agTcKlMw/mjBWOnD6kFZttAAGHgi/Nw0CZ2o6JqWSbMlI219lAFLZZCyqByTsvVAJq5XA5H8cA6PrvBRpBWEuQ=="
+    },
+    "inputData": "synthetic SVG + synthetic browser-generated WebM + official GNM only"
+  }
+}

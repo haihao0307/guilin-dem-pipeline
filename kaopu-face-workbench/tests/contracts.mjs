@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';import fs from 'node:fs';import crypto from 'node:crypto';import {validateProfile,objText,MODEL_HASH,MODEL_VERSION} from '../src/profile.js';
+let count=0;const test=(name,fn)=>{fn();console.log('PASS',name);count++};
+const p={schema:'kaopu-face-profile/1',modelHash:MODEL_HASH,modelVersion:MODEL_VERSION,person:'同一人物',identity:Array(253).fill(0),expression:Array(383).fill(0),observations:[{name:'frame',note:'左侧',type:'frame',timeSeconds:1.234}]};
+test('profile roundtrip',()=>assert.deepEqual(validateProfile(JSON.parse(JSON.stringify(p))).identity,p.identity));
+for(const [label,edit]of [['wrong model version',p=>p.modelVersion='unknown'],['wrong hash',p=>p.modelHash='bad'],['wrong dimension',p=>p.identity.pop()],['infinite',p=>p.identity[1]=Infinity],['NaN',p=>p.identity[1]=NaN],['string coefficient',p=>p.identity[1]='1'],['out of range',p=>p.expression[0]=4],['negative timestamp',p=>p.observations[0].timeSeconds=-1],['too long name',p=>p.person='a'.repeat(81)],['bad observations',p=>p.observations=null]])test(label,()=>{let q=structuredClone(p);edit(q);assert.throws(()=>validateProfile(q));});
+test('prototype data not propagated',()=>{const q=JSON.parse(JSON.stringify(p));q.observations[0].__proto__={polluted:true};const clean=validateProfile(q);assert.equal(clean.observations[0].polluted,undefined);assert.equal({}.polluted,undefined);});
+test('strip unrecognized properties',()=>assert.equal(validateProfile({...p,photo:'private blob'}).photo,undefined));
+test('OBJ geometry export',()=>{let s=objText(new Float32Array([0,1,2,3,4,5,6,7,8]),new Uint16Array([0,1,2]));assert.match(s,/f 1 2 3/);assert.equal(s.split('\n').filter(x=>x.startsWith('v ')).length,3);});
+const dir=new URL('../',import.meta.url);const app=fs.readFileSync(new URL('src/app.js',dir),'utf8'),html=fs.readFileSync(new URL('index.html',dir),'utf8');
+test('single graphics creation site',()=>assert.equal((app.match(/new THREE.WebGLRenderer/g)||[]).length,1));
+test('no personal data network/storage sink',()=>{assert.equal((app.match(/\bfetch\(/g)||[]).length,1);for(const s of ['XMLHttpRequest','sendBeacon','localStorage','indexedDB','WebSocket'])assert.ok(!app.includes(s));});
+test('no external new tabs or body dependency',()=>{assert.ok(!html.includes('_blank'));assert.ok(!app.includes('HairLayer'));});
+test('CSP limits model domain and disallows forms',()=>{assert.match(html,/form-action 'none'/);assert.match(html,/connect-src 'self' https:\/\/raw.githubusercontent.com\/xrblocks\/assets-gnm\//);});
+test('GNM evaluator exact preserved bytes',()=>assert.equal(crypto.createHash('sha256').update(fs.readFileSync(new URL('src/GNMModel.js',dir))).digest('hex'),'e9619714dc5a975f66fc8c9cef76220441fd8e644cf9d14e43022b4705579c5f'));
+console.log(JSON.stringify({passed:count,browserVerified:false}));
