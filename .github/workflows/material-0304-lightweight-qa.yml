@@ -1,4 +1,4 @@
-name: Material R16 unified public QA
+name: Material anchor recovery focused QA
 on:
   push:
     branches: [qa/material-0304-lightweight-bff7aa6]
@@ -6,6 +6,7 @@ on:
       - '.github/workflows/material-0304-lightweight-qa.yml'
       - 'kaopu-material-workbench/qa/teacher-0304-public.cjs'
       - 'kaopu-material-workbench/candidate-r16/**'
+      - 'kaopu-material-workbench/recovery-candidate/**'
 permissions:
   contents: read
 jobs:
@@ -18,6 +19,7 @@ jobs:
           persist-credentials: false
           sparse-checkout: |
             kaopu-material-workbench/candidate-r16
+            kaopu-material-workbench/recovery-candidate
             kaopu-material-workbench/qa
       - uses: actions/setup-node@v4
         with:
@@ -26,13 +28,11 @@ jobs:
         run: |
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
-      - name: Verify published R16 without deployment
-        env:
-          MATERIAL_PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-material-workbench/
+      - name: Verify anchor recovery without deployment
         run: timeout --signal=TERM --kill-after=15s 12m node kaopu-material-workbench/qa/teacher-0304-public.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: material-r16-unified-proof
-          path: material-r16-qa/
+          name: material-anchor-recovery-proof
+          path: material-anchor-protection-qa/
           retention-days: 14
