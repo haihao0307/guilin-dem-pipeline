@@ -52,7 +52,14 @@ jobs:
             assert(src.includes('lessonVoronoi')&&src.includes('uLessonMode'),'lesson functions missing');
             assert(!/sampler2D|texture\s*\(/.test(src),'IQ lesson shader unexpectedly depends on texture sampling');
             assert(errors.length===0,'page errors: '+errors.join(' | '));
-            const report={version:'R17',url,environment:'Public HTTPS Chromium + ANGLE SwiftShader',studyCards:cards,distinctMaterialHashes:new Set(hashes).size,stoneIdentityStable:true,normalChannelStable:n0===n1,noTextureSampling:true,errors,checkedAt:new Date().toISOString(),browserPassed:true,shareAllowed:true};
+            const mobile=await browser.newPage({viewport:{width:390,height:844}});mobile.on('pageerror',e=>errors.push(e.message));await mobile.goto(url,{waitUntil:'load',timeout:90000});await mobile.waitForFunction(()=>window.KAOPU_STUDIO?.ready,{timeout:90000});
+            await mobile.locator('[data-tab="study"]').click();await mobile.waitForTimeout(100);
+            const mobileCards=await mobile.locator('#studyCards .studyCard').count();assert(mobileCards===7,'mobile study cards missing');
+            await mobile.locator('#studyCards .studyCard').nth(4).click();await mobile.waitForTimeout(150);
+            const mobileNoOverflow=await mobile.evaluate(()=>document.documentElement.scrollWidth<=innerWidth);assert(mobileNoOverflow,'mobile viewport horizontal overflow');
+            assert(await mobile.locator('#canvas').isVisible(),'mobile 3D canvas not visible');
+            assert(errors.length===0,'page errors: '+errors.join(' | '));
+            const report={version:'R17',url,environment:'Public HTTPS Chromium + ANGLE SwiftShader',studyCards:cards,distinctMaterialHashes:new Set(hashes).size,stoneIdentityStable:true,normalChannelStable:n0===n1,noTextureSampling:true,desktop:{viewport:'1280x900',passed:true},mobile:{viewport:'390x844 Chromium viewport, not physical phone',studyCards:mobileCards,noOverflow:mobileNoOverflow,canvasVisible:true},errors,checkedAt:new Date().toISOString(),browserPassed:true,shareAllowed:true};
             fs.writeFileSync('R17_VIDEO_SAMPLE_PROOF.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
           }finally{await browser.close()}})().catch(e=>{console.error(e);process.exit(1)});
           JS
