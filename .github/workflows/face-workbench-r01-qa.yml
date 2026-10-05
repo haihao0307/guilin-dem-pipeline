@@ -50,6 +50,13 @@ jobs:
           trap 'kill "$server" 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do curl -fsS "$FACE_URL" > /dev/null && break || sleep 1; done
           NODE_PATH="$RUNNER_TEMP/face-test/node_modules" node kaopu-face-workbench/tests/browser.cjs
+      - name: Verify immutable external HTTPS preview in real Chromium
+        env:
+          FACE_URL: https://raw.githack.com/haihao0307/guilin-dem-pipeline/4abb5619560f3bb1bb01df5b6141f8d5f92060f5/kaopu-face-workbench/index.html
+        run: |
+          mkdir -p qa-external
+          cd qa-external
+          NODE_PATH="$RUNNER_TEMP/face-test/node_modules" node ../kaopu-face-workbench/tests/browser.cjs
       - name: Upload synthetic-only QA evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -62,3 +69,5 @@ jobs:
             face-restored.png
             face-mobile.png
             face-qa-result.json
+            qa-external/*.png
+            qa-external/face-qa-result.json
