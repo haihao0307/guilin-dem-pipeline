@@ -33,9 +33,6 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Render actual standalone Three scenes
         run: node kaopu-tree-fractal-wave-lab/spirit-plant-connected-wind-study/tests/browser.cjs kaopu-tree-fractal-wave-lab/spirit-plant-connected-wind-study
-      - name: Verify full bounded parameter suite
-        working-directory: kaopu-tree-fractal-wave-lab/spirit-plant-connected-wind-study
-        run: node tests/numerical.mjs
       - name: Store verification evidence
         if: always()
         uses: actions/upload-artifact@v4

@@ -367,7 +367,7 @@ function fitToGraph(){
   const size=max.clone().sub(min),span=Math.max(size.x,size.y,size.z,2);
   const direction=new THREE.Vector3(1.05,.62,1.18).normalize();
   controls.target.copy(center);
-  camera.position.copy(center).addScaledVector(direction,span*1.55);
+  camera.position.copy(center).addScaledVector(direction,span*1.55/Math.min(1,camera.aspect));
   camera.near=Math.max(.02,span/180);camera.far=Math.max(60,span*12);camera.updateProjectionMatrix();controls.update();
 }
 $('fit').addEventListener('click',fitToGraph);
