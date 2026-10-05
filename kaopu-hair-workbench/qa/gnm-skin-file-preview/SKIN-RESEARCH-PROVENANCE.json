@@ -1,0 +1,81 @@
+{
+  "title": "GNM unified procedural skin study r1",
+  "status": "First interactive procedural-material research, not scan reproduction",
+  "identities": {
+    "default": "female-a",
+    "neutral": "Original zero-identity GNM head",
+    "female-a": {
+      "source": "Official FEMALE semantic sampler",
+      "seed": 20261005,
+      "sigma": 0.6
+    },
+    "female-b": {
+      "source": "Official FEMALE semantic sampler",
+      "seed": 20261006,
+      "sigma": 0.6
+    },
+    "sharedInstances": "One head model, one UV mesh, one skin material, one groom binding set",
+    "notTen24": true
+  },
+  "skin": {
+    "shaderVersion": "gnm-procedural-skin-r2",
+    "shaderSha256": "d92a6232e88d02fc4cbe216966d4980392f958383784fa8b341d2fc5373f8cab",
+    "sources": [
+      "Independent rest-space procedural pore depressions and lip relief",
+      "Official GNM material IDs and UV sidecar"
+    ],
+    "maps": "Optional local browser-only user albedo/normal/roughness; no texture upload",
+    "colorSpace": {
+      "albedo": "sRGB",
+      "normal": "linear OpenGL tangent normal",
+      "roughness": "linear green channel"
+    },
+    "filtering": "Derivative-filtered multi-scale relief and roughness variation",
+    "diffusion": "Bounded wrapped diffuse approximation; not full SSS",
+    "scannedMapsBundled": false
+  },
+  "lights": {
+    "default": "Neutral warm/cool studio",
+    "r8ComparisonAvailable": true,
+    "r9OriginalPageModified": false,
+    "r8OriginalPageModified": false,
+    "lightingChangeIsNotMaterialValidation": true
+  },
+  "data": {
+    "source": "https://github.com/xrblocks/assets-gnm/tree/134feb02b11fa642a43ff5e7e880246255a74e86",
+    "license": "Apache-2.0",
+    "headBytes": 34937952,
+    "samplerBytes": 2731824,
+    "uvBytes": 396732,
+    "assetsHostedHere": false,
+    "perProfileReload": false
+  },
+  "boundaries": {
+    "contactAcceptance": false,
+    "fullRegressionPassed": false,
+    "photorealAcceptance": false,
+    "physicalIPhoneTested": false,
+    "mobilePerformanceClaim": false,
+    "knownOriginalRootRadiusFailures": {
+      "neutral": 3,
+      "smile": 2,
+      "surprise": 3,
+      "olderIdentityCase": 3
+    },
+    "femaleGroomSafety": "Bounded local shaft and neck-tip correction only; no complete radius collision guarantee"
+  },
+  "learningReferences": [
+    {
+      "url": "https://github.com/RoboPoets/digital_human",
+      "used": "Channel separation / skin roughness principles; Godot shader not transplanted"
+    },
+    {
+      "url": "https://github.com/iryoku/separable-sss",
+      "used": "Read-only research; two-pass diffusion not implemented"
+    },
+    {
+      "url": "https://github.com/facebookresearch/BioSkin",
+      "used": "Read-only research; network not downloaded or executed"
+    }
+  ]
+}
