@@ -66,7 +66,7 @@ def original_study_entries(p,mobile=False):
   assert not requests,('invalid local input caused a network request',requests)
   p.remove_listener('request',listener)
   p.locator('#clear').click();assert '未载入' in p.locator('#status').inner_text()
-  p.screenshot(path=str(OUT/('mobile_' if mobile else '')+'original_import_'+number+'_ui.png'),full_page=True)
+  p.screenshot(path=str(OUT/(('mobile_' if mobile else '')+'original_import_'+number+'_ui.png')),full_page=True)
   record(('mobile_' if mobile else '')+'original_import_'+number+'_ui_and_invalid_file',{'route':p.url,'teacher_rendered':False,'original_payload_uploaded':False,'empty_state_truthful':True,'invalid_pack_rejected':True,'no_import_network_request':True})
   p.locator('a[href="../index.html"]').click();p.wait_for_function('window.KaoPuDiagnostics&&KaoPuDiagnostics().homeVisible')
   assert p.locator('[data-scene]').count()==7 and p.locator('[data-teacher-original]').count()==3
