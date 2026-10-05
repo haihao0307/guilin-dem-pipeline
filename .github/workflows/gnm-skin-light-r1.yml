@@ -1,0 +1,40 @@
+name: GNM skin lighting FILE-only diagnostic
+on:
+  push:
+    branches: [qa/gnm-skin-light-r1]
+    paths:
+      - 'kaopu-hair-workbench/qa/gnm-skin-file-preview/**'
+      - '.github/workflows/gnm-skin-light-r1.yml'
+permissions:
+  contents: read
+jobs:
+  file-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: kaopu-hair-workbench/qa/gnm-skin-file-preview
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install pinned official browser test dependency
+        run: |
+          npm install --prefix .skin-qa --no-save --ignore-scripts --no-audit --no-fund playwright@1.55.0
+          ./.skin-qa/node_modules/.bin/playwright install chromium
+      - name: Install readable Chinese fonts
+        run: sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk
+      - name: Run fixed-material lighting and shadow comparisons
+        env:
+          NODE_PATH: ${{ github.workspace }}/.skin-qa/node_modules
+          SKIN_QA_OUT: ${{ github.workspace }}/gnm-skin-light-results
+        run: node kaopu-hair-workbench/qa/gnm-skin-file-preview/tests/run-light-preview.cjs
+      - name: Keep actual FILE-only browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gnm-skin-light-${{ github.sha }}
+          path: gnm-skin-light-results/
+          if-no-files-found: error
