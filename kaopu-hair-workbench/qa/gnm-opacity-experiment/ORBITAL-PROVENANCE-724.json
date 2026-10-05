@@ -1,0 +1,45 @@
+{
+  "status": "HOLD for GPU visual review. Local eye-tip target and all centerline tests pass; broad orbital radius test retains pre-existing unmodified root overlaps and does not pass globally.",
+  "creditExact": "Daniel Bystedt. CC BY-SA license",
+  "license": "Same source-provided CC BY-SA license, version unspecified; existing attribution retained.",
+  "implementation": "One bounded implementation and verification attempt; no further algorithm or tolerance change after observing remaining root contacts.",
+  "runtimeSourceSha256": "83d924732ba566721aa282241fa30847c13279bcd27c70b10d033839aa2da767",
+  "predecessor188SourceSha256": "188acce4feb10938e03ca6251afc05da98fb996d1c64037c2c09925106be4205",
+  "runtimeContract": "ORBITAL-RUNTIME-CONTRACT-724.json",
+  "actualSeed": 724,
+  "sourceGuideDataUnchanged": true,
+  "method": [
+    "Actual GNM orbital skin and original eye components1/2 form a local BVH of7608 triangles. Eye and eyelid model vertices are never changed.",
+    "Only the final3 segments are tested for actual centerline or stored-source-radius contact. Conservative unresolved local queries trigger the same bounded check. No strand IDs are hard coded.",
+    "Only contacted terminal segments and one preceding smooth neighbour are moved toward the front exterior. The largest necessary shift is computed from the outermost actual triangle height over the segment XY projection; affine barycentric clipping gives continuous segment endpoint extrema on each triangle.",
+    "The local +Z direction is the neutral GNM frontal direction. Only the four exposed unposed states are tested.",
+    "At most2 local terminal passes,0.006 native-unit displacement cap,0.016 native-unit smoothing span and unchanged0.0002 root socket exclusion.",
+    "In actual724 data only child6879 is changed, points20–24, in neutral/smile/surprise; identity has no orbital trigger. The same child is an interpolation of original independent guides0/9/28 (global346/355/374), not an original guide.",
+    "All roots, all geometry before point20, all brows, all model mesh vertices and normals, root barycentrics, guide identities, random values and radius buffers are byte-identical to188acce. Every untriggered curve is byte-identical."
+  ],
+  "results": {
+    "allSkinAndEyesCenterlineTestsPassed": true,
+    "editedChildFiniteRadiusTestsPassed": true,
+    "earFiniteRadiusRegressionPassed": true,
+    "wholeBroadOrbitalFiniteRadiusPassed": false,
+    "broadOrbitalRootOverlapCounts": [
+      3,
+      2,
+      3,
+      3
+    ],
+    "maxOrbitalDisplacement": 0.003917135298252106,
+    "maxExtraOrbitalBendDegrees": 9.956227699311661,
+    "maxExtraRootBendDegrees": 0,
+    "maxLengthChange": 0.0007741467149893488
+  },
+  "remainingContacts": "ORBITAL-PREEXISTING-ROOT-CONTACTS-724.json records exact positions, root arc distances, radii, overlap amounts and bit-identical188/6a17 first segments for6478/12199/13898. These are retained failures, not excluded or relabelled.",
+  "eyelidRelation": "ORBITAL-6879-EYELID-RELATION-724.json uses the GNM68-landmark eye contour as an approximate reference; it is not asserted to be an exact anatomical eyelid boundary.",
+  "scopeLimits": [
+    "No all636-axis, arbitrary pose or universal intersection-free claim.",
+    "Broad orbital finite-radius checks retain3/2/3/3 pre-existing upper-temple/scalp-root contacts, maximum overlap0.00000440 native units. Root exclusion was not enlarged.",
+    "Finite-radius tests use actual shader input radii and float32 scale/interpolation. They do not cover screen-space AA footprint or every rendering artifact.",
+    "GPU eye-angle and overall appearance remain to be reviewed.",
+    "All188acce actual724 failed evidence and source snapshot remain preserved as the comparison."
+  ]
+}
