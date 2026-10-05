@@ -365,7 +365,8 @@ vec3 render( in vec2 p, in float time, in float dof_dis )
             vec3  hal = normalize(lig_dir-rd);
             float spe = pow(clamp(dot(nor,hal),0.0,1.0),64.0*mate_ks/uSurfaceRough*(1.+uSurfaceWet));
             spe *= 0.04 + 0.96*pow( clamp(1.0-max(dot(hal,rd),0.0), 0.0, 1.0), 5.0 );
-            col += spe*dif*mate_ks*uSpecularScale;
+            vec3 rigSpecular = uSharedRig==1 ? (i==0 ? uKeyTint*uKeyPower : uFillTint*uFillPower) : vec3(1.0);
+            col += spe*dif*mate_ks*uSpecularScale*rigSpecular;
         }
 
         // fill shadows with a bounce light

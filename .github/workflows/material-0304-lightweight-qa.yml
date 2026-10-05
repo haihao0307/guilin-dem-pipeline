@@ -1,4 +1,4 @@
-name: Material R16 unified candidate QA
+name: Material R16 focused light binding QA
 on:
   push:
     branches: [qa/material-0304-lightweight-bff7aa6]
@@ -26,7 +26,9 @@ jobs:
         run: |
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
-      - name: Test candidate locally without deployment
+      - name: Verify 02 final light binding without deployment
+        env:
+          MATERIAL_FOCUS_IQ: 1
         run: timeout --signal=TERM --kill-after=15s 12m node kaopu-material-workbench/qa/teacher-0304-public.cjs
       - uses: actions/upload-artifact@v4
         if: always()
