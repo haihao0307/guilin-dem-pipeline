@@ -1,4 +1,4 @@
-name: Material public anchor recovery QA
+name: Material isolated 05-10 study QA
 on:
   push:
     branches: [qa/material-0304-lightweight-bff7aa6]
@@ -28,13 +28,11 @@ jobs:
         run: |
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
-      - name: Verify public recovery without deployment
-        env:
-          MATERIAL_PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-material-workbench/
-        run: timeout --signal=TERM --kill-after=15s 12m node kaopu-material-workbench/qa/teacher-0304-public.cjs
+      - name: Verify isolated studies without deployment
+        run: timeout --signal=TERM --kill-after=15s 12m node kaopu-material-workbench/recovery-candidate/qa/run-studies.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: material-anchor-recovery-proof
-          path: material-anchor-protection-qa/
+          name: material-studies-proof
+          path: material-studies-qa/
           retention-days: 14

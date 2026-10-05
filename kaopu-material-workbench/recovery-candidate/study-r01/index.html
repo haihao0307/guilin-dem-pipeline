@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>KAOPU 材质样板 · 05–10</title>
+  <link rel="stylesheet" href="study.css">
+  <link rel="icon" href="data:,">
+</head>
+<body>
+<main>
+  <header>
+    <div><small>KAOPU / MATERIAL STUDIES / R01</small><h1>材质样板 · 05–10</h1></div>
+    <a class="legacyLink" href="../?v=r16-anchors">返回旧案例 01–04 ↗</a>
+  </header>
+  <nav aria-label="独立材质样板">
+    <button type="button" data-case="05">05 云状石灰</button>
+    <button type="button" data-case="06">06 脏污混合</button>
+    <button type="button" data-case="07">07 晶格矿物</button>
+    <button type="button" data-case="08">08 层理岩</button>
+    <button type="button" data-case="09">09 磨损金属</button>
+    <button type="button" data-case="10">10 方向风化</button>
+  </nav>
+  <section id="sceneSection" aria-label="实时材质观察">
+    <div class="sceneBar">
+      <h2 id="caseTitle">05 / 云状石灰</h2>
+      <div class="tools">
+        <button type="button" id="rotate" aria-pressed="false">自动旋转</button>
+        <button type="button" id="cameraReset">镜头复位</button>
+        <button type="button" id="zoomOut" aria-label="缩小">−</button>
+        <output id="zoomLabel">100%</output>
+        <button type="button" id="zoomIn" aria-label="放大">＋</button>
+        <button type="button" id="fullscreen">全屏观察</button>
+        <button type="button" id="toggleControls" aria-expanded="true" aria-controls="controlRoom">收起控制室</button>
+      </div>
+    </div>
+    <div id="viewport">
+      <canvas id="canvas" width="640" height="360" aria-label="实时三维材质样板"></canvas>
+      <span id="renderInfo">正在载入…</span>
+      <div id="error" hidden role="alert"></div>
+    </div>
+    <div class="sceneFoot"><span>拖动旋转 · 双指 / 滚轮缩放 · Shift＋拖动平移</span><span>同一 IQ 石形 · 同一冷暖双灯 · 动静同精度</span></div>
+  </section>
+  <section id="controlRoom" aria-label="材质控制室">
+    <div class="controlHead"><h3>样板控制室</h3><button type="button" id="resetMaterial">恢复当前样板默认</button></div>
+    <div class="tabs" aria-label="控制分类">
+      <button type="button" data-tab="study">材质样板</button>
+      <button type="button" data-tab="light">统一双灯</button>
+      <button type="button" data-tab="quality">观察精度</button>
+    </div>
+    <div id="study" class="controlPage">
+      <p id="studyDescription" class="explain"></p>
+      <p id="studyFormula" class="studyFormula"></p>
+      <div id="studyControls" class="controls"></div>
+      <p class="explain">混合量 0 为继承基底，1 为完整样板；颜色、粗糙度与高光一起混合。每个编号分别保存参数和镜头。</p>
+    </div>
+    <div id="light" class="controlPage" hidden>
+      <p class="explain">六个样板共用这组冷暖双灯，切换时保持灯光一致。</p>
+      <div class="presets"><button type="button" id="rigReset">恢复冷暖双灯</button><button type="button" id="keyOnly">只看主光</button><button type="button" id="fillOnly">只看次光</button><button type="button" id="bothLights">两灯一起</button></div>
+      <div id="lightControls" class="controls"></div>
+    </div>
+    <div id="quality" class="controlPage" hidden>
+      <div class="qualityControls">
+        <label>画面精度<select id="resolution"><option value="480">480 · 省电</option><option value="640" selected>640 · 轻量</option><option value="960">960 · 细看</option></select></label>
+        <label>空间采样<select id="samples"><option value="1">1 次 · 性能</option><option value="2" selected>4 次 · 稳定细节</option></select></label>
+        <label>观察通道<select id="channel"><option value="0">完整材质</option><option value="1">底色</option><option value="2">表面法线</option></select></label>
+      </div>
+      <p class="explain">默认 640 画面预算、4 次空间采样。静止、拖动与旋转使用相同石形、灯光和采样路径。</p>
+    </div>
+    <p id="storageStatus" class="explain" role="status">参数自动保存在本浏览器</p>
+  </section>
+  <details id="sources">
+    <summary>样板说明与来源</summary>
+    <p>05–10 是程序化外观练习，名称描述视觉效果，不用于物理矿物识别。六个样板均继承同一份 IQ 石形、裁切与微细节基础，没有新增几何；当前相机与双灯为工作台观察环境。</p>
+    <p>几何与着色基础：Inigo Quilez（iq）/ 2026，<a href="https://youtu.be/6Qb6QtC6QMs" target="_blank" rel="noopener">原教学视频</a>。原代码版权头保留，依据 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/" target="_blank" rel="noopener">CC BY-NC-SA 3.0</a> 使用；此处的适配与六种函数外观练习沿用相同许可。</p>
+  </details>
+</main>
+<script src="defaults.js"></script>
+<script src="preserve-legacy.js"></script>
+<script src="study.js"></script>
+</body>
+</html>
