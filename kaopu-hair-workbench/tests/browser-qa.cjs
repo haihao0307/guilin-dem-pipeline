@@ -1,5 +1,3 @@
-// GPU cache dispose candidate observation; live human runtime stays pinned.
-if(require('fs').existsSync(require('path').join(__dirname,'../qa/gnm-webgl-listener-audit/manifest.json'))){require('./webgl-listener-audit-entry.cjs');return;}
 const fs=require('fs'),path=require('path'),crypto=require('crypto'),http=require('http'),https=require('https');
 const {chromium}=require('playwright');
 const ROOT=path.resolve(__dirname,'..'),HTML=process.env.HAIR_HTML||path.join(ROOT,'index.html'),OUT=process.env.HAIR_QA_OUT||path.join(ROOT,'qa-browser');

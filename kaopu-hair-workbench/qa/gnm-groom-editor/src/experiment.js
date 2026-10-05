@@ -126,8 +126,11 @@ function suspendGraphics(){
  ready=false;if(raf){cancelAnimationFrame(raf);raf=0;}last=0;orbit?.disconnect();if(orbit){orbit._pointers.length=0;orbit._pointerPositions={};orbit.state=-1;orbit._sphericalDelta.set(0,0,0);orbit._panOffset.set(0,0,0);orbit._scale=1;}
  try{opacitySystem?.dispose();}catch{}opacitySystem=null;
  for(const light of lights||[]){light.shadow.map?.dispose();light.shadow.mapPass?.dispose();light.shadow.map=null;light.shadow.mapPass=null;}
+ // Dispose renderer caches while retaining the same CPU geometry/material objects.
+ const geometries=new Set(),materials=new Set();
+ scene?.traverse(object=>{if(object.geometry)geometries.add(object.geometry);for(const value of [object.material,object.customDepthMaterial,object.customDistanceMaterial])for(const material of Array.isArray(value)?value:[value])if(material)materials.add(material);});
+ for(const geometry of geometries)geometry.dispose();for(const material of materials)material.dispose();
  if(!sceneComplete){
-  scene?.traverse(o=>{o.geometry?.dispose();if(o.material)for(const m of Array.isArray(o.material)?o.material:[o.material])m?.dispose();});
   for(const item of materialPairs)try{item.dispose();}catch{}
   orbit?.dispose();scene=null;camera=null;head=null;orbit=null;lights=null;model=null;samplers=null;
   bindings=[];teacherMeshes=[];teacherEditors=[];legacyHair=null;legacyFace=null;materialPairs.length=0;originalMaterials.clear();

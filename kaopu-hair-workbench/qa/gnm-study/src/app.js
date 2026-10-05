@@ -174,8 +174,11 @@ async function setHair(enabled){state.hair=!!enabled;if(enabled&&!hairLayer){if(
 let sceneComplete=false,resizeObserver=null,rebuildingGraphics=false;
 function suspendGraphics(){
  ready=false;active=false;if(raf){cancelAnimationFrame(raf);raf=0;}previous=0;orbit?.disconnect();if(orbit){orbit._pointers.length=0;orbit._pointerPositions={};orbit.state=-1;orbit._sphericalDelta.set(0,0,0);orbit._panOffset.set(0,0,0);orbit._scale=1;}
+ // Dispose renderer caches while retaining the same CPU geometry/material objects.
+ const geometries=new Set(),materials=new Set();
+ scene?.traverse(object=>{if(object.geometry)geometries.add(object.geometry);for(const value of [object.material,object.customDepthMaterial,object.customDistanceMaterial])for(const material of Array.isArray(value)?value:[value])if(material)materials.add(material);});
+ for(const geometry of geometries)geometry.dispose();for(const material of materials)material.dispose();
  if(!sceneComplete){
-  scene?.traverse(o=>{o.geometry?.dispose();if(o.material)for(const m of Array.isArray(o.material)?o.material:[o.material])m?.dispose();});
   orbit?.dispose();hairLayer?.dispose();facialHairLayer?.dispose();
   scene=null;camera=null;orbit=null;geometry=null;mesh=null;wire=null;skeleton=null;landmarks=null;model=null;samplers=null;hairLayer=null;hairPromise=null;facialHairLayer=null;legacyLights=[];
  }
