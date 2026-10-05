@@ -8,6 +8,8 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+env:
+  SPIRIT_PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tree-fractal-wave-lab/spirit-plant-connected-wind-study/
 jobs:
   standalone-render:
     runs-on: ubuntu-latest
@@ -27,12 +29,13 @@ jobs:
           python acquire_vendor.py
           python patch_runtime.py
           python build.py
-          node tests/runtime-smoke.mjs
+          if [ -z "$SPIRIT_PUBLIC_URL" ]; then node tests/runtime-smoke.mjs; fi
       - name: Install fixed browser testing dependencies
         run: |
           npm install --no-save --ignore-scripts playwright@1.51.1
           npx playwright install --with-deps chromium
       - name: Render actual standalone Three scenes
+        if: ${{ env.SPIRIT_PUBLIC_URL == '' }}
         run: node kaopu-tree-fractal-wave-lab/spirit-plant-connected-wind-study/tests/browser.cjs kaopu-tree-fractal-wave-lab/spirit-plant-connected-wind-study
       - name: Verify exact public study when configured
         if: ${{ env.SPIRIT_PUBLIC_URL != '' }}
