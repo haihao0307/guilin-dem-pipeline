@@ -128,6 +128,7 @@ module.exports = async function mobileControls(browser, url, outDir, check) {
           scrollX, scrollY, scrollHeight: document.documentElement.scrollHeight },
         drawers: ['referenceDrawer', 'controlsDrawer', 'learningDrawer'].map(id => ({ id, exists: !!document.getElementById(id), open: !!document.getElementById(id)?.open })),
         reset: rectData(document.getElementById('anemoneCamera')),
+        resetStyles: (()=>{const e=document.getElementById('anemoneCamera'),t=e?.parentElement;if(!e||!t)return null;const a=getComputedStyle(e),b=getComputedStyle(t);return{fontSize:a.fontSize,lineHeight:a.lineHeight,textSizeAdjust:a.webkitTextSizeAdjust,button:rectData(e),tools:rectData(t),columns:b.gridTemplateColumns,rows:b.gridTemplateRows,gap:b.gap,scrollHeight:t.scrollHeight,clientHeight:t.clientHeight,fontsStatus:document.fonts?.status};})(),
         touchAction: getComputedStyle(c).touchAction,
         module: platform.module
       };
