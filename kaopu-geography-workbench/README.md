@@ -32,10 +32,16 @@ This is a shader-learning and derived-study workbench; renaming or changing the 
 
 BoyC, The Cave (https://www.shadertoy.com/view/MsX3RH), CC BY-NC-SA 3.0 (https://creativecommons.org/licenses/by-nc-sa/3.0/). User-provided shader preserved byte-for-byte at `sources/endless/original.frag`; provenance and exact channel hashes at `sources/endless/provenance.json`. This is an inverse-square potential field traced at fixed steps, not a true SDF or Perlin-noise reconstruction. Camera, light path, field constants, grain, mirrored triplanar samples and original step counts are unchanged. No commercial license is asserted. The private user reference video is not hosted.
 
-## Independent runnable studies I3
+## O1: original teacher study correction
 
-The original seven R17 scenes and runtime remain unchanged. Completed independent cases use newly authored shape, movement, camera and procedural-material functions with no teacher source or image textures. Small card images are actual rendered frames. Unfinished cases are omitted from the visible catalog until accepted, with their numbers reserved.
+The seven original R17 runnable scenes and runtime remain byte-identical. The independent replacements08/09/10 have been withdrawn from the main catalog and script-loading list; their earlier files remain archived rather than deleted.
 
-- Study 08: Open Canyon / 开阔峡谷. Self-authored source SHA-256: `261db7db873d4680d1deb48e238aa8b76eaf7a5cf261ce35a5db8e31bcd6d4e5`. Visual learning reference: https://www.shadertoy.com/view/MdBGzG. This is an independent visual study, not an exact port or physical simulation.
-- Study 09: Pelagic Manta / 海中蝠鲼. Self-authored source SHA-256: `a4c15f35658855f0ba8d52831525c69fd824845c8f5f2ab3d15273838f89a14e`. Visual learning reference: https://www.shadertoy.com/view/4ls3zM. This is an independent visual study, not an exact port or physical simulation.
-- Study 10: Undersea Explorer / 海底探险船. Self-authored source SHA-256: `e9bfe8f503c878f039dee49673a02fcb97a78f117f8af91f359aa2103d17a1f9`. Visual learning reference: https://www.shadertoy.com/view/ldBBDm. This is an independent visual study, not an exact port or physical simulation.
+Three original-study entries lead to the shared, self-authored local-import container at `teacher-original/index.html?case=08`, `?case=09`, and `?case=10`. The public container contains only UI, runtime wrappers, integrity pins, and attribution. It contains no teacher shader body, original texture bytes, original audio, or pre-rendered teacher image. Before import it explicitly states that no original study pack has been loaded. The card icon represents a local file, not a completed render.
+
+The user privately retains exact original HTML/JSON study packs. The browser parses an imported HTML only as data, checks original source bytes, each original texture, dimensions and individual sampler settings, and then compiles the source unchanged inside a uniform/entry wrapper. Imported content stays in browser memory; the container makes no upload/fetch request. Original author rights are not replaced by the container's authorship.
+
+-08: Canyon — Inigo Quilez, https://www.shadertoy.com/view/MdBGzG
+-09: Manta Ray v2.0 — dakrunch, https://www.shadertoy.com/view/4ls3zM
+-10: Boaty Goes Caving — David Hoskins, https://www.shadertoy.com/view/ldBBDm
+
+Verification scope: original-source/image integrity and private EGL renders exist. The public correction checks the container UI, navigation, invalid local-file rejection and no network submission, plus the unchanged original seven scene regressions. It does not claim real-browser reproduction of the imported teacher shaders; that private verification remains blocked by the available execution environment. UI-only success must not be presented as completed teacher rendering.

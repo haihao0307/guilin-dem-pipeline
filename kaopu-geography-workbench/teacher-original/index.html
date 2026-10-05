@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-yrbheN7dx5mGBS7ogt+96YdlxyFGZ475BY/QzQB3pgc='; style-src 'unsafe-inline'; img-src blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; media-src 'none'; base-uri 'none'; form-action 'none'">
+<title>08 / 09 / 10 · 老师原版学习容器</title>
+<style>:root{color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#081118;color:#e8eff2;font-synthesis:none}*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;min-width:300px}a{color:#8be0d5;text-underline-offset:4px}a:hover{color:#c5fff7}button,input,select{font:inherit}button,a,input,select,textarea{outline-offset:4px}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #98efe1}button,select,input{border:1px solid #3d5962;border-radius:8px;background:#172b35;color:#e8eff2;min-height:44px}button{padding:10px 16px;cursor:pointer}button:hover:enabled{background:#23414b}button:disabled,input:disabled,select:disabled{opacity:.42;cursor:not-allowed}select,input{padding:8px 10px}.shell{width:min(1300px,100%);margin:auto;padding:24px 32px}.topline{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:27px}.back{font-size:13px;color:#a9bdc4;text-decoration:none}.case-nav{display:flex;gap:6px}.case-nav a{font-size:12px;letter-spacing:.08em;padding:9px 11px;border-radius:6px;color:#abc0c8;text-decoration:none;background:#12212a}.case-nav a[aria-current]{color:#041813;background:#9edbcc}.heading{display:flex;justify-content:space-between;gap:24px;align-items:flex-end}.eyebrow{color:#8ab5b9;font-size:11px;letter-spacing:.14em;text-transform:uppercase}.heading h1{font-size:clamp(25px,3vw,36px);font-weight:600;letter-spacing:-.025em;margin:10px 0 8px;line-height:1.2}.heading h1 small{font-size:15px;color:#9eb4bf;font-weight:400;white-space:nowrap}.attribution{font-size:13px}.tag{font-size:11px;white-space:nowrap;color:#b5d4ce;border:1px solid #365c58;border-radius:30px;padding:8px 12px;margin-bottom:3px}.lead{max-width:850px;margin:21px 0 24px;color:#9fb7c2;line-height:1.8;font-size:14px}.workspace{display:grid;grid-template-columns:minmax(0,1fr) 296px;gap:18px}.viewer{min-width:0;border:1px solid #28414e;border-radius:12px;overflow:hidden;background:#0a1822}.stage{position:relative;aspect-ratio:1200/674;background:#061019;display:grid;place-items:center;min-height:0}.stage canvas{width:100%;height:100%;display:block;touch-action:none}.empty-state{text-align:center;padding:24px;max-width:480px}.empty-state svg{width:44px;height:44px;stroke:#6c989e;fill:none;stroke-width:1.3;margin-bottom:13px}.empty-state h2{font-size:17px;font-weight:500;margin:0 0 10px;color:#cddfe4}.empty-state p{color:#809da9;font-size:12px;line-height:1.8;margin:0}.render-meta{display:flex;gap:18px;align-items:center;padding:11px 15px;border-top:1px solid #233c48;background:#0d1c26;color:#879fab;font-size:11px;letter-spacing:.025em}.render-meta b{font-weight:500;color:#c7d8df}.controls{padding:15px;display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;border-top:1px solid #233c48}.controls label{display:flex;flex-direction:column;gap:6px;font-size:11px;color:#9db4bd}.controls input{width:99px}.controls select{width:105px}.controls .time-group{display:flex;align-items:flex-end;gap:7px}.primary{color:#042820;background:#9cdfcd;border-color:#9cdfcd}.primary:hover:enabled{background:#bcf3e5}.side{display:flex;flex-direction:column;gap:12px}.panel{background:#10212c;border:1px solid #28414e;border-radius:12px;padding:19px}.panel h2{font-size:14px;font-weight:600;line-height:1.5;margin:0 0 10px}.panel p,.panel li{font-size:12px;color:#9eb5c0;line-height:1.8}.panel p{margin:9px 0}.panel ul{padding-left:17px;margin:9px 0}.import-area{border-style:dashed}.import-area.dragging{border-color:#9cdfcd;background:#193b3c}.import-area button{width:100%;margin:8px 0 3px}.import-area #clear{background:transparent;color:#9eb5c0;font-size:12px;min-height:35px;padding:6px}.filename{overflow-wrap:anywhere;color:#71949f!important;font-size:11px!important}.status{margin:16px 0 10px;padding:12px 15px;border:1px solid #2c464e;border-radius:8px;background:#11262d;color:#b7d9d4;font-size:12px;line-height:1.8;overflow-wrap:anywhere}.status[data-tone=error]{border-color:#956848;color:#f4c39d;background:#30241e}.verification{font-size:11px;color:#86a7b0;line-height:1.7;margin:0 2px 22px;overflow-wrap:anywhere}.details{display:grid;grid-template-columns:1.3fr 1fr;gap:18px}.details .panel{background:#0d1d27}.source-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}.source-actions button{font-size:12px}.hash{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px;color:#afd2d0;overflow-wrap:anywhere;display:block;line-height:1.7;margin:9px 0}.byte-count{font-size:11px;color:#7f9da9}.source-panel{margin-top:18px;border:1px solid #294551;border-radius:12px;padding:18px;background:#0d1d27}.source-panel label{font-size:14px;font-weight:600}.source-panel p{color:#94afb9;font-size:12px;line-height:1.7}.source-panel textarea{width:100%;min-height:430px;resize:vertical;font:12px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;background:#07131b;color:#c6d9dd;border:1px solid #294551;border-radius:7px;padding:14px;tab-size:4;white-space:pre;overflow:auto}.footer{padding:24px 0 5px;color:#6e8b98;font-size:11px;line-height:1.8}.footer p{margin:5px 0}@media(max-width:1000px){.workspace{grid-template-columns:minmax(0,1fr) 260px}.shell{padding:23px}.controls{gap:9px}.controls button{padding:9px 12px}.heading h1 small{display:block;margin-top:9px}.tag{display:none}}@media(max-width:760px){.shell{padding:18px 14px}.topline{margin-bottom:23px;gap:8px}.case-nav a{padding:9px;font-size:11px}.back{font-size:12px}.workspace,.details{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr}.stage{min-height:0}.heading h1{font-size:28px}.lead{font-size:13px;margin:18px 0}.controls{padding:12px}.controls label{font-size:11px}.details{gap:12px}.source-panel{padding:14px}}@media(max-width:430px){.empty-state{padding:14px}.empty-state svg{width:32px;height:32px;margin-bottom:10px}.empty-state h2{font-size:16px}.side{grid-template-columns:1fr}.panel{padding:16px}.controls{gap:8px}.controls select{width:108px}.controls input{width:88px}.render-meta{gap:13px}.source-actions button{flex:1}.topline{align-items:flex-start}.case-nav{gap:4px}.case-nav a{padding:8px}.source-panel textarea{font-size:11px}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header>
+  <div class="topline"><a class="back" href="../index.html">← 返回地理工作台</a><nav class="case-nav" aria-label="原版学习案例"><a data-case="08" href="?case=08">08 Canyon</a><a data-case="09" href="?case=09">09 Manta</a><a data-case="10" href="?case=10">10 Submarine</a></nav></div>
+  <div class="heading"><div><div class="eyebrow">TEACHER CODE STUDY / <span id="case-number">09</span></div><h1><span id="case-title">Manta Ray</span> <small>老师原版学习</small></h1><a id="attribution" class="attribution" href="https://www.shadertoy.com/view/4ls3zM" target="_blank" rel="noopener noreferrer">dakrunch · 查看老师原作 ↗</a></div><span class="tag">原码学习 · 本地导入</span></div>
+  <p class="lead">先完整学习老师原码。请选择已保存的原版 HTML 查看器或 JSON 学习包；校验通过后，在你的浏览器中运行。此公开页面只提供容器，不包含老师源码、原图或预渲染画面。</p>
+</header>
+<main>
+  <div class="workspace">
+    <section class="viewer" aria-label="原版渲染查看器">
+      <div id="stage" class="stage">
+        <div id="empty-state" class="empty-state"><svg aria-hidden="true" viewBox="0 0 48 48"><path d="M12 5h17l8 8v30H12zM29 5v9h8M24 35V21m-6 6 6-6 6 6"/></svg><h2>未载入原版学习包</h2><p>导入私有学习文件后显示原码实时结果<br>这里没有替代造型，也没有预置效果图</p></div>
+        <canvas id="canvas" width="480" height="270" aria-label="导入后显示老师原码的实时渲染" hidden></canvas>
+      </div>
+      <div class="render-meta"><span>iTime <b id="render-time">—</b></span><span>采样 <b id="render-size">480 × 270</b></span><span>GPU 单帧在途</span></div>
+      <div class="controls">
+        <button id="play" class="primary" aria-pressed="false" disabled>播放</button><button id="reset" disabled>归零暂停</button>
+        <div class="time-group"><label for="time">iTime / 秒<input id="time" type="number" min="0" max="1000000" step="0.1" value="0" inputmode="decimal" disabled></label><button id="seek" disabled>定位</button></div>
+        <label for="speed">播放速度<select id="speed" disabled><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label>
+        <label for="quality">渲染宽度<select id="quality" disabled><option value="480" selected>480 · 轻量</option><option value="720">720 · 中等</option><option value="1200">1200 · 高负载</option></select></label>
+      </div>
+    </section>
+    <aside class="side">
+      <section id="import-area" class="panel import-area" aria-label="选择本地学习包">
+        <h2>载入这位老师的学习包</h2><p>选择原版 .html 或 .json 文件，也可以拖放到这里。文件保持在当前页面内存中，不会上传。</p>
+        <input id="file-input" type="file" accept=".html,.htm,.json,text/html,application/json" hidden>
+        <button id="import-button" class="primary">选择本地学习包</button><p id="filename" class="filename">文件只在当前页面内存中使用</p><button id="clear">清除本页已载入数据</button>
+      </section>
+      <section class="panel"><h2>低负载起步</h2><p>载入后默认暂停在 iTime=0，渲染宽度 480。需要时再点击播放或提高分辨率。</p><p>上一帧 GPU 完成后才提交下一帧。连续定位、拖动或改分辨率会合并为最新一次操作。</p></section>
+    </aside>
+  </div>
+  <p id="status" class="status" data-tone="normal" role="status" aria-live="polite">未载入原版学习包</p>
+  <p id="verification" class="verification">等待本地文件</p>
+  <div class="details">
+    <section class="panel"><h2>保留原码，区分容器与作品</h2><p id="case-note">保留老师原始源码；运行前校验完整字节。</p><ul><li>仅添加 uniforms、入口与采样密度容器，老师源码正文不改写</li><li>参考坐标 <span id="aspect-note">1200 × 674</span>，保持老师查看器的画面比例</li><li>原始图像字节、实际尺寸与每个通道的 sampler 都单独校验</li><li>切换到后台自动暂停；刷新或切换案例后需重新选择本地文件</li></ul></section>
+    <section class="panel"><h2>原始源码校验与阅读</h2><span id="source-byte-count" class="byte-count">12,150 bytes</span><code id="source-hash" class="hash">679e35942e1285cd4c5c2543896050fa6ab2326f73495d1e44be203435118c78</code><p>校验通过后可只读查看，并下载与输入包逐字节相同的源码。</p><div class="source-actions"><button id="show-source" aria-controls="source-panel" aria-expanded="false" disabled>只读查看源码</button><button id="download-source" disabled>下载原始字节</button></div></section>
+  </div>
+  <section id="source-panel" class="source-panel" hidden><label for="source-text">老师原始源码 · 只读</label><p>此文本区用于阅读，浏览器显示时可能规范化换行。下载使用校验后的原始字节，保留原文件换行与 SHA-256。</p><textarea id="source-text" readonly spellcheck="false" wrap="off" aria-label="老师原始源码只读内容"></textarea></section>
+</main>
+<footer class="footer"><p>本容器只解析导入文件中的 JSON 数据，不执行导入 HTML 的脚本，不加载其中的网络资源。源码、图像及其权利仍属于原作者；本页不授予新的作品许可，也不公开重托原始内容。</p><p>容器与数据校验可独立验证。未导入私有包时不代表完成原作复现；真实画面仍需在支持 WebGL2 的浏览器中验证，不宣称与参考录像逐帧一致。</p></footer>
+</div>
+<noscript>请启用 JavaScript 后使用本地学习包校验与查看器。未载入原版学习包。</noscript>
+<script>/* Self-authored local-data parser and one-frame GPU pacing. No teacher payload. */
+(function (root) {
+  'use strict';
+  function deepFreeze(value) { for (const child of Object.values(value)) if (child && typeof child === 'object') deepFreeze(child); return Object.freeze(value); }
+  const CASES = deepFreeze({"08":{"schemaVersion":1,"id":"canyon-teacher-08","number":"08","title":"Canyon","author":"Inigo Quilez / iq","source":"https://www.shadertoy.com/view/MdBGzG","sourceBytes":13395,"sourceSha256":"de3c501db33965ce4b4a17496b4ff78abc77b59aa955d36a292764a783dc61eb","virtualResolution":[1200,674],"channels":[{"channel":0,"width":1024,"height":1024,"sha256":"bf1c3488a84e8d13381bca53dff4cdeefff42d90cc375d0ff3d44bebc76864b1","sampler":{"filter":"mipmap","internal":"byte","srgb":"false","vflip":"false","wrap":"repeat"},"mime":"image/jpeg","bytes":174949},{"channel":1,"width":1024,"height":1024,"sha256":"1eae2aea7054b1aeaeb0d4f6f3bda7ec4f1c84ae24f1d08cd534fcbd0f96ec78","sampler":{"filter":"mipmap","internal":"byte","srgb":"false","vflip":"false","wrap":"repeat"},"mime":"image/jpeg","bytes":112578},{"channel":2,"width":256,"height":256,"sha256":"e59217a8eecc2e90bfbe7bb163dfcdd90de155bb35e4e904484ede91b8c0f36d","sampler":{"filter":"linear","internal":"byte","srgb":"false","vflip":"false","wrap":"repeat"},"mime":"image/png","bytes":264082},{"channel":3,"width":1024,"height":1024,"sha256":"859b5de7244fac7ee17aafdd1b6a1940596cafcef8ce42470630218c6958fc20","sampler":{"filter":"mipmap","internal":"byte","srgb":"false","vflip":"false","wrap":"repeat"},"mime":"image/jpeg","bytes":204414}]},"09":{"schemaVersion":1,"id":"manta-ray-09","number":"09","title":"Manta Ray","author":"dakrunch","source":"https://www.shadertoy.com/view/4ls3zM","sourceBytes":12150,"sourceSha256":"679e35942e1285cd4c5c2543896050fa6ab2326f73495d1e44be203435118c78","virtualResolution":[1200,674],"channels":[{"channel":0,"width":64,"height":64,"sha256":"6c43a9a9e21bfb8bea1c1b4454206c85651c0abda657ecd3535b1f9e4e4805b4","sampler":{"filter":"mipmap","internal":"byte","srgb":"false","vflip":"false","wrap":"repeat"},"mime":"image/png","bytes":16558},{"channel":1,"width":512,"height":512,"sha256":"81c28c65b034a4cd924f4254d82d7fe1ba451c8a7c735dc9da73ee782bd885ac","sampler":{"filter":"mipmap","internal":"byte","srgb":"false","vflip":"false","wrap":"repeat"},"mime":"image/jpeg","bytes":87562},{"channel":3,"width":512,"height":512,"sha256":"ef063b8f751db77d2ca4ef8a7f28ba60096e58cc8250b30f32923f99b067c9aa","sampler":{"filter":"mipmap","internal":"byte","srgb":"false","vflip":"false","wrap":"repeat"},"mime":"image/jpeg","bytes":49498}]},"10":{"schemaVersion":1,"id":"submarine-exploration-10","number":"10","title":"海底探险船 / Boaty Goes Caving","author":"David Hoskins","source":"https://www.shadertoy.com/view/ldBBDm","sourceBytes":16497,"sourceSha256":"571642c54667eb5a015a535172e988e0e59a7f37ab807546f7dc0e35e7440bf3","virtualResolution":[960,540],"channels":[{"channel":0,"width":512,"height":512,"sha256":"81c28c65b034a4cd924f4254d82d7fe1ba451c8a7c735dc9da73ee782bd885ac","sampler":{"filter":"mipmap","internal":"byte","srgb":"false","vflip":"true","wrap":"repeat"},"mime":"image/jpeg","bytes":87562},{"channel":2,"width":1024,"height":1024,"sha256":"1eae2aea7054b1aeaeb0d4f6f3bda7ec4f1c84ae24f1d08cd534fcbd0f96ec78","sampler":{"filter":"mipmap","internal":"byte","srgb":"false","vflip":"true","wrap":"repeat"},"mime":"image/jpeg","bytes":112578},{"channel":3,"width":256,"height":256,"sha256":"e59217a8eecc2e90bfbe7bb163dfcdd90de155bb35e4e904484ede91b8c0f36d","sampler":{"filter":"linear","internal":"byte","srgb":"false","vflip":"false","wrap":"repeat"},"mime":"image/png","bytes":264082}]}});
+  const MAX_INPUT_BYTES = 2 * 1024 * 1024;
+  function requireValue(ok, message) { if (!ok) throw new Error(message); }
+  function parsePackText(text) {
+    requireValue(typeof text === 'string' && new TextEncoder().encode(text).length <= MAX_INPUT_BYTES, '学习包超过 2 MB 限制');
+    const trimmed = text.trimStart();
+    if (trimmed[0] === '{') return JSON.parse(trimmed);
+    requireValue(/^<!doctype\s+html\b|^<html\b/i.test(trimmed), '请选择原版 HTML 查看器或 JSON 学习包');
+    // Do not create an imported DOM, run scripts, or resolve any imported URL.
+    const markers = [...text.matchAll(/(?:^|[\r\n])\s*const\s+bundle\s*=\s*(?=\{)/g)];
+    requireValue(markers.length === 1, 'HTML 中必须有且只有一个 const bundle JSON 数据对象');
+    const start = markers[0].index + markers[0][0].length;
+    let depth = 0, quoted = false, escaped = false;
+    for (let i = start; i < text.length; i++) {
+      const c = text[i];
+      if (quoted) {
+        if (escaped) escaped = false;
+        else if (c === '\\') escaped = true;
+        else if (c === '"') quoted = false;
+      } else if (c === '"') quoted = true;
+      else if (c === '{') depth++;
+      else if (c === '}' && --depth === 0) return JSON.parse(text.slice(start, i + 1));
+    }
+    throw new Error('HTML 的学习包 JSON 不完整');
+  }
+  function base64Bytes(value, count, label) {
+    requireValue(typeof value === 'string' && value.length === Math.ceil(count / 3) * 4, label + ' 的 Base64 长度不匹配');
+    requireValue(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value), label + ' 的 Base64 无效');
+    const data = Uint8Array.from(atob(value), c => c.charCodeAt(0));
+    requireValue(data.length === count, label + ' 的字节数不匹配');
+    return data;
+  }
+  async function sha256(data) {
+    requireValue(root.crypto && root.crypto.subtle, '浏览器缺少 SHA-256 校验接口，请用支持 Web Crypto 的 HTTPS 页面或本地文件浏览器');
+    return [...new Uint8Array(await root.crypto.subtle.digest('SHA-256', data))].map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  function imageDimensions(bytes, mime) {
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    if (mime === 'image/png') {
+      requireValue(bytes.length >= 24 && view.getUint32(0) === 0x89504e47 && view.getUint32(4) === 0x0d0a1a0a && view.getUint32(8) === 13 && view.getUint32(12) === 0x49484452, 'PNG 文件头无效');
+      return {width: view.getUint32(16), height: view.getUint32(20)};
+    }
+    requireValue(mime === 'image/jpeg' && view.getUint16(0) === 0xffd8, 'JPEG 文件头无效');
+    let offset = 2;
+    while (offset + 4 <= bytes.length) {
+      requireValue(bytes[offset++] === 0xff, 'JPEG 段无效');
+      while (bytes[offset] === 0xff) offset++;
+      const marker = bytes[offset++];
+      if (marker === 0xd9 || marker === 0xda) break;
+      if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) continue;
+      requireValue(offset + 2 <= bytes.length, 'JPEG 段被截断');
+      const length = view.getUint16(offset);
+      requireValue(length >= 2 && offset + length <= bytes.length, 'JPEG 段长度无效');
+      if ([0xc0,0xc1,0xc2,0xc3,0xc5,0xc6,0xc7,0xc9,0xca,0xcb,0xcd,0xce,0xcf].includes(marker)) {
+        requireValue(length >= 8, 'JPEG 尺寸段被截断');
+        return {width: view.getUint16(offset + 5), height: view.getUint16(offset + 3)};
+      }
+      offset += length;
+    }
+    throw new Error('未找到 JPEG 图像尺寸');
+  }
+  async function verifyPack(pack, caseId = '09') {
+    const PINS = CASES[caseId];
+    requireValue(Boolean(PINS), '案例编号无效');
+    requireValue(pack && typeof pack === 'object' && !Array.isArray(pack), '学习包必须是 JSON 对象');
+    for (const key of ['schemaVersion', 'id', 'author', 'source', 'sourceBytes', 'sourceSha256']) {
+      requireValue(pack[key] === PINS[key], '学习包元数据不匹配：' + key);
+    }
+    const originalBytes = base64Bytes(pack.sourceBase64, PINS.sourceBytes, '源码');
+    requireValue(await sha256(originalBytes) === PINS.sourceSha256, '原始源码 SHA-256 不匹配；不编译');
+    const source = new TextDecoder('utf-8', {fatal: true}).decode(originalBytes);
+    requireValue(new TextEncoder().encode(source).length === originalBytes.length && new TextEncoder().encode(source).every((b, i) => b === originalBytes[i]), '源码 UTF-8 往返校验失败');
+    requireValue(Array.isArray(pack.channels) && pack.channels.length === PINS.channels.length, '必须包含原始通道 ' + PINS.channels.map(c => c.channel).join('、') + '，且不能重复或增加通道');
+    const channels = [];
+    for (const pin of PINS.channels) {
+      const matches = pack.channels.filter(c => c && c.channel === pin.channel);
+      requireValue(matches.length === 1, '通道 ' + pin.channel + ' 缺失或重复');
+      const channel = matches[0], label = '通道 ' + pin.channel;
+      for (const key of ['width', 'height', 'sha256', 'mime']) requireValue(channel[key] === pin[key], label + ' 元数据不匹配：' + key);
+      if (channel.bytes !== undefined) requireValue(channel.bytes === pin.bytes, label + ' 字节数元数据不匹配');
+      requireValue(channel.sampler && Object.keys(channel.sampler).length === 5, label + ' sampler 不完整');
+      for (const key of Object.keys(pin.sampler)) requireValue(channel.sampler[key] === pin.sampler[key], label + ' sampler 不匹配：' + key);
+      const bytes = base64Bytes(channel.base64, pin.bytes, label);
+      requireValue(await sha256(bytes) === pin.sha256, label + ' SHA-256 不匹配；不编译');
+      const dimensions = imageDimensions(bytes, pin.mime);
+      requireValue(dimensions.width === pin.width && dimensions.height === pin.height, label + ' 图像实际尺寸不匹配');
+      channels.push({...pin, sampler: {...pin.sampler}, data: bytes});
+    }
+    return {source, originalBytes, channels, pins: PINS};
+  }
+
+  class Timeline {
+    constructor() { this.time = 0; this.anchor = 0; this.speed = 1; this.playing = false; }
+    current(now) { return this.time + (this.playing ? Math.max(0, now - this.anchor) * this.speed / 1000 : 0); }
+    pause(now) { this.time = this.current(now); this.playing = false; this.anchor = now; }
+    play(now) { this.anchor = now; this.playing = true; }
+    seek(value, now) { this.time = value; this.anchor = now; }
+    setSpeed(value, now) { this.time = this.current(now); this.anchor = now; this.speed = value; }
+    reset(now) { this.time = 0; this.anchor = now; this.playing = false; }
+  }
+
+  class FencePacer {
+    constructor({gl, draw, getLatest = () => null, onComplete = () => {}, onError = () => {}, raf = requestAnimationFrame, caf = cancelAnimationFrame}) {
+      Object.assign(this, {gl, draw, getLatest, onComplete, onError, raf, caf});
+      this.pending = null; this.flight = null; this.rafId = null; this.stopped = false; this.retiring = false; this.retirement = null;
+    }
+    request(state) { if (!this.stopped && !this.retiring) { this.pending = {...state}; this.schedule(); } }
+    schedule() { if (!this.stopped && this.rafId === null) this.rafId = this.raf(now => this.pump(now)); }
+    pump(now) {
+      this.rafId = null;
+      if (this.stopped) return;
+      try {
+        const latest = this.retiring ? null : this.getLatest(now);
+        if (latest) this.pending = {...latest};
+        if (this.flight) {
+          const result = this.gl.clientWaitSync(this.flight.sync, 0, 0); // Never block; never gl.finish().
+          if (result === this.gl.TIMEOUT_EXPIRED) { this.schedule(); return; }
+          if (result !== this.gl.ALREADY_SIGNALED && result !== this.gl.CONDITION_SATISFIED) throw new Error('GPU 同步失败，已停止提交画面');
+          const finished = this.flight;
+          this.flight = null;
+          this.gl.deleteSync(finished.sync);
+          if (!this.retiring) this.onComplete(finished.state, now - finished.started);
+        }
+        if (this.stopped) return;
+        if (this.retiring) { this.stop(); return; }
+        if (this.pending) {
+          const state = this.pending; this.pending = null;
+          this.draw(state);
+          const sync = this.gl.fenceSync(this.gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+          if (!sync) throw new Error('无法建立 GPU fence，已停止提交画面');
+          this.flight = {sync, state, started: now};
+          this.gl.flush();
+        }
+        if (this.flight || this.pending) this.schedule();
+      } catch (error) { this.stop(error); this.onError(error); }
+    }
+    retire() {
+      if (this.retirement) return this.retirement;
+      if (this.stopped) return Promise.resolve();
+      this.retiring = true; this.pending = null;
+      this.retirement = new Promise((resolve, reject) => { this.resolveRetirement = resolve; this.rejectRetirement = reject; });
+      if (this.flight) this.schedule(); else this.stop();
+      return this.retirement;
+    }
+    stop(error = null) {
+      this.stopped = true;
+      if (this.rafId !== null) this.caf(this.rafId);
+      this.rafId = null; this.pending = null;
+      if (this.flight) this.gl.deleteSync(this.flight.sync);
+      this.flight = null;
+      if (error && this.rejectRetirement) this.rejectRetirement(error);
+      else if (this.resolveRetirement) this.resolveRetirement();
+    }
+  }
+  root.MantaCore = Object.freeze({CASES, MAX_INPUT_BYTES, parsePackText, verifyPack, imageDimensions, sha256, Timeline, FencePacer});
+})(globalThis);
+
+/* Only this self-authored uniform/entry wrapper surrounds the verified source. */
+(function (root) {
+  'use strict';
+  const VERTEX = '#version 300 es\nprecision highp float;void main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);gl_Position=vec4(p*2.-1.,0.,1.);}';
+  const PREFIX = '#version 300 es\nprecision highp float;precision highp int;uniform vec3 iResolution;uniform vec2 uRenderResolution;uniform float iTime;uniform vec4 iMouse;uniform int iFrame;uniform sampler2D iChannel0,iChannel1,iChannel2,iChannel3;out vec4 outputColor;\n';
+  const SUFFIX = '\nvoid main(){mainImage(outputColor,gl_FragCoord.xy * iResolution.xy / uRenderResolution);}';
+  function wrapSource(source, caseId = '09') { return PREFIX + (caseId === '08' ? '#define HW_PERFORMANCE 0\n' : '') + source + SUFFIX; }
+  async function prepareImages(pack, isCurrent) {
+    if (typeof createImageBitmap !== 'function') throw new Error('此浏览器缺少无预乘的 createImageBitmap 解码接口');
+    const images = [];
+    try {
+      for (const channel of pack.channels) {
+        if (!isCurrent()) throw new Error('导入已被新的选择替换');
+        const bitmap = await createImageBitmap(new Blob([channel.data], {type: channel.mime}), {premultiplyAlpha: 'none', colorSpaceConversion: 'none', imageOrientation: channel.sampler.vflip === 'true' ? 'flipY' : 'none'});
+        images.push({channel, bitmap});
+        if (bitmap.width !== channel.width || bitmap.height !== channel.height) throw new Error('通道 ' + channel.channel + ' 解码尺寸不匹配');
+      }
+      if (!isCurrent()) throw new Error('导入已被新的选择替换');
+      return images;
+    } catch (error) { for (const image of images) image.bitmap.close(); throw error; }
+  }
+  function createRenderer(canvas, pack, images, callbacks) {
+    const gl = canvas.getContext('webgl2', {alpha: false, antialias: false, premultipliedAlpha: false, preserveDrawingBuffer: true, powerPreference: 'low-power'});
+    if (!gl || gl.isContextLost()) throw new Error('此浏览器没有可用的 WebGL2；源码校验及下载仍可使用');
+    let program = null, vao = null, pacer = null;
+    const shaders = [], textures = [];
+    function cleanup() {
+      if (pacer) pacer.stop();
+      for (const shader of shaders.splice(0)) gl.deleteShader(shader);
+      for (const texture of textures.splice(0)) gl.deleteTexture(texture);
+      if (program) { gl.deleteProgram(program); program = null; }
+      if (vao) { gl.deleteVertexArray(vao); vao = null; }
+    }
+    function compile(type, source) {
+      const shader = gl.createShader(type);
+      if (!shader) throw new Error('无法建立 shader');
+      shaders.push(shader); gl.shaderSource(shader, source); gl.compileShader(shader);
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw new Error('Shader 编译失败：' + (gl.getShaderInfoLog(shader) || '未知错误'));
+      return shader;
+    }
+    try {
+      gl.disable(gl.BLEND); gl.disable(gl.DEPTH_TEST);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+      gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+      program = gl.createProgram();
+      if (!program) throw new Error('无法建立 shader program');
+      gl.attachShader(program, compile(gl.VERTEX_SHADER, VERTEX));
+      gl.attachShader(program, compile(gl.FRAGMENT_SHADER, wrapSource(pack.source, pack.pins.number)));
+      gl.linkProgram(program);
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error('Program 链接失败：' + (gl.getProgramInfoLog(program) || '未知错误'));
+      for (const shader of shaders.splice(0)) { gl.detachShader(program, shader); gl.deleteShader(shader); }
+      gl.useProgram(program);
+      vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+      for (const {channel, bitmap} of images) {
+        const texture = gl.createTexture();
+        if (!texture) throw new Error('无法建立通道贴图');
+        textures.push(texture); gl.activeTexture(gl.TEXTURE0 + channel.channel); gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, channel.sampler.filter === 'mipmap' ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, bitmap);
+        if (channel.sampler.filter === 'mipmap') gl.generateMipmap(gl.TEXTURE_2D);
+        gl.uniform1i(gl.getUniformLocation(program, 'iChannel' + channel.channel), channel.channel);
+      }
+      const uniforms = Object.fromEntries(['iResolution', 'uRenderResolution', 'iTime', 'iMouse', 'iFrame'].map(name => [name, gl.getUniformLocation(program, name)]));
+      let frames = 0, epoch = -1;
+      function draw(state) {
+        if (gl.isContextLost()) throw new Error('WebGL 上下文已丢失');
+        if (canvas.width !== state.width || canvas.height !== state.height) { canvas.width = state.width; canvas.height = state.height; }
+        gl.useProgram(program); gl.bindVertexArray(vao); gl.viewport(0, 0, state.width, state.height);
+        // Fixed virtual coordinates preserve each teacher viewer's framing at every density.
+        gl.uniform3f(uniforms.iResolution, ...pack.pins.virtualResolution, 1);
+        gl.uniform2f(uniforms.uRenderResolution, state.width, state.height);
+        gl.uniform1f(uniforms.iTime, state.time);
+        gl.uniform4fv(uniforms.iMouse, state.mouse);
+        if (epoch !== state.epoch) { epoch = state.epoch; frames = 0; }
+        gl.uniform1i(uniforms.iFrame, frames++);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        const error = gl.getError();
+        if (error !== gl.NO_ERROR) throw new Error('WebGL 错误 ' + error);
+      }
+      pacer = new root.MantaCore.FencePacer({gl, draw, ...callbacks});
+      return {request: state => pacer.request(state), retire: () => pacer.retire().finally(cleanup), abandon: cleanup};
+    } catch (error) { cleanup(); throw error; }
+  }
+  root.MantaRenderer = Object.freeze({prepareImages, createRenderer, wrapSource, PREFIX, SUFFIX});
+})(globalThis);
+
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const {CASES, MAX_INPUT_BYTES, parsePackText, verifyPack, Timeline} = MantaCore;
+  const requestedCase = new URLSearchParams(location.search).get('case') || '09';
+  const caseId = Object.hasOwn(CASES, requestedCase) ? requestedCase : '09';
+  const PINS = CASES[caseId];
+  const [virtualWidth, virtualHeight] = PINS.virtualResolution;
+  const timeline = new Timeline();
+  const mouse = [0, 0, 0, 0]; let pointerId = null, epoch = 0;
+  let verified = null, renderer = null, generation = 0, retirement = Promise.resolve(), contextLost = false, gpuFailed = false;
+  let lastFrame = null, phase = 'unloaded', filename = '';
+  const playbackIds = ['play', 'reset', 'time', 'seek', 'speed', 'quality'];
+  const canvas = $('canvas');
+  function announce(message, isError = false) { $('status').textContent = message; $('status').dataset.tone = isError ? 'error' : 'normal'; }
+  function setPlayback(enabled) { for (const id of playbackIds) $(id).disabled = !enabled; }
+  function setSource(enabled) { $('download-source').disabled = !enabled; $('show-source').disabled = !enabled; }
+  function updatePlay() { $('play').textContent = timeline.playing ? '暂停' : '播放'; $('play').setAttribute('aria-pressed', String(timeline.playing)); }
+  function state(now = performance.now()) { const width = Number($('quality').value); return {time: timeline.current(now), width, height: Math.round(width * virtualHeight / virtualWidth), mouse: [...mouse], epoch}; }
+  function request() { if (renderer) renderer.request(state()); }
+  function retireCurrent() {
+    const previous = renderer; renderer = null;
+    if (previous) retirement = retirement.then(() => previous.retire());
+    return retirement;
+  }
+  function pause() { timeline.pause(performance.now()); updatePlay(); }
+  function forgetVisibleData() {
+    verified = null; lastFrame = null; filename = '';
+    $('source-text').value = ''; $('source-panel').hidden = true; $('show-source').setAttribute('aria-expanded', 'false');
+    $('verification').textContent = '等待本地文件'; $('filename').textContent = '文件只在当前页面内存中使用';
+    canvas.hidden = true; $('empty-state').hidden = false;
+    setSource(false); setPlayback(false);
+  }
+  function fail(error, id) {
+    if (id !== generation) return;
+    pause(); phase = verified ? 'render-error' : 'unloaded'; setPlayback(false);
+    retireCurrent().catch(() => {});
+    announce((verified ? '已校验原版学习包；运行未成功：' : '未载入原版学习包：') + error.message, true);
+    if (!verified) $('verification').textContent = '校验未通过，未编译';
+  }
+  async function importFile(file) {
+    if (!file) return;
+    const id = ++generation;
+    pause(); const drain = retireCurrent(); drain.catch(() => {}); forgetVisibleData();
+    phase = 'validating'; announce('正在本地校验源码和 ' + PINS.channels.length + ' 张原图…');
+    $('file-input').value = '';
+    try {
+      if (file.size > MAX_INPUT_BYTES) throw new Error('文件超过 2 MB 限制');
+      const data = await file.arrayBuffer();
+      const pack = parsePackText(new TextDecoder('utf-8', {fatal: true}).decode(data));
+      const result = await verifyPack(pack, caseId);
+      if (id !== generation) return;
+      verified = result; filename = file.name;
+      $('filename').textContent = file.name;
+      $('source-text').value = result.source;
+      $('verification').textContent = '源码 ' + PINS.sourceBytes.toLocaleString() + ' B 与通道 ' + PINS.channels.map(c => c.channel).join(' / ') + '：SHA-256、实际尺寸、sampler 全部通过';
+      setSource(true);
+      if (gpuFailed) throw new Error('GPU 同步曾失败，为避免继续积压任务，请刷新页面后重试；源码仍可下载');
+      if (contextLost) throw new Error('WebGL 上下文尚未恢复；可下载源码，或稍后重新选择本地文件');
+      announce('字节校验通过，正在本地准备 WebGL2…'); phase = 'preparing';
+      const images = await MantaRenderer.prepareImages(result, () => id === generation);
+      try {
+        await drain; // Retire any earlier GPU frame before creating another renderer.
+        if (id !== generation) return;
+        timeline.reset(performance.now()); mouse.fill(0); epoch++; timeline.setSpeed(1, performance.now());
+        $('quality').value = '480'; $('speed').value = '1'; $('time').value = '0'; updatePlay();
+        renderer = MantaRenderer.createRenderer(canvas, result, images, {
+          getLatest: now => timeline.playing ? state(now) : null,
+          onComplete: (frame, elapsed) => {
+            if (id !== generation) return;
+            phase = timeline.playing ? 'playing' : 'paused'; lastFrame = {...frame};
+            canvas.hidden = false; $('empty-state').hidden = true;
+            $('render-time').textContent = frame.time.toFixed(2) + ' s';
+            $('render-size').textContent = frame.width + ' × ' + frame.height;
+            if (document.activeElement !== $('time')) $('time').value = frame.time.toFixed(2);
+            announce((timeline.playing ? '原码播放中' : '已载入 · 原码已暂停') + ' · iTime ' + frame.time.toFixed(2) + ' s · ' + frame.width + '×' + frame.height + ' · GPU 单帧 ' + Math.round(elapsed) + ' ms');
+          },
+          onError: error => { gpuFailed = true; fail(error, id); }
+        });
+        setPlayback(true); phase = 'waiting-first-frame';
+        announce('已校验 · 正在等待原码 t=0 首帧，播放保持暂停');
+        request();
+      } finally { for (const {bitmap} of images) bitmap.close(); }
+    } catch (error) { fail(error, id); }
+  }
+  $('file-input').addEventListener('change', event => importFile(event.target.files[0]));
+  $('import-button').addEventListener('click', () => $('file-input').click());
+  const drop = $('import-area');
+  for (const event of ['dragenter', 'dragover']) drop.addEventListener(event, e => { e.preventDefault(); drop.classList.add('dragging'); });
+  for (const event of ['dragleave', 'drop']) drop.addEventListener(event, e => { e.preventDefault(); drop.classList.remove('dragging'); });
+  drop.addEventListener('drop', event => {
+    if (event.dataTransfer.files.length === 1) importFile(event.dataTransfer.files[0]);
+    else announce('请一次选择一个本地 HTML 或 JSON 学习包', true);
+  });
+  // A drop elsewhere must not navigate to or execute an imported HTML file.
+  window.addEventListener('dragover', e => e.preventDefault());
+  window.addEventListener('drop', e => e.preventDefault());
+  $('clear').addEventListener('click', () => {
+    generation++; pause(); retireCurrent().catch(error => announce('GPU 清理失败，请刷新页面：' + error.message, true));
+    forgetVisibleData(); timeline.reset(performance.now()); updatePlay(); $('time').value = '0';
+    $('render-time').textContent = '—'; $('render-size').textContent = '480 × ' + Math.round(480 * virtualHeight / virtualWidth); phase = 'unloaded';
+    announce('未载入原版学习包');
+  });
+  $('play').addEventListener('click', () => {
+    if (timeline.playing) pause(); else { timeline.play(performance.now()); updatePlay(); }
+    request();
+  });
+  $('reset').addEventListener('click', () => { mouse.fill(0); epoch++; timeline.reset(performance.now()); $('time').value = '0'; updatePlay(); request(); });
+  function seek() {
+    const value = Number($('time').value);
+    if ($('time').value.trim() === '' || !Number.isFinite(value) || value < 0 || value > 1000000) { announce('iTime 请输入 0 到 1,000,000 之间的秒数', true); return; }
+    timeline.seek(value, performance.now()); request();
+  }
+  $('seek').addEventListener('click', seek);
+  $('time').addEventListener('keydown', e => { if (e.key === 'Enter') seek(); });
+  $('speed').addEventListener('change', () => { timeline.setSpeed(Number($('speed').value), performance.now()); request(); });
+  $('quality').addEventListener('change', request);
+  $('show-source').addEventListener('click', () => {
+    $('source-panel').hidden = !$('source-panel').hidden;
+    $('show-source').setAttribute('aria-expanded', String(!$('source-panel').hidden));
+    if (!$('source-panel').hidden) $('source-text').focus();
+  });
+  $('download-source').addEventListener('click', () => {
+    if (!verified) return;
+    const url = URL.createObjectURL(new Blob([verified.originalBytes], {type: 'application/octet-stream'}));
+    const a = document.createElement('a'); a.href = url; a.download = 'teacher-' + caseId + '-original-' + PINS.sourceBytes + 'B.frag';
+    document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && timeline.playing) { pause(); request(); announce('页面已切换到后台，播放已暂停'); }
+  });
+  canvas.addEventListener('webglcontextlost', event => {
+    event.preventDefault(); contextLost = true; generation++; pause();
+    if (renderer) renderer.abandon(); renderer = null; retirement = Promise.resolve();
+    setPlayback(false); canvas.hidden = true; $('empty-state').hidden = false; phase = 'context-lost';
+    announce('WebGL 上下文丢失，已暂停；源码仍可查看或下载，恢复后请重新选择本地文件', true);
+  });
+  canvas.addEventListener('webglcontextrestored', () => { contextLost = false; gpuFailed = false; announce('WebGL 已恢复，请重新选择本地学习包；不会自动重新播放'); });
+  window.addEventListener('pagehide', () => { generation++; pause(); retireCurrent().catch(() => {}); });
+  window.addEventListener('pageshow', event => { if (event.persisted && verified) { setPlayback(false); phase = 'restore-needed'; announce('页面已返回，请重新选择本地学习包以恢复渲染'); } });
+  // Read-only diagnostic snapshots contain no source, image bytes, or local filename.
+  Object.defineProperty(window, 'teacherStudyDiagnostics', {get: () => Object.freeze({version: 1, caseId, phase, imported: Boolean(verified), playing: timeline.playing, sourceSha256: PINS.sourceSha256, sourceBytes: PINS.sourceBytes, channelCount: PINS.channels.length, lastFrame: lastFrame ? Object.freeze({...lastFrame, mouse: Object.freeze([...lastFrame.mouse])}) : null, configuredMaxFramesInFlight: 1, networkUploads: false})});
+  function mousePoint(event) {
+    const rect = canvas.getBoundingClientRect();
+    return [Math.max(0, Math.min(virtualWidth, (event.clientX - rect.left) * virtualWidth / rect.width)), Math.max(0, Math.min(virtualHeight, (rect.bottom - event.clientY) * virtualHeight / rect.height))];
+  }
+  canvas.addEventListener('pointerdown', event => {
+    if (!renderer || pointerId !== null) return;
+    pointerId = event.pointerId;
+    [mouse[0], mouse[1]] = mousePoint(event);
+    mouse[2] = Math.max(mouse[0], 0.001); mouse[3] = Math.max(mouse[1], 0.001);
+    canvas.setPointerCapture(pointerId); request();
+  });
+  canvas.addEventListener('pointermove', event => { if (event.pointerId === pointerId) { [mouse[0], mouse[1]] = mousePoint(event); request(); } });
+  for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(name, event => {
+    if (event.pointerId !== pointerId) return;
+    pointerId = null; mouse[2] = -Math.abs(mouse[2]); mouse[3] = -Math.abs(mouse[3]); request();
+  });
+  document.title = caseId + ' · ' + PINS.title + ' · 原版学习容器';
+  $('case-number').textContent = caseId;
+  $('case-title').textContent = PINS.title;
+  $('attribution').textContent = PINS.author + ' · 查看老师原作 ↗'; $('attribution').href = PINS.source;
+  $('source-hash').textContent = PINS.sourceSha256;
+  $('source-byte-count').textContent = PINS.sourceBytes.toLocaleString() + ' bytes';
+  $('aspect-note').textContent = virtualWidth + ' × ' + virtualHeight;
+  $('render-size').textContent = '480 × ' + Math.round(480 * virtualHeight / virtualWidth);
+  $('stage').style.aspectRatio = virtualWidth + ' / ' + virtualHeight;
+  $('case-note').textContent = caseId === '10' ? '原码从黑色淡入，iTime=0 的黑画面是原始结果。可点击播放，或定位到 4 秒。原配置的音频通道 1 不参与当前视觉计算，此容器不播放或获取音频。' : caseId === '08' ? '原码按本地查看器配置使用 HW_PERFORMANCE=0。拖动画面传入实际 iMouse；首次载入与重置时 iMouse=0。' : '保留老师的原始尾部、光照、步进和输出写法。初始 iTime=0；容器不会替换成另一套几何或示意画面。';
+  for (const link of document.querySelectorAll('[data-case]')) if (link.dataset.case === caseId) link.setAttribute('aria-current', 'page');
+  setPlayback(false); setSource(false); updatePlay();
+  if (caseId !== requestedCase) announce('未知案例编号，已显示 09；未载入原版学习包', true);
+})();
+</script>
+</body>
+</html>
