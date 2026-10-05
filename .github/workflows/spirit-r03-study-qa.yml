@@ -1,0 +1,48 @@
+name: Spirit R03 isolated study QA
+on:
+  push:
+    branches: [work/fractal-wave-spirit-plant-study-20261005]
+    paths:
+      - '.github/workflows/spirit-r03-study-qa.yml'
+      - 'kaopu-tree-fractal-wave-lab/spirit-plant-connected-wind-study/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  standalone-render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build pinned standalone and run logic checks
+        working-directory: kaopu-tree-fractal-wave-lab/spirit-plant-connected-wind-study
+        run: |
+          mkdir -p qa
+          python acquire_vendor.py
+          python patch_runtime.py
+          python build.py
+          node tests/runtime-smoke.mjs
+      - name: Install fixed browser testing dependencies
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.51.1
+          npx playwright install --with-deps chromium
+      - name: Render actual standalone Three scenes
+        run: node kaopu-tree-fractal-wave-lab/spirit-plant-connected-wind-study/tests/browser.cjs kaopu-tree-fractal-wave-lab/spirit-plant-connected-wind-study
+      - name: Verify full bounded parameter suite
+        working-directory: kaopu-tree-fractal-wave-lab/spirit-plant-connected-wind-study
+        run: node tests/numerical.mjs
+      - name: Store verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spirit-r03-study-qa
+          path: |
+            kaopu-tree-fractal-wave-lab/spirit-plant-connected-wind-study/qa/
+            kaopu-tree-fractal-wave-lab/spirit-plant-connected-wind-study/*-standalone.html
+            kaopu-tree-fractal-wave-lab/spirit-plant-connected-wind-study/spirit-r03-connected-wind.html
+          retention-days: 14

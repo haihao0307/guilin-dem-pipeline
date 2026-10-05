@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07100f">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:,">
+<title>KAOPU · Native 3D Fractal Grammar R03</title>
+<style>
+:root{--bg:#07100f;--panel:#101817;--line:#30413d;--ink:#edf4f1;--muted:#91a19c;--accent:#9fc2b1;--cyan:#38ddc9;--magenta:#cf4d86;--amber:#d4b86f;--blue:#73a9d7}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:14px/1.52 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft Yahei",sans-serif}
+button,input,select{font:inherit}
+header{min-height:68px;padding:10px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:14px}
+.title{font-size:18px;font-weight:650}.sub{font-size:10px;color:var(--muted);margin-top:2px}.tag{border:1px solid #435650;border-radius:999px;padding:4px 10px;font-size:9px;color:#bdcbc6;white-space:nowrap}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 372px;min-height:calc(100vh - 68px)}
+.stage{position:relative;min-height:760px;overflow:hidden;background:radial-gradient(circle at 48% 38%,#162722,#07100f 72%)}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.bar{position:absolute;z-index:5;left:10px;top:10px;right:10px;display:flex;gap:6px;flex-wrap:wrap}
+.bar button{border:1px solid #435650;background:#101a18dd;color:#e9f0ee;border-radius:6px;padding:7px 10px;min-height:36px;cursor:pointer}
+.bar button.on{background:#38544b;border-color:#8aa99d}
+.caption{position:absolute;z-index:4;left:14px;top:58px;max-width:660px;font-size:10px;color:#aab8b3;pointer-events:none;text-shadow:0 1px 8px #000}
+.caption b{display:block;color:#f2f7f4;font-size:14px;margin-bottom:2px}
+.info{position:absolute;z-index:4;left:14px;bottom:12px;font-size:9px;color:#9eb0aa;pointer-events:none}
+.badges{position:absolute;right:12px;bottom:12px;z-index:4;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;pointer-events:none}
+.badge{border:1px solid #364943;background:#0b1211cc;border-radius:999px;padding:4px 7px;font-size:9px;color:#a8b8b2}
+.error{position:absolute;z-index:9;left:14px;right:14px;top:112px;padding:12px;background:#3a1d24;border:1px solid #95506a;border-radius:7px;white-space:pre-wrap}.error[hidden]{display:none}
+.panel{background:var(--panel);border-left:1px solid var(--line);padding:17px 18px 26px;overflow:auto}
+.panel h2{font-size:14px;margin:0 0 5px}.note{font-size:10px;color:var(--muted);margin:0 0 13px}.gate{border:1px solid #344640;border-radius:8px;background:#0e1615;padding:10px 11px;margin-bottom:14px;font-size:10px;color:#aebdb7}.gate b{color:#e4ece9}
+.row{margin:0 0 13px}.row label{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#bcc9c4}.row output{color:#dce7e3;font-variant-numeric:tabular-nums}.row input,.row select{width:100%;margin-top:5px}.row input[type=range]{accent-color:var(--accent)}.row select{background:#14201d;color:#e4ece9;border:1px solid #40534e;border-radius:6px;padding:7px}
+.checkgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px 10px;margin:4px 0 13px}.checkgrid label{font-size:10px;color:#b8c6c1;display:flex;gap:6px;align-items:center}.checkgrid input{accent-color:var(--accent)}
+.status{border-top:1px solid var(--line);padding-top:11px;margin-top:5px;font-size:10px;color:#a5b9b1;min-height:68px}
+.legend{font-size:9px;color:#84948f;margin-top:10px;line-height:1.8}.sw{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:4px}.cyan{background:var(--cyan)}.magenta{background:var(--magenta)}.amber{background:var(--amber)}.blue{background:var(--blue)}
+@media(max-width:820px){header{padding:10px 12px}.tag{display:none}.wrap{display:block}.stage{height:68svh;min-height:560px}.panel{border-left:0;border-top:1px solid var(--line);padding:15px}.caption{max-width:80%}.bar{gap:4px}.bar button{font-size:11px;padding:7px 8px}.badges{display:none}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.0/examples/jsm/"}}</script>
+</head>
+<body>
+<header>
+  <div><div class="title">KAOPU · Native 3D Fractal Grammar R03</div><div class="sub">SPATIAL HASH · BUD PERCEPTION VOLUME · 3D FIELD COMPETITION · LOAD BACK-PROP</div></div>
+  <div class="tag">三维分形演奏技巧 · 仍不绑定任何物种</div>
+</header>
+<div class="wrap">
+<main class="stage" id="stage">
+  <div class="bar">
+    <button id="orbit" class="on">自由三维</button><button id="front">正面</button><button id="side">侧面</button><button id="top">顶部</button><button id="fit">适配视野</button>
+    <button id="grow">播放生长</button><button id="rebuild">重新生长</button><button id="buds" class="on">芽</button><button id="field" class="on">空间场</button><button id="probe" class="on">芽感知</button><button id="auto">自动转动</button>
+  </div>
+  <div class="caption"><b>R03：不是“画一棵三维树”，而是让三维空间参与每一次分枝决定</b>枝条生成以前，Bud 先在父枝局部球面里提出候选方向；每个候选方向都读取光、三维占据、障碍、向上性和父轴连续性。被选中的 Shoot 会立即写回空间哈希，改变后续 Bud 的世界。</div>
+  <div class="info" id="info">正在建立三维空间场…</div>
+  <div class="badges"><span class="badge" id="segBadge">Shoot --</span><span class="badge" id="budBadge">Bud --</span><span class="badge" id="volBadge">Volume --</span></div>
+  <pre class="error" id="error" hidden></pre>
+</main>
+<aside class="panel">
+  <h2>Native 3D 总控</h2>
+  <p class="note">R01 Lift 继续作为“二维理解是否正确”的锚点；R03 生成时不再依赖任何固定投影。</p>
+  <div class="gate"><b>本轮新增：</b><br>✓ 空间哈希替代全局逐点扫描<br>✓ 每个 Bud 有三维感知体积和多候选方向<br>✓ 已生长结构实时写回 Occupancy<br>✓ 下游支撑需求反传到枝条粗细<br>✓ 可把 Growth Pass 从骨架逐步长到完整空间结构</div>
+
+  <div class="row"><label>KuKo 分枝声部 <output id="voiceO"></output></label><select id="voice"><option value="C">C · 3 slots / 40°</option><option value="L">L · 3 slots / 20°</option><option value="R">R · 4 slots / 25.7°</option></select></div>
+  <div class="row"><label>Growth Pass <output id="passO"></output></label><input id="pass" type="range" min="1" max="11" step="1" value="10"></div>
+  <div class="row"><label>空间竞争 <output id="spaceO"></output></label><input id="space" type="range" min="0" max="2.4" step=".05" value="1.18"></div>
+  <div class="row"><label>光场权重 <output id="lightO"></output></label><input id="light" type="range" min="0" max="2.4" step=".05" value=".92"></div>
+  <div class="row"><label>光场方位 <output id="lightAzO"></output></label><input id="lightAz" type="range" min="-180" max="180" step="1" value="48"></div>
+  <div class="row"><label>光场高度 <output id="lightElO"></output></label><input id="lightEl" type="range" min="5" max="85" step="1" value="42"></div>
+  <div class="row"><label>向上性 <output id="gravityO"></output></label><input id="gravity" type="range" min="0" max="2.0" step=".05" value=".62"></div>
+  <div class="row"><label>父轴连续性 <output id="parentO"></output></label><input id="parent" type="range" min=".2" max="2.4" step=".05" value="1.08"></div>
+  <div class="row"><label>芽释放阈值 <output id="thresholdO"></output></label><input id="threshold" type="range" min=".28" max=".88" step=".01" value=".46"></div>
+  <div class="row"><label>感知半径 <output id="perceptionO"></output></label><input id="perception" type="range" min=".35" max="1.6" step=".05" value=".82"></div>
+  <div class="row"><label>冠层开放度 <output id="opennessO"></output></label><input id="openness" type="range" min=".55" max="1.45" step=".02" value="1.08"></div>
+  <div class="row"><label>障碍位置 X <output id="obsXO"></output></label><input id="obsX" type="range" min="-2.8" max="2.8" step=".05" value="2.15"></div>
+  <div class="row"><label>障碍位置 Z <output id="obsZO"></output></label><input id="obsZ" type="range" min="-2.8" max="2.8" step=".05" value="1.35"></div>
+
+  <div class="checkgrid">
+    <label><input id="obstacle" type="checkbox" checked>障碍参与</label>
+    <label><input id="lightField" type="checkbox" checked>光场参与</label>
+    <label><input id="spaceField" type="checkbox" checked>空间场参与</label>
+    <label><input id="upField" type="checkbox" checked>向上性参与</label>
+  </div>
+
+  <div class="status" id="status">等待 R03 生长…</div>
+  <div class="legend"><span class="sw cyan"></span>Shoot　<span class="sw magenta"></span>Active Bud　<span class="sw amber"></span>Dormant Bud　<span class="sw blue"></span>Perception rays / Occupancy samples</div>
+</aside>
+</div>
+<script type="module" src="./runtime.js"></script>
+</body>
+</html>

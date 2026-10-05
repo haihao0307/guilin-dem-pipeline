@@ -1,0 +1,14 @@
+<section id="studyPanel">
+<h2>连接 · 方向 · 共同风场</h2>
+<p class="study-note">从 <a href="https://variable.io/expo-2025-spirit-plant/" target="_blank" rel="noopener">Spirit Plant 过程页</a> 学习结构组织和风响应关系。只接入冻结 R03 的原有枝段和芽；形态未重画，也未添加叶花。</p>
+<div class="study-buttons"><button id="windOn" class="on">风响应：开</button><button id="windPlay" class="on">暂停风</button><button id="windReset">时间归零</button><button id="restOverlay">静态对照</button><button id="localFrames">局部方向</button><button id="windField">风场矢量</button></div>
+<div class="row"><label for="windStrength">风强度（无量纲）<output id="windStrengthO">0.65</output></label><input id="windStrength" type="range" min="0" max="1.5" step=".01" value=".65"></div>
+<div class="row"><label for="windAz">风向<output id="windAzO">35°</output></label><input id="windAz" type="range" min="-180" max="180" step="1" value="35"></div>
+<div class="row"><label for="windTime">固定时刻<output id="windTimeO">0.00 s</output></label><input id="windTime" type="range" min="0" max="30" step=".05" value="0"></div>
+<div class="row"><label for="worldOffset">空间采样位置 X<output id="worldOffsetO">0.0</output></label><input id="worldOffset" type="range" min="-12" max="12" step=".1" value="0"></div>
+<div class="row"><label for="plantSeed">个体种子</label><input id="plantSeed" type="number" min="0" max="2147483647" step="1" value="123303"></div>
+<div class="study-buttons"><button id="applySeed">按种子重建</button><button id="originalSeed">恢复原始种子</button><button id="saveIdentity">保存个体参数</button></div>
+<div id="studyIdentity" class="study-stat"></div><div id="studyMetrics" class="study-stat" role="status"></div>
+<details class="study-note"><summary>已观察与本次实现的边界</summary><p>已观察：骨架连通、沿枝局部方向、根端较稳定、不同区域不同步；官方说明使用种子、部件参数和实例复用。当前实现：在静止骨架中点采样连续世界风场（没有对摆动后位置迭代求风），分枝局部旋转、父枝附着约束和固定长度。场函数、响应系数与几何约束是我们的独立实验，不是原作者公式，也未标定真实植物物性。没有碰撞、惯性积分或实测性能结论。</p><p>RGB 方向分别为切向 T、法向 N、副法向 B。灰线是同种子的静态 R03 对照。风强度为零直接恢复原始坐标。相机、调试开关和时间不会重新生成个体。</p><a href="https://variable.io/notes/spirit-plant-software-and-network-architecture-a-technical-case-study/" target="_blank" rel="noopener">官方技术案例</a></details>
+<hr>
+</section>
