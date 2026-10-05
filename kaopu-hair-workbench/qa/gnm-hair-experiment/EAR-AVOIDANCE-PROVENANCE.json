@@ -1,0 +1,649 @@
+{
+  "status": "HOLD for GPU shape review; contact/root/unchanged-geometry targets passed in four displayed states, non-root bending remains a material visual concern",
+  "candidate": "Bounded actual-ear-contact gate, up to3 local routing passes, and conditional shallow-neck terminal repair",
+  "runtimeSha256": "188acce4feb10938e03ca6251afc05da98fb996d1c64037c2c09925106be4205",
+  "baselineRuntimeSha256": "6a17a090ae7c4b6ad453b9a1ac79c8b622678755cbb3bd47fd79d5f527b62499",
+  "previousProxyOnlyRuntimeSha256": "152ab94aa96d158b48093cfd727d8204c14f8a3c850749fcd4d0699d786325fa",
+  "sourceGuideDataUnchanged": true,
+  "sourceGuideDataSha256": "706a8192d47b1f8a422ee3094107a71946b8fd417ce7f0c456ef29addf2c60be",
+  "creditExact": "Daniel Bystedt. CC BY-SA license",
+  "license": "Same source-provided CC BY-SA declaration, version unspecified. Existing attribution retained.",
+  "changes": [
+    "Actual deformed GNM ear-triangle BVH controls the trigger. Exact segment ray tests plus adaptive finite-radius distance bounds determine local contact; envelope membership alone cannot trigger movement.",
+    "The actual source-scaled per-strand radius is0.0001045×(0.78+0.42×deterministicRandom)×max(0.06,1-s), in GNM native units.",
+    "If12-level runtime proximity subdivision is unresolved, it conservatively triggers that local segment. There were1–4 such checks per state; these are explicit, not asserted positive intersections.",
+    "Only contacted segments and a0.030-native-unit arc neighbourhood route around the existing actual-ear-derived envelope. Up to3 local rechecks detect contacts introduced in adjacent segments. No global solver.",
+    "Root-region displacement ramps from zero at0.008 curve arc to full by0.040. An explicit15° additional-angle cap applies at the first two interior samples; observed increase in these tested states is0°.",
+    "A separately bounded actual lower-neck BVH checks terminal segments. Only contact-triggered last2–3 samples receive an outward correction, capped at0.0006; observed maximum0.0002193. No hard-coded strand IDs.",
+    "Source guides, binding root triangles/barycentrics, original root locations and brow buffers remain unchanged by these stages.",
+    "Every curve with neither ear nor neck trigger is byte-identical to the frozen baseline."
+  ],
+  "rootSocket": "Ray audit retains raw hits; possible exclusion only segment0 within0.0002 curve arc AND Euclidean root distance, actual exclusions0. Finite-radius audit shortens only first0.0002 arc, never whole first segments.",
+  "verification": {
+    "fourStateSummary": [
+      {
+        "state": "neutral",
+        "scalpTriangleCrossings": 0,
+        "browTriangleCrossings": 0,
+        "earRadiusOverlaps": 0,
+        "earRadiusUnresolved": 0,
+        "minimumSampledEarRadiusMargin": 4.981090642438879e-06,
+        "earTriggeredStrands": 696,
+        "neckTriggeredStrands": 0,
+        "untriggeredChanged": 0,
+        "rootsBitExact": true,
+        "browsBitExact": true,
+        "strand4869BitExact": true,
+        "maximumNearRootExtraBendDegrees": 0.0,
+        "largestNearRootAbsoluteBendRadians": 1.5276928613257088,
+        "maximumNonRootExtraBendDegrees": 46.44395049213606,
+        "maximumDisplacement": 0.027962520718574524,
+        "lengthChange": {
+          "maxIncrease": 0.028730433350852375,
+          "maxDecrease": -0.0007594421867289092,
+          "meanAffected": 0.006520454883011435,
+          "maxAbsoluteRelative": 0.11899935148300975
+        },
+        "bindMs": 33591.009447,
+        "updateMs": 738.2019600000058,
+        "contactStats": {
+          "affectedStrands": 696,
+          "proxyHitSegments": 1232,
+          "maxDisplacement": 0.027962522050878985,
+          "totalDisplacement": 40.237765834202904,
+          "maxLengthChange": 0.02873043074075754,
+          "totalLengthChange": 4.538236591694869,
+          "rootMoved": 0,
+          "rootProxyConflicts": 0,
+          "trueTriggerStrands": 696,
+          "trueRayTriggerSegments": 1199,
+          "radiusOnlyTriggerSegments": 29,
+          "radiusUnresolvedTriggerSegments": 4,
+          "rootCapApplied": 315,
+          "neckCorrectedStrands": 0,
+          "neckMaxDisplacement": 0
+        }
+      },
+      {
+        "state": "smile",
+        "scalpTriangleCrossings": 0,
+        "browTriangleCrossings": 0,
+        "earRadiusOverlaps": 0,
+        "earRadiusUnresolved": 0,
+        "minimumSampledEarRadiusMargin": 8.09657848422241e-06,
+        "earTriggeredStrands": 751,
+        "neckTriggeredStrands": 0,
+        "untriggeredChanged": 0,
+        "rootsBitExact": true,
+        "browsBitExact": true,
+        "strand4869BitExact": true,
+        "maximumNearRootExtraBendDegrees": 0.0,
+        "largestNearRootAbsoluteBendRadians": 1.5276928613257088,
+        "maximumNonRootExtraBendDegrees": 46.44423093508875,
+        "maximumDisplacement": 0.027965731918811798,
+        "lengthChange": {
+          "maxIncrease": 0.027604398266640656,
+          "maxDecrease": -0.000759349985242852,
+          "meanAffected": 0.0069259770075513,
+          "maxAbsoluteRelative": 0.11412989246578123
+        },
+        "bindMs": 33591.009447,
+        "updateMs": 758.3070999999982,
+        "contactStats": {
+          "affectedStrands": 751,
+          "proxyHitSegments": 1356,
+          "maxDisplacement": 0.027965731074248934,
+          "totalDisplacement": 45.25973884060085,
+          "maxLengthChange": 0.027604399288483655,
+          "totalLengthChange": 5.201408716820787,
+          "rootMoved": 0,
+          "rootProxyConflicts": 0,
+          "trueTriggerStrands": 751,
+          "trueRayTriggerSegments": 1311,
+          "radiusOnlyTriggerSegments": 42,
+          "radiusUnresolvedTriggerSegments": 3,
+          "rootCapApplied": 314,
+          "neckCorrectedStrands": 0,
+          "neckMaxDisplacement": 0
+        }
+      },
+      {
+        "state": "surprise",
+        "scalpTriangleCrossings": 0,
+        "browTriangleCrossings": 0,
+        "earRadiusOverlaps": 0,
+        "earRadiusUnresolved": 0,
+        "minimumSampledEarRadiusMargin": 2.4060416409483904e-06,
+        "earTriggeredStrands": 652,
+        "neckTriggeredStrands": 0,
+        "untriggeredChanged": 0,
+        "rootsBitExact": true,
+        "browsBitExact": true,
+        "strand4869BitExact": true,
+        "maximumNearRootExtraBendDegrees": 0.0,
+        "largestNearRootAbsoluteBendRadians": 1.5276928613257088,
+        "maximumNonRootExtraBendDegrees": 46.443987355334905,
+        "maximumDisplacement": 0.027961254119873047,
+        "lengthChange": {
+          "maxIncrease": 0.02833590974045369,
+          "maxDecrease": -0.0007593852572341242,
+          "meanAffected": 0.00643988253303835,
+          "maxAbsoluteRelative": 0.11719394390480554
+        },
+        "bindMs": 33591.009447,
+        "updateMs": 737.1116630000033,
+        "contactStats": {
+          "affectedStrands": 652,
+          "proxyHitSegments": 1170,
+          "maxDisplacement": 0.027961255281354777,
+          "totalDisplacement": 37.46810265225703,
+          "maxLengthChange": 0.028335909384464092,
+          "totalLengthChange": 4.198803494327843,
+          "rootMoved": 0,
+          "rootProxyConflicts": 0,
+          "trueTriggerStrands": 652,
+          "trueRayTriggerSegments": 1144,
+          "radiusOnlyTriggerSegments": 25,
+          "radiusUnresolvedTriggerSegments": 1,
+          "rootCapApplied": 317,
+          "neckCorrectedStrands": 0,
+          "neckMaxDisplacement": 0
+        }
+      },
+      {
+        "state": "identity",
+        "scalpTriangleCrossings": 0,
+        "browTriangleCrossings": 0,
+        "earRadiusOverlaps": 0,
+        "earRadiusUnresolved": 0,
+        "minimumSampledEarRadiusMargin": 3.019352080308504e-06,
+        "earTriggeredStrands": 660,
+        "neckTriggeredStrands": 3,
+        "untriggeredChanged": 0,
+        "rootsBitExact": true,
+        "browsBitExact": true,
+        "strand4869BitExact": true,
+        "maximumNearRootExtraBendDegrees": 0.0,
+        "largestNearRootAbsoluteBendRadians": 1.5238055466355178,
+        "maximumNonRootExtraBendDegrees": 46.07445734168539,
+        "maximumDisplacement": 0.028402291238307953,
+        "lengthChange": {
+          "maxIncrease": 0.028313897668582222,
+          "maxDecrease": -0.00020123909503222404,
+          "meanAffected": 0.0072079105614493676,
+          "maxAbsoluteRelative": 0.09847635055499517
+        },
+        "bindMs": 33591.009447,
+        "updateMs": 688.9185900000011,
+        "contactStats": {
+          "affectedStrands": 660,
+          "proxyHitSegments": 1096,
+          "maxDisplacement": 0.028402294331075342,
+          "totalDisplacement": 39.440155429640605,
+          "maxLengthChange": 0.02831389656804356,
+          "totalLengthChange": 4.77914815091032,
+          "rootMoved": 0,
+          "rootProxyConflicts": 0,
+          "trueTriggerStrands": 660,
+          "trueRayTriggerSegments": 1066,
+          "radiusOnlyTriggerSegments": 29,
+          "radiusUnresolvedTriggerSegments": 1,
+          "rootCapApplied": 295,
+          "neckCorrectedStrands": 3,
+          "neckMaxDisplacement": 0.0002192481953918993
+        }
+      }
+    ],
+    "fullConstructorAndIsolatedStageByteIdentical": true,
+    "allRootsBitExact": true,
+    "allBrowsBitExact": true,
+    "allUntriggeredStrandsBitExact": true,
+    "strand4869BitExactAllFourStates": true,
+    "earActualTriangleCount": 2718,
+    "skinCenterlineAudit": "Every one of336,000 scalp and10,000 brow segments against actual GNM component0 triangles, each state",
+    "earRadiusAudit": "Continuous adaptive1-Lipschitz distance lower bounds using actual per-strand varying radius; all candidates certified or counted as unresolved. Final overlap and unresolved counts0 in every state.",
+    "scope": "neutral, Maya smile_wide, Maya surprise, and fixedidentity sampler seed42/sampleIdentity([0,1],[0,1,0,0],0.8), plus exact neutral reset"
+  },
+  "visualReviewExamples": [
+    {
+      "state": "neutral",
+      "nonRootBendExample": {
+        "strand": 11384,
+        "point": 18,
+        "previous": [
+          0.09566681832075119,
+          0.28203585743904114,
+          0.024707987904548645
+        ],
+        "current": [
+          0.08855075389146805,
+          0.2709376811981201,
+          0.020869014784693718
+        ],
+        "next": [
+          0.09783617407083511,
+          0.2574813961982727,
+          0.018106862902641296
+        ],
+        "root": [
+          -0.02488030306994915,
+          0.3978574573993683,
+          0.056550562381744385
+        ]
+      },
+      "formerlyBad4869Unchanged": true
+    },
+    {
+      "state": "smile",
+      "nonRootBendExample": {
+        "strand": 11384,
+        "point": 18,
+        "previous": [
+          0.09566684812307358,
+          0.28203585743904114,
+          0.024707987904548645
+        ],
+        "current": [
+          0.08855077624320984,
+          0.2709376811981201,
+          0.020869014784693718
+        ],
+        "next": [
+          0.09783628582954407,
+          0.2574813961982727,
+          0.018106862902641296
+        ],
+        "root": [
+          -0.02488030306994915,
+          0.3978574573993683,
+          0.056550562381744385
+        ]
+      },
+      "formerlyBad4869Unchanged": true
+    },
+    {
+      "state": "surprise",
+      "nonRootBendExample": {
+        "strand": 11384,
+        "point": 18,
+        "previous": [
+          0.09566688537597656,
+          0.28203585743904114,
+          0.024707987904548645
+        ],
+        "current": [
+          0.08855079859495163,
+          0.2709376811981201,
+          0.020869014784693718
+        ],
+        "next": [
+          0.0978362038731575,
+          0.2574813961982727,
+          0.018106862902641296
+        ],
+        "root": [
+          -0.02488030306994915,
+          0.3978574573993683,
+          0.056550562381744385
+        ]
+      },
+      "formerlyBad4869Unchanged": true
+    },
+    {
+      "state": "identity",
+      "nonRootBendExample": {
+        "strand": 6114,
+        "point": 21,
+        "previous": [
+          0.08074694871902466,
+          0.22431470453739166,
+          0.018564539030194283
+        ],
+        "current": [
+          0.06845156848430634,
+          0.21161812543869019,
+          0.013505193404853344
+        ],
+        "next": [
+          0.07198947668075562,
+          0.19960948824882507,
+          0.008086860179901123
+        ],
+        "root": [
+          -0.01818014308810234,
+          0.3986731469631195,
+          0.06254330277442932
+        ]
+      },
+      "formerlyBad4869Unchanged": true
+    }
+  ],
+  "earEnvelopes": [
+    {
+      "state": "neutral",
+      "envelopes": [
+        {
+          "side": -1,
+          "center": [
+            -0.07675252,
+            0.26868798,
+            0.02327114
+          ],
+          "radii": [
+            0.019166394577077722,
+            0.053514073274425075,
+            0.03739714965555106
+          ],
+          "vertexCount": 654,
+          "maxVertexNormalizedRadius": 0.9999900000999989,
+          "bbox": [
+            [
+              -0.09591891457707773,
+              0.2151739067255749,
+              -0.014126009655551063
+            ],
+            [
+              -0.05758612542292228,
+              0.3222020532744251,
+              0.06066828965555106
+            ]
+          ],
+          "radiusMargin": 0.0001254,
+          "safetyMargin": 0.00015
+        },
+        {
+          "side": 1,
+          "center": [
+            0.07671676,
+            0.26864847,
+            0.02327088
+          ],
+          "radii": [
+            0.019287972877800003,
+            0.053409264087300005,
+            0.037323443230700006
+          ],
+          "vertexCount": 653,
+          "maxVertexNormalizedRadius": 0.9999900000999989,
+          "bbox": [
+            [
+              0.057428787122199995,
+              0.21523920591269996,
+              -0.014052563230700005
+            ],
+            [
+              0.0960047328778,
+              0.3220577340873,
+              0.060594323230700006
+            ]
+          ],
+          "radiusMargin": 0.0001254,
+          "safetyMargin": 0.00015
+        }
+      ]
+    },
+    {
+      "state": "smile",
+      "envelopes": [
+        {
+          "side": -1,
+          "center": [
+            -0.07675252,
+            0.2686877092982959,
+            0.023271074289491458
+          ],
+          "radii": [
+            0.019166408499825285,
+            0.053514440041120805,
+            0.037397089804884154
+          ],
+          "vertexCount": 654,
+          "maxVertexNormalizedRadius": 0.9999900000999989,
+          "bbox": [
+            [
+              -0.09591892849982529,
+              0.2151732692571751,
+              -0.014126015515392696
+            ],
+            [
+              -0.057586111500174716,
+              0.3222021493394167,
+              0.060668164094375615
+            ]
+          ],
+          "radiusMargin": 0.0001254,
+          "safetyMargin": 0.00015
+        },
+        {
+          "side": 1,
+          "center": [
+            0.07671676,
+            0.2686483560915729,
+            0.02327047580417331
+          ],
+          "radii": [
+            0.01928802244469045,
+            0.05340921475827309,
+            0.03732300407707524
+          ],
+          "vertexCount": 653,
+          "maxVertexNormalizedRadius": 0.9999900000999989,
+          "bbox": [
+            [
+              0.05742873755530954,
+              0.2152391413332998,
+              -0.014052528272901932
+            ],
+            [
+              0.09600478244469045,
+              0.322057570849846,
+              0.06059347988124855
+            ]
+          ],
+          "radiusMargin": 0.0001254,
+          "safetyMargin": 0.00015
+        }
+      ]
+    },
+    {
+      "state": "surprise",
+      "envelopes": [
+        {
+          "side": -1,
+          "center": [
+            -0.07675252,
+            0.2686844354995618,
+            0.023270488692900625
+          ],
+          "radii": [
+            0.0191665954327747,
+            0.053518927473953974,
+            0.03739667906635475
+          ],
+          "vertexCount": 654,
+          "maxVertexNormalizedRadius": 0.9999900000999989,
+          "bbox": [
+            [
+              -0.0959191154327747,
+              0.2151655080256078,
+              -0.014126190373454126
+            ],
+            [
+              -0.057585924567225305,
+              0.32220336297351576,
+              0.060667167759255375
+            ]
+          ],
+          "radiusMargin": 0.0001254,
+          "safetyMargin": 0.00015
+        },
+        {
+          "side": 1,
+          "center": [
+            0.07671676,
+            0.26864890032072447,
+            0.023270593213437257
+          ],
+          "radii": [
+            0.01928798611131257,
+            0.053410005595402744,
+            0.03732308919512649
+          ],
+          "vertexCount": 653,
+          "maxVertexNormalizedRadius": 0.9999900000999989,
+          "bbox": [
+            [
+              0.057428773888687425,
+              0.21523889472532173,
+              -0.014052495981689232
+            ],
+            [
+              0.09600474611131257,
+              0.32205890591612724,
+              0.06059368240856375
+            ]
+          ],
+          "radiusMargin": 0.0001254,
+          "safetyMargin": 0.00015
+        }
+      ]
+    },
+    {
+      "state": "identity",
+      "envelopes": [
+        {
+          "side": -1,
+          "center": [
+            -0.07823385694969431,
+            0.2680921492152649,
+            0.021120421712405368
+          ],
+          "radii": [
+            0.019044953893821957,
+            0.05459575342585785,
+            0.03944363748362657
+          ],
+          "vertexCount": 654,
+          "maxVertexNormalizedRadius": 0.9999900000999989,
+          "bbox": [
+            [
+              -0.09727881084351628,
+              0.21349639578940707,
+              -0.018323215771221205
+            ],
+            [
+              -0.059188903055872356,
+              0.3226879026411228,
+              0.060564059196031944
+            ]
+          ],
+          "radiusMargin": 0.0001254,
+          "safetyMargin": 0.00015
+        },
+        {
+          "side": 1,
+          "center": [
+            0.0782220589256957,
+            0.2679710304443807,
+            0.020932546912971955
+          ],
+          "radii": [
+            0.019372399706253846,
+            0.05438201708029735,
+            0.039341365815225154
+          ],
+          "vertexCount": 653,
+          "maxVertexNormalizedRadius": 0.9999900000999989,
+          "bbox": [
+            [
+              0.05884965921944185,
+              0.21358901336408334,
+              -0.0184088189022532
+            ],
+            [
+              0.09759445863194954,
+              0.322353047524678,
+              0.06027391272819711
+            ]
+          ],
+          "radiusMargin": 0.0001254,
+          "safetyMargin": 0.00015
+        }
+      ]
+    },
+    {
+      "state": "neutral-reset",
+      "envelopes": [
+        {
+          "side": -1,
+          "center": [
+            -0.07675252,
+            0.26868798,
+            0.02327114
+          ],
+          "radii": [
+            0.019166394577077722,
+            0.053514073274425075,
+            0.03739714965555106
+          ],
+          "vertexCount": 654,
+          "maxVertexNormalizedRadius": 0.9999900000999989,
+          "bbox": [
+            [
+              -0.09591891457707773,
+              0.2151739067255749,
+              -0.014126009655551063
+            ],
+            [
+              -0.05758612542292228,
+              0.3222020532744251,
+              0.06066828965555106
+            ]
+          ],
+          "radiusMargin": 0.0001254,
+          "safetyMargin": 0.00015
+        },
+        {
+          "side": 1,
+          "center": [
+            0.07671676,
+            0.26864847,
+            0.02327088
+          ],
+          "radii": [
+            0.019287972877800003,
+            0.053409264087300005,
+            0.037323443230700006
+          ],
+          "vertexCount": 653,
+          "maxVertexNormalizedRadius": 0.9999900000999989,
+          "bbox": [
+            [
+              0.057428787122199995,
+              0.21523920591269996,
+              -0.014052563230700005
+            ],
+            [
+              0.0960047328778,
+              0.3220577340873,
+              0.060594323230700006
+            ]
+          ],
+          "radiusMargin": 0.0001254,
+          "safetyMargin": 0.00015
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Four-state collision and root protection success is not a visual-smoothness pass.",
+    "Non-root ear-side samples can gain up to46.45° discrete bend; inspect the supplied concrete strand/point examples. This remains HOLD pending actual GPU images.",
+    "Maximum native displacement0.02840 and maximum strand length increase0.02873 remain material changes.",
+    "Near-root absolute maximum angle remains the baseline87.53°; the candidate added0° at the first two interior samples. Do not attribute the pre-existing baseline maximum to this repair.",
+    "Runtime contact-segment counters include repeated checks across up to3 passes, not unique segment counts.",
+    "Node initialization about33.6s and each full update0.69–0.76s; device/browser costs may differ.",
+    "Finite-radius certification is limited to actual ear triangles. Whole-head checks test centerline segments; the neck repair is shallow and conditional. Raster AA footprint and shading are separate GPU concerns.",
+    "No proof for all636 model axes, arbitrary identities/expressions/poses, or inter-hair collisions. Poses remain unexposed."
+  ],
+  "priorReportScope": "EAR-TRIGGER-OVERREACH-AUDIT.json and EAR-REMAINING-NECK-CONTACTS.json describe the superseded proxy-only/baseline problems. Current gate invariants and segment/radius reports supersede those outcomes."
+}
