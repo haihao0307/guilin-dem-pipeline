@@ -1,5 +1,3 @@
-// Graphics recovery candidate revision 2; production entry is unchanged.
-if(require('fs').existsSync(require('path').join(__dirname,'../qa/gnm-webgl-recovery-candidate/manifest.json'))){require('./webgl-recovery-candidate.cjs');return;}
 const fs=require('fs'),path=require('path'),crypto=require('crypto'),http=require('http'),https=require('https');
 const {chromium}=require('playwright');
 const ROOT=path.resolve(__dirname,'..'),HTML=process.env.HAIR_HTML||path.join(ROOT,'index.html'),OUT=process.env.HAIR_QA_OUT||path.join(ROOT,'qa-browser');

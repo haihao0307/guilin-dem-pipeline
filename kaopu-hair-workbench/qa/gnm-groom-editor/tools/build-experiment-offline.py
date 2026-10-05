@@ -37,7 +37,7 @@ def build(output,cache,download):
  if re.search(r'''(?:from\s*|import\s*\(\s*)["']\.{1,2}/''',app):raise RuntimeError('Use importmap names in app')
  html=re.sub(r'<script type="importmap">.*?</script>','<script type="importmap">'+json.dumps({'imports':source})+'</script>',html,flags=re.S)
  html=html.replace('<link rel="stylesheet" href="experiment.css">','<style>'+(ROOT/'experiment.css').read_text()+'</style>')
- html=html.replace('<script type="module" src="src/experiment.js"></script>','<script>window.__GNM_ASSETS__='+json.dumps(assets)+'</script><script type="module" src="'+data(app)+'"></script>')
+ html=html.replace('<script type="module" src="src/experiment.js?graphics-recovery=1"></script>','<script>window.__GNM_ASSETS__='+json.dumps(assets)+'</script><script type="module" src="'+data(app)+'"></script>')
  output.parent.mkdir(parents=True,exist_ok=True);output.write_text(html)
  print(json.dumps({'bytes':output.stat().st_size,'sha256':hashlib.sha256(output.read_bytes()).hexdigest(),'moduleCount':len(source),'weights':EXPECTED}))
 if __name__=='__main__':
