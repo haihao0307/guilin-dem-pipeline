@@ -32,9 +32,10 @@ This is a shader-learning and derived-study workbench; renaming or changing the 
 
 BoyC, The Cave (https://www.shadertoy.com/view/MsX3RH), CC BY-NC-SA 3.0 (https://creativecommons.org/licenses/by-nc-sa/3.0/). User-provided shader preserved byte-for-byte at `sources/endless/original.frag`; provenance and exact channel hashes at `sources/endless/provenance.json`. This is an inverse-square potential field traced at fixed steps, not a true SDF or Perlin-noise reconstruction. Camera, light path, field constants, grain, mirrored triplanar samples and original step counts are unchanged. No commercial license is asserted. The private user reference video is not hosted.
 
-## Independent runnable studies I2
+## Independent runnable studies I3
 
 The original seven R17 scenes and runtime remain unchanged. Completed independent cases use newly authored shape, movement, camera and procedural-material functions with no teacher source or image textures. Small card images are actual rendered frames. Unfinished cases are omitted from the visible catalog until accepted, with their numbers reserved.
 
+- Study 08: Open Canyon / 开阔峡谷. Self-authored source SHA-256: `261db7db873d4680d1deb48e238aa8b76eaf7a5cf261ce35a5db8e31bcd6d4e5`. Visual learning reference: https://www.shadertoy.com/view/MdBGzG. This is an independent visual study, not an exact port or physical simulation.
 - Study 09: Pelagic Manta / 海中蝠鲼. Self-authored source SHA-256: `a4c15f35658855f0ba8d52831525c69fd824845c8f5f2ab3d15273838f89a14e`. Visual learning reference: https://www.shadertoy.com/view/4ls3zM. This is an independent visual study, not an exact port or physical simulation.
 - Study 10: Undersea Explorer / 海底探险船. Self-authored source SHA-256: `e9bfe8f503c878f039dee49673a02fcb97a78f117f8af91f359aa2103d17a1f9`. Visual learning reference: https://www.shadertoy.com/view/ldBBDm. This is an independent visual study, not an exact port or physical simulation.
