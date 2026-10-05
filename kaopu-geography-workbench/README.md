@@ -31,3 +31,13 @@ This is a shader-learning and derived-study workbench; renaming or changing the 
 ## Seventh terrain: Endless Cave
 
 BoyC, The Cave (https://www.shadertoy.com/view/MsX3RH), CC BY-NC-SA 3.0 (https://creativecommons.org/licenses/by-nc-sa/3.0/). User-provided shader preserved byte-for-byte at `sources/endless/original.frag`; provenance and exact channel hashes at `sources/endless/provenance.json`. This is an inverse-square potential field traced at fixed steps, not a true SDF or Perlin-noise reconstruction. Camera, light path, field constants, grain, mirrored triplanar samples and original step counts are unchanged. No commercial license is asserted. The private user reference video is not hosted.
+
+## Reference catalog L1: entries 08–10
+
+These are source-reference entries, not additional runnable scenes. Every card explicitly says “原作参考 / 本地学习，站内复现未完成”. The original seven scene shaders, settings, runtime, and controls remain byte-identical. R17 continues to identify the existing renderer; L1 identifies only this separate home-page reference catalog.
+
+- 08 Canyon — Inigo Quilez / iq: https://www.shadertoy.com/view/MdBGzG
+- 09 Manta Ray v2.0 — dakrunch: https://www.shadertoy.com/view/4ls3zM
+- 10 海底探险船 / [SH17B] Boaty Goes Caving — David Hoskins: https://www.shadertoy.com/view/ldBBDm
+
+No new teacher source, original textures, soundtrack, private reference recording, derived screenshot, or independent canyon prototype is published in this update. The links navigate to the external original site; availability, authentication, and verification there are not guaranteed. Private offscreen rendering is distinct from browser/mobile acceptance. No claim of three completed in-site reproductions is made.

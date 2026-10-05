@@ -15,7 +15,7 @@ def wait_site():
  for _ in range(60):
   try:
    status,body=get(BASE+'?qa='+str(time.time()))
-   if status==200 and b'endless.js?v=R17' in body:
+   if status==200 and b'data-learning-revision="L1"' in body and body==Path(__file__).with_name('index.html').read_bytes():
     record('public_https_200',{'status':status,'html_sha256':hashlib.sha256(body).hexdigest()});return
   except Exception as e:print('Waiting for Pages:',e,flush=True)
   time.sleep(10)
@@ -41,12 +41,42 @@ def layout(p,name):
  assert p.evaluate('document.documentElement.scrollWidth<=innerWidth+2');record(name,d)
 def back(p):
  url=p.url;p.locator('#backBtn').click();p.wait_for_function('KaoPuDiagnostics().homeVisible && !KaoPuDiagnostics().detailVisible');assert p.url==url and p.locator('[data-scene]').count()==7
+def reference_catalog(p, mobile=False):
+ links={'08':'https://www.shadertoy.com/view/MdBGzG','09':'https://www.shadertoy.com/view/4ls3zM','10':'https://www.shadertoy.com/view/ldBBDm'}
+ assert p.locator('[data-study]').count()==3
+ assert p.locator('#teacherStudies img, #teacherStudies canvas, #teacherStudies [data-scene], #teacherStudies button').count()==0
+ for number,url in links.items():
+  card=p.locator('[data-study="'+number+'"]');assert '原作参考 / 本地学习，站内复现未完成' in card.inner_text()
+  a=card.locator('a');assert a.get_attribute('href')==url and a.get_attribute('target')=='_blank'
+  assert 'noopener' in a.get_attribute('rel') and 'noreferrer' in a.get_attribute('rel')
+  if not mobile:
+   requested=[]
+   def observe(route):
+    requested.append(route.request.url);route.abort()
+   p.context.route(url,observe)
+   with p.expect_popup() as pending:a.click()
+   popup=pending.value
+   for attempt in range(20):
+    if requested:break
+    p.wait_for_timeout(100)
+   popup.close();p.context.unroute(url,observe)
+   assert url in requested,(number,requested)
+   assert diag(p)['homeVisible'] and not diag(p)['detailVisible']
+  else:
+   a.scroll_into_view_if_needed();assert a.is_visible()
+ assert p.evaluate('document.documentElement.scrollWidth<=innerWidth+2')
+ p.locator('#teacherStudies').screenshot(path=str(OUT/('learning_catalog_mobile.png' if mobile else 'learning_catalog_desktop.png')))
+ record('reference_catalog_mobile' if mobile else 'reference_catalog_desktop',{'entries':list(links),'source_links':links,'external_navigation':'actual new-tab request observed then blocked by test, not external-site availability test' if not mobile else 'visible links and responsive layout','in_site_reproduction_complete':False})
+ p.evaluate('window.scrollTo(0,0)')
 try:
  wait_site()
  public=OUT/'public_source';public.mkdir(exist_ok=True);manifest={}
- for name in ['index.html','style.css','settings.js','more.js','cave.js','canyon.js','crater.js','snow.js','post.js','caveBake.js','underwater.js','runtime.js','endless.js','README.md']:
+ for name in ['index.html','style.css','settings.js','more.js','cave.js','canyon.js','crater.js','snow.js','post.js','caveBake.js','underwater.js','runtime.js','endless.js','README.md','learning-r1.css']:
   status,body=get(BASE+name+'?qa='+str(time.time()));assert status==200; (public/name).write_bytes(body);manifest[name]=hashlib.sha256(body).hexdigest()
  record('public_source_checksums',manifest)
+ for name in ['more.js','cave.js','canyon.js','crater.js','snow.js','underwater.js','endless.js','runtime.js','settings.js']:
+  assert manifest[name]==hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest(),('deployed source differs from checkout',name)
+ record('seven_scene_runtime_exact_bytes')
  with sync_playwright() as pw:
   browser=pw.chromium.launch(headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--disable-dev-shm-usage'])
   p=browser.new_page(viewport={'width':1440,'height':1100},device_scale_factor=1);p.set_default_timeout(120000)
@@ -54,6 +84,7 @@ try:
   p.goto(BASE,wait_until='load',timeout=90000)
   assert diag(p)['homeVisible'] and not diag(p)['detailVisible'] and p.locator('[data-scene]').count()==7
   record('home_first_desktop',{'diagnostics':diag(p),'entries':p.locator('[data-scene]').count()})
+  reference_catalog(p)
   before=diag(p)['renderCount'];p.locator('[data-scene="underwater"]').click();rendered(p,'underwater',before);pause(p);record('desktop_browser',{'version':browser.version,'diagnostics':diag(p)})
   gpu=p.evaluate('''()=>{const g=document.getElementById('liveCanvas').getContext('webgl2'),x=g.getExtension('WEBGL_debug_renderer_info');return{version:g.getParameter(g.VERSION),renderer:x?g.getParameter(x.UNMASKED_RENDERER_WEBGL):g.getParameter(g.RENDERER)};}''');record('actual_gpu_backend',gpu)
   assert abs(diag(p)['underwater']['horizontal']-2/3)<1e-10 and diag(p)['underwater']['depth']==2
@@ -95,6 +126,7 @@ try:
   mobile=browser.new_page(viewport={'width':390,'height':844},device_scale_factor=1,is_mobile=True,has_touch=True);mobile.set_default_timeout(120000)
   mobile.goto(BASE,wait_until='load',timeout=90000)
   assert diag(mobile)['homeVisible'] and mobile.locator('[data-scene]').count()==7
+  reference_catalog(mobile,True)
   mobile.screenshot(path=str(OUT/'mobile_viewport_home_first.png'),full_page=True)
   before=diag(mobile)['renderCount'];mobile.locator('[data-scene="underwater"]').click();rendered(mobile,'underwater',before);pause(mobile);layout(mobile,'mobile_viewport_layout_390x844');seek(mobile,72);shot(mobile,'mobile_viewport_underwater');mobile.screenshot(path=str(OUT/'mobile_viewport_page.png'),full_page=True);back(mobile);mobile.screenshot(path=str(OUT/'mobile_viewport_home.png'),full_page=True);record('mobile_viewport_not_real_phone',True)
   before=diag(mobile)['renderCount'];mobile.locator('[data-scene="endless"]').click();rendered(mobile,'endless',before);pause(mobile);layout(mobile,'mobile_endless_layout_390x844');seek(mobile,2);shot(mobile,'mobile_endless');mobile.locator('#speed').select_option('0.02');assert diag(mobile)['speed']==.02;back(mobile);record('mobile_endless_entry_controls_return');assert not errors,errors;browser.close()
