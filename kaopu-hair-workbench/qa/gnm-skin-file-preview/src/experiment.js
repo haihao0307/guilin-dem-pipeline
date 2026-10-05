@@ -72,7 +72,7 @@ async function init(){try{document.querySelectorAll('button,input').forEach(b=>b
  syncLegacyLighting();editorDepth++;setRadiusMode(state.radiusMode);applyVisibility();editorDepth--;
  try{opacitySystem=createHairOpacityShadows({renderer,scene,lights,mapSize:512});opacityCapability=await opacitySystem.init();for(const item of materialPairs)opacitySystem.attachFiber(item.mesh);opacitySystem.attachHead(head);opacitySystem.attachHead({material:clayMaterial});opacitySystem.setEnabled(opacityCapability.supported);if(!opacityCapability.supported)state.shadowMode='stochastic';}catch(e){state.shadowMode='stochastic';opacityCapability={supported:false,reason:String(e.message||e)};try{opacitySystem?.setEnabled(false);}catch{};}
  $('opacityStatus').textContent=opacityCapability.supported?'R8 分层投影已开启 · 保留原质感':'本机分层投影不可用：'+(opacityCapability.reason||'能力检查未通过')+'；保留原投影';
- ready=true;batch(()=>{resize();setCamera('three');applyVisibility();});$('loading').hidden=true;document.querySelectorAll('button,input').forEach(b=>b.disabled=false);syncUI();syncSkinUI();message('基础皮肤研究已载入 · 毛发与冷暖灯保持原设置');window.dispatchEvent(new Event('groom:ready'));
+ ready=true;batch(()=>{resize();setCamera('three');applyVisibility();setStudyLighting('studio');});$('loading').hidden=true;document.querySelectorAll('button,input').forEach(b=>b.disabled=false);syncUI();syncSkinUI();message('程序皮肤研究已载入 · 毛发材质保留 · 当前为材质棚拍灯');window.dispatchEvent(new Event('groom:ready'));
  }catch(e){errors.push(e.stack||String(e));$('error').textContent=String(e.stack||e);$('error').hidden=false;$('loading').hidden=true;console.error(e);}}
 function applyVisibility(){
  if(!teacherMeshes.length||!legacyHair)return;
