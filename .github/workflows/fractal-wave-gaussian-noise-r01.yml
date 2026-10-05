@@ -1,0 +1,157 @@
+name: Gaussian Noise R01 - existing workbench
+on:
+  push:
+    branches: [work/fractal-wave-gaussian-noise-r01-20261005]
+    paths:
+      - kaopu-tree-fractal-wave-lab/gaussian-model-r01.js
+      - kaopu-tree-fractal-wave-lab/gaussian-noise-proof-r01.js
+      - kaopu-tree-fractal-wave-lab/GAUSSIAN_NOISE_TEACHER_R01_ZH.md
+      - .github/workflows/fractal-wave-gaussian-noise-r01.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: fractal-wave-gaussian-noise-r01
+  cancel-in-progress: false
+jobs:
+  test-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-tree-fractal-wave-lab
+      - name: Syntax and immutable baseline audit
+        run: |
+          node --check kaopu-tree-fractal-wave-lab/gaussian-model-r01.js
+          node --check kaopu-tree-fractal-wave-lab/gaussian-noise-proof-r01.js
+          mkdir -p evidence-gs-r01
+          git fetch --depth=1 origin 5ad3af23bfb9e2c2ff5f99c4465de092549fa4b0
+          git diff --exit-code 5ad3af23bfb9e2c2ff5f99c4465de092549fa4b0 HEAD -- kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r02 kaopu-tree-fractal-wave-lab/kuko-day123-native-3d-r03 kaopu-tree-fractal-wave-lab/mobile-r05-seasons kaopu-tree-fractal-wave-lab/kuko-day123-branching-r01
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json,os
+          p=Path('kaopu-tree-fractal-wave-lab/index.html')
+          text=p.read_text()
+          tags='\n<script src="./gaussian-model-r01.js"></script>\n<script src="./gaussian-noise-proof-r01.js"></script>\n'
+          if 'gaussian-noise-proof-r01.js' not in text:
+              text=text.replace('</body>',tags+'</body>')
+          p.write_text(text)
+          data={'source_commit':os.environ['GITHUB_SHA'],'integration':'append two script tags, no original runtime edits','files':{}}
+          for f in Path('kaopu-tree-fractal-wave-lab').glob('gaussian-*.js'):
+              data['files'][str(f)]=hashlib.sha256(f.read_bytes()).hexdigest()
+          Path('evidence-gs-r01/source-lock.json').write_text(json.dumps(data,indent=2))
+          PY
+      - name: Browser dependencies
+        run: |
+          python -m pip install --disable-pip-version-check playwright pillow numpy
+          python -m playwright install --with-deps chromium
+      - name: Actual WebGL rendering and control checks
+        run: |
+          python -m http.server 4173 --bind 127.0.0.1 >/tmp/gs-http.log 2>&1 &
+          python - <<'PY'
+          import json,time,traceback,hashlib
+          from pathlib import Path
+          import numpy as np
+          from PIL import Image
+          from playwright.sync_api import sync_playwright
+          out=Path('evidence-gs-r01'); C={}; report={'checks':C,'new_module_errors':[],'other_console_errors':[],'scope':'desktop Chromium and mobile viewport, not physical phone','exact_visual_replication':False}
+          url='http://127.0.0.1:4173/kaopu-tree-fractal-wave-lab/#gaussian-noise'
+          def shot(page,name):
+              path=out/(name+'.png');page.locator('#kaopuGaussianProof canvas').screenshot(path=str(path),timeout=120000)
+              return np.asarray(Image.open(path).convert('RGB')).astype(float)
+          def delta(a,b): return float(np.abs(a-b).mean())
+          try:
+              with sync_playwright() as pw:
+                  browser=pw.chromium.launch(headless=True,args=['--enable-unsafe-swiftshader'])
+                  page=browser.new_page(viewport={'width':1440,'height':1000},device_scale_factor=1)
+                  page.set_default_timeout(120000)
+                  page.on('pageerror',lambda e:report['new_module_errors' if 'gaussian' in str(e).lower() else 'other_console_errors'].append(str(e)))
+                  page.on('console',lambda m:report['other_console_errors'].append(m.text) if m.type=='error' else None)
+                  page.goto(url,wait_until='domcontentloaded',timeout=180000)
+                  page.wait_for_function('window.__gaussianNoiseProofReady || window.__gaussianNoiseFailure',timeout=180000)
+                  if page.evaluate('window.__gaussianNoiseFailure || null'): raise RuntimeError(page.evaluate('window.__gaussianNoiseFailure'))
+                  page.evaluate('GaussianNoiseProof.setTime(1.4)')
+                  state=page.evaluate('GaussianNoiseProof.getState()'); report['initial']=state
+                  C['actual_gl_ready']=state['frames']>0 and state['webglError']==0
+                  C['original_workbench_host']=page.locator('#native3Frame').count()==1 and page.locator('#gaussianNoiseTab').count()==1
+                  C['not_claiming_original']=state['exactReplica'] is False and state['originalAsset'] is False
+                  fx=shot(page,'01-fibres');C['canvas_nonblank']=float(fx.std())>3
+                  page.evaluate('GaussianNoiseProof.setParameter("amp",0)')
+                  zero=shot(page,'02-no-displacement');C['noise_changes_actual_pixels']=delta(fx,zero)>.05
+                  page.evaluate('GaussianNoiseProof.setParameter("amp",1);GaussianNoiseProof.setTime(7.8)')
+                  bare=shot(page,'03-bare')
+                  page.evaluate('GaussianNoiseProof.setTime(9.6)')
+                  leaves=shot(page,'04-leaves');C['leaf_reveal_changes_pixels']=delta(bare,leaves)>.15
+                  page.evaluate('GaussianNoiseProof.setView(.65,.1)')
+                  orbit=shot(page,'05-orbit');C['true_view_change']=delta(leaves,orbit)>.1
+                  after=page.evaluate('GaussianNoiseProof.getState()');C['rest_asset_preserved']=state['restHash']==after['restHash']
+                  C['no_gl_error']=after['webglError']==0
+                  page.locator('#gs-reset').click();page.wait_for_timeout(150)
+                  p=page.evaluate('GaussianNoiseProof.getState().params');C['reset_control']=p['amp']==0 and p['stretch']==0
+                  page.locator('#gs-points').click();page.wait_for_timeout(150);C['point_diagnostic_control']=page.evaluate('GaussianNoiseProof.getState().params.dots')==1
+                  page.locator('nav [data-mode="native3"]').first.click();page.wait_for_timeout(500)
+                  C['old_mode_reachable']=not page.locator('#kaopuGaussianProof').is_visible()
+                  page.locator('#gaussianNoiseTab').click();page.evaluate('GaussianNoiseProof.setTime(1.4);GaussianNoiseProof.setParameter("amp",1);GaussianNoiseProof.setParameter("stretch",1)')
+                  C['return_same_asset']=page.evaluate('GaussianNoiseProof.getState().restHash')==state['restHash']
+                  page.screenshot(path=str(out/'desktop-workbench.png'),full_page=False,timeout=120000)
+                  mobile=browser.new_page(viewport={'width':390,'height':844},device_scale_factor=1,is_mobile=True,has_touch=True)
+                  mobile.set_default_timeout(120000);mobile.goto(url,wait_until='domcontentloaded',timeout=180000)
+                  mobile.wait_for_function('window.__gaussianNoiseProofReady || window.__gaussianNoiseFailure',timeout=180000)
+                  if mobile.evaluate('window.__gaussianNoiseFailure || null'):raise RuntimeError(mobile.evaluate('window.__gaussianNoiseFailure'))
+                  mobile.evaluate('GaussianNoiseProof.setTime(9.6)'); ms=mobile.evaluate('GaussianNoiseProof.getState()');report['mobile']=ms
+                  C['mobile_canvas_rendered']=ms['frames']>0 and ms['count']<=110000 and ms['webglError']==0
+                  C['mobile_no_overflow']=mobile.evaluate('document.documentElement.scrollWidth<=innerWidth')
+                  shot(mobile,'06-mobile-leaves');mobile.screenshot(path=str(out/'mobile-workbench.png'),timeout=120000)
+                  C['new_module_page_errors_zero']=len(report['new_module_errors'])==0
+                  report['pixel_deltas']={'noise':delta(fx,zero),'leaves':delta(bare,leaves),'camera':delta(leaves,orbit)}
+                  browser.close()
+          except Exception:
+              report['failure']=traceback.format_exc()
+          (out/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          if report.get('failure') or not C or not all(C.values()): raise SystemExit('Gaussian browser checks failed; do not publish')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: GAUSSIAN_NOISE_R01_BROWSER_EVIDENCE
+          path: evidence-gs-r01
+          retention-days: 60
+      - name: Add only tested module to existing public entry
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC="$GITHUB_WORKSPACE"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch --depth=1 origin gh-pages
+          git worktree add /tmp/gs-publish FETCH_HEAD
+          cd /tmp/gs-publish
+          for attempt in 1 2 3 4; do
+            git fetch --depth=1 origin gh-pages
+            git checkout --detach FETCH_HEAD
+            mkdir -p kaopu-tree-fractal-wave-lab/evidence-gaussian-r01
+            for file in gaussian-model-r01.js gaussian-noise-proof-r01.js GAUSSIAN_NOISE_TEACHER_R01_ZH.md; do
+              cp "$SRC/kaopu-tree-fractal-wave-lab/$file" "kaopu-tree-fractal-wave-lab/$file"
+            done
+            cp "$SRC/evidence-gs-r01/report.json" kaopu-tree-fractal-wave-lab/evidence-gaussian-r01/report.json
+            cp "$SRC/evidence-gs-r01/source-lock.json" kaopu-tree-fractal-wave-lab/evidence-gaussian-r01/source-lock.json
+            python - <<'PY'
+          from pathlib import Path
+          p=Path('kaopu-tree-fractal-wave-lab/index.html')
+          if not p.exists():raise SystemExit('Existing workbench is absent; refusing to create replacement')
+          text=p.read_text()
+          if 'gaussian-noise-proof-r01.js' not in text:
+              tags='\n<script src="./gaussian-model-r01.js"></script>\n<script src="./gaussian-noise-proof-r01.js"></script>\n'
+              text=text.replace('</body>',tags+'</body>')
+              p.write_text(text)
+          PY
+            git add kaopu-tree-fractal-wave-lab/gaussian-model-r01.js kaopu-tree-fractal-wave-lab/gaussian-noise-proof-r01.js kaopu-tree-fractal-wave-lab/GAUSSIAN_NOISE_TEACHER_R01_ZH.md kaopu-tree-fractal-wave-lab/index.html kaopu-tree-fractal-wave-lab/evidence-gaussian-r01
+            git diff --cached --quiet || git commit -m "publish: Gaussian noise teacher inside existing workbench ${GITHUB_SHA:0:8}"
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            sleep 4
+          done
+          exit 1
