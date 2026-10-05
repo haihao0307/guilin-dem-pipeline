@@ -1,0 +1,66 @@
+name: Material R17 video-material samples public check
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/material-r17-video-samples.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser
+        run: |
+          npm init -y
+          npm install --save-dev playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Verify public R17 material study samples
+        run: |
+          cat > check.cjs <<'JS'
+          const {chromium}=require('playwright');const fs=require('fs');
+          const url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-material-workbench/?case=iq&v=r17';
+          const wait=ms=>new Promise(r=>setTimeout(r,ms));const assert=(x,m)=>{if(!x)throw Error(m)};
+          async function waitPublic(){for(let i=0;i<42;i++){const r=await fetch(url+'&probe='+Date.now());const t=await r.text();if(r.status===200&&t.includes('MATERIAL STUDIO / R17')&&t.includes('lab-r17/studio.js'))return;await wait(10000)}throw Error('R17 not propagated')}
+          async function hash(page){return page.evaluate(()=>{const p=KAOPU_STUDIO.pixels();let h=2166136261;for(let i=0;i<p.length;i+=256)h=Math.imul(h^p[i],16777619);return h>>>0})}
+          (async()=>{await waitPublic();const browser=await chromium.launch({headless:true,args:['--no-sandbox','--enable-unsafe-swiftshader','--use-angle=swiftshader']});const errors=[];try{
+            const page=await browser.newPage({viewport:{width:1280,height:900}});page.on('pageerror',e=>errors.push(e.message));await page.goto(url,{waitUntil:'load',timeout:90000});await page.waitForFunction(()=>window.KAOPU_STUDIO?.ready,{timeout:90000});
+            await page.waitForTimeout(300);
+            assert(KAOPU_STUDIO===undefined?true:true,'noop');
+            const tabs=await page.locator('[data-tab="study"]').count();assert(tabs===1,'study tab missing');
+            await page.locator('[data-tab="study"]').click();await page.waitForTimeout(100);
+            const cards=await page.locator('#studyCards .studyCard').count();assert(cards===7,'expected original + six study cards');
+            const initial=await page.evaluate(()=>KAOPU_STUDIO.getState());
+            const shape0=JSON.stringify(initial.states.iq.scale)+':'+initial.states.iq.shapeSeed+':'+initial.states.iq.noiseSeed+':'+initial.states.iq.planes+':'+initial.states.iq.cut+':'+initial.states.iq.k+':'+initial.states.iq.displacement;
+            const hashes=[];
+            for(let mode=0;mode<=6;mode++){
+              await page.evaluate(m=>KAOPU_STUDIO.setValues({lessonMode:m,lessonScale:1,lessonAmount:1,lessonSeed:0,view:0}),mode);
+              await page.waitForTimeout(180);
+              hashes.push(await hash(page));
+              const st=await page.evaluate(()=>KAOPU_STUDIO.getState());
+              const shape=JSON.stringify(st.states.iq.scale)+':'+st.states.iq.shapeSeed+':'+st.states.iq.noiseSeed+':'+st.states.iq.planes+':'+st.states.iq.cut+':'+st.states.iq.k+':'+st.states.iq.displacement;
+              assert(shape===shape0,'material mode changed stone identity');
+            }
+            assert(new Set(hashes).size>=6,'study samples not visually distinct enough');
+            await page.evaluate(()=>KAOPU_STUDIO.setValues({lessonMode:0,view:2}));await page.waitForTimeout(160);const n0=await hash(page);
+            await page.evaluate(()=>KAOPU_STUDIO.setValues({lessonMode:4,view:2}));await page.waitForTimeout(160);const n1=await hash(page);
+            assert(n0===n1,'lesson material changed geometry/normal channel');
+            const src=await (await fetch('https://haihao0307.github.io/guilin-dem-pipeline/kaopu-material-workbench/lab-r17/iq-studio.frag?v='+Date.now())).text();
+            assert(src.includes('lessonVoronoi')&&src.includes('uLessonMode'),'lesson functions missing');
+            assert(!/sampler2D|texture\s*\(/.test(src),'IQ lesson shader unexpectedly depends on texture sampling');
+            assert(errors.length===0,'page errors: '+errors.join(' | '));
+            const report={version:'R17',url,environment:'Public HTTPS Chromium + ANGLE SwiftShader',studyCards:cards,distinctMaterialHashes:new Set(hashes).size,stoneIdentityStable:true,normalChannelStable:n0===n1,noTextureSampling:true,errors,checkedAt:new Date().toISOString(),browserPassed:true,shareAllowed:true};
+            fs.writeFileSync('R17_VIDEO_SAMPLE_PROOF.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
+          }finally{await browser.close()}})().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          node check.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: material-r17-video-samples-proof
+          path: R17_VIDEO_SAMPLE_PROOF.json
+          retention-days: 14
