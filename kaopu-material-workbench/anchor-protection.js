@@ -34,6 +34,3 @@
     document.body.prepend(note);
   }
 })();
-
-// Compatibility bridge for cached R17 HTML. No former R17 renderer or save handler runs.
-(()=>{const source=document.currentScript?.src;if(!source)return;location.replace(new URL('../anchors-r16.html',source).href);})();
