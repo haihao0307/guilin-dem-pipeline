@@ -19,7 +19,23 @@ function http(url){return new Promise((resolve,reject)=>https.get(url,r=>{const 
 const ready=async p=>{await p.waitForFunction(()=>window.platform?.module==='home'&&window.catalogUI,null,{timeout:120000});check('default opens object catalog without rendering',await p.evaluate(()=>!anemone.ready&&!kuko.ready&&!workbench.ready.teacher&&!workbench.ready.candidate&&!workbench.started));await p.evaluate(()=>platform.select('anemone'));await p.waitForFunction(()=>window.anemone?.ready&&platform.module==='anemone',null,{timeout:120000});await p.evaluate(()=>{anemone.pause();anemone.seek(0)});};
 const probe=async p=>p.evaluate(()=>{const r=anemone.renderer;anemone.pixels();let h=2166136261;const arr=new Uint8Array(r.data.buffer);for(const b of arr)h=Math.imul(h^b,16777619)>>>0;return{pixels:anemone.pixels(),geometryHash:h,metrics:anemone.metrics(),state:anemone.state,errors:[...anemone.errors,...workbench.errors,...kuko.errors],overflow:document.documentElement.scrollWidth>innerWidth}});
 async function sample(p,name){const x=await probe(p);check(name+' real WebGL',x.pixels.glError===0&&x.pixels.changed>500&&!x.errors.length&&!x.overflow,x);await p.screenshot({path:path.join(OUT,name+'.jpg'),fullPage:true,type:'jpeg',quality:88});await p.locator('#anemoneCanvas').screenshot({path:path.join(OUT,name+'-canvas.jpg'),type:'jpeg',quality:88});return x;}
-(async()=>{let browser;try{browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});const context=await browser.newContext({viewport:{width:1440,height:1000},deviceScaleFactor:1,acceptDownloads:true});const p=await context.newPage();p.on('pageerror',e=>result.errors.push(e.message));p.on('console',m=>{if(m.type()==='error')result.errors.push(m.text())});p.on('request',r=>{if(!r.url().startsWith('data:')&&!r.url().startsWith('blob:'))result.requests.push(r.url())});
+(async()=>{let browser;try{
+// Bounded supplemental evidence only while every runtime byte remains pinned.
+const supplementalPath=path.join(__dirname,'r8-supplemental-scope.json');
+if(fs.existsSync(supplementalPath)){
+ const spec=JSON.parse(fs.readFileSync(supplementalPath,'utf8')),base=path.dirname(ONLINE_HTML);
+ const exact=Object.entries(spec.runtimePins).every(([f,h])=>fs.existsSync(path.join(base,f))&&sha(fs.readFileSync(path.join(base,f)))===h);
+ if(group!=='all'&&exact&&spec.scope==='r8-supplemental-same-runtime'){
+  Object.assign(result,{scope:spec.scope,reusedEvidence:spec.reusedRuns,fullRegressionPassed:false,contactAcceptance:false,productionReady:false,runtimePinsVerified:Object.keys(spec.runtimePins).length,notRerun:group!=='catalog'});
+  if(group==='catalog'){
+   browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+   const r=path.join(base,'gnm-opacity-experiment');result.gnmOpacitySupplement=await require(path.join(r,'tests/supplement-browser.cjs'))(browser,phase==='public'?new globalThis.URL('gnm-opacity-experiment/experiment.html',URL).href:'file://'+path.join(r,'experiment.html'),path.join(OUT,'gnm-opacity-supplement'));
+   check('R8 supplemental completion and fallback evidence passes',result.gnmOpacitySupplement.passed,result.gnmOpacitySupplement.failure||result.gnmOpacitySupplement.errors);section('catalog');
+  }
+  result.supplementalPassed=group==='catalog'?result.gnmOpacitySupplement.passed:null;result.passed=false;return;
+ }
+}
+browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});const context=await browser.newContext({viewport:{width:1440,height:1000},deviceScaleFactor:1,acceptDownloads:true});const p=await context.newPage();p.on('pageerror',e=>result.errors.push(e.message));p.on('console',m=>{if(m.type()==='error')result.errors.push(m.text())});p.on('request',r=>{if(!r.url().startsWith('data:')&&!r.url().startsWith('blob:'))result.requests.push(r.url())});
 if(phase==='public'){let r,deadline=Date.now()+8*60000;do{r=await http(URL);if(r.status===200&&sha(r.bytes)===result.htmlSha256)break;await new Promise(r=>setTimeout(r,15000));}while(Date.now()<deadline);check('public exact complete bytes',r.status===200&&sha(r.bytes)===result.htmlSha256,{status:r.status,size:r.bytes.length,sha256:sha(r.bytes)});await p.goto(URL,{waitUntil:'load',timeout:120000});}else await p.goto('file://'+HTML,{waitUntil:'load',timeout:120000});
 const startupUrl=phase==='public'?URL:'file://'+HTML;
 check('user-accepted Rabbit runtime remains byte exact',sha(Buffer.from(await p.evaluate(()=>FRAME_RUNTIME)))==='019a2371d87139af19c5fbc4048a87eb490586143271b4528ab8158ed52435d7');

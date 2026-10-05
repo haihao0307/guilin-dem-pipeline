@@ -4,6 +4,15 @@ const root=process.argv[2],online=process.argv[3],offline=process.argv[4];
 const hash=p=>crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
 const expected={online:hash(online),offline:hash(offline)};
 const files=[];function walk(p){for(const e of fs.readdirSync(p,{withFileTypes:true})){const q=path.join(p,e.name);if(e.isDirectory())walk(q);else if(/^cluster-(file|public)-(core|catalog|orbit|touch)-results\.json$/.test(e.name))files.push(q);}}walk(root);
+const supplementalReports=files.map(f=>({file:f,value:JSON.parse(fs.readFileSync(f))}));
+if(supplementalReports.length===8&&supplementalReports.every(x=>x.value.scope==='r8-supplemental-same-runtime')){
+ const catalog=supplementalReports.filter(x=>x.value.group==='catalog'),errors=[],matrixResult=process.env.HAIR_QA_MATRIX_RESULT;
+ if(matrixResult!=='success')errors.push('Supplemental matrix did not complete successfully: '+matrixResult);
+ for(const phase of ['file','public'])for(const group of ['core','catalog','orbit','touch']){const a=supplementalReports.filter(x=>x.value.phase===phase&&x.value.group===group);if(a.length!==1){errors.push(phase+'/'+group+' duplicate or missing report');continue;}const r=a[0].value;if(r.htmlSha256!==expected[phase==='file'?'offline':'online']||r.onlineHtmlSha256!==expected.online||r.standaloneHtmlSha256!==expected.offline||r.errors.length||r.contactAcceptance!==false||r.fullRegressionPassed!==false||r.notRerun!==(group!=='catalog'))errors.push(phase+'/'+group+' byte or scope mismatch');}
+ for(const phase of ['file','public']){const a=catalog.filter(x=>x.value.phase===phase);if(a.length!==1||a[0].value.supplementalPassed!==true||a[0].value.gnmOpacitySupplement?.passed!==true||a[0].value.errors.length)errors.push(phase+' supplemental incomplete or failed');}
+ const report={scope:'r8-supplemental-same-runtime',matrixResult,timestamp:new Date().toISOString(),passed:false,fullRegressionPassed:false,supplementalPassed:errors.length===0,contactAcceptance:false,productionReady:false,physicalIPhoneTested:false,visualAcceptance:false,errors,knownRootGate:[3,2,3,3],reusedEvidence:supplementalReports[0].value.reusedEvidence,groups:supplementalReports.map(x=>({phase:x.value.phase,group:x.value.group,notRerun:x.value.notRerun,supplementalPassed:x.value.supplementalPassed,result:x.file}))};
+ fs.writeFileSync(path.join(root,'aggregate-results.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));if(errors.length)process.exitCode=1;return;
+}
 const matrixResult=process.env.HAIR_QA_MATRIX_RESULT;
 const summary={matrixResult,timestamp:new Date().toISOString(),expected,passed:false,groups:[],errors:[],physicalIPhoneTested:false,visualAcceptance:false};
 if(matrixResult!=='success')summary.errors.push('Matrix jobs did not all complete successfully: '+matrixResult);
