@@ -339,7 +339,7 @@ function rotationMatrix(){
 function isInspect(){return inspect.yaw!==0||inspect.pitch!==0||inspect.zoom!==1||inspect.pan.some(x=>x!==0)||inspect.depth!==0||inspect.light!==0}
 function inspectChanged(){
  S.inspection={...inspect,pan:inspect.pan.slice()};S.viewRevision=(S.viewRevision||0)+1;
- $('zoomNow').textContent=inspect.zoom.toFixed(inspect.zoom<10?1:0)+'×';
+ $('zoomNow').textContent=Math.round(inspect.zoom*100)+'%';
  $('zoomPreset').value=zoomSteps.includes(inspect.zoom)?String(inspect.zoom):'custom';
  $('depth').value=inspect.depth;$('depthNow').textContent=inspect.depth.toFixed(2);
  $('lightingMode').value=String(inspect.light);$('warmPower').value=inspect.warm;$('coolPower').value=inspect.cool;$('lightBlend').value=inspect.blend;
@@ -383,8 +383,8 @@ for(const n of ['pointerup','pointercancel','lostpointercapture'])surface.addEve
 surface.addEventListener('wheel',e=>{e.preventDefault();const [x,y]=screenPoint(e);setZoom(inspect.zoom*Math.exp(-Math.max(-100,Math.min(100,e.deltaY))*.003),x,y)},{passive:false});
 surface.addEventListener('dblclick',e=>{e.preventDefault();const [x,y]=screenPoint(e);inspect.pan[0]+=x/inspect.zoom;inspect.pan[1]+=y/inspect.zoom;setZoom(inspect.zoom*2)});
 $('zoomPreset').onchange=()=>{if($('zoomPreset').value!=='custom')setZoom(Number($('zoomPreset').value))};
-$('zoomIn').onclick=()=>setZoom(zoomSteps.find(z=>z>inspect.zoom)||100);
-$('zoomOut').onclick=()=>setZoom([...zoomSteps].reverse().find(z=>z<inspect.zoom)||.5);
+$('zoomIn').onclick=()=>setZoom(inspect.zoom+1);
+$('zoomOut').onclick=()=>setZoom(inspect.zoom-1);
 $('cameraReset').onclick=resetView;$('baselineReset').onclick=resetInspection;
 $('depth').oninput=()=>setInspection({depth:Number($('depth').value)});
 $('lightingMode').onchange=()=>setInspection({light:Number($('lightingMode').value)});
@@ -443,3 +443,4 @@ $('exportBranchNotes').onclick=()=>{const u=URL.createObjectURL(new Blob([JSON.s
 $('sourceText').textContent=$('original').textContent.trim();try{views=[make('student'),make('teacher')];applyColor();layout();inspectChanged();report('coral:young-ready')}catch(e){error(e)}
 })();
 </script></body></html>
+
