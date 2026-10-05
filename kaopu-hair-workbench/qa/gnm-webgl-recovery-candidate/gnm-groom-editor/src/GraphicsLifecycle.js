@@ -1,7 +1,7 @@
 // Application-owned lifecycle; pinned Three, appearance and GPU formats are unchanged.
 export function createGraphicsLifecycle({THREE, build, suspend, fail, success, progress}) {
   let renderer=null, canvas=null, controller=null, flight=null, wanted=false;
-  let hidden=false, stopped=false, phase='idle', attempts=0, recoveries=0, losses=0;
+  let hidden=!!document.hidden, stopped=false, phase='idle', attempts=0, recoveries=0, losses=0;
   let timer=0, autoLossBudget=2, lastError=null;
   const history=[];
   const record=(event,detail={})=>{history.push({event,...detail});if(history.length>30)history.shift();};
@@ -71,7 +71,7 @@ export function createGraphicsLifecycle({THREE, build, suspend, fail, success, p
     }catch(e){
       const interrupted=signal.aborted||e.name==='AbortError';
       release();
-      if(!interrupted){phase='error';lastError={code:e.code||'asset-or-scene',message:String(e.message||e)};record('failed',lastError);fail(e);}
+      if(!interrupted){phase='error';lastError={code:e.code||'asset-or-scene',message:String(e.message||e)};record('failed',lastError);fail(e);if(e.code==='context-lost'&&!hidden&&!stopped&&autoLossBudget>0){autoLossBudget--;schedule();}}
     }
   }
   function start(){
@@ -85,10 +85,12 @@ export function createGraphicsLifecycle({THREE, build, suspend, fail, success, p
   function retry(){if(stopped)return Promise.resolve();autoLossBudget=2;return start();}
   function pagehide(){hidden=true;wanted=false;clearTimeout(timer);phase='suspended';record('pagehide');release();}
   function pageshow(){hidden=false;record('pageshow');start();}
+  function visibility(){if(document.hidden)pagehide();else pageshow();}
   addEventListener('pagehide',pagehide);addEventListener('pageshow',pageshow);
+  document.addEventListener('visibilitychange',visibility);
   return {start,retry,get usable(){return !!renderer&&!hidden&&!stopped&&!renderer.getContext().isContextLost();},
     diagnostics(){return {phase,attempts,recoveries,losses,lastError,autoLossBudget,activeContexts:renderer?1:0,history:[...history]};},
-    dispose(){stopped=true;wanted=false;clearTimeout(timer);phase='disposed';release();removeEventListener('pagehide',pagehide);removeEventListener('pageshow',pageshow);}};
+    dispose(){stopped=true;wanted=false;clearTimeout(timer);phase='disposed';release();removeEventListener('pagehide',pagehide);removeEventListener('pageshow',pageshow);document.removeEventListener('visibilitychange',visibility);}};
 }
 
 export function showGraphicsFailure(error,{container,loading,status,retry}){
