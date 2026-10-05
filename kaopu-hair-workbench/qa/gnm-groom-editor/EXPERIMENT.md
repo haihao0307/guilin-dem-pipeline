@@ -4,7 +4,8 @@ The default presentation is the accepted R8 layered-opacity appearance whenever 
 
 ## Controls
 
-- Six presets: original teacher long hair, two complete-source-segment trims, and the three established R6 real-scalp styles (side sweep, swept back, short crop)
+- Three primary length/silhouette choices: original teacher long hair and two complete-source-segment trims
+- Three older R6 real-scalp styles remain explicitly folded into a structure comparison because their hard hairlines are visually unfinished
 - Independent hair color, length, density, physical width, roughness; short-style volume, hairline and front/side/back coverage
 - Teacher-authored brows with independent color, source-prefix length, density and physical width
 - Existing real-skin upper-lip and chin beard: visibility, four presets, color, density, length, width and regional coverage

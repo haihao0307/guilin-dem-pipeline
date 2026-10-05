@@ -1,3 +1,4 @@
+// Final R9 navigation and primary-preset presentation verification.
 // Runtime assertions preserved: startup in catalog, lighting in orbit, first-entry and bounded seed probe in touch; seed724/Three certificate remains strict.
 // Isolated hair shadow frusta update their projection and are checked on GPU.
 // R6 offline dependency mapping is validated at build time.
