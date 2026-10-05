@@ -50,9 +50,11 @@ jobs:
           trap 'kill "$server" 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do curl -fsS "$FACE_URL" > /dev/null && break || sleep 1; done
           NODE_PATH="$RUNNER_TEMP/face-test/node_modules" node kaopu-face-workbench/tests/browser.cjs
+          command -v ffmpeg >/dev/null || (sudo apt-get update && sudo apt-get install -y ffmpeg)
+          ffmpeg -hide_banner -loglevel error -f lavfi -i color=c=orange:s=128x128:d=1:r=10 -an -c:v libx264 -pix_fmt yuv420p -movflags +faststart -y "$RUNNER_TEMP/face-test/synthetic.mp4"
           mkdir -p qa-webkit
           cd qa-webkit
-          FACE_BROWSER=webkit NODE_PATH="$RUNNER_TEMP/face-test/node_modules" node ../kaopu-face-workbench/tests/browser.cjs
+          FACE_BROWSER=webkit FACE_VIDEO_FIXTURE="$RUNNER_TEMP/face-test/synthetic.mp4" NODE_PATH="$RUNNER_TEMP/face-test/node_modules" node ../kaopu-face-workbench/tests/browser.cjs
       - name: Upload synthetic-only QA evidence
         if: always()
         uses: actions/upload-artifact@v4
