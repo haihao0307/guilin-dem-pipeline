@@ -6,7 +6,8 @@
     "index.html",
     "runtime.js",
     "original-replay.js",
-    "original-replay.css"
+    "original-replay.css",
+    "ORIGINAL_REPLAY_R02_MANIFEST.json"
   ],
   "preservation": {
     "sixExistingCaseCardsUnchanged": true,
@@ -15,8 +16,27 @@
     "otherProjectFilesChanged": false
   },
   "validation": {
-    "offlineExactNeutral": true,
-    "browserValidation": "pending",
+    "offlineExactNeutral": {
+      "passed": true,
+      "comparisons": 17,
+      "maximumChannelDifference": 0,
+      "engine": "EGL ES3 llvmpipe"
+    },
+    "offlineOrbitZoom": {
+      "passed": true,
+      "comparisons": 12
+    },
+    "hostStateTests": {
+      "passed": true,
+      "method": "Node VM with mocked GPU, not browser rendering"
+    },
+    "browserValidation": {
+      "payloadSHA256": true,
+      "caseKeyedLocalStorage": true,
+      "navigationAndControls": true,
+      "actualOriginalPixels": false,
+      "blocker": "Cloud Chromium returned no WebGL2 context; original frames and interactions not visually verified in browser"
+    },
     "physicalMobileDevice": "not-tested"
   }
 }
