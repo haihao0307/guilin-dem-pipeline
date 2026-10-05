@@ -1,3 +1,2 @@
-// Temporary, scoped observation of unchanged Hair startup in Linux WebKit.
-// Resolve the official CLI through the package's declared bin entry.
-require('./webkit-startup-diagnostic.cjs');
+// Bounded follow-up for the old page's real WebKit pixel-recovery failure.
+require('./webkit-old-viewport-diff.cjs');
