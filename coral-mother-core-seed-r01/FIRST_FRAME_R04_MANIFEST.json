@@ -1,0 +1,55 @@
+{
+  "version": "coral-first-frame-r04-20261005",
+  "status": "root-cause hotfix candidate; physical iOS scene validation pending",
+  "regression": {
+    "introducedIn": "1b263283",
+    "affected": [
+      "color",
+      "transparent"
+    ],
+    "symptom": "zero frames and resource-validation failure",
+    "cause": "isVertexArray called on newly allocated but never-bound VAO; official WebGL2 semantics return false until first bind",
+    "deviceFailureNotRequired": true,
+    "previousMockGap": "R03 mocked isVertexArray incorrectly returned true immediately after allocation; those tests could not expose this startup regression"
+  },
+  "fix": [
+    "Bind each new VAO immediately during program initialization",
+    "Validate GL result at vao-first-bind",
+    "Keep actual resource checks, distinguish program-status and vao-status",
+    "Expose typed stage, GL error and context-lost fields without changing shaders or resolution"
+  ],
+  "evidence": {
+    "officialConformance": "https://github.com/KhronosGroup/WebGL/blob/main/sdk/tests/conformance2/vertex_arrays/vertex-array-object.html",
+    "specification": "https://registry.khronos.org/webgl/specs/latest/2.0/#3.7.17",
+    "webKitSource": "https://raw.githubusercontent.com/WebKit/WebKit/main/Source/WebCore/html/canvas/WebGL2RenderingContext.cpp",
+    "nativeEGLFirstBind": {
+      "beforeFirstBind": false,
+      "afterFirstBind": true,
+      "glError": 0,
+      "isSafari": false
+    },
+    "correctedMockBaseline": {
+      "passed": 10,
+      "failed": 17
+    },
+    "correctedMockPatched": {
+      "passed": 27,
+      "failed": 0
+    },
+    "nativeEGLChecks": 21,
+    "physicalIOS": "not yet verified"
+  },
+  "preservation": {
+    "allShaderWrapperStringsIdentical": true,
+    "cameraSourceTransformationIdentical": true,
+    "originalSourcesUnchanged": true,
+    "resolutionAndQualityUnchanged": true,
+    "fixIsFirstVAOBindBeforeIsVertexArray": true
+  },
+  "scope": [
+    "index.html",
+    "original-replay.js",
+    "webgl-lifecycle.js",
+    "FIRST_FRAME_R04_MANIFEST.json"
+  ]
+}
