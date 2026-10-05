@@ -32,10 +32,10 @@ def seek(p,value):
 def shot(p,name):
  p.evaluate('window.scrollTo(0,0)');p.wait_for_timeout(150)
  box=p.locator('#liveCanvas').bounding_box()
- raw=p.screenshot(full_page=True,animations='disabled',timeout=120000)
+ raw=p.locator('#liveCanvas').screenshot(animations='disabled',timeout=120000) if diag(p)['scene'] in NEW_KEYS else p.screenshot(full_page=True,animations='disabled',timeout=120000)
  im=Image.open(io.BytesIO(raw)).convert('RGB');x,y,w,h=box['x'],box['y'],box['width'],box['height']
- im=im.crop((round(x),round(y),round(x+w),round(y+h)))
  if diag(p)['scene'] in NEW_KEYS:im.thumbnail((720,540),Image.Resampling.LANCZOS)
+ else:im=im.crop((round(x),round(y),round(x+w),round(y+h)))
  im.save(OUT/(name+'.png'));stat=ImageStat.Stat(im)
  assert max(stat.stddev)>3,('Unexpected blank or uniform canvas',name,stat.stddev)
  record('render_'+name,{'mean':stat.mean,'stddev':stat.stddev,'pixels':im.size,'diagnostics':diag(p)})
@@ -48,13 +48,14 @@ def independent_cases(p,mobile=False):
  keys=['canyon08', 'manta09', 'submarine10']
  sample_times={'canyon08': [0, 3, 6, 9, 12], 'manta09': [0, 0.85, 1.7, 2.55, 3.4, 4.25, 5.11], 'submarine10': [0, 2, 5, 8, 11, 14]}
  mobile_times={'canyon08': 6, 'manta09': 1.7, 'submarine10': 8}
+ default_widths={'canyon08': '480', 'manta09': '720', 'submarine10': '720'}
  assert p.locator('#independentStudies [data-scene]').count()==len(keys)
  assert p.locator('[data-study]').count()==0
  for key in keys:
   card=p.locator('[data-scene="'+key+'"]');image=card.locator('img')
   assert image.evaluate('(el)=>el.complete&&el.naturalWidth>0')
   before=diag(p)['renderCount'];card.click();rendered(p,key,before);pause(p)
-  assert p.locator('#quality').input_value()=='720'
+  assert p.locator('#quality').input_value()==default_widths[key]
   assert '独立' in p.locator('#sourceText').text_content() and 'undefined' not in p.locator('#sourceText').text_content()
   layout(p,('mobile_' if mobile else 'desktop_')+key+'_layout')
   for t in ([mobile_times[key]] if mobile else sample_times[key]):seek(p,t);shot(p,('mobile_' if mobile else '')+key+'_t'+str(t))
