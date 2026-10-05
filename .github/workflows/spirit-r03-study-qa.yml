@@ -16,6 +16,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          sparse-checkout: kaopu-tree-fractal-wave-lab/spirit-plant-connected-wind-study
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -33,6 +34,9 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Render actual standalone Three scenes
         run: node kaopu-tree-fractal-wave-lab/spirit-plant-connected-wind-study/tests/browser.cjs kaopu-tree-fractal-wave-lab/spirit-plant-connected-wind-study
+      - name: Verify exact public study when configured
+        if: ${{ env.SPIRIT_PUBLIC_URL != '' }}
+        run: node kaopu-tree-fractal-wave-lab/spirit-plant-connected-wind-study/tests/public-browser.cjs kaopu-tree-fractal-wave-lab/spirit-plant-connected-wind-study
       - name: Store verification evidence
         if: always()
         uses: actions/upload-artifact@v4

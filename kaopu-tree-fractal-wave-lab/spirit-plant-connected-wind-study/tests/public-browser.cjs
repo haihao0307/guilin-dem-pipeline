@@ -1,0 +1,13 @@
+const {chromium}=require('playwright'),fs=require('fs'),path=require('path'),crypto=require('crypto');
+const root=path.resolve(process.argv[2]||'.'),url=process.env.SPIRIT_PUBLIC_URL;
+if(!url)throw Error('SPIRIT_PUBLIC_URL must name the authorized exact study URL');
+const expected=crypto.createHash('sha256').update(fs.readFileSync(path.join(root,'spirit-r03-connected-wind.html'))).digest('hex');
+const report={url,expectedSha256:expected,sourceCommit:process.env.GITHUB_SHA,softwareRenderer:'Chromium / ANGLE SwiftShader',physicalMobile:false,passed:false,viewports:[]};
+(async()=>{let browser;try{
+ let raw,status;for(let attempt=0;attempt<20;attempt++){const r=await fetch(url+'?verify='+Date.now());status=r.status;raw=Buffer.from(await r.arrayBuffer());if(status===200&&crypto.createHash('sha256').update(raw).digest('hex')===expected)break;await new Promise(r=>setTimeout(r,10000));}
+ report.httpStatus=status;report.publicSha256=crypto.createHash('sha256').update(raw).digest('hex');if(status!==200||report.publicSha256!==expected)throw Error('Published bytes differ');
+ browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+ for(const [name,width,height] of [['desktop',1440,900],['mobile-viewport',390,844]]){const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,isMobile:name.startsWith('mobile'),hasTouch:name.startsWith('mobile')});const page=await context.newPage(),errors=[],badResources=[];page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400)badResources.push(r.url());});await page.goto(url+'?verify='+Date.now(),{waitUntil:'load'});await page.waitForFunction(()=>window.__native3dR03Ready===true,{timeout:60000});await page.click('#windPlay');await page.click('#localFrames');await page.click('#windField');await page.click('#fit');const state=await page.evaluate(()=>SpiritR03Study.getState());const noOverflow=await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1);if(errors.length||badResources.length||!noOverflow)throw Error('Public browser fail '+JSON.stringify({errors,badResources,noOverflow}));await page.screenshot({path:path.join(root,'qa','public-'+name+'.png'),fullPage:true});report.viewports.push({name,errors,badResources,noOverflow,state});await context.close();}
+ report.passed=true;report.shareAllowed=true;
+ }catch(e){report.failure=String(e.stack||e);}finally{if(browser)await browser.close();fs.writeFileSync(path.join(root,'qa/PUBLIC_BROWSER_QA.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));}if(!report.passed)process.exit(1);
+})();
