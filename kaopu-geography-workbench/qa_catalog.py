@@ -25,7 +25,7 @@ try:
   try:
    html=get().decode()
    runtime_bytes=get('runtime.js')
-   if 'data-ui-version="R17"' in html and '0.01× 极慢观察' in html and blob_sha(runtime_bytes)=='06904231c24537f81dba620d9e1472a6c7fae30c':break
+   if 'data-independent-revision="I1"' in html and html==Path(__file__).with_name('index.html').read_text() and 'data-ui-version="R17"' in html and '0.01× 极慢观察' in html and blob_sha(runtime_bytes)=='06904231c24537f81dba620d9e1472a6c7fae30c':break
   except Exception as e:print('waiting R17',e,flush=True)
   time.sleep(10)
  else:raise RuntimeError('R17 did not reach public hosting')
