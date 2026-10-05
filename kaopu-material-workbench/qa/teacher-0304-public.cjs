@@ -5,6 +5,7 @@ const report={startedAt:new Date().toISOString(),passed:false,checks:[],errors:[
 const assert=(v,m)=>{if(!v)throw Error(m)},hash=b=>crypto.createHash('sha256').update(b).digest('hex');
 function bounded(p,ms=90000){let t;return Promise.race([p,new Promise((_,no)=>t=setTimeout(()=>no(Error('Bounded wait timed out')),ms))]).finally(()=>clearTimeout(t));}
 function mark(s){report.stages.push({at:new Date().toISOString(),stage:s});fs.writeFileSync(out+'/progress.json',JSON.stringify(report,null,2));console.log('STAGE',s);}
+const publicBase=process.env.MATERIAL_PUBLIC_URL||'',candidateBase=publicBase||'http://127.0.0.1:4173/candidate/',referenceBase=publicBase?new URL('lab-r16/',publicBase).href:'http://127.0.0.1:4173/reference/';
 let server,owner,browser,page;
 async function frame(p){return bounded(p.evaluate(async()=>{const a=KAOPU_STUDIO;const bytes=Uint8Array.from(a.pixels());return {hash:Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))).map(n=>n.toString(16).padStart(2,'0')).join(''),distinct:new Set(bytes).size,packet:a.packet(),error:a.glError()};}));}
 (async()=>{try{
@@ -30,11 +31,12 @@ server=http.createServer((req,res)=>{let pathname=decodeURIComponent(new URL(req
  if(!file.startsWith(fixture+path.sep)&&!file.startsWith(candidate+path.sep)){res.writeHead(403).end();return;}
  const ext=path.extname(file);res.setHeader('Content-Type',ext==='.js'?'text/javascript':ext==='.html'?'text/html; charset=utf-8':ext==='.css'?'text/css':'text/plain');res.setHeader('Cache-Control','no-store');fs.createReadStream(file).on('error',()=>res.writeHead(404).end()).pipe(res);
 });await new Promise(r=>server.listen(4173,'127.0.0.1',r));
+if(publicBase){mark('verify deployed protection and immutable anchor bytes');for(const [name,sha]of Object.entries(manifest)){const response=await bounded(fetch(new URL('lab-r16/'+name,publicBase),{cache:'no-store'}),45000);assert(response.ok,'Missing public R16 '+name);assert(hash(Buffer.from(await response.arrayBuffer()))===sha,'Public R16 changed '+name);}for(const name of ['index.html','anchors-r16.html','anchor-protection.js','lab-r17/index.html','lab-r17/studio.js','lab-r17/archive/studio-r17-original.js.txt']){const response=await bounded(fetch(new URL(name,publicBase),{cache:'no-store'}),45000);assert(response.ok,'Missing public protection '+name);assert(hash(Buffer.from(await response.arrayBuffer()))===hash(fs.readFileSync(path.join(candidate,name))),'Public protection differs '+name);}report.publicBytes={R16:14,protection:6,allExact:true};}
 mark('real browser four-anchor same-state pixel comparison');
 owner=await bounded(chromium.launchServer({headless:true,args:['--no-sandbox','--enable-unsafe-swiftshader','--use-angle=swiftshader']}),45000);browser=await chromium.connect(owner.wsEndpoint());
 const frames={};for(const route of ['reference','candidate']){
  const context=await browser.newContext({viewport:{width:1440,height:960}});page=await context.newPage();page.setDefaultTimeout(20000);page.on('pageerror',e=>report.errors.push(e.message));
- await page.goto('http://127.0.0.1:4173/'+route+'/?case=volcanic',{timeout:45000});await page.waitForFunction(()=>window.KAOPU_STUDIO?.ready,null,{timeout:90000});
+ await page.goto((route==='reference'?referenceBase:candidateBase)+'?case=volcanic',{timeout:45000});await page.waitForFunction(()=>window.KAOPU_STUDIO?.ready,null,{timeout:90000});
  await bounded(page.evaluate(()=>{KAOPU_STUDIO.stop();KAOPU_STUDIO.setQuality({width:320,samples:1});}));
  for(const id of ['volcanic','analytic','iq','wet']){
   mark(route+' '+id);await bounded(page.evaluate(id=>{KAOPU_STUDIO.select(id,false);KAOPU_STUDIO.stop();KAOPU_STUDIO.draw();},id));const f=await frame(page);assert(f.error===0&&f.distinct>60,'Blank/error '+route+' '+id);
@@ -44,7 +46,7 @@ const frames={};for(const route of ['reference','candidate']){
 }
 mark('actual legacy URL redirects without writing old storage');
 const context=await browser.newContext({viewport:{width:390,height:844}}),legacy='{"version":17,"states":{"raw":"原数据，不改写"}}';
-await context.addInitScript(raw=>{if(location.protocol==='http:'&&localStorage.getItem('KAOPU_MATERIAL_R16')===null)localStorage.setItem('KAOPU_MATERIAL_R16',raw);},legacy);page=await context.newPage();page.on('pageerror',e=>report.errors.push(e.message));await page.goto('http://127.0.0.1:4173/candidate/lab-r17/index.html',{timeout:45000});await page.waitForURL('**/anchors-r16.html',{timeout:20000});await page.waitForFunction(()=>window.KAOPU_STUDIO?.ready,null,{timeout:90000});
+await context.addInitScript(raw=>{if((location.protocol==='http:'||location.protocol==='https:')&&localStorage.getItem('KAOPU_MATERIAL_R16')===null)localStorage.setItem('KAOPU_MATERIAL_R16',raw);},legacy);page=await context.newPage();page.on('pageerror',e=>report.errors.push(e.message));await page.goto(new URL('lab-r17/index.html',candidateBase).href,{timeout:45000});await page.waitForURL('**/anchors-r16.html',{timeout:20000});await page.waitForFunction(()=>window.KAOPU_STUDIO?.ready,null,{timeout:90000});
 const legacyState=await page.evaluate(()=>({old:localStorage.getItem('KAOPU_MATERIAL_R16'),backup:localStorage.getItem(KAOPU_ANCHOR_PROTECTION.backupKey),status:KAOPU_ANCHOR_PROTECTION,overflow:document.documentElement.scrollWidth>innerWidth+2,version:KAOPU_STUDIO.version}));
 assert(legacyState.old===legacy&&legacyState.backup===legacy,'Legacy original or backup changed');assert(legacyState.status.backedUp&&legacyState.status.needsReview,'Legacy status incorrect');assert(!legacyState.overflow&&legacyState.version===16,'Safe legacy entrance failed');report.legacy=legacyState;await page.screenshot({path:out+'/legacy-390-restored.png',fullPage:true});await context.close();page=null;
 assert(report.errors.length===0,'Browser errors');report.passed=true;mark('all focused checks passed');
