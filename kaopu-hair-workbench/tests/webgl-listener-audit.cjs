@@ -1,0 +1,32 @@
+const fs=require('fs'),path=require('path'),http=require('http'),crypto=require('crypto');
+const {chromium}=require('playwright');
+const ROOT=path.resolve(__dirname,'..'),OUT=process.env.HAIR_QA_OUT||path.join(ROOT,'qa-listener-audit'),KIND=process.env.HAIR_AUDIT_PAGE||'gnm-groom-editor';
+const api=KIND==='gnm-groom-editor'?'groomStudy':'gnmStudy',file=api==='groomStudy'?'experiment.html':'index.html';
+const expected=api==='groomStudy'?3863130920:3753470069;
+const result={scope:'Observation of persistent Three dispose callback counts; JS heap bytes not measured',passed:false,physicalIPhoneTested:false,productionRuntimePatched:false,observerInjected:true,fullRegressionPassed:false,checks:[],samples:[],errors:[]};
+fs.mkdirSync(OUT,{recursive:true});const save=()=>fs.writeFileSync(path.join(OUT,'listener-audit.json'),JSON.stringify(result,null,2));
+function check(name,pass,detail){result.checks.push({name,pass:!!pass,detail});save();console.log(KIND,pass?'PASS':'FAIL',name);if(!pass)throw Error(name+' '+JSON.stringify(detail));}
+let browser,server;
+(async()=>{try{
+ const vendor=fs.readFileSync(path.join(ROOT,'qa',KIND,'vendor/three.module.js')),hook=fs.readFileSync(path.join(ROOT,'qa/gnm-webgl-listener-audit/observer.js'));
+ result.originalVendorSha256=crypto.createHash('sha256').update(vendor).digest('hex');result.observerSha256=crypto.createHash('sha256').update(hook).digest('hex');
+ server=http.createServer((req,res)=>{try{const u=new URL(req.url,'http://x');if(u.pathname==='/favicon.ico'){res.writeHead(204);res.end();return;}const p=path.join(ROOT,u.pathname);res.setHeader('content-type',p.endsWith('.js')?'text/javascript':p.endsWith('.css')?'text/css':'text/html');if(p===path.join(ROOT,'qa',KIND,'vendor/three.module.js'))res.end(Buffer.concat([vendor,Buffer.from('\n'),hook]));else res.end(fs.readFileSync(p));}catch{res.writeHead(404);res.end();}});
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));
+ browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+ const ctx=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1}),page=await ctx.newPage();page.on('pageerror',e=>result.errors.push(String(e)));
+ await page.goto('http://127.0.0.1:'+server.address().port+'/qa/'+KIND+'/'+file,{waitUntil:'domcontentloaded'});await page.waitForFunction(api=>window[api]?.ready,api,{timeout:240000});
+ async function sample(){return page.evaluate(api=>{const a=window[api],d=a.diagnostics?a.diagnostics():a.getDiagnostics(),g=document.getElementById('canvas').getContext('webgl2'),b=new Uint8Array(g.drawingBufferWidth*g.drawingBufferHeight*4);g.readPixels(0,0,g.drawingBufferWidth,g.drawingBufferHeight,g.RGBA,g.UNSIGNED_BYTE,b);let h=2166136261;for(const x of b)h=Math.imul(h^x,16777619)>>>0;const positions=new Float32Array(a.getPositions());let modelHash=2166136261;for(const x of new Uint8Array(positions.buffer))modelHash=Math.imul(modelHash^x,16777619)>>>0;return{pixels:h,modelHash,gl:g.getError(),graphics:a.graphicsDiagnostics(),callbacks:__hairDisposeObservation(),geometry:d.geometryHashes||null,state:a.getState()};},api);}
+ const first=await sample();result.baseline=first;const stable=first.callbacks.filter(x=>x.callbacks>0);check('observer preserves published default pixels',first.pixels===expected&&first.gl===0,{actual:first.pixels,expected});check('actual initial GPU disposal callbacks are observable',stable.some(x=>x.key.startsWith('geometry:')&&x.vertices>=17821)&&stable.some(x=>x.key.startsWith('material:')),stable);
+ const keys=new Set(stable.map(x=>x.key));
+ for(let i=0;i<20;i++){
+  const previous=await page.evaluate(api=>window[api].graphicsDiagnostics().recoveries,api);
+  if(i%5===4){await page.evaluate(()=>document.getElementById('canvas').getContext('webgl2').getExtension('WEBGL_lose_context').loseContext());if(i===14){await page.waitForSelector('#graphicsRetry');await page.locator('#graphicsRetry').click();}}
+  else await page.evaluate(()=>{dispatchEvent(new PageTransitionEvent('pagehide',{persisted:true}));dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}));});
+  await page.waitForFunction(({api,previous})=>window[api].ready&&window[api].graphicsDiagnostics().recoveries>previous,{api,previous},{timeout:180000});
+  const x=await sample();result.samples.push({round:i,pixels:x.pixels,graphics:x.graphics,callbacks:x.callbacks.filter(y=>keys.has(y.key))});
+  check('round '+i+' real pixels, geometry and settings preserved',x.pixels===first.pixels&&x.modelHash===first.modelHash&&x.modelHash===1686585375&&x.gl===0&&JSON.stringify(x.geometry)===JSON.stringify(first.geometry)&&JSON.stringify(x.state)===JSON.stringify(first.state),{pixels:x.pixels,gl:x.gl});
+ }
+ const last=result.samples.at(-1);result.growth=stable.map(x=>{const end=last.callbacks.find(y=>y.key===x.key);return{...x,initial:x.callbacks,final:end?.callbacks??0,delta:(end?.callbacks??0)-x.callbacks};}).filter(x=>x.delta>0);
+ result.growthObserved=result.growth.length>0;result.conclusion=result.growthObserved?'Persistent scene objects accumulated distinct dispose callbacks across real renderer rebuilds; heap bytes were not measured.':'No callback count growth observed in the tracked persistent objects.';
+ check('no uncaught browser errors',result.errors.length===0,result.errors);await page.locator('#canvas').screenshot({path:path.join(OUT,'after-20-observed-reentries.png')});result.passed=true;
+}catch(e){result.failure=String(e.stack||e);process.exitCode=1;console.error(e);}finally{save();await browser?.close();if(server)await new Promise(r=>server.close(r));}})();
