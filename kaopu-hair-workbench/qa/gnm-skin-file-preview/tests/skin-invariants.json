@@ -1,0 +1,242 @@
+{
+  "passed": true,
+  "scope": "CPU UV/material contract only; actual appearance and shader GPU compile pending",
+  "checks": [
+    {
+      "name": "UV attachment preserves original solver positions",
+      "passed": true
+    },
+    {
+      "name": "source arrays stay byte-identical after skin setup",
+      "passed": true
+    },
+    {
+      "name": "official UV render corner and seam contract",
+      "passed": true,
+      "detail": {
+        "sourceVertices": 17821,
+        "renderVertices": 18437,
+        "duplicates": 616,
+        "triangleCornerMismatch": 0,
+        "maxPositionError": 0,
+        "maxNormalError": 0,
+        "normalMethod": "duplicate exact original topology vertex normals",
+        "uvFlipped": false,
+        "finite": true
+      }
+    },
+    {
+      "name": "official skin/eye/mouth regions finite and separate",
+      "passed": true,
+      "detail": {
+        "vertices": 18437,
+        "skinVertices": 12608,
+        "eyeVertices": 1590,
+        "nonSkinMapProtected": 5829,
+        "sourceMapped": 18437,
+        "finite": true,
+        "materialNames": [
+          "skin",
+          "teeth",
+          "gums",
+          "tongue",
+          "scleras",
+          "irises",
+          "pupils"
+        ]
+      }
+    },
+    {
+      "name": "skin shader keeps accepted hair-shadow injection hooks",
+      "passed": true
+    },
+    {
+      "name": "local map samples are restricted to official skin IDs",
+      "passed": true
+    },
+    {
+      "name": "color correct texture color space",
+      "passed": true,
+      "detail": {
+        "colorSpace": "srgb",
+        "width": 1,
+        "height": 1
+      }
+    },
+    {
+      "name": "color clear restores procedural source",
+      "passed": true
+    },
+    {
+      "name": "normal correct texture color space",
+      "passed": true,
+      "detail": {
+        "colorSpace": "",
+        "width": 1,
+        "height": 1
+      }
+    },
+    {
+      "name": "normal clear restores procedural source",
+      "passed": true
+    },
+    {
+      "name": "roughness correct texture color space",
+      "passed": true,
+      "detail": {
+        "colorSpace": "",
+        "width": 1,
+        "height": 1
+      }
+    },
+    {
+      "name": "roughness clear restores procedural source",
+      "passed": true
+    },
+    {
+      "name": "invalid material edit atomic",
+      "passed": true
+    },
+    {
+      "name": "neutral source and UV arrays compatible",
+      "passed": true,
+      "detail": {
+        "sourceVertices": 17821,
+        "renderVertices": 18437,
+        "duplicates": 616,
+        "triangleCornerMismatch": 0,
+        "maxPositionError": 0,
+        "maxNormalError": 0,
+        "normalMethod": "duplicate exact original topology vertex normals",
+        "uvFlipped": false,
+        "finite": true
+      }
+    },
+    {
+      "name": "female source and UV arrays compatible",
+      "passed": true,
+      "detail": {
+        "sourceVertices": 17821,
+        "renderVertices": 18437,
+        "duplicates": 616,
+        "triangleCornerMismatch": 0,
+        "maxPositionError": 0,
+        "maxNormalError": 0,
+        "normalMethod": "duplicate exact original topology vertex normals",
+        "uvFlipped": false,
+        "finite": true
+      }
+    },
+    {
+      "name": "female-alt source and UV arrays compatible",
+      "passed": true,
+      "detail": {
+        "sourceVertices": 17821,
+        "renderVertices": 18437,
+        "duplicates": 616,
+        "triangleCornerMismatch": 0,
+        "maxPositionError": 0,
+        "maxNormalError": 0,
+        "normalMethod": "duplicate exact original topology vertex normals",
+        "uvFlipped": false,
+        "finite": true
+      }
+    },
+    {
+      "name": "neutral reset exact",
+      "passed": true
+    }
+  ],
+  "states": [
+    {
+      "name": "neutral",
+      "positionSha256": "47abbb7e46f52c241ae1cb7a798ca59d73a281540e05c651d0f7468f5c52f3cf",
+      "uv": {
+        "sourceVertices": 17821,
+        "renderVertices": 18437,
+        "duplicates": 616,
+        "triangleCornerMismatch": 0,
+        "maxPositionError": 0,
+        "maxNormalError": 0,
+        "normalMethod": "duplicate exact original topology vertex normals",
+        "uvFlipped": false,
+        "finite": true
+      }
+    },
+    {
+      "name": "female",
+      "positionSha256": "40bd3203296ee0bcb7eca1224272f96a07c450f9661cdf48ca2630b2228a70bc",
+      "uv": {
+        "sourceVertices": 17821,
+        "renderVertices": 18437,
+        "duplicates": 616,
+        "triangleCornerMismatch": 0,
+        "maxPositionError": 0,
+        "maxNormalError": 0,
+        "normalMethod": "duplicate exact original topology vertex normals",
+        "uvFlipped": false,
+        "finite": true
+      }
+    },
+    {
+      "name": "female-alt",
+      "positionSha256": "d9b08db5e3c1790c8c84a2c7a83dbc3ef7c54cca9464082888303a8e369e3335",
+      "uv": {
+        "sourceVertices": 17821,
+        "renderVertices": 18437,
+        "duplicates": 616,
+        "triangleCornerMismatch": 0,
+        "maxPositionError": 0,
+        "maxNormalError": 0,
+        "normalMethod": "duplicate exact original topology vertex normals",
+        "uvFlipped": false,
+        "finite": true
+      }
+    }
+  ],
+  "skin": {
+    "version": "gnm-procedural-skin-r1",
+    "uvDebug": false,
+    "parameters": {
+      "color": "#bea099",
+      "roughness": 0.6,
+      "detail": 0.3,
+      "flush": 0.32,
+      "softness": 0.25,
+      "normalStrength": 0.65
+    },
+    "regions": {
+      "vertices": 18437,
+      "skinVertices": 12608,
+      "eyeVertices": 1590,
+      "nonSkinMapProtected": 5829,
+      "sourceMapped": 18437,
+      "finite": true,
+      "materialNames": [
+        "skin",
+        "teeth",
+        "gums",
+        "tongue",
+        "scleras",
+        "irises",
+        "pupils"
+      ]
+    },
+    "compiled": 1,
+    "usesOfficialUvs": true,
+    "skinMapsOnly": true,
+    "changesHeadVertices": false,
+    "changesHair": false,
+    "maps": {
+      "color": null,
+      "normal": null,
+      "roughness": null
+    },
+    "limitations": [
+      "Independent procedural material study; no scanned skin map reproduction",
+      "Wrapped diffuse is a bounded lighting approximation, not multiple-scattering or spectral SSS",
+      "No dynamic wrinkles, measured age changes or photoreal visual acceptance"
+    ]
+  },
+  "originalPositionSha": "47abbb7e46f52c241ae1cb7a798ca59d73a281540e05c651d0f7468f5c52f3cf"
+}

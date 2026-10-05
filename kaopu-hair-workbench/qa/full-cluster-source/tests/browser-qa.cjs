@@ -21,6 +21,23 @@ const ready=async p=>{await p.waitForFunction(()=>window.platform?.module==='hom
 const probe=async p=>p.evaluate(()=>{const r=anemone.renderer;anemone.pixels();let h=2166136261;const arr=new Uint8Array(r.data.buffer);for(const b of arr)h=Math.imul(h^b,16777619)>>>0;return{pixels:anemone.pixels(),geometryHash:h,metrics:anemone.metrics(),state:anemone.state,errors:[...anemone.errors,...workbench.errors,...kuko.errors],overflow:document.documentElement.scrollWidth>innerWidth}});
 async function sample(p,name){const x=await probe(p);check(name+' real WebGL',x.pixels.glError===0&&x.pixels.changed>500&&!x.errors.length&&!x.overflow,x);await p.screenshot({path:path.join(OUT,name+'.jpg'),fullPage:true,type:'jpeg',quality:88});await p.locator('#anemoneCanvas').screenshot({path:path.join(OUT,name+'-canvas.jpg'),type:'jpeg',quality:88});return x;}
 (async()=>{let browser;try{
+// FILE-only skin previews: no public skin HTML or entry is included in this batch.
+const skinPreviewSpecPath=path.join(__dirname,'skin-preview-scope.json');
+if(fs.existsSync(skinPreviewSpecPath)){
+ const spec=JSON.parse(fs.readFileSync(skinPreviewSpecPath,'utf8')),base=path.dirname(ONLINE_HTML),failedPins=Object.entries({...spec.runtimePins,...spec.previewPins}).filter(([f,h])=>!fs.existsSync(path.join(base,f))||sha(fs.readFileSync(path.join(base,f)))!==h);
+ if(spec.scope==='skin-file-preview-r1'&&group!=='all'){
+  check('frozen R9 and preview source bytes pinned',failedPins.length===0,failedPins);
+  const runMale=phase==='file'&&group==='catalog',runFemale=phase==='file'&&group==='core',runs=runMale||runFemale;
+  Object.assign(result,{scope:spec.scope,reusedEvidence:spec.reusedEvidence,publicSkinAvailable:false,visualAcceptance:false,fullRegressionPassed:false,contactAcceptance:false,productionReady:false,runtimePinsVerified:Object.keys(spec.runtimePins).length,previewPinsVerified:Object.keys(spec.previewPins).length,notRerun:!runs});
+  if(runs){
+   browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+   if(runMale){const r=path.join(base,'gnm-skin-file-preview');result.skinPreview=await require(path.join(r,'tests/skin-preview-browser.cjs'))(browser,path.join(OUT,'gnm-skin-preview'));check('male skin actual FILE-only preview passes',result.skinPreview.passed,result.skinPreview.failure||result.skinPreview.errors);}
+   if(runFemale){const r=path.join(base,'gnm-female-skin-preview');result.skinPreview=await require(path.join(r,'tests/female-preview.cjs'))(browser,'file://'+path.join(r,'experiment.page'),path.join(OUT,'gnm-female-skin-preview'));check('female skin actual FILE-only preview passes',result.skinPreview.passed,result.skinPreview.failure||result.skinPreview.errors);}
+   section(group);
+  }
+  result.skinPreviewPassed=runs?result.skinPreview?.passed:null;result.passed=false;return;
+ }
+}
 // Focused new-editor evidence; all original runtime source hashes stay pinned.
 const editorScopePath=path.join(__dirname,'r9-editor-scope.json');
 if(fs.existsSync(editorScopePath)){
@@ -71,4 +88,5 @@ if(selected('orbit')){result.lightingGeometry=await require('./lighting-geometry
 if(selected('touch')){const seedRoot=path.join(path.dirname(ONLINE_HTML),'gnm-hair-experiment');result.gnmShadowSeed=await require(path.join(seedRoot,'tests/shadow-seed-probe.cjs'))(browser,phase==='public'?new globalThis.URL('gnm-hair-experiment/experiment.html',URL).href:'file://'+path.join(seedRoot,'experiment.html'),path.join(OUT,'gnm-shadow-seed'));check('fixed-geometry shadow-seed diagnostic completes',result.gnmShadowSeed.passed,result.gnmShadowSeed.failure||result.gnmShadowSeed.errors);result.firstEntry=await require('./first-entry.cjs')(browser,startupUrl,path.join(OUT,'first-entry'),recordCheck);check('real first Rabbit startup and visible Anemone controls pass',result.firstEntry.passed,result.firstEntry.summary);const gnmRoot=path.join(path.dirname(ONLINE_HTML),'gnm-study');result.gnmGroomEditor=await require(path.join(gnmRoot,'tests/browser-qa.cjs'))(browser,phase==='public'?new globalThis.URL('gnm-study/index.html',URL).href:'file://'+path.join(gnmRoot,'index.html'),path.join(OUT,'gnm-groom-editor'),undefined,{editorOnly:true});check('GNM independent groom-editor controls and rendered styles pass',result.gnmGroomEditor.passed,result.gnmGroomEditor.errors);const featherPath=HTML;const scripts=[...fs.readFileSync(featherPath,'utf8').matchAll(/<script\b[^>]*>([\s\S]*?)<\/script\s*>/gi)].map(x=>x[1]);for(let i=0;i<scripts.length;i++)new (require('vm').Script)(scripts[i],{filename:'feather-integration-script-'+i});check('all generated fifth-entry scripts parse',scripts.length===5,{scripts:scripts.length});const featherParent=startupUrl;result.featherCatalog=await require('./feather-catalog.cjs')(browser,featherParent,path.join(OUT,'feather-catalog'),check);check('fifth feather integration lifecycle passes',result.featherCatalog.passed,result.featherCatalog.failure||result.featherCatalog.summary);const mobile=await require('./mobile-controls.cjs')(browser,phase==='public'?URL:'file://'+HTML,path.join(OUT,'touch'),check);result.mobileTouch=mobile;check('native mobile touch suite passes',mobile.passed,mobile.summary);const rabbitTouch=await require('./rabbit-controls.cjs')(browser,phase==='public'?URL:'file://'+HTML,path.join(OUT,'rabbit-touch'),check);result.rabbitTouch=rabbitTouch;check('native rabbit touch suite passes',rabbitTouch.passed,rabbitTouch.summary);section('touch');}
 check('all selected sections completed',JSON.stringify(result.completedSections)===JSON.stringify(group==='all'?['core','catalog','orbit','touch']:[group]),result.completedSections);result.passed=true;
 }catch(e){result.passed=false;result.failure=e.stack;process.exitCode=1;}finally{checkpoint();console.log(JSON.stringify(result,null,2));if(browser)await browser.close();}})();
+
 

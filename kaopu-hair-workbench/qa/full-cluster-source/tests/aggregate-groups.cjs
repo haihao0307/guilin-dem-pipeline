@@ -5,6 +5,19 @@ const hash=p=>crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex
 const expected={online:hash(online),offline:hash(offline)};
 const files=[];function walk(p){for(const e of fs.readdirSync(p,{withFileTypes:true})){const q=path.join(p,e.name);if(e.isDirectory())walk(q);else if(/^cluster-(file|public)-(core|catalog|orbit|touch)-results\.json$/.test(e.name))files.push(q);}}walk(root);
 const supplementalReports=files.map(f=>({file:f,value:JSON.parse(fs.readFileSync(f))}));
+if(supplementalReports.length===8&&supplementalReports.every(x=>x.value.scope==='skin-file-preview-r1')){
+ const errors=[],matrixResult=process.env.HAIR_QA_MATRIX_RESULT;
+ if(matrixResult!=='success')errors.push('Skin preview matrix incomplete: '+matrixResult);
+ for(const phase of ['file','public'])for(const group of ['core','catalog','orbit','touch']){
+  const matches=supplementalReports.filter(x=>x.value.phase===phase&&x.value.group===group),runs=phase==='file'&&['core','catalog'].includes(group);
+  if(matches.length!==1){errors.push(phase+'/'+group+' duplicate or missing');continue;}
+  const r=matches[0].value;
+  if(r.htmlSha256!==expected[phase==='file'?'offline':'online']||r.onlineHtmlSha256!==expected.online||r.standaloneHtmlSha256!==expected.offline||r.errors.length||r.contactAcceptance!==false||r.fullRegressionPassed!==false||r.publicSkinAvailable!==false||r.notRerun===runs)errors.push(phase+'/'+group+' source or scope mismatch');
+  if(runs&&(r.skinPreviewPassed!==true||r.skinPreview?.passed!==true||r.skinPreview?.errors?.length))errors.push(phase+'/'+group+' preview incomplete or failed');
+ }
+ const report={scope:'skin-file-preview-r1',timestamp:new Date().toISOString(),matrixResult,skinPreviewPassed:errors.length===0,passed:false,publicSkinAvailable:false,visualAcceptance:false,fullRegressionPassed:false,contactAcceptance:false,productionReady:false,physicalIPhoneTested:false,errors,reusedEvidence:supplementalReports[0].value.reusedEvidence,groups:supplementalReports.map(x=>({phase:x.value.phase,group:x.value.group,notRerun:x.value.notRerun,skinPreviewPassed:x.value.skinPreviewPassed,checks:x.value.skinPreview?.checks?.length,result:x.file}))};
+ fs.writeFileSync(path.join(root,'aggregate-results.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));if(errors.length)process.exitCode=1;return;
+}
 if(supplementalReports.length===8&&supplementalReports.every(x=>x.value.scope==='r9-editor-focused')){
  const errors=[],matrixResult=process.env.HAIR_QA_MATRIX_RESULT;
  if(matrixResult!=='success')errors.push('R9 focused matrix incomplete: '+matrixResult);
@@ -40,4 +53,5 @@ for(const phase of ['file','public'])for(const group of ['core','catalog','orbit
 }
 summary.passed=summary.groups.length===8&&summary.errors.length===0;
 fs.writeFileSync(path.join(root,'aggregate-results.json'),JSON.stringify(summary,null,2));console.log(JSON.stringify(summary,null,2));if(!summary.passed)process.exitCode=1;
+
 
