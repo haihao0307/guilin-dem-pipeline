@@ -1,0 +1,52 @@
+{
+  "id": "CLIENT-STATE-VERSION-ISOLATION-001",
+  "status": "Candidate",
+  "createdAt": "2026-10-06T02:33:45+08:00",
+  "scope": "versioned browser workbenches that persist accepted parameters, user presets, camera, material or renderer state",
+  "observedFailure": {
+    "mother": "Material",
+    "writerVersion": 17,
+    "writtenKey": "KAOPU_MATERIAL_R16",
+    "writtenPayloadVersion": 17,
+    "effect": "a newer candidate can overwrite the prior accepted-version client state",
+    "recoveryLimit": "post-failure backup preserves the currently stored bytes but cannot reconstruct pre-overwrite bytes"
+  },
+  "requiredReceiptFields": [
+    "taskId",
+    "acceptedBaselineVersion",
+    "acceptedBaselineSha",
+    "storageNamespace",
+    "writerVersion",
+    "readerVersion",
+    "migrationSourceDigest",
+    "migrationTargetDigest",
+    "preMigrationImmutableBackup",
+    "rollbackTest",
+    "testedPublicSubject",
+    "knownIrrecoverableState"
+  ],
+  "assertions": [
+    "a candidate version must not write to an accepted baseline storage key",
+    "the payload version must match the namespace version unless an explicit one-shot migration contract is active",
+    "migration must copy before write and preserve the exact source bytes under an immutable recovery key",
+    "a post-overwrite backup does not prove recovery of the pre-overwrite state",
+    "rollback must reopen the accepted baseline without consuming candidate state",
+    "passing rendering or interaction tests cannot promote a build whose storage isolation gate fails",
+    "public delivery evidence must bind the exact current page blob after any rollback or canonical-entry change"
+  ],
+  "decisions": {
+    "sameKeyDifferentVersion": "HOLD_CLIENT_STATE_VERSION_COLLISION",
+    "copyBeforeWriteAndRollbackVerified": "CLIENT_STATE_MIGRATION_VERIFIED_SCOPED",
+    "backupOnlyAfterOverwrite": "HOLD_PREOVERWRITE_STATE_UNKNOWN",
+    "testRunPredatesCanonicalRollback": "REJECTED_STALE_OR_WRONG_TARGET_DELIVERY"
+  },
+  "activation": {
+    "posted": false,
+    "acknowledged": false,
+    "implemented": false,
+    "gateRun": false,
+    "adopted": false,
+    "userAccepted": false
+  },
+  "nextValidation": "Learning Flywheel should implement a four-fixture replay: isolated namespace pass; same-key cross-version hold; verified copy-before-write migration pass; post-overwrite backup remains unknown."
+}
