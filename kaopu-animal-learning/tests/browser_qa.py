@@ -55,7 +55,7 @@ def run(page,name,width,height):
  page.get_by_role('button',name='既有工作入口',exact=True).click()
  page.get_by_role('heading',name='既有动物、人物与服装入口').wait_for()
  check('eight public workbench destinations retained',page.get_by_role('link',name='打开原工作台 ↗').count()==8)
- check('private Site URL excluded',not page.locator('a[href*="palau-birds-r04-workbench"]').count())
+ check('private Site URL excluded',not page.locator('a[href*="chatgpt.site"]').count())
  check('unpublished entries are honest',page.get_by_text('暂无核实网页入口',exact=True).count()==8)
  page.get_by_role('button',name='学习总览',exact=True).click()
  page.get_by_role('button',name='打开点位记录',exact=True).click()

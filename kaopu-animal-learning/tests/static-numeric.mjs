@@ -56,7 +56,7 @@ check('method diagrams explicitly marked',()=>assert.equal((homeMarkup().match(/
 check('all card details state not run',()=>data.teachers.forEach(t=>assert.match(teacherMarkup(t),/推理未运行/)));
 check('old overview preserves eight public destinations',()=>{const links=data.existingOverview.entries.filter(e=>e.url);assert.equal(links.length,8);assert(links.some(x=>x.url.endsWith('shorts-original-r5/')));assert(links.some(x=>x.url.endsWith('shorts-v9-4-directed-20261003/')));});
 check('unpublished old entries have no fabricated href',()=>assert.equal((overviewMarkup().match(/暂无核实网页入口/g)||[]).length,8));
-check('private Palau URL not published',()=>{assert.match(overviewMarkup(),/私有工作台/);assert(!JSON.stringify(data).includes('palau-birds-r04-workbench.sunhaihao.chatgpt.site'));});
+check('private Palau URL not published',()=>{assert.match(overviewMarkup(),/私有工作台/);assert(!JSON.stringify(data).includes('.chatgpt.site'));});
 check('old overview quality is not promoted',()=>{assert.equal(data.existingOverview.qualityRechecked,false);assert.match(overviewMarkup(),/尚未在本轮重新验收/);});
 check('same-tab sources only',()=>{assert(!source.includes('target="_blank"'));assert(source.includes('target="_self"'));});
 check('manual tool is visibly labeled',()=>assert.match(toolMarkup('annotate'),/人工标注，不是模型识别/));
