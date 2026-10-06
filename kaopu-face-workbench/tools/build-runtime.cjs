@@ -1,0 +1,10 @@
+/* Reproducible delivery-only build. Install official esbuild@0.25.0 separately.
+   NODE_PATH=/path/to/build-tools/node_modules node tools/build-runtime.cjs
+   Preserves GNM data/evaluator and source geometry; no user files are inputs. */
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),zlib=require('node:zlib'),esbuild=require('esbuild');
+if(esbuild.version!=='0.25.0')throw Error('Use pinned official esbuild@0.25.0');
+const root=path.resolve(__dirname,'..');const build=esbuild.buildSync({entryPoints:[path.join(root,'src/app.js')],bundle:true,minify:true,format:'iife',target:['es2018'],legalComments:'inline',write:false,metafile:true});
+const code=build.outputFiles[0].contents,sha=b=>crypto.createHash('sha256').update(b).digest('hex'),hash=sha(code),name='face-r01-'+hash.slice(0,12)+'.min.js',gz=zlib.gzipSync(code,{level:9,mtime:0}),folder=path.join(root,'runtime');fs.mkdirSync(folder,{recursive:true});fs.writeFileSync(path.join(folder,name),code);fs.writeFileSync(path.join(folder,name+'.gz'),gz);
+const record={buildTool:'esbuild@0.25.0',target:'es2018',format:'iife',modelChanged:false,plain:{path:'runtime/'+name,bytes:code.length,sha256:hash},gzip:{path:'runtime/'+name+'.gz',bytes:gz.length,sha256:sha(gz)},sources:Object.fromEntries(['src/app.js','src/GNMModel.js','src/profile.js','vendor/three.module.js','vendor/OrbitControls.js'].map(n=>[n,{bytes:fs.statSync(path.join(root,n)).size,sha256:sha(fs.readFileSync(path.join(root,n)))}]))};
+const old=path.join(folder,'BUILD.json');if(fs.existsSync(old)){const prior=JSON.parse(fs.readFileSync(old));if(prior.plain.sha256===record.plain.sha256&&prior.neutralPositionSHA256)record.neutralPositionSHA256=prior.neutralPositionSHA256;}fs.writeFileSync(old,JSON.stringify(record,null,2));
+const html=path.join(root,'index.html'),text=fs.readFileSync(html,'utf8');if(!/var ASSETS=\{.*?\};/.test(text))throw Error('Expected resource manifest placeholder missing');fs.writeFileSync(html,text.replace(/var ASSETS=\{.*?\};/,'var ASSETS='+JSON.stringify({plain:record.plain,gzip:record.gzip})+';'));console.log(JSON.stringify(record,null,2));

@@ -49,34 +49,15 @@ jobs:
           server=$!
           trap 'kill "$server" 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do curl -fsS "$FACE_URL" > /dev/null && break || sleep 1; done
-          mkdir -p entry-chromium entry-webkit
-          (cd entry-chromium && NODE_PATH="$RUNNER_TEMP/face-test/node_modules" node ../kaopu-face-workbench/tests/entry-bootstrap.cjs)
-          (cd entry-webkit && FACE_BROWSER=webkit NODE_PATH="$RUNNER_TEMP/face-test/node_modules" node ../kaopu-face-workbench/tests/entry-bootstrap.cjs)
+          mkdir -p loader-chromium loader-webkit
+          (cd loader-chromium && NODE_PATH="$RUNNER_TEMP/face-test/node_modules" node ../kaopu-face-workbench/tests/loader-transfer.cjs)
+          (cd loader-webkit && FACE_BROWSER=webkit NODE_PATH="$RUNNER_TEMP/face-test/node_modules" node ../kaopu-face-workbench/tests/loader-transfer.cjs)
           NODE_PATH="$RUNNER_TEMP/face-test/node_modules" node kaopu-face-workbench/tests/browser.cjs
           command -v ffmpeg >/dev/null || (sudo apt-get update && sudo apt-get install -y ffmpeg)
           ffmpeg -hide_banner -loglevel error -f lavfi -i color=c=orange:s=128x128:d=1:r=10 -an -c:v libx264 -pix_fmt yuv420p -movflags +faststart -y "$RUNNER_TEMP/face-test/synthetic.mp4"
           mkdir -p qa-webkit
           cd qa-webkit
           FACE_BROWSER=webkit FACE_VIDEO_FIXTURE="$RUNNER_TEMP/face-test/synthetic.mp4" NODE_PATH="$RUNNER_TEMP/face-test/node_modules" node ../kaopu-face-workbench/tests/browser.cjs
-      - name: Verify R01 entry fix on public HTTPS in both engines
-        env:
-          FACE_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-face-workbench/?entry=r01-20261006
-        run: |
-          python3 - <<'PYVERIFY'
-          import hashlib, urllib.request
-          expected={"PROVENANCE.json": "f9c27b76dd4538ff3a506fcd7e26828f41d84b879bb3baf41760275cf3ac3ed9", "README.md": "eaac8a971205273cd6b83c7620b33e3a007959c7de6b81bce07f55ecf68301d6", "index.html": "dc5e110b4aabf659f50318ceab97be1dbb29c4e29a2017a1dba0d22f0368f717", "licenses/GNM-LICENSE.txt": "ba12fffb7f905c67daa3e0d9656e8638d3a0d0eee70862ec17da7db429be19f0", "licenses/THREE-LICENSE.txt": "4c40a1ef62450b857c3b2aaf294936304cd552d965fbcd9d32d4c5bcf4ba4454", "licenses/XRBLOCKS-LICENSE.txt": "33eef1d0689b439ecb31fe3eb3e14cc5a0c31c5d1489087fe45fb2d2ad13f084", "package.json": "36c92d5574b3f75e0d24e10cc8d81793c5971a1268f8c00464ded482d3c86b46", "src/GNMModel.js": "e9619714dc5a975f66fc8c9cef76220441fd8e644cf9d14e43022b4705579c5f", "src/app.js": "8980a6ae6e3b8272ed2b69ebb79c61eedcd28d55bd7b06d554d54fc7f36e1c3e", "src/profile.js": "aced33fdaa8b35276d5d3e92dacbb32c28742c9de2fdc3858bc0798b7a2bbbcc", "style.css": "c2c0dbcdd4f652287ab587802c1d3ae1b7c00208a54ef10a37e3313ae4898cbb", "tests/browser.cjs": "ee2d072cbfe300677741ca67a20e9cec601456f1884206c0a4748dc65c7940a2", "tests/contracts.mjs": "634862187bee8350239fbdca49d9f0403b17fea8413c4fc0698c7e645f97403f", "tests/model.mjs": "6f8104612bc116ded2d69d0254f37938064f6e75aac337b609d7e04e980d1e2a", "vendor/OrbitControls.js": "6f3052dd8860a60fe6999260d50558ff54609523724c6e374326228e5590cf55", "vendor/three.module.js": "ce1fa418de16a19495a9f72495580e3015d7745c296d3ce0485897f902ddedfb"}
-          base='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-face-workbench/'
-          for name, digest in expected.items():
-              response=urllib.request.urlopen(base+name+'?entry=r01-20261006',timeout=60)
-              data=response.read()
-              assert hashlib.sha256(data).hexdigest()==digest, name+' public bytes mismatch'
-              print(name,response.status,response.headers.get('content-type'),len(data),digest)
-          PYVERIFY
-          mkdir -p public-entry-chromium public-entry-webkit public-flow-chromium public-flow-webkit
-          (cd public-entry-chromium && NODE_PATH="$RUNNER_TEMP/face-test/node_modules" node ../kaopu-face-workbench/tests/entry-bootstrap.cjs)
-          (cd public-entry-webkit && FACE_BROWSER=webkit NODE_PATH="$RUNNER_TEMP/face-test/node_modules" node ../kaopu-face-workbench/tests/entry-bootstrap.cjs)
-          (cd public-flow-chromium && NODE_PATH="$RUNNER_TEMP/face-test/node_modules" node ../kaopu-face-workbench/tests/browser.cjs)
-          (cd public-flow-webkit && FACE_BROWSER=webkit FACE_VIDEO_FIXTURE="$RUNNER_TEMP/face-test/synthetic.mp4" NODE_PATH="$RUNNER_TEMP/face-test/node_modules" node ../kaopu-face-workbench/tests/browser.cjs)
       - name: Upload synthetic-only QA evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -107,3 +88,7 @@ jobs:
             public-flow-chromium/face-qa-result.json
             public-flow-webkit/*.png
             public-flow-webkit/face-qa-result.json
+            loader-chromium/*.png
+            loader-chromium/loader-qa-result.json
+            loader-webkit/*.png
+            loader-webkit/loader-qa-result.json

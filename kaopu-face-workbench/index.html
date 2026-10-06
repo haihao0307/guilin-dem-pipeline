@@ -2,47 +2,82 @@
 <header><a href="#home" class="brand">KAOPU / GAME</a><span>捏脸工作台 · R01</span><span class="badge">本地资料 · 手动原型</span></header>
 <main id="home"><section class="intro"><p class="eyebrow">FACE / 独立人物工作台</p><h1>从同一个人，<br>观察一张脸</h1><p>以 Google GNM 原始头模为基线。照片、视频只是本地对照输入，当前不会自动重建或识别人。</p><button id="enter" class="primary">进入捏脸工作台 ↗</button><p id="bootStatus" role="status" aria-live="polite"></p><button id="bootHomeRetry" hidden>重新载入组件</button><noscript><p>浏览器已禁止 JavaScript，无法启动三维工作台。请允许此站点运行 JavaScript 后重新打开。</p></noscript><div class="steps"><span>01 指定人物</span><span>02 收集视角</span><span>03 GNM 编辑</span><span>04 导出三维</span></div></section><section class="boundary"><h2>这一版能做什么</h2><p>真实 GNM 网格、身份与表情参数、冷暖侧光、照片对照、视频手动取帧、档案及 OBJ 导出。</p><p>多图联合拟合、自动 mask / landmarks、相机估计尚未接入。没有“照片导入即重建完成”。</p></section></main>
 <main id="workbench" hidden><nav class="toolbar"><button id="back">← 返回入口</button><button data-view="front">正面</button><button data-view="three">斜侧</button><button data-view="side">侧面</button><button id="rotate" aria-pressed="false">自动旋转</button><button id="zoomOut" aria-label="缩小">−</button><button id="zoomIn" aria-label="放大">＋</button><button id="warm" aria-pressed="true">暖光</button><button id="cool" aria-pressed="true">冷光</button></nav>
-<div class="workspace"><section class="viewport"><div id="stage"><canvas id="canvas" aria-label="GNM 三维脸，拖动旋转、滚轮或双指缩放"></canvas><div id="load"><p id="loadText">准备原始 GNM…</p><progress id="progress" max="1" value="0"></progress><button id="retry" hidden>重新加载</button><button id="bootRetry" hidden>重新载入组件</button></div></div><div class="caption"><span id="modelStatus" role="status">原始 GNM · 未拟合</span><button id="baseline" disabled>恢复原始基线</button></div></section>
+<div class="workspace"><section class="viewport"><div id="stage"><canvas id="canvas" aria-label="GNM 三维脸，拖动旋转、滚轮或双指缩放"></canvas><div id="load"><p id="loadText">准备原始 GNM…</p><p id="bootResource" class="small"></p><progress id="progress" max="1" value="0"></progress><button id="retry" hidden>重新加载</button><button id="bootRetry" hidden>重新载入组件</button></div></div><div class="caption"><span id="modelStatus" role="status">原始 GNM · 未拟合</span><button id="baseline" disabled>恢复原始基线</button></div></section>
 <aside><section><h2>01 / 指定同一个人</h2><label>人物档案名<input id="person" maxlength="80" placeholder="仅保存在当前页面，可导出备份"></label><label class="check"><input id="samePerson" type="checkbox">我确认所有导入资料属于我指定的同一个人</label><p class="small">不自动猜人、不跨人检索。资料只在此浏览器页面处理，离开或刷新前请导出。此页不上传照片。</p><label class="file">导入照片 / 视频<input id="media" type="file" multiple accept="image/*,video/*" disabled></label><button id="clearMedia">清空资料与观察</button><p id="mediaStatus" role="status">尚未导入资料</p><div id="reference"><img id="photo" alt="当前本地对照照片" hidden><video id="video" controls playsinline hidden></video></div><button id="capture" hidden>取当前视频帧</button><div id="thumbnails"></div></section>
 <section><h2>02 / 观察记录</h2><p class="small">自动分割、landmarks、相机与置信度：未接入。可手工记录视角、遮挡、光线与待核部位。</p><label>当前图观察<div id="restoredNotes"></div><textarea id="observation" rows="3" placeholder="例如：左侧面，鼻翼被头发遮挡；避免当作几何证据" disabled></textarea></label></section>
 <section><details><summary>03 / 研究参数（展开）</summary><h2>GNM 原始统计分量</h2><p class="small">身份 PCA 与表情 PCA 是统计基底，不等于“鼻宽”等语义旋钮。调整是真实 GNM 求值，尚未由照片拟合。</p><fieldset id="parameters" disabled><label>参数组<select id="kind"><option value="identity">身份 · 253 维</option><option value="expression">表情 · 383 维</option></select></label><label>维度（从 1 开始）<input id="dimension" type="number" min="1" max="253" value="1"></label><label>系数 <output id="value">0.00</output><input id="coefficient" type="range" min="-3" max="3" step="0.01" value="0"></label><button id="zero">当前维度归零</button></fieldset><p id="difference">与原始基线差异：0 个参数</p></details></section>
 <section><h2>04 / 输出</h2><div class="row"><button id="exportProfile" disabled>导出档案 JSON</button><button id="exportObj" disabled>导出当前 OBJ</button></div><label class="file">导入档案 JSON<input id="importProfile" type="file" accept="application/json,.json" disabled></label><p class="small">档案只含参数与观察文字，仍依赖同版本共享 GNM 底座才能重建网格，不能独立运行。不含照片和视频；OBJ 为当前 GNM 几何，无贴图、无毛发。均不是已完成的照片重建结果。</p><p id="notice" role="status"></p></section></aside></div>
 <footer><a href="https://github.com/google/GNM">Google GNM · Apache-2.0</a> / <a href="PROVENANCE.json">来源与版本</a> / <a href="README.md">技术边界</a></footer></main><script>
-/* R01 entry shell is deliberately classic JavaScript: module download/parse failure
-   must never leave an inert entry button. No model bytes or personal data here. */
 (function () {
-  'use strict';
-  var home=document.getElementById('home'),workbench=document.getElementById('workbench');
-  var enter=document.getElementById('enter'),back=document.getElementById('back');
-  var shell=document.getElementById('load'),text=document.getElementById('loadText');
-  var status=document.getElementById('bootStatus'),retry=document.getElementById('bootRetry');
-  var homeRetry=document.getElementById('bootHomeRetry'),timer=0,started=false;
-  var boot=window.faceBoot={version:'r01-entry-20261006',ready:false,phase:'idle',error:null};
-  function tell(message){text.textContent=message;status.textContent=message;}
-  function fail(message){if(boot.ready)return;clearTimeout(timer);boot.phase='failed';boot.error=message;tell(message);retry.hidden=false;homeRetry.hidden=false;}
-  function shellRoute(){if(boot.ready)return;var editing=location.hash==='#edit';home.hidden=editing;workbench.hidden=!editing;if(editing)start();}
-  function reload(){if(boot.ready)return;location.reload();}
-  function start(){
-    if(boot.ready||started)return;
-    started=true;boot.phase='components';shell.hidden=false;
-    tell('正在启动三维组件，请稍候…');
-    document.getElementById('progress').removeAttribute('value');
-    var probe=document.createElement('script');
-    if(!('noModule' in probe)||!window.Promise||!window.fetch||!window.AbortController||!window.TextDecoder){fail('当前浏览器缺少运行三维工作台所需的功能。请用最新版 Edge、Chrome 或 Safari 打开');return;}
-    if(!window.crypto||!window.crypto.subtle){fail('模型校验需要安全的 HTTPS 页面。请从工作台的正式 HTTPS 网址打开');return;}
-    var script=document.createElement('script');script.type='module';script.src='src/app.js?entry=r01-20261006';
-    script.onerror=function(){fail('三维组件未能载入，入口已经打开，但原始头模尚未启动。可以重新载入组件');};
-    timer=setTimeout(function(){fail('三维组件等待超过 15 秒，可能下载受阻或连接较慢。可以重新载入组件；下载完成后也会继续');},15000);
-    document.body.appendChild(script);
-  }
-  boot.moduleReady=function(){boot.ready=true;boot.phase='model';boot.error=null;clearTimeout(timer);retry.hidden=true;homeRetry.hidden=true;status.textContent='三维组件已启动';};
-  enter.onclick=function(){location.hash='edit';shellRoute();};
-  back.onclick=function(){location.hash='home';shellRoute();};
-  retry.onclick=reload;homeRetry.onclick=reload;
-  window.addEventListener('hashchange',shellRoute);
-  window.addEventListener('error',function(event){if(started&&!boot.ready)fail('三维组件启动失败：'+(event.message||'运行文件未能读取')+'。可以重新载入组件');});
-  window.addEventListener('unhandledrejection',function(event){if(started&&!boot.ready)fail('三维组件启动失败：'+String(event.reason&&event.reason.message||event.reason||'未知原因')+'。可以重新载入组件');});
-  shellRoute();
+ 'use strict';
+ var ASSETS={"plain":{"path":"runtime/face-r01-4a6168be117e.min.js","bytes":525049,"sha256":"4a6168be117ec3e992824ddd6a4c02b5e2faf43e55d398669ca94b5f9671b0e7"},"gzip":{"path":"runtime/face-r01-4a6168be117e.min.js.gz","bytes":134599,"sha256":"93e290bb34926ad5cdaa094993a5558cf83424b338d6b25bd3a4bf6c7520f964"}};
+ var home=document.getElementById('home'),stage=document.getElementById('workbench'),overlay=document.getElementById('load');
+ var text=document.getElementById('loadText'),status=document.getElementById('bootStatus'),resource=document.getElementById('bootResource'),progress=document.getElementById('progress');
+ var retry=document.getElementById('bootRetry'),homeRetry=document.getElementById('bootHomeRetry');
+ var active=null,generation=0;
+ var boot=window.faceBoot={version:'r01-single-loader-20261006',ready:false,phase:'idle',attempt:0,execCount:0,requestURL:null,loaded:0,total:0,aborted:false,error:null,errorCode:null,history:[]};
+ function note(){boot.history.push({phase:boot.phase,loaded:boot.loaded,total:boot.total,url:boot.requestURL,code:boot.errorCode,time:Date.now()});if(boot.history.length>24)boot.history.shift();}
+ function say(message){text.textContent=message;status.textContent=message;resource.textContent=boot.requestURL||'';}
+ function current(run){return active===run&&!run.cancelled&&run.id===generation;}
+ function timers(run){clearTimeout(run.idle);clearTimeout(run.deadline);}
+ function failure(message,code){boot.phase='failed';boot.error=message;boot.errorCode=code;boot.endedAt=Date.now();progress.hidden=true;retry.hidden=false;homeRetry.hidden=false;say(message);note();}
+ function stop(run,message,code){if(!current(run))return;run.cancelled=true;active=null;timers(run);boot.aborted=true;run.controller.abort();failure(message,code);}
+ function idle(run){clearTimeout(run.idle);run.idle=setTimeout(function(){stop(run,'程序下载已停止：10 秒没有收到新数据。已收到 '+Math.round(boot.loaded/1024)+' / '+Math.round(boot.total/1024)+' KB，请求已取消','IDLE_TIMEOUT');},10000);}
+ function reportProgress(run,n){if(!current(run))return;boot.loaded=n;if(n>boot.total)boot.total=Math.max(n,ASSETS.plain.bytes);boot.lastProgressAt=Date.now();progress.max=boot.total;progress.value=n;say('下载三维程序：'+(n/1024).toFixed(1)+' / '+(boot.total/1024).toFixed(1)+' KB');idle(run);}
+ function digest(bytes){return window.crypto.subtle.digest('SHA-256',bytes).then(function(result){var array=new Uint8Array(result),hex='';for(var i=0;i<array.length;i++)hex+=('0'+array[i].toString(16)).slice(-2);return hex;});}
+ function read(run,response){
+  if(!current(run))return null;
+  boot.httpStatus=response.status;
+  if(!response.ok){var e=new Error('程序文件返回 HTTP '+response.status);e.code='HTTP_'+response.status;throw e;}
+  idle(run);
+  if(!response.body||!response.body.getReader)return response.arrayBuffer().then(function(b){if(current(run))reportProgress(run,b.byteLength);return new Uint8Array(b);});
+  var reader=response.body.getReader(),chunks=[],length=0;
+  function next(){return reader.read().then(function(item){if(!current(run)){reader.cancel();return null;}if(item.done){var data=new Uint8Array(length),offset=0;for(var i=0;i<chunks.length;i++){data.set(chunks[i],offset);offset+=chunks[i].length;}return data;}length+=item.value.length;if(length>ASSETS.plain.bytes){reader.cancel();var e=new Error('程序文件超过已核准大小');e.code='SIZE_MISMATCH';throw e;}chunks.push(item.value);reportProgress(run,length);return next();});}
+  return next();
+ }
+ function verify(run,data){
+  if(!current(run)||!data)return null;
+  clearTimeout(run.idle);boot.phase='verifying';say('三维程序已收齐，正在校验完整性…');
+  return digest(data).then(function(hash){
+   if(!current(run))return null;
+   if(data.length===ASSETS.plain.bytes&&hash===ASSETS.plain.sha256)return data;
+   if(!run.compressed||data.length!==ASSETS.gzip.bytes||hash!==ASSETS.gzip.sha256){var error=new Error('程序文件完整性不符，已阻止运行');error.code='HASH_MISMATCH';throw error;}
+   var stream=new Blob([data]).stream().pipeThrough(new DecompressionStream('gzip'));
+   return new Response(stream).arrayBuffer().then(function(b){var bytes=new Uint8Array(b);return digest(bytes).then(function(check){if(bytes.length!==ASSETS.plain.bytes||check!==ASSETS.plain.sha256){var e=new Error('程序解压校验失败，已阻止运行');e.code='DECOMPRESSION_MISMATCH';throw e;}return bytes;});});
+  });
+ }
+ function execute(run,data){
+  if(!current(run)||!data)return;
+  boot.phase='executing';say('三维程序校验通过，正在启动原始 GNM…');note();
+  var script=document.createElement('script');script.text=new TextDecoder('utf-8').decode(data)+'\n//# sourceURL='+new URL(ASSETS.plain.path,document.baseURI).href;
+  boot.execCount++;
+  document.body.appendChild(script);
+  if(current(run)&&!boot.ready)stop(run,'三维程序未能启动，程序下载已结束','EXECUTION_FAILED');
+ }
+ function start(){
+  if(boot.ready||active)return;
+  overlay.hidden=false;retry.hidden=true;homeRetry.hidden=true;progress.hidden=false;
+  if(!window.Promise||!window.fetch||!window.AbortController||!window.TextDecoder||!window.URL||!window.crypto||!window.crypto.subtle){failure('当前浏览器缺少安全下载程序所需的功能，请用最新版 Edge、Chrome 或 Safari 的 HTTPS 页面打开','CAPABILITY_MISSING');return;}
+  var compressed=!!(window.DecompressionStream&&window.Response&&window.Blob&&Blob.prototype.stream),asset=compressed?ASSETS.gzip:ASSETS.plain;
+  var run={id:++generation,controller:new AbortController(),cancelled:false,compressed:compressed,idle:0,deadline:0};active=run;
+  boot.attempt++;boot.phase='downloading';boot.requestURL=new URL(asset.path,document.baseURI).href;boot.loaded=0;boot.total=asset.bytes;boot.startedAt=Date.now();boot.lastProgressAt=boot.startedAt;boot.error=null;boot.errorCode=null;boot.aborted=false;boot.compressed=compressed;progress.max=asset.bytes;progress.value=0;
+  say('下载三维程序：0 / '+(asset.bytes/1024).toFixed(1)+' KB');note();idle(run);
+  run.deadline=setTimeout(function(){stop(run,'程序下载超过 60 秒，总请求已取消。已收到 '+Math.round(boot.loaded/1024)+' / '+Math.round(boot.total/1024)+' KB','TOTAL_TIMEOUT');},60000);
+  fetch(boot.requestURL,{signal:run.controller.signal,cache:'no-cache'}).then(function(r){return read(run,r);}).then(function(b){return verify(run,b);}).then(function(b){execute(run,b);}).catch(function(error){if(current(run))stop(run,'三维程序加载失败：'+String(error.message||error)+'；该请求已结束',error.code||'DOWNLOAD_FAILED');});
+ }
+ function shellRoute(){
+  if(boot.ready)return;
+  var editing=location.hash==='#edit';home.hidden=editing;stage.hidden=!editing;
+  if(editing){start();return;}
+  if(active){var run=active;active=null;run.cancelled=true;timers(run);run.controller.abort();boot.aborted=true;boot.phase='idle';boot.errorCode='NAVIGATED_AWAY';boot.endedAt=Date.now();progress.hidden=true;say('已返回入口，未完成的程序下载已取消');note();}
+ }
+ boot.moduleReady=function(){if(active)timers(active);active=null;boot.ready=true;boot.phase='model';boot.error=null;boot.errorCode=null;boot.endedAt=Date.now();retry.hidden=true;homeRetry.hidden=true;progress.hidden=false;progress.max=1;progress.value=0;resource.textContent='';status.textContent='三维程序已校验并启动';note();};
+ document.getElementById('enter').onclick=function(){location.hash='edit';shellRoute();};
+ document.getElementById('back').onclick=function(){location.hash='home';shellRoute();};
+ retry.onclick=start;homeRetry.onclick=function(){location.hash='edit';shellRoute();};
+ window.addEventListener('hashchange',shellRoute);
+ window.addEventListener('error',function(event){if(active&&boot.phase==='executing')stop(active,'三维程序执行失败：'+String(event.message||'浏览器执行错误'),'EXECUTION_FAILED');});
+ shellRoute();
 }());
 </script>
 </body></html>
