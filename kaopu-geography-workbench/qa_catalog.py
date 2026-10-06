@@ -36,7 +36,7 @@ try:
   p=browser.new_page(viewport={'width':1440,'height':1000})
   p.goto(BASE+'?ui=R17',wait_until='load',timeout=120000)
   assert p.evaluate('KaoPuDiagnostics().homeVisible') and not p.evaluate('KaoPuDiagnostics().detailVisible')
-  assert p.locator('[data-scene]').count()==8
+  assert p.locator('[data-scene]').count()==9
   before=p.evaluate('KaoPuDiagnostics().renderCount');p.locator('[data-scene="underwater"]').click();wait_render(p,'underwater',before)
   assert p.locator('#speed').input_value()=='0.5'
   opts=p.locator('#speed option').evaluate_all('(xs)=>xs.map(x=>x.value)')
@@ -60,7 +60,7 @@ try:
   # Mobile viewport: speed selector remains reachable below canvas, no overflow.
   m=browser.new_page(viewport={'width':390,'height':844},device_scale_factor=2,is_mobile=True,has_touch=True)
   m.goto(BASE+'?ui=R17',wait_until='load',timeout=120000)
-  assert m.evaluate('KaoPuDiagnostics().homeVisible') and m.locator('[data-scene]').count()==8
+  assert m.evaluate('KaoPuDiagnostics().homeVisible') and m.locator('[data-scene]').count()==9
   before=m.evaluate('KaoPuDiagnostics().renderCount');m.locator('[data-scene="underwater"]').click();wait_render(m,'underwater',before)
   assert m.locator('#speed').is_visible()
   assert m.locator('#liveCanvas').bounding_box()['y'] < m.locator('#speed').bounding_box()['y']
