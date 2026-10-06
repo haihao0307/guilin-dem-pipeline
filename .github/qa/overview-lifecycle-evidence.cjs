@@ -58,11 +58,14 @@ exports.start=async({browser,pages,contexts,out,engine})=>{
   page.on('requestfinished',r=>record('requestfinished',{page:index,url:r.url(),resourceType:r.resourceType(),timing:r.timing()}));
   page.on('requestfailed',r=>record('requestfailed',{page:index,url:r.url(),resourceType:r.resourceType(),failure:r.failure()?.errorText,timing:r.timing()}));
  });
- return {finish:async()=>{
+ const saved=new Set();
+ async function stopTrace(i){
+  if(saved.has(i))return;saved.add(i);
+  let timeout;try{await Promise.race([contexts[i].tracing.stop({path:path.join(out,`trace-${engine}-${i}.zip`)}),new Promise((_,reject)=>{timeout=setTimeout(()=>reject(Error('Trace finalization timeout')),10000)})]);record('trace-saved',{context:i});}catch(e){record('trace-save-error',{context:i,message:e.message});}finally{clearTimeout(timeout);}
+ }
+ return {closeContext:async i=>{record('layout-complete-release-context',{context:i});await stopTrace(i);await contexts[i].close();sampleRSS();},finish:async()=>{
   if(ended)return;ended=true;clearInterval(timer);sampleRSS();record('finish-start');
-  for(let i=0;i<contexts.length;i++){
-   let timeout;try{await Promise.race([contexts[i].tracing.stop({path:path.join(out,`trace-${engine}-${i}.zip`)}),new Promise((_,reject)=>{timeout=setTimeout(()=>reject(Error('Trace finalization timeout')),10000)})]);record('trace-saved',{context:i});}catch(e){record('trace-save-error',{context:i,message:e.message});}finally{clearTimeout(timeout);}
-  }
+  for(let i=0;i<contexts.length;i++)await stopTrace(i);
   record('finish-end');
  }};
 };
