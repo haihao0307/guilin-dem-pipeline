@@ -6,6 +6,7 @@ assert.ok(['chromium','webkit'].includes(engine));fs.mkdirSync(out,{recursive:tr
 (async()=>{
  const browser=await playwright[engine].launch(engine==='webkit'?{headless:true}:{headless:true,executablePath:process.env.CHROMIUM||undefined,args:['--no-sandbox']});
  const ctx=await browser.newContext({viewport:{width:1440,height:1100},hasTouch:true}),page=await ctx.newPage();
+ await page.emulateMedia({reducedMotion:'reduce'});
  const navCtx=await browser.newContext({viewport:{width:1440,height:1100},hasTouch:true}),nav=await navCtx.newPage();
  const errors=[],badResponses=[],nonGets=[],navigationWarnings=[];
  page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400&&r.url().includes('/kaopu-human-overview/'))badResponses.push({url:r.url(),status:r.status()})});page.on('request',r=>{if(r.method()!=='GET')nonGets.push(r.url())});nav.on('pageerror',e=>navigationWarnings.push({url:nav.url(),message:e.message}));
@@ -31,8 +32,8 @@ assert.ok(['chromium','webkit'].includes(engine));fs.mkdirSync(out,{recursive:tr
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),size.name+' horizontal overflow');
   for(const selector of ['.card-link','.tile-link','.shared-visual a','.section-nav a']){const boxes=await page.locator(selector).evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return{w:r.width,h:r.height}}));assert.ok(boxes.every(b=>b.w>=44&&b.h>=44),size.name+' small touch target '+selector);}
   const previews=await page.locator('.tile-image').evaluateAll(es=>es.map(e=>e.getBoundingClientRect().height));assert.ok(previews.every(h=>h>=145),size.name+' collapsed tile preview');
-  for(const id of ['people','clothing','animals','hair']){await page.locator(`.section-nav a[href="#${id}"]`).tap();await page.waitForURL('**/#'+id);assert.ok(await page.locator('#'+id).isVisible());}
-  await page.screenshot({path:`${out}/overview-${size.name}-${engine}.png`,fullPage:true});
+  for(const id of ['people','clothing','animals','hair']){await page.locator(`.section-nav a[href="#${id}"]`).tap();await page.waitForURL('**/#'+id);assert.ok(await page.locator('#'+id).isVisible());await page.waitForFunction(sectionId=>{const n=document.querySelector('.section-nav').getBoundingClientRect(),h=document.querySelector('#'+sectionId+' .section-heading').getBoundingClientRect();return h.top>=n.bottom-1&&h.top<innerHeight;},id,{timeout:5000});await page.screenshot({path:`${out}/overview-jump-${id}-${size.name}-${engine}.png`});}
+  await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`${out}/overview-${size.name}-${engine}.png`,fullPage:true});
  }
  const checks=await page.locator('img').evaluateAll(is=>is.map(i=>({src:i.getAttribute('src'),ready:i.complete&&i.naturalWidth>0,width:i.naturalWidth,height:i.naturalHeight,alt:i.alt})));
  for(const i of checks){assert.ok(i.ready,i.src);assert.ok(i.alt.length>5,i.src);images.push(i)}
