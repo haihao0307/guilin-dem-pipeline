@@ -41,12 +41,13 @@ assert.ok(['chromium','webkit'].includes(engine));fs.mkdirSync(out,{recursive:tr
  for(const route of routes){
   assert.ok(route.href.startsWith('../kaopu-'));
   const url=new URL(route.href,base).href,response=await navCtx.request.get(url,{timeout:60000});assert.equal(response.status(),200,'Destination HTTP: '+route.href);assert.match(response.headers()['content-type']||'',/text\/html/);
-  await nav.goto(base,{waitUntil:'domcontentloaded'});const link=nav.locator(`a[data-entry][href="${route.href}"]`);await link.focus();assert.equal(await link.evaluate(a=>a===document.activeElement),true);
+  console.log('NAV_START',engine,route.id,route.href,'from',nav.url());
+  if(nav.url()!==base)await nav.goto(base,{waitUntil:'domcontentloaded'});else await nav.locator('#title').waitFor();const link=nav.locator(`a[data-entry][href="${route.href}"]`);await link.focus();assert.equal(await link.evaluate(a=>a===document.activeElement),true);
   await Promise.all([nav.waitForURL(url,{waitUntil:'domcontentloaded',timeout:60000}),nav.keyboard.press('Enter')]);assert.equal(navCtx.pages().length,1);assert.ok(!/404|not found/i.test(await nav.title()));
   await nav.goBack({waitUntil:'domcontentloaded'});await nav.locator('#title').waitFor();assert.equal(nav.url(),base);
   await nav.goForward({waitUntil:'domcontentloaded'});assert.equal(nav.url(),url);
   if(route.returnMode==='direct'){const href=await nav.locator('a[href]').evaluateAll((as,expected)=>as.find(a=>a.href===expected)?.getAttribute('href'),base);assert.ok(href,'Missing resolved overview return link: '+route.href);const back=nav.locator('a[href='+JSON.stringify(href)+']');await back.first().click();await nav.waitForURL(base,{waitUntil:'domcontentloaded'});}else await nav.goBack({waitUntil:'domcontentloaded'});
-  await nav.locator('#title').waitFor();assert.equal(navCtx.pages().length,1);
+  await nav.locator('#title').waitFor();assert.equal(navCtx.pages().length,1);console.log('NAV_PASS',engine,route.id,route.href);
  }
  await page.locator('.guide-link').tap();await page.waitForURL('**/#guide');await page.locator('summary').tap();assert.equal(await page.locator('details').getAttribute('open'),'');await page.locator('summary').tap();assert.equal(await page.locator('details').getAttribute('open'),null);
  await nav.setViewportSize({width:390,height:844});await nav.goto(base,{waitUntil:'domcontentloaded'});await nav.locator('#gnm a').tap();await nav.waitForURL(new URL(routes[0].href,base).href,{waitUntil:'domcontentloaded'});await nav.goBack({waitUntil:'domcontentloaded'});await nav.locator('#title').waitFor();assert.equal(navCtx.pages().length,1);
