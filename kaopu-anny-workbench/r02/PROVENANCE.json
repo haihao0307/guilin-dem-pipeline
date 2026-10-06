@@ -1,0 +1,60 @@
+{
+  "version": "r02",
+  "upstream": "https://github.com/naver/anny",
+  "sourceCommit": "d6fc027ced5c17b6b0775dee944096ade7a9ef80",
+  "baseData": {
+    "metadata": "../assets/anny-model.json",
+    "sha256": "57cb642954bfee0c7589626a22726f5584490f74a1e38e7db8eb78a8392f57b1",
+    "unchangedFromR01": true
+  },
+  "facialData": {
+    "metadata": "assets/facial-actions.json",
+    "sha256": "855721f015fc77beab5a2d9845d1b412005adde893b23f9c47ab89c1cd9db3d8",
+    "count": 52,
+    "compressedBytes": 211555
+  },
+  "poseUI": "roma.rotvec_to_rotmat(torch.deg2rad(XYZ)), each component in [-180,180]",
+  "defaultPhenotypes": {
+    "gender": 0.5,
+    "age": 0.5,
+    "muscle": 0.5,
+    "weight": 0.5,
+    "height": 0.5,
+    "proportions": 0.5
+  },
+  "defaultDemoAgeRange": [
+    0,
+    1
+  ],
+  "optionalLibraryAgeExtension": [
+    -0.3333333333333333,
+    1
+  ],
+  "rendering": {
+    "baseColorFactor": [
+      0.4,
+      0.8,
+      0.8,
+      1
+    ],
+    "metallicFactor": 0.5,
+    "roughnessFactor": 1,
+    "note": "Official material factors; workbench camera and lighting remain a browser presentation, not pixel-identical Gradio."
+  },
+  "verified": {
+    "cases": 64,
+    "maxVertexErrorMetres": 6.612390279769897e-07,
+    "R01MigrationMaxMetres": 0,
+    "officialJSONRoundtripMaxMetres": 0
+  },
+  "pending": [
+    "independent head/hand topologies",
+    "rig/topology selection",
+    "self-intersection diagnostics"
+  ],
+  "licenses": {
+    "code": "Apache-2.0",
+    "modelAssets": "CC0-1.0"
+  },
+  "legacy": "../"
+}

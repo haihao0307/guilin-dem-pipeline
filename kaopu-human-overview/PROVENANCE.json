@@ -1,6 +1,6 @@
 {
   "title": "KAOPU 统一创作工作台",
-  "release": "r02-unified-20261006",
+  "release": "r03-anny-skin-20261006",
   "routing": "Static same-tab entry cards. No model runtime, iframe, user-image processing, analytics, persistence, or parameter sharing in the overview.",
   "gnm": {
     "thumbnail": "assets/gnm-r01.png",
@@ -14,21 +14,27 @@
     "status": "Published R01 manual face controls and local photo reference only; automatic photo fitting R02 not published. Photo input unlocks only after a nonempty person name and same-person confirmation."
   },
   "anny": {
-    "thumbnail": "assets/anny-r01.png",
+    "thumbnail": "assets/anny-r02-public.png",
     "type": "Unmodified actual public HTTPS Chromium screenshot of the official Anny baseline, displayed with centered CSS clipping",
-    "entry": "../kaopu-anny-workbench/",
-    "status": "Correction in progress. Existing preview retained, overview entry disabled until official pose and facial-action completeness corrections pass acceptance. Old published implementation is not presented as corrected.",
-    "coverage": "Body phenotypes and local shape controls plus pose experiment; official pose UI convention/range and facial action coverage not fully aligned",
-    "captureQA": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37425485541",
-    "publicQA": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37425485541",
-    "productionCommit": "af29900d82d99def9e54df590fa13d6c9e698119",
+    "entry": "../kaopu-anny-workbench/r02/",
+    "status": "R02 official-semantic correction publicly verified: native rotation vectors ±180 degrees, 52 facial actions, official JSON and export flow. Not a complete official-app feature clone.",
+    "coverage": "Corrected body/pose semantics with 52 facial actions; native component models, other rigs and self-intersection checks still pending",
+    "captureQA": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37436878830",
+    "publicQA": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37436878830",
+    "productionCommit": "35f83557bf69b1d1f058cd60722fcd611495ce1f",
     "completenessAudit": {
-      "officialPoseUI": "rotation vectors, ±180 degrees",
-      "currentPoseUI": "Euler angles, ±120 degrees",
-      "officialDemoFacialActions": "all",
-      "currentExportFacialActions": "none",
-      "fullPreciseReplicationClaimed": false
-    }
+      "officialPoseUI": "rotation vectors ±180 degrees",
+      "currentR02PoseUI": "rotation vectors ±180 degrees",
+      "currentFacialActions": 52,
+      "fullOfficialFeatureCoverage": false
+    },
+    "remaining": [
+      "Native head/hand component models",
+      "Other rig selection",
+      "Self-intersection diagnostics"
+    ],
+    "fullPreciseReplicationClaimed": false,
+    "sourceAndTests": "https://github.com/haihao0307/guilin-dem-pipeline/tree/2d3e4e2a4ab63083bf4fc38e45183ca742b53de0/kaopu-anny-workbench/r02"
   },
   "mhr": {
     "thumbnail": "assets/mhr-r01.png",
@@ -50,7 +56,8 @@
     "coverage": "MHR partial transfer: 1/45 identity axes; MHR pose and expression not transferred; native GNM facial control plus Anny body/pose",
     "limitation": "Cross-model alignment has measured errors; does not claim all features are fused",
     "publicQA": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37429099299",
-    "productionCommit": "4379003a"
+    "productionCommit": "4379003a",
+    "roadmap": "Full-merge R02 is in development; existing public minimum-compatibility entry and geometry are unchanged"
   },
   "otherProjectsChanged": false,
   "clothing": {
@@ -104,5 +111,19 @@
     "status": "Actual public handoff/status page, original female model still awaiting local source integration and grooming acceptance",
     "thumbnail": "None; typography-only status card, never a substitute male model",
     "sourceAssetsPublished": false
+  },
+  "skin": {
+    "entry": "../kaopu-skin-workbench/",
+    "thumbnail": "assets/skin-olive-public.png",
+    "type": "Unmodified public Chromium screenshot of the independent procedural skin experiment",
+    "publicQA": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37438135408",
+    "productionCommit": "fda78a163b086474c5b673a3c76dccb01812e317",
+    "coverage": "Three skin-tone recipes, regional pores, white-model and layer A/B controls on the same head/body mesh",
+    "limitations": [
+      "Translucency approximation, not true SSS",
+      "Not SkinGen equivalent",
+      "No finished corneal refinement or full-face photorealistic deliverable"
+    ],
+    "separateFromCanonicalCommonModel": true
   }
 }
