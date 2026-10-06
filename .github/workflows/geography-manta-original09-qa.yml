@@ -1,0 +1,54 @@
+name: Original geography Manta09 same-workbench browser QA
+on:
+  push:
+    branches: [qa/geography-manta-original09-20261006]
+    paths:
+      - 'kaopu-geography-workbench/**'
+      - '.github/workflows/geography-manta-original09-qa.yml'
+permissions:
+  contents: read
+jobs:
+  original-main-app:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: kaopu-geography-workbench
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install official pinned browser tooling
+        run: |
+          python -m pip install playwright==1.57.0 pillow
+          python -m playwright install --with-deps ${{ matrix.browser }}
+      - name: Click original homepage09 and verify real original pixels and controls
+        env:
+          KAOPU_PUBLIC_URL: http://127.0.0.1:8765/kaopu-geography-workbench/
+          KAOPU_BROWSER: ${{ matrix.browser }}
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/geography-server.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -fsS "$KAOPU_PUBLIC_URL" > /dev/null && break || sleep 1; done
+          python kaopu-geography-workbench/qa_manta09_main.py
+          if [ "$KAOPU_BROWSER" = "chromium" ]; then
+            python kaopu-geography-workbench/qa_catalog.py
+            python kaopu-geography-workbench/qa_public.py
+          fi
+      - name: Preserve actual browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: geography-original-manta09-${{ matrix.browser }}-${{ github.sha }}
+          path: |
+            manta09-browser-qa/
+            geography-qa/
+          retention-days: 7
+          if-no-files-found: warn
