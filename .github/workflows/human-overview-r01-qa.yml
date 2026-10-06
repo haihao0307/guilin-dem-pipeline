@@ -42,6 +42,8 @@ jobs:
           node --check .github/qa/overview-browser-diagnostic.cjs
           node --check .github/qa/overview-lifecycle-evidence.cjs
           node --check .github/qa/overview-browser-single-context.cjs
+          node --check .github/qa/overview-candidate-return.cjs
+          node --check .github/qa/overview-browser-lifecycle-candidate.cjs
       - name: Install fixed official browser test dependency
         run: |
           npm install --prefix "$RUNNER_TEMP/overview-test" --no-save --ignore-scripts playwright@1.57.0
@@ -56,8 +58,8 @@ jobs:
           server=$!
           trap 'kill "$server" 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do curl -fsS "$OVERVIEW_URL" > /dev/null && break || sleep 1; done
-          OVERVIEW_QA_DIR=overview-chromium node .github/qa/overview-browser-single-context.cjs
-          OVERVIEW_BROWSER=webkit OVERVIEW_QA_DIR=overview-webkit node .github/qa/overview-browser-single-context.cjs
+          OVERVIEW_QA_DIR=overview-chromium node .github/qa/overview-browser-lifecycle-candidate.cjs
+          OVERVIEW_BROWSER=webkit OVERVIEW_QA_DIR=overview-webkit node .github/qa/overview-browser-lifecycle-candidate.cjs
       - name: Verify exact published bytes and real HTTPS navigation
         if: env.OVERVIEW_VERIFY_PUBLIC == 'true'
         env:

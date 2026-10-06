@@ -1,0 +1,38 @@
+/* Candidate-only supplement. The overview's original 20-route gate must remain
+ * unchanged. These are real history navigations, never synthetic page events. */
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+module.exports=async({page,overviewURL,out,engine})=>{
+ const events=[],rows=[],context=page.context();await page.setViewportSize({width:1440,height:1100});
+ await context.exposeBinding('__candidateNavigationEvent',(_,data)=>{events.push(data);fs.writeFileSync(path.join(out,'candidate-return-events-'+engine+'.json'),JSON.stringify(events,null,2));});
+ await context.addInitScript(()=>{
+  window.__candidateDocId=crypto.randomUUID();window.__candidateShow=null;
+  addEventListener('pageshow',e=>{window.__candidateShow={persisted:e.persisted,at:Date.now()};window.__candidateNavigationEvent({type:'pageshow',documentId:window.__candidateDocId,url:location.href,...window.__candidateShow}).catch(()=>{});});
+  addEventListener('pagehide',e=>queueMicrotask(()=>{window.__candidateNavigationEvent({type:'pagehide-after-handlers',documentId:window.__candidateDocId,url:location.href,persisted:e.persisted,at:Date.now(),common:window.unifiedWorkbench?.diagnostics(),mhr:window.mhrWorkbench?.diagnostics()}).catch(()=>{});}));
+ });
+ const spec=[{name:'common-r01',href:'../kaopu-unified-human-workbench/',vertices:25417,stage:'#stage'},{name:'mhr',href:'../kaopu-mhr-workbench/',vertices:18439,stage:'#viewport'}];
+ async function ready(s){await page.waitForFunction(s=>{const a=s.name==='mhr'?window.mhrWorkbench:window.unifiedWorkbench,d=a?.diagnostics();return d?.ready&&!d.busy&&d.vertices===s.vertices&&(s.name!=='mhr'||window.__MHR__?.ready===true&&window.__MHR__?.result?.id===d.revision);},s,{timeout:180000});}
+ async function proof(s){return page.evaluate(async s=>{const a=s.name==='mhr'?window.mhrWorkbench:window.unifiedWorkbench,v=a.positions(),bytes=v instanceof Float32Array?v:new Float32Array(v),hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(x=>x.toString(16).padStart(2,'0')).join('');return{documentId:window.__candidateDocId,pageshow:window.__candidateShow,diagnostics:a.diagnostics(),state:a.state(),camera:a.camera?.()||null,canvasCount:document.querySelectorAll('canvas').length,vertexSHA256:hash,pixels:a.pixelAudit()};},s);}
+ async function restore(s,state,exportedProfile=null){if(exportedProfile){await page.setInputFiles(s.name==='mhr'?'#import':'#importProfile',{name:'actual-exported-lifecycle-profile.json',mimeType:'application/json',buffer:exportedProfile});await page.waitForFunction(({name,expected})=>{const a=name==='mhr'?window.mhrWorkbench:window.unifiedWorkbench,d=a?.diagnostics();return d?.ready&&!d.busy&&(name!=='mhr'||window.__MHR__?.result?.id===d.revision)&&JSON.stringify(a.state())===JSON.stringify(expected);},{name:s.name,expected:state},{timeout:180000});return;}if(s.name==='common-r01'){await page.evaluate(state=>window.unifiedWorkbench.setState(state),state);return;}
+  const source=await page.evaluate(()=>window.__MHR__.meta.commit);await page.setInputFiles('#import',{name:'synthetic-lifecycle-profile.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({schema:'kaopu-mhr-v1',source,...state,lod:1,snapGround:true}))});
+  await page.waitForFunction(expected=>{const a=window.mhrWorkbench,d=a?.diagnostics();return d?.ready&&!d.busy&&window.__MHR__?.result?.id===d.revision&&JSON.stringify(a.state())===JSON.stringify(expected);},state,{timeout:180000});
+ }
+ for(const s of spec)for(let cycle=0;cycle<3;cycle++){
+  const row={workbench:s.name,cycle,passed:false};rows.push(row);
+  try{
+   if(page.url()!==overviewURL)await page.goto(overviewURL,{waitUntil:'domcontentloaded'});else await page.locator('#title').waitFor();await page.locator('a[href='+JSON.stringify(s.href)+']').first().click();await page.waitForURL(new URL(s.href,overviewURL).href,{waitUntil:'domcontentloaded',timeout:60000});await ready(s);
+   const state=await page.evaluate(name=>(name==='mhr'?window.mhrWorkbench:window.unifiedWorkbench).state(),s.name);
+   if(s.name==='mhr'){state.identity[3]=.25;state.pose[34]=.7;state.expression[24]=.4;}else{state.phenotypes.weight=.8;state.headExpression[200]=1.4;state.pose={head:[0,0,25]};state.mhr={amount:.6,channel:'identity_000'};}
+   await restore(s,state);await page.locator('[data-view="side"]').first().click();await page.waitForTimeout(300);const [download]=await Promise.all([page.waitForEvent('download'),page.locator(s.name==='mhr'?'#json':'#exportProfile').click()]);const profilePath=path.join(out,`${s.name}-exported-profile-${cycle}-${engine}.json`);await download.saveAs(profilePath);const exportedProfile=fs.readFileSync(profilePath);row.profileExportBytes=exportedProfile.length;row.before=await proof(s);assert(row.before.pixels.colors>20);assert.equal(row.before.pixels.error,0);
+   await page.locator(s.stage).screenshot({path:path.join(out,`${s.name}-before-return-${cycle}-${engine}.png`)});
+   const begin=Date.now();await page.goBack({waitUntil:'domcontentloaded',timeout:30000});await page.locator('#title').waitFor();assert.equal(page.url(),overviewURL);row.backMS=Date.now()-begin;
+   await page.goForward({waitUntil:'domcontentloaded',timeout:30000});await ready(s);row.returned=await proof(s);
+   const persisted=row.returned.pageshow?.persisted===true;row.actualBFCache=persisted;
+   if(persisted){assert.equal(row.returned.documentId,row.before.documentId);assert.deepEqual(row.returned.state,row.before.state);assert.equal(row.returned.vertexSHA256,row.before.vertexSHA256);if(row.before.camera)assert.deepEqual(row.returned.camera,row.before.camera);row.stateRestoration='automatic within actual BFCache document';}
+   else{assert.notEqual(row.returned.documentId,row.before.documentId);row.stateRestoration='fresh document: default load then explicit parameter/profile restore; not claimed automatic';await restore(s,row.before.state,exportedProfile);await page.locator('[data-view="side"]').first().click();row.restored=await proof(s);assert.deepEqual(row.restored.state,row.before.state);assert.equal(row.restored.vertexSHA256,row.before.vertexSHA256);}
+   const activeProof=row.restored||row.returned;assert.equal(activeProof.canvasCount,1);assert(activeProof.pixels.colors>20);assert.equal(activeProof.pixels.error,0);const d=activeProof.diagnostics;if(s.name==='mhr'){assert.equal(d.contexts,1);assert.equal(d.workers,1);assert.equal(d.frameScheduled,true);}else assert.equal(d.contextsCreated-d.contextsReleased,1);
+   await page.locator(s.stage).screenshot({path:path.join(out,`${s.name}-after-return-${cycle}-${engine}.png`)});
+   await page.goBack({waitUntil:'domcontentloaded',timeout:30000});await page.locator('#title').waitFor();row.passed=true;
+  }catch(e){row.error=String(e.stack||e);throw e;}finally{fs.writeFileSync(path.join(out,'candidate-return-'+engine+'.json'),JSON.stringify({engine,passed:rows.length===6&&rows.every(r=>r.passed),physicalPhone:false,syntheticPageEvents:false,rows,events},null,2));}
+ }
+ return{passed:true,cyclesPerWorkbench:3,actualBFCacheReturns:rows.filter(r=>r.actualBFCache).length,freshDocumentReturns:rows.filter(r=>!r.actualBFCache).length};
+};
