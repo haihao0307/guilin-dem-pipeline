@@ -1,13 +1,24 @@
-# Storm Orb · 实时视觉学习案例 02
+# 风暴球体 · 首轮实时学习 02
 
-参考来源：[Q. / @qornflex — Storm Sample, 2019-01-28](https://x.com/qornflex/status/1089870266526846976)。原参考为 11 秒、720×720、30fps 动画。此目录不包含原作视频、截图、模型或源码，也未声称取得原作的再发布授权。
+参考：[Q. / @qornflex — Storm Sample, 2019-01-28](https://x.com/qornflex/status/1089870266526846976)。参考动画为 11 秒、720×720、30fps。本目录不包含原作视频、截图、模型或作者源码。
 
-此案例独立实现程序化实时云体、地形、草叶、雨幕、房屋、闪电，以及近到远的观察镜头。暂停、时间轴、重置及自由相机为新增学习控件，不是原视频的游戏规则。原作使用 Houdini / Redshift 等离线制作工具；本实现不应描述为同等保真。
+本案例独立组织程序化地形、草、屋、雨与闪电，云体借鉴 Three.js r170 官方体积示例，使用连续密度、光学厚度和不透明场景深度截断。共享已有 Three.js r170，不复制运行库。组件来源与 MIT 许可见 THIRD_PARTY.md。
 
-复用兄弟目录 `voxel-train-study/vendor/` 中 Three.js r170 和 OrbitControls，不复制依赖。MIT 许可随原依赖存于其 `licenses/`。
+## 可用观察功能
 
-本地运行：从仓库根目录 `python3 -m http.server 8765`，访问 `/kaopu-minigame-workbench/storm-orb-study/`。
+- 11 秒参考相机拉远
+- 播放、暂停、精确时间轴、重置
+- 自由相机旋转/缩放，并可回到参考相机
+- 返回同一个小游戏总台，旧列车案例保留
 
-验证：`node --check app.mjs`、`node --check scene.mjs`。安装官方 Playwright 后，从仓库根目录运行 `node kaopu-minigame-workbench/storm-orb-study/tests/browser.cjs`；设置 `STORM_BROWSER=webkit` 可测试 WebKit，`STORM_URL` 指定目标，`STORM_QA_DIR` 指定证据输出。
+## 质量边界
 
-待实际浏览器验证和视觉对照通过后才可发布。本目录首轮版本为本地候选，不能将语法通过视为视觉验收。
+这是首轮浏览器实时近似，不是 1:1 复刻。云体仍偏柔、细节不足；地表比原片更整，岩层与湿润反光的细碎层次不足；屋和照明也有差异。原片使用 Houdini / Redshift 离线渲染。
+
+后续优先细化云的自遮挡/边缘细节、湿岩层理与细小反光，再补设备性能实测；不能仅以页面可运行代替视觉验收。
+
+## 已有测试证据与限制
+
+形体冻结版本：29ee8bcab863d55eec6277218a95d987ac24ff0b。该版本的 Chromium/WebKit 控件、七时间相位、自由观察、横竖屏尺寸及低角度深度检查通过。CI 活动播放采样约 2.9 / 9.5 FPS，属于云端测试环境，不能当作手机 GPU 帧率，也不构成 60 FPS 保证。这些功能检查不等于与原片视觉一致，也不能替代真机性能测试。
+
+手机轻量档保留同一球体、地形、房屋、云包络与相机，主要减少草/雨数量和体积采样成本；不是播放参考视频。
