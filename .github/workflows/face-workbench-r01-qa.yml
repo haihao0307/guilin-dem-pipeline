@@ -113,11 +113,10 @@ jobs:
           mkdir -p "qa-navigation-${{ matrix.engine }}"
           cd "qa-navigation-${{ matrix.engine }}"
           node ../kaopu-face-workbench/tests/navigation-browser.cjs
-      - name: Verify published R01 overview navigation
+      - name: Verify published R02 and retained R01 navigation
         env:
           FACE_BROWSER: ${{ matrix.engine }}
           FACE_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-face-workbench/
-          FACE_NAVIGATION_PAGES: index.html
         run: |
           export NODE_PATH="$RUNNER_TEMP/face-navigation/node_modules"
           mkdir -p "qa-navigation-public-${{ matrix.engine }}"
@@ -133,3 +132,55 @@ jobs:
           path: |
             qa-navigation-*/*.png
             qa-navigation-*/*result.json
+  face-public-r02:
+    if: github.event_name == 'pull_request' && github.head_ref == 'qa/face-navigation-20261006'
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, webkit]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-face-workbench
+          sparse-checkout-cone-mode: true
+      - name: Install fixed official browser dependency
+        run: |
+          npm install --prefix "$RUNNER_TEMP/face-public" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/face-public/node_modules/.bin/playwright" install --with-deps ${{ matrix.engine }}
+      - name: Verify public fixture and prepare its video
+        run: |
+          python3 kaopu-face-workbench/tests/download-public-assets.py "$RUNNER_TEMP/face-assets"
+          command -v ffmpeg >/dev/null || (sudo apt-get update && sudo apt-get install -y ffmpeg)
+          ffmpeg -hide_banner -loglevel error -loop 1 -i "$RUNNER_TEMP/face-assets/portrait.jpg" -vf scale=1080:-2,setsar=1 -r 30 -t 2 -an -c:v libx264 -pix_fmt yuv420p -movflags +faststart -y "$RUNNER_TEMP/face-assets/public-portrait-1080.mp4"
+          cd kaopu-face-workbench
+          node tests/runtime.mjs
+      - name: Verify published runtime, real photo and video fitting, and groom
+        env:
+          FACE_BROWSER: ${{ matrix.engine }}
+          FACE_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-face-workbench/
+        run: |
+          export NODE_PATH="$RUNNER_TEMP/face-public/node_modules"
+          export FACE_ASSETS="$RUNNER_TEMP/face-assets"
+          export GNM_ASSET="$RUNNER_TEMP/face-assets/gnm_head_web.bin"
+          mkdir -p "qa-public-r02-${{ matrix.engine }}"
+          cd "qa-public-r02-${{ matrix.engine }}"
+          failure=0
+          node ../kaopu-face-workbench/tests/loader-public.cjs || failure=1
+          node ../kaopu-face-workbench/tests/fitting-browser.cjs || failure=1
+          node ../kaopu-face-workbench/tests/video-fitting-browser.cjs || failure=1
+          node ../kaopu-face-workbench/tests/groom-browser.cjs || failure=1
+          exit "$failure"
+      - name: Upload public R02 browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: face-public-r02-evidence-${{ matrix.engine }}
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            qa-public-r02-*/*.png
+            qa-public-r02-*/*result.json
