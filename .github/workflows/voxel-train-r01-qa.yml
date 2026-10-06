@@ -35,7 +35,7 @@ jobs:
           "$RUNNER_TEMP/train-test/node_modules/.bin/playwright" install --with-deps chromium webkit
       - name: Test browser controls and capture seven loop phases
         env:
-          TRAIN_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/?release=cd7d8f9dfd6e91d08fa8b07c492897d64a5a0d05&layout=reference
+          TRAIN_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/?release=e3793211b40ec76a456b2735a0158dc970cab0aa&layout=reference
           NODE_PATH: ${{ runner.temp }}/train-test/node_modules
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/train-server.log" 2>&1 &
