@@ -66,6 +66,8 @@ fs.mkdirSync(out,{recursive:true});
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),size.name+' horizontal overflow');
     const boxes=await page.locator('.card-link').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return {w:r.width,h:r.height}}));
     assert.ok(boxes.every(b=>b.w>=44&&b.h>=44));
+    const fabricBox=await page.locator('.tailor-preview').boundingBox();assert.ok(fabricBox&&fabricBox.height>=150&&fabricBox.width>=180,size.name+' fabric preview collapsed');
+    const fabricState=await page.locator('.research-state').boundingBox();assert.ok(fabricState.x>=0&&fabricState.x+fabricState.width<=size.width,size.name+' fabric entry clipped');
     await page.screenshot({path:`${out}/overview-${size.name}-${engine}.png`,fullPage:true});
   }
   await page.locator('.guide-link').tap();
