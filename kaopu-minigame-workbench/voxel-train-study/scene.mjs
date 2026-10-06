@@ -1,7 +1,7 @@
 import * as THREE from './vendor/three.module.js';
 
 // Original, procedural study geometry. No author mesh, texture or image is embedded.
-export const SPEC = Object.freeze({ halfRun:9.1, radius:2.35, width:9.2, period:6, scale:1, phase:0 });
+export const SPEC = Object.freeze({ halfRun:9.42105, radius:2.8543, width:12.2, nearEdge:7.6, farEdge:-4.6, period:6, scale:1, phase:0 });
 export const LENGTH = 4 * SPEC.halfRun + 2 * Math.PI * SPEC.radius;
 export const PALETTE = Object.freeze({green:0x315853,greenDark:0x244842,greenLight:0x3f6761,orange:0xf5a014,steel:0x59616d,black:0x202427,grass:0x546233,gravel:0xc5c1aa});
 export function pathAt(distance, elevation=0, z=0) {
@@ -77,44 +77,45 @@ function buildTrain(){const b=new Blocks(),p=PALETTE;
   b.box(-1.95,1.03,0,.7,.12,.2,0x292d2a);
   return b;
 }
-function tree(b,x,z,h=3.1,seed=11,crown=.66){
+function tree(b,x,z,h=3.1,seed=11,crown=.66,vertical=.34){
   const rng=random(seed);b.box(x,h*.37,z,.17,h*.74,.18,0x56472a);
   for(const side of [-1,1])b.beam(x,h*.46,z,x+side*crown*.54,h*.72,z+side*.15,.095,0x544629);
   const leaves=[0x354321,0x475627,0x5e6d2e,0x718137,0x3b4c28],occupied=new Set(),q=.085;
   for(let i=0;i<2600;i++){
     const a=rng()*Math.PI*2,u=rng()*2-1,r=.7+.3*Math.cbrt(rng());
-    const dx=Math.cos(a)*Math.sqrt(1-u*u)*r*crown,dz=Math.sin(a)*Math.sqrt(1-u*u)*r*crown*.87,dy=u*r*h*.34;
+    const sideLobe=vertical>=.3&&i%5<2,lobeSide=i%2?1:-1,dx=Math.cos(a)*Math.sqrt(1-u*u)*r*crown*(sideLobe?.65:.9)+(sideLobe?lobeSide*crown*.38:0),dz=Math.sin(a)*Math.sqrt(1-u*u)*r*crown*.82,dy=u*r*h*(sideLobe?.19:vertical)+(sideLobe?-h*.24:0);
     const ix=Math.round(dx/q),iy=Math.round(dy/q),iz=Math.round(dz/q),key=ix+','+iy+','+iz;
     if(occupied.has(key))continue;occupied.add(key);
     b.box(x+ix*q,h*.8+iy*q,z+iz*q,q*.98,q*.98,q*.98,leaves[Math.floor(rng()*leaves.length)]);
   }
 }
 
-function bridge(b,x){const L=12.8,H=4.02,panels=5;
+function bridge(b,x){const L=14.45847,H=4.22945,panels=5;
   // The source's apparent rear arch is the belt deformation of a straight truss.
-  for(const z of [-1.67,1.67]){
+  for(const z of [-1.95438,1.95438]){
     b.beam(x-L/2,H,z,x+L/2,H,z,.15,0x6f5b4b);
     for(let i=0;i<=panels;i++){const u=-L/2+i*L/panels;b.box(x+u,H/2,z,.12,H,.12,0x49443e);if(i<panels){const v=u+L/panels;const direction=i%2;b.beam(x+u,direction?H-.06:.2,z,x+v,direction?.2:H-.06,z,.085,0x514940);}}
   }
-  for(let i=0;i<=panels;i++){const u=-L/2+i*L/panels;b.box(x+u,H,0,.17,.16,3.5,0x866641);}
+  for(let i=0;i<=panels;i++){const u=-L/2+i*L/panels;b.box(x+u,H,0,.17,.16,4.06876,0x866641);}
 }
 function buildEnvironment(){const rand=random(19790214),b=new Blocks(),p=PALETTE;const start=-SPEC.halfRun,end=LENGTH-SPEC.halfRun;
   // One closed belt, discretized along its full arc-length; motion is a deformation of the same geometry.
   const segments=Math.ceil(LENGTH/.20),pitch=LENGTH/segments;
-  for(let j=0;j<segments;j++){const x=start+(j+.5)*pitch;b.box(x,.015,0,pitch,.14,SPEC.width,p.grass,0,true);b.box(x,-.09,0,pitch,.065,SPEC.width,0x1c1e23,0,true);b.box(x,.13,0,pitch,.10,3.02,0xaba995,0,true);for(const z of [-.76,.76]){b.box(x,.245,z,pitch,.155,.13,0x625e53,0,true);b.box(x,.331,z,pitch,.035,.15,0x9d9a88,0,true);}}
+  for(let j=0;j<segments;j++){const x=start+(j+.5)*pitch;b.box(x,.015,1.5,pitch,.14,SPEC.width,p.grass,0,true);b.box(x,-.09,1.5,pitch,.065,SPEC.width,0x1c1e23,0,true);b.box(x,.13,0,pitch,.10,3.02,0xaba995,0,true);for(const z of [-.76,.76]){b.box(x,.245,z,pitch,.155,.13,0x625e53,0,true);b.box(x,.331,z,pitch,.035,.15,0x9d9a88,0,true);}}
   for(let x=start;x<end;x+=.64){b.box(x,.184,0,.23,.16,2.33,0x514839);for(const z of [-.76,.76])b.box(x,.277,z,.28,.03,.29,0x423e36);}
-  for(let i=0;i<12500;i++){const x=start+rand()*LENGTH;let z=(rand()-.5)*SPEC.width;if(Math.abs(z)<1.6){if(Math.abs(z)>.89||rand()>.65){const size=.035+rand()*.09;b.box(x,.22+rand()*.09,z,size,.025+rand()*.045,size,[0xcac8b0,0xa5a58f,0xe1ddc3,0x797e69,0xbab59b][Math.floor(rand()*5)]);}}else{const width=.03+rand()*.025;b.box(x,.104+rand()*.008,z,.04+rand()*.12,.012+rand()*.01,width,[0x64763a,0x77853e,0x414f2b,0x96a044,0x4a5931][Math.floor(rand()*5)]);}}
+  for(let i=0;i<12500;i++){const x=start+rand()*LENGTH;let z=SPEC.farEdge+rand()*SPEC.width;if(Math.abs(z)<1.6){if(Math.abs(z)>.89||rand()>.65){const size=.035+rand()*.09;b.box(x,.22+rand()*.09,z,size,.025+rand()*.045,size,[0xcac8b0,0xa5a58f,0xe1ddc3,0x797e69,0xbab59b][Math.floor(rand()*5)]);}}else{const width=.03+rand()*.025;b.box(x,.104+rand()*.008,z,.04+rand()*.12,.012+rand()*.01,width,[0x64763a,0x77853e,0x414f2b,0x96a044,0x4a5931][Math.floor(rand()*5)]);}}
   // Long crop-like bands are visible on the original flat terrain module.
-  for(const z of [-4.29,-3.83,-3.25,2.11,3.72,4.2])for(let x=start;x<end;x+=.7+rand()*1.4)b.box(x,.13,z,.35+rand()*1.7,.05,.075,rand()>.5?0x829137:0x384b29);
+  for(const z of [-4.29,-3.83,-3.25,2.11,3.72,4.2,4.9,5.35,5.95,6.55,7.25])for(let x=start;x<end;x+=.7+rand()*1.4)b.box(x,.13,z,.35+rand()*1.7,.05,.075,rand()>.5?0x829137:0x384b29);
+  for(const z of [2.75,3.55,4.55,5.55,6.5,7.1])for(let x=start;x<end;x+=.6){const band=Math.floor((x-start)/3.2),height=.06+.025*Math.sin(band*1.7+z);b.box(x,.105+height/2,z,.602,height,.22+.08*Math.sin(z),z>5?0x4b602f:0x516536);}
   for(let x=start;x<end;x+=1.07){b.box(x,.56,-3.01,.11,1.12,.11,0xc3c6b2);b.box(x,.99,-3.01,.17,.08,.17,0xd8d9c7);b.box(x+.53,.72,-3.01,1.06,.09,.076,0xc9cbb8);b.box(x+.53,.32,-3.01,1.06,.08,.075,0xb4b7a7);}
   // Two ground motifs per bridge period, as observed in the source loop.
   for(const offset of [0,LENGTH/2]){
-    tree(b,-3.3+offset,-3.94,2.9,23);tree(b,7.15+offset,-3.94,4.25,32,.66);tree(b,12.25+offset,3.6,2.8,21,.50);
+    tree(b,-5.9+offset,-3.94,2.9,23);tree(b,7.15+offset,-3.94,5.8,32,.95);tree(b,11.75+offset,6.2,3.8,21,.85,.25);
     const rng=random(71),colors=[0x4b572a,0x647232,0x758039,0x3d4b27];
-    for(let i=0;i<1400;i++){const a=rng()*Math.PI*2,u=rng()*2-1,r=Math.cbrt(rng());const dx=Math.cos(a)*Math.sqrt(1-u*u)*r,dz=Math.sin(a)*Math.sqrt(1-u*u)*r,q=.085;b.box(4.65+offset+Math.round(dx/q)*q,.52+Math.round(u*r*.58/q)*q,3.32+Math.round(dz*.77/q)*q,q*.99,q*.99,q*.99,colors[Math.floor(rng()*colors.length)]);}
-    for(const [dx,z] of [[0,3.4],[11.03,3.26],[13.46,3.59]]){const x=dx+offset;b.box(x,.18,z,.73,.22,.53,0xa5aba3);b.box(x+.34,.14,z-.13,.47,.20,.38,0xb6bab0);b.box(x-.13,.28,z,.38,.16,.30,0xd2d4c3);}
+    for(let i=0;i<1400;i++){const a=rng()*Math.PI*2,u=rng()*2-1,r=Math.cbrt(rng());const dx=Math.cos(a)*Math.sqrt(1-u*u)*r,dz=Math.sin(a)*Math.sqrt(1-u*u)*r,q=.085;b.box(7.33+offset+Math.round(dx*1.55/q)*q,.53+Math.round(u*r*.56/q)*q,5.24+Math.round(dz*1.1/q)*q,q*.99,q*.99,q*.99,colors[Math.floor(rng()*colors.length)]);}
+    for(const [dx,z] of [[1.9,6.0],[11.94,4.1],[15.52,5.02]]){const x=dx+offset;b.box(x,.18,z,.73,.22,.53,0xa5aba3);b.box(x+.34,.14,z-.13,.47,.20,.38,0xb6bab0);b.box(x-.13,.28,z,.38,.16,.30,0xd2d4c3);}
   }
-  bridge(b,-6.95);return b;
+  bridge(b,-7.42917);return b;
 }
 const BEND_GLSL=`
 uniform float beltPhase;

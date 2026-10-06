@@ -6,13 +6,13 @@ let renderer;
 try{renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});}catch(error){$('loading').textContent='三维渲染未能启动，请使用支持 WebGL 的浏览器';throw error;}
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.0;
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x1b2425);
-const camera=new THREE.OrthographicCamera(-15,15,15,-15,.1,120);
-const controls=new OrbitControls(camera,canvas);controls.enableDamping=true;controls.dampingFactor=.1;controls.enablePan=false;controls.minZoom=.6;controls.maxZoom=2.5;controls.minPolarAngle=.25;controls.maxPolarAngle=Math.PI*.74;controls.enabled=false;
+const camera=new THREE.PerspectiveCamera(24.402073,1,.1,120);
+const controls=new OrbitControls(camera,canvas);controls.enableDamping=true;controls.dampingFactor=.1;controls.enablePan=false;controls.minZoom=.6;controls.maxZoom=2.5;controls.minDistance=26;controls.maxDistance=72;controls.minPolarAngle=.25;controls.maxPolarAngle=Math.PI*.74;controls.enabled=false;
 const hemi=new THREE.HemisphereLight(0xd5e6ec,0x273d30,1.4);scene.add(hemi);
 const key=new THREE.DirectionalLight(0xffebc4,2.3);key.position.set(1,18,12);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-18;key.shadow.camera.right=18;key.shadow.camera.top=17;key.shadow.camera.bottom=-17;key.shadow.camera.far=60;key.shadow.normalBias=.05;key.shadow.bias=-.00025;key.shadow.radius=3;scene.add(key);
 const rim=new THREE.DirectionalLight(0xc3dce4,.7);rim.position.set(-14,8,-14);scene.add(rim);
 const model=createSceneModel();scene.add(model.root);
-const lamp=new THREE.SpotLight(0xffe7a2,78,12,Math.PI*.15,.76,1.3);lamp.position.set(4.7,2.7,0);lamp.target.position.set(7.85,.13,0);scene.add(lamp,lamp.target);
+const lamp=new THREE.SpotLight(0xffda88,150,12,Math.PI*.15,.76,1.3);lamp.position.set(4.7,2.7,0);lamp.target.position.set(7.85,.13,0);scene.add(lamp,lamp.target);
 function makeSmokeTexture(){
   const c=document.createElement('canvas');c.width=c.height=128;const ctx=c.getContext('2d'),data=ctx.createImageData(128,128);
   const hash=(x,y)=>{const n=Math.sin(x*127.1+y*311.7+41.3)*43758.5453;return n-Math.floor(n);};
@@ -29,14 +29,14 @@ const smokeTexture=makeSmokeTexture(),smokeGroup=new THREE.Group();scene.add(smo
 for(let i=0;i<125;i++){const material=new THREE.SpriteMaterial({map:smokeTexture,color:i%4===0?0xb7cbcf:0xf1f2da,transparent:true,depthWrite:false,opacity:.3});const sprite=new THREE.Sprite(material);smokeGroup.add(sprite);smokeParticles.push(sprite);}
 const sparkN=90,sparkPositions=new Float32Array(sparkN*3),sparkGeometry=new THREE.BufferGeometry();sparkGeometry.setAttribute('position',new THREE.BufferAttribute(sparkPositions,3));const sparks=new THREE.Points(sparkGeometry,new THREE.PointsMaterial({color:0xffd475,size:.033,transparent:true,opacity:.85,depthWrite:false}));scene.add(sparks);
 let elapsed=0,playing=!new URLSearchParams(location.search).has('paused')&&!matchMedia('(prefers-reduced-motion: reduce)').matches,speed=1,last=performance.now(),frame=0,raf=0,contextLost=false,needsRender=true;
-function resetCamera(){controls.enableDamping=false;controls.update();camera.position.set(27.37,20.03,25);camera.zoom=1;controls.target.set(.37,-.47,0);camera.lookAt(controls.target);camera.updateProjectionMatrix();controls.update();controls.enableDamping=true;needsRender=true;}
-function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;renderer.setSize(w,h,false);const aspect=w/h,span=Math.max(16.5,16.5*aspect);camera.left=-span/2;camera.right=span/2;camera.top=span/aspect/2;camera.bottom=-span/aspect/2;camera.updateProjectionMatrix();needsRender=true;}
+function resetCamera(){controls.enableDamping=false;controls.update();camera.position.set(26.39158811,21.75348493,24.01053742);camera.zoom=1;controls.target.set(.33628995,-.79902115,0);camera.lookAt(controls.target);camera.updateProjectionMatrix();controls.update();controls.enableDamping=true;needsRender=true;}
+function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;renderer.setSize(w,h,false);const aspect=w/h;camera.aspect=aspect;camera.fov=aspect>=1?24.402073:THREE.MathUtils.radToDeg(2*Math.atan(Math.tan(THREE.MathUtils.degToRad(24.402073)/2)/aspect));camera.updateProjectionMatrix();needsRender=true;}
 function smokeAt(t){
   for(let i=0;i<smokeParticles.length;i++){
     const lower=i<84,lifetime=lower?1.5:3,f=((t/lifetime+i*.618033989)%1+1)%1,side=i%2?1:-1,p=smokeParticles[i];
     const emit=lower?3.4-(i%12)*.75:.6-(i%8)*.78;
     p.position.set(emit-f*(lower?2.4:3.4),(lower?.58:1.4)+f*(lower?1.45:3.0)+.10*Math.sin(i*3+t*Math.PI*2/3),side*((lower?1.1:.75)+f*(lower?.24:.55))+.08*Math.sin(i+t*Math.PI/3));
-    const size=(lower?.64+f*1.1:.85+f*1.7)*(1+(i%5)*.065);p.scale.set(size,size,1);
+    const size=(lower?.78+f*1.5:.85+f*1.7)*(1+(i%5)*.065);p.scale.set(size,size,1);
     p.material.color.set(lower?0xf3f6e9:0x879aa5);p.material.opacity=Math.sin(Math.PI*f)*(lower?.91:.36);p.material.rotation=i+f*.8;
   }
   for(let i=0;i<sparkN;i++){const f=(t*2+i*.381966)%1,j=i*3;sparkPositions[j]=3.6-(i%4)*2.9-f*.6;sparkPositions[j+1]=.58+Math.sin(f*Math.PI)*.55;sparkPositions[j+2]=(i%2?1:-1)*(.81+f*.46);}sparkGeometry.attributes.position.needsUpdate=true;

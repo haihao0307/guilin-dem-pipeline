@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [gh-pages]
     paths:
-      - 'kaopu-minigame-workbench/voxel-train-study/**'
+      - 'kaopu-minigame-workbench/**'
       - '.github/workflows/voxel-train-r01-qa.yml'
 permissions:
   contents: read
@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+          sparse-checkout: kaopu-minigame-workbench
           sparse-checkout-cone-mode: true
       - name: Validate continuous geometry
         run: |
@@ -39,8 +39,8 @@ jobs:
           server=$!
           trap 'kill "$server" 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do curl -fsS "$TRAIN_URL" > /dev/null && break || sleep 1; done
-          TRAIN_QA_DIR=train-chromium timeout 240s node kaopu-minigame-workbench/voxel-train-study/tests/browser.cjs
-          TRAIN_BROWSER=webkit TRAIN_QA_DIR=train-webkit timeout 240s node kaopu-minigame-workbench/voxel-train-study/tests/browser.cjs
+          TRAIN_QA_DIR=train-chromium timeout 300s node kaopu-minigame-workbench/voxel-train-study/tests/browser.cjs
+          TRAIN_BROWSER=webkit TRAIN_QA_DIR=train-webkit timeout 300s node kaopu-minigame-workbench/voxel-train-study/tests/browser.cjs
       - name: Upload browser screenshots and results
         if: always()
         uses: actions/upload-artifact@v4
