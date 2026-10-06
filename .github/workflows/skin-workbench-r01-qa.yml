@@ -30,6 +30,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify fixed geometry and skin material attributes
+        working-directory: kaopu-skin-workbench
+        env:
+          ANNY_ROOT: ../kaopu-anny-workbench
+          GNM_PATH: ../kaopu-face-workbench/assets/gnm_head_web.bin
+        run: |
+          gzip -dc assets/canonical.json.gz > assets/canonical.json
+          gzip -dc assets/mhr-torso-delta.json.gz > assets/mhr-torso-delta.json
+          node tests/skin-model.mjs
       - name: Install test browser
         run: |
           npm install --no-save --ignore-scripts --package-lock=false playwright@1.57.0
@@ -48,4 +57,6 @@ jobs:
           path: |
             kaopu-skin-workbench/skin-*.png
             kaopu-skin-workbench/skin-browser-report.json
+            kaopu-skin-workbench/skin-console-errors.json
+            kaopu-skin-workbench/research/skin-model-report.json
             /tmp/skin-server.log
