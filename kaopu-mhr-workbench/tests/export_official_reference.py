@@ -25,6 +25,9 @@ raw=b''.join(chunks);(A/'model.bin.gz').write_bytes(gzip.compress(raw,compressle
 spec=importlib.util.spec_from_file_location('face',R/'official/mhr/face_expression.py');face=importlib.util.module_from_spec(spec);spec.loader.exec_module(face)
 limits=m.get_parameter_limits().numpy()[:204].tolist();names=list(m.get_parameter_names())[:204]
 metadata={'schema':1,'source':'https://github.com/facebookresearch/MHR','commit':'d96fafa33bbf018647c70c3525e91f53e79d2a14','asset_release':'v1.0.1','asset_sha256':'e4f4f205cd87c0fa106577ba1de4fc763e4eb197c924461d2ef7e6944e9d6b94','license':'Apache-2.0','vertices':18439,'joints':127,'arrays':header,'pose_names':names,'pose_limits':limits,'expression_names':face.FACE_EXPRESSION_NAMES,'joint_names':list(m.get_joint_names()),'raw_bytes':len(raw),'compressed_bytes':(A/'model.bin.gz').stat().st_size,'weight_encoding':'lossless float32, exact-zero sparse CSR; no quantization or pruning'}
+packed=(A/'model.bin.gz').read_bytes();metadata['parts']=[]
+for i,start in enumerate(range(0,len(packed),8*1024*1024)):
+ name=f'model-{i:02}.bin.part';part=packed[start:start+8*1024*1024];(A/name).write_bytes(part);metadata['parts'].append({'file':name,'bytes':len(part),'sha256':hashlib.sha256(part).hexdigest()})
 (A/'model.json').write_text(json.dumps(metadata,separators=(',',':')))
 # Official viewer barycentric LOD correspondence (not native per-LOD evaluation).
 with np.load(R/'official/web-viewer/data/lod_topology.npz') as topo:
