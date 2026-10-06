@@ -48,7 +48,7 @@ def build(output,assets_dir,download):
  html=re.sub(r'<script type="importmap">.*?</script>','<script type="importmap">'+json.dumps({'imports':modules})+'</script>',html,flags=re.S)
  payload='<script>window.__GNM_ASSETS__='+json.dumps(assets)+';</script>'
  app='<script type="module" src="'+data_url((ROOT/'src/app.js').read_text())+'"></script>'
- html=html.replace('<script type="module" src="src/app.js?graphics-recovery=2"></script>',payload+app)
+ html=html.replace('<script type="module" src="src/app.js?graphics-recovery=3"></script>',payload+app)
  output.parent.mkdir(parents=True,exist_ok=True)
  output.write_text(html)
  print(json.dumps({'output':str(output),'bytes':output.stat().st_size,'sha256':hashlib.sha256(output.read_bytes()).hexdigest(),'weights':{k:{'bytes':v[1],'sha256':v[2]}for k,v in EXPECTED.items()}}))

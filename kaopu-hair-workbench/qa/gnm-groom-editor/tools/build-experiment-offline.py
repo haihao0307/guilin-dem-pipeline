@@ -18,7 +18,7 @@ def build(output,cache,download):
   b=p.read_bytes()
   if len(b)!=size or hashlib.sha256(b).hexdigest()!=digest:raise RuntimeError('Pinned asset hash mismatch')
   assets[kind]=base64.b64encode(b).decode()
- html=(ROOT/'experiment.html').read_text();imap=json.loads(re.search(r'<script type="importmap">(.*?)</script>',html,re.S).group(1))['imports'];paths={key:(ROOT/path).resolve() for key,path in imap.items()};by_path={path:key for key,path in paths.items()}
+ html=(ROOT/'experiment.html').read_text();imap=json.loads(re.search(r'<script type="importmap">(.*?)</script>',html,re.S).group(1))['imports'];paths={key:(ROOT/path.split('?',1)[0]).resolve() for key,path in imap.items()};by_path={path:key for key,path in paths.items()}
  # Resolve the complete local ES-module graph to bare names before data-URL embedding.
  pending=list(paths);source={}
  while pending:
@@ -37,7 +37,7 @@ def build(output,cache,download):
  if re.search(r'''(?:from\s*|import\s*\(\s*)["']\.{1,2}/''',app):raise RuntimeError('Use importmap names in app')
  html=re.sub(r'<script type="importmap">.*?</script>','<script type="importmap">'+json.dumps({'imports':source})+'</script>',html,flags=re.S)
  html=html.replace('<link rel="stylesheet" href="experiment.css">','<style>'+(ROOT/'experiment.css').read_text()+'</style>')
- html=html.replace('<script type="module" src="src/experiment.js?graphics-recovery=2"></script>','<script>window.__GNM_ASSETS__='+json.dumps(assets)+'</script><script type="module" src="'+data(app)+'"></script>')
+ html=html.replace('<script type="module" src="src/experiment.js?graphics-recovery=3"></script>','<script>window.__GNM_ASSETS__='+json.dumps(assets)+'</script><script type="module" src="'+data(app)+'"></script>')
  output.parent.mkdir(parents=True,exist_ok=True);output.write_text(html)
  print(json.dumps({'bytes':output.stat().st_size,'sha256':hashlib.sha256(output.read_bytes()).hexdigest(),'moduleCount':len(source),'weights':EXPECTED}))
 if __name__=='__main__':

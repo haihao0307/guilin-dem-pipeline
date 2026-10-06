@@ -1,5 +1,5 @@
 {
-  "title": "KAOPU Face Workbench R01 local candidate",
+  "title": "KAOPU Face Workbench R01 release candidate",
   "repoBaselineChecked": "84edc5ca67dc8f30c17427645232ab07275fdea1",
   "scope": "New kaopu-face-workbench directory plus dedicated read-only QA workflow; no navigation/Hair/production ref edits",
   "model": {
@@ -23,10 +23,49 @@
   "verification": {
     "contractTests": 26,
     "realModelCPU": "passed; exact baseline reset; expression preserves identity; OBJ topology counts",
-    "realBrowser": "Passed full local-hosted Chromium QA on exact runtime commit 4abb5619560f3bb1bb01df5b6141f8d5f92060f5: run37380493968, including clear-color restoration. Now independently verifying immutable raw.githack HTTPS delivery, resource MIME and same interactions.",
+    "realBrowser": {
+      "passed": true,
+      "testedRuntimeCommit": "4abb5619560f3bb1bb01df5b6141f8d5f92060f5",
+      "run": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37380493968",
+      "cycles": 20,
+      "contextLossRestore": true,
+      "backgroundColorPreserved": true,
+      "initialFailureRetry": true,
+      "syntheticVideoFrame": true,
+      "jsonAndOBJ": true,
+      "mobileViewport": "390x844 Chromium, not physical iPhone",
+      "nonGetRequests": 0,
+      "screenshotsInspected": true
+    },
     "physicalPhone": "not tested",
     "published": false,
-    "localMediaHardening": "local only; pending next intentional non-skip QA commit"
+    "localMediaHardening": "included in passed browser and CPU candidate",
+    "externalHTTPS": {
+      "rawGithack": "failed: entry UI not returned in real Chromium, run37380944998. Do not present as a working preview.",
+      "pages": "not published; awaiting authorized addition of this independent directory"
+    },
+    "dualEngine": {
+      "run": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37382868464",
+      "qaCommit": "7b50afc2c94879efff8ff3f2ac9da7f851333e74",
+      "runtimeEquivalentTo": "4abb5619560f3bb1bb01df5b6141f8d5f92060f5",
+      "chromium": "143.0.7499.4 passed; synthetic WebM",
+      "webkit": "Linux WebKit26.0 passed; synthetic local ffmpeg MP4",
+      "bothPassed": [
+        "real pixels",
+        "20 enter/back cycles",
+        "context loss restore",
+        "background color preserved",
+        "failed model fetch retry",
+        "photo import",
+        "video frame capture",
+        "JSON reimport",
+        "OBJ export",
+        "390px viewport no horizontal overflow",
+        "no non-GET requests"
+      ],
+      "physicalIPhone": false,
+      "screenshotsInspected": true
+    }
   },
   "privacy": {
     "input": "local browser object URLs only",
@@ -36,8 +75,8 @@
   },
   "files": {
     "README.md": {
-      "bytes": 5383,
-      "sha256": "1fb2d4288893a8690a20f2ca7ebbd226443bb67209babf376f6a36b9b5763018"
+      "bytes": 5907,
+      "sha256": "eaac8a971205273cd6b83c7620b33e3a007959c7de6b81bce07f55ecf68301d6"
     },
     "index.html": {
       "bytes": 5486,
@@ -76,8 +115,8 @@
       "sha256": "c2c0dbcdd4f652287ab587802c1d3ae1b7c00208a54ef10a37e3313ae4898cbb"
     },
     "tests/browser.cjs": {
-      "bytes": 7639,
-      "sha256": "592f7913142f8a012da4282ae2608fc5b384ed0e1204f8f55b5a80a5e3613cdf"
+      "bytes": 8214,
+      "sha256": "ee2d072cbfe300677741ca67a20e9cec601456f1884206c0a4748dc65c7940a2"
     },
     "tests/contracts.mjs": {
       "bytes": 3901,
