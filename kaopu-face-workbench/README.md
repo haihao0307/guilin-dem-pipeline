@@ -1,56 +1,55 @@
-# KAOPU 捏脸工作台 R01
+# KAOPU 捏脸工作台 R02 实验候选
 
-独立 GAME 工作台候选目录 `kaopu-face-workbench/`。未修改毛发工作台、原男性、R8/R9、女性页面或仓库导航。未确认 GAME 总览位置，故没有伪造总览挂载。
+保留 Google GNM Head v3 原始 17,821 顶点模型、253 身份/383 表情基底与精确归零。`r01.html` 可回到完整 R01 输入/手工编辑流程；来源基线为已发布提交 `920ecc213701c14a9666308fdcd453273f141a83`。其他工作台不变。
 
-## 当前可运行功能
+## 新接入的真实计算
 
-- 原始 Google GNM Head v3 官方网页权重，253 维身份、383 维表情、4 关节，17,821 顶点、35,324 三角面。固定版本、长度和 SHA-256 校验。默认零参数基线。
-- 单个 Three.js WebGL 画布，原脸旋转/缩放、冷暖灯、原始基线恢复；统计分量编辑默认折叠，无虚构语义映射。
-- 用户填写人物名并确认同一人物后，本地导入多个照片/视频。视频使用浏览器解码，手动取当前帧；记录秒数，最长边限制2048像素。浏览器不支持某视频编解码器时须换格式。
-- 每图手工观察文字；档案 JSON 参数与文字导出/回导；当前网格 OBJ 导出。不含照片、不含贴图、不含毛发、不含推定真人身份。
-- 入口/返回复用同一画布与模型；隐藏/离页暂停动画；context loss 暂停，浏览器 restore 后重绘。不存在自动刷新/重开画布循环。
-- 公共模型是唯一跨域请求；照片仅 object URL / canvas 内存，不上传、不存 localStorage。档案包含用户主动输入的名字与观察文字，导出到用户本地。
+1. 用户指定人物并确认同人；选 1–8 张本地照片或手动视频取帧。没有自动认人或跨档案检索。
+2. MediaPipe Face Landmarker 0.10.34 / float16 模型版本 1，在浏览器 CPU/WASM 实际提取 478 点。双脸、无脸、过小脸、约40度以上侧转明确拒绝；不伪造逐点置信度或遮挡mask。
+3. 采用 Google XRBlocks 已有 GNM/MediaPipe 校准对应473点与 Horn/Cholesky数学工具。身份为共享24个前导PCA；每图独立6自由度弱透视相机与12个表情分量（每眼4、下脸4）。不复制FLAME参数到GNM。
+4. 联合交替求解真实二维误差。MediaPipe非公制z仅初始化相机；身份在刚性子集求解，表情每图独立。其余身份/表情参数保持零。
+5. 每第五个对应点（95点）在初始化、相机、身份与表情求解前完全留出。3图以上执行逐图排除身份的交叉验证，留出图只用训练点估计其相机/表情。
+6. 求解在Web Worker执行；检测逐图实际运行并让出UI。可取消，不自动应用。用户可应用中性共享身份、当前图表情、导出完整参数与验证报告。
 
-档案 JSON 依赖同版本共享 GNM 底座，文件小不意味着无需模型即可重建；当前 OBJ 也不是用户最终的轻量数字谱。编辑台到游戏的个人轻量谱仅在讨论，不在 R01 实施。
+## 质量边界
 
-## 明确未完成
+这是一条可运行、可测误差的稀疏/校准特征拟合基线，不是稠密照片重建、摄影测量、真实皮肤或已经验收的本人相似度。深度没有标定，镜头内参与公制深度均为null。
 
-本原型没有照片拟合、自动人物识别、自动mask、landmarks、相机估计、置信度评分、摄影测量、真实皮肤材质。导入照片后模型不会改变，不显示“分析完成”。参数手动编辑不是自动重建质量验收。原始脸只是 GNM 统计基线，不宣称是导入者。
+校准对应点的位置不同于真实GNM表面。UI分别报告校准点与实际网格对应点的留出误差，均和原始身份基线（独立拟合相机与表情）比较，避免把检测器校准改善当成真实表面改善。没有遮挡估计、鲁棒权重、动态轮廓、透视镜头或纹理损失；侧脸、张嘴、强阴影、宽角镜头仍可能失真。刚性子集无法充分约束下脸身份。单张图尤其欠约束。低pixel误差不证明像本人。
 
-真实 Chromium 已通过20轮进退、上下文恢复与颜色保持、本地媒体和JSON/OBJ流程，并实际审查截图。外部 HTTPS 发布后仍须再次验收；390px浏览器截图不等于实体iPhone验收。
+GNM原始68点下颌2..6顺序与iBUG不同；专门测试记录该事实。本拟合使用不同的473点对应，不把68点冒当MediaPipe顺序。
 
-## 结构与后续接口
+## 可选毛发 / 眉毛 / 睫毛
 
-1. 输入：一个用户明确指定的 `person` 档案。图像各自有 source、时间戳、观察记录；禁止自动跨档案认人。
-2. 观察：未来每图 `mask / landmarks / intrinsics / extrinsics / expression / pose / confidence / provenance`；缺失用 null，不能填伪结果。
-3. 联合拟合：固定共享身份向量；每图独立 camera、pose、expression。返回误差、遮挡、采样来源和失败状态，不把资料接收当拟合成功。
-4. 表示：GNM模型固定 hash。当前保留完整身份/表情参数。Pixel3DMM 的 FLAME 结果必须先在原生模型离线验证，再通过单独注册 adapter 转到 GNM；参数不可直接复制。
-5. 输出：当前档案 v1 + OBJ。未来 adapter 的输出须另设经过校验的 schema，不能复用 `not-fitted` 结果冒称拟合档案。
+保留现有毛发台的老师原长发与原眉毛数据，新增224根眼睑曲线睫毛。默认关闭，点击添加后才在可取消Worker里绑定；照片流程无需等待。毛发、眉毛和睫毛随同一真实GNM三角形变形，不改原头模。保留原发缝与发根，三种长度来自原曲线裁切。具体来源、CC BY-SA声明、参数与验证见GROOM-INTEGRATION.md和TEACHER-GROOM-PROVENANCE.json。恢复原始基线会隐藏毛发；OBJ仍只导出GNM头。
 
-SAM3是分割/跟踪辅助；不把它作为脸身份核心。SAM3DBody/MHR 不在本台范围。候选后端尚未运行或购买；不得默认上传人像到外部服务。GPU 后端需要另行评估部署位置、模型许可与逐项授权。优先先做用户批准的少量同人资料离线试验，并与原 RealityScan→MetaHuman 结果对照质量与耗时。
+## 本地与隐私
 
-## 运行与验证
+照片只用blob URL/canvas内存，不写浏览器持久存储，不上传。仅GET读取公开GNM权重、固定版本MediaPipe WASM与经过SHA-256校验的检测模型。应用不调用外部照片推理服务。
 
-用任意静态HTTP服务器服务父目录，打开 `kaopu-face-workbench/`。Web Crypto SHA-256 要求HTTPS或localhost。无构建、无需 npm install；权重首次读取约33.3MiB。
+通用档案JSON仍支持R01，并验证/恢复毛发设置（不包含毛发曲线），拟合参数标记 `sparse-landmark-fit-needs-review`。详细拟合报告另用 `kaopu-face-fit/1`，包含共享身份、每图camera/expression、留点/留图误差及来源，无图像。通用档案回导只恢复参数/文字，不能声称恢复完整拟合证据。OBJ仍是原GNM几何，无纹理。
 
-- `npm test`：档案恶意输入、维数、范围、OBJ、来源哈希、隐私和文件边界静态检查
-- `GNM_ASSET=/path/to/gnm_head_web.bin node tests/model.mjs`：真实官方数据、参数变化、独立表情、原始基线恢复
-- `FACE_URL=http://localhost:8000/kaopu-face-workbench/ node tests/browser.cjs`：已安装Playwright/Chromium上的真实图形回归。需可创建浏览器socket的执行环境。覆盖20轮enter/back、参数回基线、context loss/restore、移动尺寸、不上传照片。
+## 验证
 
-## 来源
+- `npm test`：原26条契约
+- `GNM_ASSET=/path/gnm_head_web.bin node tests/model.mjs`：原模型、维数、表情独立、精确归零
+- `GNM_ASSET=/path/gnm_head_web.bin node tests/fitting.mjs`：真实GNM基底、共享身份、每图独立参数、预留点与逐图验证、顺序不变、非法输入与精确恢复
+- `GNM_ASSET=/path/gnm_head_web.bin node tests/landmark-order.mjs`：68顺序与473边界
+- `FACE_ASSETS=/path/assets FACE_URL=http://127.0.0.1:8765/kaopu-face-workbench/ node tests/fitting-browser.cjs`：真实MediaPipe CPU照片推理、应用/恢复、重复图拒绝、无脸拒绝、取消、导出、隐私网络断言。Chromium与Linux WebKit分别运行
 
-GNM Apache-2.0，含原许可证末尾舌部MIT说明；XRBlocks求值器 Apache-2.0；Three.js r170 MIT。保留所有对应许可证。权重只固定引用官方公开版本，不复制受限人脸素材或 TEN24。
+合成3视角求解自检在本地达到按留点数量合并的RMS 1.453→0.668px；是同一基底生成的数值正确性测试，不是检测器或真人精度。公开MediaPipe测试照片只用于CI本地验证，非用户资料，不嵌入产品或仓库。实体iPhone与用户真实同人多视角相似度尚未验收。PR保持Draft，不合并、不部署。
 
-## 独立只读 QA 候选
+## 上游与许可证
 
-分支 `qa/face-workbench-r01-20261005`，新增专属 `.github/workflows/face-workbench-r01-qa.yml`。仅 PR / 手动事件，无 push 触发、部署或生产 ref 更新；contents:read、checkout 不持有凭据。固定官方 Playwright 1.57.0 与其 Chromium；输入是合成图、浏览器生成的合成 WebM 和官方 GNM，不含用户照片。测试输出截图不能代替实际用户手机验收。
+- GNM: https://github.com/google/GNM
+- XRBlocks固定提交: https://github.com/google/xrblocks/tree/265c2adadadb286854ff081fd9d07b16f39c4134/samples/avatar_lab/gnm
+- XRBlocks FaceFit及对应来自 https://github.com/edualvarado/gnm-webcam-puppet （Apache-2.0）；原注释保留
+- MediaPipe Web API: https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker/web_js
+- MediaPipe官方测试引用: https://github.com/google-ai-edge/mediapipe/blob/master/mediapipe/tasks/python/test/vision/face_landmarker_test.py
+- GNM/XRBlocks/MediaPipe Apache-2.0；Three.js MIT。许可证保留于licenses
 
-## 媒体与档案容错
+R01详细说明保留在README-r01.md。后续Pixel3DMM等稠密FLAME路线需要其原生模型验证与独立拓扑注册适配，不能把本基线称为该路线已完成。
 
-竖屏与横屏取帧长边均限制2048；取帧互斥、回调校验资料代次与容量，返回入口暂停视频。空MIME仅按常见图像/视频扩展名回退；解码失败仍明确报错。缩略图懒加载，不预解码全部原图。
+## 方法体系与效率记录
 
-资料与已回导观察共享100条上限，达到上限明确提示，不再从导出档案静默截断旧观察。100条最大长度中文观察在2MiB回导上限内。清空按钮明确同时清空资料及观察、保留当前脸参数。JSON回导最新选择优先；下载锚点附着文档后点击以改善Safari兼容，但没有声称实际iOS保存成功。
-
-## 最终引擎验收
-
-Chromium143与Linux WebKit26在独立只读CI中均通过：真实像素、20轮入口进退、上下文恢复与背景保持、模型失败重试、合成照片/视频取帧、JSON回导和OBJ导出、390px布局。WebKit输入为本地ffmpeg生成的无人物橙色MP4。没有用户资料入CI，也没有非GET网络请求。运行文件等同4abb561，完整双引擎QA见run37382868464。仍未做实体iPhone和正式HTTPS页验收。
+METHODS.html为工作台内可见方法卡：观察→特征/可见性门槛→共享身份+逐图相机/表情→留点/留图复验。AMADEUS等仅作研究启发，未引入其模型或训练。逐点置信度与遮挡mask尚无实现，均为null。现有检查只覆盖单脸、脸宽、画面边界与近似侧转。报告保留原图/处理图尺寸和缩放映射。timings记录真实各阶段耗时；浏览器QA另记视频导入与取帧，不声称实体手机性能。

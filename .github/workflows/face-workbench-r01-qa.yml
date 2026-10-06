@@ -1,0 +1,74 @@
+name: Face workbench R02 read-only QA
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [gh-pages]
+    paths:
+      - 'kaopu-face-workbench/**'
+      - '.github/workflows/face-workbench-r01-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: face-r02-qa-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  face-browser:
+    if: github.event_name != 'pull_request' || github.head_ref == 'qa/face-photo-fit-r02-20261006'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-face-workbench
+          sparse-checkout-cone-mode: true
+      - name: Install fixed official test dependency
+        run: |
+          npm install --prefix "$RUNNER_TEMP/face-test" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/face-test/node_modules/.bin/playwright" install --with-deps chromium webkit
+      - name: Verify public assets, contracts and numerical fitting
+        run: |
+          python3 kaopu-face-workbench/tests/download-public-assets.py "$RUNNER_TEMP/face-assets"
+          cd kaopu-face-workbench
+          node tests/contracts.mjs
+          node tests/groom-options.mjs
+          export GNM_ASSET="$RUNNER_TEMP/face-assets/gnm_head_web.bin"
+          node tests/model.mjs
+          node tests/landmark-order.mjs
+          node tests/fitting.mjs
+          node tests/groom-model.mjs > ../groom-numerical-result.json
+          node tests/lash-clearance.mjs
+          node tests/groom-worker.mjs
+      - name: Actual Chromium and WebKit geometry, inputs and photo inference
+        env:
+          FACE_URL: http://127.0.0.1:8765/kaopu-face-workbench/
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/face-server.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -fsS "$FACE_URL" > /dev/null && break || sleep 1; done
+          export NODE_PATH="$RUNNER_TEMP/face-test/node_modules"
+          export FACE_ASSETS="$RUNNER_TEMP/face-assets"
+          export GNM_ASSET="$RUNNER_TEMP/face-assets/gnm_head_web.bin"
+          command -v ffmpeg >/dev/null || (sudo apt-get update && sudo apt-get install -y ffmpeg)
+          ffmpeg -hide_banner -loglevel error -f lavfi -i color=c=orange:s=128x128:d=1:r=10 -an -c:v libx264 -pix_fmt yuv420p -movflags +faststart -y "$RUNNER_TEMP/face-test/synthetic.mp4"
+          ffmpeg -hide_banner -loglevel error -loop 1 -i "$FACE_ASSETS/portrait.jpg" -vf scale=1080:-2 -r 30 -t 2 -an -c:v libx264 -pix_fmt yuv420p -movflags +faststart -y "$FACE_ASSETS/public-portrait-1080.mp4"
+          for engine in chromium webkit; do
+            mkdir -p "qa-$engine"
+            (cd "qa-$engine" && FACE_BROWSER="$engine" FACE_VIDEO_FIXTURE="$RUNNER_TEMP/face-test/synthetic.mp4" node ../kaopu-face-workbench/tests/browser.cjs)
+            (cd "qa-$engine" && FACE_BROWSER="$engine" node ../kaopu-face-workbench/tests/fitting-browser.cjs)
+            (cd "qa-$engine" && FACE_BROWSER="$engine" node ../kaopu-face-workbench/tests/video-fitting-browser.cjs)
+            (cd "qa-$engine" && FACE_BROWSER="$engine" node ../kaopu-face-workbench/tests/groom-browser.cjs)
+          done
+      - name: Upload public-fixture and synthetic-only QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: face-r02-browser-evidence
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            qa-*/*.png
+            qa-*/*result.json
+            groom-numerical-result.json
