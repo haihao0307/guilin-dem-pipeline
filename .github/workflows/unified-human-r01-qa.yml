@@ -1,0 +1,122 @@
+name: Unified human R01 read-only QA
+on:
+  push:
+    branches: [qa/unified-human-r01-20261006]
+    paths: ['kaopu-unified-human-workbench/**', '.github/workflows/unified-human-r01-qa.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  model_fixture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-unified-human-workbench
+          filter: blob:none
+      - uses: actions/cache@v4
+        id: fixture-cache
+        with:
+          path: kaopu-anny-workbench/assets
+          key: unified-anny-fixture-d6fc027-torch2141-numpy253-57cb642954bfee0c
+      - uses: actions/setup-python@v5
+        if: steps.fixture-cache.outputs.cache-hit != 'true'
+        with:
+          python-version: '3.12'
+      - uses: actions/checkout@v4
+        if: steps.fixture-cache.outputs.cache-hit != 'true'
+        with:
+          repository: naver/anny
+          ref: d6fc027ced5c17b6b0775dee944096ade7a9ef80
+          path: teacher-anny
+          persist-credentials: false
+      - name: Build the pinned official fixture once, only on cache miss
+        if: steps.fixture-cache.outputs.cache-hit != 'true'
+        env:
+          ANNY_OUTPUT: ${{ github.workspace }}/kaopu-anny-workbench
+          ANNY_CACHE_DIR: ${{ runner.temp }}/unified-anny-cache
+          SETUPTOOLS_SCM_PRETEND_VERSION_FOR_ANNY: '0.6.1'
+        run: |
+          test "$(git -C teacher-anny rev-parse HEAD)" = d6fc027ced5c17b6b0775dee944096ade7a9ef80
+          python -m pip install torch==2.14.1+cpu --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -r kaopu-unified-human-workbench/tools/ci-requirements.txt
+          python -m pip install --no-deps --no-build-isolation ./teacher-anny
+          python kaopu-unified-human-workbench/tools/export_anny_ci.py
+          rm kaopu-anny-workbench/assets/anny-model.bin
+      - name: Verify cached or newly built array bytes
+        run: |
+          python kaopu-unified-human-workbench/tools/unpack_anny.py kaopu-anny-workbench
+          echo '57cb642954bfee0c7589626a22726f5584490f74a1e38e7db8eb78a8392f57b1  kaopu-anny-workbench/assets/anny-model.bin' | sha256sum -c -
+          rm kaopu-anny-workbench/assets/anny-model.bin
+          cat kaopu-anny-workbench/assets/ci-generated-receipt.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unified-anny-qa-fixture
+          path: kaopu-anny-workbench/assets
+          compression-level: 0
+          retention-days: 7
+  browser:
+    needs: model_fixture
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-unified-human-workbench
+          filter: blob:none
+      - uses: actions/download-artifact@v4
+        with:
+          name: unified-anny-qa-fixture
+          path: kaopu-anny-workbench/assets
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch pinned public GNM fixture and unpack verified models
+        run: |
+          mkdir -p kaopu-face-workbench/assets
+          curl -fL --retry 2 'https://raw.githubusercontent.com/xrblocks/assets-gnm/134feb02b11fa642a43ff5e7e880246255a74e86/gnm_head_web.bin' -o kaopu-face-workbench/assets/gnm_head_web.bin
+          echo 'fd19f46eef6f8bfb725fceab581e1bc8837209997ca3fd43f3c1735003c86961  kaopu-face-workbench/assets/gnm_head_web.bin' | sha256sum -c -
+          python kaopu-unified-human-workbench/tools/unpack_anny.py kaopu-anny-workbench
+          gzip -dc kaopu-unified-human-workbench/assets/canonical.json.gz > kaopu-unified-human-workbench/assets/canonical.json
+          gzip -dc kaopu-unified-human-workbench/assets/mhr-torso-delta.json.gz > kaopu-unified-human-workbench/assets/mhr-torso-delta.json
+      - name: Fixed topology and deterministic parameter tests
+        working-directory: kaopu-unified-human-workbench
+        env:
+          ANNY_ROOT: ../kaopu-anny-workbench
+          GNM_PATH: ../kaopu-face-workbench/assets/gnm_head_web.bin
+        run: node tests/model.mjs
+      - name: Sampled neck collision and protection gate
+        if: matrix.browser == 'chromium'
+        run: |
+          python -m pip install numpy==2.3.3
+          python kaopu-unified-human-workbench/tests/neck_geometry.py
+      - name: Install test browser
+        run: |
+          npm install --no-save --ignore-scripts --package-lock=false playwright@1.57.0
+          npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Static server
+        run: python -m http.server 8765 > /tmp/unified-server.log 2>&1 &
+      - name: Actual browser QA
+        working-directory: kaopu-unified-human-workbench
+        env:
+          UNIFIED_BROWSER: ${{ matrix.browser }}
+          UNIFIED_URL: http://127.0.0.1:8765/kaopu-unified-human-workbench/?local=1
+        run: node tests/browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unified-human-r01-${{ matrix.browser }}
+          path: |
+            kaopu-unified-human-workbench/unified-*.png
+            kaopu-unified-human-workbench/unified-browser-report.json
+            kaopu-unified-human-workbench/research/model-report.json
+            kaopu-unified-human-workbench/research/neck-geometry-report.json
+            kaopu-anny-workbench/assets/ci-generated-receipt.json
+            /tmp/unified-server.log
