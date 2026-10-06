@@ -4,7 +4,7 @@ function note(type,label,detail=''){state.events.push({type,label,detail,time:Da
 function problem(message,stage,detail={}){const e=new Error('['+stage+'] '+message);e.gpuRecoverable=true;e.stage=stage;if(stage==='context-lost')e.contextLost=true;Object.assign(e,detail);return e}
 function check(gl,stage){if(!gl||gl.isContextLost())throw problem('图形上下文已失效',stage,{contextLost:true});const code=gl.getError();if(code!==gl.NO_ERROR)throw problem('WebGL '+code,stage,{contextLost:false,glError:code})}
 function context(canvas,label){
- let detail='';canvas.addEventListener('webglcontextcreationerror',e=>detail=e.statusMessage||'',{once:true});
+ let detail='';canvas.addEventListener('webglcontextcreationerror',e=>{detail=e.statusMessage||'';note('creation-error',label,detail)},{once:true});
  const options={alpha:false,antialias:false,preserveDrawingBuffer:true},gl=canvas.getContext('webgl2',options);
  const unavailable=()=>{const contextLost=gl?gl.isContextLost():null,extra={contextLost,providerStatus:detail,contextResult:gl?'lost':'null'};note('creation-failed',label,extra);return problem('WebGL2 未就绪'+(detail?'：'+detail:''),'context-create',extra)};
  if(!gl)throw unavailable();

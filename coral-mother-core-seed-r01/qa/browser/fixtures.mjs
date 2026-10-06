@@ -19,7 +19,10 @@ void mainImage(out vec4 result, in vec2 fragCoord) {
     vec3 camera = ca * ro;
     vec3 phase = vec3(p.x * 13.0, p.y * 17.0, (p.x + p.y) * 11.0);
     phase += camera * 2.3 + vec3(iTime * 0.73 + ${offset}.0);
-    result = vec4(0.5 + 0.43 * sin(phase), 1.0);
+    // Bounded self-authored arithmetic load; no original artwork algorithm.
+    vec3 accum = vec3(0.0);
+    for (int k=0; k<24; ++k) accum += sin(phase + float(k)*0.013);
+    result = vec4(0.5 + 0.43 * accum/24.0, 1.0);
 }
 `;
 }
@@ -35,7 +38,9 @@ out vec4 fragColorOut;
 void mainImage(out vec4 result, in vec2 fragCoord) {
     vec2 p = (fragCoord - iResolution.xy * 0.5) / iResolution.y;
     vec3 phase = vec3(p.x * 15.0, p.y * 12.0, length(p) * 19.0);
-    result = vec4(0.5 + 0.43 * sin(phase + vec3(iTime * 0.71)), 1.0);
+    vec3 accum = vec3(0.0);
+    for (int k=0; k<24; ++k) accum += sin(phase + vec3(iTime * 0.71 + float(k)*0.013));
+    result = vec4(0.5 + 0.43 * accum/24.0, 1.0);
 }
 void main(){ mainImage(fragColorOut, gl_FragCoord.xy); }
 `;
