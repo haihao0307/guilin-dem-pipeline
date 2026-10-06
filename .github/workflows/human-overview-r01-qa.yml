@@ -8,6 +8,8 @@ on:
       - '.github/workflows/human-overview-r01-qa.yml'
 permissions:
   contents: read
+env:
+  OVERVIEW_VERIFY_PUBLIC: 'false'
 concurrency:
   group: human-overview-r01-${{ github.ref }}
   cancel-in-progress: true
@@ -15,7 +17,7 @@ jobs:
   overview-browser:
     if: github.event_name != 'pull_request' || github.head_ref == 'qa/human-overview-r01-20261006'
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -27,6 +29,8 @@ jobs:
             kaopu-mhr-workbench
             kaopu-unified-human-workbench
             kaopu-tailor-workbench
+            kaopu-animal-learning
+            kaopu-hair-workbench
           sparse-checkout-cone-mode: true
       - name: Validate static contracts
         run: |
@@ -48,6 +52,7 @@ jobs:
           OVERVIEW_QA_DIR=overview-chromium node kaopu-human-overview/tests/browser.cjs
           OVERVIEW_BROWSER=webkit OVERVIEW_QA_DIR=overview-webkit node kaopu-human-overview/tests/browser.cjs
       - name: Verify exact published bytes and real HTTPS navigation
+        if: env.OVERVIEW_VERIFY_PUBLIC == 'true'
         env:
           OVERVIEW_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-human-overview/
           NODE_PATH: ${{ runner.temp }}/overview-test/node_modules

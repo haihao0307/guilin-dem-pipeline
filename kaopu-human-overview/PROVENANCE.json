@@ -1,6 +1,6 @@
 {
-  "title": "KAOPU 人物工作台总览",
-  "release": "r01-20261006",
+  "title": "KAOPU 统一创作工作台",
+  "release": "r02-unified-20261006",
   "routing": "Static same-tab entry cards. No model runtime, iframe, user-image processing, analytics, persistence, or parameter sharing in the overview.",
   "gnm": {
     "thumbnail": "assets/gnm-r01.png",
@@ -11,17 +11,24 @@
     "captureQA": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37411214726",
     "runtimeCommit": "b36cca8f4a96bd9cde69c141a184f7d7aa27ee8f",
     "entry": "../kaopu-face-workbench/?loader=single-r01-20261006#edit",
-    "status": "Published R01 verified by Chromium and Linux WebKit; no photo fitting; no R02 claim; actual phone not tested"
+    "status": "Published R01 manual face controls and local photo reference only; automatic photo fitting R02 not published. Photo input unlocks only after a nonempty person name and same-person confirmation."
   },
   "anny": {
     "thumbnail": "assets/anny-r01.png",
     "type": "Unmodified actual public HTTPS Chromium screenshot of the official Anny baseline, displayed with centered CSS clipping",
     "entry": "../kaopu-anny-workbench/",
-    "status": "Published R01; 31 public files verified HTTP 200 and SHA256; public HTTPS Chromium and Linux WebKit interaction, chunk loading, cancellation and recovery passed; actual phone not tested",
-    "coverage": "6 native phenotype axes, 254 local changes and 104-bone pose; shape age/weight axes are not chronological age or kilograms",
+    "status": "Correction in progress. Existing preview retained, overview entry disabled until official pose and facial-action completeness corrections pass acceptance. Old published implementation is not presented as corrected.",
+    "coverage": "Body phenotypes and local shape controls plus pose experiment; official pose UI convention/range and facial action coverage not fully aligned",
     "captureQA": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37425485541",
     "publicQA": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37425485541",
-    "productionCommit": "af29900d82d99def9e54df590fa13d6c9e698119"
+    "productionCommit": "af29900d82d99def9e54df590fa13d6c9e698119",
+    "completenessAudit": {
+      "officialPoseUI": "rotation vectors, ±180 degrees",
+      "currentPoseUI": "Euler angles, ±120 degrees",
+      "officialDemoFacialActions": "all",
+      "currentExportFacialActions": "none",
+      "fullPreciseReplicationClaimed": false
+    }
   },
   "mhr": {
     "thumbnail": "assets/mhr-r01.png",
@@ -39,17 +46,62 @@
     "thumbnail": "assets/unified-r01.png",
     "type": "Actual Chromium browser capture of a single fixed head/body mesh, not a composite of iframe workbenches",
     "entry": "../kaopu-unified-human-workbench/",
-    "status": "Candidate browser interaction checked; final regression and publication pending; entry disabled",
-    "coverage": "Anny body/pose and native GNM identity/expression, with only 1 of 45 MHR identity components; 0 of 204 MHR pose, 0 of 72 MHR expression",
-    "limitation": "Cross-model alignment has measured errors; does not claim all features are fused"
+    "status": "Public HTTPS Chromium and WebKit plus 45-file hash validation passed; entry enabled as a minimal compatibility experiment",
+    "coverage": "MHR partial transfer: 1/45 identity axes; MHR pose and expression not transferred; native GNM facial control plus Anny body/pose",
+    "limitation": "Cross-model alignment has measured errors; does not claim all features are fused",
+    "publicQA": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37429099299",
+    "productionCommit": "4379003a"
   },
   "otherProjectsChanged": false,
   "clothing": {
     "thumbnail": "assets/tailor-r01.png",
-    "type": "Unmodified actual public Chromium screenshot; CSS displays only its 3D fabric viewport",
+    "type": "Unmodified real public browser canvas screenshots of the original R1 and R2 fabric experiments",
     "entry": "../kaopu-tailor-workbench/",
-    "status": "Published R1 public Chromium and Linux WebKit verified, 14/14 public file hashes verified by its owner",
-    "coverage": "Two original millimetre fabric pieces with real seam constraints; not a full garment or body fitting",
-    "assets": "Only the public original seam experiment; no private project code, link, or asset is included"
+    "status": "R1 and R2 passed public browser checks; R2 has 23/23 public hashes verified",
+    "coverage": "R1 two fabric pieces and seams; R2 manual specification editing with three curved-edge pieces. No photo AI inference, full garment or body-fitting claim",
+    "assets": "Only the public original seam experiment; no private project code, link, or asset is included",
+    "thumbnails": [
+      "assets/tailor-r1-canvas.png",
+      "assets/tailor-r2-canvas.png"
+    ],
+    "entries": [
+      "../kaopu-tailor-workbench/",
+      "../kaopu-tailor-workbench/structured.html"
+    ]
+  },
+  "animal": {
+    "entry": "../kaopu-animal-learning/",
+    "productionCommit": "f45e392a6af5fa7cc8863677bbca8179ff36ae68",
+    "publicQA": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37427590414",
+    "diagrams": "Three original methodGraphic SVG diagrams copied from the public kaopu-animal-learning source; explicitly labelled schematics, not animal model outputs",
+    "methods": [
+      "RAPID",
+      "4DEquine",
+      "AnimalLift"
+    ],
+    "workingTools": [
+      "Manual local point annotations",
+      "Local OBJ numeric inspection"
+    ],
+    "limitations": [
+      "Teacher models not run here",
+      "Original 19-animal Atlas not published here",
+      "Legacy workbench links have connectivity checks only"
+    ]
+  },
+  "hair": {
+    "thumbnail": "assets/hair-original-male-r9.jpg",
+    "thumbnailSource": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-hair-workbench/qa/references/previews/gnm-human-render.jpg",
+    "thumbnailSHA256": "775f76977b144bf198b380c3a8275b6d33fba7792497fd7871c3423830356493",
+    "entry": "../kaopu-hair-workbench/qa/gnm-groom-editor/experiment.html",
+    "hub": "../kaopu-hair-workbench/",
+    "identityLabel": "Original male R9, not TEN24 female",
+    "status": "Existing published model preview and HTTP endpoints verified; no changes to original workbench"
+  },
+  "TEN24": {
+    "entry": "../kaopu-hair-workbench/handoffs/ten24-original-local/index.html",
+    "status": "Actual public handoff/status page, original female model still awaiting local source integration and grooming acceptance",
+    "thumbnail": "None; typography-only status card, never a substitute male model",
+    "sourceAssetsPublished": false
   }
 }

@@ -9,7 +9,9 @@ class Parse(HTMLParser):
 p=Parse();p.feed((root/'index.html').read_text())
 ids=[a['id'] for t,a in p.tags if 'id'in a]
 assert len(ids)==len(set(ids)), 'Duplicate ID'
-assert 'clothing' in ids
+assert all(k in ids for k in ['people','clothing','animals','hair','shared-stage','ten24'])
+assert len([1 for t,a in p.tags if t=='a' and 'data-entry' in a])==15
+assert 'TEN24 接入待完成' in (root/'index.html').read_text()
 assert not [t for t,a in p.tags if t in ('iframe','canvas','script')], 'Overview must remain static and lightweight'
 for tag,a in p.tags:
     if tag=='img':
