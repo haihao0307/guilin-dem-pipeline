@@ -22,7 +22,7 @@ class Blocks {
   box(x,y,z,w,h,d,color,rotation=0,openEnds=false){
     const base=this.p.length/3,c=new THREE.Color(color),co=Math.cos(rotation),si=Math.sin(rotation);
     for(let j=0;j<cp.length;j+=3){const px=cp[j]*w,py=cp[j+1]*h;this.p.push(x+co*px-si*py,y+si*px+co*py,z+cp[j+2]*d);this.n.push(co*cn[j]-si*cn[j+1],si*cn[j]+co*cn[j+1],cn[j+2]);this.c.push(c.r,c.g,c.b);}
-    for(let k=0;k<ci.length;k+=3){if(openEnds&&Math.abs(cn[ci[k]*3])>.9)continue;this.i.push(base+ci[k],base+ci[k+1],base+ci[k+2]);}this.count++;
+    for(let k=0;k<ci.length;k+=3){if(openEnds&&Math.abs(cn[ci[k]*3])>.9)continue;if(this.thinGround&&y<.4&&cn[ci[k]*3+1]<-.9)continue;this.i.push(base+ci[k],base+ci[k+1],base+ci[k+2]);}this.count++;
   }
   beam(x1,y1,z1,x2,y2,z2,size,color){
     const length=Math.hypot(x2-x1,y2-y1,z2-z1);
@@ -98,15 +98,15 @@ function bridge(b,x){const L=14.45847,H=4.22945,panels=5;
   }
   for(let i=0;i<=panels;i++){const u=-L/2+i*L/panels;b.box(x+u,H,0,.17,.16,4.06876,0x866641);}
 }
-function buildEnvironment(){const rand=random(19790214),b=new Blocks(),p=PALETTE;const start=-SPEC.halfRun,end=LENGTH-SPEC.halfRun;
+function buildEnvironment(){const rand=random(19790214),b=new Blocks(),p=PALETTE;b.thinGround=true;const start=-SPEC.halfRun,end=LENGTH-SPEC.halfRun;
   // One closed belt, discretized along its full arc-length; motion is a deformation of the same geometry.
   const segments=Math.ceil(LENGTH/.20),pitch=LENGTH/segments;
   for(let j=0;j<segments;j++){const x=start+(j+.5)*pitch;b.box(x,.015,1.5,pitch,.14,SPEC.width,p.grass,0,true);b.box(x,-.09,1.5,pitch,.065,SPEC.width,0x1c1e23,0,true);b.box(x,.13,0,pitch,.10,3.02,0xaba995,0,true);for(const z of [-.76,.76]){b.box(x,.245,z,pitch,.155,.13,0x625e53,0,true);b.box(x,.331,z,pitch,.035,.15,0x9d9a88,0,true);}}
   for(let x=start;x<end;x+=.64){b.box(x,.184,0,.23,.16,2.33,0x514839);for(const z of [-.76,.76])b.box(x,.277,z,.28,.03,.29,0x423e36);}
   for(let i=0;i<12500;i++){const x=start+rand()*LENGTH;let z=SPEC.farEdge+rand()*SPEC.width;if(Math.abs(z)<1.6){if(Math.abs(z)>.89||rand()>.65){const size=.035+rand()*.09;b.box(x,.22+rand()*.09,z,size,.025+rand()*.045,size,[0xcac8b0,0xa5a58f,0xe1ddc3,0x797e69,0xbab59b][Math.floor(rand()*5)]);}}else{const width=.03+rand()*.025;b.box(x,.104+rand()*.008,z,.04+rand()*.12,.012+rand()*.01,width,[0x64763a,0x77853e,0x414f2b,0x96a044,0x4a5931][Math.floor(rand()*5)]);}}
   // Long crop-like bands are visible on the original flat terrain module.
-  for(const z of [-4.29,-3.83,-3.25,2.11,3.72,4.2,4.9,5.35,5.95,6.55,7.25])for(let x=start;x<end;x+=.7+rand()*1.4)b.box(x,.13,z,.35+rand()*1.7,.05,.075,rand()>.5?0x829137:0x384b29);
-  for(const z of [2.75,3.55,4.55,5.55,6.5,7.1])for(let x=start;x<end;x+=.6){const band=Math.floor((x-start)/3.2),height=.06+.025*Math.sin(band*1.7+z);b.box(x,.105+height/2,z,.602,height,.22+.08*Math.sin(z),z>5?0x4b602f:0x516536);}
+  for(let i=0;i<1900;i++){const x=start+rand()*LENGTH,z=SPEC.farEdge+rand()*SPEC.width;if(Math.abs(z)<1.75)continue;b.box(x,.11+rand()*.025,z,.15+rand()*.72,.018+rand()*.019,.025+rand()*.025,rand()>.52?0x809042:0x40562d);}
+  for(const z of [2.75,3.55,4.55,5.55,6.5,7.1])for(let x=start;x<end;x+=.6){if(rand()<.24)continue;const band=Math.floor((x-start)/3.2),height=.032+.018*Math.sin(band*1.7+z);b.box(x,.105+height/2,z+(rand()-.5)*.08,.42+rand()*.24,height,.15+.08*Math.sin(z),z>5?0x4e632f:0x566c36);}
   for(let x=start;x<end;x+=1.07){b.box(x,.56,-3.01,.11,1.12,.11,0xc3c6b2);b.box(x,.99,-3.01,.17,.08,.17,0xd8d9c7);b.box(x+.53,.72,-3.01,1.06,.09,.076,0xc9cbb8);b.box(x+.53,.32,-3.01,1.06,.08,.075,0xb4b7a7);}
   // Two ground motifs per bridge period, as observed in the source loop.
   for(const offset of [0,LENGTH/2]){
