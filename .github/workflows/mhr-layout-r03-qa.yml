@@ -1,4 +1,4 @@
-name: MHR enlarged workspace R03 QA
+name: MHR enlarged workspace R03 public QA
 on:
   push:
     branches: [qa/mhr-layout-r03-20261006]
@@ -19,11 +19,24 @@ jobs:
         run: |
           npm install --prefix "$RUNNER_TEMP/mhr-test" --no-save --ignore-scripts playwright@1.57.0
           "$RUNNER_TEMP/mhr-test/node_modules/.bin/playwright" install --with-deps chromium webkit
-      - name: Real 1440 2048 and 390 pixel layout and interaction
+      - name: Verify exact public release assets
         run: |
-          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/mhr-server.log" 2>&1 &
-          trap 'kill $! 2>/dev/null || true' EXIT
-          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8765/kaopu-mhr-workbench/ >/dev/null && break || sleep 1; done
+          for file in index.html style.css; do
+            expected=$(sha256sum "kaopu-mhr-workbench/$file" | cut -d' ' -f1)
+            matched=0
+            for i in $(seq 1 60); do
+              curl --max-time 15 -fsS "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-mhr-workbench/$file?qa=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-$file" || true
+              actual=$(sha256sum "$RUNNER_TEMP/public-$file" | cut -d' ' -f1)
+              if [ "$actual" = "$expected" ]; then matched=1; break; fi
+              sleep 5
+            done
+            test "$matched" = 1
+          done
+      - name: Real public 1440 2048 and 390 pixel layout and interaction
+        env:
+          MHR_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-mhr-workbench/
+        run: |
+          curl -fsS https://haihao0307.github.io/guilin-dem-pipeline/kaopu-human-overview/ > /dev/null
           for browser in chromium webkit; do
             mkdir -p "qa-$browser"
             (cd "qa-$browser" && MHR_BROWSER="$browser" NODE_PATH="$RUNNER_TEMP/mhr-test/node_modules" node ../kaopu-mhr-workbench/tests/layout.cjs)
@@ -33,7 +46,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mhr-layout-r03-evidence
+          name: mhr-layout-r03-public-evidence
           retention-days: 7
           path: |
             qa-*/*
