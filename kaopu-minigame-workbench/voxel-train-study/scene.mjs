@@ -119,6 +119,7 @@ function buildEnvironment(){const rand=random(19790214),b=new Blocks(),p=PALETTE
 }
 const BEND_GLSL=`
 uniform float beltPhase;
+varying float vBeltInterior;
 vec4 beltFrame(float xx) {
   float a=${SPEC.halfRun.toFixed(6)}, r=${SPEC.radius.toFixed(6)}, l=2.0*a, c=3.141592653589793*r;
   float s=mod(xx+beltPhase+a,2.0*l+2.0*c);
@@ -130,7 +131,7 @@ vec4 beltFrame(float xx) {
 vec3 beltPosition(vec3 pos){vec4 f=beltFrame(pos.x);return vec3(f.x-pos.y*f.w,f.y+pos.y*f.z,pos.z);}
 vec3 beltNormal(vec3 pos,vec3 norm){vec4 f=beltFrame(pos.x);return vec3(norm.x*f.z-norm.y*f.w,norm.x*f.w+norm.y*f.z,norm.z);}
 `;
-function bentMaterial(material,phase){material.onBeforeCompile=shader=>{shader.uniforms.beltPhase=phase;shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\n'+BEND_GLSL).replace('#include <beginnormal_vertex>','#include <beginnormal_vertex>\nobjectNormal = beltNormal(position, objectNormal);').replace('#include <begin_vertex>','vec3 transformed = beltPosition(position);');};material.customProgramCacheKey=()=> 'kaopu-train-bend-v1';return material;}
+function bentMaterial(material,phase){material.onBeforeCompile=shader=>{shader.uniforms.beltPhase=phase;shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\n'+BEND_GLSL).replace('#include <beginnormal_vertex>','#include <beginnormal_vertex>\nobjectNormal = beltNormal(position, objectNormal);').replace('#include <begin_vertex>','vBeltInterior = (position.y < -0.03 && normal.y < -0.9) ? 1.0 : 0.0; vec3 transformed = beltPosition(position);');shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying float vBeltInterior;').replace('#include <opaque_fragment>','outgoingLight = max(outgoingLight, vBeltInterior * vec3(0.023, 0.024, 0.030));\n#include <opaque_fragment>');};material.customProgramCacheKey=()=> 'kaopu-train-bend-v1';return material;}
 export function createSceneModel(){const trainBlocks=buildTrain(),environmentBlocks=buildEnvironment();const root=new THREE.Group();root.name='Procedural voxel train study';const material=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.79,metalness:.14});const train=new THREE.Mesh(trainBlocks.geometry(),material);train.name='Diesel locomotive and FUEL tank';train.castShadow=train.receiveShadow=true;root.add(train);
   const phase={value:0};const environment=new THREE.Mesh(environmentBlocks.geometry(),bentMaterial(new THREE.MeshStandardMaterial({vertexColors:true,roughness:.96,metalness:.02}),phase));environment.name='Continuously deformed closed terrain belt';environment.castShadow=environment.receiveShadow=true;environment.frustumCulled=false;environment.customDepthMaterial=bentMaterial(new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking}),phase);root.add(environment);
   return {root,train,environment,phase,stats:{trainBlocks:trainBlocks.count,environmentBlocks:environmentBlocks.count,vertices:train.geometry.attributes.position.count+environment.geometry.attributes.position.count},setTime(seconds){phase.value=-seconds*LENGTH/SPEC.period;},dispose(){for(const mesh of [train,environment]){mesh.geometry.dispose();mesh.material.dispose();mesh.customDepthMaterial?.dispose();}}};
