@@ -280,7 +280,7 @@ async function boot(pack){const id=++gen;pause();enabled(false);if(renderer){ren
  $('verification').textContent='已核对：源码12,150 B + 原图3张；字节SHA-256、尺寸、采样设置全部一致';
  phase='preparing';status('校验通过，正在建立WebGL2原码画面…');
  const images=await MantaRenderer.prepareImages(verified,()=>id===gen);
- try{clock.reset(performance.now());clock.setSpeed(1,performance.now());first=true;
+ try{clock.reset(performance.now());clock.setSpeed(1,performance.now());$('speed').value='1';$('time').value='0';first=true;
  renderer=MantaRenderer.createRenderer(canvas,verified,images,{
  getLatest:now=>clock.playing?state(now):null,
  onComplete:(frame,elapsed)=>{if(id!==gen)return;lastFrame={...frame};canvas.hidden=false;$('empty').hidden=true;enabled(true);if(first){first=false;if(!document.hidden)clock.play(performance.now());request();}phase=clock.playing?'playing':'paused';controls();if(document.activeElement!==$('time'))$('time').value=frame.time.toFixed(2);status((clock.playing?'原码播放中':'原码已暂停')+' · '+frame.time.toFixed(2)+'s · '+frame.width+'×'+frame.height+' · 单帧 '+Math.round(elapsed)+'ms');},
