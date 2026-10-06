@@ -1,0 +1,40 @@
+name: MHR enlarged workspace R03 QA
+on:
+  push:
+    branches: [qa/mhr-layout-r03-20261006]
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-mhr-workbench
+      - name: Original numerical parity
+        run: cd kaopu-mhr-workbench && node tests/model.mjs
+      - name: Official Playwright browser install
+        run: |
+          npm install --prefix "$RUNNER_TEMP/mhr-test" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/mhr-test/node_modules/.bin/playwright" install --with-deps chromium webkit
+      - name: Real 1440 2048 and 390 pixel layout and interaction
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/mhr-server.log" 2>&1 &
+          trap 'kill $! 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8765/kaopu-mhr-workbench/ >/dev/null && break || sleep 1; done
+          for browser in chromium webkit; do
+            mkdir -p "qa-$browser"
+            (cd "qa-$browser" && MHR_BROWSER="$browser" NODE_PATH="$RUNNER_TEMP/mhr-test/node_modules" node ../kaopu-mhr-workbench/tests/layout.cjs)
+            (cd "qa-$browser" && MHR_BROWSER="$browser" NODE_PATH="$RUNNER_TEMP/mhr-test/node_modules" node ../kaopu-mhr-workbench/tests/browser.cjs)
+          done
+      - name: Upload real browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mhr-layout-r03-evidence
+          retention-days: 7
+          path: |
+            qa-*/*
+            kaopu-mhr-workbench/tests/*parity*.json
