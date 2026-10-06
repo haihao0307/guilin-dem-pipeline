@@ -14,10 +14,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-          sparse-checkout: |
-            kaopu-unified-human-workbench
-            kaopu-anny-workbench/assets
+          sparse-checkout: kaopu-unified-human-workbench
           filter: blob:none
+      - name: Fetch published authoritative Anny multipart assets
+        run: python kaopu-unified-human-workbench/tools/fetch_anny_public.py
       - name: Verify authoritative uploaded Anny multipart assets
         run: |
           python kaopu-unified-human-workbench/tools/unpack_anny.py kaopu-anny-workbench
@@ -90,5 +90,5 @@ jobs:
             kaopu-unified-human-workbench/unified-browser-report.json
             kaopu-unified-human-workbench/research/model-report.json
             kaopu-unified-human-workbench/research/neck-geometry-report.json
-            kaopu-anny-workbench/assets/ci-generated-receipt.json
+            kaopu-anny-workbench/assets/public-fetch-receipt.json
             /tmp/unified-server.log
