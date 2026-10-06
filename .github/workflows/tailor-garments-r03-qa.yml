@@ -1,0 +1,57 @@
+name: Tailor complete shorts R03 read-only QA
+on:
+  pull_request:
+    branches: [gh-pages]
+    paths:
+      - 'kaopu-tailor-workbench/garments-r03/**'
+      - '.github/workflows/tailor-garments-r03-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: tailor-garments-r03-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  garment-browser:
+    if: github.head_ref == 'qa/tailor-garments-r03-20261006'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-tailor-workbench
+            kaopu-human-overview
+          sparse-checkout-cone-mode: true
+      - name: Install exact official test dependencies
+        run: |
+          npm install --prefix "$RUNNER_TEMP/tailor-test" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/tailor-test/node_modules/.bin/playwright" install --with-deps chromium webkit
+          cd kaopu-tailor-workbench/garments-r03
+          npm install --ignore-scripts
+      - name: Original and structured cases unchanged
+        run: cd kaopu-tailor-workbench && npm run check
+      - name: Nine bounded paper parameter combinations
+        run: cd kaopu-tailor-workbench/garments-r03 && npm test
+      - name: Actual browser reconstruction in two engines
+        env:
+          TAILOR_URL: http://127.0.0.1:8765/kaopu-tailor-workbench/garments-r03/
+          NODE_PATH: ${{ runner.temp }}/tailor-test/node_modules
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/tailor-server.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -fsS "$TAILOR_URL" > /dev/null && break || sleep 1; done
+          for engine in chromium webkit; do
+            TAILOR_BROWSER=$engine node kaopu-tailor-workbench/garments-r03/tests/browser.cjs
+          done
+      - name: Keep actual screenshots and numerical evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tailor-garments-r03-evidence
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            garments-chromium/*
+            garments-webkit/*
