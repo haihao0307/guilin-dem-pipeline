@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#171c20"><title>KAOPU 裁缝工作台 · 接缝实验 R1</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header><a class="brand" href="#">KAOPU <span>/ TAILOR</span></a><nav><a href="#workbench">接缝实验</a><a href="#learning">学习与路线</a><a href="../kaopu-human-overview/">人物总览 ↗</a></nav><span class="tag">R1 · 独立学习增量</span></header>
+<main>
+<section class="intro"><div><p class="eyebrow">PATTERN → MATERIAL → SEAM → SOLVE</p><h1>从两块布，开始真正缝合</h1><p>尺寸留在纸样里，连接留在接缝里。三维形状由约束求解产生，拆掉针脚后会重新分开。</p></div><aside><b>当前：小布片实验</b><span>不代表短裤完成，也不代表人物试身通过</span></aside></section>
+<section id="workbench" class="workbench">
+<aside class="controls">
+<h2>01 / 制版与校验</h2><label>实验案例<select id="example"><option value="straight">等长直缝 · 基线</option><option value="ease">声明 8% 吃势 · 压力测试</option><option value="direction">错误反例 · 方向反接</option><option value="easeError">错误反例 · 吃势未配长</option><option value="reference">错误反例 · 裁片引用丢失</option></select></label>
+<label>裁片宽 <span id="widthValue">150 mm</span><input id="width" type="range" min="80" max="240" value="150" step="10"></label>
+<label>净缝长 <span id="heightValue">220 mm</span><input id="height" type="range" min="100" max="300" value="220" step="10"></label>
+<p class="small">每片缝线外保留 10 mm 实体布料。改版会使旧裁片与求解立即失效。</p>
+<div class="validity" id="validation" role="status"></div>
+<button id="cut" class="primary">校验并冻结裁片</button>
+<h2>02 / 逐步缝制</h2>
+<button id="sew" disabled>激活接缝，开始求解</button>
+<div class="buttonrow"><button id="pause" disabled>暂停</button><button id="reset">重置实验</button></div>
+<div class="switches"><label><input id="gravity" type="checkbox">重力载荷</label><label><input id="obstacle" type="checkbox">测试球体接触</label><label><input id="pull" type="checkbox">向两侧轻拉</label></div>
+<div class="buttonrow"><button id="release" disabled>解除临时托持</button><button id="detach" disabled>拆除接缝</button></div>
+<p class="small">托持只有 A 片上角 1 点。球体是测试环境，不是人体。重力与接触可能暴露过度变形。</p>
+<h2>03 / 可追溯导出</h2><div class="buttonrow"><button id="exportPattern">纸样 JSON ↓</button><button id="exportResult" disabled>实验结果 ↓</button></div>
+<label class="import">导入本工作台纸样 JSON<input id="import" type="file" accept="application/json,.json"></label><p class="small">只在浏览器内读取，不上传。R1 仅支持本格式；不伪装为 PatternGSL 官方解码器。</p>
+</aside>
+<div class="studio">
+<div class="stagebar"><span id="stage" class="stage">纸样草稿</span><span id="revision">版本 1</span><span id="runtime">尚未求解</span></div>
+<div class="views">
+<div class="view"><div class="viewtitle"><b>二维材料 / mm</b><span>实线裁切 · 虚线缝合 · 箭头布纹</span></div><canvas id="paper" aria-label="原始二维材料裁片、缝线、对位标记"></canvas><div class="viewfoot">A / 金色 &nbsp; B / 蓝紫色 &nbsp; N1、N2 / 对位剪口</div></div>
+<div class="view"><div class="viewtitle"><b>三维求解 / 原材料网格</b><select id="view"><option value="perspective">斜视</option><option value="front">正视</option><option value="side">侧视</option><option value="top">俯视</option></select></div><canvas id="cloth" aria-label="布片约束求解三维视图"></canvas><div class="viewfoot">拖动旋转 · 未预制造型 · 缝份尚未折转或压烫</div></div>
+</div>
+<div class="metrics"><div><span>激活针脚</span><strong id="stitches">0</strong></div><div><span>最大接缝间隙</span><strong id="gap">—</strong></div><div><span>最大主伸缩应变</span><strong id="strain">—</strong></div><div><span>临时托持点</span><strong id="pins">—</strong></div></div>
+<div class="gate" id="gate" role="status">先校验并冻结裁片，再开始缝制</div>
+<div class="audit"><div><b>来源不变</b><p id="identity">两块原创矩形实验布片，374 个材料点 / 640 个三角形</p></div><div><b>如实保留缺口</b><p>未实现布片自碰撞、连续碰撞、人体接触和真实面料标定。纸样通过与接缝收紧均不构成成衣验收。</p></div></div>
+<details><summary>查看有向接缝与工序记录</summary><pre id="record"></pre></details>
+</div>
+</section>
+<section id="learning" class="learning"><div class="sectionhead"><p class="eyebrow">LEARN / REBUILD / VERIFY</p><h2>把研究变成自己的能力</h2><p>学到的方法进入真实的数据与约束；未取得的模型和数据，不假装已经接入。</p></div>
+<div class="cards"><article><span class="num">01</span><h3>GarmentCode / Data</h3><p>借鉴可参数化纸样、布片身份、量体与落布分开验收的思路。这里使用原创实验纸样，没有加载其数据集。</p><p class="note">代码仓库当前为 MIT；数据集与身体资产的授权需分别核对，不能从代码许可推断。</p><a href="https://github.com/maria-korosteleva/GarmentCode" target="_blank" rel="noreferrer">官方代码与文档 ↗</a></article><article><span class="num">02</span><h3>PatternGSL</h3><p>学习“结构先于外壳”：显式裁片、曲线/边、摆片变换与针脚拓扑，再经过有效性检查。</p><p class="note">2026-10-06 检查的 master 只有项目网页与测试，未见推理代码或权重。本页没有“单图自动制版”能力。</p><a href="https://lagrangeli.github.io/PatternGSL/" target="_blank" rel="noreferrer">官方项目页 ↗</a></article><article><span class="num">03</span><h3>这一轮真正新增</h3><p>有向接缝与剪口检查、声明吃势、不可变毫米裁片、逐步激活的 XPBD 距离约束、拆缝与托持释放反证。</p><p class="note">弯曲为未标定距离近似；球体碰撞仅检查顶点。保留真实数值失败，不用几何壳补洞。</p><a href="https://mmacklin.com/xpbd.pdf" target="_blank" rel="noreferrer">XPBD 原论文 ↗</a></article></div>
+<div class="roadmap"><h3>增强版裁缝的后续门槛</h3><ol><li><b>材料与接缝核</b><span>当前实验：结构与因果验证。局部吃势、弯曲与强载荷仍需提高。</span></li><li><b>接回现有短裤纸样</b><span>保持旧案例与材料点身份，逐条适配有向边、裆片与腰头，不把拓扑焊接当物理缝合。</span></li><li><b>完整人物试身</b><span>重新量体、真实人体网格碰撞、多视图与动作测试。未通过不输出合格成衣。</span></li></ol></div>
+</section>
+</main><footer><span>KAOPU / ORIGINAL SEWING LAB R1</span><span>本地浏览器计算 · 无外部模型请求 · productionReady = false</span></footer>
+<script type="module" src="src/app.mjs"></script>
+</body></html>

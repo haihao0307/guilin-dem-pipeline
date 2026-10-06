@@ -1,0 +1,51 @@
+name: Tailor seam laboratory R01 read-only QA
+on:
+  pull_request:
+    branches: [gh-pages]
+    paths:
+      - 'kaopu-tailor-workbench/**'
+      - '.github/workflows/tailor-workbench-r01-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: tailor-r01-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  tailor-browser:
+    if: github.head_ref == 'qa/tailor-seam-r01-20261006'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-tailor-workbench
+          sparse-checkout-cone-mode: true
+      - name: Validate structural and numerical counterexamples
+        run: cd kaopu-tailor-workbench && npm run check
+      - name: Install fixed official browser test dependency
+        run: |
+          npm install --prefix "$RUNNER_TEMP/tailor-test" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/tailor-test/node_modules/.bin/playwright" install --with-deps chromium webkit
+      - name: Test desktop mobile keyboard touch and invalidation
+        env:
+          TAILOR_URL: http://127.0.0.1:8765/kaopu-tailor-workbench/
+          NODE_PATH: ${{ runner.temp }}/tailor-test/node_modules
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/tailor-server.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -fsS "$TAILOR_URL" > /dev/null && break || sleep 1; done
+          TAILOR_QA_DIR=tailor-chromium node kaopu-tailor-workbench/tests/browser.cjs
+          TAILOR_BROWSER=webkit TAILOR_QA_DIR=tailor-webkit node kaopu-tailor-workbench/tests/browser.cjs
+      - name: Upload screenshots and numeric evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tailor-seam-r01-evidence
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            tailor-chromium/*
+            tailor-webkit/*
+            kaopu-tailor-workbench/qa/*
