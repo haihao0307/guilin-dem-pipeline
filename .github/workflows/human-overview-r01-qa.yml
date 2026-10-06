@@ -10,7 +10,7 @@ on:
 permissions:
   contents: read
 env:
-  OVERVIEW_VERIFY_PUBLIC: 'false'
+  OVERVIEW_VERIFY_PUBLIC: 'true'
 concurrency:
   group: human-overview-r01-${{ github.ref }}
   cancel-in-progress: true
@@ -69,6 +69,7 @@ jobs:
           python3 - <<'PYVERIFY'
           from pathlib import Path
           import hashlib,json,os,urllib.request
+          from urllib.parse import urljoin
           root=Path('kaopu-human-overview');base=os.environ['OVERVIEW_URL'];checks=[]
           for path in sorted(root.rglob('*')):
               if not path.is_file(): continue
@@ -81,9 +82,19 @@ jobs:
               checks.append({'path':relative,'status':status,'sha256':expected,'bytes':len(actual)})
           Path('overview-public-bytes.json').write_text(json.dumps({'passed':True,'url':base,'files':checks},indent=2))
           print('Public overview exact file verification passed:',len(checks))
+          protected=json.loads(Path('.github/qa/lifecycle-public-integrity.json').read_text());extra=[]
+          for relative,expected in protected['expectedSHA256'].items():
+              assert hashlib.sha256(Path(relative).read_bytes()).hexdigest()==expected,relative+' candidate mismatch'
+              request=urllib.request.Request(urljoin(base,'../'+relative)+'?overview=lifecycle-verified',headers={'Cache-Control':'no-cache'})
+              with urllib.request.urlopen(request,timeout=60) as response:
+                  actual=response.read();status=response.status
+              assert status==200 and hashlib.sha256(actual).hexdigest()==expected,relative+' public lifecycle mismatch'
+              extra.append({'path':relative,'status':status,'sha256':expected,'bytes':len(actual)})
+          Path('overview-public-lifecycle-bytes.json').write_text(json.dumps({'passed':True,'productionCommit':protected['productionCommit'],'files':extra},indent=2))
+          print('Public lifecycle plus protected-asset hash verification passed:',len(extra))
           PYVERIFY
-          OVERVIEW_QA_DIR=overview-public-chromium node kaopu-human-overview/tests/browser.cjs
-          OVERVIEW_BROWSER=webkit OVERVIEW_QA_DIR=overview-public-webkit node kaopu-human-overview/tests/browser.cjs
+          OVERVIEW_QA_DIR=overview-public-chromium node .github/qa/overview-browser-lifecycle-candidate.cjs
+          OVERVIEW_BROWSER=webkit OVERVIEW_QA_DIR=overview-public-webkit node .github/qa/overview-browser-lifecycle-candidate.cjs
       - name: Upload reports and screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -105,6 +116,7 @@ jobs:
             overview-public-webkit/*.jsonl
             overview-public-webkit/*.png
             overview-public-bytes.json
+            overview-public-lifecycle-bytes.json
       - name: Upload Chromium traces separately
         if: always()
         uses: actions/upload-artifact@v4
