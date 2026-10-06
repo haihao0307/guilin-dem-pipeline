@@ -5,3 +5,52 @@
 /* Preserve the authored square view on phones instead of revealing extra lower-loop geometry. */
 @media(max-width:600px) and (orientation:portrait){canvas#scene{position:absolute;left:0;top:50%;width:100%;height:100vw;transform:translateY(-50%)}}
 @media(max-height:600px) and (orientation:landscape){#stage{min-height:0;height:100dvh}.masthead{padding:13px 20px}.masthead h1{font-size:20px}.masthead .subtitle{display:none}.controls{bottom:10px;padding-top:5px;padding-bottom:6px}#hint{display:none}}
+
+/* Shared viewport controls; the reference mode keeps the R01 canvas framing. */
+.view-actions{display:flex;gap:6px;align-items:center;pointer-events:auto}
+.advanced-controls{display:contents}
+.short-workbench-label,.about-short,#toolsToggle{display:none}
+.view-status{position:absolute;z-index:6;left:50%;bottom:128px;transform:translateX(-50%);width:max-content;max-width:calc(100% - 32px);padding:12px 16px;border:1px solid #71816b66;border-radius:12px;background:#182322ed;color:#c7d2c5;font-size:12px;line-height:1.6;pointer-events:none}
+[data-layout=immersive] #stage{min-height:0;height:100vh;height:100dvh}
+[data-layout=immersive] canvas#scene{position:absolute;inset:0;width:100%;height:100%;transform:none}
+[data-layout=immersive] .masthead{align-items:center;padding:max(12px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) 12px max(18px,env(safe-area-inset-left))}
+[data-layout=immersive] .masthead h1{font-size:17px;letter-spacing:.08em;margin-top:2px}
+[data-layout=immersive] .eyebrow{margin:0;font-size:9px}
+[data-layout=immersive] .subtitle{display:none}
+[data-layout=immersive] .view-actions .text-button{font-size:11px;min-height:44px;padding:10px 12px;background:#1b2824bf;border:1px solid #63705c44}
+[data-layout=immersive] .controls{display:grid;grid-template-columns:auto minmax(70px,1fr) auto auto;align-items:center;gap:6px;width:min(720px,calc(100% - 24px));padding:5px 8px;bottom:max(12px,env(safe-area-inset-bottom));border-radius:14px;background:#182322c7}
+[data-layout=immersive] .control-row{display:contents}
+[data-layout=immersive] #playPause{grid-column:1;grid-row:1}
+[data-layout=immersive] .timeline{grid-column:2;grid-row:1;gap:8px;padding:0 3px}
+[data-layout=immersive] .timeline>label{display:none}
+[data-layout=immersive] .speed-label{grid-column:3;grid-row:1}
+[data-layout=immersive] .speed-label>span{display:none}
+[data-layout=immersive] #toolsToggle{display:block;grid-column:4;grid-row:1;min-width:44px;font-size:23px;padding:0 8px}
+[data-layout=immersive] .advanced-controls{display:none}
+[data-layout=immersive] .controls[data-expanded=true] .advanced-controls{grid-column:1/-1;grid-row:2;display:flex;align-items:center;justify-content:center;gap:8px;border-top:1px solid #63705c44;padding-top:4px}
+[data-layout=immersive] #hint{display:none}
+[data-layout=immersive] #about{top:82px;max-height:calc(100dvh - 100px);overflow:auto}
+#stage:fullscreen{width:100vw;height:100vh;min-height:0}
+@media(max-width:600px){
+  .masthead>div{min-width:0}
+  .view-actions{display:grid;grid-template-columns:repeat(2,auto);gap:4px}
+  .view-actions #aboutOpen{grid-column:1/-1}
+  [data-layout=reference] .full-workbench-label{max-width:135px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  [data-layout=reference] #about{top:148px;max-height:calc(100dvh - 166px);overflow:auto}
+  [data-layout=immersive] .masthead{padding:10px 12px;gap:8px}
+  [data-layout=immersive] .masthead h1,[data-layout=immersive] .full-workbench-label,[data-layout=immersive] .about-label{display:none}
+  [data-layout=immersive] .short-workbench-label,[data-layout=immersive] .about-short{display:inline}
+  [data-layout=immersive] .eyebrow{font-size:10px;letter-spacing:.03em;white-space:nowrap}
+  [data-layout=immersive] .view-actions{display:flex;gap:4px}
+  [data-layout=immersive] .view-actions .text-button{padding:8px 9px;font-size:10px;min-width:44px}
+  [data-layout=immersive] #fullscreenToggle span{display:none}
+  [data-layout=immersive] .timeline output{display:none}
+  [data-layout=immersive] .controls{gap:4px;padding:4px 7px}
+  [data-layout=immersive] #about{top:66px;right:12px;width:calc(100% - 24px);max-height:calc(100dvh - 80px)}
+}
+@media(max-height:450px) and (orientation:landscape){
+  [data-layout=immersive] .masthead h1{display:none}
+  [data-layout=immersive] .masthead{padding-top:6px;padding-bottom:6px}
+  [data-layout=immersive] .controls{bottom:max(7px,env(safe-area-inset-bottom))}
+  [data-layout=immersive] #about{top:58px;max-height:calc(100dvh - 70px)}
+}
