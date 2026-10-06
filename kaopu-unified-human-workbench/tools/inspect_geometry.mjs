@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import {AnnyModel} from '../../anny-workbench-20261006/kaopu-anny-workbench/src/AnnyModel.js';
+import {GNMHeadModel,parseContainer} from '../../face-workbench-20261005/kaopu-face-workbench/src/GNMModel.js';
+const ab=p=>{let b=fs.readFileSync(p);return b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength)};
+const a=new AnnyModel(JSON.parse(fs.readFileSync('anny-workbench-20261006/kaopu-anny-workbench/assets/anny-model.json')),ab('anny-workbench-20261006/kaopu-anny-workbench/assets/anny-model.bin'));
+const {meta,sections}=parseContainer(ab('face-workbench-20261005/qa-assets/gnm_head_web.bin')),g=new GNMHeadModel(meta,sections);
+const av=a.forward({phenotypes:{age:2/3}}),gv=new Float32Array(g.numVertices*3);g.computeVertices(gv);
+const bounds=v=>{let b=[[],[]];for(let k=0;k<3;k++){const t=[];for(let i=k;i<v.length;i+=3)t.push(v[i]);b[0][k]=Math.min(...t);b[1][k]=Math.max(...t);}return b};
+console.log('Anny',bounds(av.vertices),a.boneLabels.filter(x=>/head|neck/.test(x))); console.log('GNM',bounds(gv),meta,Object.keys(sections));
+const aj={vertices:Array.from(av.vertices),rest:Array.from(av.restVertices),faces:Array.from(a.arrays.faces),bones:a.boneLabels,heads:Array.from(av.boneHeads),restHeads:Array.from(av.restBoneHeads),weights:Array.from(a.arrays.vertex_bone_weights),indices:Array.from(a.arrays.vertex_bone_indices),influences:a.influences};
+const gj={vertices:Array.from(gv),faces:Array.from(g.triangles),componentId:Array.from(g.componentId||[]),regionId:Array.from(g.regionId||[]),meta};
+fs.writeFileSync('unified-human-20261006/research/anny-neutral.json',JSON.stringify(aj));fs.writeFileSync('unified-human-20261006/research/gnm-neutral.json',JSON.stringify(gj));
