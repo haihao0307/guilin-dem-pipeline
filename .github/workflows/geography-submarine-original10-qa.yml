@@ -1,4 +1,4 @@
-name: Geography09 continuous camera clock QA
+name: Published geography09 continuous camera clock QA
 on:
   push:
     branches: [qa/geography-submarine-original10-20261006]
@@ -30,13 +30,25 @@ jobs:
           python -m playwright install --with-deps ${{ matrix.browser }}
       - name: Verify continuous09 input clock and locked10 pixels
         env:
-          KAOPU_PUBLIC_URL: http://127.0.0.1:8765/kaopu-geography-workbench/
+          KAOPU_PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-geography-workbench/
           KAOPU_BROWSER: ${{ matrix.browser }}
         run: |
-          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/geography-server.log" 2>&1 &
-          server=$!
-          trap 'kill "$server" 2>/dev/null || true' EXIT
-          for i in $(seq 1 30); do curl -fsS "$KAOPU_PUBLIC_URL" > /dev/null && break || sleep 1; done
+          python - <<'PY_PUBLIC'
+          import hashlib,os,time,urllib.request
+          from pathlib import Path
+          expected=Path('kaopu-geography-workbench/runtime.js').read_bytes()
+          deadline=time.time()+600
+          while True:
+              try:
+                  with urllib.request.urlopen(os.environ['KAOPU_PUBLIC_URL']+'runtime.js?clock=c8d87b84-'+str(time.time()),timeout=30)as response: actual=response.read()
+                  assert hashlib.sha256(actual).digest()==hashlib.sha256(expected).digest(),'runtime.js mismatch'
+                  print('PUBLIC_RUNTIME_SHA256',hashlib.sha256(actual).hexdigest(),flush=True)
+                  break
+              except Exception as error:
+                  if time.time()>=deadline: raise
+                  print('Waiting for exact public runtime:',str(error),flush=True)
+                  time.sleep(15)
+          PY_PUBLIC
           python kaopu-geography-workbench/qa_manta09_main.py
           python kaopu-geography-workbench/qa_submarine10_main.py
       - name: Preserve camera and UI browser evidence
