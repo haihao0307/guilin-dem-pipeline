@@ -59,3 +59,5 @@ METHODS.html为工作台内可见方法卡：观察→特征/可见性门槛→�
 R02沿用R01生产b36cca8f的单文件gzip/IIFE加载器：真实字节进度、显示请求地址、10秒空闲/60秒总超时主动中止、解压与SHA-256双校验、取消旧请求、单次执行、手动重试和无DecompressionStream的plain回退。初始进入不再请求整张ES模块依赖图；MediaPipe和两个Worker仅在相应功能需要时读取。
 
 R01恢复页与原134599字节gzip运行包原样保留。新的功能增加R02包体，不宣称仍与R01同大小；具体字节与哈希记录于runtime/BUILD.json。修改源码后必须用固定esbuild0.25.0重新运行tools/build-runtime.cjs并同步运行包与index.html内ASSETS，不能只改src/app.js。
+
+MediaPipe推理仍用CPU；其图像输入桥接也需要图形上下文。初始化明确使用独立HTMLCanvasElement，避免WebKit存在OffscreenCanvas但其WebGL路径不可用时GLctx未创建。视频QA使用方形像素setsar=1，避免同一编码在不同浏览器被SAR重新计算为1079/1080的显示宽度。

@@ -9,7 +9,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: face-r02-qa-${{ github.ref }}
+  group: face-r02-qa-${{ github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}
   cancel-in-progress: true
 jobs:
   face-browser:
@@ -58,7 +58,7 @@ jobs:
           export GNM_ASSET="$RUNNER_TEMP/face-assets/gnm_head_web.bin"
           command -v ffmpeg >/dev/null || (sudo apt-get update && sudo apt-get install -y ffmpeg)
           ffmpeg -hide_banner -loglevel error -f lavfi -i color=c=orange:s=128x128:d=1:r=10 -an -c:v libx264 -pix_fmt yuv420p -movflags +faststart -y "$RUNNER_TEMP/face-test/synthetic.mp4"
-          ffmpeg -hide_banner -loglevel error -loop 1 -i "$FACE_ASSETS/portrait.jpg" -vf scale=1080:-2 -r 30 -t 2 -an -c:v libx264 -pix_fmt yuv420p -movflags +faststart -y "$FACE_ASSETS/public-portrait-1080.mp4"
+          ffmpeg -hide_banner -loglevel error -loop 1 -i "$FACE_ASSETS/portrait.jpg" -vf scale=1080:-2,setsar=1 -r 30 -t 2 -an -c:v libx264 -pix_fmt yuv420p -movflags +faststart -y "$FACE_ASSETS/public-portrait-1080.mp4"
           failure=0
           for engine in "${{ matrix.engine }}"; do
             mkdir -p "qa-$engine"
