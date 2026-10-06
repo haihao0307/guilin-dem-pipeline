@@ -1,0 +1,53 @@
+name: Voxel train R01 read-only QA
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [gh-pages]
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/**'
+      - '.github/workflows/voxel-train-r01-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: voxel-train-r01-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  train-browser:
+    if: github.event_name != 'pull_request' || github.head_ref == 'qa/voxel-train-r01-20261006'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+          sparse-checkout-cone-mode: true
+      - name: Validate continuous geometry
+        run: |
+          node --check kaopu-minigame-workbench/voxel-train-study/app.mjs
+          node kaopu-minigame-workbench/voxel-train-study/tests/geometry.mjs
+      - name: Install official browser test dependency
+        run: |
+          npm install --prefix "$RUNNER_TEMP/train-test" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/train-test/node_modules/.bin/playwright" install --with-deps chromium webkit
+      - name: Test browser controls and capture seven loop phases
+        env:
+          TRAIN_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/
+          NODE_PATH: ${{ runner.temp }}/train-test/node_modules
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/train-server.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -fsS "$TRAIN_URL" > /dev/null && break || sleep 1; done
+          TRAIN_QA_DIR=train-chromium node kaopu-minigame-workbench/voxel-train-study/tests/browser.cjs
+          TRAIN_BROWSER=webkit TRAIN_QA_DIR=train-webkit node kaopu-minigame-workbench/voxel-train-study/tests/browser.cjs
+      - name: Upload browser screenshots and results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: voxel-train-r01-evidence
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            train-chromium/*
+            train-webkit/*
