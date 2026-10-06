@@ -32,17 +32,19 @@ fs.mkdirSync(out,{recursive:true});
   await page.locator('h1').waitFor();
   assert.equal(await page.title(),'KAOPU · 人物工作台');
   assert.equal(await page.locator('article.workbench-card').count(),3);
-  assert.equal(await page.locator('#clothing a, #clothing button').count(),0,'Clothing research must not imply a live workbench');
+  assert.equal(await page.locator('#clothing a').count(),1,'Verified R1 seam experiment must have one entry');
+  assert.ok((await page.locator('#clothing').textContent()).includes('尚未完成整件服装')); 
   assert.equal(await page.locator('iframe,canvas').count(),0,'Overview must not preload parallel WebGL workbenches');
   assert.equal(await page.locator('article.is-pending a').count(),0,'Pending cards cannot be live links');
   assert.equal(await page.locator('a[target="_blank"]').count(),0,'Model entries stay in the same tab');
   const images=await page.locator('img').evaluateAll(imgs=>imgs.map(i=>({src:i.getAttribute('src'),ready:i.complete&&i.naturalWidth>0,width:i.naturalWidth,height:i.naturalHeight,alt:i.alt})));
   assert.ok(images.length>=1);
   for(const i of images){assert.ok(i.ready,i.src);assert.ok(i.alt.length>5,i.src)}
-  const routes=await page.locator('.card-link[href],.shared-visual a[href]').evaluateAll(as=>as.map(a=>({href:a.getAttribute('href'),label:a.getAttribute('aria-labelledby')||a.textContent.trim(),id:a.closest('[id]')?.id})));
+  const routes=await page.locator('.card-link[href],.shared-visual a[href],#clothing a[href]').evaluateAll(as=>as.map(a=>({href:a.getAttribute('href'),label:a.getAttribute('aria-labelledby')||a.textContent.trim(),id:a.closest('[id]')?.id})));
   assert.equal(routes[0].href,'../kaopu-face-workbench/?loader=single-r01-20261006#edit');
   for(const route of routes){
     assert.ok(route.href.startsWith('../kaopu-'));
+    if(!fixtureNavigation){const documentResponse=await navContext.request.get(new URL(route.href,base).href);assert.equal(documentResponse.status(),200,'Destination must return HTTP 200: '+route.href);assert.match(documentResponse.headers()['content-type']||'',/text\/html/);}
     await navPage.goto(base,{waitUntil:'domcontentloaded'});
     const link=navPage.locator(`a[href="${route.href}"]`);
     await link.focus();
@@ -55,7 +57,7 @@ fs.mkdirSync(out,{recursive:true});
     assert.equal(navPage.url(),base);
     await navPage.goForward({waitUntil:'domcontentloaded'});
     assert.equal(navPage.url(),new URL(route.href,base).href);
-    await navPage.goBack({waitUntil:'domcontentloaded'});
+    if(route.id!=='gnm'&&!fixtureNavigation){const back=navPage.locator('a[href="../kaopu-human-overview/"]');assert.ok(await back.count()>0,'New workbench needs overview return link');await back.first().click();await navPage.waitForURL(base,{waitUntil:'domcontentloaded'});}else await navPage.goBack({waitUntil:'domcontentloaded'});
     await navPage.locator('#title').waitFor();
   }
   for(const size of [{name:'desktop',width:1440,height:1100},{name:'mobile',width:390,height:844},{name:'small-mobile',width:320,height:750}]){
