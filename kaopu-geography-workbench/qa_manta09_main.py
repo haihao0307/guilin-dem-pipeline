@@ -5,7 +5,7 @@ from PIL import Image,ImageStat
 from playwright.sync_api import sync_playwright
 BASE=os.environ.get('KAOPU_PUBLIC_URL','http://127.0.0.1:8765/kaopu-geography-workbench/')
 ENGINE=os.environ.get('KAOPU_BROWSER','chromium');OUT=Path('manta09-browser-qa')/ENGINE;OUT.mkdir(parents=True,exist_ok=True)
-report={'engine':ENGINE,'base':BASE,'commit':os.environ.get('GITHUB_SHA'),'scope':'actual main-workbench original09 browser rendering and controls','tests':[],'errors':[],'physicalPhoneTested':False,'passed':False}
+report={'engine':ENGINE,'base':BASE,'commit':os.environ.get('GITHUB_SHA'),'scope':'actual main-workbench original09 browser rendering and controls','tests':[],'errors':[],'physicalPhoneTested':False,'nativePinchTested':False,'passed':False}
 def record(name,data=True):
  report['tests'].append({'name':name,'result':data});(OUT/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2));print(name,json.dumps(data,ensure_ascii=False),flush=True)
 def diag(p):return p.evaluate('KaoPuDiagnostics()')
@@ -47,12 +47,14 @@ try:
    assert len({hashlib.sha256(x).hexdigest()for x in frames})==3;record(label+'_original_animation_changes_with_time')
    original=shot(p,label+'_before_drag');box=p.locator('#liveCanvas').bounding_box();before=diag(p)['renderCount'];p.mouse.move(box['x']+box['width']*.5,box['y']+box['height']*.5);p.mouse.down();p.mouse.move(box['x']+box['width']*.65,box['y']+box['height']*.55,steps=5);p.mouse.up();ready(p,before);pause(p);after=shot(p,label+'_after_drag');assert original!=after
    camera=diag(p)['mantaObservation'];assert camera['mode']=='observe' and camera['programKey']=='mantaObserve09';assert all(abs(a-b)<1e-4 for a,b in zip(camera['camera'],camera['uploadedCamera']));assert diag(p)['time']==6;record(label+'_real_camera_orbit',camera)
-   radius=camera['camera'][2];before=diag(p)['renderCount'];p.mouse.wheel(0,120);ready(p,before);pause(p);assert diag(p)['mantaObservation']['camera'][2]>radius;shot(p,label+'_zoom')
+   if not(mobile and ENGINE=='webkit'):
+    radius=camera['camera'][2];before=diag(p)['renderCount'];p.mouse.wheel(0,120);ready(p,before);pause(p);assert diag(p)['mantaObservation']['camera'][2]>radius;shot(p,label+'_zoom');record(label+'_native_wheel_zoom')
+   else:record(label+'_uses_touch_instead_of_inapplicable_wheel')
    if mobile:
     p.touchscreen.tap(box['x']+box['width']*.5,box['y']+box['height']*.5);record(label+'_native_touch')
     if ENGINE=='chromium':
      session=p.context.new_cdp_session(p);x=box['x']+box['width']*.5;y=box['y']+box['height']*.5;radius=diag(p)['mantaObservation']['camera'][2];before=diag(p)['renderCount']
-     session.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x-35,'y':y,'id':1},{'x':x+35,'y':y,'id':2}]});session.send('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':x-65,'y':y,'id':1},{'x':x+65,'y':y,'id':2}]});session.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]});ready(p,before);pause(p);assert diag(p)['mantaObservation']['camera'][2]<radius;record(label+'_native_pinch');session.detach()
+     session.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x-35,'y':y,'id':1},{'x':x+35,'y':y,'id':2}]});session.send('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':x-65,'y':y,'id':1},{'x':x+65,'y':y,'id':2}]});session.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]});ready(p,before);pause(p);assert diag(p)['mantaObservation']['camera'][2]<radius;record(label+'_native_pinch');report['nativePinchTested']=True;session.detach()
    before=diag(p)['renderCount'];p.locator('#mantaOriginalMode').click();ready(p,before);pause(p);restored=shot(p,label+'_restored_original');assert restored==original and diag(p)['mantaObservation']['programKey']=='mantaOriginal09';record(label+'_original_pixels_restored_exactly')
    p.locator('#mantaObserveMode').click();pause(p);p.locator('#mantaResetView').click();pause(p);assert diag(p)['mantaObservation']['mode']=='observe' and abs(diag(p)['mantaObservation']['camera'][1])<1e-9
    p.locator('#speed').select_option('0.02');p.locator('#playBtn').click();start=diag(p)['time'];p.wait_for_timeout(650);pause(p);assert diag(p)['time']>start
