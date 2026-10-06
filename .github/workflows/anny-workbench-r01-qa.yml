@@ -44,9 +44,9 @@ jobs:
           (cd qa-chromium && NODE_PATH="$RUNNER_TEMP/anny-test/node_modules" node ../kaopu-anny-workbench/tests/browser.cjs)
           (cd qa-webkit && ANNY_BROWSER=webkit NODE_PATH="$RUNNER_TEMP/anny-test/node_modules" node ../kaopu-anny-workbench/tests/browser.cjs)
       - name: Verify public HTTPS release
-        if: github.event_name == 'workflow_dispatch' && inputs.public_url != ''
+        if: always() && success()
         env:
-          ANNY_URL: ${{ inputs.public_url }}
+          ANNY_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-anny-workbench/
         run: |
           mkdir -p public-chromium public-webkit
           (cd public-chromium && NODE_PATH="$RUNNER_TEMP/anny-test/node_modules" node ../kaopu-anny-workbench/tests/browser.cjs)
