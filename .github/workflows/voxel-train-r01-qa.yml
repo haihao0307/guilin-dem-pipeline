@@ -1,10 +1,11 @@
-name: Voxel train R02 layout candidate QA
+name: Voxel train R02 public layout QA
 on:
   workflow_dispatch:
   pull_request:
     branches: [gh-pages]
     paths:
-      - 'kaopu-minigame-workbench/**'
+      - 'kaopu-minigame-workbench/voxel-train-study/**'
+      - 'kaopu-minigame-workbench/index.html'
       - '.github/workflows/voxel-train-r01-qa.yml'
 permissions:
   contents: read
@@ -26,7 +27,7 @@ jobs:
         run: |
           node --check kaopu-minigame-workbench/voxel-train-study/app.mjs
           node kaopu-minigame-workbench/voxel-train-study/tests/geometry.mjs
-      - name: Verify approved public R01 anchor hashes
+      - name: Verify all 17 published layout asset hashes
         run: python3 kaopu-minigame-workbench/voxel-train-study/tests/public-hashes.py
       - name: Install official browser test dependency
         run: |
@@ -34,7 +35,7 @@ jobs:
           "$RUNNER_TEMP/train-test/node_modules/.bin/playwright" install --with-deps chromium webkit
       - name: Test browser controls and capture seven loop phases
         env:
-          TRAIN_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/?layout=reference
+          TRAIN_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/?release=cd7d8f9dfd6e91d08fa8b07c492897d64a5a0d05&layout=reference
           NODE_PATH: ${{ runner.temp }}/train-test/node_modules
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/train-server.log" 2>&1 &
@@ -49,7 +50,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: voxel-train-r02-layout-evidence
+          name: voxel-train-r02-public-evidence
           retention-days: 7
           if-no-files-found: warn
           path: |
