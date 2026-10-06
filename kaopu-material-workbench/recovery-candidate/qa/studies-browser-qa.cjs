@@ -91,10 +91,10 @@ async function range(name, value) {
   assert.equal(Number(actual), value, `${name}: the actual range input did not receive the value`);
   assert.equal((await state()).states[(await state()).active][name], value, `${name}: input did not update the selected study`);
 }
-async function snapshot(label = null, compareTo = null) {
-  return page.evaluate(async ({ label, compareTo }) => {
+async function snapshot(label = null, compareTo = null, redraw = true) {
+  return page.evaluate(async ({ label, compareTo, redraw }) => {
     const api = KAOPU_STUDIES;
-    api.draw();
+    if (redraw) api.draw();
     const canvas = document.getElementById('canvas');
     const bytes = Uint8Array.from(api.pixels());
     const cache = window.__KAOPU_STUDIES_QA_PIXELS ||= new Map();
@@ -125,7 +125,7 @@ async function snapshot(label = null, compareTo = null) {
       comparison: previous ? { reference: compareTo, changedPixels, meanAbsoluteRGBDifference: absoluteDifference / (count * 3) } : null,
       packet: api.packet(), glError: api.glError()
     };
-  }, { label, compareTo });
+  }, { label, compareTo, redraw });
 }
 function nonempty(frame, name) {
   assert.equal(frame.glError, 0, name + ': WebGL error');
@@ -234,7 +234,13 @@ function assertProtected(audit) {
     });
 
     await step('load independent page; verify default quality, six IDs and legacy backup', async () => {
-      await page.goto(STUDY_URL, { waitUntil: 'domcontentloaded' });
+      await page.goto(BASE.href, { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => window.KAOPU_STUDIO?.ready === true, null, { timeout: 80000 });
+      assert.equal(await page.locator('#independentStudiesLink a').getAttribute('href'), 'study-r01/');
+      await Promise.all([
+        page.waitForURL(STUDY_URL),
+        page.locator('#independentStudiesLink a').click()
+      ]);
       await ready();
       const current = await state();
       assert.equal(current.active, '05');
@@ -244,7 +250,7 @@ function assertProtected(audit) {
       assert.equal(current.quality.samples, 2, '2 × 2 spatial samples should be the default');
       assert.equal(current.quality.post, true);
       assert.deepEqual(await page.locator('[data-case]').evaluateAll(buttons => buttons.map(button => button.dataset.case)), IDS);
-      assert.equal(await page.locator('.legacyLink').getAttribute('href'), '../?v=r16-anchors');
+      assert.equal(await page.locator('.legacyLink').getAttribute('href'), '../anchors-r16.html');
       const audit = await auditLegacy();
       assertProtected(audit);
       assert.equal(audit.protection?.backedUp, true);
@@ -256,7 +262,7 @@ function assertProtected(audit) {
     for (const id of IDS) {
       await step(`case ${id}: actual default render is nonempty with four samples`, async () => {
         await select(id);
-        const frame = await snapshot();
+        const frame = await snapshot(null, null, false);
         nonempty(frame, id);
         assert.equal(frame.packet.case, id);
         assert.equal(frame.packet.uniforms.uLessonMode, Number(id) - 4);
@@ -272,6 +278,16 @@ function assertProtected(audit) {
     await step('the six default studies have six distinct rendered images', async () => {
       assert.equal(defaultHashes.size, 6, 'The six default samples should produce distinct images');
       return { distinctDefaultImages: defaultHashes.size };
+    });
+
+    await step('use fixed 480 single sampling for interaction comparisons after default-image proof', async () => {
+      await page.locator('[data-tab="quality"]').click();
+      await page.locator('#resolution').selectOption('480');
+      await page.locator('#samples').selectOption('1');
+      await page.locator('[data-tab="study"]').click();
+      const current = await state();
+      assert.equal(current.quality.width, 480); assert.equal(current.quality.samples, 1);
+      return { quality: current.quality, defaultVisualsAlreadyTested: '640 budget with four samples for every study' };
     });
 
     for (const id of IDS) {
@@ -444,7 +460,7 @@ function assertProtected(audit) {
 
     await step('old-case link reaches the actual R16 workbench in the same context', async () => {
       await Promise.all([
-        page.waitForURL(url => url.origin === BASE.origin && url.pathname === BASE.pathname && url.searchParams.get('v') === 'r16-anchors'),
+        page.waitForURL(url => url.origin === BASE.origin && url.pathname === new URL('anchors-r16.html', BASE).pathname),
         page.locator('.legacyLink').click()
       ]);
       await page.waitForFunction(() => window.KAOPU_STUDIO?.ready === true, null, { timeout: 80000 });
