@@ -6,6 +6,7 @@ on:
     paths:
       - 'kaopu-human-overview/**'
       - '.github/workflows/human-overview-r01-qa.yml'
+      - '.github/qa/overview-*.cjs'
 permissions:
   contents: read
 env:
@@ -23,6 +24,7 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: |
+            .github/qa
             kaopu-human-overview
             kaopu-face-workbench
             kaopu-anny-workbench
@@ -37,6 +39,8 @@ jobs:
         run: |
           python3 kaopu-human-overview/tests/static.py
           node --check kaopu-human-overview/tests/browser.cjs
+          node --check .github/qa/overview-browser-diagnostic.cjs
+          node --check .github/qa/overview-lifecycle-evidence.cjs
       - name: Install fixed official browser test dependency
         run: |
           npm install --prefix "$RUNNER_TEMP/overview-test" --no-save --ignore-scripts playwright@1.57.0
@@ -51,8 +55,8 @@ jobs:
           server=$!
           trap 'kill "$server" 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do curl -fsS "$OVERVIEW_URL" > /dev/null && break || sleep 1; done
-          OVERVIEW_QA_DIR=overview-chromium node kaopu-human-overview/tests/browser.cjs
-          OVERVIEW_BROWSER=webkit OVERVIEW_QA_DIR=overview-webkit node kaopu-human-overview/tests/browser.cjs
+          OVERVIEW_QA_DIR=overview-chromium node .github/qa/overview-browser-diagnostic.cjs
+          OVERVIEW_BROWSER=webkit OVERVIEW_QA_DIR=overview-webkit node .github/qa/overview-browser-diagnostic.cjs
       - name: Verify exact published bytes and real HTTPS navigation
         if: env.OVERVIEW_VERIFY_PUBLIC == 'true'
         env:
