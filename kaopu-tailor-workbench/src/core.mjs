@@ -102,9 +102,10 @@ export class ClothLab {
   constructor(snapshot){
     if(snapshot?.schema!=='kaopu-cut-snapshot@1'||snapshot.signature!==fingerprint(snapshot.spec))fail('SNAPSHOT','valid immutable cut snapshot required');
     validate(snapshot.spec);this.snapshot=freeze(clone(snapshot));this.spec=this.snapshot.spec;this.positions=[];this.previous=[];this.velocity=[];this.invMass=[];this.baseInvMass=[];this.offsets=new Map();this.constraints=[];this.seamConstraints=[];this.triangles=[];this.pins=new Map();this.completed=new Set(['cut']);this.active=new Set();this.elapsed=0;this.seamElapsed=0;this.seamDetached=false;this.gravity=true;this.obstacle=false;this.pull=false;this.sphere={center:[0,-0.025,-0.02],radius:0.052};this.floorY=-0.3;
-    for(const p of this.spec.panels){const start=this.positions.length;this.offsets.set(p.id,start);const theta=p.placement.rotationYDeg*Math.PI/180,m=specMaterial(this.spec,p),mass=new Array(p.uvMm.length).fill(0);
+    this.pullDirections=[];
+    for(const p of this.spec.panels){const start=this.positions.length;this.offsets.set(p.id,start);const theta=p.placement.rotationYDeg*Math.PI/180,m=specMaterial(this.spec,p),mass=new Array(p.uvMm.length).fill(0),panelIndex=this.spec.panels.indexOf(p);
       for(const tri of p.triangles){const area=cross(...tri.map(i=>p.uvMm[i]))/2e6;tri.forEach(i=>mass[i]+=area*m.densityKgM2/3);this.triangles.push({ids:tri.map(i=>start+i),uv:tri.map(i=>p.uvMm[i]),panelId:p.id});}
-      for(let i=0;i<p.uvMm.length;i++){const [u,v]=p.uvMm[i],t=p.placement.translationMm;const point=[(u*Math.cos(theta)+t[0])/1000,(t[1]-v)/1000,(u*Math.sin(theta)+t[2])/1000];this.positions.push(point);this.previous.push([...point]);this.velocity.push([0,0,0]);this.invMass.push(1/mass[i]);this.baseInvMass.push(1/mass[i]);}
+      for(let i=0;i<p.uvMm.length;i++){const [u,v]=p.uvMm[i],t=p.placement.translationMm;const point=[(u*Math.cos(theta)+t[0])/1000,(t[1]-v)/1000,(u*Math.sin(theta)+t[2])/1000];this.positions.push(point);this.previous.push([...point]);this.velocity.push([0,0,0]);this.invMass.push(1/mass[i]);this.baseInvMass.push(1/mass[i]);this.pullDirections.push(panelIndex===0?-1:panelIndex===this.spec.panels.length-1?1:0);}
       for(const i of p.temporaryPins){this.pins.set(start+i,[...this.positions[start+i]]);this.invMass[start+i]=0;}
       const edges=new Map();for(const tri of p.triangles)for(let i=0;i<3;i++){const a=tri[i],b=tri[(i+1)%3],key=[a,b].sort((a,b)=>a-b).join(':');if(!edges.has(key))edges.set(key,{a,b,opposite:[]});edges.get(key).opposite.push(tri[(i+2)%3]);}
       for(const e of edges.values()){this.constraints.push({a:start+e.a,b:start+e.b,rest:distance(p.uvMm[e.a],p.uvMm[e.b])/1000,compliance:m.stretchCompliance,lambda:0,type:'stretch'});if(e.opposite.length===2){const [a,b]=e.opposite;this.constraints.push({a:start+a,b:start+b,rest:distance(p.uvMm[a],p.uvMm[b])/1000,compliance:m.bendCompliance,lambda:0,type:'bend-distance-proxy'});}}
@@ -112,20 +113,20 @@ export class ClothLab {
   }
   assertCurrent(spec){if(fingerprint(spec)!==this.snapshot.signature)fail('STALE_CUT','pattern/material/placement changed: cut and sew again');}
   activate(stageId,current=this.spec){this.assertCurrent(current);const stage=this.spec.stages.find(s=>s.id===stageId);if(!stage)fail('STAGE_REFERENCE',stageId);if(stage.requires.some(id=>!this.completed.has(id)))fail('STAGE_DEPENDENCY',stageId);if(this.completed.has(stageId))return;
-    for(const id of stage.seams){const seam=this.spec.seams.find(s=>s.id===id),a=directedEdge(this.spec,seam.a),b=directedEdge(this.spec,seam.b);for(let i=0;i<a.ids.length;i++){const ia=this.offsets.get(a.panel.id)+a.ids[i],ib=this.offsets.get(b.panel.id)+b.ids[i];this.seamConstraints.push({a:ia,b:ib,rest:0.0008,startRest:distance(this.positions[ia],this.positions[ib]),compliance:1e-8,lambda:0,type:'seam',seamId:id});}this.active.add(id);}
+    for(const id of stage.seams){const seam=this.spec.seams.find(s=>s.id===id),a=directedEdge(this.spec,seam.a),b=directedEdge(this.spec,seam.b);for(let i=0;i<a.ids.length;i++){const ia=this.offsets.get(a.panel.id)+a.ids[i],ib=this.offsets.get(b.panel.id)+b.ids[i];this.seamConstraints.push({a:ia,b:ib,rest:0.0008,startRest:distance(this.positions[ia],this.positions[ib]),activatedAt:this.elapsed,compliance:1e-8,lambda:0,type:'seam',seamId:id});}this.active.add(id);}
     this.seamElapsed=0;this.completed.add(stageId);
   }
   releasePins(){this.pins.clear();this.invMass=[...this.baseInvMass];}
-  detach(){this.seamConstraints=[];this.active.clear();this.completed.delete('join');this.seamDetached=true;}
+  detach(){this.seamConstraints=[];this.active.clear();this.completed=new Set(['cut']);this.seamDetached=true;}
   step(dt=1/60){
     if(!Number.isFinite(dt)||dt<=0||dt>0.05)fail('TIMESTEP','positive timestep up to 0.05 seconds required');
     const sub=3,h=dt/sub;
     for(let substep=0;substep<sub;substep++){
       this.elapsed+=h;this.seamElapsed+=h;
-      for(let i=0;i<this.positions.length;i++){this.previous[i]=[...this.positions[i]];if(!this.invMass[i])continue;const v=this.velocity[i],p=this.positions[i];v[1]-=(this.gravity?9.81:0)*h;if(this.pull)v[0]+=(i<this.offsets.get('B')?-1:1)*2.2*h;for(let k=0;k<3;k++)p[k]+=v[k]*h;}
+      for(let i=0;i<this.positions.length;i++){this.previous[i]=[...this.positions[i]];if(!this.invMass[i])continue;const v=this.velocity[i],p=this.positions[i];v[1]-=(this.gravity?9.81:0)*h;if(this.pull)v[0]+=this.pullDirections[i]*2.2*h;for(let k=0;k<3;k++)p[k]+=v[k]*h;}
       const constraints=[...this.constraints,...this.seamConstraints];constraints.forEach(c=>c.lambda=0);
       for(let iter=0;iter<12;iter++){
-        for(const c of constraints){const a=this.positions[c.a],b=this.positions[c.b],w1=this.invMass[c.a],w2=this.invMass[c.b],dx=a[0]-b[0],dy=a[1]-b[1],dz=a[2]-b[2],d=Math.hypot(dx,dy,dz);if(d<1e-12||w1+w2===0)continue;const alpha=c.compliance/(h*h),target=c.type==='seam'?c.rest+(c.startRest-c.rest)*Math.max(0,1-this.seamElapsed/1.2):c.rest;const dl=(-(d-target)-alpha*c.lambda)/(w1+w2+alpha);c.lambda+=dl;const f=dl/d;for(let k=0;k<3;k++){const n=[dx,dy,dz][k];a[k]+=w1*f*n;b[k]-=w2*f*n;}}
+        for(const c of constraints){const a=this.positions[c.a],b=this.positions[c.b],w1=this.invMass[c.a],w2=this.invMass[c.b],dx=a[0]-b[0],dy=a[1]-b[1],dz=a[2]-b[2],d=Math.hypot(dx,dy,dz);if(d<1e-12||w1+w2===0)continue;const alpha=c.compliance/(h*h),target=c.type==='seam'?c.rest+(c.startRest-c.rest)*Math.max(0,1-(this.elapsed-c.activatedAt)/1.2):c.rest;const dl=(-(d-target)-alpha*c.lambda)/(w1+w2+alpha);c.lambda+=dl;const f=dl/d;for(let k=0;k<3;k++){const n=[dx,dy,dz][k];a[k]+=w1*f*n;b[k]-=w2*f*n;}}
         for(let i=0;i<this.positions.length;i++){if(!this.invMass[i])continue;const p=this.positions[i];p[1]=Math.max(this.floorY,p[1]);if(this.obstacle){const c=this.sphere.center,d=distance(p,c),r=this.sphere.radius+0.001;if(d<r){const n=d>1e-10?p.map((x,k)=>(x-c[k])/d):[0,0,1];for(let k=0;k<3;k++)p[k]=c[k]+n[k]*r;}}}
       }
       const decay=Math.exp(-3*h);for(let i=0;i<this.positions.length;i++)for(let k=0;k<3;k++)this.velocity[i][k]=(this.positions[i][k]-this.previous[i][k])/h*decay;

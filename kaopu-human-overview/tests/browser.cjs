@@ -32,11 +32,13 @@ fs.mkdirSync(out,{recursive:true});
   await page.locator('h1').waitFor();
   assert.equal(await page.title(),'KAOPU · 人物工作台');
   assert.equal(await page.locator('article.workbench-card').count(),3);
+  assert.equal(await page.locator('article.workbench-card a.card-link').count(),3,'All three teacher workbenches must be available');
   assert.equal(await page.locator('#clothing a').count(),1,'Verified R1 seam experiment must have one entry');
   assert.ok((await page.locator('#clothing').textContent()).includes('尚未完成整件服装')); 
   assert.equal(await page.locator('iframe,canvas').count(),0,'Overview must not preload parallel WebGL workbenches');
   assert.equal(await page.locator('article.is-pending a').count(),0,'Pending cards cannot be live links');
   assert.equal(await page.locator('a[target="_blank"]').count(),0,'Model entries stay in the same tab');
+  assert.equal(await page.locator('.shared-visual a,.shared-visual button,[role="button"] .shared-image-caption').count(),0,'Unreleased common model must have no active or pretend button');
   const images=await page.locator('img').evaluateAll(imgs=>imgs.map(i=>({src:i.getAttribute('src'),ready:i.complete&&i.naturalWidth>0,width:i.naturalWidth,height:i.naturalHeight,alt:i.alt})));
   assert.ok(images.length>=1);
   for(const i of images){assert.ok(i.ready,i.src);assert.ok(i.alt.length>5,i.src)}
