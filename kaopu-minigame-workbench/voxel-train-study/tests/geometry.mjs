@@ -7,6 +7,7 @@ for(const s of [SPEC.halfRun,SPEC.halfRun+Math.PI*SPEC.radius,3*SPEC.halfRun+Mat
 const model=createSceneModel();assert.ok(model.stats.trainBlocks>2000);assert.ok(model.stats.environmentBlocks>10000);for(const mesh of [model.train,model.environment]){const p=mesh.geometry.attributes.position.array;assert.ok(Array.from(p).every(Number.isFinite));const idx=mesh.geometry.index.array;assert.ok(idx.length%3===0);for(const n of idx)assert.ok(n<p.length/3);}
 model.setTime(0);const p0=model.phase.value;model.setTime(6);assert.ok(Math.abs(model.phase.value+LENGTH-p0)<epsilon);
 const pBefore=pathAt(3).position,pAfter=pathAt(3-LENGTH/6*.05).position;assert.ok(pAfter[0]<pBefore[0],'top surface must travel toward the train rear');
+const second=createSceneModel();for(const part of ['train','environment']){const a=model[part].geometry.attributes.position.array,b=second[part].geometry.attributes.position.array;assert.equal(a.length,b.length);for(let i=0;i<a.length;i++)assert.equal(a[i],b[i],'deterministic procedural scene');}second.dispose();
 const report={status:'passed',scope:'Offline geometry and continuous bend math; browser rendering has not been tested here',stats:model.stats,loopSeconds:SPEC.period,pathLength:LENGTH,sourceReferenceSeconds:6,browser:'not_run'};
 console.log(JSON.stringify(report,null,2));
 if(process.env.QA_REPORT)fs.writeFileSync(process.env.QA_REPORT,JSON.stringify(report,null,2));

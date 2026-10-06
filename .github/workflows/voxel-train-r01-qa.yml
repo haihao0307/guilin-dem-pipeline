@@ -39,8 +39,8 @@ jobs:
           server=$!
           trap 'kill "$server" 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do curl -fsS "$TRAIN_URL" > /dev/null && break || sleep 1; done
-          TRAIN_QA_DIR=train-chromium node kaopu-minigame-workbench/voxel-train-study/tests/browser.cjs
-          TRAIN_BROWSER=webkit TRAIN_QA_DIR=train-webkit node kaopu-minigame-workbench/voxel-train-study/tests/browser.cjs
+          TRAIN_QA_DIR=train-chromium timeout 240s node kaopu-minigame-workbench/voxel-train-study/tests/browser.cjs
+          TRAIN_BROWSER=webkit TRAIN_QA_DIR=train-webkit timeout 240s node kaopu-minigame-workbench/voxel-train-study/tests/browser.cjs
       - name: Upload browser screenshots and results
         if: always()
         uses: actions/upload-artifact@v4
