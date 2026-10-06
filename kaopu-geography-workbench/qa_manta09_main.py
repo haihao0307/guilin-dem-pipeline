@@ -57,6 +57,15 @@ try:
      session.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x-35,'y':y,'id':1},{'x':x+35,'y':y,'id':2}]});session.send('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':x-65,'y':y,'id':1},{'x':x+65,'y':y,'id':2}]});session.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]});ready(p,before);pause(p);assert diag(p)['mantaObservation']['camera'][2]<radius;record(label+'_native_pinch');report['nativePinchTested']=True;session.detach()
    before=diag(p)['renderCount'];p.locator('#mantaOriginalMode').click();ready(p,before);pause(p);restored=shot(p,label+'_restored_original');assert restored==original and diag(p)['mantaObservation']['programKey']=='mantaOriginal09';record(label+'_original_pixels_restored_exactly')
    p.locator('#mantaObserveMode').click();pause(p);p.locator('#mantaResetView').click();pause(p);assert diag(p)['mantaObservation']['mode']=='observe' and abs(diag(p)['mantaObservation']['camera'][1])<1e-9
+   p.locator('#speed').select_option('1');p.locator('#playBtn').click()
+   for kind in ['wheel','pointermove']:
+    if kind=='pointermove':
+     p.evaluate("document.getElementById('liveCanvas').addEventListener('pointerdown',e=>window.qaTimingPointer=e.pointerId,{once:true})")
+     p.mouse.move(box['x']+box['width']*.5,box['y']+box['height']*.5);p.mouse.down()
+    timing=p.evaluate("""async kind=>{const c=document.getElementById('liveCanvas'),r=c.getBoundingClientRect();let events=0;const start=KaoPuDiagnostics().time,wall=performance.now();const id=setInterval(()=>{events++;c.dispatchEvent(kind==='wheel'?new WheelEvent('wheel',{deltaY:0,cancelable:true}):new PointerEvent('pointermove',{pointerId:window.qaTimingPointer,clientX:r.x+r.width*.5+Math.sin(events)*3,clientY:r.y+r.height*.5,buttons:1}));},4);await new Promise(resolve=>setTimeout(resolve,600));clearInterval(id);const seconds=(performance.now()-wall)/1000,elapsed=KaoPuDiagnostics().time-start;return{kind,events,seconds,elapsed,ratio:elapsed/seconds,input:'DOM event burst; native drag/pinch tested separately'};}""",kind)
+    if kind=='pointermove':p.mouse.up()
+    assert timing['events']>=2 and .94<timing['ratio']<1.03,timing;record(label+'_continuous_'+kind+'_preserves_animation_time',timing)
+   pause(p);stopped=diag(p)['time'];p.wait_for_timeout(200);assert abs(diag(p)['time']-stopped)<.01
    p.locator('#speed').select_option('0.02');p.locator('#playBtn').click();start=diag(p)['time'];p.wait_for_timeout(650);pause(p);assert diag(p)['time']>start
    stopped=diag(p)['time'];p.wait_for_timeout(200);assert abs(diag(p)['time']-stopped)<.01
    before=diag(p)['renderCount'];p.locator('#quality').select_option('720');ready(p,before);pause(p);assert p.locator('#liveCanvas').evaluate('(e)=>[e.width,e.height]')==[720,404]
