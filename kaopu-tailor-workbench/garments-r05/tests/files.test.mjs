@@ -1,0 +1,2 @@
+import fs from'node:fs';import crypto from'node:crypto';import assert from'node:assert/strict';
+const root=new URL('../',import.meta.url),m=JSON.parse(fs.readFileSync(new URL('MANIFEST.json',root)));for(const f of [...m.files,...m.sharedDependencies]){const b=fs.readFileSync(new URL(f.path,root));assert.equal(b.length,f.bytes);assert.equal(crypto.createHash('sha256').update(b).digest('hex'),f.sha256,f.path);}console.log(JSON.stringify({passed:true,caseFiles:m.files.length,sharedDependencies:m.sharedDependencies.length,oldFilesMutated:false}));

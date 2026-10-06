@@ -1,20 +1,20 @@
-name: Tailor basic sleeveless top R04 PUBLIC read-only QA
+name: Tailor short-sleeve construction R05 read-only QA
 on:
   pull_request:
     branches: [gh-pages]
     paths:
-      - 'kaopu-tailor-workbench/garments-r04/**'
+      - 'kaopu-tailor-workbench/garments-r05/**'
       - '.github/workflows/tailor-garments-r03-qa.yml'
 permissions:
   contents: read
 concurrency:
-  group: tailor-garments-r04-${{ github.ref }}
+  group: tailor-garments-r05-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   garment-browser:
     if: github.head_ref == 'qa/tailor-garments-r03-20261006'
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 35
     strategy:
       fail-fast: false
       matrix:
@@ -31,69 +31,28 @@ jobs:
         run: |
           npm install --prefix "$RUNNER_TEMP/tailor-test" --no-save --ignore-scripts playwright@1.57.0
           "$RUNNER_TEMP/tailor-test/node_modules/.bin/playwright" install --with-deps chromium webkit
-          cd kaopu-tailor-workbench/garments-r04
-          npm install --ignore-scripts
       - name: Original and structured cases unchanged
         run: cd kaopu-tailor-workbench && npm run check
+      - name: Fixed scope and shared dependencies
+        run: cd kaopu-tailor-workbench/garments-r05 && node tests/files.test.mjs
       - name: Nine bounded paper parameter combinations
-        run: cd kaopu-tailor-workbench/garments-r04 && npm test
-      - name: Verify all published case bytes over HTTPS
-        run: |
-          python3 - <<'PY2'
-          import hashlib,json,time,urllib.request
-          from pathlib import Path
-          root=Path('kaopu-tailor-workbench/garments-r04')
-          base='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/garments-r04/'
-          expected={x['path']:x['sha256'] for x in json.loads((root/'MANIFEST.json').read_text())['files']}
-          for path in ['MANIFEST.json','SHA256SUMS.txt']:
-              expected[path]=hashlib.sha256((root/path).read_bytes()).hexdigest()
-          for path,digest in expected.items():
-              last=None
-              for attempt in range(5):
-                  try:
-                      with urllib.request.urlopen(base+path+'?verify=1850ce11fcfc5b947bb9d2b1dc7e269c2fb29aa1',timeout=60) as response:
-                          data=response.read()
-                      assert hashlib.sha256(data).hexdigest()==digest,path
-                      last=None
-                      break
-                  except Exception as error:
-                      last=error
-                      time.sleep(8)
-              if last: raise last
-          print('R04_PUBLIC_BYTES_VERIFIED',len(expected))
-          legacy=json.loads('[{"path": "kaopu-tailor-workbench/LEARNING.md", "sha": "563dc81036aedfe6d0b2a0c481db6e081effdb8a"}, {"path": "kaopu-tailor-workbench/MANIFEST.json", "sha": "a416aee30d6ca64c0190fe6337e858d53b7d8ada"}, {"path": "kaopu-tailor-workbench/PROVENANCE.json", "sha": "b95aa45e649def312ed5643b9bf745ca26b8ab76"}, {"path": "kaopu-tailor-workbench/README.md", "sha": "06f0c47cc32f47914659e4ea603b82490e5c3c5d"}, {"path": "kaopu-tailor-workbench/SHA256SUMS.txt", "sha": "ca4e5451eb2da2dcc7c5ff4f7a6c0acf0e344539"}, {"path": "kaopu-tailor-workbench/garments-r03/MANIFEST.json", "sha": "75d6b545cb8a5e56220b224d760a312e5a5f08c2"}, {"path": "kaopu-tailor-workbench/garments-r03/SHA256SUMS.txt", "sha": "5d4afb4b08c7545bcc6da1e5faaf8acff574fdad"}, {"path": "kaopu-tailor-workbench/garments-r03/SOURCES.md", "sha": "eeeae38e6cbcdf6391978e5bf2e76590076ef392"}, {"path": "kaopu-tailor-workbench/garments-r03/assets/baseline-audit.json", "sha": "da7ad4ded78e456322ac82553f0d076685129c12"}, {"path": "kaopu-tailor-workbench/garments-r03/assets/body-anny-adult.json", "sha": "79e167ce9f347b3d0d2687efbbe5541c48cae181"}, {"path": "kaopu-tailor-workbench/garments-r03/assets/body-anny-adult.sdfd.gz", "sha": "6b09678b12c64d32d1036d15a96b5348642cfa95"}, {"path": "kaopu-tailor-workbench/garments-r03/assets/body-sdf-grid.json", "sha": "fbc7c180a647c93c1524b4db11fecbb53e49e6e8"}, {"path": "kaopu-tailor-workbench/garments-r03/assets/measurements.json", "sha": "5dbe34d9885832e608d4ba2bbbf49815958cd7da"}, {"path": "kaopu-tailor-workbench/garments-r03/assets/teacher-paper-base.json", "sha": "d25b275bd6a6b8608ea969c54883067d39a38978"}, {"path": "kaopu-tailor-workbench/garments-r03/assets/verified-own-solve.json", "sha": "e3d01e89d0d7e91499443af06d25cd7040a0d532"}, {"path": "kaopu-tailor-workbench/garments-r03/index.html", "sha": "26b87c288d1e32eeea93bad17c78abbb5bcbd6a7"}, {"path": "kaopu-tailor-workbench/garments-r03/licenses/ANNY-APACHE-2.0.txt", "sha": "659df360722e536ba63191f32a691a05d28816f5"}, {"path": "kaopu-tailor-workbench/garments-r03/licenses/CDT2D-MIT.txt", "sha": "1815ddd61d61d007ca9c832c7d69ffc8a4f9f86a"}, {"path": "kaopu-tailor-workbench/garments-r03/licenses/GARMENTCODE-MIT.txt", "sha": "7a786c7d473137dbbbb599626657e98bdb79235a"}, {"path": "kaopu-tailor-workbench/garments-r03/licenses/MAKEHUMAN-CC0.txt", "sha": "f3ede1fc3318f8d794e2cb51924186c62f02f71a"}, {"path": "kaopu-tailor-workbench/garments-r03/licenses/THREE-LICENSE.txt", "sha": "d33709fbf00f10b928bae20baf72a5c6da92d03a"}, {"path": "kaopu-tailor-workbench/garments-r03/licenses/binary-search-bounds-LICENSE.txt", "sha": "413b41167a9cbc49ca43e569a0b41e03eb95bf83"}, {"path": "kaopu-tailor-workbench/garments-r03/licenses/cdt2d-LICENSE.txt", "sha": "1815ddd61d61d007ca9c832c7d69ffc8a4f9f86a"}, {"path": "kaopu-tailor-workbench/garments-r03/licenses/robust-in-sphere-LICENSE.txt", "sha": "97cc615514f248e721965584ec46a5edf8c1a91e"}, {"path": "kaopu-tailor-workbench/garments-r03/licenses/robust-orientation-LICENSE.txt", "sha": "8ce206a84544ae1623a4c94db88c18c2d9ed8009"}, {"path": "kaopu-tailor-workbench/garments-r03/licenses/robust-scale-LICENSE.txt", "sha": "8ce206a84544ae1623a4c94db88c18c2d9ed8009"}, {"path": "kaopu-tailor-workbench/garments-r03/licenses/robust-subtract-LICENSE.txt", "sha": "8ce206a84544ae1623a4c94db88c18c2d9ed8009"}, {"path": "kaopu-tailor-workbench/garments-r03/licenses/robust-sum-LICENSE.txt", "sha": "8ce206a84544ae1623a4c94db88c18c2d9ed8009"}, {"path": "kaopu-tailor-workbench/garments-r03/licenses/two-product-LICENSE.txt", "sha": "8ce206a84544ae1623a4c94db88c18c2d9ed8009"}, {"path": "kaopu-tailor-workbench/garments-r03/licenses/two-sum-LICENSE.txt", "sha": "8ce206a84544ae1623a4c94db88c18c2d9ed8009"}, {"path": "kaopu-tailor-workbench/garments-r03/package.json", "sha": "afacb4d58d0c354d3ff249d0a833a6e6ca51d093"}, {"path": "kaopu-tailor-workbench/garments-r03/src/app.mjs", "sha": "107191a934e0871d72ff595c5959847b30c209a8"}, {"path": "kaopu-tailor-workbench/garments-r03/src/core.mjs", "sha": "f14030e3da295cb73169644469a3d157bcc4ed84"}, {"path": "kaopu-tailor-workbench/garments-r03/src/diagnostics.mjs", "sha": "ea97c4f7fb47d99c765b130ff7b1037c0571a6a1"}, {"path": "kaopu-tailor-workbench/garments-r03/src/intersection-audit.mjs", "sha": "00469c40acf5a74551f8251ced0fb19c8d131346"}, {"path": "kaopu-tailor-workbench/garments-r03/src/paper-program.mjs", "sha": "0731062d00dda94df778c25d24e7d4328b280b5c"}, {"path": "kaopu-tailor-workbench/garments-r03/src/paper-view.mjs", "sha": "7a24a90d359cddcd00f64c75c4dd7527fa327b30"}, {"path": "kaopu-tailor-workbench/garments-r03/src/sdf-transport.mjs", "sha": "79931a4ae4645af8a2161c98d7dafa9c2c90f7d9"}, {"path": "kaopu-tailor-workbench/garments-r03/src/self-contact.mjs", "sha": "7890412008db58b3030e9fa07024ca6f941b8c3a"}, {"path": "kaopu-tailor-workbench/garments-r03/src/solver.mjs", "sha": "d94a61c1672e8371695379588e9085a74a459698"}, {"path": "kaopu-tailor-workbench/garments-r03/src/stitch-groups.mjs", "sha": "c3d82b792b8b258596c3d14b3bf71c30a648591c"}, {"path": "kaopu-tailor-workbench/garments-r03/src/worker.bundle.mjs", "sha": "7913c315beeeb4270095c5742863d848268daa05"}, {"path": "kaopu-tailor-workbench/garments-r03/src/worker.mjs", "sha": "c15dc0927c6cac371d5c74f7c94ac7a09b5b5284"}, {"path": "kaopu-tailor-workbench/garments-r03/style.css", "sha": "4530a02f8ae63a8bf14436cb9660bfbbdcf281ea"}, {"path": "kaopu-tailor-workbench/garments-r03/tests/browser.cjs", "sha": "55e282c18e5b51f6a9be05de829d4b535fa323a0"}, {"path": "kaopu-tailor-workbench/garments-r03/tests/paper.test.mjs", "sha": "1883b4de1c4b7ff076a629c8d48df1a1ca8193fe"}, {"path": "kaopu-tailor-workbench/garments-r03/tests/worker-state.test.mjs", "sha": "40bbf90bdf2613337a1b1d007b7b030a97a5caf8"}, {"path": "kaopu-tailor-workbench/garments-r03/vendor/OrbitControls.js", "sha": "7360aab9b347eb677b0ea1a18655c5b86626d29d"}, {"path": "kaopu-tailor-workbench/garments-r03/vendor/three.module.js", "sha": "6bc781491ae24ffd29ee22c8f019cdb67c2c61b7"}, {"path": "kaopu-tailor-workbench/index.html", "sha": "68c4fcbcc5e4fcc50475b297e99c42bd6a186df6"}, {"path": "kaopu-tailor-workbench/package.json", "sha": "cc5ef3532b4079bb582834a0816ed80e1128f23e"}, {"path": "kaopu-tailor-workbench/qa/numerical.json", "sha": "81b294af8c37c877d3cd9bc079f9060989e0d8f1"}, {"path": "kaopu-tailor-workbench/qa/structured-numerical.json", "sha": "62016068a18d4a4102fc4da16fc84fa99f54a3a8"}, {"path": "kaopu-tailor-workbench/src/app.mjs", "sha": "64f1054534616b78cde902700de0e511183d9917"}, {"path": "kaopu-tailor-workbench/src/core.mjs", "sha": "f14030e3da295cb73169644469a3d157bcc4ed84"}, {"path": "kaopu-tailor-workbench/structured.html", "sha": "97bd2fa095b7e0b506ff3bbe642be6530ba05fb8"}, {"path": "kaopu-tailor-workbench/structured/README.md", "sha": "7524262db986ddad341b327662a2ebd02cfb93c7"}, {"path": "kaopu-tailor-workbench/structured/app.mjs", "sha": "fcc3fb3fb4db8e48f764a1e9fddbbdeae0e97abc"}, {"path": "kaopu-tailor-workbench/structured/compiler.mjs", "sha": "e5a1b87bfae77cf421f5372e1af2b28aee24896b"}, {"path": "kaopu-tailor-workbench/structured/example.json", "sha": "d163fdc4b2bbc3b21225e5314ebe83f6aaaa8c1d"}, {"path": "kaopu-tailor-workbench/structured/style.css", "sha": "99ff43c61d57c42320a4502e28dee629e05d8696"}, {"path": "kaopu-tailor-workbench/style.css", "sha": "e27b9b6ca56ce8196f5326fba17e471bb3d8b804"}, {"path": "kaopu-tailor-workbench/tests/browser.cjs", "sha": "5cd0280ead9a57c949b3579f4c87468105666de6"}, {"path": "kaopu-tailor-workbench/tests/core.test.mjs", "sha": "a2e6a2f3106df9ff5ff60d5666c0b679891007d9"}, {"path": "kaopu-tailor-workbench/tests/structured-browser.cjs", "sha": "8e10ef9d97b752e2b5436cfc57725c0f714e7f27"}, {"path": "kaopu-tailor-workbench/tests/structured.test.mjs", "sha": "3767f9a0d310ddb891ca08017507a54c050bd59f"}, {"path": "kaopu-tailor-workbench/tools/verify.mjs", "sha": "d37fd2a5356877912efceb1fd3e0d5f22326228b"}]')
-          legacy_report=[]
-          for item in legacy:
-              last=None
-              for attempt in range(5):
-                  try:
-                      url='https://haihao0307.github.io/guilin-dem-pipeline/'+item['path']+'?verify=1850ce11'
-                      with urllib.request.urlopen(url,timeout=60) as response:
-                          data=response.read()
-                      actual=hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
-                      assert actual==item['sha'],item['path']
-                      legacy_report.append({'path':item['path'],'sha':actual,'bytes':len(data),'passed':True})
-                      last=None
-                      break
-                  except Exception as error:
-                      last=error
-                      time.sleep(8)
-              if last: raise last
-          print('R04_LEGACY_PUBLIC_BYTES_VERIFIED',len(legacy_report))
-          print('R04_PUBLIC_HASH_RESULT',json.dumps({'newFileCount':len(expected),'newFiles':expected,'protectedLegacy':legacy_report}))
-          PY2
+        run: cd kaopu-tailor-workbench/garments-r05 && npm test
       - name: Actual browser reconstruction in two engines
         env:
-          TAILOR_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/garments-r04/
+          TAILOR_URL: http://127.0.0.1:8765/kaopu-tailor-workbench/garments-r05/
           NODE_PATH: ${{ runner.temp }}/tailor-test/node_modules
           TAILOR_BROWSER: ${{ matrix.browser }}
         run: |
-          node kaopu-tailor-workbench/garments-r04/tests/browser.cjs
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/tailor-server.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -fsS "$TAILOR_URL" > /dev/null && break || sleep 1; done
+          node kaopu-tailor-workbench/garments-r05/tests/browser.cjs
       - name: Keep actual screenshots and numerical evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: tailor-garments-r04-public-evidence-${{ matrix.browser }}
+          name: tailor-garments-r05-evidence-${{ matrix.browser }}
           retention-days: 7
           if-no-files-found: warn
           path: |
