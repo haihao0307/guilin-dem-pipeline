@@ -1,0 +1,49 @@
+name: Coral Mother generic runtime recovery QA
+on:
+  push:
+    branches: [work/coral-r05-recovery-qa-20261005]
+    paths:
+      - coral-mother-core-seed-r01/original-replay.js
+      - coral-mother-core-seed-r01/webgl-lifecycle.js
+      - coral-mother-core-seed-r01/runtime.js
+      - coral-mother-core-seed-r01/qa/browser/**
+      - .github/workflows/coral-mother-core-runtime-qa.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: coral-mother-core-seed-r01
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install pinned official browser tooling
+        run: |
+          npm install --prefix .coral-qa --no-save --ignore-scripts --no-audit --no-fund playwright@1.55.0
+          node .coral-qa/node_modules/playwright/cli.js install --with-deps ${{ matrix.browser }}
+      - name: Exercise public wrapper with self-authored coordinate shaders
+        env:
+          NODE_PATH: ${{ github.workspace }}/.coral-qa/node_modules
+          CORAL_APP_ROOT: ${{ github.workspace }}/coral-mother-core-seed-r01
+          CORAL_BROWSER: ${{ matrix.browser }}
+          CORAL_QA_OUT: ${{ github.workspace }}/coral-runtime-qa-results
+        run: node coral-mother-core-seed-r01/qa/browser/run.mjs
+      - name: Retain synthetic-only browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coral-generic-runtime-${{ matrix.browser }}-${{ github.sha }}
+          path: coral-runtime-qa-results/
+          retention-days: 7
+          if-no-files-found: warn
