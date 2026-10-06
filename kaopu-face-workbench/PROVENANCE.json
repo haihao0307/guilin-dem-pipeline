@@ -81,8 +81,8 @@
       "sha256": "eaac8a971205273cd6b83c7620b33e3a007959c7de6b81bce07f55ecf68301d6"
     },
     "README.md": {
-      "bytes": 6985,
-      "sha256": "c4bbb57072eddedfc083c978b1daf87d652ef4d02f738b7451892c44bd416921"
+      "bytes": 7395,
+      "sha256": "cebb78744ef9ec57d01852324b9f3e4e89a174d5d4549870e1a67faaf032af80"
     },
     "TEACHER-GROOM-PROVENANCE.json": {
       "bytes": 13833,
@@ -97,8 +97,8 @@
       "sha256": "c0cb41a74d8624f28169e8305fce63d8b17976e4f4b1d9be606b27112f9f3381"
     },
     "index.html": {
-      "bytes": 14318,
-      "sha256": "84ca0818c17e59bf6affebe848010211f66e1d16129c1c396404c8db5afa6cc9"
+      "bytes": 14526,
+      "sha256": "21f5bbb8e3f2421b8576693a1a71ea0bfda98d6e7470200e93d685615e11ef98"
     },
     "licenses/GNM-LICENSE.txt": {
       "bytes": 12823,
@@ -134,7 +134,7 @@
     },
     "runtime/BUILD.json": {
       "bytes": 3935,
-      "sha256": "4f213cdb3bc20221e67f536927a0642900ea9147a22db5a14fa9028a07de16c4"
+      "sha256": "a6c291dd4437fad88bd505f965cf2540e51bd4af296818f9c71ce16a3d5c66ae"
     },
     "runtime/face-r01-4a6168be117e.min.js": {
       "bytes": 525049,
@@ -151,6 +151,14 @@
     "runtime/face-r02-78d6a6ac82e8.min.js.gz": {
       "bytes": 414841,
       "sha256": "d5442c9cd47102eeb19c12bf71fb2992b33a592383127af6d101e637219f2b76"
+    },
+    "runtime/face-r02-ad49d794dd7b.min.js": {
+      "bytes": 1238137,
+      "sha256": "ad49d794dd7b6f154853213f45aa8395a684b5b1a3925a7fc0fcf561a18c32c3"
+    },
+    "runtime/face-r02-ad49d794dd7b.min.js.gz": {
+      "bytes": 415037,
+      "sha256": "14157d731c4eab4ebe7383579133edcd1507bf9fbcb04ddd06b764a6aaf3e275"
     },
     "runtime/face-r02-d62bc4dd29d2.min.js": {
       "bytes": 1237383,
@@ -185,8 +193,8 @@
       "sha256": "3879cce900a6d068087504f3a547a936ed82e25a54310f925055e73186b5239d"
     },
     "src/app.js": {
-      "bytes": 17523,
-      "sha256": "8a0d3c8c96458af793375e5b091cca49af6547dab7a2b10afd520ac1e238548e"
+      "bytes": 17945,
+      "sha256": "799aea281d671175b4f3753217f89691c06fbfe717096612d3ab7bf40778a309"
     },
     "src/fittingWorker.js": {
       "bytes": 217,
@@ -245,8 +253,8 @@
       "sha256": "8609f98e44cd961740b87328bbc7f8f31e1c3bba781bcdd8afe947c210bb6cb0"
     },
     "tests/browser.cjs": {
-      "bytes": 8630,
-      "sha256": "1e2b3f4488604906ab61cd0ee77972dcf54f94e3624098887f5a917e099fe5ed"
+      "bytes": 9415,
+      "sha256": "db104da6d33a5050ebd553924da3e620aaa50e911ce57b88a2e6620610c8826e"
     },
     "tests/contracts.mjs": {
       "bytes": 3901,
@@ -346,8 +354,9 @@
     "newLashes": 224,
     "numericalChecks": "passed: exact root deformation, serialization, identity/expression/pose restore, sampled lash centerline clearances",
     "browserQA": {
+      "testedCommit": "ff06b3a772dc651aba1a0d28d5f6924953885c6d",
       "webkit": "passed all controls, actual pixels,20navigation,context restoration; front/side/eyelids inspected",
-      "chromium": "same run still in progress"
+      "chromium": "passed all controls, actual pixels,20navigation,context restoration; front/side/eyelids inspected; software-GPU synchronous readback23-104s does not establish interactive performance"
     },
     "source": "TEACHER-GROOM-PROVENANCE.json"
   },
@@ -357,8 +366,18 @@
     "build": "runtime/BUILD.json",
     "r01Restore": "r01.html + original hash-pinned gzip/IIFE runtime",
     "originalNeutralVertexSHA256": "47abbb7e46f52c241ae1cb7a798ca59d73a281540e05c651d0f7468f5c52f3cf",
-    "runtimeChecks": "local gzip roundtrip, source hashes, original evaluator exact bytes passed; browser loader/worker integration pending",
+    "runtimeChecks": "current local gzip roundtrip, source hashes, original evaluator exact bytes passed; previous ff06b3a7 browser loader passed both engines; current WebKit detector and import-guidance changes await browser validation",
     "qaRun": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37425689873",
     "webkit": "slow/hung/corrupt HTTP, cancel/retry, original neutral SHA, plain fallback passed"
+  },
+  "importGuidance": {
+    "realNameRequired": false,
+    "checks": [
+      "missing archive label",
+      "missing same-person confirmation",
+      "label edit clears confirmation",
+      "ready includes video frame instructions"
+    ],
+    "browserVerified": false
   }
 }

@@ -61,3 +61,5 @@ R02沿用R01生产b36cca8f的单文件gzip/IIFE加载器：真实字节进度、
 R01恢复页与原134599字节gzip运行包原样保留。新的功能增加R02包体，不宣称仍与R01同大小；具体字节与哈希记录于runtime/BUILD.json。修改源码后必须用固定esbuild0.25.0重新运行tools/build-runtime.cjs并同步运行包与index.html内ASSETS，不能只改src/app.js。
 
 MediaPipe推理仍用CPU；其图像输入桥接也需要图形上下文。初始化明确使用独立HTMLCanvasElement，避免WebKit存在OffscreenCanvas但其WebGL路径不可用时GLctx未创建。视频QA使用方形像素setsar=1，避免同一编码在不同浏览器被SAR重新计算为1079/1080的显示宽度。
+
+导入引导会分别提示缺少档案名、缺少同人确认或已可导入；档案名可填“人物 A”，无需真实姓名。修改档案名会取消旧的同人确认。视频导入后先播放到所需角度并暂停，再取当前帧。对应浏览器回归覆盖初始空名、先勾后填和改名后重新确认；本地仅完成构建/契约检查，当前提示改动仍待浏览器验收。
