@@ -10,7 +10,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: voxel-train-r01-${{ github.ref }}
+  group: voxel-train-r01-${{ github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}
   cancel-in-progress: true
 jobs:
   train-browser:

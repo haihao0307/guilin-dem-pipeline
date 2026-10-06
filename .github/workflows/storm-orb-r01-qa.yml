@@ -8,7 +8,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: storm-orb-r01-${{ github.ref }}
+  group: storm-orb-r01-${{ github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}
   cancel-in-progress: true
 jobs:
   storm-browser:
