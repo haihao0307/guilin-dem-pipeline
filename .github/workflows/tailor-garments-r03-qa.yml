@@ -14,7 +14,11 @@ jobs:
   garment-browser:
     if: github.head_ref == 'qa/tailor-garments-r03-20261006'
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -37,19 +41,18 @@ jobs:
         env:
           TAILOR_URL: http://127.0.0.1:8765/kaopu-tailor-workbench/garments-r03/
           NODE_PATH: ${{ runner.temp }}/tailor-test/node_modules
+          TAILOR_BROWSER: ${{ matrix.browser }}
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/tailor-server.log" 2>&1 &
           server=$!
           trap 'kill "$server" 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do curl -fsS "$TAILOR_URL" > /dev/null && break || sleep 1; done
-          for engine in chromium webkit; do
-            TAILOR_BROWSER=$engine node kaopu-tailor-workbench/garments-r03/tests/browser.cjs
-          done
+          node kaopu-tailor-workbench/garments-r03/tests/browser.cjs
       - name: Keep actual screenshots and numerical evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: tailor-garments-r03-evidence
+          name: tailor-garments-r03-evidence-${{ matrix.browser }}
           retention-days: 7
           if-no-files-found: warn
           path: |
