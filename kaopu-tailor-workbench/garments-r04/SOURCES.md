@@ -25,6 +25,7 @@ This page is an independent addition. Published R01, R02 and R03 are unchanged.
 
 - Immutable original flat material → constrained 2D Delaunay mesh → staged XPBD seams → source-triangle body SDF contact → release both shoulder fixtures → eight simulated seconds of gravity
 - Completion is 1,560 steps at 60 Hz, 26 simulated seconds total. Actual wall time is longer and depends on the browser/device
+- Internal solver units are metres, kilograms and seconds. Areal density is 0.2 kg/m². Distance-constraint compliances are 1e−7 m/N for extension and 20 m/N for the bend-distance proxy; these are explicit uncalibrated numerical model parameters, not measured textile properties
 - Ideal zero-width seam points share solver degrees of freedom after progressive sewing. Original material vertices, UVs, area/mass and rest edges remain available for audit
 - SDF: original nearest-triangle BVH, 5 mm grid, 0.05 mm quantization. The web uses a byte-identical cropped grid covering this garment; all out-of-domain vertices remain explicit diagnostics. Delta/gzip is lossless and SHA-256 checked after decode
 - Independent final triangle intersection audit and region-weighted original-UV strain reporting. Real seam allowance layers have zero modeled area, not hidden removed geometry
