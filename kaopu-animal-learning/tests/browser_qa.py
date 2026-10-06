@@ -1,0 +1,138 @@
+"""Read-only browser QA for the standalone research UI. Fixtures are TEST_FIXTURE_ONLY."""
+import hashlib,json,os,pathlib,struct,time,zlib
+from playwright.sync_api import sync_playwright
+ROOT=pathlib.Path(__file__).resolve().parents[1]
+OUT=pathlib.Path(os.environ.get('ANIMAL_QA_OUT',str(ROOT/'qa/browser-results')))
+OUT.mkdir(parents=True,exist_ok=True)
+BASE=os.environ.get('ANIMAL_QA_URL', (ROOT/'index.html').as_uri())
+head=os.environ.get('GITHUB_SHA','LOCAL_UNCOMMITTED')
+html=(ROOT/'index.html').read_bytes()
+report={'schema':'kaopu/animal-learning-browser-qa@1','headSha':head,'testedAtUtc':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'htmlSha256':hashlib.sha256(html).hexdigest(),'htmlBytes':len(html),'targetUrl':BASE,'fixtures':'TEST_FIXTURE_ONLY; no author/user animal assets','cases':[],'errors':[],'teacherInferenceExecuted':False,'originalAtlasRuntimeVerified':False,'publicDeliveryVerified':BASE.startswith('https://')}
+
+def png(w,h):
+ def chunk(kind,data):return struct.pack('!I',len(data))+kind+data+struct.pack('!I',zlib.crc32(kind+data)&0xffffffff)
+ rows=b''.join(b'\x00'+bytes([80,120,140])*w for _ in range(h))
+ return b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('!IIBBBBB',w,h,8,2,0,0,0))+chunk(b'IDAT',zlib.compress(rows))+chunk(b'IEND',b'')
+image_bytes=png(12,8)
+valid_obj=b'# TEST_FIXTURE_ONLY\nv 0 0 0\nv 2 0 0\nv 0 3 1\nf 1 2 3\n'
+
+def run(page,name,width,height):
+ case={'name':name,'viewport':{'width':width,'height':height},'checks':[],'pageErrors':[],'consoleErrors':[],'networkRequests':[]}
+ report['cases'].append(case)
+ page.on('pageerror',lambda error:case['pageErrors'].append(str(error)))
+ page.on('console',lambda msg:case['consoleErrors'].append(msg.text) if msg.type=='error' else None)
+ page.on('request',lambda req:case['networkRequests'].append(req.url) if req.url.startswith(('http:','https:')) else None)
+ def check(label,condition=True):
+  if not condition:raise AssertionError(label)
+  case['checks'].append(label)
+ response=page.goto(BASE,wait_until='load')
+ if BASE.startswith('https:'):
+  check('public HTTP 200',response.status==200)
+  check('public bytes match committed HTML',hashlib.sha256(response.body()).hexdigest()==report['htmlSha256'])
+ page.get_by_role('heading',name='从图像中，留下可信的动物信息').wait_for()
+ check('home mounted with all three teachers',page.locator('.teacher-grid .teacher').count()==3)
+ check('no document horizontal overflow',page.evaluate('document.documentElement.scrollWidth <= innerWidth+1'))
+ page.screenshot(path=str(OUT/(name+'-home.png')),full_page=True)
+ for teacher in [('rapid-pattern-reid','RAPID'),('4dequine-motion-appearance','4DEquine'),('animallift-canonical-fur','AnimalLift')]:
+  page.locator('[data-open="'+teacher[0]+'"]').click()
+  page.get_by_role('heading',name=teacher[1]+' ·',exact=False).wait_for()
+  check(teacher[1]+' detail not-run labels',page.get_by_text('推理未运行',exact=True).count()==1)
+  check(teacher[1]+' uses same-tab external links',page.locator('.source-links a:not([target="_self"])').count()==0)
+  check(teacher[1]+' no horizontal overflow',page.evaluate('document.documentElement.scrollWidth <= innerWidth+1'))
+  page.screenshot(path=str(OUT/(name+'-'+teacher[0]+'.png')),full_page=True)
+  page.go_back(wait_until='domcontentloaded')
+  page.get_by_role('heading',name='从图像中，留下可信的动物信息').wait_for()
+  check(teacher[1]+' browser Back restores home')
+  page.go_forward(wait_until='domcontentloaded')
+  page.get_by_role('heading',name=teacher[1]+' ·',exact=False).wait_for()
+  page.get_by_role('button',name='← 返回学习总览',exact=True).click()
+  page.get_by_role('heading',name='从图像中，留下可信的动物信息').wait_for()
+  check(teacher[1]+' in-page return restores home')
+ # Direct deep links remain valid after reload.
+ page.goto(BASE+'#animal-learning/animallift-canonical-fur',wait_until='load')
+ page.get_by_role('heading',name='AnimalLift ·',exact=False).wait_for()
+ check('direct teacher deep link')
+ page.get_by_role('button',name='既有工作入口',exact=True).click()
+ page.get_by_role('heading',name='既有动物、人物与服装入口').wait_for()
+ check('eight public workbench destinations retained',page.get_by_role('link',name='打开原工作台 ↗').count()==8)
+ check('private Site URL excluded',not page.locator('a[href*="palau-birds-r04-workbench"]').count())
+ check('unpublished entries are honest',page.get_by_text('暂无核实网页入口',exact=True).count()==8)
+ page.get_by_role('button',name='学习总览',exact=True).click()
+ page.get_by_role('button',name='打开点位记录',exact=True).click()
+ page.get_by_role('heading',name='从可见像素开始记').wait_for()
+ page.screenshot(path=str(OUT/(name+'-manual-empty.png')),full_page=True)
+ page.locator('#image-file').set_input_files({'name':'TEST_FIXTURE_ONLY.png','mimeType':'image/png','buffer':image_bytes})
+ page.locator('#image-stage').wait_for(state='visible')
+ page.get_by_text('12 × 8 像素 · 请命名并点击可见点').wait_for()
+ box=page.locator('#point-overlay').bounding_box()
+ page.locator('#point-label').fill('左前足')
+ page.locator('#point-overlay').click(position={'x':box['width']*.25,'y':box['height']*.5})
+ check('first manual point recorded',page.locator('#points-list li').count()==1)
+ page.locator('#point-label').fill('鼻端')
+ page.locator('#point-overlay').click(position={'x':box['width']*.75,'y':box['height']*.25})
+ check('second manual point recorded',page.locator('#points-list li').count()==2)
+ page.locator('#point-label').fill('鼻端')
+ page.locator('#point-overlay').click(position={'x':box['width']*.5,'y':box['height']*.5})
+ check('duplicate label rejected',page.locator('#points-list li').count()==2)
+ page.locator('#point-undo').click()
+ check('undo removes latest point',page.locator('#points-list li').count()==1)
+ page.locator('#observation-note').fill('TEST_FIXTURE_ONLY: 数值流程检查，无动物身份或结构声明')
+ with page.expect_download() as download:
+  page.locator('#observation-export').click()
+ record=json.loads(pathlib.Path(download.value.path()).read_text())
+ check('manual origin and no fake inference',record['origin']=='manual_annotation' and record['claims']['modelInference'] is False)
+ check('pixel coordinate conversion',abs(record['points'][0]['x']-3)<=.1 and abs(record['points'][0]['y']-4)<=.1)
+ check('image hash matches actual input',record['image']['sha256']==hashlib.sha256(image_bytes).hexdigest())
+ check('no image bytes exported','dataUrl' not in record and 'base64' not in json.dumps(record))
+ (OUT/(name+'-TEST_FIXTURE_ONLY-observation.json')).write_text(json.dumps(record,ensure_ascii=False,indent=2))
+ page.get_by_role('button',name='学习总览',exact=True).click()
+ page.get_by_role('button',name='打开点位记录',exact=True).click()
+ check('annotation survives internal navigation',page.locator('#points-list li').count()==1)
+ page.locator('#points-list button').click()
+ check('remove empties annotation and disables export',page.locator('#points-list li').count()==0 and page.locator('#observation-export').is_disabled())
+ # Repeated input must clear prior annotations without creating requests.
+ page.locator('#image-file').set_input_files({'name':'TEST_FIXTURE_ONLY-again.png','mimeType':'image/png','buffer':image_bytes})
+ page.get_by_text('12 × 8 像素 · 请命名并点击可见点').wait_for()
+ check('repeated image input clears old points',page.locator('#points-list li').count()==0)
+ page.get_by_role('button',name='学习总览',exact=True).click()
+ page.get_by_role('button',name='打开文件检查',exact=True).click()
+ page.locator('#obj-file').set_input_files({'name':'TEST_FIXTURE_ONLY.obj','mimeType':'text/plain','buffer':valid_obj})
+ page.locator('#obj-result').wait_for(state='visible')
+ obj=json.loads(page.locator('#obj-result').inner_text())
+ check('OBJ counts and bounds computed',obj['vertices']==3 and obj['faces']==1 and obj['bounds']['extent']==[2,3,1])
+ check('OBJ unchecked limitations visible',len(obj['notChecked'])==5)
+ with page.expect_download() as download:
+  page.locator('#obj-export').click()
+ downloaded=json.loads(pathlib.Path(download.value.path()).read_text())
+ check('OBJ inspection export is real',downloaded==obj)
+ page.locator('#obj-file').set_input_files({'name':'TEST_FIXTURE_ONLY-invalid.obj','mimeType':'text/plain','buffer':valid_obj.replace(b'f 1 2 3',b'f 1 2 4')})
+ page.get_by_text('第 5 行索引越界',exact=True).wait_for()
+ check('invalid OBJ disables stale export',page.locator('#obj-export').is_disabled() and page.locator('#obj-result').is_hidden())
+ page.locator('#obj-file').set_input_files({'name':'TEST_FIXTURE_ONLY.obj','mimeType':'text/plain','buffer':valid_obj})
+ page.locator('#obj-result').wait_for(state='visible')
+ check('valid OBJ recovers after rejection',not page.locator('#obj-export').is_disabled())
+ page.get_by_role('button',name='学习总览',exact=True).click()
+ page.get_by_role('heading',name='从图像中，留下可信的动物信息').wait_for()
+ check('no runtime errors',not case['pageErrors'])
+ check('no console errors',not case['consoleErrors'])
+ if BASE.startswith('file:'):check('file core network requests zero',len(case['networkRequests'])==0)
+ else:check('only public document fetched',len(case['networkRequests'])==1)
+ check('final mobile/desktop layout within viewport',page.evaluate('document.documentElement.scrollWidth <= innerWidth+1'))
+ case['status']='passed'
+
+try:
+ with sync_playwright() as p:
+  browser=p.chromium.launch(headless=True)
+  for name,width,height in [('desktop',1440,960),('mobile',390,844)]:
+   context=browser.new_context(viewport={'width':width,'height':height},device_scale_factor=1,has_touch=name=='mobile',is_mobile=name=='mobile',accept_downloads=True)
+   page=context.new_page();page.set_default_timeout(15000)
+   run(page,name,width,height);context.close()
+  browser.close()
+ report['status']='passed'
+except Exception as e:
+ report['status']='failed';report['errors'].append(type(e).__name__+': '+str(e))
+finally:
+ report['totalChecks']=sum(len(c['checks']) for c in report['cases'])
+ (OUT/'BROWSER_REPORT.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+ print(json.dumps(report,ensure_ascii=False,indent=2))
+if report['status']!='passed':raise SystemExit(1)
