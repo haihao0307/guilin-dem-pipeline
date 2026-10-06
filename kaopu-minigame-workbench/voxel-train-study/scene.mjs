@@ -1,9 +1,9 @@
 import * as THREE from './vendor/three.module.js';
 
 // Original, procedural study geometry. No author mesh, texture or image is embedded.
-export const SPEC = Object.freeze({ halfRun:9.42105, radius:2.8543, width:12.2, nearEdge:7.6, farEdge:-4.6, period:6, scale:1, phase:0 });
+export const SPEC = Object.freeze({ halfRun:7.93554791, radius:3.8, width:12.2, nearEdge:7.6, farEdge:-4.6, period:6, scale:1, phase:0 });
 export const LENGTH = 4 * SPEC.halfRun + 2 * Math.PI * SPEC.radius;
-export const PALETTE = Object.freeze({green:0x315853,greenDark:0x244842,greenLight:0x3f6761,orange:0xf5a014,steel:0x59616d,black:0x202427,grass:0x546233,gravel:0xc5c1aa});
+export const PALETTE = Object.freeze({green:0x405f5c,greenDark:0x304c49,greenLight:0x54736d,orange:0xf5a014,steel:0x59616d,black:0x202427,grass:0x546233,gravel:0xc5c1aa});
 export function pathAt(distance, elevation=0, z=0) {
   const a=SPEC.halfRun,r=SPEC.radius,l=2*a,c=Math.PI*r;
   let s=((distance+a)%LENGTH+LENGTH)%LENGTH, x,y,tx,ty;
@@ -66,7 +66,7 @@ function buildTrain(){const b=new Blocks(),p=PALETTE;
   // Cylindrical FUEL tank built from a rectangular voxel grid.
   const tx=-4.895,cy=2.0,rad=.835,step=.129,length=5.6,nr=Math.floor(rad/step);
   b.box(tx,1.03,0,length+.28,.23,1.9,0x2b4240);bogie(b,-6.93,1.24);bogie(b,-2.83,1.24);
-  for(let iy=-nr;iy<=nr;iy++)for(let iz=-nr;iz<=nr;iz++){if(Math.hypot(iy*step,iz*step)>rad)continue;const edge=Math.hypot(iy*step,iz*step)>rad-step*1.5;if(edge)b.box(tx,cy+iy*step,iz*step,length,step,step,iy>3?0x46716a:p.green);else{b.box(tx-length/2+.064,cy+iy*step,iz*step,step,step,step,p.green);b.box(tx+length/2-.064,cy+iy*step,iz*step,step,step,step,p.green);}}
+  for(let iy=-nr;iy<=nr;iy++)for(let iz=-nr;iz<=nr;iz++){if(Math.hypot(iy*step,iz*step)>rad)continue;const edge=Math.hypot(iy*step,iz*step)>rad-step*1.5;if(edge)b.box(tx,cy+iy*step,iz*step,length,step,step,iy>3?0x567974:p.green);else{b.box(tx-length/2+.064,cy+iy*step,iz*step,step,step,step,p.green);b.box(tx+length/2-.064,cy+iy*step,iz*step,step,step,step,p.green);}}
   for(let iz=-nr;iz<=nr;iz++){const z=iz*step,dy=Math.sqrt(Math.max(0,rad*rad-z*z));b.box(tx+length/2+.018,cy+dy,z,.06,.078,.13,0xe2e9bd);if(dy>.12)b.box(tx+length/2+.026,cy+dy-.085,z,.045,.08,.127,0xa8c196);}
   for(const x of [tx-length/2+.42,tx+length/2-.42])for(let iz=-nr;iz<=nr;iz++){const z=iz*step;const dy=Math.sqrt(Math.max(0,rad*rad-z*z));b.box(x,cy+dy,z,.07,.059,.12,0x57847b);b.box(x,cy-dy,z,.07,.059,.12,0x284b47);}
   for(const z of [-.858,.858]){b.box(tx,1.86,z,length,.05,.035,0xc7cbb8);letters(b,'FUEL',tx-.45,2.50,z,.112,0xe5e7ce);}
@@ -90,15 +90,15 @@ function tree(b,x,z,h=3.1,seed=11,crown=.66,vertical=.34){
   }
 }
 
-function bridge(b,x){const L=14.45847,H=4.22945,panels=5;
+function bridge(b,x){const L=14.05576,H=4.33704,panels=5;
   // The source's apparent rear arch is the belt deformation of a straight truss.
-  for(const z of [-1.95438,1.95438]){
+  for(const z of [-1.95164,1.95164]){
     b.beam(x-L/2,H,z,x+L/2,H,z,.15,0x6f5b4b);
     for(let i=0;i<=panels;i++){const u=-L/2+i*L/panels;b.box(x+u,H/2,z,.12,H,.12,0x49443e);if(i<panels){const v=u+L/panels;const direction=i%2;b.beam(x+u,direction?H-.06:.2,z,x+v,direction?.2:H-.06,z,.085,0x514940);}}
   }
-  for(let i=0;i<=panels;i++){const u=-L/2+i*L/panels;b.box(x+u,H,0,.17,.16,4.06876,0x866641);}
+  for(let i=0;i<=panels;i++){const u=-L/2+i*L/panels;b.box(x+u,H,0,.17,.16,4.06328,0x866641);}
 }
-function buildEnvironment(){const rand=random(19790214),b=new Blocks(),p=PALETTE;b.thinGround=true;const start=-SPEC.halfRun,end=LENGTH-SPEC.halfRun;
+function buildEnvironment(){const rand=random(19790214),b=new Blocks(),p=PALETTE;b.thinGround=false;const start=-SPEC.halfRun,end=LENGTH-SPEC.halfRun;
   // One closed belt, discretized along its full arc-length; motion is a deformation of the same geometry.
   const segments=Math.ceil(LENGTH/.20),pitch=LENGTH/segments;
   for(let j=0;j<segments;j++){const x=start+(j+.5)*pitch;b.box(x,.015,1.5,pitch,.14,SPEC.width,p.grass,0,true);b.box(x,-.09,1.5,pitch,.065,SPEC.width,0x1c1e23,0,true);b.box(x,.13,0,pitch,.10,3.02,0xaba995,0,true);for(const z of [-.76,.76]){b.box(x,.245,z,pitch,.155,.13,0x625e53,0,true);b.box(x,.331,z,pitch,.035,.15,0x9d9a88,0,true);}}
@@ -115,7 +115,7 @@ function buildEnvironment(){const rand=random(19790214),b=new Blocks(),p=PALETTE
     for(let i=0;i<1400;i++){const a=rng()*Math.PI*2,u=rng()*2-1,r=Math.cbrt(rng());const dx=Math.cos(a)*Math.sqrt(1-u*u)*r,dz=Math.sin(a)*Math.sqrt(1-u*u)*r,q=.085;b.box(7.33+offset+Math.round(dx*1.55/q)*q,.53+Math.round(u*r*.56/q)*q,5.24+Math.round(dz*1.1/q)*q,q*.99,q*.99,q*.99,colors[Math.floor(rng()*colors.length)]);}
     for(const [dx,z] of [[1.9,6.0],[11.94,4.1],[15.52,5.02]]){const x=dx+offset;b.box(x,.18,z,.73,.22,.53,0xa5aba3);b.box(x+.34,.14,z-.13,.47,.20,.38,0xb6bab0);b.box(x-.13,.28,z,.38,.16,.30,0xd2d4c3);}
   }
-  bridge(b,-7.42917);return b;
+  bridge(b,-7.715);return b;
 }
 const BEND_GLSL=`
 uniform float beltPhase;
