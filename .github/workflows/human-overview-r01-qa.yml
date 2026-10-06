@@ -9,7 +9,6 @@ on:
       - '.github/qa/overview-*.cjs'
 permissions:
   contents: read
-  actions: read
 env:
   OVERVIEW_VERIFY_PUBLIC: 'false'
 concurrency:
@@ -17,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   overview-browser:
-    if: false # Evidence recovery only; does not count as application acceptance.
+    if: github.event_name != 'pull_request' || github.head_ref == 'qa/human-overview-r01-20261006'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -85,42 +84,44 @@ jobs:
           PYVERIFY
           OVERVIEW_QA_DIR=overview-public-chromium node kaopu-human-overview/tests/browser.cjs
           OVERVIEW_BROWSER=webkit OVERVIEW_QA_DIR=overview-public-webkit node kaopu-human-overview/tests/browser.cjs
-      - name: Upload overview QA screenshots and results
+      - name: Upload reports and screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: human-overview-r01-evidence
+          name: human-overview-small-evidence
           retention-days: 7
           if-no-files-found: warn
           path: |
-            overview-chromium/*
-            overview-webkit/*
-            overview-public-chromium/*
-            overview-public-webkit/*
+            overview-chromium/*.json
+            overview-chromium/*.jsonl
+            overview-chromium/*.png
+            overview-webkit/*.json
+            overview-webkit/*.jsonl
+            overview-webkit/*.png
+            overview-public-chromium/*.json
+            overview-public-chromium/*.jsonl
+            overview-public-chromium/*.png
+            overview-public-webkit/*.json
+            overview-public-webkit/*.jsonl
+            overview-public-webkit/*.png
             overview-public-bytes.json
-
-  recover-lifecycle-evidence:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    steps:
-      - name: Read the already completed candidate evidence
-        uses: actions/download-artifact@v4
-        with:
-          name: human-overview-r01-evidence
-          run-id: 37524123937
-          github-token: ${{ github.token }}
-          path: recovered
-      - name: Package only small reports and failure screenshots
+      - name: Upload Chromium traces separately
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: lifecycle-candidate-small-evidence
+          name: human-overview-chromium-traces
           retention-days: 7
-          if-no-files-found: error
+          if-no-files-found: warn
           path: |
-            recovered/**/candidate-return*.json
-            recovered/**/navigation-diagnostic*.json
-            recovered/**/lifecycle*.jsonl
-            recovered/**/browser-rss*.jsonl
-            recovered/**/navigation-failure*.png
-            recovered/**/common-r01-*.png
-            recovered/**/mhr-*.png
+            overview-chromium/trace-*.zip
+            overview-public-chromium/trace-*.zip
+      - name: Upload WebKit traces separately
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: human-overview-webkit-traces
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            overview-webkit/trace-*.zip
+            overview-public-webkit/trace-*.zip

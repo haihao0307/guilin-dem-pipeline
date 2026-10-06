@@ -2,7 +2,7 @@
  * A single cancel signal covers metadata, parts, reads and decompression. */
 const hash=async bytes=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(x=>x.toString(16).padStart(2,'0')).join('');
 export class R01Assets {
-  constructor(base,fetcher=fetch,progress=()=>{}){this.base=new URL(base);this.fetcher=fetcher;this.progress=progress;this.controller=new AbortController();this.requests=[];}
+  constructor(base,fetcher=fetch,progress=()=>{}){this.base=new URL(base);this.fetcher=fetcher.bind(globalThis);this.progress=progress;this.controller=new AbortController();this.requests=[];}
   check(){if(this.controller.signal.aborted)throw new DOMException('Model loading cancelled','AbortError');}
   cancel(){this.controller.abort();}
   async bytes(url,sha=null,length=null){this.check();const absolute=new URL(url,this.base);this.requests.push(String(absolute));const timer=setTimeout(()=>this.cancel(),120000);try{const r=await this.fetcher(absolute,{signal:this.controller.signal});this.check();if(!r.ok)throw Error('HTTP '+r.status+' '+absolute);const b=await r.arrayBuffer();this.check();if(length!==null&&b.byteLength!==length)throw Error('资产长度不一致');if(sha&&await hash(b)!==sha)throw Error('资产校验不一致');this.check();return b;}finally{clearTimeout(timer);}}
