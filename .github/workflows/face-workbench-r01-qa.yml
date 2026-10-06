@@ -113,6 +113,16 @@ jobs:
           mkdir -p "qa-navigation-${{ matrix.engine }}"
           cd "qa-navigation-${{ matrix.engine }}"
           node ../kaopu-face-workbench/tests/navigation-browser.cjs
+      - name: Verify published R01 overview navigation
+        env:
+          FACE_BROWSER: ${{ matrix.engine }}
+          FACE_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-face-workbench/
+          FACE_NAVIGATION_PAGES: index.html
+        run: |
+          export NODE_PATH="$RUNNER_TEMP/face-navigation/node_modules"
+          mkdir -p "qa-navigation-public-${{ matrix.engine }}"
+          cd "qa-navigation-public-${{ matrix.engine }}"
+          node ../kaopu-face-workbench/tests/navigation-browser.cjs
       - name: Upload actual navigation evidence
         if: always()
         uses: actions/upload-artifact@v4
