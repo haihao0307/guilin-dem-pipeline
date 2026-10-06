@@ -13,12 +13,15 @@ fs.mkdirSync(out,{recursive:true});
   const browser = await playwright[engine].launch(engine==='webkit'?{headless:true}:{headless:true,executablePath:process.env.CHROMIUM||undefined,args:['--no-sandbox']});
   const context = await browser.newContext({viewport:{width:1440,height:1100},hasTouch:true});
   const page = await context.newPage();
+  const navContext=await browser.newContext({viewport:{width:1440,height:1100},hasTouch:true});
+  const navPage=await navContext.newPage(),navigationWarnings=[];
+  navPage.on('pageerror',e=>navigationWarnings.push({url:navPage.url(),message:e.message}));
   const errors=[],badResponses=[],unexpectedRequests=[];
   page.on('pageerror',e=>errors.push(e.message));
   page.on('response',r=>{if(r.status()>=400&&r.url().includes('/kaopu-human-overview/'))badResponses.push({url:r.url(),status:r.status()})});
   page.on('request',r=>{if(r.method()!=='GET')unexpectedRequests.push(r.url())});
   if(fixtureNavigation){
-    await page.route('**/*',async route=>{
+    await navPage.route('**/*',async route=>{
       const r=route.request(),u=new URL(r.url());
       if(r.isNavigationRequest()&&!u.pathname.includes('/kaopu-human-overview/')){
         await route.fulfill({status:200,contentType:'text/html',body:'<!doctype html><html lang="zh-CN"><title>Navigation-only fixture</title><body><h1>Navigation-only fixture</h1></body></html>'});
@@ -39,19 +42,20 @@ fs.mkdirSync(out,{recursive:true});
   assert.equal(routes[0].href,'../kaopu-face-workbench/?loader=single-r01-20261006#edit');
   for(const route of routes){
     assert.ok(route.href.startsWith('../kaopu-'));
-    const link=page.locator(`a[href="${route.href}"]`);
+    await navPage.goto(base,{waitUntil:'domcontentloaded'});
+    const link=navPage.locator(`a[href="${route.href}"]`);
     await link.focus();
     assert.equal(await link.evaluate(a=>a===document.activeElement),true);
-    await Promise.all([page.waitForURL(new URL(route.href,base).href,{waitUntil:'domcontentloaded'}),page.keyboard.press('Enter')]);
-    assert.equal(context.pages().length,1,'Keyboard entry opened an extra tab');
-    assert.ok(!await page.title().then(t=>/404|not found/i.test(t)),'Entry must not show a 404 page');
-    await page.goBack({waitUntil:'domcontentloaded'});
-    await page.locator('#title').waitFor();
-    assert.equal(page.url(),base);
-    await page.goForward({waitUntil:'domcontentloaded'});
-    assert.equal(page.url(),new URL(route.href,base).href);
-    await page.goBack({waitUntil:'domcontentloaded'});
-    await page.locator('#title').waitFor();
+    await Promise.all([navPage.waitForURL(new URL(route.href,base).href,{waitUntil:'domcontentloaded'}),navPage.keyboard.press('Enter')]);
+    assert.equal(navContext.pages().length,1,'Keyboard entry opened an extra tab');
+    assert.ok(!await navPage.title().then(t=>/404|not found/i.test(t)),'Entry must not show a 404 page');
+    await navPage.goBack({waitUntil:'domcontentloaded'});
+    await navPage.locator('#title').waitFor();
+    assert.equal(navPage.url(),base);
+    await navPage.goForward({waitUntil:'domcontentloaded'});
+    assert.equal(navPage.url(),new URL(route.href,base).href);
+    await navPage.goBack({waitUntil:'domcontentloaded'});
+    await navPage.locator('#title').waitFor();
   }
   for(const size of [{name:'desktop',width:1440,height:1100},{name:'mobile',width:390,height:844},{name:'small-mobile',width:320,height:750}]){
     await page.setViewportSize(size);
@@ -67,12 +71,12 @@ fs.mkdirSync(out,{recursive:true});
   assert.equal(await page.locator('details').getAttribute('open'),'');
   await page.locator('summary').tap();
   assert.equal(await page.locator('details').getAttribute('open'),null);
-  await page.goto(base,{waitUntil:'networkidle'});
-  await page.locator('#gnm a').tap();
-  await page.waitForURL(new URL(routes[0].href,base).href);
-  assert.equal(context.pages().length,1);
-  await page.goBack({waitUntil:'domcontentloaded'});
-  await page.locator('#title').waitFor();
+  await navPage.goto(base,{waitUntil:'networkidle'});
+  await navPage.locator('#gnm a').tap();
+  await navPage.waitForURL(new URL(routes[0].href,base).href);
+  assert.equal(navContext.pages().length,1);
+  await navPage.goBack({waitUntil:'domcontentloaded'});
+  await navPage.locator('#title').waitFor();
   assert.deepEqual(badResponses,[]);
   assert.deepEqual(unexpectedRequests,[]);
   assert.deepEqual(errors,[]);
@@ -81,7 +85,7 @@ fs.mkdirSync(out,{recursive:true});
   await nopage.goto(base,{waitUntil:'networkidle'});
   assert.equal(await nopage.locator('#gnm a').count(),1);
   assert.ok(await nopage.locator('#title').isVisible());
-  const result={passed:true,engine,version:browser.version(),base,images,routes,pending:await page.locator('.is-pending').count(),navigation:fixtureNavigation?'fixture-only: real workbench destinations not verified':'real destination document and same-tab Back; model controls tested separately',keyboard:true,touch:true,backForward:true,noJavaScript:true,noIframeOrCanvas:true,widths:[1440,390,320],actualPhoneTested:false,errors,badResponses,unexpectedRequests};
+  const result={passed:true,engine,version:browser.version(),base,images,routes,pending:await page.locator('.is-pending').count(),navigation:fixtureNavigation?'fixture-only: real workbench destinations not verified':'real destination document and same-tab Back; model controls tested separately',keyboard:true,touch:true,backForward:true,noJavaScript:true,noIframeOrCanvas:true,widths:[1440,390,320],actualPhoneTested:false,errors,badResponses,unexpectedRequests,navigationWarnings};
   fs.writeFileSync(`${out}/overview-${engine}-result.json`,JSON.stringify(result,null,2));
   console.log(JSON.stringify(result));
   await browser.close();
