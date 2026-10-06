@@ -9,7 +9,7 @@ on:
 permissions:
   contents: read
 env:
-  OVERVIEW_VERIFY_PUBLIC: 'false'
+  OVERVIEW_VERIFY_PUBLIC: 'true'
 concurrency:
   group: human-overview-r01-${{ github.ref }}
   cancel-in-progress: true
@@ -42,6 +42,7 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/overview-test" --no-save --ignore-scripts playwright@1.57.0
           "$RUNNER_TEMP/overview-test/node_modules/.bin/playwright" install --with-deps chromium webkit
       - name: Test desktop mobile keyboard touch and Back in both engines
+        if: env.OVERVIEW_VERIFY_PUBLIC != 'true'
         env:
           OVERVIEW_URL: http://127.0.0.1:8765/kaopu-human-overview/
           NODE_PATH: ${{ runner.temp }}/overview-test/node_modules
