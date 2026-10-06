@@ -1,0 +1,72 @@
+name: MHR workbench R01 read-only QA
+on:
+  workflow_dispatch:
+    inputs:
+      public_url:
+        description: 'Optional HTTPS URL to verify after release'
+        required: false
+        type: string
+  pull_request:
+    branches: [gh-pages]
+    paths:
+      - 'kaopu-mhr-workbench/**'
+      - '.github/workflows/mhr-workbench-r01-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: mhr-r01-qa-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-mhr-workbench
+          sparse-checkout-cone-mode: true
+      - name: Official Python fixture parity
+        run: cd kaopu-mhr-workbench && node tests/model.mjs
+      - name: Install pinned browser QA dependency
+        run: |
+          npm install --prefix "$RUNNER_TEMP/mhr-test" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/mhr-test/node_modules/.bin/playwright" install --with-deps chromium webkit
+      - name: Chromium and WebKit rendered interaction
+        env:
+          MHR_URL: http://127.0.0.1:8765/kaopu-mhr-workbench/
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/mhr-server.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -fsS "$MHR_URL" > /dev/null && break || sleep 1; done
+          mkdir -p qa-chromium qa-webkit
+          (cd qa-chromium && NODE_PATH="$RUNNER_TEMP/mhr-test/node_modules" node ../kaopu-mhr-workbench/tests/browser.cjs)
+          (cd qa-webkit && MHR_BROWSER=webkit NODE_PATH="$RUNNER_TEMP/mhr-test/node_modules" node ../kaopu-mhr-workbench/tests/browser.cjs)
+      - name: Validate real rigged exports with OpenUSD
+        run: |
+          python3 -m pip install --target "$RUNNER_TEMP/mhr-usd" --no-deps usd-core==26.8
+          PYTHONPATH="$RUNNER_TEMP/mhr-usd" python3 kaopu-mhr-workbench/tests/validate_exports.py
+      - name: Verify public HTTPS release
+        if: github.event_name == 'workflow_dispatch' && inputs.public_url != ''
+        env:
+          MHR_URL: ${{ inputs.public_url }}
+        run: |
+          mkdir -p public-chromium public-webkit
+          (cd public-chromium && NODE_PATH="$RUNNER_TEMP/mhr-test/node_modules" node ../kaopu-mhr-workbench/tests/browser.cjs)
+          (cd public-webkit && MHR_BROWSER=webkit NODE_PATH="$RUNNER_TEMP/mhr-test/node_modules" node ../kaopu-mhr-workbench/tests/browser.cjs)
+      - name: Upload actual browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mhr-r01-browser-evidence
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            kaopu-mhr-workbench/tests/*parity*.json
+            qa-*/*.png
+            qa-*/*.glb
+            qa-*/*.usda
+            qa-*/mhr-qa-result.json
+            public-*/*.png
+            public-*/mhr-qa-result.json
