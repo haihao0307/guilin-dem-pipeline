@@ -45,10 +45,14 @@ jobs:
           npx playwright install --with-deps ${{ matrix.browser }}
       - name: Static server
         run: python -m http.server 8765 > /tmp/skin-server.log 2>&1 &
+      - name: Verify exact published files
+        working-directory: kaopu-skin-workbench
+        run: python tests/public_hash.py
       - name: Actual browser QA
         working-directory: kaopu-skin-workbench
         env:
           SKIN_BROWSER: ${{ matrix.browser }}
+          SKIN_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-skin-workbench/
         run: node tests/browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
@@ -57,6 +61,7 @@ jobs:
           path: |
             kaopu-skin-workbench/skin-*.png
             kaopu-skin-workbench/skin-browser-report.json
+            kaopu-skin-workbench/skin-public-hash-report.json
             kaopu-skin-workbench/skin-console-errors.json
             kaopu-skin-workbench/research/skin-model-report.json
             /tmp/skin-server.log
