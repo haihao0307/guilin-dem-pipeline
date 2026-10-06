@@ -47,10 +47,23 @@ jobs:
         run: |
           python3 -m pip install --target "$RUNNER_TEMP/mhr-usd" --no-deps usd-core==26.8
           PYTHONPATH="$RUNNER_TEMP/mhr-usd" python3 kaopu-mhr-workbench/tests/validate_exports.py
-      - name: Verify public HTTPS release
-        if: github.event_name == 'workflow_dispatch' && inputs.public_url != ''
+      - name: Wait for verified Pages runtime
         env:
-          MHR_URL: ${{ inputs.public_url }}
+          MHR_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-mhr-workbench/
+        run: |
+          expected=$(sha256sum kaopu-mhr-workbench/app.mjs | cut -d' ' -f1)
+          matched=0
+          for i in $(seq 1 90); do
+            if curl --max-time 12 -fsS "${MHR_URL}app.mjs?qa=${GITHUB_SHA}" -o "$RUNNER_TEMP/mhr-public-app.mjs"; then
+              actual=$(sha256sum "$RUNNER_TEMP/mhr-public-app.mjs" | cut -d' ' -f1)
+              if [ "$actual" = "$expected" ]; then matched=1; break; fi
+            fi
+            sleep 5
+          done
+          test "$matched" = 1
+      - name: Verify public HTTPS release
+        env:
+          MHR_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-mhr-workbench/
         run: |
           mkdir -p public-chromium public-webkit
           (cd public-chromium && NODE_PATH="$RUNNER_TEMP/mhr-test/node_modules" node ../kaopu-mhr-workbench/tests/browser.cjs)
