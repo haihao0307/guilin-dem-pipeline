@@ -1,4 +1,4 @@
-name: Geography09 observation and private08 main-workbench QA
+name: Published geography09 observation and private08 UI QA
 on:
   push:
     branches: [qa/geography-submarine-original10-20261006]
@@ -30,13 +30,27 @@ jobs:
           python -m playwright install --with-deps ${{ matrix.browser }}
       - name: Verify main09 observation, private08 UI and locked10 pixels
         env:
-          KAOPU_PUBLIC_URL: http://127.0.0.1:8765/kaopu-geography-workbench/
+          KAOPU_PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-geography-workbench/
           KAOPU_BROWSER: ${{ matrix.browser }}
         run: |
-          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/geography-server.log" 2>&1 &
-          server=$!
-          trap 'kill "$server" 2>/dev/null || true' EXIT
-          for i in $(seq 1 30); do curl -fsS "$KAOPU_PUBLIC_URL" > /dev/null && break || sleep 1; done
+          python - <<'PY_PUBLIC'
+          import hashlib,os,time,urllib.request
+          from pathlib import Path
+          names=['index.html','runtime.js','manta-observe09.js','canyon-local08.js','original-study-controls.css','qa_public.py','qa_catalog.py','README.md']
+          deadline=time.time()+600
+          while True:
+              try:
+                  for name in names:
+                      expected=Path('kaopu-geography-workbench',name).read_bytes()
+                      with urllib.request.urlopen(os.environ['KAOPU_PUBLIC_URL']+name+'?interaction=fd05c9f1-'+str(time.time()),timeout=30)as response: actual=response.read()
+                      assert hashlib.sha256(actual).digest()==hashlib.sha256(expected).digest(),name
+                  print('PUBLIC_EXACT_EIGHT_FILES',names,flush=True)
+                  break
+              except Exception as error:
+                  if time.time()>=deadline: raise
+                  print('Waiting for exact public files:',str(error),flush=True)
+                  time.sleep(15)
+          PY_PUBLIC
           python kaopu-geography-workbench/qa_manta09_main.py
           python kaopu-geography-workbench/qa_canyon08_local_ui.py
           python kaopu-geography-workbench/qa_submarine10_main.py
