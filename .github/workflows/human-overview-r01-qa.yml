@@ -47,6 +47,29 @@ jobs:
           for i in $(seq 1 30); do curl -fsS "$OVERVIEW_URL" > /dev/null && break || sleep 1; done
           OVERVIEW_QA_DIR=overview-chromium node kaopu-human-overview/tests/browser.cjs
           OVERVIEW_BROWSER=webkit OVERVIEW_QA_DIR=overview-webkit node kaopu-human-overview/tests/browser.cjs
+      - name: Verify exact published bytes and real HTTPS navigation
+        env:
+          OVERVIEW_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-human-overview/
+          NODE_PATH: ${{ runner.temp }}/overview-test/node_modules
+        run: |
+          python3 - <<'PYVERIFY'
+          from pathlib import Path
+          import hashlib,json,os,urllib.request
+          root=Path('kaopu-human-overview');base=os.environ['OVERVIEW_URL'];checks=[]
+          for path in sorted(root.rglob('*')):
+              if not path.is_file(): continue
+              relative=path.relative_to(root).as_posix()
+              request=urllib.request.Request(base+relative+'?overview=verified-r01',headers={'Cache-Control':'no-cache'})
+              with urllib.request.urlopen(request,timeout=60) as response:
+                  actual=response.read();status=response.status
+              expected=hashlib.sha256(path.read_bytes()).hexdigest()
+              assert status==200 and hashlib.sha256(actual).hexdigest()==expected,relative+' public mismatch'
+              checks.append({'path':relative,'status':status,'sha256':expected,'bytes':len(actual)})
+          Path('overview-public-bytes.json').write_text(json.dumps({'passed':True,'url':base,'files':checks},indent=2))
+          print('Public overview exact file verification passed:',len(checks))
+          PYVERIFY
+          OVERVIEW_QA_DIR=overview-public-chromium node kaopu-human-overview/tests/browser.cjs
+          OVERVIEW_BROWSER=webkit OVERVIEW_QA_DIR=overview-public-webkit node kaopu-human-overview/tests/browser.cjs
       - name: Upload overview QA screenshots and results
         if: always()
         uses: actions/upload-artifact@v4
@@ -57,3 +80,6 @@ jobs:
           path: |
             overview-chromium/*
             overview-webkit/*
+            overview-public-chromium/*
+            overview-public-webkit/*
+            overview-public-bytes.json
