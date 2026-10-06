@@ -57,17 +57,31 @@
   },
   "verification": {
     "CPU": "research/skin-model-report.json",
-    "visual": "pending screenshot review",
-    "physicalIPhone": false,
-    "browserPreviousRevision": {
-      "commit": "512250335e039c8bc398cf32e2f1424bb4256731",
-      "run": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37435719474",
-      "passed": [
-        "Chromium143",
-        "LinuxWebKit26"
+    "browser": {
+      "runtimeCommit": "3dee6662babe3b3ad678b0b14043b23364665f8a",
+      "run": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37436542796",
+      "Chromium": "143.0.7499.4",
+      "LinuxWebKit": "26.0",
+      "passed": true,
+      "skinChangesGeometry": false,
+      "referenceStableAcrossBodyPose": true,
+      "twentyEntryCycles": true,
+      "staticAndCameraReturnPixelIdentical": true,
+      "contextRestored": true,
+      "nonGetRequests": []
+    },
+    "visual": {
+      "screenshotsInspected": true,
+      "neutralLightThreeProfiles": true,
+      "microdetailLayerOnOff": true,
+      "limitations": [
+        "No true SSS or full cornea/iris renderer",
+        "Not scan-grade or SkinGen-equivalent",
+        "Original face geometry, eyebrows and eyelashes unchanged"
       ],
-      "visualResult": "Initial overly glossy appearance; refinements awaiting new screenshots"
-    }
+      "stageAcceptance": "accepted for independent user testing; not SkinGen-equivalent"
+    },
+    "physicalIPhone": false
   },
   "files": {
     "src/app.js": {
