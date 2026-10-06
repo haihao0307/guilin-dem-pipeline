@@ -1,0 +1,168 @@
+{
+  "schema": "coral-context-recovery-release/1",
+  "runtimeRelease": "RECOVERY-R05-20261005",
+  "changes": [
+    "Three bounded recovery attempts, delays 1/3/7 seconds; stop playback on failure",
+    "Keep initial failure, latest failure, and at most 16 records",
+    "Reset retry budget only after 30 healthy seconds and 30 completed frames, or explicit reentry/retry",
+    "Retired replacement canvases no longer request restoration; guards registered before fallible capability queries",
+    "Reset bounded recovery on pageshow even without visibilitychange"
+  ],
+  "reproducedDefect": "R04 stops retrying after 250 ms when a post-frame context provider is unavailable for 2 seconds; reproduced in real Chromium and WebKit with synthetic GLSL and explicit null-provider fault injection",
+  "publicFiles": {
+    "index.html": {
+      "bytes": 34982,
+      "sha256": "b90544f70ea0985c1046c41d4ab184f4dc22e4c2a5648f9dd3e8755143a8902c"
+    },
+    "original-replay.js": {
+      "bytes": 22275,
+      "sha256": "0368adc8c6a22fbdf09baad996ce37b99cdda4b9b7c0fb4fe7c77a9007946e80"
+    },
+    "webgl-lifecycle.js": {
+      "bytes": 5693,
+      "sha256": "26e57a34c0ec2aaf3d0537d5a01c1e087f9e9486cc0d59a9426a2ad55769d49c"
+    },
+    "runtime.js": {
+      "bytes": 23841,
+      "sha256": "b8a074ddf2a81bb758225f674cf572b3a324f0dfd5e2c78131a22e0d77735da4"
+    }
+  },
+  "verification": {
+    "deterministicLifecycleChecks": 27,
+    "unchangedShaderRenderingSections": 19,
+    "privateOriginalNativeEGLComparisons": 15,
+    "privateOriginalNativeEGLResolutionRange": [
+      [
+        320,
+        180
+      ],
+      [
+        615,
+        346
+      ],
+      [
+        1230,
+        692
+      ]
+    ],
+    "privateOriginalInCI": false,
+    "finalBrowserQA": {
+      "commit": "31dee8cb2062c4154e26390404865e6bdd6d1014",
+      "run": 37392945973,
+      "status": "passed",
+      "chromiumVersion": "140.0.7339.16",
+      "webkitVersion": "26.0",
+      "stepsEach": 14,
+      "caseSwitchAndHashlessReopenRoundsEach": 20,
+      "syntheticLoopIterations": 24,
+      "playbackSeconds": {
+        "transparent": 180,
+        "color": 60,
+        "rosette": 60
+      },
+      "artifacts": {
+        "chromium": 11381609276,
+        "webkit": 11382560214
+      },
+      "sampledFramesAndTimeContinuouslyAdvanced": true,
+      "unexpectedFailureRecordsDuringPlaybackAndSwitching": 0
+    },
+    "browserDetails": [
+      {
+        "engine": "chromium",
+        "version": "140.0.7339.16",
+        "passedSteps": 14,
+        "rounds": 20,
+        "longPlayback": [
+          {
+            "case": "transparent",
+            "sampleWindows": 35,
+            "framesAdded": 1753,
+            "every5SecondWindowAdvanced": true,
+            "unexpectedFailureRecords": 0,
+            "resolution": [
+              1236,
+              695
+            ]
+          },
+          {
+            "case": "color",
+            "sampleWindows": 12,
+            "framesAdded": 620,
+            "every5SecondWindowAdvanced": true,
+            "unexpectedFailureRecords": 0,
+            "resolution": [
+              1236,
+              695
+            ]
+          },
+          {
+            "case": "rosette",
+            "sampleWindows": 11,
+            "framesAdded": 199,
+            "every5SecondWindowAdvanced": true,
+            "unexpectedFailureRecords": 0,
+            "resolution": [
+              1236,
+              1848
+            ]
+          }
+        ],
+        "unexpectedFailuresDuringPlaybackAndSwitching": 0,
+        "scope": "Real Linux browser with self-authored synthetic GLSL; not physical iOS, not original-artwork load or performance"
+      },
+      {
+        "engine": "webkit",
+        "version": "26.0",
+        "passedSteps": 14,
+        "rounds": 20,
+        "longPlayback": [
+          {
+            "case": "transparent",
+            "sampleWindows": 36,
+            "framesAdded": 1314,
+            "every5SecondWindowAdvanced": true,
+            "unexpectedFailureRecords": 0,
+            "resolution": [
+              1236,
+              695
+            ]
+          },
+          {
+            "case": "color",
+            "sampleWindows": 12,
+            "framesAdded": 439,
+            "every5SecondWindowAdvanced": true,
+            "unexpectedFailureRecords": 0,
+            "resolution": [
+              1236,
+              695
+            ]
+          },
+          {
+            "case": "rosette",
+            "sampleWindows": 12,
+            "framesAdded": 215,
+            "every5SecondWindowAdvanced": true,
+            "unexpectedFailureRecords": 0,
+            "resolution": [
+              1236,
+              1848
+            ]
+          }
+        ],
+        "unexpectedFailuresDuringPlaybackAndSwitching": 0,
+        "scope": "Real Linux browser with self-authored synthetic GLSL; not physical iOS, not original-artwork load or performance"
+      }
+    ]
+  },
+  "limits": [
+    "Root cause of initial context loss on the physical iPhone remains unverified",
+    "Synthetic Linux browsers do not validate original-shader mobile GPU load or long-session stability",
+    "Native EGL software timings are not iPhone performance estimates",
+    "Existing tree iframe remains outside local parent-case context accounting and may retain one additional context"
+  ],
+  "privacy": "Original shader bytes remain private URL-fragment/per-case local-browser cache; public repository and public CI use only generic wrappers and self-authored test shaders",
+  "originalAlgorithmColorsQualityTimingUnchanged": true,
+  "actualIPhoneLongSessionVerified": false
+}
