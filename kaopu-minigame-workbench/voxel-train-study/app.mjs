@@ -1,6 +1,7 @@
 import * as THREE from './vendor/three.module.js';
 import {OrbitControls} from './vendor/OrbitControls.js';
 import {createSceneModel,SPEC,LENGTH} from './scene.mjs';
+import {createViewportControls} from './viewport.mjs';
 const $=id=>document.getElementById(id),canvas=$('scene');
 let renderer;
 try{renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});}catch(error){$('loading').textContent='三维渲染未能启动，请使用支持 WebGL 的浏览器';throw error;}
@@ -55,8 +56,9 @@ $('speed').addEventListener('change',()=>{speed=Number($('speed').value);});
 $('time').addEventListener('input',()=>{playing=false;elapsed=Number($('time').value)%6;renderAt(elapsed);updateUI();});
 function closeAbout(){ $('about').hidden=true;$('aboutOpen').setAttribute('aria-expanded','false');$('aboutOpen').focus();}
 $('aboutOpen').addEventListener('click',()=>{const open=$('about').hidden;$('about').hidden=!open;$('aboutOpen').setAttribute('aria-expanded',String(open));if(open)$('aboutClose').focus();});$('aboutClose').addEventListener('click',closeAbout);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('about').hidden){closeAbout();return;}if(/INPUT|SELECT|TEXTAREA|BUTTON|A/.test(e.target.tagName))return;if(e.code==='Space'){e.preventDefault();playing=!playing;updateUI();}if(e.key.toLowerCase()==='r')resetCamera();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('about').hidden){closeAbout();return;}if(/^(INPUT|SELECT|TEXTAREA|BUTTON|A)$/.test(e.target.tagName))return;if(e.code==='Space'){e.preventDefault();playing=!playing;updateUI();}if(e.key.toLowerCase()==='r')resetCamera();});
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=true;$('loading').hidden=false;$('loading').textContent='三维画面已暂停，正在等待图形环境恢复…';});canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;$('loading').hidden=true;resize();renderAt(elapsed);});
 window.addEventListener('resize',resize);document.addEventListener('visibilitychange',()=>{last=performance.now();});
+const viewport=createViewportControls({stage:$('stage'),onResize:resize,onLayoutChange:()=>{$('resetView').click();resize();}});
 resetCamera();resize();updateUI();renderAt(0);$('loading').hidden=true;requestAnimationFrame(animate);
-window.__voxelTrain={version:'r01-local',ready:true,stats:model.stats,getState:()=>({elapsed,playing,speed,frame,phase:model.phase.value,freeView:controls.enabled,smoke:smokeGroup.visible,camera:camera.position.toArray(),zoom:camera.zoom,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),setTime(t){playing=false;elapsed=((Number(t)%6)+6)%6;renderAt(elapsed);updateUI();},resetCamera,render:()=>renderAt(elapsed),scene,model,camera,renderer};
+window.__voxelTrain={version:'r02-layout-candidate',ready:true,stats:model.stats,getState:()=>({elapsed,playing,speed,frame,phase:model.phase.value,freeView:controls.enabled,smoke:smokeGroup.visible,camera:camera.position.toArray(),zoom:camera.zoom,aspect:camera.aspect,fov:camera.fov,viewport:viewport.getState(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),setTime(t){playing=false;elapsed=((Number(t)%6)+6)%6;renderAt(elapsed);updateUI();},resetCamera,render:()=>renderAt(elapsed),scene,model,camera,renderer};

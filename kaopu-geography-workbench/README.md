@@ -44,9 +44,9 @@ The user privately retains exact original HTML/JSON study packs. The browser par
 -09: Manta Ray v2.0 — dakrunch, https://www.shadertoy.com/view/4ls3zM
 -10: Boaty Goes Caving — David Hoskins, https://www.shadertoy.com/view/ldBBDm
 
-Verification scope: original-source/image integrity and private EGL renders exist. The public correction checks the container UI, navigation, invalid local-file rejection and no network submission, plus the unchanged original seven scene regressions. It does not claim real-browser reproduction of the imported teacher shaders; that private verification remains blocked by the available execution environment. UI-only success must not be presented as completed teacher rendering.
+Historical O1 import-container checks covered its UI, navigation, invalid-file rejection and no network submission. That container remains the 08 route. The 09 and 10 main-workbench integrations below use bundled original resources and separate actual-render tests; UI-only import-container success is not used as their rendering evidence.
 
-## M09 main-workbench original restoration candidate
+## M09 main-workbench original restoration
 
 Study 09 now follows the same homepage button → `openScene()` → `#liveCanvas` route as the original seven entries. It uses the existing pause, reset, speed, time, resolution and return controls. It does not link to the separate `teacher-original/manta-09.html` runner, does not load the archived independently authored `manta09.js`, and requires no separate import after the page's bundled resource module is available.
 
@@ -57,3 +57,18 @@ Shader-license evidence: the [NVIDIA-derived MantaRay file](https://github.com/t
 KAOPU changes are limited to the integration wrapper, source/image integrity verification, original-app resource binding, per-case GPU pacing and controls. The original shader body, camera, light, colors, tail and texture bytes are not rewritten. Manta's virtual coordinates remain 1200×674 at every sampling density; default sampling is 480 wide, original time speed is 1×. Other scene shaders, assets, settings and the 08/10 entries remain unchanged.
 
 Verification must distinguish actual main-app browser rendering from byte/static tests and native EGL comparison. The updated browser test clicks the original homepage 09 button, captures actual frames, and checks pause/seek/speed/reset/back/reopen on the shared canvas. Its completion must be read from the resulting test report; its existence is not a pass. Physical-phone acceptance is separate.
+
+
+M09 publication verification (2026-10-06): production commit `d1d00fec8aa46d86cf911384de90be25a0c891fc`, [public dual-browser run 37429914807](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37429914807) passed Chromium and WebKit, 18 original09 checks per engine, plus 60 main-workbench regression checks and 2 catalog checks in Chromium. Desktop and mobile viewports were exercised; no physical-phone test is claimed.
+
+## S10 original sea-exploration boat in the main workbench
+
+Study 10 follows the existing homepage button → `openScene()` → `#liveCanvas` path and shares the existing pause, time, speed, resolution, reset and return controls. No separate file selection is needed. The archived independently authored `submarine10.js` remains unused. Original01–09 scene resources and the08 card remain unchanged.
+
+Original work: **[SH17B] Boaty Goes Caving**, **David Hoskins / Dave_Hoskins**, https://www.shadertoy.com/view/ldBBDm . The [matching API source archive](https://github.com/GabeRundlett/shadertoy-api-shaders/blob/f6d538adf936215ccf2d11ba9b4a6c79ccb448c5/shaders/ldBBDm.json) explicitly attributes the shader to David Hoskins under [CC BY-NC-SA 3.0 Unported](https://creativecommons.org/licenses/by-nc-sa/3.0/). The user-supplied shader body matches the archived body after line-ending normalization; its supplied bytes are retained exactly in `submarine-original10.js`: 16,497 bytes, SHA-256 `571642c54667eb5a015a535172e988e0e59a7f37ab807546f7dc0e35e7440bf3`. Shader authorship and this license are retained; the integration wrapper is by KAOPU. No commercial rights are asserted.
+
+All three original images were supplied by the user for this study. Channel0: 87,562 bytes, SHA-256 `81c28c65b034a4cd924f4254d82d7fe1ba451c8a7c735dc9da73ee782bd885ac`; channel2: 112,578 bytes, `1eae2aea7054b1aeaeb0d4f6f3bda7ec4f1c84ae24f1d08cd534fcbd0f96ec78`; channel3: 264,082 bytes, `e59217a8eecc2e90bfbe7bb163dfcdd90de155bb35e4e904484ede91b8c0f36d`. The original paths and sampler configurations are recorded in the resource module and independently match the archive. Channels0/2 use mipmaps and vertical flip; channel3 is linear and unflipped. All use repeat, byte data and no sRGB conversion or alpha premultiplication. The wrapper does not claim original ownership or a separate texture license. No official-site download or replacement image is used.
+
+The original visual shader never reads music channel1; its only occurrence is commented out. Audio is not added. Original geometry, map side effects, the macro `F`, floaty particles, constants, lighting, camera and original four-second fade from black are unchanged. Default original time is0 at1×; sampling defaults to480×270 while virtual coordinates stay960×540. Original mouse X scrubs the route via `iMouse`; pointer input is normalized into those original coordinates, and reset clears the original mouse as well as time. It does not introduce a free-orbit camera.
+
+Local verification checks the actual main-app selected shader and quad draw against the recovered original in native EGL at0/4/20seconds: all three pixel buffers match exactly. This is additional byte/pixel evidence, not browser acceptance. Browser tests start by clicking the original homepage10 card and exercise frames, mouse/touch route input, pause, time, speed, resolution, reset, return/reopen, interrupted10→09 navigation and preserved09/old-seven behavior. The corresponding Actions report is the browser acceptance record; physical-phone validation remains separate.
