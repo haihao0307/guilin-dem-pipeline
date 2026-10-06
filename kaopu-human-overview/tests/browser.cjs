@@ -32,6 +32,7 @@ fs.mkdirSync(out,{recursive:true});
   await page.locator('h1').waitFor();
   assert.equal(await page.title(),'KAOPU · 人物工作台');
   assert.equal(await page.locator('article.workbench-card').count(),3);
+  assert.equal(await page.locator('#clothing a, #clothing button').count(),0,'Clothing research must not imply a live workbench');
   assert.equal(await page.locator('iframe,canvas').count(),0,'Overview must not preload parallel WebGL workbenches');
   assert.equal(await page.locator('article.is-pending a').count(),0,'Pending cards cannot be live links');
   assert.equal(await page.locator('a[target="_blank"]').count(),0,'Model entries stay in the same tab');
