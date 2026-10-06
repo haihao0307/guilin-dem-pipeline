@@ -37,16 +37,37 @@ jobs:
         run: cd kaopu-tailor-workbench && npm run check
       - name: Nine bounded paper parameter combinations
         run: cd kaopu-tailor-workbench/garments-r03 && npm test
+      - name: Verify all published case bytes over HTTPS
+        run: |
+          python3 - <<'PY2'
+          import hashlib,json,time,urllib.request
+          from pathlib import Path
+          root=Path('kaopu-tailor-workbench/garments-r03')
+          base='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/garments-r03/'
+          expected={x['path']:x['sha256'] for x in json.loads((root/'MANIFEST.json').read_text())['files']}
+          for path in ['MANIFEST.json','SHA256SUMS.txt']:
+              expected[path]=hashlib.sha256((root/path).read_bytes()).hexdigest()
+          for path,digest in expected.items():
+              last=None
+              for attempt in range(5):
+                  try:
+                      with urllib.request.urlopen(base+path+'?verify=3186499c3e3705a03edab608b759b8a3ea25bdfe',timeout=60) as response:
+                          data=response.read()
+                      assert hashlib.sha256(data).hexdigest()==digest,path
+                      last=None
+                      break
+                  except Exception as error:
+                      last=error
+                      time.sleep(8)
+              if last: raise last
+          print('R03_PUBLIC_BYTES_VERIFIED',len(expected))
+          PY2
       - name: Actual browser reconstruction in two engines
         env:
-          TAILOR_URL: http://127.0.0.1:8765/kaopu-tailor-workbench/garments-r03/
+          TAILOR_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/garments-r03/
           NODE_PATH: ${{ runner.temp }}/tailor-test/node_modules
           TAILOR_BROWSER: ${{ matrix.browser }}
         run: |
-          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/tailor-server.log" 2>&1 &
-          server=$!
-          trap 'kill "$server" 2>/dev/null || true' EXIT
-          for i in $(seq 1 30); do curl -fsS "$TAILOR_URL" > /dev/null && break || sleep 1; done
           node kaopu-tailor-workbench/garments-r03/tests/browser.cjs
       - name: Keep actual screenshots and numerical evidence
         if: always()

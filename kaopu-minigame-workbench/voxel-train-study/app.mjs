@@ -55,7 +55,7 @@ $('speed').addEventListener('change',()=>{speed=Number($('speed').value);});
 $('time').addEventListener('input',()=>{playing=false;elapsed=Number($('time').value)%6;renderAt(elapsed);updateUI();});
 function closeAbout(){ $('about').hidden=true;$('aboutOpen').setAttribute('aria-expanded','false');$('aboutOpen').focus();}
 $('aboutOpen').addEventListener('click',()=>{const open=$('about').hidden;$('about').hidden=!open;$('aboutOpen').setAttribute('aria-expanded',String(open));if(open)$('aboutClose').focus();});$('aboutClose').addEventListener('click',closeAbout);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('about').hidden){closeAbout();return;}if(/INPUT|SELECT|TEXTAREA|BUTTON|A/.test(e.target.tagName))return;if(e.code==='Space'){e.preventDefault();playing=!playing;updateUI();}if(e.key.toLowerCase()==='r')resetCamera();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('about').hidden){closeAbout();return;}if(/^(INPUT|SELECT|TEXTAREA|BUTTON|A)$/.test(e.target.tagName))return;if(e.code==='Space'){e.preventDefault();playing=!playing;updateUI();}if(e.key.toLowerCase()==='r')resetCamera();});
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=true;$('loading').hidden=false;$('loading').textContent='三维画面已暂停，正在等待图形环境恢复…';});canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;$('loading').hidden=true;resize();renderAt(elapsed);});
 window.addEventListener('resize',resize);document.addEventListener('visibilitychange',()=>{last=performance.now();});
 resetCamera();resize();updateUI();renderAt(0);$('loading').hidden=true;requestAnimationFrame(animate);
