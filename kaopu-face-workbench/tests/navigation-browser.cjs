@@ -24,10 +24,8 @@ const faceBase = new URL('./', input);
 const overviewURL = new URL('../kaopu-human-overview/', faceBase).href;
 const runtimePath = new URL('runtime/', faceBase).pathname;
 const output = process.env.FACE_NAVIGATION_QA_DIR || '.';
-const filenames=(process.env.FACE_NAVIGATION_PAGES||'index.html,r01.html').split(',');
-assert.ok(filenames.length>0&&filenames.every(name=>['index.html','r01.html'].includes(name)),'FACE_NAVIGATION_PAGES must contain index.html and/or r01.html');
 const report = {
-  engine, faceBase: faceBase.href, overviewURL, filenames, passed: false,
+  engine, faceBase: faceBase.href, overviewURL, passed: false,
   scope: 'Actual HTML links and inline shell/history navigation, with runtime fetches aborted',
   realOverviewRequired: true, runtimeAndModelTested: false, actualDeviceTested: false,
   cases: [], documents: [], blockedRequests: [], pageErrors: [], nonGetRequests: [], screenshots: [],
@@ -182,7 +180,7 @@ async function historyTo(page, direction, target) {
       } finally { await context.close(); }
     }
 
-    for (const filename of filenames) {
+    for (const filename of ['index.html', 'r01.html']) {
       const url = new URL(filename, faceBase).href;
       // Fresh, direct URLs have no overview referrer or prior overview history.
       for (const hash of ['', '#edit']) {
