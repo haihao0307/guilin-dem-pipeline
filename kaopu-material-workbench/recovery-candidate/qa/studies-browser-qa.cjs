@@ -174,6 +174,22 @@ function assertProtected(audit) {
       // and deletes of either protected key are recorded; reads are expressly allowed.
       await context.addInitScript(({ origin, legacy, seedKey, auditKey }) => {
         if (location.origin !== origin) return;
+        // Capture the existing application's GL error without consuming or masking it.
+        const glProto = WebGL2RenderingContext.prototype, recentCalls = [];
+        for (const name of ['texImage2D', 'viewport', 'uniform1f', 'uniform1i', 'uniform2fv', 'uniform3fv', 'uniform4fv', 'drawArrays', 'readPixels']) {
+          const originalCall = glProto[name];
+          glProto[name] = function (...args) {
+            recentCalls.push({ name, args: args.map(value => ArrayBuffer.isView(value) ? { length: value.length } : typeof value === 'number' ? value : String(value)) });
+            if (recentCalls.length > 80) recentCalls.shift();
+            return originalCall.apply(this, args);
+          };
+        }
+        const getError = glProto.getError;
+        glProto.getError = function () {
+          const code = getError.call(this);
+          if (code) (window.__KAOPU_GL_DIAGNOSTICS ||= []).push({ code, width: this.canvas.width, height: this.canvas.height, box: document.getElementById('viewport')?.getBoundingClientRect().toJSON(), maxTexture: this.getParameter(this.MAX_TEXTURE_SIZE), calls: recentCalls.slice() });
+          return code;
+        };
         const nativeLocal = window.localStorage, nativeSession = window.sessionStorage;
         const original = {
           get: Storage.prototype.getItem,
@@ -421,12 +437,12 @@ function assertProtected(audit) {
 
     await step('fullscreen button enters and exits actual browser fullscreen', async () => {
       await page.locator('#fullscreen').click();
-      await page.waitForFunction(() => document.fullscreenElement !== null, null, { timeout: 15000 });
+      await page.waitForFunction(() => document.fullscreenElement !== null && document.getElementById('fullscreen').textContent === '退出全屏', null, { timeout: 15000 });
       assert.equal(await page.locator('#fullscreen').innerText(), '退出全屏');
       const frame = await snapshot(); nonempty(frame, 'fullscreen');
       await page.screenshot({ path: path.join(OUT, 'fullscreen.png'), timeout: 15000 });
       await page.locator('#fullscreen').click();
-      await page.waitForFunction(() => document.fullscreenElement === null, null, { timeout: 15000 });
+      await page.waitForFunction(() => document.fullscreenElement === null && document.getElementById('fullscreen').textContent === '全屏观察', null, { timeout: 15000 });
       assert.equal(await page.locator('#fullscreen').innerText(), '全屏观察');
       return { entered: true, exited: true, fullscreenFrame: { width: frame.width, height: frame.height, hash: frame.hash } };
     });
@@ -487,6 +503,7 @@ function assertProtected(audit) {
     report.error = error.stack || String(error);
     log('STOPPED', 'browser QA failed or was blocked', { error: error.message });
     if (page && !page.isClosed()) {
+      try { report.glDiagnostics = await bounded(page.evaluate(() => window.__KAOPU_GL_DIAGNOSTICS || []), 4000, 'GL error details'); } catch {}
       try { report.legacyAuditAtFailure = await bounded(auditLegacy(), 4000, 'failure storage audit'); }
       catch (auditError) { report.legacyAuditAtFailureError = auditError.message; }
     }
