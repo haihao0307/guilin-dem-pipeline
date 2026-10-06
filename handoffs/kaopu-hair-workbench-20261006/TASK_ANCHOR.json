@@ -1,0 +1,31 @@
+{
+  "taskId": "HAIR-FULL-HANDOFF-20261006",
+  "dispatchTime": "2026-10-06T04:16:02.134186+00:00",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "handoff/hair-workbench-full-20261006",
+  "baseSha": "5bdd2d6aa4989ac6acedb99411c207c267b8937b",
+  "sourceSnapshotSha": "f7463e9e8bd68228fa977e913cbe1c0aa83b636e",
+  "target": "Complete source/learning handoff and GitHub upload",
+  "userDirective": "用户否定R1外观；要求全量包推GitHub，并提供原学习资料或接手者重新下载办法",
+  "acceptedBaseline": "Original R8/R9 preserved; R1 is USER_REJECTED, not a shape baseline",
+  "expectedArtifact": "Full ZIP with code, assets, learning, provenance, latest remaining tasks; GitHub release",
+  "allowedPaths": [
+    "handoffs/kaopu-hair-workbench-20261006",
+    "new handoff branch/tag/release"
+  ],
+  "protectedInvariants": [
+    "No other production line changes",
+    "Do not overwrite accepted R8/R9",
+    "No TEN24 source assets in GNM or public archive"
+  ],
+  "forbiddenRoutes": [
+    "Claim visual learning complete based on browser tests",
+    "Deploy rejected R1 as accepted baseline"
+  ],
+  "acceptanceGates": [
+    "SHA manifest",
+    "Fresh extraction and HTTP resource checks",
+    "Uploaded archive SHA digest/readback"
+  ],
+  "taskType": "HANDOFF_ONLY_NO_NEW_VISUAL_CANDIDATE"
+}
