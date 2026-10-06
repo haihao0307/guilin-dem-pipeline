@@ -9,6 +9,7 @@ on:
       - '.github/qa/overview-*.cjs'
 permissions:
   contents: read
+  actions: read
 env:
   OVERVIEW_VERIFY_PUBLIC: 'false'
 concurrency:
@@ -16,7 +17,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   overview-browser:
-    if: github.event_name != 'pull_request' || github.head_ref == 'qa/human-overview-r01-20261006'
+    if: false # Evidence recovery only; does not count as application acceptance.
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -97,3 +98,29 @@ jobs:
             overview-public-chromium/*
             overview-public-webkit/*
             overview-public-bytes.json
+
+  recover-lifecycle-evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Read the already completed candidate evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: human-overview-r01-evidence
+          run-id: 37524123937
+          github-token: ${{ github.token }}
+          path: recovered
+      - name: Package only small reports and failure screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: lifecycle-candidate-small-evidence
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            recovered/**/candidate-return*.json
+            recovered/**/navigation-diagnostic*.json
+            recovered/**/lifecycle*.jsonl
+            recovered/**/browser-rss*.jsonl
+            recovered/**/navigation-failure*.png
+            recovered/**/common-r01-*.png
+            recovered/**/mhr-*.png
