@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#efece6">
+  <meta name="description" content="KAOPU 人物工作台：GNM 捏脸、Anny 体型、MHR 姿态，与同一模型联动实验。">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; script-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'">
+  <title>KAOPU · 人物工作台</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip" href="#workbenches">跳到工作台</a>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="人物工作台总览"><span class="brand-mark" aria-hidden="true">K</span> KAOPU <span class="brand-divider">/</span> GAME</a>
+    <span class="top-label">人物工作台</span>
+    <a class="guide-link" href="#guide">怎么选 <span aria-hidden="true">↘</span></a>
+  </header>
+  <main>
+    <section class="intro" aria-labelledby="title">
+      <div>
+        <p class="eyebrow">HUMAN LAB / 01</p>
+        <h1 id="title">从一张脸，<br class="mobile-break">到一个完整的人<span class="title-dot">.</span></h1>
+        <p class="intro-copy">点模型图进入。脸、体型、姿态，各有一个清楚的入口。</p>
+      </div>
+      <a class="stage-jump" href="#shared-stage"><span class="small">下一步</span><strong>在同一个模型上联动</strong><span aria-hidden="true">↓</span></a>
+    </section>
+
+    <section id="workbenches" class="cards" aria-label="三个独立人物工作台">
+      <article class="workbench-card face-card" id="gnm">
+        <a class="card-link" href="../kaopu-face-workbench/?loader=single-r01-20261006#edit" aria-labelledby="gnm-name" aria-describedby="gnm-description gnm-status">
+          <div class="card-heading"><span class="card-number">01</span><span>FACE</span><span class="open-icon" aria-hidden="true">↗</span></div>
+          <div class="model-image source-crop"><img src="assets/gnm-r01.png" width="1440" height="1235" alt="GNM 官方中性头模在工作台中的真实渲染，正面视角，冷暖侧光" fetchpriority="high"></div>
+          <div class="card-content"><p class="teacher-name">GOOGLE GNM</p><h2 id="gnm-name">捏脸 <span>脸与表情</span></h2><p id="gnm-description">身份、表情统计参数 · 本地照片对照</p><div class="card-footer"><span class="status ready" id="gnm-status">R01 已验收 <time datetime="2026-10-06">10.06</time></span><span class="enter-text">进入工作台 <span aria-hidden="true">→</span></span></div></div>
+        </a>
+      </article>
+
+      <article class="workbench-card anny-card is-pending" id="anny">
+        <div class="card-link" role="group" aria-labelledby="anny-name" aria-describedby="anny-description anny-status">
+          <div class="card-heading"><span class="card-number">02</span><span>BODY SHAPE</span><span class="open-icon pending-icon" aria-hidden="true">·</span></div>
+          <div class="model-image awaiting-image"><span>真实模型预览<br><small>等待渲染验收</small></span></div>
+          <div class="card-content"><p class="teacher-name">ANNY</p><h2 id="anny-name">体型 <span>年龄与胖瘦</span></h2><p id="anny-description">以 Anny 官方模型为基线</p><div class="card-footer"><span class="status pending" id="anny-status">待验收 <time datetime="2026-10-06">10.06</time></span><span class="enter-text">准备中</span></div></div>
+        </div>
+      </article>
+
+      <article class="workbench-card mhr-card is-pending" id="mhr">
+        <div class="card-link" role="group" aria-labelledby="mhr-name" aria-describedby="mhr-description mhr-status">
+          <div class="card-heading"><span class="card-number">03</span><span>BODY &amp; POSE</span><span class="open-icon pending-icon" aria-hidden="true">·</span></div>
+          <div class="model-image awaiting-image"><span>真实模型预览<br><small>等待渲染验收</small></span></div>
+          <div class="card-content"><p class="teacher-name">META MHR</p><h2 id="mhr-name">身体 <span>形体与姿态</span></h2><p id="mhr-description">以 MHR 官方模型为基线</p><div class="card-footer"><span class="status pending" id="mhr-status">待验收 <time datetime="2026-10-06">10.06</time></span><span class="enter-text">准备中</span></div></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="shared-stage" id="shared-stage" aria-labelledby="shared-name">
+      <div class="shared-copy"><p class="eyebrow">ONE PERSON / 一个共同模型</p><h2 id="shared-name">让脸与身体，<br>在同一个人身上改变。</h2><p>把脸部参数、年龄胖瘦与姿态接到同一份可见网格，再检查各自影响的区域。</p><div class="shared-status"><span class="status pending">联动实验 · 待验收</span><time datetime="2026-10-06">2026.10.06</time></div><p class="shared-boundary">当前三个独立工作台各自运行，不会自动共享人物。联动入口通过实测后开放。</p></div>
+      <div class="shared-visual" aria-label="共同模型实验尚在验收"><div class="connection-pill face-pill">GNM <span>脸</span></div><div class="connection-pill anny-pill">Anny <span>体型</span></div><div class="connection-pill mhr-pill">MHR <span>身体</span></div><div class="shared-placeholder"><span>1</span><p>共同模型实验</p><small>真实网格待验收</small></div><div class="pending-entry">等待模型与联动实测 <span aria-hidden="true">↗</span></div></div>
+    </section>
+
+    <section class="guide" id="guide" aria-labelledby="guide-title">
+      <div class="guide-heading"><p class="eyebrow">QUICK GUIDE</p><h2 id="guide-title">我该去哪里调？</h2></div>
+      <div class="guide-items"><div><span class="guide-dot face-dot"></span><h3>脸与表情</h3><p>GNM 的身份与表情统计分量；目前不是“鼻宽”等命名旋钮。</p></div><div><span class="guide-dot anny-dot"></span><h3>年龄与胖瘦</h3><p>去 Anny 体型台。可用范围以该工作台的实测控件为准。</p></div><div><span class="guide-dot mhr-dot"></span><h3>身体与姿态</h3><p>去 MHR 身体台。姿态支持范围在入口内标明。</p></div><div><span class="guide-dot shared-dot"></span><h3>同一个人一起调</h3><p>使用共同模型实验。独立工作台之间暂不自动传递参数。</p></div></div>
+      <details class="notes"><summary>使用前的两个小提醒</summary><div><p>导入照片不会自动得到这个人的重建结果。当前 GNM R01 只做本地对照与手动编辑。</p><p>本页只显示模型实拍预览，不预加载三套三维运行时。点击后在同一标签页打开；工作台内的“返回人物总览”或浏览器返回键可回来。GNM R01 的“返回入口”仍回到它自己的首页。</p><p>“已验收”指注明版本的浏览器测试，不代表实体手机已经测试。模型来源及许可见各工作台。</p></div></details>
+    </section>
+  </main>
+  <footer class="footer"><a href="./">KAOPU / 人物工作台</a><span>模型真实渲染 · 独立入口 · 如实标注能力</span><time datetime="2026-10-06">2026.10.06</time></footer>
+</body>
+</html>
