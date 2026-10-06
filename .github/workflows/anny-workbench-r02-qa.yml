@@ -1,0 +1,47 @@
+name: Anny R02 official semantics QA
+on:
+  pull_request:
+    branches: [gh-pages]
+    paths:
+      - 'kaopu-anny-workbench/r02/**'
+      - '.github/workflows/anny-workbench-r02-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: anny-r02-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-anny-workbench
+      - name: Verify 64 official cases and parameter interoperability
+        run: node kaopu-anny-workbench/r02/tests/model.mjs
+      - name: Install pinned real browsers
+        run: |
+          npm install --prefix "$RUNNER_TEMP/anny-r02" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/anny-r02/node_modules/.bin/playwright" install --with-deps chromium webkit
+      - name: Inspect Chromium and WebKit rendering and official UI input
+        env:
+          ANNY_URL: http://127.0.0.1:8765/kaopu-anny-workbench/r02/
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/anny-r02-server.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -fsS "$ANNY_URL" >/dev/null && break || sleep 1; done
+          mkdir -p r02-chromium r02-webkit
+          (cd r02-chromium && NODE_PATH="$RUNNER_TEMP/anny-r02/node_modules" node ../kaopu-anny-workbench/r02/tests/browser.cjs)
+          (cd r02-webkit && ANNY_BROWSER=webkit NODE_PATH="$RUNNER_TEMP/anny-r02/node_modules" node ../kaopu-anny-workbench/r02/tests/browser.cjs)
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anny-r02-browser-evidence
+          retention-days: 7
+          path: |
+            kaopu-anny-workbench/r02/tests/parity-report.json
+            r02-*/*.png
+            r02-*/anny-r02-qa-result.json
