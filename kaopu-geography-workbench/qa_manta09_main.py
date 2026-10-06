@@ -14,7 +14,7 @@ def pause(p):
  if diag(p)['playing']:p.locator('#playBtn').click()
  p.wait_for_function('KaoPuDiagnostics().manta09.framesInFlight===0',timeout=180000)
 def seek(p,t):
- pause(p);before=diag(p)['renderCount'];p.locator('#seek').evaluate('(e,t)=>{e.value=String(t);e.dispatchEvent(new Event("input",{bubbles:true}));}',t);ready(p,before);pause(p)
+ pause(p);before=diag(p)['renderCount'];p.locator('#seek').evaluate('(e,t)=>{e.value=String(t);e.dispatchEvent(new Event("input",{bubbles:true}));}',t);ready(p,before);pause(p);p.wait_for_function('(t)=>Math.abs(KaoPuDiagnostics().renderedTime-t)<1e-6&&Math.abs(KaoPuDiagnostics().time-t)<1e-6',arg=t);p.evaluate('()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))')
 def shot(p,name):
  raw=p.locator('#liveCanvas').screenshot(timeout=180000);im=Image.open(io.BytesIO(raw)).convert('RGB');st=ImageStat.Stat(im);assert max(st.stddev)>8,(name,st.stddev);assert max(st.mean)>30,(name,st.mean);(OUT/(name+'.png')).write_bytes(raw);record('actual_pixels_'+name,{'size':im.size,'mean':st.mean,'stddev':st.stddev,'imageSha256':hashlib.sha256(raw).hexdigest()});return im.tobytes()
 def back(p,url):
