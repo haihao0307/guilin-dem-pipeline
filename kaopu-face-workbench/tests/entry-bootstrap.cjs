@@ -24,5 +24,6 @@ const engine=process.env.FACE_BROWSER||'chromium',url=process.env.FACE_URL||'htt
  {
   const[c,p]=await fresh({javaScriptEnabled:false});await p.goto(url);assert.equal(await p.locator('noscript').isVisible(),true);report.cases.push('JavaScript disabled has static noscript guidance');await c.close();
  }
+ {const[c,p]=await fresh();await p.goto(url+'#edit',{waitUntil:'domcontentloaded'});await ready(p);report.cases.push('direct #edit URL starts original GNM without needing intro click');await p.screenshot({path:'entry-direct-ready.png'});await c.close();}
  report.passed=true;fs.writeFileSync('entry-qa-result.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report));await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});
