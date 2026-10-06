@@ -2635,7 +2635,7 @@ self.onmessage = async ({ data }) => {
     } else if (data.type === "pause") {
       epoch++;
       paused = true;
-      emit("paused", snapshot());
+      emit("paused", lab ? snapshot() : { stage: "not-cut" });
     } else if (data.type === "export") {
       emit("export", { record: lab.export() });
     }
