@@ -40,36 +40,12 @@ def layout(p,name):
  d=p.evaluate('''()=>{const b=document.getElementById('backBtn').getBoundingClientRect();return ['playBtn','resetBtn','quality','teacherBtn'].map(id=>{const r=document.getElementById(id).getBoundingClientRect();return{id,overlap:Math.max(0,Math.min(b.right,r.right)-Math.max(b.left,r.left))*Math.max(0,Math.min(b.bottom,r.bottom)-Math.max(b.top,r.top))};});}''');assert all(x['overlap']==0 for x in d),d
  assert p.evaluate('document.documentElement.scrollWidth<=innerWidth+2');record(name,d)
 def back(p):
- url=p.url;p.locator('#backBtn').click();p.wait_for_function('KaoPuDiagnostics().homeVisible && !KaoPuDiagnostics().detailVisible');assert p.url==url and p.locator('[data-scene]').count()==9
+ url=p.url;p.locator('#backBtn').click();p.wait_for_function('KaoPuDiagnostics().homeVisible && !KaoPuDiagnostics().detailVisible');assert p.url==url and p.locator('[data-scene]').count()==10
 def original_study_entries(p,mobile=False):
- assert p.locator('[data-teacher-original]').count()==1 and p.locator('[data-scene]').count()==9
- assert p.locator('[data-scene="canyon08"],[data-scene="manta09"],[data-scene="submarine10"]').count()==0
- assert p.locator('script[src*="canyon08.js"],script[src*="manta09.js"],script[src*="submarine10.js"]').count()==0
- p.locator('#independentStudies').screenshot(path=str(OUT/('original_entries_mobile.png' if mobile else 'original_entries_desktop.png')))
- for number in ['08']:
-  entry=p.locator('[data-teacher-original="'+number+'"]')
-  assert entry.get_attribute('href')=='teacher-original/index.html?case='+number
-  assert '原版' in entry.inner_text() and '导入' in entry.inner_text()
-  entry.click();p.wait_for_url('**/teacher-original/index.html?case='+number)
-  p.wait_for_function('(n)=>window.teacherStudyDiagnostics&&teacherStudyDiagnostics.caseId===n',arg=number)
-  assert p.locator('#case-number').inner_text()==number
-  assert '未载入' in p.locator('#status').inner_text()
-  d=p.evaluate('teacherStudyDiagnostics');assert not d['imported'] and d['phase']=='unloaded' and d['lastFrame'] is None
-  for control in ['play','reset','time','seek','speed','quality','show-source','download-source']:assert p.locator('#'+control).is_disabled(),control
-  assert p.locator('#empty-state').is_visible() and not p.locator('#canvas').is_visible()
-  assert p.evaluate('document.documentElement.scrollWidth<=innerWidth+2')
-  requests=[];listener=lambda r:requests.append((r.method,r.url));p.on('request',listener)
-  p.locator('#file-input').set_input_files({'name':'invalid-learning-pack.json','mimeType':'application/json','buffer':b'{"not":"a valid teacher study pack"}'})
-  p.locator('#status[data-tone="error"]').wait_for();assert not p.evaluate('teacherStudyDiagnostics.imported')
-  assert p.locator('#play').is_disabled() and p.locator('#download-source').is_disabled()
-  assert not [r for r in requests if r[0] not in ['GET','HEAD']],requests
-  assert not requests,('invalid local input caused a network request',requests)
-  p.remove_listener('request',listener)
-  p.locator('#clear').click();assert '未载入' in p.locator('#status').inner_text()
-  p.screenshot(path=str(OUT/(('mobile_' if mobile else '')+'original_import_'+number+'_ui.png')),full_page=True)
-  record(('mobile_' if mobile else '')+'original_import_'+number+'_ui_and_invalid_file',{'route':p.url,'teacher_rendered':False,'original_payload_uploaded':False,'empty_state_truthful':True,'invalid_pack_rejected':True,'no_import_network_request':True})
-  p.locator('a[href="../index.html"]').click();p.wait_for_function('window.KaoPuDiagnostics&&KaoPuDiagnostics().homeVisible')
-  assert p.locator('[data-scene]').count()==9 and p.locator('[data-teacher-original]').count()==1
+ assert p.locator('[data-teacher-original]').count()==0 and p.locator('[data-scene]').count()==10
+ url=p.url;p.locator('[data-scene="canyonOriginal08"]').click();p.wait_for_function('KaoPuDiagnostics().canyon08.phase==="needs-import"');assert p.url==url and p.locator('#canyonOriginalFile').is_visible();assert p.locator('#liveCanvas').is_hidden() and p.locator('#playBtn').is_disabled()
+ writes=[];listener=lambda r:writes.append(r.url) if r.method not in ['GET','HEAD']else None;p.on('request',listener);p.locator('#canyonOriginalFile').set_input_files({'name':'invalid08.json','mimeType':'application/json','buffer':b'{"invalid":"neutral UI test"}'});p.wait_for_function('KaoPuDiagnostics().canyon08.error.includes("校验未通过")');assert not p.evaluate('KaoPuDiagnostics().canyon08.verified');assert not writes;p.remove_listener('request',listener)
+ record(('mobile_'if mobile else'')+'08_same_main_local_import_UI',{'originalPayloadUploaded':False,'originalBrowserRenderingTested':False,'sameURL':True,'invalidFileRejected':True});back(p)
 def original_manta09(p,mobile=False):
  name=('mobile_' if mobile else '')+'original_manta09'
  original_url=p.url
@@ -83,7 +59,7 @@ def original_manta09(p,mobile=False):
  assert d['manta09']['sourceSha256']=='679e35942e1285cd4c5c2543896050fa6ab2326f73495d1e44be203435118c78'
  assert d['manta09']['channels']==[0,1,3] and d['manta09']['sourceUnchanged']
  assert p.url==original_url and p.locator('#liveCanvas').count()==1
- assert p.locator('#quality').input_value()=='480' and p.locator('#speed').input_value()=='1'
+ assert p.locator('#quality').input_value()=='auto' and p.locator('#speed').input_value()=='1'
  for t in [0,2,6]:
   seek(p,t);p.wait_for_function('KaoPuDiagnostics().manta09.framesInFlight===0');shot(p,name+'_t'+str(t))
  layout(p,name+'_same_original_controls')
@@ -125,7 +101,7 @@ def original_submarine10(p,mobile=False):
 try:
  wait_site()
  public=OUT/'public_source';public.mkdir(exist_ok=True);manifest={}
- for name in ['index.html','style.css','settings.js','more.js','cave.js','canyon.js','crater.js','snow.js','post.js','caveBake.js','underwater.js','runtime.js','endless.js','manta-original09.js','submarine-original10.js','README.md']:
+ for name in ['index.html','style.css','settings.js','more.js','cave.js','canyon.js','crater.js','snow.js','post.js','caveBake.js','underwater.js','runtime.js','endless.js','manta-original09.js','manta-observe09.js','canyon-local08.js','original-study-controls.css','submarine-original10.js','README.md']:
   status,body=get(BASE+name+'?qa='+str(time.time()));assert status==200; (public/name).write_bytes(body);manifest[name]=hashlib.sha256(body).hexdigest()
  record('public_source_checksums',manifest)
  for name in ['more.js','cave.js','canyon.js','crater.js','snow.js','underwater.js','endless.js','runtime.js','manta-original09.js','submarine-original10.js','settings.js']:
@@ -141,7 +117,7 @@ try:
   p=browser.new_page(viewport={'width':1440,'height':1100},device_scale_factor=1);p.set_default_timeout(120000)
   errors=[];p.on('pageerror',lambda e:errors.append(str(e)))
   p.goto(BASE,wait_until='load',timeout=90000)
-  assert diag(p)['homeVisible'] and not diag(p)['detailVisible'] and p.locator('[data-scene]').count()==9
+  assert diag(p)['homeVisible'] and not diag(p)['detailVisible'] and p.locator('[data-scene]').count()==10
   record('home_first_desktop',{'diagnostics':diag(p),'entries':p.locator('[data-scene]').count()})
   before=diag(p)['renderCount'];p.locator('[data-scene="underwater"]').click();rendered(p,'underwater',before);pause(p);record('desktop_browser',{'version':browser.version,'diagnostics':diag(p)})
   gpu=p.evaluate('''()=>{const g=document.getElementById('liveCanvas').getContext('webgl2'),x=g.getExtension('WEBGL_debug_renderer_info');return{version:g.getParameter(g.VERSION),renderer:x?g.getParameter(x.UNMASKED_RENDERER_WEBGL):g.getParameter(g.RENDERER)};}''');record('actual_gpu_backend',gpu)
@@ -184,7 +160,7 @@ try:
   original_manta09(p);original_submarine10(p);original_study_entries(p);assert not errors,errors
   mobile=browser.new_page(viewport={'width':390,'height':844},device_scale_factor=1,is_mobile=True,has_touch=True);mobile.set_default_timeout(120000)
   mobile.goto(BASE,wait_until='load',timeout=90000)
-  assert diag(mobile)['homeVisible'] and mobile.locator('[data-scene]').count()==9
+  assert diag(mobile)['homeVisible'] and mobile.locator('[data-scene]').count()==10
   mobile.screenshot(path=str(OUT/'mobile_viewport_home_first.png'),full_page=True)
   before=diag(mobile)['renderCount'];mobile.locator('[data-scene="underwater"]').click();rendered(mobile,'underwater',before);pause(mobile);layout(mobile,'mobile_viewport_layout_390x844');seek(mobile,72);shot(mobile,'mobile_viewport_underwater');mobile.screenshot(path=str(OUT/'mobile_viewport_page.png'),full_page=True);back(mobile);mobile.screenshot(path=str(OUT/'mobile_viewport_home.png'),full_page=True);record('mobile_viewport_not_real_phone',True)
   before=diag(mobile)['renderCount'];mobile.locator('[data-scene="endless"]').click();rendered(mobile,'endless',before);pause(mobile);layout(mobile,'mobile_endless_layout_390x844');seek(mobile,2);shot(mobile,'mobile_endless');mobile.locator('#speed').select_option('0.02');assert diag(mobile)['speed']==.02;back(mobile);record('mobile_endless_entry_controls_return');assert not errors,errors

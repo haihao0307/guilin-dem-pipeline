@@ -29,9 +29,9 @@ try:
    errors=[];writes=[];p.on('pageerror',lambda e:errors.append(str(e)));p.on('request',lambda r:writes.append(r.url) if r.method not in ['GET','HEAD'] else None)
    p.goto(BASE,wait_until='load',timeout=120000);url=p.url
    assert diag(p)['homeVisible'] and p.locator('canvas').count()==1
-   old=set(p.locator('[data-scene]').evaluate_all('(es)=>es.map(e=>e.dataset.scene)'));assert old=={'more','cave','canyon','crater','snow','underwater','endless','mantaOriginal09','submarineOriginal10'}
+   old=set(p.locator('[data-scene]').evaluate_all('(es)=>es.map(e=>e.dataset.scene)'));assert old=={'more','cave','canyon','crater','snow','underwater','endless','mantaOriginal09','submarineOriginal10','canyonOriginal08'}
    card=p.locator('[data-scene="submarineOriginal10"]');assert card.evaluate('(e)=>e.tagName')=='BUTTON' and card.get_attribute('href') is None
-   assert p.locator('[data-teacher-original="08"]').get_attribute('href')=='teacher-original/index.html?case=08'
+   assert p.locator('[data-scene="canyonOriginal08"]').evaluate('(e)=>e.tagName')=='BUTTON'
    assert p.locator('[data-scene="submarineOriginal10"]').evaluate('(e)=>e.tagName')=='BUTTON'
    before=diag(p)['renderCount'];card.click();ready(p,before);pause(p)
    d=diag(p);assert d['submarine10']['verified'] and d['submarine10']['sourceBytes']==16497 and d['submarine10']['channels']==[0,2,3]
