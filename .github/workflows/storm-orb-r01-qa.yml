@@ -1,0 +1,51 @@
+name: Storm Orb R01 visual QA
+on:
+  pull_request:
+    branches: [gh-pages]
+    paths:
+      - 'kaopu-minigame-workbench/storm-orb-study/**'
+      - '.github/workflows/storm-orb-r01-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: storm-orb-r01-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  storm-browser:
+    if: github.head_ref == 'qa/voxel-train-r01-20261006'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench
+          sparse-checkout-cone-mode: true
+      - name: Validate JavaScript
+        run: |
+          node --check kaopu-minigame-workbench/storm-orb-study/app.mjs
+          node --check kaopu-minigame-workbench/storm-orb-study/scene.mjs
+      - name: Install official browser test dependency
+        run: |
+          npm install --prefix "$RUNNER_TEMP/storm-test" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/storm-test/node_modules/.bin/playwright" install --with-deps chromium webkit
+      - name: Capture real WebGL phases and test controls
+        env:
+          NODE_PATH: ${{ runner.temp }}/storm-test/node_modules
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/storm-server.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          sleep 2
+          STORM_QA_DIR=storm-chromium timeout 360s node kaopu-minigame-workbench/storm-orb-study/tests/browser.cjs
+          STORM_BROWSER=webkit STORM_QA_DIR=storm-webkit timeout 360s node kaopu-minigame-workbench/storm-orb-study/tests/browser.cjs
+      - name: Upload visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: storm-orb-r01-evidence
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            storm-chromium/*
+            storm-webkit/*
