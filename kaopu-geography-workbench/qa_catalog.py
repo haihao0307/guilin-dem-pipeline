@@ -25,7 +25,7 @@ try:
   try:
    html=get().decode()
    runtime_bytes=get('runtime.js')
-   if 'data-original-studies-revision="O1"' in html and html==Path(__file__).with_name('index.html').read_text() and 'data-ui-version="R17"' in html and '0.01× 极慢观察' in html and blob_sha(runtime_bytes)=='06904231c24537f81dba620d9e1472a6c7fae30c':break
+   if 'data-original-studies-revision="O1"' in html and html==Path(__file__).with_name('index.html').read_text() and 'data-ui-version="R17"' in html and '0.01× 极慢观察' in html and blob_sha(runtime_bytes)==blob_sha(Path(__file__).with_name('runtime.js').read_bytes()):break
   except Exception as e:print('waiting R17',e,flush=True)
   time.sleep(10)
  else:raise RuntimeError('R17 did not reach public hosting')
@@ -36,7 +36,7 @@ try:
   p=browser.new_page(viewport={'width':1440,'height':1000})
   p.goto(BASE+'?ui=R17',wait_until='load',timeout=120000)
   assert p.evaluate('KaoPuDiagnostics().homeVisible') and not p.evaluate('KaoPuDiagnostics().detailVisible')
-  assert p.locator('[data-scene]').count()==7
+  assert p.locator('[data-scene]').count()==8
   before=p.evaluate('KaoPuDiagnostics().renderCount');p.locator('[data-scene="underwater"]').click();wait_render(p,'underwater',before)
   assert p.locator('#speed').input_value()=='0.5'
   opts=p.locator('#speed option').evaluate_all('(xs)=>xs.map(x=>x.value)')
@@ -60,7 +60,7 @@ try:
   # Mobile viewport: speed selector remains reachable below canvas, no overflow.
   m=browser.new_page(viewport={'width':390,'height':844},device_scale_factor=2,is_mobile=True,has_touch=True)
   m.goto(BASE+'?ui=R17',wait_until='load',timeout=120000)
-  assert m.evaluate('KaoPuDiagnostics().homeVisible') and m.locator('[data-scene]').count()==7
+  assert m.evaluate('KaoPuDiagnostics().homeVisible') and m.locator('[data-scene]').count()==8
   before=m.evaluate('KaoPuDiagnostics().renderCount');m.locator('[data-scene="underwater"]').click();wait_render(m,'underwater',before)
   assert m.locator('#speed').is_visible()
   assert m.locator('#liveCanvas').bounding_box()['y'] < m.locator('#speed').bounding_box()['y']
