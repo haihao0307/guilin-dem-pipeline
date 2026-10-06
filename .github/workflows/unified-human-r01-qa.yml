@@ -2,55 +2,27 @@ name: Unified human R01 read-only QA
 on:
   push:
     branches: [qa/unified-human-r01-20261006]
-    paths: ['kaopu-unified-human-workbench/**', '.github/workflows/unified-human-r01-qa.yml']
+    paths: ['kaopu-anny-workbench/assets/**', 'kaopu-unified-human-workbench/QA-READY.json']
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   model_fixture:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-          sparse-checkout: kaopu-unified-human-workbench
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench/assets
           filter: blob:none
-      - uses: actions/cache@v4
-        id: fixture-cache
-        with:
-          path: kaopu-anny-workbench/assets
-          key: unified-anny-fixture-d6fc027-torch2141-numpy253-57cb642954bfee0c
-      - uses: actions/setup-python@v5
-        if: steps.fixture-cache.outputs.cache-hit != 'true'
-        with:
-          python-version: '3.12'
-      - uses: actions/checkout@v4
-        if: steps.fixture-cache.outputs.cache-hit != 'true'
-        with:
-          repository: naver/anny
-          ref: d6fc027ced5c17b6b0775dee944096ade7a9ef80
-          path: teacher-anny
-          persist-credentials: false
-      - name: Build the pinned official fixture once, only on cache miss
-        if: steps.fixture-cache.outputs.cache-hit != 'true'
-        env:
-          ANNY_OUTPUT: ${{ github.workspace }}/kaopu-anny-workbench
-          ANNY_CACHE_DIR: ${{ runner.temp }}/unified-anny-cache
-          SETUPTOOLS_SCM_PRETEND_VERSION_FOR_ANNY: '0.6.1'
-        run: |
-          test "$(git -C teacher-anny rev-parse HEAD)" = d6fc027ced5c17b6b0775dee944096ade7a9ef80
-          python -m pip install torch==2.14.1+cpu --index-url https://download.pytorch.org/whl/cpu
-          python -m pip install -r kaopu-unified-human-workbench/tools/ci-requirements.txt
-          python -m pip install --no-deps --no-build-isolation ./teacher-anny
-          python kaopu-unified-human-workbench/tools/export_anny_ci.py
-          rm kaopu-anny-workbench/assets/anny-model.bin
-      - name: Verify cached or newly built array bytes
+      - name: Verify authoritative uploaded Anny multipart assets
         run: |
           python kaopu-unified-human-workbench/tools/unpack_anny.py kaopu-anny-workbench
           echo '57cb642954bfee0c7589626a22726f5584490f74a1e38e7db8eb78a8392f57b1  kaopu-anny-workbench/assets/anny-model.bin' | sha256sum -c -
           rm kaopu-anny-workbench/assets/anny-model.bin
-          cat kaopu-anny-workbench/assets/ci-generated-receipt.json
       - uses: actions/upload-artifact@v4
         with:
           name: unified-anny-qa-fixture

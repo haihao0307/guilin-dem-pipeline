@@ -16,6 +16,7 @@ export class UnifiedModel {
   this.neutral=anny.forward({phenotypes:canonical.referenceAnnyPhenotypes});
   this.headBone=anny.boneLabels.indexOf('head');this.neckBone=anny.boneLabels.indexOf('neck01');this.revision=0;
   this.referenceHead=this.neutral.boneHeads.slice(this.headBone*3,this.headBone*3+3);this.referenceNeck=this.neutral.boneHeads.slice(this.neckBone*3,this.neckBone*3+3);
+  this.headScaleVertex=canonical.headScaleLandmark.annySourceVertex;this.referenceCranialDistance=dist(this.neutral.vertices.slice(this.headScaleVertex*3,this.headScaleVertex*3+3),this.referenceHead);
  }
  compute(state){
   const amount=state.mhr?.amount??0;
@@ -30,7 +31,7 @@ export class UnifiedModel {
   const head=bodyRest.boneHeads.slice(this.headBone*3,this.headBone*3+3),neck=bodyRest.boneHeads.slice(this.neckBone*3,this.neckBone*3+3);
   // Only uniform head scale and attachment move with Anny shape. GNM coefficients
   // stay identical; Anny age does not claim to age facial appearance.
-  const scale=dist(head,neck)/dist(this.referenceHead,this.referenceNeck);
+  const scale=dist(bodyRest.vertices.slice(this.headScaleVertex*3,this.headScaleVertex*3+3),head)/this.referenceCranialDistance;
   const poseDeltas=Array.from({length:this.anny.boneCount},(_,j)=>multiply4(body.bonePoses.slice(j*16,j*16+16),rigidInverse4(bodyRest.bonePoses.slice(j*16,j*16+16))));
   // MHR teacher contribution is an actual transported torso displacement,
   // not a relabelled Anny control. It stays in this one canonical vertex array.
