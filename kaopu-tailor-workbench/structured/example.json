@@ -1,0 +1,202 @@
+{
+  "schema": "kaopu-panel-language@1",
+  "id": "original-three-panel-curved-swatch",
+  "revision": 1,
+  "units": "mm",
+  "description": "手工规范学习；不是图片模型输出或服装成品",
+  "panels": [
+    {
+      "id": "A",
+      "left": {
+        "kind": "line",
+        "start": [
+          0,
+          0
+        ],
+        "end": [
+          0,
+          220
+        ]
+      },
+      "right": {
+        "kind": "quadratic",
+        "start": [
+          90,
+          0
+        ],
+        "control": [
+          65,
+          110
+        ],
+        "end": [
+          90,
+          220
+        ]
+      },
+      "allowanceMm": 8,
+      "rows": 16,
+      "columns": 6,
+      "placement": {
+        "translationMm": [
+          -205,
+          130,
+          0
+        ],
+        "rotationYDeg": -10
+      },
+      "holdTopLeft": true
+    },
+    {
+      "id": "B",
+      "left": {
+        "kind": "quadratic",
+        "start": [
+          0,
+          0
+        ],
+        "control": [
+          -25,
+          110
+        ],
+        "end": [
+          0,
+          220
+        ]
+      },
+      "right": {
+        "kind": "quadratic",
+        "start": [
+          90,
+          0
+        ],
+        "control": [
+          115,
+          110
+        ],
+        "end": [
+          90,
+          220
+        ]
+      },
+      "allowanceMm": 8,
+      "rows": 16,
+      "columns": 6,
+      "placement": {
+        "translationMm": [
+          -50,
+          130,
+          5
+        ],
+        "rotationYDeg": 0
+      },
+      "holdTopLeft": false
+    },
+    {
+      "id": "C",
+      "left": {
+        "kind": "quadratic",
+        "start": [
+          0,
+          0
+        ],
+        "control": [
+          25,
+          110
+        ],
+        "end": [
+          0,
+          220
+        ]
+      },
+      "right": {
+        "kind": "line",
+        "start": [
+          90,
+          0
+        ],
+        "end": [
+          90,
+          220
+        ]
+      },
+      "allowanceMm": 8,
+      "rows": 16,
+      "columns": 6,
+      "placement": {
+        "translationMm": [
+          105,
+          130,
+          0
+        ],
+        "rotationYDeg": 10
+      },
+      "holdTopLeft": false
+    }
+  ],
+  "stitches": [
+    {
+      "id": "left-curve",
+      "a": {
+        "panelId": "A",
+        "edge": "right",
+        "reverse": false
+      },
+      "b": {
+        "panelId": "B",
+        "edge": "left",
+        "reverse": true
+      },
+      "easeMm": 0,
+      "notches": [
+        "N1",
+        "N2"
+      ],
+      "stageId": "join-left"
+    },
+    {
+      "id": "right-curve",
+      "a": {
+        "panelId": "B",
+        "edge": "right",
+        "reverse": false
+      },
+      "b": {
+        "panelId": "C",
+        "edge": "left",
+        "reverse": true
+      },
+      "easeMm": 0,
+      "notches": [
+        "N1",
+        "N2"
+      ],
+      "stageId": "join-right"
+    }
+  ],
+  "stages": [
+    {
+      "id": "cut",
+      "requires": [],
+      "seams": []
+    },
+    {
+      "id": "join-left",
+      "requires": [
+        "cut"
+      ],
+      "seams": [
+        "left-curve"
+      ]
+    },
+    {
+      "id": "join-right",
+      "requires": [
+        "join-left"
+      ],
+      "seams": [
+        "right-curve"
+      ]
+    }
+  ],
+  "productionReady": false
+}

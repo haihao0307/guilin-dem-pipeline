@@ -1,0 +1,415 @@
+{
+  "schema": "kaopu/animal-learning-teachers@1",
+  "verifiedAtUtc": "2026-10-06",
+  "status": {
+    "methodReviewed": true,
+    "sourceReviewed": true,
+    "weightsDownloaded": false,
+    "inferenceExecuted": false,
+    "resultReproduced": false
+  },
+  "teachers": [
+    {
+      "id": "rapid-pattern-reid",
+      "name": "RAPID",
+      "title": "从花纹找回同一个体",
+      "fullTitle": "Real-time Animal Pattern re-Identification on Edge Devices",
+      "category": "图像 → 个体信息",
+      "input": "已知身份的图库与裁剪后的查询照片",
+      "output": "个体候选、置信分数与匹配证据",
+      "steps": [
+        "灰度与尺度归一",
+        "SIFT 局部描述子",
+        "ANNOY 近邻索引",
+        "ID 候选与人工复核"
+      ],
+      "learn": [
+        "花纹证据与个体身份分开保存",
+        "低置信结果可以拒识",
+        "图库保留视角信息"
+      ],
+      "scope": "斑马、长颈鹿、虎、奶牛、美洲豹等带花纹动物；匹配依赖相近视角",
+      "limits": [
+        "不是物种分类器、检测器、分割器或三维重建",
+        "不能自动保证开放集新个体身份",
+        "官方速度只对应查询，不是视频检测全链速度"
+      ],
+      "dependencies": "Python ≥ 3.10、OpenCV、annoy、NumPy、SciPy/pandas；核心方法可以使用 CPU",
+      "weights": "核心 SIFT/ANNOY 不需神经权重；可选斑马视角模块需要另外审计",
+      "license": "GPL-3.0",
+      "minimumTest": "用官方演示子集输出 ID 候选与置信 CSV，分别核对正确、错误、未知与遮挡结果",
+      "browserStatus": "Python CLI；本站仅提供学习与结果阅读入口",
+      "sourceCommit": "7402a550c4ebf2d0480bc9e0c7e6f9e031236b85",
+      "links": [
+        {
+          "label": "机构介绍",
+          "url": "https://is.mpg.de/ps/news/innovative-algorithms-for-species-conservation"
+        },
+        {
+          "label": "论文",
+          "url": "https://doi.org/10.1111/2041-210x.70332"
+        },
+        {
+          "label": "官方代码",
+          "url": "https://github.com/robot-perception-group/RAPID-animal-reidentification"
+        }
+      ]
+    },
+    {
+      "id": "4dequine-motion-appearance",
+      "name": "4DEquine",
+      "title": "把马的动作与外观分开恢复",
+      "fullTitle": "Disentangling Motion and Appearance for 4D Equine Reconstruction from Monocular Video",
+      "category": "视频 → 马科四维",
+      "input": "单目马科视频与一张清晰关键帧",
+      "output": "VAREN 姿态、形状、相机与可动画的三维高斯外观",
+      "steps": [
+        "视频时空模型 AniMoFormer",
+        "关键点与轮廓约束后优化",
+        "关键帧与 VAREN 点集进入 EquineGS",
+        "LBS 组合动作与外观"
+      ],
+      "learn": [
+        "形状、姿态、相机和外观分开估计",
+        "用时间连续性减少逐帧抖动",
+        "观察误差与不可见区域必须单独记录"
+      ],
+      "scope": "以马为主，论文另验证斑马零样本；不外推为任意动物",
+      "limits": [
+        "不输出个体身份",
+        "高斯外观不是可梳理的逐根毛发",
+        "严重遮挡或截断的关键帧会失败",
+        "未证明可导出通用可编辑 GLB"
+      ],
+      "dependencies": "Python 3.10、torch 2.5.1 / CUDA 12.1、PyTorch3D、ViTPose、VAREN、DINOv3、CUDA 高斯光栅化扩展",
+      "weights": "官方 Google Drive 入口存在；文件名、体积及完整可用性未核实",
+      "license": "BSL-1.1，Additional Use Grant=None；2030-12-01 才变更为 Apache-2.0。当前仅作为非生产研究",
+      "implementationDifference": "论文使用 Samurai 掩码；当前源码默认 sam3，需要单独审计许可、权重与依赖",
+      "minimumTest": "单匹无遮挡马短视频与关键帧，逐帧检查几何叠图、关键点误差、轮廓误差、时序抖动和外观视频",
+      "nativeOutputs": [
+        "mask_list.pkl",
+        "animer_outputs.pt",
+        "refined_results.pt",
+        "cano.mp4",
+        "animate.mp4"
+      ],
+      "browserStatus": "GPU 离线研究流程；本站不提供伪重建按钮",
+      "sourceCommit": "746c1f4bd707802fdb0f6d1f58ed02d265536af7",
+      "links": [
+        {
+          "label": "论文",
+          "url": "https://arxiv.org/html/2603.10125v1"
+        },
+        {
+          "label": "官方项目与演示",
+          "url": "https://luoxue-star.github.io/4DEquine_Project_Page/"
+        },
+        {
+          "label": "官方代码",
+          "url": "https://github.com/luoxue-star/4DEquine"
+        },
+        {
+          "label": "官方权重入口",
+          "url": "https://drive.google.com/drive/folders/1YDtNaKmueDoyP-NgySrp-BtJR0Pv9ftk"
+        }
+      ]
+    },
+    {
+      "id": "animallift-canonical-fur",
+      "name": "AnimalLift",
+      "title": "单图恢复规范形体、纹理与毛发",
+      "fullTitle": "Reconstructing Animatable 3D Animals from a Single Image by Learning Canonical Shape, Texture, and Fur Maps",
+      "category": "图像 → 动物三维",
+      "input": "一张受支持动物照片",
+      "output": "统一拓扑规范姿态网格、UV 纹理与显式 UV 毛发",
+      "steps": [
+        "图像条件编码",
+        "规范形体 / 纹理 / 毛发图预测",
+        "表面与毛根对应",
+        "Blender 中检查与编辑"
+      ],
+      "learn": [
+        "骨架与形体、UV 颜色和毛发分开",
+        "毛根绑定统一表面",
+        "背面等不可见区域保留先验推断标签"
+      ],
+      "scope": "犬、小猫、大猫、狼、狐、熊六类，共享四足拓扑",
+      "limits": [
+        "不提供追踪或个体识别",
+        "不是照片中真实姿态的直接恢复",
+        "不可见区域由先验补全",
+        "伤疤、湿毛与脏污等个体瞬态不保证恢复"
+      ],
+      "dependencies": "官方测试环境 Linux / NVIDIA、Python 3.10.20、torch 2.4.0 / CUDA 12.4、DINOv2 ViT-S/14、SD VAE、Blender 4.2 与 Essentials 毛发节点",
+      "weights": "latest.pt 约 2.32 GB；推理不需要 295.51 GiB 全量合成数据集",
+      "license": "GitHub 未发现 LICENSE；权重 CC BY-NC 2.0，数据 CC BY-NC-ND 4.0。仅研究方法，不能据此称可商用集成",
+      "implementationDifference": "论文自训 AE 为 8×64×64；当前代码改为冻结 SD VAE 4×128×128，旧 checkpoint 不兼容，论文速度与指标不作当前实现实测",
+      "minimumTest": "一个官方输入，batch=1，检查网格拓扑、UV、毛根映射与打包 .blend；旋转检查背面并标注推断",
+      "nativeOutputs": [
+        "OBJ",
+        "UV PNG",
+        "hair NPZ / PNG",
+        "manifest.csv",
+        "可保存的 .blend"
+      ],
+      "browserStatus": "Python 与 Blender 离线流程；存在 CPU 回退但无 CPU 性能验证",
+      "sourceCommit": "5d364cfc06d65e18cfa18f94a5883641075d862f",
+      "links": [
+        {
+          "label": "论文",
+          "url": "https://arxiv.org/html/2609.09513v1"
+        },
+        {
+          "label": "官方代码",
+          "url": "https://github.com/Chuny1/AnimalLift"
+        },
+        {
+          "label": "官方权重与许可",
+          "url": "https://huggingface.co/Chunyi99/AnimalLift/tree/main"
+        },
+        {
+          "label": "合成数据与许可",
+          "url": "https://huggingface.co/datasets/Chunyi99/AnimalLift"
+        }
+      ]
+    }
+  ],
+  "observationLayers": [
+    {
+      "id": "silhouette",
+      "label": "轮廓",
+      "meaning": "动物占据哪些像素",
+      "methods": [
+        "SAM"
+      ],
+      "notEvidenceFor": "不可见解剖结构"
+    },
+    {
+      "id": "correspondence",
+      "label": "对应",
+      "meaning": "图中哪些点可能对应",
+      "methods": [
+        "CoTracker3",
+        "DINOv3"
+      ],
+      "notEvidenceFor": "同一个体或真实三维"
+    },
+    {
+      "id": "keypoints",
+      "label": "关键点",
+      "meaning": "已定义的身体部位位置",
+      "methods": [
+        "DeepLabCut"
+      ],
+      "notEvidenceFor": "内部骨骼或自动尺度"
+    },
+    {
+      "id": "identity",
+      "label": "身份",
+      "meaning": "观察是否属于同一个体",
+      "methods": [
+        "RAPID",
+        "AMADEUS",
+        "idtracker.ai"
+      ],
+      "notEvidenceFor": "关节骨架或三维"
+    },
+    {
+      "id": "structure",
+      "label": "三维",
+      "meaning": "有约束的形体与姿态假设",
+      "methods": [
+        "4DEquine",
+        "AnimalLift"
+      ],
+      "notEvidenceFor": "被遮挡细节已经真实测得"
+    }
+  ],
+  "existingOverview": {
+    "sourceTitle": "🐾动物工作总览.md",
+    "sourceUpdatedAtUtc": "2026-10-04T14:49:36.228843Z",
+    "qualityRechecked": false,
+    "entries": [
+      {
+        "group": "动物总台",
+        "name": "Animal Atlas V1.2",
+        "url": null,
+        "note": "既有 19 条目离线工作台；公网固定入口尚未确认"
+      },
+      {
+        "group": "鱼类",
+        "name": "六鱼共用工作台 · R11",
+        "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-fish-system/",
+        "note": "保留原入口；候选"
+      },
+      {
+        "group": "鱼类",
+        "name": "30 条鱼群 · R14",
+        "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-fish-r14/",
+        "note": "保留原入口；群游与互动候选"
+      },
+      {
+        "group": "鱼类",
+        "name": "金枪鱼解剖专线 · R012",
+        "url": "https://haihao0307.github.io/guilin-dem-pipeline/fish-mother-yellowfin/?v=r012",
+        "note": "保留原入口；物种身份未确认"
+      },
+      {
+        "group": "鸟类",
+        "name": "帕劳鸟类工作台",
+        "url": null,
+        "note": "私有工作台，需要本人从原总览进入；这里保留名称，不公开私有站点链接"
+      },
+      {
+        "group": "鸟类",
+        "name": "苍鹭制谱工作台 · R01",
+        "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-bird-triad/r01-20260929/",
+        "note": "保留原入口；动作未验证"
+      },
+      {
+        "group": "鸟类",
+        "name": "海鸥 R023",
+        "url": null,
+        "note": "已有单文件成果，当前网页入口待发布"
+      },
+      {
+        "group": "猫狗与四足",
+        "name": "猫、犬、狼 R06／K5",
+        "url": null,
+        "note": "已有独立谱与播放器，当前网页入口待发布"
+      },
+      {
+        "group": "猫狗与四足",
+        "name": "猪与猫狗动作版",
+        "url": null,
+        "note": "已纳入 Animal Atlas；鹿的独立入口待核"
+      },
+      {
+        "group": "螃蟹",
+        "name": "螃蟹 R14",
+        "url": null,
+        "note": "普通蟹、椰子蟹六套外观；网页入口待发布"
+      },
+      {
+        "group": "相关形态实验",
+        "name": "毛发工作台 · 五案例／羽毛",
+        "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-hair-workbench/qa/kuko-anemone-candidate.html",
+        "note": "保留原入口；本学习更新不改变原案例"
+      },
+      {
+        "group": "相关形态实验",
+        "name": "海羽工作台",
+        "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-haiyu-workbench/",
+        "note": "保留原入口；本轮不重新声明案例完成状态"
+      },
+      {
+        "group": "相关形态实验",
+        "name": "珊瑚生产线",
+        "url": null,
+        "note": "原总览的测试入口待核，不猜测网址"
+      },
+      {
+        "group": "人物",
+        "name": "人物 02 · R26",
+        "url": null,
+        "note": "原总览记为候选，网页入口待发布"
+      },
+      {
+        "group": "人物",
+        "name": "原人物联合测试 · R5.3",
+        "url": "https://haihao0307.github.io/guilin-dem-pipeline/shorts-original-r5/",
+        "note": "保留原入口；不代表人物 02 最新版"
+      },
+      {
+        "group": "服装",
+        "name": "短裤原版／新版对照 · V9.4",
+        "url": "https://haihao0307.github.io/guilin-dem-pipeline/shorts-v9-4-directed-20261003/",
+        "note": "保留原入口；旧总览记为试穿未通过，非最新复验"
+      }
+    ]
+  },
+  "motionWorkflows": [
+    {
+      "id": "video-motion-silhouette",
+      "name": "视频参考动作实验",
+      "title": "固定视角拟合，再检验三维",
+      "category": "视频参考 → 骨骼动画候选",
+      "summary": "用目标角色生成固定视角参考，再逐帧摆骨、渲染、对比轮廓；原帖进一步展示正/侧同屏与左右色分区。",
+      "statusLabels": [
+        {
+          "label": "原帖视频已查看",
+          "verified": true
+        },
+        {
+          "label": "教程说明已读取",
+          "verified": true
+        },
+        {
+          "label": "新求解器源码未找到",
+          "verified": false
+        },
+        {
+          "label": "拟合流程未运行",
+          "verified": false
+        }
+      ],
+      "inferenceExecuted": false,
+      "coreBoundary": "同一视角的轮廓吻合，不能证明三维深度正确。这里保存方法与检查协议，尚未接入这套拟合器，也未实现通用动作制作器。",
+      "input": "有权使用的目标网格与有效骨架；固定视角渲染、参考视频及动作约束",
+      "output": "来源展示绑定角色动画与游戏结果；本页仅导出学习卡和现有人工点位 JSON，不导出新动作",
+      "steps": [
+        "准备目标角色及有效骨架。教程作者改用 Tripo 动物模型，再建立绑定；不是随意用另一只动物的外形代替目标。",
+        "从固定视角渲染目标角色，将图片送到 Dreamina 的 Seedance 2.5 生成二维动作参考。生成参考与三维拟合是分开的环节。",
+        "AI 编写脚本逐帧摆动目标骨架，渲染并比较参考轮廓，再调整。需要人工指出错误并迭代。",
+        "从互补视角检查深度。原帖约 1:37 展示正/侧两行的参考、绑定、轮廓叠加；约 1:58 以青/粉色区分左右肢体。",
+        "检验三维姿态与接触后才考虑游戏使用。来源提到 Blender 与 Godot 4；本轮没有验证可下载动作或通用导出器。"
+      ],
+      "demonstratedScope": "动物细节来自教程创作者的完整说明，以鹿侧向运动为较有利案例。原帖实际视频展示的是盔甲人形角色；它不是动物案例或跨物种统一验证。",
+      "limits": [
+        "教程报告人体搬石、扛木失败：二维轮廓对上，深度仍可能错误。原帖也展示了输入视角正确而侧面不对的情况。",
+        "动物仍会出现腿交叉、左右混淆和遮挡。标称帧率不一定等于实际独立帧节奏，需要逐帧检查。",
+        "模型缺少可动结构时无法靠摆骨补齐。例如教程中的雉鸡翅膀只是贴图，不能当成已存在的可动翅膀。",
+        "多视角同屏参考，需验证逐帧同步和跨视角一致性；不能称相机已标定、可以直接三角化。",
+        "左右色区只是对应线索；骨长、关节限位、脚底接触、滑脚、根运动和遮挡不能只靠轮廓验收。"
+      ],
+      "sourceRelationship": "Graalito 原帖直接引用下方教程。已查看原帖视频多个关键时间点；教程播放/转写未完整取得，动物流程依据创作者完整说明。作者早期 Mixamo / GVHMR 工程不能据此视为本帖技术栈。",
+      "availability": "这套新拟合器尚未发现公开代码、权重、安装文档或最低硬件配置。Tripo、Dreamina、Seedance 是作者使用的服务，本页没有调用或嵌入。",
+      "license": "尚未找到新流程的公开许可证。这里只发布自写方法说明、检查建议和原站链接，不转载原视频、角色模型、商业服务素材或受限权重。",
+      "authorReportedCost": "教程作者称每段处理 97 帧、约半小时，5 种动物与 21 段视频经历数日迭代。这是作者个案陈述，不是本工作台实测或硬件性能基准。",
+      "integrationPlan": [
+        "第一层先管理参考、固定视角、时间、左右身份与遮挡记录；已有人工图片点位工具可为选定视频帧准备可见点位。",
+        "第二层只有在取得合规实现或自行完成并验证后，才加入轮廓/关键点拟合。不能把生成视频的隐藏区域当成真实测量。",
+        "同一个三维姿态应同时解释各视角；多视角生成参考先检查是否同一时刻、同一动作和一致体形。保留一个未参与拟合的检查视角。",
+        "第三层再处理骨架拓扑、静止姿态、关节轴、比例、接触与根运动适配，之后才验证动画导出。人体、四足、鸟类分别设约束。"
+      ],
+      "minimumTest": "先用一个有权使用且骨架有效的鹿或四足模型，测试短侧向步行。固定相机、地面、比例和时间轴；核对真实帧节奏与可见左右点位。分别记录轮廓误差、骨长/限位、脚滑/穿透、根轨迹及循环首尾差，不预设无来源的合格数值。",
+      "futureGate": "只有参考忠实度与三维可用性分别通过，再测试第二个同拓扑、不同身材模型。人体、鸟类、飞行与跨物种独立验证，不能由单次演示升级成“通用动作制作器”。",
+      "suggestedObservationFields": [
+        "source_url",
+        "rights_status",
+        "subject_type",
+        "rig_id",
+        "fps_declared",
+        "fps_observed",
+        "time_seconds",
+        "view_id",
+        "landmark_id",
+        "side",
+        "visibility",
+        "confidence",
+        "contact_state",
+        "notes"
+      ],
+      "links": [
+        {
+          "label": "Graalito 原帖与演示",
+          "url": "https://x.com/Graalitoo/status/2106536651883421934"
+        },
+        {
+          "label": "原帖引用的教程 · Crazy AI Animation Workflow - Opus 5.5",
+          "url": "https://www.youtube.com/watch?v=evK-Y83Qlco"
+        }
+      ]
+    }
+  ]
+}

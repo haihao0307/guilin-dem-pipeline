@@ -1,0 +1,304 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'"><title>09 Manta · 原码原图实时学习</title><style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,sans-serif;background:#06121d;color:#ecf7ff}*{box-sizing:border-box}body{margin:0}main{max-width:1280px;margin:auto;padding:18px}header{display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:clamp(21px,4vw,32px);margin:10px 0}.sub{color:#9bb6c9;font-size:14px}a{color:#8be3ff}.stage{position:relative;aspect-ratio:1200/674;background:#02080c;border:1px solid #23445a;border-radius:12px;overflow:hidden;margin-top:16px}canvas{display:block;width:100%;height:100%;object-fit:contain}.empty{position:absolute;inset:0;display:grid;place-content:center;padding:24px;text-align:center;line-height:1.7;color:#b8cedc}.empty[hidden]{display:none}.controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:14px 0}button,input,select{font:inherit;color:inherit;background:#102c40;border:1px solid #35586e;border-radius:8px;min-height:42px;padding:8px 12px}button{cursor:pointer}button:disabled,input:disabled,select:disabled{opacity:.45;cursor:default}input{width:100px}label{display:flex;align-items:center;gap:7px}.status{min-height:2.8em;line-height:1.5;font-size:14px}.status[data-error=true]{color:#ffccab}details{border-top:1px solid #264355;padding-top:14px;line-height:1.65;font-size:14px}summary{cursor:pointer}code{word-break:break-all;font-size:12px}footer{color:#9ab2c2;font-size:12px;margin:20px 0;line-height:1.6}#verification{color:#8fd1b8;font-size:13px}@media(max-width:600px){main{padding:12px}header{align-items:flex-start;flex-direction:column}.controls{gap:8px}.controls label{font-size:13px}button,input,select{min-height:44px}.stage{border-radius:8px}}
+</style></head><body><main><header><div><div class="sub">原版学习 · STUDY 09</div><h1>Manta Ray</h1><div class="sub">dakrunch · 原码 12,150 B · 原通道 0 / 1 / 3</div></div><a href="../index.html" rel="noreferrer">返回地形工作台</a></header><section class="stage" aria-label="Manta 原码实时画布"><canvas id="canvas" width="480" height="270" hidden></canvas><div id="empty" class="empty">正在载入私有原码原图…</div></section><div class="controls"><button id="play" disabled>暂停</button><button id="reset" disabled>回到原始0秒</button><label>时间<input id="time" type="number" min="0" max="1000000" step="0.01" value="0" disabled></label><button id="seek" disabled>定位并暂停</button><label>速度<select id="speed" disabled><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1× 原速</option></select></label><label>采样<select id="quality" disabled><option value="480" selected>480 轻量</option><option value="720">720</option><option value="1200">1200 原尺寸</option></select></label></div><p id="status" class="status" role="status">正在检查私有学习载荷…</p><p id="verification"></p><details><summary>原版与验证边界</summary><p>保留原源码、原尾部、原相机、原光照、原颜色与原贴图。运行器只提供图形接口、时间控件和采样密度；同一时刻的虚拟坐标始终为1200×674，默认480宽减轻负载。</p><p>本页仅在内存中解析私有载荷，严格校验源码、原图、尺寸和采样设置；不会上传、联网取图或执行学习包HTML脚本。原图保留原始字节，随机alpha噪声按不预乘方式解码。</p><p>原码SHA-256：<code>679e35942e1285cd4c5c2543896050fa6ab2326f73495d1e44be203435118c78</code></p><p>原作：<a href="https://www.shadertoy.com/view/4ls3zM" rel="noreferrer">Manta Ray v2.0 · dakrunch</a>。源码的CC BY-NC-SA 3.0有归档及数据集旁证；原图的公开再分发许可未确认，本学习载荷只作私人使用，请勿公开转发含载荷的地址。</p><p>是否完成浏览器渲染以此页实际画面为准；离屏结果不代替真实浏览器或手机验收。</p></details><footer>私有学习候选 M09-P1 · 单画布、GPU单帧在途 · 切到后台自动暂停</footer></main><script>
+/* Self-authored local-data parser and one-frame GPU pacing. No teacher payload. */
+(function (root) {
+  'use strict';
+  function deepFreeze(value) { for (const child of Object.values(value)) if (child && typeof child === 'object') deepFreeze(child); return Object.freeze(value); }
+  const CASES = deepFreeze({"09":{"schemaVersion":1,"id":"manta-ray-09","number":"09","title":"Manta Ray","author":"dakrunch","source":"https://www.shadertoy.com/view/4ls3zM","sourceBytes":12150,"sourceSha256":"679e35942e1285cd4c5c2543896050fa6ab2326f73495d1e44be203435118c78","virtualResolution":[1200,674],"channels":[{"channel":0,"width":64,"height":64,"sha256":"6c43a9a9e21bfb8bea1c1b4454206c85651c0abda657ecd3535b1f9e4e4805b4","sampler":{"filter":"mipmap","internal":"byte","srgb":"false","vflip":"false","wrap":"repeat"},"mime":"image/png","bytes":16558},{"channel":1,"width":512,"height":512,"sha256":"81c28c65b034a4cd924f4254d82d7fe1ba451c8a7c735dc9da73ee782bd885ac","sampler":{"filter":"mipmap","internal":"byte","srgb":"false","vflip":"false","wrap":"repeat"},"mime":"image/jpeg","bytes":87562},{"channel":3,"width":512,"height":512,"sha256":"ef063b8f751db77d2ca4ef8a7f28ba60096e58cc8250b30f32923f99b067c9aa","sampler":{"filter":"mipmap","internal":"byte","srgb":"false","vflip":"false","wrap":"repeat"},"mime":"image/jpeg","bytes":49498}]}});
+  const MAX_INPUT_BYTES = 2 * 1024 * 1024;
+  function requireValue(ok, message) { if (!ok) throw new Error(message); }
+  function parsePackText(text) {
+    requireValue(typeof text === 'string' && new TextEncoder().encode(text).length <= MAX_INPUT_BYTES, '学习包超过 2 MB 限制');
+    const trimmed = text.trimStart();
+    if (trimmed[0] === '{') return JSON.parse(trimmed);
+    requireValue(/^<!doctype\s+html\b|^<html\b/i.test(trimmed), '请选择原版 HTML 查看器或 JSON 学习包');
+    // Do not create an imported DOM, run scripts, or resolve any imported URL.
+    const markers = [...text.matchAll(/(?:^|[\r\n])\s*const\s+bundle\s*=\s*(?=\{)/g)];
+    requireValue(markers.length === 1, 'HTML 中必须有且只有一个 const bundle JSON 数据对象');
+    const start = markers[0].index + markers[0][0].length;
+    let depth = 0, quoted = false, escaped = false;
+    for (let i = start; i < text.length; i++) {
+      const c = text[i];
+      if (quoted) {
+        if (escaped) escaped = false;
+        else if (c === '\\') escaped = true;
+        else if (c === '"') quoted = false;
+      } else if (c === '"') quoted = true;
+      else if (c === '{') depth++;
+      else if (c === '}' && --depth === 0) return JSON.parse(text.slice(start, i + 1));
+    }
+    throw new Error('HTML 的学习包 JSON 不完整');
+  }
+  function base64Bytes(value, count, label) {
+    requireValue(typeof value === 'string' && value.length === Math.ceil(count / 3) * 4, label + ' 的 Base64 长度不匹配');
+    requireValue(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value), label + ' 的 Base64 无效');
+    const data = Uint8Array.from(atob(value), c => c.charCodeAt(0));
+    requireValue(data.length === count, label + ' 的字节数不匹配');
+    return data;
+  }
+  async function sha256(data) {
+    requireValue(root.crypto && root.crypto.subtle, '浏览器缺少 SHA-256 校验接口，请用支持 Web Crypto 的 HTTPS 页面或本地文件浏览器');
+    return [...new Uint8Array(await root.crypto.subtle.digest('SHA-256', data))].map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  function imageDimensions(bytes, mime) {
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    if (mime === 'image/png') {
+      requireValue(bytes.length >= 24 && view.getUint32(0) === 0x89504e47 && view.getUint32(4) === 0x0d0a1a0a && view.getUint32(8) === 13 && view.getUint32(12) === 0x49484452, 'PNG 文件头无效');
+      return {width: view.getUint32(16), height: view.getUint32(20)};
+    }
+    requireValue(mime === 'image/jpeg' && view.getUint16(0) === 0xffd8, 'JPEG 文件头无效');
+    let offset = 2;
+    while (offset + 4 <= bytes.length) {
+      requireValue(bytes[offset++] === 0xff, 'JPEG 段无效');
+      while (bytes[offset] === 0xff) offset++;
+      const marker = bytes[offset++];
+      if (marker === 0xd9 || marker === 0xda) break;
+      if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) continue;
+      requireValue(offset + 2 <= bytes.length, 'JPEG 段被截断');
+      const length = view.getUint16(offset);
+      requireValue(length >= 2 && offset + length <= bytes.length, 'JPEG 段长度无效');
+      if ([0xc0,0xc1,0xc2,0xc3,0xc5,0xc6,0xc7,0xc9,0xca,0xcb,0xcd,0xce,0xcf].includes(marker)) {
+        requireValue(length >= 8, 'JPEG 尺寸段被截断');
+        return {width: view.getUint16(offset + 5), height: view.getUint16(offset + 3)};
+      }
+      offset += length;
+    }
+    throw new Error('未找到 JPEG 图像尺寸');
+  }
+  async function verifyPack(pack, caseId = '09') {
+    const PINS = CASES[caseId];
+    requireValue(Boolean(PINS), '案例编号无效');
+    requireValue(pack && typeof pack === 'object' && !Array.isArray(pack), '学习包必须是 JSON 对象');
+    for (const key of ['schemaVersion', 'id', 'author', 'source', 'sourceBytes', 'sourceSha256']) {
+      requireValue(pack[key] === PINS[key], '学习包元数据不匹配：' + key);
+    }
+    const originalBytes = base64Bytes(pack.sourceBase64, PINS.sourceBytes, '源码');
+    requireValue(await sha256(originalBytes) === PINS.sourceSha256, '原始源码 SHA-256 不匹配；不编译');
+    const source = new TextDecoder('utf-8', {fatal: true}).decode(originalBytes);
+    requireValue(new TextEncoder().encode(source).length === originalBytes.length && new TextEncoder().encode(source).every((b, i) => b === originalBytes[i]), '源码 UTF-8 往返校验失败');
+    requireValue(Array.isArray(pack.channels) && pack.channels.length === PINS.channels.length, '必须包含原始通道 ' + PINS.channels.map(c => c.channel).join('、') + '，且不能重复或增加通道');
+    const channels = [];
+    for (const pin of PINS.channels) {
+      const matches = pack.channels.filter(c => c && c.channel === pin.channel);
+      requireValue(matches.length === 1, '通道 ' + pin.channel + ' 缺失或重复');
+      const channel = matches[0], label = '通道 ' + pin.channel;
+      for (const key of ['width', 'height', 'sha256', 'mime']) requireValue(channel[key] === pin[key], label + ' 元数据不匹配：' + key);
+      if (channel.bytes !== undefined) requireValue(channel.bytes === pin.bytes, label + ' 字节数元数据不匹配');
+      requireValue(channel.sampler && Object.keys(channel.sampler).length === 5, label + ' sampler 不完整');
+      for (const key of Object.keys(pin.sampler)) requireValue(channel.sampler[key] === pin.sampler[key], label + ' sampler 不匹配：' + key);
+      const bytes = base64Bytes(channel.base64, pin.bytes, label);
+      requireValue(await sha256(bytes) === pin.sha256, label + ' SHA-256 不匹配；不编译');
+      const dimensions = imageDimensions(bytes, pin.mime);
+      requireValue(dimensions.width === pin.width && dimensions.height === pin.height, label + ' 图像实际尺寸不匹配');
+      channels.push({...pin, sampler: {...pin.sampler}, data: bytes});
+    }
+    return {source, originalBytes, channels, pins: PINS};
+  }
+
+  class Timeline {
+    constructor() { this.time = 0; this.anchor = 0; this.speed = 1; this.playing = false; }
+    current(now) { return this.time + (this.playing ? Math.max(0, now - this.anchor) * this.speed / 1000 : 0); }
+    pause(now) { this.time = this.current(now); this.playing = false; this.anchor = now; }
+    play(now) { this.anchor = now; this.playing = true; }
+    seek(value, now) { this.time = value; this.anchor = now; }
+    setSpeed(value, now) { this.time = this.current(now); this.anchor = now; this.speed = value; }
+    reset(now) { this.time = 0; this.anchor = now; this.playing = false; }
+  }
+
+  class FencePacer {
+    constructor({gl, draw, getLatest = () => null, onComplete = () => {}, onError = () => {}, raf = requestAnimationFrame, caf = cancelAnimationFrame}) {
+      Object.assign(this, {gl, draw, getLatest, onComplete, onError, raf, caf});
+      this.pending = null; this.flight = null; this.rafId = null; this.stopped = false; this.retiring = false; this.retirement = null;
+    }
+    request(state) { if (!this.stopped && !this.retiring) { this.pending = {...state}; this.schedule(); } }
+    schedule() { if (!this.stopped && this.rafId === null) this.rafId = this.raf(now => this.pump(now)); }
+    pump(now) {
+      this.rafId = null;
+      if (this.stopped) return;
+      try {
+        const latest = this.retiring ? null : this.getLatest(now);
+        if (latest) this.pending = {...latest};
+        if (this.flight) {
+          const result = this.gl.clientWaitSync(this.flight.sync, 0, 0); // Never block; never gl.finish().
+          if (result === this.gl.TIMEOUT_EXPIRED) { this.schedule(); return; }
+          if (result !== this.gl.ALREADY_SIGNALED && result !== this.gl.CONDITION_SATISFIED) throw new Error('GPU 同步失败，已停止提交画面');
+          const finished = this.flight;
+          this.flight = null;
+          this.gl.deleteSync(finished.sync);
+          if (!this.retiring) this.onComplete(finished.state, now - finished.started);
+        }
+        if (this.stopped) return;
+        if (this.retiring) { this.stop(); return; }
+        if (this.pending) {
+          const state = this.pending; this.pending = null;
+          this.draw(state);
+          const sync = this.gl.fenceSync(this.gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+          if (!sync) throw new Error('无法建立 GPU fence，已停止提交画面');
+          this.flight = {sync, state, started: now};
+          this.gl.flush();
+        }
+        if (this.flight || this.pending) this.schedule();
+      } catch (error) { this.stop(error); this.onError(error); }
+    }
+    retire() {
+      if (this.retirement) return this.retirement;
+      if (this.stopped) return Promise.resolve();
+      this.retiring = true; this.pending = null;
+      this.retirement = new Promise((resolve, reject) => { this.resolveRetirement = resolve; this.rejectRetirement = reject; });
+      if (this.flight) this.schedule(); else this.stop();
+      return this.retirement;
+    }
+    stop(error = null) {
+      this.stopped = true;
+      if (this.rafId !== null) this.caf(this.rafId);
+      this.rafId = null; this.pending = null;
+      if (this.flight) this.gl.deleteSync(this.flight.sync);
+      this.flight = null;
+      if (error && this.rejectRetirement) this.rejectRetirement(error);
+      else if (this.resolveRetirement) this.resolveRetirement();
+    }
+  }
+  root.MantaCore = Object.freeze({CASES, MAX_INPUT_BYTES, parsePackText, verifyPack, imageDimensions, sha256, Timeline, FencePacer});
+})(globalThis);
+
+/* Only this self-authored uniform/entry wrapper surrounds the verified source. */
+(function (root) {
+  'use strict';
+  const VERTEX = '#version 300 es\nprecision highp float;void main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);gl_Position=vec4(p*2.-1.,0.,1.);}';
+  const PREFIX = '#version 300 es\nprecision highp float;precision highp int;uniform vec3 iResolution;uniform vec2 uRenderResolution;uniform float iTime;uniform vec4 iMouse;uniform int iFrame;uniform sampler2D iChannel0,iChannel1,iChannel2,iChannel3;out vec4 outputColor;\n';
+  const SUFFIX = '\nvoid main(){mainImage(outputColor,gl_FragCoord.xy * iResolution.xy / uRenderResolution);}';
+  function wrapSource(source, caseId = '09') { return PREFIX + (caseId === '08' ? '#define HW_PERFORMANCE 0\n' : '') + source + SUFFIX; }
+  async function prepareImages(pack, isCurrent) {
+    if (typeof createImageBitmap !== 'function') throw new Error('此浏览器缺少无预乘的 createImageBitmap 解码接口');
+    const images = [];
+    try {
+      for (const channel of pack.channels) {
+        if (!isCurrent()) throw new Error('导入已被新的选择替换');
+        const bitmap = await createImageBitmap(new Blob([channel.data], {type: channel.mime}), {premultiplyAlpha: 'none', colorSpaceConversion: 'none', imageOrientation: channel.sampler.vflip === 'true' ? 'flipY' : 'none'});
+        images.push({channel, bitmap});
+        if (bitmap.width !== channel.width || bitmap.height !== channel.height) throw new Error('通道 ' + channel.channel + ' 解码尺寸不匹配');
+      }
+      if (!isCurrent()) throw new Error('导入已被新的选择替换');
+      return images;
+    } catch (error) { for (const image of images) image.bitmap.close(); throw error; }
+  }
+  function createRenderer(canvas, pack, images, callbacks) {
+    const gl = canvas.getContext('webgl2', {alpha: false, antialias: false, premultipliedAlpha: false, preserveDrawingBuffer: true, powerPreference: 'low-power'});
+    if (!gl || gl.isContextLost()) throw new Error('此浏览器没有可用的 WebGL2；源码校验及下载仍可使用');
+    let program = null, vao = null, pacer = null;
+    const shaders = [], textures = [];
+    function cleanup() {
+      if (pacer) pacer.stop();
+      for (const shader of shaders.splice(0)) gl.deleteShader(shader);
+      for (const texture of textures.splice(0)) gl.deleteTexture(texture);
+      if (program) { gl.deleteProgram(program); program = null; }
+      if (vao) { gl.deleteVertexArray(vao); vao = null; }
+    }
+    function compile(type, source) {
+      const shader = gl.createShader(type);
+      if (!shader) throw new Error('无法建立 shader');
+      shaders.push(shader); gl.shaderSource(shader, source); gl.compileShader(shader);
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw new Error('Shader 编译失败：' + (gl.getShaderInfoLog(shader) || '未知错误'));
+      return shader;
+    }
+    try {
+      gl.disable(gl.BLEND); gl.disable(gl.DEPTH_TEST);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+      gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+      program = gl.createProgram();
+      if (!program) throw new Error('无法建立 shader program');
+      gl.attachShader(program, compile(gl.VERTEX_SHADER, VERTEX));
+      gl.attachShader(program, compile(gl.FRAGMENT_SHADER, wrapSource(pack.source, pack.pins.number)));
+      gl.linkProgram(program);
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error('Program 链接失败：' + (gl.getProgramInfoLog(program) || '未知错误'));
+      for (const shader of shaders.splice(0)) { gl.detachShader(program, shader); gl.deleteShader(shader); }
+      gl.useProgram(program);
+      vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+      for (const {channel, bitmap} of images) {
+        const texture = gl.createTexture();
+        if (!texture) throw new Error('无法建立通道贴图');
+        textures.push(texture); gl.activeTexture(gl.TEXTURE0 + channel.channel); gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, channel.sampler.filter === 'mipmap' ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, bitmap);
+        if (channel.sampler.filter === 'mipmap') gl.generateMipmap(gl.TEXTURE_2D);
+        gl.uniform1i(gl.getUniformLocation(program, 'iChannel' + channel.channel), channel.channel);
+      }
+      const uniforms = Object.fromEntries(['iResolution', 'uRenderResolution', 'iTime', 'iMouse', 'iFrame'].map(name => [name, gl.getUniformLocation(program, name)]));
+      let frames = 0, epoch = -1;
+      function draw(state) {
+        if (gl.isContextLost()) throw new Error('WebGL 上下文已丢失');
+        if (canvas.width !== state.width || canvas.height !== state.height) { canvas.width = state.width; canvas.height = state.height; }
+        gl.useProgram(program); gl.bindVertexArray(vao); gl.viewport(0, 0, state.width, state.height);
+        // Fixed virtual coordinates preserve each teacher viewer's framing at every density.
+        gl.uniform3f(uniforms.iResolution, ...pack.pins.virtualResolution, 1);
+        gl.uniform2f(uniforms.uRenderResolution, state.width, state.height);
+        gl.uniform1f(uniforms.iTime, state.time);
+        gl.uniform4fv(uniforms.iMouse, state.mouse);
+        if (epoch !== state.epoch) { epoch = state.epoch; frames = 0; }
+        gl.uniform1i(uniforms.iFrame, frames++);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        const error = gl.getError();
+        if (error !== gl.NO_ERROR) throw new Error('WebGL 错误 ' + error);
+      }
+      pacer = new root.MantaCore.FencePacer({gl, draw, ...callbacks});
+      return {request: state => pacer.request(state), retire: () => pacer.retire().finally(cleanup), abandon: cleanup};
+    } catch (error) { cleanup(); throw error; }
+  }
+  root.MantaRenderer = Object.freeze({prepareImages, createRenderer, wrapSource, PREFIX, SUFFIX});
+})(globalThis);
+
+(function(){'use strict';
+const $=id=>document.getElementById(id),canvas=$('canvas'),clock=new MantaCore.Timeline();
+let renderer=null,verified=null,parsedPack=null,phase='unloaded',lastFrame=null,epoch=0,gen=0,first=true;
+const controlIds=['play','reset','time','seek','speed','quality'];
+function enabled(v){for(const id of controlIds)$(id).disabled=!v;}
+function status(message,error=false){$('status').textContent=message;$('status').dataset.error=String(error);}
+function controls(){ $('play').textContent=clock.playing?'暂停':'播放'; }
+function state(now=performance.now()){const w=Number($('quality').value);return{time:clock.current(now),width:w,height:Math.round(w*674/1200),mouse:[0,0,0,0],epoch};}
+function pause(){clock.pause(performance.now());controls();}
+function request(){if(renderer)renderer.request(state());}
+function fail(e,id=gen){if(id!==gen)return;pause();enabled(false);phase='error';status((verified?'原码原图校验通过；':'')+e.message,true);$('empty').textContent=verified?'当前浏览器未能运行原画：'+e.message:'无法载入：'+e.message;$('empty').hidden=false;canvas.hidden=true;if(renderer){renderer.abandon();renderer=null;}}
+async function unpackFragment(fragment){
+ const token=new URLSearchParams(fragment.replace(/^#/, '')).get('manta');
+ if(!token)throw Error('缺少私有载荷。请打开随附的09 Manta一键启动文件，或完整私有版本；此裸地址不含老师源码和贴图。');
+ if(token.length>300000||!/^[A-Za-z0-9_-]+$/.test(token))throw Error('私有载荷无效或过长');
+ if(typeof DecompressionStream!=='function')throw Error('此浏览器不支持gzip解压，请使用完整私有HTML版本');
+ let b=token.replace(/-/g,'+').replace(/_/g,'/');while(b.length%4)b+='=';
+ const bytes=Uint8Array.from(atob(b),c=>c.charCodeAt(0));
+ const reader=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip')).getReader();const chunks=[];let total=0;
+ for(;;){const {done,value}=await reader.read();if(done)break;total+=value.length;if(total>MantaCore.MAX_INPUT_BYTES){await reader.cancel();throw Error('解压后学习包超过2MB');}chunks.push(value);}
+ const out=new Uint8Array(total);let offset=0;for(const c of chunks){out.set(c,offset);offset+=c.length;}
+ return MantaCore.parsePackText(new TextDecoder('utf-8',{fatal:true}).decode(out));
+}
+async function boot(pack){const id=++gen;pause();enabled(false);if(renderer){renderer.abandon();renderer=null;}phase='validating';status('正在校验Manta原码与3张原图…');
+ try{const result=await MantaCore.verifyPack(pack,'09');if(id!==gen)return;verified=result;
+ $('verification').textContent='已核对：源码12,150 B + 原图3张；字节SHA-256、尺寸、采样设置全部一致';
+ phase='preparing';status('校验通过，正在建立WebGL2原码画面…');
+ const images=await MantaRenderer.prepareImages(verified,()=>id===gen);
+ try{clock.reset(performance.now());clock.setSpeed(1,performance.now());$('speed').value='1';$('time').value='0';first=true;
+ renderer=MantaRenderer.createRenderer(canvas,verified,images,{
+ getLatest:now=>clock.playing?state(now):null,
+ onComplete:(frame,elapsed)=>{if(id!==gen)return;lastFrame={...frame};canvas.hidden=false;$('empty').hidden=true;enabled(true);if(first){first=false;if(!document.hidden)clock.play(performance.now());request();}phase=clock.playing?'playing':'paused';controls();if(document.activeElement!==$('time'))$('time').value=frame.time.toFixed(2);status((clock.playing?'原码播放中':'原码已暂停')+' · '+frame.time.toFixed(2)+'s · '+frame.width+'×'+frame.height+' · 单帧 '+Math.round(elapsed)+'ms');},
+ onError:error=>fail(error,id)});phase='waiting-first-frame';request();
+ }finally{for(const item of images)item.bitmap.close();}
+ }catch(e){fail(e,id);}}
+$('play').addEventListener('click',()=>{if(clock.playing)pause();else{clock.play(performance.now());controls();}request();});
+$('reset').addEventListener('click',()=>{epoch++;clock.reset(performance.now());controls();request();});
+function seek(){const t=Number($('time').value);if($('time').value.trim()===''||!Number.isFinite(t)||t<0||t>1000000){status('时间请输入0到1,000,000秒',true);return;}pause();clock.seek(t,performance.now());request();}
+$('seek').addEventListener('click',seek);$('time').addEventListener('keydown',e=>{if(e.key==='Enter')seek();});
+$('speed').addEventListener('change',()=>{clock.setSpeed(Number($('speed').value),performance.now());request();});$('quality').addEventListener('change',request);
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&clock.playing){pause();request();}});
+canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();gen++;fail(Error('WebGL上下文丢失；请刷新本页，私有载荷仍保留在当前地址中'));});
+window.addEventListener('pagehide',()=>{gen++;pause();if(renderer){renderer.abandon();renderer=null;}});
+window.addEventListener('pageshow',e=>{if(e.persisted){enabled(false);if(parsedPack)boot(parsedPack);else load();}});
+Object.defineProperty(window,'manta09Diagnostics',{get:()=>Object.freeze({version:'M09-P1',phase,imported:!!verified,sourceBytes:verified?verified.originalBytes.length:0,sourceSha256:MantaCore.CASES['09'].sourceSha256,channelCount:verified?verified.channels.length:0,playing:clock.playing,lastFrame:lastFrame?Object.freeze({...lastFrame}):null,networkUploads:false,configuredMaxFramesInFlight:1})});
+window.MantaPrivateLoader=Object.freeze({unpackFragment});
+function load(){const id=++gen;const embedded=document.getElementById('private-pack');Promise.resolve().then(()=>embedded?MantaCore.parsePackText(embedded.textContent):unpackFragment(location.hash)).then(pack=>{if(id!==gen)return;parsedPack=pack;return boot(pack);}).catch(e=>fail(e,id));}
+load();
+})();
+</script></body></html>
