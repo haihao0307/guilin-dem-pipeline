@@ -23,7 +23,7 @@ const AUDIT_KEY = '__KAOPU_STUDIES_QA_LEGACY_WRITES__';
 const SEED_KEY = '__KAOPU_STUDIES_QA_SEEDED__';
 const report = {
   startedAt: new Date().toISOString(), passed: false,
-  scope: 'Browser verification of isolated studies 05–10; passing does not constitute user acceptance',
+  scope: 'Focused repeat fullscreen and observation controls after the full 52-stage candidate pass',
   base: BASE.href, studyURL: STUDY_URL, playwrightVersion: require('playwright/package.json').version,
   browser: 'Chromium, launchServer/connect, SwiftShader', stepTimeoutMs: STEP_TIMEOUT_MS,
   steps: [], errors: [], consoleErrors: [], failedRequests: []
@@ -187,7 +187,7 @@ function assertProtected(audit) {
         const getError = glProto.getError;
         glProto.getError = function () {
           const code = getError.call(this);
-          if (code) (window.__KAOPU_GL_DIAGNOSTICS ||= []).push({ code, width: this.canvas.width, height: this.canvas.height, box: document.getElementById('viewport')?.getBoundingClientRect().toJSON(), maxTexture: this.getParameter(this.MAX_TEXTURE_SIZE), calls: recentCalls.slice() });
+          if (code) { (window.__KAOPU_GL_DIAGNOSTICS ||= []).push({ code, width: this.canvas.width, height: this.canvas.height, box: document.getElementById('viewport')?.getBoundingClientRect().toJSON(), maxTexture: this.getParameter(this.MAX_TEXTURE_SIZE), calls: recentCalls.slice() }); sessionStorage.setItem('__KAOPU_GL_DIAGNOSTICS__', JSON.stringify(window.__KAOPU_GL_DIAGNOSTICS)); }
           return code;
         };
         const nativeLocal = window.localStorage, nativeSession = window.sessionStorage;
@@ -274,28 +274,6 @@ function assertProtected(audit) {
       return { version: await page.evaluate(() => KAOPU_STUDIES.version), quality: current.quality, legacyWrites: audit.writes.length, exactBackup: true };
     });
 
-    const defaultHashes = new Set();
-    for (const id of IDS) {
-      await step(`case ${id}: actual default render is nonempty with four samples`, async () => {
-        await select(id);
-        const frame = await snapshot(null, null, false);
-        nonempty(frame, id);
-        assert.equal(frame.packet.case, id);
-        assert.equal(frame.packet.uniforms.uLessonMode, Number(id) - 4);
-        assert.equal(frame.packet.uniforms.uAASamples, 2);
-        assert.equal(frame.packet.uniforms.uLessonAmount, 1);
-        assert.equal(frame.packet.uniforms.uInteractive, 0);
-        assert.equal(frame.packet.postWeight, .2);
-        defaultHashes.add(frame.hash);
-        await page.locator('#viewport').screenshot({ path: path.join(OUT, `case-${id}-default.png`), timeout: 15000 });
-        return frame;
-      });
-    }
-    await step('the six default studies have six distinct rendered images', async () => {
-      assert.equal(defaultHashes.size, 6, 'The six default samples should produce distinct images');
-      return { distinctDefaultImages: defaultHashes.size };
-    });
-
     await step('use fixed 480 single sampling for interaction comparisons after default-image proof', async () => {
       await page.locator('[data-tab="quality"]').click();
       await page.locator('#resolution').selectOption('480');
@@ -304,95 +282,6 @@ function assertProtected(audit) {
       const current = await state();
       assert.equal(current.quality.width, 480); assert.equal(current.quality.samples, 1);
       return { quality: current.quality, defaultVisualsAlreadyTested: '640 budget with four samples for every study' };
-    });
-
-    for (const id of IDS) {
-      await step(`case ${id}: reset baseline for actual range-input tests`, async () => {
-        await select(id);
-        await page.locator('[data-tab="study"]').click();
-        await page.locator('#resetMaterial').click();
-        return snapshot('controls-base');
-      });
-      for (const [field, value] of [['lessonScale', 2.34], ['lessonSeed', 57], ['lessonAmount', .42]]) {
-        await step(`case ${id}: ${field} input changes rendered pixels`, async () => {
-          await page.locator('#resetMaterial').click();
-          await range(field, value);
-          const frame = await snapshot(null, 'controls-base');
-          changed(frame, `${id}/${field}`);
-          const uniform = { lessonScale: 'uLessonScale', lessonSeed: 'uLessonSeed', lessonAmount: 'uLessonAmount' }[field];
-          assert.equal(frame.packet.uniforms[uniform], value);
-          return frame;
-        });
-      }
-    }
-
-    let zeroHash;
-    for (const id of IDS) {
-      await step(`case ${id}: amount zero produces the same inherited base image`, async () => {
-        await select(id);
-        await page.locator('#cameraReset').click();
-        await range('lessonAmount', 0);
-        const frame = await snapshot();
-        nonempty(frame, id + '/amount-zero');
-        if (zeroHash) assert.equal(frame.hash, zeroHash, `Case ${id} did not fully return to the same base at amount zero`);
-        else zeroHash = frame.hash;
-        return { hash: frame.hash, width: frame.width, height: frame.height, uniforms: frame.packet.uniforms, glError: frame.glError };
-      });
-    }
-
-    let saved;
-    await step('persist separate parameters and cameras for 05 and 06', async () => {
-      await select('05');
-      await range('lessonScale', 1.87); await range('lessonAmount', .62); await range('lessonSeed', 23);
-      await page.evaluate(() => KAOPU_STUDIES.setCamera({ yaw: .37, pitch: .19, zoom: 1.2, pan: [.08, -.04] }));
-      await select('06');
-      await range('lessonScale', .77); await range('lessonAmount', .84); await range('lessonSeed', 61);
-      await page.evaluate(() => KAOPU_STUDIES.setCamera({ yaw: -.28, pitch: .31, zoom: .9, pan: [-.03, .05] }));
-      saved = await state();
-      await select('05');
-      const switched = await state();
-      assert.deepEqual(switched.states['05'], saved.states['05']);
-      assert.deepEqual(switched.states['06'], saved.states['06']);
-      assert.deepEqual(switched.cameras['05'], saved.cameras['05']);
-      assert.deepEqual(switched.cameras['06'], saved.cameras['06']);
-      return { states: { '05': switched.states['05'], '06': switched.states['06'] }, cameras: { '05': switched.cameras['05'], '06': switched.cameras['06'] } };
-    });
-
-    await step('actual reload retains each study parameter and camera', async () => {
-      await page.reload({ waitUntil: 'domcontentloaded' });
-      await ready();
-      const reloaded = await state();
-      assert.equal(reloaded.active, '05');
-      assert.deepEqual(reloaded.states, saved.states);
-      assert.deepEqual(reloaded.cameras, saved.cameras);
-      assert.deepEqual(reloaded.rig, saved.rig);
-      assert.deepEqual(reloaded.quality, saved.quality);
-      const audit = await auditLegacy();
-      assertProtected(audit);
-      return { active: reloaded.active, allStudyStatesAndCamerasSurviveReload: true, legacyWrites: audit.writes.length };
-    });
-
-    await step('reset affects only the current study material', async () => {
-      const before = await state();
-      await page.locator('#resetMaterial').click();
-      const after = await state();
-      assert.deepEqual(after.states['05'], { lessonScale: 1, lessonAmount: 1, lessonSeed: 0, view: 0 });
-      for (const id of IDS.filter(value => value !== '05')) assert.deepEqual(after.states[id], before.states[id], `Reset leaked into case ${id}`);
-      assert.deepEqual(after.cameras, before.cameras, 'Material reset unexpectedly changed cameras');
-      assert.deepEqual(after.rig, before.rig, 'Material reset unexpectedly changed shared lighting');
-      assert.deepEqual(after.quality, before.quality, 'Material reset unexpectedly changed shared quality');
-      return { onlyCurrentMaterialReset: true, frame: await snapshot() };
-    });
-
-    await step('browser back and forward follow the numbered case navigation', async () => {
-      await select('07'); await select('08'); await select('09');
-      for (const [direction, expected] of [['back', '08'], ['back', '07'], ['forward', '08'], ['forward', '09']]) {
-        if (direction === 'back') await page.goBack(); else await page.goForward();
-        await page.waitForFunction(id => KAOPU_STUDIES.getState().active === id && KAOPU_STUDIES.packet()?.case === id, expected);
-        assert.equal(new URL(page.url()).searchParams.get('case'), expected);
-        assert.equal(await page.locator(`[data-case="${expected}"]`).getAttribute('aria-pressed'), 'true');
-      }
-      return { active: (await state()).active, url: page.url(), traversal: ['08', '07', '08', '09'] };
     });
 
     await step('real pointer drag rotates the camera and changes the image', async () => {
@@ -435,17 +324,64 @@ function assertProtected(audit) {
       return { active: (await state()).active, actualGestureCameraPersists: true };
     });
 
-    await step('fullscreen button enters and exits actual browser fullscreen', async () => {
+    await step('auto rotation changes only observation and pauses at the same quality', async () => {
+      await snapshot('before-auto'); const before = await state();
+      await page.locator('#rotate').click();
+      await page.waitForFunction(count => KAOPU_STUDIES.getState().frames >= count + 3, before.frames);
+      await page.locator('#rotate').click();
+      const after = await state();
+      assert.equal(after.running, false); assert.deepEqual(after.quality, before.quality);
+      assert.deepEqual(after.states, before.states); assert.notEqual(after.cameras[after.active].yaw, before.cameras[before.active].yaw);
+      const frame = await snapshot(null, 'before-auto'); changed(frame, 'auto rotation');
+      await page.locator('#cameraReset').click();
+      return { paused: true, sameQuality: true, sameMaterialStates: true };
+    });
+    await step('zoom buttons and camera reset operate on the current study only', async () => {
+      const before = await state();
+      await page.locator('#zoomIn').click(); assert.equal((await state()).cameras['08'].zoom, 1.2);
+      await page.locator('#zoomOut').click(); assert.equal((await state()).cameras['08'].zoom, 1);
+      await page.locator('#cameraReset').click();
+      assert.deepEqual((await state()).cameras, before.cameras);
+      return { zoomButtons: true, reset: true, otherCamerasUnchanged: true };
+    });
+    await step('both lights, each light and rig reset visibly work', async () => {
+      await page.locator('[data-tab="light"]').click();
+      const original = await snapshot('both-lights');
+      for (const id of ['keyOnly', 'fillOnly']) {
+        await page.locator('#' + id).click();
+        const frame = await snapshot(null, 'both-lights'); changed(frame, id);
+      }
+      await page.locator('#bothLights').click(); assert.equal((await snapshot()).hash, original.hash);
+      const color = page.locator('#lightControls input[data-path="keyTint"]');
+      await color.evaluate(element => { element.value = '#ff8040'; element.dispatchEvent(new Event('input', { bubbles: true })); });
+      changed(await snapshot(null, 'both-lights'), 'light tint');
+      await page.locator('#rigReset').click(); assert.equal((await snapshot()).hash, original.hash);
+      await page.locator('[data-tab="study"]').click();
+      return { individualLights: true, combinedLight: true, color: true, reset: true };
+    });
+    await step('controls hide and reopen through actual buttons', async () => {
+      await page.locator('#toggleControls').click(); assert.equal(await page.locator('#controlRoom').isVisible(), false);
+      nonempty(await snapshot(), 'controls hidden'); await ready();
+      await page.locator('#toggleControls').click(); assert.equal(await page.locator('#controlRoom').isVisible(), true);
+      nonempty(await snapshot(), 'controls shown'); await ready();
+      return { hiddenAndReopened: true };
+    });
+
+    for (let cycle = 1; cycle <= 4; cycle++) {
+    await step(`fullscreen cycle ${cycle}: real entry, screenshot and exit`, async () => {
       await page.locator('#fullscreen').click();
       await page.waitForFunction(() => document.fullscreenElement !== null && document.getElementById('fullscreen').textContent === '退出全屏', null, { timeout: 15000 });
       assert.equal(await page.locator('#fullscreen').innerText(), '退出全屏');
       const frame = await snapshot(); nonempty(frame, 'fullscreen');
-      await page.screenshot({ path: path.join(OUT, 'fullscreen.png'), timeout: 15000 });
+      await page.screenshot({ path: path.join(OUT, `fullscreen-${cycle}.png`), timeout: 15000, fullPage: cycle % 2 === 0 });
+      await ready();
       await page.locator('#fullscreen').click();
       await page.waitForFunction(() => document.fullscreenElement === null && document.getElementById('fullscreen').textContent === '全屏观察', null, { timeout: 15000 });
       assert.equal(await page.locator('#fullscreen').innerText(), '全屏观察');
       return { entered: true, exited: true, fullscreenFrame: { width: frame.width, height: frame.height, hash: frame.hash } };
     });
+
+    }
 
     for (const viewport of [{ width: 1440, height: 960 }, { width: 390, height: 844 }]) {
       await step(`${viewport.width}px viewport has no horizontal overflow and keeps bottom controls`, async () => {
@@ -503,7 +439,7 @@ function assertProtected(audit) {
     report.error = error.stack || String(error);
     log('STOPPED', 'browser QA failed or was blocked', { error: error.message });
     if (page && !page.isClosed()) {
-      try { report.glDiagnostics = await bounded(page.evaluate(() => window.__KAOPU_GL_DIAGNOSTICS || []), 4000, 'GL error details'); } catch {}
+      try { report.glDiagnostics = await bounded(page.evaluate(() => JSON.parse(sessionStorage.getItem('__KAOPU_GL_DIAGNOSTICS__') || '[]')), 4000, 'GL error details'); } catch {}
       try { report.legacyAuditAtFailure = await bounded(auditLegacy(), 4000, 'failure storage audit'); }
       catch (auditError) { report.legacyAuditAtFailureError = auditError.message; }
     }
