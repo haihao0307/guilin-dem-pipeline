@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import crypto from 'node:crypto';
+import {GNMHeadModel,parseContainer} from '../src/GNMModel.js';
+import {TeacherGroomBinding,teacherVertexNormals} from '../src/groom/TeacherGroomBinding.js';
+import {LashBinding} from '../src/groom/LashBinding.js';
+import data from '../data/teacher-groom.js';
+import {modelSnapshot,snapshotModel,createBinding,dehydrateBinding,hydrateBinding} from '../src/groom/GroomFactory.js';
+const path=process.env.GNM_ASSET||'../../face-workbench-20261005/qa-assets/gnm_head_web.bin';
+const raw=fs.readFileSync(path);assert.equal(crypto.createHash('sha256').update(raw).digest('hex'),'fd19f46eef6f8bfb725fceab581e1bc8837209997ca3fd43f3c1735003c86961');
+const {meta,sections}=parseContainer(raw.buffer.slice(raw.byteOffset,raw.byteOffset+raw.byteLength)),model=new GNMHeadModel(meta,sections),positions=new Float32Array(model.numVertices*3);model.computeVertices(positions);const original=positions.slice(),template=model.template.slice(),triangles=model.triangles.slice();
+const layers={hair:new TeacherGroomBinding(model,data,{region:'scalp',count:14000,segments:24,seed:724}),brows:new TeacherGroomBinding(model,data,{region:'brows',count:1000,segments:10,seed:724}),lashes:new LashBinding(model)};
+const baseline={};let results=[];
+function measure(label){const normals=teacherVertexNormals(model,positions);let item={label};for(const [name,binding]of Object.entries(layers)){binding.update(positions,normals);const d=binding.diagnostics();assert.equal(d.finite,true,name);assert.equal(d.invalidTriangles,0,name);assert.ok(d.maxBaryError<1e-6,name);assert.ok(d.maxRootGap<.00012,name);for(let i=0;i<binding.count;i++){const t=binding.rootTriangles[i],bc=binding.rootBarycentrics.subarray(i*3,i*3+3);for(let axis=0;axis<3;axis++){let actual=0;for(let k=0;k<3;k++)actual+=positions[model.triangles[t*3+k]*3+axis]*bc[k];assert.ok(Math.abs(actual-binding.roots[i*3+axis])<4e-8,name+' root follows exact deformed triangle');}}item[name]={count:d.count,maxRootGap:d.maxRootGap,invalidTriangles:d.invalidTriangles,finite:d.finite};if(label==='baseline')baseline[name]=binding.positions.slice();}assert.deepEqual(model.template,template);assert.deepEqual(model.triangles,triangles);results.push(item);}
+for(const [name,b]of Object.entries(layers)){const raw=structuredClone(dehydrateBinding(b)),copy=hydrateBinding(raw,model,name);copy.update(positions,teacherVertexNormals(model,positions));b.update(positions,teacherVertexNormals(model,positions));assert.deepEqual(copy.positions,b.positions,name+' worker transfer matches');}
+const minimal=snapshotModel(structuredClone(modelSnapshot(model)));const lashesFromWorker=createBinding(minimal,'lashes');assert.deepEqual(lashesFromWorker.positions,layers.lashes.positions);
+measure('baseline');assert.deepEqual(positions,original);model.setIdentityParam(0,1);model.computeVertices(positions);measure('identity');for(const [name,b]of Object.entries(layers))assert.notDeepEqual(b.positions,baseline[name],name+' changes with identity');model.setExpressionParam(0,1);model.computeVertices(positions);measure('expression');model.setJointRotation(0,.1,.2,-.08);model.computeVertices(positions);measure('pose');model.resetIdentity();model.resetExpression();model.resetPose();model.computeVertices(positions);measure('restored');assert.deepEqual(positions,original);for(const [name,b]of Object.entries(layers))assert.deepEqual(b.positions,baseline[name],name+' exact baseline restoration');
+console.log(JSON.stringify({passed:true,modelVertices:model.numVertices,headExactRestore:true,teacherScalpCount:14000,teacherBrowCount:1000,lashCount:224,results},null,2));
