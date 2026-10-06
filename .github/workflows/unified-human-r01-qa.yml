@@ -69,6 +69,8 @@ jobs:
         run: |
           python -m pip install numpy==2.3.3
           python kaopu-unified-human-workbench/tests/neck_geometry.py
+      - name: Verify all 45 published file hashes
+        run: python kaopu-unified-human-workbench/tests/public_hash.py
       - name: Install test browser
         run: |
           npm install --no-save --ignore-scripts --package-lock=false playwright@1.57.0
@@ -79,7 +81,7 @@ jobs:
         working-directory: kaopu-unified-human-workbench
         env:
           UNIFIED_BROWSER: ${{ matrix.browser }}
-          UNIFIED_URL: http://127.0.0.1:8765/kaopu-unified-human-workbench/?local=1
+          UNIFIED_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/
         run: node tests/browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
@@ -88,6 +90,7 @@ jobs:
           path: |
             kaopu-unified-human-workbench/unified-*.png
             kaopu-unified-human-workbench/unified-browser-report.json
+            kaopu-unified-human-workbench/unified-public-hash-report.json
             kaopu-unified-human-workbench/research/model-report.json
             kaopu-unified-human-workbench/research/neck-geometry-report.json
             kaopu-anny-workbench/assets/public-fetch-receipt.json
