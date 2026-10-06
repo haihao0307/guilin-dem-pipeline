@@ -40,6 +40,40 @@ jobs:
             TAILOR_BROWSER=$engine TAILOR_QA_DIR=baseline-$engine node kaopu-tailor-workbench/tests/browser.cjs
             TAILOR_BROWSER=$engine TAILOR_QA_DIR=structured-$engine node kaopu-tailor-workbench/tests/structured-browser.cjs
           done
+      - name: Verify exact production HTTPS file bytes
+        run: |
+          python3 - <<'PY2'
+          import hashlib,json,urllib.request
+          from pathlib import Path
+          root=Path('kaopu-tailor-workbench')
+          base='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/'
+          entries=json.loads((root/'MANIFEST.json').read_text())['files']
+          expected={x['path']:x['sha256'] for x in entries}
+          for p in ['MANIFEST.json','SHA256SUMS.txt']: expected[p]=hashlib.sha256((root/p).read_bytes()).hexdigest()
+          for path,digest in expected.items():
+              with urllib.request.urlopen(base+path+'?verify=c3a1acee865284a6b2b539fa55301e577f3ccb7f',timeout=40) as r: data=r.read()
+              assert hashlib.sha256(data).hexdigest()==digest,path
+          print('R02_PUBLIC_HASHES_VERIFIED',len(expected),'c3a1acee865284a6b2b539fa55301e577f3ccb7f')
+          PY2
+      - name: Test both live HTTPS cases in both engines
+        env:
+          TAILOR_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/
+          NODE_PATH: ${{ runner.temp }}/tailor-test/node_modules
+        run: |
+          for engine in chromium webkit; do
+            TAILOR_BROWSER=$engine TAILOR_QA_DIR=public-baseline-$engine node kaopu-tailor-workbench/tests/browser.cjs
+            TAILOR_BROWSER=$engine TAILOR_QA_DIR=public-structured-$engine node kaopu-tailor-workbench/tests/structured-browser.cjs
+          done
+          node <<'NODE'
+          const {chromium}=require('playwright');
+          (async()=>{
+            const b=await chromium.launch({headless:true});const p=await b.newPage({viewport:{width:1440,height:1050},deviceScaleFactor:2});
+            await p.goto(process.env.TAILOR_URL,{waitUntil:'networkidle'});await p.locator('#cut').click();await p.locator('#sew').click();await p.locator('#pause').click();await p.evaluate(()=>window.__TAILOR_QA__.step(180));
+            let image=await p.locator('#cloth').screenshot({path:'public-baseline-chromium/canvas.png'});console.log('TAILOR_CANVAS_PNG_BEGIN baseline '+image.toString('base64')+' TAILOR_CANVAS_PNG_END');
+            await p.goto(process.env.TAILOR_URL+'structured.html',{waitUntil:'networkidle'});await p.locator('#freeze').click();await p.locator('#stage-join-left').click();await p.locator('#pause').click();await p.evaluate(()=>window.__STRUCTURED_QA__.step(180));await p.locator('#stage-join-right').click();await p.locator('#pause').click();await p.evaluate(()=>window.__STRUCTURED_QA__.step(240));
+            image=await p.locator('#cloth').screenshot({path:'public-structured-chromium/canvas.png'});console.log('TAILOR_CANVAS_PNG_BEGIN structured '+image.toString('base64')+' TAILOR_CANVAS_PNG_END');await b.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          NODE
       - name: Upload actual screenshots and numeric evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -52,4 +86,8 @@ jobs:
             baseline-webkit/*
             structured-chromium/*
             structured-webkit/*
+            public-baseline-chromium/*
+            public-baseline-webkit/*
+            public-structured-chromium/*
+            public-structured-webkit/*
             kaopu-tailor-workbench/qa/*
