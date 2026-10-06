@@ -10,7 +10,7 @@ p=Parse();p.feed((root/'index.html').read_text())
 ids=[a['id'] for t,a in p.tags if 'id'in a]
 assert len(ids)==len(set(ids)), 'Duplicate ID'
 assert all(k in ids for k in ['people','clothing','animals','hair','shared-stage','ten24'])
-assert len([1 for t,a in p.tags if t=='a' and 'data-entry' in a])==15
+assert len([1 for t,a in p.tags if t=='a' and 'data-entry' in a])==17
 assert 'TEN24 接入待完成' in (root/'index.html').read_text()
 assert not [t for t,a in p.tags if t in ('iframe','canvas','script')], 'Overview must remain static and lightweight'
 for tag,a in p.tags:
@@ -23,7 +23,7 @@ for tag,a in p.tags:
         if a['href'].startswith('#'):assert a['href'][1:] in ids
         for attr in ['aria-labelledby','aria-describedby']:
             for value in a.get(attr,'').split():assert value in ids,value
-assert any(t=='a' and a.get('href')=='../kaopu-face-workbench/?loader=single-r01-20261006#edit' for t,a in p.tags)
+assert any(t=='a' and a.get('href')=='../kaopu-face-workbench/?release=r02-41d46766#edit' for t,a in p.tags)
 assert len([t for t,a in p.tags if t=='article' and 'workbench-card' in a.get('class','')])==3
 css=(root/'style.css').read_text()
 assert '@media(max-width:760px)' in css and ':focus-visible' in css
