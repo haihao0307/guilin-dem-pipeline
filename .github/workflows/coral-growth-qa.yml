@@ -54,4 +54,16 @@ jobs:
           name: coral-growth-${{ matrix.engine }}-evidence
           retention-days: 7
           if-no-files-found: warn
-          path: coral-${{ matrix.engine }}/
+          path: |
+            coral-${{ matrix.engine }}/*.png
+            coral-${{ matrix.engine }}/*.json
+            coral-${{ matrix.engine }}/*.obj
+
+      - name: Save optional browser trace separately
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coral-growth-${{ matrix.engine }}-trace
+          retention-days: 7
+          if-no-files-found: warn
+          path: coral-${{ matrix.engine }}/trace.zip
