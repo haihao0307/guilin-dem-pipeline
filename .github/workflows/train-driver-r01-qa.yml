@@ -51,10 +51,17 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
           sparse-checkout: kaopu-minigame-workbench
-      - name: Install official browser test dependency
-        run: |
-          npm install --prefix "$RUNNER_TEMP/driver-test" --no-save --ignore-scripts playwright@1.57.0
-          "$RUNNER_TEMP/driver-test/node_modules/.bin/playwright" install --with-deps chromium webkit
+      - name: Install official Playwright package with bounded network retries
+        timeout-minutes: 4
+        run: timeout 180s npm install --prefix "$RUNNER_TEMP/driver-test" --no-save --ignore-scripts --fetch-timeout=30000 --fetch-retries=2 playwright@1.57.0
+      - name: Download official browser engines
+        timeout-minutes: 5
+        env:
+          PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT: 30000
+        run: timeout 240s "$RUNNER_TEMP/driver-test/node_modules/.bin/playwright" install chromium webkit
+      - name: Install browser system dependencies
+        timeout-minutes: 4
+        run: timeout 180s "$RUNNER_TEMP/driver-test/node_modules/.bin/playwright" install-deps chromium webkit
       - name: Verify immersive HUD and actual six-stop map
         env:
           NODE_PATH: ${{ runner.temp }}/driver-test/node_modules
