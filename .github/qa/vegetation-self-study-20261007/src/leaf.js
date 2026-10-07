@@ -1,38 +1,58 @@
 import * as THREE from '../vendor/three.module.js';
 import {makeLeafVeins,leafWidth} from './venation.js';
-import {clamp,seeded} from './geometry.js';
-let source;
+import {clamp,seeded,curve,sweep} from './geometry.js';
+import {buildReticulation} from './reticulation.js';
+let source,closedSource;
+export function reticulationSource(){return closedSource??=buildReticulation();}
 export function veinSource(){return source??=makeLeafVeins();}
 export function leafPoint(u,t,{length=4,curl=1.15,fold=.25,ripple=.028,width=.65}={}){
  const x=(u*2-1)*leafWidth(t)*length*width;
  const k=curl/length,theta=curl*t;
  const y=Math.abs(k)<1e-5?length*t:Math.sin(theta)/k;
- const z=(Math.abs(k)<1e-5?0:(1-Math.cos(theta))/k)+Math.abs(x)*fold+Math.sin(t*80+u*4)*ripple*Math.abs(u*2-1)**3+Math.sin(t*Math.PI)*Math.sin(u*6.28)*.04;
+ const z=(Math.abs(k)<1e-5?0:(1-Math.cos(theta))/k)+Math.abs(x)*fold+Math.sin(t*80+u*4)*ripple*Math.abs(u*2-1)**3*Math.sin(Math.PI*t)+Math.sin(t*Math.PI)*Math.sin(u*6.28)*.04;
  return [x,y,z];
 }
 export function leafGeometry(options={}){
  const nu=options.nu??48,nv=options.nv??140,positions=[],uv=[],indices=[];
- for(let j=0;j<=nv;j++)for(let i=0;i<=nu;i++){const u=i/nu,t=j/nv;positions.push(...leafPoint(u,t,options));uv.push(.5+(u*2-1)*leafWidth(t)*.68*1.5,t);}
+ for(let j=0;j<=nv;j++)for(let i=0;i<=nu;i++){const u=i/nu,t=j/nv;positions.push(...leafPoint(u,t,options));uv.push(.5+(u*2-1)*leafWidth(t)*.64*1.5,t);}
  for(let j=0;j<nv;j++)for(let i=0;i<nu;i++){const a=j*(nu+1)+i,b=a+1,c=a+nu+1,d=c+1;indices.push(a,b,c,b,d,c);}
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(indices);g.computeVertexNormals();g.computeBoundingSphere();g.userData={kind:'curved-lamina',options};return g;
 }
 export function createLeafTextures({size=2048,coffee=false}={}){
- const data=veinSource(),canvas=document.createElement('canvas');canvas.width=size;canvas.height=size*1.5;const c=canvas.getContext('2d');c.fillStyle=coffee?'rgb(79,104,26)':'rgb(114,161,73)';c.fillRect(0,0,canvas.width,canvas.height);
- const rand=seeded(817);const pixels=c.getImageData(0,0,canvas.width,canvas.height);for(let i=0;i<pixels.data.length;i+=4){const n=(rand()-.5)*17;pixels.data[i]+=n;pixels.data[i+1]+=n*.7;pixels.data[i+2]+=n*.45;}c.putImageData(pixels,0,0);
- c.save();c.scale(canvas.width/data.width,canvas.height/data.height);
- // Explicit application addition: fine areole texture; not present in the baseline C example.
- c.strokeStyle=coffee?'rgba(28,47,10,.15)':'rgba(66,102,31,.2)';c.lineWidth=.42;
- for(let y=10;y<1200;y+=14)for(let x=10;x<800;x+=12){const xx=x+(rand()-.5)*11,yy=y+(rand()-.5)*13;c.beginPath();c.moveTo(xx,yy);c.lineTo(xx+8+rand()*8,yy+6);c.lineTo(xx+8,yy+17);c.stroke();}
- for(let i=1;i<data.veins.length;i++){const v=data.veins[i],p=data.veins[v.parent],weight=Math.min(8,Math.pow(data.weights[i],.4)*.75);c.beginPath();c.moveTo(p.x,p.y);c.lineTo(v.x,v.y);c.strokeStyle=coffee?'rgba(43,59,13,.68)':'rgba(31,72,17,.88)';c.lineWidth=weight;c.lineCap='round';c.stroke();if(weight>2){c.strokeStyle=coffee?'rgba(149,159,49,.75)':'rgba(74,114,29,.6)';c.lineWidth=weight*.27;c.stroke();}}
- c.restore();const color=new THREE.CanvasTexture(canvas);color.colorSpace=THREE.SRGBColorSpace;color.anisotropy=8;
- const depth=document.createElement('canvas');depth.width=canvas.width;depth.height=canvas.height;const d=depth.getContext('2d');d.fillStyle='#eeeeee';d.fillRect(0,0,depth.width,depth.height);d.scale(depth.width/data.width,depth.height/data.height);d.lineCap='round';for(let i=1;i<data.veins.length;i++){const v=data.veins[i],p=data.veins[v.parent];d.strokeStyle='#282828';d.lineWidth=Math.min(8,Math.pow(data.weights[i],.4)*.75);d.beginPath();d.moveTo(p.x,p.y);d.lineTo(v.x,v.y);d.stroke();}const thickness=new THREE.CanvasTexture(depth);thickness.anisotropy=8;return {color,thickness};
+ const graph=reticulationSource(),width=size,height=Math.round(size*1.5),canvas=document.createElement('canvas'),thicknessCanvas=document.createElement('canvas');canvas.width=thicknessCanvas.width=width;canvas.height=thicknessCanvas.height=height;
+ const c=canvas.getContext('2d'),d=thicknessCanvas.getContext('2d'),colorData=c.createImageData(width,height),densityData=d.createImageData(width,height),rand=seeded(817);
+ const base=coffee?[65,99,33]:[116,166,72];for(let i=0;i<colorData.data.length;i+=4){const n=rand()-.5,v=.93+rand()*.14;for(let k=0;k<3;k++)colorData.data[i+k]=base[k]*v+n*7;colorData.data[i+3]=255;const density=coffee?26:15+Math.round(n*3);densityData.data.set([density,density,density,255],i);}c.putImageData(colorData,0,0);d.putImageData(densityData,0,0);
+ d.save();d.scale(width/graph.width,height/graph.height);d.lineCap='round';d.lineJoin='round';d.globalCompositeOperation='lighten';
+ for(const e of [...graph.edges].sort((a,b)=>a.radius-b.radius)){const a=graph.nodes[e.a],b=graph.nodes[e.b],mm=.08+2*e.radius,value=Math.min(255,Math.round(mm/1.4*255));d.strokeStyle=`rgb(${value},${value},${value})`;d.lineWidth=Math.max(.4,e.radius*15);d.beginPath();d.moveTo(a.x,a.y);d.lineTo(b.x,b.y);d.stroke();}d.restore();
+ const color=new THREE.CanvasTexture(canvas);color.colorSpace=THREE.SRGBColorSpace;color.anisotropy=16;
+ const thickness=new THREE.CanvasTexture(thicknessCanvas);thickness.anisotropy=16;
+ return {color,thickness,graph,units:'thickness texture red * 1.4 millimetres',optics:{laminaMillimetres:.08,maxVeinMillimetres:1.22}};
+}
+export function thinLeafMaterial(textures,{transmission=.8}={}){
+ const uniform={value:transmission};const m=new THREE.MeshStandardMaterial({map:textures.color,color:0xffffff,roughness:.79,metalness:0,side:THREE.DoubleSide,transparent:true,depthWrite:true,bumpMap:textures.thickness,bumpScale:.034});
+ m.onBeforeCompile=shader=>{shader.uniforms.uLeafThickness={value:textures.thickness};shader.uniforms.uThinTransmission=uniform;shader.vertexShader='varying vec2 vLeafUv;\n'+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\nvLeafUv=uv;');shader.fragmentShader='uniform sampler2D uLeafThickness;uniform float uThinTransmission;varying vec2 vLeafUv;\n'+shader.fragmentShader;
+ shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>',`float leafMM=texture2D(uLeafThickness,vLeafUv).r*1.4;
+ vec3 absorptionPerMM=vec3(8.0,3.5,12.0);
+ #if NUM_DIR_LIGHTS > 0
+ float incidence=dot(normal,directionalLights[0].direction);
+ vec3 opticalTransmittance=exp(-absorptionPerMM*leafMM/max(.20,abs(incidence)));
+ outgoingLight+=directionalLights[0].color*opticalTransmittance*max(0.0,-incidence)*uThinTransmission*.42;
+ #endif
+ float viewCos=max(.18,abs(dot(normal,normalize(vViewPosition))));
+ diffuseColor.a=mix(1.0,clamp(1.0-exp(-7.0*leafMM/viewCos),.25,1.0),clamp(uThinTransmission,0.0,1.0));
+ #include <opaque_fragment>`);};m.customProgramCacheKey=()=> 'thin-leaf-thickness-beer-r03';Object.defineProperty(m,'transmission',{get:()=>uniform.value,set:v=>uniform.value=v});m.userData.optics={model:'thin-wall diffuse BTDF approximation with Beer-Lambert absorption',absorptionPerMM:[8,3.5,12],thicknessSource:'generated field from explicitly assumed graph calibre; no black colour-map vein drawing',KarmaEquivalent:false};return m;
+}
+export function setLeafShape(leaf,options){const old=leaf.geometry;leaf.geometry=leafGeometry(options);old?.dispose();if(leaf.userData.veinObject){leaf.remove(leaf.userData.veinObject);leaf.userData.veinObject.traverse(o=>o.geometry?.dispose());}const group=new THREE.Group(),graph=reticulationSource(),material=leaf.userData.veinMaterial??=new THREE.MeshStandardMaterial({color:0x435f2d,roughness:.8});
+ for(let pi=0;pi<graph.primaryPaths.length;pi++){const ids=graph.primaryPaths[pi],points=ids.map(id=>{const n=graph.nodes[id],t=1-n.y/graph.height,hw=leafWidth(t)*graph.height*.64,u=Math.abs(hw)<1e-7?.5:.5+(n.x-400)/(2*hw),p=leafPoint(u,t,options),angle=options.curl*t,offset=(pi===0?.005:.001);p[1]-=Math.sin(angle)*offset;p[2]+=Math.cos(angle)*offset;return p;});const path=curve(points),radius=pi===0?.010:pi<23?.003:.0014;const g=sweep(path,radius,{segments:pi===0?130:35,sides:6,tip:pi===0?.12:.28,lobes:0});const mesh=new THREE.Mesh(g,material);mesh.castShadow=mesh.receiveShadow=true;group.add(mesh);}
+ leaf.userData.veinObject=group;leaf.add(group);
 }
 export function leafMaterial(textures,{coffee=false,transmission=.58}={}){
  const m=new THREE.MeshPhysicalMaterial({map:textures.color,color:coffee?0x798f46:0xc7dda8,roughness:coffee?.40:.43,metalness:0,side:THREE.DoubleSide,transmission:coffee?.08:transmission,transmissionMap:textures.thickness,thickness:coffee?.03:.018,ior:1.32,attenuationDistance:1.2,attenuationColor:new THREE.Color(coffee?0x659b26:0x8dcc56),clearcoat:coffee?.18:.06,clearcoatRoughness:.38,bumpMap:textures.thickness,bumpScale:coffee?-.055:-.025});
  m.onBeforeCompile=shader=>{shader.uniforms.leafScatter={value:coffee?.16:.3};shader.fragmentShader='uniform float leafScatter;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>','outgoingLight += diffuseColor.rgb * leafScatter * pow(1.0-abs(normal.z), 1.6);\n#include <opaque_fragment>');};m.customProgramCacheKey=()=>coffee?'leaf-coffee-r01':'leaf-thin-r01';return m;
 }
 export function createLeafStudy({textures,params}){
- const root=new THREE.Group();const material=leafMaterial(textures,{transmission:params.transmission});const leaves=[];
- for(let i=0;i<3;i++){const geo=leafGeometry({curl:params.curl+(i-1)*.35,fold:.14+i*.06,length:4,width:.65,nu:52,nv:180}),m=new THREE.Mesh(geo,material);m.position.set((i-1)*.2,-1.2,(i-1)*.5);m.rotation.set(.15*(i-1),.15*(i-1),.13*(i-1));m.castShadow=m.receiveShadow=true;root.add(m);leaves.push(m);}
- return {root,leaves,material,update(t){root.rotation.y=Math.sin(t*.12)*.10;leaves[0].rotation.z=-.13+Math.sin(t*.3)*.025;leaves[2].rotation.z=.13+Math.sin(t*.3+.8)*.025;},info:{geometry:'3 parametric 3D laminae',venation:veinSource().veins.length,teacher:'tsoding kernel + clearly separated leaf-domain adaptation'}};
+ const root=new THREE.Group(),material=thinLeafMaterial(textures,{transmission:params.transmission}),leaves=[];
+ const transforms=[{position:[0,-1.2,0],rotation:[.05,.06,-.13],length:4,width:.65,curl:1,fold:.12},{position:[.27,-.87,.70],rotation:[.18,-.32,.25],length:4.2,width:.58,curl:.89,fold:.20},{position:[-.28,-1.43,-.61],rotation:[-.12,.29,-.38],length:3.72,width:.69,curl:1.12,fold:.085}];
+ for(let i=0;i<3;i++){const shape=transforms[i],m=new THREE.Mesh(new THREE.BufferGeometry(),material);m.position.fromArray(shape.position);m.rotation.fromArray(shape.rotation);m.userData.shape=shape;setLeafShape(m,{curl:params.curl*shape.curl,fold:shape.fold,length:shape.length,width:shape.width,nu:52,nv:180,ripple:.007});m.castShadow=m.receiveShadow=true;root.add(m);leaves.push(m);}
+ return {root,leaves,material,update(t){root.rotation.y=Math.sin(t*.12)*.07;leaves[0].rotation.z=-.13+Math.sin(t*.3)*.013;leaves[2].rotation.z=-.38+Math.sin(t*.23+1.8)*.018;},info:{geometry:'3 parametric laminae + raised primary/secondary vein geometry',venation:reticulationSource().nodes.length,network:reticulationSource().report,optics:material.userData.optics,teacher:'independent Runions closed-rule implementation; original tsoding baseline remains separate'}};
 }
