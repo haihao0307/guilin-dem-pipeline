@@ -3,11 +3,12 @@ import {Session,replay} from './session.mjs';
 import {createGameWorld} from './world.mjs';
 import {createGameSmoke} from './smoke.mjs';
 import {createViewControls} from './view-controls.mjs';
+import {createRouteMap} from './route-map.mjs';
 const $=id=>document.getElementById(id),canvas=$('gameScene'),wrap=$('sceneWrap'),params=new URLSearchParams(location.search),SAVE_KEY='kaopu.train-driver.save.v1';
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.4));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1;
 const gl=renderer.getContext(),debugRenderer=gl.getExtension('WEBGL_debug_renderer_info'),rendererName=debugRenderer?gl.getParameter(debugRenderer.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x1b2425);
-const camera=new THREE.PerspectiveCamera(32,1,.1,180),cameraTarget=new THREE.Vector3(-8.8,-.8,1),widePosition=new THREE.Vector3(19,24,38),wideTarget=new THREE.Vector3(-8.8,-.8,1),closePosition=new THREE.Vector3(-2,13,20),closeTarget=new THREE.Vector3(-14.2,1.2,1.4);camera.position.copy(widePosition);camera.lookAt(cameraTarget);
+const camera=new THREE.PerspectiveCamera(32,1,.1,180),cameraTarget=new THREE.Vector3(-8.8,-.8,1),widePosition=new THREE.Vector3(11.2,18.2,27.6),wideTarget=new THREE.Vector3(-8.8,.3,1),portraitTarget=new THREE.Vector3(-8.8,-.8,1),closePosition=new THREE.Vector3(-2,13,20),closeTarget=new THREE.Vector3(-14.2,1.2,1.4);camera.position.copy(widePosition);camera.lookAt(cameraTarget);
 scene.add(new THREE.HemisphereLight(0xd5e6ec,0x273d30,1.4));
 const key=new THREE.DirectionalLight(0xffebc4,2.3);key.position.set(1,22,14);key.target.position.set(-8,0,0);key.castShadow=true;key.shadow.mapSize.set(1024,1024);Object.assign(key.shadow.camera,{left:-34,right:21,top:20,bottom:-19,far:90});key.shadow.normalBias=.05;key.shadow.bias=-.00025;key.shadow.radius=3;scene.add(key,key.target);
 const rim=new THREE.DirectionalLight(0xc3dce4,.7);rim.position.set(-14,8,-14);scene.add(rim);
@@ -15,7 +16,8 @@ for(const [x,power]of [[1.4,36],[-15,24]]){const fill=new THREE.PointLight(0xf4e
 const world=createGameWorld();scene.add(world.root);const smoke=createGameSmoke();scene.add(smoke.root);
 let renderRatio=1,maxRenderRatio=1,frameMs=33,qualityFrames=0;
 let game=new Session({seed:params.get('seed')||'松溪-001',durationMinutes:Number(params.get('duration')||10)}),last=performance.now(),lastHUD=0,lastEvent=0,lastSaveTick=0,noticeUntil=0,needsRender=true,manualCamera=null,summaryShown=false,frameCount=0,fps=0,contextLost=false,saved=null;
-const heldBrake=new Set();
+const heldBrake=new Set(),routeMap=createRouteMap($('routeMap'));
+$('toggleHints').addEventListener('click',()=>{const expanded=$('driverGame').dataset.hints!=='true';$('driverGame').dataset.hints=String(expanded);$('toggleHints').setAttribute('aria-expanded',String(expanded));$('toggleHints').textContent=expanded?'收起说明':'说明';});
 $('seed').value=game.config.seed;$('duration').value=String(game.config.durationMinutes);
 function say(text,{warning=false,duration=4200}={}){$('notice').textContent=text;$('notice').classList.add('visible');$('notice').classList.toggle('warning',warning);noticeUntil=performance.now()+duration;}
 function safeSave(){if(!game.started||game.phase==='summary')return;try{const packet=game.replayPacket();localStorage.setItem(SAVE_KEY,JSON.stringify({version:1,packet,signature:game.signature(),station:game.stationIndex}));lastSaveTick=game.tick;}catch{}}
@@ -26,7 +28,7 @@ new ResizeObserver(resize).observe(wrap);
 function command(type,value){const result=game.command(type,value);needsRender=true;if(!result.accepted&&type==='station-action')say('先停稳，让车门落在站台范围内。');return result;}
 let viewControls;
 function resetView(){if(viewControls?.manual())return;manualCamera=null;camera.position.copy(widePosition);cameraTarget.copy(wideTarget);camera.lookAt(cameraTarget);needsRender=true;}
-function start(config){game=new Session(config);world.resetEffects();heldBrake.clear();lastEvent=0;lastSaveTick=0;summaryShown=false;noticeUntil=0;$('notice').classList.remove('visible');$('startScreen').hidden=true;$('pauseScreen').hidden=true;$('summaryScreen').hidden=true;resetView();game.command('start');last=performance.now();needsRender=true;safeSave();canvas.focus();}
+function start(config){game=new Session({...config,routeCount:6});world.resetEffects();heldBrake.clear();lastEvent=0;lastSaveTick=0;summaryShown=false;noticeUntil=0;$('notice').classList.remove('visible');$('startScreen').hidden=true;$('pauseScreen').hidden=true;$('summaryScreen').hidden=true;resetView();game.command('start');last=performance.now();needsRender=true;safeSave();canvas.focus();}
 function setPaused(value){if(!game.started||game.phase==='summary')return;heldBrake.clear();game.command('brake',false);game.command('pause',value);$('pauseScreen').hidden=!game.paused;$('pause').textContent=game.paused?'▶':'Ⅱ';$('pause').setAttribute('aria-label',game.paused?'继续游戏':'暂停游戏');safeSave();last=performance.now();needsRender=true;if(!game.paused)canvas.focus();}
 function stationAction(){const v=game.view();if(v.station.canRecover&&!v.station.canOpen)return command('recover');return command('station-action');}
 function setBrake(source,pressed){if(pressed)heldBrake.add(source);else heldBrake.delete(source);command('brake',heldBrake.size>0);}
@@ -57,6 +59,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&game.start
 window.addEventListener('pagehide',safeSave);
 function formatClock(seconds){const n=Math.max(0,Math.ceil(seconds));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0');}
 function updateHUD(v){
+  routeMap.update(v);
   $('clock').textContent=formatClock(v.remainingTime);$('speed').textContent=v.speedKmh.toFixed(1);$('speed').parentElement.parentElement.classList.toggle('overspeed',v.speedKmh>v.station.limit+3);
   const locked=game.serviceLocked();$('notch').textContent=locked?'车门互锁':v.brake?'正在制动':v.reverse?'低速倒回':v.throttle>0?'牵引 '+v.throttle+' 档':v.throttle<0?'减速 '+(-v.throttle)+' 档':'惰行';for(const[i,node]of [...document.querySelectorAll('.power-dots i')].entries())node.classList.toggle('active',i<=v.throttle+2);
   $('brakingDistance').textContent=v.brakingDistance.toFixed(1)+' m';$('brake').setAttribute('aria-pressed',String(v.brake));$('accelerate').disabled=$('decelerate').disabled=locked||!v.started||v.paused||v.phase==='summary'||v.finishing;
@@ -66,7 +69,7 @@ function updateHUD(v){
   if(v.phase==='doors-opening'){hint='车门打开中';action='正在打开车门…';}
   else if(v.phase==='unloading'){hint='先下后上，请等乘客走到站台';action='乘客下车中…';}
   else if(v.phase==='boarding'){hint='乘客正在沿过道入座';action='乘客上车中…';}
-  else if(v.phase==='ready-depart'){hint='接送完成，可以发车';action='关门发车';enabled=true;}
+  else if(v.phase==='ready-depart'){hint=v.station.index===v.routeCount-1?'六站接送完成，可以收车':'接送完成，可以发车';action=v.station.index===v.routeCount-1?'收车 · 完成行程':'关门发车';enabled=true;}
   else if(v.phase==='doors-closing'){hint='车门关闭后才会启动';action='正在关门…';}
   else if(v.station.canOpen){hint=v.station.standard?'停得很准，开门接送':'停偏了一点，乘客可以多走几步';action=v.station.standard?'开门接送':'招呼乘客步行上车';enabled=true;}
   else if(v.station.canRecover){hint='还有机会，低速倒回停车区';action='倒回补停';enabled=true;}
@@ -80,7 +83,7 @@ function updateHUD(v){
   for(const key of ['pickedUp','delivered','combo','stops','missed'])$(key).textContent=v.stats[key];$('score').textContent=Math.round(v.stats.score)+' 分';$('satisfaction').textContent=Math.round(v.stats.satisfaction);
   const showTutorial=v.started&&!v.paused&&v.elapsed<30&&v.phase!=='summary';$('tutorial').hidden=!showTutorial;if(showTutorial)$('tutorialText').textContent=locked?'乘客会走进真实车门、沿过道入座，等接送完成再发车。':v.station.canOpen?'停稳了。点“开门接送”，或按 E。':v.station.remaining<v.brakingDistance+15?'提前按住制动。停早一点没关系，可以慢慢挪到标记。':'点 ＋ 或按 W 加档。速度是慢慢加起来的，刹车也需要距离。';
   const close=(manualCamera||((locked&&v.phase!=='doors-closing')?'carriage':'wide'))==='carriage';$('cameraView').textContent=close?'全车视角':'车厢观察';$('cameraView').setAttribute('aria-pressed',String(close));
-  if(v.phase==='summary'&&!summaryShown){summaryShown=true;clearSaved();$('summaryScreen').hidden=false;$('pauseScreen').hidden=true;$('finalScore').textContent=Math.round(v.stats.score);$('finalPicked').textContent=v.stats.pickedUp;$('finalDelivered').textContent=v.stats.delivered;$('finalCombo').textContent=v.stats.bestCombo;$('finalAccuracy').textContent=(v.stats.stops?Math.round(v.stats.accuracyTotal/v.stats.stops*100):0)+'%';$('finalMistakes').textContent=v.stats.missed+' / '+v.stats.recovered;$('finalSatisfaction').textContent=Math.round(v.stats.satisfaction);$('finalRoute').textContent='线路 '+v.seed+' · '+v.stats.stops+' 站'+(v.stats.lateDropOff?' · '+v.stats.lateDropOff+' 位错站补下':'');$('summaryTitle').textContent=v.stats.stops===0?'下一趟，慢慢找节奏':v.stats.bestCombo>=8?'这位老司机，稳！':v.stats.missed>v.stats.stops?'有点惊险，也接到了人':'这一趟，开得不错';}
+  if(v.phase==='summary'&&!summaryShown){summaryShown=true;clearSaved();$('summaryScreen').hidden=false;$('pauseScreen').hidden=true;$('finalScore').textContent=Math.round(v.stats.score);$('finalPicked').textContent=v.stats.pickedUp;$('finalDelivered').textContent=v.stats.delivered;$('finalCombo').textContent=v.stats.bestCombo;$('finalAccuracy').textContent=(v.stats.stops?Math.round(v.stats.accuracyTotal/v.stats.stops*100):0)+'%';$('finalMistakes').textContent=v.stats.missed+' / '+v.stats.recovered;$('finalSatisfaction').textContent=Math.round(v.stats.satisfaction);$('finalRoute').textContent='线路 '+v.seed+' · '+v.stats.stops+' 站'+(v.stats.lateDropOff?' · '+v.stats.lateDropOff+' 位错站补下':'');$('summaryTitle').textContent=v.stats.stops===0?'下一趟，慢慢找节奏':v.stats.bestCombo>=6?'这位老司机，稳！':v.stats.missed>v.stats.stops?'有点惊险，也接到了人':'这一趟，开得不错';}
 }
 function events(v){for(const e of v.events){if(e.id<=lastEvent)continue;
   if(e.type==='missed-station')say('漏站了！乘客追来了。先刹停，40 米内还能倒回补救。',{warning:true,duration:6500});
@@ -94,9 +97,9 @@ function events(v){for(const e of v.events){if(e.id<=lastEvent)continue;
 }}
 function draw(view,dt=1/60,snap=false){
   const close=(manualCamera||((game.serviceLocked()&&view.phase!=='doors-closing')?'carriage':'wide'))==='carriage',targetPosition=close?closePosition:widePosition,targetLook=close?closeTarget:wideTarget;
-  const alpha=snap?1:1-Math.exp(-dt*4);if(!viewControls?.manual()){const portrait=viewControls?.mode()==='portrait';camera.position.lerp(portrait?new THREE.Vector3(31,25,15):targetPosition,alpha);cameraTarget.lerp(portrait?wideTarget:targetLook,alpha);}camera.lookAt(cameraTarget);camera.updateMatrixWorld();
+  const alpha=snap?1:1-Math.exp(-dt*4);if(!viewControls?.manual()){const portrait=viewControls?.mode()==='portrait';camera.position.lerp(portrait?new THREE.Vector3(31,25,15):targetPosition,alpha);cameraTarget.lerp(portrait?portraitTarget:targetLook,alpha);}camera.lookAt(cameraTarget);camera.updateMatrixWorld();
   world.update(view,game.route,{interior:close});smoke.update(view.elapsed,camera,{speed:view.velocity,braking:view.brake||view.throttle<0});renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=snap||frameCount%3===0;renderer.render(scene,camera);frameCount++;
-  return !viewControls?.manual()&&(camera.position.distanceTo(viewControls?.mode()==='portrait'?new THREE.Vector3(31,25,15):targetPosition)>.015||cameraTarget.distanceTo(viewControls?.mode()==='portrait'?wideTarget:targetLook)>.015);
+  return !viewControls?.manual()&&(camera.position.distanceTo(viewControls?.mode()==='portrait'?new THREE.Vector3(31,25,15):targetPosition)>.015||cameraTarget.distanceTo(viewControls?.mode()==='portrait'?portraitTarget:targetLook)>.015);
 }
 function animate(now){requestAnimationFrame(animate);const wallDt=Math.max(.001,(now-last)/1000),dt=Math.min(.25,wallDt);last=now;if(contextLost)return;const active=game.started&&!game.paused&&game.phase!=='summary';if(active)game.advance(wallDt);const view=game.view();events(view);if(now-lastHUD>90||needsRender){updateHUD(view);lastHUD=now;}if(now>noticeUntil)$('notice').classList.remove('visible');if(active||needsRender){needsRender=draw(view,dt);frameMs=frameMs*.9+wallDt*1000*.1;fps=1000/frameMs;if(active&&++qualityFrames>=20){qualityFrames=0;const next=frameMs>48?Math.max(.65,renderRatio*.82):frameMs<25?Math.min(maxRenderRatio,renderRatio+.04):renderRatio;if(Math.abs(next-renderRatio)>.015){renderRatio=next;renderer.setPixelRatio(renderRatio);renderer.setSize(wrap.clientWidth,wrap.clientHeight,false);}}}if(game.tick-lastSaveTick>180)safeSave();}
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=true;setPaused(true);$('loading').hidden=false;$('loading').textContent='画面暂时中断，已暂停并保存这趟旅程';});
