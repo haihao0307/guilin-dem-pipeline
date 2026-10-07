@@ -1,9 +1,9 @@
 {
-  "version": "CORAL-GROWTH-R01-20261007",
-  "implementation": "Original JavaScript triangular-membrane growth experiment; not a Houdini node evaluation or exact teacher reproduction",
+  "version": "CORAL-GROWTH-R02-20261007",
+  "implementation": "Original JavaScript connected single-cup growth benchmark; not a Houdini cook or completed reproduction of the complex reference colony",
   "scope": "Growth only; no sand, grains, bubbles, purchased HIP, teacher movie or teacher geometry",
   "algorithm": [
-    "Seeded small connected membrane and fixed stalk",
+    "Connected pointed cup seed with circumference-dependent sampling; no separate fixed cylinder or preplaced leaf membranes",
     "Spatially varying edge rest-length growth",
     "Curvature, normal-to-light direction and projected self-occlusion masks",
     "Iterative local spring relaxation",
@@ -11,7 +11,9 @@
     "Normal/tangential Laplacian relaxation",
     "Conforming long-edge splitting with shared midpoints",
     "Deterministic stored snapshots of genuinely computed geometry",
-    "Two-level Loop subdivision for displayed tissue surface; raw solver topology and OBJ remain inspectable"
+    "Two-level Loop subdivision for displayed tissue surface; raw solver topology and OBJ remain inspectable",
+    "Edge-activated anisotropic rest-metric growth with bounded local strain",
+    "Angular chart preservation and projected triangle orientation guard in the single-body safe domain"
   ],
   "sources": [
     {
@@ -69,9 +71,10 @@
   ],
   "knownLimits": [
     "No Houdini runtime comparison",
+    "Single-valued cup-chart constraint excludes overhanging multi-layer forms",
+    "Reference colony, branching and dense mature plate stack are not reproduced yet",
     "Approximate projected-grid exposure rather than ray-traced visibility",
     "Point repulsion rather than complete triangle self-collision",
-    "Possible sheet intersections at high growth",
     "Not a biologically validated coral species model",
     "No sand or ocean scene reproduction"
   ],
