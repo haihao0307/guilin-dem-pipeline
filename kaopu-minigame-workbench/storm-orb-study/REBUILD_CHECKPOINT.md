@@ -23,3 +23,7 @@ A3 also rejected: superGaussian hill and height-times-valley transition made cli
 ## B1 after A4 structural gate
 
 Root accepted river path, cabin ground contact and outer frame as a stage anchor, but rejected the single dark planar river-facing slope. B1 keeps those anchors and adds actual tilted rock bedding, embedded strike-aligned blocks, smooth geological joins and slope/wetness-based moss transitions. These are terrain details, not cloud occlusion. Water motion and cloud remain unimplemented.
+
+## B2 after B1 visual rejection
+
+B1 produced artificial full-circle terraces, low-poly jewel rocks and foil-like wide highlights. B2 removes periodic whole-hill rings, limits bedding to three interrupted bank strata, decouples grass from phase, replaces the stone border with five embedded continuous-normal outcrops, raises wet-rock roughness and adds mipmapped micro-bump. Structure remains A4; cloud/water animation remain pending.
