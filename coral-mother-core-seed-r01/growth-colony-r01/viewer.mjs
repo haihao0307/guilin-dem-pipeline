@@ -129,10 +129,25 @@ function bufferMemory(){const position=lastGeometry?.positions.byteLength??0,nor
 function rendererMemory(){return {geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,programs:renderer.info.programs?.length??0};}
 function onContextLost(event){
  if(lifecycle.disposed)return;event.preventDefault();lifecycle.phase='context-lost';lifecycle.contextLost=true;lifecycle.contextLostCount++;lifecycle.lastLossAt=Date.now();stop();if(rafId!==null)cancelAnimationFrame(rafId);rafId=null;controls.enabled=false;$('status').textContent='图形上下文已丢失，等待恢复。';
+ // r170's renderer loss listener ran first but has not replaced its caches yet.
+ // Retire old WebGLGeometries dispose closures/VAOs NOW, while GL is lost;
+ // after restoration those closures would illegally delete prior-epoch objects.
+ // BufferGeometry/Material.dispose release GPU bookkeeping only: CPU arrays,
+ // geometry objects, material settings, lineage, selection and recipe stay intact.
+ const retiredEpoch=lifecycle.contextRestoredCount,before=rendererMemory(),preservedBytes=bufferMemory().total,geometries=new Set([mesh?.geometry,selectedMesh?.geometry].filter(Boolean)),materials=new Set([material,selectionMaterial]);
+ try{
+  if(!renderer.getContext().isContextLost())throw new Error('Context-loss cleanup requires an actually lost WebGL context.');
+  for(const geometry of geometries)geometry.dispose();
+  for(const currentMaterial of materials)currentMaterial.dispose();
+  renderer.renderLists.dispose();
+  lifecycle.contextLossCleanup={status:'complete',retiredEpoch,contextWasLost:true,geometriesReleased:geometries.size,materialsReleased:materials.size,before,after:rendererMemory(),preservedCPUBufferBytes:preservedBytes};
+ }catch(error){lifecycle.contextLossCleanup={status:'failed',retiredEpoch,message:error.message};lifecycle.phase='loss-cleanup-failed';showError(`图形上下文旧资源清理失败：${error.message}`);throw error;}
 }
 function onContextRestored(){
  if(lifecycle.disposed)return;lifecycle.phase='restoring';lifecycle.contextLost=false;lifecycle.contextRestoredCount++;lifecycle.lastRestoreAt=Date.now();
  try{
+  // Three's earlier-registered restore listener has now created fresh caches.
+  if(lifecycle.contextLossCleanup?.status!=='complete'||lifecycle.contextLossCleanup.retiredEpoch!==lifecycle.contextRestoredCount-1)throw new Error('Previous-context resource cleanup did not complete for this GPU epoch.');
   for(const object of [mesh,selectedMesh])if(object){for(const attribute of Object.values(object.geometry.attributes))attribute.needsUpdate=true;if(object.geometry.index)object.geometry.index.needsUpdate=true;object.material.needsUpdate=true;}
   controls.enabled=true;resize();renderScene(true);lifecycle.phase='running';$('status').textContent=`图形上下文已恢复 · 当前画面 ${Math.round(displayed*100)}%`;startAnimation();
  }catch(error){lifecycle.phase='restore-failed';showError(`图形上下文恢复失败：${error.message}`);}
