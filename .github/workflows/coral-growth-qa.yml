@@ -16,6 +16,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   geometry-and-preservation:
+    if: ${{ !contains(github.event.head_commit.message, '[coral-public-smoke]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -68,6 +69,7 @@ jobs:
             coral-validation.json
             coral-geometry-tests.txt
   browser:
+    if: ${{ !contains(github.event.head_commit.message, '[coral-public-smoke]') }}
     needs: geometry-and-preservation
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -119,3 +121,30 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
           path: coral-colony-${{ matrix.engine }}-${{ matrix.profile }}/*trace*.zip
+
+  public-browser:
+    if: ${{ contains(github.event.head_commit.message, '[coral-public-smoke]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: coral-mother-core-seed-r01/growth-colony-r01
+      - name: Install fixed official Chromium tools
+        run: |
+          npm install --prefix "$RUNNER_TEMP/coral-test" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/coral-test/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Verify real public HTTPS geometry and navigation
+        env:
+          NODE_PATH: ${{ runner.temp }}/coral-test/node_modules
+          CORAL_OUT: coral-public-smoke
+        run: node coral-mother-core-seed-r01/growth-colony-r01/tests/public-smoke.mjs
+      - name: Preserve public browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coral-colony-public-chromium-evidence
+          retention-days: 7
+          if-no-files-found: warn
+          path: coral-public-smoke/
