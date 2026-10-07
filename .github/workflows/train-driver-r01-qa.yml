@@ -1,0 +1,28 @@
+name: Train Driver R01 gameplay QA
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [gh-pages]
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/game/**'
+      - '.github/workflows/train-driver-r01-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: train-driver-r01-${{ github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}
+  cancel-in-progress: true
+jobs:
+  deterministic-session:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Protect the approved classic source
+        run: node kaopu-minigame-workbench/voxel-train-study/game/tests/classic-anchor.mjs
+      - name: Complete a seeded session and station recovery tests
+        run: |
+          node --check kaopu-minigame-workbench/voxel-train-study/game/session.mjs
+          node kaopu-minigame-workbench/voxel-train-study/game/tests/session.test.mjs
