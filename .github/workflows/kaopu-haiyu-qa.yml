@@ -43,14 +43,43 @@ jobs:
           NODE_PATH: ${{ github.workspace }}/.haiyu-qa/node_modules
           HAIYU_HTML: ${{ github.workspace }}/kaopu-haiyu-workbench/index.html
           HAIYU_STRUCTURE_OUT: ${{ github.workspace }}/haiyu-structure-results
+          HAIYU_STRUCTURE_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-haiyu-workbench/
         run: |
+          python3 - <<'PYCODE'
+          from pathlib import Path
+          import urllib.request,time,json,hashlib
+          expected=hashlib.sha256(Path('kaopu-haiyu-workbench/index.html').read_bytes()).hexdigest()
+          url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-haiyu-workbench/'
+          deadline=time.monotonic()+900
+          while True:
+              try:
+                  response=urllib.request.urlopen(url+'?verify=e7125bf26e7865e306937f4e65fa712d6adc55b0',timeout=45)
+                  body=response.read();actual=hashlib.sha256(body).hexdigest()
+                  if actual==expected:break
+                  print('Waiting exact C01 wrapping-correction Pages bytes',actual,flush=True)
+              except Exception as error:print(str(error),flush=True)
+              if time.monotonic()>deadline:raise RuntimeError('Expected C01 correction Pages bytes did not arrive')
+              time.sleep(15)
+          out=Path('haiyu-structure-results');out.mkdir(exist_ok=True)
+          (out/'public-bytes.json').write_text(json.dumps({'url':url,'status':response.status,'bytes':len(body),'expectedSha256':expected,'actualSha256':actual,'productionCommit':'e7125bf26e7865e306937f4e65fa712d6adc55b0','exact':True},indent=2))
+          PYCODE
           node kaopu-haiyu-workbench/studies/axis-ribs-r01/tests/geometry.mjs
           node kaopu-haiyu-workbench/studies/axis-ribs-wrap-r02/tests/integration.cjs
+          cat > .haiyu-qa/wrap-public-extra.cjs <<'JSCODE'
+          const fs=require('fs'),path=require('path'),assert=require('assert/strict'),crypto=require('crypto'),{chromium}=require('playwright');
+          const out=path.resolve(process.env.HAIYU_STRUCTURE_OUT),url=process.env.HAIYU_STRUCTURE_URL;fs.mkdirSync(out,{recursive:true});const hash=x=>crypto.createHash('sha256').update(JSON.stringify(x)).digest('hex'),result={target:url,browser:'Official Chromium',physicalDevice:false,checks:[],errors:[]};let browser,p;const save=()=>fs.writeFileSync(path.join(out,'public-extra-browser.json'),JSON.stringify(result,null,2));
+          (async()=>{try{browser=await chromium.launch({headless:true});p=await browser.newPage({viewport:{width:1440,height:1100},deviceScaleFactor:1});p.on('pageerror',e=>result.errors.push(e.message));await p.goto(url+'?module=axis-ribs-r01',{waitUntil:'load'});await p.waitForFunction(()=>document.body.dataset.stage==='19');const f=await(await p.$('#sparseFrame')).contentFrame();await f.waitForFunction(()=>document.body.dataset.ready==='true'&&window.HaiyuSparseCandidate.getState().pendingRAF===0);const packet=()=>f.evaluate(()=>window.HaiyuSparseCandidate.getPacket()),initial=await packet(),initialWorld=hash([initial.axis,initial.ribs]),axisHash=hash(initial.axis);
+           for(const[view,name]of[['side','axis-end'],['front','top'],['top','side']]){await f.locator(`[data-view="${view}"]`).click();await f.waitForFunction(()=>window.HaiyuSparseCandidate.getState().pendingRAF===0);assert.equal(hash([(await packet()).axis,(await packet()).ribs]),initialWorld);await f.locator('#scene').screenshot({path:path.join(out,`public-c01-${name}.png`)});result.checks.push({view,sameWorld:true})}
+           await f.locator('[data-view="side"]').click();await f.locator('#wrapAngle').selectOption('2.75');await f.waitForFunction(()=>window.HaiyuSparseCandidate.getState().pendingRAF===0);const closed=await packet();assert.equal(hash(closed.axis),axisHash);assert.notEqual(hash([closed.axis,closed.ribs]),initialWorld);assert.ok(closed.ribs.every(r=>r.local.slice(1).every(v=>v[2]<0)));assert.ok(closed.ribs.every(r=>Math.abs(r.local.at(-1)[1])<Math.abs(r.local.at(-2)[1])));await f.locator('#scene').screenshot({path:path.join(out,'public-c01-more-closed-axis-end.png')});result.checks.push({closureChangesWorldSupportOnly:true,allArcsChestSide:true,tipsReturnInward:true});
+           await f.locator('#wrapAngle').selectOption('2.40');await f.waitForFunction(()=>window.HaiyuSparseCandidate.getState().pendingRAF===0);assert.equal(hash([(await packet()).axis,(await packet()).ribs]),initialWorld);await p.setViewportSize({width:390,height:844});await p.evaluate(()=>scrollTo(0,0));await f.evaluate(()=>scrollTo(0,0));await p.waitForTimeout(150);assert.equal(await p.evaluate(()=>scrollY),0);assert.equal(await f.evaluate(()=>scrollY),0);const b=await f.locator('#scene').boundingBox();assert.ok(b.y<340);assert.equal(await p.locator('.dimension-navigation').isVisible(),false);assert.equal(await p.locator('#sparseReturn').isVisible(),true);await p.screenshot({path:path.join(out,'public-c01-mobile-zero-scroll-axis-end.png')});result.checks.push({mobileZeroScrollCanvasTop:b.y,rootAndFrameScrollY:0,returnVisible:true,caseNavigationCollapsedOnlyInC01:true});assert.deepEqual(result.errors,[]);result.ok=true;save()}catch(e){result.ok=false;result.error=e.stack;save();if(p)await p.screenshot({path:path.join(out,'public-extra-failure.png'),fullPage:true}).catch(()=>{});process.exitCode=1}finally{if(browser)await browser.close()}})();
+          JSCODE
+          node .haiyu-qa/wrap-public-extra.cjs
       - name: Verify both screenshot formulas and actual browser interactions
         env:
           NODE_PATH: ${{ github.workspace }}/.haiyu-qa/node_modules
           HAIYU_HTML: ${{ github.workspace }}/kaopu-haiyu-workbench/index.html
           HAIYU_POINTFIELD_OUT: ${{ github.workspace }}/haiyu-pointfield-results
+          HAIYU_POINTFIELD_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-haiyu-workbench/
         run: |
           node kaopu-haiyu-workbench/studies/20261007-pointfields/tests/fidelity.cjs
           node kaopu-haiyu-workbench/studies/20261007-pointfields/tests/browser-qa.cjs
