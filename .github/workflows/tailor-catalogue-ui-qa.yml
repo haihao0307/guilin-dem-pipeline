@@ -33,7 +33,9 @@ jobs:
         env:
           NODE_PATH: ${{ runner.temp }}/catalogue-qa/node_modules
           BROWSER: ${{ matrix.browser }}
-        run: node .github/tailor-catalogue/catalogue-ui.cjs
+        run: |
+          node .github/tailor-catalogue/source-controls.mjs
+          node .github/tailor-catalogue/catalogue-ui.cjs
       - if: always()
         uses: actions/upload-artifact@v4
         with:

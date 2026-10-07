@@ -34,12 +34,21 @@ export function parameterState(path,design){
  if(p.startsWith('flare-skirt.skirt-many-panels.')&&!consumed.has('SkirtManyPanels'))return off('仅用于多片裙');
  if(p.startsWith('flare-skirt.asymm.')&&!consumed.has('AsymmSkirtCircle'))return off('仅用于前后不对称圆裙');
  if(p.startsWith('flare-skirt.cut.')&&p!=='flare-skirt.cut.add'&&!get('flare-skirt.cut.add'))return off('先增加开衩');
- if(p.startsWith('sleeve.')&&get(prefix+'shirt.strapless'))return off('无肩带上装不使用袖子');
+ const strapless=upper==='FittedShirt'&&get(prefix+'shirt.strapless');
+ if(p.startsWith('sleeve.')&&strapless&&p!=='sleeve.connecting_width')return off('无肩带上装只使用连接宽度确定侧边高度');
  if(p.startsWith('sleeve.')&&get(prefix+'sleeve.sleeveless')&&!['sleeve.sleeveless','sleeve.armhole_shape','sleeve.connecting_width','sleeve.smoothing_coeff'].includes(p))return off('当前选择无袖');
- if(p==='sleeve.smoothing_coeff'&&get(prefix+'sleeve.armhole_shape')!=='ArmholeAngle')return off('平滑量仅用于折角袖窿');
+ if(p==='sleeve.smoothing_coeff'&&(!get(prefix+'sleeve.sleeveless')||get(prefix+'sleeve.armhole_shape')!=='ArmholeAngle'))return off('平滑量仅用于折角袖窿');
+ if(p==='sleeve.armhole_shape'&&!get(prefix+'sleeve.sleeveless'))return off('有袖形制由原程序固定使用曲线袖窿');
  if(p==='sleeve.standing_shoulder_len'&&!get(prefix+'sleeve.standing_shoulder'))return off('先启用竖肩');
  const cuffAt=path.indexOf('.cuff.');if(cuffAt>=0){const base=path.slice(0,cuffAt)+'.cuff.';if(!p.endsWith('cuff.type')&&!get(base+'type'))return off('先选择收口类型');const kind=get(base+'type');if(p.endsWith('cuff.skirt_fraction')&&kind!=='CuffBandSkirt')return off('仅用于袖带与荷叶组合');if((p.endsWith('cuff.skirt_flare')||p.endsWith('cuff.skirt_ruffle'))&&kind==='CuffBand')return off('纯收口带没有荷叶部分');}
- const component=get('collar.component.style');if(p.startsWith('collar.component.')&&p!=='collar.component.style'){if(!component)return off('先选择衣领或帽子');if(p.includes('hood_')&&component!=='Hood2Panels')return off('仅用于帽子');if(p.endsWith('lapel_standing')&&component!=='SimpleLapel')return off('仅用于翻领');}
- if(/collar\.[fb]_bezier_[xy]$/.test(p)){const side=p.includes('.f_')?'f':'b';if(get(prefix+'collar.'+side+'_collar')!=='Bezier2NeckHalf')return off('仅用于贝塞尔领口');}
+ const component=get('left.enable_asym')?null:get('collar.component.style');
+ if(p.startsWith('collar.component.')&&get('left.enable_asym'))return off('左右独立设计时原程序停用片式衣领与帽子');
+ if(strapless&&p.startsWith('collar.')&&!['collar.fc_depth','collar.bc_depth'].includes(p))return off('无肩带上装只用前后领深控制上缘高度');
+ if(p.startsWith('collar.component.')&&p!=='collar.component.style'){if(!component)return off('先选择衣领或帽子');if(p.includes('hood_')&&component!=='Hood2Panels')return off('仅用于帽子');if(p.endsWith('lapel_standing')&&component!=='SimpleLapel')return off('仅用于翻领');if(p.endsWith('.depth')&&component==='Hood2Panels')return off('帽子使用专门的帽深与帽长参数');}
+ const neckShape=side=>['Turtle','Hood2Panels'].includes(component)||component==='SimpleLapel'&&side==='b'?'CircleNeckHalf':get(prefix+'collar.'+side+'_collar');
+ if(['collar.f_collar','collar.b_collar'].includes(p)){const side=p.includes('.f_')?'f':'b';if(['Turtle','Hood2Panels'].includes(component)||component==='SimpleLapel'&&side==='b')return off('这一衣领部件由原程序固定为圆领投影');}
+ if(['collar.fc_angle','collar.bc_angle'].includes(p)){const side=p.includes('.fc_')?'f':'b';if(!['TrapezoidNeckHalf','CircleArcNeckHalf'].includes(neckShape(side)))return off('角度仅用于梯形或圆弧领口');}
+ if(['collar.f_flip_curve','collar.b_flip_curve'].includes(p)){const side=p.includes('.f_')?'f':'b';if(!['CurvyNeckHalf','CircleArcNeckHalf','Bezier2NeckHalf'].includes(neckShape(side)))return off('这一领口曲线不使用翻转参数');}
+ if(/collar\.[fb]_bezier_[xy]$/.test(p)){const side=p.includes('.f_')?'f':'b';if(neckShape(side)!=='Bezier2NeckHalf')return off('仅用于贝塞尔领口');if(component==='SimpleLapel')return off('原翻领程序使用固定贝塞尔控制点');}
  return on;
 }
