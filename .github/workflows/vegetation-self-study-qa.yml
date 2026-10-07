@@ -1,0 +1,41 @@
+name: Vegetation self-study QA
+on:
+  push:
+    branches: [qa/vegetation-self-study-20261007]
+    paths: ['.github/qa/vegetation-self-study-20261007/**', '.github/workflows/vegetation-self-study-qa.yml']
+permissions:
+  contents: read
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install official browser test dependencies
+        working-directory: .github/qa/vegetation-self-study-20261007
+        run: |
+          npm init -y
+          npm install --save-exact playwright@1.58.2
+          npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Render and exercise independent module
+        working-directory: .github/qa/vegetation-self-study-20261007
+        env:
+          BROWSER: ${{ matrix.browser }}
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          python3 -m http.server 8765 > /tmp/vegetation-http.log 2>&1 &
+          node qa/browser.mjs
+      - name: Preserve actual browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vegetation-study-${{ matrix.browser }}-${{ github.sha }}
+          path: .github/qa/vegetation-self-study-20261007/qa-output
+          retention-days: 14
