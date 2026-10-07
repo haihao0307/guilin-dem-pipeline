@@ -21,16 +21,16 @@ async function check(page,name,fn){await fn();report.checks.push(name);}
   const context=await browser.newContext({viewport:{width:2048,height:1040},deviceScaleFactor:1});
   await context.exposeFunction('ppfAuditRelease',data=>report.releases.push(data));
   await context.addInitScript(()=>{
-    const rafs=new Set(),observers=new Set(),contexts=new Set();
+    const rafs=new Set(),rafOrigins=new Map(),observers=new Set(),contexts=new Set();
     const request=requestAnimationFrame.bind(window),cancel=cancelAnimationFrame.bind(window);
-    window.requestAnimationFrame=callback=>{const id=request(t=>{rafs.delete(id);callback(t);});rafs.add(id);return id;};
-    window.cancelAnimationFrame=id=>{rafs.delete(id);return cancel(id);};
+    window.requestAnimationFrame=callback=>{const origin={stack:new Error().stack,callback:String(callback).slice(0,600)};const id=request(t=>{rafs.delete(id);rafOrigins.delete(id);callback(t);});rafs.add(id);rafOrigins.set(id,origin);return id;};
+    window.cancelAnimationFrame=id=>{rafs.delete(id);rafOrigins.delete(id);return cancel(id);};
     const RO=window.ResizeObserver;window.ResizeObserver=class extends RO{observe(...a){observers.add(this);return super.observe(...a);}disconnect(){observers.delete(this);return super.disconnect();}};
     const get=HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext=function(type,...args){const gl=get.call(this,type,...args);if(gl&&(type==='webgl'||type==='webgl2')&&!contexts.has(gl)){
       contexts.add(gl);const original=gl.getExtension.bind(gl);gl.getExtension=name=>{const ext=original(name);if(name==='WEBGL_lose_context'&&ext&&!ext.__ppfObserved){const lose=ext.loseContext.bind(ext);ext.loseContext=()=>{contexts.delete(gl);return lose();};ext.__ppfObserved=true;}return ext;};
     }return gl;};
-    window.addEventListener('ppf-lifecycle',e=>{if(e.detail.kind==='released')window.ppfAuditRelease({...e.detail,observedRafs:rafs.size,observedResizeObservers:observers.size,observedContexts:contexts.size});});
+    window.addEventListener('ppf-lifecycle',e=>{if(e.detail.kind==='released')window.ppfAuditRelease({...e.detail,observedRafs:rafs.size,rafOrigins:[...rafOrigins.values()],observedResizeObservers:observers.size,observedContexts:contexts.size,href:location.href});});
     const OriginalWorker=window.Worker;window.__workersCreated=0;
     window.Worker=class extends OriginalWorker{constructor(...args){super(...args);window.__workersCreated++;}};
   });
@@ -41,6 +41,7 @@ async function check(page,name,fn){await fn();report.checks.push(name);}
     const audit=JSON.parse(fs.readFileSync(path.join(root,'kaopu-tailor-workbench/ppf-teacher/data',scene,'verification.json')));
     await check(page,scene+':one renderer and on-demand first view',async()=>{const s=await state(page);assert.equal(s.current,metadata.frames-1);assert.equal(s.rendererCount,1);assert.equal(s.workerCount,0);assert.equal(await page.evaluate(()=>window.__workersCreated),0);assert.equal(await page.locator('iframe').count(),0);assert(s.cachedChunks<=3);assert(s.bytes<(scene==='drape'?4.3e6:.3e6));});
     await shot(page,scene+'-final-cloth-2048');
+    await check(page,scene+':shadow-only comparison retains every position',async()=>{const before=await page.evaluate(()=>Array.from(window.ppfQA.positions()));await page.uncheck('#ppf-shadows');await shot(page,scene+'-final-no-shadows');assert.deepEqual(await page.evaluate(()=>Array.from(window.ppfQA.positions())),before);await page.check('#ppf-shadows');});
     await check(page,scene+':desktop controls and viewport simultaneously visible',async()=>{
       for(const size of [{width:1440,height:900},{width:2048,height:1040}]){await page.setViewportSize(size);const boxes=await page.evaluate(()=>({canvas:document.querySelector('#ppf-canvas').getBoundingClientRect().toJSON(),control:document.querySelector('#ppf-case').getBoundingClientRect().toJSON(),scroll:document.documentElement.scrollWidth,width:innerWidth}));assert(boxes.canvas.width>size.width*.55);assert(boxes.canvas.height>size.height*.5);assert(boxes.control.x>=boxes.canvas.right-2);assert(boxes.control.right<=size.width);assert.equal(boxes.scroll,boxes.width);await shot(page,scene+'-desktop-'+size.width);}
     });
