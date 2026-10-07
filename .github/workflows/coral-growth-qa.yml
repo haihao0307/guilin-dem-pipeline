@@ -1,0 +1,57 @@
+name: Coral growth experiment read-only QA
+on:
+  push:
+    branches: [work/coral-r05-recovery-qa-20261005]
+    paths:
+      - 'coral-mother-core-seed-r01/growth-lab-r01/**'
+      - '.github/qa/coral-growth-*'
+      - '.github/workflows/coral-growth-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: coral-growth-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            coral-mother-core-seed-r01
+            .github/qa
+      - name: Validate authored JavaScript
+        run: |
+          node --check coral-mother-core-seed-r01/growth-lab-r01/growth.mjs
+          node --check coral-mother-core-seed-r01/growth-lab-r01/app.mjs
+          node --check coral-mother-core-seed-r01/growth-lab-r01/worker.mjs
+          node --check .github/qa/coral-growth-browser.cjs
+      - name: Install fixed official browser tools
+        run: |
+          npm install --prefix "$RUNNER_TEMP/coral-test" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/coral-test/node_modules/.bin/playwright" install --with-deps ${{ matrix.engine }}
+      - name: Run real rendering and interaction checks
+        env:
+          NODE_PATH: ${{ runner.temp }}/coral-test/node_modules
+          CORAL_ENGINE: ${{ matrix.engine }}
+          CORAL_OUT: coral-${{ matrix.engine }}
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/coral-server.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          node .github/qa/coral-growth-browser.cjs
+      - name: Save exact screenshots and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coral-growth-${{ matrix.engine }}-evidence
+          retention-days: 7
+          if-no-files-found: warn
+          path: coral-${{ matrix.engine }}/
