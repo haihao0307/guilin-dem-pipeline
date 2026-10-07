@@ -22,6 +22,7 @@ jobs:
         working-directory: .github/qa/vegetation-self-study-20261007
         run: |
           npm init -y
+          npm pkg set type=module
           npm install --save-exact playwright@1.58.2
           npx playwright install --with-deps ${{ matrix.browser }}
       - name: Render and exercise independent module
