@@ -10,5 +10,5 @@ const manifest=require('./public-manifest.json'),base='https://haihao0307.github
   const report={checkedAt:new Date().toISOString(),base,candidate:manifest.candidate,releaseCommit:manifest.release_commit,allMatched:results.every(x=>x.ok),files:results};
   fs.writeFileSync('driver-public-hashes.json',JSON.stringify(report,null,2));
   if(!report.allMatched)throw new Error('Public asset gate failed: '+results.filter(x=>!x.ok).map(x=>x.path+' ('+(x.status||x.error)+')').join(', '));
-  console.log('All 29 public asset hashes match: 13 release and 16 protected classic files');
+  console.log('All '+manifest.files.length+' public asset hashes match, including all protected classic files');
 })().catch(error=>{console.error(error);process.exit(1);});
