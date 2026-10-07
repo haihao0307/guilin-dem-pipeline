@@ -1,0 +1,125 @@
+{
+  "version": "TEN24 recovery 2026-10-07",
+  "blender": "4.3.2",
+  "parameterized_pipeline_test": "all six stages passed against newly created private work directory",
+  "official_zip_range_index_entries": 90,
+  "source_subset_files": 26,
+  "source_subset_bytes": 300113494,
+  "whole_zip_hash_verified_this_run": false,
+  "source_blend_sha256": "7e069f5508aaaf53f8ea0ce560741b54b5ddbc2e90128141c6c94edd22bd54a9",
+  "geometry_triangles": 4935456,
+  "geometry_decimated": false,
+  "original_parts": 10,
+  "groom_curves": 13998,
+  "verification": {
+    "checks": [
+      {
+        "name": "density changes evaluated curve count",
+        "ok": true,
+        "original": 13998,
+        "half": 7083
+      },
+      {
+        "name": "length trims actual source curves",
+        "ok": true,
+        "median_ratio": 0.4998873183568879,
+        "curve_count": 13998
+      },
+      {
+        "name": "width changes actual radii",
+        "ok": true,
+        "radius_ratio": 2.0,
+        "centerlines_unchanged": true
+      },
+      {
+        "name": "native surface-deform follows attachment surface translation",
+        "ok": true,
+        "translation_local": [
+          0.002,
+          0,
+          0
+        ],
+        "max_error": 2.7492642402648926e-06,
+        "scope": "controlled attachment-surface displacement; not a body rig or physics test"
+      },
+      {
+        "name": "reset exactly restores centerline geometry",
+        "ok": true,
+        "sha256": "54edd093bdbaadb4550b0bfbe8ca0eb747eb03e0640521dd8259601fbf265110"
+      },
+      {
+        "name": "all ten original topology and subdivision signatures retained",
+        "ok": true
+      },
+      {
+        "name": "original source blend unchanged",
+        "ok": true,
+        "sha256": "7e069f5508aaaf53f8ea0ce560741b54b5ddbc2e90128141c6c94edd22bd54a9"
+      }
+    ],
+    "all_functional_checks_passed": true,
+    "evaluated_control_point_contacts": 0,
+    "evaluated_midpoint_contacts": 0,
+    "worst_sample_gap": 0,
+    "evaluated_root_max_gap": 0.00013550139556173235,
+    "contact_method": "all points above local head y=0.20 plus lower points within 0.025 local units, finite-radius points and centerline midpoints; open-boundary signed-distance caveat; not continuous Catmull-Rom/capsule proof",
+    "native_node_warnings": [],
+    "baseline_curve_count": 13998
+  },
+  "web_geometry_cpu_tests": {
+    "scope": "Actual private R11 groom CPU geometry only; no WebGL, browser, shader or visual validation",
+    "results": [
+      {
+        "length": 1,
+        "density": 1,
+        "width": 1,
+        "curves": 13998,
+        "vertices": 1398642,
+        "triangles": 2713296,
+        "allFinite": true,
+        "indexInRange": true
+      },
+      {
+        "length": 0.5,
+        "density": 0.5,
+        "width": 2,
+        "curves": 6999,
+        "vertices": 360372,
+        "triangles": 678750,
+        "allFinite": true,
+        "indexInRange": true
+      },
+      {
+        "length": 0.1,
+        "density": 0.05,
+        "width": 0.25,
+        "curves": 699,
+        "vertices": 10512,
+        "triangles": 16830,
+        "allFinite": true,
+        "indexInRange": true
+      },
+      {
+        "length": 1,
+        "density": 0,
+        "width": 1,
+        "curves": 0,
+        "vertices": 0,
+        "triangles": 0,
+        "allFinite": true,
+        "indexInRange": true
+      }
+    ]
+  },
+  "webgl_runtime_tested": true,
+  "visual_accepted": false,
+  "browser_material_equivalent": false,
+  "continuous_collision_verified": false,
+  "scan_data_published": false,
+  "webgl_technical_checks": 15,
+  "webgl_test_commit": "cb0b602fffd0fcd100e332675cb4ad57d0364158",
+  "webgl_test_run": 37566304498,
+  "webgl_test_job": 112614698311,
+  "webgl_technical_passed": true,
+  "hardware_performance_validated": false
+}

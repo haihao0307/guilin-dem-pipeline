@@ -1,16 +1,15 @@
-name: Tailor unified viewport and unchanged-physics acceleration QA
+name: Tailor unified published desktop and new-dimension full solve QA
 on:
   pull_request:
     branches: [gh-pages]
     paths:
       - 'kaopu-tailor-workbench/**'
-      - 'kaopu-human-overview/workbench-ui.css'
-      - 'kaopu-human-overview/workbench-ui.js'
       - '.github/workflows/tailor-garments-r03-qa.yml'
+      - '.github/tailor-public/**'
 permissions:
   contents: read
 concurrency:
-  group: tailor-unified-${{ github.ref }}
+  group: tailor-unified-public-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   interface:
@@ -27,107 +26,59 @@ jobs:
           persist-credentials: false
           sparse-checkout: |
             kaopu-tailor-workbench
-            kaopu-human-overview
+            .github/tailor-public
       - name: Official browser test dependency
         run: |
           npm install --prefix "$RUNNER_TEMP/tailor-test" --no-save --ignore-scripts playwright@1.57.0
           "$RUNNER_TEMP/tailor-test/node_modules/.bin/playwright" install --with-deps chromium webkit
-      - name: Original gates and accelerated worker protocol
-        run: |
-          cd kaopu-tailor-workbench
-          npm run check
-          node unified/tests/guard.test.mjs
-          node unified/tests/worker.test.mjs
-          node unified/tests/files.test.mjs
-      - name: One viewport, five modes, four sizes and interrupted transitions
+      - name: Published bytes and desktop case transitions
         env:
           NODE_PATH: ${{ runner.temp }}/tailor-test/node_modules
           TAILOR_BROWSER: ${{ matrix.browser }}
           TAILOR_SUITE: layout
+          TAILOR_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/
         run: |
-          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/tailor-server.log" 2>&1 &
-          server=$!
-          trap 'kill "$server" 2>/dev/null || true' EXIT
-          node kaopu-tailor-workbench/unified/tests/browser.cjs
-      - name: Actual UI evidence
+          node .github/tailor-public/public-files.mjs
+          node .github/tailor-public/public-browser.cjs
+      - name: Actual published desktop evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: tailor-interface-${{ matrix.browser }}
+          name: tailor-public-interface-${{ matrix.browser }}
           retention-days: 7
-          path: tailor-layout-*/**
+          path: |
+            tailor-layout-*/**
+            tailor-public-hash/**
   garments:
     needs: interface
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
         browser: [chromium, webkit]
-        case: [shorts, sleeveless]
+        case: [shorts, sleeveless, shortsleeve]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-          sparse-checkout: |
-            kaopu-tailor-workbench
-            kaopu-human-overview
+          sparse-checkout: .github/tailor-public
       - name: Official browser test dependency
         run: |
           npm install --prefix "$RUNNER_TEMP/tailor-test" --no-save --ignore-scripts playwright@1.57.0
           "$RUNNER_TEMP/tailor-test/node_modules/.bin/playwright" install --with-deps chromium webkit
-      - name: Actual new dimensions, full original frame counts and final intersections
+      - name: Public HTTPS actual new dimensions and complete unchanged solve
         env:
           NODE_PATH: ${{ runner.temp }}/tailor-test/node_modules
           TAILOR_BROWSER: ${{ matrix.browser }}
           TAILOR_CASE: ${{ matrix.case }}
           TAILOR_SUITE: garment
-        run: |
-          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/tailor-server.log" 2>&1 &
-          server=$!
-          trap 'kill "$server" 2>/dev/null || true' EXIT
-          node kaopu-tailor-workbench/unified/tests/browser.cjs
-      - name: Actual garment and reference views
+          TAILOR_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/
+        run: node .github/tailor-public/public-browser.cjs
+      - name: Actual new garment 2048 front and back views
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: tailor-${{ matrix.case }}-${{ matrix.browser }}
+          name: tailor-public-${{ matrix.case }}-${{ matrix.browser }}
           retention-days: 7
           path: tailor-garment-*/**
-  benchmark:
-    needs: interface
-    runs-on: ubuntu-24.04
-    timeout-minutes: 50
-    strategy:
-      fail-fast: false
-      matrix:
-        browser: [chromium, webkit]
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with:
-          persist-credentials: false
-          sparse-checkout: |
-            kaopu-tailor-workbench
-            kaopu-human-overview
-      - name: Official browser test dependency
-        run: |
-          npm install --prefix "$RUNNER_TEMP/tailor-test" --no-save --ignore-scripts playwright@1.57.0
-          "$RUNNER_TEMP/tailor-test/node_modules/.bin/playwright" install --with-deps chromium webkit
-      - name: Same browser, same new short-sleeve dimensions, old and new full solves
-        env:
-          NODE_PATH: ${{ runner.temp }}/tailor-test/node_modules
-          TAILOR_BROWSER: ${{ matrix.browser }}
-          TAILOR_CASE: shortsleeve
-          TAILOR_SUITE: benchmark
-        run: |
-          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/tailor-server.log" 2>&1 &
-          server=$!
-          trap 'kill "$server" 2>/dev/null || true' EXIT
-          node kaopu-tailor-workbench/unified/tests/browser.cjs
-      - name: Actual old/new computation and rendered evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: tailor-short-sleeve-speed-${{ matrix.browser }}
-          retention-days: 7
-          path: tailor-benchmark-*/**
