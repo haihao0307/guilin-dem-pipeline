@@ -8,7 +8,7 @@ const cases=[
  ['09','09','磨损金属','划痕、粗糙度与反光','材质练习'],['10','10','方向风化','方向渐变与噪声显色','材质练习']
 ];
 const $=id=>document.getElementById(id),rigKey='KAOPU_MATERIAL_SHARED_RIG_R18';
-let active=null,frame=null,sharedRig=null,lastCard=null;
+let active=null,frame=null,sharedRig=null,lastCard=null,frameRigReady=false;
 try{
  sharedRig=JSON.parse(localStorage.getItem(rigKey)||'null');
  if(!sharedRig){const saved=JSON.parse(localStorage.getItem('KAOPU_MATERIAL_R16')||'null');if(saved?.version===16&&saved.rig)sharedRig=saved.rig;}
@@ -16,7 +16,7 @@ try{
 }catch{}
 function storeRig(r){sharedRig=JSON.parse(JSON.stringify(r));try{localStorage.setItem(rigKey,JSON.stringify(sharedRig));}catch{}}
 function runtime(){try{return frame?.contentWindow?.KAOPU_STUDIO||frame?.contentWindow?.KAOPU_STUDIES;}catch{return null;}}
-function closeFrame(){const api=runtime();if(api?.ready){storeRig(api.getState().rig);api.flushSave?.();}frame?.remove();frame=null;}
+function closeFrame(){const api=runtime();if(api?.ready&&frameRigReady){storeRig(api.getState().rig);api.flushSave?.();}frame?.remove();frame=null;frameRigReady=false;}
 function address(id,push){const url=new URL(location.href);url.searchParams.delete('v');if(id)url.searchParams.set('case',id);else url.searchParams.delete('case');if(push)history.pushState({case:id},'',url);}
 function show(id,push=true){
  const item=cases.find(x=>x[0]===id);closeFrame();active=item?.[0]||null;
@@ -28,7 +28,7 @@ function show(id,push=true){
  $('frameHost').append(frame);$('backToOverview').focus({preventScroll:true});window.scrollTo(0,0);
 }
 for(const [id,n,title,description,type] of cases){const b=document.createElement('button');b.type='button';b.className='caseCard';b.dataset.case=id;b.setAttribute('aria-label',n+' '+title+'，进入工作台');b.innerHTML=`<img src="thumbnails/${id}.png" alt="${title}实际渲染" width="552" height="423" loading="${n<='04'?'eager':'lazy'}"><span class="cardText"><span class="cardNumber">${n} / ${type}</span><strong>${title}</strong><p>${description}</p><span class="enter">打开工作台 ↗</span></span>`;b.onclick=()=>{lastCard=b;show(id);};$('caseGrid').append(b);}
-window.addEventListener('message',e=>{if(!frame||e.source!==frame.contentWindow||e.origin!==location.origin)return;const m=e.data;if(!m||m.type!=='kaopu-viewer')return;if(m.action==='ready'){if(sharedRig)frame.contentWindow.postMessage({type:'kaopu-host',action:'rig',rig:sharedRig},location.origin);else storeRig(m.rig);$('viewerStatus').textContent='实时渲染 · 共用双灯';}if(m.action==='rig')storeRig(m.rig);if(m.action==='height')frame.style.height=Math.max(400,m.height)+'px';if(m.action==='overview')show(null);if(m.action==='error')$('viewerStatus').textContent=m.message;});
+window.addEventListener('message',e=>{if(!frame||e.source!==frame.contentWindow||e.origin!==location.origin)return;const m=e.data;if(!m||m.type!=='kaopu-viewer')return;if(m.action==='ready'){const api=runtime();if(!api?.ready)return;if(sharedRig){api.setRig(sharedRig);api.flushSave?.();}else storeRig(m.rig);frameRigReady=true;$('viewerStatus').textContent='实时渲染 · 共用双灯';}if(m.action==='rig'&&frameRigReady)storeRig(m.rig);if(m.action==='height')frame.style.height=Math.max(400,m.height)+'px';if(m.action==='overview')show(null);if(m.action==='error')$('viewerStatus').textContent=m.message;});
 $('backToOverview').onclick=()=>show(null);window.addEventListener('popstate',()=>show(new URLSearchParams(location.search).get('case'),false));
 window.KAOPU_GALLERY={version:'20261007',cases:cases.map(c=>({id:c[0],number:c[1],title:c[2]})),show,back:()=>show(null),getState:()=>({active,sharedRig}),runtime};
 show(new URLSearchParams(location.search).get('case'),false);
