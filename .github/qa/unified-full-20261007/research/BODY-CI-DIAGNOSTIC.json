@@ -1,0 +1,16 @@
+{
+  "failedRun": 37587846660,
+  "commit": "9f0cf393034d04e78fcf4ad51dbaf6cc81c99499",
+  "bodyMapRegeneratedByteExact": true,
+  "native48DriverAnd7CommonTestsPassed": true,
+  "native17BothBrowserTestsPassed": true,
+  "failure": "Chromium body anny-shoulder-elbow actual versus stale golden, 0.18415754847228527 metres",
+  "independentNodeManifestReplay": {
+    "anny-shoulder-elbow": 0.18415754847228527,
+    "mhr-shoulder-elbow": 0.1634532834868878
+  },
+  "cause": "The fixture exporter retained the mutable state object then modified it for the later combined case; earlier golden bytes no longer matched manifest state",
+  "fix": "Deep-clone state at record creation, then independently evaluate every recorded state and assert its saved SHA before writing the manifest",
+  "toleranceUnchanged": true,
+  "notADeclaredModelParityPass": true
+}
