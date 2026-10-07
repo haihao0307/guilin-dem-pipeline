@@ -1,4 +1,4 @@
-name: Train Driver public six-stop HUD QA
+name: Train railway HUD and touch QA
 on:
   workflow_dispatch:
   pull_request:
@@ -15,108 +15,82 @@ jobs:
   deterministic-session:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
-    outputs:
-      browser_required: ${{ steps.changed.outputs.browser_required }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          fetch-depth: 2
           persist-credentials: false
           sparse-checkout: kaopu-minigame-workbench/voxel-train-study
-      - name: Check this commit for driver changes
-        id: changed
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || ! git diff --quiet HEAD^ HEAD -- kaopu-minigame-workbench/voxel-train-study .github/workflows/train-driver-r01-qa.yml; then
-            echo "browser_required=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "browser_required=false" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Protect the approved classic source
-        run: node kaopu-minigame-workbench/voxel-train-study/game/tests/classic-anchor.mjs
-      - name: Complete seeded sessions, recovery and carriage tests
+      - name: Preserve original models, seeded gameplay and legacy saves
         run: |
           node --check kaopu-minigame-workbench/voxel-train-study/game/app.mjs
-          node kaopu-minigame-workbench/voxel-train-study/game/tests/session.test.mjs
-          node kaopu-minigame-workbench/voxel-train-study/game/tests/model.test.mjs
-          node kaopu-minigame-workbench/voxel-train-study/game/tests/route-map.test.mjs
-  game-browsers:
+          node --check kaopu-minigame-workbench/voxel-train-study/game/view-controls.mjs
+          for test in classic-anchor.mjs session.test.mjs model.test.mjs route-map.test.mjs; do
+            node kaopu-minigame-workbench/voxel-train-study/game/tests/$test
+          done
+  railway-browser:
     needs: deterministic-session
-    if: needs.deterministic-session.outputs.browser_required == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    env:
+      TRAIN_BROWSER: ${{ matrix.browser }}
+      TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/
+      NODE_PATH: ${{ runner.temp }}/driver-test/node_modules
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
           sparse-checkout: kaopu-minigame-workbench
-      - name: Install official Playwright package with bounded network retries
+      - name: Install official Playwright package
         timeout-minutes: 4
         run: timeout 180s npm install --prefix "$RUNNER_TEMP/driver-test" --no-save --ignore-scripts --fetch-timeout=30000 --fetch-retries=2 playwright@1.57.0
-      - name: Download official browser engines
+      - name: Install selected browser
         timeout-minutes: 5
         env:
           PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT: 30000
-        run: timeout 240s "$RUNNER_TEMP/driver-test/node_modules/.bin/playwright" install chromium webkit
-      - name: Install browser system dependencies
+        run: timeout 240s "$RUNNER_TEMP/driver-test/node_modules/.bin/playwright" install "${{ matrix.browser }}"
+      - name: Install browser dependencies
         timeout-minutes: 4
-        run: timeout 180s "$RUNNER_TEMP/driver-test/node_modules/.bin/playwright" install-deps chromium webkit
-      - name: Verify all 31 public asset hashes including the 16 protected classic files
-        run: node kaopu-minigame-workbench/voxel-train-study/game/tests/public-hashes.cjs
-      - name: Upload verified public asset receipt
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: train-hud-public-assets
-          retention-days: 7
-          path: driver-public-hashes.json
-      - name: Verify immersive HUD and actual six-stop map
-        env:
-          NODE_PATH: ${{ runner.temp }}/driver-test/node_modules
-          TRAIN_GAME_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/
+        run: timeout 180s "$RUNNER_TEMP/driver-test/node_modules/.bin/playwright" install-deps "${{ matrix.browser }}"
+      - name: Start the candidate server
         run: |
-          result=0
-          timeout 300s node kaopu-minigame-workbench/voxel-train-study/game/tests/hit-targets.cjs || result=$?
-          TRAIN_BROWSER=webkit timeout 300s node kaopu-minigame-workbench/voxel-train-study/game/tests/hit-targets.cjs || result=$?
-          timeout 240s node kaopu-minigame-workbench/voxel-train-study/game/tests/hud.cjs || result=$?
-          TRAIN_BROWSER=webkit timeout 240s node kaopu-minigame-workbench/voxel-train-study/game/tests/hud.cjs || result=$?
-          exit "$result"
-      - name: Upload HUD evidence immediately
+          nohup python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/driver-server.log" 2>&1 &
+          for i in $(seq 1 30); do curl -fsS "$TRAIN_GAME_URL" > /dev/null && break || sleep 1; done
+      - name: Capture railway framing and verify old saved-view restoration
+        run: timeout 240s node kaopu-minigame-workbench/voxel-train-study/game/tests/railway-ui.cjs
+      - name: Upload first layout screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: train-hud-public-first-evidence
+          name: train-railway-layout-${{ matrix.browser }}
           retention-days: 7
-          path: |
-            hud-chromium/*
-            hud-webkit/*
-            hit-targets-chromium/*
-            hit-targets-webkit/*
-      - name: Play a real first stop and verify both browser engines
-        env:
-          NODE_PATH: ${{ runner.temp }}/driver-test/node_modules
-          TRAIN_GAME_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/
+          path: railway-ui-${{ matrix.browser }}/*
+      - name: Verify held brake, native taps and scoped selection protection
+        run: timeout 240s node kaopu-minigame-workbench/voxel-train-study/game/tests/driving-touch.cjs
+      - name: Verify all hit targets and actual six-stop route HUD
         run: |
-          result=0
-          TRAIN_GAME_QA_DIR=driver-chromium timeout 420s node kaopu-minigame-workbench/voxel-train-study/game/tests/browser.cjs || result=$?
-          TRAIN_BROWSER=webkit TRAIN_GAME_QA_DIR=driver-webkit timeout 420s node kaopu-minigame-workbench/voxel-train-study/game/tests/browser.cjs || result=$?
-          timeout 300s node kaopu-minigame-workbench/voxel-train-study/game/tests/views.cjs || result=$?
-          TRAIN_BROWSER=webkit timeout 300s node kaopu-minigame-workbench/voxel-train-study/game/tests/views.cjs || result=$?
-          exit "$result"
-      - name: Upload real game screenshots and results
+          node kaopu-minigame-workbench/voxel-train-study/game/tests/hit-targets.cjs
+          node kaopu-minigame-workbench/voxel-train-study/game/tests/hud.cjs
+      - name: Play the real first station and all gameplay regressions
+        run: timeout 540s node kaopu-minigame-workbench/voxel-train-study/game/tests/browser.cjs
+      - name: Verify independent views and touch gestures
+        run: timeout 300s node kaopu-minigame-workbench/voxel-train-study/game/tests/views.cjs
+      - name: Upload complete browser evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: train-driver-public-evidence
+          name: train-railway-complete-${{ matrix.browser }}
           retention-days: 7
           if-no-files-found: warn
           path: |
-            driver-chromium/*
-            driver-webkit/*
-            views-chromium/*
-            views-webkit/*
-            hud-chromium/*
-            hud-webkit/*
-            hit-targets-chromium/*
-            hit-targets-webkit/*
+            railway-ui-${{ matrix.browser }}/*
+            driving-touch-${{ matrix.browser }}/*
+            hud-${{ matrix.browser }}/*
+            hit-targets-${{ matrix.browser }}/*
+            driver-${{ matrix.browser }}/*
+            views-${{ matrix.browser }}/*

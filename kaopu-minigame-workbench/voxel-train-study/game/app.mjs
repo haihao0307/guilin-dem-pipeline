@@ -8,7 +8,7 @@ const $=id=>document.getElementById(id),canvas=$('gameScene'),wrap=$('sceneWrap'
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.4));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1;
 const gl=renderer.getContext(),debugRenderer=gl.getExtension('WEBGL_debug_renderer_info'),rendererName=debugRenderer?gl.getParameter(debugRenderer.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x1b2425);
-const camera=new THREE.PerspectiveCamera(32,1,.1,180),cameraTarget=new THREE.Vector3(-8.8,-.8,1),widePosition=new THREE.Vector3(11.2,18.2,27.6),wideTarget=new THREE.Vector3(-8.8,.3,1),portraitTarget=new THREE.Vector3(-8.8,-.8,1),closePosition=new THREE.Vector3(-2,13,20),closeTarget=new THREE.Vector3(-14.2,1.2,1.4);camera.position.copy(widePosition);camera.lookAt(cameraTarget);
+const camera=new THREE.PerspectiveCamera(32,1,.1,180),cameraTarget=new THREE.Vector3(-8.8,-.8,1),widePosition=new THREE.Vector3(4,20,32),wideTarget=new THREE.Vector3(-5.6,1.5,1),portraitTarget=new THREE.Vector3(-8.8,-.8,1),closePosition=new THREE.Vector3(-2,13,20),closeTarget=new THREE.Vector3(-14.2,1.2,1.4);camera.position.copy(widePosition);camera.lookAt(cameraTarget);
 scene.add(new THREE.HemisphereLight(0xd5e6ec,0x273d30,1.4));
 const key=new THREE.DirectionalLight(0xffebc4,2.3);key.position.set(1,22,14);key.target.position.set(-8,0,0);key.castShadow=true;key.shadow.mapSize.set(1024,1024);Object.assign(key.shadow.camera,{left:-34,right:21,top:20,bottom:-19,far:90});key.shadow.normalBias=.05;key.shadow.bias=-.00025;key.shadow.radius=3;scene.add(key,key.target);
 const rim=new THREE.DirectionalLight(0xc3dce4,.7);rim.position.set(-14,8,-14);scene.add(rim);
@@ -59,7 +59,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&game.start
 window.addEventListener('pagehide',safeSave);
 function formatClock(seconds){const n=Math.max(0,Math.ceil(seconds));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0');}
 function updateHUD(v){
-  routeMap.update(v);
+  routeMap.update(v);$('limitValue').textContent=v.station.limit;$('speed').closest('.speed-display').style.setProperty('--speed-angle',(-118+Math.min(80,v.speedKmh)/80*236)+'deg');
   $('clock').textContent=formatClock(v.remainingTime);$('speed').textContent=v.speedKmh.toFixed(1);$('speed').parentElement.parentElement.classList.toggle('overspeed',v.speedKmh>v.station.limit+3);
   const locked=game.serviceLocked();$('notch').textContent=locked?'车门互锁':v.brake?'正在制动':v.reverse?'低速倒回':v.throttle>0?'牵引 '+v.throttle+' 档':v.throttle<0?'减速 '+(-v.throttle)+' 档':'惰行';for(const[i,node]of [...document.querySelectorAll('.power-dots i')].entries())node.classList.toggle('active',i<=v.throttle+2);
   $('brakingDistance').textContent=v.brakingDistance.toFixed(1)+' m';$('brake').setAttribute('aria-pressed',String(v.brake));$('accelerate').disabled=$('decelerate').disabled=locked||!v.started||v.paused||v.phase==='summary'||v.finishing;
