@@ -4,6 +4,7 @@ on:
     branches: [work/coral-r05-recovery-qa-20261005]
     paths:
       - 'coral-mother-core-seed-r01/growth-lab-r01/**'
+      - 'coral-mother-core-seed-r01/index.html'
       - '.github/qa/coral-growth-*'
       - '.github/workflows/coral-growth-qa.yml'
   workflow_dispatch:
@@ -34,6 +35,18 @@ jobs:
           node --check coral-mother-core-seed-r01/growth-lab-r01/worker.mjs
           node --check coral-mother-core-seed-r01/growth-lab-r01/surface.mjs
           node --check .github/qa/coral-growth-browser.cjs
+          python3 - <<'PYVERIFY'
+          import json,subprocess,hashlib,re
+          from pathlib import Path
+          m=json.loads(Path('.github/qa/coral-growth-protected.json').read_text())
+          for item in m['protected']+m['frozenProduct']:
+              row=subprocess.check_output(['git','ls-tree','HEAD','--',item['path']],text=True).strip()
+              assert row and row.split()[2]==item['sha'],item['path']+' changed protected bytes'
+          data=Path('coral-mother-core-seed-r01/index.html').read_text()
+          original=re.sub(r'<a[^>]*data-coral-growth-entry="(?:nav|card)".*?</a>','',data,flags=re.S)
+          assert hashlib.sha256(original.encode()).hexdigest()==m['motherOriginalSHA256'],'Non-additive mother edit'
+          print('Original mother bytes, existing cases, assets and frozen growth core preserved')
+          PYVERIFY
       - name: Install fixed official browser tools
         run: |
           npm install --prefix "$RUNNER_TEMP/coral-test" --no-save --ignore-scripts playwright@1.57.0
