@@ -18,7 +18,7 @@ async function seek(p,f){await p.locator('#timeline').fill(String(f));await p.wa
  assert.equal(await p.locator('[data-module="source08"] img').count(),1);assert.equal(await p.locator('[data-module="source09"] img').count(),1);
  const iframeCount=await p.locator('iframe').count(),rafBaseline=await p.evaluate(()=>window.__rafStats.live());
  for(const [stage,module,N,frame]of [[17,'source08',40000,80],[18,'source09',10000,180]]){
-  await p.locator(`[data-stage="${stage}"]`).click();await settle(p,stage);await seek(p,1);
+  await p.locator(`button[data-stage="${stage}"]`).click();await settle(p,stage);await seek(p,1);
   const child=await source(p);assert.deepEqual(await child.locator('canvas').evaluate(c=>[c.width,c.height]),[400,400]);
   await child.evaluate(()=>{const original=point;window.__drawnPoints=0;window.point=(...p)=>{window.__drawnPoints++;return original(...p)}});
   const h1=await canvasHash(p);await p.locator('#step').click();await settle(p,stage);assert.equal(await p.locator('body').getAttribute('data-frame'),'2');assert.equal(await child.evaluate(()=>window.__drawnPoints),N);
@@ -32,12 +32,12 @@ async function seek(p,f){await p.locator('#timeline').fill(String(f));await p.wa
   await p.locator('#pointfieldReturn').click();await p.waitForFunction(()=>document.body.dataset.pending==='0'&&Number(document.body.dataset.stage)<17);assert.ok(await p.locator('#pointfieldCatalogue').isVisible());
   report.checks.push({module,N,initialFrameHash:h1,stepChanges:true,pauseStable:true,resetExact:true,sameCanvasAcrossResize:true,observationWindowStops:true,extensionContinues:true,samePageReturn:true});save();
  }
- const legacyHashes={};for(const stage of [1,2,3,4,5,9,12]){await p.locator(`[data-stage="${stage}"]`).first().click();await settle(p,stage);await seek(p,60);legacyHashes[stage]=await canvasHash(p);}
- for(let round=0;round<3;round++)for(const stage of [17,18,1,2,3,4,5,9,12]){await p.locator(`[data-stage="${stage}"]`).first().click();await settle(p,stage);await seek(p,60);assert.equal(await p.locator('iframe').count(),iframeCount);if(stage<17)assert.equal(await canvasHash(p),legacyHashes[stage]);}
+ const legacyHashes={};for(const stage of [1,2,3,4,5,9,12]){await p.locator(`button[data-stage="${stage}"]`).first().click();await settle(p,stage);await seek(p,60);legacyHashes[stage]=await canvasHash(p);}
+ for(let round=0;round<3;round++)for(const stage of [17,18,1,2,3,4,5,9,12]){await p.locator(`button[data-stage="${stage}"]`).first().click();await settle(p,stage);await seek(p,60);assert.equal(await p.locator('iframe').count(),iframeCount);if(stage<17)assert.equal(await canvasHash(p),legacyHashes[stage]);}
  assert.ok((await p.evaluate(()=>window.__rafStats.live()))<=rafBaseline+1);report.checks.push({reentryCycles:3,legacySources:[1,2,3,4,5,6,7],legacyCanvasHashesStable:true,iframeCountStable:iframeCount,rafBaseline,rafAfter:await p.evaluate(()=>window.__rafStats.live())});
  // Verify the old sources against untouched R23 baseline in the same browser.
  const baseline=await ctx.newPage();const baselinePath=path.resolve(path.dirname(root),'baselines/r23/index.html');await baseline.goto('file://'+baselinePath,{waitUntil:'load'});await baseline.waitForFunction(()=>document.body.dataset.pending==='0');
- for(const stage of[1,2,3,4,5,9,12]){await baseline.locator(`[data-stage="${stage}"]`).first().click();await settle(baseline,stage);await seek(baseline,60);assert.equal(await canvasHash(baseline),legacyHashes[stage]);}
+ for(const stage of[1,2,3,4,5,9,12]){await baseline.locator(`button[data-stage="${stage}"]`).first().click();await settle(baseline,stage);await seek(baseline,60);assert.equal(await canvasHash(baseline),legacyHashes[stage]);}
  await baseline.close();report.checks.push({old01to07MatchesUntouchedR23:true,frame:60});
  await p.goto(base+'?module=source09&frame=180',{waitUntil:'load'});await settle(p,18);assert.equal(await p.locator('body').getAttribute('data-frame'),'180');await p.locator('#pointfieldReturn').click();await settle(p,5);report.checks.push({directSource09DeepLink:true,samePageDirectLinkReturn:true});
  assert.deepEqual(report.errors,[]);report.ok=true;save();console.log(JSON.stringify(report,null,2));
