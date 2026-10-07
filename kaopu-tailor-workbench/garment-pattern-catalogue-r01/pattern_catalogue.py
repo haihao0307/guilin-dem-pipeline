@@ -44,7 +44,7 @@ def parameterSchema():
        'GodetSkirt and SkirtLevels also consume parameters of their selected base/level skirt families',
        'FittedShirt combinations force full lower rise; source clamps several geometric controls based on current body dimensions'
       ],'requiredBodyCm':REQUIRED_BODY,'tree':copy.deepcopy(DEFAULT),
-      'parameters':[dict(path=p,default=v['v'],type=v['type'],samplingRange=copy.deepcopy(v['range']),defaultProbability=v.get('default_prob'),physicalDomain=None) for p,v in _leaves(DEFAULT)]}
+      'parameters':[dict(path=p,default=v['v'],type=v['type'],samplingRange=copy.deepcopy(v['range']),choices=(list(dict.fromkeys(v['range']+([None] if v['type']=='select_null' else []))) if v['type'].startswith('select') else None),nullable=v['type']=='select_null',defaultProbability=v.get('default_prob'),physicalDomain=None) for p,v in _leaves(DEFAULT)]}
 
 def _preset(upper=None,bottom=None,wb=None,**params):
     return {'meta.upper':upper,'meta.bottom':bottom,'meta.wb':wb,**params}
@@ -95,7 +95,7 @@ def normalize_design(given):
                 if typ=='int' and int(val)!=val:raise PatternError(f'{p} must be an integer')
             elif typ=='bool':
                 if not isinstance(val,bool):raise PatternError(f'{p} must be boolean')
-            elif val not in meta['range']:raise PatternError(f'Unsupported selection {p}={val}')
+            elif val not in meta['range'] and not (typ=='select_null' and val is None):raise PatternError(f'Unsupported selection {p}={val}')
             if typ in ['float','int'] and not min(meta['range'])<=val<=max(meta['range']):raise PatternError(f'{p} outside original sampling range {meta["range"]}')
             _set(d,p,val);return
         if not isinstance(v,dict):raise PatternError(f'Unknown design parameter: {p}')

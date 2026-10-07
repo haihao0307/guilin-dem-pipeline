@@ -11,6 +11,12 @@ class Contract(unittest.TestCase):
  def test_rules_and_unknowns(self):
   for design in [{},{'style':'absent'},{'meta.bottom':'SkirtCircle'},{'style':'Shirt','pants.nope':2},{'style':'Pants','pants.length':2},{'style':'Pants','pants.length':float('nan')}]:
    with self.assertRaises((PatternError,BaseException)):generatePattern({'bodyCm':self.body,'design':design})
+ def test_full_design_snapshot_roundtrip(self):
+  p=generatePattern({'bodyCm':self.body,'design':self.basic['design']})
+  self.assertEqual(p['geometryHash'],self.basic['geometryHash'])
+  o=generateOfficialOracleCm({'bodyCm':self.body,'design':self.basic['design']})
+  self.assertEqual(o['pattern']['panels'],self.basic['officialOracleCm']['pattern']['panels'])
+  self.assertIsNone(normalize_design({'style':'PencilSkirt','pencil-skirt.style_side_cut':None})['pencil-skirt']['style_side_cut']['v'])
  def test_schema_immutable(self):
   a=parameterSchema();a['parameters'][0]['samplingRange'].clear();self.assertTrue(parameterSchema()['parameters'][0]['samplingRange'])
   a=listStyles();a[0]['overrides']['meta.upper']='bad';self.assertEqual(listStyles()[0]['overrides']['meta.upper'],'Shirt')
