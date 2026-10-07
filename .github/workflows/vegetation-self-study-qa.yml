@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
       - name: Install official browser test dependencies
         working-directory: .github/qa/vegetation-self-study-20261007
         run: |
@@ -33,6 +33,10 @@ jobs:
           python3 -m http.server 8765 > /tmp/vegetation-http.log 2>&1 &
           node qa/check-source-lock.mjs
           node tests/sweep-orientation.test.mjs
+          node qa/marching-original-baseline.mjs
+          node tests/volume-core.test.mjs
+          mkdir -p qa-output/cpu
+          cp qa/marching-original-baseline.json qa/volume-core-report.json qa/sweep-orientation-report.json qa-output/cpu/
           node qa/browser.mjs
           node qa/coffee-browser.mjs
           node qa/trees-browser.mjs
