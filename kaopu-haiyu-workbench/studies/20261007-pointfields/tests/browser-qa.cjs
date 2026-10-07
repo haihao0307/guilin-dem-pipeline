@@ -39,6 +39,15 @@ async function seek(p,f){await p.locator('#timeline').fill(String(f));await p.wa
  const baseline=await ctx.newPage();const baselinePath=path.resolve(path.dirname(root),'baselines/r23/index.html');await baseline.goto('file://'+baselinePath,{waitUntil:'load'});await baseline.waitForFunction(()=>document.body.dataset.pending==='0');
  for(const stage of[1,2,3,4,5,9,12]){await baseline.locator(`button[data-stage="${stage}"]`).first().click();await settle(baseline,stage);await seek(baseline,60);assert.equal(await canvasHash(baseline),legacyHashes[stage]);}
  await baseline.close();report.checks.push({old01to07MatchesUntouchedR23:true,frame:60});
+ for(const stage of[13,14,15,16,7,8]){
+  await p.locator(`button[data-stage="${stage}"]`).click();await p.setViewportSize({width:390,height:844});await p.evaluate(()=>scrollTo(0,0));
+  assert.equal(await p.locator('#pointfieldCatalogue').isVisible(),false);
+  if(stage<17&&stage>12){await p.waitForFunction(()=>document.querySelector('#sourceSpace').dataset.referenceFrame);assert.equal(await p.evaluate(()=>window.HaiyuVolumeStudy.validate(window.HaiyuSourceSpace.getPacket(),true).ok),true);}
+  else await p.waitForTimeout(200);
+  const id=stage>=13?'#phaseCanvas':'#expCanvas',box=await p.locator(id).boundingBox();assert.ok(box.width>=360);assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));await p.screenshot({path:path.join(out,`legacy-stage${stage}-mobile.png`),fullPage:true});
+  report.checks.push({legacyStage:stage,existing3DViewRenders:true,newCardsHiddenIn3D:true,mobileCanvas:box});save();await p.setViewportSize({width:1440,height:1000});
+ }
+
  await p.goto(base+'?module=source09&frame=180',{waitUntil:'load'});await settle(p,18);assert.equal(await p.locator('body').getAttribute('data-frame'),'180');await p.locator('#pointfieldReturn').click();await settle(p,5);report.checks.push({directSource09DeepLink:true,samePageDirectLinkReturn:true});
  assert.deepEqual(report.errors,[]);report.ok=true;save();console.log(JSON.stringify(report,null,2));
  }catch(e){report.ok=false;report.error=e.stack;save();if(p)await p.screenshot({path:path.join(out,'failure.png'),fullPage:true}).catch(()=>{});console.error(e);process.exitCode=1;}finally{if(browser)await browser.close();}})();
