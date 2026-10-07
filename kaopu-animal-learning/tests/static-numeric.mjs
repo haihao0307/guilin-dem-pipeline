@@ -83,9 +83,10 @@ check('unavailable code weights hardware disclosed',()=>{assert.match(workflow.a
 check('author timing is not benchmarked as local result',()=>assert.match(workflow.authorReportedCost,/不是本工作台实测/));
 check('observation protocol is not solved animation output',()=>{assert.match(workflow.output,/不导出新动作/);assert(workflow.suggestedObservationFields.includes('visibility'));assert(workflow.suggestedObservationFields.includes('time_seconds'));});
 check('future cross-species maker is not claimed complete',()=>assert.match(workflow.futureGate,/不能由单次演示升级/));
-check('new card only opens and downloads method',()=>{assert.match(motionSection(),/检查动作流程与边界/);assert.match(workflowMarkup(workflow),/下载动作学习卡 JSON/);assert(!/data-run|run-inference|generate-motion/.test(workflowMarkup(workflow)));});
+check('new card opens action workspace and preserved method card still downloads',()=>{assert.match(motionSection(),/打开视频动作工作区/);assert.match(workflowMarkup(workflow),/下载动作学习卡 JSON/);assert(!/data-run|run-inference|generate-motion/.test(workflowMarkup(workflow)));});
 check('workflow view has explicit evidence status',()=>{const view=workflowMarkup(workflow);assert.match(view,/原帖视频已查看/);assert.match(view,/教程说明已读取/);assert.match(view,/拟合流程未运行/);});
 check('diagram is identified as method, not motion result',()=>assert.match(motionSection(),/非动捕或动画结果/));
 const report={schema:'kaopu/animal-learning-qa@1',checkedAtUtc:new Date().toISOString(),repository:'haihao0307/guilin-dem-pipeline',scope:'kaopu-animal-learning',checks,counts:{passed:checks.length,failed:0},artifact:{path:'index.html',sha256:crypto.createHash('sha256').update(html).digest('hex'),bytes:Buffer.byteLength(html)},notRun:['Actual browser/UI and file:// runtime','GPU/CPU inference for any teacher','User image or author output testing','Network deployment and live publication checks']};
 fs.mkdirSync(path.join(root,'qa'),{recursive:true});fs.writeFileSync(path.join(root,'qa/LEARNING_STATIC_NUMERIC.json'),JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify({passed:checks.length,failed:0,report:'qa/LEARNING_STATIC_NUMERIC.json'},null,2));
+
