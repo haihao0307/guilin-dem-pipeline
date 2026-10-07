@@ -3,7 +3,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright,expect
 ROOT=Path(__file__).resolve().parents[1];OUT=Path(os.environ.get('MOTION_QA_OUT',ROOT/'qa/browser'));OUT.mkdir(parents=True,exist_ok=True)
 handler=functools.partial(http.server.SimpleHTTPRequestHandler,directory=str(ROOT.parent));server=socketserver.TCPServer(('127.0.0.1',0),handler);threading.Thread(target=server.serve_forever,daemon=True).start();url=f'http://127.0.0.1:{server.server_address[1]}/kaopu-animal-learning/#animal-learning/video-motion-silhouette'
-checks=[];errors=[];external=[];engine=os.environ.get('MOTION_ENGINE','chromium')
+pixel_checks=[];checks=[];errors=[];external=[];engine=os.environ.get('MOTION_ENGINE','chromium')
 def check(name,fn):fn();checks.append({'name':name,'status':'passed'})
 def yes(x,msg='assertion failed'):
  if not x:raise AssertionError(msg)
@@ -14,12 +14,19 @@ def main():
   page.screenshot(path=str(OUT/'sample-initial.png'),full_page=True)
   q=lambda sel:page.locator(sel)
   ev=lambda code:page.evaluate("()=>{const s=document.querySelector('#animal-learning').shadowRoot;"+code+"}")
+  reference=json.loads((ROOT/'tests/muybridge-frame-reference.json').read_text())['frames']
+  def verify_pixels(i):
+   page.wait_for_timeout(100)
+   observed=ev("const c=document.createElement('canvas');c.width=30;c.height=20;const x=c.getContext('2d');x.drawImage(s.querySelector('#vm-video'),0,0,30,20);const d=x.getImageData(0,0,30,20).data;return Array.from({length:600},(_,i)=>d[i*4]*.2126+d[i*4+1]*.7152+d[i*4+2]*.0722)")
+   distances=[sum(abs(a-b) for a,b in zip(observed,frame))/600 for frame in reference];nearest=min(range(15),key=lambda j:distances[j]);pixel_checks.append({'requestedFrame':i,'nearestSourceFrame':nearest,'meanAbsoluteGrayError':distances[i]})
+   yes(nearest==i,'Visible video frame does not match original GIF: '+str(pixel_checks[-1]))
+  check('initial image matches original source frame 0',lambda:verify_pixels(0))
   check('sample decodes at original 300x200 and 1.5 seconds',lambda:yes(ev("const v=s.querySelector('#vm-video');return v.videoWidth===300&&v.videoHeight===200&&Math.abs(v.duration-1.5)<.01")))
   check('15 saved true-image keyframes shown',lambda:yes(q('#vm-timeline button').count()==15))
   check('side mapping remains unresolved',lambda:yes(q('#vm-sides').input_value()=='unresolved'))
   check('video and rig desktop panes are visible side-by-side',lambda:yes(ev("const a=s.querySelector('.vm-frame').getBoundingClientRect(),b=s.querySelector('#vm-rig').getBoundingClientRect(),c=s.querySelector('.vm-controls').getBoundingClientRect();return a.width>300&&b.width>300&&b.x>a.right-1&&c.x>b.right-1")))
   for i in range(1,15):
-   q('#vm-next').click();expect(q('#vm-time')).to_have_text(f'{i/10:.3f} s');check('decoded frame '+str(i)+' aligned with source time',lambda:yes('人工关键帧' in q('#vm-metrics').inner_text()))
+   q('#vm-next').click();expect(q('#vm-time')).to_have_text(f'{i/10:.3f} s');check('decoded frame '+str(i)+' aligned with source time',lambda:yes('人工关键帧' in q('#vm-metrics').inner_text()));check('visible pixels match original source frame '+str(i),lambda:verify_pixels(i))
   q('#vm-next').click();page.wait_for_timeout(100);check('next frame clamps to last decoded source frame',lambda:yes(q('#vm-time').inner_text()=='1.400 s'))
   q('#vm-prev').click();expect(q('#vm-time')).to_have_text('1.300 s')
   q('#vm-timeline button').first.click();expect(q('#vm-time')).to_have_text('0.000 s')
@@ -54,4 +61,4 @@ try:
 except Exception as e:
  result='failed';errors.append(repr(e));raise
 finally:
- server.shutdown();(OUT/'MOTION_BROWSER.json').write_text(json.dumps({'engine':engine,'status':result,'checks':checks,'passed':len(checks),'errors':errors,'externalRequests':external,'htmlSHA256':hashlib.sha256((ROOT/'index.html').read_bytes()).hexdigest(),'commit':os.environ.get('GITHUB_SHA'),'scope':'Real desktop browser; original source animation, local files, authored points and uncalibrated 3D skeleton; no model inference'},ensure_ascii=False,indent=2)+'\n')
+ server.shutdown();(OUT/'MOTION_BROWSER.json').write_text(json.dumps({'engine':engine,'status':result,'checks':checks,'passed':len(checks),'errors':errors,'externalRequests':external,'sourcePixelChecks':pixel_checks,'htmlSHA256':hashlib.sha256((ROOT/'index.html').read_bytes()).hexdigest(),'commit':os.environ.get('GITHUB_SHA'),'scope':'Real desktop browser; original source animation, local files, authored points and uncalibrated 3D skeleton; no model inference'},ensure_ascii=False,indent=2)+'\n')
