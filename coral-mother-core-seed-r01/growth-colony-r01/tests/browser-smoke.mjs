@@ -15,15 +15,17 @@ const out=path.resolve(process.env.CORAL_OUT||path.join(path.dirname(fileURLToPa
 const mother='https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-core-seed-r01/';
 const timeout=90000,results=[];await fs.mkdir(out,{recursive:true});
 let browser,context,page,traceStarted=false,phase='dependency',viewport=null,engineVersion=null;
-let pageErrors=[],consoleErrors=[],networkFailures=[];
+let pageErrors=[],consoleErrors=[],networkFailures=[],currentObservations=null;
 const saveJSON=(name,value)=>fs.writeFile(path.join(out,name),JSON.stringify(value,null,2));
+const bounded=(promise,ms,label)=>Promise.race([promise,new Promise((_,reject)=>{const t=setTimeout(()=>reject(new Error(`${label} exceeded ${ms}ms`)),ms);t.unref?.();})]);
+const progressTimer=setInterval(()=>{const state={phase,viewport,at:new Date().toISOString(),sourceCommit:process.env.GITHUB_SHA??null};saveJSON('progress.json',state).catch(()=>{});console.log('QA_PROGRESS',JSON.stringify(state));},30000);progressTimer.unref();
 async function failure(error,status='failed'){
- const details={status,engine,engineVersion,url,at:new Date().toISOString(),phase,viewport,error:{name:error?.name??'Error',message:String(error?.message??error),stack:error?.stack??null},pageErrors,consoleErrors,networkFailures,completed:results};
+ const details={status,sourceCommit:process.env.GITHUB_SHA??null,runId:process.env.GITHUB_RUN_ID??null,engine,engineVersion,url,at:new Date().toISOString(),phase,viewport,error:{name:error?.name??'Error',message:String(error?.message??error),stack:error?.stack??null},pageErrors,consoleErrors,networkFailures,partialObservation:currentObservations,completed:results};
  if(page&&!page.isClosed()){
-  try{details.currentURL=page.url();details.audit=await page.evaluate(()=>window.__coralAudit?.state??null);}catch(e){details.auditError=String(e);}
+  try{details.currentURL=page.url();details.audit=await bounded(page.evaluate(()=>window.__coralAudit?.state??null),4000,'failure audit');}catch(e){details.auditError=String(e);}
   try{await page.screenshot({path:path.join(out,'failure.png'),fullPage:true,timeout:10000});details.screenshot='failure.png';}catch(e){details.screenshotUnavailable=String(e);}
  }else details.screenshotUnavailable='No browser page was created.';
- if(context&&traceStarted){try{await context.tracing.stop({path:path.join(out,'failure-trace.zip')});details.trace='failure-trace.zip';traceStarted=false;}catch(e){details.traceUnavailable=String(e);}}else details.traceUnavailable='No browser tracing session was created.';
+ if(context&&traceStarted){try{await bounded(context.tracing.stop({path:path.join(out,'failure-trace.zip')}),15000,'failure trace');details.trace='failure-trace.zip';traceStarted=false;}catch(e){details.traceUnavailable=String(e);}}else details.traceUnavailable='No browser tracing session was created.';
  await saveJSON('failure.json',details);console.error(`${status.toUpperCase()} ${engine}: ${details.error.message}`);
 }
 try{
@@ -36,6 +38,7 @@ try{
  if(browser){
   for(viewport of [{width:1440,height:1000},{width:390,height:844}]){
    const tag=`${engine}-${viewport.width}`,observations={engine,viewport,emulation:viewport.width<500?'mobile viewport and touch emulation, not a physical phone':'desktop browser viewport',steps:[],screenshots:[],performance:null};
+   currentObservations=observations;
    context=await browser.newContext({viewport,deviceScaleFactor:1,isMobile:viewport.width<500,hasTouch:viewport.width<500,acceptDownloads:true});
    await context.tracing.start({screenshots:true,snapshots:true,sources:true});traceStarted=true;
    page=await context.newPage();page.setDefaultTimeout(timeout);pageErrors=[];consoleErrors=[];networkFailures=[];
@@ -46,7 +49,7 @@ try{
    await page.route('**/favicon.ico',route=>route.fulfill({status:204,body:''}));
    async function ready(){await page.waitForFunction(()=>window.__coralAudit?.state.faces>0&&!window.__coralAudit.state.geometryBusy&&!window.__coralAudit.state.queued,null,{timeout});}
    async function capture(name,{screenshot=false}={}){
-    const value=await page.evaluate(()=>{const pixels=window.__coralAudit.pixelDigest();return {state:window.__coralAudit.state,pixels};});
+    const value=await bounded(page.evaluate(()=>{const pixels=window.__coralAudit.pixelDigest();return {state:window.__coralAudit.state,pixels};}),60000,`${name} framebuffer readback`);
     assert.equal(value.pixels.glErrorBefore,0,`${name}: preexisting GL error`);assert.equal(value.pixels.glError,0,`${name}: readPixels GL error`);
     assert.ok(value.pixels.nonBackgroundPixels>200,`${name}: actual WebGL framebuffer is blank`);
     assert.ok(value.pixels.rendererTriangles>=value.state.faces,`${name}: renderer did not draw the reported mesh`);assert.ok(value.pixels.rendererCalls>=1,`${name}: no actual render call`);
@@ -69,7 +72,7 @@ try{
    }
    async function download(button,filename){const pending=page.waitForEvent('download');await page.locator(button).click();const file=await pending;const dest=path.join(out,`${tag}-${filename}`);await file.saveAs(dest);assert.equal(await file.failure(),null);return dest;}
    async function rafPerformance(){
-    return page.evaluate(async()=>{const intervals=[];let previous=null;await new Promise(resolve=>{function step(t){if(previous!==null)intervals.push(t-previous);previous=t;if(intervals.length<60)requestAnimationFrame(step);else resolve();}requestAnimationFrame(step);});const sorted=[...intervals].sort((a,b)=>a-b);return {samples:intervals.length,intervalsMs:intervals,medianMs:sorted[30],p95Ms:sorted[57],maxMs:sorted.at(-1),meanMs:intervals.reduce((a,b)=>a+b,0)/intervals.length,over50ms:intervals.filter(x=>x>50).length,generationMs:window.__coralAudit.state.generationMs,note:'60 RAF intervals in this browser environment; no physical-device or real-time FPS guarantee'};});
+    return bounded(page.evaluate(async()=>{const intervals=[];let previous=null;await new Promise(resolve=>{function step(t){if(previous!==null)intervals.push(t-previous);previous=t;if(intervals.length<60)requestAnimationFrame(step);else resolve();}requestAnimationFrame(step);});const sorted=[...intervals].sort((a,b)=>a-b);return {samples:intervals.length,intervalsMs:intervals,medianMs:sorted[30],p95Ms:sorted[57],maxMs:sorted.at(-1),meanMs:intervals.reduce((a,b)=>a+b,0)/intervals.length,over50ms:intervals.filter(x=>x>50).length,generationMs:window.__coralAudit.state.generationMs,note:'60 RAF intervals in this browser environment; no physical-device or real-time FPS guarantee'};}),120000,'60 RAF measurement');
    }
    phase=`${tag} initial load`;await page.goto(url,{waitUntil:'domcontentloaded',timeout});await ready();
    const readonly=await page.evaluate(()=>{const descriptor=Object.getOwnPropertyDescriptor(window,'__coralAudit');return {writable:descriptor.writable,configurable:descriptor.configurable,frozen:Object.isFrozen(window.__coralAudit),keys:Object.keys(window.__coralAudit)};});assert.equal(readonly.writable,false);assert.equal(readonly.configurable,false);assert.equal(readonly.frozen,true);assert.deepEqual(readonly.keys,['state','pixelDigest']);
@@ -105,12 +108,12 @@ try{
    const current=await download('#obj','current-stage.obj'),text=await fs.readFile(current,'utf8'),currentState=await page.evaluate(()=>window.__coralAudit.state);assert.equal(text.split('\n').filter(line=>line.startsWith('o ')).length,currentState.parts);assert.equal(text.split('\n').filter(line=>line.startsWith('v ')).length,currentState.vertices);assert.equal(text.split('\n').filter(line=>line.startsWith('f ')).length,currentState.faces);assert.match(text,/# t=0.52;/);
    await page.locator('#part').selectOption('');await panel('inspect',false);await stage(1,'before-return-navigation');
    phase=`${tag} overflow`;const layout=await page.evaluate(()=>({width:innerWidth,height:innerHeight,scrollWidth:document.documentElement.scrollWidth,scrollHeight:document.documentElement.scrollHeight,controls:['header','#timeline','#views','#tools'].map(selector=>{const r=document.querySelector(selector).getBoundingClientRect();return {selector,x:r.x,y:r.y,right:r.right,bottom:r.bottom};})}));assert.ok(layout.scrollWidth<=layout.width+1);assert.ok(layout.scrollHeight<=layout.height+1);for(const r of layout.controls){assert.ok(r.x>=-1&&r.y>=-1&&r.right<=layout.width+1&&r.bottom<=layout.height+1,`${r.selector} overflows`);}observations.layout=layout;
-   phase=`${tag} mother navigation`;assert.equal(await page.locator('#return').getAttribute('href'),mother);await Promise.all([page.waitForURL(mother,{waitUntil:'domcontentloaded',timeout}),page.locator('#return').click()]);assert.equal(page.url(),mother);await page.waitForTimeout(1000);observations.motherURL=page.url();
+   phase=`${tag} mother navigation`;assert.equal(await page.locator('#return').getAttribute('href'),mother);const motherTarget=new URL(mother);await Promise.all([page.waitForURL(u=>u.origin===motherTarget.origin&&u.pathname===motherTarget.pathname,{waitUntil:'domcontentloaded',timeout}),page.locator('#return').click()]);const arrived=new URL(page.url());assert.equal(arrived.origin,motherTarget.origin);assert.equal(arrived.pathname,motherTarget.pathname);assert.match(await page.title(),/Coral Mother/i);await page.waitForTimeout(1000);observations.motherURL=page.url();
    phase=`${tag} browser back`;await page.goBack({waitUntil:'domcontentloaded',timeout});assert.equal(new URL(page.url()).pathname,new URL(url).pathname);await ready();const back=await capture('returned-from-mother',{screenshot:true});assert.ok(back.state.faces>650000);
    assert.deepEqual(pageErrors,[],'uncaught browser page errors');assert.deepEqual(consoleErrors,[],'browser console errors');assert.deepEqual(networkFailures,[],'failed network requests');
    observations.pageErrors=pageErrors;observations.consoleErrors=consoleErrors;observations.networkFailures=networkFailures;observations.result='Automated checks passed; screenshots and morphology still require independent visual review. Mobile is emulation only.';
    await context.tracing.stop({path:path.join(out,`${tag}-trace.zip`)});traceStarted=false;results.push(observations);await saveJSON(`${tag}-results.json`,observations);await context.close();context=null;page=null;
   }
-  phase='complete';await saveJSON('results.json',{status:'automated checks passed',engine,engineVersion,url,at:new Date().toISOString(),results});console.log(`${engine}: ${results.length} viewport suites passed. Pixel/readback evidence, screenshots, downloads, traces and RAF observations saved in ${out}. Visual morphology and physical mobile acceptance remain separate.`);
+  phase='complete';await saveJSON('results.json',{status:'automated checks passed',sourceCommit:process.env.GITHUB_SHA??null,runId:process.env.GITHUB_RUN_ID??null,engine,engineVersion,url,at:new Date().toISOString(),results});console.log(`${engine}: ${results.length} viewport suites passed. Pixel/readback evidence, screenshots, downloads, traces and RAF observations saved in ${out}. Visual morphology and physical mobile acceptance remain separate.`);
  }
-}catch(error){await failure(error);process.exitCode=1;}finally{if(browser)await browser.close();}
+}catch(error){await failure(error);process.exitCode=1;}finally{clearInterval(progressTimer);if(browser)await bounded(browser.close(),20000,'browser close').catch(error=>console.error(error.message));}
