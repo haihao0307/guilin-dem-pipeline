@@ -1,4 +1,4 @@
-name: Train railway HUD and touch QA
+name: Train railway HUD public QA
 on:
   push:
     branches: ['qa/voxel-train-r01-20261006']
@@ -43,7 +43,7 @@ jobs:
         browser: [chromium, webkit]
     env:
       TRAIN_BROWSER: ${{ matrix.browser }}
-      TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/
+      TRAIN_GAME_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -61,18 +61,24 @@ jobs:
       - name: Install browser dependencies
         timeout-minutes: 4
         run: timeout 180s "$RUNNER_TEMP/driver-test/node_modules/.bin/playwright" install-deps "${{ matrix.browser }}"
-      - name: Start the candidate server
-        run: |
-          nohup python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/driver-server.log" 2>&1 &
-          for i in $(seq 1 30); do curl -fsS "$TRAIN_GAME_URL" > /dev/null && break || sleep 1; done
-          echo "NODE_PATH=$RUNNER_TEMP/driver-test/node_modules" >> "$GITHUB_ENV"
+      - name: Configure installed browser module path
+        run: echo "NODE_PATH=$RUNNER_TEMP/driver-test/node_modules" >> "$GITHUB_ENV"
+      - name: Verify all 31 exact public asset hashes
+        run: node kaopu-minigame-workbench/voxel-train-study/game/tests/public-hashes.cjs
+      - name: Upload public identity receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-railway-public-assets-${{ matrix.browser }}
+          retention-days: 7
+          path: driver-public-hashes.json
       - name: Capture railway framing and verify old saved-view restoration
         run: timeout 240s node kaopu-minigame-workbench/voxel-train-study/game/tests/railway-ui.cjs
       - name: Upload first layout screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: train-railway-layout-${{ matrix.browser }}
+          name: train-railway-public-layout-${{ matrix.browser }}
           retention-days: 7
           path: railway-ui-${{ matrix.browser }}/*
       - name: Verify held brake, native taps and scoped selection protection
@@ -89,7 +95,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: train-railway-complete-${{ matrix.browser }}
+          name: train-railway-public-complete-${{ matrix.browser }}
           retention-days: 7
           if-no-files-found: warn
           path: |
