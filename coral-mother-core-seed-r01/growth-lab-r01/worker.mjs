@@ -1,2 +1,0 @@
-import {Growth,VERSION} from './growth.mjs';
-self.onmessage=({data})=>{try{const solver=new Growth(data.options);let initial=solver.snapshot();postMessage({kind:'frame',id:data.id,version:VERSION,...initial});for(let i=1;i<=180;i++){solver.step();if(i%3===0){const snap=solver.snapshot();postMessage({kind:'frame',id:data.id,...snap},[snap.positions.buffer,snap.indices.buffer,snap.masks.buffer,snap.birth.buffer,snap.groups.buffer]);}}postMessage({kind:'done',id:data.id});}catch(e){postMessage({kind:'error',id:data.id,message:String(e?.stack||e)});}};
