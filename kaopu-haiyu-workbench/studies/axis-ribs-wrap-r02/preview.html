@@ -1,0 +1,129 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>海羽 · C01 弧形收拢修正候选</title><style>
+*{box-sizing:border-box}html,body{margin:0;background:#0d171e;color:#dce7ed;font:14px system-ui,-apple-system,sans-serif}main{max-width:1450px;margin:auto;padding:16px}h1{font-size:20px;margin:0 0 7px}p{color:#9bafbc;line-height:1.65;margin:6px 0 12px}.toolbar{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}button,select{border:1px solid #395262;background:#152732;color:#e4eff4;border-radius:8px;padding:8px 12px;min-height:38px;font:inherit}button[aria-pressed=true]{border-color:#cca874;background:#394235}button:focus-visible{outline:2px solid #ddb270}canvas{width:100%;height:440px;min-height:300px;background:#0a141b;border:1px solid #294451;border-radius:12px;touch-action:none}.time{display:flex;align-items:center;gap:9px}.time input{flex:1}label{display:flex;gap:7px;align-items:center}output{min-width:94px;font-variant-numeric:tabular-nums}.small{font-size:11px}.status{padding:10px 0;color:#b6ccd6}details{margin-top:10px}pre{white-space:pre-wrap;overflow-wrap:anywhere;color:#9fb6c5}.mini{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.mini canvas{height:150px;min-height:0;border-radius:8px}.mini figure{margin:8px 0}.mini figcaption{font-size:11px;color:#9bafbc;margin:5px} @media(max-width:600px){main{padding:10px}h1{font-size:17px}canvas{height:330px;min-height:270px}.toolbar{gap:5px}button,select{padding:6px 8px;font-size:12px}.mini{grid-template-columns:1fr}.mini canvas{height:135px}.mini figure{margin:3px 0}h1{font-size:15px}p{font-size:12px;margin-bottom:7px}.toolbar{margin:7px 0}}
+</style></head><body><main><h1>C01 弧形收拢 · 形态候选 / 无表皮</h1><p>中轴在两侧之间。局部 +B 为背，−B 为胸；黄左、蓝右向胸侧弯回。三视使用同一份 XYZ。</p><div class="toolbar" aria-label="观察方向"><button data-view="orbit" aria-pressed="true">自由观察</button><button data-view="front">XY 顶视 · 沿 Z 看</button><button data-view="top">XZ 侧视 · 沿 Y 看</button><button data-view="side">YZ 轴端 · 沿 X 看</button><button id="resetView">重置视角</button><button id="frames" aria-pressed="false">局部坐标架</button><button id="neutral" aria-pressed="false">中性色</button></div><canvas id="scene" width="1200" height="620" aria-label="同一三维主轴和成对支架的可旋转投影"></canvas><div class="toolbar"><button id="play">播放</button><button id="reset">回到起点</button><label>运动<select id="amplitude"><option value="0">静止</option><option value="0.4">轻摆</option><option value="1" selected>正常</option><option value="2">较强</option></select></label><label>对数<select id="ribCount"><option>2</option><option>6</option><option selected>12</option><option>24</option></select></label><button id="axisOnly" aria-pressed="false">只看轴与站点</button></div><div class="toolbar"><label>收拢<select id="wrapAngle"><option value="2.10">较开</option><option value="2.40" selected>标准</option><option value="2.75">较拢</option></select></label><label>展开宽度<select id="widthScale"><option value=".85">85%</option><option value=".94" selected>94%</option><option value="1">100%</option></select></label><label>胸侧深度<select id="depthScale"><option value=".35">浅</option><option value=".50" selected>中</option><option value=".75">深</option></select></label></div><div class="time"><label for="time">时间</label><input id="time" type="range" min="0" max="4" step="0.01" value="0"><output id="clock">0.00 / 4.00 s</output></div><div class="status" id="status" role="status"></div><p class="small">拖动改变相机，滚轮缩放。下方三投影始终使用同一份世界坐标；轴与根部不随相机重新生成。颜色只区分左右支架，不冒充光照。</p><div class="mini"><figure><canvas id="front"></canvas><figcaption>XY 顶视 · 沿 Z 看</figcaption></figure><figure><canvas id="top"></canvas><figcaption>XZ 侧视 · 沿 Y 看</figcaption></figure><figure><canvas id="side"></canvas><figcaption>YZ 轴端 · 沿 X 看</figcaption></figure></div><details><summary>检查数据与边界</summary><pre id="diagnostics"></pre></details><p class="small">当前仅对选定状态和已列边界测试。背/胸是本次用户指定的设计方向，不是解剖验证。闭合路径与大于60°的单步尖折未支持；无表皮、厚壳和全局碰撞保证。这是结构研究候选，不代表真实解剖或物理力学；验收范围以报告为准。</p></main><script>(function(){'use strict';
+// Numeric functions shared by parameter extraction and the standalone player.
+function basis(s, knots, degree=3) {
+  const count=knots.length-degree-1;
+  if(s===knots.at(-1))return Array.from({length:count},(_,i)=>i===count-1?1:0);
+  let row=Array.from({length:knots.length-1},(_,i)=>s>=knots[i]&&s<knots[i+1]?1:0);
+  for(let d=1;d<=degree;d++)row=Array.from({length:row.length-1},(_,i)=>{
+    const a=knots[i+d]-knots[i],b=knots[i+d+1]-knots[i+1];
+    return (a?(s-knots[i])/a*row[i]:0)+(b?(knots[i+d+1]-s)/b*row[i+1]:0);
+  });
+  return row;
+}
+function spline(s, knots, coefficients) {
+  const w=basis(s,knots);
+  return w.reduce((sum,v,i)=>sum+v*coefficients[i],0);
+}
+function phase(t, period, harmonics) {
+  const angle=2*Math.PI*t/period, row=[1];
+  for(let n=1;n<=harmonics;n++)row.push(Math.cos(n*angle),Math.sin(n*angle));
+  return row;
+}
+function series(coefficients, timeBasis) {
+  return coefficients.reduce((sum,v,i)=>sum+v*timeBasis[i],0);
+}
+// Rodrigues rotation from a rotation vector; no scene or animation dependency.
+function rotate(v, rotation) {
+  const a=Math.hypot(...rotation);
+  if(a<1e-14)return [...v];
+  const [x,y,z]=rotation.map(c=>c/a),[vx,vy,vz]=v;
+  const c=Math.cos(a),s=Math.sin(a),dot=x*vx+y*vy+z*vz;
+  return [vx*c+(y*vz-z*vy)*s+x*dot*(1-c),vy*c+(z*vx-x*vz)*s+y*dot*(1-c),vz*c+(x*vy-y*vx)*s+z*dot*(1-c)];
+}
+
+// Haiyu's own sparse structure study. Not reconstruction of the artist's code or anatomy.
+// The axis equation and Rodrigues helper are reused from the verified R17 source.
+const add=(a,b)=>a.map((v,i)=>v+b[i]);
+const sub=(a,b)=>a.map((v,i)=>v-b[i]);
+const mul=(v,k)=>v.map(x=>x*k);
+const dot=(a,b)=>a.reduce((r,v,i)=>r+v*b[i],0);
+const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const length=v=>Math.hypot(...v);
+const unit=v=>{const d=length(v);if(!Number.isFinite(d)||d<1e-12)throw Error('Degenerate tangent');return mul(v,1/d)};
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+function axis(s,t,amplitude=1){const p=2*Math.PI*t/4,a=.055*amplitude;return [s-.5,.022*s*s+a*s*s*Math.sin(p-2.5*s),a*.48*s*s*Math.sin(p-1.8*s+.4)];}
+function tangent(s,t,amplitude=1){const p=2*Math.PI*t/4,a=.055*amplitude;return [1,.044*s+a*(2*s*Math.sin(p-2.5*s)-2.5*s*s*Math.cos(p-2.5*s)),a*.48*(2*s*Math.sin(p-1.8*s+.4)-1.8*s*s*Math.cos(p-1.8*s+.4))];}
+// Discrete minimal-rotation approximation, not a claimed exact continuous RMF.
+// The initial normal is fixed once. There is no per-station world-axis switch.
+function transportedFrames(tangents,normalSeed=[0,1,0],{closed=false}={}){
+ if(closed)throw Error('Closed paths need a separately tested twist-closure policy');
+ if(!tangents.length)throw Error('No tangents');
+ const T0=unit(tangents[0]),N0=unit(sub(normalSeed,mul(T0,dot(normalSeed,T0))));
+ const frames=[{T:T0,N:N0,B:unit(cross(T0,N0))}];
+ for(let i=1;i<tangents.length;i++){
+  const prev=frames[i-1],T=unit(tangents[i]),d=clamp(dot(prev.T,T),-1,1),r=cross(prev.T,T),s=length(r);
+  if(d<-1+1e-9)throw Error('Adjacent tangents reverse: resample or repair the axis');
+  if(d<.5)throw Error('Tangent turn exceeds 60 degrees: resample or repair the axis');
+  let N=s<1e-12?prev.N:rotate(prev.N,mul(r,Math.atan2(s,d)/s));
+  N=unit(sub(N,mul(T,dot(N,T))));const B=unit(cross(T,N));frames.push({T,N,B});
+ }
+ return frames;
+}
+function evaluate(options={}){
+ const allowed=['time','amplitude','ribCount','asymmetry','wrapAngle','widthScale','depthScale'];for(const k of Object.keys(options))if(!allowed.includes(k))throw Error('Unsupported geometry parameter: '+k);
+ const p={time:0,amplitude:1,ribCount:12,asymmetry:.04,wrapAngle:2.40,widthScale:.94,depthScale:.50,...options};
+ if(!Number.isFinite(p.time)||!Number.isFinite(p.amplitude)||p.amplitude<0||p.amplitude>2||!Number.isInteger(p.ribCount)||p.ribCount<2||p.ribCount>24||!Number.isFinite(p.asymmetry)||Math.abs(p.asymmetry)>.1)throw Error('Invalid structure parameters');
+ if(!Number.isFinite(p.wrapAngle)||p.wrapAngle<2.10||p.wrapAngle>2.75||!Number.isFinite(p.widthScale)||p.widthScale<.85||p.widthScale>1||!Number.isFinite(p.depthScale)||p.depthScale<.35||p.depthScale>.75)throw Error('Invalid wrapping parameters');
+ const steps=128,centers=Array.from({length:steps+1},(_,i)=>axis(i/steps,p.time,p.amplitude));
+ const frames=transportedFrames(Array.from({length:steps+1},(_,i)=>tangent(i/steps,p.time,p.amplitude)));
+ const stations=[],ribs=[];
+ for(let j=0;j<p.ribCount;j++){
+  const index=Math.round((.12+.76*j/(p.ribCount-1))*steps),s=index/steps,root=centers[index],f=frames[index];
+  const phase=2*Math.PI*p.time/4-2.5*s,L=.255*Math.pow(Math.sin(Math.PI*s),.7)*(1+.05*p.amplitude*Math.sin(phase));
+  const station={id:j,index,s,root:[...root],frame:f};stations.push(station);
+  for(const side of[-1,1]){
+   const span=L*(1+side*p.asymmetry*Math.sin(2*Math.PI*s));const local=[],points=[];
+   for(let k=0;k<=24;k++){
+    // +B is the designed back direction; -B is the chest direction.
+    // Each elliptical arc starts exactly on the axis, opens laterally, then turns inward.
+    // Neither the axis equation nor the camera projection is changed for this correction.
+    const u=k/24,angle=p.wrapAngle*u,offset=[.22*span*u,side*span*p.widthScale*Math.sin(angle),-span*p.depthScale*(1-Math.cos(angle))];
+    local.push(offset);points.push(add(root,add(mul(f.T,offset[0]),add(mul(f.N,offset[1]),mul(f.B,offset[2])))));
+   }
+   ribs.push({id:`station-${j}-${side<0?'left':'right'}`,stationId:j,side,root:[...root],local,points});
+  }
+ }
+ return {schema:'haiyu.sparse-axis-ribs-wrap/2',parameters:p,axis:centers,frames,stations,ribs,semantics:'C01 user-directed shape study: local +B back, -B chest; paired arcs wrap inward. Not anatomy or physical simulation',bounds:{origin:'world',cameraDependent:false},vertexCount:centers.length+ribs.reduce((n,r)=>n+r.points.length,0)};
+}
+function inspect(packet){
+ let orthogonality=0,unitError=0,handedness=1,adjacentNormalDot=1,rootError=0;
+ for(let i=0;i<packet.frames.length;i++){
+  const{T,N,B}=packet.frames[i];orthogonality=Math.max(orthogonality,Math.abs(dot(T,N)),Math.abs(dot(T,B)),Math.abs(dot(N,B)));unitError=Math.max(unitError,...[T,N,B].map(v=>Math.abs(length(v)-1)));handedness=Math.min(handedness,dot(cross(T,N),B));if(i)adjacentNormalDot=Math.min(adjacentNormalDot,dot(N,packet.frames[i-1].N));
+ }
+ for(const rib of packet.ribs){rootError=Math.max(rootError,length(sub(rib.points[0],packet.stations[rib.stationId].root)));}
+ const all=[...packet.axis,...packet.ribs.flatMap(r=>r.points)].flat();
+ return {orthogonality,unitError,handedness,adjacentNormalDot,rootError,allFinite:all.every(Number.isFinite),ribCount:packet.ribs.length,stations:packet.stations.length,vertexCount:packet.vertexCount};
+}
+function project(v,view='front',yaw=.65,pitch=.35){
+ if(view==='front')return [v[0],-v[1],v[2]];
+ if(view==='top')return [v[0],-v[2],v[1]];
+ if(view==='side')return [v[1],-v[2],v[0]];
+ const x=v[0]*Math.cos(yaw)+v[2]*Math.sin(yaw),z=-v[0]*Math.sin(yaw)+v[2]*Math.cos(yaw),y=v[1]*Math.cos(pitch)-z*Math.sin(pitch);
+ return [x,-y,v[1]*Math.sin(pitch)+z*Math.cos(pitch)];
+}
+const el=id=>document.getElementById(id),s={active:true,playing:false,time:0,amplitude:1,ribCount:12,wrapAngle:2.40,widthScale:.94,depthScale:.50,view:'orbit',yaw:.45,pitch:-.65,zoom:1,frames:false,neutral:false,axisOnly:false},canvases=['scene','front','top','side'].map(el);
+let geometryRevision=0,viewEvidence={};
+let packet=evaluate({time:s.time,amplitude:s.amplitude,ribCount:s.ribCount,wrapAngle:s.wrapAngle,widthScale:s.widthScale,depthScale:s.depthScale}),request=0,last=0,dirty=true,geometryDirty=false,disposed=false,drag=null;
+function schedule(){if(!request&&s.active&&!document.hidden&&!disposed)request=requestAnimationFrame(tick)}
+function geometry(){geometryRevision++;packet=evaluate({time:s.time,amplitude:s.amplitude,ribCount:s.ribCount,wrapAngle:s.wrapAngle,widthScale:s.widthScale,depthScale:s.depthScale});geometryDirty=false;dirty=true}
+function projected(v,view,w,h,zoom=1){const q=project(v,view,s.yaw,s.pitch),scale=(view==='side'?.86:.8)*Math.min(w,h*1.7)*zoom;return[w/2+q[0]*scale,h/2+q[1]*scale,q[2]]}
+function draw(canvas,view){const world=JSON.stringify([packet.axis,packet.ribs.map(r=>r.points)]);let fingerprint=2166136261;for(let i=0;i<world.length;i++){fingerprint^=world.charCodeAt(i);fingerprint=Math.imul(fingerprint,16777619)}viewEvidence[canvas.id]={geometryRevision,time:packet.parameters.time,worldFingerprint:(fingerprint>>>0).toString(16),vertices:packet.vertexCount};const rect=canvas.getBoundingClientRect(),dpr=Math.min(2,devicePixelRatio||1),w=Math.max(1,Math.round(rect.width*dpr)),h=Math.max(1,Math.round(rect.height*dpr));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}const c=canvas.getContext('2d');if(!c)throw Error('Canvas 2D unavailable');c.fillStyle='#0a141b';c.fillRect(0,0,w,h);
+ const line=(points,color,width)=>{c.strokeStyle=color;c.lineWidth=width*dpr;c.lineCap='round';c.lineJoin='round';c.beginPath();points.forEach((p,i)=>{const q=projected(p,view,w,h,canvas.id==='scene'?s.zoom:1);i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1])});c.stroke()};
+ if(!s.axisOnly){const ribs=[...packet.ribs].sort((a,b)=>project(a.points[12],view,s.yaw,s.pitch)[2]-project(b.points[12],view,s.yaw,s.pitch)[2]);for(const r of ribs)line(r.points,s.neutral?'#cad4d8':r.side<0?'#c6a574':'#88b2bc',canvas.id==='scene'?1.8:1)}
+ if(view==='side'){c.fillStyle='#93a9b4';c.font=(12*dpr)+'px system-ui';c.textAlign='center';c.fillText('背 +B',w/2,22*dpr);c.fillText('胸 −B',w/2,h-15*dpr);c.textAlign='left'}
+ line(packet.axis,s.neutral?'#f3f3ee':'#b2764c',canvas.id==='scene'?4:2);for(const st of packet.stations){const q=projected(st.root,view,w,h,canvas.id==='scene'?s.zoom:1);c.fillStyle='#eedcb4';c.beginPath();c.arc(q[0],q[1],(canvas.id==='scene'?3.8:2)*dpr,0,Math.PI*2);c.fill();if(s.frames&&st.id%3===0)for(const[key,col]of[['T','#df9d8e'],['N','#81c29f'],['B','#76a8df']])line([st.root,add(st.root,mul(st.frame[key],.06))],col,1)}
+}
+function render(){for(const canvas of canvases)draw(canvas,canvas.id==='scene'?s.view:canvas.id);const m=inspect(packet);el('status').textContent=`${m.stations} 个站点 · ${m.ribCount} 根支架 · 根部误差 ${m.rootError} · ${m.vertexCount} 个三维点`;el('clock').value=s.time.toFixed(2)+' / 4.00 s';el('time').value=s.time;el('play').textContent=s.playing?'暂停':'播放';el('diagnostics').textContent=JSON.stringify({parameters:packet.parameters,checks:m,frameMethod:'discrete minimal rotation; selected tests only',camera:{view:s.view,yaw:s.yaw,pitch:s.pitch,zoom:s.zoom},geometryDoesNotUseCamera:true,verificationScope:'Runtime geometry diagnostics; browser acceptance is recorded separately'},null,2);document.body.dataset.time=s.time;document.body.dataset.ready='true';dirty=false}
+function stop(){s.playing=false;last=0;if(request){cancelAnimationFrame(request);request=0}dirty=true;if(s.active)schedule()}
+function tick(now){request=0;if(!s.active||document.hidden||disposed)return;try{if(s.playing&&last){s.time=(s.time+Math.min(.05,(now-last)/1000))%4;geometryDirty=true}last=now;if(geometryDirty)geometry();if(dirty)render();if(s.playing)schedule()}catch(e){stop();s.active=false;el('status').textContent='未能绘制：'+e.message;document.body.dataset.error=e.message}}
+function chooseView(view){s.view=view;for(const x of document.querySelectorAll('[data-view]'))x.setAttribute('aria-pressed',String(x.dataset.view===view));dirty=true;schedule()}
+for(const b of document.querySelectorAll('[data-view]'))b.onclick=()=>chooseView(b.dataset.view);el('resetView').onclick=()=>{s.yaw=.45;s.pitch=-.65;s.zoom=1;chooseView('orbit')};
+for(const id of['frames','neutral','axisOnly'])el(id).onclick=()=>{s[id]=!s[id];el(id).setAttribute('aria-pressed',String(s[id]));dirty=true;schedule()};
+el('play').onclick=()=>{s.playing=!s.playing;last=0;dirty=true;schedule()};el('reset').onclick=()=>{stop();s.time=0;geometryDirty=true;schedule()};el('time').oninput=e=>{stop();s.time=Number(e.target.value);geometryDirty=true;schedule()};for(const id of['amplitude','ribCount','wrapAngle','widthScale','depthScale'])el(id).onchange=e=>{s[id]=Number(e.target.value);geometryDirty=true;schedule()};
+const scene=el('scene');scene.onpointerdown=e=>{if(e.button!==0)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,yaw:s.yaw,pitch:s.pitch};scene.setPointerCapture(e.pointerId)};scene.onpointermove=e=>{if(!drag||e.pointerId!==drag.id)return;chooseView('orbit');s.yaw=drag.yaw+(e.clientX-drag.x)*.006;s.pitch=clamp(drag.pitch+(e.clientY-drag.y)*.006,-1.4,1.4);dirty=true;schedule()};for(const name of['pointerup','pointercancel','lostpointercapture'])scene.addEventListener(name,()=>drag=null);scene.addEventListener('wheel',e=>{e.preventDefault();s.zoom=clamp(s.zoom*Math.exp(-e.deltaY*.001),.5,3);dirty=true;schedule()},{passive:false});
+const observer=new ResizeObserver(()=>{dirty=true;schedule()});for(const c of canvases)observer.observe(c);document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();else{dirty=true;schedule()}});window.addEventListener('pagehide',()=>{s.active=false;stop();observer.disconnect()});
+window.HaiyuSparseCandidate={getPacket:()=>JSON.parse(JSON.stringify(packet)),getState:()=>({...s,pendingRAF:request?1:0}),getRenderEvidence:()=>JSON.parse(JSON.stringify(viewEvidence)),setActive(active){s.active=!!active;stop();if(s.active){dirty=true;schedule()}},dispose(){s.active=false;disposed=true;stop();observer.disconnect()}};schedule();
+
+})();</script></body></html>
