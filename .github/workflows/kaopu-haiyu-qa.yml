@@ -34,7 +34,26 @@ jobs:
           NODE_PATH: ${{ github.workspace }}/.haiyu-qa/node_modules
           HAIYU_HTML: ${{ github.workspace }}/kaopu-haiyu-workbench/index.html
           HAIYU_POINTFIELD_OUT: ${{ github.workspace }}/haiyu-pointfield-results
+          HAIYU_POINTFIELD_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-haiyu-workbench/
         run: |
+          python3 - <<'PYCODE'
+          from pathlib import Path
+          import urllib.request,time,json,hashlib
+          expected=hashlib.sha256(Path('kaopu-haiyu-workbench/index.html').read_bytes()).hexdigest()
+          url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-haiyu-workbench/'
+          deadline=time.monotonic()+900
+          while True:
+              try:
+                  response=urllib.request.urlopen(url+'?verify=2a53d77f87bb932ed8381b33e86f937712b66b28',timeout=45)
+                  body=response.read();actual=hashlib.sha256(body).hexdigest()
+                  if actual==expected:break
+                  print('Waiting for exact Pages bytes',actual,flush=True)
+              except Exception as error:print(str(error),flush=True)
+              if time.monotonic()>deadline:raise RuntimeError('Expected Pages bytes did not arrive')
+              time.sleep(15)
+          out=Path('haiyu-pointfield-results');out.mkdir(exist_ok=True)
+          (out/'public-bytes.json').write_text(json.dumps({'url':url,'status':response.status,'bytes':len(body),'expectedSha256':expected,'actualSha256':actual,'productionCommit':'2a53d77f87bb932ed8381b33e86f937712b66b28','exact':True},indent=2))
+          PYCODE
           node kaopu-haiyu-workbench/studies/20261007-pointfields/tests/fidelity.cjs
           node kaopu-haiyu-workbench/studies/20261007-pointfields/tests/browser-qa.cjs
       - name: Run unmodified R24 assertions in local-file mode before publication
