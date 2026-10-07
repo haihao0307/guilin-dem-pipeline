@@ -25,14 +25,13 @@ jobs:
       matrix:
         include:
           - engine: chromium
-            mode: candidate
+            mode: published
           - engine: webkit
-            mode: candidate
-          - engine: webkit
-            mode: baseline
+            mode: published
     env:
       OVERVIEW_BROWSER: ${{ matrix.engine }}
-      OVERVIEW_LIFECYCLE_CANDIDATE: ${{ matrix.mode == 'candidate' && 'true' || 'false' }}
+      OVERVIEW_LIFECYCLE_CANDIDATE: 'false'
+      OVERVIEW_LIFECYCLE_PUBLISHED: 'true'
       OVERVIEW_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-human-overview/
       OVERVIEW_QA_DIR: narrow-${{ matrix.engine }}-${{ matrix.mode }}
     steps:
@@ -43,7 +42,7 @@ jobs:
             .github/qa
             kaopu-tailor-workbench/unified
             kaopu-tailor-workbench/UNIFIED-MANIFEST.json
-      - name: Verify four text candidates and unchanged public text baseline
+      - name: Verify all four real published text hashes without overrides
         id: verify
         run: |
           node --check .github/qa/overview-lifecycle-navigation.cjs
@@ -59,10 +58,10 @@ jobs:
               data=Path(item['path']).read_bytes();assert hashlib.sha256(data).hexdigest()==item['sha256']
               assert hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()==item['gitBlobSHA']
               row={'path':item['path'],'candidateSHA256':item['sha256'],'candidatePassed':True}
-              if item['previousSHA256']:
+              if item['sha256']:
                   with urllib.request.urlopen('https://haihao0307.github.io/guilin-dem-pipeline/'+item['path']+'?verify=lifecycle-text-only',timeout=60) as response:published=response.read();status=response.status
                   row.update(status=status,publishedSHA256=hashlib.sha256(published).hexdigest())
-                  assert status==200 and row['publishedSHA256']==item['previousSHA256'],item['path']+' public baseline changed'
+                  assert status==200 and row['publishedSHA256']==item['sha256'],item['path']+' published candidate bytes mismatch'
               else:row['publicBaseline']='New helper: no previous public file; candidate text only'
               rows.append(row)
           out=Path(__import__('os').environ['OVERVIEW_QA_DIR']);out.mkdir(exist_ok=True)
@@ -78,7 +77,7 @@ jobs:
           NODE_PATH: ${{ runner.temp }}/overview-test/node_modules
         run: node .github/qa/overview-lifecycle-navigation.cjs
       - name: Three garments release workers, frames and graphics resources
-        if: always() && matrix.mode == 'candidate' && steps.verify.outcome == 'success'
+        if: always() && matrix.mode == 'published' && steps.verify.outcome == 'success'
         env:
           DEBUG: pw:browser
           NODE_PATH: ${{ runner.temp }}/overview-test/node_modules

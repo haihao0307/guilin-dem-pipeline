@@ -3,6 +3,7 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
 exports.apply=async(context,report)=>{
  const enabled=process.env.OVERVIEW_LIFECYCLE_CANDIDATE==='true';
  report.candidateTextOverrides={enabled,files:[],routingPolicy:"Both modes use the same routing hook and HTTP cache policy; baseline continues every request without replacing bytes."};
+ if(process.env.OVERVIEW_LIFECYCLE_PUBLISHED==='true'){if(enabled)throw Error('Published validation must not override any resource');report.candidateTextOverrides.routingPolicy='Native public requests; no route handler installed';return;}
  const scope=JSON.parse(fs.readFileSync(path.join(__dirname,'overview-lifecycle-scope.json'),'utf8'));
  const files=new Map();
  for(const item of scope.files){
