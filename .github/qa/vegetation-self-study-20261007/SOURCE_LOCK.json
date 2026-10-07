@@ -1,18 +1,18 @@
 {
-  "version": "R06-leaf+02-structure-r01",
+  "version": "R07-hierarchical-closed-network+coffee-structure-r02",
   "destination": "isolated QA branch only",
   "originalVideoProjectAvailable": false,
   "sourceCommit": "3d828c51d99be86c538769f19f715f919bba5456",
   "files": [
     {
       "path": "src/app.js",
-      "sha256": "e3173b6d7af896d4772bebeb20b017849013325c983cd618fcae2b4f8bd32221",
-      "bytes": 16109
+      "sha256": "ba4f697cd87e9424363e0f85b26148dcbb738d0e679990eef25e80230fd5c383",
+      "bytes": 16735
     },
     {
       "path": "src/leaf.js",
-      "sha256": "1d12cf2613f57b640a4d6d46cf25d2d4dbdb31153d40004d8340d67dd4a88ec7",
-      "bytes": 8683
+      "sha256": "69fd22ab43244e6612d0ac91930c67569f9b3a0eb648798934b09f360026a785",
+      "bytes": 9017
     },
     {
       "path": "src/geometry.js",
@@ -26,13 +26,13 @@
     },
     {
       "path": "src/reticulation.js",
-      "sha256": "d66300d744a6fe76f65a930e3be23878adf26230c8224e906272d9662dc905c9",
-      "bytes": 6901
+      "sha256": "013a173a9b633605cdcf49568dc3b19e14d4e96f81e86eb6a691a6b2afa86547",
+      "bytes": 7701
     },
     {
       "path": "qa/browser.mjs",
-      "sha256": "e15febed41ca20854a0a8778eed183ff764e52921b6ee5ed1bf160bfc9e4bec0",
-      "bytes": 5091
+      "sha256": "3938b2019279c0366054b34ae7179621cbf3bf0cc499611cc738d96c2bce37d3",
+      "bytes": 5681
     },
     {
       "path": "qa/teacher-parity.json",
@@ -41,13 +41,13 @@
     },
     {
       "path": "qa/reticulation-report.json",
-      "sha256": "d1fc7877558e0c09ad66ef8baaf69b2d5f341f8825a0bef6ee145e35c6fb9362",
-      "bytes": 324
+      "sha256": "1815e292569c13e660fc263b8d1ecabe81429de07c6958434cb639e95b317aef",
+      "bytes": 675
     },
     {
       "path": "index.html",
-      "sha256": "a9828fdc820bf7a0f99c5a5b1af8269be43de19c04ca22b504894e8acd233776",
-      "bytes": 5343
+      "sha256": "8a22767bf9abade3df5d21b7c0b3008abfb29c8947597e2b62af5d14951d96ef",
+      "bytes": 5400
     },
     {
       "path": "qa/check-source-lock.mjs",
@@ -61,13 +61,13 @@
     },
     {
       "path": "src/coffee.js",
-      "sha256": "ac8a3f3b5d548943b67cd31bd84683d7c946391e2ced066b5d168169c4c10a06",
-      "bytes": 5376
+      "sha256": "3bf0129c8383f858b4cfbcbbef536f35dd06df0d005d05a96f31c55b36f75bf6",
+      "bytes": 5599
     },
     {
       "path": "qa/coffee-entry.js",
-      "sha256": "33d3cb8dbe2c317d768d849f4a4baac7e5f7ca0467824d78d6353e0a1cf91264",
-      "bytes": 2929
+      "sha256": "d66936878fc17110a30aa2195c8f1f0583ef985681653532988312a639fc2ac8",
+      "bytes": 3052
     },
     {
       "path": "coffee.html",
@@ -91,13 +91,33 @@
   "network": {
     "algorithm": "Runions relative-neighbour closed growth, independent implementation",
     "authoredScaffold": true,
-    "nodes": 20691,
-    "edges": 22017,
+    "nodes": 22803,
+    "edges": 24573,
     "components": 1,
-    "cycles": 1327,
-    "sourceWelds": 1969,
-    "remainingSources": 33,
-    "iterations": 32,
+    "cycles": 1771,
+    "sourceWelds": 2235,
+    "remainingSources": 18,
+    "iterations": 51,
+    "phases": [
+      {
+        "order": 2,
+        "sourcesRequested": 420,
+        "iterations": 29,
+        "welds": 241,
+        "remaining": 2,
+        "step": 4.2,
+        "kill": 3
+      },
+      {
+        "order": 3,
+        "sourcesRequested": 3800,
+        "iterations": 22,
+        "welds": 1994,
+        "remaining": 16,
+        "step": 3.2,
+        "kill": 2.45
+      }
+    ],
     "kill": 2.45,
     "step": 3.2,
     "actualAuthorSourceRun": false
