@@ -9,7 +9,7 @@ permissions:
 jobs:
   native:
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
+    timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,6 +30,28 @@ jobs:
           node audit-teachers.mjs
           node tests/native-channels.mjs
           node build_coverage.mjs
+      - name: Produce real neutral teacher geometry and pinned semantic-proposal runtime
+        working-directory: .github/qa/unified-full-20261007
+        run: |
+          node tools/export_geometry.mjs
+          node tools/export_semantic_masks.mjs
+          python restore_registration.py
+          npm install --no-save --ignore-scripts --package-lock=false playwright@1.57.0
+          npx playwright install --with-deps chromium
+          python -m http.server 8765 > /tmp/common-registration-server.log 2>&1 &
+      - name: Render actual teachers and capture landmark-to-triangle evidence
+        working-directory: .github/qa/unified-full-20261007
+        run: node qa/registration.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unified-full-semantic-proposal
+          retention-days: 21
+          path: |
+            .github/qa/unified-full-20261007/qa-output/registration
+            .github/qa/unified-full-20261007/research/geometry/metadata.json
+            .github/qa/unified-full-20261007/research/geometry/semantic-mask-report.json
+            .github/qa/unified-full-20261007/research/registration-source-receipt.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
