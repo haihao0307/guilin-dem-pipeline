@@ -1,0 +1,161 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>海羽 · 视频结构学习候选</title><style>*{box-sizing:border-box}html,body{margin:0;background:#0b141a;color:#d8e4ea;font:14px system-ui,-apple-system,sans-serif}main{padding:14px;max-width:1480px;margin:auto}h1{font-size:19px;margin:0 0 6px}p{color:#a1b6c1;margin:5px 0 10px;line-height:1.65}.tag{color:#c6b893;font-size:12px}.toolbar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:9px 0}button,select{font:inherit;border:1px solid #37515f;border-radius:7px;background:#182a35;color:#dbe7ec;padding:7px 11px;min-height:36px}button[aria-pressed=true]{background:#3c4434;border-color:#cdbb88}label{display:flex;align-items:center;gap:6px}canvas{display:block;width:100%;height:500px;border:1px solid #2e4550;border-radius:10px;background:#101a20;touch-action:none}.mini{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.mini canvas{height:210px}.mini figure{margin:8px 0}.mini figcaption{font-size:11px;color:#91a9b7;margin:4px}.time{display:flex;gap:10px;align-items:center}.time input{flex:1}#clock{min-width:106px;font-variant-numeric:tabular-nums}.small{font-size:11px}#status{font-size:12px;margin:10px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere}details{margin-top:12px} @media(max-width:600px){main{padding:9px}h1{font-size:16px}p{font-size:12px}.toolbar{gap:5px}button,select{font-size:12px;padding:6px 8px}canvas{height:340px}.mini{grid-template-columns:1fr}.mini canvas{height:190px}}</style></head><body><main><div class="tag">结构候选 / 无表皮 / 待形态审查</div><h1 id="title"></h1><p id="description"></p><div class="toolbar"><button data-view="orbit" aria-pressed="true">自由观察</button><button data-view="xy">顶视 XY</button><button data-view="xz">侧视 XZ</button><button data-view="yz">轴端 YZ</button><button id="resetView">重置视角</button><button id="neutral">中性骨架</button><label>显示<select id="layer"><option value="all">全部结构</option></select></label></div><canvas id="scene" aria-label="同一三维结构的可旋转视图"></canvas><div class="toolbar"><button id="play">播放</button><button id="reset">回到起点</button><label><span id="motionLabel"></span><select id="amplitude"><option value="0">静止</option><option value="0.5">轻</option><option value="1">标准</option><option value="1.4">较强</option></select></label><label>附属展开<select id="span"><option value=".75">75%</option><option value="1" selected>100%</option><option value="1.2">120%</option></select></label><label>腔架比例<select id="chest"><option value=".8">80%</option><option value="1" selected>100%</option><option value="1.2">120%</option></select></label></div><div class="time"><input id="time" type="range" min="0" value="0"><output id="clock"></output></div><div id="status"></div><div class="mini"><figure><canvas id="xy"></canvas><figcaption>XY 顶视</figcaption></figure><figure><canvas id="xz"></canvas><figcaption>XZ 侧视</figcaption></figure><figure><canvas id="yz"></canvas><figcaption>YZ 轴端</figcaption></figure></div><p class="small">拖动旋转，滚轮缩放。三视和时序共用同一世界坐标；相机不参与结构生成。这是对视频可见层次的自有设计，不是作者代码或真实解剖；未加入表皮、纹理和受力仿真。</p><details><summary>检查数据与未确定项</summary><pre id="data"></pre></details></main><script>(function(){'use strict';
+// Numeric functions shared by parameter extraction and the standalone player.
+function basis(s, knots, degree=3) {
+  const count=knots.length-degree-1;
+  if(s===knots.at(-1))return Array.from({length:count},(_,i)=>i===count-1?1:0);
+  let row=Array.from({length:knots.length-1},(_,i)=>s>=knots[i]&&s<knots[i+1]?1:0);
+  for(let d=1;d<=degree;d++)row=Array.from({length:row.length-1},(_,i)=>{
+    const a=knots[i+d]-knots[i],b=knots[i+d+1]-knots[i+1];
+    return (a?(s-knots[i])/a*row[i]:0)+(b?(knots[i+d+1]-s)/b*row[i+1]:0);
+  });
+  return row;
+}
+function spline(s, knots, coefficients) {
+  const w=basis(s,knots);
+  return w.reduce((sum,v,i)=>sum+v*coefficients[i],0);
+}
+function phase(t, period, harmonics) {
+  const angle=2*Math.PI*t/period, row=[1];
+  for(let n=1;n<=harmonics;n++)row.push(Math.cos(n*angle),Math.sin(n*angle));
+  return row;
+}
+function series(coefficients, timeBasis) {
+  return coefficients.reduce((sum,v,i)=>sum+v*timeBasis[i],0);
+}
+// Rodrigues rotation from a rotation vector; no scene or animation dependency.
+function rotate(v, rotation) {
+  const a=Math.hypot(...rotation);
+  if(a<1e-14)return [...v];
+  const [x,y,z]=rotation.map(c=>c/a),[vx,vy,vz]=v;
+  const c=Math.cos(a),s=Math.sin(a),dot=x*vx+y*vy+z*vz;
+  return [vx*c+(y*vz-z*vy)*s+x*dot*(1-c),vy*c+(z*vx-x*vz)*s+y*dot*(1-c),vz*c+(x*vy-y*vx)*s+z*dot*(1-c)];
+}
+// Haiyu's own sparse structure study. Not reconstruction of the artist's code or anatomy.
+// The axis equation and Rodrigues helper are reused from the verified R17 source.
+const add=(a,b)=>a.map((v,i)=>v+b[i]);
+const sub=(a,b)=>a.map((v,i)=>v-b[i]);
+const mul=(v,k)=>v.map(x=>x*k);
+const dot=(a,b)=>a.reduce((r,v,i)=>r+v*b[i],0);
+const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const length=v=>Math.hypot(...v);
+const unit=v=>{const d=length(v);if(!Number.isFinite(d)||d<1e-12)throw Error('Degenerate tangent');return mul(v,1/d)};
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+function axis(s,t,amplitude=1){const p=2*Math.PI*t/4,a=.055*amplitude;return [s-.5,.022*s*s+a*s*s*Math.sin(p-2.5*s),a*.48*s*s*Math.sin(p-1.8*s+.4)];}
+function tangent(s,t,amplitude=1){const p=2*Math.PI*t/4,a=.055*amplitude;return [1,.044*s+a*(2*s*Math.sin(p-2.5*s)-2.5*s*s*Math.cos(p-2.5*s)),a*.48*(2*s*Math.sin(p-1.8*s+.4)-1.8*s*s*Math.cos(p-1.8*s+.4))];}
+// Discrete minimal-rotation approximation, not a claimed exact continuous RMF.
+// The initial normal is fixed once. There is no per-station world-axis switch.
+function transportedFrames(tangents,normalSeed=[0,1,0],{closed=false}={}){
+ if(closed)throw Error('Closed paths need a separately tested twist-closure policy');
+ if(!tangents.length)throw Error('No tangents');
+ const T0=unit(tangents[0]),N0=unit(sub(normalSeed,mul(T0,dot(normalSeed,T0))));
+ const frames=[{T:T0,N:N0,B:unit(cross(T0,N0))}];
+ for(let i=1;i<tangents.length;i++){
+  const prev=frames[i-1],T=unit(tangents[i]),d=clamp(dot(prev.T,T),-1,1),r=cross(prev.T,T),s=length(r);
+  if(d<-1+1e-9)throw Error('Adjacent tangents reverse: resample or repair the axis');
+  if(d<.5)throw Error('Tangent turn exceeds 60 degrees: resample or repair the axis');
+  let N=s<1e-12?prev.N:rotate(prev.N,mul(r,Math.atan2(s,d)/s));
+  N=unit(sub(N,mul(T,dot(N,T))));const B=unit(cross(T,N));frames.push({T,N,B});
+ }
+ return frames;
+}
+// Two authored topology studies from visible video structure, not recovered artist code or anatomy.
+const PI=Math.PI,bounded=(x,a,b)=>Math.max(a,Math.min(b,x)),lerp=(a,b,u)=>add(mul(a,1-u),mul(b,u));
+const sample=(f,n=24)=>Array.from({length:n+1},(_,i)=>f(i/n));
+const bezier=(a,b,c,d,u)=>add(add(mul(a,(1-u)**3),mul(b,3*(1-u)**2*u)),add(mul(c,3*(1-u)*u*u),mul(d,u**3)));
+const world=(frame,offset)=>add(mul(frame.T,offset[0]),add(mul(frame.N,offset[1]),mul(frame.B,offset[2])));
+function makeAxis(fn,n=160){const points=sample(fn,n),tangents=points.map((p,i)=>sub(points[Math.min(n,i+1)],points[Math.max(0,i-1)]));return {points,frames:transportedFrames(tangents)}}
+function builder(kind,parameters,axis){
+ const lines=[],joints=[],attachments=[];
+ const port=(s)=>{const index=Math.round(bounded(s,0,1)*(axis.points.length-1));return {index,s:index/(axis.points.length-1),root:axis.points[index],frame:axis.frames[index]}};
+ const line=(id,group,points,width=1,extra={})=>{const q={id,group,points,width,...extra};lines.push(q);return q};
+ const attached=(id,group,points,source,width=1,extra={})=>{attachments.push({id,source:source.lineId||source.id||('axis@'+source.index),sourceLine:source.lineId||null,sourceVertex:source.pointIndex??0,sourceJoint:source.lineId||source.index!==undefined?null:source.id,sourceAxisIndex:source.index??null,root:[...source.root],point:[...points[0]]});return line(id,group,points,width,extra)};
+ const joint=(id,root,radius=.016)=>{joints.push({id,point:root,radius});return {id,root}};
+ return {lines,joints,attachments,port,line,attached,joint,finish(extra){return {schema:'haiyu.video-structure-study/1',kind,parameters,axis:axis.points,frames:axis.frames,lines,joints,attachments,...extra,semantics:'Authored structural interpretation; no recovered topology, surface, or physical simulation'}}};
+}
+function localArc(span,depth,wrap,u,side,sweep=0){const a=wrap*u;return[sweep*u,side*span*Math.sin(a),-depth*(1-Math.cos(a))]}
+function segmentMarkers(b,addresses,scale,group){for(let j=0;j<addresses.length;j++){const p=b.port(addresses[j]);for(const side of[-1,1]){const q=sample(u=>add(p.root,world(p.frame,[-.014*u,side*scale*u,scale*.7*Math.sin(PI*u)])),8);b.attached(`${group}-${j}-${side}`,group,q,p,.8)}}}
+function evaluateBird(options={}){
+ const p={time:0,amplitude:1,span:1,chest:1,...options};for(const k of Object.keys(options))if(!['time','amplitude','span','chest'].includes(k))throw Error('Unsupported bird parameter '+k);
+ if(![p.time,p.amplitude,p.span,p.chest].every(Number.isFinite)||p.amplitude<0||p.amplitude>1.4||p.span<.75||p.span>1.2||p.chest<.8||p.chest>1.2)throw Error('Invalid bird parameters');
+ const phase=2*PI*p.time/10.5,flap=p.amplitude*(.22+.47*Math.sin(phase-2.1));
+ const ax=makeAxis(s=>{const x=-1.3+2.15*s,neck=bounded((.41-s)/.41,0,1);return[x,.012*p.amplitude*Math.sin(phase-2*s)*(1-neck),.14+.18*neck+.025*Math.sin(PI*s)+.018*p.amplitude*Math.sin(phase-.7)*Math.sin(PI*s)]});
+ const b=builder('bird',p,ax);b.line('spine','axis',ax.points,2.8);
+ segmentMarkers(b,Array.from({length:11},(_,j)=>.015+.36*j/10),.027,'front-chain');
+ segmentMarkers(b,Array.from({length:6},(_,j)=>.87+.12*j/5),.035,'rear-chain');
+ for(let j=0;j<18;j++){const a=.415+.42*j/17,port=b.port(a),q=j/17,profile=Math.sin(PI*(.025+.95*q))**.85,span=(.025+.23*profile)*p.chest,depth=(.025+.24*profile)*p.chest;
+  for(const side of[-1,1]){const points=sample(u=>add(port.root,world(port.frame,localArc(span,depth,2.86,u,side,.055*Math.sin(PI*q)))),28);b.attached(`chest-${j}-${side}`,'chest',points,port,1.2,{side,station:j})}
+ }
+ // Paired wings have shoulder, elbow, wrist and distal beam. They are not copies of chest ribs.
+ const shoulder=b.port(.45),wingJointIds=[];
+ for(const side of[-1,1]){
+  const toWorld=v=>add(shoulder.root,world(shoulder.frame,v));const rootLocal=[-.015,side*.13,.025],root=toWorld(rootLocal),rootJ=b.joint(`shoulder-${side}`,root,.024);
+  b.attached(`shoulder-bridge-${side}`,'girdle',[shoulder.root,root],shoulder,2.2,{side});
+  const rest=[[0,0,0],[.11,side*.49*p.span,.035],[.14,side*.54*p.span,.02],[.28,side*.64*p.span,.025]],angles=[flap,flap-.085*p.amplitude*Math.sin(phase-.25),flap-.15*p.amplitude*Math.sin(phase-.65)];
+  const localJ=[rootLocal];for(let i=1;i<4;i++)localJ.push(add(localJ[i-1],rotate(rest[i],[side*angles[i-1],0,0])));
+  const jointNames=['shoulder','elbow','wrist','wingtip'],worldJ=localJ.map(toWorld);
+  for(let i=1;i<4;i++){b.joint(`${jointNames[i]}-${side}`,worldJ[i],i===3?.009:.018);b.attached(`wing-beam-${side}-${i}`,'wing-beam',[worldJ[i-1],worldJ[i]],{id:`${jointNames[i-1]}-${side}`,root:worldJ[i-1]},i===1?3:2.3,{side,boneLength:Math.hypot(...rest[i])})}
+  const leading=[],trailing=[];
+  for(let j=0;j<=20;j++){const v=j/20,z=v*3,segment=Math.min(2,Math.floor(z)),u=j===20?1:z-segment,rootLocalAt=lerp(localJ[segment],localJ[segment+1],u),rootAt=toWorld(rootLocalAt),angle=angles[segment],chord=(.05+.37*Math.sin(PI*v)**.85)*(1-.28*v),thickness=.025*Math.sin(PI*v);
+   leading.push(rootAt);const rib=sample(t=>{const offset=rotate([chord*(1-Math.cos(2*PI*t))/2,0,-thickness*Math.sin(2*PI*t)],[side*angle,0,0]);return toWorld(add(rootLocalAt,offset))},20);
+   b.attached(`wing-rib-${side}-${j}`,'wing-ribs',rib,{lineId:`wing-leading-${side}`,pointIndex:j,root:rootAt},.85,{side,spanAddress:v});trailing.push(toWorld(add(rootLocalAt,rotate([chord,0,0],[side*angle,0,0]))));
+  }
+  b.line(`wing-leading-${side}`,'wing-beam',leading,1.2,{side});b.line(`wing-trailing-${side}`,'wing-ribs',trailing,.85,{side});wingJointIds.push(...jointNames.map(x=>x+'-'+side));
+ }
+ // Two suspended segmented appendages. No invented toes, feet or ground-contact gait.
+ const hip=b.port(.82);
+ for(const side of[-1,1]){const r=add(hip.root,world(hip.frame,[0,side*.13,-.04]));b.attached(`hip-bridge-${side}`,'girdle',[hip.root,r],hip,2.1,{side});b.joint(`hip-${side}`,r,.024);const swing=.018*p.amplitude*Math.sin(phase-.4);const bends=[[.01,side*.015,-.46],[.25,side*.02,-.35],[.17,side*.006,-.26]];let prev=r;
+  for(let k=0;k<bends.length;k++){const delta=rotate(bends[k],[0,swing,0]),q=add(prev,world(hip.frame,delta));b.attached(`leg-${side}-${k}`,'legs',[prev,q],{id:k?`leg-joint-${side}-${k-1}`:`hip-${side}`,root:prev},k===2?1.4:3,{side,boneLength:Math.hypot(...bends[k])});b.joint(`leg-joint-${side}-${k}`,q,k===2?.006:.017);prev=q}
+ }
+ return b.finish({duration:10.5,camera:{target:[-.12,0,-.18],extent:4.15,azimuth:-1.05,elevation:.23},sourceMotion:'Paired wing elevation is visible; period and articulated driver here are our approximate design',motion:{flapRadians:flap,wingJointIds},regions:['front-chain','chest','wing-beam','wing-ribs','legs','rear-chain'],unknown:['precise head form','artist topology','anatomical identity','force dynamics']});
+}
+function evaluateFish(options={}){
+ const p={time:0,amplitude:0,span:1,chest:1,...options};for(const k of Object.keys(options))if(!['time','amplitude','span','chest'].includes(k))throw Error('Unsupported fish parameter '+k);
+ if(![p.time,p.amplitude,p.span,p.chest].every(Number.isFinite)||p.amplitude<0||p.amplitude>1.4||p.span<.75||p.span>1.2||p.chest<.8||p.chest>1.2)throw Error('Invalid fish parameters');
+ const phase=2*PI*p.time/6;
+ const ax=makeAxis(s=>[-1.55+2.7*s,.10*Math.sin(PI*s)+p.amplitude*.10*(1-s)**1.6*Math.sin(phase-4*s),-.30*Math.sin(PI*s)+.60*s*s]);
+ const b=builder('fish',p,ax);b.line('spine','axis',ax.points,2.7);segmentMarkers(b,Array.from({length:38},(_,j)=>.015+.97*j/37),.025,'segment-chain');
+ // A long narrow repeating section and a sharply broader chamber, not an equal-width chest array.
+ for(let j=0;j<38;j++){const s=.025+.95*j/37,port=b.port(s),wide=Math.exp(-(((s-.75)/.135)**2)),width=(.075+.055*Math.sin(PI*s)+.33*wide)*p.chest,depth=(.064+.06*Math.sin(PI*s)+.28*wide)*p.chest;
+  for(const side of[-1,1]){const points=sample(u=>add(port.root,world(port.frame,localArc(width,depth,3.02,u,side,.015+.025*wide))),26);b.attached(`segment-rib-${j}-${side}`,'segment-ribs',points,port,wide>.5?1.35:.9,{side,station:j,axisAddress:s,wideChamber:wide>.5})}
+ }
+ // Several wide-chamber supports, each with its own axial root: no avian elbow/wrist topology.
+ for(const side of[-1,1])for(let j=0;j<4;j++){const s=.635+.047*j,port=b.port(s),height=(.34+.085*j)*p.span,spread=(.52+.08*j)*p.span;
+  const points=sample(u=>{const offset=bezier([0,0,0],[-.22,side*spread*.85,height*.85],[.24,side*spread,height],[.40,side*spread*.43,height*.12],u);return add(port.root,world(port.frame,offset))},32);b.attached(`chamber-arch-${side}-${j}`,'chamber-arches',points,port,2.0,{side,axisAddress:s});
+  // Sparse secondary struts show attachment hierarchy under the broad arch.
+  for(let k=1;k<=4;k++){const u=k/5,root=points[Math.round(u*32)],end=add(port.root,world(port.frame,[.22+u*.1,side*(.17+.26*u),-.10-.17*u]));b.attached(`arch-strut-${side}-${j}-${k}`,'chamber-struts',sample(v=>bezier(root,add(root,[0,0,-.08]),lerp(root,end,.8),end,v),12),{lineId:`chamber-arch-${side}-${j}`,pointIndex:Math.round(u*32),root},.8,{side})}
+ }
+ // Dorsal fan-like supports visible around the wide zone, kept open and unskinned.
+ for(let j=0;j<10;j++){const s=.59+.027*j,port=b.port(s),height=(.26+.53*Math.sin(PI*j/11))*p.span;const points=sample(u=>add(port.root,world(port.frame,[.20*Math.sin(PI*u),.035*Math.sin(PI*u)*(j%2?1:-1),height*Math.sin(PI*u*.70)])),22);b.attached(`crest-${j}`,'crest',points,port,1.4,{axisAddress:s})}
+ return b.finish({duration:6,camera:{target:[-.04,0,.10],extent:3.65,azimuth:-1.05,elevation:.30},sourceMotion:'Changing video viewpoints do not establish a swimming driver; nonzero amplitude is explicitly our test motion',motion:{testMotionOnly:true},regions:['segment-chain','segment-ribs','chamber-arches','chamber-struts','crest'],unknown:['which terminal is anatomical head/tail','hidden connections','artist topology','reference swimming dynamics']});
+}
+function evaluate(kind,options={}){if(kind==='bird')return evaluateBird(options);if(kind==='fish')return evaluateFish(options);throw Error('Unknown structure case')}
+function project(v,view,azimuth=-1.05,elevation=.23){if(view==='xy')return[v[0],-v[1],v[2]];if(view==='xz')return[v[0],-v[2],v[1]];if(view==='yz')return[v[1],-v[2],v[0]];const ca=Math.cos(azimuth),sa=Math.sin(azimuth),ce=Math.cos(elevation),se=Math.sin(elevation);return[-sa*v[0]+ca*v[1],se*ca*v[0]+se*sa*v[1]-ce*v[2],ce*ca*v[0]+ce*sa*v[1]+se*v[2]]}
+function inspect(p){let attachmentError=0,boneLengthError=0,orthogonality=0;for(const a of p.attachments){const parent=a.sourceAxisIndex!==null?p.axis[a.sourceAxisIndex]:a.sourceLine?p.lines.find(l=>l.id===a.sourceLine)?.points[a.sourceVertex]:p.joints.find(j=>j.id===a.sourceJoint)?.point;if(!parent)throw Error('Unresolved attachment '+a.id+' to '+a.source);attachmentError=Math.max(attachmentError,Math.hypot(...sub(a.point,parent)));}for(const l of p.lines)if(l.boneLength)boneLengthError=Math.max(boneLengthError,Math.abs(Math.hypot(...sub(l.points[1],l.points[0]))-l.boneLength));for(const f of p.frames)orthogonality=Math.max(orthogonality,Math.abs(dot(f.T,f.N)),Math.abs(dot(f.T,f.B)),Math.abs(dot(f.N,f.B)));return{allFinite:p.lines.every(l=>l.points.every(v=>v.every(Number.isFinite))),attachmentError,boneLengthError,orthogonality,lines:p.lines.length,points:p.lines.reduce((n,l)=>n+l.points.length,0),groups:[...new Set(p.lines.map(l=>l.group))]}}
+const $=id=>document.getElementById(id),kind=(document.body.dataset.studyKind||new URLSearchParams(location.search).get('case'))==='fish'?'fish':'bird';
+const s={kind,time:0,amplitude:kind==='bird'?1:0,span:1,chest:1,playing:false,view:'orbit',azimuth:-1.05,elevation:kind==='bird'?.23:.30,zoom:1,active:true,neutral:true,layer:'all'};
+let packet=evaluate(kind,sParameters()),raf=0,last=0,geometryDirty=false,dirty=true,disposed=false,drag=null,revision=0,evidence={};
+function sParameters(){return{time:s.time,amplitude:s.amplitude,span:s.span,chest:s.chest}}
+function schedule(){if(!raf&&s.active&&!document.hidden&&!disposed)raf=requestAnimationFrame(tick)}
+const palette={axis:'#bc956f','front-chain':'#c6b799','rear-chain':'#c6b799',chest:'#d7c998','wing-beam':'#9dbabf','wing-ribs':'#adced0',girdle:'#c1a779',legs:'#bcb3cf','segment-chain':'#c6b799','segment-ribs':'#c5d0b6','chamber-arches':'#d9c69b','chamber-struts':'#b5cad0',crest:'#c1b4ce'};
+let framingKey='',framingPoints=[],framingCache={},framingSampleCount=0;
+function prepareFraming(){const key=[kind,s.amplitude,s.span,s.chest].join('/');if(key===framingKey)return;framingKey=key;framingCache={};framingPoints=[];framingSampleCount=s.amplitude===0?1:17;for(let i=0;i<framingSampleCount;i++){const samplePacket=evaluate(kind,{...sParameters(),time:framingSampleCount===1?0:packet.duration*i/(framingSampleCount-1)});for(const line of samplePacket.lines)framingPoints.push(...line.points)}}
+function frameBounds(view){const key=view==='orbit'?[s.azimuth,s.elevation].join('/'):'fixed',old=framingCache[view];if(old?.key===key)return old;let xmin=Infinity,xmax=-Infinity,ymin=Infinity,ymax=-Infinity;for(const v of framingPoints){const q=project(v,view,s.azimuth,s.elevation);xmin=Math.min(xmin,q[0]);xmax=Math.max(xmax,q[0]);ymin=Math.min(ymin,q[1]);ymax=Math.max(ymax,q[1])}return framingCache[view]={key,cx:(xmin+xmax)/2,cy:(ymin+ymax)/2,width:Math.max(.1,xmax-xmin),height:Math.max(.1,ymax-ymin)}}
+function screen(v,view,w,h,zoom=1){const q=project(v,view,s.azimuth,s.elevation),f=frameBounds(view),scale=Math.min(w/f.width,h/f.height)*.84*zoom;return[w/2+(q[0]-f.cx)*scale,h/2+(q[1]-f.cy)*scale,q[2]]}
+function fingerprint(){const str=JSON.stringify(packet.lines.map(l=>l.points));let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return(h>>>0).toString(16)}
+function draw(canvas,view){const rect=canvas.getBoundingClientRect(),dpr=Math.min(2,devicePixelRatio||1),w=Math.round(rect.width*dpr),h=Math.round(rect.height*dpr);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}const zoom=canvas.id==='scene'?s.zoom:1,c=canvas.getContext('2d');c.fillStyle='#101a20';c.fillRect(0,0,w,h);const rows=packet.lines.filter(l=>s.layer==='all'||l.group===s.layer).map(l=>({line:l,depth:l.points.reduce((n,p)=>n+screen(p,view,w,h,zoom)[2],0)/l.points.length})).sort((a,b)=>a.depth-b.depth);
+ for(const {line:l}of rows){c.strokeStyle=s.neutral?'#dbd8c9':palette[l.group]||'#d7d6c9';c.lineWidth=Math.max(.6,l.width*(canvas.id==='scene'?1:.56))*dpr;c.lineCap='round';c.lineJoin='round';c.beginPath();l.points.forEach((p,i)=>{const q=screen(p,view,w,h,zoom);i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1])});c.stroke()}
+ if(s.layer==='all')for(const j of packet.joints){const q=screen(j.point,view,w,h,zoom),r=Math.max(1.2,j.radius*70)*(canvas.id==='scene'?1:.6)*dpr;c.fillStyle='#e9e3d1';c.beginPath();c.arc(q[0],q[1],r,0,Math.PI*2);c.fill()}
+ c.fillStyle='#748b97';c.font=(11*dpr)+'px system-ui';c.fillText(view==='xy'?'XY · 顶视':view==='xz'?'XZ · 侧视':view==='yz'?'YZ · 轴端':'自由观察',12*dpr,20*dpr);let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;for(const {line:l}of rows)for(const p of l.points){const q=screen(p,view,w,h,zoom);minX=Math.min(minX,q[0]);maxX=Math.max(maxX,q[0]);minY=Math.min(minY,q[1]);maxY=Math.max(maxY,q[1])}evidence[canvas.id]={revision,time:s.time,worldFingerprint:fingerprint(),lines:packet.lines.length,cycleFramingSamples:framingSampleCount,pixelBounds:{minX,maxX,minY,maxY},canvas:{width:w,height:h},zoom};
+}
+function render(){prepareFraming();for(const id of['scene','xy','xz','yz'])draw($(id),id==='scene'?s.view:id);$('time').value=s.time;$('clock').textContent=s.time.toFixed(2)+' / '+packet.duration.toFixed(2)+' s';$('play').textContent=s.playing?'暂停':'播放';const m=inspect(packet);$('status').textContent=`${m.lines} 条结构线 · ${m.points} 个三维点 · 根部误差 ${m.attachmentError}`;$('data').textContent=JSON.stringify({kind,parameters:packet.parameters,checks:m,motion:packet.motion,unknown:packet.unknown},null,2);document.body.dataset.ready='true';document.body.dataset.case=kind;dirty=false}
+function tick(now){raf=0;if(!s.active||disposed||document.hidden)return;if(s.playing&&last){s.time=(s.time+Math.min(.05,(now-last)/1000))%packet.duration;geometryDirty=true}last=now;if(geometryDirty){packet=evaluate(kind,sParameters());revision++;geometryDirty=false;dirty=true}if(dirty)render();if(s.playing)schedule()}
+function pause(){s.playing=false;last=0;if(raf)cancelAnimationFrame(raf);raf=0;dirty=true;schedule()}
+function view(v){s.view=v;for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',String(b.dataset.view===v));dirty=true;schedule()}
+for(const b of document.querySelectorAll('[data-view]'))b.onclick=()=>view(b.dataset.view);
+$('title').textContent=kind==='bird'?'鸟状骨架 · 结构学习候选':'鱼状节段架 · 结构学习候选';$('description').textContent=kind==='bird'?'长前段、深胸架、双翼主梁与翼架、悬垂双肢、短后段。拍动关系取自可见参考，关节与周期为我方设计。':'长细节段连接宽腔，宽部另生弧架与背侧扇架。头尾身份待确认；播放是我方侧摆试验。';$('motionLabel').textContent=kind==='bird'?'拍动幅度':'我方侧摆';$('amplitude').value=String(s.amplitude);$('time').max=packet.duration;$('time').step='.01';
+for(const group of inspect(packet).groups){const o=document.createElement('option');o.value=group;o.textContent=({'axis':'主轴','front-chain':'前段节链','rear-chain':'后段节链',chest:'胸腔弧架','wing-beam':'翼主梁','wing-ribs':'翼支架',girdle:'附着桥',legs:'悬垂双肢','segment-chain':'节段支点','segment-ribs':'成对环弧','chamber-arches':'宽腔外弧','chamber-struts':'外弧次支架',crest:'背侧扇架'})[group];$('layer').append(o)}
+$('layer').onchange=e=>{s.layer=e.target.value;dirty=true;schedule()};$('neutral').onclick=()=>{s.neutral=!s.neutral;$('neutral').textContent=s.neutral?'中性骨架':'结构分组色';dirty=true;schedule()};$('resetView').onclick=()=>{s.azimuth=packet.camera.azimuth;s.elevation=packet.camera.elevation;s.zoom=1;view('orbit')};$('play').onclick=()=>{s.playing=!s.playing;last=0;dirty=true;schedule()};$('reset').onclick=()=>{pause();s.time=0;geometryDirty=true;schedule()};$('time').oninput=e=>{pause();s.time=Number(e.target.value);geometryDirty=true;schedule()};for(const id of['amplitude','span','chest'])$(id).onchange=e=>{s[id]=Number(e.target.value);geometryDirty=true;schedule()};
+const scene=$('scene');scene.onpointerdown=e=>{if(e.button!==0)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,az:s.azimuth,el:s.elevation};scene.setPointerCapture(e.pointerId)};scene.onpointermove=e=>{if(!drag||drag.id!==e.pointerId)return;s.azimuth=drag.az+(e.clientX-drag.x)*.006;s.elevation=Math.max(-1.3,Math.min(1.3,drag.el-(e.clientY-drag.y)*.006));view('orbit')};for(const ev of['pointerup','pointercancel','lostpointercapture'])scene.addEventListener(ev,()=>drag=null);scene.addEventListener('wheel',e=>{e.preventDefault();s.zoom=Math.max(.6,Math.min(2.6,s.zoom*Math.exp(-e.deltaY*.001)));dirty=true;schedule()},{passive:false});
+const observer=new ResizeObserver(()=>{dirty=true;schedule()});for(const id of['scene','xy','xz','yz'])observer.observe($(id));document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();else{dirty=true;schedule()}});addEventListener('pagehide',()=>{s.active=false;pause();observer.disconnect()});
+window.HaiyuSkeletonStudy={getPacket:()=>JSON.parse(JSON.stringify(packet)),getState:()=>({...s,pendingRAF:raf?1:0}),getEvidence:()=>JSON.parse(JSON.stringify(evidence)),setActive(active){s.active=!!active;pause()},dispose(){s.active=false;disposed=true;pause();observer.disconnect()}};schedule();
+})();</script></body></html>
