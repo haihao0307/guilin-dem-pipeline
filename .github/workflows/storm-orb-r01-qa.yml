@@ -52,8 +52,10 @@ jobs:
           server=$!
           trap 'kill "$server" 2>/dev/null || true' EXIT
           sleep 2
-          timeout 300s node kaopu-minigame-workbench/storm-orb-study/tests/rebuild-checkpoint.cjs
-          STORM_BROWSER=webkit timeout 300s node kaopu-minigame-workbench/storm-orb-study/tests/rebuild-checkpoint.cjs
+          failed=0
+          timeout 360s node kaopu-minigame-workbench/storm-orb-study/tests/rebuild-checkpoint.cjs || failed=1
+          STORM_BROWSER=webkit timeout 360s node kaopu-minigame-workbench/storm-orb-study/tests/rebuild-checkpoint.cjs || failed=1
+          exit "$failed"
       - name: Upload checkpoint evidence not visual approval
         if: always() && steps.scope.outputs.changed == 'true'
         uses: actions/upload-artifact@v4

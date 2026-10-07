@@ -47,3 +47,7 @@ C2 changed fine sampling but did not remove all larger dark bumps. C3 separates 
 ## D1 real flowing river
 
 Root confirmed C3 removed false dark bumps; keep this rollback point. D1 adds official Three r170 Water2 planar reflection/refraction on the actual sloping curved river. CPU proof: world normal error0, plane residual2.1e-16, water-height max error3.6e-9. No nonuniform parent transform is applied to water. Stream UV uses actual arc length, downstream speed0.35world units/s, and a two-phase deterministic normal blend. Both capture targets1024²; fixed-camera flow, cycle continuity and extra-pass cost are verified in the next browser evidence. Cloud/rain and final lighting remain pending.
+
+## D2 render scheduling and evidence
+
+D1 produced valid reflection/refraction images but the first browser sequence timed out waiting for element screenshot stability after repeated resizes. D2 renders paused scenes only on actual changes, keeps full target pixel resolution, captures a known rendered frame and visible stage clip, and places flow/cost checks before the1440closeup. Both engines run even if one fails, with overall failure retained. CPU draw-submit time and RAF timing are recorded separately. No visual-quality reduction is used to obtain a green check.
