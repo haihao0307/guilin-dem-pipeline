@@ -1,15 +1,20 @@
-import json,hashlib,os,time,threading,http.server,socketserver,functools
+import json,hashlib,os,time,threading,http.server,socketserver,functools,urllib.request
 from pathlib import Path
 from playwright.sync_api import sync_playwright,expect
 ROOT=Path(__file__).resolve().parents[1];OUT=Path(os.environ.get('MOTION_QA_OUT',ROOT/'qa/browser'));OUT.mkdir(parents=True,exist_ok=True)
-handler=functools.partial(http.server.SimpleHTTPRequestHandler,directory=str(ROOT.parent));server=socketserver.TCPServer(('127.0.0.1',0),handler);threading.Thread(target=server.serve_forever,daemon=True).start();url=f'http://127.0.0.1:{server.server_address[1]}/kaopu-animal-learning/#animal-learning/video-motion-silhouette'
-pixel_checks=[];checks=[];errors=[];external=[];engine=os.environ.get('MOTION_ENGINE','chromium')
+handler=functools.partial(http.server.SimpleHTTPRequestHandler,directory=str(ROOT.parent));server=socketserver.TCPServer(('127.0.0.1',0),handler);threading.Thread(target=server.serve_forever,daemon=True).start();url=os.environ.get('MOTION_QA_URL') or f'http://127.0.0.1:{server.server_address[1]}/kaopu-animal-learning/#animal-learning/video-motion-silhouette';source_url=url.split('#')[0];public_verification=None
+request_audit=[True];overview_verification=None;pixel_checks=[];checks=[];errors=[];external=[];engine=os.environ.get('MOTION_ENGINE','chromium')
 def check(name,fn):fn();checks.append({'name':name,'status':'passed'})
 def yes(x,msg='assertion failed'):
  if not x:raise AssertionError(msg)
 def main():
+ global public_verification,overview_verification
+ if os.environ.get('MOTION_QA_URL'):
+  with urllib.request.urlopen(urllib.request.Request(source_url,headers={'Cache-Control':'no-cache','User-Agent':'KAOPU-Animal-Public-QA/1.0'}),timeout=60) as response:actual=response.read();http_status=response.status
+  yes(actual==(ROOT/'index.html').read_bytes(),'Public HTML differs from exact tested candidate')
+  public_verification={'url':source_url,'status':http_status,'exactBytes':True,'productionCommit':os.environ.get('MOTION_PUBLIC_COMMIT'),'sha256':hashlib.sha256(actual).hexdigest()}
  with sync_playwright() as p:
-  browser=getattr(p,engine).launch();ctx=browser.new_context(viewport={'width':1440,'height':900},accept_downloads=True);page=ctx.new_page();page.on('pageerror',lambda e:errors.append(str(e)));page.on('request',lambda r:external.append(r.url) if r.url.startswith('http') and '127.0.0.1' not in r.url else None)
+  browser=getattr(p,engine).launch();ctx=browser.new_context(viewport={'width':1440,'height':900},accept_downloads=True);page=ctx.new_page();page.on('pageerror',lambda e:errors.append(str(e)));page.on('request',lambda r:external.append(r.url) if request_audit[0] and r.url.startswith('http') and r.url!=source_url and '127.0.0.1' not in r.url else None)
   page.goto(url);page.locator('#vm-sample').click();expect(page.locator('#vm-status')).to_contain_text('样例已就绪',timeout=20000)
   page.screenshot(path=str(OUT/'sample-initial.png'),full_page=False)
   q=lambda sel:page.locator(sel)
@@ -60,10 +65,18 @@ def main():
   check('2048x1080 viewport retains both views and full timeline',lambda:yes(ev("return ['#vm-frame','#vm-rig','#vm-timeline','#vm-metrics'].every(id=>s.querySelector(id).getBoundingClientRect().bottom<=innerHeight)&&document.documentElement.scrollHeight<=innerHeight+1")))
   for route in ['home','overview','annotate','obj','rapid-pattern-reid','4dequine-motion-appearance','animallift-canonical-fur']:
    page.evaluate('(r)=>location.hash="#animal-learning/"+r',route);page.wait_for_timeout(100);check('legacy route retained '+route,lambda:yes(q('.overview-return').is_visible()))
+  page.evaluate("location.hash='#animal-learning/home'");q('[data-open="video-motion-silhouette"]').click();q('#vm-sample').wait_for();check('existing animal overview action card opens exact original route',lambda:yes(page.url.endswith('#animal-learning/video-motion-silhouette')))
+  if os.environ.get('MOTION_OVERVIEW_URL'):
+   request_audit[0]=False
+   overview_url=os.environ['MOTION_OVERVIEW_URL'];expected=(ROOT.parent/'kaopu-human-overview/index.html').read_bytes()
+   with urllib.request.urlopen(overview_url,timeout=60) as response:actual=response.read();http_status=response.status
+   yes(actual==expected,'Overview differs from exact tested animal-entry patch');overview_verification={'url':overview_url,'status':http_status,'exactBytes':True,'sha256':hashlib.sha256(actual).hexdigest()}
+   page.goto(overview_url);page.locator('a[href="../kaopu-animal-learning/#animal-learning/video-motion-silhouette"]').click();q('#vm-sample').wait_for();check('original unified overview links directly to working animal action route',lambda:yes(page.url.endswith('#animal-learning/video-motion-silhouette')))
+   q('.overview-return').click();page.locator('#animals-heading').wait_for();check('animal action returns to original unified overview',lambda:yes(page.locator('a[href="../kaopu-animal-learning/#animal-learning/video-motion-silhouette"]').count()==1))
   check('no uncaught browser exceptions',lambda:yes(not errors,str(errors)));check('no outbound uploads or media requests',lambda:yes(not external,str(external)));browser.close()
 try:
  main();result='passed'
 except Exception as e:
  result='failed';errors.append(repr(e));raise
 finally:
- server.shutdown();(OUT/'MOTION_BROWSER.json').write_text(json.dumps({'engine':engine,'status':result,'checks':checks,'passed':len(checks),'errors':errors,'externalRequests':external,'sourcePixelChecks':pixel_checks,'htmlSHA256':hashlib.sha256((ROOT/'index.html').read_bytes()).hexdigest(),'commit':os.environ.get('GITHUB_SHA'),'scope':'Real desktop browser; original source animation, local files, authored points and uncalibrated 3D skeleton; no model inference'},ensure_ascii=False,indent=2)+'\n')
+ server.shutdown();(OUT/'MOTION_BROWSER.json').write_text(json.dumps({'engine':engine,'status':result,'checks':checks,'passed':len(checks),'errors':errors,'externalRequests':external,'networkAuditScope':'Animal media workflow before requested overview-navigation checks','sourcePixelChecks':pixel_checks,'publicVerification':public_verification,'overviewVerification':overview_verification,'htmlSHA256':hashlib.sha256((ROOT/'index.html').read_bytes()).hexdigest(),'commit':os.environ.get('GITHUB_SHA'),'scope':'Real desktop browser; original source animation, local files, authored points and uncalibrated 3D skeleton; no model inference'},ensure_ascii=False,indent=2)+'\n')

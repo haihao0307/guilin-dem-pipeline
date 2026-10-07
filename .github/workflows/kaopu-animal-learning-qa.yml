@@ -1,4 +1,4 @@
-name: QA animal local video observation
+name: QA published animal video observation
 on:
   push:
     branches: [qa/animal-learning-r01-20261006]
@@ -20,7 +20,9 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
-          sparse-checkout: kaopu-animal-learning
+          sparse-checkout: |
+            kaopu-animal-learning
+            kaopu-human-overview
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -43,13 +45,16 @@ jobs:
       - name: Real desktop video, timeline, 3D and recovery checks
         env:
           MOTION_ENGINE: ${{ matrix.engine }}
+          MOTION_QA_URL: "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-animal-learning/?qa=12304b11c0c3fab3226c9f922408518226f05020#animal-learning/video-motion-silhouette"
+          MOTION_OVERVIEW_URL: "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-human-overview/?qa=12304b11c0c3fab3226c9f922408518226f05020"
+          MOTION_PUBLIC_COMMIT: 12304b11c0c3fab3226c9f922408518226f05020
           MOTION_QA_OUT: ${{ github.workspace }}/animal-motion-${{ matrix.engine }}
         run: python kaopu-animal-learning/tests/motion-browser.py
       - name: Preserve exact-commit evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: animal-motion-${{ matrix.engine }}-${{ github.sha }}
+          name: animal-motion-public-${{ matrix.engine }}-${{ github.sha }}
           path: |
             animal-motion-${{ matrix.engine }}/
             kaopu-animal-learning/qa/*.json
