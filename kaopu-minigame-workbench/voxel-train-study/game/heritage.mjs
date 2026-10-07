@@ -21,7 +21,13 @@ const cube=new THREE.BoxGeometry(1,1,1);
 const cp=cube.attributes.position.array,cn=cube.attributes.normal.array,ci=cube.index.array;
 class Blocks {
   constructor(){this.p=[];this.n=[];this.c=[];this.i=[];this.count=0;}
+  surfaceBox(x,y,z,w,h,d,color,keep){
+    const colorValue=new THREE.Color(color);
+    for(let face=0;face<6;face++){const first=face*4,j=first*3,n=[cn[j],cn[j+1],cn[j+2]];if(!keep(n))continue;const base=this.p.length/3;for(let v=0;v<4;v++){const k=(first+v)*3;this.p.push(x+cp[k]*w,y+cp[k+1]*h,z+cp[k+2]*d);this.n.push(...n);this.c.push(colorValue.r,colorValue.g,colorValue.b);}for(let k=face*6;k<face*6+6;k++)this.i.push(base+ci[k]-first);}
+  }
   box(x,y,z,w,h,d,color,rotation=0,openEnds=false){
+    if(this.floraVoxels&&rotation===0&&w>.08&&w<.086&&Math.abs(w-h)<.001&&Math.abs(w-d)<.001){const q=.085,key=[x,y,z].map(v=>Math.round(v/q)).join(',');if(!this.floraVoxels.has(key))this.floraVoxels.set(key,{x,y,z,color});this.count++;return;}
+    if(this.gameTerrain&&rotation===0&&y>.09&&y<.30&&h<.08&&w<1&&d<.3){this.surfaceBox(x,y,z,w,h,d,color,n=>n[1]>.9);this.count++;return;}
     const base=this.p.length/3,c=new THREE.Color(color),co=Math.cos(rotation),si=Math.sin(rotation);
     for(let j=0;j<cp.length;j+=3){const px=cp[j]*w,py=cp[j+1]*h;this.p.push(x+co*px-si*py,y+si*px+co*py,z+cp[j+2]*d);this.n.push(co*cn[j]-si*cn[j+1],si*cn[j]+co*cn[j+1],cn[j+2]);this.c.push(c.r,c.g,c.b);}
     for(let k=0;k<ci.length;k+=3){if(openEnds&&Math.abs(cn[ci[k]*3])>.9)continue;if(this.thinGround&&y<.4&&cn[ci[k]*3+1]<-.9)continue;this.i.push(base+ci[k],base+ci[k+1],base+ci[k+2]);}this.count++;
@@ -100,7 +106,7 @@ function bridge(b,x){const L=14.05576,H=4.33704,panels=5;
   }
   for(let i=0;i<=panels;i++){const u=-L/2+i*L/panels;b.box(x+u,H,0,.17,.16,4.06328,0x866641);}
 }
-function buildEnvironment(spec=SPEC,options={}){const length=4*spec.halfRun+2*Math.PI*spec.radius;const rand=random(19790214),b=new Blocks(),p=PALETTE;b.thinGround=false;const start=-spec.halfRun,end=length-spec.halfRun;
+function buildEnvironment(spec=SPEC,options={}){const length=4*spec.halfRun+2*Math.PI*spec.radius;const rand=random(19790214),b=new Blocks(),p=PALETTE;b.thinGround=false;const start=-spec.halfRun,end=length-spec.halfRun;b.gameTerrain=!!options.optimizeGeometry;b.floraRanges=[];const flora=(x,z,build)=>{const first=b.p.length/3;if(options.optimizeGeometry)b.floraVoxels=new Map();build();if(b.floraVoxels){const voxels=b.floraVoxels,q=.085;for(const voxel of voxels.values()){const {x,y,z,color}=voxel;b.surfaceBox(x,y,z,q,q,q,color,n=>!voxels.has([x+n[0]*q,y+n[1]*q,z+n[2]*q].map(v=>Math.round(v/q)).join(',')));}b.floraVoxels=null;}b.floraRanges.push({first,count:b.p.length/3-first,x,z});};
   // One closed belt, discretized along its full arc-length; motion is a deformation of the same geometry.
   const segments=Math.ceil(length/.20),pitch=length/segments;
   for(let j=0;j<segments;j++){const x=start+(j+.5)*pitch;b.box(x,.015,1.5,pitch,.14,spec.width,p.grass,0,true);b.box(x,-.09,1.5,pitch,.065,spec.width,0x1c1e23,0,true);b.box(x,.13,0,pitch,.10,3.02,0xaba995,0,true);for(const z of [-.76,.76]){b.box(x,.245,z,pitch,.155,.13,0x625e53,0,true);b.box(x,.331,z,pitch,.035,.15,0x9d9a88,0,true);}}
@@ -112,9 +118,9 @@ function buildEnvironment(spec=SPEC,options={}){const length=4*spec.halfRun+2*Ma
   for(let x=start;x<end;x+=1.07){b.box(x,.56,-3.01,.11,1.12,.11,0xc3c6b2);b.box(x,.99,-3.01,.17,.08,.17,0xd8d9c7);b.box(x+.53,.72,-3.01,1.06,.09,.076,0xc9cbb8);b.box(x+.53,.32,-3.01,1.06,.08,.075,0xb4b7a7);}
   // Two ground motifs per bridge period, as observed in the source loop.
   for(const offset of [0,length/2]){
-    tree(b,-5.9+offset,-3.94,2.9,23);tree(b,7.15+offset,-3.94,5.8,32,.95);tree(b,11.75+offset,options.platformCorridor?7.05:6.2,3.8,21,options.platformCorridor?.5:.85,.25);
+    flora(-5.9+offset,-3.94,()=>tree(b,-5.9+offset,-3.94,2.9,23));flora(7.15+offset,-3.94,()=>tree(b,7.15+offset,-3.94,5.8,32,.95));flora(11.75+offset,options.platformCorridor?7.05:6.2,()=>tree(b,11.75+offset,options.platformCorridor?7.05:6.2,3.8,21,options.platformCorridor?.5:.85,.25));
     const rng=random(71),colors=[0x4b572a,0x647232,0x758039,0x3d4b27];
-    for(let i=0;i<1400;i++){const a=rng()*Math.PI*2,u=rng()*2-1,r=Math.cbrt(rng());const dx=Math.cos(a)*Math.sqrt(1-u*u)*r,dz=Math.sin(a)*Math.sqrt(1-u*u)*r,q=.085;b.box(7.33+offset+Math.round(dx*1.55/q)*q,.53+Math.round(u*r*.56/q)*q,(options.platformCorridor?6.85:5.24)+Math.round(dz*(options.platformCorridor?.6:1.1)/q)*q,q*.99,q*.99,q*.99,colors[Math.floor(rng()*colors.length)]);}
+    flora(7.33+offset,options.platformCorridor?6.85:5.24,()=>{for(let i=0;i<1400;i++){const a=rng()*Math.PI*2,u=rng()*2-1,r=Math.cbrt(rng());const dx=Math.cos(a)*Math.sqrt(1-u*u)*r,dz=Math.sin(a)*Math.sqrt(1-u*u)*r,q=.085;b.box(7.33+offset+Math.round(dx*1.55/q)*q,.53+Math.round(u*r*.56/q)*q,(options.platformCorridor?6.85:5.24)+Math.round(dz*(options.platformCorridor?.6:1.1)/q)*q,q*.99,q*.99,q*.99,colors[Math.floor(rng()*colors.length)]);}});
     for(const [dx,z] of [[1.9,6.0],[11.94,4.1],[15.52,5.02]]){const x=dx+offset;b.box(x,.18,z,.73,.22,.53,0xa5aba3);b.box(x+.34,.14,z-.13,.47,.20,.38,0xb6bab0);b.box(x-.13,.28,z,.38,.16,.30,0xd2d4c3);}
   }
   if(options.includeBridge!==false)bridge(b,-7.715);return b;

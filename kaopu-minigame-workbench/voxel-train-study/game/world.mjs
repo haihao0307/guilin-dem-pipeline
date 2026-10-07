@@ -13,6 +13,9 @@ export function pathFrame(worldX,elevation=0,z=0){
 const BEND=[
 'uniform float beltPhase;',
 'varying float vBeltInterior;',
+'#ifdef DRIVER_FLORA',
+'attribute vec2 floraRoot;',
+'#endif',
 'vec4 driverFrame(float u){',
 'float a=18.0,r=3.8,l=36.0,c=3.141592653589793*r,total=4.0*a+2.0*c;',
 'float s=mod(u+beltPhase+a,total);',
@@ -20,11 +23,15 @@ const BEND=[
 'if(s<l+c){float t=(s-l)/r;return vec4(a+r*sin(t),-r+r*cos(t),cos(t),-sin(t));}',
 'if(s<2.0*l+c)return vec4(a-(s-l-c),-2.0*r,-1.0,0.0);',
 'float t=(s-2.0*l-c)/r;return vec4(-a-r*sin(t),-r-r*cos(t),-cos(t),sin(t));}',
-'vec3 driverPosition(vec3 p){vec4 f=driverFrame(p.x);return vec3(f.x-p.y*f.w,f.y+p.y*f.z,p.z);}',
+'vec3 driverPosition(vec3 p){',
+'#ifdef DRIVER_FLORA',
+'if(floraRoot.x>-999.0){float growth=smoothstep(-2.1,-0.15,driverFrame(floraRoot.x).y);p.xz=mix(floraRoot,p.xz,growth);p.y*=growth;}',
+'#endif',
+'vec4 f=driverFrame(p.x);return vec3(f.x-p.y*f.w,f.y+p.y*f.z,p.z);}',
 'vec3 driverNormal(vec3 p,vec3 n){vec4 f=driverFrame(p.x);return vec3(n.x*f.z-n.y*f.w,n.x*f.w+n.y*f.z,n.z);}'
 ].join('\n');
 function bendMaterial(material,phase){material.onBeforeCompile=shader=>{shader.uniforms.beltPhase=phase;shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\n'+BEND).replace('#include <beginnormal_vertex>','#include <beginnormal_vertex>\nobjectNormal = driverNormal(position, objectNormal);').replace('#include <begin_vertex>','vBeltInterior=(position.y < -0.03 && normal.y < -0.9)?1.0:0.0; vec3 transformed=driverPosition(position);');shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying float vBeltInterior;').replace('#include <opaque_fragment>','outgoingLight=max(outgoingLight,vBeltInterior*vec3(0.023,0.024,0.030));\n#include <opaque_fragment>');};material.customProgramCacheKey=()=> 'train-driver-bend-v1';return material;}
-function bentMesh(blocks,phase,{localCoordinates=false,material=null}={}){const geometry=blocks.geometry();if(localCoordinates){const p=geometry.attributes.position;for(let i=0;i<p.count;i++)p.setX(i,p.getX(i)-WORLD.centerX);p.needsUpdate=true;}const m=new THREE.Mesh(geometry,bendMaterial(material||new THREE.MeshStandardMaterial({vertexColors:true,roughness:.93,metalness:.04}),phase));m.position.x=WORLD.centerX;m.frustumCulled=false;m.castShadow=m.receiveShadow=true;m.customDepthMaterial=bendMaterial(new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking}),phase);return m;}
+function bentMesh(blocks,phase,{localCoordinates=false,material=null}={}){const geometry=blocks.geometry();if(localCoordinates){const p=geometry.attributes.position;for(let i=0;i<p.count;i++)p.setX(i,p.getX(i)-WORLD.centerX);p.needsUpdate=true;}const m=new THREE.Mesh(geometry,bendMaterial(material||new THREE.MeshStandardMaterial({vertexColors:true,roughness:.93,metalness:.04}),phase));m.position.x=WORLD.centerX;m.frustumCulled=false;m.castShadow=m.receiveShadow=true;m.customDepthMaterial=bendMaterial(new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking}),phase);if(blocks.floraRanges?.length){const roots=new Float32Array(geometry.attributes.position.count*2);for(let i=0;i<roots.length;i+=2)roots[i]=-10000;for(const plant of blocks.floraRanges)for(let i=plant.first;i<plant.first+plant.count;i++){roots[i*2]=plant.x;roots[i*2+1]=plant.z;}geometry.setAttribute('floraRoot',new THREE.BufferAttribute(roots,2));m.material.defines={...m.material.defines,DRIVER_FLORA:1};m.customDepthMaterial.defines={...m.customDepthMaterial.defines,DRIVER_FLORA:1};}return m;}
 function signTexture(text){const canvas=document.createElement('canvas');canvas.width=512;canvas.height=144;const ctx=canvas.getContext('2d');ctx.fillStyle='#e5d8ac';ctx.fillRect(0,0,512,144);ctx.fillStyle='#344e46';ctx.fillRect(10,10,492,124);ctx.fillStyle='#eee4bc';ctx.font='bold 60px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,256,72);const map=new THREE.CanvasTexture(canvas);map.colorSpace=THREE.SRGBColorSpace;return map;}
 function stationModel(plan){
   const group=new THREE.Group(),phase={value:0},b=new Blocks();
@@ -44,7 +51,7 @@ function stationModel(plan){
   return{group,phase,zoneMaterial,sign,update(view,station){const offset=station.target-view.distance;phase.value=offset;const f=pathFrame(-14.6+offset,2.39,5.438);sign.position.set(...f.position);sign.rotation.z=Math.atan2(f.tangent[1],f.tangent[0]);const current=station.index===view.station.index,green=current&&view.station.canOpen;zoneMaterial.color.setHex(green?0x8db65b:station.missed?0xc77646:0xcfb96d);group.visible=Math.abs(offset)<60;},dispose(){group.traverse(o=>{o.geometry?.dispose();if(o.material){o.material.map?.dispose();o.material.dispose();}o.customDepthMaterial?.dispose();});}};
 }
 export function createGameWorld(){
-  const root=new THREE.Group(),terrainPhase={value:0},terrain=bentMesh(buildEnvironment(WORLD,{platformCorridor:true,includeBridge:false}),terrainPhase);root.add(terrain);const train=createGameTrain();root.add(train.root);
+  const root=new THREE.Group(),terrainPhase={value:0},terrain=bentMesh(buildEnvironment(WORLD,{platformCorridor:true,includeBridge:false,optimizeGeometry:true}),terrainPhase);root.add(terrain);const train=createGameTrain();root.add(train.root);
   const people=createPassengers(pathFrame);root.add(people.mesh);const stations=new Map(),bridges=new Map();
   const stones=new THREE.InstancedMesh(new THREE.DodecahedronGeometry(.092,0),new THREE.MeshStandardMaterial({color:0xb5b5a2,roughness:.93}),80);stones.castShadow=true;stones.frustumCulled=false;root.add(stones);
   const impacts=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshBasicMaterial({color:0xebc55c}),180);impacts.frustumCulled=false;root.add(impacts);let lastEvent=0,effects=[];

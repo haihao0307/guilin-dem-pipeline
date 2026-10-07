@@ -8,14 +8,16 @@
 
 ## 状态机
 
-`ready → running → approach → stopped → doorsOpening → unloading → boarding → readyToDepart → doorsClosing → running`
+`ready → running → doors-opening → unloading → boarding → ready-depart → doors-closing → running`
+
+进站、停稳、停早与补停提示由位置、速度、稳定时间和 `reverse` 标记推导；它们不会把普通驾驶锁死。
 
 - `earlyStop` 是停止时的提示状态：保留前进操作；只有满足步行距离与站台覆盖条件才可开门。
 - `missed` 保留正常驾驶与制动。停车后可进入 `recovering`，以受限倒车速度回到停车区；离站超过补救范围才计入不可补救并推进下一站。
 - `paused` 冻结模拟，不改变原阶段。
 - 达到本局时长后进入 `finishing`；已有上下客安全完成后进入 `summary`。
 
-车门状态与运动互锁，避免车辆载着正在跨门的乘客移动。上车奖励只在乘客抵达座位后确认，下车奖励只在其走到站台出口后确认，避免重复奖励。
+车门状态与运动互锁，避免车辆载着正在跨门的乘客移动。上车奖励只在乘客抵达座位后确认，下车奖励只在其走出车门、抵达站台后确认，避免重复奖励。
 
 ## 可见行走与碰撞
 
