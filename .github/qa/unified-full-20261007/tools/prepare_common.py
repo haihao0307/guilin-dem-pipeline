@@ -1,0 +1,10 @@
+from pathlib import Path
+import hashlib
+R=Path(__file__).resolve().parent.parent;out=R/'source/neck-baseline/src';out.mkdir(parents=True,exist_ok=True)
+s=(R/'source/kaopu-unified-human-workbench/src/UnifiedModel.js').read_text().replace('fingerprint=null){','fingerprint=null,neckSurface=null){').replace('this.adapterFingerprint=fingerprint.id;','this.adapterFingerprint=fingerprint.id;this.acceptedParameterFingerprints=fingerprint.acceptedParameterFingerprints||[];this.neckSurface=neckSurface;if(neckSurface&&neckSurface.topologySha256!==canonical.topologySha256)throw Error(\'Neck topology mismatch\');').replace("if(!Array.from(pos).every(Number.isFinite))", "if(this.neckSurface)this.neckSurface.apply(pos);\n  if(!Array.from(pos).every(Number.isFinite))").replace('neckFairingMaxMM:this.neckFairingMaxMM,revision:', 'neckFairingMaxMM:this.neckFairingMaxMM,neckSurfaceMaxMM:this.neckSurface?.maxDisplacementMM||0,neckSurfaceVertices:this.neckSurface?.unknownCount||0,revision:')
+s=s.replace('raw.adapterFingerprint!==model.adapterFingerprint)', '(raw.adapterFingerprint!==model.adapterFingerprint&&!model.acceptedParameterFingerprints.includes(raw.adapterFingerprint)))').replace('s.mhr={amount:n,channel};return s;', "s.mhr={amount:n,channel};if(raw.adapterFingerprint!==model.adapterFingerprint)Object.defineProperty(s,'migrationFrom',{value:raw.adapterFingerprint});return s;")
+b=s.encode();assert hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()=='646f2a91f02f3d4edcac1b3eb4d9a5b2aee2f8d2';(out/'UnifiedModel.js').write_bytes(b)
+# Shared matrix helpers are unchanged; official R02 Anny changes the actual pose protocol.
+p=out/'AnnyModel.js'
+if not p.exists():p.symlink_to((R/'source/kaopu-anny-workbench/r02/src/AnnyModel.js').resolve())
+print('Reconstructed the exact accepted neck baseline class, with pinned R02 Anny driver import')

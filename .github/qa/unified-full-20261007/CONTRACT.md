@@ -22,4 +22,10 @@ GNM's four actual native joints are neck, head, left_eye and right_eye. There is
 
 ## Reproduction
 
-Run python restore_sources.py, then node audit-teachers.mjs and node build_coverage.mjs. SOURCE-LOCK.json pins each fetched Git blob and source commit. The restore script reuses verified local teacher bytes when present and otherwise reads the same immutable public URLs. No source model is bundled in this checkpoint, no full TorchScript model is downloaded, and no private input photos are published. The core implementation, every adapter generator and each accepted compact mapping will be checkpointed before subsequent work.
+Run python restore_sources.py, python tools/prepare_common.py, node audit-teachers.mjs, node tests/native-channels.mjs, and node build_coverage.mjs. SOURCE-LOCK.json pins each fetched Git blob and source commit. The restore script reuses verified local teacher bytes when present and otherwise reads the same immutable public URLs. No source model is bundled in this checkpoint, no full TorchScript model is downloaded, and no private input photos are published. The core implementation, every adapter generator and each accepted compact mapping will be checkpointed before subsequent work.
+
+## Native-channel checkpoint
+
+CommonPerson.mjs adds the real GNM native12 rotations and3 translations and the pinned Anny R02 body evaluator. The neutral mesh remains byte-identical to the accepted neck candidate (fbc05655…). GNM head-rig ownership suppresses the saved Anny head-bone configuration; body ownership suppresses saved GNM rotations/translation. Non-head Anny body bones remain active. This is an explicit first-stage ownership rule, not full anatomical pose retargeting. Anny facial actions and all MHR vectors are retained but inactive in this checkpoint; selecting those unsupported drivers throws instead of silently pretending they work. Their transfer adapters remain pending.
+
+The15 native GNMPose/translation channels each move the same fixed mesh in numerical tests. Repeated evaluation, inactive settings, switching back, archive recovery and invalid-input rollback are checked. This is not yet browser or visual acceptance of these added channels.

@@ -1,0 +1,42 @@
+name: Rebuild full common human sources and native channels
+on:
+  push:
+    branches: [qa/unified-human-r01-20261006]
+    paths: ['.github/qa/unified-full-20261007/**', '.github/workflows/unified-full-rebuild-qa.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/qa/unified-full-20261007
+          filter: blob:none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Recover immutable shared teachers and preserve accepted neck baseline
+        working-directory: .github/qa/unified-full-20261007
+        run: |
+          python restore_sources.py
+          python tools/prepare_common.py
+      - name: Native references, actual common channels and ownership
+        working-directory: .github/qa/unified-full-20261007
+        run: |
+          node audit-teachers.mjs
+          node tests/native-channels.mjs
+          node build_coverage.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unified-full-native-checkpoint
+          retention-days: 21
+          path: |
+            .github/qa/unified-full-20261007/SOURCE-RESTORE-RECEIPT.json
+            .github/qa/unified-full-20261007/COVERAGE.json
+            .github/qa/unified-full-20261007/research/teacher-audit.json
+            .github/qa/unified-full-20261007/research/native-channel-report.json
