@@ -5,6 +5,7 @@ on:
     paths:
       - 'kaopu-hair-workbench/qa/gnm-skin-file-preview/**'
       - '.github/workflows/gnm-skin-light-r1.yml'
+      - 'kaopu-hair-workbench/handoffs/ten24-original-local/**'
 permissions:
   contents: read
 jobs:
@@ -44,3 +45,83 @@ jobs:
           name: gnm-skin-unified-${{ matrix.group }}-${{ github.sha }}
           path: gnm-skin-light-results/
           if-no-files-found: error
+
+  ten24-private-technical:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      TEN24_QA_OUT: ${{ github.workspace }}/ten24-numeric-results
+      NODE_PATH: ${{ github.workspace }}/.ten24-qa/node_modules
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-hair-workbench/handoffs/ten24-original-local
+            kaopu-hair-workbench/qa/gnm-groom-editor/data
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install official pinned browser test tools
+        run: |
+          npm install --prefix .ten24-qa --no-save --ignore-scripts --no-audit --no-fund playwright@1.55.0 pngjs@7.0.0
+          ./.ten24-qa/node_modules/.bin/playwright install --with-deps chromium
+      - name: Probe WebGL2 before acquiring original scan
+        run: node kaopu-hair-workbench/handoffs/ten24-original-local/tests/private-browser-qa.cjs --probe
+      - name: Prepare official pinned Blender privately
+        run: |
+          set -euo pipefail
+          private="$RUNNER_TEMP/ten24-private-qa"
+          mkdir -p "$private/assets" "$private/tools"
+          curl --fail --location --retry 2 --max-time 300 --silent --show-error https://download.blender.org/release/Blender4.3/blender-4.3.2-linux-x64.tar.xz -o "$private/blender.tar.xz"
+          echo "4da1c956673c0485e63054e563ee69198cc8f80d8157dd7592dffc8a6a5592e6  $private/blender.tar.xz" | sha256sum -c -
+          tar -xf "$private/blender.tar.xz" -C "$private/tools"
+      - name: Rebuild original private R11 with disabled auto-execution
+        run: |
+          set -euo pipefail
+          private="$RUNNER_TEMP/ten24-private-qa"
+          timeout 1200s python kaopu-hair-workbench/handoffs/ten24-original-local/rebuild_private.py --private-parent "$private/assets" --blender "$private/tools/blender-4.3.2-linux-x64/blender" --groom-data "$GITHUB_WORKSPACE/kaopu-hair-workbench/qa/gnm-groom-editor/data/teacher-groom.js" > "$private/build-private.log" 2>&1
+          python - <<'PY'
+          import os,pathlib,json
+          parent=pathlib.Path(os.environ['RUNNER_TEMP'])/'ten24-private-qa/assets'
+          roots=list(parent.glob('TEN24-private-*'))
+          assert len(roots)==1
+          root=roots[0]
+          report=json.loads((root/'reports/ten24-groom-rebuilt-verified.json').read_text())['verification']
+          allowed={'scope':'Blender private numeric controls and sampled contacts','checks':report['checks'],'controlPointContacts':report['evaluated_control_point_contacts'],'midpointContacts':report['evaluated_midpoint_contacts'],'curves':report['baseline_curve_count'],'continuousCollisionVerified':False}
+          out=pathlib.Path(os.environ['TEN24_QA_OUT']);out.mkdir(exist_ok=True)
+          (out/'blender-numeric.json').write_text(json.dumps(allowed,indent=2))
+          with open(os.environ['GITHUB_ENV'],'a') as f:f.write('TEN24_RUNTIME='+str(root/'runtime')+'\n')
+          PY
+      - name: Verify actual private WebGL import and interactions
+        run: timeout 900s node kaopu-hair-workbench/handoffs/ten24-original-local/tests/private-browser-qa.cjs
+      - name: Enforce numeric-only output allowlist
+        id: numeric_guard
+        if: always()
+        run: |
+          python - <<'PY'
+          import pathlib,os,json
+          root=pathlib.Path(os.environ['TEN24_QA_OUT']);root.mkdir(exist_ok=True)
+          files=list(root.iterdir())
+          assert len(files)<=3
+          for p in files:
+            assert p.is_file() and p.name in {'preflight.json','blender-numeric.json','browser-results.json'}
+            assert p.stat().st_size<100000
+            s=p.read_text();json.loads(s)
+            assert 'base64' not in s and 'data:image' not in s
+          PY
+      - name: Retain numeric evidence only
+        if: ${{ always() && steps.numeric_guard.outcome == 'success' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ten24-private-numeric-${{ github.sha }}
+          path: ten24-numeric-results/*.json
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Clear temporary original scan and all derivatives
+        if: always()
+        run: |
+          set -euo pipefail
+          test -n "$RUNNER_TEMP"
+          rm -rf -- "$RUNNER_TEMP/ten24-private-qa"
