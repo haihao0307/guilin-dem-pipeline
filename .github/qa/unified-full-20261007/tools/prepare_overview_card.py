@@ -1,0 +1,14 @@
+"""Apply only the parent-approved shared-stage text; retain every other byte."""
+from pathlib import Path
+import json,hashlib,difflib
+R=Path(__file__).resolve().parents[1];src=(R/'fixtures/public-overview-index.html').read_text();start=src.index('    <section class="shared-stage"');end=src.index('    </section>',start)+len('    </section>');old=src[start:end];new=old
+replacements=[('ONE PERSON / 最小兼容实验','ONE PERSON / 全参数兼容测试'),('GNM 脸与表情、Anny 体型与姿态，作用于同一份头身网格。','GNM、Anny、MHR 的头部、体型、姿态与表情，在同一份头身网格上组合测试'),('最小兼容实验 · 已验收','成人基础 · 参数测试'),('datetime="2026-10-06">2026.10.06','datetime="2026-10-07">2026.10.07'),('MHR 部分迁移：1/45 身份轴，未迁移 MHR 姿态与表情。跨模型对齐仍有误差。全量合并 R02 开发中，当前仍是最小兼容实验。','三个来源的参数通路已接入。婴幼儿耳部与牙列、极端表情接触仍未验收；皮肤、照片视频拟合及毛发另列。完整参数可保存恢复，通用导出是当前姿态快照。'),('进入最小兼容实验','进入全参数兼容测试')]
+for a,b in replacements:assert new.count(a)==1,a;new=new.replace(a,b)
+out=src[:start]+new+src[end:];assert out[:start]==src[:start]and out[start+len(new):]==src[end:]
+jumpStart=src.index('<a class="stage-jump" href="#shared-stage">');jumpEnd=src.index('</a>',jumpStart)+4;oldJump=src[jumpStart:jumpEnd];assert oldJump.count('<strong>最小兼容实验</strong>')==1;newJump=oldJump.replace('<strong>最小兼容实验</strong>','<strong>全参数兼容测试</strong>');out=out.replace(oldJump,newJump,1);assert out.replace(new,old,1).replace(newJump,oldJump,1)==src
+p=R/'deployment/kaopu-human-overview/index.html';p.parent.mkdir(parents=True,exist_ok=True);p.write_text(out)
+blob=lambda b:hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest();record={'path':'kaopu-human-overview/index.html','oldCommit':'e7125bf26e7865e306937f4e65fa712d6adc55b0','oldGitBlobSHA':blob(src.encode()),'gitBlobSHA':blob(out.encode()),'sha256':hashlib.sha256(out.encode()).hexdigest(),'bytes':len(out.encode()),'onlySharedStageAndItsJumpLabelChanged':True,'allOtherHTMLBytesIdentical':True,'sameImageAndHref':True,'changedTextLocations':7};(R/'OVERVIEW-CARD-PATCH.json').write_text(json.dumps(record,indent=2)+'\n');(R/'OVERVIEW-CARD.diff').write_text(''.join(difflib.unified_diff(src.splitlines(True),out.splitlines(True),fromfile='public/index.html',tofile='candidate/index.html')))
+m=json.loads((R/'DEPLOYMENT-MANIFEST.json').read_text());m['files'].append({k:record[k]for k in ['path','gitBlobSHA','sha256','bytes']});m['overviewPrecondition']={k:record[k]for k in ['oldCommit','oldGitBlobSHA','onlySharedStageAndItsJumpLabelChanged','allOtherHTMLBytesIdentical']};(R/'DEPLOYMENT-45-MANIFEST.json').write_text(json.dumps(m,indent=2)+'\n');entries=json.loads((R/'PUBLICATION-TREE-ELEMENTS.json').read_text())if(R/'PUBLICATION-TREE-ELEMENTS.json').exists()else[]
+if entries:
+ entries.append({'path':record['path'],'mode':'100644','type':'blob','content':out});(R/'PUBLICATION-45-TREE-ELEMENTS.json').write_text(json.dumps(entries))
+print(json.dumps(record,indent=2))

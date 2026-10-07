@@ -34,6 +34,7 @@ jobs:
           node ui/build-runtime-metadata.mjs
           node ui/tests/controller.test.mjs
           python tools/build_deployment.py
+          python tools/prepare_overview_card.py
           python -c "import json; m=json.load(open('DEPLOYMENT-MANIFEST.json')); assert m['adapterFingerprint']=='f975df925c5586eccaae60f61d888e5b1bcfa6200aad7d1763cb10ae3b736224'; assert m['mathCheckpoint']=='29109562604f9fdfa7def1aa3652258b722b0ad7'"
       - name: Independently read actual posed exports and verify skeleton evaluation
         working-directory: .github/qa/unified-full-20261007
@@ -67,6 +68,11 @@ jobs:
           COMMON_UI_URL: ${{ inputs.public_url || 'http://127.0.0.1:8765/deployment/kaopu-unified-human-workbench/index.html' }}
           COMMON_UI_OUT: qa-output/deployment-webkit
         run: node ui/tests/browser.cjs
+      - name: Original overview card keyboard entry, history and direct return
+        working-directory: .github/qa/unified-full-20261007
+        run: |
+          OVERVIEW_BROWSER=chromium node qa/overview-common-card.cjs
+          OVERVIEW_BROWSER=webkit node qa/overview-common-card.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -89,3 +95,15 @@ jobs:
             .github/qa/unified-full-20261007/research/export-cases/manifest.json
             .github/qa/unified-full-20261007/research/export-independent-reader-report.json
             .github/qa/unified-full-20261007/research/PUBLIC-BYTE-RECEIPT.json
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: common-overview-card-pair
+          retention-days: 21
+          path: |
+            .github/qa/unified-full-20261007/qa-output/overview-card-chromium
+            .github/qa/unified-full-20261007/qa-output/overview-card-webkit
+            .github/qa/unified-full-20261007/DEPLOYMENT-45-MANIFEST.json
+            .github/qa/unified-full-20261007/OVERVIEW-CARD-PATCH.json
+            .github/qa/unified-full-20261007/OVERVIEW-CARD.diff
