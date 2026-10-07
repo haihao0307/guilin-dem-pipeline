@@ -1,4 +1,4 @@
-name: Published neck repair diagnostic
+name: Published neck repair integration
 on:
   push:
     branches: [qa/unified-human-r01-20261006]
@@ -34,6 +34,11 @@ jobs:
           node fixtures.mjs
           python build_probe.py
           python analyze.py
+          python build_integration.py
+          node validate_probe.mjs
+          node validate_integration.mjs
+          python validate_geometry.py
+          python volume.py
       - name: Install pinned browser runners
         working-directory: .github/qa/neck-repair-20261007
         run: |
@@ -46,33 +51,61 @@ jobs:
         working-directory: .github/qa/neck-repair-20261007
         env:
           NECK_BROWSER: chromium
-        run: node qa/browser.cjs
+        run: node qa/workbenches.cjs
       - name: Actual WebKit geometry and skin views
         working-directory: .github/qa/neck-repair-20261007
         env:
           NECK_BROWSER: webkit
-        run: node qa/browser.cjs
+        run: node qa/workbenches.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: neck-diagnostic-chromium
+          name: neck-integration-chromium-baseline-skin
           retention-days: 14
-          path: .github/qa/neck-repair-20261007/qa-output/chromium
+          path: .github/qa/neck-repair-20261007/qa-output/integration-chromium/baseline-skin
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: neck-diagnostic-webkit
+          name: neck-integration-chromium-candidate-skin
           retention-days: 14
-          path: .github/qa/neck-repair-20261007/qa-output/webkit
+          path: .github/qa/neck-repair-20261007/qa-output/integration-chromium/candidate-skin
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: neck-diagnostic-numeric
+          name: neck-integration-chromium-candidate-common
+          retention-days: 14
+          path: .github/qa/neck-repair-20261007/qa-output/integration-chromium/candidate-common
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: neck-integration-webkit-baseline-skin
+          retention-days: 14
+          path: .github/qa/neck-repair-20261007/qa-output/integration-webkit/baseline-skin
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: neck-integration-webkit-candidate-skin
+          retention-days: 14
+          path: .github/qa/neck-repair-20261007/qa-output/integration-webkit/candidate-skin
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: neck-integration-webkit-candidate-common
+          retention-days: 14
+          path: .github/qa/neck-repair-20261007/qa-output/integration-webkit/candidate-common
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: neck-integration-numeric
           retention-days: 14
           path: |
             .github/qa/neck-repair-20261007/recovery-receipt.json
-            .github/qa/neck-repair-20261007/research/ablation-states.json
-            .github/qa/neck-repair-20261007/research/ablation-geometry.json
-            .github/qa/neck-repair-20261007/research/neck-probe-report.json
-            .github/qa/neck-repair-20261007/research/ablation-posterior-profile.png
+            .github/qa/neck-repair-20261007/INTEGRATION-MANIFEST.json
+            .github/qa/neck-repair-20261007/research/integration-report.json
+            .github/qa/neck-repair-20261007/research/neck-runtime-probe-report.json
+            .github/qa/neck-repair-20261007/research/neck-candidate-cross-region-report.json
+            .github/qa/neck-repair-20261007/research/neck-volume-report.json
+            .github/qa/neck-repair-20261007/candidate-validation/research/neck-geometry-report.json
+            .github/qa/neck-repair-20261007/qa-output/**/integration-browser-report.json
+            .github/qa/neck-repair-20261007/qa-output/**/failure.txt
             /tmp/neck-server.log
