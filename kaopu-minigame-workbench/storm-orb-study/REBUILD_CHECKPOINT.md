@@ -27,3 +27,7 @@ Root accepted river path, cabin ground contact and outer frame as a stage anchor
 ## B2 after B1 visual rejection
 
 B1 produced artificial full-circle terraces, low-poly jewel rocks and foil-like wide highlights. B2 removes periodic whole-hill rings, limits bedding to three interrupted bank strata, decouples grass from phase, replaces the stone border with five embedded continuous-normal outcrops, raises wet-rock roughness and adds mipmapped micro-bump. Structure remains A4; cloud/water animation remain pending.
+
+## B3 after B2 green-blanket failure
+
+B2 removed artificial rings but still looked like a smooth green blanket. B3 adds two actual shallow weathering seams and derives exposed wet rock from their geometry, plus32000short turf blades using the same slope/wetness cover field. A4 macro river path and foundations remain unchanged. Cloud and water animation remain pending; no production release is authorized at this stage.
