@@ -1,0 +1,52 @@
+name: PPF original CPU result playback QA
+on:
+  pull_request:
+    branches: [gh-pages]
+    paths:
+      - 'kaopu-tailor-workbench/ppf-teacher/**'
+      - 'kaopu-tailor-workbench/entry.mjs'
+      - '.github/tailor-ppf/**'
+      - '.github/workflows/tailor-ppf-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: tailor-ppf-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  replay:
+    if: github.head_ref == 'qa/tailor-garments-r03-20261006'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-tailor-workbench
+            kaopu-human-overview
+            .github/tailor-ppf
+      - name: Original frame hashes and bounded cache checks
+        run: |
+          node .github/tailor-ppf/verify-replay.mjs kaopu-tailor-workbench/ppf-teacher/data/drape
+          node .github/tailor-ppf/verify-replay.mjs kaopu-tailor-workbench/ppf-teacher/data/belt
+          node .github/tailor-ppf/test-frame-store.mjs kaopu-tailor-workbench/ppf-teacher/data/belt
+      - name: Official browser dependency
+        run: |
+          npm install --prefix "$RUNNER_TEMP/ppf-test" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/ppf-test/node_modules/.bin/playwright" install --with-deps chromium webkit
+      - name: Actual original geometry playback and lifecycle
+        env:
+          NODE_PATH: ${{ runner.temp }}/ppf-test/node_modules
+          PPF_BROWSER: ${{ matrix.browser }}
+        run: node .github/tailor-ppf/browser.cjs
+      - name: Original geometry desktop evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ppf-browser-${{ matrix.browser }}
+          retention-days: 7
+          path: ppf-browser-*/**
