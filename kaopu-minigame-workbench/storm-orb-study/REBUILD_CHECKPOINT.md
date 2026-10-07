@@ -43,3 +43,7 @@ C1 source PBR images are resolved at720and1440, but high-frequency1024height sam
 ## C3 source separation and surface response
 
 C2 changed fine sampling but did not remove all larger dark bumps. C3 separates ecological coverage from rock micro-displacement: coverage uses12cm macro slope, and moss cushions70percent of rock microrelief. Dry rock, wet rock and moss receive distinct roughness ranges; wet rock darkening is moderated. Matched normal-on/off diagnostic captures distinguish geometry/color artifacts from normal-map artifacts. Original texture bytes unchanged.
+
+## D1 real flowing river
+
+Root confirmed C3 removed false dark bumps; keep this rollback point. D1 adds official Three r170 Water2 planar reflection/refraction on the actual sloping curved river. CPU proof: world normal error0, plane residual2.1e-16, water-height max error3.6e-9. No nonuniform parent transform is applied to water. Stream UV uses actual arc length, downstream speed0.35world units/s, and a two-phase deterministic normal blend. Both capture targets1024²; fixed-camera flow, cycle continuity and extra-pass cost are verified in the next browser evidence. Cloud/rain and final lighting remain pending.

@@ -1,4 +1,4 @@
-name: Storm rebuild material checkpoint
+name: Storm rebuild flowing water checkpoint
 on:
   pull_request:
     branches: [gh-pages]
@@ -37,6 +37,7 @@ jobs:
           node --check kaopu-minigame-workbench/storm-orb-study/app.mjs
           node --check kaopu-minigame-workbench/storm-orb-study/scene.mjs
           node --check kaopu-minigame-workbench/storm-orb-study/materials.mjs
+          node --check kaopu-minigame-workbench/storm-orb-study/water.mjs
       - name: Install official browser test dependency
         if: steps.scope.outputs.changed == 'true'
         run: |
