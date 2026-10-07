@@ -1,4 +1,4 @@
-name: Validate fixed common-person deployment and public return
+name: Verify public common-person parameters and overview
 on:
   push:
     branches: [qa/unified-human-r01-20261006]
@@ -43,10 +43,9 @@ jobs:
           python -m pip install trimesh==5.1.1 usd-core==26.8 numpy==2.3.5
           python tests/read_common_exports.py
       - name: Check public bytes when a deployed URL is supplied
-        if: inputs.public_url != ''
         working-directory: .github/qa/unified-full-20261007
         env:
-          PUBLIC_URL: ${{ inputs.public_url }}
+          PUBLIC_URL: ${{ inputs.public_url || 'https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/index.html' }}
         run: python tools/verify_public_deployment.py "$PUBLIC_URL"
       - name: Prepare real browser verification
         working-directory: .github/qa/unified-full-20261007
@@ -58,20 +57,20 @@ jobs:
         working-directory: .github/qa/unified-full-20261007
         env:
           COMMON_UI_BROWSER: chromium
-          COMMON_UI_URL: ${{ inputs.public_url || 'http://127.0.0.1:8765/deployment/kaopu-unified-human-workbench/index.html' }}
+          COMMON_UI_URL: ${{ inputs.public_url || 'https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/index.html' }}
           COMMON_UI_OUT: qa-output/deployment-chromium
         run: node ui/tests/browser.cjs
       - name: WebKit actual parameters, archive, exports and return
         working-directory: .github/qa/unified-full-20261007
         env:
           COMMON_UI_BROWSER: webkit
-          COMMON_UI_URL: ${{ inputs.public_url || 'http://127.0.0.1:8765/deployment/kaopu-unified-human-workbench/index.html' }}
+          COMMON_UI_URL: ${{ inputs.public_url || 'https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/index.html' }}
           COMMON_UI_OUT: qa-output/deployment-webkit
         run: node ui/tests/browser.cjs
       - name: Original overview card keyboard entry, history and direct return
         working-directory: .github/qa/unified-full-20261007
         env:
-          PUBLIC_OVERVIEW: ${{ inputs.public_url }}
+          PUBLIC_OVERVIEW: ${{ inputs.public_url || 'https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/index.html' }}
         run: |
           OVERVIEW_BROWSER=chromium node qa/overview-common-card.cjs
           OVERVIEW_BROWSER=webkit node qa/overview-common-card.cjs
