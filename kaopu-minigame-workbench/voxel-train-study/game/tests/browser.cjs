@@ -14,15 +14,15 @@ fs.mkdirSync(out,{recursive:true});
     const braking=await page.locator('#brake').boundingBox();await page.mouse.move(braking.x+braking.width/2,braking.y+braking.height/2);await page.mouse.down();await page.waitForFunction(()=>Math.abs(__trainDriver.getState().velocity)<.02);await page.mouse.up();assert.equal((await state()).brake,false);
     await page.locator('#pause').click();const paused=await state();await page.waitForTimeout(400);assert.equal((await state()).tick,paused.tick);assert.equal(await page.locator('#pauseScreen').isVisible(),true);await page.locator('#resume').click();
     console.log('DRIVER_QA: real input first station');let holding=false,opened=false;const began=Date.now();
-    while(Date.now()-began<100000){
+    while(Date.now()-began<150000){
       const v=await state();if(v.phase==='ready-depart')break;
       if(['doors-opening','unloading','boarding'].includes(v.phase)){if(!opened){opened=true;await shot('doors');}if(v.phase==='boarding'&&!fs.existsSync(out+'/boarding-'+engine+'.png'))await shot('boarding');await page.waitForTimeout(180);continue;}
       assert.equal(v.paused,false,'No unintended pause during live input');
       if(v.station.canOpen){if(holding){await page.mouse.up();holding=false;}await page.locator('#gameScene').focus();await page.keyboard.press('e');continue;}
-      if(v.station.canRecover&&v.station.remaining<0){if(holding){await page.mouse.up();holding=false;}await page.locator('#stationAction').click();continue;}
+      if(v.station.canRecover&&!v.reverse&&v.station.remaining<0){if(holding){await page.mouse.up();holding=false;}await page.locator('#stationAction').click();continue;}
       if(Math.abs(v.velocity)<.02){if(holding){await page.mouse.up();holding=false;}if(Math.abs(v.station.remaining)<=7&&v.station.platformCoverage){await page.waitForTimeout(150);continue;}if(v.station.remaining>0&&v.throttle<=0)await page.locator('#accelerate').click();}
-      else if((!v.reverse&&v.station.remaining<=v.velocity*v.velocity/(2*(v.station.wet?2.4:3.1))+.45)||(v.reverse&&v.station.remaining>-.5)){if(!holding){const b=await page.locator('#brake').boundingBox();await page.mouse.move(b.x+b.width/2,b.y+b.height/2);await page.mouse.down();holding=true;}}
-      else if(!holding&&!v.reverse){if(v.velocity>10.5&&v.throttle>0)await page.locator('#decelerate').click();else if(v.velocity<8&&v.throttle<3)await page.locator('#accelerate').click();}
+      else if((!v.reverse&&v.station.remaining<=v.brakingDistance+1.2)||(v.reverse&&v.station.remaining>-.5)){if(!holding){const b=await page.locator('#brake').boundingBox();await page.mouse.move(b.x+b.width/2,b.y+b.height/2);await page.mouse.down();holding=true;}}
+      else if(!holding&&!v.reverse){if(v.velocity>6&&v.throttle>0)await page.locator('#decelerate').click();else if(v.velocity<4.5&&v.throttle<2)await page.locator('#accelerate').click();}
       await page.waitForTimeout(90);
     }
     if(holding)await page.mouse.up();const served=await state();assert.equal(served.phase,'ready-depart','First station should be served using real input');assert.equal(served.stats.stops,1);assert.ok(served.stats.pickedUp>=2&&served.stats.delivered>=2);assert.equal(served.stats.missed,0);assert.ok(served.onboard<=16);await shot('served');

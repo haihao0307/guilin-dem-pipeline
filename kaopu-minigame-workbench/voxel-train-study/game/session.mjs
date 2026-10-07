@@ -46,7 +46,7 @@ export class Session{
     return{accepted:true};
   }
   serviceLocked(){return['doors-opening','unloading','boarding','ready-depart','doors-closing'].includes(this.phase);}
-  canRecover(){return!!this.station&&!this.station.completed&&this.distance>this.station.target+this.station.radius&&this.distance-this.station.target<=40&&Math.abs(this.velocity)<.35&&!this.serviceLocked();}
+  canRecover(){return!!this.station&&!this.station.completed&&!this.reverse&&this.distance>this.station.target+this.station.radius&&this.distance-this.station.target<=40&&Math.abs(this.velocity)<.35&&!this.serviceLocked();}
   platformCoversDoors(){const min=this.station.target-31,max=this.station.target-7;return COACHES.every(c=>[c.frontDoor,c.rearDoor].every(x=>{const world=this.distance+x-FRONT_X;return world>=min+.22&&world<=max-.22;}));}
   canOpen(){return!!this.station&&!this.station.completed&&Math.abs(this.velocity)<.35&&this.stopStable>=.8&&Math.abs(this.station.target-this.distance)<=7&&this.platformCoversDoors();}
   stationAction(){

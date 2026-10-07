@@ -26,7 +26,7 @@ const resumed=replay(game.replayPacket());assert.equal(resumed.replayPacket().in
 const early=new Session({seed:'EARLY-STOP'});early.command('start');for(let i=0;i<3000&&early.phase!=='ready-depart';i++){normalPilot(early,5);early.stepTicks(1);checkPeople(early);}assert.equal(early.phase,'ready-depart');assert.equal(early.station.walkStop,true);assert.equal(early.stats.stops,1);assert.ok(early.stats.satisfaction>70);
 
 const miss=new Session({seed:'RECOVERY'});miss.command('start');power(miss,1);while(miss.velocity<7)miss.stepTicks(1);power(miss,0);while(!miss.station.missed)miss.stepTicks(1);brake(miss,true);while(miss.velocity>.001)miss.stepTicks(1);assert.ok(miss.canRecover());assert.equal(miss.stats.missed,1);assert.notEqual(miss.phase,'summary');assert.ok(miss.actors.some(a=>a.kind==='angry'));
-assert.equal(miss.command('recover').accepted,true);let sawRocks=false,sawHit=false;
+assert.equal(miss.command('recover').accepted,true);assert.equal(miss.canRecover(),false,'An active recovery cannot be triggered twice');assert.equal(miss.command('recover').accepted,false);let sawRocks=false,sawHit=false;
 for(let i=0;i<1500&&miss.phase!=='ready-depart';i++){
   const v=miss.view();sawRocks||=v.rocks.length>0;sawHit||=v.stats.stoneHits>0;
   if(v.station.canOpen)miss.command('station-action');
