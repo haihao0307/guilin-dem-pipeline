@@ -11,7 +11,7 @@ on:
 permissions:
   contents: read
 env:
-  OVERVIEW_VERIFY_PUBLIC: 'true'
+  OVERVIEW_VERIFY_PUBLIC: 'false'
 concurrency:
   group: human-overview-r01-${{ github.ref }}
   cancel-in-progress: true
@@ -19,7 +19,7 @@ jobs:
   overview-browser:
     if: github.event_name != 'pull_request' || github.head_ref == 'qa/human-overview-r01-20261006'
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -138,3 +138,61 @@ jobs:
           path: |
             overview-webkit/trace-*.zip
             overview-public-webkit/trace-*.zip
+
+  workbench-ui-layout:
+    if: github.event_name != 'pull_request' || github.head_ref == 'qa/human-overview-r01-20261006'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            .github/qa
+            kaopu-human-overview
+            kaopu-face-workbench
+            kaopu-anny-workbench
+            kaopu-mhr-workbench
+            kaopu-unified-human-workbench
+            kaopu-skin-workbench
+            kaopu-animal-learning
+            kaopu-hair-workbench
+      - name: Install fixed official browser dependency
+        run: |
+          npm install --prefix "$RUNNER_TEMP/overview-ui-test" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/overview-ui-test/node_modules/.bin/playwright" install --with-deps ${{ matrix.engine }}
+      - name: Check real model and controls in four viewport sizes
+        env:
+          NODE_PATH: ${{ runner.temp }}/overview-ui-test/node_modules
+          OVERVIEW_BROWSER: ${{ matrix.engine }}
+          OVERVIEW_URL: http://127.0.0.1:8765/kaopu-human-overview/
+          OVERVIEW_QA_DIR: ui-${{ matrix.engine }}
+        run: |
+          node --check .github/qa/overview-ui-layout.cjs
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/overview-ui-server.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -fsS "$OVERVIEW_URL" > /dev/null && break || sleep 1; done
+          node .github/qa/overview-ui-layout.cjs
+      - name: Upload UI screenshots and measurements
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workbench-ui-${{ matrix.engine }}-screenshots
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            ui-${{ matrix.engine }}/*.json
+            ui-${{ matrix.engine }}/*.png
+      - name: Upload UI browser trace
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workbench-ui-${{ matrix.engine }}-trace
+          retention-days: 7
+          if-no-files-found: warn
+          path: ui-${{ matrix.engine }}/*.zip

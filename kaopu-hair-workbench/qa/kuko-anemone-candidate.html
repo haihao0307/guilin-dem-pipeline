@@ -26,23 +26,159 @@ body[data-module=feather] #catalogHomeButton{min-height:44px}
 @media(max-width:650px){.gnm-catalog-card{border-radius:13px}}
 
 .ten24-local-task{margin:18px 0 6px;padding:14px 16px;border:1px solid #635c39;border-radius:12px;background:#242419;display:flex;gap:10px 18px;align-items:center;flex-wrap:wrap}.ten24-local-task strong{color:#e8e9cd}.ten24-local-task span{color:#d6c991;font-size:13px}.ten24-local-task a{margin-left:auto;color:#c1dfa2;font-size:13px}
-</style></head>
-<body data-module="home">
-<header>
+</style><link rel="stylesheet" href="../../kaopu-human-overview/workbench-ui.css">
+<style id="wbHairPresentation">/* Shared full-screen shell. This layer changes presentation only. */
+body[data-wb-ui="hair-hub"] {--bg:var(--wb-bg,#10191f);--panel:var(--wb-surface,#18252d);--line:var(--wb-border,#30424b);--ink:var(--wb-text,#edf2ef);--muted:var(--wb-muted,#b2c1c6);--accent:var(--wb-action,#d7ed9c);height:100dvh;overflow:hidden;background:var(--bg);color:var(--ink)}
+body[data-wb-ui="hair-hub"] .wb-header {height:var(--wb-header,56px);min-height:var(--wb-header,56px);padding:0 12px;gap:12px;border-color:var(--line);background:var(--panel)}
+body[data-wb-ui="hair-hub"] .wb-header>a[data-wb-back] {display:inline-flex!important;visibility:visible!important;align-items:center;min-height:44px;flex-shrink:0;font-size:14px;color:var(--wb-accent,#d5b48b);white-space:nowrap}
+body[data-wb-ui="hair-hub"] .wb-header .brand {margin-right:auto}
+body[data-wb-ui="hair-hub"] .wb-header .brand small,body[data-wb-ui="hair-hub"] .studio-title small {display:none}
+body[data-wb-ui="hair-hub"] .studio-title strong {font-size:16px}
+body[data-wb-ui="hair-hub"] .species-nav {display:none}
+body[data-wb-ui="hair-hub"] .wb-workspace {width:100%;max-width:none;margin:0;height:calc(100dvh - var(--wb-header,56px))!important;min-height:0;display:grid!important;grid-template-columns:minmax(0,1fr) clamp(320px,24vw,400px);grid-template-rows:minmax(0,1fr);padding:12px!important;gap:12px;overflow:hidden}
+body[data-wb-ui="hair-hub"]:not([data-module=anemone]) #anemoneModule,body[data-wb-ui="hair-hub"]:not([data-module=rabbit]) #rabbitModule,body[data-wb-ui="hair-hub"]:not([data-module=kuko]) #kukoModule {display:none!important}
+body[data-wb-ui="hair-hub"] .wb-stage {min-width:0;min-height:0;overflow:hidden;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+body[data-wb-ui="hair-hub"] .wb-controls {display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+body[data-wb-ui="hair-hub"] .wb-controls-head {display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 10px;min-height:52px;flex-shrink:0;border-bottom:1px solid var(--line)}
+body[data-wb-ui="hair-hub"] .wb-controls-scroll {flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:12px}
+body[data-wb-ui="hair-hub"] :is(button,input,select,summary) {min-height:44px;font-size:14px!important}
+body[data-wb-ui="hair-hub"] button {min-width:44px;padding:8px 10px}
+body[data-wb-ui="hair-hub"] :is(p,small,label,output,.control-note,.section-title,.section-title span,.footnote,.hint,.mono,.value,.badge,.version,.chip,.subtitle,.eyebrow,.code,.viewport-foot,.anemone-stage-foot,.studio-title,.kuko-card-title,.kuko-card-title span,.anemone-card-title,.rabbit-quick-footer,.rabbit-quick-heading span,.catalog-card-description,.catalog-open,.catalog-card-title>span,.catalog-eyebrow,.control label span,.control label small) {font-size:14px!important;line-height:1.5}
+body[data-wb-ui="hair-hub"] input[type=number] {min-width:64px;max-width:none;width:70px;height:44px;padding:6px}
+body[data-wb-ui="hair-hub"] input[type=range] {height:44px!important;min-height:44px!important;margin:0!important;background:transparent;touch-action:pan-y}
+body[data-wb-ui="hair-hub"] input[type=range]::-webkit-slider-runnable-track {height:4px;border-radius:4px;background:#546675}
+body[data-wb-ui="hair-hub"] input[type=range]::-webkit-slider-thumb {width:20px;height:20px;margin-top:-8px;background:var(--accent)}
+body[data-wb-ui="hair-hub"] input[type=range]::-moz-range-track {height:4px;border-radius:4px;background:#546675}
+body[data-wb-ui="hair-hub"] input[type=range]::-moz-range-thumb {width:18px;height:18px;background:var(--accent)}
+body[data-wb-ui="hair-hub"] :is(.color-row,.slider-row) {height:auto!important;min-height:44px}
+body[data-wb-ui="hair-hub"] input[type=color] {height:44px!important;min-width:44px}
+body[data-wb-ui="hair-hub"] .switch {min-height:44px;font-size:14px}
+body[data-wb-ui="hair-hub"] .switch input {width:20px;min-height:20px;height:20px}
+body[data-wb-ui="hair-hub"] summary {display:flex;align-items:center;padding:8px 0}
+body[data-wb-ui="hair-hub"] .wb-controls :is(.anemone-inspector,.inspector) {display:block;margin:0;padding:0;max-height:none;overflow:visible;border:0;background:transparent}
+body[data-wb-ui="hair-hub"] .wb-controls :is(.anemone-controls,.studio-quick-controls,.section,.footnote,.inspector-title,.studio-more-controls) {padding:12px 0;border-color:var(--line)}
+body[data-wb-ui="hair-hub"] .wb-controls :is(.preset-grid,.switch-grid,.studio-quick-controls) {grid-template-columns:1fr}
+body[data-wb-ui="hair-hub"] .wb-controls .control {margin:0 0 12px}
+body[data-wb-ui="hair-hub"] .wb-controls .control label {min-height:44px;margin:0;white-space:normal;line-height:1.5}
+body[data-wb-ui="hair-hub"] .wb-controls .lower-info {display:block;padding:12px 0}
+body[data-wb-ui="hair-hub"] .wb-controls .lower-info>div {margin-bottom:16px}
+body[data-wb-ui="hair-hub"] .wb-controls .color-row {flex-wrap:wrap}
+body[data-wb-ui="hair-hub"] .wb-controls .swatch {width:44px;height:44px}
+body[data-wb-ui="hair-hub"] .anemone-grid,body[data-wb-ui="hair-hub"] #rabbitModule>.layout {display:contents!important}
+body[data-wb-ui="hair-hub"] .anemone-stage {height:100%;display:flex!important;flex-direction:column;position:relative;border:1px solid var(--line)!important;border-radius:12px!important}
+body[data-wb-ui="hair-hub"] .anemone-stage>.anemone-card-title {display:none}
+body[data-wb-ui="hair-hub"] .anemone-canvas-wrap {flex:1;min-height:0!important;height:auto!important;grid-column:auto;grid-row:auto}
+body[data-wb-ui="hair-hub"] .anemone-stage-foot {position:static;width:auto;min-height:30px;flex-direction:row;padding:4px 10px;flex-shrink:0}
+body[data-wb-ui="hair-hub"] .wb-controls :is(.cluster-palette,.anemone-tools) {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:0 0 12px;max-width:none;width:100%;margin:0}
+body[data-wb-ui="hair-hub"] .wb-controls .cluster-palette button {padding:8px 4px}
+body[data-wb-ui="hair-hub"] .anemone-quick-panel {padding:0;width:100%;max-width:none}
+body[data-wb-ui="hair-hub"] :is(.anemone-quick-lighting,.anemone-quick-flow) {display:grid;grid-template-columns:1fr;gap:8px;padding:8px 0}
+body[data-wb-ui="hair-hub"] .anemone-quick-flow .control {display:block}
+body[data-wb-ui="hair-hub"] .anemone-quick-flow label {height:auto}
+body[data-wb-ui="hair-hub"] .anemone-zoom-presets,body[data-wb-ui="hair-hub"] .rabbit-zoom-presets {display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:8px 0}
+body[data-wb-ui="hair-hub"] :is(#anemoneZoomPresets,#rabbitZoomPresets) {display:flex;flex-wrap:wrap;gap:4px}
+body[data-wb-ui="hair-hub"] #anemoneQuickLighting .anemone-light-mode label {font-size:14px!important;display:block}
+body[data-wb-ui="hair-hub"] #anemoneLightingMode {width:100%}
+body[data-wb-ui="hair-hub"] .anemone-heading,body[data-wb-ui="hair-hub"] #rabbitModule .workspace-top,body[data-wb-ui="hair-hub"] #rabbitModule .rail {display:none}
+body[data-wb-ui="hair-hub"] #rabbitModule .workspace {height:100%;display:flex!important;flex-direction:column!important;padding:0;overflow:hidden}
+body[data-wb-ui="hair-hub"] #rabbitModule .viewports {display:block;flex:1;min-height:0;height:auto;grid-column:auto;grid-row:auto}
+body[data-wb-ui="hair-hub"] #rabbitModule .candidate {height:100%;display:flex;flex-direction:column;border:0;border-radius:0}
+body[data-wb-ui="hair-hub"] #rabbitModule .candidate .viewport-head {display:none}
+body[data-wb-ui="hair-hub"] #rabbitModule .candidate .viewport-body {flex:1;height:auto;min-height:0}
+body[data-wb-ui="hair-hub"] #rabbitModule .candidate .viewport-foot {min-height:30px;height:auto;flex-shrink:0}
+body[data-wb-ui="hair-hub"] #rabbitModule .stage-tools {display:flex;flex-direction:row;flex-wrap:wrap;flex-shrink:0;width:100%;padding:6px;gap:6px;justify-content:flex-start;overflow:visible}
+body[data-wb-ui="hair-hub"] #rabbitModule .stage-tools button {width:auto;min-height:44px}
+body[data-wb-ui="hair-hub"] #rabbitModule #autoRotate {display:inline-flex}
+body[data-wb-ui="hair-hub"] #rabbitModule .stage-tools .hint {width:100%;font-size:14px}
+body[data-wb-ui="hair-hub"] #rabbitQuickPanel {padding:0 0 12px;border:0;background:transparent;overflow:visible;min-height:0}
+body[data-wb-ui="hair-hub"] #rabbitQuickPanel .rabbit-quick-heading {display:flex}
+body[data-wb-ui="hair-hub"] #rabbitQuickPanel .rabbit-fur-palette {grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+body[data-wb-ui="hair-hub"] #rabbitQuickPanel .rabbit-color-choice {min-height:44px;padding:6px;justify-content:flex-start}
+body[data-wb-ui="hair-hub"] #rabbitQuickPanel .rabbit-color-choice>span:last-child {display:inline;max-width:none;font-size:14px}
+body[data-wb-ui="hair-hub"] #rabbitQuickPanel #rabbitAppearanceControls {grid-template-columns:1fr;gap:12px}
+body[data-wb-ui="hair-hub"] .rabbit-quick-footer {flex-wrap:wrap}
+body[data-wb-ui="hair-hub"] #kukoModule>.kuko-heading {display:none}
+body[data-wb-ui="hair-hub"] .kuko-views {display:grid;grid-template-columns:1fr 1fr;height:100%;gap:8px;background:#000}
+body[data-wb-ui="hair-hub"] .kuko-views.focus {grid-template-columns:1fr}
+body[data-wb-ui="hair-hub"] .kuko-views article {height:100%;min-height:0;display:flex;flex-direction:column;border:0;border-radius:0}
+body[data-wb-ui="hair-hub"] .kuko-views canvas {flex:1;min-height:0;width:100%;height:100%;aspect-ratio:auto;object-fit:contain}
+body[data-wb-ui="hair-hub"] .kuko-card-title {padding:8px;flex-wrap:wrap;flex-shrink:0}
+body[data-wb-ui="hair-hub"] .kuko-views footer {min-height:30px;font-size:14px;padding:6px;flex-shrink:0}
+body[data-wb-ui="hair-hub"] .wb-controls :is(.kuko-toolbar,.kuko-bottom,.kuko-actions,.study-controls) {display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:0 0 12px;width:100%;margin:0}
+body[data-wb-ui="hair-hub"] .wb-controls .kuko-toolbar label {min-width:0;flex-wrap:wrap;gap:6px}
+body[data-wb-ui="hair-hub"] .wb-controls .study-controls label {display:flex;flex-wrap:wrap;gap:6px}
+body[data-wb-ui="hair-hub"] .wb-controls .study-controls input[type=range] {width:100%}
+body[data-wb-ui="hair-hub"] .wb-controls .study-colors {display:grid;grid-template-columns:1fr 1fr;gap:6px}
+body[data-wb-ui="hair-hub"] .wb-workspace.wb-controls-collapsed {grid-template-columns:minmax(0,1fr) 56px}
+body[data-wb-ui="hair-hub"] .wb-controls-collapsed .wb-controls-scroll {display:none}
+body[data-wb-ui="hair-hub"] .wb-controls-collapsed .wb-controls-head {padding:4px;writing-mode:vertical-rl;flex:1;justify-content:flex-start}
+body[data-wb-ui="hair-hub"] .wb-controls-collapsed .wb-controls-head strong {display:none}
+body[data-wb-ui="hair-hub"] .wb-controls-collapsed .wb-controls-head button {writing-mode:vertical-rl;min-height:110px}
+body[data-wb-ui="hair-hub"] #controlsToggle,body[data-wb-ui="hair-hub"] #rabbitControlsToggle {display:none}
+body[data-wb-ui="hair-hub"][data-module=home] {height:100dvh;overflow:auto;background:var(--bg)}
+body[data-wb-ui="hair-hub"] .catalog-home {width:100%;max-width:none;padding:28px 24px}
+body[data-wb-ui="hair-hub"] .catalog-grid {grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+body[data-wb-ui="hair-hub"] .catalog-intro h1 {font-size:clamp(24px,3vw,38px)}
+body[data-wb-ui="hair-hub"] .catalog-preview {aspect-ratio:1.6;height:auto}
+body[data-wb-ui="hair-hub"] .catalog-card,body[data-wb-ui="hair-hub"] .gnm-catalog-card {background:var(--panel);border-color:var(--line)}
+body[data-wb-ui="hair-hub"] .catalog-card-title {font-size:20px}
+@media(max-width:959px) and (min-height:601px), (max-width:639px) {
+ body[data-wb-ui="hair-hub"] .wb-header {gap:6px;padding:0 8px}
+ body[data-wb-ui="hair-hub"] .studio-title strong {font-size:14px}
+ body[data-wb-ui="hair-hub"] .wb-header .studio-nav {gap:4px}
+ body[data-wb-ui="hair-hub"] .wb-header button {padding:6px;min-width:44px}
+ body[data-wb-ui="hair-hub"] #catalogHomeButton {font-size:14px}
+ body[data-wb-ui="hair-hub"] .wb-workspace {padding:8px!important;gap:8px;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,56fr) minmax(0,44fr)}
+ body[data-wb-ui="hair-hub"] .wb-controls-head {height:44px;min-height:44px;padding:0 8px}
+ body[data-wb-ui="hair-hub"] #rabbitModule .stage-tools {max-height:58px;flex-wrap:nowrap;overflow-x:auto}
+ body[data-wb-ui="hair-hub"] #rabbitModule .stage-tools button {white-space:nowrap;flex-shrink:0}
+ body[data-wb-ui="hair-hub"] #rabbitModule .stage-tools .hint {display:none}
+ body[data-wb-ui="hair-hub"] .wb-workspace.wb-controls-collapsed {grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) 44px}
+ body[data-wb-ui="hair-hub"] .wb-controls-collapsed .wb-controls-head {writing-mode:horizontal-tb;justify-content:space-between}
+ body[data-wb-ui="hair-hub"] .wb-controls-collapsed .wb-controls-head strong {display:block}
+ body[data-wb-ui="hair-hub"] .wb-controls-collapsed .wb-controls-head button {writing-mode:horizontal-tb;min-height:44px}
+ body[data-wb-ui="hair-hub"] .kuko-views {grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) minmax(0,1fr)}
+ body[data-wb-ui="hair-hub"] .kuko-views.focus {grid-template-rows:minmax(0,1fr)}
+ body[data-wb-ui="hair-hub"] .kuko-card-title span,body[data-wb-ui="hair-hub"] .kuko-views footer:empty {display:none}
+ body[data-wb-ui="hair-hub"] .catalog-home {padding:20px 12px}
+}
+@media(max-height:600px) and (min-width:640px) {
+ body[data-wb-ui="hair-hub"] .wb-header {height:48px;min-height:48px}
+ body[data-wb-ui="hair-hub"] .wb-workspace {height:calc(100dvh - 48px)!important;padding:8px!important;gap:8px;grid-template-columns:minmax(0,1fr) 280px;grid-template-rows:minmax(0,1fr)}
+ body[data-wb-ui="hair-hub"] #rabbitModule .stage-tools {flex-wrap:nowrap;overflow-x:auto;max-height:58px}
+ body[data-wb-ui="hair-hub"] #rabbitModule .stage-tools button {white-space:nowrap;flex-shrink:0}
+ body[data-wb-ui="hair-hub"] #rabbitModule .stage-tools .hint {display:none}
+ body[data-wb-ui="hair-hub"] .wb-workspace.wb-controls-collapsed {grid-template-columns:minmax(0,1fr) 56px}
+ body[data-wb-ui="hair-hub"] .kuko-card-title span {display:none}
+}
+@media(max-width:420px) {
+ body[data-wb-ui="hair-hub"] #rabbitBack {display:none}
+ body[data-wb-ui="hair-hub"] #catalogHomeButton {font-size:0!important;min-width:44px}
+ body[data-wb-ui="hair-hub"] #catalogHomeButton span {font-size:18px}
+ body[data-wb-ui="hair-hub"] .studio-nav button {font-size:14px}
+}
+
+body[data-wb-ui="hair-hub"] :is(span,small,a,footer,strong,b,pre,.viewport-tag,.anemone-caption,.reference-copy,.reference-copy strong,.reference-copy a,.studio-nav button,.study-controls p,.kuko-lesson p) {font-size:14px!important}
+body[data-wb-ui="hair-hub"] .catalog-card-title {font-size:20px!important}
+body[data-wb-ui="hair-hub"][data-module=kuko] header :is(.header-actions,.status,.header-divider,.spacer,.brand) {display:none!important}
+</style>
+</head>
+<body data-module="home" data-wb-ui="hair-hub">
+<header class="wb-header"><a data-wb-back style="display:inline-flex!important" href="../../kaopu-human-overview/">← 人总览</a>
 <div class="brand"><div class="brand-mark" aria-hidden="true"><svg width="35" height="35" viewBox="0 0 35 35" fill="none"><path d="M7 29C5 20 12 16 8 7M14 30C11 18 21 17 15 4M22 28C18 19 29 13 23 6M29 27C27 20 32 16 29 11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div><div><strong>KAOPU</strong><small>FUR & FIBER LAB</small></div></div>
 <div class="header-divider"></div><div class="project-name">毛发工作台<small>SEDDI 研究基线 / 01</small></div><div class="spacer"></div><div class="status"><i class="dot"></i><span id="globalStatus">初始化真实 WebGL 2</span></div><div class="header-actions"><button class="ghost hide-tablet" id="sourceButton">来源与边界 ↗</button><button id="importButton">导入</button><button class="primary" id="exportButton">导出参数 ↓</button></div>
 </header>
 <nav class="species-nav" aria-label="工作台模块"><button id="speciesAnemone" class="active">海葵 · 水流触手 <small>FULL CLUSTER / KuKo</small></button><button id="speciesRabbit">兔子 · 毛发基线 <small>SEDDI / r02</small></button><button id="speciesKuko">KuKo · 原版触手 <small>TEACHER / Day 114</small></button><span>短毛可编辑 · 人类头发与长发动力学待实现</span></nav>
-<section id="anemoneModule" class="anemone-module">
+<main id="anemoneModule" class="anemone-module">
 <div class="anemone-heading"><div><div class="eyebrow">LIVING FORMS / ANEMONE STUDY</div><h1>整株海葵 · 轻透光感</h1><p class="subtitle">240 根完整触手 · 圆钝末端 · 分部位色彩 · 区域水流</p></div><div class="anemone-live"><i class="dot"></i><span id="anemoneStatus">初始化 WebGL 2</span></div></div>
 <div id="anemoneError" hidden role="alert"></div>
 <div class="anemone-grid">
 <aside class="anemone-reference"><div class="anemone-card-title"><span class="code">01</span>真实形态参考</div><div class="reference-photo"><img data-reference-src="./catalog-assets/wootton-eedf069047bc6cb4.jpg" alt="Neville Wootton 拍摄的 Heteractis magnifica 野外近摄"></div><div class="reference-copy"><strong>壮丽海葵 · Radianthus magnifica</strong><p>旧称 Heteractis magnifica</p><p>密集、柔软、钝指状触手。浅色末端连续过渡，中心口盘与根部相连。</p><p>Neville Wootton · <a href="https://creativecommons.org/licenses/by/2.0/" target="_blank" rel="noreferrer">CC BY 2.0</a><br>马尔代夫野外近摄 · 2082×1314</p><a href="https://commons.wikimedia.org/wiki/File:Heteractis_magnifica,_tent%C3%A1culos.jpg" target="_blank" rel="noreferrer">查看原始摄影来源 ↗</a><details><summary>视频与研究依据</summary><p><a href="https://www.underseaproductions.com/stock-footage/magnificent-sea-anemone-heteractis-magnifica-balled-up-close-lock-shot-hd-video-24379/" target="_blank" rel="noreferrer">H. magnifica · 真实触手近景（已观察） ↗</a><br><a href="https://www.underseaproductions.com/stock-footage/magnificent-sea-anemone-heteractis-magnifica-swaying-close-lock-shot-video-14739/" target="_blank" rel="noreferrer">H. magnifica · 圆钝末端与水流 ↗</a></p><p><a href="https://www.youtube.com/watch?v=rn6R4ncd2OU" target="_blank" rel="noreferrer">BBC Earth · 小丑鱼与地毯海葵 ↗</a><br><a href="https://www.youtube.com/watch?v=ALchuPgwniM" target="_blank" rel="noreferrer">Ocean Futures · 海葵共生 ↗</a></p><p><a href="https://animaldiversity.org/accounts/Heteractis_magnifica/" target="_blank" rel="noreferrer">ADW · 口盘、体柱与钝指状触手</a><br><a href="https://sicb.org/abstracts/sea-anemone-tentacles-flutter-and-flap-in-water-flow-in-the-field-/" target="_blank" rel="noreferrer">SICB · 海葵触手水流响应研究</a></p><p>运动研究为其他海葵物种的一般响应依据；本例没有实测标定。视频是可选外链，未打包或宣称逐帧复刻。</p></details></div></aside>
 <div class="anemone-stage"><div class="anemone-card-title"><span class="code">02</span>程序化学习样件 <span class="badge">LIVE 3D</span></div><div class="anemone-canvas-wrap"><canvas id="anemoneCanvas" aria-label="可旋转的实时三维海葵"></canvas><span class="anemone-caption">口盘与体柱相连 · 触手根部不漂移</span><button id="anemoneCapture" class="viewport-tool">保存海葵视图 ↗</button></div><div class="anemone-stage-foot"><span id="anemoneStats">WEBGL 2</span><span>LIVE GEOMETRY / LAYERED LIGHT</span></div><div class="cluster-palette"><button data-cluster-color="green" title="黄绿 · 亮端" aria-label="黄绿 · 亮端">黄绿</button><button data-cluster-color="yellow" title="暖黄 · 奶油" aria-label="暖黄 · 奶油">暖黄</button><button data-cluster-color="brown" title="浅褐 · 金端" aria-label="浅褐 · 金端">浅褐</button><button data-cluster-color="purple" title="柔紫 · 浅端" aria-label="柔紫 · 浅端">柔紫</button><button data-cluster-color="red">红 · 艺术</button><button data-cluster-color="blue">蓝 · 艺术</button></div><div class="anemone-tools"><button id="clusterMacro">微距观察</button><button id="clusterBaseline">对照原材质</button><button id="anemonePause">Ⅱ 暂停水流</button><button id="anemoneResetTime">↺ 时间归零</button><button id="anemoneCamera">⌖ 海葵相机归位</button></div><p class="anemone-hint">拖动旋转 · 滚轮缩放 · 可直接切换已调配色</p><p class="cluster-sources">配色观察：<a href="https://www.naturettl.com/a-guide-to-rockpool-macro-photography/" target="_blank" rel="noreferrer">Alex Hyde · 蛇锁海葵微距</a> / <a href="https://www.wildlifevision.com/blog/anemone-colours" target="_blank" rel="noreferrer">Martin Stevens · 海葵四色摄影</a> · 跨物种艺术观察，照片仅外链<br>同种组织色彩：<a href="https://zenodo.org/records/13760333" target="_blank" rel="noreferrer">Titus 等 · 2024 物种指南</a> / <a href="https://www.vliz.be/imisdocs/publications/370236.pdf" target="_blank" rel="noreferrer">2021 野外调查</a><br>光照与颜色：<a href="https://oceanexplorer.noaa.gov/ocean-fact/animal-color/" target="_blank" rel="noreferrer">NOAA Ocean Exploration</a></p><div class="anemone-boundary"><strong>当前最大差异</strong><p>完整 240 根、原长度/半径分布、钝圆轮廓与 KuKo 轻透风格保留。已纠正初始根排布和静态径向弯曲，并验证触手包络；当前仅支持这套固定安全形态。增加了认证范围内的共同往复侧摆，尖端峰谷位移约0.11–0.17模型单位；叠加的区域微流仍限幅。幅度与速度独立，不是自由碰撞或流体仿真。根部浅层嵌入口盘属于组织连接近似，未完成水密焊接。冷暖两道侧光来自材质工作台灯架；两层透光仍非真实折射。色值是摄影拟合，并非 NOAA/PICRC 实测或背书。</p></div></div>
 <details class="anemone-inspector"><summary class="anemone-card-title">高级形态与水流（默认已调好）</summary><div class="anemone-card-title">形态与水流 <button id="anemoneReset" class="small ghost">完整重置</button></div><details id="artPalette" class="studio-more-controls"><summary>艺术配色 · 跨物种摄影转译</summary><p class="control-note">保留先前红、蓝样式。本轮未确认这种整簇外观是本物种的帕劳自然色型。</p></details><div class="anemone-controls"><div class="section-title">形态 <span>ANCHORED CURVES</span></div><div id="anemoneShapeControls"></div><div class="section-title">程序水流 <span>BOUNDED MOTION</span></div><div id="anemoneFlowControls"></div><p class="control-note">强度与频率是艺术调参，不是米/秒或实验物理量。平滑空间噪声形成区域相关、不等时的流动，末端响应更明显；每段保持定长，没有全株伸缩或自动球状闭合。属于视觉运动近似。</p><div class="anemone-state-buttons"><button id="anemoneExport">导出海葵参数</button><button id="anemoneImport">导入海葵参数</button></div><input id="anemoneImportFile" type="file" accept=".json,application/json" hidden><p class="control-note" id="anemoneMessage" role="status">种子与时间可复现同一形态</p></div></details>
-</div></section>
+</div></main>
 
-<section id="kukoModule" class="kuko-module">
+<main id="kukoModule" class="kuko-module">
 <div class="kuko-heading"><div><div class="kuko-eyebrow">TEACHER STUDY / 03</div><h1>KuKo · Day 114</h1><p>从原版开始。正弦弯曲、光线步进、亮边与距离柔化</p></div><span id="kukoStatus">正在启动真实 WebGL 2</span></div>
 <div id="kukoError" hidden role="alert"></div>
 <div class="kuko-toolbar"><button id="kukoPlay">Ⅱ 暂停</button><button id="kukoReset">从头播放</button><label>时间 <input id="kukoTime" type="range" min="0" max="12" step="0.01" value="0"><output id="kukoClock">0.00 s</output></label><button id="kukoCompare" class="active">老师 / 副本</button><button id="kukoFocus">老师大图</button></div>
@@ -50,10 +186,10 @@ body[data-module=feather] #catalogHomeButton{min-height:44px}
 <div class="kuko-bottom"><div class="kuko-lesson"><b>先看清老师实际做了什么</b><p>这是实时三维 SDF 光线步进。细长胶囊按网格重复，正弦函数弯曲；镜头固定，整个场景向前移动。</p><p>蓝色亮边、黑底衰减和距离柔化形成通透观感。原版输出不透明像素，没有透射、折射、真实景深或碰撞反作用。这里保留原貌，未用旧海葵管线替代。</p></div><div class="kuko-actions"><label>两侧渲染分辨率 <select id="kukoResolution"><option value="960">960 × 540 · 视频原始尺寸</option><option value="640">640 × 360 · 轻量预览</option></select></label><button id="kukoCapture">保存老师当前画面</button><button id="kukoSource">查看原始代码</button><button id="kukoExport">导出播放状态</button><button id="kukoImport">载入播放状态</button><input type="file" id="kukoFile" accept="application/json,.json" hidden><p id="kukoMessage">未加载任何视频或预渲染画面</p></div></div>
 <details class="kuko-source-note"><summary>作者、来源与适配边界</summary><p>KuKo / Day 114，用户在本次对话提供的代码。未确认公开许可证，未声明为 MIT。保留作者标识；仅将 ShaderToy 的 iTime / iResolution / mainImage 接入 WebGL2，不修改老师函数。</p><p><a href="https://www.shadertoy.com/view/tlSfzV" target="_blank" rel="noopener noreferrer">fabrice 的抗锯齿方法引用</a>是原注释中的方法出处，不是本作来源或许可。用户参考视频不包含在本页面中。</p><p>副本范围：9 根有限定根触手、不同长度、平滑数值噪声和四色摄影启发预设；保留原版亮边/柔化。没有真实透射、碰撞反作用或完整海葵形态。副本保留老师的光感公式，把无限平移柱阵替换为有限定根圆簇，加入平滑数值噪声；可切回原版作像素对照。</p></details>
 <dialog id="kukoSourceDialog"><button id="kukoCloseSource">关闭</button><button id="kukoSaveSource">下载用户提供的 GLSL</button><pre id="kukoSourceText"></pre></dialog>
-</section>
-<div id="rabbitModule"><div class="layout">
+</main>
+<main id="rabbitModule"><div class="layout">
 <nav class="rail" aria-label="工作台工具"><button class="active" id="orbitRail" title="旋转模型" aria-label="旋转模型">↻</button><button id="combRail" title="梳理工作副本" aria-label="梳理工作副本">≋</button><button id="cameraRail" title="重置相机" aria-label="重置相机">⌖</button><button id="captureRail" title="保存工作副本 PNG" aria-label="保存工作副本 PNG">▣</button><div class="rail-bottom"><button id="helpRail" title="操作说明" aria-label="操作说明">?</button></div></nav>
-<main class="workspace">
+<section class="workspace">
 <div class="workspace-top"><div><div class="eyebrow">REAL-TIME GROOMING STUDY</div><h1>从一只真实的兔子开始</h1><p class="subtitle">保留老师原始算法，在同一相机与灯光下观察每一次变化</p></div><div class="segmented" role="group" aria-label="视图"><button id="compareView" class="active">对照</button><button id="singleView">专注</button></div></div>
 <div id="errorBanner" hidden role="alert"></div>
 <div class="viewports" id="viewports">
@@ -62,7 +198,7 @@ body[data-module=feather] #catalogHomeButton{min-height:44px}
 </div>
 <div class="stage-tools"><button class="active" id="orbitButton">↻ 旋转观察</button><button id="combButton">≋ 梳理毛发</button><button id="resetCombButton">还原梳理</button><div class="tool-divider"></div><button id="resetCamera">⌖ 相机归位</button><button id="autoRotate">自动环绕</button><span class="hint" id="interactionHint">拖动旋转 · 滚轮 / 双指缩放 · 相机始终同步</span></div>
 <div class="lower-info"><div><div class="title">原始技术，清晰可见</div><p>Shells 逐层生成体积，Fins 补足轮廓。梳理直接修改 GPU 毛发方向，Perlin 程序纹理决定覆盖分布。</p><div class="info-chips"><span class="chip">5,508 顶点</span><span class="chip">10,108 三角面</span><span class="chip">Shells + Fins</span><span class="chip">GPU 梳理</span></div></div><div><div class="title">这一版的真实边界 <span class="badge">BASELINE</span></div><p>兔子与布片是老师的原始参考资产。本版是离线封装与交互工作台，尚未实现独立程序兔子、长发动力学、触手或引擎蒙皮绑定。</p><div class="mesh-row"><button class="active" data-mesh="rabbit">原始兔子</button><button data-mesh="cloth">原始布片</button><button id="aboutButton" class="ghost">查看完整说明 ↗</button></div></div></div>
-</main>
+</section>
 <aside class="inspector" id="inspector"><div class="inspector-title"><div><strong>工作副本参数</strong><small>所有修改实时作用于右侧 3D</small></div><button class="small ghost" id="resetAll">同步老师</button></div>
 <div class="section"><div class="section-title">快速实验 <span>01 / PRESETS</span></div><div class="preset-grid"><button class="active" data-preset="baseline">老师默认<small id="baselineCaption">32 层 · 长度 2.5</small></button><button data-preset="short">短绒实验<small>48 层 · 长度 0.8</small></button><button data-preset="long">蓬松实验<small>48 层 · 长度 4.5</small></button><button data-preset="wave">波浪实验<small>40 层 · 波浪 2</small></button></div><p class="control-note">后 3 组是参数实验，不代表新增物理模型</p></div>
 <div class="section"><div class="section-title">毛发形态 <span>02 / GEOMETRY</span></div><div id="shapeControls"></div><div class="control"><label for="furColor">毛发基色 <span id="colorValue" class="mono">#E3D1A6</span></label><div class="color-row"><input type="color" id="furColor" value="#e3d1a6" aria-label="毛发基色"><button class="swatch" style="background:#e3d1a6" data-color="#e3d1a6" title="暖米色"></button><button class="swatch" style="background:#dce7d4" data-color="#dce7d4" title="冷白色"></button><button class="swatch" style="background:#72608e" data-color="#72608e" title="紫色"></button><button class="swatch" style="background:#366663" data-color="#366663" title="青绿色"></button></div><p id="clothColorNote" class="control-note" hidden>原始布片采用纹理颜色，基色在此预设中不参与着色</p></div></div>
@@ -2362,4 +2498,53 @@ platform.select("home");</script>
     grid.insertAdjacentHTML('afterend', "<section id=\"ten24LocalTask\" class=\"ten24-local-task\"><strong>指定原女性 · TEN24</strong><span>待本地原件接入 · 未完成</span><a href=\"../handoffs/ten24-original-local/index.html\">本地任务与原件核验 ↗</a></section>");
   }
 })();
-</script></body></html>
+</script><script id="wbHairPresentationAdapter">/* Presentation adapter: relocate live controls only; original renderers, values,
+ * handlers, source assets and reference/teacher dialogs remain owned by the baseline. */
+(function () {
+  'use strict';
+  const byId = id => document.getElementById(id);
+  function createPanel(module, title, id) {
+    module.classList.add('wb-workspace');
+    const panel = document.createElement('aside');
+    panel.className = 'wb-controls';
+    panel.setAttribute('aria-label', title);
+    panel.innerHTML = '<div class="wb-controls-head"><strong>' + title + '</strong><button type="button" data-wb-toggle aria-expanded="true" aria-controls="' + id + '">收起参数</button></div><div id="' + id + '" class="wb-controls-scroll" tabindex="-1"></div>';
+    module.append(panel);
+    return panel.querySelector('.wb-controls-scroll');
+  }
+  function move(target, ...nodes) { for (const node of nodes) if (node) target.append(node); }
+  function moveDrawer(target, id) {
+    const drawer = byId(id);
+    if (!drawer) return;
+    if (drawer.open) drawer.close();
+    const content = drawer.querySelector('.drawer-content');
+    if (content) while (content.firstChild) target.append(content.firstChild);
+  }
+  function reveal(module, scroll) {
+    const toggle = module.querySelector('[data-wb-toggle]');
+    if (module.classList.contains('wb-controls-collapsed') && toggle) toggle.click();
+    scroll.focus({preventScroll:true});
+  }
+  const anemone = byId('anemoneModule');
+  const anemoneScroll = createPanel(anemone, '海葵参数', 'anemoneControlScroll');
+  anemone.querySelector('.anemone-stage').classList.add('wb-stage');
+  move(anemoneScroll, anemone.querySelector('.cluster-palette'), byId('anemoneQuickPanel'), anemone.querySelector('.anemone-tools'));
+  moveDrawer(anemoneScroll, 'controlsDrawer');
+  move(anemoneScroll, anemone.querySelector('.anemone-hint'));
+  if (byId('controlsToggle')) byId('controlsToggle').onclick = () => reveal(anemone, anemoneScroll);
+
+  const rabbit = byId('rabbitModule');
+  const rabbitScroll = createPanel(rabbit, '毛发参数', 'rabbitControlScroll');
+  rabbit.querySelector('.workspace').classList.add('wb-stage');
+  move(rabbitScroll, byId('rabbitQuickPanel'));
+  moveDrawer(rabbitScroll, 'rabbitControlsDrawer');
+  if (byId('rabbitControlsToggle')) byId('rabbitControlsToggle').onclick = () => reveal(rabbit, rabbitScroll);
+
+  const kuko = byId('kukoModule');
+  const kukoScroll = createPanel(kuko, '播放与工作副本', 'kukoControlScroll');
+  byId('kukoViews').classList.add('wb-stage');
+  move(kukoScroll, kuko.querySelector('.kuko-heading'), kuko.querySelector('.kuko-toolbar'), kuko.querySelector('.study-controls'), kuko.querySelector('.kuko-bottom'), kuko.querySelector('.kuko-source-note'));
+})();
+</script>
+<script src="../../kaopu-human-overview/workbench-ui.js" defer></script>
+</body></html>
