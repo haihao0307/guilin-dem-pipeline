@@ -1,0 +1,23 @@
+// Two-sided, material-identity-preserving cloth contacts. No vertex welding.
+const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+function closest(p,a,b,c,out){const ab=sub(b,a),ac=sub(c,a),ap=sub(p,a),d1=dot(ab,ap),d2=dot(ac,ap);let u=0,v=0,w=0;
+ if(d1<=0&&d2<=0)u=1;else{const bp=sub(p,b),d3=dot(ab,bp),d4=dot(ac,bp);if(d3>=0&&d4<=d3)v=1;else{const vc=d1*d4-d3*d2;if(vc<=0&&d1>=0&&d3<=0){v=d1/(d1-d3);u=1-v;}else{const cp=sub(p,c),d5=dot(ab,cp),d6=dot(ac,cp);if(d6>=0&&d5<=d6)w=1;else{const vb=d5*d2-d1*d6;if(vb<=0&&d2>=0&&d6<=0){w=d2/(d2-d6);u=1-w;}else{const va=d3*d6-d5*d4;if(va<=0&&(d4-d3)>=0&&(d5-d6)>=0){w=(d4-d3)/((d4-d3)+(d5-d6));v=1-w;}else{const den=1/(va+vb+vc);v=vb*den;w=vc*den;u=1-v-w;}}}}}}
+ out[0]=a[0]*u+b[0]*v+c[0]*w;out[1]=a[1]*u+b[1]*v+c[1]*w;out[2]=a[2]*u+b[2]*v+c[2]*w;out[3]=u;out[4]=v;out[5]=w;return out;
+}
+export class SelfContact{
+ constructor(lab,{thicknessMm=.6,cellSizeMm=25}={}){this.lab=lab;this.h=thicknessMm/1000;this.cell=cellSizeMm/1000;this.neighbours=Array.from({length:lab.positions.length},(_,i)=>new Set([i]));for(const[a,b]of lab.meshEdges){this.neighbours[a].add(b);this.neighbours[b].add(a);}this.hash=new Map();this.q=new Float64Array(6);this.corrections=0;this.skippedLargeTriangles=0;this.groupNeighbours=null;this.lastGroupCount=-1;}
+ key(x,y,z){return(x+128)+512*(y+128)+262144*(z+128);}
+ rebuild(){const l=this.lab;if(l.stitchEqualityElimination&&this.lastGroupCount!==l.stitchGroups.groupCount){this.groupNeighbours=new Map();for(let i=0;i<this.neighbours.length;i++){const r=l.stitchGroups.find(i);if(!this.groupNeighbours.has(r))this.groupNeighbours.set(r,new Set());for(const j of this.neighbours[i])this.groupNeighbours.get(r).add(l.stitchGroups.find(j));}this.lastGroupCount=l.stitchGroups.groupCount;}this.hash.clear();const ps=this.lab.positions,s=this.cell,pad=this.h*3+(this.lab.lastMaxSubstepDisplacement||0)*3;for(let t=0;t<this.lab.triangles.length;t++){const ids=this.lab.triangles[t].ids,a=ps[ids[0]],b=ps[ids[1]],c=ps[ids[2]];const x0=Math.floor((Math.min(a[0],b[0],c[0])-pad)/s),x1=Math.floor((Math.max(a[0],b[0],c[0])+pad)/s),y0=Math.floor((Math.min(a[1],b[1],c[1])-pad)/s),y1=Math.floor((Math.max(a[1],b[1],c[1])+pad)/s),z0=Math.floor((Math.min(a[2],b[2],c[2])-pad)/s),z1=Math.floor((Math.max(a[2],b[2],c[2])+pad)/s);if((x1-x0+1)*(y1-y0+1)*(z1-z0+1)>3000){this.skippedLargeTriangles++;continue;}for(let z=z0;z<=z1;z++)for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const key=this.key(x,y,z);let list=this.hash.get(key);if(!list){list=[];this.hash.set(key,list);}list.push(t);}}}
+ project(){const l=this.lab,ps=l.positions,im=l.invMass,h=this.h,q=this.q,s=this.cell;let total=0;
+ for(let i=0;i<ps.length;i++){if(l.stitchEqualityElimination&&l.stitchGroups.find(i)!==i)continue;const p=ps[i],list=this.hash.get(this.key(Math.floor(p[0]/s),Math.floor(p[1]/s),Math.floor(p[2]/s)));if(!list)continue;const near=l.stitchEqualityElimination?this.groupNeighbours.get(l.stitchGroups.find(i)):this.neighbours[i];for(const t of list){const ids=l.triangles[t].ids,topological=l.stitchEqualityElimination?ids.map(j=>l.stitchGroups.find(j)):ids;if(near.has(topological[0])||near.has(topological[1])||near.has(topological[2]))continue;const a=ps[ids[0]],b=ps[ids[1]],c=ps[ids[2]];closest(p,a,b,c,q);let dx=p[0]-q[0],dy=p[1]-q[1],dz=p[2]-q[2],len=Math.hypot(dx,dy,dz),n;
+   const fn=cross(sub(b,a),sub(c,a)),fnLen=Math.hypot(...fn);if(fnLen<1e-15)continue;const N=fn.map(v=>v/fnLen),currentSigned=dot(sub(p,a),N),old=l._old,prevP=[old[i*3],old[i*3+1],old[i*3+2]],oldA=[old[ids[0]*3],old[ids[0]*3+1],old[ids[0]*3+2]],oldB=[old[ids[1]*3],old[ids[1]*3+1],old[ids[1]*3+2]],oldC=[old[ids[2]*3],old[ids[2]*3+1],old[ids[2]*3+2]],pn=cross(sub(oldB,oldA),sub(oldC,oldA)),pnLen=Math.hypot(...pn),previousSigned=pnLen?dot(sub(prevP,oldA),pn)/pnLen:currentSigned,projectedDistance=Math.hypot(dx-currentSigned*N[0],dy-currentSigned*N[1],dz-currentSigned*N[2]);
+   const crossed=previousSigned*currentSigned<0&&projectedDistance<h&&pnLen>1e-15&&dot(pn,N)>0;
+   if(len>=h&&!crossed)continue;
+   let penetration;
+   if(crossed){const side=previousSigned>=0?1:-1;n=N.map(v=>v*side);penetration=h-side*currentSigned;}
+   else if(len>1e-9){n=[dx/len,dy/len,dz/len];penetration=h-len;}
+   else{n=N;if(previousSigned<0)n=n.map(v=>-v);penetration=h;}
+   let den=im[i];for(let k=0;k<3;k++)den+=im[ids[k]]*q[k+3]*q[k+3];if(den<1e-12)continue;const dl=penetration/den,fp=im[i]*dl;for(let k=0;k<3;k++)p[k]+=n[k]*fp;for(let k=0;k<3;k++){const v=ps[ids[k]],f=im[ids[k]]*q[k+3]*dl;v[0]-=n[0]*f;v[1]-=n[1]*f;v[2]-=n[2]*f;}total++;
+  }}this.corrections+=total;return total;
+ }
+}
