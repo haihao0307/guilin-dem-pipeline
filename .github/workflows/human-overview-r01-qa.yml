@@ -1,113 +1,99 @@
-name: Human overview R01 read-only QA
+name: Workbench lifecycle and navigation read-only QA
 on:
   workflow_dispatch:
   pull_request:
     branches: [gh-pages]
     paths:
-      - 'kaopu-human-overview/**'
+      - 'kaopu-tailor-workbench/unified/**'
+      - 'kaopu-tailor-workbench/UNIFIED-MANIFEST.json'
       - '.github/workflows/human-overview-r01-qa.yml'
-      - '.github/qa/overview-*.cjs'
-      - '.github/qa/overview-*.json'
-      - '.github/qa/overview-*.py'
+      - '.github/qa/overview-lifecycle-*.cjs'
+      - '.github/qa/overview-lifecycle-*.json'
+      - '.github/qa/overview-tailor-lifecycle.cjs'
 permissions:
   contents: read
-env:
-  OVERVIEW_VERIFY_PUBLIC: 'true'
 concurrency:
   group: human-overview-r01-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  desktop-combination:
+  lifecycle:
     if: github.event_name != 'pull_request' || github.head_ref == 'qa/human-overview-r01-20261006'
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        engine: [chromium, webkit]
+        include:
+          - engine: chromium
+            mode: candidate
+          - engine: webkit
+            mode: candidate
+          - engine: webkit
+            mode: baseline
+    env:
+      OVERVIEW_BROWSER: ${{ matrix.engine }}
+      OVERVIEW_LIFECYCLE_CANDIDATE: ${{ matrix.mode == 'candidate' && 'true' || 'false' }}
+      OVERVIEW_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-human-overview/
+      OVERVIEW_QA_DIR: narrow-${{ matrix.engine }}-${{ matrix.mode }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
           sparse-checkout: |
             .github/qa
-            kaopu-human-overview
-            kaopu-face-workbench
-            kaopu-anny-workbench
-            kaopu-mhr-workbench
-            kaopu-unified-human-workbench
-            kaopu-skin-workbench
-            kaopu-tailor-workbench
-            kaopu-animal-learning
-            kaopu-hair-workbench
-      - name: Check static and exact reviewed bytes
+            kaopu-tailor-workbench/unified
+            kaopu-tailor-workbench/UNIFIED-MANIFEST.json
+      - name: Verify four text candidates and unchanged public text baseline
+        id: verify
         run: |
-          python3 .github/qa/overview-release-static.py
-          node --check .github/qa/overview-release-navigation.cjs
-          node --check .github/qa/overview-ui-neck-combined.cjs
+          node --check .github/qa/overview-lifecycle-navigation.cjs
+          node --check .github/qa/overview-lifecycle-evidence.cjs
+          node --check .github/qa/overview-lifecycle-overrides.cjs
+          node --check .github/qa/overview-tailor-lifecycle.cjs
           python3 - <<'PYVERIFY'
           from pathlib import Path
-          import hashlib,json
-          manifest=json.loads(Path('.github/qa/overview-release-integrity.json').read_text())
-          for item in manifest['files']:
-              data=Path(item['path']).read_bytes()
-              assert hashlib.sha256(data).hexdigest()==item['sha256'],item['path']+' candidate SHA256 mismatch'
-              actual=hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
-              assert actual==item['gitBlobSHA'],item['path']+' candidate Git blob mismatch'
-          print('Exact reviewed release files:',len(manifest['files']))
-          PYVERIFY
-      - name: Verify real public bytes
-        if: env.OVERVIEW_VERIFY_PUBLIC == 'true'
-        run: |
-          python3 - <<'PYVERIFY'
-          from pathlib import Path
-          from concurrent.futures import ThreadPoolExecutor
           import hashlib,json,urllib.request
-          manifest=json.loads(Path('.github/qa/overview-release-integrity.json').read_text());base='https://haihao0307.github.io/guilin-dem-pipeline/'
-          def check(item):
-              request=urllib.request.Request(base+item['path']+'?verify=ui-neck-20261007',headers={'Cache-Control':'no-cache'})
-              with urllib.request.urlopen(request,timeout=60) as response: data=response.read();status=response.status
-              actual=hashlib.sha256(data).hexdigest()
-              return {'path':item['path'],'status':status,'sha256':actual,'passed':status==200 and actual==item['sha256']}
-          with ThreadPoolExecutor(max_workers=6) as pool: rows=list(pool.map(check,manifest['files']))
-          Path('overview-public-release-bytes.json').write_text(json.dumps({'passed':all(r['passed'] for r in rows),'files':rows},indent=2))
-          assert all(r['passed'] for r in rows),[r for r in rows if not r['passed']]
-          print('Published release exact hashes:',len(rows))
+          scope=json.loads(Path('.github/qa/overview-lifecycle-scope.json').read_text());rows=[]
+          for item in scope['files']:
+              assert item['path'].endswith(('.mjs','.json'))
+              data=Path(item['path']).read_bytes();assert hashlib.sha256(data).hexdigest()==item['sha256']
+              assert hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()==item['gitBlobSHA']
+              row={'path':item['path'],'candidateSHA256':item['sha256'],'candidatePassed':True}
+              if item['previousSHA256']:
+                  with urllib.request.urlopen('https://haihao0307.github.io/guilin-dem-pipeline/'+item['path']+'?verify=lifecycle-text-only',timeout=60) as response:published=response.read();status=response.status
+                  row.update(status=status,publishedSHA256=hashlib.sha256(published).hexdigest())
+                  assert status==200 and row['publishedSHA256']==item['previousSHA256'],item['path']+' public baseline changed'
+              else:row['publicBaseline']='New helper: no previous public file; candidate text only'
+              rows.append(row)
+          out=Path(__import__('os').environ['OVERVIEW_QA_DIR']);out.mkdir(exist_ok=True)
+          (out/'four-text-hashes.json').write_text(json.dumps({'passed':True,'files':rows},indent=2))
           PYVERIFY
       - name: Install fixed official browser dependency
         run: |
           npm install --prefix "$RUNNER_TEMP/overview-test" --no-save --ignore-scripts playwright@1.57.0
           "$RUNNER_TEMP/overview-test/node_modules/.bin/playwright" install --with-deps ${{ matrix.engine }}
-      - name: Desktop navigation, lifecycle and combined neck UI
+      - name: Exact 21 public entries and same-tab returns
         env:
+          DEBUG: pw:browser
           NODE_PATH: ${{ runner.temp }}/overview-test/node_modules
-          OVERVIEW_BROWSER: ${{ matrix.engine }}
-          OVERVIEW_URL: ${{ env.OVERVIEW_VERIFY_PUBLIC == 'true' && 'https://haihao0307.github.io/guilin-dem-pipeline/kaopu-human-overview/' || 'http://127.0.0.1:8765/kaopu-human-overview/' }}
-          OVERVIEW_QA_DIR: combined-${{ matrix.engine }}
-        run: |
-          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/overview-server.log" 2>&1 &
-          server=$!
-          trap 'kill "$server" 2>/dev/null || true' EXIT
-          for i in $(seq 1 30); do curl -fsS "$OVERVIEW_URL" > /dev/null && break || sleep 1; done
-          node .github/qa/overview-release-navigation.cjs
-          node .github/qa/overview-ui-neck-combined.cjs
-      - name: Upload desktop screenshots and reports
+        run: node .github/qa/overview-lifecycle-navigation.cjs
+      - name: Three garments release workers, frames and graphics resources
+        if: always() && matrix.mode == 'candidate' && steps.verify.outcome == 'success'
+        env:
+          DEBUG: pw:browser
+          NODE_PATH: ${{ runner.temp }}/overview-test/node_modules
+        run: node .github/qa/overview-tailor-lifecycle.cjs
+      - name: Upload only numerical reports and our public-page screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: combined-ui-neck-${{ matrix.engine }}-evidence
+          name: lifecycle-${{ matrix.engine }}-${{ matrix.mode }}-evidence
           retention-days: 7
           if-no-files-found: warn
           path: |
-            combined-${{ matrix.engine }}/*.json
-            combined-${{ matrix.engine }}/*.jsonl
-            combined-${{ matrix.engine }}/*.png
-            overview-public-release-bytes.json
-      - name: Upload desktop traces
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: combined-ui-neck-${{ matrix.engine }}-traces
-          retention-days: 7
-          if-no-files-found: warn
-          path: combined-${{ matrix.engine }}/*.zip
+            narrow-${{ matrix.engine }}-${{ matrix.mode }}/four-text-hashes.json
+            narrow-${{ matrix.engine }}-${{ matrix.mode }}/release-navigation-${{ matrix.engine }}.json
+            narrow-${{ matrix.engine }}-${{ matrix.mode }}/numeric-diagnostics-${{ matrix.engine }}.json
+            narrow-${{ matrix.engine }}-${{ matrix.mode }}/*.png
+            narrow-${{ matrix.engine }}-${{ matrix.mode }}/tailor-lifecycle/result.json
+            narrow-${{ matrix.engine }}-${{ matrix.mode }}/tailor-lifecycle/*.png
