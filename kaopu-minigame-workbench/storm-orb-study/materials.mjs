@@ -5,7 +5,7 @@ export async function loadStudyMaterials(){
  for(const [name,tex] of Object.entries(t)){tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.anisotropy=4;if(name.endsWith('color'))tex.colorSpace=THREE.SRGBColorSpace;}
  const canvas=document.createElement('canvas');canvas.width=64;canvas.height=64;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(t['rock-height'].image,0,0,64,64);const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data,N=canvas.width;
  function sampleHeight(x,z){const u=((x*1.04/2)%1+1)%1,v=((z*1.04/2)%1+1)%1;const fx=u*N,fy=(1-v)*N,ix=Math.floor(fx),iy=Math.floor(fy),ax=fx-ix,ay=fy-iy;const at=(i,j)=>pixels[((j%N)*N+i%N)*4]/255;return (at(ix,iy)*(1-ax)+at(ix+1,iy)*ax)*(1-ay)+(at(ix,iy+1)*(1-ax)+at(ix+1,iy+1)*ax)*ay;}
- const ground=new THREE.MeshStandardMaterial({map:t['rock-color'],normalMap:t['rock-normal'],normalScale:new THREE.Vector2(.70,.70),roughnessMap:t['rock-roughness'],roughness:1,metalness:0,envMapIntensity:1.25});
+ const ground=new THREE.MeshStandardMaterial({map:t['rock-color'],normalMap:t['rock-normal'],normalScale:new THREE.Vector2(.70,.70),roughnessMap:t['rock-roughness'],roughness:1,metalness:0,envMapIntensity:1.25,vertexColors:true});
  ground.onBeforeCompile=shader=>{
   shader.uniforms.mossColor={value:t['moss-color']};shader.uniforms.mossNormal={value:t['moss-normal']};shader.uniforms.mossRoughness={value:t['moss-roughness']};
   shader.vertexShader='attribute float cover;attribute float wetness;varying float vCover;varying float vWetness;varying vec2 vSurfaceUV;varying vec3 vSurfacePos;varying vec3 vSurfaceNormal;\n'+shader.vertexShader;
