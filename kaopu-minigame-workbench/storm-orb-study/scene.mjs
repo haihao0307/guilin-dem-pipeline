@@ -8,7 +8,7 @@ export function riverWidth(z){return .26+.045*Math.sin(z*2.4)+.025*Math.cos(z*5)
 export function waterLevel(z){return .06+.032*(2.7-z);}
 function rawHeight(x,z){let d=Math.abs(x-riverCenter(z)),w=riverWidth(z);const left=.66*Math.exp(-((x+1.17)**2/1.7+(z-.25)**2/1.35));const back=.22*Math.exp(-((x+.6)**2/3+(z+1.65)**2/.5));const right=.23*Math.exp(-((x-1.7)**2/.9+(z-.15)**2/2));const macro=.13+left+back+right;const rock=.055*noise.noise(x*3.1,.3,z*3.1)+.018*noise.noise(x*9,3,z*9)+.006*noise.noise(x*24,4,z*24);const valley=smooth(w*.8,w+ .34,d);return THREE.MathUtils.lerp(waterLevel(z)-.09,macro+rock,valley);}
 const houseX=1.39,houseZ=-.34,padY=.34;
-export function height(x,z){let h=rawHeight(x,z);const d=Math.max(Math.abs(x-houseX)/.52,Math.abs(z-houseZ)/.60);return THREE.MathUtils.lerp(padY,h,smooth(.75,1.6,d));}
+export function height(x,z){let h=rawHeight(x,z);const d=Math.max(Math.abs(x-houseX)/.52,Math.abs(z-houseZ)/.60);const bankClear=smooth(riverWidth(z)+.025,riverWidth(z)+.28,Math.abs(x-riverCenter(z)));return THREE.MathUtils.lerp(h,padY,(1-smooth(.75,1.6,d))*bankClear);}
 function mesh(g,m,x=0,y=0,z=0){const o=new THREE.Mesh(g,m);o.position.set(x,y,z);o.castShadow=o.receiveShadow=true;return o;}
 function box(parent,w,h,d,m,x,y,z){const o=mesh(new THREE.BoxGeometry(w,h,d),m,x,y,z);parent.add(o);return o;}
 export function createStorm(scene,{mobile=false}={}){
