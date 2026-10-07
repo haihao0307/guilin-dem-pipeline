@@ -58,7 +58,7 @@ export class Session{
     for(const a of this.actors)if(a.station===s.index&&a.kind==='angry'){a.kind='waiting';a.pose='idle';}
     this.emit('doors-opening',{offset:s.target-this.distance,walkStop:s.walkStop,recovered:s.recovered});return{accepted:true};
   }
-  advance(seconds){if(!this.started||this.paused||this.phase==='summary')return;this.accumulator+=clamp(seconds,0,.25);while(this.accumulator>=DT){this.accumulator-=DT;this.step();}}
+  advance(seconds){if(!this.started||this.paused||this.phase==='summary')return;this.accumulator+=clamp(seconds,0,2);while(this.accumulator+1e-9>=DT&&!this.paused&&this.phase!=='summary'){this.accumulator=Math.max(0,this.accumulator-DT);this.step();}}
   stepTicks(count){for(let i=0;i<count;i++){if(!this.started||this.paused||this.phase==='summary')break;this.step();}}
   step(){
     this.tick++;this.elapsed+=DT;this.phaseTime+=DT;

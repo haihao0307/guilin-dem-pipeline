@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
+import {readFileSync} from 'node:fs';
 import {createSceneModel} from '../../scene.mjs';
 import {buildTrain,buildEnvironment} from '../heritage.mjs';
 import {partitionTerrain,WORLD} from '../world.mjs';
 import {createGameTrain,WHEEL_RADIUS,RAIL_HEAD} from '../train-model.mjs';
 import {COACHES,SEATS} from '../session.mjs';
+const runtimeSource=readFileSync(new URL('../app.mjs',import.meta.url),'utf8');for(const forbidden of ['__trainDriver.test','gl.finish','gl.readPixels','measureFrames','qaRenderMode'])assert.equal(runtimeSource.includes(forbidden),false,'Production runtime must not contain diagnostic hook '+forbidden);
 const hash=g=>createHash('sha256').update(Buffer.from(g.attributes.position.array.buffer)).update(Buffer.from(g.attributes.color.array.buffer)).digest('hex');
 const original=createSceneModel(),inherited=buildTrain().geometry(),game=createGameTrain();
 assert.equal(hash(original.train.geometry),hash(inherited),'Approved original body geometry and colors must be reused exactly');
