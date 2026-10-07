@@ -31,3 +31,7 @@ B1 produced artificial full-circle terraces, low-poly jewel rocks and foil-like 
 ## B3 after B2 green-blanket failure
 
 B2 removed artificial rings but still looked like a smooth green blanket. B3 adds two actual shallow weathering seams and derives exposed wet rock from their geometry, plus32000short turf blades using the same slope/wetness cover field. A4 macro river path and foundations remain unchanged. Cloud and water animation remain pending; no production release is authorized at this stage.
+
+## C1 approved change of material method
+
+B3 failed as an artificial X path with black grain. C1 returns to the A4 macro surface and replaces invented material detail with original CC0 Rock015 and Moss001 maps from ambientCG. Seven original1024²JPG files,9659372bytes, no resizing/recompression. Source hashes/license/scale are in assets/SOURCES.json. Color maps are sRGB; normal/roughness/height are non-color; OpenGL normals are used. Moss scale0.45m comes from provider45cm metadata; Rock015 scale2m and0.10m displacement range are explicit artistic assumptions because source dimensions are absent. All images must load before WebGL evidence;720 and1440closeups will determine whether1K is sufficient. No visual approval or publication claimed.

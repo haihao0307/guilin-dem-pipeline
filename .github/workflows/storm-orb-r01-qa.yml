@@ -1,4 +1,4 @@
-name: Storm rebuild static geometry checkpoint
+name: Storm rebuild material checkpoint
 on:
   pull_request:
     branches: [gh-pages]
@@ -19,17 +19,31 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 2
           sparse-checkout: kaopu-minigame-workbench
           sparse-checkout-cone-mode: true
+      - name: Check this head for Storm changes
+        id: scope
+        run: |
+          if git diff --quiet HEAD^ HEAD -- kaopu-minigame-workbench/storm-orb-study .github/workflows/storm-orb-r01-qa.yml; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Validate JavaScript
+        if: steps.scope.outputs.changed == 'true'
         run: |
           node --check kaopu-minigame-workbench/storm-orb-study/app.mjs
           node --check kaopu-minigame-workbench/storm-orb-study/scene.mjs
+          node --check kaopu-minigame-workbench/storm-orb-study/materials.mjs
       - name: Install official browser test dependency
+        if: steps.scope.outputs.changed == 'true'
         run: |
           npm install --prefix "$RUNNER_TEMP/storm-test" --no-save --ignore-scripts playwright@1.57.0
           "$RUNNER_TEMP/storm-test/node_modules/.bin/playwright" install --with-deps chromium webkit
       - name: Capture static reconstruction for human review
+        if: steps.scope.outputs.changed == 'true'
         env:
           NODE_PATH: ${{ runner.temp }}/storm-test/node_modules
         run: |
@@ -40,7 +54,7 @@ jobs:
           timeout 300s node kaopu-minigame-workbench/storm-orb-study/tests/rebuild-checkpoint.cjs
           STORM_BROWSER=webkit timeout 300s node kaopu-minigame-workbench/storm-orb-study/tests/rebuild-checkpoint.cjs
       - name: Upload checkpoint evidence not visual approval
-        if: always()
+        if: always() && steps.scope.outputs.changed == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: storm-rebuild-static-evidence

@@ -1,0 +1,20 @@
+import * as THREE from 'three';
+export async function loadStudyMaterials(){
+ const loader=new THREE.TextureLoader();const names=['rock-color','rock-normal','rock-roughness','rock-height','moss-color','moss-normal','moss-roughness'];
+ const textures=await Promise.all(names.map(n=>loader.loadAsync(new URL(`./assets/${n}.jpg`,import.meta.url).href)));const t=Object.fromEntries(names.map((n,i)=>[n,textures[i]]));
+ for(const [name,tex] of Object.entries(t)){tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.anisotropy=4;if(name.endsWith('color'))tex.colorSpace=THREE.SRGBColorSpace;}
+ const canvas=document.createElement('canvas');canvas.width=t['rock-height'].image.width;canvas.height=t['rock-height'].image.height;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(t['rock-height'].image,0,0);const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data,N=canvas.width;
+ function sampleHeight(x,z){const u=((x*1.04/2)%1+1)%1,v=((z*1.04/2)%1+1)%1;const fx=u*N,fy=(1-v)*N,ix=Math.floor(fx),iy=Math.floor(fy),ax=fx-ix,ay=fy-iy;const at=(i,j)=>pixels[((j%N)*N+i%N)*4]/255;return (at(ix,iy)*(1-ax)+at(ix+1,iy)*ax)*(1-ay)+(at(ix,iy+1)*(1-ax)+at(ix+1,iy+1)*ax)*ay;}
+ const ground=new THREE.MeshStandardMaterial({map:t['rock-color'],normalMap:t['rock-normal'],normalScale:new THREE.Vector2(.70,.70),roughnessMap:t['rock-roughness'],roughness:1,metalness:0});
+ ground.onBeforeCompile=shader=>{
+  shader.uniforms.mossColor={value:t['moss-color']};shader.uniforms.mossNormal={value:t['moss-normal']};shader.uniforms.mossRoughness={value:t['moss-roughness']};
+  shader.vertexShader='attribute float cover;attribute float wetness;varying float vCover;varying float vWetness;varying vec2 vSurfaceUV;\n'+shader.vertexShader;
+  shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvCover=cover;vWetness=wetness;vSurfaceUV=position.xz*1.04;');
+  shader.fragmentShader='uniform sampler2D mossColor;uniform sampler2D mossNormal;uniform sampler2D mossRoughness;varying float vCover;varying float vWetness;varying vec2 vSurfaceUV;\n'+shader.fragmentShader;
+  shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',`vec3 rockC=texture2D(map,vSurfaceUV/2.).rgb;vec3 mossC=texture2D(mossColor,vSurfaceUV/.45).rgb;float coverage=clamp(vCover,0.,1.);diffuseColor.rgb*=mix(rockC*mix(.75,.40,vWetness),mossC*.75,coverage);`);
+  shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',`vec3 rockN=texture2D(normalMap,vSurfaceUV/2.).xyz*2.-1.;vec3 mossN=texture2D(mossNormal,vSurfaceUV/.45).xyz*2.-1.;vec3 mapN=normalize(mix(rockN,mossN,clamp(vCover,0.,1.)));mapN.xy*=normalScale;normal=normalize(tbn*mapN);`);
+  shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',`float rockR=texture2D(roughnessMap,vSurfaceUV/2.).g;float mossR=texture2D(mossRoughness,vSurfaceUV/.45).g;float roughnessFactor=mix(mix(rockR,max(.25,rockR*.62),vWetness),max(.78,mossR),clamp(vCover,0.,1.));`);
+ };
+ const rock=new THREE.MeshStandardMaterial({color:0x777d78,map:t['rock-color'],normalMap:t['rock-normal'],normalScale:new THREE.Vector2(.7,.7),roughnessMap:t['rock-roughness'],roughness:.7,metalness:0});
+ return {ground,rock,sampleHeight,stats:{textures:names.length,pixels:[1024,1024],rockTileMeters:2,mossTileMeters:.45,assetBytes:9659372},dispose(){textures.forEach(x=>x.dispose());ground.dispose();rock.dispose();}};
+}
