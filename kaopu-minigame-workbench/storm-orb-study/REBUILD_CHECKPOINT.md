@@ -19,3 +19,7 @@ A2 rejected as round single peak, steep trench banks and flat right terrain. A3 
 ## A4 cross-section correction
 
 A3 also rejected: superGaussian hill and height-times-valley transition made cliffs. A4 replaces those with designed upper/middle/foreground/right shoulders and explicitly graded asymmetric bank cross-sections. Bed reaches0.006below water at the actual ribbon edge; depth increases to0.09at center. Macro95th-percentile slope decreases from1.43to0.90; max from4.48to1.37. No cloud/material camouflage is used. Await same-frame and side-view human review.
+
+## B1 after A4 structural gate
+
+Root accepted river path, cabin ground contact and outer frame as a stage anchor, but rejected the single dark planar river-facing slope. B1 keeps those anchors and adds actual tilted rock bedding, embedded strike-aligned blocks, smooth geological joins and slope/wetness-based moss transitions. These are terrain details, not cloud occlusion. Water motion and cloud remain unimplemented.
