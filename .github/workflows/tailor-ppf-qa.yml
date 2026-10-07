@@ -1,20 +1,18 @@
-name: PPF published HTTPS playback and overview QA
+name: PPF published overview decoded image check
 on:
   pull_request:
     branches: [gh-pages]
-    paths:
-      - '.github/tailor-ppf/**'
-      - '.github/workflows/tailor-ppf-qa.yml'
+    paths: ['.github/tailor-ppf/**', '.github/workflows/tailor-ppf-qa.yml']
 permissions:
   contents: read
 concurrency:
-  group: tailor-ppf-public-${{ github.ref }}
+  group: tailor-ppf-card-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  public:
+  image:
     if: github.head_ref == 'qa/tailor-garments-r03-20261006'
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -23,30 +21,19 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-          sparse-checkout: |
-            kaopu-tailor-workbench/ppf-teacher/data
-            .github/tailor-ppf
-      - name: Published PPF, overview and preserved garment byte hashes
-        if: matrix.browser == 'chromium'
-        env:
-          PPF_PUBLIC_BASE: https://haihao0307.github.io/guilin-dem-pipeline
-        run: node .github/tailor-ppf/public-files.mjs
+          sparse-checkout: .github/tailor-ppf
       - name: Official browser dependency
         run: |
           npm install --prefix "$RUNNER_TEMP/ppf-test" --no-save --ignore-scripts playwright@1.57.0
           "$RUNNER_TEMP/ppf-test/node_modules/.bin/playwright" install --with-deps chromium webkit
-      - name: Real published HTTPS with no response interception
+      - name: Real public card after lazy image decode
         env:
           NODE_PATH: ${{ runner.temp }}/ppf-test/node_modules
           PPF_BROWSER: ${{ matrix.browser }}
-          PPF_PUBLIC_BASE: https://haihao0307.github.io/guilin-dem-pipeline
-        run: node .github/tailor-ppf/public-browser.cjs
-      - name: Actual public evidence and hashes
-        if: always()
+        run: node .github/tailor-ppf/card-check.cjs
+      - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ppf-public-${{ matrix.browser }}
+          name: ppf-card-${{ matrix.browser }}
           retention-days: 7
-          path: |
-            ppf-browser-*/**
-            ppf-public-hash/**
+          path: ppf-card-*/**
