@@ -9,7 +9,7 @@ The unmodified official Three.js r170 MarchingCubes implementation (MIT) is run 
 ## Independent volume layer
 
 1. Sample selected axes into variable-radius capsule segments
-2. Form a bounded signed-distance field with smooth unions
+2. Hard-min segments within the same axis, then smooth-union only distinct axes; subdivision must not inflate an axis
 3. Subtract a trunk interior and volume windows, producing actual inner surfaces
 4. Extract the isosurface with the original kernel
 5. Weld coincident vertices at 1e-5 scene units and remove only collapsed microtriangles
@@ -21,4 +21,6 @@ This is a reconstruction of a volume modelling workflow. It is not the source au
 
 CPU tests verify parent connectivity is retained, the centre is empty while the back wall remains solid, surface windows join the void, inner-facing surface normals exist, oriented volume is positive and every indexed edge is paired exactly twice. The browser has controls for union radius, interior radius and axis-ID colour inspection; rebuilding must change the actual mesh while keeping axis identity.
 
-Default pine voxel spacing is anisotropic, approximately 0.068 × 0.193 × 0.045 scene units. Deadwood spacing is approximately 0.067 × 0.090 × 0.042. These grids address the core mass, not millimetre bark detail. The initial controlled forms and all source-reference fidelity remain visually unaccepted. 04 bark stays frozen and is not applied.
+Default pine voxel spacing is anisotropic, approximately 0.045 × 0.129 × 0.030 scene units. Deadwood spacing is approximately 0.050 × 0.068 × 0.031. These grids address the core mass, not millimetre bark detail. The initial controlled forms and all source-reference fidelity remain visually unaccepted. 04 bark stays frozen and is not applied.
+
+R13 corrects a real R12 defect: smoothing adjacent capsules of one axis made the shape thicker as sampling increased. A straight-axis fixture now checks 6 versus 24 capsules with exactly zero field difference. The pine hook is shortened before its free end can rejoin the trunk. These changes still require actual browser/reference review.

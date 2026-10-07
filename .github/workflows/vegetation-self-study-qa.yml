@@ -41,6 +41,12 @@ jobs:
           node qa/browser.mjs
           node qa/coffee-browser.mjs
           node qa/trees-browser.mjs
+      - name: Read public mother Site UI without writes
+        working-directory: .github/qa/vegetation-self-study-20261007
+        env:
+          BROWSER: ${{ matrix.browser }}
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: node qa/mother-ui-readonly.mjs
       - name: Preserve actual browser evidence
         if: always()
         uses: actions/upload-artifact@v4
