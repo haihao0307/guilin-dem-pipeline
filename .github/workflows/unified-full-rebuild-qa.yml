@@ -103,18 +103,22 @@ jobs:
         run: |
           node ui/build-runtime-metadata.mjs
           node ui/tests/controller.test.mjs
+          node tests/common-exports.mjs
+          python -m pip install trimesh==5.1.1 usd-core==26.8 numpy==2.3.5
+          python tests/read_common_exports.py
+          python tools/build_deployment.py
       - name: Desktop Chromium single-person parameter workbench
         working-directory: .github/qa/unified-full-20261007
         env:
           COMMON_UI_BROWSER: chromium
-          COMMON_UI_URL: http://127.0.0.1:8765/qa/full-workbench.html
+          COMMON_UI_URL: http://127.0.0.1:8765/deployment/kaopu-unified-human-workbench/index.html
           COMMON_UI_OUT: qa-output/ui-chromium
         run: node ui/tests/browser.cjs
       - name: Desktop WebKit single-person parameter workbench
         working-directory: .github/qa/unified-full-20261007
         env:
           COMMON_UI_BROWSER: webkit
-          COMMON_UI_URL: http://127.0.0.1:8765/qa/full-workbench.html
+          COMMON_UI_URL: http://127.0.0.1:8765/deployment/kaopu-unified-human-workbench/index.html
           COMMON_UI_OUT: qa-output/ui-webkit
         run: node ui/tests/browser.cjs
       - uses: actions/upload-artifact@v4
@@ -210,3 +214,13 @@ jobs:
             .github/qa/unified-full-20261007/body-adapter/map-indices.u32
             .github/qa/unified-full-20261007/body-adapter/map-bary.f32
             .github/qa/unified-full-20261007/research/body-map-runtime-verify.json
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unified-full-deployment-receipt
+          retention-days: 21
+          path: |
+            .github/qa/unified-full-20261007/DEPLOYMENT-MANIFEST.json
+            .github/qa/unified-full-20261007/research/export-cases/manifest.json
+            .github/qa/unified-full-20261007/research/export-independent-reader-report.json

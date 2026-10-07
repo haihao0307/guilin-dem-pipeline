@@ -9,10 +9,10 @@ import{MHRDetailedEngine,unpackModel}from'../body-adapter/MHRDetailedEngine.mjs'
 export const assetRoot=new URL('../',import.meta.url);
 const digest=async data=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',data))].map(x=>x.toString(16).padStart(2,'0')).join('');
 export async function loadCommon({signal,onProgress=()=>{},base=assetRoot}={}){
- const alive=()=>{if(signal?.aborted)throw new DOMException('Load cancelled','AbortError');};let finished=0,total=38;
- const get=async(path,expected)=>{alive();const response=await fetch(new URL(path,base),{signal});if(!response.ok)throw Error(path+': HTTP '+response.status);const data=await response.arrayBuffer();alive();if(expected&&await digest(data)!==expected)throw Error('资产校验失败：'+path);alive();finished++;onProgress({fraction:Math.min(.95,finished/total),label:path});return data;};
+ const alive=()=>{if(signal?.aborted)throw new DOMException('Load cancelled','AbortError');};let finished=0,total=38,assetURLs={};
+ const get=async(path,expected)=>{alive();const response=await fetch(new URL(assetURLs[path]||path,base),{signal});if(!response.ok)throw Error(path+': HTTP '+response.status);const data=await response.arrayBuffer();alive();if(expected&&await digest(data)!==expected)throw Error('资产校验失败：'+path);alive();finished++;onProgress({fraction:Math.min(.95,finished/total),label:path});return data;};
  const decode=data=>JSON.parse(new TextDecoder().decode(data)),inflate=async data=>{alive();const result=await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();alive();return result;};
- const metadata=decode(await get('ui/runtime-metadata.json'));total=Object.keys(metadata.coreHashes).length+Object.keys(metadata.assetHashes).length+10;
+ const metadata=decode(await get('ui/runtime-metadata.json'));assetURLs=metadata.assetURLs||{};total=Object.keys(metadata.coreHashes).length+Object.keys(metadata.assetHashes).length+10;
  await Promise.all(Object.entries(metadata.coreHashes).map(([path,sha])=>get(path,sha)));
  const read=path=>get(path,metadata.assetHashes[path]),json=async path=>decode(await read(path));
  const[am,fm,mm,km,canonicalBytes,gnmBytes,faceBytes,kernelBytes,indexBytes,baryBytes,gates]=await Promise.all([

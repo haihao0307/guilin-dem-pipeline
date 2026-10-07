@@ -1766,16 +1766,6 @@
       "status": "Separate workstream; no automatic inclusion in common geometry"
     }
   ],
-  "acceptance": {
-    "fixedTopologyAndPersistentMesh": true,
-    "inactiveSourceConfigurationInert": true,
-    "shapeSourceConflictExplicit": true,
-    "neutralAndExtremePairedTeacherRenders": true,
-    "nearEyeMouthAndNeckVisualReview": true,
-    "crossRegionIntersections": true,
-    "archiveAndExportReproduceSelectedDriver": true,
-    "scalarResponseAloneIsNotCompletion": true
-  },
   "parameterRouteAudit": {
     "fingerprint": "f975df925c5586eccaae60f61d888e5b1bcfa6200aad7d1763cb10ae3b736224",
     "records": 1908,
@@ -1865,9 +1855,43 @@
     "rawReport": "research/all-parameter-audit.json.gz"
   },
   "visualBlockers": [
-    "Anny tongue/lip and preserved mouth-cavity contact: R5 candidate browser review",
-    "Infant dentition is not native age anatomy; ear detail requires review",
-    "MHR eyesLook visible-eye part semantics require independent audit"
+    "Infant/newborn common ears have added folds versus native Anny; infant dentition remains adult GNM anatomy, not accepted age fidelity",
+    "Extreme and arbitrary parameter combinations can self-intersect; moderate adult test cases do not certify all combinations"
   ],
-  "extraAnnyTranslationScalars": 312
+  "extraAnnyTranslationScalars": 312,
+  "acceptanceCriteria": {
+    "fixedTopologyAndPersistentMesh": true,
+    "inactiveSourceConfigurationInert": true,
+    "shapeSourceConflictExplicit": true,
+    "neutralAndExtremePairedTeacherRenders": true,
+    "nearEyeMouthAndNeckVisualReview": true,
+    "crossRegionIntersections": true,
+    "archiveAndExportReproduceSelectedDriver": true,
+    "scalarResponseAloneIsNotCompletion": true
+  },
+  "exports": {
+    "formats": [
+      "obj",
+      "glb",
+      "usda",
+      "full-weight-json",
+      "png"
+    ],
+    "browserDownloadValidation": "See current deployment browser report",
+    "posedSnapshotOnly": true,
+    "riggedFormats": "Strongest four normalized weights, matching native MHR web convention; full weights also saved in JSON",
+    "independentReaders": "Trimesh 5.1.1 OBJ/GLB and OpenUSD 26.8 actual skinning passed three states"
+  },
+  "browserEvidence": {
+    "run": 37616913087,
+    "commit": "29109562604f9fdfa7def1aa3652258b722b0ad7",
+    "uiEngines": [
+      "chromium",
+      "webkit"
+    ],
+    "headCases": 22,
+    "moderateOwnerCombinations": 108,
+    "allVariableScalarRoutes": 1871,
+    "knownBoundariesRemain": true
+  }
 }

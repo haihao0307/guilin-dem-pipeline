@@ -229,5 +229,16 @@
     "Same canonical position/index buffers and a single rendered model",
     "No CSS or layout redesign required for this stage"
   ],
-  "exports": "JSON archive/restore currently implemented; common OBJ/GLB/USDA and rig snapshot interfaces still to be supplied explicitly"
+  "exports": {
+    "call": "exportCommon(model,format)",
+    "formats": [
+      "obj",
+      "glb",
+      "usda",
+      "snapshot"
+    ],
+    "scope": "Current evaluated pose only; full weights in snapshot JSON; original native drivers required for subsequent parameter animation",
+    "independentReadersPassed": true,
+    "browserDownloadPending": true
+  }
 }
