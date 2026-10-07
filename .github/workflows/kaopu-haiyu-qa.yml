@@ -37,6 +37,26 @@ jobs:
         run: |
           node kaopu-haiyu-workbench/studies/20261007-pointfields/tests/fidelity.cjs
           node kaopu-haiyu-workbench/studies/20261007-pointfields/tests/browser-qa.cjs
+      - name: Run unmodified R24 assertions in local-file mode before publication
+        if: github.ref == 'refs/heads/qa/haiyu-pointfields-20261007'
+        env:
+          NODE_PATH: ${{ github.workspace }}/.haiyu-qa/node_modules
+          HAIYU_HTML: ${{ github.workspace }}/kaopu-haiyu-workbench/index.html
+          HAIYU_QA_OUT: ${{ github.workspace }}/haiyu-r24-file-only-results
+        run: |
+          python3 - <<'PYCODE'
+          from pathlib import Path
+          import re
+          original=Path('kaopu-haiyu-workbench/r24/tests/browser-qa.cjs').read_text()
+          pattern=r'const deadline=Date\.now\(\)\+12\*60e3;[\s\S]*?save\(\);browser='
+          script,count=re.subn(pattern, 'report.public={prepublicationSkipped:true};save();browser=',original,count=1)
+          assert count==1
+          old="for(const mode of ['file','public'])"
+          assert script.count(old)==1
+          script=script.replace(old,"for(const mode of ['file'])")
+          Path('.haiyu-qa/r24-file-only.cjs').write_text(script)
+          PYCODE
+          node .haiyu-qa/r24-file-only.cjs
       - name: Verify existing full workbench on exact published bytes
         if: github.ref == 'refs/heads/gh-pages'
         env:
@@ -56,4 +76,5 @@ jobs:
           path: |
             haiyu-pointfield-results/
             haiyu-r24-browser-results/
+            haiyu-r24-file-only-results/
           if-no-files-found: error
