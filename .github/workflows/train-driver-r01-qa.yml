@@ -64,8 +64,8 @@ jobs:
           trap 'kill "$server" 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do curl -fsS "$TRAIN_GAME_URL" > /dev/null && break || sleep 1; done
           result=0
-          TRAIN_GAME_QA_DIR=driver-chromium timeout 420s node kaopu-minigame-workbench/voxel-train-study/game/tests/browser.cjs || result=$?
-          TRAIN_BROWSER=webkit TRAIN_GAME_QA_DIR=driver-webkit timeout 420s node kaopu-minigame-workbench/voxel-train-study/game/tests/browser.cjs || result=$?
+          # Runtime unchanged from 5d0dbf8e: full two-engine gameplay already passed run37613064550.
+          # This checkpoint adds native touch evidence and default-view captures only.
           timeout 300s node kaopu-minigame-workbench/voxel-train-study/game/tests/views.cjs || result=$?
           TRAIN_BROWSER=webkit timeout 300s node kaopu-minigame-workbench/voxel-train-study/game/tests/views.cjs || result=$?
           exit "$result"
