@@ -11,7 +11,7 @@ export function gnmRootInCommonRest(model,{scale,head}){
 }
 export function applyCommonBodyDriver(model,context){
  if(!model.bodyDriver)return;
- const result=model.bodyDriver.evaluate(model.effectiveState,{gnmRootRestMatrix:gnmRootInCommonRest(model,context)});
+ const result=model.bodyDriver.evaluate(model.effectiveState,{gnmRootRestMatrix:model.activeGNMRootRestMatrix||gnmRootInCommonRest(model,context)});
  if(result.bodyCount!==model.bodyCount||result.topologySha256!==model.canonical.topologySha256)throw Error('Common body topology changed');
  context.pos.set(result.vertices,0);
  if(model.effectiveState.owners.rig==='mhr')for(const name of['neck02','head'])context.poseDeltas[model.anny.boneLabels.indexOf(name)]=result.attachmentBodySkinMatrices[name];
