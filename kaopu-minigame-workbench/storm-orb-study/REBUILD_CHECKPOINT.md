@@ -15,3 +15,7 @@ First checkpoint run37573242949 rendered correctly but remains visually rejected
 ## A3 after root A2 review
 
 A2 rejected as round single peak, steep trench banks and flat right terrain. A3 explicitly reshapes macro hill and cross-sections, adds a foreground shelf and right ridge, derives inside shallows from curvature, trims water width to leave those shallows visible, and adds a terrain-sampled continuous stone foundation and three entrance steps. Water minimum bed clearance0.042374; no submerged surface vertices. Final materials, clouds and motion remain unimplemented.
+
+## A4 cross-section correction
+
+A3 also rejected: superGaussian hill and height-times-valley transition made cliffs. A4 replaces those with designed upper/middle/foreground/right shoulders and explicitly graded asymmetric bank cross-sections. Bed reaches0.006below water at the actual ribbon edge; depth increases to0.09at center. Macro95th-percentile slope decreases from1.43to0.90; max from4.48to1.37. No cloud/material camouflage is used. Await same-frame and side-view human review.
