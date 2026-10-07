@@ -129,3 +129,9 @@
  [data-wb-ui] .wb-workspace.wb-controls-collapsed{grid-template-rows:minmax(0,1fr) 48px}
  [data-wb-ui] .wb-controls-collapsed .wb-controls-scroll{display:none}
 }
+
+/* Readable diagnostic text is kept clear of the model. */
+[data-wb-ui] :where(.view-label,.stage-top,.stage-bottom,#stats,#modelStatus,#status,.slider-title,.control-label,.control-title,.range-ends){font-size:14px!important}
+[data-wb-ui=anny] .wb-controls-scroll :is(.stage-top,.stage-bottom){position:static;display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 12px;padding:0;color:var(--wb-muted);font-size:14px;pointer-events:auto;letter-spacing:0}
+[data-wb-ui=anny] .wb-controls-scroll .stage-bottom span:last-child{display:inline}
+@media(max-width:639px){[data-wb-ui=face] .wb-header .brand{display:none}[data-wb-ui=face] .wb-header>span{min-width:0;overflow:hidden;text-overflow:ellipsis}}

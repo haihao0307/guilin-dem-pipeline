@@ -196,3 +196,58 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
           path: ui-${{ matrix.engine }}/*.zip
+
+  workbench-ui-extras:
+    if: github.event_name != 'pull_request' || github.head_ref == 'qa/human-overview-r01-20261006'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            .github/qa
+            kaopu-human-overview
+            kaopu-animal-learning
+            kaopu-hair-workbench
+      - name: Install fixed official browser dependency
+        run: |
+          npm install --prefix "$RUNNER_TEMP/overview-ui-test" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/overview-ui-test/node_modules/.bin/playwright" install --with-deps ${{ matrix.engine }}
+      - name: Check animal image controls and live hair workbenches
+        env:
+          NODE_PATH: ${{ runner.temp }}/overview-ui-test/node_modules
+          OVERVIEW_BROWSER: ${{ matrix.engine }}
+          OVERVIEW_URL: http://127.0.0.1:8765/kaopu-human-overview/
+          OVERVIEW_QA_DIR: ui-extra-${{ matrix.engine }}
+        run: |
+          node --check .github/qa/overview-ui-animal.cjs
+          node --check .github/qa/overview-ui-hair.cjs
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/overview-ui-extra-server.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -fsS "$OVERVIEW_URL" > /dev/null && break || sleep 1; done
+          node .github/qa/overview-ui-animal.cjs
+          node .github/qa/overview-ui-hair.cjs
+      - name: Upload extras screenshots and measurements
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workbench-ui-extra-${{ matrix.engine }}-screenshots
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            ui-extra-${{ matrix.engine }}/*.json
+            ui-extra-${{ matrix.engine }}/*.png
+      - name: Upload extras traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workbench-ui-extra-${{ matrix.engine }}-trace
+          retention-days: 7
+          if-no-files-found: warn
+          path: ui-extra-${{ matrix.engine }}/*.zip
