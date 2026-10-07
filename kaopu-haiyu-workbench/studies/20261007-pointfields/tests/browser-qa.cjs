@@ -39,12 +39,17 @@ async function seek(p,f){await p.locator('#timeline').fill(String(f));await p.wa
  const baseline=await ctx.newPage();const baselinePath=path.resolve(path.dirname(root),'baselines/r23/index.html');await baseline.goto('file://'+baselinePath,{waitUntil:'load'});await baseline.waitForFunction(()=>document.body.dataset.pending==='0');
  for(const stage of[1,2,3,4,5,9,12]){await baseline.locator(`button[data-stage="${stage}"]`).first().click();await settle(baseline,stage);await seek(baseline,60);assert.equal(await canvasHash(baseline),legacyHashes[stage]);}
  await baseline.close();report.checks.push({old01to07MatchesUntouchedR23:true,frame:60});
+ const oldRootURL='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/f62c4d3cb52d45514031263590593279a45fa2f4/kaopu-haiyu-workbench/index.html';
+ const oldRoot=await new Promise((resolve,reject)=>{require('https').get(oldRootURL,r=>{if(r.statusCode!==200)return reject(Error('Fixed old-root HTTP '+r.statusCode));const b=[];r.on('data',x=>b.push(x));r.on('end',()=>resolve(Buffer.concat(b)))}).on('error',reject)});
+ assert.equal(crypto.createHash('sha1').update('blob '+oldRoot.length+'\0').update(oldRoot).digest('hex'),'0f8140a54ef2b5e4794b6b99c870e288e705e3a1');
+ const oldRootPath=path.join(out,'temporary-old-root.html');fs.writeFileSync(oldRootPath,oldRoot);const oldLayoutPage=await ctx.newPage();await oldLayoutPage.setViewportSize({width:390,height:844});await oldLayoutPage.goto('file://'+oldRootPath+'?module=source06space',{waitUntil:'load'});await oldLayoutPage.waitForFunction(()=>document.querySelector('#sourceSpace').dataset.referenceFrame);await oldLayoutPage.evaluate(()=>scrollTo(0,0));const oldRootMobileBox=await oldLayoutPage.locator('#phaseCanvas').boundingBox();await oldLayoutPage.screenshot({path:path.join(out,'old-root-fixed-f62-mobile.png'),fullPage:true});await oldLayoutPage.close();fs.unlinkSync(oldRootPath);
+ report.checks.push({fixedOldRootBlob:'0f8140a54ef2b5e4794b6b99c870e288e705e3a1',oldRootMobileBox});
  for(const stage of[13,14,15,16,7,8]){
   await p.locator(`button[data-stage="${stage}"]`).click();await p.setViewportSize({width:390,height:844});await p.evaluate(()=>scrollTo(0,0));
   assert.equal(await p.locator('#pointfieldCatalogue').isVisible(),false);
   if(stage<17&&stage>12){await p.waitForFunction(()=>document.querySelector('#sourceSpace').dataset.referenceFrame);assert.equal(await p.evaluate(()=>window.HaiyuVolumeStudy.validate(window.HaiyuSourceSpace.getPacket(),true).ok),true);}
   else await p.waitForTimeout(200);
-  const id=stage>=13?'#phaseCanvas':'#expCanvas',box=await p.locator(id).boundingBox();assert.ok(box.width>=360);assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));await p.screenshot({path:path.join(out,`legacy-stage${stage}-mobile.png`),fullPage:true});
+  const id=stage>=13?'#phaseCanvas':'#expCanvas',box=await p.locator(id).boundingBox();assert.ok(box.width>=360);if(stage===13){assert.equal(box.y,oldRootMobileBox.y);assert.equal(box.width,oldRootMobileBox.width);}assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));await p.screenshot({path:path.join(out,`legacy-stage${stage}-mobile.png`),fullPage:true});
   report.checks.push({legacyStage:stage,existing3DViewRenders:true,newCardsHiddenIn3D:true,mobileCanvas:box});save();await p.setViewportSize({width:1440,height:1000});
  }
 
