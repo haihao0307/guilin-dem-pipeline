@@ -11,6 +11,6 @@ for(const [name,options] of [['straight',{}],['ease8',{ease:0.08}],['loaded',{}]
 }
 const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 for(const file of ['src/app.mjs','src/core.mjs','style.css'])assert.ok(fs.statSync(new URL('../'+file,import.meta.url)).size>0);
-assert.match(html,/不代表短裤完成/);assert.match(html,/未实现布片自碰撞/);assert.match(html,/PatternGSL/);
+assert.match(html,/data-wb-back/);assert.match(html,/data-wb-ui="tailor"/);assert.match(html,/id="scene"/);assert.match(html,/工业制衣认证/);assert.equal((html.match(/<canvas/g)||[]).length,1);for(const id of ['swatch','structured','shorts','sleeveless','shortsleeve'])assert.ok(html.includes('value="'+id+'"'));assert.match(html,/PatternGSL/);
 fs.mkdirSync(new URL('../qa/',import.meta.url),{recursive:true});fs.writeFileSync(new URL('../qa/numerical.json',import.meta.url),JSON.stringify(result,null,2));
 console.log(JSON.stringify(result,null,2));
