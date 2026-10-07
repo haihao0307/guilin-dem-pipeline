@@ -231,8 +231,12 @@ jobs:
           server=$!
           trap 'kill "$server" 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do curl -fsS "$OVERVIEW_URL" > /dev/null && break || sleep 1; done
-          node .github/qa/overview-ui-animal.cjs
-          node .github/qa/overview-ui-hair.cjs
+          animal_status=0
+          node .github/qa/overview-ui-animal.cjs || animal_status=$?
+          hair_status=0
+          node .github/qa/overview-ui-hair.cjs || hair_status=$?
+          test "$animal_status" -eq 0
+          test "$hair_status" -eq 0
       - name: Upload extras screenshots and measurements
         if: always()
         uses: actions/upload-artifact@v4
