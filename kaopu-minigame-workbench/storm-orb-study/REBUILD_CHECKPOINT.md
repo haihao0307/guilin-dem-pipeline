@@ -39,3 +39,7 @@ B3 failed as an artificial X path with black grain. C1 returns to the A4 macro s
 ## C2 geometry sampling correction
 
 C1 source PBR images are resolved at720and1440, but high-frequency1024height samples were undersampled by about91geometry vertices per2m tile, creating false sharp bumps/shadows. C2 prefilters only the CPU geometry height field to64²before vertex sampling; color, OpenGL normal and roughness textures remain original1024²files and full material detail. This is anti-aliasing of geometry, not a reduced-resolution visual mode. All source assets unchanged.
+
+## C3 source separation and surface response
+
+C2 changed fine sampling but did not remove all larger dark bumps. C3 separates ecological coverage from rock micro-displacement: coverage uses12cm macro slope, and moss cushions70percent of rock microrelief. Dry rock, wet rock and moss receive distinct roughness ranges; wet rock darkening is moderated. Matched normal-on/off diagnostic captures distinguish geometry/color artifacts from normal-map artifacts. Original texture bytes unchanged.
