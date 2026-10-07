@@ -1,4 +1,4 @@
-name: QA animal method learning standalone
+name: QA animal local video observation
 on:
   push:
     branches: [qa/animal-learning-r01-20261006]
@@ -9,8 +9,12 @@ permissions:
   contents: read
 jobs:
   browser:
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, webkit]
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -23,72 +27,30 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install pinned browser QA dependency
+      - name: Install pinned real browser runtime
         run: |
           python -m pip install playwright==1.55.0
-          python -m playwright install --with-deps chromium
-          sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk
-      - name: Static and numerical checks
-        run: node kaopu-animal-learning/tests/static-numeric.mjs
-      - name: Exact standalone file checks
-        env:
-          ANIMAL_QA_OUT: ${{ github.workspace }}/animal-learning-file-results
-        run: python kaopu-animal-learning/tests/browser_qa.py
-      - name: Read back and test exact public page
-        env:
-          ANIMAL_QA_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-animal-learning/?qa=1fc996ec3b5b1cd8e0f1b54fd90979b832f13976
-          ANIMAL_PUBLIC_COMMIT: 1fc996ec3b5b1cd8e0f1b54fd90979b832f13976
-          ANIMAL_QA_OUT: ${{ github.workspace }}/animal-learning-public-results
+          python -m playwright install --with-deps ${{ matrix.engine }}
+          sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk ffmpeg
+      - name: Reproducible bundle and source animation checks
         run: |
-          python - <<'PY'
-          import hashlib,json,os,pathlib,time,urllib.request,subprocess
-          expected=pathlib.Path('kaopu-animal-learning/index.html').read_bytes()
-          url=os.environ['ANIMAL_QA_URL']
-          last='No request yet'
-          for attempt in range(60):
-              try:
-                  req=urllib.request.Request(url,headers={'Cache-Control':'no-cache','User-Agent':'KAOPU-Animal-Readonly-QA/1.0'})
-                  with urllib.request.urlopen(req,timeout=20) as response:
-                      actual=response.read();status=response.status
-                  if status==200 and actual==expected:break
-                  last=f'HTTP {status}; {len(actual)} bytes; exactBytes={actual==expected}'
-              except Exception as e:last=str(e)
-              print('Propagation check',attempt,last,flush=True)
-              time.sleep(10)
-          else:raise SystemExit('Public bytes not available in propagation window: '+last)
-          subprocess.run(['python','kaopu-animal-learning/tests/browser_qa.py'],check=True)
-          report_path=pathlib.Path(os.environ['ANIMAL_QA_OUT'])/'BROWSER_REPORT.json'
-          report=json.loads(report_path.read_text())
-          report['publishedCommit']=os.environ['ANIMAL_PUBLIC_COMMIT']
-          report['publicHttpStatus']=200
-          report['publicExactBytes']=True
-          report['expectedHtmlSha256']=hashlib.sha256(expected).hexdigest()
-          report_path.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
-          print(json.dumps({'publishedCommit':report['publishedCommit'],'status':report['status'],'checks':report['totalChecks'],'htmlSha256':report['htmlSha256']},indent=2))
-          import re
-          entries=json.loads(pathlib.Path('kaopu-animal-learning/src/learning-teachers.json').read_text())['existingOverview']['entries']
-          legacy=[]
-          for entry in entries:
-              if not entry.get('url'):continue
-              result={'name':entry['name'],'url':entry['url'],'runtimeVerified':False}
-              try:
-                  with urllib.request.urlopen(urllib.request.Request(entry['url'],headers={'User-Agent':'KAOPU-Animal-Readonly-QA/1.0'}),timeout=30) as response:
-                      fragment=response.read(262144).decode('utf-8','replace')
-                      result['httpStatus']=response.status
-                      result['finalUrl']=response.url
-                      title=re.search(r'<title[^>]*>(.*?)</title>',fragment,re.I|re.S)
-                      result['title']=title.group(1).strip() if title else None
-              except Exception as e:result['error']=str(e)
-              legacy.append(result)
-          (pathlib.Path(os.environ['ANIMAL_QA_OUT'])/'LEGACY_HTTP_REPORT.json').write_text(json.dumps({'checkedAtUtc':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'entries':legacy,'scope':'HTTP/title only; original runtime not revalidated'},ensure_ascii=False,indent=2)+'\n')
-          PY
-      - name: Preserve verification evidence
+          cp kaopu-animal-learning/index.html /tmp/animal-before.html
+          node kaopu-animal-learning/tools/build.mjs
+          cmp /tmp/animal-before.html kaopu-animal-learning/index.html
+          ffprobe -v error -count_frames -select_streams v:0 -show_entries stream=width,height,r_frame_rate,nb_read_frames,duration -of json kaopu-animal-learning/assets/muybridge-horse.mp4 > kaopu-animal-learning/qa/VIDEO_PROBE.json
+          node kaopu-animal-learning/tests/static-numeric.mjs
+          node kaopu-animal-learning/tests/motion-numeric.mjs
+      - name: Real desktop video, timeline, 3D and recovery checks
+        env:
+          MOTION_ENGINE: ${{ matrix.engine }}
+          MOTION_QA_OUT: ${{ github.workspace }}/animal-motion-${{ matrix.engine }}
+        run: python kaopu-animal-learning/tests/motion-browser.py
+      - name: Preserve exact-commit evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: animal-learning-public-${{ github.sha }}
+          name: animal-motion-${{ matrix.engine }}-${{ github.sha }}
           path: |
-            animal-learning-file-results/
-            animal-learning-public-results/
-            kaopu-animal-learning/qa/LEARNING_STATIC_NUMERIC.json
+            animal-motion-${{ matrix.engine }}/
+            kaopu-animal-learning/qa/*.json
           if-no-files-found: error
