@@ -70,6 +70,8 @@ jobs:
         run: node ui/tests/browser.cjs
       - name: Original overview card keyboard entry, history and direct return
         working-directory: .github/qa/unified-full-20261007
+        env:
+          PUBLIC_OVERVIEW: ${{ inputs.public_url }}
         run: |
           OVERVIEW_BROWSER=chromium node qa/overview-common-card.cjs
           OVERVIEW_BROWSER=webkit node qa/overview-common-card.cjs

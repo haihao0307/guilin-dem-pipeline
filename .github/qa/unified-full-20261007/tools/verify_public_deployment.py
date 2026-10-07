@@ -1,7 +1,7 @@
 """Read-only byte verification of the exact permitted public common-model URL."""
 import sys,json,hashlib,urllib.request,concurrent.futures
 from pathlib import Path
-R=Path(__file__).resolve().parents[1];manifest=json.loads((R/'DEPLOYMENT-MANIFEST.json').read_text());url=sys.argv[1];base='https://haihao0307.github.io/guilin-dem-pipeline/'
+R=Path(__file__).resolve().parents[1];manifestPath=R/'DEPLOYMENT-45-MANIFEST.json';manifest=json.loads((manifestPath if manifestPath.exists()else R/'DEPLOYMENT-MANIFEST.json').read_text());url=sys.argv[1];base='https://haihao0307.github.io/guilin-dem-pipeline/'
 assert url in [base+'kaopu-unified-human-workbench/',base+'kaopu-unified-human-workbench/index.html']
 rows=[{**r,'url':base+r['path']}for r in manifest['files']+manifest['shared']]+manifest['external']
 def check(row):
