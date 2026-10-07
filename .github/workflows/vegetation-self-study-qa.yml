@@ -31,6 +31,7 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE: '1'
         run: |
           python3 -m http.server 8765 > /tmp/vegetation-http.log 2>&1 &
+          node qa/check-source-lock.mjs
           node qa/browser.mjs
       - name: Preserve actual browser evidence
         if: always()

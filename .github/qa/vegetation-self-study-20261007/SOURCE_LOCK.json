@@ -1,18 +1,18 @@
 {
-  "version": "R03-thin-reticulate",
+  "version": "R04-depth-field-projection",
   "destination": "isolated QA branch only",
   "originalVideoProjectAvailable": false,
   "sourceCommit": "3d828c51d99be86c538769f19f715f919bba5456",
   "files": [
     {
       "path": "src/app.js",
-      "sha256": "ad284c4e4a5c1291eb5f89c4aa392b8b9d2a0f720962b8a01d0b77ac3f12768b",
-      "bytes": 14283
+      "sha256": "1bf00ae0f8df6b4cd035650e5cf5586bef5311a7c4cdcba5a91a2b08635a857d",
+      "bytes": 14970
     },
     {
       "path": "src/leaf.js",
-      "sha256": "cea7775dfca69c0c55b547051075b9cb599569cb91c0d19f0d942ea0f52de8e9",
-      "bytes": 8238
+      "sha256": "7165b836a721f34fc0a3db54d9e7e664625d51bccda5badfda5aec773e2919af",
+      "bytes": 8477
     },
     {
       "path": "src/geometry.js",
@@ -31,8 +31,8 @@
     },
     {
       "path": "qa/browser.mjs",
-      "sha256": "be00ba437cf2d1bf8ab98aea71aa3295e01f32201052e5fbc11bcd823a38fc98",
-      "bytes": 4441
+      "sha256": "9ed965f2d1e0458274fc2ab6e84f62e6a0c91771ee025f6dce9d1c69b4de195a",
+      "bytes": 4832
     },
     {
       "path": "qa/teacher-parity.json",
@@ -46,8 +46,13 @@
     },
     {
       "path": "index.html",
-      "sha256": "1c837d86b41d64f9dfbcebe871768bd328b535750f47bdf9eca4167155660264",
+      "sha256": "4528d7af7d1eea9d507bfde4a3b54b4b09c0e190badbb080048f350856f3e1fa",
       "bytes": 5343
+    },
+    {
+      "path": "qa/check-source-lock.mjs",
+      "sha256": "83f3001a71a557254a8db70f1d77e581f7dd6fb18d4efb6192c6d799aaabc916",
+      "bytes": 443
     }
   ],
   "vendor": {
@@ -77,5 +82,14 @@
     "Closed-rule algorithm is independently implemented from paper, not original authors executable",
     "Vein millimetres and absorption coefficients are model assumptions",
     "Visual acceptance pending"
-  ]
+  ],
+  "optics": {
+    "assumptions": true,
+    "absorptionPerMM": [
+      20,
+      9,
+      27
+    ],
+    "laminaMM": 0.04
+  }
 }
