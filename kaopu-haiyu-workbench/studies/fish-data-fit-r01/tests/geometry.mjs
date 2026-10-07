@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';import fs from 'node:fs';import {evaluate,inspect,project} from '../geometry.mjs';
+const data=JSON.parse(fs.readFileSync(new URL('../data/sample.json',import.meta.url)));let cases=0,worst={attachmentError:0,orthogonality:0,handednessError:0};
+for(const layout of ['raw','haiyu'])for(const fit of ['measured','sparse'])for(const bend of [0,1,4])for(const width of [.7,1,1.3])for(const spine of [.7,1,1.3])for(const single of [0,8]){
+ const options={layout,fit,bend,width,spine,single},p=evaluate(data,options),r=inspect(p);assert.ok(r.allFinite);for(const k of Object.keys(worst)){worst[k]=Math.max(worst[k],r[k]);assert.ok(r[k]<1e-10,k)}assert.equal(r.triangles,single?160:1760);assert.equal(r.sourceLandmarks,single?15:165);const before=JSON.stringify(p);for(const v of ['xy','xz','yz','orbit'])p.lines.flatMap(l=>l.points).map(q=>project(q,v));assert.equal(JSON.stringify(p),before);assert.equal(JSON.stringify(evaluate(data,options)),before);cases++;
+}
+assert.throws(()=>evaluate(data,{bend:NaN}));assert.throws(()=>evaluate(data,{width:0}));assert.throws(()=>evaluate(data,{single:15}));
+const raw=evaluate(data);for(let i=0;i<10;i++){let gap=Math.hypot(...raw.ports[i].posterior.map((v,j)=>v-raw.ports[i+1].anterior[j]));assert.ok(Math.abs(gap-data.registration.adjacent_centrum_port_gaps_mm[i])<1e-10)}
+for(const r of data.records)for(const k of ['length','height','half_width'])assert.ok(r.params[k]>0);
+assert.ok(data.registration.v8_max_point_to_surface_mm<.000005);
+const report={ok:true,cases,...worst,default:inspect(raw),sourceSurfaceTriangles:205050,generatedCentrumTriangles:160,comparisonNote:'Scan surface and generated mainform are different representations; no surface-fidelity or volume equivalence is asserted',v8RegistrationMaxMm:data.registration.v8_max_point_to_surface_mm,scope:'Sampled v2–v12 only; 4-knot fit is not a passed anatomical tolerance; no motion/biomechanics validation',browserVerified:false};fs.writeFileSync(new URL('../qa/geometry.json',import.meta.url),JSON.stringify(report,null,2));console.log(report);
