@@ -145,3 +145,8 @@
 #driverGame #restoreView{position:static}
 #driverGame[data-layout=landscape] .view-tools:has([id=restoreView]:not([hidden])) button{min-width:31px;max-width:34px}
 #driverGame[data-layout=portrait] #restoreView{width:28px;min-width:28px;max-width:28px;padding:2px}
+/* ID-level fullscreen/pause sizing must respect the same portrait grid as the other controls. */
+#driverGame[data-layout=portrait] .quiet-button{padding:3px}
+#driverGame[data-layout=portrait] .quiet-button::before{width:18px;height:18px}
+#driverGame[data-layout=portrait] #fullScreen,#driverGame[data-layout=portrait] #pause{width:30px;min-width:30px;padding:3px}
+@media(max-width:359px) and (orientation:portrait){#driverGame[data-layout=portrait] #fullScreen,#driverGame[data-layout=portrait] #pause{width:27px;min-width:27px}}
