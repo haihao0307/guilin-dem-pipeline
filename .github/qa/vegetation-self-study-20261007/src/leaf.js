@@ -17,7 +17,7 @@ export function leafGeometry(options={}){
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(indices);g.computeVertexNormals();g.computeBoundingSphere();g.userData={kind:'curved-lamina',options};return g;
 }
 export function createLeafTextures({size=2048,coffee=false}={}){
- const data=veinSource(),canvas=document.createElement('canvas');canvas.width=size;canvas.height=size*1.5;const c=canvas.getContext('2d');c.fillStyle=coffee?'rgb(79,104,26)':'rgb(153,194,74)';c.fillRect(0,0,canvas.width,canvas.height);
+ const data=veinSource(),canvas=document.createElement('canvas');canvas.width=size;canvas.height=size*1.5;const c=canvas.getContext('2d');c.fillStyle=coffee?'rgb(79,104,26)':'rgb(114,161,73)';c.fillRect(0,0,canvas.width,canvas.height);
  const rand=seeded(817);const pixels=c.getImageData(0,0,canvas.width,canvas.height);for(let i=0;i<pixels.data.length;i+=4){const n=(rand()-.5)*17;pixels.data[i]+=n;pixels.data[i+1]+=n*.7;pixels.data[i+2]+=n*.45;}c.putImageData(pixels,0,0);
  c.save();c.scale(canvas.width/data.width,canvas.height/data.height);
  // Explicit application addition: fine areole texture; not present in the baseline C example.
@@ -28,7 +28,7 @@ export function createLeafTextures({size=2048,coffee=false}={}){
  const depth=document.createElement('canvas');depth.width=canvas.width;depth.height=canvas.height;const d=depth.getContext('2d');d.fillStyle='#eeeeee';d.fillRect(0,0,depth.width,depth.height);d.scale(depth.width/data.width,depth.height/data.height);d.lineCap='round';for(let i=1;i<data.veins.length;i++){const v=data.veins[i],p=data.veins[v.parent];d.strokeStyle='#282828';d.lineWidth=Math.min(8,Math.pow(data.weights[i],.4)*.75);d.beginPath();d.moveTo(p.x,p.y);d.lineTo(v.x,v.y);d.stroke();}const thickness=new THREE.CanvasTexture(depth);thickness.anisotropy=8;return {color,thickness};
 }
 export function leafMaterial(textures,{coffee=false,transmission=.58}={}){
- const m=new THREE.MeshPhysicalMaterial({map:textures.color,color:coffee?0x798f46:0xd2e4a5,roughness:coffee?.40:.43,metalness:0,side:THREE.DoubleSide,transmission:coffee?.08:transmission,transmissionMap:textures.thickness,thickness:coffee?.03:.018,ior:1.32,attenuationDistance:1.2,attenuationColor:new THREE.Color(coffee?0x659b26:0x8dcc56),clearcoat:coffee?.18:.06,clearcoatRoughness:.38,bumpMap:textures.thickness,bumpScale:coffee?-.055:-.025});
+ const m=new THREE.MeshPhysicalMaterial({map:textures.color,color:coffee?0x798f46:0xc7dda8,roughness:coffee?.40:.43,metalness:0,side:THREE.DoubleSide,transmission:coffee?.08:transmission,transmissionMap:textures.thickness,thickness:coffee?.03:.018,ior:1.32,attenuationDistance:1.2,attenuationColor:new THREE.Color(coffee?0x659b26:0x8dcc56),clearcoat:coffee?.18:.06,clearcoatRoughness:.38,bumpMap:textures.thickness,bumpScale:coffee?-.055:-.025});
  m.onBeforeCompile=shader=>{shader.uniforms.leafScatter={value:coffee?.16:.3};shader.fragmentShader='uniform float leafScatter;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>','outgoingLight += diffuseColor.rgb * leafScatter * pow(1.0-abs(normal.z), 1.6);\n#include <opaque_fragment>');};m.customProgramCacheKey=()=>coffee?'leaf-coffee-r01':'leaf-thin-r01';return m;
 }
 export function createLeafStudy({textures,params}){

@@ -20,8 +20,15 @@ export function leafWidth(t){return Math.pow(Math.max(0,Math.sin(Math.PI*t)),.78
 export function makeLeafVeins({seed=706,steps=185}={}){
  const width=800,height=1200;const accept=p=>{const t=1-p.y/height;return Math.abs((p.x-width/2)/height)<leafWidth(t)*.68;};
  const v=new TeacherVenation({width,height,seed,root:{x:400,y:1200},kill:14,step:8,auxinsRate:80,accept});
- // Applied reconstruction: seed a midrib. The teacher baseline leaves its one-root setup untouched.
- for(let i=1;i<=75;i++)v.veins.push({x:400+Math.sin(i*.03)*4,y:1200-i*15,dx:0,dy:0,parent:i-1});
+ // Applied reconstruction: sparse arcing secondaries are authored before fine colonization.
+ // This anatomically directed seed network is a declared departure from the one-root baseline.
+ for(let i=1;i<=75;i++)v.veins.push({x:400,y:1200-i*15,dx:0,dy:0,parent:i-1});
+ for(let row=0;row<11;row++){
+  const rootIndex=6+row*6,baseY=v.veins[rootIndex].y,t=1-baseY/height;
+  for(const side of [-1,1]){let parent=rootIndex;for(let k=1;k<=13;k++){const f=k/13,yt=baseY-(80+105*Math.sin(t*Math.PI))*Math.pow(f,1.08),half=leafWidth(1-yt/height)*height*.68*.91;
+   v.veins.push({x:400+side*half*Math.sin(f*Math.PI*.48),y:yt,dx:0,dy:0,parent});parent=v.veins.length-1;
+  }}
+ }
  for(let i=0;i<steps;i++)v.tick();
  const weights=new Float32Array(v.veins.length).fill(1);for(let i=v.veins.length-1;i>0;i--)weights[v.veins[i].parent]+=weights[i];
  return {veins:v.veins,weights,width,height,seed,steps};
