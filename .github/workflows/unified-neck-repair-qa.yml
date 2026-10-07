@@ -39,6 +39,7 @@ jobs:
           node validate_integration.mjs
           python validate_geometry.py
           python volume.py
+          python normal_metrics.py
       - name: Install pinned browser runners
         working-directory: .github/qa/neck-repair-20261007
         run: |
@@ -47,15 +48,16 @@ jobs:
       - name: Serve diagnostic only
         working-directory: .github/qa/neck-repair-20261007
         run: python -m http.server 8765 > /tmp/neck-server.log 2>&1 &
-      - name: Diagnose exact WebKit geometry mismatch without changing acceptance gate
+      - name: Actual Chromium geometry and skin views
         working-directory: .github/qa/neck-repair-20261007
-        run: node qa/numeric-diagnostic.cjs
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: neck-webkit-numeric-diagnostic
-          retention-days: 14
-          path: .github/qa/neck-repair-20261007/qa-output/numeric-diagnostic
+        env:
+          NECK_BROWSER: chromium
+        run: node qa/workbenches.cjs
+      - name: Actual WebKit geometry and skin views
+        working-directory: .github/qa/neck-repair-20261007
+        env:
+          NECK_BROWSER: webkit
+        run: node qa/workbenches.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -104,6 +106,7 @@ jobs:
             .github/qa/neck-repair-20261007/research/neck-runtime-probe-report.json
             .github/qa/neck-repair-20261007/research/neck-candidate-cross-region-report.json
             .github/qa/neck-repair-20261007/research/neck-volume-report.json
+            .github/qa/neck-repair-20261007/research/neck-normal-metrics.json
             .github/qa/neck-repair-20261007/candidate-validation/research/neck-geometry-report.json
             .github/qa/neck-repair-20261007/qa-output/**/integration-browser-report.json
             .github/qa/neck-repair-20261007/qa-output/**/failure.txt
