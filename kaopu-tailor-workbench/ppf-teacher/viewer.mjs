@@ -50,7 +50,7 @@ export class PpfViewer {
         color=new THREE.Color().fromArray(colors,obj.firstVertex*3);
       }
       const material=new THREE.MeshStandardMaterial({color,roughness:.83,metalness:obj.kind==='STATIC'?.12:0,side:THREE.DoubleSide});
-      const mesh=new THREE.Mesh(g,material);mesh.castShadow=true;mesh.receiveShadow=true;mesh.userData.object=obj;mesh.userData.originalColor=color.clone();
+      const mesh=new THREE.Mesh(g,material);mesh.castShadow=true;mesh.receiveShadow=obj.kind==='STATIC';mesh.userData.object=obj;mesh.userData.originalColor=color.clone();
       if(obj.kind==='STATIC')g.computeVertexNormals();this.meshes.push(mesh);this.scene.add(mesh);
     }
     const min=new THREE.Vector3(...manifest.bounds[0]),max=new THREE.Vector3(...manifest.bounds[1]);
