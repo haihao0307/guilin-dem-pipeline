@@ -1,6 +1,6 @@
 import * as THREE from '../vendor/three.module.js';
 const KEY='kaopu.train-driver.views.v1';
-export function createViewControls({camera,target,canvas,root,onChange}){
+export function createViewControls({camera,target,canvas,root,onChange,onReset=()=>{}}){
  const defaults={landscape:{position:[19,24,38],target:[-8.8,-.8,1],zoom:1},portrait:{position:[31,25,15],target:[-8.8,-.8,1],zoom:1}};
  let data={version:1,layout:'landscape',profiles:{}},pointers=new Map(),gesture=null;
  try{const d=JSON.parse(localStorage.getItem(KEY));if(d?.version===1&&['landscape','portrait'].includes(d.layout)){data.layout=d.layout;for(const mode of ['landscape','portrait']){const p=d.profiles?.[mode];if(p&&[p.position,p.target].every(a=>Array.isArray(a)&&a.length===3&&a.every(n=>Number.isFinite(n)&&Math.abs(n)<500))&&Number.isFinite(p.zoom)&&p.zoom>=.4&&p.zoom<=3)data.profiles[mode]={position:p.position,target:p.target,zoom:p.zoom,manual:!!p.manual,locked:!!p.locked};}}}catch{}
@@ -20,7 +20,7 @@ export function createViewControls({camera,target,canvas,root,onChange}){
  canvas.addEventListener('wheel',e=>{if(profile().locked)return;e.preventDefault();camera.zoom=THREE.MathUtils.clamp(camera.zoom*Math.exp(-e.deltaY*.001),.4,3);camera.updateProjectionMatrix();capture();onChange();},{passive:false});
  $('landscapeView').addEventListener('click',()=>setLayout('landscape'));$('portraitView').addEventListener('click',()=>setLayout('portrait'));
  $('lockView').addEventListener('click',()=>{capture();profile().locked=!profile().locked;pointers.clear();persist();sync();onChange();});
- $('resetView').addEventListener('click',()=>{data.profiles[data.layout]={...structuredClone(defaults[data.layout]),manual:false,locked:false};apply();persist();});
+ $('resetView').addEventListener('click',()=>{onReset();data.profiles[data.layout]={...structuredClone(defaults[data.layout]),manual:false,locked:false};apply();persist();});
  addEventListener('resize',()=>{pointers.clear();sync();onChange();});apply();
  return{manual:()=>profile().manual||profile().locked,locked:()=>profile().locked,mode:()=>data.layout,resetForSession(){if(!this.manual())apply();},markPreset(){profile().locked=false;capture(true);},saveCurrent(){capture();},state:()=>({layout:data.layout,rotated:rotated(),locked:profile().locked,manual:profile().manual,position:camera.position.toArray(),target:target.toArray(),zoom:camera.zoom,profiles:structuredClone(data.profiles)})};
 }

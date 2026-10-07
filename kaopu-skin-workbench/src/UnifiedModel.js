@@ -4,9 +4,9 @@ export const DEFAULT_STATE=()=>({schema:'kaopu-unified-person/1',personId:'canon
 const point=(m,p)=>[m[0]*p[0]+m[1]*p[1]+m[2]*p[2]+m[3],m[4]*p[0]+m[5]*p[1]+m[6]*p[2]+m[7],m[8]*p[0]+m[9]*p[1]+m[10]*p[2]+m[11]];
 const dist=(a,b)=>Math.hypot(...a.map((x,i)=>x-b[i]));
 export class UnifiedModel {
- constructor(anny,gnm,canonical,mhr=null,fingerprint=null){
+ constructor(anny,gnm,canonical,mhr=null,fingerprint=null,neckSurface=null){
   if(!fingerprint||!/^[0-9a-f]{64}$/.test(fingerprint.id))throw Error('Versioned adapter fingerprint required');
-  this.adapterFingerprint=fingerprint.id;
+  this.adapterFingerprint=fingerprint.id;this.acceptedParameterFingerprints=fingerprint.acceptedParameterFingerprints||[];this.neckSurface=neckSurface;if(neckSurface&&neckSurface.topologySha256!==canonical.topologySha256)throw Error('Neck topology mismatch');
   this.mhr=mhr;
   if(mhr&&mhr.topologySha256!==canonical.topologySha256)throw Error('MHR delta topology mismatch');
   this.anny=anny;this.gnm=gnm;this.canonical=canonical;this.faces=new Uint32Array(canonical.faces);
@@ -60,6 +60,7 @@ export class UnifiedModel {
   const beforeFair=pos.slice(),fair=c.neckFairing;
   if(fair){const next=pos.slice();for(let it=0;it<fair.iterations;it++)for(const coefficient of [fair.lambda,fair.mu]){next.set(pos);for(const row of fair.band){for(let k=0;k<3;k++){let avg=0;for(const n of row.neighbors)avg+=pos[n*3+k];avg/=row.neighbors.length;next[row.index*3+k]=pos[row.index*3+k]+coefficient*row.weight*(avg-pos[row.index*3+k]);}}pos.set(next);}}
   this.neckFairingMaxMM=0;for(let i=0;i<pos.length;i+=3)this.neckFairingMaxMM=Math.max(this.neckFairingMaxMM,1000*Math.hypot(pos[i]-beforeFair[i],pos[i+1]-beforeFair[i+1],pos[i+2]-beforeFair[i+2]));
+  if(this.neckSurface)this.neckSurface.apply(pos);
   if(!Array.from(pos).every(Number.isFinite))throw Error('Non-finite canonical geometry');
   this.lastBody=body;this.headScale=scale;this.revision++;return pos;
  }
@@ -67,16 +68,16 @@ export class UnifiedModel {
   const p=this.positions,c=this.canonical;let maxSeamEdge=0,minArea=Infinity;
   const first=c.report.bodyFaces+c.report.headFaces;
   for(let i=first*3;i<this.faces.length;i+=3){const v=[0,1,2].map(k=>Array.from(p.subarray(this.faces[i+k]*3,this.faces[i+k]*3+3)));for(let k=0;k<3;k++)maxSeamEdge=Math.max(maxSeamEdge,dist(v[k],v[(k+1)%3]));const a=v[1].map((x,k)=>x-v[0][k]),b=v[2].map((x,k)=>x-v[0][k]);minArea=Math.min(minArea,.5*Math.hypot(a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]));}
-  return {vertices:this.vertexCount,triangles:this.faces.length/3,topologySha256:c.topologySha256,bodyVertices:this.bodyCount,headVertices:this.headCount,seamTriangles:c.report.seamFaces,maxSeamEdgeMM:maxSeamEdge*1000,minSeamTriangleAreaMM2:minArea*1e6,headScale:this.headScale,neckContourMaxMM:this.neckContourMaxMM,neckFairingMaxMM:this.neckFairingMaxMM,revision:this.revision};
+  return {vertices:this.vertexCount,triangles:this.faces.length/3,topologySha256:c.topologySha256,bodyVertices:this.bodyCount,headVertices:this.headCount,seamTriangles:c.report.seamFaces,maxSeamEdgeMM:maxSeamEdge*1000,minSeamTriangleAreaMM2:minArea*1e6,headScale:this.headScale,neckContourMaxMM:this.neckContourMaxMM,neckFairingMaxMM:this.neckFairingMaxMM,neckSurfaceMaxMM:this.neckSurface?.maxDisplacementMM||0,neckSurfaceVertices:this.neckSurface?.unknownCount||0,revision:this.revision};
  }
 }
 
 export function validateProfile(raw,model){
- if(!raw||raw.schema!=='kaopu-unified-person/1'||raw.topologySha256!==model.canonical.topologySha256||raw.adapterFingerprint!==model.adapterFingerprint)throw Error('档案或固定拓扑版本不匹配');
+ if(!raw||raw.schema!=='kaopu-unified-person/1'||raw.topologySha256!==model.canonical.topologySha256||(raw.adapterFingerprint!==model.adapterFingerprint&&!model.acceptedParameterFingerprints.includes(raw.adapterFingerprint)))throw Error('档案或固定拓扑版本不匹配');
  const s=DEFAULT_STATE();if(typeof raw.personId!=='string'||raw.personId.length>100)throw Error('角色标识无效');s.personId=raw.personId;
  for(const k of Object.keys(s.phenotypes)){const v=raw.phenotypes?.[k];if(!Number.isFinite(v)||v<(k==='age'?1/3:0)||v>1)throw Error('身体参数范围无效');s.phenotypes[k]=v;}
  for(const [name,size] of [['headIdentity',253],['headExpression',383]]){const v=raw[name];if(!Array.isArray(v)||v.length!==size||!v.every(x=>Number.isFinite(x)&&Math.abs(x)<=3))throw Error('头部参数无效');s[name]=v.slice();}
  if(!raw.pose||typeof raw.pose!=='object'||Array.isArray(raw.pose))throw Error('动作参数无效');for(const [key,value] of Object.entries(raw.pose)){if(!model.anny.boneLabels.includes(key)||!Array.isArray(value)||value.length!==3||!value.every(x=>Number.isFinite(x)&&Math.abs(x)<=90))throw Error('骨骼动作参数无效');s.pose[key]=value.slice();}
  if(raw.localChanges&&Object.keys(raw.localChanges).length)throw Error('此实验版档案暂不接收局部自由修改');
- const n=raw.mhr?.amount;if(!Number.isFinite(n)||Math.abs(n)>1)throw Error('MHR实验范围无效');const channel=raw.mhr?.channel??null;if(![null,'identity_000'].includes(channel)||(n!==0&&channel!=='identity_000'))throw Error('不支持该 MHR 通道');s.mhr={amount:n,channel};return s;
+ const n=raw.mhr?.amount;if(!Number.isFinite(n)||Math.abs(n)>1)throw Error('MHR实验范围无效');const channel=raw.mhr?.channel??null;if(![null,'identity_000'].includes(channel)||(n!==0&&channel!=='identity_000'))throw Error('不支持该 MHR 通道');s.mhr={amount:n,channel};if(raw.adapterFingerprint!==model.adapterFingerprint)Object.defineProperty(s,'migrationFrom',{value:raw.adapterFingerprint});return s;
 }
