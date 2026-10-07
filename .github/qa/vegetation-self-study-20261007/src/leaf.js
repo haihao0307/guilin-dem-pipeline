@@ -30,7 +30,7 @@ export function createLeafTextures({size=2048,coffee=false}={}){
 }
 export function thinLeafMaterial(textures,{transmission=.8}={}){
  const uniform={value:transmission};const m=new THREE.MeshStandardMaterial({map:textures.color,color:0xffffff,roughness:.79,metalness:0,side:THREE.DoubleSide,transparent:true,depthWrite:true,envMapIntensity:.03,bumpMap:textures.thickness,bumpScale:.034});
- m.onBeforeCompile=shader=>{shader.uniforms.uLeafThickness={value:textures.thickness};shader.uniforms.uThinTransmission=uniform;shader.vertexShader='varying vec2 vLeafUv;\n'+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\nvLeafUv=uv;');shader.fragmentShader='uniform sampler2D uLeafThickness;uniform float uThinTransmission;varying vec2 vLeafUv;\n'+shader.fragmentShader;
+ m.onBeforeCompile=shader=>{m.userData.compiledUniforms=shader.uniforms;shader.uniforms.uLeafThickness={value:textures.thickness};shader.uniforms.uThinTransmission=uniform;shader.vertexShader='varying vec2 vLeafUv;\n'+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\nvLeafUv=uv;');shader.fragmentShader='uniform sampler2D uLeafThickness;uniform float uThinTransmission;varying vec2 vLeafUv;\n'+shader.fragmentShader;
  shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>',`float leafMM=texture2D(uLeafThickness,vLeafUv).r*1.4;
  vec3 absorptionPerMM=vec3(20.0,9.0,27.0);
  #if NUM_DIR_LIGHTS > 0
