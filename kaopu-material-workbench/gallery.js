@@ -9,6 +9,7 @@ const cases=[
 ];
 const $=id=>document.getElementById(id),rigKey='KAOPU_MATERIAL_SHARED_RIG_R18';
 let active=null,frame=null,sharedRig=null,lastCard=null,frameRigReady=false;
+let pendingSession=null;
 let recoveryAttempts=0,framesCreated=0,framesDisposed=0,lastDisposal=null;
 try{
  sharedRig=JSON.parse(localStorage.getItem(rigKey)||'null');
@@ -26,7 +27,7 @@ function closeFrame(){
 }
 function address(id,push){const url=new URL(location.href);url.searchParams.delete('v');if(id)url.searchParams.set('case',id);else url.searchParams.delete('case');if(push)history.pushState({case:id},'',url);}
 function show(id,push=true,recovering=false){
- if(!recovering)recoveryAttempts=0;
+ if(!recovering){recoveryAttempts=0;pendingSession=null;}else{const state=runtime()?.getState?.();if(state)pendingSession=state;}
  const item=cases.find(x=>x[0]===id);closeFrame();active=item?.[0]||null;
  $('overview').hidden=!!active;$('caseView').hidden=!active;document.body.classList.toggle('viewing',!!active);address(active,push);
  if(!item){document.title='KAOPU 材质工作台 · 图形总台';lastCard?.focus({preventScroll:true});return;}
@@ -41,7 +42,7 @@ window.addEventListener('message',e=>{
  const m=e.data;if(!m||m.type!=='kaopu-viewer')return;
  if(m.action==='ready'){
   const api=runtime();if(!api?.ready)return;
-  if(!frameRigReady){if(sharedRig&&JSON.stringify(api.getState().rig)!==JSON.stringify(sharedRig)){api.setRig(sharedRig);api.flushSave?.();}else if(!sharedRig)storeRig(m.rig);frameRigReady=true;}
+  if(!frameRigReady){if(sharedRig&&JSON.stringify(api.getState().rig)!==JSON.stringify(sharedRig)){api.setRig(sharedRig);api.flushSave?.();}else if(!sharedRig)storeRig(m.rig);if(pendingSession){api.restoreSession?.(pendingSession);pendingSession=null;}frameRigReady=true;}
   else storeRig(api.getState().rig);
   $('viewerStatus').textContent=m.recovered?'实时渲染 · 画面已恢复':'实时渲染 · 共用双灯';
  }
@@ -50,10 +51,10 @@ window.addEventListener('message',e=>{
  if(m.action==='overview')show(null);
  if(m.action==='recovering')$('viewerStatus').textContent='正在恢复画面 · 参数已保留';
  if(m.action==='error')$('viewerStatus').textContent=m.message;
- if(m.action==='recover'&&(m.manual||recoveryAttempts<1)){recoveryAttempts++;show(active,false,true);}
+ if(m.action==='recover'&&(m.manual||recoveryAttempts<1)){const d=frame.contentWindow.KAOPU_VIEWER_LIFECYCLE?.diagnostics();if(!runtime()?.ready&&(d?.contextLost||d?.failed)){recoveryAttempts++;show(active,false,true);}}
 });
 $('backToOverview').onclick=()=>show(null);window.addEventListener('popstate',()=>show(new URLSearchParams(location.search).get('case'),false));
 window.KAOPU_GALLERY={version:'r19-20261007',cases:cases.map(c=>({id:c[0],number:c[1],title:c[2]})),show,back:()=>show(null),getState:()=>({active,sharedRig}),diagnostics:()=>({framesCreated,framesDisposed,lastDisposal,recoveryAttempts,iframeCount:document.querySelectorAll('#caseFrame').length}),runtime};
-window.addEventListener('pagehide',()=>closeFrame());window.addEventListener('pageshow',e=>{if(e.persisted&&active)show(active,false);});
+window.addEventListener('pagehide',()=>{pendingSession=runtime()?.getState?.()||pendingSession;closeFrame();});window.addEventListener('pageshow',e=>{if(e.persisted&&active)show(active,false,true);});
 show(new URLSearchParams(location.search).get('case'),false);
 })();

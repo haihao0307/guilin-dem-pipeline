@@ -85,14 +85,7 @@
     }
   }
   function mark() { dirty = true; save(); }
-  function fail(error) {
-    $('error').textContent = '渲染未完成：' + (error.message || error);
-    $('error').hidden = false;
-    console.error(error);
-    running = false;
-    dirty = false;
-    setRunning(false);
-  }
+  function fail(error) {ready=false;pauseFrames();lifecycle.fail(error);console.error(error);setRunning(false);dirty=false;}
   function setRunning(value) {
     running = Boolean(value);
     $('rotate').textContent = running ? '暂停旋转' : '自动旋转';
@@ -131,25 +124,19 @@
   }
   function use(name) {
     if (!programs.has(name)) {
-      const program = gl.createProgram();
-      const vertex = compile(gl.VERTEX_SHADER, '#version 300 es\nprecision highp float;void main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);gl_Position=vec4(p*2.-1.,0.,1.);}');
-      const fragment = compile(gl.FRAGMENT_SHADER, sources[name]);
-      gl.attachShader(program, vertex);
-      gl.attachShader(program, fragment);
-      gl.linkProgram(program);
-      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw Error(gl.getProgramInfoLog(program));
-      gl.deleteShader(vertex);
-      gl.deleteShader(fragment);
-      const fields = [];
-      for (let i = 0; i < gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS); i++) {
-        const uniform = gl.getActiveUniform(program, i);
-        fields.push([uniform.name, uniform.type, gl.getUniformLocation(program, uniform.name)]);
-      }
-      programs.set(name, { program, fields });
+      let program=null,vertex=null,fragment=null;
+      try {
+        program=gl.createProgram();
+        vertex=compile(gl.VERTEX_SHADER, '#version 300 es\nprecision highp float;void main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);gl_Position=vec4(p*2.-1.,0.,1.);}');
+        fragment=compile(gl.FRAGMENT_SHADER,sources[name]);
+        gl.attachShader(program,vertex);gl.attachShader(program,fragment);gl.linkProgram(program);
+        if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program)||'着色器链接中断');
+        const fields=[];for(let i=0;i<gl.getProgramParameter(program,gl.ACTIVE_UNIFORMS);i++){const uniform=gl.getActiveUniform(program,i);fields.push([uniform.name,uniform.type,gl.getUniformLocation(program,uniform.name)]);}
+        programs.set(name,{program,fields});
+      }catch(error){if(program)gl.deleteProgram(program);throw error;}
+      finally{if(vertex)gl.deleteShader(vertex);if(fragment)gl.deleteShader(fragment);}
     }
-    const result = programs.get(name);
-    gl.useProgram(result.program);
-    return result;
+    const result=programs.get(name);gl.useProgram(result.program);return result;
   }
   function targetBuffer(width, height) {
     if (!sceneTexture) { sceneTexture = gl.createTexture(); sceneBuffer = gl.createFramebuffer(); }
@@ -381,9 +368,10 @@ window.KAOPU_VIEWER_DISPOSE=()=>lifecycle.dispose();
     version: VERSION,
     dispose:()=>lifecycle.dispose(),flushSave:save,
     diagnostics:()=>({...lifecycle.diagnostics(),programs:programs.size,rafPending:!!rafId,framebufferBytes:bufferW*bufferH*4}),
-    get ready() { return ready; },
+    get ready() { return ready&&!!gl&&!gl.isContextLost(); },
     select, draw,
-    getState: () => copy({ active, states, cameras, rig, quality, running, frames, fps }),
+    restoreSession:s=>{for(const id of ids){states[id]=normalizedState(s.states?.[id]);cameras[id]=normalizedCamera(s.cameras?.[id]);}rig=normalizedRig(s.rig);quality=normalizedQuality(s.quality);if(ids.includes(s.active))active=s.active;build();setRunning(s.running);if(s.tab)showTab(s.tab);document.body.classList.toggle('controlsHidden',!!s.controlsHidden);$('toggleControls').textContent=s.controlsHidden?'显示控制室':'收起控制室';$('toggleControls').setAttribute('aria-expanded',String(!s.controlsHidden));dirty=true;return draw();},
+    getState: () => copy({ active, states, cameras, rig, quality, running, tab, controlsHidden:document.body.classList.contains('controlsHidden'), frames, fps }),
     packet: () => copy(lastPacket),
     pixels: () => {
       if (!ready) return [];
@@ -405,7 +393,7 @@ window.KAOPU_VIEWER_DISPOSE=()=>lifecycle.dispose();
       if (!response.ok) throw Error(file + ' HTTP ' + response.status);
       sources[file] = await response.text();
     }));
-    if(lifecycle.disposed)return;
+    if(lifecycle.disposed||!await lifecycle.whenVisible())return;
     gl = canvas.getContext('webgl2', { alpha: false, antialias: false, preserveDrawingBuffer: true, powerPreference: 'high-performance' });
     if (!gl) throw Error('WebGL2 未启动');
     lifecycle.bind(gl);rebuildGPU();

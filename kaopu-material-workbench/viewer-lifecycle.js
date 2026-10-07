@@ -3,7 +3,7 @@
 window.KAOPU_CREATE_LIFECYCLE = function (hooks) {
   const canvas = hooks.canvas, requests = new AbortController();
   let gl = null, extension = null, disposed = false, contextLost = false;
-  let losses = 0, restores = 0, timer = 0, paused = false;
+  let losses = 0, restores = 0, timer = 0, paused = false, pendingRestore = false, failed = false;
   const notify = (phase, extra = {}) => canvas.dispatchEvent(new CustomEvent('kaopu-renderer-state', { detail: { phase, ...extra } }));
   const visible = () => !document.hidden;
   function notice(message, retry = false) {
@@ -12,7 +12,7 @@ window.KAOPU_CREATE_LIFECYCLE = function (hooks) {
     if (retry) { const button = document.createElement('button'); button.type = 'button'; button.textContent = '恢复这张画面'; button.style.cssText = 'display:block;margin:14px auto 0;padding:10px 16px'; button.onclick = () => requestRebuild(true); box.append(button); }
   }
   function requestRebuild(manual = false) {
-    if (disposed || !contextLost || !visible()) return;
+    if (disposed || !(contextLost || failed) || !visible()) return;
     hooks.save();
     if (parent !== window && new URLSearchParams(location.search).get('embedded') === '1') {
       parent.postMessage({ type: 'kaopu-viewer', action: 'recover', manual }, location.origin);
@@ -26,7 +26,7 @@ window.KAOPU_CREATE_LIFECYCLE = function (hooks) {
   function lost(event) {
     event.preventDefault();
     if (disposed) return;
-    contextLost = true; losses++; hooks.save(); hooks.pause(); hooks.setReady(false);
+    contextLost = true;pendingRestore=false;failed=false; losses++; hooks.save(); hooks.pause(); hooks.setReady(false);
     // Every WebGL handle and cached uniform location is invalid after context loss.
     hooks.clearGPU(false);
     notice('图形资源中断，正在恢复画面；当前参数已保留。', true);
@@ -34,9 +34,12 @@ window.KAOPU_CREATE_LIFECYCLE = function (hooks) {
   }
   function restored() {
     if (disposed) return;
-    clearTimeout(timer);
+    clearTimeout(timer);contextLost=false;
+    if(!visible()){pendingRestore=true;hooks.setReady(false);return;}
+    pendingRestore=false;failed=false;
+    if(!gl||gl.isContextLost()){contextLost=true;hooks.setReady(false);scheduleRebuild();return;}
     try {
-      contextLost = false; hooks.rebuildGPU(); hooks.setReady(true); hooks.redraw();
+      hooks.rebuildGPU(); hooks.setReady(true); hooks.redraw();
       if (gl.isContextLost()) { contextLost = true; hooks.setReady(false); scheduleRebuild(); return; }
       restores++; document.getElementById('error').hidden = true;
       notify('restored'); if (visible()) hooks.resume();
@@ -48,7 +51,7 @@ window.KAOPU_CREATE_LIFECYCLE = function (hooks) {
   function visibility() {
     if (disposed) return;
     if (!visible()) { paused = true; clearTimeout(timer); hooks.save(); hooks.pause(); }
-    else { paused = false; if (contextLost) scheduleRebuild(); else { hooks.invalidate(); hooks.resume(); } }
+    else { paused = false; if(pendingRestore){restored();return;} if (contextLost) scheduleRebuild(); else { hooks.invalidate(); hooks.resume(); } }
   }
   function pagehide(event) { if (event.persisted) { hooks.save(); hooks.pause(); } else dispose(); }
   function pageshow(event) { if (event.persisted && !disposed) visibility(); }
@@ -77,7 +80,9 @@ window.KAOPU_CREATE_LIFECYCLE = function (hooks) {
     get disposed() { return disposed; },
     bind(context) { if (disposed) return false; gl = context; extension = gl.getExtension('WEBGL_lose_context'); return true; },
     dispose,
-    diagnostics: () => ({ disposed, contextLost, losses, restores, paused, hasContext: !!gl, contextIsLost: !!gl?.isContextLost(), restoreExtension: !!extension, canvasPixels: canvas.width * canvas.height }),
+    whenVisible(){if(disposed)return Promise.resolve(false);if(visible())return Promise.resolve(true);return new Promise(resolve=>{const done=()=>{if(!disposed&&!visible())return;document.removeEventListener('visibilitychange',done);requests.signal.removeEventListener('abort',done);resolve(!disposed);};document.addEventListener('visibilitychange',done);requests.signal.addEventListener('abort',done,{once:true});});},
+    fail(error){if(disposed)return;failed=true;hooks.setReady(false);hooks.pause();hooks.save();notice('渲染未完成：'+(error?.message||error||'图形资源暂不可用'),true);notify('failed');},
+    diagnostics: () => ({ disposed, contextLost, losses, restores, paused, pendingRestore, failed, hasContext: !!gl, contextIsLost: !!gl?.isContextLost(), restoreExtension: !!extension, canvasPixels: canvas.width * canvas.height }),
     // Explicit test hook; uses the real browser extension, not a synthetic DOM event.
     testLoseContext() { if (extension && gl && !gl.isContextLost()) { extension.loseContext(); return true; } return false; },
     testRestoreContext() { if (extension && gl?.isContextLost()) { extension.restoreContext(); return true; } return false; }
