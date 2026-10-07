@@ -21,3 +21,14 @@ export function refineSurface(snapshot,levels=2){
  }
  return{...snapshot,positions:p,masks:m,indices:f};
 }
+
+export function thickenSurface(surface,thickness=.004){
+ const p=surface.positions,f=surface.indices,n=p.length/3,normals=new Float64Array(p.length),edges=new Map();
+ for(let t=0;t<f.length;t+=3){let a=f[t],b=f[t+1],c=f[t+2],ax=p[b*3]-p[a*3],ay=p[b*3+1]-p[a*3+1],az=p[b*3+2]-p[a*3+2],bx=p[c*3]-p[a*3],by=p[c*3+1]-p[a*3+1],bz=p[c*3+2]-p[a*3+2],cr=[ay*bz-az*by,az*bx-ax*bz,ax*by-ay*bx];for(const i of[a,b,c])for(let q=0;q<3;q++)normals[i*3+q]+=cr[q];for(const [i,j]of[[a,b],[b,c],[c,a]]){let key=i<j?`${i}:${j}`:`${j}:${i}`;let e=edges.get(key);if(e)e.count++;else edges.set(key,{a:i,b:j,count:1});}}
+ const nextP=new Float32Array(p.length*2),nextM=new Float32Array(surface.masks.length*2);
+ for(let i=0;i<n;i++){let length=Math.hypot(normals[i*3],normals[i*3+1],normals[i*3+2])||1;for(let q=0;q<3;q++){let delta=normals[i*3+q]/length*thickness*.5;nextP[i*3+q]=p[i*3+q]+delta;nextP[(i+n)*3+q]=p[i*3+q]-delta;nextM[i*3+q]=nextM[(i+n)*3+q]=surface.masks[i*3+q];}}
+ const rim=[...edges.values()].filter(e=>e.count===1),nextF=new Uint32Array(f.length*2+rim.length*6);let cursor=0;
+ for(let t=0;t<f.length;t+=3){const a=f[t],b=f[t+1],c=f[t+2];nextF.set([a,b,c,a+n,c+n,b+n],cursor);cursor+=6;}
+ for(const {a,b}of rim){nextF.set([a,a+n,b+n,a,b+n,b],cursor);cursor+=6;}
+ return{...surface,positions:nextP,masks:nextM,indices:nextF,shellThickness:thickness};
+}
