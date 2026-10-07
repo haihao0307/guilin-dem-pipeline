@@ -36,6 +36,7 @@ jobs:
         working-directory: .github/qa/unified-full-20261007
         run: |
           node tools/export_geometry.mjs
+          node tools/export_semantic_pose.mjs
           node tools/export_semantic_masks.mjs
           python restore_registration.py
           npm install --no-save --ignore-scripts --package-lock=false playwright@1.57.0
