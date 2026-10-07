@@ -28,6 +28,7 @@ const perspective=new THREE.PerspectiveCamera(35,1,.01,100),orthographic=new THR
 perspective.position.set(4,3.5,5.4);perspective.lookAt(target);orthographic.position.set(0,1.35,7);orthographic.lookAt(target);
 const controls=new OrbitControls(camera,canvas);controls.target.copy(target);controls.enableDamping=true;controls.dampingFactor=.08;controls.minDistance=1.2;controls.maxDistance=14;controls.maxPolarAngle=Math.PI;controls.screenSpacePanning=true;controls.addEventListener('change',invalidate);
 const material=new THREE.MeshStandardMaterial({color:0xbabbb8,metalness:0,roughness:1,side:THREE.FrontSide});let mesh=null,ranges=[],lineage=[],lastGeometry=null;
+let framingBounds=resumeState?.framingSphere?new THREE.Sphere(new THREE.Vector3().fromArray(resumeState.framingSphere.center),resumeState.framingSphere.radius):null,fitPending=!resumeState?.camera,portraitHalfY=resumeState?.portraitHalfY??2.7,framingRecord=resumeState?.framingRecord??null,lastViewportWidth=0,lastViewportHeight=0;
 const selectionMaterial=new THREE.MeshBasicMaterial({color:0xd0e3d8,wireframe:true,transparent:true,opacity:.38,depthTest:true});let selectedMesh=null;
 let sequence=0,requested=0,displayed=0,geometryBusy=false,queued=false,playing=false,time=1,lastFrame=0,lastRequest=0,parameters={seed:'17',density:1,fold:1};
 let worker;const pendingDownloads=new Map();
@@ -46,10 +47,12 @@ worker.onmessage=({data})=>{
  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(data.positions,3));geometry.setAttribute('normal',new THREE.BufferAttribute(data.normals,3));geometry.setIndex(new THREE.BufferAttribute(data.indices,1));geometry.computeBoundingSphere();
  if(mesh){mesh.geometry.dispose();mesh.geometry=geometry;}else{mesh=new THREE.Mesh(geometry,material);mesh.onBeforeRender=()=>{beforeMainDraw={calls:renderer.info.render.calls,triangles:renderer.info.render.triangles};};mesh.onAfterRender=()=>{mainDrawCalls+=renderer.info.render.calls-beforeMainDraw.calls;mainTriangles+=renderer.info.render.triangles-beforeMainDraw.triangles;};scene.add(mesh);}
  ranges=data.ranges;lineage=data.lineage;lastGeometry=data;displayed=data.time;
+ if(data.time>=.999||!framingBounds)framingBounds=geometry.boundingSphere.clone();
  updatePartOptions();updateSelected();
  $('part-count').textContent=`${ranges.length} 个活动分件`;
  $('status').textContent=lifecycle.contextLost?'图形上下文已丢失，等待恢复。':`画面 ${Math.round(displayed*100)}% · ${(data.indices.length/3).toLocaleString('zh-CN')} 三角面 · ${data.quality==='mobilePreview'?'手机采样 · ':''}原始分件预览`;
  canvas.dataset.renderedTime=String(displayed);canvas.dataset.vertices=String(data.positions.length/3);canvas.dataset.triangles=String(data.indices.length/3);canvas.dataset.generation=String(data.id);
+ if(fitPending&&fitPortraitCamera())fitPending=false;
  timings.geometryInstallCount++;timings.geometryInstallMsLast=performance.now()-installStarted;timings.geometryInstallMsTotal+=timings.geometryInstallMsLast;timings.geometryBytesInstalled+=data.positions.byteLength+data.normals.byteLength+data.indices.byteLength;invalidate();
  if(queued){queued=false;requestGeometry();}
 };
@@ -70,14 +73,14 @@ function updateParameters(){stop();parameters={seed:$('seed').value||'17',densit
 let parameterTimer;
 for(const id of ['density','fold'])$(id).addEventListener('input',()=>{$(`${id}-value`).textContent=`${Number($(id).value).toFixed(2)}×`;clearTimeout(parameterTimer);parameterTimer=setTimeout(updateParameters,140);});
 $('seed').addEventListener('change',updateParameters);$('seed').addEventListener('keydown',event=>{if(event.key==='Enter'){$('seed').blur();updateParameters();}});
-$('reset').onclick=()=>{clearTimeout(parameterTimer);$('seed').value='17';$('density').value='1';$('fold').value='1';$('wire').checked=false;material.wireframe=false;$('part').value='';updateTime(1);setView('perspective');updateParameters();};
+$('reset').onclick=()=>{clearTimeout(parameterTimer);$('seed').value='17';$('density').value='1';$('fold').value='1';$('wire').checked=false;material.wireframe=false;$('part').value='';updateTime(1);setView('perspective');fitPending=true;updateParameters();};
 $('wire').addEventListener('change',()=>{material.wireframe=$('wire').checked;invalidate();});
 function setView(view){
  if(lifecycle.disposed)return;
  const damping=controls.enableDamping;controls.enableDamping=false;controls.update();
  const isPerspective=view==='perspective';camera=isPerspective?perspective:orthographic;controls.object=camera;controls.target.copy(target);camera.up.set(0,1,0);
  if(isPerspective){camera.position.set(4,3.5,5.4);camera.zoom=1;}else{camera.zoom=1;if(view==='front')camera.position.set(0,1.35,7);if(view==='side')camera.position.set(7,1.35,0);if(view==='top'){camera.position.set(0,8,0);camera.up.set(0,0,-1);}}
- camera.lookAt(target);controls.update();controls.enableDamping=damping;invalidate();resize();for(const button of document.querySelectorAll('[data-view]'))button.setAttribute('aria-pressed',String(button.dataset.view===view));
+ camera.lookAt(target);controls.update();controls.enableDamping=damping;invalidate();resize();if(!fitPortraitCamera())fitPending=true;for(const button of document.querySelectorAll('[data-view]'))button.setAttribute('aria-pressed',String(button.dataset.view===view));
 }
 for(const button of document.querySelectorAll('[data-view]'))button.onclick=()=>setView(button.dataset.view);
 function zoomCamera(factor){
@@ -87,7 +90,46 @@ function zoomCamera(factor){
  controls.update();invalidate();renderScene();
 }
 $('zoom-in').onclick=()=>zoomCamera(.84);$('zoom-out').onclick=()=>zoomCamera(1/.84);
-function resize(){if(lifecycle.disposed)return;invalidate();const nextQuality=chooseRenderQuality();if(nextQuality!==renderQuality){renderQuality=nextQuality;requestGeometry();}const w=window.innerWidth,h=window.innerHeight;renderer.setSize(w,h,false);perspective.aspect=w/h;perspective.updateProjectionMatrix();const aspect=w/h,halfY=aspect<.8?2.7:2.15;orthographic.left=-halfY*aspect;orthographic.right=halfY*aspect;orthographic.top=halfY;orthographic.bottom=-halfY;orthographic.updateProjectionMatrix();if(aspect<.8&&camera===perspective&&camera.position.distanceTo(controls.target)<8.5)camera.position.copy(controls.target).add(new THREE.Vector3(4,2.15,5.4).normalize().multiplyScalar(8.8));}
+// Fit only explicit views / initial load on narrow screens. Geometry and timeline
+// never change camera scale. The same framing sphere is retained through growth.
+function availablePortraitRect(){
+ const w=innerWidth,h=innerHeight,pad=12;
+ const top=Math.max(document.querySelector('header').getBoundingClientRect().bottom,$('tools').getBoundingClientRect().bottom,$('views').getBoundingClientRect().bottom)+pad;
+ const bottom=Math.min($('timeline').getBoundingClientRect().top,$('status').getBoundingClientRect().top,$('hint').getBoundingClientRect().top)-pad;
+ return {left:pad,right:w-pad,top,bottom:Math.max(top+80,bottom),width:Math.max(80,w-pad*2),height:Math.max(80,bottom-top)};
+}
+function setPortraitProjection(rect=availablePortraitRect()){
+ const w=innerWidth,h=innerHeight,offsetX=w/2-(rect.left+rect.right)/2,offsetY=h/2-(rect.top+rect.bottom)/2;
+ // Shift the optical centre into the unobstructed rectangle; raycasting continues
+ // to use the full canvas because the camera projection includes this offset.
+ perspective.setViewOffset(w,h,offsetX,offsetY,w,h);
+ orthographic.setViewOffset(w,h,offsetX,offsetY,w,h);
+ return rect;
+}
+function fitPortraitCamera(){
+ if(innerWidth>640){fitPending=false;return true;}
+ if(!framingBounds)return false;
+ const rect=setPortraitProjection(),radius=framingBounds.radius*1.06;
+ const direction=camera.position.clone().sub(controls.target).normalize();
+ const damping=controls.enableDamping;controls.enableDamping=false;controls.update();
+ target.copy(framingBounds.center);controls.target.copy(target);
+ const halfVertical=THREE.MathUtils.degToRad(perspective.fov/2);
+ const horizontalAngle=Math.atan(Math.tan(halfVertical)*rect.width/innerHeight);
+ const verticalAngle=Math.atan(Math.tan(halfVertical)*rect.height/innerHeight);
+ const distance=radius/Math.sin(Math.min(horizontalAngle,verticalAngle));
+ controls.maxDistance=Math.max(14,distance*2);camera.zoom=1;
+ portraitHalfY=radius*Math.max(innerHeight/rect.width,innerHeight/rect.height);
+ const aspect=innerWidth/innerHeight;orthographic.left=-portraitHalfY*aspect;orthographic.right=portraitHalfY*aspect;orthographic.top=portraitHalfY;orthographic.bottom=-portraitHalfY;orthographic.updateProjectionMatrix();
+ camera.position.copy(target).addScaledVector(direction,camera.isPerspectiveCamera?distance:Math.max(7,framingBounds.radius*3));camera.lookAt(target);camera.updateProjectionMatrix();controls.update();controls.enableDamping=damping;
+ framingRecord={method:'actual geometry bounding sphere and unobstructed canvas rectangle',rect,sphere:{center:framingBounds.center.toArray(),radius:framingBounds.radius},margin:1.06,distance,portraitHalfY};invalidate();return true;
+}
+function resize(){
+ if(lifecycle.disposed)return;invalidate();const nextQuality=chooseRenderQuality();if(nextQuality!==renderQuality){renderQuality=nextQuality;fitPending=true;requestGeometry();}
+ const w=window.innerWidth,h=window.innerHeight,dimensionsChanged=w!==lastViewportWidth||h!==lastViewportHeight;lastViewportWidth=w;lastViewportHeight=h;renderer.setSize(w,h,false);perspective.aspect=w/h;
+ const aspect=w/h,halfY=w<=640?portraitHalfY:2.15;orthographic.left=-halfY*aspect;orthographic.right=halfY*aspect;orthographic.top=halfY;orthographic.bottom=-halfY;
+ if(w<=640){if(dimensionsChanged)setPortraitProjection();}else{perspective.clearViewOffset();orthographic.clearViewOffset();framingRecord=null;}
+ perspective.updateProjectionMatrix();orthographic.updateProjectionMatrix();
+}
 window.addEventListener('resize',resize);
 function updatePartOptions(){
  const ids=lineage.map(r=>r.id).join('|');if($('part').dataset.ids===ids)return;
@@ -156,7 +198,7 @@ canvas.addEventListener('webglcontextlost',onContextLost,false);canvas.addEventL
 function disposePage(event){
  if(lifecycle.disposed)return;
  const before={buffers:bufferMemory(),rendererMemory:rendererMemory()};
- writeSession('resume',{params:{...parameters},time,camera:{view:document.querySelector('[data-view][aria-pressed=true]')?.dataset.view??'perspective',position:camera.position.toArray(),up:camera.up.toArray(),target:controls.target.toArray(),zoom:camera.zoom}});
+ writeSession('resume',{params:{...parameters},time,framingSphere:framingBounds?{center:framingBounds.center.toArray(),radius:framingBounds.radius}:null,portraitHalfY,framingRecord,camera:{view:document.querySelector('[data-view][aria-pressed=true]')?.dataset.view??'perspective',position:camera.position.toArray(),up:camera.up.toArray(),target:controls.target.toArray(),zoom:camera.zoom}});
  lifecycle.disposed=true;lifecycle.phase='disposed';stop();const record={instanceId:lifecycle.instanceId,event:'pagehide',persisted:!!event.persisted,at:Date.now(),before,errors:[]};
  const release=(name,fn)=>{try{fn();record[name]=true;}catch(error){record[name]=false;record.errors.push(`${name}: ${error.message}`);}};
  release('rafCancelled',()=>{if(rafId!==null)cancelAnimationFrame(rafId);rafId=null;});
@@ -178,7 +220,7 @@ resize();
 if(resumeState?.params){
  parameters={seed:String(resumeState.params.seed??'17'),density:Number(resumeState.params.density??1),fold:Number(resumeState.params.fold??1)};$('seed').value=parameters.seed;$('density').value=String(parameters.density);$('fold').value=String(parameters.fold);$('density-value').textContent=`${parameters.density.toFixed(2)}×`;$('fold-value').textContent=`${parameters.fold.toFixed(2)}×`;
  updateTime(Number.isFinite(resumeState.time)?resumeState.time:1);
- const saved=resumeState.camera;if(saved){setView(saved.view);camera.position.fromArray(saved.position);camera.up.fromArray(saved.up);camera.zoom=saved.zoom;controls.target.fromArray(saved.target);camera.updateProjectionMatrix();controls.update();}
+ const saved=resumeState.camera;if(saved){setView(saved.view);camera.position.fromArray(saved.position);camera.up.fromArray(saved.up);camera.zoom=saved.zoom;controls.target.fromArray(saved.target);target.copy(controls.target);fitPending=false;camera.updateProjectionMatrix();controls.update();}
 }else updateTime(1);
 requestGeometry();startAnimation();
 // Read-only audit: observations of actual buffers and WebGL output, never a pass flag.
@@ -201,6 +243,7 @@ function exposeReadonlyAudit(){
    lifecycle:JSON.parse(JSON.stringify(lifecycle)),workerAlive:worker!==null,rafPending:rafId!==null,
    geometryFingerprint:geometryFingerprint(),rendererTriangles:renderer.info.render.triangles,rendererCalls:renderer.info.render.calls,
    parts:ranges.length,vertices:lastGeometry?.positions.length/3||0,faces:lastGeometry?.indices.length/3||0,union:false,selected:$('part').value,
+   framing:framingRecord?JSON.parse(JSON.stringify(framingRecord)):null,
    camera:{type:camera.type,position:camera.position.toArray(),up:camera.up.toArray(),zoom:camera.zoom,target:controls.target.toArray()}
   };},
   pixelDigest(){
@@ -213,10 +256,10 @@ function exposeReadonlyAudit(){
    const glError=gl.getError(),border=new Map();
    const sample=(x,y)=>{const i=(y*width+x)*4,key=`${pixels[i]},${pixels[i+1]},${pixels[i+2]},${pixels[i+3]}`;border.set(key,(border.get(key)||0)+1);};
    for(let i=0;i<20;i++){const x=Math.min(width-1,Math.floor(i*width/20)),y=Math.min(height-1,Math.floor(i*height/20));sample(x,0);sample(x,height-1);sample(0,y);sample(width-1,y);}
-   const background=[...border].sort((a,b)=>b[1]-a[1])[0][0].split(',').map(Number);let nonBackgroundPixels=0;
-   for(let i=0;i<pixels.length;i+=4)if(Math.abs(pixels[i]-background[0])+Math.abs(pixels[i+1]-background[1])+Math.abs(pixels[i+2]-background[2])>9)nonBackgroundPixels++;
+   const background=[...border].sort((a,b)=>b[1]-a[1])[0][0].split(',').map(Number);let nonBackgroundPixels=0,minX=width,minY=height,maxX=-1,maxY=-1;
+   for(let i=0;i<pixels.length;i+=4)if(Math.abs(pixels[i]-background[0])+Math.abs(pixels[i+1]-background[1])+Math.abs(pixels[i+2]-background[2])>9){nonBackgroundPixels++;const x=(i/4)%width,y=height-1-Math.floor(i/4/width);minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);}
    const hash=hashBytes(pixels);timings.pixelDigestCount++;timings.pixelDigestMsLast=performance.now()-digestStarted;timings.pixelDigestMsTotal+=timings.pixelDigestMsLast;
-   return {width,height,background,nonBackgroundPixels,nonBackgroundFraction:nonBackgroundPixels/(width*height),hash,glErrorBefore,glError,rendererTriangles:renderer.info.render.triangles,rendererCalls:renderer.info.render.calls,mainDrawCalls,mainTriangles,buffers:bufferMemory(),rendererMemory:rendererMemory(),readbackMs:timings.readbackMsLast,pixelDigestMs:timings.pixelDigestMsLast,renderSubmitMs:timings.renderSubmitMsLast};
+   return {width,height,background,nonBackgroundBounds:{minX,minY,maxX,maxY},nonBackgroundPixels,nonBackgroundFraction:nonBackgroundPixels/(width*height),hash,glErrorBefore,glError,rendererTriangles:renderer.info.render.triangles,rendererCalls:renderer.info.render.calls,mainDrawCalls,mainTriangles,buffers:bufferMemory(),rendererMemory:rendererMemory(),readbackMs:timings.readbackMsLast,pixelDigestMs:timings.pixelDigestMsLast,renderSubmitMs:timings.renderSubmitMsLast};
   }
  };
  Object.defineProperty(window,'__coralAudit',{value:Object.freeze(audit),writable:false,configurable:false});
