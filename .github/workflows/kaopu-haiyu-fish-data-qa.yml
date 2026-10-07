@@ -36,6 +36,12 @@ jobs:
           node kaopu-haiyu-workbench/studies/fish-data-fit-r01/tests/dom-smoke.cjs
           node kaopu-haiyu-workbench/studies/fish-data-fit-r01/tests/browser.cjs
           cp kaopu-haiyu-workbench/studies/fish-data-fit-r01/qa/*.json haiyu-fish-data-evidence/
+      - name: Verify exact public Pages bytes and interactions
+        env:
+          NODE_PATH: ${{ github.workspace }}/.haiyu-data-qa/node_modules
+          HAIYU_FISH_DATA_OUT: ${{ github.workspace }}/haiyu-fish-data-evidence/public
+          HAIYU_FISH_PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-haiyu-workbench/studies/fish-data-fit-r01/
+        run: node kaopu-haiyu-workbench/studies/fish-data-fit-r01/tests/browser.cjs
       - name: Preserve Chromium screenshots and QA evidence
         if: always()
         uses: actions/upload-artifact@v4
