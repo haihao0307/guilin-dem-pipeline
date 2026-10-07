@@ -56,15 +56,13 @@ jobs:
           trap 'kill "$server" 2>/dev/null || true' EXIT
           sleep 2
           failed=0
-          timeout 420s node kaopu-minigame-workbench/storm-orb-study/tests/whole-scene.cjs || failed=1
-          STORM_BROWSER=webkit timeout 420s node kaopu-minigame-workbench/storm-orb-study/tests/whole-scene.cjs || failed=1
+          timeout 600s node kaopu-minigame-workbench/storm-orb-study/tests/approved-rock-references.cjs || failed=1
           exit "$failed"
       - name: Upload checkpoint evidence not visual approval
         if: always() && steps.scope.outputs.changed == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: storm-whole-scene-evidence
+          name: approved-rock-references
           retention-days: 7
           path: |
-            whole-chromium/*
-            whole-webkit/*
+            approved-rock-references/*
