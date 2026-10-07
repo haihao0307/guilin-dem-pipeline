@@ -3,7 +3,7 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),read=
 const teacher=JSON.parse(read('src/learning-teachers.json')),sample=JSON.parse(read('src/motion-sample.json'));
 const strip=s=>s.replaceAll('export function ','function ').replaceAll('export const ','const ');
 const source=read('src/learning.js').replace("import TEACHERS_DATA from './learning-teachers.json';",'const TEACHERS_DATA='+JSON.stringify(teacher)+';');
-const js='const MOTION_SAMPLE='+JSON.stringify(sample)+';\nconst MOTION_SAMPLE_VIDEO='+JSON.stringify(fs.readFileSync(path.join(root,'assets/muybridge-horse.mp4')).toString('base64'))+';\n'+strip(read('src/video-motion-core.js'))+'\n'+strip(read('src/video-motion-ui.js'))+'\n'+strip(source)+'\nmountLearning(document.getElementById("animal-learning"));';
+const js='const MOTION_SAMPLE='+JSON.stringify(sample)+';\nconst MOTION_SAMPLE_VIDEO='+JSON.stringify(fs.readFileSync(path.join(root,'assets/muybridge-horse.webm')).toString('base64'))+';\n'+strip(read('src/video-motion-core.js'))+'\n'+strip(read('src/video-motion-ui.js'))+'\n'+strip(source)+'\nmountLearning(document.getElementById("animal-learning"));';
 if(/(^|\n)\s*(import|export)\s/.test(js))throw Error('Unbundled module');
 const html=read('src/host-shell.html').replace('__ANIMAL_BUNDLE__',js.replaceAll('</script','<\\/script'));
 fs.writeFileSync(path.join(root,'index.html'),html);

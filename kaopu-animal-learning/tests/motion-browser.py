@@ -39,8 +39,10 @@ def main():
   q('#vm-rate').select_option('0.5');q('#vm-play').click();page.wait_for_timeout(500);q('#vm-play').click();check('half-speed playback advances decoded clock',lambda:yes(ev("const v=s.querySelector('#vm-video');return v.paused&&v.playbackRate===.5&&v.currentTime>.1&&v.currentTime<.6")))
   # Route away during active media and return: no old media resurrects.
   page.evaluate("location.hash='#animal-learning/annotate'");q('#image-file').wait_for();page.go_back();q('#vm-file').wait_for();check('leaving route cleans video and resets local state',lambda:yes(q('#vm-frame').is_hidden()))
-  q('#vm-file').set_input_files(str(ROOT/'assets/muybridge-horse.mp4'));expect(q('#vm-status')).to_contain_text('视频已载入');check('local file import is independent from sample annotation',lambda:yes(q('#vm-timeline button').count()==0))
+  q('#vm-file').set_input_files(str(ROOT/'assets/muybridge-horse.webm'));expect(q('#vm-status')).to_contain_text('视频已载入');check('local file import is independent from sample annotation',lambda:yes(q('#vm-timeline button').count()==0))
   q('#vm-record').click();check('local decoded frame can be authored',lambda:yes(q('#vm-timeline button').count()==1))
+  for _ in range(4):q('#vm-next').click();page.wait_for_timeout(100)
+  check('manual fps mismatch still progresses requested timeline',lambda:yes(float(q('#vm-time').inner_text().split()[0])>=.1))
   # Rapid repeat sample opens must not attach stale decode to newer state.
   q('#vm-sample').dblclick();expect(page.locator('#vm-status')).to_contain_text('样例已就绪',timeout=20000);check('repeated import settles to one sample',lambda:yes(q('#vm-timeline button').count()==15))
   page.set_viewport_size({'width':1920,'height':1080});page.wait_for_timeout(100);page.screenshot(path=str(OUT/'sample-wide-desktop.png'),full_page=True)

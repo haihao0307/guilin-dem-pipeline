@@ -37,7 +37,7 @@ jobs:
           cp kaopu-animal-learning/index.html /tmp/animal-before.html
           node kaopu-animal-learning/tools/build.mjs
           cmp /tmp/animal-before.html kaopu-animal-learning/index.html
-          ffprobe -v error -count_frames -select_streams v:0 -show_entries stream=width,height,r_frame_rate,nb_read_frames,duration -of json kaopu-animal-learning/assets/muybridge-horse.mp4 > kaopu-animal-learning/qa/VIDEO_PROBE.json
+          ffprobe -v error -count_frames -select_streams v:0 -show_entries stream=width,height,r_frame_rate,nb_read_frames,duration -of json kaopu-animal-learning/assets/muybridge-horse.webm > kaopu-animal-learning/qa/VIDEO_PROBE.json
           node kaopu-animal-learning/tests/static-numeric.mjs
           node kaopu-animal-learning/tests/motion-numeric.mjs
       - name: Real desktop video, timeline, 3D and recovery checks

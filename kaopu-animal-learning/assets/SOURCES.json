@@ -1,13 +1,13 @@
 {
-  "asset": "muybridge-horse.mp4",
+  "asset": "muybridge-horse.webm",
   "source": "https://commons.wikimedia.org/wiki/File:Muybridge_race_horse_animated.gif",
   "download": "https://upload.wikimedia.org/wikipedia/commons/d/dd/Muybridge_race_horse_animated.gif",
   "author": "Eadweard Muybridge (photos, published 1887); Waugsberg (animation, 2006)",
   "license": "Public domain: PD-old-100-expired; PD-US-expired; source marks PDM 1.0",
   "licenseURL": "https://creativecommons.org/publicdomain/mark/1.0/",
   "sourceSHA256": "eb40bebc1f039e7c2a121673c3b55d4aa73582f858053dbbcca9ebce9e2b479d",
-  "derivativeSHA256": "3eae9d74c22df9d6d77e332d2a6731ee99f6101b01d7761df692bae7f9ff1175",
-  "conversion": "ffmpeg -i source.gif -an -c:v libx264 -crf 18 -pix_fmt yuv420p -movflags +faststart muybridge-horse.mp4",
+  "derivativeSHA256": "f16ce0d6f8073698655c6b1ae07ec0f1d21dcc51857ee1251dffe3414e4e7466",
+  "conversion": "ffmpeg -i source.gif -an -c:v libvpx -pix_fmt yuv420p -b:v 1500k -g 1 -qmin 0 -qmax 10 muybridge-horse.webm",
   "dimensions": [
     300,
     200
@@ -15,6 +15,6 @@
   "frames": 15,
   "animationFrameDurationSeconds": 0.1,
   "durationSeconds": 1.5,
-  "changes": "Lossy H.264 encoding only. Original aspect ratio and animation timing preserved.",
+  "changes": "All-intra VP8 encoding for accurate browser seeking; original 15-frame aspect ratio and animation timing preserved.",
   "annotation": "Manually authored coarse surface proxies. Limb A/B anatomical side unresolved; hidden B chains omitted. Not motion-capture ground truth."
 }

@@ -5,7 +5,7 @@
 ## 可直接完成的流程
 
 1. 打开内置公版奔马样例，或导入本地 MP4 / WebM / MOV（上限 100 MiB，浏览器须支持其编码）
-2. 暂停或步进。支持的浏览器用 `requestVideoFrameCallback.mediaTime` 记录实际解码帧时间；不支持时明确保存 `seek_time_browser_fallback`。手填帧率仅决定步进间隔，不声称检测了原帧率
+2. 暂停或步进。支持的浏览器用 `requestVideoFrameCallback.mediaTime` 记录实际解码帧时间；不支持或浏览器上报的解码时刻超前于当前定位时明确保存 `seek_time_browser_fallback`。手填帧率仅决定步进间隔，不声称检测了原帧率
 3. 在原视频像素坐标上记录可见表面代理点；遮挡和不确定部位不补造。A/B 是轨迹槽，不默认等于身体左右。只有相邻两关键帧都确认同一部位身份才插值；插值不是直接观察
 4. 同屏查看可旋转的 XYZ 观察骨架。初始 Z=0；深度由人填写，是假设而非恢复结果。可编辑 XY 偏移以查看投影偏差
 5. 显示侧面正交投影的 RMS/最大像素误差，以及人工确认接触足端的离地误差。直接回投为零不能验证真实三维；本版骨段长度随点位变化，没有固定骨长、物理接触或皮肤绑定
@@ -15,7 +15,7 @@
 
 ## 内置验证材料
 
-Eadweard Muybridge 1887 年奔马照片，Waugsberg 2006 年的动画，来源页列为公有领域。`assets/SOURCES.json` 保存原始 URL、许可及原/转码 SHA-256。保留原始 300×200、15 帧、每帧 0.1 秒，转为 1.5 秒 H.264 MP4。动画编排速度不是生物真实步频。
+Eadweard Muybridge 1887 年奔马照片，Waugsberg 2006 年的动画，来源页列为公有领域。`assets/SOURCES.json` 保存原始 URL、许可及原/转码 SHA-256。保留原始 300×200、15 帧、每帧 0.1 秒，转为 1.5 秒 全关键帧 VP8 WebM。动画编排速度不是生物真实步频。
 
 `src/motion-sample.json` 是根据逐帧图像人工填写的粗略表面代理点，不是解剖关节真值。候选肢体 A 的时间身份未确认，B 保持不确定，因此样例肢体不自动插值，身体左右也不赋值。样例用于验证媒体/帧/编辑/导出链路，不能用作动捕精度基准。
 
@@ -27,7 +27,7 @@ Eadweard Muybridge 1887 年奔马照片，Waugsberg 2006 年的动画，来源�
 
 ## 构建与验收
 
-- `node tools/build.mjs`：可重复生成不依赖外部请求的薄页（内嵌公版视频约 139 KiB）
+- `node tools/build.mjs`：可重复生成不依赖外部请求的薄页（内嵌公版视频约 345 KiB）
 - `node tests/static-numeric.mjs`：原研究/工具 69 项回归
 - `node tests/motion-numeric.mjs`：动作数值、数据边界与素材指纹检查
 - `MOTION_ENGINE=chromium python tests/motion-browser.py`
