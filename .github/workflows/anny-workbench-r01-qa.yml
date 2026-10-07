@@ -1,0 +1,66 @@
+name: Anny workbench R01 read-only QA
+on:
+  workflow_dispatch:
+    inputs:
+      public_url:
+        description: 'Optional HTTPS URL to verify after release'
+        required: false
+        type: string
+  pull_request:
+    branches: [gh-pages]
+    paths:
+      - 'kaopu-anny-workbench/**'
+      - '.github/workflows/anny-workbench-r01-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: anny-r01-qa-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-anny-workbench
+          sparse-checkout-cone-mode: true
+      - name: Official Python fixture parity
+        run: cd kaopu-anny-workbench && node tests/model.mjs
+      - name: Install pinned browser QA dependency
+        run: |
+          npm install --prefix "$RUNNER_TEMP/anny-test" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/anny-test/node_modules/.bin/playwright" install --with-deps chromium webkit
+      - name: Chromium and WebKit rendered interaction
+        env:
+          ANNY_URL: http://127.0.0.1:8765/kaopu-anny-workbench/
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/anny-server.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -fsS "$ANNY_URL" > /dev/null && break || sleep 1; done
+          mkdir -p qa-chromium qa-webkit
+          (cd qa-chromium && NODE_PATH="$RUNNER_TEMP/anny-test/node_modules" node ../kaopu-anny-workbench/tests/browser.cjs)
+          (cd qa-webkit && ANNY_BROWSER=webkit NODE_PATH="$RUNNER_TEMP/anny-test/node_modules" node ../kaopu-anny-workbench/tests/browser.cjs)
+      - name: Verify public HTTPS release
+        if: always() && success()
+        env:
+          ANNY_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-anny-workbench/
+        run: |
+          mkdir -p public-chromium public-webkit
+          (cd public-chromium && NODE_PATH="$RUNNER_TEMP/anny-test/node_modules" node ../kaopu-anny-workbench/tests/browser.cjs)
+          (cd public-webkit && ANNY_BROWSER=webkit NODE_PATH="$RUNNER_TEMP/anny-test/node_modules" node ../kaopu-anny-workbench/tests/browser.cjs)
+      - name: Upload actual browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anny-r01-browser-evidence
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            kaopu-anny-workbench/tests/parity-report.json
+            qa-*/*.png
+            qa-*/anny-qa-result.json
+            public-*/*.png
+            public-*/anny-qa-result.json
