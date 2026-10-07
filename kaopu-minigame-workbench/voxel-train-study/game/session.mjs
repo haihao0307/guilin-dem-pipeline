@@ -15,7 +15,7 @@ export class Session{
     this.config={seed:String(seed),durationMinutes:[10,15,20].includes(Number(durationMinutes))?Number(durationMinutes):10};
     this.route=route(this.config.seed);this.tick=0;this.elapsed=0;this.accumulator=0;this.distance=0;this.velocity=0;this.throttle=0;this.brake=false;this.paused=false;this.started=false;this.finishing=false;
     this.phase='ready';this.phaseTime=0;this.door=0;this.stopStable=0;this.reverse=false;this.stationIndex=0;this.actors=[];this.rocks=[];this.events=[];this.eventId=0;this.sequence=0;this.inputLog=[];this.nextRockId=0;
-    this.stats={score:0,pickedUp:0,delivered:0,stops:0,missed:0,recovered:0,stoneHits:0,combo:0,bestCombo:0,satisfaction:85,accuracyTotal:0};
+    this.stats={score:0,pickedUp:0,delivered:0,lateDropOff:0,stops:0,missed:0,recovered:0,stoneHits:0,combo:0,bestCombo:0,satisfaction:85,accuracyTotal:0};
     this.station=null;this.stationStates=new Map();this.activateStation(0);
     for(const [i,seatId] of [0,3,9,12].entries())this.actors.push({id:'start-'+i,appearance:i,kind:'seated',frame:'train',position:SEATS[seatId].position.slice(),seatId,destination:i<2?0:1,walk:0,pose:'seated',age:0});
   }
@@ -46,7 +46,7 @@ export class Session{
     return{accepted:true};
   }
   serviceLocked(){return['doors-opening','unloading','boarding','ready-depart','doors-closing'].includes(this.phase);}
-  canRecover(){return this.station?.missed&&!this.station.completed&&this.distance-this.station.target<=40&&Math.abs(this.velocity)<.35&&!this.serviceLocked();}
+  canRecover(){return!!this.station&&!this.station.completed&&this.distance>this.station.target+this.station.radius&&this.distance-this.station.target<=40&&Math.abs(this.velocity)<.35&&!this.serviceLocked();}
   platformCoversDoors(){const min=this.station.target-31,max=this.station.target-7;return COACHES.every(c=>[c.frontDoor,c.rearDoor].every(x=>{const world=this.distance+x-FRONT_X;return world>=min+.22&&world<=max-.22;}));}
   canOpen(){return!!this.station&&!this.station.completed&&Math.abs(this.velocity)<.35&&this.stopStable>=.8&&Math.abs(this.station.target-this.distance)<=7&&this.platformCoversDoors();}
   stationAction(){
@@ -101,7 +101,7 @@ export class Session{
   updateActors(){
     for(const a of this.actors){a.age+=DT;if(!a.path)continue;const p=a.path;if(p.delay>0){p.delay-=DT;continue;}let budget=1.65*DT;
       while(budget>0&&p.segment<p.points.length-1){const from=p.points[p.segment],to=p.points[p.segment+1],length=dist(from,to),remain=length-p.progress;if(remain<=budget+.000001){a.position=to.slice();budget-=remain;p.segment++;p.progress=0;}else{p.progress+=budget;const u=length?p.progress/length:1;a.position=from.map((v,i)=>v+(to[i]-v)*u);budget=0;}a.walk+=DT*8;a.heading=Math.atan2(-(to[2]-from[2]),to[0]-from[0]);}
-      if(p.segment>=p.points.length-1){a.path=null;if(p.kind==='board'){a.kind='seated';a.frame='train';a.position=SEATS[a.seatId].position.slice();a.pose='seated';this.stats.pickedUp++;this.station.boarded++;this.stats.score+=Math.round(10*(1+Math.min(this.stats.combo,5)*.15));this.emit('passenger-seated',{actor:a.id,seat:a.seatId});}else{a.kind='gone';a.pose='waving';a.age=0;this.stats.delivered++;this.station.alighted++;this.stats.score+=25;this.emit('passenger-delivered',{actor:a.id});}}
+      if(p.segment>=p.points.length-1){a.path=null;if(p.kind==='board'){a.kind='seated';a.frame='train';a.position=SEATS[a.seatId].position.slice();a.pose='seated';this.stats.pickedUp++;this.station.boarded++;this.stats.score+=Math.round(10*(1+Math.min(this.stats.combo,5)*.15));this.emit('passenger-seated',{actor:a.id,seat:a.seatId});}else if(p.kind==='alight'){const end=a.position.slice(),late=a.destination<this.station.index;a.kind='leaving';a.pose='walking';a.path=makePath([end,[end[0]+1.2,.82,5.35],[end[0]+1.2,.45,5.8],[end[0]+2,.14,6.2],[end[0]+4.5,.14,6.4]],'leave');this.stats.delivered++;this.station.alighted++;this.stats.score+=late?10:25;if(late){this.stats.lateDropOff++;this.stats.satisfaction=clamp(this.stats.satisfaction-2,0,100);}this.emit('passenger-delivered',{actor:a.id,late});}else{a.kind='gone';a.pose='idle';a.age=0;}}
     }
   }
   completeStop(){
@@ -136,4 +136,4 @@ export class Session{
   replayPacket(){return{version:1,config:{...this.config},ticks:this.tick,inputs:this.inputLog.map(x=>({...x}))};}
   signature(){return JSON.stringify({tick:this.tick,distance:+this.distance.toFixed(6),velocity:+this.velocity.toFixed(6),phase:this.phase,station:this.stationIndex,stats:this.stats,actors:this.actors.map(a=>({id:a.id,kind:a.kind,seat:a.seatId,position:a.position.map(v=>+v.toFixed(6))}))});}
 }
-export function replay(packet){const game=new Session(packet.config),inputs=packet.inputs.slice().sort((a,b)=>a.tick-b.tick||a.sequence-b.sequence);let i=0;while(game.tick<packet.ticks){while(i<inputs.length&&inputs[i].tick===game.tick)game.apply(inputs[i++]);if(!game.started||game.paused)throw new Error('Replay is paused before its final tick');game.step();}while(i<inputs.length&&inputs[i].tick===game.tick)game.apply(inputs[i++]);return game;}
+export function replay(packet){const game=new Session(packet.config),inputs=packet.inputs.slice().sort((a,b)=>a.tick-b.tick||a.sequence-b.sequence);let i=0;while(game.tick<packet.ticks){while(i<inputs.length&&inputs[i].tick===game.tick)game.apply(inputs[i++]);if(!game.started||game.paused)throw new Error('Replay is paused before its final tick');game.step();}while(i<inputs.length&&inputs[i].tick===game.tick)game.apply(inputs[i++]);game.inputLog=inputs.map(x=>({...x}));game.sequence=inputs.reduce((n,x)=>Math.max(n,x.sequence),0);return game;}

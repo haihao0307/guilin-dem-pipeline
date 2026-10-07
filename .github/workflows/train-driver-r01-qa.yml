@@ -15,15 +15,65 @@ jobs:
   deterministic-session:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+    outputs:
+      browser_required: ${{ steps.changed.outputs.browser_required }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 2
           persist-credentials: false
           sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Check this commit for driver changes
+        id: changed
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || ! git diff --quiet HEAD^ HEAD -- kaopu-minigame-workbench/voxel-train-study .github/workflows/train-driver-r01-qa.yml; then
+            echo "browser_required=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "browser_required=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Protect the approved classic source
         run: node kaopu-minigame-workbench/voxel-train-study/game/tests/classic-anchor.mjs
-      - name: Complete a seeded session and station recovery tests
+      - name: Complete seeded sessions, recovery and carriage tests
         run: |
-          node --check kaopu-minigame-workbench/voxel-train-study/game/session.mjs
+          node --check kaopu-minigame-workbench/voxel-train-study/game/app.mjs
           node kaopu-minigame-workbench/voxel-train-study/game/tests/session.test.mjs
           node kaopu-minigame-workbench/voxel-train-study/game/tests/model.test.mjs
+  game-browsers:
+    needs: deterministic-session
+    if: needs.deterministic-session.outputs.browser_required == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench
+      - name: Install official browser test dependency
+        run: |
+          npm install --prefix "$RUNNER_TEMP/driver-test" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/driver-test/node_modules/.bin/playwright" install --with-deps chromium webkit
+      - name: Play a real first stop and verify both browser engines
+        env:
+          NODE_PATH: ${{ runner.temp }}/driver-test/node_modules
+          TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/driver-server.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -fsS "$TRAIN_GAME_URL" > /dev/null && break || sleep 1; done
+          result=0
+          TRAIN_GAME_QA_DIR=driver-chromium timeout 360s node kaopu-minigame-workbench/voxel-train-study/game/tests/browser.cjs || result=$?
+          TRAIN_BROWSER=webkit TRAIN_GAME_QA_DIR=driver-webkit timeout 360s node kaopu-minigame-workbench/voxel-train-study/game/tests/browser.cjs || result=$?
+          exit "$result"
+      - name: Upload real game screenshots and results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-driver-r01-evidence
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            driver-chromium/*
+            driver-webkit/*

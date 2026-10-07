@@ -21,6 +21,7 @@ let samples=0;
 for(let i=0;i<20000&&game.phase!=='summary';i++){normalPilot(game);game.stepTicks(1);checkPeople(game);samples++;}
 assert.equal(game.phase,'summary','A full ten-minute run must finish');assert.ok(game.stats.stops>=8,'One full playtest should serve repeated stations');assert.ok(game.stats.pickedUp>20&&game.stats.delivered>15);assert.equal(game.stats.missed,0);assert.ok(game.stats.bestCombo>=8);assert.ok(game.elapsed>=600&&game.elapsed<630);
 assert.equal(replay(game.replayPacket()).signature(),game.signature(),'Seed plus input log reproduces the final score, actors and physics');
+const resumed=replay(game.replayPacket());assert.equal(resumed.replayPacket().inputs.length,game.inputLog.length,'Resume keeps the complete input history');
 
 const early=new Session({seed:'EARLY-STOP'});early.command('start');for(let i=0;i<3000&&early.phase!=='ready-depart';i++){normalPilot(early,5);early.stepTicks(1);checkPeople(early);}assert.equal(early.phase,'ready-depart');assert.equal(early.station.walkStop,true);assert.equal(early.stats.stops,1);assert.ok(early.stats.satisfaction>70);
 
