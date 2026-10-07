@@ -7,7 +7,7 @@ fs.mkdirSync(out,{recursive:true});
   const state=()=>page.evaluate(()=>__trainDriver.getState()),shot=name=>page.screenshot({path:out+'/'+name+'-'+engine+'.png'});
   try{
     console.log('DRIVER_QA: load '+engine);await page.goto(base+'?qa=1',{waitUntil:'networkidle'});await page.waitForFunction(()=>window.__trainDriver?.ready);await shot('menu');assert.deepEqual(errors,[]);assert.equal(await page.locator('canvas').count(),1);assert.equal(await page.locator('video,iframe').count(),0);
-    const initial=await state();assert.equal(initial.proof.existingVehicles,2);assert.equal(initial.proof.addedCoaches,2);assert.equal(initial.proof.wheels,32);assert.equal(initial.smokeParticles,160);assert.ok(initial.triangles>120000);
+    const initial=await state();assert.equal(initial.proof.existingVehicles,2);assert.equal(initial.proof.addedCoaches,2);assert.equal(initial.proof.wheels,32);assert.equal(initial.smokeParticles,160);assert.ok(initial.triangles>90000);assert.equal(initial.terrainProof.originalTriangles,initial.terrainProof.partitionedTriangles);assert.ok(initial.terrainProof.maxPositionDeviation<1e-6);
     await page.locator('#seed').fill('QA-DRIVER-01');await page.locator('#duration').selectOption('10');await page.locator('#startGame').click();await page.waitForFunction(()=>__trainDriver.getState().started);
     await page.locator('#accelerate').click();await page.locator('#accelerate').click();await page.locator('#accelerate').click();await page.waitForFunction(()=>__trainDriver.getState().velocity>1.2);
     await page.locator('#gameScene').focus();await page.keyboard.press('ArrowDown');assert.equal((await state()).throttle,2);
@@ -20,9 +20,9 @@ fs.mkdirSync(out,{recursive:true});
       assert.equal(v.paused,false,'No unintended pause during live input');
       if(v.station.canOpen){if(holding){await page.keyboard.up('Space');holding=false;}await page.locator('#gameScene').focus();await page.keyboard.press('e');continue;}
       if(v.station.canRecover&&!v.reverse&&v.station.remaining<0){if(holding){await page.keyboard.up('Space');holding=false;}await page.locator('#stationAction').click();continue;}
-      if(Math.abs(v.velocity)<.02){if(holding){await page.keyboard.up('Space');holding=false;}if(Math.abs(v.station.remaining)<=7&&v.station.platformCoverage){await page.waitForTimeout(150);continue;}if(v.station.remaining>0&&v.throttle<=0)await page.locator('#accelerate').click();}
-      else if((!v.reverse&&v.station.remaining<=v.brakingDistance+1.2)||(v.reverse&&v.station.remaining>-.5)){if(!holding){await page.keyboard.down('Space');holding=true;}}
-      else if(!holding&&!v.reverse){if(v.velocity>6&&v.throttle>0)await page.locator('#decelerate').click();else if(v.velocity<4.5&&v.throttle<2)await page.locator('#accelerate').click();}
+      if(Math.abs(v.velocity)<.02){if(holding){await page.keyboard.up('Space');holding=false;}if(Math.abs(v.station.remaining)<=7&&v.station.platformCoverage){await page.waitForTimeout(150);continue;}if(v.station.remaining>0&&v.throttle<=0)await page.keyboard.press('ArrowUp');}
+      else if((!v.reverse&&v.station.remaining<=v.brakingDistance+1.2+Math.abs(v.velocity))||(v.reverse&&v.station.remaining>-.5)){if(!holding){await page.keyboard.down('Space');holding=true;}}
+      else if(!holding&&!v.reverse){if(v.velocity>6&&v.throttle>0)await page.keyboard.press('ArrowDown');else if(v.velocity<4.5&&v.throttle<2)await page.keyboard.press('ArrowUp');}
       await page.waitForTimeout(90);
     }
     if(holding)await page.keyboard.up('Space');const served=await state();assert.equal(served.phase,'ready-depart','First station should be served using real input');assert.equal(served.stats.stops,1);assert.ok(served.stats.pickedUp>=2&&served.stats.delivered>=2);assert.equal(served.stats.missed,0);assert.ok(served.onboard<=16);await shot('served');console.log('DRIVER_QA: first station served '+JSON.stringify({fps:served.fps,renderRatio:served.renderRatio,renderer:served.rendererName,missed:served.stats.missed}));

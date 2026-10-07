@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {createSceneModel} from '../../scene.mjs';
-import {buildTrain} from '../heritage.mjs';
+import {buildTrain,buildEnvironment} from '../heritage.mjs';
+import {partitionTerrain,WORLD} from '../world.mjs';
 import {createGameTrain,WHEEL_RADIUS,RAIL_HEAD} from '../train-model.mjs';
 import {COACHES,SEATS} from '../session.mjs';
 const hash=g=>createHash('sha256').update(Buffer.from(g.attributes.position.array.buffer)).update(Buffer.from(g.attributes.color.array.buffer)).digest('hex');
@@ -11,6 +12,7 @@ assert.equal(game.proof.existingVehicles,2);assert.equal(game.proof.addedCoaches
 assert.equal(game.proof.inherited.removedLampBlocks,2,'Only the game headlight housing/lens is relocated');
 assert.equal(game.proof.inherited.bodyBlocks+game.proof.inherited.wheelBlocks.reduce((a,b)=>a+b,0)+2,game.proof.inherited.originalBlocks);
 assert.ok(game.proof.inherited.wheelBlocks.every(n=>n===46),'Every original wheel was separated without removing body blocks');
+const partition=partitionTerrain(buildEnvironment(WORLD,{platformCorridor:true,includeBridge:false,optimizeGeometry:true}));assert.equal(partition.proof.originalTriangles,partition.proof.partitionedTriangles,'Terrain batching preserves every retained surface');assert.ok(partition.proof.maxPositionDeviation<1e-6,'Plant-local coordinates reconstruct the original flat geometry');assert.equal(partition.proof.floraObjects,8);
 assert.equal(SEATS.length,16);assert.ok(game.wheels.every(w=>Math.abs(w.position.y-WHEEL_RADIUS-RAIL_HEAD)<1e-9),'Wheel treads meet the rail head without sinking into it');
 game.update({distance:3.9,brake:true,phase:'boarding',throttle:0,door:1},{interior:true});
 assert.ok(game.wheels.every(w=>Math.abs(w.rotation.z+3.9/WHEEL_RADIUS)<1e-9),'Wheel angle follows physical rolling distance');
