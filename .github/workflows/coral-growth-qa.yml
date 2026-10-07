@@ -47,6 +47,8 @@ jobs:
           assert hashlib.sha256(original.encode()).hexdigest()==m['motherOriginalSHA256'],'Non-additive mother edit'
           print('Original mother bytes, existing cases, assets and frozen growth core preserved')
           PYVERIFY
+      - name: Verify exact public release bytes
+        run: python3 .github/qa/coral-growth-public-verify.py .github/qa/coral-growth-production.json
       - name: Install fixed official browser tools
         run: |
           npm install --prefix "$RUNNER_TEMP/coral-test" --no-save --ignore-scripts playwright@1.57.0
@@ -56,6 +58,7 @@ jobs:
           NODE_PATH: ${{ runner.temp }}/coral-test/node_modules
           CORAL_ENGINE: ${{ matrix.engine }}
           CORAL_OUT: coral-${{ matrix.engine }}
+          CORAL_URL: https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-core-seed-r01/growth-lab-r01/
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/coral-server.log" 2>&1 &
           server=$!
@@ -72,6 +75,7 @@ jobs:
             coral-${{ matrix.engine }}/*.png
             coral-${{ matrix.engine }}/*.json
             coral-${{ matrix.engine }}/*.obj
+            coral-public-bytes.json
 
       - name: Save optional browser trace separately
         if: always()
