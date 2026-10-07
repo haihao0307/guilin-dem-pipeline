@@ -11,3 +11,7 @@ Next gate:720×720 reference view, diagnostic envelope, low foundation view and 
 ## A2 after first actual render
 
 First checkpoint run37573242949 rendered correctly but remains visually rejected: low left hill, elevated cabin, inward-facing lower shell and open tip. A2 raises the left hill, lowers cabin and surrounding right bank, closes the lower shell and corrects face winding. All2873 water vertices remain above the bed by at least0.089708units. Await new human review.
+
+## A3 after root A2 review
+
+A2 rejected as round single peak, steep trench banks and flat right terrain. A3 explicitly reshapes macro hill and cross-sections, adds a foreground shelf and right ridge, derives inside shallows from curvature, trims water width to leave those shallows visible, and adds a terrain-sampled continuous stone foundation and three entrance steps. Water minimum bed clearance0.042374; no submerged surface vertices. Final materials, clouds and motion remain unimplemented.
