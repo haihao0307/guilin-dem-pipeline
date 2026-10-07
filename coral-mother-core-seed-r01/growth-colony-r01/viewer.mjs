@@ -52,7 +52,7 @@ worker.onmessage=({data})=>{
  $('part-count').textContent=`${ranges.length} 个活动分件`;
  $('status').textContent=lifecycle.contextLost?'图形上下文已丢失，等待恢复。':`画面 ${Math.round(displayed*100)}% · ${(data.indices.length/3).toLocaleString('zh-CN')} 三角面 · ${data.quality==='mobilePreview'?'手机采样 · ':''}原始分件预览`;
  canvas.dataset.renderedTime=String(displayed);canvas.dataset.vertices=String(data.positions.length/3);canvas.dataset.triangles=String(data.indices.length/3);canvas.dataset.generation=String(data.id);
- if(fitPending&&fitPortraitCamera())fitPending=false;
+ if(fitPending&&fitCameraToBounds())fitPending=false;
  timings.geometryInstallCount++;timings.geometryInstallMsLast=performance.now()-installStarted;timings.geometryInstallMsTotal+=timings.geometryInstallMsLast;timings.geometryBytesInstalled+=data.positions.byteLength+data.normals.byteLength+data.indices.byteLength;invalidate();
  if(queued){queued=false;requestGeometry();}
 };
@@ -80,7 +80,7 @@ function setView(view){
  const damping=controls.enableDamping;controls.enableDamping=false;controls.update();
  const isPerspective=view==='perspective';camera=isPerspective?perspective:orthographic;controls.object=camera;controls.target.copy(target);camera.up.set(0,1,0);
  if(isPerspective){camera.position.set(4,3.5,5.4);camera.zoom=1;}else{camera.zoom=1;if(view==='front')camera.position.set(0,1.35,7);if(view==='side')camera.position.set(7,1.35,0);if(view==='top'){camera.position.set(0,8,0);camera.up.set(0,0,-1);}}
- camera.lookAt(target);controls.update();controls.enableDamping=damping;invalidate();resize();if(!fitPortraitCamera())fitPending=true;for(const button of document.querySelectorAll('[data-view]'))button.setAttribute('aria-pressed',String(button.dataset.view===view));
+ camera.lookAt(target);controls.update();controls.enableDamping=damping;invalidate();resize();if(!fitCameraToBounds())fitPending=true;for(const button of document.querySelectorAll('[data-view]'))button.setAttribute('aria-pressed',String(button.dataset.view===view));
 }
 for(const button of document.querySelectorAll('[data-view]'))button.onclick=()=>setView(button.dataset.view);
 function zoomCamera(factor){
@@ -90,15 +90,16 @@ function zoomCamera(factor){
  controls.update();invalidate();renderScene();
 }
 $('zoom-in').onclick=()=>zoomCamera(.84);$('zoom-out').onclick=()=>zoomCamera(1/.84);
-// Fit only explicit views / initial load on narrow screens. Geometry and timeline
+// Fit explicit views / initial load to an unobstructed rectangle. Geometry and timeline
 // never change camera scale. The same framing sphere is retained through growth.
-function availablePortraitRect(){
+function availableFrameRect(){
  const w=innerWidth,h=innerHeight,pad=12;
+ if(w>640){const left=$('tools').getBoundingClientRect().right+pad,right=w-24,top=Math.max(document.querySelector('header').getBoundingClientRect().bottom,$('views').getBoundingClientRect().bottom)+pad,bottom=Math.min($('timeline').getBoundingClientRect().top,$('status').getBoundingClientRect().top,$('hint').getBoundingClientRect().top)-pad;return {left,right,top,bottom,width:Math.max(80,right-left),height:Math.max(80,bottom-top)};}
  const top=Math.max(document.querySelector('header').getBoundingClientRect().bottom,$('tools').getBoundingClientRect().bottom,$('views').getBoundingClientRect().bottom)+pad;
  const bottom=Math.min($('timeline').getBoundingClientRect().top,$('status').getBoundingClientRect().top,$('hint').getBoundingClientRect().top)-pad;
  return {left:pad,right:w-pad,top,bottom:Math.max(top+80,bottom),width:Math.max(80,w-pad*2),height:Math.max(80,bottom-top)};
 }
-function setPortraitProjection(rect=availablePortraitRect()){
+function setFrameProjection(rect=availableFrameRect()){
  const w=innerWidth,h=innerHeight,offsetX=w/2-(rect.left+rect.right)/2,offsetY=h/2-(rect.top+rect.bottom)/2;
  // Shift the optical centre into the unobstructed rectangle; raycasting continues
  // to use the full canvas because the camera projection includes this offset.
@@ -106,10 +107,9 @@ function setPortraitProjection(rect=availablePortraitRect()){
  orthographic.setViewOffset(w,h,offsetX,offsetY,w,h);
  return rect;
 }
-function fitPortraitCamera(){
- if(innerWidth>640){fitPending=false;return true;}
+function fitCameraToBounds(){
  if(!framingBounds)return false;
- const rect=setPortraitProjection(),radius=framingBounds.radius*1.06;
+ const rect=setFrameProjection(),radius=framingBounds.radius*1.06;
  const direction=camera.position.clone().sub(controls.target).normalize();
  const damping=controls.enableDamping;controls.enableDamping=false;controls.update();
  target.copy(framingBounds.center);controls.target.copy(target);
@@ -126,8 +126,8 @@ function fitPortraitCamera(){
 function resize(){
  if(lifecycle.disposed)return;invalidate();const nextQuality=chooseRenderQuality();if(nextQuality!==renderQuality){renderQuality=nextQuality;fitPending=true;requestGeometry();}
  const w=window.innerWidth,h=window.innerHeight,dimensionsChanged=w!==lastViewportWidth||h!==lastViewportHeight;lastViewportWidth=w;lastViewportHeight=h;renderer.setSize(w,h,false);perspective.aspect=w/h;
- const aspect=w/h,halfY=w<=640?portraitHalfY:2.15;orthographic.left=-halfY*aspect;orthographic.right=halfY*aspect;orthographic.top=halfY;orthographic.bottom=-halfY;
- if(w<=640){if(dimensionsChanged)setPortraitProjection();}else{perspective.clearViewOffset();orthographic.clearViewOffset();framingRecord=null;}
+ const aspect=w/h,halfY=portraitHalfY;orthographic.left=-halfY*aspect;orthographic.right=halfY*aspect;orthographic.top=halfY;orthographic.bottom=-halfY;
+ if(dimensionsChanged)setFrameProjection();
  perspective.updateProjectionMatrix();orthographic.updateProjectionMatrix();
 }
 window.addEventListener('resize',resize);

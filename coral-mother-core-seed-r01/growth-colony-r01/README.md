@@ -1,6 +1,6 @@
 # Guided coral tissue growth, JS R4.1
 
-Independent research candidate. It is not registered with the mother workbench or deployed to Pages. This app uses an original deterministic guided skeleton and lamella material-growth law. It does not contain or recreate the video author's HIP, a biological solver, water, sand, or source assets.
+Independent research candidate, kept in its own directory and separate from the original mother workbench. This app uses an original deterministic guided skeleton and lamella material-growth law. It does not contain or recreate the video author's HIP, a biological solver, water, sand, or source assets.
 
 ## Run
 
@@ -39,7 +39,7 @@ Default preview at maturity: 479 pieces, 366,734 vertices and 731,552 triangles.
 
 ## Important distinctions
 
-- Real-time model and every OBJ export: overlapping individual closed tissue shells, with possible inter-part intersections and lamella self-intersections. These are raw organization meshes.
+- Interactive preview and every OBJ export: overlapping individual closed tissue shells, with possible inter-part intersections and lamella self-intersections. These are raw organization meshes.
 - Offline tissue union: a separate workflow being validated elsewhere; not included or claimed by this app.
 - Per-part edge-incidence closure is not proof of one connected watertight object, manufacturing readiness, or absence of self-intersections.
 - The app is an independent research candidate. Node tests do not establish morphology acceptance or visual/browser acceptance.
@@ -56,9 +56,9 @@ The original Node run passed 10/10 tests (the current lifecycle/LOD revision pas
 
 A regression test caught and fixed a cache bug that could reuse mature parts after rewinding. The complete suite passed after the fix.
 
-Browser acceptance is pending a real Chromium/WebKit run on the dedicated QA branch. Node checks and offline geometry renders are recorded separately from browser validation. The existing dedicated workflow serves the candidate's exact checked-out files over localhost in its disposable runner. No published mother entry is changed by that test.
+Browser verification runs in real Chromium/WebKit on the dedicated QA branch. Its per-viewport receipts name the exact source commit; a green workflow is a functional check, not approval of the reference morphology or physical-phone performance. Node checks and offline geometry renders are recorded separately from browser validation. The existing dedicated workflow serves the candidate's exact checked-out files over localhost in its disposable runner. No published mother entry is changed by that test.
 
-The browser script accepts `CORAL_ENGINE`, `CORAL_URL`, and `CORAL_OUT`; it records the source commit, real WebGL pixel readback, geometry fingerprints, interaction outcomes, screenshots, downloads and measured frame intervals. A missing browser or driver is reported as NOT RUN, not a pass. Physical phone testing is a separate unperformed check.
+The browser script accepts `CORAL_ENGINE`, `CORAL_PROFILE` (desktop/mobile), `CORAL_URL`, and `CORAL_OUT`; it records the source commit, real WebGL pixel readback, geometry fingerprints, interaction outcomes, screenshots, downloads and measured frame intervals. A missing browser or driver is reported as NOT RUN, not a pass. Physical phone testing is a separate unperformed check.
 
 See `RESEARCH_COMPARISON.md` for the preserved earlier R03 solver and the present guided route's different capabilities and limits.
 
@@ -81,7 +81,7 @@ The browser runner separately measures 60 idle RAF intervals (requiring zero dra
 
 Mobile WebKit uses real touchscreen taps on the accessible +/− zoom buttons instead of the unsupported mouse-wheel API. Optional single-touch picking is separately recorded. Mobile viewport/input emulation is not proof of physical-phone pinch performance.
 
-Current Node result: 13/13 passed, including same-runtime desktop bit-exact comparison against pinned original source, unchanged mobile lineage, shared material points and normal thickness, preserved curl landmarks, rewind, and closed outward shells. Browser validation of this revision remains pending; no performance improvement is claimed from Node alone.
+Current Node result: 13/13 passed, including same-runtime desktop bit-exact comparison against pinned original source, unchanged mobile lineage, shared material points and normal thickness, preserved curl landmarks, rewind, and closed outward shells. The same-code geometry and four browser viewport jobs at commit `0bbe1a937e4f54446a5fb343cf441b4f5f0962c3` all passed in [run 37657216633](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37657216633). Subsequent framing changes are checked again by the same workflow. Functional success does not mean smooth sustained rendering: that CI run measured continuous-draw median intervals of 716.6 ms / 228 ms on desktop Chromium / WebKit, and 233.3 ms / 96 ms in their mobile viewports. These measurements include at least 60 actual draws and no geometry uploads or readPixels during the measured window; they are not physical-device FPS. The 60 idle intervals separately confirmed zero drawing, upload or geometry reconstruction. All four exit receipts showed zero retained geometry/program/texture counts, no worker/RAF/object URL, and a lost GPU context. Actual forced loss, restoration, reset and normal-history Back passed; BFCache was not exercised.
 
 
 ### Same-runtime regression provenance and cross-runtime limits
@@ -90,4 +90,9 @@ The frozen self-authored reference is `tests/desktop-pre-lod-baseline.mjs`, copi
 
 The active regression compares the current and original recipes' serialized bytes, then the actual position and index buffer bytes at stages 0, 0.18, 0.52, 0.72 and 1, within the same runtime. This preserves a strict bit-exact geometry gate instead of weakening it to a tolerance or replacing an expected hash with a new result. Runtime/engine details and both recipe hashes are printed in the test diagnostics.
 
-`tests/desktop-pre-lod-fingerprints.json` remains an unchanged historical snapshot captured on local Node v24.19.0 / V8 13.6.233.17-node.51 / Linux x64. That recipe hash is `532bf426ca1a68137c0c404cbc2771cb6717fde481457e29e508f2e829b4a666`. The earlier CI runtime produced `95a1e8739ce2efe35a9b12fde2ddb58e448068b39298e5911acbe18ad36c7b68` before it reached the geometry assertions. This cross-runtime difference alone does not demonstrate a code regression: recipes include double-precision trigonometry and normalized frames, whose last bits may differ across runtime math implementations. The frozen-source same-runtime check is now used to distinguish code changes from runtime-dependent numeric differences; its next CI result must establish that distinction there. No universal cross-engine transcendental-math bit identity is claimed.
+`tests/desktop-pre-lod-fingerprints.json` remains an unchanged historical snapshot captured on local Node v24.19.0 / V8 13.6.233.17-node.51 / Linux x64. That recipe hash is `532bf426ca1a68137c0c404cbc2771cb6717fde481457e29e508f2e829b4a666`. The earlier CI runtime produced `95a1e8739ce2efe35a9b12fde2ddb58e448068b39298e5911acbe18ad36c7b68` before it reached the geometry assertions. This cross-runtime difference alone does not demonstrate a code regression: recipes include double-precision trigonometry and normalized frames, whose last bits may differ across runtime math implementations. The frozen-source same-runtime check is now used to distinguish code changes from runtime-dependent numeric differences; CI Node v22.23.3 / V8 12.4.254.21-node.57 has since passed the exact old/new recipe and five-stage geometry comparison, with both recipe hashes equal to `95a1e873…`; the local Node v24.19.0 old/new comparison also passed with both hashes equal to `532bf426…`. No universal cross-engine transcendental-math bit identity is claimed.
+
+
+## Camera framing
+
+Initial load, Reset and explicit view buttons fit the actual generated bounding sphere into the available canvas rectangle, with a six-percent radius margin. Mobile reserves the space below the top controls and above the lower timeline/status. Desktop uses the region to the right of the inspector and above the lower controls. The sphere is projected using the real horizontal and vertical fields of view, with a camera projection offset placing its centre in the unobstructed region. Orthographic views use the same bounds. Growth does not repeatedly refit or scale the camera. Context restoration preserves the current view; returning through history reconstructs the saved view. Camera changes do not alter model, lineage, worker or geometry fingerprints. Browser checks compare actual foreground-pixel bounds against that reserved rectangle at initial load and in all four explicit views.
