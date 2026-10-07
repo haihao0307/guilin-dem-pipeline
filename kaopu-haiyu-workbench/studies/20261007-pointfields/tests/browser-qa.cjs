@@ -21,7 +21,7 @@ async function seek(p,f){await p.locator('#timeline').fill(String(f));await p.wa
   await p.locator(`button[data-stage="${stage}"]`).click();await settle(p,stage);await seek(p,1);
   const child=await source(p);assert.deepEqual(await child.locator('canvas').evaluate(c=>[c.width,c.height]),[400,400]);
   await child.evaluate(()=>{const original=point;window.__drawnPoints=0;window.point=(...p)=>{window.__drawnPoints++;return original(...p)}});
-  const h1=await canvasHash(p);await p.locator('#step').click();await settle(p,stage);assert.equal(await p.locator('body').getAttribute('data-frame'),'2');assert.equal(await child.evaluate(()=>window.__drawnPoints),N);
+  const h1=await canvasHash(p);await p.screenshot({path:path.join(out,`${module}-default.png`),fullPage:true});await child.locator('canvas').screenshot({path:path.join(out,`${module}-default-canvas.png`)});await p.locator('#step').click();await settle(p,stage);assert.equal(await p.locator('body').getAttribute('data-frame'),'2');assert.equal(await child.evaluate(()=>window.__drawnPoints),N);
   const h2=await canvasHash(p);assert.notEqual(h1,h2);await p.waitForTimeout(450);assert.equal(await canvasHash(p),h2);
   await p.locator('#play').click();await p.waitForFunction(()=>Number(document.body.dataset.frame)>=5);await p.locator('#play').click();await settle(p,stage);const pausedFrame=await p.locator('body').getAttribute('data-frame'),pausedHash=await canvasHash(p);await p.waitForTimeout(350);assert.equal(await p.locator('body').getAttribute('data-frame'),pausedFrame);assert.equal(await canvasHash(p),pausedHash);
   await p.locator('#reset').click();await settle(p,stage);assert.equal(await canvasHash(p),h1);
