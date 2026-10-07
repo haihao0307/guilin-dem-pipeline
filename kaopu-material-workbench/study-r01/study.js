@@ -27,6 +27,7 @@
   let active = '05', rig = copy(rigDefault), quality = copy(qualityDefault), tab = 'study';
   let gl, ready = false, running = false, dirty = true, frames = 0, lastTick = 0, lastDraw = 0, fps = 0, lastPacket = null;
   let sceneTexture, sceneBuffer, bufferW = 0, bufferH = 0;
+  let rafId = 0, vao = null, lastViewport = null;
   const sources = {}, programs = new Map();
   const raw = hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255);
   const linear = hex => raw(hex).map(v => v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4);
@@ -125,7 +126,7 @@
     const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw Error(gl.getShaderInfoLog(shader));
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) { const log=gl.getShaderInfoLog(shader);gl.deleteShader(shader);throw Error(log||'着色器编译中断'); }
     return shader;
   }
   function use(name) {
@@ -181,8 +182,9 @@
     return weight;
   }
   function draw() {
-    if (!ready) return;
+    if (!ready || lifecycle.disposed || gl.isContextLost()) return;
     const box = $('viewport').getBoundingClientRect();
+    lastViewport = { width: box.width, height: box.height };
     const ratio = Math.max(1, box.height) / Math.max(1, box.width);
     const scale = Math.min(1, Math.sqrt((9 / 16) / ratio));
     const width = Math.max(128, Math.round(quality.width * scale / 8) * 8);
@@ -347,22 +349,38 @@
   });
   for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(name, event => { pointers.delete(event.pointerId); drag = null; pinch = 0; });
   canvas.addEventListener('wheel', event => { event.preventDefault(); zoom(Math.exp(-event.deltaY * .001)); }, { passive: false });
-  window.addEventListener('resize', () => { dirty = true; });
+  window.addEventListener('resize', () => { const box=$('viewport').getBoundingClientRect();if(!lastViewport||box.width!==lastViewport.width||box.height!==lastViewport.height)dirty=true; });
   window.addEventListener('pagehide', save);
   document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
-  canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); ready = false; fail(Error('图形上下文中断，请刷新恢复已保存参数')); });
+
+function pauseFrames(){if(rafId)cancelAnimationFrame(rafId);rafId=0;lastTick=0;}
+function resumeFrames(){if(!lifecycle.disposed&&ready&&!document.hidden&&!rafId)rafId=requestAnimationFrame(tick);}
+function clearGPU(remove){
+ if(remove&&gl&&!gl.isContextLost()){
+  for(const value of programs.values())gl.deleteProgram(value.p||value.program);
+  if(sceneTexture)gl.deleteTexture(sceneTexture);if(sceneBuffer)gl.deleteFramebuffer(sceneBuffer);if(vao)gl.deleteVertexArray(vao);
+ }
+ programs.clear();sceneTexture=null;sceneBuffer=null;vao=null;bufferW=0;bufferH=0;
+}
+function rebuildGPU(){vao=gl.createVertexArray();gl.bindVertexArray(vao);}
+const lifecycle=window.KAOPU_CREATE_LIFECYCLE({canvas,save:save,pause:pauseFrames,resume:resumeFrames,setReady:value=>{ready=value;},clearGPU,rebuildGPU,redraw:draw,invalidate:()=>{dirty=true;}});
+window.KAOPU_VIEWER_DISPOSE=()=>lifecycle.dispose();
+
   function tick(time) {
+    rafId=0;if(lifecycle.disposed||!ready||document.hidden)return;
     const dt = Math.min((time - lastTick) / 1000, .05);
     lastTick = time;
     if (ready && !document.hidden) {
       if (running) { cameras[active].yaw = (cameras[active].yaw + dt * .16) % (Math.PI * 2); dirty = true; }
-      if (dirty && time - lastDraw > 40) { try { draw(); } catch (error) { fail(error); } }
+      if (dirty && time - lastDraw > 40) { try { draw(); } catch (error) { if(!gl?.isContextLost())fail(error); } }
     }
-    requestAnimationFrame(tick);
+    resumeFrames();
   }
   // Public QA identity is the numbered study. The shader mode mapping stays internal.
   window.KAOPU_STUDIES = {
     version: VERSION,
+    dispose:()=>lifecycle.dispose(),flushSave:save,
+    diagnostics:()=>({...lifecycle.diagnostics(),programs:programs.size,rafPending:!!rafId,framebufferBytes:bufferW*bufferH*4}),
     get ready() { return ready; },
     select, draw,
     getState: () => copy({ active, states, cameras, rig, quality, running, frames, fps }),
@@ -383,15 +401,16 @@
   build();
   try {
     await Promise.all(['iq-study.frag', 'post.frag'].map(async file => {
-      const response = await fetch(new URL(file, baseURL), { cache: 'no-cache' });
+      const response = await fetch(new URL(file, baseURL), { cache: 'no-cache', signal: lifecycle.signal });
       if (!response.ok) throw Error(file + ' HTTP ' + response.status);
       sources[file] = await response.text();
     }));
+    if(lifecycle.disposed)return;
     gl = canvas.getContext('webgl2', { alpha: false, antialias: false, preserveDrawingBuffer: true, powerPreference: 'high-performance' });
     if (!gl) throw Error('WebGL2 未启动');
-    gl.bindVertexArray(gl.createVertexArray());
+    lifecycle.bind(gl);rebuildGPU();
     ready = true;
     select(requestedCase(), false);
-    requestAnimationFrame(tick);
-  } catch (error) { ready = false; fail(error); }
+    resumeFrames();
+  } catch (error) { ready = false; if(!lifecycle.disposed&&error.name!=='AbortError'&&!gl?.isContextLost())fail(error); }
 })();
