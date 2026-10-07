@@ -1,9 +1,10 @@
-name: Coral growth experiment read-only QA
+name: Coral colony candidate browser QA
 on:
   push:
     branches: [work/coral-r05-recovery-qa-20261005]
     paths:
       - 'coral-mother-core-seed-r01/growth-lab-r01/**'
+      - 'coral-mother-core-seed-r01/growth-colony-r01/**'
       - 'coral-mother-core-seed-r01/index.html'
       - '.github/qa/coral-growth-*'
       - '.github/workflows/coral-growth-qa.yml'
@@ -16,7 +17,7 @@ concurrency:
 jobs:
   browser:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
@@ -35,6 +36,10 @@ jobs:
           node --check coral-mother-core-seed-r01/growth-lab-r01/worker.mjs
           node --check coral-mother-core-seed-r01/growth-lab-r01/surface.mjs
           node --check .github/qa/coral-growth-browser.cjs
+          node --check coral-mother-core-seed-r01/growth-colony-r01/coral-growth.mjs
+          node --check coral-mother-core-seed-r01/growth-colony-r01/viewer.mjs
+          node --check coral-mother-core-seed-r01/growth-colony-r01/geometry-worker.mjs
+          node --test coral-mother-core-seed-r01/growth-colony-r01/tests/growth.test.mjs
           python3 - <<'PYVERIFY'
           import json,subprocess,hashlib,re
           from pathlib import Path
@@ -45,7 +50,11 @@ jobs:
           data=Path('coral-mother-core-seed-r01/index.html').read_text()
           original=re.sub(r'<a[^>]*data-coral-growth-entry="(?:nav|card)".*?</a>','',data,flags=re.S)
           assert hashlib.sha256(original.encode()).hexdigest()==m['motherOriginalSHA256'],'Non-additive mother edit'
-          print('Original mother bytes, existing cases, assets and frozen growth core preserved')
+          candidate=json.loads(Path('coral-mother-core-seed-r01/growth-colony-r01/tests/preservation.json').read_text())
+          for item in candidate['entries']:
+              row=subprocess.check_output(['git','ls-tree','HEAD','--',item['path']],text=True).strip()
+              assert row and row.split()[2]==item['sha'],item['path']+' changed pre-existing coral data'
+          print('Original mother bytes, existing cases, assets, R03 research and frozen growth core preserved')
           PYVERIFY
       - name: Verify exact public release bytes
         run: python3 .github/qa/coral-growth-public-verify.py .github/qa/coral-growth-production.json
@@ -57,31 +66,31 @@ jobs:
         env:
           NODE_PATH: ${{ runner.temp }}/coral-test/node_modules
           CORAL_ENGINE: ${{ matrix.engine }}
-          CORAL_OUT: coral-${{ matrix.engine }}
-          CORAL_URL: https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-core-seed-r01/growth-lab-r01/
+          CORAL_OUT: coral-colony-${{ matrix.engine }}
+          CORAL_URL: http://127.0.0.1:8765/coral-mother-core-seed-r01/growth-colony-r01/
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/coral-server.log" 2>&1 &
           server=$!
           trap 'kill "$server" 2>/dev/null || true' EXIT
-          node .github/qa/coral-growth-browser.cjs
+          node coral-mother-core-seed-r01/growth-colony-r01/tests/browser-smoke.mjs
       - name: Save exact screenshots and evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coral-growth-${{ matrix.engine }}-evidence
+          name: coral-colony-${{ matrix.engine }}-evidence
           retention-days: 7
           if-no-files-found: warn
           path: |
-            coral-${{ matrix.engine }}/*.png
-            coral-${{ matrix.engine }}/*.json
-            coral-${{ matrix.engine }}/*.obj
+            coral-colony-${{ matrix.engine }}/*.png
+            coral-colony-${{ matrix.engine }}/*.json
+            coral-colony-${{ matrix.engine }}/*.obj
             coral-public-bytes.json
 
       - name: Save optional browser trace separately
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coral-growth-${{ matrix.engine }}-trace
+          name: coral-colony-${{ matrix.engine }}-trace
           retention-days: 7
           if-no-files-found: warn
-          path: coral-${{ matrix.engine }}/trace.zip
+          path: coral-colony-${{ matrix.engine }}/*trace*.zip
