@@ -3,12 +3,12 @@ export const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
 export const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a));return t*t*(3-2*t);};
 export function seeded(seed){let s=seed>>>0;return()=>((s=(Math.imul(s,1664525)+1013904223)>>>0)/4294967296);}
 export function curve(points){return new THREE.CatmullRomCurve3(points.map(p=>p.isVector3?p:new THREE.Vector3(...p)),false,'centripetal');}
-export function sweep(path,radius,{segments=60,sides=16,tip=.015,twist=0,lobes=.07,hollow=false,holes=[],broken=false}={}){
+export function sweep(path,radius,{segments=60,sides=16,tip=.015,twist=0,lobes=.07,hollow=false,holes=[],broken=false,radiusProfile=null,lobeCount=5}={}){
  const frames=path.computeFrenetFrames(segments,false),p=[],uv=[],idx=[],junction=[],length=path.getLength(),stride=sides+1;
  const rings=segments+1;let minRadius=Infinity;
  for(let shell=0;shell<(hollow?2:1);shell++)for(let i=0;i<=segments;i++){
-  const t=i/segments,c=path.getPointAt(t),r=radius*(Math.pow(1-t,.8)*(1-tip)+tip)*(1+.25*Math.exp(-t*28));minRadius=Math.min(minRadius,r);
-  for(let j=0;j<=sides;j++){const u=j/sides,a=u*Math.PI*2+twist*t,bulge=1+lobes*Math.sin(a*5+5*t)+lobes*.4*Math.sin(a*11-19*t);let rr=r*bulge*(shell?.63:1);const v=c.clone().addScaledVector(frames.normals[i],Math.cos(a)*rr).addScaledVector(frames.binormals[i],Math.sin(a)*rr);if(broken&&i===segments)v.addScaledVector(frames.tangents[i],Math.sin(a*7+.8)*radius*.18);p.push(v.x,v.y,v.z);uv.push(u,t*length);junction.push(Math.exp(-t*20));}
+  const t=i/segments,c=path.getPointAt(t),r=radiusProfile?radiusProfile(t):radius*(Math.pow(1-t,.8)*(1-tip)+tip)*(1+.25*Math.exp(-t*28));minRadius=Math.min(minRadius,r);
+  for(let j=0;j<=sides;j++){const u=j/sides,a=u*Math.PI*2+twist*t,bulge=1+lobes*Math.sin(a*lobeCount+5*t)+lobes*.4*Math.sin(a*11-19*t);let rr=r*bulge*(shell?.63:1);const v=c.clone().addScaledVector(frames.normals[i],Math.cos(a)*rr).addScaledVector(frames.binormals[i],Math.sin(a)*rr);if(broken&&i===segments)v.addScaledVector(frames.tangents[i],Math.sin(a*7+.8)*radius*.18);p.push(v.x,v.y,v.z);uv.push(u,t*length);junction.push(Math.exp(-t*20));}
  }
  const boundary=new Map();function edge(a,b){const k=Math.min(a,b)+','+Math.max(a,b);if(boundary.has(k))boundary.delete(k);else boundary.set(k,[a,b]);}
  for(let i=0;i<segments;i++)for(let j=0;j<sides;j++){const u=(j+.5)/sides,t=(i+.5)/segments;if(holes.some(h=>{let du=Math.abs(u-h.u);du=Math.min(du,1-du);return (du/h.w)**2+((t-h.t)/h.h)**2<1;}))continue;const a=i*stride+j,b=a+1,c=a+stride,d=c+1;idx.push(a,c,b,b,c,d);if(hollow){const n=rings*stride;idx.push(a+n,b+n,c+n,b+n,d+n,c+n);edge(a,b);edge(b,d);edge(d,c);edge(c,a);}}
