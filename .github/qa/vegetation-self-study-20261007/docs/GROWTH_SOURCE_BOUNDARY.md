@@ -19,3 +19,7 @@ The coffee-inspired “Houdini 植物生长RND” video (supplied capture shows 
 ## Remaining limits
 
 This model is a bounded study of growth relationships, not a botanically calibrated growth simulator. Seconds are demonstration time, not real coffee phenology. Root fine hairs, substrate interaction, material detail, flower abscission and plant-specific branch morphology require further visual and scientific validation. It is not marked AAA or 100% reproduction.
+
+## Mother identity correction
+
+The live mother has since been located at https://vegetation-workbench-rc16.sunhaihao.chatgpt.site and is version 5.0.0-rc.2 (Sites saved version 51). The 1.14 original-source test above is a historical baseline, not proof of matching current live source. Current live source access and full mother integration remain unresolved; see MOTHER_IDENTITY.md.
