@@ -65,6 +65,8 @@ jobs:
           trap 'kill "$server" 2>/dev/null || true' EXIT
           sleep 2
           result=0
+          timeout 120s node kaopu-minigame-workbench/voxel-train-study/game/tests/hit-targets.cjs || result=$?
+          TRAIN_BROWSER=webkit timeout 120s node kaopu-minigame-workbench/voxel-train-study/game/tests/hit-targets.cjs || result=$?
           timeout 240s node kaopu-minigame-workbench/voxel-train-study/game/tests/hud.cjs || result=$?
           TRAIN_BROWSER=webkit timeout 240s node kaopu-minigame-workbench/voxel-train-study/game/tests/hud.cjs || result=$?
           exit "$result"
@@ -77,6 +79,8 @@ jobs:
           path: |
             hud-chromium/*
             hud-webkit/*
+            hit-targets-chromium/*
+            hit-targets-webkit/*
       - name: Play a real first stop and verify both browser engines
         env:
           NODE_PATH: ${{ runner.temp }}/driver-test/node_modules
@@ -106,3 +110,5 @@ jobs:
             views-webkit/*
             hud-chromium/*
             hud-webkit/*
+            hit-targets-chromium/*
+            hit-targets-webkit/*
