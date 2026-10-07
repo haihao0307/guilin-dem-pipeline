@@ -6,10 +6,11 @@
   <link rel="icon" type="image/svg+xml" href="../icon.svg"><link rel="stylesheet" href="./game.css">
 </head>
 <body>
-<main id="driverGame">
+<main id="driverGame" data-layout="landscape">
   <section id="sceneWrap" aria-label="火车与站台实时三维场景">
     <canvas id="gameScene" tabindex="0" aria-label="原版柴油机车、燃料罐车与两节客车"></canvas>
     <header class="masthead"><div><a href="../../" class="back">← 小游戏生产线</a><h1>火车老司机</h1></div><nav aria-label="视图与游戏"><a class="quiet-button classic-link" href="../?layout=immersive">经典观赏 ↗</a><button id="cameraView" class="quiet-button" aria-pressed="false">车厢观察</button><button id="fullScreen" class="quiet-button" aria-label="进入全屏">⛶</button><button id="pause" class="quiet-button" aria-label="暂停游戏">Ⅱ</button></nav></header>
+    <div class="view-tools" aria-label="布局与保存视角"><button id="landscapeView" aria-pressed="true">横版</button><button id="portraitView" aria-pressed="false">竖版</button><button id="lockView" aria-pressed="false">固定当前视角</button><button id="resetView">恢复默认</button><span id="viewHint"></span></div>
     <div class="route-hud"><div class="route-heading"><span id="stationName">杉林站</span><strong id="stationDistance">72 m</strong></div><div class="parking-track" aria-hidden="true"><span id="stopZone"></span><i id="parkingNeedle"></i><b></b></div><div class="route-caption"><span id="stationHint">车头停在黄色标记旁</span><span id="weather">晴 · 限速 54</span></div></div>
     <div class="score-strip" aria-label="本局成绩"><span>接 <b id="pickedUp">0</b></span><span>送 <b id="delivered">0</b></span><span id="comboWrap">连送 <b id="combo">0</b></span><span>满意 <b id="satisfaction">85</b></span><strong id="score">0 分</strong></div>
     <div id="notice" class="notice" role="status" aria-live="polite"></div>
