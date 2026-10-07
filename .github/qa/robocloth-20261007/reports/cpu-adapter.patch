@@ -1,0 +1,117 @@
+--- upstream/rendering/brdf_plugin/mlp.py
++++ runtime_cpu/rendering/brdf_plugin/mlp.py
+@@ -118,7 +118,7 @@
+     #print(f"hidden_layers={config.hidden_layers}, activation={config.activation}")
+     
+     if material_type == "AnisotropicLatentTexturedModel":
+-        model = AnisotropicLatentTexturedModel(config).cuda()
++        model = AnisotropicLatentTexturedModel(config).to("cpu")
+     elif material_type == "LatentTexturedModel":
+         model = LatentTexturedModel(config)
+     elif material_type == "SvPBRBRDF":
+@@ -126,43 +126,43 @@
+     elif material_type == "CompressedModel":
+         model = CompressedModel(config)
+     elif material_type == "MoeLatentModel":
+-        model = MoeLatentModel(config).cuda()
++        model = MoeLatentModel(config).to("cpu")
+     elif material_type == "MERLBRDF":
+-        model = MERLBRDF(config).cuda()
++        model = MERLBRDF(config).to("cpu")
+     elif material_type == "AXFBRDF":
+         axf_path="/absolute/path/to/axf/mat0001.axf"
+-        model = AXFBRDF(config,axf_path).cuda()
++        model = AXFBRDF(config,axf_path).to("cpu")
+     elif material_type == "UBOLatentBRDF":
+-        model = UBOLatentBRDF(config).cuda()
++        model = UBOLatentBRDF(config).to("cpu")
+     elif material_type == "UBOLatentBRDFDebugCos":
+-        model = UBOLatentBRDFDebugCos(config).cuda()
++        model = UBOLatentBRDFDebugCos(config).to("cpu")
+     elif material_type == "UBOLatentBRDFDebugBinary":
+-        model = UBOLatentBRDFDebugBinary(config).cuda()
++        model = UBOLatentBRDFDebugBinary(config).to("cpu")
+     elif material_type == "UBOPBRLatentBRDF":
+-        model = UBOPBRLatentBRDF(config).cuda()
++        model = UBOPBRLatentBRDF(config).to("cpu")
+     elif material_type == "LearnablePBRTexturedModel":
+-        model = LearnablePBRTexturedModel(config).cuda()
++        model = LearnablePBRTexturedModel(config).to("cpu")
+     elif material_type == "BonnLatentBRDF":
+-        model = BonnLatentBRDF(config).cuda()
++        model = BonnLatentBRDF(config).to("cpu")
+     elif material_type == "BonnPBRLatentBRDF":
+-        model = BonnPBRLatentBRDF(config).cuda()
++        model = BonnPBRLatentBRDF(config).to("cpu")
+     else:
+         raise ValueError(f"Unsupported material type: {material_type}")
+     
+     if model_path=="":
+         print("Using PBR model")
+-        return model.cuda()
++        return model.to("cpu")
+ 
+     if model_path is None:
+         print("Using randomly initialized AnisotropicLatentTexturedModel")
+         model.eval()
+-        return model.cuda()
++        return model.to("cpu")
+ 
+     # Load pretrained weights. Fail closed (beta item B2): an unreadable file,
+     # an unknown format or any missing / unexpected / shape-mismatched tensor
+     # raises — there is no non-strict retry and no random-init fallback.
+     print(f"Loading pretrained model: {model_path}")
+-    checkpoint = checkpoint_io.load_checkpoint_file(model_path, map_location='cuda')
++    checkpoint = checkpoint_io.load_checkpoint_file(model_path, map_location='cpu')
+     state_dict = checkpoint_io.extract_state_dict(checkpoint, source=model_path)
+     print(f"Checkpoint contains {len(state_dict)} keys")
+ 
+@@ -214,7 +214,7 @@
+ 
+     model.eval()
+ 
+-    return model.cuda()
++    return model.to("cpu")
+ 
+ class SimpleMLP(nn.Module):
+     def __init__(self, input_dim=6, hidden_dim=128, output_dim=3):
+@@ -338,7 +338,7 @@
+                 self.w3 = props['w3']
+                 self.b3 = props['b3']
+             
+-            self.model = SimpleMLP().cuda()
++            self.model = SimpleMLP().to("cpu")
+             print("MLPBRDF: Using SimpleMLP")
+         
+         self.m_flags = mi.BSDFFlags.GlossyReflection | mi.BSDFFlags.FrontSide | mi.BSDFFlags.BackSide
+@@ -388,7 +388,7 @@
+ 
+         # 2. Generate samples in PyTorch (e.g., Uniform 0 to 1)
+         # Ensure the device matches your Mitsuba variant (usually 'cuda')
+-        torch_samples = torch.rand((batch_size, 2), device='cuda', dtype=torch.float32)
++        torch_samples = torch.rand((batch_size, 2), device='cpu', dtype=torch.float32)
+ 
+         # 3. Transform PyTorch tensor back to Mitsuba type (mi.Point2f)
+         # We split the tensor columns and wrap them into Dr.Jit arrays
+@@ -531,10 +531,10 @@
+             # NOTE: wi_torch / wo_torch are intentionally passed swapped here
+             # (the neural model's "wi" slot receives our wo_torch and vice versa).
+             brdf, _, _, _, cos_i_internal, cos_o_internal = self.anisotropic_model.eval_brdf(
+-                {}, pos_torch.cuda(), wo_torch.cuda(), wi_torch.cuda(),
+-                normal_torch.cuda(), uv_torch.cuda(), TBN_torch.cuda()
++                {}, pos_torch.to("cpu"), wo_torch.to("cpu"), wi_torch.to("cpu"),
++                normal_torch.to("cpu"), uv_torch.to("cpu"), TBN_torch.to("cpu")
+             )
+-            #brdf,_ = self.anisotropic_model.eval_brdf(wo_torch.cuda(), wi_torch.cuda(),uv_torch.cuda())
++            #brdf,_ = self.anisotropic_model.eval_brdf(wo_torch.to("cpu"), wi_torch.to("cpu"),uv_torch.to("cpu"))
+ 
+         # Keep tensors on the active device. Under cuda_ad_rgb, mi.Float wraps
+         # a CUDA torch tensor in-place (no copy); under llvm_ad_rgb mi.Float
+@@ -577,6 +577,6 @@
+         x[3] = wo.x
+         x[4] = wo.y
+         x[5] = wo.z
+-        x=x.torch().cuda()
++        x=x.torch().to("cpu")
+         out=self.model(x)
+         return mi.Vector3f(float(out[0]), float(out[1]), float(out[2]))
