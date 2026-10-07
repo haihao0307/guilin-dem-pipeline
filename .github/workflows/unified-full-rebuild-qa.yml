@@ -76,6 +76,37 @@ jobs:
           NATIVE_BROWSER: webkit
           BODY_DRIVER: '1'
         run: node qa/common-native.cjs
+      - name: Desktop UI metadata and real controller
+        working-directory: .github/qa/unified-full-20261007
+        run: |
+          node ui/build-runtime-metadata.mjs
+          node ui/tests/controller.test.mjs
+      - name: Desktop Chromium single-person parameter workbench
+        working-directory: .github/qa/unified-full-20261007
+        env:
+          COMMON_UI_BROWSER: chromium
+          COMMON_UI_URL: http://127.0.0.1:8765/qa/full-workbench.html
+          COMMON_UI_OUT: qa-output/ui-chromium
+        run: node ui/tests/browser.cjs
+      - name: Desktop WebKit single-person parameter workbench
+        working-directory: .github/qa/unified-full-20261007
+        env:
+          COMMON_UI_BROWSER: webkit
+          COMMON_UI_URL: http://127.0.0.1:8765/qa/full-workbench.html
+          COMMON_UI_OUT: qa-output/ui-webkit
+        run: node ui/tests/browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unified-full-ui-chromium
+          retention-days: 21
+          path: .github/qa/unified-full-20261007/qa-output/ui-chromium
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unified-full-ui-webkit
+          retention-days: 21
+          path: .github/qa/unified-full-20261007/qa-output/ui-webkit
       - uses: actions/upload-artifact@v4
         if: always()
         with:
