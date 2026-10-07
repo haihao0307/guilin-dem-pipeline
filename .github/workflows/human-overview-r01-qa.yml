@@ -7,7 +7,8 @@ on:
       - 'kaopu-human-overview/**'
       - '.github/workflows/human-overview-r01-qa.yml'
       - '.github/qa/overview-*.cjs'
-      - '.github/qa/lifecycle-public-*.json'
+      - '.github/qa/overview-*.json'
+      - '.github/qa/overview-*.py'
 permissions:
   contents: read
 env:
@@ -16,10 +17,14 @@ concurrency:
   group: human-overview-r01-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  overview-browser:
+  desktop-combination:
     if: github.event_name != 'pull_request' || github.head_ref == 'qa/human-overview-r01-20261006'
     runs-on: ubuntu-24.04
     timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, webkit]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -35,228 +40,74 @@ jobs:
             kaopu-tailor-workbench
             kaopu-animal-learning
             kaopu-hair-workbench
-          sparse-checkout-cone-mode: true
-      - name: Validate static contracts
+      - name: Check static and exact reviewed bytes
         run: |
-          python3 kaopu-human-overview/tests/static.py
-          node --check kaopu-human-overview/tests/browser.cjs
-          node --check .github/qa/overview-browser-diagnostic.cjs
-          node --check .github/qa/overview-lifecycle-evidence.cjs
-          node --check .github/qa/overview-browser-single-context.cjs
-          node --check .github/qa/overview-candidate-return.cjs
-          node --check .github/qa/overview-browser-lifecycle-candidate.cjs
-      - name: Install fixed official browser test dependency
+          python3 .github/qa/overview-release-static.py
+          node --check .github/qa/overview-release-navigation.cjs
+          node --check .github/qa/overview-ui-neck-combined.cjs
+          python3 - <<'PYVERIFY'
+          from pathlib import Path
+          import hashlib,json
+          manifest=json.loads(Path('.github/qa/overview-release-integrity.json').read_text())
+          for item in manifest['files']:
+              data=Path(item['path']).read_bytes()
+              assert hashlib.sha256(data).hexdigest()==item['sha256'],item['path']+' candidate SHA256 mismatch'
+              actual=hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
+              assert actual==item['gitBlobSHA'],item['path']+' candidate Git blob mismatch'
+          print('Exact reviewed release files:',len(manifest['files']))
+          PYVERIFY
+      - name: Verify real public bytes
+        if: env.OVERVIEW_VERIFY_PUBLIC == 'true'
+        run: |
+          python3 - <<'PYVERIFY'
+          from pathlib import Path
+          from concurrent.futures import ThreadPoolExecutor
+          import hashlib,json,urllib.request
+          manifest=json.loads(Path('.github/qa/overview-release-integrity.json').read_text());base='https://haihao0307.github.io/guilin-dem-pipeline/'
+          def check(item):
+              request=urllib.request.Request(base+item['path']+'?verify=ui-neck-20261007',headers={'Cache-Control':'no-cache'})
+              with urllib.request.urlopen(request,timeout=60) as response: data=response.read();status=response.status
+              actual=hashlib.sha256(data).hexdigest()
+              return {'path':item['path'],'status':status,'sha256':actual,'passed':status==200 and actual==item['sha256']}
+          with ThreadPoolExecutor(max_workers=6) as pool: rows=list(pool.map(check,manifest['files']))
+          Path('overview-public-release-bytes.json').write_text(json.dumps({'passed':all(r['passed'] for r in rows),'files':rows},indent=2))
+          assert all(r['passed'] for r in rows),[r for r in rows if not r['passed']]
+          print('Published release exact hashes:',len(rows))
+          PYVERIFY
+      - name: Install fixed official browser dependency
         run: |
           npm install --prefix "$RUNNER_TEMP/overview-test" --no-save --ignore-scripts playwright@1.57.0
-          "$RUNNER_TEMP/overview-test/node_modules/.bin/playwright" install --with-deps chromium webkit
-      - name: Test desktop mobile keyboard touch and Back in both engines
-        if: env.OVERVIEW_VERIFY_PUBLIC != 'true'
+          "$RUNNER_TEMP/overview-test/node_modules/.bin/playwright" install --with-deps ${{ matrix.engine }}
+      - name: Desktop navigation, lifecycle and combined neck UI
         env:
-          OVERVIEW_URL: http://127.0.0.1:8765/kaopu-human-overview/
           NODE_PATH: ${{ runner.temp }}/overview-test/node_modules
+          OVERVIEW_BROWSER: ${{ matrix.engine }}
+          OVERVIEW_URL: ${{ env.OVERVIEW_VERIFY_PUBLIC == 'true' && 'https://haihao0307.github.io/guilin-dem-pipeline/kaopu-human-overview/' || 'http://127.0.0.1:8765/kaopu-human-overview/' }}
+          OVERVIEW_QA_DIR: combined-${{ matrix.engine }}
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/overview-server.log" 2>&1 &
           server=$!
           trap 'kill "$server" 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do curl -fsS "$OVERVIEW_URL" > /dev/null && break || sleep 1; done
-          OVERVIEW_QA_DIR=overview-chromium node .github/qa/overview-browser-lifecycle-candidate.cjs
-          OVERVIEW_BROWSER=webkit OVERVIEW_QA_DIR=overview-webkit node .github/qa/overview-browser-lifecycle-candidate.cjs
-      - name: Verify exact published bytes and real HTTPS navigation
-        if: env.OVERVIEW_VERIFY_PUBLIC == 'true'
-        env:
-          OVERVIEW_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-human-overview/
-          NODE_PATH: ${{ runner.temp }}/overview-test/node_modules
-        run: |
-          python3 - <<'PYVERIFY'
-          from pathlib import Path
-          import hashlib,json,os,urllib.request
-          from urllib.parse import urljoin
-          root=Path('kaopu-human-overview');base=os.environ['OVERVIEW_URL'];checks=[]
-          for path in sorted(root.rglob('*')):
-              if not path.is_file(): continue
-              relative=path.relative_to(root).as_posix()
-              request=urllib.request.Request(base+relative+'?overview=verified-r01',headers={'Cache-Control':'no-cache'})
-              with urllib.request.urlopen(request,timeout=60) as response:
-                  actual=response.read();status=response.status
-              expected=hashlib.sha256(path.read_bytes()).hexdigest()
-              assert status==200 and hashlib.sha256(actual).hexdigest()==expected,relative+' public mismatch'
-              checks.append({'path':relative,'status':status,'sha256':expected,'bytes':len(actual)})
-          Path('overview-public-bytes.json').write_text(json.dumps({'passed':True,'url':base,'files':checks},indent=2))
-          print('Public overview exact file verification passed:',len(checks))
-          protected=json.loads(Path('.github/qa/lifecycle-public-integrity.json').read_text());extra=[]
-          for relative,expected in protected['expectedSHA256'].items():
-              assert hashlib.sha256(Path(relative).read_bytes()).hexdigest()==expected,relative+' candidate mismatch'
-              request=urllib.request.Request(urljoin(base,'../'+relative)+'?overview=lifecycle-verified',headers={'Cache-Control':'no-cache'})
-              with urllib.request.urlopen(request,timeout=60) as response:
-                  actual=response.read();status=response.status
-              assert status==200 and hashlib.sha256(actual).hexdigest()==expected,relative+' public lifecycle mismatch'
-              extra.append({'path':relative,'status':status,'sha256':expected,'bytes':len(actual)})
-          Path('overview-public-lifecycle-bytes.json').write_text(json.dumps({'passed':True,'productionCommit':protected['productionCommit'],'files':extra},indent=2))
-          print('Public lifecycle plus protected-asset hash verification passed:',len(extra))
-          PYVERIFY
-          OVERVIEW_QA_DIR=overview-public-chromium node .github/qa/overview-browser-lifecycle-candidate.cjs
-          OVERVIEW_BROWSER=webkit OVERVIEW_QA_DIR=overview-public-webkit node .github/qa/overview-browser-lifecycle-candidate.cjs
-      - name: Upload reports and screenshots
+          node .github/qa/overview-release-navigation.cjs
+          node .github/qa/overview-ui-neck-combined.cjs
+      - name: Upload desktop screenshots and reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: human-overview-small-evidence
+          name: combined-ui-neck-${{ matrix.engine }}-evidence
           retention-days: 7
           if-no-files-found: warn
           path: |
-            overview-chromium/*.json
-            overview-chromium/*.jsonl
-            overview-chromium/*.png
-            overview-webkit/*.json
-            overview-webkit/*.jsonl
-            overview-webkit/*.png
-            overview-public-chromium/*.json
-            overview-public-chromium/*.jsonl
-            overview-public-chromium/*.png
-            overview-public-webkit/*.json
-            overview-public-webkit/*.jsonl
-            overview-public-webkit/*.png
-            overview-public-bytes.json
-            overview-public-lifecycle-bytes.json
-      - name: Upload Chromium traces separately
+            combined-${{ matrix.engine }}/*.json
+            combined-${{ matrix.engine }}/*.jsonl
+            combined-${{ matrix.engine }}/*.png
+            overview-public-release-bytes.json
+      - name: Upload desktop traces
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: human-overview-chromium-traces
+          name: combined-ui-neck-${{ matrix.engine }}-traces
           retention-days: 7
           if-no-files-found: warn
-          path: |
-            overview-chromium/trace-*.zip
-            overview-public-chromium/trace-*.zip
-      - name: Upload WebKit traces separately
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: human-overview-webkit-traces
-          retention-days: 7
-          if-no-files-found: warn
-          path: |
-            overview-webkit/trace-*.zip
-            overview-public-webkit/trace-*.zip
-
-  workbench-ui-layout:
-    if: github.event_name != 'pull_request' || github.head_ref == 'qa/human-overview-r01-20261006'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    strategy:
-      fail-fast: false
-      matrix:
-        engine: [chromium, webkit]
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with:
-          persist-credentials: false
-          sparse-checkout: |
-            .github/qa
-            kaopu-human-overview
-            kaopu-face-workbench
-            kaopu-anny-workbench
-            kaopu-mhr-workbench
-            kaopu-unified-human-workbench
-            kaopu-skin-workbench
-            kaopu-animal-learning
-            kaopu-hair-workbench
-      - name: Install fixed official browser dependency
-        run: |
-          npm install --prefix "$RUNNER_TEMP/overview-ui-test" --no-save --ignore-scripts playwright@1.57.0
-          "$RUNNER_TEMP/overview-ui-test/node_modules/.bin/playwright" install --with-deps ${{ matrix.engine }}
-      - name: Check real model and controls in four viewport sizes
-        env:
-          NODE_PATH: ${{ runner.temp }}/overview-ui-test/node_modules
-          OVERVIEW_BROWSER: ${{ matrix.engine }}
-          OVERVIEW_URL: http://127.0.0.1:8765/kaopu-human-overview/
-          OVERVIEW_QA_DIR: ui-${{ matrix.engine }}
-        run: |
-          node --check .github/qa/overview-ui-layout.cjs
-          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/overview-ui-server.log" 2>&1 &
-          server=$!
-          trap 'kill "$server" 2>/dev/null || true' EXIT
-          for i in $(seq 1 30); do curl -fsS "$OVERVIEW_URL" > /dev/null && break || sleep 1; done
-          node .github/qa/overview-ui-layout.cjs
-          OVERVIEW_UI_LEGACY=true OVERVIEW_QA_DIR=ui-legacy-${{ matrix.engine }} node .github/qa/overview-ui-layout.cjs
-      - name: Upload UI screenshots and measurements
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: workbench-ui-${{ matrix.engine }}-screenshots
-          retention-days: 7
-          if-no-files-found: warn
-          path: |
-            ui-${{ matrix.engine }}/*.json
-            ui-${{ matrix.engine }}/*.png
-            ui-legacy-${{ matrix.engine }}/*.json
-            ui-legacy-${{ matrix.engine }}/*.png
-      - name: Upload UI browser trace
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: workbench-ui-${{ matrix.engine }}-trace
-          retention-days: 7
-          if-no-files-found: warn
-          path: |
-            ui-${{ matrix.engine }}/*.zip
-            ui-legacy-${{ matrix.engine }}/*.zip
-
-  workbench-ui-extras:
-    if: github.event_name != 'pull_request' || github.head_ref == 'qa/human-overview-r01-20261006'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        engine: [chromium, webkit]
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with:
-          persist-credentials: false
-          sparse-checkout: |
-            .github/qa
-            kaopu-human-overview
-            kaopu-animal-learning
-            kaopu-hair-workbench
-      - name: Install fixed official browser dependency
-        run: |
-          npm install --prefix "$RUNNER_TEMP/overview-ui-test" --no-save --ignore-scripts playwright@1.57.0
-          "$RUNNER_TEMP/overview-ui-test/node_modules/.bin/playwright" install --with-deps ${{ matrix.engine }}
-      - name: Check animal image controls and live hair workbenches
-        env:
-          NODE_PATH: ${{ runner.temp }}/overview-ui-test/node_modules
-          OVERVIEW_BROWSER: ${{ matrix.engine }}
-          OVERVIEW_URL: http://127.0.0.1:8765/kaopu-human-overview/
-          OVERVIEW_QA_DIR: ui-extra-${{ matrix.engine }}
-        run: |
-          node --check .github/qa/overview-ui-animal.cjs
-          node --check .github/qa/overview-ui-hair.cjs
-          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/overview-ui-extra-server.log" 2>&1 &
-          server=$!
-          trap 'kill "$server" 2>/dev/null || true' EXIT
-          for i in $(seq 1 30); do curl -fsS "$OVERVIEW_URL" > /dev/null && break || sleep 1; done
-          animal_status=0
-          node .github/qa/overview-ui-animal.cjs || animal_status=$?
-          hair_status=0
-          OVERVIEW_HAIR_CASES=kuko node .github/qa/overview-ui-hair.cjs || hair_status=$?
-          test "$animal_status" -eq 0
-          test "$hair_status" -eq 0
-      - name: Upload extras screenshots and measurements
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: workbench-ui-extra-${{ matrix.engine }}-screenshots
-          retention-days: 7
-          if-no-files-found: warn
-          path: |
-            ui-extra-${{ matrix.engine }}/*.json
-            ui-extra-${{ matrix.engine }}/*.png
-      - name: Upload extras traces
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: workbench-ui-extra-${{ matrix.engine }}-trace
-          retention-days: 7
-          if-no-files-found: warn
-          path: ui-extra-${{ matrix.engine }}/*.zip
+          path: combined-${{ matrix.engine }}/*.zip

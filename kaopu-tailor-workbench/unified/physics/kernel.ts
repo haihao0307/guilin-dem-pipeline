@@ -1,0 +1,30 @@
+// Original KAOPU f64 kernels. Same ordered XPBD/strain/body projections.
+// JS supplies the original Math trigonometric functions. No reduced iterations.
+@external('math','atan2') declare function atan2(y:f64,x:f64):f64;
+@external('math','cos') declare function cos(x:f64):f64;
+@external('math','sin') declare function sin(x:f64):f64;
+let pos:usize=0,inv:usize=0,alias:usize=0,ci:usize=0,cf:usize=0,ti:usize=0,tf:usize=0,edges:usize=0,sdf:usize=0;
+let N:i32=0,C:i32=0,T:i32=0,E:i32=0,nx:i32=0,ny:i32=0,nz:i32=0;
+let ox:f64=0,oy:f64=0,oz:f64=0,spacing:f64=5,quant:f64=.05;
+let gx:f64=0,gy:f64=0,gz:f64=0,sd:f64=0,valid:bool=false;
+export let contacts:i32=0;
+export function configure(p:usize,w:usize,a:usize,cidx:usize,cdata:usize,tidx:usize,tdata:usize,eidx:usize,field:usize,n:i32,c:i32,t:i32,e:i32,dx:i32,dy:i32,dz:i32,x:f64,y:f64,z:f64,step:f64,q:f64):void{pos=p;inv=w;alias=a;ci=cidx;cf=cdata;ti=tidx;tf=tdata;edges=eidx;sdf=field;N=n;C=c;T=t;E=e;nx=dx;ny=dy;nz=dz;ox=x;oy=y;oz=z;spacing=step;quant=q;}
+@inline function point(i:i32):usize{return pos+usize(load<i32>(alias+usize(i)*4))*24;}
+@inline function weight(i:i32):f64{return load<f64>(inv+usize(i)*8);}
+@inline function norm(x:f64,y:f64,z:f64):f64{return Math.sqrt(x*x+y*y+z*z);}
+@inline function add(p:usize,x:f64,y:f64,z:f64):void{store<f64>(p,load<f64>(p)+x);store<f64>(p+8,load<f64>(p+8)+y);store<f64>(p+16,load<f64>(p+16)+z);}
+export function setConstraintCount(count:i32):void{C=count;}
+export function prepare(h:f64,elapsed:f64):void{contacts=0;for(let i=0;i<C;i++){let d=cf+usize(i)*80;store<f64>(d+40,0);store<f64>(d+64,load<f64>(d+8)/(h*h));let rest=load<f64>(d),target=rest;if(load<f64>(d+56)!=0)target=rest+(load<f64>(d+16)-rest)*Math.max(0,1-(elapsed-load<f64>(d+24))/load<f64>(d+32));store<f64>(d+72,target);}}
+export function distances(begin:i32,end:i32):void{for(let i=begin;i<end;i++){let d=cf+usize(i)*80;if(load<f64>(d+48)!=0)continue;let a=load<i32>(ci+usize(i)*8),b=load<i32>(ci+usize(i)*8+4),pa=point(a),pb=point(b),w1=weight(a),w2=weight(b),dx=load<f64>(pa)-load<f64>(pb),dy=load<f64>(pa+8)-load<f64>(pb+8),dz=load<f64>(pa+16)-load<f64>(pb+16),len=norm(dx,dy,dz);if(len<1e-12||w1+w2==0)continue;let alpha=load<f64>(d+64),lambda=load<f64>(d+40),dl=(-(len-load<f64>(d+72))-alpha*lambda)/(w1+w2+alpha),f=dl/len;store<f64>(d+40,lambda+dl);add(pa,w1*f*dx,w1*f*dy,w1*f*dz);add(pb,-w2*f*dx,-w2*f*dy,-w2*f*dz);}}
+export function strains():void{for(let t=0;t<T;t++){let ids=ti+usize(t)*12,coef=tf+usize(t)*48,a=load<i32>(ids),b=load<i32>(ids+4),c=load<i32>(ids+8),pa=point(a),pb=point(b),pc=point(c),u0=load<f64>(coef),u1=load<f64>(coef+8),u2=load<f64>(coef+16),v0=load<f64>(coef+24),v1=load<f64>(coef+32),v2=load<f64>(coef+40);
+ let ax=load<f64>(pa),ay=load<f64>(pa+8),az=load<f64>(pa+16),bx=load<f64>(pb),by=load<f64>(pb+8),bz=load<f64>(pb+16),cx=load<f64>(pc),cy=load<f64>(pc+8),cz=load<f64>(pc+16),ux=ax*u0+bx*u1+cx*u2,uy=ay*u0+by*u1+cy*u2,uz=az*u0+bz*u1+cz*u2,vx=ax*v0+bx*v1+cx*v2,vy=ay*v0+by*v1+cy*v2,vz=az*v0+bz*v1+cz*v2;
+ let aa=ux*ux+uy*uy+uz*uz,bb=vx*vx+vy*vy+vz*vz,ab=ux*vx+uy*vy+uz*vz,radius=Math.abs(ab);if(Math.min(aa,bb)-radius>=.985*.985+1e-12&&Math.max(aa,bb)+radius<=1.015*1.015-1e-12)continue;
+ let angle=.5*atan2(2*ab,aa-bb),co=cos(angle),si=sin(angle);
+ for(let mode=0;mode<2;mode++){if(mode){ax=load<f64>(pa);ay=load<f64>(pa+8);az=load<f64>(pa+16);bx=load<f64>(pb);by=load<f64>(pb+8);bz=load<f64>(pb+16);cx=load<f64>(pc);cy=load<f64>(pc+8);cz=load<f64>(pc+16);ux=ax*u0+bx*u1+cx*u2;uy=ay*u0+by*u1+cy*u2;uz=az*u0+bz*u1+cz*u2;vx=ax*v0+bx*v1+cx*v2;vy=ay*v0+by*v1+cy*v2;vz=az*v0+bz*v1+cz*v2;}
+ let qx=mode?-si:co,qy=mode?co:si,x=ux*qx+vx*qy,y=uy*qx+vy*qy,z=uz*qx+vz*qy,len=norm(x,y,z),target=Math.max(.985,Math.min(1.015,len));if(Math.abs(len-target)<1e-6||len<1e-9)continue;let ca=u0*qx+v0*qy,cb=u1*qx+v1*qy,cc=u2*qx+v2*qy,wa=weight(a),wb=weight(b),wc=weight(c),den=wa*ca*ca+wb*cb*cb+wc*cc*cc;if(den<1e-12)continue;let factor=-(len-target)/(den*len),fa=wa*ca*factor,fb=wb*cb*factor,fc=wc*cc*factor;add(pa,fa*x,fa*y,fa*z);add(pb,fb*x,fb*y,fb*z);add(pc,fc*x,fc*y,fc*z);}
+ }}
+@inline function field(i:i32):f64{return f64(load<i16>(sdf+usize(i)*2));}
+function sample(x:f64,y:f64,z:f64,margin:f64):void{let fx=(x*1000-ox)/spacing,fy=(y*1000-oy)/spacing,fz=(z*1000-oz)/spacing;if(fx<0||fy<0||fz<0||fx>=nx-1||fy>=ny-1||fz>=nz-1){valid=false;return;}valid=true;let i=i32(Math.floor(fx)),j=i32(Math.floor(fy)),k=i32(Math.floor(fz)),u=fx-f64(i),v=fy-f64(j),w=fz-f64(k),o=(k*ny+j)*nx+i,nxy=nx*ny,p=field(o),q=field(o+1),r=field(o+nx),s=field(o+nx+1),t=field(o+nxy),b=field(o+nxy+1),c=field(o+nxy+nx),e=field(o+nxy+nx+1),lo=(p*(1-u)+q*u)*(1-v)+(r*(1-u)+s*u)*v,hi=(t*(1-u)+b*u)*(1-v)+(c*(1-u)+e*u)*v;sd=(lo*(1-w)+hi*w)*quant*.001;if(sd>=margin)return;let dx=((q-p)*(1-v)+(s-r)*v)*(1-w)+((b-t)*(1-v)+(e-c)*v)*w,dy=((r-p)*(1-u)+(s-q)*u)*(1-w)+((c-t)*(1-u)+(e-b)*u)*w,dz=hi-lo,n=norm(dx,dy,dz);gx=n?dx/n:0;gy=n?dy/n:1;gz=n?dz/n:0;}
+export function vertices(margin:f64):void{for(let i=0;i<N;i++){if(weight(i)==0)continue;let p=point(i);sample(load<f64>(p),load<f64>(p+8),load<f64>(p+16),margin);if(valid&&sd<margin){let d=margin-sd;add(p,gx*d,gy*d,gz*d);contacts++;}}}
+function contact(a:i32,b:i32,c:i32,three:bool,margin:f64):void{let pa=point(a),pb=point(b),pc=point(c),w=three?1.0/3:.5,x=load<f64>(pa)*w+load<f64>(pb)*w,y=load<f64>(pa+8)*w+load<f64>(pb+8)*w,z=load<f64>(pa+16)*w+load<f64>(pb+16)*w,wa=weight(a),wb=weight(b),wc=three?weight(c):0,sum=wa*w*w+wb*w*w;if(three){x+=load<f64>(pc)*w;y+=load<f64>(pc+8)*w;z+=load<f64>(pc+16)*w;sum+=wc*w*w;}sample(x,y,z,margin);if(!valid||sd>=margin||sum<1e-12)return;let lambda=(margin-sd)/sum,fa=wa*w*lambda,fb=wb*w*lambda;add(pa,gx*fa,gy*fa,gz*fa);add(pb,gx*fb,gy*fb,gz*fb);if(three){let fc=wc*w*lambda;add(pc,gx*fc,gy*fc,gz*fc);}contacts++;}
+export function surfaces():void{for(let i=0;i<E;i++){let p=edges+usize(i)*8;contact(load<i32>(p),load<i32>(p+4),0,false,.0015);}for(let i=0;i<T;i++){let p=ti+usize(i)*12;contact(load<i32>(p),load<i32>(p+4),load<i32>(p+8),true,.0015);}}
