@@ -22,6 +22,24 @@ export function relativeNeighbours(source,candidates,nodes){
  const best=Array(6).fill(null);for(const c of candidates){const p=nodes[c.i],sector=Math.min(5,Math.floor((Math.atan2(p.y-source.y,p.x-source.x)+Math.PI)/(Math.PI/3)));if(!best[sector]||c.d<best[sector].d)best[sector]=c;}
  const out=[];for(const v of best){if(!v)continue;let ok=true;for(const u of candidates){if(u.i!==v.i&&u.d<=v.d&&d2(nodes[v.i],nodes[u.i])<=v.d){ok=false;break;}}if(ok)out.push(v);}return out;
 }
+// Explicit planar junction construction. A geometric crossing without a shared
+// graph vertex is not counted as an anastomosis. Original growth paths are retained.
+export function planarContacts(nodes,edges,{weld=false}={}){
+ const bins=new Map(),seen=new Set(),splits=new Map(),points=new Map();let crossings=0;const count=edges.length,size=9,epsilon=1e-8;
+ const addSplit=(i,t,node)=>{let a=splits.get(i);if(!a){a=[];splits.set(i,a);}a.push({t,node});};
+ for(let i=0;i<count;i++){const e=edges[i],a=nodes[e.a],b=nodes[e.b],rx=b.x-a.x,ry=b.y-a.y;
+  for(let x=Math.floor(Math.min(a.x,b.x)/size);x<=Math.floor(Math.max(a.x,b.x)/size);x++)for(let y=Math.floor(Math.min(a.y,b.y)/size);y<=Math.floor(Math.max(a.y,b.y)/size);y++){
+   const key=x+','+y;let list=bins.get(key);if(!list){list=[];bins.set(key,list);}
+   for(const j of list){const f=edges[j];if(e.a===f.a||e.a===f.b||e.b===f.a||e.b===f.b)continue;const pair=j*count+i;if(seen.has(pair))continue;seen.add(pair);
+    const c=nodes[f.a],d=nodes[f.b],sx=d.x-c.x,sy=d.y-c.y,det=rx*sy-ry*sx;if(Math.abs(det)<1e-10)continue;const qx=c.x-a.x,qy=c.y-a.y,t=(qx*sy-qy*sx)/det,u=(qx*ry-qy*rx)/det;
+    if(t<=epsilon||t>=1-epsilon||u<=epsilon||u>=1-epsilon)continue;crossings++;if(!weld)continue;
+    const px=a.x+rx*t,py=a.y+ry*t,k=Math.round(px*1e6)+','+Math.round(py*1e6);let node=points.get(k);if(node===undefined){node=nodes.length;nodes.push({x:px,y:py,parent:e.a,order:Math.min(e.order,f.order),birth:0,planarJunction:true});points.set(k,node);}addSplit(i,t,node);addSplit(j,u,node);
+   }list.push(i);
+  }
+ }
+ if(weld&&splits.size){const result=[],unique=new Set();for(let i=0;i<count;i++){const e=edges[i],chain=[{t:0,node:e.a},...(splits.get(i)||[]),{t:1,node:e.b}].sort((a,b)=>a.t-b.t);for(let k=1;k<chain.length;k++){const a=chain[k-1].node,b=chain[k].node;if(a===b)continue;const key=Math.min(a,b)+','+Math.max(a,b);if(unique.has(key))continue;unique.add(key);result.push({...e,a,b});}}edges.length=0;for(const e of result)edges.push(e);}
+ return {crossings,weldedJunctions:points.size};
+}
 export function buildReticulation({seed=771,attractors=3800,step=3.2,kill=2.45,influence=40,maxIterations=150,hierarchy=true,micro=true}={}){
  const random=seeded(seed),nodes=[],edges=[],edgeKeys=new Set(),primaryPaths=[];const width=800,height=1200;
  const inside=p=>p.y>=0&&p.y<=height&&Math.abs(p.x-400)<=leafWidth(1-p.y/height)*height*.64;
@@ -30,7 +48,7 @@ export function buildReticulation({seed=771,attractors=3800,step=3.2,kill=2.45,i
  for(let i=0;i<=120;i++){addNode(400+Math.sin(i/120*3.0)*3,1200-i*10,i-1,0);if(i)addEdge(i-1,i,0,.50*Math.pow(1-i/125,.6)+.07);}primaryPaths.push(nodes.slice(0,121).map((_,i)=>i));
  const secondaryEnds=[[],[]];for(let row=0;row<11;row++){for(let side=0;side<2;side++){const rootIndex=10+row*9+(hierarchy?Math.round((random()-.5)*4):0),baseY=nodes[rootIndex].y,t=1-baseY/height,sign=side?-1:1,path=[rootIndex];let parent=rootIndex;
  const ascent=(90+80*Math.sin(t*Math.PI))*(hierarchy?.78+random()*.40:1),bend=hierarchy?1.06+random()*.25:1.12,reach=hierarchy?.86+random()*.07:.91;
- for(let k=1;k<=22;k++){const q=k/22,y=baseY-ascent*Math.pow(q,bend),half=leafWidth(1-y/height)*height*.64*reach,x=400+sign*half*Math.sin(q*Math.PI*.46);const id=addNode(x,y,parent,1);addEdge(parent,id,1,(.095+.045*(1-t))*Math.pow(1-q*.85,.62));parent=id;path.push(id);}primaryPaths.push(path);secondaryEnds[side].push(parent);}}
+ for(let k=1;k<=80;k++){const q=k/80,y=baseY-ascent*Math.pow(q,bend),half=leafWidth(1-y/height)*height*.64*reach,x=400+sign*half*Math.sin(q*Math.PI*.46);const id=addNode(x,y,parent,1);addEdge(parent,id,1,(.095+.045*(1-t))*Math.pow(1-q*.85,.62));parent=id;path.push(id);}primaryPaths.push(path);secondaryEnds[side].push(parent);}}
  // Marginal secondary arches are explicit study scaffolding, distinct from fine growth.
  for(let side=0;side<2;side++)for(let i=0;i<10;i++){const a=secondaryEnds[side][i],b=secondaryEnds[side][i+1],start=nodes[a],end=nodes[b],path=[a];let parent=a;for(let k=1;k<12;k++){const t=k/12,y=start.y+(end.y-start.y)*t,x=400+(side?-1:1)*leafWidth(1-y/height)*height*.64*.91;const n=addNode(x,y,parent,1);addEdge(parent,n,1,.038);parent=n;path.push(n);}addEdge(parent,b,1,.038);path.push(b);primaryPaths.push(path);}
  function growPhase({attractors,step,kill,influence,spacing,clearance,order}){let sources=[];const sourceGrid=new Grid(sources,12),initialGrid=new Grid(nodes,18);for(let attempt=0;sources.length<attractors&&attempt<attractors*30;attempt++){const p={x:random()*800,y:random()*1200,tags:null};if(inside(p)&&!sourceGrid.near(p,spacing).length&&!initialGrid.near(p,clearance).length){sources.push(p);sourceGrid.add(sources.length-1);}}
@@ -58,6 +76,7 @@ export function buildReticulation({seed=771,attractors=3800,step=3.2,kill=2.45,i
  const neighbours=nodes.map(()=>[]);for(const e of edges){neighbours[e.a].push(e.b);neighbours[e.b].push(e.a);}for(let pass=0;pass<3;pass++){const updates=[];for(let i=0;i<nodes.length;i++){if(nodes[i].order<2||neighbours[i].length!==2)continue;const a=nodes[neighbours[i][0]],b=nodes[neighbours[i][1]],n=nodes[i];updates.push([i,n.x*.5+(a.x+b.x)*.25,n.y*.5+(a.y+b.y)*.25]);}for(const [i,x,y] of updates){nodes[i].x=x;nodes[i].y=y;}}
  const weights=new Float32Array(nodes.length).fill(1);for(let i=nodes.length-1;i>0;i--)if(nodes[i].parent>=0)weights[nodes[i].parent]+=weights[i];
  for(const e of edges)if(e.order>=2){const w=Math.min(weights[e.a],weights[e.b]);e.radius=e.order===4?Math.min(.015,.004+Math.pow(w,.22)*.0019):e.order===2&&hierarchy?Math.min(.088,.026+Math.pow(w,.31)*.008):Math.min(.038,.008+Math.pow(w,.25)*.004);}
+ const planar=planarContacts(nodes,edges,{weld:true});
  const parent=nodes.map((_,i)=>i),find=i=>{while(parent[i]!==i){parent[i]=parent[parent[i]];i=parent[i];}return i;};for(const e of edges)parent[find(e.b)]=find(e.a);const components=new Set(nodes.map((_,i)=>find(i))).size;
- return {width,height,nodes,edges,primaryPaths,seed,report:{algorithm:'Runions relative-neighbour closed growth, independent implementation',authoredScaffold:true,nodes:nodes.length,edges:edges.length,components,cycles:edges.length-nodes.length+components,sourceWelds:phases.reduce((s,p)=>s+p.welds,0),remainingSources:phases.reduce((s,p)=>s+p.remaining,0),iterations:phases.reduce((s,p)=>s+p.iterations,0),phases,kill,step,actualAuthorSourceRun:false}};
+ return {width,height,nodes,edges,primaryPaths,seed,report:{algorithm:'Runions relative-neighbour closed growth, independent implementation',authoredScaffold:true,nodes:nodes.length,edges:edges.length,components,cycles:edges.length-nodes.length+components,sourceWelds:phases.reduce((s,p)=>s+p.welds,0),remainingSources:phases.reduce((s,p)=>s+p.remaining,0),iterations:phases.reduce((s,p)=>s+p.iterations,0),phases,planarWelds:planar.weldedJunctions,kill,step,actualAuthorSourceRun:false}};
 }

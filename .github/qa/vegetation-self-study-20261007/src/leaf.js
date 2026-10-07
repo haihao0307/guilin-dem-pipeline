@@ -5,12 +5,14 @@ import {buildReticulation} from './reticulation.js';
 let source,closedSource;
 export function reticulationSource(){return closedSource??=buildReticulation();}
 export function veinSource(){return source??=makeLeafVeins();}
-export function leafPoint(u,t,{length=4,curl=1.15,fold=.25,ripple=.028,width=.65}={}){
- const x=(u*2-1)*leafWidth(t)*length*width;
- const k=curl/length,theta=curl*t;
- const y=Math.abs(k)<1e-5?length*t:Math.sin(theta)/k;
- const z=(Math.abs(k)<1e-5?0:(1-Math.cos(theta))/k)+Math.abs(x)*fold+Math.sin(t*80+u*4)*ripple*Math.abs(u*2-1)**3*Math.sin(Math.PI*t)+Math.sin(t*Math.PI)*Math.sin(u*6.28)*.04;
- return [x,y,z];
+export function leafPoint(u,t,{length=4,curl=1.15,fold=.25,ripple=.028,width=.65,twist=0,sway=0,rippleFrequency=80,midrib=0}={}){
+ const x=(u*2-1)*leafWidth(t)*length*width,k=curl/length,theta=curl*t,torsion=twist*Math.sin(Math.PI*t),ct=Math.cos(torsion),st=Math.sin(torsion),sn=Math.sin(theta),cs=Math.cos(theta);
+ const y=Math.abs(k)<1e-5?length*t:sn/k,z=Math.abs(k)<1e-5?0:(1-cs)/k;
+ const camber=Math.abs(x)*fold+Math.sin(t*rippleFrequency+u*4)*ripple*Math.abs(u*2-1)**3*Math.sin(Math.PI*t)+Math.sin(t*Math.PI)*Math.sin(u*6.28)*.04+midrib*Math.exp(-(((u-.5)/.035)**2))*Math.sin(Math.PI*t);
+ // Ribbon basis follows the curved spine. Camber and edge ripples remain normal
+ // to the local leaf rather than fixed to world Z when the blade curls over.
+ const across=x*ct-camber*st,normalOffset=x*st+camber*ct;
+ return [across+sway*Math.sin(Math.PI*t),y-sn*normalOffset,z+cs*normalOffset];
 }
 export function leafGeometry(options={}){
  const nu=options.nu??48,nv=options.nv??140,positions=[],uv=[],indices=[];
@@ -56,7 +58,7 @@ export function leafMaterial(textures,{coffee=false,transmission=.58}={}){
 }
 export function createLeafStudy({textures,params}){
  const root=new THREE.Group(),material=thinLeafMaterial(textures,{transmission:params.transmission}),leaves=[];
- const transforms=[{position:[0,-1.2,0],rotation:[.05,.06,-.13],length:4,width:.65,curl:1,fold:.12},{position:[.27,-.87,.70],rotation:[.18,-.32,.25],length:4.2,width:.58,curl:.89,fold:.20},{position:[-.28,-1.43,-.61],rotation:[-.12,.29,-.38],length:3.72,width:.69,curl:1.12,fold:.085}];
- for(let i=0;i<3;i++){const shape=transforms[i],m=new THREE.Mesh(new THREE.BufferGeometry(),material);m.position.fromArray(shape.position);m.rotation.fromArray(shape.rotation);m.userData.shape=shape;setLeafShape(m,{curl:params.curl*shape.curl,fold:shape.fold,length:shape.length,width:shape.width,nu:52,nv:180,ripple:.007});m.castShadow=m.receiveShadow=true;root.add(m);leaves.push(m);}
+ const transforms=[{position:[0,-1.2,0],rotation:[.05,.06,-.13],length:4,width:.65,curl:1,fold:.12,twist:-.32,sway:.12},{position:[.27,-.87,.70],rotation:[.18,-.32,.25],length:4.2,width:.58,curl:.89,fold:.20,twist:.46,sway:-.14},{position:[-.28,-1.43,-.61],rotation:[-.12,.29,-.38],length:3.72,width:.69,curl:1.12,fold:.085,twist:-.54,sway:.08}];
+ for(let i=0;i<3;i++){const shape=transforms[i],m=new THREE.Mesh(new THREE.BufferGeometry(),material);m.position.fromArray(shape.position);m.rotation.fromArray(shape.rotation);m.userData.shape=shape;setLeafShape(m,{curl:params.curl*shape.curl,fold:shape.fold,length:shape.length,width:shape.width,twist:shape.twist,sway:shape.sway,nu:52,nv:180,ripple:.007});m.castShadow=m.receiveShadow=true;root.add(m);leaves.push(m);}
  return {root,leaves,material,update(t){root.rotation.y=Math.sin(t*.12)*.07;leaves[0].rotation.z=-.13+Math.sin(t*.3)*.013;leaves[2].rotation.z=-.38+Math.sin(t*.23+1.8)*.018;},info:{geometry:'3 parametric laminae + raised primary/secondary vein geometry',venation:reticulationSource().nodes.length,network:reticulationSource().report,optics:material.userData.optics,teacher:'independent Runions closed-rule implementation; original tsoding baseline remains separate'}};
 }
