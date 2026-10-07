@@ -24,21 +24,12 @@ jobs:
         run: |
           python restore_sources.py
           python tools/prepare_common.py
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Rebuild fixed body correspondence once from immutable source bytes
+      - name: Verify committed body mapping and recover native diagnostic inputs
         working-directory: .github/qa/unified-full-20261007
-        env:
-          OPENBLAS_NUM_THREADS: '2'
-          MPLCONFIGDIR: /tmp/common-body-mpl
         run: |
-          python -m pip install -r registration-requirements.txt
+          python tools/verify_body_map.py
           node body-adapter/export-input.mjs
           node body-adapter/export-bind.mjs
-          python body-adapter/register-body.py
-          python body-adapter/generate-mapping.py
-          python tools/verify_body_map.py
       - name: Native references, actual common channels and ownership
         working-directory: .github/qa/unified-full-20261007
         run: |
@@ -135,4 +126,4 @@ jobs:
             .github/qa/unified-full-20261007/body-adapter/mapping-report.json
             .github/qa/unified-full-20261007/body-adapter/map-indices.u32
             .github/qa/unified-full-20261007/body-adapter/map-bary.f32
-            .github/qa/unified-full-20261007/research/body-map-rebuild.json
+            .github/qa/unified-full-20261007/research/body-map-runtime-verify.json
