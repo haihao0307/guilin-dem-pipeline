@@ -1,0 +1,86 @@
+{
+  "version": "CORAL-GROWTH-R02-20261007",
+  "implementation": "Original JavaScript connected single-cup growth benchmark; not a Houdini cook or completed reproduction of the complex reference colony",
+  "scope": "Growth only; no sand, grains, bubbles, purchased HIP, teacher movie or teacher geometry",
+  "algorithm": [
+    "Connected pointed cup seed with circumference-dependent sampling; no separate fixed cylinder or preplaced leaf membranes",
+    "Spatially varying edge rest-length growth",
+    "Curvature, normal-to-light direction and projected self-occlusion masks",
+    "Iterative local spring relaxation",
+    "Spatial-hash near-neighbor repulsion",
+    "Normal/tangential Laplacian relaxation",
+    "Conforming long-edge splitting with shared midpoints",
+    "Deterministic stored snapshots of genuinely computed geometry",
+    "Two-level Loop subdivision for displayed tissue surface; raw solver topology and OBJ remain inspectable",
+    "Edge-activated anisotropic rest-metric growth with bounded local strain",
+    "Angular chart preservation and projected triangle orientation guard in the single-body safe domain",
+    "A 0.004-unit closed offset shell with joined rim represents tissue thickness for rendering; raw solver stays a membrane"
+  ],
+  "sources": [
+    {
+      "author": "Junichiro Horikawa",
+      "repository": "https://github.com/jhorikawa/HoudiniHowtos",
+      "commit": "ebafabe0f2b3559e729b6561153e879cf7d03125",
+      "path": "0008 Coral Growth/Coral Growth.hipnc",
+      "gitBlob": "e51193596924fff05c56e3e6ee8afc31ce33eae1",
+      "sha256": "bac6d84241e9da5cea5cc445deb81ce2d2ad577e1471516693f59f3c6562c429",
+      "license": "MIT, Copyright (c) 2024 Junichiro Horikawa",
+      "inspection": "Read actual serialized SOP and VEX. Not cooked.",
+      "learned": [
+        "pscale-driven point relaxation",
+        "slow_factor displacement blending",
+        "iterative remesh",
+        "Laplacian smoothing"
+      ]
+    },
+    {
+      "author": "Junichiro Horikawa",
+      "repository": "https://github.com/jhorikawa/HoudiniHowtos",
+      "commit": "ebafabe0f2b3559e729b6561153e879cf7d03125",
+      "path": "Live-0053 Differential Growth with Vellum/Differential Growth with Vellum.hiplc",
+      "gitBlob": "3bb70442608b12d74d4e3e460742655db002d4bc",
+      "sha256": "9859001fd8564096d941081b6793b88481d0875defad86065b073cf0ebed0257",
+      "license": "MIT",
+      "inspection": "Read actual restlength and stiffness VEX. Not cooked.",
+      "learned": [
+        "spatial mask controls rest length over time",
+        "differential stretch produces out-of-plane folds"
+      ],
+      "notUsed": "No Vellum engine or grain simulation copied or claimed"
+    },
+    {
+      "author": "Konstantin Magnus",
+      "url": "https://procegen.konstantinmagnus.de/simulating-growth-on-meshes",
+      "learned": [
+        "surface features, normal orientation and light exposure affect growth",
+        "iterative displacement with remeshing"
+      ],
+      "codeCopied": false
+    },
+    {
+      "author": "Iman Vafaei",
+      "url": "https://www.youtube.com/watch?v=icN9z23F1ag",
+      "role": "Visual and high-level method reference only",
+      "assetsOrCodeUsed": false
+    },
+    {
+      "library": "three.js",
+      "version": "r170",
+      "license": "MIT",
+      "localFile": "vendor/three.module.js"
+    }
+  ],
+  "knownLimits": [
+    "No Houdini runtime comparison",
+    "Single-valued cup-chart constraint excludes overhanging multi-layer forms",
+    "Reference colony, branching and dense mature plate stack are not reproduced yet",
+    "Approximate projected-grid exposure rather than ray-traced visibility",
+    "Point repulsion rather than complete triangle self-collision",
+    "Not a biologically validated coral species model",
+    "No sand or ocean scene reproduction",
+    "Closed shell is a render representation, not volumetric physical growth"
+  ],
+  "existingCases": "Independent case directory; only additive mother navigation integration is intended",
+  "timeUnit": "dimensionless solver iteration",
+  "areaUnit": "normalized model units squared"
+}
