@@ -51,3 +51,7 @@ Root confirmed C3 removed false dark bumps; keep this rollback point. D1 adds of
 ## D2 render scheduling and evidence
 
 D1 produced valid reflection/refraction images but the first browser sequence timed out waiting for element screenshot stability after repeated resizes. D2 renders paused scenes only on actual changes, keeps full target pixel resolution, captures a known rendered frame and visible stage clip, and places flow/cost checks before the1440closeup. Both engines run even if one fails, with overall failure retained. CPU draw-submit time and RAF timing are recorded separately. No visual-quality reduction is used to obtain a green check.
+
+## E1 whole cloud / rain / water scene
+
+D2 dual-engine water tests passed, paused redraw count0. Water remains visually too close to a dark channel, so E1 adds the main atmosphere rather than more small turf edits. A coherent128×112×128procedural density/light field is integrated with128view steps at the full current viewport:720²main view and1024²water reflection. Actual opaque depth is rendered per camera; the oblique reflection camera projection is explicitly inverted. Cloud optical depth casts a matching directional-light shadow on terrain and house.2100rain segments terminate at terrain or water. Original2.5s framing, fixed-camera time change and low-angle volume/depth reference are captured before any aesthetic approval. No original video pixels and no automatic software downsampling. Full-scene motion/mobile performance remains unverified at this initial visual checkpoint.

@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import {ImprovedNoise} from './ImprovedNoise.js';
 import {loadStudyMaterials} from './materials.mjs';
 import {createRiver} from './water.mjs';
+import {createVolumeCloud,applyCloudShadow} from './cloud-volume.mjs';
+import {createRain} from './rain.mjs';
 let scanHeight=()=>.5;
 export const DURATION=11;
 const noise=new ImprovedNoise(),clamp=THREE.MathUtils.clamp;
@@ -38,9 +40,10 @@ export async function createStorm(scene,{mobile=false}={}){
  for(const x of [-.17,.17]){box(hgroup,.125,.18,.012,glass,x,floor+.75,.358);box(hgroup,.014,.19,.02,timber,x,floor+.75,.371);box(hgroup,.135,.012,.025,timber,x,floor+.75,.371);}for(const z of [-.18,.18]){box(hgroup,.014,.17,.11,glass,.311,floor+.75,z);box(hgroup,.025,.18,.012,timber,.323,floor+.75,z);}box(hgroup,.16,.31,.02,timber,0,floor+.21,.37);box(hgroup,.095,.32,.11,timber,.20,floor+1.32,-.19);
  for(let step=0;step<3;step++){const z=.45+step*.095,top=floor+.015-step*.025,bottom=height(houseX,houseZ+z)-.020;box(hgroup,.235,Math.max(.035,top-bottom),.105,stone,0,top-Math.max(.035,top-bottom)/2,z);}
 
- const skyLight=new THREE.HemisphereLight(0xd5e2e4,0x17231d,1.4);scene.add(skyLight);const sun=new THREE.DirectionalLight(0xdce9e8,2.6);sun.position.set(-3,7,-2);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-4,right:4,top:5,bottom:-4,near:.1,far:20});sun.shadow.bias=-.0003;scene.add(sun);
+ const skyLight=new THREE.HemisphereLight(0xd5e2e4,0x17231d,1.4);scene.add(skyLight);const sun=new THREE.DirectionalLight(0xdce9e8,2.6);sun.position.set(-4.5,8.5,-3);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-4,right:4,top:5,bottom:-4,near:.1,far:20});sun.shadow.bias=-.0003;scene.add(sun);
  const envelope=mesh(new THREE.SphereGeometry(2.83,64,32,0,Math.PI*2,0,Math.PI/2),new THREE.MeshBasicMaterial({color:0xbad3db,wireframe:true,transparent:true,opacity:.06,depthWrite:false}),0,1.68,0);envelope.scale.y=.78;envelope.visible=false;world.add(envelope);
- const stats={stage:'D1-planar-reflecting-flowing-river',materialStudy:materials.stats,foundation,waterWidthRange:[.185,.275],riverSegments:220,terrainVertices:pos.length/3,cloud:'not implemented in this checkpoint',houseAnchor:[houseX,floor,houseZ]};
- Object.defineProperty(stats,'river',{enumerable:true,get:()=>river.stats()});
- return {world,stats,setWaterCaptureEnabled(v){river.setCaptureEnabled(v);},setDiagnosticNormalStrength(v){materials.ground.normalScale.set(v,v);materials.rock.normalScale.set(v,v);river.invalidate();},update(t){riverTime=t;},renderCloud(){},setEnvelope(v){envelope.visible=v;river.invalidate();},dispose(){world.traverse(o=>{o.geometry?.dispose();o.material?.dispose();});env.dispose();materials.dispose();river.dispose();}};
+ const volume=createVolumeCloud(scene,world,river);for(const material of [materials.ground,materials.rock,wall,timber,roofMat,stone])applyCloudShadow(material,volume.shadowUniforms);const rain=createRain(scene,{height,waterLevel,riverCenter,riverEdges});
+ const stats={stage:'E1-full-resolution-volume-rain-water',materialStudy:materials.stats,foundation,waterWidthRange:(()=>{const widths=Array.from({length:221},(_,i)=>{const e=riverEdges(-2.69+i/220*5.38);return (e[0]+e[1])*1.04;});return [Math.min(...widths),Math.max(...widths)];})(),riverSegments:220,terrainVertices:pos.length/3,houseAnchor:[houseX,floor,houseZ]};
+ Object.defineProperty(stats,'river',{enumerable:true,get:()=>river.stats()});Object.defineProperty(stats,'cloud',{enumerable:true,get:()=>volume.stats()});stats.rain=rain.stats;
+ return {world,stats,setCloudVisible(v){volume.mesh.visible=v;river.invalidate();},setWaterCaptureEnabled(v){river.setCaptureEnabled(v);},setDiagnosticNormalStrength(v){materials.ground.normalScale.set(v,v);materials.rock.normalScale.set(v,v);river.invalidate();},update(t){riverTime=t;volume.update(t);rain.update(t);},renderCloud(){},setEnvelope(v){envelope.visible=v;river.invalidate();},dispose(){world.traverse(o=>{o.geometry?.dispose();o.material?.dispose();});env.dispose();materials.dispose();river.dispose();volume.dispose();rain.dispose();}};
 }
