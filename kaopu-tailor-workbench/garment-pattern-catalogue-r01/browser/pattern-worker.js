@@ -21,7 +21,7 @@ async function initialize(config={}){
     const name=url.slice(runtimeBase.length),entry=manifest.files[name];
     if(entry){let compressedStream;
      if(entry.compressedParts){const parts=await Promise.all(entry.compressedParts.map(p=>checkedFetch(runtimeBase+p.file,p.sha256)));compressedStream=new Blob(parts).stream();}
-     else {const r=await originalFetch(runtimeBase+entry.compressed,init);if(!r.ok)throw Error(`Runtime download failed ${name}: ${r.status}`);compressedStream=r.body;}
+     else {const {integrity:decodedWheelIntegrity,...transportInit}=init||{};const r=await originalFetch(runtimeBase+entry.compressed,transportInit);if(!r.ok)throw Error(`Runtime download failed ${name}: ${r.status}`);compressedStream=r.body;}
      const data=await new Response(compressedStream.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
      if(await digest(data)!==entry.sha256)throw Error(`Runtime integrity failed: ${name}`);
      return new Response(data,{headers:{'Content-Type':name.endsWith('.wasm')?'application/wasm':name.endsWith('.json')?'application/json':'application/octet-stream'}});
@@ -31,7 +31,9 @@ async function initialize(config={}){
   };
   importScripts(runtimeBase+'pyodide.js');
   runtime=await loadPyodide({indexURL:runtimeBase,stdout:()=>{},stderr:s=>self.postMessage({type:'log',level:'warning',message:s})});
-  await runtime.loadPackage(['numpy','scipy','pyyaml']);
+  const packageErrors=[];await runtime.loadPackage(['numpy','scipy','pyyaml'],{checkIntegrity:true,messageCallback:message=>self.postMessage({type:'log',level:'info',message:String(message)}),errorCallback:message=>{packageErrors.push(String(message));self.postMessage({type:'log',level:'error',message:String(message)});}});
+  if(packageErrors.length)throw Error('Python dependency loading failed: '+packageErrors.join(' | '));
+  await runtime.runPythonAsync('import numpy, scipy, yaml');
   const a=manifest.patternArchive;
   const data=await checkedFetch(new URL(a.file,base),a.sha256);
   runtime.FS.mkdirTree('/pattern-generator');runtime.unpackArchive(data,'zip',{extractDir:'/pattern-generator'});
