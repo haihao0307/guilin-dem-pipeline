@@ -2,8 +2,8 @@
   "schema": "kaopu-common-ui-contract/1",
   "status": "Desktop QA interface; not full visual acceptance or production permission",
   "coreModule": "src/CommonPerson.mjs",
-  "coreFactoryForNode": "create-common.mjs:createCommon({bodyDriver:true})",
-  "browserLoaderReference": "qa/common-native.mjs?body=1",
+  "coreFactoryForNode": "create-common.mjs:createCommon({headDriver:true})",
+  "browserLoaderReference": "qa/common-native.mjs?head=1",
   "persistentMesh": {
     "positions": "model.positions Float32Array, same object throughout compute/restore",
     "faces": "model.faces Uint32Array, same object",
@@ -35,17 +35,17 @@
     },
     "expression": {
       "values": [
-        "gnm"
+        "gnm",
+        "anny",
+        "mhr"
       ],
       "plannedValues": [
         "gnm",
         "anny",
         "mhr"
       ],
-      "meaning": "Currently only GNM is implemented in the common runtime; Anny/MHR face probes not yet enabled"
-    }
-  },
-  "reservedOwnersNotYetCallable": {
+      "meaning": "\u771f\u5b9e\u539f\u751f\u8868\u60c5\u573a\uff1aGNM383\u3001Anny52\u3001MHR72\uff1b\u975e\u6d3b\u52a8\u503c\u4fdd\u5b58\u4e14\u4e0d\u5f71\u54cd\u7f51\u683c"
+    },
     "headShape": {
       "values": [
         "gnm",
@@ -53,7 +53,7 @@
         "mhr"
       ],
       "default": "gnm",
-      "meaning": "Explicit head morphology ownership. Body Anny shape and MHR45 identity remain common state; inactive head morphology values remain saved."
+      "meaning": "\u5934\u90e8\u5f62\u72b6\u6765\u6e90\u72ec\u7acb\u9009\u62e9\uff1bAnny\u8eab\u4f53\u5c40\u90e8\u548cMHR\u8eab\u4f53\u8eab\u4efd\u4ecd\u4e3a\u5171\u540c\u5f62\u6001"
     },
     "gaze": {
       "values": [
@@ -62,9 +62,10 @@
         "expression"
       ],
       "default": "gnm",
-      "meaning": "GNM native eye rotations, active rig eye bones, or selected expression source gaze; excludes double gaze deformation."
+      "meaning": "GNM\u773c\u7403\u65cb\u8f6c\u3001Anny\u539f\u751f\u773c\u9aa8\u6216\u5f53\u524d\u8868\u60c5\u6e90\u773c\u90e8\u573a\u3002MHR\u4ec5\u773c\u7f18/\u773c\u5468\u51e0\u4f55\u573a\uff0c\u65e0\u72ec\u7acb\u773c\u7403\u65cb\u8f6c\u53c2\u6570"
     }
   },
+  "reservedOwnersNotYetCallable": {},
   "parameterGroups": [
     {
       "id": "gnm.identity",
@@ -1797,7 +1798,7 @@
       ],
       "unit": "native mixed units; use official per-channel names and limits",
       "default": 0,
-      "owner": "rig=mhr;24–29 inactive under headRig=gnm",
+      "owner": "rig=mhr;24\u201329 inactive under headRig=gnm",
       "implemented": "native body rig and full nonlinear MLP"
     },
     {
@@ -1903,7 +1904,7 @@
       "qa/full-workbench.html"
     ],
     "coreOwner": "prototype_unified_human_model",
-    "uiOwner": "build_human_overview",
+    "uiOwner": "prototype_unified_human_model, minimal head-field integration authorized by root; frozen layout",
     "refOwner": "prototype_unified_human_model",
     "production": "Root coordinated; no current public modification"
   }

@@ -36,28 +36,34 @@ export function writeValue(state,row,value){
  let node=state;for(let i=0;i<row.path.length-1;i++){const key=row.path[i];if(node[key]===undefined)node[key]=typeof row.path[i+1]==='number'?[0,0,0]:{};node=node[key];}node[row.path.at(-1)]=value;
  return state;
 }
-export function rowStatus(row,state,{localGate,modelReady=true,bodyDriver=true}={}){
+export function rowStatus(row,state,{localGate,modelReady=true,bodyDriver=true,semanticHead=false}={}){
  if(row.locked)return {editable:false,active:false,kind:'locked',label:'原生锁定',reason:'官方通道范围为 0；保留目录位置，不开放调节'};
  if(!modelReady)return {editable:false,active:false,kind:'loading',label:'待加载',reason:'同一模型载入后可用'};
- if(['anny.facialActions','mhr.expression'].includes(row.group))return {editable:false,active:false,kind:'pending',label:'映射待验证',reason:'参数会保存在档案中；当前未转入同一头部，不产生形变'};
- if(['anny.pose','anny.translations'].includes(row.group)&&['eye.L','eye.R'].includes(row.bone))return {editable:false,active:false,kind:'pending',label:'眼球映射待接',reason:'原生眼骨尚未接入共同眼球；不能用头骨代替'};
+ if(!semanticHead&&['anny.facialActions','mhr.expression'].includes(row.group))return {editable:false,active:false,kind:'pending',label:'映射待验证',reason:'参数会保存在档案中；当前未转入同一头部，不产生形变'};
+ if(!semanticHead&&['anny.pose','anny.translations'].includes(row.group)&&['eye.L','eye.R'].includes(row.bone))return {editable:false,active:false,kind:'pending',label:'眼球映射待接',reason:'原生眼骨尚未接入共同眼球；不能用头骨代替'};
  if(row.group==='anny.localChanges'){
   const gate=localGate?.[row.nativeLabel];
   if(!gate||gate.enabled===false)return {editable:false,active:false,kind:'pending',label:'部位校核中',reason:gate?.reason||'正在依据真实源形变区分身体与头部支持，不按名字猜测映射'};
  }
  if(row.source==='mhr'&&!bodyDriver)return {editable:false,active:false,kind:'pending',label:'身体驱动待加载',reason:'当前模型未装配 MHR 身体适配器'};
  let active=true,reason='当前共同模型生效',label;
+ if(row.group==='gnm.identity')active=state.owners.headShape==='gnm';
  if(row.group==='gnm.expression')active=state.owners.expression==='gnm';
- if(['gnm.rotation','gnm.translation'].includes(row.group))active=state.owners.headRig==='gnm';
+ if(row.group==='anny.facialActions')active=state.owners.expression==='anny'&&(!row.nativeLabel.startsWith('eyeLook')||state.owners.gaze==='expression');
+ if(row.group==='mhr.expression')active=state.owners.expression==='mhr'&&(!row.nativeLabel.startsWith('eyesLook')||state.owners.gaze==='expression');
+ if(row.group==='anny.localChanges'&&localGate[row.nativeLabel]?.headOnly)active=state.owners.headShape==='anny';
+ if(['gnm.rotation','gnm.translation'].includes(row.group))active=semanticHead&&row.group==='gnm.rotation'&&row.index>=6?state.owners.gaze==='gnm':state.owners.headRig==='gnm';
  if(['anny.pose','anny.translations'].includes(row.group)){
   active=state.owners.rig==='anny';
   if((/^neck\d+$/.test(row.bone)||row.bone==='head')&&state.owners.headRig==='gnm')active=false;
+  if(['eye.L','eye.R'].includes(row.bone))active=state.owners.rig==='anny'&&state.owners.gaze==='rig';
  }
  if(['mhr.pose','mhr.correctives'].includes(row.group))active=state.owners.rig==='mhr';
  if(row.group==='mhr.pose'&&row.index>=24&&row.index<=29&&state.owners.headRig==='gnm')active=false;
  if(!active)reason='数值可以保存；当前来源没有接管此部位，因此不会影响网格';
- if(['anny.phenotypes','mhr.identity'].includes(row.group)&&active){reason='已连接身体；跨教师头形转移仍单独校核，不能据身体变化宣称脸部已接通';label='身体生效';}
- if(row.group==='anny.localChanges'&&active){const gate=localGate[row.nativeLabel];reason=gate.reason;label=gate.partial?'身体部分生效':'身体生效';}
+ if(['anny.phenotypes','mhr.identity'].includes(row.group)&&active){reason='共同身体形态生效；头部细部由所选头形来源负责。跨模型形态存在适配误差';label='共同形态';}
+ if(row.group==='anny.localChanges'&&active){const gate=localGate[row.nativeLabel];reason=gate.reason;label=gate.headOnly?'头部生效':gate.partial&&state.owners.headShape!=='anny'?'身体部分生效':'当前生效';}
+ if(row.group==='mhr.expression'&&row.nativeLabel.startsWith('eyesLook')&&active)reason='原生眼缘/眼周形变；MHR此接口没有独立虹膜、瞳孔或眼球转角';
  return {editable:true,active,kind:active?'active':'inactive',label:label||(active?'当前生效':'仅保存'),reason};
 }
 export const groupTitle=id=>names[id]||id;

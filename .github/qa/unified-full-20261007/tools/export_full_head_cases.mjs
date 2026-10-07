@@ -1,3 +1,4 @@
+import{mixedState}from'../qa/mixed-states.mjs';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import assert from 'node:assert/strict';
@@ -24,6 +25,11 @@ for(const source of ['anny','mhr']){
 const anchors=[['newborn',-1/3],['baby',0],['child',1/3],['old',1]];
 for(const[name,age]of anchors){const s=state('anny');s.anny.phenotypes.age=age;s.anny.facialActions={jawOpen:.3,eyeBlinkLeft:.2,eyeBlinkRight:.2};add(name,s,`Official Anny age=${age}; source field and cranial placement factored once`);}
 assert.equal(cases.find(c=>c.name==='newborn').state.anny.phenotypes.age,-1/3);assert.equal(cases.find(c=>c.name==='baby').state.anny.phenotypes.age,0);
+for(const[name,owners]of[
+ ['mixed-gnm-shape-anny-expression-mhr-rig',{rig:'mhr',headRig:'gnm',headShape:'gnm',expression:'anny',gaze:'expression'}],
+ ['mixed-anny-shape-mhr-expression-anny-rig',{rig:'anny',headRig:'body',headShape:'anny',expression:'mhr',gaze:'gnm'}],
+ ['mixed-mhr-shape-gnm-expression-mhr-rig',{rig:'mhr',headRig:'body',headShape:'mhr',expression:'gnm',gaze:'gnm'}]
+])add(name,mixedState(owners,model.mhrMeta),'Moderate cross-source combination; every inactive saved field remains present in the same record');
 for(const row of cases){assert.equal(sha(model.compute(row.state)),row.sha256,'Fixture input mutated: '+row.name);const saved=model.archive();model.compute(defaultState());model.restore(saved);assert.equal(sha(model.positions),row.sha256,'Archive mismatch: '+row.name);}
 fs.writeFileSync(new URL('anny-faces.u32',dir),new Uint8Array(model.anny.arrays.faces.buffer,model.anny.arrays.faces.byteOffset,model.anny.arrays.faces.byteLength));
 fs.writeFileSync(new URL('faces.u32',dir),new Uint8Array(model.faces.buffer));

@@ -25,6 +25,11 @@ for(const gaze of ['gnm','rig','expression']){
  if(gaze!=='expression'){const t=structuredClone(s);t.anny.facialActions.eyeLookDownLeft=.7;assert.equal(sha(run(t)),sha(a),'Inactive expression gaze');}
  rows.push({name:gaze+'-gaze-ownership',passed:true});
 }
+for(const gaze of ['gnm','rig']){const s=defaultState();s.owners.headShape='mhr';s.owners.expression='mhr';s.owners.gaze=gaze;const before=run(s),t=structuredClone(s);model.mhrMeta.expression_names.forEach((name,i)=>{if(name.startsWith('eyesLook'))t.mhr.expression[i]=.7;});assert.equal(sha(run(t)),sha(before),'Inactive MHR gaze leaked into body packet');rows.push({name:gaze+'-inactive-MHR-eye-expression',passed:true});}
+// Pure Anny head locals have exactly zero native rest response on retained
+// body vertices. Stored inactive values must not leak through bone reorientation.
+for(const owner of ['gnm','mhr']){const s=defaultState();s.owners.headShape=owner;const before=run(s),t=structuredClone(s);for(const key of model.headTransfer.headOnlyAnnyLocalLabels)t.anny.localChanges[key]=.5;assert.equal(sha(run(t)),sha(before),'Inactive pure Anny head locals leaked');assert.equal(Object.keys(model.archive().state.anny.localChanges).length,114);rows.push({name:owner+'-inactive-114-Anny-head-locals',passed:true});}
+{const s=defaultState();s.owners.headShape='anny';const before=run(s),t=structuredClone(s);t.anny.localChanges['nose-width1-incr']=.5;assert(diff(run(t),before).maxMetres>1e-6,'Active Anny nose shape failed');const archive=model.archive();const off=structuredClone(t);off.owners.headShape='gnm';run(off);model.restore(archive);assert.equal(sha(model.positions),sha(run(t)));}
 for(const source of ['anny','mhr']){
  const s=defaultState();s.owners.headShape=source;s.owners.expression=source;s.owners.gaze='expression';const base=run(s),labels=source==='anny'?model.anny.facialActionLabels:model.mhrMeta.expression_names;
  for(let index=0;index<labels.length;index++){

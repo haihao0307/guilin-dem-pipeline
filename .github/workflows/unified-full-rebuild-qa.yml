@@ -41,6 +41,9 @@ jobs:
           node tools/export_common_body_cases.mjs
           node tools/export_common_cases.mjs
           node tests/semantic-head.mjs
+          node tests/mixed-source-grid.mjs
+          node tools/audit_all_parameters.mjs
+          node tools/summarize_parameter_audit.mjs
           node tools/export_full_head_cases.mjs
           node build_coverage.mjs
       - name: Produce real neutral teacher geometry and pinned semantic-proposal runtime
@@ -68,6 +71,11 @@ jobs:
           NATIVE_BROWSER: webkit
           HEAD_DRIVER: '1'
         run: node qa/common-native.cjs
+      - name: Diagnose native/common fine surface lines without modifying geometry
+        working-directory: .github/qa/unified-full-20261007
+        run: |
+          NATIVE_BROWSER=chromium node qa/line-diagnostic.cjs
+          NATIVE_BROWSER=webkit node qa/line-diagnostic.cjs
       - name: Real common-model Chromium native controls and profiles
         working-directory: .github/qa/unified-full-20261007
         env:
@@ -112,6 +120,14 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
+          name: unified-full-line-diagnostic
+          retention-days: 21
+          path: |
+            .github/qa/unified-full-20261007/qa-output/line-chromium
+            .github/qa/unified-full-20261007/qa-output/line-webkit
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
           name: unified-full-head-chromium
           retention-days: 21
           path: .github/qa/unified-full-20261007/qa-output/head-chromium
@@ -128,6 +144,8 @@ jobs:
           retention-days: 21
           path: |
             .github/qa/unified-full-20261007/research/semantic-head-runtime-report.json
+            .github/qa/unified-full-20261007/research/all-parameter-audit.json
+            .github/qa/unified-full-20261007/research/mixed-source-grid-report.json
             .github/qa/unified-full-20261007/research/full-head-cases/manifest.json
       - uses: actions/upload-artifact@v4
         if: always()

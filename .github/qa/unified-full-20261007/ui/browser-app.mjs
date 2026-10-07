@@ -2,7 +2,7 @@ import{loadCommon,assetRoot}from'./load-common.mjs';import{CommonViewer}from'./V
 const $=id=>document.getElementById(id);let active=true,generation=0,aborter=null,controller=null,viewer=null,panel=null,busy=false,savedArchive=null,savedCamera=null,wasLoaded=false,contextsCreated=0,contextsReleased=0,loadCount=0;
 const current=ticket=>active&&ticket===generation;
 function status(message){$('model-status').textContent=message;}
-function syncModelStatus(){if(!controller)return;const m=controller.metrics(),state=controller.state();$('model-caption').textContent=`同一网格 · ${m.vertices.toLocaleString()} 顶点 · ${m.triangles.toLocaleString()} 面`;status(`骨架 ${state.owners.rig.toUpperCase()} · 头颈 ${state.owners.headRig==='gnm'?'GNM':'当前身体骨架'} · 表情 ${state.owners.expression.toUpperCase()} · 未接部位保持禁用`);}
+function syncModelStatus(){if(!controller)return;const m=controller.metrics(),state=controller.state();$('model-caption').textContent=`同一网格 · ${m.vertices.toLocaleString()} 顶点 · ${m.triangles.toLocaleString()} 面`;status(`骨架 ${state.owners.rig.toUpperCase()} · 头颈 ${state.owners.headRig==='gnm'?'GNM':'当前身体骨架'} · 表情 ${state.owners.expression.toUpperCase()} · 头形 ${state.owners.headShape.toUpperCase()} · 参数已接，视觉边界见清单`);}
 async function load(){
  if(!active||busy||controller)return;const ticket=++generation;aborter=new AbortController();const signal=aborter.signal;busy=true;loadCount++;$('load-model').hidden=true;$('cancel-load').hidden=false;$('load-progress').hidden=false;$('load-status').textContent='校验并载入现有教师资产…';
  try{

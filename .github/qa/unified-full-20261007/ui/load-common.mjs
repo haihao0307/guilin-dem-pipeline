@@ -1,3 +1,4 @@
+import{HeadTransfer}from'../src/HeadTransfer.mjs';
 import{AnnyModel}from'../source/kaopu-anny-workbench/r02/src/AnnyModel.js';
 import{GNMHeadModel,parseContainer}from'../source/kaopu-unified-human-workbench/src/GNMModel.js';
 import{NeckSurface}from'../source/neck-baseline/src/NeckSurface.js';
@@ -23,6 +24,7 @@ export async function loadCommon({signal,onProgress=()=>{},base=assetRoot}={}){
  if(await digest(faceBytes)!==fm.rawSha256)throw Error('Anny 面部权重校验失败');
  const canonical=decode(canonicalBytes),g=parseContainer(gnmBytes),anny=new AnnyModel(am,bodyRaw,fm,faceBytes),gnm=new GNMHeadModel(g.meta,g.sections),model=new CommonPerson(anny,gnm,canonical,{id:metadata.adapterFingerprint},new NeckSurface({...km,vertexCount:metadata.vertices},kernelBytes),mm);
  const adapter=new MHRBodyAdapter({engine:new MHRDetailedEngine(mm,unpackModel(mm,mhrRaw)),anny,canonical,mapIndices:new Uint32Array(indexBytes),mapBary:new Float32Array(baryBytes),topologySha256:canonical.topologySha256});model.bodyDriver=new CommonBodyDriver({anny,mhrAdapter:adapter,canonical});
- Object.assign(model.coverage,{mhrBodyIdentity45:true,mhrBodyRig204:true,mhrFullNonlinearCorrectives:true,mhrHeadIdentity:false,mhrExpression:false});alive();onProgress({fraction:1,label:'同一共同网格已装配'});
- return {model,metadata,localGate:Object.fromEntries(gates.rows.map(r=>[r.label,{...r,enabled:r.gate!=='disabled-head-transfer-pending',partial:r.gate==='body-active-head-partial',reason:r.gate==='disabled-head-transfer-pending'?'真实源形变只在已移除的头部，尚未转入共同头部':r.gate==='body-active-head-partial'?'身体部分生效；源头部形变仍待转移':'原生身体局部已连接'}]))};
+ const headMeta=await json('assets/head-transfer.json'),headRaw=await read('assets/head-transfer.bin.gz').then(inflate);if(await digest(headRaw)!==headMeta.binary.sha256)throw Error('共同头部适配校验失败');model.headTransfer=new HeadTransfer(headMeta,headRaw);
+ Object.assign(model.coverage,{mhrBodyIdentity45:true,mhrBodyRig204:true,mhrFullNonlinearCorrectives:true,mhrHeadIdentity:true,mhrExpression:true,annyHeadTransfer:true,annyFacialActions:true,crossTeacherHeadVisuallyAccepted:false});alive();onProgress({fraction:1,label:'同一共同网格已装配'});
+ return {model,metadata,localGate:Object.fromEntries(gates.rows.map(r=>[r.label,{...r,enabled:true,headOnly:r.gate==='disabled-head-transfer-pending',partial:r.gate==='body-active-head-partial',reason:r.gate==='disabled-head-transfer-pending'?'纯头部局部形態；Anny接管头部形状时生效':r.gate==='body-active-head-partial'?'身体部分始终生效；头部部分由头形来源决定':'原生身体局部已连接'}]))};
 }

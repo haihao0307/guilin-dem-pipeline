@@ -3,7 +3,7 @@ import{buildCatalog,valueAt,writeValue,rowStatus}from'./catalog.mjs';
 export class WorkbenchController extends EventTarget{
  constructor({model,contract,defaults,localGate,onGeometry=()=>{}}){super();this.model=model;this.catalog=buildCatalog(contract);this.defaults=structuredClone(defaults);this.localGate=localGate;this.onGeometry=onGeometry;this.positionReference=model.positions;this.faceReference=model.faces;this.revision=0;}
  state(){return structuredClone(this.model.state);}
- status(row){return rowStatus(row,this.model.state,{localGate:this.localGate,bodyDriver:!!this.model.bodyDriver});}
+ status(row){return rowStatus(row,this.model.state,{localGate:this.localGate,bodyDriver:!!this.model.bodyDriver,semanticHead:!!this.model.headTransfer});}
  value(row){return valueAt(this.model.state,row);}
  commit(next){this.model.compute(next);return this.changed();}
  changed(){if(this.model.positions!==this.positionReference||this.model.faces!==this.faceReference)throw Error('Core replaced the fixed canonical buffers');this.revision++;this.onGeometry(this.model.positions,this.model.faces);this.dispatchEvent(new Event('change'));return this.state();}

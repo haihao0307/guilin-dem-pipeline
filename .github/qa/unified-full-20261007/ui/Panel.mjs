@@ -1,7 +1,7 @@
 import{groupTitle}from'./catalog.mjs';
 const el=(tag,className,text)=>{const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=text;return node;};
 const sourceName={gnm:'GNM',anny:'Anny',mhr:'MHR',body:'当前身体骨架',rig:'当前骨架',expression:'当前表情源'};
-const ownerName={rig:'身体骨架',headRig:'头颈动作',expression:'面部表情',headShape:'头部形状',gaze:'凝视来源'};
+const ownerName={rig:'骨架与姿态',headRig:'头颈动作',expression:'面部表情',headShape:'头部形状',gaze:'眼部驱动'};
 const sourceUnit=row=>({'gnm.identity':'原生 PCA 系数','gnm.expression':'原生表情系数','gnm.rotation':'轴角向量 · rad','gnm.translation':'GNM 原生 XYZ · m','anny.pose':'旋转向量 · ° · local-ref','anny.translations':'骨局部平移 · m','anny.phenotypes':'原生形态值','anny.localChanges':'原生局部系数','anny.facialActions':'原生面部动作','mhr.identity':'原生 PCA 系数','mhr.pose':'原生混合单位 · 不换算','mhr.expression':'原生表情系数'}[row.group]||row.unit||'原生值');
 const browserWindow=row=>row.bounds||(row.group.includes('translation')?[-.1,.1]:row.group==='gnm.rotation'?[-Math.PI,Math.PI]:[-3,3]);
 export function mountPanel(root,controller){
@@ -11,7 +11,7 @@ export function mountPanel(root,controller){
  const owners=el('div','owner-grid'),ownerControls=new Map();
  function addOwner(key,config,reserved=false){const label=el('label','owner-field',ownerName[key]||key),select=el('select');select.dataset.owner=key;for(const value of [...new Set([...(config.values||[]),...(config.plannedValues||[])])]){const option=el('option','',sourceName[value]||value);option.value=value;option.disabled=reserved||!config.values.includes(value);if(option.disabled)option.textContent+=' · 待接';select.append(option);}select.disabled=reserved;select.title=reserved?'该来源字段尚未启用，不能影响模型':config.meaning;label.append(select);ownerControls.set(key,{select,reserved,config});return label;}
  for(const[key,config]of Object.entries(controller.catalog.contract.currentOwners))owners.append(addOwner(key,config));top.append(owners);
- const pending=el('details','pending-sources'),pendingTitle=el('summary','','头形与凝视来源 · 待接'),pendingGrid=el('div','owner-grid');for(const[key,config]of Object.entries(controller.catalog.contract.reservedOwnersNotYetCallable))pendingGrid.append(addOwner(key,config,true));pending.append(pendingTitle,pendingGrid,el('p','muted','只有已接入的来源能改变当前模型；灰色项保留真实缺口。'));top.append(pending);
+ const pending=el('details','pending-sources'),pendingTitle=el('summary','','头形与凝视来源 · 待接'),pendingGrid=el('div','owner-grid');for(const[key,config]of Object.entries(controller.catalog.contract.reservedOwnersNotYetCallable))pendingGrid.append(addOwner(key,config,true));pending.append(pendingTitle,pendingGrid,el('p','muted','只有已接入的来源能改变当前模型；灰色项保留真实缺口。'));if(Object.keys(controller.catalog.contract.reservedOwnersNotYetCallable).length)top.append(pending);else{pending.replaceChildren(el('summary','','实验边界'),el('p','muted','婴儿牙列尚未做成长适配；极端表情可能穿插。MHR eyesLook 是眼周几何场，没有独立眼球旋转参数。皮肤和毛发仍独立。'));top.append(pending);}
  const sourceTabs=el('div','source-tabs');sourceTabs.setAttribute('aria-label','筛选教师参数');for(const value of ['all','gnm','anny','mhr']){const b=el('button','source-tab',value==='all'?'全部':sourceName[value]);b.type='button';b.dataset.source=value;b.setAttribute('aria-pressed',String(value===source));sourceTabs.append(b);}top.append(sourceTabs);
  const search=el('input','parameter-search');search.type='search';search.placeholder='搜索参数、骨骼名或编号';search.setAttribute('aria-label','搜索全部原生参数');top.append(search);
  const categories=el('select','group-select');categories.setAttribute('aria-label','参数分类');const all=el('option','','所有分类');all.value='';categories.append(all);for(const g of controller.catalog.groups){const option=el('option','',g.title+' · '+controller.catalog.rows.filter(r=>r.group===g.id).length);option.value=g.id;categories.append(option);}const interfaces=el('option','','其他接口与待接范围');interfaces.value='__interfaces';categories.append(interfaces);categories.value=group;top.append(categories);
@@ -39,7 +39,7 @@ export function mountPanel(root,controller){
  function renderRows(){
   if(group==='__interfaces'){
    rowNodes.clear();list.replaceChildren();const descriptions={
-    'Anny per-bone translation':['Anny · 每骨平移','已列出 104 × 3 分量；眼骨待接，非当前骨架只保存配置。','anny.translations'],
+    'Anny per-bone translation':['Anny · 每骨平移','104 × 3 原生平移分量；眼骨由眼部驱动决定，非当前来源只保存。','anny.translations'],
     'GNM eye/teeth/mouth components':['GNM · 眼、牙齿与口腔','保留当前原生结构；跨教师内部解剖对应尚未全部验证。'],
     'MHR nonlinear correctives':['MHR · 非线性修正','身体驱动使用原生 MLP；只有 MHR 接管骨架时生效。','mhr.correctives'],
     'MHR 7 LOD views':['MHR · 7 级 LOD','共同模型保持固定拓扑；额外预览与导出策略待接。'],
