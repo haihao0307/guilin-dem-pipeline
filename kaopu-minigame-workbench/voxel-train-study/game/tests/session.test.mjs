@@ -19,7 +19,7 @@ function checkPeople(game){
 const game=new Session({seed:'QA-DRIVER-01',durationMinutes:10});game.command('start');
 let samples=0;
 for(let i=0;i<20000&&game.phase!=='summary';i++){normalPilot(game);game.stepTicks(1);checkPeople(game);samples++;}
-assert.equal(game.phase,'summary','A full ten-minute run must finish');assert.ok(game.stats.stops>=8,'One full playtest should serve repeated stations');assert.ok(game.stats.pickedUp>20&&game.stats.delivered>15);assert.equal(game.stats.missed,0);assert.ok(game.stats.bestCombo>=8);assert.ok(game.elapsed>=600&&game.elapsed<630);
+assert.equal(game.phase,'summary','Six stations must finish without re-entering running');assert.equal(game.route.length,6);assert.equal(game.stats.stops,6);assert.ok(game.stats.pickedUp>0);assert.equal(game.stats.delivered,game.stats.pickedUp+4,'Every boarded and initial passenger reaches the terminal');assert.equal(game.view().onboard,0);assert.equal(game.stats.missed,0);assert.equal(game.stats.bestCombo,6);assert.ok(game.elapsed>0&&game.elapsed<600);assert.equal(game.station.index,5);assert(game.view().routeStations.every(s=>s.completed));
 assert.equal(replay(game.replayPacket()).signature(),game.signature(),'Seed plus input log reproduces the final score, actors and physics');
 const resumed=replay(game.replayPacket());assert.equal(resumed.replayPacket().inputs.length,game.inputLog.length,'Resume keeps the complete input history');
 

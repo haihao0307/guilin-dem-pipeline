@@ -1,7 +1,7 @@
 import * as THREE from '../vendor/three.module.js';
 const KEY='kaopu.train-driver.views.v1';
 export function createViewControls({camera,target,canvas,root,onChange,onReset=()=>{}}){
- const defaults={landscape:{position:[19,24,38],target:[-8.8,-.8,1],zoom:1},portrait:{position:[31,25,15],target:[-8.8,-.8,1],zoom:1}};
+ const defaults={landscape:{position:[11.2,18.2,27.6],target:[-8.8,.3,1],zoom:1},portrait:{position:[31,25,15],target:[-8.8,-.8,1],zoom:1}};
  let data={version:1,layout:'landscape',profiles:{}},pointers=new Map(),gesture=null;
  try{const d=JSON.parse(localStorage.getItem(KEY));if(d?.version===1&&['landscape','portrait'].includes(d.layout)){data.layout=d.layout;for(const mode of ['landscape','portrait']){const p=d.profiles?.[mode];if(p&&[p.position,p.target].every(a=>Array.isArray(a)&&a.length===3&&a.every(n=>Number.isFinite(n)&&Math.abs(n)<500))&&Number.isFinite(p.zoom)&&p.zoom>=.4&&p.zoom<=3)data.profiles[mode]={position:p.position,target:p.target,zoom:p.zoom,manual:!!p.manual,locked:!!p.locked};}}}catch{}
  const $=id=>document.getElementById(id),profile=()=>data.profiles[data.layout]||(data.profiles[data.layout]={...structuredClone(defaults[data.layout]),manual:false,locked:false});

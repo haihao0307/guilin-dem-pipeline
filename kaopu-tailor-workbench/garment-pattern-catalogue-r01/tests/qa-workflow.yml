@@ -1,0 +1,35 @@
+name: Live GarmentCode pattern catalogue QA
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser-patterns:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated test driver
+        run: |
+          mkdir -p /tmp/pattern-qa
+          npm install --prefix /tmp/pattern-qa playwright@1.57.0
+          /tmp/pattern-qa/node_modules/.bin/playwright install --with-deps ${{ matrix.browser }}
+      - name: Verify live generation and lifecycle
+        env:
+          NODE_PATH: /tmp/pattern-qa/node_modules
+          PATTERN_ROOT: kaopu-tailor-workbench/garment-pattern-catalogue-r01
+        run: node "$PATTERN_ROOT/tests/browser-test.cjs" ${{ matrix.browser }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-pattern-${{ matrix.browser }}
+          path: kaopu-tailor-workbench/garment-pattern-catalogue-r01/reports/browser-*.json

@@ -1,14 +1,10 @@
-// One active application and renderer per document. Existing garment modes
-// retain their verified implementation; PPF loads only its replay module.
+// A single active document application. Archived experiments retain their old code.
 const mode=new URL(location.href).searchParams.get('case');
-if(mode==='ppf'){
-  await import('./ppf-teacher/player.mjs');
-}else{
-  document.getElementById('case-select').addEventListener('change',event=>{
-    if(event.target.value!=='ppf')return;
-    event.stopImmediatePropagation();
-    const url=new URL(location.href);url.searchParams.set('case','ppf');url.searchParams.delete('scene');
-    location.assign(url);
-  },true);
-  await import('./unified/app.mjs');
-}
+if(mode==='ppf') await import('./ppf-teacher/player.mjs');
+else if(mode==='swatch'||mode==='structured'){
+ document.getElementById('case-select').addEventListener('change',event=>{
+  const id=event.target.value;if(id==='swatch'||id==='structured')return;
+  event.stopImmediatePropagation();const url=new URL(location.href);url.searchParams.set('case',id);url.searchParams.delete('scene');location.assign(url);
+ },true);
+ await import('./unified/app.mjs');
+}else await import('./catalogue/workbench-app.mjs');
