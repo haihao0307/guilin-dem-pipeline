@@ -69,10 +69,21 @@ test('default preview mature stage passes complete finite/index checks',()=>{
 });
 
 
-test('desktop default recipe and five stage buffers remain bit-exact across LOD change',()=>{
- const fixture=JSON.parse(readFileSync(new URL('./desktop-pre-lod-fingerprints.json',import.meta.url),'utf8')),recipe=createRecipe(),evaluate=createEvaluator(recipe,QUALITY.preview),sha=x=>createHash('sha256').update(x).digest('hex');
- assert.equal(sha(JSON.stringify(recipe)),fixture.recipeSHA256);
- for(const [time,want] of Object.entries(fixture.stages)){const mesh=mergeParts(evaluate(Number(time)).parts);assert.equal(sha(mesh.positions),want.positionsSHA256);assert.equal(sha(mesh.indices),want.indicesSHA256);assert.equal(mesh.positions.length/3,want.vertices);assert.equal(mesh.indices.length/3,want.faces);}
+test('desktop default recipe and five stage buffers remain bit-exact against frozen pre-LOD code in the SAME runtime',async t=>{
+ // Original independently authored pre-LOD module; verify its immutable provenance before import.
+ // Commit 99f5dd1cf4ad6b63569816e83a730a4e53d849b3, Git blob a29877a3a9c04b5842838de4c9b638d7436124de.
+ const baselineURL=new URL('./desktop-pre-lod-baseline.mjs',import.meta.url),source=readFileSync(baselineURL),sha=x=>createHash('sha256').update(x).digest('hex');
+ const baselineSHA='1b623c051b68772138ed7cba72be551eefcf132ddb2999fa8332e410197bc050';
+ assert.equal(sha(source),baselineSHA,'Frozen baseline source must match the recorded original Git blob exactly');
+ assert.doesNotMatch(source.toString('utf8'),/^\s*import\b/m,'Baseline is a standalone, dependency-free model module');
+ const baseline=await import(baselineURL.href),recipe=createRecipe(),originalRecipe=baseline.createRecipe(),currentJSON=JSON.stringify(recipe),originalJSON=JSON.stringify(originalRecipe);
+ assert.ok(currentJSON===originalJSON,`Same-runtime recipe changed: current ${sha(currentJSON)}; frozen ${sha(originalJSON)}`);
+ const evaluate=createEvaluator(recipe,QUALITY.preview),originalEvaluate=baseline.createEvaluator(originalRecipe,baseline.QUALITY.preview);
+ const sameBytes=(actual,expected,label)=>{const a=Buffer.from(actual.buffer,actual.byteOffset,actual.byteLength),b=Buffer.from(expected.buffer,expected.byteOffset,expected.byteLength);assert.equal(a.length,b.length,`${label}: byte length changed`);assert.ok(a.equals(b),`${label}: exact bytes changed; current ${sha(a)}; frozen ${sha(b)}`);};
+ for(const time of [0,.18,.52,.72,1]){const current=mergeParts(evaluate(time).parts),original=baseline.mergeParts(originalEvaluate(time).parts);sameBytes(current.positions,original.positions,`t=${time} positions`);sameBytes(current.indices,original.indices,`t=${time} indices`);}
+ // The old JSON was captured on local Node v24.19.0; it is documentary, never the active oracle.
+ const historicalRecipeSHA='532bf426ca1a68137c0c404cbc2771cb6717fde481457e29e508f2e829b4a666';
+ t.diagnostic(JSON.stringify({runtime:process.version,v8:process.versions.v8,platform:process.platform,arch:process.arch,baselineCommit:'99f5dd1cf4ad6b63569816e83a730a4e53d849b3',baselineGitBlob:'a29877a3a9c04b5842838de4c9b638d7436124de',baselineSourceSHA256:baselineSHA,currentRecipeSHA256:sha(currentJSON),frozenRecipeSHA256:sha(originalJSON),historicalNode24SnapshotMatches:sha(currentJSON)===historicalRecipeSHA,note:'Exact regression compares original and current source in this one runtime; it does not require cross-runtime transcendental math bit identity.'}));
 });
 test('mobile render LOD preserves every lineage and shared material point with fixed desktop normals',()=>{
  const recipe=createRecipe(),before=JSON.stringify(recipe),desktop=createEvaluator(recipe,QUALITY.preview),mobile=createEvaluator(recipe,QUALITY.mobilePreview);

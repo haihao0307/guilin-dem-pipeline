@@ -67,7 +67,7 @@ Manual visual review remains required: crown irregularity, insufficient layering
 
 ## Bounded lifecycle and mobile-cost revision
 
-The geometry law, recipe and layer count are unchanged. The default desktop's full recipe and five stages of position/index buffers match the recorded pre-LOD SHA-256 fixtures byte-for-byte. Mobile viewport sampling preserves all 479 parts and 436 lamellae. It uses seven main radial intervals and 14 angular intervals, plus fixed material samples at the curl onset (0.86), the shared desktop outer sample (13/14), and applicable radial/rise extrema. The normal-thickness field remains the desktop 14×28 full-material field. Shared material points are exactly identical. No layer is deleted.
+The geometry law, recipe and layer count are unchanged. The default desktop's full recipe and five stages of position/index buffers are compared byte-for-byte against the immutable original pre-LOD source running in the same Node process. The original local SHA-256 JSON is documentary rather than a cross-runtime test oracle. Mobile viewport sampling preserves all 479 parts and 436 lamellae. It uses seven main radial intervals and 14 angular intervals, plus fixed material samples at the curl onset (0.86), the shared desktop outer sample (13/14), and applicable radial/rise extrema. The normal-thickness field remains the desktop 14×28 full-material field. Shared material points are exactly identical. No layer is deleted.
 
 Default mature mobile rendering is 143,502 vertices / 285,088 triangles. Its main position + normal + index buffers total 6,865,104 bytes, versus desktop's 17,580,240 bytes (about 61% lower). These are explicit mesh buffer byte counts, not whole-process RAM or complete GPU memory measurements. Current-stage export matches the displayed sampling; the higher-resolution export remains an explicit checkbox.
 
@@ -81,4 +81,13 @@ The browser runner separately measures 60 idle RAF intervals (requiring zero dra
 
 Mobile WebKit uses real touchscreen taps on the accessible +/− zoom buttons instead of the unsupported mouse-wheel API. Optional single-touch picking is separately recorded. Mobile viewport/input emulation is not proof of physical-phone pinch performance.
 
-Current Node result: 13/13 passed, including desktop bit-exact fixtures, unchanged mobile lineage, shared material points and normal thickness, preserved curl landmarks, rewind, and closed outward shells. Browser validation of this revision remains pending; no performance improvement is claimed from Node alone.
+Current Node result: 13/13 passed, including same-runtime desktop bit-exact comparison against pinned original source, unchanged mobile lineage, shared material points and normal thickness, preserved curl landmarks, rewind, and closed outward shells. Browser validation of this revision remains pending; no performance improvement is claimed from Node alone.
+
+
+### Same-runtime regression provenance and cross-runtime limits
+
+The frozen self-authored reference is `tests/desktop-pre-lod-baseline.mjs`, copied byte-for-byte from the pre-LOD candidate module at commit `99f5dd1cf4ad6b63569816e83a730a4e53d849b3`, Git blob `a29877a3a9c04b5842838de4c9b638d7436124de`. Its source SHA-256 is `1b623c051b68772138ed7cba72be551eefcf132ddb2999fa8332e410197bc050`. The test verifies that source checksum before importing this standalone module; it has no imports and contains no unrelated executable or third-party code.
+
+The active regression compares the current and original recipes' serialized bytes, then the actual position and index buffer bytes at stages 0, 0.18, 0.52, 0.72 and 1, within the same runtime. This preserves a strict bit-exact geometry gate instead of weakening it to a tolerance or replacing an expected hash with a new result. Runtime/engine details and both recipe hashes are printed in the test diagnostics.
+
+`tests/desktop-pre-lod-fingerprints.json` remains an unchanged historical snapshot captured on local Node v24.19.0 / V8 13.6.233.17-node.51 / Linux x64. That recipe hash is `532bf426ca1a68137c0c404cbc2771cb6717fde481457e29e508f2e829b4a666`. The earlier CI runtime produced `95a1e8739ce2efe35a9b12fde2ddb58e448068b39298e5911acbe18ad36c7b68` before it reached the geometry assertions. This cross-runtime difference alone does not demonstrate a code regression: recipes include double-precision trigonometry and normalized frames, whose last bits may differ across runtime math implementations. The frozen-source same-runtime check is now used to distinguish code changes from runtime-dependent numeric differences; its next CI result must establish that distinction there. No universal cross-engine transcendental-math bit identity is claimed.

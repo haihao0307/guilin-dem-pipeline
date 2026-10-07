@@ -10,17 +10,19 @@ import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
 const require=createRequire(import.meta.url);
 const engine=process.env.CORAL_ENGINE||'chromium';
+const profile=process.env.CORAL_PROFILE||'all';
 const url=process.env.CORAL_URL||process.argv[2]||'http://127.0.0.1:8765';
 const out=path.resolve(process.env.CORAL_OUT||path.join(path.dirname(fileURLToPath(import.meta.url)),'browser-evidence',engine));
 const mother='https://haihao0307.github.io/guilin-dem-pipeline/coral-mother-core-seed-r01/';
 const timeout=90000,results=[];await fs.mkdir(out,{recursive:true});
+let browserVersion=null;
 let browser,context,page,traceStarted=false,phase='dependency',viewport=null,engineVersion=null;
 let pageErrors=[],consoleErrors=[],networkFailures=[],currentObservations=null;
 const saveJSON=(name,value)=>fs.writeFile(path.join(out,name),JSON.stringify(value,null,2));
 const bounded=(promise,ms,label)=>Promise.race([promise,new Promise((_,reject)=>{const t=setTimeout(()=>reject(new Error(`${label} exceeded ${ms}ms`)),ms);t.unref?.();})]);
 const progressTimer=setInterval(()=>{const state={phase,viewport,at:new Date().toISOString(),sourceCommit:process.env.GITHUB_SHA??null};saveJSON('progress.json',state).catch(()=>{});console.log('QA_PROGRESS',JSON.stringify(state));},30000);progressTimer.unref();
 async function failure(error,status='failed'){
- const details={status,sourceCommit:process.env.GITHUB_SHA??null,runId:process.env.GITHUB_RUN_ID??null,engine,engineVersion,url,at:new Date().toISOString(),phase,viewport,error:{name:error?.name??'Error',message:String(error?.message??error),stack:error?.stack??null},pageErrors,consoleErrors,networkFailures,partialObservation:currentObservations,completed:results};
+ const details={status,sourceCommit:process.env.GITHUB_SHA??null,runId:process.env.GITHUB_RUN_ID??null,engine,profile,engineVersion,browserVersion,url,at:new Date().toISOString(),phase,viewport,error:{name:error?.name??'Error',message:String(error?.message??error),stack:error?.stack??null},pageErrors,consoleErrors,networkFailures,partialObservation:currentObservations,completed:results};
  if(page&&!page.isClosed()){
   try{details.currentURL=page.url();details.audit=await bounded(page.evaluate(()=>window.__coralAudit?.state??null),4000,'failure audit');}catch(e){details.auditError=String(e);}
   try{await page.screenshot({path:path.join(out,'failure.png'),fullPage:true,timeout:10000});details.screenshot='failure.png';}catch(e){details.screenshotUnavailable=String(e);}
@@ -30,14 +32,16 @@ async function failure(error,status='failed'){
 }
 try{
  if(!['chromium','webkit'].includes(engine))throw new Error(`Unsupported CORAL_ENGINE=${engine}`);
+ if(!['all','desktop','mobile'].includes(profile))throw new Error(`Unsupported CORAL_PROFILE=${profile}`);
  let playwright;
  try{playwright=require('playwright');engineVersion=require('playwright/package.json').version;}catch(error){await failure(error,'not run');process.exitCode=77;}
  if(playwright){
   phase='browser launch';try{browser=await playwright[engine].launch({headless:true});}catch(error){await failure(error,'not run');process.exitCode=77;}
  }
  if(browser){
-  for(viewport of [{width:1440,height:1000},{width:390,height:844}]){
-   const tag=`${engine}-${viewport.width}`,observations={engine,viewport,emulation:viewport.width<500?'mobile viewport and touch emulation, not a physical phone':'desktop browser viewport',steps:[],screenshots:[],performance:null};
+  browserVersion=browser.version();
+  for(viewport of [{width:1440,height:1000},{width:390,height:844}].filter(v=>profile==='all'||(profile==='desktop'?v.width>500:v.width<500))){
+   const tag=`${engine}-${viewport.width}`,observations={engine,profile,viewport,emulation:viewport.width<500?'mobile viewport and touch emulation, not a physical phone':'desktop browser viewport',steps:[],screenshots:[],performance:null};
    const expectedQuality=viewport.width<=640?'mobilePreview':'preview',expectedMature=viewport.width<=640?{vertices:143502,faces:285088,buffers:6865104}:{vertices:366734,faces:731552,buffers:17580240};
    currentObservations=observations;
    context=await browser.newContext({viewport,deviceScaleFactor:1,isMobile:viewport.width<500,hasTouch:viewport.width<500,acceptDownloads:true});
@@ -80,6 +84,7 @@ try{
    }
    phase=`${tag} initial load`;await page.goto(url,{waitUntil:'domcontentloaded',timeout});await ready();
    const readonly=await page.evaluate(()=>{const descriptor=Object.getOwnPropertyDescriptor(window,'__coralAudit');return {writable:descriptor.writable,configurable:descriptor.configurable,frozen:Object.isFrozen(window.__coralAudit),keys:Object.keys(window.__coralAudit)};});assert.equal(readonly.writable,false);assert.equal(readonly.configurable,false);assert.equal(readonly.frozen,true);assert.deepEqual(readonly.keys,['state','pixelDigest']);
+   observations.environment=await page.evaluate(()=>{const c=document.getElementById('scene'),gl=c.getContext('webgl2')||c.getContext('webgl'),debug=gl.getExtension('WEBGL_debug_renderer_info');return {userAgent:navigator.userAgent,devicePixelRatio,hardwareConcurrency:navigator.hardwareConcurrency,gpu:{vendor:gl.getParameter(gl.VENDOR),renderer:gl.getParameter(gl.RENDERER),version:gl.getParameter(gl.VERSION),unmaskedVendor:debug?gl.getParameter(debug.UNMASKED_VENDOR_WEBGL):null,unmaskedRenderer:debug?gl.getParameter(debug.UNMASKED_RENDERER_WEBGL):null}};});
    const initial=await capture('mature-initial',{screenshot:true});assert.equal(initial.state.displayedTime,1);assert.equal(initial.state.union,false);assert.equal(initial.state.faces,expectedMature.faces);assert.equal(initial.state.vertices,expectedMature.vertices);assert.equal(initial.state.buffers.total,expectedMature.buffers);assert.equal(initial.state.displayedQuality,expectedQuality);assert.equal(initial.state.parts,479);assert.deepEqual(initial.state.displayedParameters,{seed:'17',density:1,fold:1});
    const baseline=new Map();for(const t of [0,.18,.35,.52,.72,1])baseline.set(t,await stage(t,`stage-${Math.round(t*100).toString().padStart(3,'0')}`,true));
    assert.equal(baseline.get(0).state.parts,8);assert.equal(baseline.get(.18).state.parts,15);assert.ok(baseline.get(.52).state.faces>baseline.get(.18).state.faces);
@@ -142,6 +147,6 @@ try{
    observations.pageErrors=pageErrors;observations.consoleErrors=consoleErrors;observations.networkFailures=networkFailures;observations.result='Automated checks passed; screenshots and morphology still require independent visual review. Mobile is emulation only.';
    await context.tracing.stop({path:path.join(out,`${tag}-trace.zip`)});traceStarted=false;results.push(observations);await saveJSON(`${tag}-results.json`,observations);await context.close();context=null;page=null;
   }
-  phase='complete';await saveJSON('results.json',{status:'automated checks passed',sourceCommit:process.env.GITHUB_SHA??null,runId:process.env.GITHUB_RUN_ID??null,engine,engineVersion,url,at:new Date().toISOString(),results});console.log(`${engine}: ${results.length} viewport suites passed. Pixel/readback evidence, screenshots, downloads, traces and RAF observations saved in ${out}. Visual morphology and physical mobile acceptance remain separate.`);
+  phase='complete';await saveJSON('results.json',{status:'automated checks passed',sourceCommit:process.env.GITHUB_SHA??null,runId:process.env.GITHUB_RUN_ID??null,engine,profile,engineVersion,browserVersion,url,at:new Date().toISOString(),results});console.log(`${engine}: ${results.length} viewport suites passed. Pixel/readback evidence, screenshots, downloads, traces and RAF observations saved in ${out}. Visual morphology and physical mobile acceptance remain separate.`);
  }
 }catch(error){await failure(error);process.exitCode=1;}finally{clearInterval(progressTimer);if(browser)await bounded(browser.close(),20000,'browser close').catch(error=>console.error(error.message));}

@@ -15,13 +15,9 @@ concurrency:
   group: coral-growth-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  browser:
+  geometry-and-preservation:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    strategy:
-      fail-fast: false
-      matrix:
-        engine: [chromium, webkit]
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -39,9 +35,9 @@ jobs:
           node --check coral-mother-core-seed-r01/growth-colony-r01/coral-growth.mjs
           node --check coral-mother-core-seed-r01/growth-colony-r01/viewer.mjs
           node --check coral-mother-core-seed-r01/growth-colony-r01/geometry-worker.mjs
-          node --test coral-mother-core-seed-r01/growth-colony-r01/tests/growth.test.mjs
+          node --test coral-mother-core-seed-r01/growth-colony-r01/tests/growth.test.mjs | tee coral-geometry-tests.txt
           python3 - <<'PYVERIFY'
-          import json,subprocess,hashlib,re
+          import json,subprocess,hashlib,re,os
           from pathlib import Path
           m=json.loads(Path('.github/qa/coral-growth-protected.json').read_text())
           for item in m['protected']+m['frozenProduct']:
@@ -55,9 +51,38 @@ jobs:
               row=subprocess.check_output(['git','ls-tree','HEAD','--',item['path']],text=True).strip()
               assert row and row.split()[2]==item['sha'],item['path']+' changed pre-existing coral data'
           print('Original mother bytes, existing cases, assets, R03 research and frozen growth core preserved')
+          runtime=json.loads(subprocess.check_output(['node','-p','JSON.stringify({version:process.version,versions:process.versions,platform:process.platform,arch:process.arch})'],text=True))
+          Path('coral-validation.json').write_text(json.dumps({'sourceCommit':os.environ['GITHUB_SHA'],'runId':os.environ['GITHUB_RUN_ID'],'nodeRuntime':runtime,'geometryTests':'passed','protectedEntries':len(candidate['entries']),'existingCoralBytes':'preserved'},indent=2))
           PYVERIFY
       - name: Verify exact public release bytes
         run: python3 .github/qa/coral-growth-public-verify.py .github/qa/coral-growth-production.json
+      - name: Save preservation receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coral-colony-preservation-${{ github.sha }}
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            coral-public-bytes.json
+            coral-validation.json
+            coral-geometry-tests.txt
+  browser:
+    needs: geometry-and-preservation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, webkit]
+        profile: [desktop, mobile]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            coral-mother-core-seed-r01
+            .github/qa
       - name: Install fixed official browser tools
         run: |
           npm install --prefix "$RUNNER_TEMP/coral-test" --no-save --ignore-scripts playwright@1.57.0
@@ -66,7 +91,8 @@ jobs:
         env:
           NODE_PATH: ${{ runner.temp }}/coral-test/node_modules
           CORAL_ENGINE: ${{ matrix.engine }}
-          CORAL_OUT: coral-colony-${{ matrix.engine }}
+          CORAL_OUT: coral-colony-${{ matrix.engine }}-${{ matrix.profile }}
+          CORAL_PROFILE: ${{ matrix.profile }}
           CORAL_URL: http://127.0.0.1:8765/coral-mother-core-seed-r01/growth-colony-r01/
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/coral-server.log" 2>&1 &
@@ -77,20 +103,19 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coral-colony-${{ matrix.engine }}-evidence
+          name: coral-colony-${{ matrix.engine }}-${{ matrix.profile }}-evidence
           retention-days: 7
           if-no-files-found: warn
           path: |
-            coral-colony-${{ matrix.engine }}/*.png
-            coral-colony-${{ matrix.engine }}/*.json
-            coral-colony-${{ matrix.engine }}/*.obj
-            coral-public-bytes.json
+            coral-colony-${{ matrix.engine }}-${{ matrix.profile }}/*.png
+            coral-colony-${{ matrix.engine }}-${{ matrix.profile }}/*.json
+            coral-colony-${{ matrix.engine }}-${{ matrix.profile }}/*.obj
 
       - name: Save optional browser trace separately
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coral-colony-${{ matrix.engine }}-trace
+          name: coral-colony-${{ matrix.engine }}-${{ matrix.profile }}-trace
           retention-days: 7
           if-no-files-found: warn
-          path: coral-colony-${{ matrix.engine }}/*trace*.zip
+          path: coral-colony-${{ matrix.engine }}-${{ matrix.profile }}/*trace*.zip
