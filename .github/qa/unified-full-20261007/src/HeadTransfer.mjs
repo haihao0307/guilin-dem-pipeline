@@ -16,6 +16,17 @@ export class HeadTransfer{
  /** A native component affine is conjugated into the canonical head frame.
   * Body placement/cranial scale is factored out for Anny, then applied once. */
  shapeEye(model,name,sourceNow,referenceBind,out,joints,{scale,head}){const d=this.d,A=d[name+'_source_to_gnm'],M=inverseAffine(A),t=model.canonical.headTransform.translation,ref=d[name+'_neutral'],res=[];for(let eye=0;eye<2;eye++){const fit=componentFit(ref,sourceNow,d[name+'_eye_'+eye+'_ids'],{affine:name==='anny',scale:name==='mhr'});res.push(fit.maxResidual*1000);const apply=p=>{let q=point(M,[p[0],-p[2],p[1]]);q=point(fit.matrix,q);if(name==='anny')q=q.map((x,k)=>(x-head[k])/scale+model.referenceHead[k]);q=point(A,q);return q.map((x,k)=>head[k]+scale*(x+t[k]-model.referenceHead[k]));};for(const i of this.componentIds[eye+1])out.set(apply(xyz(referenceBind,i)),i*3);joints.set(apply(xyz(model.gnm._jointsBind,eye+2)),(eye+2)*3);}return res;}
+ embedNativeTongue(model,out,{scale,head}){
+  const ids=this.d.tongue_ids,reference=this.place(model,model.gnm.template,scale,head),fit=componentFit(reference,out,ids,{affine:true});
+  for(let i=0;i<ids.length;i++){const delta=vector(fit.matrix,xyz(this.d.tongue_rest_delta,i).map(x=>x*scale));for(let c=0;c<3;c++)out[ids[i]*3+c]+=delta[c];}
+ }
+ attachOralToDentition(before,after,lowerFit){
+  const d=this.d;if(!lowerFit)return;
+  for(const i of d.oral_dental_upper)after.set(xyz(before,i),i*3);
+  for(const i of d.oral_dental_lower)after.set(point(lowerFit.matrix,xyz(before,i)),i*3);
+  const ids=d.oral_dental_free,boundary=d.oral_dental_boundary,w=d.oral_dental_weights;
+  for(let row=0;row<ids.length;row++)for(let c=0;c<3;c++){let delta=0;for(let k=0;k<boundary.length;k++)delta+=w[row*boundary.length+k]*(after[boundary[k]*3+c]-before[boundary[k]*3+c]);after[ids[row]*3+c]=before[ids[row]*3+c]+delta;}
+ }
  gaze(model,state,out,joints,{scale,head,bodyRest},sourceBase){
   const source=state.owners.gaze==='rig'?(state.owners.rig==='anny'?'anny':null):state.owners.gaze==='expression'?state.owners.expression:null;
   this.gazeDiagnostic={source,method:source==='mhr'?'native-periorbital-field-only':null,independentMHRGlobeRotationImplemented:false};
@@ -55,11 +66,12 @@ export class HeadTransfer{
   let exprDelta=new Float64Array(out.length),tongueDelta=null;
   if(expressionOwner==='anny'){const result=model.anny.forward({...shape,facialActions:this.actions(state)});exprDelta=this.extend(this.mapDelta('anny',bodyRest.vertices,result.vertices));const ids=d.tongue_ids,idx=d.tongue_indices,bary=d.tongue_bary,A=d.anny_source_to_gnm;tongueDelta=new Float64Array(ids.length*3);for(let i=0;i<ids.length;i++){const p=sample(bodyRest.vertices,idx,bary,i),q=sample(result.vertices,idx,bary,i);tongueDelta.set(vector(A,q.map((x,c)=>x-p[c])),i*3);}}
   if(expressionOwner==='mhr'){const engine=model.bodyDriver.mhr.engine,ms=this.mhrState(model,state),before=sources.mhr||sourceCoordinates('mhr',engine.evaluate(ms).vertices),after=sourceCoordinates('mhr',engine.evaluate(this.mhrState(model,state,{expression:true})).vertices);sources.mhr=before;exprDelta=this.extend(this.mapDelta('mhr',before,after,scale));}
+  if(expressionOwner==='anny')this.embedNativeTongue(model,out,context);
   const beforeExpression=out.slice();this.add(out,exprDelta);
-  if(expressionOwner!=='gnm'){const fits=this.moveDental(beforeExpression,out);if(tongueDelta){for(let i=0;i<d.tongue_ids.length;i++)for(let c=0;c<3;c++)out[d.tongue_ids[i]*3+c]=beforeExpression[d.tongue_ids[i]*3+c]+tongueDelta[i*3+c];}else if(fits[4])for(const i of this.componentIds[5])out.set(point(fits[4].matrix,xyz(beforeExpression,i)),i*3);}
+  if(expressionOwner!=='gnm'){const fits=this.moveDental(beforeExpression,out);this.attachOralToDentition(beforeExpression,out,fits[4]);if(tongueDelta){for(let i=0;i<d.tongue_ids.length;i++)for(let c=0;c<3;c++)out[d.tongue_ids[i]*3+c]=beforeExpression[d.tongue_ids[i]*3+c]+tongueDelta[i*3+c];}else if(fits[4])for(const i of this.componentIds[5])out.set(point(fits[4].matrix,xyz(beforeExpression,i)),i*3);}
   let correctiveMaxMM=0;
   if(preparedCorrective){for(let i=0;i<preparedCorrective.length;i++)correctiveMaxMM=Math.max(correctiveMaxMM,Math.abs(preparedCorrective[i])*1000);this.add(out,preparedCorrective);}
   const gazeError=this.gaze(model,state,out,joints,context,sources),posed=skinGNMRest(model,out,joints,scale);
-  if(!posed.vertices.every(Number.isFinite))throw Error('Nonfinite common head');model.headWorldOverride=posed.vertices;model.activeGNMRootRestMatrix=posed.rootMatrix;model.lastHeadRig={jointsRest:joints,jointsPosed:posed.jointsPosed,nativeParents:Array.from(g.jointParents),nativeWeights:g.skinningWeights,restVertices:out};this.last={shapeOwner,expressionOwner,gazeOwner,vertices:17821,outerVertices:this.outer.length,cavityVertices:1064,eyeShapeFitMaxMM:eyeShapeError,gazeComponentFitMaxMM:gazeError,gaze:this.gazeDiagnostic,correctiveMaxMM,fieldMapFixed:true,tongueNativeAnny:expressionOwner==='anny',gnmDentalTopologyPreserved:true};
+  if(!posed.vertices.every(Number.isFinite))throw Error('Nonfinite common head');model.headWorldOverride=posed.vertices;model.activeGNMRootRestMatrix=posed.rootMatrix;model.lastHeadRig={jointsRest:joints,jointsPosed:posed.jointsPosed,nativeParents:Array.from(g.jointParents),nativeWeights:g.skinningWeights,restVertices:out};this.last={shapeOwner,expressionOwner,gazeOwner,vertices:17821,outerVertices:this.outer.length,cavityVertices:1064,eyeShapeFitMaxMM:eyeShapeError,gazeComponentFitMaxMM:gazeError,gaze:this.gazeDiagnostic,correctiveMaxMM,fieldMapFixed:true,tongueNativeAnny:expressionOwner==='anny',tongueRestEmbedding:expressionOwner==='anny'?'registered-native-component':'GNM',oralAttachments:'native-GNM-dental-contact-anchors',gnmDentalTopologyPreserved:true};
  }
 }

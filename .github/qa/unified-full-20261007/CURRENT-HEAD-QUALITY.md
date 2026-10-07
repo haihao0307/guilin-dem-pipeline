@@ -9,3 +9,5 @@ Actual browser screenshots show an unresolved adult tongue/lower-lip intersectio
 Baby/newborn are exact official age=0 / age=-1/3 inputs. Their source facial shape changes are applied once, but adult GNM dentition is not a validated infant mouth. Infant dental development and ear detail remain unaccepted. No public full-function readiness or age-fidelity claim follows from the parameter route tests.
 
 Development contact ablations are isolated files and do not change the tested runtime. The source observation archive and generator scripts are preserved so a container loss cannot erase this checkpoint. Public R01 and all teacher baselines remain unchanged.
+
+R5 candidate changes only the Anny-owned tongue rest embedding and preserved-cavity attachment. The old generic signed-contact projections failed (one required 16.51 mm displacement) and are not in runtime. The new source-driven tongue rest candidate reduced measured exterior-lip/tongue crossing-curve length from 67.38 to 39.07 mm in the isolated ablation; native-source geometry still requires paired visual assessment. Numerical contact statistics are not a pass label.
