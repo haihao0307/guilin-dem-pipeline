@@ -22,7 +22,7 @@ export function relativeNeighbours(source,candidates,nodes){
  const best=Array(6).fill(null);for(const c of candidates){const p=nodes[c.i],sector=Math.min(5,Math.floor((Math.atan2(p.y-source.y,p.x-source.x)+Math.PI)/(Math.PI/3)));if(!best[sector]||c.d<best[sector].d)best[sector]=c;}
  const out=[];for(const v of best){if(!v)continue;let ok=true;for(const u of candidates){if(u.i!==v.i&&u.d<=v.d&&d2(nodes[v.i],nodes[u.i])<=v.d){ok=false;break;}}if(ok)out.push(v);}return out;
 }
-export function buildReticulation({seed=771,attractors=3800,step=3.2,kill=2.45,influence=40,maxIterations=150,hierarchy=true}={}){
+export function buildReticulation({seed=771,attractors=3800,step=3.2,kill=2.45,influence=40,maxIterations=150,hierarchy=true,micro=true}={}){
  const random=seeded(seed),nodes=[],edges=[],edgeKeys=new Set(),primaryPaths=[];const width=800,height=1200;
  const inside=p=>p.y>=0&&p.y<=height&&Math.abs(p.x-400)<=leafWidth(1-p.y/height)*height*.64;
  const addNode=(x,y,parent=-1,order=2)=>{const id=nodes.length;nodes.push({x,y,parent,order,birth:0});return id;};
@@ -53,8 +53,11 @@ export function buildReticulation({seed=771,attractors=3800,step=3.2,kill=2.45,i
   return {order,sourcesRequested:attractors,iterations,welds,remaining:sources.length,step,kill};}
  const phases=[];if(hierarchy)phases.push(growPhase({attractors:420,step:4.2,kill:3.0,influence:70,spacing:13,clearance:6,order:2}));
  phases.push(growPhase({attractors,step,kill,influence,spacing:6,clearance:3,order:hierarchy?3:2}));
+ if(hierarchy&&micro)phases.push(growPhase({attractors:14000,step:1.8,kill:1.35,influence:18,spacing:3.2,clearance:1.9,order:4}));
+ // Preserve branch junctions while fairing degree-two growth polylines.
+ const neighbours=nodes.map(()=>[]);for(const e of edges){neighbours[e.a].push(e.b);neighbours[e.b].push(e.a);}for(let pass=0;pass<3;pass++){const updates=[];for(let i=0;i<nodes.length;i++){if(nodes[i].order<2||neighbours[i].length!==2)continue;const a=nodes[neighbours[i][0]],b=nodes[neighbours[i][1]],n=nodes[i];updates.push([i,n.x*.5+(a.x+b.x)*.25,n.y*.5+(a.y+b.y)*.25]);}for(const [i,x,y] of updates){nodes[i].x=x;nodes[i].y=y;}}
  const weights=new Float32Array(nodes.length).fill(1);for(let i=nodes.length-1;i>0;i--)if(nodes[i].parent>=0)weights[nodes[i].parent]+=weights[i];
- for(const e of edges)if(e.order>=2){const w=Math.min(weights[e.a],weights[e.b]);e.radius=e.order===2&&hierarchy?Math.min(.088,.026+Math.pow(w,.31)*.008):Math.min(.038,.008+Math.pow(w,.25)*.004);}
+ for(const e of edges)if(e.order>=2){const w=Math.min(weights[e.a],weights[e.b]);e.radius=e.order===4?Math.min(.015,.004+Math.pow(w,.22)*.0019):e.order===2&&hierarchy?Math.min(.088,.026+Math.pow(w,.31)*.008):Math.min(.038,.008+Math.pow(w,.25)*.004);}
  const parent=nodes.map((_,i)=>i),find=i=>{while(parent[i]!==i){parent[i]=parent[parent[i]];i=parent[i];}return i;};for(const e of edges)parent[find(e.b)]=find(e.a);const components=new Set(nodes.map((_,i)=>find(i))).size;
  return {width,height,nodes,edges,primaryPaths,seed,report:{algorithm:'Runions relative-neighbour closed growth, independent implementation',authoredScaffold:true,nodes:nodes.length,edges:edges.length,components,cycles:edges.length-nodes.length+components,sourceWelds:phases.reduce((s,p)=>s+p.welds,0),remainingSources:phases.reduce((s,p)=>s+p.remaining,0),iterations:phases.reduce((s,p)=>s+p.iterations,0),phases,kill,step,actualAuthorSourceRun:false}};
 }
