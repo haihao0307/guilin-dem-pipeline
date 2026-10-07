@@ -5,7 +5,7 @@ const out=path.resolve('ppf-browser-'+engine);fs.mkdirSync(out,{recursive:true})
 const report={engine,checks:[],errors:[],releases:[],screenshots:[]};let browser,server;
 const waitReady=page=>page.waitForFunction(()=>window.ppfQA&&window.ppfQA.getState().current>=0&&!window.ppfQA.getState().busy&&!window.ppfQA.getState().error,null,{timeout:90000,polling:50});
 const state=page=>page.evaluate(()=>window.ppfQA.getState());
-async function shot(page,name){const file=path.join(out,name+'-'+engine+'.png');await page.screenshot({path:file});report.screenshots.push(path.basename(file));}
+async function shot(page,name){if(await page.evaluate(()=>!!window.ppfQA)){const before=(await state(page)).renderCount;await page.evaluate(()=>window.ppfQA.redraw());await page.waitForFunction(n=>{const s=window.ppfQA.getState();return s.renderCount>n&&s.renderedRevision===s.drawRevision;},before,{polling:50,timeout:30000});}const file=path.join(out,name+'-'+engine+'.png');await page.screenshot({path:file});report.screenshots.push(path.basename(file));}
 async function check(page,name,fn){await fn();report.checks.push(name);}
 (async()=>{
   server=http.createServer((req,res)=>{

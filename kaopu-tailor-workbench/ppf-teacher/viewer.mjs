@@ -3,7 +3,7 @@ import {OrbitControls} from '../garments-r04/vendor/OrbitControls.js';
 
 export class PpfViewer {
   constructor(canvas, container) {
-    this.canvas=canvas;this.container=container;this.disposed=false;this.meshes=[];this.dirty=true;
+    this.canvas=canvas;this.container=container;this.disposed=false;this.meshes=[];this.drawRevision=0;this.renderedRevision=-1;this.invalidate();
     this.renderer=new THREE.WebGLRenderer({canvas,antialias:true});
     this.renderer.setPixelRatio(Math.min(devicePixelRatio,2));
     this.renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -19,16 +19,17 @@ export class PpfViewer {
     this.camera=new THREE.PerspectiveCamera(34,1,.01,40);
     this.orbit=new OrbitControls(this.camera,canvas);this.orbit.enableDamping=true;
     this.orbit.minDistance=.1;this.orbit.maxDistance=15;
-    this.onOrbit=()=>this.dirty=true;this.orbit.addEventListener('change',this.onOrbit);
+    this.onOrbit=()=>this.invalidate();this.orbit.addEventListener('change',this.onOrbit);
     this.observer=new ResizeObserver(()=>this.resize());this.observer.observe(container);
     this.onResize=()=>this.resize();window.addEventListener('resize',this.onResize);
     this.renderCount=0;this.raf=0;this.tick=()=>{
       this.raf=0;if(this.disposed)return;this.orbit.update();
-      if(this.dirty&&!document.hidden){this.renderer.render(this.scene,this.camera);this.renderCount++;this.dirty=false;}
+      if(this.dirty&&!document.hidden){const revision=this.drawRevision;this.renderer.render(this.scene,this.camera);this.renderCount++;this.renderedRevision=revision;this.dirty=false;}
       this.raf=requestAnimationFrame(this.tick);
     };this.raf=requestAnimationFrame(this.tick);this.resize();
   }
-  resize(){if(this.disposed)return;const r=this.container.getBoundingClientRect();if(r.width<=0||r.height<=0)return;this.renderer.setSize(r.width,r.height,false);this.camera.aspect=r.width/r.height;this.camera.updateProjectionMatrix();this.dirty=true;}
+  invalidate(){this.drawRevision++;this.dirty=true;}
+  resize(){if(this.disposed)return;const r=this.container.getBoundingClientRect();if(r.width<=0||r.height<=0)return;this.renderer.setSize(r.width,r.height,false);this.camera.aspect=r.width/r.height;this.camera.updateProjectionMatrix();this.invalidate();}
   load(manifest, bytes){
     this.manifest=manifest;const types={'<u4':Uint32Array,'<f4':Float32Array,'<f8':Float64Array};
     const section=name=>{const s=manifest.topology.sections[name];return s?new types[s.dtype](bytes.buffer,bytes.byteOffset+s.offset,s.count):null;};
@@ -60,10 +61,10 @@ export class PpfViewer {
     this.floor.rotation.x=-Math.PI/2;this.floor.position.y=floorY;this.floor.receiveShadow=true;this.scene.add(this.floor);
     this.cameraView('angle');
   }
-  update(positions,statistics){this.current=positions;this.statistics=statistics;for(const m of this.meshes){const o=m.userData.object;if(o.kind==='STATIC')continue;m.geometry.attributes.position.array.set(positions.subarray(o.firstVertex*3,(o.firstVertex+o.vertexCount)*3));m.geometry.attributes.position.needsUpdate=true;m.geometry.computeVertexNormals();m.geometry.computeBoundingSphere();}this.mode(this.displayMode);this.dirty=true;}
-  cameraView(kind){if(!this.target)return;const directions={angle:[1,.6,1.8],front:[0,.05,2],side:[2,.1,0],top:[0,2,.001]};const d=new THREE.Vector3(...directions[kind]).normalize().multiplyScalar(this.radius*(this.manifest.case==='belt'?2.65:2.4));this.camera.position.copy(this.target).add(d);this.orbit.target.copy(this.target);this.orbit.update();this.dirty=true;}
-  visible(id,value){const m=this.meshes.find(m=>m.userData.object.id===id);if(m)m.visible=value;this.dirty=true;}
-  shadows(enabled){this.renderer.shadowMap.enabled=enabled;this.key.castShadow=enabled;for(const m of this.meshes)m.material.needsUpdate=true;this.dirty=true;}
+  update(positions,statistics){this.current=positions;this.statistics=statistics;for(const m of this.meshes){const o=m.userData.object;if(o.kind==='STATIC')continue;m.geometry.attributes.position.array.set(positions.subarray(o.firstVertex*3,(o.firstVertex+o.vertexCount)*3));m.geometry.attributes.position.needsUpdate=true;m.geometry.computeVertexNormals();m.geometry.computeBoundingSphere();}this.mode(this.displayMode);this.invalidate();}
+  cameraView(kind){if(!this.target)return;const directions={angle:[1,.6,1.8],front:[0,.05,2],side:[2,.1,0],top:[0,2,.001]};const d=new THREE.Vector3(...directions[kind]).normalize().multiplyScalar(this.radius*(this.manifest.case==='belt'?2.65:2.4));this.camera.position.copy(this.target).add(d);this.orbit.target.copy(this.target);this.orbit.update();this.invalidate();}
+  visible(id,value){const m=this.meshes.find(m=>m.userData.object.id===id);if(m)m.visible=value;this.invalidate();}
+  shadows(enabled){this.renderer.shadowMap.enabled=enabled;this.key.castShadow=enabled;for(const m of this.meshes)m.material.needsUpdate=true;this.invalidate();}
   mode(mode){
     this.displayMode=mode;const maxContact=Math.max(1,...(this.statistics||[]).map(o=>o.contact_count));this.maximumStretch=1;
     for(const m of this.meshes){
@@ -74,7 +75,7 @@ export class PpfViewer {
       }
       if(mode==='strain'&&this.current&&m.userData.object.kind!=='STATIC')this.colorStrain(m);
       m.material.needsUpdate=true;
-    }this.dirty=true;
+    }this.invalidate();
   }
   colorStrain(mesh){
     const g=mesh.geometry,p=g.attributes.position.array,ids=g.index.array,triIds=g.userData.triangleIds,basis=this.restBasis;
