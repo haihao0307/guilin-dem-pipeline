@@ -9,9 +9,9 @@ def yes(x,msg='assertion failed'):
  if not x:raise AssertionError(msg)
 def main():
  with sync_playwright() as p:
-  browser=getattr(p,engine).launch();ctx=browser.new_context(viewport={'width':1440,'height':1000},accept_downloads=True);page=ctx.new_page();page.on('pageerror',lambda e:errors.append(str(e)));page.on('request',lambda r:external.append(r.url) if r.url.startswith('http') and '127.0.0.1' not in r.url else None)
+  browser=getattr(p,engine).launch();ctx=browser.new_context(viewport={'width':1440,'height':900},accept_downloads=True);page=ctx.new_page();page.on('pageerror',lambda e:errors.append(str(e)));page.on('request',lambda r:external.append(r.url) if r.url.startswith('http') and '127.0.0.1' not in r.url else None)
   page.goto(url);page.locator('#vm-sample').click();expect(page.locator('#vm-status')).to_contain_text('样例已就绪',timeout=20000)
-  page.screenshot(path=str(OUT/'sample-initial.png'),full_page=True)
+  page.screenshot(path=str(OUT/'sample-initial.png'),full_page=False)
   q=lambda sel:page.locator(sel)
   ev=lambda code:page.evaluate("()=>{const s=document.querySelector('#animal-learning').shadowRoot;"+code+"}")
   reference=json.loads((ROOT/'tests/muybridge-frame-reference.json').read_text())['frames']
@@ -25,14 +25,18 @@ def main():
   check('15 saved true-image keyframes shown',lambda:yes(q('#vm-timeline button').count()==15))
   check('side mapping remains unresolved',lambda:yes(q('#vm-sides').input_value()=='unresolved'))
   check('video and rig desktop panes are visible side-by-side',lambda:yes(ev("const a=s.querySelector('.vm-frame').getBoundingClientRect(),b=s.querySelector('#vm-rig').getBoundingClientRect(),c=s.querySelector('.vm-controls').getBoundingClientRect();return a.width>300&&b.width>300&&b.x>a.right-1&&c.x>b.right-1")))
+  check('1440x900 viewport retains views timeline and metrics without document scrolling',lambda:yes(ev("return ['#vm-frame','#vm-rig','#vm-scrub','#vm-timeline','#vm-metrics'].every(id=>{const r=s.querySelector(id).getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight})&&document.documentElement.scrollHeight<=innerHeight+1")))
+
   for i in range(1,15):
    q('#vm-next').click();expect(q('#vm-time')).to_have_text(f'{i/10:.3f} s');check('decoded frame '+str(i)+' aligned with source time',lambda:yes('人工关键帧' in q('#vm-metrics').inner_text()));check('visible pixels match original source frame '+str(i),lambda:verify_pixels(i))
+  check('full keyframe labels remain readable and selected end key scrolls into view',lambda:yes(ev("const t=s.querySelector('#vm-timeline'),a=t.querySelector('[data-current=true]'),r=a.getBoundingClientRect(),b=t.getBoundingClientRect();return a.scrollWidth<=a.clientWidth+1&&r.left>=b.left-1&&r.right<=b.right+1")))
   q('#vm-next').click();page.wait_for_timeout(100);check('next frame clamps to last decoded source frame',lambda:yes(q('#vm-time').inner_text()=='1.400 s'))
   q('#vm-prev').click();expect(q('#vm-time')).to_have_text('1.300 s')
   q('#vm-timeline button').first.click();expect(q('#vm-time')).to_have_text('0.000 s')
   q('#vm-joint').select_option('nose');q('#vm-dx').fill('3');q('#vm-dy').fill('4');q('#vm-z').fill('60');q('#vm-apply').click();check('projection residual reacts to XY edits',lambda:yes('最大：5.00 px' in q('#vm-metrics').inner_text()))
-  q('#vm-orbit').click();page.screenshot(path=str(OUT/'sample-3d-depth.png'),full_page=True)
-  q('#vm-controls' if False else '.vm-controls details summary').click()
+  check('scrolling XYZ parameters keeps video and timeline within viewport',lambda:yes(ev("const c=s.querySelector('.vm-controls'),a=s.querySelector('#vm-apply').getBoundingClientRect(),v=s.querySelector('#vm-frame').getBoundingClientRect(),t=s.querySelector('#vm-scrub').getBoundingClientRect();return c.scrollTop>0&&a.bottom<=innerHeight&&v.top>=0&&v.bottom<=innerHeight&&t.bottom<=innerHeight")))
+  q('#vm-orbit').click();page.screenshot(path=str(OUT/'sample-3d-depth.png'),full_page=False)
+  q('.vm-controls details summary').first.click()
   with page.expect_download() as d:q('#vm-export').click()
   file=OUT/'roundtrip.json';d.value.save_as(file);doc=json.loads(file.read_text());check('export has manually edited XYZ and rig',lambda:yes(doc['frames'][0]['points']['nose']['z']==60 and abs(doc['rig']['frames'][0]['points']['nose']['z']-.2)<1e-8))
   check('export has no false inferred depth or original model claims',lambda:yes(not any(doc['claims'].values())))
@@ -52,7 +56,8 @@ def main():
   check('manual fps mismatch still progresses requested timeline',lambda:yes(float(q('#vm-time').inner_text().split()[0])>=.1))
   # Rapid repeat sample opens must not attach stale decode to newer state.
   q('#vm-sample').dblclick();expect(page.locator('#vm-status')).to_contain_text('样例已就绪',timeout=20000);check('repeated import settles to one sample',lambda:yes(q('#vm-timeline button').count()==15))
-  page.set_viewport_size({'width':1920,'height':1080});page.wait_for_timeout(100);page.screenshot(path=str(OUT/'sample-wide-desktop.png'),full_page=True)
+  page.set_viewport_size({'width':2048,'height':1080});page.wait_for_timeout(100);page.screenshot(path=str(OUT/'sample-wide-desktop.png'),full_page=False)
+  check('2048x1080 viewport retains both views and full timeline',lambda:yes(ev("return ['#vm-frame','#vm-rig','#vm-timeline','#vm-metrics'].every(id=>s.querySelector(id).getBoundingClientRect().bottom<=innerHeight)&&document.documentElement.scrollHeight<=innerHeight+1")))
   for route in ['home','overview','annotate','obj','rapid-pattern-reid','4dequine-motion-appearance','animallift-canonical-fur']:
    page.evaluate('(r)=>location.hash="#animal-learning/"+r',route);page.wait_for_timeout(100);check('legacy route retained '+route,lambda:yes(q('.overview-return').is_visible()))
   check('no uncaught browser exceptions',lambda:yes(not errors,str(errors)));check('no outbound uploads or media requests',lambda:yes(not external,str(external)));browser.close()
