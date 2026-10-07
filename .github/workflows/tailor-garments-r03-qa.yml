@@ -1,20 +1,22 @@
-name: Tailor short-sleeve construction R05 PUBLIC read-only QA
+name: Tailor unified viewport and unchanged-physics acceleration QA
 on:
   pull_request:
     branches: [gh-pages]
     paths:
-      - 'kaopu-tailor-workbench/garments-r05/**'
+      - 'kaopu-tailor-workbench/**'
+      - 'kaopu-human-overview/workbench-ui.css'
+      - 'kaopu-human-overview/workbench-ui.js'
       - '.github/workflows/tailor-garments-r03-qa.yml'
 permissions:
   contents: read
 concurrency:
-  group: tailor-garments-r05-${{ github.ref }}
+  group: tailor-unified-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  garment-browser:
+  interface:
     if: github.head_ref == 'qa/tailor-garments-r03-20261006'
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -26,55 +28,106 @@ jobs:
           sparse-checkout: |
             kaopu-tailor-workbench
             kaopu-human-overview
-          sparse-checkout-cone-mode: true
-      - name: Install exact official test dependencies
+      - name: Official browser test dependency
         run: |
           npm install --prefix "$RUNNER_TEMP/tailor-test" --no-save --ignore-scripts playwright@1.57.0
           "$RUNNER_TEMP/tailor-test/node_modules/.bin/playwright" install --with-deps chromium webkit
-      - name: Original and structured cases unchanged
-        run: cd kaopu-tailor-workbench && npm run check
-      - name: Fixed scope and shared dependencies
-        run: cd kaopu-tailor-workbench/garments-r05 && node tests/files.test.mjs
-      - name: Nine bounded paper parameter combinations
-        run: cd kaopu-tailor-workbench/garments-r05 && npm test
-      - name: Verify every public tailor file and shared dependency
+      - name: Original gates and accelerated worker protocol
         run: |
-          python3 - <<'PY2'
-          import subprocess,hashlib,json,urllib.request,time,concurrent.futures,os
-          rows=[]
-          for line in subprocess.check_output(['git','ls-tree','-r','HEAD','--','kaopu-tailor-workbench'],text=True).splitlines():
-              meta,path=line.split('\t',1)
-              mode,kind,sha=meta.split()
-              if kind=='blob': rows.append({'path':path,'expectedGitBlobSha1':sha})
-          def check(item):
-              errors=[]
-              for attempt in range(5):
-                  try:
-                      url='https://haihao0307.github.io/guilin-dem-pipeline/'+item['path']+'?verify='+os.environ['GITHUB_SHA']
-                      with urllib.request.urlopen(url,timeout=60) as response: data=response.read();status=response.status
-                      actual=hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
-                      assert actual==item['expectedGitBlobSha1'],item['path']
-                      return {**item,'actual':actual,'status':status,'bytes':len(data),'retryErrors':errors,'passed':True}
-                  except Exception as e: errors.append(str(e));time.sleep(5)
-              return {**item,'retryErrors':errors,'passed':False}
-          with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool: result=list(pool.map(check,rows))
-          report={'passed':all(x['passed'] for x in result),'files':len(result),'newFiles':sum('/garments-r05/' in x['path'] for x in result),'results':result}
-          print('R05_PUBLIC_HASH_RESULT '+json.dumps(report))
-          assert report['passed']
-          PY2
-      - name: Actual browser reconstruction in two engines
+          cd kaopu-tailor-workbench
+          npm run check
+          node unified/tests/guard.test.mjs
+          node unified/tests/worker.test.mjs
+          node unified/tests/files.test.mjs
+      - name: One viewport, five modes, four sizes and interrupted transitions
         env:
-          TAILOR_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/garments-r05/
           NODE_PATH: ${{ runner.temp }}/tailor-test/node_modules
           TAILOR_BROWSER: ${{ matrix.browser }}
-        run: node kaopu-tailor-workbench/garments-r05/tests/browser.cjs
-      - name: Keep actual screenshots and numerical evidence
+          TAILOR_SUITE: layout
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/tailor-server.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          node kaopu-tailor-workbench/unified/tests/browser.cjs
+      - name: Actual UI evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: tailor-garments-r05-public-evidence-${{ matrix.browser }}
+          name: tailor-interface-${{ matrix.browser }}
           retention-days: 7
-          if-no-files-found: warn
-          path: |
-            garments-chromium/*
-            garments-webkit/*
+          path: tailor-layout-*/**
+  garments:
+    needs: interface
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+        case: [shorts, sleeveless]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-tailor-workbench
+            kaopu-human-overview
+      - name: Official browser test dependency
+        run: |
+          npm install --prefix "$RUNNER_TEMP/tailor-test" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/tailor-test/node_modules/.bin/playwright" install --with-deps chromium webkit
+      - name: Actual new dimensions, full original frame counts and final intersections
+        env:
+          NODE_PATH: ${{ runner.temp }}/tailor-test/node_modules
+          TAILOR_BROWSER: ${{ matrix.browser }}
+          TAILOR_CASE: ${{ matrix.case }}
+          TAILOR_SUITE: garment
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/tailor-server.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          node kaopu-tailor-workbench/unified/tests/browser.cjs
+      - name: Actual garment and reference views
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tailor-${{ matrix.case }}-${{ matrix.browser }}
+          retention-days: 7
+          path: tailor-garment-*/**
+  benchmark:
+    needs: interface
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-tailor-workbench
+            kaopu-human-overview
+      - name: Official browser test dependency
+        run: |
+          npm install --prefix "$RUNNER_TEMP/tailor-test" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/tailor-test/node_modules/.bin/playwright" install --with-deps chromium webkit
+      - name: Same browser, same new short-sleeve dimensions, old and new full solves
+        env:
+          NODE_PATH: ${{ runner.temp }}/tailor-test/node_modules
+          TAILOR_BROWSER: ${{ matrix.browser }}
+          TAILOR_CASE: shortsleeve
+          TAILOR_SUITE: benchmark
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/tailor-server.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          node kaopu-tailor-workbench/unified/tests/browser.cjs
+      - name: Actual old/new computation and rendered evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tailor-short-sleeve-speed-${{ matrix.browser }}
+          retention-days: 7
+          path: tailor-benchmark-*/**
