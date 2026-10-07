@@ -18,3 +18,8 @@ export function sweep(path,radius,{segments=60,sides=16,tip=.015,twist=0,lobes=.
 }
 export function branchMesh(path,radius,material,opts){const m=new THREE.Mesh(sweep(path,radius,opts),material);m.castShadow=m.receiveShadow=true;return m;}
 export function disposeObject(obj){const geo=new Set(),mats=new Set(),textures=new Set();obj.traverse(o=>{if(o.geometry)geo.add(o.geometry);for(const m of (Array.isArray(o.material)?o.material:[o.material]))if(m)mats.add(m);});for(const g of geo)g.dispose();for(const m of mats){for(const v of Object.values(m))if(v?.isTexture)textures.add(v);m.dispose();}for(const t of textures)t.dispose();}
+export function mergeGeometryBatch(geometries){
+ const total=geometries.reduce((n,g)=>n+g.attributes.position.count,0),indexCount=geometries.reduce((n,g)=>n+(g.index?.count??g.attributes.position.count),0),p=new Float32Array(total*3),n=new Float32Array(total*3),uv=new Float32Array(total*2),ix=new Uint32Array(indexCount);let vo=0,io=0;
+ for(const g of geometries){p.set(g.attributes.position.array,vo*3);n.set(g.attributes.normal.array,vo*3);if(g.attributes.uv)uv.set(g.attributes.uv.array,vo*2);for(let j=0;j<(g.index?.count??g.attributes.position.count);j++)ix[io++]=vo+(g.index?.array[j]??j);vo+=g.attributes.position.count;}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));g.setAttribute('normal',new THREE.BufferAttribute(n,3));g.setAttribute('uv',new THREE.BufferAttribute(uv,2));g.setIndex(new THREE.BufferAttribute(ix,1));g.computeBoundingSphere();return g;
+}

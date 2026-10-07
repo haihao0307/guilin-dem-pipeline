@@ -1,6 +1,6 @@
 import * as THREE from '../vendor/three.module.js';
 import {makeLeafVeins,leafWidth} from './venation.js';
-import {clamp,seeded,curve,sweep} from './geometry.js';
+import {clamp,seeded,curve,sweep,mergeGeometryBatch} from './geometry.js';
 import {buildReticulation} from './reticulation.js';
 let source,closedSource;
 export function reticulationSource(){return closedSource??=buildReticulation();}
@@ -29,7 +29,7 @@ export function createLeafTextures({size=2048,coffee=false}={}){
  return {color,thickness,graph,units:'thickness texture red * 1.4 millimetres',optics:{laminaMillimetres:.04,maxVeinMillimetres:1.22}};
 }
 export function thinLeafMaterial(textures,{transmission=.8}={}){
- const uniform={value:transmission};const m=new THREE.MeshStandardMaterial({map:textures.color,color:0xffffff,roughness:.79,metalness:0,side:THREE.DoubleSide,transparent:true,depthWrite:true,bumpMap:textures.thickness,bumpScale:.034});
+ const uniform={value:transmission};const m=new THREE.MeshStandardMaterial({map:textures.color,color:0xffffff,roughness:.79,metalness:0,side:THREE.DoubleSide,transparent:true,depthWrite:true,envMapIntensity:.03,bumpMap:textures.thickness,bumpScale:.034});
  m.onBeforeCompile=shader=>{shader.uniforms.uLeafThickness={value:textures.thickness};shader.uniforms.uThinTransmission=uniform;shader.vertexShader='varying vec2 vLeafUv;\n'+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\nvLeafUv=uv;');shader.fragmentShader='uniform sampler2D uLeafThickness;uniform float uThinTransmission;varying vec2 vLeafUv;\n'+shader.fragmentShader;
  shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>',`float leafMM=texture2D(uLeafThickness,vLeafUv).r*1.4;
  vec3 absorptionPerMM=vec3(20.0,9.0,27.0);
@@ -42,13 +42,13 @@ export function thinLeafMaterial(textures,{transmission=.8}={}){
  diffuseColor.a=mix(1.0,clamp(1.0-exp(-7.0*leafMM/viewCos),.25,1.0),clamp(uThinTransmission,0.0,1.0));
  #include <opaque_fragment>`);};m.customProgramCacheKey=()=> 'thin-leaf-thickness-beer-r03';Object.defineProperty(m,'thinTransmission',{get:()=>uniform.value,set:v=>uniform.value=v});m.userData.optics={model:'thin-wall diffuse BTDF approximation with Beer-Lambert absorption',absorptionPerMM:[20,9,27],thicknessSource:'generated field from explicitly assumed graph calibre; no black colour-map vein drawing',KarmaEquivalent:false};return m;
 }
-export function setLeafShape(leaf,options){const old=leaf.geometry;leaf.geometry=leafGeometry(options);old?.dispose();if(leaf.userData.veinObject){leaf.remove(leaf.userData.veinObject);leaf.userData.veinObject.traverse(o=>o.geometry?.dispose());}const group=new THREE.Group(),graph=reticulationSource(),material=leaf.userData.veinMaterial??=new THREE.MeshStandardMaterial({color:0x729441,roughness:.8,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
- for(let pi=0;pi<graph.primaryPaths.length;pi++){
+export function setLeafShape(leaf,options){const old=leaf.geometry;leaf.geometry=leafGeometry(options);old?.dispose();if(leaf.userData.veinObject){leaf.remove(leaf.userData.veinObject);leaf.userData.veinObject.traverse(o=>o.geometry?.dispose());}const group=new THREE.Group(),graph=reticulationSource(),material=leaf.userData.veinMaterial??=new THREE.MeshStandardMaterial({color:0x729441,roughness:.8,envMapIntensity:.03,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
+ const parts=[];for(let pi=0;pi<graph.primaryPaths.length;pi++){
   const ids=graph.primaryPaths[pi],uvCurve=curve(ids.map(id=>[graph.nodes[id].x,graph.nodes[id].y,0])),radius=pi===0?.012:pi<23?.0035:.0015,tip=pi===0?.12:.28,count=pi===0?190:100,points=[];
   for(let k=0;k<=count;k++){const n=uvCurve.getPointAt(k/count),t=1-n.y/graph.height,hw=leafWidth(t)*graph.height*.64,u=Math.abs(hw)<1e-7?.5:.5+(n.x-400)/(2*hw),p=leafPoint(u,t,options),angle=options.curl*t,offset=radius*(Math.pow(1-k/count,.8)*(1-tip)+tip)*.82;p[1]-=Math.sin(angle)*offset;p[2]+=Math.cos(angle)*offset;points.push(p);}
-  const path=curve(points),g=sweep(path,radius,{segments:count,sides:7,tip,lobes:0});const mesh=new THREE.Mesh(g,material);mesh.castShadow=mesh.receiveShadow=true;group.add(mesh);
+  const path=curve(points),g=sweep(path,radius,{segments:count,sides:7,tip,lobes:0});parts.push(g);
  }
- leaf.userData.veinObject=group;leaf.add(group);
+ const merged=mergeGeometryBatch(parts);parts.forEach(g=>g.dispose());const mesh=new THREE.Mesh(merged,material);mesh.castShadow=mesh.receiveShadow=true;group.add(mesh);leaf.userData.veinObject=group;leaf.add(group);
 }
 export function leafMaterial(textures,{coffee=false,transmission=.58}={}){
  const m=new THREE.MeshPhysicalMaterial({map:textures.color,color:coffee?0x798f46:0xc7dda8,roughness:coffee?.40:.43,metalness:0,side:THREE.DoubleSide,transmission:coffee?.08:transmission,transmissionMap:textures.thickness,thickness:coffee?.03:.018,ior:1.32,attenuationDistance:1.2,attenuationColor:new THREE.Color(coffee?0x659b26:0x8dcc56),clearcoat:coffee?.18:.06,clearcoatRoughness:.38,bumpMap:textures.thickness,bumpScale:coffee?-.055:-.025});
