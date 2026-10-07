@@ -3,7 +3,7 @@ export async function loadStudyMaterials(){
  const loader=new THREE.TextureLoader();const names=['rock-color','rock-normal','rock-roughness','rock-height','moss-color','moss-normal','moss-roughness'];
  const textures=await Promise.all(names.map(n=>loader.loadAsync(new URL(`./assets/${n}.jpg`,import.meta.url).href)));const t=Object.fromEntries(names.map((n,i)=>[n,textures[i]]));
  for(const [name,tex] of Object.entries(t)){tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.anisotropy=4;if(name.endsWith('color'))tex.colorSpace=THREE.SRGBColorSpace;}
- const canvas=document.createElement('canvas');canvas.width=t['rock-height'].image.width;canvas.height=t['rock-height'].image.height;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(t['rock-height'].image,0,0);const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data,N=canvas.width;
+ const canvas=document.createElement('canvas');canvas.width=64;canvas.height=64;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(t['rock-height'].image,0,0,64,64);const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data,N=canvas.width;
  function sampleHeight(x,z){const u=((x*1.04/2)%1+1)%1,v=((z*1.04/2)%1+1)%1;const fx=u*N,fy=(1-v)*N,ix=Math.floor(fx),iy=Math.floor(fy),ax=fx-ix,ay=fy-iy;const at=(i,j)=>pixels[((j%N)*N+i%N)*4]/255;return (at(ix,iy)*(1-ax)+at(ix+1,iy)*ax)*(1-ay)+(at(ix,iy+1)*(1-ax)+at(ix+1,iy+1)*ax)*ay;}
  const ground=new THREE.MeshStandardMaterial({map:t['rock-color'],normalMap:t['rock-normal'],normalScale:new THREE.Vector2(.70,.70),roughnessMap:t['rock-roughness'],roughness:1,metalness:0});
  ground.onBeforeCompile=shader=>{
@@ -16,5 +16,5 @@ export async function loadStudyMaterials(){
   shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',`float rockR=texture2D(roughnessMap,vSurfaceUV/2.).g;float mossR=texture2D(mossRoughness,vSurfaceUV/.45).g;float roughnessFactor=mix(mix(rockR,max(.25,rockR*.62),vWetness),max(.78,mossR),clamp(vCover,0.,1.));`);
  };
  const rock=new THREE.MeshStandardMaterial({color:0x777d78,map:t['rock-color'],normalMap:t['rock-normal'],normalScale:new THREE.Vector2(.7,.7),roughnessMap:t['rock-roughness'],roughness:.7,metalness:0});
- return {ground,rock,sampleHeight,stats:{textures:names.length,pixels:[1024,1024],rockTileMeters:2,mossTileMeters:.45,assetBytes:9659372},dispose(){textures.forEach(x=>x.dispose());ground.dispose();rock.dispose();}};
+ return {ground,rock,sampleHeight,stats:{textures:names.length,pixels:[1024,1024],geometryHeightSamples:[64,64],geometrySamplingReason:'2m tile projects onto about91 terrain grid vertices; prefilter height before displacement, full1024 color and normals retained',rockTileMeters:2,mossTileMeters:.45,assetBytes:9659372},dispose(){textures.forEach(x=>x.dispose());ground.dispose();rock.dispose();}};
 }

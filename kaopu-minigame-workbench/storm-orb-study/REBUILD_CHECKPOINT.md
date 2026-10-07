@@ -35,3 +35,7 @@ B2 removed artificial rings but still looked like a smooth green blanket. B3 add
 ## C1 approved change of material method
 
 B3 failed as an artificial X path with black grain. C1 returns to the A4 macro surface and replaces invented material detail with original CC0 Rock015 and Moss001 maps from ambientCG. Seven original1024²JPG files,9659372bytes, no resizing/recompression. Source hashes/license/scale are in assets/SOURCES.json. Color maps are sRGB; normal/roughness/height are non-color; OpenGL normals are used. Moss scale0.45m comes from provider45cm metadata; Rock015 scale2m and0.10m displacement range are explicit artistic assumptions because source dimensions are absent. All images must load before WebGL evidence;720 and1440closeups will determine whether1K is sufficient. No visual approval or publication claimed.
+
+## C2 geometry sampling correction
+
+C1 source PBR images are resolved at720and1440, but high-frequency1024height samples were undersampled by about91geometry vertices per2m tile, creating false sharp bumps/shadows. C2 prefilters only the CPU geometry height field to64²before vertex sampling; color, OpenGL normal and roughness textures remain original1024²files and full material detail. This is anti-aliasing of geometry, not a reduced-resolution visual mode. All source assets unchanged.
