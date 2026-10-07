@@ -1,0 +1,9 @@
+import fs from 'node:fs';
+import {loadAnny,loadMHR,gunzip} from '../teachers.mjs';
+const root=new URL('./',import.meta.url),a=loadAnny(),m=loadMHR(),c=JSON.parse(new TextDecoder().decode(gunzip('kaopu-unified-human-workbench/assets/canonical.json.gz'))),ar=a.forward({phenotypes:c.referenceAnnyPhenotypes}),mr=m.evaluate();
+const write=(name,a)=>fs.writeFileSync(new URL(name,root),Buffer.from(a.buffer,a.byteOffset,a.byteLength));
+const cv=new Float64Array(c.annyRecipes.length*3);c.annyRecipes.forEach(([u,v,t],i)=>{for(let k=0;k<3;k++)cv[i*3+k]=ar.vertices[u*3+k]*(1-t)+ar.vertices[v*3+k]*t;});
+write('canonical-body.f64',cv);write('canonical-faces.u32',new Uint32Array(c.faces.slice(0,c.report.bodyFaces*3)));write('anny-rest-heads.f64',ar.boneHeads);write('anny-rest-poses.f64',ar.bonePoses);write('mhr-rest-joints.f32',mr.joints);write('mhr-rest-vertices.f32',mr.vertices);write('mhr-faces.u32',m.d.faces);for(const n of ['skin_weights','skin_joints','skin_verts'])write(n+(n==='skin_weights'?'.f32':'.u16'),m.d[n]);
+const aw=new Float64Array(c.annyRecipes.length*a.boneCount);c.annyRecipes.forEach(([u,v,t],i)=>{for(const [s,b]of[[u,1-t],[v,t]])for(let q=0;q<a.influences;q++){const z=s*a.influences+q;aw[i*a.boneCount+a.arrays.vertex_bone_indices[z]]+=b*a.arrays.vertex_bone_weights[z];}});write('anny-canonical-weights.f64',aw);
+fs.writeFileSync(new URL('input.json',root),JSON.stringify({canonicalVertexCount:c.report.vertices,bodyVertexCount:cv.length/3,bodyFaces:c.report.bodyFaces,topologySha256:c.topologySha256,referencePhenotypes:c.referenceAnnyPhenotypes,annyBoneNames:a.boneLabels,annyParents:Array.from(a.boneParents),mhrJointNames:m.meta.joint_names,mhrParents:Array.from(m.d.parents),nativeVertexCount:m.meta.vertices,skinArrays:Object.fromEntries(['skin_weights','skin_joints','skin_verts'].map(n=>[n,{dtype:m.meta.arrays[n].dtype,length:m.d[n].length}]))},null,2));
+console.log('Input exported',cv.length/3, m.meta.vertices);

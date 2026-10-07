@@ -1,0 +1,20 @@
+import fs from'node:fs';import assert from'node:assert/strict';import{loadMHR}from'../teachers.mjs';import{createBodyAdapter}from'./load-adapter.mjs';
+const a=createBodyAdapter(),native=loadMHR(),root=new URL('./',import.meta.url),report={schema:'mhr-body-focused-qa/1',topology:a.canonical.topologySha256,bodyCount:a.bodyCount,headCovered:false,cases:{},warning:'Numerical mechanics gates are not full visual acceptance or semantic coverage.'};
+const save=(n,x)=>fs.writeFileSync(new URL(n,root),Buffer.from(x.buffer,x.byteOffset,x.byteLength));
+const maxDiff=(a,b)=>{let x=0;for(let i=0;i<a.length;i++)x=Math.max(x,Math.abs(a[i]-b[i]));return x;};
+const cases={neutral:{},elbow_60:{pose:{46:Math.PI/3}},elbow_90:{pose:{46:Math.PI/2}},elbow_twist:{pose:{46:Math.PI/2,47:.7}},both_elbows_twist:{pose:{36:Math.PI/3,37:-.6,46:Math.PI/2,47:.7}},identity_0:{identity:{0:.75}},identity_mixed:{identity:{0:.5,1:-.5,12:.75,32:-.7,44:.6}},scale_arm:{pose:{142:.1,143:-.1}},translate_root:{pose:{0:10,1:5,2:-3}},shoulder:{pose:{44:.4,45:.3,46:1}},fingers:{pose:{106:.4,107:.5,108:.35,109:.4,110:.5,111:.35}}};
+let neutral;
+for(const[name,v]of Object.entries(cases)){
+ const s=a.zeroState();for(const[g,values]of Object.entries(v))for(const[k,x]of Object.entries(values))s[g][k]=x;
+ const r=a.evaluate(s),n=native.evaluate(s);assert.equal(maxDiff(r.native.vertices,n.vertices),0,'Instrumented teacher differs');assert.equal(r.vertices.length,9253*3);assert.ok(r.vertices.every(Number.isFinite));
+ if(name==='neutral'){neutral=r;assert.equal(maxDiff(r.vertices,r.restVertices),0);}
+ const off=a.evaluate({...s,correctives:false}),delta=new Float32Array(r.vertices.length);for(let i=0;i<delta.length;i++)delta[i]=r.vertices[i]-off.vertices[i];
+ save(name+'-body.f32',r.vertices);save(name+'-corrective.f32',delta);save(name+'-native-on.f32',r.native.vertices);save(name+'-native-off.f32',off.native.vertices);save(name+'-rest-on.f32',r.native.rest);save(name+'-rest-off.f32',off.native.rest);
+ fs.writeFileSync(new URL(name+'-matrices.json',root),JSON.stringify({targetBind:r.targetRestMatrices,targetPose:r.targetPosedMatrices,sourceBind:r.sourceBindMatrices,sourcePose:r.sourcePosedMatrices,sourceSkin:r.native.skinMatrices,scales:r.targetBinding.scales,attachment:r.attachment}));
+ report.cases[name]={state:{...s,identity:Array.from(s.identity),pose:Array.from(s.pose),expression:Array.from(s.expression)},teacherParityMaxCm:0,neutralDifferenceMaxMM:name==='neutral'?maxDiff(r.vertices,r.restVertices)*1000:null,maxDisplacementComponentMM:maxDiff(r.vertices,neutral.vertices)*1000,maxCorrectiveComponentMM:Math.max(...Array.from(delta,Math.abs))*1000,evaluationMs:r.evaluationMs};
+}
+const rerun=a.evaluate(a.zeroState());assert.equal(maxDiff(rerun.vertices,neutral.vertices),0);report.neutralRestoreExact=true;report.influenceCount={max:Math.max(...Array.from({length:a.bodyCount},(_,i)=>a.weights.ptr[i+1]-a.weights.ptr[i])),total:a.weights.values.length};
+let blocked=false;try{a.evaluate(a.zeroState(),{rigOwner:'anny'});}catch{blocked=true;}assert.ok(blocked);report.inactiveOwnerGuard=true;let lockedRejected=false;try{const locked=a.zeroState();locked.pose[131]=.1;a.evaluate(locked);}catch{lockedRejected=true;}assert.ok(lockedRejected);report.officialLockedSlotGuard=true;
+// Target rest-shape changes must recompute the Anny rig and preserve neutral.
+report.targetShapes={};for(const[shape,phenotypes]of Object.entries({newborn:{age:-1/3},baby:{age:0},child:{age:1/3},old:{age:1},muscular:{age:2/3,muscle:1,weight:.6},tall:{age:2/3,height:1}})){const r=a.evaluate(a.zeroState(),{phenotypes});assert.equal(maxDiff(r.vertices,r.restVertices),0);report.targetShapes[shape]={neutralMaxMM:0,neck:r.attachment.c_neck.restPosition,head:r.attachment.c_head.restPosition};}
+fs.writeFileSync(new URL('focused-test-report.json',root),JSON.stringify(report,null,2));console.log(JSON.stringify({neutralExact:true,teacherExact:true,caseCount:Object.keys(cases).length,influences:report.influenceCount,ms:Object.fromEntries(Object.entries(report.cases).map(([k,v])=>[k,v.evaluationMs]))},null,2));

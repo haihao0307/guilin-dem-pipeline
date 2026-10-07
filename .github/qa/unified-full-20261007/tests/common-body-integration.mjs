@@ -1,0 +1,14 @@
+import fs from'node:fs';import crypto from'node:crypto';import assert from'node:assert/strict';import{createCommon}from'../create-common.mjs';import{defaultState}from'../src/State.mjs';
+const hash=x=>crypto.createHash('sha256').update(x).digest('hex'),max=(a,b)=>Math.max(...a.map((v,i)=>Math.abs(v-b[i]))),baseline=createCommon(),m=createCommon({bodyDriver:true}),neutral=m.compute(defaultState()).slice(),positions=m.positions,faces=m.faces,rows=[];
+assert.equal(hash(neutral),hash(baseline.compute(defaultState())));
+for(const owner of['anny','mhr']){
+ const s=defaultState();s.owners.rig=owner;s.mhr.identity[0]=.4;s.mhr.identity[7]=-.2;s.anny.pose['upperarm01.L']=[12,8,-18];s.mhr.pose[44]=.2;s.mhr.pose[45]=.15;s.mhr.pose[46]=.8;s.gnm.identity[0]=.25;s.gnm.expression[200]=.5;s.gnm.rotation[1]=.1;
+ const v=m.compute(s).slice();assert(max(v,neutral)>.01);assert.equal(m.positions,positions);assert.equal(m.faces,faces);
+ const inactive=structuredClone(s);if(owner==='anny'){inactive.mhr.pose[44]=-.2;inactive.mhr.pose[46]=.1;inactive.mhr.correctives=false;}else{inactive.anny.pose['upperarm01.L']=[-35,4,60];inactive.anny.pose.neck01=[40,20,10];}inactive.mhr.expression[0]=.6;assert.equal(hash(m.compute(inactive)),hash(v));
+ const other=structuredClone(s);other.owners.rig=owner==='anny'?'mhr':'anny';m.compute(other);assert.equal(hash(m.compute(s)),hash(v));const archive=JSON.parse(JSON.stringify(m.archive()));m.compute(defaultState());assert.equal(hash(m.restore(archive)),hash(v));
+ const noG=structuredClone(s);noG.owners.headRig='body';const noGv=m.compute(noG).slice();noG.gnm.rotation.fill(.2);noG.gnm.translation=[.02,.01,.005];assert.equal(hash(m.compute(noG)),hash(noGv));
+ rows.push({rigOwner:owner,inactiveOtherRigAndMHRExpressionExact:true,rigSwitchBackExact:true,archiveExact:true,inactiveGNMHeadRigExact:true,metrics:m.metrics()});
+}
+for(const age of[-1/3,0,1/3,2/3,1]){const s=defaultState();s.anny.phenotypes.age=age;s.anny.pose.root=[0,0,10];s.gnm.rotation[1]=.12;const v=m.compute(s).slice();assert(v.every(Number.isFinite));m.compute(defaultState());assert.equal(hash(m.compute(s)),hash(v));rows.push({age,repeatExact:true,metrics:m.metrics()});}
+const failed=defaultState();failed.owners.rig='mhr';failed.mhr.pose[46]=1e300;const before=m.positions.slice();assert.throws(()=>m.compute(failed));assert.equal(hash(m.positions),hash(before));
+const report={passed:true,cases:rows,neutralByteExactWithAcceptedCommon:true,fixedPositionAndIndexBuffers:true,sourceOwnershipAndArchiveExact:true,invalidStateAtomic:true,adapterFingerprint:m.adapterFingerprint,coverage:m.coverage,remaining:['MHR head45 shape','Anny dense head phenotype/local transfer','Anny52 and MHR72 facial components','Browser body-driver visual review']};fs.writeFileSync('research/common-body-integration-report.json',JSON.stringify(report,null,2));console.log({passed:true,cases:rows.length,neutralHash:hash(neutral),coverage:m.coverage});
