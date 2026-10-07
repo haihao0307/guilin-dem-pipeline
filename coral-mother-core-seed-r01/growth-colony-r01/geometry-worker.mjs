@@ -1,9 +1,9 @@
 import {createRecipe,createEvaluator,QUALITY,mergeParts,computeVertexNormals,stageToOBJ} from './coral-growth.mjs';
 let key='',recipe=null,evaluate=null,latest=null,timer=null;
-function getRecipe(params){const next=JSON.stringify(params);if(next!==key){key=next;recipe=createRecipe(params);evaluate=createEvaluator(recipe,QUALITY.preview);}return recipe;}
+function getRecipe(params,qualityName='preview'){const quality=QUALITY[qualityName]??QUALITY.preview;const next=JSON.stringify([params,qualityName]);if(next!==key){key=next;recipe=createRecipe(params);evaluate=createEvaluator(recipe,quality);}return recipe;}
 async function process(message){
  try{
-  const {id,type,params,time}=message;getRecipe(params);
+  const {id,type,params,time}=message;const qualityName=message.quality==='mobilePreview'?'mobilePreview':'preview';getRecipe(params,qualityName);
   if(type==='lineage'){const stage=evaluate(time);postMessage({id,type,contents:JSON.stringify({recipe,stage:{time:stage.time,union:false,lineage:stage.lineage}},null,2)});return;}
   if(type==='obj'){
    const stage=message.highQuality?createEvaluator(recipe,QUALITY.export)(time):evaluate(time);
@@ -11,7 +11,7 @@ async function process(message){
    const blob=new Blob([stageToOBJ(stage)],{type:'text/plain'});postMessage({id,type,blob,parts:stage.parts.length,time:stage.time});return;
   }
   const started=performance.now(),stage=evaluate(time),merged=mergeParts(stage.parts),normals=computeVertexNormals(merged.positions,merged.indices);
-  postMessage({id,type:'geometry',time:stage.time,params:recipe.params,positions:merged.positions,indices:merged.indices,normals,ranges:merged.ranges,lineage:stage.lineage,ms:performance.now()-started},[merged.positions.buffer,merged.indices.buffer,normals.buffer]);
+  postMessage({id,type:'geometry',time:stage.time,params:recipe.params,quality:qualityName,positions:merged.positions,indices:merged.indices,normals,ranges:merged.ranges,lineage:stage.lineage,ms:performance.now()-started},[merged.positions.buffer,merged.indices.buffer,normals.buffer]);
  }catch(error){postMessage({id:message.id,type:'error',message:String(error?.stack??error)});}
 }
 onmessage=({data})=>{

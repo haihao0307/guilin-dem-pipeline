@@ -1,17 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {createRecipe,createEvaluator,evaluatePart,mergeParts,stageToOBJ,QUALITY,progress,sampleMantle,sampleMantleMid} from '../coral-growth.mjs';
+import {readFileSync} from 'node:fs';
+import {createRecipe,createEvaluator,evaluatePart,mergeParts,stageToOBJ,QUALITY,progress,sampleMantle,sampleMantleMid,mantleMaterialSamples} from '../coral-growth.mjs';
 const Q={steps:8,cols:16,tube:16,pad:16};
 const hash=stage=>{const h=createHash('sha256');for(const p of stage.parts){h.update(p.id);h.update(p.positions);h.update(p.indices);}return h.digest('hex');};
 function checkMesh(part){
  assert.ok(part.positions.length>0,part.id);assert.equal(part.positions.length%3,0);assert.equal(part.indices.length%3,0);
  for(const v of part.positions)assert.ok(Number.isFinite(v),`${part.id} nonfinite`);
- const edges=new Map();
+ const edges=new Map();let volume6=0;
  for(let i=0;i<part.indices.length;i+=3){const ids=Array.from(part.indices.subarray(i,i+3));for(const v of ids)assert.ok(v>=0&&v<part.positions.length/3,`${part.id} index`);assert.equal(new Set(ids).size,3,`${part.id} degenerate ids`);
-  const p=ids.map(k=>Array.from(part.positions.subarray(k*3,k*3+3))),a=p[1].map((v,i)=>v-p[0][i]),b=p[2].map((v,i)=>v-p[0][i]);assert.ok(Math.hypot(a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0])>1e-12,`${part.id} zero area`);
+  const p=ids.map(k=>Array.from(part.positions.subarray(k*3,k*3+3))),a=p[1].map((v,i)=>v-p[0][i]),b=p[2].map((v,i)=>v-p[0][i]);assert.ok(Math.hypot(a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0])>1e-12,`${part.id} zero area`);volume6+=p[0][0]*(a[1]*b[2]-a[2]*b[1])+p[0][1]*(a[2]*b[0]-a[0]*b[2])+p[0][2]*(a[0]*b[1]-a[1]*b[0]);
   for(let j=0;j<3;j++){const a=ids[j],b=ids[(j+1)%3],key=a<b?`${a}/${b}`:`${b}/${a}`,value=edges.get(key)||{n:0,w:0};value.n++;value.w+=a<b?1:-1;edges.set(key,value);}
  }
+ assert.ok(volume6>0,`${part.id} outward signed volume`);
  for(const [key,e] of edges){assert.equal(e.n,2,`${part.id} edge ${key} incidence`);assert.equal(e.w,0,`${part.id} edge ${key} inconsistent orientation`);}
 }
 
@@ -64,4 +66,30 @@ test('OBJ keeps original named pieces and current-stage index bounds',()=>{
 });
 test('default preview mature stage passes complete finite/index checks',()=>{
  const r=createRecipe(),e=createEvaluator(r,QUALITY.preview),stage=e(1),m=mergeParts(stage.parts);assert.equal(stage.parts.length,479);assert.ok(m.positions.length/3>300000);assert.ok(m.indices.length/3>650000);for(const p of m.positions)assert.ok(Number.isFinite(p));for(const i of m.indices)assert.ok(i<m.positions.length/3);
+});
+
+
+test('desktop default recipe and five stage buffers remain bit-exact across LOD change',()=>{
+ const fixture=JSON.parse(readFileSync(new URL('./desktop-pre-lod-fingerprints.json',import.meta.url),'utf8')),recipe=createRecipe(),evaluate=createEvaluator(recipe,QUALITY.preview),sha=x=>createHash('sha256').update(x).digest('hex');
+ assert.equal(sha(JSON.stringify(recipe)),fixture.recipeSHA256);
+ for(const [time,want] of Object.entries(fixture.stages)){const mesh=mergeParts(evaluate(Number(time)).parts);assert.equal(sha(mesh.positions),want.positionsSHA256);assert.equal(sha(mesh.indices),want.indicesSHA256);assert.equal(mesh.positions.length/3,want.vertices);assert.equal(mesh.indices.length/3,want.faces);}
+});
+test('mobile render LOD preserves every lineage and shared material point with fixed desktop normals',()=>{
+ const recipe=createRecipe(),before=JSON.stringify(recipe),desktop=createEvaluator(recipe,QUALITY.preview),mobile=createEvaluator(recipe,QUALITY.mobilePreview);
+ for(const t of [0,.18,.52,.72,1]){const d=desktop(t),m=mobile(t);assert.deepEqual(m.lineage,d.lineage);assert.deepEqual(m.parts.map(p=>p.id),d.parts.map(p=>p.id));assert.equal(m.params,d.params);}
+ for(const r of recipe.records.filter(r=>r.type==='mantle')){
+  for(const u of [0,1/7,3/7,6/7,13/14,1])for(const v of [0,1/14,4/14,9/14,1])for(const side of [-1,1])assert.deepEqual(sampleMantle(r,u,v,side,QUALITY.mobilePreview),sampleMantle(r,u,v,side,QUALITY.preview));
+  const samples=mantleMaterialSamples(r,1,QUALITY.mobilePreview);assert.ok(samples.includes(.86));assert.ok(samples.includes(13/14));const peak=.86+.14*Math.PI/2/r.curlRadians;if(peak<1)assert.ok(samples.some(u=>Math.abs(u-peak)<1e-12),'true radial fold maximum must be sampled');
+ }
+ const mature=mobile(1);assert.equal(mature.parts.length,479);assert.equal(mature.lineage.filter(r=>r.type==='mantle').length,436);
+ const mm=mergeParts(mature.parts),dm=mergeParts(desktop(1).parts);assert.ok(mm.indices.length<dm.indices.length*.45);assert.ok(mm.positions.length<dm.positions.length*.45);assert.equal(JSON.stringify(recipe),before);
+ const replayHash=hash(mobile(.72));mobile(1);mobile(.18);assert.equal(hash(mobile(.72)),replayHash);
+});
+test('mobile fold landmarks are fixed through time, closed, and retain normal thickness at extremes',()=>{
+ for(const fold of [.2,1,1.5]){const recipe=createRecipe({fold}),r=recipe.records.find(r=>r.type==='mantle'),q=QUALITY.mobilePreview;
+  const full=mantleMaterialSamples(r,1,q),partial=mantleMaterialSamples(r,.97,q);assert.deepEqual(partial.slice(0,-1),full.filter(u=>u<.97-1e-9));
+  for(const u of full)for(const v of [0,.5,1]){const a=sampleMantle(r,u,v,1,q),b=sampleMantle(r,u,v,-1,q);assert.ok(Math.abs(Math.hypot(...a.map((x,i)=>x-b[i]))-r.thickness)<1e-8);}
+  checkMesh(evaluatePart(r,r.birth+r.duration,q));checkMesh(evaluatePart(r,r.birth+r.duration*.975,q));
+ }
+ const r=createRecipe(),stage=createEvaluator(r,QUALITY.mobilePreview)(1);for(const part of stage.parts)checkMesh(part);
 });

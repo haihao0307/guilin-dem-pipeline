@@ -52,7 +52,7 @@ Run:
     node --check viewer.mjs
     node --check geometry-worker.mjs
 
-The recorded Node run passed 10/10 tests: byte-identical determinism, rewind/replay and recipe immutability, full parent timing, staged emergence, meaningful parameter changes, fixed old vertices, normal-based shell thickness, finite indexed closed component shells, input bounds, original-piece OBJ and full mature preview counts. See `tests/node-test-results.txt` for the actual run.
+The original Node run passed 10/10 tests (the current lifecycle/LOD revision passes 13/13, described below): byte-identical determinism, rewind/replay and recipe immutability, full parent timing, staged emergence, meaningful parameter changes, fixed old vertices, normal-based shell thickness, finite indexed closed component shells, input bounds, original-piece OBJ and full mature preview counts. See `tests/node-test-results.txt` for the actual run.
 
 A regression test caught and fixed a cache bug that could reuse mature parts after rewinding. The complete suite passed after the fix.
 
@@ -63,3 +63,22 @@ The browser script accepts `CORAL_ENGINE`, `CORAL_URL`, and `CORAL_OUT`; it reco
 See `RESEARCH_COMPARISON.md` for the preserved earlier R03 solver and the present guided route's different capabilities and limits.
 
 Manual visual review remains required: crown irregularity, insufficient layering, excessive column appearance, stage continuity, screen framing in portrait/landscape, touch orbit/pinch, mobile memory, and whether the result meets the user's reference morphology.
+
+
+## Bounded lifecycle and mobile-cost revision
+
+The geometry law, recipe and layer count are unchanged. The default desktop's full recipe and five stages of position/index buffers match the recorded pre-LOD SHA-256 fixtures byte-for-byte. Mobile viewport sampling preserves all 479 parts and 436 lamellae. It uses seven main radial intervals and 14 angular intervals, plus fixed material samples at the curl onset (0.86), the shared desktop outer sample (13/14), and applicable radial/rise extrema. The normal-thickness field remains the desktop 14×28 full-material field. Shared material points are exactly identical. No layer is deleted.
+
+Default mature mobile rendering is 143,502 vertices / 285,088 triangles. Its main position + normal + index buffers total 6,865,104 bytes, versus desktop's 17,580,240 bytes (about 61% lower). These are explicit mesh buffer byte counts, not whole-process RAM or complete GPU memory measurements. Current-stage export matches the displayed sampling; the higher-resolution export remains an explicit checkbox.
+
+The closed shells now use FrontSide back-face culling. Node checks include positive signed volume and consistent closed edge incidence. This does not establish absence of local/inter-part intersections.
+
+The renderer draws only when geometry, camera, selection, wireframe or size changes. Controls continue receiving RAF updates, but an unchanged view submits no repeated draw. The readonly audit reports actual draw counts, WebGL bufferData/bufferSubData submission counts and bytes, geometry installation times, render-submit wall time, and separate pixel readback/digest time. Submission wall times are not GPU elapsed times.
+
+On pagehide, the app terminates its worker, cancels RAF and timers, disposes controls/geometries/materials/renderer, revokes download object URLs, and explicitly loses its GPU context. A session-only cleanup receipt and view/parameter snapshot allow verification after Back. A disposed BFCache page reloads safely on pageshow, reconstructing from that snapshot. Ordinary context-loss/restoration events pause rendering, preserve recipe/parameters, rebuild GPU resources through Three.js, and resume safely.
+
+The browser runner separately measures 60 idle RAF intervals (requiring zero draws, geometry installs, uploads and readbacks) and 60 RAF intervals during controlled continuous camera movement (requiring repeated actual draws but no geometry rebuild/upload/readback). It explicitly simulates one WEBGL_lose_context loss/restoration and checks real pixels and exact geometry/parameters afterward, then verifies cleanup on mother-workbench navigation and Back. BFCache-specific behavior is reported as unexercised when the browser chooses an ordinary history reload.
+
+Mobile WebKit uses real touchscreen taps on the accessible +/− zoom buttons instead of the unsupported mouse-wheel API. Optional single-touch picking is separately recorded. Mobile viewport/input emulation is not proof of physical-phone pinch performance.
+
+Current Node result: 13/13 passed, including desktop bit-exact fixtures, unchanged mobile lineage, shared material points and normal thickness, preserved curl landmarks, rewind, and closed outward shells. Browser validation of this revision remains pending; no performance improvement is claimed from Node alone.

@@ -6,7 +6,7 @@
  */
 export const MODEL_VERSION = 'guided-tissue-accretion-js-r4.1';
 export const DEFAULTS = Object.freeze({seed:17,density:1,fold:1});
-export const QUALITY = Object.freeze({preview:{steps:14,cols:28,tube:24,pad:24},export:{steps:30,cols:64,tube:40,pad:40}});
+export const QUALITY = Object.freeze({preview:{steps:14,cols:28,tube:24,pad:24},mobilePreview:{steps:7,cols:14,tube:24,pad:24,normalSteps:14,normalCols:28,foldFeatures:true},export:{steps:30,cols:64,tube:40,pad:40}});
 const TAU=Math.PI*2, EPS=1e-9;
 const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
 const finite=(x,d)=>Number.isFinite(Number(x))?Number(x):d;
@@ -102,8 +102,9 @@ function mantleNormalField(r,q){
  const result={grid,normals,nc};fields.set(key,result);return result;
 }
 export function sampleMantle(r,u,v,side=1,quality=QUALITY.preview){
- const {grid,normals,nc}=mantleNormalField(r,quality),z=clamp(u)*quality.steps,j=Math.min(quality.steps-1,Math.floor(z)),f=z-j;
- const col=clamp(v)*quality.cols,k=Math.min(quality.cols-1,Math.floor(col)),w=col-k;
+ const normalQuality=quality.normalSteps?{steps:quality.normalSteps,cols:quality.normalCols}:quality;
+ const {grid,normals,nc}=mantleNormalField(r,normalQuality),z=clamp(u)*normalQuality.steps,j=Math.min(normalQuality.steps-1,Math.floor(z)),f=z-j;
+ const col=clamp(v)*normalQuality.cols,k=Math.min(normalQuality.cols-1,Math.floor(col)),w=col-k;
  const get=(row,c)=>Array.from(normals.subarray(grid[row*nc+c]*3,grid[row*nc+c]*3+3));
  const n=unit(mix(mix(get(j,k),get(j,k+1),w),mix(get(j+1,k),get(j+1,k+1),w),f));
  return add(sampleMantleMid(r,u,v),scale(n,side*r.thickness*.5));
@@ -140,8 +141,18 @@ function finishMesh(id,vertices,triangles,weld=false){
  if(volume6<0)for(let i=0;i<valid.length;i+=3)[valid[i+1],valid[i+2]]=[valid[i+2],valid[i+1]];
  return {id,positions:new Float32Array(points),indices:new Uint32Array(valid)};
 }
+/** Render-only LOD retains fixed fold landmarks, independent of stage time. */
+export function mantleMaterialSamples(record,g,quality=QUALITY.preview){
+ if(!quality.foldFeatures)return materialSamples(g,quality.steps);
+ if(g<=EPS)return [];
+ const fixed=Array.from({length:quality.steps+1},(_,i)=>i/quality.steps);
+ // Preserve the curl onset, a shared desktop curl sample, and true radial / rise extrema.
+ fixed.push(.86,13/14);
+ for(const angle of [Math.PI/2,Math.PI]){const u=.86+.14*angle/record.curlRadians;if(u>.86&&u<1)fixed.push(u);}
+ const prefix=[...new Set(fixed)].sort((a,b)=>a-b).filter(u=>u<g-EPS);prefix.push(g);return prefix;
+}
 function makeMantle(r,g,q){
- const us=materialSamples(g,q.steps),nr=us.length,nc=q.cols+1,vertices=[],faces=[];
+ const us=mantleMaterialSamples(r,g,q),nr=us.length,nc=q.cols+1,vertices=[],faces=[];
  for(const side of [1,-1])for(const u of us)for(let k=0;k<nc;k++)vertices.push(...sampleMantle(r,u,k/q.cols,side,q));
  const size=nr*nc;
  for(let side=0;side<2;side++)for(let j=0;j<nr-1;j++)for(let k=0;k<q.cols;k++){
