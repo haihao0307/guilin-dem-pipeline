@@ -1,0 +1,80 @@
+{
+  "version": "candidate-2",
+  "sourceCommit": "d449629979028123a5c4dc9e732a2ec19b7fce31",
+  "status": "local-implementation-complete; browser QA and 3D validation remain separate open gates",
+  "liveGenerator": true,
+  "presetGeometryLookup": false,
+  "coverage": {
+    "entryRecipes": 23,
+    "nativeDefaultAndChangedCases": 46,
+    "parameterLeaves": 122,
+    "parameterChangesAffectGeometry": 122,
+    "enumCases": 89,
+    "enumCases2DPass": 88,
+    "bodyChangedCases": 23,
+    "bodyChangesAffectGeometry": 23,
+    "compositionCases": 48,
+    "composition2DPass": 48,
+    "independentNativeOriginalOraclePass": 23,
+    "independentSameWasmOriginalOraclePass": 23
+  },
+  "browser": {
+    "status": "not-run; GitHub Actions upload requires explicit repository authorization",
+    "preparedTests": [
+      "23 live defaults and same-backend raw original oracle comparisons",
+      "zero Python runtime requests before generation",
+      "parameter edit and restoration",
+      "request queue identity",
+      "missing-input and invalid-paper rejection",
+      "cancel/restart/dispose"
+    ]
+  },
+  "nodeWasmTiming": {
+    "initializationMs": 4472.787598999999,
+    "minGenerationMs": 119.95187900000019,
+    "maxGenerationMs": 4950.819926000004,
+    "caveat": "Node WASM on this cloud CPU, not browser/network performance"
+  },
+  "physicalFit": {
+    "status": "not-run here",
+    "owner": "consuming tailoring workbench",
+    "notCertified": [
+      "3D sewing",
+      "body contact",
+      "cloth self-contact",
+      "cloth material law",
+      "continuous parameter domains",
+      "thumbnails"
+    ]
+  },
+  "knownIssues": [
+    {
+      "case": "SkirtManyPanels panel_curve=-0.35 on fixed synthetic body",
+      "status": "2D self-intersection; browser facade rejects by default; diagnostic opt-in only"
+    },
+    {
+      "case": "LongSleeve cross-platform solver sensitivity",
+      "maxSameParameterCurveDeltaMm": 4.496478833442268,
+      "maxNormalizedArclengthDeltaMm": 3.0259726598755434,
+      "approximateHausdorffMm": 2.9579258698222857,
+      "maxVertexDeltaMm": 0.6420560155827296,
+      "cause": "original L-BFGS-B objective has max-of-sampled-curvature non-smoothness; finite-difference numerical path differs between native/WASM",
+      "changedOriginalSolver": false
+    },
+    {
+      "case": "R04 body-derived waist level vs R03 semantic waist plane",
+      "differenceMm": 13.2914157515303,
+      "status": "reported; not silently corrected"
+    },
+    {
+      "case": "Fitted upper/lower composition projected seam mismatch",
+      "differenceMm": 3.6060276331254073,
+      "status": "original value retained in per-seam warnings"
+    }
+  ],
+  "deployment": {
+    "status": "not-published",
+    "successfulRemoteBlobs": 0,
+    "productionChanged": false
+  }
+}
