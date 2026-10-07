@@ -78,7 +78,7 @@
 #driverGame .speed-display span{font-size:6px;color:#c4c8ae}
 #driverGame .speed-display p{position:absolute;bottom:-9px;left:-16px;width:94px;margin:0;text-align:center;font-size:7px;line-height:8px;color:#bfc4ac;white-space:nowrap}
 #driverGame .speed-display .power-dots{display:none}
-#driverGame .gauge-needle{position:absolute;top:9px;left:calc(50% - 1px);width:2px;height:21px;transform-origin:50% 100%;transform:rotate(var(--speed-angle,-118deg));background:#dbb660;border-radius:1px;z-index:1;pointer-events:none}
+#driverGame .gauge-needle{position:absolute;top:9px;left:calc(50% - 1px);width:2px;height:21px;transform-origin:50% 100%;transform:rotate(var(--speed-angle,-100deg));background:#dbb660;border-radius:1px;z-index:1;pointer-events:none}
 #driverGame .gauge-needle::after{content:"";position:absolute;bottom:-2px;left:-2px;width:6px;height:6px;background:#e3d1a1;border:1px solid #4b4b33;border-radius:50%}
 #driverGame .drive-buttons{gap:8px}
 #driverGame[data-layout=landscape] .drive-buttons{grid-column:2;grid-row:1;grid-template-columns:1fr 1fr 1.2fr}
@@ -125,8 +125,19 @@
 #driverGame[data-layout=portrait] .station-action::before{width:20px;height:25px}
 @media(max-width:359px) and (orientation:portrait){#driverGame[data-layout=portrait] .view-tools{left:42px;gap:2px}#driverGame[data-layout=portrait] .view-tools button{min-width:28px;max-width:29px;font-size:7px}#driverGame[data-layout=portrait] .quiet-button{width:27px;min-width:27px}#driverGame[data-layout=portrait] .masthead nav{gap:2px}#driverGame[data-layout=portrait] .route-hud{min-width:149px;width:149px;padding-left:7px;padding-right:38px}#driverGame[data-layout=portrait] .route-heading strong{font-size:28px}#driverGame[data-layout=portrait] .limit-sign{width:29px;height:29px;right:3px;line-height:25px}#driverGame[data-layout=portrait] .limit-sign b{font-size:18px}#driverGame[data-layout=portrait] .route-map{width:135px}#driverGame[data-layout=portrait] .route-map text{font-size:20px}}
 
-#driverGame .speed-display{background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2080%2080%22%20fill%3D%22none%22%20stroke%3D%22%23d6c9a0%22%20stroke-width%3D%221%22%3E%3Cpath%20d%3D%22M13.5%2053.1L9.1%2055.4%22%2F%3E%3Cpath%20d%3D%22M10.1%2041.3L5.1%2041.7%22%2F%3E%3Cpath%20d%3D%22M11.7%2029.1L6.9%2027.5%22%2F%3E%3Cpath%20d%3D%22M18.0%2018.6L14.3%2015.2%22%2F%3E%3Cpath%20d%3D%22M28.0%2011.5L26.0%206.9%22%2F%3E%3Cpath%20d%3D%22M40.0%209.0L40.0%204.0%22%2F%3E%3Cpath%20d%3D%22M52.0%2011.5L54.0%206.9%22%2F%3E%3Cpath%20d%3D%22M62.0%2018.6L65.7%2015.2%22%2F%3E%3Cpath%20d%3D%22M68.3%2029.1L73.1%2027.5%22%2F%3E%3Cpath%20d%3D%22M69.9%2041.3L74.9%2041.7%22%2F%3E%3Cpath%20d%3D%22M66.5%2053.1L70.9%2055.4%22%2F%3E%3Ctext%20x%3D%228%22%20y%3D%2260%22%20stroke%3D%22none%22%20fill%3D%22%23c2ba96%22%20font-family%3D%22serif%22%20font-size%3D%227%22%3E0%3C%2Ftext%3E%3Ctext%20x%3D%2261%22%20y%3D%2260%22%20stroke%3D%22none%22%20fill%3D%22%23c2ba96%22%20font-family%3D%22serif%22%20font-size%3D%227%22%3E80%3C%2Ftext%3E%3C%2Fsvg%3E");background-size:100% 100%;background-position:center;background-repeat:no-repeat}
+#driverGame .speed-display{background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2080%2080%22%20fill%3D%22none%22%20stroke%3D%22%23d6c9a0%22%20stroke-width%3D%221%22%3E%3Cpath%20d%3D%22M10.5%2044.2L5.5%2045.1%22%2F%3E%3Cpath%20d%3D%22M10.5%2033.8L5.5%2032.9%22%2F%3E%3Cpath%20d%3D%22M14.0%2024.0L9.7%2021.5%22%2F%3E%3Cpath%20d%3D%22M20.7%2016.0L17.5%2012.2%22%2F%3E%3Cpath%20d%3D%22M29.7%2010.8L28.0%206.1%22%2F%3E%3Cpath%20d%3D%22M40.0%209.0L40.0%204.0%22%2F%3E%3Cpath%20d%3D%22M50.3%2010.8L52.0%206.1%22%2F%3E%3Cpath%20d%3D%22M59.3%2016.0L62.5%2012.2%22%2F%3E%3Cpath%20d%3D%22M66.0%2024.0L70.3%2021.5%22%2F%3E%3Cpath%20d%3D%22M69.5%2033.8L74.5%2032.9%22%2F%3E%3Cpath%20d%3D%22M69.5%2044.2L74.5%2045.1%22%2F%3E%3C%2Fsvg%3E");background-size:100% 100%;background-position:center;background-repeat:no-repeat}
 
 #driverGame .view-tools{pointer-events:none}#driverGame .view-tools button{pointer-events:auto}
 #driverGame .screen .sheet{max-height:calc(100% - 16px);overflow:auto}
 @media(max-height:500px){.screen{padding:8px}.sheet{padding:16px 22px}.sheet>img{display:none}.sheet h2{font-size:23px;margin-bottom:8px}.sheet .intro{font-size:11px;margin-bottom:8px}.setup-row{margin:8px 0}.sheet .fine{margin:7px 0;font-size:9px}.sheet .primary{min-height:39px}.sheet .secondary{min-height:35px}}
+
+/* Keep optional instructions closed and the station schematic in the upper black gutter. */
+#driverGame[data-hints=false] .tutorial,#driverGame[data-hints=false] .route-caption{display:none!important}
+#driverGame .route-map{top:52px;width:148px}
+#driverGame .route-map>button{display:flex;justify-content:space-between;align-items:center;gap:6px;width:100%;border:0;border-bottom:1px solid #a59d7e33;background:transparent;min-height:22px;padding:5px 8px}
+#driverGame .route-map text{font-size:18px}
+#driverGame[data-layout=portrait] .route-map{top:53px;width:138px}
+#driverGame[data-layout=portrait] .route-map text{font-size:20px}
+@media(max-width:359px) and (orientation:portrait){#driverGame[data-layout=portrait] .route-map{width:135px}}
+
+#driverGame .speed-display>div{bottom:5px}#driverGame .speed-display strong{font-size:20px}#driverGame .speed-display span{font-size:5.5px}#driverGame[data-layout=portrait] .speed-display strong{font-size:17px}#driverGame[data-layout=portrait] .speed-display>div{bottom:4px}
