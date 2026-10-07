@@ -1,0 +1,78 @@
+name: Published neck repair diagnostic
+on:
+  push:
+    branches: [qa/unified-human-r01-20261006]
+    paths: ['.github/qa/neck-repair-20261007/**', '.github/workflows/unified-neck-repair-qa.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnostic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      MPLCONFIGDIR: /tmp/neck-mpl
+      XDG_CACHE_HOME: /tmp/neck-cache
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/qa/neck-repair-20261007
+          filter: blob:none
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Restore pinned public source and derive diagnostic states
+        working-directory: .github/qa/neck-repair-20261007
+        run: |
+          python -m pip install numpy==2.3.5 scipy==1.17.0 matplotlib==3.10.8
+          python recover.py
+          node fixtures.mjs
+          python build_probe.py
+          python analyze.py
+      - name: Install pinned browser runners
+        working-directory: .github/qa/neck-repair-20261007
+        run: |
+          npm install --no-save --ignore-scripts --package-lock=false playwright@1.57.0
+          npx playwright install --with-deps chromium webkit
+      - name: Serve diagnostic only
+        working-directory: .github/qa/neck-repair-20261007
+        run: python -m http.server 8765 > /tmp/neck-server.log 2>&1 &
+      - name: Actual Chromium geometry and skin views
+        working-directory: .github/qa/neck-repair-20261007
+        env:
+          NECK_BROWSER: chromium
+        run: node qa/browser.cjs
+      - name: Actual WebKit geometry and skin views
+        working-directory: .github/qa/neck-repair-20261007
+        env:
+          NECK_BROWSER: webkit
+        run: node qa/browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: neck-diagnostic-chromium
+          retention-days: 14
+          path: .github/qa/neck-repair-20261007/qa-output/chromium
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: neck-diagnostic-webkit
+          retention-days: 14
+          path: .github/qa/neck-repair-20261007/qa-output/webkit
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: neck-diagnostic-numeric
+          retention-days: 14
+          path: |
+            .github/qa/neck-repair-20261007/recovery-receipt.json
+            .github/qa/neck-repair-20261007/research/ablation-states.json
+            .github/qa/neck-repair-20261007/research/ablation-geometry.json
+            .github/qa/neck-repair-20261007/research/neck-probe-report.json
+            .github/qa/neck-repair-20261007/research/ablation-posterior-profile.png
+            /tmp/neck-server.log
