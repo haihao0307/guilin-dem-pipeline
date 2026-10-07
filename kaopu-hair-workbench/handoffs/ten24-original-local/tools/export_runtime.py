@@ -22,7 +22,7 @@ hair=bpy.data.objects.get('TEN24_R10_Hair')
 if hair:
  c=hair.evaluated_get(DG).data;points=np.empty(len(c.points)*3,np.float32);c.position_data.foreach_get('vector',points);r=np.empty(len(c.points),np.float32);c.attributes['radius'].data.foreach_get('value',r);offset=np.array([x.value for x in c.curve_offset_data],np.uint32)
  with (OUT/'groom.bin').open('wb')as f:f.write(points.tobytes());f.write(r.tobytes());f.write(offset.tobytes())
- groom={'file':'groom.bin','points':len(c.points),'curves':len(c.curves),'matrix':[list(row)for row in hair.matrix_world],'source':'Private R11 rebuilt from historical teacher retarget; finite-radius points/midpoints checked, not continuous spline collision'}
+ groom={'file':'groom.bin','sha256':hashlib.sha256((OUT/'groom.bin').read_bytes()).hexdigest(),'points':len(c.points),'curves':len(c.curves),'matrix':[list(row)for row in hair.matrix_world],'source':'Private R11 rebuilt from historical teacher retarget; finite-radius points/midpoints checked, not continuous spline collision'}
 else:groom=None
 meta={'schema':'kaopu-private-original-v1','sourceBlendSHA256':'7e069f5508aaaf53f8ea0ce560741b54b5ddbc2e90128141c6c94edd22bd54a9','geometry':'evaluated original subdivision 2, byte-exact tuple merge only, no decimation','blender':bpy.app.version_string,'meshes':records,'groom':groom,'redistribution':False,'appearance_equivalent':False}
 (OUT/'runtime.json').write_text(json.dumps(meta,indent=2))

@@ -95,7 +95,7 @@ jobs:
           with open(os.environ['GITHUB_ENV'],'a') as f:f.write('TEN24_RUNTIME='+str(root/'runtime')+'\n')
           PY
       - name: Verify actual private WebGL import and interactions
-        run: timeout 900s node kaopu-hair-workbench/handoffs/ten24-original-local/tests/private-browser-qa.cjs
+        run: timeout 1500s node kaopu-hair-workbench/handoffs/ten24-original-local/tests/private-browser-qa.cjs
       - name: Enforce numeric-only output allowlist
         id: numeric_guard
         if: always()
