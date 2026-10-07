@@ -1,0 +1,15 @@
+float t = 0;
+void setup() { size(400, 400); }
+void draw() {
+  t += 0.1;
+  background(6);
+  stroke(255);
+  for (int i = 0; i < 40000; i++) a(i % 400, i / 400);
+}
+void a(float x, float y) {
+  float k = x / 16 - 12.5;
+  float d = -5 * abs(sin(k / 3) * sin(y / 24));
+  float q = x / 4 - y / 3 + 60 + (sin(t) + d * 3 + 3) * k * sin(d * 3 + t + sin(d));
+  float c = d / 2 + t / 8;
+  point(q * 0.7 * cos(c) + 200, (q + y / 2 - d * 19) * 0.7 * sin(c) + 200);
+}
