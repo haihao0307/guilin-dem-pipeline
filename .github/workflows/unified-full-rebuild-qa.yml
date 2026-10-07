@@ -29,6 +29,8 @@ jobs:
         run: |
           node audit-teachers.mjs
           node tests/native-channels.mjs
+          node tests/cranial-binding.mjs
+          node tools/export_common_cases.mjs
           node build_coverage.mjs
       - name: Produce real neutral teacher geometry and pinned semantic-proposal runtime
         working-directory: .github/qa/unified-full-20261007
@@ -37,11 +39,33 @@ jobs:
           node tools/export_semantic_masks.mjs
           python restore_registration.py
           npm install --no-save --ignore-scripts --package-lock=false playwright@1.57.0
-          npx playwright install --with-deps chromium
+          npx playwright install --with-deps chromium webkit
           python -m http.server 8765 > /tmp/common-registration-server.log 2>&1 &
       - name: Render actual teachers and capture landmark-to-triangle evidence
         working-directory: .github/qa/unified-full-20261007
         run: node qa/registration.cjs
+      - name: Real common-model Chromium native controls and profiles
+        working-directory: .github/qa/unified-full-20261007
+        env:
+          NATIVE_BROWSER: chromium
+        run: node qa/common-native.cjs
+      - name: Real common-model WebKit native controls and profiles
+        working-directory: .github/qa/unified-full-20261007
+        env:
+          NATIVE_BROWSER: webkit
+        run: node qa/common-native.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unified-full-native-chromium
+          retention-days: 21
+          path: .github/qa/unified-full-20261007/qa-output/native-chromium
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unified-full-native-webkit
+          retention-days: 21
+          path: .github/qa/unified-full-20261007/qa-output/native-webkit
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -62,3 +86,4 @@ jobs:
             .github/qa/unified-full-20261007/COVERAGE.json
             .github/qa/unified-full-20261007/research/teacher-audit.json
             .github/qa/unified-full-20261007/research/native-channel-report.json
+            .github/qa/unified-full-20261007/research/cranial-binding-report.json

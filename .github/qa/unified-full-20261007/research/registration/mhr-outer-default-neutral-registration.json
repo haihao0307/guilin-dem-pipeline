@@ -1,0 +1,83 @@
+{
+  "target": "mhr",
+  "algorithm": "trimesh5.1.1 nricp_sumner, Sumner/Popovic2004 correspondence",
+  "source": "GNM outer; preserved cavities are not forced to match the teacher surface",
+  "targetMask": "largest connected component above a recorded head/neck cut; eye/tongue components excluded when disconnected",
+  "landmarkKind": "actual surface-ray triangle barycentrics on both teachers",
+  "landmarks": 456,
+  "landmarkMM": {
+    "median": 0.15034188697359877,
+    "p95": 0.6459276658946396,
+    "max": 2.7938807210592844
+  },
+  "closestSurfaceMM": {
+    "median": 0.1800707868902315,
+    "p95": 1.6408456127361994,
+    "max": 8.256970525812159
+  },
+  "areaRatio": {
+    "min": 0.14650508973734927,
+    "p01": 0.31716777189318957,
+    "max": 1.8905425931861037
+  },
+  "faceNormalsOppositeInitial": 0,
+  "sourceToTargetMatrix": [
+    [
+      0.9963349496995181,
+      -0.0005339436722051567,
+      -0.0007268487215318594,
+      0.0002706598686687841
+    ],
+    [
+      0.0005522290947795757,
+      0.9960139116549049,
+      0.025300755533606927,
+      -0.014687625608160101
+    ],
+    [
+      0.0007130553526615319,
+      -0.025301148031253117,
+      0.9960137995319217,
+      1.3217523549151782
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "steps": [
+    [
+      1,
+      0.001,
+      1,
+      1000,
+      0
+    ],
+    [
+      1,
+      0.001,
+      1,
+      1000,
+      0
+    ],
+    [
+      10,
+      0.001,
+      1,
+      1000,
+      0
+    ],
+    [
+      100,
+      0.001,
+      1,
+      1000,
+      0
+    ]
+  ],
+  "elapsedSeconds": 16.900700092315674,
+  "semanticQualityPassed": false,
+  "reason": "Candidate correspondence requires eye/lip/ear visual and topology review; proximity alone does not certify correctness"
+}
