@@ -1,4 +1,4 @@
-name: Storm Orb R01 public QA
+name: Storm rebuild static geometry checkpoint
 on:
   pull_request:
     branches: [gh-pages]
@@ -14,7 +14,7 @@ jobs:
   storm-browser:
     if: github.head_ref == 'qa/voxel-train-r01-20261006'
     runs-on: ubuntu-24.04
-    timeout-minutes: 18
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -25,29 +25,26 @@ jobs:
         run: |
           node --check kaopu-minigame-workbench/storm-orb-study/app.mjs
           node --check kaopu-minigame-workbench/storm-orb-study/scene.mjs
-          node kaopu-minigame-workbench/storm-orb-study/tests/geometry.mjs
       - name: Install official browser test dependency
         run: |
           npm install --prefix "$RUNNER_TEMP/storm-test" --no-save --ignore-scripts playwright@1.57.0
           "$RUNNER_TEMP/storm-test/node_modules/.bin/playwright" install --with-deps chromium webkit
-      - name: Capture real WebGL phases and test controls
+      - name: Capture static reconstruction for human review
         env:
-          STORM_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/storm-orb-study/?release=e3793211b40ec76a456b2735a0158dc970cab0aa
           NODE_PATH: ${{ runner.temp }}/storm-test/node_modules
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/storm-server.log" 2>&1 &
           server=$!
           trap 'kill "$server" 2>/dev/null || true' EXIT
           sleep 2
-          STORM_QA_DIR=storm-chromium timeout 360s node kaopu-minigame-workbench/storm-orb-study/tests/browser.cjs
-          STORM_BROWSER=webkit STORM_QA_DIR=storm-webkit timeout 360s node kaopu-minigame-workbench/storm-orb-study/tests/browser.cjs
-      - name: Upload visual evidence
+          timeout 300s node kaopu-minigame-workbench/storm-orb-study/tests/rebuild-checkpoint.cjs
+          STORM_BROWSER=webkit timeout 300s node kaopu-minigame-workbench/storm-orb-study/tests/rebuild-checkpoint.cjs
+      - name: Upload checkpoint evidence not visual approval
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: storm-orb-r01-public-evidence
+          name: storm-rebuild-static-evidence
           retention-days: 7
-          if-no-files-found: warn
           path: |
-            storm-chromium/*
-            storm-webkit/*
+            rebuild-chromium/*
+            rebuild-webkit/*
