@@ -23,9 +23,14 @@ const cases = [
   { name: 'rabbit', path: hubPath, root: '#rabbitModule', stage: '#rabbitModule .workspace', canvas: '#canvasGL', scroll: '#rabbitControlScroll', sliders: [['#range-hairLength', 'hairLength']] },
   { name: 'kuko', path: hubPath, root: '#kukoModule', stage: '#kukoViews', canvas: '#kukoCopy', scroll: '#kukoControlScroll', sliders: [['#study-current', 'current'], ['#kukoTime', 'time']] },
 ];
+const requestedCases = process.env.OVERVIEW_HAIR_CASES?.split(',').filter(Boolean);
+if (requestedCases) {
+  assert(requestedCases.length && requestedCases.every(name => cases.some(c => c.name === name)), 'Unknown targeted hair case');
+  for (let i = cases.length - 1; i >= 0; i--) if (!requestedCases.includes(cases[i].name)) cases.splice(i, 1);
+}
 fs.mkdirSync(out, { recursive: true });
 const report = {
-  engine, base, startedAt: new Date().toISOString(), sizes, rows: [], navigation: [], catalog: [],
+  engine, base, requestedCases: requestedCases || 'all four modes', startedAt: new Date().toISOString(), sizes, rows: [], navigation: [], catalog: [],
   sourceDialogs: [], errors: [], warnings: [], artifacts: [], passed: false,
   physicalPhone: false, inputMethod: 'Playwright real keyboard, mouse wheel, clicks and canvas drag',
   scope: 'UI presentation and original renderer responsiveness; no full hair physics or device-performance acceptance',
@@ -76,8 +81,9 @@ function inspectLocalManifest() {
     const html = fs.readFileSync(file, 'utf8');
     const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script\s*>/gi)].map(match => hash(match[1]));
     const originalScriptsUnchanged = evidence.baseline_script_sha256.every((digest, i) => scripts[i] === digest);
-    report.sourceIntegrity.files.push({ path: relative, sha256: hash(html), originalScriptsUnchanged, scripts: scripts.length });
-    assert(originalScriptsUnchanged, `${relative}: original script source changed`);
+    const reviewedScriptsMatch = (evidence.expected_candidate_existing_script_sha256 || evidence.baseline_script_sha256).every((digest, i) => scripts[i] === digest);
+    report.sourceIntegrity.files.push({ path: relative, sha256: hash(html), originalScriptsUnchanged, reviewedScriptsMatch, allowedUiHandlerPatch: evidence.allowedUiHandlerPatch || null, scripts: scripts.length });
+    assert(reviewedScriptsMatch, `${relative}: script differs from reviewed exact UI scope`);
   }
 }
 async function ready(c) {

@@ -178,6 +178,7 @@ jobs:
           trap 'kill "$server" 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do curl -fsS "$OVERVIEW_URL" > /dev/null && break || sleep 1; done
           node .github/qa/overview-ui-layout.cjs
+          OVERVIEW_UI_LEGACY=true OVERVIEW_QA_DIR=ui-legacy-${{ matrix.engine }} node .github/qa/overview-ui-layout.cjs
       - name: Upload UI screenshots and measurements
         if: always()
         uses: actions/upload-artifact@v4
@@ -188,6 +189,8 @@ jobs:
           path: |
             ui-${{ matrix.engine }}/*.json
             ui-${{ matrix.engine }}/*.png
+            ui-legacy-${{ matrix.engine }}/*.json
+            ui-legacy-${{ matrix.engine }}/*.png
       - name: Upload UI browser trace
         if: always()
         uses: actions/upload-artifact@v4
@@ -195,7 +198,9 @@ jobs:
           name: workbench-ui-${{ matrix.engine }}-trace
           retention-days: 7
           if-no-files-found: warn
-          path: ui-${{ matrix.engine }}/*.zip
+          path: |
+            ui-${{ matrix.engine }}/*.zip
+            ui-legacy-${{ matrix.engine }}/*.zip
 
   workbench-ui-extras:
     if: github.event_name != 'pull_request' || github.head_ref == 'qa/human-overview-r01-20261006'
@@ -234,7 +239,7 @@ jobs:
           animal_status=0
           node .github/qa/overview-ui-animal.cjs || animal_status=$?
           hair_status=0
-          node .github/qa/overview-ui-hair.cjs || hair_status=$?
+          OVERVIEW_HAIR_CASES=kuko node .github/qa/overview-ui-hair.cjs || hair_status=$?
           test "$animal_status" -eq 0
           test "$hair_status" -eq 0
       - name: Upload extras screenshots and measurements

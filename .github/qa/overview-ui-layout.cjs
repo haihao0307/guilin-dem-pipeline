@@ -3,6 +3,7 @@ const {chromium,webkit}=require('playwright');
 const engine=process.env.OVERVIEW_BROWSER||'chromium',base=process.env.OVERVIEW_URL||'http://127.0.0.1:8765/kaopu-human-overview/',out=process.env.OVERVIEW_QA_DIR||'ui-evidence';fs.mkdirSync(out,{recursive:true});
 const sizes=[{name:'wide',width:2048,height:1040},{name:'desktop',width:1440,height:900},{name:'phone',width:390,height:844},{name:'landscape',width:844,height:390}];
 const cases=[{name:'anny',path:'../kaopu-anny-workbench/r02/',api:'annyWorkbench',control:'#p-weight',stage:'#stage',view:'[data-view="front"]'},{name:'face',path:'../kaopu-face-workbench/?release=r02-41d46766#edit',api:'faceWorkbench',control:'#coefficient',stage:'#stage',view:'[data-view="front"]'},{name:'mhr',path:'../kaopu-mhr-workbench/',api:'mhrWorkbench',control:'#sliders input[type=range]',stage:'#viewport',view:'[data-view="front"]'},{name:'common',path:'../kaopu-unified-human-workbench/',api:'unifiedWorkbench',control:'#weight',stage:'#stage',view:'[data-view="front"]'},{name:'skin',path:'../kaopu-skin-workbench/',api:'unifiedWorkbench',control:'#skin-tone',stage:'#stage',view:'[data-view="face"]'}];
+if(process.env.OVERVIEW_UI_LEGACY==='true'){cases.splice(0,cases.length,{name:'anny-legacy',path:'../kaopu-anny-workbench/',api:'annyWorkbench',control:'#p-weight',stage:'#stage',view:'[data-view="front"]'},{name:'face-legacy',path:'../kaopu-face-workbench/r01.html#edit',api:'faceWorkbench',control:'#coefficient',stage:'#stage',view:'[data-view="front"]'},{name:'hair-r9-header',path:'../kaopu-hair-workbench/qa/gnm-groom-editor/experiment.html',api:'groomStudy',control:'#hairLength',stage:'#stage',view:'[data-view="front"]'});sizes.splice(0,1);sizes.splice(2,1);}
 let browser,ctx,page;const report={engine,base,sizes,rows:[],warnings:[],errors:[],passed:false,physicalPhone:false,rendererMathChanged:false};
 function save(){fs.writeFileSync(`${out}/ui-layout-${engine}.json`,JSON.stringify(report,null,2))}
 (async()=>{
@@ -11,11 +12,11 @@ function save(){fs.writeFileSync(`${out}/ui-layout-${engine}.json`,JSON.stringif
  for(const c of cases){
   console.log('UI_START',engine,c.name);await page.setViewportSize(sizes[0]);await page.goto(new URL(c.path,base).href,{waitUntil:'domcontentloaded',timeout:60000});
   await page.waitForFunction(c=>{const api=window[c.api],d=api?.diagnostics?.();return d?.ready&&!d.lost&&!d.busy&&(c.name!=='mhr'||window.__MHR__?.ready&&window.__MHR__.result?.id===d.revision)},c,{timeout:180000});
-  if(c.name==='face')await page.locator('#parameters').evaluate(e=>e.closest('details').open=true);
+  if(c.name.startsWith('face'))await page.locator('#parameters').evaluate(e=>e.closest('details').open=true);
   for(const size of sizes){
    await page.setViewportSize(size);await page.waitForTimeout(150);await page.locator(c.view).first().click();await page.waitForTimeout(150);
    const control=page.locator(c.control).first();await control.scrollIntoViewIfNeeded();await control.focus();
-   const before=await control.inputValue();await control.press('ArrowRight');await page.waitForTimeout(200);const after=await control.inputValue();assert.notEqual(before,after,c.name+' real control change');
+   const before=await control.inputValue();const direction=await control.evaluate(e=>Number(e.value)+(Number(e.step)||1)<=Number(e.max)?'ArrowRight':'ArrowLeft');await control.press(direction);await page.waitForTimeout(200);const after=await control.inputValue();assert.notEqual(before,after,c.name+' real control change');
    await page.waitForFunction(c=>{const d=window[c.api]?.diagnostics();return d?.ready&&!d.busy&&(c.name!=='mhr'||window.__MHR__.result?.id===d.revision)},c,{timeout:30000});
    const proof=await page.evaluate(({c,size})=>{
     const box=s=>{const r=document.querySelector(s).getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom,right:r.right}};
@@ -29,7 +30,7 @@ function save(){fs.writeFileSync(`${out}/ui-layout-${engine}.json`,JSON.stringif
    if(size.name==='phone'){
     await page.locator('[data-wb-toggle]').click();await page.waitForTimeout(100);const collapsed=await page.locator(c.stage).boundingBox();assert(collapsed.height>proof.stage.height+80,c.name+' collapsed sheet expands stage');assert.equal(await page.locator('[data-wb-toggle]').getAttribute('aria-expanded'),'false');await page.screenshot({path:`${out}/${c.name}-phone-collapsed-${engine}.png`});await page.locator('[data-wb-toggle]').click();
    }
-   await control.press('ArrowLeft');
+   await control.press(direction==='ArrowRight'?'ArrowLeft':'ArrowRight');
   }
   await page.locator('[data-wb-back]').click();await page.waitForURL(base,{waitUntil:'domcontentloaded'});assert.equal(ctx.pages().length,1);await page.goBack({waitUntil:'domcontentloaded'});await page.waitForFunction(api=>window[api]?.diagnostics?.().ready,c.api,{timeout:180000});await page.locator('[data-wb-back]').click();await page.waitForURL(base,{waitUntil:'domcontentloaded'});console.log('UI_PASS',engine,c.name);
  }
