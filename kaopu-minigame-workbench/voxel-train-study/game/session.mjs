@@ -1,8 +1,9 @@
+import {kcrRoute,scheduleView,clockRate} from './timetable.mjs';
 // Deterministic, renderer-independent authority for the local single-player game.
 export const TICK_HZ=30, DT=1/TICK_HZ, FRONT_X=5;
 export const COACHES=Object.freeze([{id:'coach-1',x:-11.1,length:6.2,frontDoor:-8.7,rearDoor:-13.5},{id:'coach-2',x:-18,length:6.2,frontDoor:-15.6,rearDoor:-20.4}]);
 export const SEATS=Object.freeze(COACHES.flatMap((car,ci)=>[-1.5,-.5,.5,1.5].flatMap((x,row)=>[-.62,.62].map((z,side)=>({id:ci*8+row*2+side,coach:ci,position:[car.x+x,1.04,z]})))));
-export const ROLE_COMMANDS=Object.freeze({driver:['start','throttle-up','throttle-down','brake','station-action','recover','pause'],passenger:['request-stop','wave']});
+export const ROLE_COMMANDS=Object.freeze({driver:['start','throttle-up','throttle-down','brake','station-action','recover','pause','whistle','finish'],passenger:['request-stop','wave']});
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
 export function seedNumber(value){let s=2166136261;for(const c of String(value)){s^=c.charCodeAt(0);s=Math.imul(s,16777619);}return s>>>0;}
@@ -11,9 +12,9 @@ const NAMES=['杉林','石桥','河湾','松溪','麦田','白鹭','青丘','榆
 function route(seed,count=6){const r=new Random(seedNumber(seed)),list=[];let at=72;for(let i=0;i<count;i++){const level=Math.min(4,Math.floor(i/4));if(i)at+=170+r.next()*95-level*8;list.push({index:i,name:NAMES[i%NAMES.length]+'站',target:at,level,limit:[54,50,45,42,38][level],wet:i>2&&r.next()<.30,waiting:Math.min(7,2+Math.floor(r.next()*4)+Math.floor(level/2)),radius:Math.max(2.2,2.8-level*.12),peopleSeed:Math.floor(r.next()*0xffffffff)} );}if(count===6)list[count-1].waiting=0;return list;}
 function makePath(points,kind,delay=0){return{points:points.map(p=>p.slice()),segment:0,progress:0,kind,delay};}
 export class Session{
-  constructor({seed='LAOSIJi-2026',durationMinutes=10,routeCount=6}={}){
-    this.config={seed:String(seed),routeCount:Number(routeCount)===180?180:6,durationMinutes:[10,15,20].includes(Number(durationMinutes))?Number(durationMinutes):10};
-    this.route=route(this.config.seed,this.config.routeCount);this.tick=0;this.elapsed=0;this.accumulator=0;this.distance=0;this.velocity=0;this.throttle=0;this.brake=false;this.paused=false;this.started=false;this.finishing=false;
+  constructor({seed='LAOSIJi-2026',durationMinutes=10,routeCount=6,line='legacy'}={}){
+    this.config={line:line==='kcr1'?'kcr1':'legacy',seed:String(seed),routeCount:Number(routeCount)===180?180:6,durationMinutes:[10,15,20].includes(Number(durationMinutes))?Number(durationMinutes):10};
+    this.route=this.config.line==='kcr1'?kcrRoute(seedNumber(this.config.seed)):route(this.config.seed,this.config.routeCount);if(this.config.line==='kcr1')this.config.routeCount=9;this.scheduleMinutes=380;this.timeRate=1.5;this.tick=0;this.elapsed=0;this.accumulator=0;this.distance=0;this.velocity=0;this.throttle=0;this.brake=false;this.paused=false;this.started=false;this.finishing=false;
     this.phase='ready';this.phaseTime=0;this.door=0;this.stopStable=0;this.reverse=false;this.stationIndex=0;this.actors=[];this.rocks=[];this.events=[];this.eventId=0;this.sequence=0;this.inputLog=[];this.nextRockId=0;
     this.stats={score:0,pickedUp:0,delivered:0,lateDropOff:0,stops:0,missed:0,recovered:0,stoneHits:0,combo:0,bestCombo:0,satisfaction:85,accuracyTotal:0};
     this.station=null;this.stationStates=new Map();this.activateStation(0);
@@ -37,6 +38,7 @@ export class Session{
     if(type==='pause'){if(this.started&&this.phase!=='summary')this.paused=value===null?!this.paused:!!value;return{accepted:true};}
     if(type==='start'){if(!this.started){this.started=true;this.phase='running';this.emit('start');}return{accepted:true};}
     if(!this.started||this.paused||this.phase==='summary')return{accepted:false,reason:'inactive'};
+    if(type==='whistle'){this.emit('whistle');return{accepted:true};}if(type==='finish'){if(this.serviceLocked()&&this.phase!=='ready-depart')return{accepted:false,reason:'passengers-moving'};this.finish();return{accepted:true};}
     if(type==='brake'){this.brake=!!value;if(this.brake){this.throttle=0;this.reverse=false;}return{accepted:true};}
     if(type==='station-action'){return this.stationAction();}
     if(type==='recover'){if(this.canRecover()){this.reverse=true;this.throttle=0;this.brake=false;this.emit('recovering');return{accepted:true};}return{accepted:false,reason:'stop-before-reverse'};}
@@ -50,10 +52,10 @@ export class Session{
   platformCoversDoors(){const min=this.station.target-31,max=this.station.target-7;return COACHES.every(c=>[c.frontDoor,c.rearDoor].every(x=>{const world=this.distance+x-FRONT_X;return world>=min+.22&&world<=max-.22;}));}
   canOpen(){return!!this.station&&!this.station.completed&&Math.abs(this.velocity)<.35&&this.stopStable>=.8&&Math.abs(this.station.target-this.distance)<=7&&this.platformCoversDoors();}
   stationAction(){
-    if(this.phase==='ready-depart'){this.phase='doors-closing';this.phaseTime=0;this.emit('doors-closing');return{accepted:true};}
+    if(this.phase==='ready-depart'){if(this.config.line==='kcr1'&&this.station.dwellSeconds&&this.elapsed-this.station.openedAt<this.station.dwellSeconds)return{accepted:false,reason:'scheduled-dwell'};this.phase='doors-closing';this.phaseTime=0;this.emit('doors-closing');return{accepted:true};}
     if(this.serviceLocked())return{accepted:false,reason:'passengers-moving'};
     if(!this.canOpen())return{accepted:false,reason:'not-stopped-at-platform'};
-    const s=this.station;s.opened=true;s.walkStop=Math.abs(s.target-this.distance)>s.radius;if(s.missed){s.recovered=true;this.stats.recovered++;this.stats.satisfaction=clamp(this.stats.satisfaction+3,0,100);}if(s.walkStop)this.stats.satisfaction=clamp(this.stats.satisfaction-2,0,100);
+    const s=this.station;s.opened=true;s.openedAt=this.elapsed;s.walkStop=Math.abs(s.target-this.distance)>s.radius;if(s.missed){s.recovered=true;this.stats.recovered++;this.stats.satisfaction=clamp(this.stats.satisfaction+3,0,100);}if(s.walkStop)this.stats.satisfaction=clamp(this.stats.satisfaction-2,0,100);
     this.velocity=0;this.throttle=0;this.brake=false;this.reverse=false;this.phase='doors-opening';this.phaseTime=0;
     for(const a of this.actors)if(a.station===s.index&&a.kind==='angry'){a.kind='waiting';a.pose='idle';}
     this.emit('doors-opening',{offset:s.target-this.distance,walkStop:s.walkStop,recovered:s.recovered});return{accepted:true};
@@ -61,8 +63,8 @@ export class Session{
   advance(seconds){if(!this.started||this.paused||this.phase==='summary')return;this.accumulator+=clamp(seconds,0,2);while(this.accumulator+1e-9>=DT&&!this.paused&&this.phase!=='summary'){this.accumulator=Math.max(0,this.accumulator-DT);this.step();}}
   stepTicks(count){for(let i=0;i<count;i++){if(!this.started||this.paused||this.phase==='summary')break;this.step();}}
   step(){
-    this.tick++;this.elapsed+=DT;this.phaseTime+=DT;
-    if(this.elapsed>=this.config.durationMinutes*60)this.finishing=true;
+    this.tick++;this.elapsed+=DT;this.phaseTime+=DT;if(this.config.line==='kcr1'){this.timeRate=clockRate(this);this.scheduleMinutes+=DT*this.timeRate/60;}
+    if(this.config.line!=='kcr1'&&this.elapsed>=this.config.durationMinutes*60)this.finishing=true;
     const s=this.station;
     if(!this.serviceLocked()){
       const old=this.velocity,braking=this.finishing||this.brake;
@@ -132,8 +134,9 @@ export class Session{
     this.rocks=this.rocks.filter(r=>(r.hit||r.landed)?r.age<.55:r.age<3);
   }
   finish(){if(this.phase==='summary')return;this.phase='summary';this.velocity=0;this.throttle=0;this.brake=false;this.reverse=false;this.emit('session-finished',{score:this.stats.score});}
-  view(){const s=this.station,remaining=s.target-this.distance,standard=this.canOpen()&&Math.abs(remaining)<=s.radius;return{version:1,tick:this.tick,seed:this.config.seed,elapsed:this.elapsed,duration:this.config.durationMinutes*60,remainingTime:Math.max(0,this.config.durationMinutes*60-this.elapsed),phase:this.phase,paused:this.paused,started:this.started,finishing:this.finishing,distance:this.distance,velocity:this.velocity,speedKmh:Math.abs(this.velocity)*3.6,throttle:this.throttle,brake:this.brake,reverse:this.reverse,door:this.door,station:{...s,remaining,canOpen:this.canOpen(),standard,canRecover:this.canRecover(),platformCoverage:this.platformCoversDoors()},brakingDistance:this.velocity*this.velocity/(2*(s.wet?2.40:3.10))+Math.abs(this.velocity)*.4,onboard:this.actors.filter(a=>a.kind==='seated').length,actors:this.actors,rocks:this.rocks,routeCount:this.route.length,routeStartDistance:this.route[Math.floor(this.stationIndex/6)*6-1]?.target??0,routeStations:this.route.slice(Math.floor(this.stationIndex/6)*6,Math.floor(this.stationIndex/6)*6+6).map(p=>({index:p.index,name:p.name,target:p.target,completed:!!this.stationStates.get(p.index)?.completed,missed:!!this.stationStates.get(p.index)?.missed,recovered:!!this.stationStates.get(p.index)?.recovered,current:p.index===this.stationIndex})),nearbyStations:this.route.filter(p=>p.target-this.distance>-65&&p.target-this.distance<65).map(p=>({...p,...this.stationStates.get(p.index)})),stats:{...this.stats},events:this.events};}
+  view(){const s=this.station,timetable=this.config.line==='kcr1'?scheduleView(this):null,remaining=s.target-this.distance,standard=this.canOpen()&&Math.abs(remaining)<=s.radius;return{version:1,line:this.config.line,timetable,tick:this.tick,seed:this.config.seed,elapsed:this.elapsed,duration:this.config.durationMinutes*60,remainingTime:Math.max(0,this.config.durationMinutes*60-this.elapsed),phase:this.phase,paused:this.paused,started:this.started,finishing:this.finishing,distance:this.distance,velocity:this.velocity,speedKmh:Math.abs(this.velocity)*3.6,throttle:this.throttle,brake:this.brake,reverse:this.reverse,door:this.door,station:{...s,remaining,canOpen:this.canOpen(),standard,canRecover:this.canRecover(),platformCoverage:this.platformCoversDoors()},brakingDistance:this.velocity*this.velocity/(2*(s.wet?2.40:3.10))+Math.abs(this.velocity)*.4,onboard:this.actors.filter(a=>a.kind==='seated').length,actors:this.actors,rocks:this.rocks,routeCount:this.route.length,routeStartDistance:this.config.line==='kcr1'?0:this.route[Math.floor(this.stationIndex/6)*6-1]?.target??0,routeStations:(this.config.line==='kcr1'?this.route:this.route.slice(Math.floor(this.stationIndex/6)*6,Math.floor(this.stationIndex/6)*6+6)).map(p=>({index:p.index,name:p.name,english:p.english,arrival:p.arrival,departure:p.departure,target:p.target,completed:!!this.stationStates.get(p.index)?.completed,missed:!!this.stationStates.get(p.index)?.missed,recovered:!!this.stationStates.get(p.index)?.recovered,current:p.index===this.stationIndex})),nearbyStations:this.route.filter(p=>p.target-this.distance>-65&&p.target-this.distance<65).map(p=>({...p,...this.stationStates.get(p.index)})),stats:{...this.stats},events:this.events};}
   replayPacket(){return{version:1,config:{...this.config},ticks:this.tick,inputs:this.inputLog.map(x=>({...x}))};}
   signature(){return JSON.stringify({tick:this.tick,distance:+this.distance.toFixed(6),velocity:+this.velocity.toFixed(6),phase:this.phase,station:this.stationIndex,stats:this.stats,actors:this.actors.map(a=>({id:a.id,kind:a.kind,seat:a.seatId,position:a.position.map(v=>+v.toFixed(6))}))});}
 }
 export function replay(packet){const game=new Session({...packet.config,routeCount:packet.config.routeCount??180}),inputs=packet.inputs.slice().sort((a,b)=>a.tick-b.tick||a.sequence-b.sequence);let i=0;while(game.tick<packet.ticks){while(i<inputs.length&&inputs[i].tick===game.tick)game.apply(inputs[i++]);if(!game.started||game.paused)throw new Error('Replay is paused before its final tick');game.step();}while(i<inputs.length&&inputs[i].tick===game.tick)game.apply(inputs[i++]);game.inputLog=inputs.map(x=>({...x}));game.sequence=inputs.reduce((n,x)=>Math.max(n,x.sequence),0);return game;}
+

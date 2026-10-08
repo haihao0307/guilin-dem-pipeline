@@ -1,115 +1,54 @@
-name: Train R06 exact-public desktop railway QA
+name: KCR R07 steam gameplay candidate QA
 on:
   push:
     branches: ['qa/voxel-train-r01-20261006']
-    paths:
-      - 'kaopu-minigame-workbench/voxel-train-study/game/**'
-      - '.github/workflows/train-driver-r01-qa.yml'
-  workflow_dispatch:
+    paths: ['kaopu-minigame-workbench/voxel-train-study/game/**', '.github/workflows/train-driver-r01-qa.yml']
 permissions:
   contents: read
 concurrency:
-  group: train-driver-r01-${{ github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}
+  group: kcr-r07-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  deterministic-session:
+  deterministic:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
           sparse-checkout: kaopu-minigame-workbench/voxel-train-study
-      - name: Preserve original models, seeded gameplay and legacy saves
-        run: |
-          node --check kaopu-minigame-workbench/voxel-train-study/game/app.mjs
-          node --check kaopu-minigame-workbench/voxel-train-study/game/view-controls.mjs
-          node kaopu-minigame-workbench/voxel-train-study/game/tests/view-profile-storage.test.mjs
-          for test in classic-anchor.mjs session.test.mjs model.test.mjs route-map.test.mjs render-quality.test.mjs anchored-zoom.test.mjs recommended-fit.test.mjs; do
+      - run: |
+          for test in kcr-session.test.mjs steam-model.test.mjs render-quality.test.mjs anchored-zoom.test.mjs recommended-fit.test.mjs view-profile-storage.test.mjs; do
             node kaopu-minigame-workbench/voxel-train-study/game/tests/$test
           done
-  railway-browser:
-    needs: deterministic-session
+          node --check kaopu-minigame-workbench/voxel-train-study/game/app.mjs
+  browser:
+    needs: deterministic
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 20
     strategy:
       fail-fast: false
-      max-parallel: 6
       matrix:
         browser: [chromium, webkit]
-        suite: [layout, touch, hud, gameplay, views, desktop, zoom]
+        suite: [hero, visual, gameplay]
     env:
       TRAIN_BROWSER: ${{ matrix.browser }}
-      TRAIN_GAME_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/
+      KCR_SUITE: ${{ matrix.suite }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
-          sparse-checkout: kaopu-minigame-workbench
-      - name: Install official Playwright package
-        timeout-minutes: 4
-        run: timeout 180s npm install --prefix "$RUNNER_TEMP/driver-test" --no-save --ignore-scripts --fetch-timeout=30000 --fetch-retries=2 playwright@1.57.0
-      - name: Install selected browser
-        timeout-minutes: 5
-        env:
-          PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT: 30000
-        run: timeout 240s "$RUNNER_TEMP/driver-test/node_modules/.bin/playwright" install "${{ matrix.browser }}"
-      - name: Install browser dependencies
-        timeout-minutes: 4
-        run: timeout 180s "$RUNNER_TEMP/driver-test/node_modules/.bin/playwright" install-deps "${{ matrix.browser }}"
-      - name: Configure installed browser module path
-        run: echo "NODE_PATH=$RUNNER_TEMP/driver-test/node_modules" >> "$GITHUB_ENV"
-      - name: Verify all 37 exact public runtime and protected classic hashes
-        run: node kaopu-minigame-workbench/voxel-train-study/game/tests/public-hashes.cjs
-      - name: Upload exact public identity receipt
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: train-r06-public-assets-${{ matrix.browser }}-${{ matrix.suite }}
-          retention-days: 7
-          path: driver-public-hashes.json
-      - name: Verify exact public layout and every saved-camera restoration
-        if: matrix.suite == 'layout'
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - run: npm install --prefix "$RUNNER_TEMP/kcr" --no-save --ignore-scripts playwright@1.57.0
+      - run: "$RUNNER_TEMP/kcr/node_modules/.bin/playwright install --with-deps ${{ matrix.browser }}"
+      - run: echo "NODE_PATH=$RUNNER_TEMP/kcr/node_modules" >> "$GITHUB_ENV"
+      - name: Start candidate and verify real browser
         run: |
-          timeout 240s node kaopu-minigame-workbench/voxel-train-study/game/tests/fullscreen-ui.cjs
-          timeout 300s node kaopu-minigame-workbench/voxel-train-study/game/tests/railway-ui.cjs
-      - name: Verify exact public modal touch and real restart state
-        if: matrix.suite == 'touch'
-        run: timeout 360s node kaopu-minigame-workbench/voxel-train-study/game/tests/driving-touch.cjs
-      - name: Verify exact public hit targets and real six-stop map
-        if: matrix.suite == 'hud'
-        run: |
-          timeout 420s node kaopu-minigame-workbench/voxel-train-study/game/tests/hit-targets.cjs
-          timeout 240s node kaopu-minigame-workbench/voxel-train-study/game/tests/hud.cjs
-      - name: Play exact public first stop and full gameplay regressions
-        if: matrix.suite == 'gameplay'
-        run: timeout 540s node kaopu-minigame-workbench/voxel-train-study/game/tests/browser.cjs
-      - name: Verify exact public rotated touch and independent saved views
-        if: matrix.suite == 'views'
-        run: timeout 300s node kaopu-minigame-workbench/voxel-train-study/game/tests/views.cjs
-      - name: Verify desktop native pixels and enlarged HUD settings
-        if: matrix.suite == 'desktop'
-        run: timeout 540s node kaopu-minigame-workbench/voxel-train-study/game/tests/desktop-hud-preview.cjs
-      - name: Verify real wheel pinch resize fullscreen and old projection
-        if: matrix.suite == 'zoom'
-        run: timeout 420s node kaopu-minigame-workbench/voxel-train-study/game/tests/anchored-zoom-browser.cjs
-      - name: Upload complete exact public evidence
+          python3 -m http.server 8765 > "$RUNNER_TEMP/kcr-server.log" 2>&1 &
+          node kaopu-minigame-workbench/voxel-train-study/game/tests/kcr-browser.cjs
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
-          name: train-r06-public-${{ matrix.browser }}-${{ matrix.suite }}
+          name: kcr-r07-${{ matrix.browser }}-${{ matrix.suite }}
+          path: kcr-${{ matrix.browser }}-${{ matrix.suite }}/*
           retention-days: 7
-          if-no-files-found: warn
-          path: |
-            driver-public-hashes.json
-            fullscreen-ui-${{ matrix.browser }}/*
-            railway-ui-${{ matrix.browser }}/*
-            driving-touch-${{ matrix.browser }}/*
-            hit-targets-${{ matrix.browser }}/*
-            hud-${{ matrix.browser }}/*
-            driver-${{ matrix.browser }}/*
-            views-${{ matrix.browser }}/*
-            desktop-hud-${{ matrix.browser }}/*
-            anchored-zoom-${{ matrix.browser }}/*

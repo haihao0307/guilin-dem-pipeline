@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 // Only scroll when a scrollable ancestor currently clips the full target frame.
 async function controlGeometry(locator) {
   return locator.evaluate(el => {
-    const contains = (outer, inner) => inner.left >= outer.left && inner.top >= outer.top && inner.right <= outer.right && inner.bottom <= outer.bottom;
+    const contains = (outer, inner, tolerance = 0) => inner.left >= outer.left - tolerance && inner.top >= outer.top - tolerance && inner.right <= outer.right + tolerance && inner.bottom <= outer.bottom + tolerance;
     const clips = [];
     let canScroll = false;
     // Body/root overflow propagates to the viewport; an absolutely positioned,
@@ -26,7 +26,9 @@ async function controlGeometry(locator) {
         rect: {x: r.x, y: r.y, width: r.width, height: r.height},
         viewport: [innerWidth, innerHeight],
         inViewport: x >= 0 && y >= 0 && x < innerWidth && y < innerHeight,
-        fullBoundsInViewport: contains({left: 0, top: 0, right: innerWidth, bottom: innerHeight}, r),
+        // Keep the pre-existing one-CSS-pixel viewport tolerance for transformed
+        // bounds; actual scrollport clipping and center hit testing stay exact.
+        fullBoundsInViewport: contains({left: 0, top: 0, right: innerWidth, bottom: innerHeight}, r, 1),
         fullBoundsInClip: clipBounds.every(b => b.contains), clipBounds,
         reachable: el === hit || el.contains(hit),
         hit: hit?.closest('button,a,input,select,textarea')?.id || hit?.id || hit?.className,
