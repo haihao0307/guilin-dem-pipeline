@@ -5,7 +5,7 @@ async function verifyLiveTitle(page,label){
  const text=await page.evaluate(()=>({name:document.getElementById('stationName').textContent,english:document.getElementById('stationEnglish').textContent}));
  assert.equal(text.name,'尖沙咀');assert.equal(text.english,'Kowloon');
  await page.evaluate(()=>document.fonts.ready);
- const bytes=await page.locator('.station-totem').screenshot({path:`${out}/${label}-header.png`});
+ const clip=await page.locator('.station-totem').boundingBox();assert(clip&&clip.width>0&&clip.height>0);const bytes=await page.screenshot({path:`${out}/${label}-header.png`,clip,timeout:60000});
  const pixels=await page.evaluate(async data=>{const img=new Image();const ready=new Promise((ok,no)=>{img.onload=ok;img.onerror=no});img.src='data:image/png;base64,'+data;await ready;const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const x=c.getContext('2d');x.drawImage(img,0,0);const p=x.getImageData(0,0,c.width,c.height).data;let bright=0;for(let y=Math.floor(c.height*.2);y<c.height*.75;y++)for(let a=Math.floor(c.width*.25);a<c.width*.75;a++){const i=(y*c.width+a)*4;if(p[i]>180&&p[i+1]>160&&p[i+2]>120)bright++;}return{bright,width:c.width,height:c.height};},bytes.toString('base64'));
  assert(pixels.bright>30,`${label}: station title is visibly painted, not only present in DOM`);return{label,...text,...pixels};
 }
