@@ -1,4 +1,4 @@
-name: Train R08 classic smoke and larger controls QA
+name: Train R08 exact-public smoke and larger controls QA
 on:
   push:
     branches: ['qa/voxel-train-r01-20261006']
@@ -34,6 +34,7 @@ jobs:
     env:
       TRAIN_BROWSER: ${{ matrix.browser }}
       KCR_SUITE: ${{ matrix.suite }}
+      TRAIN_GAME_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -42,6 +43,8 @@ jobs:
       - run: npm install --prefix "$RUNNER_TEMP/kcr" --no-save --ignore-scripts playwright@1.57.0
       - run: "$RUNNER_TEMP/kcr/node_modules/.bin/playwright install --with-deps ${{ matrix.browser }}"
       - run: echo "NODE_PATH=$RUNNER_TEMP/kcr/node_modules" >> "$GITHUB_ENV"
+      - name: Verify 67 public release and protected classic files
+        run: node kaopu-minigame-workbench/voxel-train-study/game/tests/public-hashes.cjs
       - name: Start candidate and verify real browser
         run: |
           python3 -m http.server 8765 > "$RUNNER_TEMP/kcr-server.log" 2>&1 &
@@ -56,6 +59,7 @@ jobs:
         with:
           name: train-r08-${{ matrix.browser }}-${{ matrix.suite }}
           path: |
+            driver-public-hashes.json
             kcr-${{ matrix.browser }}-${{ matrix.suite }}/*
             r08-smoke-${{ matrix.browser }}/*
             r08-controls-${{ matrix.browser }}/*
