@@ -33,6 +33,29 @@
       "failedMatrixJobsByRun": [7, 7, 2, 0],
       "result": "9/9 history replay passed",
       "novelty": "the prior run-level scalar jobId/failureSignature cannot preserve multiple concurrent matrix failures"
+    },
+    {
+      "round": "N120",
+      "mother": "Train",
+      "runs": [37825833649, 37826431136],
+      "subjects": [
+        "3db526bd272fbecd6c7dec325a043375561da5a1",
+        "69d0b747260c8488d977ae28dab0e65f6ac294be"
+      ],
+      "matrixCells": ["chromium:scene", "webkit:scene"],
+      "terminalCells": {
+        "chromium:scene": "success",
+        "webkit:scene": "failure:LOCATOR_CLICK_CAMERA_PLATFORM_TIMEOUT"
+      },
+      "terminalArtifact": {
+        "id": 11572126144,
+        "digest": "sha256:ea7f69a9fbf1d1e8b8d8bc67fa537cc18f8f5993e90744a04226f4e9575c0a75",
+        "liveHudScreenshotsCompleted": 9,
+        "liveHudScreenshotsRequired": 10
+      },
+      "delta": "QA-only locator screenshot to clipped page screenshot; no production path changed",
+      "result": "8/8 history replay passed; HOLD_REQUIRED_MATRIX_CELL_FAILED",
+      "novelty": "NO_NOVELTY; confirms that a Chromium repair and partial WebKit observations cannot erase the required WebKit cell failure"
     }
   ],
   "activation": {
