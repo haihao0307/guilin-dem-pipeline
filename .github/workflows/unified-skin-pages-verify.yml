@@ -1,0 +1,45 @@
+name: Unified Skin Public Pages Check
+on:
+  push:
+    branches: [feature/unified-human-skin-r01-20261008]
+    paths: [.github/workflows/unified-skin-pages-verify.yml]
+permissions:
+  contents: read
+jobs:
+  public-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench/skin-r01
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Browser tooling
+        run: |
+          mkdir -p /tmp/skin-tools /tmp/common-skin-pages
+          cd /tmp/skin-tools
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund playwright@1.55.1
+          npx playwright install --with-deps chromium
+      - name: Wait for this deployment only
+        run: |
+          for n in $(seq 1 60); do
+            if curl --fail --silent --max-time 15 "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/skin-r01/?deployment=88d407e507a520b51cc4e57d3c5e3d12344d53cf" | grep -q '8683cee4051ad7a1555fa4cd87921ff102cd0676'; then
+              echo 'Correct immutable entry published'; exit 0
+            fi
+            sleep 5
+          done
+          echo 'Public Pages deployment did not become available'; exit 1
+      - name: Real public-page rendering and interactions
+        env:
+          NODE_PATH: /tmp/skin-tools/node_modules
+        run: node kaopu-unified-human-workbench/skin-r01/qa-pages.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unified-skin-pages-evidence
+          path: /tmp/common-skin-pages
+          retention-days: 7
