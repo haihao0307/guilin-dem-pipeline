@@ -30,7 +30,7 @@ jobs:
       fail-fast: false
       matrix:
         browser: [chromium, webkit]
-        suite: [hero, visual, gameplay]
+        suite: [hero, visual, gameplay, zoom]
     env:
       TRAIN_BROWSER: ${{ matrix.browser }}
       KCR_SUITE: ${{ matrix.suite }}
@@ -45,10 +45,12 @@ jobs:
       - name: Start candidate and verify real browser
         run: |
           python3 -m http.server 8765 > "$RUNNER_TEMP/kcr-server.log" 2>&1 &
-          node kaopu-minigame-workbench/voxel-train-study/game/tests/kcr-browser.cjs
+          if [ "${{ matrix.suite }}" = "zoom" ]; then node kaopu-minigame-workbench/voxel-train-study/game/tests/anchored-zoom-browser.cjs; else node kaopu-minigame-workbench/voxel-train-study/game/tests/kcr-browser.cjs; fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: kcr-r07-${{ matrix.browser }}-${{ matrix.suite }}
-          path: kcr-${{ matrix.browser }}-${{ matrix.suite }}/*
+          path: |
+            kcr-${{ matrix.browser }}-${{ matrix.suite }}/*
+            anchored-zoom-${{ matrix.browser }}/*
           retention-days: 7
