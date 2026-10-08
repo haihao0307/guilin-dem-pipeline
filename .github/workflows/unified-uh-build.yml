@@ -37,6 +37,7 @@ jobs:
         env:
           NODE_PATH: /tmp/uh-tools/node_modules
         run: |
+          node kaopu-unified-human-workbench/skin-r02/review.cjs
           node kaopu-unified-human-workbench/skin-r02/assemble.cjs
           node kaopu-unified-human-workbench/skin-r02/build.cjs --source-only
           node --check kaopu-unified-human-workbench/skin-r02/SkinLayer.mjs
@@ -49,15 +50,15 @@ jobs:
         run: |
           python -m http.server 8765 >/tmp/uh-evidence/server.log 2>&1 &
           node kaopu-unified-human-workbench/skin-r02/qa.cjs
-          QA_URL=http://127.0.0.1:8765/kaopu-unified-human-workbench/skin-r02/index.html QA_OUT=/tmp/uh-evidence/geometry node kaopu-unified-human-workbench/skin-r01/qa.cjs
+          QA_URL=http://127.0.0.1:8765/kaopu-unified-human-workbench/skin-r02/index.html QA_OUT=/tmp/uh-evidence/geometry node kaopu-unified-human-workbench/skin-r02/native-regression.cjs
       - name: Commit generated source and pin immutable candidate only
         env:
           NODE_PATH: /tmp/uh-tools/node_modules
         run: |
           git config user.name 'UH Skin Study Build'
           git config user.email 'skin-study@users.noreply.github.com'
-          git add kaopu-unified-human-workbench/skin-r02/{SkinLayer.mjs,build.cjs,entry.mjs,index.html,ui.css,THIRD_PARTY.txt}
-          if ! git diff --cached --quiet; then git commit -m 'feat(skin): assemble inherited common-human skin relationships [skip ci]'; fi
+          git add kaopu-unified-human-workbench/skin-r02/{SkinLayer.mjs,UHLayer.mjs,qa.cjs,native-regression.cjs,build.cjs,entry.mjs,index.html,ui.css,THIRD_PARTY.txt}
+          if ! git diff --cached --quiet; then git commit -m 'feat(skin): assemble reviewed common-human skin relationships [skip ci]'; fi
           git push origin HEAD:feature/unified-human-skin-uh-r02-20261008
           ASSET_COMMIT=$(git rev-parse HEAD) node kaopu-unified-human-workbench/skin-r02/build.cjs
           git add kaopu-unified-human-workbench/skin-r02/{preview.html,BUILD_MANIFEST.json}
