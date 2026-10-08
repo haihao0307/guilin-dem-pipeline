@@ -32,8 +32,8 @@ replace('''const distances = a.ids.map((v, i) => Math.hypot(...this.positions[o1
       return { id: s.id, active: this.active.has(s.id), maxGapMm: Math.max(...distances) };''','''const pairs=this.spec.source?.experimentalSparseSewing?s.stitchVertexPairs:a.ids.map((v,i)=>[v,b.ids[i]]);
       const distances = pairs.map(([v,w]) => Math.hypot(...this.positions[o1 + v].map((x, k) => x - this.positions[o2 + w][k])) * 1e3);
       return { id: s.id, active: this.active.has(s.id), maxGapMm: Math.max(...distances), measurement: this.spec.source?.experimentalSparseSewing ? "numerical stitch sites, not every free gathering vertex" : "all paired edge vertices", stitchCount:pairs.length };''')
-# Ordinary seams keep every original curve sample; only gathered seams need free intervening material.
-replace('if (numericalStitchSpacingMm !== null) {', 'if (numericalStitchSpacingMm !== null && Math.abs(s.lengthAMm-s.lengthBMm)/Math.min(s.lengthAMm,s.lengthBMm)>0.15) {')
+# Length-mismatched seams keep their original metric and free intervening material.
+replace('if (numericalStitchSpacingMm !== null) {', 'if (numericalStitchSpacingMm !== null && Math.abs(s.lengthAMm-s.lengthBMm)/Math.min(s.lengthAMm,s.lengthBMm)>0.02) {')
 replace('kind: "GarmentCode MIT live analytic pattern", commit:', 'kind: "GarmentCode MIT live analytic pattern", experimentalSparseSewing: numericalStitchSpacingMm !== null, commit:')
 replace('''const meshStart = performance.now(), paper = compileAnalytic(sourcePattern, { allowUnsupportedSeams: true });''','''const meshStart = performance.now(), paper = compileAnalytic(sourcePattern, { allowUnsupportedSeams: true, numericalStitchSpacingMm: 12, measurementSnapshot: {bodyId:"anny-adult-neutral-r01"} });
   paper.source.bodyId="anny-adult-neutral-r01";
@@ -76,7 +76,7 @@ replace('  const sourcePanels = new Map(input.panels.map', '  input={...input,se
 # R06 contact path retains the original ordered f64 constraint kernel.
 replace('if (this.orientationGuides || this.selfCollisionEnabled) return super.step(dt);', 'if (this.orientationGuides || (this.selfCollisionEnabled && !this.r06Contact)) return super.step(dt);')
 replace('      k.distances(baseCount, this.count);\n      P.distanceMs += performance.now() - now;\n      if (this.collisions && sub3 % 3 === 2) {', '      if (!this.r06Contact) k.distances(baseCount, this.count);\n      P.distanceMs += performance.now() - now;\n      if (this.r06Contact) {\n        for(let guard=0;guard<6;guard++) { k.strains(); k.vertices(this.clearance); }\n      }\n      if (this.collisions && sub3 % 3 === 2) {')
-replace('      this.bodyContacts += k.contacts.value;', '      if (this.r06Contact && sub3 % 6 === 5) { this.selfContacts.bodySweep(); this.selfContacts.rebuild(); this.selfContacts.project(); }\n      this.bodyContacts += k.contacts.value;')
+replace('      this.bodyContacts += k.contacts.value;', '      if (this.r06Contact) { this.selfContacts.bodySweep(); this.selfContacts.rebuild(); this.selfContacts.project(); }\n      this.bodyContacts += k.contacts.value;')
 replace('  profile.bodyMs = performance.now() - start;', '  if(config.kind!=="legacy") configureContactWasm(await bytes("r06/contact/contact-kernel.wasm"));\n  if(token!==epoch)return;\n  profile.bodyMs = performance.now() - start;')
 
 replace('selfCollision: this.selfCollisionEnabled ? "discrete vertex-face, exact audit still required" : "disabled"', 'selfCollision: this.selfCollisionEnabled ? (this.r06Contact ? "swept linear VF/EE + bounded body paths; not nonlinear CCD" : "discrete vertex-face, exact audit still required") : "disabled"')
@@ -88,7 +88,7 @@ replace('No continuous collision or runtime self-contact response.', 'Runtime co
 step=s[s.index('var GarmentLab2 ='):s.index('// tailor-unify-20261007/work/kaopu-tailor-workbench/garments-r04/src/sdf-transport.mjs')]
 assert step.count('this.selfContacts.rebuild();') == 1
 assert step.count('this.selfContacts.project();') == 1
-assert 'this.r06Contact && sub3 % 6 === 5' in step
+assert 'if (this.r06Contact) { this.selfContacts.bodySweep();' in step
 s=(ROOT/'r06/contact/fast-contact.mjs').read_text().replace("import {SweptContact} from './swept-contact.mjs';",'').replace('export function','function').replace('export class','class')+'\n'+s
 s=(ROOT/'r06/contact/swept-contact.mjs').read_text().replace('export class','class')+'\n'+s
 s=(ROOT/'r06/contact/seam-order.mjs').read_text().replace('export function','function')+'\n'+s

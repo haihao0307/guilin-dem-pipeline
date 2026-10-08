@@ -126,7 +126,7 @@ class SweptContact {
   for(let e=0;e<l.meshEdges.length;e++){const a=l.meshEdges[e],seen=new Set();this.cells(this.eb[e],key=>{for(const f of this.edgeHash.get(key)||[]){if(f<=e||seen.has(f))continue;seen.add(f);const b=l.meshEdges[f];if(!this.overlaps(this.eb[e],this.eb[f])||this.exclude(a,b))continue;this.contact([...a,...b],false);}});}
   this.capture();
  }
- report(){return{kind:'swept linear vertex-face and edge-edge conservative advancement',thicknessMm:this.h*1000,corrections:this.corrections,bodySweptHits:this.bodySweptHits||0,contactIntervalSubsteps:6,sweptHits:this.sweptHits,discreteHits:this.discreteHits,iterationLimitEvents:this.unresolved,nonlinearContinuousCollisionCertified:false,skippedPrimitives:0};}
+ report(){return{kind:'swept linear vertex-face and edge-edge conservative advancement',thicknessMm:this.h*1000,corrections:this.corrections,bodySweptHits:this.bodySweptHits||0,contactIntervalSubsteps:1,sweptHits:this.sweptHits,discreteHits:this.discreteHits,iterationLimitEvents:this.unresolved,nonlinearContinuousCollisionCertified:false,skippedPrimitives:0};}
 }
 
 
@@ -142,21 +142,16 @@ class FastSweptContact extends SweptContact {
   const l=this.lab,k=this.kernel,count=this.rows.length/5,n=l.positions.length;
   if(!this.capacity||count>this.capacity){this.capacity=Math.max(1024,Math.ceil(count*1.5));k.setup(n,this.capacity);}
   const b=k.memory.buffer,ps=new Float64Array(b,k.positions(),n*3),old=new Float64Array(b,k.previous(),n*3),mass=new Float64Array(b,k.weights(),n),alias=new Int32Array(b,k.aliases(),n),pairs=new Int32Array(b,k.pairs(),count*5);
-  old.set(this.previous);
-  for(let pass=0;pass<4;pass++){
-   if(pass>0&&l.kernel){for(let j=0;j<4;j++){l.kernel.strains();l.kernel.vertices(l.clearance);}l.kernel.surfaces();}
-   for(let i=0;i<n;i++){ps.set(l.positions[i],i*3);mass[i]=l.invMass[i];alias[i]=l.stitchGroups.find(i);}pairs.set(this.rows);
-   k.project(count,this.h);
-   for(let i=0;i<n;i++)if(alias[i]===i){for(let axis=0;axis<3;axis++)l.positions[i][axis]=ps[i*3+axis];}
-   this.corrections+=k.corrections.value;this.sweptHits+=k.sweptHits.value;this.discreteHits+=k.discreteHits.value;this.unresolved+=k.unresolved.value;
-   // Each relaxation sweep has its own linear history. Reusing the entire
-   // old integration path after a corrected contact caused repeated rewind impulses.
-   for(let i=0;i<n;i++)old.set(l.positions[i],i*3);
-  }
+  for(let i=0;i<n;i++){ps.set(l.positions[i],i*3);mass[i]=l.invMass[i];alias[i]=l.stitchGroups.find(i);}old.set(this.previous);pairs.set(this.rows);
+  k.project(count,this.h);
+  for(let i=0;i<n;i++)if(alias[i]===i){for(let axis=0;axis<3;axis++)l.positions[i][axis]=ps[i*3+axis];}
+  this.corrections+=k.corrections.value;this.sweptHits+=k.sweptHits.value;this.discreteHits+=k.discreteHits.value;this.unresolved+=k.unresolved.value;
+  // No cached candidate reuse across future nonlinear relaxation motions.
+  // Contact is rebuilt for each original integration substep.
   if(l.kernel)l.kernel.vertices(l.clearance);
   this.capture();
  }
- report(){return{...super.report(),jointMaterialBodyContactIterations:4,maxCandidatePairs:250000,correctionHistory:'fresh post-contact state for each subsequent material/body relaxation',backend:'additional f64 WASM narrow phase; original cloth kernel unchanged'};}
+ report(){return{...super.report(),jointMaterialBodyContactIterations:1,maxCandidatePairs:250000,correctionHistory:'one freshly rebuilt contact sweep per original integration substep',backend:'additional f64 WASM narrow phase; original cloth kernel unchanged'};}
 }
 
 var __create = Object.create;
@@ -3022,7 +3017,7 @@ var GarmentLab2 = class extends GarmentLab {
         k.surfaces();
         P.bodySurfaceMs += performance.now() - now;
       }
-      if (this.r06Contact && sub3 % 6 === 5) { this.selfContacts.bodySweep(); this.selfContacts.rebuild(); this.selfContacts.project(); }
+      if (this.r06Contact) { this.selfContacts.bodySweep(); this.selfContacts.rebuild(); this.selfContacts.project(); }
       this.bodyContacts += k.contacts.value;
       now = performance.now();
       const damping = Math.exp(-20 * h);
@@ -3316,7 +3311,7 @@ function compileAnalytic(input, { interiorStepMm = 16, boundaryStepMm = 16, chor
   for (const s of input.seams) {
     const ka = edgeKey(s.a.panelId, s.a.edge), kb = edgeKey(s.b.panelId, s.b.edge);
     let count = Math.max(counts.get(ka), counts.get(kb));
-    if (numericalStitchSpacingMm !== null && Math.abs(s.lengthAMm-s.lengthBMm)/Math.min(s.lengthAMm,s.lengthBMm)>0.15) {
+    if (numericalStitchSpacingMm !== null && Math.abs(s.lengthAMm-s.lengthBMm)/Math.min(s.lengthAMm,s.lengthBMm)>0.02) {
       const target = Math.max(s.gathering?.projectedLengthAMm || s.lengthAMm, s.gathering?.projectedLengthBMm || s.lengthBMm), intervals = Math.max(1, Math.ceil(target / numericalStitchSpacingMm)), gathered = Math.abs(s.lengthAMm - s.lengthBMm) / Math.min(s.lengthAMm, s.lengthBMm) > 0.02, subdivisions = Math.max(gathered ? 3 : 1, Math.ceil(count / intervals));
       count = intervals * subdivisions;
       needleIntervals.set(s.id, { intervals, subdivisions });

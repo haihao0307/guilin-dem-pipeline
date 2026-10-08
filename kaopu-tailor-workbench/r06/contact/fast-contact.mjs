@@ -11,19 +11,14 @@ export class FastSweptContact extends SweptContact {
   const l=this.lab,k=this.kernel,count=this.rows.length/5,n=l.positions.length;
   if(!this.capacity||count>this.capacity){this.capacity=Math.max(1024,Math.ceil(count*1.5));k.setup(n,this.capacity);}
   const b=k.memory.buffer,ps=new Float64Array(b,k.positions(),n*3),old=new Float64Array(b,k.previous(),n*3),mass=new Float64Array(b,k.weights(),n),alias=new Int32Array(b,k.aliases(),n),pairs=new Int32Array(b,k.pairs(),count*5);
-  old.set(this.previous);
-  for(let pass=0;pass<4;pass++){
-   if(pass>0&&l.kernel){for(let j=0;j<4;j++){l.kernel.strains();l.kernel.vertices(l.clearance);}l.kernel.surfaces();}
-   for(let i=0;i<n;i++){ps.set(l.positions[i],i*3);mass[i]=l.invMass[i];alias[i]=l.stitchGroups.find(i);}pairs.set(this.rows);
-   k.project(count,this.h);
-   for(let i=0;i<n;i++)if(alias[i]===i){for(let axis=0;axis<3;axis++)l.positions[i][axis]=ps[i*3+axis];}
-   this.corrections+=k.corrections.value;this.sweptHits+=k.sweptHits.value;this.discreteHits+=k.discreteHits.value;this.unresolved+=k.unresolved.value;
-   // Each relaxation sweep has its own linear history. Reusing the entire
-   // old integration path after a corrected contact caused repeated rewind impulses.
-   for(let i=0;i<n;i++)old.set(l.positions[i],i*3);
-  }
+  for(let i=0;i<n;i++){ps.set(l.positions[i],i*3);mass[i]=l.invMass[i];alias[i]=l.stitchGroups.find(i);}old.set(this.previous);pairs.set(this.rows);
+  k.project(count,this.h);
+  for(let i=0;i<n;i++)if(alias[i]===i){for(let axis=0;axis<3;axis++)l.positions[i][axis]=ps[i*3+axis];}
+  this.corrections+=k.corrections.value;this.sweptHits+=k.sweptHits.value;this.discreteHits+=k.discreteHits.value;this.unresolved+=k.unresolved.value;
+  // No cached candidate reuse across future nonlinear relaxation motions.
+  // Contact is rebuilt for each original integration substep.
   if(l.kernel)l.kernel.vertices(l.clearance);
   this.capture();
  }
- report(){return{...super.report(),jointMaterialBodyContactIterations:4,maxCandidatePairs:250000,correctionHistory:'fresh post-contact state for each subsequent material/body relaxation',backend:'additional f64 WASM narrow phase; original cloth kernel unchanged'};}
+ report(){return{...super.report(),jointMaterialBodyContactIterations:1,maxCandidatePairs:250000,correctionHistory:'one freshly rebuilt contact sweep per original integration substep',backend:'additional f64 WASM narrow phase; original cloth kernel unchanged'};}
 }
