@@ -189,12 +189,12 @@
 #driverGame #instrumentPanel .limit-sign{top:17px;right:2px;width:30px;height:30px;line-height:26px}
 #driverGame #instrumentPanel .limit-sign b{font-size:18px}
 #driverGame #instrumentPanel .speed-display{position:relative;inset:auto;grid-area:auto;flex:none;width:60px;height:60px;margin:5px 0 10px;padding:0;display:block;align-self:auto;justify-self:auto;background-color:#10191655}
-#driverGame #instrumentPanel .speed-display>div{bottom:5px;left:0;right:0;display:flex;justify-content:center;align-items:baseline;gap:2px}
+#driverGame #instrumentPanel .speed-display>div:not(.power-dots){bottom:5px;left:0;right:0;display:flex;justify-content:center;align-items:baseline;gap:2px}
 #driverGame #instrumentPanel .speed-display strong{font-size:20px}
 #driverGame #instrumentPanel .speed-display span{font-size:5.5px}
 #driverGame #instrumentPanel .speed-display p{position:absolute;bottom:-10px;left:-12px;display:block;width:84px;max-width:none;font-size:7px;line-height:8px}
 #driverGame #instrumentPanel .gauge-needle{top:8px;height:21px}
-#driverGame #drivePanel{position:absolute;left:50%;right:auto;top:auto;bottom:max(8px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(584px,calc(100% - 24px));height:var(--drive-height);min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 128px;grid-template-rows:1fr;align-items:center;gap:10px;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;overflow:visible;z-index:6;pointer-events:none}
+#driverGame[data-layout] #drivePanel{position:absolute;left:50%;right:auto;top:auto;bottom:max(8px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(584px,calc(100% - 24px));height:var(--drive-height);min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 128px;grid-template-rows:1fr;align-items:center;gap:10px;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;overflow:visible;z-index:6;pointer-events:none}
 #driverGame #drivePanel .drive-buttons{display:grid;grid-template-columns:1fr 1fr 1.12fr;grid-column:1;grid-row:1;height:100%;gap:10px;margin:0}
 #driverGame #drivePanel .drive-button,#driverGame #drivePanel .drive-button.brake,#driverGame #drivePanel .station-action{position:relative;isolation:isolate;min-width:0;width:100%;height:var(--drive-height);min-height:var(--drive-height);padding:5px 3px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border:0;border-radius:50%;background:transparent;box-shadow:none;color:#f0e3bd;pointer-events:auto;touch-action:manipulation}
 #driverGame #drivePanel .drive-button.brake{grid-column:3}
