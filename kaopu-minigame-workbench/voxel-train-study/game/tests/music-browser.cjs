@@ -172,6 +172,10 @@ async function run() {
   }
   async function setRange(selector,value){
     await clickTarget(page,selector,{touch:true});
+    const tapped=Number(await page.locator(selector).inputValue());
+    if(selector==='#musicVolume')assert.equal((await state()).music.volume,tapped/100,'Real touch slider changes the music gain');
+    await page.locator(selector).focus();
+    assert.equal(await page.locator(selector).evaluate(el=>document.activeElement===el),true,'Keyboard follows the selected slider');
     await page.keyboard.press('Home');
     for(let i=0;i<value;i++)await page.keyboard.press('ArrowRight');
     assert.equal(await page.locator(selector).inputValue(),String(value),'Native slider keyboard input');
