@@ -1,0 +1,86 @@
+name: UH Skin Integration and Regression
+on:
+  push:
+    branches: [feature/unified-human-skin-uh-r02-20261008]
+    paths:
+      - kaopu-unified-human-workbench/skin-r02/**
+      - .github/workflows/unified-uh-build.yml
+permissions:
+  contents: write
+concurrency:
+  group: unified-uh-skin-r02
+  cancel-in-progress: false
+jobs:
+  skin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/unified-human-skin-uh-r02-20261008
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench/assets
+            kaopu-anny-workbench/r02/assets
+            kaopu-mhr-workbench/assets
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Isolated validation tooling
+        run: |
+          mkdir -p /tmp/uh-tools /tmp/uh-evidence
+          cd /tmp/uh-tools
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund esbuild@0.25.10 playwright@1.55.1
+          npx playwright install --with-deps chromium
+      - name: Inherit checked material and test mathematical invariants
+        env:
+          NODE_PATH: /tmp/uh-tools/node_modules
+        run: |
+          node kaopu-unified-human-workbench/skin-r02/assemble.cjs
+          node kaopu-unified-human-workbench/skin-r02/build.cjs --source-only
+          node --check kaopu-unified-human-workbench/skin-r02/SkinLayer.mjs
+          node --check kaopu-unified-human-workbench/skin-r02/UHLayer.mjs
+          node kaopu-unified-human-workbench/skin-r02/unit.mjs | tee /tmp/uh-evidence/unit.txt
+      - name: Real rendered material and original-body regression
+        env:
+          NODE_PATH: /tmp/uh-tools/node_modules
+          QA_OUT: /tmp/uh-evidence/local
+        run: |
+          python -m http.server 8765 >/tmp/uh-evidence/server.log 2>&1 &
+          node kaopu-unified-human-workbench/skin-r02/qa.cjs
+          QA_URL=http://127.0.0.1:8765/kaopu-unified-human-workbench/skin-r02/index.html QA_OUT=/tmp/uh-evidence/geometry node kaopu-unified-human-workbench/skin-r01/qa.cjs
+      - name: Commit generated source and pin immutable candidate only
+        env:
+          NODE_PATH: /tmp/uh-tools/node_modules
+        run: |
+          git config user.name 'UH Skin Study Build'
+          git config user.email 'skin-study@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/skin-r02/{SkinLayer.mjs,build.cjs,entry.mjs,index.html,ui.css,THIRD_PARTY.txt}
+          if ! git diff --cached --quiet; then git commit -m 'feat(skin): assemble inherited common-human skin relationships [skip ci]'; fi
+          git push origin HEAD:feature/unified-human-skin-uh-r02-20261008
+          ASSET_COMMIT=$(git rev-parse HEAD) node kaopu-unified-human-workbench/skin-r02/build.cjs
+          git add kaopu-unified-human-workbench/skin-r02/{preview.html,BUILD_MANIFEST.json}
+          git commit -m 'build(skin): pin tested UH-relation common-body preview [skip ci]'
+          git push origin HEAD:feature/unified-human-skin-uh-r02-20261008
+          echo "PUBLIC_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          cp kaopu-unified-human-workbench/skin-r02/BUILD_MANIFEST.json /tmp/uh-evidence/
+      - name: Verify actual immutable public preview
+        env:
+          NODE_PATH: /tmp/uh-tools/node_modules
+          QA_OUT: /tmp/uh-evidence/public
+        run: |
+          export QA_URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${PUBLIC_COMMIT}/kaopu-unified-human-workbench/skin-r02/preview.html"
+          echo "$QA_URL" | tee /tmp/uh-evidence/PUBLIC_URL.txt
+          node kaopu-unified-human-workbench/skin-r02/qa.cjs
+      - name: Retain source and rendered evidence
+        if: always()
+        run: |
+          mkdir -p /tmp/uh-evidence/source
+          cp kaopu-unified-human-workbench/skin-r02/*.{mjs,cjs,css,json,md,txt} /tmp/uh-evidence/source/ 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: uh-skin-integration-evidence
+          path: /tmp/uh-evidence
+          retention-days: 7
