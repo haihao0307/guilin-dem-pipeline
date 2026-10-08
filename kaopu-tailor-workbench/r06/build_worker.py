@@ -50,6 +50,28 @@ replace('''emit("done", { record, regions, intersections, profile, activeWallMs:
           }
           emit("done", { record, regions, intersections, profile, activeWallMs: wallMs + profile.auditMs });''')
 replace('  lab = new GarmentLab2(spec, sdf, { substeps: 12, iterations: 6 });', '  if(config.kind!=="legacy") prepareShoulderFixtures(spec,sdf);\n  lab = new GarmentLab2(spec, sdf, { substeps: 12, iterations: 6 });')
+# A pause arriving during body/SDF/WASM loading is an intent, not cancellation.
+# Do not invalidate the asynchronous init epoch and strand the UI in loading-solver.
+replace('var kernelReady = false;', 'var kernelReady = false;\nvar pendingPause = false;')
+replace('''  running = true;
+  runStarted = performance.now();
+  packet("started");''','''  if (pendingPause) { running=false; packet("paused"); return; }
+  running = true;
+  runStarted = performance.now();
+  packet("started");''')
+replace('''      stop();
+      await startLegacySolve(epoch);''','''      stop();
+      pendingPause=false;
+      await startLegacySolve(epoch);''')
+replace('''    } else if (data.type === "pause") {
+      stop();
+      if (lab) packet("paused");''','''    } else if (data.type === "pause") {
+      pendingPause=true;
+      if (lab) { stop(); packet("paused"); }''')
+replace('''    } else if (data.type === "resume") {
+      if (!lab''','''    } else if (data.type === "resume") {
+      pendingPause=false;
+      if (!lab''')
 s=(ROOT/'r06/fixtures.mjs').read_text().replace('export function','function')+'\n'+s
 (ROOT/'catalogue/r06-worker.bundle.mjs').write_text('// R06.2 additive worker. Original catalogue/workbench-worker.bundle.mjs remains intact.\n'+s)
 print('worker',len(s))
