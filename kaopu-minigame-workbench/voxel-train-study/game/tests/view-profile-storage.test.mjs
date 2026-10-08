@@ -8,3 +8,7 @@ assert(restoreView(reopened,'landscape'));assert.deepEqual(reopened.profiles.lan
 recommendView(reopened,'portrait');assert.deepEqual(reopened.backups.portrait,old.profiles.portrait);assert.deepEqual(reopened.profiles.portrait.position,DEFAULT_VIEWS.portrait.position);assert(restoreView(reopened,'portrait'));assert.deepEqual(reopened.profiles.portrait,old.profiles.portrait);
 const fresh=prepareViewProfiles(null);assert.equal(fresh.layout,'landscape');assert.deepEqual(fresh.backups,{});assert.equal(restoreView(fresh,'landscape'),false);
 console.log(JSON.stringify({status:'passed',oneTimeMigration:true,oldLockedViewsPreserved:true,earlierBackupsRetained:true,reopenDoesNotOverwrite:true,restoreExact:true,invalidDataSafe:true}));
+
+// A restored automatic old default is still an explicit recoverable view choice.
+const oldAutomatic={version:1,layout:'landscape',profiles:{landscape:{position:[4,20,32],target:[-4.5,1.5,1],zoom:1.14,manual:false,locked:false}}};
+const autoState=prepareViewProfiles(oldAutomatic);assert(restoreView(autoState,'landscape'));const oldAuto=structuredClone(autoState.profiles.landscape);recommendView(autoState,'landscape');assert.deepEqual(autoState.backups.landscape,oldAuto);assert(restoreView(autoState,'landscape'));assert.deepEqual(autoState.profiles.landscape,oldAuto);console.log('Automatic old framing can be restored, recommended again and undone without changing flags');

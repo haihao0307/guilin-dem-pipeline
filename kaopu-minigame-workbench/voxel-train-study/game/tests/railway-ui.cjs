@@ -161,8 +161,101 @@ fs.mkdirSync(out,{recursive:true});
   }
   assert.deepEqual((await stored()).backups,{});
   assert.deepEqual((await stored()).archivedBackups,expectedArchives);
+
+  // Legacy automatic profiles are real saved frames too. The positions/zoom
+  // include an R04-style landscape; targets are explicit synthetic fixtures.
+  const legacyAutomatic={version:1,layout:'landscape',profiles:{
+   landscape:{position:[4,20,32],target:[-8.8,-.8,1],zoom:1.14,manual:false,locked:false},
+   portrait:{position:[30,22,17],target:[-7,-.5,1],zoom:1.02,manual:false,locked:false}
+  }};
+  const assertAutomatic=async(mode,label)=>{
+   const current=(await state()).viewSettings,expected=legacyAutomatic.profiles[mode];
+   assert.equal(current.layout,mode,label+' layout');
+   assert.equal(current.frameRevision,VIEW_REVISION,label+' revision');
+   // Lerp/snap arithmetic may differ by a last floating-point bit. Only the
+   // rendered vectors have this tolerance; saved vectors and all flags are exact.
+   for(const field of ['position','target'])for(let i=0;i<3;i++)assert(Math.abs(current[field][i]-expected[field][i])<1e-9,label+' '+field+'['+i+']: '+JSON.stringify(current[field]));
+   for(const field of ['zoom','manual','locked'])assert.equal(current[field],expected[field],label+' '+field);
+   assert.deepEqual(current.profiles[mode],expected,label+' runtime automatic baseline');
+   assert.deepEqual((await stored()).profiles[mode],expected,label+' persisted automatic baseline');
+  };
+  const assertAutomaticProfiles=async label=>{
+   assert.deepEqual((await state()).viewSettings.profiles,legacyAutomatic.profiles,label+' runtime profiles');
+   assert.deepEqual((await stored()).profiles,legacyAutomatic.profiles,label+' persisted profiles');
+  };
+  await page.evaluate(({key,data})=>localStorage.setItem(key,JSON.stringify(data)),{key:VIEW_KEY,data:legacyAutomatic});
+  await reopen();
+  await assertView('landscape',recommended('landscape'),'Old automatic profiles still migrate to the new recommendation once');
+  assert.deepEqual((await stored()).backups,legacyAutomatic.profiles,'Automatic profiles must be backed up with both flags still false');
+  await resume();
+  for(const mode of MODES){
+   await page.locator('#'+mode+'View').click();await freeze();
+   await assertView(mode,recommended(mode),'Unrestored automatic '+mode+' starts with the new recommendation');
+   await page.locator('#restoreView').click();await freeze();
+   await assertAutomatic(mode,'Restored automatic '+mode+' survives the actual snap draw');
+   assert.equal(await page.locator('#restoreView').isVisible(),false);
+   // An explicitly requested new frame must remain reversible for old automatic
+   // profiles, even though neither manual nor locked is set.
+   await page.locator('#resetView').click();await freeze();
+   await assertView(mode,recommended(mode),'Automatic '+mode+' can select the new recommendation');
+   assert.deepEqual((await stored()).backups[mode],legacyAutomatic.profiles[mode],'Recommending again must retain the old automatic frame');
+   assert.equal(await page.locator('#restoreView').isVisible(),true);
+   await page.locator('#restoreView').click();await freeze();
+   await assertAutomatic(mode,'Automatic '+mode+' recommendation undo');
+   const automaticRestored=await stored();
+   await reopen();await freeze();
+   assert.deepEqual(await stored(),automaticRestored,'Reopening cannot overwrite the restored automatic profile');
+   await assertAutomatic(mode,'Automatic '+mode+' survives initial page draw');
+   // Freeze before Continue so its synchronous reset is checked before a later
+   // draw could conceal a jump to the global recommendation.
+   await page.locator('#continueSaved').click();
+   await assertAutomatic(mode,'Continue immediately preserves automatic '+mode);
+   await freeze();
+   await assertAutomatic(mode,'Continued automatic '+mode+' survives rendering');
+  }
+  await assertAutomaticProfiles('Both restored automatic frames are independent');
+  await page.setViewportSize({width:844,height:390});
+  await page.locator('#landscapeView').click();await freeze();
+  const beforeService=await page.evaluate(()=>__trainDriver.test.session().phase);
+  const serviceLocked=await page.evaluate(()=>{const g=__trainDriver.test.session();g.phase='boarding';__trainDriver.test.render();return g.serviceLocked();});
+  assert.equal(serviceLocked,true,'The service fixture must exercise the real automatic close-camera branch');
+  const assertAutomaticClose=async label=>{
+   const current=(await state()).viewSettings;
+   assert.equal((await state()).cameraMode,'carriage',label+' camera mode');
+   for(const [field,expected] of [['position',[-2,13,20]],['target',[-14.2,1.2,1.4]]])for(let i=0;i<3;i++)assert(Math.abs(current[field][i]-expected[i])<1e-9,label+' '+field);
+   assert.equal(current.zoom,legacyAutomatic.profiles.landscape.zoom,label+' keeps the saved zoom');
+   assert.equal(current.manual,false,label+' is still automatic');assert.equal(current.locked,false,label+' is still unlocked');
+   await assertAutomaticProfiles(label+' does not persist the temporary close-up');
+  };
+  await assertAutomaticClose('Automatic boarding close-up');
+  // Layout changes during service must never capture the transient close-up as
+  // the landscape wide baseline. Portrait keeps its own automatic frame.
+  await page.locator('#portraitView').click();await freeze();
+  await assertAutomatic('portrait','Portrait remains at its own frame during boarding');
+  await assertAutomaticProfiles('Switching out of the close-up preserves both baselines');
+  await page.locator('#landscapeView').click();await freeze();
+  await assertAutomaticClose('Returning to landscape during boarding');
+  await page.evaluate(()=>{__trainDriver.test.session().phase='doors-closing';__trainDriver.test.render();});
+  await assertAutomatic('landscape','Closing the doors returns to the restored old wide frame');
+  assert.equal((await state()).cameraMode,'wide');
+  await page.evaluate(phase=>{__trainDriver.test.session().phase=phase;__trainDriver.test.render();},beforeService);
+  await assertAutomatic('landscape','Leaving service retains the restored old wide frame');
+  await assertAutomaticProfiles('Service transitions never overwrite the saved automatic frames');
+  for(const mode of MODES){
+   await page.locator('#'+mode+'View').click();await freeze();
+   await page.evaluate(()=>__trainDriver.test.start({seed:'AUTOMATIC-VIEW-RESTART',durationMinutes:10}));
+   await assertAutomatic(mode,'Restart immediately preserves automatic '+mode);
+   await freeze();
+   await assertAutomatic(mode,'Restarted automatic '+mode+' survives rendering');
+  }
+  const afterAutomaticService=await stored();
+  await reopen();await freeze();
+  assert.deepEqual(await stored(),afterAutomaticService,'Reopening after service must retain the automatic baselines');
+  await assertAutomatic('portrait','Automatic portrait remains saved after service and restart');
+  await assertAutomaticProfiles('Both automatic profiles remain exact after a later reopen');
+  assert.deepEqual((await stored()).backups,{});
   assert.deepEqual(errors,[]);
-  fs.writeFileSync(out+'/result.json',JSON.stringify({status:'passed',engine,url:base,frameRevision:VIEW_REVISION,checks,oneTimeMigration:true,oldLockedViewsPreserved:true,earlierBackupsRetained:true,reopenDoesNotOverwrite:true,restoreExact:true,restoredViewsSurviveReopen:true,recommendedViewCanBeUndone:true,newUserAdjustmentsPreserved:true,errors},null,2));
+  fs.writeFileSync(out+'/result.json',JSON.stringify({status:'passed',engine,url:base,frameRevision:VIEW_REVISION,checks,oneTimeMigration:true,oldLockedViewsPreserved:true,earlierBackupsRetained:true,reopenDoesNotOverwrite:true,restoreExact:true,restoredViewsSurviveReopen:true,recommendedViewCanBeUndone:true,newUserAdjustmentsPreserved:true,automaticProfilesRestoreExact:true,automaticProfilesSurviveReopen:true,automaticRecommendationReversible:true,automaticServiceCloseAndReturn:true,automaticServiceLayoutSwitchSafe:true,automaticRestartPreserves:true,errors},null,2));
  }catch(error){
   fs.writeFileSync(out+'/failure.json',JSON.stringify({error:String(error),checks,errors,state:await state().catch(()=>null),stored:await stored().catch(()=>null)},null,2));
   try{await page.screenshot({path:out+'/failure.png',timeout:5000});}catch{}

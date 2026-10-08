@@ -22,5 +22,5 @@ export function prepareViewProfiles(raw){
  }
  return data;
 }
-export function recommendView(data,mode){const p=data.profiles[mode];if(p&&(p.manual||p.locked)){if(data.backups[mode])archiveBackup(data,mode,data.backups[mode]);data.backups[mode]=clone(p);}data.profiles[mode]=defaultView(mode);}
+export function recommendView(data,mode){const p=data.profiles[mode];if(p&&(p.manual||p.locked||JSON.stringify(p)!==JSON.stringify(defaultView(mode)))){if(data.backups[mode])archiveBackup(data,mode,data.backups[mode]);data.backups[mode]=clone(p);}data.profiles[mode]=defaultView(mode);}
 export function restoreView(data,mode){if(!validView(data.backups[mode]))return false;data.profiles[mode]=clone(data.backups[mode]);delete data.backups[mode];return true;}
