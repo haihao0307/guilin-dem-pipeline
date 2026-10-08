@@ -72,7 +72,7 @@ with sync_playwright() as pw:
   with page.expect_download() as dl:page.locator('#save-problem').click()
   dl.value.save_as(str(OUT/'exported-problem.json'))
   # A composition without an upper must not claim to display a complete dress.
-  page.locator('#parameters-list details').evaluate_all('(els)=>els.forEach(el=>el.open=true)');control=page.locator('[data-control="meta.upper"]');control.select_option('null');control.dispatch_event('change');assert '未选上装' in page.locator('#current-title').inner_text()
+  page.locator('#parameters-list details').evaluate_all('(els)=>els.forEach(el=>el.open=true)');page.locator('#parameters-list details').evaluate_all('(els)=>els.forEach(el=>el.open=true)');control=page.locator('[data-control="meta.upper"]');control.select_option('null');control.dispatch_event('change');assert '未选上装' in page.locator('#current-title').inner_text()
   page.locator('#generate').click();paper();assert page.evaluate('window.__TAILOR_CATALOGUE_QA__.getSpec().panels.every(p=>!p.id.includes("torso"))')
   for id in ['shorts','sleeveless','shortsleeve']:
    page.evaluate('(id)=>window.__TAILOR_CATALOGUE_QA__.select(id)',id);page.wait_for_function("window.__TAILOR_CATALOGUE_QA__.getState().phase==='historical'",timeout=45000)
