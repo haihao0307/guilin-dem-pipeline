@@ -41,7 +41,7 @@ function regions(v){
   const x=p[i*3],y=p[i*3+1],z=p[i*3+2];mask[i*4+2]*=smooth(.132,.142,z)*Math.exp(-Math.pow((y-(.676+.002*Math.cos(x*95)))/.007,4))*(1-smooth(.027,.035,Math.abs(x)));
  });
  const f=g.index.array,adj=Array.from({length:N},()=>new Set());for(let i=0;i<f.length;i+=3)for(const[a,b]of[[f[i],f[i+1]],[f[i+1],f[i+2]],[f[i+2],f[i]]]){if(cover[a]&&cover[b]){adj[a].add(b);adj[b].add(a);}}
- let sm=mask;for(let it=0;it<9;it++){const next=sm.slice();for(let i=0;i<N;i++){if(!adj[i].size)continue;for(let c=0;c<4;c++){let total=0;for(const j of adj[i])total+=sm[j*4+c];next[i*4+c]=sm[i*4+c]*.62+total/adj[i].size*.38;}}sm=next;}
+ let sm=mask;for(let it=0;it<9;it++){const next=sm.slice();for(let i=0;i<N;i++){if(!adj[i].size)continue;for(let c=0;c<4;c++){if(c===2&&it>=2)continue;let total=0;for(const j of adj[i])total+=sm[j*4+c];next[i*4+c]=sm[i*4+c]*.62+total/adj[i].size*.38;}}sm=next;}
  g.setAttribute('uhRegion',new THREE.BufferAttribute(sm,4));const counts=[0,0,0,0];for(let i=0;i<N;i++)for(let c=0;c<4;c++)if(sm[i*4+c]>.05)counts[c]++;return{scope,counts,source:'GNM native region IDs + canonical recipe interpolation; hand bone-plane mask; smoothed on skin only'};
 }
 const FUNCTIONS=`
@@ -117,3 +117,5 @@ export function mountUHControls(){
  el.querySelector('#uh-import').onclick=()=>el.querySelector('#uh-file').click();el.querySelector('#uh-file').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;if(f.size>30000)throw Error('配方过大');restore(JSON.parse(await f.text()));message('配方已导入');}catch(x){message(x.message);}finally{e.target.value='';}};
  window.uhSkin={version:VERSION,set,report:()=>latest?.report()||{version:VERSION,ready:false,settings:{...S}},recipe,restore,presets:PRESETS};syncUI();
 }
+
+// uh-render-review-lip-locality
