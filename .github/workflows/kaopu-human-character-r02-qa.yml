@@ -1,4 +1,4 @@
-name: QA revised character presets and archive compatibility
+name: QA published revised character presets
 on:
   push:
     branches: [qa/human-character-r02-20261008]
@@ -30,10 +30,25 @@ jobs:
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/human-r02-ui-http.log 2>&1 &
           sleep 2
+      - name: Wait for the exact approved public release marker
+        run: |
+          python3 - <<'PYWAIT'
+          import urllib.request,json,time
+          url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/full/research/characters-r02/RELEASE.json?v=be719199'
+          deadline=time.monotonic()+900
+          while time.monotonic()<deadline:
+              try:
+                  data=json.load(urllib.request.urlopen(url,timeout=20))
+                  if data.get('testedRuntimeCommit')=='aada1b65e3956dae32f904c997183f10aee6c265':
+                      print('Exact R02 release marker is public.');break
+              except Exception as e: print(type(e).__name__,str(e))
+              time.sleep(20)
+          else: raise RuntimeError('Pages release marker was not current during this bounded CI execution; inspect deployment and retry.')
+          PYWAIT
       - name: Verify 72 states, visual hashes, undo, archives and mobile
         env:
           NODE_PATH: ${{ github.workspace }}/.human-qa/node_modules
-          HUMAN_QA_URL: http://127.0.0.1:8765/kaopu-unified-human-workbench/
+          HUMAN_QA_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/?v=characters-r02-20261008
           HUMAN_R2_OUT: ${{ github.workspace }}/human-character-r02-ui-results
         run: node kaopu-unified-human-workbench/tests/character-r02-ui.cjs
       - name: Preserve actual browser evidence
