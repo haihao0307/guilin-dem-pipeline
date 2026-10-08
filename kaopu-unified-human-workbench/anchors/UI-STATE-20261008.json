@@ -1,0 +1,89 @@
+{
+  "schema": "kaopu.stable-human.ui-state/1",
+  "baselineCommit": "ac9110ffe78e2f77d15acd9f5da4d4790a147c36",
+  "status": "SOURCE_DERIVED_NOT_BROWSER_VISUALLY_VERIFIED",
+  "sourceEvidence": [
+    "index.html",
+    "full/ui/Viewer.mjs",
+    "full/ui/Panel.mjs",
+    "full/ui/browser-app.mjs",
+    "full/ui/workbench.css"
+  ],
+  "userPersonalConfigurationCaptured": false,
+  "defaults": {
+    "preload": "manual load button; no mesh until load succeeds",
+    "sourceTab": "all",
+    "parameterGroup": "anny.phenotypes",
+    "query": "",
+    "wireframe": false,
+    "neckBand": false,
+    "cameraView": "three",
+    "owners": {
+      "rig": "anny",
+      "headRig": "gnm",
+      "expression": "gnm",
+      "headShape": "gnm",
+      "gaze": "gnm"
+    }
+  },
+  "renderer": {
+    "background": "#242c32",
+    "cameraFovDegrees": 31,
+    "pixelRatioCap": 1.5,
+    "toneMapping": "ACESFilmicToneMapping",
+    "exposure": 1.05,
+    "materialColor": "#bab3a5",
+    "roughness": 0.72,
+    "metalness": 0,
+    "singleCanonicalMesh": true
+  },
+  "controls": {
+    "viewKeys": [
+      "three",
+      "front",
+      "rear",
+      "side",
+      "face"
+    ],
+    "buttonIDs": [
+      "load-model",
+      "cancel-load",
+      "wireframe",
+      "neck-band",
+      "view-reset"
+    ],
+    "parameterFlow": [
+      "source filter",
+      "search",
+      "classification",
+      "numeric input",
+      "single-parameter reset",
+      "group reset",
+      "source reset",
+      "all defaults",
+      "archive save",
+      "archive restore"
+    ],
+    "exports": [
+      "obj",
+      "glb",
+      "usda",
+      "snapshot",
+      "png"
+    ]
+  },
+  "screenshots": {
+    "accepted": [],
+    "requiredBeforeVisualAcceptance": [
+      "Desktop loaded body front/side/three and GNM face",
+      "Mobile loaded model and accessible parameter panel",
+      "Same camera/lighting/profile paired baseline and candidate",
+      "Cancel/reload and context restoration; no blank canvas"
+    ]
+  },
+  "exclusions": [
+    "Do not freeze false complete-parameter or full visual-acceptance claims.",
+    "Do not preserve a defective exclusivity gate just because it existed in this baseline.",
+    "Archive/profile source values are preserved, but migrations require explicit version handling."
+  ]
+}
