@@ -191,30 +191,36 @@
    Keep both throttle border boxes, visible rings and SVGs exactly at R08 size.
    Narrow portrait uses three controls above two auxiliaries, never a third row. */
 #driverGame #drivePanel {
-  --r09-pause: 100px;
+  --r09-pause: calc(var(--r07-circle) * 1.5);
   grid-template-columns: var(--r09-pause) var(--r08-primary) var(--r08-primary) var(--r08-brake) var(--r08-station);
 }
 #driverGame #drivePanel #pause {
   width: var(--r09-pause);
   height: var(--r08-height);
   min-height: var(--r08-height);
-  border: 2px solid #d7c39c;
-  border-radius: 16px;
-  background: #23372be8;
-  box-shadow: inset 0 0 0 4px #d8cc9b12, 0 3px 15px #0003;
-  gap: 8px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  gap: 5px;
   color: #fff3d5;
   font-family: inherit;
 }
-#driverGame #drivePanel #pause::after { content: none; }
-#driverGame #drivePanel #pause #pauseIcon { font: 700 34px/1 Georgia, serif; letter-spacing: 0; }
+#driverGame #drivePanel #pause::after {
+  content: "";
+  width: min(var(--r09-pause), calc(var(--r07-circle) * 1.5));
+  height: min(var(--r09-pause), calc(var(--r07-circle) * 1.5));
+  border: 2.4px solid #d7c39c;
+  border-radius: 50%;
+  background: #23372ba8;
+  box-shadow: inset 0 0 0 6px #d8cc9b14;
+}
+#driverGame #drivePanel #pause #pauseIcon { font: 700 32px/1 Georgia, serif; letter-spacing: 0; }
 #driverGame #drivePanel #pause #pauseLabel { font-size: 19px; font-weight: 700; letter-spacing: .06em; }
-#driverGame #drivePanel #pause[aria-pressed=true] { background: #6b542beF; border-color: #f7d795; }
-#driverGame #drivePanel #pause:hover { background: #3d5141; }
-#driverGame #drivePanel #pause[aria-pressed=true]:hover { background: #81683b; }
-#driverGame .notice, #driverGame .tutorial { bottom: calc(var(--r09-camera-bottom, 210px) + 70px); }
-@container game (max-height: 650px) and (min-width: 600px) {
-  #driverGame #drivePanel { --r09-pause: 88px; }
+#driverGame #drivePanel #pause[aria-pressed=true]::after { background: #6b542bda; border-color: #f7d795; }
+#driverGame #drivePanel #pause:hover::after { background: #3d5141c7; }
+#driverGame #drivePanel #pause[aria-pressed=true]:hover::after { background: #81683b; }
+@container game (min-width: 751px) and (max-width: 999px) {
+  #driverGame[data-layout=landscape] #drivePanel { --r08-brake: 80px; --r08-station: 84px; --r08-gap: 12px; }
 }
 @container game (min-width: 600px) and (max-width: 750px) {
   #driverGame[data-layout=landscape] #drivePanel {
@@ -232,7 +238,9 @@
   #driverGame[data-layout=landscape] #drivePanel #stationAction { padding-inline: 2px; font-size: 10px; }
   #driverGame[data-layout=landscape] #drivePanel #brake .rail-control-icon { width: 30px; height: 30px; }
   #driverGame[data-layout=landscape] #drivePanel #brake span { max-width: 40px; font-size: 10px; }
-  #driverGame[data-layout=landscape] #drivePanel #pause #pauseLabel { font-size: 17px; }
+  #driverGame[data-layout=landscape] #drivePanel #pause { gap: 2px; }
+  #driverGame[data-layout=landscape] #drivePanel #pause #pauseIcon { font-size: 28px; }
+  #driverGame[data-layout=landscape] #drivePanel #pause #pauseLabel { font-size: 15px; }
 }
 #driverGame[data-layout=portrait] #drivePanel {
   --r09-pause: clamp(72px, 22.5cqw, 98px);
@@ -240,7 +248,7 @@
   grid-template-columns: var(--r09-pause) var(--r08-primary) var(--r08-primary);
   grid-template-rows: var(--r08-height) var(--r07-height);
 }
-#driverGame[data-layout=portrait] #drivePanel #pause { grid-column: 1; grid-row: 1; }
+#driverGame[data-layout=portrait] #drivePanel #pause { grid-column: 1; grid-row: 1; gap: 3px; }
 #driverGame[data-layout=portrait] #drivePanel #accelerate { grid-column: 2; grid-row: 1; }
 #driverGame[data-layout=portrait] #drivePanel #decelerate { grid-column: 3; grid-row: 1; }
 #driverGame[data-layout=portrait] #drivePanel #brake { grid-column: 2; grid-row: 2; }
@@ -256,18 +264,14 @@
   #pauseScreen .sheet :is(.eyebrow, .intro, .classic-link) { display: none; }
   #pauseScreen .sheet :is(.primary, .secondary) { min-height: 44px; margin: 0; padding: 6px; font-size: 12px; }
 }
-/* All five camera targets have real 44px minimum touch boxes. Their vertical
-   anchor is recalculated from the driving panel after resize/layout changes. */
-.camera-positions { position: absolute; bottom: var(--r09-camera-bottom, 210px); left: 50%; transform: translateX(-50%); z-index: 6; display: flex; gap: 6px; padding: 4px; border: 1px solid #b7ac8970; border-radius: 28px; background: #14221dbd; backdrop-filter: blur(4px); pointer-events: auto; }
-.camera-positions button { min-width: 56px; min-height: 44px; padding: 5px 9px; border: 1px solid transparent; border-radius: 22px; background: transparent; color: #efe5c7; font: 12px/1.2 sans-serif; touch-action: manipulation; }
+/* Camera choices live in settings, never across the locomotive or its wheels. */
+#driverGame #openCameraMenu { min-width: 44px; min-height: 44px; font-size: 11px; }
+.camera-menu-group { scroll-margin-top: 4px; }
+.camera-positions { position: static; display: grid; grid-template-columns: repeat(5, minmax(44px, 1fr)); gap: 8px; margin: 0; padding: 0; border: 0; background: none; transform: none; }
+.camera-positions button { min-width: 44px; min-height: 44px; padding: 7px 8px; border: 1px solid #aaa78869; border-radius: 8px; background: #25382c; color: #efe5c7; font: 13px/1.2 sans-serif; touch-action: manipulation; }
 .camera-positions button[aria-pressed=true] { background: #7b633bc2; border-color: #d6c29a; }
 .camera-positions button:disabled { opacity: .45; }
 .camera-positions button:focus-visible { outline: 2px solid #f2ce78; outline-offset: 1px; }
-@container game (max-width: 359px) {
-  .camera-positions { gap: 4px; }
-  .camera-positions button { min-width: 48px; padding-inline: 6px; }
-}
-@container game (max-height: 450px) {
-  .camera-positions { padding: 3px; gap: 4px; }
-  .camera-positions button { min-width: 52px; font-size: 11px; }
+@container game (max-width: 520px) {
+  .camera-positions { grid-template-columns: repeat(3, minmax(44px, 1fr)); }
 }

@@ -20,6 +20,7 @@ const cases = [
   {name:'desktop-1440', width:1440, height:900},
   {name:'tablet-1024', width:1024, height:768, touch:true},
   {name:'landscape-844', width:844, height:390, touch:true},
+  {name:'landscape-768-tall', width:768, height:768, touch:true},
   {name:'landscape-600', width:600, height:360, touch:true},
   {name:'landscape-568', width:568, height:320, touch:true},
   {name:'forced-landscape-390', width:390, height:844, touch:true},
@@ -140,15 +141,15 @@ async function nativeAt(page, point, touch) {
       assert.equal(await page.locator('#pauseIcon').count(), 1, 'Stable pause icon span');
       assert.equal(await page.locator('#pauseLabel').count(), 1, 'Stable pause label span');
       assert(after.buttons.pause.cssWidth >= 64 && after.buttons.pause.cssHeight >= 99, 'Pause is a large full-height driving target');
+      const pauseRing=after.buttons.pause.ring;
+      near(pauseRing.width,pauseRing.height,'Pause visual is a circle');
+      assert.equal(await page.locator('#pause').evaluate(el=>getComputedStyle(el,'::after').borderRadius),'50%','Pause has a circular visible ring');
+      assert.equal(await page.locator('#cameraPositions').isVisible(),false,'Camera strip is absent from the driving scene');
+      assert.equal(await page.locator('#cameraPositions').evaluate(el=>!!el.closest('#settingsScreen')),true,'Five camera choices live in settings');
+      const menuOpener=await controlGeometry(page.locator('#openCameraMenu'));
+      assertControlGeometry(menuOpener);
+      assert(menuOpener.width>=44&&menuOpener.height>=44,'Camera menu shortcut has a 44px target');
       const cameraGeometry={};
-      const cameraBar=await page.locator('#cameraPositions').boundingBox();
-      for(const name of cameraNames) {
-        const g=await controlGeometry(page.locator(`[data-camera="${name}"]`));
-        assertControlGeometry(g);
-        assert(g.width >= 44 && g.height >= 44, `${spec.name}/${name}: camera target >=44 CSS pixels`);
-        cameraGeometry[name]=g;
-      }
-      for(const id of ids) assert(separation(after.buttons[id],cameraBar)>=7.9, `${spec.name}/${id}: clear of camera strip`);
       const gaps=[];
       for(let i=0;i<ids.length;i++) {
         const geometry=await controlGeometry(page.locator('#'+ids[i]));
@@ -203,8 +204,19 @@ async function nativeAt(page, point, touch) {
       }
       const cameraClicks=[];
       for(const name of cameraNames) {
+        await clickTarget(page,'#openCameraMenu',{touch:!!spec.touch});
+        await page.locator('#settingsScreen').waitFor({state:'visible'});
+        for(const other of cameraNames) {
+          const g=await controlGeometry(page.locator(`[data-camera="${other}"]`));
+          assertControlGeometry(g);
+          assert(g.width>=44&&g.height>=44, `${spec.name}/${other}: camera target >=44 CSS pixels`);
+          cameraGeometry[other]=g;
+        }
         await clickTarget(page, `[data-camera="${name}"]`, {touch:!!spec.touch});
+        await page.locator('#settingsScreen').waitFor({state:'hidden'});
         assert.equal(await page.locator(`[data-camera="${name}"]`).getAttribute('aria-pressed'),'true',`${name}: native camera tap selects viewpoint`);
+        assert.equal(await page.evaluate(()=>__r09Controls.state().paused),false,'Selecting a camera returns to driving');
+        assert.equal(await page.locator('#cameraPositions').isVisible(),false,'Camera choices hide after selection');
         cameraClicks.push(name);
       }
       const brake=await controlGeometry(page.locator('#brake'));

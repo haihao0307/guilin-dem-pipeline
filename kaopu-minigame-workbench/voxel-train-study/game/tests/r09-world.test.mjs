@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../../vendor/three.module.js';
 import {readFileSync} from 'node:fs';
-import {FLAT_WORLD,flatFrame,flatActor,stationOffset,terrainSlots,chunkBounds,chunkDetail,splitFlatGround} from '../flat-terrain.mjs';
+import {FLAT_WORLD,flatFrame,flatActor,stationOffset,floraPlacementZ,fieldTreePose,terrainSlots,chunkBounds,chunkDetail,splitFlatGround} from '../flat-terrain.mjs';
 import {WORLD,pathFrame,partitionTerrain,createGameWorld} from '../world.mjs';
 import {buildEnvironment} from '../heritage.mjs';
 import {Session,FRONT_X,COACHES} from '../session.mjs';
@@ -38,6 +38,11 @@ test('Repeated terrain stays continuous and recycles only beyond every supported
   }
 });
 
+test('Platform-side foliage stays outside the locomotive and driver viewing corridor',()=>{
+  for(const z of [6.85,7.05]){assert.ok(floraPlacementZ(z)>=18);assert.ok(floraPlacementZ(z)>14+3);near(floraPlacementZ(z)-z,12);}
+  for(const z of [-3.94,-16,0])near(floraPlacementZ(z),z);
+});
+
 test('Every close terrain chunk copies the original detailed geometry without resampling',()=>{
   const parts=partitionTerrain(buildEnvironment(WORLD,{platformCorridor:true,includeBridge:false,optimizeGeometry:true}));
   assert.equal(parts.proof.originalTriangles,149496);assert.equal(parts.proof.partitionedTriangles,parts.proof.originalTriangles);assert.ok(parts.proof.maxPositionDeviation<1e-6);assert.equal(parts.plants.length,8);
@@ -66,6 +71,16 @@ test('Station, original actors and coach doorway frames agree after scrolling',(
 globalThis.document??={createElement:()=>({getContext:()=>({fillRect(){},fillText(){}})})};
 const world=createGameWorld(),session=new Session({line:'kcr1',seed:'R09-flat-world'});
 
+test('Far trees reuse original layered crown silhouettes with deterministic off-grid placement',()=>{
+  const crowns=world.terrain.children.filter(o=>o.name.startsWith('Distant source-derived crown variant'));assert.equal(crowns.length,3);
+  const heights=new Set();for(const mesh of crowns){const geometry=mesh.geometry;assert.equal(geometry.userData.sourceDerivedCrown,true);assert.equal(geometry.userData.crownLevels,7);assert.ok(geometry.index.count/3<=124);geometry.computeBoundingBox();near(geometry.boundingBox.max.y,geometry.userData.sourceLeafHeight[1],1e-6);heights.add(geometry.boundingBox.max.y.toFixed(2));for(const value of geometry.attributes.position.array)assert.ok(Number.isFinite(value));
+    const crownY=new Set();for(let i=24;i<geometry.attributes.position.count;i++)crownY.add(geometry.attributes.position.getY(i).toFixed(3));assert.ok(crownY.size>=7,'Crown silhouette has actual layered heights');
+  }
+  assert.equal(heights.size,3);const placements=Array.from({length:16},(_,i)=>fieldTreePose(i));assert.deepEqual(placements,Array.from({length:16},(_,i)=>fieldTreePose(i)));assert.equal(new Set(placements.map(p=>p.variant)).size,3);
+  assert.ok(new Set(placements.map(p=>p.z.toFixed(1))).size>12);assert.ok(new Set(placements.map(p=>p.scale.toFixed(2))).size>8);
+  for(const [i,p]of placements.entries()){assert.ok(i%2?p.z>=19:p.z<=-12);assert.ok(p.x>FLAT_WORLD.sourceStart+i*FLAT_WORLD.period/16);assert.ok(p.x<FLAT_WORLD.sourceStart+(i+1)*FLAT_WORLD.period/16);}
+});
+
 test('Broad ground and straight rails cover front, rear, detail and maximum free orbit views',()=>{
   const spec=FLAT_WORLD;
   assert.ok(spec.groundHalfSize>spec.maxOrbitDistance+spec.cameraFar);
@@ -86,7 +101,8 @@ test('Actual station parts translate as one flat group, with no sign or lamp ben
   const platform=world.root.children.find(o=>o.name==='Flat station platform: '+session.route[0].name);assert.ok(platform);near(platform.position.x,-3.5);near(platform.position.y,0);assert.deepEqual(platform.rotation.toArray().slice(0,3),[0,0,0]);
   const sign=platform.children.find(o=>o.geometry?.type==='PlaneGeometry');assert.ok(sign);const position=sign.getWorldPosition(new THREE.Vector3());near(position.x,-14.6-3.5);near(position.y,2.39);near(position.z,5.438);
   const lamps=platform.children.find(o=>o.isGroup);for(const lamp of lamps.children){const p=lamp.getWorldPosition(new THREE.Vector3());near(p.x,lamp.userData.localX-3.5);near(p.y,2.75);near(p.z,5.29);}
-  assert.equal(world.terrain.userData.proof.blackUndersideRendered,false);assert.equal(world.terrain.userData.proof.sourceVertexDeviation,0);
+  assert.equal(world.terrain.userData.proof.blackUndersideRendered,false);assert.equal(world.terrain.userData.proof.sourceVertexDeviation,0);assert.equal(world.terrain.userData.proof.platformSideFloraShiftZ,12);
+  const nearFlora=world.terrain.children.filter(o=>o.name.startsWith('Preserved original tree or shrub')&&o.visible);assert.ok(nearFlora.some(o=>o.position.z>18));for(const mesh of nearFlora)assert.ok(mesh.position.z<0||mesh.position.z>18);
 });
 
 test('Flat terrain density remains bounded rather than tripling all original trees',()=>{
