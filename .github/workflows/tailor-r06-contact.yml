@@ -1,0 +1,94 @@
+name: Tailor R06 contact browser verification
+on:
+  push:
+    branches: [fix/tailor-r06-contact-20261008]
+    paths:
+      - '.github/workflows/tailor-r06-contact.yml'
+      - 'kaopu-tailor-workbench/r06/build_worker.py'
+      - 'kaopu-tailor-workbench/r06/build_ui.py'
+      - 'kaopu-tailor-workbench/r06/build_sdf.py'
+      - 'kaopu-tailor-workbench/r06/fixtures.mjs'
+      - 'kaopu-tailor-workbench/r06/body_field.cpp'
+      - 'kaopu-tailor-workbench/r06/contact/*.mjs'
+      - 'kaopu-tailor-workbench/r06/contact/*.ts'
+      - 'kaopu-tailor-workbench/r06/contact/*.wasm'
+      - 'kaopu-tailor-workbench/r06/contact/index.html'
+      - 'kaopu-tailor-workbench/r06/contact/qa.py'
+      - 'kaopu-tailor-workbench/catalogue/r06-contact-*.mjs'
+      - 'kaopu-tailor-workbench/catalogue/workbench-worker.bundle.mjs'
+      - 'kaopu-tailor-workbench/catalogue/workbench-app.mjs'
+      - 'kaopu-tailor-workbench/catalogue/*style.css'
+permissions:
+  contents: write
+concurrency:
+  group: tailor-r06-contact-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          sparse-checkout: |
+            kaopu-tailor-workbench
+            kaopu-human-overview
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reproduce additional collision-only kernel
+        run: |
+          npx --yes --package=assemblyscript@0.28.9 asc kaopu-tailor-workbench/r06/contact/contact-kernel.ts -O3 --noAssert --outFile /tmp/contact-kernel.wasm
+          cmp /tmp/contact-kernel.wasm kaopu-tailor-workbench/r06/contact/contact-kernel.wasm
+      - name: Build additive application and collision data
+        run: |
+          python kaopu-tailor-workbench/r06/build_worker.py
+          python kaopu-tailor-workbench/r06/build_ui.py
+          python kaopu-tailor-workbench/r06/build_sdf.py
+          node --check kaopu-tailor-workbench/catalogue/r06-contact-workbench-app.mjs
+          node --check kaopu-tailor-workbench/catalogue/r06-contact-worker.bundle.mjs
+          node kaopu-tailor-workbench/r06/contact/contact.test.mjs
+          mkdir -p evidence
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json,os
+          r=Path('kaopu-tailor-workbench')
+          paths=list((r/'r06').rglob('*'))+list((r/'catalogue').glob('r06-*'))
+          manifest={'version':'R06.3','sourceCommit':os.environ['GITHUB_SHA'],'sourceBranch':os.environ['GITHUB_REF_NAME'],'baselineCommit':'6562c4677b1b14c58f00d686ceb700856118854d','files':{str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in paths if p.is_file() and p.name!='BUILD_MANIFEST.json'},'newStyleFitAccepted':False}
+          (r/'r06/contact/BUILD_MANIFEST.json').write_text(json.dumps(manifest,indent=2))
+          PY
+      - name: Browser dependencies
+        run: |
+          python -m pip install playwright==1.56.0
+          python -m playwright install chromium --with-deps
+      - name: Execute real browser generation and sewing
+        run: |
+          python -m http.server 8765 > /tmp/tailor-server.log 2>&1 &
+          python - <<'PY'
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          import json,traceback
+          out=Path('evidence')
+          with sync_playwright() as p:
+            browser=p.chromium.launch(headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+            page=browser.new_page(viewport={'width':1440,'height':1000})
+            try:
+              exec(compile(Path('kaopu-tailor-workbench/r06/contact/qa.py').read_text(),'r06/qa.py','exec'),{'page':page,'browser':browser,'out':out,'json':json,'Path':Path})
+            except Exception:
+              (out/'FAILURE.txt').write_text(traceback.format_exc())
+              page.screenshot(path=str(out/'failure.png'))
+              (out/'failure-state.json').write_text(json.dumps(page.evaluate('window.__TAILOR_CATALOGUE_QA__?.getState()')))
+              raise
+            finally:browser.close()
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r06-contact-evidence
+          path: |
+            evidence
+            kaopu-tailor-workbench/r06
+            kaopu-tailor-workbench/catalogue/r06-*
+          retention-days: 7

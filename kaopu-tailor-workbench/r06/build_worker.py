@@ -32,8 +32,8 @@ replace('''const distances = a.ids.map((v, i) => Math.hypot(...this.positions[o1
       return { id: s.id, active: this.active.has(s.id), maxGapMm: Math.max(...distances) };''','''const pairs=this.spec.source?.experimentalSparseSewing?s.stitchVertexPairs:a.ids.map((v,i)=>[v,b.ids[i]]);
       const distances = pairs.map(([v,w]) => Math.hypot(...this.positions[o1 + v].map((x, k) => x - this.positions[o2 + w][k])) * 1e3);
       return { id: s.id, active: this.active.has(s.id), maxGapMm: Math.max(...distances), measurement: this.spec.source?.experimentalSparseSewing ? "numerical stitch sites, not every free gathering vertex" : "all paired edge vertices", stitchCount:pairs.length };''')
-# Ordinary seams keep every original curve sample; only gathered seams need free intervening material.
-replace('if (numericalStitchSpacingMm !== null) {', 'if (numericalStitchSpacingMm !== null && Math.abs(s.lengthAMm-s.lengthBMm)/Math.min(s.lengthAMm,s.lengthBMm)>0.15) {')
+# Length-mismatched seams keep their original metric and free intervening material.
+replace('if (numericalStitchSpacingMm !== null) {', 'if (numericalStitchSpacingMm !== null && Math.abs(s.lengthAMm-s.lengthBMm)/Math.min(s.lengthAMm,s.lengthBMm)>0.02) {')
 replace('kind: "GarmentCode MIT live analytic pattern", commit:', 'kind: "GarmentCode MIT live analytic pattern", experimentalSparseSewing: numericalStitchSpacingMm !== null, commit:')
 replace('''const meshStart = performance.now(), paper = compileAnalytic(sourcePattern, { allowUnsupportedSeams: true });''','''const meshStart = performance.now(), paper = compileAnalytic(sourcePattern, { allowUnsupportedSeams: true, numericalStitchSpacingMm: 12, measurementSnapshot: {bodyId:"anny-adult-neutral-r01"} });
   paper.source.bodyId="anny-adult-neutral-r01";
@@ -46,7 +46,7 @@ replace('''if (config.kind !== "legacy") throw Error("This newly generated style
 replace('''bytes(config.directory + "/assets/" + meta.transport.file)''','''bytes(directory + "/assets/" + meta.transport.file)''')
 replace('''canSew: config.kind === "legacy", physicalStatus: config.kind === "legacy" ? "accepted baseline family; current parameters require actual solve" : "new style: analytic paper and material mesh validated; physical fit not accepted"''','''canSew: config.kind === "legacy" || spec.source.experimentalSparseSewing === true, physicalStatus: config.kind === "legacy" ? "accepted baseline family; current parameters require actual solve" : "R06 live sparse-stitch trial available; no fit certificate"''')
 replace('''emit("done", { record, regions, intersections, profile, activeWallMs: wallMs + profile.auditMs });''','''if(config.kind!=="legacy"){
-            record.trial={version:"R06.2",style:config.recipe.design.style,sourceRecipeHash:spec.source.recipeHash,physicalFitAccepted:false,solver:"existing small-step XPBD / f64 WASM; full original-body SDF; sparse numerical stitching",runtimeSelfContact:false,continuousCollision:false,materialCalibrated:false,seamAllowanceAndThickness:false};
+            record.trial={version:"R06.3",style:config.recipe.design.style,sourceRecipeHash:spec.source.recipeHash,physicalFitAccepted:false,solver:"existing small-step XPBD / f64 WASM; full original-body SDF; sparse numerical stitching",runtimeSelfContact:false,continuousCollision:false,materialCalibrated:false,seamAllowanceAndThickness:false};
           }
           emit("done", { record, regions, intersections, profile, activeWallMs: wallMs + profile.auditMs });''')
 replace('  lab = new GarmentLab2(spec, sdf, { substeps: 12, iterations: 6 });', '  if(config.kind!=="legacy") prepareShoulderFixtures(spec,sdf);\n  lab = new GarmentLab2(spec, sdf, { substeps: 12, iterations: 6 });')
@@ -72,6 +72,29 @@ replace('''    } else if (data.type === "resume") {
       if (!lab''','''    } else if (data.type === "resume") {
       pendingPause=false;
       if (!lab''')
+replace('  const sourcePanels = new Map(input.panels.map', '  input={...input,seams:orderedSeams(input.seams)};\n  const sourcePanels = new Map(input.panels.map')
+replace('        const p = ps[hold.id], t = Math.min(1, this.elapsed / 4), s = t * t * (3 - 2 * t);\n        for (let axis = 0; axis < 3; axis++) p[axis] = hold.start[axis] + (hold.target[axis] - hold.start[axis]) * s;', '        const p = ps[hold.id];\n        if(this.r06Contact) liftedSupportPosition(hold,this.elapsed,p);\n        else { const t = Math.min(1,this.elapsed/4),s=t*t*(3-2*t); for(let axis=0;axis<3;axis++)p[axis]=hold.start[axis]+(hold.target[axis]-hold.start[axis])*s; }')
+replace('    if (this.kernel) this.syncConstraints();\n  }\n  releasePins() {', '    if (this.kernel) this.syncConstraints();\n    if(this.r06Contact && stageId==="shoulders" && this.support.length) this.releasePins();\n  }\n  releasePins() {')
+# R06 contact path retains the original ordered f64 constraint kernel.
+replace('if (this.orientationGuides || this.selfCollisionEnabled) return super.step(dt);', 'if (this.orientationGuides || (this.selfCollisionEnabled && !this.r06Contact)) return super.step(dt);')
+replace('      k.distances(baseCount, this.count);\n      P.distanceMs += performance.now() - now;\n      if (this.collisions && sub3 % 3 === 2) {', '      if (!this.r06Contact) k.distances(baseCount, this.count);\n      P.distanceMs += performance.now() - now;\n      if (this.r06Contact) {\n        for(let guard=0;guard<6;guard++) { k.strains(); k.vertices(this.clearance); }\n      }\n      if (this.collisions && sub3 % 3 === 2) {')
+replace('      this.bodyContacts += k.contacts.value;', '      if (this.r06Contact) { this.selfContacts.bodySweep(); this.selfContacts.rebuild(); this.selfContacts.project(); }\n      this.bodyContacts += k.contacts.value;')
+replace('  profile.bodyMs = performance.now() - start;', '  if(config.kind!=="legacy") configureContactWasm(await bytes("r06/contact/contact-kernel.wasm"));\n  if(token!==epoch)return;\n  profile.bodyMs = performance.now() - start;')
+
+replace('selfCollision: this.selfCollisionEnabled ? "discrete vertex-face, exact audit still required" : "disabled"', 'selfCollision: this.selfCollisionEnabled ? (this.r06Contact ? "swept linear VF/EE + bounded body paths; not nonlinear CCD" : "discrete vertex-face, exact audit still required") : "disabled"')
+replace('originalConstraintOrder: true };', 'originalConstraintOrder: !this.r06Contact, contactTrialChanges: this.r06Contact ? "original main-pass order; final seam-only tightening removed; additional material/body relaxation and swept contacts" : null };')
+replace('  lab.selfCollisionEnabled = false;', '  lab.selfCollisionEnabled = config.kind!=="legacy";\n  lab.r06Contact = config.kind!=="legacy";\n  if(lab.r06Contact) { lab.selfContacts=new FastSweptContact(lab); lab.selfContacts.capture(); }')
+replace('runtimeSelfContact:false,continuousCollision:false', 'runtimeSelfContact:true,continuousCollision:false,linearSweptContact:lab.selfContacts.report(),temporarySupportPath:{kind:"lift-sweep-lower",liftMm:80,durationSec:4,originalTargetRetained:true,releasePolicy:"start original shoulder sewing stage after center assembly",releasedBeforeGravity:true},gatheringStitchModel:{restGapMm:.8,equalityWeld:true,restMetricRescaled:false}')
+replace('No continuous collision or runtime self-contact response.', 'Runtime collision-only f64 WASM, swept linear vertex-face and edge-edge conservative advancement; nonlinear CCD remains uncertified.')
+# Prevent the accidental duplicate contact pass found during profiling.
+step=s[s.index('var GarmentLab2 ='):s.index('// tailor-unify-20261007/work/kaopu-tailor-workbench/garments-r04/src/sdf-transport.mjs')]
+assert step.count('this.selfContacts.rebuild();') == 1
+assert step.count('this.selfContacts.project();') == 1
+assert 'if (this.r06Contact) { this.selfContacts.bodySweep();' in step
+s=(ROOT/'r06/contact/fast-contact.mjs').read_text().replace("import {SweptContact} from './swept-contact.mjs';",'').replace('export function','function').replace('export class','class')+'\n'+s
+s=(ROOT/'r06/contact/swept-contact.mjs').read_text().replace('export class','class')+'\n'+s
+s=(ROOT/'r06/contact/support-path.mjs').read_text().replace('export function','function')+'\n'+s
+s=(ROOT/'r06/contact/seam-order.mjs').read_text().replace('export function','function')+'\n'+s
 s=(ROOT/'r06/fixtures.mjs').read_text().replace('export function','function')+'\n'+s
-(ROOT/'catalogue/r06-worker.bundle.mjs').write_text('// R06.2 additive worker. Original catalogue/workbench-worker.bundle.mjs remains intact.\n'+s)
+(ROOT/'catalogue/r06-contact-worker.bundle.mjs').write_text('// R06.3 contact repair, original R06.2 retained. Original catalogue/workbench-worker.bundle.mjs remains intact.\n'+s)
 print('worker',len(s))

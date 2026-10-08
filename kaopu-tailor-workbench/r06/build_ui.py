@@ -56,5 +56,6 @@ patch("$('generate').onclick=()=>generate(false);$('sew').onclick=()=>generate(t
 patch("state.phase='error';state.error=error.message;status", "state.phase='error';state.runAfterGeneration=false;state.error=error.message;status")
 patch("getState:()=>({caseId:current?.id,", "getState:()=>({version:'R06.2',diagnosticFailed:state.diagnosticFailed,caseId:current?.id,")
 patch("getRecord:()=>structuredClone(state.record),select", "getRecord:()=>structuredClone(state.record),getDesign:()=>structuredClone(design),select")
-(R/'catalogue/r06-workbench-app.mjs').write_text('// R06.2 additive UI; original application retained.\n'+s)
+s=s.replace('R06.2','R06.3').replace('r06-worker.bundle.mjs','r06-contact-worker.bundle.mjs')
+(R/'catalogue/r06-contact-workbench-app.mjs').write_text('// R06.2 additive UI; original application retained.\n'+s)
 print('UI',len(s))
