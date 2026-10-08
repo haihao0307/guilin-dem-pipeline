@@ -1,7 +1,6 @@
 import {createRailAudio} from './audio.mjs';
-import {createMorningAtmosphere} from './morning-atmosphere.mjs';
 import {KCR_STATIONS,MILEAGE} from './timetable.mjs';
-import * as THREE from '../vendor/three.module.js';
+import * as THREE from '../../vendor/three.module.js';
 import {Session,replay} from './session.mjs';
 import {createGameWorld} from './world.mjs';
 import {createGameSmoke} from './smoke.mjs';
@@ -20,7 +19,10 @@ const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'h
 const gl=renderer.getContext(),debugRenderer=gl.getExtension('WEBGL_debug_renderer_info'),rendererName=debugRenderer?gl.getParameter(debugRenderer.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x52645a);scene.fog=new THREE.Fog(0x52645a,45,105);
 const camera=new THREE.PerspectiveCamera(32,1,.08,320),cameraTarget=new THREE.Vector3(-8.8,-.8,1),widePosition=new THREE.Vector3(...DEFAULT_VIEWS.landscape.position),wideTarget=new THREE.Vector3(...DEFAULT_VIEWS.landscape.target),portraitPosition=new THREE.Vector3(...DEFAULT_VIEWS.portrait.position),portraitTarget=new THREE.Vector3(...DEFAULT_VIEWS.portrait.target),closePosition=new THREE.Vector3(-2,13,20),closeTarget=new THREE.Vector3(-14.2,1.2,1.4);camera.position.copy(widePosition);camera.lookAt(cameraTarget);
-const atmosphere=createMorningAtmosphere(scene,renderer);
+scene.add(new THREE.HemisphereLight(0xd5e6ec,0x273d30,1.4));
+const key=new THREE.DirectionalLight(0xffebc4,2.3);key.position.set(1,22,14);key.target.position.set(-8,0,0);key.castShadow=true;key.shadow.mapSize.set(1024,1024);Object.assign(key.shadow.camera,{left:-34,right:21,top:20,bottom:-19,far:90});key.shadow.normalBias=.05;key.shadow.bias=-.00025;key.shadow.radius=3;scene.add(key,key.target);
+const rim=new THREE.DirectionalLight(0xc3dce4,.7);rim.position.set(-14,8,-14);scene.add(rim);
+for(const [x,power]of [[1.4,36],[-15,24]]){const fill=new THREE.PointLight(0xf4e5a2,power,24,1.6);fill.position.set(x,5.6,5);scene.add(fill);}
 const railAudio=createRailAudio({wheelRadius:.61});const world=createGameWorld();scene.add(world.root);const smoke=createGameSmoke({tallExhaust:true});scene.add(smoke.root);
 world.train.root.updateWorldMatrix(true,true);const zoomBounds=new THREE.Box3().setFromObject(world.train.root),zoomPoints=[];for(const x of [zoomBounds.min.x,zoomBounds.max.x])for(const y of [zoomBounds.min.y,zoomBounds.max.y])for(const z of [zoomBounds.min.z,zoomBounds.max.z])zoomPoints.push(new THREE.Vector3(x,y,z));
 const QUALITY_KEY='kaopu.train-driver.quality.v1';let qualityMode='clear';try{qualityMode=normalizeQuality(localStorage.getItem(QUALITY_KEY));}catch{}
@@ -121,7 +123,7 @@ canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=tr
 canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;$('loading').hidden=true;resize();needsRender=true;});
 viewControls=createViewControls({camera,target:cameraTarget,canvas,root:$('driverGame'),getZoomPoints:currentZoomPoints,onReset:()=>{manualCamera=null;},onChange:(profile,detail)=>{syncCameraButtons();if(detail?.profileApplied)projectionKey='';needsRender=true;if(lastCanvasSize[0]!==wrap.clientWidth||lastCanvasSize[1]!==wrap.clientHeight)resize(profile);else syncProjection(profile);}});
 resize();draw(game.view(),1,true);updateHUD(game.view());$('loading').hidden=true;requestAnimationFrame(animate);
-window.__trainDriver={ready:true,version:'kcr-atmosphere-r10',getState:()=>({...game.view(),actors:game.actors.map(a=>({...a,position:a.position.slice()})),proof:world.train.proof,audio:railAudio.getState(),steam:smoke.root.userData.effects,terrainProof:world.terrain.userData.proof,worldMode:'flat',atmosphere:atmosphere.proof,stationDetail:world.stationProof?.(),sceneFog:{near:scene.fog.near,far:scene.fog.far},camera:camera.position.toArray(),viewSettings:viewControls.state(),cameraMode:viewControls?.activePreset()||'manual',smokeMode:smoke.mode,smokeParticles:smoke.particles,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,frames:frameCount,fps,renderRatio,qualityMode,qualityInfo,canvasPixels:[canvas.width,canvas.height],canvasCss:[wrap.clientWidth,wrap.clientHeight],devicePixelRatio,antialias:gl.getContextAttributes()?.antialias,rendererName}),exportReplay:()=>game.replayPacket()};
+window.__trainDriver={ready:true,version:'kcr-flat-r09',getState:()=>({...game.view(),actors:game.actors.map(a=>({...a,position:a.position.slice()})),proof:world.train.proof,audio:railAudio.getState(),steam:smoke.root.userData.effects,terrainProof:world.terrain.userData.proof,worldMode:'flat',sceneFog:{near:scene.fog.near,far:scene.fog.far},camera:camera.position.toArray(),viewSettings:viewControls.state(),cameraMode:viewControls?.activePreset()||'manual',smokeMode:smoke.mode,smokeParticles:smoke.particles,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,frames:frameCount,fps,renderRatio,qualityMode,qualityInfo,canvasPixels:[canvas.width,canvas.height],canvasCss:[wrap.clientWidth,wrap.clientHeight],devicePixelRatio,antialias:gl.getContextAttributes()?.antialias,rendererName}),exportReplay:()=>game.replayPacket()};
 
 initSettingsUI();
 function currentZoomPoints(){if(!viewControls?.state?.().focus||viewControls.state().focus==='overview')return zoomPoints;const b=viewControls?.focusBounds?.();if(!b)return zoomPoints;const points=[];for(const x of [b.min[0],b.max[0]])for(const y of [b.min[1],b.max[1]])for(const z of [b.min[2],b.max[2]])points.push(new THREE.Vector3(x,y,z));return points;}

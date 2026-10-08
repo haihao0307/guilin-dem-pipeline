@@ -49,12 +49,3 @@ The prior sections describe the R01–R06 baseline. R07 adds `line: 'kcr1'` whil
 `flat-terrain.mjs` reuses the original near geometry with zero vertex displacement, then fills a broad flat world with bounded instanced scenery. Stations and actors receive plain translations, never a belt transform. Chunk recycling occurs beyond 287m; supported camera radius is capped at 65m, fog 45–105m. Continuous rails extend beyond ±244m and broad ground beyond ±1800m. Camera presets and persistence are isolated under `kaopu.train-driver.views.r09`; `game/r08/` owns its original modules and unchanged old camera key. Gameplay `session.mjs`, timetable, route mileage, and audio samples remain shared in behavior but source-independent in the archived entry.
 
 The new driver is a basic original in-cab placeholder, not a production character asset. Tall upper exhaust is an explicit renderer option; lower platform steam preserves R08. Explicit pause also suspends the Web Audio context; canvas gestures only adjust the camera.
-
-
-## R10 platform detail and atmosphere
-
-`station-platform.mjs` owns station furniture and surface variants; `station-room.mjs` supplies the small open waiting room and tea corner. The world wrapper continues to translate station groups on the same flat frame. Session, actor trajectories, train construction, smoke and camera controls remain unchanged. Static detail is grouped by material rather than creating a mesh per plank or woven strip. See `VISUAL_REFERENCES.md` for reference-only photographic sources.
-
-`morning-atmosphere.mjs` replaces the lighting rig and flat background with clear warm side light, cool sky fill and an original procedural sky. Fog far distance remains inside the existing terrain/rail visibility margin. No post-process colour filter or blur is used.
-
-`r09/` preserves the accepted R09 runtime, with relative imports/links adjusted for its new directory. Its R08 link points to the sibling archive. Main R10 and R09 intentionally share the unchanged camera-coordinate preferences so the accepted view does not reset; R08 keeps its older isolated storage.
