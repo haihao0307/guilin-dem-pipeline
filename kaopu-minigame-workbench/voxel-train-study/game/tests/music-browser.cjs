@@ -208,30 +208,39 @@ async function run() {
     s=await page.evaluate(()=>__musicQA.step(6));assert.equal(s.brake,true);assert(s.music.duckFactor<=.34);
     await page.mouse.up();await page.evaluate(()=>__musicQA.drive('cruise'));await record(phase);
 
-    phase='pause-freeze-independent-controls';
+    phase='native-pause-freeze-resume';
     await clickTarget(page,'#pause',{touch:true});
     await waitState(()=>{const s=__trainDriver.getState();return s.paused&&s.music.state==='suspended'&&s.audio.state==='suspended';});
     const frozen=await state();await page.waitForTimeout(350);s=await state();
     for(const key of ['tick','elapsed'])assert.equal(s[key],frozen[key],key+' frozen');
     assert.equal(s.music.audioClock,frozen.music.audioClock);assert.equal(s.music.position,frozen.music.position);
     assert.equal(s.audio.audioClock,frozen.audio.audioClock);
+    await clickTarget(page,'#resume',{touch:true});
+    await waitState(()=>{const s=__trainDriver.getState();return !s.paused&&s.music.state==='running'&&s.audio.state==='running';});
+    s=await record(phase);assert.equal(s.music.sourceStarts,1);assert.equal(s.music.activeSources,1);
+    assert(s.music.position>=frozen.music.position&&s.music.position-frozen.music.position<1,'Resume preserves the playhead without wall-clock catchup');
+
+    phase='settings-pause-independent-controls';
+    assert.equal((await state()).paused,false,'Open settings from the supported running state');
     await openSettings(page,{touch:true});
+    await waitState(()=>{const s=__trainDriver.getState();return s.paused&&s.music.state==='suspended'&&s.audio.state==='suspended';});
+    const menuFrozen=await state();
     await setRange('#musicVolume',100);s=await state();assert.equal(s.music.volume,1);assert.equal(s.audio.volume,.65);
     await setRange('#musicVolume',32);
     for(let cycle=0;cycle<2;cycle++){
       await clickTarget(page,'#musicToggle',{touch:true});s=await state();assert.equal(s.music.enabled,false);
       await clickTarget(page,'#musicToggle',{touch:true});s=await state();assert.equal(s.music.enabled,true);
-      assert.equal(s.music.state,'suspended');assert.equal(s.music.position,frozen.music.position);
+      assert.equal(s.music.state,'suspended');assert.equal(s.music.position,menuFrozen.music.position);
+      assert.equal(s.music.audioClock,menuFrozen.music.audioClock);assert.equal(s.audio.audioClock,menuFrozen.audio.audioClock);
       assert.equal(s.music.sourceStarts,1);assert.equal(s.music.activeSources,1);
     }
     await clickTarget(page,'#soundToggle',{touch:true});s=await state();assert.equal(s.audio.muted,true);assert.equal(s.music.enabled,true);
     await clickTarget(page,'#soundToggle',{touch:true});s=await state();assert.equal(s.audio.muted,false);assert.equal(s.audio.state,'suspended');
     assert.equal(s.audio.crowdEnabled,false);assert.equal(s.music.volume,.32);
-    await closeSettings(page,{touch:true});assert.equal((await state()).paused,true);
-    await clickTarget(page,'#resume',{touch:true});
-    await waitState(()=>__trainDriver.getState().music.state==='running');
+    await closeSettings(page,{touch:true});
+    await waitState(()=>{const s=__trainDriver.getState();return !s.paused&&s.music.state==='running'&&s.audio.state==='running';});
     s=await record(phase);assert.equal(s.music.sourceStarts,1);assert.equal(s.music.activeSources,1);
-    assert(s.music.position>=frozen.music.position&&s.music.position-frozen.music.position<1,'Resume preserves the playhead without wall-clock catchup');
+    assert(s.music.position>=menuFrozen.music.position&&s.music.position-menuFrozen.music.position<1,'Closing settings automatically resumes without wall-clock catchup');
 
     phase='station-approach-steam-and-settlement';
     await page.waitForTimeout(1600);
@@ -253,16 +262,19 @@ async function run() {
     const laterSave=await page.evaluate(()=>__musicQA.savedPacket());
 
     phase='native-restart-and-disabled-scope';
+    assert.equal((await state()).paused,false,'Restart settings open from running');
     await openSettings(page,{touch:true});await clickTarget(page,'#restart',{touch:true});
     await page.locator('#settingsScreen').waitFor({state:'hidden'});
     s=await state();assert.equal(s.station.index,0);assert.equal(s.music.position,0);assert.equal(s.music.cueStarted,false);
     assert.equal(s.music.activeSources,0);assert.equal(s.music.stage,'waiting-departure');
     s=await serviceKowloon();assert.equal(s.music.sourceStarts,2);assert.equal(s.music.activeSources,1);
+    assert.equal(s.paused,false,'Disable-music settings open from running');
     await openSettings(page,{touch:true});await clickTarget(page,'#musicToggle',{touch:true});await closeSettings(page,{touch:true});
     await waitState(()=>__trainDriver.getState().music.state==='suspended');
     s=await state();assert.equal(s.paused,false);assert.equal(s.audio.state,'running');
     s=await page.evaluate(()=>__musicQA.drive('past-yaumati'));
     assert.equal(s.station.index,2);assert.equal(s.music.finished,true);assert.equal(s.music.activeSources,0);
+    assert.equal(s.paused,false,'Later-station settings open from running');
     await openSettings(page,{touch:true});await clickTarget(page,'#musicToggle',{touch:true});await closeSettings(page,{touch:true});
     s=await record(phase);assert.equal(s.music.sourceStarts,2);assert.equal(s.music.activeSources,0);
     assert.equal(s.music.enabled,true);assert.equal(s.audio.crowdEnabled,false);
