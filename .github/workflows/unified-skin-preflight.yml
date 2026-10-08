@@ -1,0 +1,59 @@
+name: Unified Skin Preflight
+on:
+  push:
+    branches: [feature/unified-human-skin-r01-20261008]
+    paths: [.github/workflows/unified-skin-preflight.yml]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Inspection tools
+        run: |
+          mkdir -p /tmp/skin-tools /tmp/common-skin-preflight
+          cd /tmp/skin-tools
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund playwright@1.55.1 esbuild@0.25.10
+          npx playwright install --with-deps chromium
+      - name: Capture actual canonical geometry and source baseline
+        env:
+          NODE_PATH: /tmp/skin-tools/node_modules
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import shutil,json,hashlib
+          root=Path('kaopu-unified-human-workbench');out=Path('/tmp/common-skin-preflight')
+          files=[]
+          for p in root.rglob('*'):
+              if p.is_file() and (p.suffix in ['.mjs','.js','.css','.html','.json','.md','.txt'] or p.name=='LICENSE'):
+                  target=out/'workspace'/p;target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(p,target)
+                  files.append({'path':str(p),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          (out/'source-files.json').write_text(json.dumps(files,indent=2))
+          p=root/'full/ui/browser-app.mjs';s=p.read_text();s=s.replace('contextsCreated++;','contextsCreated++;window.__INSPECT_COMMON__={viewer,model};');p.write_text(s)
+          PY
+          python -m http.server 8765 >/tmp/common-server.log 2>&1 &
+          node - <<'JS'
+          const {chromium}=require('playwright'),fs=require('fs');
+          (async()=>{const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});const p=await browser.newPage({viewport:{width:1440,height:1040}});const errors=[];p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
+          await p.goto('http://localhost:8765/kaopu-unified-human-workbench/');await p.click('#load-model');await p.waitForFunction(()=>window.fullCommonWorkbench?.diagnostics().ready,null,{timeout:360000});
+          const data=await p.evaluate(()=>{const {viewer:v,model:m}=window.__INSPECT_COMMON__;const describe=o=>Object.fromEntries(Object.entries(o).map(([k,v])=>[k,v?.length??(typeof v)]));return{positions:Array.from(v.geometry.attributes.position.array),normals:Array.from(v.geometry.attributes.normal.array),faces:Array.from(m.faces),canonical:m.canonical,gnmKeys:describe(m.gnm),gnmMeta:m.gnm.meta,annyKeys:describe(m.anny),metrics:m.metrics(),state:window.fullCommonWorkbench.state(),catalog:window.fullCommonWorkbench.catalog(),threeRevision:v.renderer.info,gnmSections:m.gnm.sections?describe(m.gnm.sections):null}});
+          fs.writeFileSync('/tmp/common-skin-preflight/common.json',JSON.stringify(data));fs.writeFileSync('/tmp/common-skin-preflight/errors.json',JSON.stringify(errors));
+          for(const view of ['three','face','side','rear']){await p.evaluate(view=>window.fullCommonWorkbench.view(view),view);await p.screenshot({path:'/tmp/common-skin-preflight/white-'+view+'.png'});}
+          console.log(JSON.stringify({metrics:data.metrics,gnmKeys:data.gnmKeys,canonicalKeys:Object.keys(data.canonical),errors}));await browser.close();if(errors.length)process.exit(1);
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unified-skin-preflight
+          path: /tmp/common-skin-preflight
+          retention-days: 5
