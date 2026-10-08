@@ -61,8 +61,10 @@ class SweptContact {
   // Paired needle sites are intentional adjacency even before equality activation.
   // No exclusion of whole panels or gathering bands.
   for(const seam of lab.spec.seams){const a=lab.offsets.get(seam.a.panelId),b=lab.offsets.get(seam.b.panelId);for(const [i,j] of seam.stitchVertexPairs){this.near[a+i].add(b+j);this.near[b+j].add(a+i);}}
+  const owners=new Int32Array(lab.positions.length);
+  for(let pi=0;pi<(lab.spec.panels||[]).length;pi++){const p=lab.spec.panels[pi],o=lab.offsets.get(p.id);owners.fill(pi,o,o+p.uvMm.length);}
   const first=this.near.map(s=>new Set(s));
-  for(let i=0;i<this.near.length;i++)for(const j of first[i])for(const k of first[j])this.near[i].add(k);
+  for(let i=0;i<this.near.length;i++)for(const j of first[i])for(const k of first[j])if(owners[i]===owners[k])this.near[i].add(k);
   this.previous=Float64Array.from(lab._old);this.lastGroups=-1;this.hash=new Map();this.edgeHash=new Map();
  }
  capture(){for(let i=0;i<this.lab.positions.length;i++)this.previous.set(this.lab.positions[i],i*3);}
@@ -2348,6 +2350,7 @@ var StitchGroups = class {
     const l = this.lab;
     let changed = false;
     for (const c of l.seamConstraints) {
+      if(l.r06Contact && l.spec.seams.find(s=>s.id===c.seamId)?.numericalStitchPlan) continue;
       if (c.eliminated || l.elapsed - c.activatedAt < c.rampDuration) continue;
       const a = this.find(c.a), b = this.find(c.b);
       if (a === b) {
@@ -2847,7 +2850,7 @@ var GarmentLab = class extends ClothLab {
       const distances = pairs.map(([v,w]) => Math.hypot(...this.positions[o1 + v].map((x, k) => x - this.positions[o2 + w][k])) * 1e3);
       return { id: s.id, active: this.active.has(s.id), maxGapMm: Math.max(...distances), measurement: this.spec.source?.experimentalSparseSewing ? "numerical stitch sites, not every free gathering vertex" : "all paired edge vertices", stitchCount:pairs.length };
     });
-    return { ...m, bodySignedDistanceMinMm: minBody, bodyInsideVertexCount: bad, outsideCollisionDomain: domain, minYmm: minY, maxYmm: maxY, seams, activeMaxGapMm: Math.max(0, ...seams.filter((s) => s.active).map((s) => s.maxGapMm)), temporarySupportCount: this.support.length, stitchEqualityElimination: this.stitchEqualityElimination ? this.stitchGroups.report() : false, gravityScale: this.gravityScale, temporaryOrientationGuides: this.orientationGuides, bodyContact: "grid-SDF from exact Anny triangle nearest distance; exact audit required", selfCollision: this.selfCollisionEnabled ? "discrete vertex-face, exact audit still required" : "disabled", selfContactCorrections: this.selfContacts.corrections, skippedSelfContactTriangles: this.selfContacts.skippedLargeTriangles };
+    return { ...m, bodySignedDistanceMinMm: minBody, bodyInsideVertexCount: bad, outsideCollisionDomain: domain, minYmm: minY, maxYmm: maxY, seams, activeMaxGapMm: Math.max(0, ...seams.filter((s) => s.active).map((s) => s.maxGapMm)), temporarySupportCount: this.support.length, stitchEqualityElimination: this.stitchEqualityElimination ? this.stitchGroups.report() : false, gravityScale: this.gravityScale, temporaryOrientationGuides: this.orientationGuides, bodyContact: "grid-SDF from exact Anny triangle nearest distance; exact audit required", selfCollision: this.selfCollisionEnabled ? (this.r06Contact ? "swept linear VF/EE + bounded body paths; not nonlinear CCD" : "discrete vertex-face, exact audit still required") : "disabled", selfContactCorrections: this.selfContacts.corrections, skippedSelfContactTriangles: this.selfContacts.skippedLargeTriangles };
   }
   export() {
     const m = this.metrics();
@@ -3032,7 +3035,7 @@ var GarmentLab2 = class extends GarmentLab {
   export() {
     const record = super.export();
     record.positionsMm = this.positions.map((p) => Array.from(p, (x) => x * 1e3));
-    record.solver.execution = { backend: "original-f64-wasm-kernels", reducedIterations: false, reducedSubsteps: false, originalConstraintOrder: true };
+    record.solver.execution = { backend: "original-f64-wasm-kernels", reducedIterations: false, reducedSubsteps: false, originalConstraintOrder: !this.r06Contact, contactTrialChanges: this.r06Contact ? "original main-pass order; final seam-only tightening removed; additional material/body relaxation and swept contacts" : null };
     return record;
   }
 };
@@ -3518,7 +3521,7 @@ function tick(token) {
           const begin = performance.now(), record = lab.export(), regions = regionalStrain(spec, record.positionsMm), intersections = strictIntersectionAudit(spec, record.positionsMm, record.materialToSolverGroup, bodyAudit);
           profile.auditMs = performance.now() - begin;
           if(config.kind!=="legacy"){
-            record.trial={version:"R06.3",style:config.recipe.design.style,sourceRecipeHash:spec.source.recipeHash,physicalFitAccepted:false,solver:"existing small-step XPBD / f64 WASM; full original-body SDF; sparse numerical stitching",runtimeSelfContact:true,continuousCollision:false,linearSweptContact:lab.selfContacts.report(),materialCalibrated:false,seamAllowanceAndThickness:false};
+            record.trial={version:"R06.3",style:config.recipe.design.style,sourceRecipeHash:spec.source.recipeHash,physicalFitAccepted:false,solver:"existing small-step XPBD / f64 WASM; full original-body SDF; sparse numerical stitching",runtimeSelfContact:true,continuousCollision:false,linearSweptContact:lab.selfContacts.report(),gatheringStitchModel:{restGapMm:.8,equalityWeld:false,restMetricRescaled:false},materialCalibrated:false,seamAllowanceAndThickness:false};
           }
           emit("done", { record, regions, intersections, profile, activeWallMs: wallMs + profile.auditMs });
           return;

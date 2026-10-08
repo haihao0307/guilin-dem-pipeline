@@ -36,8 +36,10 @@ export class SweptContact {
   // Paired needle sites are intentional adjacency even before equality activation.
   // No exclusion of whole panels or gathering bands.
   for(const seam of lab.spec.seams){const a=lab.offsets.get(seam.a.panelId),b=lab.offsets.get(seam.b.panelId);for(const [i,j] of seam.stitchVertexPairs){this.near[a+i].add(b+j);this.near[b+j].add(a+i);}}
+  const owners=new Int32Array(lab.positions.length);
+  for(let pi=0;pi<(lab.spec.panels||[]).length;pi++){const p=lab.spec.panels[pi],o=lab.offsets.get(p.id);owners.fill(pi,o,o+p.uvMm.length);}
   const first=this.near.map(s=>new Set(s));
-  for(let i=0;i<this.near.length;i++)for(const j of first[i])for(const k of first[j])this.near[i].add(k);
+  for(let i=0;i<this.near.length;i++)for(const j of first[i])for(const k of first[j])if(owners[i]===owners[k])this.near[i].add(k);
   this.previous=Float64Array.from(lab._old);this.lastGroups=-1;this.hash=new Map();this.edgeHash=new Map();
  }
  capture(){for(let i=0;i<this.lab.positions.length;i++)this.previous.set(this.lab.positions[i],i*3);}

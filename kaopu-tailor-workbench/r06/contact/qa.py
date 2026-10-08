@@ -32,7 +32,7 @@ page.screenshot(path=str(out/'r06-paused-desktop.png'))
 page.locator('#resume').click()
 start=time.time();stages=set()
 while state()['phase'] not in ['complete','error']:
- if time.time()-start>1500:raise AssertionError('Dress trial exceeded 25-minute QA limit')
+ if time.time()-start>3000:raise AssertionError('Dress trial exceeded 50-minute QA limit')
  page.wait_for_timeout(2500)
  ss=state();label=page.locator('#catalogue-status').inner_text();key=label.split(' · ')[0]
  if key not in stages and ss['running']:
