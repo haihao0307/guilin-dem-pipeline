@@ -150,3 +150,78 @@
 #driverGame[data-layout=portrait] .quiet-button::before{width:18px;height:18px}
 #driverGame[data-layout=portrait] #fullScreen,#driverGame[data-layout=portrait] #pause{width:30px;min-width:30px;padding:3px}
 @media(max-width:359px) and (orientation:portrait){#driverGame[data-layout=portrait] #fullScreen,#driverGame[data-layout=portrait] #pause{width:27px;min-width:27px}}
+/* R05: full-canvas scene; auxiliary controls left, driving instruments right. */
+#driverGame{--tool-size:32px;--tool-gap:4px;--left-panel:360px;--instrument-panel:212px;--control-circle:78px;--drive-height:84px}
+#driverGame,#driverGame button,#driverGame button *,#driverGame a,#driverGame a *,#driverGame .screen,#driverGame .screen :not(input):not(textarea):not(select):not(option){-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#driverGame :is(input,textarea,select,option,[contenteditable]:not([contenteditable="false"]),[contenteditable]:not([contenteditable="false"]) *){-webkit-user-select:text!important;user-select:text!important;-webkit-touch-callout:default!important}
+#driverGame[data-layout=landscape],#driverGame[data-layout=portrait]{grid-template-rows:minmax(0,1fr);grid-template-columns:minmax(0,1fr)}
+#driverGame #sceneWrap{grid-column:1;grid-row:1;height:100%;min-height:0}
+#driverGame #leftHud{position:absolute;left:10px;top:8px;width:var(--left-panel);max-width:calc(100% - var(--instrument-panel) - 34px);z-index:5;pointer-events:none}
+#driverGame #leftHud .hud-tools{display:flex;flex-wrap:wrap;align-items:flex-start;gap:4px 8px;width:100%}
+#driverGame #leftHud .masthead{position:static;inset:auto;display:flex;align-items:center;justify-content:flex-start;gap:var(--tool-gap);padding:0;width:max-content}
+#driverGame #leftHud .masthead>div{display:contents}
+#driverGame #leftHud .masthead nav{display:flex;gap:var(--tool-gap);align-items:center}
+#driverGame #leftHud .view-tools{position:static;inset:auto;display:flex;flex-wrap:nowrap;align-items:center;gap:var(--tool-gap);width:max-content}
+#driverGame #leftHud :is(.masthead .quiet-button,.masthead .back,.view-tools button){position:relative;inset:auto;width:var(--tool-size);min-width:var(--tool-size);max-width:var(--tool-size);height:var(--tool-size);min-height:var(--tool-size);padding:2px;border:1px solid #b4ac8559;border-radius:50%;background:#10191629;box-shadow:none;pointer-events:auto}
+#driverGame #leftHud .masthead .quiet-button,#driverGame #leftHud .masthead .back{font-size:0}
+#driverGame #leftHud .view-tools button{font-size:7px;line-height:8px;gap:0}
+#driverGame #leftHud :is(.quiet-button,.view-tools button,.back)::before{width:16px;height:16px;margin:0 auto}
+#driverGame #leftHud .view-tools button[aria-pressed=true],#driverGame #leftHud .quiet-button[aria-pressed=true]{border-color:#dac383;background:#d4b76420;color:#f7e7b2}
+#driverGame #leftHud #restoreView{position:relative;inset:auto;width:var(--tool-size);min-width:var(--tool-size);max-width:var(--tool-size)}
+#driverGame #leftHud #routeMap{position:static;inset:auto;transform:none;width:100%;margin-top:4px;padding:0;border:0;border-radius:0;background:#10191614;box-shadow:none;overflow:hidden}
+#driverGame #leftHud #routeMap>button{width:100%;height:22px;min-height:22px;padding:2px 3px;border:0;background:transparent;font-size:9px;line-height:1;pointer-events:auto}
+#driverGame #leftHud #routeMap small{display:inline;font-size:7px}
+#driverGame #leftHud #routeMap svg{display:block;width:100%;height:auto}
+#driverGame #leftHud #routeMap[data-closed=true] svg{display:none}
+#driverGame #leftHud #routeMap text{font-size:17px}
+#driverGame #leftHud .map-footer{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:0 3px;min-height:16px}
+#driverGame #leftHud .session-clock{position:static;inset:auto;display:flex;width:auto;gap:7px;padding:0;margin:0;border:0;font-size:7px;line-height:1.2}
+#driverGame #leftHud .session-clock strong{font-size:11px}
+#driverGame #leftHud .score-strip{position:static;inset:auto;display:flex;gap:5px;width:auto;padding:0;margin:0;border:0;border-radius:0;background:transparent;font-size:7px}
+#driverGame #leftHud .score-strip>span{display:none}
+#driverGame #leftHud .score-strip>strong{font-size:10px;margin:0}
+#driverGame[data-hints=true] #leftHud .score-strip>span{display:inline}
+#driverGame[data-hints=true] #leftHud .map-footer{flex-wrap:wrap}
+#driverGame #instrumentPanel{position:absolute;right:10px;top:8px;width:var(--instrument-panel);display:flex;flex-direction:row-reverse;align-items:flex-start;justify-content:space-between;gap:8px;z-index:4;pointer-events:none}
+#driverGame #instrumentPanel .route-hud{position:relative;inset:auto;transform:none;grid-area:auto;width:142px;min-width:0;padding:5px 38px 5px 5px;border:0;background:#10191629;box-shadow:none}
+#driverGame #instrumentPanel .route-heading{align-items:flex-start}
+#driverGame #instrumentPanel .route-heading strong{font-size:32px;line-height:1.08}
+#driverGame #instrumentPanel .limit-sign{top:17px;right:2px;width:30px;height:30px;line-height:26px}
+#driverGame #instrumentPanel .limit-sign b{font-size:18px}
+#driverGame #instrumentPanel .speed-display{position:relative;inset:auto;grid-area:auto;flex:none;width:60px;height:60px;margin:5px 0 10px;padding:0;display:block;align-self:auto;justify-self:auto;background-color:#10191655}
+#driverGame #instrumentPanel .speed-display>div:not(.power-dots){bottom:5px;left:0;right:0;display:flex;justify-content:center;align-items:baseline;gap:2px}
+#driverGame #instrumentPanel .speed-display strong{font-size:20px}
+#driverGame #instrumentPanel .speed-display span{font-size:5.5px}
+#driverGame #instrumentPanel .speed-display p{position:absolute;bottom:-10px;left:-12px;display:block;width:84px;max-width:none;font-size:7px;line-height:8px}
+#driverGame #instrumentPanel .gauge-needle{top:8px;height:21px}
+#driverGame[data-layout] #drivePanel{position:absolute;left:50%;right:auto;top:auto;bottom:max(8px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(584px,calc(100% - 24px));height:var(--drive-height);min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 128px;grid-template-rows:1fr;align-items:center;gap:10px;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;overflow:visible;z-index:6;pointer-events:none}
+#driverGame #drivePanel .drive-buttons{display:grid;grid-template-columns:1fr 1fr 1.12fr;grid-column:1;grid-row:1;height:100%;gap:10px;margin:0}
+#driverGame #drivePanel .drive-button,#driverGame #drivePanel .drive-button.brake,#driverGame #drivePanel .station-action{position:relative;isolation:isolate;min-width:0;width:100%;height:var(--drive-height);min-height:var(--drive-height);padding:5px 3px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border:0;border-radius:50%;background:transparent;box-shadow:none;color:#f0e3bd;pointer-events:auto;touch-action:manipulation}
+#driverGame #drivePanel .drive-button.brake{grid-column:3}
+#driverGame #drivePanel .station-action{grid-column:2;grid-row:1;padding:5px max(3px,calc((100% - 72px)/2));font-size:11px;line-height:1.15;letter-spacing:0;white-space:normal}
+#driverGame #drivePanel .drive-button::after,#driverGame #drivePanel .station-action::after{content:"";position:absolute;left:50%;top:50%;right:auto;bottom:auto;transform:translate(-50%,-50%);width:var(--control-circle);height:var(--control-circle);border:1.4px solid #cfbc868f;border-radius:50%;background:#10191614;box-shadow:inset 0 0 0 3px #e0cb8522;z-index:-1}
+#driverGame #drivePanel .drive-button span{font-size:13px;letter-spacing:.08em;line-height:1.2}
+#driverGame #drivePanel .rail-control-icon{width:34px;height:34px}
+#driverGame #drivePanel .station-action::before{width:23px;height:25px;margin:0;background:currentColor}
+#driverGame #drivePanel .drive-button.brake[aria-pressed=true]{background:transparent;box-shadow:none;color:#ffe4bd}
+#driverGame #drivePanel .drive-button.brake[aria-pressed=true]::after{border-color:#df8975;background:#923e3120;box-shadow:inset 0 0 0 3px #b36a4933}
+#driverGame #drivePanel button:not(:disabled):active{background:transparent;transform:none;filter:brightness(1.15)}
+#driverGame #drivePanel button:disabled{opacity:.52}
+#driverGame .notice{left:50%;top:auto;bottom:calc(var(--drive-height) + 20px);max-width:55%;transform:translateX(-50%);background:#101916c9;pointer-events:none}
+#driverGame .tutorial{top:auto;bottom:calc(var(--drive-height) + 20px);left:10px;max-width:220px;background:#101916b0}
+#driverGame[data-layout=portrait]{--tool-size:30px;--tool-gap:4px;--left-panel:210px;--instrument-panel:126px;--control-circle:62px;--drive-height:68px}
+#driverGame[data-layout=portrait] #leftHud #routeMap text{font-size:15px}
+#driverGame[data-layout=portrait] #instrumentPanel{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+#driverGame[data-layout=portrait] #instrumentPanel .route-hud{width:126px;padding-right:34px}
+#driverGame[data-layout=portrait] #instrumentPanel .route-heading strong{font-size:30px}
+#driverGame[data-layout=portrait] #instrumentPanel .speed-display{width:54px;height:54px;margin:2px 4px 10px 0}
+#driverGame[data-layout=portrait] #instrumentPanel .speed-display strong{font-size:18px}
+#driverGame[data-layout=portrait] #instrumentPanel .gauge-needle{top:7px;height:19px}
+#driverGame[data-layout=portrait] #drivePanel{grid-template-columns:minmax(0,1fr) 88px;gap:6px;width:calc(100% - 20px)}
+#driverGame[data-layout=portrait] #drivePanel .drive-buttons{gap:6px}
+#driverGame[data-layout=portrait] #drivePanel .rail-control-icon{width:27px;height:27px}
+#driverGame[data-layout=portrait] #drivePanel .drive-button span{font-size:10px;letter-spacing:0}
+#driverGame[data-layout=portrait] #drivePanel .station-action{padding:3px max(2px,calc((100% - 54px)/2));font-size:10px}
+#driverGame[data-layout=portrait] #drivePanel .station-action::before{width:20px;height:22px}
+#driverGame[data-layout=portrait] .notice{left:50%;top:auto;bottom:calc(var(--drive-height) + 18px);max-width:80%;transform:translateX(-50%)}
+@media(max-width:359px) and (orientation:portrait){#driverGame[data-layout=portrait]{--tool-size:28px;--tool-gap:3px;--left-panel:174px;--instrument-panel:112px;--control-circle:60px;--drive-height:66px}#driverGame[data-layout=portrait] #instrumentPanel .route-hud{width:112px;padding-right:32px}#driverGame[data-layout=portrait] #instrumentPanel .route-heading strong{font-size:28px}#driverGame[data-layout=portrait] #instrumentPanel .limit-sign{width:27px;height:27px;line-height:23px}#driverGame[data-layout=portrait] #instrumentPanel .limit-sign b{font-size:16px}#driverGame[data-layout=portrait] #leftHud{max-width:calc(100% - var(--instrument-panel) - 30px)}#driverGame[data-layout=portrait] #leftHud #routeMap text{font-size:17px}#driverGame[data-layout=portrait] #drivePanel{grid-template-columns:minmax(0,1fr) 76px;gap:5px}#driverGame[data-layout=portrait] #drivePanel .drive-buttons{gap:5px}}

@@ -4,11 +4,15 @@ import {createGameWorld} from './world.mjs';
 import {createGameSmoke} from './smoke.mjs';
 import {createViewControls} from './view-controls.mjs';
 import {createRouteMap} from './route-map.mjs';
+import {DEFAULT_VIEWS} from './view-profile-storage.mjs';
 const $=id=>document.getElementById(id),canvas=$('gameScene'),wrap=$('sceneWrap'),params=new URLSearchParams(location.search),SAVE_KEY='kaopu.train-driver.save.v1';
+// Gameplay labels and overlays must not summon selection/callout UI; editable form fields retain native behavior.
+const editableUiTarget=target=>{const el=target instanceof Element?target:target?.parentElement;return !!el?.closest('input,textarea,select,option,[contenteditable]:not([contenteditable="false"])');};
+for(const eventName of ['selectstart','contextmenu'])$('driverGame').addEventListener(eventName,event=>{if(!editableUiTarget(event.target))event.preventDefault();});
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.4));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1;
 const gl=renderer.getContext(),debugRenderer=gl.getExtension('WEBGL_debug_renderer_info'),rendererName=debugRenderer?gl.getParameter(debugRenderer.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x1b2425);
-const camera=new THREE.PerspectiveCamera(32,1,.1,180),cameraTarget=new THREE.Vector3(-8.8,-.8,1),widePosition=new THREE.Vector3(4,20,32),wideTarget=new THREE.Vector3(-4.5,1.5,1),portraitTarget=new THREE.Vector3(-8.8,-.8,1),closePosition=new THREE.Vector3(-2,13,20),closeTarget=new THREE.Vector3(-14.2,1.2,1.4);camera.position.copy(widePosition);camera.lookAt(cameraTarget);
+const camera=new THREE.PerspectiveCamera(32,1,.1,180),cameraTarget=new THREE.Vector3(-8.8,-.8,1),widePosition=new THREE.Vector3(...DEFAULT_VIEWS.landscape.position),wideTarget=new THREE.Vector3(...DEFAULT_VIEWS.landscape.target),portraitPosition=new THREE.Vector3(...DEFAULT_VIEWS.portrait.position),portraitTarget=new THREE.Vector3(...DEFAULT_VIEWS.portrait.target),closePosition=new THREE.Vector3(-2,13,20),closeTarget=new THREE.Vector3(-14.2,1.2,1.4);camera.position.copy(widePosition);camera.lookAt(cameraTarget);
 scene.add(new THREE.HemisphereLight(0xd5e6ec,0x273d30,1.4));
 const key=new THREE.DirectionalLight(0xffebc4,2.3);key.position.set(1,22,14);key.target.position.set(-8,0,0);key.castShadow=true;key.shadow.mapSize.set(1024,1024);Object.assign(key.shadow.camera,{left:-34,right:21,top:20,bottom:-19,far:90});key.shadow.normalBias=.05;key.shadow.bias=-.00025;key.shadow.radius=3;scene.add(key,key.target);
 const rim=new THREE.DirectionalLight(0xc3dce4,.7);rim.position.set(-14,8,-14);scene.add(rim);
@@ -27,7 +31,7 @@ function resize(){const w=wrap.clientWidth,h=wrap.clientHeight;maxRenderRatio=Ma
 new ResizeObserver(resize).observe(wrap);
 function command(type,value){const result=game.command(type,value);needsRender=true;if(!result.accepted&&type==='station-action')say('先停稳，让车门落在站台范围内。');return result;}
 let viewControls;
-function resetView(){if(viewControls?.manual())return;manualCamera=null;camera.position.copy(widePosition);cameraTarget.copy(wideTarget);camera.lookAt(cameraTarget);needsRender=true;}
+function resetView(){if(viewControls?.manual())return;manualCamera=null;if(viewControls)viewControls.resetForSession();else{camera.position.copy(widePosition);cameraTarget.copy(wideTarget);camera.lookAt(cameraTarget);}needsRender=true;}
 function start(config){game=new Session({...config,routeCount:6});world.resetEffects();heldBrake.clear();lastEvent=0;lastSaveTick=0;summaryShown=false;noticeUntil=0;$('notice').classList.remove('visible');$('startScreen').hidden=true;$('pauseScreen').hidden=true;$('summaryScreen').hidden=true;resetView();game.command('start');last=performance.now();needsRender=true;safeSave();canvas.focus();}
 function setPaused(value){if(!game.started||game.phase==='summary')return;heldBrake.clear();game.command('brake',false);game.command('pause',value);$('pauseScreen').hidden=!game.paused;$('pause').textContent=game.paused?'▶':'Ⅱ';$('pause').setAttribute('aria-label',game.paused?'继续游戏':'暂停游戏');safeSave();last=performance.now();needsRender=true;if(!game.paused)canvas.focus();}
 function stationAction(){const v=game.view();if(v.station.canRecover&&!v.station.canOpen)return command('recover');return command('station-action');}
@@ -95,11 +99,13 @@ function events(v){for(const e of v.events){if(e.id<=lastEvent)continue;
   if(e.type==='stone-hit')say('咚！记住这次刹车距离。',{warning:true,duration:1300});
   lastEvent=e.id;
 }}
+const automaticPosition=new THREE.Vector3(),automaticTarget=new THREE.Vector3();
 function draw(view,dt=1/60,snap=false){
-  const close=(manualCamera||((game.serviceLocked()&&view.phase!=='doors-closing')?'carriage':'wide'))==='carriage',targetPosition=close?closePosition:widePosition,targetLook=close?closeTarget:wideTarget;
-  const alpha=snap?1:1-Math.exp(-dt*4);if(!viewControls?.manual()){const portrait=viewControls?.mode()==='portrait';camera.position.lerp(portrait?new THREE.Vector3(31,25,15):targetPosition,alpha);cameraTarget.lerp(portrait?portraitTarget:targetLook,alpha);}camera.lookAt(cameraTarget);camera.updateMatrixWorld();
+  const close=(manualCamera||((game.serviceLocked()&&view.phase!=='doors-closing')?'carriage':'wide'))==='carriage',portrait=viewControls?.mode()==='portrait',savedFrame=viewControls?.automaticFrame()||DEFAULT_VIEWS[portrait?'portrait':'landscape'];
+  const targetPosition=close&&!portrait?closePosition:automaticPosition.fromArray(savedFrame.position),targetLook=close&&!portrait?closeTarget:automaticTarget.fromArray(savedFrame.target);
+  const alpha=snap?1:1-Math.exp(-dt*4);if(!viewControls?.manual()){camera.position.lerp(targetPosition,alpha);cameraTarget.lerp(targetLook,alpha);}camera.lookAt(cameraTarget);camera.updateMatrixWorld();
   world.update(view,game.route,{interior:close});smoke.update(view.elapsed,camera,{speed:view.velocity,braking:view.brake||view.throttle<0});renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=snap||frameCount%3===0;renderer.render(scene,camera);frameCount++;
-  return !viewControls?.manual()&&(camera.position.distanceTo(viewControls?.mode()==='portrait'?new THREE.Vector3(31,25,15):targetPosition)>.015||cameraTarget.distanceTo(viewControls?.mode()==='portrait'?portraitTarget:targetLook)>.015);
+  return !viewControls?.manual()&&(camera.position.distanceTo(targetPosition)>.015||cameraTarget.distanceTo(targetLook)>.015);
 }
 function animate(now){requestAnimationFrame(animate);const wallDt=Math.max(.001,(now-last)/1000),dt=Math.min(.25,wallDt);last=now;if(contextLost)return;const active=game.started&&!game.paused&&game.phase!=='summary';if(active)game.advance(wallDt);const view=game.view();events(view);if(now-lastHUD>90||needsRender){updateHUD(view);lastHUD=now;}if(now>noticeUntil)$('notice').classList.remove('visible');if(active||needsRender){needsRender=draw(view,dt);frameMs=frameMs*.9+wallDt*1000*.1;fps=1000/frameMs;if(active&&++qualityFrames>=20){qualityFrames=0;const next=frameMs>48?Math.max(.65,renderRatio*.82):frameMs<25?Math.min(maxRenderRatio,renderRatio+.04):renderRatio;if(Math.abs(next-renderRatio)>.015){renderRatio=next;renderer.setPixelRatio(renderRatio);renderer.setSize(wrap.clientWidth,wrap.clientHeight,false);}}}if(game.tick-lastSaveTick>180)safeSave();}
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=true;setPaused(true);$('loading').hidden=false;$('loading').textContent='画面暂时中断，已暂停并保存这趟旅程';});
