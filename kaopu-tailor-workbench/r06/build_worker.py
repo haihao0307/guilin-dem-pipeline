@@ -73,6 +73,7 @@ replace('''    } else if (data.type === "resume") {
       pendingPause=false;
       if (!lab''')
 replace('  const sourcePanels = new Map(input.panels.map', '  input={...input,seams:orderedSeams(input.seams)};\n  const sourcePanels = new Map(input.panels.map')
+replace('        const p = ps[hold.id], t = Math.min(1, this.elapsed / 4), s = t * t * (3 - 2 * t);\n        for (let axis = 0; axis < 3; axis++) p[axis] = hold.start[axis] + (hold.target[axis] - hold.start[axis]) * s;', '        const p = ps[hold.id];\n        if(this.r06Contact) liftedSupportPosition(hold,this.elapsed,p);\n        else { const t = Math.min(1,this.elapsed/4),s=t*t*(3-2*t); for(let axis=0;axis<3;axis++)p[axis]=hold.start[axis]+(hold.target[axis]-hold.start[axis])*s; }')
 # R06 contact path retains the original ordered f64 constraint kernel.
 replace('if (this.orientationGuides || this.selfCollisionEnabled) return super.step(dt);', 'if (this.orientationGuides || (this.selfCollisionEnabled && !this.r06Contact)) return super.step(dt);')
 replace('      k.distances(baseCount, this.count);\n      P.distanceMs += performance.now() - now;\n      if (this.collisions && sub3 % 3 === 2) {', '      if (!this.r06Contact) k.distances(baseCount, this.count);\n      P.distanceMs += performance.now() - now;\n      if (this.r06Contact) {\n        for(let guard=0;guard<6;guard++) { k.strains(); k.vertices(this.clearance); }\n      }\n      if (this.collisions && sub3 % 3 === 2) {')
@@ -82,7 +83,7 @@ replace('  profile.bodyMs = performance.now() - start;', '  if(config.kind!=="le
 replace('selfCollision: this.selfCollisionEnabled ? "discrete vertex-face, exact audit still required" : "disabled"', 'selfCollision: this.selfCollisionEnabled ? (this.r06Contact ? "swept linear VF/EE + bounded body paths; not nonlinear CCD" : "discrete vertex-face, exact audit still required") : "disabled"')
 replace('originalConstraintOrder: true };', 'originalConstraintOrder: !this.r06Contact, contactTrialChanges: this.r06Contact ? "original main-pass order; final seam-only tightening removed; additional material/body relaxation and swept contacts" : null };')
 replace('  lab.selfCollisionEnabled = false;', '  lab.selfCollisionEnabled = config.kind!=="legacy";\n  lab.r06Contact = config.kind!=="legacy";\n  if(lab.r06Contact) { lab.selfContacts=new FastSweptContact(lab); lab.selfContacts.capture(); }')
-replace('runtimeSelfContact:false,continuousCollision:false', 'runtimeSelfContact:true,continuousCollision:false,linearSweptContact:lab.selfContacts.report(),gatheringStitchModel:{restGapMm:.8,equalityWeld:true,restMetricRescaled:false}')
+replace('runtimeSelfContact:false,continuousCollision:false', 'runtimeSelfContact:true,continuousCollision:false,linearSweptContact:lab.selfContacts.report(),temporarySupportPath:{kind:"lift-sweep-lower",liftMm:80,durationSec:4,originalTargetRetained:true,releasedBeforeGravity:true},gatheringStitchModel:{restGapMm:.8,equalityWeld:true,restMetricRescaled:false}')
 replace('No continuous collision or runtime self-contact response.', 'Runtime collision-only f64 WASM, swept linear vertex-face and edge-edge conservative advancement; nonlinear CCD remains uncertified.')
 # Prevent the accidental duplicate contact pass found during profiling.
 step=s[s.index('var GarmentLab2 ='):s.index('// tailor-unify-20261007/work/kaopu-tailor-workbench/garments-r04/src/sdf-transport.mjs')]
@@ -91,6 +92,7 @@ assert step.count('this.selfContacts.project();') == 1
 assert 'if (this.r06Contact) { this.selfContacts.bodySweep();' in step
 s=(ROOT/'r06/contact/fast-contact.mjs').read_text().replace("import {SweptContact} from './swept-contact.mjs';",'').replace('export function','function').replace('export class','class')+'\n'+s
 s=(ROOT/'r06/contact/swept-contact.mjs').read_text().replace('export class','class')+'\n'+s
+s=(ROOT/'r06/contact/support-path.mjs').read_text().replace('export function','function')+'\n'+s
 s=(ROOT/'r06/contact/seam-order.mjs').read_text().replace('export function','function')+'\n'+s
 s=(ROOT/'r06/fixtures.mjs').read_text().replace('export function','function')+'\n'+s
 (ROOT/'catalogue/r06-contact-worker.bundle.mjs').write_text('// R06.3 contact repair, original R06.2 retained. Original catalogue/workbench-worker.bundle.mjs remains intact.\n'+s)

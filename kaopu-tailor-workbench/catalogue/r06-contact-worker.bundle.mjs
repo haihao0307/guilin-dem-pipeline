@@ -30,6 +30,16 @@ function orderedSeams(seams){
  return [...seams].sort((a,b)=>{const x=key(a),y=key(b);return x<y?-1:x>y?1:0;});
 }
 
+// Temporary assembly motion, not a garment pose. Original UVs and anchor target
+// are unchanged. Raise before moving across the shoulder clearance surface.
+function liftedSupportPosition(hold,elapsed,out=[0,0,0]){
+ const smooth=t=>t*t*(3-2*t),t=Math.max(0,Math.min(1,elapsed/4)),start=hold.start,target=hold.target,safeY=Math.max(start[1],target[1])+.08;
+ if(t<.25){out[0]=start[0];out[2]=start[2];out[1]=start[1]+(safeY-start[1])*smooth(t/.25);}
+ else if(t<.75){const u=smooth((t-.25)/.5);out[0]=start[0]+(target[0]-start[0])*u;out[2]=start[2]+(target[2]-start[2])*u;out[1]=safeY;}
+ else{out[0]=target[0];out[2]=target[2];out[1]=safeY+(target[1]-safeY)*smooth((t-.75)/.25);}
+ return out;
+}
+
 // Rest material and the original solver are unchanged. Contact is mass-weighted.
 // Conservative advancement of linearly moving VF/EE primitives, not nonlinear CCD.
 const scDot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
@@ -149,10 +159,22 @@ class FastSweptContact extends SweptContact {
   for(let i=0;i<eb.length;i++)this.cells(this.cachedEB[i],key=>{let a=this.edgeHash.get(key);if(!a)this.edgeHash.set(key,a=[]);a.push(i);});
   this.bucketRebuilds=(this.bucketRebuilds||0)+1;
  }
+ overlaps(a,b){return a.lo[0]<=b.hi[0]&&b.lo[0]<=a.hi[0]&&a.lo[1]<=b.hi[1]&&b.lo[1]<=a.hi[1]&&a.lo[2]<=b.hi[2]&&b.lo[2]<=a.hi[2];}
+ nextStamp(){if(!this.triangleSeen){this.triangleSeen=new Int32Array(this.lab.triangles.length);this.edgeSeen=new Int32Array(this.lab.meshEdges.length);this.stamp=0;}if(this.stamp>=2147483646){this.triangleSeen.fill(0);this.edgeSeen.fill(0);this.stamp=0;}return ++this.stamp;}
+ collectCandidates(){
+  const l=this.lab;
+  for(let i=0;i<l.positions.length;i++){
+   if(l.stitchGroups.find(i)!==i)continue;const vb=this.bounds([i]),stamp=this.nextStamp();
+   this.cells(vb,key=>{const bucket=this.hash.get(key);if(!bucket)return;for(const t of bucket){if(this.triangleSeen[t]===stamp)continue;this.triangleSeen[t]=stamp;const ids=l.triangles[t].ids;if(!this.overlaps(vb,this.tb[t])||this.exclude([i],ids))continue;this.contact([i,ids[0],ids[1],ids[2]],true);}});
+  }
+  for(let e=0;e<l.meshEdges.length;e++){
+   const a=l.meshEdges[e],stamp=this.nextStamp();this.cells(this.eb[e],key=>{const bucket=this.edgeHash.get(key);if(!bucket)return;for(const f of bucket){if(f<=e||this.edgeSeen[f]===stamp)continue;this.edgeSeen[f]=stamp;const b=l.meshEdges[f];if(!this.overlaps(this.eb[e],this.eb[f])||this.exclude(a,b))continue;this.contact([a[0],a[1],b[0],b[1]],false);}});
+  }
+ }
  capture(){if(!this.collecting)super.capture();}
- contact(ids,face){if(this.rows.length/5>=250000)throw Error('CONTACT_CANDIDATE_BUDGET: unstable or excessive contact set; refusing to omit candidates');this.rows.push(face?1:0,...ids);}
+ contact(ids,face){if(this.rows.length/5>=250000)throw Error('CONTACT_CANDIDATE_BUDGET: unstable or excessive contact set; refusing to omit candidates');this.rows.push(face?1:0,ids[0],ids[1],ids[2],ids[3]);}
  project(){
-  this.rows=[];this.collecting=true;super.project();this.collecting=false;
+  this.rows=[];this.collectCandidates();
   const l=this.lab,k=this.kernel,count=this.rows.length/5,n=l.positions.length;
   if(!this.capacity||count>this.capacity){this.capacity=Math.max(1024,Math.ceil(count*1.5));k.setup(n,this.capacity);}
   const b=k.memory.buffer,ps=new Float64Array(b,k.positions(),n*3),old=new Float64Array(b,k.previous(),n*3),mass=new Float64Array(b,k.weights(),n),alias=new Int32Array(b,k.aliases(),n),pairs=new Int32Array(b,k.pairs(),count*5);
@@ -2985,8 +3007,9 @@ var GarmentLab2 = class extends GarmentLab {
       if (this.stitchEqualityElimination) this.stitchGroups.synchronize();
       for (let j = 0; j < this.seamConstraints.length; j++) this.cf[(baseCount + j) * 10 + 6] = this.seamConstraints[j].eliminated ? 1 : 0;
       for (const hold of this.support) {
-        const p = ps[hold.id], t = Math.min(1, this.elapsed / 4), s = t * t * (3 - 2 * t);
-        for (let axis = 0; axis < 3; axis++) p[axis] = hold.start[axis] + (hold.target[axis] - hold.start[axis]) * s;
+        const p = ps[hold.id];
+        if(this.r06Contact) liftedSupportPosition(hold,this.elapsed,p);
+        else { const t = Math.min(1,this.elapsed/4),s=t*t*(3-2*t); for(let axis=0;axis<3;axis++)p[axis]=hold.start[axis]+(hold.target[axis]-hold.start[axis])*s; }
       }
       for (let i = 0; i < n; i++) {
         const p = ps[i], o = i * 3;
@@ -3539,7 +3562,7 @@ function tick(token) {
           const begin = performance.now(), record = lab.export(), regions = regionalStrain(spec, record.positionsMm), intersections = strictIntersectionAudit(spec, record.positionsMm, record.materialToSolverGroup, bodyAudit);
           profile.auditMs = performance.now() - begin;
           if(config.kind!=="legacy"){
-            record.trial={version:"R06.3",style:config.recipe.design.style,sourceRecipeHash:spec.source.recipeHash,physicalFitAccepted:false,solver:"existing small-step XPBD / f64 WASM; full original-body SDF; sparse numerical stitching",runtimeSelfContact:true,continuousCollision:false,linearSweptContact:lab.selfContacts.report(),gatheringStitchModel:{restGapMm:.8,equalityWeld:true,restMetricRescaled:false},materialCalibrated:false,seamAllowanceAndThickness:false};
+            record.trial={version:"R06.3",style:config.recipe.design.style,sourceRecipeHash:spec.source.recipeHash,physicalFitAccepted:false,solver:"existing small-step XPBD / f64 WASM; full original-body SDF; sparse numerical stitching",runtimeSelfContact:true,continuousCollision:false,linearSweptContact:lab.selfContacts.report(),temporarySupportPath:{kind:"lift-sweep-lower",liftMm:80,durationSec:4,originalTargetRetained:true,releasedBeforeGravity:true},gatheringStitchModel:{restGapMm:.8,equalityWeld:true,restMetricRescaled:false},materialCalibrated:false,seamAllowanceAndThickness:false};
           }
           emit("done", { record, regions, intersections, profile, activeWallMs: wallMs + profile.auditMs });
           return;

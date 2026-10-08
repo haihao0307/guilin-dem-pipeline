@@ -18,10 +18,22 @@ export class FastSweptContact extends SweptContact {
   for(let i=0;i<eb.length;i++)this.cells(this.cachedEB[i],key=>{let a=this.edgeHash.get(key);if(!a)this.edgeHash.set(key,a=[]);a.push(i);});
   this.bucketRebuilds=(this.bucketRebuilds||0)+1;
  }
+ overlaps(a,b){return a.lo[0]<=b.hi[0]&&b.lo[0]<=a.hi[0]&&a.lo[1]<=b.hi[1]&&b.lo[1]<=a.hi[1]&&a.lo[2]<=b.hi[2]&&b.lo[2]<=a.hi[2];}
+ nextStamp(){if(!this.triangleSeen){this.triangleSeen=new Int32Array(this.lab.triangles.length);this.edgeSeen=new Int32Array(this.lab.meshEdges.length);this.stamp=0;}if(this.stamp>=2147483646){this.triangleSeen.fill(0);this.edgeSeen.fill(0);this.stamp=0;}return ++this.stamp;}
+ collectCandidates(){
+  const l=this.lab;
+  for(let i=0;i<l.positions.length;i++){
+   if(l.stitchGroups.find(i)!==i)continue;const vb=this.bounds([i]),stamp=this.nextStamp();
+   this.cells(vb,key=>{const bucket=this.hash.get(key);if(!bucket)return;for(const t of bucket){if(this.triangleSeen[t]===stamp)continue;this.triangleSeen[t]=stamp;const ids=l.triangles[t].ids;if(!this.overlaps(vb,this.tb[t])||this.exclude([i],ids))continue;this.contact([i,ids[0],ids[1],ids[2]],true);}});
+  }
+  for(let e=0;e<l.meshEdges.length;e++){
+   const a=l.meshEdges[e],stamp=this.nextStamp();this.cells(this.eb[e],key=>{const bucket=this.edgeHash.get(key);if(!bucket)return;for(const f of bucket){if(f<=e||this.edgeSeen[f]===stamp)continue;this.edgeSeen[f]=stamp;const b=l.meshEdges[f];if(!this.overlaps(this.eb[e],this.eb[f])||this.exclude(a,b))continue;this.contact([a[0],a[1],b[0],b[1]],false);}});
+  }
+ }
  capture(){if(!this.collecting)super.capture();}
- contact(ids,face){if(this.rows.length/5>=250000)throw Error('CONTACT_CANDIDATE_BUDGET: unstable or excessive contact set; refusing to omit candidates');this.rows.push(face?1:0,...ids);}
+ contact(ids,face){if(this.rows.length/5>=250000)throw Error('CONTACT_CANDIDATE_BUDGET: unstable or excessive contact set; refusing to omit candidates');this.rows.push(face?1:0,ids[0],ids[1],ids[2],ids[3]);}
  project(){
-  this.rows=[];this.collecting=true;super.project();this.collecting=false;
+  this.rows=[];this.collectCandidates();
   const l=this.lab,k=this.kernel,count=this.rows.length/5,n=l.positions.length;
   if(!this.capacity||count>this.capacity){this.capacity=Math.max(1024,Math.ceil(count*1.5));k.setup(n,this.capacity);}
   const b=k.memory.buffer,ps=new Float64Array(b,k.positions(),n*3),old=new Float64Array(b,k.previous(),n*3),mass=new Float64Array(b,k.weights(),n),alias=new Int32Array(b,k.aliases(),n),pairs=new Int32Array(b,k.pairs(),count*5);
