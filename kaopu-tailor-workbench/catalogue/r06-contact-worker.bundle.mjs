@@ -23,6 +23,13 @@ function prepareShoulderFixtures(spec,sdf){
  return count;
 }
 
+// Stable physical ordering without renumbering upstream seams or changing paper.
+function orderedSeams(seams){
+ const end=e=>JSON.stringify([e.panelId,String(e.edge),!!e.reverse]);
+ const key=s=>[end(s.a),end(s.b)].sort().join('|');
+ return [...seams].sort((a,b)=>{const x=key(a),y=key(b);return x<y?-1:x>y?1:0;});
+}
+
 // Rest material and the original solver are unchanged. Contact is mass-weighted.
 // Conservative advancement of linearly moving VF/EE primitives, not nonlinear CCD.
 const scDot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
@@ -129,24 +136,27 @@ function configureContactWasm(bytes){scWasmModule=new WebAssembly.Module(bytes);
 class FastSweptContact extends SweptContact {
  constructor(lab,options={}){super(lab,options);if(!scWasmModule)throw Error('Contact WASM must be initialized before cloth');this.kernel=new WebAssembly.Instance(scWasmModule,{env:{abort:()=>{throw Error('CONTACT_KERNEL_ABORT');}}}).exports;this.capacity=0;}
  capture(){if(!this.collecting)super.capture();}
- contact(ids,face){this.rows.push(face?1:0,...ids);}
+ contact(ids,face){if(this.rows.length/5>=250000)throw Error('CONTACT_CANDIDATE_BUDGET: unstable or excessive contact set; refusing to omit candidates');this.rows.push(face?1:0,...ids);}
  project(){
   this.rows=[];this.collecting=true;super.project();this.collecting=false;
   const l=this.lab,k=this.kernel,count=this.rows.length/5,n=l.positions.length;
   if(!this.capacity||count>this.capacity){this.capacity=Math.max(1024,Math.ceil(count*1.5));k.setup(n,this.capacity);}
   const b=k.memory.buffer,ps=new Float64Array(b,k.positions(),n*3),old=new Float64Array(b,k.previous(),n*3),mass=new Float64Array(b,k.weights(),n),alias=new Int32Array(b,k.aliases(),n),pairs=new Int32Array(b,k.pairs(),count*5);
+  old.set(this.previous);
   for(let pass=0;pass<4;pass++){
-   for(let i=0;i<n;i++){ps.set(l.positions[i],i*3);mass[i]=l.invMass[i];alias[i]=l.stitchGroups.find(i);}old.set(this.previous);pairs.set(this.rows);
+   if(pass>0&&l.kernel){for(let j=0;j<4;j++){l.kernel.strains();l.kernel.vertices(l.clearance);}l.kernel.surfaces();}
+   for(let i=0;i<n;i++){ps.set(l.positions[i],i*3);mass[i]=l.invMass[i];alias[i]=l.stitchGroups.find(i);}pairs.set(this.rows);
    k.project(count,this.h);
    for(let i=0;i<n;i++)if(alias[i]===i){for(let axis=0;axis<3;axis++)l.positions[i][axis]=ps[i*3+axis];}
    this.corrections+=k.corrections.value;this.sweptHits+=k.sweptHits.value;this.discreteHits+=k.discreteHits.value;this.unresolved+=k.unresolved.value;
-   // Alternate original material/body constraints with contact instead of
-   // allowing the last contact impulse to leave arbitrary material extension.
-   if(l.kernel){for(let j=0;j<4;j++){l.kernel.strains();l.kernel.vertices(l.clearance);}l.kernel.surfaces();}
+   // Each relaxation sweep has its own linear history. Reusing the entire
+   // old integration path after a corrected contact caused repeated rewind impulses.
+   for(let i=0;i<n;i++)old.set(l.positions[i],i*3);
   }
+  if(l.kernel)l.kernel.vertices(l.clearance);
   this.capture();
  }
- report(){return{...super.report(),jointMaterialBodyContactIterations:4,backend:'additional f64 WASM narrow phase; original cloth kernel unchanged'};}
+ report(){return{...super.report(),jointMaterialBodyContactIterations:4,maxCandidatePairs:250000,correctionHistory:'fresh post-contact state for each subsequent material/body relaxation',backend:'additional f64 WASM narrow phase; original cloth kernel unchanged'};}
 }
 
 var __create = Object.create;
@@ -3291,6 +3301,7 @@ function compileAnalytic(input, { interiorStepMm = 16, boundaryStepMm = 16, chor
   if (input.validation?.analytic2DPass !== true) throw Error("Source 2D validity failed; refusing material generation");
   if (![interiorStepMm, boundaryStepMm, chordToleranceMm].every((x) => Number.isFinite(x) && x > 0)) throw Error("Positive mesh controls required");
   if (numericalStitchSpacingMm !== null && (!Number.isFinite(numericalStitchSpacingMm) || numericalStitchSpacingMm <= 0)) throw Error("Positive numerical stitch spacing required");
+  input={...input,seams:orderedSeams(input.seams)};
   const sourcePanels = new Map(input.panels.map((p) => [p.id, p])), tables = /* @__PURE__ */ new Map(), counts = /* @__PURE__ */ new Map(), needleIntervals = /* @__PURE__ */ new Map(), edgeDiagnostics = [];
   for (const p of input.panels) for (const e of p.edges) {
     const key = edgeKey(p.id, e.index), table = curveTable(p, e);

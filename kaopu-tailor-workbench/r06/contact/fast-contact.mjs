@@ -5,22 +5,25 @@ export function configureContactWasm(bytes){scWasmModule=new WebAssembly.Module(
 export class FastSweptContact extends SweptContact {
  constructor(lab,options={}){super(lab,options);if(!scWasmModule)throw Error('Contact WASM must be initialized before cloth');this.kernel=new WebAssembly.Instance(scWasmModule,{env:{abort:()=>{throw Error('CONTACT_KERNEL_ABORT');}}}).exports;this.capacity=0;}
  capture(){if(!this.collecting)super.capture();}
- contact(ids,face){this.rows.push(face?1:0,...ids);}
+ contact(ids,face){if(this.rows.length/5>=250000)throw Error('CONTACT_CANDIDATE_BUDGET: unstable or excessive contact set; refusing to omit candidates');this.rows.push(face?1:0,...ids);}
  project(){
   this.rows=[];this.collecting=true;super.project();this.collecting=false;
   const l=this.lab,k=this.kernel,count=this.rows.length/5,n=l.positions.length;
   if(!this.capacity||count>this.capacity){this.capacity=Math.max(1024,Math.ceil(count*1.5));k.setup(n,this.capacity);}
   const b=k.memory.buffer,ps=new Float64Array(b,k.positions(),n*3),old=new Float64Array(b,k.previous(),n*3),mass=new Float64Array(b,k.weights(),n),alias=new Int32Array(b,k.aliases(),n),pairs=new Int32Array(b,k.pairs(),count*5);
+  old.set(this.previous);
   for(let pass=0;pass<4;pass++){
-   for(let i=0;i<n;i++){ps.set(l.positions[i],i*3);mass[i]=l.invMass[i];alias[i]=l.stitchGroups.find(i);}old.set(this.previous);pairs.set(this.rows);
+   if(pass>0&&l.kernel){for(let j=0;j<4;j++){l.kernel.strains();l.kernel.vertices(l.clearance);}l.kernel.surfaces();}
+   for(let i=0;i<n;i++){ps.set(l.positions[i],i*3);mass[i]=l.invMass[i];alias[i]=l.stitchGroups.find(i);}pairs.set(this.rows);
    k.project(count,this.h);
    for(let i=0;i<n;i++)if(alias[i]===i){for(let axis=0;axis<3;axis++)l.positions[i][axis]=ps[i*3+axis];}
    this.corrections+=k.corrections.value;this.sweptHits+=k.sweptHits.value;this.discreteHits+=k.discreteHits.value;this.unresolved+=k.unresolved.value;
-   // Alternate original material/body constraints with contact instead of
-   // allowing the last contact impulse to leave arbitrary material extension.
-   if(l.kernel){for(let j=0;j<4;j++){l.kernel.strains();l.kernel.vertices(l.clearance);}l.kernel.surfaces();}
+   // Each relaxation sweep has its own linear history. Reusing the entire
+   // old integration path after a corrected contact caused repeated rewind impulses.
+   for(let i=0;i<n;i++)old.set(l.positions[i],i*3);
   }
+  if(l.kernel)l.kernel.vertices(l.clearance);
   this.capture();
  }
- report(){return{...super.report(),jointMaterialBodyContactIterations:4,backend:'additional f64 WASM narrow phase; original cloth kernel unchanged'};}
+ report(){return{...super.report(),jointMaterialBodyContactIterations:4,maxCandidatePairs:250000,correctionHistory:'fresh post-contact state for each subsequent material/body relaxation',backend:'additional f64 WASM narrow phase; original cloth kernel unchanged'};}
 }
