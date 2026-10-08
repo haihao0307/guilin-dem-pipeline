@@ -1,8 +1,8 @@
-import{PRESETS,createPresetState,presetRecord}from'./PresetCatalogue.mjs?v=presets-r01-20261008';
+import{ALL_PRESETS,createPresetState,presetRecord}from'./PresetCatalogueR2.mjs?v=characters-r02-20261008';
 import{buildCatalog,valueAt,writeValue,rowStatus}from'./catalog.mjs?v=human-r2-20261008';
 /** UI transaction adapter only. All deformation and validation stay in CommonPerson. */
 export class WorkbenchController extends EventTarget{
- constructor({model,contract,defaults,localGate,onGeometry=()=>{}}){super();this.model=model;this.catalog=buildCatalog(contract);this.defaults=structuredClone(defaults);this.localGate=localGate;this.onGeometry=onGeometry;this.positionReference=model.positions;this.faceReference=model.faces;this.revision=0;this.presetId=null;this.presetSignatures=new Map(PRESETS.map(p=>[JSON.stringify(createPresetState(p.id,this.defaults)),p.id]));}
+ constructor({model,contract,defaults,localGate,onGeometry=()=>{}}){super();this.model=model;this.catalog=buildCatalog(contract);this.defaults=structuredClone(defaults);this.localGate=localGate;this.onGeometry=onGeometry;this.positionReference=model.positions;this.faceReference=model.faces;this.revision=0;this.presetId=null;this.presetSignatures=new Map(ALL_PRESETS.map(p=>[JSON.stringify(createPresetState(p.id,this.defaults)),p.id]));}
  state(){return structuredClone(this.model.state);}
  status(row){return rowStatus(row,this.model.state,{localGate:this.localGate,bodyDriver:!!this.model.bodyDriver,semanticHead:!!this.model.headTransfer});}
  value(row){return valueAt(this.model.state,row);}
