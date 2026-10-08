@@ -22,13 +22,14 @@ test('portrait and landscape presets, manual flags, locks and restored views sur
 test('invalid storage and invalid preset IDs leave valid recoverable profiles',()=>{for(const raw of [null,'broken',{version:99},'{"version":1,"profiles":{"landscape":{"position":[null,0,0]}}}']){const data=prepareViewProfiles(raw);assert(validView(data.profiles.landscape));assert(validView(data.profiles.portrait));const before=JSON.stringify(data);assert.equal(selectCameraPreset(data,'nope'),false);assert.equal(JSON.stringify(data),before);}});
 test('free camera guard stays above ground, outside train, and at bounded orbit radius',()=>{for(const[position,target]of [[[0,-20,0],[0,0,0]],[[0,1,0],[0,1,0]],[[1,1,1],[0,1,0]],[[1000,1000,1000],[0,1,0]],[[-8,1,1.5],[-8,1,7]],[[0,5,20],[0,-100,0]],[[999,200,800],[999,150,799]]]){const safe=boundCameraPose(position,target);assert(safe);assert(safe.position[1]>=CAMERA_LIMITS.minHeight);assert(safe.target[1]>=CAMERA_LIMITS.minTargetHeight);assert(safe.target[0]>=CAMERA_LIMITS.minTargetX&&safe.target[0]<=CAMERA_LIMITS.maxTargetX);assert(Math.abs(safe.target[2])<=CAMERA_LIMITS.maxTargetZ);const radius=Math.hypot(...safe.position.map((v,i)=>v-safe.target[i]));assert(radius>=CAMERA_LIMITS.minRadius-1e-9&&radius<=CAMERA_LIMITS.maxRadius+1e-9,`radius ${radius}`);const box=CAMERA_LIMITS.trainClearance;assert(!safe.position.every((v,i)=>v>box.min[i]&&v<box.max[i]));}assert.equal(boundCameraPose([NaN,0,0],[0,0,0]),null);assert.equal(boundCameraPose(null,[0,0,0]),null);});
 
-function mockedControls(initial={}){
+function mockedControls(initial={},viewport={width:1280,height:720}){
  const elements=new Map(),reads=[],writes=[],storage=new Map(Object.entries(initial));
  function element(id){if(!elements.has(id))elements.set(id,{dataset:{},listeners:{},setAttribute(key,value){this[key]=value;},addEventListener(type,fn){(this.listeners[type]||=[]).push(fn);},fire(type,extra={}){for(const fn of this.listeners[type]||[])fn({preventDefault(){},button:0,deltaMode:0,...extra});}});return elements.get(id);}
  globalThis.document={getElementById:element};globalThis.localStorage={getItem(key){reads.push(key);return storage.get(key)||null;},setItem(key,value){writes.push(key);storage.set(key,value);}};
- globalThis.innerWidth=1280;globalThis.innerHeight=720;globalThis.addEventListener=()=>{};globalThis.requestAnimationFrame=fn=>fn();
- const canvas=element('canvas');Object.assign(canvas,{clientWidth:1280,clientHeight:720,setPointerCapture(){},getBoundingClientRect:()=>({left:0,top:0,right:1280,width:1280,height:720})});
- const camera=new THREE.PerspectiveCamera(32,16/9,.1,240),target=new THREE.Vector3();
+ globalThis.innerWidth=viewport.width;globalThis.innerHeight=viewport.height;globalThis.addEventListener=()=>{};globalThis.requestAnimationFrame=fn=>fn();
+ const rotated=viewport.height>viewport.width,width=rotated?viewport.height:viewport.width,height=rotated?viewport.width:viewport.height;
+ const canvas=element('canvas');Object.assign(canvas,{clientWidth:width,clientHeight:height,setPointerCapture(){},getBoundingClientRect:()=>({left:0,top:0,right:viewport.width,width:viewport.width,height:viewport.height})});
+ const camera=new THREE.PerspectiveCamera(32,width/height,.1,240),target=new THREE.Vector3();
  let controls;
  controls=createViewControls({camera,target,canvas,root:element('root'),getZoomPoints:()=>corners(controls?.focusBounds()||TRAIN_FOCUS_BOUNDS),onChange:p=>{camera.fov=verticalFov(camera.aspect,p.projection);camera.updateProjectionMatrix();}});
  return {controls,camera,target,canvas,element,reads,writes,storage};
@@ -36,4 +37,26 @@ function mockedControls(initial={}){
 test('control initialization, presets and reload never read or write the frozen R08 key',()=>{const oldKey='kaopu.train-driver.views.v1',oldValue=JSON.stringify({frozen:'R08 camera'}),h=mockedControls({[oldKey]:oldValue});assert.deepEqual(h.reads,[VIEW_STORAGE_KEY]);assert(h.writes.every(key=>key===VIEW_STORAGE_KEY));assert(h.controls.applyPreset('front'));assert(h.controls.applyPreset('rear'));assert.equal(h.storage.get(oldKey),oldValue);assert.equal(h.controls.state().focus,'rear');assert.equal(h.controls.activePreset(),'rear');const reopened=mockedControls(Object.fromEntries(h.storage));assert.equal(reopened.controls.activePreset(),'rear');assert.deepEqual(reopened.controls.state().position,h.controls.state().position);assert.equal(reopened.storage.get(oldKey),oldValue);});
 test('wheel zoom keeps selected focus anchored and manual orbit preserves that focus',()=>{const h=mockedControls();h.controls.applyPreset('detail');const points=corners(h.controls.focusBounds()),before=projectFrame(h.camera,points);h.canvas.fire('wheel',{deltaY:-100});const after=projectFrame(h.camera,points);nearly(before.x,after.x);nearly(before.y,after.y);assert.equal(h.controls.activePreset(),null);assert.equal(h.controls.state().focus,'detail');h.canvas.fire('pointerdown',{pointerId:1,clientX:500,clientY:350});h.canvas.fire('pointermove',{pointerId:1,clientX:780,clientY:700});h.canvas.fire('pointerup',{pointerId:1});assert(h.camera.position.y>=CAMERA_LIMITS.minHeight);assert.equal(h.controls.state().manual,true);assert.equal(h.controls.state().focus,'detail');});
 test('fixed camera resists presets, wheel and drag; layout choices remain independent',()=>{const h=mockedControls();h.controls.applyPreset('front');h.element('lockView').fire('click');const locked=h.controls.state();assert.equal(h.controls.applyPreset('rear'),false);h.canvas.fire('wheel',{deltaY:-100});h.canvas.fire('pointerdown',{pointerId:1,clientX:200,clientY:100});h.canvas.fire('pointermove',{pointerId:1,clientX:800,clientY:500});assert.deepEqual(h.controls.state().position,locked.position);assert.equal(h.controls.state().zoom,locked.zoom);assert(h.controls.setLayout('portrait'));assert.equal(h.controls.activePreset(),'platform');assert(h.controls.applyPreset('rear'));assert(h.controls.setLayout('landscape'));assert.equal(h.controls.activePreset(),'front');assert.equal(h.controls.locked(),true);assert.deepEqual(h.controls.state().position,locked.position);globalThis.innerWidth=390;globalThis.innerHeight=844;assert.equal(h.controls.state().rotated,true);assert.equal(h.controls.setLayout('invalid'),false);});
+
+test('rotated mobile pinch preserves exact pan with either finger event order',()=>{
+ for(const order of [[1,2],[2,1]]){
+  const h=mockedControls({}, {width:390,height:844}),cx=390*.55,cy=844*.55;
+  const points=corners(h.controls.focusBounds());
+  const center=()=>{const b=projectFrame(h.camera,points);return [(b.x+1)*h.canvas.clientWidth/2,(1-b.y)*h.canvas.clientHeight/2];};
+  h.canvas.fire('pointerdown',{pointerId:10,clientX:cx,clientY:cy});
+  for(let i=1;i<=5;i++)h.canvas.fire('pointermove',{pointerId:10,clientX:cx+24*i/5,clientY:cy-18*i/5});
+  h.canvas.fire('pointerup',{pointerId:10});
+  for(const deltaY of [-35,-35,-35,-35,-35,20,20])h.canvas.fire('wheel',{deltaY});
+  const touch=(type,d,dx=0,dy=0)=>{for(const id of order)h.canvas.fire(type,{pointerId:id,clientX:cx+(id===1?-d:d)+dx,clientY:cy+dy});};
+  touch('pointerdown',30);
+  const beforePinch=center();
+  for(const distance of [34,38,42,46]){touch('pointermove',distance);const after=center();nearly(after[0],beforePinch[0],.000001);nearly(after[1],beforePinch[1],.000001);}
+  const before=center();
+  touch('pointermove',46,15,12);
+  const after=center();
+  nearly(after[0],before[0]+12,.000001);nearly(after[1],before[1]-15,.000001);
+  assert(h.camera.position.y>=CAMERA_LIMITS.minHeight);
+  assert(h.target.y>CAMERA_LIMITS.minTargetHeight+.5,'The ordinary gesture never approaches the target guard');
+ }
+});
 console.log(JSON.stringify({status:'passed',tests:passed,storageKey:VIEW_STORAGE_KEY,presets:CAMERA_PRESET_IDS}));

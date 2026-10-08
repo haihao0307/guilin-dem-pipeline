@@ -130,13 +130,14 @@ function currentZoomPoints(){if(!viewControls?.state?.().focus||viewControls.sta
 function syncCameraButtons(){const active=viewControls?.activePreset?.();for(const button of document.querySelectorAll('[data-camera]')){button.setAttribute('aria-pressed',String(button.dataset.camera===active));button.disabled=!!viewControls?.locked();}}
 function selectCamera(id){if(!viewControls?.applyPreset(id)){say('先解除固定視角，再選擇觀察位置。');return;}manualCamera=null;projectionKey='';syncProjection();syncCameraButtons();needsRender=true;if(!$('settingsScreen').hidden)$('closeSettings').click();}
 $('openCameraMenu')?.addEventListener('click',()=>{$('openSettings').click();$('cameraPositions').scrollIntoView({block:'nearest'});});
+new MutationObserver(()=>{$('openCameraMenu')?.setAttribute('aria-expanded',String(!$('settingsScreen').hidden));}).observe($('settingsScreen'),{attributes:true,attributeFilter:['hidden']});
 for(const button of document.querySelectorAll('[data-camera]'))button.addEventListener('click',()=>selectCamera(button.dataset.camera));
 syncCameraButtons();
 $('lockView').addEventListener('click',()=>queueMicrotask(syncCameraButtons));for(const id of ['resetView','restoreView','landscapeView','portraitView'])$(id).addEventListener('click',()=>queueMicrotask(syncCameraButtons));
 
 let soundMuted=false,crowdEnabled=false;$('crowdToggle').addEventListener('click',()=>{crowdEnabled=!crowdEnabled;railAudio.setCrowdEnabled(crowdEnabled);$('crowdToggle').textContent=crowdEnabled?'人群底聲：開':'人群底聲：關';$('crowdToggle').setAttribute('aria-pressed',String(crowdEnabled));});for(const id of ['startGame','continueSaved','resume'])$(id).addEventListener('click',()=>railAudio.unlock());
 function whistle(){railAudio.unlock();command('whistle');railAudio.whistle();} $('whistle').addEventListener('click',whistle);$('testWhistle').addEventListener('click',()=>{railAudio.unlock();railAudio.whistle();});
-$('soundToggle').addEventListener('click',()=>{soundMuted=!soundMuted;railAudio.setMuted(soundMuted);$('soundToggle').textContent=soundMuted?'聲音：關':'聲音：開';$('soundToggle').setAttribute('aria-pressed',String(soundMuted));if(!soundMuted)railAudio.unlock();});
+$('soundToggle').addEventListener('click',()=>{soundMuted=!soundMuted;railAudio.setMuted(soundMuted);$('soundToggle').textContent=soundMuted?'聲音：關':'聲音：開';$('soundToggle').setAttribute('aria-pressed',String(soundMuted));if(!soundMuted&&!game.paused)railAudio.unlock();});
 $('volume').addEventListener('input',()=>railAudio.setVolume(Number($('volume').value)/100));railAudio.setVolume(.65);
 $('finishTrip').addEventListener('click',()=>{const wasPaused=game.paused;game.command('pause',false);const result=command('finish');if(!result.accepted){game.command('pause',wasPaused);say('先讓乘客完成上下車，再收車。');return;}$('closeSettings').click();needsRender=true;});
 document.addEventListener('keydown',e=>{if(e.code==='KeyH'&&!e.repeat&&!editableUiTarget(e.target)&&game.started&&!game.paused){e.preventDefault();whistle();}});
