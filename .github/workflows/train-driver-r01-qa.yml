@@ -1,4 +1,4 @@
-name: Train R10 music lifecycle QA
+name: Train R10 WebKit full-size control coverage
 on:
   push:
     branches: ['qa/voxel-train-r01-20261006']
@@ -6,7 +6,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: kcr-r10-score-only-${{ github.ref }}
+  group: kcr-r10-control-shards-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   deterministic:
@@ -35,11 +35,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium, webkit]
-        suite: [music]
+        include:
+          - { browser: webkit, suite: controls, tag: w0, control_shards: 4, control_shard: 0 }
+          - { browser: webkit, suite: controls, tag: w1, control_shards: 4, control_shard: 1 }
+          - { browser: webkit, suite: controls, tag: w2, control_shards: 4, control_shard: 2 }
+          - { browser: webkit, suite: controls, tag: w3, control_shards: 4, control_shard: 3 }
     env:
       TRAIN_BROWSER: ${{ matrix.browser }}
       KCR_SUITE: ${{ matrix.suite }}
+      TRAIN_SCENE_SIZE: ${{ matrix.scene_size || '' }}
+      TRAIN_CONTROL_SHARDS: ${{ matrix.control_shards || 1 }}
+      TRAIN_CONTROL_SHARD: ${{ matrix.control_shard || 0 }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -61,11 +67,11 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: train-r10-${{ matrix.browser }}-${{ matrix.suite }}
+          name: train-r10-${{ matrix.browser }}-${{ matrix.suite }}-${{ matrix.tag }}
           path: |
             kcr-${{ matrix.browser }}-${{ matrix.suite }}/*
-            r10-${{ matrix.browser }}-${{ matrix.suite }}/*
-            r09-controls-${{ matrix.browser }}/*
+            r10-${{ matrix.browser }}-${{ matrix.suite }}*/*
+            r09-controls-${{ matrix.browser }}*/*
             r10-music-${{ matrix.browser }}/*
             anchored-zoom-${{ matrix.browser }}/*
           retention-days: 7
