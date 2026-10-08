@@ -1,0 +1,38 @@
+name: Unified Skin Visual Diagnosis
+on:
+  push:
+    branches: [feature/unified-human-skin-r01-20261008]
+    paths: [.github/workflows/unified-skin-diagnose.yml]
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Install browser
+        run: |
+          mkdir -p /tmp/skin-tools /tmp/skin-diagnose
+          cd /tmp/skin-tools
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund playwright@1.55.1
+          npx playwright install --with-deps chromium
+      - name: Public pixel diagnosis
+        env:
+          NODE_PATH: /tmp/skin-tools/node_modules
+        run: |
+          node - <<'JS'
+          const {chromium}=require('playwright'),fs=require('fs');
+          (async()=>{const b=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});const p=await b.newPage({viewport:{width:1440,height:1040}});const errors=[];p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error')errors.push(m.text())});await p.goto('https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/ed14d3ac9dc32eac77cfe4dab7cd6f09762ae58f/kaopu-unified-human-workbench/skin-r01/preview.html');await p.waitForFunction(()=>window.fullCommonWorkbench);await p.click('#load-model');await p.waitForFunction(()=>window.commonSkin?.report().ready,null,{timeout:180000});await p.evaluate(()=>fullCommonWorkbench.view('face'));
+          const cases=[['all',{}],['no-trans',{translucency:0}],['no-detail',{detail:0}],['no-sss',{sss:0}],['plain-reflection',{detail:0,sss:0,translucency:0}],['matte-no-trans',{translucency:0,oil:0,roughness:.64}]];
+          for(const [name,values]of cases){await p.evaluate(values=>commonSkin.set({enabled:true,roughness:.53,oil:.23,detail:.72,pigment:.22,sss:.78,radius:1.15,translucency:.55,...values}),values);await p.screenshot({path:'/tmp/skin-diagnose/'+name+'.png'});}
+          await p.evaluate(()=>{commonSkin.set({translucency:0});fullCommonWorkbench.view('face');const v=commonSkin._viewer();v.camera.position.copy(v.orbit.target).add({x:.12,y:0,z:.53});v.orbit.update();v.render();});await p.screenshot({path:'/tmp/skin-diagnose/close-no-trans.png'});fs.writeFileSync('/tmp/skin-diagnose/report.json',JSON.stringify({errors,skin:await p.evaluate(()=>commonSkin.report())},null,2));await b.close();})().catch(e=>{console.error(e);process.exit(1)});
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-visual-diagnosis
+          path: /tmp/skin-diagnose
+          retention-days: 3
