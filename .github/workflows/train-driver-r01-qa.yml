@@ -1,4 +1,4 @@
-name: Train R10 WebKit full-size control coverage
+name: Train R10 final portrait360 WebKit full-size control coverage
 on:
   push:
     branches: ['qa/voxel-train-r01-20261006']
@@ -36,10 +36,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { browser: webkit, suite: controls, tag: w0, control_shards: 4, control_shard: 0 }
-          - { browser: webkit, suite: controls, tag: w1, control_shards: 4, control_shard: 1 }
-          - { browser: webkit, suite: controls, tag: w2, control_shards: 4, control_shard: 2 }
-          - { browser: webkit, suite: controls, tag: w3, control_shards: 4, control_shard: 3 }
+          - { browser: webkit, suite: controls, tag: portrait360, control_shards: 16, control_shard: 13 }
     env:
       TRAIN_BROWSER: ${{ matrix.browser }}
       KCR_SUITE: ${{ matrix.suite }}
