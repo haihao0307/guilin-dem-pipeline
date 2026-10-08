@@ -33,7 +33,7 @@ jobs:
           NODE_PATH: ${{ github.workspace }}/.human-qa/node_modules
           HUMAN_QA_URL: http://127.0.0.1:8765/kaopu-unified-human-workbench/
           HUMAN_R2_OUT: ${{ github.workspace }}/human-character-r02-results
-          CHARACTER_R2_FOCUS: refine
+          CHARACTER_R2_FOCUS: tall-children
         run: node kaopu-unified-human-workbench/tests/character-r02-browser.cjs
       - name: Keep the full 108-view evidence and actual parameters
         if: always()
