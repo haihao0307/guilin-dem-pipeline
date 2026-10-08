@@ -3004,10 +3004,7 @@ var GarmentLab2 = class extends GarmentLab {
       if (!this.r06Contact) k.distances(baseCount, this.count);
       P.distanceMs += performance.now() - now;
       if (this.r06Contact) {
-        this.selfContacts.rebuild();
-        this.selfContacts.project();
-        // Contact/sewing must not be the final operation that stretches rest material.
-        for(let guard=0;guard<3;guard++) { k.strains(); k.vertices(this.clearance); }
+        for(let guard=0;guard<6;guard++) { k.strains(); k.vertices(this.clearance); }
       }
       if (this.collisions && sub3 % 3 === 2) {
         now = performance.now();

@@ -4,8 +4,20 @@ on:
     branches: [fix/tailor-r06-contact-20261008]
     paths:
       - '.github/workflows/tailor-r06-contact.yml'
-      - 'kaopu-tailor-workbench/r06/**'
-      - 'kaopu-tailor-workbench/catalogue/r06-*'
+      - 'kaopu-tailor-workbench/r06/build_worker.py'
+      - 'kaopu-tailor-workbench/r06/build_ui.py'
+      - 'kaopu-tailor-workbench/r06/build_sdf.py'
+      - 'kaopu-tailor-workbench/r06/fixtures.mjs'
+      - 'kaopu-tailor-workbench/r06/body_field.cpp'
+      - 'kaopu-tailor-workbench/r06/contact/*.mjs'
+      - 'kaopu-tailor-workbench/r06/contact/*.ts'
+      - 'kaopu-tailor-workbench/r06/contact/*.wasm'
+      - 'kaopu-tailor-workbench/r06/contact/index.html'
+      - 'kaopu-tailor-workbench/r06/contact/qa.py'
+      - 'kaopu-tailor-workbench/catalogue/r06-contact-*.mjs'
+      - 'kaopu-tailor-workbench/catalogue/workbench-worker.bundle.mjs'
+      - 'kaopu-tailor-workbench/catalogue/workbench-app.mjs'
+      - 'kaopu-tailor-workbench/catalogue/*style.css'
 permissions:
   contents: write
 concurrency:
@@ -45,7 +57,7 @@ jobs:
           r=Path('kaopu-tailor-workbench')
           paths=list((r/'r06').rglob('*'))+list((r/'catalogue').glob('r06-*'))
           manifest={'version':'R06.3','sourceCommit':os.environ['GITHUB_SHA'],'sourceBranch':os.environ['GITHUB_REF_NAME'],'baselineCommit':'6562c4677b1b14c58f00d686ceb700856118854d','files':{str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in paths if p.is_file() and p.name!='BUILD_MANIFEST.json'},'newStyleFitAccepted':False}
-          (r/'r06/BUILD_MANIFEST.json').write_text(json.dumps(manifest,indent=2))
+          (r/'r06/contact/BUILD_MANIFEST.json').write_text(json.dumps(manifest,indent=2))
           PY
       - name: Browser dependencies
         run: |
