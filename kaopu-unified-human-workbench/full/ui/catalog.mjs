@@ -46,12 +46,13 @@ export function rowStatus(row,state,{localGate,modelReady=true,bodyDriver=true,s
   if(!gate||gate.enabled===false)return {editable:false,active:false,kind:'pending',label:'部位校核中',reason:gate?.reason||'正在依据真实源形变区分身体与头部支持，不按名字猜测映射'};
  }
  if(row.source==='mhr'&&!bodyDriver)return {editable:false,active:false,kind:'pending',label:'身体驱动待加载',reason:'当前模型未装配 MHR 身体适配器'};
+ const shared=state.headShapeComposition==='shared-layers/1';
  let active=true,reason='当前共同模型生效',label;
- if(row.group==='gnm.identity')active=state.owners.headShape==='gnm';
+ if(row.group==='gnm.identity')active=shared||state.owners.headShape==='gnm';
  if(row.group==='gnm.expression')active=state.owners.expression==='gnm';
  if(row.group==='anny.facialActions')active=state.owners.expression==='anny'&&(!row.nativeLabel.startsWith('eyeLook')||state.owners.gaze==='expression');
  if(row.group==='mhr.expression')active=state.owners.expression==='mhr'&&(!row.nativeLabel.startsWith('eyesLook')||state.owners.gaze==='expression');
- if(row.group==='anny.localChanges'&&localGate[row.nativeLabel]?.headOnly)active=state.owners.headShape==='anny';
+ if(row.group==='anny.localChanges'&&localGate[row.nativeLabel]?.headOnly)active=shared||state.owners.headShape==='anny';
  if(['gnm.rotation','gnm.translation'].includes(row.group))active=semanticHead&&row.group==='gnm.rotation'&&row.index>=6?state.owners.gaze==='gnm':state.owners.headRig==='gnm';
  if(['anny.pose','anny.translations'].includes(row.group)){
   active=state.owners.rig==='anny';
@@ -61,8 +62,8 @@ export function rowStatus(row,state,{localGate,modelReady=true,bodyDriver=true,s
  if(['mhr.pose','mhr.correctives'].includes(row.group))active=state.owners.rig==='mhr';
  if(row.group==='mhr.pose'&&row.index>=24&&row.index<=29&&state.owners.headRig==='gnm')active=false;
  if(!active)reason='数值可以保存；当前来源没有接管此部位，因此不会影响网格';
- if(['anny.phenotypes','mhr.identity'].includes(row.group)&&active){reason='共同身体形态生效；头部细部由所选头形来源负责。跨模型形态存在适配误差';label='共同形态';}
- if(row.group==='anny.localChanges'&&active){const gate=localGate[row.nativeLabel];reason=gate.reason;label=gate.headOnly?'头部生效':gate.partial&&state.owners.headShape!=='anny'?'身体部分生效':'当前生效';}
+ if(['anny.phenotypes','mhr.identity'].includes(row.group)&&active){reason=shared?'源形态同时作用身体与可见头部；GNM身份与表情保留，跨源适配仍需视觉检查':'旧单源模式：共同身体形态生效，头部细部由头形来源决定';label=shared?'身体 + 头部':'共同身体';}
+ if(row.group==='anny.localChanges'&&active){const gate=localGate[row.nativeLabel];reason=shared?'原生局部形变进入同一人物，含其头部范围':gate.reason;label=gate.headOnly?'头部生效':gate.partial&&!shared&&state.owners.headShape!=='anny'?'身体部分生效':'当前生效';}
  if(row.group==='mhr.expression'&&row.nativeLabel.startsWith('eyesLook')&&active)reason='原生眼缘/眼周形变；MHR此接口没有独立虹膜、瞳孔或眼球转角';
  return {editable:true,active,kind:active?'active':'inactive',label:label||(active?'当前生效':'仅保存'),reason};
 }

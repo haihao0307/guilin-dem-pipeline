@@ -1,7 +1,7 @@
 import{exportCommon}from'../src/CommonExports.mjs';
 import{groupTitle}from'./catalog.mjs';
 const el=(tag,className,text)=>{const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=text;return node;};
-const sourceName={gnm:'GNM',anny:'Anny',mhr:'MHR',body:'当前身体骨架',rig:'当前骨架',expression:'当前表情源'};
+const sourceName={shared:'共同叠加',gnm:'GNM',anny:'Anny',mhr:'MHR',body:'当前身体骨架',rig:'当前骨架',expression:'当前表情源'};
 const ownerName={rig:'骨架与姿态',headRig:'头颈动作',expression:'面部表情',headShape:'头部形状',gaze:'眼部驱动'};
 const sourceUnit=row=>({'gnm.identity':'原生 PCA 系数','gnm.expression':'原生表情系数','gnm.rotation':'轴角向量 · rad','gnm.translation':'GNM 原生 XYZ · m','anny.pose':'旋转向量 · ° · local-ref','anny.translations':'骨局部平移 · m','anny.phenotypes':'原生形态值','anny.localChanges':'原生局部系数','anny.facialActions':'原生面部动作','mhr.identity':'原生 PCA 系数','mhr.pose':'原生混合单位 · 不换算','mhr.expression':'原生表情系数'}[row.group]||row.unit||'原生值');
 const browserWindow=row=>row.bounds||(row.group.includes('translation')?[-.1,.1]:row.group==='gnm.rotation'?[-Math.PI,Math.PI]:[-3,3]);
@@ -59,7 +59,7 @@ export function mountPanel(root,controller,{screenshot}={}){
   const g=controller.catalog.groups.find(g=>g.id===group);groupInfo.textContent=g?.id==='anny.translations'?'额外 104 骨 × 3 个平移分量，未计入 1596 标量目录。':g&&controller.catalog.rows.some(r=>r.group===group&&!r.bounds&&r.kind!=='boolean')?'滑条只是浏览窗口，不是官方硬限；数值框保留原生未限定范围。':'按原生名称、单位与范围显示；1596 项目录不等于全部验收。';resetGroup.disabled=!group;resetSource.disabled=source==='all';sync();
  }
  function sync(){
-  if(!active)return;const state=controller.state();for(const[key,{select,reserved,config}]of ownerControls)select.value=reserved?config.default:state.owners[key];
+  if(!active)return;const state=controller.state();for(const[key,{select,reserved,config}]of ownerControls)select.value=reserved?config.default:key==='headShape'&&state.headShapeComposition==='shared-layers/1'?'shared':state.owners[key];
   for(const n of rowNodes.values()){
    const s=controller.status(n.row),value=controller.value(n.row);n.item.dataset.parameterState=s.kind;n.badge.textContent=s.label;n.reason.textContent=s.reason;
    if(n.toggle){n.toggle.checked=value;n.toggle.disabled=!s.editable;}
@@ -80,7 +80,7 @@ export function mountPanel(root,controller,{screenshot}={}){
   if(action==='load'){file.value='';file.click();return;}
   if(action==='save'){const url=URL.createObjectURL(new Blob([JSON.stringify(controller.archive(),null,2)],{type:'application/json'}));urls.add(url);const a=el('a');a.href=url;a.download='common-person-archive.json';a.click();setTimeout(()=>{URL.revokeObjectURL(url);urls.delete(url);},1000);report('已导出全部配置，包括非活动来源');return;}report('已恢复默认值');
  }catch(error){report(error.message,true);sync();}};
- const onFile=async()=>{const selected=file.files?.[0];if(!selected)return;try{if(selected.size>10*1024*1024)throw Error('档案过大');const data=JSON.parse(await selected.text());if(!active)return;clearQueue();controller.restore(data);report('已恢复同一拓扑档案；未选中的来源仍只保存');}catch(e){if(active)report('恢复失败：'+e.message,true);}};
+ const onFile=async()=>{const selected=file.files?.[0];if(!selected)return;try{if(selected.size>10*1024*1024)throw Error('档案过大');const data=JSON.parse(await selected.text());if(!active)return;clearQueue();controller.restore(data);report(controller.state().headShapeComposition==='shared-layers/1'?'已恢复共同形态组合；骨架与表情来源按档案保留':'已按旧单源模式恢复；选择头部形状「共同叠加」可启用联动');}catch(e){if(active)report('恢复失败：'+e.message,true);}};
  const onSearch=()=>{query=search.value;if(query){group='';categories.value='';}renderRows();};const onCategory=()=>{group=categories.value;if(group&&group!=='__interfaces'&&group!=='__exports'){source=controller.catalog.groups.find(g=>g.id===group).source;for(const b of sourceTabs.children)b.setAttribute('aria-pressed',String(b.dataset.source===source));}renderRows();};
  root.addEventListener('input',onInput);root.addEventListener('change',onChange);root.addEventListener('click',onClick);search.addEventListener('input',onSearch);categories.addEventListener('change',onCategory);file.addEventListener('change',onFile);controller.addEventListener('change',sync);renderRows();
  return {sync,report,renderRows,destroy(){active=false;clearQueue();for(const url of urls)URL.revokeObjectURL(url);urls.clear();root.removeEventListener('input',onInput);root.removeEventListener('change',onChange);root.removeEventListener('click',onClick);search.removeEventListener('input',onSearch);categories.removeEventListener('change',onCategory);file.removeEventListener('change',onFile);controller.removeEventListener('change',sync);root.replaceChildren();}};

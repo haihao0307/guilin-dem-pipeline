@@ -1,0 +1,47 @@
+name: QA unified head bindings candidate
+on:
+  push:
+    branches: [qa/unified-head-bindings-20261008]
+    paths:
+      - kaopu-unified-human-workbench/full/**
+      - kaopu-unified-human-workbench/tests/head-binding-browser.cjs
+      - .github/workflows/kaopu-unified-head-bindings-qa.yml
+permissions:
+  contents: read
+jobs:
+  actual-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+            kaopu-mhr-workbench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install the existing pinned browser QA dependency
+        run: |
+          npm install --prefix .human-qa --no-save --ignore-scripts --no-audit --no-fund playwright@1.55.0
+          ./.human-qa/node_modules/.bin/playwright install --with-deps chromium
+      - name: Serve only the checked-out candidate locally
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/human-qa-http.log 2>&1 &
+          for n in 1 2 3 4 5; do curl --fail --silent http://127.0.0.1:8765/kaopu-unified-human-workbench/ && break; sleep 1; done
+      - name: Capture real browser evidence and preserve known visual failure
+        env:
+          NODE_PATH: ${{ github.workspace }}/.human-qa/node_modules
+          HUMAN_QA_URL: http://127.0.0.1:8765/kaopu-unified-human-workbench/
+          HUMAN_QA_OUT: ${{ github.workspace }}/human-head-qa-results
+        run: node kaopu-unified-human-workbench/tests/head-binding-browser.cjs
+      - name: Keep actual screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unified-head-candidate-${{ github.sha }}
+          path: human-head-qa-results/
+          if-no-files-found: warn
