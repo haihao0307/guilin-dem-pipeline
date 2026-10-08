@@ -1,6 +1,6 @@
 {
-  "schema": "kaopu-common-coverage/20261007-rebuild-1",
-  "currentPublicBase": "3aca43a3085b66e2227ccd779a28e51f3d8425de",
+  "schema": "kaopu-common-coverage/20261008-head-bindings-r2",
+  "currentPublicBase": "ac9110ffe78e2f77d15acd9f5da4d4790a147c36",
   "recoveredOldR02Package": false,
   "complete": false,
   "rows": [
@@ -8,10 +8,10 @@
       "source": "GNM",
       "group": "identity",
       "nativeScalarCount": 253,
-      "publishedCommon": "Forwarded natively; UI exposes one axis",
       "rebuildStatus": "Real fixed-mesh parameter route wired and numerically exercised; semantic-part, extreme and combined visual validation remains separate",
       "plan": "Keep all native coefficients on the fixed GNM head",
-      "parameterRouteAudit": {
+      "historicalPublishedCommon": "Forwarded natively; UI exposes one axis",
+      "historicalParameterRouteAudit": {
         "total": 253,
         "locked": 0,
         "responding": 253,
@@ -22,10 +22,10 @@
       "source": "GNM",
       "group": "expression",
       "nativeScalarCount": 383,
-      "publishedCommon": "Forwarded natively; UI exposes two axes",
       "rebuildStatus": "Real fixed-mesh parameter route wired and numerically exercised; semantic-part, extreme and combined visual validation remains separate",
       "plan": "Active only when expression owner is GNM",
-      "parameterRouteAudit": {
+      "historicalPublishedCommon": "Forwarded natively; UI exposes two axes",
+      "historicalParameterRouteAudit": {
         "total": 383,
         "locked": 0,
         "responding": 383,
@@ -36,7 +36,6 @@
       "source": "GNM",
       "group": "jointRotation",
       "nativeScalarCount": 12,
-      "publishedCommon": "Absent from common state/archive",
       "rebuildStatus": "Real fixed-mesh parameter route wired and numerically exercised; semantic-part, extreme and combined visual validation remains separate",
       "plan": "Native neck, head, left_eye and right_eye axis-angle radians",
       "joints": [
@@ -45,7 +44,8 @@
         "left_eye",
         "right_eye"
       ],
-      "parameterRouteAudit": {
+      "historicalPublishedCommon": "Absent from common state/archive",
+      "historicalParameterRouteAudit": {
         "total": 12,
         "locked": 0,
         "responding": 12,
@@ -56,10 +56,10 @@
       "source": "GNM",
       "group": "translation",
       "nativeScalarCount": 3,
-      "publishedCommon": "Absent from common state/archive",
       "rebuildStatus": "Real fixed-mesh parameter route wired and numerically exercised; semantic-part, extreme and combined visual validation remains separate",
       "plan": "Native metre translation with explicit head-placement ownership",
-      "parameterRouteAudit": {
+      "historicalPublishedCommon": "Absent from common state/archive",
+      "historicalParameterRouteAudit": {
         "total": 3,
         "locked": 0,
         "responding": 3,
@@ -69,9 +69,8 @@
     {
       "source": "Anny",
       "group": "phenotype",
-      "nativeScalarCount": 6,
-      "publishedCommon": "Body forward; GNM face only uniformly scaled/placed",
-      "rebuildStatus": "Real fixed-mesh parameter route wired and numerically exercised; semantic-part, extreme and combined visual validation remains separate",
+      "nativeScalarCount": 11,
+      "rebuildStatus": "All native phenotype basis restored. Shape drives the same visible head through registered continuous source deformation.",
       "plan": "Preserve native body shape and separately verify semantic head transfer",
       "labels": [
         "gender",
@@ -79,9 +78,15 @@
         "muscle",
         "weight",
         "height",
-        "proportions"
+        "proportions",
+        "cupsize",
+        "firmness",
+        "african",
+        "asian",
+        "caucasian"
       ],
-      "parameterRouteAudit": {
+      "historicalPublishedCommon": "Body forward; GNM face only uniformly scaled/placed",
+      "historicalParameterRouteAudit": {
         "total": 6,
         "locked": 0,
         "responding": 6,
@@ -91,9 +96,8 @@
     {
       "source": "Anny",
       "group": "localChange",
-      "nativeScalarCount": 254,
-      "publishedCommon": "Underlying body forward exists, but R01 profile rejects all nonzero local changes; head semantic transfer missing",
-      "rebuildStatus": "Real fixed-mesh parameter route wired and numerically exercised; semantic-part, extreme and combined visual validation remains separate",
+      "nativeScalarCount": 256,
+      "rebuildStatus": "All native locals represented. nipple-point is strictly zero under the unchanged official topology and is visibly disabled.",
       "plan": "Native body locals plus validated semantic head transfer; store complete official values",
       "labels": [
         "l-lowerarm-scale-depth-incr",
@@ -122,6 +126,8 @@
         "l-upperarm-scale-vert-incr",
         "r-upperarm-scale-vert-incr",
         "breast-point-incr",
+        "nipple-point-incr",
+        "nipple-size-incr",
         "breast-dist-incr",
         "breast-volume-vert-up",
         "breast-trans-up",
@@ -351,18 +357,21 @@
         "measure-bust-circ-incr",
         "torso-trans-out"
       ],
-      "parameterRouteAudit": {
+      "historicalPublishedCommon": "Underlying body forward exists, but R01 profile rejects all nonzero local changes; head semantic transfer missing",
+      "historicalParameterRouteAudit": {
         "total": 254,
         "locked": 0,
         "responding": 254,
         "withoutResponse": []
-      }
+      },
+      "nativeNull": [
+        "nipple-point-incr"
+      ]
     },
     {
       "source": "Anny",
       "group": "facialAction",
       "nativeScalarCount": 52,
-      "publishedCommon": "Missing",
       "rebuildStatus": "Real fixed-mesh parameter route wired and numerically exercised; semantic-part, extreme and combined visual validation remains separate",
       "plan": "Semantic outer-face transfer, preserve canonical mouth/eye components",
       "labels": [
@@ -419,7 +428,8 @@
         "noseSneerRight",
         "tongueOut"
       ],
-      "parameterRouteAudit": {
+      "historicalPublishedCommon": "Missing",
+      "historicalParameterRouteAudit": {
         "total": 52,
         "locked": 0,
         "responding": 52,
@@ -430,7 +440,6 @@
       "source": "Anny",
       "group": "boneRotation",
       "nativeScalarCount": 312,
-      "publishedCommon": "Legacy Euler body path; official rotvec protocol and full UI absent",
       "rebuildStatus": "Real fixed-mesh parameter route wired and numerically exercised; semantic-part, extreme and combined visual validation remains separate",
       "plan": "104 official bones, rotation-vector degrees in local-ref; active only under Anny rig ownership",
       "boneLabels": [
@@ -539,7 +548,8 @@
         "eye.L",
         "eye.R"
       ],
-      "parameterRouteAudit": {
+      "historicalPublishedCommon": "Legacy Euler body path; official rotvec protocol and full UI absent",
+      "historicalParameterRouteAudit": {
         "total": 312,
         "locked": 0,
         "responding": 312,
@@ -550,10 +560,10 @@
       "source": "MHR",
       "group": "identity",
       "nativeScalarCount": 45,
-      "publishedCommon": "Only one torso displacement channel, identity_000",
       "rebuildStatus": "Real fixed-mesh parameter route wired and numerically exercised; semantic-part, extreme and combined visual validation remains separate",
       "plan": "All original body20/head20/hand5 components with measured fixed-mesh transfer error",
-      "parameterRouteAudit": {
+      "historicalPublishedCommon": "Only one torso displacement channel, identity_000",
+      "historicalParameterRouteAudit": {
         "total": 45,
         "locked": 0,
         "responding": 45,
@@ -564,7 +574,6 @@
       "source": "MHR",
       "group": "rigAndPose",
       "nativeScalarCount": 204,
-      "publishedCommon": "Missing",
       "rebuildStatus": "Real fixed-mesh parameter route wired and numerically exercised; semantic-part, extreme and combined visual validation remains separate",
       "plan": "All mixed native pose/scale/translation channels under MHR rig ownership; 37 original locked channels remain zero",
       "labels": [
@@ -1630,7 +1639,8 @@
         151,
         152
       ],
-      "parameterRouteAudit": {
+      "historicalPublishedCommon": "Missing",
+      "historicalParameterRouteAudit": {
         "total": 204,
         "locked": 37,
         "responding": 167,
@@ -1641,7 +1651,6 @@
       "source": "MHR",
       "group": "expression",
       "nativeScalarCount": 72,
-      "publishedCommon": "Missing",
       "rebuildStatus": "Real fixed-mesh parameter route wired and numerically exercised; semantic-part, extreme and combined visual validation remains separate",
       "plan": "All named native expression displacements through fixed semantic head correspondence",
       "labels": [
@@ -1718,7 +1727,8 @@
         "upperLipRaiser_L",
         "upperLipRaiser_R"
       ],
-      "parameterRouteAudit": {
+      "historicalPublishedCommon": "Missing",
+      "historicalParameterRouteAudit": {
         "total": 72,
         "locked": 0,
         "responding": 72,
@@ -1726,7 +1736,7 @@
       }
     }
   ],
-  "totalRequestedScalarSlots": 1596,
+  "totalRequestedScalarSlots": 1603,
   "lockedScalarSlots": 37,
   "additionalInterfaces": [
     {
@@ -1766,97 +1776,10 @@
       "status": "Separate workstream; no automatic inclusion in common geometry"
     }
   ],
-  "parameterRouteAudit": {
-    "fingerprint": "f975df925c5586eccaae60f61d888e5b1bcfa6200aad7d1763cb10ae3b736224",
-    "records": 1908,
-    "locked": 37,
-    "variableScalarsWithResponse": 1871,
-    "sampledOneValuePerAxis": true,
-    "groups": {
-      "gnm/identity": {
-        "total": 253,
-        "locked": 0,
-        "responding": 253,
-        "withoutResponse": []
-      },
-      "gnm/expression": {
-        "total": 383,
-        "locked": 0,
-        "responding": 383,
-        "withoutResponse": []
-      },
-      "gnm/rotation": {
-        "total": 12,
-        "locked": 0,
-        "responding": 12,
-        "withoutResponse": []
-      },
-      "gnm/translation": {
-        "total": 3,
-        "locked": 0,
-        "responding": 3,
-        "withoutResponse": []
-      },
-      "anny/phenotypes": {
-        "total": 6,
-        "locked": 0,
-        "responding": 6,
-        "withoutResponse": []
-      },
-      "anny/localChanges": {
-        "total": 254,
-        "locked": 0,
-        "responding": 254,
-        "withoutResponse": []
-      },
-      "anny/facialActions": {
-        "total": 52,
-        "locked": 0,
-        "responding": 52,
-        "withoutResponse": []
-      },
-      "anny/pose": {
-        "total": 312,
-        "locked": 0,
-        "responding": 312,
-        "withoutResponse": []
-      },
-      "anny/translations": {
-        "total": 312,
-        "locked": 0,
-        "responding": 312,
-        "withoutResponse": []
-      },
-      "mhr/identity": {
-        "total": 45,
-        "locked": 0,
-        "responding": 45,
-        "withoutResponse": []
-      },
-      "mhr/pose": {
-        "total": 204,
-        "locked": 37,
-        "responding": 167,
-        "withoutResponse": []
-      },
-      "mhr/expression": {
-        "total": 72,
-        "locked": 0,
-        "responding": 72,
-        "withoutResponse": []
-      }
-    },
-    "rawSHA256": "80de8f3c9f440c340e882931f94d9a0a7f5cf6bdf927432918172372bf94f332",
-    "compressedSHA256": "2dd96e47c646019c6e8bf9afd5a2658d9997558c617a821af211fec0f79b3b0e",
-    "rawBytes": 799050,
-    "compressedBytes": 39899,
-    "numericalOnly": true,
-    "notProofOfSemanticPartCoverageOrVisualAcceptance": true,
-    "rawReport": "research/all-parameter-audit.json.gz"
-  },
   "visualBlockers": [
-    "Infant/newborn common ears have added folds versus native Anny; infant dentition remains adult GNM anatomy, not accepted age fidelity",
-    "Extreme and arbitrary parameter combinations can self-intersect; moderate adult test cases do not certify all combinations"
+    "Native full-amplitude Anny eyeBlink overcloses in the source; no hidden coefficient reduction is applied.",
+    "Cross-source extreme expression/contact cases remain separately documented.",
+    "Skin wrinkles and infant tooth eruption are not supplied by these geometry fields."
   ],
   "extraAnnyTranslationScalars": 312,
   "acceptanceCriteria": {
@@ -1882,16 +1805,129 @@
     "riggedFormats": "Strongest four normalized weights, matching native MHR web convention; full weights also saved in JSON",
     "independentReaders": "Trimesh 5.1.1 OBJ/GLB and OpenUSD 26.8 actual skinning passed three states"
   },
-  "browserEvidence": {
-    "run": 37616913087,
-    "commit": "29109562604f9fdfa7def1aa3652258b722b0ad7",
-    "uiEngines": [
-      "chromium",
-      "webkit"
+  "historicalBaseCoverage": {
+    "currentPublicBase": "3aca43a3085b66e2227ccd779a28e51f3d8425de",
+    "parameterRouteAudit": {
+      "fingerprint": "f975df925c5586eccaae60f61d888e5b1bcfa6200aad7d1763cb10ae3b736224",
+      "records": 1908,
+      "locked": 37,
+      "variableScalarsWithResponse": 1871,
+      "sampledOneValuePerAxis": true,
+      "groups": {
+        "gnm/identity": {
+          "total": 253,
+          "locked": 0,
+          "responding": 253,
+          "withoutResponse": []
+        },
+        "gnm/expression": {
+          "total": 383,
+          "locked": 0,
+          "responding": 383,
+          "withoutResponse": []
+        },
+        "gnm/rotation": {
+          "total": 12,
+          "locked": 0,
+          "responding": 12,
+          "withoutResponse": []
+        },
+        "gnm/translation": {
+          "total": 3,
+          "locked": 0,
+          "responding": 3,
+          "withoutResponse": []
+        },
+        "anny/phenotypes": {
+          "total": 6,
+          "locked": 0,
+          "responding": 6,
+          "withoutResponse": []
+        },
+        "anny/localChanges": {
+          "total": 254,
+          "locked": 0,
+          "responding": 254,
+          "withoutResponse": []
+        },
+        "anny/facialActions": {
+          "total": 52,
+          "locked": 0,
+          "responding": 52,
+          "withoutResponse": []
+        },
+        "anny/pose": {
+          "total": 312,
+          "locked": 0,
+          "responding": 312,
+          "withoutResponse": []
+        },
+        "anny/translations": {
+          "total": 312,
+          "locked": 0,
+          "responding": 312,
+          "withoutResponse": []
+        },
+        "mhr/identity": {
+          "total": 45,
+          "locked": 0,
+          "responding": 45,
+          "withoutResponse": []
+        },
+        "mhr/pose": {
+          "total": 204,
+          "locked": 37,
+          "responding": 167,
+          "withoutResponse": []
+        },
+        "mhr/expression": {
+          "total": 72,
+          "locked": 0,
+          "responding": 72,
+          "withoutResponse": []
+        }
+      },
+      "rawSHA256": "80de8f3c9f440c340e882931f94d9a0a7f5cf6bdf927432918172372bf94f332",
+      "compressedSHA256": "2dd96e47c646019c6e8bf9afd5a2658d9997558c617a821af211fec0f79b3b0e",
+      "rawBytes": 799050,
+      "compressedBytes": 39899,
+      "numericalOnly": true,
+      "notProofOfSemanticPartCoverageOrVisualAcceptance": true,
+      "rawReport": "research/all-parameter-audit.json.gz"
+    },
+    "browserEvidence": {
+      "run": 37616913087,
+      "commit": "29109562604f9fdfa7def1aa3652258b722b0ad7",
+      "uiEngines": [
+        "chromium",
+        "webkit"
+      ],
+      "headCases": 22,
+      "moderateOwnerCombinations": 108,
+      "allVariableScalarRoutes": 1871,
+      "knownBoundariesRemain": true
+    }
+  },
+  "parameterRouteAudit": {
+    "currentScalarSlotsWithTranslations": 1915,
+    "nativeMHRLockedSlots": 37,
+    "additionalNativeNullSlots": 1,
+    "nativeNullLabels": [
+      "anny.localChanges:nipple-point-incr"
     ],
-    "headCases": 22,
-    "moderateOwnerCombinations": 108,
-    "allVariableScalarRoutes": 1871,
-    "knownBoundariesRemain": true
+    "allCurrentScalarSweep": "pending; do not reuse historical 1871 response count as visual acceptance",
+    "newSourceRecovery": "591 old-domain cases exact; six newly recovered non-null parameters respond",
+    "bodyNativeDriver": "Full MHR 45/204/72 dynamic engine retained"
+  },
+  "headShapeComposition": {
+    "newDefault": "shared-layers/1",
+    "legacyArchives": "explicit legacy-owner/1; old inactive saved values are not silently activated",
+    "method": "continuous cubic RBF on fixed GNM control domain with original Anny barycentric correspondence; MHR shape/expression passed through the same lifecycle field",
+    "topologyUnchanged": true
+  },
+  "browserEvidence": {
+    "failedCheckpointRun": 37721289212,
+    "commit": "d1b871bcaf7f1aebd3a37feb15b919e49c84603b",
+    "status": "known infant visual failure plus mobile width failure preserved; later candidate not yet browser-accepted"
   }
 }
