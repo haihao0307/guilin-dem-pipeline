@@ -1,4 +1,4 @@
-import * as THREE from '../vendor/three.module.js';
+import * as THREE from '../../vendor/three.module.js';
 import {makeSmokeTexture} from './smoke-texture.mjs';
 import {SMOKE_COUNT,smokeFrameState,smokeParticle,classicSmokeParticle} from './smoke-profile.mjs';
 const COUNT=SMOKE_COUNT,UPPER=new THREE.Color(0x8f9eab),WHITE=new THREE.Color(0xffffff);
@@ -37,14 +37,14 @@ const FRAGMENT=[
 '#include <colorspace_fragment>',
 '}'
 ].join('\n');
-export function createGameSmoke({legacy=false,tallExhaust=false}={}){
+export function createGameSmoke({legacy=false}={}){
   const root=new THREE.Group(),texture=makeSmokeTexture();root.name='Classic layered smoke and steam rolling onto the platform, '+(legacy?'sprite reference':'batched billboards');
   let smoke,attributes,sprites;
   if(legacy){sprites=[];for(let i=0;i<COUNT;i++){const material=new THREE.SpriteMaterial({map:texture,color:i<84?WHITE:UPPER,transparent:true,depthWrite:false,opacity:.3});material.toneMapped=i>=84;const sprite=new THREE.Sprite(material);root.add(sprite);sprites.push(sprite);}}
   else{const quad=new THREE.PlaneGeometry(1,1),geometry=new THREE.InstancedBufferGeometry();geometry.index=quad.index;geometry.setAttribute('position',quad.attributes.position);geometry.setAttribute('uv',quad.attributes.uv);geometry.instanceCount=COUNT;attributes={particleCenter:3,particleScale:2,particleAngle:1,particleOpacity:1,particleColor:3,particleUpper:1};for(const[name,size]of Object.entries(attributes))geometry.setAttribute(name,new THREE.InstancedBufferAttribute(new Float32Array(COUNT*size),size).setUsage(THREE.DynamicDrawUsage));attributes=geometry.attributes;smoke=new THREE.Mesh(geometry,new THREE.ShaderMaterial({uniforms:{smokeMap:{value:texture}},vertexShader:VERTEX,fragmentShader:FRAGMENT,transparent:true,depthWrite:false,side:THREE.DoubleSide,toneMapped:true}));smoke.frustumCulled=false;root.add(smoke);}
   const sparkPositions=new Float32Array(90*3),sparkGeometry=new THREE.BufferGeometry();sparkGeometry.setAttribute('position',new THREE.BufferAttribute(sparkPositions,3));const sparkMaterial=new THREE.PointsMaterial({color:0xffd475,size:.033,transparent:true,opacity:.6,depthWrite:false}),sparks=new THREE.Points(sparkGeometry,sparkMaterial);root.add(sparks);const temp=new THREE.Vector3();
   return{root,mode:legacy?'legacy-sprites':'batched-classic-layered-platform',particles:COUNT,update(t,camera,{speed=7,braking=false,comparison=false,view=null}={}){
-    const state=comparison?{}:smokeFrameState(view,{tallExhaust}),particles=Array.from({length:COUNT},(_,i)=>{const p=comparison?classicSmokeParticle(i,t):smokeParticle(i,t,state);p.color=p.upper?UPPER:WHITE;return p;}),intensity=1;root.userData.effects={...state,burstParticles:84};
+    const state=comparison?{}:smokeFrameState(view),particles=Array.from({length:COUNT},(_,i)=>{const p=comparison?classicSmokeParticle(i,t):smokeParticle(i,t,state);p.color=p.upper?UPPER:WHITE;return p;}),intensity=1;root.userData.effects={...state,burstParticles:84};
     if(legacy){for(const p of particles){const sprite=sprites[p.index];sprite.position.set(...p.position);sprite.scale.set(p.size,p.size,1);sprite.material.opacity=p.opacity*intensity;sprite.material.rotation=p.rotation;}}
     else{camera.updateMatrixWorld();for(const p of particles)p.depth=temp.set(...p.position).applyMatrix4(camera.matrixWorldInverse).z;particles.sort((a,b)=>a.depth-b.depth||a.index-b.index);for(let i=0;i<particles.length;i++){const p=particles[i];attributes.particleCenter.setXYZ(i,...p.position);attributes.particleScale.setXY(i,p.size,p.size);attributes.particleAngle.setX(i,p.rotation);attributes.particleOpacity.setX(i,p.opacity*intensity);attributes.particleColor.setXYZ(i,p.color.r,p.color.g,p.color.b);attributes.particleUpper.setX(i,p.upper?1:0);}for(const a of Object.values(attributes))if(a.isInstancedBufferAttribute)a.needsUpdate=true;}
     for(let i=0;i<90;i++){const f=(t*2+i*.381966)%1,j=i*3;sparkPositions[j]=3.6-(i%4)*2.9-f*.6;sparkPositions[j+1]=.58+Math.sin(f*Math.PI)*.55;sparkPositions[j+2]=(i%2?1:-1)*(.81+f*.46);}sparkGeometry.attributes.position.needsUpdate=true;sparkMaterial.opacity=0;

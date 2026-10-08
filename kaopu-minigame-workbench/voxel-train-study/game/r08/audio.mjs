@@ -113,11 +113,10 @@ export function createRailAudio({wheelRadius=.72,volume=.55,muted=false,crowdEna
     for(const event of view.events||[]){if(event.id<=lastEvent)continue;if(hasAudio&&running&&wasActive&&event.type==='departed')guardWhistle();if(hasAudio&&running&&event.type==='approach-steam')release(.28);lastEvent=Math.max(lastEvent,event.id||0);}
     lastDistance=distance;lastElapsed=elapsed;lastPhase=phase;lastBrake=!!view.brake;lastThrottle=throttle;
   }
-  function setPlaybackPaused(value){if(!context||context.state==='closed')return Promise.resolve();return value?context.suspend():context.resume();}
   function setCrowdEnabled(value){crowdEnabled=!!value;}
   function setMuted(value){userMuted=!!value;syncMaster();}
   function setVolume(value){userVolume=clamp(value,0,1);syncMaster();}
-  function getState(){return{supported:!!(globalThis.AudioContext||globalThis.webkitAudioContext),unlocked:!!context&&context.state==='running',state:context?.state||'locked',audioClock:context?.currentTime||0,muted:userMuted,volume:userVolume,samples:Object.keys(buffers),errors:{...errors},chuffs,clacks,wheelRadius:Number(wheelRadius)||.72,voiceRecording:false,crowdEnabled};}
+  function getState(){return{supported:!!(globalThis.AudioContext||globalThis.webkitAudioContext),unlocked:!!context&&context.state==='running',state:context?.state||'locked',muted:userMuted,volume:userVolume,samples:Object.keys(buffers),errors:{...errors},chuffs,clacks,wheelRadius:Number(wheelRadius)||.72,voiceRecording:false,crowdEnabled};}
   function dispose(){disposed=true;globalThis.document?.removeEventListener('visibilitychange',syncMaster);for(const layer of Object.values(loops)){try{layer.src.stop();}catch{}}for(const src of oneshots){try{src.stop();}catch{}}context?.close();}
-  return{unlock,setPlaybackPaused,setCrowdEnabled,setMuted,setVolume,update,whistle,guardWhistle,release,getState,dispose};
+  return{unlock,setCrowdEnabled,setMuted,setVolume,update,whistle,guardWhistle,release,getState,dispose};
 }

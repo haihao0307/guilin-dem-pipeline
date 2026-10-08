@@ -1,6 +1,6 @@
 // Original procedural study of the utilitarian WD Austerity 2-8-0 silhouette.
 // All meshes below are generated from primitives. No third-party mesh, image or texture is used.
-import * as THREE from '../vendor/three.module.js';
+import * as THREE from '../../vendor/three.module.js';
 
 export const STEAM_SPEC=Object.freeze({wheelArrangement:'2-8-0',railHead:.3485,driverRadius:.61,guideRadius:.31,tenderRadius:.34,driverAxles:[-1.32,-.04,1.24,2.52],guideAxles:[3.84],tenderAxles:[-7.12,-6.08,-4.77,-3.73],chimney:[3.03,3.72,0],cylinders:{boreInches:19,strokeInches:28},original:true});
 const C={black:0x18201e,soot:0x242a27,green:0x283d32,edge:0x425248,steel:0x88918c,darkSteel:0x4b5752,rust:0x705445,brass:0xb29355,red:0x9b382d,coal:0x20251f};
@@ -78,7 +78,7 @@ export function createSteamLocomotive(){
   for(const sign of [-1,1]){
     const z=sign*.984;b.box(-1.37,1.99,z,1.48,.84,.095,C.green);b.box(-1.37,3.06,z,1.49,.16,.10,C.green);for(const x of [-2.05,-1.36,-.67])b.box(x,2.69,z,.085,.72,.105,C.edge);
     b.box(-1.37,2.33,z,1.48,.055,.135,C.brass);b.box(-1.37,3.14,z,1.50,.045,.13,C.black);
-    for(const x of [-1.72,-1.02]){if(!(sign>0&&x===-1.72))glass.box(x,2.70,z,.55,.58,.014,0x91ada8);b.box(x,3.015,z+sign*.014,.57,.035,.045,C.brass);}
+    for(const x of [-1.72,-1.02]){glass.box(x,2.70,z,.55,.58,.014,0x91ada8);b.box(x,3.015,z+sign*.014,.57,.035,.045,C.brass);}
     b.pipe([[-2.12,1.60,sign*1.02],[-2.12,2.62,sign*1.02]],.028,C.brass);
     for(let j=0;j<3;j++)b.box(-1.80,.70+j*.28,sign*1.07,.59,.065,.36,C.darkSteel);
     for(const x of [-2.03,-1.51])b.pipe([[x,.69,sign*1.13],[x,1.37,sign*.94]],.032,C.black);
@@ -93,15 +93,6 @@ export function createSteamLocomotive(){
   b.cylinder(-1.20,2.03,0,.53,.12,C.black,'x',24);b.cylinder(-1.28,1.89,0,.23,.055,C.darkSteel,'x',20);warm.box(-1.315,1.89,0,.012,.21,.32,0xe79035);
   for(const z of [-.29,.29]){b.cylinder(-1.30,2.43,z,.092,.035,C.brass,'x',16);b.cylinder(-1.323,2.43,z,.074,.018,0xe5dcc5,'x',16);b.box(-1.34,2.44,z,.013,.061,.010,C.black,[.3,0,0]);}
   b.pipe([[-1.33,1.68,-.39],[-1.33,2.26,-.39],[-1.33,2.32,.34]],.025,C.brass);b.pipe([[-1.37,2.25,0],[-1.60,2.50,.12]],.027,C.red);for(const z of [-.62,.62]){b.box(-1.81,1.92,z,.30,.09,.28,0x66503b);b.cylinder(-1.81,1.69,z,.042,.40,C.darkSteel);}
-  // Original placeholder driver in the open right-side cab window. No final character asset is implied.
-  b.box(-1.74,2.20,.61,.29,.38,.28,0x263d48);b.box(-1.74,2.45,.67,.37,.39,.29,0x40545d);
-  for(const x of [-1.84,-1.64]){b.box(x,1.85,.59,.12,.36,.13,0x2b363e);b.box(x,1.64,.65,.14,.09,.24,0x242b2b);}
-  b.box(-1.74,2.67,.72,.14,.12,.15,0xc79572);b.box(-1.74,2.82,.78,.28,.28,.26,0xd6ab83);
-  b.box(-1.74,2.91,.66,.29,.14,.09,0x5e554c);b.box(-1.74,2.82,.93,.072,.06,.052,0xc79572);
-  for(const x of [-1.81,-1.67]){b.box(x,2.86,.916,.033,.033,.015,0x292c28);b.box(x,2.89,.919,.055,.018,.015,0x70675b);}
-  b.box(-1.74,2.74,.921,.13,.018,.018,0x7e6450);
-  b.box(-1.74,2.985,.78,.39,.052,.36,0x172a34);b.box(-1.74,3.035,.76,.33,.07,.30,0x314451);b.box(-1.74,2.963,.93,.36,.035,.16,0x182832);b.box(-1.74,3.005,.936,.047,.045,.014,0xc9b57a);
-  for(const x of [-1.95,-1.53]){b.box(x,2.47,.75,.12,.31,.13,0x40545d);b.box(x,2.34,.91,.12,.1,.32,0x40545d);b.box(x,2.34,1.085,.12,.095,.12,0xd6ab83);}
   // Original eight-wheel tender: two four-wheel bogies, leaf springs, water tank and open coal bunker.
   for(const x of [-6.60,-4.25])for(const z of [-.74,.74]){b.box(x,.86,z,1.52,.19,.13,C.black);b.box(x,.99,z,1.40,.065,.17,C.darkSteel);}
   b.box(-5.28,1.10,0,4.75,.20,2.03,C.black);b.box(-5.28,1.26,0,4.64,.13,2.04,C.darkSteel);b.box(-7.66,1.11,0,.15,.33,2.15,C.red);b.box(-2.91,1.13,0,.12,.27,2.05,C.red);
@@ -156,5 +147,5 @@ export function createSteamLocomotive(){
     for(const batch of [driverBatch,guideBatch,tenderBatch,rods,pins])batch.instanceMatrix.needsUpdate=true;
   }
   update(0);
-  return{root,wheels,brakes:[],motion,update,proof:{original:true,placeholderDriver:{visible:true,position:[-1.74,2.82,.78],cap:'peaked',side:'right-platform',openWindow:true},source:'Original procedural geometry; no copied mesh or image assets',wheelArrangement:'2-8-0',leadingWheels:2,drivingWheels:8,trailingWheels:0,tenderWheels:8,locomotiveAxles:5,tenderAxles:4,count:18,wheels:18,driverRadius:STEAM_SPEC.driverRadius,guideRadius:STEAM_SPEC.guideRadius,tenderRadius:STEAM_SPEC.tenderRadius,cylinderDimensions:'19 x 28 in',chimney:STEAM_SPEC.chimney.slice(),coalPieces:112,staticParts:b.parts,staticTriangles:b.p.length/9,rodInstances:18,drawCalls:8,rodMotion:'Distance-driven quartered wheels and constant-length slider crank',livery:'Weathered soot black and dark green, red buffer beams, brass details'}};
+  return{root,wheels,brakes:[],motion,update,proof:{original:true,source:'Original procedural geometry; no copied mesh or image assets',wheelArrangement:'2-8-0',leadingWheels:2,drivingWheels:8,trailingWheels:0,tenderWheels:8,locomotiveAxles:5,tenderAxles:4,count:18,wheels:18,driverRadius:STEAM_SPEC.driverRadius,guideRadius:STEAM_SPEC.guideRadius,tenderRadius:STEAM_SPEC.tenderRadius,cylinderDimensions:'19 x 28 in',chimney:STEAM_SPEC.chimney.slice(),coalPieces:112,staticParts:b.parts,staticTriangles:b.p.length/9,rodInstances:18,drawCalls:8,rodMotion:'Distance-driven quartered wheels and constant-length slider crank',livery:'Weathered soot black and dark green, red buffer beams, brass details'}};
 }

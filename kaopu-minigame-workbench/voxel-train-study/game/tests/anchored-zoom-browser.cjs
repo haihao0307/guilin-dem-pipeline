@@ -19,9 +19,9 @@ const near=(a,b,label,tol=.5)=>assert(Math.hypot(a[0]-b[0],a[1]-b[1])<tol,label+
   if(engine==='chromium'){
    const cdp=await context.newCDPSession(page),before=await evidence();let distance=30;pinchMaxDrift=0;
    const points=(d,dx=0,dy=0)=>[{x:cx-d+dx,y:cy+dy,id:1},{x:cx+d+dx,y:cy+dy,id:2}];
-   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:points(distance)});
+   const hits=await page.evaluate(pts=>pts.map(p=>document.elementFromPoint(p.x,p.y)?.id),points(distance));assert.deepEqual(hits,['gameScene','gameScene'],'Both pinch starts must land on the canvas, not a HUD overlay');await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:points(distance)});
    for(const d of [34,38,42,46]){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:points(d)});const e=await evidence();pinchMaxDrift=Math.max(pinchMaxDrift,Math.hypot(e.center[0]-before.center[0],e.center[1]-before.center[1]));near(e.center,before.center,'Symmetric native pinch keeps subject fixed');distance=d;}
-   const beforePan=await evidence();await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:points(distance,15,12)});const afterPan=await evidence();const rotated=(await state()).viewSettings.rotated;panDelta=rotated?[12,-15]:[15,12];near(afterPan.center,[beforePan.center[0]+panDelta[0],beforePan.center[1]+panDelta[1]],'Native pinch midpoint moves subject by the exact logical pixel delta');
+   const beforePan=await evidence();await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:points(distance,15,12)});const afterPan=await evidence();const rotated=(await state()).viewSettings.rotated;panDelta=rotated?[12,-15]:[15,12];near(afterPan.center,[beforePan.center[0]+panDelta[0],beforePan.center[1]+panDelta[1]],'Native pinch midpoint moves subject by the exact logical pixel delta '+JSON.stringify({beforePan,afterPan}));
    assert(afterPan.zoom>before.zoom*1.4);await cdp.send('Input.dispatchTouchEvent',{type:'touchCancel',touchPoints:[]});
    const cancelled=await evidence();await page.mouse.move(cx+80,cy+35);near((await evidence()).center,cancelled.center,'Cancelled touches leave no stale gesture');cancelNoStaleGesture=true;nativePinch=true;await cdp.detach();
   }
