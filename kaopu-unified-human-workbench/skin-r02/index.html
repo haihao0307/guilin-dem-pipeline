@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><title>共同人体 · UH 皮肤关系融合 R02</title><style>body{margin:0;background:#14212a;color:#c9d6de;font:15px/1.8 system-ui,sans-serif;display:grid;min-height:100vh;place-items:center}main{max-width:590px;padding:32px}h1{font-size:23px;color:#eed1b4;font-weight:550}a{color:#d3b898}small{color:#94a9b8}#error{color:#efbaab}</style></head><body><main><h1>共同人体 · 皮肤分层关系 R02</h1><p id="status">正在读取并校验固定版本工作台…</p><p id="error" role="alert"></p><small>在原 Anny / GNM / MHR 人体上增加材质关系；不是 Universal Human 商业资产移植。</small><p><a href="../skin-r01/">上一版皮肤</a> · <a href="../">原人体总平台</a></p></main><script>
+(async()=>{
+ const source='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/29d75e6a6e4e2627578d61e898461b968e3dd598/kaopu-unified-human-workbench/skin-r02/preview.html';
+ const expected='2c6b7d249f0e1c7b055e6a5ead284880136d26ce3a206b3528ed113f926d7178';
+ try{const response=await fetch(source);if(!response.ok)throw Error('工作台读取失败（'+response.status+'）');const bytes=await response.arrayBuffer();const digest=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(x=>x.toString(16).padStart(2,'0')).join('');if(digest!==expected)throw Error('固定版本校验不匹配，未执行');const html=new TextDecoder().decode(bytes);document.open();document.write(html);document.close();}
+ catch(error){document.getElementById('status').textContent='工作台尚未载入';document.getElementById('error').textContent=error.message+'。请刷新重试；原总平台及上一版皮肤未被替换。';console.error(error);}
+})();
+</script></body></html>
