@@ -71,7 +71,7 @@ export class Session{
       let acceleration=this.reverse?clamp((-1.6-this.velocity)*1.5,-.9,.9):this.throttle>0?this.throttle*.48:this.throttle<0?this.throttle*.60:-.11*Math.sign(this.velocity);
       if(braking)acceleration=-Math.sign(old)*(s.wet?2.40:3.10);
       let next=old+acceleration*DT;if(braking&&old*next<=0)next=0;if(!this.reverse&&next<0)next=0;
-      this.velocity=clamp(next,-1.8,18);this.distance=Math.max(0,this.distance+this.velocity*DT);
+      this.velocity=clamp(next,-1.8,18);this.distance=Math.max(0,this.distance+this.velocity*DT);if(this.config.line==='kcr1'&&!s.approachSteam&&s.target-this.distance<55&&s.target-this.distance>-8&&this.velocity>.5){s.approachSteam=true;this.emit('approach-steam',{station:s.index});}
       if(this.velocity*3.6>s.limit+3)this.stats.satisfaction=clamp(this.stats.satisfaction-DT*.16,0,100);
       if(Math.abs(this.velocity)<.35&&Math.abs(s.target-this.distance)<=7)this.stopStable+=DT;else this.stopStable=0;
       if(!s.missed&&!s.completed&&!s.opened&&this.distance>s.target+8){s.missed=true;this.stats.missed++;this.stats.combo=0;this.stats.satisfaction=clamp(this.stats.satisfaction-8,0,100);this.emit('missed-station',{station:s.index,name:s.name});for(const a of this.actors)if(a.station===s.index&&a.kind==='waiting'){a.kind='angry';a.pose='running';}}
