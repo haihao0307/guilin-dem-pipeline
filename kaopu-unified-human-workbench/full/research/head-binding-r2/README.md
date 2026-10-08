@@ -49,6 +49,23 @@ sampled eyelid-to-globe clearances are positive (minimum about 0.101 mm), with
 zero tested upper/lower lid crossings and zero skin-to-dental/tongue crossings.
 Forty adjacent-age checks found no visible jump. See GEOMETRY-QA.json.
 
+The subsequent fresh current-code scalar sweep covered all 1915 scalar slots:
+1877 controllable responses, 37 native locked axes (nonzero writes rejected),
+and one disabled native-null parameter. All 1878 legal nonzero evaluations were
+finite and retained the fixed vertex/index objects, sizes and index hash.
+All 114 pure-head Anny local controls, 34 mixed head/body locals and 20 native
+MHR head identity axes produced actual head-region displacement. No historical
+1871 response count was reused. See the currentScalarAudit in GEOMETRY-QA.json
+for per-group partitions, native conditions and retained evidence hashes.
+
+The disabled nipple-point source field and its +1/-1 common outputs are exactly
+zero/equal. Switching from zero to nonzero at the neutral midpoint can select
+a different native calculation path and introduce at most 0.000656 mm of
+roundoff; no vertex exceeds 0.001 mm. This is documented numerical noise, not a
+usable deformation control. Eight MHR eyesLook axes move the eye-surrounding
+surface while leaving both globes unchanged, matching the disclosed source
+boundary. One sampled value per scalar establishes routing, not all extrema.
+
 These finite tests are not a guarantee for arbitrary extreme coefficient
 combinations. Native full-strength Anny blink already overcloses its source;
 that limitation is retained and disclosed rather than silently changing slider
