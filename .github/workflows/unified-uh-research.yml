@@ -1,0 +1,41 @@
+name: UH Skin Research Snapshot
+on:
+  push:
+    branches: [feature/unified-human-skin-uh-r02-20261008]
+    paths: [.github/workflows/unified-uh-research.yml]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench/skin-r01
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Browser tooling
+        run: |
+          mkdir -p /tmp/uh-tools /tmp/uh-research
+          cd /tmp/uh-tools
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund playwright@1.55.1
+          npx playwright install --with-deps chromium
+      - name: Inspect fixed native model and retain exact prior skin bytes
+        env:
+          NODE_PATH: /tmp/uh-tools/node_modules
+        run: |
+          cp -r kaopu-unified-human-workbench/skin-r01/assets /tmp/uh-research/
+          node - <<'JS'
+          const {chromium}=require('playwright'),fs=require('fs');
+          (async()=>{const b=await chromium.launch({args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});const p=await b.newPage({viewport:{width:1440,height:1040}});await p.goto('https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/8683cee4051ad7a1555fa4cd87921ff102cd0676/kaopu-unified-human-workbench/skin-r01/preview.html');await p.waitForFunction(()=>window.fullCommonWorkbench);await p.click('#load-model');await p.waitForFunction(()=>window.commonSkin?.report().ready,null,{timeout:180000});const data=await p.evaluate(()=>{const v=commonSkin._viewer(),m=v.model;return{topology:m.canonical.topologySha256,gnmRegionNames:m.gnm.meta.regionNames,gnmMaterialNames:m.gnm.meta.materialNames,gnmRegionIds:Array.from(m.gnm.regionId),gnmMaterialIds:Array.from(m.gnm.materialId),gnmLandmarkIndices:Array.from(m.gnm.landmarkIndices),gnmLandmarkWeights:Array.from(m.gnm.landmarkWeights),gnmTemplate:Array.from(m.gnm.template),boneLabels:m.anny.boneLabels,boneHeads:Array.from(m.neutral.boneHeads),defaultState:fullCommonWorkbench.state(),canonical:m.canonical,rest:Array.from(v.geometry.attributes.skinRest.array),normals:Array.from(v.geometry.attributes.skinRestNormal.array)};});fs.writeFileSync('/tmp/uh-research/semantics.json',JSON.stringify(data));await p.evaluate(()=>fullCommonWorkbench.view('face'));await p.screenshot({path:'/tmp/uh-research/previous-face.png'});console.log(JSON.stringify({topology:data.topology,regions:data.gnmRegionNames,bones:data.boneLabels.length}));await b.close();})().catch(e=>{console.error(e);process.exit(1)});
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: uh-skin-research
+          path: /tmp/uh-research
+          retention-days: 7
