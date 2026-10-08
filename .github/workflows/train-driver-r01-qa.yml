@@ -1,4 +1,4 @@
-name: Train full-canvas UI complete candidate QA
+name: Train full-canvas UI exact public QA
 on:
   push:
     branches: ['qa/voxel-train-r01-20261006']
@@ -32,14 +32,16 @@ jobs:
   railway-browser:
     needs: deterministic-session
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 18
     strategy:
       fail-fast: false
+      max-parallel: 6
       matrix:
         browser: [chromium, webkit]
+        suite: [layout, touch, hud, gameplay, views]
     env:
       TRAIN_BROWSER: ${{ matrix.browser }}
-      TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/
+      TRAIN_GAME_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -59,47 +61,43 @@ jobs:
         run: timeout 180s "$RUNNER_TEMP/driver-test/node_modules/.bin/playwright" install-deps "${{ matrix.browser }}"
       - name: Configure installed browser module path
         run: echo "NODE_PATH=$RUNNER_TEMP/driver-test/node_modules" >> "$GITHUB_ENV"
-      - name: Serve the candidate only
-        run: |
-          nohup python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/driver-server.log" 2>&1 &
-          for i in $(seq 1 30); do curl -fsS "$TRAIN_GAME_URL" > /dev/null && break || sleep 1; done
-      - name: Capture actual full-canvas candidate layout
-        run: timeout 240s node kaopu-minigame-workbench/voxel-train-study/game/tests/fullscreen-ui.cjs
-      - name: Upload first layout screenshots for review
+      - name: Verify all 32 exact public asset hashes
+        run: node kaopu-minigame-workbench/voxel-train-study/game/tests/public-hashes.cjs
+      - name: Upload exact public identity receipt
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: train-fullscreen-layout-${{ matrix.browser }}
+          name: train-fullscreen-public-assets-${{ matrix.browser }}-${{ matrix.suite }}
           retention-days: 7
-          if-no-files-found: warn
-          path: |
-            fullscreen-ui-${{ matrix.browser }}/*
-            railway-ui-${{ matrix.browser }}/*
-            driving-touch-${{ matrix.browser }}/*
-            hit-targets-${{ matrix.browser }}/*
-            hud-${{ matrix.browser }}/*
-            driver-${{ matrix.browser }}/*
-            views-${{ matrix.browser }}/*
-      - name: Verify one-time camera migration and exact restore
-        run: timeout 240s node kaopu-minigame-workbench/voxel-train-study/game/tests/railway-ui.cjs
-      - name: Verify modal selection protection and actual touch controls
+          path: driver-public-hashes.json
+      - name: Verify exact public layout and every saved-camera restoration
+        if: matrix.suite == 'layout'
+        run: |
+          timeout 240s node kaopu-minigame-workbench/voxel-train-study/game/tests/fullscreen-ui.cjs
+          timeout 300s node kaopu-minigame-workbench/voxel-train-study/game/tests/railway-ui.cjs
+      - name: Verify exact public modal touch and real restart state
+        if: matrix.suite == 'touch'
         run: timeout 360s node kaopu-minigame-workbench/voxel-train-study/game/tests/driving-touch.cjs
-      - name: Verify all hit targets and actual six-stop route HUD
+      - name: Verify exact public hit targets and real six-stop map
+        if: matrix.suite == 'hud'
         run: |
-          node kaopu-minigame-workbench/voxel-train-study/game/tests/hit-targets.cjs
-          node kaopu-minigame-workbench/voxel-train-study/game/tests/hud.cjs
-      - name: Play the real first station and all gameplay regressions
+          timeout 420s node kaopu-minigame-workbench/voxel-train-study/game/tests/hit-targets.cjs
+          timeout 240s node kaopu-minigame-workbench/voxel-train-study/game/tests/hud.cjs
+      - name: Play exact public first stop and full gameplay regressions
+        if: matrix.suite == 'gameplay'
         run: timeout 540s node kaopu-minigame-workbench/voxel-train-study/game/tests/browser.cjs
-      - name: Verify independent views and touch gestures
+      - name: Verify exact public rotated touch and independent saved views
+        if: matrix.suite == 'views'
         run: timeout 300s node kaopu-minigame-workbench/voxel-train-study/game/tests/views.cjs
-      - name: Upload complete evidence
+      - name: Upload complete public evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: train-fullscreen-complete-${{ matrix.browser }}
+          name: train-fullscreen-public-${{ matrix.browser }}-${{ matrix.suite }}
           retention-days: 7
           if-no-files-found: warn
           path: |
+            driver-public-hashes.json
             fullscreen-ui-${{ matrix.browser }}/*
             railway-ui-${{ matrix.browser }}/*
             driving-touch-${{ matrix.browser }}/*
