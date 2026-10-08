@@ -1,5 +1,5 @@
 export const VIEW_REVISION='left-fullscreen-r05';
-export const DEFAULT_VIEWS=Object.freeze({landscape:{position:[5,23,37],target:[-2.2,2.8,1],zoom:1.06},portrait:{position:[31.5,25,13.6],target:[-8.3,2.5,-.4],zoom:.86}});
+export const DEFAULT_VIEWS=Object.freeze({landscape:{position:[5,23,37],target:[-2.2,2.8,1],zoom:1.06},portrait:{position:[32.92048,22.17643,14.09967],target:[-6.87952,-0.32357,0.09967],zoom:.86}});
 const MODES=['landscape','portrait'];
 const clone=p=>structuredClone(p);
 export function validView(p){return !!p&&[p.position,p.target].every(a=>Array.isArray(a)&&a.length===3&&a.every(n=>Number.isFinite(n)&&Math.abs(n)<500))&&Number.isFinite(p.zoom)&&p.zoom>=.4&&p.zoom<=3;}
