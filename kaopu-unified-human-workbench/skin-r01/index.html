@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>共同人物 · R02 皮肤材质接入 R01</title><link rel="icon" href="data:,">
+<link rel="stylesheet" href="../full/ui/workbench.css">
+<script type="importmap">{"imports":{"three":"../full/source/registration-vendor/three.module.js"}}</script><style>
+.skin-panel{flex-shrink:0;position:relative;padding:8px 10px;border-top:1px solid #344752;background:#18262e}.skin-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.skin-row strong{font-size:12px;margin-right:5px;color:#dbbc9d}.skin-row button{min-height:34px;font-size:12px;padding:5px 10px}.skin-row button[aria-pressed=true]{background:#534639;color:#f3dcc5;border-color:#ab8e6c}.skin-row summary{min-height:34px;cursor:pointer;padding:6px 10px;border:1px solid #52606a;border-radius:5px;font-size:12px}.skin-sliders{position:absolute;left:10px;bottom:calc(100% + 6px);z-index:30;width:325px;max-height:65vh;overflow:auto;display:grid;gap:10px;background:#17252fee;border:1px solid #637079;border-radius:9px;padding:16px;box-shadow:0 10px 35px #0007}.skin-sliders label{display:grid;grid-template-columns:1fr auto;gap:5px;font-size:12px;color:#c9d1d3}.skin-sliders input{grid-column:1/-1;width:100%;accent-color:#d7b38c}.skin-sliders output{font:11px ui-monospace,monospace;color:#d7b38c}#skin-status{font-size:11px;color:#a9b9bc;flex:1;min-width:200px}.skin-credits{font-size:10px;color:#a9b9bc}.skin-credits a{min-height:0;text-decoration:underline}
+</style></head>
+<body>
+<header><a id="overview-back" href="https://haihao0307.github.io/guilin-dem-pipeline/kaopu-human-overview/">← 返回总工作台</a><strong>共同人物 · 皮肤接入 R01</strong><span class="header-note">只改材质 · 保留 Anny / GNM / MHR</span><a href="https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/">原总平台</a></header>
+<main>
+ <section class="model-stage" aria-label="同一个共同模型">
+  <div class="viewport" id="stage"><canvas id="canvas" aria-label="固定拓扑共同人物三维画面"></canvas>
+   <div class="load-overlay" id="load-overlay"><div class="load-card"><h1>同一个人，同一张网格</h1><p>选择参数来源后，始终在这个模型上查看结果。未接通的部位会明确禁用。</p><button id="load-model">载入共同模型</button><button id="cancel-load" hidden>取消载入</button><progress id="load-progress" max="1" value="0" hidden></progress><p id="load-status" role="status">原教师资产按需载入；就绪后自动附着 R02 皮肤</p></div></div>
+   <div class="model-caption" id="model-caption">25417 个固定顶点 · 50624 个三角面</div>
+  </div>
+  <div class="view-tools" aria-label="查看模型"><button data-view="three">3/4</button><button data-view="front">正面</button><button data-view="rear">背面</button><button data-view="side">侧面</button><button data-view="face">面部</button><button id="wireframe" aria-pressed="false">线框</button><button id="neck-band" aria-pressed="false">颈部检查</button><button id="view-reset">取景复位</button><span class="muted">拖动旋转 · 滚轮缩放</span></div>
+  <div class="model-status" id="model-status" role="status">皮肤只写入显示属性；原生参数与头颈连接沿用总平台。</div>
+ </section>
+ <aside id="parameters" class="parameter-host" aria-label="同屏参数设置"><div class="before-load"><h2>完整分类参数</h2><p>载入后可搜索三个教师的原生参数、切换实际来源、保存或恢复全部配置。</p><p>未选中的来源保留数值；没有接通的映射不会伪装成可调功能。</p></div></aside>
+</main>
+<script type="module" src="./entry.mjs"></script>
+</body></html>
