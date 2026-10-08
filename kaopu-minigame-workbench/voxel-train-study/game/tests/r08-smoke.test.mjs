@@ -1,0 +1,9 @@
+import assert from 'node:assert/strict';
+import {SMOKE_COUNT,PLATFORM_TOP,classicSmokeParticle,smokeFrameState,smokeParticle} from '../smoke-profile.mjs';
+assert.equal(SMOKE_COUNT,160);
+// Independent transcription of the published classic scene's smokeAt formula.
+function reference(i,t){const lower=i<84,lifetime=lower?1.5:3,f=((t/lifetime+i*.618033989)%1+1)%1,side=i%2?1:-1,emit=lower?3.4-(i%12)*.75:.6-(i%8)*.78;return{position:[emit-f*(lower?2.4:3.4),(lower?.58:1.4)+f*(lower?1.45:3.6)+.10*Math.sin(i*3+t*Math.PI*2/3),side*((lower?1.1:.75)+f*(lower?.24:.55))+.08*Math.sin(i+t*Math.PI/3)],size:(lower?.78+f*1.5:1.15+f*1.9)*(1+(i%5)*.065),opacity:Math.sin(Math.PI*f)*(lower?.91:.44),rotation:i+f*.8,color:lower?0xffffff:0x8f9eab};}
+let samples=0;
+for(const t of [0,.3,1,2.9,5.999,13.4,270])for(let i=0;i<160;i++){const p=classicSmokeParticle(i,t),r=reference(i,t);for(const key of Object.keys(r))assert.deepEqual(p[key],r[key]);const cruising=smokeParticle(i,t,smokeFrameState({tick:9000,velocity:14,throttle:3,station:{remaining:400},events:[]}));assert.deepEqual(cruising,p);samples++;}
+for(const age of [.5,2,4,7,12]){const state=smokeFrameState({tick:300+age*30,velocity:0,door:1,station:{remaining:0},events:[{type:'doors-opening',tick:300}]});assert.equal(state.burstActive,age<8);const particles=Array.from({length:84},(_,i)=>smokeParticle(i,age,state));assert(particles.every(p=>p.position[1]>PLATFORM_TOP+.48));const near=particles.filter(p=>p.side>0);assert(near.every(p=>p.position[2]>=2.5&&p.position[2]<4.6));if(age>=2){assert(Math.min(...near.map(p=>p.position[0]))<-25);assert(Math.max(...near.map(p=>p.position[0]))>3);}}
+console.log(JSON.stringify({passed:true,classicParticleComparisons:samples,particleBudget:160,travelFormulaExact:true,stationSteamAboveWood:true,roundScale:true,deckHeight:PLATFORM_TOP}));
