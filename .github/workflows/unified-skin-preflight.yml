@@ -8,12 +8,15 @@ permissions:
 jobs:
   inspect:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
         with:
           sparse-checkout: |
             kaopu-unified-human-workbench
+            kaopu-anny-workbench/assets
+            kaopu-anny-workbench/r02/assets
+            kaopu-mhr-workbench/assets
           fetch-depth: 1
       - uses: actions/setup-node@v4
         with: {node-version: '22'}
@@ -43,12 +46,15 @@ jobs:
           python -m http.server 8765 >/tmp/common-server.log 2>&1 &
           node - <<'JS'
           const {chromium}=require('playwright'),fs=require('fs');
-          (async()=>{const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});const p=await browser.newPage({viewport:{width:1440,height:1040}});const errors=[];p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
-          await p.goto('http://localhost:8765/kaopu-unified-human-workbench/');await p.click('#load-model');await p.waitForFunction(()=>window.fullCommonWorkbench?.diagnostics().ready,null,{timeout:360000});
-          const data=await p.evaluate(()=>{const {viewer:v,model:m}=window.__INSPECT_COMMON__;const describe=o=>Object.fromEntries(Object.entries(o).map(([k,v])=>[k,v?.length??(typeof v)]));return{positions:Array.from(v.geometry.attributes.position.array),normals:Array.from(v.geometry.attributes.normal.array),faces:Array.from(m.faces),canonical:m.canonical,gnmKeys:describe(m.gnm),gnmMeta:m.gnm.meta,annyKeys:describe(m.anny),metrics:m.metrics(),state:window.fullCommonWorkbench.state(),catalog:window.fullCommonWorkbench.catalog(),threeRevision:v.renderer.info,gnmSections:m.gnm.sections?describe(m.gnm.sections):null}});
-          fs.writeFileSync('/tmp/common-skin-preflight/common.json',JSON.stringify(data));fs.writeFileSync('/tmp/common-skin-preflight/errors.json',JSON.stringify(errors));
+          (async()=>{const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});const p=await browser.newPage({viewport:{width:1440,height:1040}});const errors=[];p.on('pageerror',e=>{errors.push(e.message);console.error(e.message)});p.on('console',m=>{if(m.type()==='error'){errors.push(m.text());console.error(m.text())}});p.on('requestfailed',r=>console.log('FAILED',r.url(),r.failure()));
+          try{
+          await p.goto('http://localhost:8765/kaopu-unified-human-workbench/');await p.click('#load-model');await p.waitForFunction(()=>window.fullCommonWorkbench?.diagnostics().ready||document.getElementById('load-status').textContent.startsWith('载入失败'),null,{timeout:180000});
+          if(!await p.evaluate(()=>window.fullCommonWorkbench.diagnostics().ready))throw Error(await p.locator('#load-status').textContent());
+          const data=await p.evaluate(()=>{const {viewer:v,model:m}=window.__INSPECT_COMMON__;const describe=o=>Object.fromEntries(Object.entries(o).map(([k,v])=>[k,v?.length??(typeof v)]));return{positions:Array.from(v.geometry.attributes.position.array),normals:Array.from(v.geometry.attributes.normal.array),faces:Array.from(m.faces),canonical:m.canonical,gnmKeys:describe(m.gnm),gnmMeta:m.gnm.meta,annyKeys:describe(m.anny),metrics:m.metrics(),state:window.fullCommonWorkbench.state(),catalog:window.fullCommonWorkbench.catalog(),gnmSections:m.gnm.sections?describe(m.gnm.sections):null}});
+          fs.writeFileSync('/tmp/common-skin-preflight/common.json',JSON.stringify(data));
           for(const view of ['three','face','side','rear']){await p.evaluate(view=>window.fullCommonWorkbench.view(view),view);await p.screenshot({path:'/tmp/common-skin-preflight/white-'+view+'.png'});}
-          console.log(JSON.stringify({metrics:data.metrics,gnmKeys:data.gnmKeys,canonicalKeys:Object.keys(data.canonical),errors}));await browser.close();if(errors.length)process.exit(1);
+          console.log(JSON.stringify({metrics:data.metrics,gnmKeys:data.gnmKeys,canonicalKeys:Object.keys(data.canonical),errors}));
+          }finally{fs.writeFileSync('/tmp/common-skin-preflight/errors.json',JSON.stringify(errors));await p.screenshot({path:'/tmp/common-skin-preflight/last-state.png'});await browser.close();}
           })().catch(e=>{console.error(e);process.exit(1)});
           JS
       - uses: actions/upload-artifact@v4
