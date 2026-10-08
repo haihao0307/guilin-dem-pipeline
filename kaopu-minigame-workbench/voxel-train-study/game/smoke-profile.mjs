@@ -11,7 +11,7 @@ export function smokeFrameState(view){
   const event=(view?.events||[]).filter(e=>e.type==='doors-opening'||e.type==='approach-steam').at(-1),burstAge=event?(view.tick-event.tick)/30:99,remaining=Number(view?.station?.remaining)||0;
   const near=remaining<55&&remaining>-10,draining=!!view&&near&&(Math.abs(view.velocity||0)<9||view.brake||view.door>0),burstActive=!!view&&near&&burstAge>=0&&burstAge<8;
   const burst=burstActive?Math.min(1,burstAge/.35)*(1-smooth(3.8,8,burstAge)):0;
-  return{draining,burstAge,burstActive,burst,platformOffset:Math.max(-8,Math.min(8,remaining)),working:Math.abs(view?.velocity||0)>.3&&view?.throttle>0,profile:'classic-layered-160',roundBillboards:true,platformTop:PLATFORM_TOP,platformCentersAboveDeck:true};
+  return{draining,burstAge,burstActive,burst,platformOffset:Math.max(-8,Math.min(8,remaining)),working:Math.abs(view?.velocity||0)>.3&&view?.throttle>0,profile:'classic-layered-160',roundBillboards:true,platformTop:PLATFORM_TOP,platformCentersAboveDeck:draining||burstActive};
 }
 export function smokeParticle(index,t,state={}){
   const p=classicSmokeParticle(index,t);

@@ -30,7 +30,7 @@ jobs:
       fail-fast: false
       matrix:
         browser: [chromium, webkit]
-        suite: [smoke]
+        suite: [smoke, controls, gameplay, zoom]
     env:
       TRAIN_BROWSER: ${{ matrix.browser }}
       KCR_SUITE: ${{ matrix.suite }}

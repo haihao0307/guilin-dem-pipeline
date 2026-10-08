@@ -46,3 +46,143 @@
 @media(min-width:1100px){#driverGame[data-layout="landscape"] #leftHud{--left:min(700px,49vw)}.route-map text{font-size:12px}.route-map .station-en{font-size:8px}.speed-reading .imperial-speed{font-size:13px}}
 @media(min-width:1700px){#driverGame[data-layout="landscape"] #leftHud{--left:min(790px,45vw)}.route-map text{font-size:12px}.route-map .station-en{font-size:8px}.speed-reading .imperial-speed{font-size:15px}}
 @media(max-height:650px) and (min-aspect-ratio:1.15){#driverGame[data-layout="landscape"] #leftHud{--left:min(490px,58vw)}#driverGame[data-layout="landscape"] .route-map text{font-size:13px}#driverGame[data-layout="landscape"] .route-map .station-en{font-size:8px}.speed-reading{top:48%}.speed-reading .imperial-speed{font-size:9px}}
+
+/* R08 · 150% throttle targets. Keep this marker: the browser regression test
+   compares the unmodified R07 prefix with these overrides in the same viewport.
+   R07's first two tracks are (panel - station - outer gap - 2 inner gaps) / 3.12.
+   Enlarge the actual button border boxes AND the visible circle/icon, not a
+   transform. The remaining 1.12 track is the brake; camera sizing is untouched. */
+#driverGame #drivePanel {
+  --r07-panel: min(530px, calc(100cqw - 28px));
+  --r07-station: 102px;
+  --r07-outer-gap: 14px;
+  --r07-inner-gap: 14px;
+  --r07-height: 84px;
+  --r07-circle: 78px;
+  --r07-icon: 34px;
+  --r07-label: 13px;
+  --r07-primary: calc((var(--r07-panel) - var(--r07-station) - var(--r07-outer-gap) - 2 * var(--r07-inner-gap)) / 3.12);
+  --r08-primary: calc(var(--r07-primary) * 1.5);
+  --r08-height: calc(var(--r07-height) * 1.5);
+  --r08-brake: calc(var(--r07-primary) * 1.12);
+  --r08-station: var(--r07-station);
+  --r08-gap: 18px;
+  width: max-content;
+  height: var(--r08-height);
+  grid-template-columns: var(--r08-primary) var(--r08-primary) var(--r08-brake) var(--r08-station);
+  grid-template-rows: var(--r08-height);
+  gap: var(--r08-gap);
+  align-items: center;
+}
+#driverGame #drivePanel .drive-buttons { display: contents; }
+#driverGame #drivePanel :is(#accelerate, #decelerate) {
+  width: var(--r08-primary);
+  height: var(--r08-height);
+  min-height: var(--r08-height);
+  /* The button's large rectangular hit area includes the sides of the ring. */
+  border-radius: 12px;
+}
+#driverGame #drivePanel :is(#accelerate, #decelerate)::after {
+  width: calc(var(--r07-circle) * 1.5);
+  height: calc(var(--r07-circle) * 1.5);
+  border-width: 2.4px;
+  box-shadow: inset 0 0 0 6px #d8cc9b14;
+}
+#driverGame #drivePanel :is(#accelerate, #decelerate) .rail-control-icon {
+  width: calc(var(--r07-icon) * 1.5);
+  height: calc(var(--r07-icon) * 1.5);
+}
+#driverGame #drivePanel :is(#accelerate, #decelerate) span {
+  font-size: calc(var(--r07-label) * 1.5);
+}
+#driverGame #drivePanel #brake {
+  width: var(--r08-brake);
+  height: var(--r07-height);
+  min-height: var(--r07-height);
+  justify-self: center;
+}
+#driverGame #drivePanel #stationAction {
+  width: var(--r08-station);
+  height: var(--r07-height);
+  min-height: var(--r07-height);
+  justify-self: center;
+}
+#driverGame .notice, #driverGame .tutorial { bottom: 154px; }
+@container game (min-width: 1000px) {
+  #driverGame #drivePanel {
+    --r07-panel: 600px; --r07-station: 116px;
+    --r07-outer-gap: 24px; --r07-inner-gap: 24px;
+    --r07-height: 94px; --r07-circle: 88px;
+    --r07-icon: 40px; --r07-label: 15px; --r08-gap: 24px;
+  }
+  #driverGame .notice, #driverGame .tutorial { bottom: 175px; }
+}
+@container game (min-width: 1600px) {
+  #driverGame #drivePanel {
+    --r07-panel: 660px; --r07-station: 130px;
+    --r07-outer-gap: 32px; --r07-inner-gap: 32px;
+    --r07-height: 110px; --r07-circle: 104px;
+    --r07-icon: 45px; --r07-label: 17px; --r08-gap: 32px;
+  }
+  #driverGame .notice, #driverGame .tutorial { bottom: 205px; }
+}
+@container game (min-width: 2300px) {
+  #driverGame #drivePanel {
+    --r07-panel: 740px; --r07-station: 144px;
+    --r07-height: 122px; --r07-circle: 116px;
+    --r07-icon: 49px; --r07-label: 19px;
+  }
+  #driverGame .notice, #driverGame .tutorial { bottom: 227px; }
+}
+@container game (min-width: 600px) and (max-width: 750px) {
+  #driverGame #drivePanel {
+    --r07-panel: 482px; --r07-station: 96px;
+    --r07-outer-gap: 14px; --r07-inner-gap: 12px;
+    --r07-height: 76px; --r07-circle: 70px;
+    --r07-icon: 31px; --r07-label: 12px; --r08-gap: 10px;
+  }
+  #driverGame .notice, #driverGame .tutorial { bottom: 137px; }
+}
+@container game (min-width: 600px) and (max-height: 650px) {
+  #driverGame #drivePanel {
+    --r07-panel: 482px; --r07-station: 96px;
+    --r07-outer-gap: 14px; --r07-inner-gap: 12px;
+    --r07-height: 76px; --r07-circle: 70px;
+    --r07-icon: 31px; --r07-label: 12px; --r08-gap: 10px;
+  }
+  #driverGame .notice, #driverGame .tutorial { bottom: 137px; }
+}
+/* Small landscape devices retain one shallow row. Only the auxiliary controls
+   become compact; the two throttle boxes still measure exactly 150% of R07. */
+@container game (max-width: 599px) {
+  #driverGame[data-layout=landscape] #drivePanel {
+    --r08-brake: 64px; --r08-station: 64px; --r08-gap: 8px;
+  }
+  #driverGame[data-layout=landscape] #drivePanel :is(#brake, #stationAction)::after {
+    width: 60px; height: 60px;
+  }
+  #driverGame[data-layout=landscape] #drivePanel #stationAction { padding-inline: 5px; font-size: 10px; }
+  #driverGame[data-layout=landscape] #drivePanel #brake span { font-size: 11px; letter-spacing: 0; }
+}
+/* Portrait: two generous primary targets above the two secondary controls.
+   The transparent 192px panel leaves the scene visible between the circles. */
+#driverGame[data-layout=portrait] #drivePanel {
+  --r07-panel: calc(100cqw - 18px); --r07-station: 82px;
+  --r07-outer-gap: 6px; --r07-inner-gap: 6px;
+  --r07-height: 72px; --r07-circle: 66px;
+  --r07-icon: 28px; --r07-label: 11px;
+  --r08-gap: 12px;
+  width: max-content;
+  height: calc(var(--r08-height) + var(--r07-height) + var(--r08-gap));
+  grid-template-columns: var(--r08-primary) var(--r08-primary);
+  grid-template-rows: var(--r08-height) var(--r07-height);
+  gap: var(--r08-gap);
+}
+#driverGame[data-layout=portrait] .notice, #driverGame[data-layout=portrait] .tutorial { bottom: 216px; }
+@container game (max-width: 359px) {
+  #driverGame[data-layout=portrait] #drivePanel {
+    --r07-station: 70px; --r07-outer-gap: 4px; --r07-inner-gap: 3px;
+    --r07-height: 66px; --r07-circle: 60px; --r07-label: 10px;
+  }
+  #driverGame[data-layout=portrait] .notice, #driverGame[data-layout=portrait] .tutorial { bottom: 201px; }
+}
