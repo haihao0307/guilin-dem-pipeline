@@ -5,9 +5,9 @@ function particle(index,t,{speed=0,draining=false,working=false}={}){
   const lower=index<84,fog=index>=144,lifetime=fog?22:lower?2.7:4.1,f=((t/lifetime+index*.618033989)%1+1)%1,side=index%2?1:-1;
   let position,size,opacity,color,upper=!lower;
   if(fog){position=[-36+((index*7.73+t*.25)%59),.32+(index%3)*.16,side*(3.3+(index%4)*.5)];size=5.5+(index%4);opacity=.075*Math.sin(Math.PI*f);color=WHITE;}
-  else if(lower){position=[2.9-f*(6.4+Math.abs(speed)*.14)+Math.sin(index)*.3,.28+.10*Math.sin(Math.PI*f),side*(1.06+f*3.9)+.12*Math.sin(index*3+t)];size=.72+f*3.0;opacity=Math.sin(Math.PI*f)*(draining?.64:.015);color=WHITE;}
+  else if(lower){position=[2.9-f*(6.4+Math.abs(speed)*.14)+Math.sin(index)*.3,.28+.10*Math.sin(Math.PI*f),side*(1.06+f*6.2)+.12*Math.sin(index*3+t)];size=.72+f*3.0;opacity=Math.sin(Math.PI*f)*(draining?.78:.015);color=WHITE;}
   else{position=[3.03-f*(working?7.4:3.5),3.72+f*3.8+.2*Math.sin(index*3+t),.16*Math.sin(index+t)+f*.3];size=.65+f*(working?3.1:2.3);opacity=Math.sin(Math.PI*f)*(working?.68:.22);color=working?new THREE.Color(0x55544e):UPPER;}
-  return{index,position,size,opacity,rotation:index+f*.8,upper,color};
+  return{index,position,size,opacity,rotation:lower?.035*Math.sin(index):index+f*.8,upper,color};
 }
 const VERTEX=[
 'attribute vec3 particleCenter;',
