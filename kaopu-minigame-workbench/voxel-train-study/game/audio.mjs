@@ -110,7 +110,7 @@ export function createRailAudio({wheelRadius=.72,volume=.55,muted=false,crowdEna
       }
       if(!running&&wasActive){for(const src of oneshots){try{src.stop();}catch{}}}
     }
-    for(const event of view.events||[]){if(event.id<=lastEvent)continue;if(hasAudio&&running&&wasActive&&event.type==='departed')guardWhistle();lastEvent=Math.max(lastEvent,event.id||0);}
+    for(const event of view.events||[]){if(event.id<=lastEvent)continue;if(hasAudio&&running&&wasActive&&event.type==='departed')guardWhistle();if(hasAudio&&running&&event.type==='approach-steam')release(.28);lastEvent=Math.max(lastEvent,event.id||0);}
     lastDistance=distance;lastElapsed=elapsed;lastPhase=phase;lastBrake=!!view.brake;lastThrottle=throttle;
   }
   function setCrowdEnabled(value){crowdEnabled=!!value;}
