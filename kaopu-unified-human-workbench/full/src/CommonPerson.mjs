@@ -1,5 +1,5 @@
 import{UnifiedModel}from'../source/neck-baseline/src/UnifiedModel.js';
-import{validateState,defaultState}from'./State.mjs';
+import{validateState,defaultState}from'./State.mjs?v=human-r2-20261008';
 import{applyCommonBodyDriver}from'./CommonBodyBridge.mjs';
 import{cranialBones,applyGNMRootToBody}from'./HeadRigBridge.mjs';
 /** First rebuild checkpoint: real GNM native channels + official Anny body.

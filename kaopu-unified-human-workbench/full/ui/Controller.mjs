@@ -1,4 +1,4 @@
-import{buildCatalog,valueAt,writeValue,rowStatus}from'./catalog.mjs';
+import{buildCatalog,valueAt,writeValue,rowStatus}from'./catalog.mjs?v=human-r2-20261008';
 /** UI transaction adapter only. All deformation and validation stay in CommonPerson. */
 export class WorkbenchController extends EventTarget{
  constructor({model,contract,defaults,localGate,onGeometry=()=>{}}){super();this.model=model;this.catalog=buildCatalog(contract);this.defaults=structuredClone(defaults);this.localGate=localGate;this.onGeometry=onGeometry;this.positionReference=model.positions;this.faceReference=model.faces;this.revision=0;}
@@ -15,5 +15,5 @@ export class WorkbenchController extends EventTarget{
  archive(){return this.model.archive();}
  restore(archive){this.model.restore(archive);return this.changed();}
  metrics(){return {...this.model.metrics(),revision:this.revision,fixedPositionBuffer:this.model.positions===this.positionReference,fixedIndexBuffer:this.model.faces===this.faceReference};}
- summary(){const counts={active:0,inactive:0,pending:0,locked:0,loading:0};for(const row of this.catalog.rows)counts[this.status(row).kind]++;return {catalogScalars:1596,extraBoneTranslationScalars:312,correctiveToggles:1,...counts};}
+ summary(){const counts={active:0,inactive:0,pending:0,locked:0,loading:0,'native-null':0};for(const row of this.catalog.rows)counts[this.status(row).kind]++;return {catalogScalars:1603,extraBoneTranslationScalars:312,correctiveToggles:1,...counts};}
 }

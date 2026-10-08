@@ -1,4 +1,4 @@
-import{loadCommon,assetRoot}from'./load-common.mjs';import{CommonViewer}from'./Viewer.mjs';import{WorkbenchController}from'./Controller.mjs';import{mountPanel}from'./Panel.mjs';import{defaultState}from'../src/State.mjs';
+import{loadCommon,assetRoot}from'./load-common.mjs?v=human-r2-20261008';import{CommonViewer}from'./Viewer.mjs?v=human-r2-20261008';import{WorkbenchController}from'./Controller.mjs?v=human-r2-20261008';import{mountPanel}from'./Panel.mjs?v=human-r2-20261008';import{defaultState}from'../src/State.mjs?v=human-r2-20261008';
 const $=id=>document.getElementById(id);let active=true,generation=0,aborter=null,controller=null,viewer=null,panel=null,busy=false,savedArchive=null,savedCamera=null,wasLoaded=false,contextsCreated=0,contextsReleased=0,loadCount=0;
 const current=ticket=>active&&ticket===generation;
 function status(message){$('model-status').textContent=message;}

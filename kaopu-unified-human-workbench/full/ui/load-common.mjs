@@ -1,8 +1,8 @@
-import{HeadTransfer}from'../src/HeadTransfer.mjs';
+import{HeadTransfer}from'../src/HeadTransfer.mjs?v=human-r2-20261008';
 import{AnnyModel}from'../source/kaopu-anny-workbench/r02/src/AnnyModel.js';
 import{GNMHeadModel,parseContainer}from'../source/kaopu-unified-human-workbench/src/GNMModel.js';
 import{NeckSurface}from'../source/neck-baseline/src/NeckSurface.js';
-import{CommonPerson}from'../src/CommonPerson.mjs';
+import{CommonPerson}from'../src/CommonPerson.mjs?v=human-r2-20261008';
 import{CommonBodyDriver}from'../body-adapter/CommonBodyDriver.mjs';
 import{MHRBodyAdapter}from'../body-adapter/MHRBodyAdapter.mjs';
 import{MHRDetailedEngine,unpackModel}from'../body-adapter/MHRDetailedEngine.mjs';
@@ -10,7 +10,7 @@ export const assetRoot=new URL('../',import.meta.url);
 const digest=async data=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',data))].map(x=>x.toString(16).padStart(2,'0')).join('');
 export async function loadCommon({signal,onProgress=()=>{},base=assetRoot}={}){
  const alive=()=>{if(signal?.aborted)throw new DOMException('Load cancelled','AbortError');};let finished=0,total=38,assetURLs={};
- const get=async(path,expected)=>{alive();const response=await fetch(new URL(assetURLs[path]||path,base),{signal});if(!response.ok)throw Error(path+': HTTP '+response.status);const data=await response.arrayBuffer();alive();if(expected&&await digest(data)!==expected)throw Error('资产校验失败：'+path);alive();finished++;onProgress({fraction:Math.min(.95,finished/total),label:path});return data;};
+ const get=async(path,expected)=>{alive();const response=await fetch(new URL(assetURLs[path]||path,base),{signal,cache:path==='ui/runtime-metadata.json'?'no-cache':'default'});if(!response.ok)throw Error(path+': HTTP '+response.status);const data=await response.arrayBuffer();alive();if(expected&&await digest(data)!==expected)throw Error('资产校验失败：'+path);alive();finished++;onProgress({fraction:Math.min(.95,finished/total),label:path});return data;};
  const decode=data=>JSON.parse(new TextDecoder().decode(data)),inflate=async data=>{alive();const result=await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();alive();return result;};
  const metadata=decode(await get('ui/runtime-metadata.json'));assetURLs=metadata.assetURLs||{};total=Object.keys(metadata.coreHashes).length+Object.keys(metadata.assetHashes).length+10;
  await Promise.all(Object.entries(metadata.coreHashes).map(([path,sha])=>get(path,sha)));
@@ -24,7 +24,7 @@ export async function loadCommon({signal,onProgress=()=>{},base=assetRoot}={}){
  if(await digest(faceBytes)!==fm.rawSha256)throw Error('Anny 面部权重校验失败');
  const canonical=decode(canonicalBytes),g=parseContainer(gnmBytes),anny=new AnnyModel(am,bodyRaw,fm,faceBytes),gnm=new GNMHeadModel(g.meta,g.sections),model=new CommonPerson(anny,gnm,canonical,{id:metadata.adapterFingerprint,acceptedParameterFingerprints:metadata.legacyArchiveFingerprints||[]},new NeckSurface({...km,vertexCount:metadata.vertices},kernelBytes),mm);
  const adapter=new MHRBodyAdapter({engine:new MHRDetailedEngine(mm,unpackModel(mm,mhrRaw)),anny,canonical,mapIndices:new Uint32Array(indexBytes),mapBary:new Float32Array(baryBytes),topologySha256:canonical.topologySha256});model.bodyDriver=new CommonBodyDriver({anny,mhrAdapter:adapter,canonical});
- const headMeta=await json('assets/head-transfer.json'),headRaw=await read('assets/head-transfer.bin.gz').then(inflate);if(await digest(headRaw)!==headMeta.binary.sha256)throw Error('共同头部适配校验失败');model.headTransfer=new HeadTransfer(headMeta,headRaw);
+ const headMeta=await json('assets/head-transfer.json'),headRaw=await read('assets/head-transfer.bin.gz').then(inflate);if(await digest(headRaw)!==headMeta.binary.sha256)throw Error('共同头部适配校验失败');model.headTransfer=new HeadTransfer(headMeta,headRaw);const morphologyMeta=await json('assets/head-morphology.json'),morphologyRaw=await read('assets/head-morphology.bin.gz').then(inflate);if(await digest(morphologyRaw)!==morphologyMeta.binary.sha256)throw Error('源头部连续场校验失败');model.headTransfer.attachMorphologyField(morphologyMeta,morphologyRaw);
  Object.assign(model.coverage,{mhrBodyIdentity45:true,mhrBodyRig204:true,mhrFullNonlinearCorrectives:true,mhrHeadIdentity:true,mhrExpression:true,annyHeadTransfer:true,annyFacialActions:true,crossTeacherHeadVisuallyAccepted:false});alive();onProgress({fraction:1,label:'同一共同网格已装配'});
- return {model,metadata,localGate:Object.fromEntries(gates.rows.map(r=>[r.label,{...r,enabled:true,headOnly:r.gate==='disabled-head-transfer-pending',partial:r.gate==='body-active-head-partial',reason:r.gate==='disabled-head-transfer-pending'?'纯头部局部形態；Anny接管头部形状时生效':r.gate==='body-active-head-partial'?'身体部分始终生效；头部部分由头形来源决定':'原生身体局部已连接'}]))};
+ return {model,metadata,localGate:Object.fromEntries([...gates.rows,...['nipple-point-incr','nipple-size-incr'].map(label=>({label,gate:'body-active'}))].map(r=>[r.label,{...r,enabled:true,headOnly:r.gate==='disabled-head-transfer-pending',partial:r.gate==='body-active-head-partial',reason:r.gate==='disabled-head-transfer-pending'?'纯头部局部形態；Anny接管头部形状时生效':r.gate==='body-active-head-partial'?'身体部分始终生效；头部部分由头形来源决定':'原生身体局部已连接'}]))};
 }

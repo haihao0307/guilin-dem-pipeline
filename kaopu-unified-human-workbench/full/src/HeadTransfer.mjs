@@ -9,22 +9,29 @@ export class HeadTransfer{
  mapDelta(name,from,to,scale=1){const d=this.d,idx=d[name+'_indices'],b=d[name+'_bary'],A=d[name+'_source_to_gnm'],out=new Float64Array(17821*3);for(let i=0;i<this.outer.length;i++){const p=sample(from,idx,b,i),q=sample(to,idx,b,i),v=vector(A,q.map((x,k)=>(x-p[k])*scale));out.set(v,this.outer[i]*3);}return out;}
  /** Fixed-topology diffusion regularizes the cross-model source displacement,
   * never the retained GNM surface or native local-parameter fields. */
- transportMorphology(model,from,to,out,{scale,head}){
-  const d=this.d,delta=this.mapDelta('anny',from,to,scale);
-  if(!this.morphologyNeighbors){
-   const outer=new Set(this.outer),adj=Array.from({length:model.gnm.numVertices},()=>new Set()),faces=model.gnm.triangles;
-   for(let k=0;k<faces.length;k+=3)for(let j=0;j<3;j++){const a=faces[k+j],b=faces[k+(j+1)%3];if(outer.has(a)&&outer.has(b)){adj[a].add(b);adj[b].add(a);}}
-   this.morphologyNeighbors=Array.from(this.outer,i=>Array.from(adj[i]));
+ attachMorphologyField(meta,buffer){if(meta.schema!=='registered-multisource-rbf-head/1'||meta.rows!==this.outer.length||meta.byteLength!==buffer.byteLength)throw Error('Head source field mismatch');const n=meta.controls;this.morphologyField={meta,sources:{anny:{indices:new Uint32Array(buffer,0,n*3),bary:new Float64Array(buffer,n*12,n*3)},mhr:{indices:new Uint32Array(buffer,n*36,n*3),bary:new Float64Array(buffer,n*48,n*3)}},points:new Float64Array(buffer,n*72,n*3),inverse:new Float64Array(buffer,n*96,(n+4)*n)};if(!Array.isArray(meta.controlRows)||meta.controlRows.length!==n)throw Error('Missing frozen source controls');for(const source of ['anny','mhr'])for(let i=0;i<n;i++)for(let k=0;k<3;k++){const row=meta.controlRows[i],binding=this.morphologyField.sources[source];if(binding.indices[i*3+k]!==this.d[source+'_indices'][row*3+k]||binding.bary[i*3+k]!==this.d[source+'_bary'][row*3+k])throw Error('Frozen source control mismatch: '+source);}}
+ /** Evaluate the same smooth native source field at the actual GNM identity and
+  * expression points. The original teacher remains the sole morphology source. */
+ transportMorphology(model,from,to,out,{scale,head},source='anny'){
+  const d=this.d,A=d[source+'_source_to_gnm'],Ai=inverseAffine(A),t=model.canonical.headTransform.translation,m=this.morphologyField,delta=new Float64Array(out.length);if(!m)throw Error('Source head field required');const binding=m.sources[source],N=m.meta.controls,coeff=new Float64Array((N+4)*3),nativeDelta=new Float64Array(N*3);
+  for(let k=0;k<N;k++){const a=sample(from,binding.indices,binding.bary,k),b=sample(to,binding.indices,binding.bary,k);nativeDelta.set(vector(A,b.map((x,c)=>x-a[c])),k*3);}
+  if(nativeDelta.every(v=>v===0))return delta;
+  for(let row=0;row<N+4;row++)for(let k=0;k<N;k++){const w=m.inverse[row*N+k];for(let c=0;c<3;c++)coeff[row*3+c]+=w*nativeDelta[k*3+c];}
+  for(let i=0;i<out.length/3;i++){
+   const current=xyz(out,i).map((x,c)=>(x-head[c])/scale+model.referenceHead[c]-t[c]),p=current.map((x,c)=>(x-m.meta.center[c])/m.meta.scale),sourceDelta=[0,0,0];
+   for(let k=0;k<N;k++){const dx=p[0]-m.points[k*3],dy=p[1]-m.points[k*3+1],dz=p[2]-m.points[k*3+2],r=Math.sqrt(dx*dx+dy*dy+dz*dz),w=r*r*r;sourceDelta[0]+=w*coeff[k*3];sourceDelta[1]+=w*coeff[k*3+1];sourceDelta[2]+=w*coeff[k*3+2];}
+   for(let c=0;c<3;c++)sourceDelta[c]+=coeff[N*3+c]+coeff[(N+1)*3+c]*p[0]+coeff[(N+2)*3+c]*p[1]+coeff[(N+3)*3+c]*p[2];
+   delta.set(sourceDelta.map(x=>x*scale),i*3);
   }
-  const nativeDelta=delta.slice(),next=delta.slice();
-  // Regularize only the transported global source displacement. Native GNM
-  // shape/expression geometry and all Anny local detail stay unfiltered.
-  for(let step=0;step<20;step++){
-   next.set(delta);for(let row=0;row<this.outer.length;row++){const i=this.outer[row],neighbors=this.morphologyNeighbors[row];if(!neighbors.length)continue;for(let c=0;c<3;c++){let average=0;for(const j of neighbors)average+=delta[j*3+c]/neighbors.length;next[i*3+c]=delta[i*3+c]+.4*(average-delta[i*3+c]);}}
-   delta.set(next);
-  }
-  let max=0,sum=0;for(const i of this.outer){let sq=0;for(let c=0;c<3;c++)sq+=(delta[i*3+c]-nativeDelta[i*3+c])**2;max=Math.max(max,Math.sqrt(sq));sum+=sq;}this.morphologyFieldDiagnostic={method:'fixed-GNM-skin-source-displacement-diffusion',iterations:20,step:.4,source:'Anny native phenotype field',localControlsFiltered:false,gnmGeometryFiltered:false,maxCorrectionMM:1000*max,rmsCorrectionMM:1000*Math.sqrt(sum/this.outer.length)};
-  return this.extend(delta);
+  this.morphologyFieldDiagnostic={method:'continuous-registered-native-source-RBF',controls:N,kernel:m.meta.kernel,regularization:m.meta.regularization,gnmGeometryFiltered:false,localControlsFiltered:false,internalGeometry:'same-continuous-field'};return delta;
+ }
+
+ /** Apply a second teacher field through the same lifecycle deformation.
+  * This is F(p+d)-F(p), so an MHR facial/identity delta is not pasted back in
+  * adult proportions after the Anny lifecycle layer has moved the face. */
+ transportCompoundDelta(model,lifecycle,reference,nativeDelta,context){
+  const after=reference.slice();this.add(after,nativeDelta);const a=this._compoundMorphDelta||this.transportMorphology(model,this.d.anny_neutral,lifecycle,reference,context),b=this.transportMorphology(model,this.d.anny_neutral,lifecycle,after,context),result=nativeDelta.slice();this._compoundMorphDelta=b;
+  for(let i=0;i<result.length;i++)result[i]+=b[i]-a[i];return result;
  }
 
  extend(delta){for(const group of cavities){const ids=this.d[group+'_ids'],boundary=this.d[group+'_boundary'],weights=this.d[group+'_weights'];for(let r=0;r<ids.length;r++)for(let c=0;c<3;c++){let x=0;for(let k=0;k<boundary.length;k++)x+=weights[r*boundary.length+k]*delta[boundary[k]*3+c];delta[ids[r]*3+c]=x;}}return delta;}
@@ -39,11 +46,11 @@ export class HeadTransfer{
  /** Shared morphology uses the exact registered source component delta, in
   * the same placed rest frame as the skin. Composing on the current component
   * preserves GNM identity/expression and preceding source layers. */
- composeEyeShape(model,name,sourceNow,out,joints,{scale,head}){
+ composeEyeShape(model,name,sourceNow,out,joints,{scale,head},referenceSource=null){
   const d=this.d,A=d[name+'_source_to_gnm'],M=inverseAffine(A),t=model.canonical.headTransform.translation,res=[];
   const apply=(fit,p)=>{let q=p.map((x,c)=>(x-head[c])/scale+model.referenceHead[c]-t[c]);q=point(M,q);q=point(fit.matrix,q);q=point(A,q);return q.map((x,c)=>head[c]+scale*(x+t[c]-model.referenceHead[c]));};
   for(let eye=0;eye<2;eye++){
-   const fit=componentFit(d[name+'_neutral'],sourceNow,d[name+'_eye_'+eye+'_ids'],{affine:name==='anny',scale:name==='mhr'});res.push(fit.maxResidual*1000);
+   const fit=componentFit(referenceSource||d[name+'_neutral'],sourceNow,d[name+'_eye_'+eye+'_ids'],{affine:name==='anny',scale:name==='mhr'});res.push(fit.maxResidual*1000);
    for(const i of this.componentIds[eye+1])out.set(apply(fit,xyz(out,i)),i*3);
    joints.set(apply(fit,xyz(joints,eye+2)),(eye+2)*3);
   }return res;
@@ -84,19 +91,20 @@ export class HeadTransfer{
  }
 
  compute(model,state,context){
-  this.morphologyFieldDiagnostic=null;const shared=state.headShapeComposition==='shared-layers/1';
+  this._compoundMorphDelta=null;this.morphologyFieldDiagnostic=null;const shared=state.headShapeComposition==='shared-layers/1';
   const {bodyRest,scale,head}=context,shapeOwner=state.owners.headShape||'gnm',expressionOwner=state.owners.expression,gazeOwner=state.owners.gaze||'gnm';
   let preparedCorrective=null;if(state.owners.rig==='mhr'&&state.mhr.correctives){const engine=model.bodyDriver.mhr.engine,ms=this.mhrState(model,state,{pose:true}),on=engine.evaluate({...ms,correctives:true}),off=engine.evaluate({...ms,correctives:false}),a=sourceCoordinates('mhr',off.rest),b=sourceCoordinates('mhr',on.rest);const delta=this.extend(this.mapDelta('mhr',a,b,scale));if(delta.some(x=>x!==0))preparedCorrective=delta;}
   const sharedActive=shared&&(Object.entries(state.anny.phenotypes).some(([k,v])=>v!==(model.canonical.referenceAnnyPhenotypes[k]??.5))||Object.values(state.anny.localChanges).some(v=>v!==0)||state.mhr.identity.some(v=>v!==0));
   if(shapeOwner==='gnm'&&expressionOwner==='gnm'&&gazeOwner==='gnm'&&!preparedCorrective&&!sharedActive){model.headWorldOverride=null;model.activeGNMRootRestMatrix=null;this.last={nativeGNMPath:true};return;}
   const g=model.gnm,d=this.d,base=this.place(model,g._bind,scale,head),out=base.slice(),joints=this.place(model,g._jointsBind,scale,head),shape={phenotypes:state.anny.phenotypes,localChanges:state.anny.localChanges},sources={anny:bodyRest.vertices};let shapeDelta=new Float64Array(out.length),eyeShapeError=[];
-  const shapeLayers=[];
+  const shapeLayers=[];let lifecycleSource=null,compoundReference=base.slice(),dentalReference=base;
   if(shared||shapeOwner==='anny'){
    const normalized=new Float64Array(bodyRest.vertices.length);for(let i=0;i<normalized.length;i+=3)for(let c=0;c<3;c++)normalized[i+c]=(bodyRest.vertices[i+c]-head[c])/scale+model.referenceHead[c];
    let delta;
    if(shared){
-    const global=model.anny.forward({phenotypes:state.anny.phenotypes}).vertices,globalNormalized=new Float64Array(global.length);for(let i=0;i<global.length;i+=3)for(let c=0;c<3;c++)globalNormalized[i+c]=(global[i+c]-head[c])/scale+model.referenceHead[c];
-    delta=this.transportMorphology(model,d.anny_neutral,globalNormalized,out,context);
+    const global=Object.values(state.anny.localChanges).some(v=>v!==0)?model.anny.forward({phenotypes:state.anny.phenotypes}).vertices:bodyRest.vertices,globalNormalized=new Float64Array(global.length);for(let i=0;i<global.length;i+=3)for(let c=0;c<3;c++)globalNormalized[i+c]=(global[i+c]-head[c])/scale+model.referenceHead[c];
+    if(!Object.entries(state.anny.phenotypes).some(([k,v])=>v!==(model.canonical.referenceAnnyPhenotypes[k]??.5))&&!Object.values(state.anny.localChanges).some(v=>v!==0))globalNormalized.set(d.anny_neutral);
+    lifecycleSource=globalNormalized;delta=this.transportMorphology(model,d.anny_neutral,globalNormalized,out,context);this._compoundMorphDelta=delta.slice();dentalReference=base.slice();this.add(dentalReference,delta);
     // Local detail remains its original native field, applied after morphology.
     this.add(delta,this.extend(this.mapDelta('anny',globalNormalized,normalized,scale)));
    }else delta=this.extend(this.mapDelta('anny',d.anny_neutral,normalized,scale));
@@ -104,22 +112,27 @@ export class HeadTransfer{
   }
   if(shared?state.mhr.identity.some(v=>v!==0):shapeOwner==='mhr'){
    const result=model.bodyDriver.mhr.engine.evaluate(this.mhrState(model,state));sources.mhr=sourceCoordinates('mhr',result.vertices);
-   const delta=this.extend(this.mapDelta('mhr',d.mhr_neutral,sources.mhr,scale));this.add(shapeDelta,delta);shapeLayers.push({source:'mhr',vertices:sources.mhr,delta});
+   let delta=shared?this.transportMorphology(model,d.mhr_neutral,sources.mhr,compoundReference,context,'mhr'):this.extend(this.mapDelta('mhr',d.mhr_neutral,sources.mhr,scale));if(shared&&lifecycleSource){const native=delta;delta=this.transportCompoundDelta(model,lifecycleSource,compoundReference,native,context);this.add(compoundReference,native);this.add(dentalReference,delta);}this.add(shapeDelta,delta);shapeLayers.push({source:'mhr',vertices:sources.mhr,delta});
   }
   this.add(out,shapeDelta);
   if(shared||shapeOwner!=='gnm'){
-   const fits=this.moveDental(base,out,{upper:true,lower:true});
-   if(fits[4]){for(const i of this.componentIds[5])out.set(point(fits[4].matrix,xyz(base,i)),i*3);}
-   if(shared)for(const layer of shapeLayers)eyeShapeError.push(...this.composeEyeShape(model,layer.source,layer.vertices,out,joints,context));
+   const fits=this.moveDental(shared?dentalReference:base,out,{upper:true,lower:true});
+   if(fits[4]){for(const i of this.componentIds[5])out.set(point(fits[4].matrix,xyz(shared?dentalReference:base,i)),i*3);}
+   if(shared){
+    const eyePoints=joints.slice(6);if(sources.mhr)this.add(eyePoints,this.transportMorphology(model,d.mhr_neutral,sources.mhr,eyePoints,context,'mhr'));if(lifecycleSource)this.add(eyePoints,this.transportMorphology(model,d.anny_neutral,lifecycleSource,eyePoints,context));joints.set(eyePoints,6);
+    if(Object.values(state.anny.localChanges).some(v=>v!==0)){const layer=shapeLayers.find(x=>x.source==='anny');if(layer)eyeShapeError.push(...this.composeEyeShape(model,'anny',layer.vertices,out,joints,context,lifecycleSource));}
+   }
    else eyeShapeError=this.shapeEye(model,shapeOwner,sources[shapeOwner],g._bind,out,joints,context);
   }
   let exprDelta=new Float64Array(out.length),tongueDelta=null;
-  if(expressionOwner==='anny'){const result=model.anny.forward({...shape,facialActions:this.actions(state)});exprDelta=this.extend(this.mapDelta('anny',bodyRest.vertices,result.vertices));const ids=d.tongue_ids,idx=d.tongue_indices,bary=d.tongue_bary,A=d.anny_source_to_gnm;tongueDelta=new Float64Array(ids.length*3);for(let i=0;i<ids.length;i++){const p=sample(bodyRest.vertices,idx,bary,i),q=sample(result.vertices,idx,bary,i);tongueDelta.set(vector(A,q.map((x,c)=>x-p[c])),i*3);}}
+  if(expressionOwner==='anny'){const reference=shared?d.anny_neutral:bodyRest.vertices,result=model.anny.forward(shared?{phenotypes:model.canonical.referenceAnnyPhenotypes,facialActions:this.actions(state)}:{...shape,facialActions:this.actions(state)}),factor=shared?scale:1;exprDelta=this.extend(this.mapDelta('anny',reference,result.vertices,factor));const ids=d.tongue_ids,idx=d.tongue_indices,bary=d.tongue_bary,A=d.anny_source_to_gnm;tongueDelta=new Float64Array(ids.length*3);for(let i=0;i<ids.length;i++){const p=sample(reference,idx,bary,i),q=sample(result.vertices,idx,bary,i);tongueDelta.set(vector(A,q.map((x,c)=>(x-p[c])*factor)),i*3);}}
   if(expressionOwner==='mhr'){const engine=model.bodyDriver.mhr.engine,ms=this.mhrState(model,state),before=sources.mhr||sourceCoordinates('mhr',engine.evaluate(ms).vertices),after=sourceCoordinates('mhr',engine.evaluate(this.mhrState(model,state,{expression:true})).vertices);sources.mhr=before;exprDelta=this.extend(this.mapDelta('mhr',before,after,scale));}
+  if(shared&&lifecycleSource&&['anny','mhr'].includes(expressionOwner)){const native=exprDelta;exprDelta=this.transportCompoundDelta(model,lifecycleSource,compoundReference,native,context);this.add(compoundReference,native);}
   if(expressionOwner==='anny')this.embedNativeTongue(model,out,context);
   const beforeExpression=out.slice();this.add(out,exprDelta);
   if(expressionOwner!=='gnm'){const fits=this.moveDental(beforeExpression,out);this.attachOralToDentition(beforeExpression,out,fits[4]);if(tongueDelta){for(let i=0;i<d.tongue_ids.length;i++)for(let c=0;c<3;c++)out[d.tongue_ids[i]*3+c]=beforeExpression[d.tongue_ids[i]*3+c]+tongueDelta[i*3+c];}else if(fits[4])for(const i of this.componentIds[5])out.set(point(fits[4].matrix,xyz(beforeExpression,i)),i*3);}
   let correctiveMaxMM=0;
+  if(shared&&lifecycleSource&&preparedCorrective)preparedCorrective=this.transportCompoundDelta(model,lifecycleSource,compoundReference,preparedCorrective,context);
   if(preparedCorrective){for(let i=0;i<preparedCorrective.length;i++)correctiveMaxMM=Math.max(correctiveMaxMM,Math.abs(preparedCorrective[i])*1000);this.add(out,preparedCorrective);}
   const gazeError=this.gaze(model,state,out,joints,context,sources),posed=skinGNMRest(model,out,joints,scale);
   if(!posed.vertices.every(Number.isFinite))throw Error('Nonfinite common head');model.headWorldOverride=posed.vertices;model.activeGNMRootRestMatrix=posed.rootMatrix;model.lastHeadRig={jointsRest:joints,jointsPosed:posed.jointsPosed,nativeParents:Array.from(g.jointParents),nativeWeights:g.skinningWeights,restVertices:out};this.last={morphologyField:this.morphologyFieldDiagnostic,shapeComposition:state.headShapeComposition||'legacy-owner/1',shapeLayers:shapeLayers.map(l=>({source:l.source,maxDisplacementMM:Math.max(...l.delta.map(Math.abs))*1000})),shapeOwner,expressionOwner,gazeOwner,vertices:17821,outerVertices:this.outer.length,cavityVertices:1064,eyeShapeFitMaxMM:eyeShapeError,gazeComponentFitMaxMM:gazeError,gaze:this.gazeDiagnostic,correctiveMaxMM,fieldMapFixed:true,tongueNativeAnny:expressionOwner==='anny',tongueRestEmbedding:expressionOwner==='anny'?'registered-native-component':'GNM',oralAttachments:'native-GNM-dental-contact-anchors',gnmDentalTopologyPreserved:true};
