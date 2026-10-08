@@ -1,0 +1,1 @@
+import{CommonViewer}from'../full/ui/Viewer.mjs';import{installSkinPreview}from'./SkinLayer.mjs';installSkinPreview(CommonViewer);import('../full/ui/browser-app.mjs').catch(e=>{document.getElementById('load-status').textContent='载入失败：'+e.message;console.error(e)});
