@@ -11,12 +11,16 @@ concurrency:
 jobs:
   deterministic:
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
           sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Install official Ubuntu audio decoder for asset checks
+        run: |
+          sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=30 update -qq
+          sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=30 install -y --no-install-recommends ffmpeg
       - run: |
           for test in station-platform.test.mjs r09-world.test.mjs r09-camera.test.mjs r09-smoke-driver.test.mjs r08-smoke.test.mjs kcr-session.test.mjs steam-model.test.mjs render-quality.test.mjs anchored-zoom.test.mjs recommended-fit.test.mjs view-profile-storage.test.mjs; do
             node kaopu-minigame-workbench/voxel-train-study/game/tests/$test
