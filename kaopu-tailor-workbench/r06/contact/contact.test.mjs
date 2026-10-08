@@ -31,3 +31,9 @@ l=lab([[0,0,0],[.004,0,0],[0,0,0],[0,.01,0],[.01,0,0]],[[0,0,0],[.004,0,0],[0,0,
 l.offsets=new Map([['skirt',0],['band',2]]);l.spec.seams=[{a:{panelId:'skirt'},b:{panelId:'band'},stitchVertexPairs:[[0,0]]}];
 c=new SweptContact(l);c.refreshTopology();assert(c.exclude([0],[2]));assert(!c.exclude([1],[2,3,4]));assert(c.exclude([2],[2,3,4]));
 console.log('exact seam adjacency preserves free gathering collision candidates');
+
+import {orderedSeams} from './seam-order.mjs';
+const seam=(id,a,b)=>({id,a:{panelId:a,edge:'e2',reverse:false},b:{panelId:b,edge:'e1',reverse:true}});
+const input=[seam('original-9','skirt','band'),seam('original-1','torso','band'),seam('original-5','a','b')], original=JSON.stringify(input);
+assert.deepEqual(orderedSeams(input).map(s=>s.id),orderedSeams([...input].reverse()).map(s=>s.id));assert.equal(JSON.stringify(input),original);assert.equal(orderedSeams(input).length,input.length);
+console.log('physical seam ordering is stable, source IDs and inputs preserved');

@@ -72,6 +72,7 @@ replace('''    } else if (data.type === "resume") {
       if (!lab''','''    } else if (data.type === "resume") {
       pendingPause=false;
       if (!lab''')
+replace('  const sourcePanels = new Map(input.panels.map', '  input={...input,seams:orderedSeams(input.seams)};\n  const sourcePanels = new Map(input.panels.map')
 # R06 contact path retains the original ordered f64 constraint kernel.
 replace('if (this.orientationGuides || this.selfCollisionEnabled) return super.step(dt);', 'if (this.orientationGuides || (this.selfCollisionEnabled && !this.r06Contact)) return super.step(dt);')
 replace('      k.distances(baseCount, this.count);\n      P.distanceMs += performance.now() - now;\n      if (this.collisions && sub3 % 3 === 2) {', '      if (!this.r06Contact) k.distances(baseCount, this.count);\n      P.distanceMs += performance.now() - now;\n      if (this.r06Contact) {\n        for(let guard=0;guard<6;guard++) { k.strains(); k.vertices(this.clearance); }\n      }\n      if (this.collisions && sub3 % 3 === 2) {')
@@ -90,6 +91,7 @@ assert step.count('this.selfContacts.project();') == 1
 assert 'this.r06Contact && sub3 % 6 === 5' in step
 s=(ROOT/'r06/contact/fast-contact.mjs').read_text().replace("import {SweptContact} from './swept-contact.mjs';",'').replace('export function','function').replace('export class','class')+'\n'+s
 s=(ROOT/'r06/contact/swept-contact.mjs').read_text().replace('export class','class')+'\n'+s
+s=(ROOT/'r06/contact/seam-order.mjs').read_text().replace('export function','function')+'\n'+s
 s=(ROOT/'r06/fixtures.mjs').read_text().replace('export function','function')+'\n'+s
 (ROOT/'catalogue/r06-contact-worker.bundle.mjs').write_text('// R06.3 contact repair, original R06.2 retained. Original catalogue/workbench-worker.bundle.mjs remains intact.\n'+s)
 print('worker',len(s))

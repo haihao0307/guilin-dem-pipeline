@@ -13,7 +13,7 @@ assert page.locator('#sew').is_visible() and page.locator('#sew').is_enabled()
 page.screenshot(path=str(out/'r06-paper-desktop.png'))
 page.locator('#arrange').click();page.wait_for_timeout(200)
 page.screenshot(path=str(out/'r06-placed-desktop.png'))
-(out/'r06-input-spec.json').write_text(json.dumps(page.evaluate('window.__TAILOR_CATALOGUE_QA__.getSpec()')))
+(out/'r06-preview-spec.json').write_text(json.dumps(page.evaluate('window.__TAILOR_CATALOGUE_QA__.getSpec()')))
 for tab in ['styles','evidence','parameters']:
  page.locator('[data-tab='+tab+']').click()
  assert page.locator('#sew').is_visible()
@@ -29,12 +29,16 @@ p0=page.evaluate('window.__TAILOR_CATALOGUE_QA__.getPositions()')
 page.wait_for_timeout(250)
 assert p0==page.evaluate('window.__TAILOR_CATALOGUE_QA__.getPositions()'),'pause moved geometry'
 page.screenshot(path=str(out/'r06-paused-desktop.png'))
+(out/'r06-input-spec.json').write_text(json.dumps(page.evaluate('window.__TAILOR_CATALOGUE_QA__.getSpec()')))
 page.locator('#resume').click()
-start=time.time();stages=set()
+start=time.time();stages=set();last_log=0
 while state()['phase'] not in ['complete','error']:
  if time.time()-start>3000:raise AssertionError('Dress trial exceeded 50-minute QA limit')
  page.wait_for_timeout(2500)
- ss=state();label=page.locator('#catalogue-status').inner_text();key=label.split(' · ')[0]
+ ss=state();
+ if time.time()-last_log>30:
+  last_log=time.time();mm=ss.get('metrics') or {};print('LIVE_BROWSER_PROGRESS',json.dumps({'phase':ss['phase'],'wallSec':round(time.time()-start,1),'simulationSec':mm.get('elapsed'),'maxPrincipalStrain':mm.get('maxPrincipalStrain'),'activeMaxGapMm':mm.get('activeMaxGapMm')}),flush=True)
+ label=page.locator('#catalogue-status').inner_text();key=label.split(' · ')[0]
  if key not in stages and ss['running']:
   stages.add(key)
   if len(stages)<12:page.screenshot(path=str(out/('r06-stage-'+str(len(stages))+'.png')))
@@ -75,7 +79,7 @@ for id in ids:
   assert len(spec['seams'])>0
  else: print('STYLE_GENERATION_FAILURE',json.dumps(ss))
 (out/'r06-catalogue-generation-audit.json').write_text(json.dumps(catalogue))
-assert len(catalogue)==23
+assert len(catalogue)==23 and all(x['phase']=='paper' for x in catalogue)
 page.evaluate("window.__TAILOR_CATALOGUE_QA__.select('MetaGarmentDress')")
 page.wait_for_function("window.__TAILOR_CATALOGUE_QA__.getState().phase==='paper'",timeout=120000)
 oldhash=page.evaluate('window.__TAILOR_CATALOGUE_QA__.getSpec().source.recipeHash')
