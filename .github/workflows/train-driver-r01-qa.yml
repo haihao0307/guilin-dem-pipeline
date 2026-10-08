@@ -1,4 +1,4 @@
-name: Train R10 horizon visual QA
+name: Train R10 final atmosphere and original first-leg score QA
 on:
   push:
     branches: ['qa/voxel-train-r01-20261006']
@@ -6,7 +6,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: kcr-r10-visual-${{ github.ref }}
+  group: kcr-r10-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   deterministic:
@@ -22,6 +22,7 @@ jobs:
             node kaopu-minigame-workbench/voxel-train-study/game/tests/$test
           done
           node kaopu-minigame-workbench/voxel-train-study/game/station-room.test.mjs
+          node kaopu-minigame-workbench/voxel-train-study/game/music.test.mjs
           node --check kaopu-minigame-workbench/voxel-train-study/game/app.mjs
   browser:
     needs: deterministic
@@ -31,7 +32,7 @@ jobs:
       fail-fast: false
       matrix:
         browser: [chromium, webkit]
-        suite: [scene]
+        suite: [scene, controls, gameplay, zoom, music]
     env:
       TRAIN_BROWSER: ${{ matrix.browser }}
       KCR_SUITE: ${{ matrix.suite }}
@@ -47,6 +48,7 @@ jobs:
         run: |
           python3 -m http.server 8765 > "$RUNNER_TEMP/kcr-server.log" 2>&1 &
           case "${{ matrix.suite }}" in
+            music) node kaopu-minigame-workbench/voxel-train-study/game/tests/music-browser.cjs ;;
             scene) node kaopu-minigame-workbench/voxel-train-study/game/tests/r10-browser.cjs ;;
             controls) node kaopu-minigame-workbench/voxel-train-study/game/tests/r09-controls.cjs ;;
             zoom) node kaopu-minigame-workbench/voxel-train-study/game/tests/anchored-zoom-browser.cjs ;;
@@ -60,5 +62,6 @@ jobs:
             kcr-${{ matrix.browser }}-${{ matrix.suite }}/*
             r10-${{ matrix.browser }}-${{ matrix.suite }}/*
             r09-controls-${{ matrix.browser }}/*
+            r10-music-${{ matrix.browser }}/*
             anchored-zoom-${{ matrix.browser }}/*
           retention-days: 7

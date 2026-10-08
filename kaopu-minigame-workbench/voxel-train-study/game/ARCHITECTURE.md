@@ -58,3 +58,6 @@ The new driver is a basic original in-cab placeholder, not a production characte
 `morning-atmosphere.mjs` replaces the lighting rig and flat background with clear warm side light, cool sky fill and an original procedural sky. Fog far distance remains inside the existing terrain/rail visibility margin. No post-process colour filter or blur is used.
 
 `r09/` preserves the accepted R09 runtime, with relative imports/links adjusted for its new directory. Its R08 link points to the sibling archive. Main R10 and R09 intentionally share the unchanged camera-coordinate preferences so the accepted view does not reset; R08 keeps its older isolated storage.
+
+
+`music.mjs` owns one gesture-unlocked AudioContext and one original MP3 buffer source. It starts only after Kowloon departure, ducks against the authoritative Session events and braking state, settles at Yaumati and cannot restart at later stations. Pause uses a short ramp before suspension; generation guards cancel stale suspensions during rapid toggles. Audio samples and their reproducible composition source live in `music/`, with original authorship and the numerical/decoding verification boundary recorded.

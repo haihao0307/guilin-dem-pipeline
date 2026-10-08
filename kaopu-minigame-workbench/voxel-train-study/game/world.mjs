@@ -14,7 +14,7 @@ function flatMesh(blocks,{material=null}={}){const mesh=new THREE.Mesh(blocks.ge
 function stationModel(plan){
   const model=createStationPlatform(plan),{group,zoneMaterial}=model,room=createStationRoom(plan);group.add(room.group);
   return {...model,proof:{...model.proof,room:room.proof},dispose(){group.remove(room.group);room.dispose();model.dispose();},update(view,station){
-    const offset=stationOffset(station.target,view.distance);group.position.x=offset;
+    const offset=stationOffset(station.target,view.distance);group.position.x=offset;model.updateClock?.(view.timetable?.minutes);
     const current=station.index===view.station.index,green=current&&view.station.canOpen;
     zoneMaterial.color.setHex(green?0x8db65b:station.missed?0xc77646:0xcfb96d);
     group.visible=offset+4.8>WORLD.centerX-FLAT_WORLD.terrainRadius&&offset-26<WORLD.centerX+FLAT_WORLD.terrainRadius;

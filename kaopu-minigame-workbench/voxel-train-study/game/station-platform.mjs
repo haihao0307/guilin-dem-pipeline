@@ -194,7 +194,6 @@ function marketDetails(b,metal,proof){
   const clockX=-17.05,clockY=2.82,clockZ=5.42;
   metal.cylinder(clockX,clockY,clockZ,.225,.075,C.iron,{axis:'z',segments:24});b.disc(clockX,clockY,clockZ+.041,.195,0xe4ddc2);
   for(let i=0;i<12;i++){const a=i*Math.PI/6;metal.box(clockX+Math.sin(a)*.163,clockY+Math.cos(a)*.163,clockZ+.046,.012,.035,.005,C.iron,[0,0,-a]);}
-  metal.beam([clockX,clockY,clockZ+.05],[clockX,clockY+.145,clockZ+.05],.014,C.iron);metal.beam([clockX,clockY,clockZ+.05],[clockX-.085,clockY+.04,clockZ+.05],.018,C.iron);
   proof.clock={facePosition:[clockX,clockY,clockZ+.041],caseRadius:.225,faceRadius:.195};
   proof.props={handcarts:1,noticeboards:1,clocks:1};
 }
@@ -284,6 +283,27 @@ export function createStationPlatform(plan){
   const deckMaterial=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.96,metalness:0,map:deckMap});
   proof.deck.texture={width:deckMap.image.width,height:deckMap.image.height,...deckMap.userData};
   group.add(deck.mesh(deckMaterial,'Station deck surface'),b.mesh(structural,'Station supports, edge, furniture and luggage'),metal.mesh(metalMaterial,'Station ironwork, lantern caps and fittings'),roof.mesh(roofMaterial,'Station sloping roof and valance'));
+  let disposed=false,clockHands=null;
+  if(proof.clock){
+    const color=new THREE.Color(C.iron),makeHand=(length,width,depth,name)=>{
+      const geometry=new THREE.BoxGeometry(width,length,.012);geometry.translate(0,length/2,0);
+      const colors=[];for(let i=0;i<geometry.attributes.position.count;i++)colors.push(color.r,color.g,color.b);
+      geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+      const hand=new THREE.Mesh(geometry,metalMaterial);hand.name=name;hand.position.fromArray(proof.clock.facePosition);hand.position.z+=depth;
+      hand.castShadow=hand.receiveShadow=true;group.add(hand);return hand;
+    };
+    clockHands={minute:makeHand(.145,.014,.009,'Station clock minute hand'),hour:makeHand(.094,.018,.017,'Station clock hour hand')};
+  }
+  function updateClock(minutes){
+    // The authoritative game timetable is the only source of time. Repeated
+    // paused values leave both hands still; no wall clock or animation timer.
+    if(disposed||!clockHands||!Number.isFinite(minutes))return false;
+    const minute=((minutes%60)+60)%60,hour=((minutes%720)+720)%720;
+    clockHands.minute.rotation.z=-minute*Math.PI/30;clockHands.hour.rotation.z=-hour*Math.PI/360;
+    proof.clock.minutes=minutes;proof.clock.handAngles={minute:clockHands.minute.rotation.z,hour:clockHands.hour.rotation.z};
+    return true;
+  }
+  updateClock(380);
   const glassMaterial=new THREE.MeshStandardMaterial({vertexColors:true,transparent:true,opacity:.38,roughness:.24,metalness:.04,emissive:0x8d622c,emissiveIntensity:.21,depthWrite:false,side:THREE.DoubleSide});
   const glassMesh=glass.mesh(glassMaterial,'Station lantern glass');glassMesh.castShadow=false;group.add(glassMesh);
   const glow=warm.mesh(new THREE.MeshBasicMaterial({vertexColors:true,toneMapped:false}),'Station warm lamp wicks');glow.castShadow=false;group.add(glow);
@@ -299,8 +319,7 @@ export function createStationPlatform(plan){
   box.dispose();group.updateMatrixWorld(true);
   let meshes=0,triangles=0;group.traverse(o=>{if(o.isMesh){meshes++;triangles+=(o.geometry.index?.count||o.geometry.attributes.position.count)/3;}});
   proof.drawCalls=meshes;proof.triangles=triangles;proof.signAnchor=PLATFORM_SPEC.sign.slice();proof.signPosition=PLATFORM_SPEC.sign.slice();proof.signSize=[4.20,.74];proof.signTextureSize=[2048,640];proof.lampPositions=proof.lanternPositions;proof.clearWalkway=PLATFORM_SPEC.clearWalkway;group.userData.stationProof=proof;
-  let disposed=false;
-  return{group,zoneMaterial,sign,proof,dispose(){if(disposed)return;disposed=true;
+  return{group,zoneMaterial,sign,proof,updateClock,dispose(){if(disposed)return;disposed=true;
     // Shared front/back sign material, geometry and attendant/furniture material
     // are released exactly once. Every texture belongs to this station instance.
     const geometries=new Set(),materials=new Set(),textures=new Set();group.traverse(o=>{if(o.geometry)geometries.add(o.geometry);for(const material of Array.isArray(o.material)?o.material:o.material?[o.material]:[]){materials.add(material);for(const value of Object.values(material))if(value?.isTexture)textures.add(value);}});

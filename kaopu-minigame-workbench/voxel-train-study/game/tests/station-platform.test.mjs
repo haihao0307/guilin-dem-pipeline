@@ -15,7 +15,7 @@ const stationMeshes=station=>{const out=[];station.group.traverse(o=>{if(o.isMes
 test('Every station has finite bounded geometry and distinct evidence-informed furniture variants',()=>{
   const variants=new Set();for(let index=0;index<9;index++){
     const s=create(index),meshes=stationMeshes(s),p=s.proof;variants.add(p.variant);
-    assert.equal(p.drawCalls,meshes.length);assert.ok(p.drawCalls<=12);assert.ok(p.triangles<12000,`${p.variant}: ${p.triangles} triangles`);
+    assert.equal(p.drawCalls,meshes.length);assert.equal(p.drawCalls,index===5?12:10);assert.ok(p.triangles<12000,`${p.variant}: ${p.triangles} triangles`);
     assert.equal(p.deckTop,.82);assert.equal(p.materialSurface,'masonry');assert.equal(p.originalProcedural,true);assert.equal(p.historicalReconstruction,false);
     for(const mesh of meshes)for(const attribute of Object.values(mesh.geometry.attributes))for(const v of attribute.array)assert.ok(Number.isFinite(v),mesh.name);
     const deck=s.group.getObjectByName('Station deck surface');near(deck.geometry.boundingBox.max.y,.82);
@@ -101,6 +101,27 @@ test('Tai Po Market clock face remains fully exposed above the noticeboard, clea
     assert.ok(hit.point.z>=z-1e-6&&hit.point.z<=z+.025,`Clock face obstructed at ${dx}, ${dy}: ${hit.object.name}`);
   }
   s.dispose();
+});
+
+test('Clock hands show the precise game timetable, including continuous fractions and frozen values',()=>{
+  const s=create(5),minute=s.group.getObjectByName('Station clock minute hand'),hour=s.group.getObjectByName('Station clock hour hand');
+  assert.ok(minute&&hour);assert.equal(minute.material,hour.material);
+  const check=(minutes,minuteDegrees,hourDegrees)=>{
+    assert.equal(s.updateClock(minutes),true);s.group.updateMatrixWorld(true);
+    near(minute.rotation.z,-minuteDegrees*Math.PI/180);near(hour.rotation.z,-hourDegrees*Math.PI/180);
+    // Confirm actual local +Y hand directions, rather than only copied proof.
+    for(const [hand,degrees]of [[minute,minuteDegrees],[hour,hourDegrees]]){
+      const direction=new THREE.Vector3(0,1,0).transformDirection(hand.matrixWorld),angle=degrees*Math.PI/180;
+      near(direction.x,Math.sin(angle));near(direction.y,Math.cos(angle));
+    }
+    assert.equal(s.proof.clock.minutes,minutes);
+  };
+  check(380,120,190);check(420,0,210);check(380.5,123,190.25);check(442.25,133.5,221.125);
+  const frozen=[minute.rotation.z,hour.rotation.z];for(let i=0;i<30;i++)s.updateClock(442.25);
+  assert.deepEqual([minute.rotation.z,hour.rotation.z],frozen);
+  assert.equal(s.updateClock(undefined),false);assert.equal(s.updateClock(NaN),false);assert.deepEqual([minute.rotation.z,hour.rotation.z],frozen);
+  s.dispose();assert.equal(s.updateClock(380),false);
+  const noClock=create(0);assert.equal(noClock.updateClock(380),false);assert.equal(noClock.proof.drawCalls,10);noClock.dispose();
 });
 
 test('The original station attendant retains every position, normal, colour and index',()=>{
