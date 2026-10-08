@@ -1,4 +1,4 @@
-name: Train desktop railway HUD candidate preview
+name: Train R06 desktop clarity and railway QA
 on:
   push:
     branches: ['qa/voxel-train-r01-20261006']
@@ -26,8 +26,7 @@ jobs:
           node --check kaopu-minigame-workbench/voxel-train-study/game/app.mjs
           node --check kaopu-minigame-workbench/voxel-train-study/game/view-controls.mjs
           node kaopu-minigame-workbench/voxel-train-study/game/tests/view-profile-storage.test.mjs
-          node kaopu-minigame-workbench/voxel-train-study/game/tests/render-quality.test.mjs
-          for test in classic-anchor.mjs session.test.mjs model.test.mjs route-map.test.mjs; do
+          for test in classic-anchor.mjs session.test.mjs model.test.mjs route-map.test.mjs render-quality.test.mjs anchored-zoom.test.mjs recommended-fit.test.mjs; do
             node kaopu-minigame-workbench/voxel-train-study/game/tests/$test
           done
   railway-browser:
@@ -36,8 +35,10 @@ jobs:
     timeout-minutes: 25
     strategy:
       fail-fast: false
+      max-parallel: 6
       matrix:
         browser: [chromium, webkit]
+        suite: [layout, touch, hud, gameplay, views, desktop, zoom]
     env:
       TRAIN_BROWSER: ${{ matrix.browser }}
       TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/
@@ -60,17 +61,50 @@ jobs:
         run: timeout 180s "$RUNNER_TEMP/driver-test/node_modules/.bin/playwright" install-deps "${{ matrix.browser }}"
       - name: Configure installed browser module path
         run: echo "NODE_PATH=$RUNNER_TEMP/driver-test/node_modules" >> "$GITHUB_ENV"
-      - name: Serve the candidate only
+      - name: Serve the exact candidate checkout
         run: |
           nohup python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/driver-server.log" 2>&1 &
           for i in $(seq 1 30); do curl -fsS "$TRAIN_GAME_URL" > /dev/null && break || sleep 1; done
-      - name: Render desktop native-DPR HUD, mobile fallbacks and settings
+      - name: Verify candidate layout and every saved-camera restoration
+        if: matrix.suite == 'layout'
+        run: |
+          timeout 240s node kaopu-minigame-workbench/voxel-train-study/game/tests/fullscreen-ui.cjs
+          timeout 300s node kaopu-minigame-workbench/voxel-train-study/game/tests/railway-ui.cjs
+      - name: Verify candidate modal touch and real restart state
+        if: matrix.suite == 'touch'
+        run: timeout 360s node kaopu-minigame-workbench/voxel-train-study/game/tests/driving-touch.cjs
+      - name: Verify candidate hit targets and real six-stop map
+        if: matrix.suite == 'hud'
+        run: |
+          timeout 420s node kaopu-minigame-workbench/voxel-train-study/game/tests/hit-targets.cjs
+          timeout 240s node kaopu-minigame-workbench/voxel-train-study/game/tests/hud.cjs
+      - name: Play candidate first stop and full gameplay regressions
+        if: matrix.suite == 'gameplay'
+        run: timeout 540s node kaopu-minigame-workbench/voxel-train-study/game/tests/browser.cjs
+      - name: Verify candidate rotated touch and independent saved views
+        if: matrix.suite == 'views'
+        run: timeout 300s node kaopu-minigame-workbench/voxel-train-study/game/tests/views.cjs
+      - name: Verify desktop native pixels and enlarged HUD settings
+        if: matrix.suite == 'desktop'
         run: timeout 540s node kaopu-minigame-workbench/voxel-train-study/game/tests/desktop-hud-preview.cjs
-      - name: Upload first candidate layout for review
+      - name: Verify real wheel pinch resize fullscreen and old projection
+        if: matrix.suite == 'zoom'
+        run: timeout 420s node kaopu-minigame-workbench/voxel-train-study/game/tests/anchored-zoom-browser.cjs
+      - name: Upload complete candidate evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: train-desktop-hud-${{ matrix.browser }}
+          name: train-r06-candidate-${{ matrix.browser }}-${{ matrix.suite }}
           retention-days: 7
           if-no-files-found: warn
-          path: desktop-hud-${{ matrix.browser }}/*
+          path: |
+            driver-public-hashes.json
+            fullscreen-ui-${{ matrix.browser }}/*
+            railway-ui-${{ matrix.browser }}/*
+            driving-touch-${{ matrix.browser }}/*
+            hit-targets-${{ matrix.browser }}/*
+            hud-${{ matrix.browser }}/*
+            driver-${{ matrix.browser }}/*
+            views-${{ matrix.browser }}/*
+            desktop-hud-${{ matrix.browser }}/*
+            anchored-zoom-${{ matrix.browser }}/*

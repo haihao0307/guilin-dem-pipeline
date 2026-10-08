@@ -1,4 +1,5 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),{chromium,webkit}=require('playwright');
+const {clickControl,openSettings,closeSettings}=require('./browser-controls.cjs');
 const engine=process.env.TRAIN_BROWSER||'chromium',out='railway-ui-'+engine,base=process.env.TRAIN_GAME_URL||'http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/';
 const VIEW_KEY='kaopu.train-driver.views.v1',MODES=['landscape','portrait'];
 fs.mkdirSync(out,{recursive:true});
@@ -6,13 +7,14 @@ fs.mkdirSync(out,{recursive:true});
 (async()=>{
  const {VIEW_REVISION,DEFAULT_VIEWS}=await import('../view-profile-storage.mjs');
  const recommended=mode=>({...structuredClone(DEFAULT_VIEWS[mode]),manual:false,locked:false});
- const profile=view=>Object.fromEntries(['position','target','zoom','manual','locked'].map(key=>[key,view[key]]));
+ const profile=view=>({...Object.fromEntries(['position','target','zoom','manual','locked'].map(key=>[key,view[key]])),...(Object.hasOwn(view,'projection')?{projection:structuredClone(view.projection)}:{})});
  const browser=await({chromium,webkit})[engine].launch(),context=await browser.newContext({viewport:{width:844,height:390},deviceScaleFactor:1,hasTouch:true}),page=await context.newPage(),errors=[],checks=[];
  page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/game/app.mjs*',async route=>{
   const response=await route.fetch();
   await route.fulfill({response,body:await response.text()+'\n'+fs.readFileSync(__dirname+'/browser-harness.mjs','utf8')});
  });
+ const control=id=>clickControl(page,id);
  const state=()=>page.evaluate(()=>__trainDriver.getState());
  const stored=()=>page.evaluate(key=>JSON.parse(localStorage.getItem(key)),VIEW_KEY);
  const freeze=async()=>{
@@ -35,12 +37,29 @@ fs.mkdirSync(out,{recursive:true});
   assert(r&&r.x>=-1&&r.y>=-1&&r.x+r.width<=size.width+1&&r.y+r.height<=size.height+1,JSON.stringify({id,r,size}));
  };
  const assertToolsClear=async label=>{
-  const overlap=await page.evaluate(()=>{
-   const a=document.querySelector('.view-tools').getBoundingClientRect(),b=document.querySelector('.masthead nav').getBoundingClientRect();
-   return Math.max(0,Math.min(a.right,b.right)-Math.max(a.left,b.left))*Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top));
-  });
-  assert.equal(overlap,0,label);
-  return overlap;
+  const opened=await openSettings(page),checks=[];
+  for(const id of ['landscapeView','portraitView','lockView','resetView','restoreView','cameraView','toggleHints','fullScreen']){
+   if(id==='restoreView'&&!await page.locator('#restoreView').isVisible())continue;
+   const target=page.locator('#'+id);await target.scrollIntoViewIfNeeded();await inBounds(id);
+   const check=await target.evaluate(el=>{
+    const a=el.getBoundingClientRect(),hit=document.elementFromPoint(a.x+a.width/2,a.y+a.height/2);
+    const area=b=>Math.max(0,Math.min(a.right,b.right)-Math.max(a.left,b.left))*Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top));
+    const collisions=[...document.querySelectorAll('#settingsScreen button')].filter(other=>other!==el&&!other.closest('[hidden]')).map(other=>({id:other.id,area:area(other.getBoundingClientRect())})).filter(other=>other.area>0);
+    return{id:el.id,reachable:hit===el||el.contains(hit),headerOverlap:area(document.querySelector('.settings-header').getBoundingClientRect()),collisions};
+   });
+   assert(check.reachable,label+': settings tool must receive input '+JSON.stringify(check));
+   assert.equal(check.headerOverlap,0,label+': settings header must not cover '+id);
+   assert.deepEqual(check.collisions,[],label+': settings buttons must not overlap '+id);
+   checks.push(check);
+  }
+  if(opened)await closeSettings(page);
+  return checks;
+ };
+ const assertRestoreVisible=async expected=>{
+  const opened=await openSettings(page);
+  assert.equal(await page.locator('#restoreView').isVisible(),expected,'Saved-view availability is checked inside the open settings dialog');
+  if(expected){await page.locator('#restoreView').scrollIntoViewIfNeeded();await inBounds('restoreView');}
+  if(opened)await closeSettings(page);
  };
  try{
   await page.goto(base);await page.waitForFunction(()=>window.__trainDriver?.test);await page.locator('#startGame').click();await freeze();
@@ -50,20 +69,25 @@ fs.mkdirSync(out,{recursive:true});
   assert.deepEqual((await stored()).profiles.portrait,recommended('portrait'));
   assert.deepEqual((await stored()).backups,{});
   for(const size of [{width:844,height:390,layout:'landscape'},{width:700,height:390,layout:'landscape'},{width:390,height:844,layout:'landscape'},{width:390,height:700,layout:'portrait'},{width:320,height:690,layout:'portrait'}]){
-   await page.setViewportSize({width:size.width,height:size.height});await page.locator('#'+size.layout+'View').click();await freeze();
+   await page.setViewportSize({width:size.width,height:size.height});await control(size.layout+'View');await freeze();
    await assertView(size.layout,recommended(size.layout),'Recommended '+JSON.stringify(size));
-   for(const id of ['landscapeView','portraitView','lockView','resetView','cameraView','toggleHints','fullScreen','pause','accelerate','decelerate','brake','stationAction'])await inBounds(id);
+   for(const id of ['pause','openSettings','accelerate','decelerate','brake','stationAction'])await inBounds(id);
    const distanceFont=await page.locator('#stationDistance').evaluate(el=>parseFloat(getComputedStyle(el).fontSize)),minimumDistanceFont=size.layout==='landscape'?32:size.width===320?28:30;
    assert(distanceFont>=minimumDistanceFont,JSON.stringify({size,distanceFont,minimumDistanceFont}));
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
-   const overlap=await assertToolsClear('View and game controls must not overlap');
+   const settingsTools=await assertToolsClear('Settings controls stay visible and separate');
    const layout=await page.evaluate(()=>{
     const main=document.getElementById('driverGame'),root=main.getBoundingClientRect(),rotated=__trainDriver.getState().viewSettings.rotated;
-    const rect=id=>{const r=document.getElementById(id).getBoundingClientRect();return rotated?{x:r.y-root.y,y:root.right-r.right,width:r.height,height:r.width}:{x:r.x-root.x,y:r.y-root.y,width:r.width,height:r.height};};
-    return{root:{width:main.clientWidth,height:main.clientHeight},scene:rect('sceneWrap'),left:rect('leftHud'),right:rect('instrumentPanel')};
+    const rect=selector=>{const r=document.querySelector(selector).getBoundingClientRect();return rotated?{x:r.y-root.y,y:root.right-r.right,width:r.height,height:r.width}:{x:r.x-root.x,y:r.y-root.y,width:r.width,height:r.height};};
+    return{root:{width:main.clientWidth,height:main.clientHeight},scene:rect('#sceneWrap'),left:rect('#leftHud'),right:rect('#instrumentPanel'),hud:{station:rect('.station-totem'),route:rect('#routeMap'),tools:rect('.essential-tools'),routeInstrument:rect('#instrumentPanel .route-hud'),speed:rect('#instrumentPanel .speed-display')}};
    });
    for(const [actual,expected] of [[layout.scene.x,0],[layout.scene.y,0],[layout.scene.width,layout.root.width],[layout.scene.height,layout.root.height]])assert(Math.abs(actual-expected)<=1,'The scene must fill the logical viewport: '+JSON.stringify(layout));
-   assert(layout.left.x+layout.left.width<layout.right.x,'Auxiliary HUD must remain left of driving instruments: '+JSON.stringify(layout));
+   const hudCollisions=[];
+   for(const left of ['station','route','tools'])for(const right of ['routeInstrument','speed']){
+    const a=layout.hud[left],b=layout.hud[right],area=Math.max(0,Math.min(a.x+a.width,b.x+b.width)-Math.max(a.x,b.x))*Math.max(0,Math.min(a.y+a.height,b.y+b.height)-Math.max(a.y,b.y));
+    if(area>0)hudCollisions.push({left,right,area});
+   }
+   assert.deepEqual(hudCollisions,[],'Station, route and main controls must stay clear of each instrument in two dimensions: '+JSON.stringify(layout));
    let heroMapOverlap=null;
    if(size.layout==='landscape'&&size.width>size.height){
     const hero=await page.evaluate(()=>__trainDriver.test.heroRect()),map=await page.locator('#routeMap').boundingBox();
@@ -72,7 +96,7 @@ fs.mkdirSync(out,{recursive:true});
     assert.equal(heroMapOverlap,0,'Recommended train framing must stay clear of the route map: '+JSON.stringify({size,hero,map}));
    }
    await page.screenshot({path:out+'/'+size.width+'-'+size.height+'-'+size.layout+'.png',timeout:30000});
-   checks.push({size,distanceFont,minimumDistanceFont,controlsInBounds:true,toolbarOverlap:overlap,heroMapOverlap,...layout});
+   checks.push({size,distanceFont,minimumDistanceFont,controlsInBounds:true,settingsTools,hudCollisions,heroMapOverlap,...layout});
   }
 
   // An old release's locked views migrate once to this release's defaults. Every
@@ -101,17 +125,16 @@ fs.mkdirSync(out,{recursive:true});
   await resume();
 
   for(const mode of MODES){
-   await page.locator('#'+mode+'View').click();await freeze();
+   await control(mode+'View');await freeze();
    await assertView(mode,recommended(mode),'Unrestored '+mode+' uses the recommendation');
-   assert.equal(await page.locator('#restoreView').isVisible(),true);
-   await inBounds('restoreView');
-   await assertToolsClear('Saved-view return must not overlap the game toolbar on the small screen');
+   await assertRestoreVisible(true);
+   await assertToolsClear('Saved-view return remains reachable inside settings on the small screen');
    // Recommending an already-default camera must not overwrite its pending backup.
-   await page.locator('#resetView').click();await freeze();
+   await control('resetView');await freeze();
    assert.deepEqual((await stored()).backups[mode],legacy.profiles[mode]);
-   await page.locator('#restoreView').click();await freeze();
+   await control('restoreView');await freeze();
    await assertView(mode,legacy.profiles[mode],'Restored '+mode+' is exact');
-   assert.equal(await page.locator('#restoreView').isVisible(),false);
+   await assertRestoreVisible(false);
    assert.equal(Object.hasOwn((await stored()).backups,mode),false);
    assert.deepEqual((await stored()).archivedBackups,expectedArchives);
    const restored=await stored();
@@ -121,13 +144,12 @@ fs.mkdirSync(out,{recursive:true});
    await resume();
    await assertView(mode,legacy.profiles[mode],'Continuing the saved game preserves restored '+mode);
    // The new recommendation remains reversible after using an old locked view.
-   await page.locator('#resetView').click();await freeze();
+   await control('resetView');await freeze();
    await assertView(mode,recommended(mode),'Explicit recommendation for '+mode);
    assert.deepEqual((await stored()).backups[mode],legacy.profiles[mode]);
-   assert.equal(await page.locator('#restoreView').isVisible(),true);
-   await inBounds('restoreView');
-   await assertToolsClear('Recommended-view return must stay clear of the game toolbar');
-   await page.locator('#restoreView').click();await freeze();
+   await assertRestoreVisible(true);
+   await assertToolsClear('Recommended-view return remains reachable inside settings');
+   await control('restoreView');await freeze();
    await assertView(mode,legacy.profiles[mode],'Explicit recommendation undo for '+mode);
   }
 
@@ -136,14 +158,14 @@ fs.mkdirSync(out,{recursive:true});
   const adjusted={};
   for(const mode of MODES){
    await page.setViewportSize(mode==='landscape'?{width:844,height:390}:{width:390,height:700});
-   await page.locator('#'+mode+'View').click();await freeze();
-   await page.locator('#lockView').click();
+   await control(mode+'View');await freeze();
+   await control('lockView');
    assert.equal((await state()).viewSettings.locked,false);
    const before=profile((await state()).viewSettings),scene=await page.locator('#gameScene').boundingBox(),x=scene.x+scene.width*.57,y=scene.y+scene.height*.55;
    await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+35,y-20,{steps:5});await page.mouse.up();
    await page.mouse.wheel(0,-100);
    await page.waitForFunction(zoom=>__trainDriver.getState().viewSettings.zoom>zoom,before.zoom,{polling:50});
-   await page.locator('#lockView').click();await freeze();
+   await control('lockView');await freeze();
    adjusted[mode]=profile((await state()).viewSettings);
    assert.notDeepEqual(adjusted[mode].position,before.position,'Pointer input must create a new '+mode+' view');
    assert(adjusted[mode].zoom>before.zoom,'Wheel input must change '+mode+' zoom');
@@ -156,7 +178,7 @@ fs.mkdirSync(out,{recursive:true});
    await resume();
   }
   for(const mode of MODES){
-   await page.locator('#'+mode+'View').click();await freeze();
+   await control(mode+'View');await freeze();
    await assertView(mode,adjusted[mode],'Independent adjusted '+mode+' remains saved');
   }
   assert.deepEqual((await stored()).backups,{});
@@ -176,6 +198,8 @@ fs.mkdirSync(out,{recursive:true});
    // rendered vectors have this tolerance; saved vectors and all flags are exact.
    for(const field of ['position','target'])for(let i=0;i<3;i++)assert(Math.abs(current[field][i]-expected[field][i])<1e-9,label+' '+field+'['+i+']: '+JSON.stringify(current[field]));
    for(const field of ['zoom','manual','locked'])assert.equal(current[field],expected[field],label+' '+field);
+   assert.equal(Object.hasOwn(current,'projection'),Object.hasOwn(expected,'projection'),label+' projection metadata presence');
+   if(Object.hasOwn(expected,'projection'))assert.deepEqual(current.projection,expected.projection,label+' projection metadata');
    assert.deepEqual(current.profiles[mode],expected,label+' runtime automatic baseline');
    assert.deepEqual((await stored()).profiles[mode],expected,label+' persisted automatic baseline');
   };
@@ -189,18 +213,18 @@ fs.mkdirSync(out,{recursive:true});
   assert.deepEqual((await stored()).backups,legacyAutomatic.profiles,'Automatic profiles must be backed up with both flags still false');
   await resume();
   for(const mode of MODES){
-   await page.locator('#'+mode+'View').click();await freeze();
+   await control(mode+'View');await freeze();
    await assertView(mode,recommended(mode),'Unrestored automatic '+mode+' starts with the new recommendation');
-   await page.locator('#restoreView').click();await freeze();
+   await control('restoreView');await freeze();
    await assertAutomatic(mode,'Restored automatic '+mode+' survives the actual snap draw');
-   assert.equal(await page.locator('#restoreView').isVisible(),false);
+   await assertRestoreVisible(false);
    // An explicitly requested new frame must remain reversible for old automatic
    // profiles, even though neither manual nor locked is set.
-   await page.locator('#resetView').click();await freeze();
+   await control('resetView');await freeze();
    await assertView(mode,recommended(mode),'Automatic '+mode+' can select the new recommendation');
    assert.deepEqual((await stored()).backups[mode],legacyAutomatic.profiles[mode],'Recommending again must retain the old automatic frame');
-   assert.equal(await page.locator('#restoreView').isVisible(),true);
-   await page.locator('#restoreView').click();await freeze();
+   await assertRestoreVisible(true);
+   await control('restoreView');await freeze();
    await assertAutomatic(mode,'Automatic '+mode+' recommendation undo');
    const automaticRestored=await stored();
    await reopen();await freeze();
@@ -215,7 +239,7 @@ fs.mkdirSync(out,{recursive:true});
   }
   await assertAutomaticProfiles('Both restored automatic frames are independent');
   await page.setViewportSize({width:844,height:390});
-  await page.locator('#landscapeView').click();await freeze();
+  await control('landscapeView');await freeze();
   const beforeService=await page.evaluate(()=>__trainDriver.test.session().phase);
   const serviceLocked=await page.evaluate(()=>{const g=__trainDriver.test.session();g.phase='boarding';__trainDriver.test.render();return g.serviceLocked();});
   assert.equal(serviceLocked,true,'The service fixture must exercise the real automatic close-camera branch');
@@ -225,15 +249,16 @@ fs.mkdirSync(out,{recursive:true});
    for(const [field,expected] of [['position',[-2,13,20]],['target',[-14.2,1.2,1.4]]])for(let i=0;i<3;i++)assert(Math.abs(current[field][i]-expected[i])<1e-9,label+' '+field);
    assert.equal(current.zoom,legacyAutomatic.profiles.landscape.zoom,label+' keeps the saved zoom');
    assert.equal(current.manual,false,label+' is still automatic');assert.equal(current.locked,false,label+' is still unlocked');
+   assert.equal(Object.hasOwn(current,'projection'),false,label+' keeps legacy projection metadata absent');
    await assertAutomaticProfiles(label+' does not persist the temporary close-up');
   };
   await assertAutomaticClose('Automatic boarding close-up');
   // Layout changes during service must never capture the transient close-up as
   // the landscape wide baseline. Portrait keeps its own automatic frame.
-  await page.locator('#portraitView').click();await freeze();
+  await control('portraitView');await freeze();
   await assertAutomatic('portrait','Portrait remains at its own frame during boarding');
   await assertAutomaticProfiles('Switching out of the close-up preserves both baselines');
-  await page.locator('#landscapeView').click();await freeze();
+  await control('landscapeView');await freeze();
   await assertAutomaticClose('Returning to landscape during boarding');
   await page.evaluate(()=>{__trainDriver.test.session().phase='doors-closing';__trainDriver.test.render();});
   await assertAutomatic('landscape','Closing the doors returns to the restored old wide frame');
@@ -242,7 +267,7 @@ fs.mkdirSync(out,{recursive:true});
   await assertAutomatic('landscape','Leaving service retains the restored old wide frame');
   await assertAutomaticProfiles('Service transitions never overwrite the saved automatic frames');
   for(const mode of MODES){
-   await page.locator('#'+mode+'View').click();await freeze();
+   await control(mode+'View');await freeze();
    await page.evaluate(()=>__trainDriver.test.start({seed:'AUTOMATIC-VIEW-RESTART',durationMinutes:10}));
    await assertAutomatic(mode,'Restart immediately preserves automatic '+mode);
    await freeze();

@@ -2,6 +2,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const {chromium, webkit} = require('playwright');
+const {clickControl, openSettings, closeSettings} = require('./browser-controls.cjs');
 const engine = process.env.TRAIN_BROWSER || 'chromium';
 assert(['chromium', 'webkit'].includes(engine), 'TRAIN_BROWSER must be chromium or webkit');
 const out = process.env.TRAIN_TOUCH_QA_DIR || 'driving-touch-' + engine;
@@ -72,8 +73,8 @@ fs.mkdirSync(out, {recursive: true});
   };
   const tap = async id => {
     progress('tap-begin', {id});
-    const p = await center('#' + id), begin = await page.evaluate(() => __touchQaEvents.length);
-    await page.touchscreen.tap(p.x, p.y);
+    const begin = await page.evaluate(() => __touchQaEvents.length);
+    await clickControl(page, id, {touch: true});
     assert((await eventsSince(begin)).some(e => e.type === 'pointerdown' && e.pointerType === 'touch' && e.id === id), phase + ': trusted native touch reaches ' + id);
     progress('tap-done', {id});
   };
@@ -147,7 +148,7 @@ fs.mkdirSync(out, {recursive: true});
     assert.deepEqual(audit.failures, [], label + ': all non-editable UI is protected');
     assert.deepEqual(audit.textFailures, [], label + ': text-node event targets are protected');
     assert(audit.nodeCount > 80, 'Audit covers the whole game, not only driving controls');
-    for (const id of ['startGame', 'continueSaved', 'pause', 'resume', 'restartPaused', 'restart', 'playAgain', 'newRoute', 'saveReplay']) assert(audit.buttonIds.includes(id), label + ': missing button ' + id);
+    for (const id of ['startGame', 'continueSaved', 'pause', 'openSettings', 'closeSettings', 'resume', 'restartPaused', 'restart', 'playAgain', 'newRoute', 'saveReplay']) assert(audit.buttonIds.includes(id), label + ': missing button ' + id);
     progress('ui-audit-done', {label, nodeCount: audit.nodeCount});
   };
   const auditEditableExceptions = async () => {
@@ -157,7 +158,7 @@ fs.mkdirSync(out, {recursive: true});
       host.innerHTML = '<textarea id="touchQaTextarea">Editable text</textarea><div contenteditable="true"><span id="touchQaEditableChild">Editable child text</span></div><div id="touchQaNonEditable" contenteditable="false">UI text</div>';
       document.querySelector('#startScreen .sheet').append(host);
       try {
-        return ['seed', 'duration', 'touchQaTextarea', 'touchQaEditableChild', 'touchQaNonEditable'].map(id => {
+        return ['seed', 'duration', 'renderQuality', 'touchQaTextarea', 'touchQaEditableChild', 'touchQaNonEditable'].map(id => {
           const el = document.getElementById(id), style = getComputedStyle(el), events = {};
           for (const type of ['selectstart', 'contextmenu']) {
             const event = new Event(type, {bubbles: true, cancelable: true});
@@ -239,6 +240,11 @@ fs.mkdirSync(out, {recursive: true});
       await page.setViewportSize({width: size.width, height: size.height});
       await tap(size.layout + 'View');
       await page.waitForTimeout(120);
+      await openSettings(page, {touch: true});
+      await freezeCheck();
+      await auditUi(phase + '-settings-screen');
+      await closeSettings(page, {touch: true});
+      assert.equal((await state()).paused, false, 'Closing settings resumes a running journey');
       await auditUi(phase);
       assert.equal(await page.locator('#accelerate').evaluate(el => getComputedStyle(el).touchAction), 'manipulation');
       await tap('accelerate'); await tap('accelerate');
@@ -265,7 +271,10 @@ fs.mkdirSync(out, {recursive: true});
       assert.equal(await page.locator('#pauseScreen').isVisible(), false);
       await tap('pause'); await tap('restartPaused');
       await freshSameRoute(routeSeed);
-      checks.push({size, allGameUiProtected: true, buttonTouchAction: 'manipulation', nativeTaps: true, holdBrake: true, actualDeceleration: true, releaseOutside: true, pauseFreezesSimulation: true, resumeAdvances: true, sameRouteRestart: true, selectionEmpty: true});
+      await tap('restart');
+      await freshSameRoute(routeSeed);
+      assert.equal(await page.locator('#settingsScreen').isVisible(), false, 'Settings restart dismisses the panel');
+      checks.push({size, allGameUiProtected: true, buttonTouchAction: 'manipulation', nativeTaps: true, holdBrake: true, actualDeceleration: true, releaseOutside: true, pauseFreezesSimulation: true, resumeAdvances: true, sameRouteRestart: true, settingsRestart: true, settingsPauseFreezesSimulation: true, selectionEmpty: true});
     }
     enterPhase('long-hold');
     if (engine === 'chromium') {
@@ -382,7 +391,7 @@ fs.mkdirSync(out, {recursive: true});
     const result = {
       engine, status: 'passed', url: base, productionRuntimeWithoutFixture: true,
       fixtureScope: 'Only deterministic timeout-summary preparation, after production driving and saved-journey checks pass',
-      cssScope: 'All non-editable UI inside driverGame, including start, pause and summary screens',
+      cssScope: 'All non-editable UI inside driverGame, including start, settings, pause and summary screens',
       editableExceptions, seedSelectionAndReplacement: true, durationOptions: ['15', '20', '10'],
       iosCalloutRulePresent: true, realIosSystemMenuValidated: false,
       nativeTouchHold: engine === 'chromium' ? 'Chromium CDP touchStart / touchEnd / touchCancel on pause, restart, acceleration label and brake' : 'WebKit trusted native taps plus held pointer and outside release; native iOS touch hold/system menu is not exposed by Playwright',
