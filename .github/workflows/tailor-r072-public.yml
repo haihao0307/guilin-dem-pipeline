@@ -1,0 +1,32 @@
+name: Tailor R072 public verification
+on:
+  push:
+    branches: [fix/tailor-r07-speed-stability-20261008]
+    paths:
+      - '.github/workflows/tailor-r072-public.yml'
+      - '.github/scripts/tailor-r072-public.py'
+permissions:
+  contents: read
+jobs:
+  public-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPECTED_SOURCE: 39cbf125ed6ec66e821a0188959017f11ea03184
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+          fetch-depth: 1
+      - name: Install browser
+        run: |
+          python -m pip install playwright==1.56.0
+          python -m playwright install chromium --with-deps
+      - name: Check actual public bytes and complete live garment trials
+        run: python .github/scripts/tailor-r072-public.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r072-public-evidence
+          path: public-r072-evidence
+          retention-days: 14
