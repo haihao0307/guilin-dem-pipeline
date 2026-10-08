@@ -1,0 +1,43 @@
+name: Review 36 native character extremes in three views
+on:
+  push:
+    branches: [qa/human-character-r02-20261008]
+permissions:
+  contents: read
+jobs:
+  render-and-measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+            kaopu-mhr-workbench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install pinned real-browser test dependency
+        run: |
+          npm install --prefix .human-qa --no-save --ignore-scripts --no-audit --no-fund playwright@1.55.0
+          ./.human-qa/node_modules/.bin/playwright install --with-deps chromium
+      - name: Serve exact candidate
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/human-r02-http.log 2>&1 &
+          sleep 2
+      - name: Render every front, side and body view without changing the accepted core
+        env:
+          NODE_PATH: ${{ github.workspace }}/.human-qa/node_modules
+          HUMAN_QA_URL: http://127.0.0.1:8765/kaopu-unified-human-workbench/
+          HUMAN_R2_OUT: ${{ github.workspace }}/human-character-r02-results
+        run: node kaopu-unified-human-workbench/tests/character-r02-browser.cjs
+      - name: Keep the full 108-view evidence and actual parameters
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: human-character-r02-${{ github.sha }}
+          path: human-character-r02-results/
+          if-no-files-found: warn
