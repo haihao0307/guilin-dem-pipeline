@@ -1,4 +1,4 @@
-name: QA unified human presets and surface
+name: QA published unified human presets and surface
 on:
   push:
     branches: [qa/human-presets-skin-20261008]
@@ -33,14 +33,14 @@ jobs:
       - name: Exercise native presets and capture the real model
         env:
           NODE_PATH: ${{ github.workspace }}/.human-qa/node_modules
-          HUMAN_QA_URL: http://127.0.0.1:8765/kaopu-unified-human-workbench/
+          HUMAN_QA_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/
           HUMAN_QA_OUT: ${{ github.workspace }}/human-presets-qa-results
         run: node kaopu-unified-human-workbench/tests/presets-browser.cjs
       - name: Exercise material semantics on the same current geometry
         if: always()
         env:
           NODE_PATH: ${{ github.workspace }}/.human-qa/node_modules
-          HUMAN_QA_URL: http://127.0.0.1:8765/kaopu-unified-human-workbench/
+          HUMAN_QA_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/
           SKIN_QA_OUT: ${{ github.workspace }}/human-skin-qa-results
         run: node kaopu-unified-human-workbench/tests/skin-browser.cjs
       - name: Keep screenshots and numerical report
