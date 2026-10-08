@@ -1,0 +1,30 @@
+name: Tailor R06 public delivery verification
+on:
+  push:
+    branches: [fix/tailor-paper-to-cloth-20261008]
+    paths:
+      - '.github/workflows/tailor-r06-public.yml'
+      - '.github/scripts/tailor-r06-public.py'
+permissions:
+  contents: read
+jobs:
+  public-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+          fetch-depth: 1
+      - name: Browser dependencies
+        run: |
+          python -m pip install playwright==1.56.0
+          python -m playwright install chromium --with-deps
+      - name: Verify actual public bytes, rendering and interaction
+        run: python .github/scripts/tailor-r06-public.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r06-public-delivery-evidence
+          path: public-evidence
+          retention-days: 7
