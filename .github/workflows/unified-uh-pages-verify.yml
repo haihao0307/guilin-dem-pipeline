@@ -1,0 +1,45 @@
+name: UH Skin Public Pages Verification
+on:
+  push:
+    branches: [feature/unified-human-skin-uh-r02-20261008]
+    paths: [.github/workflows/unified-uh-pages-verify.yml]
+permissions:
+  contents: read
+jobs:
+  public-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench/skin-r02
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Isolated browser
+        run: |
+          mkdir -p /tmp/uh-tools /tmp/uh-pages-evidence
+          cd /tmp/uh-tools
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund playwright@1.55.1
+          npx playwright install --with-deps chromium
+      - name: Wait for this specific Pages deployment
+        run: |
+          for n in $(seq 1 72); do
+            if curl --silent --fail --max-time 15 "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/skin-r02/?deployment=23f1f408f961749c49e9747d45072c761825b158" | grep -q '29d75e6a6e4e2627578d61e898461b968e3dd598'; then
+              echo 'Correct pinned entry available'; exit 0
+            fi
+            sleep 5
+          done
+          echo 'Same-site deployment not yet available'; exit 1
+      - name: Check actual public rendering and control behavior
+        env:
+          NODE_PATH: /tmp/uh-tools/node_modules
+        run: node kaopu-unified-human-workbench/skin-r02/qa-pages.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: uh-skin-pages-evidence
+          path: /tmp/uh-pages-evidence
+          retention-days: 7
