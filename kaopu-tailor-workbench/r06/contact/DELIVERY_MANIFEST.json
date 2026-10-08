@@ -1,16 +1,197 @@
 {
   "version": "R06.3",
-  "sourceCommit": "ee0b9fad5777fb882213e04a40a50fa04e5679e9",
+  "sourceCommit": "29213e18f91e4cfebd55190eb0a16045b7ea7e2f",
   "sourcePR": 176,
   "originalR062Commit": "80ecce4c6d3d9ac644d78cdbba56cadc77c5657f",
   "publishedFrom": "independent draft branch; no merge",
   "runtime": "live original f64 XPBD cloth plus collision-only kernel; no cached solved garment",
   "physicalFitAccepted": false,
-  "sharedDependenciesIdentical": true,
+  "contactIntervalSubsteps": 1,
+  "bodyAndOriginalClothKernelUnchanged": true,
+  "sharedDependencyChecks": [
+    {
+      "dir": "unified",
+      "differences": []
+    },
+    {
+      "dir": "unified/physics",
+      "differences": []
+    },
+    {
+      "dir": "catalogue",
+      "differences": []
+    },
+    {
+      "dir": "garments-r04/assets",
+      "differences": []
+    },
+    {
+      "dir": "garment-pattern-catalogue-r01/browser",
+      "differences": []
+    },
+    {
+      "dir": "r06/assets",
+      "differences": []
+    }
+  ],
+  "sharedDependencies": [
+    {
+      "path": "kaopu-tailor-workbench/unified/LifeEpoch.mjs",
+      "gitBlobSha": "10cff14a1f63a1f32a24f9df2414ed17b5e0bcfe"
+    },
+    {
+      "path": "kaopu-tailor-workbench/unified/SOURCES.md",
+      "gitBlobSha": "8086c4b447428436bd71d2a5d16ef0a92a031417"
+    },
+    {
+      "path": "kaopu-tailor-workbench/unified/app.mjs",
+      "gitBlobSha": "645fcb1b97c290af1317481ace4b38adccaf6b85"
+    },
+    {
+      "path": "kaopu-tailor-workbench/unified/cases.mjs",
+      "gitBlobSha": "a643485acaed0de152ff5eea3394dc8be6c7afde"
+    },
+    {
+      "path": "kaopu-tailor-workbench/unified/style.css",
+      "gitBlobSha": "1b46a63eea652473ad11e8f4d2c52619d55fdbae"
+    },
+    {
+      "path": "kaopu-tailor-workbench/unified/viewer.mjs",
+      "gitBlobSha": "8decb8ab15b35dbd24d1467104aef4dfac3405b9"
+    },
+    {
+      "path": "kaopu-tailor-workbench/unified/worker.bundle.mjs",
+      "gitBlobSha": "5361147d8bbf28c71f9bea72e82da3323de734a9"
+    },
+    {
+      "path": "kaopu-tailor-workbench/unified/worker.mjs",
+      "gitBlobSha": "809a9dae6e7fccee1970a7258fa12a0bb1ac7847"
+    },
+    {
+      "path": "kaopu-tailor-workbench/unified/physics/fast-solver.mjs",
+      "gitBlobSha": "fc8aaced6458e4f8377302f9e1fcae22800396d0"
+    },
+    {
+      "path": "kaopu-tailor-workbench/unified/physics/kernel.ts",
+      "gitBlobSha": "0bd051aedd57d75c94bc3d9b1a44dc37e3fc42a4"
+    },
+    {
+      "path": "kaopu-tailor-workbench/unified/physics/kernel.wasm",
+      "gitBlobSha": "c8cbefc4477a16b38af0b06765ac7ebe67a6c4bf"
+    },
+    {
+      "path": "kaopu-tailor-workbench/unified/physics/reference-optimized.mjs",
+      "gitBlobSha": "cbef1b2971d05d98edd1e50fb6a66644ef0ea477"
+    },
+    {
+      "path": "kaopu-tailor-workbench/catalogue/README.md",
+      "gitBlobSha": "082ff058f73554d468bd2ee89ab016a10ff7b13d"
+    },
+    {
+      "path": "kaopu-tailor-workbench/catalogue/catalogue-controls.mjs",
+      "gitBlobSha": "4c5a2ce3936192c1a2739863a87492c3c78bfbc9"
+    },
+    {
+      "path": "kaopu-tailor-workbench/catalogue/catalogue-viewer.mjs",
+      "gitBlobSha": "01a7a77b84dd9e43b801b5328539fd666d7b4fed"
+    },
+    {
+      "path": "kaopu-tailor-workbench/catalogue/paper-preview.mjs",
+      "gitBlobSha": "dced995fbd846bc0b1580c3c243fbf48e99d3acd"
+    },
+    {
+      "path": "kaopu-tailor-workbench/catalogue/r06-workbench-app.mjs",
+      "gitBlobSha": "f0590886d3b41db827b8b6497a73160600a69bb0"
+    },
+    {
+      "path": "kaopu-tailor-workbench/catalogue/r06-workbench-style.css",
+      "gitBlobSha": "b22b865d07453acfee28231f6c49ae4dee03422a"
+    },
+    {
+      "path": "kaopu-tailor-workbench/catalogue/r06-worker.bundle.mjs",
+      "gitBlobSha": "d00432fee4f86af4804fae59ad8e986373c7c9b9"
+    },
+    {
+      "path": "kaopu-tailor-workbench/catalogue/workbench-app.mjs",
+      "gitBlobSha": "ea2049710b7b6cbc97de31f87e898513de0c14da"
+    },
+    {
+      "path": "kaopu-tailor-workbench/catalogue/workbench-style.css",
+      "gitBlobSha": "91305ea07d3abfe64553a2f80cf9c5bfb41d2b46"
+    },
+    {
+      "path": "kaopu-tailor-workbench/catalogue/workbench-worker.bundle.mjs",
+      "gitBlobSha": "3177838ad68df9fcce2a0bac8624f34e5371a7cf"
+    },
+    {
+      "path": "kaopu-tailor-workbench/garments-r04/assets/baseline-audit.json",
+      "gitBlobSha": "5100c3b020c5dee153f8600cbaa75d4e1873835c"
+    },
+    {
+      "path": "kaopu-tailor-workbench/garments-r04/assets/body-anny-adult.json",
+      "gitBlobSha": "79e167ce9f347b3d0d2687efbbe5541c48cae181"
+    },
+    {
+      "path": "kaopu-tailor-workbench/garments-r04/assets/body-anny-adult.sdfd.gz",
+      "gitBlobSha": "14e77d9e9ebe8fca599f22ed2cb61e2741f31993"
+    },
+    {
+      "path": "kaopu-tailor-workbench/garments-r04/assets/body-sdf-grid.json",
+      "gitBlobSha": "3534b8dbfc3044047bb98811d7118e8d18e5a3d7"
+    },
+    {
+      "path": "kaopu-tailor-workbench/garments-r04/assets/measurements.json",
+      "gitBlobSha": "66335e34a2c291c9955c14136dfdd46c7c0eae93"
+    },
+    {
+      "path": "kaopu-tailor-workbench/garments-r04/assets/teacher-paper-base.json",
+      "gitBlobSha": "06745866c675a5ecb5a5f560ea2713f9b577c86d"
+    },
+    {
+      "path": "kaopu-tailor-workbench/garments-r04/assets/verified-own-solve.json",
+      "gitBlobSha": "f95b6f2ca854096b76637d6303461b949024108f"
+    },
+    {
+      "path": "kaopu-tailor-workbench/garment-pattern-catalogue-r01/browser/parameter-schema.json",
+      "gitBlobSha": "1cc637c123086a6186700ed38739c38d7b5968a2"
+    },
+    {
+      "path": "kaopu-tailor-workbench/garment-pattern-catalogue-r01/browser/pattern-engine.mjs",
+      "gitBlobSha": "337db0de3c5bef6efb564bf560feb96b2342b10a"
+    },
+    {
+      "path": "kaopu-tailor-workbench/garment-pattern-catalogue-r01/browser/pattern-generator.mjs",
+      "gitBlobSha": "bf670191e3f8b4487b4bce60d321922e48556d55"
+    },
+    {
+      "path": "kaopu-tailor-workbench/garment-pattern-catalogue-r01/browser/pattern-runtime.zip",
+      "gitBlobSha": "a2d332923408753d621ad60bf94c7708da61d4b2"
+    },
+    {
+      "path": "kaopu-tailor-workbench/garment-pattern-catalogue-r01/browser/pattern-worker.js",
+      "gitBlobSha": "fdeb35aadd2265707c3a318a5860b5e3a8cac4ce"
+    },
+    {
+      "path": "kaopu-tailor-workbench/garment-pattern-catalogue-r01/browser/runtime-manifest.json",
+      "gitBlobSha": "fcdfe5f4d37e58e3afda211aa5fc00a8042a1439"
+    },
+    {
+      "path": "kaopu-tailor-workbench/garment-pattern-catalogue-r01/browser/styles.json",
+      "gitBlobSha": "a531e37dce1deb3319078c0f5813a314fd35a664"
+    },
+    {
+      "path": "kaopu-tailor-workbench/r06/assets/body-full.sdfd.gz",
+      "gitBlobSha": "f4a4a24ba2c5fc030da2c1a4c90eba66721465a8"
+    },
+    {
+      "path": "kaopu-tailor-workbench/r06/assets/body-sdf-grid.json",
+      "gitBlobSha": "614ac9abfa4558f6c22d8ee9562d87513f204f82"
+    }
+  ],
   "files": [
     {
       "path": "kaopu-tailor-workbench/r06/contact/README.md",
-      "gitBlobSha": "67a24c76c6d4d315858af06d858f836e2f3d74f6"
+      "gitBlobSha": "485b56db2cd967fee115cbb7c8b37bf5333ba16f"
     },
     {
       "path": "kaopu-tailor-workbench/r06/contact/contact-kernel.ts",
@@ -22,11 +203,11 @@
     },
     {
       "path": "kaopu-tailor-workbench/r06/contact/contact.test.mjs",
-      "gitBlobSha": "1b61d0b01461cfabec9e4a7eb9505f2e0e52eeef"
+      "gitBlobSha": "d34b79055c666af7ebde6e934eab08a5cec7d1b5"
     },
     {
       "path": "kaopu-tailor-workbench/r06/contact/fast-contact.mjs",
-      "gitBlobSha": "e407870d494b295087e2e5ee193a60b13b9d044c"
+      "gitBlobSha": "c8b6636c6fa53e5803511906e93022f113c420ee"
     },
     {
       "path": "kaopu-tailor-workbench/r06/contact/index.html",
@@ -41,8 +222,12 @@
       "gitBlobSha": "5875915aff9a466f592531fb726b994274e7e77d"
     },
     {
+      "path": "kaopu-tailor-workbench/r06/contact/support-path.mjs",
+      "gitBlobSha": "d8c1172efca48827c9f3cb0e0f79bb1aa9492d47"
+    },
+    {
       "path": "kaopu-tailor-workbench/r06/contact/swept-contact.mjs",
-      "gitBlobSha": "c1fe089905e0e830a7f0ec130f67f0b3dd5879bc"
+      "gitBlobSha": "3cc46d0ca255d4ae0644240296592c394192cdb0"
     },
     {
       "path": "kaopu-tailor-workbench/catalogue/r06-contact-workbench-app.mjs",
@@ -50,7 +235,7 @@
     },
     {
       "path": "kaopu-tailor-workbench/catalogue/r06-contact-worker.bundle.mjs",
-      "gitBlobSha": "46096ede403541afd082438352088afabd9c4c56"
+      "gitBlobSha": "8772cf0baddb843496ad763f97e4f1b4bb2595c3"
     }
   ]
 }

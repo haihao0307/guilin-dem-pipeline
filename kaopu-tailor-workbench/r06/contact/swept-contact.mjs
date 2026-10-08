@@ -94,5 +94,5 @@ export class SweptContact {
   for(let e=0;e<l.meshEdges.length;e++){const a=l.meshEdges[e],seen=new Set();this.cells(this.eb[e],key=>{for(const f of this.edgeHash.get(key)||[]){if(f<=e||seen.has(f))continue;seen.add(f);const b=l.meshEdges[f];if(!this.overlaps(this.eb[e],this.eb[f])||this.exclude(a,b))continue;this.contact([...a,...b],false);}});}
   this.capture();
  }
- report(){return{kind:'swept linear vertex-face and edge-edge conservative advancement',thicknessMm:this.h*1000,corrections:this.corrections,bodySweptHits:this.bodySweptHits||0,contactIntervalSubsteps:6,sweptHits:this.sweptHits,discreteHits:this.discreteHits,iterationLimitEvents:this.unresolved,nonlinearContinuousCollisionCertified:false,skippedPrimitives:0};}
+ report(){return{kind:'swept linear vertex-face and edge-edge conservative advancement',thicknessMm:this.h*1000,corrections:this.corrections,bodySweptHits:this.bodySweptHits||0,contactIntervalSubsteps:1,sweptHits:this.sweptHits,discreteHits:this.discreteHits,iterationLimitEvents:this.unresolved,nonlinearContinuousCollisionCertified:false,skippedPrimitives:0};}
 }
