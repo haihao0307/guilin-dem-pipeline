@@ -13,10 +13,10 @@ export function createMorningAtmosphere(scene,renderer){
   scene.background=new THREE.Color(p.skyHorizon);scene.fog=new THREE.Fog(p.fog,p.fogNear,p.fogFar);
   renderer.toneMappingExposure=p.exposure;
   const sky=new THREE.Mesh(new THREE.SphereGeometry(270,32,16),new THREE.ShaderMaterial({
-    side:THREE.BackSide,depthWrite:false,fog:false,
+    side:THREE.BackSide,depthWrite:false,fog:false,toneMapped:false,
     uniforms:{top:{value:new THREE.Color(p.skyTop)},horizon:{value:new THREE.Color(p.skyHorizon)}},
     vertexShader:'varying vec3 vDirection; void main(){vDirection=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
-    fragmentShader:'uniform vec3 top; uniform vec3 horizon; varying vec3 vDirection; void main(){float y=normalize(vDirection).y; float t=smoothstep(.01,.70,y); gl_FragColor=vec4(mix(horizon,top,t),1.0);\n #include <tonemapping_fragment>\n #include <colorspace_fragment>\n }'
+    fragmentShader:'uniform vec3 top; uniform vec3 horizon; varying vec3 vDirection; void main(){float y=normalize(vDirection).y; float t=smoothstep(.01,.70,y); gl_FragColor=vec4(mix(horizon,top,t),1.0);\n #include <colorspace_fragment>\n }'
   }));sky.name='Original procedural dawn sky';sky.renderOrder=-10;root.add(sky);
   const ambient=new THREE.HemisphereLight(p.skyFill,p.groundFill,1.65);root.add(ambient);
   const sun=new THREE.DirectionalLight(p.sun,2.35);sun.position.fromArray(p.sunPosition);sun.target.position.set(-8,0,0);sun.castShadow=true;

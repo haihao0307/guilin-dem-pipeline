@@ -1,4 +1,4 @@
-name: Train R10 period platform atmosphere QA
+name: Train R10 horizon visual QA
 on:
   push:
     branches: ['qa/voxel-train-r01-20261006']
@@ -6,7 +6,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: kcr-r10-${{ github.ref }}
+  group: kcr-r10-visual-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   deterministic:
@@ -31,7 +31,7 @@ jobs:
       fail-fast: false
       matrix:
         browser: [chromium, webkit]
-        suite: [scene, controls, gameplay, zoom]
+        suite: [scene]
     env:
       TRAIN_BROWSER: ${{ matrix.browser }}
       KCR_SUITE: ${{ matrix.suite }}

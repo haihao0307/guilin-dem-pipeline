@@ -113,7 +113,7 @@ function roomShell(b, staff) {
     b.box(x,1.08,0,.12,.52,1.94,plaster);
     b.box(x,2.60,0,.12,.20,1.94,plaster);
     // Joined corner posts carry the entire roof; no deliberately removed wall.
-    for(const z of [-.965,.965])b.box(x,1.735,z,.18,1.83,.18,trim);
+    for(const z of [-.96,.96])b.box(x,1.735,z,.18,1.83,.18,trim);
     b.box(x,1.355,0,.23,.075,1.78,trim);
     b.box(x,2.545,0,.22,.075,1.78,trim);
     if(side<0)b.box(x,1.95,0,.16,1.11,.036,trim);
@@ -131,7 +131,7 @@ function roomShell(b, staff) {
     });
     // Shallow roof courses give the intact roof a quiet period texture.
     for(const z of [-.87,-.47,-.07,.33,.73,1.11])b.box(side*.83,2.971,z,1.79,.025,.018,staff?0x736852:0x866e55,-side*.255);
-    for(const z of [-1.04,1.14])b.box(side*.83,2.907,z,1.81,.13,.035,trim,-side*.255);
+    for(const z of [-1.0275,1.14])b.box(side*.83,2.907,z,1.81,.13,.035,trim,-side*.255);
     b.box(side*1.70,2.695,.05,.065,.09,2.20,roof);
   }
   b.box(0,3.166,.05,.12,.115,2.20,roof);
