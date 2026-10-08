@@ -1,0 +1,38 @@
+name: Tailor paper-to-cloth R06
+on:
+  push:
+    branches: [fix/tailor-paper-to-cloth-20261008]
+    paths:
+      - '.github/workflows/tailor-paper-to-cloth-r06.yml'
+      - 'kaopu-tailor-workbench/**'
+permissions:
+  contents: read
+concurrency:
+  group: tailor-paper-to-cloth-r06
+  cancel-in-progress: false
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-tailor-workbench
+          fetch-depth: 1
+      - name: Capture exact source and tracked context
+        run: |
+          mkdir -p audit
+          git rev-parse HEAD > audit/SOURCE_COMMIT.txt
+          git ls-tree -r --name-only HEAD | grep -Ei '(tailor|garment|pattern|mother|workbench-ui)' > audit/RELATED_PATHS.txt
+          find kaopu-tailor-workbench -type f | sort > audit/WORKBENCH_FILES.txt
+          du -sh kaopu-tailor-workbench
+          curl --fail --retry 2 -L 'https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/?case=MetaGarmentDress' -o audit/live-index.html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tailor-r06-source-snapshot
+          path: |
+            kaopu-tailor-workbench
+            audit
+          retention-days: 7
+          compression-level: 1
