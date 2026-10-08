@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark"><title>静物室 · 空间机制候选</title>
+  <meta name="description" content="本地原创室内机制候选：凝视、移开视线、空间声音与近看。">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231c211f'/%3E%3Cpath d='M8 25V7h16v18M13 24V12h6v12' fill='none' stroke='%23d7c7a0' stroke-width='2'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main id="stage" aria-label="可行走的静物观察室">
+    <canvas id="view" aria-label="三维室内场景，拖动查看，WASD移动" tabindex="0"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+    <header class="topbar"><div><span class="eyebrow">ROOM STUDY · 01</span><h1>静物室</h1></div><span class="candidate">机制验证候选</span></header>
+    <section id="humanControl"><button id="humanButton">载入现有人物</button><p id="humanStatus">按需复用原工作台网格与皮肤，首次加载权重较大</p></section>
+    <div id="reticle" aria-hidden="true"><span></span></div>
+    <section id="welcome" aria-labelledby="welcomeTitle">
+      <p class="eyebrow">AFTER CLOSING</p><h2 id="welcomeTitle">让目光停留一会。</h2>
+      <p>观察展台上的白色标本，移开目光，再回头看。</p>
+      <button id="start">进入观察 <span>↗</span></button>
+      <p class="small">进入后启用轻柔空间声，可随时静音。<br>原创房间与机制验证，不是 P.T. 复刻成品。</p>
+    </section>
+    <section id="hud" hidden aria-live="polite"><p class="eyebrow">OBSERVATION <span id="phase">01 / 03</span></p><p id="hint">靠近展台，观察白色标本</p><div class="meter"><i id="gazeMeter"></i></div></section>
+    <div class="bottom"><p id="instructions">拖动查看 · WASD / 方向键行走 · 按住空格近看</p><nav aria-label="场景控制"><button id="zoom" aria-pressed="false">近看</button><button id="sound" aria-pressed="true">声音 开</button><button id="pause" aria-pressed="false">暂停</button><button id="reset">重来</button><button id="debugButton" aria-pressed="false">检查</button></nav></div>
+    <div id="touchMove" aria-label="触摸移动"><button data-key="ArrowUp" aria-label="前进">↑</button><button data-key="ArrowLeft" aria-label="左移">←</button><button data-key="ArrowDown" aria-label="后退">↓</button><button data-key="ArrowRight" aria-label="右移">→</button></div>
+    <pre id="debug" hidden></pre><p id="notice" role="status" hidden></p>
+  </main>
+  <script type="module" src="./app.js"></script>
+</body></html>
