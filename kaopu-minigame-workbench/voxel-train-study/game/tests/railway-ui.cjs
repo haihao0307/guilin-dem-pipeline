@@ -36,19 +36,27 @@ fs.mkdirSync(out,{recursive:true});
   const size=page.viewportSize(),r=await page.locator('#'+id).boundingBox();
   assert(r&&r.x>=-1&&r.y>=-1&&r.x+r.width<=size.width+1&&r.y+r.height<=size.height+1,JSON.stringify({id,r,size}));
  };
+ const scrollSettingsControl=async target=>{
+  // Reopened menus retain their scroll offset. Minimal scrolling can leave a
+  // subpixel edge clipped behind the fixed header, especially when rotated.
+  // Center the real scroll container before checking the entire target frame.
+  await target.evaluate(el=>el.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'}));
+ };
  const assertToolsClear=async label=>{
   const opened=await openSettings(page),checks=[];
   for(const id of ['landscapeView','portraitView','lockView','resetView','restoreView','cameraView','toggleHints','fullScreen']){
    if(id==='restoreView'&&!await page.locator('#restoreView').isVisible())continue;
-   const target=page.locator('#'+id);await target.scrollIntoViewIfNeeded();await inBounds(id);
+   const target=page.locator('#'+id);await scrollSettingsControl(target);await inBounds(id);
    const check=await target.evaluate(el=>{
-    const a=el.getBoundingClientRect(),hit=document.elementFromPoint(a.x+a.width/2,a.y+a.height/2);
+    const a=el.getBoundingClientRect(),scroll=el.closest('.settings-scroll'),port=scroll.getBoundingClientRect(),header=document.querySelector('.settings-header').getBoundingClientRect(),hit=document.elementFromPoint(a.x+a.width/2,a.y+a.height/2);
+    const box=r=>({left:r.left,top:r.top,right:r.right,bottom:r.bottom,width:r.width,height:r.height});
     const area=b=>Math.max(0,Math.min(a.right,b.right)-Math.max(a.left,b.left))*Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top));
     const collisions=[...document.querySelectorAll('#settingsScreen button')].filter(other=>other!==el&&!other.closest('[hidden]')).map(other=>({id:other.id,area:area(other.getBoundingClientRect())})).filter(other=>other.area>0);
-    return{id:el.id,reachable:hit===el||el.contains(hit),headerOverlap:area(document.querySelector('.settings-header').getBoundingClientRect()),collisions};
+    return{id:el.id,reachable:hit===el||el.contains(hit),fullyInsideScrollport:a.left>=port.left&&a.top>=port.top&&a.right<=port.right&&a.bottom<=port.bottom,headerOverlap:area(header),collisions,target:box(a),scrollport:box(port),header:box(header),scrollTop:scroll.scrollTop};
    });
    assert(check.reachable,label+': settings tool must receive input '+JSON.stringify(check));
-   assert.equal(check.headerOverlap,0,label+': settings header must not cover '+id);
+   assert(check.fullyInsideScrollport,label+': the full target frame must be inside the settings scrollport '+JSON.stringify(check));
+   assert.equal(check.headerOverlap,0,label+': settings header must not cover '+JSON.stringify(check));
    assert.deepEqual(check.collisions,[],label+': settings buttons must not overlap '+id);
    checks.push(check);
   }
@@ -58,7 +66,7 @@ fs.mkdirSync(out,{recursive:true});
  const assertRestoreVisible=async expected=>{
   const opened=await openSettings(page);
   assert.equal(await page.locator('#restoreView').isVisible(),expected,'Saved-view availability is checked inside the open settings dialog');
-  if(expected){await page.locator('#restoreView').scrollIntoViewIfNeeded();await inBounds('restoreView');}
+  if(expected){await scrollSettingsControl(page.locator('#restoreView'));await inBounds('restoreView');}
   if(opened)await closeSettings(page);
  };
  try{

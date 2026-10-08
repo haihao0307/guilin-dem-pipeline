@@ -66,7 +66,10 @@ export function initSettingsUI(){
     if(validQuality(quality.value))window.dispatchEvent(new CustomEvent('train-quality-change',{detail:{mode:quality.value}}));
   });
   window.addEventListener('train-quality-change',e=>{if(validQuality(e.detail?.mode))quality.value=e.detail.mode;});
-  $('toggleHints').addEventListener('click',()=>{queueMicrotask(()=>{$('helpDetails').hidden=$('toggleHints').getAttribute('aria-expanded')!=='true';});});
+  // App owns the hint state. Observe its committed attribute so registration
+  // order cannot read the previous value between target event listeners.
+  const syncHints=()=>{$('helpDetails').hidden=root.dataset.hints!=='true';};
+  const hintsObserver=new MutationObserver(syncHints);hintsObserver.observe(root,{attributes:true,attributeFilter:['data-hints']});syncHints();
   // Fullscreen is an existing game action. Keep its settings label in sync.
   function syncFullscreen(){$('fullScreen').textContent=document.fullscreenElement?'退出全屏':'全屏显示';}
   document.addEventListener('fullscreenchange',syncFullscreen);
