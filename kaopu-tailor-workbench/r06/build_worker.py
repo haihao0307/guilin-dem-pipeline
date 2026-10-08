@@ -46,7 +46,7 @@ replace('''if (config.kind !== "legacy") throw Error("This newly generated style
 replace('''bytes(config.directory + "/assets/" + meta.transport.file)''','''bytes(directory + "/assets/" + meta.transport.file)''')
 replace('''canSew: config.kind === "legacy", physicalStatus: config.kind === "legacy" ? "accepted baseline family; current parameters require actual solve" : "new style: analytic paper and material mesh validated; physical fit not accepted"''','''canSew: config.kind === "legacy" || spec.source.experimentalSparseSewing === true, physicalStatus: config.kind === "legacy" ? "accepted baseline family; current parameters require actual solve" : "R06 live sparse-stitch trial available; no fit certificate"''')
 replace('''emit("done", { record, regions, intersections, profile, activeWallMs: wallMs + profile.auditMs });''','''if(config.kind!=="legacy"){
-            record.trial={version:"R06.2",style:config.recipe.design.style,sourceRecipeHash:spec.source.recipeHash,physicalFitAccepted:false,solver:"existing small-step XPBD / f64 WASM; full original-body SDF; sparse numerical stitching",runtimeSelfContact:false,continuousCollision:false,materialCalibrated:false,seamAllowanceAndThickness:false};
+            record.trial={version:"R06.3",style:config.recipe.design.style,sourceRecipeHash:spec.source.recipeHash,physicalFitAccepted:false,solver:"existing small-step XPBD / f64 WASM; full original-body SDF; sparse numerical stitching",runtimeSelfContact:false,continuousCollision:false,materialCalibrated:false,seamAllowanceAndThickness:false};
           }
           emit("done", { record, regions, intersections, profile, activeWallMs: wallMs + profile.auditMs });''')
 replace('  lab = new GarmentLab2(spec, sdf, { substeps: 12, iterations: 6 });', '  if(config.kind!=="legacy") prepareShoulderFixtures(spec,sdf);\n  lab = new GarmentLab2(spec, sdf, { substeps: 12, iterations: 6 });')
@@ -72,6 +72,12 @@ replace('''    } else if (data.type === "resume") {
       if (!lab''','''    } else if (data.type === "resume") {
       pendingPause=false;
       if (!lab''')
+# R06 contact path retains the original ordered f64 constraint kernel.
+replace('if (this.orientationGuides || this.selfCollisionEnabled) return super.step(dt);', 'if (this.orientationGuides || (this.selfCollisionEnabled && !this.r06Contact)) return super.step(dt);')
+replace('      k.distances(baseCount, this.count);\n      P.distanceMs += performance.now() - now;\n      if (this.collisions && sub3 % 3 === 2) {', '      if (!this.r06Contact) k.distances(baseCount, this.count);\n      P.distanceMs += performance.now() - now;\n      if (this.r06Contact) {\n        this.selfContacts.rebuild();\n        this.selfContacts.project();\n        // Contact/sewing must not be the final operation that stretches rest material.\n        for(let guard=0;guard<3;guard++) { k.strains(); k.vertices(this.clearance); }\n      }\n      if (this.collisions && sub3 % 3 === 2) {')
+replace('  lab.selfCollisionEnabled = false;', '  lab.selfCollisionEnabled = config.kind!=="legacy";\n  lab.r06Contact = config.kind!=="legacy";')
+replace('runtimeSelfContact:false,continuousCollision:false', 'runtimeSelfContact:true,continuousCollision:false')
+replace('No continuous collision or runtime self-contact response.', 'Runtime discrete vertex-face contact enabled; full continuous collision remains unverified.')
 s=(ROOT/'r06/fixtures.mjs').read_text().replace('export function','function')+'\n'+s
-(ROOT/'catalogue/r06-worker.bundle.mjs').write_text('// R06.2 additive worker. Original catalogue/workbench-worker.bundle.mjs remains intact.\n'+s)
+(ROOT/'catalogue/r06-contact-worker.bundle.mjs').write_text('// R06.3 contact repair, original R06.2 retained. Original catalogue/workbench-worker.bundle.mjs remains intact.\n'+s)
 print('worker',len(s))
