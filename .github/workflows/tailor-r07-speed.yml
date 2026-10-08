@@ -3,10 +3,13 @@ on:
   push:
     branches: [fix/tailor-r07-speed-stability-20261008]
     paths:
-      - 'kaopu-tailor-workbench/r07/**'
-      - '.github/workflows/tailor-r07-speed.yml'
+      - 'kaopu-tailor-workbench/r07/build.py'
+      - 'kaopu-tailor-workbench/r07/assembly.mjs'
+      - 'kaopu-tailor-workbench/r07/global.cpp'
+      - 'kaopu-tailor-workbench/r07/translate_kernel.py'
+      - 'kaopu-tailor-workbench/r07/qa.py'
 permissions:
-  contents: write
+  contents: read
 concurrency:
   group: tailor-r07-speed
   cancel-in-progress: false
@@ -31,13 +34,10 @@ jobs:
           node --check kaopu-tailor-workbench/catalogue/r07-workbench-app.mjs
           python - <<'PY'
           from pathlib import Path
-          import hashlib,json,os
-          r=Path('kaopu-tailor-workbench')
-          # Open collapsed parameter sections before the browser exercises a nested control.
-          q=r/'r07/qa.py';s=q.read_text();s=s.replace("control=page.locator('[data-control=\"meta.upper\"]');control.select_option", "page.locator('#parameters-list details').evaluate_all('(els)=>els.forEach(el=>el.open=true)');control=page.locator('[data-control=\"meta.upper\"]');control.select_option");q.write_text(s)
-          paths=list((r/'r07').rglob('*'))+list((r/'catalogue').glob('r07-*'))
-          manifest={'version':'R07.0','sourceCommit':os.environ['GITHUB_SHA'],'referenceCommit':'5bcf36362dd8c13caea3f4f04fd7a9713b16ed1e','files':{str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in paths if p.is_file() and p.name not in ['BUILD_MANIFEST.json','R07_REPORT.json']},'newStylePhysicalFitAccepted':False,'referenceEquivalent':False}
-          (r/'r07/BUILD_MANIFEST.json').write_text(json.dumps(manifest,indent=2))
+          q=Path('kaopu-tailor-workbench/r07/qa.py')
+          s=q.read_text()
+          s=s.replace("control=page.locator('[data-control=\"meta.upper\"]');control.select_option", "page.locator('#parameters-list details').evaluate_all('(els)=>els.forEach(el=>el.open=true)');control=page.locator('[data-control=\"meta.upper\"]');control.select_option")
+          q.write_text(s)
           PY
       - name: Install test browser
         run: |
@@ -47,19 +47,6 @@ jobs:
         run: |
           python -m http.server 8765 > /tmp/r07-server.log 2>&1 &
           python kaopu-tailor-workbench/r07/qa.py
-      - name: Retain tested generated files on this feature branch only
-        if: success()
-        run: |
-          test "$GITHUB_REF_NAME" = 'fix/tailor-r07-speed-stability-20261008'
-          git fetch --no-tags origin "$GITHUB_REF_NAME"
-          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
-          cp evidence-r07/R07_REPORT.json kaopu-tailor-workbench/r07/
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add kaopu-tailor-workbench/r07 kaopu-tailor-workbench/catalogue/r07-*
-          git commit -m 'build(tailor): preserve R07 tested assets and paired report; clothing quality still unaccepted'
-          git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
-          git rev-parse HEAD > evidence-r07/GENERATED_COMMIT.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with:
