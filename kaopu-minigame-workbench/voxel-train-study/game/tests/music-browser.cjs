@@ -274,12 +274,13 @@ async function run() {
     s=await serviceKowloon();assert.equal(s.music.sourceStarts,2);assert.equal(s.music.activeSources,1);
     assert.equal(s.paused,false,'Disable-music settings open from running');
     await openSettings(page,{touch:true});await clickTarget(page,'#musicToggle',{touch:true});await closeSettings(page,{touch:true});
-    await waitState(()=>__trainDriver.getState().music.state==='suspended');
+    await waitState(()=>{const s=__trainDriver.getState();return !s.paused&&s.music.state==='suspended'&&s.audio.state==='running';});
     s=await state();assert.equal(s.paused,false);assert.equal(s.audio.state,'running');
     s=await page.evaluate(()=>__musicQA.drive('past-yaumati'));
     assert.equal(s.station.index,2);assert.equal(s.music.finished,true);assert.equal(s.music.activeSources,0);
     assert.equal(s.paused,false,'Later-station settings open from running');
     await openSettings(page,{touch:true});await clickTarget(page,'#musicToggle',{touch:true});await closeSettings(page,{touch:true});
+    await waitState(()=>{const s=__trainDriver.getState();return !s.paused&&s.audio.state==='running'&&s.music.state==='running';});
     s=await record(phase);assert.equal(s.music.sourceStarts,2);assert.equal(s.music.activeSources,0);
     assert.equal(s.music.enabled,true);assert.equal(s.audio.crowdEnabled,false);
     await page.evaluate(()=>__musicQA.stopPump());await context.close();

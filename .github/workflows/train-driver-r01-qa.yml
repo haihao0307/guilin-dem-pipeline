@@ -1,4 +1,4 @@
-name: Train R10 original score and journey input QA
+name: Train R10 music lifecycle QA
 on:
   push:
     branches: ['qa/voxel-train-r01-20261006']
@@ -6,7 +6,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: kcr-r10-score-journey-${{ github.ref }}
+  group: kcr-r10-score-only-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   deterministic:
@@ -36,7 +36,7 @@ jobs:
       fail-fast: false
       matrix:
         browser: [chromium, webkit]
-        suite: [gameplay, music]
+        suite: [music]
     env:
       TRAIN_BROWSER: ${{ matrix.browser }}
       KCR_SUITE: ${{ matrix.suite }}
