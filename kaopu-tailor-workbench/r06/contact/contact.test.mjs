@@ -25,3 +25,9 @@ for(const edgeOnly of [false,true]){
  const a=lab(before,after,edges,triangles,weights),b=lab(before,after,edges,triangles,weights),reference=new SweptContact(a),fast=new FastSweptContact(b);reference.rebuild();reference.project();fast.rebuild();fast.project();for(let i=0;i<a.positions.length;i++)for(let k=0;k<3;k++)assert(Math.abs(a.positions[i][k]-b.positions[i][k])<1e-10);assert(fast.sweptHits>0);
 }
 console.log('independent JS / f64 WASM swept VF and EE agreement passed');
+
+// Free material adjacent to a needle must still collide with the other panel.
+l=lab([[0,0,0],[.004,0,0],[0,0,0],[0,.01,0],[.01,0,0]],[[0,0,0],[.004,0,0],[0,0,0],[0,.01,0],[.01,0,0]],[[0,1],[2,3],[3,4],[4,2]],[[2,3,4]],[1,1,1,1,1]);
+l.offsets=new Map([['skirt',0],['band',2]]);l.spec.seams=[{a:{panelId:'skirt'},b:{panelId:'band'},stitchVertexPairs:[[0,0]]}];
+c=new SweptContact(l);c.refreshTopology();assert(c.exclude([0],[2]));assert(!c.exclude([1],[2,3,4]));assert(c.exclude([2],[2,3,4]));
+console.log('exact seam adjacency preserves free gathering collision candidates');

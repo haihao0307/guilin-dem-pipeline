@@ -57,14 +57,11 @@ class SweptContact {
  constructor(lab,{thicknessMm=.8,cellSizeMm=24}={}){
   this.lab=lab;this.h=thicknessMm/1000;this.cell=cellSizeMm/1000;this.corrections=0;this.sweptHits=0;this.discreteHits=0;this.unresolved=0;this.skippedLargeTriangles=0;
   this.near=Array.from({length:lab.positions.length},(_,i)=>new Set([i]));
-  for(const [a,b] of lab.meshEdges){this.near[a].add(b);this.near[b].add(a);}
   // Paired needle sites are intentional adjacency even before equality activation.
   // No exclusion of whole panels or gathering bands.
   for(const seam of lab.spec.seams){const a=lab.offsets.get(seam.a.panelId),b=lab.offsets.get(seam.b.panelId);for(const [i,j] of seam.stitchVertexPairs){this.near[a+i].add(b+j);this.near[b+j].add(a+i);}}
-  const owners=new Int32Array(lab.positions.length);
-  for(let pi=0;pi<(lab.spec.panels||[]).length;pi++){const p=lab.spec.panels[pi],o=lab.offsets.get(p.id);owners.fill(pi,o,o+p.uvMm.length);}
-  const first=this.near.map(s=>new Set(s));
-  for(let i=0;i<this.near.length;i++)for(const j of first[i])for(const k of first[j])if(owners[i]===owners[k])this.near[i].add(k);
+  // Only shared material points and exact paired needle sites are exempt.
+  // Graph-neighbour exclusions hid free gathering vertices from waistband contact.
   this.previous=Float64Array.from(lab._old);this.lastGroups=-1;this.hash=new Map();this.edgeHash=new Map();
  }
  capture(){for(let i=0;i<this.lab.positions.length;i++)this.previous.set(this.lab.positions[i],i*3);}
@@ -138,13 +135,18 @@ class FastSweptContact extends SweptContact {
   const l=this.lab,k=this.kernel,count=this.rows.length/5,n=l.positions.length;
   if(!this.capacity||count>this.capacity){this.capacity=Math.max(1024,Math.ceil(count*1.5));k.setup(n,this.capacity);}
   const b=k.memory.buffer,ps=new Float64Array(b,k.positions(),n*3),old=new Float64Array(b,k.previous(),n*3),mass=new Float64Array(b,k.weights(),n),alias=new Int32Array(b,k.aliases(),n),pairs=new Int32Array(b,k.pairs(),count*5);
-  for(let i=0;i<n;i++){ps.set(l.positions[i],i*3);mass[i]=l.invMass[i];alias[i]=l.stitchGroups.find(i);}old.set(this.previous);pairs.set(this.rows);
-  k.project(count,this.h);
-  for(let i=0;i<n;i++)if(alias[i]===i){ for(let k=0;k<3;k++)l.positions[i][k]=ps[i*3+k]; }
-  this.corrections+=k.corrections.value;this.sweptHits+=k.sweptHits.value;this.discreteHits+=k.discreteHits.value;this.unresolved+=k.unresolved.value;
+  for(let pass=0;pass<4;pass++){
+   for(let i=0;i<n;i++){ps.set(l.positions[i],i*3);mass[i]=l.invMass[i];alias[i]=l.stitchGroups.find(i);}old.set(this.previous);pairs.set(this.rows);
+   k.project(count,this.h);
+   for(let i=0;i<n;i++)if(alias[i]===i){for(let axis=0;axis<3;axis++)l.positions[i][axis]=ps[i*3+axis];}
+   this.corrections+=k.corrections.value;this.sweptHits+=k.sweptHits.value;this.discreteHits+=k.discreteHits.value;this.unresolved+=k.unresolved.value;
+   // Alternate original material/body constraints with contact instead of
+   // allowing the last contact impulse to leave arbitrary material extension.
+   if(l.kernel){for(let j=0;j<4;j++){l.kernel.strains();l.kernel.vertices(l.clearance);}l.kernel.surfaces();}
+  }
   this.capture();
  }
- report(){return{...super.report(),backend:'additional f64 WASM narrow phase; original cloth kernel unchanged'};}
+ report(){return{...super.report(),jointMaterialBodyContactIterations:4,backend:'additional f64 WASM narrow phase; original cloth kernel unchanged'};}
 }
 
 var __create = Object.create;
@@ -2350,7 +2352,6 @@ var StitchGroups = class {
     const l = this.lab;
     let changed = false;
     for (const c of l.seamConstraints) {
-      if(l.r06Contact && l.spec.seams.find(s=>s.id===c.seamId)?.numericalStitchPlan) continue;
       if (c.eliminated || l.elapsed - c.activatedAt < c.rampDuration) continue;
       const a = this.find(c.a), b = this.find(c.b);
       if (a === b) {
@@ -3518,7 +3519,7 @@ function tick(token) {
           const begin = performance.now(), record = lab.export(), regions = regionalStrain(spec, record.positionsMm), intersections = strictIntersectionAudit(spec, record.positionsMm, record.materialToSolverGroup, bodyAudit);
           profile.auditMs = performance.now() - begin;
           if(config.kind!=="legacy"){
-            record.trial={version:"R06.3",style:config.recipe.design.style,sourceRecipeHash:spec.source.recipeHash,physicalFitAccepted:false,solver:"existing small-step XPBD / f64 WASM; full original-body SDF; sparse numerical stitching",runtimeSelfContact:true,continuousCollision:false,linearSweptContact:lab.selfContacts.report(),gatheringStitchModel:{restGapMm:.8,equalityWeld:false,restMetricRescaled:false},materialCalibrated:false,seamAllowanceAndThickness:false};
+            record.trial={version:"R06.3",style:config.recipe.design.style,sourceRecipeHash:spec.source.recipeHash,physicalFitAccepted:false,solver:"existing small-step XPBD / f64 WASM; full original-body SDF; sparse numerical stitching",runtimeSelfContact:true,continuousCollision:false,linearSweptContact:lab.selfContacts.report(),gatheringStitchModel:{restGapMm:.8,equalityWeld:true,restMetricRescaled:false},materialCalibrated:false,seamAllowanceAndThickness:false};
           }
           emit("done", { record, regions, intersections, profile, activeWallMs: wallMs + profile.auditMs });
           return;
