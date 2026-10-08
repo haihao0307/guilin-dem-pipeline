@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const {chromium, webkit} = require('playwright');
-const {clickControl, openSettings, closeSettings} = require('./browser-controls.cjs');
+const {clickControl, openSettings, closeSettings, controlGeometry, assertControlGeometry} = require('./browser-controls.cjs');
 const engine = process.env.TRAIN_BROWSER || 'chromium';
 assert(['chromium', 'webkit'].includes(engine), 'TRAIN_BROWSER must be chromium or webkit');
 const out = process.env.TRAIN_TOUCH_QA_DIR || 'driving-touch-' + engine;
@@ -61,12 +61,9 @@ fs.mkdirSync(out, {recursive: true});
   const center = async selector => {
     const locator = page.locator(selector);
     await locator.waitFor({state: 'visible'});
-    await page.waitForFunction(selector => !document.querySelector(selector)?.closest('button')?.disabled, selector);
-    await locator.scrollIntoViewIfNeeded();
-    const p = await locator.evaluate(el => {
-      const r = el.getBoundingClientRect(), x = r.x + r.width / 2, y = r.y + r.height / 2, hit = document.elementFromPoint(x, y);
-      return {x, y, width: r.width, height: r.height, reachable: hit === el || el.contains(hit), viewport: [innerWidth, innerHeight]};
-    });
+    await page.waitForFunction(selector => !document.querySelector(selector)?.closest('button')?.disabled, selector, {polling: 50});
+    const p = await controlGeometry(locator);
+    assertControlGeometry(p);
     assert(p.width > 0 && p.height > 0 && p.x >= 0 && p.y >= 0 && p.x < p.viewport[0] && p.y < p.viewport[1], phase + ': offscreen control ' + selector);
     assert(p.reachable, phase + ': another element intercepts ' + selector);
     return {x: p.x, y: p.y};

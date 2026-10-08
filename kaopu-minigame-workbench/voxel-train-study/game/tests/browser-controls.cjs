@@ -1,31 +1,89 @@
 const assert = require('node:assert/strict');
 
-// Exercise the same settings entry and controls as a player. In particular, do
-// not reveal hidden elements or dispatch synthetic clicks to bypass the dialog.
-async function activate(locator, {touch = false} = {}) {
-  await locator.waitFor({state: 'visible'});
-  await locator.scrollIntoViewIfNeeded();
-  const center = await locator.evaluate(el => {
-    const r = el.getBoundingClientRect(), x = r.x + r.width / 2, y = r.y + r.height / 2;
-    const hit = document.elementFromPoint(x, y);
-    return {id: el.id, x, y, width: r.width, height: r.height, reachable: el === hit || el.contains(hit), viewport: [innerWidth, innerHeight]};
+// Read actual viewport and clipping geometry without waiting for renderer frames.
+// Only scroll when a scrollable ancestor currently clips the full target frame.
+async function controlGeometry(locator) {
+  return locator.evaluate(el => {
+    const contains = (outer, inner) => inner.left >= outer.left && inner.top >= outer.top && inner.right <= outer.right && inner.bottom <= outer.bottom;
+    const clips = [];
+    let canScroll = false;
+    // Body/root overflow propagates to the viewport; an absolutely positioned,
+    // rotated game can leave body's layout box at zero height without clipping.
+    for (let parent = el.parentElement; parent && parent !== document.body && parent !== document.documentElement; parent = parent.parentElement) {
+      const style = getComputedStyle(parent);
+      if (/(auto|scroll|hidden|clip)/.test(style.overflowX + ' ' + style.overflowY)) clips.push(parent);
+      if (/(auto|scroll)/.test(style.overflowX + ' ' + style.overflowY) && (parent.scrollHeight > parent.clientHeight || parent.scrollWidth > parent.clientWidth)) canScroll = true;
+    }
+    const measure = () => {
+      const r = el.getBoundingClientRect(), x = r.x + r.width / 2, y = r.y + r.height / 2;
+      const hit = document.elementFromPoint(x, y);
+      const clipBounds = clips.map(parent => {
+        const b = parent.getBoundingClientRect();
+        return {id: parent.id || parent.className, left: b.left, top: b.top, right: b.right, bottom: b.bottom, contains: contains(b, r)};
+      });
+      return {
+        id: el.id, x, y, width: r.width, height: r.height,
+        rect: {x: r.x, y: r.y, width: r.width, height: r.height},
+        viewport: [innerWidth, innerHeight],
+        inViewport: x >= 0 && y >= 0 && x < innerWidth && y < innerHeight,
+        fullBoundsInViewport: contains({left: 0, top: 0, right: innerWidth, bottom: innerHeight}, r),
+        fullBoundsInClip: clipBounds.every(b => b.contains), clipBounds,
+        reachable: el === hit || el.contains(hit),
+        hit: hit?.closest('button,a,input,select,textarea')?.id || hit?.id || hit?.className,
+        disabled: el.matches(':disabled') || !!el.closest('button:disabled,[aria-disabled="true"]'),
+        inert: !!el.closest('[inert]')
+      };
+    };
+    let geometry = measure(), scrolled = false;
+    if (canScroll && (!geometry.fullBoundsInViewport || !geometry.fullBoundsInClip)) {
+      el.scrollIntoView({block: 'center', inline: 'nearest', behavior: 'instant'});
+      scrolled = true;
+      geometry = measure();
+    }
+    return {...geometry, scrolled};
   });
-  assert(center.width > 0 && center.height > 0 && center.x >= 0 && center.y >= 0 && center.x < center.viewport[0] && center.y < center.viewport[1], 'Offscreen control: ' + center.id);
-  assert(center.reachable, 'Another element intercepts control: ' + center.id);
-  if (touch) await locator.tap();
-  else await locator.click();
+}
+
+function assertControlGeometry(geometry) {
+  assert(geometry.width > 0 && geometry.height > 0 && geometry.inViewport, 'Offscreen control: ' + JSON.stringify(geometry));
+  assert(geometry.fullBoundsInViewport && geometry.fullBoundsInClip, 'Clipped control frame: ' + JSON.stringify(geometry));
+  assert(geometry.reachable, 'Another element intercepts control: ' + JSON.stringify(geometry));
+}
+
+// Native page input avoids two separate animation-frame stability waits in
+// locator.scrollIntoViewIfNeeded() and locator.click()/tap(). Geometry, enabled
+// state, inert state and hit testing are checked before sending the real input.
+async function activate(page, locator, {touch = false} = {}) {
+  await locator.waitFor({state: 'visible'});
+  let center = await controlGeometry(locator);
+  if (center.disabled) {
+    assert(center.id, 'Waiting for an enabled control requires its existing ID');
+    await page.waitForFunction(id => {
+      const el = document.getElementById(id);
+      return el && !el.matches(':disabled') && !el.closest('button:disabled,[aria-disabled="true"]');
+    }, center.id, {polling: 50});
+    center = await controlGeometry(locator);
+  }
+  assertControlGeometry(center);
+  assert(!center.disabled && !center.inert, 'Control is unavailable: ' + JSON.stringify(center));
+  if (touch) await page.touchscreen.tap(center.x, center.y);
+  else await page.mouse.click(center.x, center.y);
+}
+
+async function clickTarget(page, selector, options = {}) {
+  await activate(page, page.locator(selector), options);
 }
 
 async function openSettings(page, {touch = false} = {}) {
   if (await page.locator('#settingsScreen').isVisible()) return false;
-  await activate(page.locator('#openSettings'), {touch});
+  await activate(page, page.locator('#openSettings'), {touch});
   await page.locator('#settingsScreen').waitFor({state: 'visible'});
   return true;
 }
 
 async function closeSettings(page, {touch = false} = {}) {
   if (!await page.locator('#settingsScreen').isVisible()) return false;
-  await activate(page.locator('#closeSettings'), {touch});
+  await activate(page, page.locator('#closeSettings'), {touch});
   await page.locator('#settingsScreen').waitFor({state: 'hidden'});
   return true;
 }
@@ -38,7 +96,7 @@ async function clickControl(page, id, {touch = false, close = true} = {}) {
     return v ? {started: v.started, paused: v.paused, phase: v.phase} : null;
   }) : null;
   const opened = insideSettings ? await openSettings(page, {touch}) : false;
-  await activate(target, {touch});
+  await activate(page, target, {touch});
   if (opened && close) {
     await closeSettings(page, {touch});
     if (before?.started && before.phase !== 'summary' && id !== 'restart') {
@@ -48,4 +106,4 @@ async function clickControl(page, id, {touch = false, close = true} = {}) {
   }
 }
 
-module.exports = {clickControl, openSettings, closeSettings};
+module.exports = {clickControl, clickTarget, openSettings, closeSettings, controlGeometry, assertControlGeometry};

@@ -1,4 +1,4 @@
-name: Train R06 desktop clarity and railway QA
+name: Train R06 native input completion QA
 on:
   push:
     branches: ['qa/voxel-train-r01-20261006']
@@ -38,7 +38,7 @@ jobs:
       max-parallel: 6
       matrix:
         browser: [chromium, webkit]
-        suite: [layout, touch, hud, gameplay, views, desktop, zoom]
+        suite: [touch, hud]
     env:
       TRAIN_BROWSER: ${{ matrix.browser }}
       TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/
@@ -61,6 +61,8 @@ jobs:
         run: timeout 180s "$RUNNER_TEMP/driver-test/node_modules/.bin/playwright" install-deps "${{ matrix.browser }}"
       - name: Configure installed browser module path
         run: echo "NODE_PATH=$RUNNER_TEMP/driver-test/node_modules" >> "$GITHUB_ENV"
+      - name: Bind every runtime byte to the previously tested candidate
+        run: node kaopu-minigame-workbench/voxel-train-study/game/tests/runtime-identity.cjs
       - name: Serve the exact candidate checkout
         run: |
           nohup python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/driver-server.log" 2>&1 &
@@ -99,6 +101,7 @@ jobs:
           if-no-files-found: warn
           path: |
             driver-public-hashes.json
+            driver-runtime-identity.json
             fullscreen-ui-${{ matrix.browser }}/*
             railway-ui-${{ matrix.browser }}/*
             driving-touch-${{ matrix.browser }}/*

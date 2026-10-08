@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const {chromium, webkit} = require('playwright');
-const {clickControl, openSettings, closeSettings} = require('./browser-controls.cjs');
+const {clickControl, clickTarget, openSettings, closeSettings, controlGeometry, assertControlGeometry} = require('./browser-controls.cjs');
 const engine = process.env.TRAIN_BROWSER || 'chromium';
 const out = 'hit-targets-' + engine;
 const base = process.env.TRAIN_GAME_URL || 'http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/';
@@ -16,22 +16,14 @@ fs.mkdirSync(out, {recursive: true});
   const hit = async id => {
     const locator = page.locator('#' + id);
     await locator.waitFor({state: 'visible'});
-    await locator.scrollIntoViewIfNeeded();
-    return locator.evaluate(el => {
-      const r = el.getBoundingClientRect(), x = r.x + r.width / 2, y = r.y + r.height / 2;
-      const top = document.elementFromPoint(x, y);
-      return {
-        id: el.id, hit: top?.closest('button,a,input,select,textarea')?.id || top?.className,
-        reachable: el === top || el.contains(top),
-        inViewport: x >= 0 && y >= 0 && x < innerWidth && y < innerHeight,
-        rect: {x: r.x, y: r.y, width: r.width, height: r.height}
-      };
-    });
+    const check = await controlGeometry(locator);
+    assertControlGeometry(check);
+    return check;
   };
   try {
     await page.goto(base);
     await page.waitForFunction(() => window.__trainDriver?.ready);
-    await page.locator('#startGame').click();
+    await tap('startGame');
     assert.equal(await page.evaluate(() => typeof __trainDriver.test), 'undefined');
     const before = {archivedLegacyFailure: 'verified in prior HUD baseline', mainHudPassThrough: true, settingsControlsScoped: true};
     for (const size of [
@@ -87,9 +79,9 @@ fs.mkdirSync(out, {recursive: true});
       assert.equal(await page.locator('#helpDetails').isVisible(), false);
       await closeSettings(page, {touch: touch()});
       assert.equal(await page.evaluate(() => __trainDriver.getState().paused), false);
-      await page.locator('#routeMap>button').click();
+      await clickTarget(page, '#routeMap>button', {touch: touch()});
       assert.equal(await page.locator('#routeMap svg').isVisible(), false);
-      await page.locator('#routeMap>button').click();
+      await clickTarget(page, '#routeMap>button', {touch: touch()});
       await tap('pause');
       assert(await page.locator('#pauseScreen').isVisible());
       await tap('resume');
