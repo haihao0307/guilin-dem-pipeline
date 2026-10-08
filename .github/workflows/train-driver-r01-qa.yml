@@ -1,4 +1,4 @@
-name: Train full-canvas UI candidate preview
+name: Train full-canvas UI complete candidate QA
 on:
   push:
     branches: ['qa/voxel-train-r01-20261006']
@@ -65,11 +65,45 @@ jobs:
           for i in $(seq 1 30); do curl -fsS "$TRAIN_GAME_URL" > /dev/null && break || sleep 1; done
       - name: Capture actual full-canvas candidate layout
         run: timeout 240s node kaopu-minigame-workbench/voxel-train-study/game/tests/fullscreen-ui.cjs
-      - name: Upload first candidate layout for review
+      - name: Upload first layout screenshots for review
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: train-fullscreen-preview-${{ matrix.browser }}
+          name: train-fullscreen-layout-${{ matrix.browser }}
           retention-days: 7
           if-no-files-found: warn
-          path: fullscreen-ui-${{ matrix.browser }}/*
+          path: |
+            fullscreen-ui-${{ matrix.browser }}/*
+            railway-ui-${{ matrix.browser }}/*
+            driving-touch-${{ matrix.browser }}/*
+            hit-targets-${{ matrix.browser }}/*
+            hud-${{ matrix.browser }}/*
+            driver-${{ matrix.browser }}/*
+            views-${{ matrix.browser }}/*
+      - name: Verify one-time camera migration and exact restore
+        run: timeout 240s node kaopu-minigame-workbench/voxel-train-study/game/tests/railway-ui.cjs
+      - name: Verify modal selection protection and actual touch controls
+        run: timeout 240s node kaopu-minigame-workbench/voxel-train-study/game/tests/driving-touch.cjs
+      - name: Verify all hit targets and actual six-stop route HUD
+        run: |
+          node kaopu-minigame-workbench/voxel-train-study/game/tests/hit-targets.cjs
+          node kaopu-minigame-workbench/voxel-train-study/game/tests/hud.cjs
+      - name: Play the real first station and all gameplay regressions
+        run: timeout 540s node kaopu-minigame-workbench/voxel-train-study/game/tests/browser.cjs
+      - name: Verify independent views and touch gestures
+        run: timeout 300s node kaopu-minigame-workbench/voxel-train-study/game/tests/views.cjs
+      - name: Upload complete evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-fullscreen-complete-${{ matrix.browser }}
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            fullscreen-ui-${{ matrix.browser }}/*
+            railway-ui-${{ matrix.browser }}/*
+            driving-touch-${{ matrix.browser }}/*
+            hit-targets-${{ matrix.browser }}/*
+            hud-${{ matrix.browser }}/*
+            driver-${{ matrix.browser }}/*
+            views-${{ matrix.browser }}/*
