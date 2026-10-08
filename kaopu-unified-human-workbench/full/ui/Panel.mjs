@@ -49,7 +49,7 @@ export function mountPanel(root,controller,{screenshot}={}){
     'Anny alternative rig/topology and independent parts':['Anny · 其他骨架与独立部件','需要独立对应和验收；不能通过换一张教师网格冒充共同模型。'],
     'Face R02 photos/video fitting':['照片与视频拟合','现有独立功能尚未接入此共同模型；这里不提供假按钮。'],
     'Face R02 Groom hair/brows/lashes':['头发、眉毛与睫毛','固定顶点对应与形变跟随仍待接入。'],
-    'Skin/S3-Face':['皮肤与 S3-Face','皮肤仍是独立实验，不表示已实现 S3-Face 等效推理。'],
+    'Skin/S3-Face':['皮肤与 S3-Face','皮肤基础版已接入当前模型：唇部、分区色彩与表面微纹理。扫描皮肤与 S3-Face 等效推理仍未接入。'],
     'Clothing':['服装','独立工作台；不计作本页已完成的共同人体功能。']
    };
    for(const item of controller.catalog.contract.additionalInterfaces||[]){const text=descriptions[item.name]||[item.name,item.status],box=el('div','interface-row');box.append(el('strong','',text[0]),el('p','muted',text[1]));const button=el('button','',text[2]?'查看实际参数':'待接入 / 待验收');button.type='button';button.disabled=!text[2];if(text[2])button.dataset.openGroup=text[2];box.append(button);list.append(box);}count.textContent=(controller.catalog.contract.additionalInterfaces||[]).length+' 类接口';groupInfo.textContent='这是完整性清单；禁用项仍是未完成工作，不计入可用功能。';resetGroup.disabled=resetSource.disabled=true;return;
