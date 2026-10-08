@@ -41,10 +41,11 @@ jobs:
           npm install --no-audit --no-fund playwright@1.55.1 esbuild@0.25.10
           npx playwright install --with-deps chromium
           python -m pip install numpy scipy pillow
-      - name: Build mapped skin channels and source candidate
+      - name: Correct visually identified artifacts and rebuild candidate
         env:
           NODE_PATH: /tmp/skin-tools/node_modules
         run: |
+          node kaopu-unified-human-workbench/skin-r01/repair.cjs
           python kaopu-unified-human-workbench/skin-r01/prepare.py /tmp/skin-baseline/common.json kaopu-unified-human-workbench/skin-r01/assets
           node kaopu-unified-human-workbench/skin-r01/build.cjs --source-only
           node --check kaopu-unified-human-workbench/skin-r01/SkinLayer.mjs
@@ -56,14 +57,14 @@ jobs:
         run: |
           python -m http.server 8765 >/tmp/common-skin-server.log 2>&1 &
           node kaopu-unified-human-workbench/skin-r01/qa.cjs
-      - name: Pin complete candidate on feature branch only
+      - name: Pin corrected candidate on feature branch only
         env:
           NODE_PATH: /tmp/skin-tools/node_modules
         run: |
           git config user.name 'Common Skin Build'
           git config user.email 'skin-build@users.noreply.github.com'
           git add -f kaopu-unified-human-workbench/skin-r01/assets/*
-          git add kaopu-unified-human-workbench/skin-r01/{entry.mjs,index.html,THIRD_PARTY.txt}
+          git add kaopu-unified-human-workbench/skin-r01/{entry.mjs,index.html,THIRD_PARTY.txt,SkinLayer.mjs,prepare.py,build.cjs,qa.cjs,README.md}
           python - <<'PY'
           import json,hashlib,subprocess
           from pathlib import Path
@@ -74,11 +75,11 @@ jobs:
                   assert hashlib.sha256(staged).hexdigest()==record['sha256'],filename
                   assert len(staged)==record['bytes'],filename
           PY
-          if ! git diff --cached --quiet; then git commit -m 'feat(skin): commit scan channels and original-surface coordinate map [skip ci]'; fi
+          if ! git diff --cached --quiet; then git commit -m 'fix(skin): publish corrected scan sampling and disable uncertain transmission [skip ci]'; fi
           git push origin HEAD:feature/unified-human-skin-r01-20261008
           ASSET_COMMIT=$(git rev-parse HEAD) node kaopu-unified-human-workbench/skin-r01/build.cjs
           git add kaopu-unified-human-workbench/skin-r01/{preview.html,BUILD_MANIFEST.json}
-          git commit -m 'build(skin): pin isolated common-human material preview [skip ci]'
+          git commit -m 'build(skin): pin corrected common-human skin R01.1 [skip ci]'
           git push origin HEAD:feature/unified-human-skin-r01-20261008
           echo "PUBLIC_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
           cp kaopu-unified-human-workbench/skin-r01/BUILD_MANIFEST.json /tmp/common-skin-evidence/
@@ -95,7 +96,7 @@ jobs:
         if: always()
         run: |
           mkdir -p /tmp/common-skin-evidence/candidate
-          cp kaopu-unified-human-workbench/skin-r01/*.{mjs,cjs,py,json,txt} /tmp/common-skin-evidence/candidate/ 2>/dev/null || true
+          cp kaopu-unified-human-workbench/skin-r01/*.{mjs,cjs,py,json,txt,md} /tmp/common-skin-evidence/candidate/ 2>/dev/null || true
           cp /tmp/common-skin*server.log /tmp/common-skin-evidence/ 2>/dev/null || true
       - uses: actions/upload-artifact@v4
         if: always()
