@@ -1,0 +1,105 @@
+name: Unified Human Skin Build
+on:
+  push:
+    branches: [feature/unified-human-skin-r01-20261008]
+    paths:
+      - kaopu-unified-human-workbench/skin-r01/**
+      - .github/workflows/unified-skin-build.yml
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: unified-human-skin-r01
+  cancel-in-progress: false
+jobs:
+  material:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/unified-human-skin-r01-20261008
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench/assets
+            kaopu-anny-workbench/r02/assets
+            kaopu-mhr-workbench/assets
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - uses: actions/download-artifact@v4
+        with:
+          name: unified-skin-preflight
+          run-id: 37726591213
+          github-token: ${{ github.token }}
+          path: /tmp/skin-baseline
+      - name: Isolated tools
+        run: |
+          mkdir -p /tmp/skin-tools /tmp/common-skin-evidence
+          cd /tmp/skin-tools
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund playwright@1.55.1 esbuild@0.25.10
+          npx playwright install --with-deps chromium
+          python -m pip install numpy scipy pillow
+      - name: Build mapped skin channels and source candidate
+        env:
+          NODE_PATH: /tmp/skin-tools/node_modules
+        run: |
+          python kaopu-unified-human-workbench/skin-r01/prepare.py /tmp/skin-baseline/common.json kaopu-unified-human-workbench/skin-r01/assets
+          node kaopu-unified-human-workbench/skin-r01/build.cjs --source-only
+          node --check kaopu-unified-human-workbench/skin-r01/SkinLayer.mjs
+          cp kaopu-unified-human-workbench/skin-r01/assets/{scan-manifest,mapping}.json /tmp/common-skin-evidence/
+      - name: Real WebGL checks against original solver outputs
+        env:
+          NODE_PATH: /tmp/skin-tools/node_modules
+          QA_OUT: /tmp/common-skin-evidence/local
+        run: |
+          python -m http.server 8765 >/tmp/common-skin-server.log 2>&1 &
+          node kaopu-unified-human-workbench/skin-r01/qa.cjs
+      - name: Pin complete candidate on feature branch only
+        env:
+          NODE_PATH: /tmp/skin-tools/node_modules
+        run: |
+          git config user.name 'Common Skin Build'
+          git config user.email 'skin-build@users.noreply.github.com'
+          git add -f kaopu-unified-human-workbench/skin-r01/assets/*
+          git add kaopu-unified-human-workbench/skin-r01/{entry.mjs,index.html,THIRD_PARTY.txt}
+          python - <<'PY'
+          import json,hashlib,subprocess
+          from pathlib import Path
+          root=Path('kaopu-unified-human-workbench/skin-r01/assets')
+          for name in ['scan-manifest.json','mapping.json']:
+              for filename,record in json.loads((root/name).read_text())['files'].items():
+                  staged=subprocess.check_output(['git','show',':'+str(root/filename)])
+                  assert hashlib.sha256(staged).hexdigest()==record['sha256'],filename
+                  assert len(staged)==record['bytes'],filename
+          PY
+          if ! git diff --cached --quiet; then git commit -m 'feat(skin): commit scan channels and original-surface coordinate map [skip ci]'; fi
+          git push origin HEAD:feature/unified-human-skin-r01-20261008
+          ASSET_COMMIT=$(git rev-parse HEAD) node kaopu-unified-human-workbench/skin-r01/build.cjs
+          git add kaopu-unified-human-workbench/skin-r01/{preview.html,BUILD_MANIFEST.json}
+          git commit -m 'build(skin): pin isolated common-human material preview [skip ci]'
+          git push origin HEAD:feature/unified-human-skin-r01-20261008
+          echo "PUBLIC_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          cp kaopu-unified-human-workbench/skin-r01/BUILD_MANIFEST.json /tmp/common-skin-evidence/
+      - name: Check actual public immutable preview
+        env:
+          NODE_PATH: /tmp/skin-tools/node_modules
+          QA_OUT: /tmp/common-skin-evidence/public
+        run: |
+          python -m http.server 8765 >/tmp/common-skin-public-server.log 2>&1 &
+          export QA_URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${PUBLIC_COMMIT}/kaopu-unified-human-workbench/skin-r01/preview.html"
+          echo "$QA_URL" | tee /tmp/common-skin-evidence/PUBLIC_URL.txt
+          node kaopu-unified-human-workbench/skin-r01/qa.cjs
+      - name: Preserve test source and failure diagnostics
+        if: always()
+        run: |
+          mkdir -p /tmp/common-skin-evidence/candidate
+          cp kaopu-unified-human-workbench/skin-r01/*.{mjs,cjs,py,json,txt} /tmp/common-skin-evidence/candidate/ 2>/dev/null || true
+          cp /tmp/common-skin*server.log /tmp/common-skin-evidence/ 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unified-human-skin-evidence
+          path: /tmp/common-skin-evidence
+          retention-days: 7
