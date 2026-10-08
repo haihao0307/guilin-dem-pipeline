@@ -7,10 +7,12 @@ let browser;const checks=[],errors=[],requests=[];const record=name=>checks.push
  await new Promise(r=>server.listen(0,'127.0.0.1',r));const origin=`http://127.0.0.1:${server.address().port}`;
  browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{}),args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
  const page=await browser.newPage({viewport:{width:1440,height:1000},deviceScaleFactor:1});
+ page.setDefaultTimeout(120000);
  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});page.on('request',r=>{if(!r.url().startsWith(origin)&&/^https?:/.test(r.url()))requests.push(r.url());});
  await page.goto(origin);await page.waitForFunction(()=>window.__study?.getState().rendered,null,{timeout:90000});record('Three r170 shader/render initialization');
  fs.mkdirSync(root+'/screenshots',{recursive:true});await page.screenshot({path:root+'/screenshots/01-room-entry.png'});
  const baseline=await page.evaluate(()=>__study.getState());assert.equal(baseline.started,false);assert.equal(baseline.audio.created,false);record('Audio starts only after explicit entry');
+ const idleFrame=baseline.frames;await page.waitForTimeout(700);assert.equal((await page.evaluate(()=>__study.getState())).frames,idleFrame);record('Stationary scene does not redraw full shadow maps continuously');
  await page.locator('#start').click();await page.waitForFunction(()=>__study.getState().audio.created);assert.equal(await page.locator('#welcome').isVisible(),false);
  await page.evaluate(()=>{__study.setPose({x:1.3,z:-2.6});__study.lookAtTarget();});
  await page.waitForFunction(()=>__study.getState().stage==='observed',null,{timeout:60000});assert.equal((await page.evaluate(()=>__study.getState())).phase,0);record('Real camera gaze arms original event');
@@ -33,6 +35,7 @@ let browser;const checks=[],errors=[],requests=[];const record=name=>checks.push
  await page.locator('#sound').click();assert.equal((await page.evaluate(()=>__study.getState())).audio.enabled,false);record('Mute state is effective');
  await page.close();
  const mobile=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});mobile.on('pageerror',e=>errors.push(e.message));await mobile.goto(origin);await mobile.waitForFunction(()=>window.__study?.getState().rendered,null,{timeout:90000});
+ mobile.setDefaultTimeout(120000);
  assert(await mobile.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await mobile.screenshot({path:root+'/screenshots/04-mobile-entry.png'});await mobile.locator('#start').click();
  const mb=await mobile.evaluate(()=>__study.getState());const b=await mobile.locator('[data-key="ArrowUp"]').boundingBox();const cdp=await mobile.context().newCDPSession(mobile);await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:b.x+b.width/2,y:b.y+b.height/2}]});await mobile.waitForTimeout(850);await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});const ma=await mobile.evaluate(()=>__study.getState());assert.notDeepEqual(ma.position,mb.position);assert.equal(ma.keys.length,0);record('Mobile touch movement and release');
  await mobile.screenshot({path:root+'/screenshots/05-mobile-observation.png'});assert.deepEqual(errors,[]);assert.deepEqual(requests,[]);record('No browser errors or external network requests');

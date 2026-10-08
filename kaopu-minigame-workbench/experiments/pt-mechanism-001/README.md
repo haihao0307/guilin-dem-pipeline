@@ -18,7 +18,11 @@ JavaScript 语法检查通过。10 项纯机制/镜头数学检查、9 项 Three
 
 几何测试明确使用 Canvas2D 绘制桩，只检查几何、变换与射线，没有验证纹理画面。接入测试使用合成三顶点夹具，没有执行现有人物模型。
 
-真实浏览器测试脚本已写出，但当前 Chromium 在网页载入前因环境 socket 权限限制退出。经支持的执行权限重试仍失败，所以图形 shader、最终画面、实际控制、音效听感和移动端表现均未验收；screenshots 目录没有成果图。不能将这里称为已验证的高保真美术。
+首轮 [GitHub Actions 实测](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37854318109) 已真正运行浏览器，锁定提交 8edc2b65a1a2cf8ca407baadcb6a5823b274de6c：数值检查通过；房间完成 WebGL 渲染、进入后启音和真实镜头凝视触发；现有人物完成原权重、版本指纹、固定拓扑和 CommonSkinLayer 的实际载入。已取得一张真实房间入口图。
+
+随后房间与人物测试均在截图操作上超过 30 秒，首轮 job 因此失败。完整三阶段、更多控制、人物同场画面、声音听感及移动端仍未验收。首张房图只支持“空间可读的机制候选”，墙地、木饰和间接光距离最终目标仍有明显差距，不能称为已验证的高保真美术。
+
+本次修订让静止场景按需渲染，两张完整分辨率的阴影只在物体或灯光改变时更新，并为软件图形环境延长截图等待。没有降低几何、纹理或阴影分辨率；这一修订尚待下一轮浏览器复验。[首轮实际证据附件](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37854318109/artifacts/11583940632)
 
 ## 后续验证方法
 
@@ -30,7 +34,7 @@ core.test.mjs、scene-numerical.mjs、adapter-contract.mjs 是已通过的数值
 
 integration/CommonPersonSceneAdapter.mjs 是已编写的窄接口适配器。它接收现有 CommonPerson 与 CommonSkinLayer，沿用固定拓扑、相同坐标转换及皮肤字段，把几何接到宿主场景，不创建新渲染器，不降级替换为泥模，不创建新人物。
 
-页面包含可选的“载入现有人物”入口，直接读取现有工作台原运行时和权重，校验版本指纹，并沿用 CommonSkinLayer。默认不下载人物大权重，可以取消或释放，失败时不会显示替代模型。它还没有在当前环境装载或渲染完成实测；独立的 tests/human-browser.cjs 用于随后验证实际加载、拓扑、原皮肤层、画布变化和释放。具体版本、入口、范围与阻塞见 docs/existing-assets-integration-audit.md。
+页面包含可选的“载入现有人物”入口，直接读取现有工作台原运行时和权重，校验版本指纹，并沿用 CommonSkinLayer。默认不下载人物大权重，可以取消或释放，失败时不会显示替代模型。首轮 CI 已验证实际加载、固定拓扑与原皮肤层；之后的人物截图超时，所以不宣称同场观感、完整释放流程或整合质量已通过。独立的 tests/human-browser.cjs 将继续验证这些部分。具体版本、入口、范围与阻塞见 docs/existing-assets-integration-audit.md。
 
 ## 从老师学到什么
 

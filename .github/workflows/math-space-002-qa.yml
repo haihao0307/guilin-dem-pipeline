@@ -23,6 +23,12 @@ jobs:
         working-directory: kaopu-minigame-workbench/experiments/math-space-002
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /kaopu-minigame-workbench/experiments/math-space-002/
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -71,6 +77,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /kaopu-minigame-workbench/experiments/pt-mechanism-001/
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -130,6 +140,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /kaopu-minigame-workbench/direction-r01/
+            /kaopu-minigame-workbench/index.html
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -169,7 +184,7 @@ jobs:
               await page.screenshot({path:`/tmp/direction-evidence/${width}-trials.png`});
               await page.goto(base+'direction-r01/');
               const promise=page.waitForEvent('download');
-              await page.getByText('下载完整 Markdown').click();
+              await page.getByText('下载基础 Markdown').click();
               const download=await promise;
               if(!fs.readFileSync(await download.path()).equals(fs.readFileSync('kaopu-minigame-workbench/direction-r01/FOUNDATION.md')))throw Error('Markdown download mismatch');
               if(errors.length)throw Error(JSON.stringify(errors));

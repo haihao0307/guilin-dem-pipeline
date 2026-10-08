@@ -16,6 +16,9 @@ renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure=1.05;
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+// The room, lights and posed person are static between explicit state changes.
+// Keep full shadow resolution, but do not redraw both maps for a stationary camera.
+renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;
 const gallery=createGallery(THREE), scene=gallery.scene;
 const camera=new THREE.PerspectiveCamera(53,1,.06,60);
 const cycle=new ObservationCycle(), keys=new Set(), velocity=new THREE.Vector2();
@@ -24,6 +27,7 @@ const target=new THREE.Vector3(), projected=new THREE.Vector3(), direction=new T
 const ray=new THREE.Raycaster();
 let started=false,paused=false,zoomToggle=false,drag=null,lastTime=0,elapsed=0,frames=0,visible=false,focused=false,rendered=false;
 let gazeOccluded=false,debugOpen=false,distance=0;
+let renderDirty=true,lastRenderPose='';
 const collisionBoxes=(gallery.collisionBoxes||[{min:[-.72,0,-6.02],max:[.72,1.3,-4.58]}])
   .map(b=>new THREE.Box3(new THREE.Vector3(...b.min),new THREE.Vector3(...b.max)).expandByScalar(.24));
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -70,10 +74,10 @@ const audio=new RoomAudio();
 let human=null,humanAbort=null,humanTicket=0,humanState={status:'not-loaded',progress:0,verifiedVisual:false};
 $('humanButton').addEventListener('click',async()=>{
   if(humanAbort){humanTicket++;humanAbort.abort();humanAbort=null;humanState={status:'cancelled',progress:0,verifiedVisual:false};$('humanButton').textContent='载入现有人物';$('humanStatus').textContent='已取消，未放入替代模型';return;}
-  if(human){human.adapter.dispose();human=null;humanState={status:'not-loaded',progress:0,verifiedVisual:false};$('humanButton').textContent='载入现有人物';$('humanStatus').textContent='已释放人物；原工作台与参数未改';return;}
+  if(human){human.adapter.dispose();human=null;renderDirty=true;renderer.shadowMap.needsUpdate=true;humanState={status:'not-loaded',progress:0,verifiedVisual:false};$('humanButton').textContent='载入现有人物';$('humanStatus').textContent='已释放人物；原工作台与参数未改';return;}
   const ticket=++humanTicket,aborter=humanAbort=new AbortController();humanState={status:'loading',progress:0,verifiedVisual:false};$('humanButton').textContent='取消人物载入';$('humanStatus').textContent='读取原人物运行时与已锁定资产…';
   try{
-    const loaded=await loadApprovedPerson({THREE,scene,signal:aborter.signal,onProgress:p=>{if(ticket===humanTicket){humanState.progress=p.fraction;$('humanStatus').textContent='载入并校验原资产 '+Math.round(p.fraction*100)+'%';}}});
+    const loaded=await loadApprovedPerson({THREE,scene,signal:aborter.signal,requestRender:()=>{renderDirty=true;renderer.shadowMap.needsUpdate=true;},onProgress:p=>{if(ticket===humanTicket){humanState.progress=p.fraction;$('humanStatus').textContent='载入并校验原资产 '+Math.round(p.fraction*100)+'%';}}});
     if(ticket!==humanTicket){loaded.adapter.dispose();return;}
     human=loaded;humanState={status:'loaded',progress:1,verifiedVisual:false,vertices:loaded.metadata.vertices,triangles:loaded.metadata.triangles,sourceCommit:loaded.source.sourceCommit};$('humanButton').textContent='释放人物';$('humanStatus').textContent='原网格与原皮肤已接入 · 场景光照仍待验收';
   }catch(e){if(ticket===humanTicket){humanState={status:e.name==='AbortError'?'cancelled':'error',progress:0,verifiedVisual:false,error:e.message};$('humanButton').textContent='重新载入人物';$('humanStatus').textContent=e.name==='AbortError'?'已取消':('载入未完成：'+e.message);}}
@@ -84,7 +88,7 @@ function clearInput(){keys.clear();velocity.set(0,0);drag=null;}
 function setPause(value){paused=value;clearInput();document.body.classList.toggle('paused',paused);$('pause').textContent=paused?'继续':'暂停';$('pause').setAttribute('aria-pressed',String(paused));
   if(audio.context){if(paused)audio.context.suspend();else if(started)audio.context.resume();}updateHud();}
 async function start(){if(started)return;started=true;paused=false;$('welcome').hidden=true;$('hud').hidden=false;document.body.classList.add('entered');await audio.start();canvas.focus();}
-function reset(){cycle.reset();gallery.applyPhase(0);audio.setPhase(0);audio.chimes=0;zoomToggle=false;$('zoom').setAttribute('aria-pressed','false');clearInput();resetPose();camera.fov=53;camera.updateProjectionMatrix();setPause(false);updateHud();}
+function reset(){cycle.reset();gallery.applyPhase(0);renderDirty=true;renderer.shadowMap.needsUpdate=true;audio.setPhase(0);audio.chimes=0;zoomToggle=false;$('zoom').setAttribute('aria-pressed','false');clearInput();resetPose();camera.fov=53;camera.updateProjectionMatrix();setPause(false);updateHud();}
 $('start').addEventListener('click',start);
 $('pause').addEventListener('click',()=>{if(started)setPause(!paused);});
 $('reset').addEventListener('click',reset);
@@ -132,23 +136,25 @@ function updateHud(){
   $('reticle').classList.toggle('seen',focused&&started&&!paused);
   if(debugOpen)$('debug').textContent=JSON.stringify({phase:cycle.phase,stage:cycle.stage,gaze:+cycle.gazeSeconds.toFixed(2),visible,focused,occluded:gazeOccluded,distance:+distance.toFixed(2),position:[+player.x.toFixed(2),+player.z.toFixed(2)],audio:audio.snapshot(),lastEvents:cycle.events.slice(-4)},null,2);
 }
-function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();}
+function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderDirty=true;}
 addEventListener('resize',resize);resize();
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();setPause(true);$('notice').hidden=false;$('notice').textContent='图形上下文已中断。场景暂停，请重新载入后再观察。';});
 function animate(time){requestAnimationFrame(animate);const dt=Math.min(.05,lastTime?(time-lastTime)/1000:1/60);lastTime=time;
   if(started&&!paused){elapsed+=dt;controls(dt);}
   camera.position.set(player.x,1.65,player.z);camera.rotation.set(player.pitch,player.yaw,0,'YXZ');
-  const desired=(keys.has('Space')||zoomToggle)?34:53;camera.fov=reducedMotion?desired:approach(camera.fov,desired,9,dt);camera.updateProjectionMatrix();camera.updateMatrixWorld();scene.updateMatrixWorld();
+  const desired=(keys.has('Space')||zoomToggle)?34:53;camera.fov=reducedMotion?desired:approach(camera.fov,desired,9,dt);if(Math.abs(camera.fov-desired)<.001)camera.fov=desired;camera.updateProjectionMatrix();camera.updateMatrixWorld();scene.updateMatrixWorld();
   visibility();
   // Confirmation uses focused gaze; looking away requires leaving the wider frame.
   const seenForCycle=cycle.stage==='observed'?visible:focused;
   const event=cycle.update(dt,seenForCycle,started&&!paused);
-  if(event==='change'||event==='complete'){gallery.applyPhase(cycle.phase);audio.setPhase(cycle.phase);audio.ping();}
-  gallery.animate?.(started&&!paused?dt:0,elapsed);audio.update();updateHud();renderer.render(scene,camera);frames++;rendered=true;
+  if(event==='change'||event==='complete'){gallery.applyPhase(cycle.phase);renderDirty=true;renderer.shadowMap.needsUpdate=true;audio.setPhase(cycle.phase);audio.ping();}
+  gallery.animate?.(started&&!paused?dt:0,elapsed);audio.update();updateHud();
+  const pose=[player.x,player.z,player.yaw,player.pitch,camera.fov,camera.aspect].map(v=>v.toFixed(6)).join('|');
+  if(renderDirty||pose!==lastRenderPose){renderer.render(scene,camera);frames++;rendered=true;renderDirty=false;lastRenderPose=pose;}
 }
 requestAnimationFrame(animate);
 window.__study={
-  getState:()=>({...cycle.snapshot(),started,paused,rendered,frames,focused,visible,occluded:gazeOccluded,distance,position:[player.x,1.65,player.z],yaw:player.yaw,pitch:player.pitch,fov:camera.fov,keys:[...keys],audio:audio.snapshot(),human:{...humanState},threeRevision:THREE.REVISION,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,collisionBoxes:collisionBoxes.map(b=>({min:b.min.toArray(),max:b.max.toArray()}))}),
+  getState:()=>({...cycle.snapshot(),started,paused,rendered,frames,renderPending:renderDirty,focused,visible,occluded:gazeOccluded,distance,position:[player.x,1.65,player.z],yaw:player.yaw,pitch:player.pitch,fov:camera.fov,keys:[...keys],audio:audio.snapshot(),human:{...humanState},threeRevision:THREE.REVISION,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,collisionBoxes:collisionBoxes.map(b=>({min:b.min.toArray(),max:b.max.toArray()}))}),
   setPose:({x=player.x,z=player.z,yaw=player.yaw,pitch=player.pitch})=>{Object.assign(player,{x:Math.max(-3.27,Math.min(3.27,x)),z:Math.max(-8.65,Math.min(2.42,z)),yaw,pitch:Math.max(-.9,Math.min(.9,pitch))});velocity.set(0,0);},
   lookAtTarget:()=>{camera.position.set(player.x,1.65,player.z);Object.assign(player,rotateToTarget(camera.position,focusPosition()));},
   move:movePlayer,reset,pause:setPause,focusPosition:()=>focusPosition().toArray()

@@ -1,7 +1,7 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert'),path=require('path');const root=path.resolve(__dirname,'..'),html=fs.readFileSync(root+'/index.html','utf8');
 const listeners={},elements=new Map();const target=id=>({addEventListener:(n,f)=>(listeners[id+':'+n]??=[]).push(f),emit(n,e={}){for(const f of listeners[id+':'+n]||[])f(e);}});
 const ctx2d=new Proxy({}, {get:(_,k)=>()=>{},set:()=>true});
-const gl=new Proxy({getShaderParameter:()=>true,getProgramParameter:()=>true,createShader:()=>({}),createProgram:()=>({}),createBuffer:()=>({}),getAttribLocation:()=>0,getUniformLocation:(_,n)=>n},{get:(t,k)=>t[k]||(()=>{})});
+const gl=new Proxy({FRAMEBUFFER_COMPLETE:36053,checkFramebufferStatus:()=>36053,getShaderParameter:()=>true,getProgramParameter:()=>true,createShader:()=>({}),createProgram:()=>({}),createBuffer:()=>({}),getAttribLocation:()=>0,getUniformLocation:(_,n)=>n},{get:(t,k)=>t[k]||(()=>{})});
 const document={...target('document'),hidden:false,activeElement:{tagName:'BODY'},getElementById:element,querySelectorAll:()=>buttons};
 function element(id){if(elements.has(id))return elements.get(id);const e={...target(id),id,tagName:'DIV',dataset:{},style:{},value:'',textContent:'',innerHTML:'',classList:{add(){},remove(){},toggle(){}},setAttribute(n,v){this[n]=v},querySelector:()=>element(id+'-small'),setPointerCapture(){},focus(){document.activeElement=this;},getContext:type=>type==='2d'?ctx2d:gl,getBoundingClientRect:()=>({width:1000,height:800})};elements.set(id,e);return e;}
 const buttons=['w','a','s','d'].map(k=>{const e=element('move-'+k);e.dataset.key=k;return e;});
