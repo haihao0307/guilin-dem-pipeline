@@ -19,6 +19,12 @@ def periodic(a):
  if a.ndim==3:den=den[...,None]
  ft=np.fft.fft2(v,axes=(0,1))/den;ft[0,0]=0;return a-np.fft.ifft2(ft,axes=(0,1)).real
 
+def micro_residual(a,sigma):
+ p=periodic(a);sig=(sigma,sigma,0) if p.ndim==3 else sigma;p-=gaussian_filter(p,sig,mode='wrap')
+ # Remove residual axis-wide scan drift, not individual pore structures.
+ p-=p.mean(axis=0,keepdims=True)+p.mean(axis=1,keepdims=True)-p.mean(axis=(0,1),keepdims=True)
+ return p
+
 def build(snapshot,out):
  out=Path(out);out.mkdir(parents=True,exist_ok=True);src=Path('/tmp/skin-r02-source')
  for name,expected in SOURCE_HASHES.items():
@@ -27,15 +33,15 @@ def build(snapshot,out):
   if sha(p)!=expected:raise RuntimeError('R02 source digest mismatch: '+name)
  # Native 512px bare central forehead crop, above the eyebrows. This is not
  # a face portrait projection, and does not carry eyes, beard or brow paint.
- box=(1792,512,2304,1024)
- albedo=np.asarray(Image.open(src/'r01/assets/hires/albedo-4k.jpg').convert('RGB').crop(box),float)/255;mean=albedo.mean((0,1));resid=albedo-gaussian_filter(albedo,(24,24,0));color=np.clip(periodic(resid)*.72+mean,0,1)
+ box=(1792,256,2304,768)
+ albedo=np.asarray(Image.open(src/'r01/assets/hires/albedo-4k.jpg').convert('RGB').crop(box),float)/255;mean=albedo.mean((0,1));resid=micro_residual(albedo,12);color=np.clip(resid*.78+mean,0,1)
  normals=[]
  for name in ['meso','micro']:
-  f=np.asarray(Image.open(src/f'r02/assets/{name}.webp').convert('RGB').crop(box),float)/255*2-1;xy=periodic(f[...,:2]);xy-=xy.mean((0,1));normals.append(np.clip(xy,-.95,.95))
+  f=np.asarray(Image.open(src/f'r02/assets/{name}.webp').convert('RGB').crop(box),float)/255*2-1;xy=micro_residual(f[...,:2],12 if name=='meso' else 6);xy-=xy.mean((0,1));normals.append(np.clip(xy,-.95,.95))
  xy=np.concatenate(normals,axis=-1)*.5+.5
- specImage=Image.open(src/'r01/assets/specular.jpg').convert('L').resize((4096,4096),Image.Resampling.BICUBIC);spec=np.asarray(specImage.crop(box),float)/255;rough=np.clip(.53+periodic(spec.mean()-spec)*.24,0,1);cr=np.concatenate([color,rough[...,None]],axis=-1)
+ specImage=Image.open(src/'r01/assets/specular.jpg').convert('L').resize((4096,4096),Image.Resampling.BICUBIC);spec=np.asarray(specImage.crop(box),float)/255;rough=np.clip(.53+micro_residual(-spec,18)*.24,0,1);cr=np.concatenate([color,rough[...,None]],axis=-1)
  for name,a in [('scan-color-rough.png',cr),('scan-meso-micro.png',xy)]:Image.fromarray(np.uint8(np.clip(a,0,1)*255+.5)).save(out/name,optimize=True)
- scan={'schema':'kaopu/skin-material-sample@1','sourceCommit':'1d4a616672f2a45e869d4ef3e36e710b11f5cf41','sourceRepository':'haihao0307/Humanoid-Rig-Lab-Next','crop':list(box),'tilePixels':512,'estimatedTileMetres':.065,'scaleBiologicallyCalibrated':False,'sourceSRGBMean':mean.tolist(),'scope':'bare skin sample only; no facial-feature transplantation','sourceFiles':SOURCE_HASHES,'files':{p.name:{'sha256':sha(p),'bytes':p.stat().st_size} for p in out.glob('*.png')}}
+ scan={'schema':'kaopu/skin-material-sample@1','sourceCommit':'1d4a616672f2a45e869d4ef3e36e710b11f5cf41','sourceRepository':'haihao0307/Humanoid-Rig-Lab-Next','crop':list(box),'tilePixels':512,'estimatedTileMetres':.065,'scaleBiologicallyCalibrated':False,'sourceSRGBMean':mean.tolist(),'scope':'brow-free upper forehead crop; periodic high-pass and axis-drift removal; no facial-feature transplantation','sourceFiles':SOURCE_HASHES,'files':{p.name:{'sha256':sha(p),'bytes':p.stat().st_size} for p in out.glob('*.png')}}
  (out/'scan-manifest.json').write_text(json.dumps(scan,indent=2))
  d=json.loads(Path(snapshot).read_text());p=np.array(d['positions'],dtype='<f4').reshape(-1,3);n=np.array(d['normals'],dtype='<f4').reshape(-1,3);f=np.array(d['faces'],dtype='<u4').reshape(-1,3)
  a=np.concatenate([f[:,0],f[:,1],f[:,2]]);b=np.concatenate([f[:,1],f[:,2],f[:,0]]);count,labels=connected_components(coo_matrix((np.ones(len(a)),(a,b)),shape=(len(p),len(p))),directed=False);sizes=np.bincount(labels);outer=int(np.argmax(sizes));coverage=np.where(labels==outer,255,0).astype('u1')
@@ -49,3 +55,5 @@ def build(snapshot,out):
  licenseText=urllib.request.urlopen(BASE+'r02/THIRD_PARTY.txt').read().decode('utf-8')+'\n\n'+urllib.request.urlopen(BASE+'r01/assets/HEAD-LICENSE.txt').read().decode('utf-8')
  (out.parent/'THIRD_PARTY.txt').write_text(licenseText)
 if __name__=='__main__':build(*sys.argv[1:])
+
+# skin-r01.1-safe-crop
