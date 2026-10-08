@@ -1,4 +1,4 @@
-name: Train desktop resolution audit
+name: Train desktop railway HUD candidate preview
 on:
   push:
     branches: ['qa/voxel-train-r01-20261006']
@@ -37,7 +37,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium]
+        browser: [chromium, webkit]
     env:
       TRAIN_BROWSER: ${{ matrix.browser }}
       TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/
@@ -64,13 +64,13 @@ jobs:
         run: |
           nohup python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/driver-server.log" 2>&1 &
           for i in $(seq 1 30); do curl -fsS "$TRAIN_GAME_URL" > /dev/null && break || sleep 1; done
-      - name: Compare native desktop pixels against current and classic releases
-        run: timeout 540s node kaopu-minigame-workbench/voxel-train-study/game/tests/desktop-resolution.cjs
+      - name: Render desktop native-DPR HUD, mobile fallbacks and settings
+        run: timeout 540s node kaopu-minigame-workbench/voxel-train-study/game/tests/desktop-hud-preview.cjs
       - name: Upload first candidate layout for review
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: train-desktop-resolution-${{ matrix.browser }}
+          name: train-desktop-hud-${{ matrix.browser }}
           retention-days: 7
           if-no-files-found: warn
-          path: desktop-resolution/*
+          path: desktop-hud-${{ matrix.browser }}/*
