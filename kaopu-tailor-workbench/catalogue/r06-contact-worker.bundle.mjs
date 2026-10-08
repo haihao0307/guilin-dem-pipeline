@@ -2984,6 +2984,7 @@ var GarmentLab2 = class extends GarmentLab {
   activate(stageId, current = this.spec) {
     super.activate(stageId, current);
     if (this.kernel) this.syncConstraints();
+    if(this.r06Contact && stageId==="shoulders" && this.support.length) this.releasePins();
   }
   releasePins() {
     super.releasePins();
@@ -3562,7 +3563,7 @@ function tick(token) {
           const begin = performance.now(), record = lab.export(), regions = regionalStrain(spec, record.positionsMm), intersections = strictIntersectionAudit(spec, record.positionsMm, record.materialToSolverGroup, bodyAudit);
           profile.auditMs = performance.now() - begin;
           if(config.kind!=="legacy"){
-            record.trial={version:"R06.3",style:config.recipe.design.style,sourceRecipeHash:spec.source.recipeHash,physicalFitAccepted:false,solver:"existing small-step XPBD / f64 WASM; full original-body SDF; sparse numerical stitching",runtimeSelfContact:true,continuousCollision:false,linearSweptContact:lab.selfContacts.report(),temporarySupportPath:{kind:"lift-sweep-lower",liftMm:80,durationSec:4,originalTargetRetained:true,releasedBeforeGravity:true},gatheringStitchModel:{restGapMm:.8,equalityWeld:true,restMetricRescaled:false},materialCalibrated:false,seamAllowanceAndThickness:false};
+            record.trial={version:"R06.3",style:config.recipe.design.style,sourceRecipeHash:spec.source.recipeHash,physicalFitAccepted:false,solver:"existing small-step XPBD / f64 WASM; full original-body SDF; sparse numerical stitching",runtimeSelfContact:true,continuousCollision:false,linearSweptContact:lab.selfContacts.report(),temporarySupportPath:{kind:"lift-sweep-lower",liftMm:80,durationSec:4,originalTargetRetained:true,releasePolicy:"start original shoulder sewing stage after center assembly",releasedBeforeGravity:true},gatheringStitchModel:{restGapMm:.8,equalityWeld:true,restMetricRescaled:false},materialCalibrated:false,seamAllowanceAndThickness:false};
           }
           emit("done", { record, regions, intersections, profile, activeWallMs: wallMs + profile.auditMs });
           return;
