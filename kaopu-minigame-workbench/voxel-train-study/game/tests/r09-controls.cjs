@@ -9,12 +9,14 @@ const {chromium, webkit} = require('playwright');
 const {clickControl, clickTarget, controlGeometry, assertControlGeometry} = require('./browser-controls.cjs');
 const engine = process.env.TRAIN_BROWSER || 'chromium';
 const base = process.env.TRAIN_GAME_URL || 'http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/';
-const out = process.env.R09_CONTROLS_OUT || `r09-controls-${engine}`;
+const shardCount=Number(process.env.TRAIN_CONTROL_SHARDS||1),shardIndex=Number(process.env.TRAIN_CONTROL_SHARD||0);
+assert(Number.isInteger(shardCount)&&shardCount>=1&&Number.isInteger(shardIndex)&&shardIndex>=0&&shardIndex<shardCount,'Valid control shard');
+const out = process.env.R09_CONTROLS_OUT || `r09-controls-${engine}${shardCount>1?'-'+shardIndex:''}`;
 const marker = '/* R09 · The first driving control';
 const ids = ['pause', 'accelerate', 'decelerate', 'brake', 'stationAction'];
 const cameraNames = ['platform', 'overview', 'front', 'rear', 'detail'];
 const pinnedBaseline = fs.readFileSync(path.join(__dirname, '../r08/game.css'), 'utf8');
-const cases = [
+const allCases = [
   {name:'desktop-2048', width:2048, height:1016},
   {name:'desktop-2560', width:2560, height:1336, dpr:2},
   {name:'desktop-1440', width:1440, height:900},
@@ -32,6 +34,8 @@ const cases = [
   {name:'portrait-320', width:320, height:690, touch:true, portrait:true},
   {name:'portrait-desktop', width:1024, height:900, portrait:true}
 ];
+const cases=allCases.filter((_,index)=>index%shardCount===shardIndex);
+assert(cases.length>0,'Control shard contains cases');
 // Rendering can otherwise make input waits slow in software WebGL. Stop the
 // frame loop only after genuine start/layout actions and a stable first stop.
 const harness = `\nwindow.__r09Controls = {
@@ -230,14 +234,14 @@ async function nativeAt(page, point, touch) {
       assert.equal(await page.evaluate(()=>__r09Controls.refresh().phase),'doors-opening','Native platform action opens doors');
       const evidence={case:spec,before,after,ratios,gaps,edges,clicks,cameraGeometry,cameraClicks,pause:true,brake:true,platform:{from:beforePlatform,to:'doors-opening'}};
       checks.push(evidence);
-      fs.writeFileSync(path.join(out,'result.json'),JSON.stringify({pass:false,inProgress:true,engine,checks,errors},null,2));
+      fs.writeFileSync(path.join(out,'result.json'),JSON.stringify({pass:false,inProgress:true,engine,shardIndex,shardCount,totalCases:allCases.length,checks,errors},null,2));
       console.log(spec.name+': '+['accelerate','decelerate'].map(id=>{
         const a=before.buttons[id],b=after.buttons[id];return `${id} ${a.cssWidth.toFixed(2)}×${a.cssHeight.toFixed(2)} → ${b.cssWidth.toFixed(2)}×${b.cssHeight.toFixed(2)}`;
       }).join('; '));
       await context.close();context=null;
     }
     assert.deepEqual(errors,[],'No page runtime errors');
-    fs.writeFileSync(path.join(out,'result.json'),JSON.stringify({pass:true,engine,checks,errors},null,2));
+    fs.writeFileSync(path.join(out,'result.json'),JSON.stringify({pass:true,engine,shardIndex,shardCount,totalCases:allCases.length,checks,errors},null,2));
   } catch(error) {
     if(page) await page.screenshot({path:path.join(out,'failure.png'),timeout:60000}).catch(()=>{});
     fs.writeFileSync(path.join(out,'failure.json'),JSON.stringify({pass:false,engine,case:currentCase,error:String(error),stack:error.stack,checks,errors},null,2));
