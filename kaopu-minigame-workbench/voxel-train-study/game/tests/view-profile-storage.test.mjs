@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {VIEW_REVISION,DEFAULT_VIEWS,prepareViewProfiles,recommendView,restoreView} from '../view-profile-storage.mjs';
+const old={version:1,layout:'landscape',profiles:{landscape:{position:[19,24,38],target:[-8.8,-.8,1],zoom:1.21,manual:true,locked:true},portrait:{position:[30,22,17],target:[-7,-.5,1],zoom:1.31,manual:true,locked:true}},backups:{landscape:{position:[18,25,39],target:[-8,0,1],zoom:.9,manual:true,locked:false}}};
+const original=JSON.stringify(old),migrated=prepareViewProfiles(JSON.stringify(old));
+assert.equal(migrated.frameRevision,VIEW_REVISION);assert.deepEqual(migrated.profiles.landscape.position,DEFAULT_VIEWS.landscape.position);assert.deepEqual(migrated.backups.landscape,old.profiles.landscape);assert.deepEqual(migrated.backups.portrait,old.profiles.portrait);assert.deepEqual(migrated.archivedBackups.landscape,[old.backups.landscape]);assert.equal(JSON.stringify(old),original);
+migrated.profiles.landscape={position:[17,22,29],target:[-3,1,0],zoom:1.18,manual:true,locked:true};const reopened=prepareViewProfiles(JSON.stringify(migrated));assert.deepEqual(reopened.profiles,migrated.profiles,'Reopening never repeats the migration or overwrites a later user adjustment');
+assert(restoreView(reopened,'landscape'));assert.deepEqual(reopened.profiles.landscape,old.profiles.landscape);assert.deepEqual(prepareViewProfiles(JSON.stringify(reopened)).profiles.landscape,old.profiles.landscape,'Restored old view remains restored on the next visit');assert(restoreView(reopened,'portrait'));assert.deepEqual(reopened.profiles.portrait,old.profiles.portrait);
+recommendView(reopened,'portrait');assert.deepEqual(reopened.backups.portrait,old.profiles.portrait);assert.deepEqual(reopened.profiles.portrait.position,DEFAULT_VIEWS.portrait.position);assert(restoreView(reopened,'portrait'));assert.deepEqual(reopened.profiles.portrait,old.profiles.portrait);
+const fresh=prepareViewProfiles(null);assert.equal(fresh.layout,'landscape');assert.deepEqual(fresh.backups,{});assert.equal(restoreView(fresh,'landscape'),false);
+console.log(JSON.stringify({status:'passed',oneTimeMigration:true,oldLockedViewsPreserved:true,earlierBackupsRetained:true,reopenDoesNotOverwrite:true,restoreExact:true,invalidDataSafe:true}));
+
+// A restored automatic old default is still an explicit recoverable view choice.
+const oldAutomatic={version:1,layout:'landscape',profiles:{landscape:{position:[4,20,32],target:[-4.5,1.5,1],zoom:1.14,manual:false,locked:false}}};
+const autoState=prepareViewProfiles(oldAutomatic);assert(restoreView(autoState,'landscape'));const oldAuto=structuredClone(autoState.profiles.landscape);recommendView(autoState,'landscape');assert.deepEqual(autoState.backups.landscape,oldAuto);assert(restoreView(autoState,'landscape'));assert.deepEqual(autoState.profiles.landscape,oldAuto);console.log('Automatic old framing can be restored, recommended again and undone without changing flags');
