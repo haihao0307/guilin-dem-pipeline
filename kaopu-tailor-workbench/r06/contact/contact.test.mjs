@@ -37,3 +37,11 @@ const seam=(id,a,b)=>({id,a:{panelId:a,edge:'e2',reverse:false},b:{panelId:b,edg
 const input=[seam('original-9','skirt','band'),seam('original-1','torso','band'),seam('original-5','a','b')], original=JSON.stringify(input);
 assert.deepEqual(orderedSeams(input).map(s=>s.id),orderedSeams([...input].reverse()).map(s=>s.id));assert.equal(JSON.stringify(input),original);assert.equal(orderedSeams(input).length,input.length);
 console.log('physical seam ordering is stable, source IDs and inputs preserved');
+
+// Bucket reuse is permitted only while every swept primitive remains contained.
+// Current bounds/candidates are recomputed even when spatial buckets are retained.
+l=lab([...fixed,[0,0,.02]],[...fixed,[0,0,.02]],[[0,1],[1,2],[2,0]],[[0,1,2]],[0,0,0,1]);
+c=new FastSweptContact(l);c.rebuild();const firstBuckets=c.cachedTB;c.project();
+for(const p of l.positions)p[0]+=.001;c.rebuild();assert.equal(c.cachedTB,firstBuckets);assert.equal(c.bucketReuses,1);c.project();
+for(const p of l.positions)p[0]+=.02;c.rebuild();assert.notEqual(c.cachedTB,firstBuckets);assert.equal(c.bucketRebuilds,2);
+console.log('spatial bucket reuse requires conservative swept-box containment');
