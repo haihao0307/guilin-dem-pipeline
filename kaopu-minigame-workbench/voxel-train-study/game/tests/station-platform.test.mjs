@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../../vendor/three.module.js';
-import {createStationPlatform,PLATFORM_SPEC} from '../station-platform.mjs';
+import {createStationPlatform,PLATFORM_SPEC,STONE_TEXTURE_SPEC} from '../station-platform.mjs';
 import {Blocks} from '../heritage.mjs';
 import {KCR_STATIONS} from '../timetable.mjs';
 import {COACHES} from '../session.mjs';
@@ -46,6 +46,23 @@ test('The passenger corridor and ordinary boarding/alighting routes remain unobs
   }
 });
 
+test('The neutral masonry map uses a unique high-resolution atlas with equal world-space texel density',()=>{
+  const s=create(0),deck=s.group.getObjectByName('Station deck surface'),map=deck.material.map,spec=STONE_TEXTURE_SPEC;
+  assert.equal(map.colorSpace,THREE.SRGBColorSpace);assert.deepEqual([map.image.width,map.image.height],[4096,512]);
+  assert.equal(map.wrapS,THREE.ClampToEdgeWrapping);assert.equal(map.wrapT,THREE.ClampToEdgeWrapping);
+  assert.equal(map.userData.originalProcedural,true);assert.equal(map.userData.repeats,false);assert.ok(map.userData.expansionJoints>=7&&map.userData.expansionJoints<=11);
+  near(map.image.width/spec.worldWidth,spec.texelsPerMetre);near(map.image.height/spec.worldDepth,spec.texelsPerMetre);
+  const p=deck.geometry.attributes.position,uv=deck.geometry.attributes.uv;
+  for(let i=0;i<p.count;i++){
+    near(uv.getX(i),(p.getX(i)-spec.originX)/spec.worldWidth);near(uv.getY(i),(p.getZ(i)-spec.originZ)/spec.worldDepth);
+    assert.ok(uv.getX(i)>0&&uv.getX(i)<1&&uv.getY(i)>0&&uv.getY(i)<1,'The platform stays inside the unique atlas');
+  }
+  // The atlas aspect must not be applied like a square texture to the long deck.
+  let a=-1,b=-1;for(let i=0;i<p.count;i++)if(deck.geometry.attributes.normal.getY(i)>.9){if(a<0)a=i;else if(Math.abs(p.getX(i)-p.getX(a))>1){b=i;break;}}
+  near(Math.abs(uv.getX(a)-uv.getX(b))*map.image.width/Math.abs(p.getX(a)-p.getX(b)),spec.texelsPerMetre,1e-5);
+  assert.ok(deck.material.roughness>=.95);assert.equal(deck.material.metalness,0);s.dispose();
+});
+
 test('The default landscape and portrait camera rays see the in-cab driver across the platform',()=>{
   for(let index=0;index<9;index++){
     const s=create(index);for(const layout of ['landscape','portrait']){
@@ -68,6 +85,22 @@ test('The sign has independent unmirrored outward-facing surfaces and an sRGB hi
     const hits=new THREE.Raycaster(new THREE.Vector3(-14.6,2.55,z),new THREE.Vector3(0,0,direction)).intersectObjects(stationMeshes(s),false);
     assert.equal(hits[0]?.object,expected);
   }s.dispose();
+});
+
+test('Tai Po Market clock face remains fully exposed above the noticeboard, clear of the station sign',()=>{
+  const s=create(5),clock=s.proof.clock,[x,y,z]=clock.facePosition;
+  near(x,-17.05);near(y,2.82);near(z,5.461);
+  assert.ok(x+clock.caseRadius<s.sign.position.x-s.sign.geometry.parameters.width/2);
+  assert.ok(y-clock.caseRadius>2.05+.83/2,'Clock clears the noticeboard top');
+  // Sample the actual dial triangles and hands: every visible dial point must
+  // be reached before any sign/backplate or roof geometry along the view ray.
+  const points=[[0,0]];for(const radius of [.08,.17])for(let i=0;i<12;i++){const angle=i*Math.PI/6;points.push([Math.cos(angle)*radius,Math.sin(angle)*radius]);}
+  for(const [dx,dy]of points){
+    const ray=new THREE.Raycaster(new THREE.Vector3(x+dx,y+dy,8),new THREE.Vector3(0,0,-1));
+    const hit=ray.intersectObjects(stationMeshes(s),false)[0];assert.ok(hit,'Visible clock dial has a surface');
+    assert.ok(hit.point.z>=z-1e-6&&hit.point.z<=z+.025,`Clock face obstructed at ${dx}, ${dy}: ${hit.object.name}`);
+  }
+  s.dispose();
 });
 
 test('The original station attendant retains every position, normal, colour and index',()=>{

@@ -88,57 +88,68 @@ function roomShell(b, staff) {
     b.box(x,.34,z,.26,.60,.28,0x777869);
     b.box(x,.15,z,.36,.16,.38,0x858573);
   }
-  b.box(0,.73,0,3.3,.18,2.1,0x8d8874);
-  for(let i=0;i<12;i++)b.box(-1.51+i*.274,.812,0,.26,.016,2.0,i%3===0?0xb8ae8c:0xc9ba96);
-  // Plinth and side cutaway walls retain the room's scale without hiding the tea.
-  b.box(0,1.13,.98,3.2,.62,.12,plaster);
-  b.box(-1.54,1.28,0,.12,.92,2.0,plaster);
-  b.box(1.54,1.08,.30,.12,.52,1.4,plaster);
-  for(const x of [-1.54,1.54])b.box(x,1.43,.98,.15,1.24,.17,trim);
-  b.box(0,.90,.904,3.08,.12,.03,trim);
-  b.box(-1.468,.90,0,.026,.12,1.92,trim);
-  // Open back window with slender mullions and a projecting sill.
-  const wx=staff?-.53:-.62,ww=staff?1.5:1.38;
-  const left=wx-ww/2,right=wx+ww/2;
-  const leftWidth=left+1.6,rightWidth=1.6-right;
-  b.box(-1.6+leftWidth/2,2.045,.98,leftWidth,.99,.12,plaster);
-  b.box(right+rightWidth/2,2.045,.98,rightWidth,.99,.12,plaster);
-  b.box(0,2.575,.98,3.2,.2,.12,plaster);
-  b.box(wx,1.56,.90,ww+.14,.085,.3,trim);
-  b.box(wx,2.5,.955,ww+.16,.065,.17,trim);
-  for(const x of [left,right])b.box(x,2.035,.955,.063,.9,.17,trim);
-  b.box(wx,2.035,.965,.038,.9,.10,trim);
-  if(!staff)b.box(wx,2.045,.965,ww,.037,.10,trim);
-  // Front doorway is an open frame: a broad, unobstructed entrance to the bench.
+  // The slab stops below the floorboards: their visible tops are never coplanar.
+  b.box(0,.718,0,3.3,.16,2.1,0x8d8874);
+  for(let i=0;i<12;i++)b.box(-1.51+i*.274,.808,0,.26,.024,2.0,i%3===0?0xb8ae8c:0xc9ba96);
+  // Complete side and rear walls surround generous real window openings.
+  // Window trim projects beyond both wall faces instead of sharing their planes.
+  b.box(0,1.08,.98,3.2,.52,.12,plaster);
+  b.box(0,2.60,.98,3.2,.20,.12,plaster);
+  for(const x of [-1.53,0,1.53])b.box(x,1.93,.98,x===0?.16:.14,1.18,.12,plaster);
+  b.box(0,.90,.892,3.08,.12,.035,trim);
+  for(const wx of [-.765,.765]){
+    const width=1.34,half=width/2;
+    b.box(wx,1.355,.97,width+.10,.075,.27,trim);
+    b.box(wx,2.545,.97,width+.10,.075,.23,trim);
+    for(const x of [wx-half,wx+half])b.box(x,1.950,.97,.06,1.110,.22,trim);
+    // The tea-side opening stays clear; only the bench window has a mullion.
+    if(wx<0){
+      b.box(wx,1.950,.973,.034,1.110,.17,trim);
+      if(!staff)b.box(wx,1.96,.982,width-.06,.035,.12,trim);
+    }
+  }
+  for(const side of [-1,1]){
+    const x=side*1.54;
+    b.box(x,1.08,0,.12,.52,1.94,plaster);
+    b.box(x,2.60,0,.12,.20,1.94,plaster);
+    // Joined corner posts carry the entire roof; no deliberately removed wall.
+    for(const z of [-.965,.965])b.box(x,1.735,z,.18,1.83,.18,trim);
+    b.box(x,1.355,0,.23,.075,1.78,trim);
+    b.box(x,2.545,0,.22,.075,1.78,trim);
+    if(side<0)b.box(x,1.95,0,.16,1.11,.036,trim);
+  }
+  // A broad front doorway provides a practical entrance from the platform.
+  for(const side of [-1,1])b.box(side*1.40,1.74,-.965,.28,1.84,.12,plaster);
   for(const x of [-1.55,1.55])b.box(x,1.73,-.97,.11,1.82,.12,trim);
   b.box(0,2.66,-.97,3.28,.12,.16,trim);
   for(const x of [-1.30,1.30])b.box(x,2.48,-.97,.49,.055,.105,trim,x<0?Math.PI/4:-Math.PI/4);
-  // Only the rear roof slice is present, an intentional cutaway for top/front views.
-  // Two pitched eaves, ridge and exposed rafters read as a building, not solid cubes.
+  // Two continuous slopes cover the complete room; the ridge closes their seam.
   const roof=staff?0x665b4a:0x775f4c;
   for(const side of [-1,1]){
-    appendGeometry(b,new THREE.BoxGeometry(1.83,.075,.66),roof,{
-      position:[side*.79,2.91,.77],rotation:[0,0,-side*.255]
+    appendGeometry(b,new THREE.BoxGeometry(1.79,.09,2.19),roof,{
+      position:[side*.83,2.91,.05],rotation:[0,0,-side*.255]
     });
-    b.box(side*.80,2.93,-.97,1.68,.075,.095,trim,-side*.255);
-    b.box(side*1.66,2.70,.145,.06,.08,1.91,roof);
+    // Shallow roof courses give the intact roof a quiet period texture.
+    for(const z of [-.87,-.47,-.07,.33,.73,1.11])b.box(side*.83,2.971,z,1.79,.025,.018,staff?0x736852:0x866e55,-side*.255);
+    for(const z of [-1.04,1.14])b.box(side*.83,2.907,z,1.81,.13,.035,trim,-side*.255);
+    b.box(side*1.70,2.695,.05,.065,.09,2.20,roof);
   }
-  b.box(0,3.125,.24,.12,.12,1.72,roof);
+  b.box(0,3.166,.05,.12,.115,2.20,roof);
   b.box(0,2.66,.98,3.36,.105,.20,trim);
   // Tongue-and-groove lower timber panels distinguish the country staff nook.
-  if(staff)for(let i=0;i<13;i++)b.box(-1.44+i*.24,1.20,.906,.026,.50,.026,wood);
+  if(staff)for(let i=0;i<13;i++)b.box(-1.44+i*.24,1.12,.896,.026,.36,.026,wood);
   // Slatted, armrest-equipped bench lives to the left of the service table.
   bench(b,-.74,.52,1.30,wood,trim);
-  const tx=.88,tz=staff?-.24:.04;
+  const tx=.82,tz=staff?.32:.43;
   for(const dx of [-.49,.49])for(const dz of [-.27,.27])b.box(tx+dx,1.145,tz+dz,.067,.65,.067,trim);
   b.box(tx,1.43,tz,1.15,.065,.68,wood);
   b.box(tx,1.34,tz-.25,1.04,.105,.052,trim);
   b.box(tx,1.02,tz,1.02,.055,.48,wood);
-  // Back shelf, towel and two closed storage tins are quiet practical details.
-  b.box(.93,1.99,.83,1.02,.05,.27,wood);
+  // A low service shelf leaves the window sightline to kettle and cups clear.
+  b.box(.93,1.16,.83,1.02,.05,.27,wood);
   b.box(1.22,1.29,tz-.32,.22,.36,.018,0xbebda3);
-  b.box(.72,2.08,.83,.16,.13,.15,0x86745b);
-  b.box(.99,2.075,.84,.15,.12,.15,0x536256);
+  b.box(.72,1.25,.83,.16,.13,.15,0x86745b);
+  b.box(.99,1.245,.84,.15,.12,.15,0x536256);
   return {table:[tx,1.482,tz],wood,trim};
 }
 
@@ -147,15 +158,15 @@ export function createStationRoom(plan={}, {variant}={}) {
   const selected=variant??(plan.index===0?'city-waiting-room':plan.index===5?'staff-tea-corner':null);
   if(selected&&!['city-waiting-room','staff-tea-corner'].includes(selected))throw new Error(`Unknown station room variant: ${selected}`);
   const group=new THREE.Group();
-  group.name=selected==='staff-tea-corner'?'Station staff tea corner':'Station cutaway waiting room';
+  group.name=selected==='staff-tea-corner'?'Station staff tea corner':'Station waiting room';
   group.position.set(...ROOM_ORIGIN);
   let disposed=false;
-  const proof={enabled:!!selected,variant:selected,origin:[...ROOM_ORIGIN],floorY:FLOOR_Y,frontOpen:true,windowOpen:true,roofCutaway:true,triangles:0,drawCalls:0,teaItems:[],bounds:null};
+  const proof={enabled:!!selected,variant:selected,origin:[...ROOM_ORIGIN],floorY:FLOOR_Y,frontOpen:true,windowOpen:true,roofCutaway:false,completeRoof:true,triangles:0,drawCalls:0,teaItems:[],bounds:null};
   if(selected){
     const shell=new Blocks(),service=new Blocks(),staff=selected==='staff-tea-corner';
     const {table}=roomShell(shell,staff);
     teaService(service,shell,...table,staff);
-    for(const [blocks,name,roughness,metalness] of [[shell,'Cutaway room, bench and tea table',.91,.015],[service,'Enamel kettle, two cups and water jug',.53,.11]]){
+    for(const [blocks,name,roughness,metalness] of [[shell,'Complete roofed room, bench and tea table',.91,.015],[service,'Enamel kettle, two cups and water jug',.53,.11]]){
       const geometry=blocks.geometry(),material=new THREE.MeshStandardMaterial({vertexColors:true,roughness,metalness});
       const mesh=new THREE.Mesh(geometry,material);mesh.name=name;mesh.castShadow=mesh.receiveShadow=true;
       group.add(mesh);proof.triangles+=geometry.index.count/3;proof.drawCalls++;

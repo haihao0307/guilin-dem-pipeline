@@ -7,6 +7,7 @@ import {Blocks} from './heritage.mjs';
 
 export const PLATFORM_SPEC=Object.freeze({minX:-26,maxX:4.6,top:.82,minZ:2.06,maxZ:5.58,
   sign:[-14.6,2.55,5.454],driver:[-1.74,2.82,.78],clearWalkway:{min:[-26,.83,2.06],max:[4.6,2.48,4.6]}});
+export const STONE_TEXTURE_SPEC=Object.freeze({width:4096,height:512,worldWidth:32,worldDepth:4,originX:-26.7,originZ:1.82,texelsPerMetre:128});
 const C={wood:0xa58b61,woodDark:0x63533e,woodEnd:0x867153,cream:0xd5cbb1,
   ink:0x30443b,iron:0x36453e,ironEdge:0x586058,rust:0x77624b,roof:0x65736b,
   stone:0xaaa999,brick:0x8f826d,rope:0xc4b38a,leather:0x745844};
@@ -22,7 +23,7 @@ class Batch{
     for(let i=0;i<p.count;i++){
       point.fromBufferAttribute(p,i).applyMatrix4(matrix);normal.fromBufferAttribute(n,i).applyMatrix3(normalMatrix).normalize();
       this.p.push(point.x,point.y,point.z);this.n.push(normal.x,normal.y,normal.z);this.c.push(col.r,col.g,col.b);
-      const uv=uvTransform?uvTransform(p,i,u):[u?.getX(i)||0,u?.getY(i)||0];this.uv.push(...uv);
+      const uv=uvTransform?uvTransform(p,i,u,point):[u?.getX(i)||0,u?.getY(i)||0];this.uv.push(...uv);
     }
     if(source.index)for(const i of source.index.array)this.indices.push(first+i);else for(let i=0;i<p.count;i++)this.indices.push(first+i);
     this.parts++;
@@ -55,6 +56,41 @@ function woodTexture(){return texture(1024,512,(ctx,w,h)=>{
   for(let i=0;i<24;i++){ctx.fillStyle='rgba(246,232,199,.08)';ctx.fillRect(r()*w,r()*h,90+r()*330,3+r()*13);}
   for(let i=0;i<18;i++){ctx.fillStyle='rgba(54,45,31,.13)';ctx.fillRect(r()*w,r()*h,12+r()*80,.7);}
 });}
+function masonryTexture(stationIndex){const spec=STONE_TEXTURE_SPEC,r=random(19580401+stationIndex*73);let seams=0;
+  const map=texture(spec.width,spec.height,(ctx,w,h)=>{
+    // One non-repeating world-space atlas: 128 texels per metre on both axes.
+    // The fine aggregate and gentle wear are authored here, not photographic.
+    ctx.fillStyle='#d8dad7';ctx.fillRect(0,0,w,h);
+    for(let i=0;i<1500;i++){
+      const x=r()*w,y=r()*h,pw=12+r()*70,ph=3+r()*12;
+      ctx.fillStyle=i%2?'rgba(84,89,85,.018)':'rgba(252,253,250,.025)';
+      for(let feather=0;feather<3;feather++)ctx.fillRect(x-feather*3,y-feather*2,pw+feather*6,ph+feather*4);
+    }
+    for(let i=0;i<76000;i++){
+      ctx.fillStyle=i%3?'rgba(73,80,76,.095)':'rgba(252,253,250,.16)';
+      ctx.fillRect(r()*w,r()*h,.45+r()*1.55,.40+r()*1.30);
+    }
+    const pixelX=x=>(x-spec.originX)*spec.texelsPerMetre,pixelZ=z=>(z-spec.originZ)*spec.texelsPerMetre;
+    // Sparse uneven expansion joints replace the formerly rigid tile grid.
+    for(let x=-23.9+r()*.4;x<4.3;x+=2.5+r()*1.45){seams++;const px=pixelX(x),phase=r()*6.28;
+      for(let y=pixelZ(2.065);y<pixelZ(5.575);y+=1.5){
+        const bend=Math.sin(y*.043+phase)*.75+Math.sin(y*.117)*.35;
+        ctx.fillStyle='rgba(68,74,70,.19)';ctx.fillRect(px+bend,y,.7,1.6);
+        ctx.fillStyle='rgba(252,253,250,.14)';ctx.fillRect(px+bend+1,y,.55,1.6);
+      }
+      // A few fine worn chips, not broad dark stains, at some joint edges.
+      for(let j=0;j<4;j++){ctx.fillStyle='rgba(81,87,82,.10)';ctx.fillRect(px-2+r()*4,pixelZ(2.2+r()*3.1),1+r()*2,2+r()*5);}
+    }
+    for(const edgeZ of [2.075,5.555])for(let i=0;i<440;i++){
+      const x=pixelX(-25.98+r()*30.56),y=pixelZ(edgeZ)+(edgeZ<3?1:-1)*r()*10;
+      ctx.fillStyle=i%3?'rgba(246,248,242,.17)':'rgba(78,84,78,.13)';ctx.fillRect(x,y,2+r()*16,.5+r()*1.3);
+    }
+    for(let i=0;i<160;i++){ctx.fillStyle='rgba(242,244,238,.08)';ctx.fillRect(pixelX(-25.8+r()*30.1),pixelZ(2.3+r()*2.9),3+r()*12,.8+r()*1.2);}
+  });
+  map.name='Original neutral aggregate and subtle platform wear';map.wrapS=map.wrapT=THREE.ClampToEdgeWrapping;
+  map.userData={originalProcedural:true,worldWidth:spec.worldWidth,worldDepth:spec.worldDepth,originX:spec.originX,originZ:spec.originZ,texelsPerMetre:spec.texelsPerMetre,repeats:false,expansionJoints:seams};
+  return map;
+}
 function signTexture(plan){return texture(2048,640,(ctx,w,h)=>{
   ctx.fillStyle='#e5dfc6';ctx.fillRect(0,0,w,h);ctx.fillStyle='#c1bba4';ctx.fillRect(18,18,w-36,4);ctx.fillRect(18,h-22,w-36,4);
   // Avoid image-based lettering and mirrored DoubleSide text. Each face owns
@@ -78,9 +114,8 @@ function buildDeck(deck,b,metal,proof){const terminal=proof.variant==='kowloon-m
     for(let row=0;row<5;row++)for(let x=-26+(row%2)*.30;x<4.6;x+=.60){const width=Math.min(.584,4.6-x);if(width<=0)continue;
       for(const z of [2.045,5.595])b.quad(x+width/2,.132+row*.112,z,width,.099,[0x918570,0x887d68,0x9b8d75][(row+Math.round(x*5)+150)%3],z<3?-1:1);}
     for(let x=-25.7;x<4.6;x+=.6)b.box(x,.733,2.13,.585,.10,.24,C.cream);
-    deck.box(-10.7,.783,3.82,30.6,.074,3.52,0xb3b1a1);
-    for(let x=-24.5;x<4.6;x+=1.7)b.box(x,.8204,3.88,.008,.001,3.30,0x8e8e82);
-    for(const z of [3.26,4.42])b.box(-10.7,.8204,z,30.6,.001,.008,0x939387);
+    deck.box(-10.7,.783,3.82,30.6,.074,3.52,0xc8c9c8,[0,0,0],(_p,_i,_uv,world)=>[
+      (world.x-STONE_TEXTURE_SPEC.originX)/STONE_TEXTURE_SPEC.worldWidth,(world.z-STONE_TEXTURE_SPEC.originZ)/STONE_TEXTURE_SPEC.worldDepth]);
     proof.deck={type:'masonry',top:.82,planks:0};
   }else{
     const count=123,pitch=30.6/count,r=random(607+proof.stationIndex),palette=[0xb39c77,0xab926d,0xb59d78,0xa88e69,0xae9875];
@@ -154,9 +189,13 @@ function marketDetails(b,metal,proof){
   metal.beam([x-.56,1.40,z-.17],[x-.56,1.40,z+.17],.030,C.iron);obstacle(proof,'handcart',x,1.17,z,.96,.78,.58);
   b.box(-17.05,2.05,5.42,.70,.83,.06,0x716d56);b.quad(-17.05,2.05,5.457,.61,.73,0xd5c597);
   for(let i=0;i<7;i++)b.quad(-17.08,2.30-i*.075,5.459,.39-(i%3)*.07,.013,0x8b8064);
-  metal.cylinder(-12.42,2.59,5.40,.225,.075,C.iron,{axis:'z',segments:24});b.disc(-12.42,2.59,5.441,.195,0xe4ddc2);
-  for(let i=0;i<12;i++){const a=i*Math.PI/6;metal.box(-12.42+Math.sin(a)*.163,2.59+Math.cos(a)*.163,5.446,.012,.035,.005,C.iron,[0,0,-a]);}
-  metal.beam([-12.42,2.59,5.45],[-12.42,2.735,5.45],.014,C.iron);metal.beam([-12.42,2.59,5.45],[-12.505,2.63,5.45],.018,C.iron);
+  // Above the noticeboard, clear of the sign's left edge and below the eave.
+  // Keep the dial just in front of its metal case so the full face is visible.
+  const clockX=-17.05,clockY=2.82,clockZ=5.42;
+  metal.cylinder(clockX,clockY,clockZ,.225,.075,C.iron,{axis:'z',segments:24});b.disc(clockX,clockY,clockZ+.041,.195,0xe4ddc2);
+  for(let i=0;i<12;i++){const a=i*Math.PI/6;metal.box(clockX+Math.sin(a)*.163,clockY+Math.cos(a)*.163,clockZ+.046,.012,.035,.005,C.iron,[0,0,-a]);}
+  metal.beam([clockX,clockY,clockZ+.05],[clockX,clockY+.145,clockZ+.05],.014,C.iron);metal.beam([clockX,clockY,clockZ+.05],[clockX-.085,clockY+.04,clockZ+.05],.018,C.iron);
+  proof.clock={facePosition:[clockX,clockY,clockZ+.041],caseRadius:.225,faceRadius:.195};
   proof.props={handcarts:1,noticeboards:1,clocks:1};
 }
 
@@ -241,7 +280,9 @@ export function createStationPlatform(plan){
   const structural=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.90,metalness:.025});
   const metalMaterial=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.70,metalness:.30});
   const roofMaterial=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.82,metalness:.16});
-  const deckMaterial=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.95,metalness:0,...(proof.materialSurface==='timber'?{map:woodTexture()}: {})});
+  const deckMap=proof.materialSurface==='timber'?woodTexture():masonryTexture(proof.stationIndex);
+  const deckMaterial=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.96,metalness:0,map:deckMap});
+  proof.deck.texture={width:deckMap.image.width,height:deckMap.image.height,...deckMap.userData};
   group.add(deck.mesh(deckMaterial,'Station deck surface'),b.mesh(structural,'Station supports, edge, furniture and luggage'),metal.mesh(metalMaterial,'Station ironwork, lantern caps and fittings'),roof.mesh(roofMaterial,'Station sloping roof and valance'));
   const glassMaterial=new THREE.MeshStandardMaterial({vertexColors:true,transparent:true,opacity:.38,roughness:.24,metalness:.04,emissive:0x8d622c,emissiveIntensity:.21,depthWrite:false,side:THREE.DoubleSide});
   const glassMesh=glass.mesh(glassMaterial,'Station lantern glass');glassMesh.castShadow=false;group.add(glassMesh);
