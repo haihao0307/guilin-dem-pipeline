@@ -9,7 +9,15 @@ def p(old,new):
  s=s.replace(old,new)
 p('sdf: take(sdf2.a.length, 2) }','sdf: take(sdf2.a.length, 2), rhs:take(n*3),sol:take(n*3),res:take(n*3),dir:take(n*3),ap:take(n*3),z:take(n*4),diag:take(n) }')
 p('this.packGroups();\n    this.wrapRebuild();','this.kernel.configureGlobal(p.rhs,p.sol,p.res,p.dir,p.ap,p.z,p.diag);\n    this.packGroups();\n    this.wrapRebuild();')
-p('this.elapsed / 4','this.elapsed / .75')
+# Restrict the hold schedule to GarmentLab2.step. The reference GarmentLab
+# contains the same expression and must not be rewritten by a global search.
+lab2_start=s.index('var GarmentLab2 = class extends GarmentLab {')
+lab2_end=s.index('// tailor-unify-20261007/work/kaopu-tailor-workbench/garments-r04/src/sdf-transport.mjs',lab2_start)
+lab2=s[lab2_start:lab2_end]
+assert lab2.count('this.elapsed / 4')==1, 'R07 GarmentLab2 hold schedule changed'
+reference_prefix=s[:lab2_start]
+s=reference_prefix+lab2.replace('this.elapsed / 4','this.elapsed / .75')+s[lab2_end:]
+assert s[:lab2_start]==reference_prefix, 'Reference GarmentLab was modified'
 p('this.bodyContacts += k.contacts.value;','const extraStart=performance.now();for(let extra=0;extra<3;extra++){k.strains();k.vertices(this.clearance);}P.extraProjectionMs=(P.extraProjectionMs||0)+performance.now()-extraStart;\n      this.bodyContacts += k.getContacts();')
 p('backend: "original-f64-wasm-kernels", reducedIterations: false, reducedSubsteps: false, originalConstraintOrder: true','backend: "R07-f64-algebraic-XPBD-plus-local-global", reducedIterations: true, reducedSubsteps: false, originalConstraintOrder: false, initialSubsteps:12, initialDistanceIterations:1, additionalStrainContactPasses:3, shortenedSewingStages:true, coupledRefinementIterations:1600, referenceEquivalent:false')
 start=s.index('    if (numericalStitchSpacingMm !== null && Math.abs(s.lengthAMm')
@@ -49,7 +57,7 @@ s="import {prepareAssembly,createSeamLayerGuide} from '../r07/assembly.mjs';\n"+
 s=(R/'catalogue/r06-workbench-app.mjs').read_text()
 assert hashlib.sha256(s.encode()).hexdigest()=='130230e9638850ab02fe89f25f7ed69223986b4f3194d8dc890d75b5bbd3339e'
 s=s.replace('R06.2','R07.0').replace('r06-workbench-style.css','r07-workbench-style.css')
-p("preferredView='paper';","preferredView='paper',solverMode='fast',workerMode=null;")
+p("rendererStops=0,preferredView='paper';","rendererStops=0,preferredView='paper',solverMode='fast',workerMode=null;")
 p("STAGE_LABELS} from '../unified/cases.mjs';","STAGE_LABELS as BASE_STAGE_LABELS} from '../unified/cases.mjs';\nconst STAGE_LABELS={...BASE_STAGE_LABELS,refine:'接缝与原材料联合整理'};")
 p('<small id="view-origin"></small>','<small id="view-origin"></small><small id="composition"></small>')
 p('<p id="flow-note">','<div class="solver-switch"><label>计算方式 <select id="solver-mode"><option value="fast">R07 快速试算</option><option value="reference">R06 原参数完整计算（较慢）</option></select></label><small>原纸样与人体不缩放；新旧算法不是逐帧等价。</small></div><p id="flow-note">')
