@@ -1,0 +1,30 @@
+name: Painted Skin Look Development
+on:
+  push:
+    branches: [feature/unified-human-painted-skin-r03-20261008]
+    paths: [.github/workflows/painted-skin-lookdev.yml]
+permissions: {contents: read}
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Browser tools
+        run: |
+          mkdir -p /tmp/paint-tools /tmp/paint-lookdev
+          cd /tmp/paint-tools
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund playwright@1.55.1
+          npx playwright install --with-deps chromium
+      - name: Render controlled detail comparisons
+        env: {NODE_PATH: /tmp/paint-tools/node_modules}
+        run: |
+          node - <<'JS'
+          const {chromium}=require('playwright'),fs=require('fs');
+          (async()=>{const b=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});const p=await b.newPage({viewport:{width:1440,height:1040}});const errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto('https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c9614a53d5efa310282656fc575def8a58ee1498/kaopu-unified-human-workbench/skin-r03/preview.html');await p.waitForFunction(()=>window.fullCommonWorkbench);await p.click('#load-model');await p.waitForFunction(()=>window.paintedSkin?.report().ready,null,{timeout:240000});await p.click('#paint-close');for(const strength of [0,.2,.4,.6]){await p.evaluate(v=>paintedSkin.set({detail:v}),strength);await p.screenshot({path:'/tmp/paint-lookdev/detail-'+strength+'.png'});}await p.evaluate(()=>{paintedSkin.set({detail:.4});uhSkin.set({meso:0,micro:1.05});});await p.screenshot({path:'/tmp/paint-lookdev/micro-only.png'});await p.evaluate(()=>{const v=commonSkin._viewer();v.orbit.target.set(0,.676,.14);v.camera.position.set(.012,.681,.345);v.orbit.update();v.render();});await p.screenshot({path:'/tmp/paint-lookdev/lips-micro-only.png'});fs.writeFileSync('/tmp/paint-lookdev/report.json',JSON.stringify({errors},null,2));await b.close();})().catch(e=>{console.error(e);process.exit(1)});
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: painted-skin-lookdev, path: /tmp/paint-lookdev, retention-days: 3}
