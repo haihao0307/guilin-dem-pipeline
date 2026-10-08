@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {coplanarPositiveOverlap,staticGate} from './audit.mjs';
+const a=[[0,0,0],[10,0,0],[0,10,0]];
+assert.equal(coplanarPositiveOverlap(a,a),true);
+assert.equal(coplanarPositiveOverlap(a,[[0,0,0],[10,0,0],[10,-10,0]]),false,'edge-only touch is not area overlap');
+assert.equal(coplanarPositiveOverlap(a,[[0,0,0],[9,0,0],[1,9,0]]),true,'shared vertex cannot hide overlap');
+assert.equal(coplanarPositiveOverlap(a,[[1,1,1],[2,1,1],[1,2,1]]),false,'parallel but separated');
+assert.equal(coplanarPositiveOverlap(a,[[1,1,0],[1,2,0],[2,1,0]]),true,'reversed winding');
+const lab={positions:[[0,0,0],[1,0,0],[0,1,0]],stitchGroups:{find:i=>i},strainTriangles:[{ids:[0,1,2],c:[-1,1,0],d:[-1,0,1]}],sdf:{sample:(x,y,z,q)=>{q.set([.0035,0,0,1,1]);}}};
+const record={metrics:{finite:true,activeMaxGapMm:0}},regions={all:{maximumPercent:0}},intersections={bodyIntersectingFaceCount:0,selfStrictTriangleIntersectionCount:0};
+assert.equal(staticGate(lab,record,regions,intersections).passed,true);
+assert.equal(staticGate(lab,record,regions,{...intersections,selfStrictTriangleIntersectionCount:1}).passed,false);
+assert.equal(staticGate(lab,record,{all:{maximumPercent:16}},intersections).passed,false);
+assert.equal(staticGate(lab,{metrics:{finite:true,activeMaxGapMm:.3}},regions,intersections).passed,false);
+console.log('R07.1 audit unit checks passed; this does not certify garments.');
