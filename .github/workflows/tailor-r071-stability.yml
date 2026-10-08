@@ -3,10 +3,14 @@ on:
   push:
     branches: [fix/tailor-r07-speed-stability-20261008]
     paths:
-      - 'kaopu-tailor-workbench/r07/stability/**'
-      - '.github/workflows/tailor-r071-stability.yml'
+      - 'kaopu-tailor-workbench/r07/stability/build.py'
+      - 'kaopu-tailor-workbench/r07/stability/refinement.mjs'
+      - 'kaopu-tailor-workbench/r07/stability/audit.mjs'
+      - 'kaopu-tailor-workbench/r07/stability/audit.test.mjs'
+      - 'kaopu-tailor-workbench/r07/stability/joint-refinement.cpp'
+      - 'kaopu-tailor-workbench/r07/stability/qa.py'
 permissions:
-  contents: write
+  contents: read
 concurrency:
   group: tailor-r071-stability
   cancel-in-progress: false
@@ -29,42 +33,22 @@ jobs:
           python kaopu-tailor-workbench/r07/stability/build.py
           node kaopu-tailor-workbench/r07/stability/audit.test.mjs
           sha256sum -c /tmp/r07-before
-          python - <<'PY'
-          from pathlib import Path
-          import hashlib,json,os
-          r=Path('kaopu-tailor-workbench');paths=list((r/'r07/stability').glob('*'))+list((r/'catalogue').glob('r071-*'))
-          files={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in paths if p.is_file() and p.name not in ['BUILD_MANIFEST.json','R071_REPORT.json']}
-          (r/'r07/stability/BUILD_MANIFEST.json').write_text(json.dumps({'version':'R07.1','sourceCommit':os.environ['GITHUB_SHA'],'referenceCommit':'7a36d1b9186db05b907acd3dcd28f421c1a2ea46','files':files,'dynamicWearCertified':False},indent=2))
-          PY
       - name: Install browser
         run: |
           python -m pip install playwright==1.56.0
           python -m playwright install chromium --with-deps
-      - name: Test new paper through full garment solve and repeated inputs
+      - name: Test fresh paper and repeated inputs
         run: |
           python -m http.server 8765 >/tmp/tailor-r071-http.log 2>&1 &
           python kaopu-tailor-workbench/r07/stability/qa.py
-      - name: Record generated candidate on feature branch, never publish
-        if: success()
-        run: |
-          test "$GITHUB_REF_NAME" = 'fix/tailor-r07-speed-stability-20261008'
-          git fetch --no-tags origin "$GITHUB_REF_NAME"
-          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
-          cp evidence-r071/R071_REPORT.json kaopu-tailor-workbench/r07/stability/
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add kaopu-tailor-workbench/r07/stability kaopu-tailor-workbench/catalogue/r071-*
-          git commit -m 'build(tailor): retain R07.1 full live-source tests and static-gate results without production acceptance'
-          git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
-          git rev-parse HEAD > evidence-r071/GENERATED_COMMIT.txt
-      - name: Separate static quality from functional test completion
+      - name: Separate static quality from functional completion
         if: success()
         run: |
           python - <<'PY'
           import json
           r=json.load(open('evidence-r071/R071_REPORT.json'))
           for c in r['cases']: print(c['name'],c['gate'])
-          assert r['allTestedStaticGatesPassed'], 'One or more garment cases failed their static engineering checks; do not publish as accepted'
+          assert r['allTestedStaticGatesPassed'], 'Garment static check failed; not an accepted garment'
           PY
       - uses: actions/upload-artifact@v4
         if: always()
