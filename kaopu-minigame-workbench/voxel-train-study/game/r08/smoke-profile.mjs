@@ -7,19 +7,14 @@ export function classicSmokeParticle(index,t){
   return{index,lower,f,side,position,size,opacity:Math.sin(Math.PI*f)*(lower?.91:.44),rotation:index+f*.8,upper:!lower,color:lower?0xffffff:0x8f9eab};
 }
 const smooth=(a,b,x)=>{const u=Math.max(0,Math.min(1,(x-a)/(b-a)));return u*u*(3-2*u);};
-export function smokeFrameState(view,{tallExhaust=false}={}){
+export function smokeFrameState(view){
   const event=(view?.events||[]).filter(e=>e.type==='doors-opening'||e.type==='approach-steam').at(-1),burstAge=event?(view.tick-event.tick)/30:99,remaining=Number(view?.station?.remaining)||0;
   const near=remaining<55&&remaining>-10,draining=!!view&&near&&(Math.abs(view.velocity||0)<9||view.brake||view.door>0),burstActive=!!view&&near&&burstAge>=0&&burstAge<8;
   const burst=burstActive?Math.min(1,burstAge/.35)*(1-smooth(3.8,8,burstAge)):0;
-  return{tallExhaust,starting:tallExhaust&&view?.throttle>0&&Math.abs(view?.velocity||0)<4.5,exhaustSpeed:Math.abs(view?.velocity||0),draining,burstAge,burstActive,burst,platformOffset:Math.max(-8,Math.min(8,remaining)),working:Math.abs(view?.velocity||0)>.3&&view?.throttle>0,profile:'classic-layered-160',roundBillboards:true,platformTop:PLATFORM_TOP,platformCentersAboveDeck:draining||burstActive};
+  return{draining,burstAge,burstActive,burst,platformOffset:Math.max(-8,Math.min(8,remaining)),working:Math.abs(view?.velocity||0)>.3&&view?.throttle>0,profile:'classic-layered-160',roundBillboards:true,platformTop:PLATFORM_TOP,platformCentersAboveDeck:draining||burstActive};
 }
 export function smokeParticle(index,t,state={}){
   const p=classicSmokeParticle(index,t);
-  if(!p.lower&&state.tallExhaust){
-    const lift=state.starting?11.8:8.4,trail=2.5+Math.min(state.exhaustSpeed||0,14)*.24;
-    p.position=[3.03-(index%8)*.40-p.f*trail,3.72+Math.max(0,p.f*lift+.15*Math.sin(index*3+t*2)),p.side*(.24+p.f*.55)];
-    p.size*=state.starting?1.52:1.22;p.opacity*=state.starting?1.3:1.08;return p;
-  }
   if(!p.lower||(!state.draining&&!state.burstActive))return p;
   const u=Math.floor(index/2)/41,front=p.side>0,spread=state.burstActive?Math.min(29,5+state.burstAge*13):29;
   // Drain vapour rolls ONTO the timber deck, then rises around passengers. Never flatten it below the boards.

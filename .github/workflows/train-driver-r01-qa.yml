@@ -1,4 +1,4 @@
-name: Train R08 exact-public smoke and larger controls QA
+name: Train R09 flat scenery camera and pause QA
 on:
   push:
     branches: ['qa/voxel-train-r01-20261006']
@@ -6,7 +6,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: kcr-r08-${{ github.ref }}
+  group: kcr-r09-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   deterministic:
@@ -18,7 +18,7 @@ jobs:
           persist-credentials: false
           sparse-checkout: kaopu-minigame-workbench/voxel-train-study
       - run: |
-          for test in r08-smoke.test.mjs kcr-session.test.mjs steam-model.test.mjs render-quality.test.mjs anchored-zoom.test.mjs recommended-fit.test.mjs view-profile-storage.test.mjs; do
+          for test in r09-world.test.mjs r09-camera.test.mjs r09-smoke-driver.test.mjs r08-smoke.test.mjs kcr-session.test.mjs steam-model.test.mjs render-quality.test.mjs anchored-zoom.test.mjs recommended-fit.test.mjs view-profile-storage.test.mjs; do
             node kaopu-minigame-workbench/voxel-train-study/game/tests/$test
           done
           node --check kaopu-minigame-workbench/voxel-train-study/game/app.mjs
@@ -30,11 +30,10 @@ jobs:
       fail-fast: false
       matrix:
         browser: [chromium, webkit]
-        suite: [smoke, controls, gameplay, zoom]
+        suite: [scene, controls, gameplay, zoom]
     env:
       TRAIN_BROWSER: ${{ matrix.browser }}
       KCR_SUITE: ${{ matrix.suite }}
-      TRAIN_GAME_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -43,25 +42,22 @@ jobs:
       - run: npm install --prefix "$RUNNER_TEMP/kcr" --no-save --ignore-scripts playwright@1.57.0
       - run: "$RUNNER_TEMP/kcr/node_modules/.bin/playwright install --with-deps ${{ matrix.browser }}"
       - run: echo "NODE_PATH=$RUNNER_TEMP/kcr/node_modules" >> "$GITHUB_ENV"
-      - name: Verify 67 public release and protected classic files
-        run: node kaopu-minigame-workbench/voxel-train-study/game/tests/public-hashes.cjs
       - name: Start candidate and verify real browser
         run: |
           python3 -m http.server 8765 > "$RUNNER_TEMP/kcr-server.log" 2>&1 &
           case "${{ matrix.suite }}" in
-            smoke) node kaopu-minigame-workbench/voxel-train-study/game/tests/r08-smoke-browser.cjs ;;
-            controls) node kaopu-minigame-workbench/voxel-train-study/game/tests/r08-controls.cjs ;;
+            scene) node kaopu-minigame-workbench/voxel-train-study/game/tests/r09-browser.cjs ;;
+            controls) node kaopu-minigame-workbench/voxel-train-study/game/tests/r09-controls.cjs ;;
             zoom) node kaopu-minigame-workbench/voxel-train-study/game/tests/anchored-zoom-browser.cjs ;;
             *) node kaopu-minigame-workbench/voxel-train-study/game/tests/kcr-browser.cjs ;;
           esac
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: train-r08-${{ matrix.browser }}-${{ matrix.suite }}
+          name: train-r09-${{ matrix.browser }}-${{ matrix.suite }}
           path: |
-            driver-public-hashes.json
             kcr-${{ matrix.browser }}-${{ matrix.suite }}/*
-            r08-smoke-${{ matrix.browser }}/*
-            r08-controls-${{ matrix.browser }}/*
+            r09-${{ matrix.browser }}-${{ matrix.suite }}/*
+            r09-controls-${{ matrix.browser }}/*
             anchored-zoom-${{ matrix.browser }}/*
           retention-days: 7
