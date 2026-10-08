@@ -54,6 +54,8 @@ page.locator('[data-camera=back]').click();page.wait_for_timeout(200)
 page.screenshot(path=str(out/'r06-result-back.png'))
 page.locator('[data-camera=side]').click();page.wait_for_timeout(200)
 page.screenshot(path=str(out/'r06-result-side.png'))
+page.locator('[data-camera=full]').click();page.wait_for_timeout(200)
+page.screenshot(path=str(out/'r06-result-full.png'))
 page.locator('#show-body').uncheck();page.wait_for_timeout(200)
 page.screenshot(path=str(out/'r06-result-without-body.png'))
 page.locator('#show-body').check()
@@ -117,7 +119,7 @@ page.locator('#pause').click()
 page.wait_for_function("window.__TAILOR_CATALOGUE_QA__.getState().phase==='paused'",timeout=20000)
 assert page.locator('#resume').is_visible()
 page.locator('#cancel').click()
-summary={'version':'R06.3','desktopViewport':[1440,1000],'mobileViewport':[390,844],'physicalMobileDeviceTested':False,'entryCount':len(ids),'fieldCount':state()['parameterCount'],'allDefaultPaperGenerationPassed':all(x['phase']=='paper' for x in catalogue),'liveDressSolveCompleted':True,'newStylePhysicalFitAccepted':False,'preservedLegacyBaselines':legacy,'recipeHashChanged':oldhash!=newhash,'pauseResumeCancelTested':True,'browserErrors':errors,'finalMetrics':record['metrics'],'finalIntersections':dress_intersections,'mobileCanvasBounds':canvas,'mobilePrimaryButtonBounds':box}
+summary={'version':'R06.3','desktopViewport':[1440,1000],'mobileViewport':[390,844],'physicalMobileDeviceTested':False,'entryCount':len(ids),'fieldCount':state()['parameterCount'],'allDefaultPaperGenerationPassed':all(x['phase']=='paper' for x in catalogue),'liveDressSolveCompleted':True,'newStylePhysicalFitAccepted':False,'preservedLegacyBaselines':legacy,'recipeHashChanged':oldhash!=newhash,'pauseResumeCancelTested':True,'browserErrors':errors,'linearSweptContact':record['trial'].get('linearSweptContact'),'finalMetrics':record['metrics'],'finalIntersections':dress_intersections,'mobileCanvasBounds':canvas,'mobilePrimaryButtonBounds':box}
 (out/'R06_BROWSER_REPORT.json').write_text(json.dumps(summary,indent=2))
 print('R06_BROWSER_REPORT',json.dumps(summary,ensure_ascii=False))
 assert not errors,errors

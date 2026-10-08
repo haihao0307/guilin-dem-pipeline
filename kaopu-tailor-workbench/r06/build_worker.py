@@ -75,9 +75,13 @@ replace('''    } else if (data.type === "resume") {
 # R06 contact path retains the original ordered f64 constraint kernel.
 replace('if (this.orientationGuides || this.selfCollisionEnabled) return super.step(dt);', 'if (this.orientationGuides || (this.selfCollisionEnabled && !this.r06Contact)) return super.step(dt);')
 replace('      k.distances(baseCount, this.count);\n      P.distanceMs += performance.now() - now;\n      if (this.collisions && sub3 % 3 === 2) {', '      if (!this.r06Contact) k.distances(baseCount, this.count);\n      P.distanceMs += performance.now() - now;\n      if (this.r06Contact) {\n        this.selfContacts.rebuild();\n        this.selfContacts.project();\n        // Contact/sewing must not be the final operation that stretches rest material.\n        for(let guard=0;guard<3;guard++) { k.strains(); k.vertices(this.clearance); }\n      }\n      if (this.collisions && sub3 % 3 === 2) {')
-replace('  lab.selfCollisionEnabled = false;', '  lab.selfCollisionEnabled = config.kind!=="legacy";\n  lab.r06Contact = config.kind!=="legacy";')
-replace('runtimeSelfContact:false,continuousCollision:false', 'runtimeSelfContact:true,continuousCollision:false')
-replace('No continuous collision or runtime self-contact response.', 'Runtime discrete vertex-face contact enabled; full continuous collision remains unverified.')
+replace('      this.bodyContacts += k.contacts.value;', '      if (this.r06Contact && sub3 % 6 === 5) { this.selfContacts.bodySweep(); this.selfContacts.rebuild(); this.selfContacts.project(); }\n      this.bodyContacts += k.contacts.value;')
+replace('  profile.bodyMs = performance.now() - start;', '  if(config.kind!=="legacy") configureContactWasm(await bytes("r06/contact/contact-kernel.wasm"));\n  if(token!==epoch)return;\n  profile.bodyMs = performance.now() - start;')
+replace('  lab.selfCollisionEnabled = false;', '  lab.selfCollisionEnabled = config.kind!=="legacy";\n  lab.r06Contact = config.kind!=="legacy";\n  if(lab.r06Contact) { lab.selfContacts=new FastSweptContact(lab); lab.selfContacts.capture(); }')
+replace('runtimeSelfContact:false,continuousCollision:false', 'runtimeSelfContact:true,continuousCollision:false,linearSweptContact:lab.selfContacts.report()')
+replace('No continuous collision or runtime self-contact response.', 'Runtime collision-only f64 WASM, swept linear vertex-face and edge-edge conservative advancement; nonlinear CCD remains uncertified.')
+s=(ROOT/'r06/contact/fast-contact.mjs').read_text().replace("import {SweptContact} from './swept-contact.mjs';",'').replace('export function','function').replace('export class','class')+'\n'+s
+s=(ROOT/'r06/contact/swept-contact.mjs').read_text().replace('export class','class')+'\n'+s
 s=(ROOT/'r06/fixtures.mjs').read_text().replace('export function','function')+'\n'+s
 (ROOT/'catalogue/r06-contact-worker.bundle.mjs').write_text('// R06.3 contact repair, original R06.2 retained. Original catalogue/workbench-worker.bundle.mjs remains intact.\n'+s)
 print('worker',len(s))

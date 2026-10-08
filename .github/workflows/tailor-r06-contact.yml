@@ -23,13 +23,21 @@ jobs:
             kaopu-tailor-workbench
             kaopu-human-overview
           fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reproduce additional collision-only kernel
+        run: |
+          npx --yes --package=assemblyscript@0.28.9 asc kaopu-tailor-workbench/r06/contact/contact-kernel.ts -O3 --noAssert --outFile /tmp/contact-kernel.wasm
+          cmp /tmp/contact-kernel.wasm kaopu-tailor-workbench/r06/contact/contact-kernel.wasm
       - name: Build additive application and collision data
         run: |
           python kaopu-tailor-workbench/r06/build_worker.py
           python kaopu-tailor-workbench/r06/build_ui.py
           python kaopu-tailor-workbench/r06/build_sdf.py
-          node --check kaopu-tailor-workbench/catalogue/r06-workbench-app.mjs
-          node --check kaopu-tailor-workbench/catalogue/r06-worker.bundle.mjs
+          node --check kaopu-tailor-workbench/catalogue/r06-contact-workbench-app.mjs
+          node --check kaopu-tailor-workbench/catalogue/r06-contact-worker.bundle.mjs
+          node kaopu-tailor-workbench/r06/contact/contact.test.mjs
           mkdir -p evidence
           python - <<'PY'
           from pathlib import Path
