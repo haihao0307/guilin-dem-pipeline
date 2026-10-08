@@ -31,21 +31,19 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import base64,hashlib,io,zipfile
-          root=Path('kaopu-unified-human-workbench/skin-r03')
-          stage=root/'stage'
+          root=Path('kaopu-unified-human-workbench/skin-r03');stage=root/'stage'
           if stage.exists():
-              text=''.join((stage/f'part{i}.b64').read_text().strip() for i in range(5))
-              data=base64.b64decode(text,validate=True)
-              assert hashlib.sha256(data).hexdigest()=='7a9ee3d37755506339539fc4f30cce00b6d427a6212ad7c5f6af4a3fa6e06f59','Source transport checksum mismatch; no unverified code executed'
+              data=base64.b64decode(''.join((stage/f'part{i}.b64').read_text().strip() for i in range(5)),validate=True)
+              assert hashlib.sha256(data).hexdigest()=='7a9ee3d37755506339539fc4f30cce00b6d427a6212ad7c5f6af4a3fa6e06f59'
               with zipfile.ZipFile(io.BytesIO(data)) as z:
                   assert set(z.namelist())=={'PaintedLayer.mjs','assemble.cjs','paint_maps.py','paint_body.py','qa-painted.cjs'}
                   for name in z.namelist():
                       assert len(z.read(name))<50000
                       (root/name).write_bytes(z.read(name))
-              print('Five exact human-readable source files restored.')
           else:
               assert (root/'paint_maps.py').exists()
           PY
+          node kaopu-unified-human-workbench/skin-r03/fix-diagnostics.cjs
       - name: Isolated render and painting tools
         run: |
           mkdir -p /tmp/paint-tools /tmp/paint-evidence /tmp/paint-donor
@@ -54,17 +52,16 @@ jobs:
           npm install --no-audit --no-fund playwright@1.55.1 esbuild@0.25.10
           npx playwright install --with-deps chromium
           python -m pip install numpy scipy pillow
-      - name: Read exact donor maps from user-specified reference asset commit
+      - name: Read exact donor maps from user reference
         run: |
           python - <<'PY'
           from pathlib import Path
           from urllib.request import urlretrieve
           root='https://raw.githubusercontent.com/haihao0307/Humanoid-Rig-Lab-Next/03aaa73a98987fbaa03857b71483045e73e5acd9/skin-quality-lab/'
           for name in ['r01/assets/head.glb','r01/assets/hires/albedo-4k.jpg','r01/assets/normal.jpg','r01/assets/specular.jpg','r02/assets/meso.webp','r02/assets/micro.webp']:
-              dest=Path('/tmp/paint-donor')/name;dest.parent.mkdir(parents=True,exist_ok=True)
-              urlretrieve(root+name,dest)
+              dest=Path('/tmp/paint-donor')/name;dest.parent.mkdir(parents=True,exist_ok=True);urlretrieve(root+name,dest)
           PY
-      - name: Bake full photographic atlas and independent body pigmentation
+      - name: Bake full atlas and independent body pigmentation
         env:
           OPENBLAS_NUM_THREADS: '1'
           NODE_PATH: /tmp/paint-tools/node_modules
