@@ -1,0 +1,265 @@
+{
+  "schemaVersion": 1,
+  "title": "R02 shadow-band numerical isolation",
+  "evidenceType": "CPU numerical isolation, not actual browser visual proof",
+  "sourceReference": "revisions/index-visual-r02.html, lines 75, 90, 97",
+  "sourceExpressions": [
+    "ceiling distance: 4.1-y",
+    "key light height: 3.86",
+    "result=min(result,7.*sd/travel)",
+    "travel+=clamp(sd,.045,.55)",
+    "if(travel>=total-.18)break"
+  ],
+  "scope": "Only floor/ceiling and an optional radial wall; all other scene geometry and rendering stages omitted.",
+  "limitations": [
+    "JavaScript double precision does not simulate GPU floating-point rounding.",
+    "No browser, screenshot, WebGL, network, or source-file mutation is performed.",
+    "The finite-emitter substitution is an isolated candidate test, not proof of final scene visual quality.",
+    "Full-scene occluder shadows and residual AO artifacts require separate browser comparison.",
+    "Some isolated wall rays exhaust 24 steps; the fully lit finite-emitter value is not proof that shadow marching reaches every light."
+  ],
+  "constants": {
+    "keyLightHeight": 3.86,
+    "ceilingHeight": 4.1,
+    "wallRadius": 7.4,
+    "floorRayStartHeight": 0.021,
+    "wallRayStartRadius": 7.38,
+    "initialTravel": 0.06,
+    "hitThreshold": 0.002,
+    "minimumStep": 0.045,
+    "maximumStep": 0.55,
+    "endMargin": 0.18,
+    "shadowFloor": 0.15,
+    "originalSoftCoefficient": 7,
+    "finiteEmitterRadius": 0.1,
+    "sampleSpacing": 0.001
+  },
+  "candidateSubstitution": "Replace only coefficient 7 with total/0.10; retain the original march and termination rules.",
+  "comparisons": {
+    "budget24Versus96MaximumShadowDifference": 0,
+    "knownDiscontinuity": {
+      "before": {
+        "radius": 4.258,
+        "shadow": 1,
+        "steps": 13,
+        "lastTravel": 5.003995801881593,
+        "lastHeight": 3.3717745286423444,
+        "lastDistance": 0.7282254713576553,
+        "total": 5.733104307441127,
+        "exitReason": "end-margin"
+      },
+      "after": {
+        "radius": 4.259,
+        "shadow": 0.45449210997283584,
+        "steps": 14,
+        "lastTravel": 5.553736562456143,
+        "lastHeight": 3.739410078785146,
+        "lastDistance": 0.3605899212148538,
+        "total": 5.733847050628401,
+        "exitReason": "end-margin"
+      }
+    }
+  },
+  "scenarios": {
+    "originalFloor": {
+      "sampleCount": 7401,
+      "from": 0,
+      "to": 7.4,
+      "spacing": 0.001,
+      "minShadow": 0.2806378178068335,
+      "maxShadow": 1,
+      "maximumAdjacentJump": 0.5455078900271642,
+      "maximumJumpPair": {
+        "before": {
+          "position": 4.258,
+          "shadow": 1,
+          "steps": 13,
+          "lastTravel": 5.003995801881593,
+          "lastHeight": 3.3717745286423444,
+          "lastDistance": 0.7282254713576553,
+          "total": 5.733104307441127,
+          "exitReason": "end-margin"
+        },
+        "after": {
+          "position": 4.259,
+          "shadow": 0.45449210997283584,
+          "steps": 14,
+          "lastTravel": 5.553736562456143,
+          "lastHeight": 3.739410078785146,
+          "lastDistance": 0.3605899212148538,
+          "total": 5.733847050628401,
+          "exitReason": "end-margin"
+        }
+      },
+      "exitCounts": {
+        "end-margin": 7401,
+        "iteration-budget": 0,
+        "hit": 0
+      }
+    },
+    "originalWall": {
+      "sampleCount": 4061,
+      "from": 0.02,
+      "to": 4.08,
+      "spacing": 0.001,
+      "minShadow": 0.23825597109231672,
+      "maxShadow": 0.5300533001893897,
+      "maximumAdjacentJump": 0.24920838794678146,
+      "maximumJumpPair": {
+        "before": {
+          "position": 0.151,
+          "shadow": 0.2782107947863157,
+          "steps": 18,
+          "lastTravel": 8.079013037448119,
+          "lastHeight": 3.778904480251793,
+          "lastDistance": 0.3210955197482068,
+          "total": 8.259605377982654,
+          "exitReason": "end-margin"
+        },
+        "after": {
+          "position": 0.152,
+          "shadow": 0.5274191827330972,
+          "steps": 17,
+          "lastTravel": 7.53001329919931,
+          "lastHeight": 3.532646648538135,
+          "lastDistance": 0.5673533514618647,
+          "total": 8.259156373383421,
+          "exitReason": "end-margin"
+        }
+      },
+      "exitCounts": {
+        "end-margin": 3680,
+        "iteration-budget": 381,
+        "hit": 0
+      }
+    },
+    "withoutCeilingFloor": {
+      "sampleCount": 7401,
+      "from": 0,
+      "to": 7.4,
+      "spacing": 0.001,
+      "minShadow": 1,
+      "maxShadow": 1,
+      "maximumAdjacentJump": 0,
+      "maximumJumpPair": null,
+      "exitCounts": {
+        "end-margin": 7401,
+        "iteration-budget": 0,
+        "hit": 0
+      }
+    },
+    "finiteEmitterFloor": {
+      "sampleCount": 7401,
+      "from": 0,
+      "to": 7.4,
+      "spacing": 0.001,
+      "minShadow": 1,
+      "maxShadow": 1,
+      "maximumAdjacentJump": 0,
+      "maximumJumpPair": null,
+      "exitCounts": {
+        "end-margin": 7401,
+        "iteration-budget": 0,
+        "hit": 0
+      }
+    },
+    "finiteEmitterWall": {
+      "sampleCount": 4061,
+      "from": 0.02,
+      "to": 4.08,
+      "spacing": 0.001,
+      "minShadow": 1,
+      "maxShadow": 1,
+      "maximumAdjacentJump": 0,
+      "maximumJumpPair": null,
+      "exitCounts": {
+        "end-margin": 3680,
+        "iteration-budget": 381,
+        "hit": 0
+      }
+    },
+    "budget96Floor": {
+      "sampleCount": 7401,
+      "from": 0,
+      "to": 7.4,
+      "spacing": 0.001,
+      "minShadow": 0.2806378178068335,
+      "maxShadow": 1,
+      "maximumAdjacentJump": 0.5455078900271642,
+      "maximumJumpPair": {
+        "before": {
+          "position": 4.258,
+          "shadow": 1,
+          "steps": 13,
+          "lastTravel": 5.003995801881593,
+          "lastHeight": 3.3717745286423444,
+          "lastDistance": 0.7282254713576553,
+          "total": 5.733104307441127,
+          "exitReason": "end-margin"
+        },
+        "after": {
+          "position": 4.259,
+          "shadow": 0.45449210997283584,
+          "steps": 14,
+          "lastTravel": 5.553736562456143,
+          "lastHeight": 3.739410078785146,
+          "lastDistance": 0.3605899212148538,
+          "total": 5.733847050628401,
+          "exitReason": "end-margin"
+        }
+      },
+      "exitCounts": {
+        "end-margin": 7401,
+        "iteration-budget": 0,
+        "hit": 0
+      }
+    },
+    "fineStepFloor": {
+      "sampleCount": 7401,
+      "from": 0,
+      "to": 7.4,
+      "spacing": 0.001,
+      "minShadow": 0.27944222567031524,
+      "maxShadow": 0.9112150963849482,
+      "maximumAdjacentJump": 0.10801063523731746,
+      "maximumJumpPair": {
+        "before": {
+          "position": 0.087,
+          "shadow": 0.9112150963849482,
+          "steps": 72,
+          "lastTravel": 3.6099999999999954,
+          "lastHeight": 3.6300733574357626,
+          "lastDistance": 0.469926642564237,
+          "total": 3.8399856770566214,
+          "exitReason": "end-margin"
+        },
+        "after": {
+          "position": 0.088,
+          "shadow": 0.8032044611476308,
+          "steps": 73,
+          "lastTravel": 3.6599999999999953,
+          "lastHeight": 3.680038810314239,
+          "lastDistance": 0.4199611896857607,
+          "total": 3.8400084635323397,
+          "exitReason": "end-margin"
+        }
+      },
+      "exitCounts": {
+        "end-margin": 7401,
+        "iteration-budget": 0,
+        "hit": 0
+      }
+    }
+  },
+  "checks": {
+    "originalFloorHasLargeJump": true,
+    "originalWallHasLargeJump": true,
+    "withoutCeilingIsFullyLit": true,
+    "finiteEmitterFloorIsFullyLit": true,
+    "finiteEmitterWallIsFullyLit": true,
+    "originalFloorNeverExhausts24Steps": true,
+    "raisingBudget24To96HasNoEffect": true,
+    "reducingMaxStepDoesNotEliminateArtifact": true
+  },
+  "passed": true
+}

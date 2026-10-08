@@ -38,7 +38,7 @@ root.HyperMath={dot,add,mul,point,distance,tangent,exp,transport,step,turn,inter
 'use strict';
 (()=>{
 const diagnostic=(new URLSearchParams(window.location?.search||'')).get('diagnostic')||'';
-const diagnosticCode={'shadow-off':1,'ao-off':2,'aa-off':3,'epsilon-quarter':4}[diagnostic]||0;
+const diagnosticCode={'shadow-off':1,'ao-off':2,'aa-off':3,'epsilon-quarter':4,'legacy-shadow':5}[diagnostic]||0;
 const H=HyperMath,canvas=document.getElementById('view'),map=document.getElementById('map'),mctx=map.getContext('2d'),el=id=>document.getElementById(id);
 const state={k:.3,frame:H.initial(),pitch:-.035,lamps:[false,false,false],target:0,tour:false,tourStage:0,keys:new Set(),frames:0,walked:0,rendered:false,lost:false};
 let beacons=[],pillars=[],angles,dirty=true,last=0,drag=null,timer=0;
@@ -89,7 +89,7 @@ float segmentDist(vec3 p,vec3 a,vec3 b){if(distH(a,b)<.002)return distH(p,a);if(
 vec3 normalH(vec3 p,float y,float material,vec3 a,vec3 b){if(material<1.5)return vec3(0.,1.,0.);if(material<2.5)return vec3(0.,-1.,0.);float e=.007;return normalize(vec3(scene(stepH(p,a,e),y).x-scene(stepH(p,a,-e),y).x,scene(p,y+e).x-scene(p,y-e).x,scene(stepH(p,b,e),y).x-scene(stepH(p,b,-e),y).x)+vec3(.0000001));}
 vec3 lightVector(vec3 p,vec3 a,vec3 b,vec3 center,float deltaY){float dh=distH(p,center);vec3 v=directionH(p,center);vec2 x=uK>.0?vec2(-B(a,v),-B(b,v)):vec2(dot(a.xy,v.xy),dot(b.xy,v.xy));return normalize(vec3(x.x*dh,deltaY,x.y*dh)+vec3(.000001));}
 float ambientOcclusion(vec3 p,float y,vec3 n,vec3 a,vec3 b){float horizontal=length(n.xz);vec3 tangent=(a*n.x+b*n.z)/max(horizontal,.00001);float sum=0.,weight=1.;for(int i=0;i<4;i++){float h=.05+float(i)*.145;float sd=scene(stepH(p,tangent,h*horizontal),y+h*n.y).x;sum+=max(0.,h-sd)*weight;weight*=.55;}return clamp(1.-sum*1.65,.28,1.);}
-float shadow(vec3 p,float y,vec3 light,float lightHeight){float horizontal=distH(p,light),vertical=lightHeight-y,total=length(vec2(horizontal,vertical));vec3 direction=directionH(p,light);float hs=horizontal/max(total,.001),vs=vertical/max(total,.001),travel=.06,result=1.;for(int i=0;i<24;i++){vec3 q=stepH(p,direction,travel*hs);float sd=scene(q,y+travel*vs).x;if(sd<.002)return .15;result=min(result,7.*sd/travel);travel+=clamp(sd,.045,.55);if(travel>=total-.18)break;}return clamp(result,.15,1.);}
+float shadow(vec3 p,float y,vec3 light,float lightHeight){float horizontal=distH(p,light),vertical=lightHeight-y,total=length(vec2(horizontal,vertical));vec3 direction=directionH(p,light);float hs=horizontal/max(total,.001),vs=vertical/max(total,.001),travel=.06,result=1.;for(int i=0;i<24;i++){vec3 q=stepH(p,direction,travel*hs);float sd=scene(q,y+travel*vs).x;if(sd<.002)return .15;float angularScale=uDebug==5.?7.:total/.10;result=min(result,angularScale*sd/travel);travel+=clamp(sd,.045,.55);if(travel>=total-.18)break;}return clamp(result,.15,1.);}
 vec2 stoneCoordinates(vec3 p){if(uK==.0)return p.xy;float r=length(p.xy);return p.xy/max(r,.00001)*ac(p.z)/uK;}
 vec3 filmic(vec3 x){return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.,1.);}
 void main(){vec2 uv=(2.*gl_FragCoord.xy-uRes)/uRes.y;float sy=sin(uPitch),cy=cos(uPitch);float cx=uv.x*.64,cf=cy-uv.y*.64*sy,vy=sy+uv.y*.64*cy;float norm=sqrt(cx*cx+cf*cf+vy*vy);float hs=sqrt(cx*cx+cf*cf)/norm,vs=vy/norm;vec3 v=(uR*cx+uF*cf)/sqrt(cx*cx+cf*cf);float t=.015;vec3 p;float y=1.25,material=0.;bool hit=false;

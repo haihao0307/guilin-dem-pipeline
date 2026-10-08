@@ -1,5 +1,5 @@
 {
-  "stage": "second_ci_person_integration_passed_room_keyboard_failure_grounding_fix_pending",
+  "stage": "third_ci_runtime_and_mechanism_verified_visual_quality_still_candidate",
   "engine": "Three.js r170",
   "originalRoomOnly": true,
   "ptOriginalGameDataIncluded": false,
@@ -18,8 +18,8 @@
   "firstCiRun": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37854318109",
   "firstCiJobOutcome": "failure",
   "firstCiFailure": "Room and person screenshot operations exceeded 30 seconds on software rendering",
-  "browserRender": "real_room_and_existing_person_frames_captured",
-  "browserChecksPassed": 15,
+  "browserRender": "actual_room_mobile_viewport_and_existing_person_frames_captured",
+  "browserChecksPassed": 23,
   "roomChecksPassed": [
     "WebGL render initialization",
     "Audio starts only after explicit entry",
@@ -31,26 +31,38 @@
     "Three observations terminate",
     "Spatial sound source follows phase",
     "Reset clears phase and input",
-    "Near-look changes focal angle"
+    "Near-look changes focal angle",
+    "Real held-key moves camera",
+    "Room bounds block exit",
+    "Plinth collider blocks traversal",
+    "Focus loss pauses and clears input",
+    "Mute state works",
+    "Mobile touch movement and release",
+    "No browser errors or external requests for the base room"
   ],
   "personChecksPassed": [
     "No model fetch before explicit load",
     "Original source fingerprint, topology and CommonSkinLayer loaded",
+    "Unchanged original mesh grounded above floor",
     "Loaded person changes actual pixels",
     "Release detaches only integrated person"
   ],
   "roomEntryScreenshotCaptured": true,
-  "screenshotsVerified": false,
-  "visualAcceptance": "Not accepted: person is visibly buried below the floor due to canonical origin placement; room materials and lighting remain mechanism-candidate quality.",
-  "revisionPendingVerification": "Ground the existing unmodified mesh using its outer Group and bounding-box minimum; verify real held-key registration and actual displacement instead of fixed wall-clock delay; new failure-state diagnostics.",
+  "screenshotsVerified": true,
+  "visualAcceptance": "Technical placement accepted: the unchanged existing person is fully above the floor. Final film/P.T.-level art quality is NOT accepted; materials, lighting and static character remain a mechanism/integration candidate.",
+  "revisionPendingVerification": null,
   "audioPerceptuallyVerified": false,
   "mobileDevicePerformanceVerified": false,
   "approvedPerson": {
-    "status": "original_runtime_skin_render_and_release_passed_grounding_visual_error_pending_recheck",
+    "status": "existing_runtime_original_skin_pixels_grounding_and_release_verified",
     "sourceCommit": "be719199ac33fac351a798e8afea51a0ee6d214e",
     "vertices": 25417,
     "triangles": 50624,
-    "retainsCommonSkinLayer": true
+    "retainsCommonSkinLayer": true,
+    "groundOffset": 0.9858653545379639,
+    "worldMinY": 0,
+    "worldMaxY": 1.8379755020141602,
+    "poseScope": "Existing default evaluated static pose only; not all animations or presets"
   },
   "secondCiCommit": "ab911ca428a29c710040e991d229cb53eb54a2b4",
   "secondCiRun": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37858306394",
@@ -60,6 +72,28 @@
   "secondCiNumericalChecksPassed": 26,
   "secondCiRoomBrowserChecksPassed": 11,
   "secondCiPersonBrowserChecksPassed": 4,
-  "screenshotsCaptured": 5,
-  "screenshotsReviewed": true
+  "screenshotsCaptured": 7,
+  "screenshotsReviewed": true,
+  "thirdCiCommit": "dd406a8f3ff4bb31f484e90c60a57395e4f60478",
+  "thirdCiRun": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37861286388",
+  "thirdCiArtifact": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37861286388/artifacts/11585804333",
+  "thirdCiJobOutcome": "success",
+  "thirdCiNumericalChecksPassed": 27,
+  "thirdCiRoomBrowserChecksPassed": 18,
+  "thirdCiPersonBrowserChecksPassed": 5,
+  "acceptedAnchorScope": [
+    "Original room mechanism checks",
+    "Existing CommonPerson and original CommonSkinLayer runtime integration",
+    "Grounded default pose without changing source shape or topology"
+  ],
+  "notAcceptedScope": [
+    "P.T. one-to-one reproduction",
+    "Film-quality material and lighting",
+    "ET03 eye adaptation",
+    "Current vegetation integration",
+    "Physical mobile performance",
+    "Perceptual audio review",
+    "Full character locomotion or rigid-body simulation"
+  ],
+  "productionStatus": "Validated on isolated QA branch; production parity must be confirmed from the deployment record"
 }
