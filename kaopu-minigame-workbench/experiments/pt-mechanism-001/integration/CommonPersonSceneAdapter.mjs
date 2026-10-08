@@ -17,13 +17,18 @@ export function attachCommonPerson({THREE,scene,model,SkinLayer,skinSettings={},
   const mesh=new THREE.Mesh(geometry,originalMaterial);mesh.name='Existing approved CommonPerson';mesh.castShadow=true;mesh.receiveShadow=true;
   const root=new THREE.Group();root.name='CommonPerson scene placement';root.position.fromArray(position);root.add(mesh);scene.add(root);
   const viewer={model,geometry,mesh,material:originalMaterial,wire:false,band:false,render:requestRender};
-  let disposed=false,skin;
+  let disposed=false,skin,groundOffset=0;
   function sync(){
     if(disposed)throw Error('Adapter disposed');
     if(model.positions!==originalPositions||model.faces!==originalFaces)throw Error('Canonical topology/buffer identity changed');
     // Exact convention already used by the approved workbench Viewer.mjs.
     for(let i=0;i<display.length;i+=3){display[i]=originalPositions[i];display[i+1]=originalPositions[i+2];display[i+2]=-originalPositions[i+1];}
     geometry.attributes.position.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere();
+    // The original canonical solver is pelvis-centred, not floor-centred.
+    // Place the exact evaluated mesh on the requested floor with a Group offset;
+    // never rescale, remesh, or rewrite the source vertex/skin buffers.
+    groundOffset=-geometry.boundingBox.min.y;
+    root.position.y=position[1]+groundOffset;
     skin?.update();requestRender();
   }
   sync();skin=new SkinLayer(viewer,skinSettings);
@@ -33,7 +38,7 @@ export function attachCommonPerson({THREE,scene,model,SkinLayer,skinSettings={},
     compute(state){model.compute(state);sync();return model.state;},
     restore(archive){model.restore(archive);sync();return model.state;},
     setSkin(values){return skin.set(values);},
-    report(){return{ready:!disposed,vertices:originalPositions.length/3,triangles:originalFaces.length/3,positionBufferPreserved:model.positions===originalPositions,indexBufferPreserved:model.faces===originalFaces,displayPositionBytes:display.byteLength,skin:skin.report(),newRendererCreated:false,newCharacterCreated:false};},
+    report(){return{ready:!disposed,vertices:originalPositions.length/3,triangles:originalFaces.length/3,positionBufferPreserved:model.positions===originalPositions,indexBufferPreserved:model.faces===originalFaces,displayPositionBytes:display.byteLength,groundOffset,worldMinY:geometry.boundingBox.min.y+root.position.y,worldMaxY:geometry.boundingBox.max.y+root.position.y,skin:skin.report(),newRendererCreated:false,newCharacterCreated:false};},
     dispose(){if(disposed)return;skin.dispose();root.removeFromParent();geometry.dispose();originalMaterial.dispose();disposed=true;}
   };
 }

@@ -1,7 +1,7 @@
-name: Minigame R01 candidate QA
+name: Minigame R03 isolated QA
 on:
   push:
-    branches: [gh-pages]
+    branches: [qa/minigame-r03-20261008]
     paths:
       - 'kaopu-minigame-workbench/experiments/math-space-002/**'
       - 'kaopu-minigame-workbench/experiments/pt-mechanism-001/**'
@@ -131,82 +131,3 @@ jobs:
           test "$NUMERIC" = success
           test "$ROOM" = success
           test "$PERSON" = success
-  direction_verify:
-    runs-on: ubuntu-latest
-    timeout-minutes: 12
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.sha }}
-          persist-credentials: false
-          sparse-checkout-cone-mode: false
-          sparse-checkout: |
-            /kaopu-minigame-workbench/direction-r01/
-            /kaopu-minigame-workbench/index.html
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Check static direction documents
-        run: python kaopu-minigame-workbench/direction-r01/verify.py
-      - name: Install declared browser test dependency
-        run: |
-          npm install --prefix "$RUNNER_TEMP/hub-qa" playwright@1.62.1
-          "$RUNNER_TEMP/hub-qa/node_modules/.bin/playwright" install --with-deps chromium
-          sudo apt-get update -qq
-          sudo apt-get install -y fonts-noto-cjk
-          echo "NODE_PATH=$RUNNER_TEMP/hub-qa/node_modules" >> "$GITHUB_ENV"
-      - name: Verify direction page and original entry
-        run: |
-          mkdir -p /tmp/direction-evidence
-          python -m http.server 8775 --bind 127.0.0.1 > /tmp/direction-evidence/server.log 2>&1 &
-          node <<'JS'
-          const { chromium } = require('playwright');
-          const fs = require('fs');
-          (async()=>{
-            const browser=await chromium.launch({headless:true});
-            const base='http://127.0.0.1:8775/kaopu-minigame-workbench/';
-            const results=[];
-            for(const [width,height] of [[1440,960],[390,844],[320,740]]){
-              const context=await browser.newContext({viewport:{width,height},reducedMotion:'reduce',acceptDownloads:true});
-              const page=await context.newPage(); const errors=[];
-              page.on('pageerror',e=>errors.push(e.message));
-              await page.goto(base+'direction-r01/',{waitUntil:'networkidle'});
-              const size=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth}));
-              if(size.width!==size.scroll)throw Error('Horizontal overflow: '+JSON.stringify(size));
-              await page.screenshot({path:`/tmp/direction-evidence/${width}-top.png`});
-              for(let i=1;i<=9;i++){
-                await page.locator(`nav a[href="#s${i}"]`).click();
-                if(!page.url().endsWith('#s'+i))throw Error('Anchor '+i);
-              }
-              await page.locator('nav a[href="#s5"]').click();
-              await page.screenshot({path:`/tmp/direction-evidence/${width}-trials.png`});
-              await page.goto(base+'direction-r01/');
-              const promise=page.waitForEvent('download');
-              await page.getByText('下载基础 Markdown').click();
-              const download=await promise;
-              if(!fs.readFileSync(await download.path()).equals(fs.readFileSync('kaopu-minigame-workbench/direction-r01/FOUNDATION.md')))throw Error('Markdown download mismatch');
-              if(errors.length)throw Error(JSON.stringify(errors));
-              results.push({viewport:[width,height],overflow:false,anchors:9,downloadExact:true,pageErrors:errors});
-              await context.close();
-            }
-            const page=await browser.newPage();await page.goto(base);
-            const order=await page.locator('article.case').evaluateAll(els=>els.map(e=>e.dataset.case));
-            if(JSON.stringify(order)!==JSON.stringify(['train','storm-orb','lost-found-bureau']))throw Error('Original case order');
-            await page.locator('.direction-link').click();if(!page.url().endsWith('/direction-r01/'))throw Error('Entry link');
-            await page.goBack();if(page.url()!==base)throw Error('Back');
-            await page.goForward();if(!page.url().endsWith('/direction-r01/'))throw Error('Forward');
-            results.push({entry:true,originalOrder:order,backForward:true});
-            fs.writeFileSync('/tmp/direction-evidence/results.json',JSON.stringify({commit:process.env.GITHUB_SHA,results,physicalDevicesTested:false},null,2));
-            await browser.close();
-          })().catch(e=>{console.error(e);process.exit(1)});
-          JS
-      - name: Upload actual direction page evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: minigame-direction-r01-qa-${{ github.sha }}
-          path: /tmp/direction-evidence/
-          if-no-files-found: warn
-          retention-days: 14

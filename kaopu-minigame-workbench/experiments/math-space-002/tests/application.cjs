@@ -5,7 +5,7 @@ const gl=new Proxy({FRAMEBUFFER_COMPLETE:36053,checkFramebufferStatus:()=>36053,
 const document={...target('document'),hidden:false,activeElement:{tagName:'BODY'},getElementById:element,querySelectorAll:()=>buttons};
 function element(id){if(elements.has(id))return elements.get(id);const e={...target(id),id,tagName:'DIV',dataset:{},style:{},value:'',textContent:'',innerHTML:'',classList:{add(){},remove(){},toggle(){}},setAttribute(n,v){this[n]=v},querySelector:()=>element(id+'-small'),setPointerCapture(){},focus(){document.activeElement=this;},getContext:type=>type==='2d'?ctx2d:gl,getBoundingClientRect:()=>({width:1000,height:800})};elements.set(id,e);return e;}
 const buttons=['w','a','s','d'].map(k=>{const e=element('move-'+k);e.dataset.key=k;return e;});
-const window={...target('window')};let raf;const context={window,document,console,Math,Set,Float32Array,Error,devicePixelRatio:1,ResizeObserver:class{constructor(f){this.f=f}observe(){this.f()}},setTimeout:()=>1,clearTimeout(){},requestAnimationFrame:f=>raf=f};vm.createContext(context);
+const window={...target('window')};let raf;const context={window,document,console,Math,Set,Float32Array,Error,URLSearchParams,devicePixelRatio:1,ResizeObserver:class{constructor(f){this.f=f}observe(){this.f()}},setTimeout:()=>1,clearTimeout(){},requestAnimationFrame:f=>raf=f};vm.createContext(context);
 for(const m of html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)){new Function(m[1]);vm.runInContext(m[1],context);}
 const api=window.__experiment002,H=context.HyperMath;assert(api);raf(100);assert(api.getState().rendered);
 const initial=api.getState();assert.strictEqual(initial.k,.3);assert(initial.angleSum<180);assert(!initial.tour);assert.strictEqual(initial.walked,0);

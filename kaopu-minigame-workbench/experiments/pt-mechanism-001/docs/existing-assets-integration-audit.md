@@ -16,7 +16,7 @@
 4. 把现有 [CommonSkinLayer.mjs](https://github.com/haihao0307/guilin-dem-pipeline/blob/be719199ac33fac351a798e8afea51a0ee6d214e/kaopu-unified-human-workbench/full/ui/skin/CommonSkinLayer.mjs) 接入宿主的 model、geometry、mesh、material、render() 等窄接口。它设置固定静止空间的皮肤区域属性、程序微表面和原材质，不改变人物几何。
 5. 参数或姿态变更后同步显示位置、法线、包围体和 skin.update()。场景平移/转向可放在外层 Group，不污染人物参数。继续使用一个宿主 renderer，避免每个角色开一个 WebGL 上下文。
 
-本地已写出 integration/CommonPersonSceneAdapter.mjs，要求传入原 CommonPerson 与 CommonSkinLayer。缺少原皮肤层会明确拒绝，不静默替换成泥模。其 7 项合成契约测试通过，涉及坐标、固定缓冲、皮肤字段保持、释放与单 renderer；这些不是原人物装载或视觉验收。
+本地已写出 integration/CommonPersonSceneAdapter.mjs，要求传入原 CommonPerson 与 CommonSkinLayer。缺少原皮肤层会明确拒绝，不静默替换成泥模。原 7 项合成契约测试已通过；第二轮审图后又加入外层 Group 落地检查，本地共 8 项通过。合成契约不替代原人物浏览器与视觉验收。
 
 ### 导出路径的准确范围
 
@@ -41,7 +41,7 @@
 
 通过官方 Sites 查询确认 [Vegetation Workbench](https://vegetation-workbench-rc16.sunhaihao.chatgpt.site) 的最新保存版本为 51，源提交 d5f6ed0f41bdd6a4e4d1163190d3cd2135e8b122。没有以旧 1.14 版本替代当前成果。
 
-当前读取结果只提供约 101.2 MB 的 Sediment 源归档，未给出 Library 文件身份或源仓库读取凭据。现有 Sediment 下载工具上限为 32 MiB；当前 Sites 工具没有只读单文件接口。Library materialize 要求已知 Library 文件记录，不能将一个 Sediment ID 擅自当成 Library/File Service ID。没有新建访问凭据，也没有修改 Sites 项目。
+当前只能取得约101.2 MB的完整源归档，超过现行单次下载上限，尚未取得受支持的分模块导出或单文件读取接口。未以旧版本替代，也没有变更植物项目、访问权限或凭据。
 
 因此，植物的实际导出接口、几何/实例布局、叶片材质、风动画与纹理许可尚未核实。下一步通过受支持的当前源码读取或用户已有导出包进行检查；不能为了填空重新造一株低质植物。
 
@@ -74,3 +74,12 @@
 当前房间只承担机制与接入宿主角色。首轮 CI 已取得真实入口截图，渲染、进入后启音、凝视触发和人物实际载入均有部分通过记录；之后截图超时导致 job 失败，完整视觉、听觉与移动端检查尚未完成。已经获得在小游戏生产线限定目录发布自有代码与测试的许可，发布用于验收，不等于成果已通过画质检查。
 
 补充进度：候选按需载入现有生产人物，已经实际通过原版本指纹、25,417 顶点、50,624 个三角形和原皮肤层检查，未创建替代人物。人物同场截图和最终组合观感仍待复验，不能将“数据载入通过”记成“高质量集成已验收”。[首轮运行](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37854318109)
+
+
+## 第二轮接入实测与放置修复
+
+[第二轮 CI](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37858306394) 固定提交 ab911ca428a29c710040e991d229cb53eb54a2b4。独立人物脚本的按需加载、原版本指纹与拓扑、CommonSkinLayer、实际画布变化、释放检查通过，已拍到真实人物同场及近景。未创建新人物，未用无皮肤 GLB 代替原运行时。
+
+人工查看截图后发现人物半身埋地。原因是共同求值模型以身体中部为原点，而场景把其 y=0 当作脚底。最小修复仅按转换后几何包围盒最低点计算外层 Group 的整体落地平移，保留全部原顶点、索引、比例和皮肤属性；新增 worldMinY 与完整身高检查。此修复本地契约通过，实际落地截图仍待下一轮。
+
+同轮机制浏览器先通过 11 项，再因按键位移检查失败而停止；总 job 正确报告 failure。不能把人物脚本成功、截图已取得或工作流上传成功，扩写成整个候选已验收。新键盘测试将确认真实按键登记并等实际位移，记录失焦/暂停信息以定位剩余问题。[真实产物](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37858306394/artifacts/11585152312)
