@@ -7,10 +7,11 @@ import{CommonBodyDriver}from'../body-adapter/CommonBodyDriver.mjs';
 import{MHRBodyAdapter}from'../body-adapter/MHRBodyAdapter.mjs';
 import{MHRDetailedEngine,unpackModel}from'../body-adapter/MHRDetailedEngine.mjs';
 export const assetRoot=new URL('../',import.meta.url);
+const metadataCorePath=path=>path.startsWith('src/')||path.startsWith('ui/')||path.startsWith('body-adapter/');
 const digest=async data=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',data))].map(x=>x.toString(16).padStart(2,'0')).join('');
 export async function loadCommon({signal,onProgress=()=>{},base=assetRoot}={}){
  const alive=()=>{if(signal?.aborted)throw new DOMException('Load cancelled','AbortError');};let finished=0,total=38,assetURLs={};
- const get=async(path,expected)=>{alive();const response=await fetch(new URL(assetURLs[path]||path,base),{signal,cache:path==='ui/runtime-metadata.json'?'no-cache':'default'});if(!response.ok)throw Error(path+': HTTP '+response.status);const data=await response.arrayBuffer();alive();if(expected&&await digest(data)!==expected)throw Error('资产校验失败：'+path);alive();finished++;onProgress({fraction:Math.min(.95,finished/total),label:path});return data;};
+ const get=async(path,expected)=>{alive();const response=await fetch(new URL(assetURLs[path]||path,base),{signal,cache:path==='ui/runtime-metadata.json'||metadataCorePath(path)?'no-cache':'default'});if(!response.ok)throw Error(path+': HTTP '+response.status);const data=await response.arrayBuffer();alive();if(expected&&await digest(data)!==expected)throw Error('资产校验失败：'+path);alive();finished++;onProgress({fraction:Math.min(.95,finished/total),label:path});return data;};
  const decode=data=>JSON.parse(new TextDecoder().decode(data)),inflate=async data=>{alive();const result=await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();alive();return result;};
  const metadata=decode(await get('ui/runtime-metadata.json'));assetURLs=metadata.assetURLs||{};total=Object.keys(metadata.coreHashes).length+Object.keys(metadata.assetHashes).length+10;
  await Promise.all(Object.entries(metadata.coreHashes).map(([path,sha])=>get(path,sha)));

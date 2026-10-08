@@ -14,8 +14,8 @@ export class WorkbenchController extends EventTarget{
  resetSource(source){const next=this.state();next[source]=structuredClone(this.defaults[source]);return this.commit(next);}
  applyPreset(id){return this.commit(createPresetState(id,this.defaults));}
  resetAll(){return this.commit(structuredClone(this.defaults));}
- archive(){const a=this.model.archive();if(this.presetId)a.preset={schema:'kaopu-human-preset-reference/1',id:this.presetId};return a;}
- restore(archive){this.model.restore(archive);return this.changed();}
+ archive(){const a=this.model.archive();if(this.presetId)a.preset={schema:'kaopu-human-preset-reference/1',id:this.presetId};if(this.archiveSurface)a.surface=this.archiveSurface();return a;}
+ restore(archive){if(archive.surface&&archive.surface.schema!=='kaopu-common-surface/1')throw Error('Unsupported surface archive');this.model.restore(archive);if(archive.surface)this.restoreSurface?.(archive.surface);return this.changed();}
  metrics(){return {...this.model.metrics(),revision:this.revision,fixedPositionBuffer:this.model.positions===this.positionReference,fixedIndexBuffer:this.model.faces===this.faceReference};}
  summary(){const counts={active:0,inactive:0,pending:0,locked:0,loading:0,'native-null':0};for(const row of this.catalog.rows)counts[this.status(row).kind]++;return {catalogScalars:1603,extraBoneTranslationScalars:312,correctiveToggles:1,...counts};}
 }

@@ -32,10 +32,19 @@ jobs:
           HUMAN_QA_URL: http://127.0.0.1:8765/kaopu-unified-human-workbench/
           HUMAN_QA_OUT: ${{ github.workspace }}/human-presets-qa-results
         run: node kaopu-unified-human-workbench/tests/presets-browser.cjs
+      - name: Exercise material semantics on the same current geometry
+        if: always()
+        env:
+          NODE_PATH: ${{ github.workspace }}/.human-qa/node_modules
+          HUMAN_QA_URL: http://127.0.0.1:8765/kaopu-unified-human-workbench/
+          SKIN_QA_OUT: ${{ github.workspace }}/human-skin-qa-results
+        run: node kaopu-unified-human-workbench/tests/skin-browser.cjs
       - name: Keep screenshots and numerical report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: human-presets-surface-${{ github.sha }}
-          path: human-presets-qa-results/
+          path: |
+            human-presets-qa-results/
+            human-skin-qa-results/
           if-no-files-found: warn
