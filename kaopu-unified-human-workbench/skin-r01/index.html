@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><title>共同人物 · R02 皮肤测试 R01.1</title><style>body{margin:0;background:#14212a;color:#c9d6de;font:15px/1.8 system-ui,sans-serif;display:grid;min-height:100vh;place-items:center}main{max-width:560px;padding:32px}h1{font-size:23px;color:#eed1b4;font-weight:550}a{color:#d3b898}small{color:#94a9b8}#error{color:#efbaab}</style></head><body><main><h1>共同人物 · 皮肤材质测试</h1><p id="status">正在读取固定版本工作台…</p><p id="error" role="alert"></p><small>沿用原 Anny / GNM / MHR 人体，仅增加可关闭的皮肤显示层。</small><p><a href="../">返回原总平台</a></p></main><script>
+(async()=>{
+ const source='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/8683cee4051ad7a1555fa4cd87921ff102cd0676/kaopu-unified-human-workbench/skin-r01/preview.html';
+ const expected='c9d2d5fc067aa84cf05faddeb748b0ee6a659a1acbc1d77cb8b9d5a2ab4a3c54';
+ try{const response=await fetch(source);if(!response.ok)throw Error('工作台资源读取失败（'+response.status+'）');const bytes=await response.arrayBuffer();const digest=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(x=>x.toString(16).padStart(2,'0')).join('');if(digest!==expected)throw Error('固定版本校验未通过，未执行不匹配内容');const html=new TextDecoder().decode(bytes);document.open();document.write(html);document.close();}
+ catch(error){document.getElementById('status').textContent='工作台尚未载入';document.getElementById('error').textContent=error.message+'。请刷新重试，原总平台未被修改。';console.error(error);}
+})();
+</script></body></html>
