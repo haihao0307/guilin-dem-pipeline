@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import * as THREE from '../full/source/registration-vendor/three.module.js';
+import {StrainField,rescaleKernel,poseIsNeutral} from './UHLayer.mjs';
+const state=()=>({owners:{rig:'anny'},gnm:{identity:[0],expression:[0],rotation:[0],translation:[0]},anny:{phenotypes:{height:.5},localChanges:{},pose:{},translations:{},facialActions:{}},mhr:{identity:[0],pose:[0],expression:[0],correctives:true}});
+const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute([0,0,0,1,0,0,0,1,0],3));g.setIndex([0,1,2]);const field=new StrainField(g,new Float32Array([1,1,1]));const s=state();field.update(s);assert.equal(field.report().maxCompression,0);assert.equal(field.report().maxStretch,0);assert.equal(field.report().calibrated,true);
+g.attributes.position.array.set([3,2,4,3,3,4,2,2,4]);s.anny.pose.arm=[0,0,90];field.update(s);assert.equal(field.report().maxCompression,0);assert.equal(field.report().maxStretch,0);
+g.attributes.position.array.set([3,2,4,3,2.8,4,2,2,4]);field.update(s);assert.ok(field.report().maxCompression>.8);
+s.anny.phenotypes.height=.7;field.update(s);assert.equal(field.report().calibrated,false);assert.equal(field.report().maxCompression,0);s.anny.pose={};field.update(s);assert.equal(field.report().calibrated,true);assert.equal(field.report().maxCompression,0);assert.equal(field.report().captures,2);assert.ok(poseIsNeutral(s));
+const orig=[new THREE.Vector4(.6,.8,.9,0),new THREE.Vector4(.2,.1,.05,-1),new THREE.Vector4(.2,.1,.05,1)];for(const scales of [[1,1,1],[.4,1.8,.75],[1.1,.95,.85]]){const k=rescaleKernel(orig,scales);for(let c=0;c<3;c++){assert.ok(Math.abs(k.reduce((n,v)=>n+v.getComponent(c),0)-1)<1e-7);assert.ok(k.every(v=>v.getComponent(c)>=0));}if(scales.every(s=>s===1))assert.deepEqual(k.map(v=>v.toArray()),orig.map(v=>v.toArray()));}
+console.log('PASS: neutral calibration; rigid invariance; deformation response; shape-change invalidation; safe recapture; positive energy-normalized RGB kernels.');
