@@ -1,0 +1,63 @@
+name: Tailor R06 browser verification
+on:
+  push:
+    branches: [fix/tailor-paper-to-cloth-20261008]
+    paths:
+      - '.github/workflows/tailor-r06-browser.yml'
+      - 'kaopu-tailor-workbench/r06/**'
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-tailor-workbench
+            kaopu-human-overview
+          fetch-depth: 1
+      - name: Browser dependencies
+        run: |
+          python -m pip install playwright==1.56.0
+          python -m playwright install chromium --with-deps
+      - name: Inspect generation and visible page
+        run: |
+          mkdir -p evidence
+          python -m http.server 8765 > /tmp/tailor-server.log 2>&1 &
+          python - <<'PY'
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          import json, time
+          out=Path('evidence')
+          with sync_playwright() as p:
+            b=p.chromium.launch(headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+            page=b.new_page(viewport={'width':1440,'height':1000})
+            errors=[]
+            page.on('pageerror',lambda e:errors.append(str(e)))
+            page.goto('http://127.0.0.1:8765/kaopu-tailor-workbench/?case=MetaGarmentDress')
+            page.wait_for_function('window.__TAILOR_CATALOGUE_QA__?.getState().ready',timeout=30000)
+            page.screenshot(path=str(out/'baseline-initial.png'))
+            page.evaluate('window.__TAILOR_CATALOGUE_QA__.generate(false)')
+            page.wait_for_function("['paper','error'].includes(window.__TAILOR_CATALOGUE_QA__.getState().phase)",timeout=240000)
+            for name,method in [('dress-state','getState'),('dress-spec','getSpec'),('dress-analytic','getAnalytic')]:
+              data=page.evaluate('window.__TAILOR_CATALOGUE_Q__.'+method+'()') if False else page.evaluate('window.__TAILOR_CATALOGUE_QA__.'+method+'()')
+              (out/(name+'.json')).write_text(json.dumps(data))
+            page.screenshot(path=str(out/'baseline-paper.png'))
+            page.locator('#view-cloth').click()
+            page.screenshot(path=str(out/'baseline-placed.png'))
+            print(json.dumps({'state':page.evaluate('window.__TAILOR_CATALOGUE_QA__.getState()'),'errors':errors},ensure_ascii=False))
+            if Path('kaopu-tailor-workbench/r06/qa.py').exists():
+              exec(compile(Path('kaopu-tailor-workbench/r06/qa.py').read_text(),'r06/qa.py','exec'),{'page':page,'browser':b,'out':out,'json':json,'Path':Path})
+            b.close()
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r06-browser-evidence
+          path: |
+            evidence
+            kaopu-human-overview/workbench-ui.css
+            kaopu-human-overview/workbench-ui.js
+          retention-days: 7
