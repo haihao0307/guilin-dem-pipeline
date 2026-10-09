@@ -11,7 +11,8 @@ export class HandBodyCoordinator extends NativeRig {
  }};
  tip(side,finger){const f=this.finger[side+finger];return transform(this.skinMatrices[f.ids[2]],f.tip);}
  fingerPose(side,finger,angles,spread=0){const f=this.finger[side+finger];f.ids.forEach((j,k)=>this.rotationDeltas[j]=add(scale(f.axes[k],angles[k]),k===0?scale(this.hand[side].palm,spread):[0,0,0]));}
- evaluate(seconds,{task='grasp',duration=6,side='L',target=null,objectId='hand-prop',amount=1,twistDegrees=35,poseOutput=false}={}){
+ evaluate(seconds,{task='grasp',duration=6,side='L',target=null,objectId='hand-prop',amount=1,twistDegrees=task==='reach-turn'?35:0,poseOutput=false,contactOffsets=null}={}){
+ if(contactOffsets&&Object.values(contactOffsets).some(v=>!Array.isArray(v)||v.length!==3||!v.every(Number.isFinite)))throw Error('Invalid contact offsets');
  if(!TASKS.includes(task)||!Number.isFinite(seconds)||!Number.isFinite(duration)||!(duration>0)||!Number.isFinite(amount)||!Number.isFinite(twistDegrees)||(target&&(!Array.isArray(target)||target.length!==3||!target.every(Number.isFinite)))||!['L','R'].includes(side))throw Error('Invalid hand-body task');
  const u=clamp(seconds/duration,0,1),reach=smooth(u/.27)*(1-smooth((u-.79)/.21)),close=smooth((u-.20)/.2)*(1-smooth((u-.68)/.16)),lift=smooth((u-.40)/.16)*(1-smooth((u-.61)/.14)),h=this.stature;
  const active=task==='carry'?['L','R']:[side],a=clamp(amount,0,1),grasp=['grasp','carry'].includes(task),closure=(['open','reach-turn'].includes(task)?0:task==='fist'?reach:close)*a;
@@ -31,13 +32,13 @@ export class HandBodyCoordinator extends NativeRig {
  let footError=0;for(const s of ['L','R']){const l=this.limbs['leg'+s],hip=pos(this.posedMatrices[l.a]);this.solveLimb(l,this.restP[l.c],add(hip,[0,-h*.3,-h*.1]),.9999);this.orientSkin(l.c,[1,0,0,0,1,0,0,0,1]);footError=Math.max(footError,norm(sub(pos(this.posedMatrices[l.c]),this.restP[l.c])));}
  const objectPosition=target||[(task==='carry'?0:(side==='L'?1:-1)*h*.12),-h*.21,h*(.61+.07*lift)-this.floorOffset];
  const hands={};for(const s of active){const sign=s==='L'?1:-1,l=this.limbs['arm'+s],shoulder=pos(this.posedMatrices[l.a]);
- const goal=task==='carry'?add(objectPosition,[sign*h*.085,0,h*.035]):task==='reach-turn'?[sign*h*.27,-h*.20,h*.71-this.floorOffset]:add(objectPosition,grasp?[0,h*.05,h*.06]:[0,h*.035,0]);
- const handTarget=lerp(this.restP[l.c],goal,reach);const solved=this.solveLimb(l,handTarget,add(shoulder,[sign*h*.23,0,-h*.23]),.995);
+ const goal=contactOffsets?.[s]?add(objectPosition,contactOffsets[s]):task==='carry'?add(objectPosition,[sign*h*.090,-h*.026,h*.035]):task==='reach-turn'?[sign*h*.27,-h*.20,h*.71-this.floorOffset]:add(objectPosition,grasp?[sign*h*.006,h*.043,h*.025]:[0,h*.035,0]);
+ const handTarget=lerp(this.restP[l.c],goal,reach);if(task==='grasp')handTarget[2]+=h*.10*reach*(1-close);const solved=this.solveLimb(l,handTarget,add(shoulder,[sign*h*.23,0,-h*.23]),.995);
  // Forearm helper receives part of axial roll. Wrist receives the residual
  // absolute orientation, so hand task orientation does not double-rotate.
  const helper=this.index.get('lowerarm02.'+s),axis=unit(sub(pos(this.posedMatrices[l.c]),pos(this.posedMatrices[l.b]))),roll=clamp(twistDegrees,-70,70)*reach*DEG;
  if(helper!==undefined)this.rotateSubtree(helper,axisRotation(axis,roll*.55));
- const forward=unit(lerp(this.hand[s].forward,task==='carry'?[0,-.18,-1]:[0,-1,.08],reach));
+ const forward=unit(lerp(this.hand[s].forward,task==='carry'?[0,-1,-.15]:[0,-1,.08],reach));
  const palm=mv(axisRotation(forward,roll),unit(lerp(this.hand[s].palm,task==='carry'?[-sign,0,0]:[0,0,-1],reach)));this.orientSkin(l.c,basisRotation(this.hand[s].forward,this.hand[s].palm,forward,palm));
  hands[s]={target:handTarget,position:pos(this.posedMatrices[l.c]),targetErrorM:norm(sub(pos(this.posedMatrices[l.c]),handTarget)),reachClamped:solved.clamped,palmMatrix:Array.from(this.posedMatrices[l.c]),twistHelperRadians:roll*.55};
  }
@@ -51,7 +52,7 @@ export class HandBodyCoordinator extends NativeRig {
 
  for(const s of active){hands[s].thumbIndexGapM=norm(sub(this.tip(s,1),this.tip(s,2)));hands[s].tips=Array.from({length:5},(_,f)=>this.tip(s,f+1));}
  const grip=grasp&&u>=.4&&u<.68;const event=grip&&!this.previousGrip?'grab':!grip&&this.previousGrip?'release':null;this.previousGrip=grip;
- this.result.hands=hands;this.result.object={id:objectId,position:objectPosition,grip,event,mode:'kinematic target; no force feedback',halfExtentsNative:[h*.23/3.4,h*.16/3.4,h*.18/3.4],graspOffsets:task==='carry'?{L:[h*.085,0,h*.035],R:[-h*.085,0,h*.035]}:{[side]:[0,h*.05,h*.06]}};
+ this.result.hands=hands;this.result.object={id:objectId,position:objectPosition,grip,event,mode:'kinematic target; no force feedback',shape:task==='grasp'?'sphere':'box',radius:h*.015,halfExtentsNative:task==='grasp'?[h*.015,h*.015,h*.015]:[h*.23/3.4,h*.16/3.4,h*.18/3.4],graspOffsets:contactOffsets|| (task==='carry'?{L:[h*.090,-h*.026,h*.035],R:[-h*.090,-h*.026,h*.035]}:{[side]:[(side==='L'?1:-1)*h*.006,h*.043,h*.025]})};
  this.result.state={task,phase,progress:u,reach,closure,space:'native-local-z-up',poseCorrectives:false};this.metrics={maxFootErrorM:footError,maxHandErrorM:Math.max(...Object.values(hands).map(x=>x.targetErrorM)),shapeEvaluationsPerFrame:0,boneCount:this.count};this.result.metrics=this.metrics;
  if(poseOutput)this.exportNativePose(this.pose);return this.result;
  }
