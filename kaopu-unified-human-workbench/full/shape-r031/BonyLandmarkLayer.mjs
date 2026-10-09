@@ -13,19 +13,19 @@ export function installBonyLandmarkLayer(model){if(model.r031Bony)throw Error('B
   for(let i=0;i<n;i++){const x=p[i*3],y=p[i*3+1],z=p[i*3+2],nx=norm[i*3],ny=norm[i*3+1],nz=norm[i*3+2],len=Math.hypot(nx,ny,nz)||1,N=[nx/len,ny/len,nz/len],ax=Math.abs(x),front=smooth(.05,.7,-N[1]),back=smooth(.05,.7,N[1]);let d=0;
    // Shoulder girdle: shallow S-like clavicular crest with soft adjacent hollows.
    const t=(ax-.018*scale)/(half*.92-.018*scale),clavZ=clav[2]-.027*scale+.010*scale*Math.sin(Math.PI*clamp(t))+.008*scale*clamp(t);const lateral=smooth(0,.13,t)*(1-smooth(.90,1.04,t));
-   d+=front*lateral*(.0110*scale*gauss((z-clavZ)/(.016*scale))-.0045*scale*gauss((z-clavZ-.030*scale)/(.024*scale))-.0035*scale*gauss((z-clavZ+.033*scale)/(.023*scale)));
+   d+=front*lateral*(.0110*scale*gauss((z-clavZ)/(.016*scale))-.0045*scale*gauss((z-clavZ-.030*scale)/(.024*scale))-.0080*scale*gauss((z-clavZ+.040*scale)/(.029*scale)));
    d+=.003*scale*gauss((ax-half*1.01)/(.025*scale))*gauss((z-clav[2]-.003*scale)/(.025*scale))*smooth(-.05,.5,N[2]);
    // Costal margin: paired oblique arches; lateral ribs softly vanish medially.
    const u=(ax-.025*scale)/(.132*scale),costal=spine[2]-.070*scale-.080*scale*Math.sin(Math.PI*.65*clamp(u)),ribGate=smooth(0,.2,u)*(1-smooth(.84,1.08,u));
    d+=front*ribGate*(.0048*scale*gauss((z-costal)/(.018*scale))-.0024*scale*gauss((z-costal+.019*scale)/(.016*scale)));
    // Individual rib corrugations are omitted: the costal arc is the first structural cue.
-   d-=front*.0012*scale*gauss(x/(.013*scale))*gauss((z-spine[2])/(.09*scale));
+   d+=front*.0027*scale*gauss(x/(.018*scale))*gauss((z-spine[2])/(.080*scale));
    // Scapular spine, preserving the soft back rather than embossing a triangle.
    const scapZ=clav[2]-.050*scale+.12*(ax-.10*scale);d+=back*.0025*scale*gauss((ax-.115*scale)/(.054*scale))*gauss((z-scapZ)/(.014*scale));
    // Patella and tibial anterior crest, anchored to the current rig proportions.
-   const kz=leftKnee[2],kx=leftKnee[0];d+=front*.0028*scale*gauss((ax-kx)/(.021*scale))*gauss((z-kz)/(.027*scale));const shinT=(kz-z)/(kz-leftAnkle[2]),shinX=kx+(leftAnkle[0]-kx)*clamp(shinT),shinGate=smooth(.09,.20,shinT)*(1-smooth(.80,.96,shinT));d+=front*.0022*scale*shinGate*gauss((ax-shinX)/(.009*scale));
+   const kz=leftKnee[2],kx=leftKnee[0];d+=front*.0028*scale*gauss((ax-kx)/(.021*scale))*gauss((z-kz)/(.027*scale));d+=.0040*scale*gauss((ax-kx)/(.030*scale))*gauss((z-kz+.005*scale)/(.021*scale))*smooth(.20,.65,Math.abs(N[0]));const shinT=(kz-z)/(kz-leftAnkle[2]),shinX=kx+(leftAnkle[0]-kx)*clamp(shinT),shinGate=smooth(.09,.20,shinT)*(1-smooth(.80,.96,shinT));d+=front*.0022*scale*shinGate*gauss((ax-shinX)/(.009*scale));
    // Olecranon at the posterior elbow; no wrist/hand or adult cranium edits.
-   d+=back*.0022*scale*gauss((ax-leftElbow[0])/(.023*scale))*gauss((z-leftElbow[2])/(.026*scale));
+   d+=(.0018+.0014*back)*scale*gauss((ax-leftElbow[0])/(.023*scale))*gauss((z-leftElbow[2])/(.026*scale));
    d=clamp(d,-.007*scale,.009*scale);maxMM=Math.max(maxMM,Math.abs(d)*1000);for(let c=0;c<3;c++)delta[i*3+c]=N[c]*d;
   }
   field={delta,maxMM,anchors:{clavicle:clav,shoulder,spine,waist,knee:leftKnee,ankle:leftAnkle,elbow:leftElbow}};cache.set(key,field);
