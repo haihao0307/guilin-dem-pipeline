@@ -77,6 +77,37 @@ test('World transforms are applied once to every source; old births retain their
   assert.notDeepEqual(effect.proof.sourceOrigins[old.emitter],origin);
 });
 
+test('Contact-born streaks clear the rod plane while still bright and remain small with finite lifetimes',()=>{
+  const effect=createBrakeEffects(),spec=BRAKE_EFFECTS_SPEC,rodOuterPlane=1.13;
+  let distance=0,birthChecks=0,visibleChecks=0;
+  const seenSources=new Set();
+  for(let tick=0;tick<=90;tick++){
+    const velocity=16-3.1*tick/30;if(tick)distance+=velocity/30;
+    effect.update(frame(tick,velocity,{distance,brake:true}));
+    for(const spark of effect.slots){
+      if(!spark.active||spark.kind!=='spark')continue;
+      const source=BRAKE_EMITTERS[spark.emitter];
+      if(spark.age===0){
+        birthChecks++;seenSources.add(spark.emitter);assert.deepEqual(spark.position,source.position);
+        const outwardSpeed=spark.velocity[2]*source.side;
+        assert.ok(outwardSpeed>=spec.minSparkOutwardSpeed&&outwardSpeed<=spec.maxSparkOutwardSpeed);
+        assert.ok(spark.length>=.12&&spark.length<=.22);assert.ok(spark.width>=.022&&spark.width<=.030);
+        assert.ok(spark.life>=.22&&spark.life<=.32);
+        const clearAge=(rodOuterPlane-Math.abs(source.position[2]))/outwardSpeed;
+        assert.ok(clearAge<.135&&clearAge<spark.life*.61,'Each spark reaches the front of the rods before most of its light is lost');
+        assert.ok(.95*(1-clearAge/spark.life)>.37);
+      }
+      if(Math.abs(spark.position[2])>rodOuterPlane&&spark.opacity>.37)visibleChecks++;
+      assert.ok(spark.position[1]>.12,'The short streak fades before falling through the track ground');
+    }
+  }
+  assert.ok(birthChecks>50);assert.equal(seenSources.size,8);assert.ok(visibleChecks>80);
+  assert.equal(effect.proof.visibilityRevision,2);assert.equal(effect.proof.parameters,spec);
+  assert.ok(effect.proof.peakSparks<=16,'Extra visibility comes from shape and outward motion, not a large shower');
+  assert.equal(effect.proof.sparkCapacity,48);assert.equal(effect.proof.hazeCapacity,20);
+  assert.ok(spec.maxLightIntensity<=.35,'Brief reflected light stays subordinate to streaks');
+});
+
 test('Pause and duplicate render calls freeze slots, lights and emission credit; resumed state matches uninterrupted state',()=>{
   const paused=createBrakeEffects(),control=createBrakeEffects();const run=braking(paused);braking(control);
   const held=frame(run.tick,run.velocity,{distance:run.distance,brake:true}),before=snapshot(paused);

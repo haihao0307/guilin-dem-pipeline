@@ -27,20 +27,23 @@ async function movie(page,name,seconds,onFrame){
  context=await browser.newContext({viewport:{width:1152,height:864},hasTouch:true});page=await context.newPage();page.setDefaultTimeout(60000);page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400)bad.push([r.status(),r.url()]);});
  await page.route('**/game/app.mjs',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:await r.text()+harness});});await page.goto(base,{waitUntil:'load'});await page.waitForFunction(()=>window.__trainDriver?.ready);assert.equal(await page.evaluate(()=>__trainDriver.version),'kcr-hud-r14');await clickTarget(page,'#startGame',{touch:true});
  if(['normal','brake-detail'].includes(suite)){
-  await page.waitForFunction(()=>__trainDriver.getState().station.canOpen);await clickTarget(page,'#stationAction');await page.waitForFunction(()=>__trainDriver.getState().phase==='ready-depart',null,{timeout:60000});
+  await page.waitForFunction(()=>__trainDriver.getState().station.canOpen);await clickTarget(page,'#stationAction');await page.waitForFunction(()=>__trainDriver.getState().phase==='ready-depart',null,{timeout:60000});await page.waitForFunction(()=>__trainDriver.getState().audio.samples.length===5);
   await clickTarget(page,'#openCameraMenu');await clickTarget(page,suite==='brake-detail'?'[data-camera="detail"]':'[data-camera="platform"]');
  }
  await page.evaluate(()=>__r13.freeze());await page.waitForTimeout(200);
  if(['normal','brake-detail'].includes(suite)){
-  const served=await page.evaluate(()=>__trainDriver.getState());assert.equal(served.stats.stops,1,'Real first station served with native door input before capture');
-  await clickTarget(page,'#stationAction');let accelerated=false,braking=false,released=false;
+  const served=await page.evaluate(()=>__trainDriver.getState());assert.equal(served.audio.unlocked,true);assert.deepEqual(served.audio.errors,{});assert(served.audio.loopCount<=4);assert.equal(served.stats.stops,1,'Real first station served with native door input before capture');
+  await clickTarget(page,'#stationAction');let accelerated=false,braking=false,released=false,frontViewed=false,platformRestored=false,gentle=false;
   const frames=await movie(page,suite==='brake-detail'?'normal-brake-wheel-detail':'normal-start-brake-stop',20,async(i,t)=>{
    const state=await page.evaluate(()=>__r13.state());
    if(!accelerated&&state.phase==='running'){await clickTarget(page,'#accelerate');await clickTarget(page,'#accelerate');accelerated=true;}
+   if(suite==='normal'&&t>=4&&!frontViewed){await clickTarget(page,'#openCameraMenu');await clickTarget(page,'[data-camera="front"]');frontViewed=true;}
+   if(suite==='normal'&&t>=7&&!platformRestored){await clickTarget(page,'#openCameraMenu');await clickTarget(page,'[data-camera="platform"]');platformRestored=true;}
+   if(suite==='normal'&&t>=7&&!gentle){for(let n=0;n<4;n++)await clickTarget(page,'#decelerate');gentle=true;}
    if(t>=9&&!braking){const r=await page.locator('#brake').boundingBox();await page.mouse.move(r.x+r.width/2,r.y+r.height/2);await page.mouse.down();braking=true;}
    if(braking&&!released&&state.velocity===0){await page.mouse.up();released=true;}
   });
-  assert(accelerated&&braking&&released);assert(frames.some(x=>x.steam.starting&&x.steam.dynamics.cylinderActive>0),'Bilateral startup steam visible');
+  assert(accelerated&&braking&&released);if(suite==='normal')assert(frames.some(x=>x.throttle<0&&x.steam.brakeVisualMode==='gentle'),'Gentle braking uses a weaker explicit visual channel');assert(frames.some(x=>x.steam.starting&&x.steam.dynamics.cylinderActive>0),'Bilateral startup steam visible');
   assert(frames.some(x=>x.brake&&x.steam.dynamics.cylinderActive>0),'Cinematic braking steam visible through normal brake input');assert(frames.some(x=>x.brakeEffects.activeSparks>0),'Native braking creates bounded shoe/rim sparks');assert(frames.some(x=>x.friction?.active),'Native braking drives original spatial friction bus');assert.equal(frames.at(-1).brakeEffects.activeSparks,0);assert.equal(frames.at(-1).brakeEffects.activeHaze,0);
   assert.equal(frames.at(-1).velocity,0);assert.equal(frames.at(-1).throttle,0);assert.equal(frames.at(-1).brake,false);assert.equal(frames.at(-1).body.state.heave,0);assert.equal(frames.at(-1).steam.dynamics.lowerActive,0);
   checks.push({name:'normal-native-start-brake-stop',frames:frames.length,actualFirstStop:served.stats.stops,first:frames[0],last:frames.at(-1),accelerated,braking,released,fixtureStateWrites:false});

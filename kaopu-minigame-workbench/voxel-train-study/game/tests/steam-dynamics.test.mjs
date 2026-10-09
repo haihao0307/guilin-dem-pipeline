@@ -91,6 +91,61 @@ test('A moving brake application produces bilateral cinematic vents without open
   assert.ok(cloud.every(p => p.birthPosition[0] === 3.3 && p.birthPosition[1] === 1.06));
 });
 
+test('Negative throttle braking shares demand semantics and has weaker bilateral application and tail steam', () => {
+  const samples = [];
+  for (const [throttle, hard, expectedDemand] of [[-1, false, .6], [-2, false, 1.2], [0, true, 3.1]]) {
+    const engine = createSteamDynamics(); engine.update(view(0, moving(8, 0)(0))); run(engine, 0, .5, moving(8, 0));
+    const fields = t => ({ distance: t * 8, velocity: 8, throttle, brake: hard });
+    const application = run(engine, .5, 1.5, fields), tail = run(engine, 1.5, 3, fields);
+    assert.equal(application.state.brakeVisualDemand, expectedDemand);
+    assert.equal(application.state.brakeVisualMode, hard ? 'hard' : 'gentle');
+    assert.equal(application.state.draining, false); assert.equal(application.proof.brakeVisualReleases, 1);
+    const puffs = active(application).filter(p => p.channel === 'brake-visual');
+    assert.ok(puffs.some(p => p.birthPosition[2] < 0) && puffs.some(p => p.birthPosition[2] > 0));
+    assert.ok(puffs.every(p => p.brakeMode === (hard ? 'hard' : 'gentle')));
+    assert.equal(tail.state.brakeVisualStage, 'held-brake');
+    samples.push({ application: application.state.brakeVisualStrength, tail: tail.state.brakeVisualStrength });
+  }
+  assert.ok(samples[0].application < samples[1].application && samples[1].application < samples[2].application);
+  assert.ok(samples[0].tail < samples[1].tail && samples[1].tail < samples[2].tail);
+});
+
+test('Coasting drag and reverse recovery do not count as requested braking vents', () => {
+  for (const fields of [
+    t => ({ distance: 8 * t, velocity: 8 - .11 * t, throttle: 0 }),
+    t => ({ distance: 8 * t, velocity: 8, throttle: -2, reverse: true }),
+    t => ({ distance: 8 * t, velocity: 8, throttle: -2, phase: 'boarding' })
+  ]) {
+    const engine = createSteamDynamics(); engine.update(view(0, moving(8, 0)(0)));
+    const result = run(engine, 0, 5, fields);
+    assert.equal(result.state.brakeVisualDemand, 0); assert.equal(result.proof.brakeVisualReleases, 0);
+    assert.equal(result.proof.brakeVisualParticles, 0); assert.equal(result.state.draining, false);
+  }
+});
+
+test('Gentle-to-hard escalation strengthens new venting immediately without recolouring old puffs', () => {
+  const engine = createSteamDynamics(); engine.update(view(0, moving(8, 0)(0)));
+  const gentle = run(engine, 0, .5, t => ({ distance: t * 8, velocity: 8, throttle: -1 }));
+  const oldIds = active(gentle).filter(p => p.channel === 'brake-visual').map(p => p.id);
+  const hard = run(engine, .5, .75, t => ({ distance: t * 8, velocity: 8, throttle: 0, brake: true }));
+  assert.equal(hard.state.brakeVisualMode, 'hard'); assert.equal(hard.state.brakeVisualStrength, 1);
+  assert.deepEqual(hard.proof.brakeModeReleases, { gentle: 1, hard: 1 });
+  assert.ok(hard.particles.filter(p => oldIds.includes(p.id)).every(p => p.brakeMode === 'gentle'));
+  const toggled = run(engine, .75, 2.75, t => ({ distance: t * 8, velocity: 8, throttle: -1, brake: Math.floor(t * 10) % 2 === 0 }));
+  assert.equal(toggled.proof.brakeVisualReleases, 2, 'Upgrading to hard braking must not allow rapid toggles to bypass cooldown repeatedly');
+});
+
+test('Gentle braking gets one weaker final stop puff and finishes without a parked loop', () => {
+  const engine = createSteamDynamics(); engine.update(view(0, { velocity: 1.2, throttle: 0 }));
+  const fields = t => ({ velocity: Math.max(0, 1.2 - .6 * t), distance: t < 2 ? 1.2 * t - .3 * t * t : 1.2, throttle: -1 });
+  let result = run(engine, 0, 2.5, fields);
+  assert.equal(result.proof.brakeStopPuffs, 1); assert.equal(result.state.brakeVisualStage, 'stop-puff');
+  assert.equal(result.state.brakeVisualMode, 'gentle'); assert.ok(result.state.brakeVisualStrength < .4);
+  assert.equal(result.state.draining, false);
+  result = run(engine, 2.5, 12, fields);
+  assert.equal(result.proof.brakeStopPuffs, 1); assert.equal(result.proof.lowerActive, 0);
+});
+
 test('Held braking has a bounded continuation, one stop puff and no parked idle loop', () => {
   const engine = createSteamDynamics(); engine.update(view(0, moving(6)(0)));
   run(engine, 0, .5, moving(6));

@@ -15,11 +15,12 @@ const wheelY=STEAM_SPEC.railHead+STEAM_SPEC.driverRadius,shoeX=.39,shoeY=.89;
 const radialLength=Math.hypot(shoeX,shoeY-wheelY),radialX=shoeX/radialLength,radialY=(shoeY-wheelY)/radialLength;
 
 export const BRAKE_EFFECTS_SPEC=Object.freeze({
-  version:'r14-cinematic-brake-friction',sparkCapacity:48,hazeCapacity:20,lightCount:2,
-  maxSparkRate:44,maxHazeRate:7,maxSparkLifetime:.26,maxHazeLifetime:.62,
-  maxSparkLength:.14,maxSparkWidth:.017,maxHazeSize:.45,maxHazeOpacity:.12,
+  version:'r14-cinematic-brake-friction',visibilityRevision:2,sparkCapacity:48,hazeCapacity:20,lightCount:2,
+  maxSparkRate:44,maxHazeRate:7,minSparkLifetime:.22,maxSparkLifetime:.32,maxHazeLifetime:.62,
+  minSparkLength:.12,maxSparkLength:.22,minSparkWidth:.022,maxSparkWidth:.030,maxHazeSize:.45,maxHazeOpacity:.12,
+  minSparkOutwardSpeed:1.20,maxSparkOutwardSpeed:1.90,sparkGravity:6,
   minimumSpeed:.20,fullSpeed:5.5,fullDeceleration:3.10,maximumCatchUp:.25,
-  stopDecay:.09,glowDecay:.055,maxLightIntensity:.65,lightReach:1.05,
+  stopDecay:.09,glowDecay:.055,maxLightIntensity:.35,lightReach:1.05,
   shoeOffset:Object.freeze([shoeX,shoeY,.84]),
   assumptions:'Bounded film/game exaggeration. Existing stylized shoe centres are projected radially onto the actual driver tread; no physical overheating or fluid simulation is implied.',
 });
@@ -65,7 +66,8 @@ void main(){
   float end=1.0-smoothstep(.25,.5,abs(vUv.x-.5));
   float alpha=edge*end*vOpacity;
   if(alpha<.001)discard;
-  gl_FragColor=vec4(mix(vec3(1.0,.18,.015),vec3(1.0,.82,.36),edge*end),alpha);
+  // Saturated orange stays distinguishable from the pale low-level steam.
+  gl_FragColor=vec4(mix(vec3(1.0,.015,.001),vec3(1.0,.085,.003),edge*end),alpha);
   #include <colorspace_fragment>
 }`;
 const HAZE_FRAGMENT=`
@@ -105,7 +107,7 @@ export function createBrakeEffects({lights=true}={}){
   const matrix=new THREE.Matrix4(),point=new THREE.Vector3(),forward=new THREE.Vector3(1,0,0),up=new THREE.Vector3(0,1,0),across=new THREE.Vector3(0,0,1),tangent=new THREE.Vector3();
   const origins=BRAKE_EMITTERS.map(source=>source.position.slice());
   const state={intensity:0,demand:0,deceleration:0,speed:0,active:false};
-  const proof={version:spec.version,assumptions:spec.assumptions,original:true,cinematic:true,physicalOverheat:false,sparkCapacity:spec.sparkCapacity,hazeCapacity:spec.hazeCapacity,lightCount:lightSlots.length,drawCalls:2,steamSlotsUsed:0,activeSparks:0,activeHaze:0,peakSparks:0,peakHaze:0,emitted:{sparks:0,haze:0},droppedBirths:0,liveSlotOverwrites:0,frameBirths:0,gapDrops:0,sourceOrigins:origins,sourceManifest:BRAKE_EMITTERS,clock:'Session elapsed or tick/30; duplicate/paused frames freeze',worldMode:'Train-centred render origin; historical source positions and distance compensation',maxObservedSparkLength:0,maxObservedHazeOpacity:0,generation:0,resetReason:'initial',state};
+  const proof={version:spec.version,visibilityRevision:spec.visibilityRevision,parameters:spec,assumptions:spec.assumptions,original:true,cinematic:true,physicalOverheat:false,sparkCapacity:spec.sparkCapacity,hazeCapacity:spec.hazeCapacity,lightCount:lightSlots.length,drawCalls:2,steamSlotsUsed:0,activeSparks:0,activeHaze:0,peakSparks:0,peakHaze:0,emitted:{sparks:0,haze:0},droppedBirths:0,liveSlotOverwrites:0,frameBirths:0,gapDrops:0,sourceOrigins:origins,sourceManifest:BRAKE_EMITTERS,clock:'Session elapsed or tick/30; duplicate/paused frames freeze',worldMode:'Train-centred render origin; historical source positions and distance compensation',maxObservedSparkLength:0,maxObservedHazeOpacity:0,generation:0,resetReason:'initial',state};
   root.userData.effects=proof;
   let lastTime=null,lastSpeed=0,lastDistance=0,lastSeed=null,serial=0,sparkCursor=0,hazeCursor=0,sparkCredit=0,hazeCredit=0;
 
@@ -147,12 +149,14 @@ export function createBrakeEffects({lights=true}={}){
     if(!p){proof.droppedBirths++;return;}
     if(spark)sparkCursor=(p.index+1)%count;else hazeCursor=(p.index-offset+1)%count;
     const id=++serial,a=hash(id*7+1),b=hash(id*7+2),c=hash(id*7+3),emitter=(id-1)%BRAKE_EMITTERS.length,source=BRAKE_EMITTERS[emitter],direction=Math.sign(finite(view.velocity))||1;
-    Object.assign(p,{active:true,id,emitter,born:time,age:0,life:spark?.12+a*.14:.28+a*.34,birthDistance:finite(view.distance),energy:state.intensity,releaseFade:1});
+    Object.assign(p,{active:true,id,emitter,born:time,age:0,life:spark?spec.minSparkLifetime+a*(spec.maxSparkLifetime-spec.minSparkLifetime):.28+a*.34,birthDistance:finite(view.distance),energy:state.intensity,releaseFade:1});
     for(let axis=0;axis<3;axis++){p.birthPosition[axis]=p.position[axis]=origins[emitter][axis];p.forward[axis]=forward.getComponent(axis);p.up[axis]=up.getComponent(axis);}
-    tangent.fromArray(source.tangent).transformDirection(matrix).multiplyScalar(direction*(spark?.9+b*.8:.12));
-    point.copy(forward).multiplyScalar(finite(view.velocity)* (spark?.72:.45)).add(tangent).addScaledVector(across,source.side*(spark?.17+c*.37:.10+c*.10));
+    tangent.fromArray(source.tangent).transformDirection(matrix).multiplyScalar(direction*(spark?.65+b*.55:.12));
+    // Fly outward from the true tread before fading, clearing the coupled-rod plane.
+    // Moving the emitter outside the wheel would instead make particles appear detached.
+    point.copy(forward).multiplyScalar(finite(view.velocity)* (spark?.72:.45)).add(tangent).addScaledVector(across,source.side*(spark?spec.minSparkOutwardSpeed+c*(spec.maxSparkOutwardSpeed-spec.minSparkOutwardSpeed):.10+c*.10));
     if(!spark)point.addScaledVector(up,.24+b*.17);
-    point.toArray(p.velocity);p.length=spark?.055+b*.065:0;p.width=spark?.009+c*.008:0;p.size=spark?0:.12+b*.07;p.opacity=spark?.88:Math.min(spec.maxHazeOpacity,.07+.05*state.intensity);
+    point.toArray(p.velocity);p.length=spark?spec.minSparkLength+b*(spec.maxSparkLength-spec.minSparkLength):0;p.width=spark?spec.minSparkWidth+c*(spec.maxSparkWidth-spec.minSparkWidth):0;p.size=spark?0:.12+b*.07;p.opacity=spark?.95:Math.min(spec.maxHazeOpacity,.07+.05*state.intensity);
     if(spark){proof.emitted.sparks++;for(const entry of lightSlots)if(entry.side===source.side){entry.emitter=emitter;entry.strength=Math.max(entry.strength,spec.maxLightIntensity*state.intensity);}}
     else proof.emitted.haze++;
     proof.frameBirths++;
@@ -173,10 +177,10 @@ export function createBrakeEffects({lights=true}={}){
       p.age=time-p.born;
       if(p.age>=p.life||gap){p.active=false;p.opacity=0;continue;}
       if(!state.intensity)p.releaseFade*=Math.exp(-dt/spec.stopDecay);
-      const age=p.age,spark=p.kind==='spark',drift=distance-p.birthDistance,fall=spark?4*age*age:0;
+      const age=p.age,spark=p.kind==='spark',drift=distance-p.birthDistance,fall=spark?.5*spec.sparkGravity*age*age:0;
       for(let axis=0;axis<3;axis++)p.position[axis]=p.birthPosition[axis]+p.velocity[axis]*age-p.forward[axis]*drift-p.up[axis]*fall;
       const fade=(1-age/p.life)*p.releaseFade;
-      p.opacity=(spark?.88:Math.min(spec.maxHazeOpacity,.07+.05*p.energy))*fade;
+      p.opacity=(spark?.95:Math.min(spec.maxHazeOpacity,.07+.05*p.energy))*fade;
       if(p.opacity<.002){p.active=false;p.opacity=0;continue;}
       if(!spark)p.size=Math.min(spec.maxHazeSize,.15+age*.46);
       proof.maxObservedSparkLength=Math.max(proof.maxObservedSparkLength,spark?p.length:0);proof.maxObservedHazeOpacity=Math.max(proof.maxObservedHazeOpacity,spark?0:p.opacity);
