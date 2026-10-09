@@ -37,6 +37,10 @@ try:
   duplicates=[v for v in signatures.values() if len(v)>1]
   check('All 60 original garment geometry signatures differ without colors',not duplicates,duplicates)
   check('All 432 combination geometries built from original members',len(mesh)==492 and all(r['vertices']>0 and r['triangles']>0 for r in mesh))
+  m11=next(r for r in mesh if r['id']=='T11')
+  check('Sleeve hems do not extend over fingers',m11.get('topLowestY',0)>.91,m11.get('topLowestY'))
+  check('Every preset has an actual connected garment shell',all(r.get('connectedShells',0)>=1 for r in mesh))
+  check('Runtime identifies the reviewed R03.3 revision',state['version']=='R03.3')
   for id in ['J06','T01','T03','T04','T08','T09','T10','T13','T15','T18','P05','P06','S09','S12','D09','D11']:
    js(page,'id=>__TAILOR_R03_QA__.select(id)',id);js(page,'__TAILOR_R03_QA__.view("angle")');page.locator('#showcase').screenshot(path=str(OUT/(id+'-detail.png')))
   js(page,'__TAILOR_R03_QA__.select("J06")');viewhash=[]

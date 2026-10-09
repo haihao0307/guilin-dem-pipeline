@@ -10,7 +10,7 @@ function basis(){
  for(const side of[-1,1]){const a=BODY.anchors[side>0?'armL':'armR'].map(p=>V(...p)),dist=[0];for(let j=1;j<a.length;j++)dist.push(dist[j-1]+a[j].distanceTo(a[j-1]));arcs[side]={a,dist,total:dist.at(-1)}}
  const points=[];
  for(let i=0;i<ps.length;i+=3){const p=V(ps[i],ps[i+1],ps[i+2]),s=p.x>=0?1:-1,A=arcs[s];let best=Infinity,t=0;
-  for(let k=0;k<A.a.length-1;k++){const d=A.a[k+1].clone().sub(A.a[k]),u=p.clone().sub(A.a[k]).dot(d)/d.lengthSq(),q=A.a[k].clone().addScaledVector(d,clamp(u));const dist=q.distanceToSquared(p);if(dist<best){best=dist;t=(A.dist[k]+(k===0?Math.min(1,u):clamp(u))*d.length())/A.total}}
+  for(let k=0;k<A.a.length-1;k++){const d=A.a[k+1].clone().sub(A.a[k]),u=p.clone().sub(A.a[k]).dot(d)/d.lengthSq(),q=A.a[k].clone().addScaledVector(d,clamp(u));const dist=q.distanceToSquared(p);if(dist<best){best=dist;t=(A.dist[k]+(k===0?Math.min(1,u):k===A.a.length-2?Math.max(0,u):clamp(u))*d.length())/A.total}}
   const aw=BODY.armWeights[(i/3)*2+(s>0?0:1)];points.push({p,n:V(ns[i],ns[i+1],ns[i+2]),s,t,aw});
  }
  g.dispose();cache={source:BODY,points,arcs};return cache;
@@ -24,6 +24,11 @@ function outer(point,row,kind,onePiece=false){
   const torsoWeight=(1-smooth(.08,.75,aw))*smooth(1.565,1.44,p.y);
   if(torsoWeight>0){const a=Math.atan2(q.x,q.z-.02),f=fitProfile(q.y,a),r=Math.hypot(q.x,q.z-f.cz);let target=f.r+ease+.006;
    if(!fitted){const base=fitProfile(wy+.17,a).r;target=Math.max(target,base+ease+(width-1)*.075)*(1+(flare-1)*.35*smooth(wy+.17,wy-.25,q.y));}
+   // R03.3 static tailoring: suspend cloth between bust and waist rather than reproducing the under-bust indentation.
+   const bust=Math.max(...[1.32,1.36,1.40].map(y=>fitProfile(y,a).r)),wr=fitProfile(wy,a).r,tension=mix(wr,bust,smooth(wy,1.365,q.y))+ease+.007;
+   if(q.y<1.42)target=Math.max(target,tension);
+   if(onePiece)target=mix(target,f.r+.021,smooth(wy+.14,wy+.015,q.y));
+   else target+=.013*smooth(wy+.055,wy-.04,q.y);
    target=Math.max(r,target);q.x=mix(q.x,target*Math.sin(a),torsoWeight);q.z=mix(q.z,f.cz+target*Math.cos(a),torsoWeight);
    const low=(1-smooth(wy+.08,1.43,q.y))*torsoWeight,fold=.0025*Math.sin(a*9+q.y*3)*low;q.x+=Math.sin(a)*fold;q.z+=Math.cos(a)*fold;
   }
@@ -39,8 +44,8 @@ function outer(point,row,kind,onePiece=false){
 }
 function shell(group,row,color,kind,onePiece=false){
  const B=basis(),wy=BODY.anchors.waistY,hemY=kind==='top'?(onePiece?wy+.005:wy-.08-(num(row,'shirt.length',1)-1)*.18):Math.max(.09,wy-(.13+clamp(num(row,'pants.length',.85),.2,1)*1.02));
- const collar=get(row,'collar.component.style',null),strapless=!!get(row,'shirt.strapless',false)||row.style==='Strapless',asym=!!get(row,'left.enable_asym',false),neck=num(row,'collar.width',.2),nx=.065+neck*.058;
- const neckline=get(row,'collar.f_collar','CircleNeckHalf'),deep=.065+num(row,'collar.fc_depth',.4)*.19;
+ const collar=get(row,'collar.component.style',null),strapless=!!get(row,'shirt.strapless',false)||row.style==='Strapless',asym=!!get(row,'left.enable_asym',false),neck=num(row,'collar.width',.2),nx=.079+neck*.058;
+ const neckline=get(row,'collar.f_collar','CircleNeckHalf'),deep=.045+num(row,'collar.fc_depth',.4)*.135;
  const mapped=B.points.map(v=>{
   const {p,s,aw,t}=v;let fields;
   if(kind==='top'){
@@ -53,7 +58,7 @@ function shell(group,row,color,kind,onePiece=false){
    if(collar==='Turtle')neckY=1.585+clamp(num(row,'collar.component.depth',5)*.01,.025,.070);else neckY-=mix(.019,collar==='SimpleLapel'?.19:deep,facing)*shape;
    if(strapless)neckY=1.455+.008*Math.cos(p.x*17);else if(asym&&get(row,'left.shirt.strapless',false))neckY=mix(neckY,1.445+.008*Math.cos(p.x*17),smooth(-.025,.055,p.x));
    const angled=get(row,'sleeve.armhole_shape','ArmholeCurve')==='ArmholeAngle'?.025:0;
-   fields=[p.y-hemY+aw*1.8,neckY-p.y,cut-t+(1-aw)*1.25-angled,1.67-p.y];
+   fields=[p.y-hemY+aw*1.8,neckY-p.y,cut-t+Math.min(5,(1-aw)*.15/(aw+.015))-angled,1.67-p.y];
   }else fields=[wy-p.y,p.y-hemY,.20-aw];
   return {p:outer(v,row,kind,onePiece),f:fields};
  });
@@ -84,11 +89,11 @@ function cuff(group,row,color,loop,prefix='',pants=false){
 }
 function front(x,y,ease=.02){let a=0,z=PI/2;for(let k=0;k<14;k++){const mid=(a+z)/2,q=bodyRing(y,mid,ease);if(q[0]<Math.abs(x))a=mid;else z=mid}const p=bodyRing(y,(a+z)/2,ease);return[x,y,p[2]];}
 export function anatomicalTop(group,row,color,onePiece=false){
- const g=shell(group,row,color,'top',onePiece),mat=g.mat,edge=plain(new T.Color(color).multiplyScalar(.81));
+ const g=shell(group,row,color,'top',onePiece);g.mesh.geometry.computeBoundingBox();group.userData.topLowestY=g.mesh.geometry.boundingBox.min.y;const mat=g.mat,edge=plain(new T.Color(color).multiplyScalar(.81));
  for(const loop of g.loops){const{c}=loop;if(Math.abs(c.x)>.20&&c.y<1.47){const prefix=get(row,'left.enable_asym',false)&&c.x>0?'left.':'';cuff(group,row,color,loop,prefix)}else if(c.y<1.18)line(group,[...loop.points,loop.points[0]],edge,.00075,'sewn-shirt-hem');}
  const collar=get(row,'collar.component.style',null),strapless=!!get(row,'shirt.strapless',false)||row.style==='Strapless';
  if(collar==='SimpleLapel'&&!strapless){
-  for(const s of[-1,1])patch(group,'shaped-folded-lapel',(u,v)=>{const x=s*mix(.105,.019,v)+s*u*.046*(1-v*.4),y=mix(1.593,1.422,v)+u*.018,p=front(x,y,.024);p[2]+=.020*Math.sin(u*PI);return p},26,30,mat,s<0);
+  for(const s of[-1,1])patch(group,'shaped-folded-lapel',(u,v)=>{const xi=mix(.067,.015,v),xo=mix(.137,.052,v),x=s*mix(xi,xo,u),y=mix(mix(1.580,1.544,u),mix(1.488,1.440,u),v),p=front(x,y,.049);p[2]+=.009*Math.sin(u*PI);return p},26,30,mat,s<0);
   line(group,trace(t=>front(0,mix(g.hemY+.025,1.43,t),.026)),edge,.0012,'button-placket');for(let i=0;i<4;i++){const p=front(0,mix(g.hemY+.045,1.412,i/3),.029),b=new T.Mesh(new T.CylinderGeometry(.0045,.0045,.002,12),plain('#d1c5b6'));b.rotation.x=PI/2;b.position.set(...p);b.name='sewn-fastening';group.add(b)}
  }
  if(collar==='Hood2Panels'&&!strapless){const l=num(row,'collar.component.hood_length',1),dep=num(row,'collar.component.hood_depth',1),fn=(u,v)=>{const a=mix(PI*.1,PI*1.9,u),r=mix(.071,.139*dep,v);return[r*Math.sin(a),1.576+.045*Math.sin(v*PI)-.17*v*l,-.018-r*Math.cos(a)-.11*v]};patch(group,'hollow-two-panel-hood',fn,70,35,mat);hem(group,u=>fn(u,1),mat,.002,'hood-open-facing');line(group,trace(v=>fn(.5,v)),edge,.001,'hood-centre-seam');}

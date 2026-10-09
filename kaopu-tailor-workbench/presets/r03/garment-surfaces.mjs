@@ -21,7 +21,7 @@ function skirt(group,row,color,topY){
 }
 export function garment(row,library,{neutral=false}={}){
  if(!BODY)throw Error('Anatomy must be loaded first');const group=new T.Group();group.name='resolved-garment-'+row.id;group.userData.sources=row.sources||[row.id];const color=neutral?'#b7b3a8':shade(row),wy=BODY.anchors.waistY;
- if(row.kind==='combination'){const a=library.find(x=>x.id===row.sources[0]),b=library.find(x=>x.id===row.sources[1]);if(!a||!b)throw Error('Unknown combination source');if(b.category==='裤装')pants(group,b,shade(b),wy);else skirt(group,b,shade(b),wy);top(group,a,shade(a));}
+ if(row.kind==='combination'){const a=library.find(x=>x.id===row.sources[0]),b=library.find(x=>x.id===row.sources[1]);if(!a||!b)throw Error('Unknown combination source');if(b.category==='裤装')pants(group,b,shade(b),wy);else skirt(group,b,shade(b),wy);top(group,a,shade(a),true);}
  else if(row.category==='上装'){pants(group,library.find(x=>x.id==='P01'),'#c5c0b4',wy);top(group,row,color);}
  else if(row.category==='裤装'||row.category==='半裙'){top(group,library.find(x=>x.id==='T02'),'#d7d1c4',true);if(row.category==='裤装')pants(group,row,color,wy);else skirt(group,row,color,wy);}
  else if(row.category==='连衣裙'){skirt(group,row,color,wy);top(group,row,color,true);}
@@ -29,4 +29,4 @@ export function garment(row,library,{neutral=false}={}){
  else throw Error('Unsupported preserved category '+row.category);
  group.userData.metrics=metrics(group);return group;
 }
-function metrics(g){let vertices=0,triangles=0,panels=0,seams=0;const names=[];let hash=2166136261;g.traverse(o=>{if(!o.isMesh)return;const p=o.geometry.attributes.position;vertices+=p.count;triangles+=(o.geometry.index?.count||p.count)/3;if(o.userData.structureLine)seams++;else{panels++;names.push(o.name);for(let k=0;k<p.array.length;k+=7){hash^=Math.round(p.array[k]*1e5);hash=Math.imul(hash,16777619)}}});return{vertices,triangles,panels,seams,surfaceNames:names,geometrySignature:(hash>>>0).toString(16),closedPrimitiveGarments:false};}
+function metrics(g){let vertices=0,triangles=0,panels=0,seams=0;const names=[];let hash=2166136261;g.traverse(o=>{if(!o.isMesh)return;const p=o.geometry.attributes.position;vertices+=p.count;triangles+=(o.geometry.index?.count||p.count)/3;if(o.userData.structureLine)seams++;else{panels++;names.push(o.name);for(let k=0;k<p.array.length;k+=7){hash^=Math.round(p.array[k]*1e5);hash=Math.imul(hash,16777619)}}});return{vertices,triangles,panels,seams,topLowestY:g.userData.topLowestY,connectedShells:g.userData.connectedShells||0,surfaceNames:names,geometrySignature:(hash>>>0).toString(16),closedPrimitiveGarments:false};}
