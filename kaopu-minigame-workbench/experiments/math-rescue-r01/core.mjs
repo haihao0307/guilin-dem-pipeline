@@ -20,7 +20,7 @@ export const TASKS={
 export const ORDER=['near1','near2','first','engineer','anchor','basket','cross','pull','valve','platform','widen'];
 export function initial(){return {beat:0,done:[],saved:[],material:1,history:[],status:'playing'};}
 export function supply(s){return s.done.includes('valve')?1:s.done.includes('widen')?.875:.75;}
-export function blocked(s,id){const t=TASKS[id];if(!t)return '不存在的任务';if(s.status!=='playing')return '本局已结束，撤回一拍或重新出发';if(s.done.includes(id))return '任务已完成';if(t.person&&s.saved.includes(t.person))return '已经平安回岸';let n=t.need.filter(x=>!s.done.includes(x));if(n.length)return '需上拍完成：'+n.map(x=>TASKS[x].name).join('、');if((t.cost||0)>s.material)return '备用材料已经用完';if(t.from&&!ropeFits(t.from,t.to))return '超过单段绳长';return '';}
+export function blocked(s,id){const t=TASKS[id];if(!t)return '不存在的任务';if(s.status!=='playing')return '本局已结束，撤回一拍或重新出发';if(s.done.includes(id))return '任务已完成';if(t.person&&s.saved.includes(t.person))return '已经平安回岸';let n=t.need.filter(x=>!s.done.includes(x));if(n.length){if(t.from){const f=s.done.includes('basket')?'C':s.done.includes('anchor')?'B':'A',d=distance(ANCHORS[f],ANCHORS[t.to]);if(d>LIMIT)return `${f}→${t.to} 长${d.toFixed(2)}，绳子还差${(d-LIMIT).toFixed(2)}；先完成${n.map(x=>TASKS[x].name).join('、')}`;}return '需上拍完成：'+n.map(x=>TASKS[x].name).join('、');}if((t.cost||0)>s.material)return '备用材料已经用完';if(t.from&&!ropeFits(t.from,t.to))return '超过单段绳长';return '';}
 export function available(s){return ORDER.filter(x=>!blocked(s,x));}
 export function step(s,ids){if(s.status!=='playing')throw Error('本局已结束');if(ids.length>3)throw Error('只有三台绞盘');if(new Set(ids).size!==ids.length)throw Error('一个任务不能重复');let cost=0,people=[];for(const id of ids){let b=blocked(s,id);if(b)throw Error(b);cost+=TASKS[id].cost||0;if(TASKS[id].person)people.push(TASKS[id].person);}if(new Set(people).size!==people.length)throw Error('同一个人只能选一种接回方式');if(cost>s.material)throw Error('备用材料不够');let n=structuredClone(s);n.beat++;n.done.push(...ids);n.saved.push(...people);n.material-=cost;n.history.push({beat:n.beat,ids:[...ids],saved:[...people],supply:supply(n),material:n.material});n.status=n.saved.length===4?'won':n.beat>=4?'lost':'playing';return n;}
 export function undo(s){if(!s.history.length)return initial();let n=initial();for(const h of s.history.slice(0,-1))n=step(n,h.ids);return n;}
@@ -32,6 +32,6 @@ export function flowWitness(mode='base'){
  const paths=[];function add(demand,path,amount){paths.push({demand,path,amount});for(let i=0;i<path.length-1;i++){let key=path[i]+path[i+1];if(!edges[key])key=path[i+1]+path[i];edges[key].load+=amount;}}
  if(mode==='base'){for(const [a,b]of[['X','Y'],['Y','Z'],['Z','X']])for(const h of hubs)add(a+b,[a,h,b],.375);for(const r of rim)add('UV',['U',r,'V'],.25);}
  else if(mode==='bypass'){for(const[a,b]of[['X','Y'],['Y','Z'],['Z','X']])for(const h of hubs)add(a+b,[a,h,b],.5);add('UV',['U','V'],1);}
- // wide witness populated separately, never approximate a physical pressure.
+ else if(mode==='wide'){add('XY',['X','U','Y'],11/16);add('XY',['X','V','Y'],3/16);add('ZX',['Z','U','X'],11/16);add('ZX',['Z','V','X'],3/16);add('YZ',['Y','U','Z'],3/16);add('YZ',['Y','V','Z'],11/16);add('UV',['U','X','V'],5/8);add('UV',['U','Y','V'],1/8);add('UV',['U','Z','V'],1/8);}
  return {rate:mode==='bypass'?1:mode==='wide'?.875:.75,edges,paths};
 }
