@@ -1,0 +1,37 @@
+name: Actual skinned surface contact R02 QA
+on:
+  push:
+    branches: ['qa/jolt-surface-r02-20261009']
+permissions:
+  contents: read
+concurrency:
+  group: jolt-surface-r02-20261009
+  cancel-in-progress: true
+jobs:
+  surface:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+            kaopu-mhr-workbench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node kaopu-unified-human-workbench/collision-architecture/r02/tests/sweep.mjs
+      - run: node kaopu-unified-human-workbench/collision-architecture/r02/tests/triangles.mjs
+      - run: npm install --prefix "$RUNNER_TEMP/jolt-qa" --no-save --ignore-scripts playwright@1.57.0
+      - run: '"$RUNNER_TEMP/jolt-qa/node_modules/.bin/playwright" install --with-deps chromium'
+      - run: echo "NODE_PATH=$RUNNER_TEMP/jolt-qa/node_modules" >> "$GITHUB_ENV"
+      - run: python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/jolt-server.log" 2>&1 &
+      - run: node kaopu-unified-human-workbench/collision-architecture/r02/tests/browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: surface-contact-${{ github.sha }}
+          path: surface-contact-qa-results/
+          retention-days: 7
