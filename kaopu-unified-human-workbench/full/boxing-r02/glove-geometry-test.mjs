@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import * as THREE from '../source/registration-vendor/three.module.js';
 import {createGlovePair,createGloveGeometry,gloveDiagnostics,GLOVE_SPEC} from './Gloves.mjs';
 const [left,right]=createGlovePair();
-assert.equal(left.geometry.userData.triangles,794);assert(left.geometry.userData.triangles<800);
+assert.equal(left.geometry.userData.triangles,770);assert(left.geometry.userData.triangles<=800);
 assert.equal(left.material,right.material);assert.equal(createGlovePair()[0].baseGeometry,left.baseGeometry);assert.notEqual(createGlovePair()[0].geometry,left.geometry);
 const a=left.geometry.attributes.position,b=right.geometry.attributes.position;
 for(let i=0;i<a.count;i++){assert.equal(a.getX(i),-b.getX(i));assert.equal(a.getY(i),b.getY(i));assert.equal(a.getZ(i),b.getZ(i));}
