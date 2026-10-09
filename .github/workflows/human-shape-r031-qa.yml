@@ -1,4 +1,4 @@
-name: R036 measured left clavicle driver-segment correction
+name: R037 provisional surface landmark registration
 on:
   push:
     branches: [qa/human-shape-r031-20261009]
@@ -25,12 +25,12 @@ jobs:
       - run: |
           python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/r031-http.log 2>&1 &
           sleep 2
-      - name: One local display subdivision experiment, 24 off/on views
+      - name: Surface landmark registration, four views plus elevation and parameter transfer
         env:
           NODE_PATH: ${{ github.workspace }}/.human-qa/node_modules
-        run: node kaopu-unified-human-workbench/tests/shape-r036-browser.cjs
+        run: node kaopu-unified-human-workbench/tests/shape-r037-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: shape-r036-${{ github.sha }}
-          path: shape-r036-results/
+          name: shape-r037-${{ github.sha }}
+          path: shape-r037-results/
