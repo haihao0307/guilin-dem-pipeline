@@ -1,0 +1,40 @@
+name: Tailor R074 continuation checks
+on:
+  push:
+    branches: [feature/tailor-continued-integration-20261009]
+    paths:
+      - '.github/workflows/tailor-continuation-check.yml'
+      - 'kaopu-tailor-workbench/r07/continuation/BUILD_TRIGGER.json'
+permissions:
+  contents: read
+concurrency:
+  group: tailor-r074-continuation
+  cancel-in-progress: false
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          sparse-checkout: |
+            kaopu-tailor-workbench
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build the additive editor and live whole-seam gate
+        run: python kaopu-tailor-workbench/r07/continuation/build.py
+      - name: Inherited and continuation geometry tests
+        run: |
+          node --test kaopu-tailor-workbench/learning/patterngsl-r01/pattern-edit.test.mjs kaopu-tailor-workbench/learning/patterngsl-r01/seam-span.test.mjs kaopu-tailor-workbench/r07/continuation/continuation.test.mjs > /tmp/tailor-r074-tests.tap
+          cat /tmp/tailor-r074-tests.tap
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r074-focused-test-evidence
+          path: |
+            /tmp/tailor-r074-tests.tap
+            kaopu-tailor-workbench/r07/continuation/BUILD_MANIFEST.json
+          retention-days: 14
