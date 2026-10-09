@@ -41,6 +41,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: human-carry-walk-${{ github.sha }}
-          path: carry-results/
+          path: |
+            carry-results/*.png
+            carry-results/*.mp4
+            carry-results/report.json
           retention-days: 7
           compression-level: 0
