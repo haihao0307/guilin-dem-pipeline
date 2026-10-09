@@ -1,7 +1,7 @@
 {
   "schema": "kaopu.regression-case/2",
   "caseId": "TAILOR-PRESET-3D-THUMBNAIL-CORRECTION-001",
-  "status": "CANDIDATE_TAILOR_R03_RECEIPT_HOLD_N126_NOT_ADOPTED",
+  "status": "CANDIDATE_TAILOR_R04_SOURCE_CORRECTED_HOLD_FULL_CATALOGUE_N127_NOT_ADOPTED",
   "active": false,
   "scope": {
     "mother": "Tailor",
@@ -20,12 +20,19 @@
       "unrelated concept art",
       "one garment renamed as multiple presets",
       "category/style heuristics assembled from generic primitive garments without an actual preset garment-geometry derivation receipt",
-      "a green pre-correction paper-only run"
+      "a green pre-correction paper-only run",
+      "a substituted person or separately authored display shell presented as output from the original common-person and native paper-material-solver chain"
     ],
     "latestPostR02Correction": {
       "instruction": "The current simplified version does not meet the requirement; do not generate substitute images; modify the GitHub implementation itself.",
       "ordering": "after PR #180 R02 public delivery",
       "exactTimestamp": "unknown-in-external-thread-snapshot"
+    },
+    "latestSourceLineageCorrection": {
+      "instruction": "R03 does not qualify because its person and garment source are not the original common person and original paper-mesh-solver chain.",
+      "acknowledgedByTailorCommentId": 6079493932,
+      "ordering": "after R03 public candidate",
+      "exactTimestamp": "2026-10-09T10:56:35Z"
     }
   },
   "historicalObservation": {
@@ -98,22 +105,65 @@
       "thumbnailDigest",
       "cardReadbackResult"
     ],
-    "decision": "HOLD_THREE_D_THUMBNAIL_IDENTITY_INCOMPLETE",
+    "decisionAtN126": "HOLD_THREE_D_THUMBNAIL_IDENTITY_INCOMPLETE",
+    "supersededAtN127By": "REJECTED_WRONG_SOURCE_LINEAGE",
     "preservedTechnicalState": "RECIPE_LINKED_CONTINUOUS_SURFACE_CABINET_PUBLIC_VERIFIED_SCOPED",
     "physicalFitAccepted": false,
     "dynamicWearCertified": false,
     "userAccepted": false
+  },
+  "n127R04SourceLineageResult": {
+    "pullRequest": 181,
+    "motherReceiptCommentId": 6079493932,
+    "sourceCorrectionCommit": "4f9849bc0776ce34d41ecc9c2c63038a77e08955",
+    "retainedEvidenceHead": "d31f06cfa51d3af4c6f93e37451d901326ef09db",
+    "failedNativeChainRun": 37920449469,
+    "artifactId": 11612331365,
+    "artifactDigest": "sha256:dac7f213b8058f405bda49179e920a95bd8e6b4e37c20dd1b50ec7f474457b5f",
+    "sourceAuditStatus": "R03_ROUTE_REJECTED_BY_USER",
+    "r03FailureMechanisms": [
+      "PERSON_SUBSTITUTED",
+      "GARMENT_PIPELINE_BYPASSED",
+      "QA_WRONG_SUCCESS_CRITERION",
+      "TAILOR_BODY_WAS_NEVER_FULL_COMMON"
+    ],
+    "commonPersonVertices": 25417,
+    "commonPersonTriangles": 50624,
+    "exactOriginalPaperCount": 60,
+    "sameBrowserNativeParityRows": 60,
+    "nativeMaterialReady": 49,
+    "nativeMaterialRejected": 11,
+    "actualSolverRecords": 2,
+    "t01QualityPassed": true,
+    "p01QualityPassed": false,
+    "j06FinishedResult": false,
+    "j06State": "NO_FINISHED_RESULT_NOT_REPLACED",
+    "sourceBrowserChecksPassed": 16,
+    "negativeIdentityChecksPassed": 12,
+    "personSwitchInvalidatesOldClothing": true,
+    "r04RuntimeDependsOnRejectedR03": false,
+    "fullClothingCatalogueDelivered": false,
+    "physicalFitAccepted": false,
+    "dynamicWearCertified": false,
+    "public": false,
+    "userAccepted": false,
+    "decision": "SOURCE_LINEAGE_CORRECTION_VERIFIED_SCOPED__HOLD_FULL_CATALOGUE_INCOMPLETE"
   },
   "mustNeverRepeat": [
     "Treat a successful test of the superseded paper-thumbnail contract as proof of the later 3D-garment-thumbnail correction.",
     "Count paper SVGs, diagrams, or unrelated images as preset-specific 3D garment thumbnails.",
     "Claim collection completion from a subset without 60-member coverage and identity receipts.",
     "Count sixty real WebGL renders as compliant when all garments are simplified proxy primitives unbound to the actual preset garment geometry.",
-    "Promote thumbnail evidence into physical-fit, collision, dynamic-wear, device, or user acceptance."
+    "Treat recipe-linked display shells as original native tailor output when the person or paper-material-solver source lineage differs.",
+    "Repair an original native rejection with a synthetic display result or reuse clothing after the bound person changes.",
+    "Promote thumbnail evidence into physical-fit, collision, dynamic-wear, device, public-delivery, or user acceptance."
   ],
   "requiredPerMemberReceipt": [
     "presetId",
+    "personGeometryTopologyStateIdentity",
     "designOrPaperIdentity",
+    "nativeMaterialIdentityOrExactNativeRejection",
+    "actualSolverResultIdentityOrExplicitNoResult",
     "garmentGeometryIdentity",
     "displayMannequinIdentity",
     "cameraAndRenderConfigIdentity",
@@ -127,6 +177,8 @@
     "HOLD_COLLECTION_MEMBER_COVERAGE_INCOMPLETE",
     "HOLD_THREE_D_THUMBNAIL_IDENTITY_INCOMPLETE",
     "REJECTED_CREATIVE_SUBSTITUTE_SIMPLIFIED_PROXY_GARMENT",
+    "REJECTED_WRONG_SOURCE_LINEAGE",
+    "SOURCE_LINEAGE_CORRECTION_VERIFIED_SCOPED__HOLD_FULL_CATALOGUE_INCOMPLETE",
     "THREE_D_PRESET_THUMBNAILS_VERIFIED_SCOPED"
   ],
   "gate": [
@@ -135,17 +187,20 @@
     "All 60 expected preset IDs must have member-level 3D derivation receipts and public card readback.",
     "The thumbnail may be a static render, but it must derive from actual preset-specific 3D garment geometry on the declared simple mannequin.",
     "Real WebGL, a real mannequin and 60 distinct renders are necessary technical facts but are not sufficient when garment geometry is a category/style primitive proxy rather than the selected preset's actual garment geometry.",
-    "Passing this case does not certify cloth physics, fit, collision, dynamic wear, physical device behavior, or user acceptance."
+    "The exact original common-person identity and original paper-native-material-solver source identity are mandatory; recipe-linked lookalikes or display shells cannot substitute.",
+    "Native failures and missing solver results must remain explicit; they cannot be converted into synthetic success.",
+    "Changing the bound person invalidates existing garment results until a new source-consistent solve is present.",
+    "Passing source lineage does not certify catalogue completion, cloth physics, fit, collision, dynamic wear, physical device behavior, public delivery, or user acceptance."
   ],
   "activation": {
     "global": false,
     "singleMotherTrialRequired": true,
     "independentVerifierRequired": true,
-    "rollbackPoint": "Keep current P01 paper preset library as BASELINE_ONLY_PRE_CORRECTION until a separate corrected candidate passes; do not overwrite the old evidence."
+    "rollbackPoint": "Keep current P01 paper preset library as BASELINE_ONLY_PRE_CORRECTION and R03 as rejected historical evidence; do not overwrite or relabel them as R04 completion."
   },
   "lifecycle": {
     "POSTED": true,
-    "ACKNOWLEDGED": false,
+    "ACKNOWLEDGED": true,
     "IMPLEMENTED": true,
     "GATE-RUN": true,
     "ADOPTED": false,
@@ -169,7 +224,14 @@
       "status": "posted",
       "commentId": 6078454193,
       "url": "https://github.com/haihao0307/guilin-dem-pipeline/pull/181#issuecomment-6078454193",
-      "purpose": "Preserve the R03 recipe-linked surface success while routing the existing sixty-member receipt join hold to the affected Tailor candidate."
+      "purpose": "Preserve the R03 recipe-linked surface success while routing the then-known sixty-member receipt join hold to the affected Tailor candidate."
+    },
+    {
+      "surface": "PR #181",
+      "status": "acknowledged-and-implemented-by-tailor",
+      "commentId": 6079493932,
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/pull/181#issuecomment-6079493932",
+      "purpose": "Tailor acknowledges the user source-lineage rejection, rejects R03, and reports the R04 original-source correction with preserved failures."
     }
   ]
 }
