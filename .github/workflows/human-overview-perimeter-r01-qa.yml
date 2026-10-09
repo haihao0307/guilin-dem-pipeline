@@ -20,6 +20,7 @@ jobs:
             kaopu-anny-workbench
             kaopu-mhr-workbench
       - name: Install pinned browser QA dependencies
+        timeout-minutes: 6
         run: |
           npm install --prefix "$RUNNER_TEMP/overview-qa" --no-save --ignore-scripts playwright@1.57.0
           "$RUNNER_TEMP/overview-qa/node_modules/.bin/playwright" install --with-deps chromium
