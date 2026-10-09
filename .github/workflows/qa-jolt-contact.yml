@@ -1,4 +1,4 @@
-name: Jolt fixed HTTPS public validation
+name: Jolt published contact multi-angle evidence
 on:
   push:
     branches: ['qa/jolt-contact-20261009']
@@ -42,9 +42,9 @@ jobs:
           for path, expected in hashes.items():
               actual = hashlib.sha256(urllib.request.urlopen(base + path, timeout=45).read()).hexdigest()
               assert actual == expected, path
-          print('Verified', len(hashes), 'published files for production 499915682292d3eb44cd5a5c881423a9c244f767')
+          print('Verified', len(hashes), 'published files for production d91f6bc138440690633193e3eb94a0fabe5b6fa8')
           PYTHON
-      - run: node kaopu-unified-human-workbench/collision-architecture/tests/browser.cjs
+      - run: node kaopu-unified-human-workbench/collision-architecture/tests/browser-angles.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
