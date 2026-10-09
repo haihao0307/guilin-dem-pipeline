@@ -20,7 +20,9 @@ const approxArray=(a,b,tolerance=1e-6)=>{assert.equal(a.length,b.length);a.forEa
 (async()=>{
  const browser=await({chromium,webkit})[engine].launch(),checks=[],errors=[],bad=[];let page,context;
  async function open(size={width:844,height:390}){
-  context=await browser.newContext({viewport:size,hasTouch:true});page=await context.newPage();page.setDefaultTimeout(45000);
+  context=await browser.newContext({viewport:size,hasTouch:true});
+  await context.addInitScript(()=>{window.__audioQa={created:0,started:0,blurs:0,trustedBlurs:0};const proto=globalThis.BaseAudioContext?.prototype,create=proto?.createBufferSource,start=globalThis.AudioBufferSourceNode?.prototype.start;if(create)proto.createBufferSource=function(...args){__audioQa.created++;return create.apply(this,args);};if(start)AudioBufferSourceNode.prototype.start=function(...args){__audioQa.started++;return start.apply(this,args);};window.addEventListener('blur',event=>{__audioQa.blurs++;if(event.isTrusted)__audioQa.trustedBlurs++;});});
+  page=await context.newPage();page.setDefaultTimeout(45000);
   page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400)bad.push([r.status(),r.url()]);});
   await page.route('**/game/app.mjs',async route=>{const response=await route.fetch();await route.fulfill({response,body:(await response.text())+harness});});
   await page.goto(base,{waitUntil:'load'});await page.waitForFunction(()=>__trainDriver?.ready);
@@ -54,6 +56,22 @@ const approxArray=(a,b,tolerance=1e-6)=>{assert.equal(a.length,b.length);a.forEa
    }
    assert(stations.every(x=>x.loops===stations[0].loops),'Changing camera does not allocate/restart loop sources');
    checks.push({cameraBinding:stations});
+   await clickControl(page,'crowdToggle',{touch:true});await page.waitForFunction(()=>__trainDriver.getState().audio.state==='running');s=await page.evaluate(()=>__r11.show());assert.equal(s.audio.loopCount,2);
+   const persistent=await page.evaluate(()=>({...__audioQa})),presets=[];
+   for(const id of ['platform','overview','front','rear','detail']){
+    await clickTarget(page,'#openCameraMenu',{touch:true});await clickTarget(page,`[data-camera="${id}"]`,{touch:true});await page.waitForFunction(()=>__trainDriver.getState().audio.state==='running');
+    s=await page.evaluate(()=>__r11.show());const pose=await page.evaluate(()=>__r11.orientation());for(const key of ['position','forward','up'])approxArray(s.audio.spatial.listener[key],pose[key]);
+    const telemetry=await page.evaluate(()=>({...__audioQa}));assert.equal(telemetry.created,persistent.created);assert.equal(telemetry.started,persistent.started);assert.equal(s.audio.loopCount,2);presets.push({id,camera:pose,audioClock:s.audio.audioClock,telemetry});
+   }
+   await openSettings(page,{touch:true});await clickTarget(page,'#soundToggle',{touch:true});await page.locator('#volume').fill('35');await closeSettings(page,{touch:true});s=await page.evaluate(()=>__r11.show());assert.equal(s.audio.muted,true);assert.equal(s.audio.volume,.35);
+   await openSettings(page,{touch:true});await clickTarget(page,'#soundToggle',{touch:true});await page.locator('#volume').fill('65');await closeSettings(page,{touch:true});await page.waitForFunction(()=>__trainDriver.getState().audio.state==='running');s=await page.evaluate(()=>__r11.show());assert.equal(s.audio.muted,false);assert.equal(s.audio.volume,.65);
+   const extra=await context.newPage();await extra.goto('about:blank');await extra.bringToFront();await page.waitForTimeout(200);
+   const background=await page.evaluate(()=>({hidden:document.hidden,visibility:document.visibilityState,focus:document.hasFocus(),telemetry:{...__audioQa},state:__trainDriver.getState()}));
+   if(background.hidden){assert.equal(background.state.paused,true);assert.equal(background.state.audio.state,'suspended');}
+   await extra.close();await page.bringToFront();if((await page.evaluate(()=>__trainDriver.getState())).paused)await clickTarget(page,'#resume',{touch:true});
+   await page.waitForFunction(()=>__trainDriver.getState().audio.state==='running');await clickControl(page,'crowdToggle',{touch:true});await page.evaluate(()=>__r11.show());
+   const afterPresets=await page.evaluate(()=>({...__audioQa}));assert.equal(afterPresets.created,persistent.created);assert.equal(afterPresets.started,persistent.started);
+   checks.push({fiveNativePresets:presets,stableLoopSources:true,muteVolumeRestored:true,backgroundObservation:{hidden:background.hidden,visibility:background.visibility,focus:background.focus,telemetry:background.telemetry},nativeHiddenPauseVerified:background.hidden});
    s=await page.evaluate(()=>__r11.missAndHit());assert.equal(s.stats.stoneHits,1);assert.equal(s.audio.impactCues,1);
    const hit=s.events.find(e=>e.type==='stone-hit'),slot=s.audio.impactSlots['impact'+(hit.id%4)];assert.equal(slot.eventId,hit.id);approxArray(slot.worldPosition,hit.point);
    assert.equal(s.audio.characterVoices.available,false);assert.equal(s.audio.characterVoices.played,0);assert(s.audio.characterVoices.requested>0);
@@ -72,6 +90,8 @@ const approxArray=(a,b,tolerance=1e-6)=>{assert.equal(a.length,b.length);a.forEa
     const beforeGuard=s.audio.guardCues;await clickTarget(page,'#stationAction',{touch:true});await page.evaluate(()=>__r11.show());s=await page.evaluate(()=>__r11.step(15));
     assert.equal(s.phase,'doors-closing');assert.equal(s.audio.guardCues,beforeGuard+1);const dispatch=await page.evaluate(()=>__r11.station());assert(dispatch.attendant.pose.raise>.5);
     await page.screenshot({path:`${out}/${size.width}-guard-whistle.png`,timeout:60000});
+    if(size.width===2048){await page.evaluate(()=>__r11.camera([-3.8,2.6,5.3],[-1.6,1.35,2.65]));await page.screenshot({path:out+'/guard-hand-close.png',timeout:60000});await page.evaluate(()=>{__r11.preset('platform');return __r11.show();});}
+
     await clickTarget(page,'#pause',{touch:true});await page.waitForFunction(()=>__trainDriver.getState().audio.state==='suspended');
     const paused=await page.evaluate(()=>__r11.show());const pausedCrew=await page.evaluate(()=>__r11.station());await page.waitForTimeout(200);const again=await page.evaluate(()=>__r11.show());
     assert.equal(again.elapsed,paused.elapsed);assert.equal(again.audio.audioClock,paused.audio.audioClock);assert.deepEqual(await page.evaluate(()=>__r11.station().attendant.pose),pausedCrew.attendant.pose);
