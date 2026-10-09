@@ -18,7 +18,7 @@ export const BOXING_MOTION_PROVENANCE=Object.freeze({
   author:'Self-authored procedural choreography and analytic two-bone IK',
   captureSource:null,version:'boxing-motion-r01',units:'metres',upAxis:'Z',
   nativeForward:'-Y',rotationProtocol:'Anny local-ref rotation-vector degrees',
-  pairCount:18,childMode:'light non-contact target practice',
+  pairCount:18,variantCount:3,childMode:'light non-contact target practice',
 });
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const mix=(a,b,t)=>a+(b-a)*t;
@@ -58,14 +58,28 @@ const EVENTS=Object.freeze([
   {actor:0,start:8.7,end:9.48,kind:'hook',response:'block',direction:-1},
 ]);
 export const BOXING_EVENTS=EVENTS;
+const variantEvents=(changes)=>Object.freeze(EVENTS.map((e,i)=>Object.freeze({...e,...(changes[i]||{})})));
+/** Three distinct authored action/response grammars, each used by six arenas. */
+export const BOXING_VARIANTS=Object.freeze([
+ Object.freeze({id:'jab-slip',label:'刺拳 · 侧闪回击',description:'Double jabs draw alternating slips; the defender returns a straight jab.',events:variantEvents({
+  1:{kind:'jab',response:'slip',direction:-1},2:{kind:'jab',response:'slip',direction:1},3:{kind:'jab',response:'block'},5:{kind:'jab',response:'slip',direction:1},6:{kind:'jab',response:'slip',direction:-1},7:{kind:'cross',response:'block'},
+ })}),
+ Object.freeze({id:'cross-duck',label:'直拳 · 下潜回守',description:'Jab setup, rear-hand cross, level-change defence and a compact hook return.',events:variantEvents({
+  0:{kind:'jab',response:'block'},1:{kind:'cross',response:'duck'},2:{kind:'hook',response:'block'},3:{kind:'cross',response:'duck'},4:{kind:'cross',response:'duck'},5:{kind:'jab',response:'block'},6:{kind:'cross',response:'duck'},7:{kind:'hook',response:'block'},
+ })}),
+ Object.freeze({id:'cross-counter',label:'交叉攻防 · 抢时反击',description:'Jab/cross pressure is answered by an earlier cross counter during recovery.',events:variantEvents({
+  0:{response:'block'},1:{response:'slip',direction:-1},2:{start:2.66,end:3.39,kind:'cross',response:'slip',direction:1},3:{kind:'hook',response:'block'},4:{response:'block'},5:{response:'slip',direction:1},6:{start:7.53,end:8.26,kind:'cross',response:'slip',direction:-1},7:{kind:'jab',response:'duck'},
+ })}),
+]);
+const PHASE_LABELS={guard:'守架',jab:'左刺拳',cross:'右直拳',hook:'左短钩',slip:'侧闪',duck:'下潜',block:'格挡',recover:'恢复','counter-jab':'刺拳反击','counter-cross':'直拳反击','counter-hook':'短钩反击'};
 export function sampleBoxingPair(seconds,pairIndex=0,{child=false}={}){
   pairIndex=mod(Math.floor(pairIndex),BOXING_PAIR_COUNT);
   const speed=child?.82:.91+.035*(pairIndex%5),offset=mod(pairIndex*.618033988749895,1)*BOXING_CYCLE_SECONDS;
-  const t=mod(seconds*speed+offset,BOXING_CYCLE_SECONDS);
+  const t=mod(seconds*speed+offset,BOXING_CYCLE_SECONDS),variantIndex=pairIndex%BOXING_VARIANTS.length,variant=BOXING_VARIANTS[variantIndex];
   const actors=[0,1].map(fighter=>({fighter,jab:0,cross:0,hook:0,slip:0,duck:0,block:0,windup:0,counter:false,phase:t<.9?'guard':t>9.48||t>4.53&&t<5.82?'recover':'guard',opponentAction:'guard'}));
-  for(const e of EVENTS){const p=pulse(t,e.start,e.end),defence=pulse(t,e.start+.065,e.end+.17,.5);const a=actors[e.actor],d=actors[1-e.actor];a[e.kind]=Math.max(a[e.kind],p);a.windup+=pulse(t,e.start-.2,e.start+.06)*.12;a.counter ||= !!e.counter&&p>0;if(p>0){a.phase=(e.counter?'counter-':'')+e.kind;d.opponentAction=e.kind;}if(e.response==='slip')d.slip+=defence*e.direction;else d[e.response]=Math.max(d[e.response],defence);if(defence>.035&&d.jab+d.cross+d.hook<.03)d.phase=e.response;}
-  for(const a of actors){a.attack=Math.max(a.jab,a.cross,a.hook);a.breath=Math.sin(t*PI*2/3.4+a.fighter*.65);a.child=child;}
-  return {time:t,cycle:BOXING_CYCLE_SECONDS,pairIndex,phaseOffset:offset,speed,actors,child};
+  for(const e of variant.events){const p=pulse(t,e.start,e.end),defence=pulse(t,e.start+.065,e.end+.17,.5);const a=actors[e.actor],d=actors[1-e.actor];a[e.kind]=Math.max(a[e.kind],p);a.windup+=pulse(t,e.start-.2,e.start+.06)*.12;a.counter ||= !!e.counter&&p>0;if(p>0){a.phase=(e.counter?'counter-':'')+e.kind;d.opponentAction=e.kind;}if(e.response==='slip')d.slip+=defence*e.direction;else d[e.response]=Math.max(d[e.response],defence);if(defence>.035&&d.jab+d.cross+d.hook<.03)d.phase=e.response;}
+  for(const a of actors){a.attack=Math.max(a.jab,a.cross,a.hook);a.breath=Math.sin(t*PI*2/3+a.fighter*.65);a.child=child;a.label=PHASE_LABELS[a.phase]||a.phase;a.variant=variant.label;a.variantId=variant.id;a.variantIndex=variantIndex;}
+  return {time:t,cycle:BOXING_CYCLE_SECONDS,pairIndex,phaseOffset:offset,speed,actors,child,variant:variant.label,variantId:variant.id,variantIndex};
 }
 // Each shuffle begins and ends with zero velocity/acceleration. Plant targets do
 // not move between swing windows: there is no sinusoidal 'treadmill' foot drift.
@@ -108,11 +122,13 @@ export class BoxingRig {
  rotateSubtree(j,r,p=pos(this.posedMatrices[j])){for(const k of this.descendants[j]){rotateMatrixInPlace(this.posedMatrices[k],r,p);rotateMatrixInPlace(this.skinMatrices[k],r,p);}}
  orientSkin(j,absolute){const current=rotation(this.skinMatrices[j]),delta=mm3(absolute,tr(current));this.rotateSubtree(j,delta);}
  solveLimb(limb,target,pole,extension=.995){const p=pos(this.posedMatrices[limb.a]),solved=solveTwoBone(p,target,pole,limb.upper,limb.lower,{extension});this.rotateSubtree(limb.a,shortestArc(sub(pos(this.posedMatrices[limb.b]),p),sub(solved.joint,p)),p);const knee=pos(this.posedMatrices[limb.b]);this.rotateSubtree(limb.b,shortestArc(sub(pos(this.posedMatrices[limb.c]),knee),sub(solved.endpoint,knee)),knee);return solved;}
- evaluate(seconds,{pairIndex=0,fighter=0,child=this.child,intensity=1,contactIK=true,footLock=true,poseOutput=false}={}){
+ evaluate(seconds,{pairIndex=0,fighter=0,child=this.child,intensity=1,contactIK=true,footLock=true,poseOutput=false,opponentStature=this.stature}={}){
   if(!Number.isFinite(seconds))throw Error('Boxing time must be finite');fighter=fighter?1:0;intensity=clamp(intensity,0,1.25);
   const pair=sampleBoxingPair(seconds,pairIndex,{child}),a=pair.actors[fighter],h=this.stature,t=pair.time,power=intensity*(child?.65:1),jab=a.jab*power,crossAmount=a.cross*power,hook=a.hook*power,duck=a.duck*power,slip=a.slip*power;
   this.result.state={...a,pairIndex:pair.pairIndex,cycleTime:t,phaseOffset:pair.phaseOffset,speed:pair.speed,mode:child?'light target practice':'responsive technical sparring',opponent:pair.actors[1-fighter]};
   for(const v of this.rotationDeltas)v.fill(0);
+  const aimHeightOffset=clamp(.84*((Number.isFinite(opponentStature)&&opponentStature>0?opponentStature:h)-h),-h*.22,h*(child?.07:.10));
+  this.result.state.targeting=opponentStature>h*1.12?'opponent torso level':'opponent head level';this.result.state.targetHeightOffset=aimHeightOffset;
   const yaw=-16+crossAmount*20-jab*7+hook*16;
   this.rootTranslation[0]=h*(slip*.023+(crossAmount-jab)*.008);
   this.rootTranslation[1]=h*(-.016-jab*.008-crossAmount*.016+duck*.009);
@@ -136,8 +152,8 @@ export class BoxingRig {
     const name=`finger${f}-${segment}.${s}`,j=this.index.get(name);if(j===undefined)continue;
     const childIndex=this.index.get(`finger${f}-${Math.min(3,segment+1)}.${s}`),parentIndex=this.parents[j];
     const direction=segment<3?sub(this.restP[childIndex],this.restP[j]):sub(this.restP[j],this.restP[parentIndex]);
-    const axis=unit(cross(unit(direction),palm));const angle=(f===1?[25,36,38]:[58,77,48])[segment-1]*(child?.90:1)*(1+.035*attack);
-    this.rotationDeltas[j]=scale(axis,angle);
+    const axis=unit(cross(unit(direction),palm));const angle=(f===1?[30,42,38]:[78,88,48])[segment-1]*(child?.90:1)*(1+.035*attack);
+    this.rotationDeltas[j]=scale(axis,angle);if(f===1&&segment===1)this.rotationDeltas[j]=add(this.rotationDeltas[j],scale(this.hand[s].forward,side*28));
    }
   }
   this.fk();
@@ -159,9 +175,9 @@ export class BoxingRig {
   for(const [s,side]of [['L',1],['R',-1]]){
    const limb=this.limbs['arm'+s],shoulder=pos(this.posedMatrices[limb.a]),head=pos(this.posedMatrices[this.index.get('head')]),reach=limb.upper+limb.lower,attack=s==='L'?Math.max(jab,hook):crossAmount;
    const guard=[head[0]+side*h*.062,head[1]-h*(s==='L'?.105:.088),head[2]-h*.074+a.block*h*.023];
-   const straight=[head[0]+side*h*.015,shoulder[1]-reach*(child?.83:.94),head[2]-h*(child?.080:.052)];
+   const straight=[head[0]+side*h*.015,shoulder[1]-reach*(child?.83:.94),head[2]-h*(child?.080:.052)+aimHeightOffset];
    let target=lerp(guard,straight,clamp(attack,0,1));
-   if(s==='L'&&hook>.001){const hookTarget=[head[0]-h*.085,shoulder[1]-reach*.70,head[2]-h*.056];target=lerp(guard,hookTarget,clamp(hook,0,1));}
+   if(s==='L'&&hook>.001){const hookTarget=[head[0]-h*.085,shoulder[1]-reach*.70,head[2]-h*.056+aimHeightOffset*.9];target=lerp(guard,hookTarget,clamp(hook,0,1));}
    const pole=add(shoulder,[side*h*(.105+hook*.055),-h*.02,-h*(.22-hook*.12)]);
    this.solveLimb(limb,target,pole,child?.94:.975);
    const forward=unit(lerp([side*.035,-.18,1],[0,-1,.06],clamp(attack,0,1)));
@@ -178,3 +194,11 @@ export class BoxingRig {
  validate(){let maxBoneLengthError=0,maxOrthogonalityError=0;for(let j=0;j<this.count;j++){const p=this.parents[j];if(p>=0)maxBoneLengthError=Math.max(maxBoneLengthError,Math.abs(norm(sub(pos(this.posedMatrices[j]),pos(this.posedMatrices[p])))-norm(sub(this.restP[j],this.restP[p]))));const r=rotation(this.skinMatrices[j]),m=mm3(r,tr(r));for(let k=0;k<9;k++)maxOrthogonalityError=Math.max(maxOrthogonalityError,Math.abs(m[k]-(k%4===0?1:0)));}return {finite:this.posedMatrices.every(m=>m.every(Number.isFinite))&&this.skinMatrices.every(m=>m.every(Number.isFinite)),maxBoneLengthError,maxOrthogonalityError,...this.metrics};}
 }
 export function createBoxingRig(options){return new BoxingRig(options);}
+
+/** Calibrated against the 36 accepted presets and palm-centred R01 gloves.
+ * Each separation conservatively keeps the nearest peak attack clear.
+ * Child/teen target practice uses 12 cm rather than the adult 6.5 cm gap. */
+export const BOXING_PAIR_RANGE=Object.freeze([{"pairIndex":0,"referenceAverageHeight":1.0385922342538834,"separation":0.7451829894882206,"clearance":0.12},{"pairIndex":1,"referenceAverageHeight":1.051154837012291,"separation":0.7344781602603649,"clearance":0.12},{"pairIndex":2,"referenceAverageHeight":1.0919053554534912,"separation":0.7435206678360323,"clearance":0.12},{"pairIndex":3,"referenceAverageHeight":1.583908349275589,"separation":1.0529964062660386,"clearance":0.12},{"pairIndex":4,"referenceAverageHeight":1.5863260626792908,"separation":1.019847383335449,"clearance":0.12},{"pairIndex":5,"referenceAverageHeight":1.5908218920230865,"separation":1.0078893596423317,"clearance":0.12},{"pairIndex":6,"referenceAverageHeight":1.7142891585826874,"separation":1.2326246546107247,"clearance":0.065},{"pairIndex":7,"referenceAverageHeight":1.7162680923938751,"separation":1.2182896230541345,"clearance":0.065},{"pairIndex":8,"referenceAverageHeight":1.7214924693107605,"separation":1.199372115580337,"clearance":0.065},{"pairIndex":9,"referenceAverageHeight":1.7142722010612488,"separation":1.213394686946074,"clearance":0.065},{"pairIndex":10,"referenceAverageHeight":1.7178281843662262,"separation":1.2122704325259441,"clearance":0.065},{"pairIndex":11,"referenceAverageHeight":1.7277375757694244,"separation":1.1892920785222039,"clearance":0.065},{"pairIndex":12,"referenceAverageHeight":1.6994035243988037,"separation":1.1752182931324968,"clearance":0.065},{"pairIndex":13,"referenceAverageHeight":1.7009539306163788,"separation":1.1897860378955087,"clearance":0.065},{"pairIndex":14,"referenceAverageHeight":1.715985655784607,"separation":1.1571339948332364,"clearance":0.065},{"pairIndex":15,"referenceAverageHeight":1.6841349005699158,"separation":1.1284757904643568,"clearance":0.065},{"pairIndex":16,"referenceAverageHeight":1.6857004761695862,"separation":1.1668211038928105,"clearance":0.065},{"pairIndex":17,"referenceAverageHeight":1.6938249468803406,"separation":1.1058538837772176,"clearance":0.065}].map(Object.freeze));
+export const BOXING_PAIR_SEPARATIONS=Object.freeze(BOXING_PAIR_RANGE.map(row=>row.separation));
+/** Locked to the current 36-preset catalogue; not a generalized collision solver. */
+export function recommendPairSeparation(pairIndex){return BOXING_PAIR_SEPARATIONS[mod(Math.floor(pairIndex),BOXING_PAIR_COUNT)];}

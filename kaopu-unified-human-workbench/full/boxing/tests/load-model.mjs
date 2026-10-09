@@ -1,0 +1,15 @@
+import fs from'node:fs';import path from'node:path';import zlib from'node:zlib';import{pathToFileURL}from'node:url';
+export async function loadLocal(which='baseline'){
+ const base=path.resolve(import.meta.dirname,'../..');
+ const mod=p=>import(pathToFileURL(path.join(base,p)));const json=p=>JSON.parse(fs.readFileSync(path.join(base,p)));const bytes=p=>{const b=fs.readFileSync(path.join(base,p));return b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength)};const unzip=p=>{const b=zlib.gunzipSync(fs.readFileSync(path.join(base,p)));return b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength)};
+ const[{AnnyModel},{GNMHeadModel,parseContainer},{NeckSurface},{CommonPerson},{CommonBodyDriver},{MHRBodyAdapter},{MHRDetailedEngine,unpackModel},{HeadTransfer}]=await Promise.all([mod('source/kaopu-anny-workbench/r02/src/AnnyModel.js'),mod('source/kaopu-unified-human-workbench/src/GNMModel.js'),mod('source/neck-baseline/src/NeckSurface.js'),mod('src/CommonPerson.mjs'),mod('body-adapter/CommonBodyDriver.mjs'),mod('body-adapter/MHRBodyAdapter.mjs'),mod('body-adapter/MHRDetailedEngine.mjs'),mod('src/HeadTransfer.mjs')]);
+ const metadata=json('ui/runtime-metadata.json'),am=json('assets/anny-all/anny-model.json'),fm=json('assets/anny-all/facial-actions.json'),mm=json('source/kaopu-mhr-workbench/assets/model.json'),km=json('source/neck-baseline/assets/kernel.json');
+ const parts=(parts,prefix)=>{const b=zlib.gunzipSync(Buffer.concat(parts.map(p=>fs.readFileSync(path.join(base,prefix,p.file||p.url.split('/').at(-1))))));return b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength)};
+ const canonical=JSON.parse(new TextDecoder().decode(unzip('source/kaopu-unified-human-workbench/assets/canonical.json.gz'))),g=parseContainer(bytes('source/kaopu-face-workbench/assets/gnm_head_web.bin'));
+ const anny=new AnnyModel(am,parts(am.binary.compressed.parts,'assets/anny-all'),fm,unzip('source/kaopu-anny-workbench/r02/assets/facial-actions.bin.gz')),gnm=new GNMHeadModel(g.meta,g.sections);
+ const model=new CommonPerson(anny,gnm,canonical,{id:metadata.adapterFingerprint,acceptedParameterFingerprints:metadata.legacyArchiveFingerprints||[]},new NeckSurface({...km,vertexCount:metadata.vertices},unzip('source/neck-baseline/assets/kernel.bin.gz')),mm);
+ const adapter=new MHRBodyAdapter({engine:new MHRDetailedEngine(mm,unpackModel(mm,parts(mm.parts,'source/kaopu-mhr-workbench/assets'))),anny,canonical,mapIndices:new Uint32Array(bytes('body-adapter/map-indices.u32')),mapBary:new Float32Array(bytes('body-adapter/map-bary.f32')),topologySha256:canonical.topologySha256});model.bodyDriver=new CommonBodyDriver({anny,mhrAdapter:adapter,canonical});model.headTransfer=new HeadTransfer(json('assets/head-transfer.json'),unzip('assets/head-transfer.bin.gz'));
+ if(which==='experiment')model.headTransfer.attachMorphologyField(json('assets/anny-head-rbf-small.json'),bytes('assets/anny-head-rbf-small.bin'));
+ if(true)model.headTransfer.attachMorphologyField(json('assets/head-morphology.json'),unzip('assets/head-morphology.bin.gz'));
+ const{defaultState}=await mod('src/State.mjs');return{model,defaultState,metadata};
+}

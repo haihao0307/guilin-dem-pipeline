@@ -24,6 +24,15 @@ jobs:
       - run: echo "NODE_PATH=$RUNNER_TEMP/human-qa/node_modules" >> "$GITHUB_ENV"
       - run: python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/human-server.log" 2>&1 &
       - run: node kaopu-unified-human-workbench/tests/boxing-browser.cjs
+        env:
+          BOXING_VIDEO: '1'
+      - name: Encode deterministic actual WebGL sequence
+        if: always()
+        run: |
+          if [ -f boxing-qa-results/frames/0143.png ]; then
+            ffmpeg -y -framerate 24 -i boxing-qa-results/frames/%04d.png -c:v libx264 -crf 20 -pix_fmt yuv420p boxing-qa-results/boxing-consecutive-frames.mp4
+            python3 -c "import shutil;shutil.rmtree('boxing-qa-results/frames')"
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
