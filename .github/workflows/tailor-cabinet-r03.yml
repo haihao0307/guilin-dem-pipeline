@@ -43,24 +43,26 @@ jobs:
           git fetch origin 976d315ef8bfd7a7351bbac88cd8c7425b363970 --depth=1
           git show 976d315ef8bfd7a7351bbac88cd8c7425b363970:kaopu-tailor-workbench/r07/continuation/assets/original-anny-rig.json.gz > "$R03_INTAKE/original-anny-rig.json.gz"
           git show HEAD:kaopu-tailor-workbench/garments-r04/assets/body-anny-adult.json > "$R03_INTAKE/body-anny-adult.json"
+          python kaopu-tailor-workbench/presets/r03/apply_refinement.py
           python kaopu-tailor-workbench/presets/r03/prepare_assets.py
+          python kaopu-tailor-workbench/presets/r03/fit_assets.py
           for f in kaopu-tailor-workbench/presets/r03/*.mjs; do node --check "$f"; done
           python - <<'PY'
           import pathlib,json,hashlib,os
           p=pathlib.Path('kaopu-tailor-workbench/presets/r03')
-          names=['index.html','style.css','app.mjs','surfaces.mjs','surface-kernel.mjs','garment-surfaces.mjs','catalogue.json','mannequin.json','MANNEQUIN_MANIFEST.json','README.md']
-          d={'schema':'kaopu-tailor-r03-build@1','sourceCommit':os.environ['GITHUB_SHA'],'sourceBranch':os.environ['GITHUB_REF_NAME'],'originalBaseline':'a9148f6860b9fa9f892b97456f4601c34ea95e04','originalCount':60,'combinationCount':432,'physicalFitAccepted':False,'files':{n:{'bytes':(p/n).stat().st_size,'sha256':hashlib.sha256((p/n).read_bytes()).hexdigest()} for n in names}}
+          names=['index.html','style.css','app.mjs','surfaces.mjs','surface-kernel.mjs','garment-surfaces.mjs','anatomical-cloth.mjs','catalogue.json','mannequin.json','MANNEQUIN_MANIFEST.json','FIT_PROFILE_REPORT.json','README.md']
+          d={'schema':'kaopu-tailor-r03-build@1','version':'R03.2','sourceCommit':os.environ['GITHUB_SHA'],'sourceBranch':os.environ['GITHUB_REF_NAME'],'originalBaseline':'a9148f6860b9fa9f892b97456f4601c34ea95e04','originalCount':60,'combinationCount':432,'physicalFitAccepted':False,'files':{n:{'bytes':(p/n).stat().st_size,'sha256':hashlib.sha256((p/n).read_bytes()).hexdigest()} for n in names}}
           (p/'BUILD_MANIFEST.json').write_text(json.dumps(d,indent=2))
           PY
-      - name: Retain generated source assets without overwriting other branches
+      - name: Retain generated sources without overwriting other branches
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git fetch origin "$GITHUB_REF_NAME" --depth=1
           test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
-          git add kaopu-tailor-workbench/presets/r03/catalogue.json kaopu-tailor-workbench/presets/r03/mannequin.json kaopu-tailor-workbench/presets/r03/MANNEQUIN_MANIFEST.json kaopu-tailor-workbench/presets/r03/BUILD_MANIFEST.json
+          git add kaopu-tailor-workbench/presets/r03/*.mjs kaopu-tailor-workbench/presets/r03/README.md kaopu-tailor-workbench/presets/r03/catalogue.json kaopu-tailor-workbench/presets/r03/mannequin.json kaopu-tailor-workbench/presets/r03/MANNEQUIN_MANIFEST.json kaopu-tailor-workbench/presets/r03/FIT_PROFILE_REPORT.json kaopu-tailor-workbench/presets/r03/BUILD_MANIFEST.json
           if ! git diff --cached --quiet; then
-            git commit -m 'build(tailor-r03): retain source-derived display mannequin and immutable design registry'
+            git commit -m 'build(tailor-r03): retain connected fitted clothing and unchanged anatomical mannequin'
             git push origin HEAD:"$GITHUB_REF_NAME"
           fi
       - name: Actual Chromium interactions and rendering
