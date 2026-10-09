@@ -1,17 +1,51 @@
 {
-  "deliveryStatus": "LOGIC_PASSED_VISUAL_REWORK_R02",
+  "deliveryStatus": "R06_TECHNICAL_PREVIEW_VERIFIED_ART_UNFINISHED",
   "entryFile": "index.html",
-  "entrySha256": "6fd5df9270871157be2923366d662a19809ce06518e4f70003532a8cb7d5389f",
-  "mathTests": "PASS: 13 numerical checks",
-  "applicationTests": "PASS: 17 logic checks, rerun after R02 changes",
-  "firstBrowserRun": {
-    "id": 37854318109,
-    "commit": "8edc2b65a1a2cf8ca407baadcb6a5823b274de6c",
-    "sourceSha256": "681d235f445172b42797996f40f40341f89fd0b31dab89758186c3c9ec659c9c",
-    "status": "PASS",
-    "visualDecision": "FAIL: coarse thick arch, isolated bright dot, low-resolution edges, flat materials"
+  "entrySha256": "e82c7109c5f677c830ced549053b756298093a07a8562edbeac898fb954ac085",
+  "sourceCommit": "40df4d9d55324bd52dd6899d6ef6ef69d609bad9",
+  "qaBranch": "qa/math-space-pbr-r06-20261009",
+  "qaRun": 37867035487,
+  "qaJob": 113616105929,
+  "qaConclusion": "success",
+  "checkedAt": "2026-10-09T00:59:04.366Z",
+  "mathChecks": 13,
+  "applicationChecks": 17,
+  "pbrChecks": 4,
+  "shadowIsolationChecks": 8,
+  "browserChecks": 16,
+  "browserResult": "PASS",
+  "browserErrors": [],
+  "externalRequests": [],
+  "visualDecision": "Improved shadows, three-beacon composition and roughness/metal response; full scene remains a gray textured exhibit. NOT finished game art.",
+  "performance": {
+    "status": "MEASURED_WITH_HOST_CLOCK",
+    "environment": "GitHub Actions Chromium forced SwiftShader software rendering",
+    "metric": "Draw + complete pixel readback + checksum + browser RPC measured by Node monotonic clock",
+    "medianMilliseconds": {
+      "desktop1103x852": 7479.055708,
+      "mobileSize390x498": 1525.253482
+    },
+    "comparison": "Prior shading 7493.779485 / 1534.133213 ms in same sampled environment; no distinguishable added PBR slowdown in this small 3-sample test. Not a statistically proven speedup.",
+    "control": "2-second real key hold moved intrinsically and released; 26–28 submitted frames are not displayed FPS.",
+    "notRealtimeInSoftwareRenderer": true,
+    "consumerGPUandPhysicalPhone": "NOT TESTED",
+    "priorPageClockZeroMetric": "REJECTED AS INVALID"
   },
-  "r02BrowserTests": "PENDING: changed shader, native-resolution buffer and AA must be rechecked",
-  "publication": "AUTHORIZED_TEST_PREVIEW_NOT_FINISHED",
-  "experiment001PreservedSha256": "37a453cf234d304c5956fdb89bd5294bc5b92878ad64e63bf0ed1ac4db12ccd5"
+  "technicalRollback": {
+    "commit": "1a9cb7d450708f07ed4a801dd938372a3e0eb553",
+    "qaRun": 37864714122,
+    "indexSha256": "3c53a8fadb43f18eed6cf2116ffb07967452f61afda621b29a6723f9ff199cc1",
+    "localPublishedSnapshot": "versions/r05/index.html",
+    "artAccepted": false
+  },
+  "geometryKernelSha256": "c68ebe4f8f7c29f1932e5df93a5af005705558b9a2a97601d35e68413c46b6b2",
+  "geometryKernelIdenticalToR05": true,
+  "experiment001PreservedSha256": "37a453cf234d304c5956fdb89bd5294bc5b92878ad64e63bf0ed1ac4db12ccd5",
+  "publicBrowserBoundary": "Cloud browser can load URL but has no WebGL; no claim of live 3D verification there",
+  "artifactIds": {
+    "first": 11588812743,
+    "full": 11588992433
+  },
+  "artifactRetentionUntil": "2026-10-23",
+  "publication": "Authorized preview; this validation describes exact tested source, not a finished-art approval"
 }

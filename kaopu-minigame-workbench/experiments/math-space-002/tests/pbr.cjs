@@ -1,0 +1,7 @@
+const fs=require('fs'),assert=require('assert'),path=require('path');const root=path.resolve(__dirname,'..'),html=fs.readFileSync(root+'/index.html','utf8');
+function D(r,c){const a=r*r,a2=a*a,d=c*c*(a2-1)+1;return a2/(Math.PI*d*d)}
+function V(r,nl,nv){const a=r*r,a2=a*a;return .5/Math.max(nl*Math.sqrt(a2+(1-a2)*nv*nv)+nv*Math.sqrt(a2+(1-a2)*nl*nl),1e-6)}
+const narrow=D(.23,1),broad=D(.84,1),narrowShoulder=D(.23,.8),broadShoulder=D(.84,.8);assert(narrow>broad*100);assert(broadShoulder>narrowShoulder*10);
+for(const r of [.1,.23,.5,.84,1])for(const nl of [.001,.02,.3,1])for(const nv of [.001,.02,.3,1]){assert(Number.isFinite(V(r,nl,nv)));assert(Math.abs(V(r,nl,nv)-V(r,nv,nl))<1e-9);}
+assert(html.includes('rough*rough'));assert(html.includes('pbrBRDF(n,view,key,base,rough,metal)'));assert(html.includes('pbrBRDF(n,view,l,base,rough,metal)'));assert(html.includes('The MIT License'));assert(!html.includes('evaluateMaterial('));
+const out={status:'PASS',scope:'Numerical BRDF response and source wiring, not image quality or calibrated measured material',checks:['roughness lowers GGX peak and broadens shoulder','height-correlated Smith is finite and reciprocal','roughness wired into key and beacon lighting','MIT license retained, NC material evaluator not copied'],normalPeak:{rough023:narrow,rough084:broad},shoulder:{rough023:narrowShoulder,rough084:broadShoulder}};fs.writeFileSync(root+'/tests/pbr-results.json',JSON.stringify(out,null,2));console.log(JSON.stringify(out,null,2));
