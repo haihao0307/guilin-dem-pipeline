@@ -1,3 +1,4 @@
+import {refineClothSurface} from './surface-refine.mjs';
 /** Connected anatomical garment scaffolds with exact edge clipping and fit envelopes.
  * Static style preview, not a cloth solver. No mannequin masking or scaling.
  */
@@ -26,10 +27,11 @@ function outer(point,row,kind,onePiece=false){
    if(!fitted){const base=fitProfile(wy+.17,a).r;target=Math.max(target,base+ease+(width-1)*.075)*(1+(flare-1)*.35*smooth(wy+.17,wy-.25,q.y));}
    // R03.3 static tailoring: suspend cloth between bust and waist rather than reproducing the under-bust indentation.
    const bust=Math.max(...[1.32,1.36,1.40].map(y=>fitProfile(y,a).r)),wr=fitProfile(wy,a).r,tension=mix(wr,bust,smooth(wy,1.365,q.y))+ease+.007;
-   if(q.y<1.42)target=Math.max(target,tension);
+   target=Math.max(target,mix(f.r+ease+.006,tension,1-smooth(1.34,1.465,q.y)));
    if(onePiece)target=mix(target,f.r+.021,smooth(wy+.14,wy+.015,q.y));
-   else target+=.013*smooth(wy+.055,wy-.04,q.y);
+   else target+=.022*smooth(wy+.12,wy+.025,q.y);
    target=Math.max(r,target);q.x=mix(q.x,target*Math.sin(a),torsoWeight);q.z=mix(q.z,f.cz+target*Math.cos(a),torsoWeight);
+   if(onePiece){const k=smooth(wy+.055,wy+.01,q.y)*torsoWeight;q.x=mix(q.x,(f.r+.022)*Math.sin(a),k);q.z=mix(q.z,f.cz+(f.r+.022)*Math.cos(a),k);}
    const low=(1-smooth(wy+.08,1.43,q.y))*torsoWeight,fold=.0025*Math.sin(a*9+q.y*3)*low;q.x+=Math.sin(a)*fold;q.z+=Math.cos(a)*fold;
   }
   if(aw>.15){const prefix=get(row,'left.enable_asym',false)&&s>0?'left.':'',end=num(row,prefix+'sleeve.end_width',1),u=clamp(point.t),c=curveAt(s,u).c,rad=q.clone().sub(c),grow=Math.max(0,(width-1)*.035)+(end-1)*.045*smooth(.12,.8,u);q.addScaledVector(rad.clone().normalize(),grow*smooth(.15,.8,aw));}
@@ -62,13 +64,14 @@ function shell(group,row,color,kind,onePiece=false){
   }else fields=[wy-p.y,p.y-hemY,.20-aw];
   return {p:outer(v,row,kind,onePiece),f:fields};
  });
- const pos=[],idx=[],ids=new Map();
+ let pos=[],idx=[];const ids=new Map();
  function vertex(v){const p=v.p,k=[p.x,p.y,p.z].map(x=>Math.round(x*1e6)).join(',');let id=ids.get(k);if(id===undefined){id=pos.length/3;ids.set(k,id);pos.push(p.x,p.y,p.z)}return id;}
  function interpolate(a,b,t){return{p:a.p.clone().lerp(b.p,t),f:a.f.map((v,k)=>mix(v,b.f[k],t))};}
  for(let k=0;k<BODY.indices.length;k+=3){let poly=[mapped[BODY.indices[k]],mapped[BODY.indices[k+1]],mapped[BODY.indices[k+2]]];if(poly.some(v=>!Number.isFinite(v.p.x)))throw Error('Invalid anatomical shell');
   for(let f=0;f<poly[0].f.length;f++){const out=[];for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length],da=a.f[f],db=b.f[f];if(da>=0)out.push(a);if((da>=0)!==(db>=0))out.push(interpolate(a,b,da/(da-db)))}poly=out;if(poly.length<3)break;}
   if(poly.length>=3){const a=vertex(poly[0]);for(let i=1;i<poly.length-1;i++)idx.push(a,vertex(poly[i]),vertex(poly[i+1]));}
  }
+ const refined=refineClothSurface(pos,idx);pos=refined.positions;idx=refined.indices;
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();
  const mat=cloth(color),mesh=new T.Mesh(g,mat);mesh.name=kind+'-continuous-clipped-shell';mesh.castShadow=mesh.receiveShadow=true;group.add(mesh);
  const edges=new Map();for(let i=0;i<idx.length;i+=3)for(const[a,b]of[[idx[i],idx[i+1]],[idx[i+1],idx[i+2]],[idx[i+2],idx[i]]]){const key=a<b?a+':'+b:b+':'+a;if(edges.has(key))edges.delete(key);else edges.set(key,[a,b]);}

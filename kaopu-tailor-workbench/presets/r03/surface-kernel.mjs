@@ -43,7 +43,7 @@ function hem(group,fn,material,inset=.0015,name='folded-open-hem'){patch(group,n
 function band(group,row,color,y,width=null){
  const curved=get(row,'meta.wb',null)==='FittedWB'||row.style==='FittedWB';
  const h=width??(.018+num(row,'waistband.width',.25)*.08),mat=cloth(color),edge=plain(new T.Color(color).multiplyScalar(.84));
- const ring=(u,v)=>{const yy=y+(v-.5)*h,p=bodyRing(curved?yy:y,u*TAU,.028);p[1]=yy;return p;};
+ const ring=(u,v)=>{const yy=y+(v-.5)*h,p=bodyRing(curved?yy:y,u*TAU,.034);p[1]=yy;return p;};
  patch(group,'anatomically-fitted-waistband',ring,96,8,mat);hem(group,u=>ring(u,1),mat,.0015,'open-waistband-facing');line(group,trace(u=>ring(u,.12),90),edge,.00065,'waistband-stitch');
 }
 export {T,PI,TAU,clamp,mix,smooth,V,lerp3,num,BODY,sample,cloth,plain,dispose,patch,line,trace,hem,band};
