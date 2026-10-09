@@ -24,6 +24,8 @@ const observed = {
     combinationCount: 432
   },
   implementation: {
+    branchBaseIsRejectedR02Head: true,
+    runtimeImportsR02GarmentGeometry: false,
     sourcePaperIdentityPresent: true,
     sourceRecipeIdentityPresent: true,
     sourceDesignValuesConsumedByRenderer: true,
@@ -108,6 +110,8 @@ check('proves the renderer now consumes preset design values', () => {
   assert.equal(observed.implementation.sourceDesignValuesConsumedByRenderer, true);
 });
 check('proves R03 no longer uses closed primitive garments', () => {
+  assert.equal(observed.implementation.branchBaseIsRejectedR02Head, true);
+  assert.equal(observed.implementation.runtimeImportsR02GarmentGeometry, false);
   assert.equal(observed.implementation.continuousClippedShells, true);
   assert.equal(observed.implementation.closedPrimitiveGarments, false);
 });

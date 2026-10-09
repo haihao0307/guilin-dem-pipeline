@@ -30,6 +30,8 @@ R03.4 相对 N125 有实质变化，不能继续标成 R02 primitive substitute�
 - 原 Anny 展示模特为 13,718 顶点、27,420 三角形；未缩放或覆盖原人体；
 - 因此 N125 的 `REJECTED_CREATIVE_SUBSTITUTE_SIMPLIFIED_PROXY_GARMENT` 不适用于 R03.4 的显示表面层。
 
+分支谱系仍必须单列：PR #181 的 Git base 确实是被 N125 拒绝的 PR #180 head，因此 branch-level rejected lineage inheritance 记 1；但 R03 runtime 使用新 `garment-surfaces.mjs` / `anatomical-cloth.mjs`，没有导入 R02 的 primitive garment geometry。这个“Git 父提交=旧候选、运行几何父对象≠旧代理”区别保留为证据，不能写成继承次数 0，也不能反向宣称 R03 仍运行 R02 代理。
+
 但 N124 的逐成员身份门还没有闭合：
 
 - `PUBLIC_REPORT.geometry` 每个原设计只有 `id / vertices / triangles / geometrySignature`；
@@ -71,5 +73,5 @@ R03.4 相对 N125 有实质变化，不能继续标成 R02 primitive substitute�
 - 下一最小动作：生成并验证 60 行 `THUMBNAIL_RECEIPTS.json` 或等价对象，把现有分散证据做逐成员不可变 join；无需重做已有几何。
 - 明确边界：`physicalFitAccepted=false`、`dynamicWearCertified=false`、真机测试=false、`USER-ACCEPTED=false`。
 - 路由：PR #181 comment `6078454193`；所以 `POSTED=true`。目前没有 Mother 回执，`ACKNOWLEDGED=false`；R03.4 生产实现与其公开门已运行，所以 `IMPLEMENTED=true`、`GATE-RUN=true`；`ADOPTED=false`、`USER-ACCEPTED=false`。
-- KPI：相对 N125，rejected primitive lineage 继承次数为 0（R03 新建独立 surface implementation，R02 目录保持不变）；首次候选通过率、用户纠错次数、每个 accepted delta 的内部迭代数、从指令到合法 candidate 时间仍为 `unknown`。
+- KPI：branch-level rejected lineage inheritance 次数为 1（PR #181 base 为 PR #180 head）；rejected R02 garment-geometry runtime reuse 次数为 0。首次候选通过率、用户纠错次数、每个 accepted delta 的内部迭代数、从指令到合法 candidate 时间仍为 `unknown`。
 - 第一梯队外部 AI：未调用。
