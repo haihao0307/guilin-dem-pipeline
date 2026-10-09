@@ -70,10 +70,10 @@ function topGarment(row,colors){
  const fitted=row.style==='FittedShirt'||row.style==='Strapless'||bool(row,'shirt.strapless',false),strapless=row.style==='Strapless'||bool(row,'shirt.strapless',false);
  const width=clamp(value(row,'shirt.width',fitted?1:1.08),.78,1.55),length=clamp(value(row,'shirt.length',1),.55,1.85),height=.39+.16*(length-.55)/1.3;
  const topY=strapless?1.39:1.47,bottomY=Math.max(.91,topY-height),center=(topY+bottomY)/2;
- group.add(ellipseCylinder(fitted?.165:.19*width,fitted?.17:.185*width,topY-bottomY,main,center,1.26,.69));
+ group.add(ellipseCylinder(fitted ? .165:.19*width,fitted ? .17:.185*width,topY-bottomY,main,center,1.26,.69));
  if(strapless){group.add(mesh(new THREE.TorusGeometry(.168, .012,10,38),trim,[0,topY,0],[Math.PI/2,0,0],[1.24,1,.68]));}
  const sleeveless=strapless||bool(row,'sleeve.sleeveless',row.style==='Shirt'||row.style==='FittedShirt'),asym=row.style==='AsymmetricShirt'||bool(row,'left.enable_asym',false);
- const sleeveRatio=clamp(value(row,'sleeve.length',row.style==='LongSleeve'||['Turtle','SimpleLapel','Hood2Panels','CuffBand','CuffSkirt','CuffBandSkirt'].includes(row.style)?.88:.30),.18,1);
+ const sleeveRatio=clamp(value(row,'sleeve.length',row.style==='LongSleeve'||['Turtle','SimpleLapel','Hood2Panels','CuffBand','CuffSkirt','CuffBandSkirt'].includes(row.style) ? .88:.30),.18,1);
  const shoulders=[new THREE.Vector3(-.285,1.445,0),new THREE.Vector3(.285,1.445,0)],elbows=[new THREE.Vector3(-.42,1.20,.018),new THREE.Vector3(.42,1.20,.018)],wrists=[new THREE.Vector3(-.47,.965,.04),new THREE.Vector3(.47,.965,.04)];
  const makeSleeve=(side,longness,mat)=>{
   if(longness<=0)return;
@@ -95,7 +95,7 @@ function topGarment(row,colors){
 }
 function addWaistband(group,row,colors,y=1.01){
  const band=material(colors[2],.79,0),curved=row.style==='FittedWB'||choice(row,'meta.wb',null)==='FittedWB',h=.055+.05*clamp(value(row,'waistband.width',.25),.1,.5);
- const m=ellipseCylinder(curved?.174:.18,curved?.19:.18,h,band,y,1.22,.68);group.add(m);
+ const m=ellipseCylinder(curved ? .174:.18,curved ? .19:.18,h,band,y,1.22,.68);group.add(m);
 }
 function skirtGarment(row,colors,topY=1.02){
  const group=new THREE.Group(),main=material(colors[0],.88,0),second=material(colors[1],.87,0),accent=material(colors[2],.84,0);
