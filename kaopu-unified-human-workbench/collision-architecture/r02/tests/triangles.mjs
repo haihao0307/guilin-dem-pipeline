@@ -1,0 +1,4 @@
+import assert from 'node:assert/strict';import {sweepTriangles,triangleDistance} from '../TriangleContact.mjs';
+const b=[[-1,-1,0],[1,-1,0],[0,1,0]],a=[[-.1,-.1,1],[.1,-.1,1],[0,.1,1]],cases=[];
+for(const [name,p,q,r,s,hit] of [['fast',a,a.map(v=>[v[0],v[1],-1]),b,b,true],['near-miss',a,a.map(v=>[v[0],v[1],.0002]),b,b,false],['parallel-near-miss',a.map(v=>[v[0],v[1],.0002]),a.map(v=>[v[0]+.1,v[1],.0002]),b,b,false],['moving-target',a,a,b,b.map(v=>[v[0],v[1],2]),true],['deforming-fast',a,a.map((v,i)=>[v[0]+i*.01,v[1],-1]),b,b,true]]){const out=sweepTriangles(p,q,r,s);assert.equal(!!out,hit,name);assert.ok(!out?.unresolved,name);cases.push({name,result:out});}
+assert.ok(Math.abs(cases[0].result.toi-.5)<1e-8);assert.equal(triangleDistance([[-.1,0,-1],[.1,0,1],[0,1,1]],b).distance,0);console.log(JSON.stringify({passed:true,cases},null,2));
