@@ -12,7 +12,7 @@ const cases=[
  {name:'portrait-390',width:390,height:844,touch:true,portrait:true},
  {name:'portrait-360',width:360,height:780,touch:true,portrait:true},
  {name:'landscape-568',width:568,height:320,touch:true}
-].filter((_,i)=>i%2===shard);
+].filter((spec,i)=>process.env.R12_ONLYCASE?spec.name===process.env.R12_ONLYCASE:i%2===shard);
 const ids=['pause','accelerate','decelerate','brake','stationAction'],checks=[],errors=[],bad=[];
 fs.mkdirSync(out,{recursive:true});
 const harness=`
@@ -25,7 +25,7 @@ window.__r12={
  game:()=>game,
  step(n){game.stepTicks(n);return this.show();}
 };
-window.__nativeInputs=[];for(const type of ['pointerdown','pointerup','click','pointercancel','lostpointercapture'])document.addEventListener(type,e=>{if(e.target.closest?.('#drivePanel'))__nativeInputs.push({type,target:e.target.id||e.target.tagName,button:e.target.closest('button')?.id,trusted:e.isTrusted})},true);
+window.__nativeInputs=[];for(const type of ['pointerdown','pointerup','click','pointercancel','lostpointercapture'])document.addEventListener(type,e=>{if(e.target.closest?.('#drivePanel'))__nativeInputs.push({type,target:e.target.id||e.target.tagName,button:e.target.closest('button')?.id,trusted:e.isTrusted,detail:e.detail,pointerId:e.pointerId,buttons:e.buttons,buttonCode:e.button,x:e.clientX,y:e.clientY})},true);
 `;
 async function point(page,id,where='center'){
  return page.locator('#'+id).evaluate((el,where)=>{const r=el.getBoundingClientRect();let x=r.x+r.width/2,y=r.y+r.height/2;if(where==='left')x=r.left+4;if(where==='right')x=r.right-4;if(where==='top')y=r.top+4;if(where==='bottom')y=r.bottom-4;if(where==='label')y=r.y+r.height*.67;const hit=document.elementFromPoint(x,y);return{x,y,id:el.id,where,rect:{x:r.x,y:r.y,w:r.width,h:r.height},hit:hit?.closest('button')?.id||hit?.id,disabled:el.disabled,ariaDisabled:el.getAttribute('aria-disabled'),inert:!!el.closest('[inert]'),pointerEvents:getComputedStyle(el).pointerEvents};},where);
@@ -70,9 +70,9 @@ function reachable(p,spec){assert.equal(p.hit,p.id,JSON.stringify(p));assert.equ
  await page.evaluate(()=>__r12.setup());await clickTarget(page,'#stationAction',{touch:!!spec.touch});await page.evaluate(()=>__r12.step(40));assert.notEqual(await page.evaluate(()=>__r12.state().phase),'running');
  await page.screenshot({path:`${out}/${spec.name}-door-open.png`,timeout:60000});
  // Explicit Pause freezes the authoritative clock and all native controls resume.
- await page.evaluate(()=>__r12.setup());await clickTarget(page,'#pause',{touch:!!spec.touch});const paused=await page.evaluate(()=>__r12.state());await page.evaluate(()=>__r12.step(30));assert.equal(await page.evaluate(()=>__r12.state().tick),paused.tick);await clickTarget(page,'#pause',{touch:!!spec.touch});assert.equal(await page.evaluate(()=>__r12.state().paused),false);
+ await page.evaluate(()=>{__r12.setup();__nativeInputs=[]});await clickTarget(page,'#pause',{touch:!!spec.touch});const paused=await page.evaluate(()=>__r12.state());const pauseEvents=await page.evaluate(()=>__nativeInputs);assert.equal(paused.paused,true,'Pause click evidence '+JSON.stringify({paused,pauseEvents}));await page.evaluate(()=>__r12.step(30));assert.equal(await page.evaluate(()=>__r12.state().tick),paused.tick);await clickTarget(page,'#pause',{touch:!!spec.touch});assert.equal(await page.evaluate(()=>__r12.state().paused),false);
  await clickTarget(page,'#openCameraMenu',{touch:!!spec.touch});assert.equal(await page.locator('#settingsScreen').isVisible(),true);await clickTarget(page,'#closeSettings',{touch:!!spec.touch});assert.equal(await page.evaluate(()=>__r12.state().paused),false);
  checks.push({spec,state,layout,events,dragOut:true,dispatchedBlurRelease:true,stopRulesUnchanged:true,pause:true,settings:true});await context.close();context=null;
  }
  assert.deepEqual(errors,[]);assert.deepEqual(bad,[]);fs.writeFileSync(out+'/result.json',JSON.stringify({pass:true,engine,shard,base,checks,errors,bad,zoomBoundary:'DPR and CSS viewport equivalent to 125/150 percent desktop zoom; separate headed test covers native browser zoom.'},null,2));
- }catch(e){if(page)await page.screenshot({path:out+'/failure.png',timeout:60000}).catch(()=>{});fs.writeFileSync(out+'/failure.json',JSON.stringify({spec,error:String(e),stack:e.stack,checks,errors,bad},null,2));throw e;}finally{await browser.close()}})().catch(e=>{console.error(e);process.exit(1)});
+ }catch(e){if(page)await page.screenshot({path:out+'/failure.png',timeout:60000}).catch(()=>{});fs.writeFileSync(out+'/failure.json',JSON.stringify({spec,error:String(e),stack:e.stack,checks,errors,bad,diagnostic:page?await page.evaluate(()=>({state:__r12.state(),events:__nativeInputs})).catch(()=>null):null},null,2));throw e;}finally{await browser.close()}})().catch(e=>{console.error(e);process.exit(1)});
