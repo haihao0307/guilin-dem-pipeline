@@ -24,7 +24,7 @@ function cloth(color,type='woven'){
     float grain=sin(vWeavePosition.z*4310.0+vWeavePosition.x*3200.0);
     vec3 grad=vec3(dFdx(warp+grain*.3),dFdy(warp+grain*.3),0.0);
     float aa=1.0-smoothstep(.002,.009,length(fwidth(vWeavePosition)));
-    normal=normalize(normal+grad*.035*aa);
+    normal=normalize(normal+grad*.008*aa);
   `);
  };
  m.customProgramCacheKey=()=> 'kaopu-woven-r03-v1';return m;
@@ -41,8 +41,18 @@ function line(group,points,mat,radius=.00085,name='seam'){if(points.length<2)ret
 function trace(fn,n=60){return Array.from({length:n+1},(_,i)=>fn(i/n))}
 function hem(group,fn,material,inset=.0015,name='folded-open-hem'){patch(group,name,(u,v)=>{const p=fn(u);return[p[0]*(1-v*.006),p[1]+v*inset,p[2]*(1-v*.008)]},80,2,material);line(group,trace(fn),material,.0011,name+'-edge');}
 function band(group,row,color,y,width=null){
- const curved=get(row,'meta.wb',null)==='FittedWB'||row.style==='FittedWB';const h=width??(.018+num(row,'waistband.width',.25)*.08),mat=cloth(color),[bx,bf,bb]=sample(y);
- const ring=(a,t)=>{let yy=y+(t-.5)*h;const w=(curved?sample(yy)[0]:bx)+.015;return[w*Math.sin(a),yy,(a<PI/2||a>PI*1.5?bf:Math.abs(bb))*Math.cos(a)*1.08]};
- patch(group,'waistband',(u,v)=>ring(u*TAU,v),80,6,mat);hem(group,u=>ring(u*TAU,1),mat,.002,'waistband-open-top');line(group,trace(u=>ring(u*TAU,0)),plain(new T.Color(color).multiplyScalar(.82)),.0007,'waistband-stitch');
+ const curved=get(row,'meta.wb',null)==='FittedWB'||row.style==='FittedWB';
+ const h=width??(.018+num(row,'waistband.width',.25)*.08),mat=cloth(color),edge=plain(new T.Color(color).multiplyScalar(.84));
+ const ring=(u,v)=>{const yy=y+(v-.5)*h,p=bodyRing(curved?yy:y,u*TAU,.028);p[1]=yy;return p;};
+ patch(group,'anatomically-fitted-waistband',ring,96,8,mat);hem(group,u=>ring(u,1),mat,.0015,'open-waistband-facing');line(group,trace(u=>ring(u,.12),90),edge,.00065,'waistband-stitch');
 }
 export {T,PI,TAU,clamp,mix,smooth,V,lerp3,num,BODY,sample,cloth,plain,dispose,patch,line,trace,hem,band};
+
+// Garment fitting changes clothing only, never mannequin vertices.
+export function fitProfile(y,a,region='torso'){
+ const p=BODY.fitProfiles[region],t=clamp((y-p.minY)/p.stepY,0,p.countY-1),i=Math.min(p.countY-2,Math.floor(t)),f=t-i;
+ const k=((a/TAU)%1+1)%1*p.countA,j=Math.floor(k),g=k-j,j1=(j+1)%p.countA;
+ const r=mix(mix(p.radii[i*p.countA+j],p.radii[i*p.countA+j1],g),mix(p.radii[(i+1)*p.countA+j],p.radii[(i+1)*p.countA+j1],g),f);
+ return {r,cx:mix(p.centres[i][0],p.centres[i+1][0],f),cz:mix(p.centres[i][1],p.centres[i+1][1],f)};
+}
+export function bodyRing(y,a,ease=.025){const f=fitProfile(y,a);return[(f.r+ease)*Math.sin(a),y,f.cz+(f.r+ease)*Math.cos(a)];}
