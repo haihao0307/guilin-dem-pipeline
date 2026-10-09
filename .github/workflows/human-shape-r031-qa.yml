@@ -1,4 +1,4 @@
-name: R040 preload controls and UI regression
+name: R040 published source and geometry verification
 on:
   push:
     branches: [qa/human-shape-r031-20261009]
@@ -12,6 +12,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          ref: gh-pages
           sparse-checkout: |
             kaopu-unified-human-workbench
             kaopu-anny-workbench
@@ -25,10 +26,16 @@ jobs:
       - run: |
           python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/r031-http.log 2>&1 &
           sleep 2
+      - name: Wait for this published source revision
+        run: |
+          node - <<'JS'
+          const fs=require('fs'),crypto=require('crypto');
+          (async()=>{const m=JSON.parse(fs.readFileSync('kaopu-unified-human-workbench/full/research/shape-r040/PUBLIC-MANIFEST.json')),path='full/shape-r040/app.mjs',sha=m.files[path];for(let n=0;n<120;n++){try{const r=await fetch('https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/'+path+'?revision='+sha);if(r.ok&&crypto.createHash('sha256').update(Buffer.from(await r.arrayBuffer())).digest('hex')===sha){console.log('Expected published revision ready');return;}}catch{}await new Promise(r=>setTimeout(r,5000));}throw Error('Published revision not ready within deployment wait');})().catch(e=>{console.error(e);process.exitCode=1});
+          JS
       - name: Continuous unilateral ribbon, 12 real off/on views
         env:
           NODE_PATH: ${{ github.workspace }}/.human-qa/node_modules
-        run: node kaopu-unified-human-workbench/tests/shape-r040-ui.cjs
+        run: node kaopu-unified-human-workbench/tests/shape-r040-public.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
