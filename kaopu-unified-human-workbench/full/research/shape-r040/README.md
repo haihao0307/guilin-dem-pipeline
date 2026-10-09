@@ -28,3 +28,5 @@ No licensed reference preview pixels, mesh or maps are included in this candidat
 
 ## Verified candidate and boundaries
 QA run 37901762905: 21 actual views, full state/surface fingerprints. UI run 37902117398: pre-load interactions and exact original-body restoration passed. The original native heavy-end chest underside still has block-like depressions; this module does not repair those areas. All rendering used Chromium/SwiftShader, not a hardware-device claim.
+
+Display snapshot local-to-world includes the actual renderer axis mapping [x,y,z]→[x,z,-y] and mesh.matrixWorld. Public UI verification compares all displayed vertices in world space, rather than assuming identity. Collision integration is still unverified.
