@@ -52,42 +52,44 @@ function tube(b,points,radii,color,segments=8){
  for(let i=0;i<rings.length-1;i++)for(let j=0;j<segments;j++){const k=(j+1)%segments;b.quad(rings[i][j],rings[i][k],rings[i+1][k],rings[i+1][j]);}
  for(const [i,flip]of [[0,true],[rings.length-1,false]]){const c=b.vertex(points[i],color);for(let j=0;j<segments;j++){const k=(j+1)%segments;if(flip)b.tri(c,rings[i][k],rings[i][j]);else b.tri(c,rings[i][j],rings[i][k]);}}
 }
-function insetPad(b,color){
- // Authored palm pattern: a lower palm pad, a shallow centre, and a raised
- // finger-roll edge. Kept inside the hand shell footprint.
- const outline=[[-.038,-.038],[-.051,-.018],[-.051,.031],[-.040,.053],[-.020,.058],[.016,.058],[.037,.044],[.038,.021],[.031,-.026],[.013,-.040]];
- const surface=(x,y,lift=0)=>{let a=shellProfile[0],d=shellProfile.at(-1);for(let i=0;i<shellProfile.length-1;i++)if(y>=shellProfile[i][0]&&y<=shellProfile[i+1][0]){a=shellProfile[i];d=shellProfile[i+1];break;}const t=(y-a[0])/(d[0]-a[0]),rx=a[1]+(d[1]-a[1])*t,rz=a[3]+(d[3]-a[3])*t;return -rz*Math.max(0,1-Math.abs(x/rx)**(2/.72))**(.72/2)-lift;};
- const outer=outline.map(([x,y])=>b.vertex([x,y,surface(x,y,.0014)],color));
- const inner=outline.map(([x,y])=>b.vertex([x*.80,y*.83,surface(x*.80,y*.83,.003)],color));
- for(let j=0;j<outer.length;j++){const k=(j+1)%outer.length;b.quad(outer[j],inner[j],inner[k],outer[k]);}
- const c=b.vertex([0,.012,surface(0,.012,.003)],color);for(let j=0;j<inner.length;j++)b.tri(c,inner[j],inner[(j+1)%inner.length]);
+// Query the already-authored shell triangles, rather than a different smooth
+// equation. Tiny surface details therefore cannot cut into its faceted surface.
+function palmSurfaceZ(b,x,y,partName='padded-hand-shell',dorsal=false){
+ let z=dorsal?-Infinity:Infinity,start=0,count=0;for(const part of b.parts){if(part.name===partName){count=part.triangles*3;break;}start+=part.triangles*3;}
+ for(let i=start;i<start+count;i+=3){const a=b.indices[i]*3,c=b.indices[i+1]*3,d=b.indices[i+2]*3,p=b.positions;
+  const ax=p[a]/b.mirror,ay=p[a+1],bx=p[c]/b.mirror,by=p[c+1],cx=p[d]/b.mirror,cy=p[d+1],den=(by-cy)*(ax-cx)+(cx-bx)*(ay-cy);if(Math.abs(den)<1e-12)continue;
+  const u=((by-cy)*(x-cx)+(cx-bx)*(y-cy))/den,v=((cy-ay)*(x-cx)+(ax-cx)*(y-cy))/den,w=1-u-v;
+  if(u>=-1e-7&&v>=-1e-7&&w>=-1e-7)z=(dorsal?Math.max:Math.min)(z,u*p[a+2]+v*p[c+2]+w*p[d+2]);
+ }return z;
 }
 function buildGeometry(side,color){
- const b=new Builder(side==='R'?-1:1),team=new THREE.Color(color),dark=new THREE.Color(0x202934),palm=team.clone().multiplyScalar(.36),edge=new THREE.Color(0xd4d8d3),accent=team.clone().lerp(new THREE.Color(0xffffff),.25);
- b.part('padded-hand-shell',()=>ringLoft(b,shellProfile,20,(i,j,t)=>i<=2?dark:Math.sin(t)<-.67?palm:team));
+ const b=new Builder(side==='R'?-1:1),team=new THREE.Color(color),dark=new THREE.Color(0x202934),palm=team.clone().multiplyScalar(.36),edge=team.clone().multiplyScalar(.52).lerp(new THREE.Color(0x787d7b),.12),accent=team.clone().multiplyScalar(.65);
+ b.part('padded-hand-shell',()=>ringLoft(b,shellProfile,20,(i,j,t)=>{if(i<=2)return dark;if(Math.sin(t)>=-.67)return team;const x=shellPoint(shellProfile[i],t)[0],y=shellProfile[i][0],panel=THREE.MathUtils.smoothstep(y,-.055,-.025)*(1-THREE.MathUtils.smoothstep(y,.040,.065))*(1-THREE.MathUtils.smoothstep(Math.abs(x),.023,.057));return palm.clone().lerp(team,panel*.12);}));
+ // Palm padding is the continuous hand shell itself, with a subdued integrated
+ // panel. No near-coplanar overlay or triangle fan can z-fight with that shell.
+ b.part('integrated-palm-padding',()=>{});
  b.part('open-cuff-lining',()=>{
-  const outer=[],inner=[],deep=[];for(let j=0;j<12;j++){const t=j/12*Math.PI*2;outer.push(b.vertex(shellPoint(shellProfile[0],t),dark));inner.push(b.vertex([pow(Math.cos(t))*.041,-.117,pow(Math.sin(t))*.038],edge));deep.push(b.vertex([pow(Math.cos(t))*.041,-.097,pow(Math.sin(t))*.038],dark));}
-  for(let j=0;j<12;j++){const k=(j+1)%12;b.quad(outer[j],outer[k],inner[k],inner[j]);b.quad(inner[j],inner[k],deep[k],deep[j]);}
+  const outer=[],inner=[],deep=[];for(let j=0;j<20;j++){const t=j/20*Math.PI*2;outer.push(b.vertex(shellPoint(shellProfile[0],t),dark));inner.push(b.vertex([pow(Math.cos(t))*.041,-.117,pow(Math.sin(t))*.038],edge));deep.push(b.vertex([pow(Math.cos(t))*.041,-.097,pow(Math.sin(t))*.038],dark));}
+  for(let j=0;j<20;j++){const k=(j+1)%20;b.quad(outer[j],outer[k],inner[k],inner[j]);b.quad(inner[j],inner[k],deep[k],deep[j]);}
  });
  b.part('attached-curved-thumb',()=>tube(b,[[.035,-.048,-.025],[.055,-.030,-.050],[.063,-.006,-.065],[.055,.016,-.074],[.038,.025,-.079],[.025,.022,-.080]],[.019,.020,.019,.018,.017,.010],team));
- b.part('palm-padding',()=>insetPad(b,palm));
- b.part('wrist-fastening-band',()=>ringLoft(b,[[-.106,.051,.0445,.050],[-.103,.053,.046,.052],[-.081,.055,.047,.067],[-.078,.0535,.046,.068]],12,team,{end:false}));
- b.part('cuff-edge-binding',()=>{
-  for(const [y,x,p]of [[-.108,.0513,.050],[-.076,.054,.071]])ringLoft(b,[[y-.0014,x,.0465,p],[y+.0014,x,.0465,p]],12,edge,{end:false});
- });
+ b.part('wrist-fastening-band',()=>ringLoft(b,[[-.108,.0535,.047,.053],[-.1068,.0535,.047,.053],[-.104,.055,.049,.055],[-.0805,.057,.050,.070],[-.078,.056,.049,.072],[-.0768,.056,.049,.072]],12,i=>(i<2||i>3)?edge:team,{end:false}));
+ // Binding is represented by narrow rows within the same band surface, so it
+ // cannot intersect the fastening band or break into bright sawtooth slivers.
+ b.part('integrated-cuff-binding',()=>{});
  b.part('strap-overlap-tab',()=>{
   // A small raised rounded fastening end, lying on the dorsal cuff. No logo.
-  const p=[[-.026,-.102],[-.032,-.097],[-.032,-.085],[-.026,-.080],[.023,-.080],[.029,-.085],[.029,-.097],[.023,-.102]],out=p.map(([x,y])=>b.vertex([x,y,.0462],dark)),inside=p.map(([x,y])=>b.vertex([x*.9,-.091+(y+.091)*.77,.050],team)),c=b.vertex([0,-.091,.050],team);
+  const surface=(x,y,lift)=>palmSurfaceZ(b,x,y,'wrist-fastening-band',true)+lift,p=[[-.026,-.102],[-.032,-.097],[-.032,-.085],[-.026,-.080],[.023,-.080],[.029,-.085],[.029,-.097],[.023,-.102]],out=p.map(([x,y])=>b.vertex([x,y,surface(x,y,.00045)],dark)),inside=p.map(([x,y])=>{const xx=x*.9,yy=-.091+(y+.091)*.77;return b.vertex([xx,yy,surface(xx,yy,.0018)],team);}),c=b.vertex([0,-.091,surface(0,-.091,.0018)],team);
   for(let j=0;j<8;j++){const k=(j+1)%8;b.quad(out[j],inside[j],inside[k],out[k]);b.tri(c,inside[k],inside[j]);}
  });
  b.part('palm-and-thumb-seams',()=>{
   // The long seam separates the back pad from the darker palm surface.
-  for(const sign of [-1,1]){const ps=shellProfile.slice(3,10).map(p=>{const t=sign===1?-Math.PI*.23:Math.PI*1.23;return shellPoint(p,t,.0008);});ribbon(b,ps,.0017,edge,p=>V(p[0],0,p[2]).normalize());}
-  ribbon(b,[[-.046,.031,-.061],[-.022,.034,-.070],[.005,.034,-.071],[.029,.031,-.069]],.0016,edge,[0,0,-1]);
-  ribbon(b,[[.040,-.042,-.047],[.061,-.026,-.067],[.066,-.005,-.080],[.053,.016,-.087],[.036,.023,-.090]],.0017,accent,[0,0,-1]);
+  for(const sign of [-1,1]){const ps=shellProfile.slice(3,10).map(p=>{const t=sign===1?-Math.PI*.23:Math.PI*1.23;return shellPoint(p,t,.0008);});ribbon(b,ps,.00065,edge,p=>V(p[0],0,p[2]).normalize());}
+  const seam=[[-.043,.031],[-.022,.034],[.005,.034],[.029,.031]].map(([x,y])=>[x,y,palmSurfaceZ(b,x,y)-.00045]);ribbon(b,seam,.00065,edge,[0,0,-1]);
+  ribbon(b,[[.040,-.042,-.047],[.061,-.026,-.067],[.066,-.005,-.080],[.053,.016,-.087],[.036,.023,-.090]],.00065,accent,[0,0,-1]);
  });
  b.part('palm-vent-stitches',()=>{
-  for(let row=0;row<2;row++)for(let i=0;i<4;i++){const x=-.026+i*.013,y=-.005+row*.014,z=row===0?-.091:-.088,a=b.vertex([x-.0014,y-.002,z],dark),c=b.vertex([x+.0014,y+.002,z],dark),d=b.vertex([x-.0014,y+.002,z],dark),e=b.vertex([x+.0014,y-.002,z],dark);b.quad(a,d,c,e);}
+  for(let row=0;row<2;row++)for(let i=0;i<4;i++){const x=-.024+i*.013,y=-.005+row*.014,c=palm.clone().multiplyScalar(.68),v=(dx,dy)=>b.vertex([x+dx,y+dy,palmSurfaceZ(b,x+dx,y+dy)-.00035],c),a=v(-.00055,-.0008),d=v(-.00055,.0008),cc=v(.00055,.0008),e=v(.00055,-.0008);b.quad(a,d,cc,e);}
  });
  const g=b.geometry();g.userData.side=side;g.userData.color=team.getHex();g.userData.contactCentre=[0,0,0];g.userData.frontReachM=.093;g.userData.referenceRadiusM=.10125;return g;
 }

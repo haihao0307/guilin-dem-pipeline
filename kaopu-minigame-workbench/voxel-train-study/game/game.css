@@ -484,3 +484,181 @@
   #driverGame[data-layout=landscape] #journeyHud .settings-button svg { width: 19px; height: 19px; }
   #driverGame[data-layout=landscape] #journeyHud .route-caption { display: none; }
 }
+
+
+/* R14 · Give the landscape its center back. Keep every existing HUD/control
+   node and event target; only desktop presentation moves. Compact landscapes
+   and portrait retain the R12 layout and its large driving hit targets. */
+.journey-time-row { display: contents; }
+@container game (min-width: 1000px) and (min-height: 651px) {
+  #driverGame[data-layout=landscape] #journeyHud {
+    --hud-side: clamp(24px, 1.5cqw, 44px);
+    --hud-sign-width: 270px;
+    top: max(22px, env(safe-area-inset-top));
+    left: max(var(--hud-side), env(safe-area-inset-left));
+    right: max(var(--hud-side), env(safe-area-inset-right));
+    transform: none;
+    width: auto;
+    display: block;
+  }
+  #driverGame[data-layout=landscape] #journeyHud #leftHud {
+    width: calc(50% - var(--hud-sign-width) / 2 - 24px);
+  }
+  #driverGame[data-layout=landscape] #journeyHud .masthead {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: var(--hud-sign-width);
+    min-height: 0;
+    justify-content: center;
+  }
+  #driverGame[data-layout=landscape] #journeyHud .station-totem {
+    width: 100%;
+    flex: none;
+  }
+  #driverGame[data-layout=landscape] #journeyHud .station-totem .totem-kicker {
+    display: block;
+    position: absolute;
+    top: -17px;
+    left: 0;
+    width: 100%;
+    font-size: 12px;
+    line-height: 14px;
+    color: var(--paper);
+  }
+  #driverGame[data-layout=landscape] #journeyHud #routeMap {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin: 0;
+    width: 100%;
+  }
+  #driverGame[data-layout=landscape] #journeyHud .route-map > svg {
+    order: -2;
+    margin: 0;
+    flex: none;
+  }
+  #driverGame[data-layout=landscape] #journeyHud .route-map > button {
+    order: -1;
+    padding: 0;
+    width: 100%;
+    min-height: 28px;
+    letter-spacing: .025em;
+  }
+  #driverGame[data-layout=landscape] #journeyHud .route-map text {
+    font-size: 13px;
+    font-weight: 600;
+    stroke: none;
+    fill: #fff9e8;
+    text-shadow: none;
+  }
+  #driverGame[data-layout=landscape] #journeyHud .route-map .station-en {
+    font-size: 8px;
+    font-weight: 400;
+    fill: #eee0bd;
+  }
+  #driverGame[data-layout=landscape] #journeyHud .map-platform {
+    width: 56px;
+    height: 34px;
+    transform: translate(-15px, 4px);
+    fill: url(#routeStationPlate);
+    stroke: none;
+  }
+  #driverGame[data-layout=landscape] #journeyHud .route-map [data-state=current] .map-platform {
+    fill: url(#routeStationPlateCurrent);
+  }
+  #driverGame[data-layout=landscape] #journeyHud .route-map :is([data-state=served], [data-state=recovered]) .map-platform {
+    fill: url(#routeStationPlateServed);
+  }
+  #driverGame[data-layout=landscape] #journeyHud .route-map [data-state=missed] .map-platform {
+    fill: url(#routeStationPlateMissed);
+  }
+  #driverGame[data-layout=landscape] #journeyHud .route-map [data-state=current] text {
+    fill: #ffe1a0;
+    font-weight: 700;
+  }
+  #driverGame[data-layout=landscape] #journeyHud .map-track {
+    stroke-width: 1;
+    opacity: .65;
+  }
+  #driverGame[data-layout=landscape] #journeyHud .journey-time-row {
+    display: flex;
+    align-items: baseline;
+    gap: 18px;
+    width: max-content;
+    max-width: calc(100cqw - var(--journey-instruments) - 3 * var(--hud-side) - 24px);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  #driverGame[data-layout=landscape] #journeyHud .station-schedule {
+    padding: 0;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  #driverGame[data-layout=landscape] #journeyHud .map-footer {
+    display: flex;
+    gap: 18px;
+    width: auto;
+    padding: 0;
+    align-items: baseline;
+    justify-content: flex-start;
+    font-size: 12px;
+  }
+  #driverGame[data-layout=landscape] #journeyHud .session-clock {
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  #driverGame[data-layout=landscape] #journeyHud .session-clock small {
+    flex-basis: auto;
+    font-size: 11px;
+  }
+  #driverGame[data-layout=landscape] #journeyHud #instrumentPanel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: auto;
+    bottom: auto;
+    width: var(--journey-instruments);
+  }
+  #driverGame[data-layout=landscape] #journeyHud .essential-tools {
+    justify-content: flex-end;
+  }
+}
+/* Moderate desktop widths stack the left rows below the central sign so the
+   nine labels keep their reading size without running into the instruments. */
+@container game (min-width: 1000px) and (max-width: 1599px) and (min-height: 651px) {
+  #driverGame[data-layout=landscape] #journeyHud #leftHud {
+    width: min(740px, calc(100% - var(--journey-instruments) - 30px));
+    padding-top: 84px;
+  }
+  #driverGame[data-layout=landscape] #journeyHud .journey-time-row,
+  #driverGame[data-layout=landscape] #journeyHud .map-footer { gap: 10px; }
+  #driverGame[data-layout=landscape] #journeyHud .station-schedule { font-size: 11px; }
+  #driverGame[data-layout=landscape] #journeyHud .session-clock { gap: 5px; }
+  #driverGame[data-layout=landscape] #journeyHud .session-clock small { font-size: 10px; }
+}
+@container game (min-width: 1600px) and (min-height: 651px) {
+  #driverGame[data-layout=landscape] #journeyHud {
+    --hud-sign-width: 286px;
+    top: max(26px, env(safe-area-inset-top));
+  }
+  #driverGame[data-layout=landscape] #journeyHud #leftHud {
+    width: min(930px, calc(50% - var(--hud-sign-width) / 2 - 24px));
+  }
+  #driverGame[data-layout=landscape] #journeyHud .route-map > button { font-size: 15px; }
+  #driverGame[data-layout=landscape] #journeyHud .station-schedule { font-size: 13px; }
+  #driverGame[data-layout=landscape] #journeyHud .session-clock small { font-size: 12px; }
+}
+@container game (min-width: 2300px) and (min-height: 651px) {
+  #driverGame[data-layout=landscape] #journeyHud {
+    --hud-sign-width: 314px;
+    top: max(30px, env(safe-area-inset-top));
+  }
+  #driverGame[data-layout=landscape] #journeyHud .route-map > button { font-size: 17px; }
+  #driverGame[data-layout=landscape] #journeyHud .journey-time-row,
+  #driverGame[data-layout=landscape] #journeyHud .map-footer { gap: 22px; }
+  #driverGame[data-layout=landscape] #journeyHud .station-schedule { font-size: 14px; }
+  #driverGame[data-layout=landscape] #journeyHud .map-footer { font-size: 14px; }
+  #driverGame[data-layout=landscape] #journeyHud .session-clock small { font-size: 13px; }
+}
