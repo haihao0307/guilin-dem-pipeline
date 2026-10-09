@@ -1,0 +1,45 @@
+name: Tailor material-preserving fold experiment
+on:
+  push:
+    branches: [experiment/tailor-fold-correspondence-20261009]
+    paths: ['.github/workflows/tailor-fold-experiment.yml','kaopu-tailor-workbench/r07/fold-experiment/BUILD_TRIGGER.json']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  trial:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          sparse-checkout: |
+            kaopu-tailor-workbench
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build isolated experimental and control modules
+        run: python kaopu-tailor-workbench/r07/fold-experiment/build.py
+      - name: Read only the original browser-result fixture
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: 11542564547
+          run-id: 37762329862
+          github-token: ${{ github.token }}
+          path: .tmp-fold-original
+          merge-multiple: true
+      - name: Same-source control and two explicit construction trials
+        run: |
+          python -m http.server 8765 >/tmp/tailor-fold-http.log 2>&1 &
+          test -f .tmp-fold-original/evidence-r072/default-analytic.json
+          node kaopu-tailor-workbench/r07/fold-experiment/run.mjs control .tmp-fold-original/evidence-r072/default-analytic.json
+          node kaopu-tailor-workbench/r07/fold-experiment/run.mjs fold12 .tmp-fold-original/evidence-r072/default-analytic.json
+          node kaopu-tailor-workbench/r07/fold-experiment/run.mjs fold4 .tmp-fold-original/evidence-r072/default-analytic.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-fold-construction-experiment
+          path: kaopu-tailor-workbench/r07/fold-experiment/evidence
+          retention-days: 14
