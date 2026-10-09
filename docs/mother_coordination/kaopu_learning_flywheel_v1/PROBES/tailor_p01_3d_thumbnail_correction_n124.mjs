@@ -159,7 +159,7 @@ const result = {
   novelty: 'NEW_USER_CORRECTION_REGRESSION_TAILOR_ONLY_NO_GLOBAL_RULE_CHANGE',
   observed,
   lifecycle: {
-    POSTED: false,
+    POSTED: true,
     ACKNOWLEDGED: false,
     IMPLEMENTED: true,
     'GATE-RUN': true,

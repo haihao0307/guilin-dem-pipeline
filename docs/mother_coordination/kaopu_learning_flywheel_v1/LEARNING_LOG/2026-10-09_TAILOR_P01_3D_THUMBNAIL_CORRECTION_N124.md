@@ -65,6 +65,6 @@ P01 在用户纠正前取得的 60 个纸样缩略图绿色公网回执，能否
 - 当前缺口：纠正后的 Task Anchor、60 个三维成衣/简易人台缩略图、逐成员来源回执、网页覆盖测试与用户验收。
 - 非要求：不强迫每张缩略图使用交互式 WebGL；可接受由真实三维几何离线渲染出的静态图片。不得用二维纸片、随机概念图或同一成衣换名重复。
 - 不证明：物理合身、无穿模、自碰撞、动态穿着、真实人物实时试衣或手机实机。上述状态继续独立。
-- 生命周期：协调增量 `POSTED` 需以 PR #179 的实际路由评论为准；当前 regression/probe `IMPLEMENTED=true`、`GATE-RUN=true`；`ACKNOWLEDGED=false`、`ADOPTED=false`、`USER-ACCEPTED=false`。
+- 生命周期：路由已发布到 PR #179 comment `6075172571`，因此 `POSTED=true`；regression/probe `IMPLEMENTED=true`、`GATE-RUN=true`；Mother 的 `ACKNOWLEDGED=false`、生产 `IMPLEMENTED=false`、生产 `GATE-RUN=false`、`ADOPTED=false`、`USER-ACCEPTED=false`。
 - KPI：可直接确认 1 次用户纠正进入回归；其余首次通过率、同类复发率、stale delivery、accepted delta 内部迭代及合法 candidate 时间均 `unknown`。
 - 第一梯队外部 AI：未调用。
