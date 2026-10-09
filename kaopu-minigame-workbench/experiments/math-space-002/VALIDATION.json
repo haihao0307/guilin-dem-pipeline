@@ -1,7 +1,7 @@
 {
-  "deliveryStatus": "FINITE_LIGHT_CORRECTION_CANDIDATE_VISUAL_PENDING",
+  "deliveryStatus": "FINITE_LIGHT_FIX_VISUALLY_CONFIRMED_SPATIAL_VIEW_PENDING",
   "entryFile": "index.html",
-  "entrySha256": "396cf4e646039a51e874d5dfedecee6365e7b637fb46ef0e6b98af38d1ba63d1",
+  "entrySha256": "3c53a8fadb43f18eed6cf2116ffb07967452f61afda621b29a6723f9ff199cc1",
   "mathTests": "PASS: 13 numerical checks",
   "applicationTests": "PASS: 17 logic checks, rerun after R02 changes",
   "firstBrowserRun": {
@@ -22,22 +22,24 @@
   "publication": "AUTHORIZED_TEST_PREVIEW_NOT_FINISHED",
   "experiment001PreservedSha256": "37a453cf234d304c5956fdb89bd5294bc5b92878ad64e63bf0ed1ac4db12ccd5",
   "r03Diagnostics": {
-    "status": "PENDING",
-    "modes": [
-      "shadow-off",
-      "ao-off",
-      "aa-off",
-      "epsilon-quarter"
-    ],
-    "defaultSceneChanged": false
+    "runId": 37861286388,
+    "commit": "dd406a8f3ff4bb31f484e90c60a57395e4f60478",
+    "status": "PASS",
+    "finding": "Only shadow-off removes broad bands; AO-off, AA-off and quarter epsilon do not"
   },
   "liveCloudBrowser": "Page loaded; WebGL unavailable; no live 3D play verification in that browser",
-  "r03IsolatedQa": {
-    "run": 37861286388,
-    "commit": "dd406a8f3ff4bb31f484e90c60a57395e4f60478",
-    "browser": "PASS",
-    "visualDiagnosis": "Only shadow-off removed the broad banded wall and floor artifacts; AO, AA and epsilon variants did not",
-    "resolutionStatus": "Diagnosis verified, finite-light correction not yet rendered"
+  "finiteLightCandidate": {
+    "runId": 37861990974,
+    "commit": "e9850c3210c36ad68ed876290377e75a36b9d21f",
+    "firstFrames": "PASS: broad bands removed, object shadows retained; legacy-shadow restores old artifact",
+    "fullBrowserResult": "PASS: math verify job completed successfully in run37861990974"
   },
-  "currentChange": "Fixed physical light radius in angular shadow factor; legacy-shadow query retains previous behavior for comparison"
+  "spatialViewCandidate": {
+    "status": "VISUAL_QA_PENDING",
+    "playerStartRadius": 6.2,
+    "playerStartDirection": "pi + 0.12",
+    "beaconCenterRadius": 3.6,
+    "geometryKernelUnchanged": true,
+    "newTests": "13 math and 17 application checks passed locally"
+  }
 }
