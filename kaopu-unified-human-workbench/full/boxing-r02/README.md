@@ -15,8 +15,12 @@ The full ropes are on by default. Transparent/hidden modes are explicit observat
 
 ## Stage 2 plan, not implemented here
 
-Use a coverage table with semanticMotionId × responseId × body-preset, not 18 phase offsets relabeled as 18 moves. Rotate the same action through every body type at the same time base, while keeping different action families visible simultaneously across arenas. Extend footwork, jab/cross/hook combinations, guard/block, slip/duck, retreat/counter, distance reset and role exchange. Validate root/foot continuity and joint-speed/acceleration before modestly increasing the default pace; retain reference speed and slow motion. Each of the five teachers needs an explicit actual input/output contribution, license and validation record. Current verified neural-generated/cleaned/physical teacher clip count is zero. Coordinate with ../.. /motion-architecture/ contracts before accepting new data.
+Use a coverage table with semanticMotionId × responseId × body-preset, not 18 phase offsets relabeled as 18 moves. Rotate the same action through every body type at the same time base, while keeping different action families visible simultaneously across arenas. Extend footwork, jab/cross/hook combinations, guard/block, slip/duck, retreat/counter, distance reset and role exchange. Validate root/foot continuity and joint-speed/acceleration before modestly increasing the default pace; retain reference speed and slow motion. Each of the five teachers needs an explicit actual input/output contribution, license and validation record. Current verified neural-generated/cleaned/physical teacher clip count is zero. Coordinate with ../../motion-architecture/ contracts before accepting new data.
 
 ## Clothing
 
 No new character clothing is created in this stage. CLOTHING-INTERFACE.json records the pending handoff from the separate clothing workbench. Existing R01 surface coverage remains as the accepted placeholder until those presets are ready and verified.
+
+## Visual regression fixes
+
+The deck has one top surface: foam side/bottom faces only, with canvas at local y=0. This removes far-camera z-fighting rather than hiding it with a raised character floor. The original canvas texture is subtle deterministic grain, with no coarse tiled grid. Resizing a paused viewport recomputes the camera and renders immediately; the browser regression reads actual framebuffer colors after the mobile viewport change. Mobile viewport QA is not a physical phone test.

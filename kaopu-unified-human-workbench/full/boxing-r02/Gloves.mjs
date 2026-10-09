@@ -73,15 +73,13 @@ function buildGeometry(side,color){
   for(let j=0;j<20;j++){const k=(j+1)%20;b.quad(outer[j],outer[k],inner[k],inner[j]);b.quad(inner[j],inner[k],deep[k],deep[j]);}
  });
  b.part('attached-curved-thumb',()=>tube(b,[[.035,-.048,-.025],[.055,-.030,-.050],[.063,-.006,-.065],[.055,.016,-.074],[.038,.025,-.079],[.025,.022,-.080]],[.019,.020,.019,.018,.017,.010],team));
- b.part('wrist-fastening-band',()=>ringLoft(b,[[-.108,.0535,.047,.053],[-.1068,.0535,.047,.053],[-.104,.055,.049,.055],[-.0805,.057,.050,.070],[-.078,.056,.049,.072],[-.0768,.056,.049,.072]],12,i=>(i<2||i>3)?edge:team,{end:false}));
+ b.part('wrist-fastening-band',()=>ringLoft(b,[[-.108,.0535,.047,.053],[-.1068,.0535,.047,.053],[-.104,.055,.049,.055],[-.0805,.057,.050,.070],[-.078,.056,.049,.072],[-.0768,.056,.049,.072]],12,(i,j,t)=>(i<2||i>3)?edge:Math.sin(t)>.85?team.clone().multiplyScalar(.73):team,{end:false}));
  // Binding is represented by narrow rows within the same band surface, so it
  // cannot intersect the fastening band or break into bright sawtooth slivers.
  b.part('integrated-cuff-binding',()=>{});
- b.part('strap-overlap-tab',()=>{
-  // A small raised rounded fastening end, lying on the dorsal cuff. No logo.
-  const surface=(x,y,lift)=>palmSurfaceZ(b,x,y,'wrist-fastening-band',true)+lift,p=[[-.026,-.102],[-.032,-.097],[-.032,-.085],[-.026,-.080],[.023,-.080],[.029,-.085],[.029,-.097],[.023,-.102]],out=p.map(([x,y])=>b.vertex([x,y,surface(x,y,.00045)],dark)),inside=p.map(([x,y])=>{const xx=x*.9,yy=-.091+(y+.091)*.77;return b.vertex([xx,yy,surface(xx,yy,.0018)],team);}),c=b.vertex([0,-.091,surface(0,-.091,.0018)],team);
-  for(let j=0;j<8;j++){const k=(j+1)%8;b.quad(out[j],inside[j],inside[k],out[k]);b.tri(c,inside[k],inside[j]);}
- });
+ // The closure end is a low-contrast section of the wrap itself. Keeping it
+ // on the same indexed surface prevents floating decals during strong flexion.
+ b.part('integrated-fastening-end',()=>{});
  b.part('palm-and-thumb-seams',()=>{
   // The long seam separates the back pad from the darker palm surface.
   for(const sign of [-1,1]){const ps=shellProfile.slice(3,10).map(p=>{const t=sign===1?-Math.PI*.23:Math.PI*1.23;return shellPoint(p,t,.0008);});ribbon(b,ps,.00065,edge,p=>V(p[0],0,p[2]).normalize());}
@@ -136,4 +134,4 @@ export class StructuredGlove extends THREE.Mesh{
  dispose(){this.geometry.dispose();}
 }
 export function createGlovePair(options={}){return ['L','R'].map(side=>new StructuredGlove({...options,side}));}
-export function gloveDiagnostics(){return {schema:GLOVE_SPEC.schema,materialCount:1,sharedBaseGeometryCount:geometryCache.size,posedGeometryPolicy:'One independent geometry per glove; position and normal buffers update only the cuff; authoring bases remain shared and unchanged',mutableBuffersPerGlove:2,cuffVerticesUpdatedPerGlove:209,variants:[...geometryCache.values()].map(g=>({side:g.userData.side,color:g.userData.color,triangles:g.userData.triangles,vertices:g.userData.vertices,bounds:{min:g.boundingBox.min.toArray(),max:g.boundingBox.max.toArray()},parts:g.userData.parts}))};}
+export function gloveDiagnostics(){return {schema:GLOVE_SPEC.schema,materialCount:1,sharedBaseGeometryCount:geometryCache.size,posedGeometryPolicy:'One independent geometry per glove; position and normal buffers update only the cuff; authoring bases remain shared and unchanged',mutableBuffersPerGlove:2,cuffVerticesUpdatedPerGlove:192,variants:[...geometryCache.values()].map(g=>({side:g.userData.side,color:g.userData.color,triangles:g.userData.triangles,vertices:g.userData.vertices,bounds:{min:g.boundingBox.min.toArray(),max:g.boundingBox.max.toArray()},parts:g.userData.parts}))};}
