@@ -1,4 +1,4 @@
-name: Train R11 spatial sound and crew QA
+name: Train R11 public core verification
 on:
   push:
     branches: ['qa/voxel-train-r01-20261006']
@@ -6,7 +6,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: kcr-r11-spatial-${{ github.ref }}
+  group: kcr-r11-public-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   deterministic:
@@ -29,6 +29,14 @@ jobs:
           node kaopu-minigame-workbench/voxel-train-study/game/music.test.mjs
           node --test kaopu-minigame-workbench/voxel-train-study/game/audio.test.mjs kaopu-minigame-workbench/voxel-train-study/game/audio-spatial.test.mjs
           node --check kaopu-minigame-workbench/voxel-train-study/game/app.mjs
+      - name: Verify public assets and preserved entries
+        run: node kaopu-minigame-workbench/voxel-train-study/game/tests/public-hashes.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: train-r11-public-hashes
+          path: driver-public-hashes.json
+          retention-days: 7
   browser:
     needs: deterministic
     runs-on: ubuntu-24.04
@@ -37,12 +45,19 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { browser: chromium, suite: lifecycle }
+          - { browser: chromium, suite: spatial }
+          - { browser: webkit, suite: spatial }
+          - { browser: chromium, suite: crew }
+          - { browser: webkit, suite: crew }
+          - { browser: chromium, suite: gameplay }
+          - { browser: webkit, suite: gameplay }
+          - { browser: chromium, suite: music }
+          - { browser: webkit, suite: music }
     env:
+      TRAIN_GAME_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/
       TRAIN_BROWSER: ${{ matrix.browser }}
       KCR_SUITE: ${{ matrix.suite }}
       R11_SUITE: ${{ matrix.suite }}
-      TRAIN_HEADLESS: "0"
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -51,11 +66,10 @@ jobs:
       - run: npm install --prefix "$RUNNER_TEMP/kcr" --no-save --ignore-scripts playwright@1.57.0
       - run: "$RUNNER_TEMP/kcr/node_modules/.bin/playwright install --with-deps ${{ matrix.browser }}"
       - run: echo "NODE_PATH=$RUNNER_TEMP/kcr/node_modules" >> "$GITHUB_ENV"
-      - name: Start candidate and verify real browser
+      - name: Verify deployed R11 in real browser
         run: |
-          python3 -m http.server 8765 > "$RUNNER_TEMP/kcr-server.log" 2>&1 &
           case "${{ matrix.suite }}" in
-            lifecycle|spatial|crew) xvfb-run -a node kaopu-minigame-workbench/voxel-train-study/game/tests/r11-browser.cjs ;;
+            spatial|crew) node kaopu-minigame-workbench/voxel-train-study/game/tests/r11-browser.cjs ;;
             music) node kaopu-minigame-workbench/voxel-train-study/game/tests/music-browser.cjs ;;
             *) node kaopu-minigame-workbench/voxel-train-study/game/tests/kcr-browser.cjs ;;
           esac
