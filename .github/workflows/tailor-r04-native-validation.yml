@@ -1,0 +1,61 @@
+name: Tailor R04 original-system source validation
+on:
+  push:
+    branches: [feature/tailor-cabinet-r03-garment-surfaces-20261009]
+    paths:
+      - '.github/workflows/tailor-r04-native-validation.yml'
+      - 'kaopu-tailor-workbench/presets/r04/BUILD_TRIGGER.json'
+permissions:
+  contents: write
+concurrency:
+  group: tailor-r04-native-source-validation
+  cancel-in-progress: false
+jobs:
+  native-chain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-tailor-workbench/presets/r04
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Native browser and compiler dependencies
+        run: |
+          pip install playwright==1.56.0
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y fonts-noto-cjk
+      - name: Build exact common-person collision field and original source adapter
+        run: |
+          git fetch origin 0ff632be3e4ab112fad93fd4c43c7bc6a90cf5f3 --depth=1
+          python kaopu-tailor-workbench/presets/r04/build_native.py
+          for f in kaopu-tailor-workbench/presets/r04/*.mjs; do node --check "$f"; done
+          node --check kaopu-tailor-workbench/presets/r04/native/kaopu-tailor-workbench/catalogue/native-adapter.mjs
+      - name: Real original-person, all source-material and native-solver checks
+        run: |
+          python -m http.server 8765 >/tmp/r04-http.log 2>&1 &
+          python kaopu-tailor-workbench/presets/r04/qa_native.py
+      - name: Retain exact source and truthful evidence, including failed native outcomes
+        if: always()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$GITHUB_REF_NAME" --depth=1
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          git add kaopu-tailor-workbench/presets/r04
+          if ! git diff --cached --quiet; then
+            git commit -m 'build(tailor-r04): retain original common-person inputs, native material/solver evidence; no proxy clothing'
+            git push origin HEAD:"$GITHUB_REF_NAME"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r04-native-source-evidence
+          path: kaopu-tailor-workbench/presets/r04
+          retention-days: 14
