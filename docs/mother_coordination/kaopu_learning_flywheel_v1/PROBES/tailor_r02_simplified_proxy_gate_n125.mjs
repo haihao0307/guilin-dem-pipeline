@@ -170,7 +170,7 @@ const result = {
   novelty: 'NO_NOVELTY_EXISTING_N124_REGRESSION_UPDATED_WITH_REAL_COUNTEREXAMPLE',
   observed,
   lifecycle: {
-    POSTED: false,
+    POSTED: true,
     ACKNOWLEDGED: false,
     IMPLEMENTED: true,
     'GATE-RUN': true,
