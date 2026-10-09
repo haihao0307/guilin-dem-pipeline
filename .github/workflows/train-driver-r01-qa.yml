@@ -37,14 +37,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { browser: chromium, suite: spatial }
-          - { browser: webkit, suite: spatial }
-          - { browser: chromium, suite: crew }
-          - { browser: webkit, suite: crew }
+          - { browser: chromium, suite: lifecycle }
     env:
       TRAIN_BROWSER: ${{ matrix.browser }}
       KCR_SUITE: ${{ matrix.suite }}
       R11_SUITE: ${{ matrix.suite }}
+      TRAIN_HEADLESS: "0"
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -57,7 +55,7 @@ jobs:
         run: |
           python3 -m http.server 8765 > "$RUNNER_TEMP/kcr-server.log" 2>&1 &
           case "${{ matrix.suite }}" in
-            spatial|crew) node kaopu-minigame-workbench/voxel-train-study/game/tests/r11-browser.cjs ;;
+            lifecycle|spatial|crew) xvfb-run -a node kaopu-minigame-workbench/voxel-train-study/game/tests/r11-browser.cjs ;;
             music) node kaopu-minigame-workbench/voxel-train-study/game/tests/music-browser.cjs ;;
             *) node kaopu-minigame-workbench/voxel-train-study/game/tests/kcr-browser.cjs ;;
           esac

@@ -18,7 +18,7 @@ window.__r11={
 };`;
 const approxArray=(a,b,tolerance=1e-6)=>{assert.equal(a.length,b.length);a.forEach((x,i)=>assert(Math.abs(x-b[i])<tolerance,`${a} != ${b}`));};
 (async()=>{
- const browser=await({chromium,webkit})[engine].launch(),checks=[],errors=[],bad=[];let page,context;
+ const browser=await({chromium,webkit})[engine].launch({headless:process.env.TRAIN_HEADLESS!=='0'}),checks=[],errors=[],bad=[];let page,context;
  async function open(size={width:844,height:390}){
   context=await browser.newContext({viewport:size,hasTouch:true});
   await context.addInitScript(()=>{window.__audioQa={created:0,started:0,blurs:0,trustedBlurs:0};const proto=globalThis.BaseAudioContext?.prototype,create=proto?.createBufferSource,start=globalThis.AudioBufferSourceNode?.prototype.start;if(create)proto.createBufferSource=function(...args){__audioQa.created++;return create.apply(this,args);};if(start)AudioBufferSourceNode.prototype.start=function(...args){__audioQa.started++;return start.apply(this,args);};window.addEventListener('blur',event=>{__audioQa.blurs++;if(event.isTrusted)__audioQa.trustedBlurs++;});});
@@ -33,7 +33,21 @@ const approxArray=(a,b,tolerance=1e-6)=>{assert.equal(a.length,b.length);a.forEa
   await page.evaluate(()=>__r11.step(40));
  }
  try{
-  if(suite==='spatial'){
+  if(suite==='lifecycle'){
+   await open({width:1280,height:900});await clickControl(page,'crowdToggle',{touch:true});await page.waitForFunction(()=>__trainDriver.getState().audio.state==='running');
+   let s=await page.evaluate(()=>__r11.show());assert.equal(s.audio.loopCount,2);const before=await page.evaluate(()=>({...__audioQa}));
+   const r=await page.locator('#brake').boundingBox();await page.mouse.move(r.x+r.width/2,r.y+r.height/2);await page.mouse.down();assert.equal(await page.evaluate(()=>__trainDriver.getState().brake),true);
+   const other=await context.newPage();await other.goto('about:blank');await other.bringToFront();
+   await page.waitForFunction(()=>document.hidden&&__trainDriver.getState().paused&&__trainDriver.getState().audio.state==='suspended',undefined,{timeout:15000,polling:100});
+   const hidden=await page.evaluate(()=>({hidden:document.hidden,visibility:document.visibilityState,focus:document.hasFocus(),state:__r11.show(),telemetry:{...__audioQa}}));
+   assert.equal(hidden.state.brake,false);assert(hidden.telemetry.trustedBlurs>0,'Real native window blur was observed');
+   await page.waitForTimeout(250);const again=await page.evaluate(()=>__r11.show());assert.equal(again.elapsed,hidden.state.elapsed);assert.equal(again.audio.audioClock,hidden.state.audio.audioClock);
+   await other.close();await page.bringToFront();await page.mouse.up();assert.equal(await page.evaluate(()=>document.hidden),false);assert.equal(await page.evaluate(()=>__trainDriver.getState().paused),true);
+   await page.screenshot({path:out+'/returned-still-paused.png',timeout:60000});await clickTarget(page,'#resume',{touch:true});await page.waitForFunction(()=>__trainDriver.getState().audio.state==='running');
+   await page.waitForTimeout(150);s=await page.evaluate(()=>__r11.show());assert.equal(s.paused,false);assert.equal(s.audio.volume,.65);assert.equal(s.audio.muted,false);assert.equal(s.brake,false);assert(s.audio.audioClock>hidden.state.audio.audioClock);
+   const after=await page.evaluate(()=>({...__audioQa}));assert.equal(after.created,before.created);assert.equal(after.started,before.started);
+   checks.push({nativeHeadedLifecycle:true,hidden,restored:{audioClock:s.audio.audioClock,volume:s.audio.volume,muted:s.audio.muted,paused:s.paused,brake:s.brake,telemetry:after},sourcesPreserved:true});await context.close();context=null;
+  }else if(suite==='spatial'){
    context=await browser.newContext({viewport:{width:1100,height:850}});page=await context.newPage();
    page.on('pageerror',e=>errors.push(e.message));await page.goto(base+'tests/spatial-audio-probe.html');
    await clickTarget(page,'#run');await page.waitForFunction(()=>!!window.__spatialAudioProbe,undefined,{timeout:120000,polling:100});
