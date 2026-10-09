@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../../vendor/three.module.js';
 import {createStationPlatform,PLATFORM_SPEC,STONE_TEXTURE_SPEC} from '../station-platform.mjs';
-import {Blocks} from '../heritage.mjs';
 import {KCR_STATIONS} from '../timetable.mjs';
 import {COACHES} from '../session.mjs';
 import {CAMERA_PRESETS} from '../camera-presets.mjs';
@@ -15,7 +14,7 @@ const stationMeshes=station=>{const out=[];station.group.traverse(o=>{if(o.isMes
 test('Every station has finite bounded geometry and distinct evidence-informed furniture variants',()=>{
   const variants=new Set();for(let index=0;index<9;index++){
     const s=create(index),meshes=stationMeshes(s),p=s.proof;variants.add(p.variant);
-    assert.equal(p.drawCalls,meshes.length);assert.equal(p.drawCalls,index===5?12:10);assert.ok(p.triangles<12000,`${p.variant}: ${p.triangles} triangles`);
+    assert.equal(p.drawCalls,meshes.length);assert.equal(p.drawCalls,index===5?13:11);assert.ok(p.triangles<12000,`${p.variant}: ${p.triangles} triangles`);
     assert.equal(p.deckTop,.82);assert.equal(p.materialSurface,'masonry');assert.equal(p.originalProcedural,true);assert.equal(p.historicalReconstruction,false);
     for(const mesh of meshes)for(const attribute of Object.values(mesh.geometry.attributes))for(const v of attribute.array)assert.ok(Number.isFinite(v),mesh.name);
     const deck=s.group.getObjectByName('Station deck surface');near(deck.geometry.boundingBox.max.y,.82);
@@ -87,6 +86,21 @@ test('The sign has independent unmirrored outward-facing surfaces and an sRGB hi
   }s.dispose();
 });
 
+test('The existing sign row keeps left-to-right Chinese and makes English ink modestly taller',()=>{
+  const saved=document,labels=[];
+  globalThis.document={createElement:()=>({getContext:()=>({
+    font:'',fillRect(){},fillText(text,x,y,maxWidth){labels.push({text,x,y,maxWidth,font:this.font});},
+    measureText(text){const size=Number(this.font.match(/[\d.]+/)?.[0]||0);return{actualBoundingBoxAscent:size*(/[A-Z]/.test(text)?.72:.90),actualBoundingBoxDescent:0};}
+  })})};
+  try{
+    const s=create(5),chinese=labels.filter(p=>p.text==='大埔墟'),english=labels.find(p=>p.text==='TAI PO MARKET');
+    assert.equal(chinese.length,2);assert.ok(chinese[0].x<english.x&&english.x<chinese[1].x);
+    const fontSize=label=>Number(label.font.match(/[\d.]+/)[0]);
+    near(fontSize(english)*.72/(fontSize(chinese[0])*.90),1.15);
+    assert.equal(english.maxWidth,1050);assert.equal(s.proof.signEnglishHeightRatio,1.15);s.dispose();
+  }finally{globalThis.document=saved;}
+});
+
 test('Tai Po Market clock face remains fully exposed above the noticeboard, clear of the station sign',()=>{
   const s=create(5),clock=s.proof.clock,[x,y,z]=clock.facePosition;
   near(x,-17.05);near(y,2.82);near(z,5.461);
@@ -121,15 +135,19 @@ test('Clock hands show the precise game timetable, including continuous fraction
   assert.deepEqual([minute.rotation.z,hour.rotation.z],frozen);
   assert.equal(s.updateClock(undefined),false);assert.equal(s.updateClock(NaN),false);assert.deepEqual([minute.rotation.z,hour.rotation.z],frozen);
   s.dispose();assert.equal(s.updateClock(380),false);
-  const noClock=create(0);assert.equal(noClock.updateClock(380),false);assert.equal(noClock.proof.drawCalls,10);noClock.dispose();
+  const noClock=create(0);assert.equal(noClock.updateClock(380),false);assert.equal(noClock.proof.drawCalls,11);noClock.dispose();
 });
 
-test('The original station attendant retains every position, normal, colour and index',()=>{
-  const b=new Blocks(),sx=-4.8;
-  b.box(sx,1.34,4.8,.29,.43,.21,0x40564d);b.box(sx,1.68,4.8,.23,.24,.22,0xc5a480);b.box(sx,1.83,4.8,.29,.08,.28,0x262d27);for(const z of [4.71,4.89])b.box(sx,.99,z,.1,.38,.1,0x383b32);b.box(sx+.18,1.33,4.8,.09,.37,.09,0x657668);b.box(sx+.22,1.43,4.8,.04,.51,.04,0x90764a);b.box(sx+.39,1.62,4.8,.3,.19,.025,0xc5b66e);
-  const expected=b.geometry(),s=create(0),actual=s.group.getObjectByName('Preserved original stationary station attendant').geometry;
-  for(const name of ['position','normal','color'])assert.deepEqual(actual.attributes[name].array,expected.attributes[name].array);
-  assert.deepEqual(actual.index.array,expected.index.array);expected.dispose();s.dispose();
+test('The compact platform attendant has a peaked cap, one moving hand and no flag',()=>{
+  const s=create(0),{crew,proof,crewAnchor}=s;
+  assert.deepEqual(crew.root.position.toArray(),[-1.6,.82,2.65]);
+  assert.deepEqual(crewAnchor,proof.attendant.whistle);assert.equal(proof.attendant.flag,false);
+  assert.equal(proof.attendant.cap,'peaked');assert.equal(crew.root.children.length,2);
+  assert.equal(proof.attendantUnchanged,false);assert.equal(proof.attendant.procedural,true);
+  assert.equal(s.updateCrew({phase:'boarding',door:1},true).raise,0);
+  assert.equal(s.updateCrew({phase:'doors-closing',door:.5},true).raise,1);
+  assert.equal(s.updateCrew({phase:'doors-closing',door:.5},false).raise,0);
+  s.dispose();assert.equal(s.updateCrew({phase:'doors-closing',door:.5},true),false);
 });
 
 test('Every shared material, texture and geometry is disposed exactly once',()=>{

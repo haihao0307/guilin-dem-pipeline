@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>R11 空間聲音輸出驗證</title>
+<style>body{font:16px/1.55 system-ui,sans-serif;background:#142328;color:#edf4f0;max-width:980px;margin:32px auto;padding:0 20px}h1{font-size:26px}button{font:inherit;padding:12px 20px;background:#d9ba75;border:0;border-radius:8px;cursor:pointer}button:disabled{opacity:.5}a{color:#f3d899}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#20363d;padding:18px;border-radius:8px}section{display:grid;grid-template-columns:110px 1fr;gap:16px;align-items:center;margin:20px 0}audio{width:100%}.pass{color:#a2dbbc}.fail{color:#ffb6a1}small{display:block;color:#b5c8c7}</style></head>
+<body><h1>R11 空間聲音：實際輸出驗證</h1>
+<p>使用遊戲既有的同一段蒸汽樣本，或原創程序合成的車廂撞擊聲，通過相同 HRTF、65% 音量與壓縮器，離線渲染真正的雙聲道 PCM。近遠、左右與轉身皆保持相同輸入。撞擊聲不是錄音。建議戴耳機聽左右與背後差異。</p>
+<label>聲源 <select id="source"><option value="chuff">既有蒸汽樣本</option><option value="coach-impact">程序合成車廂撞擊</option></select></label>
+<button id="run">渲染並測量</button><p id="status" role="status">尚未執行</p><div id="captures"></div><pre id="report">等待渲染結果。</pre>
+<script type="module">
+import {runSpatialAudioProbe,stereoFloatWav} from './spatial-audio-probe.mjs';
+const urls=[],button=document.querySelector('#run'),status=document.querySelector('#status'),captures=document.querySelector('#captures'),report=document.querySelector('#report');
+button.addEventListener('click',async()=>{
+ button.disabled=true;status.textContent='正在解碼同一樣本並渲染 8 組雙聲道輸出…';status.className='';
+ for(const url of urls)URL.revokeObjectURL(url);urls.length=0;captures.replaceChildren();
+ try{
+  const source=document.querySelector('#source').value,result=await runSpatialAudioProbe({includePcm:true,source}),{pcm,...summary}=result;
+  window.__spatialAudioProbe={...summary,pcm};
+  const names={near:'近處 3 m',far:'遠處 45 m',left:'左前方',right:'右前方',turn0:'轉身 0°',turn90:'轉身 90°',turn180:'轉身 180°',turn270:'轉身 270°'};
+  for(const [name,capture] of Object.entries(pcm)){
+   const buffer={sampleRate:capture.sampleRate,length:capture.channels[0].length,getChannelData:index=>capture.channels[index]},url=URL.createObjectURL(new Blob([stereoFloatWav(buffer)],{type:'audio/wav'}));urls.push(url);
+   const section=document.createElement('section'),label=document.createElement('a'),body=document.createElement('div'),audio=document.createElement('audio'),detail=document.createElement('small');
+   label.href=url;label.download='r11-spatial-'+source+'-'+name+'.wav';label.textContent=names[name]+' WAV';audio.controls=true;audio.src=url;
+   const m=result.measurements[name];detail.textContent='L RMS '+m.leftRms.toFixed(6)+' · R RMS '+m.rightRms.toFixed(6)+' · L/R '+m.lrDb.toFixed(2)+' dB';body.append(audio,detail);section.append(label,body);captures.append(section);
+  }
+  status.textContent=(result.passed?'通過':'存在未通過項目')+' · 實测近遠音量差 '+result.distanceDropDb.toFixed(2)+' dB';status.className=result.passed?'pass':'fail';report.textContent=JSON.stringify(summary,null,2);
+ }catch(error){status.textContent='無法完成輸出驗證：'+error.message;status.className='fail';report.textContent=error.stack||String(error);}
+ button.disabled=false;
+});
+</script></body></html>

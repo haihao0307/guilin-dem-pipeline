@@ -1,4 +1,4 @@
-/* R10 real-browser music regression. No audio, clock, Session or network mocks.
+/* R11 retained-cue real-browser regression; default off, explicit enable required. No audio, clock, Session or network mocks.
  * TRAIN_BROWSER=chromium|webkit TRAIN_GAME_URL=<served game URL> node this-file
  * Optional: TRAIN_BROWSER_EXECUTABLE, TRAIN_MUSIC_OUT, TRAIN_HEADLESS=0.
  * --validate-only parses the injected fixture and checks local inputs; it does
@@ -185,7 +185,9 @@ async function run() {
     let s=await state();
     assert.equal(s.music.state,'locked');assert.equal(s.music.volume,.32);assert.equal(s.audio.volume,.65);
     assert.equal(s.audio.crowdEnabled,false);assert.equal(s.music.activeSources,0);
-    await clickTarget(page,'#startGame',{touch:true});await freezeAfterGesture();await loaded();
+    assert.equal(s.music.enabled,false,'Rejected cue is disabled by default');
+    await clickTarget(page,'#startGame',{touch:true});await freezeAfterGesture();
+    await openSettings(page,{touch:true});await clickTarget(page,'#musicToggle',{touch:true});await closeSettings(page,{touch:true});await loaded();
     s=await record(phase);assert.equal(s.music.stage,'waiting-departure');assert.equal(s.music.sourceStarts,0);
     assert.equal((await page.evaluate(()=>__musicQA.telemetry())).trustedStarts,1);
     assert(Math.abs(s.music.duration-manifest.renderedDurationSeconds)<.1,'Actual browser-decode duration');
@@ -287,7 +289,8 @@ async function run() {
 
     phase='actual-continue-of-original-later-save';await open(laterSave);
     assert(await page.locator('#continueSaved').isVisible());
-    await clickTarget(page,'#continueSaved',{touch:true});await freezeAfterGesture();await loaded();
+    await clickTarget(page,'#continueSaved',{touch:true});await freezeAfterGesture();
+    assert.equal((await state()).music.enabled,false);await openSettings(page,{touch:true});await clickTarget(page,'#musicToggle',{touch:true});await closeSettings(page,{touch:true});await loaded();
     s=await record(phase);assert.equal(s.station.index,2);assert.equal(s.music.finished,true);
     assert.equal(s.music.sourceStarts,0);assert.equal(s.music.activeSources,0);assert.equal(s.music.cueStarted,false);
     assert.equal((await page.evaluate(()=>__musicQA.telemetry())).trustedContinues,1);
