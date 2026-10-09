@@ -23,6 +23,8 @@ jobs:
         with:
           node-version: '24'
       - run: node --max-old-space-size=640 --expose-gc kaopu-unified-human-workbench/collision-architecture/r03-fast/tests/actual-fixtures.mjs
+        env:
+          FAST_ALLOW_PINNED_ASSET: '1'
       - run: npm install --prefix "$RUNNER_TEMP/jolt-qa" --no-save --ignore-scripts playwright@1.57.0
       - run: '"$RUNNER_TEMP/jolt-qa/node_modules/.bin/playwright" install --with-deps chromium'
       - run: echo "NODE_PATH=$RUNNER_TEMP/jolt-qa/node_modules" >> "$GITHUB_ENV"

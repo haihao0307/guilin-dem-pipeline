@@ -10,7 +10,7 @@ import * as THREE from '../../../full/source/registration-vendor/three.module.js
 import {surfaceFingerprint} from '../../r02/SurfaceFingerprint.mjs';
 import {SurfaceNarrowPhase} from '../SurfaceNarrowPhase.mjs';
 import {validateActualFixture} from '../Validation.mjs';
-const {model,defaultState,assetReads}=await loadLocal({allowNetwork:false});if(global.gc)global.gc();const cases=[];
+const {model,defaultState,assetReads}=await loadLocal({allowNetwork:process.env.FAST_ALLOW_PINNED_ASSET==='1'});if(global.gc)global.gc();const cases=[];
 const presets=process.env.FAST_PRESET?process.env.FAST_PRESET.split(',').map(Number):[16,12,35];
 for(const presetIndex of presets){
  const state=createPresetState(PRESETS[presetIndex].id,defaultState);model.compute(state);const human=new AnimatedHuman(model,state),surface=new SurfaceNarrowPhase(human),rig=createBoxingRig({names:human.names,parents:human.rig.parents,restMatrices:human.rig.restMatrices,stature:human.height}),gloves=createGlovePair({names:human.names,height:human.height,color:0xd8a047}),matrix=new THREE.Matrix4().makeTranslation(0,human.floorOffset,0),fingerprint=await surfaceFingerprint(human);

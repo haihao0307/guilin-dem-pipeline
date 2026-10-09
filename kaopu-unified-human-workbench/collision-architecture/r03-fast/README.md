@@ -21,6 +21,8 @@ From the existing workbench checkout, with its existing pinned assets available:
 node --max-old-space-size=640 --expose-gc collision-architecture/r03-fast/tests/actual-fixtures.mjs
 ```
 
+A CI checkout can set `FAST_ALLOW_PINNED_ASSET=1` for the existing loader’s sole immutable, SHA-verified external GNM asset; no asset is republished. The default remains offline.
+
 The test writes `tests/NODE-VALIDATION.json` (the published evidence copy is losslessly compressed as `tests/NODE-VALIDATION.json.gz`): 3 real bodies × 3 actual poses × body/guard × cold/warm = 36 exact result comparisons. It uses the existing `full/boxing/tests/load-model.mjs` pinned asset loader and does not copy or republish model data. `FAST_PRESET=16`, `12`, or `35` can run one body when executor memory requires separate processes; report only the cases actually completed.
 
 The browser check requires an HTTP-served copy of this candidate beside the existing workbench dependencies and an installed Playwright browser:
