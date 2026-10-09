@@ -1,0 +1,7 @@
+# Motion capture source and boundaries
+
+Motion source: Carnegie Mellon University Graphics Lab Motion Capture Database, subject 16. Three short captured clips: 16_33 (285 frames, walking and stop), 16_57 (268 frames, run and sudden stop), 16_01 (322 frames, small jump). The source files are individually linked in each source JSON; the shared skeleton is http://mocap.cs.cmu.edu/subjects/16/16.asf . Database usage information: http://mocap.cs.cmu.edu/ . The official terms permit research and inclusion in commercially sold products, but prohibit directly reselling the original or converted data. This free application embeds three short converted position tracks to drive its motion demonstration; it does not sell a dataset.
+
+Acknowledgement: The data used in this project was obtained from mocap.cs.cmu.edu. The database was created with funding from NSF EIA-0196217.
+
+Our code preserves the existing complete canonical 25,417-vertex / 50,624-triangle full-CSR person and uses native 104-bone proportion-preserving FK/IK and support constraints. It is not CMU geometry. Each recorded clip plays once and holds the last frame; walk/run begin already moving. Foot-contact geometric checks are separate from visual motion-quality review. The V3 solver uses a source bend-plane pole to avoid straight-knee branch flips and an explicit seven-sample offline capture filter. It does not read future online opponent observations. Continuous browser appearance is verified separately; small per-frame rolling-foot motion is not claimed to be absolute zero sliding.
