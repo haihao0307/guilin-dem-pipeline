@@ -1,0 +1,153 @@
+name: Human boxing R03 candidate browser evidence
+on:
+  workflow_dispatch:
+    inputs:
+      capture_video:
+        description: 'Capture full-cycle and worst-elbow offline fixed-step videos'
+        required: false
+        default: true
+        type: boolean
+  push:
+    branches: ['qa/human-boxing-r03-20261009']
+permissions:
+  contents: read
+concurrency:
+  group: human-boxing-r03-candidate-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+            kaopu-mhr-workbench
+      - name: Install pinned official test dependencies without package scripts
+        run: npm install --prefix "$RUNNER_TEMP/human-r03-qa" --no-save --ignore-scripts playwright@1.57.0 jolt-physics@1.1.0
+      - name: Install real Chromium and Ubuntu video encoder
+        run: |
+          "$RUNNER_TEMP/human-r03-qa/node_modules/.bin/playwright" install --with-deps chromium
+          command -v ffmpeg || (sudo apt-get update && sudo apt-get install --no-install-recommends -y ffmpeg)
+          echo "NODE_PATH=$RUNNER_TEMP/human-r03-qa/node_modules" >> "$GITHUB_ENV"
+          echo "JOLT_NODE_MODULE=file://$RUNNER_TEMP/human-r03-qa/node_modules/jolt-physics/dist/jolt-physics.wasm-compat.js" >> "$GITHUB_ENV"
+      - name: Syntax and small deterministic unit checks
+        run: |
+          node --check kaopu-unified-human-workbench/tests/boxing-r03/boxing-r03-browser.cjs
+          node --test kaopu-unified-human-workbench/tests/boxing-r03/assertions.test.cjs
+          node kaopu-unified-human-workbench/full/boxing-r03/simulation-clock.test.mjs
+          node kaopu-unified-human-workbench/full/boxing-r03/contact-space.test.mjs
+          node kaopu-unified-human-workbench/full/boxing-r03/collision-pruning.test.mjs
+          node kaopu-unified-human-workbench/full/boxing-r03/pruning-jolt.test.mjs
+      - name: Serve the exact candidate checkout
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/human-r03-server.log" 2>&1 &
+          for n in $(seq 1 30); do
+            curl --fail --silent http://127.0.0.1:8765/kaopu-unified-human-workbench/boxing-r03.html > /dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Run real SwiftShader UI, physics, source and fixed-step video evidence
+        env:
+          BOXING_R03_WORKBENCH: kaopu-unified-human-workbench
+          BOXING_R03_BASE: http://127.0.0.1:8765/kaopu-unified-human-workbench/
+          BOXING_R03_OUT: boxing-r03-qa-results
+          BOXING_R03_VIDEO: ${{ (github.event_name != 'workflow_dispatch' || inputs.capture_video) && '1' || '0' }}
+        run: node kaopu-unified-human-workbench/tests/boxing-r03/boxing-r03-browser.cjs
+      # Separate already-compressed images/videos to keep evidence downloads small.
+      # Nine bounded categories target <20 MiB each; report JSON is independent.
+      - name: Upload evidence report-json
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: human-boxing-r03-${{ github.sha }}-report-json
+          path: |
+            boxing-r03-qa-results/*.json
+            kaopu-unified-human-workbench/full/boxing-r03/PRUNING-JOLT-QA.json
+          compression-level: 6
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Upload evidence programstills-01-09
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: human-boxing-r03-${{ github.sha }}-programstills-01-09
+          path: |
+            boxing-r03-qa-results/program-0[1-9]-*.png
+          compression-level: 0
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Upload evidence programstills-10-18
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: human-boxing-r03-${{ github.sha }}-programstills-10-18
+          path: |
+            boxing-r03-qa-results/program-1[0-8]-*.png
+          compression-level: 0
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Upload evidence otherstills
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: human-boxing-r03-${{ github.sha }}-otherstills
+          path: |
+            boxing-r03-qa-results/*.png
+            !boxing-r03-qa-results/program-*.png
+          compression-level: 0
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Upload evidence worstframes-speed
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: human-boxing-r03-${{ github.sha }}-worstframes-speed
+          path: |
+            boxing-r03-qa-results/worst-pose-frames/max-angular-speed/*.png
+          compression-level: 0
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Upload evidence worstframes-acceleration
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: human-boxing-r03-${{ github.sha }}-worstframes-acceleration
+          path: |
+            boxing-r03-qa-results/worst-pose-frames/max-angular-acceleration/*.png
+          compression-level: 0
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Upload evidence videos-full-cycle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: human-boxing-r03-${{ github.sha }}-videos-full-cycle
+          path: |
+            boxing-r03-qa-results/12-adult-full-cycle-offline.mp4
+          compression-level: 0
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Upload evidence videos-worst-speed
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: human-boxing-r03-${{ github.sha }}-videos-worst-speed
+          path: |
+            boxing-r03-qa-results/13-worst-elbow-angularSpeed-offline.mp4
+          compression-level: 0
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Upload evidence videos-worst-acceleration
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: human-boxing-r03-${{ github.sha }}-videos-worst-acceleration
+          path: |
+            boxing-r03-qa-results/13-worst-elbow-angularAcceleration-offline.mp4
+          compression-level: 0
+          if-no-files-found: warn
+          retention-days: 7

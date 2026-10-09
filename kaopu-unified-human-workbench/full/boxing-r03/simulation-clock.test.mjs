@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {SimulationClock} from './SimulationClock.mjs';
+let calls=0;const c=new SimulationClock(),sample=[];
+assert.equal(c.advance(1,s=>{calls++;sample.push(s)}),24);
+assert.equal(calls,24);assert(Math.abs(c.time-.228)<1e-12);assert(Math.abs(c.backlog-.8)<1e-12);
+for(let i=0;i<4;i++)c.advance(0,s=>sample.push(s));
+assert(Math.abs(c.time-1.14)<1e-12);assert(c.backlog<1e-12);assert.equal(c.steps,120);
+assert(sample.every(s=>s.dt===1/120));assert.equal(c.diagnostics().droppedSteps,0);
+c.setSpeed(.55);c.advance(.2,()=>{});assert(Math.abs(c.time-1.25)<1e-12);
+c.advance(1,()=>{});c.setPaused(true);const t=c.time;c.advance(5,()=>{throw Error('Paused step');});assert.equal(c.time,t);assert.equal(c.backlog,0);assert(c.discardedByExplicitPause>.79);
+c.reset(4);assert.equal(c.time,4);assert.equal(c.steps,0);assert.throws(()=>c.advance(NaN,()=>{}));assert.throws(()=>c.setSpeed(0));
+console.log(JSON.stringify({passed:true,fixedSteps:120,canonicalSecondsAfterOnePhysicalSecond:1.14,backlogPreserved:true,pauseExplicit:true}));

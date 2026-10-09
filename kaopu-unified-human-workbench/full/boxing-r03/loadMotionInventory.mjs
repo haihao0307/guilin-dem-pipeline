@@ -1,0 +1,9 @@
+/** Lossless delivery loader only. Motion evaluation and review gate are separate. */
+const hex=bytes=>Array.from(new Uint8Array(bytes),b=>b.toString(16).padStart(2,'0')).join('');
+async function digest(bytes){return hex(await crypto.subtle.digest('SHA-256',bytes));}
+export async function loadMotionInventory(baseURL,{fetchImpl=globalThis.fetch,verify=true,onProgress=()=>{}}={}){
+ const base=new URL(baseURL,globalThis.location?.href||import.meta.url),response=await fetchImpl(new URL('./LIVE-PROGRAM-INDEX.json',base));if(!response.ok)throw Error('Motion inventory index: HTTP '+response.status);const index=await response.json();if(index.schema!=='boxing-r03-split-live-inventory/1'||index.programCount!==18||index.characters?.length!==36)throw Error('Unexpected split motion inventory');
+ const library=new Array(index.programFiles.length);let next=0,finished=0;
+ async function worker(){while(next<index.programFiles.length){const i=next++,ref=index.programFiles[i],r=await fetchImpl(new URL(ref.path,base));if(!r.ok)throw Error('Motion program '+ref.programId+': HTTP '+r.status);const compressed=await r.arrayBuffer();if(verify&&await digest(compressed)!==ref.sha256)throw Error('Compressed motion program hash mismatch: '+ref.programId);const raw=await new Response(new Blob([compressed]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();if(verify&&await digest(raw)!==ref.uncompressedSha256)throw Error('Decoded motion program hash mismatch: '+ref.programId);const p=JSON.parse(new TextDecoder().decode(raw));if(p.programId!==ref.programId||p.semanticMotionId!==ref.semanticMotionId)throw Error('Split program identity mismatch');library[i]=p;onProgress({complete:++finished,total:index.programCount,programId:p.programId});}}
+ await Promise.all(Array.from({length:Math.min(4,index.programFiles.length)},worker));return {schema:'boxing-r03-live-inventory-bundle/1',library,characters:index.characters,index};
+}
