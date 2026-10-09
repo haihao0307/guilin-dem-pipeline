@@ -71,6 +71,6 @@ NIST SP 500-93 将 requirements tracing 描述为核对软件是否真正响应�
 - 拒绝：把 generic/category-style primitive 代理称为 60 套真实成衣；把它作为下一版真实服装几何父节点。
 - 下一合法候选：直接修改 GitHub 源码，让每张卡的 3D 形体读取或生成自对应 preset 的实际纸样/缝合/成衣几何，并提供逐成员不可变 receipt；禁止图像生成替代。
 - 不要求：每张卡长期保留 WebGL context；允许缓存缩略图，但缩略图的源几何必须合格。
-- 生命周期：R02 生产候选 `IMPLEMENTED=true`、公开门 `GATE-RUN=true`，但本回归判定 REJECT；N125 路由待发布到 PR #180，未收到 Mother 回执，因此 `ACKNOWLEDGED=false`；`ADOPTED=false`、`USER-ACCEPTED=false`。
+- 生命周期：R02 生产候选 `IMPLEMENTED=true`、公开门 `GATE-RUN=true`，但本回归判定 REJECT；N125 已路由到 PR #180 comment `6076748889`，所以 `POSTED=true`。未收到 Mother 回执，因此 `ACKNOWLEDGED=false`；`ADOPTED=false`、`USER-ACCEPTED=false`。
 - KPI：本轮记录 1 次同类错误复发（从纸样替代转为简化三维代理替代）；首次候选通过率、内部迭代数、合法 candidate 时间及后续复发率仍为 `unknown`。
 - 第一梯队外部 AI：未调用。
