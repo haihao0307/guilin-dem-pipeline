@@ -1,6 +1,6 @@
 # 从源码研究到1:1单例，再到本台适配
 
-本计划中的老师运行命令**尚未执行**。不把“能找到仓库”“写了适配器”“程序动作可播放”记为模型复现成功。
+本计划的初始状态是原系统未执行；现已新增 [SOMA native low CPU最小实跑](soma-cpu-r01/README.md)，其余四套原系统仍未执行。不把“能找到仓库”“写了适配器”“程序动作可播放”记为模型复现成功。
 
 ## 阶段门
 
@@ -8,7 +8,7 @@
 
 对每个老师固定source commit、实际包锁、输入与checkpoint SHA-256、模型/数据许可、运行硬件、命令和种子。确认下载不是Git LFS pointer，确定可用磁盘和下载规模。官方来源的软件与模型也不因此自动拥有可公开再分发权。
 
-这次环境探测：Python3.12.14、Node24.19.0、NumPy可导入；PyTorch、SOMA、Kimodo不存在；没有发现nvidia-smi或/dev/nvidia设备。当前只足以执行自有契约与CPU矩阵测试。没有伪造CUDA测试或大型下载。SOMA数值单例和ProtoMotions MuJoCo单环境可能有CPU路线，但仍需相应包、授权资产和匹配checkpoint。
+初始环境探测（安装前历史记录）：Python3.12.14、Node24.19.0、NumPy可导入；PyTorch、SOMA、Kimodo不存在；没有发现nvidia-smi或/dev/nvidia设备。当前只足以执行自有契约与CPU矩阵测试。没有伪造CUDA测试或大型下载。SOMA数值单例和ProtoMotions MuJoCo单环境可能有CPU路线，但仍需相应包、授权资产和匹配checkpoint。
 
 停止条件：未知权利、需要注册/新条款、超出已讨论的资源下载、或没有满足要求的执行环境。记录具体缺项再继续独立的接口/数值工作，不无限重复下载或将别的模型当替身。
 
@@ -91,4 +91,6 @@ python -m sample.fix_globsmpl --model_path <trusted-ema-checkpoint> --use_ema --
 
 已执行：28项Python契约/诊断/数字NPZ往返测试；36人物×31帧=1116帧104骨原生packet JSON往返，252个负向检查。
 
-未执行：五老师模型安装/推理/训练、SOMA→Anny104重定向标定、真实视频动作恢复、物理追踪、StableMotion修复、模型前后视觉等效比较。本目录有接口落实和数值证据，但不能宣称1:1效果复现。
+更新：官方SOMA0.3.3与CPU PyTorch已安装在隔离venv，native low单例23项已通过；mid尝试137退出。PREFLIGHT.json保留安装前快照。
+
+未执行：其余四套原系统运行、所有神经推理/训练、SOMA→Anny104重定向标定、真实视频动作恢复、物理追踪、StableMotion修复、模型前后视觉等效比较。本目录有接口落实和数值证据，但不能宣称1:1效果复现。

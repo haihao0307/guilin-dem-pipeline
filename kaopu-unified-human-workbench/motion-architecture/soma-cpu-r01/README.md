@@ -7,7 +7,7 @@
 - CPU PyTorch `2.14.1+cpu`，Python 3.12.14，4计算线程，`identity_model_type="soma"`, `mode="torch"`, `lod="low"`, `correctives_model_path=None`。
 - native 4505顶点、77 joints、78公共transforms；128 identity系数全零，pose轴角弧度全零。
 - 23项检查：有限值，forward与缓存prepare_identity→pose完全一致，重复确定性，左前臂XYZ各±10°，Hips不随前臂改变，根平移和virtual Root恒等。
-- 六次实际旋转角均10.000165°；根平移顶点最大误差2.3842e-7米。测试内容与阈值在脚本，不是全模型功能验收。
+- 当前角度测试验10°幅度与顶点变化，不单独证明XYZ轴或±符号方向正确；这仍须后续坐标/rest可视化标定。六次实际旋转角均10.000165°；根平移顶点最大误差2.3842e-7米。测试内容与阈值在脚本，不是全模型功能验收。
 - 首次成功运行初始化1.626秒、首forward6.809秒；复跑初始化1.550秒、首forward0.050秒；不可当作通用性能基准。
 
 ## 真实失败和边界
