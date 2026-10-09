@@ -1,4 +1,4 @@
-name: Existing human overview motion integration QA
+name: Existing human overview deployed HTTPS smoke verification
 on:
   push:
     branches: ['qa/human-overview-motion-r01-20261009']
@@ -34,12 +34,12 @@ jobs:
           done
           exit 1
       - name: Existing canvas modes and full-mesh visual evidence
-        run: OVERVIEW_ACTIVITY_VIDEO_ONLY=1 node kaopu-unified-human-workbench/tests/overview-motion/overview-motion.cjs
+        run: node kaopu-unified-human-workbench/tests/overview-motion/public-smoke.cjs
       - name: Upload evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: human-overview-motion-${{ github.sha }}
-          path: overview-motion-results/
+          name: human-overview-public-${{ github.sha }}
+          path: overview-public-results/
           retention-days: 7
           compression-level: 0
