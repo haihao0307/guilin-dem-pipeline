@@ -1,0 +1,32 @@
+name: Human boxing R01 full-mesh candidate
+on:
+  push:
+    branches: ['qa/human-boxing-r01-20261009']
+permissions:
+  contents: read
+concurrency:
+  group: human-boxing-r01
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+            kaopu-mhr-workbench
+      - run: npm install --prefix "$RUNNER_TEMP/human-qa" --no-save --ignore-scripts playwright@1.57.0
+      - run: '"$RUNNER_TEMP/human-qa/node_modules/.bin/playwright" install --with-deps chromium'
+      - run: echo "NODE_PATH=$RUNNER_TEMP/human-qa/node_modules" >> "$GITHUB_ENV"
+      - run: python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/human-server.log" 2>&1 &
+      - run: node kaopu-unified-human-workbench/tests/boxing-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: human-boxing-r01-${{ github.sha }}
+          path: boxing-qa-results/
+          retention-days: 7
