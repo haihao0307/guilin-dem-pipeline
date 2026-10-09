@@ -1,0 +1,49 @@
+name: Tailor PatternGSL learning regression
+on:
+  push:
+    branches: [fix/tailor-r07-speed-stability-20261008]
+    paths:
+      - 'kaopu-tailor-workbench/learning/patterngsl-r01/**'
+      - '.github/workflows/tailor-patterngsl-learning.yml'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: tailor-patterngsl-learning
+  cancel-in-progress: false
+jobs:
+  learning-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          sparse-checkout: kaopu-tailor-workbench
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test immutable pattern edits and bounded seam diagnostics
+        run: |
+          mkdir -p evidence-learning
+          node --test kaopu-tailor-workbench/learning/patterngsl-r01/*.test.mjs | tee evidence-learning/TESTS.tap
+          node kaopu-tailor-workbench/learning/patterngsl-r01/inventory.mjs evidence-learning/PARAMETER_INVENTORY.json
+      - name: Read the previously verified R072 browser result, not a newly solved garment
+        uses: actions/download-artifact@v4
+        with:
+          name: tailor-r072-evidence
+          run-id: 37762329862
+          github-token: ${{ github.token }}
+          path: reference
+      - name: Verify original evidence hashes and reproduce the needle-only gate blind spot
+        run: |
+          node kaopu-tailor-workbench/learning/patterngsl-r01/audit-existing.mjs reference/evidence-r072 evidence-learning
+          git rev-parse HEAD > evidence-learning/SOURCE_COMMIT.txt
+          git diff --exit-code
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-patterngsl-learning-evidence
+          path: evidence-learning
+          retention-days: 14
