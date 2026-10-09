@@ -10,7 +10,7 @@ The included `fight03.meta` states author MakeHuman, license **CC0**, copyright 
 
 `FistReference.mjs` contains only the source hand/metacarpal rotation vectors and source hand basis extracted from this pose, plus our conversion implementation. BVH declared intrinsic X/Y/Z Euler channels are composed as matrices, then converted to rotation vectors. Source hand-forward/palm basis is mapped to each destination body's unmodified rest hand basis. Anny local-reference rotations remain degrees. Wrist, arm, body, rest matrices, mesh and full CSR weights remain our existing system's responsibility.
 
-The reference preserves independent finger axes and metacarpal cupping. A small -7.5 degree CMC correction around the current hand-forward axis reduces thumb/index surface-proxy overlap in the reviewed adult. It does not replace finger motion with a tip-only target. Tight uses the complete reference; loose uses 78% of its rotations. Smooth closing uses the same shape-specific rotations throughout the transition.
+The reference preserves independent finger axes and metacarpal cupping. A small -12 degree CMC correction around the current hand-forward axis reduces thumb/index surface-proxy overlap in the reviewed adult. It does not replace finger motion with a tip-only target. Tight uses the complete reference; loose uses 78% of its rotations. Smooth closing uses the same shape-specific rotations, with the thumb folding after the four fingers. The right fist mirrors the left reference using axial-vector reflection before the shape-frame conversion; the source action’s asymmetric right-hand pose is not silently treated as the same fist.
 
 ## What this proves and what it does not
 

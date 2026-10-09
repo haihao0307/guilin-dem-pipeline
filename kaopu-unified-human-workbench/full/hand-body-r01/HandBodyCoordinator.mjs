@@ -54,7 +54,7 @@ export class HandBodyCoordinator extends NativeRig {
  // Small shape-clearance correction after the CC0 reference. Preserve the
  // independent finger axes and metacarpal cup; do not solve a tip-only goal.
  const w=rotation(this.skinMatrices[this.index.get('wrist.'+s)]),axis=mv(w,this.hand[s].forward);
- this.rotateSubtree(this.finger[s+'1'].ids[0],axisRotation(axis,(s==='L'?1:-1)*-7.5*DEG*closure));
+ this.rotateSubtree(this.finger[s+'1'].ids[0],axisRotation(axis,(s==='L'?1:-1)*-12*DEG*closure*closure));
  }
 
  for(const s of active){hands[s].thumbIndexGapM=norm(sub(this.tip(s,1),this.tip(s,2)));hands[s].tips=Array.from({length:5},(_,f)=>this.tip(s,f+1));}
