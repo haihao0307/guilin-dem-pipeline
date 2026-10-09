@@ -8,5 +8,5 @@ function material(){return savedMaterial;}let savedMaterial;
 async function start(){await load();savedMaterial=viewer.mesh.material;}
 function toggle(on){enabled=on;detail.set(on);$('switch').textContent=on?'显示R033权威网格':'显示局部细分表面';}
 $('load').onclick=start;$('switch').onclick=()=>toggle(!enabled);$('raise').onclick=()=>pose(true);$('neutral').onclick=()=>pose(false);$('rotate').onclick=()=>light(-1.1);
-window.visualStudy={load:start,ready:()=>!!detail,on:toggle,pose,light,view,positions:()=>Array.from(model.positions),rest:()=>Array.from(rest),recipe:()=>detail.recipe(),pixels:()=>viewer.pixelAudit(),surface:()=>detail.surface(),displayPositions:()=>Array.from(detail.positions),displayTriangles:()=>Array.from(detail.indices)};
+window.visualStudy={load:start,ready:()=>!!detail,on:toggle,mode:m=>{enabled=m!=="canonical";detail.set(enabled,m==="subdiv"?0:.35)},pose,light,view,positions:()=>Array.from(model.positions),rest:()=>Array.from(rest),recipe:()=>detail.recipe(),pixels:()=>viewer.pixelAudit(),surface:()=>detail.surface(),displayPositions:()=>Array.from(detail.positions),displayTriangles:()=>Array.from(detail.indices)};
 addEventListener('pagehide',()=>{detail?.dispose();viewer?.dispose();});
