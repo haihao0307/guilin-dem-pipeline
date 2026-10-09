@@ -42,9 +42,9 @@
       "input": "identity and public pose parameters",
       "output": "vertices, 77 joints, 78 public transforms",
       "sourceCodeLicense": "Apache-2.0",
-      "modelAndDataRights": "separate review required; no model/data republished",
+      "modelAndDataRights": "Official native 3 assets Apache-2.0 checked locally; not redistributed; optional backends separate",
       "verifiedSourceReading": true,
-      "nativeReproductionExecuted": false,
+      "nativeReproductionExecuted": true,
       "neuralInferenceExecuted": false,
       "trainingExecuted": false,
       "numericFileAdapterImplemented": false,
@@ -56,14 +56,17 @@
         "separately licensed optional identity assets"
       ],
       "limitations": [
-        "Public 77 poses, public 78 transforms and internal twist skeleton differ"
+        "Public 77 poses, public 78 transforms and internal twist skeleton differ",
+        "Default mid LOD run terminated with exit137; only official low LOD4505 CPU smoke test passed"
       ],
       "minimumNextRun": {
-        "task": "Attempt native SOMA CPU zero-pose and one-joint calibration",
-        "requires": "PyTorch/Warp and authorized native runtime assets; disable optional learned correctives initially",
-        "successEvidence": "77 joints/78 public transforms, correct units, forward versus cached identity/pose comparison",
+        "task": "Visualize native rest and single-joint outputs; calibrate SOMA77 to Anny104",
+        "requires": "Explicit per-joint rest frames and target shape rest fingerprints",
+        "successEvidence": "Preserved full source skeleton and target104, coordinate/units/role tests and side-by-side visual acceptance",
         "status": "not_started"
-      }
+      },
+      "nativeReproductionScope": "Official 0.3.3 analytical CPU low LOD zero pose, six single-joint rotations and root translation; not complete reproduction",
+      "evidence": "soma-cpu-r01/SOMA-CPU-QA.json"
     },
     {
       "id": "kimodo",

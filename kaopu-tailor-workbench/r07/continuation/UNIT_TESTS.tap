@@ -1,0 +1,298 @@
+TAP version 13
+# Subtest: all four explicit curve types retain independent parameters
+ok 1 - all four explicit curve types retain independent parameters
+  ---
+  duration_ms: 2.397637
+  type: 'test'
+  ...
+# Subtest: uniform panel scale transforms vertices, Bezier controls and arc geometry consistently
+ok 2 - uniform panel scale transforms vertices, Bezier controls and arc geometry consistently
+  ---
+  duration_ms: 2.868036
+  type: 'test'
+  ...
+# Subtest: curve adjustment affects the selected control, not endpoint references or other panel
+ok 3 - curve adjustment affects the selected control, not endpoint references or other panel
+  ---
+  duration_ms: 0.574142
+  type: 'test'
+  ...
+# Subtest: a sleeve-spread style translation changes initial placement, NOT sleeve circumference
+ok 4 - a sleeve-spread style translation changes initial placement, NOT sleeve circumference
+  ---
+  duration_ms: 0.423832
+  type: 'test'
+  ...
+# Subtest: component removal explicitly removes only incident stitches and preserves remaining stable IDs
+ok 5 - component removal explicitly removes only incident stitches and preserves remaining stable IDs
+  ---
+  duration_ms: 0.893448
+  type: 'test'
+  ...
+# Subtest: invalid edits reject atomically
+ok 6 - invalid edits reject atomically
+  ---
+  duration_ms: 1.984586
+  type: 'test'
+  ...
+# Subtest: malformed stitch references and non-closed ordered boundaries are rejected, not guessed
+ok 7 - malformed stitch references and non-closed ordered boundaries are rejected, not guessed
+  ---
+  duration_ms: 0.39075
+  type: 'test'
+  ...
+# Subtest: property key order is canonical, vertex and stitch orientation order is never sorted
+ok 8 - property key order is canonical, vertex and stitch orientation order is never sorted
+  ---
+  duration_ms: 0.631048
+  type: 'test'
+  ...
+# Subtest: zero needle gap does not hide a four-millimetre naked-boundary gap
+ok 9 - zero needle gap does not hide a four-millimetre naked-boundary gap
+  ---
+  duration_ms: 6.033597
+  type: 'test'
+  ...
+# Subtest: identical piecewise-linear paths need no artificial subdivisions
+ok 10 - identical piecewise-linear paths need no artificial subdivisions
+  ---
+  duration_ms: 0.336097
+  type: 'test'
+  ...
+# Subtest: same straight path with different tessellation is bounded near zero
+ok 11 - same straight path with different tessellation is bounded near zero
+  ---
+  duration_ms: 0.891996
+  type: 'test'
+  ...
+# Subtest: parallel separated paths return their exact gap
+ok 12 - parallel separated paths return their exact gap
+  ---
+  duration_ms: 0.245098
+  type: 'test'
+  ...
+# Subtest: orientation must follow declared edge direction, even if geometric sets coincide
+ok 13 - orientation must follow declared edge direction, even if geometric sets coincide
+  ---
+  duration_ms: 1.100926
+  type: 'test'
+  ...
+# Subtest: invalid panel references are rejected, never repaired by proximity
+ok 14 - invalid panel references are rejected, never repaired by proximity
+  ---
+  duration_ms: 0.442987
+  type: 'test'
+  ...
+# Subtest: invalid edge references are rejected
+ok 15 - invalid edge references are rejected
+  ---
+  duration_ms: 0.347128
+  type: 'test'
+  ...
+# Subtest: duplicate panel IDs are rejected
+ok 16 - duplicate panel IDs are rejected
+  ---
+  duration_ms: 0.235339
+  type: 'test'
+  ...
+# Subtest: duplicate seam IDs are rejected
+ok 17 - duplicate seam IDs are rejected
+  ---
+  duration_ms: 0.785696
+  type: 'test'
+  ...
+# Subtest: one edge cannot silently sew to two other edges
+ok 18 - one edge cannot silently sew to two other edges
+  ---
+  duration_ms: 0.770539
+  type: 'test'
+  ...
+# Subtest: needle sites must belong to the explicit source edges
+ok 19 - needle sites must belong to the explicit source edges
+  ---
+  duration_ms: 0.375241
+  type: 'test'
+  ...
+# Subtest: interior sites alone do not complete seam endpoints
+ok 20 - interior sites alone do not complete seam endpoints
+  ---
+  duration_ms: 0.251961
+  type: 'test'
+  ...
+# Subtest: out of range material indices are rejected
+ok 21 - out of range material indices are rejected
+  ---
+  duration_ms: 0.309579
+  type: 'test'
+  ...
+# Subtest: duplicate material vertices within one edge are rejected
+ok 22 - duplicate material vertices within one edge are rejected
+  ---
+  duration_ms: 0.265446
+  type: 'test'
+  ...
+# Subtest: zero-length original material segments are rejected
+ok 23 - zero-length original material segments are rejected
+  ---
+  duration_ms: 0.226703
+  type: 'test'
+  ...
+# Subtest: NaN positions are rejected
+ok 24 - NaN positions are rejected
+  ---
+  duration_ms: 0.189364
+  type: 'test'
+  ...
+# Subtest: source units are never silently guessed
+ok 25 - source units are never silently guessed
+  ---
+  duration_ms: 0.120845
+  type: 'test'
+  ...
+# Subtest: invalid declared gathering does not fall back to a ratio threshold
+ok 26 - invalid declared gathering does not fall back to a ratio threshold
+  ---
+  duration_ms: 0.227565
+  type: 'test'
+  ...
+# Subtest: small declared gathering is still identified, without an obsolete fifteen-percent threshold
+ok 27 - small declared gathering is still identified, without an obsolete fifteen-percent threshold
+  ---
+  duration_ms: 0.331449
+  type: 'test'
+  ...
+# Subtest: unknown gathering is not falsely labelled absent
+ok 28 - unknown gathering is not falsely labelled absent
+  ---
+  duration_ms: 0.395508
+  type: 'test'
+  ...
+# Subtest: unsewn / deliberately open edges are not automatically bad seams
+ok 29 - unsewn / deliberately open edges are not automatically bad seams
+  ---
+  duration_ms: 0.50879
+  type: 'test'
+  ...
+# Subtest: an insufficient refinement budget stays unresolved, not silently passed
+ok 30 - an insufficient refinement budget stays unresolved, not silently passed
+  ---
+  duration_ms: 0.213128
+  type: 'test'
+  ...
+# Subtest: coincident deformed segments remain measurable without modifying rest geometry
+ok 31 - coincident deformed segments remain measurable without modifying rest geometry
+  ---
+  duration_ms: 0.341317
+  type: 'test'
+  ...
+# Subtest: dart tip shared by both material edges is permitted
+ok 32 - dart tip shared by both material edges is permitted
+  ---
+  duration_ms: 0.299539
+  type: 'test'
+  ...
+# Subtest: upper bounds contain independently sampled distances on eighty deterministic random path pairs
+ok 33 - upper bounds contain independently sampled distances on eighty deterministic random path pairs
+  ---
+  duration_ms: 132.15493
+  type: 'test'
+  ...
+# Subtest: translation preserves the measured geometry gap
+ok 34 - translation preserves the measured geometry gap
+  ---
+  duration_ms: 0.430625
+  type: 'test'
+  ...
+# Subtest: no-op bridge preserves exact original vertices, body and declared references
+ok 35 - no-op bridge preserves exact original vertices, body and declared references
+  ---
+  duration_ms: 114.644863
+  type: 'test'
+  ...
+# Subtest: uniform material scale recomputes curves, lengths, areas and a fresh material triangulation
+ok 36 - uniform material scale recomputes curves, lengths, areas and a fresh material triangulation
+  ---
+  duration_ms: 1193.16967
+  type: 'test'
+  ...
+# Subtest: Bezier control editing recomputes source-relative curvature and mesh
+ok 37 - Bezier control editing recomputes source-relative curvature and mesh
+  ---
+  duration_ms: 918.779327
+  type: 'test'
+  ...
+# Subtest: explicit removal drops exactly incident seams, no invented replacement panel
+ok 38 - explicit removal drops exactly incident seams, no invented replacement panel
+  ---
+  duration_ms: 811.878693
+  type: 'test'
+  ...
+# Subtest: placement changes do not modify material UV or edge lengths
+ok 39 - placement changes do not modify material UV or edge lengths
+  ---
+  duration_ms: 12.514739
+  type: 'test'
+  ...
+# Subtest: automatic envelope does not erase explicit initial placement
+ok 40 - automatic envelope does not erase explicit initial placement
+  ---
+  duration_ms: 947.800499
+  type: 'test'
+  ...
+# Subtest: a mismatched base geometry is rejected rather than applying edits to another garment
+ok 41 - a mismatched base geometry is rejected rather than applying edits to another garment
+  ---
+  duration_ms: 1.021808
+  type: 'test'
+  ...
+# Subtest: invalid scale and implicit incident deletion leave original untouched
+ok 42 - invalid scale and implicit incident deletion leave original untouched
+  ---
+  duration_ms: 2.796653
+  type: 'test'
+  ...
+# Subtest: independent sampling rejects a closed but self-crossed material boundary
+ok 43 - independent sampling rejects a closed but self-crossed material boundary
+  ---
+  duration_ms: 3.729814
+  type: 'test'
+  ...
+# Subtest: zero needle endpoint gaps do not hide an interior material-edge gap
+ok 44 - zero needle endpoint gaps do not hide an interior material-edge gap
+  ---
+  duration_ms: 1.882706
+  type: 'test'
+  ...
+# Subtest: recover local front/back gathering while preserving body, design and exact cutting geometry
+ok 45 - recover local front/back gathering while preserving body, design and exact cutting geometry
+  ---
+  duration_ms: 28.393051
+  type: 'test'
+  ...
+# Subtest: requested total ratio must agree with actual source material lengths
+ok 46 - requested total ratio must agree with actual source material lengths
+  ---
+  duration_ms: 1.375799
+  type: 'test'
+  ...
+# Subtest: do not apply constructor-specific correction to an unknown upstream version
+ok 47 - do not apply constructor-specific correction to an unknown upstream version
+  ---
+  duration_ms: 0.615248
+  type: 'test'
+  ...
+# Subtest: plain hems, other cuff types and unrelated garments remain unchanged
+ok 48 - plain hems, other cuff types and unrelated garments remain unchanged
+  ---
+  duration_ms: 0.344453
+  type: 'test'
+  ...
+1..48
+# tests 48
+# suites 0
+# pass 48
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4134.036541

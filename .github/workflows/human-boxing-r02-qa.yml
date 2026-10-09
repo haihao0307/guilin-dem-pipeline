@@ -1,4 +1,4 @@
-name: Human boxing R02 stage-one ring and glove validation
+name: Human boxing R02 published equipment verification
 on:
   push:
     branches: ['qa/human-boxing-r02-20261009']
@@ -25,6 +25,9 @@ jobs:
       - run: echo "NODE_PATH=$RUNNER_TEMP/human-qa/node_modules" >> "$GITHUB_ENV"
       - run: python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/human-server.log" 2>&1 &
       - run: node kaopu-unified-human-workbench/tests/boxing-r02-browser.cjs
+        env:
+          BOXING_R02_BASE: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/
+          BOXING_R02_MANIFEST: kaopu-unified-human-workbench/tests/boxing-r02-release.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:

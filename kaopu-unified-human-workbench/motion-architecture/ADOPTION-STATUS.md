@@ -5,7 +5,7 @@
 | 老师 | 实际能力 | 现在真正用到哪一层 | 未完成/阻塞 | 最小下一步与成功证据 |
 |---|---|---|---|---|
 | GEM-X | 视频姿态与世界/相机运动恢复 | 观测→动作的数据边界和源版本已核实；未执行原模型 | 缺PyTorch/感知依赖、权重、合法输入视频；原训练数据未公开 | 在匹配环境用一段自有短静态镜头跑官方demo，记录77点overlay、world/incam参数、相机回退状态、视频/权重/输出哈希；不从2D点直接假造准确3D |
-| SOMA-X | 身份/骨架/蒙皮统一表示与拟合接口 | 77pose/78public transform/internal twist与单位/参考系边界进入契约；未跑SOMA | 包与公开runtime资产尚未准备；optional后端许可另查 | 优先尝试官方支持的CPU单例：native SOMA身份、zero pose、单关节±10°，先不启用pose-corrective模型；检查原生joints/transforms、forward与prepare_identity+pose等价，再做Anny rest标定 |
+| SOMA-X | 解析身份/骨架/蒙皮统一表示与拟合接口 | 官方0.3.3 native CPU low4505顶点实际运行；零姿、六个前臂±10°、根平移和缓存等价23/23通过 | mid18056尝试137退出，未证实原因；未启用correctives；未完成Anny104映射 | [原生实跑证据](soma-cpu-r01/README.md)；下一步原生rest/单关节可视化及77→104明确标定，不能用低LOD替换现有显示模型 |
 | Kimodo | 受文本/路径/关键帧约束的运动学生成 | 安全NPZ→标准动作转换已实现，官方77骨顺序/float32/bool接触测试已跑；未推理 | 缺model/text-encoder权重与推理环境；未有老师生成clip；未完成Anny104标定 | 核实具体权重体量和条款后，固定公开SOMA模型、seed、短prompt跑原生预览+NPZ。官方称文本编码CPU可减显存至<3GB，但本机未验证且RAM需求须实测 |
 | ProtoMotions | 物理追踪/任务策略学习、MotionLib及模拟器接口 | 控制/观测/奖励/数据分层用于架构；未跑策略或模拟 | 缺匹配simulator、checkpoint、LFS数据/机器人资产与配置 | 最小可考虑G1 deployment tracker + MuJoCo CPU单环境，按model card加载匹配motion。记录真实rollout、跟踪误差、终止与录像；IsaacLab-only权重不能直接宣称跨后端等效 |
 | StableMotion | 质量标签识别+条件扩散修复 | 原始/诊断/修复分支的数据库边界已落实；当前QA是自有阈值诊断 | 缺合法SMPL/AMASS相关资源、可信checkpoint/normalizer；跨Anny域未验证 | 在原生20fps/233维协议跑一个授权BrokenAMASS单例，保存detected labels、mask、前后与好帧保真；TMR没跑就不报TMR分 |
@@ -30,7 +30,7 @@
 
 ## 仍保持打开的后续工作
 
-- 老师原生单例运行及证据：五项全部未完成。
+- 老师原生单例运行及证据：SOMA解析CPU low最小测试完成；其余四项未完成，SOMA mid与完整迁移也未完成。
 - SOMA77→Anny104 rest-frame/比例/末端标定：未完成，不能截断到23骨代替。
 - 实际动作库扩充到18种并实现UI同屏/轮换对照：未完成；当前只有协议与拒绝错误输入的测试。
 - 跨形体碰撞、自然度、物理稳定性和完整视觉复核：独立验收，未由当前数值测试覆盖。

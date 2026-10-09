@@ -24,3 +24,5 @@ No new character clothing is created in this stage. CLOTHING-INTERFACE.json reco
 ## Visual regression fixes
 
 The deck has one top surface: foam side/bottom faces only, with canvas at local y=0. This removes far-camera z-fighting rather than hiding it with a raised character floor. The original canvas texture is subtle deterministic grain, with no coarse tiled grid. Resizing a paused viewport recomputes the camera and renders immediately; the browser regression reads actual framebuffer colors after the mobile viewport change. Mobile viewport QA is not a physical phone test.
+
+The small regular dark dots on the palm are eight authored ventilation/stitch quads (approximately 1.1 × 1.6 mm), not a noise texture. Narrow seam geometry is retained; its very-close antialiasing appearance is a future visual refinement. Finite-buffer and nondegenerate-triangle tests pass; the large palm, cuff-binding and fastening-end overlays were removed in favor of integrated carrier surfaces. This does not claim a mathematically intersection-free glove for every possible future pose.
