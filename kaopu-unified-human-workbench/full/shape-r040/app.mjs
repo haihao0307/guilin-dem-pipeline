@@ -3,10 +3,10 @@ let model,viewer,detail,adiposity=0,raised=false,enabled=true;const $=x=>documen
 function state(pose=false){const s=createState('bony-lean-adult',defaultState);s.anny.phenotypes.weight=.015+.985*adiposity;if(pose)s.anny.pose={'clavicle.L':[0,-12,0],'shoulder01.L':[10,0,0],'upperarm01.L':[35,0,0],'clavicle.R':[0,12,0],'shoulder01.R':[10,0,0],'upperarm01.R':[35,0,0]};return s;}
 function rebuild(){if(detail){viewer.mesh.geometry=viewer.geometry;detail.dispose();}model.compute(state(false));viewer.update();viewer.skin.set({enabled:false});detail=createLocalVisualSurface(viewer,model,{adiposity});if(raised){model.compute(state(true));viewer.update();}detail.set(enabled);$('status').textContent=`双侧锁骨研究；胖瘦参数 ${adiposity.toFixed(2)}；骨性覆盖强度 ${detail.recipe().registration.cover.toFixed(3)}。非BMI。`;}
 async function load(){if(model)return;model=(await loadCommon()).model;model.compute(state());viewer=new CommonViewer({canvas:$('canvas'),container:$('stage'),model});rebuild();light(-1.1);view(0);}
-function light(a){const l=viewer.scene.children.filter(x=>x.isLight);l[0].intensity=.7;l[1].intensity=3.3;l[1].position.set(Math.sin(a)*3,2,Math.cos(a)*3);l[2].intensity=.45;viewer.render();}
-function view(a=0){viewer.restoreCamera({position:[Math.sin(a)*1.3,.46,Math.cos(a)*1.3],target:[0,.46,0],zoom:1});}
-function pose(v){raised=v;model.compute(state(raised));viewer.update();detail.update();}
-function fat(v){adiposity=v;rebuild();}
-function on(v){enabled=v;detail.set(v);}
+function light(a){if(!viewer)return;const l=viewer.scene.children.filter(x=>x.isLight);l[0].intensity=.7;l[1].intensity=3.3;l[1].position.set(Math.sin(a)*3,2,Math.cos(a)*3);l[2].intensity=.45;viewer.render();}
+function view(a=0){if(!viewer)return;viewer.restoreCamera({position:[Math.sin(a)*1.3,.46,Math.cos(a)*1.3],target:[0,.46,0],zoom:1});}
+function pose(v){raised=v;if(!model)return;model.compute(state(raised));viewer.update();detail.update();}
+function fat(v){if(!Number.isFinite(v)||v<0||v>1)throw Error("Fat slider outside [0,1]");adiposity=v;if(model)rebuild();}
+function on(v){enabled=v;if(detail)detail.set(v);}
 $('load').onclick=load;$('fat').oninput=e=>fat(Number(e.target.value));$('switch').onclick=()=>on(!enabled);$('raise').onclick=()=>pose(!raised);for(const b of document.querySelectorAll('[data-view]'))b.onclick=()=>view(Number(b.dataset.view));
 window.bilateralStudy={load,adiposity:fat,pose,on,view,light,state:()=>state(raised),positions:()=>Array.from(model.positions),displayPositions:()=>Array.from(detail.positions),displayTriangles:()=>Array.from(detail.indices),recipe:()=>detail.recipe(),surface:()=>detail.surface(),pixels:()=>viewer.pixelAudit()};
