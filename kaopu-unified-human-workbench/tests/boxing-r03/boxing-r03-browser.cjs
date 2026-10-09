@@ -13,7 +13,10 @@ const BASE = (process.env.BOXING_R03_BASE || 'http://127.0.0.1:8765/kaopu-unifie
 const OUT = path.resolve(process.env.BOXING_R03_OUT || 'boxing-r03-qa-results');
 const ROOT = path.resolve(process.env.BOXING_R03_WORKBENCH || (fs.existsSync(path.join(__dirname, '../workbench')) ? path.join(__dirname, '../workbench') : path.join(__dirname, '../..')));
 const MANIFEST = process.env.BOXING_R03_MANIFEST || path.join(__dirname, 'candidate-source-manifest.json');
-const BASELINE = process.env.BOXING_R03_BASELINE || path.join(__dirname, 'r02-preservation-baseline.json');
+const BASELINE = process.env.BOXING_R03_BASELINE || path.join(__dirname, 'production-tree.json');
+const REPO_ROOT = path.resolve(process.env.BOXING_R03_REPO_ROOT || path.dirname(ROOT));
+const PRODUCTION_COMMIT = '499915682292d3eb44cd5a5c881423a9c244f767';
+const PRODUCTION_TREE = 'ed42e6053b00634d2ca5ca1ee6a6feefaaec83cc';
 const REPLAY = process.env.BOXING_R03_REPLAY || path.join(__dirname, 'WORST-POSE-REPLAY.json');
 const VIDEO = process.env.BOXING_R03_VIDEO !== '0';
 const PHASE = process.env.BOXING_R03_PHASE || 'all';
@@ -72,13 +75,51 @@ async function poseData(actorId = null) {
 }
 async function sourceIntegrity() {
   const baseline = json(BASELINE), manifest = json(MANIFEST);
+  assert.equal(baseline.schema, 'boxing-r03-production-git-baseline/1');
+  assert.equal(baseline.commit, PRODUCTION_COMMIT, 'Preservation must use pre-candidate production commit, never current candidate');
+  assert.equal(baseline.tree, PRODUCTION_TREE);
+  assert.equal(baseline.files.length, 429, 'Exact published production tree is incomplete');
+  if (manifest.productionBaselineSha256) assert.equal(sha(fs.readFileSync(BASELINE)), manifest.productionBaselineSha256);
   report.sourceManifest = {preparedAt:manifest.preparedAt, sourceFiles:Object.keys(manifest.files).length};
-  report.preservation = {files:Object.keys(baseline.files).length, mismatches:[]};
-  for (const [file, expected] of Object.entries(baseline.files)) {
-    const full = path.join(ROOT, file);
-    if (!fs.existsSync(full) || sha(fs.readFileSync(full)) !== expected) report.preservation.mismatches.push(file);
+  report.preservation = {source:'exact pre-candidate production Git tree',commit:baseline.commit,tree:baseline.tree,algorithm:'sha1(blob <byteLength>\0 + bytes)',files:baseline.files.length,verifiedFiles:[],mismatches:[],historicalLocalBaseline:{file:'r02-preservation-baseline.json',required:false,reason:'Historical local snapshot includes unpublished glove diagnostics/materialized aliases and an older boxing.html research link. Production already has the later R01 teacher-link edit; keeping that published file unchanged is not an R03 regression.'}};
+  const seen = new Set();
+  for (const entry of baseline.files) {
+    const {path:relative,sha:expected}=entry;
+    assert(/^kaopu-(?:unified-human|anny|mhr)-workbench\//.test(relative) && !relative.split('/').includes('..'), 'Unsafe production tree path');
+    assert.match(expected,/^[a-f0-9]{40}$/);assert(!seen.has(relative),'Duplicate production tree path');seen.add(relative);
+    const full = path.join(REPO_ROOT, relative);
+    if (!fs.existsSync(full)) {report.preservation.mismatches.push({path:relative,reason:'published file missing'});continue;}
+    const bytes=fs.readFileSync(full);
+    const actual=crypto.createHash('sha1').update(Buffer.from(`blob ${bytes.length}\0`)).update(bytes).digest('hex');
+    if(actual!==expected)report.preservation.mismatches.push({path:relative,expected,actual});
+    else report.preservation.verifiedFiles.push({path:relative,gitBlobSha1:actual});
   }
-  assert.deepEqual(report.preservation.mismatches, [], 'R02 preserved source/assets changed');
+  assert.deepEqual(report.preservation.mismatches, [], 'Published R02/teacher dependency bytes changed relative to production 4999156');
+  assert(seen.has('kaopu-unified-human-workbench/full/ui/runtime-metadata.json'), 'Runtime metadata must itself be production-blob-verified');
+  // Follow the production metadata's actual assetURLs, never its locally
+  // materialized source aliases. External GNM stays bound to its pinned URL
+  // and existing SHA256. Native compressed parts are bound to their verified
+  // production model manifests and original part hashes.
+  const metadataPath=path.join(ROOT,'full/ui/runtime-metadata.json');
+  const metadata=json(metadataPath),assetBase=new URL('full/',BASE),cache=new Map();
+  report.runtimeDependencies={metadataGitBlobSha1:baseline.files.find(e=>e.path==='kaopu-unified-human-workbench/full/ui/runtime-metadata.json').sha,files:[],parts:[]};
+  const verifyAsset=async (logical,expected,kind='asset')=>{
+    assert.match(expected,/^[a-f0-9]{64}$/,'Missing production asset hash for '+logical);
+    const url=new URL(metadata.assetURLs?.[logical]||logical,assetBase).href;
+    let bytes=cache.get(url);
+    if(!bytes){const response=await page.request.get(url,{timeout:120000});assert(response.ok(),'Published runtime dependency unavailable: '+url);bytes=await response.body();if(logical.endsWith('.json'))cache.set(url,bytes);}
+    const actual=sha(bytes);assert.equal(actual,expected,'Production runtime dependency SHA256 mismatch: '+logical);
+    const row={kind,logical,url,sha256:actual,bytes:bytes.length};
+    (kind==='compressed-native-part'?report.runtimeDependencies.parts:report.runtimeDependencies.files).push(row);
+    return logical.endsWith('.json')?JSON.parse(bytes.toString('utf8')):null;
+  };
+  for(const[logical,expected]of Object.entries(metadata.coreHashes))await verifyAsset(logical,expected,'core');
+  for(const[logical,expected]of Object.entries(metadata.assetHashes))await verifyAsset(logical,expected,'asset');
+  const annyPath='source/kaopu-anny-workbench/assets/anny-model.json',mhrPath='source/kaopu-mhr-workbench/assets/model.json';
+  const anny=await verifyAsset(annyPath,metadata.assetHashes[annyPath],'native-part-manifest');
+  const mhr=await verifyAsset(mhrPath,metadata.assetHashes[mhrPath],'native-part-manifest');
+  for(const part of anny.binary.compressed.parts)await verifyAsset('source/kaopu-anny-workbench/assets/'+(part.file||part.url.split('/').at(-1)),part.sha256,'compressed-native-part');
+  for(const part of mhr.parts)await verifyAsset('source/kaopu-mhr-workbench/assets/'+(part.file||part.url.split('/').at(-1)),part.sha256,'compressed-native-part');
   report.servedSources = [];
   for (const [file, expected] of Object.entries(manifest.files)) {
     assert.equal(sha(fs.readFileSync(path.join(ROOT, file))), expected, 'Frozen candidate source changed: ' + file);

@@ -6,7 +6,9 @@ const crypto = require('node:crypto');
 const args = process.argv.slice(2);
 const value = (name, fallback) => args.includes(name) ? args[args.indexOf(name) + 1] : fallback;
 const root = path.resolve(value('--workbench', path.join(__dirname, '../workbench')));
-const baseline = value('--baseline', null);
+const productionFile = path.resolve(value('--production-tree', path.join(__dirname, 'production-tree.json')));
+const PRODUCTION_COMMIT = '499915682292d3eb44cd5a5c881423a9c244f767';
+const PRODUCTION_TREE = 'ed42e6053b00634d2ca5ca1ee6a6feefaaec83cc';
 const replay = value('--replay', path.join(__dirname, '../motion/reports/WORST-POSE-REPLAY.json'));
 const out = path.resolve(value('--out', __dirname));
 const hash = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
@@ -17,22 +19,24 @@ const walk = (root, relative) => {
     ? fs.readdirSync(file).sort().flatMap(name => walk(root, path.posix.join(relative, name)))
     : [relative];
 };
-const preservedRoots = ['boxing-r02.html', 'boxing.html', 'index-characters-r02.html', 'full/boxing', 'full/boxing-r02', 'full/body-adapter', 'full/src', 'full/ui', 'full/assets', 'full/source'];
 fs.mkdirSync(out, {recursive: true});
-if (baseline) {
-  const old = path.resolve(baseline);
-  const files = Object.fromEntries(preservedRoots.flatMap(p => walk(old, p)).map(p => [p, hash(path.join(old, p))]));
-  fs.writeFileSync(path.join(out, 'r02-preservation-baseline.json'), JSON.stringify({schema:'boxing-r03-r02-preservation/1', meaning:'Byte hashes of pre-existing R02 native shape, full CSR skin, preset, source asset, glove and ring files. New R03 files are excluded.', files}, null, 2) + '\n');
+if (args.includes('--baseline')) throw Error('--baseline is retired. The old 185-file local snapshot is historical only; do not overwrite it or rebase preservation onto the candidate.');
+const preserved = JSON.parse(fs.readFileSync(productionFile, 'utf8'));
+if (preserved.schema !== 'boxing-r03-production-git-baseline/1' || preserved.commit !== PRODUCTION_COMMIT || preserved.tree !== PRODUCTION_TREE || preserved.files?.length !== 429) throw Error('Expected the exact pre-candidate 4999156 production Git tree (429 published files).');
+const seen = new Set();
+for (const file of preserved.files) {
+  if (!/^kaopu-(?:unified-human|anny|mhr)-workbench\//.test(file.path) || file.path.split('/').includes('..') || !/^[a-f0-9]{40}$/.test(file.sha) || seen.has(file.path)) throw Error('Invalid or duplicate production Git entry: ' + file.path);
+  seen.add(file.path);
 }
-const baselineFile = path.join(out, 'r02-preservation-baseline.json');
-if (!fs.existsSync(baselineFile)) throw Error('Create the R02 preservation baseline once with --baseline before preparing a candidate.');
-const preserved = JSON.parse(fs.readFileSync(baselineFile, 'utf8'));
-const mismatches = Object.entries(preserved.files).filter(([file, expected]) => !fs.existsSync(path.join(root, file)) || hash(path.join(root, file)) !== expected).map(([file]) => file);
-if (mismatches.length) throw Error('R02 preservation mismatch: ' + mismatches.join(', '));
+// The preparation workspace deliberately contains materialized aliases and an
+// older R01 page. It is not a production checkout. Do not derive expected blobs
+// from it, copy aliases into publication, or reject them as missing production.
+// Browser CI verifies every entry below against its real sparse Git checkout.
+if (path.resolve(productionFile) !== path.join(out, 'production-tree.json')) fs.copyFileSync(productionFile, path.join(out, 'production-tree.json'));
 for (const required of ['full/boxing-r03/loadMotionInventory.mjs']) if (!fs.existsSync(path.join(root, required))) throw Error('Candidate assembly incomplete: ' + required);
 const code = ['boxing-r03.html', 'full/boxing-r03', 'collision-architecture', 'motion-architecture/live_program_schedule.mjs'].flatMap(p => walk(root, p)).filter(p => /\.(?:mjs|js|css|html|json)$/.test(p) && !/(?:-QA|RELEASE|report|reports|research)\b/i.test(p) && !/\.test\./.test(p));
 const files = Object.fromEntries(code.map(p => [p, hash(path.join(root, p))]));
-const result = {schema:'boxing-r03-candidate-source/1', preparedAt:new Date().toISOString(), files, preservedFileCount:Object.keys(preserved.files).length};
+const result = {schema:'boxing-r03-candidate-source/1', preparedAt:new Date().toISOString(), files, preservedFileCount:preserved.files.length, preservationCommit:preserved.commit, preservationTree:preserved.tree, preservationAlgorithm:'git-blob-sha1', productionBaselineSha256:hash(productionFile)};
 if (replay && fs.existsSync(replay)) {
   const replayData = JSON.parse(fs.readFileSync(replay, 'utf8'));
   for (const [file, expected] of Object.entries(replayData.sourceHashes || {})) {
