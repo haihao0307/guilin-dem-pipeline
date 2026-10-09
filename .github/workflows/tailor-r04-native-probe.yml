@@ -1,0 +1,60 @@
+name: Tailor R04 exact native person probe
+on:
+  push:
+    branches: [feature/tailor-cabinet-r03-garment-surfaces-20261009]
+    paths: ['.github/workflows/tailor-r04-native-probe.yml']
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 0ff632be3e4ab112fad93fd4c43c7bc6a90cf5f3
+          sparse-checkout: |
+            kaopu-unified-human-workbench/full/ui
+            kaopu-unified-human-workbench/full/src
+            kaopu-unified-human-workbench/full/body-adapter
+            kaopu-tailor-workbench/catalogue
+            kaopu-tailor-workbench/r07
+            kaopu-tailor-workbench/unified
+            kaopu-tailor-workbench/garments-r04/src
+            kaopu-tailor-workbench/garment-pattern-catalogue-r01/examples
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install original-runtime browser probe
+        run: pip install playwright==1.56.0 && python -m playwright install --with-deps chromium
+      - name: Capture unmodified common person and archive
+        run: |
+          mkdir -p /tmp/r04-native
+          python - <<'PY'
+          from playwright.sync_api import sync_playwright
+          import pathlib,json,hashlib,subprocess,shutil
+          out=pathlib.Path('/tmp/r04-native')
+          with sync_playwright() as pw:
+            b=pw.chromium.launch(headless=True,args=['--no-sandbox','--enable-unsafe-swiftshader','--use-angle=swiftshader'])
+            p=b.new_page(viewport={'width':1200,'height':900});errors=[]
+            p.on('pageerror',lambda e:errors.append(str(e)))
+            p.goto('https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/index-characters-r02.html',wait_until='domcontentloaded',timeout=120000)
+            p.wait_for_function('window.fullCommonWorkbench',timeout=60000)
+            p.evaluate('fullCommonWorkbench.load()')
+            p.wait_for_function('fullCommonWorkbench.diagnostics().ready',timeout=300000)
+            d=p.evaluate('({archive:fullCommonWorkbench.archive(),positions:Array.from(fullCommonWorkbench.positions()),faces:Array.from(fullCommonWorkbench.faces()),diagnostics:fullCommonWorkbench.diagnostics(),presets:fullCommonWorkbench.presets(),state:fullCommonWorkbench.state()})')
+            d['pageErrors']=errors
+            assert len(d['positions'])==25417*3 and len(d['faces'])==50624*3
+            (out/'native-common-person.json').write_text(json.dumps(d,separators=(',',':')))
+            p.screenshot(path=str(out/'native-common-person.png'))
+            print('NATIVE_COMMON',d['diagnostics'],flush=True);b.close()
+          for root in ['kaopu-unified-human-workbench/full/ui','kaopu-unified-human-workbench/full/src','kaopu-unified-human-workbench/full/body-adapter','kaopu-tailor-workbench/catalogue','kaopu-tailor-workbench/r07','kaopu-tailor-workbench/unified','kaopu-tailor-workbench/garments-r04/src','kaopu-tailor-workbench/garment-pattern-catalogue-r01/examples']:
+            shutil.copytree(root,out/root,dirs_exist_ok=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r04-exact-native-probe
+          path: /tmp/r04-native
+          retention-days: 7
