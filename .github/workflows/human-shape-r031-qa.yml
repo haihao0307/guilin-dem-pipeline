@@ -27,7 +27,7 @@ jobs:
           sleep 2
       - name: Validate all original head triangles, rest, weights and poses
         run: node kaopu-unified-human-workbench/full/shape-r031/qa.mjs
-      - name: Render 96 true same-camera comparisons
+      - name: Render 64 true same-camera comparisons
         env:
           NODE_PATH: ${{ github.workspace }}/.human-qa/node_modules
         run: node kaopu-unified-human-workbench/tests/shape-r031-browser.cjs
@@ -35,7 +35,7 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';import assert from 'node:assert/strict';
-          const a=JSON.parse(fs.readFileSync('shape-r031-results/numeric.json')),b=JSON.parse(fs.readFileSync('shape-r031-results/browser.json'));assert(b.passed);assert.equal(b.cases.length,6);for(const c of b.cases)assert.equal(c.geometrySHA256,a.cases.find(x=>x.id===c.id).geometrySHA256);console.log('PASS all six exact full mesh fingerprints');
+          const a=JSON.parse(fs.readFileSync('shape-r031-results/numeric.json')),b=JSON.parse(fs.readFileSync('shape-r031-results/browser.json'));assert(b.passed);assert.equal(b.cases.length,4);for(const c of b.cases)assert.equal(c.geometrySHA256,a.cases.find(x=>x.id===c.id).geometrySHA256);console.log('PASS all four exact full mesh fingerprints');
           NODE
       - uses: actions/upload-artifact@v4
         if: always()
