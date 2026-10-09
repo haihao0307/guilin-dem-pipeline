@@ -2,11 +2,12 @@ const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path'),http=require('http'),assert=require('assert');
 const root=path.resolve(__dirname,'..'),mime={'.html':'text/html','.css':'text/css','.js':'text/javascript','.mjs':'text/javascript','.json':'application/json'};
 const server=http.createServer((req,res)=>{const rel=decodeURIComponent(new URL(req.url,'http://localhost').pathname);const p=path.resolve(root,'.'+(rel==='/'?'/index.html':rel));if(!p.startsWith(root+path.sep)){res.writeHead(403);return res.end();}fs.readFile(p,(e,b)=>{if(e){res.writeHead(404);return res.end();}res.setHeader('Content-Type',mime[path.extname(p)]||'application/octet-stream');res.end(b);});});
-let browser;const checks=[],errors=[],requests=[];const record=name=>checks.push(name);
+let browser,activePage;const checks=[],errors=[],requests=[];const record=name=>checks.push(name);
 (async()=>{
  await new Promise(r=>server.listen(0,'127.0.0.1',r));const origin=`http://127.0.0.1:${server.address().port}`;
  browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{}),args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
  const page=await browser.newPage({viewport:{width:1440,height:1000},deviceScaleFactor:1});
+ activePage=page;
  page.setDefaultTimeout(120000);
  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});page.on('request',r=>{if(!r.url().startsWith(origin)&&/^https?:/.test(r.url()))requests.push(r.url());});
  await page.goto(origin);await page.waitForFunction(()=>window.__study?.getState().rendered,null,{timeout:90000});record('Three r170 shader/render initialization');
@@ -28,16 +29,23 @@ let browser;const checks=[],errors=[],requests=[];const record=name=>checks.push
  const complete=await page.evaluate(()=>__study.getState());assert.equal(complete.audio.chimes,3);assert.equal(complete.events.length,6);assert.deepEqual(complete.audio.position,[.2,1.5,-7.4]);record('Spatial audio source follows phase without duplicate event sounds');
  await page.locator('#reset').click();const reset=await page.evaluate(()=>__study.getState());assert.equal(reset.phase,0);assert.equal(reset.events.length,0);assert.equal(reset.keys.length,0);record('Reset clears phase, input and event history');
  await page.locator('#zoom').click();await page.waitForFunction(()=>__study.getState().fov<35,null,{timeout:60000});await page.locator('#zoom').click();record('Near-look changes live focal angle');
- await page.keyboard.down('KeyW');await page.waitForTimeout(900);await page.keyboard.up('KeyW');const moved=await page.evaluate(()=>__study.getState());assert.notDeepEqual(moved.position,reset.position);record('Keyboard navigation moves camera');
+ // Wait for actual input registration and simulation displacement, not 900 ms
+ // of wall-clock time while a software GPU may still finish the FOV transition.
+ await page.locator('#view').focus();const beforeMove=await page.evaluate(()=>__study.getState());assert(beforeMove.started&&!beforeMove.paused,'Keyboard test must start in active play');
+ await page.keyboard.down('w');
+ try{await page.waitForFunction(()=>__study.getState().keys.includes('KeyW'),null,{timeout:15000});await page.waitForFunction(p=>{const q=__study.getState().position;return Math.hypot(q[0]-p[0],q[2]-p[2])>.08;},beforeMove.position,{timeout:30000});}
+ finally{await page.keyboard.up('w');}
+ const moved=await page.evaluate(()=>__study.getState());assert.notDeepEqual(moved.position,beforeMove.position);record('Keyboard navigation moves camera through real held input');
  await page.evaluate(()=>{__study.setPose({x:2.8,z:1.5});__study.move(20,0);});assert((await page.evaluate(()=>__study.getState())).position[0]<=3.27);record('Room boundary prevents leaving walls');
  await page.evaluate(()=>{__study.setPose({x:0,z:-3.5});__study.move(0,-3);});const collision=await page.evaluate(()=>__study.getState());assert(collision.position[2]>-4.8);record('Plinth collision blocks forward traversal');
  await page.keyboard.down('KeyW');await page.evaluate(()=>window.dispatchEvent(new Event('blur')));const blurred=await page.evaluate(()=>__study.getState());assert.equal(blurred.keys.length,0);assert.equal(blurred.paused,true);await page.keyboard.up('KeyW');record('Focus loss pauses and releases controls');
  await page.locator('#sound').click();assert.equal((await page.evaluate(()=>__study.getState())).audio.enabled,false);record('Mute state is effective');
  await page.close();
  const mobile=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});mobile.on('pageerror',e=>errors.push(e.message));await mobile.goto(origin);await mobile.waitForFunction(()=>window.__study?.getState().rendered,null,{timeout:90000});
+ activePage=mobile;
  mobile.setDefaultTimeout(120000);
  assert(await mobile.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await mobile.screenshot({path:root+'/screenshots/04-mobile-entry.png'});await mobile.locator('#start').click();
  const mb=await mobile.evaluate(()=>__study.getState());const b=await mobile.locator('[data-key="ArrowUp"]').boundingBox();const cdp=await mobile.context().newCDPSession(mobile);await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:b.x+b.width/2,y:b.y+b.height/2}]});await mobile.waitForTimeout(850);await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});const ma=await mobile.evaluate(()=>__study.getState());assert.notDeepEqual(ma.position,mb.position);assert.equal(ma.keys.length,0);record('Mobile touch movement and release');
  await mobile.screenshot({path:root+'/screenshots/05-mobile-observation.png'});assert.deepEqual(errors,[]);assert.deepEqual(requests,[]);record('No browser errors or external network requests');
  const result={passed:true,scope:'Original local scene only, not P.T. runtime or AAA fidelity verification',browser:'Chromium headless SwiftShader',checks,baseline,complete,errors,externalRequests:requests};fs.writeFileSync(root+'/tests/browser-results.json',JSON.stringify(result,null,2));console.log(JSON.stringify({passed:true,checks,baseline},null,2));await browser.close();server.close();
-})().catch(async error=>{fs.writeFileSync(root+'/tests/browser-failure.json',JSON.stringify({passed:false,message:error.message,checks,errors},null,2));console.error(error);if(browser)await browser.close();server.close();process.exitCode=1;});
+})().catch(async error=>{let failureState=null;try{failureState=await activePage?.evaluate(()=>({study:window.__study?.getState(),focused:document.activeElement?.id,visibility:document.visibilityState}));}catch{}fs.writeFileSync(root+'/tests/browser-failure.json',JSON.stringify({passed:false,message:error.message,checks,errors,failureState},null,2));console.error(error);if(browser)await browser.close();server.close();process.exitCode=1;});
