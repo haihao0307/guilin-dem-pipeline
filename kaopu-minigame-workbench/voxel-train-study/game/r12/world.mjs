@@ -1,4 +1,4 @@
-import * as THREE from '../vendor/three.module.js';
+import * as THREE from '../../vendor/three.module.js';
 import {Blocks,buildEnvironment,bridge} from './heritage.mjs';
 import {createGameTrain} from './train-model.mjs';
 import {createStationPlatform} from './station-platform.mjs';
@@ -38,7 +38,7 @@ export function createGameWorld(){
   const soundVector=new THREE.Vector3();
   function fillAudioSources(output,view){
     train.root.updateWorldMatrix(true,false);
-    for(const [name,point] of Object.entries(soundPoints)){const local=name==='whistle'&&train.steam?.transformBodyPoint?train.steam.transformBodyPoint(point):point;soundVector.fromArray(local).applyMatrix4(train.root.matrixWorld).toArray(output[name]);}
+    for(const [name,point] of Object.entries(soundPoints))soundVector.fromArray(point).applyMatrix4(train.root.matrixWorld).toArray(output[name]);
     // The nearest rendered station stays behind when next-station activates.
     // Its guard/crowd must not jump to the next stop with the HUD.
     let station=null,distance=Infinity;
@@ -57,17 +57,11 @@ export function createGameWorld(){
     }
     return output;
   }
-  function fillSteamEmitters(output){
-    train.root.updateWorldMatrix(true,false);
-    const chimney=train.steam?.transformBodyPoint?train.steam.transformBodyPoint([3.03,3.72,0]):[3.03,3.72,0];
-    for(const[name,point]of Object.entries({chimney,cylinderLeft:soundPoints.cylinderLeft,cylinderRight:soundPoints.cylinderRight}))soundVector.fromArray(point).applyMatrix4(train.root.matrixWorld).toArray(output[name]);
-    return output;
-  }
-  return{root,train,terrain,people,pathFrame,fillAudioSources,fillSteamEmitters,stationProof:()=>[...stations].map(([index,m])=>({index,...m.proof,offset:m.group.position.x})),update(view,route,{interior=false}={}){
+  return{root,train,terrain,people,pathFrame,fillAudioSources,stationProof:()=>[...stations].map(([index,m])=>({index,...m.proof,offset:m.group.position.x})),update(view,route,{interior=false}={}){
     flatTerrain.update(view.distance);train.update(view,{interior});
     // Convert world actors once at the renderer boundary, keeping the original
     // farmer/passenger geometry and Session paths while removing the old belt cull.
-    people.update({...view,actors:view.actors.map(actor=>{const rendered=flatActor(actor,view.distance,FRONT_X);if(actor.frame==='train'&&train.transformPassengerPoint)rendered.position=train.transformPassengerPoint(rendered.position);return rendered;}).filter(actor=>Math.abs(actor.position[0]-WORLD.centerX)<FLAT_WORLD.terrainRadius)});
+    people.update({...view,actors:view.actors.map(actor=>flatActor(actor,view.distance,FRONT_X)).filter(actor=>Math.abs(actor.position[0]-WORLD.centerX)<FLAT_WORLD.terrainRadius)});
     const visible=new Set(),nearby=new Map(view.nearbyStations.map(plan=>[plan.index,plan]));
     for(const source of route){const offset=stationOffset(source.target,view.distance);if(offset+5<WORLD.centerX-FLAT_WORLD.terrainRadius||offset-27>WORLD.centerX+FLAT_WORLD.terrainRadius)continue;const plan=nearby.get(source.index)||source;visible.add(plan.index);if(!stations.has(plan.index))stations.set(plan.index,stationModel(plan));const m=stations.get(plan.index);if(!m.group.parent)root.add(m.group);m.update(view,plan);}for(const [id,m]of stations)if(!visible.has(id)){root.remove(m.group);m.dispose();stations.delete(id);}
     const activeBridges=new Set();for(let i=1;i<route.length;i++){const at=(route[i-1].target+route[i].target)/2,offset=at-view.distance+FRONT_X;if(Math.abs(offset-WORLD.centerX)>FLAT_WORLD.terrainRadius+8)continue;activeBridges.add(i);if(!bridges.has(i)){const b=new Blocks();bridge(b,0);const mesh=flatMesh(b);mesh.name='Straight railway truss bridge';bridges.set(i,{mesh});root.add(mesh);}bridges.get(i).mesh.position.x=offset;}for(const[id,b]of bridges)if(!activeBridges.has(id)){root.remove(b.mesh);b.mesh.geometry.dispose();b.mesh.material.dispose();bridges.delete(id);}
@@ -75,6 +69,6 @@ export function createGameWorld(){
     for(const e of view.events)if(e.id>lastEvent&&e.type==='stone-hit')effects.push({tick:e.tick,point:e.point,id:e.id});if(view.events.length)lastEvent=view.events.at(-1).id;effects=effects.filter(e=>(view.tick-e.tick)/30<.65);count=0;
     for(const e of effects){const age=(view.tick-e.tick)/30;for(let j=0;j<8;j++){const a=j*Math.PI/4+e.id;pose.position.set(e.point[0]+Math.cos(a)*age*.85,e.point[1]+Math.sin(a)*age*.8+.15,e.point[2]+age*.6);pose.rotation.set(0,0,a+age*2);pose.scale.set(.065*(1-age),.065*(1-age),.065*(1-age));pose.updateMatrix();impacts.setMatrixAt(count++,pose.matrix);}}impacts.count=count;impacts.instanceMatrix.needsUpdate=true;
     rain.visible=view.station.wet;if(rain.visible){for(let i=0;i<110;i++){const x=((i*13.37)%38)-26,z=((i*7.17)%11)-3.5,y=7-((view.elapsed*8+i*.173)%7);pose.position.set(x,y,z);pose.rotation.set(0,0,-.13);pose.scale.set(1,1,1);pose.updateMatrix();rain.setMatrixAt(i,pose.matrix);}rain.instanceMatrix.needsUpdate=true;}
-  },resetEffects(){lastEvent=0;effects=[];train.resetBodyMotion?.();}};
+  },resetEffects(){lastEvent=0;effects=[];}};
 }
 

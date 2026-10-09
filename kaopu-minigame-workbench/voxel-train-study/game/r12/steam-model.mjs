@@ -1,14 +1,13 @@
 // Original procedural study of the utilitarian WD Austerity 2-8-0 silhouette.
 // All meshes below are generated from primitives. No third-party mesh, image or texture is used.
-import * as THREE from '../vendor/three.module.js';
+import * as THREE from '../../vendor/three.module.js';
 import {CREW_SPEC,driverCrewPose} from './crew-state.mjs';
-import {BODY_MOTION_SPEC,createBodyMotion} from './body-motion.mjs';
 
 export const STEAM_SPEC=Object.freeze({wheelArrangement:'2-8-0',railHead:.3485,driverRadius:.61,guideRadius:.31,tenderRadius:.34,driverAxles:[-1.32,-.04,1.24,2.52],guideAxles:[3.84],tenderAxles:[-7.12,-6.08,-4.77,-3.73],chimney:[3.03,3.72,0],cylinders:{boreInches:19,strokeInches:28},original:true});
 const C={black:0x18201e,soot:0x242a27,green:0x283d32,edge:0x425248,steel:0x88918c,darkSteel:0x4b5752,rust:0x705445,brass:0xb29355,red:0x9b382d,coal:0x20251f};
 const Y=new THREE.Vector3(0,1,0),unitBox=new THREE.BoxGeometry(1,1,1),unitCylinder=new THREE.CylinderGeometry(1,1,1,12);
 
-// One vertex-colour material; upper locomotive and fixed chassis/tender are separate batches.
+// One vertex-colour material, one draw call for the entire fixed body, including rivets/pipes.
 class GeometryBatch{
   constructor(){this.p=[];this.n=[];this.c=[];this.parts=0;}
   add(source,color,position=[0,0,0],rotation=[0,0,0],scale=[1,1,1]){
@@ -45,13 +44,9 @@ function makeLabel(b,text,x,y,z,pixel=.065){
   const font={'W':['10101','10101','10101','10101','10101','10101','01010'],'D':['11110','10001','10001','10001','10001','10001','11110'],'2':['11110','00001','00001','01110','10000','10000','11111'],'8':['01110','10001','10001','01110','10001','10001','01110'],'0':['01110','10001','10011','10101','11001','10001','01110'],'1':['010','110','010','010','010','010','111']};
   let at=x;for(const char of text){const rows=font[char];if(!rows){at+=pixel*3;continue;}for(let row=0;row<rows.length;row++)for(let col=0;col<rows[row].length;col++)if(rows[row][col]==='1')b.box(at+col*pixel,y-row*pixel,z,pixel*.80,pixel*.80,.015,C.brass);at+=(rows[0].length+1)*pixel;}
 }
-export function createSteamLocomotive({bodyMotion:bodyMotionOptions={}}={}){
+export function createSteamLocomotive(){
   const root=new THREE.Group();root.name='Original WD-inspired 2-8-0 steam locomotive and coal-water tender';
-  const material=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.73,metalness:.40}),fixed=new GeometryBatch(),upper=new GeometryBatch(),glass=new GeometryBatch(),warm=new GeometryBatch();
-  let b=fixed;
-  const bodyMotion=createBodyMotion(bodyMotionOptions),body=new THREE.Group(),bodyContents=new THREE.Group(),pivot=BODY_MOTION_SPEC.pivot;
-  body.name='Subtle locomotive upper-body motion';bodyContents.name='Boiler cab crew glazing and headlamp';
-  body.position.fromArray(pivot);bodyContents.position.set(-pivot[0],-pivot[1],-pivot[2]);body.add(bodyContents);root.add(body);
+  const material=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.73,metalness:.40}),b=new GeometryBatch(),glass=new GeometryBatch(),warm=new GeometryBatch();
   // Deep twin plate frames, front pilot deck, running boards and red buffer beams.
   for(const z of [-.67,.67]){b.box(1.02,1.00,z,6.30,.25,.13,C.black);b.box(.74,1.55,Math.sign(z)*.96,5.72,.095,.40,C.darkSteel);for(const x of STEAM_SPEC.driverAxles){b.box(x,1.13,z,.46,.25,.18,C.green);for(let j=0;j<4;j++)b.box(x,1.29+j*.034,z,.65-j*.07,.029,.20,C.darkSteel);}}
   b.box(4.08,1.15,0,1.14,.16,1.94,C.green);b.box(4.67,1.11,0,.16,.37,2.14,C.red);b.box(-2.13,1.17,0,.15,.30,2.08,C.red);
@@ -60,7 +55,6 @@ export function createSteamLocomotive({bodyMotion:bodyMotionOptions={}}={}){
   b.pipe([[4.70,1.06,.28],[4.72,.67,.31],[4.56,.59,.31]],.043,C.black);b.pipe([[4.67,1.05,-.29],[4.69,.60,-.29]],.031,C.rust);
   for(const z of [-.83,.83]){b.pipe([[4.29,.63,z],[4.07,.97,z],[3.78,1.12,z]],.037,C.darkSteel);b.box(4.35,.58,z,.19,.07,.16,C.darkSteel);}
   // Riveted tapered boiler, separate smokebox, circular door and authentic central latch.
-  b=upper;
   b.cylinder(1.00,2.26,0,.705,3.50,C.green,'x',48,.665);b.cylinder(3.06,2.25,0,.69,.76,C.soot,'x',48);
   b.cylinder(3.47,2.25,0,.686,.085,C.black,'x',48);b.cylinder(3.53,2.25,0,.602,.050,C.soot,'x',48);b.torus(3.555,2.25,0,.61,.021,C.darkSteel,'x');
   for(let i=0;i<20;i++){const a=i*Math.PI/10;b.cylinder(3.565,2.25+Math.cos(a)*.626,Math.sin(a)*.626,.016,.021,C.steel,'x',8);}
@@ -74,11 +68,11 @@ export function createSteamLocomotive({bodyMotion:bodyMotionOptions={}}={}){
   b.cylinder(-.60,3.30,-.36,.043,.36,C.brass,'y',12);b.cylinder(-.60,3.50,-.36,.067,.055,C.brass,'y',12);
   // Outside 19 x 28 inch cylinders, slide valves, long steam pipes and fine handrails.
   for(const sign of [-1,1]){
-    const z=sign*.965;fixed.cylinder(3.30,1.06,z,.2413,.7112,C.black,'x',24);for(const x of [2.93,3.67]){fixed.cylinder(x,1.06,z,.251,.055,C.darkSteel,'x',24);for(let j=0;j<8;j++){const a=j*Math.PI/4;fixed.cylinder(x+(x>3.3?.031:-.031),1.06+Math.cos(a)*.197,z+Math.sin(a)*.197,.018,.025,C.steel,'x',8);}}
-    fixed.box(3.27,1.34,z,.55,.17,.32,C.green);b.pipe([[2.98,2.04,sign*.59],[3.05,1.76,sign*.84],[3.28,1.41,z]],.070,C.darkSteel);
+    const z=sign*.965;b.cylinder(3.30,1.06,z,.2413,.7112,C.black,'x',24);for(const x of [2.93,3.67]){b.cylinder(x,1.06,z,.251,.055,C.darkSteel,'x',24);for(let j=0;j<8;j++){const a=j*Math.PI/4;b.cylinder(x+(x>3.3?.031:-.031),1.06+Math.cos(a)*.197,z+Math.sin(a)*.197,.018,.025,C.steel,'x',8);}}
+    b.box(3.27,1.34,z,.55,.17,.32,C.green);b.pipe([[2.98,2.04,sign*.59],[3.05,1.76,sign*.84],[3.28,1.41,z]],.070,C.darkSteel);
     b.pipe([[-.86,2.39,sign*.744],[2.83,2.39,sign*.744],[3.20,2.35,sign*.61]],.021,C.brass);for(const x of [-.70,.2,1.15,2.05,2.80]){b.pipe([[x,2.25,sign*.68],[x,2.39,sign*.746]],.022,C.darkSteel);}
     b.pipe([[-.53,1.73,sign*.84],[2.75,1.73,sign*.84],[3.25,1.57,z]],.025,C.rust);b.box(2.22,1.55,sign*1.01,.60,.055,.30,C.steel);
-    for(const x of STEAM_SPEC.driverAxles){fixed.box(x+.39,.89,sign*.84,.09,.30,.10,C.darkSteel);fixed.pipe([[x+.39,1.22,sign*.83],[x+.39,.89,sign*.84]],.032,C.black);}
+    for(const x of STEAM_SPEC.driverAxles){b.box(x+.39,.89,sign*.84,.09,.30,.10,C.darkSteel);b.pipe([[x+.39,1.22,sign*.83],[x+.39,.89,sign*.84]],.032,C.black);}
   }
   // Broad firebox and open-backed cab. Distinct window openings are real gaps in the metal.
   b.box(-.78,1.94,0,.98,1.05,1.39,C.soot);b.box(-1.34,1.51,0,1.65,.13,1.93,C.green);b.box(-1.36,1.39,0,1.60,.11,1.74,C.black);
@@ -110,7 +104,6 @@ export function createSteamLocomotive({bodyMotion:bodyMotionOptions={}}={}){
   headBatch.box(-1.74,2.985,.78,.39,.052,.36,0x172a34);headBatch.box(-1.74,3.035,.76,.33,.07,.30,0x314451);headBatch.box(-1.74,2.963,.93,.36,.035,.16,0x182832);headBatch.box(-1.74,3.005,.936,.047,.045,.014,0xc9b57a);
   for(const x of [-1.95,-1.53]){b.box(x,2.47,.75,.12,.31,.13,0x40545d);b.box(x,2.34,.91,.12,.1,.32,0x40545d);b.box(x,2.34,1.085,.12,.095,.12,0xd6ab83);}
   // Original eight-wheel tender: two four-wheel bogies, leaf springs, water tank and open coal bunker.
-  b=fixed;
   for(const x of [-6.60,-4.25])for(const z of [-.74,.74]){b.box(x,.86,z,1.52,.19,.13,C.black);b.box(x,.99,z,1.40,.065,.17,C.darkSteel);}
   b.box(-5.28,1.10,0,4.75,.20,2.03,C.black);b.box(-5.28,1.26,0,4.64,.13,2.04,C.darkSteel);b.box(-7.66,1.11,0,.15,.33,2.15,C.red);b.box(-2.91,1.13,0,.12,.27,2.05,C.red);
   b.box(-5.95,1.94,0,3.38,1.28,1.96,C.green);b.box(-5.91,2.61,0,3.50,.10,2.03,C.edge);b.box(-3.72,1.76,0,1.18,.91,1.95,C.green);
@@ -133,20 +126,18 @@ export function createSteamLocomotive({bodyMotion:bodyMotionOptions={}}={}){
   for(const z of [-.36,.36])b.pipe([[-7.72,1.34,z],[-7.72,2.72,z]],.027,C.darkSteel);for(let y=1.42;y<2.73;y+=.25)b.pipe([[-7.76,y,-.36],[-7.76,y,.36]],.024,C.steel);
   b.box(-2.55,1.08,0,.77,.10,.21,C.darkSteel);b.pipe([[-2.12,1.43,.46],[-2.51,1.19,.46],[-2.97,1.38,.46]],.031,C.black);b.box(-2.53,1.51,0,.78,.054,1.20,C.darkSteel);
   // Deliberate grime/streak plates stay on the metal, not pasted-on external textures.
-  for(const sign of [-1,1]){for(const x of [-7.20,-6.31,-5.58])b.box(x,1.60,sign*1.009,.11,.43,.009,C.soot);for(const x of [-.5,.4,1.4,2.3])upper.box(x,1.59,sign*.80,.13,.045,.14,C.rust);}
+  for(const sign of [-1,1]){for(const x of [-7.20,-6.31,-5.58])b.box(x,1.60,sign*1.009,.11,.43,.009,C.soot);for(const x of [-.5,.4,1.4,2.3])b.box(x,1.59,sign*.80,.13,.045,.14,C.rust);}
   // Lamp on front running plate. Warm lens is separate to share one emissive material with firebox.
-  b=upper;
   b.box(4.20,1.71,0,.25,.11,.25,C.black);b.cylinder(4.24,1.94,0,.184,.25,C.black,'x',24);b.torus(4.382,1.94,0,.162,.018,C.brass,'x');warm.cylinder(4.392,1.94,0,.146,.023,0xffe0a0,'x',24);b.pipe([[4.19,2.09,-.12],[4.19,2.18,-.12],[4.19,2.18,.12],[4.19,2.09,.12]],.020,C.darkSteel);
   const headGeometry=headBatch.geometry();headGeometry.translate(...CREW_SPEC.driverHead.map(v=>-v));
   const driverHead=new THREE.Mesh(headGeometry,material);driverHead.name='Original placeholder driver head and peaked cap';
-  driverHead.position.fromArray(CREW_SPEC.driverHead);driverHead.castShadow=driverHead.receiveShadow=true;bodyContents.add(driverHead);
+  driverHead.position.fromArray(CREW_SPEC.driverHead);driverHead.castShadow=driverHead.receiveShadow=true;root.add(driverHead);
   const crew={driverHead,pose:driverCrewPose({velocity:0,station:{remaining:0}})};
   function updateCrew(view){Object.assign(crew.pose,driverCrewPose(view));driverHead.rotation.y=crew.pose.yaw;return crew.pose;}
-  root.add(fixed.mesh(material,'Fixed chassis cylinders and coal-water tender'));
-  bodyContents.add(upper.mesh(material,'Batched riveted locomotive upper body'));
-  bodyContents.add(glass.mesh(new THREE.MeshStandardMaterial({vertexColors:true,transparent:true,opacity:.31,metalness:.22,roughness:.15,depthWrite:false,side:THREE.DoubleSide}),'Cab glazing'));
-  bodyContents.add(warm.mesh(new THREE.MeshStandardMaterial({vertexColors:true,emissive:0xffa533,emissiveIntensity:1.15,roughness:.3}),'Amber headlamp and firebox glow'));
-  const lamp=new THREE.SpotLight(0xffda88,150,34,Math.PI*.16,.78,1.3);lamp.position.set(4.40,1.94,0);lamp.target.position.set(24,.25,0);bodyContents.add(lamp,lamp.target);
+  root.add(b.mesh(material,'Batched riveted steam engine and tender'));
+  root.add(glass.mesh(new THREE.MeshStandardMaterial({vertexColors:true,transparent:true,opacity:.31,metalness:.22,roughness:.15,depthWrite:false,side:THREE.DoubleSide}),'Cab glazing'));
+  root.add(warm.mesh(new THREE.MeshStandardMaterial({vertexColors:true,emissive:0xffa533,emissiveIntensity:1.15,roughness:.3}),'Amber headlamp and firebox glow'));
+  const lamp=new THREE.SpotLight(0xffda88,150,34,Math.PI*.16,.78,1.3);lamp.position.set(4.40,1.94,0);lamp.target.position.set(24,.25,0);root.add(lamp,lamp.target);
   const driverBatch=makeWheelBatch(STEAM_SPEC.driverRadius,8,true,material),guideBatch=makeWheelBatch(STEAM_SPEC.guideRadius,2,false,material),tenderBatch=makeWheelBatch(STEAM_SPEC.tenderRadius,8,false,material);root.add(driverBatch,guideBatch,tenderBatch);
   const wheels=[];for(const [kind,axles,radius,batch] of [['driver',STEAM_SPEC.driverAxles,STEAM_SPEC.driverRadius,driverBatch],['guide',STEAM_SPEC.guideAxles,STEAM_SPEC.guideRadius,guideBatch],['tender',STEAM_SPEC.tenderAxles,STEAM_SPEC.tenderRadius,tenderBatch]]){let instance=0;for(const x of axles)for(const sign of [-1,1]){const group=new THREE.Group();group.name=kind+' wheel';group.position.set(x,STEAM_SPEC.railHead+radius,sign*.90);group.userData={kind,radius,sign,batch,instance:instance++};wheels.push(group);}}
   const rods=new THREE.InstancedMesh(unitBox,new THREE.MeshStandardMaterial({color:0xb2b7ad,metalness:.72,roughness:.34}),18);rods.name='Distance-driven coupled rods and piston slides';rods.castShadow=rods.receiveShadow=true;rods.frustumCulled=false;root.add(rods);
@@ -170,15 +161,6 @@ export function createSteamLocomotive({bodyMotion:bodyMotionOptions={}}={}){
     }
     for(const batch of [driverBatch,guideBatch,tenderBatch,rods,pins])batch.instanceMatrix.needsUpdate=true;
   }
-  const bodyPoint=new THREE.Vector3(),bodyPivot=new THREE.Vector3(...pivot);
-  function applyBodyPose(){
-    const s=bodyMotion.state;body.position.set(pivot[0],pivot[1]+s.heave,pivot[2]+s.lateral);body.rotation.set(s.roll,0,s.pitch,'XYZ');body.updateMatrix();return s;
-  }
-  function updateBodyMotion(view,dt=0){bodyMotion.update(view,dt);return applyBodyPose();}
-  function resetBodyMotion(view={}){bodyMotion.reset(view);return applyBodyPose();}
-  // Only transform points attached to the upper locomotive. Cylinders stay in the fixed frame.
-  // The output remains train-local: callers apply train.root.matrixWorld once, at emission time.
-  function transformBodyPoint(point,out=[]){return bodyPoint.fromArray(point).sub(bodyPivot).applyQuaternion(body.quaternion).add(body.position).toArray(out);}
   update(0);
-  return{root,wheels,brakes:[],motion,update,updateCrew,crew,body,bodyMotion,updateBodyMotion,resetBodyMotion,transformBodyPoint,proof:{original:true,bodyMotion:Object.assign(bodyMotion.proof,{moving:'Locomotive boiler, cab, driver, glazing, warm lens and headlamp with its target',fixed:'Frames, wheel axes, cylinders, mechanical rods, tender and all coaches',batches:{fixedParts:fixed.parts,upperParts:upper.parts},extraDrawCalls:1}),placeholderDriver:{visible:true,position:[-1.74,2.82,.78],cap:'peaked',side:'right-platform',openWindow:true,animatedPart:'original head and cap',movingFacing:'+X',platformFacing:'+Z',pose:crew.pose},source:'Original procedural geometry; no copied mesh or image assets',wheelArrangement:'2-8-0',leadingWheels:2,drivingWheels:8,trailingWheels:0,tenderWheels:8,locomotiveAxles:5,tenderAxles:4,count:18,wheels:18,driverRadius:STEAM_SPEC.driverRadius,guideRadius:STEAM_SPEC.guideRadius,tenderRadius:STEAM_SPEC.tenderRadius,cylinderDimensions:'19 x 28 in',chimney:STEAM_SPEC.chimney.slice(),coalPieces:112,staticParts:fixed.parts+upper.parts,staticTriangles:(fixed.p.length+upper.p.length)/9,rodInstances:18,drawCalls:10,rodMotion:'Distance-driven quartered wheels and constant-length slider crank',livery:'Weathered soot black and dark green, red buffer beams, brass details'}};
+  return{root,wheels,brakes:[],motion,update,updateCrew,crew,proof:{original:true,placeholderDriver:{visible:true,position:[-1.74,2.82,.78],cap:'peaked',side:'right-platform',openWindow:true,animatedPart:'original head and cap',movingFacing:'+X',platformFacing:'+Z',pose:crew.pose},source:'Original procedural geometry; no copied mesh or image assets',wheelArrangement:'2-8-0',leadingWheels:2,drivingWheels:8,trailingWheels:0,tenderWheels:8,locomotiveAxles:5,tenderAxles:4,count:18,wheels:18,driverRadius:STEAM_SPEC.driverRadius,guideRadius:STEAM_SPEC.guideRadius,tenderRadius:STEAM_SPEC.tenderRadius,cylinderDimensions:'19 x 28 in',chimney:STEAM_SPEC.chimney.slice(),coalPieces:112,staticParts:b.parts,staticTriangles:b.p.length/9,rodInstances:18,drawCalls:9,rodMotion:'Distance-driven quartered wheels and constant-length slider crank',livery:'Weathered soot black and dark green, red buffer beams, brass details'}};
 }

@@ -9,7 +9,7 @@ const approx=(a,b,epsilon=1e-6)=>assert.ok(Math.abs(a-b)<epsilon,`${a} != ${b}`)
 test('Original 2-8-0 engine and eight-wheel tender have an explicit mechanical manifest',()=>{
  const m=createSteamLocomotive();assert.equal(m.proof.original,true);assert.equal(m.proof.wheelArrangement,'2-8-0');assert.equal(m.proof.leadingWheels,2);assert.equal(m.proof.drivingWheels,8);assert.equal(m.proof.trailingWheels,0);assert.equal(m.proof.tenderWheels,8);assert.equal(m.wheels.length,18);assert.equal(m.proof.cylinderDimensions,'19 x 28 in');assert.equal(m.proof.coalPieces,112);assert.ok(m.proof.staticParts>700);
  for(const wheel of m.wheels)approx(wheel.position.y-wheel.userData.radius,STEAM_SPEC.railHead);
- let meshes=0;m.root.traverse(o=>{if(o.isMesh){meshes++;for(const n of o.geometry.attributes.position.array)assert.ok(Number.isFinite(n));}});assert.equal(meshes,9);assert.equal(m.proof.drawCalls,meshes);assert.ok(m.proof.staticTriangles<30000);
+ let meshes=0;m.root.traverse(o=>{if(o.isMesh){meshes++;for(const n of o.geometry.attributes.position.array)assert.ok(Number.isFinite(n));}});assert.equal(meshes,10);assert.equal(m.proof.drawCalls,meshes);assert.ok(m.proof.staticTriangles<30000);
 });
 test('Wheels roll by distance, are quartered, and main rods keep a constant 2.6 m length',()=>{
  const m=createSteamLocomotive();for(const distance of [0,.1,1.03,20,-3.15,500]){m.update(distance);approx(m.motion.angle,-distance/STEAM_SPEC.driverRadius);for(let side=0;side<2;side++){const pins=m.motion.crankPins[side],slider=m.motion.crossheads[side],main=pins[1];approx(Math.hypot(slider[0]-main[0],slider[1]-main[1]),2.6);for(let i=1;i<4;i++)approx(pins[i][0]-pins[i-1][0],1.28);}
