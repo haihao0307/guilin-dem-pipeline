@@ -2,7 +2,7 @@ import {createRailAudio} from './audio.mjs';
 import {createJourneyMusic} from './music.mjs';
 import {createMorningAtmosphere} from './morning-atmosphere.mjs';
 import {KCR_STATIONS,MILEAGE} from './timetable.mjs';
-import * as THREE from '../vendor/three.module.js';
+import * as THREE from '../../vendor/three.module.js';
 import {Session,replay} from './session.mjs';
 import {createGameWorld} from './world.mjs';
 import {createGameSmoke} from './smoke.mjs';
@@ -135,7 +135,7 @@ canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=tr
 canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;$('loading').hidden=true;resize();needsRender=true;});
 viewControls=createViewControls({camera,target:cameraTarget,canvas,root:$('driverGame'),getZoomPoints:currentZoomPoints,onReset:()=>{manualCamera=null;},onChange:(profile,detail)=>{syncCameraButtons();if(detail?.profileApplied)projectionKey='';needsRender=true;if(lastCanvasSize[0]!==wrap.clientWidth||lastCanvasSize[1]!==wrap.clientHeight)resize(profile);else syncProjection(profile);}});
 resize();draw(game.view(),1,true);updateHUD(game.view());$('loading').hidden=true;requestAnimationFrame(animate);
-window.__trainDriver={ready:true,version:'kcr-hud-r14',getState:()=>({...game.view(),actors:game.actors.map(a=>({...a,position:a.position.slice()})),proof:world.train.proof,audio:railAudio.getState(),music:journeyMusic.getState(),steam:smoke.root.userData.effects,terrainProof:world.terrain.userData.proof,worldMode:'flat',atmosphere:atmosphere.proof,stationDetail:world.stationProof?.(),sceneFog:{near:scene.fog.near,far:scene.fog.far},camera:camera.position.toArray(),viewSettings:viewControls.state(),cameraMode:viewControls?.activePreset()||'manual',smokeMode:smoke.mode,smokeParticles:smoke.particles,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,frames:frameCount,fps,renderRatio,qualityMode,qualityInfo,canvasPixels:[canvas.width,canvas.height],canvasCss:[wrap.clientWidth,wrap.clientHeight],devicePixelRatio,antialias:gl.getContextAttributes()?.antialias,rendererName}),exportReplay:()=>game.replayPacket()};
+window.__trainDriver={ready:true,version:'kcr-dynamics-r13',getState:()=>({...game.view(),actors:game.actors.map(a=>({...a,position:a.position.slice()})),proof:world.train.proof,audio:railAudio.getState(),music:journeyMusic.getState(),steam:smoke.root.userData.effects,terrainProof:world.terrain.userData.proof,worldMode:'flat',atmosphere:atmosphere.proof,stationDetail:world.stationProof?.(),sceneFog:{near:scene.fog.near,far:scene.fog.far},camera:camera.position.toArray(),viewSettings:viewControls.state(),cameraMode:viewControls?.activePreset()||'manual',smokeMode:smoke.mode,smokeParticles:smoke.particles,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,frames:frameCount,fps,renderRatio,qualityMode,qualityInfo,canvasPixels:[canvas.width,canvas.height],canvasCss:[wrap.clientWidth,wrap.clientHeight],devicePixelRatio,antialias:gl.getContextAttributes()?.antialias,rendererName}),exportReplay:()=>game.replayPacket()};
 
 initSettingsUI();
 function currentZoomPoints(){if(!viewControls?.state?.().focus||viewControls.state().focus==='overview')return zoomPoints;const b=viewControls?.focusBounds?.();if(!b)return zoomPoints;const points=[];for(const x of [b.min[0],b.max[0]])for(const y of [b.min[1],b.max[1]])for(const z of [b.min[2],b.max[2]])points.push(new THREE.Vector3(x,y,z));return points;}

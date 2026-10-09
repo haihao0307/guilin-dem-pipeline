@@ -1,4 +1,4 @@
-name: Train R13 reference smoke and body motion public
+name: Train R14 separate HUD candidate
 on:
   push:
     branches: ['qa/voxel-train-r01-20261006']
@@ -6,7 +6,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: kcr-r13-public-${{ github.ref }}
+  group: kcr-r14-candidate-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   deterministic:
@@ -17,40 +17,25 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: kaopu-minigame-workbench/voxel-train-study
-      - run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends ffmpeg
-      - name: Verify dynamics, original geometry, rolling gear, replay and controls
-        run: |
-          node --test kaopu-minigame-workbench/voxel-train-study/game/{audio-spatial.test.mjs,audio.test.mjs,music.test.mjs,station-room.test.mjs} kaopu-minigame-workbench/voxel-train-study/game/tests/{anchored-zoom,body-motion,crew-state,driver-input,kcr-session,r08-smoke,r09-camera,r09-smoke-driver,r09-world,r11-integration,recommended-fit,render-quality,station-platform,steam-dynamics,steam-model,view-profile-storage}.test.mjs
-          node --check kaopu-minigame-workbench/voxel-train-study/game/app.mjs
-          node --check kaopu-minigame-workbench/voxel-train-study/game/smoke.mjs
-      - name: Verify current release and preserved version hashes
-        run: node kaopu-minigame-workbench/voxel-train-study/game/tests/public-hashes.cjs
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: train-r13-public-hashes
-          path: driver-public-hashes.json
-          retention-days: 7
+      - run: node --test kaopu-minigame-workbench/voxel-train-study/game/{audio-spatial.test.mjs,audio.test.mjs,music.test.mjs,station-room.test.mjs} kaopu-minigame-workbench/voxel-train-study/game/tests/*.test.mjs
+      - run: node --check kaopu-minigame-workbench/voxel-train-study/game/app.mjs
   browser:
     needs: deterministic
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { browser: chromium, suite: departure }
-          - { browser: chromium, suite: approach }
-          - { browser: chromium, suite: detail }
-          - { browser: chromium, suite: regressions }
-          - { browser: webkit, suite: regressions }
-          - { browser: chromium, suite: gameplay }
-          - { browser: webkit, suite: gameplay }
+          - { browser: chromium, suite: controls, shard: 0 }
+          - { browser: chromium, suite: controls, shard: 1 }
+          - { browser: webkit, suite: controls, shard: 0 }
+          - { browser: webkit, suite: controls, shard: 1 }
+          - { browser: chromium, suite: zoom, shard: 0 }
     env:
-      TRAIN_GAME_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/
+      TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/
       TRAIN_BROWSER: ${{ matrix.browser }}
-      R13_SUITE: ${{ matrix.suite }}
-      KCR_SUITE: ${{ matrix.suite }}
+      R12_SHARD: ${{ matrix.shard }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -58,21 +43,22 @@ jobs:
           sparse-checkout: kaopu-minigame-workbench/voxel-train-study
       - run: npm install --prefix "$RUNNER_TEMP/kcr" --no-save --ignore-scripts playwright@1.57.0
       - run: '"$RUNNER_TEMP/kcr/node_modules/.bin/playwright" install --with-deps ${{ matrix.browser }}'
-      - run: sudo apt-get install -y --no-install-recommends ffmpeg
       - run: echo "NODE_PATH=$RUNNER_TEMP/kcr/node_modules" >> "$GITHUB_ENV"
-      - name: Capture actual browser frames and verify live emitters
+      - if: matrix.suite == 'zoom'
+        run: sudo apt-get install -y --no-install-recommends xdotool
+      - run: python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/train-server.log" 2>&1 &
+      - name: Verify separate HUD with native mouse and touch
         run: |
           case "${{ matrix.suite }}" in
-            gameplay) node kaopu-minigame-workbench/voxel-train-study/game/tests/kcr-browser.cjs && node kaopu-minigame-workbench/voxel-train-study/game/tests/r13-archive.cjs ;;
-            *) node kaopu-minigame-workbench/voxel-train-study/game/tests/r13-browser.cjs ;;
+            controls) node kaopu-minigame-workbench/voxel-train-study/game/tests/r14-controls.cjs && node kaopu-minigame-workbench/voxel-train-study/game/tests/r14-archive.cjs ;;
+            zoom) xvfb-run --server-args="-screen 0 2560x1440x24" node kaopu-minigame-workbench/voxel-train-study/game/tests/r14-native-zoom.cjs ;;
           esac
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: train-r13-public-${{ matrix.browser }}-${{ matrix.suite }}
+          name: train-r14-${{ matrix.browser }}-${{ matrix.suite }}-${{ matrix.shard }}
           path: |
-            r13-${{ matrix.browser }}-${{ matrix.suite }}/*
-            r13-${{ matrix.browser }}-archive/*
-            kcr-${{ matrix.browser }}-${{ matrix.suite }}/*
+            r14-${{ matrix.browser }}-controls-${{ matrix.shard }}/*
+            r14-${{ matrix.browser }}-archive/*
+            r14-native-zoom/*
           retention-days: 7
-
