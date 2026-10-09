@@ -1,0 +1,311 @@
+{
+  "schema": "kaopu-live-program-schedule-contract-qa/1",
+  "passed": true,
+  "generatedAt": "2026-10-09T05:21:43.485Z",
+  "totalChecks": 72,
+  "testFixturesOnly": true,
+  "neuralModelsExecuted": [],
+  "realMotionQualityValidated": false,
+  "rounds": 36,
+  "arenasPerRound": 18,
+  "characters": 36,
+  "qaBindingsPerInventory": 1296,
+  "differentSemanticPrograms": "synthetic fixture identifiers only; not a real semantic quality claim",
+  "sharedSourceFileAccepted": true,
+  "bothRolesAndEveryProgramCovered": true,
+  "sameProgramGlobalClockCovered": true,
+  "sourceDefinitionRestPartnerRoleAndMetricsMutationRejected": true,
+  "fixtureProductionPublicationAllowed": false,
+  "legacyOfflineFilesUnchanged": true,
+  "note": "This run validates integrity, gate behavior and deterministic scheduling only. It runs no motion solver or visual review and creates no offline clip/bake hashes.",
+  "checks": [
+    {
+      "name": "reject test fixtures by default",
+      "passed": true
+    },
+    {
+      "name": "validation mode does not implicitly allow fixtures",
+      "passed": true
+    },
+    {
+      "name": "36-round schedule keeps fixed pairs, shared clocks and full semantic/role coverage",
+      "passed": true
+    },
+    {
+      "name": "one shared source file legitimately supplies 18 distinct program definitions",
+      "passed": true
+    },
+    {
+      "name": "same-program mode synchronizes all 18 arenas on a global clock and swaps AB",
+      "passed": true
+    },
+    {
+      "name": "rounds repeat deterministically with no hidden random phase",
+      "passed": true
+    },
+    {
+      "name": "output is immutable and detached from caller-owned input",
+      "passed": true
+    },
+    {
+      "name": "async validation snapshots source/definitions/QA before yielding",
+      "passed": true
+    },
+    {
+      "name": "fewer than 18 programs",
+      "passed": true
+    },
+    {
+      "name": "duplicate program IDs",
+      "passed": true
+    },
+    {
+      "name": "duplicate semantic IDs",
+      "passed": true
+    },
+    {
+      "name": "same definition renamed as a second program",
+      "passed": true
+    },
+    {
+      "name": "phase seed timing and event IDs cannot inflate action diversity",
+      "passed": true
+    },
+    {
+      "name": "program definition edits invalidate hash",
+      "passed": true
+    },
+    {
+      "name": "source revision edits invalidate semantic review",
+      "passed": true
+    },
+    {
+      "name": "dependency replacement invalidates semantic review even with fresh numeric evidence",
+      "passed": true
+    },
+    {
+      "name": "semantic review needs entire source bundle fingerprint",
+      "passed": true
+    },
+    {
+      "name": "target rest shape edits invalidate measured QA",
+      "passed": true
+    },
+    {
+      "name": "partner rest shape edits invalidate measured QA",
+      "passed": true
+    },
+    {
+      "name": "re-pairing characters needs new partner-specific evidence",
+      "passed": true
+    },
+    {
+      "name": "QA role cannot be reassigned",
+      "passed": true
+    },
+    {
+      "name": "missing opposite-role QA blocks even first round",
+      "passed": true
+    },
+    {
+      "name": "source bytes mismatch blocks schedule",
+      "passed": true
+    },
+    {
+      "name": "runtime dependency bytes mismatch blocks schedule",
+      "passed": true
+    },
+    {
+      "name": "source hash edits without new evidence are rejected",
+      "passed": true
+    },
+    {
+      "name": "missing real source bytes are rejected",
+      "passed": true
+    },
+    {
+      "name": "source strings cannot stand in for sourceFiles map",
+      "passed": true
+    },
+    {
+      "name": "execution config changes invalidate QA",
+      "passed": true
+    },
+    {
+      "name": "unreviewed quality is blocked by default",
+      "passed": true
+    },
+    {
+      "name": "pending semantic review is blocked by default",
+      "passed": true
+    },
+    {
+      "name": "explicit validation preview permits pending art review but never publishing",
+      "passed": true
+    },
+    {
+      "name": "reviewed evidence requires identified reviewer",
+      "passed": true
+    },
+    {
+      "name": "missing semantic evidence rationale",
+      "passed": true
+    },
+    {
+      "name": "semantic review must bind definition",
+      "passed": true
+    },
+    {
+      "name": "neural inference claim is forbidden",
+      "passed": true
+    },
+    {
+      "name": "missing no-inference fact is forbidden",
+      "passed": true
+    },
+    {
+      "name": "unapproved rights are forbidden",
+      "passed": true
+    },
+    {
+      "name": "fake offline bakes are forbidden",
+      "passed": true
+    },
+    {
+      "name": "fake native packet SHA is forbidden",
+      "passed": true
+    },
+    {
+      "name": "missing explicit live schema",
+      "passed": true
+    },
+    {
+      "name": "phase offsets forbidden",
+      "passed": true
+    },
+    {
+      "name": "hidden random phase in definitions forbidden",
+      "passed": true
+    },
+    {
+      "name": "declared duration must match authored duration",
+      "passed": true
+    },
+    {
+      "name": "contradictory metric sample count rejected",
+      "passed": true
+    },
+    {
+      "name": "per-program speed offsets forbidden",
+      "passed": true
+    },
+    {
+      "name": "nonpaired program forbidden",
+      "passed": true
+    },
+    {
+      "name": "FPS changes invalidate measured QA",
+      "passed": true
+    },
+    {
+      "name": "numeric metrics mutation detected",
+      "passed": true
+    },
+    {
+      "name": "numeric QA evidence mutation detected",
+      "passed": true
+    },
+    {
+      "name": "recomputed hash cannot hide failing numeric threshold",
+      "passed": true
+    },
+    {
+      "name": "all numeric QA metrics must be finite",
+      "passed": true
+    },
+    {
+      "name": "missing full-duration measurement coverage",
+      "passed": true
+    },
+    {
+      "name": "exclusive endpoint sampling is supported and honestly fingerprinted",
+      "passed": true
+    },
+    {
+      "name": "missing measured metrics rejected",
+      "passed": true
+    },
+    {
+      "name": "non-finite sample report rejected",
+      "passed": true
+    },
+    {
+      "name": "missing numeric pass thresholds rejected",
+      "passed": true
+    },
+    {
+      "name": "finite sample check cannot be omitted",
+      "passed": true
+    },
+    {
+      "name": "missing QA harness fingerprint rejected",
+      "passed": true
+    },
+    {
+      "name": "unexecuted numeric QA rejected",
+      "passed": true
+    },
+    {
+      "name": "duplicate QA binding rejected",
+      "passed": true
+    },
+    {
+      "name": "invalid fixture override rejected",
+      "passed": true
+    },
+    {
+      "name": "duplicate character IDs rejected",
+      "passed": true
+    },
+    {
+      "name": "incorrect cast size rejected",
+      "passed": true
+    },
+    {
+      "name": "inadequate arena count rejected",
+      "passed": true
+    },
+    {
+      "name": "unknown comparison mode rejected",
+      "passed": true
+    },
+    {
+      "name": "same-program mode needs explicit choice",
+      "passed": true
+    },
+    {
+      "name": "unknown selected program rejected",
+      "passed": true
+    },
+    {
+      "name": "selected program cannot silently change diverse mode",
+      "passed": true
+    },
+    {
+      "name": "round integer boundaries are strict",
+      "passed": true
+    },
+    {
+      "name": "strict canonical JSON rejects lossy values and canonicalizes key ordering",
+      "passed": true
+    },
+    {
+      "name": "semantic projection preserves authored attacks and drops decorations",
+      "passed": true
+    },
+    {
+      "name": "legacy offline planner and native packet files stay byte-identical",
+      "passed": true
+    }
+  ]
+}

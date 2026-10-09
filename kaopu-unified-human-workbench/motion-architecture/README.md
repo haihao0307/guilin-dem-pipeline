@@ -10,6 +10,8 @@
 - 已实现现有 Anny104 动作帧的离线烘焙与原格式回放，对既有36个人物共1116帧做 JSON 往返，posed/skin 矩阵最大差为0。没有换网格、削骨或修改蒙皮。
 - **SOMA-X原生解析身体层CPU low最小单例已通过23项检查**，见 [实跑证据](soma-cpu-r01/README.md)。mid尝试以137退出。其余四套原系统未实跑；没有训练或神经推理，没有完成 SOMA77 → Anny104 标定。不能称为五套体系完整1:1复现。
 
+新增 [真实SOMA → 完整104骨最小标定](soma-retarget-r01/README.md)：root与左前臂432例/396负例，六完整人物蒙皮消费及静态网格对照。仅两处局部控制，不能当作全身重定向或动作库新增招式。
+
 本目录由自有接口代码、研究说明、测试和测试结果构成；不打包老师权重、受限人体模型或动作数据。源码阅读固定点在 [SOURCE-INDEX.json](SOURCE-INDEX.json)，完整判断见 [FIVE-TEACHERS.md](FIVE-TEACHERS.md)。
 
 [TEACHERS.json](TEACHERS.json) 是机器可读的角色/输入输出/版本/运行条件注册表。`numericFileAdapterImplemented` 与 `nativeReproductionExecuted` 分开，避免把接口实现自动晋级为原模型复现成功。
@@ -86,3 +88,7 @@ SOMA 外来动作在标定完成前停在独立标准动作文件；不能绕过
 ## 下一步及停止条件
 
 详见 [REPRODUCTION-PLAN.md](REPRODUCTION-PLAN.md)。先在固定源码、权重、许可证和环境条件下做老师原样单例，保存命令/种子/输入输出哈希/日志/原生预览，再做适配。条件不齐时明确停在对应阶段；不在网页里假装训练，也不把程序动作重命名为模型输出。
+
+## 实时自研程序与离线clip分开
+
+[Live程序调度契约](LIVE-PROGRAM-SCHEDULE.md) 与 `live_program_schedule.mjs` 不伪造离线bake/clip哈希。它绑定实际程序源码、定义、语义审核及每个形体/对手/角色的实测QA，支持18台不同程序与同一程序全局同步。72项测试仅验证契约，未生成或视觉审核任何真实招式；候选模式始终validationOnly/canPublish:false。

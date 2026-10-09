@@ -10,7 +10,7 @@
 <div class="eyebrow">KAOPU HUMAN · MOTION ARCHITECTURE / R01</div>
 <h1>五个老师，各司其职。<br>先验证，再接进完整人物。</h1>
 <p class="muted">恢复、身体表示、生成、物理控制、坏帧清理。研究固定到源码提交，接口、实验和未完成条件一起留在同一项目库。</p>
-<div class="notice"><strong>SOMA原生CPU最小单例已跑通；其余四套原系统尚未实跑。</strong><br>SOMA-X解析身体层low LOD已通过23项CPU检查，未启用神经修正。mid尝试以137退出。尚未完成 SOMA77 → Anny104 标定；下列28项与1116帧仍是自有契约及既有动作回放结果。</div>
+<div class="notice"><strong>SOMA原生CPU最小单例已跑通；其余四套原系统尚未实跑。</strong><br>SOMA-X解析身体层low LOD已通过23项CPU检查，未启用神经修正。mid尝试以137退出。新增root与左前臂的最小解剖标定；全身 SOMA77 → Anny104 仍未完成。下列28项与1116帧仍是自有契约及既有动作回放结果。</div>
 <section class="stats" aria-label="已执行测试">
 <div class="stat"><b>28 / 28</b><span>契约、数值诊断、NPZ往返测试</span></div>
 <div class="stat"><b>36 × 31</b><span>既有人物 · 实际104骨回放帧</span></div>
@@ -24,8 +24,8 @@
 <article class="card"><span class="tag">05 / 识别与清理</span><h3>StableMotion</h3><p>质量条件扩散：先识别坏帧，再按mask修复。原动作和好帧保真都需要保留。</p><p class="muted">当前模型输入是232维动作+1质量通道。本台阈值诊断不等于它的神经审核结果。</p><div class="links"><a href="https://github.com/Murrol/StableMotion/tree/45d8836ce5cd7ae70f0065fdac672debfdfd6066">固定源码</a><a href="https://xbpeng.github.io/projects/StableMotion/index.html">官方论文页</a></div></article>
 <article class="card"><span class="tag">我们的运行时 / 保留完整身体</span><h3>104骨动作消费口</h3><p>既有形体与蒙皮继续使用。离线矩阵包逐帧深复制，带形体rest指纹和根位移所有权检查。</p><p class="muted">保留25417顶点、50624面和最多9个原生蒙皮影响；不把外来77骨直接改名成104骨。</p><div class="links"><a href="https://github.com/haihao0307/guilin-dem-pipeline/blob/gh-pages/kaopu-unified-human-workbench/motion-architecture/native_packet.mjs">原生packet实现</a><a href="https://github.com/haihao0307/guilin-dem-pipeline/blob/gh-pages/kaopu-unified-human-workbench/motion-architecture/NATIVE-PACKET-QA.json">1116帧回放证据</a></div></article>
 </section>
-<p><a href="https://github.com/haihao0307/guilin-dem-pipeline/blob/gh-pages/kaopu-unified-human-workbench/motion-architecture/soma-cpu-r01/README.md">SOMA-X 官方原生 CPU 实跑：23项通过、low范围与mid失败记录 →</a></p><h2>动作库：下一步要兑现的目标</h2><p>当前R01是3套自有双人动作语法与18套相位/速度组合，老师模型产出的入库动作仍为0。18台不同招、各形体轮换同招的调度协议已测试，但真实18种动作仍待生成、标定和审核。</p><p><a href="https://github.com/haihao0307/guilin-dem-pipeline/blob/gh-pages/kaopu-unified-human-workbench/motion-architecture/ADOPTION-STATUS.md">查看每位老师当前用到哪层、最小下一步和未完任务 →</a></p>
-<h2>接入顺序</h2>
+<p><a href="https://github.com/haihao0307/guilin-dem-pipeline/blob/gh-pages/kaopu-unified-human-workbench/motion-architecture/soma-cpu-r01/README.md">SOMA-X 官方原生 CPU 实跑：23项通过、low范围与mid失败记录 →</a></p><p><a href="https://github.com/haihao0307/guilin-dem-pipeline/blob/gh-pages/kaopu-unified-human-workbench/motion-architecture/soma-retarget-r01/README.md">真实SOMA → 完整104骨：root与左前臂432例标定、完整网格对照 →</a></p><h2>动作库：下一步要兑现的目标</h2><p>当前R01是3套自有双人动作语法与18套相位/速度组合，老师模型产出的入库动作仍为0。18台不同招、各形体轮换同招的调度协议已测试，但真实18种动作仍待生成、标定和审核。</p><p><a href="https://github.com/haihao0307/guilin-dem-pipeline/blob/gh-pages/kaopu-unified-human-workbench/motion-architecture/ADOPTION-STATUS.md">查看每位老师当前用到哪层、最小下一步和未完任务 →</a></p>
+<p><a href="https://github.com/haihao0307/guilin-dem-pipeline/blob/gh-pages/kaopu-unified-human-workbench/motion-architecture/LIVE-PROGRAM-SCHEDULE.md">实时自研程序调度：18台不同动作 / 同招跨形体，72项契约验证 →</a></p><h2>接入顺序</h2>
 <div class="flow">老师原生单例与预览 → 完整源动作存档 → 明确单位/坐标/FPS → 骨架rest标定 → 任务与质量审核 → 带来源动作库 → 既有人物运行时</div>
 <ul><li>actual root和smoothed root独立保存，不逐帧bbox归零。</li><li>原始动作、物理代理、重定向动作与清理后动作分开版本化。</li><li>每条记录绑定输入、源码/权重、骨架、审核哈希与单独的再分发权利。</li><li>没有GPU、模型、许可或数据时停在真实边界；不把程序动作冒充研究模型输出。</li></ul>
 <h2>可复查的项目锚点</h2>

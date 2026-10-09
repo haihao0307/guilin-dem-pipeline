@@ -60,13 +60,27 @@
         "Default mid LOD run terminated with exit137; only official low LOD4505 CPU smoke test passed"
       ],
       "minimumNextRun": {
-        "task": "Visualize native rest and single-joint outputs; calibrate SOMA77 to Anny104",
-        "requires": "Explicit per-joint rest frames and target shape rest fingerprints",
-        "successEvidence": "Preserved full source skeleton and target104, coordinate/units/role tests and side-by-side visual acceptance",
+        "task": "Extend explicitly reviewed anatomical mappings to remaining spine/limb/hand groups and temporal contacts",
+        "requires": "Per-group rest-frame and twist-distribution decisions, actual native source sequences and target shape QA",
+        "successEvidence": "Independent full-chain rotation, endpoint, surface and paired-motion review; no source joint silently dropped",
         "status": "not_started"
       },
       "nativeReproductionScope": "Official 0.3.3 analytical CPU low LOD zero pose, six single-joint rotations and root translation; not complete reproduction",
-      "evidence": "soma-cpu-r01/SOMA-CPU-QA.json"
+      "evidence": "soma-cpu-r01/SOMA-CPU-QA.json",
+      "partialAnny104Calibration": {
+        "implemented": true,
+        "scope": [
+          "Hips/root",
+          "LeftForeArm/lowerarm01.L"
+        ],
+        "sourceFrames": 12,
+        "targetCharacters": 36,
+        "cases": 432,
+        "negativeChecks": 396,
+        "fullMeshConsumerCharacters": 6,
+        "fullBodyRetarget": false,
+        "evidence": "soma-retarget-r01/RETARGET-QA.json"
+      }
     },
     {
       "id": "kimodo",
@@ -98,6 +112,14 @@
         "requires": "Weight/model license and size review, text encoder, compatible inference device; CPU text encoding is an upstream option, not locally measured",
         "successEvidence": "Native preview and NPZ, seed/constraints/FPS, checkpoint/input/output hashes",
         "status": "not_started"
+      },
+      "cpuFeasibility": {
+        "officialCpuPath": true,
+        "localInferenceExecuted": false,
+        "defaultTextEncoder": "gated Meta Llama3 8B plus LLM2Vec adapters",
+        "blocker": "~16.07GB base weights exceed 9.73GiB no-swap host; access and matching environment unverified",
+        "alternative": "Authorized official text-encoder API plus local CPU denoising; no endpoint currently configured",
+        "evidence": "soma-retarget-r01/KIMODO-CPU-FEASIBILITY.md"
       }
     },
     {
