@@ -20,25 +20,29 @@ extension=(P/'worker-extension.mjs').read_text().replace("from '../../learning/"
 worker=once(worker,'self.onmessage = async ({ data }) => {',extension+'\nself.onmessage = async ({ data }) => {')
 worker=worker.replace('R07.2','R07.4')
 (CAT/'r074-worker.bundle.mjs').write_text(worker)
-# Node-only export of the exact newly built worker for independent geometry checks.
 (CAT/'r074-test-module.mjs').write_text('globalThis.self={};\n'+worker+'\nexport {compileAnalytic,GarmentLab2,GarmentLab,BodySDF,configureWasm,prepareBodyAudit,strictIntersectionAudit,regionalStrain};\n')
 ui=(CAT/'r072-workbench-app.mjs').read_text().replace('r072-workbench','r074-workbench').replace('r072-worker','r074-worker').replace('R07.2','R07.4')
-ui=once(ui,'function bindDOM(){','function bindDOM(){mountContinuationUI();')
+ui=once(ui,'function bindDOM(){','function bindDOM(){mountContinuationUI();mountPresetUI();')
 ui=once(ui,'function updateButtons(){','function updateButtons(){updateContinuationUI();')
 ui=once(ui,"if(d.type==='paper'){state.generating=false;","if(d.type==='paper'){continuationPaperArrived(d);state.generating=false;")
 ui=once(ui,"$('sew').onclick=()=>generate(true);","$('sew').onclick=continuationSewCurrent;")
 ui=once(ui,"检验未通过：有穿插或过度拉伸，不能视为合格成衣","检验未通过：穿插、应变或整段接缝未通过；不能视为合格成衣")
-ui=once(ui,"source:state.source,panelCount:","source:state.source,editRevision:continuationUIInfo?.revision||0,editOperationCount:continuationUIInfo?.operationCount||0,panelCount:")
-extension=(P/'ui-extension.mjs').read_text()
+ui=once(ui,"source:state.source,panelCount:","source:state.source,activePresetId:state.activePresetId||null,editRevision:continuationUIInfo?.revision||0,editOperationCount:continuationUIInfo?.operationCount||0,panelCount:")
+ui=once(ui,'function select(id,{push=false,skipBaseline=false}={})','function select(id,{push=false,skipBaseline=false,presetDesign=null}={})')
+ui=once(ui,"design=selected.kind==='analytic'?(saved?.design||initialDesign(schema,selected)):null;","design=selected.kind==='analytic'?(presetDesign?validateDesignSnapshot(presetDesign,schema):(saved?.design||initialDesign(schema,selected))):null;")
+ui=once(ui,"tab('parameters');","tab('styles');")
+extension=(P/'ui-extension.mjs').read_text()+'\n'+(P/'preset-ui.mjs').read_text()
+extension=extension.replace('requestId++;state.generating=true;','requestId++;state.error=null;state.generating=true;')
 ui=once(ui,"mountDOM();window.addEventListener",extension+"\nmountDOM();window.addEventListener")
-ui+='\nwindow.__TAILOR_CONTINUATION_QA__={apply:op=>sendContinuationOperation(op),undo:()=>sendContinuationOperation(null,"undo-edit"),reset:()=>sendContinuationOperation(null,"reset-edits"),sew:continuationSewCurrent,getEditInfo:()=>structuredClone(continuationUIInfo),getBase:()=>structuredClone(continuationUIBase),showEditor:()=>{tab("parameters");$("continuation-editor").open=true;},getWholeSeamAudit:()=>structuredClone(state.staticGate?.wholeSeamAudit||null)};\n'
+ui+='\nwindow.__TAILOR_CONTINUATION_QA__={apply:op=>sendContinuationOperation(op),undo:()=>sendContinuationOperation(null,"undo-edit"),reset:()=>sendContinuationOperation(null,"reset-edits"),sew:continuationSewCurrent,selectPreset:applyContinuationPreset,getPresetCount:()=>continuationPresetLibrary?.presets.length||0,getEditInfo:()=>structuredClone(continuationUIInfo),getBase:()=>structuredClone(continuationUIBase),showEditor:()=>{tab("parameters");$("continuation-editor").open=true;},getWholeSeamAudit:()=>structuredClone(state.staticGate?.wholeSeamAudit||null)};\n'
 (CAT/'r074-workbench-app.mjs').write_text(ui)
 css="""@import url('./r072-workbench-style.css');
-#continuation-editor{border:1px solid var(--wb-line,#49616b);border-radius:6px;padding:10px;margin-bottom:14px;background:#192f38}
+#continuation-editor,#continuation-presets{border:1px solid var(--wb-line,#49616b);border-radius:6px;padding:10px;margin-bottom:14px;background:#192f38}
 #continuation-editor summary{cursor:pointer;font-weight:600;color:#dac49b}
-#continuation-editor p{font-size:11px;line-height:1.5;color:#bdcccc;margin:7px 0}
+#continuation-editor p,#continuation-presets p{font-size:11px;line-height:1.5;color:#bdcccc;margin:7px 0}
 #continuation-editor label{display:block;font-size:11px;margin:8px 0}
-#continuation-editor select{display:block;width:100%;max-width:100%;font-size:10px;background:#142831;color:#e6eeeb}
+#continuation-editor select,#continuation-presets select{display:block;width:100%;max-width:100%;font-size:10px;background:#142831;color:#e6eeeb}
+#continuation-preset-apply{margin-top:8px;width:100%;font-size:11px!important;white-space:normal}
 .continuation-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .continuation-actions button{font-size:10px!important;padding:7px!important;white-space:normal}
 #continuation-whole-seam{font-size:11px!important;line-height:1.4;color:#e7c293;max-height:58px;overflow:auto;margin:6px 0 0}
