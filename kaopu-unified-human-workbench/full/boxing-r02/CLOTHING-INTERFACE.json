@@ -1,0 +1,31 @@
+{
+  "schema": "human-boxing-clothing-pending/1",
+  "status": "waiting-for-clothing-workbench-presets",
+  "changesInThisStage": false,
+  "acceptedR01ClothingAndSkinModule": "../boxing/AnimatedHuman.mjs",
+  "requirements": [
+    "retain canonical 25417-vertex human identity and saved native state",
+    "clothing preset must declare restFingerprint, metre/Z-up convention, anchor/bone map, license and source provenance",
+    "surface-only presets and separate cloth meshes must be distinguished",
+    "do not claim cloth simulation if only materials are supplied",
+    "test all 36 body presets, shoulder/hip flexion, glove cuff and rope views before enabling"
+  ],
+  "incomingPaperPresetVersion": "P01",
+  "incomingPresetStatus": "60 design/paper presets; not 60 new garments and not dynamic-wear accepted",
+  "bodyProfileSchema": "kaopu-tailor-body-measurements@1",
+  "requiredBodyProfile": [
+    "id",
+    "revision",
+    "sourceSHA256",
+    "units=cm",
+    "bodyCm",
+    "bodyGeometrySHA256 for non-reference bodies"
+  ],
+  "requestSchema": "kaopu-tailor-preset-request@1",
+  "requestAction": "generate-paper",
+  "bodyMutationAllowed": false,
+  "geometryReuseAllowed": false,
+  "physicalFitAccepted": false,
+  "dynamicWearCertified": false,
+  "automaticApplyEnabled": false
+}
