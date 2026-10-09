@@ -1,0 +1,64 @@
+import * as THREE from '../source/registration-vendor/three.module.js';
+export const SCHEMA='common-person-display-surface/1';export const PROFILES=['landmarks','costal_sheets','soft_coverage'];
+const smooth=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)},g=x=>Math.exp(-.5*x*x);
+/** Original reference-informed anatomy study. No scan mesh or map copied.
+ * One reversible conforming edge split, barycentric parent mapping, complete CSR.
+ * Canonical CommonPerson positions/faces/bones/weights are read-only.
+ */
+export function createLocalVisualSurface(viewer,model){
+ const rest=model.positions.slice(),n=model.vertexCount,faces=model.faces,parents=Array.from({length:n},(_,i)=>[i,i]),edgeMap=new Map(),marked=new Set();
+ const key=(a,b)=>a<b?a+','+b:b+','+a;
+ const inTorso=i=>i<model.bodyCount&&Math.abs(rest[3*i])<.29&&rest[3*i+2]>.15&&rest[3*i+2]<.61;
+ for(let k=0;k<faces.length;k+=3){const a=faces[k],b=faces[k+1],c=faces[k+2];if([a,b,c].some(inTorso))for(const[x,y]of[[a,b],[b,c],[c,a]])if(x<model.bodyCount&&y<model.bodyCount)marked.add(key(x,y));}
+ const midpoint=(a,b)=>{const k=key(a,b);if(!marked.has(k))return-1;if(!edgeMap.has(k)){edgeMap.set(k,parents.length);parents.push([a,b]);}return edgeMap.get(k)};
+ const out=[];for(let k=0;k<faces.length;k+=3){const v=[faces[k],faces[k+1],faces[k+2]],m=[midpoint(v[0],v[1]),midpoint(v[1],v[2]),midpoint(v[2],v[0])],count=m.filter(i=>i>=0).length;if(count===0)out.push(...v);else if(count===3)out.push(v[0],m[0],m[2],m[0],v[1],m[1],m[2],m[1],v[2],m[0],m[1],m[2]);else if(count===1){const e=m.findIndex(i=>i>=0),a=v[e],b=v[(e+1)%3],c=v[(e+2)%3],h=m[e];out.push(a,h,c,h,b,c);}else{const e=m.findIndex(i=>i<0),a=v[e],b=v[(e+1)%3],c=v[(e+2)%3],bc=m[(e+1)%3],ca=m[(e+2)%3];out.push(c,ca,bc,a,b,bc,a,bc,ca);}}
+ const indices=Uint32Array.from(out),positions=new Float32Array(parents.length*3),display=new Float32Array(positions.length),deltas=new Float32Array(positions.length),restNormals=new Float32Array(n*3),norm=viewer.geometry.attributes.normal;
+ for(let i=0;i<n;i++){restNormals[3*i]=norm.getX(i);restNormals[3*i+1]=-norm.getZ(i);restNormals[3*i+2]=norm.getY(i);}
+ const a=model.r033Thorax.last.anchors,sc=(a.clavicle[2]-model.lastBodyDriver.rig.restMatrices[model.lastBodyDriver.rig.names.indexOf('pelvis.L')][11])/.557;
+ let profile="landmarks";function height(q,N){const[x,y,z]=q,ax=Math.sqrt(x*x+1e-10),front=smooth(.05,.65,-N[1]),region=smooth(.16*sc,.21*sc,z)*(1-smooth(.565*sc,.61*sc,z))*(1-smooth(.22*sc,.28*sc,ax));let d=0;
+  // Independent reference annotations: SC joint -> curved clavicular shaft -> AC joint.
+  // The outer shoulder belongs to the acromion/deltoid cap, not an extended clavicle.
+  const t=(ax-.017*sc)/(.166*sc),ct=Math.max(0,Math.min(1,t));
+  const cz=a.clavicle[2]-.033*sc+.014*sc*Math.sin(Math.PI*ct)-.030*sc*ct;
+  const cg=smooth(0,.12,t)*(1-smooth(.86,1.05,t));
+  const width=(.014+.010*g((ct-.12)/.22)+.005*g((ct-.8)/.2))*sc;
+  d+=cg*sc*(.0055*g((z-cz)/width)-.0028*g((z-cz+.034*sc)/(.027*sc)));
+  // Pectoralis is a continuous fan-shaped covering; avoid digging a central funnel.
+  const chestTop=a.spine[2]+.078*sc,cover=g((ax-.085*sc)/(.065*sc))*g((z-chestTop)/(.065*sc));
+  d-=.0033*sc*cover;
+  d+=.0018*sc*g(x/(.027*sc))*g((z-(a.spine[2]+.020*sc))/(.085*sc));
+  // Infrasternal angle is a broad shallow transition below xiphoid, not a sharp V incision.
+  d-=.0032*sc*g(x/(.058*sc))*g((z-(a.spine[2]-.135*sc))/(.061*sc));
+  if(profile!=="landmarks"){
+   const lateral=smooth(.055*sc,.095*sc,ax)*(1-smooth(.165*sc,.225*sc,ax));
+   // Rib sheets widen outward and become gradually less exposed under pectoralis.
+   for(let j=0;j<3;j++){
+    const u=Math.max(0,Math.min(1,(ax-.055*sc)/(.15*sc))),rz=a.spine[2]-.024*sc-j*.043*sc-.034*sc*u+.013*sc*u*u;
+    const width=(.018+.007*u+.002*j)*sc;
+    const exposed=profile==="soft_coverage"?(.30+.22*j)*(1-.48*g((z-chestTop)/(.07*sc))):(.58+.17*j);
+    d+=lateral*exposed*.0032*sc*g((z-rz)/width);
+   }
+   if(profile==="soft_coverage"){
+    // A broad skin bridge between adjacent lower ribs removes ladder-like troughs.
+    d+=.0017*sc*g((ax-.12*sc)/(.052*sc))*g((z-(a.spine[2]-.073*sc))/(.080*sc));
+    d+=.0015*sc*cover;
+   }
+  }
+  return Math.max(-.007*sc,Math.min(.008*sc,d*front*region));
+ }
+ let maxRest=0;function rebuildField(){maxRest=0;for(let i=0;i<parents.length;i++){const[l,r]=parents[i],q=[0,1,2].map(c=>(rest[3*l+c]+rest[3*r+c])*.5),N=[0,1,2].map(c=>(restNormals[3*l+c]+restNormals[3*r+c])*.5),len=Math.hypot(...N)||1;for(let c=0;c<3;c++)N[c]/=len;const d=(l<model.bodyCount&&r<model.bodyCount)?height(q,N):0;maxRest=Math.max(maxRest,Math.abs(d));for(let c=0;c<3;c++)deltas[3*i+c]=N[c]*d;}}
+ rebuildField();
+ // Record the full CSR blend for every child; never limit to four influences.
+ const w=model.lastBodyDriver.packet.weights,ptr=[0],joints=[],values=[];let maxInfluences=0,maxWeightError=0;
+ for(const[l,r]of parents){const weights=new Map();if(l<model.bodyCount&&r<model.bodyCount)for(const src of[l,r])for(let k=w.ptr[src];k<w.ptr[src+1];k++)weights.set(w.joints[k],(weights.get(w.joints[k])||0)+w.values[k]*.5);for(const[j,v]of weights){joints.push(j);values.push(v);}ptr.push(joints.length);maxInfluences=Math.max(maxInfluences,weights.size);if(weights.size)maxWeightError=Math.max(maxWeightError,Math.abs([...weights.values()].reduce((a,b)=>a+b,0)-1));}
+ const colors=new Float32Array(positions.length),originalColors=viewer.geometry.attributes.color;for(let i=0;i<parents.length;i++){const[l,r]=parents[i];colors[i*3]=(originalColors.getX(l)+originalColors.getX(r))*.5;colors[i*3+1]=(originalColors.getY(l)+originalColors.getY(r))*.5;colors[i*3+2]=(originalColors.getZ(l)+originalColors.getZ(r))*.5;}const geometry=new THREE.BufferGeometry();geometry.setAttribute('color',new THREE.BufferAttribute(colors,3));geometry.setAttribute('position',new THREE.BufferAttribute(display,3));geometry.setIndex(new THREE.BufferAttribute(indices,1));let on=false,heightAmount=1,maxPosed=0,revision=0,sampleTimeSeconds=0,previousTimeSeconds=0;const previousPositions=positions.slice();
+ const digest=async buffer=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',buffer))).map(x=>x.toString(16).padStart(2,'0')).join('');
+ const canonicalFingerprintPromise=digest(rest.buffer),topologyFingerprintPromise=digest(indices.buffer);
+ const exteriorMask=new Uint8Array(indices.length/3);for(let k=0;k<indices.length;k+=3)exteriorMask[k/3]=[indices[k],indices[k+1],indices[k+2]].every(i=>parents[i].every(j=>j<model.bodyCount))?1:0;
+
+ function update(timeSeconds=performance.now()/1000){previousPositions.set(positions);previousTimeSeconds=sampleTimeSeconds;sampleTimeSeconds=timeSeconds;revision++;const skin=model.lastBodyDriver.rig.skinMatrices;maxPosed=0;for(let i=0;i<parents.length;i++){const[l,r]=parents[i],v=[0,1,2].map(c=>(model.positions[3*l+c]+model.positions[3*r+c])*.5),d=deltas.subarray(i*3,i*3+3),delta=[0,0,0];if(on)for(let k=ptr[i];k<ptr[i+1];k++){const m=skin[joints[k]],w=values[k];for(let c=0;c<3;c++)delta[c]+=heightAmount*w*(m[c*4]*d[0]+m[c*4+1]*d[1]+m[c*4+2]*d[2]);}for(let c=0;c<3;c++)positions[3*i+c]=v[c]+delta[c];maxPosed=Math.max(maxPosed,Math.hypot(...[0,1,2].map(c=>positions[3*i+c]-v[c])));display[3*i]=positions[3*i];display[3*i+1]=positions[3*i+2];display[3*i+2]=-positions[3*i+1];}geometry.attributes.position.needsUpdate=true;// Remove subdivision-induced area-weight bias before evaluating added geometry.
+ const deformed=display.slice();for(let i=0;i<parents.length;i++){const[l,r]=parents[i];display[3*i]=(model.positions[3*l]+model.positions[3*r])*.5;display[3*i+1]=(model.positions[3*l+2]+model.positions[3*r+2])*.5;display[3*i+2]=-(model.positions[3*l+1]+model.positions[3*r+1])*.5;}
+ geometry.computeVertexNormals();const baselineNormals=geometry.attributes.normal.array.slice();display.set(deformed);geometry.computeVertexNormals();const corrected=geometry.attributes.normal,sourceNormals=viewer.geometry.attributes.normal;
+ for(let i=0;i<parents.length;i++){const[l,r]=parents[i],base=[(sourceNormals.getX(l)+sourceNormals.getX(r))*.5,(sourceNormals.getY(l)+sourceNormals.getY(r))*.5,(sourceNormals.getZ(l)+sourceNormals.getZ(r))*.5],len=Math.hypot(...base)||1;let q=[0,1,2].map(c=>base[c]/len+corrected.array[3*i+c]-baselineNormals[3*i+c]),ql=Math.hypot(...q)||1;corrected.setXYZ(i,q[0]/ql,q[1]/ql,q[2]/ql);}corrected.needsUpdate=true;geometry.attributes.position.needsUpdate=true;geometry.computeBoundingSphere();viewer.mesh.geometry=on?geometry:viewer.geometry;viewer.render();}
+ return{profile:name=>{if(!PROFILES.includes(name))throw Error("Unknown profile");profile=name;rebuildField();update();},set:(value,amount=1)=>{on=!!value;heightAmount=amount;update()},update,dispose:()=>geometry.dispose(),positions,indices,parents,recipe:()=>({schema:SCHEMA,subdivisionLevels:1,canonicalVertexCount:n,displayVertexCount:parents.length,canonicalTriangleCount:faces.length/3,displayTriangleCount:indices.length/3,fullCSR:true,maxInfluences,maxWeightError,maxRestFieldMetres:maxRest,maxRestDeviationMetres:maxRest*heightAmount,maxPosedDeviationMetres:maxPosed,normalOnly:false,profile,heightAmount,normalMethod:"canonical interpolated normal plus displaced-minus-undisplaced refined normal",canonicalUnchanged:true}),surface:async()=>{if(!on)throw Error('Display surface snapshot requires active display layer');const sampledRevision=revision,poseMatrices=Float64Array.from(model.lastBodyDriver.rig.skinMatrices.flat()),snapshot={schema:SCHEMA,positions:positions.slice(),previousPositions:previousPositions.slice(),triangles:indices.slice(),exteriorTriangleMask:exteriorMask.slice(),maskScope:'body skin only; head excluded until dedicated head-transfer mask is supplied',parents,coordinateSystem:'local metres X right Y back Z up',worldMatrix:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],sampleTimeSeconds,previousTimeSeconds,sampledRevision,maxDeviationMetres:maxPosed,deviationMeaning:'actual current posed display vertices versus barycentric canonical surface; not an all-pose bound',topologyRevision:1,previousSampleValid:revision>1,sourceRecipe:JSON.stringify({base:'R031 native adult parameters, native adipose -.45, R031Bony 0, R033Thorax 0',displayAlgorithm:'r035-reference-structure-profiles/1',profile,heightAmount,subdivisionLevels:1}),authoritativeCollisionSurface:false};snapshot.canonicalRestFingerprint=await canonicalFingerprintPromise;snapshot.displayTopologyFingerprint=await topologyFingerprintPromise;snapshot.skinMatricesFingerprint=await digest(poseMatrices.buffer);snapshot.displayGeometryFingerprint=await digest(snapshot.positions.buffer);snapshot.recipeFingerprint=await digest(new TextEncoder().encode(snapshot.sourceRecipe).buffer);return snapshot;}};
+}
