@@ -2,14 +2,11 @@
 // Kowloon's masonry edge / slender columns / valanced canopy refer to the
 // Andrew Suddaby photograph of 1 April 1958 (https://gwulo.com/media/11761).
 // This compact game layout is not a reconstruction of an individual station.
-import * as THREE from '../vendor/three.module.js';
+import * as THREE from '../../vendor/three.module.js';
 import {Blocks} from './heritage.mjs';
-import {CREW_SPEC,attendantCrewPose} from './crew-state.mjs';
 
-// The passenger corridor ends beyond the nearest coach door even at the
-// largest stop offset Session permits. The attendant stands in the cab apron.
 export const PLATFORM_SPEC=Object.freeze({minX:-26,maxX:4.6,top:.82,minZ:2.06,maxZ:5.58,
-  sign:[-14.6,2.55,5.454],driver:[-1.74,2.82,.78],clearWalkway:{min:[-26,.83,2.06],max:[-2,2.48,4.6]}});
+  sign:[-14.6,2.55,5.454],driver:[-1.74,2.82,.78],clearWalkway:{min:[-26,.83,2.06],max:[4.6,2.48,4.6]}});
 export const STONE_TEXTURE_SPEC=Object.freeze({width:4096,height:512,worldWidth:32,worldDepth:4,originX:-26.7,originZ:1.82,texelsPerMetre:128});
 const C={wood:0xa58b61,woodDark:0x63533e,woodEnd:0x867153,cream:0xd5cbb1,
   ink:0x30443b,iron:0x36453e,ironEdge:0x586058,rust:0x77624b,roof:0x65736b,
@@ -102,14 +99,7 @@ function signTexture(plan){return texture(2048,640,(ctx,w,h)=>{
   const name=String(plan.name||'車站'),english=String(plan.english||'STATION').toUpperCase();
   const chineseSize=Math.min(196,464/Math.max(2,name.length));ctx.font=`600 ${chineseSize}px "Noto Serif CJK TC","Noto Serif CJK SC","Songti TC","SimSun",serif`;
   ctx.fillText(name,272,334,448);ctx.fillText(name,w-272,334,448);
-  // The archive signs use one Chinese | English | Chinese row. Keep the
-  // approved left-to-right Chinese and make English ink about 15% taller;
-  // measure cap height rather than comparing unlike font em sizes.
-  const inkHeight=(text,fallback)=>{const m=ctx.measureText?.(text);return m&&Number.isFinite(m.actualBoundingBoxAscent+m.actualBoundingBoxDescent)&&m.actualBoundingBoxAscent+m.actualBoundingBoxDescent>0?m.actualBoundingBoxAscent+m.actualBoundingBoxDescent:fallback;};
-  const chineseInk=inkHeight(name,chineseSize*.90);
-  ctx.font='200px "Arial Narrow",Arial,sans-serif';
-  const englishSize=200*chineseInk*1.15/inkHeight(english,146);
-  ctx.font=`${englishSize}px "Arial Narrow",Arial,sans-serif`;
+  ctx.font=`${Math.min(196,1050/Math.max(7,english.length)*1.5)}px "Arial Narrow",Arial,sans-serif`;
   ctx.fillText(english,w/2,328,1050);
 });}
 
@@ -258,35 +248,15 @@ function lantern(metal,glass,warm,proof,x){const z=5.29,y=2.75;
   obstacle(proof,'lantern',x,1.94,z,.37,2.23,.37);proof.lanternPositions.push([x,y,z]);
 }
 
-function createAttendant(material,box){
-  const root=new THREE.Group();root.name='Original platform attendant beside cab';
-  root.position.fromArray(CREW_SPEC.attendantFeet);root.rotation.y=Math.PI;
-  const b=new Blocks();
-  b.box(0,.52,0,.29,.43,.21,0x40564d);b.box(0,.72,0,.095,.10,.10,0xc5a480);
-  b.box(0,.86,0,.23,.24,.22,0xc5a480);b.box(0,1.01,0,.29,.08,.28,0x262d27);
-  b.box(0,.985,.13,.27,.035,.12,0x262d27);b.box(0,.86,.122,.048,.046,.026,0xba9270);
-  for(const x of [-.056,.056])b.box(x,.89,.115,.022,.023,.010,0x292c28);
-  for(const x of [-.08,.08]){b.box(x,.19,0,.10,.38,.10,0x383b32);b.box(x,.035,.033,.12,.07,.16,0x282d29);}
-  b.box(-.18,.50,0,.09,.37,.09,0x657668);b.box(-.18,.295,0,.08,.075,.085,0xc5a480);
-  const body=new THREE.Mesh(b.geometry(),material);body.name='Attendant body and peaked cap';root.add(body);
-  // One extra mesh is enough for the modest bent arm, bare hand and tiny
-  // whistle. Its shoulder quaternion raises the hand once to the mouth.
-  const arm=new Batch(box);arm.beam([0,0,0],[0,-.17,.025],.085,0x657668);
-  arm.beam([0,-.17,.025],[-.09,-.30,.095],.078,0x657668);
-  arm.box(-.11,-.33,.11,.075,.08,.08,0xc5a480);
-  arm.box(-.11,-.33,.153,.032,.03,.055,0xb7b4a3);
-  const hand=arm.mesh(material,'Attendant single hand and small whistle');hand.position.set(.18,.61,0);root.add(hand);
-  for(const mesh of [body,hand])mesh.castShadow=mesh.receiveShadow=true;
-  const rest=new THREE.Quaternion(),raised=new THREE.Quaternion().setFromUnitVectors(
-    new THREE.Vector3(-.11,-.33,.11).normalize(),new THREE.Vector3(-.18,.25,.16).normalize());
-  const crew={root,hand,pose:attendantCrewPose(),anchor:CREW_SPEC.attendantWhistle.slice()};
-  crew.update=(view,isCurrentStation)=>{Object.assign(crew.pose,attendantCrewPose(view,isCurrentStation));hand.quaternion.copy(rest).slerp(raised,crew.pose.raise);return crew.pose;};
-  return crew;
+function originalAttendant(){const b=new Blocks(),sx=-4.8;
+  // Exact R09 stationary block geometry. No motion or new narrative is added.
+  b.box(sx,1.34,4.8,.29,.43,.21,0x40564d);b.box(sx,1.68,4.8,.23,.24,.22,0xc5a480);b.box(sx,1.83,4.8,.29,.08,.28,0x262d27);for(const z of [4.71,4.89])b.box(sx,.99,z,.1,.38,.1,0x383b32);b.box(sx+.18,1.33,4.8,.09,.37,.09,0x657668);b.box(sx+.22,1.43,4.8,.04,.51,.04,0x90764a);b.box(sx+.39,1.62,4.8,.3,.19,.025,0xc5b66e);
+  return b.geometry();
 }
 
 export function createStationPlatform(plan){
   const group=new THREE.Group();group.name='Flat station platform: '+plan.name;
-  const proof={version:'station-r11',originalProcedural:true,historicalReconstruction:false,stationIndex:Number(plan.index||0),variant:stationVariant(plan),deckTop:.82,materialSurface:'masonry',obstacles:[],benches:0,luggage:{trunks:0,parcels:0,baskets:0},props:{handcarts:0,noticeboards:0,clocks:0},lanternPositions:[],attendantUnchanged:false,signFaces:2,signEnglishHeightRatio:1.15};
+  const proof={version:'station-r10',originalProcedural:true,historicalReconstruction:false,stationIndex:Number(plan.index||0),variant:stationVariant(plan),deckTop:.82,materialSurface:'masonry',obstacles:[],benches:0,luggage:{trunks:0,parcels:0,baskets:0},props:{handcarts:0,noticeboards:0,clocks:0},lanternPositions:[],attendantUnchanged:true,signFaces:2};
   const box=new THREE.BoxGeometry(1,1,1),deck=new Batch(box),b=new Batch(box),metal=new Batch(box),roof=new Batch(box),glass=new Batch(box),warm=new Batch(box);
   buildDeck(deck,b,metal,proof);canopy(roof,metal,proof);bench(b,metal,proof,-23.6,4.91);bench(b,metal,proof,-7.35,4.91,1.80);
   if(proof.variant==='kowloon-masonry'){bench(b,metal,proof,-16.8,4.91,1.50);trunk(b,metal,proof,-25.25,5.13,{width:.65,height:.40});parcel(b,proof,-25.21,5.13,{width:.40,height:.23,depth:.32,base:1.22});}
@@ -340,10 +310,7 @@ export function createStationPlatform(plan){
   const signMaterial=new THREE.MeshBasicMaterial({map:signTexture(plan),side:THREE.FrontSide,toneMapped:true});
   const signGeometry=new THREE.PlaneGeometry(4.20,.74),sign=new THREE.Mesh(signGeometry,signMaterial);sign.name='Station sign front';sign.position.set(...PLATFORM_SPEC.sign);group.add(sign);
   const reverseSign=new THREE.Mesh(signGeometry,signMaterial);reverseSign.name='Station sign back';reverseSign.position.set(-14.6,2.55,5.358);reverseSign.rotation.y=Math.PI;group.add(reverseSign);
-  const crew=createAttendant(structural,box);group.add(crew.root);
-  proof.attendant={position:CREW_SPEC.attendantFeet.slice(),whistle:CREW_SPEC.attendantWhistle.slice(),facing:'-Z',cap:'peaked',flag:false,procedural:true,pose:crew.pose};
-  const crewAnchor=crew.anchor;
-  function updateCrew(view,isCurrentStation){if(disposed)return false;return crew.update(view,isCurrentStation);}
+  const attendant=new THREE.Mesh(originalAttendant(),structural);attendant.name='Preserved original stationary station attendant';attendant.castShadow=attendant.receiveShadow=true;group.add(attendant);
   const zone=new Blocks(),radius=Number.isFinite(plan.radius)?plan.radius:2.8;
   for(const z of [-1.22,1.22])zone.box(5,.38,z,radius*2,.08,.065,0xffffff);
   for(const x of [5-radius,5+radius])zone.box(x,.38,0,.065,.08,2.5,0xffffff);
@@ -352,7 +319,7 @@ export function createStationPlatform(plan){
   box.dispose();group.updateMatrixWorld(true);
   let meshes=0,triangles=0;group.traverse(o=>{if(o.isMesh){meshes++;triangles+=(o.geometry.index?.count||o.geometry.attributes.position.count)/3;}});
   proof.drawCalls=meshes;proof.triangles=triangles;proof.signAnchor=PLATFORM_SPEC.sign.slice();proof.signPosition=PLATFORM_SPEC.sign.slice();proof.signSize=[4.20,.74];proof.signTextureSize=[2048,640];proof.lampPositions=proof.lanternPositions;proof.clearWalkway=PLATFORM_SPEC.clearWalkway;group.userData.stationProof=proof;
-  return{group,zoneMaterial,sign,proof,updateClock,updateCrew,crew,crewAnchor,dispose(){if(disposed)return;disposed=true;
+  return{group,zoneMaterial,sign,proof,updateClock,dispose(){if(disposed)return;disposed=true;
     // Shared front/back sign material, geometry and attendant/furniture material
     // are released exactly once. Every texture belongs to this station instance.
     const geometries=new Set(),materials=new Set(),textures=new Set();group.traverse(o=>{if(o.geometry)geometries.add(o.geometry);for(const material of Array.isArray(o.material)?o.material:o.material?[o.material]:[]){materials.add(material);for(const value of Object.values(material))if(value?.isTexture)textures.add(value);}});

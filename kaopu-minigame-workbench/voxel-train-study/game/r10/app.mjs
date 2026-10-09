@@ -2,7 +2,7 @@ import {createRailAudio} from './audio.mjs';
 import {createJourneyMusic} from './music.mjs';
 import {createMorningAtmosphere} from './morning-atmosphere.mjs';
 import {KCR_STATIONS,MILEAGE} from './timetable.mjs';
-import * as THREE from '../vendor/three.module.js';
+import * as THREE from '../../vendor/three.module.js';
 import {Session,replay} from './session.mjs';
 import {createGameWorld} from './world.mjs';
 import {createGameSmoke} from './smoke.mjs';
@@ -22,7 +22,7 @@ const gl=renderer.getContext(),debugRenderer=gl.getExtension('WEBGL_debug_render
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x52645a);scene.fog=new THREE.Fog(0x52645a,45,105);
 const camera=new THREE.PerspectiveCamera(32,1,.08,320),cameraTarget=new THREE.Vector3(-8.8,-.8,1),widePosition=new THREE.Vector3(...DEFAULT_VIEWS.landscape.position),wideTarget=new THREE.Vector3(...DEFAULT_VIEWS.landscape.target),portraitPosition=new THREE.Vector3(...DEFAULT_VIEWS.portrait.position),portraitTarget=new THREE.Vector3(...DEFAULT_VIEWS.portrait.target),closePosition=new THREE.Vector3(-2,13,20),closeTarget=new THREE.Vector3(-14.2,1.2,1.4);camera.position.copy(widePosition);camera.lookAt(cameraTarget);
 const atmosphere=createMorningAtmosphere(scene,renderer);
-const railAudio=createRailAudio({wheelRadius:.61}),journeyMusic=createJourneyMusic({volume:.32,enabled:false});const world=createGameWorld();scene.add(world.root);const smoke=createGameSmoke({tallExhaust:true});scene.add(smoke.root);
+const railAudio=createRailAudio({wheelRadius:.61}),journeyMusic=createJourneyMusic({volume:.32,enabled:true});const world=createGameWorld();scene.add(world.root);const smoke=createGameSmoke({tallExhaust:true});scene.add(smoke.root);
 world.train.root.updateWorldMatrix(true,true);const zoomBounds=new THREE.Box3().setFromObject(world.train.root),zoomPoints=[];for(const x of [zoomBounds.min.x,zoomBounds.max.x])for(const y of [zoomBounds.min.y,zoomBounds.max.y])for(const z of [zoomBounds.min.z,zoomBounds.max.z])zoomPoints.push(new THREE.Vector3(x,y,z));
 const QUALITY_KEY='kaopu.train-driver.quality.v1';let qualityMode='clear';try{qualityMode=normalizeQuality(localStorage.getItem(QUALITY_KEY));}catch{}
 let renderRatio=1,maxRenderRatio=1,minRenderRatio=1,frameMs=33,qualityFrames=0,previousQualityActive=false,qualityInfo=null;
@@ -108,30 +108,21 @@ function events(v){for(const e of v.events){if(e.id<=lastEvent)continue;
   if(e.type==='stone-hit')say('咚！记住这次刹车距离。',{warning:true,duration:1300});
   lastEvent=e.id;
 }}
-const audioFrame={listener:{position:[0,0,0],forward:[0,0,-1],up:[0,1,0]},sources:Object.fromEntries(['wheelFront','wheelRear','cylinderLeft','cylinderRight','whistle','guard','crowdFront','crowdRear','impact0','impact1','impact2','impact3'].map(name=>[name,[0,0,0]]))};
-for(let i=0;i<4;i++)audioFrame.sources['impact'+i]={position:[10000,0,0],eventId:null,enabled:false};
-const audioVector=new THREE.Vector3();
-function syncSpatialAudio(view){
-  camera.getWorldPosition(audioVector).toArray(audioFrame.listener.position);
-  camera.getWorldDirection(audioVector).toArray(audioFrame.listener.forward);
-  audioVector.set(0,1,0).transformDirection(camera.matrixWorld).toArray(audioFrame.listener.up);
-  world.fillAudioSources(audioFrame.sources,view);railAudio.setSpatialFrame?.(audioFrame);
-}
 const automaticPosition=new THREE.Vector3(),automaticTarget=new THREE.Vector3();
 function draw(view,dt=1/60,snap=false){
   const close=viewControls?.state().focus==='detail',portrait=viewControls?.mode()==='portrait',savedFrame=viewControls?.automaticFrame()||DEFAULT_VIEWS[portrait?'portrait':'landscape'];
   const targetPosition=automaticPosition.fromArray(savedFrame.position),targetLook=automaticTarget.fromArray(savedFrame.target);
   const alpha=snap?1:1-Math.exp(-dt*4);if(!viewControls?.manual()){camera.position.lerp(targetPosition,alpha);cameraTarget.lerp(targetLook,alpha);}camera.lookAt(cameraTarget);camera.updateMatrixWorld();
-  world.update(view,game.route,{interior:close});syncSpatialAudio(view);smoke.update(view.elapsed,camera,{speed:view.velocity,braking:view.brake||view.throttle<0,view});renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=snap||frameCount%3===0;renderer.render(scene,camera);frameCount++;
+  world.update(view,game.route,{interior:close});smoke.update(view.elapsed,camera,{speed:view.velocity,braking:view.brake||view.throttle<0,view});renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=snap||frameCount%3===0;renderer.render(scene,camera);frameCount++;
   return !viewControls?.manual()&&(camera.position.distanceTo(targetPosition)>.015||cameraTarget.distanceTo(targetLook)>.015);
 }
-function animate(now){requestAnimationFrame(animate);const wallDt=Math.max(.001,(now-last)/1000),dt=Math.min(.25,wallDt);last=now;if(contextLost)return;const active=game.started&&!game.paused&&game.phase!=='summary';if(active)game.advance(wallDt);const view=game.view();events(view);if(now-lastHUD>90||needsRender){updateHUD(view);lastHUD=now;}if(now>noticeUntil)$('notice').classList.remove('visible');if(active||needsRender){needsRender=draw(view,dt);const qualityActive=active&&!document.hidden;if(qualityActive&&previousQualityActive){frameMs=frameMs*.9+wallDt*1000*.1;qualityFrames++;}else{frameMs=33;qualityFrames=0;}previousQualityActive=qualityActive;fps=1000/frameMs;if(qualityActive&&qualityFrames>=20){qualityFrames=0;const next=nextRenderRatio({mode:qualityMode,ratio:renderRatio,max:maxRenderRatio,min:minRenderRatio,frameMs});if(Math.abs(next-renderRatio)>.015){renderRatio=next;renderer.setPixelRatio(renderRatio);renderer.setSize(wrap.clientWidth,wrap.clientHeight,false);}}}railAudio.update(view);journeyMusic.update(view);if(game.tick-lastSaveTick>180)safeSave();}
+function animate(now){requestAnimationFrame(animate);const wallDt=Math.max(.001,(now-last)/1000),dt=Math.min(.25,wallDt);last=now;if(contextLost)return;const active=game.started&&!game.paused&&game.phase!=='summary';if(active)game.advance(wallDt);const view=game.view();railAudio.update(view);journeyMusic.update(view);events(view);if(now-lastHUD>90||needsRender){updateHUD(view);lastHUD=now;}if(now>noticeUntil)$('notice').classList.remove('visible');if(active||needsRender){needsRender=draw(view,dt);const qualityActive=active&&!document.hidden;if(qualityActive&&previousQualityActive){frameMs=frameMs*.9+wallDt*1000*.1;qualityFrames++;}else{frameMs=33;qualityFrames=0;}previousQualityActive=qualityActive;fps=1000/frameMs;if(qualityActive&&qualityFrames>=20){qualityFrames=0;const next=nextRenderRatio({mode:qualityMode,ratio:renderRatio,max:maxRenderRatio,min:minRenderRatio,frameMs});if(Math.abs(next-renderRatio)>.015){renderRatio=next;renderer.setPixelRatio(renderRatio);renderer.setSize(wrap.clientWidth,wrap.clientHeight,false);}}}if(game.tick-lastSaveTick>180)safeSave();}
 addEventListener('train-quality-change',event=>{qualityMode=normalizeQuality(event.detail?.mode);try{localStorage.setItem(QUALITY_KEY,qualityMode);}catch{}resize();});
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=true;setPaused(true);$('loading').hidden=false;$('loading').textContent='画面暂时中断，已暂停并保存这趟旅程';});
 canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;$('loading').hidden=true;resize();needsRender=true;});
 viewControls=createViewControls({camera,target:cameraTarget,canvas,root:$('driverGame'),getZoomPoints:currentZoomPoints,onReset:()=>{manualCamera=null;},onChange:(profile,detail)=>{syncCameraButtons();if(detail?.profileApplied)projectionKey='';needsRender=true;if(lastCanvasSize[0]!==wrap.clientWidth||lastCanvasSize[1]!==wrap.clientHeight)resize(profile);else syncProjection(profile);}});
 resize();draw(game.view(),1,true);updateHUD(game.view());$('loading').hidden=true;requestAnimationFrame(animate);
-window.__trainDriver={ready:true,version:'kcr-spatial-r11',getState:()=>({...game.view(),actors:game.actors.map(a=>({...a,position:a.position.slice()})),proof:world.train.proof,audio:railAudio.getState(),music:journeyMusic.getState(),steam:smoke.root.userData.effects,terrainProof:world.terrain.userData.proof,worldMode:'flat',atmosphere:atmosphere.proof,stationDetail:world.stationProof?.(),sceneFog:{near:scene.fog.near,far:scene.fog.far},camera:camera.position.toArray(),viewSettings:viewControls.state(),cameraMode:viewControls?.activePreset()||'manual',smokeMode:smoke.mode,smokeParticles:smoke.particles,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,frames:frameCount,fps,renderRatio,qualityMode,qualityInfo,canvasPixels:[canvas.width,canvas.height],canvasCss:[wrap.clientWidth,wrap.clientHeight],devicePixelRatio,antialias:gl.getContextAttributes()?.antialias,rendererName}),exportReplay:()=>game.replayPacket()};
+window.__trainDriver={ready:true,version:'kcr-atmosphere-r10',getState:()=>({...game.view(),actors:game.actors.map(a=>({...a,position:a.position.slice()})),proof:world.train.proof,audio:railAudio.getState(),music:journeyMusic.getState(),steam:smoke.root.userData.effects,terrainProof:world.terrain.userData.proof,worldMode:'flat',atmosphere:atmosphere.proof,stationDetail:world.stationProof?.(),sceneFog:{near:scene.fog.near,far:scene.fog.far},camera:camera.position.toArray(),viewSettings:viewControls.state(),cameraMode:viewControls?.activePreset()||'manual',smokeMode:smoke.mode,smokeParticles:smoke.particles,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,frames:frameCount,fps,renderRatio,qualityMode,qualityInfo,canvasPixels:[canvas.width,canvas.height],canvasCss:[wrap.clientWidth,wrap.clientHeight],devicePixelRatio,antialias:gl.getContextAttributes()?.antialias,rendererName}),exportReplay:()=>game.replayPacket()};
 
 initSettingsUI();
 function currentZoomPoints(){if(!viewControls?.state?.().focus||viewControls.state().focus==='overview')return zoomPoints;const b=viewControls?.focusBounds?.();if(!b)return zoomPoints;const points=[];for(const x of [b.min[0],b.max[0]])for(const y of [b.min[1],b.max[1]])for(const z of [b.min[2],b.max[2]])points.push(new THREE.Vector3(x,y,z));return points;}
@@ -143,9 +134,7 @@ for(const button of document.querySelectorAll('[data-camera]'))button.addEventLi
 syncCameraButtons();
 $('lockView').addEventListener('click',()=>queueMicrotask(syncCameraButtons));for(const id of ['resetView','restoreView','landscapeView','portraitView'])$(id).addEventListener('click',()=>queueMicrotask(syncCameraButtons));
 
-let soundMuted=false,crowdEnabled=false;
-$('characterVoiceToggle').addEventListener('click',()=>{const state=railAudio.getState().characterVoices;if(!state?.available)return;railAudio.setCharacterVoicesEnabled(!state.enabled);$('characterVoiceToggle').setAttribute('aria-pressed',String(!state.enabled));$('characterVoiceToggle').textContent=!state.enabled?'角色喊聲：開':'角色喊聲：關';});
-$('crowdToggle').addEventListener('click',()=>{crowdEnabled=!crowdEnabled;railAudio.setCrowdEnabled(crowdEnabled);$('crowdToggle').textContent=crowdEnabled?'人群底聲：開':'人群底聲：關';$('crowdToggle').setAttribute('aria-pressed',String(crowdEnabled));});for(const id of ['startGame','continueSaved','resume'])$(id).addEventListener('click',()=>{railAudio.unlock();journeyMusic.unlock();});
+let soundMuted=false,crowdEnabled=false;$('crowdToggle').addEventListener('click',()=>{crowdEnabled=!crowdEnabled;railAudio.setCrowdEnabled(crowdEnabled);$('crowdToggle').textContent=crowdEnabled?'人群底聲：開':'人群底聲：關';$('crowdToggle').setAttribute('aria-pressed',String(crowdEnabled));});for(const id of ['startGame','continueSaved','resume'])$(id).addEventListener('click',()=>{railAudio.unlock();journeyMusic.unlock();});
 function whistle(){railAudio.unlock();command('whistle');railAudio.whistle();} $('whistle').addEventListener('click',whistle);$('testWhistle').addEventListener('click',()=>{railAudio.unlock();railAudio.whistle();});
 $('soundToggle').addEventListener('click',()=>{soundMuted=!soundMuted;railAudio.setMuted(soundMuted);$('soundToggle').textContent=soundMuted?'聲音：關':'聲音：開';$('soundToggle').setAttribute('aria-pressed',String(soundMuted));if(!soundMuted&&!game.paused)railAudio.unlock();});
 $('volume').addEventListener('input',()=>railAudio.setVolume(Number($('volume').value)/100));railAudio.setVolume(.65);
@@ -155,6 +144,6 @@ $('timetableList').replaceChildren(...KCR_STATIONS.map((s,i)=>{const row=documen
 
 
 
-let musicEnabled=false;
+let musicEnabled=true;
 $('musicToggle').addEventListener('click',()=>{musicEnabled=!musicEnabled;journeyMusic.setEnabled(musicEnabled);$('musicToggle').textContent=musicEnabled?'配樂：開':'配樂：關';$('musicToggle').setAttribute('aria-pressed',String(musicEnabled));if(musicEnabled&&!game.paused)journeyMusic.unlock();});
 $('musicVolume').addEventListener('input',()=>journeyMusic.setVolume(Number($('musicVolume').value)/100));

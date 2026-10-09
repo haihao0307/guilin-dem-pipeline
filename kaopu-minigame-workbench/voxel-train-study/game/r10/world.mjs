@@ -1,4 +1,4 @@
-import * as THREE from '../vendor/three.module.js';
+import * as THREE from '../../vendor/three.module.js';
 import {Blocks,buildEnvironment,bridge} from './heritage.mjs';
 import {createGameTrain} from './train-model.mjs';
 import {createStationPlatform} from './station-platform.mjs';
@@ -14,7 +14,7 @@ function flatMesh(blocks,{material=null}={}){const mesh=new THREE.Mesh(blocks.ge
 function stationModel(plan){
   const model=createStationPlatform(plan),{group,zoneMaterial}=model,room=createStationRoom(plan);group.add(room.group);
   return {...model,proof:{...model.proof,room:room.proof},dispose(){group.remove(room.group);room.dispose();model.dispose();},update(view,station){
-    const offset=stationOffset(station.target,view.distance);group.position.x=offset;model.updateClock?.(view.timetable?.minutes);model.updateCrew?.(view,station.index===view.station.index);
+    const offset=stationOffset(station.target,view.distance);group.position.x=offset;model.updateClock?.(view.timetable?.minutes);
     const current=station.index===view.station.index,green=current&&view.station.canOpen;
     zoneMaterial.color.setHex(green?0x8db65b:station.missed?0xc77646:0xcfb96d);
     group.visible=offset+4.8>WORLD.centerX-FLAT_WORLD.terrainRadius&&offset-26<WORLD.centerX+FLAT_WORLD.terrainRadius;
@@ -34,30 +34,7 @@ export function createGameWorld(){
   const stones=new THREE.InstancedMesh(new THREE.DodecahedronGeometry(.092,0),new THREE.MeshStandardMaterial({color:0xb5b5a2,roughness:.93}),80);stones.castShadow=true;stones.frustumCulled=false;root.add(stones);
   const impacts=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshBasicMaterial({color:0xebc55c}),180);impacts.frustumCulled=false;root.add(impacts);let lastEvent=0,effects=[];
   const rain=new THREE.InstancedMesh(new THREE.BoxGeometry(.012,.65,.012),new THREE.MeshBasicMaterial({color:0xb3c4c9,transparent:true,opacity:.32,depthWrite:false}),110);rain.frustumCulled=false;root.add(rain);const pose=new THREE.Object3D();
-  const soundPoints={wheelFront:[.6,.65,0],wheelRear:[-18,.55,0],cylinderLeft:[3.30,1.06,-.965],cylinderRight:[3.30,1.06,.965],whistle:[-.60,3.50,-.36]};
-  const soundVector=new THREE.Vector3();
-  function fillAudioSources(output,view){
-    train.root.updateWorldMatrix(true,false);
-    for(const [name,point] of Object.entries(soundPoints))soundVector.fromArray(point).applyMatrix4(train.root.matrixWorld).toArray(output[name]);
-    // The nearest rendered station stays behind when next-station activates.
-    // Its guard/crowd must not jump to the next stop with the HUD.
-    let station=null,distance=Infinity;
-    for(const model of stations.values()){const d=Math.abs(model.group.position.x);if(d<distance){station=model;distance=d;}}
-    const localGuard=station?.proof?.attendant?.position||[-1.6,.82,2.65];
-    const points={guard:station?.crewAnchor||[localGuard[0],localGuard[1]+.87,localGuard[2]-.17],crowdFront:[-9,1.8,3.9],crowdRear:[-20,1.8,4]};
-    if(station)station.group.updateWorldMatrix(true,false);
-    for(const [name,point] of Object.entries(points)){
-      if(station)soundVector.fromArray(point).applyMatrix4(station.group.matrixWorld).toArray(output[name]);
-      else{output[name][0]=10000;output[name][1]=0;output[name][2]=0;}
-    }
-    for(let i=0;i<4;i++){const entry=output['impact'+i];if(!entry)continue;const point=entry.position||entry;point[0]=10000;point[1]=0;point[2]=0;if(entry.position){entry.enabled=false;entry.eventId=null;}}
-    for(const event of view?.events||[]){
-      if(event.type!=='stone-hit'||!event.point?.every(Number.isFinite)||(view.tick-event.tick)/30>1.2)continue;
-      const role='impact'+(event.id%4),entry=output[role];if(entry){soundVector.fromArray(event.point).applyMatrix4(train.root.matrixWorld).toArray(entry.position||entry);if(entry.position){entry.enabled=true;entry.eventId=event.id;}}
-    }
-    return output;
-  }
-  return{root,train,terrain,people,pathFrame,fillAudioSources,stationProof:()=>[...stations].map(([index,m])=>({index,...m.proof,offset:m.group.position.x})),update(view,route,{interior=false}={}){
+  return{root,train,terrain,people,pathFrame,stationProof:()=>[...stations].map(([index,m])=>({index,...m.proof,offset:m.group.position.x})),update(view,route,{interior=false}={}){
     flatTerrain.update(view.distance);train.update(view,{interior});
     // Convert world actors once at the renderer boundary, keeping the original
     // farmer/passenger geometry and Session paths while removing the old belt cull.
