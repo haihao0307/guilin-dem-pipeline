@@ -2,6 +2,8 @@ import{ANCHORS,LIMIT,distance,supply}from'./core.mjs';
 export const POINTS={A:[250,580],B:[485,475],C:[620,300],D:[855,195],near1:[255,442],near2:[375,534],engineer:[467,648],yao:[852,263],pump:[150,682]};
 export const TARGETS={near1:'near1',near2:'near2',first:'engineer',engineer:'engineer',anchor:'B',basket:'C',cross:'D',pull:'yao',platform:'yao',valve:'pump',widen:'pump'};
 const TAU=Math.PI*2;const mix=(a,b,t)=>a+(b-a)*t;
+export function along(points,t){const lens=points.slice(1).map((p,i)=>Math.hypot(p[0]-points[i][0],p[1]-points[i][1])),total=lens.reduce((a,b)=>a+b,0);let d=Math.min(1,Math.max(0,t))*total;for(let i=0;i<lens.length;i++){if(d<=lens[i]||i===lens.length-1){let u=d/lens[i];return[mix(points[i][0],points[i+1][0],u),mix(points[i][1],points[i+1][1],u)]}d-=lens[i]}return points.at(-1);}
+
 export class Scene{
  constructor(canvas){this.c=canvas;this.ctx=canvas.getContext('2d');this.state=null;this.selected=[];this.hover=null;this.map=false;this.drag=null;this.events=[];this.start=performance.now();this.resize();new ResizeObserver(()=>this.resize()).observe(canvas);this.reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;this.run=this.run.bind(this);requestAnimationFrame(this.run);}
  resize(){const r=this.c.getBoundingClientRect();this.w=r.width;this.h=r.height;const d=Math.min(devicePixelRatio||1,2);this.c.width=Math.round(r.width*d);this.c.height=Math.round(r.height*d);this.d=d;}
@@ -62,7 +64,7 @@ export class Scene{
  // Human figures: helmet, fabric, harness, limbs; intentionally an authored 2.5D illustration.
  const persons=[['lin','near1','#d7af6d'],['shan','near2','#9ab6a0'],['engineer','engineer','#e8b170'],['yao','yao','#d69678']];
  const anim=elapsed;
- for(let i=0;i<persons.length;i++){const[id,point,col]=persons[i],saved=this.state.saved.includes(id),prior=this.previous?.saved.includes(id);let p=POINTS[point].slice(),dest=[54+i*33,641+(i%2)*7],progress=saved?1:0;if(saved&&!prior&&anim<1)progress=anim*anim*(3-2*anim);p=[mix(p[0],dest[0],progress),mix(p[1],dest[1],progress)-Math.sin(progress*Math.PI)*75];if(saved&&progress<1){this.rope(POINTS.A,p,'#c8e6bc',false,t);this.circle(p[0],p[1]-18,30,'#aaf1d411')};this.person(p[0],p[1],saved?col:col,id==='yao'&&!saved,id==='engineer'&&done.includes('first'),t,i,saved);}
+ for(let i=0;i<persons.length;i++){const[id,point,col]=persons[i],saved=this.state.saved.includes(id),prior=this.previous?.saved.includes(id);let p=POINTS[point].slice(),dest=[54+i*33,641+(i%2)*7],progress=saved?1:0;if(saved&&!prior&&anim<1)progress=anim*anim*(3-2*anim);p=id==='yao'&&this.state.done.includes('pull')?along([POINTS.yao,POINTS.D,POINTS.C,POINTS.B,POINTS.A,dest],progress):[mix(p[0],dest[0],progress),mix(p[1],dest[1],progress)-Math.sin(progress*Math.PI)*75];if(saved&&progress<1){if(id!=='yao')this.rope(POINTS.A,p,'#c8e6bc',false,t);this.circle(p[0],p[1]-18,30,'#aaf1d411')};this.person(p[0],p[1],saved?col:col,id==='yao'&&!saved,id==='engineer'&&done.includes('first'),t,i,saved);}
  // Silhouetted foliage, carefully bounded away from interactive targets.
  for(let i=0;i<13;i++)this.fern(i*34-20,770+Math.sin(i)*17,20+(i%4)*8,'#0c3038');for(let i=0;i<9;i++)this.tree(950+i*12,570+(i%3)*23,30+(i%4)*5,'#1d3b41');
  // Slab poised over the injured climber. Danger progresses only on submitted beats.
@@ -73,7 +75,7 @@ export class Scene{
  for(let i=0;i<23;i++){const x=(i*71+t*(2+i%3))%1000,y=300+(i*47)%480;this.circle(x,y,.7,'#d2d5b02b')}
  let shade=c.createLinearGradient(0,0,0,800);shade.addColorStop(0,'#0a20265c');shade.addColorStop(.24,'#061b2300');shade.addColorStop(.72,'#071c2400');shade.addColorStop(1,'#081e27bc');c.fillStyle=shade;c.fillRect(0,0,1000,800);
  // Live drag is an interaction overlay, not a replacement for committed routes.
- if(this.drag){const [x,y]=this.drag.point;this.rope(this.drag.from||POINTS.A,[x,y],this.drag.valid?'#b8ffdc':'#f1bc87',true,t);this.circle(x,y,9,'#d5ffe7','#e5ffed')}
+ if(this.drag){const [x,y]=this.drag.point;if(this.drag.mode==='relay'&&this.drag.valid){for(const[a,b]of[['A','B'],['B','C'],['C','D']])this.rope(POINTS[a],POINTS[b],'#b8ffdc',true,t);this.rope(POINTS.D,[x,y],'#b8ffdc',true,t)}else if(this.drag.mode!=='platform')this.rope(this.drag.from||POINTS.A,[x,y],this.drag.valid?'#b8ffdc':'#f1bc87',true,t);this.circle(x,y,9,'#d5ffe7','#e5ffed')}
  if(this.state.status==='lost'){c.fillStyle='#13252b44';c.fillRect(0,0,1000,800)}
  }
  rope(p,q,col,dashed,t){let c=this.ctx;c.beginPath();c.moveTo(...p);c.quadraticCurveTo((p[0]+q[0])/2,(p[1]+q[1])/2+13+Math.sin(t)*2,...q);c.strokeStyle='#0a222b';c.lineWidth=5;c.stroke();c.strokeStyle=col;c.lineWidth=2;c.setLineDash(dashed?[7,5]:[]);c.stroke();c.setLineDash([])}

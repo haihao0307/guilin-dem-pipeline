@@ -35,3 +35,8 @@ export function flowWitness(mode='base'){
  else if(mode==='wide'){add('XY',['X','U','Y'],11/16);add('XY',['X','V','Y'],3/16);add('ZX',['Z','U','X'],11/16);add('ZX',['Z','V','X'],3/16);add('YZ',['Y','U','Z'],3/16);add('YZ',['Y','V','Z'],11/16);add('UV',['U','X','V'],5/8);add('UV',['U','Y','V'],1/8);add('UV',['U','Z','V'],1/8);}
  return {rate:mode==='bypass'?1:mode==='wide'?.875:.75,edges,paths};
 }
+export function outcome(s){
+ const rescue=s.done.includes('platform')?'供给恢复后，升降台把阿遥接回了营地。':'你沿分段绳索把阿遥接回了营地。';
+ const material=s.done.includes('widen')?'备用材料用在旧路扩容；真正补足供给的是后来开启的旁路。':s.done.includes('cross')?'备用材料用在C到D的最后缺口。':'你还保住了1份备用连接材料。';
+ return '四拍之内，全员撤离。'+rescue+material;
+}
