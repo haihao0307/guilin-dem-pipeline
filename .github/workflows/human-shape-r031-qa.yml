@@ -1,4 +1,4 @@
-name: R035 reference-informed anatomical surface profiles
+name: R036 measured left clavicle driver-segment correction
 on:
   push:
     branches: [qa/human-shape-r031-20261009]
@@ -28,9 +28,9 @@ jobs:
       - name: One local display subdivision experiment, 24 off/on views
         env:
           NODE_PATH: ${{ github.workspace }}/.human-qa/node_modules
-        run: node kaopu-unified-human-workbench/tests/shape-r035-browser.cjs
+        run: node kaopu-unified-human-workbench/tests/shape-r036-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: shape-r035-${{ github.sha }}
-          path: shape-r035-results/
+          name: shape-r036-${{ github.sha }}
+          path: shape-r036-results/
