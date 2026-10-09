@@ -1,4 +1,4 @@
-name: Human boxing R01 full-mesh candidate
+name: Human boxing R01 published full-mesh verification
 on:
   push:
     branches: ['qa/human-boxing-r01-20261009']
@@ -24,9 +24,32 @@ jobs:
       - run: '"$RUNNER_TEMP/human-qa/node_modules/.bin/playwright" install --with-deps chromium'
       - run: echo "NODE_PATH=$RUNNER_TEMP/human-qa/node_modules" >> "$GITHUB_ENV"
       - run: python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/human-server.log" 2>&1 &
+      - name: Wait for exact public boxing release marker
+        run: |
+          python3 - <<'PYWAIT'
+          import urllib.request,json,time,hashlib
+          url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/full/research/boxing-r01/RELEASE.json?v=boxing-r01-20261009'
+          deadline=time.monotonic()+900
+          while time.monotonic()<deadline:
+              try:
+                  data=json.load(urllib.request.urlopen(url,timeout=20))
+                  if data.get('testedRuntimeCommit')=='3d1702ac791dc11dfa982c940cf798d31012d8ec':
+                      print('Exact boxing release marker is public.');break
+              except Exception as e: print(type(e).__name__,str(e))
+              time.sleep(20)
+          else: raise RuntimeError('Expected Pages marker did not arrive; inspect deployment before retrying.')
+          base='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/'
+          manifest=json.load(open('kaopu-unified-human-workbench/tests/boxing-public-hashes.json'))
+          for path,expected in manifest.items():
+              data=urllib.request.urlopen(base+path+'?qa=3afeed63482d5a9e0d403cb40627679a37305ee5',timeout=30).read()
+              actual=hashlib.sha256(data).hexdigest()
+              if actual!=expected:raise RuntimeError('Public hash mismatch: '+path)
+          print(str(len(manifest))+' public release file hashes match.')
+          PYWAIT
       - run: node kaopu-unified-human-workbench/tests/boxing-browser.cjs
         env:
           BOXING_VIDEO: '1'
+          BOXING_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/boxing.html?v=boxing-r01-20261009
       - name: Encode deterministic actual WebGL sequence
         if: always()
         run: |
