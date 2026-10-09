@@ -47,10 +47,12 @@ jobs:
         run: |
           python -m playwright install chromium --with-deps
           sudo apt-get install -y fonts-noto-cjk
-      - name: All-preset browser, exports, real source regeneration and mobile layout
+      - name: Produce every preset with the actual browser worker
         run: |
           python -m http.server 8765 >/tmp/tailor-p01-http.log 2>&1 &
-          python kaopu-tailor-workbench/presets/r01/qa_browser.py
+          python kaopu-tailor-workbench/presets/r01/cache_browser.py
+      - name: All-preset browser, exports, real source regeneration and mobile layout
+        run: python kaopu-tailor-workbench/presets/r01/qa_browser.py
       - name: Verify original source bytes are unchanged
         run: |
           python - <<'PY'
@@ -60,7 +62,8 @@ jobs:
           lock=json.loads((root/'presets/r01/SOURCE_LOCK.json').read_text())
           for path,expected in lock['files'].items():
               assert hashlib.sha256((root/path).read_bytes()).hexdigest()==expected,path
-          print('All inherited source bytes unchanged')
+          assert json.loads((root/'presets/r01/BROWSER_CACHE_REPORT.json').read_text())['passed']==60
+          print('All inherited source bytes unchanged; 60 actual browser papers checked')
           PY
       - name: Retain checked runtime and full evidence on the isolated feature branch
         run: |
@@ -82,6 +85,7 @@ jobs:
           name: tailor-p01-delivery-evidence
           path: |
             kaopu-tailor-workbench/presets/r01/BUILD_REPORT.json
+            kaopu-tailor-workbench/presets/r01/BROWSER_CACHE_REPORT.json
             kaopu-tailor-workbench/presets/r01/PARAMETER_REPORT.json
             kaopu-tailor-workbench/presets/r01/BACKEND_PARITY.json
             kaopu-tailor-workbench/presets/r01/BROWSER_REPORT.json
