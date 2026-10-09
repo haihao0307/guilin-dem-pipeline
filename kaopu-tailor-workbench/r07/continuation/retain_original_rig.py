@@ -1,4 +1,4 @@
-"""Persist the existing original-rig artifact, not a replacement human or guessed rig."""
+"""Prepare the existing original-rig artifact, not a replacement human or guessed rig."""
 from pathlib import Path
 import gzip,hashlib,json,shutil,sys
 import numpy as np
@@ -26,6 +26,7 @@ shutil.copy2(rig_path,assets/'original-anny-rig.json.gz')
 report={'schema':'kaopu-original-body-binding-check@1','sourceArtifactId':11590103742,'sourceArtifactRun':37872375418,
  'retainedFileSHA256':expected,'sourceReport':original_report,'maximumNeutralPositionErrorMm':float(error.max()),
  'vertices':len(vertices),'bones':len(rest),'influencesPerVertex':r['influences'],'weightsTruncated':False,
- 'bodyReplaced':False,'bodyRescaled':False,'originalRigRetainedPermanentlyInBranch':True,
+ 'bodyReplaced':False,'bodyRescaled':False,'rigBytesPrepared':True,
+ 'versionedRetentionRequiresSuccessfulCommit':'kaopu-tailor-workbench/r07/continuation/assets/original-anny-rig.json.gz',
  'actualMovingClothingTested':False,'dynamicWearCertified':False}
 (P/'ORIGINAL_RIG_REPORT.json').write_text(json.dumps(report,indent=2));print(json.dumps(report),flush=True)
