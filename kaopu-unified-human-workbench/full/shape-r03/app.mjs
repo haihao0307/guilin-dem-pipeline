@@ -1,0 +1,13 @@
+import {loadCommon} from '../ui/load-common.mjs';
+import {CommonViewer} from '../ui/Viewer.mjs';
+import {defaultState} from '../src/State.mjs';
+import {PRESETS,PILOT_IDS,createPresetState} from '../ui/PresetCatalogueR3.mjs';
+import {createPresetState as oldState} from '../ui/PresetCatalogueR2.mjs';
+const $=s=>document.getElementById(s);let model,viewer,preset=PRESETS.find(p=>p.id===PILOT_IDS[0]),version='new',camera=null,viewName='front';
+for(const id of PILOT_IDS){const p=PRESETS.find(p=>p.id===id),o=document.createElement('option');o.value=id;o.textContent=p.label;$('preset').append(o);}
+function apply(){if(!model)return;model.compute(version==='new'?createPresetState(preset.id,defaultState):oldState(preset.previousPresetId,defaultState));viewer.update();if(camera)viewer.restoreCamera(camera);$('old').setAttribute('aria-pressed',String(version==='old'));$('new').setAttribute('aria-pressed',String(version==='new'));$('metrics').textContent=`${preset.id}\n${version==='old'?'原R02':'R03候选'} · 25,417顶点 / 50,624三角\n同机位对照 · 原生分区参数` ;}
+function view(name){viewName=name;viewer.view(name==='face-side'?'face':name);camera=viewer.cameraState();if(name==='face-side'){const [x,y,z]=camera.position,[a,b,c]=camera.target;camera.position=[a+z-c,y,c-x+a];viewer.restoreCamera(camera);}return camera;}
+async function load(){if(model)return;$('load').disabled=true;try{const r=await loadCommon({onProgress:p=>$('status').textContent=`载入并校验 ${Math.round(p.fraction*100)}%`});model=r.model;model.compute(createPresetState(preset.id,defaultState));viewer=new CommonViewer({canvas:$('canvas'),container:$('stage'),model,onStatus:t=>$('status').textContent=t});apply();view('front');$('status').textContent='六例就绪 · R01/R02未改';}catch(e){$('status').textContent=e.message;$('load').disabled=false;throw e;}}
+$('load').onclick=load;$('preset').onchange=()=>{preset=PRESETS.find(p=>p.id===$('preset').value);version='new';camera=null;apply();view(viewName);};$('old').onclick=()=>{version='old';apply();};$('new').onclick=()=>{version='new';apply();};for(const b of document.querySelectorAll('[data-view]'))b.onclick=()=>view(b.dataset.view);
+window.shapeR3={load,ready:()=>!!viewer,presets:()=>PRESETS.filter(p=>PILOT_IDS.includes(p.id)),select:id=>{preset=PRESETS.find(p=>p.id===id);$('preset').value=id;version='new';camera=null;apply();view('front');},version:v=>{version=v;apply();},view,positions:()=>Array.from(model.positions),metrics:()=>model.metrics(),state:()=>structuredClone(model.state),camera:()=>viewer.cameraState(),pixels:()=>viewer.pixelAudit(),skin:()=>viewer.skin.report()};
+addEventListener('pagehide',()=>viewer?.dispose());
