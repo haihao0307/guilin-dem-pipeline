@@ -79,6 +79,32 @@
       },
       "result": "12/12 history replay passed; PUBLIC_RELEASE_VERIFIED_SCOPED",
       "novelty": "NO_NOVELTY; terminal success supersedes the technical hold without erasing the failed public-hash attempt"
+    },
+    {
+      "round": "N123",
+      "mother": "Tailor",
+      "runs": [37878896327, 37880361490],
+      "subjects": [
+        "3463c654def88fed4cad8315fd7d7b36b6d06d87",
+        "7e21a019512adfda29fd5d457fdf03c94563a0f9"
+      ],
+      "failedAttempts": [
+        {
+          "signature": "BROWSER_PATTERN_RECIPE_HASH_SERIALIZATION_MISMATCH",
+          "artifactId": 11593617373,
+          "artifactDigest": "sha256:88e0f2f24c9403237c0cabf9d8e1701890dad523422afbace1432099227fdb54"
+        },
+        {
+          "signature": "LOCAL_BROWSER_REGENERATED_PAPER_GEOMETRY_MISMATCH",
+          "maximumObservedMillimetreError": 0.06899010856065502,
+          "allowedMillimetreError": 0.001,
+          "artifactId": 11594128833,
+          "artifactDigest": "sha256:c3862b9b473b257b016fae7be1c66513ad1c656d0cdc153c4f444eb28e021460"
+        }
+      ],
+      "terminalState": "HOLD_LOCAL_BROWSER_GEOMETRY_PARITY_FAILED",
+      "result": "10/10 history replay passed; both immutable failures retained and publication remains skipped",
+      "novelty": "NO_NOVELTY; a repaired hash comparison exposed a deeper geometric mismatch, so the newer failure does not erase the earlier attempt"
     }
   ],
   "activation": {
