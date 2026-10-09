@@ -34,7 +34,7 @@ jobs:
           done
           exit 1
       - name: Existing canvas modes and full-mesh visual evidence
-        run: node kaopu-unified-human-workbench/tests/overview-motion/overview-motion.cjs
+        run: OVERVIEW_ACTIVITY_VIDEO_ONLY=1 node kaopu-unified-human-workbench/tests/overview-motion/overview-motion.cjs
       - name: Upload evidence
         if: always()
         uses: actions/upload-artifact@v4
