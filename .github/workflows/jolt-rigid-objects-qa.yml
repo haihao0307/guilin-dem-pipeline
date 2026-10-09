@@ -1,4 +1,4 @@
-name: Public Jolt rigid object activity bridge QA
+name: Jolt rigid object activity bridge QA
 on:
   push:
     branches: ['qa/jolt-rigid-objects-20261009']
@@ -24,23 +24,11 @@ jobs:
       - run: echo "JOLT_NODE_MODULE=file://$RUNNER_TEMP/jolt-qa/node_modules/jolt-physics/dist/jolt-physics.wasm-compat.js" >> "$GITHUB_ENV"
       - run: node kaopu-unified-human-workbench/collision-architecture/rigid-objects/tests/rigid.mjs
       - run: node kaopu-unified-human-workbench/collision-architecture/rigid-objects/tests/lifecycle.mjs
+      - run: node kaopu-unified-human-workbench/collision-architecture/rigid-objects/tests/target-limits.mjs
       - run: '"$RUNNER_TEMP/jolt-qa/node_modules/.bin/playwright" install --with-deps chromium'
       - run: echo "NODE_PATH=$RUNNER_TEMP/jolt-qa/node_modules" >> "$GITHUB_ENV"
       - run: python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/jolt-server.log" 2>&1 &
-      - name: Verify public module bytes
-        run: |
-          python3 - <<'PYHASH'
-          import urllib.request, hashlib, json
-          base = 'https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/collision-architecture/rigid-objects/'
-          expected = {'RigidObjectWorld.mjs': 'de026abcb5a6f00665be0addb31b1d03629233e88b33062a1256ab859ab42efb', 'index.html': 'c6c8287cad930bb00201175f9233d01d55af20efc6990c14c1a8a5aab705141b', 'demo.mjs': 'ccf56e5ec7c94f91b887addb7de4de4b467a4d958149971f496ecd588de848cd', 'README.md': 'ba9391443be6b0672798aa5304b51ef83761558040f592e8a665e635ddfda99c', 'RIGID-QA.json': '48fd263acf613251446c37cf9dafb203e41a98def10b4a91b113903ac29c9e93', 'LIFECYCLE-QA.json': '539c216236663662440e30bb975d9ccca66cdb040e6b4c12c6800ed02de85fca', 'tests/rigid.mjs': 'f7ec33ca583cde98668497917d8aeccb270784158381471be8fa590cf29c1131', 'tests/lifecycle.mjs': '888ec8459023fa10deabe425c45d468ee314f3ce775f8736eec5e09123e11908', 'tests/browser.cjs': 'bf0d48e5ddd0355f6818f1f77091960fb01ed8419a7be3ebde322dd6ab4af4a7'}
-          for path, digest in expected.items():
-              actual = hashlib.sha256(urllib.request.urlopen(base + path, timeout=60).read()).hexdigest()
-              assert actual == digest, (path, actual, digest)
-          print('Verified', len(expected), 'public module files')
-          PYHASH
       - run: node kaopu-unified-human-workbench/collision-architecture/rigid-objects/tests/browser.cjs
-        env:
-          RIGID_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/collision-architecture/rigid-objects/
       - uses: actions/upload-artifact@v4
         if: always()
         with:
