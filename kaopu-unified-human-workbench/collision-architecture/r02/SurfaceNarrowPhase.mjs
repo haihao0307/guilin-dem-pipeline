@@ -12,7 +12,7 @@ const point=(m,p)=>[0,1,2].map(k=>m[k*4]*p[0]+m[k*4+1]*p[1]+m[k*4+2]*p[2]+m[k*4+
 const world=(m,p)=>[0,1,2].map(k=>m[k]*p[0]+m[4+k]*p[2]-m[8+k]*p[1]+m[12+k]);
 /** Ericson triangle Voronoi regions; weights also transport surface velocity. */
 export function closestTriangle(p,a,b,c){
- const ab=sub(b,a),ac=sub(c,a),ap=sub(p,a),d1=dot(ab,ap),d2=dot(ac,ap);let w;
+ const ab=sub(b,a),ac=sub(c,a),cross=[ab[1]*ac[2]-ab[2]*ac[1],ab[2]*ac[0]-ab[0]*ac[2],ab[0]*ac[1]-ab[1]*ac[0]];if(dot(cross,cross)<1e-32)return closestDegenerate(p,a,b,c);const ap=sub(p,a),d1=dot(ab,ap),d2=dot(ac,ap);let w;
  if(d1<=0&&d2<=0)w=[1,0,0];else{const bp=sub(p,b),d3=dot(ab,bp),d4=dot(ac,bp);
  if(d3>=0&&d4<=d3)w=[0,1,0];else{const vc=d1*d4-d3*d2;
  if(vc<=0&&d1>=0&&d3<=0){const v=d1/(d1-d3);w=[1-v,v,0];}else{const cp=sub(p,c),d5=dot(ab,cp),d6=dot(ac,cp);
@@ -51,8 +51,8 @@ export function sweepSphereTriangle(from,to,radius,previous,current,{tolerance=S
  // A solver budget is never relabelled a miss or hit.
  return {unresolved:true,reason:'iteration-budget',lastGap};
 }
-function region(name){const side=/\.L|_l|left/i.test(name)?'.L':/\.R|_r|right/i.test(name)?'.R':'';
- if(/head|jaw|eye|face/.test(name))return 'head';if(/neck/.test(name))return 'neck';if(/clav|shoulder/.test(name))return 'shoulder'+side;if(/upperarm|lowerarm|hand|finger|thumb/.test(name))return 'arm'+side;if(/upperleg|lowerleg|foot|toe/.test(name))return 'leg'+side;if(/pelvis|hip/.test(name))return 'pelvis';return 'torso';}
+export function bodyRegionForBone(name){const side=/\.L|_l|left/i.test(name)?'.L':/\.R|_r|right/i.test(name)?'.R':'';
+ if(/head|jaw|eye|face/.test(name))return 'head';if(/neck/.test(name))return 'neck';if(/clav|shoulder/.test(name))return 'shoulder'+side;if(/wrist|metacarpal|hand|finger|thumb/.test(name))return 'hand'+side;if(/upperarm|lowerarm/.test(name))return 'arm'+side;if(/upperleg|lowerleg|foot|toe/.test(name))return 'leg'+side;if(/pelvis|hip/.test(name))return 'pelvis';return 'torso';}
 export class SurfaceNarrowPhase {
  constructor(human,{leafTriangles=48}={}){
   this.human=human;this.stats={verticesSkinned:0,nodesVisited:0,trianglesTested:0,unresolved:0};
@@ -60,7 +60,7 @@ export class SurfaceNarrowPhase {
   for(let t=0;t<faces.length/3;t++){const vertices=[faces[t*3],faces[t*3+1],faces[t*3+2]];
    if(cover&&vertices.every(v=>cover.getX(v)<.5))continue;
    const weights=new Map();for(const v of vertices)for(let i=0;i<range[v*2+1];i++){const s=(range[v*2]+i)*8,j=packed[s+3];weights.set(j,(weights.get(j)||0)+packed[s+4]);}
-   this.triangleRegion[t]=region(human.names[[...weights].sort((a,b)=>b[1]-a[1])[0][0]]);ids.push(t);
+   this.triangleRegion[t]=bodyRegionForBone(human.names[[...weights].sort((a,b)=>b[1]-a[1])[0][0]]);ids.push(t);
   }
   this.triangleIds=ids;let nodeId=0;
   const build=triangles=>{const influence=new Map(),b=box();let minSum=Infinity,maxSum=-Infinity;const vertices=new Set(triangles.flatMap(t=>[faces[t*3],faces[t*3+1],faces[t*3+2]]));
