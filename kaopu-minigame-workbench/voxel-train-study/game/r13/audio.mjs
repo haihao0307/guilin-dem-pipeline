@@ -1,7 +1,6 @@
 // Sound layers for the fictional 1960s KCR steam service. See audio/manifest.json.
 // Samples are modern CC0 recordings / foley, not historical KCR archives.
 import {createSpatialAudioGraph, createEffectsOutput, monoPointBuffer, crowdPointBuffers, createCoachImpactBuffer, SPATIAL_EMITTERS} from './audio-spatial.mjs';
-import {brakeEffort} from './brake-effort.mjs';
 const FILES = Object.freeze({whistle:'steam-whistle.mp3',chuff:'steam-chuff.mp3',release:'steam-release.mp3',brake:'metal-brake.mp3',crowd:'station-crowd.mp3'});
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,Number(v)||0));
 export const AUDIO_LIMITS=Object.freeze({emitters:Object.keys(SPATIAL_EMITTERS).length,impactEmitters:4,oneShots:40,voicesPerEmitter:12,loops:4});
@@ -11,7 +10,6 @@ export function createRailAudio({wheelRadius=.61,volume=.55,muted=false,crowdEna
   let context,master,compressor,noise,impactBuffer,loading,spatial,spatialFrame,lastDistance=null,lastElapsed=null,lastPhase=null,lastBrake=false,lastThrottle=0,lastEvent=0,lastWhistle=-100,lastRelease=-100,lastGuard=-100,disposed=false,playbackPaused=false;
   let userVolume=clamp(volume,0,1),userMuted=!!muted,active=false,chuffs=0,clacks=0,guardCues=0,impactCues=0,peakVoices=0,droppedVoices=0;
   const characterVoices={enabled:!!characterVoicesEnabled,available:false,requested:0,played:0,lastRequest:null};
-  const brakeFriction={strength:0,gain:0,active:false,roles:['wheelFront','wheelRear']};
   const impactSlots={};
   const buffers={},crowdBuffers=[],loops={},oneshots=new Set(),errors={},decodedChannels={};
   const radius=Math.max(.15,Number(wheelRadius)||.61),step=2*Math.PI*radius/4;
@@ -121,8 +119,6 @@ export function createRailAudio({wheelRadius=.61,volume=.55,muted=false,crowdEna
     if(!view||disposed)return;if(frame)setSpatialFrame(frame);
     const distance=Number(view.distance)||0,elapsed=Number(view.elapsed)||0,phase=view.phase,velocity=Math.abs(Number(view.velocity)||(Number(view.speedKmh)||0)/3.6),throttle=Number(view.throttle)||0;
     const running=!!view.started&&!view.paused&&!playbackPaused&&phase!=='summary'&&!globalThis.document?.hidden;
-    const effort=brakeEffort(view),brakeGain=running&&effort.active&&velocity>.22?Math.min(.2,.022+velocity*.012)*effort.strength:0;
-    Object.assign(brakeFriction,{strength:effort.strength,gain:brakeGain,active:brakeGain>0});
     const hasAudio=!!context&&context.state==='running';
     if(lastElapsed!==null&&elapsed<lastElapsed){lastDistance=null;lastEvent=0;lastPhase=null;active=false;stopOneShots();}
     const wasActive=active;active=running;
@@ -130,6 +126,7 @@ export function createRailAudio({wheelRadius=.61,volume=.55,muted=false,crowdEna
       // No camera-facing gain scalar: location/rotation comes only from Web Audio's
       // listener and source positions. Crowd loudness is independent of train distance.
       for(const [i,role] of ['crowdFront','crowdRear'].entries())loop(role,{buffer:crowdBuffers[i],role,gain:running&&crowdEnabled?.024:0,offset:i*7.13});
+      const braking=!!view.brake||throttle<0,brakeGain=running&&braking&&velocity>.22?Math.min(.2,.022+velocity*.012):0;
       for(const [i,role] of ['wheelFront','wheelRear'].entries())loop('brake-'+role,{buffer:buffers.brake,role,gain:brakeGain*.65,rate:.82+Math.min(velocity,18)/50,offset:i*.73,fallback:true});
       if(running&&wasActive){
         if(view.brake&&!lastBrake&&velocity>1)release(.14);
@@ -181,7 +178,7 @@ export function createRailAudio({wheelRadius=.61,volume=.55,muted=false,crowdEna
   function setCharacterVoicesEnabled(value){characterVoices.enabled=!!value;}
   function setMuted(value){userMuted=!!value;syncMaster();}
   function setVolume(value){userVolume=clamp(value,0,1);syncMaster();}
-  function getState(){return{supported:!!(globalThis.AudioContext||globalThis.webkitAudioContext),unlocked:!!context&&context.state==='running',state:context?.state||'locked',audioClock:context?.currentTime||0,muted:userMuted,paused:playbackPaused,volume:userVolume,samples:Object.keys(buffers),decodedChannels:{...decodedChannels},pointChannels:Object.fromEntries(Object.entries(buffers).map(([key,buffer])=>[key,buffer.numberOfChannels||1])),errors:{...errors},chuffs,clacks,guardCues,impactCues,impactSlots:Object.fromEntries(Object.entries(impactSlots).map(([key,slot])=>[key,{...slot,worldPosition:slot.worldPosition.slice()}])),impactFoley:'original procedural coach clunk; not a recording',characterVoices:{...characterVoices,lastRequest:characterVoices.lastRequest?{...characterVoices.lastRequest}:null},wheelRadius:radius,brakeFriction:{...brakeFriction,roles:brakeFriction.roles.slice()},voiceRecording:false,crowdEnabled,ambience:'two mono platform emitters; independent sample offsets',musicRoute:'separate stereo context; no effects Panner',spatial:spatial?.getState()||null,voices:{active:oneshots.size,peak:peakVoices,dropped:droppedVoices,limit:AUDIO_LIMITS.oneShots,byRole:Object.fromEntries(Object.keys(spatial?.getState().sources||{}).map(role=>[role,[...oneshots].filter(voice=>voice.role===role).length]))},loopCount:Object.keys(loops).length,limits:AUDIO_LIMITS};}
+  function getState(){return{supported:!!(globalThis.AudioContext||globalThis.webkitAudioContext),unlocked:!!context&&context.state==='running',state:context?.state||'locked',audioClock:context?.currentTime||0,muted:userMuted,paused:playbackPaused,volume:userVolume,samples:Object.keys(buffers),decodedChannels:{...decodedChannels},pointChannels:Object.fromEntries(Object.entries(buffers).map(([key,buffer])=>[key,buffer.numberOfChannels||1])),errors:{...errors},chuffs,clacks,guardCues,impactCues,impactSlots:Object.fromEntries(Object.entries(impactSlots).map(([key,slot])=>[key,{...slot,worldPosition:slot.worldPosition.slice()}])),impactFoley:'original procedural coach clunk; not a recording',characterVoices:{...characterVoices,lastRequest:characterVoices.lastRequest?{...characterVoices.lastRequest}:null},wheelRadius:radius,voiceRecording:false,crowdEnabled,ambience:'two mono platform emitters; independent sample offsets',musicRoute:'separate stereo context; no effects Panner',spatial:spatial?.getState()||null,voices:{active:oneshots.size,peak:peakVoices,dropped:droppedVoices,limit:AUDIO_LIMITS.oneShots,byRole:Object.fromEntries(Object.keys(spatial?.getState().sources||{}).map(role=>[role,[...oneshots].filter(voice=>voice.role===role).length]))},loopCount:Object.keys(loops).length,limits:AUDIO_LIMITS};}
   function dispose(){
     if(disposed)return;disposed=true;globalThis.document?.removeEventListener('visibilitychange',syncMaster);
     for(const [key,layer] of Object.entries(loops)){try{layer.src.stop();}catch{}for(const node of layer.nodes)node.disconnect();delete loops[key];}
