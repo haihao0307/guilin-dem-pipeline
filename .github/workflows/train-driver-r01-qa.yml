@@ -1,4 +1,4 @@
-name: Train R11 public core verification
+name: Train R12 original desktop mouse diagnosis
 on:
   push:
     branches: ['qa/voxel-train-r01-20261006']
@@ -6,81 +6,30 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: kcr-r11-public-${{ github.ref }}
+  group: kcr-r12-diagnostic-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  deterministic:
+  mouse:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with:
-          persist-credentials: false
-          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
-      - name: Install official Ubuntu audio decoder for asset checks
-        run: |
-          sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=30 update -qq
-          sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=30 install -y --no-install-recommends ffmpeg
-      - run: |
-          for test in crew-state.test.mjs r11-integration.test.mjs station-platform.test.mjs r09-world.test.mjs r09-camera.test.mjs r09-smoke-driver.test.mjs r08-smoke.test.mjs kcr-session.test.mjs steam-model.test.mjs render-quality.test.mjs anchored-zoom.test.mjs recommended-fit.test.mjs view-profile-storage.test.mjs; do
-            node kaopu-minigame-workbench/voxel-train-study/game/tests/$test
-          done
-          node kaopu-minigame-workbench/voxel-train-study/game/station-room.test.mjs
-          node kaopu-minigame-workbench/voxel-train-study/game/music.test.mjs
-          node --test kaopu-minigame-workbench/voxel-train-study/game/audio.test.mjs kaopu-minigame-workbench/voxel-train-study/game/audio-spatial.test.mjs
-          node --check kaopu-minigame-workbench/voxel-train-study/game/app.mjs
-      - name: Verify public assets and preserved entries
-        run: node kaopu-minigame-workbench/voxel-train-study/game/tests/public-hashes.cjs
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: train-r11-public-hashes
-          path: driver-public-hashes.json
-          retention-days: 7
-  browser:
-    needs: deterministic
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - { browser: chromium, suite: spatial }
-          - { browser: webkit, suite: spatial }
-          - { browser: chromium, suite: crew }
-          - { browser: webkit, suite: crew }
-          - { browser: chromium, suite: gameplay }
-          - { browser: webkit, suite: gameplay }
-          - { browser: chromium, suite: music }
-          - { browser: webkit, suite: music }
+        browser: [chromium, webkit]
     env:
-      TRAIN_GAME_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/
       TRAIN_BROWSER: ${{ matrix.browser }}
-      KCR_SUITE: ${{ matrix.suite }}
-      R11_SUITE: ${{ matrix.suite }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
           sparse-checkout: kaopu-minigame-workbench/voxel-train-study
       - run: npm install --prefix "$RUNNER_TEMP/kcr" --no-save --ignore-scripts playwright@1.57.0
-      - run: "$RUNNER_TEMP/kcr/node_modules/.bin/playwright install --with-deps ${{ matrix.browser }}"
+      - run: '"$RUNNER_TEMP/kcr/node_modules/.bin/playwright" install --with-deps ${{ matrix.browser }}'
       - run: echo "NODE_PATH=$RUNNER_TEMP/kcr/node_modules" >> "$GITHUB_ENV"
-      - name: Verify deployed R11 in real browser
-        run: |
-          case "${{ matrix.suite }}" in
-            spatial|crew) node kaopu-minigame-workbench/voxel-train-study/game/tests/r11-browser.cjs ;;
-            music) node kaopu-minigame-workbench/voxel-train-study/game/tests/music-browser.cjs ;;
-            *) node kaopu-minigame-workbench/voxel-train-study/game/tests/kcr-browser.cjs ;;
-          esac
+      - run: node kaopu-minigame-workbench/voxel-train-study/game/tests/r12-mouse-diagnostic.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: train-r11-${{ matrix.browser }}-${{ matrix.suite }}
-          path: |
-            kcr-${{ matrix.browser }}-${{ matrix.suite }}/*
-            r11-${{ matrix.browser }}-${{ matrix.suite }}/*
-            r09-controls-${{ matrix.browser }}*/*
-            r10-music-${{ matrix.browser }}/*
-            anchored-zoom-${{ matrix.browser }}/*
+          name: train-r12-${{ matrix.browser }}-mouse-diagnostic
+          path: r12-${{ matrix.browser }}-mouse-diagnostic/*
           retention-days: 7
