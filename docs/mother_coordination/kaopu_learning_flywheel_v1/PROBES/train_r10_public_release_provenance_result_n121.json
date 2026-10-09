@@ -1,0 +1,102 @@
+{
+  "schema": "kaopu.learning-probe-result/1",
+  "probe": "train-r10-public-release-provenance-n121",
+  "pass": true,
+  "checksPassed": 12,
+  "checksTotal": 12,
+  "checks": [
+    "binds candidate, workflow subject and release commit",
+    "preserves failed public hash attempt and artifact",
+    "preserves that failed attempt skipped browser matrix",
+    "binds terminal run and 17 required jobs",
+    "binds public hash artifact and 157 of 157 result",
+    "replays 140 release and 16 classic Git objects",
+    "proves concurrent homepage survived publication",
+    "classifies manifest repair as QA-only",
+    "accepts the complete immutable receipt",
+    "rejects a missing required job",
+    "rejects a public object mismatch",
+    "rejects erasure of the prior failure"
+  ],
+  "decision": "PUBLIC_RELEASE_VERIFIED_SCOPED",
+  "causalState": "PUBLIC_BYTES_AND_REQUIRED_BROWSER_MATRIX_VERIFIED_WITH_PRIOR_FAILURE_LINEAGE_RETAINED",
+  "novelty": "NO_NOVELTY_EXISTING_N83_AND_N71_APPLY",
+  "observed": {
+    "candidate": "7df5da1569d1790d85309033ffddd56f4535eb98",
+    "workflowSubject": "e8a8027fd8610b58b21b5e031d9d7cfac26a5229",
+    "releaseCommit": "2bba50071f9dabedc9a69c8fd60e9ca54a07d0f5",
+    "releaseParent": "ab911ca428a29c710040e991d229cb53eb54a2b4",
+    "failedAttempt": {
+      "runId": 37859882917,
+      "headSha": "720147581621724c72b3c18c0110623e117830ff",
+      "conclusion": "failure",
+      "signature": "PUBLIC_ASSET_HOME_HASH_MISMATCH",
+      "browserMatrix": "skipped",
+      "artifact": {
+        "id": 11586036453,
+        "digest": "sha256:26fb19e680ab74932c22fc4865cf6c5f84e3b79b8ca8a1e7086d22236df46ad9"
+      }
+    },
+    "terminalAttempt": {
+      "runId": 37860468924,
+      "headSha": "e8a8027fd8610b58b21b5e031d9d7cfac26a5229",
+      "jobs": {
+        "deterministic": "success",
+        "browser (chromium, gameplay, full)": "success",
+        "browser (chromium, music, full)": "success",
+        "browser (chromium, zoom, full)": "success",
+        "browser (chromium, scene, full)": "success",
+        "browser (chromium, controls, full)": "success",
+        "browser (webkit, scene, desktop, 2048)": "success",
+        "browser (webkit, scene, landscape, 844)": "success",
+        "browser (webkit, scene, portrait, 390)": "success",
+        "browser (webkit, controls, w0, 4, 0)": "success",
+        "browser (webkit, controls, w1a, 8, 1)": "success",
+        "browser (webkit, controls, w1b, 8, 5)": "success",
+        "browser (webkit, controls, w2, 4, 2)": "success",
+        "browser (webkit, controls, w3, 4, 3)": "success",
+        "browser (webkit, gameplay, full)": "success",
+        "browser (webkit, zoom, full)": "success",
+        "browser (webkit, music, full)": "success"
+      },
+      "publicHashArtifact": {
+        "id": 11585857096,
+        "digest": "sha256:9290de542edbd602456467c9fe765693c490b3f11554065b52cb8c0757066796",
+        "checkedAt": "2026-10-08T23:38:21.690Z",
+        "allMatched": true,
+        "total": 157,
+        "release": 140,
+        "protectedClassic": 16,
+        "protectedConcurrentBaseline": 1
+      }
+    },
+    "gitObjectReplay": {
+      "releaseCandidatePublishedArtifact": "140/140",
+      "protectedPublishedArtifact": "16/16",
+      "homepagePath": "kaopu-minigame-workbench/index.html",
+      "homepageBeforeRelease": "d3303611d4ad0f18fd5343248f56f4750f866563",
+      "homepageAfterRelease": "d3303611d4ad0f18fd5343248f56f4750f866563",
+      "trainIndexCandidate": "cc4da4bbfb3ef89fe3ba66540fbf35d67d3e436a",
+      "trainIndexPublished": "cc4da4bbfb3ef89fe3ba66540fbf35d67d3e436a"
+    },
+    "repairDelta": {
+      "from": "720147581621724c72b3c18c0110623e117830ff",
+      "to": "e8a8027fd8610b58b21b5e031d9d7cfac26a5229",
+      "changedPaths": [
+        "kaopu-minigame-workbench/voxel-train-study/game/tests/public-manifest.json"
+      ],
+      "productionPathCount": 0,
+      "oldHomepage": "c40adc5026c02abb57d0cc8e714bfaff7640df1b",
+      "currentHomepage": "d3303611d4ad0f18fd5343248f56f4750f866563",
+      "currentRole": "protected-concurrent-release-baseline"
+    }
+  },
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": true,
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}
