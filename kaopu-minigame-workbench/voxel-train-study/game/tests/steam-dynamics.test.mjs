@@ -68,12 +68,105 @@ test('Coasting keeps weaker residual smoke, without powered exhaust beats or per
   assert.ok(coast.proof.upperActive < power.proof.upperActive / 2);
 });
 
-test('Ordinary braking near a platform does not open drains or create station choreography', () => {
+test('A restored held brake does not invent a new application, physical drain or station event', () => {
   const engine = createSteamDynamics(); engine.update(view(0, { velocity: 2, brake: true }));
   const result = run(engine, 0, 8, t => ({ distance: t * 2, velocity: 2, brake: true, throttle: 0,
     station: { target: 20, remaining: 20 - t * 2, index: 0 } }));
   assert.equal(result.state.draining, false); assert.equal(result.proof.lowerActive, 0);
   assert.equal(result.proof.warmReleases, 0); assert.equal(result.proof.stationReleases, 0);
+});
+
+test('A moving brake application produces bilateral cinematic vents without opening physical drains', () => {
+  const engine = createSteamDynamics(); engine.update(view(0, moving(6)(0)));
+  run(engine, 0, .5, moving(6));
+  const result = run(engine, .5, 1.5, t => ({ distance: 6 * t, velocity: 6, throttle: 0, brake: true }));
+  const cloud = active(result).filter(p => p.channel === 'brake-visual');
+  assert.equal(result.proof.brakeVisualReleases, 1); assert.equal(result.state.brakeVisualActive, true);
+  assert.equal(result.state.draining, false); assert.equal(result.state.physicalDrainOpenedByBrake, false);
+  assert.equal(result.state.cylinderReleaseReason, 'brake-choreography');
+  assert.equal(result.proof.stationReleases, 0); assert.ok(cloud.length >= 10);
+  assert.ok(cloud.every(p => p.reason === 'brake-choreography' && p.source === 'cylinder'));
+  assert.ok(cloud.some(p => p.birthPosition[2] === -.965 && p.position[2] < -1.8));
+  assert.ok(cloud.some(p => p.birthPosition[2] === .965 && p.position[2] > 1.8));
+  assert.ok(cloud.every(p => p.birthPosition[0] === 3.3 && p.birthPosition[1] === 1.06));
+});
+
+test('Held braking has a bounded continuation, one stop puff and no parked idle loop', () => {
+  const engine = createSteamDynamics(); engine.update(view(0, moving(6)(0)));
+  run(engine, 0, .5, moving(6));
+  const stopTime = .5 + 6 / 3.1;
+  const braking = t => {
+    const elapsed = Math.min(t - .5, 6 / 3.1);
+    return { brake: true, throttle: 0, velocity: Math.max(0, 6 - 3.1 * (t - .5)), distance: 3 + 6 * elapsed - 3.1 * elapsed * elapsed / 2 };
+  };
+  let result = run(engine, .5, 2.75, braking);
+  assert.ok(2.75 > stopTime); assert.equal(result.proof.brakeVisualReleases, 1); assert.equal(result.proof.brakeStopPuffs, 1);
+  assert.equal(result.state.brakeVisualStage, 'stop-puff'); assert.equal(result.state.draining, false);
+  const saved = structuredClone(result.particles);
+  for (let i = 0; i < 120; i++) {
+    const paused = engine.update(view(2.75, { ...braking(2.75), paused: true }));
+    assert.deepEqual(paused.particles, saved); assert.equal(paused.proof.brakeVisualReleases, 1); assert.equal(paused.proof.brakeStopPuffs, 1);
+  }
+  result = run(engine, 2.75, 15, braking);
+  assert.equal(result.proof.brakeVisualReleases, 1); assert.equal(result.proof.brakeStopPuffs, 1);
+  assert.equal(result.state.brakeVisualActive, false); assert.equal(result.proof.lowerActive, 0);
+});
+
+test('A long brake hold in motion expires and rapid toggles respect the cooldown', () => {
+  const held = createSteamDynamics(); held.update(view(0, moving(8)(0)));
+  const hold = run(held, 0, 10, t => ({ ...moving(8, 0)(t), brake: true }));
+  assert.equal(hold.proof.brakeVisualReleases, 1); assert.equal(hold.proof.brakeStopPuffs, 0);
+  assert.equal(hold.state.brakeVisualActive, false); assert.equal(hold.proof.lowerActive, 0);
+  const toggled = createSteamDynamics(); toggled.update(view(0, moving(8)(0)));
+  let result = run(toggled, 0, 6, t => ({ ...moving(8, 0)(t), brake: Math.floor(t * 10) % 2 === 0 }));
+  assert.equal(result.proof.brakeVisualReleases, 1);
+  assert.ok(result.proof.brakeVisualCooldownRemaining > 0);
+  result = run(toggled, 6, 8, t => ({ ...moving(8, 0)(t), brake: Math.floor(t * 10) % 2 === 0 }));
+  assert.equal(result.proof.brakeVisualReleases, 2);
+});
+
+test('Startup continues visibly from both correct outlets for about five seconds and then tapers out', () => {
+  const engine = createSteamDynamics(); engine.update(view(0));
+  let result = run(engine, 0, 4.5, moving(1));
+  const fresh = active(result).filter(p => p.channel === 'startup-warmup' && p.birthTime > 3.8);
+  assert.equal(result.proof.warmReleases, 1); assert.equal(result.state.draining, true);
+  assert.ok(fresh.length >= 5); assert.ok(fresh.some(p => p.birthPosition[2] === -.965)); assert.ok(fresh.some(p => p.birthPosition[2] === .965));
+  assert.ok(fresh.every(p => p.birthPosition[0] === 3.3 && p.birthPosition[1] === 1.06));
+  assert.equal(result.proof.droppedBirths, 0); assert.ok(result.proof.lowerPoolPeak <= 61);
+  result = run(engine, 4.5, 10, moving(1));
+  assert.equal(result.proof.warmReleases, 1); assert.equal(result.state.draining, false); assert.equal(result.proof.lowerActive, 0);
+});
+
+test('Overlapping startup, braking and station effects keep deck coverage and fade without live replacement', () => {
+  const engine = createSteamDynamics(); let before = engine.update(view(0));
+  for (let i = 1; i <= 900; i++) {
+    const t = i / 60;
+    const result = engine.update(view(t, { velocity: t < 4 ? 1 : 0, distance: Math.min(t, 4), throttle: t < 2 ? 3 : 0,
+      brake: t >= 2, station: { target: 4, remaining: 4 - Math.min(t, 4) },
+      events: t >= 2 ? [{ id: 1, type: 'approach-steam', tick: 60 }, ...(t >= 4 ? [{ id: 2, type: 'doors-opening', tick: 120 }] : [])] : [] }));
+    assert.ok(result.proof.lowerActive <= 64); assert.equal(result.proof.liveSlotOverwrites, 0);
+    assert.equal(result.proof.droppedBirths, 0);
+    const ids = new Set(result.particles.map(p => p.id));
+    for (const old of before.particles) if (old.id && !ids.has(old.id)) assert.ok(old.opacity < .002);
+    assert.ok(active(result).filter(p => p.source === 'platform').every(p => p.position[1] > .82));
+    if (i === 330) { assert.ok(result.proof.platformActive >= 10); assert.ok(result.proof.brakeVisualParticles > 0); }
+    before = result;
+  }
+  assert.equal(before.proof.brakeVisualReleases, 1); assert.equal(before.proof.brakeStopPuffs, 1);
+  assert.equal(before.proof.lowerActive, 0);
+});
+
+test('R14 retains the approved R13 upper exhaust trajectory, size, colour and opacity', async () => {
+  const { createSteamDynamics: createR13 } = await import('../r13/steam-dynamics.mjs');
+  const a = createSteamDynamics(), b = createR13(); a.update(view(0, moving(8)(0))); b.update(view(0, moving(8)(0)));
+  for (let i = 1; i <= 480; i++) {
+    const t = i / 60, x = a.update(view(t, moving(8)(t))), y = b.update(view(t, moving(8)(t)));
+    for (let index = 0; index < 96; index++) {
+      const p = x.particles[index], q = y.particles[index];
+      assert.deepEqual(p.position, q.position); assert.deepEqual(p.color, q.color);
+      assert.equal(p.size, q.size); assert.equal(p.opacity, q.opacity); assert.equal(p.rotation, q.rotation);
+    }
+  }
 });
 
 test('Station release is a single event-driven deck layer and repeating a snapshot does not replay it', () => {

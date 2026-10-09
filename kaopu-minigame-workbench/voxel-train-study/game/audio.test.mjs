@@ -21,3 +21,18 @@ test('quarter-wheel chuff sync, pause, volume, throttle guard and graceful fallb
   delete globalThis.AudioContext;const c=createRailAudio();await c.unlock();assert.match(c.getState().errors.context,/unavailable/);
  }finally{if(priorContext)globalThis.AudioContext=priorContext;else delete globalThis.AudioContext;globalThis.fetch=priorFetch;}
 });
+test('spatial brake friction follows actual light and hard brake demand and stops without new emitters',async()=>{
+ const previousContext=globalThis.AudioContext,previousFetch=globalThis.fetch;
+ try{
+  globalThis.AudioContext=Context;globalThis.fetch=async()=>({ok:true,arrayBuffer:async()=>new ArrayBuffer(32)});
+  const audio=createRailAudio();await audio.unlock();
+  const view={started:true,phase:'running',distance:10,elapsed:1,velocity:8,throttle:-1,brake:false,station:{wet:false,remaining:300},events:[]};
+  audio.update(view);const light=audio.getState().brakeFriction.gain;
+  audio.update({...view,throttle:-2,elapsed:2});const medium=audio.getState().brakeFriction.gain;
+  audio.update({...view,throttle:0,brake:true,elapsed:3});const hard=audio.getState().brakeFriction.gain;
+  assert(light>0&&medium>light&&hard>medium);assert.deepEqual(audio.getState().brakeFriction.roles,['wheelFront','wheelRear']);
+  audio.update({...view,throttle:0,brake:true,station:{wet:true},elapsed:4});assert(audio.getState().brakeFriction.gain<hard);
+  for(const state of [{throttle:0,brake:false},{velocity:0,brake:true},{paused:true,brake:true}]){audio.update({...view,...state,elapsed:5});assert.equal(audio.getState().brakeFriction.gain,0);}
+  for(let i=0;i<40;i++)audio.update({...view,brake:i%2===0,elapsed:6+i/30});assert(audio.getState().loopCount<=4);audio.dispose();
+ }finally{if(previousContext)globalThis.AudioContext=previousContext;else delete globalThis.AudioContext;globalThis.fetch=previousFetch;}
+});

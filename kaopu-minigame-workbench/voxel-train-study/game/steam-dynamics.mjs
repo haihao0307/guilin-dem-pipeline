@@ -2,14 +2,15 @@
 // Four exhaust beats per driving-wheel revolution assume two double-acting cylinders.
 // Distances are metres; time comes only from the Session clock, never the camera.
 export const STEAM_DYNAMICS_SPEC = Object.freeze({
-  version: 'r13-stateful-steam', maxParticles: 160, upperParticles: 96,
+  version: 'r14-stateful-steam', maxParticles: 160, upperParticles: 96,
   lowerParticles: 64, wheelRadius: .61, beatsPerRevolution: 4, fixedStep: 1 / 60,
   platformTop: .82, maximumLifetime: 5.2, maximumCatchUp: 1,
   chimney: Object.freeze([3.03, 3.72, 0]),
   cylinders: Object.freeze([Object.freeze([3.30, 1.06, -.965]), Object.freeze([3.30, 1.06, .965])]),
-  warmCylinderSeconds: 2.6, longStopSeconds: 12,
+  warmCylinderSeconds: 5.4, warmTaperSeconds: 1.6, longStopSeconds: 12,
   stationReleaseSeconds: 3.8, stationJetSeconds: 1.45,
-  assumptions: 'Four distance-driven beats assume two double-acting cylinders; station deck vapour is game choreography, not an automatic drain-valve action. Plume dimensions and rates are bounded artistic parameters.'
+  brakeVisualSeconds: 4, brakeVisualCooldown: 6.5, brakeStopWindow: 8, brakeStopPuffSeconds: 1.35,
+  assumptions: 'Four distance-driven beats assume two double-acting cylinders; station deck vapour and braking/stop vents are game choreography, not a claim that braking opens physical drain cocks. Plume dimensions and rates are bounded artistic parameters.'
 });
 
 const TAU = Math.PI * 2, EPS = 1e-8;
@@ -45,6 +46,7 @@ export function createSteamDynamics({ wheelRadius = .61, maxParticles = 160 } = 
   let pulseCount = 0, framePulses = 0, lastPulseTime = -Infinity;
   let highestEventId = 0, seenFallback = [], stationSources = [], stationReleases = 0;
   let warmUntil = -Infinity, warmEligible = true, warmReleases = 0, stoppedFor = 0;
+  let brakeSource = null, lastBrakeStart = -Infinity, brakeVisualReleases = 0, brakeStopPuffs = 0, lowerPoolPeak = 0;
   let emitted = { upper: 0, cylinder: 0, platform: 0 }, droppedBirths = 0, resetReason = 'initial';
   let latestResetReason = 'initial', resetCount = 0, lastResetTime = 0;
 
@@ -75,6 +77,7 @@ export function createSteamDynamics({ wheelRadius = .61, maxParticles = 160 } = 
     upperCredit = lowerCredit = platformCredit = 0; pulseCount = framePulses = 0;
     highestEventId = 0; seenFallback = []; stationSources = []; stationReleases = 0;
     warmUntil = lastPulseTime = -Infinity; warmReleases = 0; stoppedFor = 0;
+    brakeSource = null; lastBrakeStart = -Infinity; brakeVisualReleases = brakeStopPuffs = lowerPoolPeak = 0;
     warmEligible = s.time < .1; emitted = { upper: 0, cylinder: 0, platform: 0 }; droppedBirths = 0;
     simTime = s.time; previous = simulated = s; cached = null; resetReason = latestResetReason = reason;
     lastResetTime = s.time;
@@ -108,7 +111,9 @@ export function createSteamDynamics({ wheelRadius = .61, maxParticles = 160 } = 
       energy: clamp(options.energy ?? (upper ? .3 + .7 * s.load : 1), .05, 1.4),
       pulse: !!options.pulse, eventId: options.eventId ?? null,
       reason: options.reason || (upper ? 'exhaust' : type === 'platform' ? 'station-choreography' : 'startup-warmup'),
-      life: upper ? (starting ? 4.6 : s.load > 0 ? 3.9 : 3.1) + b * .5 : type === 'platform' ? 3.5 + b * .7 : 2.8 + b * .45
+      channel: options.channel || (upper ? 'upper-exhaust' : type === 'platform' || options.reason === 'station-choreography' ? 'station-visual' : 'startup-warmup'),
+      releaseStage: options.releaseStage || null,
+      life: upper ? (starting ? 4.6 : s.load > 0 ? 3.9 : 3.1) + b * .5 : type === 'platform' ? 3.5 + b * .7 : options.channel === 'brake-visual' ? 2.65 + b * .30 : 2.8 + b * .45
     };
     slots[index] = p;
     emitted[upper ? 'upper' : type === 'platform' ? 'platform' : 'cylinder']++;
@@ -121,6 +126,17 @@ export function createSteamDynamics({ wheelRadius = .61, maxParticles = 160 } = 
   }
 
   function working(s) { return s.enabled && !s.brake && s.load > 0 && Math.abs(s.speed) > .035; }
+
+  function brakeVisual(time, held) {
+    if (!brakeSource) return { strength: 0, stage: null, age: 0 };
+    const age = time - brakeSource.start;
+    const application = 1 - smooth(.75, 1.7, age);
+    const sustain = held ? .52 * smooth(.8, 1.2, age) * (1 - smooth(3, STEAM_DYNAMICS_SPEC.brakeVisualSeconds, age)) : 0;
+    const stopAge = brakeSource.stopAt === null ? Infinity : time - brakeSource.stopAt;
+    const stop = stopAge >= 0 ? .94 * (1 - smooth(.45, STEAM_DYNAMICS_SPEC.brakeStopPuffSeconds, stopAge)) : 0;
+    const strength = Math.max(0, application, sustain, stop);
+    return { strength, age, stage: !strength ? null : stop > application && stop >= sustain ? 'stop-puff' : sustain > application ? 'held-brake' : 'brake-application' };
+  }
 
   function receiveEvents(s) {
     // Session events are monotonically numbered and ordered. Retain only bounded source state.
@@ -142,6 +158,15 @@ export function createSteamDynamics({ wheelRadius = .61, maxParticles = 160 } = 
     if (working(b) && warmEligible && Math.abs(b.speed) < 4.5) {
       warmEligible = false; warmUntil = b.time + STEAM_DYNAMICS_SPEC.warmCylinderSeconds; warmReleases++;
     } else if (working(b) && Math.abs(b.speed) >= 4.5) warmEligible = false;
+
+    // This is a requested cinematic channel. It neither changes Session braking nor opens physical drains.
+    if (b.enabled && b.brake && !a.brake && Math.max(Math.abs(a.speed), Math.abs(b.speed)) > .35 && b.time - lastBrakeStart >= STEAM_DYNAMICS_SPEC.brakeVisualCooldown) {
+      brakeSource = { start: b.time, stopAt: null }; lastBrakeStart = b.time; brakeVisualReleases++;
+    }
+    if (brakeSource && brakeSource.stopAt === null && b.brake && Math.abs(a.speed) > .08 && Math.abs(b.speed) <= .08 && b.time - brakeSource.start <= STEAM_DYNAMICS_SPEC.brakeStopWindow) {
+      brakeSource.stopAt = b.time; brakeStopPuffs++;
+    }
+    if (brakeSource && b.time - brakeSource.start > STEAM_DYNAMICS_SPEC.brakeStopWindow + STEAM_DYNAMICS_SPEC.brakeStopPuffSeconds) brakeSource = null;
 
     // Crossings, rather than a time sine wave, keep the beats locked to the rods.
     const beatDistance = radius * TAU / 4, da = a.distance / beatDistance, db = b.distance / beatDistance;
@@ -172,21 +197,31 @@ export function createSteamDynamics({ wheelRadius = .61, maxParticles = 160 } = 
     stationSources = stationSources.filter(source => b.time - source.start < 8.1);
     const jet = stationSources.filter(source => b.time >= source.start && b.time - source.start < STEAM_DYNAMICS_SPEC.stationJetSeconds).at(-1);
     const stationEmitting = stationSources.some(source => b.time >= source.start && b.time - source.start < STEAM_DYNAMICS_SPEC.stationReleaseSeconds);
-    // A station release already supplies the valve jet; do not stack a second warm-up cloud on it.
-    if (jet || (b.time < warmUntil && !stationEmitting)) {
-      const strength = jet ? 1 - smooth(.95, STEAM_DYNAMICS_SPEC.stationJetSeconds, b.time - jet.start) : 1 - smooth(warmUntil - .8, warmUntil, b.time);
-      lowerCredit += dt * (jet ? 12 : 20) * strength * lowerCapacity / 64;
+    const braking = brakeVisual(b.time, b.brake);
+    const warming = b.time < warmUntil && !b.brake && !stationEmitting && Math.abs(b.speed) < 8;
+    const liveLower = slots.slice(upperCapacity).filter(p => p && b.time - p.born < p.life).length;
+    lowerPoolPeak = Math.max(lowerPoolPeak, liveLower);
+    // Taper NEW emission before capacity is reached. Existing clouds always retain their full fade.
+    const headroom = 1 - smooth(lowerCapacity * .78, lowerCapacity * .94, liveLower);
+    // One bilateral outlet stream can serve overlapping visual requests without stacking hidden jets.
+    if (braking.strength > 0 || jet || warming) {
+      const isBrake = braking.strength > 0;
+      const strength = isBrake ? braking.strength : jet ? 1 - smooth(.95, STEAM_DYNAMICS_SPEC.stationJetSeconds, b.time - jet.start) : (1 - smooth(warmUntil - STEAM_DYNAMICS_SPEC.warmTaperSeconds, warmUntil, b.time)) * (1 - smooth(4.5, 8, Math.abs(b.speed)));
+      const rate = isBrake ? stationEmitting ? 10 : 18 : jet ? 12 : 16;
+      lowerCredit += dt * rate * strength * lowerCapacity / 64 * headroom;
       while (lowerCredit >= 1) {
         lowerCredit--;
         allocate('cylinder', b.time, b, { side: emitted.cylinder % 2 ? 1 : -1, energy: .78 * strength + .18,
-          reason: jet ? 'station-choreography' : 'startup-warmup', eventId: jet?.id });
+          reason: isBrake ? 'brake-choreography' : jet ? 'station-choreography' : 'startup-warmup',
+          channel: isBrake ? 'brake-visual' : jet ? 'station-visual' : 'startup-warmup',
+          releaseStage: isBrake ? braking.stage : null, eventId: jet?.id });
       }
     } else lowerCredit = 0;
 
     const source = stationSources.filter(source => b.time >= source.start && b.time - source.start < STEAM_DYNAMICS_SPEC.stationReleaseSeconds).at(-1);
     if (source) {
       const age = b.time - source.start;
-      platformCredit += dt * 16 * (1 - smooth(2.8, 3.8, age)) * lowerCapacity / 64;
+      platformCredit += dt * (braking.strength > 0 ? 8 : 16) * (1 - smooth(2.8, 3.8, age)) * lowerCapacity / 64 * headroom;
       while (platformCredit >= 1) {
         platformCredit--; const seed = hash((serial + 1) * 7), spread = Math.min(26, 3 + age * 12);
         const position = [source.target - b.distance - 2 - seed * spread, STEAM_DYNAMICS_SPEC.platformTop + .36 + hash(serial + 67) * .24, 2.25 + hash(serial + 19) * 1.25];
@@ -243,7 +278,8 @@ export function createSteamDynamics({ wheelRadius = .61, maxParticles = 160 } = 
       position: [x, y, z], size, opacity: clamp(opacity, 0, 1), color: color.map(c => clamp(c, 0, 1)),
       rotation: phase + q * (p.upper ? .8 : 1.05) * p.side, age: q, f,
       birthTime: p.born, birthDistance: p.birthDistance, birthPosition: p.birthPosition.slice(),
-      birthLoad: p.load, pulse: p.pulse, eventId: p.eventId, reason: p.reason, residual: p.residual };
+      birthLoad: p.load, pulse: p.pulse, eventId: p.eventId, reason: p.reason, residual: p.residual,
+      channel: p.channel, releaseStage: p.releaseStage };
   }
 
   function render(s) {
@@ -257,12 +293,15 @@ export function createSteamDynamics({ wheelRadius = .61, maxParticles = 160 } = 
     const source = stationSources.at(-1), burstAge = source ? s.time - source.start : 99;
     const burstActive = !!source && burstAge >= 0 && burstAge < 8.1;
     const stationJetsActive = !!source && burstAge >= 0 && burstAge < STEAM_DYNAMICS_SPEC.stationJetSeconds;
-    const warmActive = s.time < warmUntil && !(burstActive && burstAge < STEAM_DYNAMICS_SPEC.stationReleaseSeconds);
+    const braking = brakeVisual(s.time, s.brake), brakeVisualActive = braking.strength > 0;
+    const warmActive = s.time < warmUntil && !s.brake && !brakeVisualActive && Math.abs(s.speed) < 8 && !(burstActive && burstAge < STEAM_DYNAMICS_SPEC.stationReleaseSeconds);
     const state = { profile: STEAM_DYNAMICS_SPEC.version, tallExhaust: true, roundBillboards: true,
       working: working(s), starting: working(s) && Math.abs(s.speed) < 4.5, exhaustSpeed: Math.abs(s.speed),
       stoppedFor, residual: Math.exp(-stoppedFor / 2.8), draining: warmActive,
-      cylinderReleaseReason: stationJetsActive ? 'station-choreography' : warmActive ? 'startup-warmup' : null,
-      cylinderJetsActive: stationJetsActive || warmActive, stationJetsActive,
+      cylinderReleaseReason: brakeVisualActive ? 'brake-choreography' : stationJetsActive ? 'station-choreography' : warmActive ? 'startup-warmup' : null,
+      cylinderJetsActive: brakeVisualActive || stationJetsActive || warmActive, stationJetsActive,
+      brakeVisualActive, brakeVisualStage: braking.stage, brakeVisualStrength: braking.strength,
+      brakeVisualIsChoreography: true, physicalDrainOpenedByBrake: false,
       burstAge, burstActive, burst: burstActive ? 1 - smooth(3.8, 8.1, burstAge) : 0,
       platformOffset: s.remaining, platformTop: STEAM_DYNAMICS_SPEC.platformTop,
       platformCentersAboveDeck: active.some(p => p.source === 'platform'),
@@ -275,7 +314,12 @@ export function createSteamDynamics({ wheelRadius = .61, maxParticles = 160 } = 
       upperActive: active.filter(p => p.upper).length, lowerActive: active.filter(p => !p.upper).length,
       cylinderActive: active.filter(p => p.source === 'cylinder').length, platformActive: active.filter(p => p.source === 'platform').length,
       pulseCount, framePulses, beatsPerRevolution: 4, wheelRadius: radius, wheelAngle: state.wheelAngle,
-      warmReleases, stationReleases, highestEventId, rememberedEvents: seenFallback.length,
+      warmReleases, stationReleases, brakeVisualReleases, brakeStopPuffs,
+      brakeVisualParticles: active.filter(p => p.channel === 'brake-visual').length,
+      brakeVisualCooldownRemaining: Math.max(0, STEAM_DYNAMICS_SPEC.brakeVisualCooldown - (s.time - lastBrakeStart)),
+      brakeVisualAge: braking.age, lowerPoolPeak,
+      lowerChannelCounts: { warmup: active.filter(p => p.channel === 'startup-warmup').length, station: active.filter(p => p.channel === 'station-visual').length, braking: active.filter(p => p.channel === 'brake-visual').length },
+      highestEventId, rememberedEvents: seenFallback.length,
       stationSourceCount: stationSources.length, emitted: { ...emitted }, droppedBirths, liveSlotOverwrites: 0,
       geometryBounds: { upper: bounds(active.filter(p => p.upper)), cylinder: bounds(active.filter(p => p.source === 'cylinder')), platform: bounds(active.filter(p => p.source === 'platform')) },
       emitters: { chimney: emitters.chimney.slice(), cylinders: emitters.cylinders.map(p => p.slice()) },
