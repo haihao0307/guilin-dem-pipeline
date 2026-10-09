@@ -6,14 +6,14 @@ on:
       - '.github/workflows/tailor-preset-library-p01.yml'
       - 'kaopu-tailor-workbench/presets/r01/BUILD_TRIGGER.json'
 permissions:
-  contents: read
+  contents: write
 concurrency:
   group: tailor-p01-presets
   cancel-in-progress: false
 jobs:
   candidate:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 38
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,14 +30,61 @@ jobs:
         with:
           node-version: '22'
       - name: Native pinned paper dependencies
-        run: python -m pip install numpy==1.26.4 scipy==1.12.0 PyYAML==6.0.1 svgpathtools==1.7.2 svgwrite==1.4.3
+        run: python -m pip install numpy==1.26.4 scipy==1.12.0 PyYAML==6.0.1 svgpathtools==1.7.2 svgwrite==1.4.3 playwright==1.56.0
       - name: Generate and independently check all authored paper recipes
         run: python kaopu-tailor-workbench/presets/r01/build.py
+      - name: Real paper thumbnails and explicit parameter contexts
+        run: |
+          node --check kaopu-tailor-workbench/presets/r01/app.mjs
+          node --check kaopu-tailor-workbench/presets/r01/worker.mjs
+          node --check kaopu-tailor-workbench/presets/r01/bridge.mjs
+          node kaopu-tailor-workbench/presets/r01/metadata.mjs
+      - name: Probe every original field without hiding inactive or invalid cases
+        run: python kaopu-tailor-workbench/presets/r01/probe_parameters.py
+      - name: Browser and Chinese text rendering dependencies
+        run: |
+          python -m playwright install chromium --with-deps
+          sudo apt-get install -y fonts-noto-cjk
+      - name: All-preset browser, exports, real source regeneration and mobile layout
+        run: |
+          python -m http.server 8765 >/tmp/tailor-p01-http.log 2>&1 &
+          python kaopu-tailor-workbench/presets/r01/qa_browser.py
+      - name: Verify original source bytes are unchanged
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          root=Path('kaopu-tailor-workbench')
+          lock=json.loads((root/'presets/r01/SOURCE_LOCK.json').read_text())
+          for path,expected in lock['files'].items():
+              assert hashlib.sha256((root/path).read_bytes()).hexdigest()==expected,path
+          print('All inherited source bytes unchanged')
+          PY
+      - name: Retain checked runtime and full evidence on the isolated feature branch
+        run: |
+          python kaopu-tailor-workbench/presets/r01/release.py manifest
+          python kaopu-tailor-workbench/presets/r01/release.py retain
+      - name: Publish only the isolated P01 directory on the latest Pages parent
+        run: python kaopu-tailor-workbench/presets/r01/release.py publish
+      - name: Wait for actual Pages deployment and verify every runtime byte
+        run: python kaopu-tailor-workbench/presets/r01/release.py verify
+      - name: Actual HTTPS full browser verification
+        env:
+          P01_BASE: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/presets/r01/
+        run: python kaopu-tailor-workbench/presets/r01/qa_browser.py
+      - name: Retain public evidence without modifying any old workbench
+        run: python kaopu-tailor-workbench/presets/r01/release.py retain-public
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: tailor-p01-native-paper-audit
+          name: tailor-p01-delivery-evidence
           path: |
             kaopu-tailor-workbench/presets/r01/BUILD_REPORT.json
-            kaopu-tailor-workbench/presets/r01/library.json
+            kaopu-tailor-workbench/presets/r01/PARAMETER_REPORT.json
+            kaopu-tailor-workbench/presets/r01/BROWSER_REPORT.json
+            kaopu-tailor-workbench/presets/r01/PUBLIC_REPORT.json
+            kaopu-tailor-workbench/presets/r01/PUBLIC_BYTES.json
+            kaopu-tailor-workbench/presets/r01/RELEASE_STATE.json
+            kaopu-tailor-workbench/presets/r01/BUILD_MANIFEST.json
+            kaopu-tailor-workbench/presets/r01/qa
           retention-days: 14
