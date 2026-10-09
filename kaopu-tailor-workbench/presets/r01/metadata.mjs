@@ -31,12 +31,16 @@ addContext('probe-curved-neck','T01',{'collar.f_collar':'CurvyNeckHalf','collar.
 addContext('probe-asym-curved-neck','T15',{'left.collar.f_collar':'CurvyNeckHalf','left.collar.b_collar':'CurvyNeckHalf','collar.bc_depth':0.3});
 addContext('probe-pants-compound-cuff','P10',{'pants.cuff.type':'CuffBandSkirt','pants.cuff.cuff_len':0.15,'pants.cuff.top_ruffle':1.15});
 addContext('probe-raised-shoulder','T13',{'sleeve.standing_shoulder':true});
+// Source sleeves.py clamps rest_angle to body._shoulder_incl, and requires an
+// additional five degrees for the standing-shoulder shelf. Merely toggling its
+// Boolean under that threshold must not be reported as an observed effect.
+addContext('probe-body-shoulder-threshold','T06',{'left.enable_asym':true,'sleeve.sleeveless':false,'left.sleeve.sleeveless':false,'left.sleeve.length':0.9,'sleeve.sleeve_angle':35,'left.sleeve.sleeve_angle':35,'sleeve.standing_shoulder':true,'left.sleeve.standing_shoulder':true,'sleeve.standing_shoulder_len':5,'left.sleeve.standing_shoulder_len':5});
 const activeByPath={};
 for(const p of schema.parameters)activeByPath[p.path]=contexts.filter(c=>parameterState(p.path,c.design).enabled).map(c=>c.id);
 fs.mkdirSync(path.join(P,'qa'),{recursive:true});
 fs.writeFileSync(path.join(P,'qa/probe-contexts.json.gz'),zlib.gzipSync(JSON.stringify({contexts,activeByPath}),{level:9}));
 save('parameter-atlas.json',{schema:'kaopu-tailor-parameter-atlas@1',fieldCount:schema.parameters.length,
- notes:schema.activationNotes,allParametersMastered:false,
+ notes:[...schema.activationNotes,'Sleeve rest angle is max(design.sleeve_angle, body.shoulder_incl); standing shoulder requires rest angle > shoulder inclination + 5 degrees.'],allParametersMastered:false,
  parameters:schema.parameters.map(p=>({...p,label:parameterLabel(p.path),candidateContexts:activeByPath[p.path],status:'not-yet-probed',evidence:null}))});
 save('library.json',library);
 const missing=structuredClone(library.referenceBody);delete missing.bodyCm.hips;
