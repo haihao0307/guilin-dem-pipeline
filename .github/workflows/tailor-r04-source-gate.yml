@@ -1,0 +1,72 @@
+name: Tailor R04 native source parity and runtime gate
+on:
+  push:
+    branches: [feature/tailor-cabinet-r03-garment-surfaces-20261009]
+    paths:
+      - '.github/workflows/tailor-r04-source-gate.yml'
+      - 'kaopu-tailor-workbench/presets/r04/SOURCE_TRIGGER.json'
+permissions:
+  contents: write
+concurrency:
+  group: tailor-r04-native-source-gate
+  cancel-in-progress: false
+jobs:
+  source-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-tailor-workbench/presets/r04
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Actual Chromium and native source test dependencies
+        run: |
+          pip install playwright==1.56.0
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y fonts-noto-cjk
+      - name: Preserve failed capability report and expose native readiness
+        run: |
+          python kaopu-tailor-workbench/presets/r04/finalize_source.py
+          node --check kaopu-tailor-workbench/presets/r04/app.mjs
+          node kaopu-tailor-workbench/presets/r04/contract_test.mjs
+      - name: Same-browser exact original mesher comparison and original-person workflow
+        run: |
+          python -m http.server 8765 >/tmp/r04-source-http.log 2>&1 &
+          python kaopu-tailor-workbench/presets/r04/qa_reference.py
+          R04_SWEEP=0 python kaopu-tailor-workbench/presets/r04/qa_native.py
+      - name: Separate source correctness from uncompleted clothing catalogue
+        run: |
+          python - <<'PY'
+          import json,pathlib,os
+          p=pathlib.Path('kaopu-tailor-workbench/presets/r04')
+          load=lambda n:json.loads((p/n).read_text())
+          reference=load('NATIVE_PARITY.json');runtime=load('SOURCE_BROWSER_REPORT.json');contract=load('CONTRACT_TESTS.json');original=load('FIRST_FULL_AUDIT.json')
+          assert reference['sourceParityPassed'] and runtime['passed'] and contract['passed']
+          assert original['passed'] is False
+          assert reference['nativeMeshed']==49 and reference['nativeRejected']==11 and reference['allPatternsMeshable'] is False
+          (p/'SOURCE_ACCEPTANCE.json').write_text(json.dumps({'sourceCommit':os.environ['GITHUB_SHA'],'sourceLineageGatePassed':True,'sameBrowserNativeParity':True,'runtimeChecks':len(runtime['checks']),'negativeContractChecks':len(contract['checks']),'nativeMeshed':49,'nativeRejected':11,'initialCapabilityAuditPassed':False,'fullClothingCatalogueDelivered':False,'physicalFitAccepted':False,'dynamicWearCertified':False},indent=2))
+          PY
+      - name: Retain exact source and independent scope-specific evidence
+        if: always()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$GITHUB_REF_NAME" --depth=1
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          git add kaopu-tailor-workbench/presets/r04
+          if ! git diff --cached --quiet; then
+            git commit -m 'test(tailor-r04): retain exact native source parity and source-scope runtime checks; original capability failures preserved'
+            git push origin HEAD:"$GITHUB_REF_NAME"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r04-source-parity-runtime-evidence
+          path: kaopu-tailor-workbench/presets/r04
+          retention-days: 14
