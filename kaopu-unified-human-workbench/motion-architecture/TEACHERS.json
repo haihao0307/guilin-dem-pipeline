@@ -26,7 +26,13 @@
       ],
       "limitations": [
         "Original training dataset not public"
-      ]
+      ],
+      "minimumNextRun": {
+        "task": "Run original demo on a short authorized static-camera video",
+        "requires": "Matching PyTorch/perception dependencies, GEM/SAM3D checkpoints and input rights",
+        "successEvidence": "77-keypoint overlay, world/incam parameters, original preview, camera fallback log and hashes",
+        "status": "not_started"
+      }
     },
     {
       "id": "soma-x",
@@ -51,7 +57,13 @@
       ],
       "limitations": [
         "Public 77 poses, public 78 transforms and internal twist skeleton differ"
-      ]
+      ],
+      "minimumNextRun": {
+        "task": "Attempt native SOMA CPU zero-pose and one-joint calibration",
+        "requires": "PyTorch/Warp and authorized native runtime assets; disable optional learned correctives initially",
+        "successEvidence": "77 joints/78 public transforms, correct units, forward versus cached identity/pose comparison",
+        "status": "not_started"
+      }
     },
     {
       "id": "kimodo",
@@ -77,7 +89,13 @@
       "limitations": [
         "SOMA/G1 and SMPL-X model licenses differ",
         "No calibrated SOMA77-to-Anny104 retarget"
-      ]
+      ],
+      "minimumNextRun": {
+        "task": "Run one pinned SOMA model short motion before any Anny retarget",
+        "requires": "Weight/model license and size review, text encoder, compatible inference device; CPU text encoding is an upstream option, not locally measured",
+        "successEvidence": "Native preview and NPZ, seed/constraints/FPS, checkpoint/input/output hashes",
+        "status": "not_started"
+      }
     },
     {
       "id": "protomotions",
@@ -103,7 +121,13 @@
       "limitations": [
         "Official SOMA23 proxy drops full-body detail",
         "Most provided checkpoints are IsaacLab-specific"
-      ]
+      ],
+      "minimumNextRun": {
+        "task": "Run a matching G1 deployment tracker with MuJoCo CPU num_envs=1 if resources permit",
+        "requires": "Matching checkpoint, resolved configs, real LFS motion and robot assets, simulator dependencies and terms",
+        "successEvidence": "Actual simulated rollout, tracking/termination measurements and original video",
+        "status": "not_started"
+      }
     },
     {
       "id": "stablemotion",
@@ -130,7 +154,13 @@
       "limitations": [
         "Own kinematic QA is not this neural quality model",
         "Cross-domain Anny104 cleanup not validated"
-      ]
+      ],
+      "minimumNextRun": {
+        "task": "Run one authorized native-protocol BrokenAMASS cleanup example",
+        "requires": "Licensed SMPL-related data, trusted checkpoint, matching normalizer and PyTorch; TMR optional separately",
+        "successEvidence": "Quality labels, repair mask, before/after clips and preservation error on retained good frames",
+        "status": "not_started"
+      }
     }
   ],
   "currentPlatform": {
@@ -139,5 +169,37 @@
     "triangles": 50624,
     "maximumNativeSkinInfluences": 9,
     "preserved": true
-  }
+  },
+  "motionLibraryStatus": {
+    "existingProceduralGrammars": 3,
+    "existingPhaseSpeedArenaCombinations": 18,
+    "testedExistingCharacters": 36,
+    "verifiedTeacherGeneratedClips": 0,
+    "verifiedTeacherRecoveredClips": 0,
+    "verifiedTeacherNeuralCleanedClips": 0,
+    "verifiedTeacherPhysicalRollouts": 0,
+    "targetDistinctSimultaneousSemanticMotions": 18,
+    "sameMotionAcrossBodyComparison": "two 18-round passes with A/B roles swapped between passes",
+    "dataOnlySchedulerImplemented": true,
+    "actualExpandedMotionLibraryImplemented": false,
+    "syntheticSchedulingTestsAreRealActions": false
+  },
+  "openTasks": [
+    {
+      "id": "native-reproduction-all-five",
+      "status": "blocked-on-environments-and-authorized-assets"
+    },
+    {
+      "id": "soma77-to-anny104-calibration",
+      "status": "not-implemented"
+    },
+    {
+      "id": "18-real-semantic-motion-takes",
+      "status": "not-implemented"
+    },
+    {
+      "id": "boxing-ui-library-and-body-rounds",
+      "status": "contract-only"
+    }
+  ]
 }

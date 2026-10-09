@@ -14,6 +14,8 @@
 
 [TEACHERS.json](TEACHERS.json) 是机器可读的角色/输入输出/版本/运行条件注册表。`numericFileAdapterImplemented` 与 `nativeReproductionExecuted` 分开，避免把接口实现自动晋级为原模型复现成功。
 
+用户后续要求每套体系实际投入使用、18台同刻不同招、各形体轮换同招；执行状态和未完任务见 [ADOPTION-STATUS.md](ADOPTION-STATUS.md)。`arena_schedule.mjs` 已落实动作ID/形体/对手/角色/时间协议和门禁，但不产生动作；不能用它的18个测试描述符冒充18个真实动作。
+
 ## 正确分层
 
 1. 观测恢复：GEM-X，把视频恢复成 SOMA 动作。单目结果仍带遮挡、尺度和相机估计误差。
