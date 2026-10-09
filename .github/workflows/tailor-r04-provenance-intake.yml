@@ -1,0 +1,37 @@
+name: Tailor R04 provenance source intake
+on:
+  push:
+    branches: [feature/tailor-cabinet-r03-garment-surfaces-20261009]
+    paths: ['.github/workflows/tailor-r04-provenance-intake.yml']
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-tailor-workbench/presets/r03
+      - name: Read frozen published sources without modifying original runtime
+        run: |
+          git fetch origin 0ff632be3e4ab112fad93fd4c43c7bc6a90cf5f3 --depth=1
+          python - <<'PY'
+          import subprocess,pathlib,json
+          ref='0ff632be3e4ab112fad93fd4c43c7bc6a90cf5f3';out=pathlib.Path('/tmp/tailor-r04-intake')
+          roots=['kaopu-unified-human-workbench','kaopu-tailor-workbench']
+          tree=subprocess.check_output(['git','ls-tree','-r','--long',ref,'--',*roots],text=True).splitlines()
+          listing=[]
+          for line in tree:
+            info,path=line.split('\t',1);mode,typ,sha,size=info.split();size=int(size);listing.append({'path':path,'sha':sha,'size':size})
+            keep=(path.endswith(('.mjs','.js','.py','.html','.md','.json','.css','.wasm')) and size<2000000 and '/qa/' not in path and '/thumbs/' not in path and '/licenses/' not in path and '/presets/r03' not in path and '/presets/r02' not in path)
+            if keep:
+              p=out/path;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(subprocess.check_output(['git','show',ref+':'+path]))
+          out.mkdir(parents=True,exist_ok=True);(out/'TREE.json').write_text(json.dumps(listing,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tailor-r04-native-chain-intake
+          path: /tmp/tailor-r04-intake
+          retention-days: 7
