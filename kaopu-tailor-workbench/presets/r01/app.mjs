@@ -24,7 +24,15 @@ function renderCards(){
  for(const b of $('cards').querySelectorAll('button'))b.onclick=()=>select(b.dataset.preset,true);
 }
 function renderCategories(){const cats=['全部',...new Set(library.presets.map(r=>r.category))];$('categories').innerHTML=cats.map(c=>`<button aria-pressed="${c===category}" data-category="${c}">${c}</button>`).join('');for(const b of $('categories').querySelectorAll('button'))b.onclick=()=>{category=b.dataset.category;renderCategories();renderCards();};}
-function paper(){if(!pattern)return;$('paper-host').innerHTML=paperSVG(pattern,{selectedSeamId:$('seam-select').value||null});$('paper-host').style.width=zoom*100+'%';}
+function paper(){
+ if(!pattern)return;
+ const host=$('paper-host'),viewport=$('paper-viewport');host.innerHTML=paperSVG(pattern,{selectedSeamId:$('seam-select').value||null});
+ const svg=host.querySelector('svg'),box=svg.viewBox.baseVal,w=viewport.clientWidth,h=viewport.clientHeight;
+ const fit=Math.min((w-8)/box.width,(h-8)/box.height),sw=box.width*fit*zoom,sh=box.height*fit*zoom;
+ host.style.width=Math.max(w,sw)+'px';host.style.height=Math.max(h,sh)+'px';
+ svg.style.width=sw+'px';svg.style.height=sh+'px';svg.style.minHeight='0';svg.style.flexShrink='0';
+ if(zoom===1){viewport.scrollTop=0;viewport.scrollLeft=0;}
+}
 function parameterRows(){
  if(!pattern)return;const filter=$('parameter-filter').value;
  $('parameter-list').innerHTML=schema.parameters.map(p=>{const s=parameterState(p.path,pattern.design);return{...p,...s};}).filter(p=>filter==='all'||(filter==='active')===p.enabled).map(p=>{
@@ -93,5 +101,6 @@ async function boot(){
   window.__TAILOR_PRESETS_QA__={getState:state,select,getPattern:()=>structuredClone(pattern),getReferenceBody:()=>structuredClone(library.referenceBody),getRows:()=>structuredClone(library.presets),applyBodyProfile,regenerate,cancel:()=>{epoch++;stop(true);}};
  }catch(e){status('预设库启动失败：'+e.message,true);$('visible-count').textContent='载入失败，请检查网络后刷新。';}
 }
+addEventListener('resize',()=>{if(pattern)paper();});
 addEventListener('pagehide',()=>{epoch++;stop(false);cache.clear();});
 boot();
