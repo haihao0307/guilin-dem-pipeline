@@ -39,6 +39,8 @@ jobs:
           node --check kaopu-tailor-workbench/presets/r01/worker.mjs
           node --check kaopu-tailor-workbench/presets/r01/bridge.mjs
           node kaopu-tailor-workbench/presets/r01/metadata.mjs
+      - name: Verify numeric JSON transport without changing the teacher
+        run: python kaopu-tailor-workbench/presets/r01/backend_parity.py
       - name: Probe every original field without hiding inactive or invalid cases
         run: python kaopu-tailor-workbench/presets/r01/probe_parameters.py
       - name: Browser and Chinese text rendering dependencies
@@ -81,6 +83,7 @@ jobs:
           path: |
             kaopu-tailor-workbench/presets/r01/BUILD_REPORT.json
             kaopu-tailor-workbench/presets/r01/PARAMETER_REPORT.json
+            kaopu-tailor-workbench/presets/r01/BACKEND_PARITY.json
             kaopu-tailor-workbench/presets/r01/BROWSER_REPORT.json
             kaopu-tailor-workbench/presets/r01/PUBLIC_REPORT.json
             kaopu-tailor-workbench/presets/r01/PUBLIC_BYTES.json
