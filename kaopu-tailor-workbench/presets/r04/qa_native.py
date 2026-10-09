@@ -4,7 +4,8 @@ import base64,gzip,hashlib,json,os,time,traceback
 from playwright.sync_api import sync_playwright
 P=Path(__file__).resolve().parent;A=P/'assets';D=P/'qa';D.mkdir(exist_ok=True)
 PUBLIC=os.environ.get('R04_BASE','').startswith('https:');BASE=os.environ.get('R04_BASE','http://127.0.0.1:8765/kaopu-tailor-workbench/presets/r04/')
-R={'url':BASE,'public':PUBLIC,'checks':[],'passed':False,'pageErrors':[],'httpErrors':[],'forbiddenProxyRequests':[],'physicalFitAccepted':False,'dynamicWearCertified':False,'mobileScope':'Chromium 390x844 viewport, not a physical phone'}
+SOURCE_REPAIR_SCOPE=os.environ.get('R04_SWEEP')=='0'
+R={'sourceCommit':os.environ.get('GITHUB_SHA'),'scope':'source-repair-runtime' if SOURCE_REPAIR_SCOPE or PUBLIC else 'complete-material-capability','url':BASE,'public':PUBLIC,'checks':[],'passed':False,'pageErrors':[],'httpErrors':[],'forbiddenProxyRequests':[],'physicalFitAccepted':False,'dynamicWearCertified':False,'mobileScope':'Chromium 390x844 viewport, not a physical phone'}
 def check(name,ok,data=None):
  R['checks'].append({'name':name,'passed':bool(ok),'data':data});print('CHECK',name,bool(ok),flush=True)
 def dump(p,d):p.write_text(json.dumps(d,ensure_ascii=False,indent=2))
@@ -21,7 +22,13 @@ try:
   check('Original common person byte identities, not an Anny substitute',s['person']==lock['person'] and s['commonVertexCount']==25417 and s['commonTriangleCount']==50624)
   check('60 exact original source patterns kept',s['sourcePresets']==60)
   check('One native original CommonViewer canvas',s['canvasCount']==1)
-  if not PUBLIC:
+  capabilities=json.loads((A/'readiness.json').read_text())['summary'];R['capabilities']=capabilities
+  check('Known incomplete catalogue is not relabelled as finished',capabilities['nativeMaterialRejected']==11 and capabilities['all60GarmentsAccepted'] is False)
+  if SOURCE_REPAIR_SCOPE or PUBLIC:
+   page.evaluate('__R04.select("T01")');cached=page.evaluate('__R04.state()');check('Cached result is actual source-bound T01 solver output',cached['phase']=='done' and cached['clothVertices']>0 and cached['renderCoordinateErrorM']==0 and cached['staticGate']['passed'])
+   page.evaluate('__R04.select("P01")');cached=page.evaluate('__R04.state()');check('Failed original P01 result stays failed',cached['phase']=='done' and cached['staticGate']['passed'] is False and bool(cached['staticGate']['failures']))
+
+  if not PUBLIC and not SOURCE_REPAIR_SCOPE:
    material=[]
    for row in json.loads((A/'catalogue.json').read_text())['rows']:
     page.evaluate('id=>__R04.select(id)',row['id']);page.evaluate('__R04.loadPaper()')
@@ -30,7 +37,7 @@ try:
     check('Native source material '+row['id'],v['clothVertices']>0 and v['binding']['paperSHA256']==row['decodedSHA256'] and v['binding']['recipeHash']==row['recipeHash'] and v['renderCoordinateErrorM']==0 and v['clothIndexMatchesNative'])
    dump(A/'MATERIAL_AUDIT.json',{'nativeMaterials':material,'sourceSizingUnchanged':True,'notSewn':True})
   solved={};cache=json.loads((A/'results/index.json').read_text())
-  for id in (['J06','T01','P01'] if not PUBLIC else ['T01']):
+  for id in (['J06','T01','P01'] if not PUBLIC and not SOURCE_REPAIR_SCOPE else ['T01']):
    page.evaluate('id=>__R04.select(id)',id);page.evaluate('__R04.loadPaper()');page.wait_for_function('__R04.state().phase!=="meshing"',timeout=45000)
    before=page.evaluate('__R04.state()');check('Original material is the displayed mesh '+id,before['clothIndexMatchesNative'] and before['renderCoordinateErrorM']==0 and before['clothVertices']>0)
    if before['phase']=='paper':
@@ -62,6 +69,6 @@ try:
   R['finalState']=page.evaluate('__R04.state()');b.close()
  R['passed']=all(c['passed'] for c in R['checks'])
 except Exception as e:R['exception']=str(e);R['traceback']=traceback.format_exc();print(R['traceback'],flush=True)
-finally:dump(P/('PUBLIC_REPORT.json' if PUBLIC else 'BROWSER_REPORT.json'),R)
+finally:dump(P/('PUBLIC_REPORT.json' if PUBLIC else 'SOURCE_BROWSER_REPORT.json' if SOURCE_REPAIR_SCOPE else 'BROWSER_REPORT.json'),R)
 print('SOURCE_CORRECTION_QA',R['passed'],len(R['checks']),flush=True)
 if not R['passed']:raise SystemExit(1)
