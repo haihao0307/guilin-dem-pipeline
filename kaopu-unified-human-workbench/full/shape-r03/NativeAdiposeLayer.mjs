@@ -12,7 +12,7 @@ export function installNativeAdiposeLayer(model){
  installHeadSoftTissue(model);
  const original=model.applyBodyDriver.bind(model),settings={amount:0},cache=new Map();
  model.r03Adipose={schema:ADIPOSE_SCHEMA,settings,set(amount){if(!Number.isFinite(amount)||amount<-.85||amount>2.5)throw Error('R03 adipose amount outside pilot bounds');settings.amount=amount;}};
- model.applyBodyDriver=context=>{original(context);const amount=settings.amount;if(!amount)return;
+ model.applyBodyDriver=context=>{original(context);const amount=settings.amount;if(amount<=0){model.r03Adipose.last={amount:0,requestedAmount:amount,bodyNativeWeightFloorPreserved:true};return;}
   const state=model.effectiveState;if(state.owners.rig!=='anny')throw Error('R03 pilot adipose layer requires Anny rig; MHR integration pending');
   if(state.anny.phenotypes.age<.52)throw Error('Adult soft-tissue extrapolation prohibited on children');
   const key=JSON.stringify([state.anny.phenotypes,state.anny.localChanges,Math.sign(amount)]);let delta=cache.get(key);
@@ -41,7 +41,7 @@ export function installNativeAdiposeLayer(model){
 function installHeadSoftTissue(model){
  const original=model.applySemanticHead.bind(model),ht=model.headTransfer,N=model.gnm.numVertices,outer=new Set(ht.outer),adj=Array.from({length:N},()=>new Set()),tri=model.gnm.triangles;
  for(let t=0;t<tri.length;t+=3){const ids=Array.from(tri.slice(t,t+3));if(ids.some(i=>!outer.has(i)))continue;for(let c=0;c<3;c++){adj[ids[c]].add(ids[(c+1)%3]);adj[ids[c]].add(ids[(c+2)%3]);}}
- const cache=new Map();model.applySemanticHead=context=>{original(context);const amount=model.r03Adipose?.settings.amount||0;if(!amount)return;if(model.effectiveState.anny.phenotypes.age<.52)throw Error('Adult head soft-tissue layer prohibited on children');const state=model.effectiveState,rig=model.lastHeadRig;if(!rig)throw Error('Shared rest head required');
+ const cache=new Map();model.applySemanticHead=context=>{original(context);const amount=model.r03Adipose?.settings.amount||0;if(!amount){model.r03HeadSoftTissue=null;return;}if(model.effectiveState.anny.phenotypes.age<.52)throw Error('Adult head soft-tissue layer prohibited on children');const state=model.effectiveState,rig=model.lastHeadRig;if(!rig)throw Error('Shared rest head required');
   const key=JSON.stringify([state.anny.phenotypes,state.anny.localChanges,Math.sign(amount)]);let delta=cache.get(key);
   if(!delta){const args={phenotypes:state.anny.phenotypes},local={...state.anny.localChanges,'head-fat-incr':0,'neck-double-incr':0};const a=model.anny.forward({...args,localChanges:local}),b=model.anny.forward({...args,localChanges:{...local,'head-fat-incr':amount>0?1:-1,'neck-double-incr':amount>0?.7:0}});delta=ht.mapDelta('anny',a.vertices,b.vertices,1);
    // Regularize only the added displacement, not facial identity geometry.

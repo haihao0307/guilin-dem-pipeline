@@ -26,11 +26,28 @@ jobs:
       - run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/shape-r03-http.log 2>&1 &
           sleep 2
-      - name: Render actual same-model geometry in 60 paired views
+      - name: Verify six shape contracts and source field geometry
+        env:
+          SHAPE_R3_NUMERIC_OUT: ${{ github.workspace }}/shape-r03-results/numeric
+        run: |
+          for id in child-male-tall-slim child-female-rounded adult-male-tall-slim adult-male-short-heavy adult-female-rounded senior-female-short-slim; do
+            ONLY=r03-$id node kaopu-unified-human-workbench/full/shape-r03/tests/contract.mjs
+          done
+          node kaopu-unified-human-workbench/full/shape-r03/tests/geometry.mjs
+          node kaopu-unified-human-workbench/full/shape-r03/tests/same-identity.mjs
+      - name: Render 76 actual same-camera geometry views
         env:
           NODE_PATH: ${{ github.workspace }}/.human-qa/node_modules
           SHAPE_R3_OUT: ${{ github.workspace }}/shape-r03-results
         run: node kaopu-unified-human-workbench/tests/shape-r03-browser.cjs
+      - name: Match numeric and browser rest geometry fingerprints
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';import assert from 'node:assert/strict';
+          const r=JSON.parse(fs.readFileSync('shape-r03-results/report.json'));
+          assert(r.numericPassed);for(const p of r.cases){const n=JSON.parse(fs.readFileSync('shape-r03-results/numeric/'+p.id+'.json')).cases[0];assert.equal(p.states.new.positionSHA256,n.geometrySHA256,p.id);}
+          console.log('PASS six complete numeric/browser geometry fingerprints are exact');
+          NODE
       - uses: actions/upload-artifact@v4
         if: always()
         with:
