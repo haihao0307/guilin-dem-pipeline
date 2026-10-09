@@ -12,3 +12,4 @@ const manifest=require('./public-manifest.json'),base='https://haihao0307.github
   if(!report.allMatched)throw new Error('Public asset gate failed: '+results.filter(x=>!x.ok).map(x=>x.path+' ('+(x.status||x.error)+')').join(', '));
   console.log('All '+manifest.files.length+' public asset hashes match, including all protected classic files');
 })().catch(error=>{console.error(error);process.exit(1);});
+
