@@ -39,7 +39,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: human-overview-public-${{ github.sha }}
+          name: human-overview-public-${{ github.sha }}-${{ github.run_attempt }}
           path: overview-public-results/
           retention-days: 7
           compression-level: 0
