@@ -1,3 +1,4 @@
+import {skinGNMRest} from '../src/HeadMath.mjs';
 /** Opt-in R03 native-derived soft-tissue extrapolation.
  * Uses the official weight anchor displacement, subtracting weighted bone-head
  * displacement to avoid doubling skeletal widening. No coordinate scaling,
@@ -8,6 +9,7 @@ export const ADIPOSE_SCHEMA='native-soft-tissue-r03/1';
 const rounded=n=>n==='root'||/pelvis|spine|breast|upperleg|lowerleg|upperarm|lowerarm|shoulder/.test(n);
 export function installNativeAdiposeLayer(model){
  if(model.r03Adipose)throw Error('R03 layer already installed');
+ installHeadSoftTissue(model);
  const original=model.applyBodyDriver.bind(model),settings={amount:0},cache=new Map();
  model.r03Adipose={schema:ADIPOSE_SCHEMA,settings,set(amount){if(!Number.isFinite(amount)||amount<-.85||amount>2.5)throw Error('R03 adipose amount outside pilot bounds');settings.amount=amount;}};
  model.applyBodyDriver=context=>{original(context);const amount=settings.amount;if(!amount)return;
@@ -31,4 +33,23 @@ export function installNativeAdiposeLayer(model){
   model.r03Adipose.last={amount,method:'native-weight-anchor-delta-minus-weighted-joint-translation',childApplied:false,topologyUnchanged:true,weightsUnchanged:true,skeletonUnchanged:true};
  };
  return model.r03Adipose;
+}
+
+/** Head soft tissue uses native head-fat and submental target differences.
+ * Eye/lip/nose components and upper cranium are pinned. Native bone matrices,
+ * GNM joints, dentition and the source identity remain untouched. */
+function installHeadSoftTissue(model){
+ const original=model.applySemanticHead.bind(model),ht=model.headTransfer,N=model.gnm.numVertices,outer=new Set(ht.outer),adj=Array.from({length:N},()=>new Set()),tri=model.gnm.triangles;
+ for(let t=0;t<tri.length;t+=3){const ids=Array.from(tri.slice(t,t+3));if(ids.some(i=>!outer.has(i)))continue;for(let c=0;c<3;c++){adj[ids[c]].add(ids[(c+1)%3]);adj[ids[c]].add(ids[(c+2)%3]);}}
+ const baseWeights={4:.55,5:.55,8:.65,9:.65,11:1,12:1,13:.3,14:.3,15:1,16:1,19:.8},pinned=new Set([0,1,2,3,6,7,10,17,18]);let gate=new Float64Array(N);for(const i of ht.outer)gate[i]=baseWeights[ht.d.regions[i]]||0;
+ for(let pass=0;pass<40;pass++){const next=gate.slice();for(const i of ht.outer){if(pinned.has(ht.d.regions[i])){next[i]=0;continue;}let avg=0;for(const j of adj[i])avg+=gate[j];if(adj[i].size)next[i]=.7*gate[i]+.3*avg/adj[i].size;}gate=next;}
+ const cache=new Map();model.applySemanticHead=context=>{original(context);const amount=model.r03Adipose?.settings.amount||0;if(!amount)return;if(model.effectiveState.anny.phenotypes.age<.52)throw Error('Adult head soft-tissue layer prohibited on children');const state=model.effectiveState,rig=model.lastHeadRig;if(!rig)throw Error('Shared rest head required');
+  const key=JSON.stringify([state.anny.phenotypes,state.anny.localChanges,Math.sign(amount)]);let delta=cache.get(key);
+  if(!delta){const args={phenotypes:state.anny.phenotypes},local={...state.anny.localChanges,'head-fat-incr':0,'neck-double-incr':0};const a=model.anny.forward({...args,localChanges:local}),b=model.anny.forward({...args,localChanges:{...local,'head-fat-incr':amount>0?1:-1,'neck-double-incr':amount>0?.7:0}});delta=ht.mapDelta('anny',a.vertices,b.vertices,1);
+   // Regularize only the added displacement, not facial identity geometry.
+   for(let pass=0;pass<24;pass++){const next=delta.slice();for(const i of ht.outer){if(!adj[i].size)continue;for(let c=0;c<3;c++){let avg=0;for(const j of adj[i])avg+=delta[j*3+c];next[i*3+c]=.65*delta[i*3+c]+.35*avg/adj[i].size;}}delta=next;}cache.set(key,delta);}
+  const rest=rig.restVertices.slice(),eyeIDs=ht.regionIds[6].concat(ht.regionIds[7]),eyeZ=eyeIDs.reduce((s,i)=>s+rest[i*3+2],0)/eyeIDs.length,fade=.025*context.scale;let max=0,cranialMoved=0;
+  for(const i of ht.outer){const upper=Math.max(0,Math.min(1,(eyeZ+.006*context.scale-rest[i*3+2])/fade)),w=gate[i]*upper*Math.abs(amount)*1.5;for(let c=0;c<3;c++){const d=delta[i*3+c]*w;rest[i*3+c]+=d;max=Math.max(max,Math.abs(d));if(upper===0&&d!==0)cranialMoved++;}}
+  const posed=skinGNMRest(model,rest,rig.jointsRest,context.scale);model.headWorldOverride=posed.vertices;model.activeGNMRootRestMatrix=posed.rootMatrix;model.lastHeadRig={...rig,restVertices:rest,jointsPosed:posed.jointsPosed};model.r03HeadSoftTissue={source:'native head-fat + neck-double field',maxDisplacementMM:max*1000,upperCraniumChangedVertices:cranialMoved,pinnedRegions:[...pinned],amount};
+ };
 }

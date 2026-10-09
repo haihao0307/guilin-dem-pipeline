@@ -19,9 +19,9 @@ const identities=[
 ];
 function identity(i,stage){const row=identities[(i+stages.indexOf(stage)*2)%6],gain=stage==='child'?.30:stage==='teen'?.65:1,o={};for(const[k,v]of Object.entries(row)){if(k==='label')continue;if(k.startsWith('eye-'))pair(o,k,v*gain*.18);else o[k]=v*gain*(k.startsWith('mouth-')?.50:1);}return {label:row.label,changes:o};}
 function physique(i,stage){const o={},child=stage==='child',teen=stage==='teen',gain=child?.20:teen?.60:stage==='senior'?.82:1,lean=i<2,heavy=i===3||i===4;
- if(lean){Object.assign(o,{'measure-shoulder-dist-incr':-.07*gain,'measure-waist-circ-incr':-.48*gain,'torso-scale-depth-incr':-.33*gain,'hip-scale-horiz-incr':-.13*gain,'measure-neck-circ-incr':-.23*gain});pair(o,'upperarm-fat-incr',-.46*gain);pair(o,'lowerarm-fat-incr',-.30*gain);pair(o,'upperleg-fat-incr',-.45*gain);pair(o,'lowerleg-fat-incr',-.26*gain);}
+ if(lean){Object.assign(o,{'measure-shoulder-dist-incr':-.30*gain,'torso-scale-horiz-incr':-.38*gain,'measure-waist-circ-incr':-.23*gain,'torso-scale-depth-incr':-.33*gain,'hip-scale-horiz-incr':-.13*gain,'measure-neck-circ-incr':-.23*gain});pair(o,'upperarm-fat-incr',-.46*gain);pair(o,'lowerarm-fat-incr',-.30*gain);pair(o,'upperleg-fat-incr',-.45*gain);pair(o,'lowerleg-fat-incr',-.26*gain);}
  if(heavy){Object.assign(o,{'measure-shoulder-dist-incr':.04*gain,'measure-waist-circ-incr':(i===4?.94:.87)*gain,'torso-scale-depth-incr':(i===4?.66:.74)*gain,'hip-scale-horiz-incr':(i===4?.43:.30)*gain,'measure-hips-circ-incr':(i===4?.60:.39)*gain,'buttocks-volume-incr':.30*gain,'measure-neck-circ-incr':.62*gain});pair(o,'upperarm-fat-incr',.72*gain);pair(o,'lowerarm-fat-incr',.48*gain);pair(o,'upperleg-fat-incr',.70*gain);pair(o,'lowerleg-fat-incr',.43*gain);}
- if(child){o['measure-shoulder-dist-incr']=0;o['torso-scale-depth-incr']=0;o['measure-neck-circ-incr']=heavy?.06:0;}
+ if(child){o['measure-shoulder-dist-incr']=lean?-.12:0;o['torso-scale-horiz-incr']=lean?-.24:0;o['torso-scale-depth-incr']=0;o['measure-neck-circ-incr']=heavy?.06:0;}
  return o;
 }
 function adiposity(i,stage){const child=stage==='child',teen=stage==='teen',heavy=i===3||i===4,lean=i<2,o={};
@@ -29,10 +29,13 @@ function adiposity(i,stage){const child=stage==='child',teen=stage==='teen',heav
  // breadth while native cheek/under-chin/neck tissues respond to body-fat.
  o['head-scale-horiz-incr']=0;
  if(child){o['head-fat-incr']=heavy?.22:.07;pair(o,'cheek-volume-incr',heavy?.10:.04);o['neck-double-incr']=heavy?.07:0;return o;}
- const g=teen?.55:1;o['head-fat-incr']=(heavy?1:lean?-.65:.10)*g;pair(o,'cheek-volume-incr',(heavy?.16:lean?-.24:.06)*g);pair(o,'cheek-bones-incr',(lean?.26:heavy?-.12:.15)*g);o['neck-double-incr']=(heavy?.78:0)*g;return o;
+ const g=teen?.55:1;o['head-fat-incr']=teen?(heavy?.40:lean?-.08:.05):0;pair(o,'cheek-volume-incr',(heavy?.16:lean?-.24:.06)*g);pair(o,'cheek-bones-incr',(lean?.26:heavy?-.12:.15)*g);o['neck-double-incr']=teen&&heavy?.15:0;return o;
 }
 export const PRESETS=Object.freeze(R2.map(p=>{const i=builds.indexOf(p.build),id=identity(i,p.stage),phenotypes={...p.phenotypes};if(p.stage!=='child'&&p.stage!=='teen'&&i<2){phenotypes.weight=.015;phenotypes.muscle=.08;}if(p.stage==='child'){phenotypes.weight=i<2?.32:i===3||i===4?.82:p.phenotypes.weight;}
  const localChanges={...p.localChanges,...physique(i,p.stage),...id.changes,...adiposity(i,p.stage)};if(p.stage==='middle'&&i===3)localChanges['mouth-scale-horiz-incr']*=.35;
  return Object.freeze({...p,id:p.id.replace('r02-','r03-'),collection:'r03-pilot',previousPresetId:p.id,adiposeAmount:p.stage==='child'||p.stage==='teen'?0:i===3?2.1:i===4?1.7:i<2?-.45:0,identityLabel:id.label,label:p.label+' · '+id.label,phenotypes:Object.freeze(phenotypes),localChanges:Object.freeze(Object.fromEntries(Object.entries(localChanges).map(([k,v])=>[k,Number(v.toFixed(5))])))});}));
 export const PILOT_IDS=Object.freeze(['r03-adult-male-tall-slim','r03-adult-male-short-heavy','r03-adult-female-rounded','r03-senior-female-short-slim','r03-child-male-tall-slim','r03-child-female-rounded']);
 export function createPresetState(id,defaults){const p=PRESETS.find(p=>p.id===id);if(!p)throw new RangeError('Unknown R03 preset');const s=priorState(p.previousPresetId,defaults);s.anny.phenotypes={...p.phenotypes};s.anny.localChanges={...p.localChanges};return s;}
+
+/** Same age/sex/stature and the same nose/eye/mouth/chin identity, fat only. */
+export function sameIdentityAdiposityPair(id,defaults){const p=PRESETS.find(x=>x.id===id);if(!p||['child','teen'].includes(p.stage))throw Error('Adult identity pair required');return ['lean','heavy'].map((endpoint,j)=>{const i=j?3:1,s=createPresetState(id,defaults);s.anny.phenotypes.weight=j?1:.015;s.anny.phenotypes.muscle=.25;s.anny.localChanges={...s.anny.localChanges,...physique(i,p.stage),...adiposity(i,p.stage)};return {endpoint,identityPresetId:id,state:s,amount:j?2.1:-.45};});}
