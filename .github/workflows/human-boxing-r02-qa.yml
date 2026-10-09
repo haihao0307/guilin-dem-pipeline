@@ -24,6 +24,22 @@ jobs:
       - run: '"$RUNNER_TEMP/human-qa/node_modules/.bin/playwright" install --with-deps chromium'
       - run: echo "NODE_PATH=$RUNNER_TEMP/human-qa/node_modules" >> "$GITHUB_ENV"
       - run: python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/human-server.log" 2>&1 &
+      - name: Wait for tested equipment release marker
+        run: |
+          python3 - <<'PYWAIT'
+          import urllib.request,json,time
+          expected='6bbe26d90c3bde6b1a370e5b2e8ee17767c26102'
+          url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/full/boxing-r02/RELEASE.json?qa='+expected
+          deadline=time.monotonic()+900
+          while time.monotonic()<deadline:
+              try:
+                  result=json.load(urllib.request.urlopen(url,timeout=20))
+                  if result.get('testedRuntimeCommit')==expected:
+                      print('Tested R02 equipment release is public');break
+              except Exception as e: print(type(e).__name__)
+              time.sleep(15)
+          else: raise RuntimeError('Expected public equipment marker did not arrive')
+          PYWAIT
       - run: node kaopu-unified-human-workbench/tests/boxing-r02-browser.cjs
         env:
           BOXING_R02_BASE: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/
