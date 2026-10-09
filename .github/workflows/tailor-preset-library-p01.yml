@@ -1,0 +1,43 @@
+name: Tailor P01 preset library
+on:
+  push:
+    branches: [feature/tailor-preset-library-20261009]
+    paths:
+      - '.github/workflows/tailor-preset-library-p01.yml'
+      - 'kaopu-tailor-workbench/presets/r01/BUILD_TRIGGER.json'
+permissions:
+  contents: read
+concurrency:
+  group: tailor-p01-presets
+  cancel-in-progress: false
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          sparse-checkout: |
+            kaopu-tailor-workbench/presets/r01
+            kaopu-tailor-workbench/garment-pattern-catalogue-r01
+            kaopu-tailor-workbench/catalogue
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Native pinned paper dependencies
+        run: python -m pip install numpy==1.26.4 scipy==1.12.0 PyYAML==6.0.1 svgpathtools==1.7.2 svgwrite==1.4.3
+      - name: Generate and independently check all authored paper recipes
+        run: python kaopu-tailor-workbench/presets/r01/build.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-p01-native-paper-audit
+          path: |
+            kaopu-tailor-workbench/presets/r01/BUILD_REPORT.json
+            kaopu-tailor-workbench/presets/r01/library.json
+          retention-days: 14
