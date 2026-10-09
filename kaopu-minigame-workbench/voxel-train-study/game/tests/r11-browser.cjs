@@ -34,7 +34,7 @@ const approxArray=(a,b,tolerance=1e-6)=>{assert.equal(a.length,b.length);a.forEa
  }
  try{
   if(suite==='lifecycle'){
-   await open({width:1280,height:900});await clickControl(page,'crowdToggle',{touch:true});await page.waitForFunction(()=>__trainDriver.getState().audio.state==='running');
+   await open({width:1280,height:900});const nativeFocus=await context.newCDPSession(page);await nativeFocus.send('Emulation.setFocusEmulationEnabled',{enabled:false});await page.bringToFront();await clickControl(page,'crowdToggle',{touch:true});await page.waitForFunction(()=>__trainDriver.getState().audio.state==='running');
    let s=await page.evaluate(()=>__r11.show());assert.equal(s.audio.loopCount,2);const before=await page.evaluate(()=>({...__audioQa}));
    const r=await page.locator('#brake').boundingBox();await page.mouse.move(r.x+r.width/2,r.y+r.height/2);await page.mouse.down();assert.equal(await page.evaluate(()=>__trainDriver.getState().brake),true);
    const other=await context.newPage();await other.goto('about:blank');await other.bringToFront();
@@ -120,6 +120,6 @@ const approxArray=(a,b,tolerance=1e-6)=>{assert.equal(a.length,b.length);a.forEa
    await page.screenshot({path:out+'/frozen-r10.png',timeout:60000});checks.push({r10Playable:true,originalCueRetained:true});await context.close();context=null;
   }
   assert.deepEqual(errors,[]);assert.deepEqual(bad,[]);fs.writeFileSync(out+'/result.json',JSON.stringify({pass:true,engine,suite,checks,errors,bad,physicalDeviceTest:false,listeningReview:false},null,2));
- }catch(error){fs.writeFileSync(out+'/failure.json',JSON.stringify({error:String(error),stack:error.stack,checks,errors,bad},null,2));if(page)await page.screenshot({path:out+'/failure.png',timeout:20000}).catch(()=>{});throw error;}
+ }catch(error){const browserState=page?await page.evaluate(()=>({hidden:document.hidden,visibility:document.visibilityState,focus:document.hasFocus(),telemetry:window.__audioQa||null,state:window.__trainDriver?.getState?.()||null})).catch(()=>null):null;fs.writeFileSync(out+'/failure.json',JSON.stringify({error:String(error),stack:error.stack,checks,errors,bad,browserState},null,2));if(page)await page.screenshot({path:out+'/failure.png',timeout:20000}).catch(()=>{});throw error;}
  finally{if(context)await context.close();await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1});
