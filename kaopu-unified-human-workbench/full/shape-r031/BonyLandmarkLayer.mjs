@@ -12,13 +12,13 @@ export function installBonyLandmarkLayer(model){if(model.r031Bony)throw Error('B
   const shoulder=joint('upperarm01.L'),clav=joint('shoulder01.L'),spine=joint('spine01'),waist=joint('spine03'),h=clav[2]-joint('pelvis.L')[2],scale=h/.557,half=shoulder[0],leftKnee=joint('lowerleg01.L'),leftAnkle=joint('foot.L'),leftElbow=joint('lowerarm01.L');let maxMM=0;
   for(let i=0;i<n;i++){const x=p[i*3],y=p[i*3+1],z=p[i*3+2],nx=norm[i*3],ny=norm[i*3+1],nz=norm[i*3+2],len=Math.hypot(nx,ny,nz)||1,N=[nx/len,ny/len,nz/len],ax=Math.abs(x),front=smooth(.05,.7,-N[1]),back=smooth(.05,.7,N[1]);let d=0;
    // Shoulder girdle: shallow S-like clavicular crest with soft adjacent hollows.
-   const t=(ax-.018*scale)/(half*.92-.018*scale),clavZ=clav[2]-.004*scale+.010*scale*Math.sin(Math.PI*clamp(t));const lateral=smooth(0,.13,t)*(1-smooth(.90,1.04,t));
-   d+=front*lateral*(.0055*scale*gauss((z-clavZ)/(.0105*scale))-.0028*scale*gauss((z-clavZ-.024*scale)/(.016*scale))-.0016*scale*gauss((z-clavZ+.024*scale)/(.017*scale)));
+   const t=(ax-.018*scale)/(half*.92-.018*scale),clavZ=clav[2]-.027*scale+.010*scale*Math.sin(Math.PI*clamp(t))+.008*scale*clamp(t);const lateral=smooth(0,.13,t)*(1-smooth(.90,1.04,t));
+   d+=front*lateral*(.0070*scale*gauss((z-clavZ)/(.014*scale))-.0030*scale*gauss((z-clavZ-.024*scale)/(.016*scale))-.0016*scale*gauss((z-clavZ+.024*scale)/(.017*scale)));
    d+=.003*scale*gauss((ax-half*1.01)/(.025*scale))*gauss((z-clav[2]-.003*scale)/(.025*scale))*smooth(-.05,.5,N[2]);
    // Costal margin: paired oblique arches; lateral ribs softly vanish medially.
    const u=(ax-.025*scale)/(.132*scale),costal=spine[2]-.070*scale-.080*scale*Math.sin(Math.PI*.65*clamp(u)),ribGate=smooth(0,.2,u)*(1-smooth(.84,1.08,u));
-   d+=front*ribGate*(.0040*scale*gauss((z-costal)/(.011*scale))-.0024*scale*gauss((z-costal+.019*scale)/(.016*scale)));
-   const sideGate=smooth(.06*scale,.10*scale,ax)*(1-smooth(.15*scale,.185*scale,ax));for(const off of [.014,-.030,-.070]){const ribZ=spine[2]+off*scale+.12*(ax-.10*scale);d+=front*sideGate*.0020*scale*gauss((z-ribZ)/(.009*scale));}
+   d+=front*ribGate*(.0048*scale*gauss((z-costal)/(.018*scale))-.0024*scale*gauss((z-costal+.019*scale)/(.016*scale)));
+   // Individual rib corrugations are omitted: the costal arc is the first structural cue.
    d-=front*.0012*scale*gauss(x/(.013*scale))*gauss((z-spine[2])/(.09*scale));
    // Scapular spine, preserving the soft back rather than embossing a triangle.
    const scapZ=clav[2]-.050*scale+.12*(ax-.10*scale);d+=back*.0025*scale*gauss((ax-.115*scale)/(.054*scale))*gauss((z-scapZ)/(.014*scale));
