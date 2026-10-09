@@ -1,0 +1,24 @@
+#!/usr/bin/env node
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const argv=process.argv.slice(2),arg=(n,d)=>argv.includes(n)?argv[argv.indexOf(n)+1]:d;
+const root=path.resolve(arg('--workbench',path.join(__dirname,'../workbench'))),out=path.resolve(arg('--out',__dirname));
+const hash=b=>crypto.createHash('sha256').update(b).digest('hex'),read=p=>fs.readFileSync(path.join(root,p));
+const production=JSON.parse(fs.readFileSync(path.join(__dirname,'production-tree.json')));
+if(production.commit!=='499915682292d3eb44cd5a5c881423a9c244f767'||production.files.length!==429)throw Error('Wrong pre-candidate production baseline');
+const entry='boxing-r03.html',html=read(entry).toString(),files={},queue=[entry],imports={three:'full/source/registration-vendor/three.module.js'};
+for(const m of html.matchAll(/<(?:script|link)\b[^>]*(?:src|href)=["']([^"']+)["'][^>]*>/g)){if(/^\.\//.test(m[1])&&/\.(?:mjs|js|css)(?:\?|$)/.test(m[1]))queue.push(path.posix.normalize(m[1].split('?')[0]));}
+function enqueue(from,spec){if(/^https?:|^data:|^blob:/.test(spec))throw Error('Unexpected unpinned module import: '+spec);const target=imports[spec]||path.posix.normalize(path.posix.join(path.posix.dirname(from),spec.split('?')[0]));if(!imports[spec]&&!spec.startsWith('.'))throw Error('Unknown bare import '+spec);if(target.startsWith('../'))throw Error('Runtime import escapes workbench: '+target);queue.push(target);}
+while(queue.length){const file=queue.shift();if(files[file])continue;if(/(?:RuntimeContacts|ContactStudy|StudyTargets|ContactSpace|collision-architecture|jolt)/i.test(file))throw Error('Phase-one entry imports disallowed contact module: '+file);const bytes=read(file);files[file]=hash(bytes);if(/\.(?:mjs|js)$/.test(file)){const text=bytes.toString().replace(/\/\*[\s\S]*?\*\//g,'').replace(/^\s*\/\/.*$/gm,'');for(const m of text.matchAll(/\b(?:import|export)\s*(?:[^'";]*?\bfrom\s*)?['"]([^'"]+)['"]/g))enqueue(file,m[1]);}}
+const indexFile='full/boxing-r03/LIVE-PROGRAM-INDEX.json',index=JSON.parse(read(indexFile));files[indexFile]=hash(read(indexFile));
+for(const ref of index.programFiles){const file=path.posix.normalize(path.posix.join('full/boxing-r03',ref.path)),bytes=read(file);if(hash(bytes)!==ref.sha256)throw Error('Inventory compressed source changed: '+file);files[file]=hash(bytes);}
+// Required dynamically fetched source descriptors are part of the live gate.
+for(const rel of index.sourcePaths||[]){const value=typeof rel==='string'?rel:rel.path;if(value){const p=path.posix.normalize(path.posix.join('full/boxing-r03',value));files[p]=hash(read(p));}}
+const glove='full/boxing-r03/GlovesR03.mjs',expectedGlove='796b1cebc402fb66953ebef86707b30d8bcb44ccaf04ac79e590274996fd6d16';if(files[glove]!==expectedGlove)throw Error('Unexpected final GlovesR03 bytes');
+const app=read('full/boxing-r03/app.mjs').toString();if(/RuntimeContacts|ContactStudy|StudyTargets|CollisionWorld|initJolt|setContactStudy|setCollisionMode/.test(app))throw Error('Phase-one app still exposes/creates body-contact engine');
+const replayFile=path.resolve(arg('--replay',path.join(__dirname,'WORST-POSE-REPLAY.json'))),replay=JSON.parse(fs.readFileSync(replayFile));
+for(const[p,h]of Object.entries(replay.sourceHashes))if(hash(read('full/boxing-r03/'+p))!==h)throw Error('Stale worst-pose motion source '+p);
+const soleFile=path.resolve(arg('--sole-report',path.join(__dirname,'../motion/reports/FOOT-SURFACE-QA.json'))),sole=JSON.parse(fs.readFileSync(soleFile));for(const[p,h]of Object.entries(sole.sourceHashes))if(hash(read('full/boxing-r03/'+p))!==h)throw Error('Stale full-CSR foot-surface source '+p);
+fs.mkdirSync(out,{recursive:true});fs.copyFileSync(soleFile,path.join(out,'actions-foot-surface-baseline.json'));
+const manifest={schema:'boxing-r03-actions-source/1',preparedAt:new Date().toISOString(),phase:'18 authored programs and GlovesR03 only',bodyContactReview:'not run, precision integration pending',entry,sourceScope:'Transitive actual module imports + CSS + live inventory descriptors/shards; unused contact experiments explicitly excluded.',files:Object.fromEntries(Object.entries(files).sort()),preservationCommit:production.commit,preservationTree:production.tree,preservedFileCount:429,productionBaselineSha256:hash(fs.readFileSync(path.join(__dirname,'production-tree.json'))),worstPoseReplaySha256:hash(fs.readFileSync(replayFile)),soleBaselineSha256:hash(fs.readFileSync(soleFile)),glovesR03Sha256:expectedGlove,gloveReplayCasesSha256:hash(fs.readFileSync(path.join(__dirname,'actions-glove-replays.json')))};
+fs.writeFileSync(path.join(out,'actions-source-manifest.json'),JSON.stringify(manifest,null,2)+'\n');console.log(JSON.stringify({prepared:true,files:Object.keys(files).length,manifest:path.join(out,'actions-source-manifest.json'),unusedContactFilesIncluded:false}));
