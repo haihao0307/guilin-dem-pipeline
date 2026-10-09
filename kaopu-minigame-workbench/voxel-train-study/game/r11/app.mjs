@@ -2,7 +2,7 @@ import {createRailAudio} from './audio.mjs';
 import {createJourneyMusic} from './music.mjs';
 import {createMorningAtmosphere} from './morning-atmosphere.mjs';
 import {KCR_STATIONS,MILEAGE} from './timetable.mjs';
-import * as THREE from '../vendor/three.module.js';
+import * as THREE from '../../vendor/three.module.js';
 import {Session,replay} from './session.mjs';
 import {createGameWorld} from './world.mjs';
 import {createGameSmoke} from './smoke.mjs';
@@ -13,7 +13,6 @@ import {qualityBounds,nextRenderRatio,normalizeQuality} from './render-quality.m
 import {initSettingsUI} from './settings-ui.mjs';
 import {verticalFov} from './anchored-zoom.mjs';
 import {guardedVerticalFov} from './recommended-fit.mjs';
-import {bindDriverButton,updateButtonState} from './driver-input.mjs';
 const $=id=>document.getElementById(id),canvas=$('gameScene'),wrap=$('sceneWrap'),params=new URLSearchParams(location.search),SAVE_KEY='kaopu.train-driver.save.v1';
 // Gameplay labels and overlays must not summon selection/callout UI; editable form fields retain native behavior.
 const editableUiTarget=target=>{const el=target instanceof Element?target:target?.parentElement;return !!el?.closest('input,textarea,select,option,[contenteditable]:not([contenteditable="false"])');};
@@ -28,7 +27,7 @@ world.train.root.updateWorldMatrix(true,true);const zoomBounds=new THREE.Box3().
 const QUALITY_KEY='kaopu.train-driver.quality.v1';let qualityMode='clear';try{qualityMode=normalizeQuality(localStorage.getItem(QUALITY_KEY));}catch{}
 let renderRatio=1,maxRenderRatio=1,minRenderRatio=1,frameMs=33,qualityFrames=0,previousQualityActive=false,qualityInfo=null;
 let game=new Session({line:'kcr1',seed:params.get('seed')||'KCR-0620',durationMinutes:Number(params.get('duration')||10)}),last=performance.now(),lastHUD=0,lastEvent=0,lastSaveTick=0,noticeUntil=0,needsRender=true,manualCamera=null,summaryShown=false,frameCount=0,fps=0,contextLost=false,saved=null;
-const heldBrake=new Set(),driverButtons=[],routeMap=createRouteMap($('routeMap'));
+const heldBrake=new Set(),routeMap=createRouteMap($('routeMap'));
 $('toggleHints').addEventListener('click',()=>{const expanded=$('driverGame').dataset.hints!=='true';$('driverGame').dataset.hints=String(expanded);$('toggleHints').setAttribute('aria-expanded',String(expanded));$('toggleHints').textContent=expanded?'收起说明':'说明';});
 $('seed').value=game.config.seed;$('duration').value=String(game.config.durationMinutes);
 function say(text,{warning=false,duration=4200}={}){$('notice').textContent=text;$('notice').classList.add('visible');$('notice').classList.toggle('warning',warning);noticeUntil=performance.now()+duration;}
@@ -42,18 +41,17 @@ new ResizeObserver(resize).observe(wrap);
 function command(type,value){const result=game.command(type,value);if(result.accepted)journeyMusic.update(game.view());needsRender=true;if(!result.accepted&&type==='station-action')say('先停稳，让车门落在站台范围内。');return result;}
 let viewControls;
 function resetView(){if(viewControls?.manual())return;manualCamera=null;if(viewControls)viewControls.resetForSession();else{camera.position.copy(widePosition);cameraTarget.copy(wideTarget);camera.lookAt(cameraTarget);}needsRender=true;}
-function releaseDriverInputs(){for(const button of driverButtons)button.release();heldBrake.clear();if(game.started&&!game.paused)command('brake',false);}
-function start(config){releaseDriverInputs();railAudio.setPlaybackPaused(false).catch(()=>{});$('driverGame').dataset.paused='false';if($('pauseIcon'))$('pauseIcon').textContent='Ⅱ';if($('pauseLabel'))$('pauseLabel').textContent='暂停';$('pause').setAttribute('aria-pressed','false');$('pause').setAttribute('aria-label','暂停游戏');game=new Session({line:'kcr1',...config,routeCount:6});world.resetEffects();heldBrake.clear();lastEvent=0;lastSaveTick=0;summaryShown=false;noticeUntil=0;$('notice').classList.remove('visible');$('startScreen').hidden=true;$('pauseScreen').hidden=true;$('summaryScreen').hidden=true;resetView();game.command('start');journeyMusic.update(game.view());Promise.resolve(journeyMusic.setPaused(false)).catch(()=>{});last=performance.now();needsRender=true;safeSave();canvas.focus();}
-function setPaused(value){if(!game.started||game.phase==='summary')return;releaseDriverInputs();game.command('brake',false);game.command('pause',value);$('pauseScreen').hidden=!game.paused;if($('pauseIcon'))$('pauseIcon').textContent=game.paused?'▶':'Ⅱ';if($('pauseLabel'))$('pauseLabel').textContent=game.paused?'继续':'暂停';$('driverGame').dataset.paused=String(game.paused);$('pause').setAttribute('aria-pressed',String(game.paused));railAudio.update(game.view());railAudio.setPlaybackPaused(game.paused).catch(()=>{});journeyMusic.update(game.view());Promise.resolve(journeyMusic.setPaused(game.paused)).catch(()=>{});$('pause').setAttribute('aria-label',game.paused?'继续游戏':'暂停游戏');safeSave();last=performance.now();needsRender=true;if(!game.paused)canvas.focus();}
+function start(config){railAudio.setPlaybackPaused(false).catch(()=>{});$('driverGame').dataset.paused='false';if($('pauseIcon'))$('pauseIcon').textContent='Ⅱ';if($('pauseLabel'))$('pauseLabel').textContent='暂停';$('pause').setAttribute('aria-pressed','false');$('pause').setAttribute('aria-label','暂停游戏');game=new Session({line:'kcr1',...config,routeCount:6});world.resetEffects();heldBrake.clear();lastEvent=0;lastSaveTick=0;summaryShown=false;noticeUntil=0;$('notice').classList.remove('visible');$('startScreen').hidden=true;$('pauseScreen').hidden=true;$('summaryScreen').hidden=true;resetView();game.command('start');journeyMusic.update(game.view());Promise.resolve(journeyMusic.setPaused(false)).catch(()=>{});last=performance.now();needsRender=true;safeSave();canvas.focus();}
+function setPaused(value){if(!game.started||game.phase==='summary')return;heldBrake.clear();game.command('brake',false);game.command('pause',value);$('pauseScreen').hidden=!game.paused;if($('pauseIcon'))$('pauseIcon').textContent=game.paused?'▶':'Ⅱ';if($('pauseLabel'))$('pauseLabel').textContent=game.paused?'继续':'暂停';$('driverGame').dataset.paused=String(game.paused);$('pause').setAttribute('aria-pressed',String(game.paused));railAudio.update(game.view());railAudio.setPlaybackPaused(game.paused).catch(()=>{});journeyMusic.update(game.view());Promise.resolve(journeyMusic.setPaused(game.paused)).catch(()=>{});$('pause').setAttribute('aria-label',game.paused?'继续游戏':'暂停游戏');safeSave();last=performance.now();needsRender=true;if(!game.paused)canvas.focus();}
 function stationAction(){const v=game.view();if(v.station.canRecover&&!v.station.canOpen)return command('recover');return command('station-action');}
 function setBrake(source,pressed){if(pressed)heldBrake.add(source);else heldBrake.delete(source);command('brake',heldBrake.size>0);}
 $('startGame').addEventListener('click',()=>{clearSaved();start({line:'kcr1',seed:$('seed').value.trim().slice(0,48)||'KCR-0620',durationMinutes:Number($('duration').value)});});
 $('continueSaved').addEventListener('click',()=>{try{const restored=replay(saved.packet);if(restored.signature()!==saved.signature)throw new Error('version changed');game=restored;game.command('pause',false);journeyMusic.update(game.view());railAudio.setPlaybackPaused(false).catch(()=>{});Promise.resolve(journeyMusic.setPaused(false)).catch(()=>{});$('driverGame').dataset.paused='false';heldBrake.clear();world.resetEffects();lastEvent=game.eventId;summaryShown=false;resetView();$('startScreen').hidden=true;$('pauseScreen').hidden=true;$('summaryScreen').hidden=true;last=performance.now();needsRender=true;canvas.focus();say('回来了，继续这一趟。');}catch{say('这份存档与当前规则不同，可用相同种子重新出发。',{warning:true});clearSaved();}});
-const drivingActive=()=>game.started&&!game.paused&&game.phase!=='summary';
-for(const[id,activate]of [['accelerate',()=>command('throttle-up')],['decelerate',()=>command('throttle-down')],['stationAction',stationAction]])driverButtons.push(bindDriverButton($(id),{activate,enabled:drivingActive}));
-driverButtons.push(bindDriverButton($('brake'),{hold:(pressed,source)=>setBrake('button:'+source,pressed),enabled:drivingActive}));
-driverButtons.push(bindDriverButton($('pause'),{activate:()=>setPaused(!game.paused),enabled:()=>game.started&&game.phase!=='summary'}));
-$('recover').addEventListener('click',()=>command('recover'));$('resume').addEventListener('click',()=>setPaused(false));
+$('accelerate').addEventListener('click',()=>command('throttle-up'));$('decelerate').addEventListener('click',()=>command('throttle-down'));
+$('brake').addEventListener('pointerdown',e=>{e.preventDefault();$('brake').setPointerCapture(e.pointerId);setBrake('pointer',true);});
+for(const name of ['pointerup','pointercancel','lostpointercapture'])$('brake').addEventListener(name,()=>setBrake('pointer',false));
+$('stationAction').addEventListener('click',stationAction);$('recover').addEventListener('click',()=>command('recover'));
+$('pause').addEventListener('click',()=>setPaused(!game.paused));$('resume').addEventListener('click',()=>setPaused(false));
 for(const id of ['restart','restartPaused','playAgain'])$(id).addEventListener('click',()=>start(game.config));
 $('newRoute').addEventListener('click',()=>{const seed='线路-'+Math.floor(Math.random()*0xffffff).toString(36).toUpperCase();$('seed').value=seed;start({...game.config,seed});});
 $('cameraView').addEventListener('click',()=>selectCamera(viewControls?.activePreset()==='detail'?'overview':'detail'));
@@ -61,17 +59,15 @@ $('fullScreen').addEventListener('click',async()=>{try{if(document.fullscreenEle
 document.addEventListener('fullscreenchange',()=>{$('fullScreen').setAttribute('aria-label',document.fullscreenElement?'退出全屏':'进入全屏');resize();});
 $('saveReplay').addEventListener('click',()=>{const data=JSON.stringify({...game.replayPacket(),signature:game.signature()},null,2),url=URL.createObjectURL(new Blob([data],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='火车老司机-本局回放.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
 document.addEventListener('keydown',e=>{
-  if(editableUiTarget(e.target)||e.target.closest('a[href]'))return;
+  if(/^(INPUT|SELECT|TEXTAREA|A)$/.test(e.target.tagName))return;
   if(e.code==='KeyP'&&game.started&&game.phase!=='summary'){e.preventDefault();if(!e.repeat)setPaused(!game.paused);return;}
   if(!game.started||game.paused||game.phase==='summary'||e.target.closest('.screen'))return;
-  // Space remains the driving brake after a mouse click focuses any control.
-  // Enter still activates a focused action button through its native click.
   if(['ArrowUp','KeyW','ArrowDown','KeyS','Space','KeyE'].includes(e.code))e.preventDefault();
   if(e.repeat)return;
   if(e.code==='ArrowUp'||e.code==='KeyW')command('throttle-up');if(e.code==='ArrowDown'||e.code==='KeyS')command('throttle-down');if(e.code==='Space')setBrake('keyboard',true);if(e.code==='KeyE')stationAction();
 });
-document.addEventListener('keyup',e=>{if(e.code==='Space'&&heldBrake.has('keyboard')){e.preventDefault();setBrake('keyboard',false);}});
-window.addEventListener('blur',()=>{releaseDriverInputs();safeSave();});
+document.addEventListener('keyup',e=>{if(e.code==='Space'){e.preventDefault();setBrake('keyboard',false);}});
+window.addEventListener('blur',()=>{heldBrake.clear();if(game.started)command('brake',false);safeSave();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&game.started&&!game.paused&&game.phase!=='summary')setPaused(true);last=performance.now();});
 window.addEventListener('pagehide',safeSave);
 function formatClock(seconds){const n=Math.max(0,Math.ceil(seconds));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0');}
@@ -79,7 +75,7 @@ function updateHUD(v){
   routeMap.update(v);$('limitValue').textContent=v.station.limit;$('speed').closest('.speed-display').style.setProperty('--speed-angle',(-100+Math.min(80,v.speedKmh)/80*200)+'deg');
   $('clock').textContent=v.timetable?v.timetable.clock:formatClock(v.remainingTime);$('clockLabel').textContent=v.timetable?'遊戲時鐘':'剩餘';$('timeMapping').textContent=v.timetable?'巡航壓縮 ×'+v.timetable.rate.toFixed(1)+' · 約10分鐘一趟':'';$('speedMph').textContent=(v.speedKmh/1.609344).toFixed(1);$('speed').textContent=v.speedKmh.toFixed(1);$('speed').parentElement.parentElement.classList.toggle('overspeed',v.speedKmh>v.station.limit+3);
   const locked=game.serviceLocked();$('notch').textContent=locked?'车门互锁':v.brake?'正在制动':v.reverse?'低速倒回':v.throttle>0?'牵引 '+v.throttle+' 档':v.throttle<0?'减速 '+(-v.throttle)+' 档':'惰行';for(const[i,node]of [...document.querySelectorAll('.power-dots i')].entries())node.classList.toggle('active',i<=v.throttle+2);
-  $('brakingDistance').textContent=v.brakingDistance.toFixed(1)+' m';$('brake').setAttribute('aria-pressed',String(v.brake));for(const id of ['accelerate','decelerate'])updateButtonState($(id),{disabled:locked||!v.started||v.paused||v.phase==='summary'||v.finishing});
+  $('brakingDistance').textContent=v.brakingDistance.toFixed(1)+' m';$('brake').setAttribute('aria-pressed',String(v.brake));$('accelerate').disabled=$('decelerate').disabled=locked||!v.started||v.paused||v.phase==='summary'||v.finishing;
   $('stationName').textContent=v.station.name;$('stationEnglish').textContent=v.station.english||'';$('stationSchedule').textContent=v.timetable?'計劃 '+v.timetable.arrival+(v.timetable.departure!==v.timetable.arrival?'–'+v.timetable.departure:'')+' · '+v.timetable.mile+' Mi / '+v.timetable.km+' Km'+(v.timetable.lateMinutes>=1?' · 遲 '+Math.floor(v.timetable.lateMinutes)+' 分':''):'';$('stationDistance').textContent=(v.station.remaining>=0?'':'越过 ')+Math.abs(v.station.remaining).toFixed(v.station.remaining<20?1:0)+' m';
   $('weather').textContent=(v.station.wet?'雨 · 制动更长':'晴')+' · 限速 '+v.station.limit;$('parkingNeedle').style.left=Math.max(0,Math.min(100,50-v.station.remaining/24*100))+'%';$('stopZone').style.left=(50-v.station.radius/24*100)+'%';$('stopZone').style.width=(v.station.radius/12*100)+'%';
   let hint='车头停在黄色标记旁',action='到站后开门接送',enabled=false;
@@ -95,7 +91,7 @@ function updateHUD(v){
   else if(v.speedKmh<1.3&&(v.station.remaining>7||(!v.station.platformCoverage&&v.station.remaining>0))){hint='停早了，慢慢向前补停';action='继续慢挪到站';}
   else if(v.speedKmh<1.3&&Math.abs(v.station.remaining)<=7){hint='稳住刹车，等列车停稳';action='正在确认停稳…';}
   else if(v.station.remaining<v.brakingDistance+12&&v.station.remaining>0){hint='该提前刹车了';action='停稳后开门';}
-  $('stationHint').textContent=hint;updateButtonState($('stationAction'),{text:action,disabled:!enabled||v.paused||!v.started});updateButtonState($('recover'),{disabled:!v.station.canRecover||v.paused});
+  $('stationHint').textContent=hint;$('stationAction').textContent=action;$('stationAction').disabled=!enabled||v.paused||!v.started;$('recover').disabled=!v.station.canRecover||v.paused;
   $('controlNote').innerHTML=v.station.wet?'雨天制动距离更长<br>别等最后一刻才刹车':'提前刹车，停稳后再开门<br>错过了也别慌，还能挽回';
   for(const key of ['pickedUp','delivered','combo','stops','missed'])$(key).textContent=v.stats[key];$('score').textContent=Math.round(v.stats.score)+' 分';$('satisfaction').textContent=Math.round(v.stats.satisfaction);
   const showTutorial=v.started&&!v.paused&&v.elapsed<30&&v.phase!=='summary';$('tutorial').hidden=!showTutorial;if(showTutorial)$('tutorialText').textContent=locked?'乘客会走进真实车门、沿过道入座，等接送完成再发车。':v.station.canOpen?'停稳了。点“开门接送”，或按 E。':v.station.remaining<v.brakingDistance+15?'提前按住制动。停早一点没关系，可以慢慢挪到标记。':'点 ＋ 或按 W 加档。速度是慢慢加起来的，刹车也需要距离。';
@@ -135,7 +131,7 @@ canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=tr
 canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;$('loading').hidden=true;resize();needsRender=true;});
 viewControls=createViewControls({camera,target:cameraTarget,canvas,root:$('driverGame'),getZoomPoints:currentZoomPoints,onReset:()=>{manualCamera=null;},onChange:(profile,detail)=>{syncCameraButtons();if(detail?.profileApplied)projectionKey='';needsRender=true;if(lastCanvasSize[0]!==wrap.clientWidth||lastCanvasSize[1]!==wrap.clientHeight)resize(profile);else syncProjection(profile);}});
 resize();draw(game.view(),1,true);updateHUD(game.view());$('loading').hidden=true;requestAnimationFrame(animate);
-window.__trainDriver={ready:true,version:'kcr-desktop-r12',getState:()=>({...game.view(),actors:game.actors.map(a=>({...a,position:a.position.slice()})),proof:world.train.proof,audio:railAudio.getState(),music:journeyMusic.getState(),steam:smoke.root.userData.effects,terrainProof:world.terrain.userData.proof,worldMode:'flat',atmosphere:atmosphere.proof,stationDetail:world.stationProof?.(),sceneFog:{near:scene.fog.near,far:scene.fog.far},camera:camera.position.toArray(),viewSettings:viewControls.state(),cameraMode:viewControls?.activePreset()||'manual',smokeMode:smoke.mode,smokeParticles:smoke.particles,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,frames:frameCount,fps,renderRatio,qualityMode,qualityInfo,canvasPixels:[canvas.width,canvas.height],canvasCss:[wrap.clientWidth,wrap.clientHeight],devicePixelRatio,antialias:gl.getContextAttributes()?.antialias,rendererName}),exportReplay:()=>game.replayPacket()};
+window.__trainDriver={ready:true,version:'kcr-spatial-r11',getState:()=>({...game.view(),actors:game.actors.map(a=>({...a,position:a.position.slice()})),proof:world.train.proof,audio:railAudio.getState(),music:journeyMusic.getState(),steam:smoke.root.userData.effects,terrainProof:world.terrain.userData.proof,worldMode:'flat',atmosphere:atmosphere.proof,stationDetail:world.stationProof?.(),sceneFog:{near:scene.fog.near,far:scene.fog.far},camera:camera.position.toArray(),viewSettings:viewControls.state(),cameraMode:viewControls?.activePreset()||'manual',smokeMode:smoke.mode,smokeParticles:smoke.particles,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,frames:frameCount,fps,renderRatio,qualityMode,qualityInfo,canvasPixels:[canvas.width,canvas.height],canvasCss:[wrap.clientWidth,wrap.clientHeight],devicePixelRatio,antialias:gl.getContextAttributes()?.antialias,rendererName}),exportReplay:()=>game.replayPacket()};
 
 initSettingsUI();
 function currentZoomPoints(){if(!viewControls?.state?.().focus||viewControls.state().focus==='overview')return zoomPoints;const b=viewControls?.focusBounds?.();if(!b)return zoomPoints;const points=[];for(const x of [b.min[0],b.max[0]])for(const y of [b.min[1],b.max[1]])for(const z of [b.min[2],b.max[2]])points.push(new THREE.Vector3(x,y,z));return points;}

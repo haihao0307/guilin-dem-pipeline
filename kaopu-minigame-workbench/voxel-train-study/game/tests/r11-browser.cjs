@@ -26,7 +26,7 @@ const approxArray=(a,b,tolerance=1e-6)=>{assert.equal(a.length,b.length);a.forEa
   page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400)bad.push([r.status(),r.url()]);});
   await page.route('**/game/app.mjs',async route=>{const response=await route.fetch();await route.fulfill({response,body:(await response.text())+harness});});
   await page.goto(base,{waitUntil:'load'});await page.waitForFunction(()=>__trainDriver?.ready);
-  assert.equal(await page.evaluate(()=>__trainDriver.version),'kcr-spatial-r11');
+  assert.equal(await page.evaluate(()=>__trainDriver.version),process.env.TRAIN_EXPECTED_VERSION||'kcr-spatial-r11');
   assert.equal(await page.evaluate(()=>__trainDriver.getState().music.enabled),false);
   await clickTarget(page,'#startGame',{touch:true});await page.evaluate(()=>__r11.freeze());await page.waitForTimeout(300);
   await page.waitForFunction(()=>__trainDriver.getState().audio.samples.length===5,{},{polling:50,timeout:90000});

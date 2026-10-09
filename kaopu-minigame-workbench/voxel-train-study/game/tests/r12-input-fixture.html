@@ -1,0 +1,20 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>R12 native input isolation</title>
+<style>body{margin:0}button{position:absolute;top:40px;left:40px;width:130px;height:110px;touch-action:manipulation}button *{pointer-events:none}#brake{left:200px;touch-action:none}canvas{position:absolute;left:0;top:180px;width:360px;height:120px}button[data-pressed=true]{filter:brightness(1.2)}</style>
+<button id="pause"><span id="icon">Ⅱ</span><span id="label">Pause</span></button><button id="brake">Brake</button><canvas id="scene" tabindex="0"></canvas>
+<script type="module">
+import {bindDriverButton} from '../driver-input.mjs';
+const pause=document.getElementById('pause'),brake=document.getElementById('brake'),scene=document.getElementById('scene');
+let paused=false,actions=0,held=new Set(),controls=[],events=[];
+const log=(e,where)=>events.push({type:e.type,where,target:e.target.id,detail:e.detail,pointerType:e.pointerType,pointerId:e.pointerId,button:e.button,buttons:e.buttons,clientX:e.clientX,clientY:e.clientY,trusted:e.isTrusted,paused,actions,captured:e.pointerId===undefined?null:pause.hasPointerCapture(e.pointerId)});
+function release(){for(const c of controls)c.release();held.clear();}
+function setPaused(value){release();paused=value;document.getElementById('icon').textContent=paused?'▶':'Ⅱ';document.getElementById('label').textContent=paused?'Resume':'Pause';pause.setAttribute('aria-pressed',String(paused));if(!paused)scene.focus();}
+controls.push(bindDriverButton(pause,{activate:e=>{actions++;log(e,'activation');setPaused(!paused);}}));
+controls.push(bindDriverButton(brake,{hold:(pressed,source)=>pressed?held.add(source):held.delete(source)}));
+for(const type of ['pointerdown','pointerup','pointercancel','gotpointercapture','lostpointercapture','click']){
+ document.addEventListener(type,e=>log(e,'document-capture'),true);
+ document.addEventListener(type,e=>log(e,'document-bubble'));
+}
+for(const el of [pause,brake])for(const type of ['pointerenter','pointerleave','blur','focus'])el.addEventListener(type,e=>log(e,'target'));
+window.addEventListener('blur',release);
+window.fixture={ready:true,reset(){setPaused(false);actions=0;events=[];},state(){return{paused,actions,held:[...held],events:events.slice()};}};
+</script></html>
