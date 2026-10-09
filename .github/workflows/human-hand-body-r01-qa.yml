@@ -1,0 +1,51 @@
+name: Human hand-body R01 isolated candidate QA
+on:
+  push:
+    branches: ['qa/human-hand-body-r01-20261009']
+permissions:
+  contents: read
+concurrency:
+  group: hand-body-r01-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+            kaopu-mhr-workbench
+      - name: Install pinned official browser QA dependency
+        run: |
+          npm install --prefix "$RUNNER_TEMP/hand-body-qa" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/hand-body-qa/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/hand-body-qa/node_modules" >> "$GITHUB_ENV"
+      - name: Serve exact isolated candidate
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/hand-body-server.log" 2>&1 &
+          for n in $(seq 1 30); do
+            curl --fail --silent http://127.0.0.1:8765/kaopu-unified-human-workbench/full/hand-body-r01/ > /dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Real full mesh and hand close-up evidence
+        run: node kaopu-unified-human-workbench/full/hand-body-r01/browser.cjs
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hand-body-r01-report-${{ github.sha }}
+          path: hand-body-qa-results/*.json
+          retention-days: 7
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hand-body-r01-images-${{ github.sha }}
+          path: hand-body-qa-results/*.png
+          compression-level: 0
+          retention-days: 7

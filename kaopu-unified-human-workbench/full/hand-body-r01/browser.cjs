@@ -1,0 +1,11 @@
+const {chromium}=require('playwright'),fs=require('node:fs'),assert=require('node:assert/strict');
+const out='hand-body-qa-results';fs.mkdirSync(out,{recursive:true});
+(async()=>{const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}),page=await browser.newPage({viewport:{width:1450,height:1050}}),errors=[],cases=[];page.on('pageerror',e=>errors.push(e.message));try{
+await page.goto('http://127.0.0.1:8765/kaopu-unified-human-workbench/full/hand-body-r01/');await page.click('#start');await page.waitForFunction(()=>handWorkbench.ready,null,{timeout:180000});
+for(const shape of [0,12,19,30])for(const task of ['open','fist','pinch','grasp','carry','reach-turn']){
+ await page.evaluate(o=>handWorkbench.set(o),{shape,task,time:3});const d=await page.evaluate(()=>handWorkbench.diagnostics());assert.equal(d.vertices,25417);assert.equal(d.triangles,50624);assert.equal(d.weightsTruncated,false);assert.equal(d.maxInfluences,9);assert(d.finite);assert(d.maxBoneLengthError<1e-8);assert(d.maxHandErrorM<.003);cases.push(d);
+ for(const side of [false,true])for(const hand of [false,true]){await page.evaluate(o=>handWorkbench.set(o),{task,time:3,side,hand});await page.screenshot({path:`${out}/${shape}-${task}-${side?'side':'front'}-${hand?'hand':'body'}.png`});}
+ for(const time of [0,1.2,2.4,4.2,4.8,6]){await page.evaluate(o=>handWorkbench.set(o),{task,time});const q=await page.evaluate(()=>handWorkbench.diagnostics());assert(q.finite);assert(q.maxBoneLengthError<1e-8);}
+}
+ assert(await page.locator('#start').isDisabled());assert.equal(await page.evaluate(()=>handWorkbench.ready),true);await page.reload();await page.waitForFunction(()=>!!window.handWorkbench);assert.equal(await page.evaluate(()=>handWorkbench.ready),false);assert.deepEqual(errors,[]);fs.writeFileSync(out+'/report.json',JSON.stringify({passed:true,commit:process.env.GITHUB_SHA,cases,errors,scope:'Real Chromium SwiftShader full canonical mesh and full CSR. Not learned pose correctives, hardware FPS or skin contact certification.'},null,2));
+}catch(e){fs.writeFileSync(out+'/failure.json',JSON.stringify({error:e.stack,errors,cases},null,2));await page.screenshot({path:out+'/failure.png'});throw e;}finally{await browser.close()}})().catch(e=>{console.error(e);process.exitCode=1});
