@@ -59,7 +59,10 @@ with sync_playwright() as p:
         page.wait_for_function('window.__TAILOR_R02_QA__.getState().selectedId==="D04"')
         check('card selection replaces the actual 3D form in the shared renderer',state()['selectedId']=='D04' and state()['detail']['currentId']=='D04',state()['detail'])
         r01=page.locator('#open-r01').get_attribute('href');r074=page.locator('#open-sewing').get_attribute('href')
-        check('paper and sewing paths remain available',page.request.get(r01).status==200 and page.request.get(r074).status==200,{'r01':r01,'r074':r074})
+        r01_status=page.request.get(r01).status
+        r074_route='/kaopu-tailor-workbench/r07/continuation/' in r074 and 'case=MetaGarmentDress' in r074
+        r074_status=page.request.get(r074).status if PUBLIC else None
+        check('paper and sewing paths remain available',r01_status==200 and r074_route and (not PUBLIC or r074_status==200),{'r01':r01,'r01Status':r01_status,'r074':r074,'r074Status':r074_status,'publicHTTPChecked':PUBLIC})
         page.locator('body').evaluate('(b)=>b.scrollTop=0')
         page.screenshot(path=str(OUT/'desktop.jpg'),type='jpeg',quality=82,full_page=False)
         layout=page.evaluate('({width:innerWidth,scrollWidth:document.documentElement.scrollWidth})')
