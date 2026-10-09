@@ -11,7 +11,7 @@ export function updateButtonState(button,{text,disabled}={}){
 
 export function bindDriverButton(button,{activate,hold,enabled=()=>true}={}){
   const doc=button.ownerDocument,win=doc.defaultView;
-  let pointer=null,ignorePointerClick=false;
+  let pointer=null,pointerType='',consumedPointer=null,ignorePointerClick=false;
   const keys=new Set(),listeners=[];
   const listen=(target,type,callback,options)=>{
     target.addEventListener(type,callback,options);
@@ -24,7 +24,7 @@ export function bindDriverButton(button,{activate,hold,enabled=()=>true}={}){
   };
   const dropPointer=()=>{
     if(pointer===null)return;
-    const id=pointer;pointer=null;ignorePointerClick=true;
+    const id=pointer;consumedPointer={id,type:pointerType};pointer=null;pointerType='';ignorePointerClick=true;
     button.removeAttribute('data-pressed');
     if(hold)hold(false,'pointer:'+id);
     // A capture failure must never prevent braking; document listeners also
@@ -39,7 +39,7 @@ export function bindDriverButton(button,{activate,hold,enabled=()=>true}={}){
   listen(button,'pointerdown',event=>{
     if(event.button!==0||pointer!==null||!available())return;
     event.preventDefault();
-    ignorePointerClick=false;pointer=event.pointerId;
+    ignorePointerClick=false;consumedPointer=null;pointer=event.pointerId;pointerType=event.pointerType||'';
     button.setAttribute('data-pressed','true');
     button.focus?.({preventScroll:true});
     try{button.setPointerCapture(event.pointerId);}catch{}
@@ -64,9 +64,12 @@ export function bindDriverButton(button,{activate,hold,enabled=()=>true}={}){
   listen(button,'lostpointercapture',cancel);
   listen(button,'pointerleave',cancel);
   listen(button,'click',event=>{
-    // A native click can follow our pointerup; consume only that pointer click.
-    // detail=0 preserves Enter/Space, assistive activation and .click() callers.
-    if(event.detail>0&&ignorePointerClick){event.preventDefault();ignorePointerClick=false;return;}
+    // Chromium touch emits click(detail=0, pointerType=touch) after pointerup;
+    // treating every zero-detail click as keyboard toggled Pause twice. Match
+    // the consumed physical gesture too. Enter/assistive/.click() have no type
+    // and keep their normal activation, even while a pointer click is pending.
+    const samePointer=!!event.pointerType&&consumedPointer&&event.pointerId===consumedPointer.id&&event.pointerType===consumedPointer.type;
+    if(ignorePointerClick&&(event.detail>0||samePointer)){event.preventDefault();ignorePointerClick=false;consumedPointer=null;return;}
     if(!hold&&available())activate?.(event);
   });
   if(hold){

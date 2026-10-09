@@ -40,6 +40,32 @@ test('touch tap and boundary points use the complete button target once',()=>{
     assert.equal(f.calls.length,1);
   }
 });
+test('actual Chromium touch event order toggles pause once despite click detail zero',()=>{
+  let paused=false,actions=0,control;
+  const f=fixture({activate:()=>{actions++;paused=!paused;control.release();}});control=f.control;
+  f.down({pointerId:2,pointerType:'touch',detail:0});f.up({pointerId:2,pointerType:'touch',detail:0});
+  f.fire(f.button,'lostpointercapture',{pointerId:2,pointerType:'touch',detail:0});
+  f.fire(f.button,'pointerleave',{pointerId:2,pointerType:'touch',detail:0});
+  f.fire(f.button,'click',{pointerId:2,pointerType:'touch',detail:0});
+  assert.equal(actions,1);assert.equal(paused,true);
+  f.down({pointerId:3,pointerType:'touch',detail:0});f.up({pointerId:3,pointerType:'touch',detail:0});
+  f.fire(f.button,'click',{pointerId:3,pointerType:'touch',detail:0});
+  assert.equal(actions,2);assert.equal(paused,false);
+});
+test('zero-detail Enter and programmatic clicks remain valid while physical click is pending',()=>{
+  for(const activation of ['Enter','.click()']){
+    const f=fixture();f.down({pointerId:2,pointerType:'touch'});f.up({pointerId:2,pointerType:'touch'});
+    f.fire(f.button,'click',{detail:0,pointerId:-1,pointerType:''});assert.equal(f.calls.length,2,activation);
+    f.fire(f.button,'click',{detail:0,pointerId:2,pointerType:'touch'});assert.equal(f.calls.length,2,'consume only the physical duplicate');
+  }
+});
+test('twenty rapid zero-detail touch taps each issue exactly one action',()=>{
+  const f=fixture();for(let i=2;i<22;i++){
+    f.down({pointerId:i,pointerType:'touch',detail:0});f.up({pointerId:i,pointerType:'touch',detail:0});
+    f.fire(f.button,'click',{pointerId:i,pointerType:'touch',detail:0});
+  }
+  assert.equal(f.calls.length,20);
+});
 test('label replacement during a long press cannot lose its button-owned release',()=>{
   const f=fixture();f.down();for(let i=0;i<5;i++)f.button.textContent='开门接送';f.up();
   assert.deepEqual(f.calls,['action']);
