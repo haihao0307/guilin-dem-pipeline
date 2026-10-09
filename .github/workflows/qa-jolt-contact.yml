@@ -1,4 +1,4 @@
-name: Jolt contact and complete human validation
+name: Jolt fixed HTTPS public validation
 on:
   push:
     branches: ['qa/jolt-contact-20261009']
@@ -7,6 +7,8 @@ permissions:
 concurrency:
   group: jolt-contact-20261009
   cancel-in-progress: true
+env:
+  JOLT_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/collision-architecture/
 jobs:
   contact:
     runs-on: ubuntu-24.04
@@ -31,6 +33,17 @@ jobs:
       - run: '"$RUNNER_TEMP/jolt-qa/node_modules/.bin/playwright" install --with-deps chromium'
       - run: echo "NODE_PATH=$RUNNER_TEMP/jolt-qa/node_modules" >> "$GITHUB_ENV"
       - run: python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/jolt-server.log" 2>&1 &
+      - name: Verify deployed collision hashes
+        run: |
+          python3 - <<'PYTHON'
+          import json, hashlib, urllib.request, os
+          base = os.environ['JOLT_URL']
+          hashes = json.load(open('kaopu-unified-human-workbench/collision-architecture/tests/public-hashes.json'))
+          for path, expected in hashes.items():
+              actual = hashlib.sha256(urllib.request.urlopen(base + path, timeout=45).read()).hexdigest()
+              assert actual == expected, path
+          print('Verified', len(hashes), 'published files for production 499915682292d3eb44cd5a5c881423a9c244f767')
+          PYTHON
       - run: node kaopu-unified-human-workbench/collision-architecture/tests/browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
