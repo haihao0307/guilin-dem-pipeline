@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>裁缝 · 三维电子橱柜 R02</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="./" aria-label="裁缝三维电子橱柜首页">
+    <span class="brand-mark">K</span>
+    <span><small>KAOPU / TAILOR ATELIER</small><strong>三维电子橱柜 <em>R02</em></strong></span>
+  </a>
+  <nav>
+    <a href="../r01/">二维纸样库 R01</a>
+    <a href="../../r07/continuation/?case=MetaGarmentDress">真实制版与缝合 R07.4</a>
+  </nav>
+</header>
+
+<section class="intro">
+  <div>
+    <p class="eyebrow">THREE-DIMENSIONAL PRESET CABINET</p>
+    <h1>先看衣服的三维形体，再进入纸样与真实缝合。</h1>
+    <p>全部预设使用统一的简易塑料橱窗模特、统一镜头和统一灯光。卡片展示款式轮廓、袖型、裙裤长度和上下装组合；不会用平铺纸片冒充成衣，也不会把橱窗形体冒充布料物理验收结果。</p>
+  </div>
+  <div class="headline-metrics" aria-label="预设库摘要">
+    <div><b id="metric-presets">—</b><span>三维预设</span></div>
+    <div><b>1</b><span>活动详情渲染器</span></div>
+    <div><b>0</b><span>真人模型依赖</span></div>
+  </div>
+</section>
+
+<main class="workspace">
+  <section class="catalogue" aria-label="三维服装预设">
+    <div class="catalogue-toolbar">
+      <label class="search-box"><span>查找款式</span><input id="search" type="search" placeholder="长袖、阔腿、圆裙、连体裤……" autocomplete="off"></label>
+      <div id="categories" class="categories" aria-label="预设分类"></div>
+    </div>
+    <div class="catalogue-status"><span id="visible-count">正在读取预设……</span><span id="thumbnail-progress">准备三维缩略图……</span></div>
+    <div id="cards" class="cards"></div>
+    <p id="empty" class="empty" hidden>没有符合这次查找的款式。</p>
+  </section>
+
+  <aside class="inspector" aria-label="当前服装预设详情">
+    <div class="selection-heading">
+      <div><p class="eyebrow" id="selected-category">当前选款</p><h2 id="selected-title">准备读取</h2></div>
+      <span class="badge">电子橱柜</span>
+    </div>
+    <p id="selected-intent" class="intent"></p>
+    <div id="facts" class="facts"></div>
+
+    <div class="view-tabs" role="tablist" aria-label="详情视图">
+      <button id="tab-3d" role="tab" aria-selected="true">三维橱窗</button>
+      <button id="tab-paper" role="tab" aria-selected="false">实际纸样</button>
+    </div>
+
+    <section id="view-3d" class="detail-view" aria-label="三维橱窗视图">
+      <div id="showcase" class="showcase"><div class="showcase-loading">正在建立塑料橱窗模特……</div></div>
+      <div class="camera-buttons" aria-label="三维观察视角">
+        <button data-view="front">正面</button><button data-view="angle" aria-pressed="true">斜前</button><button data-view="side">侧面</button><button data-view="back">背面</button>
+      </div>
+      <p class="view-note">可拖动旋转、滚轮缩放。这里是统一形体展示，不是已经缝好、没有穿模的成衣证明。</p>
+    </section>
+
+    <section id="view-paper" class="detail-view" aria-label="实际纸样视图" hidden>
+      <div class="paper-toolbar"><strong>真实裁片 · 毫米坐标</strong><div><button id="paper-minus">−</button><button id="paper-fit">适应</button><button id="paper-plus">＋</button></div></div>
+      <div id="paper-viewport"><div id="paper-host"><p>切换到纸样视图后按需读取原 R01 数据。</p></div></div>
+      <p class="view-note">纸样仍完整保留，作为结构、曲线和缝边检查视图；三维缩略图只是更直观的选款入口。</p>
+    </section>
+
+    <div class="actions">
+      <a id="open-r01" class="secondary-action" href="../r01/">查看该款完整纸样</a>
+      <a id="open-sewing" class="primary-action" href="../../r07/continuation/?case=MetaGarmentDress">进入真实制版与缝合</a>
+    </div>
+    <p id="runtime-status" class="runtime-status" role="status">网页只保留一个活动详情渲染器；60张卡片由同一个临时渲染器逐张缓存后释放。</p>
+  </aside>
+</main>
+
+<section class="boundary">
+  <article><h3>三维缩略图解决什么</h3><p>用统一模特直观看出衣长、袖长、裙裤轮廓和组合关系，避免只看纸片时无法判断整体款式。</p></article>
+  <article><h3>它不证明什么</h3><p>不证明接缝闭合、材料应变、自碰撞、连续碰撞或动作穿着稳定；这些仍进入 R07.4 的真实求解和数值门槛。</p></article>
+  <article><h3>为什么不用真人</h3><p>选款阶段使用中性塑料展示体，减少脸、皮肤和具体体型干扰。换人物时仍必须读取该人物完整量体重新制版。</p></article>
+</section>
+
+<footer><span id="version">R02 · 正在加载</span><a href="./README.md">实现、验证与边界记录</a></footer>
+<noscript>此页面需要 JavaScript 和 WebGL 才能生成三维缩略图。</noscript>
+<script type="module" src="./app.mjs"></script>
+</body>
+</html>
