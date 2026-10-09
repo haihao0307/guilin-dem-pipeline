@@ -3,13 +3,13 @@
 float pbrD(float alpha,float NoH){float a2=alpha*alpha;float d=NoH*NoH*(a2-1.)+1.;return .31830988618*a2/max(d*d,.0000001);}
 float pbrV(float alpha,float NoL,float NoV){float a2=alpha*alpha;float gv=NoL*sqrt(a2+(1.-a2)*NoV*NoV);float gl=NoV*sqrt(a2+(1.-a2)*NoL*NoL);return .5/max(gv+gl,.000001);}
 vec3 pbrF(vec3 f0,float VoH){float f=pow(1.-clamp(VoH,0.,1.),5.);return f0+(1.-f0)*f;}
-vec3 pbrBRDF(vec3 n,vec3 v,vec3 l,vec3 base,float rough,float metal){vec3 h=normalize(v+l);float NoL=max(0.,dot(n,l)),NoV=max(.001,dot(n,v)),NoH=max(0.,dot(n,h)),VoH=max(0.,dot(v,h));float alpha=max(.045,rough*rough);vec3 f=pbrF(mix(vec3(.04),base,metal),VoH);vec3 diffuse=(1.-f)*(1.-metal)*base*.31830988618;vec3 specular=f*pbrD(alpha,NoH)*pbrV(alpha,NoL,NoV);return (diffuse+specular)*NoL;}
+vec3 pbrBRDF(vec3 n,vec3 v,vec3 l,vec3 base,float rough,float metal){vec3 h=(v+l)/max(length(v+l),.00001);float NoL=max(0.,dot(n,l)),NoV=max(.001,dot(n,v)),NoH=max(0.,dot(n,h)),VoH=max(0.,dot(v,h));float alpha=max(.045,rough*rough);vec3 f=pbrF(mix(vec3(.04),base,metal),VoH);vec3 diffuse=(1.-f)*(1.-metal)*base*.31830988618;vec3 specular=f*pbrD(alpha,NoH)*pbrV(alpha,NoL,NoV);return (diffuse+specular)*NoL;}
 float materialHash(vec2 p){return fract(sin(dot(p,vec2(91.73,263.31)))*49732.1128);}
 float materialNoise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(materialHash(i),materialHash(i+vec2(1.,0.)),f.x),mix(materialHash(i+vec2(0.,1.)),materialHash(i+vec2(1.,1.)),f.x),f.y);}
 vec2 materialUV(vec3 p,float y,float mat){vec2 st=stoneCoordinates(p);if(mat>2.5&&mat<4.5){float circumference=uK>.0?sh(uK*7.4)/uK:7.4;return vec2(atan(p.y,p.x)*circumference,y);}return st;}
 float materialHeight(vec3 p,float y,float mat){vec2 uv=materialUV(p,y,mat);return (materialNoise(uv*9.7)-.5)*.003+(materialNoise(uv*31.3)-.5)*.0011;}
 vec3 materialNormal(vec3 p,float y,float mat,vec3 n,vec3 a,vec3 b){if(mat>4.5||mat>1.5&&mat<2.5)return n;float e=.006;vec3 g=vec3(materialHeight(stepH(p,a,e),y,mat)-materialHeight(stepH(p,a,-e),y,mat),materialHeight(p,y+e,mat)-materialHeight(p,y-e,mat),materialHeight(stepH(p,b,e),y,mat)-materialHeight(stepH(p,b,-e),y,mat))/(2.*e);g-=n*dot(n,g);return normalize(n-g);}
-vec3 shadePBR(vec3 p,float y,float mat,float distanceToEye){vec3 a,b;frameH(p,a,b);vec3 geometricNormal=normalH(p,y,mat,a,b);vec3 n=materialNormal(p,y,mat,geometricNormal,a,b);vec3 view=lightVector(p,a,b,uP,1.25-y);float occ=ambientOcclusion(p,y,geometricNormal,a,b);vec2 uv=materialUV(p,y,mat);float broad=materialNoise(uv*1.7),middle=materialNoise(uv*9.7),grain=materialNoise(uv*31.3);vec3 base=mix(vec3(.035,.037,.037),vec3(.077,.069,.056),broad);float rough=clamp(.44+middle*.23+grain*.06,.32,.83),metal=0.;
+vec3 shadePBR(vec3 p,float y,float mat,float distanceToEye){vec3 a,b;frameH(p,a,b);vec3 geometricNormal=normalH(p,y,mat,a,b);vec3 n=materialNormal(p,y,mat,geometricNormal,a,b);vec3 view=lightVector(p,a,b,uP,1.25-y);float occ=uDebug==2.?1.:ambientOcclusion(p,y,geometricNormal,a,b);vec2 uv=materialUV(p,y,mat);float broad=materialNoise(uv*1.7),middle=materialNoise(uv*9.7),grain=materialNoise(uv*31.3);vec3 base=mix(vec3(.035,.037,.037),vec3(.077,.069,.056),broad);float rough=clamp(.44+middle*.23+grain*.06,.32,.83),metal=0.;
 if(mat>1.5&&mat<2.5){base=vec3(.024,.034,.042);rough=.85;}
 if(mat>2.5&&mat<4.5){base=mix(vec3(.105,.092,.075),vec3(.17,.15,.119),broad);rough=.58+middle*.18;}
 if(mat>4.5){base=vec3(.50,.30,.102)*(.9+.1*broad);rough=.25+.085*middle;metal=1.;}
@@ -21,3 +21,4 @@ if(mat<1.5){float pathD=min(segmentDist(p,uBeacons[0],uBeacons[1]),min(segmentDi
 if(mat>2.5&&mat<3.5){float ledY=(y-3.54)*75.;color+=vec3(.19,.34,.38)*exp(-ledY*ledY)*.32;}
 if(mat>5.5){float lit=mat<6.5?uLit.x:mat<7.5?uLit.y:uLit.z;color=mix(vec3(2.8,1.10,.29),vec3(.75,1.65,1.2),lit*.6)*(.62+.5*pow(max(0.,dot(n,view)),2.));}
 return mix(color,vec3(.033,.047,.053),1.-exp(-distanceToEye*.018));}
+
