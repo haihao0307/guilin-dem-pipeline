@@ -1,0 +1,40 @@
+name: Jolt contact and complete human validation
+on:
+  push:
+    branches: ['qa/jolt-contact-20261009']
+permissions:
+  contents: read
+concurrency:
+  group: jolt-contact-20261009
+  cancel-in-progress: true
+jobs:
+  contact:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+            kaopu-mhr-workbench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm install --prefix "$RUNNER_TEMP/jolt-runtime" --no-save --ignore-scripts jolt-physics@1.1.0
+      - run: echo "JOLT_NODE_MODULE=file://$RUNNER_TEMP/jolt-runtime/node_modules/jolt-physics/dist/jolt-physics.wasm-compat.js" >> "$GITHUB_ENV"
+      - run: node kaopu-unified-human-workbench/collision-architecture/tests/collision.mjs
+      - run: node kaopu-unified-human-workbench/collision-architecture/tests/response.mjs
+      - run: node kaopu-unified-human-workbench/collision-architecture/tests/soft-body.mjs
+      - run: npm install --prefix "$RUNNER_TEMP/jolt-qa" --no-save --ignore-scripts playwright@1.57.0
+      - run: '"$RUNNER_TEMP/jolt-qa/node_modules/.bin/playwright" install --with-deps chromium'
+      - run: echo "NODE_PATH=$RUNNER_TEMP/jolt-qa/node_modules" >> "$GITHUB_ENV"
+      - run: python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/jolt-server.log" 2>&1 &
+      - run: node kaopu-unified-human-workbench/collision-architecture/tests/browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jolt-contact-${{ github.sha }}
+          path: jolt-contact-qa-results/
+          retention-days: 7

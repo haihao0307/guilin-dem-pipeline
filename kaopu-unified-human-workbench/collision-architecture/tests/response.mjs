@@ -1,0 +1,4 @@
+import assert from 'node:assert/strict';
+import {ContactResponse} from '../ContactResponse.mjs';
+const r=new ContactResponse(),event={source:'JoltPhysics.js/1.1.0 WASM TransformedShape.CastShape',contactPoint:[0,1.6,0],normal:[1,0,0],closingSpeed:3,defenderId:'B',bodyRegion:'head'};
+r.accept(event);const first=structuredClone(r.state('B'));let max=0;for(let i=0;i<120*4;i++){r.step(1/120);max=Math.max(max,Math.hypot(...r.state('B').offset));}assert(max>0&&max<=.065);assert(Math.hypot(...r.state('B').offset)<1e-8);assert(Math.hypot(...r.state('B').head)<1e-8);r.reset();r.accept(event);assert.deepEqual(r.state('B'),first);assert.throws(()=>r.accept({...event,source:'animation-clock'}));assert.throws(()=>r.step(1/30));console.log(JSON.stringify({passed:true,maxOffsetM:max,returnsToRest:true,resetExact:true,notARagdoll:true},null,2));
