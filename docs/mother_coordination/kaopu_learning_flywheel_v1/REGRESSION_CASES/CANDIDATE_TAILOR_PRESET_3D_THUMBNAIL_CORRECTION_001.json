@@ -1,7 +1,7 @@
 {
   "schema": "kaopu.regression-case/2",
   "caseId": "TAILOR-PRESET-3D-THUMBNAIL-CORRECTION-001",
-  "status": "CANDIDATE_TAILOR_HISTORY_REPLAY_PASSED_NOT_ADOPTED",
+  "status": "CANDIDATE_TAILOR_HISTORY_REPLAY_UPDATED_N125_NOT_ADOPTED",
   "active": false,
   "scope": {
     "mother": "Tailor",
@@ -19,8 +19,14 @@
       "paper-pattern SVG thumbnails",
       "unrelated concept art",
       "one garment renamed as multiple presets",
+      "category/style heuristics assembled from generic primitive garments without an actual preset garment-geometry derivation receipt",
       "a green pre-correction paper-only run"
-    ]
+    ],
+    "latestPostR02Correction": {
+      "instruction": "The current simplified version does not meet the requirement; do not generate substitute images; modify the GitHub implementation itself.",
+      "ordering": "after PR #180 R02 public delivery",
+      "exactTimestamp": "unknown-in-external-thread-snapshot"
+    }
   },
   "historicalObservation": {
     "preCorrectionRun": 37881219569,
@@ -37,10 +43,35 @@
     "threeDThumbnailCoverage": 0,
     "currentPublicStatement": "Thumbnails come from real paper patterns, not garment photos."
   },
+  "n125Counterexample": {
+    "pullRequest": 180,
+    "headSha": "a9148f6860b9fa9f892b97456f4601c34ea95e04",
+    "sourceSha": "4ca3569f763fc4dae361d905c8d4696f2f56709f",
+    "workflowRun": 37896825675,
+    "publicUrl": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/presets/r02/?preset=J06",
+    "publicByteAndBrowserState": "WEBGL_PROXY_CABINET_VERIFIED_SCOPED",
+    "thumbnailCoverage": 60,
+    "runtimeKind": "real WebGL with cached card renders and one interactive detail canvas",
+    "garmentConstruction": "category/style/design-override heuristics assembled with SphereGeometry, CylinderGeometry, ConeGeometry, BoxGeometry and authored skirt surfaces",
+    "actualPaperOrSewnGeometryConsumedBy3DRenderer": false,
+    "perMemberGarmentGeometryIdentityReceipts": 0,
+    "qaAsserts": [
+      "60 cached WebGL images exist",
+      "one active canvas remains",
+      "paper SVG is available in a separate tab"
+    ],
+    "qaDoesNotAssert": [
+      "3D preview geometry derives from the selected preset paper panels and seams",
+      "preview geometry identity matches a sewn garment artifact",
+      "visual fidelity accepted by the user"
+    ],
+    "userDisposition": "REJECTED_SIMPLIFIED_VERSION"
+  },
   "mustNeverRepeat": [
     "Treat a successful test of the superseded paper-thumbnail contract as proof of the later 3D-garment-thumbnail correction.",
     "Count paper SVGs, diagrams, or unrelated images as preset-specific 3D garment thumbnails.",
     "Claim collection completion from a subset without 60-member coverage and identity receipts.",
+    "Count sixty real WebGL renders as compliant when all garments are simplified proxy primitives unbound to the actual preset garment geometry.",
     "Promote thumbnail evidence into physical-fit, collision, dynamic-wear, device, or user acceptance."
   ],
   "requiredPerMemberReceipt": [
@@ -58,6 +89,7 @@
     "REJECTED_WRONG_TARGET_PAPER_THUMBNAIL",
     "HOLD_COLLECTION_MEMBER_COVERAGE_INCOMPLETE",
     "HOLD_THREE_D_THUMBNAIL_IDENTITY_INCOMPLETE",
+    "REJECTED_CREATIVE_SUBSTITUTE_SIMPLIFIED_PROXY_GARMENT",
     "THREE_D_PRESET_THUMBNAILS_VERIFIED_SCOPED"
   ],
   "gate": [
@@ -65,6 +97,7 @@
     "A run predating the correction or testing only paper thumbnails cannot satisfy the corrected contract.",
     "All 60 expected preset IDs must have member-level 3D derivation receipts and public card readback.",
     "The thumbnail may be a static render, but it must derive from actual preset-specific 3D garment geometry on the declared simple mannequin.",
+    "Real WebGL, a real mannequin and 60 distinct renders are necessary technical facts but are not sufficient when garment geometry is a category/style primitive proxy rather than the selected preset's actual garment geometry.",
     "Passing this case does not certify cloth physics, fit, collision, dynamic wear, physical device behavior, or user acceptance."
   ],
   "activation": {
@@ -81,9 +114,16 @@
     "ADOPTED": false,
     "USER-ACCEPTED": false
   },
-  "postingReceipt": {
-    "surface": "PR #179",
-    "commentId": 6075172571,
-    "url": "https://github.com/haihao0307/guilin-dem-pipeline/pull/179#issuecomment-6075172571"
-  }
+  "postingReceipts": [
+    {
+      "surface": "PR #179",
+      "commentId": 6075172571,
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/pull/179#issuecomment-6075172571"
+    },
+    {
+      "surface": "PR #180",
+      "status": "prepared-pending-post",
+      "purpose": "Route the N125 real counterexample to the affected Tailor candidate without changing its production branch."
+    }
+  ]
 }
