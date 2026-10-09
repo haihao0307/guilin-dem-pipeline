@@ -1,0 +1,46 @@
+{
+  "schema": "kaopu-collision-capabilities/1",
+  "runtime": {
+    "name": "jolt-physics",
+    "version": "1.1.0",
+    "cppTag": "v5.6.0",
+    "cppCommit": "e77f175595e64cb44218cc9d9d56fc365ad0e36a",
+    "packageCommit": "c9c122bcd48e92885fbee7d267c928c3781d581c",
+    "license": "MIT",
+    "backend": "official embedded WebAssembly",
+    "moduleSHA256": "011233a5fff762d6f0f5b50726b315246bf68cb182f0a10024559d04f4c257de"
+  },
+  "adopted": {
+    "sphereVsCapsuleSweep": "runtime-tested",
+    "translatingTargets": "runtime-tested",
+    "arbitraryRotatingTargetCCD": false,
+    "contactPointNormalTOI": "runtime-tested",
+    "completeAnnyMesh": "numeric-tested; browser acceptance separate",
+    "springReaction": "original bounded animation response, not rigid impulse solver",
+    "JoltSoftBodyVsRigid": "81-particle fixture runtime-tested"
+  },
+  "notAdopted": {
+    "ragdollMotors": "library supports; production calibration and active-ragdoll test pending",
+    "CharacterVirtual": "library supports; no integration claim",
+    "skinnedClothConstraints": "source and official sample reviewed; not runtime-tested",
+    "clothSelfCollision": "not implemented/certified by this adapter",
+    "clothVsCloth": "unsupported in pinned Jolt soft-body collision loop",
+    "garmentFitCertified": false,
+    "dynamicWearCertified": false
+  },
+  "contracts": {
+    "units": "m",
+    "up": "Y",
+    "fixedDtMax": 0.008333333333333333,
+    "normal": "attacker to defender",
+    "fingerprint": "SHA256 actual neutral positions + complete 104-bone rest/names/parents",
+    "newMorphology": "rebuild proxy fit and fingerprint; R03 adipose recipe amount/schema/sourceHash required",
+    "visualSkinning": "all original influences retained; no four-weight truncation"
+  },
+  "sourceMap": "README.md",
+  "standaloneDemo": {
+    "guardBlockersEnabled": false,
+    "hitMeaning": "geometric body-proxy contact; not guard-aware combat scoring",
+    "mainControllerRequirement": "earliest guard/body TOI; real guard opening before accepting body strike"
+  }
+}

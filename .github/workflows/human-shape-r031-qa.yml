@@ -1,4 +1,4 @@
-name: R031 public identity stage and explicit body boundary
+name: R032 normal-only surface gradient single experiment
 on:
   push:
     branches: [qa/human-shape-r031-20261009]
@@ -16,38 +16,21 @@ jobs:
             kaopu-unified-human-workbench
             kaopu-anny-workbench
             kaopu-mhr-workbench
-            r031-public-manifest.json
-            r031-public-geometry.json
-            r031-public-verify.cjs
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - run: |
           npm install --prefix .human-qa --no-save --ignore-scripts --no-audit --no-fund playwright@1.55.0
           ./.human-qa/node_modules/.bin/playwright install --with-deps chromium
-      - name: Wait for deployed R031 hashes (maximum ten minutes)
-        run: |
-          python3 - <<'PYWAIT'
-          import json, urllib.request, hashlib, time
-          manifest=json.load(open('r031-public-manifest.json'))
-          for attempt in range(30):
-              try:
-                  for path,expected in manifest.items():
-                      u='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/'+path+'?deploycheck='+str(time.time())
-                      data=urllib.request.urlopen(u,timeout=30).read()
-                      assert hashlib.sha256(data).hexdigest()==expected,path
-                  print('Published R031 hashes ready');break
-              except Exception as e:
-                  print('Waiting for Pages:',e,flush=True)
-                  if attempt==29: raise
-                  time.sleep(20)
-          PYWAIT
-      - name: Public entry, default face, 92 views and four exact shape fingerprints
+      - run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/r031-http.log 2>&1 &
+          sleep 2
+      - name: One surface-gradient experiment, 24 off/on views
         env:
           NODE_PATH: ${{ github.workspace }}/.human-qa/node_modules
-        run: node r031-public-verify.cjs
+        run: node kaopu-unified-human-workbench/tests/shape-r032-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: shape-r031-${{ github.sha }}
-          path: shape-r031-results/
+          name: shape-r032-${{ github.sha }}
+          path: shape-r032-results/
