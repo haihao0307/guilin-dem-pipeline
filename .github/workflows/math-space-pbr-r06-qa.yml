@@ -1,0 +1,57 @@
+name: Math Space PBR R06 QA
+on:
+  push:
+    branches: [qa/math-space-pbr-r06-20261009]
+    paths:
+      - 'kaopu-minigame-workbench/experiments/math-space-002/**'
+      - '.github/workflows/math-space-pbr-r06-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: math-pbr-r06-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: kaopu-minigame-workbench/experiments/math-space-002
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          sparse-checkout: kaopu-minigame-workbench/experiments/math-space-002
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: |
+          npx playwright install --with-deps chromium
+          sudo apt-get update -qq
+          sudo apt-get install -y fonts-noto-cjk
+      - run: npm test
+      - name: Capture material and whole-space comparisons
+        run: node tests/capture-first.cjs
+      - name: Upload first visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: math-pbr-r06-first-${{ github.sha }}
+          path: |
+            kaopu-minigame-workbench/experiments/math-space-002/screenshots/first-*.png
+            kaopu-minigame-workbench/experiments/math-space-002/tests/first-capture-results.json
+          retention-days: 14
+      - name: Verify geometry and interaction in browser
+        run: npm run test:browser
+      - name: Measure synchronized rendering cost
+        run: npm run test:performance
+      - name: Preserve all acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: math-pbr-r06-full-${{ github.sha }}
+          path: |
+            kaopu-minigame-workbench/experiments/math-space-002/screenshots/
+            kaopu-minigame-workbench/experiments/math-space-002/tests/*-results.json
+          retention-days: 14
