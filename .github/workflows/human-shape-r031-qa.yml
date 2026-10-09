@@ -1,4 +1,4 @@
-name: R038 continuous unilateral surface coverage
+name: R039 medial upper-coverage C2 correction
 on:
   push:
     branches: [qa/human-shape-r031-20261009]
@@ -28,9 +28,9 @@ jobs:
       - name: Continuous unilateral ribbon, 12 real off/on views
         env:
           NODE_PATH: ${{ github.workspace }}/.human-qa/node_modules
-        run: node kaopu-unified-human-workbench/tests/shape-r038-browser.cjs
+        run: node kaopu-unified-human-workbench/tests/shape-r039-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: shape-r038-${{ github.sha }}
-          path: shape-r038-results/
+          name: shape-r039-${{ github.sha }}
+          path: shape-r039-results/
