@@ -62,7 +62,7 @@
 - R03 状态：`REJECTED_WRONG_SOURCE_LINEAGE`，不可通过补旧展示壳回执复活。
 - R04 状态：`SOURCE_LINEAGE_CORRECTION_VERIFIED_SCOPED__HOLD_FULL_CATALOGUE_INCOMPLETE`。
 - PR #181 已出现真实 Mother 回执并实现/运行门，因此：`ACKNOWLEDGED=true`、`IMPLEMENTED=true`、`GATE-RUN=true`；未采用为 Current Best、未公开、未获用户接受，所以 `ADOPTED=false`、`USER-ACCEPTED=false`。
-- 本轮路由：PR #181 comment 待提交后补入；不会声称“各 Mother 已学会”。
+- 本轮路由：PR #181 comment `6080271429`；所以本轮 `POSTED=true`。不会声称“各 Mother 已学会”。
 
 ## 指标
 
