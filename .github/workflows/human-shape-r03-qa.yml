@@ -1,4 +1,4 @@
-name: R03 six human shapes same-camera review
+name: R03 public six shapes hashes and navigation
 on:
   push:
     branches: [qa/human-shape-r03-20261009]
@@ -17,21 +17,37 @@ jobs:
             kaopu-unified-human-workbench
             kaopu-anny-workbench
             kaopu-mhr-workbench
+            r03-public-manifest.json
+            r03-public-geometry.json
+            r03-public-verify.cjs
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - run: |
           npm install --prefix .human-qa --no-save --ignore-scripts --no-audit --no-fund playwright@1.55.0
           ./.human-qa/node_modules/.bin/playwright install --with-deps chromium
-      - run: |
-          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/shape-r03-http.log 2>&1 &
-          sleep 2
+      - name: Wait for the published R03 manifest (maximum ten minutes)
+        run: |
+          python3 - <<'PYWAIT'
+          import json, urllib.request, hashlib, time
+          manifest=json.load(open('r03-public-manifest.json'))
+          for attempt in range(30):
+              try:
+                  for path,expected in manifest.items():
+                      u='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/'+path+'?deploycheck='+str(time.time())
+                      data=urllib.request.urlopen(u,timeout=30).read()
+                      assert hashlib.sha256(data).hexdigest()==expected,path
+                  print('Published manifest ready');break
+              except Exception as e:
+                  print('Waiting for deployment:',e,flush=True)
+                  if attempt==29: raise
+                  time.sleep(20)
+          PYWAIT
       - name: Render 76 actual same-camera geometry views
         env:
-          SHAPE_R3_SMOKE: 1
           NODE_PATH: ${{ github.workspace }}/.human-qa/node_modules
           SHAPE_R3_OUT: ${{ github.workspace }}/shape-r03-results
-        run: node kaopu-unified-human-workbench/tests/shape-r03-browser.cjs
+        run: node r03-public-verify.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
