@@ -1,4 +1,4 @@
-name: R032 normal-only surface gradient single experiment
+name: R033 broad thoracic volume anatomy experiment
 on:
   push:
     branches: [qa/human-shape-r031-20261009]
@@ -25,12 +25,12 @@ jobs:
       - run: |
           python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/r031-http.log 2>&1 &
           sleep 2
-      - name: One surface-gradient experiment, 24 off/on views
+      - name: One thoracic-volume experiment, 24 off/on views
         env:
           NODE_PATH: ${{ github.workspace }}/.human-qa/node_modules
-        run: node kaopu-unified-human-workbench/tests/shape-r032-browser.cjs
+        run: node kaopu-unified-human-workbench/tests/shape-r033-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: shape-r032-${{ github.sha }}
-          path: shape-r032-results/
+          name: shape-r033-${{ github.sha }}
+          path: shape-r033-results/
