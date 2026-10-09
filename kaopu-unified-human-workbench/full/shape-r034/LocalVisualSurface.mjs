@@ -1,0 +1,40 @@
+import * as THREE from '../source/registration-vendor/three.module.js';
+export const SCHEMA='common-person-display-surface/1';
+const smooth=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)},g=x=>Math.exp(-.5*x*x);
+/** Original reference-informed anatomy study. No scan mesh or map copied.
+ * One reversible conforming edge split, barycentric parent mapping, complete CSR.
+ * Canonical CommonPerson positions/faces/bones/weights are read-only.
+ */
+export function createLocalVisualSurface(viewer,model){
+ const rest=model.positions.slice(),n=model.vertexCount,faces=model.faces,parents=Array.from({length:n},(_,i)=>[i,i]),edgeMap=new Map(),marked=new Set();
+ const key=(a,b)=>a<b?a+','+b:b+','+a;
+ const inTorso=i=>i<model.bodyCount&&Math.abs(rest[3*i])<.29&&rest[3*i+2]>.15&&rest[3*i+2]<.61;
+ for(let k=0;k<faces.length;k+=3){const a=faces[k],b=faces[k+1],c=faces[k+2];if([a,b,c].some(inTorso))for(const[x,y]of[[a,b],[b,c],[c,a]])if(x<model.bodyCount&&y<model.bodyCount)marked.add(key(x,y));}
+ const midpoint=(a,b)=>{const k=key(a,b);if(!marked.has(k))return-1;if(!edgeMap.has(k)){edgeMap.set(k,parents.length);parents.push([a,b]);}return edgeMap.get(k)};
+ const out=[];for(let k=0;k<faces.length;k+=3){const v=[faces[k],faces[k+1],faces[k+2]],m=[midpoint(v[0],v[1]),midpoint(v[1],v[2]),midpoint(v[2],v[0])],count=m.filter(i=>i>=0).length;if(count===0)out.push(...v);else if(count===3)out.push(v[0],m[0],m[2],m[0],v[1],m[1],m[2],m[1],v[2],m[0],m[1],m[2]);else if(count===1){const e=m.findIndex(i=>i>=0),a=v[e],b=v[(e+1)%3],c=v[(e+2)%3],h=m[e];out.push(a,h,c,h,b,c);}else{const e=m.findIndex(i=>i<0),a=v[e],b=v[(e+1)%3],c=v[(e+2)%3],bc=m[(e+1)%3],ca=m[(e+2)%3];out.push(c,ca,bc,a,b,bc,a,bc,ca);}}
+ const indices=Uint32Array.from(out),positions=new Float32Array(parents.length*3),display=new Float32Array(positions.length),deltas=new Float32Array(positions.length),restNormals=new Float32Array(n*3),norm=viewer.geometry.attributes.normal;
+ for(let i=0;i<n;i++){restNormals[3*i]=norm.getX(i);restNormals[3*i+1]=-norm.getZ(i);restNormals[3*i+2]=norm.getY(i);}
+ const a=model.r033Thorax.last.anchors,sc=(a.clavicle[2]-model.lastBodyDriver.rig.restMatrices[model.lastBodyDriver.rig.names.indexOf('pelvis.L')][11])/.557;
+ function height(q,N){const[x,y,z]=q,ax=Math.sqrt(x*x+1e-10),front=smooth(.05,.65,-N[1]),region=smooth(.16*sc,.21*sc,z)*(1-smooth(.565*sc,.61*sc,z))*(1-smooth(.22*sc,.28*sc,ax));let d=0;
+  // Clavicle: broad sternal end, narrower shaft, widened lateral acromial end.
+  // Distinct S arc and varying cross-section replace a constant-width straight line.
+  const t=(ax-.014*sc)/(.185*sc),ct=Math.max(0,Math.min(1,t)),cz=a.clavicle[2]-.030*sc-.022*sc*ct+.010*sc*Math.sin(2*Math.PI*ct);
+  const cg=smooth(0,.13,t)*(1-smooth(.90,1.08,t)),width=(.010+.008*g((ct-.12)/.19)+.005*g((ct-.85)/.20))*sc;
+  d+=cg*sc*(.0065*g((z-cz)/width)-.0032*g((z-cz+.025*sc)/(.018*sc))-.0025*g((z-cz-.020*sc)/(.017*sc)));
+  // Remove part of the old broad vertical costal bulge; use three broad oblique
+  // rib surfaces with tapering anterior cartilage, not two continuous grooves.
+  d-=.0040*sc*g((ax-.108*sc)/(.046*sc))*g((z-(a.spine[2]-.060*sc))/(.071*sc));
+  const rg=smooth(.041*sc,.075*sc,ax)*(1-smooth(.151*sc,.196*sc,ax));
+  for(let j=0;j<3;j++){const u=Math.max(0,Math.min(1,(ax-.045*sc)/(.15*sc))),rz=a.spine[2]-.023*sc-j*.042*sc-.033*sc*u+.012*sc*u*u;d+=rg*sc*(.0038*g((z-rz)/(.0145*sc))-.0013*g((z-rz+.020*sc)/(.018*sc)));}
+  // Shallow central sternum and xiphoid transition, no deeper abdominal hollow.
+  d+=.0015*sc*g(x/(.025*sc))*g((z-(a.spine[2]+.045*sc))/(.065*sc));
+  return Math.max(-.007*sc,Math.min(.008*sc,d*front*region));
+ }
+ let maxRest=0;for(let i=0;i<parents.length;i++){const[l,r]=parents[i],q=[0,1,2].map(c=>(rest[3*l+c]+rest[3*r+c])*.5),N=[0,1,2].map(c=>(restNormals[3*l+c]+restNormals[3*r+c])*.5),len=Math.hypot(...N)||1;for(let c=0;c<3;c++)N[c]/=len;const d=(l<model.bodyCount&&r<model.bodyCount)?height(q,N):0;maxRest=Math.max(maxRest,Math.abs(d));for(let c=0;c<3;c++)deltas[3*i+c]=N[c]*d;}
+ // Record the full CSR blend for every child; never limit to four influences.
+ const w=model.lastBodyDriver.packet.weights,ptr=[0],joints=[],values=[];let maxInfluences=0,maxWeightError=0;
+ for(const[l,r]of parents){const weights=new Map();if(l<model.bodyCount&&r<model.bodyCount)for(const src of[l,r])for(let k=w.ptr[src];k<w.ptr[src+1];k++)weights.set(w.joints[k],(weights.get(w.joints[k])||0)+w.values[k]*.5);for(const[j,v]of weights){joints.push(j);values.push(v);}ptr.push(joints.length);maxInfluences=Math.max(maxInfluences,weights.size);if(weights.size)maxWeightError=Math.max(maxWeightError,Math.abs([...weights.values()].reduce((a,b)=>a+b,0)-1));}
+ const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(display,3));geometry.setIndex(new THREE.BufferAttribute(indices,1));let on=false,maxPosed=0;
+ function update(){const skin=model.lastBodyDriver.rig.skinMatrices;maxPosed=0;for(let i=0;i<parents.length;i++){const[l,r]=parents[i],v=[0,1,2].map(c=>(model.positions[3*l+c]+model.positions[3*r+c])*.5),d=deltas.subarray(i*3,i*3+3),delta=[0,0,0];if(on)for(let k=ptr[i];k<ptr[i+1];k++){const m=skin[joints[k]],w=values[k];for(let c=0;c<3;c++)delta[c]+=w*(m[c*4]*d[0]+m[c*4+1]*d[1]+m[c*4+2]*d[2]);}maxPosed=Math.max(maxPosed,Math.hypot(...delta));for(let c=0;c<3;c++)positions[3*i+c]=v[c]+delta[c];display[3*i]=positions[3*i];display[3*i+1]=positions[3*i+2];display[3*i+2]=-positions[3*i+1];}geometry.attributes.position.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingSphere();viewer.mesh.geometry=on?geometry:viewer.geometry;viewer.render();}
+ return{set:value=>{on=!!value;update()},update,dispose:()=>geometry.dispose(),positions,indices,parents,recipe:()=>({schema:SCHEMA,subdivisionLevels:1,canonicalVertexCount:n,displayVertexCount:parents.length,canonicalTriangleCount:faces.length/3,displayTriangleCount:indices.length/3,fullCSR:true,maxInfluences,maxWeightError,maxRestDeviationMetres:maxRest,maxPosedDeviationMetres:maxPosed,normalOnly:false,canonicalUnchanged:true}),surface:()=>({schema:SCHEMA,positions,triangles:indices,parents,weights:{ptr,joints,values},coordinateSystem:'metres X right Y back Z up',maxDeviationMetres:maxPosed,authoritativeCollisionSurface:false})};
+}
