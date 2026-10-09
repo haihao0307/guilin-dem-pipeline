@@ -54,5 +54,25 @@
     "aggregate": "SUCCESS",
     "artifactCount": 9
   },
+  "evidenceUpdates": [
+    {
+      "id": "N122_TRAIN_R12_PUBLIC_DIAGNOSTIC_COUNTEREXAMPLE",
+      "date": "2026-10-09",
+      "mother": "Train",
+      "headSha": "9ee080929f7311562811b422a218b9e3f7567fb7",
+      "run": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37870709681",
+      "processConclusion": "SUCCESS",
+      "diagnosticCapture": "COMPLETE",
+      "semanticLedger": {
+        "chromium": "30/30",
+        "webkit": "29/30",
+        "failedRequiredCheck": "stationAction:label click missing after five HUD refreshes between mouse down and up"
+      },
+      "decision": "HOLD_REQUIRED_RECORDED_DIAGNOSTIC_FAILED",
+      "novelty": "NO_NOVELTY_EXISTING_GATE_LOGIC_APPLIES",
+      "scope": "Candidate cross-Mother history replay only; no global activation or production change",
+      "probe": "../PROBES/train_r12_diagnostic_fail_closed_result_n122.json"
+    }
+  ],
   "activationRequirement": "Kuko-local implementation has a passed exact-subject public run. Keep this case inactive for other Mothers; global adoption requires a separate trial in another affected Mother and an independent receipt."
 }
