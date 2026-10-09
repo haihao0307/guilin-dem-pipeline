@@ -1,4 +1,4 @@
-name: Train R12 desktop input and concentrated HUD candidate
+name: Train R12 corrected mouse regression
 on:
   push:
     branches: ['qa/voxel-train-r01-20261006']
@@ -6,7 +6,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: kcr-r12-candidate-${{ github.ref }}
+  group: kcr-r12-controls-fix-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   deterministic:
@@ -33,11 +33,6 @@ jobs:
           - { browser: chromium, suite: controls, shard: 1 }
           - { browser: webkit, suite: controls, shard: 0 }
           - { browser: webkit, suite: controls, shard: 1 }
-          - { browser: chromium, suite: gameplay, shard: 0 }
-          - { browser: webkit, suite: gameplay, shard: 0 }
-          - { browser: chromium, suite: spatial, shard: 0 }
-          - { browser: webkit, suite: spatial, shard: 0 }
-          - { browser: chromium, suite: native-zoom, shard: 0 }
     env:
       TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/
       TRAIN_BROWSER: ${{ matrix.browser }}
