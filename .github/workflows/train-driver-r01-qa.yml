@@ -17,7 +17,8 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: kaopu-minigame-workbench/voxel-train-study
-      - run: node --test kaopu-minigame-workbench/voxel-train-study/game/{audio-spatial.test.mjs,audio.test.mjs,music.test.mjs,station-room.test.mjs} kaopu-minigame-workbench/voxel-train-study/game/tests/*.test.mjs
+      - run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends ffmpeg
+      - run: node --test kaopu-minigame-workbench/voxel-train-study/game/{audio-spatial.test.mjs,audio.test.mjs,music.test.mjs,station-room.test.mjs} kaopu-minigame-workbench/voxel-train-study/game/tests/{anchored-zoom,body-motion,crew-state,driver-input,kcr-session,r08-smoke,r09-camera,r09-smoke-driver,r09-world,r11-integration,recommended-fit,render-quality,station-platform,steam-dynamics,steam-model,view-profile-storage}.test.mjs
       - run: node --check kaopu-minigame-workbench/voxel-train-study/game/app.mjs
   browser:
     needs: deterministic
