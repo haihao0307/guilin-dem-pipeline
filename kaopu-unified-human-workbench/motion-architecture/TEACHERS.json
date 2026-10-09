@@ -1,0 +1,143 @@
+{
+  "schema": "kaopu-motion-teacher-registry/1",
+  "checkedAt": "2026-10-09",
+  "teachers": [
+    {
+      "id": "gem-x",
+      "repository": "https://github.com/NVlabs/GEM-X",
+      "commit": "32992550dba114c62243fb55e361311972dce8f9",
+      "role": "observation-recovery",
+      "input": "monocular-video",
+      "output": "SOMA world/incam parameter sequences",
+      "sourceCodeLicense": "Apache-2.0",
+      "modelAndDataRights": "separate review required; no model/data republished",
+      "verifiedSourceReading": true,
+      "nativeReproductionExecuted": false,
+      "neuralInferenceExecuted": false,
+      "trainingExecuted": false,
+      "numericFileAdapterImplemented": false,
+      "calibratedAnny104RetargetImplemented": false,
+      "runtimeDefaultChanged": false,
+      "requirements": [
+        "PyTorch/perception stack",
+        "GEM/SAM3D checkpoints",
+        "authorized local video",
+        "camera assumptions"
+      ],
+      "limitations": [
+        "Original training dataset not public"
+      ]
+    },
+    {
+      "id": "soma-x",
+      "repository": "https://github.com/NVlabs/SOMA-X",
+      "commit": "d6aa640f7787498009c4e3d57fcc14a243905d10",
+      "role": "body-representation",
+      "input": "identity and public pose parameters",
+      "output": "vertices, 77 joints, 78 public transforms",
+      "sourceCodeLicense": "Apache-2.0",
+      "modelAndDataRights": "separate review required; no model/data republished",
+      "verifiedSourceReading": true,
+      "nativeReproductionExecuted": false,
+      "neuralInferenceExecuted": false,
+      "trainingExecuted": false,
+      "numericFileAdapterImplemented": false,
+      "calibratedAnny104RetargetImplemented": false,
+      "runtimeDefaultChanged": false,
+      "requirements": [
+        "PyTorch/Warp stack",
+        "native runtime assets",
+        "separately licensed optional identity assets"
+      ],
+      "limitations": [
+        "Public 77 poses, public 78 transforms and internal twist skeleton differ"
+      ]
+    },
+    {
+      "id": "kimodo",
+      "repository": "https://github.com/nv-tlabs/kimodo",
+      "commit": "58e781898b3d7e328a676a75d3e338c45dce3ad9",
+      "role": "kinematic-generation",
+      "input": "text and optional kinematic constraints",
+      "output": "numeric NPZ motion arrays",
+      "sourceCodeLicense": "Apache-2.0",
+      "modelAndDataRights": "separate review required; no model/data republished",
+      "verifiedSourceReading": true,
+      "nativeReproductionExecuted": false,
+      "neuralInferenceExecuted": false,
+      "trainingExecuted": false,
+      "numericFileAdapterImplemented": true,
+      "calibratedAnny104RetargetImplemented": false,
+      "runtimeDefaultChanged": false,
+      "requirements": [
+        "model/text-encoder checkpoints",
+        "compatible inference environment",
+        "exact skeleton and FPS metadata"
+      ],
+      "limitations": [
+        "SOMA/G1 and SMPL-X model licenses differ",
+        "No calibrated SOMA77-to-Anny104 retarget"
+      ]
+    },
+    {
+      "id": "protomotions",
+      "repository": "https://github.com/NVlabs/ProtoMotions",
+      "commit": "7a8417a9f55b1586b0d6e8f46578c5bc9d7ce1f1",
+      "role": "physical-control",
+      "input": "reference MotionLib and task/environment state",
+      "output": "policy checkpoints and simulated rollouts",
+      "sourceCodeLicense": "Apache-2.0",
+      "modelAndDataRights": "separate review required; no model/data republished",
+      "verifiedSourceReading": true,
+      "nativeReproductionExecuted": false,
+      "neuralInferenceExecuted": false,
+      "trainingExecuted": false,
+      "numericFileAdapterImplemented": false,
+      "calibratedAnny104RetargetImplemented": false,
+      "runtimeDefaultChanged": false,
+      "requirements": [
+        "matching checkpoint and simulator",
+        "LFS motion/model/robot assets",
+        "applicable simulator agreements"
+      ],
+      "limitations": [
+        "Official SOMA23 proxy drops full-body detail",
+        "Most provided checkpoints are IsaacLab-specific"
+      ]
+    },
+    {
+      "id": "stablemotion",
+      "repository": "https://github.com/Murrol/StableMotion",
+      "commit": "45d8836ce5cd7ae70f0065fdac672debfdfd6066",
+      "role": "quality-detection-and-cleanup",
+      "input": "232 motion features plus one quality channel",
+      "output": "quality labels, cleanup masks and reconstructed motion",
+      "sourceCodeLicense": "MIT",
+      "modelAndDataRights": "separate review required; no model/data republished",
+      "verifiedSourceReading": true,
+      "nativeReproductionExecuted": false,
+      "neuralInferenceExecuted": false,
+      "trainingExecuted": false,
+      "numericFileAdapterImplemented": false,
+      "calibratedAnny104RetargetImplemented": false,
+      "runtimeDefaultChanged": false,
+      "requirements": [
+        "licensed SMPL/AMASS data",
+        "checkpoint and matching normalizer",
+        "PyTorch stack",
+        "optional TMR evaluation assets"
+      ],
+      "limitations": [
+        "Own kinematic QA is not this neural quality model",
+        "Cross-domain Anny104 cleanup not validated"
+      ]
+    }
+  ],
+  "currentPlatform": {
+    "skeleton": "anny104",
+    "vertices": 25417,
+    "triangles": 50624,
+    "maximumNativeSkinInfluences": 9,
+    "preserved": true
+  }
+}
