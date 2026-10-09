@@ -1,4 +1,4 @@
-name: R039 medial upper-coverage C2 correction
+name: R040 bilateral clavicle and continuous fat coverage
 on:
   push:
     branches: [qa/human-shape-r031-20261009]
@@ -28,9 +28,9 @@ jobs:
       - name: Continuous unilateral ribbon, 12 real off/on views
         env:
           NODE_PATH: ${{ github.workspace }}/.human-qa/node_modules
-        run: node kaopu-unified-human-workbench/tests/shape-r039-browser.cjs
+        run: node kaopu-unified-human-workbench/tests/shape-r040-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: shape-r039-${{ github.sha }}
-          path: shape-r039-results/
+          name: shape-r040-${{ github.sha }}
+          path: shape-r040-results/
