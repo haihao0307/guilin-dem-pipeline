@@ -1,0 +1,13 @@
+import {measureMeshBox} from './BoxContactDiagnostic.mjs';
+export function carryHandRegions(human){const regions={};for(const S of ['L','R']){const ids=new Set();for(let v=0;v<human.N;v++){let w=0;for(let n=0;n<human.range[v*2+1];n++){const k=(human.range[v*2]+n)*8,name=human.names[human.packed[k+3]];if(/^(finger|metacarpal|wrist)/.test(name)&&name.endsWith('.'+S))w+=human.packed[k+4];}if(w>.5)ids.add(v);}regions[S]=[];for(let f=0;f<human.faces.length;f+=3)if([0,1,2].some(k=>ids.has(human.faces[f+k])))regions[S].push(f/3);}return regions;}
+export function measureCarryHands(human,frame,regions){human.animate(frame.skinMatrices);const R=frame.object.rotation,needed=new Set(Object.values(regions).flatMap(ids=>ids.flatMap(i=>[human.faces[i*3],human.faces[i*3+1],human.faces[i*3+2]]))),positions=[];for(const v of needed){const q=human.sampleVertex(v).map((x,k)=>x-frame.object.position[k]);positions[v]=[R[0]*q[0]+R[3]*q[1]+R[6]*q[2],R[1]*q[0]+R[4]*q[1]+R[7]*q[2],R[2]*q[0]+R[5]*q[1]+R[8]*q[2]];}return Object.fromEntries(['L','R'].map(S=>[S,measureMeshBox({positions,faces:human.faces,halfExtents:frame.object.halfExtents,triangleIds:regions[S]})]));}
+/** Shape-specific minimum outward wrist adjustment for nonintersecting hand
+ * triangles with 0.2mm modelling clearance. Static fitting only, no grasp forces. */
+export function calibrateCarryGrip(human,adapter,base,handReference,{margin=.0002,objectForwardOffset=0}={}){
+ if(!Number.isFinite(margin)||margin<=0||margin>.002)throw Error('Bounded positive modelling margin required');const regions=carryHandRegions(human),gripClearance={L:0,R:0};let queries=0;
+ const sample=()=>{queries++;return measureCarryHands(human,adapter.evaluate(base,{handReference,gripClearance,objectForwardOffset}),regions);},safe=q=>q.intersectionCount===0&&q.maxInsideVertexDepth===0&&q.nearestSurfaceM>=margin;
+ // Both hands remain attached to the same object. Refit once after the other
+ // hand adjustment to expose any shared reach-projection coupling.
+ for(let pass=0;pass<2;pass++)for(const S of ['L','R']){let lo=-human.height*.005,hi=human.height*.018;gripClearance[S]=lo;const a=sample()[S];gripClearance[S]=hi;const b=sample()[S];if(safe(a)||!safe(b))throw Error('Carry clearance bracket not established '+JSON.stringify({S,pass,lo,hi,a,b}));for(let n=0;n<15;n++){const mid=(lo+hi)/2;gripClearance[S]=mid;if(safe(sample()[S]))hi=mid;else lo=mid;}gripClearance[S]=hi;}
+ const measurements=sample();if(!['L','R'].every(S=>safe(measurements[S])))throw Error('Coupled carry surface fit failed');return{schema:'static-carry-hand-triangle-fit/1',gripClearance,margin,measurements,queries,regions,certifiedDynamic:false,forceClosure:false};
+}

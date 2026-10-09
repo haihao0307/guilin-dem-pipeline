@@ -1,0 +1,12 @@
+/** Offline captured-clip task planning against actual protected body triangles.
+ * Finds a single forward box offset for the whole clip, avoiding frame-wise
+ * target snapping. Arms are handled separately by real hand triangle fitting. */
+function clip(poly,k,limit,sign){const out=[];for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length],da=sign*a[k]-limit,db=sign*b[k]-limit;if(da<=0)out.push(a);if((da<0&&db>0)||(da>0&&db<0)){const t=da/(da-db);out.push(a.map((v,j)=>v+(b[j]-v)*t));}}return out;}
+export function planCarryClearance(human,base,adapter,{margin=.002}={}){
+ if(!Number.isFinite(margin)||margin<=0||margin>.01)throw Error('Positive bounded body margin required');const protectedVertices=new Set();for(let v=0;v<human.N;v++){let w=0;for(let n=0;n<human.range[v*2+1];n++){const k=(human.range[v*2]+n)*8;if(!adapter.armSet.has(human.packed[k+3]))w+=human.packed[k+4];}if(w>.5)protectedVertices.add(v);}
+ const faces=[];for(let i=0;i<human.faces.length;i+=3)if([0,1,2].some(k=>protectedVertices.has(human.faces[i+k])))faces.push([human.faces[i],human.faces[i+1],human.faces[i+2]]);const needed=new Set(faces.flat()),positions=[];let required=0,limiting=null;
+ for(let f=0;f<base.source.points.length;f++){const pose=base.evaluate(f/base.source.fps),task=adapter.evaluate(pose),o=task.object,R=o.rotation;human.animate(pose.skinMatrices);for(const v of needed){const q=human.sampleVertex(v).map((x,k)=>x-o.position[k]);positions[v]=[R[0]*q[0]+R[3]*q[1]+R[6]*q[2],R[1]*q[0]+R[4]*q[1]+R[7]*q[2],R[2]*q[0]+R[5]*q[1]+R[8]*q[2]];}
+  for(let i=0;i<faces.length;i++){const t=faces[i].map(v=>positions[v]);if([0,2].some(k=>Math.min(...t.map(p=>p[k]))>o.halfExtents[k]||Math.max(...t.map(p=>p[k]))< -o.halfExtents[k]))continue;let polygon=t;for(const k of [0,2])for(const sign of [-1,1]){polygon=clip(polygon,k,o.halfExtents[k],sign);if(!polygon.length)break;}if(!polygon.length)continue;const front=Math.min(...polygon.map(p=>p[1])),d=o.halfExtents[1]+margin-front;if(d>required){required=d;limiting={frame:f,triangleVertices:faces[i],bodyFrontLocalY:front};}}
+ }
+ if(required>human.height*.15)throw Error('Protected body clearance exceeds allowed reach task range');return{objectForwardOffset:Math.max(0,required),bodyMarginM:margin,frames:base.source.points.length,protectedTriangles:faces.length,limiting,scope:'all recorded sample poses; no swept-between-sample or load-feedback guarantee'};
+}
