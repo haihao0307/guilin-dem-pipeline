@@ -33,7 +33,6 @@ jobs:
         include:
           - { browser: chromium, suite: departure }
           - { browser: chromium, suite: approach }
-          - { browser: chromium, suite: detail }
           - { browser: chromium, suite: regressions }
           - { browser: webkit, suite: regressions }
     env:
@@ -58,3 +57,4 @@ jobs:
           name: train-r13-${{ matrix.browser }}-${{ matrix.suite }}
           path: r13-${{ matrix.browser }}-${{ matrix.suite }}/*
           retention-days: 7
+

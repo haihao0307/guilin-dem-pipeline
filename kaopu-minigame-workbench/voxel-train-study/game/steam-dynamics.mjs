@@ -101,6 +101,10 @@ export function createSteamDynamics({ wheelRadius = .61, maxParticles = 160 } = 
       id: `${generation}:${id}`, index, upper, type, born, birthDistance: s.distance,
       birthPosition: source.slice(), speed: s.speed, load: s.load,
       starting, a, b, c, side: options.side || (b > .5 ? 1 : -1),
+      residual: upper && !working(s),
+      // Neighbouring births roll as a loose cloud family, instead of all following one pipe.
+      billowPhase: hash(Math.floor(born / .72) + 817) * TAU,
+      billowScale: hash(Math.floor(born / .72) + 223),
       energy: clamp(options.energy ?? (upper ? .3 + .7 * s.load : 1), .05, 1.4),
       pulse: !!options.pulse, eventId: options.eventId ?? null,
       reason: options.reason || (upper ? 'exhaust' : type === 'platform' ? 'station-choreography' : 'startup-warmup'),
@@ -157,7 +161,8 @@ export function createSteamDynamics({ wheelRadius = .61, maxParticles = 160 } = 
     const totalUpperRate = upperCapacity / (longestLife + .05) * .93;
     const beatRate = Math.abs(b.speed) / beatDistance;
     // Powered wheel beats consume the same budget as the continuous connecting plume.
-    const rate = !b.enabled && b.phase === 'ready' ? 1.4 * residual : work ? Math.max(0, totalUpperRate - beatRate) : (moving ? 3.2 : 3.0) * residual;
+    const coastRate = 7.8 + 1.8 * Math.sin(b.time * 1.3) + .6 * Math.sin(b.time * 3.7);
+    const rate = !b.enabled && b.phase === 'ready' ? 1.4 * residual : work ? Math.max(0, totalUpperRate - beatRate) : (moving ? coastRate : 3.0) * residual;
     upperCredit += dt * rate;
     while (upperCredit >= 1) {
       upperCredit--; allocate('chimney', b.time, b, { energy: work ? .6 + b.load * .4 : .18 + .12 * residual });
@@ -197,16 +202,25 @@ export function createSteamDynamics({ wheelRadius = .61, maxParticles = 160 } = 
     const travelled = s.distance - p.birthDistance;
     let x, y, z, size, opacity, color;
     if (p.upper) {
-      const carry = p.speed * .92 * 2.4 * (1 - Math.exp(-q / 2.4));
-      const curl = Math.min(1, q * .95) * (.16 + q * .24);
-      x = p.birthPosition[0] - travelled + carry - q * .24 + Math.sin(phase + q * 2.0) * curl;
-      y = p.birthPosition[1] + q * (p.starting ? 3.3 : 2.75) * (.60 + p.energy * .40) + .23 * q * q + Math.sin(phase + q * 2.5) * curl * .28;
-      z = p.birthPosition[2] + Math.sin(phase + q * 2.2) * curl + (p.b - .5) * q * .43;
-      size = clamp(.30 + q * (.90 + p.energy * .43) + q * q * .11, .28, 8.2);
-      opacity = (.46 + p.energy * .28) * smooth(0, .055, q) * (1 - smooth(.62, 1, f));
+      const billow = smooth(.45, 1.4, q), group = p.billowPhase, roll = group + q * 1.45;
+      const curl = billow * (.30 + q * .58) * (.82 + p.billowScale * .36);
+      const carry = p.speed * .92 * 2.4 * (1 - Math.exp(-q / 2.4)) * (1 + .07 * billow * Math.sin(group * .61));
+      const fineCurl = Math.min(1, q) * (.045 + q * .065);
+      const riseSpeed = (p.starting ? 3.8 : 3.2) * (.65 + p.energy * .35) * (.88 + p.billowScale * .24);
+      // Velocity decreases with altitude; no quadratic upward acceleration stretches a pipe.
+      const rise = riseSpeed * (.58 * q + .92 * (1 - Math.exp(-q / 1.2)));
+      x = p.birthPosition[0] - travelled + carry - q * .24 + Math.sin(roll) * curl + Math.sin(phase + q * 2) * fineCurl;
+      y = p.birthPosition[1] + rise + Math.sin(roll + .65) * curl * .46 + Math.sin(phase + q * 2.5) * fineCurl;
+      z = p.birthPosition[2] + Math.cos(roll) * curl + (p.b - .5) * billow * q * .36 + Math.sin(phase + q * 2.2) * fineCurl;
+      const earlySpread = 2.1 * smooth(.40, 1.50, q);
+      const lobe = 1 + billow * (.16 * Math.sin(group + q * .65) + (p.a - .5) * .15);
+      size = clamp((.30 + q * (.95 + p.energy * .25) + earlySpread + q * q * .065) * lobe, .28, 8.2);
+      const density = p.residual ? .13 + p.energy * .10 : .46 + p.energy * .28;
+      opacity = density * smooth(0, .055, q) * (1 - smooth(p.residual ? .36 : .62, 1, f));
       // Birth energy survives throttle changes; each released puff lightens on its own clock.
       const dark = .31 + (1 - p.energy) * .20;
-      color = [mix(dark, .79, core), mix(dark + .015, .80, core), mix(dark + .025, .80, core)];
+      const mature = p.residual ? .60 + p.billowScale * .045 : .755 + p.billowScale * .055;
+      color = [mix(dark, mature, core), mix(dark + .015, mature + .01, core), mix(dark + .025, mature + .015, core)];
     } else if (p.type === 'cylinder') {
       const lateral = 2.5 * (1 - Math.exp(-q * 1.25));
       const rearwardSweep = p.reason === 'station-choreography' ? q * 1.8 : q * .23;
@@ -229,7 +243,7 @@ export function createSteamDynamics({ wheelRadius = .61, maxParticles = 160 } = 
       position: [x, y, z], size, opacity: clamp(opacity, 0, 1), color: color.map(c => clamp(c, 0, 1)),
       rotation: phase + q * (p.upper ? .8 : 1.05) * p.side, age: q, f,
       birthTime: p.born, birthDistance: p.birthDistance, birthPosition: p.birthPosition.slice(),
-      birthLoad: p.load, pulse: p.pulse, eventId: p.eventId, reason: p.reason };
+      birthLoad: p.load, pulse: p.pulse, eventId: p.eventId, reason: p.reason, residual: p.residual };
   }
 
   function render(s) {

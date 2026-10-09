@@ -219,3 +219,41 @@ test('Default pool budget fits start-up, fast cruise and a station release witho
     assert.equal(result.proof.liveSlotOverwrites, 0);
   }
 });
+
+test('The narrow fresh core opens into broad, uneven billows above the chimney', () => {
+  const engine = createSteamDynamics(); engine.update(view(0, moving(10)(0)));
+  const result = run(engine, 0, 5, moving(10));
+  const upper = active(result).filter(p => p.upper);
+  const core = upper.filter(p => p.age > .03 && p.age < .2);
+  const opening = upper.filter(p => p.age > .8 && p.age < 1.4);
+  const billows = upper.filter(p => p.age > 1.2 && p.age < 3);
+  assert.ok(core.length > 0 && core.every(p => Math.abs(p.position[2]) < .05 && p.size < .65));
+  assert.ok(opening.length > 5 && opening.every(p => p.size > 2));
+  assert.ok(Math.max(...opening.map(p => p.size)) / Math.min(...opening.map(p => p.size)) > 1.5, 'Young lobes have distinct sizes instead of forming a uniform tube');
+  assert.ok(Math.max(...billows.map(p => p.position[2])) - Math.min(...billows.map(p => p.position[2])) > 2, 'Large-scale roll spreads away from the shared centreline');
+});
+
+test('Coasting emits a more continuous irregular grey haze, not bright equally spaced powered puffs', () => {
+  const engine = createSteamDynamics(); engine.update(view(0, moving(10, 0)(0)));
+  const result = run(engine, 0, 5, moving(10, 0));
+  const cloud = active(result).filter(p => p.upper);
+  assert.ok(cloud.length > 16 && cloud.length < 42);
+  assert.ok(cloud.every(p => p.residual && p.opacity <= .17 && p.color[0] < .66));
+  assert.equal(result.proof.pulseCount, 0);
+  const born = cloud.map(p => p.birthTime).sort((a, b) => a - b);
+  const intervals = new Set(born.slice(1).map((t, i) => Math.round((t - born[i]) * 60)));
+  assert.ok(intervals.size >= 3, 'Emission intervals vary smoothly with the residual source');
+});
+
+test('Macro billows move continuously across frames while retaining their own birth history', () => {
+  const engine = createSteamDynamics(); let before = engine.update(view(0, moving(18)(0)));
+  for (let i = 1; i <= 360; i++) {
+    const t = i / 60, after = engine.update(view(t, moving(18)(t))), prior = new Map(before.particles.filter(p => p.id).map(p => [p.id, p]));
+    for (const p of after.particles) {
+      const old = prior.get(p.id); if (!old || !p.upper) continue;
+      assert.ok(Math.hypot(...p.position.map((v, axis) => v - old.position[axis])) < .8, 'A surviving cloud must not jitter or jump');
+      assert.deepEqual(p.birthPosition, old.birthPosition); assert.equal(p.birthDistance, old.birthDistance);
+    }
+    before = after;
+  }
+});
