@@ -54,11 +54,12 @@ Foot targets are piecewise constant during support. Quintic-eased swing windows 
 From the workbench directory:
 
 ```sh
+node full/boxing/tests/asset-reader.mjs
 node full/boxing/tests/motion-analytic.mjs
 node full/boxing/tests/motion-surface.mjs
 ```
 
-The tests use the already-vendored model assets and Node built-ins; no installation or network access is required. They write `full/research/boxing-r01/MOTION-ANALYTIC-QA.json` and `MOTION-SURFACE-QA.json`.
+The tests require Node 20.11+ and Node built-ins; no package installation is required. The analytic test uses the included Anny parts. Full-surface/range tests resolve the existing same-repository assets through ui/runtime-metadata.json assetURLs, with an assembled local source path as an offline fallback. If GNM is absent locally, its existing immutable upstream URL is fetched into memory and SHA-256 verified; no model asset is copied into the repository. Use BOXING_OFFLINE=1 to forbid this fetch and get an explicit missing-asset message. A checkout without the shared sibling assets cannot run the full-surface test until those existing assets are available. They write `full/research/boxing-r01/MOTION-ANALYTIC-QA.json` and `MOTION-SURFACE-QA.json`.
 
 The final three-grammar checks cover:
 
