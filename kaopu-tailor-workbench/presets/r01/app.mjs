@@ -19,7 +19,7 @@ function stop(show=true){if(worker){worker.terminate();worker=null;}if(timer){cl
 function buttons(){for(const id of ['regenerate','export-preset','export-paper'])$(id).disabled=!pattern||running;$('cancel').hidden=!running;}
 function renderCards(){
  const rows=library.presets.filter(r=>(category==='全部'||r.category===category)&&(!query||[r.name,r.id,r.intent,r.style].join(' ').toLowerCase().includes(query)));
- $('cards').innerHTML=rows.map(r=>`<button class="card" data-preset="${esc(r.id)}" aria-pressed="${r.id===selected?.id}" aria-label="选择 ${esc(r.name)}"><span class="card-image"><img src="${esc(r.thumbnail)}" alt="${esc(r.name)}的真实裁片布局" loading="lazy"><span class="card-code">${esc(r.id)}</span></span><span class="card-text"><strong>${esc(r.name)}</strong><small>${esc(r.category)} · ${r.panelCount} 片 · ${r.seamCount} 组缝边</small></span></button>`).join('');
+ $('cards').innerHTML=rows.map(r=>`<button class="card" data-preset="${esc(r.id)}" aria-pressed="${r.id===selected?.id}" aria-label="选择 ${esc(r.name)}"><span class="card-image"><img src="${esc(r.thumbnail)}" alt="${esc(r.name)}的真实裁片布局" loading="lazy"><span class="card-code">${esc(r.id)}</span></span><span class="card-text"><strong>${esc(r.name)}</strong><small>${esc(r.category)} · ${r.panelCount} 片 · ${r.seamCount} 组缝边${r.paperWarnings?.length?' · 含源警告':''}</small></span></button>`).join('');
  $('visible-count').textContent=`${rows.length} / ${library.presets.length} 个预设`;$('empty').hidden=rows.length!==0;
  for(const b of $('cards').querySelectorAll('button'))b.onclick=()=>select(b.dataset.preset,true);
 }
@@ -33,23 +33,32 @@ function paper(){
  svg.style.width=sw+'px';svg.style.height=sh+'px';svg.style.minHeight='0';svg.style.flexShrink='0';
  if(zoom===1){viewport.scrollTop=0;viewport.scrollLeft=0;}
 }
+function bodyCondition(path){
+ const prefix=path.startsWith('left.')?'left.':'',key=prefix?path.slice(5):path;
+ if(!['sleeve.sleeve_angle','sleeve.standing_shoulder','sleeve.standing_shoulder_len'].includes(key))return '';
+ const shoulder=pattern.derivedBodyCm?._shoulder_incl??pattern.bodyCm.shoulder_incl,angle=valueAt(pattern.design,prefix+'sleeve.sleeve_angle');
+ if(key==='sleeve.sleeve_angle')return `人体条件：原程序使用 max(设计袖角, 肩斜 ${shoulder.toFixed(2)}°)。当前实际下限角 ${Math.max(angle,shoulder).toFixed(2)}°，低于肩斜的修改不会产生效果。`;
+ return `人体条件：竖肩须开启，而且袖角须大于肩斜再加5°（本人体门槛 ${(shoulder+5).toFixed(2)}°）；当前角度条件${angle>shoulder+5?'满足':'不满足'}。`;
+}
 function parameterRows(){
  if(!pattern)return;const filter=$('parameter-filter').value;
  $('parameter-list').innerHTML=schema.parameters.map(p=>{const s=parameterState(p.path,pattern.design);return{...p,...s};}).filter(p=>filter==='all'||(filter==='active')===p.enabled).map(p=>{
   const e=atlas.parameters.find(a=>a.path===p.path),proof=e?.evidence;
   const detail=proof?`单字段实测：${esc(proof.context)}，${esc(val(proof.from))} → ${esc(val(proof.to))}；${proof.changedPanels.length} 片发生几何或摆位变化。`:'本轮没有有效几何效应证据，不能说已经精准掌握。';
-  return `<div class="parameter-row"><strong>${esc(parameterLabel(p.path))}：${esc(val(valueAt(pattern.design,p.path)))}</strong><br><code>${esc(p.path)}</code><p>${p.enabled?'本款启用':'本款休眠'} · ${esc(p.reason)}</p><p class="${proof?'observed':''}">${detail}</p></div>`;
+  const condition=bodyCondition(p.path);
+  return `<div class="parameter-row"><strong>${esc(parameterLabel(p.path))}：${esc(val(valueAt(pattern.design,p.path)))}</strong><br><code>${esc(p.path)}</code><p>${p.enabled?'本款结构启用':'本款休眠'} · ${esc(p.reason)}</p>${condition?`<p>${esc(condition)}</p>`:''}<p class="${proof?'observed':''}">${detail}</p></div>`;
  }).join('');
 }
 function renderDetails(){
  $('selected-category').textContent=selected.category+' / '+selected.id;$('selected-title').textContent=selected.name;$('intent').textContent=selected.intent;
- $('facts').innerHTML=[`${pattern.panels.length} 个裁片`,`${pattern.seams.length} 组缝边`,`${pattern.darts.length} 个省道`,'原材料坐标保留'].map(x=>`<span>${x}</span>`).join('');
+ const warnings=pattern.validation?.warnings||[];
+ $('facts').innerHTML=[`${pattern.panels.length} 个裁片`,`${pattern.seams.length} 组缝边`,`${pattern.darts.length} 个省道`,'原材料坐标保留',...(warnings.length?[`${warnings.length} 条源缝边警告`]:[])].map(x=>`<span>${x}</span>`).join('');
  $('seam-select').innerHTML='<option value="">查看全部裁片</option>'+pattern.seams.map(s=>`<option value="${esc(s.id)}">${esc(s.id)} · ${esc(s.a.panelId)} ↔ ${esc(s.b.panelId)}</option>`).join('');
  $('seam-detail').textContent='高亮显示源配方中明确相接的两条边。领口、裤脚和开衩等自由边不是自动漏缝。';
- $('authored-controls').innerHTML=selected.authoredControls.length?selected.authoredControls.map(p=>`<span>${esc(p.label)}：${esc(val(p.value))}${p.enabled?'':'（本款休眠）'}</span>`).join(''):'<span>完整保留该原制版入口的基准配方</span>';
+ $('authored-controls').innerHTML=(selected.authoredControls.length?selected.authoredControls.map(p=>`<span>${esc(p.label)}：${esc(val(p.value))}${p.enabled?'':'（本款休眠）'}</span>`).join(''):'<span>完整保留该原制版入口的基准配方</span>')+warnings.map(w=>`<span data-paper-warning="${esc(w.code)}">源警告 ${esc(w.seam||'')}：投影缝边长度差 ${Number.isFinite(w.differenceMm)?Math.abs(w.differenceMm).toFixed(2)+' mm':esc(w.code)}，尚未消除。</span>`).join('');
  const active=schema.parameters.filter(p=>parameterState(p.path,pattern.design).enabled).length;
- $('control-summary').textContent=`完整保存 ${schema.parameters.length} 项；本款按源依赖规则启用 ${active} 项，其余为休眠参数。不同款式不能把每项滑块都当作有效控制。`;
- const ref=paperBody.kind==='reference-body';$('paper-status').textContent=(ref?'基准人台参考纸样':'所选人物新纸样')+' · 未缝合 · 无现实缝份'+(dirty?' · 当前人体已变化，需重新制版':'');
+ $('control-summary').textContent=`完整保存 ${schema.parameters.length} 项；本款按源依赖规则启用 ${active} 项，其余为休眠参数。结构启用也可能受人体阈值限制，不能把每项滑块都当作始终有效。`;
+ const ref=paperBody.kind==='reference-body';$('paper-status').textContent=(ref?'基准人台参考纸样':'所选人物新纸样')+' · 未缝合 · 无现实缝份'+(dirty?' · 当前人体已变化，需重新制版':'')+(warnings.length?` · 保留${warnings.length}条缝边长度警告，明细见下方只读配方。`:'');
  $('body-title').textContent='当前尺寸来源：'+(currentBody.kind==='reference-body'?'基准 Anny 人台':currentBody.id);
  $('body-note').textContent=currentBody.kind==='reference-body'?'人物台实时接入尚未启用。下方操作重新运行原制版程序；首次需要加载计算环境，不调用缝制求解。':`人物版本 ${currentBody.revision}。已接收完整量体；${dirty?'当前显示仍是旧尺寸，点击重新制版。':'新纸样对应此版本；尚未进行穿体检验。'}`;
  parameterRows();paper();buttons();
