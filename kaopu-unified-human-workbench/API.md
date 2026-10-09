@@ -1,4 +1,6 @@
-# Common person contract v1
+# Common person contract v1 (historical minimal adapter)
+
+> Version boundary: this document describes the preserved legacy `kaopu-unified-person/1` minimal adapter in `src/`. Its `src/AnnyModel.js` actually consumes XYZ Euler degrees. The current full workbench uses `kaopu-common-person/rebuild-1` and native Anny local-ref **rotation-vector components in degrees**, not Euler angles. GNM axis-angle channels use radians. Do not reinterpret saved v1 values as current full-workbench values. See `full/src/State.mjs`, `full/UI-CONTRACT.json` and [the boxing runtime contract](full/boxing/MOTION.md) for the current interfaces.
 
 ## Stable identity
 
