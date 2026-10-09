@@ -1,6 +1,6 @@
 """Guarded R02 release: ordinary fast-forward publication, no old URL replacement."""
 from pathlib import Path
-import concurrent.futures, hashlib, json, os, shutil, subprocess, sys, tempfile, time, urllib.request
+import hashlib, json, os, shutil, subprocess, sys, tempfile, time, urllib.error, urllib.request
 
 HERE=Path(__file__).resolve().parent
 TAILOR=HERE.parent.parent
@@ -76,23 +76,34 @@ def publish():
  finally:
   git('worktree','remove',str(work));shutil.rmtree(snapshot.parent,ignore_errors=True)
 
-def fetch_public(path):
- request=urllib.request.Request(ROOT_URL+path,headers={'Cache-Control':'no-cache','User-Agent':'KAOPU-R02-Delivery'})
- with urllib.request.urlopen(request,timeout=60) as response:return response.read()
+def fetch_public(path,attempts=12):
+ separator='&' if '?' in path else '?'
+ url=ROOT_URL+path+separator+'r02verify='+SOURCE[:16]
+ last=None
+ for attempt in range(attempts):
+  try:
+   request=urllib.request.Request(url,headers={'Cache-Control':'no-cache','Pragma':'no-cache','User-Agent':'KAOPU-R02-Delivery'})
+   with urllib.request.urlopen(request,timeout=60) as response:return response.read()
+  except urllib.error.HTTPError as exc:
+   last=exc
+   if exc.code not in {408,425,429,500,502,503,504}:raise
+  except (urllib.error.URLError,TimeoutError) as exc:last=exc
+  if attempt+1<attempts:time.sleep(min(2+attempt*2,20))
+ raise RuntimeError(f'Public fetch failed after {attempts} attempts: {url}: {last}')
 
 def verify():
  expected=json.loads((HERE/'BUILD_MANIFEST.json').read_text());available=False
  for _ in range(90):
   try:
-   live=json.loads(fetch_public('presets/r02/BUILD_MANIFEST.json?check='+str(time.time())))
+   live=json.loads(fetch_public('presets/r02/BUILD_MANIFEST.json',attempts=3))
    if live.get('sourceCommit')==SOURCE:available=True;break
   except Exception:pass
   time.sleep(10)
  assert available,'R02 checked build did not reach GitHub Pages; delivery incomplete'
  tasks=[('presets/r02/'+name,sha) for name,sha in expected['runtimeFiles'].items()]+list(expected['inheritedDependencies'].items())
- def one(item):
-  name,sha=item;actual=hashlib.sha256(fetch_public(name)).hexdigest();assert actual==sha,(name,actual,sha);return name
- with concurrent.futures.ThreadPoolExecutor(max_workers=7) as pool:checked=list(pool.map(one,tasks))
+ checked=[]
+ for name,sha in tasks:
+  actual=hashlib.sha256(fetch_public(name)).hexdigest();assert actual==sha,(name,actual,sha);checked.append(name)
  save('PUBLIC_BYTES.json',{'sourceCommit':SOURCE,'allSHA256Match':True,'checkedPaths':checked,'runtimeCount':len(expected['runtimeFiles']),'dependencyCount':len(expected['inheritedDependencies'])})
  print('R02_PUBLIC_BYTES_PASS',len(checked),flush=True)
 
