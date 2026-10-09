@@ -1,4 +1,4 @@
-name: R031 native bone and scanned identity probes
+name: R031 public identity stage and explicit body boundary
 on:
   push:
     branches: [qa/human-shape-r031-20261009]
@@ -16,27 +16,36 @@ jobs:
             kaopu-unified-human-workbench
             kaopu-anny-workbench
             kaopu-mhr-workbench
+            r031-public-manifest.json
+            r031-public-geometry.json
+            r031-public-verify.cjs
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - run: |
           npm install --prefix .human-qa --no-save --ignore-scripts --no-audit --no-fund playwright@1.55.0
           ./.human-qa/node_modules/.bin/playwright install --with-deps chromium
-      - run: |
-          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/r031-http.log 2>&1 &
-          sleep 2
-      - name: Validate all original head triangles, rest, weights and poses
-        run: node kaopu-unified-human-workbench/full/shape-r031/qa.mjs
-      - name: Render 92 actual geometry, expression and clay views
+      - name: Wait for deployed R031 hashes (maximum ten minutes)
+        run: |
+          python3 - <<'PYWAIT'
+          import json, urllib.request, hashlib, time
+          manifest=json.load(open('r031-public-manifest.json'))
+          for attempt in range(30):
+              try:
+                  for path,expected in manifest.items():
+                      u='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/'+path+'?deploycheck='+str(time.time())
+                      data=urllib.request.urlopen(u,timeout=30).read()
+                      assert hashlib.sha256(data).hexdigest()==expected,path
+                  print('Published R031 hashes ready');break
+              except Exception as e:
+                  print('Waiting for Pages:',e,flush=True)
+                  if attempt==29: raise
+                  time.sleep(20)
+          PYWAIT
+      - name: Public entry, default face, 92 views and four exact shape fingerprints
         env:
           NODE_PATH: ${{ github.workspace }}/.human-qa/node_modules
-        run: node kaopu-unified-human-workbench/tests/shape-r031-browser.cjs
-      - name: Compare all native and browser mesh hashes
-        run: |
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';import assert from 'node:assert/strict';
-          const a=JSON.parse(fs.readFileSync('shape-r031-results/numeric.json')),b=JSON.parse(fs.readFileSync('shape-r031-results/browser.json'));assert(b.passed);assert.equal(b.cases.length,4);for(const c of b.cases)assert.equal(c.geometrySHA256,a.cases.find(x=>x.id===c.id).geometrySHA256);console.log('PASS all four exact full mesh fingerprints');
-          NODE
+        run: node r031-public-verify.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
