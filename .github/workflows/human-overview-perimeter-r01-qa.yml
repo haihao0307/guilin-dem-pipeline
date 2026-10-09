@@ -1,0 +1,45 @@
+name: Existing human 18 R02 arenas and perimeter QA
+on:
+  push:
+    branches: ['qa/human-overview-perimeter-r01-20261009']
+permissions:
+  contents: read
+concurrency:
+  group: human-overview-perimeter-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+            kaopu-mhr-workbench
+      - name: Install pinned browser QA dependencies
+        run: |
+          npm install --prefix "$RUNNER_TEMP/overview-qa" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/overview-qa/node_modules/.bin/playwright" install --with-deps chromium
+          command -v ffmpeg || (sudo apt-get update && sudo apt-get install --no-install-recommends -y ffmpeg)
+          echo "NODE_PATH=$RUNNER_TEMP/overview-qa/node_modules" >> "$GITHUB_ENV"
+      - name: Serve exact candidate
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/overview-server.log" 2>&1 &
+          for n in $(seq 1 30); do
+            curl --fail --silent http://127.0.0.1:8765/kaopu-unified-human-workbench/ > /dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Existing canvas modes and full-mesh visual evidence
+        run: node kaopu-unified-human-workbench/tests/overview-perimeter/perimeter.cjs
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: human-overview-perimeter-${{ github.sha }}
+          path: perimeter-results/
+          retention-days: 7
+          compression-level: 0
