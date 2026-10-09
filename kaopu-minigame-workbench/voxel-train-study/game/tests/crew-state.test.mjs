@@ -39,7 +39,7 @@ test('The actual driver face points +X in motion and +Z when stopped beside a pl
 
 test('Splitting the driver preserves every original body/head vertex, normal and colour, including the cap',()=>{
   const current=createSteamLocomotive(),old=createR10Locomotive();
-  const body=current.root.getObjectByName('Batched riveted steam engine and tender'),oldBody=old.root.getObjectByName(body.name),head=current.crew.driverHead;
+  const bodies=['Fixed chassis cylinders and coal-water tender','Batched riveted locomotive upper body'].map(name=>current.root.getObjectByName(name)),oldBody=old.root.getObjectByName('Batched riveted steam engine and tender'),head=current.crew.driverHead;
   const vertices=meshes=>meshes.flatMap(mesh=>{
     const {position,normal,color}=mesh.geometry.attributes,values=[],p=new THREE.Vector3();
     for(let i=0;i<position.count;i++){
@@ -48,7 +48,7 @@ test('Splitting the driver preserves every original body/head vertex, normal and
     }
     return values;
   }).sort();
-  assert.deepEqual(vertices([body,head]),vertices([oldBody]));
+  assert.deepEqual(vertices([...bodies,head]),vertices([oldBody]));
   assert.equal(current.proof.placeholderDriver.cap,old.proof.placeholderDriver.cap);
   for(const name of ['Eight large spoked driving wheels','Small steel railway wheels','Distance-driven coupled rods and piston slides']){
     const a=current.root.getObjectByName(name).geometry,b=old.root.getObjectByName(name).geometry;
