@@ -1,0 +1,71 @@
+name: Tailor R02 three-dimensional preset cabinet
+on:
+  push:
+    branches: [feature/tailor-preset-3d-showcase-r02-20261009]
+    paths:
+      - '.github/workflows/tailor-preset-3d-showcase-r02.yml'
+      - 'kaopu-tailor-workbench/presets/r02/BUILD_TRIGGER.json'
+permissions:
+  contents: write
+concurrency:
+  group: tailor-preset-3d-showcase-r02
+  cancel-in-progress: false
+jobs:
+  verify-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          sparse-checkout: |
+            kaopu-tailor-workbench/presets/r01
+            kaopu-tailor-workbench/presets/r02
+            kaopu-tailor-workbench/garments-r04/vendor
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Materialize and syntax-check the authored WebGL cabinet
+        run: |
+          python kaopu-tailor-workbench/presets/r02/materialize.py
+          node --check kaopu-tailor-workbench/presets/r02/showcase-3d.mjs
+          node --check kaopu-tailor-workbench/presets/r02/app.mjs
+      - name: Browser and Chinese text dependencies
+        run: |
+          python -m pip install playwright==1.56.0
+          python -m playwright install chromium --with-deps
+          sudo apt-get install -y fonts-noto-cjk
+      - name: Actual local browser validation of all 60 WebGL thumbnails
+        run: |
+          python -m http.server 8765 >/tmp/tailor-r02-http.log 2>&1 &
+          python kaopu-tailor-workbench/presets/r02/qa_browser.py
+      - name: Retain the exact checked source and candidate evidence
+        run: |
+          python kaopu-tailor-workbench/presets/r02/release.py manifest
+          python kaopu-tailor-workbench/presets/r02/release.py retain
+      - name: Publish only the additive R02 path on the latest Pages parent
+        run: python kaopu-tailor-workbench/presets/r02/release.py publish
+      - name: Wait for real Pages deployment and verify runtime plus inherited dependencies
+        run: python kaopu-tailor-workbench/presets/r02/release.py verify
+      - name: Actual HTTPS browser validation
+        env:
+          R02_BASE: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/presets/r02/
+        run: python kaopu-tailor-workbench/presets/r02/qa_browser.py
+      - name: Retain public reports and screenshots
+        run: python kaopu-tailor-workbench/presets/r02/release.py retain-public
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r02-three-dimensional-cabinet-evidence
+          path: |
+            kaopu-tailor-workbench/presets/r02/BUILD_MANIFEST.json
+            kaopu-tailor-workbench/presets/r02/BROWSER_REPORT.json
+            kaopu-tailor-workbench/presets/r02/PUBLIC_REPORT.json
+            kaopu-tailor-workbench/presets/r02/PUBLIC_BYTES.json
+            kaopu-tailor-workbench/presets/r02/RELEASE_STATE.json
+            kaopu-tailor-workbench/presets/r02/qa
+          retention-days: 14
