@@ -16,16 +16,19 @@ jobs:
             kaopu-tailor-workbench/presets/r02
             kaopu-tailor-workbench/garments-r04/vendor
           fetch-depth: 1
-      - name: Read frozen original anatomy without changing any original files
+      - name: Read frozen anatomy and face topology without changing originals
         run: |
           mkdir -p /tmp/tailor-r03-intake
           git fetch origin 976d315ef8bfd7a7351bbac88cd8c7425b363970 --depth=1
           git show 976d315ef8bfd7a7351bbac88cd8c7425b363970:kaopu-tailor-workbench/r07/continuation/assets/original-anny-rig.json.gz > /tmp/tailor-r03-intake/original-anny-rig.json.gz
+          git show HEAD:kaopu-tailor-workbench/garments-r04/assets/body-anny-adult.json > /tmp/tailor-r03-intake/body-anny-adult.json
+          git show HEAD:kaopu-tailor-workbench/garments-r04/SOURCES.md > /tmp/tailor-r03-intake/BODY-SOURCES.md
+          git show HEAD:kaopu-tailor-workbench/garments-r04/assets/measurements.json > /tmp/tailor-r03-intake/measurements.json
+          git show 976d315ef8bfd7a7351bbac88cd8c7425b363970:kaopu-tailor-workbench/catalogue/r074-workbench-app.mjs > /tmp/tailor-r03-intake/r074-workbench-app.mjs
           python - <<'PY'
           import json,gzip,pathlib,shutil
           p=pathlib.Path('/tmp/tailor-r03-intake')
           d=json.loads(gzip.decompress((p/'original-anny-rig.json.gz').read_bytes()))
-          print('ORIGINAL_RIG_KEYS',[(k, type(v).__name__,len(v) if hasattr(v,'__len__') else v) for k,v in d.items()])
           (p/'original-anny-rig.json').write_text(json.dumps(d))
           lib=json.loads(pathlib.Path('kaopu-tailor-workbench/presets/r01/library.json').read_text())
           rows=[{k:r.get(k) for k in ['id','name','category','style','overrides','intent']} for r in lib['presets']]
