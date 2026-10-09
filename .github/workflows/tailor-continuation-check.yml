@@ -6,14 +6,15 @@ on:
       - '.github/workflows/tailor-continuation-check.yml'
       - 'kaopu-tailor-workbench/r07/continuation/BUILD_TRIGGER.json'
 permissions:
-  contents: read
+  contents: write
+  actions: read
 concurrency:
   group: tailor-r074-continuation
   cancel-in-progress: false
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
         with:
@@ -24,17 +25,63 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Build the additive editor and live whole-seam gate
         run: python kaopu-tailor-workbench/r07/continuation/build.py
       - name: Inherited and continuation geometry tests
         run: |
-          node --test kaopu-tailor-workbench/learning/patterngsl-r01/pattern-edit.test.mjs kaopu-tailor-workbench/learning/patterngsl-r01/seam-span.test.mjs kaopu-tailor-workbench/r07/continuation/continuation.test.mjs > /tmp/tailor-r074-tests.tap
-          cat /tmp/tailor-r074-tests.tap
+          node --test kaopu-tailor-workbench/learning/patterngsl-r01/pattern-edit.test.mjs kaopu-tailor-workbench/learning/patterngsl-r01/seam-span.test.mjs kaopu-tailor-workbench/r07/continuation/continuation.test.mjs > kaopu-tailor-workbench/r07/continuation/UNIT_TESTS.tap
+          cat kaopu-tailor-workbench/r07/continuation/UNIT_TESTS.tap
+      - name: Browser and skinning-check dependencies
+        run: |
+          python -m pip install numpy==1.26.4 playwright==1.56.0
+          python -m playwright install chromium --with-deps
+          sudo apt-get install -y fonts-noto-cjk
+      - name: Retrieve only the previously verified original body binding
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: 11590103742
+          run-id: 37872375418
+          github-token: ${{ github.token }}
+          path: .tmp-r074-original-binding
+          merge-multiple: true
+      - name: Verify and retain full original Anny skinning weights
+        run: python kaopu-tailor-workbench/r07/continuation/retain_original_rig.py .tmp-r074-original-binding
+      - name: Real edit buttons, new material meshes and two full sewing runs
+        run: |
+          python -m http.server 8765 >/tmp/tailor-r074-http.log 2>&1 &
+          python kaopu-tailor-workbench/r07/continuation/qa_browser.py
+      - name: Curated preset handoff to original current-body generation
+        run: python kaopu-tailor-workbench/r07/continuation/qa_presets.py
+      - name: Retain verified continuation and explicit failed-quality metrics
+        run: python kaopu-tailor-workbench/r07/continuation/release.py retain
+      - name: Publish only new continuation files and unchanged edit dependencies
+        run: python kaopu-tailor-workbench/r07/continuation/release.py publish
+      - name: Wait for Pages and verify actual public runtime bytes
+        run: python kaopu-tailor-workbench/r07/continuation/release.py verify
+      - name: Actual HTTPS edit and re-sew workflow
+        env:
+          R074_BASE: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/r07/continuation/
+        run: |
+          python kaopu-tailor-workbench/r07/continuation/qa_browser.py
+          python kaopu-tailor-workbench/r07/continuation/qa_presets.py
+      - name: Retain public workflow evidence
+        run: python kaopu-tailor-workbench/r07/continuation/release.py retain-public
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: tailor-r074-focused-test-evidence
+          name: tailor-r074-continuation-evidence
           path: |
-            /tmp/tailor-r074-tests.tap
+            kaopu-tailor-workbench/r07/continuation/UNIT_TESTS.tap
             kaopu-tailor-workbench/r07/continuation/BUILD_MANIFEST.json
+            kaopu-tailor-workbench/r07/continuation/BROWSER_REPORT.json
+            kaopu-tailor-workbench/r07/continuation/PRESET_HANDOFF.json
+            kaopu-tailor-workbench/r07/continuation/ORIGINAL_RIG_REPORT.json
+            kaopu-tailor-workbench/r07/continuation/PUBLIC_REPORT.json
+            kaopu-tailor-workbench/r07/continuation/PUBLIC_PRESET_HANDOFF.json
+            kaopu-tailor-workbench/r07/continuation/PUBLIC_BYTES.json
+            kaopu-tailor-workbench/r07/continuation/RELEASE_STATE.json
+            kaopu-tailor-workbench/r07/continuation/qa
           retention-days: 14
