@@ -1,0 +1,61 @@
+name: Tailor R07.1 joint stability checks
+on:
+  push:
+    branches: [fix/tailor-r07-speed-stability-20261008]
+    paths:
+      - 'kaopu-tailor-workbench/r07/stability/build.py'
+      - 'kaopu-tailor-workbench/r07/stability/refinement.mjs'
+      - 'kaopu-tailor-workbench/r07/stability/audit.mjs'
+      - 'kaopu-tailor-workbench/r07/stability/audit.test.mjs'
+      - 'kaopu-tailor-workbench/r07/stability/joint-refinement.cpp'
+      - 'kaopu-tailor-workbench/r07/stability/qa.py'
+permissions:
+  contents: read
+concurrency:
+  group: tailor-r071-stability
+  cancel-in-progress: false
+jobs:
+  live-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          sparse-checkout: |
+            kaopu-tailor-workbench
+            kaopu-human-overview
+          fetch-depth: 1
+      - name: Build without changing previous versions
+        run: |
+          mkdir -p evidence-r071
+          find kaopu-tailor-workbench/catalogue -maxdepth 1 -name 'r07-*' -print0 | sort -z | xargs -0 sha256sum > /tmp/r07-before
+          python kaopu-tailor-workbench/r07/stability/build.py
+          node kaopu-tailor-workbench/r07/stability/audit.test.mjs
+          sha256sum -c /tmp/r07-before
+      - name: Install browser
+        run: |
+          python -m pip install playwright==1.56.0
+          python -m playwright install chromium --with-deps
+      - name: Test fresh paper and repeated inputs
+        run: |
+          python -m http.server 8765 >/tmp/tailor-r071-http.log 2>&1 &
+          python kaopu-tailor-workbench/r07/stability/qa.py
+      - name: Separate static quality from functional completion
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          r=json.load(open('evidence-r071/R071_REPORT.json'))
+          for c in r['cases']: print(c['name'],c['gate'])
+          assert r['allTestedStaticGatesPassed'], 'Garment static check failed; not an accepted garment'
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r071-evidence
+          path: |
+            evidence-r071
+            kaopu-tailor-workbench/r07/stability
+            kaopu-tailor-workbench/catalogue/r071-*
+          retention-days: 14

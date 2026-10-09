@@ -1,0 +1,29 @@
+name: Tailor R07 build scope regression
+on:
+  push:
+    branches: [fix/tailor-r07-speed-stability-20261008]
+    paths:
+      - '.github/workflows/tailor-r07-build-regression.yml'
+      - '.github/tests/tailor_r07_build_regression.py'
+      - 'kaopu-tailor-workbench/r07/build.py'
+permissions:
+  contents: read
+jobs:
+  build-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-tailor-workbench
+            .github/tests
+          fetch-depth: 1
+      - name: Verify exact target, deterministic output and original bytes
+        run: python .github/tests/tailor_r07_build_regression.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r07-build-regression
+          path: tailor-r07-build-regression.json
+          retention-days: 14

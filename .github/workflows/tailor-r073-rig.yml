@@ -1,0 +1,43 @@
+name: Tailor R073 original body rig
+on:
+  push:
+    branches: [fix/tailor-r07-speed-stability-20261008]
+    paths: ['.github/workflows/tailor-r073-rig.yml']
+permissions:
+  contents: read
+jobs:
+  rig:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          sparse-checkout: |
+            kaopu-anny-workbench/assets
+            kaopu-unified-human-workbench/src
+            kaopu-tailor-workbench/garments-r04/assets
+          fetch-depth: 1
+      - name: Export existing full skin influences and exact neutral bone transforms
+        run: |
+          mkdir -p rig-evidence
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';import zlib from 'node:zlib';import crypto from 'node:crypto';
+          import {AnnyModel} from './kaopu-unified-human-workbench/src/AnnyModel.js';
+          const root='kaopu-anny-workbench/';const meta=JSON.parse(fs.readFileSync(root+'assets/anny-model.json'));
+          const c=meta.binary.compressed;const gz=c.parts?Buffer.concat(c.parts.map(p=>fs.readFileSync(root+p.url.replace(/^\.\//,'')))):fs.readFileSync(root+'assets/anny-model.bin.gz');
+          const buf=zlib.gunzipSync(gz);const sha=b=>crypto.createHash('sha256').update(b).digest('hex');if(sha(buf)!==meta.binary.sha256)throw Error('original model hash mismatch');
+          const model=new AnnyModel(meta,buf.buffer.slice(buf.byteOffset,buf.byteOffset+buf.byteLength));
+          const path='kaopu-tailor-workbench/garments-r04/assets/body-anny-adult.json',raw=fs.readFileSync(path),body=JSON.parse(raw);
+          const r=model.forward(body.parameters);let max=0;for(let i=0;i<body.positionsMm.length;i++){const p=[r.vertices64[i*3]*1000,r.vertices64[i*3+2]*1000+body.groundTranslationMm,-r.vertices64[i*3+1]*1000];for(let k=0;k<3;k++)max=Math.max(max,Math.abs(p[k]-body.positionsMm[i][k]));}
+          if(max>.001)throw Error('neutral original body mismatch '+max);
+          const faces=Array.from(model.arrays.faces);if(JSON.stringify(faces)!==JSON.stringify(body.triangles.flat()))throw Error('body topology mismatch');
+          const out={schema:'kaopu-tailor-original-skin-binding@1',sourceModelSHA256:meta.binary.sha256,sourceBodySHA256:sha(raw),neutralMaxErrorMm:max,coordinateSystem:'Original Anny Z-up metres; display [x,z+ground,-y]',groundTranslationM:body.groundTranslationMm/1000,boneLabels:model.boneLabels,boneParents:model.boneParents,boneOrder:model.boneOrder,restVertices:Array.from(r.restVertices),neutralBonePoses:Array.from(r.bonePoses),restBonePoses:Array.from(r.restBonePoses),vertexBoneIndices:Array.from(model.arrays.vertex_bone_indices),vertexBoneWeights:Array.from(model.arrays.vertex_bone_weights),influences:model.influences};
+          fs.writeFileSync('rig-evidence/original-anny-rig.json.gz',zlib.gzipSync(JSON.stringify(out),{level:9}));
+          fs.writeFileSync('rig-evidence/RIG_REPORT.json',JSON.stringify({neutralMaxErrorMm:max,sourceModelSHA256:meta.binary.sha256,sourceBodySHA256:sha(raw),vertices:body.positionsMm.length,triangles:body.triangles.length,bones:model.boneCount,influences:model.influences,indicesTruncated:false,bodyReplaced:false},null,2));console.log(fs.readFileSync('rig-evidence/RIG_REPORT.json','utf8'));
+          JS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tailor-r073-original-rig
+          path: rig-evidence
+          retention-days: 14

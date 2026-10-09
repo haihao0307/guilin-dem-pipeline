@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {requiresGatheredStitchSites} from './gathering.mjs';
+import {preflightSizing} from './fit-preflight.mjs';
+const s=(a,b)=>({gathering:{ruffleCoefficientA:a,ruffleCoefficientB:b}});
+for(const ratio of [1.01,1.1,1.149999999999,1.15,1.150000000001,1.3,1.45])assert.equal(requiresGatheredStitchSites(s(1,ratio)),true);
+assert.equal(requiresGatheredStitchSites(s(1,1)),false);
+assert.equal(requiresGatheredStitchSites(s(1,1+1e-12)),false);
+assert.equal(requiresGatheredStitchSites(s(1.3,1.3)),false);
+assert.throws(()=>requiresGatheredStitchSites(s(1,0)),/INVALID_SOURCE_GATHERING/);
+assert.throws(()=>requiresGatheredStitchSites(s(1,NaN)),/INVALID_SOURCE_GATHERING/);
+const sample={design:{meta:{bottom:{v:'Skirt2'}},skirt:{flare:{v:0},bottom_cut:{v:0},rise:{v:1},ruffle:{v:1.15}}},bodyCm:{hips:100,hips_line:20},panels:[{id:'skirt_front',verticesMm:[[0,0],[500,0],[500,400],[0,400]]},{id:'skirt_back',verticesMm:[[0,0],[400,0],[400,400],[0,400]]}]};
+const before=JSON.stringify(sample),short=preflightSizing(sample);assert(short.blocking);assert.equal(short.shortageMm,100);assert.equal(JSON.stringify(sample),before);
+assert.equal(preflightSizing(null).assessed,false);
+const missing=structuredClone(sample);delete missing.bodyCm.hips;assert(preflightSizing(missing).blocking);
+const shape=structuredClone(sample);shape.design.skirt.flare.v=3;assert.equal(preflightSizing(shape).assessed,false);
+const enough=structuredClone(sample);enough.bodyCm.hips=89;assert.equal(preflightSizing(enough).blocking,false);
+console.log('R072 source-gathering and preflight unit checks passed; not a garment certificate.');

@@ -1,0 +1,55 @@
+from pathlib import Path
+import hashlib,subprocess
+P=Path(__file__).resolve().parent;R=P.parent.parent
+source=R/'catalogue/r07-worker.bundle.mjs'
+assert hashlib.sha256(source.read_bytes()).hexdigest()=='55545150ce47a13f017d4bac3b01a83460db6e95cd0a77c4b027952ceafba435'
+s=source.read_text()
+def patch(a,b):
+ global s
+ if s.count(a)!=1:raise RuntimeError(f'Expected one anchor, got {s.count(a)}: {a[:100]}')
+ s=s.replace(a,b)
+patch('diag:take(n) }','diag:take(n),qn:take(n*3*31),qgi:take(t*3*4,4),qgm:take(t*3) }')
+patch('bytes("r07/global.wasm")','bytes("r07/stability/joint.wasm")')
+patch('var refinementSteps=0,layerGuide=null;','var refinementSteps=0,layerGuide=null,jointSteps=0,jointInfo=null,closureInfo=null;')
+patch('[...spec.source.assemblyExperiment, "release", "refine"]','[...spec.source.assemblyExperiment, "release", "refine", "joint"]')
+patch('totalFrames = (stages.length - 2) * 90 + 120 + 1600;','totalFrames = spec.source.assemblyExperiment.length * 90 + 120 + 1600 + 1600;')
+patch('refinementSteps=0;layerGuide=null;','refinementSteps=0;layerGuide=null;jointSteps=0;jointInfo=closureInfo=null;')
+patch('progress: (lab.frameCount+refinementSteps) / totalFrames','progress: (lab.frameCount+refinementSteps+jointSteps) / totalFrames')
+patch('else {lab.activate(stages[stageIndex]);if(stages[stageIndex]==="sides")lab.releasePins();}', 'else if(stages[stageIndex]==="joint"){jointInfo=beginJointRefinement(lab);}\n        else {lab.activate(stages[stageIndex]);if(stages[stageIndex]==="sides")lab.releasePins();}')
+patch('}else lab.step();','}else if(stages[stageIndex]==="joint"){const code=lab.kernel.qnStep();if(code<0)throw Error("联合整理遇到无效状态，已停止并保留当前材料。");jointSteps++;}else lab.step();')
+patch('stages[stageIndex]==="refine"?1600:','["refine","joint"].includes(stages[stageIndex])?1600:')
+patch('if (stageFrame === frames) {','if (stageFrame === frames) {\n        if(stages[stageIndex]==="joint"){jointInfo=jointReport(lab,jointInfo);closureInfo=finalizeCloseSeams(lab);}')
+patch('b.id <= t.id || t.ids.some((i) => b.ids.some((j) => groups[i] === groups[j]))','b.id <= t.id')
+patch('if (intersects(t.points, b.points)) selfPairs.push([t.id, b.id]);','if (intersects(t.points, b.points)||coplanarPositiveOverlap(t.points,b.points)) selfPairs.push([t.id, b.id]);')
+patch('coplanarOverlapChecked: false, continuousCollisionChecked: false, stitchedAdjacencyMapUsed: true, method: "independent BVH + segment/triangle intersection on final geometry"','coplanarOverlapChecked: true, continuousCollisionChecked: false, stitchedAdjacencyMapUsed: false, sharedPointPairExclusions:false, method: "independent final BVH + proper segment/triangle and positive-area coplanar overlap; no shared-point blanket exclusions"')
+patch('profile.auditMs = performance.now() - begin;','const gate=staticGate(lab,record,regions,intersections);record.staticGate=gate;\n          profile.auditMs = performance.now() - begin;')
+patch('record.trial={version:"R07.0"','record.jointRefinement={...jointInfo,closure:closureInfo};\n            record.trial={version:"R07.1"')
+patch('guideFreeFinalSweeps:200','guideFreeFinalSweeps:0,sourceLocalSeamInequalities:true')
+patch('physicalFrameCount:lab.frameCount,refinementSteps','physicalFrameCount:lab.frameCount,refinementSteps,jointSteps')
+patch('then 1600 coupled geometric relaxation sweeps','then 1600 global and 1600 joint objective refinement steps; declared close needle pairs finalized')
+s="import {beginJointRefinement,finalizeCloseSeams,jointReport} from '../r07/stability/refinement.mjs';\nimport {coplanarPositiveOverlap,staticGate} from '../r07/stability/audit.mjs';\n"+s
+(R/'catalogue/r071-worker.bundle.mjs').write_text(s)
+(P/'node-joint.mjs').write_text('globalThis.self={};\n'+s.replace("'../r07/assembly.mjs'","'../assembly.mjs'").replace("'../r07/stability/refinement.mjs'","'./refinement.mjs'").replace("'../r07/stability/audit.mjs'","'./audit.mjs'")+'\nexport {GarmentLab2,BodySDF,configureWasm,compileAnalytic,prepareShoulderFixtures,regionalStrain,strictIntersectionAudit,prepareBodyAudit,staticGate};\n')
+combined=(R/'r07/kernel.cpp').read_text()+(R/'r07/global.cpp').read_text()+(P/'joint-refinement.cpp').read_text();(P/'combined.cpp').write_text(combined)
+subprocess.run(['clang++','--target=wasm32','-O3','-ffp-contract=off','-nostdlib','-fno-exceptions','-fno-rtti','-Wl,--no-entry','-Wl,--export-all','-Wl,-z,stack-size=32768','-Wl,--initial-memory=131072','-o',str(P/'joint.wasm'),str(P/'combined.cpp')],check=True)
+s=(R/'catalogue/r07-workbench-app.mjs').read_text()
+assert hashlib.sha256(s.encode()).hexdigest()=='f45a39afd83c31e242d35f60d0b9cabbf87eaebd785def7b8d8231929f8b69cb'
+s=s.replace('R07.0','R07.1').replace('r07-workbench-style.css','r071-workbench-style.css').replace("'r07-worker.bundle.mjs'","'r071-worker.bundle.mjs'")
+patch("refine:'接缝与原材料联合整理'","refine:'初步整理',joint:'接缝、材料与人体联合收敛'")
+s=s.replace('R07 快速试算','R07.1 联合整理').replace('③ 快速缝合试算','③ 缝合并联合整理')
+patch('const failed=i.bodyIntersectingFaceCount>0||i.selfStrictTriangleIntersectionCount>0||d.regions.all.maximumPercent>15||d.record.metrics.activeMaxGapMm>2;','state.staticGate=d.record.staticGate||null;const failed=d.record.staticGate?!d.record.staticGate.passed:i.bodyIntersectingFaceCount>0||i.selfStrictTriangleIntersectionCount>0||d.regions.all.maximumPercent>15||d.record.metrics.activeMaxGapMm>2;')
+patch("$('view-origin').textContent='本轮实时缝合结果 · 未验收';","$('view-origin').textContent=!failed&&state.staticGate?'本轮静态几何检查通过 · 动态未验收':'本轮实时缝合结果 · 未验收';")
+patch("'仅最终几何抽检无交叉；仍非已验收成衣'","'本轮静态几何检查通过；不代表动态试衣或实测面料通过'")
+patch("本轮试验结束${failed?'，检验未通过':''}","本轮${!failed&&state.staticGate?'静态几何检查通过':'试验结束'}${failed?'，检验未通过':''}")
+patch("diagnosticFailed:state.diagnosticFailed,","staticGate:state.staticGate,diagnosticFailed:state.diagnosticFailed,")
+patch("state.spec=state.analytic=state.record=null;","state.staticGate=null;state.spec=state.analytic=state.record=null;")
+patch("state.dirty=true;state.record=","state.dirty=true;state.staticGate=null;state.record=")
+# Disclose local constraints and the difference between a completed calculation and static quality.
+s=s.replace('运行时无布料自碰撞，失败不会标为合格','接缝/材料/人体联合整理；运行时完整自碰撞仍未实现，失败不会标为合格')
+s=s.replace('R07 缩短工序 + 联合整理','R07.1 缩短工序 + 原材料联合收敛')
+s=s.replace("'快速试算，非原算法逐帧等价'","'联合几何整理，非原算法逐帧等价'")
+(R/'catalogue/r071-workbench-app.mjs').write_text(s)
+(R/'catalogue/r071-workbench-style.css').write_text("@import url('./r07-workbench-style.css');\n")
+(P/'index.html').write_text('<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base href="../../"><title>裁缝工作台 R07.1 · 联合整理</title><link rel="stylesheet" href="catalogue/r071-workbench-style.css"><script type="importmap">{"imports":{"three":"./garments-r04/vendor/three.module.js"}}</script></head><body data-wb-ui="tailor"><p>正在打开 R07.1…</p><script type="module" src="catalogue/r071-workbench-app.mjs"></script></body></html>')
+for f in ['r071-worker.bundle.mjs','r071-workbench-app.mjs']:subprocess.run(['node','--check',str(R/'catalogue'/f)],check=True)
+print('R07.1 built; original R07/R06 files untouched.')
