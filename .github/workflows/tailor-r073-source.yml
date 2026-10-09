@@ -1,0 +1,46 @@
+name: Tailor R073 source inspection
+on:
+  push:
+    branches: [fix/tailor-r07-speed-stability-20261008]
+    paths: ['.github/workflows/tailor-r073-source.yml']
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-human-overview
+          path: public-source
+          fetch-depth: 1
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          sparse-checkout: |
+            kaopu-tailor-workbench/r07
+            kaopu-tailor-workbench/catalogue
+            .github/reports
+            .github/scripts
+          path: tailor-source
+          fetch-depth: 1
+      - name: Summarize source origins
+        run: |
+          mkdir -p metadata
+          git -C public-source rev-parse HEAD > metadata/HUMAN_SOURCE.txt
+          git -C tailor-source rev-parse HEAD > metadata/TAILOR_SOURCE.txt
+          git -C public-source ls-tree -r --name-only HEAD | grep -Ei '(anny|rig|skin|skeleton|motion)' > metadata/RELATED_PATHS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tailor-r073-source
+          path: |
+            public-source/kaopu-unified-human-workbench
+            public-source/kaopu-human-overview
+            tailor-source/kaopu-tailor-workbench/r07
+            tailor-source/kaopu-tailor-workbench/catalogue
+            metadata
+          retention-days: 14
