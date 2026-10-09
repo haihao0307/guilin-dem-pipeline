@@ -1,0 +1,72 @@
+{
+  "schema": "r03-fast-local-browser-preparation/1",
+  "status": "Local code and Node validation complete; browser QA has not been run for this candidate.",
+  "entry": "collision-architecture/r03-fast/index.html",
+  "relocation": [
+    {
+      "module": "SurfaceNarrowPhase.mjs",
+      "experimentSHA256": "2ad30eb5417a47094a0b8787b0eaa5a0e24ca8fef5f3503a17dcf6d0fcccb2f6",
+      "candidateSHA256": "282ef367229ae0689e2ffd4226b4fe2ec4dc20a574be72f525a741299c03b9d3",
+      "change": "Only relative oracle import prefix changed; sibling-only imports unchanged"
+    },
+    {
+      "module": "MeshSurfaceContact.mjs",
+      "experimentSHA256": "d58628702f9e6304366d990a57578c2728b4e04a83c464a4d9343425d3669fb3",
+      "candidateSHA256": "f098786faa084db3a21f47fb56579fc34149df81610cea1b3c4d7f286af02425",
+      "change": "Only relative oracle import prefix changed; sibling-only imports unchanged"
+    },
+    {
+      "module": "FixedStepCollisionWorld.mjs",
+      "experimentSHA256": "b28c8712701ee37ae6ca8df4cfec7c8a8be662f88de5c0e7b74c821f190b2746",
+      "candidateSHA256": "b28c8712701ee37ae6ca8df4cfec7c8a8be662f88de5c0e7b74c821f190b2746",
+      "change": "Only relative oracle import prefix changed; sibling-only imports unchanged"
+    }
+  ],
+  "oracle": [
+    {
+      "file": "SurfaceNarrowPhase.mjs",
+      "sha256": "bcc277e94d9ef57d5bd05f4a0d56037a476ac21ba654017d4d9212c5099d82c5",
+      "unchanged": true
+    },
+    {
+      "file": "MeshSurfaceContact.mjs",
+      "sha256": "8807209a25083ecf1d0ace738698f99514968e95cd2964aa78abedbe5b19460f",
+      "unchanged": true
+    },
+    {
+      "file": "TriangleContact.mjs",
+      "sha256": "affff7dd05aca5a16cb50d072e3c2b2b442316aafa0e69d8138c679a60c8017c",
+      "unchanged": true
+    }
+  ],
+  "checks": {
+    "allDirectModuleImportsResolve": true,
+    "nodeActualCases": 9,
+    "nodeExactComparisons": 36,
+    "realPresets": [
+      16,
+      12,
+      35
+    ],
+    "realPoseTimes": [
+      0,
+      0.55,
+      1.1
+    ],
+    "displayVertices": 25417,
+    "gloveTrianglesPerHand": 770,
+    "articulatedCuffsRetained": true
+  },
+  "browserQA": {
+    "run": false,
+    "script": "tests/browser.cjs",
+    "expectedEvidence": [
+      "overview.png",
+      "contact.png",
+      "BROWSER-VALIDATION.json"
+    ],
+    "note": "Only a real successful browser run may mark browser verification complete."
+  },
+  "changes": "Only new candidate source, tests and owned numerical evidence. Original collision-fast experiment, R02 oracle, human/rig/glove sources and existing deployment unchanged.",
+  "externalWrites": false
+}

@@ -1,4 +1,4 @@
-name: Published actual surface contact R02 QA
+name: Exact surface hierarchy R03 comparison QA
 on:
   push:
     branches: ['qa/jolt-surface-r02-20261009']
@@ -22,27 +22,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - run: node kaopu-unified-human-workbench/collision-architecture/r02/tests/sweep.mjs
-      - run: node kaopu-unified-human-workbench/collision-architecture/r02/tests/triangles.mjs
+      - run: node --max-old-space-size=640 --expose-gc kaopu-unified-human-workbench/collision-architecture/r03-fast/tests/actual-fixtures.mjs
       - run: npm install --prefix "$RUNNER_TEMP/jolt-qa" --no-save --ignore-scripts playwright@1.57.0
       - run: '"$RUNNER_TEMP/jolt-qa/node_modules/.bin/playwright" install --with-deps chromium'
       - run: echo "NODE_PATH=$RUNNER_TEMP/jolt-qa/node_modules" >> "$GITHUB_ENV"
       - run: python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/jolt-server.log" 2>&1 &
-      - name: Verify all 22 published files
-        run: |
-          python3 - <<'PYTHON'
-          import json,hashlib,urllib.request
-          base='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/collision-architecture/r02/'
-          hashes=json.load(open('kaopu-unified-human-workbench/collision-architecture/r02/tests/public-hashes.json'))
-          for path,expected in hashes.items():
-              actual=hashlib.sha256(urllib.request.urlopen(base+path,timeout=45).read()).hexdigest()
-              assert actual==expected,path
-          print('22 public files verified for a46956d5dc582ed0ca289643d34de399ed902a0a')
-          PYTHON
-      - run: node kaopu-unified-human-workbench/collision-architecture/r02/tests/public.cjs
+      - run: node kaopu-unified-human-workbench/collision-architecture/r03-fast/tests/browser.cjs
+        env:
+          FAST_SURFACE_URL: http://127.0.0.1:8765/kaopu-unified-human-workbench/collision-architecture/r03-fast/
+          FAST_QA_OUT: surface-fast-qa-results
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: surface-contact-${{ github.sha }}
-          path: surface-contact-qa-results/
+          name: surface-fast-${{ github.sha }}
+          path: surface-fast-qa-results/
           retention-days: 7
