@@ -1,0 +1,84 @@
+{
+  "schema": "kaopu.regression-case/2",
+  "caseId": "TAILOR-PRESET-3D-THUMBNAIL-CORRECTION-001",
+  "status": "CANDIDATE_TAILOR_HISTORY_REPLAY_PASSED_NOT_ADOPTED",
+  "active": false,
+  "scope": {
+    "mother": "Tailor",
+    "taskClass": "PRESET_COLLECTION_THREE_D_GARMENT_THUMBNAILS",
+    "globalAdoption": false
+  },
+  "userCorrection": {
+    "correctionId": "TAILOR-P01-3D-THUMBNAILS-20261009T1320+08",
+    "instruction": "Each preset must use a three-dimensional finished-garment thumbnail; a simple dedicated plastic display mannequin is allowed; paper pieces are not visually sufficient.",
+    "allowed": [
+      "static images rendered from real preset-specific 3D garment geometry",
+      "a simple dedicated plastic display mannequin instead of a real human"
+    ],
+    "forbiddenSubstitutions": [
+      "paper-pattern SVG thumbnails",
+      "unrelated concept art",
+      "one garment renamed as multiple presets",
+      "a green pre-correction paper-only run"
+    ]
+  },
+  "historicalObservation": {
+    "preCorrectionRun": 37881219569,
+    "testedSourceSha": "637ef1f9bad233cfed06e7d191fe15263b378bbc",
+    "artifactId": 11595152743,
+    "artifactDigest": "sha256:471a1cd516dede9e0b8d3b47de4af8378ec6a14d323552578d47b1df38372c8a",
+    "oldContractState": "PAPER_PRESET_LIBRARY_VERIFIED_SCOPED_PRE_CORRECTION",
+    "assertedThumbnailType": "paper",
+    "currentPrHead": "78eb5030f791735037d20b1dfe32a9044845ef34",
+    "currentPublicHead": "716631d614e9dc73eab7a1551f3e925da9adc485",
+    "publicIndexBlob": "6e82c4bec45fa4ae3a7694317aca9c0a7b8072e5",
+    "publicAppBlob": "6792673b3c8ec551b4b7cc585fe611ac5494fe0e",
+    "paperSvgThumbnailCount": 60,
+    "threeDThumbnailCoverage": 0,
+    "currentPublicStatement": "Thumbnails come from real paper patterns, not garment photos."
+  },
+  "mustNeverRepeat": [
+    "Treat a successful test of the superseded paper-thumbnail contract as proof of the later 3D-garment-thumbnail correction.",
+    "Count paper SVGs, diagrams, or unrelated images as preset-specific 3D garment thumbnails.",
+    "Claim collection completion from a subset without 60-member coverage and identity receipts.",
+    "Promote thumbnail evidence into physical-fit, collision, dynamic-wear, device, or user acceptance."
+  ],
+  "requiredPerMemberReceipt": [
+    "presetId",
+    "designOrPaperIdentity",
+    "garmentGeometryIdentity",
+    "displayMannequinIdentity",
+    "cameraAndRenderConfigIdentity",
+    "thumbnailDigest",
+    "cardReadbackResult"
+  ],
+  "states": [
+    "BASELINE_ONLY_PRE_CORRECTION",
+    "HOLD_LATEST_USER_CORRECTION_UNTESTED",
+    "REJECTED_WRONG_TARGET_PAPER_THUMBNAIL",
+    "HOLD_COLLECTION_MEMBER_COVERAGE_INCOMPLETE",
+    "HOLD_THREE_D_THUMBNAIL_IDENTITY_INCOMPLETE",
+    "THREE_D_PRESET_THUMBNAILS_VERIFIED_SCOPED"
+  ],
+  "gate": [
+    "Preserve the old paper-library success as a scoped historical observation; do not relabel it as failure.",
+    "A run predating the correction or testing only paper thumbnails cannot satisfy the corrected contract.",
+    "All 60 expected preset IDs must have member-level 3D derivation receipts and public card readback.",
+    "The thumbnail may be a static render, but it must derive from actual preset-specific 3D garment geometry on the declared simple mannequin.",
+    "Passing this case does not certify cloth physics, fit, collision, dynamic wear, physical device behavior, or user acceptance."
+  ],
+  "activation": {
+    "global": false,
+    "singleMotherTrialRequired": true,
+    "independentVerifierRequired": true,
+    "rollbackPoint": "Keep current P01 paper preset library as BASELINE_ONLY_PRE_CORRECTION until a separate corrected candidate passes; do not overwrite the old evidence."
+  },
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": true,
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}
