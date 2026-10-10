@@ -1,0 +1,176 @@
+name: Train R19 clean runtime batching and real WebGL profile
+on:
+  push:
+    branches: ['qa/train-r19-clean-runtime-20261010', 'gh-pages']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r19/**'
+      - '.github/workflows/train-r19-runtime-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: train-r19-runtime-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    if: github.ref != 'refs/heads/gh-pages'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      GAME: kaopu-minigame-workbench/voxel-train-study/game
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Install official pinned browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/train-r19" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/train-r19/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/train-r19/node_modules" >> "$GITHUB_ENV"
+          sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Verify source contracts and unchanged layouts
+        run: |
+          set -o pipefail
+          mkdir -p train-r19-results
+          export R19_QA_OUT=train-r19-results/cpu
+          node --test "$GAME/r19/tests/"*.test.mjs 2>&1 | tee train-r19-results/unit.txt
+      - name: Serve exact candidate
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/train-r19-server.log" 2>&1 &
+          for n in $(seq 1 30); do
+            curl --fail --silent http://127.0.0.1:8765/$GAME/r19/ >/dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Compare actual baseline and candidate WebGL without deployment
+        env:
+          TRAIN_QA_OUT: train-r19-results/profile
+        run: node "$GAME/r19/tests/r19-webgl-profile.cjs"
+      - name: Measure changed-cell streaming latency against frozen batch baseline
+        env:
+          TRAIN_QA_OUT: train-r19-results/streaming-profile
+        run: node "$GAME/r19/tests/r19-streaming-profile.cjs"
+      - name: Retain early streaming-latency evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-r19-streaming-profile-${{ github.sha }}
+          path: train-r19-results/streaming-profile/
+          compression-level: 0
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Diagnose browser CPU without altering timing-gate samples
+        if: ${{ !cancelled() }}
+        env:
+          R19_PROFILE_ONLY: '1'
+          TRAIN_QA_OUT: train-r19-results/cpu-profile
+        run: node "$GAME/r19/tests/r19-streaming-profile.cjs"
+      - name: Retain evidence including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-r19-runtime-${{ github.sha }}
+          path: train-r19-results/
+          compression-level: 0
+          if-no-files-found: warn
+          retention-days: 7
+
+  candidate-interactions:
+    if: github.ref != 'refs/heads/gh-pages'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GAME: kaopu-minigame-workbench/voxel-train-study/game
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Install official pinned browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/train-r19" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/train-r19/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/train-r19/node_modules" >> "$GITHUB_ENV"
+          sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Serve exact candidate
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/train-r19-server.log" 2>&1 &
+          for n in $(seq 1 30); do
+            curl --fail --silent http://127.0.0.1:8765/$GAME/r19/ >/dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Native first station to second without fixture placement
+        if: ${{ !cancelled() }}
+        env:
+          TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r19/
+          TRAIN_QA_OUT: train-r19-results/native
+        run: node "$GAME/r19/tests/r19-native-browser.cjs"
+      - name: Exercise phone viewport and touch controls
+        if: ${{ !cancelled() }}
+        env:
+          TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r19/
+          TRAIN_QA_OUT: train-r19-results/mobile
+        run: node "$GAME/r19/tests/r19-mobile-browser.cjs"
+      - name: Retain native and phone evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-r19-interactions-${{ github.sha }}
+          path: train-r19-results/
+          compression-level: 0
+          if-no-files-found: warn
+          retention-days: 7
+
+  public-mobile:
+    if: github.ref == 'refs/heads/gh-pages'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      GAME: kaopu-minigame-workbench/voxel-train-study/game
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Install official pinned browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/train-r19" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/train-r19/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/train-r19/node_modules" >> "$GITHUB_ENV"
+      - name: Wait for exact published source
+        run: |
+          python3 - <<'PYCODE'
+          import hashlib, pathlib, time, urllib.request
+          paths = ['kaopu-minigame-workbench/voxel-train-study/game/r19/' + x for x in ['app.mjs', 'street/render-batches.mjs']]
+          expected = {p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in paths}
+          for attempt in range(120):
+              try:
+                  actual = {}
+                  for path in paths:
+                      url = 'https://haihao0307.github.io/guilin-dem-pipeline/' + path
+                      with urllib.request.urlopen(url + '?verify=${{ github.sha }}', timeout=20) as response:
+                          actual[path] = hashlib.sha256(response.read()).hexdigest()
+                  if actual == expected:
+                      print('Published app and optimized packer match candidate', expected)
+                      break
+              except Exception as exc:
+                  print(type(exc).__name__)
+              time.sleep(5)
+          else:
+              raise SystemExit('Pages never returned exact candidate source')
+          PYCODE
+      - name: Verify actual public phone viewport and interactions
+        env:
+          TRAIN_GAME_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r19/
+          TRAIN_QA_OUT: train-r19-public-results
+        run: node "$GAME/r19/tests/r19-mobile-browser.cjs"
+      - name: Preserve public evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-r19-public-${{ github.sha }}
+          path: train-r19-public-results/
+          compression-level: 0
+          if-no-files-found: warn
+          retention-days: 7
