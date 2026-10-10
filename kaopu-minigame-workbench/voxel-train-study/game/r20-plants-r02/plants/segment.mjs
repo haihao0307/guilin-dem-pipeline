@@ -8,7 +8,7 @@ export const PLANT_SEGMENT=Object.freeze({id:'native-pandanus-young-street-first
 export const PLANT_PLACEMENTS=Object.freeze([
   Object.freeze({id:'kowloon-verge',chainage:-34,z:-4.55,yaw:0,seed:50721,params:Object.freeze({age:16,resource:.70,space:.55,leafDensity:.90})}),
   Object.freeze({id:'kowloon-exit',chainage:12,z:-4.55,yaw:0,seed:50731,params:Object.freeze({age:18,resource:.70,space:.55,leafDensity:.90})}),
-  Object.freeze({id:'bridge-verge',chainage:165,z:-6.2,yaw:0,seed:50741,params:Object.freeze({age:20,resource:.70,space:.55,leafDensity:.90})}),
+  Object.freeze({id:'bridge-verge',chainage:365,z:-6.2,yaw:0,seed:50741,params:Object.freeze({age:20,resource:.70,space:.55,leafDensity:.90})}),
   Object.freeze({id:'yaumati-approach',chainage:666,z:-4.4,yaw:0,seed:50751,params:Object.freeze({age:16,resource:.70,space:.55,leafDensity:.90})}),
 ]);
 export function createNativePlantSegment(){
