@@ -1,0 +1,92 @@
+name: Train R20 street character and bounded WebGL cost
+on:
+  push:
+    branches: ['qa/train-r20-street-character-20261010']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20/**'
+      - '.github/workflows/train-r20-character-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: train-r20-character-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  visual:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GAME: kaopu-minigame-workbench/voxel-train-study/game
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Install official pinned browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/train-r20" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/train-r20/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/train-r20/node_modules" >> "$GITHUB_ENV"
+          sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Source, identity, geometry and streaming checks
+        run: |
+          set -o pipefail
+          mkdir -p train-r20-results
+          export R20_QA_OUT=train-r20-results/cpu
+          node --test "$GAME/r20/tests/"*.test.mjs 2>&1 | tee train-r20-results/unit.txt
+      - name: Serve candidate and frozen accepted baseline
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/r20-http.log" 2>&1 &
+          for n in $(seq 1 30); do curl --fail --silent http://127.0.0.1:8765/$GAME/r20/ >/dev/null && exit 0; sleep 1; done
+          exit 1
+      - name: Real WebGL appearance and same-machine resource comparison
+        env:
+          TRAIN_QA_OUT: train-r20-results/visual
+        run: node "$GAME/r20/tests/r20-visual-comparison.cjs"
+      - name: Preserve all evidence including failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-r20-visual-${{ github.sha }}
+          path: train-r20-results/
+          compression-level: 0
+          retention-days: 7
+  native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GAME: kaopu-minigame-workbench/voxel-train-study/game
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Install official pinned browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/train-r20" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/train-r20/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/train-r20/node_modules" >> "$GITHUB_ENV"
+          sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Serve candidate
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/r20-http.log" 2>&1 &
+          for n in $(seq 1 30); do curl --fail --silent http://127.0.0.1:8765/$GAME/r20/ >/dev/null && exit 0; sleep 1; done
+          exit 1
+      - name: Native first leg with original controls and shared clock
+        env:
+          TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r20/
+          TRAIN_QA_OUT: train-r20-results/native
+        run: node "$GAME/r20/tests/r20-native-browser.cjs"
+      - name: Phone viewport and trusted touch
+        if: ${{ !cancelled() }}
+        env:
+          TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r20/
+          TRAIN_QA_OUT: train-r20-results/mobile
+        run: node "$GAME/r20/tests/r20-mobile-browser.cjs"
+      - name: Preserve native and phone evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-r20-native-${{ github.sha }}
+          path: train-r20-results/
+          compression-level: 0
+          retention-days: 7
