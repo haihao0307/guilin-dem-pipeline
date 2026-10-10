@@ -42,8 +42,8 @@ jobs:
             sleep 1
           done
           exit 1
-      - name: Measure existing ET13 semantic targets on the frozen native candidate
-        run: node kaopu-unified-human-workbench/joey-observation-r01/semantic-response.cjs
+      - name: Render refined manual native face and calibrate barefoot height
+        run: node kaopu-unified-human-workbench/joey-observation-r01/manual-r03.cjs
       - name: Keep bounded research evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -55,6 +55,7 @@ jobs:
             joey-relative-mouth-results/
             joey-archive-file-verification/
             joey-semantic-response-results/
+            joey-manual-r03-results/
           retention-days: 7
           compression-level: 0
           if-no-files-found: warn
