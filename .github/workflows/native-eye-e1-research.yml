@@ -33,8 +33,10 @@ jobs:
       - name: Compare on unchanged ET13 native canvas
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/e1-http.log 2>&1 &
-          QA_OUT=qa-eye-e1/stability node kaopu-unified-human-workbench/eye-optics-r02/verify-stability.cjs
-          QA_OUT=qa-eye-e1/e2 node kaopu-unified-human-workbench/eye-optics-r02/verify-browser.cjs
+          stability_status=0; browser_status=0
+          QA_OUT=qa-eye-e1/stability node kaopu-unified-human-workbench/eye-optics-r02/verify-stability.cjs || stability_status=$?
+          QA_OUT=qa-eye-e1/e2 node kaopu-unified-human-workbench/eye-optics-r02/verify-browser.cjs || browser_status=$?
+          test "$stability_status" = 0 && test "$browser_status" = 0
       - uses: actions/upload-artifact@v4
         if: always()
         with:
