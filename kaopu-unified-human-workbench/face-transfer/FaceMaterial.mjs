@@ -12,8 +12,8 @@ uniform sampler2D ftAtlas;
 uniform float ftEnabled,ftMicro,ftMeso,ftPigment,ftRegional,ftWrap,ftMode,ftMaturity;
 varying vec4 vFTRegion,vFTExtra;varying vec3 vFTCoord;
 vec4 ftTile(float tile,vec2 uv){vec2 p=fract(uv);return texture2D(ftAtlas,vec2((tile+.012+.976*p.x)/5.,.012+.976*p.y));}
-vec4 ftBands(vec2 uv){
- float lip=clamp(vCSRegion.y,0.,1.);vec4 w=max(vFTRegion,vec4(0.));float sum=w.x+w.y+w.z+w.w;
+vec4 ftBands(vec2 uv,float lip){
+ lip=clamp(lip,0.,1.);vec4 w=max(vFTRegion,vec4(0.));float sum=w.x+w.y+w.z+w.w;
  if(sum>1.)w/=sum;float cheek=max(0.,1.-w.x-w.y-w.w);
  vec4 b=ftTile(0.,uv*.87)*w.x+ftTile(1.,uv)*cheek+ftTile(2.,uv*1.20)*w.y+ftTile(3.,uv*1.15)*w.w;
  return mix(b,ftTile(4.,uv*vec2(1.25,.8)),lip);
@@ -41,7 +41,7 @@ export function attachFaceMaterial({geometry,skin,face,redraw=()=>{}}){
    float ftHead=clamp(vFTExtra.w,0.,1.)*csCover*ftEnabled;
    vec2 ftUV=vFTCoord.xy/.009;ftUV=mix(ftUV,vFTCoord.zy/.009,clamp(vFTExtra.y,0.,1.));
    ftUV+=vec2(csNoise(vFTCoord*66.),csNoise(vFTCoord*73.+vec3(17.)))*.40;
-   vec4 ftData=ftBands(ftUV);
+   vec4 ftData=ftBands(ftUV,csLip);
    float ftVariation=(ftData.b-.5)*ftPigment;
    vec3 ftColor=csPaint*(1.+ftVariation*.18);
    ftColor*=vec3(1.+vFTRegion.z*csRedness*.022,1.-vFTRegion.z*csRedness*.018,1.-vFTRegion.z*csRedness*.014);
