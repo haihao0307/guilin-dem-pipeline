@@ -1,31 +1,106 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>共同人物 · 五官与动作总台</title>
-<link rel="stylesheet" href="./full/ui/workbench.css?v=human-r2-20261008">
-<script type="importmap">{"imports":{"three":"./full/source/registration-vendor/three.module.js"}}</script><link rel="stylesheet" href="./full/ui/presets.css?v=characters-r02-20261008"><link rel="stylesheet" href="./full/ui/entry-controls.css?v=entry-r05-20261010"></head>
+<html lang="zh-CN">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1">
+ <title>共同人物 · 人物与动作总台</title>
+ <link rel="stylesheet" href="./full/ui/workbench.css?v=human-r2-20261008">
+ <script type="importmap">{"imports":{"three":"./full/source/registration-vendor/three.module.js"}}</script>
+ <link rel="stylesheet" href="./full/ui/presets.css?v=characters-r02-20261008">
+ <link rel="stylesheet" href="./full/ui/entry-controls.css?v=entry-r06-20261010">
+</head>
 <body class="presets-workbench workbench-entry-layout">
-<header><a id="overview-back" href="https://haihao0307.github.io/guilin-dem-pipeline/kaopu-human-overview/">← 返回总工作台</a><strong>共同人物 · 五官与动作总台</strong><span class="header-note">原生人物 · 五官对比 · 动作验证</span><a class="boxing-entry" style="color:#9ee3e2;font-weight:700;white-space:nowrap" href="#workbench-entries">同台动作入口 ↓</a><a class="legacy-link" href="./index-minimal.html">已验最小版</a><a class="legacy-link" id="shape-r03-entry" href="./shape-r03.html?v=shape-r03-pilot-20261009">R03六例对照</a><a class="legacy-link" id="shape-r040-entry" href="./shape-r040.html?v=shape-r040-clavicle-20261009">锁骨胖瘦阶段对照</a></header>
+<header>
+ <a id="overview-back" href="https://haihao0307.github.io/guilin-dem-pipeline/kaopu-human-overview/">← 总工作台</a>
+ <strong>共同人物</strong>
+ <span class="header-note">36 种形态 · 同一人物模型</span>
+</header>
 
-<nav id="workbench-entries" class="workbench-entries" aria-label="人物总台直接入口">
- <div class="entry-group"><strong>同一总台</strong><button data-entry-action="shape">人物 / 五官</button><button data-entry-action="perimeter">进入擂台</button><button data-entry-action="outside">场外走跑跳</button><button data-entry-action="walk">走路</button><button data-entry-action="run">跑步</button><button data-entry-action="jump">小跳</button><button data-entry-action="hand">手部验证</button><button data-entry-action="reaction">来拳侧闪验证</button></div>
- <div class="entry-group face-choices" id="face-choices" aria-label="原生GNM五官对比"><strong>眼鼻嘴 / 脸型</strong><button data-face-identity="neutral" aria-pressed="false">GNM中性</button><button data-face-identity="long_narrow" aria-pressed="false">长脸窄颌 · 长鼻薄唇</button><button data-face-identity="short_broad" aria-pressed="false">短脸宽颧 · 短鼻丰唇</button><button data-face-identity="square_jaw" aria-pressed="false">方颌低眉 · 阔口直鼻</button><button id="undo-face-identity" disabled>撤回五官切换</button></div>
- <button id="cancel-entry" hidden>取消 / 返回人物</button><output id="entry-status" aria-live="polite">直接选择上面的功能；首次会先载入原人物模型。</output>
- <p class="entry-note">擂台目前是原R02预设编排；“来拳侧闪”另用过去骨点观测的规则策略，不是神经推理。场外走跑跳是原捕捉重定向，仍有适配边界。<a class="legacy-entry" href="./boxing-r02.html?v=boxing-r02-stage1-20261009">保留的R02独立擂台</a></p>
+<nav id="workbench-entries" class="workbench-entries" aria-label="人物与动作入口">
+ <div class="entry-group primary-entries">
+  <button data-entry-action="shape">人物对照</button>
+  <button data-entry-action="perimeter">擂台对练</button>
+  <button data-entry-action="outside">场外活动</button>
+ </div>
+ <details class="entry-backstage">
+  <summary>后台验证</summary>
+  <div class="backstage-content">
+   <div class="entry-group verification-entries" aria-label="单项动作验证">
+    <strong>单项验证</strong>
+    <button data-entry-action="walk">走路</button>
+    <button data-entry-action="run">跑步</button>
+    <button data-entry-action="jump">小跳</button>
+    <button data-entry-action="hand">手部验证</button>
+    <button data-entry-action="reaction">来拳侧闪验证</button>
+   </div>
+   <p class="entry-note">擂台沿用 R02 的 3 套现有编排。来拳侧闪采用过去骨点观测的规则策略。场外走跑跳为捕捉重定向，仍有适配边界。</p>
+   <div class="backstage-links" aria-label="保留的旧版与研究页">
+    <a class="legacy-link" href="./index-minimal.html">已验最小版</a>
+    <a class="legacy-link" id="shape-r03-entry" href="./shape-r03.html?v=shape-r03-pilot-20261009">R03 六例对照</a>
+    <a class="legacy-link" id="shape-r040-entry" href="./shape-r040.html?v=shape-r040-clavicle-20261009">锁骨胖瘦对照</a>
+    <a class="legacy-entry" href="./boxing-r02.html?v=boxing-r02-stage1-20261009">R02 独立擂台</a>
+    <a class="shape-r031-research-entry" id="shape-r031-entry" href="./shape-r031.html?v=shape-r031-identity-20261009">R03.1 五官骨性研究</a>
+    <a class="motion-research-entry" href="./motion-architecture/">动作研究与验证记录</a>
+    <a class="boxing-entry" href="#workbench-entries">回到场景入口 ↑</a>
+   </div>
+  </div>
+ </details>
+ <div class="entry-group face-choices" id="face-choices" aria-label="原生GNM五官对比">
+  <strong>五官对照</strong>
+  <button data-face-identity="neutral" aria-pressed="false" title="GNM中性">中性</button>
+  <button data-face-identity="long_narrow" aria-pressed="false" title="长脸窄颌 · 长鼻薄唇">长脸窄颌</button>
+  <button data-face-identity="short_broad" aria-pressed="false" title="短脸宽颧 · 短鼻丰唇">短脸宽颧</button>
+  <button data-face-identity="square_jaw" aria-pressed="false" title="方颌低眉 · 阔口直鼻">方颌低眉</button>
+  <button id="undo-face-identity" title="撤回五官切换" aria-label="撤回五官切换" disabled>撤回</button>
+ </div>
+ <button id="cancel-entry" hidden>取消 / 返回人物</button>
+ <output id="entry-status" aria-live="polite">选人物看形态差别，或进入擂台、场外活动。</output>
 </nav>
 <main>
  <section class="model-stage" aria-label="同一个共同模型">
-  <div class="viewport" id="stage"><canvas id="canvas" aria-label="固定拓扑共同人物三维画面"></canvas>
-   <div class="load-overlay" id="load-overlay"><div class="load-card"><h1>同一个人，同一张网格</h1><p>从右侧选人物，或直接点上方五官、走跑跳与场外活动。所有入口复用原头身网格和骨架。</p><button id="load-model">载入默认人物</button><button id="cancel-load" hidden>取消载入</button><progress id="load-progress" max="1" value="0" hidden></progress><p id="load-status" role="status">教师资产按需载入</p><p class="shape-r031-research-entry"><a id="shape-r031-entry" style="color:#b2d5b0" href="./shape-r031.html?v=shape-r031-identity-20261009">R03.1 五官身份 · 骨性研究仍在细化 →</a></p><p class="motion-research-entry"><a style="color:#8ce3dd" href="./motion-architecture/">动作架构研究 · 五个老师与验证记录 →</a></p></div></div>
-   <div class="stage-hint">COMMON HUMAN / 固定拓扑 · 真实参数</div><div class="model-caption" id="model-caption">25417 个固定顶点 · 50624 个三角面</div>
+  <div class="viewport" id="stage">
+   <canvas id="canvas" aria-label="固定拓扑共同人物三维画面"></canvas>
+   <div class="load-overlay" id="load-overlay">
+    <div class="load-card">
+     <h1>先选一个人</h1>
+     <p>从人物库选形态，或直接进入擂台和场外。</p>
+     <button id="load-model">载入默认人物</button>
+     <button id="cancel-load" hidden>取消载入</button>
+     <progress id="load-progress" max="1" value="0" hidden></progress>
+     <p id="load-status" role="status">首次选择时载入原模型</p>
+    </div>
+   </div>
+   <div class="stage-hint">共同人物 · 同一张网格</div>
+   <div class="model-caption" id="model-caption">25,417 顶点 · 50,624 三角面</div>
   </div>
-  <div class="view-tools" aria-label="查看模型"><button data-view="three">3/4</button><button data-view="front">正面</button><button data-view="rear">背面</button><button data-view="side">侧面</button><button data-view="face">面部</button><button id="skin-settings" aria-expanded="false" aria-controls="skin-panel" disabled>皮肤基础版</button><button id="wireframe" aria-pressed="false">线框</button><button id="neck-band" aria-pressed="false">颈部检查</button><button id="view-reset">取景复位</button><span class="muted">拖动旋转 · 滚轮缩放</span></div>
-  <div class="model-status" id="model-status" role="status">原生参数目录不等于映射验收。当前完整性按部位列出。</div>
+  <div class="view-tools" aria-label="查看模型">
+   <button data-view="three">3/4</button>
+   <button data-view="front">正面</button>
+   <button data-view="rear">背面</button>
+   <button data-view="side">侧面</button>
+   <button data-view="face">面部</button>
+   <button id="view-reset">复位</button>
+   <details class="stage-validation">
+    <summary>模型检查</summary>
+    <div class="stage-validation-content">
+     <button id="skin-settings" aria-expanded="false" aria-controls="skin-panel" disabled>皮肤基础版</button>
+     <button id="wireframe" aria-pressed="false">线框</button>
+     <button id="neck-band" aria-pressed="false">颈部检查</button>
+     <div class="model-status" id="model-status" role="status">参数目录不等于映射验收；完整性按部位列出。</div>
+    </div>
+   </details>
+   <span class="muted">拖动旋转 · 滚轮缩放</span>
+  </div>
  </section>
- <aside id="control-shell" class="control-shell" aria-label="人物预设与参数">
- <div id="preset-browser" class="preset-host"></div>
- <div id="advanced-bar" class="advanced-bar" hidden><button id="close-all-parameters">← 返回人物预设</button><span>完整原生参数 · 可搜索 / 保存 / 恢复</span></div>
- <div id="parameters" class="parameter-host" aria-label="全部原生参数" hidden></div>
+ <aside id="control-shell" class="control-shell" aria-label="36个人物预设与后台参数">
+  <div id="preset-browser" class="preset-host"></div>
+  <div id="advanced-bar" class="advanced-bar" hidden>
+   <button id="close-all-parameters">← 返回人物预设</button>
+   <span>后台参数 · 搜索 / 保存 / 恢复</span>
+  </div>
+  <div id="parameters" class="parameter-host" aria-label="全部原生参数" hidden></div>
  </aside>
 </main>
-<script type="module" src="./full/ui/browser-app.mjs?v=entry-r05-20261010"></script>
-</body></html>
-
+<script type="module" src="./full/ui/browser-app.mjs?v=entry-r06-20261010"></script>
+</body>
+</html>

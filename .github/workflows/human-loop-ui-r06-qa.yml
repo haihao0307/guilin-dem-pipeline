@@ -1,0 +1,83 @@
+name: Human R06 streamlined platform and continuous arena QA
+on:
+  push:
+    branches: ['qa/human-loop-ui-r06-20261010']
+    paths:
+      - 'kaopu-unified-human-workbench/**'
+      - '.github/workflows/human-loop-ui-r06-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: human-loop-ui-r06-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+            kaopu-mhr-workbench
+      - name: Install pinned official browser test package without package scripts
+        run: npm install --prefix "$RUNNER_TEMP/human-entry-r04" --no-save --ignore-scripts playwright@1.57.0
+      - name: Install real Chromium
+        run: |
+          "$RUNNER_TEMP/human-entry-r04/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/human-entry-r04/node_modules" >> "$GITHUB_ENV"
+      - name: Check source and pure regressions
+        run: |
+          node --check kaopu-unified-human-workbench/tests/entry-r06-browser.cjs
+          node --test kaopu-unified-human-workbench/tests/entry-actions.mjs kaopu-unified-human-workbench/tests/entry-load-readiness.mjs kaopu-unified-human-workbench/tests/face-identity-presets.mjs kaopu-unified-human-workbench/tests/motion-lifecycle.mjs kaopu-unified-human-workbench/tests/continuous-arena-clock.mjs
+      - name: Serve exact candidate locally, with no deployment
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/human-r04-server.log" 2>&1 &
+          for n in $(seq 1 30); do
+            curl --fail --silent http://127.0.0.1:8765/kaopu-unified-human-workbench/ > /dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Test first ring click, cancel retry and legacy link on candidate
+        env:
+          HUMAN_COLD_URL: http://127.0.0.1:8765/kaopu-unified-human-workbench/
+          HUMAN_COLD_OUT: human-cold-ring-r06-candidate-results
+          HUMAN_COLD_CARDS: 36
+          HUMAN_COLD_FOCUS: 0
+        run: node kaopu-unified-human-workbench/tests/cold-ring-r06-browser.cjs
+      - name: Exercise original index, native face and existing motion entries
+        env:
+          HUMAN_R06_URL: http://127.0.0.1:8765/kaopu-unified-human-workbench/
+          HUMAN_R06_OUT: human-loop-ui-r06-results
+        run: node kaopu-unified-human-workbench/tests/entry-r06-browser.cjs
+      - name: Test the existing public main when R06 has been deployed
+        env:
+          HUMAN_R06_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/
+          HUMAN_R06_OUT: human-loop-ui-r06-public-results
+          HUMAN_COLD_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/
+          HUMAN_COLD_OUT: human-cold-ring-r06-public-results
+          HUMAN_COLD_CARDS: 36
+          HUMAN_COLD_FOCUS: 0
+        run: |
+          if curl --fail --silent "$HUMAN_R06_URL" | grep -q 'entry-r06-20261010'; then
+            node kaopu-unified-human-workbench/tests/cold-ring-r06-browser.cjs
+            node kaopu-unified-human-workbench/tests/entry-r06-browser.cjs
+          else
+            mkdir -p "$HUMAN_R06_OUT"
+            printf '%s\n' '{"passed":false,"status":"pending-deployment","scope":"public R06 interaction has not been tested"}' > "$HUMAN_R06_OUT/report.json"
+          fi
+      - name: Retain bounded QA evidence, not a website deployment
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: human-loop-ui-r06-${{ github.sha }}
+          path: |
+            human-loop-ui-r06-results/
+            human-loop-ui-r06-public-results/
+            human-cold-ring-r06-candidate-results/
+            human-cold-ring-r06-public-results/
+          compression-level: 0
+          if-no-files-found: warn
+          retention-days: 7
