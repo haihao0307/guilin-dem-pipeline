@@ -1,0 +1,17 @@
+/** R02 artistic region fields in fixed GNM native coordinates. Not anatomical
+ * segmentation or universal human density measurements. Never use region 255
+ * as a scalp label. Pinna guard is a conservative neutral-geometry approximation. */
+export const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+export const smooth=(a,b,v)=>{const t=clamp((v-a)/(b-a));return t*t*(3-2*t);};
+export function pinnaMargin([x,y,z]){const lateral=smooth(.058,.068,Math.abs(x));const d=Math.hypot((y-.277)/.041,(z-.021)/.034);return .05*(1-lateral)+(d-1.09)*.034*lateral;}
+export function scalpMargin(p){const [x,y,z]=p,a=Math.abs(x),front=smooth(.035,.095,z),rear=1-smooth(-.055,.005,z),side=smooth(.052,.075,a),temple=Math.exp(-(((z-.047)/.024)**2))*side;const base=.268+.079*front-.015*rear-.006*side*rear-.024*temple;return Math.min(y-base,pinnaMargin(p));}
+export function scalpZone([x,y,z]){if(y>.343)return 'crown';if(z>.055)return 'frontal';if(z<-.035)return y<.295?'nape':'occipital';return z<.008?'retroauricular':'temple';}
+export function scalpDensity(p){const z=scalpZone(p);return ({crown:1.18,frontal:1.3,temple:.92,retroauricular:.8,occipital:1,nape:.65})[z];}
+export function beardField(p){const[x,y,z]=p,a=Math.abs(x),edge=(lo,hi,v,w=.004)=>smooth(lo,lo+w,v)*(1-smooth(hi-w,hi,v));if(pinnaMargin(p)<.001||z<.025)return {weight:0,zone:0};const zones=[
+ {zone:4,weight:edge(.059,.085,a)*edge(.239,.307,y)*edge(.029,.076,z)},
+ {zone:3,weight:edge(.027,.078,a)*edge(.222,.276-.18*a,y)*smooth(.034,.065,z)*.72},
+ {zone:2,weight:edge(.026,.085,a)*edge(.177+.25*a,.239,y)*smooth(.022,.045,z)*.92},
+ {zone:0,weight:edge(-.037,.037,x)*edge(.177,.223,y)*smooth(.077,.096,z)},
+ {zone:1,weight:edge(-.029,.029,x)*edge(.232,.252-.27*a,y)*smooth(.10,.118,z)}
+ ];return zones.reduce((a,b)=>b.weight>a.weight?b:a,{weight:0,zone:0});}
+export const ZONE_NAMES=['chin','moustache','jaw','cheek','sideburn'];
