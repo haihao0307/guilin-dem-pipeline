@@ -22,6 +22,6 @@ PR197 overlap: its general hydration/nose roughness/oil and this module's local 
 
 ## Verification and honest boundary
 
-Run `tests/regions.mjs`, then `tests/regions-browser.cjs` against the unchanged original ET13 preview. The browser dynamically attaches this module to the existing model and captures strict same-camera/same-light A/B at face, nose, mouth and oblique views under neutral and grazing lights. It checks actual panel controls, excluded eye/teeth regions, retained face archive and geometry, exact repeated rollback, complete archive round-trip and old-archive behavior. Existing R01's 25-check suite also runs unchanged.
+Run `tests/regions.mjs`, then `tests/regions-browser.cjs` against the unchanged original ET13 preview. The browser dynamically attaches this module to the existing model and captures strict same-camera/same-light A/B at face, nose, mouth, native eye closeup and oblique views under neutral and grazing lights. It checks actual panel controls, excluded eye/teeth regions, retained face archive and geometry, exact repeated rollback, complete archive round-trip and old-archive behavior. Existing R01's 25-check suite also runs unchanged.
 
 CI results and inspected screenshots must accompany any acceptance. Functional checks and pixel changes do not certify more realistic skin. Texture repetition, tangential stretch, real wet/dry lip anatomy, thickness-aware transmission, dynamic tissue tension, full-body consistency and physical-device performance remain open.
