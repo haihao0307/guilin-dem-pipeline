@@ -4,6 +4,7 @@ on:
     branches: ['qa/human-native-actor-contract-20261010']
     paths:
       - 'kaopu-unified-human-workbench/tests/native-actor-contract-browser.cjs'
+      - 'kaopu-unified-human-workbench/tests/native-actor-contract/**'
       - '.github/workflows/human-native-actor-contract-qa.yml'
 permissions:
   contents: read
@@ -22,6 +23,8 @@ jobs:
         run: |
           "$RUNNER_TEMP/native-actor/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/native-actor/node_modules" >> "$GITHUB_ENV"
+      - name: Check independent R02 contract regression
+        run: node --test kaopu-unified-human-workbench/tests/native-actor-contract/hand-anchor-r02.test.mjs
       - name: Read-only actual native actor and room probe
         run: node kaopu-unified-human-workbench/tests/native-actor-contract-browser.cjs
       - name: Preserve actual probe results
