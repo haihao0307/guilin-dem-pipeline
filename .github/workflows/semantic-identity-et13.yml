@@ -30,6 +30,7 @@ jobs:
           node kaopu-unified-human-workbench/identity-lab/normalize-source.cjs
           node kaopu-unified-human-workbench/identity-lab/refine-identity.cjs
           node kaopu-unified-human-workbench/identity-lab/prepare-qa.cjs
+          node kaopu-unified-human-workbench/identity-lab/finish-ui.cjs
           for file in kaopu-unified-human-workbench/identity-lab/*.mjs; do node --check "$file"; done
           node kaopu-unified-human-workbench/identity-lab/build.cjs
       - name: Test generated geometry, skin pixels and original profile compatibility
