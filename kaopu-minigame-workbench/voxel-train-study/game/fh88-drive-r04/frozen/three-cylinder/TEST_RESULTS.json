@@ -1,0 +1,76 @@
+{
+  "scope": "original FH88 metric datum and three parallel cylinder bench, not A3/A4 reconstruction",
+  "allPassed": true,
+  "testGroups": 6,
+  "groups": [
+    {
+      "name": "metre gauge is inner rail face distance, not wheel centre spacing",
+      "pass": true,
+      "contract": {
+        "scope": "NOMINAL_CONTACT_AND_AXIAL_DATUM_CONTRACT",
+        "gaugeM": 1.435,
+        "railInnerFaceYM": [
+          -0.7175,
+          0.7175
+        ],
+        "railHeadCentreYM": [
+          -0.7525000000000001,
+          0.7525000000000001
+        ],
+        "nominalRollingCircleYM": [
+          -0.7525000000000001,
+          0.7525000000000001
+        ],
+        "wheelAxleZM": 0.95,
+        "railTopZM": 0,
+        "wheelRadiusM": 0.95,
+        "crankReferencePointM": [
+          0,
+          0,
+          0.95
+        ],
+        "outsideCylinderAxisAbsYM": 0.9075000000000001,
+        "actualTreadFlangeCompatibilityEstablished": false
+      }
+    },
+    {
+      "name": "same track and wheel nominal datums plus explicit slip rejection",
+      "pass": true,
+      "mismatchSlipVelocityMS": 0.05000000000000071
+    },
+    {
+      "name": "three linked phases close on one shaft, no independent animation clocks",
+      "pass": true,
+      "states": 1441,
+      "maxRodClosureM": 8.881784197001252e-16,
+      "maxAggregatePowerResidualW": 2.3283064365386963e-10
+    },
+    {
+      "name": "equal phase cancellation does not imply spatial balance",
+      "pass": true,
+      "scope": "80 kg each prescribed sensitivity; only slider inertia; not a counterweight design",
+      "speedKMH": 120,
+      "omegaRadS": -35.08771929824562,
+      "massPerCylinderKg": 80,
+      "maxFirstHarmonicUnitSum": 1.3322676295501878e-15,
+      "maxSecondHarmonicUnitSum": 2.4424906541753444e-15,
+      "sampledPeakNetLongitudinalShakingForceN": 0.1269321725521877,
+      "sampledPeakYawShakingCoupleNm": 56314.436265064214
+    },
+    {
+      "name": "unequal masses break harmonic cancellation",
+      "pass": true,
+      "massScenarioKg": [
+        88,
+        80,
+        80
+      ],
+      "sampledPeakNetLongitudinalShakingForceN": 3890.493968173636
+    },
+    {
+      "name": "quarter-cycle and old game-unit inputs cannot silently become this design",
+      "pass": true,
+      "nullMassesRemainUnresolvedInDesign": true
+    }
+  ]
+}

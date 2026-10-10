@@ -1,0 +1,19 @@
+export default {
+  "schema": "FH88_SI_DRIVING_PARAMETERS_R01",
+  "status": "Original tunable game-physics design assumptions. JSON contains numbers and metadata, not imported geometry. This is not a verified KAOPU editor save format.",
+  "clock": { "fixedDtS": 0.008333333333333333, "maxStepsPerAdvance": 1200 },
+  "train": { "massKg": 205000, "equivalentMassFactor": 1.08, "adhesiveMassKg": 60000, "brakedMassKg": 205000, "wheelDiameterM": 1.9, "initialMechanicalThetaRad": 0.25 },
+  "engine": { "cylinderCount": 3, "cylinderBoreM": 0.457, "strokeM": 0.711, "cutoffMin": 0.1, "cutoffMax": 0.8, "polytropicExponent": 1.2, "diagramFactor": 0.8, "mechanicalEfficiency": 0.9, "maxIndicatedHeatFraction": 0.22, "steamTemperatureK": 673.15, "steamGasConstantJkgK": 461.526, "steamHeatJkg": 2800000, "maxSteamFlowKgS": 9, "referencePressurePa": 1800000, "exhaustPressurePa": 120000, "maxDirectionChangeSpeedMps": 0.2 },
+  "supply": { "pressureComplianceJPa": 1500, "maximumPressurePa": 2500000, "initialPressurePa": 1800000, "initialFireKgS": 0.8, "fuelLowerHeatingValueJkg": 25000000, "absorbedHeatFraction": 0.75, "fireLagS": 45, "ambientLossW": 120000, "coalInitialKg": 3000, "waterInitialKg": 18500, "maxFiringKgS": 1.5 },
+  "rail": { "gravityMps2": 9.81, "adhesionCoefficient": 0.15, "rollingConstantN": 2500, "rollingLinearNsM": 60, "aeroQuadraticNs2M2": 6, "maxBrakeForceN": 120000, "brakeBuildS": 1.5, "brakeReleaseS": 2.0, "maxAbsGrade": 0.1 },
+  "initialControls": { "throttle": 0, "reverser": 1, "cutoff": 0.55, "brake": 1, "firingKgS": 0.8, "grade": 0 },
+  "assumptions": {
+    "inherited_candidates": "Three equal cylinders; 0.457 m bore; 0.711 m stroke; 1.90 m drivers. Mass 205 t, effective inertia factor 1.08, 60 t adhesive load and mu=0.15 are design study assumptions, not measured values.",
+    "pressure": "Usable thermal reserve E=C*(p-p_exhaust), hot-start only; not IAPWS, vessel design, boiler-water-level or cold-start simulation.",
+    "valves": "Cycle-averaged double-acting p-V work with polytropic expansion and exhaust floor. Throttle is an ideal effective admission-pressure control plus finite valve flow capacity, not exact regulator geometry or valve timing.",
+    "adhesion": "Ideal instantaneous pressure/steam reduction to mu*Madh*g; no wheelspin, slip loss or real historical anti-slip hardware.",
+    "water": "Finite usable feedwater inventory; no boiler/tender split or feed pump dynamics.",
+    "resistance": "Uncalibrated A+B|v|+Cv^2 resistance and grade mg*sin(atan(grade)); no curvature, coupler slack, derailment or route profile.",
+    "brake": "Aggregate train brake with first-order build/release and adhesion bound; not air/vacuum pipe simulation or stopping-distance certification."
+  }
+};

@@ -1,0 +1,154 @@
+{
+  "result": "PASS_REAL_BROWSER_DRIVING_UI_GEOMETRY_AND_NATIVE_RESTART",
+  "startedUTC": "2026-10-10T22:38:01Z",
+  "finishedUTC": "2026-10-10T22:39:48Z",
+  "webgl": {
+    "actualRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "actualVendor": "Google Inc. (Google)",
+    "canvas": [
+      1680,
+      837
+    ],
+    "contextLost": false,
+    "debugRendererExtension": true,
+    "documentURL": "http://127.0.0.1:37843/drive.html",
+    "rendererInfo": {
+      "calls": 396,
+      "frame": 1,
+      "lines": 0,
+      "points": 0,
+      "triangles": 75702
+    },
+    "shadingLanguage": "WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+    "viewport": [
+      1680,
+      837,
+      1
+    ],
+    "webglVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+  },
+  "startMotion": {
+    "travelM": 28.066618211244418,
+    "rodArticulation": [
+      {
+        "id": "right",
+        "localEndpointDeltaM": 0.5438161020576047
+      },
+      {
+        "id": "inside",
+        "localEndpointDeltaM": 0.567005806801061
+      },
+      {
+        "id": "left",
+        "localEndpointDeltaM": 0.469761558402638
+      }
+    ]
+  },
+  "braking": {
+    "trace": "braking-trace.json",
+    "samples": 112,
+    "stoppedPositionM": 216.884946221001,
+    "heldAtRestS": 2
+  },
+  "reverseMotion": {
+    "travelM": -8.657167346170922,
+    "rodArticulation": [
+      {
+        "id": "right",
+        "localEndpointDeltaM": 0.6229839667825157
+      },
+      {
+        "id": "inside",
+        "localEndpointDeltaM": 0.7017014765555132
+      },
+      {
+        "id": "left",
+        "localEndpointDeltaM": 0.5923986423577052
+      }
+    ]
+  },
+  "nativeFile": {
+    "file": "FH88_Driving_Settings_R04.KaoPu",
+    "bytes": 135168,
+    "sha256": "cf0f854c2435755c02f0d4da2619493c3ae7fa58f8c6fd1f3d72a7d4e92af31e",
+    "sqliteIntegrity": "ok",
+    "tables": [
+      "assets",
+      "fields",
+      "header",
+      "links",
+      "records"
+    ]
+  },
+  "uiSaveDownload": {
+    "bytes": 135168,
+    "sha256": "cf0f854c2435755c02f0d4da2619493c3ae7fa58f8c6fd1f3d72a7d4e92af31e",
+    "name": "FH88_Driving_Settings_R04.KaoPu"
+  },
+  "nativeHotRestart": {
+    "resetTimeS": 0,
+    "paused": true,
+    "archivedTimeS": 42.375,
+    "archivedSpeedMps": -2.319148838995771,
+    "savedOriginM": 208.22777887483008,
+    "thermalBreakpointResumeClaimed": false
+  },
+  "nondefaultPhaseNativeRoundtrip": {
+    "initialMechanicalThetaRad": 1.123,
+    "positionM": 731.5,
+    "reexported": true
+  },
+  "revision": "R04 final ground-follow candidate",
+  "runId": 38092095585,
+  "sourceArchiveSHA256": "e20f88ffef967e938cb4757fb82176434b4e98cefea0964c45992ce7dc0b646d",
+  "reviewedPatch": {
+    "drive-viewer.mjs": {
+      "beforeSHA256": "7a904a22c9a34b1e9ef06a31e27cb00168abfb4c7836a6a1b111d047e0a8e7dc",
+      "afterSHA256": "82d58144310d1d7a1efe0e5d4c2b6de1a0fca725e0415307bda45ab49523b40a",
+      "replacements": [
+        [
+          "rails.position.x=.7*Math.floor((tx-30)/.7);",
+          "ground.position.x=tx;rails.position.x=.7*Math.floor((tx-30)/.7);"
+        ],
+        [
+          "snapshot,renderer,exportSettings",
+          "snapshot,renderer,sceneFrame:()=>({trainX:model.train.position.x,groundCenterX:ground.position.x,railTileX:rails.position.x}),exportSettings"
+        ]
+      ]
+    },
+    "ci_drive.py": {
+      "beforeSHA256": "bed8794e3acc955fe256b05f4b220e85e3ae3bdae1e964f2f81ab337f4c214d9",
+      "afterSHA256": "743b1880694e621bf8706d1ef61b109e8583b46b547cf4ca18d711f802133b05",
+      "replacements": [
+        [
+          "        s=self.snapshot()\n        metrics=gear_assertions(s,self.p,self.d)",
+          "        self.b.settle()\n        s=self.snapshot()\n        scene_frame=self.js(\"return a.sceneFrame();\")\n        near(scene_frame[\"groundCenterX\"],s[\"physics\"][\"positionM\"],name+\" ground proxy follows world position\")\n        near(scene_frame[\"trainX\"],s[\"physics\"][\"positionM\"],name+\" body follows world position\")\n        metrics=gear_assertions(s,self.p,self.d)"
+        ],
+        [
+          "record={\"name\":name,\"gear\":metrics,",
+          "record={\"name\":name,\"sceneFrame\":scene_frame,\"gear\":metrics,"
+        ]
+      ]
+    }
+  },
+  "artifactSHA256": "f094125d81ad3764a27b99d4b98b8cf4d3fe5d129062560164896ae61491419e",
+  "maxActualRodEndpointErrorM": 1.136873928317731e-13,
+  "groundPositionCheckedAtAllSnapshots": true,
+  "readableChineseFont": "Ubuntu official fonts-noto-cjk; actual screenshot visually checked",
+  "javascriptErrors": {
+    "errors": [],
+    "rejections": []
+  },
+  "failedRequests": [],
+  "externalRequests": [],
+  "scope": "Mechanical driving research; not finished No88 appearance, full steam thermodynamics, valve timing, wheel slip or certified wheel/rail safety",
+  "settingsSemantics": "SQLite experimental FH88 restart recipe; paused hot start, old full snapshot retained for inspection only",
+  "publishedURLBrowserSmoke": "Pending deployment, separate required check",
+  "postPrivateTestChange": {
+    "file": "drive-viewer.mjs",
+    "sha256": "8013abdb725afb3d9adfbaa09e489768075fcef596747a57eef6d98fa32b7498",
+    "scope": "Only pause(value) now updates visible status text to running/paused; mechanics/physics/codec unchanged",
+    "requiredVerification": "Public fixed-commit browser smoke status checks"
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "checkedAt": "2026-10-10T21:19:18.567Z",
+  "scope": "Actual local R04 adapter instantiated with THREE CPU geometry and real physics/bridge; not browser input/render validation or KAOPU editor persistence",
+  "hashes": {
+    "/workspace/shared/fh88-driving-preview-r04/physics/driving-physics.mjs": "294e175db9f0b2b0e68d760ebe492d9bb6059d274b8017698f9a59a867133f00",
+    "/workspace/shared/fh88-driving-preview-r04/physics/adapter-bridge.mjs": "01e892565620f356d29311814ed4891776110c5647b15ce2c1d2a6edca3f76b1",
+    "/workspace/shared/fh88-driving-preview-r04/adapter.mjs": "fc1b2bffe3d50372600304ee218734ebf691c8963693f9b86594012b9c3bf5ae"
+  },
+  "passed": 7,
+  "failed": 0,
+  "results": [
+    {
+      "name": "Real R04 adapter accepts and synchronizes default moving state",
+      "status": "PASS",
+      "details": {
+        "physicsPositionM": 0.7385448837731122,
+        "adapterPositionM": 0.7385448837731122,
+        "timeS": 2
+      }
+    },
+    {
+      "name": "Nonzero positive and negative world origin resets keep relative wheel angle and absolute shape position synchronized",
+      "status": "PASS",
+      "details": [
+        {
+          "physicsPositionM": 100.18427973269236,
+          "adapterPositionM": 100.18427973269236,
+          "timeS": 1
+        },
+        {
+          "physicsPositionM": -120.18427973269236,
+          "adapterPositionM": -120.18427973269236,
+          "timeS": 1
+        },
+        {
+          "physicsPositionM": 0.18427973269223252,
+          "adapterPositionM": 0.18427973269223252,
+          "timeS": 1
+        }
+      ]
+    },
+    {
+      "name": "Invalid real bridge reset preserves both physics and adapter state",
+      "status": "PASS",
+      "details": {
+        "atomic": true
+      }
+    },
+    {
+      "name": "Physical and visible wheel diameter mismatch rejects at initialization without adapter changes",
+      "status": "PASS",
+      "details": {
+        "mismatchedDiameterM": 2
+      }
+    },
+    {
+      "name": "Nondefault phase is either correctly supported or rejected before visual state mutation",
+      "status": "PASS",
+      "details": {
+        "supportedThetaRad": 1.25,
+        "carryingWheelsPreserveRelativeTravel": true
+      }
+    },
+    {
+      "name": "Caller parameter mutation cannot silently reconfigure bridge on reset",
+      "status": "PASS",
+      "details": {
+        "massKg": 205000,
+        "wheelDiameterM": 1.9
+      }
+    },
+    {
+      "name": "Pause and deterministic reset keep real external adapter on same physics state",
+      "status": "PASS",
+      "details": {
+        "physicsPositionM": 0,
+        "adapterPositionM": 0,
+        "timeS": 0
+      }
+    }
+  ]
+}
