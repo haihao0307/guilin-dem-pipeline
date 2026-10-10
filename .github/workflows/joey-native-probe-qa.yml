@@ -1,7 +1,7 @@
 name: Joey isolated native observation probe
 on:
   push:
-    branches: ['qa/joey-native-observation-r01-20261010']
+    branches: ['qa/joey-native-identity-r36-20261010']
     paths:
       - 'kaopu-unified-human-workbench/joey-observation-r01/**'
       - '.github/workflows/joey-native-probe-qa.yml'
@@ -43,7 +43,7 @@ jobs:
           done
           exit 1
       - name: Render sculpted native face with strictly surface-bound existing eyebrows
-        run: node kaopu-unified-human-workbench/joey-observation-r01/eyefold-r35/render-compat-r35.cjs
+        run: node kaopu-unified-human-workbench/joey-observation-r01/lid-curve-r36/render-lid-r36.cjs
       - name: Keep bounded research evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -77,7 +77,7 @@ jobs:
             joey-linear-domain-r20/
             joey-brow-coverage-r21/
             joey-combined-appearance-r22/
-            joey-eyefold-compat-r35/
+            joey-lid-curve-r36/
           retention-days: 7
           compression-level: 0
           if-no-files-found: warn
