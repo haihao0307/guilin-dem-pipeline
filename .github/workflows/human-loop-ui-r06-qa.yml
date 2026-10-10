@@ -28,6 +28,10 @@ jobs:
         run: |
           "$RUNNER_TEMP/human-entry-r04/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/human-entry-r04/node_modules" >> "$GITHUB_ENV"
+      - name: Install official Ubuntu video encoder
+        run: |
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -version | head -n 1
       - name: Check source and pure regressions
         run: |
           node --check kaopu-unified-human-workbench/tests/entry-r06-browser.cjs
@@ -44,6 +48,12 @@ jobs:
         env:
           HUMAN_WALK_URL: http://127.0.0.1:8765/kaopu-unified-human-workbench/
           HUMAN_WALK_OUT: human-walk-round-trip-results
+        run: node kaopu-unified-human-workbench/tests/walk-round-trip-browser.cjs
+      - name: Verify default outside child actual three-cycle walk and support contact
+        env:
+          HUMAN_WALK_URL: http://127.0.0.1:8765/kaopu-unified-human-workbench/
+          HUMAN_WALK_CONTEXT: perimeter
+          HUMAN_WALK_OUT: human-outside-child-walk-results
         run: node kaopu-unified-human-workbench/tests/walk-round-trip-browser.cjs
       - name: Test first ring click, cancel retry and legacy link on candidate
         env:
@@ -80,6 +90,7 @@ jobs:
           name: human-loop-ui-r06-${{ github.sha }}
           path: |
             human-walk-round-trip-results/
+            human-outside-child-walk-results/
             human-loop-ui-r06-results/
             human-loop-ui-r06-public-results/
             human-cold-ring-r06-candidate-results/
