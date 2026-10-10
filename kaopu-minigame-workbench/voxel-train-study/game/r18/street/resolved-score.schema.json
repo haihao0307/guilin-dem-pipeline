@@ -1,0 +1,515 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kaopu.street.resolved/1",
+  "title": "KST1 1.1.0 resolved architectural recipe",
+  "type": "object",
+  "required": [
+    "schema",
+    "instrument",
+    "object",
+    "units",
+    "axis",
+    "construction",
+    "appearance",
+    "motion",
+    "performance",
+    "provenance"
+  ],
+  "properties": {
+    "schema": {
+      "const": "kaopu.street.resolved/1"
+    },
+    "instrument": {
+      "type": "object",
+      "required": [
+        "id",
+        "version",
+        "abi"
+      ],
+      "properties": {
+        "id": {
+          "const": "kaopu.street.architecture"
+        },
+        "version": {
+          "const": "1.1.0"
+        },
+        "abi": {
+          "const": "KST1"
+        }
+      }
+    },
+    "object": {
+      "type": "object",
+      "required": [
+        "id",
+        "seed"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,63}$"
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 1024
+        }
+      }
+    },
+    "units": {
+      "const": "metre"
+    },
+    "axis": {
+      "const": "Y_UP"
+    },
+    "construction": {
+      "type": "object",
+      "required": [
+        "railClearance",
+        "windowCageDensity",
+        "signDensity",
+        "wireSag",
+        "buildings"
+      ],
+      "properties": {
+        "railClearance": {
+          "type": "object",
+          "required": [
+            "halfWidth",
+            "height"
+          ],
+          "properties": {
+            "halfWidth": {
+              "type": "number",
+              "minimum": 1.6,
+              "maximum": 2.2
+            },
+            "height": {
+              "type": "number",
+              "minimum": 4.75,
+              "maximum": 6
+            }
+          }
+        },
+        "windowCageDensity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "signDensity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "wireSag": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.9
+        },
+        "buildings": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/building"
+          }
+        }
+      }
+    },
+    "appearance": {
+      "type": "object",
+      "required": [
+        "wetness",
+        "saltExposure",
+        "plasterTint",
+        "brickTint",
+        "woodTint"
+      ],
+      "properties": {
+        "wetness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "saltExposure": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "plasterTint": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "brickTint": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "woodTint": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        }
+      }
+    },
+    "motion": {
+      "type": "object",
+      "required": [
+        "timeSource",
+        "wind"
+      ],
+      "properties": {
+        "timeSource": {
+          "const": "host.elapsed"
+        },
+        "wind": {
+          "type": "object",
+          "required": [
+            "amplitude",
+            "frequency"
+          ],
+          "properties": {
+            "amplitude": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.12
+            },
+            "frequency": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 2
+            }
+          }
+        }
+      }
+    },
+    "performance": {
+      "type": "object",
+      "required": [
+        "detail",
+        "limits"
+      ],
+      "properties": {
+        "detail": {
+          "enum": [
+            "near",
+            "mid",
+            "far"
+          ]
+        },
+        "limits": {
+          "type": "object",
+          "required": [
+            "maxTriangles",
+            "maxInstances",
+            "maxMaterials"
+          ],
+          "properties": {
+            "maxTriangles": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 240000
+            },
+            "maxInstances": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12000
+            },
+            "maxMaterials": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 48
+            }
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "externalMesh",
+        "externalImageTextures"
+      ],
+      "properties": {
+        "externalMesh": {
+          "const": false
+        },
+        "externalImageTextures": {
+          "const": false
+        }
+      }
+    }
+  },
+  "$defs": {
+    "shop": {
+      "type": "object",
+      "required": [
+        "text",
+        "type",
+        "signStyle",
+        "signAge",
+        "open"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "text": {
+          "enum": [
+            "麗華戲院",
+            "同豐藥房",
+            "金禾冰室",
+            "海峰鐘錶",
+            "雲禾茶室",
+            "春榕冰室",
+            "南霞戲院",
+            "月桂茶室",
+            "松月藥房",
+            "榕川鐘錶",
+            "雲豐五金",
+            "金禾五金"
+          ]
+        },
+        "type": {
+          "enum": [
+            "cinema",
+            "pharmacy",
+            "tea",
+            "watch",
+            "hardware"
+          ]
+        },
+        "signStyle": {
+          "enum": [
+            "brush",
+            "serif"
+          ]
+        },
+        "signAge": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "open": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "text": {
+                  "const": "麗華戲院"
+                },
+                "signStyle": {
+                  "const": "brush"
+                }
+              }
+            },
+            {
+              "properties": {
+                "text": {
+                  "const": "同豐藥房"
+                },
+                "signStyle": {
+                  "const": "serif"
+                }
+              }
+            },
+            {
+              "properties": {
+                "text": {
+                  "const": "金禾冰室"
+                },
+                "signStyle": {
+                  "const": "brush"
+                }
+              }
+            },
+            {
+              "properties": {
+                "text": {
+                  "const": "海峰鐘錶"
+                },
+                "signStyle": {
+                  "const": "serif"
+                }
+              }
+            },
+            {
+              "properties": {
+                "text": {
+                  "const": "雲禾茶室"
+                },
+                "signStyle": {
+                  "const": "brush"
+                }
+              }
+            },
+            {
+              "properties": {
+                "text": {
+                  "const": "春榕冰室"
+                },
+                "signStyle": {
+                  "const": "brush"
+                }
+              }
+            },
+            {
+              "properties": {
+                "text": {
+                  "const": "南霞戲院"
+                },
+                "signStyle": {
+                  "const": "brush"
+                }
+              }
+            },
+            {
+              "properties": {
+                "text": {
+                  "const": "月桂茶室"
+                },
+                "signStyle": {
+                  "const": "brush"
+                }
+              }
+            },
+            {
+              "properties": {
+                "text": {
+                  "const": "松月藥房"
+                },
+                "signStyle": {
+                  "const": "serif"
+                }
+              }
+            },
+            {
+              "properties": {
+                "text": {
+                  "const": "榕川鐘錶"
+                },
+                "signStyle": {
+                  "const": "serif"
+                }
+              }
+            },
+            {
+              "properties": {
+                "text": {
+                  "const": "雲豐五金"
+                },
+                "signStyle": {
+                  "const": "serif"
+                }
+              }
+            },
+            {
+              "properties": {
+                "text": {
+                  "const": "金禾五金"
+                },
+                "signStyle": {
+                  "const": "serif"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "building": {
+      "type": "object",
+      "required": [
+        "id",
+        "x",
+        "frontZ",
+        "width",
+        "depth",
+        "floors",
+        "floorHeight",
+        "groundHeight",
+        "bays",
+        "facade",
+        "age",
+        "repair",
+        "shops"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number",
+          "minimum": -20,
+          "maximum": 8
+        },
+        "frontZ": {
+          "type": "number",
+          "minimum": -12,
+          "maximum": -6
+        },
+        "width": {
+          "type": "number",
+          "minimum": 6,
+          "maximum": 10
+        },
+        "depth": {
+          "type": "number",
+          "minimum": 3,
+          "maximum": 8
+        },
+        "floors": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 8
+        },
+        "floorHeight": {
+          "type": "number",
+          "minimum": 2.5,
+          "maximum": 3.6
+        },
+        "groundHeight": {
+          "type": "number",
+          "minimum": 3.6,
+          "maximum": 4.8
+        },
+        "bays": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 5
+        },
+        "facade": {
+          "enum": [
+            "brick_shophouse",
+            "timber_verandah"
+          ]
+        },
+        "age": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "repair": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "shops": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/shop"
+          }
+        }
+      }
+    }
+  },
+  "$comment": "Describes resolved runtime scores produced by route-plan.resolveChunk, not the unchanged R17 anchor template or route.score.json. instrument.validate is authoritative: 32768 UTF-8 bytes, finite numbers, unique building IDs, parcel edges within [-17,8], registered text/style pairs, recursion depth <=16, forbidden baked-asset fields and external/data/blob/file URI rejection. This schema never fetches assets. Route constraints are enforced separately by route-plan.validateRoute."
+}

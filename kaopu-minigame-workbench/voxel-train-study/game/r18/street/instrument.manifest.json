@@ -1,0 +1,136 @@
+{
+  "instrument": {
+    "id": "kaopu.street.architecture",
+    "version": "1.1.0",
+    "abi": "KST1"
+  },
+  "status": "bounded first-interstation architecture extension of the KAOPU Score/Instrument pattern",
+  "entry": "instrument.mjs",
+  "routeEntry": "route-plan.mjs",
+  "hostEntry": "../street-district.mjs",
+  "scoreSchemas": [
+    "kaopu.street.resolved/1",
+    "kaopu.street.route/1"
+  ],
+  "validation": {
+    "resolved": "instrument.mjs:validate / parseScore",
+    "route": "route-plan.mjs:validateRoute",
+    "anchorTemplate": "first-street.score.json preserves the R17 1.0.0 recipe; resolveChunk upgrades the runtime copy to 1.1.0"
+  },
+  "units": "metre",
+  "axis": "Y_UP",
+  "engine": {
+    "provider": "host",
+    "name": "Three.js",
+    "revision": "170",
+    "bundledDuplicate": false
+  },
+  "api": [
+    "validate",
+    "parseScore",
+    "build",
+    "update",
+    "measure",
+    "snapshot",
+    "dispose",
+    "createSharedResources"
+  ],
+  "routeApi": [
+    "validateRoute",
+    "createRoutePlan",
+    "resolveChunk",
+    "desiredChunks"
+  ],
+  "worldInputs": [
+    "timeSeconds",
+    "wetness",
+    "railDistance",
+    "originOffset",
+    "shared"
+  ],
+  "operators": [
+    "sharedPrimitiveInstances",
+    "pierSpandrelFacade",
+    "windowCage",
+    "timberShutter",
+    "balcony",
+    "shopInterior",
+    "supportedSign",
+    "bezierGlyphExtrusion",
+    "foldedCanopy",
+    "pinnedAnalyticCloth",
+    "proceduralSurfaceShader",
+    "boundedNearMidFarLOD",
+    "referenceCountedSharedGeometry"
+  ],
+  "limits": {
+    "scoreBytes": 32768,
+    "buildings": 2,
+    "floors": 8,
+    "bays": 5,
+    "triangles": 240000,
+    "instances": 12000,
+    "materials": 48
+  },
+  "route": {
+    "fromStation": 0,
+    "toStation": 1,
+    "sceneMetres": 700,
+    "historicalDisplayKm": 4.4,
+    "anchorOffset": 27,
+    "pitch": 22,
+    "firstIndex": -4,
+    "lastIndex": 32,
+    "chunks": 37,
+    "buildings": 74,
+    "bridgeSceneMetres": 355,
+    "side": -1,
+    "observerSide": 1,
+    "details": [
+      "near",
+      "mid",
+      "far"
+    ]
+  },
+  "streaming": {
+    "nearEnter": 21,
+    "nearExit": 27,
+    "midEnter": 76,
+    "midExit": 88,
+    "farEnter": 140,
+    "farExit": 156,
+    "maxActiveChunks": 16,
+    "maxNearChunks": 1,
+    "maxExpandedTriangles": 520000,
+    "maxGeometryBytes": 48000000,
+    "maxBuildsPerFrame": 2
+  },
+  "resources": {
+    "shared": "finite CPU primitive and glyph cache; live geometry references counted across chunks",
+    "release": "InstancedMesh buffers and chunk-owned geometry/materials are disposed on unload; shared geometry receives dispose at its last live reference; pool is cleared when no chunk remains",
+    "lighting": "two persistent host point-light slots"
+  },
+  "externalAssetInFormalBuild": false,
+  "unsupported": [
+    "delivered mesh buffers",
+    "image texture assets",
+    "font binaries",
+    "automatic arbitrary Chinese glyph generation",
+    "GPU validation from CPU tests",
+    "universal legacy KAOPU loader",
+    "street generation beyond first interstation",
+    "historically accurate geographic reconstruction"
+  ],
+  "determinism": {
+    "explicitSeed": true,
+    "explicitTime": true,
+    "usesWallClock": false,
+    "clock": "canonical R17 Session.view.elapsed"
+  },
+  "provenance": {
+    "source": "original architectural functions and licensed glyph curves",
+    "visualAcceptance": false,
+    "productionReady": false,
+    "gpuVerified": false
+  }
+}
