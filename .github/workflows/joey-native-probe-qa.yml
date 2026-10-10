@@ -1,0 +1,55 @@
+name: Joey isolated native observation probe
+on:
+  push:
+    branches: ['qa/joey-native-observation-r01-20261010']
+    paths:
+      - 'kaopu-unified-human-workbench/joey-observation-r01/**'
+      - '.github/workflows/joey-native-probe-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: joey-native-observation-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  observe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-unified-human-workbench/joey-observation-r01
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 0b4703359efbae10ffc6c0e5fe3fc081e7eca4fe
+          path: native
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+            kaopu-mhr-workbench
+      - name: Install pinned official browser package
+        run: |
+          npm install --prefix "$RUNNER_TEMP/joey-native" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/joey-native/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/joey-native/node_modules" >> "$GITHUB_ENV"
+      - name: Serve fixed native engine without deployment
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/joey-server.log" 2>&1 &
+          for n in $(seq 1 30); do
+            curl --fail --silent http://127.0.0.1:8765/native/kaopu-unified-human-workbench/ > /dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Read actual native archive catalogue and landmarks
+        run: node kaopu-unified-human-workbench/joey-observation-r01/probe.cjs
+      - name: Keep bounded research evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: joey-native-probe-${{ github.sha }}
+          path: joey-native-probe-results/
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: warn
