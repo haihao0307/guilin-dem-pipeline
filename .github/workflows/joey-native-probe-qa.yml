@@ -42,8 +42,8 @@ jobs:
             sleep 1
           done
           exit 1
-      - name: Render refined manual native face and calibrate barefoot height
-        run: node kaopu-unified-human-workbench/joey-observation-r01/manual-r03.cjs
+      - name: Render sculpted native face with strictly surface-bound existing eyebrows
+        run: node kaopu-unified-human-workbench/joey-observation-r01/manual-r04.cjs
       - name: Keep bounded research evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -56,6 +56,7 @@ jobs:
             joey-archive-file-verification/
             joey-semantic-response-results/
             joey-manual-r03-results/
+            joey-manual-r04-results/
           retention-days: 7
           compression-level: 0
           if-no-files-found: warn
