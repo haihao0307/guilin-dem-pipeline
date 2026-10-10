@@ -1,0 +1,91 @@
+name: Train native plants R01 actual WebGL and first leg
+on:
+  push:
+    branches: ['qa/train-native-plants-r01-20261010']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/**'
+      - '.github/workflows/train-native-plants-r01-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: train-native-plants-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      GAME: kaopu-minigame-workbench/voxel-train-study/game
+      CANDIDATE: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01
+      PANDANUS_REFERENCE_SOURCE: kaopu-tree-fractal-wave-lab/mobile-r05-seasons/runtime-pandanus-r05.js
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-minigame-workbench/voxel-train-study
+            kaopu-tree-fractal-wave-lab/mobile-r05-seasons
+      - name: Exact source equations, geometry, clearance and existing game tests
+        run: node --test "$CANDIDATE/plants/"*.test.mjs "$CANDIDATE/tests/"*.test.mjs
+      - name: Read frozen R20 baseline without altering it
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: fdbc36e17a34c21c14cc9566a533bb080e3dacc2
+          path: qa-reference-r20
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study/game/r20
+      - name: Install official pinned test browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/plant-qa" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/plant-qa/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/plant-qa/node_modules" >> "$GITHUB_ENV"
+      - name: Stage identical shared dependencies and serve
+        run: |
+          cp -a "qa-reference-r20/$GAME/r20" "$GAME/r20-baseline"
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/plant-http.log" 2>&1 &
+          for n in $(seq 1 30); do curl --fail --silent http://127.0.0.1:8765/$CANDIDATE/ >/dev/null && exit 0; sleep 1; done
+          exit 1
+      - name: Same-machine actual 3D screenshot and synchronized frame comparison
+        run: node "$CANDIDATE/plants/browser-comparison.cjs"
+      - name: Preserve actual evidence including failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-native-plants-comparison-${{ github.sha }}
+          path: train-plants-r01-results/comparison/
+          retention-days: 7
+          compression-level: 0
+  native:
+    needs: compare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GAME: kaopu-minigame-workbench/voxel-train-study/game
+      CANDIDATE: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01
+      TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/
+      TRAIN_QA_OUT: train-plants-r01-results/native
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Install official pinned test browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/plant-native" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/plant-native/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/plant-native/node_modules" >> "$GITHUB_ENV"
+      - name: Serve immutable candidate
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/plant-native-http.log" 2>&1 &
+          for n in $(seq 1 30); do curl --fail --silent http://127.0.0.1:8765/$CANDIDATE/ >/dev/null && exit 0; sleep 1; done
+          exit 1
+      - name: Production-clock first-to-second station, real controls and screenshots
+        run: node "$CANDIDATE/tests/r20-native-browser.cjs"
+      - name: Preserve native evidence including failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-native-plants-journey-${{ github.sha }}
+          path: train-plants-r01-results/native/
+          retention-days: 7
+          compression-level: 0
