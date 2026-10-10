@@ -9,7 +9,7 @@ export function paintTraitMaps(s){
  if(s.enabled){
   const count=Math.round(s.freckles*1050);let accepted=0;
   for(let attempt=0;attempt<25000&&accepted<count;attempt++){
-   const x=(r()*2-1)*61,y=251+r()*75,coverage=Math.exp(-((y-287)/18)**2)*Math.exp(-(Math.abs(x)/(24+38*s.freckleSpread))**4);
+   const x=(r()*2-1)*61,y=251+r()*75,coverage=Math.exp(-Math.pow((y-287)/18,2))*Math.exp(-Math.pow(Math.abs(x)/(24+38*s.freckleSpread),4));
    if(r()>coverage||!valid(x,y))continue;const size=s.freckleSize*(.4+.9*r()),op=s.freckleContrast*(.25+.6*r());blob(pigment,x,y,size,size*(.55+.55*r()),op,r()*6.28,.25);marks.freckles.push([x,y,size]);accepted++;
   }
   const rc=seededRandom(s.seed^91837);
@@ -24,8 +24,8 @@ export function paintTraitMaps(s){
   for(const side of[-1,1]){blob(pigment,side*32,289,15,4.5,s.darkCircles*.5);blob(red,side*42,273,15,11,s.redPatches*.35);}
   const rw=seededRandom(s.seed^234879);
   function wrinkle(p,width,amount){if(!amount)return;curve(depth,p,width,s.wrinkleDepth*amount);curve(pigment,p,width*.7,.10*amount);curve(rough,p,width*1.2,.25*amount);marks.wrinklePaths.push(p);}
-  for(let i=0;i<4;i++){const length=[44,48,40,33][i],y=332+i*9.8;wrinkle(wrinklePath(-length,y,length*.94,y+.8,3.5,rw,s.wrinkleIrregularity),s.wrinkleWidth*(.7+.35*rw()),s.forehead*(1-i*.12));}
-  for(let i=0;i<3;i++)wrinkle(wrinklePath(-6+i*5,319,-7+i*6,340,1.5,rw,s.wrinkleIrregularity),s.wrinkleWidth*.8,s.frown*(i===1?.65:1));
+  for(let i=0;i<4;i++){const length=[39,44,37,29][i],y=337+i*8.5;wrinkle(wrinklePath(-length,y,length*(.86+i*.025),y+1.8,1.8+i*.35,rw,s.wrinkleIrregularity),s.wrinkleWidth*(.7+.35*rw()),s.forehead*(1-i*.12));}
+  for(let i=0;i<2;i++)wrinkle(wrinklePath(-5+i*9,314.5+i,-7+i*13,332-i*1.5,.8,rw,s.wrinkleIrregularity),s.wrinkleWidth*.8,s.frown*(i===1?.82:1));
   for(const side of[-1,1]){
    for(let j=0;j<4;j++)wrinkle(wrinklePath(side*47,298+j*.6,side*(60+j*.8),293+j*4,-1.2,rw,s.wrinkleIrregularity),s.wrinkleWidth*.55,s.crowsFeet*(1-j*.12));
    for(let j=0;j<3;j++)wrinkle(wrinklePath(side*19,292-j*2.6,side*45,291-j*2.4,-2.2,rw,s.wrinkleIrregularity),s.wrinkleWidth*.40,s.underEye*(.9-j*.22));

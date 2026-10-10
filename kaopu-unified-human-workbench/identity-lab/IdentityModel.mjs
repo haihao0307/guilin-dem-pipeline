@@ -1,5 +1,6 @@
 import {TRAIT_SCHEMA,TRAIT_DEFAULTS,SHAPE_DEFAULTS,validateTraits,validateShape} from './TraitSchema.mjs';
 import {paintTraitMaps} from './TraitMaps.mjs';
+import {fairUpperLids} from './LidFairing.mjs';
 import {point,sub,dot,cross,unit,clamp,smooth} from '../face-transfer/FaceFields.mjs';
 import {makeSpline} from '../eye-transfer/EyelidKnowledge.mjs';
 export function installIdentity(model){
@@ -22,14 +23,15 @@ export function installIdentity(model){
    if(s.crease)for(const e of eyeInfo){const q=e.proj(P),u=q[0]/e.width;if(u<.04||u>.96)continue;const distance=q[1]-e.upper(u);if(distance<.0012*scale||distance>.0075*scale)continue;
     const band=smooth(.0012*scale,.0020*scale,distance)*(1-smooth(.006,.0075,distance/scale)),arc=Math.sin(Math.PI*u)**.8,mask=fields.a[i*4+2]*band*arc*e.gate;
     if(mask<.005)continue;let displacement=0;
-    if(s.crease<0){const ns=fields.adjacency[i];let average=0,w=0;for(const j of ns){const v=point(before,j),len=Math.hypot(...sub(P,v));const a=1/Math.max(.0002,len);average+=dot(sub(v,P),front)*a;w+=a;}if(w)displacement=average/w*2.4*(-s.crease);}
+    if(s.crease<0){displacement=0;} // Bounded whole-band fairing follows below.
     else{const v=(distance/scale-s.creaseHeightMM*.001)/(s.creaseWidthMM*.001);displacement=-.00065*scale*s.crease*Math.exp(-v*v)+.00018*scale*s.crease*Math.exp(-Math.pow((v+1.7)/1.3,2));}
     d+=clamp(displacement,-.00065*scale,.00045*scale)*mask;lidVertices++;
    }
    if(d){for(let k=0;k<3;k++)p[i*3+k]+=front[k]*d;max=Math.max(max,Math.abs(d));affected++;}
   }
+  const fairing=s.crease<0?fairUpperLids(model,before,front,eyeInfo,fields,scale,-s.crease):null;if(fairing){max=Math.max(max,fairing.maxMM/1000);affected+=fairing.changed;lidVertices=fairing.vertices;}
   if(!p.every(Number.isFinite))throw Error('身份层生成非有限几何');maps();for(const skin of api.skins)skin.updateIdentity?.();
-  api.report={version:'ET13-I1',shape:{...s},traits:{...api.traits},affectedVertices:affected,noseVertices,lidVertices,maxAddedDisplacementMM:max*1000,bodyAddedDisplacementMM:0,controlTopologyUnchanged:true,nativeGeneratorPreserved:true,field:api.maps.report,closure:'crease correction fades with measured aperture; not new blink physics',clinicalMeaning:false};return p;
+  api.report={version:'ET13-I1',shape:{...s},traits:{...api.traits},affectedVertices:affected,noseVertices,lidVertices,fairing,maxAddedDisplacementMM:max*1000,bodyAddedDisplacementMM:0,controlTopologyUnchanged:true,nativeGeneratorPreserved:true,field:api.maps.report,closure:'crease correction fades with measured aperture; not new blink physics',clinicalMeaning:false};return p;
  }
  model.compute=input=>{const old=model.positions.slice(),state=model.state;try{priorCompute(input);return apply();}catch(e){try{priorCompute(state);}catch{}model.positions.set(old);model.state=state;throw e;}};
  model.archive=()=>({...priorArchive(),faceIdentity:{schema:TRAIT_SCHEMA,topology:model.canonical.topologySha256,traits:{...api.traits},shape:{...api.shape}}});
