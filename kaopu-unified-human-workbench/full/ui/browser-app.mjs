@@ -13,6 +13,9 @@ function undoPreset(){invalidateEntryRequest('已选择撤回人物预设');pend
 async function selectPreset(id,{internalReplay=false}={}){if(!ALL_PRESETS.some(p=>p.id===id))throw Error('未知人物预设');if(!internalReplay){invalidateEntryRequest('正在应用所选人物预设');presetTicket++;}pendingPreset=id;presetBrowser.setBusy(id);if(!controller||(busy&&!internalReplay)){if(!busy)await load();return;}const ticket=++presetTicket;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));if(ticket!==presetTicket||!active||!controller)return;panel?.cancelEdits();const start=performance.now();try{const previous=controller.presetId===id?null:controller.archive();controller.applyPreset(id);if(previous)previousPresetArchive=previous;presetSwitchMS=performance.now()-start;viewPerson('three');pendingPreset=null;presetBrowser.sync(controller);}catch(e){status('预设切换失败：'+e.message);presetBrowser.sync(controller);throw e;}}
 const current=ticket=>active&&ticket===generation;
 function viewPerson(name){if(motionStudio&&motionStudio.mode!=='shape')motionStudio.view(name);else viewer?.view(name);}
+// Keep the current motion focus in frame when the viewport changes aspect.
+let entryResizeFrame=null;
+window.addEventListener('resize',()=>{if(entryResizeFrame!==null)cancelAnimationFrame(entryResizeFrame);entryResizeFrame=requestAnimationFrame(()=>{entryResizeFrame=null;if(!active||!viewer||!motionStudio||motionStudio.destroyed||motionStudio.mode==='shape'||motionStudio.modeBusy)return;viewer.resize();motionStudio.view(motionStudio.angle||'three');});});
 function status(message){$('model-status').textContent=message;}
 let previousFaceArchive=null,faceSelection=null,applyingFace=false,entryTicket=0,entryBusy=false;
 const loadWaiters=[];
