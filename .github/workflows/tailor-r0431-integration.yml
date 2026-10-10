@@ -1,0 +1,81 @@
+name: Tailor R04.3.1 submitted runtime integration
+on:
+  push:
+    branches: [feature/tailor-cabinet-r03-garment-surfaces-20261009]
+    paths:
+      - '.github/workflows/tailor-r0431-integration.yml'
+      - 'kaopu-tailor-workbench/presets/r04/R0431_TRIGGER.json'
+permissions:
+  contents: write
+concurrency:
+  group: tailor-r0431-runtime-integration
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-tailor-workbench/presets/r04
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Original-system actual browser dependencies
+        run: |
+          pip install playwright==1.56.0
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y fonts-noto-cjk
+      - name: Apply submitted handoff without reverting the newer native solver
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          python - <<'PY'
+          from pathlib import Path
+          import json,hashlib
+          p=Path('kaopu-tailor-workbench/presets/r04')
+          names=[str(f.relative_to(p)) for folder in ['assets','native','correctives'] for f in (p/folder).rglob('*') if f.is_file()]+['parameter-schema.json','PARAMETER_AUDIT_R043.json']
+          (p/'R0431_PROTECTED.json').write_text(json.dumps({n:hashlib.sha256((p/n).read_bytes()).hexdigest() for n in names},indent=2))
+          PY
+          python "$P/finish_r0431.py"
+          for f in "$P"/*.mjs; do node --check "$f"; done
+          node "$P/test_parameter_preview_r0431.mjs"
+          node "$P/test_editor_unit.mjs"
+          node "$P/contract_test.mjs"
+      - name: Real browser regenerated garment, parameter locks and source-linked outfit
+        run: |
+          python -m http.server 8765 >/tmp/r0431-http.log 2>&1 &
+          python kaopu-tailor-workbench/presets/r04/qa_integrated_r0431.py
+      - name: Verify frozen source and result identity after integration
+        run: |
+          python - <<'PY'
+          import pathlib,json,hashlib,os
+          p=pathlib.Path('kaopu-tailor-workbench/presets/r04');load=lambda n:json.loads((p/n).read_text())
+          before=load('R0431_PROTECTED.json')
+          assert all(hashlib.sha256((p/n).read_bytes()).hexdigest()==sha for n,sha in before.items())
+          q=load('R0431_BROWSER_REPORT.json');assert q['passed']
+          native=load('MATERIAL_R043B_ACCEPTANCE.json');assert native['runtimeGatePassed']
+          report={'sourceCommit':os.environ['GITHUB_SHA'],'runtimeIntegrationPassed':True,'browserChecks':len(q['checks']),'protectedFilesUnchanged':len(before),'summary':load('assets/readiness.json')['summary'],'all60GarmentsAccepted':False,'fabricCalibrated':False,'dynamicWearCertified':False}
+          (p/'R0431_ACCEPTANCE.json').write_text(json.dumps(report,indent=2));print(json.dumps(report),flush=True)
+          PY
+      - name: Retain exact source and actual test evidence without overwriting concurrent work
+        if: always()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$GITHUB_REF_NAME" --depth=1
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          git add kaopu-tailor-workbench/presets/r04
+          if ! git diff --cached --quiet; then
+            git commit -m 'fix(tailor-r0431): retain submitted request-bound parameter and outfit runtime with actual browser evidence'
+            git push origin HEAD:"$GITHUB_REF_NAME"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r0431-integrated-native-runtime
+          path: kaopu-tailor-workbench/presets/r04
+          retention-days: 14
