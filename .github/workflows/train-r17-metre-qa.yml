@@ -1,0 +1,78 @@
+name: Train R17 metre-scale actual WebGL acceptance
+on:
+  push:
+    branches: ['qa/train-r17-metre-20261010']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r17/**'
+      - '.github/workflows/train-r17-metre-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: train-r17-metre-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      GAME: kaopu-minigame-workbench/voxel-train-study/game
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Install pinned official browser dependencies without package scripts
+        run: |
+          npm install --prefix "$RUNNER_TEMP/train-r17" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/train-r17/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/train-r17/node_modules" >> "$GITHUB_ENV"
+          sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Check preserved baseline and actual metre geometry
+        run: |
+          mkdir -p train-r17-results
+          node --check "$GAME/r17/tests/r17-browser.cjs"
+          node --test "$GAME"/tests/*.test.mjs "$GAME"/*.test.mjs "$GAME"/r17/tests/*.test.mjs "$GAME"/r17/street/*.test.mjs 2>&1 | tee train-r17-results/unit.txt
+      - name: Serve this exact commit without deployment
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/train-r17-server.log" 2>&1 &
+          for n in $(seq 1 30); do
+            curl --fail --silent http://127.0.0.1:8765/$GAME/r17/ > /dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Render actual-dimensional fixtures for early review
+        env:
+          TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r17/
+          TRAIN_QA_OUT: train-r17-results/scale
+          TRAIN_QA_CASES: scale-fixtures
+        run: node "$GAME/r17/tests/r17-browser.cjs"
+      - name: Preserve early geometry-frame evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-r17-scale-${{ github.sha }}
+          path: train-r17-results/
+          compression-level: 0
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Verify genuine controls, shared clock, route, source bytes and three releases
+        env:
+          TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r17/
+          TRAIN_QA_OUT: train-r17-results/browser
+          TRAIN_QA_CASES: cold-warm,native-journey,delayed-score,score-failure,plain-context-r17
+        run: node "$GAME/r17/tests/r17-browser.cjs"
+      - name: Measure clean uninstrumented cold and warm startup
+        if: ${{ !cancelled() }}
+        env:
+          TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r17/
+          TRAIN_CLEAN_QA_OUT: train-r17-results/clean
+        run: node "$GAME/r17/tests/r17-clean-startup.cjs"
+      - name: Preserve actual-browser evidence and failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-r17-final-${{ github.sha }}
+          path: train-r17-results/
+          compression-level: 0
+          if-no-files-found: warn
+          retention-days: 7
