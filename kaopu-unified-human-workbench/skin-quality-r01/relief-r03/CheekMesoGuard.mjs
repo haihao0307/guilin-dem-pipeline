@@ -17,12 +17,13 @@ export function attachCheekMesoGuard(skin,{enabled=true}={}){
  if(!skin?.faceExtension||!skin?.samplingExtension)throw Error('Reviewed ET13 FaceSkin and R01 sampling required');
  if(skin.cheekMesoGuard)throw Error('Cheek meso guard already attached');
  const mat=skin.material,before=mat.onBeforeCompile,key=mat.customProgramCacheKey,disposeSkin=skin.dispose;let active=enabled,disposed=false;
- const compile=function(shader){before.call(this,shader);if(active&&!disposed)shader.fragmentShader=patchCheekMeso(shader.fragmentShader);};
- const cache=function(){return key.call(this)+(active&&!disposed?'/'+MESO_GUARD_VERSION:'');};
+ const effective=()=>active&&!disposed&&skin.samplingExtension.enabled===true&&!skin.samplingExtension.disposed;
+ const compile=function(shader){before.call(this,shader);if(effective())shader.fragmentShader=patchCheekMeso(shader.fragmentShader);};
+ const cache=function(){return key.call(this)+(effective()?'/'+MESO_GUARD_VERSION:'');};
  const disposeWrapper=function(){api.dispose();return disposeSkin.call(this);};
  const api={
   setEnabled(value){if(disposed)throw Error('Cheek meso guard disposed');if(typeof value!=='boolean')throw TypeError('enabled must be boolean');if(active===value)return;active=value;mat.needsUpdate=true;skin.viewer.render();},
-  report(){return{version:MESO_GUARD_VERSION,enabled:active,disposed,removedSignal:'detail atlas G, tiles 0/7 only; includes native chin reuse of tile 7',newTextures:0,newGeometry:0,newUniforms:0,newEditableParameters:0,physicalCalibration:false};},
+  report(){return{version:MESO_GUARD_VERSION,enabled:active&&!disposed,effective:effective(),disposed,suspendedReason:!disposed&&active&&!effective()?'R01 sampling disabled':null,removedSignal:'detail atlas G, tiles 0/7 only; includes native chin reuse of tile 7',newTextures:0,newGeometry:0,newUniforms:0,newEditableParameters:0,physicalCalibration:false};},
   dispose(){if(disposed)return;if(mat.onBeforeCompile!==compile||mat.customProgramCacheKey!==cache||skin.dispose!==disposeWrapper)throw Error('Dispose later shader layers first');disposed=true;mat.onBeforeCompile=before;mat.customProgramCacheKey=key;skin.dispose=disposeSkin;delete skin.cheekMesoGuard;mat.needsUpdate=true;skin.viewer.render();}
  };
  mat.onBeforeCompile=compile;mat.customProgramCacheKey=cache;skin.dispose=disposeWrapper;skin.cheekMesoGuard=api;mat.needsUpdate=true;skin.viewer.render();return api;

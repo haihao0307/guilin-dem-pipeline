@@ -15,7 +15,7 @@ The existing licensed atlas comes from Lee Perry-Smith's Infinite 3D Head Scan (
 `attachCheekMesoGuard(skin)` installs after R01/R02. In the detail-atlas call only, neutralize G to 0.5 for source tiles 0 and 7 BEFORE existing native region mixing. Existing R/B channels, chroma calls, other tiles, mixes, analytic pores, identity height, height gains and normals code are untouched. Tile 7 is also reused by the native chin, and source contributions survive at blended region edges; this is not a strictly cheek-only spatial mask.
 
 - No new samples, textures, geometry, uniforms or editable material parameters.
-- `setEnabled(false)` restores the original shader/key; `dispose()` restores previous hooks.
+- `setEnabled(false)` restores the original shader/key; `dispose()` restores previous hooks. R01 sampling off safely suspends this array-atlas correction; turning R01 back on resumes it. `report()` exposes requested/effective status.
 - A later shader wrapper must be disposed first; wrong disposal order fails closed instead of silently discarding another layer.
 - This is a removal of a demonstrated bad source contribution, not a claim of measured skin or new realism from parameter count.
 - No automatic installation on production. No R05 compatibility claim.
