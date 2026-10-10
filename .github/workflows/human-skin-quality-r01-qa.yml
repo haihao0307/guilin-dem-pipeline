@@ -1,0 +1,141 @@
+name: Human skin sampling R01 candidate QA
+on:
+  push:
+    branches: [feature/common-human-skin-sampling-r01-20261010]
+    paths: ['kaopu-unified-human-workbench/skin-quality-r01/**', '.github/workflows/human-skin-quality-r01-qa.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: human-skin-sampling-r01
+  cancel-in-progress: true
+jobs:
+  validate:
+    if: ${{ !contains(github.event.head_commit.message, '[public-preview-only]') && !contains(github.event.head_commit.message, '[skin-relief-probe]') && !contains(github.event.head_commit.message, '[skin-meso-guard]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-unified-human-workbench
+      - name: Validate original atlas layout and candidate source
+        run: |
+          node kaopu-unified-human-workbench/skin-quality-r01/tests/numeric.mjs
+          node kaopu-unified-human-workbench/skin-quality-r01/tests/lifecycle.mjs
+          node kaopu-unified-human-workbench/skin-quality-r01/tests/pore-filter.mjs
+          node kaopu-unified-human-workbench/skin-quality-r01/tests/regions.mjs
+          for file in kaopu-unified-human-workbench/skin-quality-r01/regions/*.mjs; do node --check "$file"; done
+          node --check kaopu-unified-human-workbench/skin-quality-r01/SkinSampling.mjs
+          node --check kaopu-unified-human-workbench/skin-quality-r01/SamplingShader.mjs
+      - name: Install official pinned browser test tools
+        run: |
+          npm install --prefix "$RUNNER_TEMP/skin-sampling-r01" --no-save --ignore-scripts playwright@1.57.0 esbuild@0.25.10
+          "$RUNNER_TEMP/skin-sampling-r01/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Compare on unchanged native ET13 person
+        env:
+          NODE_PATH: ${{ runner.temp }}/skin-sampling-r01/node_modules
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/skin-r01-http.log 2>&1 &
+          node kaopu-unified-human-workbench/skin-quality-r01/tests/browser.cjs
+          node kaopu-unified-human-workbench/skin-quality-r01/tests/regions-browser.cjs
+          node kaopu-unified-human-workbench/skin-quality-r01/regions/build-preview.cjs
+          node kaopu-unified-human-workbench/skin-quality-r01/tests/preview-browser.cjs
+          if [ -f kaopu-unified-human-workbench/skin-quality-r01/preview.html ]; then
+            DELIVERY_PREVIEW_URL="http://127.0.0.1:8765/kaopu-unified-human-workbench/skin-quality-r01/preview.html" DELIVERY_RAW_BASE="http://127.0.0.1:8765/kaopu-unified-human-workbench/skin-quality-r01" node kaopu-unified-human-workbench/skin-quality-r01/tests/preview-browser.cjs
+            PUBLIC_PREVIEW_URL="https://raw.githack.com/haihao0307/guilin-dem-pipeline/${{ github.sha }}/kaopu-unified-human-workbench/skin-quality-r01/preview.html" PUBLIC_RAW_BASE="https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${{ github.sha }}/kaopu-unified-human-workbench/skin-quality-r01" node kaopu-unified-human-workbench/skin-quality-r01/tests/preview-browser.cjs
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-sampling-r01-${{ github.run_number }}
+          path: qa-skin-quality-r01/
+          retention-days: 14
+  public-preview:
+    if: ${{ contains(github.event.head_commit.message, '[public-preview-only]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-unified-human-workbench/skin-quality-r01
+      - name: Verify exact ca9f7e40 public delivery bytes
+        timeout-minutes: 3
+        run: node kaopu-unified-human-workbench/skin-quality-r01/tests/public-preview.cjs preflight
+      - name: Install official pinned browser test tools
+        timeout-minutes: 3
+        run: |
+          npm install --prefix "$RUNNER_TEMP/skin-public" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/skin-public/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Open authorized fixed URL and verify real public renderer
+        timeout-minutes: 7
+        env:
+          NODE_PATH: ${{ runner.temp }}/skin-public/node_modules
+        run: node kaopu-unified-human-workbench/skin-quality-r01/tests/public-preview.cjs browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-public-ca9f7e40-${{ github.run_number }}
+          path: qa-skin-public-ca9f7e40/
+          retention-days: 14
+  relief-probe:
+    if: ${{ contains(github.event.head_commit.message, '[skin-relief-probe]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-unified-human-workbench/skin-quality-r01
+      - name: Validate isolated diagnostic source
+        run: |
+          node --check kaopu-unified-human-workbench/skin-quality-r01/diagnostics/ReliefProbe.mjs
+          node --check kaopu-unified-human-workbench/skin-quality-r01/tests/relief-probe.cjs
+      - name: Install official pinned browser test tools
+        run: |
+          npm install --prefix "$RUNNER_TEMP/skin-relief" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/skin-relief/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Ablate original relief sources on unchanged R02
+        timeout-minutes: 12
+        env:
+          NODE_PATH: ${{ runner.temp }}/skin-relief/node_modules
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/skin-relief-http.log 2>&1 &
+          node kaopu-unified-human-workbench/skin-quality-r01/tests/relief-probe.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-relief-probe-${{ github.run_number }}
+          path: qa-skin-relief-probe/
+          retention-days: 14
+  meso-guard:
+    if: ${{ contains(github.event.head_commit.message, '[skin-meso-guard]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-unified-human-workbench/skin-quality-r01
+      - name: Verify subtractive source patch and lifecycle
+        run: |
+          node kaopu-unified-human-workbench/skin-quality-r01/tests/meso-guard.mjs
+          node --check kaopu-unified-human-workbench/skin-quality-r01/tests/meso-guard-browser.cjs
+      - name: Install official pinned browser test tools
+        run: |
+          npm install --prefix "$RUNNER_TEMP/skin-meso" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/skin-meso/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Compare original and source-limited meso removal
+        timeout-minutes: 11
+        env:
+          NODE_PATH: ${{ runner.temp }}/skin-meso/node_modules
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/skin-meso-http.log 2>&1 &
+          node kaopu-unified-human-workbench/skin-quality-r01/tests/meso-guard-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-meso-guard-${{ github.run_number }}
+          path: qa-skin-meso-guard/
+          retention-days: 14
