@@ -1,6 +1,6 @@
 {
   "id": "T07",
-  "elapsedMs": 65377.600000000006,
+  "elapsedMs": 46807.30000000005,
   "events": [
     "progress",
     "progress",
@@ -23,13 +23,12 @@
     "progress",
     "progress",
     "progress",
-    "progress",
-    "progress",
-    "error"
+    "stage",
+    "auditing",
+    "done"
   ],
-  "lastStage": "refine",
-  "status": "native-solve-abort",
-  "message": "当前参数出现严重变形，快速试算已中止，未生成合格成衣。请导出问题快照检查该工序。",
+  "lastStage": "complete",
+  "status": "static-fail",
   "material": {
     "id": "T07",
     "status": "native-material-ready",
@@ -63,5 +62,760 @@
     "areaErrorMaxMm2": 7.712515071034431e-09,
     "maxPanelVertices": 1103,
     "maxPanelTriangles": 2051
+  },
+  "file": "T07.json.gz",
+  "sha256": "9757b3e60ce1b1df50ab701b9f83d723e1df2ef120d1fbdd301a26b8b4df45f6",
+  "qualityPassed": false,
+  "gate": {
+    "schema": "kaopu-static-garment-check@2",
+    "passed": false,
+    "failures": [
+      "cloth-intersections"
+    ],
+    "maximumCompressionPercent": 9.650923679615053,
+    "minimumBodyVertexDistanceMm": 3.490506159148743,
+    "invalidBodySamples": 0,
+    "thresholds": {
+      "maximumTensionPercent": 15,
+      "maximumCompressionPercent": 15,
+      "maximumNeedleGapMm": 0.25,
+      "minimumBodyDistanceMm": -0.05,
+      "maximumWholeSeamSeparationMm": 0.25
+    },
+    "engineeringThresholdsNotFabricCalibration": true,
+    "continuousCollisionCertified": false,
+    "dynamicWearCertified": false,
+    "wholeSeamAudit": {
+      "schema": "kaopu-bounded-seam-span-audit@1",
+      "inputSchema": "kaopu-sewing-graph@1",
+      "units": "mm",
+      "vertexCount": 5743,
+      "activeScope": "explicit active seam IDs",
+      "measuredSeams": 16,
+      "reviewThresholdMm": 0.25,
+      "toleranceMm": 0.02,
+      "maxNeedleGapMm": 0,
+      "maxSpanLowerBoundMm": 0,
+      "maxSpanUpperBoundMm": 1e-10,
+      "separatedSeamIds": [],
+      "unresolvedSeamIds": [],
+      "allWithinReviewThreshold": true,
+      "rows": [
+        {
+          "seamId": "s0",
+          "stageId": "sleeve_tubes",
+          "sourceStitchIndex": 0,
+          "a": {
+            "panelId": "left_sleeve_f",
+            "edge": "e0",
+            "reverse": false
+          },
+          "b": {
+            "panelId": "left_sleeve_b",
+            "edge": "e4",
+            "reverse": true
+          },
+          "declaredGathering": false,
+          "needleCount": 23,
+          "needleGapMm": 0,
+          "span": {
+            "lowerBoundMm": 0,
+            "upperBoundMm": 1e-10,
+            "errorBoundMm": 1e-10,
+            "resolved": true,
+            "evaluations": 46,
+            "worst": {
+              "sourceSide": 0,
+              "sourceSegment": 0,
+              "sourceT": 0,
+              "sourcePositionMm": [
+                446.71308525913514,
+                1237.9459424960473,
+                55.28905468379602
+              ],
+              "targetSegment": 0,
+              "targetT": 0,
+              "distanceMm": 0
+            },
+            "scope": "complete supplied piecewise-linear paths; finite floating-point tolerance",
+            "analyticCurveCertified": false,
+            "floatingPointIntervalCertified": false,
+            "motionCertified": false
+          },
+          "assessment": "within_review_threshold",
+          "measurementMeaning": "separation of declared sewn boundaries; topology order checked separately"
+        },
+        {
+          "seamId": "s1",
+          "stageId": "sleeve_tubes",
+          "sourceStitchIndex": 1,
+          "a": {
+            "panelId": "left_sleeve_f",
+            "edge": "e2",
+            "reverse": false
+          },
+          "b": {
+            "panelId": "left_sleeve_b",
+            "edge": "e1",
+            "reverse": true
+          },
+          "declaredGathering": false,
+          "needleCount": 17,
+          "needleGapMm": 0,
+          "span": {
+            "lowerBoundMm": 0,
+            "upperBoundMm": 1e-10,
+            "errorBoundMm": 1e-10,
+            "resolved": true,
+            "evaluations": 34,
+            "worst": {
+              "sourceSide": 0,
+              "sourceSegment": 0,
+              "sourceT": 0,
+              "sourcePositionMm": [
+                188.31743594361572,
+                1315.5437144439777,
+                8.563154025273068
+              ],
+              "targetSegment": 0,
+              "targetT": 0,
+              "distanceMm": 0
+            },
+            "scope": "complete supplied piecewise-linear paths; finite floating-point tolerance",
+            "analyticCurveCertified": false,
+            "floatingPointIntervalCertified": false,
+            "motionCertified": false
+          },
+          "assessment": "within_review_threshold",
+          "measurementMeaning": "separation of declared sewn boundaries; topology order checked separately"
+        },
+        {
+          "seamId": "s2",
+          "stageId": "armholes",
+          "sourceStitchIndex": 2,
+          "a": {
+            "panelId": "left_sleeve_f",
+            "edge": "e1",
+            "reverse": false
+          },
+          "b": {
+            "panelId": "left_ftorso",
+            "edge": "e2",
+            "reverse": true
+          },
+          "declaredGathering": false,
+          "needleCount": 37,
+          "needleGapMm": 0,
+          "span": {
+            "lowerBoundMm": 0,
+            "upperBoundMm": 1e-10,
+            "errorBoundMm": 1e-10,
+            "resolved": true,
+            "evaluations": 74,
+            "worst": {
+              "sourceSide": 0,
+              "sourceSegment": 0,
+              "sourceT": 0,
+              "sourcePositionMm": [
+                245.9643183318185,
+                1501.868207743473,
+                -0.8505510052044806
+              ],
+              "targetSegment": 0,
+              "targetT": 0,
+              "distanceMm": 0
+            },
+            "scope": "complete supplied piecewise-linear paths; finite floating-point tolerance",
+            "analyticCurveCertified": false,
+            "floatingPointIntervalCertified": false,
+            "motionCertified": false
+          },
+          "assessment": "within_review_threshold",
+          "measurementMeaning": "separation of declared sewn boundaries; topology order checked separately"
+        },
+        {
+          "seamId": "s3",
+          "stageId": "armholes",
+          "sourceStitchIndex": 3,
+          "a": {
+            "panelId": "left_sleeve_b",
+            "edge": "e3",
+            "reverse": false
+          },
+          "b": {
+            "panelId": "left_ftorso",
+            "edge": "e3",
+            "reverse": true
+          },
+          "declaredGathering": false,
+          "needleCount": 3,
+          "needleGapMm": 0,
+          "span": {
+            "lowerBoundMm": 0,
+            "upperBoundMm": 1e-10,
+            "errorBoundMm": 1e-10,
+            "resolved": true,
+            "evaluations": 6,
+            "worst": {
+              "sourceSide": 0,
+              "sourceSegment": 0,
+              "sourceT": 0,
+              "sourcePositionMm": [
+                229.0940339472059,
+                1499.084748094169,
+                -26.117103951397212
+              ],
+              "targetSegment": 0,
+              "targetT": 0,
+              "distanceMm": 0
+            },
+            "scope": "complete supplied piecewise-linear paths; finite floating-point tolerance",
+            "analyticCurveCertified": false,
+            "floatingPointIntervalCertified": false,
+            "motionCertified": false
+          },
+          "assessment": "within_review_threshold",
+          "measurementMeaning": "separation of declared sewn boundaries; topology order checked separately"
+        },
+        {
+          "seamId": "s4",
+          "stageId": "armholes",
+          "sourceStitchIndex": 4,
+          "a": {
+            "panelId": "left_sleeve_b",
+            "edge": "e2",
+            "reverse": false
+          },
+          "b": {
+            "panelId": "left_btorso",
+            "edge": "e3",
+            "reverse": true
+          },
+          "declaredGathering": false,
+          "needleCount": 33,
+          "needleGapMm": 0,
+          "span": {
+            "lowerBoundMm": 0,
+            "upperBoundMm": 1e-10,
+            "errorBoundMm": 1e-10,
+            "resolved": true,
+            "evaluations": 66,
+            "worst": {
+              "sourceSide": 0,
+              "sourceSegment": 0,
+              "sourceT": 0,
+              "sourcePositionMm": [
+                188.31743594361572,
+                1315.5437144439777,
+                8.563154025273068
+              ],
+              "targetSegment": 0,
+              "targetT": 0,
+              "distanceMm": 0
+            },
+            "scope": "complete supplied piecewise-linear paths; finite floating-point tolerance",
+            "analyticCurveCertified": false,
+            "floatingPointIntervalCertified": false,
+            "motionCertified": false
+          },
+          "assessment": "within_review_threshold",
+          "measurementMeaning": "separation of declared sewn boundaries; topology order checked separately"
+        },
+        {
+          "seamId": "s5",
+          "stageId": "shoulders",
+          "sourceStitchIndex": 5,
+          "a": {
+            "panelId": "left_ftorso",
+            "edge": "e4",
+            "reverse": false
+          },
+          "b": {
+            "panelId": "left_btorso",
+            "edge": "e2",
+            "reverse": true
+          },
+          "declaredGathering": false,
+          "needleCount": 6,
+          "needleGapMm": 0,
+          "span": {
+            "lowerBoundMm": 0,
+            "upperBoundMm": 1e-10,
+            "errorBoundMm": 1e-10,
+            "resolved": true,
+            "evaluations": 12,
+            "worst": {
+              "sourceSide": 0,
+              "sourceSegment": 0,
+              "sourceT": 0,
+              "sourcePositionMm": [
+                229.0940339472059,
+                1499.084748094169,
+                -26.117103951397212
+              ],
+              "targetSegment": 0,
+              "targetT": 0,
+              "distanceMm": 0
+            },
+            "scope": "complete supplied piecewise-linear paths; finite floating-point tolerance",
+            "analyticCurveCertified": false,
+            "floatingPointIntervalCertified": false,
+            "motionCertified": false
+          },
+          "assessment": "within_review_threshold",
+          "measurementMeaning": "separation of declared sewn boundaries; topology order checked separately"
+        },
+        {
+          "seamId": "s6",
+          "stageId": "sides",
+          "sourceStitchIndex": 6,
+          "a": {
+            "panelId": "left_ftorso",
+            "edge": "e1",
+            "reverse": false
+          },
+          "b": {
+            "panelId": "left_btorso",
+            "edge": "e4",
+            "reverse": true
+          },
+          "declaredGathering": false,
+          "needleCount": 34,
+          "needleGapMm": 0,
+          "span": {
+            "lowerBoundMm": 0,
+            "upperBoundMm": 1e-10,
+            "errorBoundMm": 1e-10,
+            "resolved": true,
+            "evaluations": 68,
+            "worst": {
+              "sourceSide": 0,
+              "sourceSegment": 0,
+              "sourceT": 0,
+              "sourcePositionMm": [
+                203.24072733771118,
+                813.0073728178855,
+                2.891187914659
+              ],
+              "targetSegment": 0,
+              "targetT": 0,
+              "distanceMm": 0
+            },
+            "scope": "complete supplied piecewise-linear paths; finite floating-point tolerance",
+            "analyticCurveCertified": false,
+            "floatingPointIntervalCertified": false,
+            "motionCertified": false
+          },
+          "assessment": "within_review_threshold",
+          "measurementMeaning": "separation of declared sewn boundaries; topology order checked separately"
+        },
+        {
+          "seamId": "s7",
+          "stageId": "sleeve_tubes",
+          "sourceStitchIndex": 7,
+          "a": {
+            "panelId": "right_sleeve_f",
+            "edge": "e3",
+            "reverse": false
+          },
+          "b": {
+            "panelId": "right_sleeve_b",
+            "edge": "e0",
+            "reverse": true
+          },
+          "declaredGathering": false,
+          "needleCount": 23,
+          "needleGapMm": 0,
+          "span": {
+            "lowerBoundMm": 0,
+            "upperBoundMm": 1e-10,
+            "errorBoundMm": 1e-10,
+            "resolved": true,
+            "evaluations": 46,
+            "worst": {
+              "sourceSide": 0,
+              "sourceSegment": 0,
+              "sourceT": 0,
+              "sourcePositionMm": [
+                -133.9229286709834,
+                1549.4499057095354,
+                8.058183658207723
+              ],
+              "targetSegment": 0,
+              "targetT": 0,
+              "distanceMm": 0
+            },
+            "scope": "complete supplied piecewise-linear paths; finite floating-point tolerance",
+            "analyticCurveCertified": false,
+            "floatingPointIntervalCertified": false,
+            "motionCertified": false
+          },
+          "assessment": "within_review_threshold",
+          "measurementMeaning": "separation of declared sewn boundaries; topology order checked separately"
+        },
+        {
+          "seamId": "s8",
+          "stageId": "sleeve_tubes",
+          "sourceStitchIndex": 8,
+          "a": {
+            "panelId": "right_sleeve_f",
+            "edge": "e1",
+            "reverse": false
+          },
+          "b": {
+            "panelId": "right_sleeve_b",
+            "edge": "e3",
+            "reverse": true
+          },
+          "declaredGathering": false,
+          "needleCount": 17,
+          "needleGapMm": 0,
+          "span": {
+            "lowerBoundMm": 0,
+            "upperBoundMm": 1e-10,
+            "errorBoundMm": 1e-10,
+            "resolved": true,
+            "evaluations": 34,
+            "worst": {
+              "sourceSide": 0,
+              "sourceSegment": 0,
+              "sourceT": 0,
+              "sourcePositionMm": [
+                -328.6005172393508,
+                1227.475194574517,
+                0.97939186249146
+              ],
+              "targetSegment": 0,
+              "targetT": 0,
+              "distanceMm": 0
+            },
+            "scope": "complete supplied piecewise-linear paths; finite floating-point tolerance",
+            "analyticCurveCertified": false,
+            "floatingPointIntervalCertified": false,
+            "motionCertified": false
+          },
+          "assessment": "within_review_threshold",
+          "measurementMeaning": "separation of declared sewn boundaries; topology order checked separately"
+        },
+        {
+          "seamId": "s9",
+          "stageId": "armholes",
+          "sourceStitchIndex": 9,
+          "a": {
+            "panelId": "right_sleeve_f",
+            "edge": "e2",
+            "reverse": false
+          },
+          "b": {
+            "panelId": "right_ftorso",
+            "edge": "e4",
+            "reverse": true
+          },
+          "declaredGathering": false,
+          "needleCount": 37,
+          "needleGapMm": 0,
+          "span": {
+            "lowerBoundMm": 0,
+            "upperBoundMm": 1e-10,
+            "errorBoundMm": 1e-10,
+            "resolved": true,
+            "evaluations": 74,
+            "worst": {
+              "sourceSide": 0,
+              "sourceSegment": 0,
+              "sourceT": 0,
+              "sourcePositionMm": [
+                -183.47564356861116,
+                1382.9409499669484,
+                -9.491749461860431
+              ],
+              "targetSegment": 0,
+              "targetT": 0,
+              "distanceMm": 0
+            },
+            "scope": "complete supplied piecewise-linear paths; finite floating-point tolerance",
+            "analyticCurveCertified": false,
+            "floatingPointIntervalCertified": false,
+            "motionCertified": false
+          },
+          "assessment": "within_review_threshold",
+          "measurementMeaning": "separation of declared sewn boundaries; topology order checked separately"
+        },
+        {
+          "seamId": "s10",
+          "stageId": "armholes",
+          "sourceStitchIndex": 10,
+          "a": {
+            "panelId": "right_sleeve_b",
+            "edge": "e1",
+            "reverse": false
+          },
+          "b": {
+            "panelId": "right_ftorso",
+            "edge": "e3",
+            "reverse": true
+          },
+          "declaredGathering": false,
+          "needleCount": 3,
+          "needleGapMm": 0,
+          "span": {
+            "lowerBoundMm": 0,
+            "upperBoundMm": 1e-10,
+            "errorBoundMm": 1e-10,
+            "resolved": true,
+            "evaluations": 6,
+            "worst": {
+              "sourceSide": 0,
+              "sourceSegment": 0,
+              "sourceT": 0,
+              "sourcePositionMm": [
+                -133.9229286709834,
+                1549.4499057095354,
+                8.058183658207723
+              ],
+              "targetSegment": 0,
+              "targetT": 0,
+              "distanceMm": 0
+            },
+            "scope": "complete supplied piecewise-linear paths; finite floating-point tolerance",
+            "analyticCurveCertified": false,
+            "floatingPointIntervalCertified": false,
+            "motionCertified": false
+          },
+          "assessment": "within_review_threshold",
+          "measurementMeaning": "separation of declared sewn boundaries; topology order checked separately"
+        },
+        {
+          "seamId": "s11",
+          "stageId": "armholes",
+          "sourceStitchIndex": 11,
+          "a": {
+            "panelId": "right_sleeve_b",
+            "edge": "e2",
+            "reverse": false
+          },
+          "b": {
+            "panelId": "right_btorso",
+            "edge": "e2",
+            "reverse": true
+          },
+          "declaredGathering": false,
+          "needleCount": 33,
+          "needleGapMm": 0,
+          "span": {
+            "lowerBoundMm": 0,
+            "upperBoundMm": 1e-10,
+            "errorBoundMm": 1e-10,
+            "resolved": true,
+            "evaluations": 66,
+            "worst": {
+              "sourceSide": 0,
+              "sourceSegment": 0,
+              "sourceT": 0,
+              "sourcePositionMm": [
+                -129.4523029492059,
+                1551.7019779964314,
+                -21.797559486271368
+              ],
+              "targetSegment": 0,
+              "targetT": 0,
+              "distanceMm": 0
+            },
+            "scope": "complete supplied piecewise-linear paths; finite floating-point tolerance",
+            "analyticCurveCertified": false,
+            "floatingPointIntervalCertified": false,
+            "motionCertified": false
+          },
+          "assessment": "within_review_threshold",
+          "measurementMeaning": "separation of declared sewn boundaries; topology order checked separately"
+        },
+        {
+          "seamId": "s12",
+          "stageId": "shoulders",
+          "sourceStitchIndex": 12,
+          "a": {
+            "panelId": "right_ftorso",
+            "edge": "e2",
+            "reverse": false
+          },
+          "b": {
+            "panelId": "right_btorso",
+            "edge": "e3",
+            "reverse": true
+          },
+          "declaredGathering": false,
+          "needleCount": 6,
+          "needleGapMm": 0,
+          "span": {
+            "lowerBoundMm": 0,
+            "upperBoundMm": 1e-10,
+            "errorBoundMm": 1e-10,
+            "resolved": true,
+            "evaluations": 12,
+            "worst": {
+              "sourceSide": 0,
+              "sourceSegment": 0,
+              "sourceT": 0,
+              "sourcePositionMm": [
+                -69.76748402710254,
+                1577.807076818713,
+                -20.7468439115666
+              ],
+              "targetSegment": 0,
+              "targetT": 0,
+              "distanceMm": 0
+            },
+            "scope": "complete supplied piecewise-linear paths; finite floating-point tolerance",
+            "analyticCurveCertified": false,
+            "floatingPointIntervalCertified": false,
+            "motionCertified": false
+          },
+          "assessment": "within_review_threshold",
+          "measurementMeaning": "separation of declared sewn boundaries; topology order checked separately"
+        },
+        {
+          "seamId": "s13",
+          "stageId": "sides",
+          "sourceStitchIndex": 13,
+          "a": {
+            "panelId": "right_ftorso",
+            "edge": "e5",
+            "reverse": false
+          },
+          "b": {
+            "panelId": "right_btorso",
+            "edge": "e1",
+            "reverse": true
+          },
+          "declaredGathering": false,
+          "needleCount": 34,
+          "needleGapMm": 0,
+          "span": {
+            "lowerBoundMm": 0,
+            "upperBoundMm": 1e-10,
+            "errorBoundMm": 1e-10,
+            "resolved": true,
+            "evaluations": 68,
+            "worst": {
+              "sourceSide": 0,
+              "sourceSegment": 0,
+              "sourceT": 0,
+              "sourcePositionMm": [
+                -183.47564356861116,
+                1382.9409499669484,
+                -9.491749461860431
+              ],
+              "targetSegment": 0,
+              "targetT": 0,
+              "distanceMm": 0
+            },
+            "scope": "complete supplied piecewise-linear paths; finite floating-point tolerance",
+            "analyticCurveCertified": false,
+            "floatingPointIntervalCertified": false,
+            "motionCertified": false
+          },
+          "assessment": "within_review_threshold",
+          "measurementMeaning": "separation of declared sewn boundaries; topology order checked separately"
+        },
+        {
+          "seamId": "s14",
+          "stageId": "centers",
+          "sourceStitchIndex": 14,
+          "a": {
+            "panelId": "right_ftorso",
+            "edge": "e0",
+            "reverse": false
+          },
+          "b": {
+            "panelId": "left_ftorso",
+            "edge": "e6",
+            "reverse": true
+          },
+          "declaredGathering": false,
+          "needleCount": 35,
+          "needleGapMm": 0,
+          "span": {
+            "lowerBoundMm": 0,
+            "upperBoundMm": 1e-10,
+            "errorBoundMm": 1e-10,
+            "resolved": true,
+            "evaluations": 70,
+            "worst": {
+              "sourceSide": 0,
+              "sourceSegment": 0,
+              "sourceT": 0,
+              "sourcePositionMm": [
+                1.0011079760163848,
+                904.724829784523,
+                150.59998518196423
+              ],
+              "targetSegment": 0,
+              "targetT": 0,
+              "distanceMm": 0
+            },
+            "scope": "complete supplied piecewise-linear paths; finite floating-point tolerance",
+            "analyticCurveCertified": false,
+            "floatingPointIntervalCertified": false,
+            "motionCertified": false
+          },
+          "assessment": "within_review_threshold",
+          "measurementMeaning": "separation of declared sewn boundaries; topology order checked separately"
+        },
+        {
+          "seamId": "s15",
+          "stageId": "centers",
+          "sourceStitchIndex": 15,
+          "a": {
+            "panelId": "right_btorso",
+            "edge": "e5",
+            "reverse": false
+          },
+          "b": {
+            "panelId": "left_btorso",
+            "edge": "e0",
+            "reverse": true
+          },
+          "declaredGathering": false,
+          "needleCount": 43,
+          "needleGapMm": 0,
+          "span": {
+            "lowerBoundMm": 0,
+            "upperBoundMm": 1e-10,
+            "errorBoundMm": 1e-10,
+            "resolved": true,
+            "evaluations": 86,
+            "worst": {
+              "sourceSide": 0,
+              "sourceSegment": 0,
+              "sourceT": 0,
+              "sourcePositionMm": [
+                50.22581508923635,
+                1527.9945198157607,
+                -71.30828504126012
+              ],
+              "targetSegment": 0,
+              "targetT": 0,
+              "distanceMm": 0
+            },
+            "scope": "complete supplied piecewise-linear paths; finite floating-point tolerance",
+            "analyticCurveCertified": false,
+            "floatingPointIntervalCertified": false,
+            "motionCertified": false
+          },
+          "assessment": "within_review_threshold",
+          "measurementMeaning": "separation of declared sewn boundaries; topology order checked separately"
+        }
+      ],
+      "needleEqualityDoesNotProveContinuousClosure": true,
+      "unreferencedEdgesAreNotAutomaticallyErrors": true,
+      "unreferencedMaterialEdges": 12,
+      "garmentAccepted": false,
+      "dynamicWearCertified": false,
+      "readOnly": true,
+      "limits": "No material, seam-allowance, bending, surface self-contact or motion validity certification. Bounds apply to discretized edge geometry, not the unsampled original analytic curve."
+    },
+    "priorNeedleOnlyGatePassed": false,
+    "geometricClosureOnly": true,
+    "seamAllowanceAndFoldConstructionCertified": false
   }
 }
