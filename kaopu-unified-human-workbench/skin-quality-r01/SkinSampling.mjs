@@ -32,7 +32,11 @@ export async function attachSkinSampling(skin){
  };
  skin.samplingExtension=ext;
  skin.material.customProgramCacheKey=()=>key()+'/'+SKIN_SAMPLING_VERSION+'/'+(ext.enabled?'array-grad':'original');
- skin.material.onBeforeCompile=shader=>{previous(shader);if(!ext.enabled||ext.disposed)return;shader.fragmentShader=patchSkinSamplingShader(shader.fragmentShader);shader.uniforms.uSamplingAtlas={value:arrays[0]};shader.uniforms.uSamplingChroma={value:arrays[1]};ext.shaderCompiles++;};
+ // Three caches programs per material but keeps the most recently built uniform set.
+ // Populate the full stable superset for BOTH modes so cached A/B programs can
+ // be revisited without losing array bindings or rebinding a 2D sampler as array.
+ const samplingUniforms={uSamplingAtlas:{value:arrays[0]},uSamplingChroma:{value:arrays[1]}};
+ skin.material.onBeforeCompile=shader=>{previous(shader);Object.assign(shader.uniforms,samplingUniforms);if(!ext.enabled||ext.disposed)return;shader.fragmentShader=patchSkinSamplingShader(shader.fragmentShader);ext.shaderCompiles++;};
  const dispose=skin.dispose.bind(skin);skin.dispose=()=>{if(!ext.disposed){ext.disposed=true;for(const t of arrays)t.dispose();}dispose();};
  skin.material.needsUpdate=true;skin.viewer.render();return ext;
 }
