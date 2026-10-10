@@ -261,9 +261,17 @@ async function shot(page, name, kind = 'native-ui-production-clock', visual = tr
 }
 async function camera(page, id, touch = false) {
   const paused = (await state(page)).paused;
-  await clickTarget(page, '#openCameraMenu', {touch}); await clickTarget(page, `[data-camera="${id}"]`, {touch});
-  await until(page, id => __trainDriver.getState().cameraMode === id && document.getElementById('settingsScreen').hidden, id);
-  assert.equal((await state(page)).paused, paused); await page.waitForTimeout(250);
+  await clickTarget(page, '#openCameraMenu', {touch});
+  const beforeSelectionFrame = (await state(page)).frames;
+  await clickTarget(page, `[data-camera="${id}"]`, {touch});
+  await until(page, ({id, before}) => {
+    const s = __trainDriver.getState(), profile = s.viewSettings.profiles[s.viewSettings.layout];
+    return s.cameraMode === id && document.getElementById('settingsScreen').hidden && s.frames > before &&
+      Math.hypot(...s.camera.map((n, i) => n - profile.position[i])) < .02;
+  }, {id, before: beforeSelectionFrame});
+  // Presets apply their saved pose directly and set manual=true. Waiting for a
+  // newer production render proves that screenshot pixels use the selected pose.
+  assert.equal((await state(page)).paused, paused);
 }
 async function inputLatency(page, name, action, expected) {
   const start = performance.now(); await action(); await until(page, expected, null, {polling: 25});
