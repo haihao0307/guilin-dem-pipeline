@@ -1,0 +1,33 @@
+name: Bounded native ticket action experiment
+on:
+  push:
+    branches: ['qa/director-ticket-r03-20261010']
+    paths:
+      - 'kaopu-unified-human-workbench/tests/director-ticket-r03/**'
+      - '.github/workflows/director-ticket-r03-qa.yml'
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-unified-human-workbench/tests/director-ticket-r03
+      - name: Use fixed official browser package
+        run: npm install --prefix "$RUNNER_TEMP/director-ticket" --no-save --ignore-scripts playwright@1.57.0
+      - name: Use actual Chromium
+        run: |
+          "$RUNNER_TEMP/director-ticket/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/director-ticket/node_modules" >> "$GITHUB_ENV"
+      - name: One original actor same-clock action take
+        run: node kaopu-unified-human-workbench/tests/director-ticket-r03/browser.cjs
+      - name: Preserve actual frames including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: director-ticket-r03-${{ github.sha }}
+          path: director-ticket-r03-results/
+          retention-days: 7
