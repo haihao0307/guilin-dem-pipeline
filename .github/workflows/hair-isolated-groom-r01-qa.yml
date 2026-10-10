@@ -33,6 +33,7 @@ jobs:
           printf "export * from '../../vendor/three.module.js';\n" > node_modules/three/index.js
           node --check src/main.js
           node tests/geometry.mjs
+          GROOM=refined node tests/geometry.mjs
       - name: Serve isolated candidate without deployment
         run: |
           python3 -m http.server 8766 --bind 127.0.0.1 --directory kaopu-hair-workbench/qa/isolated-groom-r01 > "$RUNNER_TEMP/hair-http.log" 2>&1 &

@@ -11,3 +11,9 @@ Acceptance is false: no film-quality claim, no physical inertia, no shoulder/bac
 Tests: `tests/geometry.mjs` checks real fixed GNM model, all styles, finite data, triangle bounds, barycentric sum, root-clearance bound, reset hashes, immutable source positions, density draw reduction vs unchanged allocation. Browser CI on Ubuntu 24.04 + Playwright 1.57 captures actual WebGL images and layered capability, reset and software-renderer wall timing. A passed geometry test does not substitute for pixel or hardware acceptance.
 
 The stable human platform and old hair workbench are untouched. This version must remain a Draft until actual screenshots have been reviewed.
+
+## R02 focused grooming candidate
+
+`?groom=refined` preserves the original roots and R8 shaders, adding a 1–26 mm smooth root-margin length transition, weak 12 mm spatial guide grouping, 1.8% selected interior-root silhouette flyaways, and 75 µm fibre radius (R01 was 280 µm). Volume rises from 8 to 12 mm while tangent frizz decreases from .45 to .15 mm; these are grooming changes, not a physics solver. Boundary shortening targets common clipped ends and gentle bundle convergence targets sheet-like uniform flow. Same-camera before/after screenshots are required; no assumed visual acceptance.
+
+Diagnostics now include actual displayed rotated roots, reachable typed-array storage (not total JavaScript heap), and full-resolution readPixels timing after forced shadow rebuild. The initial gl.finish-only timing is discarded as an inadequate performance measurement.
