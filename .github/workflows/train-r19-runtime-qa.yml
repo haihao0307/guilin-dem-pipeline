@@ -45,7 +45,21 @@ jobs:
         env:
           TRAIN_QA_OUT: train-r19-results/profile
         run: node "$GAME/r19/tests/r19-webgl-profile.cjs"
+      - name: Isolate pixel cost without changing production quality
+        env:
+          TRAIN_QA_OUT: train-r19-results/gpu-isolation
+        run: node "$GAME/r19/tests/r19-gpu-isolation.cjs"
+      - name: Retain early GPU diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-r19-gpu-isolation-${{ github.sha }}
+          path: train-r19-results/gpu-isolation/
+          compression-level: 0
+          if-no-files-found: warn
+          retention-days: 7
       - name: Native first station to second without fixture placement
+        if: ${{ !cancelled() }}
         env:
           TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r19/
           TRAIN_QA_OUT: train-r19-results/native
