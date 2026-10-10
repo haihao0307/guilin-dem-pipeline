@@ -1,0 +1,89 @@
+name: Tailor R04.3 original-material fitting correction
+on:
+  push:
+    branches: [feature/tailor-cabinet-r03-garment-surfaces-20261009]
+    paths:
+      - '.github/workflows/tailor-r043-material-correction.yml'
+      - 'kaopu-tailor-workbench/presets/r04/MATERIAL_R043B_TRIGGER.json'
+permissions:
+  contents: write
+concurrency:
+  group: tailor-r043-original-material-correction
+  cancel-in-progress: false
+jobs:
+  native-correction:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-tailor-workbench/presets/r04
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Actual compiler and browser
+        run: |
+          pip install playwright==1.56.0
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y clang lld fonts-noto-cjk
+      - name: Build only original-material solver corrections and verify invariants
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          python "$P/install_r043b.py"
+          node "$P/test_r043b.mjs"
+          node "$P/contract_test.mjs"
+          python - <<'PY'
+          import pathlib,json,hashlib
+          p=pathlib.Path('kaopu-tailor-workbench/presets/r04')
+          files=['assets/identity.json','assets/common-body.json','assets/common-body.sdfd.gz','assets/body-sdf-grid.json','parameter-schema.json','PARAMETER_AUDIT_R043.json','native/kaopu-tailor-workbench/r07/continuation/seam-gate.mjs','native/kaopu-tailor-workbench/r07/stability/audit.mjs']+[str(f.relative_to(p)) for f in (p/'assets/papers').glob('*.json.gz')]
+          index=json.loads((p/'assets/results/index.json').read_text())
+          files+=['assets/results/'+v['file'] for v in index['rows'].values() if v['qualityPassed']]
+          (p/'MATERIAL_R043B_PROTECTED.json').write_text(json.dumps({f:hashlib.sha256((p/f).read_bytes()).hexdigest() for f in files},indent=2))
+          (p/'BATCH_R043_BEFORE_MATERIAL.json').write_bytes((p/'BATCH_R043.json').read_bytes())
+          # All original generated trial files remain in prior commits; fresh numerical trials may not reuse them.
+          for f in (p/'batch-r043').glob('*.json.gz'): f.unlink()
+          for f in (p/'batch-r043').glob('*.log'): f.unlink()
+          PY
+      - name: Recompute all 51 previously unaccepted native originals
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          R043_PARALLEL=3 python "$P/batch_r043.py"
+          python "$P/collect_results_r043.py"
+      - name: Real original-person gallery, regenerated parameter example and 432 outfit checks
+        run: |
+          python -m http.server 8765 >/tmp/tailor-r043b-http.log 2>&1 &
+          python kaopu-tailor-workbench/presets/r04/qa_r043.py
+          python - <<'PY'
+          import pathlib,json,hashlib,os
+          p=pathlib.Path('kaopu-tailor-workbench/presets/r04');load=lambda n:json.loads((p/n).read_text())
+          protected=load('MATERIAL_R043B_PROTECTED.json')
+          assert all(hashlib.sha256((p/f).read_bytes()).hexdigest()==sha for f,sha in protected.items())
+          q=load('R043_BROWSER_REPORT.json');index=load('assets/results/index.json')
+          assert q['passed'] and load('R043B_CONTRACT_TESTS.json')['passed']
+          summary=load('assets/readiness.json')['summary']
+          report={'sourceCommit':os.environ['GITHUB_SHA'],'runtimeGatePassed':True,'protectedFilesUnchanged':len(protected),'browserChecks':len(q['checks']),'outfitsTested':len(q['outfitMembers']),'summary':summary,'all60GarmentsAccepted':False,'fabricCalibrated':False,'dynamicWearCertified':False}
+          (p/'MATERIAL_R043B_ACCEPTANCE.json').write_text(json.dumps(report,indent=2))
+          print(json.dumps(report),flush=True)
+          PY
+      - name: Retain exact source and actual outcomes without overwriting concurrent work
+        if: always()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$GITHUB_REF_NAME" --depth=1
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          git add kaopu-tailor-workbench/presets/r04
+          if ! git diff --cached --quiet; then
+            git commit -m 'fix(tailor-r043): retain native material fitting, actual outfit gallery and preserved quality failures'
+            git push origin HEAD:"$GITHUB_REF_NAME"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r043-material-correction-evidence
+          path: kaopu-tailor-workbench/presets/r04
+          retention-days: 14
