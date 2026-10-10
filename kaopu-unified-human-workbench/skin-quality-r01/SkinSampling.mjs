@@ -32,7 +32,7 @@ export async function attachSkinSampling(skin){
  };
  skin.samplingExtension=ext;
  skin.material.customProgramCacheKey=()=>key()+'/'+SKIN_SAMPLING_VERSION+'/'+(ext.enabled?'array-grad':'original');
- skin.material.onBeforeCompile=shader=>{previous(shader);if(!ext.enabled||ext.disposed)return;shader.fragmentShader=patchSkinSamplingShader(shader.fragmentShader);shader.uniforms.uFAtlas={value:arrays[0]};shader.uniforms.uFChroma={value:arrays[1]};ext.shaderCompiles++;};
+ skin.material.onBeforeCompile=shader=>{previous(shader);if(!ext.enabled||ext.disposed)return;shader.fragmentShader=patchSkinSamplingShader(shader.fragmentShader);shader.uniforms.uSamplingAtlas={value:arrays[0]};shader.uniforms.uSamplingChroma={value:arrays[1]};ext.shaderCompiles++;};
  const dispose=skin.dispose.bind(skin);skin.dispose=()=>{if(!ext.disposed){ext.disposed=true;for(const t of arrays)t.dispose();}dispose();};
  skin.material.needsUpdate=true;skin.viewer.render();return ext;
 }

@@ -11,6 +11,7 @@ Production R06 uses `common-skin-foundation/r1`, procedural rest-space detail an
 1. Unity Digital Human / The Heretic / Enemies provides inspectable skin/eye shader graphs, skin attachment, skin tension and wrinkle-map facilities. Its new skin shader requires Unity/HDRP; the repository license is Unity Companion for Unity-dependent projects. Public source access does not make it permissively reusable in an unrelated WebGL runtime. Study the separation between base tissue, surface detail, tension and attachments, and author the WebGL implementation independently. No Unity code/assets are copied here.
    - https://github.com/Unity-Technologies/com.unity.demoteam.digital-human
    - https://github.com/Unity-Technologies/com.unity.demoteam.digital-human/blob/master/LICENSE.md
+   - Code inspection: `ShaderLibrary/Nodes_Skin/SkinTensionSampleWeight.hlsl` reads a validated per-vertex tension buffer; `SkinDeformationBlend.hlsl` blends captured albedo frames. These are separate data-backed mechanisms, not evidence that random noise or static identity wrinkles already simulate skin tension.
 
 2. USC ICT Digital Emily 2 separates diffuse, specular, single scatter, displacement and microgeometry, and supplies polarized reference categories. That separation is a useful validation discipline: verify color without illumination baked into it, specular response independently, and shallow detail at a physical scale. The page explicitly restricts its reference image's commercial use and redistribution. It does not establish a blanket permissive license for every linked dataset; none of the Emily model, textures or images is copied or republished here.
    - https://vgl.ict.usc.edu/Data/DigitalEmily2/
@@ -25,6 +26,9 @@ Production R06 uses `common-skin-foundation/r1`, procedural rest-space detail an
 5. Khronos GLSL ES 3.00 specifies that implicit texture derivatives and derivative functions are undefined in nonuniform control flow. `textureGrad` accepts explicit gradients; array textures select a layer rather than filtering between facial tiles. This directly supports the first small code improvement, which is testable without changing the person's identity or artistic settings.
    - https://registry.khronos.org/OpenGL/specs/es/3.0/GLSL_ES_Specification_3.00.pdf (sections 8.8 and 8.9)
    - https://threejs.org/docs/#api/en/textures/DataArrayTexture
+
+6. Pixar's photorealistic-head tutorial, authored by Leif Pedersen and reviewed/annotated by Christophe Hery, uses separate fine bump/displacement, subsurface scattering, two specular lobes and restrained fuzz. It explicitly evaluates specular under different lighting and discusses high-bit-depth data and scene scale. This is why the next work should address light transport and region-specific surface response rather than increase contrast globally. The tutorial confirms the Infinite/Lee Perry-Smith head's CC BY 3.0 attribution, supporting the host's existing atlas provenance; no additional model is imported.
+   - https://renderman.pixar.com/photorealistic-head
 
 ## Ordered quality checks before larger claims
 
