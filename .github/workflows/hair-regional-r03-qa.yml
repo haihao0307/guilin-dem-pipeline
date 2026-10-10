@@ -1,0 +1,60 @@
+name: Root and nape R03 draft browser evidence
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        type: choice
+        options: [candidate, public]
+        default: candidate
+        description: Read-only target to verify
+  push:
+    branches: ['codex/hair-roots-r03-20261010', 'gh-pages']
+    paths: ['kaopu-hair-workbench/qa/isolated-groom-r03/**', '.github/workflows/hair-regional-r03-qa.yml']
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-hair-workbench/qa/isolated-groom-r03
+      - name: Install pinned official test runner
+        run: |
+          npm install --prefix "$RUNNER_TEMP/hair-r03" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/hair-r03/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/hair-r03/node_modules" >> "$GITHUB_ENV"
+          sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk
+      - name: Fetch fixed licensed GNM head and verify bytes
+        working-directory: kaopu-hair-workbench/qa/isolated-groom-r03
+        run: |
+          curl --fail --location --retry 2 --output gnm_head_web.bin https://raw.githubusercontent.com/xrblocks/assets-gnm/134feb02b11fa642a43ff5e7e880246255a74e86/gnm_head_web.bin
+          echo 'fd19f46eef6f8bfb725fceab581e1bc8837209997ca3fd43f3c1735003c86961  gnm_head_web.bin' | sha256sum --check
+      - name: Check actual geometry and allocations
+        working-directory: kaopu-hair-workbench/qa/isolated-groom-r03
+        run: |
+          mkdir -p node_modules/three evidence
+          printf '{"type":"module","exports":"./index.js"}' > node_modules/three/package.json
+          printf "export * from '../../vendor/three.module.js';\n" > node_modules/three/index.js
+          node --check src/main.js
+          node tests/regions.mjs
+      - name: Serve isolated candidate without deployment
+        run: |
+          python3 -m http.server 8767 --bind 127.0.0.1 --directory kaopu-hair-workbench/qa/isolated-groom-r03 > "$RUNNER_TEMP/hair-http.log" 2>&1 &
+          for n in $(seq 1 30); do curl --fail --silent http://127.0.0.1:8767/ > /dev/null && exit 0; sleep 1; done
+          exit 1
+      - name: Render styles, head rotation and mobile evidence
+        working-directory: kaopu-hair-workbench/qa/isolated-groom-r03
+        run: |
+          if [ "${{ inputs.target }}" = "public" ] || [ "${{ github.ref }}" = "refs/heads/gh-pages" ]; then export GROOM_BASE_URL="https://haihao0307.github.io/guilin-dem-pipeline/kaopu-hair-workbench/qa/isolated-groom-r03/"; fi
+          node tests/browser-regions.cjs
+      - name: Retain evidence only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hair-regional-r03-${{ github.sha }}
+          path: kaopu-hair-workbench/qa/isolated-groom-r03/evidence/
+          retention-days: 7
+          if-no-files-found: warn
