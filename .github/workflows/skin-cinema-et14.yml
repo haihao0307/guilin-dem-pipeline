@@ -1,0 +1,63 @@
+name: ET14 close-up skin candidate
+on:
+  push:
+    branches: [feature/skin-cinema-et14-20261010]
+    paths: ['kaopu-unified-human-workbench/skin-cinema-et14/*.mjs', 'kaopu-unified-human-workbench/skin-cinema-et14/*.cjs', '.github/workflows/skin-cinema-et14.yml']
+permissions:
+  contents: write
+concurrency:
+  group: et14-close-up-skin
+  cancel-in-progress: true
+jobs:
+  skin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      NODE_PATH: /tmp/et14-tools/node_modules
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-unified-human-workbench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated fixed tools
+        run: |
+          npm install --prefix /tmp/et14-tools --no-audit --no-fund esbuild@0.25.10 playwright@1.56.1
+          /tmp/et14-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Validate numeric model and original-source hashes then build
+        run: |
+          for file in kaopu-unified-human-workbench/skin-cinema-et14/*.mjs; do node --check "$file"; done
+          node kaopu-unified-human-workbench/skin-cinema-et14/tests.mjs
+          node kaopu-unified-human-workbench/skin-quality-r01/tests/numeric.mjs
+          node kaopu-unified-human-workbench/skin-quality-r01/tests/pore-filter.mjs
+          node kaopu-unified-human-workbench/skin-cinema-et14/build.cjs
+      - name: Render same native person and validate desktop controls
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/et14-http.log 2>&1 &
+          node kaopu-unified-human-workbench/skin-cinema-et14/verify.cjs
+      - name: Publish checked build to this independent branch only
+        run: |
+          git config user.name 'KAOPU Skin Cinema Candidate'
+          git config user.email 'kaopu-workbench@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/skin-cinema-et14/preview.html kaopu-unified-human-workbench/skin-cinema-et14/BUILD.json kaopu-unified-human-workbench/full/ui/cinema-app.generated.mjs
+          if ! git diff --cached --quiet; then
+            git commit -m 'build(skin): checked ET14-S1 native surface candidate [skip ci]'
+            git push origin HEAD:feature/skin-cinema-et14-20261010
+          fi
+          git rev-parse HEAD > qa-et14/public-commit.txt
+      - name: Verify actual immutable public web page
+        run: |
+          PUBLIC_COMMIT=$(git rev-parse HEAD) node kaopu-unified-human-workbench/skin-cinema-et14/verify.cjs
+      - name: Include reproducible new source and exact build
+        if: always()
+        run: |
+          mkdir -p qa-et14
+          cp -r kaopu-unified-human-workbench/skin-cinema-et14 qa-et14/source-files
+          cp kaopu-unified-human-workbench/full/ui/cinema-app.generated.mjs qa-et14/ 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: et14-skin-${{ github.run_number }}
+          path: qa-et14/
+          retention-days: 30
