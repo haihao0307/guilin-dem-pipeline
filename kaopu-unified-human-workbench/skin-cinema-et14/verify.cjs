@@ -11,6 +11,7 @@ async function light(kind){await page.evaluate(kind=>{const v=__IDENTITY_QA__.vi
  page.on('pageerror',e=>R.errors.push(e.message));page.on('console',m=>{if(m.type()==='error')R.errors.push(m.text());if(m.type()==='warning')R.warnings.push(m.text());});
  await page.goto(URL,{waitUntil:'domcontentloaded',timeout:120000});await page.waitForFunction(()=>window.cinemaWorkbench&&window.fullCommonWorkbench?.diagnostics().ready&&!fullCommonWorkbench.diagnostics().busy,null,{timeout:240000});await page.evaluate(()=>cinemaWorkbench.ready());await page.evaluate(()=>fullFaceTransfer.ready());
  await page.evaluate(async()=>{await fullCommonWorkbench.motion().setMode('shape');cinemaWorkbench.view('face');});
+ await require('./tests/archive-preflight.cjs')(page,OUT);
  R.initial=await page.evaluate(()=>cinemaWorkbench.report());check('new shader compiled on same material',R.initial.materials.some(m=>m.compiles>0),R.initial);check('original 89 native named controls retained',await page.evaluate(()=>identityWorkbench.catalog().length===89));check('17 new controls in DOM',await page.locator('[data-cfield]').count()===17);
  const saved=await page.evaluate(()=>fullCommonWorkbench.archive()),original=await state();check('native canvas has real pixels',(await pixel()).visible>100);await page.screenshot({path:OUT+'/entry-desktop.png'});
  for(const view of ['face','nose','oblique']){
