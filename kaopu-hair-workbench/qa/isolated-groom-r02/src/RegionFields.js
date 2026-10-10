@@ -4,7 +4,8 @@
 export const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
 export const smooth=(a,b,v)=>{const t=clamp((v-a)/(b-a));return t*t*(3-2*t);};
 export function pinnaMargin([x,y,z]){const lateral=smooth(.058,.068,Math.abs(x));const d=Math.hypot((y-.277)/.041,(z-.021)/.034);return .05*(1-lateral)+(d-1.09)*.034*lateral;}
-export function scalpMargin(p){const [x,y,z]=p,a=Math.abs(x),front=smooth(.035,.095,z),rear=1-smooth(-.055,.005,z),side=smooth(.052,.075,a),temple=Math.exp(-(((z-.047)/.024)**2))*side;const base=.268+.079*front-.015*rear-.006*side*rear-.024*temple;return Math.min(y-base,pinnaMargin(p));}
+export function scalpPinnaMargin([x,y,z]){const lateral=smooth(.061,.070,Math.abs(x)),d=Math.hypot((y-.274)/.032,(z-.017)/.024);return .05*(1-lateral)+(d-1.06)*.024*lateral;}
+export function scalpMargin(p){const [x,y,z]=p,a=Math.abs(x),front=smooth(.035,.095,z),rear=1-smooth(-.055,.005,z),side=smooth(.052,.075,a),temple=Math.exp(-(((z-.047)/.024)**2))*side;const base=.268+.079*front-.015*rear-.006*side*rear-.024*temple;return Math.min(y-base,scalpPinnaMargin(p));}
 export function scalpZone([x,y,z]){if(y>.343)return 'crown';if(z>.055)return 'frontal';if(z<-.035)return y<.295?'nape':'occipital';return z<.008?'retroauricular':'temple';}
 export function scalpDensity(p){const [,y,z]=p,back=1-smooth(-.05,-.02,z),front=smooth(.035,.075,z),crown=smooth(.33,.355,y),nape=1-smooth(.28,.31,y);let v=.8+.12*smooth(-.004,.022,z);v=v*(1-back)+(1-.35*nape)*back;v=v*(1-front)+1.3*front;return v*(1-crown)+1.18*crown;}
 export function beardField(p){const[x,y,z]=p,a=Math.abs(x),edge=(lo,hi,v,w=.004)=>smooth(lo,lo+w,v)*(1-smooth(hi-w,hi,v));if(pinnaMargin(p)<.001||z<.025)return {weight:0,zone:0};const zones=[
