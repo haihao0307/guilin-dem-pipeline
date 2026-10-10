@@ -1,7 +1,7 @@
 {
   "schema": "kaopu.regression-case/2",
   "caseId": "TAILOR-PRESET-3D-THUMBNAIL-CORRECTION-001",
-  "status": "CANDIDATE_TAILOR_R0431_SELECTIVE_PROMOTION_VERIFIED_SCOPED__39_STATIC_FAILURES_VISUAL_PHYSICS_PUBLIC_USER_HOLD_N131_NOT_ADOPTED",
+  "status": "CANDIDATE_TAILOR_R0432_PUBLIC_BYTES_AND_CI_BROWSER_VERIFIED_SCOPED__INDEPENDENT_WEBGL_RUNTIME_DEVICE_USER_HOLD_N132_NOT_ADOPTED",
   "active": false,
   "scope": {
     "mother": "Tailor",
@@ -183,7 +183,8 @@
     "Do not treat 60 solver records as 60 accepted garments: member-level static and visual acceptance remain separate.",
     "Do not promote 122 source-geometry parameter perturbations into fit certification when allAlteredGarmentsFitCertified=false.",
     "Do not promote 432 browser-readable outfit identities into joint cloth-collision or dynamic-wear certification.",
-    "Do not treat a strictly improved but still failing solver route as an accepted garment; preserve its remaining failure categories and keep it out of accepted/front-row claims."
+    "Do not treat a strictly improved but still failing solver route as an accepted garment; preserve its remaining failure categories and keep it out of accepted/front-row claims.",
+    "Do not generalize successful public-byte, gallery-decode or CI-browser verification into universal browser/device runtime readiness; WebGL context creation is a separate scoped observation and an unavailable context must fail closed without fallback."
   ],
   "requiredPerMemberReceipt": [
     "presetId",
@@ -210,7 +211,8 @@
     "HOLD_R041_USER_VISUAL_FIT_AND_CATALOGUE_INCOMPLETE",
     "R042_FAILURE_STATE_OBSERVABILITY_VERIFIED_SCOPED__HOLD_REMAINING_VISUAL_FIXES_AND_PHYSICS",
     "R043_ALL60_SOLVER_OUTCOMES_VERIFIED_SCOPED__HOLD_49_STATIC_FAILURES_VISUAL_PHYSICS_USER_ACCEPTANCE",
-    "R0431_SELECTIVE_PROMOTION_VERIFIED_SCOPED__HOLD_39_STATIC_FAILURES_VISUAL_PHYSICS_PUBLIC_USER_ACCEPTANCE"
+    "R0431_SELECTIVE_PROMOTION_VERIFIED_SCOPED__HOLD_39_STATIC_FAILURES_VISUAL_PHYSICS_PUBLIC_USER_ACCEPTANCE",
+    "R0432_PUBLIC_BYTES_AND_CI_BROWSER_VERIFIED_SCOPED__HOLD_INDEPENDENT_WEBGL_RUNTIME_DEVICE_USER_ACCEPTANCE"
   ],
   "gate": [
     "Preserve the old paper-library success as a scoped historical observation; do not relabel it as failure.",
@@ -231,7 +233,8 @@
     "An exact push-triggered workflow run, its head SHA, workflow path, successful claim-critical steps, artifact ID/digest and retained evidence head must agree before a later Tailor candidate receives GATE-RUN.",
     "Complete source/material/solver coverage closes missing-result execution coverage only; every static failure and every missing visual/physical/user receipt remains HOLD.",
     "Parameter controls may pass source-geometry perturbation while altered-garment fit remains uncertified; outfit render coverage does not certify joint cloth physics.",
-    "A failed numerical trial may contribute only complete routes whose failure-category set is a strict subset of the baseline; regressions, ties and incomplete candidates must preserve the prior parent, while improved-but-failing routes remain failed."
+    "A failed numerical trial may contribute only complete routes whose failure-category set is a strict subset of the baseline; regressions, ties and incomplete candidates must preserve the prior parent, while improved-but-failing routes remain failed.",
+    "Public verification must remain layered by exact source, public bytes, CI browser, independent browser/device and user acceptance; a WebGL getContext failure on an independent browser is a scoped runtime HOLD, not permission to substitute another model or to erase successful exact-subject publication evidence."
   ],
   "activation": {
     "global": false,
@@ -358,8 +361,8 @@
     }
   },
   "currentCycleLifecycle": {
-    "POSTED": true,
-    "ACKNOWLEDGED": true,
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
     "IMPLEMENTED": true,
     "GATE-RUN": true,
     "ADOPTED": false,
@@ -591,5 +594,98 @@
       "ADOPTED": false,
       "USER-ACCEPTED": false
     }
+  },
+  "n132R0432IndependentBrowserRuntimeResult": {
+    "pullRequest": 181,
+    "currentPrHead": "7be34c18a44859e2ce2143c377d2c450e1ad89f5",
+    "nativeSolveSource": "cc40098fc782b9cb9ca99743e07f101356159421",
+    "runtimeSource": "eeca9dee0c3a01be2b203eb3422bd62f146b8795",
+    "publicationCommit": "277c0474c287ac873c40e9d7bc3dc070e86e8705",
+    "fixedPublicUrl": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/presets/r0432-eeca9dee0c3a/?preset=S02",
+    "exactEvidence": {
+      "originalPapers": 60,
+      "materials": 60,
+      "solverRecords": 60,
+      "staticPass": 22,
+      "staticFail": 38,
+      "outfitMembers": 432,
+      "publicPathsChecked": 1412,
+      "decodedOriginalPngs": 60,
+      "decodedOutfitThumbnails": 432,
+      "all60GarmentsAccepted": false,
+      "physicalFitAccepted": false,
+      "dynamicWearCertified": false,
+      "userAccepted": false
+    },
+    "firstPublicFailure": {
+      "source": "fe8087cdd39e4c5ded8a0af86fb4d7f4e90a9cc0",
+      "runId": 38043051246,
+      "artifactId": 11667300446,
+      "artifactDigest": "sha256:67c2e9c89a4a33ccedac8a6c60748d9b7a1cbeb900d0dc792ddcbd251865c85f",
+      "failure": "parameter-schema.json returned 404",
+      "notDelivered": true,
+      "failedPrefixMustNotBeDelivered": "r0432-fe8087"
+    },
+    "verifiedRuns": [
+      {
+        "kind": "native-validation",
+        "runId": 38042213827,
+        "headSha": "cc40098fc782b9cb9ca99743e07f101356159421",
+        "artifactId": 11666413472,
+        "artifactDigest": "sha256:7ec57d55d4a09a2e3ed6b3d98e95d9b52bb2c3b1937df93785561f71b60fb3c5",
+        "conclusion": "success"
+      },
+      {
+        "kind": "public-runtime",
+        "runId": 38044151774,
+        "headSha": "eeca9dee0c3a01be2b203eb3422bd62f146b8795",
+        "artifactId": 11666932172,
+        "artifactDigest": "sha256:11ba79a09f7284f80eba824c399521f77136484e9827a7012ec6f44364c924c4",
+        "conclusion": "success"
+      },
+      {
+        "kind": "pages-deploy",
+        "runId": 38044272065,
+        "headSha": "4dba892b",
+        "artifactId": 11667052098,
+        "artifactDigest": "sha256:ed44d3",
+        "conclusion": "success"
+      },
+      {
+        "kind": "gallery-decode",
+        "runId": 38045206400,
+        "headSha": "96001134f3ae2bfef10ebf1abaace30c9e2964f7",
+        "artifactId": 11667682667,
+        "artifactDigest": "sha256:6930f6480f60ec7c94af632ebd36844f39c92d8f910c2be928b1e1be60a73676",
+        "conclusion": "success"
+      }
+    ],
+    "independentHostedChromeObservation": {
+      "observedAt": "2026-10-10T11:43:52Z",
+      "htmlLoaded": true,
+      "releaseMarker": "R04.3.2",
+      "webglContextCreated": false,
+      "consoleFailure": "THREE.WebGLRenderer: Error creating WebGL context.",
+      "visibleFailure": "原系统连接失败：Error creating WebGL context.；不会改用替代模型或衣壳。",
+      "interactiveControlsEnabled": false,
+      "fallbackUsed": false,
+      "scope": "independent hosted Chrome with WebGL disabled/unavailable; not a claim about the user's physical device"
+    },
+    "externalMethodComparison": {
+      "htmlCanvas": "HTMLCanvasElement.getContext() may return null when the requested context is unsupported or incompatible with the user-agent configuration.",
+      "webgl": "WebGL context creation can fail for browser/environment configuration reasons; callers must detect the null/failure path.",
+      "kaopuComparison": "R2 already separates public, browser/device, production and user-acceptance layers and requires explicit failure with no silent fallback. N49 already recorded the same mechanism for Coast.",
+      "novelty": "NO_NOVELTY"
+    },
+    "falsifiableHypothesis": "If R04.3.2 claims are kept layer-specific, exact public bytes, CI Chromium and decoded galleries will remain verified, while an independent hosted Chrome that cannot create WebGL will be classified as a scoped runtime HOLD, display an explicit reason, keep controls unavailable, and use no substitute model.",
+    "replay": {
+      "checks": 15,
+      "passed": 15,
+      "outcome": "R0432_PUBLIC_BYTES_AND_CI_BROWSER_VERIFIED_SCOPED__HOLD_INDEPENDENT_WEBGL_RUNTIME_DEVICE_USER_ACCEPTANCE",
+      "falseUniversalRuntimePromotionPrevented": true,
+      "silentFallbackPrevented": true
+    },
+    "boundary": "Exact R04.3.2 sources and fixed prefix plus one independent hosted-Chrome observation. It does not invalidate the exact CI/public/decode evidence, certify the user's physical device, repair 38 static failures, or set user acceptance.",
+    "decision": "UPDATE_EXISTING_REGRESSION_CASE_NO_NOVELTY"
   }
 }
