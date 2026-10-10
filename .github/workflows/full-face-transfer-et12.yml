@@ -44,11 +44,12 @@ jobs:
         run: |
           node kaopu-unified-human-workbench/face-transfer/tools/wire-native.cjs
           node kaopu-unified-human-workbench/face-transfer/build.cjs
-      - name: Check all native presets parameters skins and original rig
+      - name: Check original generator and native master-control composition
         run: |
           python -m http.server 8765 --bind 127.0.0.1 >/tmp/face-http.log 2>&1 &
           node kaopu-unified-human-workbench/face-transfer/verify.cjs
           node kaopu-unified-human-workbench/face-transfer/review.cjs
+          node kaopu-unified-human-workbench/face-transfer/compatibility.cjs
       - name: Publish tested source and preview on the isolated branch
         run: |
           git add kaopu-unified-human-workbench/full/ui/skin/CommonSkinLayer.mjs kaopu-unified-human-workbench/eye-transfer/DenseSurface.mjs kaopu-unified-human-workbench/eye-transfer/TransferUI.mjs kaopu-unified-human-workbench/full/ui/face-transfer-app.generated.mjs kaopu-unified-human-workbench/face-transfer/preview.html kaopu-unified-human-workbench/face-transfer/BUILD.json
@@ -60,6 +61,7 @@ jobs:
         run: |
           PUBLIC_COMMIT=$(git rev-parse HEAD) node kaopu-unified-human-workbench/face-transfer/verify.cjs
           PUBLIC_COMMIT=$(git rev-parse HEAD) node kaopu-unified-human-workbench/face-transfer/review.cjs
+          PUBLIC_COMMIT=$(git rev-parse HEAD) node kaopu-unified-human-workbench/face-transfer/compatibility.cjs
       - name: Include exact changed source and generated evidence
         if: always()
         run: |
