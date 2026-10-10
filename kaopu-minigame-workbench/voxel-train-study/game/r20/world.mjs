@@ -33,7 +33,7 @@ export function partitionTerrain(blocks){
 }
 export function createGameWorld({street=true,onChange=()=>{}}={}){
   const root=new THREE.Group(),parts=partitionTerrain(buildEnvironment(WORLD,{platformCorridor:true,includeBridge:false,optimizeGeometry:true})),flatTerrain=createFlatTerrain(parts),terrain=flatTerrain.root;root.add(terrain);const train=createGameTrain();root.add(train.root);
-  const streetDistrict=street?createStreetDistrict({onChange}):null;if(streetDistrict)root.add(streetDistrict.root);
+  const streetDistrict=street?createStreetDistrict({onChange,renderBudgetMs:6}):null;if(streetDistrict)root.add(streetDistrict.root);
   const people=createPassengers(pathFrame,{seatGeometry:(actor,position)=>({floorY:position[1],seatSurfaceY:position[1]+COACH_DIMENSIONS.seatHeight,ceilingY:position[1]+COACH_DIMENSIONS.interiorHeight})});root.add(people.mesh);
   const stationStreaming=createStationStreaming({root,createModel:createStationModel,minOffset:WORLD.centerX-FLAT_WORLD.terrainRadius-5,maxOffset:WORLD.centerX+FLAT_WORLD.terrainRadius-PLATFORM_LAYOUT.minX,isVisible:offset=>!(offset+5<WORLD.centerX-FLAT_WORLD.terrainRadius||offset+PLATFORM_LAYOUT.minX>WORLD.centerX+FLAT_WORLD.terrainRadius)}),stations=stationStreaming.stations,bridges=new Map();let disposed=false;
   const stones=new THREE.InstancedMesh(new THREE.DodecahedronGeometry(.092,0),new THREE.MeshStandardMaterial({color:0xb5b5a2,roughness:.93}),80);stones.castShadow=true;stones.frustumCulled=false;root.add(stones);
