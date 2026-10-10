@@ -1,7 +1,7 @@
 {
   "schema": "kaopu.regression-case/2",
   "caseId": "TAILOR-PRESET-3D-THUMBNAIL-CORRECTION-001",
-  "status": "CANDIDATE_TAILOR_R04_SOURCE_CORRECTED_HOLD_FULL_CATALOGUE_N127_NOT_ADOPTED",
+  "status": "CANDIDATE_TAILOR_R041_REAL_SOURCE_VISUAL_FIT_HOLD_N128_NOT_ADOPTED",
   "active": false,
   "scope": {
     "mother": "Tailor",
@@ -33,6 +33,13 @@
       "acknowledgedByTailorCommentId": 6079493932,
       "ordering": "after R03 public candidate",
       "exactTimestamp": "2026-10-09T10:56:35Z"
+    },
+    "latestVisualFitCorrection": {
+      "instruction": "R04.1 is the original system, but many garments still do not load and many worn results have visible panel-joining, fold and on-body shape problems.",
+      "ordering": "after R04.1 public correction became available",
+      "observedAt": "2026-10-10T03:38:35Z",
+      "exactUserMessageTimestamp": "unknown-in-external-thread-snapshot",
+      "affectedPresetIds": "UNKNOWN_UNTIL_MEMBER_LEVEL_VISUAL_LEDGER"
     }
   },
   "historicalObservation": {
@@ -156,7 +163,9 @@
     "Count sixty real WebGL renders as compliant when all garments are simplified proxy primitives unbound to the actual preset garment geometry.",
     "Treat recipe-linked display shells as original native tailor output when the person or paper-material-solver source lineage differs.",
     "Repair an original native rejection with a synthetic display result or reuse clothing after the bound person changes.",
-    "Promote thumbnail evidence into physical-fit, collision, dynamic-wear, device, public-delivery, or user acceptance."
+    "Promote thumbnail evidence into physical-fit, collision, dynamic-wear, device, public-delivery, or user acceptance.",
+    "Treat an internally approved source/runtime screenshot review as user visual acceptance when visible seam, fold or on-body-shape defects remain.",
+    "Place static-pass garments in an accepted/front row without a member-level visual receipt for seam integrity, fold plausibility and on-body shape."
   ],
   "requiredPerMemberReceipt": [
     "presetId",
@@ -179,7 +188,8 @@
     "REJECTED_CREATIVE_SUBSTITUTE_SIMPLIFIED_PROXY_GARMENT",
     "REJECTED_WRONG_SOURCE_LINEAGE",
     "SOURCE_LINEAGE_CORRECTION_VERIFIED_SCOPED__HOLD_FULL_CATALOGUE_INCOMPLETE",
-    "THREE_D_PRESET_THUMBNAILS_VERIFIED_SCOPED"
+    "THREE_D_PRESET_THUMBNAILS_VERIFIED_SCOPED",
+    "HOLD_R041_USER_VISUAL_FIT_AND_CATALOGUE_INCOMPLETE"
   ],
   "gate": [
     "Preserve the old paper-library success as a scoped historical observation; do not relabel it as failure.",
@@ -190,7 +200,10 @@
     "The exact original common-person identity and original paper-native-material-solver source identity are mandatory; recipe-linked lookalikes or display shells cannot substitute.",
     "Native failures and missing solver results must remain explicit; they cannot be converted into synthetic success.",
     "Changing the bound person invalidates existing garment results until a new source-consistent solve is present.",
-    "Passing source lineage does not certify catalogue completion, cloth physics, fit, collision, dynamic wear, physical device behavior, public delivery, or user acceptance."
+    "Passing source lineage does not certify catalogue completion, cloth physics, fit, collision, dynamic wear, physical device behavior, public delivery, or user acceptance.",
+    "R04 source lineage and public runtime verification are preserved, but no member is user-ready unless its visible seam integrity, fold plausibility and on-body shape are independently reviewed.",
+    "Internal static engineering checks and internal screenshot approval cannot set USER-ACCEPTED or promote a garment when the user reports visible fit defects.",
+    "Member IDs for user-visible failures remain UNKNOWN until a per-preset visual ledger is produced; do not guess affected IDs from aggregate counts."
   ],
   "activation": {
     "global": false,
@@ -240,5 +253,60 @@
       "url": "https://github.com/haihao0307/guilin-dem-pipeline/pull/181#issuecomment-6080271429",
       "purpose": "Route the N127 scoped source-lineage verification and full-catalogue hold to Tailor without modifying its production branch."
     }
-  ]
+  ],
+  "n128R041VisualFitResult": {
+    "pullRequest": 181,
+    "headSha": "1a5f98ff4e345f466b4050f9a6e723f21c04ef18",
+    "publicUrl": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/presets/r041-8e98936acb85/?preset=T01",
+    "sourceLineageCorrect": true,
+    "originalPaperTrials": 60,
+    "nativeMaterialsReady": 57,
+    "nativeMaterialRejected": 3,
+    "actualSolverRecords": 37,
+    "staticGatePassedRecords": 7,
+    "staticGateFailedRecords": 30,
+    "solverAbortedRecords": 20,
+    "userVisibleCompleteGarmentCoverage": "7/60 static-pass; 37/60 have result records",
+    "internalVisualReviewApproved": true,
+    "internalVisualReviewScope": "source/runtime screenshots; not user visual acceptance",
+    "userObservedFailureClasses": [
+      "many garments not loaded",
+      "panel joining / seam appearance problems",
+      "fold appearance problems",
+      "on-body garment shape / fit appearance problems"
+    ],
+    "exactAffectedPresetIds": "UNKNOWN",
+    "deliveryAdmission": [
+      "long sleeves, collar/hood, multi-layer gathering, trousers and one-piece garments still show self-intersection, whole-seam opening, abnormal deformation or solver abort",
+      "physicalFitAccepted=false",
+      "dynamicWearCertified=false",
+      "all60GarmentsAccepted=false",
+      "userAccepted=false"
+    ],
+    "falsifiableHypothesis": "A member-level acceptance gate requiring loadable result plus explicit seam-integrity, fold-plausibility and on-body-shape visual evidence will HOLD R04.1 instead of promoting internal static passes as user-ready.",
+    "replay": {
+      "checks": 10,
+      "passed": 10,
+      "outcome": "HOLD_R041_USER_VISUAL_FIT_AND_CATALOGUE_INCOMPLETE",
+      "falsePromotionPrevented": true
+    },
+    "boundary": "Tailor R04.1 only; does not change global R2 thresholds or reject the verified source-lineage/public-runtime facts.",
+    "decision": "UPDATE_EXISTING_REGRESSION_CASE_NO_NEW_CASE",
+    "lifecycle": {
+      "POSTED": false,
+      "ACKNOWLEDGED": true,
+      "IMPLEMENTED": true,
+      "GATE-RUN": true,
+      "ADOPTED": false,
+      "USER-ACCEPTED": false
+    }
+  },
+  "currentCycleLifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": true,
+    "IMPLEMENTED": true,
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
 }
