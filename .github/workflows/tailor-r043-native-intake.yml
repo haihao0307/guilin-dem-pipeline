@@ -1,0 +1,41 @@
+name: Tailor R04.3 original solver and pattern source intake
+on:
+  push:
+    branches: [feature/tailor-cabinet-r03-garment-surfaces-20261009]
+    paths: ['.github/workflows/tailor-r043-native-intake.yml']
+permissions:
+  contents: read
+jobs:
+  intake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 976d315ef8bfd7a7351bbac88cd8c7425b363970
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-tailor-workbench/r07
+            kaopu-tailor-workbench/unified/physics
+            kaopu-tailor-workbench/garment-pattern-catalogue-r01/browser
+      - name: Preserve source, archive and reproducible compiler inputs
+        run: |
+          mkdir -p /tmp/r043-native
+          python - <<'PY'
+          import pathlib,subprocess,shutil,json,hashlib
+          root=pathlib.Path('kaopu-tailor-workbench');out=pathlib.Path('/tmp/r043-native')
+          rows=[]
+          for folder in ['r07','unified/physics','garment-pattern-catalogue-r01/browser']:
+            for p in (root/folder).rglob('*'):
+              if not p.is_file():continue
+              if '/qa/' in str(p):continue
+              if p.suffix not in ['.cpp','.ts','.mjs','.js','.py','.json','.wasm','.zip'] and not '/vendor/pyodide/' in str(p):continue
+              q=out/p.relative_to(root);q.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(p,q)
+              rows.append({'path':str(p),'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          (out/'SOURCES.json').write_text(json.dumps({'commit':'976d315ef8bfd7a7351bbac88cd8c7425b363970','files':rows},indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tailor-r043-original-code
+          path: /tmp/r043-native
+          retention-days: 7

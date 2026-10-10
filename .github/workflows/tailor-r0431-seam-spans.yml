@@ -1,0 +1,83 @@
+name: Tailor R04.3.1 native seam closure and live outfit previews
+on:
+  push:
+    branches: [feature/tailor-cabinet-r03-garment-surfaces-20261009]
+    paths:
+      - '.github/workflows/tailor-r0431-seam-spans.yml'
+      - 'kaopu-tailor-workbench/presets/r04/R0431_SEAM_TRIGGER.json'
+permissions:
+  contents: write
+concurrency:
+  group: tailor-r0431-seam-spans
+  cancel-in-progress: false
+jobs:
+  native-correction:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-tailor-workbench/presets/r04
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Actual native compiler and browser
+        run: |
+          pip install playwright==1.56.0
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y clang lld fonts-noto-cjk
+      - name: Preserve original inputs and add only declared seam constraints
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          python - <<'PY'
+          import pathlib,json,hashlib
+          p=pathlib.Path('kaopu-tailor-workbench/presets/r04')
+          files=['assets/identity.json','assets/common-body.json','assets/common-body.sdfd.gz','assets/body-sdf-grid.json','parameter-schema.json','PARAMETER_AUDIT_R043.json','native/kaopu-tailor-workbench/r07/continuation/seam-gate.mjs','native/kaopu-tailor-workbench/r07/stability/audit.mjs']+[str(f.relative_to(p)) for f in (p/'assets/papers').glob('*.json.gz')]
+          index=json.loads((p/'assets/results/index.json').read_text());files+=['assets/results/'+r['file'] for r in index['rows'].values() if r['qualityPassed']]
+          (p/'R043C_PROTECTED.json').write_text(json.dumps({n:hashlib.sha256((p/n).read_bytes()).hexdigest() for n in files},indent=2))
+          PY
+          python "$P/install_r043c.py"
+          python "$P/finish_visible_previews_r0431.py"
+          node --check "$P/app.mjs"
+          node "$P/test_seam_spans_r043c.mjs"
+          node "$P/test_parameter_preview_r0431.mjs"
+          node "$P/test_editor_unit.mjs"
+          node "$P/contract_test.mjs"
+      - name: Re-solve 24 affected original materials without changing UVs or gates
+        run: python kaopu-tailor-workbench/presets/r04/sweep_seams_r043c.py
+      - name: Regenerate real 60-garment and 432-outfit thumbnails and test edited outfit previews
+        run: |
+          python -m http.server 8765 >/tmp/r043c-http.log 2>&1 &
+          python kaopu-tailor-workbench/presets/r04/qa_r043.py
+          python kaopu-tailor-workbench/presets/r04/qa_integrated_r0431.py
+          python - <<'PY'
+          import pathlib,json,hashlib,os
+          p=pathlib.Path('kaopu-tailor-workbench/presets/r04');load=lambda n:json.loads((p/n).read_text())
+          protected=load('R043C_PROTECTED.json');assert all(hashlib.sha256((p/n).read_bytes()).hexdigest()==sha for n,sha in protected.items())
+          sweep=load('R043C_SWEEP.json');gallery=load('R043_BROWSER_REPORT.json');ui=load('R0431_BROWSER_REPORT.json')
+          assert sweep['complete'] and gallery['passed'] and ui['passed'] and load('R043C_CONTRACT_TESTS.json')['passed']
+          assert sweep['summary']['actualSolverRecords']==60
+          (p/'R043C_ACCEPTANCE.json').write_text(json.dumps({'sourceCommit':os.environ['GITHUB_SHA'],'nativeSeamCorrectionVerified':True,'protectedFilesUnchanged':len(protected),'galleryChecks':len(gallery['checks']),'runtimeChecks':len(ui['checks']),'outfitsTested':len(gallery['outfitMembers']),'summary':sweep['summary'],'newPassingIds':sweep['newPassingIds'],'all60GarmentsAccepted':sweep['all60GarmentsAccepted'],'physicalFitAccepted':False,'dynamicWearCertified':False},indent=2))
+          PY
+      - name: Retain actual sources, native results and browser evidence with fast-forward only
+        if: always()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$GITHUB_REF_NAME" --depth=1
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          git add kaopu-tailor-workbench/presets/r04
+          if ! git diff --cached --quiet; then
+            git commit -m 'fix(tailor-r0431): retain original-material seam correction and real regenerated outfit previews'
+            git push origin HEAD:"$GITHUB_REF_NAME"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r0431-seam-and-outfit-evidence
+          path: kaopu-tailor-workbench/presets/r04
+          retention-days: 14

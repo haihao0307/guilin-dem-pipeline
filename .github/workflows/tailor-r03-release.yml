@@ -1,0 +1,56 @@
+name: Tailor R03.4 reviewed public release
+on:
+  push:
+    branches: [feature/tailor-cabinet-r03-garment-surfaces-20261009]
+    paths:
+      - '.github/workflows/tailor-r03-release.yml'
+      - 'kaopu-tailor-workbench/presets/r03/RELEASE_TRIGGER.json'
+permissions:
+  contents: write
+concurrency:
+  group: tailor-r03-reviewed-public-release
+  cancel-in-progress: false
+jobs:
+  publish-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-tailor-workbench/presets
+            kaopu-tailor-workbench/garments-r04/vendor
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install real public-browser test dependencies
+        run: |
+          pip install playwright==1.56.0 Pillow==11.3.0
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y fonts-noto-cjk
+      - name: Publish reviewed source into new R03 and fixed-version paths only
+        run: python kaopu-tailor-workbench/presets/r03/release.py publish
+      - name: Verify actual HTTPS bytes and all 60 inherited papers
+        run: python kaopu-tailor-workbench/presets/r03/release.py verify
+      - name: Real HTTPS browser checks on the fixed snapshot
+        run: |
+          P=kaopu-tailor-workbench/presets/r03
+          SOURCE=$(python -c "import json;print(json.load(open('$P/BUILD_MANIFEST.json'))['sourceCommit'])")
+          URL=$(python -c "import json;print(json.load(open('$P/RELEASE_STATE.json'))['publicURL'])")
+          GITHUB_SHA="$SOURCE" R03_BASE="$URL" python "$P/qa_browser.py"
+          python "$P/release.py" alias
+          python "$P/release.py" finish
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r034-real-public-delivery
+          path: |
+            kaopu-tailor-workbench/presets/r03/BUILD_MANIFEST.json
+            kaopu-tailor-workbench/presets/r03/VISUAL_REVIEW.json
+            kaopu-tailor-workbench/presets/r03/RELEASE_STATE.json
+            kaopu-tailor-workbench/presets/r03/PUBLIC_BYTES.json
+            kaopu-tailor-workbench/presets/r03/PUBLIC_REPORT.json
+            kaopu-tailor-workbench/presets/r03/ALIAS_REPORT.json
+            kaopu-tailor-workbench/presets/r03/qa/public
+          retention-days: 14

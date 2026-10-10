@@ -1,0 +1,63 @@
+name: Tailor R04.2 rear-panel correction
+on:
+  push:
+    branches: [feature/tailor-cabinet-r03-garment-surfaces-20261009]
+    paths:
+      - '.github/workflows/tailor-r042-panel-sides.yml'
+      - 'kaopu-tailor-workbench/presets/r04/R042_TRIGGER.json'
+permissions:
+  contents: write
+concurrency:
+  group: tailor-r042-panel-sides
+  cancel-in-progress: false
+jobs:
+  correct-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-tailor-workbench/presets/r04
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install actual browser
+        run: |
+          pip install playwright==1.56.0
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y fonts-noto-cjk
+      - name: Correct only metadata that misplaces rear pieces and ambiguous card state
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          python "$P/fix_panel_sides_r042.py"
+          python "$P/patch_card_states_r042.py"
+          node --check "$P/app.mjs"
+          node "$P/test_panel_sides_r042.mjs"
+          node "$P/contract_test.mjs"
+      - name: Fresh solves for all affected originals, preserving accepted baselines
+        run: |
+          python -m http.server 8765 >/tmp/r042-http.log 2>&1 &
+          python kaopu-tailor-workbench/presets/r04/sweep_panel_sides_r042.py
+          python kaopu-tailor-workbench/presets/r04/qa_panel_sides_r042.py
+      - name: Retain exact code, original solver outputs and actual browser evidence
+        if: always()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$GITHUB_REF_NAME" --depth=1
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          git add kaopu-tailor-workbench/presets/r04
+          if ! git diff --cached --quiet; then
+            git commit -m 'fix(tailor-r042): retain corrected rear-panel placement and genuine re-solved clothing; unresolved failures remain explicit'
+            git push origin HEAD:"$GITHUB_REF_NAME"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r042-corrected-native-evidence
+          path: kaopu-tailor-workbench/presets/r04
+          retention-days: 14

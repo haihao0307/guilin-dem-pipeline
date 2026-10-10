@@ -1,0 +1,53 @@
+name: Tailor R04.2 reviewed public correction
+on:
+  push:
+    branches: [feature/tailor-cabinet-r03-garment-surfaces-20261009]
+    paths:
+      - '.github/workflows/tailor-r042-release.yml'
+      - 'kaopu-tailor-workbench/presets/r04/R042_RELEASE_TRIGGER.json'
+permissions:
+  contents: write
+concurrency:
+  group: tailor-r042-reviewed-release
+  cancel-in-progress: false
+jobs:
+  publish-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-tailor-workbench/presets
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install actual browser
+        run: |
+          pip install playwright==1.56.0
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y fonts-noto-cjk
+      - name: Publish only reviewed correction and fixed snapshot
+        run: python kaopu-tailor-workbench/presets/r04/release_r042.py publish
+      - name: Verify real HTTPS revision and every runtime asset
+        run: python kaopu-tailor-workbench/presets/r04/release_r042.py verify
+      - name: Real public views, failure filters and fresh original T08 solve
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          URL=$(python -c "import json;print(json.load(open('$P/R042_RELEASE_STATE.json'))['fixedURL'].split('?')[0])")
+          R04_MODE=render R04_BASE="$URL" python "$P/sweep_native.py"
+          R04_BASE="$URL" python "$P/qa_panel_sides_r042.py"
+          R04_BASE="$URL" python "$P/qa_public_sides_r042.py"
+          python "$P/release_r042.py" finish
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r042-public-correction-evidence
+          path: |
+            kaopu-tailor-workbench/presets/r04/R042*.json
+            kaopu-tailor-workbench/presets/r04/SIDE*.json
+            kaopu-tailor-workbench/presets/r04/PUBLIC_CONTINUATION_REPORT.json
+            kaopu-tailor-workbench/presets/r04/qa-r042/public-*.png
+            kaopu-tailor-workbench/presets/r04/qa-r042-public-live
+            kaopu-tailor-workbench/presets/r04/qa-continuation/public-*.png
+          retention-days: 14
