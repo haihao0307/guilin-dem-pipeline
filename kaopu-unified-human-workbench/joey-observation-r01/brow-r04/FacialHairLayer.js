@@ -35,7 +35,7 @@ class FacialRegion{
   const [x,y,z]=p,ax=Math.abs(x),l=this.landmarks;
   if(this.name==='brows'){
    if(ax<.008||ax>.058||z<.093||y<.308)return 0;
-   const line=x<0?l.leftBrow:l.rightBrow,u=clamp((ax-.009)/.049,0,1),width=.0038*(1-.58*u),d=polylineDistance(p,line,2);
+   const line=x<0?l.leftBrow:l.rightBrow,u=clamp((ax-.009)/.049,0,1),width=(this.options.maskRadius||.0038)*(1-.58*u),d=polylineDistance(p,line,2);
    if(d>=width||polylineDistance(p,x<0?l.leftEye:l.rightEye,2)<.0055)return 0;
    return clamp((1-d/width)*2.5,0,1)*(.22+.78*smooth(0,.22,u))*(1-.35*smooth(.65,1,u));
   }
@@ -155,6 +155,10 @@ export class FacialHairLayer{
  constructor(model,positions,normals,options={}){
   this.model=model;const raw=new Float32Array(68*3);model.computeLandmarks(model.template,raw);const range=(a,b)=>Array.from({length:b-a+1},(_,i)=>Array.from(raw.subarray((i+a)*3,(i+a)*3+3)));
   this.landmarks={leftBrow:range(17,21),rightBrow:range(22,26),leftEye:[...range(36,41),...range(36,36)],rightEye:[...range(42,47),...range(42,42)],upperLip:range(48,54).sort((a,b)=>a[0]-b[0]),lowerLip:[...range(48,48),...range(54,59)].sort((a,b)=>a[0]-b[0])};
+  // Candidate-only grooming mask controls. These move the authored sampling
+  // curve, never the native skin. Defaults preserve the upstream mask exactly.
+  const flatten=clamp(options.brows?.archFlatten||0,0,1),outerLift=clamp(options.brows?.outerLift||0,-.006,.006);
+  if(flatten||outerLift)for(const name of ['leftBrow','rightBrow']){const line=this.landmarks[name],inner=line.reduce((a,b)=>Math.abs(a[0])<Math.abs(b[0])?a:b),outer=line.reduce((a,b)=>Math.abs(a[0])>Math.abs(b[0])?a:b),ix=Math.abs(inner[0]),span=Math.abs(outer[0])-ix,iy=inner[1],oy=outer[1];for(const point of line){const u=clamp((Math.abs(point[0])-ix)/span,0,1),target=iy+(oy+outerLift-iy)*u+.002*Math.sin(Math.PI*u);point[1]=point[1]*(1-flatten)+target*flatten;}}
   this.walker=Object.create(ScalpBinding.prototype);this.walker.model=model;this.walker.adjacency=this.walker.buildAdjacency();
   this.mesh=new THREE.Group();this.mesh.name='GNM bound eyebrows and short beard';this.regions={};this.options={};for(const name of ['brows','beard']){const region=new FacialRegion(model,this.landmarks,name,options[name]||{},positions,normals,this.walker);this.regions[name]=region;this.options[name]=region.options;this.mesh.add(region.mesh);}
  }
