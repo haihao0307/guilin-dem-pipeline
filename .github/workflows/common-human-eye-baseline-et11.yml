@@ -1,0 +1,62 @@
+name: ET11 native eye baseline
+on:
+  push:
+    branches: [feature/common-human-eye-transfer-et11-20261010]
+    paths: ['.github/workflows/common-human-eye-baseline-et11.yml']
+permissions:
+  contents: read
+jobs:
+  native-baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-unified-human-workbench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install test browser
+        run: |
+          npm install --prefix /tmp/eye-tools --no-audit --no-fund playwright@1.56.1
+          /tmp/eye-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Inspect the existing synthetic model
+        env:
+          NODE_PATH: /tmp/eye-tools/node_modules
+        run: |
+          mkdir -p qa-et11
+          node <<'JS'
+          const fs=require('fs');
+          const root='kaopu-unified-human-workbench/full/ui/';
+          fs.appendFileSync(root+'browser-app.mjs','\nwindow.__ET11_SOURCE__={model:()=>controller?.model,viewer:()=>viewer};');
+          let loader=fs.readFileSync(root+'load-common.mjs','utf8');
+          loader=loader.replace("export const assetRoot=new URL('../',import.meta.url);","export const assetRoot=new URL('https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/2c9c6403815083b731d40051cc1d711cfdd7c34f/kaopu-unified-human-workbench/full/');");
+          fs.writeFileSync(root+'load-common.mjs',loader);
+          JS
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/eye-http.log 2>&1 &
+          node <<'JS'
+          const fs=require('fs'),{chromium}=require('playwright');
+          (async()=>{
+            const b=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+            const p=await b.newPage({viewport:{width:1440,height:1040},deviceScaleFactor:1});const errors=[];p.on('pageerror',e=>errors.push(e.message));
+            await p.goto('http://127.0.0.1:8765/kaopu-unified-human-workbench/',{waitUntil:'domcontentloaded'});
+            await p.waitForFunction(()=>window.fullCommonWorkbench,null,{timeout:120000});await p.evaluate(()=>fullCommonWorkbench.load());
+            await p.waitForFunction(()=>fullCommonWorkbench.diagnostics().ready,null,{timeout:240000});
+            full=await p.evaluate(()=>{
+              const m=__ET11_SOURCE__.model(),g=m.gnm;
+              return {state:fullCommonWorkbench.state(),presets:fullCommonWorkbench.presets(),catalog:fullCommonWorkbench.catalog(),diagnostics:fullCommonWorkbench.diagnostics(),canonical:m.canonical,bodyCount:m.bodyCount,positions:Array.from(m.positions),faces:Array.from(m.faces),template:Array.from(g.template),gnmMeta:g.meta,gnmTriangles:Array.from(g.triangles),componentId:Array.from(g.componentId),materialId:Array.from(g.materialId),regionId:Array.from(g.regionId),landmarkIndices:Array.from(g.landmarkIndices),landmarkWeights:Array.from(g.landmarkWeights),headNative:Array.from(m.headNative),skinFields:__ET11_SOURCE__.viewer().skin.fields.report};
+            });
+            fs.writeFileSync('qa-et11/native-model.json',JSON.stringify({...full,errors}));
+            await p.evaluate(()=>fullCommonWorkbench.view('face'));await p.waitForTimeout(300);await p.screenshot({path:'qa-et11/baseline-face.png'});
+            await p.evaluate(()=>fullCommonWorkbench.view('three'));await p.screenshot({path:'qa-et11/baseline-body.png'});
+            const dump=await p.evaluate(()=>({ids:fullCommonWorkbench.presets().map(p=>p.id),head:Array.from(__ET11_SOURCE__.viewer().displayPositions)}));fs.writeFileSync('qa-et11/display.json',JSON.stringify(dump));
+            await b.close();if(errors.length)throw Error(errors.join(';'));
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-eyes-et11
+          path: qa-et11/
+          retention-days: 7
