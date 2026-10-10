@@ -334,7 +334,12 @@ class DriveRun:
                 self.b.cdp('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]});self.b.settle();touches.append({'id':identity,'point':point,'value':self.snapshot()['physics']['controls'][identity]})
             controls=self.snapshot()['physics']['controls'];require(controls['brake']<.1 and .2<controls['throttle']<.6 and .3<controls['cutoff']<.6,'Real mobile slider taps change physical controls: '+str(controls))
             self.click('run');require(not self.snapshot()['physics']['paused'],'Mobile start click')
-            self.js("return a.setExternalClock(false);");before=self.snapshot()['physics'];time.sleep(1.1);after=self.snapshot()['physics'];self.js("return a.setExternalClock(true);")
+            self.js("return a.setExternalClock(false);");before=self.snapshot()['physics'];deadline=time.monotonic()+12;trace=[]
+            while True:
+                time.sleep(.5);after=self.snapshot()['physics'];trace.append({'timeS':after['timeS'],'positionM':after['positionM'],'speedMps':after['speedMps']})
+                if after['positionM']>before['positionM']+.001 or time.monotonic()>=deadline:break
+            self.js("return a.setExternalClock(true);")
+            self.report['latestMobileMotion']={'before':before,'after':after,'trace':trace,'sliderTouches':touches}
             require(after['positionM']>before['positionM'] and after['timeS']>before['timeS'],'Mobile real-time start moves train')
             self.click('emergency');near(self.snapshot()['physics']['controls']['brake'],1,'Mobile emergency click')
             self.click('run');require(self.snapshot()['physics']['paused'],'Mobile pause click')
@@ -345,8 +350,8 @@ class DriveRun:
                 self.b.cdp('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':x,'y':y0+(y1-y0)*k/5,'id':2}]});time.sleep(.035)
             self.b.cdp('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]});self.b.settle()
             scrolled=self.b.js("return document.querySelector('.panel').scrollTop;");require(scrolled>10,'Real touch drag scrolls panel, not camera')
-            self.b.js("document.querySelector('.panel').scrollTop=0;");self.b.settle();self.checkpoint('13-mobile-390x'+str(height)+'-paused',True)
-            results.append({'actualDevice':False,'emulatedViewport':[390,height],'layout':frame,'reachableControls':hit,'realButtonClicks':['reset','run','emergency','run'],'sliderTouchCoordinates':touches,'touchScrolledPanelPx':scrolled,'realTimeMotionM':after['positionM']-before['positionM']})
+            self.click('overview');self.b.js("document.querySelector('.panel').scrollTop=0;");self.b.settle();self.checkpoint('13-mobile-390x'+str(height)+'-paused',True)
+            results.append({'actualDevice':False,'emulatedViewport':[390,height],'layout':frame,'reachableControls':hit,'realButtonClicks':['reset','run','emergency','run'],'sliderTouchCoordinates':touches,'touchScrolledPanelPx':scrolled,'realTimeMotionM':after['positionM']-before['positionM'],'realTimeStartupTrace':trace})
         self.report['mobileViewports']=results
         self.b.cdp('Emulation.clearDeviceMetricsOverride',{});self.b.settle()
 
@@ -498,14 +503,17 @@ def run(args):
         browser.js('window.FH88_PREVIEW=window.FH88_DRIVE;window.FH88_DRIVE.setExternalClock(true);')
         report['webgl']=core.browser_information(browser);require(not report['webgl']['contextLost'],'WebGL context lost')
         parameters=json.loads((ROOT/'physics/parameters.json').read_text());design=json.loads((ROOT/'frozen/three-cylinder/design.json').read_text())
-        DriveRun(browser,out,report,parameters,design).run_all()
+        qa=DriveRun(browser,out,report,parameters,design)
+        if args.mobile_only:qa.mobile_tests()
+        else:qa.run_all()
+        report['mobileOnlyRun']=args.mobile_only
         report['logs']=core.collect_logs(browser,origin)
         require(not report['logs']['externalRequests'] and not report['logs']['failedRequests'],'External or failed page request')
         require(not any(int(r['status'])>=400 for r in requests),'HTTP asset failure')
         hooks=report['logs']['javascript']
         require(not hooks['errors'] and not hooks['rejections'],'JavaScript errors/unhandled rejections')
         require(not any(x.get('level')=='SEVERE' for x in report['logs']['console']),'Severe browser console error')
-        report['result']='PASS_REAL_BROWSER_DRIVING_UI_GEOMETRY_AND_NATIVE_RESTART'
+        report['result']='PASS_REAL_BROWSER_MOBILE_UI_GEOMETRY_TOUCH_AND_START' if args.mobile_only else 'PASS_REAL_BROWSER_DRIVING_UI_GEOMETRY_AND_NATIVE_RESTART'
         print(report['result'],flush=True);return 0
     except Exception as exc:
         if not report['result'].startswith('BLOCKED_'):report['result']='FAILED_OR_INCOMPLETE'
@@ -618,6 +626,7 @@ def main():
     parser.add_argument('--ready-timeout',type=float,default=60)
     parser.add_argument('--max-seconds',type=int,default=480)
     parser.add_argument('--no-sandbox',action='store_true',help='Explicit opt-in for an already isolated runner only')
+    parser.add_argument('--mobile-only',action='store_true',help='Only finite mobile UI/real-time startup regression; not full driving/native restart')
     parser.add_argument('--self-test',action='store_true',help='Pure local tests only; no browser/network/subprocess/CI')
     args=parser.parse_args()
     if not 1<=args.ready_timeout<=180 or not 60<=args.max_seconds<=480:parser.error('ready-timeout 1..180; max-seconds 60..480')
