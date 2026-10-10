@@ -1,0 +1,65 @@
+name: Tailor R04.1 original-system continuation
+on:
+  push:
+    branches: [feature/tailor-cabinet-r03-garment-surfaces-20261009]
+    paths:
+      - '.github/workflows/tailor-r04-native-continuation.yml'
+      - 'kaopu-tailor-workbench/presets/r04/CONTINUE_TRIGGER.json'
+permissions:
+  contents: write
+concurrency:
+  group: tailor-r04-native-continuation
+  cancel-in-progress: false
+jobs:
+  native-continuation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-tailor-workbench/presets/r04
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Browser dependencies
+        run: |
+          pip install playwright==1.56.0
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y fonts-noto-cjk
+      - name: Continue original sampling without raising any validator or quality limit
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          python "$P/continue_native.py"
+          python "$P/guard_gallery_capture.py"
+          python -m py_compile "$P/continue_native.py" "$P/sweep_native.py"
+          node --check "$P/app.mjs"
+          node --check "$P/native/kaopu-tailor-workbench/catalogue/native-adapter.mjs"
+          node "$P/contract_test.mjs"
+      - name: Every original preset passes through the actual native sewing worker
+        run: |
+          python -m http.server 8765 >/tmp/r04-continuation-http.log 2>&1 &
+          python kaopu-tailor-workbench/presets/r04/sweep_native.py
+      - name: Retain source and real results, including failed native outcomes
+        if: always()
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          find "$P" -type d -name __pycache__ -prune -exec rm -rf {} +
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$GITHUB_REF_NAME" --depth=1
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          git add -- "$P"
+          if ! git diff --cached --quiet; then
+            git commit -m 'build(tailor-r04): retain actual 60-preset native outcomes; reject proxy clothing and preserve failures'
+            git push origin HEAD:"$GITHUB_REF_NAME"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r041-native-continuation
+          path: kaopu-tailor-workbench/presets/r04
+          retention-days: 14
