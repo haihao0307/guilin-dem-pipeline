@@ -38,7 +38,7 @@ jobs:
           exit 1
       - name: Render original scene and verify pause restore input
         env:
-          CAPTURE_DIRECTOR_MOTION: '1'
+          CAPTURE_DIRECTOR_MOTION: '0'
           DIRECTOR_TRIAL_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/director-camera-r02/
         run: node "$TRIAL/tests/browser.cjs"
       - name: Keep real screenshots and diagnostics including failures
@@ -49,3 +49,4 @@ jobs:
           path: kaopu-minigame-workbench/voxel-train-study/game/director-camera-r02/evidence/
           retention-days: 7
           if-no-files-found: warn
+

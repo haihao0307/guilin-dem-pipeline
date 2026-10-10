@@ -1,6 +1,87 @@
-{"schema":"kaopu.director.camera/1","id":"controlled-crane-architecture-r02","kind":"camera_technical_trial_not_story_film","nativeScene":"R19 tai-po-market actual canopy, columns and train; no new residents or window claims","duration":24,"worldTime":"Session.view().elapsed; clock from timetable.minutes","safetyIntent":"camera remains outside platform back edge z=6.15; controlled 2m to12m lift; no roof clipping","keys":[
-{"t":0,"position":[-28,2,12],"target":[-21,1.2,3],"fov":46,"label":"低机位建立月台与雨棚"},
-{"t":8,"position":[-23,4,15],"target":[-18,2.2,3.8],"fov":43,"label":"外侧后撤，为升高留空间"},
-{"t":16,"position":[-18,12,14],"target":[-16,3.78,4.525],"fov":40,"label":"受控摇臂升至12米，看清真实棚顶"},
-{"t":24,"position":[-10,10,17],"target":[-14.85,3.78,4.525],"fov":36,"label":"高位横移，收束雨棚与列车空间关系"}
-]}
+{
+  "schema": "kaopu.director.camera/1",
+  "id": "controlled-crane-architecture-r02",
+  "kind": "camera_technical_trial_not_story_film",
+  "nativeScene": "R19 tai-po-market actual canopy, columns and train; no new residents or window claims",
+  "duration": 24,
+  "worldTime": "Session.view().elapsed; clock from timetable.minutes",
+  "safetyIntent": "camera remains outside platform back edge z=6.15; controlled 2m to12m lift; no roof clipping",
+  "keys": [
+    {
+      "t": 0,
+      "position": [
+        -28,
+        2,
+        12
+      ],
+      "target": [
+        -21,
+        1.2,
+        3
+      ],
+      "fov": 46,
+      "label": "低位后撤，世界Y 2→4m"
+    },
+    {
+      "t": 8,
+      "position": [
+        -23,
+        4,
+        15
+      ],
+      "target": [
+        -18,
+        2.2,
+        3.8
+      ],
+      "fov": 43,
+      "label": "大摇臂升起，世界Y 4→12m"
+    },
+    {
+      "t": 16,
+      "position": [
+        -18,
+        12,
+        14
+      ],
+      "target": [
+        -16,
+        3.78,
+        4.525
+      ],
+      "fov": 40,
+      "label": "高位横移并下降，世界Y 12→10m"
+    },
+    {
+      "t": 24,
+      "position": [
+        -10,
+        10,
+        17
+      ],
+      "target": [
+        -14.85,
+        3.78,
+        4.525
+      ],
+      "fov": 36,
+      "label": "收束：世界Y 10m"
+    }
+  ],
+  "heightReference": {
+    "units": "meters",
+    "reference": "world Y, not height above platform",
+    "platformTopY": 1.1,
+    "demoGroundY": -0.03,
+    "peak": {
+      "at_s": 16,
+      "worldY": 12,
+      "abovePlatform": 10.9
+    },
+    "end": {
+      "at_s": 24,
+      "worldY": 10,
+      "abovePlatform": 8.9
+    }
+  }
+}
