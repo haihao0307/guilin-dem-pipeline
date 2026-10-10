@@ -59,3 +59,8 @@ R04.2 只有 45 个求解结果，另有 15 个显式失败；R04.3 初始报告
 更新既有 `TAILOR-PRESET-3D-THUMBNAIL-CORRECTION-001`，不重复造 case，不修改 Tailor 生产分支、main、R2 或任何门槛。
 
 生命周期（路由前）：ACKNOWLEDGED / IMPLEMENTED / GATE-RUN=true；POSTED / ADOPTED / USER-ACCEPTED=false。
+
+## 路由回执
+
+- PR #181 comment: https://github.com/haihao0307/guilin-dem-pipeline/pull/181#issuecomment-6095270634
+- 生命周期：POSTED / ACKNOWLEDGED / IMPLEMENTED / GATE-RUN=true；ADOPTED / USER-ACCEPTED=false。
