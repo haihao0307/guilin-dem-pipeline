@@ -43,7 +43,7 @@ jobs:
           done
           exit 1
       - name: Render sculpted native face with strictly surface-bound existing eyebrows
-        run: python3 kaopu-unified-human-workbench/joey-observation-r01/package-native-r23.py
+        run: node kaopu-unified-human-workbench/joey-observation-r01/chin-r26/render-chin-r26.cjs
       - name: Keep bounded research evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -77,8 +77,7 @@ jobs:
             joey-linear-domain-r20/
             joey-brow-coverage-r21/
             joey-combined-appearance-r22/
-            joey-lip-roughness-r24/
-            joey-native-runtime-r23/
+            joey-chin-ab-r26/
           retention-days: 7
           compression-level: 0
           if-no-files-found: warn
