@@ -1,0 +1,44 @@
+name: Pulled-back long hair isolated candidate
+on:
+  push:
+    branches: ['codex/hair-long-r01-20261010']
+    paths: ['kaopu-hair-workbench/qa/isolated-longhair-r01/**', '.github/workflows/hair-long-r01-qa.yml']
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-hair-workbench/qa/isolated-longhair-r01
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 0b4703359efbae10ffc6c0e5fe3fc081e7eca4fe
+          path: native
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+            kaopu-mhr-workbench
+      - name: Install official pinned browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/hair-long" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/hair-long/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/hair-long/node_modules" >> "$GITHUB_ENV"
+      - name: Serve fixed native head and isolated hair
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/hair-long-http.log" 2>&1 &
+          for n in $(seq 1 30); do curl --fail --silent http://127.0.0.1:8765/native/kaopu-unified-human-workbench/ > /dev/null && exit 0; sleep 1; done
+          exit 1
+      - name: Render real long-hair candidate
+        run: node kaopu-hair-workbench/qa/isolated-longhair-r01/test-long.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-long-r01-${{ github.sha }}
+          path: hair-long-results/
+          retention-days: 7
+          if-no-files-found: warn
