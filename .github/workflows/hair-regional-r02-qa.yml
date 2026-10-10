@@ -1,7 +1,14 @@
 name: Regional hair R02 draft browser evidence
 on:
+  workflow_dispatch:
+    inputs:
+      target:
+        type: choice
+        options: [candidate, public]
+        default: candidate
+        description: Read-only target to verify
   push:
-    branches: ['codex/hair-region-r02-20261010']
+    branches: ['codex/hair-region-r02-20261010', 'gh-pages']
     paths: ['kaopu-hair-workbench/qa/isolated-groom-r02/**', '.github/workflows/hair-regional-r02-qa.yml']
 permissions:
   contents: read
@@ -41,6 +48,7 @@ jobs:
       - name: Render styles, head rotation and mobile evidence
         working-directory: kaopu-hair-workbench/qa/isolated-groom-r02
         run: |
+          if [ "${{ inputs.target }}" = "public" ] || [ "${{ github.ref }}" = "refs/heads/gh-pages" ]; then export GROOM_BASE_URL="https://haihao0307.github.io/guilin-dem-pipeline/kaopu-hair-workbench/qa/isolated-groom-r02/"; fi
           node tests/browser-regions.cjs
       - name: Retain evidence only
         if: always()
