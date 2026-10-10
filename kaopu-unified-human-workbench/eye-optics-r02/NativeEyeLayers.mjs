@@ -17,7 +17,7 @@ export function recoverNativeEyeLayers(model){
  }return{layers,eyes,method:'fixed triangle connectivity; source-space pupil-depth ordering; validated against official eye_exteriors semantics'};
 }
 function solve(A,b){const n=b.length,m=A.map((r,i)=>[...r,b[i]]);for(let i=0;i<n;i++){let p=i;for(let j=i+1;j<n;j++)if(Math.abs(m[j][i])>Math.abs(m[p][i]))p=j;[m[i],m[p]]=[m[p],m[i]];if(Math.abs(m[i][i])<1e-14)throw Error('Singular native iris fit');const d=m[i][i];for(let j=i;j<=n;j++)m[i][j]/=d;for(let k=0;k<n;k++)if(k!==i){const f=m[k][i];for(let j=i;j<=n;j++)m[k][j]-=f*m[i][j];}}return m.map(r=>r[n]);}
-/** Fits actual retained iris/pupil vertices to a quadratic chart in fEye coordinates.
+/** Fits actual retained aperture support vertices (iris/pupil and narrow sclera transition ring) to a quadratic chart in fEye coordinates.
  * Does not modify the geometry. Residual quantifies the approximation.
  * Input/output positions are metres; q coordinates are the unchanged native fEye.
  */
@@ -29,10 +29,10 @@ export function fitNativeIris(vertices,position,fEye){
  // fEye has native +X,+Y chart; display eye fronts point along this cross product.
  const xx=dot(X,X),xy=dot(X,Y),yy=dot(Y,Y),det=xx*yy-xy*xy;if(det<1e-14)throw Error('Collapsed iris metric');
  const U=X.map((x,i)=>(yy*x-xy*Y[i])/det),V=Y.map((y,i)=>(xx*y-xy*X[i])/det),H=[3,4,5].map(j=>dot(coeff.map(c=>c[j]),Z));
- let sq=0;for(const{q:[x,y],p}of samples){const h=H[0]*x*x+H[1]*x*y+H[2]*y*y,pred=O.map((o,k)=>o+X[k]*x+Y[k]*y+Z[k]*h);sq+=dot(sub(p,pred),sub(p,pred));}
- return{O,X,Y,Z,U,V,H,samples:samples.length,rmsMicrometres:Math.sqrt(sq/samples.length)*1e6,irisRadiusMM:[Math.hypot(...X)*1000,Math.hypot(...Y)*1000]};
+ let sq=0,maxResidual=0;for(const{q:[x,y],p}of samples){const h=H[0]*x*x+H[1]*x*y+H[2]*y*y,pred=O.map((o,k)=>o+X[k]*x+Y[k]*y+Z[k]*h);const err=dot(sub(p,pred),sub(p,pred));sq+=err;maxResidual=Math.max(maxResidual,Math.sqrt(err));}
+ return{O,X,Y,Z,U,V,H,samples:samples.length,rmsMicrometres:Math.sqrt(sq/samples.length)*1e6,maxResidualMicrometres:maxResidual*1e6,irisRadiusMM:[Math.hypot(...X)*1000,Math.hypot(...Y)*1000]};
 }
 export function intersectIris(origin,direction,fit){const p=sub(origin,fit.O),q=[dot(p,fit.U),dot(p,fit.V)],d=[dot(direction,fit.U),dot(direction,fit.V)],z=dot(p,fit.Z),dz=dot(direction,fit.Z),[a,b,c]=fit.H;
  const A=-(a*d[0]*d[0]+b*d[0]*d[1]+c*d[1]*d[1]),B=dz-2*a*q[0]*d[0]-b*(q[0]*d[1]+q[1]*d[0])-2*c*q[1]*d[1],C=z-a*q[0]*q[0]-b*q[0]*q[1]-c*q[1]*q[1];let ts=[];
- if(Math.abs(A)<1e-12){if(Math.abs(B)>1e-12)ts=[-C/B];}else{const D=B*B-4*A*C;if(D>=0){const s=Math.sqrt(D);ts=[(-B-s)/(2*A),(-B+s)/(2*A)];}}const positive=ts.filter(t=>t>1e-7);if(!positive.length)return null;const t=Math.min(...positive);return{t,q:q.map((v,i)=>v+d[i]*t)};
+ if(Math.abs(A)<1e-12){if(Math.abs(B)>1e-12)ts=[-C/B];}else{const D=B*B-4*A*C;if(D>=0){const s=Math.sqrt(D),q=-.5*(B+(B>=0?s:-s));ts=[q/A,Math.abs(q)>1e-15?C/q:-1];}}const positive=ts.filter(t=>t>1e-7);if(!positive.length)return null;const t=Math.min(...positive);return{t,q:q.map((v,i)=>v+d[i]*t)};
 }
