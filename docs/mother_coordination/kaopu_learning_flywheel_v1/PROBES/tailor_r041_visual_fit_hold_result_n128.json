@@ -1,0 +1,132 @@
+{
+  "schema": "kaopu.learning-probe-result/1",
+  "cycle": "N128",
+  "boundedQuestion": "Does R04.1's internal static/source review prove the user's intended visible finished-garment quality?",
+  "subject": {
+    "pullRequest": 181,
+    "headSha": "1a5f98ff4e345f466b4050f9a6e723f21c04ef18",
+    "publicUrl": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/presets/r041-8e98936acb85/?preset=T01"
+  },
+  "observedFailure": {
+    "userCorrection": "Many garments are not loaded; multiple worn garments still have panel-joining, fold and on-body shape problems.",
+    "exactAffectedPresetIds": "UNKNOWN",
+    "repositoryAdmissions": [
+      "57/60 native materials ready",
+      "37/60 complete solver records",
+      "7/60 pass static gate",
+      "30/60 fail static gate",
+      "20/60 solver abort",
+      "3/60 material/seam rejection",
+      "physicalFitAccepted=false",
+      "dynamicWearCertified=false",
+      "all60GarmentsAccepted=false",
+      "userAccepted=false"
+    ]
+  },
+  "externalEvidence": [
+    {
+      "source": "NASA Systems Engineering Handbook",
+      "url": "https://science.nasa.gov/wp-content/uploads/2023/04/nasa_systems_engineering_handbook_0.pdf",
+      "fact": "Product validation demonstrates stakeholder expectations in intended operational environments and should involve anticipated users when possible."
+    },
+    {
+      "source": "NIST validation glossary",
+      "url": "https://csrc.nist.gov/glossary/term/validation",
+      "fact": "Validation concerns objective evidence that the stakeholder's true needs and specific intended use are fulfilled."
+    }
+  ],
+  "comparison": "R2 already separates machine verification, independent verification and user acceptance. R04.1 correctly leaves userAccepted=false, but its internal visual approval has no member-level seam/fold/on-body visual ledger and therefore cannot absorb the new user correction.",
+  "hypothesis": "A per-member gate requiring loadable result plus seam-integrity, fold-plausibility and on-body-shape evidence will HOLD R04.1 and prevent static/source success from being promoted as user-ready.",
+  "replay": [
+    {
+      "id": "source-lineage-preserved",
+      "expected": "PASS_SCOPED",
+      "actual": "PASS_SCOPED",
+      "passed": true
+    },
+    {
+      "id": "all-60-attempted",
+      "expected": 60,
+      "actual": 60,
+      "passed": true
+    },
+    {
+      "id": "all-60-material-loadable",
+      "expected": 60,
+      "actual": 57,
+      "passed": true,
+      "outcome": "HOLD"
+    },
+    {
+      "id": "all-60-solver-records",
+      "expected": 60,
+      "actual": 37,
+      "passed": true,
+      "outcome": "HOLD"
+    },
+    {
+      "id": "all-60-static-pass",
+      "expected": 60,
+      "actual": 7,
+      "passed": true,
+      "outcome": "HOLD"
+    },
+    {
+      "id": "visible-seam-integrity-ledger",
+      "expected": "60 member rows",
+      "actual": "absent",
+      "passed": true,
+      "outcome": "HOLD"
+    },
+    {
+      "id": "fold-plausibility-ledger",
+      "expected": "60 member rows",
+      "actual": "absent",
+      "passed": true,
+      "outcome": "HOLD"
+    },
+    {
+      "id": "on-body-shape-ledger",
+      "expected": "60 member rows",
+      "actual": "absent",
+      "passed": true,
+      "outcome": "HOLD"
+    },
+    {
+      "id": "user-acceptance",
+      "expected": true,
+      "actual": false,
+      "passed": true,
+      "outcome": "HOLD"
+    },
+    {
+      "id": "no-false-promotion",
+      "expected": "HOLD",
+      "actual": "HOLD_R041_USER_VISUAL_FIT_AND_CATALOGUE_INCOMPLETE",
+      "passed": true
+    }
+  ],
+  "replaySummary": {
+    "passed": 10,
+    "total": 10
+  },
+  "applicability": "Tailor R04.1 member acceptance only. Preserve source-lineage and public-runtime facts. Do not alter global R2 or claim failed/aborted members are completed.",
+  "decision": "UPDATE_EXISTING_REGRESSION_CASE_NO_NOVELTY",
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": true,
+    "IMPLEMENTED": true,
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  },
+  "metrics": {
+    "firstCandidatePassRate": "unknown",
+    "userCorrectionCount": 1,
+    "sameClassRecurrenceRate": "unknown",
+    "rejectedLineageInheritanceCount": 0,
+    "staleDeliveryCount": 0,
+    "internalIterationsPerAcceptedDelta": "unknown",
+    "instructionToLegalCandidateTime": "unknown"
+  }
+}
