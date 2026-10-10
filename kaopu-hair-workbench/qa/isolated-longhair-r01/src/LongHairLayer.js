@@ -39,6 +39,8 @@ export function attachLongHair(a,{count=32000,surfaceSegments=20,tailSegments=20
    const c1=new THREE.Vector3(neutralEnd.x+sign*.08*earExit,neutralEnd.y-.065+.12*earExit,Math.min(neutralEnd.z-.055,-.125));
    const c2=new THREE.Vector3(sign*(.045+.17*lateral),neutralEnd.y-tailLength*.60,-.175+.025*lateral);
    const end=new THREE.Vector3(endX,neutralEnd.y-tailLength,endZ);
+   const unitRandom=((Math.imul(binding.unitIds[i]+1,1597334677)>>>0)%1048576)/1048576,frontBundle=unitRandom<.80*smooth(.024,.060,Math.abs(root.x));
+   if(frontBundle){c1.set(sign*.15,neutralEnd.y-.025,-.14);c2.set(sign*.44,.15,.085);end.set(sign*(.12+.03*rand),neutralEnd.y-tailLength,.13);}else{c2.x=sign*(.025+.065*lateral);end.x=sign*(.025+.065*lateral);end.z=-.135-.015*rand;}
    const c1w=p0.clone().add(transformVector(c1.sub(neutralEnd))),c2w=p0.clone().add(transformVector(c2.sub(neutralEnd))),endw=p0.clone().add(transformVector(end.sub(neutralEnd)));
    for(let j=1;j<=tailSegments;j++){const u=j/tailSegments,w=1-u,q=i*per+surfaceSegments+j,pp=p0.clone().multiplyScalar(w*w*w).addScaledVector(c1w,3*w*w*u).addScaledVector(c2w,3*w*u*u).addScaledVector(endw,u*u*u);pp.toArray(centerline,q*3);endNormal.toArray(normals,q*6);endNormal.toArray(normals,q*6+3);}
   }
