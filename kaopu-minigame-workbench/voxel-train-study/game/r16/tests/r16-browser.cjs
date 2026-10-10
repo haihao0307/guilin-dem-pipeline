@@ -350,7 +350,26 @@ async function nativeJourney(page) {
   await clickTarget(page, '#startGame'); await until(page, () => __trainDriver.getState().station.canOpen);
   await clickTarget(page, '#stationAction');
   await until(page, () => ['doors-opening', 'unloading', 'boarding'].includes(__trainDriver.getState().phase));
-  assert(await page.locator('#accelerate').isDisabled(), 'Real door interlock disables throttle');
+  // Session changes synchronously on the station button's pointerup, whereas
+  // updateHUD commits native button.disabled on the next production frame.
+  // isDisabled() is a snapshot (not an auto-retrying assertion), so wait for
+  // that frame instead of racing the pre-door HUD. Test the keyboard authority
+  // too: an early W must be rejected even before the disabled HUD is painted.
+  const doorCommand = await state(page);
+  await page.keyboard.press('w');
+  const rejectedThrottle = await state(page);
+  assert.equal(rejectedThrottle.throttle, 0, 'Session door interlock rejects trusted W');
+  assert.equal(rejectedThrottle.velocity, 0, 'Door service keeps the train stationary');
+  await until(page, previousFrame => {
+    const s = __trainDriver.getState();
+    return s.frames > previousFrame && ['doors-opening', 'unloading', 'boarding', 'ready-depart'].includes(s.phase) &&
+      document.getElementById('accelerate').disabled && document.getElementById('decelerate').disabled;
+  }, doorCommand.frames, {timeout: 20000});
+  assert(await page.locator('#accelerate').isDisabled(), 'Real door interlock disables throttle up');
+  assert(await page.locator('#decelerate').isDisabled(), 'Real door interlock disables throttle down');
+  write('native-door-interlock.json', {doorCommand, rejectedThrottle, committedHUD: await state(page),
+    nativeDisabled: {accelerate: await page.locator('#accelerate').isDisabled(), decelerate: await page.locator('#decelerate').isDisabled()}});
+  await shot(page, '02b-native-doors-interlock', 'native-ui-production-clock', false);
   await until(page, () => __trainDriver.getState().phase === 'ready-depart', null, {timeout: 90000});
   const served = await state(page); assert.equal(served.stats.stops, 1); assert.equal(served.audio.unlocked, true);
   await clickTarget(page, '#stationAction'); await until(page, () => __trainDriver.getState().phase === 'running');
