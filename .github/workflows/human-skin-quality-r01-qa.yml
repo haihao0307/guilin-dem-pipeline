@@ -41,6 +41,7 @@ jobs:
           node kaopu-unified-human-workbench/skin-quality-r01/regions/build-preview.cjs
           node kaopu-unified-human-workbench/skin-quality-r01/tests/preview-browser.cjs
           if [ -f kaopu-unified-human-workbench/skin-quality-r01/preview.html ]; then
+            DELIVERY_PREVIEW_URL="http://127.0.0.1:8765/kaopu-unified-human-workbench/skin-quality-r01/preview.html" DELIVERY_RAW_BASE="http://127.0.0.1:8765/kaopu-unified-human-workbench/skin-quality-r01" node kaopu-unified-human-workbench/skin-quality-r01/tests/preview-browser.cjs
             PUBLIC_PREVIEW_URL="https://raw.githack.com/haihao0307/guilin-dem-pipeline/${{ github.sha }}/kaopu-unified-human-workbench/skin-quality-r01/preview.html" PUBLIC_RAW_BASE="https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${{ github.sha }}/kaopu-unified-human-workbench/skin-quality-r01" node kaopu-unified-human-workbench/skin-quality-r01/tests/preview-browser.cjs
           fi
       - uses: actions/upload-artifact@v4
