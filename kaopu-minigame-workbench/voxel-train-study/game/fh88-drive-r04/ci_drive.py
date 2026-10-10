@@ -308,7 +308,47 @@ class DriveRun:
         require(final["physics"]["paused"],"Final reset pauses")
         near(final["physics"]["timeS"],0,"Final reset clock")
         near(final["physics"]["positionM"],0,"Final default reset origin")
+        # Chromium viewport/touch emulation only, never claim an iOS device test.
+        self.mobile_tests()
         self.report["drivingScenariosComplete"]=True
+
+    def mobile_tests(self):
+        results=[]
+        for height in (844, 664):
+            self.b.cdp('Emulation.setDeviceMetricsOverride',{'width':390,'height':height,'deviceScaleFactor':1,'mobile':True})
+            self.b.settle()
+            frame=self.b.js("return {w:innerWidth,h:innerHeight,vw:visualViewport.width,vh:visualViewport.height,p:document.querySelector('.panel').getBoundingClientRect().toJSON(),t:document.querySelector('.telemetry').getBoundingClientRect().toJSON(),c:document.querySelector('canvas').getBoundingClientRect().toJSON()};")
+            self.report['latestMobileLayout']=frame
+            require(frame['w']==390 and frame['h']==height,'Exact mobile viewport: '+str(frame))
+            require(abs(frame['c']['height']-height*.52)<2 and abs(frame['p']['top']-height*.52)<2,'Mobile camera and controls split')
+            require(frame['t']['bottom']<=frame['p']['top'],'Mobile instruments never overlap control panel')
+            hit=[]
+            for identity in ['run','reset','emergency','throttle','brake','cutoff','reverse','neutral','forward','mechanism','full','cab','overview','side','inside','save','open']:
+                result=self.b.js("const e=document.getElementById(arguments[0]);e.scrollIntoView({block:'center',inline:'nearest'});const r=e.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2,hit=document.elementFromPoint(x,y);return {id:e.id,rect:r.toJSON(),hit:hit?.id||hit?.tagName,ok:hit===e||e.contains(hit),w:innerWidth,h:innerHeight};",identity)
+                rr=result['rect'];require(result['ok'] and rr['left']>=0 and rr['right']<=390 and rr['top']>=0 and rr['bottom']<=height,'Mobile control reachable without overlap: '+str(result));hit.append(result)
+            self.click('reset')
+            touches=[]
+            for identity,ratio in [('brake',0),('throttle',.4),('cutoff',.5)]:
+                point=self.b.js("const e=document.getElementById(arguments[0]);e.scrollIntoView({block:'center'});const r=e.getBoundingClientRect();return {x:r.left+8+(r.width-16)*arguments[1],y:r.top+r.height/2};",identity,ratio)
+                self.b.cdp('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[dict(point,radiusX=1,radiusY=1,force=1,id=1)]})
+                self.b.cdp('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]});self.b.settle();touches.append({'id':identity,'point':point,'value':self.snapshot()['physics']['controls'][identity]})
+            controls=self.snapshot()['physics']['controls'];require(controls['brake']<.1 and .2<controls['throttle']<.6 and .3<controls['cutoff']<.6,'Real mobile slider taps change physical controls: '+str(controls))
+            self.click('run');require(not self.snapshot()['physics']['paused'],'Mobile start click')
+            self.js("return a.setExternalClock(false);");before=self.snapshot()['physics'];time.sleep(1.1);after=self.snapshot()['physics'];self.js("return a.setExternalClock(true);")
+            require(after['positionM']>before['positionM'] and after['timeS']>before['timeS'],'Mobile real-time start moves train')
+            self.click('emergency');near(self.snapshot()['physics']['controls']['brake'],1,'Mobile emergency click')
+            self.click('run');require(self.snapshot()['physics']['paused'],'Mobile pause click')
+            self.b.js("document.querySelector('.panel').scrollTop=0;")
+            x=8;y0=height-28;y1=frame['p']['top']+80
+            self.b.cdp('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x,'y':y0,'id':2}]})
+            for k in range(1,6):
+                self.b.cdp('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':x,'y':y0+(y1-y0)*k/5,'id':2}]});time.sleep(.035)
+            self.b.cdp('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]});self.b.settle()
+            scrolled=self.b.js("return document.querySelector('.panel').scrollTop;");require(scrolled>10,'Real touch drag scrolls panel, not camera')
+            self.b.js("document.querySelector('.panel').scrollTop=0;");self.b.settle();self.checkpoint('13-mobile-390x'+str(height)+'-paused',True)
+            results.append({'actualDevice':False,'emulatedViewport':[390,height],'layout':frame,'reachableControls':hit,'realButtonClicks':['reset','run','emergency','run'],'sliderTouchCoordinates':touches,'touchScrolledPanelPx':scrolled,'realTimeMotionM':after['positionM']-before['positionM']})
+        self.report['mobileViewports']=results
+        self.b.cdp('Emulation.clearDeviceMetricsOverride',{});self.b.settle()
 
     def codec_tests(self,saved):
         require(self.js("return a.codecReady===true;"),"Native codec unavailable; full driving run cannot pass")
