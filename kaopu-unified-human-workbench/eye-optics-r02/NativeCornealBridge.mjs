@@ -1,5 +1,5 @@
 import {recoverNativeEyeLayers,fitNativeIris} from './NativeEyeLayers.mjs';
-const VERSION='kaopu/native-corneal-bridge@2-research';
+const VERSION='kaopu/native-corneal-bridge@2-research-quad-safe';
 const GLSL=`
 uniform float uE2Mode,uE2IOR;
 uniform vec3 uE2O[2],uE2U[2],uE2V[2],uE2Z[2],uE2H[2];
@@ -31,9 +31,9 @@ export function patchCornealShader(shader,U){
  if(!shader.fragmentShader.includes('vec3 e1IrisColor()'))throw Error('E2 requires attached E1 native tissue module');
  shader.vertexShader='attribute float e2Layer;varying float vE2Layer;varying vec3 vE2Normal;\n'+shader.vertexShader;
  shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvE2Layer=e2Layer;vE2Normal=normalize(normalMatrix*objectNormal);');
- shader.fragmentShader=shader.fragmentShader.replace('vec3 e1IrisColor()',GLSL+'\nvec3 e1IrisColor()');
- shader.fragmentShader=shader.fragmentShader.replace('float r=length(vFEye.xy),aa=', 'vec2 e2TissueQ=e2Lookup();float r=length(e2TissueQ),aa=');
- shader.fragmentShader=shader.fragmentShader.replace('atan(vFEye.y,vFEye.x)/6.28318530718','atan(e2TissueQ.y,e2TissueQ.x)/6.28318530718');
+ const coordinateAnchor='vec2 e1TissueCoordinates(){return vFEye.xy;}';
+ if(!shader.fragmentShader.includes(coordinateAnchor))throw Error('E2 requires the explicit E1 tissue coordinate hook');
+ shader.fragmentShader=shader.fragmentShader.replace(coordinateAnchor,GLSL+'\nvec2 e1TissueCoordinates(){return e2Lookup();}');
  shader.fragmentShader=shader.fragmentShader.replace('void main() {','void main() {\nif(uE2Mode>.5&&uE2Mode<1.5&&vE2Layer>1.5)discard;');
  if(!shader.fragmentShader.includes('vec3 fDiffuse=totalDiffuse;'))throw Error('E2 requires native post-derivative output anchor');
  shader.fragmentShader=shader.fragmentShader.replace('vec3 fDiffuse=totalDiffuse;','if(uE2Mode>1.5&&vE2Layer>1.5&&e2Reject>.5)discard;\nvec3 fDiffuse=totalDiffuse;');

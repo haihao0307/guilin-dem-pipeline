@@ -1,0 +1,43 @@
+{
+  "commit": "ae2bd8073deeb5e3a694f757e452c939e158b5de",
+  "base": "2702e9482cfd1655411bb0920929872669301334",
+  "run": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/38047507662",
+  "artifact": 11668900756,
+  "legacyShaderSHA256": {
+    "eye-optics-r01/NativeEyeOptics.mjs": "dc5ebdfba35e2f04e83ff14e6e87ea68d39d5ac6aed8dc00d622668c3675f776",
+    "eye-optics-r02/NativeCornealBridge.mjs": "981fc301b508ad686e5fd2146ba9d9b943caa6572786293434724c10371b36e4"
+  },
+  "strictByteChecks": [
+    {
+      "name": "refracted optical aperture repeat-frame stability",
+      "pass": false,
+      "detail": [
+        "c02c33173bc60aade1d8354996f780dffbe2a9fb8fcea3c278d8e8b47f5d8d3a",
+        "7f4f487a60f8b12847629db26a9274837e4f7f0ba89b752809afa54daf780f66",
+        "7f4f487a60f8b12847629db26a9274837e4f7f0ba89b752809afa54daf780f66",
+        "c02c33173bc60aade1d8354996f780dffbe2a9fb8fcea3c278d8e8b47f5d8d3a",
+        "7f4f487a60f8b12847629db26a9274837e4f7f0ba89b752809afa54daf780f66",
+        "1fcd02d883053a29f32036e62a8ef72196d5a0ce8360b905e0864626f26e113b"
+      ]
+    },
+    {
+      "name": "shadow toggle exact reversible at 0",
+      "pass": true
+    },
+    {
+      "name": "shadow toggle exact reversible at 30",
+      "pass": true
+    },
+    {
+      "name": "shadow toggle exact reversible at -30",
+      "pass": false
+    },
+    {
+      "name": "shadow disposal restores exact pre-install framebuffer",
+      "pass": false
+    }
+  ],
+  "structuralChecksPassed": 39,
+  "historicalCI": "failure",
+  "note": "Immutable failing reference retained for controlled shader-only A/B. Do not rewrite historical failure as a pass."
+}
