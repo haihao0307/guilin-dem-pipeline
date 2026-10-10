@@ -6,6 +6,10 @@ if not snapshot.exists():snapshot.write_bytes(f.read_bytes())
 s=snapshot.read_text()
 old="const corrected43=config?.variant43||!new Set([\"T01\",\"T02\",\"T03\",\"T04\",\"T08\",\"T15\",\"T16\",\"T17\",\"T18\"]).has(nativeBinding?.presetId);"
 new=old+"\n const spanCorrected43=corrected43&&(config?.variant43||!['T13','T14'].includes(nativeBinding?.presetId))&&spec.seams.some(s=>s.numericalStitchPlan&&Math.max(s.sourceSeam.lengthAMm,s.sourceSeam.lengthBMm)/Math.min(s.sourceSeam.lengthAMm,s.sourceSeam.lengthBMm)<=1.12+1e-12),kernelMode43=corrected43?(spanCorrected43?'seam-spans':'bending'):'legacy';"
+routes=P/'R043C_SELECTED_ROUTES.json'
+if routes.exists():
+ selected=json.loads(routes.read_text())['enabledOriginalIds']
+ new=new.replace("(config?.variant43||!['T13','T14'].includes(nativeBinding?.presetId))",'new Set('+json.dumps(selected,separators=(",",":"))+').has(nativeBinding?.presetId)')
 assert s.count(old)==1;s=s.replace(old,new)
 s=s.replace("import {beginMaterialRefinement} from '../../../correctives/r043b/seam-frames.mjs';","import {beginMaterialRefinement} from '../../../correctives/r043c/seam-frames.mjs';")
 s=s.replace('kernelVariant43!==corrected43','kernelVariant43!==kernelMode43').replace('kernelVariant43=corrected43','kernelVariant43=kernelMode43')

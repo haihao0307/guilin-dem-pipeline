@@ -3364,7 +3364,7 @@ function packet(type, extra = {}) {
 }
 async function startLegacySolve(token) {
  const corrected43=config?.variant43||!new Set(["T01","T02","T03","T04","T08","T15","T16","T17","T18"]).has(nativeBinding?.presetId);
- const spanCorrected43=corrected43&&(config?.variant43||!['T13','T14'].includes(nativeBinding?.presetId))&&spec.seams.some(s=>s.numericalStitchPlan&&Math.max(s.sourceSeam.lengthAMm,s.sourceSeam.lengthBMm)/Math.min(s.sourceSeam.lengthAMm,s.sourceSeam.lengthBMm)<=1.12+1e-12),kernelMode43=corrected43?(spanCorrected43?'seam-spans':'bending'):'legacy';
+ const spanCorrected43=corrected43&&new Set(["D07","J01","J02","J04","J06","P01","P02","P03","P04","P05","P08","P10","S03","S04","S10","S14"]).has(nativeBinding?.presetId)&&spec.seams.some(s=>s.numericalStitchPlan&&Math.max(s.sourceSeam.lengthAMm,s.sourceSeam.lengthBMm)/Math.min(s.sourceSeam.lengthAMm,s.sourceSeam.lengthBMm)<=1.12+1e-12),kernelMode43=corrected43?(spanCorrected43?'seam-spans':'bending'):'legacy';
  r043PreGuides=r043PreJoint=null;r043BudgetOrigin=0;r043Recovery=[];
  const sizing=preflightSizing(analytic);if(sizing.blocking)throw Error(sizing.message);
   if (config.kind !== "legacy" && !spec.source.experimentalSparseSewing) throw Error("Generate the R06 sparse-stitch material before a new-style trial");
