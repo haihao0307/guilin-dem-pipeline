@@ -1,0 +1,36 @@
+name: Train native plants public URL smoke
+on:
+  push:
+    branches: ['qa/train-native-plants-r01-20261010']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/tests/train-plants-public-smoke.cjs'
+      - '.github/workflows/train-native-plants-public-smoke.yml'
+permissions:
+  contents: read
+concurrency:
+  group: train-native-plants-public-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  public:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Install official pinned browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/plant-public" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/plant-public/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/plant-public/node_modules" >> "$GITHUB_ENV"
+      - name: Public entry, visible plants, start, pause and station doors
+        run: node kaopu-minigame-workbench/voxel-train-study/tests/train-plants-public-smoke.cjs
+      - name: Preserve actual public evidence including failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-native-plants-public-${{ github.sha }}
+          path: train-plants-r01-results/public/
+          retention-days: 7
+          compression-level: 0
