@@ -122,7 +122,7 @@ class FullerScalpBinding extends ScalpBinding{
   const [x,y,z]=p,side=smooth(.045,.085,Math.abs(x)),rear=1-smooth(-.052,-.015,z),front=smooth(.02,.09,z),r=this.random[i*4],near=1-smooth(.002,.015,this.safetyMargin(p));let direction;
   if(style==='swept-back')direction=[x*.7,-.12-side*rear*.72,-1];
   else if(style==='short-crop')direction=[x*1.8,-.2-side*rear*.55,.7*front-.6*(1-front)];
-  else direction=[.95*(1-side*.8)+x*2,-.12-side*rear*.6,-.65-side*.6];
+  else{const rootX=this.templateRoots[i*3],rootZ=this.templateRoots[i*3+2],part=-.027+.045*rootZ,partSide=rootX<part?-1:1;direction=[partSide*(.78*(1-side*.75))+x*2,-.12-side*rear*.6,-.65-side*.6];}
   const lower=1-smooth(.311,.350,y),rearFlow=1-smooth(-.035,.014,z),sideFlow=smooth(.045,.073,Math.abs(x));const regional=Math.max(rearFlow,sideFlow)*lower;direction=direction.map((v,k)=>v*(1-regional)+[x*.5,-1,-.18][k]*regional);
   // Group nearby roots into 12 mm guide cells, then converge gently along
   // each supported strand. The grouping controls coherent bundles, not noise.
@@ -130,7 +130,7 @@ class FullerScalpBinding extends ScalpBinding{
   const dx=(Math.round(root[0]/cell)*cell-root[0])/cell,dz=(Math.round(root[2]/cell)*cell-root[2])/cell;
   const gather=Math.sin(Math.PI*progress)*.34;
   direction[0]+=dx*gather;direction[2]+=dz*gather;
-  const wx=x-.018,wz=z+.028,wd=Math.hypot(wx,wz),whorl=.9*smooth(.343,.367,y)*(1-smooth(.018,.054,wd))*Math.exp(-progress*12);const spin=normalized([-.82*wz+.5*wx,.02,.82*wx+.5*wz]);direction=direction.map((v,k)=>v*(1-whorl)+spin[k]*whorl);direction[0]+=(r-.5)*.06;direction[1]+=near*.3;return normalized(direction);
+  const wx=x-.018,wz=z+.028,wd=Math.hypot(wx,wz),whorl=.94*smooth(.343,.367,y)*(1-smooth(.012,.048,wd))*(.45+.55*Math.exp(-progress*8));const spin=normalized([-.32*wz+wx,.02,.32*wx+wz]);direction=direction.map((v,k)=>v*(1-whorl)+spin[k]*whorl);direction[0]+=(r-.5)*.06;direction[1]+=near*.3;return normalized(direction);
  }
  setStyle(style){
   if(this.guideCache.has(style)){const cached=this.guideCache.get(style);this.triangleIndices=cached.triangles;this.barycentrics=cached.barycentrics;this.guideEnds=cached.ends;this.style=style;return;}
@@ -154,7 +154,7 @@ export class HairLayer{
   this.options={count:36000,segments:9,seed:724,sweep:.34,style:'side-sweep',hairlineHeight:0,frontCoverage:1,backCoverage:1,sideCoverage:1,width:1,length:.065,maxLength:.13,density:.9,volume:.0035,frizz:.00045,roughness:.42,color:'#21170f',guides:false,...options};
   this.options.count=Math.max(1,Math.round(this.options.count));this.clampOptions();
   this.binding=new FullerScalpBinding(model,{...this.options,length:this.options.maxLength,segments:32});this.binding.setStyle(this.options.style);
-  this.geometry=new THREE.BufferGeometry();this.createBuffers();this.material=createStrandMaterial({...this.options,radius:.00028*this.options.width});
+  this.bundleHeights=new Float32Array(this.options.count);for(let i=0;i<this.options.count;i++){const rx=this.binding.templateRoots[i*3],rz=this.binding.templateRoots[i*3+2],patches=[[-.045,.065,.72],[.025,.065,1.30],[.045,.012,.82],[-.030,-.035,1.20],[.032,-.055,.88]];let hw=0,hv=0;for(const [cx,cz,h]of patches){const w=Math.exp(-((rx-cx)**2+(rz-cz)**2)/.0012);hw+=w;hv+=w*h;}this.bundleHeights[i]=hw>0?hv/hw:1;}this.geometry=new THREE.BufferGeometry();this.createBuffers();this.material=createStrandMaterial({...this.options,radius:.00028*this.options.width});
   this.mesh=new THREE.Mesh(this.geometry,this.material);this.mesh.name='GNM scalp-bound strands';this.mesh.frustumCulled=false;this.mesh.renderOrder=1;this.applyDrawRange();this.prepareSupports();this.update(positions,normals);
  }
  clampOptions(){const ranges={density:[0,1],length:[.012,this.options.maxLength],volume:[0,.026],frizz:[0,.0014],roughness:[0,1],hairlineHeight:[-1,1],frontCoverage:[0,1],backCoverage:[0,1],sideCoverage:[0,1],width:[.5,2]};for(const [k,[a,b]]of Object.entries(ranges))this.options[k]=clamp(this.options[k],a,b);if(!SCALP_STYLES.includes(this.options.style))this.options.style='side-sweep';}
@@ -198,7 +198,7 @@ export class HairLayer{
    const nd=Math.hypot(nx,ny,nz)||1;nx/=nd;ny/=nd;nz/=nd;minNormalSquared=Math.min(minNormalSquared,nx*nx+ny*ny+nz*nz);
    const r=this.binding.random[i*4],r2=this.binding.random[i*4+2],top=smooth(.305,.38,this.binding.templateRoots[i*3+1]),envelope=Math.pow(s,.72+r*.8)*Math.pow(1-s,.7+r2*.7)*3.1;
    const rootMargin=Math.max(0,this.binding.safetyMargin(this.binding.templateRoots.subarray(i*3,i*3+3))),edgeFade=.2+.8*smooth(.001,.025,rootMargin),flyaway=this.binding.selectionRandom[i]<.018&&rootMargin>.018?(.0015+.0025*r2)*s*s:0;
-   const lift=.00002+.00033*smooth(0,.18,s)+flyaway+edgeFade*volume*Math.sqrt(length/.065)*envelope*(.7+.3*r2)*(.35+.65*top)*(style==='short-crop'?.35:1),noise=frizz*s*s*(1-s*.65),phase=r*23;
+   const bundleLift=this.bundleHeights[i];const lift=.00002+.00033*smooth(0,.18,s)+flyaway+edgeFade*volume*bundleLift*Math.sqrt(length/.065)*envelope*(.7+.3*r2)*(.35+.65*top)*(style==='short-crop'?.35:1),noise=frizz*s*s*(1-s*.65),phase=r*23;
    // Frizz lies in the local tangent plane, preserving a positive surface gap.
    let fx=Math.sin(s*19+phase),fy=Math.sin(s*26+this.binding.random[i*4+1]*23),fz=Math.sin(s*33+r2*23),fn=fx*nx+fy*ny+fz*nz;fx=(fx-fn*nx)*noise;fy=(fy-fn*ny)*noise;fz=(fz-fn*nz)*noise;
    points[q*3]=px+nx*lift+fx;points[q*3+1]=py+ny*lift+fy;points[q*3+2]=pz+nz*lift+fz;maxLift=Math.max(maxLift,lift);

@@ -49,6 +49,7 @@ jobs:
         working-directory: kaopu-hair-workbench/qa/isolated-groom-r03
         run: |
           if [ "${{ inputs.target }}" = "public" ] || [ "${{ github.ref }}" = "refs/heads/gh-pages" ]; then export GROOM_BASE_URL="https://haihao0307.github.io/guilin-dem-pipeline/kaopu-hair-workbench/qa/isolated-groom-r03/"; fi
+          if [ "${{ github.ref }}" != "refs/heads/gh-pages" ]; then export VISUAL_ONLY=1; fi
           node tests/browser-regions.cjs
       - name: Retain evidence only
         if: always()

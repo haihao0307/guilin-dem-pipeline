@@ -84,6 +84,7 @@ void main() {
 
 export const HAIR_RECEIVER_GLSL = /* glsl */`
 uniform float hairOpacityActive;
+uniform float hairScatterStrength;
 uniform float hairOpacityMapSize;
 uniform sampler2D hairOpacityNearest0;
 uniform sampler2D hairOpacityNearest1;
@@ -318,7 +319,7 @@ export class HairOpacityShadows {
     this.lastPasses = []; this.passHistory = []; this.pendingQueries = [];
     this.timerExtension = renderer.getContext().getExtension('EXT_disjoint_timer_query_webgl2');
     this.uniforms = {
-      hairOpacityActive: {value: 0}, hairOpacityMapSize: {value: mapSize},
+      hairScatterStrength: {value:.22}, hairOpacityActive: {value: 0}, hairOpacityMapSize: {value: mapSize},
       hairOpacityFractions: {value: new THREE.Vector4(...HAIR_OPACITY_LAYER_FRACTIONS)},
       hairOpacityNearest0: {value: null}, hairOpacityNearest1: {value: null},
       hairOpacityTau0: {value: null}, hairOpacityTau1: {value: null},
@@ -410,8 +411,15 @@ export class HairOpacityShadows {
         if (!shader.fragmentShader.includes(marker)) throw new Error('Fibre per-light visibility hook is missing');
         shader.fragmentShader = shader.fragmentShader.replace(marker, /* glsl */`
           #if defined(USE_SHADOWMAP) && (UNROLLED_LOOP_INDEX < NUM_DIR_LIGHT_SHADOWS)
-            if (receiveShadow && fiberShadows > 0.5)
-              visibility *= hairOpacityVisibility(UNROLLED_LOOP_INDEX, vDirectionalShadowCoord[i], lampShadow.shadowBias);
+            if (receiveShadow && fiberShadows > 0.5) {
+              float hairTransmission = hairOpacityVisibility(UNROLLED_LOOP_INDEX, vDirectionalShadowCoord[i], lampShadow.shadowBias);
+              // Bounded secondary-transport surrogate, not full dual scattering.
+              // Keeps the opaque-head shadow and the matching lamp colour.
+              float shorterPath = max(0.0,sqrt(hairTransmission)-hairTransmission);
+              float crossFiber = sqrt(max(0.0,1.0-pow(dot(T,normalize(directionalLights[i].direction)),2.0)));
+              color += directionalLights[i].color * visibility * hairScatterStrength * shorterPath * sqrt(pigment) * (.35+.65*crossFiber);
+              visibility *= hairTransmission;
+            }
           #endif
           ${marker}`);
       } else {
@@ -660,7 +668,7 @@ export class HairOpacityShadows {
 
   diagnostics() {
     this._pollTimers();
-    return {version: HAIR_OPACITY_VERSION, enabled: this.enabled, hairCasts: this.hairCasts,
+    return {secondaryTransport:{strength:this.uniforms.hairScatterStrength.value,model:"bounded per-light shorter-path surrogate, not validated multiple scattering"},version: HAIR_OPACITY_VERSION, enabled: this.enabled, hairCasts: this.hairCasts,
       capability: {...this.capability}, mapSize: this.mapSize, depthLayers: 4,
       storage: 'per light: RGBA8 packed nearest + RGBA16F cumulative tau, samples=0',
       colorTextureEstimateBytes: 2 * this.mapSize * this.mapSize * (4 + 8),

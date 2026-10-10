@@ -11,3 +11,6 @@ R02 left350μm gap at scalp roots. R03 reduces it to20μm and smoothly rises awa
 
 
 The36k×9 first render was rejected for crown tangling and coarse close-up flow. The whorl influence now decays within the root section, leaving longer shafts governed by the groom.32 geodesic supports and16 rendered segments serve the96k close-up mode; single-current-style caching limits retained CPU guide arrays. Radius decreases75→50μm in near mode. The96k test yields about151 active hairs/cm² in the crown and141 at occiput, with separately computed area. Matching one study range does not establish realism or population validity.
+
+
+Structure follow-up: an authored side part splits root flow, and five smooth guide-height regions replace a uniform loft. The crown field is primarily outward with a smaller spiral component; it must not coil whole strands. Lights, exposure and ambient remain fixed. A bounded per-light shorter-path term uses T^0.5−T, which vanishes at transmission0 and1; it retains opaque-head occlusion and lamp colour. This is an explicit artistic secondary-transport surrogate, NOT an implementation or validation of dual scattering. The underlying need for multiple-fibre transport is described by the authors at https://www.cemyuksel.com/research/dualscattering/ . A direct-only same-camera comparison is captured.
