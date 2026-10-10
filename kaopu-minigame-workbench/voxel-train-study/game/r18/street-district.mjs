@@ -39,10 +39,15 @@ export function createStreetDistrict({routeScore=null,anchorScore=null,onChange=
   for(const [id]of live)if(!wanted.has(id))release(id);
   for(const id of failures)if(!wanted.has(id))failures.delete(id);
   account();let builds=0,attempts=0;proof.lastUpdateAttempts=0;
-  // Downgrade outgoing parcels before upgrading incoming ones, so hysteresis
-  // cannot temporarily consume the budget required by the nearest facade.
+  // Coverage precedes detail: an incoming parcel first receives its own
+  // far architecture (pierced walls, balcony/cage silhouettes and sign frames).
+  // Otherwise an endless queue of old LOD downgrades can starve new parcels
+  // when the shared host advances by 24–36m between software-rendered frames.
+  // Only after every requested outline exists do we spend work on LOD changes.
   const rank={near:0,mid:1,far:2};
-  const ordered=[...desired].sort((a,b)=>Number(!!live.get(b.id)&&rank[b.detail]>rank[live.get(b.id).detail])-Number(!!live.get(a.id)&&rank[a.detail]>rank[live.get(a.id).detail]));
+  const missing=desired.filter(c=>!live.has(c.id)).map(c=>({...c,detail:'far'}));
+  const changes=desired.filter(c=>live.has(c.id)).sort((a,b)=>Number(rank[b.detail]>rank[live.get(b.id).detail])-Number(rank[a.detail]>rank[live.get(a.id).detail]));
+  const ordered=[...missing,...changes];
   for(const c of ordered){const old=live.get(c.id);if(failures.has(c.id)||(old&&old.detail===c.detail))continue;
    if(attempts>=plan.score.streaming.maxBuildsPerFrame)break;attempts++;proof.buildAttempts++;proof.lastUpdateAttempts=attempts;
    try{build(c,view);failures.delete(c.id);builds++;}catch(e){if(!failures.has(c.id)){proof.error=String(e);event('error',c,{error:String(e)});failures.add(c.id);} }
@@ -54,6 +59,7 @@ export function createStreetDistrict({routeScore=null,anchorScore=null,onChange=
   proof.lightingActive=n;proof.elapsed=view.elapsed;proof.focus=focus;proof.pending=desired.filter(c=>!failures.has(c.id)&&(!live.has(c.id)||live.get(c.id).detail!==c.detail)).length;
   if(!failures.size)delete proof.error;
   proof.status=failures.size?'error':proof.pending?'streaming':live.size?'active':'released';account();
+  const required=desired.filter(c=>c.distance<=70);proof.coverage={radius:70,required:required.map(c=>c.id),missing:required.filter(c=>!live.has(c.id)).map(c=>c.id)};
   if(!live.size&&pool.snapshot().cachedGeometries){pool.dispose();pool=instrument.createSharedResources();proof.shared=pool.snapshot();event('shared-cache-released',{id:'finite-pool',detail:'all'});}
   if(attempts||proof.pending)notify();
  }
