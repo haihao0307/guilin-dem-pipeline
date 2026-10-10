@@ -1,3 +1,5 @@
+import {prepareNativeSource} from '../../../source-repair-r043.mjs';
+import {attachExteriorField,waistCircuit} from '../../../correctives/r043/fit-support.mjs';
 import {sha,requirePerson,materialHash} from '../../../source-contract.mjs';
 const R04_LOCK={"schema":"kaopu-native-tailor-lock@1","version":"R04-SOURCE-1","nativeAnchor":"0ff632be3e4ab112fad93fd4c43c7bc6a90cf5f3","commonEntry":"https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/index-characters-r02.html","commonFull":"https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/full/","person":{"geometrySHA256":"fbc056553c1731b790769124bee121554f0800400271eaf564a0ad5e6f458571","topologySHA256":"e8526431b9b24bec71d8161ed409794a8398ffc68ad25800abb27e0fc09644de","stateSHA256":"f6a60588040d2967ac619c5352c52355cbd02b12890f88cc976d0c2fbe50c0b7","adapterFingerprint":"4ac1f6b9ffac5ab45d1a427a1eb5e9578af0e7f105d58bff4d48555e4e2027a5"},"vertices":25417,"triangles":50624,"groundShiftM":0.9858653545379639,"bodyFileSHA256":"9193aded7fa9c7d14436b5de84469e09fd51ea0bd7727fe6e4c20f06e237e31c","sdfFileSHA256":"e60cea26e250863dd74e27434e5e7140db35a93d9b341c0249c2db3a1530ab56","sdfMetadataSHA256":"42985dc3db3214ce2b71aa91f4f9910841d0b04812aa4350b94d65965c40ba35","cppSHA256":"58497fbc68140d2d439ec93e1f488783e48ab715e3a22b29d16db1ad7ca40dfc","bodySourceComparison":{"canonicalRecipesChecked":8795,"maxDefaultBodyErrorMmBelow1490":0.0},"sizingPolicy":"PRESERVED_ORIGINAL_PAPER_SIZE_NOT_CURRENT_PERSON_REMEASURED","supportedCollisionPerson":"exact default native state only; other native characters require their own collider and measurements","noBodyScale":true,"garmentDisplayProxyAllowed":false,"physicalFitAccepted":false};
 const R04_ROWS={"T01":{"id":"T01","style":"Shirt","recipeHash":"823103e24349c2650f7328dec3d010afa070d5012a2135868c95e1c0d98a2151","geometryHash":"94dd4ccfc9f8bc305f88381ecf0f31899559b4d6442a0f2249b6d1e0af1a724f","decodedSHA256":"5ae24624797b4eee8801551b833ab0d4b5cea1a6d93612940d01b3f5e936527d"},"T02":{"id":"T02","style":"FittedShirt","recipeHash":"4dd377515e120e5c7bbd5d639405ea41a8050dbe54d66fbf159984395e047a53","geometryHash":"17ef6b618b4d31d2a6abedc90fbe886511df20f24aacf84f333cf4f4fd390c7f","decodedSHA256":"686b15b890df8048364b63f531133194218486d729fb3dd0413e301b96332c5e"},"T03":{"id":"T03","style":"Shirt","recipeHash":"6b39ad161eff755a32bc3610b107a5bf4f181ba978bd95671241e4ba817407ca","geometryHash":"7ad801ca43aa6d13341218aeb70fa25b40ff1f31414da9742863cc456f085169","decodedSHA256":"3240c5d9b130f74b9b79300655d13694bfca455c0d55536cf123f4ec1d87973b"},"T04":{"id":"T04","style":"Shirt","recipeHash":"824ca0d7dfdf4497128c44475cb4a85428bcb46016a6bad583b8ab4ddaf93911","geometryHash":"95ff73d426e6e3ba2d0d6582b30f69549bb927ab4f07c5b0dc592a9986d2fbce","decodedSHA256":"a43f45756e6b23d8b1c0923f6709447c1d5f279a3e68efe89f6b0b8c5db852f5"},"T05":{"id":"T05","style":"Shirt","recipeHash":"9f2e2c762bdcf52ea8243af33760ab2f916529358a048190a7bf6f4a20de0e5a","geometryHash":"ff70b845e90facfdf7e5c927fc2e7c5ce71a22071a527df3c6ebb1037a082bc6","decodedSHA256":"f4d8556c8de9977c35e0b96cccd2f75ab3ab3d44fa59ccacf51ab163e663f84e"},"T06":{"id":"T06","style":"LongSleeve","recipeHash":"ec6c46304fb7d36a7a040241ae49c7c6214e79bed8818bc3a96b9071b09f35cc","geometryHash":"d52bd758171dd0fa4b81e2ab00fd0bfcb9bb122289e6266b36103dd3b1a2e717","decodedSHA256":"7187456e5a3ff75f3e187f3a90b820619662087f7abfc0cdd1c0ef4a48f675c6"},"T07":{"id":"T07","style":"Shirt","recipeHash":"979d58b24c6fec3206d89f05ceda37d8a2c00f430d0409ea72f4934771743881","geometryHash":"1f85fd57a42348eec6f844f38017c94ce431d4ae72fc56d7de9e6493a4c5c9f5","decodedSHA256":"6618a0dd354c5aebc642cf6e10df846bec9f4830c9fa7fa3a6dff1713597e3dd"},"T08":{"id":"T08","style":"Turtle","recipeHash":"18ab681f7f560577d1d49ed317b0595bdffd8c9964b95be3489d89849c1a9d63","geometryHash":"5d3d40c7911c776b7b65fdc57e1bd30e13e4d239a817e202a0460c8185e6fc24","decodedSHA256":"0e09e1ae5f2ea2df31b9ab4408d712f64c39b97356abedc76beae7a501c62507"},"T09":{"id":"T09","style":"SimpleLapel","recipeHash":"bebd0d83a0ea4ade6867e540e66f7ea8e711bb860b6e45ef83dec866159cecd1","geometryHash":"96d1bb7c807209dd86b4781a420272cd4a09b42a66945f716b98c8e2dfa95a0e","decodedSHA256":"04113f4e1a62426781529d6bf7dbe2c74246e702a210bc097cd308d32872a36c"},"T10":{"id":"T10","style":"Hood2Panels","recipeHash":"a45e4a0d3159f55bef6270424bc171f172ca1be77c757706d5d68546a2b96ef7","geometryHash":"f5baa9594d1b125d8ea14c56cdea4c4c58cf508c2c1dfaa891230a8969bb3ca0","decodedSHA256":"4875cb8e202f875d100f7027f5da7cceb69d5f4fbebc4f126aa0b2077950bd56"},"T11":{"id":"T11","style":"CuffBand","recipeHash":"9be65342116566e76d4ceb0947bb5d344ba3c972f93735ab4884d77f0901ae4b","geometryHash":"2302fb43fe84d53f0860d83567e70879513e22f65ba0c01f39d45663f293cc54","decodedSHA256":"597f46eceff25d3af1aa4ce74e5df9040ed2977d712af1abe37a8f398b52dec5"},"T12":{"id":"T12","style":"CuffSkirt","recipeHash":"cee574e3bc7ffaef233ae4482552e74499d5b2a0524c24b0aa60ae806f1006b2","geometryHash":"331efa6eb818ef51915f37caf34f8e0b985f5b17a1464f541e7b793e43a0c176","decodedSHA256":"b288efed40d701119d7602fdf4f06b61a3c08e6be59275e5b0b511fe89fccc23"},"T13":{"id":"T13","style":"CuffBandSkirt","recipeHash":"e6bf5c4164b34fb7d5fb870b47eed00ead1d83121016de56eccda7031fe8f0b1","geometryHash":"3cd72ec069dea0fd05f7b87cd47131bfc7a2ce9dc11f2aca97171adcd40d5afa","decodedSHA256":"aca00a6e44c9c9ca597ef7674ef4db192c1e7c97a0f71232e700553eab8a9604"},"T14":{"id":"T14","style":"Strapless","recipeHash":"d9019332d51c4309c1af7a8061b9ed1cece677d90cceec842fd150c70d3eee0d","geometryHash":"b938a2adbf80a69c0eee03ac60d40614d3134b995b43075e5975846fbd647b3d","decodedSHA256":"ee4fe4f104b7a445d3e1d6e608cdc0d49a504e635e01a5a266ab1a6a2146afc2"},"T15":{"id":"T15","style":"AsymmetricShirt","recipeHash":"a4422d50184572e9f4fbff8ee38bce80b008f4b5e5ab6e3130727edcddfec696","geometryHash":"3192951d5cf416fa5bfcb67438079363ad8d3219706c686ab6861fce1e63cb3d","decodedSHA256":"0a78dd199eeb9dd28d8c21298ee249c4d2d6e75152a0b6563d2f7a30f1975f6b"},"T16":{"id":"T16","style":"Shirt","recipeHash":"b9460b5efb56f032daf9ea59025f96ce27bf075a1010eddc5e16927857335943","geometryHash":"7caa562d757443080c12499fc945ead7b315fe62294200f0812d9412c9107996","decodedSHA256":"bcb5e92dbfe10ecaf40dd080d0bbe68d3802b5ac19b81ca81e1f06cc2e8face0"},"T17":{"id":"T17","style":"Shirt","recipeHash":"dea1248238d98262fed8e2c3933415e7984a0218aa18dcad65c0653d9f3f60ed","geometryHash":"42721c487cfcc1e52ef29cd4b4a3ce5c32badce3a1ebc527bb83f58c53aacae6","decodedSHA256":"6c10949c8c080585857874675dea04a02dc2ea5cabce65116d193ba757a6afcb"},"T18":{"id":"T18","style":"Shirt","recipeHash":"e023669e456f6488869f7bc668014b0aee76e761e4600e1ffec180ebecaf95d7","geometryHash":"69b523f30e6b49035b10954878bbaa23b99699ab32f4fc4234f426a19930904d","decodedSHA256":"6ddf6aae062d5378255b50cafbb5462c989cd9d4cd8b86d8ad7872f15cdd96ef"},"P01":{"id":"P01","style":"Pants","recipeHash":"0d38f3cb9ce793078502a56a5ffb830f380f2f5180b9214f90b104d055ff2895","geometryHash":"5f6d651f5e188cb9fb9a21f007a60c16f15be2d48187acc0d00078018f98c878","decodedSHA256":"f26b9d49480a8cd5a52a24259ca8fdec2e11e997b36fce81e0c6fae78afd4630"},"P02":{"id":"P02","style":"Pants","recipeHash":"39361c076e9972c18c1406a76ba00009259c45f7e79c7426c1e6d009905ba103","geometryHash":"813a597d20de5dd54fa4df1efd6ada7ba85b618fafa6b1e09ecfc61b00ebefa5","decodedSHA256":"ba0666533ecaec09140fc2dc232f8bada3f2d713321c979ca9a60bacf642b73f"},"P03":{"id":"P03","style":"Pants","recipeHash":"8c7385ece948936121a58bc9d8c48efefcbe59e69522a1a8d461668acd9829e7","geometryHash":"da4c771385a94089a498c6171cbc38f8989051a592ff2ed0f40ff4832de0d488","decodedSHA256":"e61d20ce47b8b96b136c248315eb9a503cca63ed2f0f1beb407c2cdfcff2ca36"},"P04":{"id":"P04","style":"Pants","recipeHash":"557f067e72fe3a1cb6a07136a7b673fd6ef9e00030f88302b774d623ad680ee4","geometryHash":"6a130a2cd0d840944e5dea0172d66db896fede07d394b0a84061056ed4941ed0","decodedSHA256":"d1733832c5dffb3c28dd5d08af4b194ee4584df9d7ef1986b99ceeecf0fb49e1"},"P05":{"id":"P05","style":"Pants","recipeHash":"7d973aad39418ea6fd4be3905a5f52b52d5df19ecf68fc376838e00484de3487","geometryHash":"044c8aa35a4ff34c375fc287e165a24776b8d9bc02b7929813582cf95f0937a8","decodedSHA256":"abecc67b00161335320cf1a2c69b09207dc81a8dc3339c7c6de794f3ad56a2c0"},"P06":{"id":"P06","style":"Pants","recipeHash":"20a979737124f629dab8e0e3151e9f27dffa5c5eee2f321bfedb2e257cfedae2","geometryHash":"577d4a41612de1b459979e7d82d1fec7fff334898b4b6aa4ce9abf68852e3ed0","decodedSHA256":"72b5be7408121bbdfeaf6f25b8a09624244411763ccc6ab19182938affd2bf4b"},"P07":{"id":"P07","style":"Pants","recipeHash":"450e3dcb8e27098f711327ea8c6a83a646e1b7caab91eedb71f1f9dc50e2c2ad","geometryHash":"8780d65a08d31630e9cdfdb166c9af5b6a3076bf84e202f8b9c2464f67acc838","decodedSHA256":"6f15eac4991966078a898d94242e1d4d8844c3721ae99beb20f85c28e7e80e79"},"P08":{"id":"P08","style":"StraightWB","recipeHash":"a7a343ff1f70845de2a4c2a4d8e442a52971f2f87931319eaeea22e4068f0117","geometryHash":"b0e11442b3c71893df3f3c5578ac43646e89846d56676fd1111e8332b6fd2c1d","decodedSHA256":"82583c3c1b29d77eb13e13e4cf464a344bbaed780562a4d8086251ec63dd944a"},"P09":{"id":"P09","style":"FittedWB","recipeHash":"ddd2daef5a58965eb6126235f61c41a4f17eaee22e12723c1b8e7e93adea5ffb","geometryHash":"1060bcb279412e605af8bfc964baa782c4d42ec52aebe52304f96ac80422653c","decodedSHA256":"f79771ac1d3b231f754fd9169d4e51a6d7784a75c2286252f181fa34a6afe540"},"P10":{"id":"P10","style":"Pants","recipeHash":"252a53f92789b5918981eb4916ae77af8ac181cd349f22936f1677a6dda7d37f","geometryHash":"1388020c6dc1be17199100f21d07f392c30fd092dceac301869129083ca5b213","decodedSHA256":"8f8a81e6864f62aa6829c510d362c0e8721bcaaed448adeb10b314a03b202d52"},"S01":{"id":"S01","style":"Skirt2","recipeHash":"793a26a6a4dd006eb0ad3ec41e91c7e01249a19ce3fa5653c0c63e8b158f4738","geometryHash":"7d5ca14bef561e5a2d12fd8c0a6d36aca00427d78c586d54fd2fa658fa3e9495","decodedSHA256":"f5847bfde6950f5b2c586cd577423a3ab9baa0f37663deaeacb18cfaa32fabe1"},"S02":{"id":"S02","style":"Skirt2","recipeHash":"145fed9bdef91d43d0b9e625ccafe56a3744ec8f742c045a0395d85ee805e6b9","geometryHash":"d205eb2abe0ef4d34ea3a325dda85fffd1378beeb51f43734792935b3c80aeeb","decodedSHA256":"48ab0269d243ef48c40f5ccd6925323e779ec5cdf61803a36862621deed0bb3c"},"S03":{"id":"S03","style":"PencilSkirt","recipeHash":"0a5b56c44b44192a6d7666da1af31f098b7c92ef382b3dd33f73c42478f5d57d","geometryHash":"5f257229209ce4ba9e57c3c32df02f03899e3462a820169d08c5abf89937f6a1","decodedSHA256":"3e54c6322a46ea7232644f341a4f5ea300d0b20a24a1d45765138b707d753baa"},"S04":{"id":"S04","style":"PencilSkirt","recipeHash":"4e67b20745f926862c29afd56158eb3796826f24df9197cfe77bef6a37147788","geometryHash":"062e9ba0933b4130098d9f470835a4cebd3c6b67a286a187eeaf9053c75c0ea3","decodedSHA256":"de6f3818a83b44e3303323d76c75eded0019135cca6ad131d6e92505f2983bc6"},"S05":{"id":"S05","style":"SkirtCircle","recipeHash":"92023b011579db83e7b175f1d66c573d2b7ac346748244989a6718e4ada72fe0","geometryHash":"a882f394acfc7c4d5bf9e79e2681f1e2b2fa11afaec8df4e19a3074ff984440a","decodedSHA256":"1fccad9e7ee9453fbede7a4517700778706937063ea5ee49a6bcf0322787b56f"},"S06":{"id":"S06","style":"SkirtCircle","recipeHash":"20a8570cb4e92f90de09b4a8efe1583cafc5e4e9aca49f2db06375cf48a66137","geometryHash":"e2652ec6c8fa0e11b9959a70bcf97bf488e8d71c6c5807947e6f93b6e27d9a01","decodedSHA256":"7689f6e0853ca87dbc38199b64c1720d06b8bfc6afc021deb76b93debc500d94"},"S07":{"id":"S07","style":"AsymmSkirtCircle","recipeHash":"8474be112f308b5f785d458d5e903d0fe82a825df585e18d5ba2691559b068df","geometryHash":"6f3cde5b9525311c29eb2019ceb57bc434ff56fa099d6cb607ea51e2c45ca351","decodedSHA256":"659f1b1f60279091569ed4ba6432f29f2df6586d0c4a7f0840f6b3e5451a0df7"},"S08":{"id":"S08","style":"SkirtManyPanels","recipeHash":"ba6f06103d588622ec9132b1ae0bb3d802d4dea0e7bb2830ef18bb5d1e6bbc28","geometryHash":"ab1dae4b64337b288337f2838b609010c44492aa65b288c046d0eab2da69ee4c","decodedSHA256":"509c1fbead8f2da05dca37ecd2a969e323096a52bf663fb39de4880121253162"},"S09":{"id":"S09","style":"SkirtManyPanels","recipeHash":"39875fd32eb1d2a2e4b63b16ef414383d0643b738587b13a9b6cebbf849246bf","geometryHash":"89ce3211e5a932908569bad8b969a2c534616cb2459d05b042020dd45576ad4d","decodedSHA256":"887ac48c6def8aaccf05e24365a8f87c9b44c791b273c949ee41ff2c03ff5aa5"},"S10":{"id":"S10","style":"GodetSkirt","recipeHash":"e16acd628b4a71d90801c4c91874df65b0265f5e82c24a402522a019003e9956","geometryHash":"cd91291024c96d6b3b7bc0a332834d35c2cb3506c8db235e7d36b1e8df70eef8","decodedSHA256":"9a658ea8bef445f559992b1988bac5157983e3ca25d56454f45c35a132f0c63f"},"S11":{"id":"S11","style":"SkirtLevels","recipeHash":"ce528250fca15d8ef46fb37f4aabdac10ffc7f7c33ec3aded972d169e99bb015","geometryHash":"682adbd38db55bb5da35d30c338598c161748a4c5141e53a0b4d0e5f9f14fd54","decodedSHA256":"4ef8034c4a3a6f0a75e56d21ed0c790ca95397dc679ce04e0ea868d891605dae"},"S12":{"id":"S12","style":"SkirtLevels","recipeHash":"f578b4a49bc119a5c24dfb4bf4d885f443bcf468c9d7572ce433af5f74b191e0","geometryHash":"8edc1d2041e8347cb53d9f6ca17346a52fb6d6bd00781107ffa3148a4a4e3b04","decodedSHA256":"6c54807564863de8c548ce895f4436a22591f5154015d9cd56a00512eb6ba4d4"},"S13":{"id":"S13","style":"SkirtCircle","recipeHash":"6ba31bfb1da95dee96786bf11ae38939a3d41bf1fc8eeb9e67626d7fdcc75312","geometryHash":"ba99e525e492237e70d0f6561bfcdab9849eded14bb266ac8d3540264a3dcd72","decodedSHA256":"2ac18e1791101b442a9ab9e3980897484d1d971cb48b7f0bc25a19e11c404e52"},"S14":{"id":"S14","style":"PencilSkirt","recipeHash":"748ad9ce508d2cb7b63e4239062b2a32c5eb8fad12975d575ff60eb1f2c7bb09","geometryHash":"4dd8a30a5e65f50582491686e2da57c683f8acc79cd25652d138e1ed3a3eea7b","decodedSHA256":"42ff4f1635ab15d2b98b7f100c5d6c20e25791a1ac4485fed7aeb2ceb7026535"},"D01":{"id":"D01","style":"MetaGarmentDress","recipeHash":"0c80e8e44b21f6e07bf4bbeca8c01efea3a9500e4eb435c290d7fdac06cd56e2","geometryHash":"4ff2afaf28f5496064dc477921aace7b15db92d7aa3de08f85a5df5662db0e22","decodedSHA256":"0303a022174a43e296c3edca4fa3ae874ac9206ec636be353b6ccd3507055cc8"},"D02":{"id":"D02","style":"MetaGarmentDress","recipeHash":"31bc770c58a86ca33ab2506cb6aee12c1ed7a894d4a38cfcba29e02d996335d6","geometryHash":"d4c4d65fafc4d142ba1dca97e93061e431a8a2452494978df0eb80846069d5e3","decodedSHA256":"0d156ada97c4884be4c363ba0d29aec1d7acfd2e57954a23a1faa2c4f2f85440"},"D03":{"id":"D03","style":"MetaGarmentDress","recipeHash":"a903ec66885fc3775167f22025e1ee5ec418f2a5eaf7b6a41eddf282505b3411","geometryHash":"5170d127dbaa160ca0e78158f738ead092b2686b1df421cabcdb42e6556d89a8","decodedSHA256":"9e36c3e81a7500a1fccff7d6ac8c937c0f171897a45401fe3ddbf727cddf2742"},"D04":{"id":"D04","style":"MetaGarmentDress","recipeHash":"ce655ede533b3a03dd041a60220f2a6b11c5de0fc572a3dd21fc39db62f6b86b","geometryHash":"f347cbeeffb1fa0dec2854c3e0265d5b7c6385c8b8e20a9acba4aae4afcf0c6d","decodedSHA256":"a1904e45f630deaac4bc1915c78f0f81b46fb7c36faecdb5967ba2f95d74a604"},"D05":{"id":"D05","style":"MetaGarmentDress","recipeHash":"d03a48e6bf33013cc80ffe530dbfd7800686bf3e624bdb1d9535697a4f0ef365","geometryHash":"b1f913e2ca52635242fc3813865e95771ccd749d588b0e6c2e6bda2bafd77057","decodedSHA256":"1b00f4aeb9ad4a9daa480e4ada6cf6c158718a52d5ce99de457d1c09a275048e"},"D06":{"id":"D06","style":"MetaGarmentDress","recipeHash":"de059d91eea739483e35a831420450de342ac536558059bbc1321cf2c913b985","geometryHash":"4edd8697c1f2e053f7d46e4241ead47c26eb775e8adac71fd224a5fa4e67e99d","decodedSHA256":"6b77fe3402ea08441386ea6b9b0c18092b26d657f0599d3b7531d9ad0fc6d694"},"D07":{"id":"D07","style":"MetaGarmentDress","recipeHash":"a818f277d38ef8937216ed45339d07323793dfa8fee93ed98eb945323ca6968a","geometryHash":"5b6369639e13dc5c1ad271c49f5f59e0c1c5658b2c572ddc24a925a62f2862dc","decodedSHA256":"910c5b827a29f6e2ea1e2d4e6a8f5ff3923cef4cefa661c09e371ba39adae498"},"D08":{"id":"D08","style":"MetaGarmentDress","recipeHash":"c6ff9132efc1a062b74d5cb75190146d8767cefe1d0f752983c6396417423cca","geometryHash":"6b92abd9db8f174750f5119d5486c533e65f1b5da1d480f2ee300dcedd55c3f3","decodedSHA256":"bde13dd97f499920e539390763431f8a723e992ecbde6d75db4b52ee55cb5fc8"},"D09":{"id":"D09","style":"MetaGarmentDress","recipeHash":"d72ade61e1c360f397ce0433c3b715ae15d8e1cdb439e29d54dc2262072131ce","geometryHash":"365863e1c611577ef9025bb2541345e5f3f43b00979cf51bcc6d71bd14c79af2","decodedSHA256":"c213e7fd8505c24d485e0a3ef264fa0df73110278a3111b1c4328d0a1f08b975"},"D10":{"id":"D10","style":"MetaGarmentDress","recipeHash":"a6d404020a7427aa7dd51568676670d0112eb3c69bb573c3a3c72328e9ccf277","geometryHash":"c630b62a9b8067c4f879919e42fd2e373f902246b95557523fc7c0df0f5c57cc","decodedSHA256":"70a0083f8e2ae65507a0ff20e3ac7ec4bd868582aa67978146072b07c04c2812"},"D11":{"id":"D11","style":"MetaGarmentDress","recipeHash":"2aa965ef8e8cc454eca9b549c249f73e6acd6c6b01a4363b71c88137d1e3fd3d","geometryHash":"d2f97e3cf83828bec998c0799d96757b2a083a669652c4a2391889e7bf3c3f4d","decodedSHA256":"1565e62c7da7b5543eeb863529bec2d3a4e64816850ac1bbcdcedd2bc190d70f"},"D12":{"id":"D12","style":"MetaGarmentDress","recipeHash":"7eb5ce62c1482fd29712183276d95d9a56da75a9af63c645e92d91d6d1c63bd8","geometryHash":"5c90b03c49651c69852a8574be13a86776983ef677f63d9ef4e5c76cf45f60b7","decodedSHA256":"e875407fdec2cbe6b19dc6194cd5245ad964976eda230df6bb02b3f5526d7686"},"J01":{"id":"J01","style":"MetaGarmentJumpsuit","recipeHash":"7b0e0416ce1d1521213ced08feba8d74e6f6fa98017829b38ed5630c82251af0","geometryHash":"b170a53d8ee43c9ce677546cbb66ce7974d983a5804a790b44d093ca67a3f012","decodedSHA256":"bc195f532919c4161c3a775a7c9776d4342c4cee151735c1d223871b6b0a7072"},"J02":{"id":"J02","style":"MetaGarmentJumpsuit","recipeHash":"089d7db169e4dfda1c28a204bd8481321a232714b97b3cb2b5a1e706d7b00d1e","geometryHash":"7977ccaff7d835aa6ac0f3c159fb138aa71c9139e65f146a16007e20348ef51b","decodedSHA256":"80dbc134bfd0b87a33076abde57b3301a7b14e2d52321662de95c02f9d8362e6"},"J03":{"id":"J03","style":"MetaGarmentJumpsuit","recipeHash":"729ace650b1a17d31f6bd29de07e2909593dd1c74ebf96292cb634523da632ab","geometryHash":"5d1ba167921e425eaaeec17de1bbabca5fc6ca61b71b5654738c3cf31f398f73","decodedSHA256":"77dfb6c71ffdf25bbd3febb7fb3ce5abd5a08beb08ffbd271a88b3b5a0ac7078"},"J04":{"id":"J04","style":"MetaGarmentJumpsuit","recipeHash":"f177dee8153230ce6b3d9c5e320133c9faa107c0ab4accd85457e0c54caef178","geometryHash":"651144862c9060d06cb1bf223235f746dd95ccf17af8acbd1a5c138732a05174","decodedSHA256":"de86d88f933de146c4ec924bc92cfbc22790cc1b8502c07b85e4698556a73d31"},"J05":{"id":"J05","style":"MetaGarmentJumpsuit","recipeHash":"44694db4c85a40a4b2fb3a8ba638009639a2dc29c524fe38ac7308ca4c07e6ad","geometryHash":"e6db01946a0e44978afd34d872858c57ceb20becd208856e51ad75366a41f8a3","decodedSHA256":"409d09c7af19ccb238d4533a45c6163b255f677920533ce0d8eb6b5a00aff026"},"J06":{"id":"J06","style":"MetaGarmentJumpsuit","recipeHash":"772c1671ebda7c7b212087407e3a5a27c9bc4c2e22e9a37d0f829dca2311d511","geometryHash":"e4b0b83892aeb8ebaa89c2a8e08c763a6d3b5353cb9bb70a6f3b1aac604bc544","decodedSHA256":"f9918ae62c937b09f1707880ffcc5696bfebb6b98f2cee2d47c3105809e65fa1"}};
@@ -11,7 +13,7 @@ async function loadNativePaper(data){
  if(await sha(data.paperText)!==row.decodedSHA256)throw Error('原纸样内容哈希不符');
  const original=JSON.parse(data.paperText);if(original.recipeHash!==row.recipeHash||original.geometryHash!==row.geometryHash||!original.validation?.analytic2DPass)throw Error('原裁片身份不符');
  for(const key in profile)profile[key]=0;
- const token=epoch;analytic=await recoverExplicitPantsCuffGathering(original);if(token!==epoch)return;
+ const token=epoch;analytic=await recoverExplicitPantsCuffGathering(prepareNativeSource(original));if(token!==epoch)return;
  config={kind:'analytic',recipe:{bodyCm:structuredClone(original.bodyCm),design:{...structuredClone(original.design),style:row.style}}};
  const start=performance.now();spec=compileWithinNativeBudget(analytic,{allowUnsupportedSeams:true,numericalStitchSpacingMm:12,measurementSnapshot:{bodyId:'common-native-default-r04',sizingOrigin:'original-reference-paper-not-remeasured'}});
  spec.source.bodyId='common-native-default-r04';spec.source.patternSizingOrigin=R04_LOCK.sizingPolicy;
@@ -2785,7 +2787,7 @@ var GarmentLab2 = class extends GarmentLab {
       offset += count * bytes2;
       return p2;
     };
-    this.ptr = { pos: take(n * 3), vel: take(n * 3), old: take(n * 3), inv: take(n), alias: take(n, 4), ci: take(capacity * 2, 4), cf: take(capacity * 10), ti: take(t * 3, 4), tf: take(t * 6), edges: take(e * 2, 4), sdf: take(sdf2.a.length, 2), rhs:take(n*3),sol:take(n*3),res:take(n*3),dir:take(n*3),ap:take(n*3),z:take(n*4),diag:take(n),qn:take(n*3*31),qgi:take(t*3*4,4),qgm:take(t*3) };
+    this.ptr = { pos: take(n * 3), vel: take(n * 3), old: take(n * 3), inv: take(n), alias: take(n, 4), ci: take(capacity * 2, 4), cf: take(capacity * 10), ti: take(t * 3, 4), tf: take(t * 6), edges: take(e * 2, 4), sdf: take(sdf2.a.length, 2), rhs:take(n*3),sol:take(n*3),res:take(n*3),dir:take(n*3),ap:take(n*3),z:take(n*4),diag:take(n),qn:take(n*3*31),qgi:take(t*3*4,4),qgm:take(t*3),w43ids:take(n*2,4),w43spans:take(2,4),w43targets:take(1),w43scratch:take(n*3) };
     if (offset > 128 * 1024 * 1024) throw Error("Kernel material memory limit exceeded");
     const memory = this.kernel.memory;
     memory.grow(Math.ceil(offset / 65536) - memory.buffer.byteLength / 65536);
@@ -2916,6 +2918,7 @@ var GarmentLab2 = class extends GarmentLab {
         P.bodySurfaceMs += performance.now() - now;
       }
       const extraStart=performance.now();for(let extra=0;extra<3;extra++){k.strains();k.vertices(this.clearance);}P.extraProjectionMs=(P.extraProjectionMs||0)+performance.now()-extraStart;
+      if(this.waistCircuit43)for(let j=0;j<32;j++){k.waistProject43(1);k.vertices(this.clearance);}
       this.bodyContacts += k.getContacts();
       now = performance.now();
       const damping = Math.exp(-20 * h);
@@ -3354,9 +3357,11 @@ function packet(type, extra = {}) {
   const start = performance.now(), positionsM = new Float32Array(lab.positions.length * 3);
   for (let i = 0; i < lab.positions.length; i++) positionsM.set(lab.positions[i], i * 3);
   profile.packetMs += performance.now() - start;
-  emit(type, { positionsM, metrics: lab.metrics(), frame: lab.frameCount, stage: stages[stageIndex] || "complete", progress: (lab.frameCount+refinementSteps+jointSteps) / totalFrames, activeWallMs: wallMs + (running ? performance.now() - runStarted : 0), profile: { ...profile }, ...extra }, [positionsM.buffer]);
+  emit(type, { positionsM, metrics: lab.metrics(), frame: lab.frameCount, stage: stages[stageIndex] || "complete", progress: (stages.slice(0,stageIndex).reduce((n,s)=>n+r043Frames(s),0)+stageFrame) / totalFrames, activeWallMs: wallMs + (running ? performance.now() - runStarted : 0), profile: { ...profile }, ...extra }, [positionsM.buffer]);
 }
 async function startLegacySolve(token) {
+ const corrected43=config?.variant43||!new Set(["T01","T02","T03","T04","T08","T15","T16","T17","T18"]).has(nativeBinding?.presetId);
+ r043PreGuides=r043PreJoint=null;r043BudgetOrigin=0;r043Recovery=[];
  const sizing=preflightSizing(analytic);if(sizing.blocking)throw Error(sizing.message);
   if (config.kind !== "legacy" && !spec.source.experimentalSparseSewing) throw Error("Generate the R06 sparse-stitch material before a new-style trial");
   const directory=config.kind === "legacy"?config.directory:"r06";
@@ -3372,24 +3377,25 @@ async function startLegacySolve(token) {
     if(await sha(raw)!==R04_LOCK.sdfFileSHA256)throw Error("共同人物碰撞场内容不符");
     const buffer = await decodeSDF(new Blob([raw]), meta);
     if (token !== epoch) return;
-    sdf = new BodySDF(meta, new Int16Array(buffer));
+    sdf = new BodySDF(meta, new Int16Array(buffer));attachExteriorField(sdf,body);
     cachedSDFURL = metaPath;
   }
-  if (!kernelReady) {
-    configureWasm(await bytes(new URL("../r07/stability/joint-r072.wasm",import.meta.url).href));
+  if (!kernelReady || kernelVariant43!==corrected43) {
+    configureWasm(await bytes(new URL(corrected43?"../../../correctives/r043/joint-r043.wasm":"../r07/stability/joint-r072.wasm",import.meta.url).href));kernelVariant43=corrected43;
     if (token !== epoch) return;
     kernelReady = true;
   }
   profile.bodyMs = performance.now() - start;
   if(config.kind==="legacy")throw Error("基础款须使用保留的 R06 原始计算线程");
   prepareAssembly(spec,body);prepareShoulderFixtures(spec,sdf);
-  lab = new GarmentLab2(spec, sdf, { substeps: 12, iterations: 1, sewingDuration:.75 });
+  lab = new GarmentLab2(spec, sdf, { substeps: corrected43&&nativeBinding.presetId==="T06"?18:12, iterations: corrected43&&nativeBinding.presetId==="T06"?4:1, sewingDuration:.75 });
+ lab.pipeline43=corrected43;if(corrected43)lab.kernel.setBodyExterior43(...sdf.exteriorBounds.lo,...sdf.exteriorBounds.hi);
   lab.orientationGuides = false;
   lab.selfCollisionEnabled = false;
   lab.stitchEqualityElimination = true;
   lab.strainGuard = true;
-  stages = [...spec.source.assemblyExperiment, "release", "refine", "joint"];
-  totalFrames = spec.source.assemblyExperiment.length * 90 + 120 + 1600 + 1600;
+  stages = [...spec.source.assemblyExperiment,...(corrected43?["seam-relax","seam-finish"]:[]),"release","refine","joint"];
+  totalFrames = stages.reduce((n,s)=>n+r043Frames(s),0);
   refinementSteps=0;layerGuide=null;jointSteps=0;jointInfo=closureInfo=null;
   stageIndex = stageFrame = wallMs = 0;
   if (pendingPause) { running=false; packet("paused"); return; }
@@ -3398,64 +3404,65 @@ async function startLegacySolve(token) {
   packet("started");
   tick(token);
 }
-function tick(token) {
-  if (!running || token !== epoch) return;
-  try {
-    const start = performance.now();
-    if(wallMs+start-runStarted>90000)throw Error("快速试算达到 90 秒计算预算，已中止；没有把未完成结果标为成衣。");
-    let n = 0;
-    do {
-      if (stageFrame === 0) {
-        if (stages[stageIndex] === "release") {
-          lab.releasePins();
-          lab.setGravity(1);
-        } else if(stages[stageIndex]==="refine"){lab.kernel.prepare(1/720,lab.elapsed);layerGuide=createSeamLayerGuide(lab);for(const v of lab.velocity)v.fill(0);}
-        else if(stages[stageIndex]==="joint"){jointInfo=beginJointRefinement(lab);}
-        else {lab.activate(stages[stageIndex]);if(stages[stageIndex]==="sides")lab.releasePins();}
-      }
-      const time = performance.now();
-      if(stages[stageIndex]==="refine"){
-        lab.kernel.globalProject(lab.constraints.length,30,.002,100,50);lab.kernel.vertices(.0035);lab.kernel.surfaces();
-        if(stageFrame>=400&&stageFrame<1400)layerGuide.project();
-        refinementSteps++;
-      }else if(stages[stageIndex]==="joint"){const code=lab.kernel.qnStep();if(code<0)throw Error("联合整理遇到无效状态，已停止并保留当前材料。");jointSteps++;}else lab.step();
-      profile.solveMs += performance.now() - time;
-      stageFrame++;
-      n++;
-      const frames = ["refine","joint"].includes(stages[stageIndex])?1600:stages[stageIndex]==="release"?120:90;
-      if (stageFrame === frames) {
-        if(stages[stageIndex]==="joint"){jointInfo=jointReport(lab,jointInfo);closureInfo=finalizeCloseSeams(lab);}
-        const check=lab.metrics();if(!check.finite||check.maxPrincipalStrain>5)throw Error("当前参数出现严重变形，快速试算已中止，未生成合格成衣。请导出问题快照检查该工序。");
-        packet("stage", { completedStage: stages[stageIndex] });
-        stageIndex++;
-        stageFrame = 0;
-        if (stageIndex === stages.length) {
-          wallMs += performance.now() - runStarted;
-          running = false;
-          packet("auditing");
-          const begin = performance.now(), record = lab.export(), regions = regionalStrain(spec, record.positionsMm), intersections = strictIntersectionAudit(spec, record.positionsMm, record.materialToSolverGroup, bodyAudit);
-          const gate=staticGate(lab,record,regions,intersections);record.staticGate=gate;
-          profile.auditMs = performance.now() - begin;
-          if(config.kind!=="legacy"){
-            record.jointRefinement={...jointInfo,closure:closureInfo};
-            record.nativeBinding=structuredClone(nativeBinding);
-            record.trial={version:"R07.4-native-common-adapter",style:config.recipe.design.style,sourceRecipeHash:spec.source.recipeHash,physicalFitAccepted:false,solver:"shortened XPBD sewing and gravity settling, then 1600 global and 1600 joint objective refinement steps; declared close needle pairs finalized",referenceEquivalent:false,runtimeSelfContact:false,temporarySeamSideGuides:layerGuide?.count||0,guideFreeFinalSweeps:0,sourceLocalSeamInequalities:true,continuousCollision:false,materialCalibrated:false,seamAllowanceAndThickness:false,physicalFrameCount:lab.frameCount,refinementSteps,jointSteps};
-          }
-          emit("done", { record, regions, intersections, profile, activeWallMs: wallMs + profile.auditMs });
-          return;
-        }
-      }
-    } while (n < 8 && performance.now() - start < 22);
-    if (performance.now() - lastPacket > 100) {
-      packet("progress");
-      lastPacket = performance.now();
+// R04.3 sequenced native sewing. Heavy stages yield so pause/cancel remains real.
+var r043PreGuides=null,r043PreJoint=null,r043BudgetOrigin=0,r043Recovery=[];
+function r043Frames(stage){return ['seam-relax','refine'].includes(stage)?(stage==='seam-relax'?1000:1600):['seam-finish','joint'].includes(stage)?1600:stage==='release'?120:90;}
+function tick(token){
+ if(!running||token!==epoch)return;
+ try{
+  const start=performance.now();
+  if(wallMs+start-runStarted-r043BudgetOrigin>180000){stop();r043BudgetOrigin=wallMs;packet('paused',{budgetCheckpoint:true,message:'本轮达到180秒计算片段，状态已保留；继续可从当前工序恢复，不会丢弃结果。'});return;}
+  let count=0;
+  do{
+   const stage=stages[stageIndex];
+   if(stageFrame===0){
+    if(stage==='seam-relax'){lab.kernel.prepare(1/720,lab.elapsed);r043PreGuides=createSeamLayerGuide(lab);for(const v of lab.velocity)v.fill(0);}
+    else if(stage==='seam-finish')r043PreJoint=beginJointRefinement(lab);
+    else if(stage==='release'){
+     lab.releasePins();
+     if(lab.pipeline43){lab.waistCircuitReport43=waistCircuit(lab,analytic);for(const v of lab.velocity)v.fill(0);lab.setGravity(0);}
+     else lab.setGravity(1);
+    }else if(stage==='refine'){lab.kernel.prepare(1/720,lab.elapsed);layerGuide=createSeamLayerGuide(lab);for(const v of lab.velocity)v.fill(0);}
+    else if(stage==='joint')jointInfo=beginJointRefinement(lab);
+    else {lab.activate(stage);if(stage==='sides')lab.releasePins();}
+   }
+   const time=performance.now();
+   if(stage==='refine'||stage==='seam-relax'){
+    lab.kernel.globalProject(lab.constraints.length,30,.002,100,50);lab.kernel.vertices(.0035);lab.kernel.surfaces();
+    if(lab.waistCircuit43)for(let k=0;k<5;k++){lab.kernel.waistProject43(1);lab.kernel.vertices(.0035);}
+    if(stage==='refine'&&stageFrame>=400&&stageFrame<1400)layerGuide.project();
+    if(stage==='seam-relax'&&stageFrame<800)r043PreGuides.project();
+    if(stage==='refine')refinementSteps++;
+   }else if(stage==='joint'||stage==='seam-finish'){
+    const result=lab.kernel.qnStep();if(result<0)throw Error('联合整理检测到无效材料/接缝状态；中间坐标保留供诊断。');if(stage==='joint')jointSteps++;
+   }else {if(stage==='release'&&lab.pipeline43)lab.setGravity((stageFrame+1)/120);lab.step();}
+   profile.solveMs+=performance.now()-time;stageFrame++;count++;
+   if(stageFrame===r043Frames(stage)){
+    if(stage==='seam-finish')lab.preReleaseClosure43={...jointReport(lab,r043PreJoint),closure:finalizeCloseSeams(lab)};
+    if(stage==='joint'){jointInfo=jointReport(lab,jointInfo);closureInfo=finalizeCloseSeams(lab);}
+    let check=lab.metrics();
+    if(lab.pipeline43&&check.finite&&check.maxPrincipalStrain>5){
+     const before=check.maxPrincipalStrain;lab.kernel.prepare(1/720,lab.elapsed);
+     for(let j=0;j<160;j++){lab.kernel.globalProject(lab.constraints.length,30,.002,100,50);lab.kernel.vertices(.0035);lab.kernel.surfaces();}
+     for(const v of lab.velocity)v.fill(0);check=lab.metrics();r043Recovery.push({stage,beforeMaxStrain:before,afterMaxStrain:check.maxPrincipalStrain,extraGlobalIterations:160});
     }
-    setTimeout(() => tick(token), 0);
-  } catch (e) {
-    stop();
-    emit("error", { message: e.message });
-  }
+    if(!check.finite||check.maxPrincipalStrain>5)throw Error('当前原裁片仍存在严重材料变形；已保留有限中间状态，不认定为成衣。');
+    packet('stage',{completedStage:stage});stageIndex++;stageFrame=0;
+    if(stageIndex===stages.length){
+     wallMs+=performance.now()-runStarted;running=false;packet('auditing');
+     const begin=performance.now(),record=lab.export(),regions=regionalStrain(spec,record.positionsMm),intersections=strictIntersectionAudit(spec,record.positionsMm,record.materialToSolverGroup,bodyAudit);
+     record.nativeBinding=structuredClone(nativeBinding);record.staticGate=staticGate(lab,record,regions,intersections);profile.auditMs=performance.now()-begin;
+     record.jointRefinement={...jointInfo,closure:closureInfo};
+     record.trial={version:lab.pipeline43?'R04.3-native-material-circuit':'R04.2-preserved-baseline',physicalFitAccepted:false,continuousCollision:false,materialCalibrated:false,runtimeSelfContact:false,originalMaterialRetained:true,wholeSeamGateUnchanged:true};
+     record.r043={sourceRepresentation:analytic.source?.r043SourceRepair||null,waistCircuit:lab.waistCircuitReport43||{enabled:false},preReleaseClosure:lab.preReleaseClosure43||null,adaptiveRecovery:r043Recovery,personScaled:false,displayProxy:false};
+     emit('done',{record,regions,intersections,profile,activeWallMs:wallMs+profile.auditMs});return;
+    }
+   }
+  }while(count<8&&performance.now()-start<22);
+  if(performance.now()-lastPacket>100){packet('progress');lastPacket=performance.now();}setTimeout(()=>tick(token),0);
+ }catch(e){stop();if(lab&&lab.positions.every(p=>Array.from(p).every(Number.isFinite))){packet('checkpoint',{message:e.message,accepted:false,complete:false});}emit('error',{message:e.message});}
 }
+
 // This extension is assembled into the inherited worker's module scope by build.py.
 import {fromNativeAnalytic,applyPatternEdit} from '../learning/patterngsl-r01/pattern-edit-kernel.mjs';
 import {rebuildEditedAnalytic} from '../r07/continuation/native-edit-bridge.mjs';
@@ -3501,6 +3508,8 @@ self.onmessage = async ({ data }) => {
       root = data.root;
       patternBase = data.patternBase;
       emit("ready", { runtimeLoaded: false });
+    } else if(data.type === "generate-native-variant") {
+      await generateNativeVariant43(data);
     } else if(data.type === "load-native-paper") {
       await loadNativePaper(data);
     } else if (data.type === "generate") {
@@ -3581,3 +3590,41 @@ function compileWithinNativeBudget(input,options){
  }
  throw Error('NATIVE_MESH_BUDGET_EXHAUSTED: original validator retained; no substitute garment.');
 }
+
+var kernelVariant43=null;
+async function generateNativeVariant43(data){
+ stop();requestId=data.requestId;nativeBinding=null;spec=analytic=lab=null;resetContinuation();requirePerson(data.person,R04_LOCK.person);
+ const row=R04_ROWS[data.presetId];if(!row||await sha(data.paperText)!==row.decodedSHA256)throw Error('参数变体必须从该款已冻结的原纸样派生。');
+ const original=JSON.parse(data.paperText),token=epoch,parameters=data.parameters||{},easeCm=data.easeCm??0,waistEaseCm=data.waistEaseCm??0;
+ const schema=await json(new URL('../../../parameter-schema.json',import.meta.url).href),byPath=new Map(schema.parameters.map(p=>[p.path,p]));
+ if(!Number.isFinite(easeCm)||easeCm<0||easeCm>12)throw Error('试穿松量支持0至12厘米；不是无限制放大模型。');
+ if(!Number.isFinite(waistEaseCm)||waistEaseCm<0||waistEaseCm>6)throw Error('腰头加放量支持0至6厘米，增大时需另验支承。');
+ const design=structuredClone(original.design),changes=[];
+ for(const[path,value]of Object.entries(parameters)){
+  const rule=byPath.get(path);if(!rule)throw Error('未知原生参数：'+path);
+  if(rule.type==='bool'&&typeof value!=='boolean')throw Error('布尔参数类型不符：'+path);
+  if(rule.type==='int'||rule.type==='float'){if(!Number.isFinite(value)||(rule.type==='int'&&!Number.isInteger(value))||value<Math.min(...rule.samplingRange)||value>Math.max(...rule.samplingRange))throw Error('超出原制版参数范围：'+path);}
+  if(rule.choices&&!rule.choices.some(v=>v===value))throw Error('原程序不支持该选项：'+path);
+  let at=design;const keys=path.split('.');for(const k of keys.slice(0,-1))at=at[k];const old=at[keys.at(-1)].v;at[keys.at(-1)].v=value;if(old!==value)changes.push({path,from:old,to:value});
+ }
+ const patternBodyCm=structuredClone(original.bodyCm),sizing=[];
+ // Positive ease changes only garment drafting dimensions, not the displayed/colliding person.
+ for(const[key,back,extra]of[['bust','back_width',easeCm],['waist','waist_back_width',waistEaseCm],['hips','hip_back_width',easeCm]])if(extra){const before=patternBodyCm[key],ratio=(before+extra)/before;patternBodyCm[key]+=extra;if(Number.isFinite(patternBodyCm[back]))patternBodyCm[back]*=ratio;sizing.push({measurement:key,fromCm:before,toCm:patternBodyCm[key],classification:'garment-drafting-ease-not-person-measurement'});}
+ if(!engine){const imported=await import(new URL('pattern-engine.mjs',patternBase).href);engine=imported.createPatternEngine();}
+ const paramsHash=await sha(stable43({parameters,easeCm,waistEaseCm}));
+ for(const k in profile)profile[k]=0;
+ const start=performance.now(),generated=await engine.generate({bodyCm:patternBodyCm,design:{style:row.style,...design},validateIntersections:true},{assetBase:patternBase},p=>{if(token===epoch)emit('runtime',p)});
+ if(token!==epoch)return;profile.pythonMs=performance.now()-start;
+ const originalRuntime=await engine.generate({bodyCm:original.bodyCm,design:{style:row.style,...original.design},validateIntersections:true},{assetBase:patternBase});
+ if(token!==epoch)return;
+ const sameGeometry=await cuttingGeometryHash43(generated)===await cuttingGeometryHash43(originalRuntime);
+ if(sameGeometry){emit('parameter-inactive',{presetId:row.id,parameterRequestSHA256:paramsHash,changes,geometryChanged:false,message:'本次参数在当前领型、袖型或版式条件下没有改变裁片；未冒充调节生效。'});return;}
+ analytic=await recoverExplicitPantsCuffGathering(prepareNativeSource(generated));
+ config={kind:'analytic',variant43:true,recipe:{bodyCm:patternBodyCm,design:{style:row.style,...design}}};
+ spec=compileWithinNativeBudget(analytic,{allowUnsupportedSeams:true,numericalStitchSpacingMm:12,measurementSnapshot:{bodyId:'common-native-default-r04',sizingOrigin:'explicit-source-parameter-variant'}});validate2(spec);
+ nativeBinding={person:structuredClone(R04_LOCK.person),presetId:row.id,basePresetId:row.id,recipeHash:generated.recipeHash,paperSHA256:await sha(JSON.stringify(generated)),basePaperSHA256:row.decodedSHA256,materialSHA256:await materialHash(spec),nativeAnchor:R04_LOCK.nativeAnchor,patternSizingOrigin:'EXPLICIT_GENERATED_GARMENT_VARIANT_NOT_CHANGED_PERSON',parameterRequestSHA256:paramsHash,parameters:structuredClone(parameters),easeCm,waistEaseCm,changes,sizing};
+ spec.source.nativeBinding=structuredClone(nativeBinding);spec.source.bodyId='common-native-default-r04';spec.source.patternSizingOrigin=nativeBinding.patternSizingOrigin;
+ const positionsM=initialPositions(spec),fit=preflightSizing(analytic);emit('paper',{spec,analytic,positionsM,variant:true,geometryChanged:true,binding:nativeBinding,fitPreflight:fit,canSew:!fit.blocking,physicalStatus:'原制版程序生成了实际新裁片；需重新缝合，不沿用旧成衣。'},[positionsM.buffer]);
+}
+const stable43=x=>JSON.stringify(x&&typeof x==='object'?Array.isArray(x)?x.map(v=>JSON.parse(stable43(v))):Object.fromEntries(Object.keys(x).sort().map(k=>[k,JSON.parse(stable43(x[k]))])):x);
+async function cuttingGeometryHash43(d){return sha(stable43(d.panels.map(p=>({id:p.id,verticesMm:p.verticesMm,edges:p.edges,placement:p.placement}))));}
