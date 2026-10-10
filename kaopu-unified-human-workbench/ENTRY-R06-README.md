@@ -21,3 +21,6 @@ No hair, new face-detail system, teacher weights, clothing or character likeness
 - Public preview: pending. A pending-deployment report never counts as passed. Draft PR does not equal publication.
 
 Workflow has only `contents: read`, no deployment or credential persistence. It does not modify any other workflow. Evidence artifacts include source byte verification, actual screenshots and native joint samples.
+
+## Unwired one-person walk experiment
+`full/activity-r01/WalkRoundTripController.mjs` is an exported experimental helper, not imported by the public runtime. Its browser test injects it into one actual existing 25,417-vertex human after the original walk entry loads. It reuses the original capture and native FK/IK: forward walk/stop, standing rest, four support-foot turn steps, two restart steps, then forward walking along the return route. It does not reverse the capture or reset the root position. No default outside actor is changed by this helper. Native sole, planted-foot, bone-length, phase-boundary and rendered-cycle checks are pending. It must not be called a delivered continuous-outside feature.
