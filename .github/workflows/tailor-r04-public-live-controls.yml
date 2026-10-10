@@ -1,0 +1,52 @@
+name: Tailor R04.1 fresh public solve and controls
+on:
+  push:
+    branches: [feature/tailor-cabinet-r03-garment-surfaces-20261009]
+    paths:
+      - '.github/workflows/tailor-r04-public-live-controls.yml'
+      - 'kaopu-tailor-workbench/presets/r04/LIVE_CONTROL_TRIGGER.json'
+permissions:
+  contents: write
+concurrency:
+  group: tailor-r041-live-public-controls
+  cancel-in-progress: false
+jobs:
+  fresh-solve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-tailor-workbench/presets/r04
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Actual browser dependencies
+        run: |
+          pip install playwright==1.56.0
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y fonts-noto-cjk
+      - name: Real HTTPS UI remeshing, new solve, pause, resume and cancel
+        run: python kaopu-tailor-workbench/presets/r04/qa_public_controls.py
+      - name: Retain the actual public controls and new solver output evidence
+        if: always()
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$GITHUB_REF_NAME" --depth=1
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          if [ -f "$P/PUBLIC_LIVE_CONTROLS_REPORT.json" ]; then
+            git add -- "$P/PUBLIC_LIVE_CONTROLS_REPORT.json" "$P/qa-public-controls"
+            git diff --cached --quiet || git commit -m 'test(tailor-r04): retain fresh real-public original solve and UI control checks, not cached-only playback'
+            git push origin HEAD:"$GITHUB_REF_NAME"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r041-public-live-controls
+          path: |
+            kaopu-tailor-workbench/presets/r04/PUBLIC_LIVE_CONTROLS_REPORT.json
+            kaopu-tailor-workbench/presets/r04/qa-public-controls
+          retention-days: 14
