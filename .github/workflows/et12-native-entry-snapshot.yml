@@ -1,0 +1,40 @@
+name: ET12 native entry snapshot
+on:
+  push:
+    branches: [feature/common-human-face-skin-et12-20261010]
+    paths: ['.github/workflows/et12-native-entry-snapshot.yml']
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: 0b4703359efbae10ffc6c0e5fe3fc081e7eca4fe
+          sparse-checkout: kaopu-unified-human-workbench
+      - name: Record only the native human platform changes
+        run: |
+          git fetch --depth=1 origin 2c9c6403815083b731d40051cc1d711cfdd7c34f
+          mkdir -p qa-native-entry
+          git diff --name-status 2c9c6403815083b731d40051cc1d711cfdd7c34f 0b4703359efbae10ffc6c0e5fe3fc081e7eca4fe -- kaopu-unified-human-workbench > qa-native-entry/changed-paths.txt
+          git diff 2c9c6403815083b731d40051cc1d711cfdd7c34f 0b4703359efbae10ffc6c0e5fe3fc081e7eca4fe -- kaopu-unified-human-workbench > qa-native-entry/native-entry.patch
+          python3 - <<'PY'
+          import pathlib,subprocess,zipfile,hashlib,json
+          names=subprocess.check_output(['git','diff','--name-only','2c9c6403815083b731d40051cc1d711cfdd7c34f','0b4703359efbae10ffc6c0e5fe3fc081e7eca4fe','--','kaopu-unified-human-workbench']).decode().splitlines()
+          records=[]
+          with zipfile.ZipFile('qa-native-entry/current-native.zip','w',zipfile.ZIP_DEFLATED) as z:
+              for name in names:
+                  p=pathlib.Path(name)
+                  if p.is_file():
+                      z.write(p,name)
+                      records.append({'path':name,'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'bytes':p.stat().st_size})
+          pathlib.Path('qa-native-entry/files.json').write_text(json.dumps({'base':'2c9c6403815083b731d40051cc1d711cfdd7c34f','native':'0b4703359efbae10ffc6c0e5fe3fc081e7eca4fe','files':records},indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: et12-current-native-entry
+          path: qa-native-entry/
+          retention-days: 7

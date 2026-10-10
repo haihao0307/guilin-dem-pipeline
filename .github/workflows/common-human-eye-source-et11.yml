@@ -1,0 +1,25 @@
+name: ET11 unified human source review
+on:
+  push:
+    branches: [feature/common-human-eye-transfer-et11-20261010]
+    paths: ['.github/workflows/common-human-eye-source-et11.yml']
+permissions:
+  contents: read
+jobs:
+  source-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-unified-human-workbench
+      - name: Collect unified-human source only
+        run: |
+          mkdir -p qa-et11
+          zip -qr qa-et11/unified-human-source.zip kaopu-unified-human-workbench
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unified-human-source-et11
+          path: qa-et11/unified-human-source.zip
+          retention-days: 7

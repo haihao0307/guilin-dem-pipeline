@@ -1,0 +1,25 @@
+name: ET12 face source snapshot
+on:
+  push:
+    branches: [feature/common-human-face-skin-et12-20261010]
+    paths: ['.github/workflows/face-source-snapshot-et12.yml']
+permissions:
+  contents: read
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-unified-human-workbench
+      - name: Archive only the existing character workbench
+        run: |
+          mkdir -p qa-face-source
+          zip -qr qa-face-source/source.zip kaopu-unified-human-workbench
+      - uses: actions/upload-artifact@v4
+        with:
+          name: et12-native-face-source
+          path: qa-face-source/source.zip
+          retention-days: 14
