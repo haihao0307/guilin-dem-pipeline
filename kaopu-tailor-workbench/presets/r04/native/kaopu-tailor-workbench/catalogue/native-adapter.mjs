@@ -1,3 +1,6 @@
+import {stageRadialSkirt} from '../../../correctives/r043b/radial-assembly.mjs';
+import {configureMaterialBending} from '../../../correctives/r043b/hinge-bending.mjs';
+import {beginMaterialRefinement} from '../../../correctives/r043b/seam-frames.mjs';
 import {prepareNativeSource} from '../../../source-repair-r043.mjs';
 import {attachExteriorField,waistCircuit} from '../../../correctives/r043/fit-support.mjs';
 import {sha,requirePerson,materialHash} from '../../../source-contract.mjs';
@@ -2787,7 +2790,7 @@ var GarmentLab2 = class extends GarmentLab {
       offset += count * bytes2;
       return p2;
     };
-    this.ptr = { pos: take(n * 3), vel: take(n * 3), old: take(n * 3), inv: take(n), alias: take(n, 4), ci: take(capacity * 2, 4), cf: take(capacity * 10), ti: take(t * 3, 4), tf: take(t * 6), edges: take(e * 2, 4), sdf: take(sdf2.a.length, 2), rhs:take(n*3),sol:take(n*3),res:take(n*3),dir:take(n*3),ap:take(n*3),z:take(n*4),diag:take(n),qn:take(n*3*31),qgi:take(t*3*4,4),qgm:take(t*3),w43ids:take(n*2,4),w43spans:take(2,4),w43targets:take(1),w43scratch:take(n*3) };
+    this.ptr = { pos: take(n * 3), vel: take(n * 3), old: take(n * 3), inv: take(n), alias: take(n, 4), ci: take(capacity * 2, 4), cf: take(capacity * 10), ti: take(t * 3, 4), tf: take(t * 6), edges: take(e * 2, 4), sdf: take(sdf2.a.length, 2), rhs:take(n*3),sol:take(n*3),res:take(n*3),dir:take(n*3),ap:take(n*3),z:take(n*4),diag:take(n),qn:take(n*3*31),qgi:take(t*3*4,4),qgm:take(t*3),w43ids:take(n*2,4),w43spans:take(2,4),w43targets:take(1),w43scratch:take(n*3),b43ids:take(t*6,4),b43coeff:take(t*6),b43weights:take(t*2) };
     if (offset > 128 * 1024 * 1024) throw Error("Kernel material memory limit exceeded");
     const memory = this.kernel.memory;
     memory.grow(Math.ceil(offset / 65536) - memory.buffer.byteLength / 65536);
@@ -3381,15 +3384,15 @@ async function startLegacySolve(token) {
     cachedSDFURL = metaPath;
   }
   if (!kernelReady || kernelVariant43!==corrected43) {
-    configureWasm(await bytes(new URL(corrected43?"../../../correctives/r043/joint-r043.wasm":"../r07/stability/joint-r072.wasm",import.meta.url).href));kernelVariant43=corrected43;
+    configureWasm(await bytes(new URL(corrected43?"../../../correctives/r043b/joint-r043b.wasm":"../r07/stability/joint-r072.wasm",import.meta.url).href));kernelVariant43=corrected43;
     if (token !== epoch) return;
     kernelReady = true;
   }
   profile.bodyMs = performance.now() - start;
   if(config.kind==="legacy")throw Error("基础款须使用保留的 R06 原始计算线程");
-  prepareAssembly(spec,body);prepareShoulderFixtures(spec,sdf);
+  prepareAssembly(spec,body);prepareShoulderFixtures(spec,sdf);if(corrected43)stageRadialSkirt(spec,analytic,body);
   lab = new GarmentLab2(spec, sdf, { substeps: corrected43&&nativeBinding.presetId==="T06"?18:12, iterations: corrected43&&nativeBinding.presetId==="T06"?4:1, sewingDuration:.75 });
- lab.pipeline43=corrected43;if(corrected43)lab.kernel.setBodyExterior43(...sdf.exteriorBounds.lo,...sdf.exteriorBounds.hi);
+ lab.pipeline43=corrected43;if(corrected43)configureMaterialBending(lab);if(corrected43)lab.kernel.setBodyExterior43(...sdf.exteriorBounds.lo,...sdf.exteriorBounds.hi);
   lab.orientationGuides = false;
   lab.selfCollisionEnabled = false;
   lab.stitchEqualityElimination = true;
@@ -3417,14 +3420,14 @@ function tick(token){
    const stage=stages[stageIndex];
    if(stageFrame===0){
     if(stage==='seam-relax'){lab.kernel.prepare(1/720,lab.elapsed);r043PreGuides=createSeamLayerGuide(lab);for(const v of lab.velocity)v.fill(0);}
-    else if(stage==='seam-finish')r043PreJoint=beginJointRefinement(lab);
+    else if(stage==='seam-finish')r043PreJoint=beginMaterialRefinement(lab);
     else if(stage==='release'){
      lab.releasePins();
      if(lab.pipeline43){lab.waistCircuitReport43=waistCircuit(lab,analytic);for(const v of lab.velocity)v.fill(0);lab.setGravity(0);}
      else lab.setGravity(1);
     }else if(stage==='refine'){lab.kernel.prepare(1/720,lab.elapsed);layerGuide=createSeamLayerGuide(lab);for(const v of lab.velocity)v.fill(0);}
-    else if(stage==='joint')jointInfo=beginJointRefinement(lab);
-    else {lab.activate(stage);if(stage==='sides')lab.releasePins();}
+    else if(stage==='joint')jointInfo=beginMaterialRefinement(lab);
+    else {lab.activate(stage);if(stage==='sides'&&!spec.source.radialAssembly43b?.enabled)lab.releasePins();}
    }
    const time=performance.now();
    if(stage==='refine'||stage==='seam-relax'){
@@ -3454,7 +3457,7 @@ function tick(token){
      record.nativeBinding=structuredClone(nativeBinding);record.staticGate=staticGate(lab,record,regions,intersections);profile.auditMs=performance.now()-begin;
      record.jointRefinement={...jointInfo,closure:closureInfo};
      record.trial={version:lab.pipeline43?'R04.3-native-material-circuit':'R04.2-preserved-baseline',physicalFitAccepted:false,continuousCollision:false,materialCalibrated:false,runtimeSelfContact:false,originalMaterialRetained:true,wholeSeamGateUnchanged:true};
-     record.r043={sourceRepresentation:analytic.source?.r043SourceRepair||null,waistCircuit:lab.waistCircuitReport43||{enabled:false},preReleaseClosure:lab.preReleaseClosure43||null,adaptiveRecovery:r043Recovery,personScaled:false,displayProxy:false};
+     record.r043={bending:lab.bending43b||null,radialAssembly:spec.source.radialAssembly43b||null,surfaceBodySamplesPerTriangle:lab.pipeline43?4:0,sourceRepresentation:analytic.source?.r043SourceRepair||null,waistCircuit:lab.waistCircuitReport43||{enabled:false},preReleaseClosure:lab.preReleaseClosure43||null,adaptiveRecovery:r043Recovery,personScaled:false,displayProxy:false};
      emit('done',{record,regions,intersections,profile,activeWallMs:wallMs+profile.auditMs});return;
     }
    }
