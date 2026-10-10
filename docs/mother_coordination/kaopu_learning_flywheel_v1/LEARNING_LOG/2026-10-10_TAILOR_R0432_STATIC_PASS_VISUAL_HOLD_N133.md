@@ -81,7 +81,7 @@ R2、N128 既有 Tailor 回归和视觉 golden/change-control 规则已经要求
 
 ## 生命周期
 
-- POSTED: pending routing receipt
+- POSTED: true — PR #181 comment 6098126777
 - ACKNOWLEDGED: false
 - IMPLEMENTED: false — 当前用户视觉纠正尚未修复
 - GATE-RUN: true
@@ -97,3 +97,10 @@ R2、N128 既有 Tailor 回归和视觉 golden/change-control 规则已经要求
 - stale delivery 次数：0
 - 每个 accepted delta 的内部迭代数：unknown
 - 指令到合法 candidate 时间：unknown
+
+## Routing receipt
+
+- PR #181 comment: https://github.com/haihao0307/guilin-dem-pipeline/pull/181#issuecomment-6098126777
+- Evidence branch: https://github.com/haihao0307/guilin-dem-pipeline/tree/automation/n133-tailor-r0432-static-pass-visual-hold-20261010
+- Production branch changed by this learning cycle: false
+- Global R2/gate changed: false
