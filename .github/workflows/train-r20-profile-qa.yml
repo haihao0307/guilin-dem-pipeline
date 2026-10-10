@@ -15,6 +15,9 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
+          sparse-checkout: |
+            kaopu-minigame-workbench/voxel-train-study
+            .github/scripts
       - name: Install official pinned browser
         run: |
           npm install --prefix "$RUNNER_TEMP/r20-profile" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0

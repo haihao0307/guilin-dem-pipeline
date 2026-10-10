@@ -5,6 +5,7 @@ import {Blocks,buildEnvironment,bridge} from './heritage.mjs';
 import {createGameTrain} from './train-model.mjs';
 import {createStationPlatform} from './station-platform.mjs';
 import {createStationRoom} from './station-room.mjs';
+import {createStationStreaming} from './station-streaming.mjs';
 import {createPassengers} from './characters.mjs';
 import {FRONT_X} from './session.mjs';
 import {FLAT_WORLD,flatFrame,flatActor,stationOffset,createFlatTerrain} from './flat-terrain.mjs';
@@ -13,7 +14,7 @@ export const WORLD=Object.freeze({halfRun:18,radius:3.8,width:12.2,nearEdge:7.6,
 export const BELT_LENGTH=FLAT_WORLD.period;
 export const pathFrame=flatFrame;
 function flatMesh(blocks,{material=null}={}){const mesh=new THREE.Mesh(blocks.geometry(),material||new THREE.MeshStandardMaterial({vertexColors:true,roughness:.93,metalness:.04}));mesh.castShadow=mesh.receiveShadow=true;return mesh;}
-function stationModel(plan){
+export function createStationModel(plan){
   const model=createStationPlatform(plan),{group,zoneMaterial}=model,room=createStationRoom(plan);room.group.position.y+=PLATFORM_LAYOUT.top-.82;group.add(room.group);
   return {...model,proof:{...model.proof,room:room.proof},dispose(){group.remove(room.group);room.dispose();model.dispose();},update(view,station){
     const offset=stationOffset(station.target,view.distance);group.position.x=offset;model.updateClock?.(view.timetable?.minutes);model.updateCrew?.(view,station.index===view.station.index);
@@ -33,7 +34,8 @@ export function partitionTerrain(blocks){
 export function createGameWorld({street=true,onChange=()=>{}}={}){
   const root=new THREE.Group(),parts=partitionTerrain(buildEnvironment(WORLD,{platformCorridor:true,includeBridge:false,optimizeGeometry:true})),flatTerrain=createFlatTerrain(parts),terrain=flatTerrain.root;root.add(terrain);const train=createGameTrain();root.add(train.root);
   const streetDistrict=street?createStreetDistrict({onChange}):null;if(streetDistrict)root.add(streetDistrict.root);
-  const people=createPassengers(pathFrame,{seatGeometry:(actor,position)=>({floorY:position[1],seatSurfaceY:position[1]+COACH_DIMENSIONS.seatHeight,ceilingY:position[1]+COACH_DIMENSIONS.interiorHeight})});root.add(people.mesh);const stations=new Map(),bridges=new Map();
+  const people=createPassengers(pathFrame,{seatGeometry:(actor,position)=>({floorY:position[1],seatSurfaceY:position[1]+COACH_DIMENSIONS.seatHeight,ceilingY:position[1]+COACH_DIMENSIONS.interiorHeight})});root.add(people.mesh);
+  const stationStreaming=createStationStreaming({root,createModel:createStationModel,minOffset:WORLD.centerX-FLAT_WORLD.terrainRadius-5,maxOffset:WORLD.centerX+FLAT_WORLD.terrainRadius-PLATFORM_LAYOUT.minX,isVisible:offset=>!(offset+5<WORLD.centerX-FLAT_WORLD.terrainRadius||offset+PLATFORM_LAYOUT.minX>WORLD.centerX+FLAT_WORLD.terrainRadius)}),stations=stationStreaming.stations,bridges=new Map();let disposed=false;
   const stones=new THREE.InstancedMesh(new THREE.DodecahedronGeometry(.092,0),new THREE.MeshStandardMaterial({color:0xb5b5a2,roughness:.93}),80);stones.castShadow=true;stones.frustumCulled=false;root.add(stones);
   const impacts=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshBasicMaterial({color:0xebc55c}),180);impacts.frustumCulled=false;root.add(impacts);let lastEvent=0,effects=[];
   const rain=new THREE.InstancedMesh(new THREE.BoxGeometry(.012,.65,.012),new THREE.MeshBasicMaterial({color:0xb3c4c9,transparent:true,opacity:.32,depthWrite:false}),110);rain.frustumCulled=false;root.add(rain);const pose=new THREE.Object3D();
@@ -67,18 +69,22 @@ export function createGameWorld({street=true,onChange=()=>{}}={}){
     for(const name of ['chimney','cylinderLeft','cylinderRight'])soundVector.fromArray(output[name]).applyMatrix4(train.root.matrixWorld).toArray(output[name]);
     return output;
   }
-  return{root,train,terrain,people,streetDistrict,pathFrame,fillAudioSources,fillSteamEmitters,stationProof:()=>[...stations].map(([index,m])=>({index,...m.proof,offset:m.group.position.x})),update(view,route,{interior=false,cameraTarget=null,cameraPosition=null}={}){
+  return{root,train,terrain,people,streetDistrict,pathFrame,fillAudioSources,fillSteamEmitters,stationProof:()=>[...stations].map(([index,m])=>({index,...m.proof,offset:m.group.position.x})),stationPreparationProof:stationStreaming.snapshot,update(view,route,{interior=false,cameraTarget=null,cameraPosition=null}={}){
+    if(disposed)return;
     streetDistrict?.update(view,route,{cameraTarget,cameraPosition});flatTerrain.update(view.distance,streetDistrict?.exclusions(view.distance)||[]);train.update(view,{interior});
     // Convert world actors once at the renderer boundary, keeping the original
     // farmer/passenger geometry and Session paths while removing the old belt cull.
     people.update({...view,actors:view.actors.map(actor=>{const rendered=flatActor(actor,view.distance,FRONT_X);if(actor.frame==='train'&&train.transformPassengerPoint)rendered.position=train.transformPassengerPoint(rendered.position);return rendered;}).filter(actor=>Math.abs(actor.position[0]-WORLD.centerX)<FLAT_WORLD.terrainRadius)});
-    const visible=new Set(),nearby=new Map(view.nearbyStations.map(plan=>[plan.index,plan]));
-    for(const source of route){const offset=stationOffset(source.target,view.distance);if(offset+5<WORLD.centerX-FLAT_WORLD.terrainRadius||offset+PLATFORM_LAYOUT.minX>WORLD.centerX+FLAT_WORLD.terrainRadius)continue;const plan=nearby.get(source.index)||source;visible.add(plan.index);if(!stations.has(plan.index))stations.set(plan.index,stationModel(plan));const m=stations.get(plan.index);if(!m.group.parent)root.add(m.group);m.update(view,plan);}for(const [id,m]of stations)if(!visible.has(id)){root.remove(m.group);m.dispose();stations.delete(id);}
+    stationStreaming.update(view,route);
     const activeBridges=new Set();for(let i=1;i<route.length;i++){const at=(route[i-1].target+route[i].target)/2,offset=at-view.distance+FRONT_X;if(Math.abs(offset-WORLD.centerX)>FLAT_WORLD.terrainRadius+8)continue;activeBridges.add(i);if(!bridges.has(i)){const b=new Blocks();bridge(b,0);const mesh=flatMesh(b);mesh.name='Straight railway truss bridge';bridges.set(i,{mesh});root.add(mesh);}bridges.get(i).mesh.position.x=offset;}for(const[id,b]of bridges)if(!activeBridges.has(id)){root.remove(b.mesh);b.mesh.geometry.dispose();b.mesh.material.dispose();bridges.delete(id);}
     let count=0;for(const rock of view.rocks){if(rock.hit)continue;pose.position.set(rock.position[0]-view.distance+FRONT_X,rock.position[1],rock.position[2]);pose.rotation.set(rock.age*7,rock.age*5,rock.age*3);pose.scale.setScalar(rock.landed?Math.max(.1,1-rock.age):1);pose.updateMatrix();stones.setMatrixAt(count++,pose.matrix);}stones.count=count;stones.instanceMatrix.needsUpdate=true;
     for(const e of view.events)if(e.id>lastEvent&&e.type==='stone-hit')effects.push({tick:e.tick,point:e.point,id:e.id});if(view.events.length)lastEvent=view.events.at(-1).id;effects=effects.filter(e=>(view.tick-e.tick)/30<.65);count=0;
     for(const e of effects){const age=(view.tick-e.tick)/30;for(let j=0;j<8;j++){const a=j*Math.PI/4+e.id;pose.position.set(e.point[0]+Math.cos(a)*age*.85,e.point[1]+Math.sin(a)*age*.8+.15,e.point[2]+age*.6);pose.rotation.set(0,0,a+age*2);pose.scale.set(.065*(1-age),.065*(1-age),.065*(1-age));pose.updateMatrix();impacts.setMatrixAt(count++,pose.matrix);}}impacts.count=count;impacts.instanceMatrix.needsUpdate=true;
     rain.visible=view.station.wet;if(rain.visible){for(let i=0;i<110;i++){const x=((i*13.37)%38)-26,z=((i*7.17)%11)-3.5,y=7-((view.elapsed*8+i*.173)%7);pose.position.set(x,y,z);pose.rotation.set(0,0,-.13);pose.scale.set(1,1,1);pose.updateMatrix();rain.setMatrixAt(i,pose.matrix);}rain.instanceMatrix.needsUpdate=true;}
-  },resetEffects(){lastEvent=0;effects=[];train.resetBodyMotion?.();}};
+  },resetEffects(){lastEvent=0;effects=[];train.resetBodyMotion?.();stationStreaming.reset();},dispose(){
+    if(disposed)return;disposed=true;stationStreaming.dispose();streetDistrict?.dispose();
+    const geometries=new Set(),materials=new Set(),textures=new Set();root.traverse(object=>{if(object.isInstancedMesh)object.dispose();if(object.geometry)geometries.add(object.geometry);for(const material of Array.isArray(object.material)?object.material:object.material?[object.material]:[]){materials.add(material);for(const value of Object.values(material))if(value?.isTexture)textures.add(value);}});
+    for(const resource of [...textures,...materials,...geometries])resource.dispose();bridges.clear();effects=[];root.removeFromParent();root.clear();
+  }};
 }
 
