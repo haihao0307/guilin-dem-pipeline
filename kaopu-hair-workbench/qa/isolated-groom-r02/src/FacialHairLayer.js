@@ -37,7 +37,7 @@ class FacialRegion{
    if(ax<.008||ax>.058||z<.093||y<.308)return 0;
    const line=x<0?l.leftBrow:l.rightBrow,u=clamp((ax-.009)/.049,0,1),width=.0038*(1-.58*u),d=polylineDistance(p,line,2);
    if(d>=width||polylineDistance(p,x<0?l.leftEye:l.rightEye,2)<.0055)return 0;
-   return clamp((1-d/width)*2.5,0,1)*(.6+.4*smooth(.02,.2,u))*(1-.35*smooth(.65,1,u));
+   return clamp((1-d/width)*2.5,0,1)*(.22+.78*smooth(0,.22,u))*(1-.35*smooth(.65,1,u));
   }
   if(polylineDistance(p,l.upperLip)<.0036||polylineDistance(p,l.lowerLip)<.0036)return 0;
   const upper=lineHeight(x,l.upperLip),lower=lineHeight(x,l.lowerLip);
@@ -82,7 +82,7 @@ class FacialRegion{
    const rootT=this.triangleIndices[i],rootB=Array.from(this.barycentrics.subarray(i*3,i*3+3)),direction=Array.from(this.directions.subarray(i*3,i*3+3));
    // First find the actual permitted prefix. Then redistribute all samples on
    // that prefix, instead of piling repeated endpoints against the mask edge.
-   const requested=length*(.48+.62*this.random[i]),step=requested/segments;let t=rootT,b=rootB,allowed=0;
+   const browU=clamp((Math.abs(this.templateRoots[i*3])-.009)/.049,0,1),medialFeather=this.name==='brows'?(.35+.65*smooth(0,.28,browU)):1;const requested=length*(.48+.62*this.random[i])*medialFeather,step=requested/segments;let t=rootT,b=rootB,allowed=0;
    for(let j=0;j<segments;j++){
     let next=this.walker.advance(t,b,step,direction),used=step;
     if(this.guideMask(this.walker.point(next.t,next.b),i)<.025){let lo=0,hi=step;next={t,b};for(let k=0;k<10;k++){const mid=(lo+hi)/2,probe=this.walker.advance(t,b,mid,direction);if(this.guideMask(this.walker.point(probe.t,probe.b),i)>=.025){lo=mid;next=probe;}else hi=mid;}used=lo;this.clippedGuideCount++;allowed+=used;break;}
