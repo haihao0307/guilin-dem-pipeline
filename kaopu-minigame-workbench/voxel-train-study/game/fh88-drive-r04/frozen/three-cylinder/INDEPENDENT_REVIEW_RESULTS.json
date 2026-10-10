@@ -1,0 +1,199 @@
+{
+  "scope": "Independent geometry, velocity sign, differentiated constraint, 3D torque/moment, and power audit of FH88 original SI prescribed-motion candidate only.",
+  "dateUTC": "2026-10-10T19:54:32.496Z",
+  "groups": [
+    {
+      "name": "Rail-head inner faces, rolling centres and outside axial stack derived independently",
+      "pass": true,
+      "gaugeM": 1.435,
+      "rollingCircleYM": [
+        -0.7525,
+        0.7525
+      ],
+      "outerWheelFacesYM": [
+        -0.7975,
+        0.7975
+      ],
+      "outsideCylinderYM": [
+        -0.9075,
+        0.9075
+      ]
+    },
+    {
+      "name": "Rolling direction verified from angular-velocity vector cross bottom radius",
+      "pass": true,
+      "positiveThetaAxis": "negative global Y",
+      "correctForwardOmegaSign": "negative",
+      "negativeExample": {
+        "speedMS": 20,
+        "incorrectOmegaRadS": 21.05263157894737,
+        "resultSlipMS": 40,
+        "pureRolling": false
+      }
+    },
+    {
+      "name": "Explicit quarter-turn torque sign sanity check",
+      "pass": true,
+      "thetaRad": 1.5707963267948966,
+      "omegaRadS": -2,
+      "externalForcesN": [
+        1000,
+        0,
+        0
+      ],
+      "massesKg": [
+        0,
+        0,
+        0
+      ],
+      "generalizedTorqueAlongPositiveThetaNm": -355.5,
+      "physicalGlobalYTorqueNm": 355.5,
+      "shaftPowerW": 711,
+      "meaning": "Positive theta is around negative Y. At the top crank pin, a positive-X piston force gives positive physical Y torque, negative generalized torque, and positive shaft power with forward negative omega."
+    },
+    {
+      "name": "Independent differentiated rod constraints and 3D cross products agree for unequal masses and nonzero acceleration",
+      "pass": true,
+      "states": 3605,
+      "operatingCases": [
+        {
+          "omegaRadS": 0,
+          "alphaRadS2": 0
+        },
+        {
+          "omegaRadS": -35.08771929824562,
+          "alphaRadS2": 0
+        },
+        {
+          "omegaRadS": -12,
+          "alphaRadS2": 0.7
+        },
+        {
+          "omegaRadS": 7,
+          "alphaRadS2": -2.1
+        },
+        {
+          "omegaRadS": 0,
+          "alphaRadS2": 3
+        }
+      ],
+      "maximumAbsoluteDiscrepancy": {
+        "positionM": 4.440892098500626e-16,
+        "velocityMS": 1.7763568394002505e-15,
+        "accelerationMS2": 1.1368683772161603e-13,
+        "torqueNm": 7.275957614183426e-12,
+        "powerW": 4.656612873077393e-10,
+        "aggregatePowerW": 6.984919309616089e-10,
+        "inertialForceN": 2.1827872842550278e-11,
+        "yawNm": 2.9103830456733704e-11
+      }
+    },
+    {
+      "name": "Five-point finite-time derivative of total slider kinetic energy",
+      "pass": true,
+      "stepS": 0.00001,
+      "finiteDifferenceEnergyRateW": -4814.831349062842,
+      "reportedEnergyRateW": -4814.831349094969,
+      "absoluteResidualW": 3.21679181070067e-8
+    },
+    {
+      "name": "Independent 65,537-angle 120 km/h sensitivity sweep",
+      "pass": true,
+      "massPerCylinderKg": 80,
+      "massesAreIllustrativeOnly": true,
+      "realDesignMasses": [
+        null,
+        null,
+        null
+      ],
+      "omegaRadS": -35.08771929824562,
+      "peakNetLongitudinalN": 0.12693217254854972,
+      "peakYawNm": 56314.43716166746,
+      "netPeakThetaRad": 1.5707963267948966,
+      "yawPeakThetaRad": 5.964500798496344,
+      "maximumSourceComparisonResidualN": 2.3646862246096134e-11,
+      "maximumSourceComparisonResidualNm": 2.1827872842550278e-11,
+      "interpretation": "Very small longitudinal sum does not imply balancing: the large yaw couple remains. Slider inertia only."
+    },
+    {
+      "name": "Negative controls detect wrong rolling sign, wrong gauge convention, altered phases and unequal masses",
+      "pass": true,
+      "wrongGaugeRejected": true,
+      "allInPhaseNetAtTheta0N": 116711.01108033242,
+      "quarterPhasedNetAtTheta0N": 3865.591715856961,
+      "unequalMassesKg": [
+        88,
+        80,
+        80
+      ],
+      "unequalMassNetAtTheta0N": 3890.493968173636,
+      "explicitAlternativePhasesAcceptedByAPI": true,
+      "phaseGuardObservation": "contract validates finite phases but does not lock 0/120/240. The shipped design has that choice. If immutable fixed-design identity is intended, add a separate phase contract guard; do not claim existing tests reject quarter-cycle phase arrays.",
+      "worldTimeRole": "metadata only; theta, omega and alpha are prescribed boundary values, not integrated or cross-validated against time"
+    },
+    {
+      "name": "Reference point transport checked using direct world-space r cross F",
+      "pass": true,
+      "originalOriginM": [
+        0,
+        0,
+        0.95
+      ],
+      "newOriginM": [
+        1.2,
+        0.31,
+        0.5499999999999999
+      ],
+      "totalSliderReactionXN": 1057.1068936557513,
+      "originalMomentNm": [
+        0,
+        0,
+        2623.4272968297873
+      ],
+      "newDirectMomentNm": [
+        0,
+        422.8427574623005,
+        2951.1304338630707
+      ],
+      "transportedMomentNm": [
+        0,
+        422.84275746230054,
+        2951.1304338630703
+      ],
+      "law": "M(O + delta) = M(O) - delta cross F_total; yaw changes by +delta_y * F_x, pitch by -delta_z * F_x.",
+      "wrongTransportSignWouldChangeYawNm": 655.4062740665657
+    },
+    {
+      "name": "Cyclic phase reassignment distinguished from fixed-angle invariance",
+      "pass": true,
+      "equalMassesKg": [
+        80,
+        80,
+        80
+      ],
+      "cyclicPhaseChoiceDegrees": [
+        120,
+        240,
+        0
+      ],
+      "fixedAngleNetForceMaxDifferenceN": 3.637978807091713e-12,
+      "yawTimeShiftMaxDifferenceNm": 7.275957614183426e-11,
+      "timeShiftRule": "yaw_cyclic(theta) = yaw_original(theta + 120 degrees); for constant omega, time shift is (2*pi/3)/omega. Negative omega makes that a negative time shift.",
+      "fixedAngleYawMaxDifferenceNm": 105915.12736446415,
+      "fullCycleOriginalPeakAbsYawNm": 56314.436265064214,
+      "fullCycleCyclicPeakAbsYawNm": 56314.4362650642,
+      "limits": "Fixed-angle force invariance here depends on equal masses. Yaw at fixed angle is generally different; only its phase-shifted waveform and full-cycle peak are invariant. For nonzero alpha, this is an instantaneous theta shift at matching omega and alpha, not a global constant time shift."
+    },
+    {
+      "name": "Left-right mirror reverses yaw and pure cylinder-list reindex preserves aggregates",
+      "pass": true,
+      "mirrorUsesPhysicalMassAndForceWithEachCylinder": true,
+      "maxMirrorForceDifferenceN": 0,
+      "maxMirrorYawSumNm": 0,
+      "maxMirrorTorqueDifferenceNm": 0,
+      "permutation": "Cylinder list, forces and masses were all reindexed together, unlike reassigning phases at fixed axial stations."
+    }
+  ],
+  "allPassed": true,
+  "groupCount": 10
+}
