@@ -28,13 +28,15 @@ jobs:
       - name: Build from unchanged ET12 native entry
         run: |
           node kaopu-unified-human-workbench/identity-lab/normalize-source.cjs
+          node kaopu-unified-human-workbench/identity-lab/refine-identity.cjs
           node kaopu-unified-human-workbench/identity-lab/prepare-qa.cjs
           for file in kaopu-unified-human-workbench/identity-lab/*.mjs; do node --check "$file"; done
           node kaopu-unified-human-workbench/identity-lab/build.cjs
-      - name: Test actual generated geometry and visible skin changes
+      - name: Test generated geometry, skin pixels and original profile compatibility
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/et13-http.log 2>&1 &
           node kaopu-unified-human-workbench/identity-lab/verify.cjs
+          node kaopu-unified-human-workbench/identity-lab/review.cjs
       - name: Publish validated build to its own review branch only
         run: |
           git config user.name 'KAOPU Identity Workbench'
@@ -45,7 +47,9 @@ jobs:
             git push origin HEAD:feature/common-human-identity-et13-20261010
           fi
       - name: Verify immutable public URL in a real browser
-        run: PUBLIC_COMMIT=$(git rev-parse HEAD) node kaopu-unified-human-workbench/identity-lab/verify.cjs
+        run: |
+          PUBLIC_COMMIT=$(git rev-parse HEAD) node kaopu-unified-human-workbench/identity-lab/verify.cjs
+          PUBLIC_COMMIT=$(git rev-parse HEAD) node kaopu-unified-human-workbench/identity-lab/review.cjs
       - name: Include exact new source and verification evidence
         if: always()
         run: |
