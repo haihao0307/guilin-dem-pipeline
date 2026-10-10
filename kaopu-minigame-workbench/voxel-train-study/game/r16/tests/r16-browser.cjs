@@ -657,6 +657,12 @@ async function nativeJourney(page) {
     boundary: 'Actual program inventory at each observed state; comparison with the previous candidate must use its recorded inventory, not an assumed 57 or an expected improvement.'};
   write('native-light-slots-and-programs.json', lightProgramSummary);
   const unloaded = cycles.map(c => c.unloaded), restarted = cycles.map(c => c.reentered), plateau = {};
+  const vaoEvidence = {released: unloaded.map(x => x.gl[0].resources.VertexArray.live), reentered: restarted.map(x => x.gl[0].resources.VertexArray.live)};
+  vaoEvidence.releasedMaxGrowth = Math.max(...vaoEvidence.released) - vaoEvidence.released[0];
+  vaoEvidence.reenteredMaxGrowth = Math.max(...vaoEvidence.reentered) - vaoEvidence.reentered[0];
+  vaoEvidence.note = 'Released VertexArray plateau is gated below with slack 8. Reentered counts are disclosed independently; any growth needs source-lifetime analysis and is not described as all GL resources remaining constant.';
+  write('native-vertex-array-lifetime.json', vaoEvidence);
+  if (vaoEvidence.reenteredMaxGrowth > 0) console.log('OBSERVATION: reentered VertexArray count grew by ' + vaoEvidence.reenteredMaxGrowth + '; released counts ' + vaoEvidence.released.join('/') + '. See native-vertex-array-lifetime.json.');
   for (const [label, values, slack] of [
     ['rendererGeometries', unloaded.map(x => x.renderer.memory.geometries), 4],
     ['rendererTextures', unloaded.map(x => x.renderer.memory.textures), 2],
@@ -671,12 +677,6 @@ async function nativeJourney(page) {
     plateau[label] = {values, slack, maxGrowth: Math.max(...values) - values[0]};
     assert(plateau[label].maxGrowth <= slack, 'Resources plateau after three genuine releases: ' + JSON.stringify(plateau[label]));
   }
-  const vaoEvidence = {released: unloaded.map(x => x.gl[0].resources.VertexArray.live), reentered: restarted.map(x => x.gl[0].resources.VertexArray.live)};
-  vaoEvidence.releasedMaxGrowth = Math.max(...vaoEvidence.released) - vaoEvidence.released[0];
-  vaoEvidence.reenteredMaxGrowth = Math.max(...vaoEvidence.reentered) - vaoEvidence.reentered[0];
-  vaoEvidence.note = 'Released VertexArray plateau is gated above with slack 8. Reentered counts are disclosed independently; any growth needs source-lifetime analysis and is not described as all GL resources remaining constant.';
-  write('native-vertex-array-lifetime.json', vaoEvidence);
-  if (vaoEvidence.reenteredMaxGrowth > 0) console.log('OBSERVATION: reentered VertexArray count grew by ' + vaoEvidence.reenteredMaxGrowth + '; released counts ' + vaoEvidence.released.join('/') + '. See native-vertex-array-lifetime.json.');
   // Preserve and assert trusted inputs before navigation creates a new document.
   const preReloadEvents = await page.evaluate(() => __r16QA.events);
   for (const id of ['startGame', 'stationAction', 'accelerate', 'decelerate', 'brake', 'pause', 'openCameraMenu', 'restartPaused']) assert(preReloadEvents.some(e => e.id === id && e.trusted && ['pointerdown', 'click'].includes(e.type)), 'Trusted native input: ' + id);
