@@ -1,0 +1,78 @@
+name: Tailor R04.3.1 reviewed native promotion
+on:
+  push:
+    branches: [feature/tailor-cabinet-r03-garment-surfaces-20261009]
+    paths:
+      - '.github/workflows/tailor-r0431-reviewed-promotion.yml'
+      - 'kaopu-tailor-workbench/presets/r04/R0431_PROMOTION_TRIGGER.json'
+permissions:
+  contents: write
+concurrency:
+  group: tailor-r0431-reviewed-promotion
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-tailor-workbench/presets/r04
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Real original-system browser
+        run: |
+          pip install playwright==1.56.0
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y fonts-noto-cjk
+      - name: Retain successful native routes and reject regressions
+        run: |
+          git fetch origin 5bc88ac13a597b8e9f947fa38b09bf54b1e181ea --depth=1
+          P=kaopu-tailor-workbench/presets/r04
+          python "$P/promote_reviewed_seams_r0431.py"
+          for f in "$P"/*.mjs; do node --check "$f"; done
+          node "$P/test_seam_spans_r043c.mjs"
+          node "$P/test_parameter_preview_r0431.mjs"
+          node "$P/test_editor_unit.mjs"
+          node "$P/contract_test.mjs"
+      - name: Real 60-garment and 432-outfit captures, current-parameter previews and fresh native P01
+        run: |
+          python -m http.server 8765 >/tmp/r0431-promotion-http.log 2>&1 &
+          P=kaopu-tailor-workbench/presets/r04
+          python "$P/qa_r043.py"
+          python "$P/qa_integrated_r0431.py"
+          python "$P/qa_fresh_seam_r0431.py"
+          python - <<'PY'
+          import pathlib,json,hashlib,os
+          p=pathlib.Path('kaopu-tailor-workbench/presets/r04');load=lambda n:json.loads((p/n).read_text())
+          promotion=load('R043C_PROMOTION.json');gallery=load('R043_BROWSER_REPORT.json');ui=load('R0431_BROWSER_REPORT.json');fresh=load('R0431_FRESH_SEAM.json')
+          protected=load('R043C_PROTECTED.json');assert all(hashlib.sha256((p/n).read_bytes()).hexdigest()==h for n,h in protected.items())
+          assert promotion['complete'] and gallery['passed'] and ui['passed'] and fresh['passed']
+          index=load('assets/results/index.json');assert len(index['rows'])==60 and all(r['thumbReady']for r in index['rows'].values())
+          assert len(gallery['outfitMembers'])==432 and promotion['summary']['staticGatePassedRecords']==21
+          out={'sourceCommit':os.environ['GITHUB_SHA'],'numericalTrialSourceCommit':promotion['numericalTrialSourceCommit'],'nativeSeamCorrectionVerified':True,'safePromotionVerified':True,'protectedFilesUnchanged':len(protected),'galleryChecks':len(gallery['checks']),'runtimeChecks':len(ui['checks']),'freshSeamChecks':len(fresh['checks']),'outfitsTested':432,'summary':promotion['summary'],'newPassingIds':promotion['newPassingIds'],'rejectedCandidateIds':[r['id']for r in promotion['rejected']],'all60GarmentsAccepted':False,'physicalFitAccepted':False,'dynamicWearCertified':False}
+          (p/'R043C_ACCEPTANCE.json').write_text(json.dumps(out,indent=2));print(json.dumps(out),flush=True)
+          PY
+      - name: Persist actual source and evidence without rewriting history
+        if: always()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$GITHUB_REF_NAME" --depth=1
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          git add kaopu-tailor-workbench/presets/r04
+          if ! git diff --cached --quiet; then
+            git commit -m 'fix(tailor-r0431): retain only improved native routes, complete result identity and real parameter/outfit browser proof'
+            git push origin HEAD:"$GITHUB_REF_NAME"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r0431-reviewed-promotion
+          path: kaopu-tailor-workbench/presets/r04
+          retention-days: 14
