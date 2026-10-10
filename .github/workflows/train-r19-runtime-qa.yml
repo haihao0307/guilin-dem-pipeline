@@ -59,6 +59,47 @@ jobs:
           compression-level: 0
           if-no-files-found: warn
           retention-days: 7
+      - name: Diagnose browser CPU without altering timing-gate samples
+        if: ${{ !cancelled() }}
+        env:
+          R19_PROFILE_ONLY: '1'
+          TRAIN_QA_OUT: train-r19-results/cpu-profile
+        run: node "$GAME/r19/tests/r19-streaming-profile.cjs"
+      - name: Retain evidence including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-r19-runtime-${{ github.sha }}
+          path: train-r19-results/
+          compression-level: 0
+          if-no-files-found: warn
+          retention-days: 7
+
+  candidate-interactions:
+    if: github.ref != 'refs/heads/gh-pages'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GAME: kaopu-minigame-workbench/voxel-train-study/game
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Install official pinned browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/train-r19" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/train-r19/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/train-r19/node_modules" >> "$GITHUB_ENV"
+          sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Serve exact candidate
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/train-r19-server.log" 2>&1 &
+          for n in $(seq 1 30); do
+            curl --fail --silent http://127.0.0.1:8765/$GAME/r19/ >/dev/null && exit 0
+            sleep 1
+          done
+          exit 1
       - name: Native first station to second without fixture placement
         if: ${{ !cancelled() }}
         env:
@@ -71,11 +112,11 @@ jobs:
           TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r19/
           TRAIN_QA_OUT: train-r19-results/mobile
         run: node "$GAME/r19/tests/r19-mobile-browser.cjs"
-      - name: Retain evidence including failures
+      - name: Retain native and phone evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: train-r19-runtime-${{ github.sha }}
+          name: train-r19-interactions-${{ github.sha }}
           path: train-r19-results/
           compression-level: 0
           if-no-files-found: warn
