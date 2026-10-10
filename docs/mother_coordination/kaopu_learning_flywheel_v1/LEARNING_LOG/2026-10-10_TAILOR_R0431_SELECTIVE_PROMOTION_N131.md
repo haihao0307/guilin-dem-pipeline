@@ -82,7 +82,7 @@ New audit rule: a failed numerical trial may contribute only complete routes who
 
 ## Lifecycle
 
-- POSTED: pending routing receipt
+- POSTED: true — PR #181 comment 6096219011
 - ACKNOWLEDGED: true (Tailor implementation already records the correction boundary)
 - IMPLEMENTED: true
 - GATE-RUN: true
@@ -98,3 +98,9 @@ New audit rule: a failed numerical trial may contribute only complete routes who
 - Stale-delivery count: 0 observed in this exact replay
 - Internal iterations per accepted delta: unknown
 - User instruction to legal candidate time: unknown
+
+## Routing receipt
+
+- PR #181 comment: https://github.com/haihao0307/guilin-dem-pipeline/pull/181#issuecomment-6096219011
+- Production branch changed by this learning cycle: false
+- Global R2/gate changed: false
