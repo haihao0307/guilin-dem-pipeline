@@ -1,0 +1,50 @@
+name: ET11 parameter-native eye transfer
+on:
+  push:
+    branches: [feature/common-human-eye-transfer-et11-20261010]
+    paths: ['kaopu-unified-human-workbench/eye-transfer/**', '.github/workflows/native-eye-transfer-et11.yml']
+permissions:
+  contents: write
+concurrency:
+  group: native-eye-transfer-et11
+  cancel-in-progress: false
+jobs:
+  native-transfer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NODE_PATH: /tmp/et11-tools/node_modules
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-unified-human-workbench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build and test dependencies
+        run: |
+          npm install --prefix /tmp/et11-tools --no-audit --no-fund esbuild@0.25.10 playwright@1.56.1
+          /tmp/et11-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Build candidate using original parameter engine
+        run: node kaopu-unified-human-workbench/eye-transfer/build.cjs
+      - name: Exercise the 36 real presets and original parameters
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/et11-human-http.log 2>&1 &
+          node kaopu-unified-human-workbench/eye-transfer/verify.cjs
+      - name: Commit validated candidate on this isolated branch
+        run: |
+          git config user.name 'KAOPU Human Workbench'
+          git config user.email 'kaopu-workbench@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/eye-transfer/preview.html kaopu-unified-human-workbench/eye-transfer/BUILD.json kaopu-unified-human-workbench/full/ui/eye-transfer-app.generated.mjs
+          if ! git diff --cached --quiet; then
+            git commit -m 'build(human): ET11 native eye transfer candidate [skip ci]'
+            git push origin HEAD:feature/common-human-eye-transfer-et11-20261010
+          fi
+      - name: Verify the real fixed public candidate
+        run: PUBLIC_COMMIT=$(git rev-parse HEAD) node kaopu-unified-human-workbench/eye-transfer/verify.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: et11-native-transfer-${{ github.run_number }}
+          path: qa-human-et11/
+          retention-days: 14
