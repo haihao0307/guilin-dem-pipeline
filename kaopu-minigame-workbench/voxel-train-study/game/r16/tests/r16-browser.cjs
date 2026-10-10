@@ -119,25 +119,61 @@ const observerHarness = `
     }
     disposals.push(report);
   }
-  const timer = gl.getExtension('EXT_disjoint_timer_query_webgl2');
-  let measured = 0, previousLifecycle = '';
+  let timer = null, measured = 0, previousLifecycle = '', contextGeneration = 0;
+  const timerStatus = {supported: false, enabled: false, tested: false, samples: 0, reason: null, contextGeneration: 0, discardedOnContextLoss: 0, errors: []};
+  function initTimer() {
+    timer = gl.isContextLost() ? null : gl.getExtension('EXT_disjoint_timer_query_webgl2');
+    const supported = !!timer && Number.isFinite(timer.TIME_ELAPSED_EXT) && Number.isFinite(timer.GPU_DISJOINT_EXT) &&
+      typeof gl.createQuery === 'function' && typeof gl.beginQuery === 'function' && typeof gl.endQuery === 'function';
+    Object.assign(timerStatus, {supported, enabled: supported, contextGeneration,
+      reason: supported ? 'Supported extension reacquired for this context; samples pending' : 'GPU timer extension/constants unavailable; no query calls made',
+      constants: timer ? {timeElapsed: timer.TIME_ELAPSED_EXT, disjoint: timer.GPU_DISJOINT_EXT} : null});
+    if (!supported) timer = null;
+  }
+  function stopTimer(reason, code = null) {
+    timerStatus.enabled = false; timerStatus.reason = reason;
+    if (code !== null) timerStatus.errors.push({reason, code, contextGeneration});
+    if (!gl.isContextLost()) for (const query of pending) gl.deleteQuery(query);
+    pending.length = 0; timer = null;
+  }
+  canvas.addEventListener('webglcontextlost', () => {
+    timerStatus.discardedOnContextLoss += pending.length;
+    // Old context objects are invalid after restoration: do not query/delete them.
+    pending.length = 0; gpuMs.length = 0; timer = null; timerStatus.enabled = false; timerStatus.tested = false; timerStatus.samples = 0; timerStatus.reason = 'Context lost; old pending queries discarded';
+  });
+  canvas.addEventListener('webglcontextrestored', () => { contextGeneration++; measured = 0; initTimer(); });
+  initTimer();
   const originalRender = renderer.render.bind(renderer);
   function drainTimers() {
+    if (!timer || !timerStatus.enabled || gl.isContextLost()) return;
     for (let i = pending.length - 1; i >= 0; i--) {
       const query = pending[i];
       if (!gl.getQueryParameter(query, gl.QUERY_RESULT_AVAILABLE)) continue;
-      if (!gl.getParameter(timer.GPU_DISJOINT_EXT)) gpuMs.push(gl.getQueryParameter(query, gl.QUERY_RESULT) / 1e6);
+      if (!gl.getParameter(timer.GPU_DISJOINT_EXT)) {
+        const value = gl.getQueryParameter(query, gl.QUERY_RESULT) / 1e6;
+        if (Number.isFinite(value)) { gpuMs.push(value); timerStatus.tested = true; timerStatus.samples++; timerStatus.reason = 'Actual non-disjoint GPU timer samples returned'; }
+      }
       gl.deleteQuery(query); pending.splice(i, 1);
     }
   }
   renderer.render = function (...values) {
     watchStreet(); const started = performance.now(); let query = null;
-    if (timer && measured < 90 && !gl.isContextLost()) {
-      query = gl.createQuery(); gl.beginQuery(timer.TIME_ELAPSED_EXT, query); measured++;
+    if (timer && timerStatus.enabled && measured < 90 && !gl.isContextLost()) {
+      query = gl.createQuery();
+      if (query) {
+        gl.beginQuery(timer.TIME_ELAPSED_EXT, query); measured++;
+        const error = gl.getError();
+        if (error !== gl.NO_ERROR) { gl.deleteQuery(query); query = null; stopTimer('GPU timer beginQuery rejected; measurement stopped', error); }
+      }
     }
     try { return originalRender(...values); }
     finally {
-      if (query) { gl.endQuery(timer.TIME_ELAPSED_EXT); pending.push(query); }
+      if (query && timer && !gl.isContextLost()) {
+        gl.endQuery(timer.TIME_ELAPSED_EXT);
+        const error = gl.getError();
+        if (error === gl.NO_ERROR) pending.push(query);
+        else { gl.deleteQuery(query); stopTimer('GPU timer endQuery rejected; measurement stopped', error); }
+      }
       if (timer && !gl.isContextLost()) drainTimers();
       renderMs.push(performance.now() - started); if (renderMs.length > 2400) renderMs.shift();
       const proof = world.streetDistrict?.proof;
@@ -150,6 +186,7 @@ const observerHarness = `
   };
   const hash = array => { let h = 2166136261; const bytes = new Uint8Array(array.buffer, array.byteOffset, array.byteLength); for (const v of bytes) { h ^= v; h = Math.imul(h, 16777619); } return (h >>> 0).toString(16); };
   function snapshot(visual = false) {
+    drainTimers();
     const district = world.streetDistrict, handle = district?.handle;
     const geometries = new Set(), materials = new Set();
     scene.traverse(o => { if (o.geometry) geometries.add(o.geometry); for (const m of (Array.isArray(o.material) ? o.material : o.material ? [o.material] : [])) materials.add(m); });
@@ -169,7 +206,7 @@ const observerHarness = `
     const result = {state: __trainDriver.getState(), threeRevision: THREE.REVISION,
       renderer: {memory: {...renderer.info.memory}, render: {...renderer.info.render}, programs, sceneGeometries: geometries.size, sceneMaterials: materials.size},
       gl: qa.contexts, disposals, shaderFailures: qa.shaderFailures, contextLost: gl.isContextLost(),
-      timing: {renderSubmitMs: renderMs.slice(), gpuFrameMs: gpuMs.slice(), timerAvailable: !!timer, pendingQueries: pending.length,
+      timing: {renderSubmitMs: renderMs.slice(), gpuFrameMs: gpuMs.slice(), timerAvailable: timerStatus.supported, timerStatus: {...timerStatus, errors: timerStatus.errors.slice()}, pendingQueries: pending.length,
         frameIntervals: qa.frameIntervals.slice(), frameCallbackMs: qa.frameCallbackMs.slice(), longTasks: qa.longTasks.slice(), transitions: transitions.slice()},
       motion: {cloth, actors: game.actors.map(a => ({id: a.id, kind: a.kind, position: a.position.slice()})),
         peopleMatrix: world.people.mesh.instanceMatrix ? hash(world.people.mesh.instanceMatrix.array) : null,
@@ -192,8 +229,8 @@ const observerHarness = `
     }
     return result;
   }
-  window.__r16Observe = {snapshot, timings: () => ({renderMs: renderMs.slice(), gpuMs: gpuMs.slice(), timerAvailable: !!timer}),
-    resetTiming: () => {renderMs.length = 0; gpuMs.length = 0; qa.frameIntervals.length = 0; qa.frameCallbackMs.length = 0; qa.longTasks.length = 0;}};
+  window.__r16Observe = {snapshot, timings: () => ({renderMs: renderMs.slice(), gpuMs: gpuMs.slice(), timerAvailable: timerStatus.supported, timerStatus: {...timerStatus}}),
+    resetTiming: () => {if (!gl.isContextLost()) for (const query of pending) gl.deleteQuery(query); pending.length = 0; renderMs.length = 0; gpuMs.length = 0; timerStatus.tested = false; timerStatus.samples = 0; measured = 0; qa.frameIntervals.length = 0; qa.frameCallbackMs.length = 0; qa.longTasks.length = 0;}};
 })();
 `;
 const fixtureHarness = `
@@ -256,7 +293,7 @@ async function shot(page, name, kind = 'native-ui-production-clock', visual = tr
   assert(png.length > 12000, 'Screenshot is nontrivial: ' + name);
   const result = {name, evidenceKind: kind, fixtureStateWrites: kind.includes('fixture'), viewport: page.viewportSize(), pngBytes: png.length, sha256: sha(png), ...report};
   write(name + '.json', result);
-  if (report.renderer) { assert(report.renderer.programs.every(p => p.linked), 'Every actual WebGL program links: ' + name); assert.deepEqual(report.shaderFailures, [], 'No captured shader failures: ' + name); assert.equal(report.threeRevision, '170'); }
+  if (report.renderer) { assert(report.renderer.programs.every(p => p.linked), 'Every actual WebGL program links: ' + name); assert.deepEqual(report.shaderFailures, [], 'No captured shader failures: ' + name); assert.equal(report.threeRevision, '170'); assert.deepEqual(report.timing.timerStatus.errors, [], 'GPU observer made no invalid GL calls: ' + name); }
   return result;
 }
 async function camera(page, id, touch = false) {
@@ -540,6 +577,9 @@ async function comparison(page, which) {
   await page.evaluate(() => { document.getElementById('pauseScreen').hidden = true; });
   await page.evaluate(() => __r16CompareFixture.sample(3)); await page.evaluate(() => __r16Observe.resetTiming());
   const synchronousFrameMs = await page.evaluate(() => __r16CompareFixture.sample(12));
+  // Query availability is asynchronous even after gl.finish(). Yield the browser
+  // event loop; snapshot drains only queries from the current, live context.
+  await page.waitForTimeout(250);
   const evidence = await shot(page, '10-comparison-' + which, 'deterministic-placement-comparison-fixture');
   if (which === 'r14') assert.equal(evidence.state.streetDistrict, undefined, 'Preserved R14 has no street injected');
   assert.equal(evidence.state.distance, 30); assert.equal(evidence.state.elapsed, 20); assert.equal(evidence.state.proof.addedCoaches, 2);
@@ -568,8 +608,9 @@ async function comparison(page, which) {
     if (browser) await browser.close().catch(() => {});
     const unexpectedConsole = consoleMessages.filter(m => m.type === 'error' && !m.expected);
     const shaderConsole = consoleMessages.filter(m => /VALIDATE_STATUS|shader error|shader.*compil|program.*link.*fail|THREE.WebGLProgram.*Error/i.test(m.text));
+    const glWarnings = consoleMessages.filter(m => /WebGL.*(?:INVALID_ENUM|INVALID_OPERATION|INVALID_VALUE|OUT_OF_MEMORY|CONTEXT_LOST_WEBGL)|GL_INVALID_|GL_OUT_OF_MEMORY/i.test(m.text));
     const unexpectedHTTP = responseErrors.filter(r => !r.expected), unexpectedNetwork = requestFailures.filter(r => !r.navigationCancellation);
-    const pass = failures.length === 0 && pageErrors.length === 0 && unexpectedConsole.length === 0 && shaderConsole.length === 0 && unexpectedHTTP.length === 0 && unexpectedNetwork.length === 0 && prohibitedRequests.length === 0;
+    const pass = failures.length === 0 && pageErrors.length === 0 && unexpectedConsole.length === 0 && shaderConsole.length === 0 && glWarnings.length === 0 && unexpectedHTTP.length === 0 && unexpectedNetwork.length === 0 && prohibitedRequests.length === 0;
     let nodeCPUReport = null; try { nodeCPUReport = JSON.parse(fs.readFileSync(path.join(__dirname, '../evidence/street-costs.json'), 'utf8')); } catch {}
     const report = {pass, base, baseline, commit: process.env.GITHUB_SHA || null, browserVersion, playwright: require('playwright/package.json').version, launchArgs: args,
       environment: {os: process.platform, architecture: process.arch, softwareRasterizer: 'ANGLE SwiftShader requested explicitly; inspect rendererName in every capture for verification', physicalDeviceTest: false},
@@ -577,8 +618,8 @@ async function comparison(page, which) {
       wallMs: performance.now() - launchStarted,
       costs: {runnerNodeCPU: process.cpuUsage(runnerCPU), runnerNodeCPUBoundary: 'Only the Node automation process CPU; excludes Chromium and SwiftShader.', existingNodeGeometryReport: nodeCPUReport,
         browserBoundary: 'Actual browser renderer, driver resource counts, frame/callback/render durations and optional GPU query samples are in each case. Generated mesh bytes are not a browser GPU-performance measure. First-load parse/build/upload are not independently isolated; navigation timings and first render after each lifecycle transition are recorded.'},
-      checks, failures, consoleMessages, pageErrors, responseErrors, requestFailures, prohibitedRequests, requests,
-      gates: {noPageErrors: !pageErrors.length, noUnexpectedConsoleErrors: !unexpectedConsole.length, noShaderErrors: !shaderConsole.length,
+      checks, failures, consoleMessages, glWarnings, pageErrors, responseErrors, requestFailures, prohibitedRequests, requests,
+      gates: {noPageErrors: !pageErrors.length, noUnexpectedConsoleErrors: !unexpectedConsole.length, noShaderErrors: !shaderConsole.length, noWebGLErrorWarnings: !glWarnings.length,
         noUnexpectedHTTP: !unexpectedHTTP.length, noUnexpectedNetwork: !unexpectedNetwork.length, noProhibitedAssets: !prohibitedRequests.length},
       remainingVisualReview: ['Traditional glyph holes and stroke ends', 'Facade depth, cages and interior occlusion', 'Per-tenant sign ages and rain/repair correlation', 'Brick/mortar scale and wet roughness', 'No grass covering street ground', 'Support beams do not cut important lettering', 'No temporal shader mask swim or view-side popping']};
     write('result.json', report); write('console.json', consoleMessages); write('network.json', {requests, responseErrors, requestFailures, prohibitedRequests});
