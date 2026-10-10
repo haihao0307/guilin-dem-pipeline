@@ -15,7 +15,8 @@ vec3 fPatch(sampler2D tex,vec2 mm,float tile,vec2 span){return texture2D(tex,fAt
 vec3 fBands(sampler2D tex,vec2 mm){vec3 r=fPatch(tex,mm,vFRest.x>0.?7.:0.,vFRest.x>0.?vec2(14.):vec2(18.));
  if(vFB.x>.001)r=mix(r,fPatch(tex,mm,1.,vec2(20.)),vFB.x);
  if(vFA.w>.001)r=mix(r,fPatch(tex,mm,2.,vec2(10.,14.)),vFA.w);
- if(vFB.w>.001)r=mix(r,fPatch(tex,mm,4.,vec2(18.,16.)),vFB.w);
+ // Chin uses the clean adjacent-skin frequency sample, not the scan's beard stubble.
+ if(vFB.w>.001)r=mix(r,fPatch(tex,mm,7.,vec2(14.)),vFB.w);
  if(vFA.z>.001)r=mix(r,fPatch(tex,mm,6.,vec2(12.)),vFA.z);
  if(vFA.y>.001)r=mix(r,fPatch(tex,mm,3.,vec2(25.,8.)),vFA.y);
  return r;
@@ -48,9 +49,10 @@ export function attachFaceSkin(skin){
   shader.fragmentShader=shader.fragmentShader.replace('float csHeight=csSurface*csDetail*csCover;', 'float csHeight=csSurface*csDetail*csCover*(1.-vFA.x*uFEnabled*.65);');
   shader.fragmentShader=shader.fragmentShader.replace('#include <clearcoat_normal_fragment_maps>',`
    if(fMask>.001){float visibility=1.-smoothstep(.6,1.6,max(length(dFdx(fMM)),length(dFdy(fMM)))/.38);
-    float thin=1.-vFA.z*.70,lip=1.-vFA.y*.78;
-    float h=((fData.r-.5)*.000050*uFDetail+(fData.g-.5)*.000120*uFMeso)*(thin*lip)*( .8+.3*uFAge);
-    h+=fPores(fMM)*.000010*uFDetail*visibility*(1.-vFA.y)*(1.-vFA.z*.85)*(1.+vFA.w*.35);h*=fMask;
+    float thin=1.-vFA.z*.70,lip=1.-vFA.y*.78,maturity=smoothstep(.25,.65,uFAge);
+    float ageGain=mix(.28,1.,maturity);
+    float h=((fData.r-.5)*.000032*uFDetail+(fData.g-.5)*.000090*uFMeso)*(thin*lip)*ageGain;
+    h+=fPores(fMM)*.000006*uFDetail*visibility*ageGain*(1.-vFA.y)*(1.-vFA.z*.85)*(1.+vFA.w*.35);h*=fMask;
     vec3 dx=dFdx(-vViewPosition),dy=dFdy(-vViewPosition),R1=cross(dy,normal),R2=cross(normal,dx);float det=dot(dx,R1);
     if(abs(det)>1e-14)normal=normalize(abs(det)*normal-sign(det)*(dFdx(h)*R1+dFdy(h)*R2));
     roughnessFactor=clamp(roughnessFactor+(fData.b-.5)*.18*fMask-vFA.w*.025*fMask+vFA.z*.015*fMask,.24,.90);

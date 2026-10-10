@@ -10,7 +10,7 @@ export function installFaceSurface(model){
  function apply(){
   const p=model.positions;before.set(p);const s=api.settings,n=surfaceNormals(p,model.faces),delta=new Float32Array(N),a=fields.a,b=fields.b;
   const L=i=>sample(before,i),mouthL=L(48),mouthR=L(54),upper=L(51),lower=L(57),nose=L(33),chin=L(8),bridge=L(27),width=Math.hypot(...sub(mouthR,mouthL)),scale=clamp(width/.048,.40,1.8),x=unit(sub(mouthR,mouthL));let up=sub(bridge,chin);up=unit(up.map((v,k)=>v-x[k]*dot(up,x)));let front=unit(cross(x,up));if(dot(front,sub(L(30),upper))<0)front=front.map(v=>-v);
-  const project=p=>{const d=sub(p,upper);return[dot(d,x),dot(d,up),dot(d,front)];},u=project(upper),lo=project(lower),ns=project(nose),ml=project(mouthL),mr=project(mouthR),ala=[project(L(31)),project(L(35))];
+  const project=p=>{const d=sub(p,upper);return[dot(d,x),dot(d,up),dot(d,front)];},u=project(upper),lo=project(lower),ns=project(nose),ch=project(chin),ml=project(mouthL),mr=project(mouthR),ala=[project(L(31)),project(L(35))];
   const maturity=smooth(.22,.70,model.state?.anny?.phenotypes?.age??.66),mouthGap=Math.hypot(...sub(upper,lower)),closedGate=1-smooth(.022,.042,mouthGap/scale);
   const curveDistance=(q,side)=>{const start=ala[side],end=side?mr:ml,bend=[start[0]+(side?1:-1)*.004*scale,(start[1]+end[1])*.55];let d=Infinity;for(let j=0;j<=12;j++){const t=j/12,xx=(1-t)**2*start[0]+2*(1-t)*t*bend[0]+t*t*end[0],yy=(1-t)**2*start[1]+2*(1-t)*t*bend[1]+t*t*end[1];d=Math.min(d,Math.hypot(q[0]-xx,q[1]-yy));}return d;};
   const regionMax={philtrum:0,nasolabial:0,lipBorder:0,alar:0,chin:0};
@@ -22,7 +22,7 @@ export function installFaceSurface(model){
    const fold=-.00022*maturity*g(Math.min(curveDistance(q,0),curveDistance(q,1)),.0019*scale)*cheek;
    const lip=.00013*Math.sin(Math.PI*lp)*closedGate*g(q[0],width*.6);
    let alar=0;for(const c of ala)alar-=.00012*g(q[0]-c[0],.0022*scale)*g(q[1]-c[1],.003*scale)*noseWeight;
-   const mental=-.00015*g(q[1]-(lo[1]-.006*scale),.0028*scale)*g(q[0],width*.34)*chinWeight*closedGate;
+   const mental=-.00015*g(q[1]-(lo[1]+(ch[1]-lo[1])*.38),.0028*scale)*g(q[0],width*.34)*chinWeight*closedGate;
    for(const[k,v]of Object.entries({philtrum,nasolabial:fold,lipBorder:lip,alar,chin:mental}))regionMax[k]=Math.max(regionMax[k],Math.abs(v)*scale*s.structure*mask*f*1000);
    delta[i]=(philtrum+fold+lip+alar+mental)*scale*s.structure*mask*f;
   }

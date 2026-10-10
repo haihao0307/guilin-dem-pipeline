@@ -48,6 +48,7 @@ jobs:
         run: |
           python -m http.server 8765 --bind 127.0.0.1 >/tmp/face-http.log 2>&1 &
           node kaopu-unified-human-workbench/face-transfer/verify.cjs
+          node kaopu-unified-human-workbench/face-transfer/review.cjs
       - name: Publish tested source and preview on the isolated branch
         run: |
           git add kaopu-unified-human-workbench/full/ui/skin/CommonSkinLayer.mjs kaopu-unified-human-workbench/eye-transfer/DenseSurface.mjs kaopu-unified-human-workbench/eye-transfer/TransferUI.mjs kaopu-unified-human-workbench/full/ui/face-transfer-app.generated.mjs kaopu-unified-human-workbench/face-transfer/preview.html kaopu-unified-human-workbench/face-transfer/BUILD.json
@@ -56,7 +57,9 @@ jobs:
             git push origin HEAD:feature/common-human-face-skin-et12-20261010
           fi
       - name: Check immutable public URL with actual browser
-        run: PUBLIC_COMMIT=$(git rev-parse HEAD) node kaopu-unified-human-workbench/face-transfer/verify.cjs
+        run: |
+          PUBLIC_COMMIT=$(git rev-parse HEAD) node kaopu-unified-human-workbench/face-transfer/verify.cjs
+          PUBLIC_COMMIT=$(git rev-parse HEAD) node kaopu-unified-human-workbench/face-transfer/review.cjs
       - name: Include exact changed source and generated evidence
         if: always()
         run: |
