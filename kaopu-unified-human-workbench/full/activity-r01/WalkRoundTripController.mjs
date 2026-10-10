@@ -22,7 +22,7 @@ export function createWalkRoundTripController(human,source,{restSeconds=.8,turnS
  function copy(p){for(let j=0;j<rig.count;j++){rig.skinMatrices[j].set(p.skinMatrices[j]);rig.posedMatrices[j].set(p.posedMatrices[j]);}}
  function place(angle,anchor,reference){const c=Math.cos(angle),s=Math.sin(angle);for(const matrices of[rig.skinMatrices,rig.posedMatrices])for(const m of matrices){for(let k=0;k<3;k++){const a=m[k],b=m[4+k];m[k]=c*a-s*b;m[4+k]=s*a+c*b;}const x=m[3]-reference[0],y=m[7]-reference[1];m[3]=anchor[0]+c*x-s*y;m[7]=anchor[1]+s*x+c*y;}const p=pos(rig.posedMatrices[rootIndex]);rig.rootTranslation=p.map((x,i)=>x-rig.restP[rootIndex][i]);}
  function target(point,angle,anchor,reference){const p=yaw([point[0]-reference[0],point[1]-reference[1],point[2]],angle);return[p[0]+anchor[0],p[1]+anchor[1],p[2]];}
- function solve(plans){let maxReachError=0;for(const S of['L','R']){const f=feet[S],p=plans[S],k=pos(rig.posedMatrices[f.limb.b]),h=pos(rig.posedMatrices[f.limb.a]);p.pole=[k[0]+(k[0]-h[0])*.2,k[1]+(k[1]-h[1])*.2,k[2]];}
+ function solve(plans){let maxReachError=0;for(const S of['L','R']){const f=feet[S],p=plans[S],k=pos(rig.posedMatrices[f.limb.b]),h=pos(rig.posedMatrices[f.limb.a]);p.pole=k.map((x,i)=>x+(x-h[i])*.2);}
   // Lower the pelvis only as much as required to reach BOTH fixed foot targets.
   let drop=0;for(const S of['L','R']){const f=feet[S],h=pos(rig.posedMatrices[f.limb.a]),d=h.map((x,i)=>x-plans[S].position[i]),reach=(f.limb.upper+f.limb.lower)*.996,xy=d[0]*d[0]+d[1]*d[1];if(xy<reach*reach)drop=Math.max(drop,d[2]-Math.sqrt(reach*reach-xy));}
   drop=Math.max(0,Math.min(human.height*.10,drop));if(drop){for(const matrices of[rig.skinMatrices,rig.posedMatrices])for(const m of matrices)m[11]-=drop;rig.rootTranslation[2]-=drop;}
