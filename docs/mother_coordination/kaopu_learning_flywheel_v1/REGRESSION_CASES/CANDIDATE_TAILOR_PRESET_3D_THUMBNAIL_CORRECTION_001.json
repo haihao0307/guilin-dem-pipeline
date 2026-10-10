@@ -1,7 +1,7 @@
 {
   "schema": "kaopu.regression-case/2",
   "caseId": "TAILOR-PRESET-3D-THUMBNAIL-CORRECTION-001",
-  "status": "CANDIDATE_TAILOR_R042_FAILURE_STATE_OBSERVABILITY_VERIFIED_SCOPED__FULL_VISUAL_FIT_HOLD_N129_NOT_ADOPTED",
+  "status": "CANDIDATE_TAILOR_R043_ALL60_SOLVER_OUTCOMES_VERIFIED_SCOPED__49_STATIC_FAILURES_VISUAL_PHYSICS_USER_HOLD_N130_NOT_ADOPTED",
   "active": false,
   "scope": {
     "mother": "Tailor",
@@ -179,7 +179,10 @@
     "Treat an internally approved source/runtime screenshot review as user visual acceptance when visible seam, fold or on-body-shape defects remain.",
     "Place static-pass garments in an accepted/front row without a member-level visual receipt for seam integrity, fold plausibility and on-body shape.",
     "Render an empty card, endless loading state or generic error without a preset-level outcome and reason when the solver/material ledger already knows the failure.",
-    "Count an explicit failure card as a repaired garment, or let a later untested PR head inherit the exact R04.2 release evidence."
+    "Count an explicit failure card as a repaired garment, or let a later untested PR head inherit the exact R04.2 release evidence.",
+    "Do not treat 60 solver records as 60 accepted garments: member-level static and visual acceptance remain separate.",
+    "Do not promote 122 source-geometry parameter perturbations into fit certification when allAlteredGarmentsFitCertified=false.",
+    "Do not promote 432 browser-readable outfit identities into joint cloth-collision or dynamic-wear certification."
   ],
   "requiredPerMemberReceipt": [
     "presetId",
@@ -204,7 +207,8 @@
     "SOURCE_LINEAGE_CORRECTION_VERIFIED_SCOPED__HOLD_FULL_CATALOGUE_INCOMPLETE",
     "THREE_D_PRESET_THUMBNAILS_VERIFIED_SCOPED",
     "HOLD_R041_USER_VISUAL_FIT_AND_CATALOGUE_INCOMPLETE",
-    "R042_FAILURE_STATE_OBSERVABILITY_VERIFIED_SCOPED__HOLD_REMAINING_VISUAL_FIXES_AND_PHYSICS"
+    "R042_FAILURE_STATE_OBSERVABILITY_VERIFIED_SCOPED__HOLD_REMAINING_VISUAL_FIXES_AND_PHYSICS",
+    "R043_ALL60_SOLVER_OUTCOMES_VERIFIED_SCOPED__HOLD_49_STATIC_FAILURES_VISUAL_PHYSICS_USER_ACCEPTANCE"
   ],
   "gate": [
     "Preserve the old paper-library success as a scoped historical observation; do not relabel it as failure.",
@@ -221,7 +225,10 @@
     "Member IDs for user-visible failures remain UNKNOWN until a per-preset visual ledger is produced; do not guess affected IDs from aggregate counts.",
     "For the exact tested release, every original preset must appear exactly once in either result rows or explicit failed rows; failed rows need a phase and reason, and PNG read failure must remain distinct from solver/material failure.",
     "A complete failure-state ledger closes only the empty/error-card observability defect; it does not repair the garment or certify physical fit, dynamic wear, outfit composition, cross-character sizing, parameter adjustability or user acceptance.",
-    "Evidence is subject-bound: current PR head or later payload-only commits cannot inherit R04.2 GATE-RUN unless their exact head is tested."
+    "Evidence is subject-bound: current PR head or later payload-only commits cannot inherit R04.2 GATE-RUN unless their exact head is tested.",
+    "An exact push-triggered workflow run, its head SHA, workflow path, successful claim-critical steps, artifact ID/digest and retained evidence head must agree before a later Tailor candidate receives GATE-RUN.",
+    "Complete source/material/solver coverage closes missing-result execution coverage only; every static failure and every missing visual/physical/user receipt remains HOLD.",
+    "Parameter controls may pass source-geometry perturbation while altered-garment fit remains uncertified; outfit render coverage does not certify joint cloth physics."
   ],
   "activation": {
     "global": false,
@@ -334,7 +341,7 @@
     }
   },
   "currentCycleLifecycle": {
-    "POSTED": true,
+    "POSTED": false,
     "ACKNOWLEDGED": true,
     "IMPLEMENTED": true,
     "GATE-RUN": true,
@@ -404,6 +411,88 @@
     "decision": "UPDATE_EXISTING_REGRESSION_CASE_NO_NOVELTY",
     "lifecycle": {
       "POSTED": true,
+      "ACKNOWLEDGED": true,
+      "IMPLEMENTED": true,
+      "GATE-RUN": true,
+      "ADOPTED": false,
+      "USER-ACCEPTED": false
+    }
+  },
+  "n130R043SolverOutcomeCoverageResult": {
+    "pullRequest": 181,
+    "exactTestedSubject": "405e711d6e0347ca0a1df7f2593ded0c6f1af683",
+    "retainedEvidenceHead": "9c4dbe48e3dca1ae46d80f286697d28f1a5b9bfd",
+    "workflow": {
+      "path": ".github/workflows/tailor-r043-material-correction.yml",
+      "runId": 38033528214,
+      "event": "push",
+      "conclusion": "success",
+      "jobId": 114159166177,
+      "claimCriticalStepsSucceeded": 5,
+      "artifactId": 11664035935,
+      "artifactName": "tailor-r043-material-correction-evidence",
+      "artifactDigest": "sha256:3a7a2c9803541384a82d47f3e0b1508abd3f5976d966dbd4176b0fb7d7a4138c"
+    },
+    "exactEvidence": {
+      "originalPapers": 60,
+      "nativeMaterialsReady": 60,
+      "nativeMaterialRejected": 0,
+      "actualSolverRecords": 60,
+      "staticGatePassedRecords": 11,
+      "staticGateFailedRecords": 49,
+      "newStaticPassIds": [
+        "T13",
+        "T14"
+      ],
+      "priorNinePassingRecordHashesPreserved": true,
+      "protectedFilesUnchanged": 77,
+      "qualityGateThresholdsChanged": false,
+      "sourcePaperArchiveChanged": false,
+      "restMaterialUVChanged": false,
+      "seamPairsChanged": false
+    },
+    "browserAndComposition": {
+      "browserChecks": 76,
+      "browserErrors": 0,
+      "failedHTTP": 0,
+      "outfitMembersReadBack": 432,
+      "outfitMemberReadbackFailures": 0,
+      "jointClothCollisionCertified": false,
+      "fullPhysicsCertified": false
+    },
+    "parameterBoundary": {
+      "controlsAudited": 122,
+      "verifiedSourceGeometryControls": 122,
+      "conditionalControls": 35,
+      "allAlteredGarmentsFitCertified": false,
+      "reportSourceCommitField": "d449629979028123a5c4dc9e732a2ec19b7fce31",
+      "reportSourceCommitResolvableAsRepositoryCommit": false,
+      "disposition": "SOURCE_GEOMETRY_CONTROL_EVIDENCE_ONLY__FIT_AND_STANDALONE_COMMIT_IDENTITY_NOT_PROMOTED"
+    },
+    "explicitLimits": {
+      "all60GarmentsAccepted": false,
+      "fabricBendingCalibrated": false,
+      "continuousCollisionCertified": false,
+      "dynamicWearCertified": false,
+      "publicDeliveryVerified": false,
+      "userAccepted": false
+    },
+    "externalMethodComparison": {
+      "githubActions": "Exact workflow run exposes event, workflow path, head SHA, step conclusions and run-bound artifact digest.",
+      "kaopuComparison": "Existing tested-subject, freshness, no-stale-delivery, claim-scope and negative-query-scope rules already require this binding.",
+      "novelty": "NO_NOVELTY"
+    },
+    "falsifiableHypothesis": "If the exact push run for 405e711 has successful claim-critical steps, a run-bound artifact digest, and retained reports that preserve original source/gates while covering all 60 materials and solver outcomes, missing-result execution coverage can pass without promoting the 49 static failures, parameter fit, outfit physics, public delivery or user acceptance.",
+    "replay": {
+      "checks": 16,
+      "passed": 16,
+      "outcome": "R043_ALL60_SOLVER_OUTCOMES_VERIFIED_SCOPED__HOLD_49_STATIC_FAILURES_VISUAL_PHYSICS_USER_ACCEPTANCE",
+      "falsePromotionPrevented": true
+    },
+    "boundary": "Tailor R04.3 exact tested subject and retained evidence only; no global R2/gate change and no production-branch modification.",
+    "decision": "UPDATE_EXISTING_REGRESSION_CASE_NO_NOVELTY",
+    "lifecycle": {
+      "POSTED": false,
       "ACKNOWLEDGED": true,
       "IMPLEMENTED": true,
       "GATE-RUN": true,
