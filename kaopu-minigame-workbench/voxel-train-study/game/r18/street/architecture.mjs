@@ -314,6 +314,10 @@ export function buildArchitecture(score, { THREE, materials, makeWord, sharedGeo
     const w = sw - 0.42, f = b.frontZ, rear = f - 1.62;
     const fixtures = [], open = shop.open !== false;
     if(!near){
+      // Consume the exact authored near-stock sequence before omitting goods.
+      // Detail choice must not change subsequent signs or canopy dimensions.
+      const shelfWidth=shop.type==='cinema'?w*.40:w*.82;
+      if(shop.type!=='watch'&&shop.type!=='hardware')for(let j=0;j<8*Math.max(4,Math.floor(shelfWidth/.28));j++)r();
       box(M.room,x,1.65,rear,w,3.18,.12,0,'shop-rear-wall');
       for(const xx of [x-w/2,x+w/2]){box(wood,xx,1.62,f-.8,.10,3.22,1.65,0,'shop-side-reveal');box(wood,xx,1.45,f+.02,.15,2.9,.18,0,'folded-shop-shutter');}
       box(wood,x,3.18,f,w+.12,.15,.23);box(M.concrete,x,.022,f-.75,w+.02,.07,1.92);
@@ -490,9 +494,10 @@ export function buildArchitecture(score, { THREE, materials, makeWord, sharedGeo
           if (angle) stats.openCasements++;
         }
         // Old green timber louvres are hinged separately from the glazed leaves.
-        if (!far && (timber || (brick && (f + q) % 3 === 0))) {
+        if (timber || (brick && (f + q) % 3 === 0)) {
           const side = (f + q) % 2 ? 1 : -1, leaf = w * 0.33;
-          windowLeaf(wood, M.glass, x + side * (w / 2 + leaf * 0.44), wy, b.frontZ + 0.20, leaf, h + 0.03, side * (0.17 + r() * 0.35), -side, true);
+          const shutterAngle=side*(.17+r()*.35);
+          if(!far)windowLeaf(wood, M.glass, x + side * (w / 2 + leaf * 0.44), wy, b.frontZ + 0.20, leaf, h + 0.03, shutterAngle, -side, true);
         }
         if (r() < density) cage(x, wy, b.frontZ + 0.14, w + 0.25, h + 0.20, 0.42 + r() * 0.26, brick && (f + q) % 4 === 0, r);
         if (timber || (brick && f === 1)) balcony(b, x, y0, bay, timber, trim, wood);

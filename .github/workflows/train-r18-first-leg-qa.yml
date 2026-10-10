@@ -26,9 +26,12 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/train-r18" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/train-r18/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/train-r18/node_modules" >> "$GITHUB_ENV"
+          sudo apt-get install -y --no-install-recommends ffmpeg
       - name: Verify contracts and preserved metre baseline
         run: |
+          set -o pipefail
           mkdir -p train-r18-results
+          export R18_QA_OUT=train-r18-results/cpu
           node --test "$GAME"/tests/*.test.mjs "$GAME"/*.test.mjs "$GAME"/r17/tests/*.test.mjs "$GAME"/r17/street/*.test.mjs "$GAME"/r18/tests/*.test.mjs "$GAME"/r18/tests/shop-catalog.mjs 2>&1 | tee train-r18-results/unit.txt
       - name: Serve exact candidate without deployment
         run: |
