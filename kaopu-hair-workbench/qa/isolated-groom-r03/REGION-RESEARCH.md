@@ -8,3 +8,6 @@ Research 2026-10-10. This is visual anatomy for rendering, not medical advice. N
 - https://ishrs.org/wp-content/uploads/2018/12/ISHRS_SurgicalAssistantsManual_2010.pdf defines natural follicular units as commonly1–4 follicles. R03 uses1–3 nearby actual triangle-bound roots, with single hairs near the boundary. Inter-root spacing and probabilities are explicit artistic approximations. A visible skin opening is distinct from the follicle below skin; this demo does not expose anatomical follicle bulbs.
 
 R02 left350μm gap at scalp roots. R03 reduces it to20μm and smoothly rises away from skin. Brow/beard retain their previously tested regional directions, with the same smaller root clearance.9 rendered segments are a provisional performance tradeoff, not an accepted smoothness result.
+
+
+The36k×9 first render was rejected for crown tangling and coarse close-up flow. The whorl influence now decays within the root section, leaving longer shafts governed by the groom.32 geodesic supports and16 rendered segments serve the96k close-up mode; single-current-style caching limits retained CPU guide arrays. Radius decreases75→50μm in near mode. The96k test yields about151 active hairs/cm² in the crown and141 at occiput, with separately computed area. Matching one study range does not establish realism or population validity.

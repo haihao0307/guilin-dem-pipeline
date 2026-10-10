@@ -91,7 +91,7 @@ class FullerScalpBinding extends ScalpBinding{
   for(let t=0;t<tr.length/3;t++){const a=tr[t*3]*3,b=tr[t*3+1]*3,c=tr[t*3+2]*3,o=t*16,f=this.triangleFrames;for(let k=0;k<3;k++){f[o+k]=p[a+k];f[o+3+k]=p[b+k]-p[a+k];f[o+6+k]=p[c+k]-p[a+k];}let d00=0,d01=0,d11=0;for(let k=0;k<3;k++){d00+=f[o+3+k]**2;d01+=f[o+3+k]*f[o+6+k];d11+=f[o+6+k]**2;}f[o+9]=d00;f[o+10]=d01;f[o+11]=d11;f[o+12]=d00*d11-d01*d01;let nx=f[o+4]*f[o+8]-f[o+5]*f[o+7],ny=f[o+5]*f[o+6]-f[o+3]*f[o+8],nz=f[o+3]*f[o+7]-f[o+4]*f[o+6],d=Math.hypot(nx,ny,nz)||1;f[o+13]=nx/d;f[o+14]=ny/d;f[o+15]=nz/d;}
   const {items,sum}=this.selectFaces(),rng=createRng(this.seed),per=this.segments+1;
   this.scalpTriangleCount=items.length;this.scalpArea=this.rootSurfaceArea=sum;
-  this.rootTriangles=new Int32Array(this.count);this.rootBarycentrics=new Float32Array(this.count*3);this.templateRoots=new Float32Array(this.count*3);this.regionWeights=new Float32Array(this.count*3);this.selectionRandom=new Float32Array(this.count);this.guideCache=new Map();this.guideBuilds=0;this.unitIds=new Uint32Array(this.count);this.unitCount=0;let remaining=0,anchor=null;const unitGrid=new Map(),cellSize=.00105;const key=(x,y,z)=>x+","+y+","+z;const nearUnit=p=>{const c=p.map(v=>Math.floor(v/cellSize));for(let x=-1;x<=1;x++)for(let y=-1;y<=1;y++)for(let z=-1;z<=1;z++)for(const q of unitGrid.get(key(c[0]+x,c[1]+y,c[2]+z))||[])if(Math.hypot(...p.map((v,k)=>v-q[k]))<cellSize)return true;return false;};
+  this.rootTriangles=new Int32Array(this.count);this.rootBarycentrics=new Float32Array(this.count*3);this.templateRoots=new Float32Array(this.count*3);this.regionWeights=new Float32Array(this.count*3);this.selectionRandom=new Float32Array(this.count);this.guideCache=new Map();this.guideBuilds=0;this.unitIds=new Uint32Array(this.count);this.unitCount=0;let remaining=0,anchor=null;const unitGrid=new Map(),cellSize=.00105*Math.min(1,Math.sqrt(36000/this.count));const key=(x,y,z)=>x+","+y+","+z;const nearUnit=p=>{const c=p.map(v=>Math.floor(v/cellSize));for(let x=-1;x<=1;x++)for(let y=-1;y<=1;y++)for(let z=-1;z<=1;z++)for(const q of unitGrid.get(key(c[0]+x,c[1]+y,c[2]+z))||[])if(Math.hypot(...p.map((v,k)=>v-q[k]))<cellSize)return true;return false;};
   for(let i=0;i<this.count;i++){
    let t,b,root;let attempts=0;
    if(remaining>0){const angle=rng()*Math.PI*2,step=.00018+rng()*.00036,next=this.advance(anchor.t,anchor.b,step,[Math.cos(angle),.25*Math.sin(angle*2),Math.sin(angle)]);t=next.t;b=next.b;root=this.point(t,b);remaining--;if(scalpMargin(root)<=.0002)root=null;}
@@ -130,7 +130,7 @@ class FullerScalpBinding extends ScalpBinding{
   const dx=(Math.round(root[0]/cell)*cell-root[0])/cell,dz=(Math.round(root[2]/cell)*cell-root[2])/cell;
   const gather=Math.sin(Math.PI*progress)*.34;
   direction[0]+=dx*gather;direction[2]+=dz*gather;
-  const wx=x-.018,wz=z+.028,wd=Math.hypot(wx,wz),whorl=smooth(.335,.366,y)*(1-smooth(.025,.063,wd))*(1-smooth(0,.48,progress));const spin=normalized([-.82*wz+.5*wx,.02,.82*wx+.5*wz]);direction=direction.map((v,k)=>v*(1-whorl)+spin[k]*whorl);direction[0]+=(r-.5)*.06;direction[1]+=near*.3;return normalized(direction);
+  const wx=x-.018,wz=z+.028,wd=Math.hypot(wx,wz),whorl=.9*smooth(.343,.367,y)*(1-smooth(.018,.054,wd))*Math.exp(-progress*12);const spin=normalized([-.82*wz+.5*wx,.02,.82*wx+.5*wz]);direction=direction.map((v,k)=>v*(1-whorl)+spin[k]*whorl);direction[0]+=(r-.5)*.06;direction[1]+=near*.3;return normalized(direction);
  }
  setStyle(style){
   if(this.guideCache.has(style)){const cached=this.guideCache.get(style);this.triangleIndices=cached.triangles;this.barycentrics=cached.barycentrics;this.guideEnds=cached.ends;this.style=style;return;}
@@ -144,7 +144,7 @@ class FullerScalpBinding extends ScalpBinding{
     t=next.t;b=next.b;
    }
   }
-  this.guideCache.set(style,{triangles,barycentrics,ends,clipped});this.triangleIndices=triangles;this.barycentrics=barycentrics;this.guideEnds=ends;this.style=style;this.guideBuilds++;
+  this.guideCache.clear();this.guideCache.set(style,{triangles,barycentrics,ends,clipped});this.triangleIndices=triangles;this.barycentrics=barycentrics;this.guideEnds=ends;this.style=style;this.guideBuilds++;
  }
 }
 
@@ -153,7 +153,7 @@ export class HairLayer{
   this.model=model;
   this.options={count:36000,segments:9,seed:724,sweep:.34,style:'side-sweep',hairlineHeight:0,frontCoverage:1,backCoverage:1,sideCoverage:1,width:1,length:.065,maxLength:.13,density:.9,volume:.0035,frizz:.00045,roughness:.42,color:'#21170f',guides:false,...options};
   this.options.count=Math.max(1,Math.round(this.options.count));this.clampOptions();
-  this.binding=new FullerScalpBinding(model,{...this.options,length:this.options.maxLength,segments:18});this.binding.setStyle(this.options.style);
+  this.binding=new FullerScalpBinding(model,{...this.options,length:this.options.maxLength,segments:32});this.binding.setStyle(this.options.style);
   this.geometry=new THREE.BufferGeometry();this.createBuffers();this.material=createStrandMaterial({...this.options,radius:.00028*this.options.width});
   this.mesh=new THREE.Mesh(this.geometry,this.material);this.mesh.name='GNM scalp-bound strands';this.mesh.frustumCulled=false;this.mesh.renderOrder=1;this.applyDrawRange();this.prepareSupports();this.update(positions,normals);
  }

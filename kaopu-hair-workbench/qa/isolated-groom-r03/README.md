@@ -2,6 +2,6 @@
 
 R02 stays preserved at ../isolated-groom-r02/. This new candidate tests a lower continuous nape boundary, surface-bound follicular unit clusters and a crown emergence whorl. These are artistic parameters informed by anatomy, not a person-specific segmentation or medical model.
 
-36,000 roots replace18,000;9 rendered segments replace18 as an initial measured budget tradeoff, subject to visual rejection if smoothness worsens. Radius remains75μm maximum base, with finer nape strands. Roots begin20μm above actual skin instead of350μm. The actual mask area and active hairs/cm² are measured by triangle quadrature; we do not claim full biological density.
+The first36k×9 trial failed close-up smoothness and crown-flow review. Current near study uses96,000 roots×16 rendered segments,32 surface guide supports,50μm base radius with finer nape strands. ?quality=light uses36k×12 and75μm base radius. Only one style guide cache is retained. These are explicit quality/memory tradeoffs; near geometry alone exceeds200MB after radius attributes. Roots begin20μm above actual skin instead of350μm. The actual mask area and active hairs/cm² are measured by triangle quadrature; we do not claim full biological density.
 
 No physics, collision acceptance or film-quality acceptance. Licensed original GNM head and existing R8 optical shader are preserved. No teacher curves or restricted assets. Source summaries in REGION-RESEARCH.md.
