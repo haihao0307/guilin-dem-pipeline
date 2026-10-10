@@ -4,7 +4,7 @@
 // All page evaluation is read-only. All state changes use trusted Playwright
 // mouse or keyboard input and the production requestAnimationFrame clock.
 const assert = require('node:assert/strict');
-module.exports = async function serveFirstTwoStations(page, clickTarget, checkpoint=async()=>{}) {
+module.exports = async function serveFirstTwoStations(page, clickTarget, checkpoint=async()=>{}, afterStart=async()=>{}) {
   const states = [], state = () => page.evaluate(() => window.__trainDriver.getState());
   const until = (fn, arg, timeout = 180000) => page.waitForFunction(fn, arg, {polling: 25, timeout});
   const save = async label => {const s = await state(); states.push({label, state:s}); return s;};
@@ -16,6 +16,7 @@ module.exports = async function serveFirstTwoStations(page, clickTarget, checkpo
   }
   await until(() => window.__trainDriver?.ready);
   await clickTarget(page, '#startGame');
+  await afterStart();
   await until(() => __trainDriver.getState().station.canOpen);
   await clickTarget(page, '#stationAction');
   await until(() => ['doors-opening','unloading','boarding','ready-depart'].includes(__trainDriver.getState().phase));
