@@ -71,3 +71,6 @@
 - regionWeight、coverage、root density、strand thickness、length 分离；“看起来浓”不等同于发根多。
 - 固定随机种子供前后对比；更换种子不能掩盖分区错误。
 - 保持个体差异：左右不必镜像，眉尾不必同长，须区不必相连；默认值须标“演示预设”。
+
+
+R02 audit corrections: density weights are continuously blended and accepted at the actual barycentric point (fixed 18,000 roots), rather than assigned by triangle centroid. Beard support paths are clipped to their root-origin region, including full-beard mode; a 2 micrometre inward path margin reduces Float32 boundary drift. This conservative rule can shorten hairs at region transitions. Pinna exclusion remains a reviewed coordinate approximation, not a topology-labelled ear or collision guarantee. Region tests verify consistency of that approximation; they do not establish anatomical clearance. Nested diagnostics describe the neutral template; per-layer root gaps measure the current displayed pose. The active Fiber material owns displayed appearance, and its radius diagnostics supersede legacy strand-material defaults.
