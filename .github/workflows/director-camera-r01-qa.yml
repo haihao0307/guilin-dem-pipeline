@@ -1,0 +1,49 @@
+name: Director camera R01 native WebGL evidence
+on:
+  push:
+    branches: ['qa/director-camera-r01-20261010']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/game/director-camera-r01/**'
+      - '.github/workflows/director-camera-r01-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: director-camera-r01-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  camera:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      TRIAL: kaopu-minigame-workbench/voxel-train-study/game/director-camera-r01
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Install pinned official test browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/director-camera" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/director-camera/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/director-camera/node_modules" >> "$GITHUB_ENV"
+      - name: Validate deterministic camera rules
+        run: |
+          mkdir -p "$TRIAL/evidence"
+          node "$TRIAL/tests/director-unit.mjs" > "$TRIAL/evidence/unit-results.json"
+      - name: Serve isolated trial without deployment
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/director-http.log" 2>&1 &
+          for n in $(seq 1 20); do curl --fail --silent "http://127.0.0.1:8765/$TRIAL/" >/dev/null && exit 0; sleep 1; done
+          exit 1
+      - name: Render original scene and verify pause restore input
+        env:
+          DIRECTOR_TRIAL_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/director-camera-r01/
+        run: node "$TRIAL/tests/browser.cjs"
+      - name: Keep real screenshots and diagnostics including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: director-camera-r01-${{ github.sha }}
+          path: kaopu-minigame-workbench/voxel-train-study/game/director-camera-r01/evidence/
+          retention-days: 7
+          if-no-files-found: warn

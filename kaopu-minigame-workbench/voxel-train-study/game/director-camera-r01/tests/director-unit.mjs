@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';import fs from 'node:fs';import {validateScore,sampleScore,createDirector} from '../source/director.mjs';
+const score=JSON.parse(fs.readFileSync(new URL('../source/camera-score.json',import.meta.url)));let tests=[];
+const check=(name,f)=>{f();tests.push({name,passed:true});};
+check('valid score',()=>assert.equal(validateScore(score),true));
+check('reject malformed time',()=>assert.throws(()=>validateScore({...score,keys:[...score.keys,{...score.keys.at(-1)}]})));
+check('all samples finite',()=>{for(let i=0;i<=240;i++){const p=sampleScore(score,i/10);assert(p.position.every(Number.isFinite));assert(p.target.every(Number.isFinite));}});
+check('deterministic sampling',()=>assert.deepEqual(sampleScore(score,12.123),sampleScore(score,12.123)));
+check('continuous boundary positions',()=>{for(const t of [8,16])assert(Math.hypot(...sampleScore(score,t-.0001).position.map((v,i)=>v-sampleScore(score,t+.0001).position[i]))<.001);});
+const base={position:[1,2,3],target:[0,0,0],fov:45,zoom:1};let pose=structuredClone(base);const make=(inspect)=>createDirector({score,readPose:()=>pose,writePose:p=>pose=p,boundPose:(position,target)=>({position,target}),inspect});
+check('repeat play does not replace restore point',()=>{const d=make();d.start(100);d.update({elapsed:101});assert.equal(d.start(101),false);d.stop();assert.deepEqual(pose,base);});
+check('pause equal elapsed gives equal camera',()=>{const d=make();d.start(0);d.update({elapsed:4});const a=structuredClone(pose);d.update({elapsed:4});assert.deepEqual(a,pose);d.stop();});
+check('end restores original and no restart',()=>{const d=make();d.start(7);d.update({elapsed:31});assert.deepEqual(pose,base);assert.equal(d.state().reason,'completed');assert.equal(d.update({elapsed:32}),null);});
+check('backward world clock exits safely',()=>{const d=make();d.start(5);d.update({elapsed:4});assert.equal(d.state().reason,'invalid-world-time');assert.deepEqual(pose,base);});
+check('collision blocks camera then restores',()=>{const d=make(()=>({safe:false}));d.start(0);d.update({elapsed:1});assert.equal(d.state().reason,'collision');assert.deepEqual(pose,base);});
+check('one-click stop is idempotent',()=>{const d=make();d.start(0);assert.equal(d.stop(),true);assert.equal(d.stop(),false);});
+check('dispose restores camera',()=>{const d=make();d.start(0);d.update({elapsed:2});d.dispose();assert.deepEqual(pose,base);});
+console.log(JSON.stringify({passed:tests.length,tests},null,2));
