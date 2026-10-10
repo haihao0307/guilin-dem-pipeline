@@ -1,0 +1,108 @@
+{
+  "schema": "kaopu.learning-probe-result/1",
+  "cycle": "N129",
+  "subject": "Tailor R04.2 explicit failure-state observability",
+  "boundedQuestion": "Does the exact R04.2 tested/public subject classify every one of the 60 presets into an explicit, reason-bearing display outcome without claiming the failures are fixed?",
+  "existingFailure": "The user encountered cards with errors or no visible garment and had to infer whether the cause was loading, solver abort, material rejection or display failure.",
+  "externalEvidence": [
+    {
+      "source": "Google SRE, Monitoring Distributed Systems",
+      "url": "https://sre.google/sre-book/monitoring-distributed-systems/",
+      "fact": "Operational evidence should distinguish the user-visible symptom (what is broken) from the cause (why), and human-facing signals should be actionable."
+    },
+    {
+      "source": "NASA Systems Engineering Handbook",
+      "url": "https://science.nasa.gov/wp-content/uploads/2023/04/nasa_systems_engineering_handbook_0.pdf",
+      "fact": "Validation analyzes anomalies, recommends corrective actions and resolves them before product transition."
+    }
+  ],
+  "comparisonToCurrentOS": "NO_NOVELTY: R2 already requires explicit failed states, no silent fallback, exact tested subjects and prevents user-first QA.",
+  "hypothesis": "If R04.2 requires an exact 60-member union of result-or-explicit-failure, reason-complete failure rows, distinct resource-read errors, and exact-subject public readback, the empty/error-card correction will pass while all unresolved garments remain HOLD.",
+  "exactSubjects": {
+    "native": "bbe7256cacc5d0698de2b8fbc70ff4a483ab245f",
+    "runtimePublic": "e292aa796e434aad4acce85b146ea62ba3692263",
+    "excludedCurrentPrHead": "f6da4075a8440b70682570320b58302cdeb21f0a"
+  },
+  "checks": [
+    {
+      "id": "original-presets-60",
+      "passed": true,
+      "observed": 60
+    },
+    {
+      "id": "result-rows-45",
+      "passed": true,
+      "observed": 45
+    },
+    {
+      "id": "explicit-failed-rows-15",
+      "passed": true,
+      "observed": 15
+    },
+    {
+      "id": "member-union-60",
+      "passed": true,
+      "observed": 60
+    },
+    {
+      "id": "result-failure-overlap-zero",
+      "passed": true,
+      "observed": 0
+    },
+    {
+      "id": "static-pass-9",
+      "passed": true,
+      "observed": 9
+    },
+    {
+      "id": "result-needs-repair-36",
+      "passed": true,
+      "observed": 36
+    },
+    {
+      "id": "failed-reasons-complete",
+      "passed": true,
+      "observed": "15/15"
+    },
+    {
+      "id": "failure-phases-explicit",
+      "passed": true,
+      "observed": {
+        "native-solve-abort": 12,
+        "native-material-rejected": 3
+      }
+    },
+    {
+      "id": "public-no-result-filter",
+      "passed": true,
+      "observed": 15
+    },
+    {
+      "id": "resource-read-error-separate-and-public-zero",
+      "passed": true,
+      "observed": 0
+    },
+    {
+      "id": "subject-binding-and-acceptance-boundary",
+      "passed": true,
+      "observed": {
+        "publicEvidenceHead": "e292aa796e434aad4acce85b146ea62ba3692263",
+        "currentPrHeadRuns": 0,
+        "userAccepted": false,
+        "finalVisualQualityAccepted": false
+      }
+    }
+  ],
+  "result": "R042_FAILURE_STATE_OBSERVABILITY_VERIFIED_SCOPED__HOLD_REMAINING_VISUAL_FIXES_AND_PHYSICS",
+  "boundary": "Exact R04.2 subjects and fixed public prefix only; later R04.3 payload WIP and all physical/fit/composition/parameter requirements remain unverified.",
+  "adoption": "UPDATE_EXISTING_REGRESSION_CASE_NO_NOVELTY",
+  "metrics": {
+    "firstCandidatePassRate": "unknown",
+    "userCorrectionCount": 1,
+    "sameClassRecurrenceRate": "unknown",
+    "rejectedLineageInheritanceCount": "unknown",
+    "staleDeliveryCount": 0,
+    "internalIterationsPerAcceptedDelta": "unknown",
+    "instructionToLegalCandidateTime": "unknown"
+  }
+}
