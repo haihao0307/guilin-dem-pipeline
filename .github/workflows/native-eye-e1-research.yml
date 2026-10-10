@@ -2,7 +2,7 @@ name: Native eye E1 research comparison
 on:
   push:
     branches: [research/native-eye-e1-20261010]
-    paths: ['kaopu-unified-human-workbench/eye-optics-r01/**', '.github/workflows/native-eye-e1-research.yml']
+    paths: ['kaopu-unified-human-workbench/eye-optics-r01/**', 'kaopu-unified-human-workbench/eye-optics-r02/**', '.github/workflows/native-eye-e1-research.yml']
 permissions:
   contents: read
 concurrency:
@@ -25,6 +25,7 @@ jobs:
         run: |
           mkdir -p qa-eye-e1
           node kaopu-unified-human-workbench/eye-optics-r01/verify.mjs > qa-eye-e1/cpu.json
+          node kaopu-unified-human-workbench/eye-optics-r02/verify.mjs > qa-eye-e1/cpu-e2.json
       - name: Install isolated pinned browser runner
         run: |
           npm install --prefix /tmp/e1-tools --no-audit --no-fund playwright@1.56.1
@@ -32,7 +33,7 @@ jobs:
       - name: Compare on unchanged ET13 native canvas
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/e1-http.log 2>&1 &
-          node kaopu-unified-human-workbench/eye-optics-r01/verify-browser.cjs
+          QA_OUT=qa-eye-e1/e2 node kaopu-unified-human-workbench/eye-optics-r02/verify-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {connectedComponents,fitNativeIris,intersectIris} from './NativeEyeLayers.mjs';
+import {patchCornealShader} from './NativeCornealBridge.mjs';
+import {patchEyeShader} from '../eye-optics-r01/NativeEyeOptics.mjs';
+const checks=[],test=(name,f)=>{f();checks.push({name,pass:true});};
+test('topology recovers disconnected surfaces without index ranges',()=>assert.deepEqual(connectedComponents([9,2,4,1,7,5],[[9,4,7],[2,1,5]]),[[9,4,7],[2,1,5]]));
+test('ambiguous cross-membership triangle rejected',()=>assert.throws(()=>connectedComponents([0,1],[[0,1,2]])));
+const P=[],F=[];for(let y=-5;y<=5;y++)for(let x=-5;x<=5;x++){const u=x/5,v=y/5;if(Math.hypot(u,v)>1)continue;P.push(.03+u*.005,.2+v*.005,.1+.0005*u*u+.0007*v*v);F.push(u,v,1,0);}const vertices=Array.from({length:P.length/3},(_,i)=>i),fit=fitNativeIris(vertices,P,F);
+test('native curved iris fit retains millimetre scale',()=>{assert(fit.rmsMicrometres<1e-6);assert(Math.abs(fit.irisRadiusMM[0]-5)<1e-10);});
+test('ray meets existing curved iris center',()=>{const hit=intersectIris([.03,.2,.104],[0,0,-1],fit);assert(Math.abs(hit.t-.004)<1e-10);assert(Math.hypot(...hit.q)<1e-10);});
+test('off-axis quadratic hit is finite and positive',()=>{const hit=intersectIris([.031,.2,.104],[.15,0,-Math.sqrt(1-.15*.15)],fit);assert(hit.t>0&&hit.q.every(Number.isFinite));});
+test('optical shader retains one opaque depth path and reversible diagnostic',()=>{const s={uniforms:{},vertexShader:'void main() {\n#include <begin_vertex>\n}',fragmentShader:'vec3 fEyeColor(){return vec3(1.);}\nvoid main() {\n#include <lights_physical_fragment>\n#include <lights_fragment_begin>\n}'};patchEyeShader(s,{});patchCornealShader(s,{});assert(s.fragmentShader.includes('refract(I,N,1./uE2IOR)'));assert(s.fragmentShader.includes('e2TissueQ=e2Lookup()'));assert(s.fragmentShader.includes('uE2Mode<1.5&&vE2Layer>1.5)discard'));assert(!s.fragmentShader.includes('gl_FragDepth'));});
+console.log(JSON.stringify({pass:true,checks,fit},null,2));
