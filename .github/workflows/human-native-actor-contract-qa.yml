@@ -1,0 +1,36 @@
+name: Native human same-world and palm contract probe
+on:
+  push:
+    branches: ['qa/human-native-actor-contract-20261010']
+    paths:
+      - 'kaopu-unified-human-workbench/tests/native-actor-contract-browser.cjs'
+      - 'kaopu-unified-human-workbench/tests/native-actor-contract/**'
+      - '.github/workflows/human-native-actor-contract-qa.yml'
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-unified-human-workbench/tests
+      - name: Install fixed official browser package
+        run: npm install --prefix "$RUNNER_TEMP/native-actor" --no-save --ignore-scripts playwright@1.57.0
+      - name: Install real Chromium
+        run: |
+          "$RUNNER_TEMP/native-actor/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/native-actor/node_modules" >> "$GITHUB_ENV"
+      - name: Check independent R02 contract regression
+        run: node --test kaopu-unified-human-workbench/tests/native-actor-contract/hand-anchor-r02.test.mjs
+      - name: Read-only actual native actor and room probe
+        run: node kaopu-unified-human-workbench/tests/native-actor-contract-browser.cjs
+      - name: Preserve actual probe results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-actor-contract-${{ github.sha }}
+          path: native-actor-contract-results/
+          retention-days: 7
