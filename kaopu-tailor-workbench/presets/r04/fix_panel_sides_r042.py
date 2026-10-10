@@ -21,7 +21,7 @@ for name in ['native-adapter.mjs','budget-probe.mjs']:
  proof['files'][name]={'beforeSHA256':hashlib.sha256(before.encode()).hexdigest(),'afterSHA256':hashlib.sha256(s.encode()).hexdigest(),'onlyRoleRegexChanged':True}
 for path in sorted((P/'assets/papers').glob('*.json.gz')):
  d=json.loads(gzip.decompress(path.read_bytes()))
- changed=[{'panelId:p['id'],'was':'front','now':'back','originalTranslationMm':p['placement']['translationMm']} for p in d['panels'] if re.search(r'_b$',p['id'])]
+ changed=[{'panelId':p['id'],'was':'front','now':'back','originalTranslationMm':p['placement']['translationMm']} for p in d['panels'] if re.search(r'_b$',p['id'])]
  if changed:proof['affected'].append({'id':path.name.split('.')[0],'panels':changed,'paperSHA256':hashlib.sha256(path.read_bytes()).hexdigest()})
 assert len(proof['affected'])==18
 proof['affectedPresetCount']=len(proof['affected']);proof['affectedPanelCount']=sum(len(r['panels']) for r in proof['affected'])
