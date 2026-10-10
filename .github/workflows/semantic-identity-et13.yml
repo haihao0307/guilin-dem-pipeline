@@ -1,0 +1,55 @@
+name: ET13 semantic face identity
+on:
+  push:
+    branches: [feature/common-human-identity-et13-20261010]
+    paths: ['kaopu-unified-human-workbench/identity-lab/**', '.github/workflows/semantic-identity-et13.yml']
+permissions:
+  contents: write
+concurrency:
+  group: semantic-identity-et13
+  cancel-in-progress: false
+jobs:
+  identity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NODE_PATH: /tmp/et13-tools/node_modules
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-unified-human-workbench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated fixed build and browser tools
+        run: |
+          npm install --prefix /tmp/et13-tools --no-audit --no-fund esbuild@0.25.10 playwright@1.56.1
+          /tmp/et13-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Build from unchanged ET12 native entry
+        run: node kaopu-unified-human-workbench/identity-lab/build.cjs
+      - name: Test actual generated geometry and visible skin changes
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/et13-http.log 2>&1 &
+          node kaopu-unified-human-workbench/identity-lab/verify.cjs
+      - name: Publish validated build to its own review branch only
+        run: |
+          git config user.name 'KAOPU Identity Workbench'
+          git config user.email 'kaopu-workbench@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/identity-lab/preview.html kaopu-unified-human-workbench/identity-lab/BUILD.json kaopu-unified-human-workbench/full/ui/identity-app.generated.mjs
+          if ! git diff --cached --quiet; then
+            git commit -m 'build(identity): ET13 checked semantic identity preview [skip ci]'
+            git push origin HEAD:feature/common-human-identity-et13-20261010
+          fi
+      - name: Verify immutable public URL in a real browser
+        run: PUBLIC_COMMIT=$(git rev-parse HEAD) node kaopu-unified-human-workbench/identity-lab/verify.cjs
+      - name: Include exact new source and verification evidence
+        if: always()
+        run: |
+          mkdir -p qa-et13
+          zip -qr qa-et13/identity-source.zip kaopu-unified-human-workbench/identity-lab kaopu-unified-human-workbench/full/ui/identity-app.generated.mjs || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: et13-identity-${{ github.run_number }}
+          path: qa-et13/
+          retention-days: 14
