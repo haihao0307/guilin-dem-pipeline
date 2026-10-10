@@ -1,0 +1,56 @@
+name: Native eye E1 research comparison
+on:
+  push:
+    branches: [research/native-eye-e1-20261010]
+    paths: ['kaopu-unified-human-workbench/eye-optics-r01/**', 'kaopu-unified-human-workbench/eye-optics-r02/**', '.github/workflows/native-eye-e1-research.yml']
+permissions:
+  contents: read
+concurrency:
+  group: native-eye-e1-research
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NODE_PATH: /tmp/e1-tools/node_modules
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-unified-human-workbench
+      - name: Read immutable failing optical shader reference
+        uses: actions/checkout@v4
+        with:
+          ref: ae2bd8073deeb5e3a694f757e452c939e158b5de
+          path: .qa-eye-reference
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            kaopu-unified-human-workbench/eye-optics-r01/NativeEyeOptics.mjs
+            kaopu-unified-human-workbench/eye-optics-r02/NativeCornealBridge.mjs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: CPU source reproduction and optical reference checks
+        run: |
+          mkdir -p qa-eye-e1
+          node kaopu-unified-human-workbench/eye-optics-r01/verify.mjs > qa-eye-e1/cpu.json
+          node kaopu-unified-human-workbench/eye-optics-r02/verify.mjs > qa-eye-e1/cpu-e2.json
+      - name: Install isolated pinned browser runner
+        run: |
+          npm install --prefix /tmp/e1-tools --no-audit --no-fund playwright@1.56.1
+          /tmp/e1-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Compare on unchanged ET13 native canvas
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/e1-http.log 2>&1 &
+          stability_status=0; browser_status=0
+          EYE_REFERENCE_ROOT=.qa-eye-reference EYE_FOCUSED=1 QA_OUT=qa-eye-e1/reference-ae2bd807 node kaopu-unified-human-workbench/eye-optics-r02/verify-stability.cjs || true
+          QA_OUT=qa-eye-e1/stability node kaopu-unified-human-workbench/eye-optics-r02/verify-stability.cjs || stability_status=$?
+          QA_OUT=qa-eye-e1/e2 node kaopu-unified-human-workbench/eye-optics-r02/verify-browser.cjs || browser_status=$?
+          node kaopu-unified-human-workbench/eye-optics-r02/verify-controlled-ab.cjs
+          test "$stability_status" = 0 && test "$browser_status" = 0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-eye-e1-${{ github.sha }}
+          path: qa-eye-e1
+          retention-days: 14
