@@ -12,7 +12,10 @@ export function stationOffset(target,distance){return target-distance;}
 // Keep the platform-to-train sightline clear; source foliage meshes remain intact.
 export function floraPlacementZ(sourceZ,spec=FLAT_WORLD){return sourceZ>0?sourceZ+spec.platformFoliageOffset:sourceZ;}
 export function flatActor(actor,distance,frontX=5){
-  if(actor.frame!=='world')return actor;
+  // Rendering must never hand a live Session actor to the body-motion adapter.
+  // That adapter assigns its transformed position; aliasing accumulated sway
+  // in the simulation even while its authoritative clock was paused.
+  if(actor.frame!=='world')return{...actor,position:actor.position.slice()};
   return{...actor,frame:'train',position:[actor.position[0]-distance+frontX,actor.position[1],actor.position[2]]};
 }
 const modulo=(x,n)=>((x%n)+n)%n;

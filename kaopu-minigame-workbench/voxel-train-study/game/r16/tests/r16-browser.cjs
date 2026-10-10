@@ -22,8 +22,9 @@ const args = ['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swifts
 const VIEWPORT = {width: 1280, height: 720};
 const VERSION = 'kcr-kst1-r16';
 const selectedCases = process.env.TRAIN_QA_CASES ? new Set(process.env.TRAIN_QA_CASES.split(',').map(x => x.trim()).filter(Boolean)) : null;
-const knownCases = ['cold-warm', 'native-journey', 'delayed-score', 'score-failure', 'context-recovery', 'comparison-r14', 'comparison-r16',
+const knownCases = ['cold-warm', 'native-journey', 'delayed-score', 'score-failure', 'comparison-r14', 'comparison-r16',
   'plain-context-r14', 'plain-context-r16'];
+if (selectedCases) assert(selectedCases.size > 0, 'TRAIN_QA_CASES must select at least one case');
 if (selectedCases) for (const name of selectedCases) assert(knownCases.includes(name), 'Unknown TRAIN_QA_CASES entry: ' + name);
 const checks = [], failures = [], consoleMessages = [], pageErrors = [], requests = [], responseErrors = [], requestFailures = [], prohibitedRequests = [];
 const launchStarted = performance.now(), runnerCPU = process.cpuUsage();
@@ -419,7 +420,9 @@ async function nativeJourney(page) {
   // geometry checks and multiple automation round trips can consume seconds of
   // genuine driving each. Do not spend that time exercising notch 3 here.
   const departure = await state(page); assert.equal(departure.throttle, 1);
-  await until(page, () => { const s = __trainDriver.getState(); return s.distance + s.velocity * s.velocity / (2 * 3.10) >= 27; }, null, {polling: 25});
+  await until(page, () => { const s = __trainDriver.getState(); return s.distance + s.velocity * s.velocity / (2 * 3.10) + s.velocity * 2.5 >= 25; }, null, {polling: 25});
+  // Anticipate 2.5 seconds of CI input/observation latency while remaining on
+  // the production clock. This does not advance or place the simulation.
   const beforeBrake = await state(page), brakeSentAt = performance.now();
   // Trusted Space uses the production keyboard brake directly, without several
   // extra geometry/mouse-position round trips while the train keeps moving.
@@ -429,8 +432,8 @@ async function nativeJourney(page) {
   await page.keyboard.up('Space'); await until(page, () => !__trainDriver.getState().brake);
   const stopped = await state(page);
   write('native-near-braking.json', {departure, beforeBrake, brakeAccepted, stopped, brakeObservedRoundTripMs: performance.now() - brakeSentAt,
-    kind: 'trusted-keyboard-production-clock', fixtureStateWrites: false});
-  assert(stopped.distance >= 20 && stopped.distance <= 65, 'Native braking stops in the near-street interval: ' + stopped.distance);
+    kind: 'trusted-keyboard-production-clock', fixtureStateWrites: false, predictor: {targetMetres: 25, inputLatencyAllowanceSeconds: 2.5}});
+  assert(stopped.distance >= 20 && stopped.distance <= 40, 'Native braking stops in the near-street interval: ' + stopped.distance);
   assert.equal(stopped.throttle, 0); await activeStreet(page); streetAssertions(await state(page));
   // Exercise the actual held mouse brake once stationary, preserving near-view
   // distance while testing the same production control and trusted pointer path.
@@ -458,8 +461,15 @@ async function nativeJourney(page) {
   await page.keyboard.up('Space'); await until(page, () => !__trainDriver.getState().brake);
   await page.setViewportSize(VIEWPORT); await clickControl(page, 'landscapeView'); await camera(page, 'city');
   // Shared-clock freeze checks include actual cloth vertices and actor/body state.
+  const beforePauseFrame = (await state(page)).frames;
   input.push(await inputLatency(page, 'pause button', () => clickTarget(page, '#pause'), () => __trainDriver.getState().paused));
-  await page.waitForTimeout(300); const paused = await inspect(page);
+  // Session pauses in the input handler; smoke/people/cloth receive that state
+  // in the next production draw. Start the exact freeze comparison only once
+  // that draw actually committed, rather than comparing to the last live frame.
+  await until(page, previous => { const s = __trainDriver.getState();
+    return s.paused && s.frames > previous && s.steam?.paused === true && s.streetDistrict.elapsed === s.elapsed;
+  }, beforePauseFrame);
+  const paused = await inspect(page);
   await page.waitForTimeout(700); const still = await inspect(page);
   assert.equal(still.state.tick, paused.state.tick); assert.equal(still.state.elapsed, paused.state.elapsed); assert.equal(still.state.streetDistrict.elapsed, paused.state.streetDistrict.elapsed);
   assert.deepEqual(still.motion, paused.motion, 'Cloth, people, steam and train bodies freeze together');
@@ -572,21 +582,6 @@ async function scoreFailure(page) {
   assert.equal(evidence.state.proof.addedCoaches, 2); assert.equal(evidence.state.streetDistrict.active, false); assert(evidence.state.drawCalls > 0);
   return {intentionalStatus: 503, fixtureStateWrites: false, originalTrainControlsUsable: true, state: evidence.state};
 }
-async function contextRecovery(page) {
-  await instrument(page); await open(page); await activeStreet(page); await clickTarget(page, '#startGame');
-  const supported = await page.evaluate(() => {
-    const gl = document.getElementById('gameScene').getContext('webgl2'), extension = gl.getExtension('WEBGL_lose_context');
-    if (!extension) return false; window.__r16RestoreContext = () => extension.restoreContext(); extension.loseContext(); return true;
-  });
-  if (!supported) return {supported: false, tested: false, reason: 'WEBGL_lose_context is unavailable; no synthetic event substituted'};
-  await until(page, () => __trainDriver.getState().paused && __r16QA.contextEvents.some(e => e.type === 'webglcontextlost'));
-  const lost = await state(page); await page.waitForTimeout(250); await page.evaluate(() => __r16RestoreContext());
-  await until(page, () => __r16QA.contextEvents.some(e => e.type === 'webglcontextrestored'), null, {timeout: 30000});
-  await until(page, () => document.getElementById('loading').hidden); // production restoration hides interruption notice
-  await clickTarget(page, '#resume'); await clickTarget(page, '#accelerate'); await until(page, t => __trainDriver.getState().elapsed > t, lost.elapsed);
-  const restored = await shot(page, '09-webgl-context-restored'); assert.equal(restored.contextLost, false); assert(restored.renderer.programs.every(p => p.linked));
-  return {supported: true, lost, restored: restored.state, events: await page.evaluate(() => __r16QA.contextEvents)};
-}
 // Explicit minimal diagnostic: NO route-appended observer, NO WebGL/RAF/API
 // wrappers, NO initObservation. Only native start/resume plus the standardized
 // WEBGL_lose_context interruption, and read-only public state/screenshots.
@@ -652,16 +647,15 @@ async function comparison(page, which) {
   try {
     // Exactly one launch. No retry, alternate executable, or sandbox fallback.
     browser = await chromium.launch({headless: true, args});
-    // Diagnostics are opt-in, so ordinary acceptance remains the original suite.
-    if (selectedCases) {
-      await runCase(browser, 'plain-context-r14', page => plainContextRecovery(page, 'r14'), {rawPage: true});
-      await runCase(browser, 'plain-context-r16', page => plainContextRecovery(page, 'r16'), {rawPage: true});
-    }
+    // Context recovery is always tested with unmodified production source and
+    // WebGL/RAF methods. The instrumented recovery probe was removed because
+    // its instrumentation interfered with the deliberate context interruption.
+    await runCase(browser, 'plain-context-r14', page => plainContextRecovery(page, 'r14'), {rawPage: true});
+    await runCase(browser, 'plain-context-r16', page => plainContextRecovery(page, 'r16'), {rawPage: true});
     await runCase(browser, 'cold-warm', coldWarm);
     await runCase(browser, 'native-journey', nativeJourney, {storage: true});
     await runCase(browser, 'delayed-score', delayedScore);
     await runCase(browser, 'score-failure', scoreFailure, {expectedScoreFailure: true});
-    await runCase(browser, 'context-recovery', contextRecovery);
     await runCase(browser, 'comparison-r14', page => comparison(page, 'r14'));
     await runCase(browser, 'comparison-r16', page => comparison(page, 'r16'));
   } catch (error) { failures.push({name: 'launch-or-runner', error: String(error), stack: error.stack}); }
@@ -672,11 +666,12 @@ async function comparison(page, which) {
     const shaderConsole = consoleMessages.filter(m => /VALIDATE_STATUS|shader error|shader.*compil|program.*link.*fail|THREE.WebGLProgram.*Error/i.test(m.text));
     const glWarnings = consoleMessages.filter(m => /WebGL.*(?:INVALID_ENUM|INVALID_OPERATION|INVALID_VALUE|OUT_OF_MEMORY|CONTEXT_LOST_WEBGL)|GL_INVALID_|GL_OUT_OF_MEMORY/i.test(m.text));
     const unexpectedHTTP = responseErrors.filter(r => !r.expected), unexpectedNetwork = requestFailures.filter(r => !r.navigationCancellation);
-    const pass = failures.length === 0 && pageErrors.length === 0 && unexpectedConsole.length === 0 && shaderConsole.length === 0 && glWarnings.length === 0 && unexpectedHTTP.length === 0 && unexpectedNetwork.length === 0 && prohibitedRequests.length === 0;
+    const expectedCaseCount = selectedCases ? selectedCases.size : knownCases.length;
+    const pass = checks.length === expectedCaseCount && failures.length === 0 && pageErrors.length === 0 && unexpectedConsole.length === 0 && shaderConsole.length === 0 && glWarnings.length === 0 && unexpectedHTTP.length === 0 && unexpectedNetwork.length === 0 && prohibitedRequests.length === 0;
     let nodeCPUReport = null; try { nodeCPUReport = JSON.parse(fs.readFileSync(path.join(__dirname, '../evidence/street-costs.json'), 'utf8')); } catch {}
-    const report = {pass, selectedCases: selectedCases ? [...selectedCases] : 'default-seven-cases', diagnosticOnly: !!selectedCases, scope: selectedCases ? 'SELECTED SUBSET ONLY; omitted cases are not revalidated by this run' : 'Default seven-case acceptance suite', base, baseline, commit: process.env.GITHUB_SHA || null, browserVersion, playwright: require('playwright/package.json').version, launchArgs: args,
+    const report = {pass, expectedCaseCount, completedCaseCount: checks.length, selectedCases: selectedCases ? [...selectedCases] : 'default-eight-cases', diagnosticOnly: !!selectedCases, scope: selectedCases ? 'SELECTED SUBSET ONLY; omitted cases are not revalidated by this run' : 'Default eight-case acceptance suite including two uninstrumented context-recovery cases', base, baseline, commit: process.env.GITHUB_SHA || null, browserVersion, playwright: require('playwright/package.json').version, launchArgs: args,
       environment: {os: process.platform, architecture: process.arch, softwareRasterizer: 'ANGLE SwiftShader requested explicitly; inspect rendererName in every capture for verification', physicalDeviceTest: false},
-      evidenceBoundary: 'Cold/warm is unmodified production network. Native journey uses trusted inputs and production time with read-only observation. Score/network and context interruptions are explicit fixtures. R14/R16 comparison alone uses deterministic state placement. No R15 entry/assets requested. Functional pass does not constitute an independent artistic/film-quality approval.',
+      evidenceBoundary: 'Cold/warm is unmodified production network. Native journey uses trusted inputs and production time with read-only observation. Score/network interruptions are explicit fixtures. R14/R16 context interruptions use unmodified production pages with no GL/RAF wrappers. R14/R16 comparison alone uses deterministic state placement. No R15 entry/assets requested. Functional pass does not constitute an independent artistic/film-quality approval.',
       wallMs: performance.now() - launchStarted,
       costs: {runnerNodeCPU: process.cpuUsage(runnerCPU), runnerNodeCPUBoundary: 'Only the Node automation process CPU; excludes Chromium and SwiftShader.', existingNodeGeometryReport: nodeCPUReport,
         browserBoundary: 'Actual browser renderer, driver resource counts, frame/callback/render durations and optional GPU query samples are in each case. Generated mesh bytes are not a browser GPU-performance measure. First-load parse/build/upload are not independently isolated; navigation timings and first render after each lifecycle transition are recorded.'},

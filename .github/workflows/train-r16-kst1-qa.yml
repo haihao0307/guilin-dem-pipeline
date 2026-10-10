@@ -35,6 +35,7 @@ jobs:
           node --check "$GAME/r16/tests/r16-browser.cjs"
           node --test "$GAME"/tests/*.test.mjs "$GAME"/*.test.mjs "$GAME"/r16/tests/*.test.mjs "$GAME"/r16/street/*.test.mjs 2>&1 | tee train-r16-results/unit.txt
       - name: Serve exact candidate without deployment
+        id: serve
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/train-r16-server.log" 2>&1 &
           for n in $(seq 1 30); do
@@ -46,8 +47,13 @@ jobs:
         env:
           TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r16/
           TRAIN_QA_OUT: train-r16-results/browser
-          TRAIN_QA_CASES: plain-context-r16,plain-context-r14,native-journey
         run: node "$GAME/r16/tests/r16-browser.cjs"
+      - name: Measure clean uninstrumented cold and warm startup
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        env:
+          TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r16/
+          TRAIN_CLEAN_QA_OUT: train-r16-results/clean
+        run: node "$GAME/r16/tests/r16-clean-startup.cjs"
       - name: Preserve screenshots, exact source hashes, timings and failures
         if: always()
         uses: actions/upload-artifact@v4
