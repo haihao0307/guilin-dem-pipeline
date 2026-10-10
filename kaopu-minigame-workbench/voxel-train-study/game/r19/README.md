@@ -10,8 +10,8 @@ Self-contained function runtime inside the existing train game. No imports into 
 
 ## Different renderer
 
-- Cross-parcel batches share twelve procedural material families. Colour, age, repair, moisture, salt exposure, façade grids and origins remain per-instance/per-vertex data.
-- Runtime-created triangle geometry is retained, not replaced by box impostors. Per-vertex shader input buffers cost more memory in exchange for fewer submissions; measure this explicitly.
+- Cross-parcel batches share twelve procedural material families. Colour, age, repair, moisture, salt exposure, façade grids and origins remain per-instance/per-vertex indexed data.
+- Runtime-created triangle geometry is retained, not replaced by box impostors. Each vertex/instance carries one appearance-table index; bounded24-entry uniform tables preserve all weather parameters without duplicating20 floats on every vertex. Measure real GPU buffers and draw submission costs explicitly.
 - Cloth uses the same shared elapsed-time displacement in vertex shaders, with analytic normals and matching shadow displacement. It is analytic wind, not physical cloth simulation. Vertex position equivalence is tested; visual normal equivalence requires real WebGL review.
 - Source recipe handles retain ownership and validate triangle/clearance limits. Only batch renderer objects enter the scene. Accounting is recomputed at topology changes instead of twice every frame.
 

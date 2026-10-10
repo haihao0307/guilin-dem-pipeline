@@ -52,7 +52,10 @@ vec3 stQ=stP+vec3(stSeed,stSeed*.71,stSeed*.37);
 float stLarge=stNoise(stQ*.63);
 float stPatch=stNoise(stQ*3.7);
 float stFootprint=max(length(dFdx(stP)),length(dFdy(stP)));
-float stFine=mix(stNoise(stQ*127.0),.5,smoothstep(.003,.021,stFootprint));
+// Beyond the microstructure footprint the original mix is exactly .5.
+// Avoid evaluating eight hash corners for detail that has zero contribution.
+float stFine=.5;
+if(stFootprint<.021) stFine=mix(stNoise(stQ*127.0),.5,smoothstep(.003,.021,stFootprint));
 float stFresh=smoothstep(1.0-stRepair*.64,1.08-stRepair*.64,stLarge);
 // Rising moisture, floor ledges and paired sill edges are separate sources.
 float stRising=1.0-smoothstep(.12,.48+stLarge*.95,max(stP.y,0.0));

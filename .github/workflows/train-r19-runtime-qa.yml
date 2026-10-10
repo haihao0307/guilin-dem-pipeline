@@ -26,10 +26,12 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/train-r19" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/train-r19/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/train-r19/node_modules" >> "$GITHUB_ENV"
+          sudo apt-get install -y --no-install-recommends ffmpeg
       - name: Verify source contracts and unchanged layouts
         run: |
           set -o pipefail
           mkdir -p train-r19-results
+          export R19_QA_OUT=train-r19-results/cpu
           node --test "$GAME/r19/tests/"*.test.mjs 2>&1 | tee train-r19-results/unit.txt
       - name: Serve exact candidate
         run: |
@@ -43,6 +45,11 @@ jobs:
         env:
           TRAIN_QA_OUT: train-r19-results/profile
         run: node "$GAME/r19/tests/r19-webgl-profile.cjs"
+      - name: Native first station to second without fixture placement
+        env:
+          TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r19/
+          TRAIN_QA_OUT: train-r19-results/native
+        run: node "$GAME/r19/tests/r19-native-browser.cjs"
       - name: Retain evidence including failures
         if: always()
         uses: actions/upload-artifact@v4
