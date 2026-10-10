@@ -23,10 +23,12 @@ export function attachRegionalSkin(skin,api=installRegionalSkin(skin.viewer.mode
  if(!skin.faceExtension)throw Error('Attach FaceSkin first');
  const m=skin.viewer.model,f=m.faceSurface.fields,L=f.landmark(f.rest,31),R=f.landmark(f.rest,35);
  if(![...L,...R].every(Number.isFinite))throw Error('Native nasal alar landmarks invalid');
- const U={uRAla:{value:{x:L[0]*1000,y:L[1]*1000,z:R[0]*1000,w:R[1]*1000}},uRLipFiltering:{value:1},uRDebug:{value:0}};
+ const eyeWindow=(a,b)=>{const p=f.landmark(f.rest,a),q=f.landmark(f.rest,b),width=Math.hypot(p[0]-q[0],p[1]-q[1])*1000;if(!Number.isFinite(width)||width<5||width>70)throw Error('Native orbital landmarks invalid');return{x:(p[0]+q[0])*500,y:(p[1]+q[1])*500,z:width*.68,w:width*.44};};
+ const orbitalL=eyeWindow(36,39),orbitalR=eyeWindow(42,45);
+ const U={uRAla:{value:{x:L[0]*1000,y:L[1]*1000,z:R[0]*1000,w:R[1]*1000}},uROrbitalL:{value:orbitalL},uROrbitalR:{value:orbitalR},uRLipFiltering:{value:1},uRDebug:{value:0}};
  for(const[k]of FIELDS)U['uR'+k[0].toUpperCase()+k.slice(1)]={value:api.settings[k]};
  const before=skin.material.onBeforeCompile,key=skin.material.customProgramCacheKey.bind(skin.material),dispose=skin.dispose.bind(skin);
- const ext={compiles:0,disposed:false,sync(){U.uRLipFiltering.value=api.settings.lipFiltering?1:0;U.uRDebug.value=api.debug?1:0;for(const[k]of FIELDS)U['uR'+k[0].toUpperCase()+k.slice(1)].value=api.settings[k];},report(){return{version:REGION_VERSION,compiles:this.compiles,disposed:this.disposed,alaRestMM:[...L.slice(0,2),...R.slice(0,2)].map(x=>x*1000),newTextures:0,newGeometry:0,eyeMaterialGate:'skin type < 0.5, original face coverage'}}};
+ const ext={compiles:0,disposed:false,sync(){U.uRLipFiltering.value=api.settings.lipFiltering?1:0;U.uRDebug.value=api.debug?1:0;for(const[k]of FIELDS)U['uR'+k[0].toUpperCase()+k.slice(1)].value=api.settings[k];},report(){return{version:REGION_VERSION,compiles:this.compiles,disposed:this.disposed,alaRestMM:[...L.slice(0,2),...R.slice(0,2)].map(x=>x*1000),orbitalWindows:[{...orbitalL},{...orbitalR}],newTextures:0,newGeometry:0,eyeMaterialGate:'skin type < 0.5, original face coverage'}}};
  skin.regionalExtension=ext;api.skins.add(skin);
  skin.material.customProgramCacheKey=()=>key()+'/'+REGION_VERSION+'/'+(api.settings.enabled?'regions':'baseline');
  skin.material.onBeforeCompile=shader=>{before(shader);Object.assign(shader.uniforms,U);if(api.settings.enabled&&!ext.disposed)shader.fragmentShader=patchRegionalShader(shader.fragmentShader);ext.compiles++;};

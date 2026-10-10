@@ -34,7 +34,7 @@ const patched=patchRegionalShader(anchors.join('\n')+'\n'+eye);assert(patched.in
 console.log(JSON.stringify({pass:true,maskCases:values.length,nonSkinLeak:0,gaussianReferenceMaxError:error,sourceAnchors:anchors.length,eyeFunctionUnchanged:true,newTextures:0}));
 const {installRegionalSkin,attachRegionalSkin}=await import('../regions/RegionalSkin.mjs');
 let native={faceParameters:[1,2,3]},renders=0;
-const model={canonical:{topologySha256:'same-native-topology'},archive:()=>structuredClone(native),restore:r=>{native={faceParameters:[...r.faceParameters]};},faceSurface:{fields:{rest:[],landmark:(a,id)=>id===31?[-.01,.27,.1]:[.01,.27,.1]},attachSkin(){}}};
+const model={canonical:{topologySha256:'same-native-topology'},archive:()=>structuredClone(native),restore:r=>{native={faceParameters:[...r.faceParameters]};},faceSurface:{fields:{rest:[],landmark:(a,id)=>({31:[-.01,.27,.1],35:[.01,.27,.1],36:[-.046,.3,.1],39:[-.018,.3,.1],42:[.018,.3,.1],45:[.046,.3,.1]})[id]},attachSkin(){}}};
 const api=installRegionalSkin(model),skin={viewer:{model,render(){renders++;}},faceExtension:{},material:{customProgramCacheKey:()=> 'native',onBeforeCompile(){}},dispose(){this.disposed=true;}};
 const ext=attachRegionalSkin(skin,api);assert.equal(attachRegionalSkin(skin,api),ext);
 let uniforms;for(const enabled of [true,false,true,false,true]){api.set({enabled});const s={fragmentShader:anchors.join('\n'),uniforms:{}};skin.material.onBeforeCompile(s);if(uniforms)assert.equal(s.uniforms.uRAla,uniforms.uRAla);uniforms=s.uniforms;assert.equal(s.fragmentShader.includes('rLipPhase'),enabled);}
@@ -42,3 +42,7 @@ const original=model.archive();api.set({lipDryness:0});model.restore(original);a
 assert.throws(()=>model.restore({...original,regionalSkin:{...original.regionalSkin,settings:{alarOil:100}}}));assert.deepEqual(model.archive(),original);
 model.restore({faceParameters:[1,2,3]});assert.equal(api.settings.enabled,false);assert.deepEqual(native,{faceParameters:[1,2,3]});skin.dispose();assert.equal(api.skins.size,0);assert(ext.disposed);
 console.log(JSON.stringify({pass:true,lifecycleToggles:5,archiveRestoration:true,invalidAtomic:true,legacyOptOut:true,disposal:true,renders}));
+
+for(const [x,y] of [[0,355],[0,250],[32,260],[-32,260]])assert.equal(regionalMasks({face:1,cover:1,thin:.9,x,y}).orbital,0);
+assert(regionalMasks({face:1,cover:1,thin:.9,x:32,y:300}).orbital>.5);
+console.log('Orbital mask rejects forehead, alar and lower-cheek probes');

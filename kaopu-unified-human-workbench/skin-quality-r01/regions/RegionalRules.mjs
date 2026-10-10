@@ -19,10 +19,11 @@ export function validate(input){
 const clamp=x=>Math.max(0,Math.min(1,x));
 export const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a));return t*t*(3-2*t);};
 // Same equations as the shader, for range/semantic validation, not a renderer.
-export function regionalMasks({face=0,cover=0,type=0,lip=0,thin=0,nose=0,x=0,y=0,ala=[[-10,270],[10,270]]}){
+export function regionalMasks({face=0,cover=0,type=0,lip=0,thin=0,nose=0,x=0,y=0,ala=[[-10,270],[10,270]],eyes=[[-32,300,20,13],[32,300,20,13]]}){
  const gate=clamp(face)*clamp(cover)*(type<.5?1:0),l=clamp(lip),core=l*smooth(.15,.85,l),border=4*l*(1-l);
  const alar=Math.max(...ala.map(p=>Math.exp(-(((x-p[0])/4.5)**2+((y-p[1])/5.5)**2))))*clamp(nose);
- return {gate,core:core*gate,border:border*gate,orbital:clamp(thin)*gate,alar:alar*gate};
+ const window=1-smooth(.75,1.35,Math.min(...eyes.map(p=>Math.hypot((x-p[0])/p[2],(y-p[1])/p[3]))));
+ return {gate,core:core*gate,border:border*gate,orbital:clamp(thin)*gate*window,alar:alar*gate};
 }
 export function lipFilterGain(dx,dy){return Math.exp(-(dx*dx+dy*dy)/24);}
 export function response(roughness,coat,coatRoughness,m,s,oilMaster=1){

@@ -2,14 +2,16 @@ export function patchRegionalShader(source){
  const replace=(a,b)=>{if(source.split(a).length!==2)throw Error('Regional ET13 anchor missing/ambiguous: '+a.slice(0,90));source=source.replace(a,()=>b);};
  replace('uniform sampler2D uFAtlas,uFChroma;',`uniform sampler2D uFAtlas,uFChroma;
  uniform float uRLipFiltering,uRLipDryness,uRLipBorderBlend,uROrbitalMicrorelief,uROrbitalRoughness,uRAlarOil,uRDebug;
- uniform vec4 uRAla;
+ uniform vec4 uRAla,uROrbitalL,uROrbitalR;
  `);
  replace('float csSurfaceRough=clamp(',`// All region math is in native rest space, before any screen derivatives.
    float rGate=fMask*csCover*(1.-step(.5,vCSType));
    float rLip=clamp(vFA.y,0.,1.);
    float rCore=rLip*smoothstep(.15,.85,rLip)*rGate;
    float rBorder=4.*rLip*(1.-rLip)*rGate;
-   float rOrbital=clamp(vFA.z,0.,1.)*rGate;
+   vec2 rEL=(fMM-uROrbitalL.xy)/uROrbitalL.zw,rER=(fMM-uROrbitalR.xy)/uROrbitalR.zw;
+   float rEyeWindow=1.-smoothstep(.75,1.35,min(length(rEL),length(rER)));
+   float rOrbital=clamp(vFA.z,0.,1.)*rGate*rEyeWindow;
    vec2 rAL=(fMM-uRAla.xy)/vec2(4.5,5.5),rAR=(fMM-uRAla.zw)/vec2(4.5,5.5);
    float rAlar=max(exp(-dot(rAL,rAL)),exp(-dot(rAR,rAR)))*clamp(vFA.w,0.,1.)*rGate;
    float csSurfaceRough=clamp(`);
