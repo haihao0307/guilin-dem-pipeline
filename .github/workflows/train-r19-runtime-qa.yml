@@ -1,0 +1,54 @@
+name: Train R19 clean runtime batching and real WebGL profile
+on:
+  push:
+    branches: ['qa/train-r19-clean-runtime-20261010']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r19/**'
+      - '.github/workflows/train-r19-runtime-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: train-r19-runtime-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      GAME: kaopu-minigame-workbench/voxel-train-study/game
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Install official pinned browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/train-r19" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/train-r19/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/train-r19/node_modules" >> "$GITHUB_ENV"
+      - name: Verify source contracts and unchanged layouts
+        run: |
+          set -o pipefail
+          mkdir -p train-r19-results
+          node --test "$GAME/r19/tests/"*.test.mjs 2>&1 | tee train-r19-results/unit.txt
+      - name: Serve exact candidate
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/train-r19-server.log" 2>&1 &
+          for n in $(seq 1 30); do
+            curl --fail --silent http://127.0.0.1:8765/$GAME/r19/ >/dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Compare actual baseline and candidate WebGL without deployment
+        env:
+          TRAIN_QA_OUT: train-r19-results/profile
+        run: node "$GAME/r19/tests/r19-webgl-profile.cjs"
+      - name: Retain evidence including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-r19-runtime-${{ github.sha }}
+          path: train-r19-results/
+          compression-level: 0
+          if-no-files-found: warn
+          retention-days: 7
