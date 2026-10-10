@@ -41,6 +41,7 @@ jobs:
           (p/'R0431_PROTECTED.json').write_text(json.dumps({n:hashlib.sha256((p/n).read_bytes()).hexdigest() for n in names},indent=2))
           PY
           python "$P/finish_r0431.py"
+          python "$P/patch_resume_r0431.py"
           for f in "$P"/*.mjs; do node --check "$f"; done
           node "$P/test_parameter_preview_r0431.mjs"
           node "$P/test_editor_unit.mjs"
