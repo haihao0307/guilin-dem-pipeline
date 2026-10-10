@@ -387,6 +387,53 @@ async function coldWarm(page, context) {
   return report;
 }
 
+// Pure validation over observed production frames, also checkable against saved
+// CI JSON without starting a browser. Hysteresis follows the actual placement.
+function assertMotionLifecycle(frames, initial) {
+  const epochs = new Map(), boundaries = [], observations = [];
+  let previous = initial;
+  for (const frame of frames) {
+    const s = frame.state, p = s.streetDistrict, old = previous.streetDistrict;
+    const target = s.routeStations[0].target, offset = target + p.placement.offset - s.distance, radius = Math.abs(offset);
+    const expectedActive = radius <= p.placement.loadRadius ? true : radius > p.placement.unloadRadius ? false : old.active;
+    assert(s.distance >= previous.distance, 'Motion sequence remains genuine forward driving');
+    assert.equal(p.active, expectedActive, 'Actual distance and 240/280 hysteresis determine street presence at ' + s.distance);
+    assert.equal(frame.rootPosition[0], offset, 'Street placement follows actual distance even when released');
+    assert.equal(p.loadCount, old.loadCount + Number(!old.active && expectedActive), 'Only entering the load radius creates a new loading epoch');
+    assert.equal(p.unloadCount, old.unloadCount + Number(old.active && !expectedActive), 'Only crossing the release boundary increments unload count');
+    const observation = {file: frame.file, distance: s.distance, offset, absoluteOffset: radius, expectedActive, active: p.active,
+      status: p.status, loadCount: p.loadCount, unloadCount: p.unloadCount, meshCount: frame.meshIds.length,
+      loadedWithinMetres: p.placement.loadRadius, releasedBeyondMetres: p.placement.unloadRadius,
+      outboundReleaseDistance: target + p.placement.offset + p.placement.unloadRadius};
+    observations.push(observation);
+    if (p.active) {
+      assert.equal(p.status, 'active'); assert.equal(frame.childCount, 1, 'Exactly one complete street root is attached');
+      assert.equal(frame.meshIds.length, p.metrics.meshes, 'Loaded state contains every generated mesh');
+      assert.equal(new Set(frame.meshIds).size, frame.meshIds.length);
+      assert.equal(frame.materials.length, p.metrics.renderMaterials, 'Loaded state contains every render-used street material');
+      assert.deepEqual(p.liveResources, {geometries: p.metrics.geometries, materials: p.metrics.materials}, 'Loaded resource set is complete');
+      const epoch = epochs.get(p.loadCount);
+      if (epoch) {
+        assert.deepEqual(frame.meshIds, epoch.meshIds, 'Mesh identity is stable within active loading epoch ' + p.loadCount);
+        assert.deepEqual(frame.materials.map(m => m.config), epoch.materialConfigs, 'Weather configuration is stable within active loading epoch ' + p.loadCount);
+        epoch.samples++; epoch.lastDistance = s.distance;
+      } else epochs.set(p.loadCount, {loadCount: p.loadCount, samples: 1, firstDistance: s.distance, lastDistance: s.distance,
+        meshIds: frame.meshIds, materialConfigs: frame.materials.map(m => m.config)});
+    } else {
+      assert.equal(p.status, 'released'); assert.equal(frame.childCount, 0, 'Released state detaches the complete street root');
+      assert.equal(frame.meshIds.length, 0); assert.equal(frame.materials.length, 0); assert.equal(frame.motion.cloth.length, 0);
+      assert.deepEqual(p.liveResources, {geometries: 0, materials: 0}, 'Released state owns no street resources');
+    }
+    if (old.active !== p.active) boundaries.push({fromDistance: previous.distance, toDistance: s.distance,
+      fromActive: old.active, toActive: p.active, loadCount: p.loadCount, unloadCount: p.unloadCount,
+      outboundReleaseDistance: observation.outboundReleaseDistance, note: 'Boundary is bracketed by actual observations, not a claim to capture the exact crossing tick.'});
+    previous = s;
+  }
+  return {observations, boundaries, epochs: [...epochs.values()].map(({meshIds, materialConfigs, ...epoch}) => ({...epoch, meshCount: meshIds.length, materialCount: materialConfigs.length})),
+    activeSamples: frames.filter(f => f.state.streetDistrict.active).length, releasedSamples: frames.filter(f => !f.state.streetDistrict.active).length,
+    captureBoundary: 'Each state/geometry snapshot is taken before its asynchronous PNG request. PNG/introspection cost does not pause or alter Session time; this sequence may legitimately span the release boundary.'};
+}
+
 async function nativeJourney(page) {
   await instrument(page); await open(page); await activeStreet(page);
   const input = [], startedAt = performance.now();
@@ -484,13 +531,14 @@ async function nativeJourney(page) {
   await clickTarget(page, '#openSettings'); await clickTarget(page, '#closeSettings'); assert.equal((await state(page)).paused, false);
   await clickTarget(page, '#whistle');
   // Six seconds minimum of actual advancing game, as an inspectable PNG sequence.
+  const motionInitialState = await state(page);
   await page.evaluate(() => __r16Observe.resetTiming()); await clickTarget(page, '#accelerate');
   const motion = [], motionStart = performance.now();
   for (let i = 0; i < 7; i++) {
     if (i) await page.waitForTimeout(1000);
     const f = await shot(page, '05-motion-' + String(i).padStart(2, '0'), 'native-ui-production-clock', false);
     motion.push({file: f.name + '.png', sha256: f.sha256, capturedAfterMs: performance.now() - motionStart, state: f.state, motion: f.motion,
-      rootPosition: f.street.rootPosition, meshIds: f.street.meshIds, materials: f.street.materials});
+      rootPosition: f.street.rootPosition, childCount: f.street.childCount, meshIds: f.street.meshIds, materials: f.street.materials});
     streetAssertions(f.state); assert(f.motion.cloth.every(c => c.pinMaxError < 1e-7), 'Cloth pins stay on authored positions');
     for (const material of f.street.materials) {
       assert.deepEqual(material.worldOffset, f.street.rootPosition, 'Weather shader local anchor follows street origin exactly');
@@ -498,16 +546,35 @@ async function nativeJourney(page) {
     }
   }
   assert(motion.at(-1).capturedAfterMs >= 6000); assert(motion.at(-1).state.distance > motion[0].state.distance);
-  assert(new Set(motion.map(f => f.sha256)).size > 1); assert(new Set(motion.map(f => JSON.stringify(f.motion.cloth))).size > 1);
-  for (const f of motion) { assert.deepEqual(f.meshIds, motion[0].meshIds, 'Street meshes do not switch with camera-side/clock'); assert.deepEqual(f.materials.map(m => m.config), motion[0].materials.map(m => m.config), 'Material weather configuration remains anchored'); }
-  const timing = await inspect(page); write('native-motion-sequence.json', {kind: 'native-ui-production-clock', fixtureStateWrites: false, durationMs: performance.now() - motionStart, frames: motion, timing: timing.timing});
-  // Three actual unload→UI restart→re-entry cycles. Later runs deliberately drive
-  // away without serving the first station; no teleport or accelerated clock.
+  assert(new Set(motion.map(f => f.sha256)).size > 1);
+  const activeMotion = motion.filter(f => f.state.streetDistrict.active);
+  assert(activeMotion.length >= 2, 'At least two actual moving samples show the loaded street');
+  assert(new Set(activeMotion.map(f => JSON.stringify(f.motion.cloth.map(c => c.hash)))).size > 1, 'Cloth changes between genuinely active samples, not merely when released');
+  const motionSummary = assertMotionLifecycle(motion, motionInitialState);
+  const timing = await inspect(page); write('native-motion-sequence.json', {kind: 'native-ui-production-clock', fixtureStateWrites: false,
+    durationMs: performance.now() - motionStart, initialState: motionInitialState, summary: motionSummary, frames: motion, timing: timing.timing});
+  // Screenshot work runs on the genuine clock and can already have driven past
+  // 307m. Re-enter by normal Pause→Restart controls before recording any cycle;
+  // never count that already-finished release as one of the three below.
   await camera(page, 'overview');
+  const lifecyclePreparation = {before: await state(page), restartedThroughNativeUI: false};
+  if (!lifecyclePreparation.before.streetDistrict.active) {
+    if (!lifecyclePreparation.before.paused) await clickTarget(page, '#pause');
+    await clickTarget(page, '#restartPaused'); await activeStreet(page);
+    lifecyclePreparation.restartedThroughNativeUI = true;
+    lifecyclePreparation.after = await state(page);
+    assert.equal(lifecyclePreparation.after.streetDistrict.loadCount, lifecyclePreparation.before.streetDistrict.loadCount + 1);
+    assert.equal(lifecyclePreparation.after.streetDistrict.unloadCount, lifecyclePreparation.before.streetDistrict.unloadCount);
+    assert(lifecyclePreparation.after.distance < 5); assert.equal(lifecyclePreparation.after.seed, served.seed);
+  }
+  write('native-lifecycle-preparation.json', lifecyclePreparation);
+  // Three NEW actual unload→UI restart→re-entry cycles. Later runs deliberately
+  // drive away without serving the first station; no teleport/clock override.
   const cycles = [], recipeMetrics = (await state(page)).streetDistrict.metrics;
   for (let cycle = 0; cycle < 3; cycle++) {
-    while ((await state(page)).throttle < 3) await clickTarget(page, '#accelerate');
     const before = await inspect(page), mark = performance.now();
+    assert.equal(before.state.streetDistrict.active, true, 'Each cycle baseline is an actually loaded street');
+    while ((await state(page)).throttle < 3) await clickTarget(page, '#accelerate');
     await until(page, () => { const s = __trainDriver.getState(), p = s.streetDistrict.placement; return s.distance > s.routeStations[0].target + p.offset + p.unloadRadius && !s.streetDistrict.active; }, null, {timeout: 120000});
     await clickTarget(page, '#pause'); await page.waitForTimeout(150);
     const unloaded = await inspect(page);
@@ -553,7 +620,7 @@ async function nativeJourney(page) {
   const storage = await page.evaluate(keys => Object.fromEntries(keys.map(k => [k, localStorage.getItem(k)])), Object.keys(oldStorage)); assert.deepEqual(storage, oldStorage, 'R14 save, view and quality storage remains byte-for-byte unchanged');
   const events = await page.evaluate(() => __r16QA.events);
   const report = {kind: 'native-ui-production-clock', fixtureStateWrites: false, wallMs: performance.now() - startedAt, served, stopped, shots,
-    portraitGeometry, pause: {paused, still, resumed}, inputLatency: input, cycles, plateau, continued: restored.state, storage, events, preReloadEvents,
+    portraitGeometry, pause: {paused, still, resumed}, inputLatency: input, motionSummary, lifecyclePreparation, cycles, plateau, continued: restored.state, storage, events, preReloadEvents,
     performance: {renderSubmissionMs: stats(timing.timing.renderSubmitMs), animationCallbackMs: stats(timing.timing.frameCallbackMs), frameIntervalMs: stats(timing.timing.frameIntervals), gpuFrameMs: stats(timing.timing.gpuFrameMs), timerAvailable: timing.timing.timerAvailable},
     limitations: ['Viewport emulation is not a physical phone test.', 'Resource counts are instrumented driver/renderer object accounting, not exact device VRAM. Observer wrappers and timer queries add overhead, so timings are instrumented diagnostic measurements.', 'Pixel sequence requires independent visual review for glyph quality, wetness, support placement and grass coverage.']};
   return report;
