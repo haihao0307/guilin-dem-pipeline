@@ -1,0 +1,118 @@
+name: Tailor R04.3 native fitting and outfit verification
+on:
+  push:
+    branches: [feature/tailor-cabinet-r03-garment-surfaces-20261009]
+    paths:
+      - '.github/workflows/tailor-r043-native.yml'
+      - 'kaopu-tailor-workbench/presets/r04/R043_TRIGGER.json'
+permissions:
+  contents: write
+concurrency:
+  group: tailor-r043-native
+  cancel-in-progress: false
+jobs:
+  fit-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      R043_PATTERN_ROOT: /tmp/r043-python
+      R043_PARALLEL: '4'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-tailor-workbench/presets/r04
+          fetch-depth: 1
+      - name: Install checksum-verified source only
+        run: python kaopu-tailor-workbench/presets/r04/install_source_r043.py
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Original compiler and actual browser dependencies
+        run: |
+          pip install numpy==2.2.6 scipy==1.15.3 PyYAML==6.0.2 playwright==1.56.0 Pillow==11.3.0
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y clang lld fonts-noto-cjk
+      - name: Read frozen original solver and original parameter engine
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          C="$P/correctives/r043"
+          REF=976d315ef8bfd7a7351bbac88cd8c7425b363970
+          git fetch origin "$REF" --depth=1
+          git show "$REF:kaopu-tailor-workbench/r07/kernel.cpp" > "$C/kernel-original.cpp"
+          git show "$REF:kaopu-tailor-workbench/r07/global.cpp" > "$C/global-original.cpp"
+          git show "$REF:kaopu-tailor-workbench/r07/stability/joint-refinement.cpp" > "$C/joint-original.cpp"
+          git show "$REF:kaopu-tailor-workbench/garment-pattern-catalogue-r01/browser/pattern-runtime.zip" > /tmp/r043-pattern-runtime.zip
+          mkdir -p "$R043_PATTERN_ROOT"
+          unzip -q /tmp/r043-pattern-runtime.zip -d "$R043_PATTERN_ROOT"
+          python "$C/build_kernel.py"
+          python "$P/build_r043.py"
+          python "$P/prepare_node_r043.py"
+          for f in "$P"/*.mjs "$C"/*.mjs; do node --check "$f"; done
+      - name: Perturb all 122 controls in the actual original Python pattern program
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          python "$P/audit_parameters_r043.py"
+          python "$P/audit_conditional_r043.py"
+          node "$P/test_source_r043.mjs"
+          node "$P/contract_test.mjs"
+      - name: Actual browser boot and real parameter-to-paper smoke test
+        run: |
+          python -m http.server 8765 >/tmp/r043-http.log 2>&1 &
+          python - <<'PY'
+          from playwright.sync_api import sync_playwright
+          from pathlib import Path
+          import json
+          out=Path('kaopu-tailor-workbench/presets/r04');errors=[]
+          with sync_playwright() as pw:
+            b=pw.chromium.launch(headless=True,args=['--no-sandbox','--enable-unsafe-swiftshader','--use-angle=swiftshader'])
+            p=b.new_page(viewport={'width':1440,'height':1080});p.set_default_timeout(300000)
+            p.on('pageerror',lambda e:errors.append(str(e)))
+            p.goto('http://127.0.0.1:8765/kaopu-tailor-workbench/presets/r04/?preset=T01',wait_until='domcontentloaded')
+            p.wait_for_function('window.__R04?.state().ready',timeout=300000)
+            first=p.evaluate('__R04.state()')
+            assert first['commonVertexCount']==25417 and first['commonTriangleCount']==50624
+            assert len(p.evaluate('__R04.parameterSchema().parameters'))==122
+            p.evaluate('__R04.setParameters({"shirt.width":1.2},3,0)')
+            p.evaluate('__R04.generateParameters()')
+            result=p.evaluate('__R04.state()')
+            (out/'R043_BOOT_REPORT.json').write_text(json.dumps({'initial':first,'parameterResult':result,'errors':errors},ensure_ascii=False,indent=2))
+            p.screenshot(path=str(out/'r043-boot.png'))
+            assert result['phase']=='paper',result
+            assert result['binding'].get('parameterRequestSHA256')
+            assert not p.locator('#sew').is_disabled() and not result['parameterPending']
+            assert not errors,errors
+            b.close()
+          PY
+      - name: Re-solve every previously failing original without replacing garments or loosening quality gates
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          python "$P/batch_r043.py"
+          python "$P/collect_results_r043.py"
+      - name: Actual original CommonViewer outfits, checkpoints and live parameter controls
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          python "$P/qa_r043.py"
+      - name: Retain actual source and results, including failures
+        if: always()
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          if [ ! -f "$P/SOURCE_TRANSPORT_R043.json" ]; then exit 0; fi
+          find "$P" -type d -name __pycache__ -prune -exec rm -rf {} +
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$GITHUB_REF_NAME" --depth=1
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          git add "$P"
+          if ! git diff --cached --quiet; then
+            git commit -m 'build(tailor-r043): retain exact original fitting, parameter and outfit evidence; uncertified outcomes remain explicit'
+            git push origin HEAD:"$GITHUB_REF_NAME"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r043-native-fitting-evidence
+          path: kaopu-tailor-workbench/presets/r04
+          retention-days: 14
