@@ -43,7 +43,7 @@ jobs:
           done
           exit 1
       - name: Render sculpted native face with strictly surface-bound existing eyebrows
-        run: node kaopu-unified-human-workbench/joey-observation-r01/linear-domain-r20.cjs
+        run: node kaopu-unified-human-workbench/joey-observation-r01/brow-coverage-r21.cjs
       - name: Keep bounded research evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -75,6 +75,7 @@ jobs:
             joey-eye-expression-r18/
             joey-final-jacobian-r19/
             joey-linear-domain-r20/
+            joey-brow-coverage-r21/
           retention-days: 7
           compression-level: 0
           if-no-files-found: warn
