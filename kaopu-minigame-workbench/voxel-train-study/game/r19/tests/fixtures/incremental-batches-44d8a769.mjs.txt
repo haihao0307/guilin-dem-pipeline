@@ -1,6 +1,6 @@
 import * as THREE from '../../../vendor/three.module.js';
 import {createBatchMaterials,packAppearance,MATERIAL_TABLE_SIZE} from './batch-materials.mjs';
-const identity=new THREE.Matrix4(),m4=new THREE.Matrix4(),n3=new THREE.Matrix3(),instanceBounds=new THREE.Box3();
+const identity=new THREE.Matrix4(),m4=new THREE.Matrix4(),n3=new THREE.Matrix3(),v3=new THREE.Vector3(),instanceBounds=new THREE.Box3();
 export const BATCH_CELL_METRES=44;
 const BOUNDS_PAD=.0001;
 const capacity=n=>Math.max(64,Math.ceil(Math.max(1,n)*1.125/64)*64);
@@ -47,34 +47,16 @@ function createCellRenderer({cellMetres=BATCH_CELL_METRES}={}){
    const writeAppearance=(n,p)=>{g.attributes.stMaterial.array[n]=p.materialIndex;};
    for(const e of group.entries){const o=e.object,p=e.appearance,source=o.geometry;
     if(group.instanced){for(let i=0;i<o.count;i++){o.getMatrixAt(i,m4);m4.premultiply(o.matrixWorld);m4.elements[12]+=e.center;b.mesh.instanceMatrix.array.set(m4.elements,offset*16);m4.fromArray(b.mesh.instanceMatrix.array,offset*16);usedBounds.union(instanceBounds.copy(primitiveBounds).applyMatrix4(m4));b.mesh.instanceColor.array.set(p.color,offset*3);writeAppearance(offset,p);offset++;}continue;}
-    // Scalar packing mirrors Three r170 Vector3 arithmetic exactly. Reading back
-    // positions after their Float32 write keeps the conservative bounds unchanged.
     const pos=source.attributes.position,norm=source.attributes.normal,base=offset,matrix=o.matrixWorld;n3.getNormalMatrix(matrix);
-    const me=matrix.elements,ne=n3.elements,rest=e.cloth?.rest;
-    const sourcePosition=rest||(!pos.normalized&&!pos.isFloat16BufferAttribute&&!pos.isInterleavedBufferAttribute&&pos.itemSize===3?pos.array:null);
-    const sourceNormal=!norm.normalized&&!norm.isFloat16BufferAttribute&&!norm.isInterleavedBufferAttribute&&norm.itemSize===3?norm.array:null;
-    const positions=g.attributes.position.array,normals=g.attributes.normal.array,colors=g.attributes.color.array,materialIds=g.attributes.stMaterial.array;
-    const motion=g.attributes.stMotion?.array,motionHeight=g.attributes.stMotionHeight?.array,bmin=usedBounds.min,bmax=usedBounds.max;
-    let minY=Infinity,maxY=-Infinity;if(rest)for(let i=1;i<rest.length;i+=3){minY=Math.min(minY,rest[i]);maxY=Math.max(maxY,rest[i]);}const height=Math.max(.1,maxY-minY);
+    let minY=Infinity,maxY=-Infinity;if(e.cloth)for(let i=1;i<e.cloth.rest.length;i+=3){minY=Math.min(minY,e.cloth.rest[i]);maxY=Math.max(maxY,e.cloth.rest[i]);}const height=Math.max(.1,maxY-minY);
     for(let i=0;i<pos.count;i++,offset++){
-     const si=i*3,di=offset*3,x=sourcePosition?sourcePosition[si]:pos.getX(i),y=sourcePosition?sourcePosition[si+1]:pos.getY(i),z=sourcePosition?sourcePosition[si+2]:pos.getZ(i);
-     const w=1/(me[3]*x+me[7]*y+me[11]*z+me[15]);
-     positions[di]=(me[0]*x+me[4]*y+me[8]*z+me[12])*w+e.center;
-     positions[di+1]=(me[1]*x+me[5]*y+me[9]*z+me[13])*w;
-     positions[di+2]=(me[2]*x+me[6]*y+me[10]*z+me[14])*w;
-     const px=positions[di],py=positions[di+1],pz=positions[di+2];
-     bmin.x=Math.min(bmin.x,px);bmin.y=Math.min(bmin.y,py);bmin.z=Math.min(bmin.z,pz);
-     bmax.x=Math.max(bmax.x,px);bmax.y=Math.max(bmax.y,py);bmax.z=Math.max(bmax.z,pz);
-     // Keep normalization order, including Three's zero-length fallback.
-     const sx=sourceNormal?sourceNormal[si]:norm.getX(i),sy=sourceNormal?sourceNormal[si+1]:norm.getY(i),sz=sourceNormal?sourceNormal[si+2]:norm.getZ(i);
-     const nx=ne[0]*sx+ne[3]*sy+ne[6]*sz,ny=ne[1]*sx+ne[4]*sy+ne[7]*sz,nz=ne[2]*sx+ne[5]*sy+ne[8]*sz;
-     const inverseLength=1/(Math.sqrt(nx*nx+ny*ny+nz*nz)||1);
-     normals[di]=nx*inverseLength;normals[di+1]=ny*inverseLength;normals[di+2]=nz*inverseLength;
-     colors[di]=p.color[0];colors[di+1]=p.color[1];colors[di+2]=p.color[2];materialIds[offset]=p.materialIndex;
+     const rest=e.cloth?.rest;if(rest)v3.fromArray(rest,i*3);else v3.fromBufferAttribute(pos,i);v3.applyMatrix4(matrix);v3.x+=e.center;v3.toArray(g.attributes.position.array,offset*3);v3.fromArray(g.attributes.position.array,offset*3);usedBounds.expandByPoint(v3);
+     // Original rest normal is kept; the shader applies the analytic wind Jacobian.
+     v3.fromBufferAttribute(norm,i).applyNormalMatrix(n3).toArray(g.attributes.normal.array,offset*3);g.attributes.color.array.set(p.color,offset*3);writeAppearance(offset,p);
      if(group.family==='cloth'){
       let free=0,phase=0,amp=0,freq=1,gradient=0;
       if(e.cloth){free=e.cloth.pinned?.[i]?0:Math.max(0,Math.min(1,(maxY-rest[i*3+1])/height));phase=((e.cloth.seed||0)*.173+rest[i*3]*1.8)%(2*Math.PI);amp=e.wind.amplitude;freq=e.wind.frequency;gradient=free>0&&free<1?-1/height:0;}
-      const mi=offset*4;motion[mi]=free;motion[mi+1]=phase;motion[mi+2]=amp;motion[mi+3]=freq;windAmplitude=Math.max(windAmplitude,motion[mi+2]);motionHeight[offset]=gradient;
+      g.attributes.stMotion.array.set([free,phase,amp,freq],offset*4);windAmplitude=Math.max(windAmplitude,g.attributes.stMotion.array[offset*4+2]);g.attributes.stMotionHeight.array[offset]=gradient;
      }
     }
     const si=source.index;for(let i=0;i<(si?.count??pos.count);i++)g.index.array[indexOffset++]=base+(si?si.getX(i):i);
