@@ -11,7 +11,7 @@ concurrency:
 jobs:
   full-face:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     env:
       NODE_PATH: /tmp/et12-tools/node_modules
     steps:
@@ -40,21 +40,23 @@ jobs:
             git push origin HEAD:feature/common-human-face-skin-et12-20261010
           fi
           echo "ASSET_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-      - name: Compose with original skin and parameter runtime
+      - name: Compose with original skin and reviewed current native entry
         run: |
           node kaopu-unified-human-workbench/face-transfer/tools/wire-native.cjs
           node kaopu-unified-human-workbench/face-transfer/build.cjs
+          node --test kaopu-unified-human-workbench/tests/entry-actions.mjs kaopu-unified-human-workbench/tests/entry-load-readiness.mjs kaopu-unified-human-workbench/tests/face-identity-presets.mjs kaopu-unified-human-workbench/tests/motion-lifecycle.mjs
       - name: Check original generator and native master-control composition
         run: |
           python -m http.server 8765 --bind 127.0.0.1 >/tmp/face-http.log 2>&1 &
           node kaopu-unified-human-workbench/face-transfer/verify.cjs
           node kaopu-unified-human-workbench/face-transfer/review.cjs
           node kaopu-unified-human-workbench/face-transfer/compatibility.cjs
+          node kaopu-unified-human-workbench/face-transfer/native-entry.cjs
       - name: Publish tested source and preview on the isolated branch
         run: |
           git add kaopu-unified-human-workbench/full/ui/skin/CommonSkinLayer.mjs kaopu-unified-human-workbench/eye-transfer/DenseSurface.mjs kaopu-unified-human-workbench/eye-transfer/TransferUI.mjs kaopu-unified-human-workbench/full/ui/face-transfer-app.generated.mjs kaopu-unified-human-workbench/face-transfer/preview.html kaopu-unified-human-workbench/face-transfer/BUILD.json
           if ! git diff --cached --quiet; then
-            git commit -m 'build(face): ET12 full face native composition [skip ci]'
+            git commit -m 'build(face): ET12 full face on preserved R05 native entry [skip ci]'
             git push origin HEAD:feature/common-human-face-skin-et12-20261010
           fi
       - name: Check immutable public URL with actual browser
@@ -62,6 +64,7 @@ jobs:
           PUBLIC_COMMIT=$(git rev-parse HEAD) node kaopu-unified-human-workbench/face-transfer/verify.cjs
           PUBLIC_COMMIT=$(git rev-parse HEAD) node kaopu-unified-human-workbench/face-transfer/review.cjs
           PUBLIC_COMMIT=$(git rev-parse HEAD) node kaopu-unified-human-workbench/face-transfer/compatibility.cjs
+          PUBLIC_COMMIT=$(git rev-parse HEAD) node kaopu-unified-human-workbench/face-transfer/native-entry.cjs
       - name: Include exact changed source and generated evidence
         if: always()
         run: |
@@ -73,7 +76,7 @@ jobs:
           with zipfile.ZipFile('qa-face-et12/changed-source.zip','w',zipfile.ZIP_DEFLATED) as z:
             for p in (root/'face-transfer').rglob('*'):
               if p.is_file() and 'source-cache' not in p.parts: z.write(p,str(p))
-            for s in ['full/ui/skin/CommonSkinLayer.mjs','eye-transfer/DenseSurface.mjs','eye-transfer/TransferUI.mjs','full/ui/face-transfer-app.generated.mjs']:
+            for s in ['full/ui/skin/CommonSkinLayer.mjs','eye-transfer/DenseSurface.mjs','eye-transfer/TransferUI.mjs','full/ui/face-transfer-app.generated.mjs','full/ui/browser-app.mjs','full/ui/FaceIdentityPresets.mjs','full/ui/EntryActions.mjs','full/motion-studio/MotionStudio.mjs','index.html']:
               p=root/s
               if p.exists(): z.write(p,str(p))
           PY
