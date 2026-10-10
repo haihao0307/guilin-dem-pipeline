@@ -7,8 +7,12 @@ export function installCinema(model){
  if(!model.identityLab||!model.faceSurface?.attachSkin)throw Error('ET14 requires unchanged ET13 native identity');
  const api={settings:{...DEFAULTS},skins:new Set(),folds:null,signature:'',errors:[],version:VERSION,disposed:false,listeners:new Set()};
  function fields(){
-  const key=JSON.stringify([model.identityLab.traits,api.settings.foldSpread,api.settings.compression]);if(api.signature===key)return;
-  const next=buildFoldField(model.identityLab,api.settings),old=api.folds;api.folds=next;api.signature=key;
+  const identity=model.identityLab,traitSignature=JSON.stringify(identity.traits);
+  // Native face callbacks run before the identity layer finishes computing.
+  // Never associate NEW settings with the PREVIOUS generation's wrinkle paths.
+  if(identity.mapSignature!==traitSignature)return;
+  const key=JSON.stringify([traitSignature,identity.maps.report.colorHash,identity.maps.report.heightHash,api.settings.foldSpread,api.settings.compression]);if(api.signature===key)return;
+  const next=buildFoldField(identity,api.settings),old=api.folds;api.folds=next;api.signature=key;
   for(const skin of api.skins)skin.cinemaExtension.sync(false);old?.dispose();
  }
  const nativeArchive=model.archive.bind(model),nativeRestore=model.restore.bind(model),attach=model.faceSurface.attachSkin;
