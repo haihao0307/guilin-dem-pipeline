@@ -75,7 +75,7 @@ No global R2/gate change and no production Mother branch change.
 
 ## Lifecycle
 
-- POSTED: pending routing receipt
+- POSTED: true — PR #181 comment 6097186622
 - ACKNOWLEDGED: false for this independent-browser finding
 - IMPLEMENTED: true for fail-closed/no-fallback behavior
 - GATE-RUN: true
@@ -91,3 +91,10 @@ No global R2/gate change and no production Mother branch change.
 - Stale-delivery count: 0 for the final fixed prefix; 1 failed first-public attempt retained and not delivered
 - Internal iterations per accepted delta: unknown
 - User instruction to legal candidate time: unknown
+
+## Routing receipt
+
+- PR #181 comment: https://github.com/haihao0307/guilin-dem-pipeline/pull/181#issuecomment-6097186622
+- Evidence branch: https://github.com/haihao0307/guilin-dem-pipeline/tree/automation/n132-tailor-r0432-independent-browser-webgl-20261010
+- Production branch changed by this learning cycle: false
+- Global R2/gate changed: false
