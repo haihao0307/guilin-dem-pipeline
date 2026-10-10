@@ -27,11 +27,13 @@ jobs:
         run: |
           "$RUNNER_TEMP/train-r16/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/train-r16/node_modules" >> "$GITHUB_ENV"
+      - name: Install distribution audio decoder required by preserved baseline tests
+        run: sudo apt-get install -y --no-install-recommends ffmpeg
       - name: Check unchanged baseline and function street
         run: |
           mkdir -p train-r16-results
           node --check "$GAME/r16/tests/r16-browser.cjs"
-          node --test "$GAME"/tests/*.test.mjs "$GAME"/*.test.mjs "$GAME"/r16/tests/*.test.mjs "$GAME"/r16/street/*.test.mjs > train-r16-results/unit.txt 2>&1
+          node --test "$GAME"/tests/*.test.mjs "$GAME"/*.test.mjs "$GAME"/r16/tests/*.test.mjs "$GAME"/r16/street/*.test.mjs 2>&1 | tee train-r16-results/unit.txt
       - name: Serve exact candidate without deployment
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/train-r16-server.log" 2>&1 &
