@@ -1,0 +1,41 @@
+name: Human skin sampling R01 candidate QA
+on:
+  push:
+    branches: [feature/common-human-skin-sampling-r01-20261010]
+    paths: ['kaopu-unified-human-workbench/skin-quality-r01/**', '.github/workflows/human-skin-quality-r01-qa.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: human-skin-sampling-r01
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-unified-human-workbench
+      - name: Validate original atlas layout and candidate source
+        run: |
+          node kaopu-unified-human-workbench/skin-quality-r01/tests/numeric.mjs
+          node --check kaopu-unified-human-workbench/skin-quality-r01/SkinSampling.mjs
+          node --check kaopu-unified-human-workbench/skin-quality-r01/SamplingShader.mjs
+      - name: Install official pinned browser test tools
+        run: |
+          npm install --prefix "$RUNNER_TEMP/skin-sampling-r01" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/skin-sampling-r01/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Compare on unchanged native ET13 person
+        env:
+          NODE_PATH: ${{ runner.temp }}/skin-sampling-r01/node_modules
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/skin-r01-http.log 2>&1 &
+          node kaopu-unified-human-workbench/skin-quality-r01/tests/browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-sampling-r01-${{ github.run_number }}
+          path: qa-skin-quality-r01/
+          retention-days: 14
