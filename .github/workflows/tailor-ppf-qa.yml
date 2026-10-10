@@ -1,0 +1,39 @@
+name: PPF published overview decoded image check
+on:
+  pull_request:
+    branches: [gh-pages]
+    paths: ['.github/tailor-ppf/**', '.github/workflows/tailor-ppf-qa.yml']
+permissions:
+  contents: read
+concurrency:
+  group: tailor-ppf-card-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  image:
+    if: github.head_ref == 'qa/tailor-garments-r03-20261006'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/tailor-ppf
+      - name: Official browser dependency
+        run: |
+          npm install --prefix "$RUNNER_TEMP/ppf-test" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/ppf-test/node_modules/.bin/playwright" install --with-deps chromium webkit
+      - name: Real public card after lazy image decode
+        env:
+          NODE_PATH: ${{ runner.temp }}/ppf-test/node_modules
+          PPF_BROWSER: ${{ matrix.browser }}
+        run: node .github/tailor-ppf/card-check.cjs
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ppf-card-${{ matrix.browser }}
+          retention-days: 7
+          path: ppf-card-*/**
