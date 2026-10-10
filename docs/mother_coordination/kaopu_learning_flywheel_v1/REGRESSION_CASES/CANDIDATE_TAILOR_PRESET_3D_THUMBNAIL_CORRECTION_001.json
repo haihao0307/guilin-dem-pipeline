@@ -1,7 +1,7 @@
 {
   "schema": "kaopu.regression-case/2",
   "caseId": "TAILOR-PRESET-3D-THUMBNAIL-CORRECTION-001",
-  "status": "CANDIDATE_TAILOR_R043_ALL60_SOLVER_OUTCOMES_VERIFIED_SCOPED__49_STATIC_FAILURES_VISUAL_PHYSICS_USER_HOLD_N130_NOT_ADOPTED",
+  "status": "CANDIDATE_TAILOR_R0431_SELECTIVE_PROMOTION_VERIFIED_SCOPED__39_STATIC_FAILURES_VISUAL_PHYSICS_PUBLIC_USER_HOLD_N131_NOT_ADOPTED",
   "active": false,
   "scope": {
     "mother": "Tailor",
@@ -182,7 +182,8 @@
     "Count an explicit failure card as a repaired garment, or let a later untested PR head inherit the exact R04.2 release evidence.",
     "Do not treat 60 solver records as 60 accepted garments: member-level static and visual acceptance remain separate.",
     "Do not promote 122 source-geometry parameter perturbations into fit certification when allAlteredGarmentsFitCertified=false.",
-    "Do not promote 432 browser-readable outfit identities into joint cloth-collision or dynamic-wear certification."
+    "Do not promote 432 browser-readable outfit identities into joint cloth-collision or dynamic-wear certification.",
+    "Do not treat a strictly improved but still failing solver route as an accepted garment; preserve its remaining failure categories and keep it out of accepted/front-row claims."
   ],
   "requiredPerMemberReceipt": [
     "presetId",
@@ -208,7 +209,8 @@
     "THREE_D_PRESET_THUMBNAILS_VERIFIED_SCOPED",
     "HOLD_R041_USER_VISUAL_FIT_AND_CATALOGUE_INCOMPLETE",
     "R042_FAILURE_STATE_OBSERVABILITY_VERIFIED_SCOPED__HOLD_REMAINING_VISUAL_FIXES_AND_PHYSICS",
-    "R043_ALL60_SOLVER_OUTCOMES_VERIFIED_SCOPED__HOLD_49_STATIC_FAILURES_VISUAL_PHYSICS_USER_ACCEPTANCE"
+    "R043_ALL60_SOLVER_OUTCOMES_VERIFIED_SCOPED__HOLD_49_STATIC_FAILURES_VISUAL_PHYSICS_USER_ACCEPTANCE",
+    "R0431_SELECTIVE_PROMOTION_VERIFIED_SCOPED__HOLD_39_STATIC_FAILURES_VISUAL_PHYSICS_PUBLIC_USER_ACCEPTANCE"
   ],
   "gate": [
     "Preserve the old paper-library success as a scoped historical observation; do not relabel it as failure.",
@@ -228,7 +230,8 @@
     "Evidence is subject-bound: current PR head or later payload-only commits cannot inherit R04.2 GATE-RUN unless their exact head is tested.",
     "An exact push-triggered workflow run, its head SHA, workflow path, successful claim-critical steps, artifact ID/digest and retained evidence head must agree before a later Tailor candidate receives GATE-RUN.",
     "Complete source/material/solver coverage closes missing-result execution coverage only; every static failure and every missing visual/physical/user receipt remains HOLD.",
-    "Parameter controls may pass source-geometry perturbation while altered-garment fit remains uncertified; outfit render coverage does not certify joint cloth physics."
+    "Parameter controls may pass source-geometry perturbation while altered-garment fit remains uncertified; outfit render coverage does not certify joint cloth physics.",
+    "A failed numerical trial may contribute only complete routes whose failure-category set is a strict subset of the baseline; regressions, ties and incomplete candidates must preserve the prior parent, while improved-but-failing routes remain failed."
   ],
   "activation": {
     "global": false,
@@ -348,7 +351,7 @@
     }
   },
   "currentCycleLifecycle": {
-    "POSTED": true,
+    "POSTED": false,
     "ACKNOWLEDGED": true,
     "IMPLEMENTED": true,
     "GATE-RUN": true,
@@ -500,6 +503,81 @@
     "decision": "UPDATE_EXISTING_REGRESSION_CASE_NO_NOVELTY",
     "lifecycle": {
       "POSTED": true,
+      "ACKNOWLEDGED": true,
+      "IMPLEMENTED": true,
+      "GATE-RUN": true,
+      "ADOPTED": false,
+      "USER-ACCEPTED": false
+    }
+  },
+  "n131R0431SelectivePromotionResult": {
+    "pullRequest": 181,
+    "currentPrHead": "a6fa594bc4c1ccb9470cbf8571a9f5ce10945ce7",
+    "exactPromotionSource": "89396dc9bf2a6ffd4c254a653295dfe15a895fec",
+    "numericalTrialSource": "ed3a992b76436f6b207f6059dcac696156d3f764",
+    "failedTrialWorkflow": {
+      "runId": 38037173868,
+      "conclusion": "failure",
+      "jobId": 114169928819,
+      "artifactId": 11664835881,
+      "artifactName": "tailor-r0431-seam-and-outfit-evidence",
+      "artifactDigest": "sha256:98861bb2fb1f8910101d783f07a6b96972ce6e8f577ee5ed5eca1b7bcf23fedd",
+      "all24Completed": false,
+      "incompleteId": "J05",
+      "failurePreserved": true
+    },
+    "reviewedPromotionWorkflow": {
+      "path": ".github/workflows/tailor-r0431-reviewed-promotion.yml",
+      "runId": 38038716284,
+      "event": "push",
+      "conclusion": "success",
+      "jobId": 114174504052,
+      "artifactId": 11665640308,
+      "artifactName": "tailor-r0431-reviewed-promotion",
+      "artifactDigest": "sha256:340b4ecb9041ac4059ba66e072f7be72b0c508ff9ade26d699ab8a1ac9ac5821"
+    },
+    "selectionReplay": {
+      "trialRows": 24,
+      "promotedRoutes": 16,
+      "rejectedRoutes": 8,
+      "promotedStaticPass": 10,
+      "promotedStillFailing": 6,
+      "totalStaticPassBefore": 11,
+      "totalStaticPassAfter": 21,
+      "totalStaticFailAfter": 39,
+      "allPromotedCompleteAndStrictFailureSubset": true,
+      "allRejectedRegressionTieOrIncomplete": true,
+      "enabledSetMatchesPromotedSet": true,
+      "disabledSetMatchesRejectedSet": true,
+      "promotedStillFailingRemainQualityPassedFalse": true,
+      "rejectedRowsRetainBaselineRecordHashes": true,
+      "thresholdsChanged": false,
+      "restMaterialChanged": false
+    },
+    "explicitLimits": {
+      "all60GarmentsAccepted": false,
+      "physicalFitAccepted": false,
+      "dynamicWearCertified": false,
+      "publicDeliveryVerified": false,
+      "userAccepted": false
+    },
+    "externalMethodComparison": {
+      "githubActions": "Run-bound artifact metadata binds workflow run, head SHA and SHA-256 digest; exact source/run/artifact identity is auditable.",
+      "nasaChangeControl": "Track evaluation results and impact analyses; regression testing checks that a corrective change does not damage previously accepted behavior.",
+      "kaopuComparison": "R2 already requires tested-subject binding, preserved rejected lineage, candidate replay, rollback and scoped acceptance.",
+      "novelty": "NO_NOVELTY"
+    },
+    "falsifiableHypothesis": "If selective promotion requires a complete trial and a strict subset of baseline failure categories, the replay will accept all 16 improved routes, reject all 8 regressions/ties/incomplete routes, retain six improved-but-failing routes as failed, and raise static pass only from 11 to 21 without changing thresholds.",
+    "replay": {
+      "checks": 19,
+      "passed": 19,
+      "outcome": "R0431_SELECTIVE_PROMOTION_VERIFIED_SCOPED__HOLD_39_STATIC_FAILURES_VISUAL_PHYSICS_PUBLIC_USER_ACCEPTANCE",
+      "falseParentPromotionPrevented": true
+    },
+    "boundary": "Tailor R04.3.1 exact promotion source and its failed numerical trial only; no global R2/gate change, no production-branch modification, no public/device/user acceptance.",
+    "decision": "UPDATE_EXISTING_REGRESSION_CASE_NO_NOVELTY",
+    "lifecycle": {
+      "POSTED": false,
       "ACKNOWLEDGED": true,
       "IMPLEMENTED": true,
       "GATE-RUN": true,
