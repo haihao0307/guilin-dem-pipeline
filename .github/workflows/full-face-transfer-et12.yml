@@ -1,0 +1,80 @@
+name: ET12 full face native composition
+on:
+  push:
+    branches: [feature/common-human-face-skin-et12-20261010]
+    paths: ['kaopu-unified-human-workbench/face-transfer/**', '.github/workflows/full-face-transfer-et12.yml']
+permissions:
+  contents: write
+concurrency:
+  group: full-face-transfer-et12
+  cancel-in-progress: false
+jobs:
+  full-face:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NODE_PATH: /tmp/et12-tools/node_modules
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-unified-human-workbench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned build and browser tools
+        run: |
+          python -m pip install numpy==2.2.6 scipy==1.15.3 pillow==11.3.0
+          npm install --prefix /tmp/et12-tools --no-audit --no-fund esbuild@0.25.10 playwright@1.56.1
+          /tmp/et12-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Extract checked regional skin frequency assets
+        run: |
+          python kaopu-unified-human-workbench/face-transfer/tools/prepare_atlas.py
+          git config user.name 'KAOPU Human Workbench'
+          git config user.email 'kaopu-workbench@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/face-transfer/assets/detail.png kaopu-unified-human-workbench/face-transfer/assets/chroma.png kaopu-unified-human-workbench/face-transfer/assets/ATLAS.json kaopu-unified-human-workbench/face-transfer/assets/source-patches.jpg
+          if ! git diff --cached --quiet; then
+            git commit -m 'assets(face): licensed regional frequency atlas [skip ci]'
+            git push origin HEAD:feature/common-human-face-skin-et12-20261010
+          fi
+          echo "ASSET_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Compose with original skin and parameter runtime
+        run: |
+          node kaopu-unified-human-workbench/face-transfer/tools/wire-native.cjs
+          node kaopu-unified-human-workbench/face-transfer/build.cjs
+      - name: Check all native presets parameters skins and original rig
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/face-http.log 2>&1 &
+          node kaopu-unified-human-workbench/face-transfer/verify.cjs
+      - name: Publish tested source and preview on the isolated branch
+        run: |
+          git add kaopu-unified-human-workbench/full/ui/skin/CommonSkinLayer.mjs kaopu-unified-human-workbench/eye-transfer/DenseSurface.mjs kaopu-unified-human-workbench/eye-transfer/TransferUI.mjs kaopu-unified-human-workbench/full/ui/face-transfer-app.generated.mjs kaopu-unified-human-workbench/face-transfer/preview.html kaopu-unified-human-workbench/face-transfer/BUILD.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'build(face): ET12 full face native composition [skip ci]'
+            git push origin HEAD:feature/common-human-face-skin-et12-20261010
+          fi
+      - name: Check immutable public URL with actual browser
+        run: PUBLIC_COMMIT=$(git rev-parse HEAD) node kaopu-unified-human-workbench/face-transfer/verify.cjs
+      - name: Include exact changed source and generated evidence
+        if: always()
+        run: |
+          mkdir -p qa-face-et12
+          python - <<'PY'
+          from pathlib import Path
+          import zipfile
+          root=Path('kaopu-unified-human-workbench')
+          with zipfile.ZipFile('qa-face-et12/changed-source.zip','w',zipfile.ZIP_DEFLATED) as z:
+            for p in (root/'face-transfer').rglob('*'):
+              if p.is_file() and 'source-cache' not in p.parts: z.write(p,str(p))
+            for s in ['full/ui/skin/CommonSkinLayer.mjs','eye-transfer/DenseSurface.mjs','eye-transfer/TransferUI.mjs','full/ui/face-transfer-app.generated.mjs']:
+              p=root/s
+              if p.exists(): z.write(p,str(p))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: et12-full-face-${{ github.run_number }}
+          path: qa-face-et12/
+          retention-days: 14
