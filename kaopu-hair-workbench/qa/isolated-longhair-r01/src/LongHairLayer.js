@@ -42,7 +42,7 @@ export function attachLongHair(a,{count=32000,surfaceSegments=20,tailSegments=20
    const c2=new THREE.Vector3(sign*(.045+.17*lateral),neutralEnd.y-tailLength*.60,-.175+.025*lateral);
    const end=new THREE.Vector3(endX,neutralEnd.y-tailLength,endZ);
    const frontBundle=frontRoute(binding,i);
-   if(frontBundle){const sheet=smooth(-.075,.085,root.z),x=sign*(.048+.115*sheet);c1.set(sign*(.084+.018*sheet),neutralEnd.y-.035,Math.min(neutralEnd.z,-.015));c2.set(x,.10,.18+.012*(1-sheet));end.set(x,neutralEnd.y-tailLength,.17+.016*(1-sheet));}else{const spread=root.x*1.8;c2.x=spread;end.x=spread;end.z=-.145-.016*smooth(-.085,.075,root.z);}
+   if(frontBundle){const sheet=smooth(-.075,.085,root.z),x=sign*(.048+.115*sheet);c1.set(sign*(.10+.015*sheet),neutralEnd.y-.035,Math.min(neutralEnd.z,-.015));c2.set(sign*(.12+.025*sheet),.10,.18+.012*(1-sheet));end.set(x,neutralEnd.y-tailLength,.17+.016*(1-sheet));}else{const spread=root.x*1.8;c2.x=spread;end.x=spread;end.z=-.145-.016*smooth(-.085,.075,root.z);}
    const c1w=p0.clone().add(transformVector(c1.sub(neutralEnd))),c2w=p0.clone().add(transformVector(c2.sub(neutralEnd))),endw=p0.clone().add(transformVector(end.sub(neutralEnd)));
    for(let j=1;j<=tailSegments;j++){const u=j/tailSegments,w=1-u,q=i*per+surfaceSegments+j,pp=p0.clone().multiplyScalar(w*w*w).addScaledVector(c1w,3*w*w*u).addScaledVector(c2w,3*w*u*u).addScaledVector(endw,u*u*u);contactEnvelope?.project(pp);pp.toArray(centerline,q*3);endNormal.toArray(normals,q*6);endNormal.toArray(normals,q*6+3);}
   }
