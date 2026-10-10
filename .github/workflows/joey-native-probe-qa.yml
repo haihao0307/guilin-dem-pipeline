@@ -48,6 +48,8 @@ jobs:
         run: node kaopu-unified-human-workbench/joey-observation-r01/render-candidate.cjs
       - name: Check three source-timestamped relative mouth states
         run: node kaopu-unified-human-workbench/joey-observation-r01/render-mouth.cjs
+      - name: Restore the exact saved candidate files and verify readback
+        run: node kaopu-unified-human-workbench/joey-observation-r01/verify-archive-files.cjs
       - name: Keep bounded research evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -57,6 +59,7 @@ jobs:
             joey-native-probe-results/
             joey-native-candidate-results/
             joey-relative-mouth-results/
+            joey-archive-file-verification/
           retention-days: 7
           compression-level: 0
           if-no-files-found: warn
