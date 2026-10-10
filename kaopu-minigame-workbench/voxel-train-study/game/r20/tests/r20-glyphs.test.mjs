@@ -9,12 +9,12 @@ const provenance = JSON.parse(readFileSync(new URL('../street/glyphs-provenance.
 const titles = provenance.families.flatMap(family => family.titles.map(text => ({text, family, style:family.style})));
 const nearly = (actual, expected, epsilon=1e-7) => assert.ok(Math.abs(actual-expected)<=epsilon, `${actual} != ${expected}`);
 
-function triangles(geometry) {
+function triangles(geometry, matrix) {
   const positions = geometry.attributes.position;
   const indices = geometry.index;
   const count = indices ? indices.count : positions.count;
   const result=[];
-  for(let i=0;i<count;i+=3) result.push([0,1,2].map(j => new THREE.Vector3().fromBufferAttribute(positions,indices ? indices.getX(i+j) : i+j)));
+  for(let i=0;i<count;i+=3) result.push([0,1,2].map(j => new THREE.Vector3().fromBufferAttribute(positions,indices ? indices.getX(i+j) : i+j).applyMatrix4(matrix)));
   return result;
 }
 const crossArea = ([a,b,c]) => b.clone().sub(a).cross(c.clone().sub(a)).length()/2;
@@ -44,7 +44,7 @@ function verifyGlyph(mesh, family, height, depth) {
     for(const value of attribute.array) assert.ok(Number.isFinite(value),'non-finite geometry attribute');
   }
   if(geometry.index) for(const index of geometry.index.array) assert.ok(index>=0 && index<geometry.attributes.position.count);
-  const all=triangles(geometry);
+  const all=triangles(geometry,mesh.matrixWorld);
   assert.ok(all.length>0);
   for(const triangle of all) assert.ok(crossArea(triangle)>0,'zero-area runtime triangle');
   const front=all.filter(triangle=>triangle.every(p=>Math.abs(p.z-depth)<1e-8));
@@ -52,7 +52,8 @@ function verifyGlyph(mesh, family, height, depth) {
   for(const [a,b,c] of front) assert.ok(b.clone().sub(a).cross(c.clone().sub(a)).z>0,'front cap faces away from +Z');
   const capArea=front.reduce((sum,triangle)=>sum+crossArea(triangle),0);
   let expectedArea=0, testedCounters=0;
-  const samples=geometry.parameters.shapes.map(shape=>shape.extractPoints(metadata.curveSegments));
+  const world=p=>new THREE.Vector3(p.x,p.y,0).applyMatrix4(mesh.matrixWorld);
+  const samples=geometry.parameters.shapes.map(shape=>{const s=shape.extractPoints(metadata.curveSegments);return {shape:s.shape.map(world),holes:s.holes.map(h=>h.map(world))};});
   for(const [shapeIndex,shape] of geometry.parameters.shapes.entries()) {
     assert.ok(shape.curves.some(curve=>curve.isQuadraticBezierCurve || curve.isCubicBezierCurve) || shape.curves.length>0);
     const sample=samples[shapeIndex];
@@ -77,19 +78,19 @@ function verifyGlyph(mesh, family, height, depth) {
   }
   assert.equal(testedCounters,native.counters);
   nearly(capArea,expectedArea,Math.max(1e-10,expectedArea*2e-6));
-  const nativeArea=Math.abs(native.native_contour_areas.reduce((sum,value)=>sum+value,0))*(height/family.units_per_em)**2;
+  const nativeArea=Math.abs(native.native_contour_areas.reduce((sum,value)=>sum+value,0))*(metadata.height/family.units_per_em)**2*Math.abs(mesh.matrixWorld.elements[0]*mesh.matrixWorld.elements[5]-mesh.matrixWorld.elements[1]*mesh.matrixWorld.elements[4]);
   assert.ok(Math.abs(capArea-nativeArea)/nativeArea<.005,'curve approximation exceeds 0.5% native area');
   return all.length;
 }
 
 
-test('Every licensed native glyph preserves its counters, winding and area across five metre-scale render recipes',()=>{
+test('Every licensed native glyph preserves world-space counters, winding and area across five metre-scale render recipes',()=>{
 const reports=[];
 for(const [height,depth] of [[.1,.018],[.38,.018],[1,.018],[3,.018],[.38,0]]) {
   const factory=createWordFactory(THREE);const errors=[];let glyphs=0,triangles=0;
   for(const family of provenance.families) for(const text of Object.keys(family.glyphs)) {
     if(text===' ')continue;
-    try {const word=factory.makeWord(text,{height,depth,style:family.style});for(const mesh of word.children){triangles+=verifyGlyph(mesh,family,height,depth);glyphs++;}}
+    try {const word=factory.makeWord(text,{height,depth,style:family.style});word.updateMatrixWorld(true);for(const mesh of word.children){triangles+=verifyGlyph(mesh,family,height,depth);glyphs++;}}
     catch(error) { errors.push({glyph:family.style+'/'+text,message:error.message}); }
   }
   factory.dispose();reports.push({height,depth,glyphs,triangles,errors});

@@ -21,6 +21,8 @@ Independent descendant of accepted R19 commit `7b8d8908c6539e52d5336470111be6219
 `street/materials.mjs`: procedural surface masks.
 `station-nameboard.mjs`: compact original two-station board rules.
 
+Native glyph geometry is shared per font/character and planar/extruded construction; sign size and relief depth are mesh transforms. A24MB idle CPU-cache target protects referenced/prefetched glyphs and evicts only idle least-recently-used entries. Transient allocation and active-owner bytes are reported separately.
+
 No street mesh or image-texture file is loaded. BufferGeometry, glyph tessellation, instance matrices and procedural/Canvas station surfaces are produced at runtime. They have real CPU/GPU costs; small score bytes alone do not prove performance. Shared Three r170 and existing audio remain execution dependencies. No historical Rxx runtime imports. New `r20` save/quality namespaces are isolated.
 
 ## Evidence and limitations

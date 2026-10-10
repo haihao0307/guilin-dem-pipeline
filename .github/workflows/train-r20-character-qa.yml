@@ -33,6 +33,15 @@ jobs:
           mkdir -p train-r20-results
           export R20_QA_OUT=train-r20-results/cpu
           node --test "$GAME/r20/tests/"*.test.mjs 2>&1 | tee train-r20-results/unit.txt
+      - name: Read frozen pre-cache R20 for identical-pixel comparison
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 0a6e0c4410b2a110957eaf47ddf872e1b3c0d177
+          path: qa-baseline-r20
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study/game/r20
+      - name: Stage comparison-only baseline beside shared engine
+        run: cp -a "qa-baseline-r20/$GAME/r20" "$GAME/r20-before-cache"
       - name: Serve candidate and frozen accepted baseline
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/r20-http.log" 2>&1 &

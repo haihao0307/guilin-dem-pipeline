@@ -86,12 +86,17 @@ RUNTIME = r'''
  * Create one owner/cache for sign lettering. Glyph outlines remain Bézier curves
  * until THREE builds Shapes and triangulates/extrudes them here, at runtime.
  * Supported glyphs are deliberately finite. No font fallback or network fetch.
+ * Each style/character keeps one unit-font plane and one unit-depth extrusion.
+ * Word transforms supply requested metre height/depth; native contours and the
+ * counter-classification algorithm are unchanged. Source UVs are canonical too;
+ * production lettering uses world-position materials and never samples them.
  * Geometry returned in groups is SHARED and must not be mutated or disposed by
  * individual signs. Use the owner's dispose(), or dispose({resources:false})
  * after a scene-level resource collector has already released each resource.
  */
 export function createWordFactory(THREE) {
-  const geometryCache = new Map();
+  const geometryCache = new Map(), geometryKeys = new WeakMap();
+  const cacheStats={geometryBuilds:0,cacheHits:0,evictions:0};
   let defaultMaterial = null;
 
   function optionsOf(options = {}) {
@@ -129,13 +134,15 @@ export function createWordFactory(THREE) {
   }
 
   function glyphGeometry(character, options) {
-    const {style, height, depth, family} = options;
+    // Tessellate once per native glyph and topology, independent of sign size.
+    const {style, family} = options, height = 1, depth = options.depth === 0 ? 0 : 1;
     const curveSegments = ((style === 'serif' && '永雲溪O'.includes(character)) || (style === 'sans' && character === 'O')) ? 12 : (style === 'serif' || style === 'sans') ? 8 : 4;
     if (!Object.hasOwn(family.glyphs, character)) {
       throw new RangeError(`Unsupported Traditional glyph ${JSON.stringify(character)} for style ${style}; fallback is forbidden`);
     }
-    const key = `${style}:${character}:${height}:${depth}`;
-    if (geometryCache.has(key)) return geometryCache.get(key);
+    const key = `${style}:${character}:${depth}`;
+    if (geometryCache.has(key)) {cacheStats.cacheHits++;return geometryCache.get(key);}
+    cacheStats.geometryBuilds++;
     const glyph = family.glyphs[character], path = new THREE.ShapePath();
     const scale = height / family.units;
     glyph.draw({
@@ -187,9 +194,9 @@ export function createWordFactory(THREE) {
     geometry.computeBoundingBox();
     geometry.computeBoundingSphere();
     geometry.userData.glyph = Object.freeze({character, style, solids:shapes.length,
-      counters, nativeCurves:true, curveSegments, height, depth});
+      counters, nativeCurves:true, curveSegments, height, depth, canonical:true});
     const entry = {geometry, advance:glyph.advance*scale};
-    geometryCache.set(key, entry);
+    geometryCache.set(key, entry);geometryKeys.set(geometry,key);
     return entry;
   }
 
@@ -206,7 +213,7 @@ export function createWordFactory(THREE) {
     let penX = 0, minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (const character of text) {
       // Only explicitly exported ASCII spaces advance without allocating a mesh.
-      if (character === ' ') { penX += resolved.family.glyphs[character].advance * resolved.height / resolved.family.units; continue; }
+      if (character === ' ') { penX += resolved.family.glyphs[character].advance / resolved.family.units; continue; }
       const entry = glyphGeometry(character, resolved), box = entry.geometry.boundingBox;
       parts.push({character, x:penX, geometry:entry.geometry});
       minX = Math.min(minX, penX + box.min.x); maxX = Math.max(maxX, penX + box.max.x);
@@ -229,7 +236,8 @@ export function createWordFactory(THREE) {
     const material = options.material ?? (defaultMaterial ??= new THREE.MeshStandardMaterial({color:0xffe4b7, roughness:.82}));
     const group = new THREE.Group();
     group.name = `traditional-sign:${text}`;
-    group.scale.set(layout.scale, layout.scale, 1);
+    // Positive XY/Z scales preserve cap winding and transformed side normals.
+    group.scale.set(layout.scale, layout.scale, layout.depth === 0 ? 1 : layout.depth);
     for (const part of layout.parts) {
       const mesh = new THREE.Mesh(part.geometry, material);
       mesh.name = `glyph:${part.character}`;
@@ -238,9 +246,12 @@ export function createWordFactory(THREE) {
     }
     group.userData.sign = {text, style:layout.style, width:layout.width,
       height:layout.height, depth:layout.depth, glyphSource:'licensed-native-bezier-functions',
-      sharedGeometry:true};
+      sharedGeometry:true, geometrySpace:'unit-font'};
     return group;
   }
+
+  // Caller must establish zero live users before evicting a geometry.
+  function forget(geometry){const key=geometryKeys.get(geometry);if(key==null||geometryCache.get(key)?.geometry!==geometry)return false;geometryCache.delete(key);geometryKeys.delete(geometry);cacheStats.evictions++;return true;}
 
   function dispose({resources = true} = {}) {
     if (resources) {
@@ -250,7 +261,7 @@ export function createWordFactory(THREE) {
     geometryCache.clear();
     defaultMaterial = null;
   }
-  return Object.freeze({makeWord, measure, dispose});
+  return Object.freeze({makeWord, measure, forget, stats:()=>({...cacheStats,cached:geometryCache.size}), dispose});
 }
 '''
 

@@ -53,7 +53,7 @@ export function parseScore(textOrData){const score=typeof textOrData==='string'?
 function gather(root){const geometries=new Set(),materials=new Set(),instanced=new Set();root.traverse(o=>{if(o.isInstancedMesh)instanced.add(o);if(o.geometry)geometries.add(o.geometry);for(const m of(Array.isArray(o.material)?o.material:o.material?[o.material]:[]))materials.add(m);});return{geometries,materials,instanced};}
 export function build(input,worldContext={}){
  const score=parseScore(input),library=createMaterialLibrary(THREE,score),shared=worldContext.shared||null,words=shared?.words||createWordFactory(THREE);let architecture;
- try{architecture=buildArchitecture(score,{THREE,materials:library,makeWord:shared?shared.makeWord:words.makeWord,sharedGeometry:shared});}catch(e){library.dispose();if(!shared)words.dispose();throw e;}
+ try{architecture=buildArchitecture(score,{THREE,materials:library,makeWord:shared?shared.makeWord:words.makeWord,sharedGeometry:shared});}catch(e){library.dispose();if(!shared)words.dispose();else shared.trim();throw e;}
  const handle={score,root:architecture.root,cloth:architecture.cloth||[],stats:architecture.stats||{},resources:architecture.resources,state:{time:0,worldInputs:{}},disposed:false,analyticWind:worldContext.analyticWind===true,_library:library,_words:words,_shared:shared,_sharedRetained:false};
  handle.root.name=score.object.id;handle.root.userData.kaopu={schema:SCHEMA,instrument:INSTRUMENT_ID,version:VERSION,abi:ABI,source:'runtime functions; no delivered mesh/image assets'};
  const m=measure(handle),l=score.performance.limits;
@@ -88,19 +88,24 @@ export function snapshot(handle){
 }
 export function dispose(handle){
  if(!handle||handle.disposed)return;const r=gather(handle.root);for(const g of handle.resources?.geometries||[])r.geometries.add(g);for(const m of handle._library?.materials||[])r.materials.add(m);
- for(const mesh of r.instanced)mesh.dispose();for(const g of r.geometries)if(!g.userData.kstShared)g.dispose();if(handle._shared&&handle._sharedRetained)handle._shared.release(handle);else if(!handle._shared)for(const g of r.geometries)if(g.userData.kstShared)g.dispose();for(const m of r.materials)m.dispose();handle._library?.dispose({resources:false});if(!handle._shared)handle._words?.dispose({resources:false});handle.root.removeFromParent();handle.root.clear();handle.cloth.length=0;handle.resources=null;handle._library=null;handle._words=null;handle._shared=null;handle.disposed=true;
+ for(const mesh of r.instanced)mesh.dispose();for(const g of r.geometries)if(!g.userData.kstShared)g.dispose();if(handle._shared&&handle._sharedRetained)handle._shared.release(handle);else if(handle._shared)handle._shared.trim();else if(!handle._shared)for(const g of r.geometries)if(g.userData.kstShared)g.dispose();for(const m of r.materials)m.dispose();handle._library?.dispose({resources:false});if(!handle._shared)handle._words?.dispose({resources:false});handle.root.removeFromParent();handle.root.clear();handle.cloth.length=0;handle.resources=null;handle._library=null;handle._words=null;handle._shared=null;handle.disposed=true;
 }
 export const KST1=Object.freeze({INSTRUMENT_ID,VERSION,ABI,SCHEMA,LIMITS,validate,parseScore,build,update,measure,snapshot,dispose});
 
 // Shared primitives and finite glyph meshes keep one CPU recipe cache. GPU storage
 // is released on the final chunk reference, and recreated by Three on re-entry.
-export function createSharedResources(){
- const words=createWordFactory(THREE),primitives=new Map(),registered=new Set(),refs=new Map();let releases=0,closed=false;
- const register=g=>{g.userData.kstShared=true;registered.add(g);return g;};
- const shared={words,primitive(key,create){if(closed)throw new Error('Shared pool disposed');if(!primitives.has(key))primitives.set(key,register(create()));return primitives.get(key);},
+// The 24 MB CPU target evicts only idle LRU glyphs. Live/prefetched owners and
+// transient construction may exceed it; snapshot reports those costs separately.
+export function createSharedResources({cacheBudgetBytes=24_000_000}={}){
+ if(!(cacheBudgetBytes===Infinity||Number.isFinite(cacheBudgetBytes)&&cacheBudgetBytes>=0))throw Error('Invalid glyph CPU cache budget');
+ const words=createWordFactory(THREE),primitives=new Map(),registered=new Set(),refs=new Map();let releases=0,closed=false,touch=0,evictions=0,peakCpuBytes=0;const lastUsed=new Map();
+ const byteSize=g=>{let n=g.index?.array.byteLength||0;for(const a of Object.values(g.attributes))n+=a.array.byteLength;return n;};
+ const trim=()=>{let total=[...registered].reduce((n,g)=>n+byteSize(g),0);peakCpuBytes=Math.max(peakCpuBytes,total);if(total<=cacheBudgetBytes)return;const idle=[...registered].filter(g=>g.userData.glyph&&!refs.has(g)).sort((a,b)=>(lastUsed.get(a)||0)-(lastUsed.get(b)||0));for(const g of idle){if(total<=cacheBudgetBytes)break;if(words.forget(g)){registered.delete(g);lastUsed.delete(g);total-=byteSize(g);evictions++;}}};
+ const register=g=>{g.userData.kstShared=true;registered.add(g);lastUsed.set(g,++touch);return g;};
+ const shared={words,trim,primitive(key,create){if(closed)throw new Error('Shared pool disposed');if(!primitives.has(key))primitives.set(key,register(create()));return primitives.get(key);},
  makeWord(text,options){const word=words.makeWord(text,options);word.traverse(o=>{if(o.geometry)register(o.geometry);});return word;},
- retain(handle){for(const g of gather(handle.root).geometries)if(g.userData.kstShared)refs.set(g,(refs.get(g)||0)+1);},
- release(handle){for(const g of gather(handle.root).geometries)if(g.userData.kstShared){const n=refs.get(g);if(!n)throw new Error('Shared geometry reference underflow');if(n===1){refs.delete(g);g.dispose();releases++;}else refs.set(g,n-1);}},
- snapshot(){let bytes=0,activeBytes=0;for(const g of registered){let n=g.index?.array.byteLength||0;for(const a of Object.values(g.attributes))n+=a.array.byteLength;bytes+=n;if(refs.has(g))activeBytes+=n;}return{cachedGeometries:registered.size,referencedGeometries:refs.size,cpuBytes:bytes,activeBytes,gpuLastReferenceReleases:releases,referenceTotal:[...refs.values()].reduce((a,b)=>a+b,0)};},
- dispose(){if(closed)return;if(refs.size)throw new Error('Cannot dispose a referenced shared pool');for(const g of registered)g.dispose();words.dispose({resources:false});registered.clear();primitives.clear();closed=true;}};return shared;
+ retain(handle){for(const g of gather(handle.root).geometries)if(g.userData.kstShared){refs.set(g,(refs.get(g)||0)+1);lastUsed.set(g,++touch);}trim();},
+ release(handle){for(const g of gather(handle.root).geometries)if(g.userData.kstShared){const n=refs.get(g);if(!n)throw new Error('Shared geometry reference underflow');if(n===1){refs.delete(g);g.dispose();releases++;lastUsed.set(g,++touch);}else refs.set(g,n-1);}trim();},
+ snapshot(){let bytes=0,activeBytes=0;for(const g of registered){let n=g.index?.array.byteLength||0;for(const a of Object.values(g.attributes))n+=a.array.byteLength;bytes+=n;if(refs.has(g))activeBytes+=n;}return{cacheBudgetBytes:Number.isFinite(cacheBudgetBytes)?cacheBudgetBytes:null,cachePolicy:cacheBudgetBytes===0?'immediate':cacheBudgetBytes===Infinity?'unbounded':'bounded-lru',evictedGlyphs:evictions,peakCpuBytes,wordFactory:words.stats(),cachedGeometries:registered.size,referencedGeometries:refs.size,cpuBytes:bytes,activeBytes,gpuLastReferenceReleases:releases,referenceTotal:[...refs.values()].reduce((a,b)=>a+b,0)};},
+ dispose(){if(closed)return;if(refs.size)throw new Error('Cannot dispose a referenced shared pool');for(const g of registered)g.dispose();words.dispose({resources:false});registered.clear();primitives.clear();lastUsed.clear();closed=true;}};return shared;
 }
