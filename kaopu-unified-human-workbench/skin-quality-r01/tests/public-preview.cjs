@@ -1,0 +1,41 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto');
+const commit='ca9f7e40144480535b08a594f0ecf9a5375cd59b',route='/haihao0307/guilin-dem-pipeline/'+commit+'/kaopu-unified-human-workbench/skin-quality-r01/';
+const URL='https://raw.githack.com'+route+'preview.html',RAW='https://raw.githubusercontent.com'+route,OUT='qa-skin-public-ca9f7e40',EXPECTED='5b8769dce62a072562ac41de70a087c68216328e2fc580202831ba751050c709';
+fs.mkdirSync(OUT,{recursive:true});const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
+async function bytes(url){const r=await fetch(url,{signal:AbortSignal.timeout(60000)});assert(r.ok,'HTTP '+r.status+' '+url);return Buffer.from(await r.arrayBuffer());}
+async function preflight(){
+ const m=JSON.parse(await bytes(RAW+'BUILD.json')),entry=await bytes(RAW+'preview.html');assert.equal(m.renderedSHA256,EXPECTED);assert.equal(m.renderedBytes,1080046);assert.equal(hash(entry),m.previewSHA256);assert.equal(entry.length,m.previewBytes);assert.equal(m.parts.length,45);
+ const parts=new Array(m.parts.length);let next=0;await Promise.all(Array.from({length:4},async()=>{for(;;){const i=next++;if(i>=parts.length)return;const p=m.parts[i];assert(/^preview-parts\/part-\d{3}\.txt$/.test(p.path));assert(p.bytes<=32768);const b=await bytes(RAW+p.path);assert.equal(b.length,p.bytes);assert.equal(hash(b),p.sha256);parts[i]=b;}}));
+ const app=Buffer.concat(parts);assert.equal(hash(app),EXPECTED);assert.equal(app.length,m.renderedBytes);fs.writeFileSync(OUT+'/preflight.json',JSON.stringify({pass:true,commit,url:URL,loaderSHA256:hash(entry),renderedSHA256:hash(app),renderedBytes:app.length,parts:parts.length,sourceBuild:m.sourceBuild},null,2));console.log('PREFLIGHT PASS: fixed commit, loader, all 45 parts and original application bytes');
+}
+async function browserQA(){
+ const {chromium}=require('playwright'),pre=JSON.parse(fs.readFileSync(OUT+'/preflight.json'));assert(pre.pass&&pre.renderedSHA256===EXPECTED);
+ const R={commit,url:URL,checks:[],errors:[],warnings:[],hostErrors:[],screenshots:[],responses:[],confirmationClicks:0,filmQualityAccepted:false};let browser,page,phase='host';
+ const check=(name,pass,detail)=>{R.checks.push({name,pass:!!pass,detail});console.log('CHECK',name,!!pass);assert(pass,name+' '+JSON.stringify(detail));};
+ try{
+  browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});page=await browser.newPage({viewport:{width:1440,height:1040},deviceScaleFactor:1});
+  page.on('pageerror',e=>(phase==='host'?R.hostErrors:R.errors).push(e.message));page.on('console',m=>{if(m.type()==='error')(phase==='host'?R.hostErrors:R.errors).push(m.text());if(m.type()==='warning'&&phase==='app')R.warnings.push(m.text());});page.on('response',r=>{if(r.url().startsWith('https://raw.githubusercontent.com/'))R.responses.push({url:r.url(),status:r.status()});});
+  const first=await page.goto(URL,{waitUntil:'domcontentloaded',timeout:120000});R.initialResponse={status:first.status(),url:first.url(),title:await page.title()};check('fixed public URL responds successfully',first.ok());
+  const open=page.getByText('Open the page',{exact:true});
+  if(await open.count()){
+   const current=new global.URL(page.url()),body=await page.locator('body').innerText();
+   check('hosting confirmation names only approved exact URL',current.origin==='https://raw.githack.com'&&current.pathname===route+'preview.html'&&body.includes(URL)&&body.includes('One more step')&&await open.count()===1);
+   await page.screenshot({path:OUT+'/host-confirmation.png'});R.screenshots.push('host-confirmation.png');
+   // One explicitly authorized hosting-site confirmation; never a browser security warning.
+   phase='app';await open.click();R.confirmationClicks++;check('hosting confirmation clicked once',R.confirmationClicks===1);
+  }else phase='app';
+  await page.waitForFunction(()=>window.regionalWorkbench||document.querySelector('[data-failed="true"]'),null,{timeout:240000});check('verified loader did not reject parts',await page.locator('[data-failed="true"]').count()===0);await page.evaluate(()=>__REGIONAL_PREVIEW_READY__);
+  R.finalURL=page.url();const final=new global.URL(R.finalURL);check('navigation stays on approved repository commit and origin',final.origin==='https://raw.githack.com'&&final.pathname===route+'preview.html');
+  const delivery=await page.evaluate(()=>window.__REGIONAL_DELIVERY__);R.delivery=delivery;check('browser verified original application bytes before execution',delivery?.verified&&delivery.sha256===EXPECTED&&delivery.bytes===1080046&&delivery.parts===45&&delivery.documentURL===R.finalURL);
+  await page.evaluate(()=>fullCommonWorkbench.motion().setMode('shape'));await page.evaluate(()=>regionalWorkbench.view('mouth'));
+  check('all original 89 face controls retained',await page.evaluate(()=>identityWorkbench.catalog().length===89));check('all five regional controls present',await page.locator('[data-r]').count()===5);check('one native renderer canvas',await page.locator('canvas').count()===1);
+  const pixels=()=>page.evaluate(async()=>{const v=__IDENTITY_QA__.viewer();v.render();const gl=v.renderer.getContext(),p=new Uint8Array(gl.drawingBufferWidth*gl.drawingBufferHeight*4);gl.readPixels(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight,gl.RGBA,gl.UNSIGNED_BYTE,p);if(gl.getError()!==gl.NO_ERROR)throw Error('WebGL error');return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',p)),x=>x.toString(16).padStart(2,'0')).join('');});
+  const archive=await page.evaluate(()=>fullCommonWorkbench.archive()),on=await pixels();await page.locator('#canvas').screenshot({path:OUT+'/mouth-on.png'});R.screenshots.push('mouth-on.png');await page.locator('[data-r-toggle]').click();const off=await pixels();await page.locator('#canvas').screenshot({path:OUT+'/mouth-off.png'});R.screenshots.push('mouth-off.png');check('public region switch changes real framebuffer',on!==off);await page.locator('[data-r-toggle]').click();check('public region switch restores exact framebuffer',on===await pixels());
+  await page.locator('[data-r="lipDryness"]').evaluate(el=>{el.value='1';el.dispatchEvent(new Event('input',{bubbles:true}));});check('public lip slider changes actual material',on!==await pixels());await page.evaluate(a=>fullCommonWorkbench.restore(a),archive);check('public full archive restores exact framebuffer',on===await pixels());R.framebuffer={on,off};
+  await page.evaluate(()=>regionalWorkbench.view('eyes'));await page.locator('#canvas').screenshot({path:OUT+'/eyes-on.png'});R.screenshots.push('eyes-on.png');await page.evaluate(()=>regionalWorkbench.view('face'));await page.screenshot({path:OUT+'/native-entry.png'});R.screenshots.push('native-entry.png');
+  check('pinned native assets return no HTTP errors',R.responses.length>0&&R.responses.every(x=>x.status>=200&&x.status<400));check('no duplicate Three runtime',!R.warnings.some(x=>/Multiple instances of Three/.test(x)));check('no application JavaScript or WebGL errors',R.errors.length===0,R.errors);
+  await page.setViewportSize({width:390,height:844});await page.waitForTimeout(500);check('390x844 viewport retains canvas and controls',await page.locator('canvas').count()===1&&await page.locator('[data-r]').count()===5);await page.screenshot({path:OUT+'/mobile-viewport.png'});R.screenshots.push('mobile-viewport.png');R.mobile={viewport:[390,844],physicalDeviceTest:false};R.settings=await page.evaluate(()=>regionalWorkbench.report());R.pass=true;
+ }catch(e){R.pass=false;R.failure=e.stack;if(page){R.finalURL=page.url();R.bodyExcerpt=(await page.locator('body').innerText().catch(()=>'' )).slice(0,3000);await page.screenshot({path:OUT+'/failure.png'}).catch(()=>{});}throw e;
+ }finally{if(browser)await browser.close();fs.writeFileSync(OUT+'/report.json',JSON.stringify(R,null,2));console.log(JSON.stringify({pass:R.pass,checks:R.checks.length,confirmationClicks:R.confirmationClicks,errors:R.errors,finalURL:R.finalURL}));}
+}
+(process.argv[2]==='preflight'?preflight():browserQA()).catch(e=>{console.error(e);process.exitCode=1;});
