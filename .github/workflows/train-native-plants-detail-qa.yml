@@ -1,0 +1,41 @@
+name: Train native plants detailed inspection angles
+on:
+  push:
+    branches: ['qa/train-native-plants-r01-20261010']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/tests/train-plants-detail-browser.cjs'
+      - '.github/workflows/train-native-plants-detail-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: train-native-plants-detail-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  detail:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Install official pinned browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/plant-detail" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/plant-detail/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/plant-detail/node_modules" >> "$GITHUB_ENV"
+      - name: Serve unchanged runtime candidate
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/plant-detail-http.log" 2>&1 &
+          for n in $(seq 1 30); do curl --fail --silent http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/ >/dev/null && exit 0; sleep 1; done
+          exit 1
+      - name: Actual plant trunks, roots and leaf forms with railway scale
+        run: node kaopu-minigame-workbench/voxel-train-study/tests/train-plants-detail-browser.cjs
+      - name: Preserve evidence including failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-native-plants-detail-${{ github.sha }}
+          path: train-plants-r01-results/detail/
+          retention-days: 7
+          compression-level: 0
