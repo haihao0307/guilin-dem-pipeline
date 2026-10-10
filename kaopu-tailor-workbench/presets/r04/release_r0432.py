@@ -19,6 +19,7 @@ def checked():
  assert a['sourceCommit']==v['reviewedSourceCommit']
  assert a['summary']['actualSolverRecords']==60 and a['summary']['staticGatePassedRecords']==22
  for n,r in a['files'].items():assert sha(P/n)==r['sha256'],('Unreviewed file change',n)
+ for n,h in v.get('additionalReviewedRuntimeFiles',{}).items():assert sha(P/n)==h,('Unreviewed required dependency',n)
  idx=load('assets/results/index.json');assert len(idx['rows'])==60 and not idx.get('checkpoints')
  for r in idx['rows'].values():assert sha(P/'assets/results'/r['file'])==r['sha256']
  return a
@@ -34,8 +35,11 @@ def publish():
  a=checked();source=git('rev-parse','HEAD');fixed='kaopu-tailor-workbench/presets/r0432-'+source[:12]
  git('config','user.name','github-actions[bot]');git('config','user.email','41898282+github-actions[bot]@users.noreply.github.com')
  files=dict(a['files'])
- for n in ['R0432_ACCEPTANCE.json','R0432_REVIEW.json','R0432_CODE_PROOF.json','R0432_PROMOTION.json','PARAMETER_AUDIT_R043.json','R0431_PATCH_PROOF.json','R043C_ACCEPTANCE.json','R043C_SELECTED_ROUTES.json','SOURCE_AUDIT.json','RELEASE_NOTES_R0432_ZH.md']:
+ for n in ['parameter-schema.json','R0432_ACCEPTANCE.json','R0432_REVIEW.json','R0432_CODE_PROOF.json','R0432_PROMOTION.json','PARAMETER_AUDIT_R043.json','R0431_PATCH_PROOF.json','R043C_ACCEPTANCE.json','R043C_SELECTED_ROUTES.json','SOURCE_AUDIT.json','RELEASE_NOTES_R0432_ZH.md']:
   files[n]={'sha256':sha(P/n),'bytes':(P/n).stat().st_size}
+ from bundle_closure_r0432 import verify_literal_json_closure
+ closure=verify_literal_json_closure(P,files);closure['runtimeSourceCommit']=source;save('R0432_BUNDLE_CLOSURE.json',closure)
+ files['R0432_BUNDLE_CLOSURE.json']={'sha256':sha(P/'R0432_BUNDLE_CLOSURE.json'),'bytes':(P/'R0432_BUNDLE_CLOSURE.json').stat().st_size}
  m={'version':'R04.3.2-native','owner':BRANCH,'runtimeSourceCommit':source,'nativeSolveSourceCommit':a['sourceCommit'],
   'person':load('assets/identity.json')['person'],'summary':a['summary'],'sourceParameters':122,'outfits':432,
   'all60GarmentsAccepted':False,'physicalFitAccepted':False,'dynamicWearCertified':False,'jointOutfitCollisionCertified':False,'files':files}
@@ -74,7 +78,7 @@ def publish():
     time.sleep(3)
   assert receipt
   save('R0432_RELEASE_STATE.json',receipt)
-  retain(['R0432_MANIFEST.json','R04_MANIFEST.json','R0432_RELEASE_STATE.json'],'docs(tailor-r0432): retain additive publication receipt pending actual HTTPS verification')
+  retain(['R0432_MANIFEST.json','R04_MANIFEST.json','R0432_RELEASE_STATE.json','R0432_BUNDLE_CLOSURE.json'],'docs(tailor-r0432): retain additive publication receipt pending actual HTTPS verification')
   print('R0432_PUBLISHED',json.dumps(receipt,ensure_ascii=False),flush=True)
  finally:
   subprocess.run(['git','worktree','remove',str(work)],cwd=ROOT,check=False)
