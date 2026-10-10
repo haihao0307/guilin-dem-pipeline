@@ -1,0 +1,50 @@
+name: Train street-scale young plants R02 review only
+on:
+  push:
+    branches: ['qa/train-plants-street-scale-r02-20261010']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r02/**'
+      - '.github/workflows/train-plants-street-scale-r02-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: train-plants-street-scale-r02-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      GAME: kaopu-minigame-workbench/voxel-train-study/game
+      CANDIDATE: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r02
+      PANDANUS_REFERENCE_SOURCE: kaopu-tree-fractal-wave-lab/mobile-r05-seasons/runtime-pandanus-r05.js
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-minigame-workbench/voxel-train-study
+            kaopu-tree-fractal-wave-lab/mobile-r05-seasons
+      - name: Native source, metre comparison, clearances and regressions
+        run: node --test "$CANDIDATE/plants/"*.test.mjs "$CANDIDATE/tests/"*.test.mjs
+      - name: Install official pinned browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/plant-scale-qa" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/plant-scale-qa/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/plant-scale-qa/node_modules" >> "$GITHUB_ENV"
+      - name: Serve preserved R01 and separate young-plant candidate
+        run: |
+          cp -a "$GAME/r20-plants-r01" "$GAME/r01-scale-baseline"
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/plant-scale-http.log" 2>&1 &
+          for n in $(seq 1 30); do curl --fail --silent http://127.0.0.1:8765/$CANDIDATE/ >/dev/null && exit 0; sleep 1; done
+          exit 1
+      - name: Actual same-camera before and after, visible full young plants
+        run: node "$CANDIDATE/plants/browser-comparison.cjs"
+      - name: Preserve evidence without publishing Pages
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-plants-street-scale-r02-${{ github.sha }}
+          path: train-plants-r02-results/comparison/
+          retention-days: 7
+          compression-level: 0
