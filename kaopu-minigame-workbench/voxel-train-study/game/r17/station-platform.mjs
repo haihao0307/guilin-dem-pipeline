@@ -327,10 +327,10 @@ export function createStationPlatform(plan){
   const crewAnchor=crew.anchor;
   function updateCrew(view,isCurrentStation){if(disposed)return false;return crew.update(view,isCurrentStation);}
   const zone=new Blocks(),radius=Number.isFinite(plan.radius)?plan.radius:2.8;
-  for(const z of [-1.22,1.22])zone.box(5,.38,z,radius*2,.08,.065,0xffffff);
-  for(const x of [5-radius,5+radius])zone.box(x,.38,0,.065,.08,2.5,0xffffff);
+  for(const z of [-1.22,1.22])zone.box(5,.183,z,radius*2,.006,.065,0xffffff);
+  for(const x of [5-radius,5+radius])zone.box(x,.183,0,.065,.006,2.5,0xffffff);
   zone.box(5,1.02,1.85,.10,1.65,.10,0xffffff);zone.box(5,1.96,1.85,.53,.42,.12,0xffffff);
-  const zoneMaterial=new THREE.MeshStandardMaterial({color:0xcfb96d,roughness:.7,emissive:0x242012}),stopZone=new THREE.Mesh(zone.geometry(),zoneMaterial);stopZone.name='Unchanged stopping zone';stopZone.castShadow=stopZone.receiveShadow=true;group.add(stopZone);
+  const zoneMaterial=new THREE.MeshStandardMaterial({color:0xcfb96d,roughness:.7,emissive:0x242012}),stopZone=new THREE.Mesh(zone.geometry(),zoneMaterial);stopZone.name='Ground-painted stopping zone and side marker';stopZone.castShadow=stopZone.receiveShadow=true;group.add(stopZone);
   box.dispose();group.updateMatrixWorld(true);
   let meshes=0,triangles=0;group.traverse(o=>{if(o.isMesh){meshes++;triangles+=(o.geometry.index?.count||o.geometry.attributes.position.count)/3;}});
   for(const obstacle of proof.obstacles){obstacle.min[1]=deckY(obstacle.min[1]);obstacle.max[1]=deckY(obstacle.max[1]);}for(const a of proof.lanternPositions)a[1]=deckY(a[1]);proof.drawCalls=meshes;proof.triangles=triangles;proof.signAnchor=PLATFORM_SPEC.sign.slice();proof.signPosition=PLATFORM_SPEC.sign.slice();proof.signSize=[4.20,.74];proof.signTextureSize=[2048,640];proof.lampPositions=proof.lanternPositions;proof.clearWalkway=PLATFORM_SPEC.clearWalkway;group.userData.stationProof=proof;

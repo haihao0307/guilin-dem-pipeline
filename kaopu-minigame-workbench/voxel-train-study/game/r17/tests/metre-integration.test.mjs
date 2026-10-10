@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import * as THREE from '../../../vendor/three.module.js';
-import {TRACK,WD_VERIFIED,COACH_DIMENSIONS as D,COACH_LAYOUT,COACH_FLOOR,PLATFORM_LAYOUT as P} from '../metre-scale.mjs';
+import {TRACK,WD_VERIFIED,COACH_DIMENSIONS as D,COACH_LAYOUT,COACH_FLOOR,PLATFORM_LAYOUT as P,CONSIST_BOUNDS} from '../metre-scale.mjs';
 import {Session,replay,DT} from '../session.mjs';import {createGameWorld} from '../world.mjs';
 import {createStationPlatform} from '../station-platform.mjs';import {createSteamDynamics} from '../steam-dynamics.mjs';
 import {CAMERA_PRESETS,boundCameraPose,CAMERA_LIMITS} from '../camera-presets.mjs';
@@ -48,4 +48,25 @@ test('camera safety enclosure contains the actual longer train and clamps sweeps
  const b=bounds(world.train.root),c=CAMERA_LIMITS.trainClearance;assert(b.min.x>c.min[0]&&b.max.x<c.max[0]);assert(b.min.z>c.min[2]&&b.max.z<c.max[2]);assert(b.max.y<c.max[1]);
  for(let x=b.min.x;x<=b.max.x;x+=.5)for(const z of [-1,0,1]){const p=boundCameraPose([x,2,z],[x,2,0]).position;assert(!p.every((v,i)=>v>c.min[i]&&v<c.max[i]));}
  for(const preset of Object.values(CAMERA_PRESETS))for(const layout of ['landscape','portrait'])assert(preset[layout].position.every(Number.isFinite));
+});
+
+test('existing route truss is raised to clear the complete metre train envelope',async()=>{
+ const {Blocks,bridge}=await import('../heritage.mjs'),b=new Blocks();bridge(b,0);const g=b.geometry(),p=g.attributes.position;
+ const top=[];for(let i=p.count-6*24;i<p.count;i++)top.push(p.getY(i)); // final six spanning crossbeams, actual vertices
+ assert(Math.min(...top)>4,'selected complete top beam geometry');
+ assert(top.length>0);assert(Math.min(...top)>=CONSIST_BOUNDS.max[1]+.25-1e-5);g.dispose();
+});
+
+test('all existing station variants and waiting-room roofs stay outside the moving train side envelope',async()=>{
+ const {createStationRoom}=await import('../station-room.mjs');const movingSide=1.49; // actual maximum 1.45531 plus 34mm body-motion allowance
+ for(let index=0;index<9;index++){
+  const station=createStationPlatform({index,name:'TEST',english:'TEST'}),room=createStationRoom({index});room.group.position.y+=P.top-.82;station.group.add(room.group);station.group.updateMatrixWorld(true);
+  let nearest=Infinity;const v=new THREE.Vector3();station.group.traverse(o=>{if(!o.geometry)return;const p=o.geometry.attributes.position;for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i).applyMatrix4(o.matrixWorld);if(v.y>.4)nearest=Math.min(nearest,v.z);}});
+  assert(nearest>movingSide,`station ${index} nearest fixed above-rail structure ${nearest}`);room.dispose();station.dispose();
+ }
+});
+
+test('stop-zone cross-track marking is ground paint, never an 80mm obstacle above rails',()=>{
+ const s=createStationPlatform({index:0,name:'TEST',english:'TEST'}),o=s.group.getObjectByName('Ground-painted stopping zone and side marker'),p=o.geometry.attributes.position;
+ for(let i=0;i<4*24;i++)assert(p.getY(i)<TRACK.railHead-.12);s.dispose();
 });

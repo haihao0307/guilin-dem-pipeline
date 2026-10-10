@@ -18,10 +18,12 @@ BR WOSS612/10 wheel data, inspected page39: https://preserved.railcar.co.uk/docu
 Swanage operator overview: https://stock.swanagerailway.co.uk/getfile.php?id=140
 Hong Kong No.313 approximately20m length: https://www.news.gov.hk/eng/2020/10/20201030/20201030_123705_698.html
 
-Drawings and private reference photographs are not included or uploaded. Original code and licensed finite glyph functions only. Font notices remain in street/licenses/.
+Drawings and private reference photographs are not included or uploaded. Original code and licensed finite glyph functions only. Font notices remain in street/glyphs-LICENSE.txt.
 
 ## Limits
 
 Verified axle/roof/body dimensions do not certify the whole fictional engine. The WD boiler outer diameter, cab floor/roof, tender and body contour are clearly marked authoring assumptions. Coach interior floor/door/seat dimensions are physical design choices, not measured historical data. CPU geometry/route tests do not establish WebGL appearance or device performance. Film-quality materials and final human anatomy remain unfinished.
 
 The acceptance workflow serves the exact Draft commit on a read-only official GitHub runner and never deploys it. Dimensional fixture screenshots add explicit test rulers and a1.72m person; native journey screenshots are separately labelled and use trusted controls and the production clock.
+
+Existing route fixtures are checked against the full-size consist. The original truss top beam is raised to underside y4.90 m for the conservative y4.65 m dynamic envelope plus 0.25 m authored clearance. Stop-zone stripes are ground paint at y0.183 m, not raised obstacles across the railheads. Nine existing station/canopy/room variants were vertex-checked outside the above-rail moving side envelope. No tunnel geometry currently exists in this entry.

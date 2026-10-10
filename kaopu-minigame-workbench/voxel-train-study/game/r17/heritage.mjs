@@ -1,4 +1,4 @@
-import {TRACK} from './metre-scale.mjs';
+import {TRACK,CONSIST_BOUNDS} from './metre-scale.mjs';
 // Game-only derivative of the approved procedural builders. Classic source remains unchanged.
 // Original buildTrain() is retained verbatim and verified against the approved mesh.
 import * as THREE from '../../vendor/three.module.js';
@@ -99,7 +99,8 @@ function tree(b,x,z,h=3.1,seed=11,crown=.66,vertical=.34){
   }
 }
 
-function bridge(b,x){const L=14.05576,H=4.33704,panels=5;
+function bridge(b,x){const L=14.05576,H=CONSIST_BOUNDS.max[1]+.25+.08,panels=5;
+  // R17 full-height envelope plus 250mm design clearance below the .16m top beams.
   // The source's apparent rear arch is the belt deformation of a straight truss.
   for(const z of [-1.95164,1.95164]){
     b.beam(x-L/2,H,z,x+L/2,H,z,.15,0x6f5b4b);

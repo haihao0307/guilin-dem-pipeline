@@ -787,7 +787,7 @@ const scaleFixtureHarness = `
  async place(kind='door') {
   const M=await import('./metre-scale.mjs'), C=await import('./characters.mjs');
   start({line:'kcr1',seed:'R17-METRE-FIXTURE'});
-  game.distance=kind==='station'?0:30;game.velocity=0;game.throttle=0;game.door=1;game.stopStable=1;
+  game.distance=kind==='station'?0:kind==='bridge'?(game.route[0].target+game.route[1].target)/2+M.CONSIST.frontX:30;game.velocity=0;game.throttle=0;game.door=1;game.stopStable=1;
   game.elapsed=20;game.tick=600;game.phase='ready-depart';game.paused=true;
   $('startScreen').hidden=true;$('pauseScreen').hidden=true;
   world.train.setBodyMotionEnabled(false);
@@ -808,10 +808,10 @@ const scaleFixtureHarness = `
   const origin=world.streetDistrict.root.position.x;
   ruler([origin-14.4,.0805,-7.4],[origin-14.4,4.2805,-7.4],0x71ee87);
   ruler([origin-14.15,4.2805,-7.4],[origin-14.15,7.3105,-7.4],0x71ee87);
-  const positions={door:[door+7,4.8,13.5],rail:[7.5,1.4,6],station:[door+13,5.5,17],overview:[10,19,70]};
-  const targets={door:[door-1,3.7,-4.2],rail:[1.0,.85,0],station:[door+2,2.9,.8],overview:[-24,2,0]};
+  const positions={door:[door+7,4.8,13.5],rail:[7.5,1.4,6],station:[door+13,5.5,17],bridge:[9,5.3,12],overview:[10,19,70]};
+  const targets={door:[door-1,3.7,-4.2],rail:[1.0,.85,0],station:[door+2,2.9,.8],bridge:[-2,2.3,0],overview:[-24,2,0]};
   camera.position.fromArray(positions[kind]||positions.door);cameraTarget.fromArray(targets[kind]||targets.door);camera.zoom=1;camera.fov=38;camera.aspect=wrap.clientWidth/wrap.clientHeight;camera.updateProjectionMatrix();camera.lookAt(cameraTarget);camera.updateMatrixWorld();
-  manualCamera={position:camera.position.clone(),target:cameraTarget.clone()};needsRender=false;
+  viewControls.saveCurrent();manualCamera={position:camera.position.clone(),target:cameraTarget.clone()};needsRender=false;
   world.root.updateWorldMatrix(true,true);scene.updateMatrixWorld(true);renderer.render(scene,camera);gl.finish();
   // QA-only presentation: default gameplay HUD remains unchanged in production.
   for(const id of ['journeyHud','drivePanel','tutorial','notice','streetStatus'])if($(id))$(id).style.visibility='hidden';
@@ -820,10 +820,11 @@ const scaleFixtureHarness = `
   const rect=canvas.getBoundingClientRect(),wrapRect=wrap.getBoundingClientRect();
   const label=(text,p,color)=>{const v=new THREE.Vector3(...p).project(camera);if(Math.abs(v.x)>1||Math.abs(v.y)>1||v.z>1)return;const el=document.createElement('div');el.textContent=text;el.style.cssText='position:absolute;padding:4px 6px;background:#101717df;border:1px solid '+color+';color:'+color+';white-space:nowrap';el.style.left=Math.max(8,Math.min(rect.width-210,(v.x*.5+.5)*rect.width+rect.left-wrapRect.left+10))+'px';el.style.top=Math.max(50,Math.min(rect.height-35,(-v.y*.5+.5)*rect.height+rect.top-wrapRect.top-9))+'px';labels.appendChild(el);};
   label('Adult 1.720 m (sole → hair)',[door-.54,actor.position[1]+1.0,actor.position[2]+.04],'#ffde45');
-  label('Door clear 2.160 m',[door+.56,floor+M.COACH_DIMENSIONS.doorHeight,M.COACH_DIMENSIONS.width/2+.06],'#46e0ed');
+  label('Door 2.160 m (design)' ,[door+.56,floor+M.COACH_DIMENSIONS.doorHeight,M.COACH_DIMENSIONS.width/2+.06],'#46e0ed');
   label('Inner gauge 1.435 m',[gx,M.TRACK.railHead+.06,0],'#ff5c8d');
   label('Ground floor 4.200 m',[origin-14.4,4.2805,-7.4],'#71ee87');
   label('Upper storey 3.030 m',[origin-14.15,7.3105,-7.4],'#71ee87');
+  if(kind==='bridge')label('Bridge soffit y4.900 m / envelope y4.650 m',[-1,4.9,0],'#71ee87');
 
   const mesh=person.mesh,point=new THREE.Vector3(),im=new THREE.Matrix4(),wm=new THREE.Matrix4(),box=new THREE.Box3();
   for(let j=0;j<mesh.count;j++){mesh.getMatrixAt(j,im);wm.multiplyMatrices(mesh.matrixWorld,im);for(let i=0;i<mesh.geometry.attributes.position.count;i++)box.expandByPoint(point.fromBufferAttribute(mesh.geometry.attributes.position,i).applyMatrix4(wm));}
@@ -836,10 +837,11 @@ async function scaleFixtures(page) {
  const target=new URL('app.mjs',base);
  await page.route(u=>u.origin===target.origin&&u.pathname===target.pathname,async route=>{const response=await route.fetch(),original=await response.text(),suffix=observerHarness+scaleFixtureHarness;write('scale-instrumentation.json',{originalSHA256:sha(original),deliveredSHA256:sha(original+suffix),suffixSHA256:sha(suffix),fixtureStateWrites:true});await route.fulfill({response,body:original+suffix});});
  await open(page);await activeStreet(page);const shots=[];
- for(const kind of ['door','rail','station','overview']){
+ for(const kind of ['door','rail','station','overview','bridge']){
   const report=await page.evaluate(k=>__r17ScaleFixture.place(k),kind);
   assert(Math.abs(report.person.heightM-1.72)<1e-5);assert.equal(report.glError,0);assert(report.pixelColors>10);
   const png=await page.screenshot({path:path.join(out,'scale-'+kind+'.png'),timeout:60000});assert(png.length>12000);
+  const after=await page.evaluate(()=>({camera:__trainDriver.getState().camera,distance:__trainDriver.getState().distance,paused:__trainDriver.getState().paused}));assert.deepEqual(after.camera,report.camera,'Paused fixture camera remains exactly fixed through capture');assert.equal(after.distance,report.distance);assert(after.paused);report.postCapture=after;
   write('scale-'+kind+'.json',{...report,sha256:sha(png),pngBytes:png.length});shots.push({kind,sha256:sha(png),person:report.person});
  }
  return{fixtureStateWrites:true,shots,limitation:'Rulers and one 1.72m person are test-only generated geometry. This case does not establish native driving or final artistic quality.'};
