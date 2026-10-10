@@ -2,7 +2,7 @@ import * as THREE from '/native/kaopu-unified-human-workbench/full/source/regist
 import {FacialHairLayer} from './FacialHairLayer.js';import {attachFiberMaterial,fiberMaterialDiagnostics} from './FiberMaterial.js';
 export function attachNativeBrows(a, savedOptions=null){
  const m=a.motion().controller.model,v=a.motion().viewer,g=m.gnm,neutral=new THREE.BufferGeometry();neutral.setAttribute('position',new THREE.BufferAttribute(g.template.slice(),3));neutral.setIndex(new THREE.BufferAttribute(g.triangles,1));neutral.computeVertexNormals();
- const options=savedOptions||{brows:{count:1800,segments:8,density:.96,length:.0045,radius:.000055,maskRadius:.0053,archFlatten:.75,outerLift:.005,color:'#211a18'},beard:{count:1,visible:false}};
+ const options=savedOptions||{brows:{count:1200,segments:8,density:.96,length:.0045,radius:.000055,maskRadius:.0053,archFlatten:.75,outerLift:.005,color:'#211a18'},beard:{count:1,visible:false}};
  const facial=new FacialHairLayer(g,g.template,neutral.attributes.normal.array,options),b=facial.regions.brows,map=new Int32Array(g.numVertices).fill(-1);
  for(let hi=0;hi<m.canonical.gnmRecipes.length;hi++){const[x,y,t]=m.canonical.gnmRecipes[hi];if(x===y&&t===0){if(map[x]!==-1&&map[x]!==m.bodyCount+hi)throw Error('Ambiguous source mapping '+x);map[x]=m.bodyCount+hi;}}
  const usedFaces=new Set([...b.triangleIndices,...b.guideTriangles]),usedVertices=new Set(),oriented=new Set();for(let i=0;i<m.faces.length;i+=3){const[x,y,z]=m.faces.slice(i,i+3);oriented.add(`${x},${y},${z}`);oriented.add(`${y},${z},${x}`);oriented.add(`${z},${x},${y}`);}
