@@ -26,7 +26,7 @@ try:
   p.goto(BASE+'?preset=S02',wait_until='domcontentloaded');p.wait_for_function('window.__R04?.state().ready',timeout=300000)
   original=state(p)['person'];lock=json.loads((P/'assets/identity.json').read_text())['person']
   check('original common person and exact collider identity',original==lock)
-  check('runtime really contains the submitted R04.3.1 patch',state(p).get('release')=='R04.3.1')
+  check('runtime really contains the submitted R04.3.1 patch',state(p).get('release')=='R04.3.2')
   check('all source designs and pairing identities remain',state(p)['sourcePresets']==60 and len(p.evaluate('__R04.outfits()'))==432)
   for id in ['S02','P01','S06','S08','S09','S11','S12','T06','J06']:
    p.evaluate('id=>__R04.select(id)',id);s=state(p)

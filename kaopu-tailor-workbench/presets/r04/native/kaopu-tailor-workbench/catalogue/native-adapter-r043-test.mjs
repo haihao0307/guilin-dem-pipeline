@@ -3364,7 +3364,7 @@ function packet(type, extra = {}) {
 }
 async function startLegacySolve(token) {
  const corrected43=config?.variant43||!new Set(["T01","T02","T03","T04","T08","T15","T16","T17","T18"]).has(nativeBinding?.presetId);
- const spanCorrected43=corrected43&&(config?.variant43||!['T13','T14'].includes(nativeBinding?.presetId))&&spec.seams.some(s=>s.numericalStitchPlan&&Math.max(s.sourceSeam.lengthAMm,s.sourceSeam.lengthBMm)/Math.min(s.sourceSeam.lengthAMm,s.sourceSeam.lengthBMm)<=1.12+1e-12),kernelMode43=corrected43?(spanCorrected43?'seam-spans':'bending'):'legacy';
+ const spanCorrected43=corrected43&&new Set(["D07","J01","J02","J04","J06","P01","P02","P03","P04","P05","P08","P10","S03","S04","S10","S14"]).has(nativeBinding?.presetId)&&spec.seams.some(s=>s.numericalStitchPlan&&Math.max(s.sourceSeam.lengthAMm,s.sourceSeam.lengthBMm)/Math.min(s.sourceSeam.lengthAMm,s.sourceSeam.lengthBMm)<=1.12+1e-12),kernelMode43=corrected43?(spanCorrected43?'seam-spans':'bending'):'legacy';
  r043PreGuides=r043PreJoint=null;r043BudgetOrigin=0;r043Recovery=[];
  const sizing=preflightSizing(analytic);if(sizing.blocking)throw Error(sizing.message);
   if (config.kind !== "legacy" && !spec.source.experimentalSparseSewing) throw Error("Generate the R06 sparse-stitch material before a new-style trial");
@@ -3393,7 +3393,7 @@ async function startLegacySolve(token) {
   if(config.kind==="legacy")throw Error("基础款须使用保留的 R06 原始计算线程");
   prepareAssembly(spec,body);prepareShoulderFixtures(spec,sdf);if(corrected43)stageRadialSkirt(spec,analytic,body);
   lab = new GarmentLab2(spec, sdf, { substeps: corrected43&&nativeBinding.presetId==="T06"?18:12, iterations: corrected43&&nativeBinding.presetId==="T06"?4:1, sewingDuration:.75 });
- lab.pipeline43=corrected43;lab.spanCorrected43=spanCorrected43;if(corrected43)configureMaterialBending(lab);if(corrected43)lab.kernel.setBodyExterior43(...sdf.exteriorBounds.lo,...sdf.exteriorBounds.hi);
+ lab.pipeline43=corrected43;lab.spanCorrected43=spanCorrected43;lab.sideClearance43d=corrected43&&nativeBinding?.presetId==="P06";if(corrected43)configureMaterialBending(lab);if(corrected43)lab.kernel.setBodyExterior43(...sdf.exteriorBounds.lo,...sdf.exteriorBounds.hi);
   lab.orientationGuides = false;
   lab.selfCollisionEnabled = false;
   lab.stitchEqualityElimination = true;
@@ -3458,7 +3458,7 @@ function tick(token){
      record.nativeBinding=structuredClone(nativeBinding);record.staticGate=staticGate(lab,record,regions,intersections);profile.auditMs=performance.now()-begin;
      record.jointRefinement={...jointInfo,closure:closureInfo};
      record.trial={version:lab.pipeline43?'R04.3-native-material-circuit':'R04.2-preserved-baseline',physicalFitAccepted:false,continuousCollision:false,materialCalibrated:false,runtimeSelfContact:false,originalMaterialRetained:true,wholeSeamGateUnchanged:true};
-     record.r043={continuousSeamSpans:lab.seamSpanReport43c||null,bending:lab.bending43b||null,radialAssembly:spec.source.radialAssembly43b||null,surfaceBodySamplesPerTriangle:lab.pipeline43?4:0,sourceRepresentation:analytic.source?.r043SourceRepair||null,waistCircuit:lab.waistCircuitReport43||{enabled:false},preReleaseClosure:lab.preReleaseClosure43||null,adaptiveRecovery:r043Recovery,personScaled:false,displayProxy:false};
+     record.r043={constructionSideClearance:lab.seamSideClearance43d||null,continuousSeamSpans:lab.seamSpanReport43c||null,bending:lab.bending43b||null,radialAssembly:spec.source.radialAssembly43b||null,surfaceBodySamplesPerTriangle:lab.pipeline43?4:0,sourceRepresentation:analytic.source?.r043SourceRepair||null,waistCircuit:lab.waistCircuitReport43||{enabled:false},preReleaseClosure:lab.preReleaseClosure43||null,adaptiveRecovery:r043Recovery,personScaled:false,displayProxy:false};
      emit('done',{record,regions,intersections,profile,activeWallMs:wallMs+profile.auditMs});return;
     }
    }

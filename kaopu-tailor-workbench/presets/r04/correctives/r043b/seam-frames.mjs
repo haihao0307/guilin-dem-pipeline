@@ -1,3 +1,4 @@
+import {compatibleSeamClearance} from '../../seam-clearance-r0432.mjs';
 /** Extend original seam-side inequalities to ordinary native joins.
  * Existing sparse gathering guides and all acceptance constants remain.
  * These are static construction-orientation constraints, NOT general self contact.
@@ -5,7 +6,9 @@
 import {refinementGuides,beginJointRefinement as originalBegin} from '../../native/kaopu-tailor-workbench/r07/stability/refinement.mjs';
 export function beginMaterialRefinement(lab){
  if(!lab.pipeline43)return originalBegin(lab);
- const rows=refinementGuides(lab),keys=new Set(rows.map(g=>g.ids.join(','))),panels=new Map(lab.spec.panels.map(p=>[p.id,p]));let additional=0;
+ const base=refinementGuides(lab),clearance=lab.sideClearance43d?compatibleSeamClearance(lab,base):null;
+ if(clearance)lab.seamSideClearance43d=clearance.report;
+ const rows=clearance?clearance.rows:base,keys=new Set(rows.map(g=>g.ids.join(','))),panels=new Map(lab.spec.panels.map(p=>[p.id,p]));let additional=0;
  for(const seam of lab.spec.seams){
   if(seam.sourceSeam?.isDart||seam.a.panelId===seam.b.panelId)continue;
   let A=seam.a,B=seam.b,pairs=seam.stitchVertexPairs;

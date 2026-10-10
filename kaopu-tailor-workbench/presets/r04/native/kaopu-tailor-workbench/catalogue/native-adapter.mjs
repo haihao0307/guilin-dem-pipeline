@@ -3393,7 +3393,7 @@ async function startLegacySolve(token) {
   if(config.kind==="legacy")throw Error("基础款须使用保留的 R06 原始计算线程");
   prepareAssembly(spec,body);prepareShoulderFixtures(spec,sdf);if(corrected43)stageRadialSkirt(spec,analytic,body);
   lab = new GarmentLab2(spec, sdf, { substeps: corrected43&&nativeBinding.presetId==="T06"?18:12, iterations: corrected43&&nativeBinding.presetId==="T06"?4:1, sewingDuration:.75 });
- lab.pipeline43=corrected43;lab.spanCorrected43=spanCorrected43;if(corrected43)configureMaterialBending(lab);if(corrected43)lab.kernel.setBodyExterior43(...sdf.exteriorBounds.lo,...sdf.exteriorBounds.hi);
+ lab.pipeline43=corrected43;lab.spanCorrected43=spanCorrected43;lab.sideClearance43d=corrected43&&nativeBinding?.presetId==="P06";if(corrected43)configureMaterialBending(lab);if(corrected43)lab.kernel.setBodyExterior43(...sdf.exteriorBounds.lo,...sdf.exteriorBounds.hi);
   lab.orientationGuides = false;
   lab.selfCollisionEnabled = false;
   lab.stitchEqualityElimination = true;
@@ -3458,7 +3458,7 @@ function tick(token){
      record.nativeBinding=structuredClone(nativeBinding);record.staticGate=staticGate(lab,record,regions,intersections);profile.auditMs=performance.now()-begin;
      record.jointRefinement={...jointInfo,closure:closureInfo};
      record.trial={version:lab.pipeline43?'R04.3-native-material-circuit':'R04.2-preserved-baseline',physicalFitAccepted:false,continuousCollision:false,materialCalibrated:false,runtimeSelfContact:false,originalMaterialRetained:true,wholeSeamGateUnchanged:true};
-     record.r043={continuousSeamSpans:lab.seamSpanReport43c||null,bending:lab.bending43b||null,radialAssembly:spec.source.radialAssembly43b||null,surfaceBodySamplesPerTriangle:lab.pipeline43?4:0,sourceRepresentation:analytic.source?.r043SourceRepair||null,waistCircuit:lab.waistCircuitReport43||{enabled:false},preReleaseClosure:lab.preReleaseClosure43||null,adaptiveRecovery:r043Recovery,personScaled:false,displayProxy:false};
+     record.r043={constructionSideClearance:lab.seamSideClearance43d||null,continuousSeamSpans:lab.seamSpanReport43c||null,bending:lab.bending43b||null,radialAssembly:spec.source.radialAssembly43b||null,surfaceBodySamplesPerTriangle:lab.pipeline43?4:0,sourceRepresentation:analytic.source?.r043SourceRepair||null,waistCircuit:lab.waistCircuitReport43||{enabled:false},preReleaseClosure:lab.preReleaseClosure43||null,adaptiveRecovery:r043Recovery,personScaled:false,displayProxy:false};
      emit('done',{record,regions,intersections,profile,activeWallMs:wallMs+profile.auditMs});return;
     }
    }
