@@ -20,7 +20,6 @@ with sync_playwright() as pw:
  labels=page.locator('#cards .pending b').all_text_contents()
  check('No result is not misreported as loading',all(x in ['求解已中止','材料 / 缝边受限','材料网格受限','尚未完成缝合计算'] for x in labels),labels)
  check('Missing records expose their reasons',all(len(s)>5 for s in page.locator('#cards .pending p').all_text_contents()))
- page.screenshot(path=str(OUT/('public-' if PUBLIC else '')+'no-results.png')) if False else None
  page.screenshot(path=str(OUT/(('public-' if PUBLIC else '')+'no-results.png')))
  page.locator('[data-quality="all"]').click()
  for id in ['T01','T05','T06','T07','T08','T09','T10','T11','T12','T13','T15','P07','J06']:
