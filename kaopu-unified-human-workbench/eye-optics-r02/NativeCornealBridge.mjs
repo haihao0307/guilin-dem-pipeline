@@ -1,5 +1,5 @@
 import {recoverNativeEyeLayers,fitNativeIris} from './NativeEyeLayers.mjs';
-const VERSION='kaopu/native-corneal-bridge@2-research-quad-safe-v2';
+const VERSION='kaopu/native-corneal-bridge@2-research-quad-safe-v3';
 const GLSL=`
 uniform float uE2Mode,uE2IOR;
 uniform vec3 uE2O[2],uE2U[2],uE2V[2],uE2Z[2],uE2H[2];
@@ -23,8 +23,8 @@ vec2 e2Lookup(){
  // makes neighboring derivative quads undefined at the optical aperture edge.
  e2Reject=(!validRay||length(q)>1.035)?1.:0.;
  float hx=2.*H.x*q.x+H.y*q.y,hy=H.y*q.x+2.*H.z*q.y;
- // Quad-wide evaluation must not widen the visible optical support gate.
- e2InnerNormal=normalize(Z-hx*U-hy*V);e2HitView=P+D*(validRay?t:0.);e2Refracted=(vFEye.z>.01&&vCSType>3.5)?1.-e2Reject:0.;return q;
+ // The host tissue support gate is restored in main after uniform sampling.
+ e2InnerNormal=normalize(Z-hx*U-hy*V);e2HitView=P+D*(validRay?t:0.);e2Refracted=1.-e2Reject;return q;
 }
 `;
 export function patchCornealShader(shader,U){
@@ -35,6 +35,10 @@ export function patchCornealShader(shader,U){
  const coordinateAnchor='vec2 e1TissueCoordinates(){return vFEye.xy;}';
  if(!shader.fragmentShader.includes(coordinateAnchor))throw Error('E2 requires the explicit E1 tissue coordinate hook');
  shader.fragmentShader=shader.fragmentShader.replace(coordinateAnchor,GLSL+'\nvec2 e1TissueCoordinates(){return e2Lookup();}');
+ const sampleAnchor='if(uE1Enabled>.5)e1CachedColor=e1IrisColor();';
+ if(!shader.fragmentShader.includes(sampleAnchor))throw Error('E2 requires uniform pre-gate E1 sampling');
+ // vCSType is declared by the host after helper functions, so use it only in main.
+ shader.fragmentShader=shader.fragmentShader.replace(sampleAnchor,sampleAnchor+'\nif(!(vFEye.z>.01&&vCSType>3.5))e2Refracted=0.;');
  shader.fragmentShader=shader.fragmentShader.replace('void main() {','void main() {\nif(uE2Mode>.5&&uE2Mode<1.5&&vE2Layer>1.5)discard;');
  if(!shader.fragmentShader.includes('vec3 fDiffuse=totalDiffuse;'))throw Error('E2 requires native post-derivative output anchor');
  shader.fragmentShader=shader.fragmentShader.replace('vec3 fDiffuse=totalDiffuse;','if(uE2Mode>1.5&&vE2Layer>1.5&&vFEye.z>.01&&vCSType>3.5&&e2Reject>.5)discard;\nvec3 fDiffuse=totalDiffuse;');
