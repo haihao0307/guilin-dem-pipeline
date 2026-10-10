@@ -35,7 +35,8 @@ export class DenseSurface{
     const na=[N.array[ai],N.array[ai+1],N.array[ai+2]],nb=[N.array[bi],N.array[bi+1],N.array[bi+2]],agreement=na[0]*nb[0]+na[1]*nb[1]+na[2]*nb[2];
     // Preserve folds / semantic material boundaries instead of smoothing across them.
     const type=g.attributes.csType,same=!type||Math.abs(type.array[a]-type.array[b])<.01;
-    if(same&&agreement>.72){const da=(x-P.array[ai])*na[0]+(y-P.array[ai+1])*na[1]+(z-P.array[ai+2])*na[2],db=(x-P.array[bi])*nb[0]+(y-P.array[bi+1])*nb[1]+(z-P.array[bi+2])*nb[2];x-=.32*(da*na[0]+db*nb[0]);y-=.32*(da*na[1]+db*nb[1]);z-=.32*(da*na[2]+db*nb[2]);}
+    const thin=g.attributes.csExtra,ocular=(type&&(type.array[a]>3.5||type.array[b]>3.5))||(thin&&(thin.array[a*4]>.30||thin.array[b*4]>.30));
+    if(same&&agreement>.72&&!ocular){const da=(x-P.array[ai])*na[0]+(y-P.array[ai+1])*na[1]+(z-P.array[ai+2])*na[2],db=(x-P.array[bi])*nb[0]+(y-P.array[bi+1])*nb[1]+(z-P.array[bi+2])*nb[2];x-=.32*(da*na[0]+db*nb[0]);y-=.32*(da*na[1]+db*nb[1]);z-=.32*(da*na[2]+db*nb[2]);}
     Q.array[qi]=x;Q.array[qi+1]=y;Q.array[qi+2]=z;
    }
    const color=g.attributes.color;if(color){const c=geometry.attributes.color;c.array.set(color.array);for(let j=0;j<pairs.length;j++){const[a,b]=pairs[j];for(let q=0;q<3;q++)c.array[(oldCount+j)*3+q]=(color.array[a*3+q]+color.array[b*3+q])*.5;}c.needsUpdate=true;}
