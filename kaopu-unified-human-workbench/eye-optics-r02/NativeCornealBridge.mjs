@@ -4,7 +4,7 @@ const GLSL=`
 uniform float uE2Mode,uE2IOR;
 uniform vec3 uE2O[2],uE2U[2],uE2V[2],uE2Z[2],uE2H[2];
 varying float vE2Layer;varying vec3 vE2Normal;
-vec3 e2InnerNormal=vec3(0.,0.,1.);vec3 e2HitView=vec3(0.);float e2Refracted=0.;
+vec3 e2InnerNormal=vec3(0.,0.,1.);vec3 e2HitView=vec3(0.);float e2Refracted=0.;float e2Reject=0.;
 vec2 e2Lookup(){
  if(uE2Mode<1.5||vE2Layer<1.5)return vFEye.xy;
  int side=int(step(.5,vFEye.w));
@@ -18,11 +18,12 @@ vec2 e2Lookup(){
  float C=z-H.x*q.x*q.x-H.y*q.x*q.y-H.z*q.y*q.y,t=1e10;
  if(abs(A)<1e-9){if(abs(B)>1e-7)t=-C/B;}
  else{float disc=B*B-4.*A*C;if(disc>=0.){float s=sqrt(disc),stableQ=-.5*(B+(B>=0.?s:-s));float t0=stableQ/A,t1=abs(stableQ)>1e-12?C/stableQ:-1.;if(t0>1e-7)t=min(t,t0);if(t1>1e-7)t=min(t,t1);}}
- q+=d*t;
- // Outside the fitted iris aperture expose the actual inner sclera. No alpha blending.
- if(t<=1e-7||t>0.05||length(q)>1.035)discard;
+ bool validRay=t>1e-7&&t<0.05;q+=d*(validRay?t:0.);
+ // Defer cutout until AFTER all fwidth/texture/bump derivatives. Early discard
+ // makes neighboring derivative quads undefined at the optical aperture edge.
+ e2Reject=(!validRay||length(q)>1.035)?1.:0.;
  float hx=2.*H.x*q.x+H.y*q.y,hy=H.y*q.x+2.*H.z*q.y;
- e2InnerNormal=normalize(Z-hx*U-hy*V);e2HitView=P+D*t;e2Refracted=1.;return q;
+ e2InnerNormal=normalize(Z-hx*U-hy*V);e2HitView=P+D*(validRay?t:0.);e2Refracted=1.-e2Reject;return q;
 }
 `;
 export function patchCornealShader(shader,U){
@@ -34,6 +35,8 @@ export function patchCornealShader(shader,U){
  shader.fragmentShader=shader.fragmentShader.replace('float r=length(vFEye.xy),aa=', 'vec2 e2TissueQ=e2Lookup();float r=length(e2TissueQ),aa=');
  shader.fragmentShader=shader.fragmentShader.replace('atan(vFEye.y,vFEye.x)/6.28318530718','atan(e2TissueQ.y,e2TissueQ.x)/6.28318530718');
  shader.fragmentShader=shader.fragmentShader.replace('void main() {','void main() {\nif(uE2Mode>.5&&uE2Mode<1.5&&vE2Layer>1.5)discard;');
+ if(!shader.fragmentShader.includes('vec3 fDiffuse=totalDiffuse;'))throw Error('E2 requires native post-derivative output anchor');
+ shader.fragmentShader=shader.fragmentShader.replace('vec3 fDiffuse=totalDiffuse;','if(uE2Mode>1.5&&vE2Layer>1.5&&e2Reject>.5)discard;\nvec3 fDiffuse=totalDiffuse;');
  shader.fragmentShader=shader.fragmentShader.replace('e1OuterNormal=normal;', 'e1OuterNormal=normal;\nif(uE2Mode>1.5&&e2Refracted>.5)normal=e2InnerNormal;');
  return shader;
 }
