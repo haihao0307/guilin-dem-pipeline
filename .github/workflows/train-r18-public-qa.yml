@@ -1,0 +1,33 @@
+name: Train R18 published preview read-only smoke
+on:
+  push:
+    branches: ['qa/train-r18-public-20261010']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r18/tests/r18-public-smoke.cjs'
+      - '.github/workflows/train-r18-public-qa.yml'
+permissions:
+  contents: read
+jobs:
+  public-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      R18_PUBLISHED_MERGE: 63c5a80aa9ea862c789b6d7a0874f36a38a5127b
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Install pinned official test browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/train-public" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/train-public/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/train-public/node_modules" >> "$GITHUB_ENV"
+      - name: Verify exact public source and native navigation and controls
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r18/tests/r18-public-smoke.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: train-r18-public-${{ github.sha }}
+          path: train-r18-public-results/
+          retention-days: 7
