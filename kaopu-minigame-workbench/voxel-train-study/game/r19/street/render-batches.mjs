@@ -20,7 +20,7 @@ export function createDistrictBatches(){
   if(group.family==='cloth'){g.setAttribute('stMotion',attribute(new Float32Array(cap*4),4,group.instanced));g.setAttribute('stMotionHeight',attribute(new Float32Array(cap),1,group.instanced));}
   const material=library.get(group.family,group.transparent),mesh=group.instanced?new THREE.InstancedMesh(g,material,cap):new THREE.Mesh(g,material);
   if(group.instanced){mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);mesh.instanceColor=attribute(new Float32Array(cap*3),3,true);}
-  mesh.castShadow=mesh.receiveShadow=true;mesh.frustumCulled=false;mesh.name='R19-batch:'+key;mesh.customDepthMaterial=library.depthFor(group.family);root.add(mesh);
+  mesh.castShadow=mesh.receiveShadow=true;mesh.frustumCulled=false;mesh.name='R19-batch:'+key;const depth=library.depthFor(group.family);if(depth)mesh.customDepthMaterial=depth;root.add(mesh);
   b={mesh,geometry:g,capacity:cap,indexCapacity:indexCap,instanced:group.instanced,key};batches.set(key,b);return b;
  }
  function rebuild(chunks){
