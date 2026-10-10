@@ -1,0 +1,9 @@
+# Full-resolution volume study
+
+Independent CPU-generated Perlin/Worley density with baked directional and vertical optical-depth integrals. GPU performs front-to-back Beer-Lambert accumulation with128primary steps, early termination, moving fine edge erosion and real per-camera opaque-depth termination. Source field128×112×128RGBA8=7,340,032bytes; sun/sky transmittance use square-root storage for dark-range precision. Primary rendering uses the actual current viewport, without an automatic software-renderer reduction. Water reflection uses its explicit1024²target and the same volume at that target resolution.
+
+A static depth scene shares original opaque geometry, including the real cabin roof and foundations. Every camera receives its own depth target; the inverse uses the actual projection matrix, including Water2's oblique clipping. Refraction skips the above-water cloud; reflection renders it. Cloud direct-light attenuation derives from the same optical-depth field and sun direction as visible cloud shading.
+
+Method references: official Three.js r170 volume-cloud example (https://github.com/mrdoob/three.js/blob/r170/examples/webgl_volume_cloud.html), Guerrilla's real-time volumetric cloud presentation (https://www.guerrilla-games.com/read/the-real-time-volumetric-cloudscapes-of-horizon-zero-dawn), and Sébastien Hillaire's MIT tileable-noise reference (https://github.com/sebh/TileableVolumeNoise). The new density/light code is independently implemented; existing ImprovedNoise remains covered by the shared Three MIT notice.
+
+Reference framing is evaluated against the private original at2.5seconds. A density projection is not visual approval. Current intended macro footprint is near the original sphere; shape, lighting and fine detail require actual rendered review. Main and reflection buffer sizes, field-generation time and depth-pass status are emitted in runtime diagnostics. Render/capture delay is not device FPS.

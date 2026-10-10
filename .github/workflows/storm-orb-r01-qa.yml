@@ -1,0 +1,70 @@
+name: Storm whole cloud rain water checkpoint
+on:
+  pull_request:
+    branches: [gh-pages]
+    paths:
+      - 'kaopu-minigame-workbench/storm-orb-study/**'
+      - '.github/workflows/storm-orb-r01-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: storm-orb-r01-${{ github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}
+  cancel-in-progress: true
+jobs:
+  storm-browser:
+    if: github.head_ref == 'qa/voxel-train-r01-20261006'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 2
+          sparse-checkout: kaopu-minigame-workbench
+          sparse-checkout-cone-mode: true
+      - name: Check this head for Storm changes
+        id: scope
+        run: |
+          if git diff --quiet HEAD^ HEAD -- kaopu-minigame-workbench/storm-orb-study .github/workflows/storm-orb-r01-qa.yml; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Validate JavaScript
+        if: steps.scope.outputs.changed == 'true'
+        run: |
+          node --check kaopu-minigame-workbench/storm-orb-study/app.mjs
+          node --check kaopu-minigame-workbench/storm-orb-study/scene.mjs
+          node --check kaopu-minigame-workbench/storm-orb-study/materials.mjs
+          node --check kaopu-minigame-workbench/storm-orb-study/water.mjs
+          node --check kaopu-minigame-workbench/storm-orb-study/cloud-field.mjs
+          node --check kaopu-minigame-workbench/storm-orb-study/cloud-volume.mjs
+          node --check kaopu-minigame-workbench/storm-orb-study/rain.mjs
+      - name: Install official browser test dependency
+        if: steps.scope.outputs.changed == 'true'
+        run: |
+          npm install --prefix "$RUNNER_TEMP/storm-test" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/storm-test/node_modules/.bin/playwright" install --with-deps chromium webkit
+      - name: Capture static reconstruction for human review
+        if: steps.scope.outputs.changed == 'true'
+        env:
+          NODE_PATH: ${{ runner.temp }}/storm-test/node_modules
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/storm-server.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          sleep 2
+          failed=0
+          timeout 420s node kaopu-minigame-workbench/storm-orb-study/tests/whole-scene.cjs || failed=1
+          STORM_BROWSER=webkit timeout 420s node kaopu-minigame-workbench/storm-orb-study/tests/whole-scene.cjs || failed=1
+          exit "$failed"
+      - name: Upload checkpoint evidence not visual approval
+        if: always() && steps.scope.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: storm-whole-scene-evidence
+          retention-days: 7
+          path: |
+            whole-chromium/*
+            whole-webkit/*

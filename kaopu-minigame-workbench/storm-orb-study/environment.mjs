@@ -1,0 +1,9 @@
+import * as THREE from 'three';
+export const SKY_LIGHT=new THREE.Vector3(-.45,.85,-.30).normalize();
+export function skyRadiance(direction){const y=direction[1],dot=Math.max(0,direction[0]*SKY_LIGHT.x+y*SKY_LIGHT.y+direction[2]*SKY_LIGHT.z),ambient=y>=0?.22+.48*Math.sqrt(y):.045,emitter=8*Math.pow(dot,14);return[ambient*.65+emitter*.92,ambient*.73+emitter*.97,ambient*.78+emitter];}
+export function createSkyEnvironment(){const width=128,height=64,data=new Uint16Array(width*height*4);let peak=-Infinity,peakIndex=0;for(let y=0;y<height;y++)for(let x=0;x<width;x++){// Three equirectUv: v=asin(direction.y)/PI+.5; row0 is SOUTH.
+ const phi=((x+.5)/width-.5)*Math.PI*2,latitude=((y+.5)/height-.5)*Math.PI,dir=[Math.cos(latitude)*Math.cos(phi),Math.sin(latitude),Math.cos(latitude)*Math.sin(phi)],value=skyRadiance(dir),i=(y*width+x)*4;for(let c=0;c<3;c++)data[i+c]=THREE.DataUtils.toHalfFloat(value[c]);data[i+3]=THREE.DataUtils.toHalfFloat(1);if(value[2]>peak){peak=value[2];peakIndex=y*width+x;}}
+ const texture=new THREE.DataTexture(data,width,height,THREE.RGBAFormat,THREE.HalfFloatType);texture.mapping=THREE.EquirectangularReflectionMapping;texture.colorSpace=THREE.LinearSRGBColorSpace;texture.minFilter=texture.magFilter=THREE.LinearFilter;texture.needsUpdate=true;
+ const probeIndices=[peakIndex,(height-1)*width+Math.floor(width/2),Math.floor(width/2)],probes=probeIndices.map((index,i)=>({name:['sky-source','zenith','nadir'][i],uv:[(index%width+.5)/width,(Math.floor(index/width)+.5)/height],linearRGB:Array.from(data.slice(index*4,index*4+3),THREE.DataUtils.fromHalfFloat)}));texture.userData.probes=probes;
+ return {texture,stats:{format:'RGBA16F',colorSpace:texture.colorSpace,skyDirection:SKY_LIGHT.toArray(),peakLinearRadiance:peak,peakLatitudeRadians:((Math.floor(peakIndex/width)+.5)/height-.5)*Math.PI,probes,bytes:data.byteLength}};
+}

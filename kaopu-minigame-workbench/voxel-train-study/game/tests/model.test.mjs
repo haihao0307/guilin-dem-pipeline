@@ -1,0 +1,26 @@
+import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+import {readFileSync} from 'node:fs';
+import {createSceneModel} from '../../scene.mjs';
+import {buildTrain,buildEnvironment} from '../heritage.mjs';
+import {partitionTerrain,WORLD} from '../world.mjs';
+import {createGameTrain,WHEEL_RADIUS,RAIL_HEAD} from '../train-model.mjs';
+import {COACHES,SEATS} from '../session.mjs';
+const runtimeSource=readFileSync(new URL('../app.mjs',import.meta.url),'utf8');for(const forbidden of ['__trainDriver.test','gl.finish','gl.readPixels','measureFrames','qaRenderMode'])assert.equal(runtimeSource.includes(forbidden),false,'Production runtime must not contain diagnostic hook '+forbidden);
+const hash=g=>createHash('sha256').update(Buffer.from(g.attributes.position.array.buffer)).update(Buffer.from(g.attributes.color.array.buffer)).digest('hex');
+const original=createSceneModel(),inherited=buildTrain().geometry(),game=createGameTrain();
+assert.equal(hash(original.train.geometry),hash(inherited),'Approved original body geometry and colors must be reused exactly');
+assert.equal(game.proof.existingVehicles,2);assert.equal(game.proof.addedCoaches,2);assert.equal(game.proof.wheels,32);
+assert.equal(game.proof.inherited.removedLampBlocks,2,'Only the game headlight housing/lens is relocated');
+assert.equal(game.proof.inherited.bodyBlocks+game.proof.inherited.wheelBlocks.reduce((a,b)=>a+b,0)+2,game.proof.inherited.originalBlocks);
+assert.ok(game.proof.inherited.wheelBlocks.every(n=>n===46),'Every original wheel was separated without removing body blocks');
+const partition=partitionTerrain(buildEnvironment(WORLD,{platformCorridor:true,includeBridge:false,optimizeGeometry:true}));assert.equal(partition.proof.originalTriangles,partition.proof.partitionedTriangles,'Terrain batching preserves every retained surface');assert.ok(partition.proof.maxPositionDeviation<1e-6,'Plant-local coordinates reconstruct the original flat geometry');assert.equal(partition.proof.floraObjects,8);
+assert.equal(SEATS.length,16);assert.ok(game.wheels.every(w=>Math.abs(w.position.y-WHEEL_RADIUS-RAIL_HEAD)<1e-9),'Wheel treads meet the rail head without sinking into it');
+game.update({distance:3.9,brake:true,phase:'boarding',throttle:0,door:1},{interior:true});
+assert.ok(game.wheels.every(w=>Math.abs(w.rotation.z+3.9/WHEEL_RADIUS)<1e-9),'Wheel angle follows physical rolling distance');
+for(const coach of game.coaches)for(const door of coach.doors)for(const leaf of door.leaves)assert.ok(Math.abs(leaf.mesh.position.x-leaf.x-(door.active?leaf.side*.44:0))<1e-9,'Only the platform-side doors open');
+assert.ok(game.coaches.every(c=>c.roof.material.opacity===.22));
+game.update({distance:4.2,brake:false,phase:'running',throttle:2,door:0});
+assert.ok(game.coaches.every(c=>c.roof.material.opacity===1));for(const coach of game.coaches)for(const door of coach.doors)for(const leaf of door.leaves)assert.equal(leaf.mesh.position.x,leaf.x);
+for(const seat of SEATS){const coach=COACHES[seat.coach];assert.ok(Math.abs(seat.position[0]-coach.x)<coach.length/2&&Math.abs(seat.position[2])<1,'Seats stay inside their real coach');}
+console.log(JSON.stringify({status:'passed',originalGeometrySha256:hash(inherited),existingVehicles:2,newPassengerCoaches:2,seats:16,animatedWheels:32,doors:'platform-side only',classicFilesUnchanged:true}));
