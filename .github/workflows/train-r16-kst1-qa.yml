@@ -46,6 +46,7 @@ jobs:
         env:
           TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r16/
           TRAIN_QA_OUT: train-r16-results/browser
+          TRAIN_QA_CASES: plain-context-r16,plain-context-r14,native-journey
         run: node "$GAME/r16/tests/r16-browser.cjs"
       - name: Preserve screenshots, exact source hashes, timings and failures
         if: always()

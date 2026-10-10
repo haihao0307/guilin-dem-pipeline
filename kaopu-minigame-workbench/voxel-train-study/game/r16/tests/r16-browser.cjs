@@ -21,6 +21,10 @@ const out = path.resolve(process.env.TRAIN_QA_OUT || 'train-r16-webgl-qa');
 const args = ['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'];
 const VIEWPORT = {width: 1280, height: 720};
 const VERSION = 'kcr-kst1-r16';
+const selectedCases = process.env.TRAIN_QA_CASES ? new Set(process.env.TRAIN_QA_CASES.split(',').map(x => x.trim()).filter(Boolean)) : null;
+const knownCases = ['cold-warm', 'native-journey', 'delayed-score', 'score-failure', 'context-recovery', 'comparison-r14', 'comparison-r16',
+  'plain-context-r14', 'plain-context-r16'];
+if (selectedCases) for (const name of selectedCases) assert(knownCases.includes(name), 'Unknown TRAIN_QA_CASES entry: ' + name);
 const checks = [], failures = [], consoleMessages = [], pageErrors = [], requests = [], responseErrors = [], requestFailures = [], prohibitedRequests = [];
 const launchStarted = performance.now(), runnerCPU = process.cpuUsage();
 const oldStorage = {'kaopu.train-driver.save.v1': 'R14-SAVE-ISOLATION-SENTINEL', 'kaopu.train-driver.views.r09': 'R14-VIEWS-ISOLATION-SENTINEL', 'kaopu.train-driver.quality.v1': 'R14-QUALITY-ISOLATION-SENTINEL'};
@@ -315,10 +319,11 @@ async function inputLatency(page, name, action, expected) {
   return {name, observedRoundTripMs: performance.now() - start, boundary: 'Node→trusted input→observable browser state; includes automation transport and polling, not photon latency'};
 }
 async function runCase(browser, name, test, options = {}) {
+  if (selectedCases && !selectedCases.has(name)) return;
   const started = performance.now(); let context, page;
   try {
     context = await browser.newContext({viewport: VIEWPORT, deviceScaleFactor: 1, hasTouch: true});
-    await context.addInitScript(initObservation, {storage: options.storage ? oldStorage : null});
+    if (!options.rawPage) await context.addInitScript(initObservation, {storage: options.storage ? oldStorage : null});
     page = await context.newPage(); observe(page, name, options.expectedScoreFailure);
     const result = await test(page, context);
     checks.push({name, pass: true, wallMs: performance.now() - started, result});
@@ -410,18 +415,28 @@ async function nativeJourney(page) {
   await until(page, () => __trainDriver.getState().phase === 'ready-depart', null, {timeout: 90000});
   const served = await state(page); assert.equal(served.stats.stops, 1); assert.equal(served.audio.unlocked, true);
   await clickTarget(page, '#stationAction'); await until(page, () => __trainDriver.getState().phase === 'running');
-  // Actual trusted keyboard and button controls; close-doors may already apply notch 1.
-  while ((await state(page)).throttle > 0) await clickTarget(page, '#decelerate');
-  input.push(await inputLatency(page, 'keyboard throttle W', () => page.keyboard.press('w'), () => __trainDriver.getState().throttle === 1));
-  await page.keyboard.press('s'); await until(page, () => __trainDriver.getState().throttle === 0);
-  for (let i = 0; i < 3; i++) await clickTarget(page, '#accelerate');
-  await until(page, () => { const s = __trainDriver.getState(); return s.distance + s.velocity * s.velocity / (2 * 3.10) >= 30; }, null, {polling: 25});
-  const brake = await controlGeometry(page.locator('#brake')); assertControlGeometry(brake);
-  await page.mouse.move(brake.x, brake.y); await page.mouse.down();
-  await until(page, () => __trainDriver.getState().brake); await until(page, () => __trainDriver.getState().velocity === 0);
-  await page.mouse.up(); await until(page, () => !__trainDriver.getState().brake);
-  const stopped = await state(page); assert(stopped.distance >= 20 && stopped.distance <= 65, 'Native braking stops in the near-street interval: ' + stopped.distance);
+  // Close-doors supplies notch 1. Do the near pass FIRST: on SwiftShader,
+  // geometry checks and multiple automation round trips can consume seconds of
+  // genuine driving each. Do not spend that time exercising notch 3 here.
+  const departure = await state(page); assert.equal(departure.throttle, 1);
+  await until(page, () => { const s = __trainDriver.getState(); return s.distance + s.velocity * s.velocity / (2 * 3.10) >= 27; }, null, {polling: 25});
+  const beforeBrake = await state(page), brakeSentAt = performance.now();
+  // Trusted Space uses the production keyboard brake directly, without several
+  // extra geometry/mouse-position round trips while the train keeps moving.
+  await page.keyboard.down('Space'); await until(page, () => __trainDriver.getState().brake);
+  const brakeAccepted = await state(page);
+  await until(page, () => __trainDriver.getState().velocity === 0);
+  await page.keyboard.up('Space'); await until(page, () => !__trainDriver.getState().brake);
+  const stopped = await state(page);
+  write('native-near-braking.json', {departure, beforeBrake, brakeAccepted, stopped, brakeObservedRoundTripMs: performance.now() - brakeSentAt,
+    kind: 'trusted-keyboard-production-clock', fixtureStateWrites: false});
+  assert(stopped.distance >= 20 && stopped.distance <= 65, 'Native braking stops in the near-street interval: ' + stopped.distance);
   assert.equal(stopped.throttle, 0); await activeStreet(page); streetAssertions(await state(page));
+  // Exercise the actual held mouse brake once stationary, preserving near-view
+  // distance while testing the same production control and trusted pointer path.
+  const brake = await controlGeometry(page.locator('#brake')); assertControlGeometry(brake);
+  await page.mouse.move(brake.x, brake.y); await page.mouse.down(); await until(page, () => __trainDriver.getState().brake);
+  await page.mouse.up(); await until(page, () => !__trainDriver.getState().brake);
   const shots = [];
   for (const id of ['platform', 'overview', 'city']) {
     await camera(page, id); const evidence = await shot(page, '03-native-landscape-' + id);
@@ -437,6 +452,10 @@ async function nativeJourney(page) {
   }
   const portrait = await shot(page, '04-native-portrait-city'); assert(portrait.street.frustumMeshes > 0);
   await clickTarget(page, '#accelerate', {touch: true}); await clickTarget(page, '#decelerate', {touch: true});
+  input.push(await inputLatency(page, 'keyboard throttle W', () => page.keyboard.press('w'), () => __trainDriver.getState().throttle === 1));
+  await page.keyboard.press('s'); await until(page, () => __trainDriver.getState().throttle === 0);
+  await page.keyboard.down('Space'); await until(page, () => __trainDriver.getState().velocity === 0);
+  await page.keyboard.up('Space'); await until(page, () => !__trainDriver.getState().brake);
   await page.setViewportSize(VIEWPORT); await clickControl(page, 'landscapeView'); await camera(page, 'city');
   // Shared-clock freeze checks include actual cloth vertices and actor/body state.
   input.push(await inputLatency(page, 'pause button', () => clickTarget(page, '#pause'), () => __trainDriver.getState().paused));
@@ -568,6 +587,44 @@ async function contextRecovery(page) {
   const restored = await shot(page, '09-webgl-context-restored'); assert.equal(restored.contextLost, false); assert(restored.renderer.programs.every(p => p.linked));
   return {supported: true, lost, restored: restored.state, events: await page.evaluate(() => __r16QA.contextEvents)};
 }
+// Explicit minimal diagnostic: NO route-appended observer, NO WebGL/RAF/API
+// wrappers, NO initObservation. Only native start/resume plus the standardized
+// WEBGL_lose_context interruption, and read-only public state/screenshots.
+async function plainContextRecovery(page, which) {
+  const url = which === 'r14' ? baseline : base, label = 'plain-context-' + which;
+  await open(page, url, which === 'r14' ? 'kcr-hud-r14' : VERSION);
+  if (which === 'r16') await activeStreet(page);
+  await clickTarget(page, '#startGame');
+  const before = await shot(page, label + '-before', 'unmodified-entry-context-interruption', false);
+  const supported = await page.evaluate(() => {
+    const canvas = document.getElementById('gameScene'), gl = canvas.getContext('webgl2');
+    const extension = gl.getExtension('WEBGL_lose_context');
+    window.__r16ContextDiagnostic = {events: [], renderer: __trainDriver.getState().rendererName};
+    if (!extension) return false;
+    for (const type of ['webglcontextlost', 'webglcontextrestored']) canvas.addEventListener(type, () => __r16ContextDiagnostic.events.push({type, at: performance.now(), state: __trainDriver.getState()}));
+    window.__r16RestoreContext = () => extension.restoreContext();
+    extension.loseContext(); return true;
+  });
+  if (!supported) return {supported: false, tested: false, instrumentation: 'none', reason: 'WEBGL_lose_context unavailable'};
+  await until(page, () => __r16ContextDiagnostic.events.some(e => e.type === 'webglcontextlost'));
+  const lost = await state(page); assert.equal(lost.paused, true);
+  await page.waitForTimeout(250); await page.evaluate(() => __r16RestoreContext());
+  await until(page, () => __r16ContextDiagnostic.events.some(e => e.type === 'webglcontextrestored'), null, {timeout: 30000});
+  await until(page, () => document.getElementById('loading').hidden);
+  await clickTarget(page, '#resume'); await clickTarget(page, '#accelerate');
+  await until(page, t => __trainDriver.getState().elapsed > t, lost.elapsed);
+  await page.waitForTimeout(500);
+  const after = await shot(page, label + '-after', 'unmodified-entry-context-interruption', false);
+  const diagnostic = await page.evaluate(() => ({...__r16ContextDiagnostic, contextLost: document.getElementById('gameScene').getContext('webgl2').isContextLost()}));
+  const errors = pageErrors.filter(e => e.label === label), warnings = consoleMessages.filter(m => m.label === label && /WebGL.*(?:INVALID_|OUT_OF_MEMORY)|GL_INVALID_|GL_OUT_OF_MEMORY/i.test(m.text));
+  const report = {supported: true, instrumentation: 'none; production source and WebGL methods unmodified', fixtureStateWrites: false,
+    before: before.state, lost, after: after.state, diagnostic, pageErrors: errors, glWarnings: warnings};
+  write(label + '-diagnostic.json', report);
+  assert.equal(diagnostic.contextLost, false); assert.deepEqual(errors, [], 'Unmodified ' + which + ' context recovery has no page errors');
+  assert.deepEqual(warnings, [], 'Unmodified ' + which + ' context recovery has no WebGL error warnings');
+  return report;
+}
+
 async function comparison(page, which) {
   const url = which === 'r14' ? baseline : base;
   await instrument(page, url, true); await open(page, url, which === 'r14' ? 'kcr-hud-r14' : VERSION);
@@ -595,6 +652,11 @@ async function comparison(page, which) {
   try {
     // Exactly one launch. No retry, alternate executable, or sandbox fallback.
     browser = await chromium.launch({headless: true, args});
+    // Diagnostics are opt-in, so ordinary acceptance remains the original suite.
+    if (selectedCases) {
+      await runCase(browser, 'plain-context-r14', page => plainContextRecovery(page, 'r14'), {rawPage: true});
+      await runCase(browser, 'plain-context-r16', page => plainContextRecovery(page, 'r16'), {rawPage: true});
+    }
     await runCase(browser, 'cold-warm', coldWarm);
     await runCase(browser, 'native-journey', nativeJourney, {storage: true});
     await runCase(browser, 'delayed-score', delayedScore);
@@ -612,7 +674,7 @@ async function comparison(page, which) {
     const unexpectedHTTP = responseErrors.filter(r => !r.expected), unexpectedNetwork = requestFailures.filter(r => !r.navigationCancellation);
     const pass = failures.length === 0 && pageErrors.length === 0 && unexpectedConsole.length === 0 && shaderConsole.length === 0 && glWarnings.length === 0 && unexpectedHTTP.length === 0 && unexpectedNetwork.length === 0 && prohibitedRequests.length === 0;
     let nodeCPUReport = null; try { nodeCPUReport = JSON.parse(fs.readFileSync(path.join(__dirname, '../evidence/street-costs.json'), 'utf8')); } catch {}
-    const report = {pass, base, baseline, commit: process.env.GITHUB_SHA || null, browserVersion, playwright: require('playwright/package.json').version, launchArgs: args,
+    const report = {pass, selectedCases: selectedCases ? [...selectedCases] : 'default-seven-cases', diagnosticOnly: !!selectedCases, scope: selectedCases ? 'SELECTED SUBSET ONLY; omitted cases are not revalidated by this run' : 'Default seven-case acceptance suite', base, baseline, commit: process.env.GITHUB_SHA || null, browserVersion, playwright: require('playwright/package.json').version, launchArgs: args,
       environment: {os: process.platform, architecture: process.arch, softwareRasterizer: 'ANGLE SwiftShader requested explicitly; inspect rendererName in every capture for verification', physicalDeviceTest: false},
       evidenceBoundary: 'Cold/warm is unmodified production network. Native journey uses trusted inputs and production time with read-only observation. Score/network and context interruptions are explicit fixtures. R14/R16 comparison alone uses deterministic state placement. No R15 entry/assets requested. Functional pass does not constitute an independent artistic/film-quality approval.',
       wallMs: performance.now() - launchStarted,
@@ -623,7 +685,7 @@ async function comparison(page, which) {
         noUnexpectedHTTP: !unexpectedHTTP.length, noUnexpectedNetwork: !unexpectedNetwork.length, noProhibitedAssets: !prohibitedRequests.length},
       remainingVisualReview: ['Traditional glyph holes and stroke ends', 'Facade depth, cages and interior occlusion', 'Per-tenant sign ages and rain/repair correlation', 'Brick/mortar scale and wet roughness', 'No grass covering street ground', 'Support beams do not cut important lettering', 'No temporal shader mask swim or view-side popping']};
     write('result.json', report); write('console.json', consoleMessages); write('network.json', {requests, responseErrors, requestFailures, prohibitedRequests});
-    console.log('R16 WebGL acceptance: ' + (pass ? 'PASS' : 'FAIL') + ' — ' + out);
+    console.log('R16 WebGL ' + (selectedCases ? 'SUBSET [' + [...selectedCases].join(', ') + ']' : 'acceptance') + ': ' + (pass ? 'PASS' : 'FAIL') + ' — ' + out);
     if (!pass) process.exitCode = 1;
   }
 })();
