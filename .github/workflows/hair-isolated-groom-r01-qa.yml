@@ -1,0 +1,51 @@
+name: Isolated hair R01 draft browser evidence
+on:
+  push:
+    branches: ['codex/hair-isolated-groom-r01-20261010']
+    paths: ['kaopu-hair-workbench/qa/isolated-groom-r01/**', '.github/workflows/hair-isolated-groom-r01-qa.yml']
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-hair-workbench/qa/isolated-groom-r01
+      - name: Install pinned official test runner
+        run: |
+          npm install --prefix "$RUNNER_TEMP/hair-r01" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/hair-r01/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/hair-r01/node_modules" >> "$GITHUB_ENV"
+          sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk
+      - name: Fetch fixed licensed GNM head and verify bytes
+        working-directory: kaopu-hair-workbench/qa/isolated-groom-r01
+        run: |
+          curl --fail --location --retry 2 --output gnm_head_web.bin https://raw.githubusercontent.com/xrblocks/assets-gnm/134feb02b11fa642a43ff5e7e880246255a74e86/gnm_head_web.bin
+          echo 'fd19f46eef6f8bfb725fceab581e1bc8837209997ca3fd43f3c1735003c86961  gnm_head_web.bin' | sha256sum --check
+      - name: Check actual geometry and allocations
+        working-directory: kaopu-hair-workbench/qa/isolated-groom-r01
+        run: |
+          mkdir -p node_modules/three evidence
+          printf '{"type":"module","exports":"./index.js"}' > node_modules/three/package.json
+          printf "export * from '../../vendor/three.module.js';\n" > node_modules/three/index.js
+          node --check src/main.js
+          node tests/geometry.mjs
+      - name: Serve isolated candidate without deployment
+        run: |
+          python3 -m http.server 8766 --bind 127.0.0.1 --directory kaopu-hair-workbench/qa/isolated-groom-r01 > "$RUNNER_TEMP/hair-http.log" 2>&1 &
+          for n in $(seq 1 30); do curl --fail --silent http://127.0.0.1:8766/ > /dev/null && exit 0; sleep 1; done
+          exit 1
+      - name: Render styles, head rotation and mobile evidence
+        working-directory: kaopu-hair-workbench/qa/isolated-groom-r01
+        run: node tests/browser.cjs
+      - name: Retain evidence only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hair-isolated-r01-${{ github.sha }}
+          path: kaopu-hair-workbench/qa/isolated-groom-r01/evidence/
+          retention-days: 7
+          if-no-files-found: warn
