@@ -25,3 +25,6 @@ edit('TraitMaps.mjs',[
 edit('IdentityUI.mjs',[
  ["端点1/2与分区1/2/3保留上游编号，避免把未标定区域误称具体解剖位置。","眼角与眼裂分区名称已按本模型实际地标位移核对；其余原生分区保留编号，不将未标定语义冒充真人测量。"]
 ]);
+edit('review.cjs',[
+ ["await page.locator('input[data-key=\"eye-scale-incr\"]').fill('.30');await page.locator('input[data-key=\"eye-scale-incr\"]').dispatchEvent('change');","await page.locator('input[data-key=\"eye-scale-incr\"]').evaluate(el=>{el.value='.30';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));});"]
+]);
