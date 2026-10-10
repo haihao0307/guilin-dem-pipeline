@@ -29,7 +29,7 @@ jobs:
           node --check kaopu-unified-human-workbench/skin-quality-r01/SamplingShader.mjs
       - name: Install official pinned browser test tools
         run: |
-          npm install --prefix "$RUNNER_TEMP/skin-sampling-r01" --no-save --ignore-scripts playwright@1.57.0
+          npm install --prefix "$RUNNER_TEMP/skin-sampling-r01" --no-save --ignore-scripts playwright@1.57.0 esbuild@0.25.10
           "$RUNNER_TEMP/skin-sampling-r01/node_modules/.bin/playwright" install --with-deps chromium
       - name: Compare on unchanged native ET13 person
         env:
@@ -38,6 +38,11 @@ jobs:
           python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/skin-r01-http.log 2>&1 &
           node kaopu-unified-human-workbench/skin-quality-r01/tests/browser.cjs
           node kaopu-unified-human-workbench/skin-quality-r01/tests/regions-browser.cjs
+          node kaopu-unified-human-workbench/skin-quality-r01/regions/build-preview.cjs
+          node kaopu-unified-human-workbench/skin-quality-r01/tests/preview-browser.cjs
+          if [ -f kaopu-unified-human-workbench/skin-quality-r01/preview.html ]; then
+            PUBLIC_PREVIEW_URL="https://raw.githack.com/haihao0307/guilin-dem-pipeline/${{ github.sha }}/kaopu-unified-human-workbench/skin-quality-r01/preview.html" PUBLIC_RAW_BASE="https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${{ github.sha }}/kaopu-unified-human-workbench/skin-quality-r01" node kaopu-unified-human-workbench/skin-quality-r01/tests/preview-browser.cjs
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
