@@ -19,24 +19,21 @@ vec4 ftBands(vec2 uv,float lip){
  return mix(b,ftTile(4.,uv*vec2(1.25,.8)),lip);
 }
 `;
-/** Shader composition, not material replacement: invoke the original callback
- * (including native skin and any full-CSR motion skinning) before adding fields.
- * Wrapped diffuse is adapted from EmilyTransferKernel.js; GGX remains native.
- * This is NOT the source screen-space SSS/transmission renderer.
- */
+/** Compose after the existing native skin (and optional motion CSR) callback.
+ * RGB wrap is adapted from EmilyTransferKernel.js; physical GGX is preserved.
+ * This is not the donor's screen-space SSS or a replacement identity material. */
 export function attachFaceMaterial({geometry,skin,face,redraw=()=>{}}){
  if(!face)throw Error('Face generator must be attached before material');
  const f=face.fields;for(const[name,array,size]of[['ftRegion',f.fields,4],['ftExtra',f.extra,4],['ftCoord',f.coords,3]])geometry.setAttribute(name,new THREE.BufferAttribute(array,size));
  const r=donorTexture();r.users++;let disposed=false,compiled=0;const mat=skin.material,prior=mat.onBeforeCompile.bind(mat),key=mat.customProgramCacheKey.bind(mat),oldUpdate=skin.update.bind(skin);
  const U={ftAtlas:{value:r.texture},ftEnabled:{value:1},ftMicro:{value:1},ftMeso:{value:.8},ftPigment:{value:.65},ftRegional:{value:1},ftWrap:{value:.32},ftMode:{value:0},ftMaturity:{value:1}};
- function sync(){const s=face.settings;U.ftAtlas.value=r.texture;U.ftEnabled.value=s.enabled?1:0;U.ftMicro.value=s.micro;U.ftMeso.value=s.meso;U.ftPigment.value=s.pigment;U.ftRegional.value=s.regional;U.ftWrap.value=s.wrap;U.ftMode.value=s.enabled?FACE_MODES.indexOf(s.mode):0;U.ftMaturity.value=face.report?.maturityGate??1;}
+ function sync(){const s=face.settings;U.ftAtlas.value=r.texture;U.ftEnabled.value=s.enabled?1:0;U.ftMicro.value=s.micro;U.ftMeso.value=s.meso;U.ftPigment.value=s.pigment;U.ftRegional.value=s.regional;U.ftWrap.value=s.wrap;U.ftMode.value=FACE_MODES.indexOf(s.mode);U.ftMaturity.value=face.report?.maturityGate??1;}
  const replace=(s,a,b)=>{if(!s.includes(a))throw Error('Native skin shader integration anchor missing: '+a);return s.replace(a,()=>b);};
  mat.onBeforeCompile=s=>{
   prior(s);compiled++;Object.assign(s.uniforms,U);
   s.vertexShader='attribute vec4 ftRegion,ftExtra;attribute vec3 ftCoord;varying vec4 vFTRegion,vFTExtra;varying vec3 vFTCoord;\n'+s.vertexShader;
   s.vertexShader=replace(s.vertexShader,'#include <begin_vertex>','#include <begin_vertex>\nvFTRegion=ftRegion;vFTExtra=ftExtra;vFTCoord=ftCoord;');
   s.fragmentShader=replace(s.fragmentShader,'#include <common>','#include <common>\n'+declarations);
-  // The original masks still decide skin versus lips versus eye/teeth material.
   s.fragmentShader=replace(s.fragmentShader,'diffuseColor.rgb=mix(csPaint,diffuseColor.rgb,csBandVertex);',`
    float ftHead=clamp(vFTExtra.w,0.,1.)*csCover*ftEnabled;
    vec2 ftUV=vFTCoord.xy/.009;ftUV=mix(ftUV,vFTCoord.zy/.009,clamp(vFTExtra.y,0.,1.));
@@ -84,5 +81,5 @@ export function attachFaceMaterial({geometry,skin,face,redraw=()=>{}}){
  };
  mat.customProgramCacheKey=()=>key()+'/ET12-face-bands-v1';mat.needsUpdate=true;
  skin.update=()=>{oldUpdate();sync();};sync();r.promise.then(()=>{if(!disposed){sync();redraw();}});
- return {sync,ready:r.promise,report:()=>({version:'ET12-face-material/1',ready:r.ready,error:r.error,shaderCompiles:compiled,donorPNGBytes:DONOR_TILES.provenance.pngBytes,donorPNGHash:DONOR_TILES.provenance.pngSHA256,regions:5,source:'same licensed scan frequency bands + existing native skin controls',originalSkinUniformsRetained:true,oneMaskForColorNormalRoughness:true,identityAlbedoCopied:false,trueSSS:false,wrappedDiffuse:'Emily-inspired RGB wrap; not energy-calibrated volumetric transport',settings:{...face.settings},coordinateHash:hashArray(f.coords)}),dispose(){if(disposed)return;disposed=true;r.users--;skin.update=oldUpdate;mat.onBeforeCompile=prior;mat.customProgramCacheKey=key;mat.needsUpdate=true;for(const n of['ftRegion','ftExtra','ftCoord'])geometry.deleteAttribute(n);}};
+ return {sync,ready:r.promise,report:()=>({version:'ET12-face-material/1',ready:r.ready,error:r.error,shaderCompiles:compiled,activeInspectionMode:U.ftMode.value,activeIncrement:U.ftEnabled.value,donorPNGBytes:DONOR_TILES.provenance.pngBytes,donorPNGHash:DONOR_TILES.provenance.pngSHA256,regions:5,source:'same licensed scan frequency bands + existing native skin controls',originalSkinUniformsRetained:true,oneMaskForColorNormalRoughness:true,identityAlbedoCopied:false,trueSSS:false,wrappedDiffuse:'Emily-inspired RGB wrap; not energy-calibrated volumetric transport',settings:{...face.settings},coordinateHash:hashArray(f.coords)}),dispose(){if(disposed)return;disposed=true;r.users--;skin.update=oldUpdate;mat.onBeforeCompile=prior;mat.customProgramCacheKey=key;mat.needsUpdate=true;for(const n of['ftRegion','ftExtra','ftCoord'])geometry.deleteAttribute(n);}};
 }
