@@ -1,7 +1,7 @@
 {
   "schema": "kaopu.regression-case/2",
   "caseId": "TAILOR-PRESET-3D-THUMBNAIL-CORRECTION-001",
-  "status": "CANDIDATE_TAILOR_R041_REAL_SOURCE_VISUAL_FIT_HOLD_N128_NOT_ADOPTED",
+  "status": "CANDIDATE_TAILOR_R042_FAILURE_STATE_OBSERVABILITY_VERIFIED_SCOPED__FULL_VISUAL_FIT_HOLD_N129_NOT_ADOPTED",
   "active": false,
   "scope": {
     "mother": "Tailor",
@@ -40,6 +40,18 @@
       "observedAt": "2026-10-10T03:38:35Z",
       "exactUserMessageTimestamp": "unknown-in-external-thread-snapshot",
       "affectedPresetIds": "UNKNOWN_UNTIL_MEMBER_LEVEL_VISUAL_LEDGER"
+    },
+    "latestErrorAndNextPhaseCorrection": {
+      "instruction": "Fix every screenshot-visible small defect and every error/no-display entry before proceeding to controllable cloth physics and full character wearing; preserve earlier outfit-set combinations; keep character, looseness and special-requirement parameters adjustable; continue by changing GitHub code and showing the result.",
+      "ordering": "after R04.1 user review and before R04.2",
+      "observedAt": "2026-10-10T05:42:46Z",
+      "boundedQuestionThisCycle": "Does the exact R04.2 tested/public subject classify every one of the 60 presets into an explicit, reason-bearing display outcome without claiming the failures are fixed?",
+      "deferredUnverifiedRequirements": [
+        "fix all remaining visual defects and solver/material failures",
+        "controllable cloth physics and full character wearing",
+        "preserve prior outfit-set combination presets",
+        "adjustability across characters, looseness and special requirements"
+      ]
     }
   },
   "historicalObservation": {
@@ -165,7 +177,9 @@
     "Repair an original native rejection with a synthetic display result or reuse clothing after the bound person changes.",
     "Promote thumbnail evidence into physical-fit, collision, dynamic-wear, device, public-delivery, or user acceptance.",
     "Treat an internally approved source/runtime screenshot review as user visual acceptance when visible seam, fold or on-body-shape defects remain.",
-    "Place static-pass garments in an accepted/front row without a member-level visual receipt for seam integrity, fold plausibility and on-body shape."
+    "Place static-pass garments in an accepted/front row without a member-level visual receipt for seam integrity, fold plausibility and on-body shape.",
+    "Render an empty card, endless loading state or generic error without a preset-level outcome and reason when the solver/material ledger already knows the failure.",
+    "Count an explicit failure card as a repaired garment, or let a later untested PR head inherit the exact R04.2 release evidence."
   ],
   "requiredPerMemberReceipt": [
     "presetId",
@@ -189,7 +203,8 @@
     "REJECTED_WRONG_SOURCE_LINEAGE",
     "SOURCE_LINEAGE_CORRECTION_VERIFIED_SCOPED__HOLD_FULL_CATALOGUE_INCOMPLETE",
     "THREE_D_PRESET_THUMBNAILS_VERIFIED_SCOPED",
-    "HOLD_R041_USER_VISUAL_FIT_AND_CATALOGUE_INCOMPLETE"
+    "HOLD_R041_USER_VISUAL_FIT_AND_CATALOGUE_INCOMPLETE",
+    "R042_FAILURE_STATE_OBSERVABILITY_VERIFIED_SCOPED__HOLD_REMAINING_VISUAL_FIXES_AND_PHYSICS"
   ],
   "gate": [
     "Preserve the old paper-library success as a scoped historical observation; do not relabel it as failure.",
@@ -203,7 +218,10 @@
     "Passing source lineage does not certify catalogue completion, cloth physics, fit, collision, dynamic wear, physical device behavior, public delivery, or user acceptance.",
     "R04 source lineage and public runtime verification are preserved, but no member is user-ready unless its visible seam integrity, fold plausibility and on-body shape are independently reviewed.",
     "Internal static engineering checks and internal screenshot approval cannot set USER-ACCEPTED or promote a garment when the user reports visible fit defects.",
-    "Member IDs for user-visible failures remain UNKNOWN until a per-preset visual ledger is produced; do not guess affected IDs from aggregate counts."
+    "Member IDs for user-visible failures remain UNKNOWN until a per-preset visual ledger is produced; do not guess affected IDs from aggregate counts.",
+    "For the exact tested release, every original preset must appear exactly once in either result rows or explicit failed rows; failed rows need a phase and reason, and PNG read failure must remain distinct from solver/material failure.",
+    "A complete failure-state ledger closes only the empty/error-card observability defect; it does not repair the garment or certify physical fit, dynamic wear, outfit composition, cross-character sizing, parameter adjustability or user acceptance.",
+    "Evidence is subject-bound: current PR head or later payload-only commits cannot inherit R04.2 GATE-RUN unless their exact head is tested."
   ],
   "activation": {
     "global": false,
@@ -309,11 +327,81 @@
     }
   },
   "currentCycleLifecycle": {
-    "POSTED": true,
+    "POSTED": false,
     "ACKNOWLEDGED": true,
     "IMPLEMENTED": true,
     "GATE-RUN": true,
     "ADOPTED": false,
     "USER-ACCEPTED": false
+  },
+  "n129R042FailureStateResult": {
+    "pullRequest": 181,
+    "exactNativeSubject": "bbe7256cacc5d0698de2b8fbc70ff4a483ab245f",
+    "exactRuntimeAndPublicSubject": "e292aa796e434aad4acce85b146ea62ba3692263",
+    "fixedPublicUrl": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/presets/r042-e292aa796e43/?preset=T08",
+    "currentPrHeadObserved": "f6da4075a8440b70682570320b58302cdeb21f0a",
+    "currentPrHeadWorkflowRunsObserved": 0,
+    "currentPrHeadScope": "R04.3 checksum-bound source-transfer payload WIP; excluded from R04.2 gate result",
+    "memberLedger": {
+      "originalPresets": 60,
+      "resultRows": 45,
+      "staticPass": 9,
+      "resultNeedsRepair": 36,
+      "explicitFailedRows": 15,
+      "solveAborted": 12,
+      "materialOrSeamRejected": 3,
+      "unionCoverage": 60,
+      "overlap": 0,
+      "failedRowsMissingReason": 0
+    },
+    "uiEvidence": {
+      "localReportPassed": true,
+      "publicReportPassed": true,
+      "allFilterCount": 60,
+      "noResultFilterCount": 15,
+      "noResultMisreportedAsLoading": false,
+      "publicThumbnailReadErrors": 0,
+      "browserExceptions": 0,
+      "pngReadFailureHandledSeparately": true
+    },
+    "workflowEvidence": [
+      {
+        "runId": 38022155568,
+        "headSha": "bbe7256cacc5d0698de2b8fbc70ff4a483ab245f",
+        "artifactId": 11658324974,
+        "artifactDigest": "sha256:fb4ec7ba9b888d636463c8486bb3f47e5ecff73b11ee147afee88c72dfebb3aa",
+        "conclusion": "success"
+      },
+      {
+        "runId": 38023440805,
+        "headSha": "e292aa796e434aad4acce85b146ea62ba3692263",
+        "artifactId": 11659891241,
+        "artifactDigest": "sha256:25e5cb2981e97d0df63f05be774c82fc1624ffe953fccd79fa1672c40d154a2e",
+        "conclusion": "success"
+      }
+    ],
+    "externalMethodComparison": {
+      "googleSre": "Monitoring should answer what is broken and why; human-facing alerts should be actionable.",
+      "nasaValidation": "Validation anomalies need analysis and recommended corrective action before transition.",
+      "kaopuComparison": "Existing R2 explicit-failure, no-silent-fallback and tested-subject rules already cover this mechanism.",
+      "novelty": "NO_NOVELTY"
+    },
+    "falsifiableHypothesis": "If R04.2 requires an exact 60-member union of result-or-explicit-failure, reason-complete failure rows, distinct resource-read errors, and exact-subject public readback, the empty/error-card correction will pass while all unresolved garments remain HOLD.",
+    "replay": {
+      "checks": 12,
+      "passed": 12,
+      "outcome": "R042_FAILURE_STATE_OBSERVABILITY_VERIFIED_SCOPED__HOLD_REMAINING_VISUAL_FIXES_AND_PHYSICS",
+      "falsePromotionPrevented": true
+    },
+    "boundary": "Exact R04.2 subjects and fixed public prefix only; later R04.3 payload WIP and all physical/fit/composition/parameter requirements remain unverified.",
+    "decision": "UPDATE_EXISTING_REGRESSION_CASE_NO_NOVELTY",
+    "lifecycle": {
+      "POSTED": false,
+      "ACKNOWLEDGED": true,
+      "IMPLEMENTED": true,
+      "GATE-RUN": true,
+      "ADOPTED": false,
+      "USER-ACCEPTED": false
+    }
   }
 }
