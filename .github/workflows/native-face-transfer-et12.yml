@@ -1,0 +1,56 @@
+name: ET12 native whole-face transfer
+on:
+  push:
+    branches: [feature/common-human-face-transfer-et12-20261010]
+    paths: ['kaopu-unified-human-workbench/face-transfer/**', '.github/workflows/native-face-transfer-et12.yml']
+permissions:
+  contents: write
+concurrency:
+  group: native-face-transfer-et12
+  cancel-in-progress: false
+jobs:
+  full-face:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NODE_PATH: /tmp/et12-tools/node_modules
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-unified-human-workbench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated build and verification tools
+        run: |
+          npm install --prefix /tmp/et12-tools --no-audit --no-fund esbuild@0.25.10 playwright@1.56.1
+          /tmp/et12-tools/node_modules/.bin/playwright install --with-deps chromium
+          python3 -m pip install --user numpy==2.3.3 pillow==11.3.0
+      - name: Build native integration and licensed donor bands
+        run: node kaopu-unified-human-workbench/face-transfer/build.cjs
+      - name: Test all original presets, parameters and skeletal animation
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/et12-http.log 2>&1 &
+          node kaopu-unified-human-workbench/face-transfer/verify.cjs
+      - name: Publish validated candidate only on this branch
+        run: |
+          git config user.name 'KAOPU Human Workbench'
+          git config user.email 'kaopu-workbench@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/face-transfer kaopu-unified-human-workbench/full/ui/face-transfer-app.generated.mjs
+          if ! git diff --cached --quiet; then
+            git commit -m 'build(human): ET12 whole-face native integration [skip ci]'
+            git push origin HEAD:feature/common-human-face-transfer-et12-20261010
+          fi
+      - name: Verify the real immutable public workbench
+        run: PUBLIC_COMMIT=$(git rev-parse HEAD) node kaopu-unified-human-workbench/face-transfer/verify.cjs
+      - name: Retain exact integration source and inspection evidence
+        if: always()
+        run: |
+          mkdir -p qa-et12
+          zip -qr qa-et12/source-code.zip kaopu-unified-human-workbench/face-transfer kaopu-unified-human-workbench/eye-transfer kaopu-unified-human-workbench/full/ui/face-transfer-app.generated.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: et12-face-transfer-${{ github.run_number }}
+          path: qa-et12/
+          retention-days: 14
