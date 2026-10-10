@@ -3,8 +3,8 @@ export const REGION_SCHEMA='kaopu/regional-skin@1';
 export const FIELDS=Object.freeze([
  ['lipDryness','唇红表面干燥',0,1,.05],
  ['lipBorderBlend','唇缘油膜渐退',0,1,.05],
- ['orbitalMicrorelief','眼周微起伏保留',0,1,.05],
- ['orbitalRoughness','眼周粗糙度偏置',-.08,.12,.01],
+ ['orbitalMicrorelief','眼周微起伏保留',0,1,.01],
+ ['orbitalRoughness','眼周粗糙度偏置',-.08,.12,.005],
  ['alarOil','鼻翼局部油膜',0,1,.05]
 ]);
 // Authoring coefficients. They are not measured physiology or clinical values.

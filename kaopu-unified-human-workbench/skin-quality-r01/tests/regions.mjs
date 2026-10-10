@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {DEFAULTS,validate,regionalMasks,lipFilterGain,response} from '../regions/RegionalRules.mjs';
+import {FIELDS,DEFAULTS,validate,regionalMasks,lipFilterGain,response} from '../regions/RegionalRules.mjs';
 import {patchRegionalShader} from '../regions/RegionalShader.mjs';
 const values=[];
 for(let l=0;l<=100;l++)for(let t=0;t<7;t++){
@@ -46,3 +46,5 @@ console.log(JSON.stringify({pass:true,lifecycleToggles:5,archiveRestoration:true
 for(const [x,y] of [[0,355],[0,250],[32,260],[-32,260]])assert.equal(regionalMasks({face:1,cover:1,thin:.9,x,y}).orbital,0);
 assert(regionalMasks({face:1,cover:1,thin:.9,x:32,y:300}).orbital>.5);
 console.log('Orbital mask rejects forehead, alar and lower-cheek probes');
+
+for(const [key,,lo,,step]of FIELDS){const index=(DEFAULTS[key]-lo)/step;assert(Math.abs(index-Math.round(index))<1e-9,key+" default must be exactly representable by native range input");}
