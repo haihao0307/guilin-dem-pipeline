@@ -24,6 +24,8 @@ jobs:
           sudo apt-get install -y ffmpeg
           echo "NODE_PATH=$RUNNER_TEMP/director-ticket/node_modules" >> "$GITHUB_ENV"
       - name: One original actor same-clock action take
+        env:
+          CAPTURE_TICKET_VIDEO: "0"
         run: node kaopu-unified-human-workbench/tests/director-ticket-r03/browser.cjs
       - name: Preserve actual frames including failures
         if: always()
