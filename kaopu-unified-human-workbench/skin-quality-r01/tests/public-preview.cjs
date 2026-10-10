@@ -18,8 +18,11 @@ async function browserQA(){
   const first=await page.goto(URL,{waitUntil:'domcontentloaded',timeout:120000});R.initialResponse={status:first.status(),url:first.url(),title:await page.title()};check('fixed public URL responds successfully',first.ok());
   const open=page.getByText('Open the page',{exact:true});
   if(await open.count()){
-   const current=new global.URL(page.url()),body=await page.locator('body').innerText();
-   check('hosting confirmation names only approved exact URL',current.origin==='https://raw.githack.com'&&current.pathname===route+'preview.html'&&body.includes(URL)&&body.includes('One more step')&&await open.count()===1);
+   await page.waitForFunction(expected=>document.body.innerText.includes(expected)||Array.from(document.querySelectorAll('input')).some(e=>e.getClientRects().length&&e.value===expected),URL,{timeout:10000});
+   const current=new global.URL(page.url()),body=await page.locator('body').innerText(),inputs=await page.locator('input').evaluateAll(es=>es.map(e=>({type:e.type,value:e.value,visible:!!e.getClientRects().length,readOnly:e.readOnly}))),href=await open.getAttribute('href');
+   R.confirmationDetails={inputs,href,title:await page.title()};const displayedTarget=body.includes(URL)||inputs.some(e=>e.visible&&e.value===URL);
+   check('hosting confirmation names only approved exact URL',current.origin==='https://raw.githack.com'&&current.pathname===route+'preview.html'&&displayedTarget&&body.includes('One more step')&&await open.count()===1,R.confirmationDetails);
+   if(href&&/^https?:/.test(href)){const target=new global.URL(href);check('confirmation link retains approved destination',target.origin===current.origin&&target.pathname===current.pathname);} 
    await page.screenshot({path:OUT+'/host-confirmation.png'});R.screenshots.push('host-confirmation.png');
    // One explicitly authorized hosting-site confirmation; never a browser security warning.
    phase='app';await open.click();R.confirmationClicks++;check('hosting confirmation clicked once',R.confirmationClicks===1);
