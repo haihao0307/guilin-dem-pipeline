@@ -45,16 +45,16 @@ jobs:
         env:
           TRAIN_QA_OUT: train-r19-results/profile
         run: node "$GAME/r19/tests/r19-webgl-profile.cjs"
-      - name: Isolate pixel cost without changing production quality
+      - name: Measure changed-cell streaming latency against frozen batch baseline
         env:
-          TRAIN_QA_OUT: train-r19-results/gpu-isolation
-        run: node "$GAME/r19/tests/r19-gpu-isolation.cjs"
-      - name: Retain early GPU diagnostic evidence
+          TRAIN_QA_OUT: train-r19-results/streaming-profile
+        run: node "$GAME/r19/tests/r19-streaming-profile.cjs"
+      - name: Retain early streaming-latency evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: train-r19-gpu-isolation-${{ github.sha }}
-          path: train-r19-results/gpu-isolation/
+          name: train-r19-streaming-profile-${{ github.sha }}
+          path: train-r19-results/streaming-profile/
           compression-level: 0
           if-no-files-found: warn
           retention-days: 7
