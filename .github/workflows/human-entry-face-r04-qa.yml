@@ -1,0 +1,69 @@
+name: Human R04 original-platform browser acceptance
+on:
+  push:
+    branches: ['qa/human-entry-face-r04-20261010']
+    paths:
+      - 'kaopu-unified-human-workbench/**'
+      - '.github/workflows/human-entry-face-r04-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: human-entry-face-r04-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+            kaopu-mhr-workbench
+      - name: Install pinned official browser test package without package scripts
+        run: npm install --prefix "$RUNNER_TEMP/human-entry-r04" --no-save --ignore-scripts playwright@1.57.0
+      - name: Install real Chromium
+        run: |
+          "$RUNNER_TEMP/human-entry-r04/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/human-entry-r04/node_modules" >> "$GITHUB_ENV"
+      - name: Check source and pure regressions
+        run: |
+          node --check kaopu-unified-human-workbench/tests/entry-r04-browser.cjs
+          node --test kaopu-unified-human-workbench/tests/entry-actions.mjs kaopu-unified-human-workbench/tests/entry-load-readiness.mjs kaopu-unified-human-workbench/tests/face-identity-presets.mjs
+      - name: Serve exact candidate locally, with no deployment
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/human-r04-server.log" 2>&1 &
+          for n in $(seq 1 30); do
+            curl --fail --silent http://127.0.0.1:8765/kaopu-unified-human-workbench/ > /dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Exercise original index, native face and existing motion entries
+        env:
+          HUMAN_R04_URL: http://127.0.0.1:8765/kaopu-unified-human-workbench/
+          HUMAN_R04_OUT: human-entry-r04-results
+        run: node kaopu-unified-human-workbench/tests/entry-r04-browser.cjs
+      - name: Test the existing public main when R04 has been deployed
+        env:
+          HUMAN_R04_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/
+          HUMAN_R04_OUT: human-entry-r04-public-results
+        run: |
+          if curl --fail --silent "$HUMAN_R04_URL" | grep -q 'workbench-entry-layout'; then
+            node kaopu-unified-human-workbench/tests/entry-r04-browser.cjs
+          else
+            mkdir -p "$HUMAN_R04_OUT"
+            printf '%s\n' '{"passed":false,"status":"pending-deployment","scope":"public R04 interaction has not been tested"}' > "$HUMAN_R04_OUT/report.json"
+          fi
+      - name: Retain bounded QA evidence, not a website deployment
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: human-entry-r04-${{ github.sha }}
+          path: |
+            human-entry-r04-results/
+            human-entry-r04-public-results/
+          compression-level: 0
+          if-no-files-found: warn
+          retention-days: 7
