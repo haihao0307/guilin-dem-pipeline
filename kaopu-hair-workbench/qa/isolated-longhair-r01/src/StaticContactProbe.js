@@ -1,0 +1,13 @@
+import * as THREE from '/native/kaopu-unified-human-workbench/full/source/registration-vendor/three.module.js';
+/** Actual displayed common mesh, rendered hair centreline segments. This is
+ * an offline/static collision diagnostic, not a physics solver or radius test. */
+export function probeStaticContacts(viewer,hair,{stride=1}={}){
+ viewer.scene.updateMatrixWorld(true);
+ const started=performance.now(),p=viewer.geometry.attributes.position.array,faces=viewer.geometry.index.array,h=hair.mesh.geometry.attributes.position.array,{count,surfaceSegments,segments}=hair.report(),per=segments+1,cell=.025,grid=new Map(),triangles=[];
+ for(let t=0;t<faces.length/3;t++){const ids=Array.from(faces.subarray(t*3,t*3+3)),ps=ids.map(i=>new THREE.Vector3().fromArray(p,i*3).applyMatrix4(viewer.mesh.matrixWorld));triangles[t]=ps;const lo=[0,1,2].map(k=>Math.floor(Math.min(...ps.map(v=>v.getComponent(k)))/cell)),hi=[0,1,2].map(k=>Math.floor(Math.max(...ps.map(v=>v.getComponent(k)))/cell));for(let x=lo[0];x<=hi[0];x++)for(let y=lo[1];y<=hi[1];y++)for(let z=lo[2];z<=hi[2];z++){const key=[x,y,z].join(',');if(!grid.has(key))grid.set(key,[]);grid.get(key).push(t);}}
+ const ray=new THREE.Ray(),hit=new THREE.Vector3(),examples=[];let testedSegments=0,triangleTests=0,surfaceCrossings=0,tailCrossings=0;const crossedStrands=new Set();
+ for(let i=0;i<count;i+=stride)for(let j=1;j<=segments;j++){const a=new THREE.Vector3().fromArray(h,(i*per+j-1)*6).applyMatrix4(hair.mesh.matrixWorld),b=new THREE.Vector3().fromArray(h,(i*per+j)*6).applyMatrix4(hair.mesh.matrixWorld),d=b.clone().sub(a),length=d.length();if(length<1e-8)continue;ray.set(a,d.divideScalar(length));testedSegments++;const lo=[0,1,2].map(k=>Math.floor(Math.min(a.getComponent(k),b.getComponent(k))/cell)),hi=[0,1,2].map(k=>Math.floor(Math.max(a.getComponent(k),b.getComponent(k))/cell)),seen=new Set();let crossed=false;
+  for(let x=lo[0];x<=hi[0]&&!crossed;x++)for(let y=lo[1];y<=hi[1]&&!crossed;y++)for(let z=lo[2];z<=hi[2]&&!crossed;z++)for(const t of grid.get([x,y,z].join(','))||[]){if(seen.has(t))continue;seen.add(t);triangleTests++;if(ray.intersectTriangle(...triangles[t],false,hit)){const distance=hit.distanceTo(a);if(distance>1e-5&&distance<length-1e-5){crossed=true;crossedStrands.add(i);if(j<=surfaceSegments)surfaceCrossings++;else tailCrossings++;if(examples.length<40)examples.push({strand:i,segment:j,triangle:t,point:hit.toArray()});break;}}}
+ }
+ return{kind:'static-rendered-centreline/common-surface',stride,testedSegments,triangleTests,surfaceCrossings,tailCrossings,crossedStrands:crossedStrands.size,examples,elapsedMs:performance.now()-started,includesBody:true,includesStrandRadius:false,continuousCurve:false,physics:false};
+}
