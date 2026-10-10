@@ -13,7 +13,7 @@ Run 38028833145 on the original public URL, runtime c307016a:
 
 ## Changes
 
-- Separate “进入擂台” (first ring) and “场外走跑跳” buttons. Switching between them reuses the existing 39-human scene instead of rebuilding it.
+- Separate “进入擂台” (first ring) and “场外走跑跳” buttons. The selected ring camera fits its two real skinned humans, avoiding the old distant target and foreground neighbouring ring. Switching between them reuses the existing 39-human scene instead of rebuilding it.
 - Mirror actual asset/build progress to the top status, with a visible cancel/return button.
 - Cancel waits for the old build to settle before unlocking; failed builds restore the original native parameter archive and shape view.
 - MotionStudio assigns asynchronously built crowd results only after checking its current ticket; stale progress/finally cannot change the new mode. No PerimeterStudio, motion solver, model or asset modifications.
