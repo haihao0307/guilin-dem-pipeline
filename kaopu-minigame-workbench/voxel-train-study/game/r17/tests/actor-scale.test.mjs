@@ -124,3 +124,10 @@ test('actual straw-hat width is independent of stature scale and fits the .86 do
 test('walking keeps original Session phase and bob while soles cannot penetrate a flat support',()=>{
   for(let i=0;i<24;i++){const walk=i*Math.PI/12,people=render(actor({heightM:1.84,path:{kind:'board'},walk,heading:-Math.PI/2})),b=bounds(people.mesh);close(b.min[1],.82+Math.abs(Math.sin(walk))*.016,'lowest sole and original bob');}
 });
+
+// Direct world-frame adapter is also used outside createGameWorld.
+test('full-length rear platform actors survive world-frame culling',()=>{
+ const back=render(actor({frame:'world',position:[-56.8,1.10,3]}));
+ assert.ok(back.mesh.count>0);close(bounds(back.mesh).min[1],1.10,'rear platform sole');
+ const far=render(actor({frame:'world',position:[-100,1.10,3]}));assert.equal(far.mesh.count,0);
+});

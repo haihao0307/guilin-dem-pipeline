@@ -792,7 +792,7 @@ const scaleFixtureHarness = `
   $('startScreen').hidden=true;$('pauseScreen').hidden=true;
   world.train.setBodyMotionEnabled(false);
   world.update(game.view(),game.route);
-  window.__r17DimensionalMarks?.removeFromParent();
+  if(window.__r17DimensionalMarks){window.__r17DimensionalMarks.traverse(o=>{o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose();});window.__r17DimensionalMarks.removeFromParent();}
   const marks=new THREE.Group();marks.name='TEST ONLY: actual-metre dimensional rulers';scene.add(marks);window.__r17DimensionalMarks=marks;
   const lines=[];
   const line=(a,b,color)=>{const geom=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(...a),new THREE.Vector3(...b)]),mat=new THREE.LineBasicMaterial({color,depthTest:true});const object=new THREE.Line(geom,mat);marks.add(object);lines.push({a,b,length:Math.hypot(...a.map((v,i)=>b[i]-v))});};
@@ -813,6 +813,18 @@ const scaleFixtureHarness = `
   camera.position.fromArray(positions[kind]||positions.door);cameraTarget.fromArray(targets[kind]||targets.door);camera.zoom=1;camera.fov=38;camera.aspect=wrap.clientWidth/wrap.clientHeight;camera.updateProjectionMatrix();camera.lookAt(cameraTarget);camera.updateMatrixWorld();
   manualCamera={position:camera.position.clone(),target:cameraTarget.clone()};needsRender=false;
   world.root.updateWorldMatrix(true,true);scene.updateMatrixWorld(true);renderer.render(scene,camera);gl.finish();
+  // QA-only presentation: default gameplay HUD remains unchanged in production.
+  for(const id of ['journeyHud','drivePanel','tutorial','notice','streetStatus'])if($(id))$(id).style.visibility='hidden';
+  $('r17-scale-labels')?.remove();const labels=document.createElement('div');labels.id='r17-scale-labels';labels.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:100;font:14px Arial,sans-serif';wrap.appendChild(labels);
+  const caption=document.createElement('div');caption.textContent='R17 • actual WebGL metre fixture • deterministic placement • not native driving';caption.style.cssText='position:absolute;left:12px;top:12px;padding:8px;background:#142025dd;color:white';labels.appendChild(caption);
+  const rect=canvas.getBoundingClientRect(),wrapRect=wrap.getBoundingClientRect();
+  const label=(text,p,color)=>{const v=new THREE.Vector3(...p).project(camera);if(Math.abs(v.x)>1||Math.abs(v.y)>1||v.z>1)return;const el=document.createElement('div');el.textContent=text;el.style.cssText='position:absolute;padding:4px 6px;background:#101717df;border:1px solid '+color+';color:'+color+';white-space:nowrap';el.style.left=Math.max(8,Math.min(rect.width-210,(v.x*.5+.5)*rect.width+rect.left-wrapRect.left+10))+'px';el.style.top=Math.max(50,Math.min(rect.height-35,(-v.y*.5+.5)*rect.height+rect.top-wrapRect.top-9))+'px';labels.appendChild(el);};
+  label('Adult 1.720 m (sole → hair)',[door-.54,actor.position[1]+1.0,actor.position[2]+.04],'#ffde45');
+  label('Door clear 2.160 m',[door+.56,floor+M.COACH_DIMENSIONS.doorHeight,M.COACH_DIMENSIONS.width/2+.06],'#46e0ed');
+  label('Inner gauge 1.435 m',[gx,M.TRACK.railHead+.06,0],'#ff5c8d');
+  label('Ground floor 4.200 m',[origin-14.4,4.2805,-7.4],'#71ee87');
+  label('Upper storey 3.030 m',[origin-14.15,7.3105,-7.4],'#71ee87');
+
   const mesh=person.mesh,point=new THREE.Vector3(),im=new THREE.Matrix4(),wm=new THREE.Matrix4(),box=new THREE.Box3();
   for(let j=0;j<mesh.count;j++){mesh.getMatrixAt(j,im);wm.multiplyMatrices(mesh.matrixWorld,im);for(let i=0;i<mesh.geometry.attributes.position.count;i++)box.expandByPoint(point.fromBufferAttribute(mesh.geometry.attributes.position,i).applyMatrix4(wm));}
   const pixels=new Uint8Array(64*64*4);gl.readPixels(Math.floor(canvas.width/2)-32,Math.floor(canvas.height/2)-32,64,64,gl.RGBA,gl.UNSIGNED_BYTE,pixels);const colors=new Set();for(let i=0;i<pixels.length;i+=4)colors.add(pixels[i]+','+pixels[i+1]+','+pixels[i+2]);

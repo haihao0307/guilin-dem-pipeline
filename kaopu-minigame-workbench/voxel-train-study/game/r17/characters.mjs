@@ -1,5 +1,6 @@
 import * as THREE from '../../vendor/three.module.js';
 import {FRONT_X} from './session.mjs';
+import {PLATFORM_LAYOUT} from './metre-scale.mjs';
 import {actorPoseDimensions,ADULT_REFERENCE_HEIGHT_M,ADULT_HEIGHTS_M} from './actor-scale.mjs';
 const COATS=[0x9d583b,0x537f89,0xb6974e,0x657654,0x986577,0x78939a,0x766657,0xa97d55,0x647795,0x8c9b67,0xab785e,0x537768];
 const SKINS=[0xd5ac86,0xb88967,0xe4c4a0,0x946847],HAIR=[0x352a24,0x554539,0x726350,0x292b29];
@@ -9,7 +10,7 @@ export function createPassengers(pathFrame,{seatGeometry=null}={}){
   const proof={version:'r17-person-parts-metres',referenceHeightM:ADULT_REFERENCE_HEIGHT_M,adultHeightRangeM:[Math.min(...ADULT_HEIGHTS_M),Math.max(...ADULT_HEIGHTS_M)],distributionBasis:'Design parameters, not historical population statistics',sourceShape:'Preserved box-person style and identities; independent metric torso, limbs, head and accessories; not finished anatomical characters',rendered:[],excluded:[]};mesh.userData.actorScale=proof;
   function color(hex){if(!colors.has(hex))colors.set(hex,new THREE.Color(hex));return colors.get(hex);}
   function box(x,y,z,w,h,d,hex,angle=0,parent=null){part.position.set(x,y,z);part.rotation.set(0,0,angle);part.scale.set(w,h,d);part.updateMatrix();matrix.multiplyMatrices(parent||rootPose.matrix,part.matrix);mesh.setMatrixAt(count,matrix);mesh.setColorAt(count,color(hex));count++;}
-  return{mesh,proof,update(view){count=0;proof.rendered=[];proof.excluded=[];for(const actor of view.actors){if(actor.kind==='gone'&&actor.age>1.3)continue;let position=actor.position.slice(),bend=0;if(actor.frame==='world'){const x=position[0]-view.distance+FRONT_X;if(x<-49||x>39||pathFrame(x,0,position[2]).position[1]<-2.1)continue;const frame=pathFrame(x,position[1],position[2]);position=frame.position;bend=Math.atan2(frame.tangent[1],frame.tangent[0]);}
+  return{mesh,proof,update(view){count=0;proof.rendered=[];proof.excluded=[];for(const actor of view.actors){if(actor.kind==='gone'&&actor.age>1.3)continue;let position=actor.position.slice(),bend=0;if(actor.frame==='world'){const x=position[0]-view.distance+FRONT_X;if(x<PLATFORM_LAYOUT.minX-12||x>PLATFORM_LAYOUT.maxX+34||pathFrame(x,0,position[2]).position[1]<-2.1)continue;const frame=pathFrame(x,position[1],position[2]);position=frame.position;bend=Math.atan2(frame.tangent[1],frame.tangent[0]);}
     const walking=!!actor.path||actor.pose==='running',seated=actor.pose==='seated',skin=SKINS[actor.appearance%SKINS.length],coat=COATS[actor.appearance%COATS.length],hair=HAIR[actor.appearance%HAIR.length],stride=walking?Math.sin(actor.walk)*.5:0;
     const fadeScale=actor.kind==='gone'?Math.max(.04,1-actor.age/1.4):1,bob=walking?Math.abs(Math.sin(actor.walk))*.016:0;
     const dimensions=actorPoseDimensions(actor,{floorY:Number.isFinite(actor.floorY)?actor.floorY:position[1],...seatGeometry?.(actor,position),fadeScale,stride,bob});
