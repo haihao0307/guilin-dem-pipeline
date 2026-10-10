@@ -73,7 +73,7 @@ R2 已经区分机器门、独立 Verifier 和 USER-ACCEPTED，因此制度本�
 
 ## 生命周期
 
-- POSTED: false（待路由 PR #181）
+- POSTED: true（PR #181 comment 6093407697）
 - ACKNOWLEDGED: true（R04.1 已承认不完整）
 - IMPLEMENTED: true（来源修正与现有门）
 - GATE-RUN: true（N128 10/10）
@@ -89,3 +89,5 @@ R2 已经区分机器门、独立 Verifier 和 USER-ACCEPTED，因此制度本�
 - stale delivery 次数：0
 - 每个 accepted delta 的内部迭代数：unknown
 - 指令到合法 candidate 时间：unknown
+
+路由回执：https://github.com/haihao0307/guilin-dem-pipeline/pull/181#issuecomment-6093407697
