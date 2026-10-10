@@ -1,0 +1,57 @@
+name: Train R18 actual first interstation street journey
+on:
+  push:
+    branches: ['qa/train-r18-first-leg-20261010']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r18/**'
+      - '.github/workflows/train-r18-first-leg-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: train-r18-first-leg-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      GAME: kaopu-minigame-workbench/voxel-train-study/game
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Install pinned official browser without package scripts
+        run: |
+          npm install --prefix "$RUNNER_TEMP/train-r18" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/train-r18/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/train-r18/node_modules" >> "$GITHUB_ENV"
+          sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Verify contracts and preserved metre baseline
+        run: |
+          set -o pipefail
+          mkdir -p train-r18-results
+          export R18_QA_OUT=train-r18-results/cpu
+          node --test "$GAME"/tests/*.test.mjs "$GAME"/*.test.mjs "$GAME"/r17/tests/*.test.mjs "$GAME"/r17/street/*.test.mjs "$GAME"/r18/tests/*.test.mjs "$GAME"/r18/tests/shop-catalog.mjs 2>&1 | tee train-r18-results/unit.txt
+      - name: Serve exact candidate without deployment
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/train-r18-server.log" 2>&1 &
+          for n in $(seq 1 30); do
+            curl --fail --silent http://127.0.0.1:8765/$GAME/r18/ > /dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Drive native first station to second with streaming WebGL evidence
+        env:
+          TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r18/
+          TRAIN_QA_OUT: train-r18-results/browser
+        run: node "$GAME/r18/tests/r18-browser.cjs"
+      - name: Preserve actual pixels and failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-r18-first-leg-${{ github.sha }}
+          path: train-r18-results/
+          compression-level: 0
+          if-no-files-found: warn
+          retention-days: 7
