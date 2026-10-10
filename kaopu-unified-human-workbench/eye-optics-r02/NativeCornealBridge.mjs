@@ -1,5 +1,5 @@
 import {recoverNativeEyeLayers,fitNativeIris} from './NativeEyeLayers.mjs';
-const VERSION='kaopu/native-corneal-bridge@2-research-quad-safe';
+const VERSION='kaopu/native-corneal-bridge@2-research-quad-safe-v2';
 const GLSL=`
 uniform float uE2Mode,uE2IOR;
 uniform vec3 uE2O[2],uE2U[2],uE2V[2],uE2Z[2],uE2H[2];
@@ -23,7 +23,8 @@ vec2 e2Lookup(){
  // makes neighboring derivative quads undefined at the optical aperture edge.
  e2Reject=(!validRay||length(q)>1.035)?1.:0.;
  float hx=2.*H.x*q.x+H.y*q.y,hy=H.y*q.x+2.*H.z*q.y;
- e2InnerNormal=normalize(Z-hx*U-hy*V);e2HitView=P+D*(validRay?t:0.);e2Refracted=1.-e2Reject;return q;
+ // Quad-wide evaluation must not widen the visible optical support gate.
+ e2InnerNormal=normalize(Z-hx*U-hy*V);e2HitView=P+D*(validRay?t:0.);e2Refracted=(vFEye.z>.01&&vCSType>3.5)?1.-e2Reject:0.;return q;
 }
 `;
 export function patchCornealShader(shader,U){
@@ -36,7 +37,7 @@ export function patchCornealShader(shader,U){
  shader.fragmentShader=shader.fragmentShader.replace(coordinateAnchor,GLSL+'\nvec2 e1TissueCoordinates(){return e2Lookup();}');
  shader.fragmentShader=shader.fragmentShader.replace('void main() {','void main() {\nif(uE2Mode>.5&&uE2Mode<1.5&&vE2Layer>1.5)discard;');
  if(!shader.fragmentShader.includes('vec3 fDiffuse=totalDiffuse;'))throw Error('E2 requires native post-derivative output anchor');
- shader.fragmentShader=shader.fragmentShader.replace('vec3 fDiffuse=totalDiffuse;','if(uE2Mode>1.5&&vE2Layer>1.5&&e2Reject>.5)discard;\nvec3 fDiffuse=totalDiffuse;');
+ shader.fragmentShader=shader.fragmentShader.replace('vec3 fDiffuse=totalDiffuse;','if(uE2Mode>1.5&&vE2Layer>1.5&&vFEye.z>.01&&vCSType>3.5&&e2Reject>.5)discard;\nvec3 fDiffuse=totalDiffuse;');
  shader.fragmentShader=shader.fragmentShader.replace('e1OuterNormal=normal;', 'e1OuterNormal=normal;\nif(uE2Mode>1.5&&e2Refracted>.5)normal=e2InnerNormal;');
  return shader;
 }
