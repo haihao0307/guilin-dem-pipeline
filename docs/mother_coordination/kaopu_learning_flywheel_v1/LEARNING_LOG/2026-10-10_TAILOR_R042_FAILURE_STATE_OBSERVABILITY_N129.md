@@ -47,3 +47,8 @@ R04.2 的精确测试/公网对象，是否把 60 款中的每一款都归入有
 更新既有 `TAILOR-PRESET-3D-THUMBNAIL-CORRECTION-001`，不重复造 case，不修改生产 Mother、main、R2 或门槛。
 
 生命周期（路由前）：ACKNOWLEDGED / IMPLEMENTED / GATE-RUN=true；POSTED / ADOPTED / USER-ACCEPTED=false。
+
+## 路由回执
+
+- PR #181 comment: https://github.com/haihao0307/guilin-dem-pipeline/pull/181#issuecomment-6094343879
+- 生命周期：POSTED / ACKNOWLEDGED / IMPLEMENTED / GATE-RUN=true；ADOPTED / USER-ACCEPTED=false。
