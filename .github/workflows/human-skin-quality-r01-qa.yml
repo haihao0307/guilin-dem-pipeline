@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   validate:
-    if: ${{ !contains(github.event.head_commit.message, '[public-preview-only]') && !contains(github.event.head_commit.message, '[skin-relief-probe]') }}
+    if: ${{ !contains(github.event.head_commit.message, '[public-preview-only]') && !contains(github.event.head_commit.message, '[skin-relief-probe]') && !contains(github.event.head_commit.message, '[skin-meso-guard]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
@@ -108,4 +108,34 @@ jobs:
         with:
           name: skin-relief-probe-${{ github.run_number }}
           path: qa-skin-relief-probe/
+          retention-days: 14
+  meso-guard:
+    if: ${{ contains(github.event.head_commit.message, '[skin-meso-guard]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-unified-human-workbench/skin-quality-r01
+      - name: Verify subtractive source patch and lifecycle
+        run: |
+          node kaopu-unified-human-workbench/skin-quality-r01/tests/meso-guard.mjs
+          node --check kaopu-unified-human-workbench/skin-quality-r01/tests/meso-guard-browser.cjs
+      - name: Install official pinned browser test tools
+        run: |
+          npm install --prefix "$RUNNER_TEMP/skin-meso" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/skin-meso/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Compare original and source-limited meso removal
+        timeout-minutes: 11
+        env:
+          NODE_PATH: ${{ runner.temp }}/skin-meso/node_modules
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/skin-meso-http.log 2>&1 &
+          node kaopu-unified-human-workbench/skin-quality-r01/tests/meso-guard-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-meso-guard-${{ github.run_number }}
+          path: qa-skin-meso-guard/
           retention-days: 14
