@@ -40,6 +40,11 @@ jobs:
             sleep 1
           done
           exit 1
+      - name: Probe one native walk and support-step round trip, without default integration
+        env:
+          HUMAN_WALK_URL: http://127.0.0.1:8765/kaopu-unified-human-workbench/
+          HUMAN_WALK_OUT: human-walk-round-trip-results
+        run: node kaopu-unified-human-workbench/tests/walk-round-trip-browser.cjs
       - name: Test first ring click, cancel retry and legacy link on candidate
         env:
           HUMAN_COLD_URL: http://127.0.0.1:8765/kaopu-unified-human-workbench/
@@ -52,11 +57,6 @@ jobs:
           HUMAN_R06_URL: http://127.0.0.1:8765/kaopu-unified-human-workbench/
           HUMAN_R06_OUT: human-loop-ui-r06-results
         run: node kaopu-unified-human-workbench/tests/entry-r06-browser.cjs
-      - name: Probe one native walk and support-step round trip, without default integration
-        env:
-          HUMAN_WALK_URL: http://127.0.0.1:8765/kaopu-unified-human-workbench/
-          HUMAN_WALK_OUT: human-walk-round-trip-results
-        run: node kaopu-unified-human-workbench/tests/walk-round-trip-browser.cjs
       - name: Test the existing public main when R06 has been deployed
         env:
           HUMAN_R06_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/
