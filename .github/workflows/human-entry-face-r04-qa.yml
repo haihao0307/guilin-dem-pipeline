@@ -1,7 +1,7 @@
 name: Human R04 original-platform browser acceptance
 on:
   push:
-    branches: ['qa/human-entry-face-r04-20261010']
+    branches: ['qa/human-entry-face-r04-20261010', 'qa/human-cold-ring-r05-20261010']
     paths:
       - 'kaopu-unified-human-workbench/**'
       - '.github/workflows/human-entry-face-r04-qa.yml'
@@ -28,6 +28,8 @@ jobs:
         run: |
           "$RUNNER_TEMP/human-entry-r04/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/human-entry-r04/node_modules" >> "$GITHUB_ENV"
+      - name: Diagnose actual public cold ring clicks
+        run: node kaopu-unified-human-workbench/tests/cold-ring-browser.cjs
       - name: Check source and pure regressions
         run: |
           node --check kaopu-unified-human-workbench/tests/entry-r04-browser.cjs
@@ -64,6 +66,7 @@ jobs:
           path: |
             human-entry-r04-results/
             human-entry-r04-public-results/
+            human-cold-ring-results/
           compression-level: 0
           if-no-files-found: warn
           retention-days: 7
