@@ -30,6 +30,10 @@ Production R06 uses `common-skin-foundation/r1`, procedural rest-space detail an
 6. Pixar's photorealistic-head tutorial, authored by Leif Pedersen and reviewed/annotated by Christophe Hery, uses separate fine bump/displacement, subsurface scattering, two specular lobes and restrained fuzz. It explicitly evaluates specular under different lighting and discusses high-bit-depth data and scene scale. This is why the next work should address light transport and region-specific surface response rather than increase contrast globally. The tutorial confirms the Infinite/Lee Perry-Smith head's CC BY 3.0 attribution, supporting the host's existing atlas provenance; no additional model is imported.
    - https://renderman.pixar.com/photorealistic-head
 
+7. Physically Based Rendering's texture treatment distinguishes point evaluation from filtered reconstruction and notes that mixing/scaling texture functions can introduce aliasing even when individual inputs are filtered. This supports measuring the small procedural pore kernel itself rather than assuming a mipmapped scan makes every surface layer antialiased. R01 independently derives the closed-form Gaussian/covariance convolution; it does not copy PBRT code or claim to implement its full texture system.
+   - https://pbr-book.org/4ed/Textures_and_Materials/Image_Texture
+   - https://pbr-book.org/4ed/Textures_and_Materials/Texture_Interface_and_Basic_Textures
+
 ## Ordered quality checks before larger claims
 
 1. Sampling correctness: close/mid/distant views must preserve intended physical frequency without incorrect mip jumps or inter-region contamination. Exact rollback must recover the baseline.
@@ -38,4 +42,4 @@ Production R06 uses `common-skin-foundation/r1`, procedural rest-space detail an
 4. Scattering/transmission: distinguish face diffusion from thickness-aware transmission. Validate under backlight, self-occlusion and head rotation, preserving a sharp specular component.
 5. Animation and scale: verify face parameters, expressions, profiles and camera distance without swimming detail, incorrect density changes or uncontrolled GPU cost.
 
-Only item 1 is implemented in R01. Items 2–5 define later experiments, not completed features. Before integration, inspect all controlled same-person A/B PNGs and the existing face-identity contract checks. No imported foreign head or 2D picture is an acceptable substitute for these tests.
+Only item 1, including footprint-filtered procedural pore height, is implemented in R01. Items 2–5 define later experiments, not completed features. Before integration, inspect all controlled same-person A/B PNGs and the existing face-identity contract checks. No imported foreign head or 2D picture is an acceptable substitute for these tests.

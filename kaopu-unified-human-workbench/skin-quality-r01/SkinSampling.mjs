@@ -27,7 +27,8 @@ export async function attachSkinSampling(skin){
  try{for(const t of source)arrays.push(arrayTexture(t));}catch(e){for(const t of arrays)t.dispose();throw e;}
  const previous=skin.material.onBeforeCompile,key=skin.material.customProgramCacheKey.bind(skin.material);
  const ext={version:SKIN_SAMPLING_VERSION,enabled:true,shaderCompiles:0,disposed:false,
-  report(){return{version:this.version,enabled:this.enabled,shaderCompiles:this.shaderCompiles,disposed:this.disposed,atlas:[256,256,8],originalAtlasPixelsPreserved:true,explicitContinuousGradients:true,isolatedMips:true,extraGPUBytesApprox:2*1024*512*4*4/3,sourceAssetsAdded:0,geometryChanged:false,identityParametersChanged:false,sssChanged:false,eyeOpticsChanged:false,remaining:'Source patch repeat discontinuities and planar stretch remain; this is sampling correctness, not full skin realism.'};},
+  report(){return{version:this.version,enabled:this.enabled,shaderCompiles:this.shaderCompiles,disposed:this.disposed,proceduralPoreFiltering:samplingUniforms.uSamplingPoreFilter.value>.5,atlas:[256,256,8],originalAtlasPixelsPreserved:true,explicitContinuousGradients:true,isolatedMips:true,extraGPUBytesApprox:2*1024*512*4*4/3,sourceAssetsAdded:0,geometryChanged:false,identityParametersChanged:false,sssChanged:false,eyeOpticsChanged:false,remaining:'Source patch repeat discontinuities and planar stretch remain; this is sampling correctness, not full skin realism.'};},
+  setPoreFiltering(enabled){if(this.disposed)throw new Error('Sampling extension disposed');samplingUniforms.uSamplingPoreFilter.value=enabled?1:0;skin.viewer.render();return this.report();},
   setEnabled(enabled){if(this.disposed)throw new Error('Sampling extension disposed');this.enabled=!!enabled;skin.material.needsUpdate=true;skin.viewer.render();return this.report();}
  };
  skin.samplingExtension=ext;
@@ -35,7 +36,7 @@ export async function attachSkinSampling(skin){
  // Three caches programs per material but keeps the most recently built uniform set.
  // Populate the full stable superset for BOTH modes so cached A/B programs can
  // be revisited without losing array bindings or rebinding a 2D sampler as array.
- const samplingUniforms={uSamplingAtlas:{value:arrays[0]},uSamplingChroma:{value:arrays[1]}};
+ const samplingUniforms={uSamplingAtlas:{value:arrays[0]},uSamplingChroma:{value:arrays[1]},uSamplingPoreFilter:{value:1}};
  skin.material.onBeforeCompile=shader=>{previous(shader);Object.assign(shader.uniforms,samplingUniforms);if(!ext.enabled||ext.disposed)return;shader.fragmentShader=patchSkinSamplingShader(shader.fragmentShader);ext.shaderCompiles++;};
  const dispose=skin.dispose.bind(skin);skin.dispose=()=>{if(!ext.disposed){ext.disposed=true;for(const t of arrays)t.dispose();}dispose();};
  skin.material.needsUpdate=true;skin.viewer.render();return ext;
