@@ -1,7 +1,7 @@
 name: Isolated hair R01 draft browser evidence
 on:
   push:
-    branches: ['codex/hair-isolated-groom-r01-20261010']
+    branches: ['codex/hair-isolated-groom-r01-20261010', 'gh-pages']
     paths: ['kaopu-hair-workbench/qa/isolated-groom-r01/**', '.github/workflows/hair-isolated-groom-r01-qa.yml']
 permissions:
   contents: read
@@ -41,7 +41,22 @@ jobs:
           exit 1
       - name: Render styles, head rotation and mobile evidence
         working-directory: kaopu-hair-workbench/qa/isolated-groom-r01
-        run: node tests/browser-alpha.cjs
+        run: |
+          node tests/browser-alpha.cjs
+          node tests/browser-release.cjs
+      - name: Verify published independent page when merged
+        if: github.ref == 'refs/heads/gh-pages'
+        working-directory: kaopu-hair-workbench/qa/isolated-groom-r01
+        env:
+          TARGET_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-hair-workbench/qa/isolated-groom-r01/
+          OUT: evidence/public
+        run: |
+          for n in $(seq 1 60); do
+            curl --fail --silent "$TARGET_URL/src/main.js?verify=$GITHUB_SHA" -o "$RUNNER_TEMP/hair-public-main.js" && cmp -s src/main.js "$RUNNER_TEMP/hair-public-main.js" && break
+            sleep 10
+          done
+          cmp src/main.js "$RUNNER_TEMP/hair-public-main.js"
+          node tests/browser-release.cjs
       - name: Retain evidence only
         if: always()
         uses: actions/upload-artifact@v4

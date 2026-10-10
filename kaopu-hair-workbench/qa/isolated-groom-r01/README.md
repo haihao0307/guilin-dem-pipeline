@@ -10,7 +10,7 @@ Acceptance is false: no film-quality claim, no physical inertia, no shoulder/bac
 
 Tests: `tests/geometry.mjs` checks real fixed GNM model, all styles, finite data, triangle bounds, barycentric sum, root-clearance bound, reset hashes, immutable source positions, density draw reduction vs unchanged allocation. Browser CI on Ubuntu 24.04 + Playwright 1.57 captures actual WebGL images and layered capability, reset and software-renderer wall timing. A passed geometry test does not substitute for pixel or hardware acceptance.
 
-The stable human platform and old hair workbench are untouched. This version must remain a Draft until actual screenshots have been reviewed.
+The stable human platform and old hair workbench are untouched. Actual screenshots have now been reviewed for the bounded short-hair experiment. Production/film-quality acceptance remains false; independent test-page publication is separate from human-platform integration.
 
 ## R02 focused grooming candidate
 
@@ -23,3 +23,5 @@ Diagnostics now include actual displayed rotated roots, reachable typed-array st
 At commit e686095, actual Ubuntu/Chromium WebGL reports 4 samples. Exact same refined curve geometry and 75 µm base radius look markedly sparse under analytic alpha-to-coverage with depthWrite=true, but recover coverage under the original R8 analytic alpha-blend reference with depthWrite=false. This is a verified raster-resolution difference, not evidence that all missing coverage required more strands or thicker ribbons. Default is now explicitly blend. Shader code and its .001 alpha-discard threshold remain unchanged; no opacity multiplier or scalp colouring was added. This order-dependent blend reference is not order-independent transparency.
 
 Actual CI38033938180 passed model SHA, source-response hashes, both alpha resolves, displayed rotated-root clearance, reset and mobile screenshot. Human inspection finds softer edges and finer fibres than the old hard-cut groom, while silhouette/flow remain limited. Visual production acceptance remains false. Previous 13.375 s full-frame timing belongs to the earlier baseline A2C snapshot, not the final refined blend case. Current CI records that case separately.
+
+Release preparation: default refined + original R8 explicit blend, pinned official asset URL on public hosts (no missing-local-file probe), source/license page and separate public source-hash / three-style / head-turn / reset / narrow-screen checks. The exact XRBlocks asset LICENSE is additionally retained as XRBLOCKS-ASSETS-LICENSE.txt. Verified refined blend full-frame software timing at bdfd5c5 is 13.029 seconds for forced shadow rebuild + complete 1200×900 readback; not hardware GPU time or an FPS claim.
