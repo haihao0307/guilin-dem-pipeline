@@ -1,0 +1,18 @@
+{
+  "schema":"kaopu-tailor-source-audit@1",
+  "status":"R03_ROUTE_REJECTED_BY_USER",
+  "reviewedR03":"5078d8aa9487b1b2c37d67701737ff963c7bd3cd",
+  "nativePublishedAnchor":"0ff632be3e4ab112fad93fd4c43c7bc6a90cf5f3",
+  "findings":[
+    {"id":"PERSON_SUBSTITUTED","actual":"R03 prepare_assets.py derives a new static Anny display pose with 13718 vertices and 27420 triangles.","required":"Existing kaopu-unified-human-workbench/index-characters-r02.html and full runtime: 25417 fixed vertices, 50624 triangles; original presets and archive semantics.","confirmed":true},
+    {"id":"GARMENT_PIPELINE_BYPASSED","actual":"R03 anatomical-cloth.mjs creates offset/cut body shells; garment-surfaces.mjs constructs separate skirts from parameters. No original pattern vertex-to-solver output chain.","required":"Existing native pattern-engine -> analytic-mesher -> original material/seam topology -> solver result. A matching name or recipe hash is not geometry provenance.","confirmed":true},
+    {"id":"QA_WRONG_SUCCESS_CRITERION","actual":"Distinct mesh hashes, HTTP success and working buttons were treated as the main completion evidence.","required":"Verify exact common-person geometry/state, full pattern identity, material vertex order and coordinates from the native solver. Missing or failed results must not be replaced by display shells.","confirmed":true},
+    {"id":"TAILOR_BODY_WAS_NEVER_FULL_COMMON","actual":"Even preserved R07.4 hardcodes anny-adult-neutral-r01 and its SDF/acromion landmarks.","required":"Do not label this legacy fixed test body as the current common person. Body measurement and collision inputs must have the same verified identity as the displayed common person.","confirmed":true}
+  ],
+  "forbiddenInCorrectedRuntime":["r03/mannequin.json","r03/anatomical-cloth.mjs","r03/garment-surfaces.mjs","r03/surface-refine.mjs","body scaling or hidden-body masking to fake fit","synthetic clothes substituted for missing solves"],
+  "thumbnailPolicy":"Only actual native solver results with their input person and design identity. Pending/failed stages remain explicit.",
+  "runtimeCorrectionCompleted":false,
+  "physicalFitAccepted":false,
+  "dynamicWearCertified":false,
+  "oldVersionsKeptForAudit":true
+}
