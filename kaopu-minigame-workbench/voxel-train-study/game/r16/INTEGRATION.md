@@ -1,6 +1,6 @@
 # R16 · KST1 function-generated street inside the train game
 
-This is a local, isolated continuation of the existing train game. Entry: `game/r16/index.html`. It retains R14's train, two coaches, controls, passengers, sound, steam and menus, and adds one original near-view street segment. It is not a separate street viewer. No public deployment or browser/GPU visual acceptance is claimed.
+This is an isolated continuation of the existing train game. Entry: `game/r16/index.html`. It retains R14's train, two coaches, controls, passengers, sound, steam and menus, and adds one original near-view street segment. It is not a separate street viewer. Actual WebGL software-rasterizer frames and native interactions have been tested in CI; see WEBGL_ACCEPTANCE.md for exact commits and scope. No public deployment, physical-GPU performance or film-quality acceptance is claimed.
 
 ## Exact file contract
 
@@ -37,6 +37,7 @@ Materials use source-based procedural shaders with connected damp patches, sill/
 - Every animated cloth and material time uses `view.elapsed`. Wheels, people and steam keep their original authoritative Session inputs. The accelerated timetable remains display/travel scheduling only, never a multiplier applied to street/character/effect time.
 - Procedural surface coordinates subtract the host offset, so rain marks do not slide over façades when the street translates.
 - Generate inside 240 metres; release beyond 280 metres; rebuild deterministically on return. Boundaries lie beyond the supported camera/fog range. This is actual object/resource release, not only `visible=false`. It is one near-detail Instrument; automatic multi-LOD asset generation is not claimed.
+- The adapter reserves two visible, unshadowed PointLight slots before loading. Generated emitter transforms and output are adopted unchanged; released slots remain attached at intensity zero, and final adapter disposal removes them. This aims to avoid host shader variants caused by light-count changes, but adds two inactive shader light paths; actual paired CI measurements determine whether it is retained.
 - Shop frontage starts beyond the station head; the existing platform/room remains separate.
 
 R16 uses separate `kaopu.train-driver.r16.*` save, view and quality keys. R14/R15 files, settings and recovery archive were not rewritten. R15 is frozen comparison only.
@@ -59,13 +60,13 @@ node --test game/tests/*.test.mjs game/*.test.mjs
 
 Evidence lives in `evidence/`: exact test output, static resource closure/SHA, deterministic geometry snapshot and measured Node CPU timings. Those are not browser frame times.
 
-The first completed local measurement generated about 162k expanded triangles, 5,921 instanced placements, 119 mesh batches, 67 unique geometries, 35 used / 36 allocated materials, and zero street textures. Shared runtime source plus first recipe is about 118KB, versus frozen R15's 11.32MB city mesh/image payload. The whole game also loads its existing shared engine and services; see exact fresh counts in `load-closure.json`, not just the recipe size.
+The first completed local measurement generated about 162k expanded triangles, 5,921 instanced placements, 119 mesh batches, 67 unique geometries, 35 used / 36 allocated materials, and zero street textures. Shared runtime source plus first recipe is about 122KB, versus frozen R15's 11.32MB city mesh/image payload. The whole game also loads its existing shared engine and services; see exact fresh counts in `load-closure.json`, not just the recipe size.
 
-Node-only generation was roughly 0.13 seconds first build and 0.07 seconds warm on this cloud executor. Cloth/material update measurements are recorded over 240 fixed-time inputs. A first build can still stall a browser's main thread; no claim of free generation, phone FPS or 3A quality follows from file size. The actual buffer storage estimate is about 6.8MB before driver/renderer/shadows; CPU heap deltas include uncontrolled GC and are not a leak measurement.
+Node-only generation was roughly 0.15 seconds first build and 0.07 seconds warm on this cloud executor. Cloth/material update measurements are recorded over 240 fixed-time inputs. A first build can still stall a browser's main thread; no claim of free generation, phone FPS or 3A quality follows from file size. The actual buffer storage estimate is about 6.8MB before driver/renderer/shadows; CPU heap deltas include uncontrolled GC and are not a leak measurement.
 
-## Known unverified boundaries
+## Known scope and quality boundaries
 
-- No real R16 WebGL frame, shader GPU compilation, shadow rendering, interactive browser test, physical-phone performance or visual comparison has been completed in this environment.
+- Real R16 Chromium/ANGLE SwiftShader frames, procedural shader compilation and native controls have been exercised. Hardware GPU/phone performance and film-quality visual acceptance remain open; diagnostics must not be reported as hardware timings.
 - The full R06 city and skyline are not yet reimplemented; this is one detailed two-building slice. No new character likeness was loaded.
 - Cloth is pinned analytic deformation, not collision-aware cloth simulation. Point lights are bounded artistic illumination, not measured photometry.
 - Subdivision/instancing and shader costs still require real GPU profiling. Screen readability and film-level material quality remain separate acceptance gates.

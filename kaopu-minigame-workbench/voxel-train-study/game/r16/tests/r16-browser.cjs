@@ -21,6 +21,13 @@ const out = path.resolve(process.env.TRAIN_QA_OUT || 'train-r16-webgl-qa');
 const args = ['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'];
 const VIEWPORT = {width: 1280, height: 720};
 const VERSION = 'kcr-kst1-r16';
+// Independently read from unchanged Instrument.build(first-street.score.json)
+// before the adapter-slot optimization. Coordinates are street-root-local;
+// assertions translate them by the actual observed district world origin.
+const BASELINE_STREET_LIGHTS = [
+  {position: [-13.767649999999998, 2.62, -8.17], color: [1, 0.623960391667596, 0.26225065751888765], colorSRGB: 'ffcf8c', intensity: 5, distance: 3.8, decay: 2, castShadow: false},
+  {position: [-5.1589, 2.62, -8.61], color: [1, 0.623960391667596, 0.26225065751888765], colorSRGB: 'ffcf8c', intensity: 5, distance: 3.8, decay: 2, castShadow: false}
+];
 const selectedCases = process.env.TRAIN_QA_CASES ? new Set(process.env.TRAIN_QA_CASES.split(',').map(x => x.trim()).filter(Boolean)) : null;
 const knownCases = ['cold-warm', 'native-journey', 'delayed-score', 'score-failure', 'comparison-r14', 'comparison-r16',
   'plain-context-r14', 'plain-context-r16'];
@@ -185,7 +192,8 @@ const observerHarness = `
       const key = proof ? [proof.status, proof.loadCount, proof.unloadCount].join(':') : 'baseline';
       if (key !== previousLifecycle) {
         previousLifecycle = key; transitions.push({at: performance.now(), status: key, distance: game.distance,
-          elapsed: game.elapsed, renderSubmitMs: renderMs.at(-1), memory: {...renderer.info.memory}, programs: renderer.info.programs.length});
+          elapsed: game.elapsed, renderSubmitMs: renderMs.at(-1), memory: {...renderer.info.memory}, programs: renderer.info.programs.length,
+          programInventory: renderer.info.programs.map(p => ({id: p.id, name: p.name, type: p.type, cacheKey: p.cacheKey, usedTimes: p.usedTimes}))});
       }
     }
   };
@@ -205,11 +213,20 @@ const observerHarness = `
     const streetMaterials = [...materials].filter(m => m.userData?.street).map(m => ({id: m.uuid, name: m.name,
       family: m.userData.street.family, config: m.userData.street.config,
       time: m.userData.street.uniforms.stTime.value, worldOffset: m.userData.street.uniforms.stWorldOffset.value.toArray()}));
-    const programs = renderer.info.programs.map(p => ({name: p.name, id: p.id, usedTimes: p.usedTimes,
+    const programs = renderer.info.programs.map(p => ({name: p.name, type: p.type, cacheKey: p.cacheKey, id: p.id, usedTimes: p.usedTimes,
       linked: gl.getProgramParameter(p.program, gl.LINK_STATUS), log: gl.getProgramInfoLog(p.program),
       diagnostic: p.diagnostics ? {runnable: p.diagnostics.runnable, programLog: p.diagnostics.programLog} : null}));
+    const slotObjects = district ? district.root.children.filter(o => o.isPointLight) : [];
+    const pointLight = light => ({id: light.uuid, name: light.name, type: light.type, slotIndex: light.userData.streetLightSlot,
+      visible: light.visible, intensity: light.intensity, power: light.power, color: light.color.toArray(), colorSRGB: light.color.getHexString(),
+      distance: light.distance, decay: light.decay, castShadow: light.castShadow, shadowMapAllocated: !!light.shadow?.map,
+      localPosition: light.position.toArray(), worldPosition: light.getWorldPosition(new THREE.Vector3()).toArray()});
+    let districtPointLightCount = 0, scenePointLightCount = 0;
+    district?.root.traverse(o => { if (o.isPointLight) districtPointLightCount++; });
+    scene.traverse(o => { if (o.isPointLight) scenePointLightCount++; });
+    const programTypes = {}; for (const program of programs) programTypes[program.type || program.name || 'unknown'] = (programTypes[program.type || program.name || 'unknown'] || 0) + 1;
     const result = {state: __trainDriver.getState(), threeRevision: THREE.REVISION,
-      renderer: {memory: {...renderer.info.memory}, render: {...renderer.info.render}, programs, sceneGeometries: geometries.size, sceneMaterials: materials.size},
+      renderer: {memory: {...renderer.info.memory}, render: {...renderer.info.render}, programs, programCount: programs.length, programTypes, sceneGeometries: geometries.size, sceneMaterials: materials.size},
       gl: qa.contexts, disposals, shaderFailures: qa.shaderFailures, contextLost: gl.isContextLost(),
       timing: {renderSubmitMs: renderMs.slice(), gpuFrameMs: gpuMs.slice(), timerAvailable: timerStatus.supported, timerStatus: {...timerStatus, errors: timerStatus.errors.slice()}, pendingQueries: pending.length,
         frameIntervals: qa.frameIntervals.slice(), frameCallbackMs: qa.frameCallbackMs.slice(), longTasks: qa.longTasks.slice(), transitions: transitions.slice()},
@@ -217,7 +234,9 @@ const observerHarness = `
         peopleMatrix: world.people.mesh.instanceMatrix ? hash(world.people.mesh.instanceMatrix.array) : null,
         steam: {particleCapacity: smoke.particles, geometry: steamGeometry, state: smoke.root.userData.effects}, locomotiveBody: world.train.proof.bodyMotion || world.train.proof.inherited?.bodyMotion,
         coachBodies: world.train.proof.coachBodyMotion?.coaches.map(c => c.state)},
-      street: {rootPosition: district?.root.position.toArray(), childCount: district?.root.children.length || 0,
+      street: {rootPosition: district?.root.position.toArray(), rootWorldPosition: district?.root.getWorldPosition(new THREE.Vector3()).toArray(), childCount: district?.root.children.length || 0,
+        generatedRootCount: district ? district.root.children.filter(o => o === handle?.root).length : 0,
+        lighting: {slots: slotObjects.map(pointLight), districtPointLightCount, scenePointLightCount},
         meshIds: [], materials: streetMaterials, cloth, frustumMeshes: null, trainRays: null}};
     handle?.root.traverse(o => { if (o.isMesh) result.street.meshIds.push(o.uuid); });
     if (visual && handle) {
@@ -292,12 +311,40 @@ function streetAssertions(s) {
     assert(s.streetDistrict.metrics.expandedTriangles <= 180000); assert.equal(s.streetDistrict.metrics.textures, 0);
   }
 }
+function assertStreetLightSlots(street, {active, baselineIds = null, stage = ''}) {
+  const slots = street.lighting?.slots || [], ids = slots.map(s => s.id).sort();
+  assert.equal(slots.length, 2, stage + ': exactly two persistent PointLight slots');
+  assert.equal(new Set(ids).size, 2); assert.equal(street.lighting.districtPointLightCount, 2, 'No duplicate generated PointLights remain attached');
+  assert.equal(street.generatedRootCount, active ? 1 : 0, 'Only the generated root follows street presence');
+  assert.equal(street.childCount, 2 + (active ? 1 : 0), 'District owns two slots plus only the active generated root');
+  if (baselineIds) assert.deepEqual(ids, baselineIds, 'PointLight slot identities survive release/re-entry: ' + stage);
+  const close = (actual, expected, message) => { assert.equal(actual.length, expected.length); actual.forEach((n, i) => assert(Math.abs(n - expected[i]) < 1e-7, message + ': ' + actual + ' vs ' + expected)); };
+  const indices = new Set();
+  for (const slot of slots) {
+    assert.equal(slot.type, 'PointLight'); assert.equal(slot.visible, true, 'Zero-intensity slots must remain visible to stabilize shader light count');
+    assert.equal(slot.castShadow, false); assert.equal(slot.shadowMapAllocated, false);
+    assert(Number.isInteger(slot.slotIndex) && slot.slotIndex >= 0 && slot.slotIndex < BASELINE_STREET_LIGHTS.length);
+    indices.add(slot.slotIndex);
+    if (active) {
+      const expected = BASELINE_STREET_LIGHTS[slot.slotIndex];
+      close(slot.localPosition, expected.position, 'Active local light position preserves original Instrument output');
+      close(slot.worldPosition, expected.position.map((n, i) => n + street.rootWorldPosition[i]), 'Active world light position follows the observed district origin');
+      close(slot.color, expected.color, 'Original linear light color is preserved');
+      assert.equal(slot.colorSRGB, expected.colorSRGB);
+      for (const key of ['intensity', 'distance', 'decay', 'castShadow']) assert.equal(slot[key], expected[key], 'Original active light ' + key + ' is preserved');
+    } else assert.equal(slot.intensity, 0, 'Inactive slot contributes zero light');
+  }
+  assert.equal(indices.size, 2, 'Both stable slot indices are present');
+  return {ids, slots, generatedRootCount: street.generatedRootCount, districtPointLightCount: street.lighting.districtPointLightCount};
+}
+
 async function shot(page, name, kind = 'native-ui-production-clock', visual = true) {
   const report = await page.evaluate(v => window.__r16Observe ? __r16Observe.snapshot(v) : {state: __trainDriver.getState()}, visual);
   const png = await page.screenshot({path: path.join(out, name + '.png'), timeout: 60000});
   assert(png.length > 12000, 'Screenshot is nontrivial: ' + name);
   const result = {name, evidenceKind: kind, fixtureStateWrites: kind.includes('fixture'), viewport: page.viewportSize(), pngBytes: png.length, sha256: sha(png), ...report};
   write(name + '.json', result);
+  if (report.state.streetDistrict && report.street) assertStreetLightSlots(report.street, {active: report.state.streetDistrict.active, stage: name});
   if (report.renderer) { assert(report.renderer.programs.every(p => p.linked), 'Every actual WebGL program links: ' + name); assert.deepEqual(report.shaderFailures, [], 'No captured shader failures: ' + name); assert.equal(report.threeRevision, '170'); assert.deepEqual(report.timing.timerStatus.errors, [], 'GPU observer made no invalid GL calls: ' + name); }
   return result;
 }
@@ -391,9 +438,10 @@ async function coldWarm(page, context) {
 // CI JSON without starting a browser. Hysteresis follows the actual placement.
 function assertMotionLifecycle(frames, initial) {
   const epochs = new Map(), boundaries = [], observations = [];
-  let previous = initial;
+  let previous = initial, slotIds = null;
   for (const frame of frames) {
     const s = frame.state, p = s.streetDistrict, old = previous.streetDistrict;
+    const lights = assertStreetLightSlots(frame, {active: p.active, baselineIds: slotIds, stage: frame.file}); slotIds = lights.ids;
     const target = s.routeStations[0].target, offset = target + p.placement.offset - s.distance, radius = Math.abs(offset);
     const expectedActive = radius <= p.placement.loadRadius ? true : radius > p.placement.unloadRadius ? false : old.active;
     assert(s.distance >= previous.distance, 'Motion sequence remains genuine forward driving');
@@ -402,12 +450,12 @@ function assertMotionLifecycle(frames, initial) {
     assert.equal(p.loadCount, old.loadCount + Number(!old.active && expectedActive), 'Only entering the load radius creates a new loading epoch');
     assert.equal(p.unloadCount, old.unloadCount + Number(old.active && !expectedActive), 'Only crossing the release boundary increments unload count');
     const observation = {file: frame.file, distance: s.distance, offset, absoluteOffset: radius, expectedActive, active: p.active,
-      status: p.status, loadCount: p.loadCount, unloadCount: p.unloadCount, meshCount: frame.meshIds.length,
+      status: p.status, loadCount: p.loadCount, unloadCount: p.unloadCount, meshCount: frame.meshIds.length, pointLightSlotIds: lights.ids, pointLightIntensities: lights.slots.map(l => l.intensity), generatedRootCount: frame.generatedRootCount,
       loadedWithinMetres: p.placement.loadRadius, releasedBeyondMetres: p.placement.unloadRadius,
       outboundReleaseDistance: target + p.placement.offset + p.placement.unloadRadius};
     observations.push(observation);
     if (p.active) {
-      assert.equal(p.status, 'active'); assert.equal(frame.childCount, 1, 'Exactly one complete street root is attached');
+      assert.equal(p.status, 'active'); assert.equal(frame.generatedRootCount, 1, 'Exactly one complete generated street root is attached');
       assert.equal(frame.meshIds.length, p.metrics.meshes, 'Loaded state contains every generated mesh');
       assert.equal(new Set(frame.meshIds).size, frame.meshIds.length);
       assert.equal(frame.materials.length, p.metrics.renderMaterials, 'Loaded state contains every render-used street material');
@@ -420,7 +468,7 @@ function assertMotionLifecycle(frames, initial) {
       } else epochs.set(p.loadCount, {loadCount: p.loadCount, samples: 1, firstDistance: s.distance, lastDistance: s.distance,
         meshIds: frame.meshIds, materialConfigs: frame.materials.map(m => m.config)});
     } else {
-      assert.equal(p.status, 'released'); assert.equal(frame.childCount, 0, 'Released state detaches the complete street root');
+      assert.equal(p.status, 'released'); assert.equal(frame.generatedRootCount, 0, 'Released state detaches the complete generated street root');
       assert.equal(frame.meshIds.length, 0); assert.equal(frame.materials.length, 0); assert.equal(frame.motion.cloth.length, 0);
       assert.deepEqual(p.liveResources, {geometries: 0, materials: 0}, 'Released state owns no street resources');
     }
@@ -436,6 +484,11 @@ function assertMotionLifecycle(frames, initial) {
 
 async function nativeJourney(page) {
   await instrument(page); await open(page); await activeStreet(page);
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  const initialRendered = await inspect(page);
+  const initialLighting = assertStreetLightSlots(initialRendered.street, {active: true, stage: 'initial native render'});
+  write('native-initial-programs-and-lights.json', {commit: process.env.GITHUB_SHA || null, renderer: initialRendered.renderer,
+    lighting: initialLighting, baselineLightReference: BASELINE_STREET_LIGHTS, note: 'Program count/cache keys/types are measured from this renderer, never an expected constant.'});
   const input = [], startedAt = performance.now();
   await clickTarget(page, '#startGame'); await until(page, () => __trainDriver.getState().station.canOpen);
   await clickTarget(page, '#stationAction');
@@ -538,7 +591,7 @@ async function nativeJourney(page) {
     if (i) await page.waitForTimeout(1000);
     const f = await shot(page, '05-motion-' + String(i).padStart(2, '0'), 'native-ui-production-clock', false);
     motion.push({file: f.name + '.png', sha256: f.sha256, capturedAfterMs: performance.now() - motionStart, state: f.state, motion: f.motion,
-      rootPosition: f.street.rootPosition, childCount: f.street.childCount, meshIds: f.street.meshIds, materials: f.street.materials});
+      rootPosition: f.street.rootPosition, rootWorldPosition: f.street.rootWorldPosition, childCount: f.street.childCount, generatedRootCount: f.street.generatedRootCount, lighting: f.street.lighting, meshIds: f.street.meshIds, materials: f.street.materials});
     streetAssertions(f.state); assert(f.motion.cloth.every(c => c.pinMaxError < 1e-7), 'Cloth pins stay on authored positions');
     for (const material of f.street.materials) {
       assert.deepEqual(material.worldOffset, f.street.rootPosition, 'Weather shader local anchor follows street origin exactly');
@@ -574,12 +627,14 @@ async function nativeJourney(page) {
   for (let cycle = 0; cycle < 3; cycle++) {
     const before = await inspect(page), mark = performance.now();
     assert.equal(before.state.streetDistrict.active, true, 'Each cycle baseline is an actually loaded street');
+    assertStreetLightSlots(before.street, {active: true, baselineIds: initialLighting.ids, stage: 'cycle ' + (cycle + 1) + ' loaded baseline'});
     while ((await state(page)).throttle < 3) await clickTarget(page, '#accelerate');
     await until(page, () => { const s = __trainDriver.getState(), p = s.streetDistrict.placement; return s.distance > s.routeStations[0].target + p.offset + p.unloadRadius && !s.streetDistrict.active; }, null, {timeout: 120000});
     await clickTarget(page, '#pause'); await page.waitForTimeout(150);
     const unloaded = await inspect(page);
     assert.equal(unloaded.state.streetDistrict.unloadCount, before.state.streetDistrict.unloadCount + 1);
-    assert.equal(unloaded.street.childCount, 0);
+    assertStreetLightSlots(unloaded.street, {active: false, baselineIds: initialLighting.ids, stage: 'cycle ' + (cycle + 1) + ' released'});
+    assert.equal(unloaded.street.meshIds.length, 0); assert.equal(unloaded.street.materials.length, 0); assert.equal(unloaded.street.generatedRootCount, 0);
     const disposal = unloaded.disposals.at(-1); assert(disposal, 'Disposal observation attached to actual street resources');
     assert.equal(disposal.duplicates, 0); assert(disposal.expected.instancedMesh > 0);
     for (const kind of ['geometry', 'material', 'instancedMesh']) assert.equal(disposal.events[kind], disposal.expected[kind], kind + ' receives exactly one dispose event');
@@ -587,17 +642,27 @@ async function nativeJourney(page) {
     const oldLoads = unloaded.state.streetDistrict.loadCount;
     await clickTarget(page, '#restartPaused'); await activeStreet(page); await page.waitForTimeout(150);
     const reentered = await inspect(page);
+    assertStreetLightSlots(reentered.street, {active: true, baselineIds: initialLighting.ids, stage: 'cycle ' + (cycle + 1) + ' reentered'});
     assert.equal(reentered.state.streetDistrict.loadCount, oldLoads + 1); assert(reentered.state.distance < 5); assert.equal(reentered.state.seed, served.seed);
     for (const key of ['meshes', 'instances', 'geometries', 'materials', 'expandedTriangles', 'textures']) assert.equal(reentered.state.streetDistrict.metrics[key], recipeMetrics[key], 'Identical recipe after re-entry: ' + key);
     assert(unloaded.renderer.memory.geometries < reentered.renderer.memory.geometries, 'Actual renderer geometry allocation drops when street is released');
     cycles.push({cycle: cycle + 1, wallMs: performance.now() - mark, before, unloaded, reentered}); write('native-lifecycle-cycles.json', cycles);
   }
+  const programEvidence = sample => ({count: sample.renderer.programs.length, types: sample.renderer.programTypes,
+    programs: sample.renderer.programs.map(p => ({id: p.id, name: p.name, type: p.type, cacheKey: p.cacheKey, cacheKeySHA256: sha(p.cacheKey || ''), usedTimes: p.usedTimes}))});
+  const lightProgramSummary = {commit: process.env.GITHUB_SHA || null, baselineLightReference: BASELINE_STREET_LIGHTS,
+    stableSlotIds: initialLighting.ids, initial: programEvidence(initialRendered),
+    cycles: cycles.map(c => ({cycle: c.cycle, loaded: programEvidence(c.before), released: programEvidence(c.unloaded), reentered: programEvidence(c.reentered),
+      loadedLights: c.before.street.lighting, releasedLights: c.unloaded.street.lighting, reenteredLights: c.reentered.street.lighting})),
+    boundary: 'Actual program inventory at each observed state; comparison with the previous candidate must use its recorded inventory, not an assumed 57 or an expected improvement.'};
+  write('native-light-slots-and-programs.json', lightProgramSummary);
   const unloaded = cycles.map(c => c.unloaded), restarted = cycles.map(c => c.reentered), plateau = {};
   for (const [label, values, slack] of [
     ['rendererGeometries', unloaded.map(x => x.renderer.memory.geometries), 4],
     ['rendererTextures', unloaded.map(x => x.renderer.memory.textures), 2],
     ['rendererPrograms', unloaded.map(x => x.renderer.programs.length), 4],
     ['driverBuffers', unloaded.map(x => x.gl[0].resources.Buffer.live), 8],
+    ['releasedVertexArrays', unloaded.map(x => x.gl[0].resources.VertexArray.live), 8],
     ['driverBufferBytes', unloaded.map(x => x.gl[0].liveBufferBytes), 65536],
     ['reenteredGeometries', restarted.map(x => x.renderer.memory.geometries), 4],
     ['reenteredTextures', restarted.map(x => x.renderer.memory.textures), 2],
@@ -606,6 +671,12 @@ async function nativeJourney(page) {
     plateau[label] = {values, slack, maxGrowth: Math.max(...values) - values[0]};
     assert(plateau[label].maxGrowth <= slack, 'Resources plateau after three genuine releases: ' + JSON.stringify(plateau[label]));
   }
+  const vaoEvidence = {released: unloaded.map(x => x.gl[0].resources.VertexArray.live), reentered: restarted.map(x => x.gl[0].resources.VertexArray.live)};
+  vaoEvidence.releasedMaxGrowth = Math.max(...vaoEvidence.released) - vaoEvidence.released[0];
+  vaoEvidence.reenteredMaxGrowth = Math.max(...vaoEvidence.reentered) - vaoEvidence.reentered[0];
+  vaoEvidence.note = 'Released VertexArray plateau is gated above with slack 8. Reentered counts are disclosed independently; any growth needs source-lifetime analysis and is not described as all GL resources remaining constant.';
+  write('native-vertex-array-lifetime.json', vaoEvidence);
+  if (vaoEvidence.reenteredMaxGrowth > 0) console.log('OBSERVATION: reentered VertexArray count grew by ' + vaoEvidence.reenteredMaxGrowth + '; released counts ' + vaoEvidence.released.join('/') + '. See native-vertex-array-lifetime.json.');
   // Preserve and assert trusted inputs before navigation creates a new document.
   const preReloadEvents = await page.evaluate(() => __r16QA.events);
   for (const id of ['startGame', 'stationAction', 'accelerate', 'decelerate', 'brake', 'pause', 'openCameraMenu', 'restartPaused']) assert(preReloadEvents.some(e => e.id === id && e.trusted && ['pointerdown', 'click'].includes(e.type)), 'Trusted native input: ' + id);
@@ -620,7 +691,7 @@ async function nativeJourney(page) {
   const storage = await page.evaluate(keys => Object.fromEntries(keys.map(k => [k, localStorage.getItem(k)])), Object.keys(oldStorage)); assert.deepEqual(storage, oldStorage, 'R14 save, view and quality storage remains byte-for-byte unchanged');
   const events = await page.evaluate(() => __r16QA.events);
   const report = {kind: 'native-ui-production-clock', fixtureStateWrites: false, wallMs: performance.now() - startedAt, served, stopped, shots,
-    portraitGeometry, pause: {paused, still, resumed}, inputLatency: input, motionSummary, lifecyclePreparation, cycles, plateau, continued: restored.state, storage, events, preReloadEvents,
+    portraitGeometry, pause: {paused, still, resumed}, inputLatency: input, initialLighting, lightProgramSummary, motionSummary, lifecyclePreparation, cycles, plateau, vaoEvidence, continued: restored.state, storage, events, preReloadEvents,
     performance: {renderSubmissionMs: stats(timing.timing.renderSubmitMs), animationCallbackMs: stats(timing.timing.frameCallbackMs), frameIntervalMs: stats(timing.timing.frameIntervals), gpuFrameMs: stats(timing.timing.gpuFrameMs), timerAvailable: timing.timing.timerAvailable},
     limitations: ['Viewport emulation is not a physical phone test.', 'Resource counts are instrumented driver/renderer object accounting, not exact device VRAM. Observer wrappers and timer queries add overhead, so timings are instrumented diagnostic measurements.', 'Pixel sequence requires independent visual review for glyph quality, wetness, support placement and grass coverage.']};
   return report;

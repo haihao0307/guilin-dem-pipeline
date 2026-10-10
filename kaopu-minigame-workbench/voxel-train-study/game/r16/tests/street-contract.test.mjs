@@ -38,7 +38,7 @@ test('Host coordinate boundary, load hysteresis, release/re-entry and same-time 
  assert.equal(new THREE.Matrix4().makeTranslation(0,.0805,0).determinant(),1);assert.deepEqual(streetToGame([1,2,-7],30),[-2,2.0805,-7]);assert.equal(streetOffset(30),-3);assert.equal(COACHES.length,2);
  const district=createStreetDistrict({score:score()});await district.ready;const view={distance:30,elapsed:2};district.update(view,[{target:0}]);assert(district.proof.active);assert.equal(district.root.position.x,-3);assert.equal(district.handle.state.time,2);const first=district.snapshot().hash;
  district.update({distance:31,elapsed:2},[{target:0}]);assert.equal(district.handle.state.time,2);assert.equal(district.proof.loadCount,1);
- district.update({distance:1000,elapsed:20},[{target:0}]);assert(!district.proof.active);assert.equal(district.proof.unloadCount,1);assert.equal(district.root.children.length,0);
+ district.update({distance:1000,elapsed:20},[{target:0}]);assert(!district.proof.active);assert.equal(district.proof.unloadCount,1);assert.equal(district.root.children.length,2);assert(district.root.children.every(o=>o.isPointLight&&o.visible&&o.intensity===0));
  district.update(view,[{target:0}]);assert.equal(district.proof.loadCount,2);assert.equal(district.snapshot().hash,first);district.dispose();assert.equal(district.proof.status,'disposed');assert.equal(district.root.children.length,0);
 });
 test('Late score load after disposal cannot attach objects; invalid score keeps host alive',async()=>{

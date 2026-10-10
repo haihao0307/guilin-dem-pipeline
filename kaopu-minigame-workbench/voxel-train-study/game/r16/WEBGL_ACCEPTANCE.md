@@ -1,6 +1,10 @@
-# Next gate: actual R16 WebGL validation
+# R16 real WebGL validation and measurement contract
 
-Status: NOT RUN. Local CPU tests and the separate Blender geometry image do not satisfy this gate. Use an authorized browser/CI environment without bypassing security restrictions. R16-only candidate branch and read-only CI are authorized; no merge or deployment before the real-frame review. The frozen R15 rejected asset is excluded. A software rasterizer must be labeled as such; desktop/phone viewports are not physical-device tests.
+Status on 2026-10-10: actual Chromium/ANGLE SwiftShader frames and native interactions have been exercised in the authorized Ubuntu 24.04 CI. Run [38028738677](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/38028738677) passed 175 unit tests, seven browser cases and all GL/network gates; its native test incorrectly compared meshes after the legitimate 307m release boundary. With the same runtime and corrected distance-aware assertions, run [38029895563](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/38029895563) passed the complete native journey, pause/door/control/storage checks and three real release/reentry cycles. That second run selected only the native case; it is not independently an eight-case pass.
+
+The current two-persistent-light-slot optimization is a separate candidate. The workflow restores all eight browser cases, repeats clean R14/R16 startup, and compares the fixed pre-optimization R16 commit 966337636c9c5112a126acbdc91244207fb29fcc with the candidate on the same runner. Read the exact candidate CI result before treating that optimization as accepted.
+
+The new street produces real shaders and geometry; no cinema/3A or lightweight hardware-performance acceptance is claimed. No physical GPU/phone measurement or public deployment has occurred. This remains a Draft PR with read-only CI. Local socket restrictions are not bypassed; the frozen rejected R15 mesh/image package is excluded.
 
 ## Exact target and identity
 

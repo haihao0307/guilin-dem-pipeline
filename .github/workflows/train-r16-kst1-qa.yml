@@ -21,6 +21,13 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Read fixed pre-optimization candidate for same-runner comparison
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          ref: 966337636c9c5112a126acbdc91244207fb29fcc
+          path: .qa-r16-before
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
       - name: Install pinned official Playwright without package scripts
         run: npm install --prefix "$RUNNER_TEMP/train-r16" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
       - name: Install Chromium
@@ -47,13 +54,20 @@ jobs:
         env:
           TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r16/
           TRAIN_QA_OUT: train-r16-results/browser
-          TRAIN_QA_CASES: native-journey
         run: node "$GAME/r16/tests/r16-browser.cjs"
       - name: Measure clean uninstrumented cold and warm startup
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         env:
           TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r16/
           TRAIN_CLEAN_QA_OUT: train-r16-results/clean
+        run: node "$GAME/r16/tests/r16-clean-startup.cjs"
+      - name: Compare unchanged pre-optimization and candidate on same runner
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        env:
+          TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r16/
+          TRAIN_CLEAN_BASELINE_URL: http://127.0.0.1:8765/.qa-r16-before/kaopu-minigame-workbench/voxel-train-study/game/r16/
+          TRAIN_CLEAN_BASELINE_COMMIT: 966337636c9c5112a126acbdc91244207fb29fcc
+          TRAIN_CLEAN_QA_OUT: train-r16-results/paired-light-optimization
         run: node "$GAME/r16/tests/r16-clean-startup.cjs"
       - name: Preserve screenshots, exact source hashes, timings and failures
         if: always()

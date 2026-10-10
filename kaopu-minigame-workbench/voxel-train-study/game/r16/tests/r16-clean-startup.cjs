@@ -15,12 +15,13 @@ const {execFileSync} = require('node:child_process');
 const {chromium} = require('playwright');
 
 const base = new URL(process.env.TRAIN_GAME_URL || 'http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r16/').href;
-const urls = {r14: new URL('../', base).href, r16: base};
-const versions = {r14: 'kcr-hud-r14', r16: 'kcr-kst1-r16'};
+const baselineName = process.env.TRAIN_CLEAN_BASELINE_URL ? 'r16-before' : 'r14';
+const urls = {[baselineName]: process.env.TRAIN_CLEAN_BASELINE_URL || new URL('../', base).href, r16: base};
+const versions = {[baselineName]: baselineName === 'r14' ? 'kcr-hud-r14' : 'kcr-kst1-r16', r16: 'kcr-kst1-r16'};
 const out = path.resolve(process.env.TRAIN_CLEAN_QA_OUT || 'train-r16-clean-startup');
 const viewport = {width: 1280, height: 720};
 const launchArgs = ['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'];
-const order = ['r14', 'r16', 'r14', 'r16'];
+const order = [baselineName, 'r16', baselineName, 'r16'];
 const captures = [], failures = [];
 let commit = process.env.GITHUB_SHA || null;
 if (!commit) {
@@ -67,7 +68,7 @@ async function capture(page, cdp, which, repeat, mode, observations) {
     if (!driver?.ready || driver.version !== version) return false;
     const s = driver.getState();
     return s.frames > 0 && s.drawCalls > 0 && s.triangles > 0 &&
-      (which !== 'r16' || (s.streetDistrict?.ready && s.streetDistrict?.active));
+      (version !== 'kcr-kst1-r16' || (s.streetDistrict?.ready && s.streetDistrict?.active));
   }, {which, version: versions[which]}, {polling: 100, timeout: 90000});
   const publiclyReadyAfterMs = performance.now() - started;
   // Schedule two ordinary browser RAF callbacks. Do not replace RAF or call the
@@ -85,7 +86,7 @@ async function capture(page, cdp, which, repeat, mode, observations) {
     userAgent: navigator.userAgent, devicePixelRatio, viewport: [innerWidth, innerHeight]}));
   const metricsAfter = metricMap(await cdp.send('Performance.getMetrics'));
   const events = observations.events.slice(eventStart);
-  const result = {name, which, repeat, mode, commit, url: urls[which], status: response.status(),
+  const result = {name, which, repeat, mode, commit, sourceCommit: which === 'r16-before' ? process.env.TRAIN_CLEAN_BASELINE_COMMIT : commit, url: urls[which], status: response.status(),
     instrumentation: 'No app route/injection, no addInitScript, no API or GL/RAF wrappers; read-only public-state/ResourceTiming sampling and external CDP Performance counters only.',
     clocks: {
       navigationToPublicReadyMs: publiclyReadyAfterMs,
@@ -107,7 +108,7 @@ async function capture(page, cdp, which, repeat, mode, observations) {
       boundary: 'ResourceTiming fields are kept verbatim per resource. Resource sums exclude the navigation document, whose timing is separate. Zero transferSize can represent cached resources; no compression/cache saving is inferred without the reported fields/headers.'},
     environment: {requestedRasterizer: 'Chromium ANGLE SwiftShader software rasterizer', actualRenderer: afterScreenshot.state.rendererName,
       viewport, deviceScaleFactor: 1, physicalDeviceTest: false,
-      coldBoundary: 'Fresh browser context, not a fresh Chromium/OS process or an empty GPU-driver cache. Contexts run sequentially in alternating R14/R16 order.'}};
+      coldBoundary: 'Fresh browser context, not a fresh Chromium/OS process or an empty GPU-driver cache. Contexts run sequentially in the recorded alternating baseline/candidate order.'}};
   // Always persist measurement and image evidence before evaluating its gates.
   write(name + '.json', result);
   assert.equal(afterScreenshot.version, versions[which]);
@@ -115,7 +116,7 @@ async function capture(page, cdp, which, repeat, mode, observations) {
   assert.deepEqual(afterScreenshot.viewport, [viewport.width, viewport.height]);
   assert.equal(afterScreenshot.state.proof.addedCoaches, 2);
   assert(/SwiftShader/i.test(afterScreenshot.state.rendererName), 'Verified renderer must be the requested software rasterizer');
-  if (which === 'r16') assert.equal(afterScreenshot.state.streetDistrict.active, true);
+  if (versions[which] === 'kcr-kst1-r16') assert.equal(afterScreenshot.state.streetDistrict.active, true);
   const errors = events.filter(e => e.type === 'pageerror' || e.type === 'console' && (e.level === 'error' || glError(e.text)) ||
     e.type === 'response' && e.status >= 400 || e.type === 'requestfailed' && !/ERR_ABORTED/.test(e.error || ''));
   assert.deepEqual(errors, [], 'Clean startup has no page/GL/HTTP errors');
@@ -161,7 +162,7 @@ async function capture(page, cdp, which, repeat, mode, observations) {
     const browserVersion = browser ? await browser.version() : null;
     if (browser) await browser.close().catch(() => {});
     const aggregate = {};
-    for (const which of ['r14', 'r16']) for (const mode of ['cold-context', 'warm-reload']) {
+    for (const which of [baselineName, 'r16']) for (const mode of ['cold-context', 'warm-reload']) {
       const subset = captures.filter(c => c.which === which && c.mode === mode);
       aggregate[which + '-' + mode] = {samples: subset.length,
         medianNavigationToVerifiedScreenshotUpperBoundMs: median(subset.map(c => c.clocks.navigationToVerifiedScreenshotUpperBoundMs)),
@@ -173,13 +174,13 @@ async function capture(page, cdp, which, repeat, mode, observations) {
     const pass = captures.length === 8 && failures.length === 0;
     write('result.json', {pass, scope: 'CLEAN STARTUP COMPARISON ONLY; not native journey, lifecycle or independent visual acceptance', commit,
       browserVersion, playwright: require('playwright/package.json').version, launchArgs, viewport, deviceScaleFactor: 1,
-      order, captures: captures.map(c => c.name + '.json'), aggregate, failures,
+      order, baselineName, baselineCommit: process.env.TRAIN_CLEAN_BASELINE_COMMIT || null, urls, captures: captures.map(c => c.name + '.json'), aggregate, failures,
       limitations: ['Two samples per entry/mode are diagnostic, not a stable performance distribution.',
         'SwiftShader software rendering on CI, not a physical desktop/phone or hardware GPU benchmark.',
         'Navigation-to-PNG is an observed workflow upper bound; it does not isolate GPU, shader compile, upload, parse or street-build time.',
         'Fresh contexts share the Chromium process and host/driver caches; only warm-reload explicitly reuses the same browser context.',
         'No production runtime or render API was replaced or called by the test.']});
-    console.log('R16/R14 CLEAN STARTUP ONLY: ' + (pass ? 'PASS' : 'FAIL') + ' — ' + out);
+    console.log('R16/' + baselineName + ' CLEAN STARTUP ONLY: ' + (pass ? 'PASS' : 'FAIL') + ' — ' + out);
     if (!pass) process.exitCode = 1;
   }
 })();
