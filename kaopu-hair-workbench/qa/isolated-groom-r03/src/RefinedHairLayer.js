@@ -122,7 +122,7 @@ class FullerScalpBinding extends ScalpBinding{
   const [x,y,z]=p,side=smooth(.045,.085,Math.abs(x)),rear=1-smooth(-.052,-.015,z),front=smooth(.02,.09,z),r=this.random[i*4],near=1-smooth(.002,.015,this.safetyMargin(p));let direction;
   if(style==='swept-back')direction=[x*.7,-.12-side*rear*.72,-1];
   else if(style==='short-crop')direction=[x*1.8,-.2-side*rear*.55,.7*front-.6*(1-front)];
-  else{const rootX=this.templateRoots[i*3],rootZ=this.templateRoots[i*3+2],part=-.027+.045*rootZ,partSide=rootX<part?-1:1;direction=[partSide*(.78*(1-side*.75))+x*2,-.12-side*rear*.6,-.65-side*.6];}
+  else{const rootX=this.templateRoots[i*3],rootZ=this.templateRoots[i*3+2],part=-.027+.045*rootZ+.007*Math.sin((rootZ+.01)*18),partStrength=smooth(-.035,.045,rootZ)*smooth(.31,.36,this.templateRoots[i*3+1]),partSide=1+(Math.tanh((rootX-part)/.0018)-1)*partStrength;direction=[partSide*(.78*(1-side*.75))+x*2,-.12-side*rear*.6,-.65-side*.6];}
   const lower=1-smooth(.311,.350,y),rearFlow=1-smooth(-.035,.014,z),sideFlow=smooth(.045,.073,Math.abs(x));const regional=Math.max(rearFlow,sideFlow)*lower;direction=direction.map((v,k)=>v*(1-regional)+[x*.5,-1,-.18][k]*regional);
   // Group nearby roots into 12 mm guide cells, then converge gently along
   // each supported strand. The grouping controls coherent bundles, not noise.
