@@ -12,6 +12,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const assert = require('node:assert/strict');
 const {performance} = require('node:perf_hooks');
+const {createBufferLedger,bridgeAdjustedBufferBytes} = require('./bridge-resource-accounting.cjs');
 const {chromium} = require('playwright');
 const {clickTarget, clickControl, controlGeometry, assertControlGeometry} = require('../../tests/browser-controls.cjs');
 const base = new URL(process.env.TRAIN_GAME_URL || 'http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r17/').href;
@@ -49,7 +50,7 @@ const stats = values => {
 
 // Observation installed before the application's first WebGL call. These
 // wrappers preserve arguments/results and record actual driver allocations.
-function initObservation({storage = null} = {}) {
+function initObservation({storage = null, createLedger} = {}) {
   if (storage) for (const [key, value] of Object.entries(storage)) {
     if (localStorage.getItem(key) === null) localStorage.setItem(key, value);
   }
@@ -79,16 +80,17 @@ function initObservation({storage = null} = {}) {
     const counters = {canvas: this.id, type: params[0], resources: {}, bufferDataCalls: 0, bufferSubDataCalls: 0,
       bufferDataBytesSubmitted: 0, bufferSubDataBytesSubmitted: 0, liveBufferBytes: 0};
     q.contexts.push(counters);
-    const bufferBytes = new Map(), bindings = new Map();
+    const bufferBytes = new Map(), bindings = new Map(), ledger = createLedger();
+    counters.bufferLedger = ledger;
     for (const name of ['Buffer', 'Texture', 'Framebuffer', 'Renderbuffer', 'VertexArray', 'Program', 'Shader', 'Query', 'Sampler']) {
       const create = 'create' + name, remove = 'delete' + name;
       if (!gl[create] || !gl[remove]) continue;
       const createFn = gl[create].bind(gl), deleteFn = gl[remove].bind(gl), live = new Set();
       const count = counters.resources[name] = {created: 0, deleted: 0, live: 0, peak: 0};
-      gl[create] = (...values) => { const obj = createFn(...values); if (obj) { live.add(obj); count.created++; count.live = live.size; count.peak = Math.max(count.peak, count.live); } return obj; };
+      gl[create] = (...values) => { const obj = createFn(...values); if (obj) { if(name==='Buffer')ledger.created(obj); live.add(obj); count.created++; count.live = live.size; count.peak = Math.max(count.peak, count.live); } return obj; };
       gl[remove] = obj => {
         if (live.delete(obj)) { count.deleted++; count.live = live.size; }
-        if (name === 'Buffer' && bufferBytes.has(obj)) { counters.liveBufferBytes -= bufferBytes.get(obj); bufferBytes.delete(obj); }
+        if(name==='Buffer'){ledger.deleted(obj);for(const [target,b]of bindings)if(b===obj)bindings.delete(target);if(bufferBytes.has(obj)){counters.liveBufferBytes-=bufferBytes.get(obj);bufferBytes.delete(obj);}}
         return deleteFn(obj);
       };
     }
@@ -97,7 +99,7 @@ function initObservation({storage = null} = {}) {
     const bufferData = gl.bufferData.bind(gl); gl.bufferData = (...values) => {
       const n = size(values[1], values[3], values[4]), buffer = bindings.get(values[0]);
       counters.bufferDataCalls++; counters.bufferDataBytesSubmitted += n;
-      if (buffer) { counters.liveBufferBytes += n - (bufferBytes.get(buffer) || 0); bufferBytes.set(buffer, n); }
+      if (buffer) { counters.liveBufferBytes += n - (bufferBytes.get(buffer) || 0); bufferBytes.set(buffer, n); ledger.uploaded(buffer,values[1],n); }
       return bufferData(...values);
     };
     const bufferSubData = gl.bufferSubData.bind(gl); gl.bufferSubData = (...values) => {
@@ -119,12 +121,28 @@ const observerHarness = `
 ;(() => {
   const qa = window.__r17QA;
   const renderMs = [], gpuMs = [], pending = [], transitions = [], disposals = [], watched = new WeakSet();
+  const bridgeWatched=new WeakSet(), bridgeRecords=[];
+  function registerGeometry(geometry,owner){for(const [attribute,a] of Object.entries({...geometry.attributes,...(geometry.index?{index:geometry.index}:{})}))qa.contexts[0].bufferLedger.registerSource(a.array,{...owner,geometryId:geometry.uuid,attribute});}
+  function watchHostBridges(){
+    world.root.traverse(object=>{
+      if(object.name!=='Straight railway truss bridge'||!object.geometry||bridgeWatched.has(object))return;
+      bridgeWatched.add(object);registerGeometry(object.geometry,{kind:'host-bridge'});const geometry=object.geometry,arrays=[...Object.values(geometry.attributes).map(a=>a.array),geometry.index?.array].filter(Boolean);
+      const buffers=new Map();for(const a of arrays)buffers.set(a.buffer,a.byteLength);
+      const report={id:geometry.uuid,name:object.name,geometryBytes:[...buffers.values()].reduce((a,b)=>a+b,0),bufferCount:buffers.size,resident:false,disposed:false,observedBy:[]};bridgeRecords.push(report);
+      for(const method of ['onBeforeRender','onBeforeShadow']){const original=object[method];object[method]=function(...args){report.resident=true;if(!report.observedBy.includes(method))report.observedBy.push(method);return original?.apply(this,args);};}
+      geometry.addEventListener('dispose',()=>{report.disposed=true;report.resident=false;});
+    });
+  }
+  function hostGeometrySnapshot(){return{scope:'Only existing route bridge buffers, observed on actual render/shadow callbacks until disposal',bridges:bridgeRecords.map(r=>({...r,observedBy:r.observedBy.slice(),gpuBuffers:qa.contexts[0].bufferLedger.snapshot().filter(b=>b.owners.some(o=>o.kind==='host-bridge'&&o.geometryId===r.id))}))};}
+
   function watchStreet() {
     const handle = world.streetDistrict?.handle; if (!handle || watched.has(handle)) return;
     watched.add(handle);
     const resources = {geometry: new Set(handle.resources?.geometries || []), material: new Set(handle._library?.materials || []), instancedMesh: new Set()};
     handle.root.traverse(o => { if (o.geometry) resources.geometry.add(o.geometry); if (o.isInstancedMesh) resources.instancedMesh.add(o); for (const m of (Array.isArray(o.material) ? o.material : o.material ? [o.material] : [])) resources.material.add(m); });
-    const report = {loadCount: world.streetDistrict.proof.loadCount, expected: {}, events: {}, duplicates: 0};
+    const report = {loadCount: world.streetDistrict.proof.loadCount, expected: {}, events: {}, duplicates: 0,geometryIds:[...resources.geometry].map(g=>g.uuid)};
+    const owner={kind:'street',loadCount:report.loadCount};for(const geometry of resources.geometry)registerGeometry(geometry,owner);
+    for(const mesh of resources.instancedMesh)for(const attribute of ['instanceMatrix','instanceColor'])if(mesh[attribute])qa.contexts[0].bufferLedger.registerSource(mesh[attribute].array,{...owner,meshId:mesh.uuid,attribute});
     for (const [kind, objects] of Object.entries(resources)) {
       report.expected[kind] = objects.size; report.events[kind] = 0;
       for (const object of objects) { let fired = false; object.addEventListener('dispose', () => { if (fired) report.duplicates++; fired = true; report.events[kind]++; }); }
@@ -149,7 +167,7 @@ const observerHarness = `
     pending.length = 0; timer = null;
   }
   canvas.addEventListener('webglcontextlost', () => {
-    timerStatus.discardedOnContextLoss += pending.length;
+    timerStatus.discardedOnContextLoss += pending.length;for(const r of bridgeRecords)r.resident=false;
     // Old context objects are invalid after restoration: do not query/delete them.
     pending.length = 0; gpuMs.length = 0; timer = null; timerStatus.enabled = false; timerStatus.tested = false; timerStatus.samples = 0; timerStatus.reason = 'Context lost; old pending queries discarded';
   });
@@ -169,7 +187,7 @@ const observerHarness = `
     }
   }
   renderer.render = function (...values) {
-    watchStreet(); const started = performance.now(); let query = null;
+    watchStreet();watchHostBridges(); const started = performance.now(); let query = null;
     if (timer && timerStatus.enabled && measured < 90 && !gl.isContextLost()) {
       query = gl.createQuery();
       if (query) {
@@ -225,9 +243,9 @@ const observerHarness = `
     district?.root.traverse(o => { if (o.isPointLight) districtPointLightCount++; });
     scene.traverse(o => { if (o.isPointLight) scenePointLightCount++; });
     const programTypes = {}; for (const program of programs) programTypes[program.type || program.name || 'unknown'] = (programTypes[program.type || program.name || 'unknown'] || 0) + 1;
-    const result = {state: __trainDriver.getState(), threeRevision: THREE.REVISION,
+    const result = {state: __trainDriver.getState(), threeRevision: THREE.REVISION,hostDynamicGeometry:hostGeometrySnapshot(),
       renderer: {memory: {...renderer.info.memory}, render: {...renderer.info.render}, programs, programCount: programs.length, programTypes, sceneGeometries: geometries.size, sceneMaterials: materials.size},
-      gl: qa.contexts, disposals, shaderFailures: qa.shaderFailures, contextLost: gl.isContextLost(),
+      gl: qa.contexts.map(({bufferLedger,...c})=>({...c,buffers:bufferLedger.snapshot()})), disposals:disposals.map(r=>({...r,sceneGeometryReferences:r.geometryIds.filter(id=>[...geometries].some(g=>g.uuid===id)),gpuBuffers:qa.contexts[0].bufferLedger.snapshot().filter(b=>b.owners.some(o=>o.kind==='street'&&o.loadCount===r.loadCount))})), shaderFailures: qa.shaderFailures, contextLost: gl.isContextLost(),
       timing: {renderSubmitMs: renderMs.slice(), gpuFrameMs: gpuMs.slice(), timerAvailable: timerStatus.supported, timerStatus: {...timerStatus, errors: timerStatus.errors.slice()}, pendingQueries: pending.length,
         frameIntervals: qa.frameIntervals.slice(), frameCallbackMs: qa.frameCallbackMs.slice(), longTasks: qa.longTasks.slice(), transitions: transitions.slice()},
       motion: {cloth, actors: game.actors.map(a => ({id: a.id, kind: a.kind, position: a.position.slice()})),
@@ -371,7 +389,7 @@ async function runCase(browser, name, test, options = {}) {
   const started = performance.now(); let context, page;
   try {
     context = await browser.newContext({viewport: VIEWPORT, deviceScaleFactor: 1, hasTouch: true});
-    if (!options.rawPage) await context.addInitScript(initObservation, {storage: options.storage ? oldStorage : null});
+    if (!options.rawPage) await context.addInitScript({content:'('+initObservation.toString()+')({storage:'+JSON.stringify(options.storage?oldStorage:null)+',createLedger:'+createBufferLedger.toString()+'});'});
     page = await context.newPage(); observe(page, name, options.expectedScoreFailure);
     const result = await test(page, context);
     checks.push({name, pass: true, wallMs: performance.now() - started, result});
@@ -639,11 +657,14 @@ async function nativeJourney(page) {
     assert.equal(disposal.duplicates, 0); assert(disposal.expected.instancedMesh > 0);
     for (const kind of ['geometry', 'material', 'instancedMesh']) assert.equal(disposal.events[kind], disposal.expected[kind], kind + ' receives exactly one dispose event');
     assert.deepEqual(unloaded.state.streetDistrict.liveResources, {geometries: 0, materials: 0});
+    assert.deepEqual(disposal.sceneGeometryReferences,[],'Disposed street geometry has no scene references');
+    assert(disposal.gpuBuffers.length>0,'Actual street GPU objects tracked by source-array identity');
+    assert(disposal.gpuBuffers.every(b=>b.deletedAt!==null),'Every uploaded street GPU buffer receives actual deleteBuffer');
     const oldLoads = unloaded.state.streetDistrict.loadCount;
     await clickTarget(page, '#restartPaused'); await activeStreet(page); await page.waitForTimeout(150);
     const reentered = await inspect(page);
     assertStreetLightSlots(reentered.street, {active: true, baselineIds: initialLighting.ids, stage: 'cycle ' + (cycle + 1) + ' reentered'});
-    assert.equal(reentered.state.streetDistrict.loadCount, oldLoads + 1); assert(reentered.state.distance < 5); assert.equal(reentered.state.seed, served.seed);
+    assert.equal(reentered.state.streetDistrict.loadCount, oldLoads + 1); assert.equal(reentered.state.distance,0,'Leak comparison uses identical native restart stop'); assert.equal(reentered.state.velocity,0); assert.equal(reentered.state.seed, served.seed);
     for (const key of ['meshes', 'instances', 'geometries', 'materials', 'expandedTriangles', 'textures']) assert.equal(reentered.state.streetDistrict.metrics[key], recipeMetrics[key], 'Identical recipe after re-entry: ' + key);
     assert(unloaded.renderer.memory.geometries < reentered.renderer.memory.geometries, 'Actual renderer geometry allocation drops when street is released');
     cycles.push({cycle: cycle + 1, wallMs: performance.now() - mark, before, unloaded, reentered}); write('native-lifecycle-cycles.json', cycles);
@@ -657,6 +678,8 @@ async function nativeJourney(page) {
     boundary: 'Actual program inventory at each observed state; comparison with the previous candidate must use its recorded inventory, not an assumed 57 or an expected improvement.'};
   write('native-light-slots-and-programs.json', lightProgramSummary);
   const unloaded = cycles.map(c => c.unloaded), restarted = cycles.map(c => c.reentered), plateau = {};
+  for(const sample of restarted){assert.deepEqual(sample.state.camera,restarted[0].state.camera,'Same-stop leak gate uses identical actual camera');assert.equal(sample.state.cameraMode,'overview');assert.deepEqual(sample.state.canvasPixels,restarted[0].state.canvasPixels);assert.equal(sample.state.distance,0);}
+  write('native-host-bridge-accounting.json',{reason:'Leak gate compares raw bytes at the same zero-distance native restart with identical camera and recipe. Different release stops are a streaming budget: each bridge deduction requires actual WebGLBuffer ID, typed-array owner, first upload, byte size and not-deleted status; no fixed byte constant.',released:unloaded.map(x=>({distance:x.state.distance,...bridgeAdjustedBufferBytes(x.gl[0].liveBufferBytes,x.hostDynamicGeometry.bridges),host:x.hostDynamicGeometry})),reenteredRawBytes:restarted.map(x=>x.gl[0].liveBufferBytes),streetBufferDeletions:unloaded.map(x=>x.disposals.at(-1)),unchangedThresholdBytes:65536});
   const vaoEvidence = {released: unloaded.map(x => x.gl[0].resources.VertexArray.live), reentered: restarted.map(x => x.gl[0].resources.VertexArray.live)};
   vaoEvidence.releasedMaxGrowth = Math.max(...vaoEvidence.released) - vaoEvidence.released[0];
   vaoEvidence.reenteredMaxGrowth = Math.max(...vaoEvidence.reentered) - vaoEvidence.reentered[0];
@@ -669,11 +692,12 @@ async function nativeJourney(page) {
     ['rendererPrograms', unloaded.map(x => x.renderer.programs.length), 4],
     ['driverBuffers', unloaded.map(x => x.gl[0].resources.Buffer.live), 8],
     ['releasedVertexArrays', unloaded.map(x => x.gl[0].resources.VertexArray.live), 8],
-    ['driverBufferBytes', unloaded.map(x => x.gl[0].liveBufferBytes), 65536],
+    ['driverBufferBytesExcludingObservedLiveBridge', unloaded.map(x => bridgeAdjustedBufferBytes(x.gl[0].liveBufferBytes,x.hostDynamicGeometry.bridges).adjustedBytes), 65536],
     ['reenteredGeometries', restarted.map(x => x.renderer.memory.geometries), 4],
     ['reenteredTextures', restarted.map(x => x.renderer.memory.textures), 2],
     ['reenteredPrograms', restarted.map(x => x.renderer.programs.length), 4],
-    ['reenteredBuffers', restarted.map(x => x.gl[0].resources.Buffer.live), 8]]) {
+    ['reenteredBuffers', restarted.map(x => x.gl[0].resources.Buffer.live), 8],
+    ['sameStopReenteredRawBufferBytes', restarted.map(x => x.gl[0].liveBufferBytes), 65536]]) {
     plateau[label] = {values, slack, maxGrowth: Math.max(...values) - values[0]};
     assert(plateau[label].maxGrowth <= slack, 'Resources plateau after three genuine releases: ' + JSON.stringify(plateau[label]));
   }
