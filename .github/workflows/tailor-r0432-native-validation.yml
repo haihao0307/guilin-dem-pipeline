@@ -1,0 +1,101 @@
+name: Tailor R04.3.2 native seam and full wardrobe validation
+on:
+  push:
+    branches: [feature/tailor-cabinet-r03-garment-surfaces-20261009]
+    paths:
+      - '.github/workflows/tailor-r0432-native-validation.yml'
+      - 'kaopu-tailor-workbench/presets/r04/R0432_TRIGGER.json'
+permissions:
+  contents: write
+concurrency:
+  group: tailor-r0432-native-validation
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-tailor-workbench/presets/r04
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install real browser
+        run: |
+          pip install playwright==1.56.0
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y fonts-noto-cjk
+      - name: Verify original-material invariants and apply P06-only correction
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          python -m py_compile "$P/install_r0432.py" "$P/promote_r0432.py" "$P/qa_fresh_r0432.py"
+          python "$P/install_r0432.py"
+          node --check "$P/app.mjs"
+          node --check "$P/native/kaopu-tailor-workbench/catalogue/native-adapter.mjs"
+          node "$P/test_r0432.mjs"
+          node "$P/test_parameter_preview_r0431.mjs"
+          node "$P/contract_test.mjs"
+      - name: Fresh native P06 trial and strict promotion
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          python "$P/prepare_node_r043.py"
+          node "$P/node_solve_r043.mjs" P06 "$P/candidate-r0432/P06.json.gz"
+          python "$P/promote_r0432.py"
+      - name: Real 60-result and 432-outfit browser regression
+        run: |
+          python -m http.server 8765 >/tmp/tailor-r0432-http.log 2>&1 &
+          P=kaopu-tailor-workbench/presets/r04
+          python "$P/qa_r043.py"
+          python "$P/qa_integrated_r0431.py"
+          python "$P/qa_fresh_r0432.py"
+      - name: Save bounded acceptance and exact runtime manifest
+        run: |
+          python - <<'PY'
+          import json,pathlib,hashlib,os
+          p=pathlib.Path('kaopu-tailor-workbench/presets/r04')
+          load=lambda n:json.loads((p/n).read_text())
+          reports={n:load(n) for n in ['R043_BROWSER_REPORT.json','R0431_BROWSER_REPORT.json','R0432_FRESH_REPORT.json','R0432_CONTRACT_TESTS.json','CONTRACT_TESTS.json']}
+          assert all(r['passed'] for r in reports.values())
+          idx=load('assets/results/index.json');summary=load('assets/readiness.json')['summary']
+          assert len(idx['rows'])==60 and sum(r['qualityPassed'] for r in idx['rows'].values())==22
+          roots={'assets','native','correctives'}
+          files={str(f.relative_to(p)):{'sha256':hashlib.sha256(f.read_bytes()).hexdigest(),'bytes':f.stat().st_size} for f in p.rglob('*') if f.is_file() and (f.parts[len(p.parts)] in roots or f.parent==p and f.suffix in ['.mjs','.html','.css'])}
+          (p/'R0432_ACCEPTANCE.json').write_text(json.dumps({'sourceCommit':os.environ['GITHUB_SHA'],'sourceBaseline':'a6fa594bc4c1ccb9470cbf8571a9f5ce10945ce7','passed':True,'summary':summary,'testCounts':{n:len(r['checks']) for n,r in reports.items()},'all60GarmentsAccepted':False,'physicalFitAccepted':False,'dynamicWearCertified':False,'userAccepted':False,'files':files},indent=2))
+          PY
+      - name: Retain tested source and actual evidence without overwriting other branches
+        if: always()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$GITHUB_REF_NAME" --depth=1
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          git add kaopu-tailor-workbench/presets/r04
+          if ! git diff --cached --quiet; then
+            git commit -m 'test(tailor-r0432): retain same-person native seam correction and actual wardrobe parameter/browser outcomes'
+            git push origin HEAD:"$GITHUB_REF_NAME"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r0432-native-verified
+          path: |
+            kaopu-tailor-workbench/presets/r04/R0432_*.json
+            kaopu-tailor-workbench/presets/r04/R0431_BROWSER_REPORT.json
+            kaopu-tailor-workbench/presets/r04/R043_BROWSER_REPORT.json
+            kaopu-tailor-workbench/presets/r04/qa-r0432
+            kaopu-tailor-workbench/presets/r04/qa-r0431
+            kaopu-tailor-workbench/presets/r04/qa-r043
+            kaopu-tailor-workbench/presets/r04/assets/results/P06.json.gz
+            kaopu-tailor-workbench/presets/r04/assets/results/P06.png
+            kaopu-tailor-workbench/presets/r04/assets/results/index.json
+            kaopu-tailor-workbench/presets/r04/assets/readiness.json
+            kaopu-tailor-workbench/presets/r04/app.mjs
+            kaopu-tailor-workbench/presets/r04/index.html
+            kaopu-tailor-workbench/presets/r04/correctives/r043b/seam-frames.mjs
+            kaopu-tailor-workbench/presets/r04/native/kaopu-tailor-workbench/catalogue/native-adapter.mjs
+          retention-days: 14
