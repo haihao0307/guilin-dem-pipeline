@@ -57,12 +57,14 @@ reference=s[:s.index('self.onmessage = async')]
 reference+='\n'+s[s.index(marker):]
 reference+='\nexport async function meshProbe(input,opts={}){const a=await recoverExplicitPantsCuffGathering(input);return compileWithinNativeBudget(a,{allowUnsupportedSeams:true,numericalStitchSpacingMm:12,measurementSnapshot:{bodyId:"common-native-default-r04"},...opts})}\n'
 (worker.parent/'budget-probe.mjs').write_text(reference)
-f=P/'app.mjs';s=f.read_text().replace("version:'R04-SOURCE-2'","version:'R04-SOURCE-3'")
-s=s.replace("if(eligible()&&!cache.rows[id]&&readiness.rows[id]?.status!=='native-material-ready')","if(eligible()&&!cache.rows[id]&&readiness.rows[id]?.status==='native-material-rejected')")
-s=s.replace('spec=d.spec;record=d.record;', 'if(token!==serial||!eligible())return;spec=d.spec;record=d.record;')
-s=s.replace("?wanted:'J06'","?wanted:'T01'")
-s=s.replace("const token=serial;if(eligible()&&cache.rows[id])", "if(eligible()&&!cache.rows[id]&&cache.failed?.[id]){phase='failed';message('该款原求解尚未成功：'+cache.failed[id].reason,true);controls();} const token=serial;if(eligible()&&cache.rows[id])")
-s=s.replace("clothComputedForOtherPerson:false", "clothComputedForOtherPerson:false,actualResultCount:Object.keys(cache.rows).length,nativeMaterialCount:readiness.summary.nativeMaterialsReady,staticPassCount:Object.values(cache.rows).filter(r=>r.qualityPassed).length,all60GarmentsAccepted:false")
-f.write_text(s)
-f=P/'index.html';s=f.read_text().replace('R04 · 原系统接回','R04.1 · 原人物 / 原裁缝').replace('原系统来源修正','原人物与原裁缝');f.write_text(s)
-print('R04_NATIVE_CONTINUATION_READY')
+if not (P/'SOURCE3_RUNTIME_MIGRATED.json').exists():
+ f=P/'app.mjs';s=f.read_text().replace("version:'R04-SOURCE-2'","version:'R04-SOURCE-3'")
+ s=s.replace("if(eligible()&&!cache.rows[id]&&readiness.rows[id]?.status!=='native-material-ready')","if(eligible()&&!cache.rows[id]&&readiness.rows[id]?.status==='native-material-rejected')")
+ s=s.replace('spec=d.spec;record=d.record;', 'if(token!==serial||!eligible())return;spec=d.spec;record=d.record;')
+ s=s.replace("?wanted:'J06'","?wanted:'T01'")
+ s=s.replace("const token=serial;if(eligible()&&cache.rows[id])", "if(eligible()&&!cache.rows[id]&&cache.failed?.[id]){phase='failed';message('该款原求解尚未成功：'+cache.failed[id].reason,true);controls();} const token=serial;if(eligible()&&cache.rows[id])")
+ s=s.replace("clothComputedForOtherPerson:false", "clothComputedForOtherPerson:false,actualResultCount:Object.keys(cache.rows).length,nativeMaterialCount:readiness.summary.nativeMaterialsReady,staticPassCount:Object.values(cache.rows).filter(r=>r.qualityPassed).length,all60GarmentsAccepted:false")
+ f.write_text(s)
+ f=P/'index.html';s=f.read_text().replace('R04 · 原系统接回','R04.1 · 原人物 / 原裁缝').replace('原系统来源修正','原人物与原裁缝');f.write_text(s)
+ print('R04_NATIVE_CONTINUATION_READY')
+ (P/'SOURCE3_RUNTIME_MIGRATED.json').write_text('{"runtimeMigrationApplied":true}')

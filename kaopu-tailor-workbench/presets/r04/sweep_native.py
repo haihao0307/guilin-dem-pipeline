@@ -82,7 +82,7 @@ def sweep():
    orig=next(x for x in originalParity if x['id']==id)
    if orig['referenceOutcome']=='native-meshed':checks[-1]['unchangedMaterialSHA256']=m['binding']['materialSHA256']==orig['referenceMaterialSHA256']
   else:ready['rows'][id]={'status':'native-material-rejected','reason':r.get('message'),'vertices':0}
-  if r.get('file'):index['rows'][id]={k:r[k] for k in ['file','sha256','qualityPassed']}|{'thumb':id+'.png','kind':'ORIGINAL_SOLVER_RESULT','person':LOCK['person']}
+  if r.get('file'):index['rows'][id]={k:r[k] for k in ['file','sha256','qualityPassed']}|{'thumb':id+'.png','thumbReady':False,'kind':'ORIGINAL_SOLVER_RESULT','person':LOCK['person']}
   else:index['failed'][id]={'phase':r['status'],'reason':r.get('message'),'kind':'NO_FINISHED_RESULT_NOT_REPLACED'}
  ready['summary']={'originalPapers':60,'nativeMaterialsReady':sum(bool(r.get('material')) for r in allresults),'nativeMaterialRejected':sum(not r.get('material') for r in allresults),'actualSolverRecords':len(index['rows']),'staticGatePassedRecords':sum(r['qualityPassed'] for r in index['rows'].values()),'all60GarmentsAccepted':False}
  summary={'sourceCommit':SOURCE,'person':LOCK['person'],'summary':ready['summary'],'all60Attempted':len(allresults)==60,'materialChecks':checks,'numericalSourceUnchanged':True,'sameBodyAndPaperInputs':True,'qualityThresholdsRaisedOrRelaxed':False,'trials':allresults,'allMaterialChecksPassed':all(all(v for k,v in c.items() if k!='id') for c in checks),'publicVerified':False}
@@ -106,6 +106,13 @@ def render_verify():
    page.evaluate('id=>__R04.select(id)',id);s=page.evaluate('__R04.state()')
    check('Exact original result '+id,s['phase']=='done' and s['renderCoordinateErrorM']==0 and s['clothIndexMatchesNative'] and s['staticGate']['passed']==r['qualityPassed'])
    if not PUBLIC:page.locator('#stage').screenshot(path=str(A/'results'/r['thumb']))
+  if not PUBLIC:
+   for item in index['rows'].values():
+    assert (A/'results'/item['thumb']).exists()
+    item['thumbReady']=True
+    item['thumbSHA256']=digest((A/'results'/item['thumb']).read_bytes())
+   write(A/'results/index.json',index)
+   page.reload(wait_until='domcontentloaded');page.wait_for_function('window.__R04?.state().ready',timeout=300000)
   for id in ['J06','T01','T03','T05','S02','P01']:
    page.evaluate('id=>__R04.select(id)',id);page.locator('#stage').screenshot(path=str(D/(prefix+id+'.png')))
   page.evaluate('__R04.select("T01")');page.screenshot(path=str(D/(prefix+'desktop.png')))

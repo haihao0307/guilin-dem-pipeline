@@ -13,7 +13,7 @@ async function loadNativePaper(data){
  for(const key in profile)profile[key]=0;
  const token=epoch;analytic=await recoverExplicitPantsCuffGathering(original);if(token!==epoch)return;
  config={kind:'analytic',recipe:{bodyCm:structuredClone(original.bodyCm),design:{...structuredClone(original.design),style:row.style}}};
- const start=performance.now();spec=compileAnalytic(analytic,{allowUnsupportedSeams:true,numericalStitchSpacingMm:12,measurementSnapshot:{bodyId:'common-native-default-r04',sizingOrigin:'original-reference-paper-not-remeasured'}});
+ const start=performance.now();spec=compileWithinNativeBudget(analytic,{allowUnsupportedSeams:true,numericalStitchSpacingMm:12,measurementSnapshot:{bodyId:'common-native-default-r04',sizingOrigin:'original-reference-paper-not-remeasured'}});
  spec.source.bodyId='common-native-default-r04';spec.source.patternSizingOrigin=R04_LOCK.sizingPolicy;
  validate2(spec);profile.meshMs=performance.now()-start;
  nativeBinding={person:structuredClone(R04_LOCK.person),presetId:row.id,recipeHash:row.recipeHash,paperSHA256:row.decodedSHA256,materialSHA256:await materialHash(spec),nativeAnchor:R04_LOCK.nativeAnchor,patternSizingOrigin:R04_LOCK.sizingPolicy};
@@ -3551,3 +3551,33 @@ self.onmessage = async ({ data }) => {
     emit("error", { message: e.message, name: e.name, fatal: !!e.fatal, validation: e.validation, diagnosticPattern: e.diagnosticPattern });
   }
 };
+
+// R04_BOUNDED_MATERIAL_SAMPLING_V1
+const originalMaterialValidator=validate2;
+validate2=function(value){
+ try{return originalMaterialValidator(value)}catch(error){
+  // Enrich an error, never turn failed validation into success.
+  const code=String(error.message||'');
+  if(code.startsWith('MATERIAL_COORDINATES: ')){
+   const id=code.slice('MATERIAL_COORDINATES: '.length),p=value.panels.find(p=>p.id===id);
+   if(p&&Array.isArray(p.uvMm)&&p.uvMm.length>3000&&p.uvMm.every(x=>finite2(x)&&x.every(v=>Math.abs(v)<=2000))){
+    error.nativeVertexBudget={panelId:id,count:p.uvMm.length,limit:3000,boundaryCount:p.boundary.length};
+   }
+  }
+  throw error;
+ }
+};
+function compileWithinNativeBudget(input,options){
+ const attempts=[];
+ for(const step of [16,18,20,22,24,28,32]){
+  try{
+   const result=compileAnalytic(input,{...options,interiorStepMm:step});
+   result.source.meshing.budgetPolicy={schema:'kaopu-native-mesh-budget@1',attempts,selectedInteriorStepMm:step,originalDefaultInteriorStepMm:16,boundarySamplingChanged:false,chordToleranceMm:.25,numericalStitchSpacingMm:12,validatorBudgetRaised:false,physicalQualityThresholdsChanged:false};
+   return result;
+  }catch(error){
+   if(!error.nativeVertexBudget||error.nativeVertexBudget.boundaryCount>=3000)throw error;
+   attempts.push({interiorStepMm:step,...error.nativeVertexBudget});
+  }
+ }
+ throw Error('NATIVE_MESH_BUDGET_EXHAUSTED: original validator retained; no substitute garment.');
+}
