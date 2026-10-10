@@ -312,18 +312,49 @@ class DriveRun:
         self.mobile_tests()
         self.report["drivingScenariosComplete"]=True
 
+    def demo_tests(self):
+        records=[]
+        for label in ('desktop','mobile-390x664'):
+            if label.startswith('mobile'):
+                self.b.cdp('Emulation.setDeviceMetricsOverride',{'width':390,'height':664,'deviceScaleFactor':1,'mobile':True});self.b.settle()
+            self.js("return a.setExternalClock(true);");self.click('reset');self.click('run');self.advance(32.33)
+            stopped=self.snapshot()['physics'];near(stopped['positionM'],0,'Clock-only does not drive train');near(stopped['speedMps'],0,'Clock-only still braked')
+            hint=self.b.js("return document.getElementById('motionHint').textContent;");require('制动' in hint and '油门关闭' in hint,'Stopped reason matches user screenshot')
+            require(self.b.js("return document.getElementById('run').textContent;")=='暂停模拟','Clock toggle is not labelled auto-drive')
+            self.click('demo');started=self.snapshot()['physics']
+            for key in ('timeS','positionM','speedMps','wheelAngleRad'):near(started[key],stopped[key],'Demo cannot change '+key)
+            for key,v in {'brake':0,'throttle':.3,'cutoff':.55,'reverser':1}.items():near(started['controls'][key],v,'Demo single recipe '+key)
+            require(not started['paused'],'Demo runs physics clock');require(self.b.js("return document.getElementById('demo').disabled;"),'Used demo disables repeat')
+            before=self.snapshot();self.click('demo');same(before,self.snapshot(),'Repeated disabled demo does not reapply controls')
+            require('缓解制动' in self.b.js("return document.getElementById('motionHint').textContent;"),'Live hint explains brake release')
+            self.js("return a.setExternalClock(false);");deadline=time.monotonic()+15;trace=[]
+            while True:
+                time.sleep(.5);v=self.snapshot()['physics'];trace.append({'timeS':v['timeS'],'positionM':v['positionM'],'speedMps':v['speedMps']})
+                if v['positionM']>started['positionM']+.05 or time.monotonic()>=deadline:break
+            self.js("return a.setExternalClock(true);");moving=self.snapshot()['physics'];require(moving['positionM']>started['positionM']+.05 and moving['speedMps']>0,'One real demo click starts real-time travel')
+            self.click('overview');self.b.js("document.querySelector('.panel').scrollTop=0;");self.checkpoint('14-demo-'+label+'-running',True)
+            self.input('throttle',.18);self.input('brake',.2);self.input('cutoff',.4);manual=self.snapshot()['physics']['controls'];self.advance(2);same(manual,self.snapshot()['physics']['controls'],'Demo never overwrites manual takeover')
+            require(self.js("return a.demoState().mode;")=='manual','Manual takeover state')
+            self.click('emergency');self.click('demo');self.advance(3);e=self.snapshot()['physics'];near(e['controls']['throttle'],0,'Emergency throttle wins');near(e['controls']['brake'],1,'Emergency brake wins')
+            require(self.js("return a.demoState().emergencyLocked;") and self.b.js("return document.getElementById('demo').disabled;"),'Emergency disables future demo until reset')
+            self.click('reset');require(not self.b.js("return document.getElementById('demo').disabled;"),'Explicit reset rearms demo')
+            self.click('neutral');self.click('demo');near(self.snapshot()['physics']['controls']['reverser'],1,'Demo safely selects forward from neutral');self.click('emergency');self.click('run')
+            records.append({'viewport':label,'oneActualDemoClick':True,'noPoseOrClockWrite':True,'brakedClockOnlyTimeS':stopped['timeS'],'ordinaryRAFTrace':trace,'travelM':moving['positionM']-started['positionM'],'manualTakeoverPreserved':True,'emergencyHasPriority':True,'repeatRequiresReset':True})
+            if label.startswith('mobile'):self.b.cdp('Emulation.clearDeviceMetricsOverride',{});self.b.settle()
+        self.click('reset');self.report['demoScenarios']=records
+
     def mobile_tests(self):
         results=[]
         for height in (844, 664):
             self.b.cdp('Emulation.setDeviceMetricsOverride',{'width':390,'height':height,'deviceScaleFactor':1,'mobile':True})
-            self.b.settle()
+            self.b.settle();self.click('reset')
             frame=self.b.js("return {w:innerWidth,h:innerHeight,vw:visualViewport.width,vh:visualViewport.height,p:document.querySelector('.panel').getBoundingClientRect().toJSON(),t:document.querySelector('.telemetry').getBoundingClientRect().toJSON(),c:document.querySelector('canvas').getBoundingClientRect().toJSON()};")
             self.report['latestMobileLayout']=frame
             require(frame['w']==390 and frame['h']==height,'Exact mobile viewport: '+str(frame))
             require(abs(frame['c']['height']-height*.52)<2 and abs(frame['p']['top']-height*.52)<2,'Mobile camera and controls split')
             require(frame['t']['bottom']<=frame['p']['top'],'Mobile instruments never overlap control panel')
             hit=[]
-            for identity in ['run','reset','emergency','throttle','brake','cutoff','reverse','neutral','forward','mechanism','full','cab','overview','side','inside','save','open']:
+            for identity in ['demo','run','reset','emergency','throttle','brake','cutoff','reverse','neutral','forward','mechanism','full','cab','overview','side','inside','save','open']:
                 result=self.b.js("const e=document.getElementById(arguments[0]);e.scrollIntoView({block:'center',inline:'nearest'});const r=e.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2,hit=document.elementFromPoint(x,y);return {id:e.id,rect:r.toJSON(),hit:hit?.id||hit?.tagName,ok:hit===e||e.contains(hit),w:innerWidth,h:innerHeight};",identity)
                 rr=result['rect'];require(result['ok'] and rr['left']>=0 and rr['right']<=390 and rr['top']>=0 and rr['bottom']<=height,'Mobile control reachable without overlap: '+str(result));hit.append(result)
             self.click('reset')
@@ -504,16 +535,17 @@ def run(args):
         report['webgl']=core.browser_information(browser);require(not report['webgl']['contextLost'],'WebGL context lost')
         parameters=json.loads((ROOT/'physics/parameters.json').read_text());design=json.loads((ROOT/'frozen/three-cylinder/design.json').read_text())
         qa=DriveRun(browser,out,report,parameters,design)
-        if args.mobile_only:qa.mobile_tests()
+        if args.demo_only:qa.demo_tests();qa.mobile_tests()
+        elif args.mobile_only:qa.mobile_tests()
         else:qa.run_all()
-        report['mobileOnlyRun']=args.mobile_only
+        report['mobileOnlyRun']=args.mobile_only;report['demoOnlyRun']=args.demo_only
         report['logs']=core.collect_logs(browser,origin)
         require(not report['logs']['externalRequests'] and not report['logs']['failedRequests'],'External or failed page request')
         require(not any(int(r['status'])>=400 for r in requests),'HTTP asset failure')
         hooks=report['logs']['javascript']
         require(not hooks['errors'] and not hooks['rejections'],'JavaScript errors/unhandled rejections')
         require(not any(x.get('level')=='SEVERE' for x in report['logs']['console']),'Severe browser console error')
-        report['result']='PASS_REAL_BROWSER_MOBILE_UI_GEOMETRY_TOUCH_AND_START' if args.mobile_only else 'PASS_REAL_BROWSER_DRIVING_UI_GEOMETRY_AND_NATIVE_RESTART'
+        report['result']='PASS_REAL_BROWSER_DEMO_START_EMERGENCY_MANUAL_AND_MOBILE' if args.demo_only else 'PASS_REAL_BROWSER_MOBILE_UI_GEOMETRY_TOUCH_AND_START' if args.mobile_only else 'PASS_REAL_BROWSER_DRIVING_UI_GEOMETRY_AND_NATIVE_RESTART'
         print(report['result'],flush=True);return 0
     except Exception as exc:
         if not report['result'].startswith('BLOCKED_'):report['result']='FAILED_OR_INCOMPLETE'
@@ -626,6 +658,7 @@ def main():
     parser.add_argument('--ready-timeout',type=float,default=60)
     parser.add_argument('--max-seconds',type=int,default=480)
     parser.add_argument('--no-sandbox',action='store_true',help='Explicit opt-in for an already isolated runner only')
+    parser.add_argument('--demo-only',action='store_true',help='Finite one-shot demo/priority/mobile test; not full driving/native regression')
     parser.add_argument('--mobile-only',action='store_true',help='Only finite mobile UI/real-time startup regression; not full driving/native restart')
     parser.add_argument('--self-test',action='store_true',help='Pure local tests only; no browser/network/subprocess/CI')
     args=parser.parse_args()

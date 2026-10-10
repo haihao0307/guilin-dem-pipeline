@@ -1,0 +1,96 @@
+{
+  "purpose": "One-shot demo-start UI recipe over unchanged R04 physical kernel",
+  "nodePassed": 20,
+  "nodeFailed": 0,
+  "checks": [
+    {
+      "name": "default: paused, stopped and eligible; run alone does not release brake",
+      "pass": true
+    },
+    {
+      "name": "one shot changes only commands and paused flag; no time, velocity, position, wheel, energy or inventory write",
+      "pass": true
+    },
+    {
+      "name": "starts safely from forward, neutral and reverse with pre-existing positive throttle",
+      "pass": true
+    },
+    {
+      "name": "actual 120 Hz physics releases brake progressively, then produces displacement and shaft motion",
+      "pass": true
+    },
+    {
+      "name": "repeated clicks never reapply demo commands, including after manual takeover at rest",
+      "pass": true
+    },
+    {
+      "name": "moving forward or backward cannot trigger demo, including paused moving snapshots",
+      "pass": true
+    },
+    {
+      "name": "atomic rollback: first control before commit",
+      "pass": true
+    },
+    {
+      "name": "atomic rollback: second control before commit",
+      "pass": true
+    },
+    {
+      "name": "atomic rollback: second control after commit",
+      "pass": true
+    },
+    {
+      "name": "atomic rollback: pause before commit",
+      "pass": true
+    },
+    {
+      "name": "atomic rollback: pause after commit",
+      "pass": true
+    },
+    {
+      "name": "emergency before first demo locks it until explicit reset and never unpauses by itself",
+      "pass": true
+    },
+    {
+      "name": "emergency from actual motion eventually stops; no rebound or implicit demo recovery",
+      "pass": true
+    },
+    {
+      "name": "manual takeover after emergency remains usable while demo stays locked",
+      "pass": true
+    },
+    {
+      "name": "diagnostics do not claim a still-rolling emergency is stopped",
+      "pass": true
+    },
+    {
+      "name": "diagnostics do not recommend unavailable demo after used or emergency-locked manual takeover",
+      "pass": true
+    },
+    {
+      "name": "diagnostics never label ordinary low-speed rolling as parked",
+      "pass": true
+    },
+    {
+      "name": "paused moving state does not suggest an unavailable demo",
+      "pass": true
+    },
+    {
+      "name": "assist has no timer, animation loop or simulation mutation API",
+      "pass": true
+    },
+    {
+      "name": "real function-generated mechanism and real bridge move only through physics steps",
+      "pass": true
+    }
+  ],
+  "behavior": [
+    "One synchronous control recipe; no position/speed/time/energy assignment",
+    "Repeat disabled until explicit reset",
+    "Emergency command cancels demo availability; no background controller",
+    "Manual controls remain in charge"
+  ],
+  "browserStatus": "Pending private run 38095991830",
+  "notIOSHardware": true,
+  "rollBackBase": "bd08a4f9db48ebc06ac280bc9f059b295a3468b9"
+}
