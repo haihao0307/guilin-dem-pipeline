@@ -1,0 +1,98 @@
+name: Workbench lifecycle and navigation read-only QA
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [gh-pages]
+    paths:
+      - 'kaopu-tailor-workbench/unified/**'
+      - 'kaopu-tailor-workbench/UNIFIED-MANIFEST.json'
+      - '.github/workflows/human-overview-r01-qa.yml'
+      - '.github/qa/overview-lifecycle-*.cjs'
+      - '.github/qa/overview-lifecycle-*.json'
+      - '.github/qa/overview-tailor-lifecycle.cjs'
+permissions:
+  contents: read
+concurrency:
+  group: human-overview-r01-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  lifecycle:
+    if: github.event_name != 'pull_request' || github.head_ref == 'qa/human-overview-r01-20261006'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - engine: chromium
+            mode: published
+          - engine: webkit
+            mode: published
+    env:
+      OVERVIEW_BROWSER: ${{ matrix.engine }}
+      OVERVIEW_LIFECYCLE_CANDIDATE: 'false'
+      OVERVIEW_LIFECYCLE_PUBLISHED: 'true'
+      OVERVIEW_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-human-overview/
+      OVERVIEW_QA_DIR: narrow-${{ matrix.engine }}-${{ matrix.mode }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            .github/qa
+            kaopu-tailor-workbench/unified
+            kaopu-tailor-workbench/UNIFIED-MANIFEST.json
+      - name: Verify all four real published text hashes without overrides
+        id: verify
+        run: |
+          node --check .github/qa/overview-lifecycle-navigation.cjs
+          node --check .github/qa/overview-lifecycle-evidence.cjs
+          node --check .github/qa/overview-lifecycle-overrides.cjs
+          node --check .github/qa/overview-tailor-lifecycle.cjs
+          python3 - <<'PYVERIFY'
+          from pathlib import Path
+          import hashlib,json,urllib.request
+          scope=json.loads(Path('.github/qa/overview-lifecycle-scope.json').read_text());rows=[]
+          for item in scope['files']:
+              assert item['path'].endswith(('.mjs','.json'))
+              data=Path(item['path']).read_bytes();assert hashlib.sha256(data).hexdigest()==item['sha256']
+              assert hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()==item['gitBlobSHA']
+              row={'path':item['path'],'candidateSHA256':item['sha256'],'candidatePassed':True}
+              if item['sha256']:
+                  with urllib.request.urlopen('https://haihao0307.github.io/guilin-dem-pipeline/'+item['path']+'?verify=lifecycle-text-only',timeout=60) as response:published=response.read();status=response.status
+                  row.update(status=status,publishedSHA256=hashlib.sha256(published).hexdigest())
+                  assert status==200 and row['publishedSHA256']==item['sha256'],item['path']+' published candidate bytes mismatch'
+              else:row['publicBaseline']='New helper: no previous public file; candidate text only'
+              rows.append(row)
+          out=Path(__import__('os').environ['OVERVIEW_QA_DIR']);out.mkdir(exist_ok=True)
+          (out/'four-text-hashes.json').write_text(json.dumps({'passed':True,'files':rows},indent=2))
+          PYVERIFY
+      - name: Install fixed official browser dependency
+        run: |
+          npm install --prefix "$RUNNER_TEMP/overview-test" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/overview-test/node_modules/.bin/playwright" install --with-deps ${{ matrix.engine }}
+      - name: Exact 21 public entries and same-tab returns
+        env:
+          DEBUG: pw:browser
+          NODE_PATH: ${{ runner.temp }}/overview-test/node_modules
+        run: node .github/qa/overview-lifecycle-navigation.cjs
+      - name: Three garments release workers, frames and graphics resources
+        if: always() && matrix.mode == 'published' && steps.verify.outcome == 'success'
+        env:
+          DEBUG: pw:browser
+          NODE_PATH: ${{ runner.temp }}/overview-test/node_modules
+        run: node .github/qa/overview-tailor-lifecycle.cjs
+      - name: Upload only numerical reports and our public-page screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lifecycle-${{ matrix.engine }}-${{ matrix.mode }}-evidence
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            narrow-${{ matrix.engine }}-${{ matrix.mode }}/four-text-hashes.json
+            narrow-${{ matrix.engine }}-${{ matrix.mode }}/release-navigation-${{ matrix.engine }}.json
+            narrow-${{ matrix.engine }}-${{ matrix.mode }}/numeric-diagnostics-${{ matrix.engine }}.json
+            narrow-${{ matrix.engine }}-${{ matrix.mode }}/*.png
+            narrow-${{ matrix.engine }}-${{ matrix.mode }}/tailor-lifecycle/result.json
+            narrow-${{ matrix.engine }}-${{ matrix.mode }}/tailor-lifecycle/*.png
