@@ -1,0 +1,218 @@
+{
+  "purpose": "One-shot demo-start UI recipe over unchanged R04 physical kernel",
+  "nodePassed": 20,
+  "nodeFailed": 0,
+  "checks": [
+    {
+      "name": "default: paused, stopped and eligible; run alone does not release brake",
+      "pass": true
+    },
+    {
+      "name": "one shot changes only commands and paused flag; no time, velocity, position, wheel, energy or inventory write",
+      "pass": true
+    },
+    {
+      "name": "starts safely from forward, neutral and reverse with pre-existing positive throttle",
+      "pass": true
+    },
+    {
+      "name": "actual 120 Hz physics releases brake progressively, then produces displacement and shaft motion",
+      "pass": true
+    },
+    {
+      "name": "repeated clicks never reapply demo commands, including after manual takeover at rest",
+      "pass": true
+    },
+    {
+      "name": "moving forward or backward cannot trigger demo, including paused moving snapshots",
+      "pass": true
+    },
+    {
+      "name": "atomic rollback: first control before commit",
+      "pass": true
+    },
+    {
+      "name": "atomic rollback: second control before commit",
+      "pass": true
+    },
+    {
+      "name": "atomic rollback: second control after commit",
+      "pass": true
+    },
+    {
+      "name": "atomic rollback: pause before commit",
+      "pass": true
+    },
+    {
+      "name": "atomic rollback: pause after commit",
+      "pass": true
+    },
+    {
+      "name": "emergency before first demo locks it until explicit reset and never unpauses by itself",
+      "pass": true
+    },
+    {
+      "name": "emergency from actual motion eventually stops; no rebound or implicit demo recovery",
+      "pass": true
+    },
+    {
+      "name": "manual takeover after emergency remains usable while demo stays locked",
+      "pass": true
+    },
+    {
+      "name": "diagnostics do not claim a still-rolling emergency is stopped",
+      "pass": true
+    },
+    {
+      "name": "diagnostics do not recommend unavailable demo after used or emergency-locked manual takeover",
+      "pass": true
+    },
+    {
+      "name": "diagnostics never label ordinary low-speed rolling as parked",
+      "pass": true
+    },
+    {
+      "name": "paused moving state does not suggest an unavailable demo",
+      "pass": true
+    },
+    {
+      "name": "assist has no timer, animation loop or simulation mutation API",
+      "pass": true
+    },
+    {
+      "name": "real function-generated mechanism and real bridge move only through physics steps",
+      "pass": true
+    }
+  ],
+  "behavior": [
+    "One synchronous control recipe; no position/speed/time/energy assignment",
+    "Repeat disabled until explicit reset",
+    "Emergency command cancels demo availability; no background controller",
+    "Manual controls remain in charge"
+  ],
+  "browserStatus": "PASS_REAL_BROWSER_DEMO_START_EMERGENCY_MANUAL_AND_MOBILE",
+  "notIOSHardware": true,
+  "rollBackBase": "bd08a4f9db48ebc06ac280bc9f059b295a3468b9",
+  "browserRun": 38095991830,
+  "privateSourceCommit": "43b5c4fc0f6badbb09f9818642ce6146b32dd039",
+  "demoScenarios": [
+    {
+      "viewport": "desktop",
+      "oneActualDemoClick": true,
+      "noPoseOrClockWrite": true,
+      "brakedClockOnlyTimeS": 32.325,
+      "ordinaryRAFTrace": [
+        {
+          "timeS": 32.40833333333333,
+          "positionM": 0,
+          "speedMps": 0
+        },
+        {
+          "timeS": 33.041666666666664,
+          "positionM": 0,
+          "speedMps": 0
+        },
+        {
+          "timeS": 33.69166666666666,
+          "positionM": 0,
+          "speedMps": 0
+        },
+        {
+          "timeS": 34.34166666666667,
+          "positionM": 0,
+          "speedMps": 0
+        },
+        {
+          "timeS": 34.958333333333336,
+          "positionM": 0.0012838343787064993,
+          "speedMps": 0.008478858484296248
+        },
+        {
+          "timeS": 35.59166666666667,
+          "positionM": 0.016888586024505332,
+          "speedMps": 0.04500924405000848
+        },
+        {
+          "timeS": 36.24166666666667,
+          "positionM": 0.06460723498618272,
+          "speedMps": 0.10505295233827533
+        }
+      ],
+      "travelM": 0.06460723498618272,
+      "manualTakeoverPreserved": true,
+      "emergencyHasPriority": true,
+      "repeatRequiresReset": true
+    },
+    {
+      "viewport": "mobile-390x664",
+      "oneActualDemoClick": true,
+      "noPoseOrClockWrite": true,
+      "brakedClockOnlyTimeS": 32.325,
+      "ordinaryRAFTrace": [
+        {
+          "timeS": 32.791666666666664,
+          "positionM": 0,
+          "speedMps": 0
+        },
+        {
+          "timeS": 33.25833333333333,
+          "positionM": 0,
+          "speedMps": 0
+        },
+        {
+          "timeS": 33.94166666666666,
+          "positionM": 0,
+          "speedMps": 0
+        },
+        {
+          "timeS": 34.391666666666666,
+          "positionM": 0,
+          "speedMps": 0
+        },
+        {
+          "timeS": 34.84166666666667,
+          "positionM": 0.0005243807327337126,
+          "speedMps": 0.004710979227811476
+        },
+        {
+          "timeS": 35.50833333333333,
+          "positionM": 0.013398593091692274,
+          "speedMps": 0.03881346837877456
+        },
+        {
+          "timeS": 35.958333333333336,
+          "positionM": 0.03896520833891784,
+          "speedMps": 0.0765100284700336
+        },
+        {
+          "timeS": 36.625,
+          "positionM": 0.11305615444108684,
+          "speedMps": 0.14859651837645937
+        }
+      ],
+      "travelM": 0.11305615444108684,
+      "manualTakeoverPreserved": true,
+      "emergencyHasPriority": true,
+      "repeatRequiresReset": true
+    }
+  ],
+  "mobileViewports": [
+    {
+      "viewport": [
+        390,
+        844
+      ],
+      "controlsChecked": 18,
+      "touchScrolledPanelPx": 282
+    },
+    {
+      "viewport": [
+        390,
+        664
+      ],
+      "controlsChecked": 18,
+      "touchScrolledPanelPx": 196
+    }
+  ],
+  "publicURLSmoke": "Pending deployment"
+}
