@@ -1,0 +1,37 @@
+name: Train R20 streaming CPU diagnostic
+on:
+  push:
+    branches: ['qa/train-r20-street-character-20261010']
+    paths:
+      - '.github/scripts/train-r20-stream-profile.cjs'
+      - '.github/workflows/train-r20-profile-qa.yml'
+permissions:
+  contents: read
+jobs:
+  profile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Install official pinned browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/r20-profile" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/r20-profile/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/r20-profile/node_modules" >> "$GITHUB_ENV"
+      - name: Serve unchanged candidate
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/r20-profile-http.log" 2>&1 &
+          for n in $(seq 1 30); do curl --fail --silent http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r20/ >/dev/null && exit 0; sleep 1; done
+          exit 1
+      - name: Profile three identical streaming sweeps
+        run: node .github/scripts/train-r20-stream-profile.cjs
+      - name: Preserve diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-r20-profile-${{ github.sha }}
+          path: train-r20-profile/
+          compression-level: 6
+          retention-days: 7
