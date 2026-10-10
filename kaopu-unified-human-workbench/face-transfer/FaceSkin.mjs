@@ -1,8 +1,8 @@
 import * as THREE from '../full/source/registration-vendor/three.module.js';
 /** Additive extension of CommonSkinLayer. Its color, lip masks, settings,
  * material instance and original body shading remain the host, not a fallback.
- * F1.1: original detail, variation and oil are master controls for the extra
- * surface bands. Defaults preserve the F1 look; zero never leaves a hidden layer.
+ * F1.1: original detail, variation and oil are masters for the extra bands.
+ * No copied face identity, and zero never leaves an uncontrolled second layer.
  */
 let atlasPromise=null;
 export function faceAtlases(){
@@ -33,7 +33,7 @@ export function attachFaceSkin(skin){
  const f=api.fields,g=skin.viewer.geometry;for(const[name,data,size]of[['fRest',f.rest,3],['fA',f.a,4],['fB',f.b,4],['fEye',f.eye,4]])g.setAttribute(name,new THREE.BufferAttribute(data,size));
  const a=neutral(),b=neutral(),U={uFEnabled:{value:1},uFDetail:{value:1},uFMeso:{value:.75},uFColor:{value:.5},uFPigment:{value:0},uFBlood:{value:.35},uFOil:{value:.55},uFWrap:{value:.28},uFAge:{value:.5},uFLayer:{value:0},uFPass:{value:0},uFAtlas:{value:a},uFChroma:{value:b}};
  const prior=skin.material.onBeforeCompile,cache=skin.material.customProgramCacheKey.bind(skin.material);const ext={version:'ET12-F1.1',U,ready:false,errors:[],fields:f.report,shaderCompiles:0,hostMasters:{detail:'csDetail / 0.72',colorVariation:'csVariation / 0.4',oil:'csOil / 0.18'},masterControlLimits:'normalized artistic gains, not physical measurement'};skin.faceExtension=ext;api.skins.add(skin);
- skin.material.customProgramCacheKey=()=>cache()+'/ET12-composed-face-master-controls-v1';
+ skin.material.customProgramCacheKey=()=>cache()+'/ET12-composed-face-master-controls-v2';
  const patch=(text,anchor,replacement)=>{if(!text.includes(anchor))throw Error('Native skin integration anchor missing: '+anchor);return text.replace(anchor,()=>replacement);};
  skin.material.onBeforeCompile=shader=>{
   prior(shader);ext.shaderCompiles++;Object.assign(shader.uniforms,U);shader.vertexShader='attribute vec3 fRest;attribute vec4 fA,fB,fEye;varying vec3 vFRest;varying vec4 vFA,vFB,vFEye;\n'+shader.vertexShader;
@@ -43,7 +43,6 @@ export function attachFaceSkin(skin){
    vec2 fMM=vFRest.xy*1000.;float fMask=clamp(vFA.x,0.,1.)*uFEnabled;vec3 fData=vec3(.5),fChroma=vec3(.5);
    float fHostDetail=clamp(csDetail/.72,0.,2.1),fHostVariation=clamp(csVariation/.4,0.,2.5),fHostOil=clamp(csOil/.18,0.,2.);
    if(fMask>.001){fData=fBands(uFAtlas,fMM);fChroma=fBands(uFChroma,fMM);
-    // The donor contributes residuals; the host keeps complexion and lip color.
     float chromaGain=uFColor*(1.-vFB.w*.8)*fHostVariation;vec3 residual=exp(clamp(fChroma-.5,vec3(-.18),vec3(.18))*chromaGain*.65);
     vec3 paint=csPaint*residual*exp(-uFPigment*vec3(1.,1.43,1.8));
     float blood=clamp(vFB.y*.5+vFA.w*.27+vFB.z*.60,0.,1.);paint*=vec3(1.+uFBlood*blood*.055,1.-uFBlood*blood*.075,1.-uFBlood*blood*.060);
@@ -67,10 +66,10 @@ export function attachFaceSkin(skin){
    clearcoatNormal=normal;
    #endif
   `);
-  shader.fragmentShader=patch(shader.fragmentShader,'#include <lights_physical_fragment>',`#include <lights_physical_fragment>
-   #ifdef USE_CLEARCOAT
+  // Add AFTER native material assignments. Inserting just after the include
+  // is overwritten by CommonSkinLayer, leaving an inert migrated oil slider.
+  shader.fragmentShader=patch(shader.fragmentShader,'material.clearcoatRoughness=.4-csT*.08-csLip*.1;',`material.clearcoatRoughness=.4-csT*.08-csLip*.1;
    material.clearcoat=clamp(material.clearcoat+fMask*uFOil*fHostOil*(.04+.08*vFA.w+.08*vFA.y),0.,.60);material.clearcoatRoughness=clamp(material.clearcoatRoughness-(.045*vFA.y+.015*vFA.w)*fMask,.23,.55);
-   #endif
   `);
   let physical=THREE.ShaderChunk.lights_physical_pars_fragment;
   physical=patch(physical,'reflectedLight.directDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );',`float fNL=dot(geometryNormal,directLight.direction);float halfLambert=max(fNL*.5+.5,0.);vec3 wrapRGB=mix(vec3(dotNL),vec3(halfLambert),vec3(.675,.45,.45)*uFWrap);reflectedLight.directDiffuse+=mix(vec3(dotNL),wrapRGB,vFA.x*uFEnabled)*directLight.color*BRDF_Lambert(material.diffuseColor);`);
