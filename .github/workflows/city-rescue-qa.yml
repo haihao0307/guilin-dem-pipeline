@@ -29,6 +29,12 @@ jobs:
       - name: Verify geometry, game, and native actor contracts
         run: |
           node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/building-plan.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/rescue-contract.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/rescue-gameplay.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/rescue-native-actor/host-frame.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/rescue-native-actor/SupportWalker.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/rescue-qa/line-geometry.test.mjs
+      - name: Confirm first real native stair steps before whole GPU
+        timeout-minutes: 3
+        env:
+          NATIVE_ROUTE_OUT: city-rescue-qa-results/native-preflight
+          NATIVE_PROBE_SECONDS: '2.5'
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/rescue-native-actor/actual-route-probe.mjs
       - name: Install official pinned browser test runtime
         run: |
           npm install --prefix "$RUNNER_TEMP/room-browser" --registry=https://registry.npmjs.org --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0

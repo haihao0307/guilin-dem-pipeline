@@ -1,6 +1,7 @@
 /** Experimental geometry-constrained locomotion on the original 104-bone rig.
  * No alternate mesh, capture repetition, autonomous clock or physics claim.
  * Host positions/support samples share worldRoot coordinates in metres. */
+import {sampleFootObstacle} from './contact-diagnostics.mjs';
 import {NativeRig,math} from './sources/full/hand-body-r01/NativeRig.mjs';
 const {pos,rotation,mv,mm3,axisRotation}=math;
 const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
@@ -34,8 +35,16 @@ export function createSupportWalker({human,standingFrame,soleIndices,sampleSuppo
     const initial=clampTo(point),candidates=[initial,[initial[0],surface.y,center[2]],[center[0],surface.y,initial[2]],center];
     // Add positions along this actual tread; never create a height or extend it.
     for(const fraction of [.2,.8,.35,.65])candidates.push([initial[0],surface.y,b.z0+(b.z1-b.z0)*fraction],[b.x0+(b.x1-b.x0)*fraction,surface.y,initial[2]]);
+    // Derive edge-aligned candidates from this original foot's rotated shape.
+    // A fixed fraction grid can miss the narrow feasible heel clearance interval
+    // on a 255mm tread. The sampler below still decides every actual contact.
+    const offsets=calibration[side].footprint.map(delta=>rotate([delta[0],delta[2],-delta[1]],heading));
+    const edgeMargin=.006;
+    const xs=[initial[0],b.x0-Math.min(...offsets.map(p=>p[0]))+edgeMargin,b.x1-Math.max(...offsets.map(p=>p[0]))-edgeMargin];
+    const zs=[initial[2],b.z0-Math.min(...offsets.map(p=>p[2]))+edgeMargin,b.z1-Math.max(...offsets.map(p=>p[2]))-edgeMargin];
+    for(const x of xs)for(const z of zs)if(x>=b.x0&&x<=b.x1&&z>=b.z0&&z<=b.z1)candidates.push([x,surface.y,z]);
     let best=null;
-    for(const c of candidates){let supported=0,blocked=false,firstBlock=null,missing=0;for(let index=0;index<calibration[side].footprint.length;index++){const delta=calibration[side].footprint[index],q=rotate([delta[0],delta[2],-delta[1]],heading),p=c.map((x,i)=>x+q[i]),s=sampleSupport({x:p[0],z:p[2],referenceY:surface.y,maxRise,maxDrop});if(!s){missing++;continue;}if(p[1]-s.y<-.008){blocked=true;firstBlock={footprintIndex:index,offset:delta,point:p,supportId:s.supportId,supportY:s.y,gapM:p[1]-s.y};break;}if(Math.abs(s.y-surface.y)<.008)supported++;}const coverage=supported/calibration[side].footprint.length;trace.push({point:c,blocked,firstBlock,supported,missing,total:calibration[side].footprint.length,coverage,rejected:blocked?'predicted-penetration':coverage<.3?'insufficient-supported-footprint':null});if(blocked||coverage<.3)continue;const error=Math.hypot(c[0]-point[0],c[2]-point[2]);if(!best||error<best.error)best={point:c,coverage,error};}
+    for(const c of candidates){let supported=0,blocked=false,firstBlock=null,missing=0;for(let index=0;index<calibration[side].footprint.length;index++){const delta=calibration[side].footprint[index],q=rotate([delta[0],delta[2],-delta[1]],heading),p=c.map((x,i)=>x+q[i]),s=sampleFootObstacle(sampleSupport,{x:p[0],z:p[2],referenceY:surface.y,maxRise,maxDrop});if(!s){missing++;continue;}if(p[1]-s.y<-.008){blocked=true;firstBlock={footprintIndex:index,offset:delta,point:p,supportId:s.supportId,supportY:s.y,gapM:p[1]-s.y};break;}if(Math.abs(s.y-surface.y)<.008)supported++;}const coverage=supported/calibration[side].footprint.length;trace.push({point:c,blocked,firstBlock,supported,missing,total:calibration[side].footprint.length,coverage,rejected:blocked?'predicted-penetration':coverage<.3?'insufficient-supported-footprint':null});if(blocked||coverage<.3)continue;const error=Math.hypot(c[0]-point[0],c[2]-point[2]);if(!best||error<best.error)best={point:c,coverage,error};}
     return best;
   }
   function footTarget(side,root,heading,referenceY,lead,previousY=referenceY,trajectory=null){
@@ -73,7 +82,14 @@ export function createSupportWalker({human,standingFrame,soleIndices,sampleSuppo
         const supportSide=active==='L'?'R':'L';
         if(actor.moving&&footError(supportSide)>h*.23&&s.u>.55)s.u=1;
         const u=smooth(s.u),point=lerp(s.from,s.target.point,u),lift=(h*.04+Math.max(0,s.target.point[1]-s.from[1])*.35)*Math.sin(Math.PI*s.u)**2;
-        point[1]+=lift;foot.point=point;foot.heading=s.fromHeading+yawDelta(s.target.heading,s.fromHeading)*u;
+        point[1]+=lift;foot.heading=s.fromHeading+yawDelta(s.target.heading,s.fromHeading)*u;
+        // Keep the original footprint above actual intervening tread tops while
+        // descending; a symmetric sine arc alone cuts through the higher nosing.
+        if(s.u>0&&s.u<1)for(const delta of calibration[active].footprint){
+          const q=rotate([delta[0],delta[2],-delta[1]],foot.heading),surface=sampleFootObstacle(sampleSupport,{x:point[0]+q[0],z:point[2]+q[2],referenceY:Math.max(s.from[1],s.target.point[1]),maxRise,maxDrop});
+          if(surface)point[1]=Math.max(point[1],surface.y-q[1]+.004*Math.sin(Math.PI*s.u));
+        }
+        foot.point=point;
         if(s.u>=1){foot.point=[...s.target.point];foot.heading=s.target.heading;foot.supportId=s.target.supportId;foot.swing=null;state.lastSide=active;active=null;}
       }
       if(!active&&actor.moving&&Math.max(footError('L'),footError('R'))>h*.10){

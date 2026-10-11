@@ -1,31 +1,37 @@
 {
   "schema": "native-rescue-publication-manifest/1",
-  "frozenAt": "2026-10-11T12:09:00Z",
+  "frozenAt": "2026-10-11T12:20:00Z",
   "sourceCommit": "30c5405cc9801e216e1155249a1b87232e4faccd",
   "destination": "kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/rescue-native-actor/",
   "files": [
     {
       "path": "CPU-RESULTS.txt",
-      "bytes": 2130,
-      "sha256": "c80a573d5d9a604a61716b8c7f5c4cdfea3166f49c48bf23d70e9c52418f5a19",
+      "bytes": 2228,
+      "sha256": "d5089a5ef811e64794a4fbd8e85b88e204c2e57fb9d257e83bbd230048097cc1",
       "category": "new-adapter-test-or-documentation"
     },
     {
       "path": "NativeActor.mjs",
-      "bytes": 11228,
-      "sha256": "ba437e67a8da32e63ea571aab070e5e513d5f0f61e483b2613b5aeae2f211ac9",
+      "bytes": 11266,
+      "sha256": "f78f94721a1d8dbfcd336dda719780d8bb45befd621ee01d3d9e6e0857e6eea4",
       "category": "new-adapter-test-or-documentation"
     },
     {
+      "path": "ORIGINAL-FOOT-REGRESSION.json",
+      "category": "new-adapter-test-or-documentation",
+      "bytes": 1274,
+      "sha256": "8208bc0b3ebd99d5385d87bf988d522f281aa519454804ce7a1574868906a46d"
+    },
+    {
       "path": "README.md",
-      "bytes": 9585,
-      "sha256": "360c3c3bd24e6d7b37435f1e214b9584c80999d0fc26ef0cb80b453fbc860ea2",
+      "bytes": 12037,
+      "sha256": "eb9d2657472867d50a9a58750969c2270e7fe12da6a7b0b438f9589da8d8ccbf",
       "category": "new-adapter-test-or-documentation"
     },
     {
       "path": "SupportWalker.mjs",
-      "bytes": 13655,
-      "sha256": "20741efa90d164b6fe99dc4d61f01fa1c4fd1b4d87e296873c7846b53bbb161f",
+      "bytes": 15034,
+      "sha256": "3a72046f1e3fa14655700f74a496d475078b674ca437b232790e46fdfc13c5a1",
       "category": "new-adapter-test-or-documentation"
     },
     {
@@ -36,26 +42,32 @@
     },
     {
       "path": "actual-foot-replay.mjs",
-      "bytes": 3966,
-      "sha256": "7bc544d36475ed9df7a4bbecb4df8ba518ba84d050107399219a85f3d30b11e8",
+      "bytes": 4276,
+      "sha256": "397b23376347ef408bf4af8d8281ef21704ef74171596a8373e22802312bfcdd",
       "category": "new-adapter-test-or-documentation"
     },
     {
       "path": "actual-route-probe.mjs",
-      "bytes": 3876,
-      "sha256": "63cf43dd82b30b2d6e7e5b2afd0bd37b33e8a870d739c5c9b772ed62db3c30f5",
+      "bytes": 4056,
+      "sha256": "82fbb3544dfa36e7397ed7a613cbfa833af03b4f2fe8b06a1416fadd93ee3b7d",
       "category": "new-adapter-test-or-documentation"
     },
     {
+      "path": "actual-route-regression.mjs",
+      "category": "new-adapter-test-or-documentation",
+      "bytes": 5249,
+      "sha256": "e330bc1029c00b1648a6352db35061f4505bbec58d608bb23c02f35e4872d260"
+    },
+    {
       "path": "contact-diagnostics.mjs",
-      "bytes": 1304,
-      "sha256": "399f3d6893c324ef42061175890619e45cb0fc054c189774ce6c00850cbdc857",
+      "bytes": 1730,
+      "sha256": "5ac0602d69ac5eac1ba43c2d7ae0b9195eb5e6f28ac05e5774293ea635dc06f8",
       "category": "new-adapter-test-or-documentation"
     },
     {
       "path": "contact-diagnostics.test.mjs",
-      "bytes": 689,
-      "sha256": "c44878a94b08a8cc74a3f5241d355f5dcff99f066679080410e0d0e93836b835",
+      "bytes": 1668,
+      "sha256": "4f1e07bbb7b2bb7ae82e79e70b694e3f65a2651b0de6b958816a309b27a1357e",
       "category": "new-adapter-test-or-documentation"
     },
     {
@@ -400,21 +412,29 @@
   ],
   "validation": {
     "sourceGitBlobsExact": 39,
-    "cpuTestsPassed": 22,
+    "cpuTestsPassed": 23,
     "factoryModuleImport": "passed against existing r170 host module",
     "actualModelLoad": "passed in official Actions R03 38137195173 at 9203d5a9",
     "actualModelGPU": "three source actors rendered; actual static six-foot skin gate passed in R03",
-    "actualSoleContact": "static passed; walking failed at t=1.5s, diagnostics pending",
+    "actualSoleContact": "Original source fixture full-CSR 3-actor two-route offline pass: 4761 frames, 28566 foot checks, zero failed gates. Updated GPU walking pending.",
     "visualAcceptance": false,
-    "CORS": "original assets loaded successfully in official R03 integration"
+    "CORS": "original assets loaded successfully in official R03 integration",
+    "actualFootFixtureSHA256": "5b0fea74e9a0c4f49908175df74aa83d15f81ed9862c799ca9c0046e67fabeab",
+    "originalFootRegression": "ORIGINAL-FOOT-REGRESSION.json"
   },
   "largeAssetsIncluded": false,
   "publicationPerformed": false,
   "diagnosticUpdate": {
-    "algorithmChanged": false,
-    "purpose": "Capture exact first-stair support rejection and export actual original foot CSR for offline replay",
+    "algorithmChanged": true,
+    "purpose": "Resolve source-foot edge-candidate omission and descending swing stair-nose clearance; all original penetration/contact/reach/bone-length limits unchanged",
     "command": "node rescue-native-actor/actual-route-probe.mjs",
     "outputEnvironment": "NATIVE_ROUTE_OUT",
-    "defaultSeconds": 2.5
+    "defaultSeconds": 2.5,
+    "changes": [
+      "Original rotated footprint-derived edge candidate search",
+      "Actual tread-top swing clearance",
+      "Highest actual obstacle inside unchanged local height window",
+      "Real original-foot full-CSR two-route regression"
+    ]
   }
 }
