@@ -1,0 +1,28 @@
+name: Identity ET15 pinned build tools
+on:
+  push:
+    branches: [fix/identity-et15-eye-skin-audit-20261011]
+    paths: [.github/workflows/identity-et15-tools.yml]
+permissions:
+  contents: read
+jobs:
+  tools:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          mkdir -p /tmp/identity-tools
+          cd /tmp/identity-tools
+          npm init -y >/dev/null
+          npm install esbuild@0.25.11
+          ./node_modules/.bin/esbuild --version
+      - uses: actions/upload-artifact@v4
+        with:
+          name: identity-et15-esbuild-0.25.11-linux-x64
+          path: |
+            /tmp/identity-tools/node_modules/esbuild
+            /tmp/identity-tools/node_modules/@esbuild
+          retention-days: 7
