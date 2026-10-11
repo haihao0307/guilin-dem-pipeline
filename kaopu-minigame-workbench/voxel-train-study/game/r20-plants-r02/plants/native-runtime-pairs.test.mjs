@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import {profile78,generateTropical78,fixedAsset76}from'./rules/native78-ficus-author.mjs';
+import {KNOWN_NATIVE_HASH_PAIRS,assertKnownNativeHashes}from'./rules/native78-equivalence.mjs';
+import {createPlantRecipe}from'./native-codec/codec.mjs';
+for(const p of KNOWN_NATIVE_HASH_PAIRS)assert.equal(assertKnownNativeHashes({geometryHash:p.geometry,contentHash:p.content}).matchedPair,p.id);
+for(const a of KNOWN_NATIVE_HASH_PAIRS)for(const b of KNOWN_NATIVE_HASH_PAIRS)if(a!==b)assert.throws(()=>assertKnownNativeHashes({geometryHash:a.geometry,contentHash:b.content}),/Unqualified/);
+assert.throws(()=>assertKnownNativeHashes({geometryHash:'0'.repeat(64),contentHash:'0'.repeat(64)}),/Unqualified/);
+const p=createPlantRecipe().profile,s=generateTropical78(profile78(p.species,p),{compactBlades76:true});const original=await fixedAsset76(s);assertKnownNativeHashes(original);
+async function reject(name,array,index,value){const old=array[index];array[index]=value;try{await assert.rejects(async()=>assertKnownNativeHashes(await fixedAsset76(s)),undefined,name);}finally{array[index]=old;}}
+const next=a=>{const c=new Float32Array([a]);new Uint32Array(c.buffer)[0]++;return c[0];};
+await reject('position ULP',s.geometry.positions,0,next(s.geometry.positions[0]));
+await reject('normal ULP',s.geometry.normals,0,next(s.geometry.normals[0]));
+await reject('index change',s.geometry.indices,0,(s.geometry.indices[0]+1)%s.geometry.positions.length);
+await reject('bark radius ULP',s.geometry.barkCoordinates69,3,next(s.geometry.barkCoordinates69[3]));
+await reject('bark direction exceeds bound',s.geometry.barkCoordinates69,0,2e-12);
+await reject('growth exceeds bound',s.growth.axes[1],'birth',s.growth.axes[1].birth+2e-12);
+await reject('resource pixel',s.surfaces.resources[0].bytes,0,(s.surfaces.resources[0].bytes[0]+1)%256);
+await reject('nonfinite position',s.geometry.positions,0,NaN);
+const restored=await fixedAsset76(s);assert.equal(restored.geometryHash,original.geometryHash);assert.equal(restored.contentHash,original.contentHash);
+console.log(JSON.stringify({pass:true,qualifiedPairs:3,mixedPairsRejected:6,unknownPairRejected:true,actualNativeMutationCounterexamples:8,rawInputsRestored:true}));

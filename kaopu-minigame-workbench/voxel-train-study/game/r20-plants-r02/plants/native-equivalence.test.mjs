@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {hashSpecimen,GROWTH_GRID_STEP,botanicalKeys} from './rules/native78-equivalence.mjs';
+import {hashSpecimen,GROWTH_GRID_STEP,botanicalKeys} from './rules/native78-bounded-signature-reference.mjs';
 const fixture=()=>({geometry:{positions:new Float32Array([1,2,3]),normals:new Float32Array([0,1,0]),indices:new Uint32Array([0,1,2]),barkCoordinates69:new Float32Array([1,2e-15,1,0.1])},growth:{profile:{species:'ficus-microcarpa',seed:761014,stage:'juvenile'},value:0.1234,organs:3,unknownField:'included'},surfaces:{resources:[{id:'leaf',bytes:new Uint8Array([12,34,56,255])}]}});
 const names=[];
 async function differs(name,mutate){const a=fixture(),before=await hashSpecimen(a);mutate(a);assert.notEqual(await hashSpecimen(a),before,name);names.push(name);}

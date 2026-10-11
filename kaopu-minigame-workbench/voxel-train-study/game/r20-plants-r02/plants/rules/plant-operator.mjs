@@ -4,9 +4,8 @@
 import * as THREE from '../vendor/three.module.min.js';
 import {profile78,generateTropical78,fixedAsset76} from './native78-ficus-author.mjs';
 import {createFixedMesh76,installWind76} from './native78-runtime.mjs';
-import {hashSpecimen,SIGNATURE_VERSION,BARK_DIRECTION_ZERO_THRESHOLD,GROWTH_GRID_STEP} from './native78-equivalence.mjs';
-export const OPERATOR_VERSION='PLANT_FUNCTION_R02';
-const EXPECTED_SIGNATURE='196486cad21adfb898fd3bdf019810d4ecf8acc8482c5eae4d97776a37e4f180';
+import {assertKnownNativeHashes} from './native78-equivalence.mjs';
+export const OPERATOR_VERSION='PLANT_FUNCTION_R03';
 const ORIGINAL_HEAD='d5f6ed0f41bdd6a4e4d1163190d3cd2135e8b122';
 const EXPECTED_GEOMETRY='04f2540de4b18ce8c13eb5cf3122db93639d29430c11d6f42d72ad3469bb8d74';
 const EXPECTED_CONTENT='77a3555fbf894deb9b610e616e7c0d0955d53c341652343f3b7eaf5638e26ea5';
@@ -21,9 +20,7 @@ export async function buildNativeFicus(recipe,{verifyResources}={}){
  try{
   const specimen=generateTropical78(canonical,{compactBlades76:true}),generated=now();
   const sourceGeometryBytes=Object.values(specimen.geometry).reduce((n,x)=>n+(ArrayBuffer.isView(x)?x.byteLength:0),0);
-  const asset=await fixedAsset76(specimen),signature=await hashSpecimen(specimen),hashed=now();
-  if(signature!==EXPECTED_SIGNATURE)throw Error('Native bounded signature mismatch: '+signature);
-  const equivalence={version:SIGNATURE_VERSION,signature,referenceSignature:EXPECTED_SIGNATURE,rawHashEqualToNode24:asset.geometryHash===EXPECTED_GEOMETRY&&asset.contentHash===EXPECTED_CONTENT,referenceRawGeometryHash:EXPECTED_GEOMETRY,referenceRawContentHash:EXPECTED_CONTENT,renderGeometryUnmodified:true,geometryArraysExactExcept:'barkCoordinates69 direction x/y near-zero only; no normal/position tolerance',barkDirectionZeroThreshold:BARK_DIRECTION_ZERO_THRESHOLD,barkMaximumPairDifferenceExclusive:2*BARK_DIRECTION_ZERO_THRESHOLD,growthDoubleMaximumPairDifferenceExclusive:GROWTH_GRID_STEP,compactLeafGettersIncluded:true};
+  const asset=await fixedAsset76(specimen),equivalence=assertKnownNativeHashes(asset),hashed=now();
   if(verifyResources)await verifyResources(Object.fromEntries(specimen.surfaces.resources.map(r=>[r.id,r.bytes])));
   fixed=createFixedMesh76(asset);fixed.group.name='原生小叶榕 · 幼株761014';
   fixed.wind.strength.value=recipe.motion.strength;
