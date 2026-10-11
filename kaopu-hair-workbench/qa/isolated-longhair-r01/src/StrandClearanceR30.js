@@ -44,6 +44,33 @@ export function strandClearanceR30(geometry,{clearance=.0021,cell=.025}={}){cons
    }
    return result;
   }
+  // Serialization-only inspection of unresolved geometry. This does not alter
+  // contact selection, displacements, pass limits or the original free solver.
+  function describeRemainingHit(strand,crossing,original,travel){
+   const record=tris[crossing.triangle],endIndices=[crossing.segment-1,crossing.segment];
+   const ends=endIndices.map(j=>getPoint(strand,j,new T.Vector3()));
+   const nativeWeights=record.tri.getBarycoord(crossing.point,new T.Vector3());
+   const nativeNormal=new T.Vector3();
+   record.ids.forEach((vertex,k)=>nativeNormal.addScaledVector(new T.Vector3().fromArray(n,vertex*3),nativeWeights.getComponent(k)));
+   const nativeLength=nativeNormal.length();if(nativeLength>0)nativeNormal.divideScalar(nativeLength);
+   return{
+    segment:crossing.segment,triangle:crossing.triangle,point:crossing.point.toArray(),
+    segmentLengthM:ends[0].distanceTo(ends[1]),
+    endpoints:endIndices.map((j,k)=>({pointIndex:j,position:ends[k].toArray(),
+     originalPosition:(original.get(j)||ends[k]).toArray(),radiusM:pointData[(strand*per+j)*4+3],
+     signedGapM:ends[k].clone().sub(crossing.point).dot(crossing.faceNormal),
+     cumulativeRepairTravelM:travel.get(j)||0})),
+    faceNormal:crossing.faceNormal.toArray(),
+    geometricFaceNormal:record.tri.getNormal(new T.Vector3()).toArray(),
+    nativeNormal:nativeLength>0?nativeNormal.toArray():null,
+    repairDirection:crossing.normal.toArray(),
+    nativeToFaceAlignment:nativeLength>0?nativeNormal.dot(crossing.faceNormal):null,
+    repairToFaceAlignment:crossing.normal.dot(crossing.faceNormal),
+    triangleVertexIds:[...record.ids],
+    triangleVertices:[record.tri.a.toArray(),record.tri.b.toArray(),record.tri.c.toArray()],
+    intersectionBarycentrics:nativeWeights.toArray(),
+   };
+  }
   for(let strand=0;strand<count;strand++){
    let hits=crossings(strand);if(!hits.length)continue;
    stats.initialCrossingSegments+=hits.length;stats.strandsInitiallyAffected++;
@@ -74,7 +101,14 @@ export function strandClearanceR30(geometry,{clearance=.0021,cell=.025}={}){cons
    }
    stats.correctedVertices+=original.size;
    for(const [j,initial]of original){stats.maxDisplacementM=Math.max(stats.maxDisplacementM,getPoint(strand,j,new T.Vector3()).distanceTo(initial));stats.maxCumulativeTravelM=Math.max(stats.maxCumulativeTravelM,travel.get(j));}
-   if(hits.length){stats.remainingCrossingSegments+=hits.length;stats.remainingStrands++;if(stats.remainingExamples.length<16)stats.remainingExamples.push({strand,hits:hits.map(h=>({segment:h.segment,triangle:h.triangle,point:h.point.toArray()}))});}
+   if(hits.length){stats.remainingCrossingSegments+=hits.length;stats.remainingStrands++;if(stats.remainingExamples.length<16)stats.remainingExamples.push({
+    strand,coordinateSpace:'native body geometry / packed point local space, metres',
+    hits:hits.map(h=>describeRemainingHit(strand,h,original,travel)),
+    prefixPoints0To6:Array.from({length:Math.min(6,surfaceSegments)+1},(_,j)=>({pointIndex:j,
+     position:getPoint(strand,j,new T.Vector3()).toArray(),
+     originalPosition:(original.get(j)||getPoint(strand,j,new T.Vector3())).toArray(),
+     radiusM:pointData[(strand*per+j)*4+3],cumulativeRepairTravelM:travel.get(j)||0})),
+   });}
    else stats.repairedStrands++;
   }
   stats.elapsedMs=performance.now()-started;return stats;
