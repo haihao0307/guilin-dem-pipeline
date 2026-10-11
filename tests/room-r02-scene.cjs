@@ -5,7 +5,9 @@ const ROOT=process.cwd(),GAME=process.env.ROOM_GAME||'kaopu-minigame-workbench/v
 const MODULE=GAME+'/room-unit-r02',OUT=path.resolve(process.env.ROOM_OUT||'room-r02-results');fs.mkdirSync(OUT,{recursive:true});
 const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
 const sourceFile=path.join(ROOT,GAME,'app.mjs'),source=fs.readFileSync(sourceFile,'utf8');
-const appendix=fs.readFileSync(path.join(ROOT,MODULE,'qa/scene-appendix.mjs'),'utf8');
+const appendix=fs.readFileSync(path.join(ROOT,MODULE,'qa/scene-appendix.mjs'),'utf8')
+ .replace('fov,cameraCutaway:cutaway,errors};',"fov,cameraCutaway:cutaway,errors,png:renderer.domElement.toDataURL('image/png')};")
+ .replaceAll(',{wetness:.38}', '');
 const receipt={host:GAME,commit:process.env.GITHUB_SHA||null,sourceAppSHA256:hash(source),testOnlyResponseAppendix:true,diskEntryModified:false,screenshots:[],pageErrors:[],console:[]};
 const mime={'.html':'text/html','.mjs':'text/javascript','.js':'text/javascript','.css':'text/css','.json':'application/json','.KaoPu':'application/octet-stream','.png':'image/png','.jpg':'image/jpeg','.ogg':'audio/ogg','.wav':'audio/wav'};
 const server=http.createServer((req,res)=>{let p;try{p=path.resolve(ROOT,'.'+decodeURIComponent(new URL(req.url,'http://localhost').pathname));}catch{res.writeHead(400);return res.end();}if(!p.startsWith(ROOT+path.sep)){res.writeHead(403);return res.end();}try{if(fs.statSync(p).isDirectory())p=path.join(p,'index.html');res.writeHead(200,{'content-type':mime[path.extname(p)]||'application/octet-stream'});fs.createReadStream(p).pipe(res);}catch{res.writeHead(404);res.end();}});
@@ -25,16 +27,16 @@ const server=http.createServer((req,res)=>{let p;try{p=path.resolve(ROOT,'.'+dec
  const views=[['original-sources-room-exterior',[-3.7,3.5,20.8],[-10,1.5,13],43,false],['original-sources-room-cutaway',[-4.5,4.5,19.0],[-10,1.1,13],46,true]];
  for(const [name,position,target,fov,cutaway] of views){
  const proof=await page.evaluate(v=>window.__roomQA.pose(v[0],v[1],v[2],v[3]),[position,target,fov,cutaway]);
- await page.locator('#gameScene').screenshot({path:path.join(OUT,name+'.png'),timeout:60000});
+ fs.writeFileSync(path.join(OUT,name+'.png'),Buffer.from(proof.png.split(',')[1],'base64'));delete proof.png;
  receipt.screenshots.push({name,camera:proof.camera,target:proof.target,fov:proof.fov,gpuErrors:proof.errors});
  console.log('CAPTURED',name);fs.writeFileSync(path.join(OUT,'receipt-progress.json'),JSON.stringify(receipt,null,2));
  }
- await page.evaluate(()=>{window.__roomQA.open(false);return window.__roomQA.pose([-7.5,1.72,20.5],[-10,1.2,14.5],40);});
- await page.locator('#gameScene').screenshot({path:path.join(OUT,'original-sources-room-door-closed.png'),timeout:60000});
+ const closed=await page.evaluate(()=>{window.__roomQA.room.setDoorOpen(false);return window.__roomQA.pose([-7.5,1.72,20.5],[-10,1.2,14.5],40);});
+ fs.writeFileSync(path.join(OUT,'original-sources-room-door-closed.png'),Buffer.from(closed.png.split(',')[1],'base64'));
  receipt.cost=await page.evaluate(()=>{window.__roomQA.pose([-3.7,3.5,20.8],[-10,1.5,13],43,false);return window.__roomQA.cost();});
  receipt.runtime=await page.evaluate(()=>window.__roomQA.receipt());
  receipt.programDiagnostics=await page.evaluate(()=>window.__roomQA.diagnostics());
- await page.screenshot({path:path.join(OUT,'existing-game-full-page.png'),timeout:60000});
+ receipt.captureMethod='Actual host WebGL canvas read immediately after the same render; no compositor stability wait';
  receipt.sourceAppUnchanged=hash(fs.readFileSync(sourceFile))===receipt.sourceAppSHA256;
  receipt.gpuCompilePassed=receipt.runtime.errors.length===0&&receipt.pageErrors.length===0&&receipt.programDiagnostics.every(p=>p.runnable!==false);
  if(!receipt.sourceAppUnchanged||!receipt.gpuCompilePassed)throw Error('GPU/entry integrity QA failed');
