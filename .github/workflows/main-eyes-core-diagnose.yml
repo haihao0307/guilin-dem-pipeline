@@ -1,0 +1,42 @@
+name: Main eyes bounded core regression diagnosis
+on:
+  push:
+    branches: [test/main-eye-integration-diagnose-20261011]
+    paths: [.github/workflows/main-eyes-core-diagnose.yml]
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      NODE_PATH: /tmp/eye-node/node_modules
+      R: kaopu-unified-human-workbench/main-eye-integration/r01
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          sparse-checkout: kaopu-unified-human-workbench
+      - name: Rebuild exact integration, not a new visual design
+        run: |
+          git fetch --depth=1 origin 528f813d5f02ee0e3bfbf870d1f6fb02fe722fc1
+          for p in eye-materials eye-transfer face-transfer identity-lab; do git restore --source=528f813d5f02ee0e3bfbf870d1f6fb02fe722fc1 --staged --worktree -- kaopu-unified-human-workbench/$p; done
+          npm --prefix /tmp/eye-node install --no-save --package-lock=false esbuild@0.25.12 playwright@1.57.0 pngjs@7.0.0
+          node /tmp/eye-node/node_modules/playwright/cli.js install --with-deps chromium
+          node "$R/build.cjs"
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('kaopu-unified-human-workbench/eye-materials/verify-browser.cjs').read_text();a="await page.goto(url,{waitUntil:'domcontentloaded',timeout:120000});";assert s.count(a)==1;s=s.replace(a,a+"await page.locator('#load-model').click();")
+          Path('/tmp/core.cjs').write_text(s)
+          PY
+      - name: Six minute hard bound with surviving progress records
+        run: |
+          python3 -m http.server 8765 >/tmp/server.log 2>&1 &
+          export EYE_URL="http://127.0.0.1:8765/$R/preview.html"
+          export EYE_EVIDENCE=diagnosis-core
+          timeout -k 15s 360s node /tmp/core.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: main-eyes-core-bounded
+          path: diagnosis-core
+          retention-days: 7
