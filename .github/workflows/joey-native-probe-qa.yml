@@ -48,8 +48,12 @@ jobs:
             sleep 1
           done
           exit 1
-      - name: Render sculpted native face with strictly surface-bound existing eyebrows
-        run: node kaopu-unified-human-workbench/joey-observation-r01/macro-face-r43/render-macro-face-r43.cjs
+      - name: Test fixed-root taper and native geometry diagnostics
+        run: |
+          node kaopu-unified-human-workbench/joey-observation-r01/brow-tip-r44/brow-band.test.mjs
+          node kaopu-unified-human-workbench/joey-observation-r01/brow-tip-r44/native-geometry-qa.test.cjs
+      - name: Render one reversible native brow and nose-tip candidate
+        run: node kaopu-unified-human-workbench/joey-observation-r01/brow-tip-r44/render-r44.cjs
       - name: Keep bounded research evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -84,6 +88,7 @@ jobs:
             joey-brow-coverage-r21/
             joey-combined-appearance-r22/
             joey-macro-face-r43/
+            joey-brow-tip-r44/
           retention-days: 7
           compression-level: 0
           if-no-files-found: warn
