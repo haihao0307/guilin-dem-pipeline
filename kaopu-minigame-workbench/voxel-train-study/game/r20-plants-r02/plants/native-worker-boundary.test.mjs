@@ -68,7 +68,7 @@ test('shared views use a unique transfer entry; detached source and recipient al
 test('wrong and mixed native hashes, source closure, growth counts, shape, provenance and pixels reject',async()=>{
  assert(packet);
  assert.throws(()=>assertNativeRenderPacket({...packet,contentHash:'0'.repeat(64)},recipe),/Unqualified/);
- assert.throws(()=>assertNativeRenderPacket({...packet,contentHash:KNOWN_NATIVE_HASH_PAIRS[1].content},recipe),/Unqualified/);
+ const otherPairs=KNOWN_NATIVE_HASH_PAIRS.filter(p=>p.content!==packet.contentHash);assert.equal(otherPairs.length,2);for(const other of otherPairs)assert.throws(()=>assertNativeRenderPacket({...packet,contentHash:other.content},recipe),/Unqualified/);
  assert.throws(()=>assertNativeRenderPacket({...packet,sourceClosureSha256:'0'.repeat(64)},recipe),/source/);
  assert.throws(()=>assertNativeRenderPacket({...packet,counts:{...packet.counts,leaf:11283}},recipe),/organ/);
  assert.throws(()=>assertNativeRenderPacket({...packet,geometry:{...packet.geometry,normals:new Float32Array(3)}},recipe),/attribute/);
