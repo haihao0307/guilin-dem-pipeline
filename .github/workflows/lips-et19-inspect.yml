@@ -1,0 +1,69 @@
+name: Lips ET19 baseline inspection
+on:
+  push:
+    branches: [feature/lips-et19-continuity-20261011]
+    paths: [.github/workflows/lips-et19-inspect.yml]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Export only relevant source and frozen build inputs
+        run: |
+          mkdir -p et19-inspect/workspace
+          python3 - <<'PY'
+          import pathlib,shutil,json
+          root=pathlib.Path('kaopu-unified-human-workbench'); out=pathlib.Path('et19-inspect/workspace')
+          for p in root.rglob('*'):
+              if p.is_file() and (p.suffix in ['.mjs','.js','.cjs','.css','.json','.md','.png'] or p.as_posix() in ['kaopu-unified-human-workbench/index.html','kaopu-unified-human-workbench/eye-materials/preview.html']):
+                  q=out/p;q.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(p,q)
+          pathlib.Path('et19-inspect/source-commit.txt').write_text('${{ github.sha }}')
+          PY
+      - name: Pinned build and browser tools
+        run: |
+          mkdir -p /tmp/lip-tools
+          cd /tmp/lip-tools
+          npm init -y >/dev/null
+          npm install esbuild@0.25.11 playwright@1.56.1 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: Inspect actual fixed public baseline and cache its referenced project assets
+        env:
+          NODE_PATH: /tmp/lip-tools/node_modules
+        run: node kaopu-unified-human-workbench/lip-structure/inspect-et19.cjs
+      - name: Test user-supplied reference video, retain private short-lived review frames only
+        if: always()
+        env:
+          REFERENCE_URL: 'https://video-lax3-1.xx.fbcdn.net/o1/v/t2/f2/m69/AQNn4KIBjgAVQrpSil63UJNDMNuO4lPCMy3DjNH7Q5HVRB91mQ4kent99NADnUFgi9K0J033rnS2-GhcGGGZ3NPm.mp4?strext=1&_nc_cat=110&_nc_sid=5e9851&_nc_ht=video-lax3-1.xx.fbcdn.net&_nc_ohc=eVSx7080j4EQ7kNvwE2eW-j&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5GQUNFQk9PSy4uQzMuMTkyMC5kYXNoX2gyNjQtYmFzaWMtZ2VuMl8xMDgwcCIsInhwdl9hc3NldF9pZCI6MTU1NTg2MTE3MTYyNzA4NSwiYXNzZXRfYWdlX2RheXMiOjg0OCwidmlfdXNlY2FzZV9pZCI6MTA1NzYsImR1cmF0aW9uX3MiOjQzLCJ1cmxnZW5fc291cmNlIjoid3d3In0%3D&ccb=17-1&vs=108c61f8ceb01459&_nc_vs=HBksFQIYOnBhc3N0aHJvdWdoX2V2ZXJzdG9yZS9HTlp3dVJyTUJHU0lpcFlCQVB0WmxsRG9Rem80YnY0R0FBQUYVAALIARIAFQIYOnBhc3N0aHJvdWdoX2V2ZXJzdG9yZS9HSkg1dHhyR0pFdWN5THNjQUNUVEZNS0NQNzFwYnY0R0FBQUYVAgLIARIAKAAYABsCiAd1c2Vfb2lsATEScHJvZ3Jlc3NpdmVfcmVjaXBlATEVAAAmmpGjh4XDwwUVAigCQzMsF0BFgAAAAAAAGBpkYXNoX2gyNjQtYmFzaWMtZ2VuMl8xMDgwcBEAdQJloKUBAA&_nc_gid=QMVwo84lAAxgGpdumJ997w&_nc_ss=79289&_nc_zt=28&oh=00_AQMhsvGNiJyuPcgGwDqoDiOaJIDEnG1T8JPzDLPPAih7pA&oe=6AD1170C&bitrate=879592&tag=dash_h264-basic-gen2_1080p'
+        run: |
+          mkdir -p et19-inspect/reference
+          curl --location --max-time 40 --output /tmp/reference.mp4 --write-out '%{http_code}\n' "$REFERENCE_URL" > et19-inspect/reference/http-status.txt || true
+          if [ "$(cat et19-inspect/reference/http-status.txt)" = '200' ]; then
+            if ! command -v ffmpeg; then sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg; fi
+            ffprobe -v quiet -print_format json -show_format -show_streams /tmp/reference.mp4 > et19-inspect/reference/video-metadata.json
+            sha256sum /tmp/reference.mp4 > et19-inspect/reference/sha256.txt
+            ffmpeg -hide_banner -loglevel error -i /tmp/reference.mp4 -vf 'fps=1/7,scale=1280:-2' -frames:v 7 et19-inspect/reference/frame-%02d.jpg
+          fi
+      - name: Retain local build tool for independent offline source testing
+        if: always()
+        run: |
+          mkdir -p et19-inspect/tools
+          cp -r /tmp/lip-tools/node_modules/esbuild et19-inspect/tools/ || true
+          cp -r /tmp/lip-tools/node_modules/@esbuild et19-inspect/tools/ || true
+          cp -r /tmp/lip-tools/node_modules/pngjs et19-inspect/tools/ || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lips-et19-inspection
+          path: et19-inspect
+          retention-days: 2
