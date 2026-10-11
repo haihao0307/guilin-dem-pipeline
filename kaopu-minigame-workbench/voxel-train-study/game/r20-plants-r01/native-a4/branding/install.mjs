@@ -1,3 +1,4 @@
+import {contourGeometry as buildContourGeometry} from './contours.mjs';
 import {batchStaticDisplay} from '../display-batching.mjs';
 import * as T from '../../../../vendor/three.module.js';
 import number88 from './number88.mjs';
@@ -8,8 +9,7 @@ const numberMaterial=new T.MeshStandardMaterial({color:0xffdea3,emissive:0xffb45
 const sourceCache=new Map();
 function contourGeometry(recipe){
  if(sourceCache.has(recipe))return sourceCache.get(recipe);
- const path=new T.ShapePath();for(const ring of recipe.rings){const pts=ring.points;path.moveTo(pts[0][0],-pts[0][1]);for(const p of pts.slice(1))path.lineTo(p[0],-p[1]);path.currentPath.closePath();}
- const shapes=path.toShapes(false),g=new T.ShapeGeometry(shapes,1);sourceCache.set(recipe,g);return g;
+ const g=buildContourGeometry(recipe);sourceCache.set(recipe,g);return g;
 }
 function shaped(recipe,width,map,material,name,depth=0){
  const input=contourGeometry(recipe),[W,H]=recipe.size_px,s=width/W,p=input.attributes.position,idx=input.index;
@@ -28,6 +28,7 @@ function company(parent,width,map,name){
 export function installBranding(train){
  const parent=new T.Group();parent.name='Flying Hongkonger approved native branding';train.root.add(parent);const loco=train.steam,{bodyScales,sourceBounds,nativeSource}=loco.model,p=nativeSource.spec.parameters,{lengthScale:ls,widthScale:ws,heightScale:hs}=bodyScales,first=p.driverZ[0],offset=loco.frontOffset,L=p.boilerLength,Y=p.boilerY,R=p.boilerRadius;
  const panelAt=source=>loco.point(source),marks=[];
+ const coachParents=train.coaches.map((coach,i)=>{const group=new T.Group();group.name='Native branding follows coach body '+i;group.position.set(-COACH_LAYOUT[i].x,-coach.proof.floorY,0);coach.body.add(group);return group;});
  const register=(name,at,width)=>marks.push({name,anchorM:at,widthM:width});
  for(const side of [-1,1]){
   const center=panelAt([0,Y,-.6]),map=(u,v,d=0)=>{const x=center[0]+side*u,y=center[1]+v,srcZ=(x-offset)/ls+first,srcY=(y-TRACK.railHead)/hs+.08,t=(srcZ+L/2+1.2)/(L+2.25),tip=1-Math.pow(Math.max(0,(t-.68)/.32),2.2)*.78,vertical=(srcY-Y)/((R+.22)*tip),lateral=(R+.24)*tip*Math.sqrt(Math.max(0,1-vertical*vertical));return[x,y,side*(lateral*ws+d)];};
@@ -36,14 +37,14 @@ export function installBranding(train){
   const tender=panelAt([-side*1.112,2.02,-L/2-3.7]);const angel=side>0?right:left;parent.add(shaped(angel,3.5,sideMap(side,tender),red,'tender C angel '+side,.008));register('tender angel '+side,tender,3.5);
   const cab=panelAt([-side*1.162,1.96*bodyScales.cabHeightFactor,-L/2-.15]),cabNumber=panelAt([-side*1.162,2.32*bodyScales.cabHeightFactor,-L/2-.15]);parent.add(shaped(number88,.55,sideMap(side,cabNumber),numberMaterial,'cab original 88 '+side,.008));company(parent,.45,sideMap(side,cab),'cab company below 88 '+side);register('cab company '+side,cab,.45);
   for(let i=0;i<train.coaches.length;i++){
-   const c=COACH_LAYOUT[i],z=side*(COACH_DIMENSIONS.bodyAndStepsWidth/2+.01),at=[c.x,TRACK.railHead+1.73,z];
-   word(parent,4.8,sideMap(side,at),'coach '+i+' wordmark '+side);register('coach '+i+' wordmark '+side,at,4.8);
-   parent.add(shaped(angel,1.45,sideMap(side,[c.x-6.4,TRACK.railHead+1.73,z]),red,'coach '+i+' C angel '+side,.004));
-   company(parent,.75,sideMap(side,[c.x+6.4,TRACK.railHead+1.73,z]),'coach '+i+' company '+side);
+   const coachParent=coachParents[i],c=COACH_LAYOUT[i],z=side*(COACH_DIMENSIONS.bodyAndStepsWidth/2+.01),at=[c.x,TRACK.railHead+1.73,z];
+   word(coachParent,4.8,sideMap(side,at),'coach '+i+' wordmark '+side);register('coach '+i+' wordmark '+side,at,4.8);
+   coachParent.add(shaped(angel,1.45,sideMap(side,[c.x-6.4,TRACK.railHead+1.73,z]),red,'coach '+i+' C angel '+side,.004));
+   company(coachParent,.75,sideMap(side,[c.x+6.4,TRACK.railHead+1.73,z]),'coach '+i+' company '+side);
   }
  }
  const tail=COACH_LAYOUT.at(-1).x-COACH_DIMENSIONS.bodyLength/2-.014,tailMap=at=>(u,v,d=0)=>[at[0]-d,at[1]+v,at[2]+u];
- word(parent,2.20,tailMap([tail,3.30,0]),'train rear wordmark');company(parent,1.05,tailMap([tail,2.65,0]),'train rear company');parent.add(shaped(right,1.55,tailMap([tail,1.88,0]),red,'train rear C angel',.008));register('rear wordmark',[tail,3.3,0],2.2);
+ word(coachParents.at(-1),2.20,tailMap([tail,3.30,0]),'train rear wordmark');company(coachParents.at(-1),1.05,tailMap([tail,2.65,0]),'train rear company');coachParents.at(-1).add(shaped(right,1.30,tailMap([tail,1.96,0]),red,'train rear C angel',.008));register('rear wordmark',[tail,3.3,0],2.2);
  train.proof.branding={nativeContours:true,rasterTextures:0,originalTypefacePreserved:true,wordmarkLayers:['red original alpha silhouette','gold color-family contour'],companySource:'User-approved Grand Southern Continental Railway plaque, original lettering and six-spoke silhouette traced',companyLimits:plaque.cleanup,marks,tail:true,coaches:2};
- const display=batchStaticDisplay(parent);for(const mesh of display.displays){mesh.castShadow=false;mesh.receiveShadow=true;}return parent;
+ for(const group of [parent,...coachParents]){const display=batchStaticDisplay(group);for(const mesh of display.displays){mesh.castShadow=false;mesh.receiveShadow=true;}}return parent;
 }

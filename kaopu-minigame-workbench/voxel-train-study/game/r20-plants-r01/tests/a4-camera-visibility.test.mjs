@@ -21,6 +21,7 @@ test('Photography presets frame every focus-bound corner in both real layout pro
  }
  assert(CAMERA_PRESETS.leftSide.landscape.position[2]>0);
  assert(CAMERA_PRESETS.rightSide.landscape.position[2]<0);
+ for(const id of ['leftSide','rightSide'])for(const layout of ['landscape','portrait']){const p=getCameraPreset(id,layout),aspect=layout==='landscape'?16/9:9/16,hfov=2*Math.atan(Math.tan(verticalFov(aspect,p.projection)*Math.PI/360)/p.zoom*aspect)*180/Math.PI;assert(hfov>=35&&hfov<=55);assert.equal(CAMERA_PRESETS[id].visibility,'open-track');assert.equal(p.zoom,1);}
  for(const id of ['leftSide','rightSide']){
   assert(CAMERA_PRESETS[id].focusBounds.min[0]<=-16.65);
   assert(CAMERA_PRESETS[id].focusBounds.max[0]>=5);

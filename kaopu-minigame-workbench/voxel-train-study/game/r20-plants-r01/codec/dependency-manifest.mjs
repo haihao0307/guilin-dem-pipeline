@@ -51,9 +51,14 @@ export const DEPENDENCIES = [
     "sha256": "be546f2228cdbe3d932d053cb663597d1dd64888cfb1d3836b91fe203f095ac6"
   },
   {
+    "id": "native-a4/branding/contours.mjs",
+    "path": "native-a4/branding/contours.mjs",
+    "sha256": "979af3dd6d8e4b7e61337c5a1a103005d2c436611ab87e131b1043d994d961e3"
+  },
+  {
     "id": "native-a4/branding/install.mjs",
     "path": "native-a4/branding/install.mjs",
-    "sha256": "1bac37fa120076546de1479fdab20ab8e408f2f1b5c3765310e2a80da4956fba"
+    "sha256": "3113ae226cbdc222f90c93fbe9bde95755d6b6f4d15b9813780050681c0382d5"
   },
   {
     "id": "native-a4/branding/number88.mjs",

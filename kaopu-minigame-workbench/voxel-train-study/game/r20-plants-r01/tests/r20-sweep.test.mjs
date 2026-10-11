@@ -11,15 +11,15 @@ import {photoTargets,streetVisibilityProbe} from './camera-visibility.mjs';
 const read=n=>JSON.parse(fs.readFileSync(new URL('../street/'+n,import.meta.url)));
 const route=[{target:0},{target:700}],layouts=['landscape','portrait'];
 const originalIds=['overview','front','rear','detail','city','platform'];
-const photographyIds=['leftSide','rightSide','tailBrand'];
+const photographyIds=['tailBrand'],openTrackIds=['leftSide','rightSide'];
 const distances=Array.from({length:71},(_,i)=>i*10);
 const corridorTargets=[[-45,2,0],[-28,2,0],[-10,2,0],[4,2,0],...COACH_LAYOUT.flatMap(c=>[[c.frontDoor,2,1.55],[c.rearDoor,2,1.55]])];
 
-test('Every route sample keeps original camera corridors and actual photography triangle sightlines unobstructed',async()=>{
- assert.deepEqual([...CAMERA_PRESET_IDS].sort(),[...originalIds,...photographyIds].sort(),'New presets must select an explicit visibility contract');
+test('Every route sample keeps original camera corridors and station-tail photography unobstructed',async()=>{
+ assert.deepEqual([...CAMERA_PRESET_IDS].sort(),[...originalIds,...photographyIds,...openTrackIds].sort(),'New presets must select an explicit visibility contract');
  const score=read('route.score.json'),anchor=read('first-street.score.json'),plan=createRoutePlan(score,route),rows=[];
  let maxBytes=0,maxBatches=0,corridorChecks=0,triangleRays=0;
- const poses=layouts.flatMap(layout=>CAMERA_PRESET_IDS.map(name=>{
+ const poses=layouts.flatMap(layout=>[...originalIds,...photographyIds].map(name=>{
   const p=getCameraPreset(name,layout);return{layout,name,...p,...boundCameraPose(p.position,p.target)};
  }));
  const distinct=[...new Set(poses.map(p=>p.target[0]))];
@@ -71,4 +71,18 @@ test('Every route sample keeps original camera corridors and actual photography 
  const report={scope:'Actual CPU submitted geometry; original global corridors plus sampled triangle sightlines including shader-deformed cloth at elapsed=10s, not raster visibility',rows,corridorChecks,triangleRays,checks:corridorChecks+triangleRays,maxBytes,maxBatches};
  if(process.env.R20_QA_OUT){fs.mkdirSync(process.env.R20_QA_OUT,{recursive:true});fs.writeFileSync(path.join(process.env.R20_QA_OUT,'camera-sweep.json'),JSON.stringify(report,null,2));}
  console.log({rows:rows.length,corridorChecks,triangleRays,maxBytes,maxBatches});
+});
+
+// Conventional side lenses intentionally need open track. At stations, actual
+// street buildings may obscure the opposite side; the production scene is never
+// hidden or moved for a photograph. Browser QA drives to this region normally.
+test('Conventional left and right side views clear the actual district after the bounded street',async()=>{
+ const score=read('route.score.json'),anchor=read('first-street.score.json'),d=createStreetDistrict({routeScore:score,anchorScore:anchor});await d.ready;
+ let rays=0;
+ try{for(const distance of[786,790,794]){
+  for(let i=0;i<25;i++){d.update({distance,elapsed:10},route,{cameraTarget:[-5.8,2.2,0]});if(!d.proof.pending)break;}
+  assert.equal(d.proof.error,undefined);assert.equal(d.proof.pending,0);assert.deepEqual(d.proof.coverage.missing,[]);
+  const probe=streetVisibilityProbe(d.renderBatches.root);
+  try{for(const id of openTrackIds)for(const layout of layouts){const p=getCameraPreset(id,layout),safe=boundCameraPose(p.position,p.target);for(const target of photoTargets(p)){assert.equal(probe.firstHit(safe.position,target),null,JSON.stringify({id,layout,distance,target}));rays++;}}}finally{probe.dispose();}
+ }}finally{d.dispose();}assert.equal(rays,360);
 });
