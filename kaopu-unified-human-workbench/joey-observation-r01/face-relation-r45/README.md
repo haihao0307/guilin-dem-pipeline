@@ -1,0 +1,3 @@
+# R45 bounded face-relation study
+
+One shared native identity candidate is being prepared after a frozen-R44 camera/expression study. This first step checks a small set of existing native lip/eye/brow axes numerically and authors two approximate per-photo lighting conditions, including self-shadow support. It is not accepted likeness or new public model output. Original photographs and image target coordinates remain private. Source/reference white balance and physical lighting are unknown. The original R44 remains available by Git revision. No unvalidated new eye or hair subsystem is included.

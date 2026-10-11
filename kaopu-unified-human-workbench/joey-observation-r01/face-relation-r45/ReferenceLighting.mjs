@@ -1,0 +1,14 @@
+/** Authored per-photo light condition, not recovered physical illumination. */
+export async function attachReferenceLighting(viewer,{reference='U01',center=[0,.69,.06]}={}){
+ if(!['U01','U07'].includes(reference)||center.length!==3||!center.every(Number.isFinite))throw Error('Invalid reference light condition');
+ const THREE=await import('/native/kaopu-unified-human-workbench/full/source/registration-vendor/three.module.js');
+ const saved=[],oldShadow={enabled:viewer.renderer.shadowMap.enabled,type:viewer.renderer.shadowMap.type,autoUpdate:viewer.renderer.shadowMap.autoUpdate},oldMesh={castShadow:viewer.mesh.castShadow,receiveShadow:viewer.mesh.receiveShadow};
+ viewer.scene.traverse(o=>{if(o.isLight){saved.push([o,o.intensity]);o.intensity=0;}});
+ const options=reference==='U01'?{fill:1.1,key:2.7,color:0xfff4e8,offset:[-.10,.22,1.1],radius:4}:{fill:.60,key:3.2,color:0xfff2e2,offset:[-.05,.27,1.0],radius:2};
+ const hemi=new THREE.HemisphereLight(0xfffcf6,0x6c6460,options.fill),key=new THREE.DirectionalLight(options.color,options.key);hemi.name='Reference comparison authored fill';key.name='Reference comparison authored key';
+ const right=new THREE.Vector3(1,0,0).applyQuaternion(viewer.camera.quaternion),up=new THREE.Vector3(0,1,0).applyQuaternion(viewer.camera.quaternion),back=new THREE.Vector3(0,0,1).applyQuaternion(viewer.camera.quaternion),target=new THREE.Vector3(...center);key.target.position.copy(target);key.position.copy(target).addScaledVector(right,options.offset[0]).addScaledVector(up,options.offset[1]).addScaledVector(back,options.offset[2]);
+ key.castShadow=true;key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-.32,right:.32,top:.32,bottom:-.42,near:.1,far:2.2});key.shadow.camera.updateProjectionMatrix();key.shadow.bias=-.000015;key.shadow.normalBias=.00012;key.shadow.radius=options.radius;
+ viewer.renderer.shadowMap.enabled=true;viewer.renderer.shadowMap.type=THREE.PCFSoftShadowMap;viewer.renderer.shadowMap.autoUpdate=true;viewer.mesh.castShadow=true;viewer.mesh.receiveShadow=true;viewer.scene.add(hemi,key,key.target);viewer.material.needsUpdate=true;let disposed=false;viewer.render();
+ const report=()=>({version:'reference-authored-light/1',reference,options,keyPosition:key.position.toArray(),target:key.target.position.toArray(),shadow:{type:'PCFSoft',map:2048,bias:key.shadow.bias,normalBias:key.shadow.normalBias},scope:'Approximate observed direction, fill and jaw-shadow character only. Unknown source white balance, exposure and reflectance; no inverse-rendering or real physical light measurement.'});
+ return{report,dispose(){if(disposed)return;disposed=true;viewer.scene.remove(hemi,key,key.target);key.shadow.map?.dispose();key.dispose();hemi.dispose();for(const[o,v]of saved)o.intensity=v;Object.assign(viewer.renderer.shadowMap,oldShadow);Object.assign(viewer.mesh,oldMesh);viewer.material.needsUpdate=true;viewer.render();}};
+}

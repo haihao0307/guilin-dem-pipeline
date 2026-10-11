@@ -54,8 +54,10 @@ jobs:
           node kaopu-unified-human-workbench/joey-observation-r01/brow-tip-r44/native-geometry-qa.test.cjs
       - name: Test bounded smile-state contract
         run: node --test kaopu-unified-human-workbench/joey-observation-r01/expression-state-r01/states.test.cjs
-      - name: Render frozen R44 conditional camera and native expression comparison
-        run: node kaopu-unified-human-workbench/joey-observation-r01/camera-expression-registration-r01/render-registration.cjs
+      - name: Verify small native shape directions and authored photo light conditions
+        run: |
+          node kaopu-unified-human-workbench/joey-observation-r01/face-relation-r45/axis-probe.cjs
+          node kaopu-unified-human-workbench/joey-observation-r01/face-relation-r45/light-probe.cjs
       - name: Keep bounded research evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -93,6 +95,7 @@ jobs:
             joey-brow-tip-r44/
             joey-expression-state-r01/
             joey-camera-expression-registration-r01/
+            joey-face-relation-r45/
           retention-days: 7
           compression-level: 0
           if-no-files-found: warn
