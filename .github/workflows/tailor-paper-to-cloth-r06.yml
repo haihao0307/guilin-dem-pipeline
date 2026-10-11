@@ -1,0 +1,25 @@
+name: Tailor paper-to-cloth source snapshot
+on:
+  push:
+    branches: [fix/tailor-paper-to-cloth-20261008]
+    paths: ['.github/workflows/tailor-paper-to-cloth-r06.yml']
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-tailor-workbench
+          fetch-depth: 1
+      - run: |
+          mkdir -p audit
+          git rev-parse HEAD > audit/SOURCE_COMMIT.txt
+          git ls-tree -r --name-only HEAD | grep -Ei '(tailor|garment|pattern|mother|workbench-ui)' > audit/RELATED_PATHS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tailor-r06-source-snapshot
+          path: audit
+          retention-days: 7
