@@ -1,22 +1,20 @@
 import * as THREE from '../../../vendor/three.module.js';
-import {createPandanus} from './pandanus.mjs';
-
-// Four individually authored placements only. Not tiled with the old terrain.
-// Metres are the inherited source's engineering authoring units, not measured
-// botanical specimen dimensions. Growth parameters alter native geometry.
-export const PLANT_SEGMENT=Object.freeze({id:'native-pandanus-young-street-first-leg-r02',fromStation:0,toStation:1,sceneMetres:700,groundY:.081,railHalfClearance:1.6,breezeAnglesRadians:[.008,.013],breezeFrequenciesRadiansPerSecond:[1.1,1.35],visibilityRadius:175,sourceSpecies:'Pandanus',growthAgeIsChronologicalYears:false,selectedHeightRangeMetres:[2,3],sourceQuality:'KAOPU R05 research generator; not a botanical scan or final AAA certification'});
-export const PLANT_PLACEMENTS=Object.freeze([
-  Object.freeze({id:'kowloon-verge',chainage:-34,z:-4.55,yaw:0,seed:50721,params:Object.freeze({age:16,resource:.70,space:.55,leafDensity:.90})}),
-  Object.freeze({id:'kowloon-exit',chainage:12,z:-4.55,yaw:0,seed:50731,params:Object.freeze({age:18,resource:.70,space:.55,leafDensity:.90})}),
-  Object.freeze({id:'bridge-verge',chainage:365,z:-6.2,yaw:0,seed:50741,params:Object.freeze({age:20,resource:.70,space:.55,leafDensity:.90})}),
-  Object.freeze({id:'yaumati-approach',chainage:666,z:-4.4,yaw:0,seed:50751,params:Object.freeze({age:16,resource:.70,space:.55,leafDensity:.90})}),
-]);
-export function createNativePlantSegment(){
-  const root=new THREE.Group();root.name='Four young native Pandanus plants — street-scale R02';
-  const items=PLANT_PLACEMENTS.map(spec=>{const plant=createPandanus({seed:spec.seed,params:spec.params});plant.root.name='Native Pandanus '+spec.id;plant.root.position.set(spec.chainage,PLANT_SEGMENT.groundY,spec.z);plant.root.rotation.y=spec.yaw;root.add(plant.root);return{spec,plant};});
-  let disposed=false,distance=0,elapsed=0;
-  function update(view){if(disposed)return;if(!Number.isFinite(view?.distance)||!Number.isFinite(view?.elapsed))throw Error('Plants need finite authoritative Session distance and elapsed');distance=view.distance;elapsed=view.elapsed;root.position.x=-distance;for(const {spec,plant}of items){plant.root.visible=Math.abs(spec.chainage-distance+8)<=PLANT_SEGMENT.visibilityRadius;if(plant.root.visible)plant.update(elapsed);}}
-  function snapshot(){return{...PLANT_SEGMENT,disposed,distance,elapsed,count:items.length,active:items.filter(({plant})=>plant.root.visible).length,externalMeshes:false,externalTextures:false,ownAnimationLoop:false,worldGeometryScale:1,plants:items.map(({spec,plant})=>({id:spec.id,species:'Pandanus',chainage:spec.chainage,position:[spec.chainage-distance,PLANT_SEGMENT.groundY,spec.z],yaw:spec.yaw,visible:plant.root.visible,seed:spec.seed,params:{...spec.params},proof:plant.proof}))};}
-  function dispose(){if(disposed)return;disposed=true;for(const {plant}of items)plant.dispose();root.clear();root.removeFromParent();}
-  update({distance:0,elapsed:0});return{root,items,update,snapshot,dispose};
+export const PLANT_SEGMENT=Object.freeze({id:'native-ficus-first-node-r02',fromStation:0,toStation:1,sceneMetres:700,groundY:.081,railHalfClearance:1.6,visibilityRadius:175,sourceSpecies:'Ficus microcarpa',units:'metre',timeSource:'host.elapsed',quality:'Complete native78 juvenile; new explicit KAOPU functional-plant adapter; visual review pending'});
+export const PLANT_PLACEMENTS=Object.freeze([Object.freeze({id:'station-rear-young-ficus',chainage:-56.2,z:-9,yaw:0,seed:761014,developmentStage:'juvenile'})]);
+const paths=Object.freeze({'plant-operator':'rules/plant-operator.mjs','mother-author':'rules/native78-ficus-author.mjs','mother-runtime':'rules/native78-runtime.mjs','three-module':'vendor/three.module.min.js','three-core':'vendor/three.core.min.js'});
+const defaultRead=async url=>{const r=await fetch(url);if(!r.ok)throw Error('Plant dependency HTTP '+r.status);return new Uint8Array(await r.arrayBuffer());};
+export function createNativePlantSegment({onChange=()=>{},readBytes=defaultRead,loadCodec=()=>import('./native-codec/codec.mjs'),loadOperator=()=>import('./rules/plant-operator.mjs')}={}){
+ const root=new THREE.Group();root.name='KAOPU native young Ficus node R02';let current=null,recipe=null,disposed=false,distance=0,elapsed=0,status='uninitialized',error=null,revision=0,initPromise=null,buildPending=false,loadProof=null;
+ function emit(){onChange(snapshot());}
+ function apply(){root.position.x=-distance;if(current){current.root.visible=Math.abs(recipe.instance.positionM[0]-distance+8)<=PLANT_SEGMENT.visibilityRadius;current.update(elapsed);}}
+ async function replaceFromBytes(input){if(disposed)throw Error('Plant segment disposed');const token=++revision;buildPending=true;status=current?'ready':'loading';error=null;emit();let candidate=null;const begin=performance.now();
+  try{const codec=await loadCodec(),decoded=await codec.decode(input);if(token!==revision||disposed)throw Error('Plant load superseded');const dependencies=codec.pinnedDependencies(),bytes={};await Promise.all(dependencies.map(async d=>{if(!Object.hasOwn(paths,d.id))throw Error('Unregistered plant dependency id');bytes[d.id]=await readBytes(new URL(paths[d.id],import.meta.url));}));await codec.verifyDependencyBytes(bytes);const verifiedAt=performance.now();if(token!==revision||disposed)throw Error('Plant load superseded');const operator=await loadOperator();candidate=await operator.buildNativeFicus(decoded,{verifyResources:codec.verifyResourceBytes});if(token!==revision||disposed){candidate.dispose();candidate=null;throw Error('Plant load superseded');}
+   candidate.root.position.fromArray(decoded.instance.positionM);candidate.root.rotation.y=decoded.instance.yawRadians;candidate.root.scale.set(1,1,1);candidate.update(elapsed);const prior=current;root.add(candidate.root);current=candidate;candidate=null;recipe=structuredClone(decoded);prior?.dispose();status='ready';buildPending=false;loadProof={containerFormat:'SQLite KAOPU prototype envelope',profile:decoded.schema??decoded.profile,actualKaoPuByteLength:input.byteLength,dependencyBytes:Object.values(bytes).reduce((n,b)=>n+b.byteLength,0),containerAndDependencyValidationMs:verifiedAt-begin,totalLoadMs:performance.now()-begin,rollback:'old instance retained until verified new instance ready',replacementRevision:token};apply();emit();return snapshot();
+  }catch(e){candidate?.dispose();if(token===revision&&!disposed){buildPending=false;status=current?'ready':'error';error=String(e?.message||e);emit();}throw e;}
+ }
+ function initialize(){if(disposed)return Promise.reject(Error('Plant segment disposed'));if(!initPromise)initPromise=readBytes(new URL('./native-codec/objects/young-ficus.KaoPu',import.meta.url)).then(replaceFromBytes);return initPromise;}
+ function update(view){if(disposed)return;if(!Number.isFinite(view?.distance)||!Number.isFinite(view?.elapsed)||view.elapsed<0)throw Error('Plants require authoritative finite Session distance and nonnegative elapsed');distance=view.distance;elapsed=view.elapsed;apply();}
+ function snapshot(){return{...PLANT_SEGMENT,status,error,buildPending,disposed,distance,elapsed,count:current?1:0,active:current?.root.visible?1:0,worldGeometryScale:1,ownAnimationLoop:false,externalMeshes:false,containsDeclaredImageMaterials:true,loadProof,plants:current?[{id:recipe.instance.id??recipe.instance.instanceId,species:'Ficus microcarpa',chainage:recipe.instance.positionM[0],position:[recipe.instance.positionM[0]-distance,recipe.instance.positionM[1],recipe.instance.positionM[2]],visible:current.root.visible,seed:recipe.profile.seed,recipe,proof:current.snapshot()}]:[]};}
+ function dispose(){if(disposed)return;disposed=true;revision++;current?.dispose();current=null;root.clear();root.removeFromParent();status='disposed';}
+ return{root,initialize,replaceFromBytes,update,snapshot,dispose};
 }

@@ -34,6 +34,8 @@ const heldBrake=new Set(),driverButtons=[],routeMap=createRouteMap($('routeMap')
 $('toggleHints').addEventListener('click',()=>{const expanded=$('driverGame').dataset.hints!=='true';$('driverGame').dataset.hints=String(expanded);$('toggleHints').setAttribute('aria-expanded',String(expanded));$('toggleHints').textContent=expanded?'收起说明':'说明';});
 $('seed').value=game.config.seed;$('duration').value=String(game.config.durationMinutes);
 function say(text,{warning=false,duration=4200}={}){$('notice').textContent=text;$('notice').classList.add('visible');$('notice').classList.toggle('warning',warning);noticeUntil=performance.now()+duration;}
+// Loading a real .KaoPu recipe is an explicit asynchronous native-plant step.
+world.nativePlants?.initialize().then(()=>{needsRender=true;}).catch(e=>{console.error('Native KAOPU plant failed',e);say('原生植物讀取失敗，列車仍可操作',{warning:true});});
 function safeSave(){if(!game.started||game.phase==='summary')return;try{const packet=game.replayPacket();localStorage.setItem(SAVE_KEY,JSON.stringify({version:1,packet,signature:game.signature(),station:game.stationIndex}));lastSaveTick=game.tick;}catch{}}
 function clearSaved(){try{localStorage.removeItem(SAVE_KEY);}catch{}saved=null;$('continueSaved').hidden=true;}
 try{const raw=localStorage.getItem(SAVE_KEY);if(raw&&raw.length<1500000){const data=JSON.parse(raw);if(data.version===1&&data.packet?.version===1&&Array.isArray(data.packet.inputs)&&data.packet.inputs.length<50000&&data.packet.ticks<180000){saved=data;$('continueSaved').hidden=false;$('continueSaved').textContent='继续上次 · 第 '+(data.station+1)+' 站';}}}catch{}

@@ -1,4 +1,4 @@
-name: Train street-scale young plants R02 review only
+name: Train native KAOPU juvenile Ficus R02 review only
 on:
   push:
     branches: ['qa/train-plants-street-scale-r02-20261010']
@@ -27,18 +27,35 @@ jobs:
             kaopu-tree-fractal-wave-lab/mobile-r05-seasons
       - name: Native source, metre comparison, clearances and regressions
         run: node --test "$CANDIDATE/plants/"*.test.mjs "$CANDIDATE/tests/"*.test.mjs
+      - name: Real KAOPU container and rule-resource integrity
+        run: |
+          node "$CANDIDATE/plants/native-codec/tests/test-codec.mjs"
+          python3 "$CANDIDATE/plants/native-codec/tests/verify_sqlite.py"
       - name: Install official pinned browser
         run: |
           npm install --prefix "$RUNNER_TEMP/plant-scale-qa" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/plant-scale-qa/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/plant-scale-qa/node_modules" >> "$GITHUB_ENV"
-      - name: Serve preserved R01 and separate young-plant candidate
+      - name: Serve preserved R20 and native KAOPU plant candidate
         run: |
-          cp -a "$GAME/r20-plants-r01" "$GAME/r01-scale-baseline"
+          cp -a "$GAME/r20" "$GAME/r20-no-plants-baseline"
           python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/plant-scale-http.log" 2>&1 &
           for n in $(seq 1 30); do curl --fail --silent http://127.0.0.1:8765/$CANDIDATE/ >/dev/null && exit 0; sleep 1; done
           exit 1
-      - name: Actual same-camera before and after, visible full young plants
+      - name: First native KAOPU Ficus look before full comparison
+        env:
+          PLANTS_QA_FIRST_LOOK: '1'
+          PLANTS_QA_OUT: train-plants-r02-results/native-first-look
+        run: node "$CANDIDATE/plants/browser-comparison.cjs"
+      - name: Preserve first actual native plant screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-native-ficus-first-look-${{ github.sha }}
+          path: train-plants-r02-results/native-first-look/
+          retention-days: 7
+          compression-level: 0
+      - name: Actual same-camera before and after, native juvenile Ficus
         run: node "$CANDIDATE/plants/browser-comparison.cjs"
       - name: Preserve evidence without publishing Pages
         if: always()

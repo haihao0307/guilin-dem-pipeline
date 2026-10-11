@@ -1,3 +1,9 @@
+# Current runtime: original native78 juvenile Ficus
+
+The active R02 scene loads the experimental KAOPU plant profile and original native78 Ficus rules described in ../README.md, native-codec/README.md and rules/RESOURCE-LICENSES.md. Its original geometry/content and eight material resources are checked against the recovered source. It includes the original declared image-based proxy bark material.
+
+The Pandanus extraction and compact dimension study below remain as an unused historical research anchor. The active Ficus runtime does not import pandanus.mjs. Statements below about no texture files concern that historical Pandanus generator only, not the current Ficus material resources. The compact and age-only Pandanus candidates were not visually accepted or published as this Ficus revision.
+
 # Native Pandanus R05 extraction, train candidate
 
 ## Source and scope
