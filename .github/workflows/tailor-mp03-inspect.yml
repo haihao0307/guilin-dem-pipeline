@@ -1,0 +1,52 @@
+name: MP03 exact baseline inspection
+on:
+  push:
+    branches: [fix/tailor-mp03-knit-seams-gravity-20261011]
+    paths: [.github/workflows/tailor-mp03-inspect.yml]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-tailor-workbench/material-products
+            kaopu-tailor-workbench/presets/r04/person-core
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          mkdir -p inspection
+          python - <<'PY'
+          import pathlib,json,gzip,shutil
+          root=pathlib.Path('kaopu-tailor-workbench/material-products/r02')
+          out={}
+          for f in (root/'native').glob('*.gz'):
+            p=json.loads(gzip.decompress(f.read_bytes()));r=p['record'];s=p['spec']
+            out[f.name]={'rootKeys':list(p),'specKeys':list(s),'recordKeys':list(r),'binding':p.get('binding'), 'specOther':{k:v for k,v in s.items() if k!='panels'},'panels':[{k:v for k,v in q.items() if k not in ['uvMm','triangles']}|{'vertexCount':len(q['uvMm']),'triangleCount':len(q['triangles']),'firstUV':q['uvMm'][:4],'firstTriangles':q['triangles'][:4]} for q in s['panels']], 'recordOther':{k:v for k,v in r.items() if k not in ['positionsMm','normals','velocities','triangles']},'positionsPreview':r['positionsMm'][:4]}
+          pathlib.Path('inspection/INSPECT.json').write_text(json.dumps(out,indent=2))
+          shutil.copytree(root,'inspection/baseline')
+          shutil.copytree('kaopu-tailor-workbench/presets/r04/person-core','inspection/person-core')
+          PY
+      - run: npm install --no-save playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - name: Open exact previous public page and capture resources
+        continue-on-error: true
+        run: |
+          cat > inspection/browser.cjs <<'JS'
+          const {chromium}=require('playwright'),fs=require('fs'),path=require('path'),crypto=require('crypto');
+          (async()=>{const b=await chromium.launch({headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});const page=await b.newPage({viewport:{width:1440,height:1000}}),errors=[],resources=[];
+          page.on('pageerror',e=>errors.push(e.message));page.on('response',async r=>{if(r.status()!==200)return;try{const data=await r.body(),u=r.url();if(!u.startsWith('https://haihao0307.github.io/'))return;const f='resources/'+crypto.createHash('sha256').update(u).digest('hex');fs.mkdirSync('inspection/resources',{recursive:true});fs.writeFileSync('inspection/'+f,data);resources.push({url:u,file:f,bytes:data.length});}catch(e){}});
+          try{await page.goto('https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/material-products/mp02-s1-23c34ca5699e/?look=K04&top=knit-reverse-3&bottom=knit-soft-0',{timeout:120000,waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__MP02__?.audit().selected&&!window.__MP02__.audit().pending,{},{timeout:360000});await page.screenshot({path:'inspection/baseline-whole.png'});fs.writeFileSync('inspection/AUDIT.json',JSON.stringify(await page.evaluate(()=>window.__MP02__.audit()),null,2));}catch(e){errors.push(e.message);await page.screenshot({path:'inspection/baseline-failure.png'}).catch(()=>{});}fs.writeFileSync('inspection/ERRORS.json',JSON.stringify(errors,null,2));fs.writeFileSync('inspection/RESOURCES.json',JSON.stringify(resources,null,2));await b.close();})();
+          JS
+          node inspection/browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp03-baseline-inspection
+          path: inspection
+          retention-days: 14
