@@ -41,7 +41,7 @@ Structural map implemented in A1:
 - antihelix with superior/inferior branching tendency
 - scapha
 - triangular fossa
-- conchal bowl
+- cymba and cavum of the conchal bowl
 - tragus
 - antitragus
 - intertragal notch
@@ -52,6 +52,7 @@ Anatomical constraints used:
 - The auricle is principally elastic cartilage covered by thin adherent skin.
 - The lobule is fibrofatty and does not continue the cartilaginous framework.
 - The antihelix is a branching ridge, not a single painted groove.
+- The helical root separates upper and lower conchal regions rather than leaving one uniform circular pit.
 - Concha depth, antihelix prominence and helix contour are major shape-variation axes.
 - The anterior and posterior ear surfaces should not share identical thickness, fat and shading assumptions.
 
@@ -70,11 +71,13 @@ Use boundary:
 
 ## A1 implementation rationale
 
-1. Three local adaptive subdivision passes increase reviewable ear density while transition triangles keep the display surface continuous.
-2. The source/canonical position, topology, body and eye buffers remain read-only.
-3. Anatomical ridges and cavities are functions over the existing ear chart, so left/right parameters can be saved without introducing detached meshes.
-4. Skin variation is ear-local: mild blood-color variation, tangent-chart microrelief, roughness and a bounded back-light wrap approximation.
-5. A/B comparison toggles the ear system without changing the camera or ear inspection light.
+1. Two local adaptive subdivision passes provide several thousand reviewable samples per ear while avoiding the cost of an unnecessary third pass.
+2. Transition triangles keep every split edge continuous with the existing head surface.
+3. The source/canonical position, topology, body and eye buffers remain read-only.
+4. Anatomical ridges and cavities are functions over the existing ear chart, so left/right parameters can be saved without introducing detached meshes.
+5. The deformation frame is derived directly from retained Y-up/Z-forward facial landmarks; it is not rotated a second time.
+6. Skin variation is ear-local: mild blood-color variation, tangent-chart microrelief, roughness and a bounded back-light wrap approximation.
+7. A/B comparison toggles the ear system without changing the camera or ear inspection light.
 
 ## Known limitations and next research gates
 

@@ -1,11 +1,11 @@
 import * as THREE from '../full/source/registration-vendor/three.module.js';
 import {earROI,earMask,sampleEar,point,earDelta,headFrame} from './EarMath.mjs';
-/** Three fixed, local Loop subdivision stencils. Transition triangles share
+/** Two fixed, local Loop subdivision stencils. Transition triangles share
  * every split edge: no detached ear, no extra head, no per-frame nearest match.
  * All input/canonical buffers are read-only. Only the derived display changes. */
 export class EarSurface{
  constructor(source){this.source=source;this.layers=[];let g=source;
-  for(let level=0;level<3;level++){
+  for(let level=0;level<2;level++){
    const R=g.attributes.fRest.array,T=g.attributes.csType.array,count=g.attributes.position.count,key=(a,b)=>a<b?a+','+b:b+','+a,edges=new Map(),adj=new Map();
    const selected=Uint8Array.from({length:count},(_,i)=>earROI(point(R,i),T[i])?1:0);
    for(let k=0;k<g.index.count;k+=3){const ids=[g.index.array[k],g.index.array[k+1],g.index.array[k+2]],take=ids.every(i=>selected[i]);for(let j=0;j<3;j++){const a=ids[j],b=ids[(j+1)%3],c=ids[(j+2)%3],id=key(a,b);if(selected[a]||selected[b]){let e=edges.get(id);if(!e){e={a,b,op:[],take:false};edges.set(id,e);}e.op.push(c);e.take ||=take;if(selected[a]){if(!adj.has(a))adj.set(a,new Set());adj.get(a).add(b);}if(selected[b]){if(!adj.has(b))adj.set(b,new Set());adj.get(b).add(a);}}}}
@@ -30,7 +30,7 @@ export class EarSurface{
   g.attributes.position.needsUpdate=true;g.computeVertexNormals();g.computeBoundingSphere();
   for(let i=0;i<this.source.attributes.position.count;i++)if(!earROI(point(this.source.attributes.fRest.array,i),this.source.attributes.csType.array[i]))for(let k=0;k<3;k++)g.attributes.normal.array[i*3+k]=this.source.attributes.normal.array[i*3+k];
   g.attributes.normal.needsUpdate=true;for(const side of[-1,1])this.centers[side]=point(Q,this.anchorIDs[side]);this.frame=frame;
-  this.stats={version:'ET18-A1',mode:'native continuous ear with adaptive Loop stencils and anatomical fields',addedDisplayVertices:g.attributes.position.count-this.source.attributes.position.count,affectedDisplayVertices:affected,maxAuthoredDeltaMM:max*1000,canonicalBuffersModified:false,extraHeadMeshes:0,scanMeshSpliced:false,scanUse:'inspection and authored structural calibration, not exact reconstruction',externalAuditoryCanal:'visible native entrance refined; full canal and cartilage volume not reconstructed'};
+  this.stats={version:'ET18-A1',mode:'native continuous ear with two adaptive Loop stencils and anatomical fields',subdivisionLevels:2,addedDisplayVertices:g.attributes.position.count-this.source.attributes.position.count,affectedDisplayVertices:affected,maxAuthoredDeltaMM:max*1000,coordinateFrame:'retained common-person Y-up/Z-forward landmark frame',canonicalBuffersModified:false,extraHeadMeshes:0,scanMeshSpliced:false,scanUse:'inspection and authored structural calibration, not exact reconstruction',externalAuditoryCanal:'visible native entrance refined; full canal and cartilage volume not reconstructed'};
   return g;
  }
  dispose(){for(const l of this.layers)l.geometry.dispose();}
