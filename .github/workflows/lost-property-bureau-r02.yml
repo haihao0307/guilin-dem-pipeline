@@ -1,0 +1,56 @@
+name: Lost property bureau R02 street and power QA
+on:
+  push:
+    branches: ['qa/lost-property-bureau-r02-*', 'gh-pages']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r02/**'
+      - '.github/workflows/lost-property-bureau-r02.yml'
+permissions:
+  contents: read
+jobs:
+  fixed-solid-clearance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Exact generated-triangle cargo clearance
+        run: |
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r02/qa/clearance.mjs
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r02/qa/access.mjs
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: bureau-r02-clearance-${{ github.sha }}
+          path: bureau-r02-clearance/
+          retention-days: 7
+  full-machine:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: SI-clock and logistics regression
+        run: node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r02/qa/simulation.test.mjs
+      - name: Install official pinned browser runner
+        run: |
+          npm install --prefix "$RUNNER_TEMP/bureau" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/bureau/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/bureau/node_modules" >> "$GITHUB_ENV"
+      - name: Actual WebGL desktop and mobile viewport
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r02/qa/browser.cjs
+      - name: Verify deployed source bytes and public WebGL
+        if: github.ref_name == 'gh-pages'
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r02/qa/public-check.cjs
+      - name: Retain real screenshots and receipts
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: bureau-r02-${{ github.sha }}
+          path: bureau-r02-results/
+          retention-days: 7
+          compression-level: 0

@@ -1,0 +1,2 @@
+import fs from 'node:fs';import assert from 'node:assert/strict';import {buildBureau} from '../building.mjs';import {buildSite} from '../site.mjs';
+const building=buildBureau().auditClearance(),site=buildSite().auditCargo(),result={building,site};fs.mkdirSync('bureau-r02-clearance',{recursive:true});fs.writeFileSync('bureau-r02-clearance/report.json',JSON.stringify(result,null,2));console.log(JSON.stringify(result));for(const r of [building,site]){assert.equal(r.complete,true);assert.equal(r.hits.length,0,'Cargo intersects a fixed solid');}
