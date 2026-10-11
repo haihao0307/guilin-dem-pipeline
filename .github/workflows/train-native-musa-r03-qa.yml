@@ -1,0 +1,43 @@
+name: Train native Musa R03 source qualification
+on:
+  push:
+    branches: ['qa/train-native-musa-r03-20261011']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r03/**'
+      - '.github/workflows/train-native-musa-r03-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: train-native-musa-r03-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      CANDIDATE: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r03
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Install official pinned browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/native-musa-qa" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/native-musa-qa/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/native-musa-qa/node_modules" >> "$GITHUB_ENV"
+      - name: Serve same native rule bytes
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/native-musa-http.log" 2>&1 &
+          for n in $(seq 1 30); do curl --fail --silent http://127.0.0.1:8765/$CANDIDATE/ >/dev/null && exit 0; sleep 1; done
+          exit 1
+      - name: Actual complete Node and Chromium source output comparison
+        run: node "$CANDIDATE/plants/browser-native-hash-diagnostic.cjs"
+      - name: Preserve source qualification evidence without Pages publication
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-native-musa-hash-diagnostic-${{ github.sha }}
+          path: train-plants-r03-results/hash-diagnostic/
+          retention-days: 7
+          compression-level: 0
