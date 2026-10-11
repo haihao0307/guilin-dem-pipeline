@@ -26,3 +26,7 @@ The earlier thin circular rods and torus wheels were rejected. Current procedura
 The complete 56E1 rail section is an explicit modern reference, not a claim about 1935 track. Its crown fillets are approximated as documented by wheel-rail-profile.mjs. The current route is straight; no curved-track swept-clearance certification is claimed.
 
 Profile 2 native session files pin the corrected geometry. Profile 1 saves are rejected rather than overriding the new wheel/axle geometry; use the preserved prior release to open prior saves.
+
+Visible wheel-centre references: drivers20 cast spokes (high-confidence photo comparison), bogie10 and Cartazzi10 (operator photographs), and covered tender discs observed on modern60007. Hidden tender construction is unknown and is not fabricated. These appearance references do not make88 a surveyed1935 Silver Link or modern60007 replica. Restricted reference photographs are not shipped.
+
+The two coaches' retained longitudinal sills now sit inside the wheel envelope; transverse members clear the flange crown. Brake shoes remain inside the tread band and stop0.5mm short of the rendered surface at full input. These are geometric clearances in the straight-track game, not structural or braking-system certification.

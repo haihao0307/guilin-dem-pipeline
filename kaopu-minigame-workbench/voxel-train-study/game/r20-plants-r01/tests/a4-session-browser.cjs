@@ -113,10 +113,10 @@ if(process.argv.includes('--self-check')){assert.deepEqual(normalizeSignedZero({
   await preciseStop(790);if(routeBrakeCDP)await routeBrakeCDP.detach();
   await click('#openSettings');await page.locator('#renderQuality').selectOption('clear');await click('#photoMode');await until(()=>__trainDriver.getState().paused);
   const openTrack=await state();assert.equal(openTrack.qualityMode,'clear');assert(openTrack.distance>=786&&openTrack.distance<=794,'The actual controlled stop must remain in the independently checked open-track window');assert.equal(openTrack.velocity,0);report.photography.openTrack={distance:openTrack.distance,stops:openTrack.stats.stops,actualControls:true,sceneHidden:false};
-  for(const preset of ['leftSide','rightSide','overview']){
+  for(const preset of ['leftSide','rightSide','runningGear','wheelRail','overview']){
    await click('#photoCamera');await click(`[data-camera="${preset}"]`);await until(()=>document.getElementById('settingsScreen').hidden);await page.waitForTimeout(600);
    const frame=await check('open-track-'+preset);assert.deepEqual(frozenPart(frame),frozenPart(openTrack));assert.deepEqual(frame.cameraProjection.up,[0,1,0]);
-   if(preset!=='overview'){const h=2*Math.atan(Math.tan(frame.cameraProjection.effectiveFov*Math.PI/360)*frame.cameraProjection.aspect)*180/Math.PI;assert(h>=35&&h<=55,'Conventional horizontal field of view, not an ultrawide lens');}
+   if(['leftSide','rightSide'].includes(preset)){const h=2*Math.atan(Math.tan(frame.cameraProjection.effectiveFov*Math.PI/360)*frame.cameraProjection.aspect)*180/Math.PI;assert(h>=35&&h<=55,'Conventional horizontal field of view, not an ultrawide lens');}
    await screenshot('photo-open-track-'+preset);
   }
   await click('#photoReturn');assert.equal(await page.locator('#drivePanel').isVisible(),true);await screenshot('open-track-restored-driver-controls');

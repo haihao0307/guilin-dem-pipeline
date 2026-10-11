@@ -1,5 +1,5 @@
 export default {
-  "identity": "FH88_ORIGINAL_THREE_PARALLEL_CYLINDER_BENCH_R01",
+  "identity": "FH88_NATIVE_GAME_RUNNING_GEAR_R02",
   "lengthUnit": "m",
   "worldFrame": "X forward, Y left, Z up; positive crank angle +X toward +Z",
   "track": {
