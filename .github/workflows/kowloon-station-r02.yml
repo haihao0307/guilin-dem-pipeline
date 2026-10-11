@@ -1,0 +1,38 @@
+name: Imagined Kowloon station whole-scene GPU review
+on:
+  push:
+    branches: ['qa/kowloon-station-r02-20261011']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r02/**'
+      - '.github/workflows/kowloon-station-r02.yml'
+permissions:
+  contents: read
+concurrency:
+  group: kowloon-station-r02-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  whole-scene:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Metre scale, actual train clearance and original factories
+        run: node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r02/qa/station-cpu.test.mjs
+      - name: Install official pinned browser runner
+        run: |
+          npm install --prefix "$RUNNER_TEMP/station-browser" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/station-browser/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/station-browser/node_modules" >> "$GITHUB_ENV"
+      - name: Actual entire station, controls, one-clock pause and departure
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r02/qa/station-browser.cjs
+      - name: Preserve actual frames and failures
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: kowloon-station-r02-${{ github.sha }}
+          path: kowloon-station-results/
+          retention-days: 7
+          compression-level: 0
