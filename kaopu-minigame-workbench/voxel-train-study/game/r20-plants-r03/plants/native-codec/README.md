@@ -50,7 +50,7 @@ Source HEAD is `d5f6ed0f41bdd6a4e4d1163190d3cd2135e8b122`. `source.closureSha256
 
 The builder checks every one of the 92 closure inputs against its actual local source file: existence, file length and SHA256. It rejects a changed but correctly formatted digest, same-size source mutation, missing files, duplicate inputs, omitted inputs, unknown source classes, absolute/traversal paths and symlinks escaping their declared roots. This is not merely hash-string validation.
 
-Build-only `sourceRoots` resolve canonical files in the recovered original checkout, adapter and npm inputs in the original probe workspace, and the transformed input in `rules/build-inputs`. No source-root paths enter recipes or browser manifests. The guarded Musa slice changes only the unused `BARK_DATA76` table to an empty array. The builder checks both the exact landed `BarkData76.musa.ts` bytes and a fresh deterministic transformation of the original bytes, preserving CRLF. An arbitrary transformed file with a newly matching hash is rejected.
+Build-only `sourceRoots` resolve canonical files through `KAOPU_NATIVE_SOURCE_ROOT`, adapter and pinned npm inputs through `KAOPU_NATIVE_ADAPTER_ROOT`, and the transformed input relative to `rules/build-inputs`. Missing environment variables reject before any output changes; no machine-specific paths are stored in the public inputs. No source-root paths enter recipes or browser manifests. The guarded Musa slice changes only the unused `BARK_DATA76` table to an empty array. The builder checks both the exact landed `BarkData76.musa.ts` bytes and a fresh deterministic transformation of the original bytes, preserving CRLF. An arbitrary transformed file with a newly matching hash is rejected.
 
 The source closure's bundle name, byte count and SHA256 must match the actual mother-author dependency. This author source closure does not claim to enumerate the separate renderer's transitive inputs; renderer and operator deployment bytes are pinned separately. The builder fixes the audited closure and proof digests in addition to the six exact resource records, profile, seven dependency identities/versions and release ID. Updating an audited closure/proof is an explicit code review, not a silent repin.
 
@@ -65,12 +65,14 @@ Unknown keys, different profile/species/stage/seed, changed metadata or pins, ar
 `release-input.json` is build-only. It has releaseId, sourceHead, sourceClosure, sourceRoots, dependencies, resourceProof and the six resources. All pins are verified against readable real files before outputs change. No dependency hash is invented or updated by the builder.
 
 ```sh
+export KAOPU_NATIVE_SOURCE_ROOT=/path/to/canonical-checkout
+export KAOPU_NATIVE_ADAPTER_ROOT=/path/to/pinned-native-build-dependencies
 python build_template.py
 node tests/test-codec.mjs
 python tests/verify_sqlite.py
 python tests/test_builder.py
 ```
 
-Outputs include the establishing-Musa and placement-roundtrip SQLite fixtures, their full expected JSON, and three test reports. The current Node suite has 48 checks: 47 passed; the optional historical FH88 fixture test is skipped unless `KAOPU_FH88_CODEC` is provided. The retained r02 Ficus mutual-rejection test is mandatory and passed. Both independent SQLite fixtures passed. The builder suite has 46 passing negative checks plus the valid 92-source-input and exact-transform verification. Historical rail reader execution is optional via `KAOPU_RAIL_CODEC` and is not claimed when unavailable.
+Outputs include the establishing-Musa and placement-roundtrip SQLite fixtures, their full expected JSON, and three test reports. The current Node suite has 48 checks: 47 passed; the optional historical FH88 fixture test is skipped unless `KAOPU_FH88_CODEC` is provided. The retained r02 Ficus mutual-rejection test is mandatory and passed. It uses the adjacent r02 codec by default, or an explicit `KAOPU_FICUS_CODEC_ROOT` directory from a separately checked-out exact historical revision. Missing, corrupt or wrong-profile references fail; they are never silently skipped. The reference reader must first decode its own original Ficus fixture successfully. Both independent SQLite fixtures passed. The builder suite has 46 passing negative checks plus the valid 92-source-input and exact-transform verification. Historical rail reader execution is optional via `KAOPU_RAIL_CODEC` and is not claimed when unavailable.
 
 The original mother workbench, its runtime, the retained r02 candidate and unrelated projects are not changed by this codec adaptation. No browser, GitHub upload or publication is part of these tests.

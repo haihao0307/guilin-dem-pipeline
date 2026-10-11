@@ -1,4 +1,4 @@
-name: Train native Musa R03 source qualification
+name: Train native KAOPU Musa R03 isolated acceptance
 on:
   push:
     branches: ['qa/train-native-musa-r03-20261011']
@@ -11,16 +11,30 @@ concurrency:
   group: train-native-musa-r03-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  qualify:
+  compare:
     runs-on: ubuntu-24.04
-    timeout-minutes: 8
+    timeout-minutes: 15
     env:
       CANDIDATE: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r03
+      KAOPU_FICUS_CODEC_ROOT: ficus-profile-reference/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r02/plants/native-codec
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
           sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Read retained Ficus profile only for incompatible-profile rejection
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 9e4994097d8487d321e14d520b63e818eebaf975
+          path: ficus-profile-reference
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r02/plants/native-codec
+      - name: Native metres, dynamic clearances, shared runtime and scene regressions
+        run: node --test "$CANDIDATE/plants/"*.test.mjs "$CANDIDATE/tests/"*.test.mjs
+      - name: Actual SQLite container, manifest and corruption checks
+        run: |
+          node "$CANDIDATE/plants/native-codec/tests/test-codec.mjs"
+          python3 "$CANDIDATE/plants/native-codec/tests/verify_sqlite.py"
       - name: Install official pinned browser
         run: |
           npm install --prefix "$RUNNER_TEMP/native-musa-qa" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
@@ -32,6 +46,8 @@ jobs:
           for n in $(seq 1 30); do curl --fail --silent http://127.0.0.1:8765/$CANDIDATE/ >/dev/null && exit 0; sleep 1; done
           exit 1
       - name: Actual complete Node and Chromium source output comparison
+        env:
+          PLANTS_QA_REQUIRE_QUALIFIED: '1'
         run: node "$CANDIDATE/plants/browser-native-hash-diagnostic.cjs"
       - name: Preserve source qualification evidence without Pages publication
         if: always()
@@ -39,5 +55,45 @@ jobs:
         with:
           name: train-native-musa-hash-diagnostic-${{ github.sha }}
           path: train-plants-r03-results/hash-diagnostic/
+          retention-days: 7
+          compression-level: 0
+      - name: Actual Worker responsiveness, exact output and cancellation
+        run: node "$CANDIDATE/plants/browser-worker-probe.cjs"
+      - name: Preserve actual Worker evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-native-musa-worker-${{ github.sha }}
+          path: train-plants-r03-results/worker-probe/
+          retention-days: 7
+          compression-level: 0
+      - name: First actual native Musa look before full comparison
+        env:
+          PLANTS_QA_FIRST_LOOK: '1'
+          PLANTS_QA_OUT: train-plants-r03-results/first-look
+        run: node "$CANDIDATE/plants/browser-comparison.cjs"
+      - name: Preserve first actual native Musa screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-native-musa-first-look-${{ github.sha }}
+          path: train-plants-r03-results/first-look/
+          retention-days: 7
+          compression-level: 0
+      - name: Read exact preserved R20 baseline with original dependencies
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: fdbc36e17a34c21c14cc9566a533bb080e3dacc2
+          path: r20-reference
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Same-camera R20 before and Musa after with strict cost gate
+        run: node "$CANDIDATE/plants/browser-comparison.cjs"
+      - name: Preserve full comparison without publishing Pages
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-native-musa-comparison-${{ github.sha }}
+          path: train-plants-r03-results/comparison/
           retention-days: 7
           compression-level: 0
