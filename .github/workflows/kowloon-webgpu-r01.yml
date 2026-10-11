@@ -1,4 +1,4 @@
-name: Kowloon WebGPU cloth interval and source slate diagnostic
+name: Kowloon WebGPU original-yarn conditional colour quadrature
 on:
   push:
     branches: ['qa/kowloon-webgpu-r01-20261011']
@@ -18,14 +18,13 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/wgpu" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/wgpu/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/wgpu/node_modules" >> "$GITHUB_ENV"
-      - name: Finite cloth interval and explicit exhaustion crops
+      - name: Small cloth colour and coverage diagnostics
         run: |
           node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r03/webgpu-receiver/room-slice/qa/source.test.mjs
-          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r03/webgpu-receiver/room-slice/qa/ray-status.test.mjs
-          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r03/webgpu-receiver/room-slice/qa/cloth-rays.cjs
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r03/webgpu-receiver/room-slice/qa/cloth-coverage.cjs
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: kowloon-cloth-ray-crops-${{ github.sha }}
-          path: kowloon-cloth-ray-results/
+          name: kowloon-cloth-coverage-${{ github.sha }}
+          path: kowloon-cloth-coverage-results/
           retention-days: 7

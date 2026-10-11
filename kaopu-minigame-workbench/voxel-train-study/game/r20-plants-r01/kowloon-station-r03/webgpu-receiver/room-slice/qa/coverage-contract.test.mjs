@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
+const file=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8'),r=file('receiver.mjs'),d=file('coverage-domain.mjs'),domain=file('domain.mjs');
+assert(d.includes('kpFabricCoverageColumn(uv,-nr)'));
+assert(d.includes('dRx-rd*dot(n,dRx)/nr'));
+assert(d.includes('dRy-rd*dot(n,dRy)/nr'));
+assert(d.includes('dx*xy.x+dy*xy.y'));
+assert(d.includes('footprint<.00021'));
+assert(d.includes('colourSum/count'));
+assert(!/CoverageColumn|ProjectedCoverage/.test(domain));
+assert(r.includes('u.debug==7u||u.debug==8u'));
+assert(r.includes('atomicAdd(&rayStats.reserved'));
+assert(r.includes('mean.albedo*(1.-.02*.15)'));
+assert(!r.includes('mean.albedo*mean.coverage'));
+assert(d.includes('if(abs(uv.x)>.46||abs(uv.y)>.67)'));
+console.log('12 CPU contracts: conditional colour only, explicit projected domain, same source/crop, near yarn and unresolved diagnostics retained. GPU not implied.');
