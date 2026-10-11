@@ -25,14 +25,9 @@ jobs:
           python-version: '3.11'
       - name: Apply exact-source repairs and pin original common runtime
         run: |
+          mkdir -p repair-evidence
           P=kaopu-tailor-workbench/presets/r04
-          python "$P/repair_display_r0434.py"
-          python "$P/freeze_common_r0434.py"
-          python "$P/prepare_qa_r0434.py"
-          node --check "$P/app.mjs"
-          node "$P/test_resources_r0434.mjs"
-          node "$P/test_display_r0433.mjs"
-          python -m py_compile "$P/qa_r0434.py" "$P/qa_fresh_r0434.py"
+          { python "$P/repair_display_r0434.py" && python "$P/freeze_common_r0434.py" && python "$P/prepare_qa_r0434.py" && node --check "$P/app.mjs" && node "$P/test_resources_r0434.mjs" && node "$P/test_display_r0433.mjs" && python -m py_compile "$P/qa_r0434.py" "$P/qa_fresh_r0434.py" "$P/qa_safety_r0434.py"; } 2>&1 | tee repair-evidence/integration.log
       - name: Commit only guarded display changes on isolated branch
         run: |
           P=kaopu-tailor-workbench/presets/r04
@@ -52,7 +47,8 @@ jobs:
         run: |
           export GITHUB_SHA=$(git rev-parse HEAD)
           python -m http.server 8765 --bind 127.0.0.1 >/tmp/tailor-r0434-http.log 2>&1 &
-          python kaopu-tailor-workbench/presets/r04/qa_r0434.py
+          python kaopu-tailor-workbench/presets/r04/qa_r0434.py 2>&1 | tee repair-evidence/browser.log
+          python kaopu-tailor-workbench/presets/r04/qa_safety_r0434.py 2>&1 | tee repair-evidence/safety.log
       - name: Preserve patched source and diagnostic evidence
         if: always()
         run: |
@@ -62,7 +58,7 @@ jobs:
           cp "$P/"*.mjs "$P/index.html" "$P/style.css" "$P/"*r0434.py repair-evidence/
           cp "$P/"R0434*.json repair-evidence/ 2>/dev/null || true
           cp -r "$P/person-core" repair-evidence/ 2>/dev/null || true
-          cp -r "$P/qa-r0434" repair-evidence/ 2>/dev/null || true
+          cp -r "$P/qa-r0434" "$P/qa-r0434-safety" repair-evidence/ 2>/dev/null || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
