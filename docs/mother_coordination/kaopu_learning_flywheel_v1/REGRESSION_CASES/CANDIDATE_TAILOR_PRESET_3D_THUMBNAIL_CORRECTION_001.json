@@ -1,7 +1,7 @@
 {
   "schema": "kaopu.regression-case/2",
   "caseId": "TAILOR-PRESET-3D-THUMBNAIL-CORRECTION-001",
-  "status": "CANDIDATE_TAILOR_R0432_STATIC_PASS_VISUAL_ACCEPTANCE_GAP_CONFIRMED__HOLD_MEMBER_VISUAL_COMPARISON_USER_N133_NOT_ADOPTED",
+  "status": "CANDIDATE_TAILOR_R0433_LOCAL_DISPLAY_VERIFIED__HOLD_EXACT_PUBLIC_HEAD_FAILED_VISUAL_PHYSICS_USER_N134_NOT_ADOPTED",
   "active": false,
   "scope": {
     "mother": "Tailor",
@@ -193,7 +193,8 @@
     "Do not promote 432 browser-readable outfit identities into joint cloth-collision or dynamic-wear certification.",
     "Do not treat a strictly improved but still failing solver route as an accepted garment; preserve its remaining failure categories and keep it out of accepted/front-row claims.",
     "Do not generalize successful public-byte, gallery-decode or CI-browser verification into universal browser/device runtime readiness; WebGL context creation is a separate scoped observation and an unavailable context must fail closed without fallback.",
-    "Do not treat qualityPassed=true, thumbReady=true, PNG decode success or an aggregate visual-review approval as member-level visual readiness; compare each claimed-ready member against an authorized reference or prior accepted golden and record visible failure categories."
+    "Do not treat qualityPassed=true, thumbReady=true, PNG decode success or an aggregate visual-review approval as member-level visual readiness; compare each claimed-ready member against an authorized reference or prior accepted golden and record visible failure categories.",
+    "Do not inherit a successful local/browser audit from an earlier tested source into a later PR head or public-delivery claim; exact public verification must pass for the exact delivered subject."
   ],
   "requiredPerMemberReceipt": [
     "presetId",
@@ -222,7 +223,8 @@
     "R043_ALL60_SOLVER_OUTCOMES_VERIFIED_SCOPED__HOLD_49_STATIC_FAILURES_VISUAL_PHYSICS_USER_ACCEPTANCE",
     "R0431_SELECTIVE_PROMOTION_VERIFIED_SCOPED__HOLD_39_STATIC_FAILURES_VISUAL_PHYSICS_PUBLIC_USER_ACCEPTANCE",
     "R0432_PUBLIC_BYTES_AND_CI_BROWSER_VERIFIED_SCOPED__HOLD_INDEPENDENT_WEBGL_RUNTIME_DEVICE_USER_ACCEPTANCE",
-    "R0432_STATIC_PASS_VISUAL_ACCEPTANCE_GAP_CONFIRMED__HOLD_MEMBER_VISUAL_COMPARISON_USER_ACCEPTANCE"
+    "R0432_STATIC_PASS_VISUAL_ACCEPTANCE_GAP_CONFIRMED__HOLD_MEMBER_VISUAL_COMPARISON_USER_ACCEPTANCE",
+    "R0433_LOCAL_ALL_CATEGORY_DISPLAY_VERIFIED_SCOPED__HOLD_EXACT_PUBLIC_HEAD_FAILURE_VISUAL_PHYSICS_USER_ACCEPTANCE"
   ],
   "gate": [
     "Preserve the old paper-library success as a scoped historical observation; do not relabel it as failure.",
@@ -245,7 +247,8 @@
     "Parameter controls may pass source-geometry perturbation while altered-garment fit remains uncertified; outfit render coverage does not certify joint cloth physics.",
     "A failed numerical trial may contribute only complete routes whose failure-category set is a strict subset of the baseline; regressions, ties and incomplete candidates must preserve the prior parent, while improved-but-failing routes remain failed.",
     "Public verification must remain layered by exact source, public bytes, CI browser, independent browser/device and user acceptance; a WebGL getContext failure on an independent browser is a scoped runtime HOLD, not permission to substitute another model or to erase successful exact-subject publication evidence.",
-    "A static-pass member remains visual HOLD until its exact public image has a member-level visual receipt with reference-or-prior-accepted comparator, visible failure categories, independent verifier, and explicit comparison state; aggregate decode/static success cannot fill these fields."
+    "A static-pass member remains visual HOLD until its exact public image has a member-level visual receipt with reference-or-prior-accepted comparator, visible failure categories, independent verifier, and explicit comparison state; aggregate decode/static success cannot fill these fields.",
+    "A successful local 60-style/432-outfit display audit is scoped to its exact tested source. If the current head public workflow fails or publicVerified=false, delivery remains HOLD even when all local display checks pass."
   ],
   "activation": {
     "global": false,
@@ -386,9 +389,9 @@
     }
   },
   "currentCycleLifecycle": {
-    "POSTED": true,
+    "POSTED": false,
     "ACKNOWLEDGED": false,
-    "IMPLEMENTED": false,
+    "IMPLEMENTED": true,
     "GATE-RUN": true,
     "ADOPTED": false,
     "USER-ACCEPTED": false
@@ -862,5 +865,80 @@
       "commentId": 6098126777,
       "url": "https://github.com/haihao0307/guilin-dem-pipeline/pull/181#issuecomment-6098126777"
     }
+  },
+  "n134R0433LocalDisplayPublicFailureResult": {
+    "pullRequest": 208,
+    "baseR0432Head": "7be34c18a44859e2ce2143c377d2c450e1ad89f5",
+    "currentPrHead": "5a0770741e6ecc35c41a66c7320d7390028d7fe4",
+    "exactLocalAuditSource": "fd69f5664cfb015e93e0ac301af58593e944b921",
+    "runtimeSource": "f2e0cf1646b604a3a738bda6d96f1f965acddd8b",
+    "localWorkflow": {
+      "runId": 38107266439,
+      "conclusion": "success",
+      "event": "push",
+      "scope": "local Chromium/SwiftShader and repository-generated assets; not actual public browser"
+    },
+    "localDisplayEvidence": {
+      "browserChecksPassed": 23,
+      "browserChecksTotal": 23,
+      "styleDisplayPassed": 60,
+      "styleTotal": 60,
+      "outfitDisplayPassed": 432,
+      "outfitTotal": 432,
+      "categoryCoverage": {
+        "上装": "18/18 display; 11 static pass",
+        "裤装": "10/10 display; 5 static pass",
+        "半裙": "14/14 display; 4 static pass",
+        "连衣裙": "12/12 display; 1 static pass",
+        "连体裤": "6/6 display; 1 static pass"
+      },
+      "actualPublicBrowser": false,
+      "mobileScope": "390x844 Chromium viewport; not physical phone",
+      "rendererScope": "Chromium WebGL2 with SwiftShader; not hardware-GPU certification"
+    },
+    "exactCurrentHeadPublicWorkflow": {
+      "runId": 38108821701,
+      "jobId": 114379910211,
+      "conclusion": "failure",
+      "artifactId": 11690642035,
+      "artifactDigest": "sha256:98f3ccf916aebd2e980d60f1e48131311ec34f3fcc737966e51045562eaa3d20",
+      "failure": "finalize_display_r0433.py fail-closed source hash assertion: Unexpected source; no overwrite for qa_r0433.py",
+      "publicVerified": false
+    },
+    "preservedBoundaries": {
+      "staticPass": 22,
+      "needsRepair": 38,
+      "all60GarmentsAccepted": false,
+      "physicalFitAccepted": false,
+      "dynamicWearCertified": false,
+      "jointOutfitCollisionCertified": false,
+      "userAccepted": false,
+      "qualityThresholdsChanged": false,
+      "bodyGeometryChanged": false,
+      "priorR0432ProtectedTreeUnchanged": true
+    },
+    "comparisonToCurrentOS": {
+      "result": "NO_NOVELTY",
+      "reason": "R2 tested-subject/freshness and no-stale-delivery gates already require exact-head, layer-specific verification and fail closed on subject mismatch."
+    },
+    "falsifiableHypothesis": "If local display verification and public delivery are bound to exact subjects and kept as separate layers, R04.3.3 will retain 60/60 style and 432/432 outfit local display success while the exact current-head public failure keeps public delivery, visual acceptance, physics and user acceptance on HOLD.",
+    "replay": {
+      "checks": 16,
+      "passed": 16,
+      "outcome": "R0433_LOCAL_ALL_CATEGORY_DISPLAY_VERIFIED_SCOPED__HOLD_EXACT_PUBLIC_HEAD_FAILURE_VISUAL_PHYSICS_USER_ACCEPTANCE",
+      "staleEvidencePromotionPrevented": true,
+      "localSuccessPreserved": true
+    },
+    "boundary": "Tailor R04.3.3 PR #208 only. This does not invalidate the exact local display audit, certify public delivery or physical devices, repair the 38 static failures, certify joint outfit physics, or establish user acceptance.",
+    "decision": "UPDATE_EXISTING_REGRESSION_CASE_NO_NOVELTY",
+    "lifecycle": {
+      "POSTED": false,
+      "ACKNOWLEDGED": false,
+      "IMPLEMENTED": true,
+      "GATE-RUN": true,
+      "ADOPTED": false,
+      "USER-ACCEPTED": false
+    },
+    "postingReceipt": null
   }
 }
