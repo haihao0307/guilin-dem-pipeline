@@ -26,7 +26,7 @@ export class IdleTimeline{
   blinkCandidates.sort((a,b)=>a.at-b.at);this.blinks=[];let previous=-10;
   for(const e of blinkCandidates){if(e.at-previous<1.05)continue;this.blinks.push(e);previous=e.at;if(e.double){this.blinks.push({...e,at:e.at+.34,scale:e.scale*.86,double:true});previous=e.at+.34;}}
   this.mouths=[];at=3.7+m()*2;while(at<this.horizon){const kind=m()<.46?'press':m()<.56?'jaw':'smile';this.mouths.push({at,kind,dur:1.1+m()*2.2,amp:.30+m()*.28,asym:.82+m()*.18});at+=(6.3+m()*8.4)*factor;}
-  this.brows=[];at=5.6+m()*3;while(at<this.horizon){this.brows.push({at,dur:1.7+m()*2,amp:.15+m()*.22});at+=(10+m()*11)*factor;}
+  const br=rng(this.seed^0x48aa72);this.brows=[];at=5.6+br()*3;while(at<this.horizon){this.brows.push({at,dur:1.7+br()*2,amp:.15+br()*.22});at+=(10+br()*11)*factor;}
  }
  sample(t,settings=IDLE_DEFAULTS){if(!Number.isFinite(t)||t<0)throw Error('Idle time must be finite and >= 0');this.ensure(t);
   const e=this.looks[latest(this.looks,t)],lookT=ease((t-e.at)/e.dur),headT=ease((t-e.at-.18)/.62),s=settings,amp=s.intensity*({quiet:.65,listening:1,engaged:1.15}[s.profile]||1);
