@@ -1,0 +1,87 @@
+name: Canonical human main eyes live activation verification
+on:
+  push:
+    branches: [test/main-eye-integration-diagnose-20261011]
+    paths: [.github/workflows/main-eyes-live-verify.yml]
+permissions:
+  contents: write
+jobs:
+  verify-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NODE_PATH: /tmp/eye-node/node_modules
+      R: kaopu-unified-human-workbench/main-eye-integration/r01
+      EYE_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/
+      BUILD_SHA: f662a52e30b568eeec09e8d3f5b2e692cccc5ab5
+      BRANCH: fix/main-natural-eyes-integration-20261011
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: f662a52e30b568eeec09e8d3f5b2e692cccc5ab5
+          sparse-checkout: kaopu-unified-human-workbench/main-eye-integration/r01
+      - name: Wait for explicit activation of exact tested bytes, never deploy here
+        run: |
+          python3 - <<'PY'
+          import urllib.request,time,hashlib,os,pathlib,json
+          expected='4e4c608b48da74eaec9feb88470515aa4384343540bb8a31f154b098f8bcd6e9';out=pathlib.Path('/tmp/live-proof');out.mkdir(exist_ok=True)
+          for attempt in range(90):
+            try:
+              raw=urllib.request.urlopen(urllib.request.Request(os.environ['EYE_URL'],headers={'Cache-Control':'no-cache'}),timeout=30).read();actual=hashlib.sha256(raw).hexdigest();print('canonical root',attempt,actual,flush=True)
+              if actual==expected:
+                (out/'byte-proof.json').write_text(json.dumps({'url':os.environ['EYE_URL'],'buildCommit':os.environ['BUILD_SHA'],'sha256':actual,'bytes':len(raw),'passed':True}));break
+            except Exception as e:print(type(e).__name__,flush=True)
+            time.sleep(10)
+          else:raise SystemExit('Canonical main was not activated to the exact tested candidate. No success claimed.')
+          PY
+          npm --prefix /tmp/eye-node install --no-save --package-lock=false playwright@1.57.0 pngjs@7.0.0
+          node /tmp/eye-node/node_modules/playwright/cli.js install --with-deps chromium
+      - name: Actual original main entries, archives and mobile viewport
+        run: EYE_EVIDENCE=/tmp/live-proof/main node "$R/verify-main.cjs"
+      - name: Fresh one-click entry and anatomical left-eye pixels on live root
+        run: |
+          cat > /tmp/one-click.cjs <<'JS'
+          const fs=require('fs'),{chromium}=require('playwright'),{PNG}=require('pngjs'),assert=require('assert/strict');
+          (async()=>{const b=await chromium.launch({args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}),p=await b.newPage({viewport:{width:1440,height:1000}});p.setDefaultTimeout(120000);const errors=[],http=[],checks=[];let failure;p.on('pageerror',e=>errors.push(String(e)));p.on('response',r=>{if(r.status()>=400)http.push({url:r.url(),status:r.status()});});const check=(name,value,data)=>{checks.push({name,passed:!!value,data});assert.ok(value,name);};
+          try{await p.goto(process.env.EYE_URL,{waitUntil:'domcontentloaded'});await p.locator('#main-eye-entry').click();await p.waitForFunction(()=>window.mainEyeIntegration?.report().sameModel&&__IDENTITY_QA__.viewer().skin.naturalEyeExtension.ready&&document.querySelector('#main-eye-entry').getAttribute('aria-expanded')==='true',{timeout:180000});
+           check('new main-eye button loads original person without a preliminary load click',await p.locator('#naturalEyeControls').isVisible());
+           await p.evaluate(()=>{naturalEyeWorkbench.preset('harveyHazel','both');naturalEyeWorkbench.view('eyes');window.__rootArchive=fullCommonWorkbench.archive();});
+           const boxes=await p.evaluate(()=>{const m=__IDENTITY_QA__.model(),v=__IDENTITY_QA__.viewer(),r=v.renderer.domElement.getBoundingClientRect(),a={};for(const e of m.eyeSurface.eyes){const q=e.vertices.map(i=>v.camera.position.clone().set(m.positions[i*3],m.positions[i*3+2],-m.positions[i*3+1]).project(v.camera));const xs=q.map(p=>(p.x+1)*r.width/2),ys=q.map(p=>(1-p.y)*r.height/2);a[e.side]={x:Math.min(...xs),y:Math.min(...ys),w:Math.max(...xs)-Math.min(...xs),h:Math.max(...ys)-Math.min(...ys)};}return a;});
+           const snap=async name=>{await p.evaluate(()=>__IDENTITY_QA__.viewer().render());await p.waitForTimeout(150);const r=await p.locator('#canvas').boundingBox(),buffer=await p.screenshot({clip:r});fs.writeFileSync('/tmp/live-proof/'+name+'.png',buffer);return PNG.sync.read(buffer);};
+           const a=await snap('root-eyes-original');await p.evaluate(()=>naturalEyeWorkbench.set({tint:'#3260a0',tintAmount:1},'left'));const z=await snap('root-anatomical-left');const counts={};for(const [side,r]of Object.entries(boxes)){let n=0;for(let y=Math.max(0,Math.floor(r.y));y<Math.min(a.height,Math.ceil(r.y+r.h));y++)for(let x=Math.max(0,Math.floor(r.x));x<Math.min(a.width,Math.ceil(r.x+r.w));x++){const i=(y*a.width+x)*4;if(Math.abs(a.data[i]-z.data[i])+Math.abs(a.data[i+1]-z.data[i+1])+Math.abs(a.data[i+2]-z.data[i+2])>6)n++;}counts[side]=n;}
+           check('anatomical left edits only corresponding eye pixels',counts.left>100&&counts.right===0,counts);
+           await p.evaluate(()=>fullCommonWorkbench.restore(window.__rootArchive));check('complete root archive restores eye settings',await p.evaluate(()=>JSON.stringify(naturalEyeWorkbench.settings())===JSON.stringify(window.__rootArchive.naturalEyes)));
+           check('same native vertex and topology identity',await p.evaluate(()=>{const m=__IDENTITY_QA__.model(),c=__IDENTITY_QA__.controller();return m.positions.length/3===25417&&m.positions===c.positionReference&&m.faces===c.faceReference;}));
+           await p.screenshot({path:'/tmp/live-proof/root-eye-controls.png'});check('no page exceptions or failed HTTP',errors.length===0&&http.length===0,{errors,http});
+          }catch(e){failure=String(e.stack||e);try{await p.screenshot({path:'/tmp/live-proof/root-failure.png'});}catch{}}
+          fs.writeFileSync('/tmp/live-proof/one-click-report.json',JSON.stringify({passed:!failure,url:process.env.EYE_URL,checks,failure,errors,http,physicalPhoneTested:false},null,2));await b.close();if(failure){console.error(failure);process.exitCode=1;}})();
+          JS
+          timeout -k 15s 300s node /tmp/one-click.cjs
+      - name: Preserve live evidence on review branch only
+        run: |
+          git fetch --depth=1 origin "$BRANCH"
+          git switch --detach FETCH_HEAD
+          PARENT=$(git rev-parse HEAD)
+          mkdir -p "$R/qa/live"
+          cp -R /tmp/live-proof/. "$R/qa/live/"
+          python3 - <<'PY'
+          import pathlib,json,os,urllib.request
+          r=pathlib.Path(os.environ['R']);base=json.loads((r/'DELIVERY.json').read_text());assert base['publicVerified'] and base['buildCommit']==os.environ['BUILD_SHA']
+          reports={k:json.loads((r/'qa/live'/p).read_text()) for k,p in {'bytes':'byte-proof.json','main':'main/main-report.json','oneClick':'one-click-report.json'}.items()};assert all(v['passed'] for v in reports.values())
+          runtime=json.loads(urllib.request.urlopen(os.environ['EYE_URL']+'MAIN_RUNTIME.json',timeout=45).read());assert runtime['buildCommit']==os.environ['BUILD_SHA']
+          receipt={'version':'MAIN-EYES-R01','mainRootActivated':True,'canonicalURL':os.environ['EYE_URL'],'fixedPreviewURL':base['publicURL'],'sourceCommit':base['sourceCommit'],'buildCommit':base['buildCommit'],'canonicalSHA256':reports['bytes']['sha256'],'publicCoreChecks':base['checks'],'liveMainChecks':len(reports['main']['checks']),'freshOneClickChecks':len(reports['oneClick']['checks']),'workflowRun':os.environ['GITHUB_RUN_ID'],'runtime':runtime,'physicalPhoneTested':False,'userVisualAccepted':False,'allMotionModesCertified':False,'anatomicalEyelidClosureCertified':False}
+          (r/'ACTIVATION.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2));print(json.dumps(receipt,ensure_ascii=False))
+          PY
+          test "$(git ls-remote origin refs/heads/$BRANCH | cut -f1)" = "$PARENT"
+          git config user.name 'KAOPU Main Eye Verification'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$R/ACTIVATION.json" "$R/qa/live"
+          find "$R/qa/live" -name '*.png' -print0 | xargs -0 -r git add -f --
+          git commit -m 'human: verify canonical main, one-click eye entry, archives and actual eye pixels [skip ci]'
+          git push origin HEAD:$BRANCH
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: main-eyes-canonical-live-proof
+          path: /tmp/live-proof
+          retention-days: 14
