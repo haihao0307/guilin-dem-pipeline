@@ -1,0 +1,22 @@
+Integration proposal only; not applied to app.mjs.
+
+1. Add `let wallUnitQA=null;` next to the existing scene creation, BEFORE the first draw call.
+2. Immediately before renderer.render(scene,camera) inside existing draw(view,...):
+   wallUnitQA?.update(view.elapsed,{wetness:view.station.wet?.65:.25});
+3. After all existing app initialization:
+   if(params.get('wallUnits')==='1'){
+     Promise.all([import('./wall-units/host-qa.mjs'),import('./street/materials.mjs')])
+       .then(async ([{mountWallUnitQA},{createMaterialLibrary}])=>{
+         wallUnitQA=await mountWallUnitQA({THREE,scene,createMaterialLibrary});
+         needsRender=true;
+       }).catch(error=>console.error('Native wall QA unavailable',error));
+   }
+4. Dispose wallUnitQA on opt-in inspection exit. It owns no camera/control handlers.
+
+Default game does not load or mount the fixtures. Inspection origin [-10,.081,10]
+is a provisional, metre-scale examination placement, not final Walled City layout.
+The native world and material update use the host clock; no independent animation.
+
+For unpublished screenshots the separate tests/wall-units-scene.cjs response-only
+appendix uses the very same existing index, Three, renderer, lighting, and material
+factory. app.mjs disk bytes are hash-checked unchanged. There is no separate page.

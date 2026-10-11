@@ -1,0 +1,72 @@
+{
+  "profile": "kaopu.functional-wall/0.1-experimental",
+  "profileVersion": 1,
+  "operator": "WALL_UNIT_FUNCTION_R01",
+  "ruleSet": "walled-city-wall-units-r01",
+  "scoreSchema": "kaopu.street.wall-unit/1",
+  "kinds": [
+    "plaster-window",
+    "tile-door",
+    "cage-window"
+  ],
+  "units": {
+    "length": "metre",
+    "up": "Y_UP",
+    "yaw": "radian"
+  },
+  "dependencies": [
+    {
+      "id": "wall-score.mjs",
+      "version": "walled-city-wall-units-r01",
+      "sha256": "732f064d2af9358d0acb95af82fc88d8912f42c137b539846a723f5a846c7f35",
+      "bytes": 5325
+    },
+    {
+      "id": "wall-geometry.mjs",
+      "version": "walled-city-wall-units-r01",
+      "sha256": "3160592d33351d5a98db0d9bde7203bb402a05d41f451da88946d10b62dd61e4",
+      "bytes": 10465
+    },
+    {
+      "id": "wall-materials.mjs",
+      "version": "walled-city-wall-units-r01",
+      "sha256": "86b4e9785bd0fb0f7b682fd011bbf1c95f706ec4e22290be225a28844937a56c",
+      "bytes": 3818
+    },
+    {
+      "id": "wall-unit.mjs",
+      "version": "walled-city-wall-units-r01",
+      "sha256": "e104343e4811b884b47754bcf1079811b5026f892787d205ac409ed8f710e60f",
+      "bytes": 5412
+    },
+    {
+      "id": "wall-native.mjs",
+      "version": "walled-city-wall-units-r01",
+      "sha256": "2de4333865292c701e22bcc18d9fd1a34ae2f98a13d02dc551d795ec7011cb2e",
+      "bytes": 2619
+    },
+    {
+      "id": "fixtures.mjs",
+      "version": "walled-city-wall-units-r01",
+      "sha256": "2c142860328827a38799baff586cb3f9791c81bd14a6a380cd7397ada260129d",
+      "bytes": 1429
+    },
+    {
+      "id": "host-street-materials",
+      "version": "KST1-surfaces-2",
+      "sha256": "4f427344d7c37b7fb80074e5d132a49c877280321a6a0d12083991ce06db85e5",
+      "bytes": 12786
+    }
+  ],
+  "dependencyStatus": "pinned",
+  "resources": [],
+  "hostRequirements": {
+    "operator": "kaopu.street.wall-unit",
+    "materialSourceRevision": "KST1-surfaces-2",
+    "materialFactory": "trusted-caller-injection",
+    "renderer": "trusted-caller-injection"
+  },
+  "restoreMode": "trusted-host-regenerate-from-score",
+  "payloadPolicy": "plain-wall-score-only;no-mesh;no-texture;no-code;no-plant-profile",
+  "authentication": false
+}
