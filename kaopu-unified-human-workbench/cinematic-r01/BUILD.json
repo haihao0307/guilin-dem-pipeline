@@ -1,0 +1,77 @@
+{
+  "schema": "kaopu/cinematic-build@1",
+  "version": "ET20-CINE-R01",
+  "idleBase": "be54aaa728f8f4ffd22786b82cfa3f8efbd99b11",
+  "sourceCommit": "5d6e61d21b39ecd18ffb8786ab996d7a677dc4e1",
+  "userBaseline": "be54aaa728f8f4ffd22786b82cfa3f8efbd99b11",
+  "baselineLipSHA256": "47f56c7be09005c8b1a0bea5b2eef37fdcdbb642a73f79d9e3b9e48c24364574",
+  "lipProfileSchema": "kaopu/lip-structure@2",
+  "baselineEyePreviewSHA256": "76d383193ae7212428cb72bc78b536e048039f1414dc26ce756d6b4ea6ff9352",
+  "nativeAssetCommit": "0b4703359efbae10ffc6c0e5fe3fc081e7eca4fe",
+  "faceAssetCommit": "02f596def9d07ebfc187e1eb18ad345a57c8a6b6",
+  "previewSHA256": "2432edbe4482be9a8f638c76d4cc5b5f68e01c0ff1e23f06fbeb1ea250017b5a",
+  "previewBytes": 5072321,
+  "oldPreviewUnchanged": true,
+  "sourceIdentityUnchanged": true,
+  "canonicalBuffersUnchanged": true,
+  "oneCharacter": true,
+  "oneCanvas": true,
+  "sources": [
+    {
+      "path": "kaopu-unified-human-workbench/cinematic-r01/CineRig.mjs",
+      "bytes": 7350,
+      "sha256": "ae7c9fdab8e88e8f3bb3e5cba5ca2d697dd7ffdddc6b95231c73dcc51b93e4b6"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/cinematic-r01/CineSkin.mjs",
+      "bytes": 7737,
+      "sha256": "ff1f91f6ab78e7d92961b110ea92c3c7e59c72fafb4ece1c56e99ad92ab9f5f1"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/cinematic-r01/CineState.mjs",
+      "bytes": 3882,
+      "sha256": "c5320f6d8fbb7128a84221bb9e2a1275734e55effb5d18f41b678dbe5423381e"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/cinematic-r01/CineUI.mjs",
+      "bytes": 7909,
+      "sha256": "098d86769f55173e6a4a257acb012924a7ae1106f03209e27a056d9188fd6755"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/cinematic-r01/CinematicViewer.mjs",
+      "bytes": 905,
+      "sha256": "6d601ff554c241afa8b06cdede5eda6e35fc52715159d8f10b1cdf76426d32f5"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/cinematic-r01/build.cjs",
+      "bytes": 7147,
+      "sha256": "3b1d0a5512f28c9561b1ed0fe12619e0b6fc02de683c0ec5249e569d33f165aa"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/cinematic-r01/layout.css",
+      "bytes": 2087,
+      "sha256": "01f5f4791311645b2b8016a9d55af73afba372bd490dd8a08d2c4b54b795cf1c"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/cinematic-r01/test.mjs",
+      "bytes": 2228,
+      "sha256": "9668c9c02ac983b2d9a32785ef7536413f544321ab78b3038956caf5548ec189"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/cinematic-r01/verify.cjs",
+      "bytes": 12095,
+      "sha256": "75a31db02efd449df4a62152c91e8589d65c2e2115c9664c065d5974d712a2da"
+    }
+  ],
+  "limitations": [
+    "Original Three r170 WebGL rendering, not Karma/RenderMan or path tracing",
+    "RectAreaLight visibility uses one key-center depth projection with 16-tap PCF, not physically exact area shadows",
+    "Three ACESFilmic is retained; no full ACES/OCIO pipeline",
+    "Weighted dual specular lobes, pore relief and sheen are bounded approximations, not measured skin or actual vellus hair",
+    "Inherited split-albedo screen-space RGB diffusion, not random-walk volume scattering",
+    "Original parametric character, eyes, lips, idle and geometry remain; no new contact or muscle solver",
+    "Only shape-mode lighting; original locomotion and crowd modes unchanged",
+    "Requires original pinned online model assets, not a complete offline HTML",
+    "Browser QA does not establish consumer GPU performance or physical phone compatibility"
+  ]
+}

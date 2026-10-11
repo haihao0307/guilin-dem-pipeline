@@ -1,0 +1,879 @@
+{
+  "url": "file:///home/runner/work/guilin-dem-pipeline/guilin-dem-pipeline/kaopu-unified-human-workbench/cinematic-r01/preview.html",
+  "source": "5d6e61d21b39ecd18ffb8786ab996d7a677dc4e1",
+  "tests": [
+    {
+      "name": "four-real-lighting-recipes",
+      "pass": true,
+      "details": [
+        {
+          "preset": "window",
+          "hash": 1472890389,
+          "meanLuma": 49.694756986183414,
+          "clippedFraction": 0,
+          "blackFraction": 0.000024761150136376796,
+          "pixels": 525016,
+          "glError": 0
+        },
+        {
+          "preset": "neutral",
+          "hash": 4231344368,
+          "meanLuma": 56.65064832064087,
+          "clippedFraction": 0,
+          "blackFraction": 0.0000038094077132887377,
+          "pixels": 525016,
+          "glError": 0
+        },
+        {
+          "preset": "lowkey",
+          "hash": 1558533672,
+          "meanLuma": 45.63460966580336,
+          "clippedFraction": 0,
+          "blackFraction": 0.001662806466850534,
+          "pixels": 525016,
+          "glError": 0
+        },
+        {
+          "preset": "practical",
+          "hash": 3695902689,
+          "meanLuma": 50.78241633452362,
+          "clippedFraction": 0,
+          "blackFraction": 0.000013332926996510583,
+          "pixels": 525016,
+          "glError": 0
+        }
+      ]
+    },
+    {
+      "name": "lighting-and-skin-independent-2x2-ablation",
+      "pass": true,
+      "details": [
+        {
+          "name": "current",
+          "hash": 1472890389,
+          "meanLuma": 49.694756986183414,
+          "clippedFraction": 0,
+          "blackFraction": 0.000024761150136376796,
+          "pixels": 525016,
+          "glError": 0
+        },
+        {
+          "name": "lighting-only",
+          "hash": 3297295764,
+          "meanLuma": 49.31298341623304,
+          "clippedFraction": 0,
+          "blackFraction": 0.000024761150136376796,
+          "pixels": 525016,
+          "glError": 0
+        },
+        {
+          "name": "skin-only",
+          "hash": 3096662328,
+          "meanLuma": 63.07637917155986,
+          "clippedFraction": 0,
+          "blackFraction": 0.00012380575068188398,
+          "pixels": 525016,
+          "glError": 0
+        },
+        {
+          "name": "et19-baseline",
+          "hash": 2584672646,
+          "meanLuma": 62.800785465463754,
+          "clippedFraction": 0,
+          "blackFraction": 0.00012380575068188398,
+          "pixels": 525016,
+          "glError": 0
+        }
+      ]
+    },
+    {
+      "name": "actual-light-mixer-solo",
+      "pass": true,
+      "details": [
+        {
+          "k": "key",
+          "hash": 3034551976,
+          "meanLuma": 41.512297977700975,
+          "clippedFraction": 0,
+          "blackFraction": 0.05654494339220138,
+          "pixels": 525016,
+          "glError": 0
+        },
+        {
+          "k": "fill",
+          "hash": 3610155456,
+          "meanLuma": 17.554122162490206,
+          "clippedFraction": 0,
+          "blackFraction": 0.017799457540341627,
+          "pixels": 525016,
+          "glError": 0
+        },
+        {
+          "k": "rim",
+          "hash": 175899482,
+          "meanLuma": 10.381700369989131,
+          "clippedFraction": 0,
+          "blackFraction": 0.2365851707376537,
+          "pixels": 525016,
+          "glError": 0
+        }
+      ]
+    },
+    {
+      "name": "softbox-resize-power-normalization",
+      "pass": true,
+      "details": {
+        "a": 6,
+        "b": 6
+      }
+    },
+    {
+      "name": "all-seven-skin-controls-change-real-GPU-output",
+      "pass": true,
+      "details": [
+        {
+          "key": "poreGain",
+          "before": 565048164,
+          "after": 1480499203
+        },
+        {
+          "key": "mesoGain",
+          "before": 2910888668,
+          "after": 3907831353
+        },
+        {
+          "key": "specular",
+          "before": 3026099793,
+          "after": 1939836407
+        },
+        {
+          "key": "lobeMix",
+          "before": 471671868,
+          "after": 1276752613
+        },
+        {
+          "key": "roughnessOffset",
+          "before": 1462093138,
+          "after": 343714879
+        },
+        {
+          "key": "fuzz",
+          "before": 4203258112,
+          "after": 3175712004
+        },
+        {
+          "key": "diffusionScale",
+          "before": 2299412056,
+          "after": 941197960
+        }
+      ]
+    },
+    {
+      "name": "actual-key-depth-occlusion",
+      "pass": true,
+      "details": {
+        "shadow": {
+          "hash": 2945172721,
+          "meanLuma": 74.03121022146912,
+          "clippedFraction": 0,
+          "blackFraction": 0.04219299983238606,
+          "pixels": 525016,
+          "glError": 0
+        },
+        "unshadowed": {
+          "hash": 1612097908,
+          "meanLuma": 87.13436205112781,
+          "clippedFraction": 0,
+          "blackFraction": 0,
+          "pixels": 525016,
+          "glError": 0
+        }
+      }
+    },
+    {
+      "name": "smooth-lit-forehead-shadow-is-not-pore-noise",
+      "pass": true,
+      "details": {
+        "pixelRegionNormalized": [
+          0.45,
+          0.63,
+          0.5,
+          0.7
+        ],
+        "samples": 1845,
+        "min": 221,
+        "max": 226,
+        "mean": 225.90460704607045,
+        "range": 5
+      }
+    },
+    {
+      "name": "lighting-material-edits-do-not-change-native-person",
+      "pass": true,
+      "details": {
+        "archive": true,
+        "positions": true,
+        "faces": true,
+        "revision": true,
+        "material": true,
+        "noIdleRebake": true,
+        "camera": true
+      }
+    },
+    {
+      "name": "fixtures-world-anchored-not-camera-headlight",
+      "pass": true,
+      "details": true
+    },
+    {
+      "name": "real-slider-input",
+      "pass": true,
+      "details": true
+    },
+    {
+      "name": "whole-person-download-includes-look-and-idle",
+      "pass": true,
+      "details": true
+    },
+    {
+      "name": "invalid-look-import-atomic",
+      "pass": true,
+      "details": {
+        "rejected": true,
+        "unchanged": true
+      }
+    },
+    {
+      "name": "look-profile-restore-with-native-rebuild",
+      "pass": true,
+      "details": true
+    },
+    {
+      "name": "inherited-idle-still-plays-and-pauses",
+      "pass": true,
+      "details": {
+        "beforePlayback": {
+          "time": 0,
+          "frames": 4,
+          "hidden": false,
+          "disposed": false,
+          "mode": "shape"
+        },
+        "afterPlayback": {
+          "time": 0.2,
+          "frames": 11,
+          "hidden": false
+        },
+        "waitWallMS": 13300,
+        "notFPSBenchmark": true
+      }
+    },
+    {
+      "name": "second-native-person-lights-reframe",
+      "pass": true,
+      "details": true
+    },
+    {
+      "name": "390x844-viewport-no-page-overflow-not-real-device",
+      "pass": true,
+      "details": true
+    },
+    {
+      "name": "no-runtime-shader-or-request-errors",
+      "pass": true,
+      "details": true
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "failedRequests": [],
+  "screens": [
+    "look-window",
+    "look-neutral",
+    "look-lowkey",
+    "look-practical",
+    "ab-current",
+    "ab-lighting-only",
+    "ab-skin-only",
+    "ab-et19-baseline",
+    "solo-key",
+    "solo-fill",
+    "solo-rim",
+    "shadow-visibility",
+    "blink-under-new-light",
+    "second-person",
+    "mobile-viewport"
+  ],
+  "completed": true,
+  "initial": {
+    "look": {
+      "version": "ET20-CINE-R01",
+      "settings": {
+        "lighting": true,
+        "skin": true,
+        "preset": "window",
+        "keyEV": 0,
+        "fillStops": 2.4,
+        "rimStops": 1.6,
+        "keyAzimuth": -43,
+        "keyElevation": 24,
+        "distance": 1.1,
+        "width": 0.75,
+        "height": 1.1,
+        "keyK": 5600,
+        "fillK": 7000,
+        "rimK": 6500,
+        "exposureEV": -0.1,
+        "ambient": 0.08,
+        "shadow": true,
+        "shadowSoftness": 2.5,
+        "poreGain": 1.05,
+        "mesoGain": 0.75,
+        "specular": 0.75,
+        "lobeMix": 0.3,
+        "roughnessOffset": 0.035,
+        "fuzz": 0.07,
+        "diffusionScale": 0.8
+      },
+      "skinBefore": false,
+      "lightBefore": false,
+      "inspect": 0,
+      "rig": {
+        "version": "ET20-CINE-R01",
+        "enabled": true,
+        "fixtureType": "RectAreaLight / Three r170 LTC",
+        "center": [
+          -0.0000865049660205841,
+          0.7149991095066071,
+          0.02971716597676277
+        ],
+        "lights": {
+          "key": {
+            "position": [
+              -0.685426659316299,
+              1.1624094168899872,
+              0.7646545032254878
+            ],
+            "width": 0.75,
+            "height": 1.1,
+            "luminance": 7.2727272727272725,
+            "normalizedPower": 6,
+            "colorLinear": [
+              1.1310784284563347,
+              0.9730112050086658,
+              0.8813727463709912
+            ]
+          },
+          "fill": {
+            "position": [
+              0.7004668279233747,
+              0.8766105893466483,
+              1.1723486714768836
+            ],
+            "width": 1.25,
+            "height": 1.4,
+            "luminance": 0.6495928142187422,
+            "normalizedPower": 1.1367874248827987,
+            "colorLinear": [
+              1.0052297539176216,
+              0.9874473725127881,
+              1.1089445082544023
+            ]
+          },
+          "rim": {
+            "position": [
+              0.7693936536979359,
+              1.0400713368340806,
+              -0.6859841211834936
+            ],
+            "width": 0.35,
+            "height": 1.1,
+            "luminance": 5.140939912102185,
+            "normalizedPower": 1.9792618661593415,
+            "colorLinear": [
+              1.0425881383994025,
+              0.9838211106622988,
+              1.034860158318712
+            ]
+          }
+        },
+        "solo": "all",
+        "shadow": {
+          "method": "single center depth projection + 16-tap PCF; not area-light ray tracing",
+          "size": 1024,
+          "frames": 6,
+          "bodyOutsideProjectionUnshadowed": true
+        },
+        "toneMapping": "existing Three ACESFilmic approximation, NOT full ACES/OCIO",
+        "renderWorkingSpace": "Linear-sRGB",
+        "output": "sRGB",
+        "exposureMultiplier": 0.9796846411136478,
+        "frames": 28
+      },
+      "skin": {
+        "compiled": 2,
+        "method": "weighted dual GGX + specular microdetail + bounded sheen, existing RGB diffusion",
+        "newSkinTextures": 0,
+        "cinemaRendererPort": false
+      },
+      "materialUUID": "ed03ff27-24b3-4bd8-af45-d4679fe7a5df"
+    },
+    "idle": {
+      "version": "ET19-IDLE-R01",
+      "ready": true,
+      "status": "待机已连接 · 当前人物原生动作",
+      "playing": false,
+      "time": 0,
+      "settings": {
+        "enabled": true,
+        "profile": "listening",
+        "seed": 4197,
+        "intensity": 0.85,
+        "blink": true,
+        "gaze": true,
+        "mouth": true,
+        "head": true,
+        "breath": true,
+        "surface": true,
+        "surfaceGain": 0.75,
+        "wrinkleGain": 0.65
+      },
+      "weights": {
+        "blinkL": 0,
+        "blinkR": 0,
+        "gazeX": 0,
+        "gazeY": 0,
+        "headX": 0,
+        "headY": 0,
+        "jaw": 0,
+        "press": 0,
+        "smile": 0,
+        "brow": 0,
+        "breath": 0.0016550408192456552,
+        "events": [
+          "视线转移"
+        ]
+      },
+      "basis": [
+        {
+          "name": "blinkL",
+          "source": "native Anny facial actions",
+          "supported": true,
+          "maxMM": 11.979008127920357,
+          "affectedDisplayVertices": 12038
+        },
+        {
+          "name": "blinkR",
+          "source": "native Anny facial actions",
+          "supported": true,
+          "maxMM": 12.195699245297249,
+          "affectedDisplayVertices": 11958
+        },
+        {
+          "name": "jaw",
+          "source": "native Anny facial actions",
+          "supported": true,
+          "maxMM": 7.794967024598497,
+          "affectedDisplayVertices": 87498
+        },
+        {
+          "name": "press",
+          "source": "native Anny facial actions",
+          "supported": true,
+          "maxMM": 2.827317121620065,
+          "affectedDisplayVertices": 66685
+        },
+        {
+          "name": "smile",
+          "source": "native Anny facial actions",
+          "supported": true,
+          "maxMM": 4.704484644224246,
+          "affectedDisplayVertices": 85989
+        },
+        {
+          "name": "brow",
+          "source": "native Anny facial actions",
+          "supported": true,
+          "maxMM": 1.0170110534280685,
+          "affectedDisplayVertices": 12184
+        },
+        {
+          "name": "gazeXP",
+          "source": "native GNM axis-angle radians",
+          "supported": true,
+          "maxMM": 1.9830926690633013,
+          "affectedDisplayVertices": 26519
+        },
+        {
+          "name": "gazeXN",
+          "source": "native GNM axis-angle radians",
+          "supported": true,
+          "maxMM": 1.9830910073600252,
+          "affectedDisplayVertices": 26498
+        },
+        {
+          "name": "gazeYP",
+          "source": "native GNM axis-angle radians",
+          "supported": true,
+          "maxMM": 1.4074651213652885,
+          "affectedDisplayVertices": 26321
+        },
+        {
+          "name": "gazeYN",
+          "source": "native GNM axis-angle radians",
+          "supported": true,
+          "maxMM": 1.407366214386027,
+          "affectedDisplayVertices": 26275
+        },
+        {
+          "name": "headXP",
+          "source": "native GNM axis-angle radians",
+          "supported": true,
+          "maxMM": 9.645500492517959,
+          "affectedDisplayVertices": 141384
+        },
+        {
+          "name": "headXN",
+          "source": "native GNM axis-angle radians",
+          "supported": true,
+          "maxMM": 9.645501717006166,
+          "affectedDisplayVertices": 141384
+        },
+        {
+          "name": "headYP",
+          "source": "native GNM axis-angle radians",
+          "supported": true,
+          "maxMM": 10.835916913705814,
+          "affectedDisplayVertices": 141384
+        },
+        {
+          "name": "headYN",
+          "source": "native GNM axis-angle radians",
+          "supported": true,
+          "maxMM": 10.83591974910773,
+          "affectedDisplayVertices": 141384
+        },
+        {
+          "name": "breath",
+          "source": "native fixed-length Anny spine rotations; postural breathing proxy",
+          "supported": true,
+          "maxMM": 1.5389995752471763,
+          "affectedDisplayVertices": 147049
+        }
+      ],
+      "bakeMS": 25877.399999999994,
+      "cacheBytes": 54165240,
+      "frames": 1,
+      "meanSubmitMS": 318.4000000000233,
+      "singleMesh": true,
+      "canonicalStateChangedByPlayback": false,
+      "skin": {
+        "version": "IDLE-R01",
+        "compiled": 2,
+        "addedTextureBytes": 0,
+        "method": "composed roughness/clearcoat + filtered inherited pore bands + expression-linked meso contrast",
+        "stressSolver": false
+      },
+      "errors": [],
+      "manualExpressionPriority": true,
+      "limitations": [
+        "small-angle native-derived blendshape cache, not a new muscle/physics solver",
+        "breathing is a spine-pose proxy, no rib volume or respiratory simulation",
+        "only current shape-mode person; existing locomotion/crowd modes are not newly animated",
+        "all profile-specific eyelid contact quality remains inherited and needs visual review"
+      ]
+    }
+  },
+  "shadowForehead": {
+    "pixelRegionNormalized": [
+      0.45,
+      0.63,
+      0.5,
+      0.7
+    ],
+    "samples": 1845,
+    "min": 221,
+    "max": 226,
+    "mean": 225.90460704607045,
+    "range": 5
+  },
+  "final": {
+    "look": {
+      "version": "ET20-CINE-R01",
+      "settings": {
+        "lighting": true,
+        "skin": true,
+        "preset": "window",
+        "keyEV": 0,
+        "fillStops": 2.4,
+        "rimStops": 1.6,
+        "keyAzimuth": -43,
+        "keyElevation": 24,
+        "distance": 1.1,
+        "width": 0.75,
+        "height": 1.1,
+        "keyK": 5600,
+        "fillK": 7000,
+        "rimK": 6500,
+        "exposureEV": -0.1,
+        "ambient": 0.08,
+        "shadow": true,
+        "shadowSoftness": 2.5,
+        "poreGain": 1.05,
+        "mesoGain": 0.75,
+        "specular": 0.75,
+        "lobeMix": 0.3,
+        "roughnessOffset": 0.035,
+        "fuzz": 0.07,
+        "diffusionScale": 0.8
+      },
+      "skinBefore": false,
+      "lightBefore": false,
+      "inspect": 0,
+      "rig": {
+        "version": "ET20-CINE-R01",
+        "enabled": true,
+        "fixtureType": "RectAreaLight / Three r170 LTC",
+        "center": [
+          0.00010719522833824158,
+          0.6196042597293854,
+          0.056459927931427956
+        ],
+        "lights": {
+          "key": {
+            "position": [
+              -0.6852329591219402,
+              1.0670145671127655,
+              0.791397265180153
+            ],
+            "width": 0.75,
+            "height": 1.1,
+            "luminance": 7.2727272727272725,
+            "normalizedPower": 6,
+            "colorLinear": [
+              1.1310784284563347,
+              0.9730112050086658,
+              0.8813727463709912
+            ]
+          },
+          "fill": {
+            "position": [
+              0.7006605281177335,
+              0.7812157395694266,
+              1.1990914334315488
+            ],
+            "width": 1.25,
+            "height": 1.4,
+            "luminance": 0.6495928142187422,
+            "normalizedPower": 1.1367874248827987,
+            "colorLinear": [
+              1.0052297539176216,
+              0.9874473725127881,
+              1.1089445082544023
+            ]
+          },
+          "rim": {
+            "position": [
+              0.7695873538922947,
+              0.9446764870568589,
+              -0.6592413592288284
+            ],
+            "width": 0.35,
+            "height": 1.1,
+            "luminance": 5.140939912102185,
+            "normalizedPower": 1.9792618661593415,
+            "colorLinear": [
+              1.0425881383994025,
+              0.9838211106622988,
+              1.034860158318712
+            ]
+          }
+        },
+        "solo": "all",
+        "shadow": {
+          "method": "single center depth projection + 16-tap PCF; not area-light ray tracing",
+          "size": 1024,
+          "frames": 73,
+          "bodyOutsideProjectionUnshadowed": true
+        },
+        "toneMapping": "existing Three ACESFilmic approximation, NOT full ACES/OCIO",
+        "renderWorkingSpace": "Linear-sRGB",
+        "output": "sRGB",
+        "exposureMultiplier": 0.9796846411136478,
+        "frames": 142
+      },
+      "skin": {
+        "compiled": 4,
+        "method": "weighted dual GGX + specular microdetail + bounded sheen, existing RGB diffusion",
+        "newSkinTextures": 0,
+        "cinemaRendererPort": false
+      },
+      "materialUUID": "ed03ff27-24b3-4bd8-af45-d4679fe7a5df"
+    },
+    "idle": {
+      "version": "ET19-IDLE-R01",
+      "ready": true,
+      "status": "待机已连接 · 当前人物原生动作",
+      "playing": false,
+      "time": 0,
+      "settings": {
+        "enabled": true,
+        "profile": "listening",
+        "seed": 4197,
+        "intensity": 0.85,
+        "blink": true,
+        "gaze": true,
+        "mouth": true,
+        "head": true,
+        "breath": true,
+        "surface": true,
+        "surfaceGain": 0.75,
+        "wrinkleGain": 0.65
+      },
+      "weights": {
+        "blinkL": 0,
+        "blinkR": 0,
+        "gazeX": 0,
+        "gazeY": 0,
+        "headX": 0,
+        "headY": 0,
+        "jaw": 0,
+        "press": 0,
+        "smile": 0,
+        "brow": 0,
+        "breath": 0.0016550408192456552,
+        "events": [
+          "视线转移"
+        ]
+      },
+      "basis": [
+        {
+          "name": "blinkL",
+          "source": "native Anny facial actions",
+          "supported": true,
+          "maxMM": 11.478688633183166,
+          "affectedDisplayVertices": 12021
+        },
+        {
+          "name": "blinkR",
+          "source": "native Anny facial actions",
+          "supported": true,
+          "maxMM": 11.24589415322982,
+          "affectedDisplayVertices": 11926
+        },
+        {
+          "name": "jaw",
+          "source": "native Anny facial actions",
+          "supported": true,
+          "maxMM": 6.701194593316617,
+          "affectedDisplayVertices": 87325
+        },
+        {
+          "name": "press",
+          "source": "native Anny facial actions",
+          "supported": true,
+          "maxMM": 2.341743343190027,
+          "affectedDisplayVertices": 70016
+        },
+        {
+          "name": "smile",
+          "source": "native Anny facial actions",
+          "supported": true,
+          "maxMM": 3.990073787169048,
+          "affectedDisplayVertices": 85931
+        },
+        {
+          "name": "brow",
+          "source": "native Anny facial actions",
+          "supported": true,
+          "maxMM": 0.9118535391216197,
+          "affectedDisplayVertices": 11709
+        },
+        {
+          "name": "gazeXP",
+          "source": "native GNM axis-angle radians",
+          "supported": true,
+          "maxMM": 1.6177755673458303,
+          "affectedDisplayVertices": 26669
+        },
+        {
+          "name": "gazeXN",
+          "source": "native GNM axis-angle radians",
+          "supported": true,
+          "maxMM": 1.6177750814818121,
+          "affectedDisplayVertices": 26620
+        },
+        {
+          "name": "gazeYP",
+          "source": "native GNM axis-angle radians",
+          "supported": true,
+          "maxMM": 1.1404651258132503,
+          "affectedDisplayVertices": 26216
+        },
+        {
+          "name": "gazeYN",
+          "source": "native GNM axis-angle radians",
+          "supported": true,
+          "maxMM": 1.1403959458955435,
+          "affectedDisplayVertices": 26404
+        },
+        {
+          "name": "headXP",
+          "source": "native GNM axis-angle radians",
+          "supported": true,
+          "maxMM": 8.112301279992355,
+          "affectedDisplayVertices": 141384
+        },
+        {
+          "name": "headXN",
+          "source": "native GNM axis-angle radians",
+          "supported": true,
+          "maxMM": 8.112301642258954,
+          "affectedDisplayVertices": 141384
+        },
+        {
+          "name": "headYP",
+          "source": "native GNM axis-angle radians",
+          "supported": true,
+          "maxMM": 9.73794096320566,
+          "affectedDisplayVertices": 141384
+        },
+        {
+          "name": "headYN",
+          "source": "native GNM axis-angle radians",
+          "supported": true,
+          "maxMM": 9.73793687712724,
+          "affectedDisplayVertices": 141384
+        },
+        {
+          "name": "breath",
+          "source": "native fixed-length Anny spine rotations; postural breathing proxy",
+          "supported": true,
+          "maxMM": 1.3991867534511961,
+          "affectedDisplayVertices": 147049
+        }
+      ],
+      "bakeMS": 17965.400000000023,
+      "cacheBytes": 54165240,
+      "frames": 14,
+      "meanSubmitMS": 54.7357142857093,
+      "singleMesh": true,
+      "canonicalStateChangedByPlayback": false,
+      "skin": {
+        "version": "IDLE-R01",
+        "compiled": 4,
+        "addedTextureBytes": 0,
+        "method": "composed roughness/clearcoat + filtered inherited pore bands + expression-linked meso contrast",
+        "stressSolver": false
+      },
+      "errors": [],
+      "manualExpressionPriority": true,
+      "limitations": [
+        "small-angle native-derived blendshape cache, not a new muscle/physics solver",
+        "breathing is a spine-pose proxy, no rib volume or respiratory simulation",
+        "only current shape-mode person; existing locomotion/crowd modes are not newly animated",
+        "all profile-specific eyelid contact quality remains inherited and needs visual review"
+      ]
+    }
+  }
+}
