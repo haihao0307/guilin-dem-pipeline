@@ -20,7 +20,7 @@ import {initSettingsUI} from '.././settings-ui.mjs';
 import {verticalFov} from '.././anchored-zoom.mjs';
 import {guardedVerticalFov} from '.././recommended-fit.mjs';
 import {bindDriverButton,updateButtonState} from '.././driver-input.mjs';
-const $=id=>document.getElementById(id),canvas=$('gameScene'),wrap=$('sceneWrap'),params=new URLSearchParams(location.search),SAVE_KEY='kaopu.train-driver.fh88-a4.save.v2';
+const $=id=>document.getElementById(id),canvas=$('gameScene'),wrap=$('sceneWrap'),params=new URLSearchParams(location.search),SAVE_KEY='kaopu.kowloon-station-r02.session';
 // Gameplay labels and overlays must not summon selection/callout UI; editable form fields retain native behavior.
 const editableUiTarget=target=>{const el=target instanceof Element?target:target?.parentElement;return !!el?.closest('input,textarea,select,option,[contenteditable]:not([contenteditable="false"])');};
 for(const eventName of ['selectstart','contextmenu'])$('driverGame').addEventListener(eventName,event=>{if(!editableUiTarget(event.target))event.preventDefault();});
@@ -181,3 +181,6 @@ $('loadNativeGame').addEventListener('change',async event=>{const file=event.tar
 $('photoMode').addEventListener('click',()=>{if(game.started&&game.phase!=='summary')game.command('pause',true);initSettingsUI()?.close({resume:false,restoreFocus:false});$('pauseScreen').hidden=true;$('driverGame').dataset.photo='true';$('photoTools').hidden=false;needsRender=true;});
 $('photoCamera').addEventListener('click',()=>initSettingsUI()?.open());
 $('photoReturn').addEventListener('click',()=>{$('driverGame').dataset.photo='false';$('photoTools').hidden=true;$('pauseScreen').hidden=!game.paused;needsRender=true;});
+
+// Station entry opens in the existing paused photographic mode.
+game.command('start');game.command('pause',true);$('startScreen').hidden=true;$('pauseScreen').hidden=true;window.__kowloonStation.hideUI();stationCandidate.choose('overall');needsRender=true;
