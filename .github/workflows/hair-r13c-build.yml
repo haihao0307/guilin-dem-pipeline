@@ -36,6 +36,7 @@ jobs:
       - name: Build readable new source and validate grooming geometry
         run: |
           python kaopu-hair-workbench/fusion/r13c/prepare.py
+          python kaopu-hair-workbench/fusion/r13c/refine.py
           find kaopu-hair-workbench/fusion/r13c/src -name '*.js' -print0 | xargs -0 -n1 node --check
           node --input-type=module - <<'JS'
           import esbuild from 'esbuild';import path from 'node:path';
