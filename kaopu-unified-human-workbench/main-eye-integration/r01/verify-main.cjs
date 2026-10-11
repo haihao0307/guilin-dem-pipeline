@@ -1,0 +1,34 @@
+const fs=require('fs'),path=require('path'),assert=require('assert/strict'),{chromium}=require('playwright');
+const url=process.env.EYE_URL,out=process.env.EYE_EVIDENCE||'main-eye-evidence';fs.mkdirSync(out,{recursive:true});
+(async()=>{const browser=await chromium.launch({args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}),page=await browser.newPage({viewport:{width:1440,height:1000}});page.setDefaultTimeout(120000);const errors=[],failed=[],checks=[];let failure;
+page.on('pageerror',e=>errors.push(String(e)));page.on('response',r=>{if(r.status()>=400)failed.push({url:r.url(),status:r.status()});});
+const check=(name,ok,data)=>{checks.push({name,passed:!!ok,data});console.log(name,!!ok);assert.ok(ok,name);};
+try{
+ await page.goto(url,{waitUntil:'domcontentloaded'});check('original scene entries remain',await page.locator('[data-entry-action]').count()===8);
+ check('no duplicate embedded workbench',await page.locator('iframe').count()===0);
+ await page.locator('#load-model').click();await page.waitForFunction(()=>window.mainEyeIntegration?.report().sameModel&&__IDENTITY_QA__.viewer().skin.naturalEyeExtension.ready,{timeout:180000});
+ check('same original model and fixed vertex count',await page.evaluate(()=>mainEyeIntegration.report().sameModel&&mainEyeIntegration.report().nativeVertices===25417));
+ check('eye controls do not replace default preset library',await page.locator('#identityPanel').isHidden());
+ await page.evaluate(()=>fullCommonWorkbench.view('three'));await page.screenshot({path:path.join(out,'main-full-body.png')});
+ await page.locator('#main-eye-entry').click();await page.waitForFunction(()=>!document.querySelector('#identityPanel').hidden&&document.querySelector('#main-eye-entry').getAttribute('aria-expanded')==='true');
+ check('main button opens real eye controls',await page.locator('#naturalEyeControls').isVisible());
+ await page.evaluate(()=>{naturalEyeWorkbench.set({pupil:.43},'left');window.__mainBase=fullCommonWorkbench.archive();window.__eyeJSON=JSON.stringify(__mainBase.naturalEyes);});
+ await page.screenshot({path:path.join(out,'main-eyes.png')});
+ const motion=await page.evaluate(async()=>{const r=await fullCommonWorkbench.activateMainEntry('walk');return{...r,eyesSame:JSON.stringify(fullCommonWorkbench.archive().naturalEyes)===window.__eyeJSON};});
+ check('existing walk still loads and plays',motion.applied&&motion.mode==='activity'&&motion.playing,motion);
+ check('eye archive survives entering motion',motion.eyesSame);
+ await page.waitForTimeout(700);await page.screenshot({path:path.join(out,'main-walk.png')});
+ await page.evaluate(()=>fullCommonWorkbench.activateMainEntry('shape'));
+ check('return to shape retains eye archive',await page.evaluate(()=>JSON.stringify(fullCommonWorkbench.archive().naturalEyes)===window.__eyeJSON));
+ await page.locator('#main-eye-entry').click();await page.waitForTimeout(250);
+ const preserved=await page.evaluate(async()=>{await fullCommonWorkbench.selectFaceIdentity('long_narrow');naturalEyeWorkbench.set({redness:.27},'left');const before=JSON.stringify(fullCommonWorkbench.archive().naturalEyes);await fullCommonWorkbench.undoFaceIdentity();return JSON.stringify(fullCommonWorkbench.archive().naturalEyes)===before;});
+ check('undo face shape preserves current eye settings',preserved);
+ await page.evaluate(()=>fullCommonWorkbench.restore(window.__mainBase));
+ await page.locator('#main-eye-close').click();check('return to original preset library works',await page.locator('#identityPanel').isHidden());
+ await page.setViewportSize({width:390,height:844});await page.evaluate(()=>fullCommonWorkbench.view('three'));await page.waitForTimeout(300);
+ check('390px viewport no horizontal overflow',await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.screenshot({path:path.join(out,'main-mobile-body.png')});
+ await page.locator('#main-eye-entry').click();await page.waitForTimeout(300);await page.locator('#identityPanel').scrollIntoViewIfNeeded();check('mobile eye controls actually reachable',await page.locator('#naturalEyeSide').isVisible());await page.screenshot({path:path.join(out,'main-mobile-eyes.png')});
+ check('no page exceptions',errors.length===0,errors);check('no HTTP errors',failed.length===0,failed);
+}catch(e){failure=String(e.stack||e);console.error(failure);try{await page.screenshot({path:path.join(out,'main-failure.png')});}catch{}}
+fs.writeFileSync(path.join(out,'main-report.json'),JSON.stringify({version:'MAIN-EYES-R01',url,passed:!failure,checks,errors,failed,failure,physicalPhoneTested:false,userAccepted:false,allMotionModesCertified:false},null,2));await browser.close();if(failure)process.exitCode=1;
+})().catch(e=>{console.error(e);process.exitCode=1});
