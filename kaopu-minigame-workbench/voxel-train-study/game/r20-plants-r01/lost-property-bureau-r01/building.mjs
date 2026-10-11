@@ -4,7 +4,7 @@ import {geometryForPart} from '../kowloon-station-r02/station-geometry.mjs';
 import {createTimberMember} from '../kowloon-station-r02/timber/three-adapter.mjs';
 import {createForgedRod,placeForgedRod,createCrosshead} from '../native-a4/running-gear/forged-rods.mjs';
 import {batchStaticDisplay} from '../native-a4/display-batching.mjs';
-import {createWordFactory} from '../street/glyphs.mjs';
+import {createWordFactory} from './labels.mjs';
 import {SOURCE_X,SOURCE_Z,LEVELS,routeFor} from './simulation.mjs';
 export function buildBureau(){
 const root=new T.Group(),fixed=new T.Group(),facade=new T.Group(),roof=new T.Group(),wood=new T.Group(),moving=new T.Group();root.add(fixed,facade,roof,wood,moving);
@@ -77,6 +77,11 @@ const engine=new T.Group();engine.position.set(-18,3,0);engine.rotation.x=Math.P
 const wheel=new T.Group();engine.add(wheel);const rim=mesh(new T.TorusGeometry(1.7,.16,10,64),mats.iron,[0,0,0],wheel);rim.rotation.x=Math.PI/2;cyl([0,0,0],.24,.65,mats.brass,wheel);for(let i=0;i<12;i++){const a=i*Math.PI/6;beam([.22*Math.cos(a),0,.22*Math.sin(a)],[1.58*Math.cos(a),0,1.58*Math.sin(a)],.13,.1,mats.iron,wheel);}cyl([.65,-.25,0],.1,.3,mats.brass,wheel);
 const rod=createForgedRod(T,{lengthM:3,steel:mats.steel,bush:mats.brass,name:'retained A4 forged rod / bureau prime mover'});engine.add(rod);proof.originalForgedRods++;const crosshead=createCrosshead(T,{steel:mats.steel,bush:mats.brass,axisYM:-.25,slideZM:0,guideCentreXM:3,strokeM:1.3,name:'retained A4 crosshead'});engine.add(crosshead.root);cyl([5,-.25,0],.55,2,mats.iron,engine,'x');
 const shaft=cyl([0,14.5,4.7],.13,38,mats.steel,fixed,'x');for(const x of[-18,-12,-5,2,10,18]){const g=new T.Group();g.position.set(x,14.5,4.7);moving.add(g);const rim=mesh(new T.TorusGeometry(.75,.08,8,36),mats.brass,[0,0,0],g);rim.rotation.y=Math.PI/2;for(let i=0;i<6;i++){const a=i*Math.PI/3;beam([0,0,0],[0,.70*Math.sin(a),.70*Math.cos(a)],.07,.07,mats.iron,g);}rotors.push(g);beam([x,13.5,4.7],[x,15.5,4.7],.16,.16,mats.iron);}
+// Explicit shaft transmission: prime mover -> right-angle boxes -> overhead line shaft -> lift drives.
+pipe([[-18,3,-.7],[-18,14.5,-.7],[-18,14.5,4.7]],.13,mats.steel);
+for(const p of[[-18,3,-.7],[-18,14.5,-.7],[-18,14.5,4.7]]){box(p,[.65,.65,.65],mats.enamel);for(const dx of[-.22,.22])for(const dy of[-.22,.22])cyl([p[0]+dx,p[1]+dy,p[2]+.34],.035,.04,mats.brass,fixed,'z');}
+for(let s=0;s<3;s++){const x=SOURCE_X[s],z=SOURCE_Z[s];pipe([[x,14.5,4.7],[x,14.5,z],[x,13.3,z]],.10,mats.steel);for(const p of[[x,14.5,4.7],[x,14.5,z],[x,13.3,z]])box(p,[.48,.48,.48],mats.enamel);}
+pipe([[18,14.5,4.7],[19,14.5,4.7],[19,14.5,2],[19,13.2,2]],.10,mats.steel);
 // 88-family rail loading apron and a timber freight wagon; no external model.
 for(const x of[-13,-11])beam([x,.10,-27],[x,.10,-19],.10,.14,mats.steel);for(let z=-27;z<-19;z+=.65)box([-12,0,z],[3,.12,.2],mats.dark);
 timber('freight-wagon-deck',[-12,.72,-25],[3.3,.18,3.5]);for(const x of[-13.25,-10.75])for(const z of[-26,-24]){cyl([x,.45,z],.44,.18,mats.iron,fixed,'x');}for(const x of[-13.55,-10.45])timber('wagon-side-'+x,[x,1.4,-25],[.14,1.2,3.5]);
@@ -87,6 +92,6 @@ labels.push({text:'01  公眾大廳',detail:'等候 / 登記 / 文員櫃台',p:[
 for(const group of[fixed,facade,roof]){const b=batchStaticDisplay(group,{domain:true});proof.staticSourceMeshes=(proof.staticSourceMeshes||0)+b.sources.length;proof.staticBatches=(proof.staticBatches||0)+b.displays.length;}
 const luggageMaterials=[catalog('brass'),catalog('water'),catalog('hall-brick')];const luggage=new Map();
 function makeBag(id,source){const g=new T.Group();g.name=id;box([0,.41,0],[.88,.82,.58],luggageMaterials[source],g);for(const x of[-.29,.29])box([x,.41,0],[.045,.84,.61],mats.dark,g);box([0,.87,0],[.29,.10,.10],mats.brass,g);box([.2,.57,.3],[.15,.21,.018],mats.cream,g);const tray=box([0,-.13,0],[1.35,.18,1.12],mats.steel,g);tray.name='synchronised elevator carrier';g.userData.tray=tray;moving.add(g);luggage.set(id,g);return g;}
-return {root,proof,labels,materials:surface,groups:{fixed,facade,roof,wood,moving},setCutaway(value){facade.visible=roof.visible=!value;},update(state){surface.update({elapsed:state.time,distance:0});const a=state.shaftAngle;wheel.rotation.y=a;const A=[.65*Math.cos(a),-.25,-.65*Math.sin(a)],B=[.65*Math.cos(a)+Math.sqrt(9-.65*.65*Math.sin(a)**2),-.25,0];placeForgedRod(T,rod,A,B);crosshead.moving.position.set(...B);for(const r of rotors)r.rotation.x=a;for(const c of carriers){const f=(state.time/32+c.phase)%1;c.g.position.set(c.x+(f<.5?0:1.6),(f<.5?f*2:(1-f)*2)*12.2+.35,c.z);}
+return {root,proof,labels,materials:surface,groups:{fixed,facade,roof,wood,moving},setCutaway(value){facade.visible=roof.visible=!value;},update(state){surface.update({elapsed:state.time,distance:0});const a=state.shaftAngle;wheel.rotation.y=a;const A=[.65*Math.cos(a),-.25,-.65*Math.sin(a)],B=[.65*Math.cos(a)+Math.sqrt(9-.65*.65*Math.sin(a)**2),-.25,0];placeForgedRod(T,rod,A,B);crosshead.moving.position.set(...B);for(const r of rotors)r.rotation.x=a;for(const c of carriers){const f=(state.time/32+c.phase)%1;c.g.position.set(c.x+1.6,(1-f)*12.2+.35,c.z);}
 const visible=new Set();for(const p of state.packages){const g=luggage.get(p.id)||makeBag(p.id,p.source);g.visible=true;g.userData.tray.visible=p.segment===3||p.segment===11;g.position.fromArray(p.position);visible.add(p.id);}for(const[id,g]of luggage)if(!visible.has(id))g.visible=false;},state(){return{...proof,activeBags:luggage.size}}};
 }
