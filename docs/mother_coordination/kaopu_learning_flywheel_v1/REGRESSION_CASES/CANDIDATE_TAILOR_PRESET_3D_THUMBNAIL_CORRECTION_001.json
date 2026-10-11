@@ -1,7 +1,7 @@
 {
   "schema": "kaopu.regression-case/2",
   "caseId": "TAILOR-PRESET-3D-THUMBNAIL-CORRECTION-001",
-  "status": "CANDIDATE_TAILOR_MP01_LOCAL_MATERIAL_LOOKS_VERIFIED__HOLD_PUBLIC_VISUAL_PHYSICS_USER_N136_NOT_ADOPTED",
+  "status": "CANDIDATE_TAILOR_MP01_PUBLIC_APPEARANCE_REJECTED_AS_REAL_CLOTH__HOLD_STRUCTURAL_TEXTILE_THICKNESS_PHYSICS_USER_N137_NOT_ADOPTED",
   "active": false,
   "scope": {
     "mother": "Tailor",
@@ -60,6 +60,13 @@
       "exactUserMessageTimestamp": "unknown-in-external-thread-snapshot",
       "affectedPresetIds": "UNKNOWN_UNTIL_EXACT_PRIOR_ACCEPTED_COMPARATOR_AND_MEMBER_LEVEL_VISUAL_LEDGER",
       "interpretationBoundary": "This is a user-level rejection of R04.3.2. It does not by itself identify which members regressed versus the previous version."
+    },
+    "latestRealClothCorrection": {
+      "instruction": "不要再用纸样、无厚度衣形或只换纹理来冒充真实布料；直接制作真实针织、皮革、牛仔版本，远近景都必须保留真实结构与厚度。",
+      "ordering": "after PR #215 MP01 public appearance-only delivery",
+      "observedAt": "2026-10-11T17:39:34+08:00",
+      "exactUserMessageTimestamp": "unknown-in-external-thread-snapshot",
+      "interpretationBoundary": "This correction rejects the appearance-only target for the requested real-cloth phase. It does not erase MP01 public/browser facts and does not itself certify any replacement implementation."
     }
   },
   "historicalObservation": {
@@ -196,7 +203,9 @@
     "Do not treat qualityPassed=true, thumbReady=true, PNG decode success or an aggregate visual-review approval as member-level visual readiness; compare each claimed-ready member against an authorized reference or prior accepted golden and record visible failure categories.",
     "Do not inherit a successful local/browser audit from an earlier tested source into a later PR head or public-delivery claim; exact public verification must pass for the exact delivered subject.",
     "Do not allow a stale fetch, cancelled request or late worker rejection to clear or overwrite a newer valid garment/outfit; only the current request identity may commit display state.",
-    "Do not treat verified material-export bytes or pinned garment/material source receipts as a rendered product result when the browser module graph never booted; zero executed look checks means no visual or public candidate exists."
+    "Do not treat verified material-export bytes or pinned garment/material source receipts as a rendered product result when the browser module graph never booted; zero executed look checks means no visual or public candidate exists.",
+    "Do not promote pixel-identical 2D appearance maps on unchanged static paper/solver geometry as the user-requested real knit, leather or denim cloth.",
+    "Do not use the rejected appearance-only MP01 as the parent of a real-cloth candidate without a fresh structural-and-physics Task Anchor and explicit rejected-lineage boundary."
   ],
   "requiredPerMemberReceipt": [
     "presetId",
@@ -229,7 +238,8 @@
     "R0433_LOCAL_ALL_CATEGORY_DISPLAY_VERIFIED_SCOPED__HOLD_EXACT_PUBLIC_HEAD_FAILURE_VISUAL_PHYSICS_USER_ACCEPTANCE",
     "R0434_TRANSACTIONAL_PUBLIC_DISPLAY_VERIFIED_SCOPED__HOLD_38_STATIC_FAILURES_VISUAL_PHYSICS_USER_ACCEPTANCE",
     "MP01_MATERIAL_EXPORT_VERIFIED__MODULE_BOOTSTRAP_FAILED__NO_LOOKS_RETAINED__HOLD_PUBLIC_VISUAL_PHYSICS_USER_ACCEPTANCE",
-    "MP01_FIXED_MODULE_BOOT_LOCAL_12_LOOKS_VERIFIED__HOLD_PUBLIC_VISUAL_PHYSICS_USER_ACCEPTANCE"
+    "MP01_FIXED_MODULE_BOOT_LOCAL_12_LOOKS_VERIFIED__HOLD_PUBLIC_VISUAL_PHYSICS_USER_ACCEPTANCE",
+    "MP01_PUBLIC_APPEARANCE_FIELDS_VERIFIED__REJECTED_AS_REAL_CLOTH_TARGET__HOLD_STRUCTURAL_TEXTILE_THICKNESS_PHYSICS_USER_ACCEPTANCE"
   ],
   "gate": [
     "Preserve the old paper-library success as a scoped historical observation; do not relabel it as failure.",
@@ -255,7 +265,10 @@
     "A static-pass member remains visual HOLD until its exact public image has a member-level visual receipt with reference-or-prior-accepted comparator, visible failure categories, independent verifier, and explicit comparison state; aggregate decode/static success cannot fill these fields.",
     "A successful local 60-style/432-outfit display audit is scoped to its exact tested source. If the current head public workflow fails or publicVerified=false, delivery remains HOLD even when all local display checks pass.",
     "Garment selection is transactional: build and validate off-screen, commit only if the request token is still current, retain the last valid garment on failure, and expose the failed requested identity plus retry without silently promoting stale work.",
-    "Before a Tailor browser gate enters a long readiness wait, it must preflight the entry module graph or race readiness against pageerror/critical module-resolution failure; a module bootstrap error must fail closed promptly, retain no look result, skip publication and remain bound to the exact head."
+    "Before a Tailor browser gate enters a long readiness wait, it must preflight the entry module graph or race readiness against pageerror/critical module-resolution failure; a module bootstrap error must fail closed promptly, retain no look result, skip publication and remain bound to the exact head.",
+    "For a REAL_CLOTH_STRUCTURE_NOT_APPEARANCE_ONLY target, static PNG/base-color/normal/roughness/AO fields cannot satisfy structural evidence even when their bytes and browser rendering are exact.",
+    "A real-cloth Task Anchor must bind material-family-specific nonzero thickness or strand/loop/weave/layer structure and subject-bound physical-response receipts for every claimed property; near and far views cannot silently substitute a paper-thin proxy.",
+    "The appearance-only MP01 remains a scoped observation and rejected target baseline; it cannot become the parent or acceptance evidence for the corrected real-cloth task without explicit lineage reset and an independent verifier."
   ],
   "activation": {
     "global": false,
@@ -1187,6 +1200,114 @@
       "commentId": 6106851950,
       "url": "https://github.com/haihao0307/guilin-dem-pipeline/pull/215#issuecomment-6106851950",
       "purpose": "Route the repaired 12-look local verification and preserved public/physics/user holds to the affected Tailor MP01 candidate."
+    }
+  },
+  "n137Mp01RealClothCorrectionResult": {
+    "pullRequest": 215,
+    "currentPrHead": "c8e9b7b6979e26029bc7dd67411bbb8ecd336cb6",
+    "baseSha": "5c6d0c36535648d8b3d4b61c70d7047258e3a969",
+    "sourceLocks": {
+      "tailorRuntimeCommit": "8c8245dd87e5fdf0e2a7720a96776743134ab17a",
+      "knitCommit": "20b466073bb458408a078260a018460c81f627b9",
+      "leatherCommit": "af389cc216ddd01e3b1aa66c972f42b2587bc797",
+      "denimCommit": "fa143743b1b0f3d74ff827664d06ff119ef87063"
+    },
+    "publicDelivery": {
+      "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/material-products/mp01-ff151f3bf29e/?look=K02",
+      "finalSourceSnapshot": "ff151f3bf29e59d5fa7c42fb8c89872feab3f652",
+      "pagesPublicationCommit": "dd22c6aa3f864e4000811ef50931efc170b989db",
+      "evidenceCommit": "c97ef4e1fe8cded6d769923cd61ad61da3da91fe",
+      "recoveryFileCommit": "c8e9b7b6979e26029bc7dd67411bbb8ecd336cb6",
+      "workflowRun": 38123011273,
+      "workflowHead": "b194a672eacf83faeeaa2d6b0a657cf4ea9519fd",
+      "workflowJob": 114421449749,
+      "conclusion": "success",
+      "artifactId": 11696561593,
+      "artifactDigest": "sha256:2f9549024607bf6dd6a7b478794762b5eaac21287ab45c011a8e1f58938245b8",
+      "publicChecksPassed": 28,
+      "publicChecksTotal": 28,
+      "publicVerified": true
+    },
+    "preservedFacts": {
+      "garmentCount": 7,
+      "lookCount": 12,
+      "materialMapCount": 40,
+      "materialMapResolution": "2048x2048",
+      "materialMapsPixelIdenticalAfterLosslessCompression": true,
+      "originalVerticesIndexPanelsSeamsUnchanged": true,
+      "garmentVerticesChanged": false,
+      "materialPhysicsCalibrated": false,
+      "jointOutfitCollisionCertified": false,
+      "physicalWearAccepted": false,
+      "userVisualAccepted": false
+    },
+    "currentFailure": "The exact public candidate proves appearance-field loading on unchanged original geometry, while the later user correction explicitly requires real textile structure, thickness and material behavior and rejects paper-thin geometry plus texture as the target.",
+    "comparisonToCurrentOS": {
+      "result": "NO_NOVELTY",
+      "reason": "R2, the no-creative-substitute gate, user-correction priority and layer-specific acceptance already forbid promoting appearance evidence into structural cloth, physics or user acceptance. The new contribution is the explicit counterexample and deduplicated regression binding."
+    },
+    "falsifiableHypothesis": "If the corrected Task Anchor requires REAL_CLOTH_STRUCTURE_NOT_APPEARANCE_ONLY, measurable material-specific thickness/strand/loop/weave/layer structure and subject-bound physical-response receipts, the current MP01 must fail the real-cloth gate even though all 28 public checks pass; a legal successor must be rebuilt or re-solved from a fresh structural/physics parent and cannot inherit MP01 public or user acceptance.",
+    "minimalReplay": {
+      "checks": 12,
+      "passed": 12,
+      "observations": [
+        "public workflow is successful and exact public URL is reachable",
+        "forty material maps are byte/pixel verified",
+        "original vertices, index, panels and seams are unchanged",
+        "garmentVerticesChanged is false",
+        "materialPhysicsCalibrated is false",
+        "jointOutfitCollisionCertified is false",
+        "physicalWearAccepted is false",
+        "userVisualAccepted is false",
+        "knit has no full yarn-loop/porosity/silhouette structure receipt",
+        "denim has no explicit yarn/twill/stitch/edge structure receipt",
+        "leather has no explicit thickness/layer/lining/edge construction receipt",
+        "latest user correction rejects texture-only paper-thin substitution"
+      ],
+      "outcome": "MP01_PUBLIC_APPEARANCE_FIELDS_VERIFIED__REJECTED_AS_REAL_CLOTH_TARGET__HOLD_STRUCTURAL_TEXTILE_THICKNESS_PHYSICS_USER_ACCEPTANCE",
+      "appearanceFactsPreserved": true,
+      "falseRealClothPromotionPrevented": true,
+      "rejectedParentInheritancePrevented": 1
+    },
+    "candidateExecutableIncrement": {
+      "scope": "Tailor real-cloth successor to MP01 only",
+      "taskAnchor": {
+        "targetMode": "REAL_CLOTH_STRUCTURE_NOT_APPEARANCE_ONLY",
+        "forbiddenParentClaim": "MP01_APPEARANCE_ONLY_IS_REAL_CLOTH",
+        "knitEvidence": "explicit yarn/loop/porosity/silhouette structure and nonzero thickness or a validated volumetric equivalent",
+        "denimEvidence": "explicit yarn/twill/weave, stitch/edge/fray structure and nonzero thickness",
+        "leatherEvidence": "explicit thickness/layers/edge/lining construction and material response",
+        "physicsEvidence": "subject-bound bending, stretch, friction, mass or areal density, rebound and collision receipts for every claimed property",
+        "renderLodRule": "near and far representations must preserve the declared structure or be labeled proxy-only; neither may serve as real-cloth acceptance evidence when paper-thin"
+      },
+      "verifierGate": "Require exact structure source, material-specific geometry/physics binding, current browser/public receipt and an independent verifier before user delivery; static appearance maps cannot satisfy structure.",
+      "rollbackPoint": "Keep the immutable MP01 URL and reports as an appearance-only rejected-target baseline; do not overwrite or delete them and do not inherit their acceptance state."
+    },
+    "metrics": {
+      "firstCandidatePassForLatestCorrection": false,
+      "confirmedUserCorrectionCount": 1,
+      "sameClassErrorRecurrenceRate": "unknown",
+      "rejectedLineageInheritancePrevented": 1,
+      "staleDeliveryPromotionPrevented": 1,
+      "internalIterationsPerAcceptedDelta": "unknown",
+      "instructionToLegalCandidateTime": "unknown-no-legal-real-cloth-candidate-yet"
+    },
+    "boundary": "Tailor PR #215 and the latest real-cloth correction only. This replay does not invalidate the exact MP01 public/browser/material-map facts, implement a replacement asset, certify physical devices, or establish producer, verifier or user acceptance.",
+    "decision": "UPDATE_EXISTING_REGRESSION_CASE_NO_NOVELTY__MP01_APPEARANCE_BASELINE_REJECTED_FOR_REAL_CLOTH_TARGET",
+    "lifecycle": {
+      "POSTED": true,
+      "ACKNOWLEDGED": false,
+      "IMPLEMENTED": false,
+      "GATE-RUN": true,
+      "ADOPTED": false,
+      "USER-ACCEPTED": false
+    },
+    "postingReceipt": {
+      "surface": "PR #215",
+      "status": "posted",
+      "commentId": 6107690124,
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/pull/215#issuecomment-6107690124",
+      "purpose": "Route the latest real-cloth correction and prevent appearance-only MP01 evidence from becoming the real-cloth parent without modifying the production branch."
     }
   }
 }
