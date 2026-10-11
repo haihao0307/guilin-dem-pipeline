@@ -9,6 +9,14 @@ fn capsuleD(p:vec3<f32>,a:vec3<f32>,b:vec3<f32>,r:f32)->f32{let q=p-a;let v=b-a;
 fn chooseField(a:RoomField,b:RoomField)->RoomField{if(b.d<a.d){return b;}return a;}
 fn rawField(d:f32,id:i32,q:vec3<f32>)->RoomField{return RoomField(d,id,q,19.,0,0.,0.,u.age);}
 fn woodField(d:f32,q:vec3<f32>,variant:i32)->RoomField{var f=rawField(d,4,q);f.variant=variant;return f;}
+// The mother stone fields are selected per material member at generation.
+// Source-unit lengths are explicit design parameters, not surveyed calibration.
+fn stoneField(d:f32,q:vec3<f32>,variant:i32)->RoomField{var f=rawField(d,3,q);f.variant=variant;return f;}
+fn stoneMemberSurface(f:RoomField,p:vec3<f32>,footprint:f32)->KpSurface{
+ let config=select(u.stoneFloor,u.stoneFrame,f.variant==1);let q=select(p,f.q,config.z>.5);let scaleM=config.y;
+ if(config.x>2.5){var a=kpStoneSlateDefaultParams();a.sourceScaleM=scaleM;return kpStoneSlateSurface(q,a,u.age,u.wetness*.12,0.,footprint);}
+ let ratio=KP_STONE_SCALE_M/scaleM;var s=kpStoneSurface(q*ratio,u.age,u.wetness*.12,0.,footprint*ratio);s.height/=ratio;return s;
+}
 fn repairAt(p:vec3<f32>)->f32{let q=(p.xy-vec2<f32>(1.65,1.3))/vec2<f32>(.58,.55);return (1.-smoothstep(.72,1.,length(q)))*.75;}
 fn historyAt(p:vec3<f32>)->f32{let runoff=(1.-smoothstep(.04,.36,abs(p.x+2.35)))*(1.-smoothstep(2.6,3.32,3.32-p.y));let base=(1.-smoothstep(.10,.65,p.y))*.65;return clamp(runoff*.8+base+.08,0.,1.);}
 fn pierceFront(p:vec3<f32>,d:f32)->f32{let door=boxD(p-vec3<f32>(-.85,1.18,0.),vec3<f32>(.57,1.28,.55));let window=boxD(p-vec3<f32>(1.35,1.97,0.),vec3<f32>(.72,.72,.55));return max(d,max(-door,-window));}
@@ -29,14 +37,14 @@ fn wallDomain(p:vec3<f32>)->RoomField{
  if(remain>.0003){let highBound=.000096*abs(u.microscope);var micro=highBound;if(-p.z-.12-remain<=highBound+.001){micro=kpPlasterOriginalField(p,plasterParams(),.0003).surface.height*u.microscope;}let coat=max(-p.z-.12-remain-micro,p.z+.12);let bounded=max(coat,boxD(p-vec3<f32>(0.,1.7,0.),vec3<f32>(3.,1.7,.5)));let d=pierceFront(p,bounded);if(d<result.d){result=RoomField(d,1,p,19.,0,wet,rep,age);}}
  return result;
 }
-fn sceneField(p:vec3<f32>)->RoomField{
+fn sceneFieldInternal(p:vec3<f32>,includeCloth:bool)->RoomField{
  var f=wallDomain(p);
- f=chooseField(f,rawField(boxD(p-vec3<f32>(0.,-.09,1.45),vec3<f32>(3.45,.09,2.85)),3,p));
+ f=chooseField(f,stoneField(boxD(p-vec3<f32>(0.,-.09,1.45),vec3<f32>(3.45,.09,2.85)),vec3<f32>(p.x,p.z-1.45,p.y),0));
  // Finite rear/side envelope leaves the room genuinely open through its door.
  f=chooseField(f,rawField(boxD(p-vec3<f32>(-3.08,1.7,1.9),vec3<f32>(.08,1.7,1.9)),1,p));
  f=chooseField(f,rawField(boxD(p-vec3<f32>(0.,1.7,3.86),vec3<f32>(3.,1.7,.06)),1,p));
  // Door frame consists of analytic solids, not a ring of little boxes.
- let frameOuter=boxD(p-vec3<f32>(-.85,1.23,-.15),vec3<f32>(.67,1.30,.085));let frameInner=boxD(p-vec3<f32>(-.85,1.18,-.15),vec3<f32>(.55,1.25,.20));f=chooseField(f,rawField(max(frameOuter,-frameInner),3,p));
+ let frameOuter=boxD(p-vec3<f32>(-.85,1.23,-.15),vec3<f32>(.67,1.30,.085));let frameInner=boxD(p-vec3<f32>(-.85,1.18,-.15),vec3<f32>(.55,1.25,.20));f=chooseField(f,stoneField(max(frameOuter,-frameInner),p-vec3<f32>(-.85,1.23,-.15),1));
  let wo=boxD(p-vec3<f32>(1.35,1.97,-.10),vec3<f32>(.76,.76,.055));let wi=boxD(p-vec3<f32>(1.35,1.97,-.10),vec3<f32>(.685,.685,.12));f=chooseField(f,rawField(max(wo,-wi),5,p));
  f=chooseField(f,rawField(boxD(p-vec3<f32>(1.35,1.97,-.065),vec3<f32>(.682,.682,.004)),6,p));
  // Separate rail sections preserve a real pedestrian gap at the doorway.
@@ -48,8 +56,10 @@ fn sceneField(p:vec3<f32>)->RoomField{
 
  // Rail and a single bounded hanging cloth height domain, no tessellated garment.
  f=chooseField(f,rawField(capsuleD(p,vec3<f32>(-.1,2.85,2.15),vec3<f32>(2.45,2.85,2.15),.018),5,p));
- let cq=p-vec3<f32>(1.2,2.08,2.15);let sheet=.045*sin(cq.x*8.)+.018*sin(cq.y*5.+cq.x*3.);let q=vec3<f32>(cq.x,cq.y,cq.z-sheet);var cloth=boxD(q,vec3<f32>(.46,.67,.0006));if(abs(q.z)<.002&&abs(q.x)<.47&&abs(q.y)<.68){cloth=max(clothNative(q).d,boxD(q,vec3<f32>(.46,.67,.02)));}f=chooseField(f,rawField(cloth,8,q));
- if(abs(f.d)<.012){if(f.id==3){f.d-=kpStoneSurface(p,u.age,u.wetness*.12,0.,.0003).height*u.microscope;}if(f.id==4){let wn=woodLocalNormal(f);let wc=select(0.,1.,abs(wn.x)>.72);f.d-=kpWoodMacroDisplacement(f.q,wc,kpWoodDefaultParams())+kpWoodOriginalSurface(f.q,wn,wc,kpWoodDefaultParams(),.0003,0.).height*u.microscope;}if(f.id==5){f.d-=kpMetalSurface(p,u.age,historyAt(p)*u.wetness,repairAt(p),.0003).height*u.microscope;}if(f.id==7){f.d-=kpCableSurface(p,.0003).height*u.microscope;}}
+ if(includeCloth){let cq=p-vec3<f32>(1.2,2.08,2.15);let sheet=.045*sin(cq.x*8.)+.018*sin(cq.y*5.+cq.x*3.);let q=vec3<f32>(cq.x,cq.y,cq.z-sheet);var cloth=boxD(q,vec3<f32>(.46,.67,.0006));if(abs(q.z)<.002&&abs(q.x)<.47&&abs(q.y)<.68){cloth=max(clothNative(q).d,boxD(q,vec3<f32>(.46,.67,.02)));}f=chooseField(f,rawField(cloth,8,q));}
+ if(abs(f.d)<.012){if(f.id==3){f.d-=stoneMemberSurface(f,p,.0003).height*u.microscope;}if(f.id==4){let wn=woodLocalNormal(f);let wc=select(0.,1.,abs(wn.x)>.72);f.d-=kpWoodMacroDisplacement(f.q,wc,kpWoodDefaultParams())+kpWoodOriginalSurface(f.q,wn,wc,kpWoodDefaultParams(),.0003,0.).height*u.microscope;}if(f.id==5){f.d-=kpMetalSurface(p,u.age,historyAt(p)*u.wetness,repairAt(p),.0003).height*u.microscope;}if(f.id==7){f.d-=kpCableSurface(p,.0003).height*u.microscope;}}
  return f;
 }
+fn sceneField(p:vec3<f32>)->RoomField{return sceneFieldInternal(p,true);}
+fn sceneFieldWithoutCloth(p:vec3<f32>)->RoomField{return sceneFieldInternal(p,false);}
 `;

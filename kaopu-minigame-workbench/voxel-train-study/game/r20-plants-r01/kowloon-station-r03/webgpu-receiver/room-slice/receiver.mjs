@@ -1,7 +1,7 @@
 /** Native WebGPU implicit surface receiver derived from the existing R02.7
  * three-vertex WGSL entry/trace organization. No Three/WebGL fallback. */
 export function receiverWGSL(fields,domain){return String.raw`
-struct Params { ro:vec3<f32>,age:f32,fw:vec3<f32>,wetness:f32,rt:vec3<f32>,microscope:f32,up:vec3<f32>,aspect:f32,resolution:vec2<f32>,debug:u32,clothLocalBudget:u32, };
+struct Params { ro:vec3<f32>,age:f32,fw:vec3<f32>,wetness:f32,rt:vec3<f32>,microscope:f32,up:vec3<f32>,aspect:f32,resolution:vec2<f32>,debug:u32,clothLocalBudget:u32,stoneFloor:vec4<f32>,stoneFrame:vec4<f32>, };
 @group(0) @binding(0) var<uniform> u:Params;
 fn receiverFootprint(p:vec3<f32>)->f32{return max(.00001,length(p-u.ro)*.96/u.resolution.y);}
 ${fields}
@@ -16,15 +16,22 @@ fn clothRayInterval(ro:vec3<f32>,rd:vec3<f32>)->vec2<f32>{
  for(var axis=0;axis<3;axis++){if(abs(rd[axis])<1e-8){if(abs(q[axis])>half[axis]){return vec2<f32>(1.,-1.);}}else{let a=(-half[axis]-q[axis])/rd[axis];let b=(half[axis]-q[axis])/rd[axis];nearT=max(nearT,min(a,b));farT=min(farT,max(a,b));}}
  return vec2<f32>(nearT,farT);
 }
+// Ray-direction Taylor bound for the authored macro fold, outside the source
+// yarn amplitude shell. The other scene fields still cap every advance.
+fn clothEmptyIntervalStep(p:vec3<f32>,rd:vec3<f32>)->f32{
+ let q=p-vec3<f32>(1.2,2.08,2.15);let phase=q.y*5.+q.x*3.;let g=q.z-.045*sin(q.x*8.)-.018*sin(phase);let gap=abs(g)-.00042;if(gap<=0.){return 0.;}
+ let a=rd.x*8.;let b=rd.y*5.+rd.x*3.;let slope=rd.z-.045*cos(q.x*8.)*a-.018*cos(phase)*b;let curvature=.045*a*a+.018*b*b;
+ let den=abs(slope)+sqrt(slope*slope+2.*curvature*gap);return min(.55,.9*2.*gap/max(den,1e-8));
+}
 fn traceWorld(ro:vec3<f32>,rd:vec3<f32>,farT:f32)->Hit{
  var t=.001;var prevT=t;var prevD=1.;var f=rawField(1e4,0,ro);var regularSteps=0u;var localSteps=0u;let interval=clothRayInterval(ro,rd);
  for(var i=0u;i<692u;i++){
  if(t>farT){return Hit(farT,false,false,i,localSteps,rawField(1e4,0,ro+rd*farT));}
  let local=u.clothLocalBudget>0u&&t>=interval.x&&t<=interval.y;
  if(local){if(localSteps>=min(u.clothLocalBudget,512u)){return Hit(t,false,true,i,localSteps,f);}localSteps++;}else{if(regularSteps>=180u){return Hit(t,false,true,i,localSteps,f);}regularSteps++;}
- f=sceneField(ro+rd*t);let eps=.000008+t*.000001;
+ if(u.clothLocalBudget>0u&&!local){f=sceneFieldWithoutCloth(ro+rd*t);}else{f=sceneField(ro+rd*t);}let eps=.000008+t*.000001;
  if(abs(f.d)<eps){return Hit(t,true,false,i+1u,localSteps,f);}if(f.d<0. && prevD>0.){var a=prevT;var b=t;for(var j=0;j<9;j++){let m=(a+b)*.5;let d=sceneField(ro+rd*m).d;if(d>0.){a=m;}else{b=m;}}t=(a+b)*.5;return Hit(t,true,false,i+1u,localSteps,sceneField(ro+rd*t));}
- prevT=t;prevD=f.d;t+=clamp(abs(f.d)*.48,.000006,.55);}
+ prevT=t;prevD=f.d;var advance=clamp(abs(f.d)*.48,.000006,.55);if(local&&f.id==8){let possible=clothEmptyIntervalStep(ro+rd*t,rd);if(possible>advance){let other=sceneFieldWithoutCloth(ro+rd*t);advance=max(advance,min(possible,clamp(abs(other.d)*.48,.000006,.55)));}}if(u.clothLocalBudget>0u&&interval.x<=interval.y&&t<interval.x){advance=min(advance,interval.x-t);}t+=advance;}
  return Hit(t,false,true,692u,localSteps,f);
 }
 struct RayStatistics { primaryHit:atomic<u32>,trueMiss:atomic<u32>,primaryExhausted:atomic<u32>,secondaryExhausted:atomic<u32>,maxPrimarySteps:atomic<u32>,maxLocalSteps:atomic<u32>,primaryRefined:atomic<u32>,reserved:atomic<u32> };
@@ -35,7 +42,7 @@ fn worldShadow(p:vec3<f32>,n:vec3<f32>,ld:vec3<f32>)->f32{var t=.004;var shade=1
 fn sky(rd:vec3<f32>)->vec3<f32>{return mix(vec3<f32>(.42,.50,.54),vec3<f32>(.15,.29,.38),smoothstep(-.2,.9,rd.y));}
 fn surface(f:RoomField,p:vec3<f32>,nWorld:vec3<f32>)->KpSurface{
  if(f.id==2){return kpApplyFabricSurface(kpBrickOriginalSurface(f.q,f.seed,f.variant,.42,receiverFootprint(p)),wallState(p));}
- if(f.id==3){return kpStoneSurface(p,u.age,u.wetness*.12,0.,receiverFootprint(p));}
+ if(f.id==3){return stoneMemberSurface(f,p,receiverFootprint(p));}
  if(f.id==4){let n=woodLocalNormal(f);return kpWoodOriginalSurface(f.q,n,select(0.,1.,abs(n.x)>.72),kpWoodDefaultParams(),receiverFootprint(p),0.);}
  if(f.id==5){return kpMetalSurface(p,u.age,historyAt(p)*u.wetness,repairAt(p),receiverFootprint(p));}
  if(f.id==7){return kpCableSurface(p,receiverFootprint(p));}
