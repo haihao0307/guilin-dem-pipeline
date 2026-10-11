@@ -1,0 +1,59 @@
+name: Hair R13C source audit
+on:
+  push:
+    branches: [fix/hair-r13-groom-coherence-20261011]
+    paths: [.github/workflows/hair-r13c-source-audit.yml]
+permissions:
+  contents: read
+jobs:
+  source-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Collect immutable source snapshots
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p audit
+          cat > /tmp/collect.py <<'PY'
+          import os,json,pathlib,urllib.request,concurrent.futures
+          root=pathlib.Path('audit'); repo='haihao0307/guilin-dem-pipeline'
+          def request(url):
+              req=urllib.request.Request(url,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'User-Agent':'hair-r13c-audit'})
+              with urllib.request.urlopen(req,timeout=90) as r:return r.read()
+          def collect(ref,sub,out,human=False):
+              listing=json.loads(request(f'https://api.github.com/repos/{repo}/contents/{sub}?ref={ref}'))
+              paths=[]
+              for item in listing:
+                  if item['type']=='file': paths.append({'path':item['name'],'size':item['size'],'type':'blob'})
+                  elif item['type']=='dir':
+                      tree=json.loads(request(item['git_url']+'?recursive=1'))
+                      if tree.get('truncated'):raise RuntimeError('truncated subtree')
+                      paths.extend({**v,'path':item['name']+'/'+v['path']} for v in tree['tree'] if v['type']=='blob')
+              dest=root/out;dest.mkdir(parents=True,exist_ok=True)
+              (dest/'SOURCE_TREE.json').write_text(json.dumps({'ref':ref,'sub':sub,'files':paths},indent=2))
+              selected=[]
+              for v in paths:
+                  p=v['path'];size=v.get('size',0)
+                  if any(x in p.lower() for x in ['evidence/','screenshots/','qa/','node_modules/','.git/']):continue
+                  if human:
+                      if size>18000000 or p.endswith('.html') or any(x in p for x in ['bundle','dist/']):continue
+                  elif size>25000000:continue
+                  selected.append(p)
+              def one(p):
+                  f=dest/p;f.parent.mkdir(parents=True,exist_ok=True)
+                  f.write_bytes(request(f'https://raw.githubusercontent.com/{repo}/{ref}/{sub}/{p}'))
+              with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:list(pool.map(one,selected))
+              print(out,len(selected),sum(f.stat().st_size for f in dest.rglob('*') if f.is_file()))
+          collect('78698827a763e706924da97d785f8f373ce055ce','kaopu-hair-workbench/fusion/r13','r13')
+          collect('78698827a763e706924da97d785f8f373ce055ce','kaopu-hair-workbench/fusion/r12','r12')
+          collect('99defb97123d8101fefddf5aa039991446f557a8','kaopu-unified-human-workbench','human',True)
+          collect('78698827a763e706924da97d785f8f373ce055ce','.github/workflows','workflows')
+          PY
+          python /tmp/collect.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-r13c-source-audit
+          path: audit
+          retention-days: 7

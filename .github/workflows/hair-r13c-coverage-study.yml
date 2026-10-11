@@ -1,0 +1,65 @@
+name: Hair R13C coverage visual study
+on:
+  push:
+    branches: [fix/hair-r13-groom-coherence-20261011]
+    paths: [.github/workflows/hair-r13c-coverage-study.yml]
+permissions:
+  contents: read
+jobs:
+  visual-study:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-hair-workbench/fusion/r13c
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --prefix /tmp/study-tools --no-save esbuild@0.25.10 playwright@1.55.1
+          ln -s /tmp/study-tools/node_modules node_modules
+          /tmp/study-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Build two unaccepted visibility alternatives without changing geometry
+        run: |
+          cat > /tmp/study.py <<'PY'
+          from pathlib import Path
+          import subprocess,shutil
+          p=Path('kaopu-hair-workbench/fusion/r13c');f=p/'src/FiberMaterial.js';original=f.read_text()
+          old='''    vec3 sampleKey=fract(vec3(floor(gl_FragCoord.xy).xyx)*0.1031+vFiberRandom*19.19);
+              sampleKey+=dot(sampleKey,sampleKey.yzx+33.33);
+              float threshold=fract((sampleKey.x+sampleKey.y)*sampleKey.z);'''
+          # Whitespace is exact in the actual authored shader.
+          start=original.index('    vec3 sampleKey=');end=original.index('    if (alpha<=threshold)',start)
+          seed='    float threshold=fract(floor(vFiberRandom*65535.0+0.5)*0.754877666);\n'
+          for name in ['continuous','stratified']:
+              s=original[:start]+seed+original[end:]
+              if name=='stratified':
+                  s=s.replace('uniform float coverageDepth;','uniform float coverageDepth;\nuniform float coverageSampleAA;')
+                  s=s.replace('    if (alpha<=threshold) discard;\n    alpha=1.0;', '''    if(coverageSampleAA>.5){
+                alpha=alpha>=.999?1.0:smoothstep(threshold-.065,threshold+.065,alpha);
+                if(alpha<=.001)discard;
+              }else{if(alpha<=threshold)discard;alpha=1.0;}''')
+                  s=s.replace('coverageDepth:{value:0},','coverageDepth:{value:0},coverageSampleAA:{value:0},')
+                  s=s.replace('material.alphaToCoverage = useMSAA;', 'material.alphaToCoverage = useMSAA || (depthCoverage && record.samples>1);\n  material.uniforms.coverageSampleAA.value=depthCoverage && record.samples>1?1:0;')
+                  assert 'coverageSampleAA.value=' in s
+              f.write_text(s)
+              subprocess.run(['node',str(p/'bundle.mjs')],check=True);subprocess.run(['python',str(p/'package.py')],check=True);shutil.copy2(p/'public-lite.html',p/(name+'.html'))
+          f.write_text(original)
+          PY
+          python /tmp/study.py
+      - name: Inspect same dense roots and real head in both rendering alternatives
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/study-http.log 2>&1 &
+          cat > study.mjs <<'JS'
+          import{chromium}from'playwright';import fs from'node:fs';
+          const out='kaopu-hair-workbench/fusion/r13c/evidence/coverage-study';fs.mkdirSync(out,{recursive:true});const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});const report=[];
+          try{for(const variant of['continuous','stratified']){const context=await browser.newContext({viewport:{width:1280,height:1000},deviceScaleFactor:1}),p=await context.newPage(),errors=[];p.on('pageerror',e=>errors.push(String(e)));p.on('console',m=>{if(m.type()==='error')errors.push(m.text());});await p.goto('http://127.0.0.1:8765/kaopu-hair-workbench/fusion/r13c/'+variant+'.html');await p.waitForFunction('window.lengthGroom && (lengthGroom.diagnostics().ready || lengthGroom.diagnostics().errors.length)',{},{timeout:300000});await p.evaluate('lengthGroom.whenRendered()');for(const v of['three','left','top']){await p.evaluate(v=>lengthGroom.camera(v),v);await p.evaluate('lengthGroom.whenRendered()');await p.locator('#canvas').screenshot({path:out+'/'+variant+'-'+v+'.png'});}report.push({variant,diagnostics:await p.evaluate('lengthGroom.diagnostics()'),errors});await context.close();}if(report.some(r=>r.errors.length||r.diagnostics.errors.length))throw Error('render errors');}finally{fs.writeFileSync(out+'/report.json',JSON.stringify(report,null,2));await browser.close();}
+          JS
+          node study.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-r13c-coverage-study
+          path: kaopu-hair-workbench/fusion/r13c/evidence/coverage-study
+          retention-days: 14
