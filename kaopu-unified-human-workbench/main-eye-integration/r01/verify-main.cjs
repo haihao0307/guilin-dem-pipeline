@@ -4,7 +4,7 @@ const url=process.env.EYE_URL,out=process.env.EYE_EVIDENCE||'main-eye-evidence';
 page.on('pageerror',e=>errors.push(String(e)));page.on('response',r=>{if(r.status()>=400)failed.push({url:r.url(),status:r.status()});});
 const check=(name,ok,data)=>{checks.push({name,passed:!!ok,data});console.log(name,!!ok);assert.ok(ok,name);};
 try{
- await page.goto(url,{waitUntil:'domcontentloaded'});check('original scene entries remain',await page.locator('[data-entry-action]').count()===8);
+ await page.goto(url,{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>typeof window.fullCommonWorkbench?.load==='function');check('original scene entries remain',await page.locator('[data-entry-action]').count()===8);
  check('no duplicate embedded workbench',await page.locator('iframe').count()===0);
  await page.locator('#load-model').click();await page.waitForFunction(()=>window.mainEyeIntegration?.report().sameModel&&__IDENTITY_QA__.viewer().skin.naturalEyeExtension.ready,{timeout:180000});
  check('same original model and fixed vertex count',await page.evaluate(()=>mainEyeIntegration.report().sameModel&&mainEyeIntegration.report().nativeVertices===25417));
