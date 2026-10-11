@@ -1,6 +1,7 @@
 {
   "schema": "kaopu/natural-eye-build@1",
-  "version": "ET15-E1",
+  "version": "ET16-E1",
+  "previousVerifiedBuild": "7bc25d5e31808d0a5724f602d4a4ade42a14c385",
   "userBaseline": "7ff27f9b5e16f2635b1e665c1321265d5da2b221",
   "inheritedET14": "45dfd9d9370987eb1d0d728bc4491426e3450bfd",
   "nativeAssetCommit": "0b4703359efbae10ffc6c0e5fe3fc081e7eca4fe",
@@ -8,12 +9,12 @@
   "originalIdentityPreviewSHA256": "99942c121ec46428e980568a6b0b82c5872359bf1a7576f600ac5fa1a4a952ad",
   "originalIdentityEntrySHA256": "a3351e4b9eefe98628a945c5b1ddb8660b24e7e27eb28b585ba10922a33dfa85",
   "layoutSHA256": "f972b6e2c956418343eb891b39e19bf196a857ef1c3452cf613cb4351e2bb31c",
-  "previewSHA256": "76d383193ae7212428cb72bc78b536e048039f1414dc26ce756d6b4ea6ff9352",
-  "previewBytes": 4742572,
+  "previewSHA256": "365bf0d32a9a14ac97b0c57e6fa850fe3a246f864065e3795207689f2d9037c9",
+  "previewBytes": 4752807,
   "oneCharacter": true,
   "oneRenderer": true,
   "canonicalTopologyUnchanged": true,
-  "oldPreviewUnchanged": true,
+  "oldIdentityPreviewUnchanged": true,
   "oldET14SkinIntegrationCompleted": false,
   "oldLidReconstructionCompleted": false,
   "realMobileDeviceTested": false,
@@ -124,18 +125,28 @@
     },
     {
       "path": "kaopu-unified-human-workbench/eye-materials/NaturalEyeShader.mjs",
-      "bytes": 9201,
-      "sha256": "b98c4429999d59c9217c0a0eef8cb4c5c61f0405588d5c3ca1ca465abd094795"
+      "bytes": 10705,
+      "sha256": "5b53be065dd5bdfbff223c228bd2f99208b2a27d51de38794b4d6b724b1cf690"
     },
     {
       "path": "kaopu-unified-human-workbench/eye-materials/NaturalEyeState.mjs",
-      "bytes": 5101,
-      "sha256": "fe286da488d8dcaca1af25e56dbd5cd8dbc02f262c58623e642dc954f1db15ab"
+      "bytes": 5438,
+      "sha256": "ff2c7ab2bc696ade35e38d9eeec8df1f23c3079b019d66f85cc658adf98db54d"
     },
     {
       "path": "kaopu-unified-human-workbench/eye-materials/NaturalEyeUI.mjs",
       "bytes": 11180,
       "sha256": "d2b6b72b844c01b04172c01d70208bc8fdb1060b2cc66686ad6551adecd8f2e5"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/eye-materials/IterationUI.mjs",
+      "bytes": 4415,
+      "sha256": "72d15a348e86e510792a6ee205c5460fb134d52a380ff476f1802c1abce197f9"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/eye-materials/EyeContactField.mjs",
+      "bytes": 5286,
+      "sha256": "f63de920d59092c059bf1277339f14978d839e2ef8af9e6397b7ab597b10a8f8"
     },
     {
       "path": "kaopu-unified-human-workbench/eye-materials/OcularRefinement.mjs",
@@ -144,14 +155,14 @@
     },
     {
       "path": "kaopu-unified-human-workbench/eye-materials/NaturalEyeViewer.mjs",
-      "bytes": 1102,
-      "sha256": "4dc3d576fbdeda14c5e9ad412af0e650505cc6bfa9a25d9262758b23dd88a216"
+      "bytes": 1355,
+      "sha256": "86f1de586d31e3ba9f469f0a4f9fe61d1741ca81ee1c370997b9b8bd6384bcf5"
     }
   ],
   "limitations": [
     "Original atlas 1024x1024, iris about243px across; not a cinematic scan",
-    "Bounded shader refraction and analytic studio reflection, not volumetric optics",
-    "Eye-only refined display surface; original eyelid and native gaze limitations remain",
-    "Source pixels preserved in original mode; renderer/lighting differ from MakeHuman screenshots"
+    "Bounded shader refraction and scene-linked finite-source reflection, not volumetric optics",
+    "Measured skin/eye intersection shading does not repair inherited eyelid anatomy or certify closure",
+    "Source pixels preserved in reference mode; renderer/lighting differ from MakeHuman screenshots"
   ]
 }
