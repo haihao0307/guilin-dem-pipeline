@@ -1,0 +1,48 @@
+name: Hair R13C3 independent recovery probe
+on:
+  push:
+    branches: [test/hair-r13c3-recovery-probe-20261011]
+    paths: [.github/workflows/hair-r13c3-recovery-probe.yml]
+permissions:
+  contents: read
+jobs:
+  fixed-source-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 052ab70531fab0d31fff8f82e462249e3ac6aa57
+          sparse-checkout: |
+            kaopu-hair-workbench/fusion/r12
+            kaopu-hair-workbench/fusion/r13
+            kaopu-hair-workbench/fusion/r13c
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --prefix /tmp/hair-probe-tools --no-save esbuild@0.25.10 playwright@1.55.1
+          ln -s /tmp/hair-probe-tools/node_modules node_modules
+          /tmp/hair-probe-tools/node_modules/.bin/playwright install --with-deps chromium
+          python kaopu-hair-workbench/fusion/r13c/prepare.py
+          python kaopu-hair-workbench/fusion/r13c/refine.py
+          python kaopu-hair-workbench/fusion/r13c/crown.py
+          node kaopu-hair-workbench/fusion/r13c/bundle.mjs
+          python kaopu-hair-workbench/fusion/r13c/package.py
+      - name: Capture actual default 64k crown, left profile and bounded head audit
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/hair-probe-http.log 2>&1 &
+          cat > probe.mjs <<'JS'
+          import{chromium}from'playwright';import fs from'node:fs';
+          const out='recovery-probe';fs.mkdirSync(out,{recursive:true});const report={source:'052ab70531fab0d31fff8f82e462249e3ac6aa57',success:false,errors:[],stages:[],environment:'Chromium SwiftShader; no actual device FPS claim'};
+          const save=(stage,d={})=>{report.stages.push({stage,time:new Date().toISOString(),...d});fs.writeFileSync(out+'/report.json',JSON.stringify(report,null,2));console.log(stage)};
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});let page;
+          try{page=await browser.newPage({viewport:{width:1280,height:1000},deviceScaleFactor:1});page.on('pageerror',e=>{report.errors.push(String(e));save('page-error')});page.on('console',m=>{if(m.type()==='error'){report.errors.push(m.text());save('console-error')}});save('open');await page.goto('http://127.0.0.1:8765/kaopu-hair-workbench/fusion/r13c/public-lite.html',{waitUntil:'domcontentloaded',timeout:120000});save('dom-loaded');await page.waitForFunction('window.lengthGroom && (lengthGroom.diagnostics().ready || lengthGroom.diagnostics().errors.length)',{},{timeout:300000});report.diagnostics=await page.evaluate('lengthGroom.diagnostics()');save('ready');if(report.diagnostics.errors.length)throw Error(report.diagnostics.errors.join('\n'));await page.evaluate('lengthGroom.whenRendered()');for(const view of['top','left']){await page.evaluate(v=>lengthGroom.camera(v),view);await page.evaluate('lengthGroom.whenRendered()');await page.locator('#canvas').screenshot({path:out+'/'+view+'.png',timeout:120000});save('captured-'+view);}report.headAudit=await page.evaluate('lengthGroom.audit(600)');report.success=report.errors.length===0;save('finished');}catch(e){report.failure=String(e.stack||e);if(page){await page.screenshot({path:out+'/failure.png',timeout:15000}).catch(()=>{});await page.evaluate('window.lengthGroom?.diagnostics()').then(d=>report.diagnostics=d).catch(()=>{});}save('failed');process.exitCode=1;}finally{await browser.close();}
+          JS
+          node probe.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-r13c3-independent-probe
+          path: recovery-probe
+          retention-days: 14
