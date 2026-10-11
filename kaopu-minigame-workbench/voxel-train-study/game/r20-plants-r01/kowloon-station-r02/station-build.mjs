@@ -27,7 +27,7 @@ export function buildWholeStation(T,input=DEFAULT_STATION_RUNTIME_SCORE){
  // Existing licensed native outline functions, no canvas labels or text image.
  for(const part of recipe.parts.filter(p=>p.surface.feature==='platform-sign-face')){
   const [x,y,z]=part.shape.center,number=part.surface.lettering.line2;
-  for(const side of[-1,1])for(const[text,height,dy]of [['PLATFORM',.12,.075],['No. '+number,.17,-.16]]){const group=platformWords.makeWord(text,{style:'serif',height,depth:.004,material:glyphMat});group.position.set(x,y+dy,z+side*.027);if(side<0)group.rotation.y=Math.PI;staticRoot.add(group);}
+  for(const side of[-1,1])for(const[text,height,dy]of [['PLATFORM',.12,.075],['No. '+number,.17,-.16]]){const group=platformWords.makeWord(text,{style:'serif',height,depth:0,material:glyphMat});group.position.set(x,y+dy,z+side*.027);if(side<0)group.rotation.y=Math.PI;staticRoot.add(group);}
  }
  proof.platformSigns={nativeOutlineSource:'Noto Serif CJK HK / existing generator runtime',images:0,doubleSided:true,boardCount:recipe.parts.filter(p=>p.surface.feature==='platform-sign-face').length};
  const hands=[];for(const spec of architecture.clockHands){const g=new T.Group();g.position.fromArray(spec.center);g.position.addScaledVector(new T.Vector3(...spec.normal),.065);if(spec.axis==='x')g.rotation.y=spec.normal[0]>0?Math.PI/2:-Math.PI/2;else if(spec.normal[2]<0)g.rotation.y=Math.PI;
