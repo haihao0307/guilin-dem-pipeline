@@ -68,7 +68,7 @@ export class SkinField{
  }
  project(p,gap=.0007){let result=p;for(let it=0;it<3;it++){const q=this.sample(result);if(q.distance>=gap)break;result=add(result,mul(q.normal,gap-q.distance));}return result;}
 }
-function fieldDirection(p,root,d){
+export function fieldDirection(p,root,d){
  const side=partSide(root,d),lateral=smooth(.033,.080,Math.abs(root[0])),back=1-smooth(-.040,.016,root[2]),low=1-smooth(.303,.35,root[1]);
  let crown;
  if(d.style==='textured-fringe')crown=[.08+side*(d.partOpen*.004+(d.flow-10)*.003),-.08,1];
@@ -77,7 +77,10 @@ function fieldDirection(p,root,d){
  const flank=[side*.12,-1,root[2]>.025?.24:-.32];
  crown=blend(crown,flank,lateral*(.3+.7*low));
  crown=blend(crown,[root[0]*2,-.65,-.9],back*(.4+.6*low));
- return unit(crown);
+ // The frontal part ends at the crown; it must not split the occiput.
+ // A shared continuous back-comb field avoids an artificial rear bald seam.
+ const backComb=unit([.10+root[0]*.5,-.15-.65*low,-1]);
+ return unit(blend(backComb,crown,smooth(-.035,.025,root[2])));
 }
 const pause=()=>new Promise(r=>setTimeout(r,0));
 function guard(cancel){if(cancel?.())throw new DOMException('已取消旧生成','AbortError');}
