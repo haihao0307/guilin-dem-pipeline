@@ -183,9 +183,10 @@ if(location.hostname==='127.0.0.1'&&params.has('surfaceAudit')){
  const model=world.train.steam.model, originals=new Map();
  const normalMaterial=new THREE.MeshNormalMaterial();
  window.__trainSurfaceAudit={setMode(mode){
-  for(const b of model.wheelBatches){b.mesh.visible=mode!=='unbatched';for(const s of b.sources)s.visible=mode==='unbatched';}
-  model.gear.traverse(o=>{if(!o.isMesh)return;if(!originals.has(o))originals.set(o,o.material);o.material=mode==='normal'?normalMaterial:originals.get(o);});
-  camera.near=mode==='depth'?.8:.08;camera.updateProjectionMatrix();
+  for(const b of model.wheelBatches){b.mesh.visible=true;for(const s of b.sources)s.visible=false;}
+  model.gear.traverse(o=>{if(!o.isMesh)return;if(!originals.has(o))originals.set(o,o.material);o.material=originals.get(o);});
+  world.terrain.visible=mode!=='no-terrain';smoke.root.visible=brakeEffects.root.visible=mode!=='no-effects';
+  camera.near=.08;camera.updateProjectionMatrix();
   needsRender=true;return {mode,near:camera.near,batches:model.wheelBatches.length};
- }};
+ },samplePixels(pixels){scene.updateMatrixWorld(true);const meshes=[];scene.traverseVisible(o=>{if(o.isMesh&&!o.material?.transparent)meshes.push(o);});const ray=new THREE.Raycaster();return pixels.map(([x,y])=>{ray.setFromCamera(new THREE.Vector2(x/1280*2-1,1-y/800*2),camera);return {pixel:[x,y],hits:ray.intersectObjects(meshes,false).slice(0,5).map(h=>({name:h.object.name,parent:h.object.parent?.name,distance:h.distance,point:h.point.toArray(),face:h.faceIndex,instanceId:h.instanceId,material:h.object.material?.type}))};});}};
 }
