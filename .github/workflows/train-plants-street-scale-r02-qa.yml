@@ -41,6 +41,16 @@ jobs:
           python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/plant-scale-http.log" 2>&1 &
           for n in $(seq 1 30); do curl --fail --silent http://127.0.0.1:8765/$CANDIDATE/ >/dev/null && exit 0; sleep 1; done
           exit 1
+      - name: Compare original Node and Chromium native generation before any render
+        run: node "$CANDIDATE/plants/browser-native-hash-diagnostic.cjs"
+      - name: Preserve pure native diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-native-ficus-hash-diagnostic-${{ github.sha }}
+          path: train-plants-r02-results/hash-diagnostic/
+          retention-days: 7
+          compression-level: 0
       - name: First native KAOPU Ficus look before full comparison
         env:
           PLANTS_QA_FIRST_LOOK: '1'
