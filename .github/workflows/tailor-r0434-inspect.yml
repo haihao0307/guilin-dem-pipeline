@@ -1,0 +1,36 @@
+name: Tailor R0434 inspect inherited display
+on:
+  push:
+    branches: [fix/tailor-display-r0434-20261011]
+    paths: [.github/workflows/tailor-r0434-inspect.yml]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-tailor-workbench/presets/r04
+            .github/workflows
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preserve exact inherited source and reproduce guarded patch failure
+        run: |
+          mkdir -p inspection
+          git rev-parse HEAD > inspection/COMMIT.txt
+          git ls-tree -r --name-only HEAD | grep -E '(^|/)(AGENTS\.md|BUILD_MANIFEST[^/]*|WORKBENCH_BUILD_SYSTEM\.md)$' > inspection/GOVERNANCE_PATHS.txt || true
+          cp README* inspection/ 2>/dev/null || true
+          tar -czf inspection/tailor-source.tgz kaopu-tailor-workbench/presets/r04 .github/workflows
+          python kaopu-tailor-workbench/presets/r04/finalize_display_r0433.py > inspection/finalize.log 2>&1 || echo 'Inherited finalize failure reproduced; see log' >> inspection/finalize.log
+          node kaopu-tailor-workbench/presets/r04/test_display_r0433.mjs > inspection/unit.log 2>&1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r0434-inherited-source
+          path: inspection/
+          retention-days: 7
