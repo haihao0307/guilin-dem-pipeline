@@ -27,7 +27,7 @@ export function createGameTrain({legacy=false,bodyMotion={}}={}){
   const proof={...inherited.proof,coachBodyMotion:coachBodyMotionProof,bodyMotionExtraDrawCalls:3,existingVehicles:2,addedCoaches:2,count:wheels.length,wheels:wheels.length,wheelRadius:WHEEL_RADIUS,railHead:RAIL_HEAD,wheelProfile:'48-sided full-size running tread and inboard flange; distance/radius rotation',inherited:inherited.proof,metreScale:true,coaches:coaches.map(c=>c.proof)};
   function update(view,{interior=false,dt=0}={}){
     const pressure=view.brake?1:['doors-opening','unloading','boarding','ready-depart','doors-closing'].includes(view.phase)?.75:view.throttle<0?-.3*view.throttle:0;
-    if(view.physics)inherited.updatePhysics(view.physics);else inherited.update(view.distance);inherited.updateCrew(view);inherited.updateBodyMotion(view,dt);
+    if(view.physics)inherited.updatePhysics(view.physics);else inherited.update(view.distance);inherited.updateBrakes(pressure);inherited.updateCrew(view);inherited.updateBodyMotion(view,dt);
     for(const coach of coaches){coach.updateHardware(view.distance,pressure);coach.updateBodyMotion(view,dt);coach.updateDoors(Math.max(0,Math.min(1,Number(view.door)||0)));coach.roof.material.opacity=interior?.22:1;coach.roof.material.depthWrite=!interior;coach.roof.castShadow=coach.ventMesh.castShadow=!interior;}
   }
   const result={root,coaches,transformCoachPoint,transformPassengerPoint,resetBodyMotion,setBodyMotionEnabled,wheels,brakes,steam:inherited,proof,update};installBranding(result);return result;

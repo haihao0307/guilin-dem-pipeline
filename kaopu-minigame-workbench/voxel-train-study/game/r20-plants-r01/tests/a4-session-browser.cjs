@@ -3,6 +3,7 @@
 // No source rewrite, artificial dt, test teleport, new page or synthetic commands.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),{execFileSync}=require('node:child_process');
 const {approachAction}=require('./approach-policy.cjs');
+const {photoApproachAction}=require('./photo-approach-policy.cjs');
 const gameDir=path.resolve(__dirname,'..'),repoRoot=path.resolve(gameDir,'../../../..');
 const target=process.env.TRAIN_GAME_URL||'http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/';
 const out=path.resolve(process.env.TRAIN_QA_OUT||'train-a4-results/browser');
@@ -71,7 +72,7 @@ if(process.argv.includes('--self-check')){assert.deepEqual(normalizeSignedZero({
   assert(download.suggestedFilename().endsWith('.KaoPu'));const savePath=path.join(out,'Flying_Hongkonger_88.KaoPu');await download.saveAs(savePath);
   const bytes=fs.readFileSync(savePath);assert.equal(bytes.subarray(0,16).toString('binary'),'SQLite format 3\0');
   const sql=JSON.parse(execFileSync('python3',['-c',"import sqlite3,json,hashlib,sys\nc=sqlite3.connect('file:'+sys.argv[1]+'?mode=ro',uri=True)\nrole,mime,sha,data=c.execute('select * from assets').fetchone()\nm=json.loads(data)\nprint(json.dumps({'integrity':c.execute('pragma integrity_check').fetchone()[0],'profile':dict(c.execute('select * from header'))['profile'],'role':role,'shaMatches':hashlib.sha256(data).hexdigest()==sha,'packet':m['packet'],'verification':m['verification'],'appearance':m['appearance']}))",savePath],{encoding:'utf8',maxBuffer:8*1024*1024}));
-  assert.equal(sql.integrity,'ok');assert.equal(sql.shaMatches,true);assert.equal(sql.profile,'kaopu.fh88-game-session/1-experimental');// JSON defines -0 as 0; normalize only the serialization representation.
+  assert.equal(sql.integrity,'ok');assert.equal(sql.shaMatches,true);assert.equal(sql.profile,'kaopu.fh88-game-session/2-experimental');// JSON defines -0 as 0; normalize only the serialization representation.
   assert.deepEqual(sql.verification.physics,normalizeSignedZero(saved.physics));
   report.nativeSave={filename:download.suggestedFilename(),bytes:bytes.length,sha256:sha(bytes),independentSQLite:sql,savedState:saved};
   await click('#closeSettings');await until(()=>!__trainDriver.getState().paused);await until(d=>__trainDriver.getState().distance>d+1,saved.distance);
@@ -99,10 +100,12 @@ if(process.argv.includes('--self-check')){assert.deepEqual(normalizeSignedZero({
    if(report.mobile){const b=routeBrakeRect,cdp=routeBrakeCDP;await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:b.x+b.width/2,y:b.y+b.height/2}]});await until(()=>__trainDriver.getState().velocity===0);await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});}
    else{await page.keyboard.down('Space');await until(()=>__trainDriver.getState().velocity===0);await page.keyboard.up('Space');}
   }
-  async function preciseStop(target){
+  async function preciseStop(target,{photoCreep=false}={}){
    const begin=Date.now();report.approach=report.approach||[];
-   while(Date.now()-begin<600000){const view=await state(),action=approachAction(view,target);report.approach.push({wallTimeMs:Date.now(),target,action,tick:view.tick,physicsTimeS:view.physics.timeS,distance:view.distance,velocity:view.velocity,brakingDistance:view.brakingDistance,throttle:view.throttle,stationTarget:view.station.target});write();
-    if(action==='brake'){await holdBrakeToStop();return;}
+   while(Date.now()-begin<600000){const view=await state(),action=photoCreep?photoApproachAction(view,target):approachAction(view,target);report.approach.push({wallTimeMs:Date.now(),target,action,tick:view.tick,physicsTimeS:view.physics.timeS,distance:view.distance,velocity:view.velocity,brakingDistance:view.brakingDistance,throttle:view.throttle,stationTarget:view.station.target});write();
+    if(action==='done')return;
+    if(action==='overshoot')throw Error('Actual photo approach exceeded its original upper bound');
+    if(action==='brake'){await holdBrakeToStop();if(!photoCreep)return;continue;}
     if(action==='accelerate'||action==='decelerate')await click('#'+action);
     await page.waitForTimeout(200);
    }throw Error('Actual-control low-speed approach timed out');
@@ -110,14 +113,22 @@ if(process.argv.includes('--self-check')){assert.deepEqual(normalizeSignedZero({
   await holdBrakeToStop();await check('early-second-station-brake');await preciseStop(700);await until(()=>__trainDriver.getState().station.canOpen);await click('#stationAction');await until(()=>__trainDriver.getState().phase==='ready-depart');
   const secondStation=await check('second-station-passenger-service');assert.equal(secondStation.stats.stops,2);assert.equal(secondStation.stats.missed,0);await screenshot('second-station-a4');
   await page.waitForFunction(()=>__trainDriver.getState().timetable.dwellRemaining<=0,null,{polling:50,timeout:600000});await click('#stationAction');await until(()=>__trainDriver.getState().phase==='running');
-  await preciseStop(790);if(routeBrakeCDP)await routeBrakeCDP.detach();
+  await preciseStop(790,{photoCreep:report.mobile});if(routeBrakeCDP)await routeBrakeCDP.detach();
   await click('#openSettings');await page.locator('#renderQuality').selectOption('clear');await click('#photoMode');await until(()=>__trainDriver.getState().paused);
   const openTrack=await state();assert.equal(openTrack.qualityMode,'clear');assert(openTrack.distance>=786&&openTrack.distance<=794,'The actual controlled stop must remain in the independently checked open-track window');assert.equal(openTrack.velocity,0);report.photography.openTrack={distance:openTrack.distance,stops:openTrack.stats.stops,actualControls:true,sceneHidden:false};
-  for(const preset of ['leftSide','rightSide','overview']){
+  for(const preset of ['leftSide','rightSide','runningGear','wheelRail','overview']){
    await click('#photoCamera');await click(`[data-camera="${preset}"]`);await until(()=>document.getElementById('settingsScreen').hidden);await page.waitForTimeout(600);
    const frame=await check('open-track-'+preset);assert.deepEqual(frozenPart(frame),frozenPart(openTrack));assert.deepEqual(frame.cameraProjection.up,[0,1,0]);
-   if(preset!=='overview'){const h=2*Math.atan(Math.tan(frame.cameraProjection.effectiveFov*Math.PI/360)*frame.cameraProjection.aspect)*180/Math.PI;assert(h>=35&&h<=55,'Conventional horizontal field of view, not an ultrawide lens');}
+   if(['leftSide','rightSide'].includes(preset)){const h=2*Math.atan(Math.tan(frame.cameraProjection.effectiveFov*Math.PI/360)*frame.cameraProjection.aspect)*180/Math.PI;assert(h>=35&&h<=55,'Conventional horizontal field of view, not an ultrawide lens');}
    await screenshot('photo-open-track-'+preset);
+   if(preset==='runningGear'&&!report.mobile){
+    // Native pointer orbit by pi at the genuinely driven open-track stop.
+    // No camera/state assignment, scenery hiding or alternative model.
+    const box=await page.locator('#gameScene').boundingBox();
+    await page.mouse.move(box.x+box.width*.15,box.y+box.height*.50);await page.mouse.down();await page.mouse.move(box.x+box.width*.775,box.y+box.height*.50,{steps:16});await page.mouse.up();await page.waitForTimeout(600);
+    const opposite=await check('open-track-runningGear-opposite');assert.deepEqual(frozenPart(opposite),frozenPart(openTrack));assert.deepEqual(opposite.cameraProjection.up,[0,1,0]);assert(opposite.camera[2]<-5);
+    await screenshot('photo-open-track-runningGear-opposite');
+   }
   }
   await click('#photoReturn');assert.equal(await page.locator('#drivePanel').isVisible(),true);await screenshot('open-track-restored-driver-controls');
   const packet=await page.evaluate(()=>__trainDriver.exportReplay());const {replay}=await import('../session.mjs');const played=replay(packet);assert.deepEqual(played.view().physics,(await state()).physics);report.replayMatches=true;

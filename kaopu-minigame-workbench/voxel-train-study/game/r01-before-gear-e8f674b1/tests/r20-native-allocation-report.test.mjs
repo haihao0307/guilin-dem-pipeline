@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+const {summarizeRenderAllocation:summary,validateFirstActiveFrame:frame}=createRequire(import.meta.url)('./native-allocation-report.cjs');
+const cold=()=>({distance:0,elapsed:0,ms:3,builds:0,loads:0,unloads:0,lifecycle:{status:'score-loading',ready:false,started:false,phase:'menu'}});
+const warm=()=>({...cold(),lifecycle:{status:'active',ready:true,started:true,phase:'running'},batch:{peakAllocatedGeometryBytes:1234,peakAllocatedInstanceBytes:456,peakAllocatedMaterials:8,pendingCells:2,maxSliceMs:3,maxCoverageMs:7}});
+test('Allocation reporter separates explicit cold rows without zero-filling peaks',()=>{const s=summary([cold(),cold(),warm()],[]);assert.equal(s.measuredRows,1);assert.equal(s.uninitializedRows.length,2);assert.equal(s.uninitializedRows[0].ms,3);assert.equal(s.peakStreetGeometryBytes,1234);});
+test('Allocation reporter rejects missing batches after initialization',()=>assert.throws(()=>summary([warm(),cold()],[]),/Missing render batch/));
+test('Allocation reporter rejects moving, ready, or started missing rows',()=>{for(const patch of [{distance:1},{elapsed:.1},{lifecycle:{status:'active',ready:true,started:false}},{lifecycle:{status:'score-loading',ready:false,started:true}}])assert.throws(()=>summary([{...cold(),...patch},warm()],[]),/Missing render batch/);});
+test('Allocation reporter rejects absent lifecycle, absent samples, or invalid measurement',()=>{assert.throws(()=>summary([{...cold(),lifecycle:undefined},warm()],[]));assert.throws(()=>summary([cold()],[]),/No initialized/);const b=warm();delete b.batch.maxSliceMs;assert.throws(()=>summary([b],[]),/Invalid allocation/);});
+test('First interactive frame requires actual non-empty rendered coverage',()=>{const f={ready:true,batchPresent:true,status:'active',required:['p0','p1'],renderedIds:['p0','p1'],missing:[]};assert.equal(frame(f),f);for(const patch of [{batchPresent:false},{required:[]},{renderedIds:['p0']},{missing:['p1']}])assert.throws(()=>frame({...f,...patch}));});

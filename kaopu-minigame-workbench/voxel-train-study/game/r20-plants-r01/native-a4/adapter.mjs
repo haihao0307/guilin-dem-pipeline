@@ -2,7 +2,11 @@ import {batchStaticDisplay} from './display-batching.mjs';
 /* FH88 original metric adapter. No teacher buffers; frozen generator is called once. */
 import * as T from './frozen/learned-shape/vendor/three.module.mjs';
 import {generate} from './frozen/learned-shape/derived/train-shape-only.mjs';
-import {contract,evaluate,nominalRollingContact} from './frozen/three-cylinder/three-cylinder.mjs';
+import {contract,evaluate,nominalRollingContact} from './running-gear/kinematics.mjs';
+import {createForgedRod,placeForgedRod,createCrosshead} from './running-gear/forged-rods.mjs';
+import {reshapeNativeNose} from './running-gear/nose-profile.mjs';
+import {createTreadBrake,createLaminatedSpring} from './running-gear/brakes.mjs';
+import {createCorrectedNativeWheel} from './running-gear/cast-wheels.mjs';
 const V=a=>new T.Vector3(...a);
 const Y=new T.Vector3(0,1,0);
 const distanceSegment2=(p,a,b)=>{const dx=b[0]-a[0],dz=b[1]-a[1],n=dx*dx+dz*dz,t=n?Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dz)/n)):0;return Math.hypot(p[0]-a[0]-t*dx,p[1]-a[1]-t*dz);};
@@ -18,19 +22,11 @@ function box(parent,size,at,mat,name){const o=new T.Mesh(cached('box:'+size,()=>
 function cylinder(parent,r,h,at,mat,name){const o=new T.Mesh(cached(`cylinder:${r},${h}`,()=>new T.CylinderGeometry(r,r,h,24)),mat);o.name=name;o.position.set(...at);parent.add(o);return o;}
 function bar(parent,r,a,b,mat,name){const o=cylinder(parent,r,V(a).distanceTo(V(b)),[0,0,0],mat,name);setBar(o,a,b);return o;}
 function setBar(o,a,b){const A=V(a),B=V(b);o.position.copy(A).add(B).multiplyScalar(.5);o.quaternion.setFromUnitVectors(Y,B.sub(A).normalize());o.userData.endpoints=[a.slice(),b.slice()];}
-// Reuse the already learned wheel hierarchy, rim, hub and all spokes. No substitute wheel generator.
-function reuseLearnedWheel(parent, sourceWheel, sourceRadius, radiusM, halfWidthM){
- const wheel=sourceWheel.clone(true);wheel.position.set(0,0,0);wheel.rotation.set(0,0,0);
- const b=new T.Box3().setFromObject(wheel),sourceHalf=Math.max(Math.abs(b.min.x),Math.abs(b.max.x));
- wheel.scale.set(halfWidthM/sourceHalf,radiusM/sourceRadius,radiusM/sourceRadius);
- const orient=new T.Group();orient.quaternion.setFromRotationMatrix(new T.Matrix4().set(0,0,1,0,1,0,0,0,0,1,0,0,0,0,0,1));orient.add(wheel);
- const g=new T.Group();g.add(orient);parent.add(g);g.userData.nativeWheel=true;g.userData.sourceName=sourceWheel.name;return g;
-}
 
 export function buildPreview(recipe,design,dimensions){
  const datum=contract(design),R=datum.wheelRadiusM,source=structuredClone(recipe),sourceDriverR=source.parameters.driverRadius,scale=R/sourceDriverR;
  if(datum.railTopZM!==0)throw Error('PREVIEW_R03_REQUIRES_RAIL_TOP_ZERO');
- source.identity={id:'fh88/native-game-a4',name:'88 / existing A4 function train'};source.parameters.number=88;source.parameters.boilerY=2.9;
+ source.identity={id:'fh88/native-game-a4',name:'88 / existing A4 function train'};source.parameters.number=88;source.parameters.boilerY=2.9;source.parameters.spokes=20;
  const old=generate(source);old.parts.find(g=>g.name==='函数蒸汽')?.removeFromParent();old.root.updateMatrixWorld(true);
  const sourceBounds=new T.Box3().setFromObject(old.root),sourceSize=sourceBounds.getSize(new T.Vector3());
  const lengthScale=dimensions.overBuffersM/sourceSize.z,widthScale=dimensions.widthM/sourceSize.x,heightScale=dimensions.heightM/(sourceBounds.max.y-.08);
@@ -47,19 +43,31 @@ export function buildPreview(recipe,design,dimensions){
  const wheelSources=new Map();
  const sourceAxles=old.parts.filter(g=>g.name==='动轮轴总成'||g.name==='承载轮轴总成').map(g=>{const p=g.getWorldPosition(new T.Vector3());const w=g.children.find(n=>n.name==='轮圈 / 轮毂 / 辐条');if(!w)throw Error('NATIVE_WHEEL_MISSING');wheelSources.set(g,w);return {g,driver:g.name==='动轮轴总成',z:p.z,r:p.y-.08};});
  const first=sourceAxles.find(a=>a.driver).z;
- old.root.traverse(o=>{const p=o.geometry?.parameters;if(o.parent?.name==='煤水车 / 水箱 / 悬挂'&&p?.width===2.2&&p?.height===.24)o.position.y=1.02;});
+ const tenderFloorSourceY=(2*.635+.06)/heightScale+.08,tenderTopSourceY=2.775;
+ old.root.traverse(o=>{const p=o.geometry?.parameters;if(o.parent?.name!=='煤水车 / 水箱 / 悬挂')return;if(p?.width===2.2&&p?.height===.24)o.position.y=tenderFloorSourceY+.12;if(p?.width===2.2&&p?.height===1.75){const h=tenderTopSourceY-tenderFloorSourceY;o.geometry=o.geometry.clone().scale(1,h/1.75,1);o.position.y=(tenderTopSourceY+tenderFloorSourceY)/2;}});
  // Gauge conversion moves only longitudinal frame rails inward and running boards outward, leaving exterior functions intact.
  old.root.traverse(o=>{const p=o.geometry?.parameters;if(!p||o.parent?.name!=='锅炉、烟箱与主承载走台')return;if(p.width===.13&&p.height===.28)o.position.x=Math.sign(o.position.x)*.54;if(p.width===.38&&p.height===.07)o.position.x=Math.sign(o.position.x)*1.075;});
  for(const g of old.parts.filter(g=>g.name==='函数编号 88'&&g.parent?.name==='煤水车 / 水箱 / 悬挂'))g.removeFromParent();
  const strip=old.parts.filter(g=>g.name==='轮轴、联动、制动与轴箱'||g.name==='承载轮轴总成'||g.name==='函数蒸汽');for(const g of strip)g.removeFromParent();
+ const tenderPart=old.parts.find(g=>g.name==='煤水车 / 水箱 / 悬挂'),jointPart=old.parts.find(g=>g.name==='车钩固定连接');
+ old.root.updateMatrixWorld(true);const tenderSourceBounds=new T.Box3().setFromObject(tenderPart),cabRearSourceZ=new T.Box3().setFromObject(cabPart).min.z,sourceFrontZ=sourceBounds.max.z;
+ const divisionGameX=-8.41755,targetSourceDivision=sourceFrontZ+(divisionGameX-5)/lengthScale;
+ const locoLongitudinalFactor=(sourceFrontZ-targetSourceDivision)/(sourceFrontZ-cabRearSourceZ),tenderLongitudinalFactor=((divisionGameX-(5-dimensions.overBuffersM))/lengthScale)/(tenderSourceBounds.max.z-tenderSourceBounds.min.z);
+ const locoMap=z=>sourceFrontZ+(z-sourceFrontZ)*locoLongitudinalFactor,tenderMap=z=>sourceBounds.min.z+(z-tenderSourceBounds.min.z)*tenderLongitudinalFactor;
+ const locoRemount=new T.Group();locoRemount.name='locomotive envelope to 1935 rear boundary';for(const child of [...old.root.children])if(child!==tenderPart&&child!==jointPart)locoRemount.add(child);old.root.add(locoRemount);locoRemount.scale.z=locoLongitudinalFactor;locoRemount.position.z=sourceFrontZ*(1-locoLongitudinalFactor);
+ tenderPart.position.z=tenderMap(tenderPart.position.z);tenderPart.scale.z=tenderLongitudinalFactor;if(jointPart)jointPart.removeFromParent();
+ const nativeSkin=old.parts.find(g=>g.name==='函数流线罩壳').children.find(o=>o.geometry?.type==='ParametricGeometry');const shellProfile=reshapeNativeNose(T,{skin:nativeSkin,source,sourceFrontZ,lengthScale,widthScale,heightScale,locoFactor:locoLongitudinalFactor,paint:old.materials.paint,root:locoRemount,door,lens});
+ const mapSourcePoint=point=>[point[0],point[1],point[2]<cabRearSourceZ?tenderMap(point[2]):locoMap(point[2])];
  const train=new T.Group();train.name='FH88 metric moving frame';const body=old.root;body.name='frozen learned exterior, rigidly remounted';
  body.quaternion.setFromRotationMatrix(new T.Matrix4().set(0,0,1,0, 1,0,0,0, 0,1,0,0, 0,0,0,1));body.scale.set(widthScale,heightScale,lengthScale);body.position.set(-first*lengthScale,0,-.08*heightScale);train.add(body);
+ body.updateMatrixWorld(true);const firstDrivingDatumXM=new T.Box3().setFromObject(body).max.x-4.826;design={...design,drivingAxleXM:firstDrivingDatumXM-2.2098};
  const wheelSpecs=[],axles=sourceAxles.map((a,i)=>({id:'axle-'+i,driver:a.driver,xM:(a.z-first)*lengthScale,radiusM:a.r*scale,sourceWheel:wheelSources.get(a.g),sourceRadius:a.r}));
  // A4 axial stations from the LNER-supplied 1935 drawing. Body and wheel circles retain separate metric mappings.
  const knownStations=[0,-2.2098,-4.4196,1.6764,3.5814,-7.3152];
- axles.slice(0,6).forEach((a,i)=>a.xM=knownStations[i]);
- const tenderAxles=axles.slice(6),tenderCenter=tenderAxles.reduce((n,a)=>n+a.xM,0)/tenderAxles.length;
- tenderAxles.forEach((a,i)=>a.xM=tenderCenter+(i-1.5)*(4.8768/3));
+ axles.slice(0,6).forEach((a,i)=>a.xM=firstDrivingDatumXM+knownStations[i]);
+ axles[3].radiusM=axles[4].radiusM=.4826;axles[5].radiusM=.5588;
+ const tenderAxles=axles.slice(6),tenderFrontXM=firstDrivingDatumXM-7.3152-2.784475;
+ tenderAxles.forEach((a,i)=>{a.xM=tenderFrontXM+[-4.8768,-3.2766,-1.6002,0][i];a.radiusM=.635;});
  for(const a of axles)for(const y of datum.nominalRollingCircleYM)wheelSpecs.push({id:a.id+(y<0?'-right':'-left'),axle:a.id,driver:a.driver,xM:a.xM,yM:y,radiusM:a.radiusM,halfWidthM:design.wheel.envelopeHalfWidthM});
  let bodyTriangles=trianglesOf(body);const initialIntersection=wheelBodyIntersections(bodyTriangles,wheelSpecs,0,0),margin=.02;
  // The retained A4 skin closes underneath the boiler. Author wheel apertures in that same procedural skin, rather than lifting the entire locomotive or replacing its wheels.
@@ -73,33 +81,56 @@ export function buildPreview(recipe,design,dimensions){
  body.updateMatrixWorld(true);const bodyBounds=new T.Box3().setFromObject(body);
  const clearance={apertureTriangles,method:'triangle surfaces against axisymmetric wheel envelope inflated radially and axially by 20 mm',initialIntersection,bodyRigidLiftM:lift,marginM:margin,finalIntersection:wheelBodyIntersections(bodyTriangles,wheelSpecs,margin,lift),retainedBodyHighestPointM:bodyBounds.max.z,centreOfMassM:null,centreOfMassAndSuspensionConsequencesUnresolved:true,solidContainmentOrWholeTrainCollisionCertified:false};
  const gear=new T.Group();gear.name='new SI running gear';train.add(gear);const steel=material('#aab7c2'),iron=material('#202c36'),crankMat=material('#c6a66a');
- const wheels=wheelSpecs.map(w=>{const axle=axles.find(a=>a.id===w.axle),g=reuseLearnedWheel(gear,axle.sourceWheel,axle.sourceRadius,w.radiusM,w.halfWidthM);g.name=w.id;g.position.set(w.xM,w.yM,w.radiusM);return {...w,object:g};});
- for(const a of axles){cylinder(gear,.065,2*(datum.nominalRollingCircleYM[1]+design.wheel.envelopeHalfWidthM*.3),[a.xM,0,a.radiusM],steel,a.id+' straight axle proxy');for(const side of [-1,1]){const y=side*(datum.nominalRollingCircleYM[1]-design.wheel.envelopeHalfWidthM-.09);box(gear,[.20,.16,.18],[a.xM,y,a.radiusM],iron,a.id+' bearing proxy');}}
- // Inside crank construction is unresolved: remove the straight main axle centre so it cannot falsely cross the rod.
- const frontAxle=gear.children.find(o=>o.name==='axle-0 straight axle proxy');frontAxle.removeFromParent();
- for(const side of [-1,1])cylinder(gear,.065,.58,[0,side*.49,R],steel,'main axle stub: crank webs omitted');
- const mechanismMaterial=material('#aeb9bc'),cylinderColours=['#aeb9bc','#aeb9bc','#aeb9bc'],motions=[],couplers=[],pins=[];
- for(let i=0;i<3;i++){const c=design.cylinders[i],mat=mechanismMaterial,main=bar(gear,.03,[0,c.axisYM,R],[design.rodPinCentresM,c.axisYM,R],mat,c.id+' 3.2m main rod');const cross=box(gear,[.20,.10,.10],[3.2,c.axisYM,R],steel,c.id+' crosshead');const pin=cylinder(gear,.065,.08,[0,c.axisYM,R],crankMat,c.id+' crank pin');for(const dz of [-.10,.10])box(gear,[design.strokeM+.25,.035,.035],[design.rodPinCentresM,c.axisYM,R+dz],steel,c.id+' guide proxy');const casing=cylinder(gear,.285,.92,[4.2,c.axisYM,R],iron,c.id+' cylinder casing');casing.rotation.z=Math.PI/2;const pistonRod=bar(gear,.038,[3.2,c.axisYM,R],[4.2,c.axisYM,R],steel,c.id+' 1m piston rod');motions.push({id:c.id,main,cross,pin,pistonRod});
-  if(c.id!=='inside'){for(const a of axles.filter(a=>a.driver)){const p=cylinder(gear,.055,.08,[a.xM,c.axisYM,R],crankMat,c.id+' coupling pin '+a.id);pins.push({object:p,axle:a,cylinder:c});}const da=axles.filter(a=>a.driver);for(let j=1;j<da.length;j++){const o=bar(gear,.024,[da[j-1].xM,c.axisYM,R],[da[j].xM,c.axisYM,R],steel,c.id+' coupling rod '+j);couplers.push({object:o,a:da[j-1],b:da[j],cylinder:c});}}
+ const wheels=wheelSpecs.map(w=>{const axle=axles.find(a=>a.id===w.axle),g=createCorrectedNativeWheel(T,{sourceWheel:axle.sourceWheel,sourceRadius:axle.sourceRadius,radiusM:w.radiusM,side:Math.sign(w.yM),driver:w.driver,closedDisc:Number(w.axle.split('-')[1])>=6,spokes:w.driver?20:10,steel,cast:iron});gear.add(g);g.name=w.id;g.position.set(w.xM,w.yM,w.radiusM);return {...w,object:g};});
+ for(const a of axles){if(a.id!=='axle-1')cylinder(gear,.08,1.49,[a.xM,0,a.radiusM],steel,a.id+' axle');else for(const side of[-1,1])cylinder(gear,.08,.50,[a.xM,side*.49,a.radiusM],steel,'middle driving axle stub');
+  for(const side of[-1,1]){const y=side*.57;box(gear,[.24,.20,.26],[a.xM,y,a.radiusM],iron,a.id+' axlebox');const isBogie=['axle-3','axle-4'].includes(a.id),isTrailing=a.id==='axle-5',leaves=isBogie?0:a.driver?16:isTrailing?11:8,maxLength=a.driver?1.2192:isTrailing?1.3716:.72,leafThickness=isTrailing?.0079375:.009525;
+   if(isBogie){const points=Array.from({length:97},(_,i)=>{const t=i/96;return new T.Vector3(.0508*Math.cos(t*Math.PI*12),.0508*Math.sin(t*Math.PI*12),t*.254);});const spring=new T.Mesh(cached('bogie-helical-spring',()=>new T.TubeGeometry(new T.CatmullRomCurve3(points),96,.0127,8,false)),iron);spring.name='bogie helical spring 10in free, 5in outside';spring.position.set(a.xM,y,a.radiusM+.14);gear.add(spring);}
+   for(let j=0;j<leaves;j++){const leaf=createLaminatedSpring(T,{lengthM:maxLength-j*.035,widthM:.127,thicknessM:leafThickness,steel:iron});leaf.position.set(a.xM,y,a.radiusM+.20+j*leafThickness);gear.add(leaf);}
+   for(const dx of[-maxLength*.43,maxLength*.43])box(gear,[.035,.035,.30],[a.xM+dx,y,a.radiusM+.25],steel,a.id+' spring hanger');
+  }
  }
+ const brakeAssemblies=[];for(const a of axles.filter(a=>a.driver||Number(a.id.split('-')[1])>=6)){for(const side of[-1,1]){const brake=createTreadBrake(T,{radiusM:a.radiusM,steel,iron});brake.position.set(a.xM,side*design.wheel.referenceHalfSpacingM,a.radiusM);brake.userData.restXM=a.xM;gear.add(brake);brakeAssemblies.push(brake);}cylinder(gear,.030,1.50,[a.xM+a.radiusM+.079,0,a.radiusM*.55],steel,a.id+' brake transverse shaft');}
+ const rearBufferX=firstDrivingDatumXM+4.826-dimensions.overBuffersM;box(gear,[.18,2.16,.22],[rearBufferX+.14,0,1.05],iron,'tender rear buffer beam at coupling datum');for(const y of[-.52,.52])box(gear,[.16,.11,.34],[rearBufferX+.14,y,1.23],steel,'rear beam to underframe hanger');box(gear,[.30,.25,.24],[rearBufferX+.10,0,1.03],steel,'tender drawhook mounting bracket');
+ const mechanismMaterial=material('#aeb9bc'),bronze=material('#8e794c'),motions=[],couplers=[],pins=[],driveX=design.drivingAxleXM,guideX=driveX+design.rodPinCentresM;
+ for(const c of design.cylinders){
+  const main=createForgedRod(T,{lengthM:design.rodPinCentresM,bigBoreM:.06985+.0002,smallBoreM:.055+.0002,steel:mechanismMaterial,bush:bronze,name:c.id+' wide fluted connecting rod'});gear.add(main);
+  const crossAssembly=createCrosshead(T,{steel:mechanismMaterial,bush:bronze,axisYM:c.axisYM,slideZM:R,guideCentreXM:guideX,strokeM:design.strokeM,name:c.id+' crosshead and twin slidebars'});gear.add(crossAssembly.root);const cross=crossAssembly.moving;
+  const pin=cylinder(gear,.06985,.1524,[driveX,c.axisYM,R],steel,c.id+' outside main crank journal 5.5in x 6in');
+  const outsideSign=Math.sign(c.axisYM)||1;const washer=cylinder(pin,.089,.016,[0,outsideSign*.084,0],steel,'main crankpin retaining washer');const nut=new T.Mesh(cached('main-crank-hexnut',()=>new T.CylinderGeometry(.042,.042,.035,6)),steel);nut.position.y=outsideSign*.11;nut.name='crankpin retaining nut';pin.add(nut);
+  const casing=cylinder(gear,.280,.84,[guideX+1.02,c.axisYM,R],iron,c.id+' cylinder casing');casing.rotation.z=Math.PI/2;
+  for(const x of[guideX+.59,guideX+1.45]){const cap=cylinder(gear,.287,.034,[x,c.axisYM,R],steel,c.id+' cylinder end cover');cap.rotation.z=Math.PI/2;}
+  const pistonRod=bar(gear,.035,[guideX,c.axisYM,R],[guideX+1,c.axisYM,R],steel,c.id+' piston rod');motions.push({id:c.id,main,cross,pin,pistonRod,crossAssembly});
+  if(c.id!=='inside'){const side=Math.sign(c.axisYM),couplingY=side*.951,da=axles.filter(a=>a.driver);
+   for(const [i,a]of da.entries()){const radius=i===1?.0762:.0508,pinObject=cylinder(gear,radius,.17,[a.xM,couplingY,R],steel,c.id+' coupling journal '+a.id);pins.push({object:pinObject,axle:a,cylinder:c,yM:couplingY});}
+   for(let j=1;j<da.length;j++){const A=da[j],B=da[j-1],isBigA=j===1;const rod=createForgedRod(T,{lengthM:B.xM-A.xM,bigRadiusM:isBigA?.165:.125,smallRadiusM:isBigA?.125:.165,bigBoreM:(isBigA?.0762:.0508)+.0002,smallBoreM:(isBigA?.0508:.0762)+.0002,shankBigM:.135,shankSmallM:.135,thicknessM:.064,webM:.022,steel:mechanismMaterial,bush:bronze,name:c.id+' articulated coupling rod '+j});gear.add(rod);couplers.push({object:rod,a:A,b:B,cylinder:c,yM:couplingY+side*(j===1?.04:-.04)});}
+  }
+ }
+ // The centre crank is an explicit 88 horizontal-cylinder assembly. Historical
+ // A4 inclined inside gear remains a separate unresolved engineering requirement.
+ const insideCrank=new T.Group();insideCrank.name='88 centre crank webs on middle driven axle';insideCrank.position.set(driveX,0,R);gear.add(insideCrank);
+ for(const y of[-.19,.19])box(insideCrank,[design.strokeM/2+.18,.065,.18],[design.strokeM/4,y,0],iron,'centre crank web');cylinder(insideCrank,.08,.38,[design.strokeM/2,0,0],steel,'centre crank journal');
+
  // Batch the preserved wheel meshes by their actual shared geometry/material. Source objects remain the motion authority.
- const batchGroups=new Map(),wheelBatches=[];
- gear.traverse(o=>{if(!o.isMesh)return;const key=o.geometry.uuid+':'+o.material.uuid;if(!batchGroups.has(key))batchGroups.set(key,[]);batchGroups.get(key).push(o);});
+ const batchGroups=new Map(),wheelBatches=[],geometryBuckets=new Map();
+ const sameGeometry=(a,b)=>{const names=Object.keys(a.attributes).sort(),other=Object.keys(b.attributes).sort();if(names.join()!==other.join()||a.index?.count!==b.index?.count)return false;for(const name of [...names,'$index']){const x=name==='$index'?a.index:a.attributes[name],y=name==='$index'?b.index:b.attributes[name];if(!x&&!y)continue;if(!x||!y||x.itemSize!==y.itemSize||x.array.length!==y.array.length)return false;for(let i=0;i<x.array.length;i++)if(x.array[i]!==y.array[i])return false;}return true;};
+ const sharedGeometry=g=>{let h=2166136261;for(const name of [...Object.keys(g.attributes).sort(),'$index']){const a=name==='$index'?g.index:g.attributes[name];if(!a)continue;const b=new Uint8Array(a.array.buffer,a.array.byteOffset,a.array.byteLength);for(const v of b)h=Math.imul(h^v,16777619);}const list=geometryBuckets.get(h)||[];for(const old of list)if(sameGeometry(g,old))return old;list.push(g);geometryBuckets.set(h,list);return g;};
+ gear.traverse(o=>{if(!o.isMesh)return;o.geometry=sharedGeometry(o.geometry);const key=o.geometry.uuid+':'+o.material.uuid;if(!batchGroups.has(key))batchGroups.set(key,[]);batchGroups.get(key).push(o);});
  for(const sources of batchGroups.values()){const mesh=new T.InstancedMesh(sources[0].geometry,sources[0].material,sources.length);mesh.castShadow=mesh.receiveShadow=true;mesh.frustumCulled=false;gear.add(mesh);for(const o of sources)o.visible=false;wheelBatches.push({mesh,sources});}
  const inverseGear=new T.Matrix4(),batchMatrix=new T.Matrix4();
  const syncWheels=()=>{inverseGear.copy(gear.matrixWorld).invert();for(const b of wheelBatches){b.sources.forEach((o,i)=>b.mesh.setMatrixAt(i,batchMatrix.copy(inverseGear).multiply(o.matrixWorld)));b.mesh.instanceMatrix.needsUpdate=true;}};
+ let currentBrakePressure=0;function setBrakePressure(value){const p=Math.max(0,Math.min(1,Number(value)||0));if(p===currentBrakePressure)return;currentBrakePressure=p;for(const b of brakeAssemblies)b.position.x=b.userData.restXM-.0115*p;train.updateMatrixWorld(true);syncWheels();}
  const bodyDisplay=batchStaticDisplay(body,{domain:true});
  let current=null,currentTime=0,currentState=null,currentPhaseOrigin=.25;const omega=-1.3,theta0=.25;
  const stateAt=t=>{if(!Number.isFinite(t))throw Error('FINITE_TIME_REQUIRED');return {worldTimeS:t,commonThetaRad:theta0+omega*t,omegaRadS:omega,alphaRadS2:0};};
  function applyState(st,travel,phaseOrigin=theta0){const next=evaluate(design,st,[0,0,0],[0,0,0]);currentTime=st.worldTimeS;currentState={...st};currentPhaseOrigin=phaseOrigin;current=next;train.position.x=travel;for(const w of wheels){const phase=w.driver?design.cylinders.find(c=>c.id===(w.yM<0?'right':'left')).crankPhaseRad:0;w.object.rotation.y=-(w.driver?st.commonThetaRad+phase:(st.commonThetaRad-phaseOrigin)*R/w.radiusM);}
-  for(const m of motions){const c=current.cylinders.find(c=>c.id===m.id),A=c.crankPinWorldM,B=c.crossheadPinWorldM;setBar(m.main,A,B);m.cross.position.set(...B);m.pin.position.set(...A);setBar(m.pistonRod,B,[B[0]+1,B[1],B[2]]);}
-  const crank=(a,c)=>[a.xM+design.strokeM/2*Math.cos(st.commonThetaRad+c.crankPhaseRad),c.axisYM,R+design.strokeM/2*Math.sin(st.commonThetaRad+c.crankPhaseRad)];for(const p of pins)p.object.position.set(...crank(p.axle,p.cylinder));for(const p of couplers)setBar(p.object,crank(p.a,p.cylinder),crank(p.b,p.cylinder));train.updateMatrixWorld(true);syncWheels();return snapshot();
+  for(const m of motions){const c=current.cylinders.find(c=>c.id===m.id),A=c.crankPinWorldM,B=c.crossheadPinWorldM;placeForgedRod(T,m.main,A,B);m.cross.position.set(...B);m.pin.position.set(...A);setBar(m.pistonRod,B,[B[0]+1,B[1],B[2]]);}
+  const crank=(a,c,y)=>[a.xM+design.strokeM/2*Math.cos(st.commonThetaRad+c.crankPhaseRad),y,R+design.strokeM/2*Math.sin(st.commonThetaRad+c.crankPhaseRad)];for(const p of pins)p.object.position.set(...crank(p.axle,p.cylinder,p.yM));for(const p of couplers)placeForgedRod(T,p.object,crank(p.a,p.cylinder,p.yM),crank(p.b,p.cylinder,p.yM));insideCrank.rotation.y=-(st.commonThetaRad+design.cylinders.find(c=>c.id==='inside').crankPhaseRad);train.updateMatrixWorld(true);syncWheels();return snapshot();
  }
  function setTime(t){const st=stateAt(t);return applyState(st,-R*(st.commonThetaRad-theta0));}
  function setPhysicsState(s){for(const key of ['timeS','positionM','speedMps','wheelAngleRad','wheelAngularSpeedRadS','wheelAngularAccelerationRadS2'])if(typeof s[key]!=='number'||!Number.isFinite(s[key]))throw Error('FINITE_PHYSICS_STATE_REQUIRED:'+key);const phaseOrigin=s.initialMechanicalThetaRad??theta0;if(typeof phaseOrigin!=='number'||!Number.isFinite(phaseOrigin))throw Error('FINITE_MECHANICAL_PHASE_ORIGIN_REQUIRED');if(s.wheelRadiusM!==undefined&&(typeof s.wheelRadiusM!=='number'||!Number.isFinite(s.wheelRadiusM)||Math.abs(s.wheelRadiusM-R)>1e-12))throw Error('PHYSICS_WHEEL_RADIUS_MISMATCH');const origin=s.rollingOriginPositionM??0;if(typeof origin!=='number'||!Number.isFinite(origin))throw Error('FINITE_ROLLING_ORIGIN_REQUIRED');if(Math.abs((s.positionM-origin)-R*s.wheelAngleRad)>1e-7||Math.abs(s.speedMps-R*s.wheelAngularSpeedRadS)>1e-7)throw Error('IDEAL_ROLLING_PHYSICS_STATE_INCONSISTENT');return applyState({worldTimeS:s.timeS,commonThetaRad:phaseOrigin-s.wheelAngleRad,omegaRadS:-s.wheelAngularSpeedRadS,alphaRadS2:-s.wheelAngularAccelerationRadS2},s.positionM,phaseOrigin);}
- const ends=o=>{const h=o.geometry.parameters.height/2;return [new T.Vector3(0,-h,0).applyMatrix4(o.matrixWorld).toArray(),new T.Vector3(0,h,0).applyMatrix4(o.matrixWorld).toArray()];};
- function snapshot(){return {scope:'original metric mechanism adaptation; shaft state drives every part; no joint-load or full-train dynamics certification',timeS:currentTime,state:{...currentState},mechanicalConfiguration:{wheelRadiusM:R,initialMechanicalThetaRad:currentPhaseOrigin},bodyTravelM:train.position.x,oldUpdateCalls:0,dimensionCalibration:{lengthScale,widthScale,heightScale,wheelScale:scale,targets:dimensions,method:'Separate body envelope and native circular wheel calibration; not a surveyed full A4 reconstruction'},bodyMountLiftM:lift,wheels:wheels.map(w=>({id:w.id,driver:w.driver,radiusM:w.radiusM,halfWidthM:w.halfWidthM,centreM:w.object.getWorldPosition(new T.Vector3()).toArray(),rotationY:w.object.rotation.y})),mainRods:motions.map(m=>({id:m.id,lengthM:m.main.geometry.parameters.height,endpointsM:ends(m.main),crossheadM:m.cross.getWorldPosition(new T.Vector3()).toArray(),crankPinM:m.pin.getWorldPosition(new T.Vector3()).toArray()})),couplingRods:couplers.map(p=>({lengthM:p.object.geometry.parameters.height,endpointsM:ends(p.object)})),nominalContact:nominalRollingContact(design,{bodySpeedMS:-R*currentState.omegaRadS,omegaRadS:currentState.omegaRadS,bodyXM:train.position.x}),unbuilt:['inner crank webs and bearings','physical cylinders/steam and valve gear','full rigid body dynamics','tread/flange contact','whole-train interference and structural certification']};}
+ const ends=o=>{const L=o.userData.pinCentresM;return [new T.Vector3(0,0,0).applyMatrix4(o.matrixWorld).toArray(),new T.Vector3(L,0,0).applyMatrix4(o.matrixWorld).toArray()];};
+ function snapshot(){return {scope:'original metric mechanism adaptation; shaft state drives every part; no joint-load or full-train dynamics certification',timeS:currentTime,state:{...currentState},mechanicalConfiguration:{wheelRadiusM:R,initialMechanicalThetaRad:currentPhaseOrigin},bodyTravelM:train.position.x,oldUpdateCalls:0,dimensionCalibration:{lengthScale,widthScale,heightScale,wheelScale:scale,targets:dimensions,method:'Separate body envelope and native circular wheel calibration; not a surveyed full A4 reconstruction'},bodyMountLiftM:lift,wheels:wheels.map(w=>({id:w.id,driver:w.driver,radiusM:w.radiusM,halfWidthM:w.halfWidthM,centreM:w.object.getWorldPosition(new T.Vector3()).toArray(),rotationY:w.object.rotation.y})),mainRods:motions.map(m=>({id:m.id,lengthM:m.main.userData.pinCentresM,endpointsM:ends(m.main),crossheadM:m.cross.getWorldPosition(new T.Vector3()).toArray(),crankPinM:m.pin.getWorldPosition(new T.Vector3()).toArray()})),couplingRods:couplers.map(p=>({lengthM:p.object.userData.pinCentresM,endpointsM:ends(p.object)})),nominalContact:nominalRollingContact(design,{bodySpeedMS:-R*currentState.omegaRadS,omegaRadS:currentState.omegaRadS,bodyXM:train.position.x}),unbuilt:['historical inclined inside crank and conjugated valve gear','full rigid body dynamics','dynamic wheel/rail contact loads','whole-train interference and structural certification']};}
  const physicsContract=Object.freeze({wheelDiameterM:2*R,cylinderCount:design.cylinders.length,strokeM:design.strokeM,initialMechanicalThetaRad:'explicit finite input, default 0.25'});
  function validatePhysicsConfiguration(input){const c=input?.train?{wheelDiameterM:input.train.wheelDiameterM,cylinderCount:input.engine?.cylinderCount,strokeM:input.engine?.strokeM,initialMechanicalThetaRad:input.train.initialMechanicalThetaRad}:input;for(const key of ['wheelDiameterM','cylinderCount','strokeM'])if(typeof c?.[key]!=='number'||!Number.isFinite(c[key])||Math.abs(c[key]-physicsContract[key])>1e-12)throw Error('PHYSICS_MECHANISM_CONFIG_MISMATCH:'+key);if(typeof c.initialMechanicalThetaRad!=='number'||!Number.isFinite(c.initialMechanicalThetaRad))throw Error('FINITE_MECHANICAL_PHASE_ORIGIN_REQUIRED');return true;}
- setTime(0);return {bodyDisplay,wheelBatches,nativeSource:old,dimensions,sourceBounds,bodyScales:{lengthScale,widthScale,heightScale,cabHeightFactor},physicsContract,validatePhysicsConfiguration,train,body,gear,wheels,axles,motions,couplers,clearance,sourceAxleCount:sourceAxles.length,scale,stateAt,setTime,setPhysicsState,snapshot,bodyTriangles};
+ setTime(0);return {shellProfile,setBrakePressure,sourceFirstAxleZ:first,mapSourcePoint,longitudinalMapping:{sourceFrontZ,cabRearSourceZ,locoLongitudinalFactor,tenderLongitudinalFactor},firstDrivingDatumXM,brakeAssemblies,bodyDisplay,wheelBatches,nativeSource:old,dimensions,sourceBounds,bodyScales:{lengthScale,widthScale,heightScale,cabHeightFactor},physicsContract,validatePhysicsConfiguration,train,body,gear,wheels,axles,motions,couplers,clearance,sourceAxleCount:sourceAxles.length,scale,stateAt,setTime,setPhysicsState,snapshot,bodyTriangles};
 }

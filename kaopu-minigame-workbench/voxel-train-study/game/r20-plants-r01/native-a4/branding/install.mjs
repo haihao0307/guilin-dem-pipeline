@@ -31,7 +31,7 @@ export function installBranding(train){
  const coachParents=train.coaches.map((coach,i)=>{const group=new T.Group();group.name='Native branding follows coach body '+i;group.position.set(-COACH_LAYOUT[i].x,-coach.proof.floorY,0);coach.body.add(group);return group;});
  const register=(name,at,width)=>marks.push({name,anchorM:at,widthM:width});
  for(const side of [-1,1]){
-  const center=panelAt([0,Y,-.6]),map=(u,v,d=0)=>{const x=center[0]+side*u,y=center[1]+v,srcZ=(x-offset)/ls+first,srcY=(y-TRACK.railHead)/hs+.08,t=(srcZ+L/2+1.2)/(L+2.25),tip=1-Math.pow(Math.max(0,(t-.68)/.32),2.2)*.78,vertical=(srcY-Y)/((R+.22)*tip),lateral=(R+.24)*tip*Math.sqrt(Math.max(0,1-vertical*vertical));return[x,y,side*(lateral*ws+d)];};
+  const center=panelAt([0,Y,-.6]),map=(u,v,d=0)=>{const x=center[0]+side*u,y=center[1]+v;return[x,y,side*(loco.surfaceHalfWidth(x,y)+d)];};
   const nose=panelAt([0,Y,4.6]),noseMap=(u,v,d)=>map(u+side*(nose[0]-center[0]),v+nose[1]-center[1],d);parent.add(shaped(number88,.30,noseMap,numberMaterial,'nose original 88 '+side,.012));
   word(parent,6,map,'boiler '+side);register('boiler wordmark '+side,center,6);
   const tender=panelAt([-side*1.112,2.02,-L/2-3.7]);const angel=side>0?right:left;parent.add(shaped(angel,3.5,sideMap(side,tender),red,'tender C angel '+side,.008));register('tender angel '+side,tender,3.5);
