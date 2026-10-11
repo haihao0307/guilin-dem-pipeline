@@ -1,0 +1,23 @@
+name: Hair R13C portable audit tools
+on:
+  push:
+    branches: [fix/hair-r13-groom-coherence-20261011]
+    paths: [.github/workflows/hair-r13c-toolkit.yml]
+permissions:
+  contents: read
+jobs:
+  toolkit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --prefix /tmp/hair-r13c-tools --no-save esbuild@0.25.10 playwright@1.55.1 pngjs@7.0.0
+          tar -czf /tmp/hair-r13c-tools.tar.gz -C /tmp/hair-r13c-tools .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hair-r13c-toolkit
+          path: /tmp/hair-r13c-tools.tar.gz
+          retention-days: 7
