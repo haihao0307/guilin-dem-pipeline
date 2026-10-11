@@ -1,0 +1,35 @@
+name: Hair R13 Source Checkpoint
+on:
+  push:
+    branches: [feature/hair-r13-length-ladder-20261011]
+    paths: [.github/workflows/hair-r13-source.yml]
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 5d420df72b94c089d38be934a02aa4b8323404fc
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-hair-workbench/fusion/r12
+            kaopu-human-overview
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Package exact accepted source and pinned build tools
+        run: |
+          mkdir -p /tmp/r13-source/kaopu-hair-workbench/fusion
+          cp -a kaopu-hair-workbench/fusion/r12 /tmp/r13-source/kaopu-hair-workbench/fusion/
+          cp -a kaopu-human-overview /tmp/r13-source/
+          rm -rf /tmp/r13-source/kaopu-hair-workbench/fusion/r12/evidence
+          npm install --prefix /tmp/r13-source/tools --no-save esbuild@0.25.10 playwright@1.55.1 pngjs@7.0.0
+          tar -czf /tmp/hair-r13-source.tar.gz -C /tmp/r13-source .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hair-r13-source
+          path: /tmp/hair-r13-source.tar.gz
+          retention-days: 7
