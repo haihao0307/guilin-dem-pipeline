@@ -1,0 +1,64 @@
+{
+  "schema": "native-multiview-fit-protocol/1",
+  "fixedBeforeFit": true,
+  "sharedIdentityCandidateAxes": [
+    "mouth-trans-up"
+  ],
+  "axesRequireNativeResponseAndObservability": "All other identity axes are locked unless independently justified; existing sparse lip points cannot resolve upper-lip height/cupid curvature.",
+  "fixedAxes": [
+    "mouth-scale-horiz-incr=.10",
+    "mouth-angles-up=.08",
+    "all-eye-and-brow",
+    "nose",
+    "jaw",
+    "body",
+    "GNM identity"
+  ],
+  "perImageControls": [
+    "mouthSmileLeft",
+    "mouthSmileRight"
+  ],
+  "cameraLightingHairMaterial": "Exact saved R45 values for before/after render; unknown photo focal/crop remains an identifiability caveat.",
+  "trainingIds": [
+    48,
+    54,
+    62,
+    66
+  ],
+  "cameraAnchorIds": [
+    36,
+    39,
+    42,
+    45,
+    30,
+    31,
+    35
+  ],
+  "newLandmarkHoldoutIds": [
+    51,
+    57
+  ],
+  "oldUnfitDiagnosticIds": [
+    8,
+    33
+  ],
+  "trainingSource": "Previous private observations reused unchanged; these are not held-out data.",
+  "holdoutSource": "Independent source-photo reading frozen by audit_multiview_fit_design before seeing R46 results; observations remain proxy image boundaries with makeup uncertainty.",
+  "identityDeltaLimit": 0.2,
+  "expressionAbsoluteBounds": [
+    0,
+    0.35
+  ],
+  "expressionDeltaLimit": 0.08,
+  "priors": {
+    "normalizedIdentity": 0.2,
+    "normalizedExpression": 0.2
+  },
+  "acceptance": [
+    "Every photo improves weighted training error over its own expression-only fit.",
+    "Each new holdout does not worsen beyond its predeclared reading box.",
+    "True native forward checked against linear prediction and geometry gates; exact baseline rollback.",
+    "Report camera-envelope and reading-box perturbation sensitivity; ambiguity or saturated expression prohibits identity-anchor promotion."
+  ],
+  "stoppingRule": "One joint fit and at most one bounded native correction or backtracking step; no open-ended likeness search."
+}
