@@ -2,7 +2,7 @@
 
 One real native78 Ficus microcarpa juvenile (seed761014, sheltered) is placed at the first station rear wall recess, position[-56.2,.081,-9] metres. The prior R01 remains published and unchanged. The rejected age-only Pandanus trial and later unpublished compact-Pandanus study are preserved separately; neither is presented as this new plant.
 
-The browser fetches a real 77,824-byte SQLite .KaoPu file, validates the fixed prototype envelope, profile, payload and pinned dependencies, then dispatches the new PLANT_FUNCTION_R01 operator. The explicit plant profile is kaopu.functional-plant/0.1-experimental. It extends the existing GAME SQLite envelope using the independently tested FH88 fixed-layout codec approach; it does not claim a finalized universal KAOPU standard or compatibility with the old railway profile. Raw JSON with a new extension is rejected. No mesh is embedded in the recipe.
+The browser fetches a real 77,824-byte SQLite .KaoPu file, validates the fixed prototype envelope, profile, payload and pinned dependencies, then dispatches the new PLANT_FUNCTION_R02 operator. The explicit plant profile is kaopu.functional-plant/0.1-experimental. It extends the existing GAME SQLite envelope using the independently tested FH88 fixed-layout codec approach; it does not claim a finalized universal KAOPU standard or compatibility with the old railway profile. Raw JSON with a new extension is rejected. No mesh is embedded in the recipe.
 
 The original mother is Vegetation Workbench v51, source HEAD d5f6ed0f41bdd6a4e4d1163190d3cd2135e8b122. The author rules use profile78/generateTropical78, and native createFixedMesh76 reconstructs every triangle. No source workbench edit, push or publication occurred. The original adult native78 specimen is about22.37m high and24.7M triangles and is not included. This is correctly labelled a juvenile; its source rules produce no aerial-root curtain.
 
@@ -15,6 +15,14 @@ The mother bark uses declared CC0 photographic proxy pixels, including japanese_
 The generator, materials, organ rules, source closure hash, seed, full profile, metre frame and absolute wind time are explicit. Candidate loading is atomic: corruption or failed construction leaves the previous live instance intact. Dispose is idempotent. The first candidate deliberately has one plant and no banana/coconut claim. Later instance sharing/LOD may be evaluated separately without changing this source-quality anchor.
 
 Tests include independent SQLite integrity and typed-graph checks, strict native recipe/dependency/resource validation, original shape hash reproduction, rollback, host clock and wall/rail/platform clearances. Actual scene screenshots must use the existing camera plus an additional labelled station-tail view at identical before/after light and camera. Existing fog, grid ground and lighting are not improved here. Do not call this candidate accepted or film-quality based on numerical tests.
+
+## Bounded signature revision
+
+The initial adapter incorrectly required the local Node24 raw output hash in every engine. Same-source Node22 and Chromium143 measurements showed 11 of12 geometry arrays byte-identical, including positions, normals, indices, colors, UV and every wind field. Seven bark-direction values near zero differed by at most7.99e-15; the initial ordinary-JSON graph diagnostic omitted compact leaf prototype getters. The new independent signature includes all those getter fields and must itself match across engines before rendering can pass.
+
+PLANT_FUNCTION_R02 pins a sixth dependency, native78-ficus-bounded-signature/1. It creates a signature copy only: bark chart x/y with abs(value)<1e-12 maps to +0, giving an exclusive pairwise bound2e-12; noninteger growth doubles use exact binary cells2^-40, an exclusive pairwise bound9.094947e-13. Positions, normals, indices, remaining typed arrays, integers, unknown fields, profile, resources and alias structure remain exact. The rendered specimen is never rounded or modified. Raw mother hashes remain recorded separately, not claimed equal where they differ. Canonical cells can conservatively reject boundary values; they never grant an unlimited output-hash exemption.
+
+Twenty-one negative/positive signature tests cover one-ULP position/normal, index, bark radius/travel, out-of-bound bark/growth, NaN, resources, unknown fields, aliases, leaf getters and nonmutation. Rules/inputs/material bytes still have strict SHA pins. The full local load now takes about7.2s including about4.6s content/signature checking, before browser/hardware measurement; this reference candidate is not latency-optimized.
 
 ## Inherited R20 implementation notes
 

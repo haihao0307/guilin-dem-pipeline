@@ -1,4 +1,4 @@
-/** Independent PLANT_FUNCTION_R01 experimental profile, not a universal KAOPU reader.
+/** Independent PLANT_FUNCTION_R02 experimental profile, not a universal KAOPU reader.
  * Real SQLite fixed envelope + physical BLOB slices, adapted from FH88 codec R04.
  * No SQL/WASM/network/eval/new dependency. Nothing here mutates a scene.
  * SHA256 is integrity, not authentication. Serve over HTTPS/localhost for WebCrypto.
@@ -152,7 +152,7 @@ async function verifyBytes(available,pins,kind){
 export async function verifyDependencyBytes(map){return verifyBytes(map,LAYOUT.static.dependencies,'RULE');}
 /** Hash original generated Uint8 RGBA resources before installing a candidate tree. */
 export async function verifyResourceBytes(map){return verifyBytes(map,LAYOUT.static.resources,'RESOURCE');}
-export const formatInfo=Object.freeze({profile:PROFILE,profileVersion:1,operator:'PLANT_FUNCTION_R01',ruleSet:'native-tropical78-ficus',
+export const formatInfo=Object.freeze({profile:PROFILE,profileVersion:1,operator:'PLANT_FUNCTION_R02',ruleSet:'native-tropical78-ficus',
  container:'SQLite KAOPU prototype envelope',applicationId:LAYOUT.applicationId,userVersion:1,
  fileBytes:MAX_FILE_BYTES,payloadCapacityBytes:MAX_PAYLOAD_BYTES,restoreMode:'regenerate-from-profile',
  oldFH88DrivingReaderSupported:false,oldFunctionalRailReaderSupported:false,oldDesktopImageReaderSupported:false,

@@ -107,7 +107,7 @@ def load_release(path):
         else:
             keys(source,['kind','license','generator'],'procedural provenance')
             require(source['kind']=='procedural', 'Original procedural resource required')
-    return {'profile':PROFILE,'profileVersion':1,'operator':'PLANT_FUNCTION_R01','ruleSet':'native-tropical78-ficus',
+    return {'profile':PROFILE,'profileVersion':1,'operator':'PLANT_FUNCTION_R02','ruleSet':'native-tropical78-ficus',
         'dependencies':dependencies,'source':{'head':SOURCE_HEAD,'closureSha256':data['sourceClosure']['sha256']},
         'profile76':PLANT_PROFILE,'units':{'length':'metre','up':'Y_UP','rootScale':[1,1,1]},
         'resources':resources,'metadata':{'releaseId':data['releaseId'],
@@ -123,7 +123,7 @@ def main():
     parser.add_argument('--input',type=Path,default=HERE/'release-input.json')
     args=parser.parse_args()
     static=load_release(args.input.resolve())  # All pins checked before changing outputs.
-    marker=b''.join(hashlib.sha256(b'PLANT_FUNCTION_R01_FIXED_SQLITE_BLOB'+struct.pack('<I',i)).digest() for i in range(CAPACITY//32))
+    marker=b''.join(hashlib.sha256(b'PLANT_FUNCTION_R02_FIXED_SQLITE_BLOB'+struct.pack('<I',i)).digest() for i in range(CAPACITY//32))
     digest_marker='d'*64
     path=HERE/'template.sqlite'
     if path.exists(): path.unlink()
@@ -136,7 +136,7 @@ def main():
       CREATE TABLE assets(role TEXT PRIMARY KEY,mime TEXT,sha256 TEXT,data BLOB);''')
     db.executemany('INSERT INTO records VALUES(?,?,?,?)',[
         ('instance','functional_plant_recipe','Young ficus; recipe regeneration only',1),
-        ('rules','pinned_plant_function','native-tropical78-ficus / PLANT_FUNCTION_R01',1),
+        ('rules','pinned_plant_function','native-tropical78-ficus / PLANT_FUNCTION_R02',1),
         ('materials','pinned_native_resources','Original native resources; CC0-declared proxy bark and procedural leaves',1)])
     db.executemany('INSERT INTO links VALUES(?,?,?,?)',[(1,'instance','generated_by','rules'),(2,'rules','uses_pinned_resources','materials')])
     sections=[('profile',{'schema':PROFILE,'profileVersion':1,'operator':static['operator'],'ruleSet':static['ruleSet']}),
@@ -147,7 +147,7 @@ def main():
     headers=[('format','KAOPU prototype envelope / independent experimental plant profile'),('profile',PROFILE),
         ('graph_sha256',graph_digest(db)),('asset_policy','One padded inert JSON BLOB; no mesh, pixels, samples or executable incoming code'),
         ('restore_policy','Validate; verify loaded rule bytes and generated material bytes; regenerate; caller atomically swaps only after success'),
-        ('old_reader_supported','false'),('layout_id','PLANT_FUNCTION_R01_FIXED_SQLITE_V1'),
+        ('old_reader_supported','false'),('layout_id','PLANT_FUNCTION_R02_FIXED_SQLITE_V1'),
         ('authentication','false: SHA256 verifies integrity, not author identity')]
     db.executemany('INSERT INTO header VALUES(?,?)',headers)
     db.execute('INSERT INTO assets VALUES(?,?,?,?)',('functional_plant_recipe','application/json',digest_marker,marker))

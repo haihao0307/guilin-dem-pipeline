@@ -1,6 +1,6 @@
 # Native plant .KaoPu codec R01
 
-This is an independent experimental plant profile, `kaopu.functional-plant/0.1-experimental`, with operator `PLANT_FUNCTION_R01` and rule set `native-tropical78-ficus`. It is not FH88 driving settings and does not claim a universal KAOPU standard or compatibility with existing readers.
+This is an independent experimental plant profile, `kaopu.functional-plant/0.1-experimental`, with operator `PLANT_FUNCTION_R02` and rule set `native-tropical78-ficus`. It is not FH88 driving settings and does not claim a universal KAOPU standard or compatibility with existing readers.
 
 The .KaoPu file is a real SQLite database, not JSON with a renamed extension. The five existing envelope tables (`header`, `records`, `links`, `fields`, `assets`), application ID `0x4B505531`, user version `1`, and typed graph digest convention are retained. `objects/young-ficus.KaoPu` is 77,824 bytes and has passed native Python SQLite `integrity_check`.
 
