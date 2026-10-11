@@ -13,8 +13,31 @@ const mime={'.html':'text/html','.mjs':'text/javascript','.js':'text/javascript'
   const b=canvas(),renderer=new THREE.WebGLRenderer({canvas:b,antialias:true,preserveDrawingBuffer:true});renderer.setSize(w,h,false);renderer.outputColorSpace=THREE.LinearSRGBColorSpace;renderer.toneMapping=THREE.NoToneMapping;renderer.setClearColor(new THREE.Color().setRGB(.040,.047,.042),1);const gpuErrors=[];renderer.debug.onShaderError=(gl,p,v,f)=>gpuErrors.push({program:gl.getProgramInfoLog(p),vertex:gl.getShaderInfoLog(v),fragment:gl.getShaderInfoLog(f)});
   const scene=new THREE.Scene(),wall=createR312Wall({THREE,...frame.parameters});scene.add(wall.group);renderer.render(scene,camera);const g=renderer.getContext();g.finish();const adaptedPNG=b.toDataURL(),pixels=new Uint8Array(w*h*4);g.readPixels(0,0,w,h,g.RGBA,g.UNSIGNED_BYTE,pixels);const threeError=g.getError();let sum=0,max=0,changed=0,foreground=0;for(let i=0;i<pixels.length;i+=4){let d=0;for(let j=0;j<3;j++){const v=Math.abs(rawPixels[i+j]-pixels[i+j]);sum+=v;max=Math.max(max,v);d=Math.max(d,v)}if(d>2)changed++;if(rawPixels[i]>24||rawPixels[i+1]>24||rawPixels[i+2]>24)foreground++;}
   const stats={width:w,height:h,maeRGB:sum/(w*h*3),maxDifference:max,changedOver2:changed,foregroundPixels:foreground,rawCounters:raw.counters,rawProof:raw.proof,adapterProof:wall.proof,gpuErrors,rawError,threeError,drawCalls:renderer.info.render.calls,frame};
-  wall.dispose();const door=createR312Wall({THREE,seed:312,bindingMode:'legacy',door:{x:0,bottom:0,width:.9,height:2.05}});scene.add(door.group);renderer.render(scene,camera);g.finish();const doorPNG=b.toDataURL();stats.doorProof=door.proof;stats.doorGPUError=g.getError();return {originalPNG,adaptedPNG,doorPNG,stats};
+  wall.dispose();const door=createR312Wall({THREE,seed:312,bindingMode:'legacy',door:{x:0,bottom:0,width:.9,height:2.05}});scene.add(door.group);renderer.render(scene,camera);g.finish();const doorPNG=b.toDataURL();stats.doorProof=door.proof;stats.doorGPUError=g.getError();door.dispose();
+  const checks=[],images=[];
+  const probe=new THREE.Mesh(new THREE.PlaneGeometry(10,8),new THREE.MeshBasicMaterial({color:0x00ffff,side:THREE.DoubleSide,toneMapped:false}));probe.position.set(0,2,1.4);scene.add(probe);
+  const projectRay=new THREE.Vector3(),ray=new THREE.Vector3(),cameraWorld=new THREE.Vector3();
+  for(const item of [
+   {name:'r312-declared-solid-front',position:[0,1.4,-6.5],opening:null},
+   {name:'r312-declared-door-front',position:[0,1.4,-6.5],opening:{x:0,bottom:0,width:.9,height:2.05}},
+   {name:'r312-declared-door-oblique',position:[-3,2.1,-5],opening:{x:0,bottom:0,width:.9,height:2.05}},
+   {name:'r312-declared-room-plaster',position:[-3,2.1,-5],opening:{x:0,bottom:0,width:.9,height:2.05},plasterSize:[3.2,2.35],plasterCenter:[0,1.48]}
+  ]){
+   camera.position.fromArray(item.position);camera.lookAt(0,1.35,0);camera.updateMatrixWorld();const candidate=createR312Wall({THREE,seed:312,bindingMode:'declared',door:item.opening,...(item.plasterSize?{plasterSize:item.plasterSize,plasterCenter:item.plasterCenter}:{})});scene.add(candidate.group);renderer.render(scene,camera);g.finish();const buf=new Uint8Array(w*h*4);g.readPixels(0,0,w,h,g.RGBA,g.UNSIGNED_BYTE,buf);let clearSamples=0,blockedSamples=0,solidSamples=0,solidCyanLeaks=0;
+   camera.getWorldPosition(cameraWorld);
+   for(let py=0;py<h;py++)for(let px=0;px<w;px++){
+    projectRay.set((px+.5)/w*2-1,(py+.5)/h*2-1,.5).unproject(camera);ray.copy(projectRay).sub(cameraWorld).normalize();if(ray.z<=0)continue;
+    const crossings=[-.45,.45].map(z=>{const t=(z-cameraWorld.z)/ray.z;return{x:cameraWorld.x+ray.x*t,y:cameraWorld.y+ray.y*t}});
+    const d=item.opening,inside=d&&crossings.every(p=>p.x>d.x-d.width/2+.045&&p.x<d.x+d.width/2-.045&&p.y>d.bottom+.06&&p.y<d.bottom+d.height-.06);
+    const i=(py*w+px)*4,isCyan=buf[i]<5&&buf[i+1]>249&&buf[i+2]>249;
+    if(inside){clearSamples++;if(!isCyan)blockedSamples++;}
+    if(!d&&crossings.every(p=>Math.abs(p.x)<1.6&&p.y>.25&&p.y<2.7)){solidSamples++;if(isCyan)solidCyanLeaks++;}
+   }
+   checks.push({name:item.name,parameters:candidate.parameters,proof:candidate.proof,clearSamples,blockedSamples,solidSamples,solidCyanLeaks,gpuError:g.getError(),drawCalls:renderer.info.render.calls});images.push({name:item.name,png:b.toDataURL()});candidate.dispose();
+  }
+  stats.declaredChecks=checks;return {originalPNG,adaptedPNG,doorPNG,images,stats};
  },origin+'/'+GAME);
  for(const [n,d] of [['r312-original-workbench',result.originalPNG],['r312-three-adapted',result.adaptedPNG],['r312-door-geometry-adapter',result.doorPNG]])fs.writeFileSync(path.join(OUT,n+'.png'),Buffer.from(d.split(',')[1],'base64'));
- receipt.stats=result.stats;receipt.sourceAppUnchanged=hash(fs.readFileSync(app))===appHash;const s=result.stats;if(s.gpuErrors.length||s.rawError||s.threeError||s.doorGPUError||s.maeRGB>1||s.foregroundPixels<500)throw Error('Wall source/adapter equivalence gate failed');receipt.passed=true;
+ for(const item of result.images)fs.writeFileSync(path.join(OUT,item.name+'.png'),Buffer.from(item.png.split(',')[1],'base64'));
+ receipt.stats=result.stats;receipt.sourceAppUnchanged=hash(fs.readFileSync(app))===appHash;const s=result.stats;if(s.gpuErrors.length||s.rawError||s.threeError||s.doorGPUError||s.maeRGB>1||s.foregroundPixels<500||s.declaredChecks.some(c=>c.gpuError||c.blockedSamples>0||(c.parameters.door&&c.clearSamples<150)))throw Error('Wall source/adapter equivalence gate failed');receipt.passed=true;
  }catch(e){receipt.failure=String(e);process.exitCode=1}finally{fs.writeFileSync(path.join(OUT,'wall-equivalence-receipt.json'),JSON.stringify(receipt,null,2));console.log(JSON.stringify(receipt,null,2));await browser?.close();server.close()}})();
