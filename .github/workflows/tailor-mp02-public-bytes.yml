@@ -1,0 +1,75 @@
+name: MP02 published candidate byte verification
+on:
+  push:
+    branches: [feature/tailor-mp02-solid-textiles-20261011]
+    paths: ['.github/workflows/tailor-mp02-public-bytes.yml']
+permissions:
+  contents: write
+jobs:
+  public-bytes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: kaopu-tailor-workbench/material-products/r02
+      - name: Verify existing immutable HTTPS files, not browser rendering
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,hashlib,time,os,subprocess
+          from urllib.request import urlopen,Request
+          P=Path('kaopu-tailor-workbench/material-products/r02')
+          source='23c34ca5699e388d2b9ab2502fb91480e6628b5c'
+          prefix='kaopu-tailor-workbench/material-products/mp02-s1-'+source[:12]
+          url='https://haihao0307.github.io/guilin-dem-pipeline/'+prefix+'/'
+          def get(path):
+              with urlopen(Request(url+path,headers={'User-Agent':'KAOPU-MP02-byte-check'}),timeout=45) as r:return r.read()
+          def save(name,data):(P/name).write_text(json.dumps(data,ensure_ascii=False,indent=2))
+          for attempt in range(60):
+              try:
+                  manifest=json.loads(get('BUILD_MANIFEST.json'))
+                  if manifest['sourceCommit']==source:break
+              except Exception as error:print('Publication not available yet:',str(error),flush=True)
+              time.sleep(5)
+          else:raise RuntimeError('Public snapshot unavailable; no completed-delivery claim')
+          assert manifest['visualVerified'] is False and manifest['deliveryComplete'] is False
+          files=[];received={}
+          for name,entry in manifest['files'].items():
+              data=get(name);digest=hashlib.sha256(data).hexdigest()
+              assert digest==entry['sha256'] and len(data)==entry['bytes'],name+' public mismatch'
+              assert hashlib.sha256((P/name).read_bytes()).hexdigest()==digest,name+' canonical source mismatch'
+              files.append({'path':name,'bytes':len(data),'sha256':digest})
+              if name in ('GEOMETRY_REPORT.json','SHADER_REPORT.json'):received[name]=json.loads(data)
+          geometry=received['GEOMETRY_REPORT.json'];shader=received['SHADER_REPORT.json']
+          assert geometry['passed'] and len(geometry['rows'])==7 and all(x['passed'] for x in geometry['checks'])
+          assert shader['passed'] and shader['visualVerified'] is False
+          subprocess.run(['git','fetch','origin','gh-pages','--depth=1'],check=True)
+          old='kaopu-tailor-workbench/material-products/mp01-ff151f3bf29e'
+          oldHash=subprocess.check_output(['git','rev-parse','origin/gh-pages:'+old],text=True).strip()
+          assert oldHash=='5dce33dd26cbf4d08cb999f5f9895cb659b24747','Old MP01 changed'
+          state={'version':'MP02-S1','sourceCommit':source,'fixedURL':url+'?look=L04&top=leather-patent&bottom=denim-bleach','knitURL':url+'?look=K02&top=knit-soft-0&bottom=denim-raw','normalPublicationTriggerCommit':'1c12f375953e26aed5099ccb9df6ed6decae51c6','oldMP01TreeBefore':oldHash,'oldMP01TreeAfter':oldHash,'publicBytesVerified':True,'publicFileCount':len(files),'numericalAssertions':len(geometry['checks']),'nativeGarments':len(geometry['rows']),'shaderCompilerPassed':True,'visualVerified':False,'deliveryComplete':False,'materialPhysicsCalibrated':False,'sourceValidationRun':38128434666,'sourceValidationRunScope':'geometry and compiler passed; first publication polling timed out','publicVerificationRun':int(os.environ['GITHUB_RUN_ID']),'browserBlock':'ERR_BLOCKED_BY_ADMINISTRATOR on local development URL'}
+          save('BUILD_MANIFEST.json',manifest);save('RELEASE_STATE.json',state);save('PUBLIC_BYTES.json',{'passed':True,'visualVerified':False,'files':files})
+          save('CHECK_SUMMARY.json',{'passedScope':'numerical assertions, custom shader compiler, public byte equality only','assertions':len(geometry['checks']),'garments':[r['id'] for r in geometry['rows']],'publicFiles':len(files),'sourceCommit':source,'noChangesToMP01':True,'visualVerified':False,'deliveryComplete':False})
+          print(json.dumps(state,ensure_ascii=False),flush=True)
+          PY
+      - name: Retain exact public verification scope without modifying runtime
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$GITHUB_REF_NAME" --depth=1
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/$GITHUB_REF_NAME)"
+          P=kaopu-tailor-workbench/material-products/r02
+          git add -- "$P/BUILD_MANIFEST.json" "$P/RELEASE_STATE.json" "$P/PUBLIC_BYTES.json" "$P/CHECK_SUMMARY.json"
+          git commit -m 'docs(mp02): public bytes verified; visual acceptance still incomplete [skip ci]'
+          git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
+      - name: Package exact source and scoped evidence
+        if: always()
+        run: tar -czf mp02-public-evidence.tgz kaopu-tailor-workbench/material-products/r02
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp02-public-evidence
+          path: mp02-public-evidence.tgz
+          retention-days: 14
