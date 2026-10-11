@@ -1,0 +1,46 @@
+name: Identity lips ET17 independent visual inspection
+on:
+  push:
+    branches: [test/identity-lips-et17-visual-20261011]
+    paths: [.github/workflows/identity-lips-et17-visual.yml]
+permissions:
+  contents: read
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pinned build and browser
+        run: |
+          mkdir -p /tmp/visual-tools
+          cd /tmp/visual-tools
+          npm init -y >/dev/null
+          npm install esbuild@0.25.11 playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Build and inspect same character
+        env:
+          NODE_PATH: /tmp/visual-tools/node_modules
+        run: |
+          node kaopu-unified-human-workbench/lip-structure/build.cjs
+          mkdir -p lip-visual
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/visual-http.log 2>&1 &
+          node <<'JS'
+          const fs=require('fs'),{chromium}=require('playwright');
+          (async()=>{const b=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}),p=await b.newPage({viewport:{width:1280,height:900}});p.setDefaultTimeout(90000);const errors=[],times=[];p.on('pageerror',e=>errors.push(String(e)));p.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+          try{await p.goto('http://127.0.0.1:8765/kaopu-unified-human-workbench/lip-structure/preview.html',{waitUntil:'domcontentloaded'});await p.waitForFunction(()=>window.lipWorkbench&&__IDENTITY_QA__.viewer().skin.naturalEyeExtension.ready);await p.waitForTimeout(1000);for(const mode of ['front','oblique','profile','macro']){const start=Date.now();await p.evaluate(mode=>lipWorkbench.view(mode),mode);await p.screenshot({path:'lip-visual/new-'+mode+'.png',timeout:90000});await p.evaluate(()=>lipWorkbench.set({enabled:false}));await p.screenshot({path:'lip-visual/old-'+mode+'.png',timeout:90000});await p.evaluate(()=>lipWorkbench.set({enabled:true}));times.push({mode,ms:Date.now()-start});}fs.writeFileSync('lip-visual/report.json',JSON.stringify(await p.evaluate(()=>lipWorkbench.report()),null,2));}catch(e){errors.push(String(e.stack));try{await p.screenshot({path:'lip-visual/failure.png',timeout:90000});fs.writeFileSync('lip-visual/body.txt',await p.locator('body').innerText());}catch{}}finally{fs.writeFileSync('lip-visual/errors.json',JSON.stringify(errors,null,2));fs.writeFileSync('lip-visual/times.json',JSON.stringify(times,null,2));await b.close();}})().catch(e=>{console.error(e);process.exitCode=1});
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: identity-lips-et17-visual
+          path: lip-visual
+          retention-days: 7
