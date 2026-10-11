@@ -109,7 +109,7 @@ Producer 不得自批 baseline 或最终视觉结论。自动门全绿仍只写 
 
 - POSTED=true — PR #225 comment 6109647755
 - ACKNOWLEDGED=false
-- IMPLEMENTED=true（功能门与收据状态分层已经实现）
+- IMPLEMENTED=false（ET20 功能实现存在；N139 独立 visual comparator / verifier 增量尚未实现）
 - GATE-RUN=true（N139 12/12）
 - ADOPTED=false
 - USER-ACCEPTED=false
