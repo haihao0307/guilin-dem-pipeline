@@ -13,7 +13,7 @@ def retain(names,msg):
 def publish():
  r=load('CANDIDATE_REPORT.json');assert r['passed'] and len(r['looks'])==12 and all(v['passed'] for v in r['looks'])
  source=load('SOURCE_LOCK.json');mats=load('materials.json');assert len(mats)==12 and len(source['garments'])==7
- files=['index.html','style.css','app.mjs','looks.mjs','outfits-r043.mjs','source-contract.mjs','sewn-normals-r0433.mjs','SOURCE_LOCK.json','materials.json','EXPORT_SOURCE_RECEIPT.json','EXPORT_FIELDS_REPORT.json','CANDIDATE_REPORT.json','THIRD_PARTY_NOTICES.md','native/identity.json']
+ files=['index.html','style.css','app.mjs','looks.mjs','outfits-r043.mjs','source-contract.mjs','sewn-normals-r0433.mjs','SOURCE_LOCK.json','materials.json','EXPORT_SOURCE_RECEIPT.json','EXPORT_FIELDS_REPORT.json','CANDIDATE_REPORT.json','THIRD_PARTY_NOTICES.md','native/identity.json','panel-grain.mjs','PANEL_GRAIN_REPORT.json','TEXTURE_PACK_REPORT.json','INTEGRATION_PATCH.json']
  files += [r['path'] for r in source['garments'].values()]
  for row in mats:
   for x in row['files'].values():assert digest((P/x['path']).read_bytes())==x['sha256'];files.append(x['path'])
