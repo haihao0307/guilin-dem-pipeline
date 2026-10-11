@@ -1,0 +1,79 @@
+name: Ear ET18 browser review and immutable publication
+on:
+  push:
+    branches: [feature/ear-anatomy-et18-20261011]
+    paths:
+      - .github/workflows/ear-et18-review.yml
+      - kaopu-unified-human-workbench/ear-structure/*.mjs
+      - kaopu-unified-human-workbench/ear-structure/*.cjs
+      - kaopu-unified-human-workbench/ear-structure/layout.css
+concurrency:
+  group: ear-et18-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: write
+jobs:
+  build-test-public:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pinned build and browser dependencies
+        run: |
+          mkdir -p /tmp/ear-tools
+          cd /tmp/ear-tools
+          npm init -y >/dev/null
+          npm install esbuild@0.25.11 playwright@1.56.1 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: Build against the exact frozen lips and retained character
+        env:
+          NODE_PATH: /tmp/ear-tools/node_modules
+        run: |
+          mkdir -p ear-evidence/local ear-evidence/public
+          git rev-parse HEAD > ear-evidence/SOURCE_COMMIT.txt
+          node kaopu-unified-human-workbench/ear-structure/build.cjs
+          cp kaopu-unified-human-workbench/ear-structure/BUILD.json ear-evidence/BUILD.json
+      - name: Actual browser rendering and full ear regression
+        env:
+          NODE_PATH: /tmp/ear-tools/node_modules
+          EAR_EVIDENCE: ear-evidence/local
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/ear-http.log 2>&1 &
+          node kaopu-unified-human-workbench/ear-structure/verify.cjs
+      - name: Publish only the new preview, preserving old versions, fast-forward only
+        run: |
+          git diff --exit-code HEAD -- kaopu-unified-human-workbench/lip-structure kaopu-unified-human-workbench/eye-materials kaopu-unified-human-workbench/identity-lab kaopu-unified-human-workbench/full kaopu-unified-human-workbench/face-transfer kaopu-unified-human-workbench/eye-transfer
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/ear-structure/preview.html kaopu-unified-human-workbench/ear-structure/BUILD.json
+          if ! git diff --cached --quiet; then git commit -m 'build(ears): ET18 native-ear review after browser regressions [skip ci]'; git push origin HEAD:feature/ear-anatomy-et18-20261011; fi
+          SHA=$(git rev-parse HEAD)
+          echo "$SHA" > ear-evidence/PUBLISHED_COMMIT.txt
+          echo "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$SHA/kaopu-unified-human-workbench/ear-structure/preview.html" > ear-evidence/PUBLIC_URL.txt
+      - name: Verify real immutable HTTPS preview in browser
+        env:
+          NODE_PATH: /tmp/ear-tools/node_modules
+          EAR_EVIDENCE: ear-evidence/public
+          EAR_SMOKE: '1'
+        run: |
+          export EAR_URL=$(cat ear-evidence/PUBLIC_URL.txt)
+          node kaopu-unified-human-workbench/ear-structure/verify.cjs
+      - name: Retain source, build and actual rendered evidence
+        if: always()
+        run: |
+          mkdir -p ear-evidence/build
+          cp -r kaopu-unified-human-workbench/ear-structure/. ear-evidence/build/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ear-et18-review-delivery
+          path: ear-evidence
+          retention-days: 14
