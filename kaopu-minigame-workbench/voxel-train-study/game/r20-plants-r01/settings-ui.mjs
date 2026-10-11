@@ -91,7 +91,7 @@ export function initSettingsUI(){
   const mapObserver=new MutationObserver(decoratePlatforms);mapObserver.observe($('mapStations'),{childList:true});decoratePlatforms();
   const statusObserver=new MutationObserver(()=>{syncSignal();syncQuality();});
   for(const id of ['notch','stationHint','pause'])statusObserver.observe($(id),{childList:true});
-  controller={open,close,sync(){syncQuality();syncSignal();syncFullscreen();decoratePlatforms();},get isOpen(){return !dialog.hidden;}};
+  controller={open,close,preservePauseOnClose(){pausedBySettings=false;priorPauseScreenHidden=false;$('settingsPauseHint').textContent='已恢复存档。关闭设置后仍保持暂停，请确认后继续。';},sync(){syncQuality();syncSignal();syncFullscreen();decoratePlatforms();},get isOpen(){return !dialog.hidden;}};
   controller.sync();return controller;
 }
 // Safe before or after app readiness; app may call initSettingsUI() again to sync.

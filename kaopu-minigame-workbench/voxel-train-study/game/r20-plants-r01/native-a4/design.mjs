@@ -1,0 +1,66 @@
+export default {
+  "identity": "FH88_ORIGINAL_THREE_PARALLEL_CYLINDER_BENCH_R01",
+  "lengthUnit": "m",
+  "worldFrame": "X forward, Y left, Z up; positive crank angle +X toward +Z",
+  "track": {
+    "nominalGaugeM": 1.435,
+    "gaugeMeaning": "distance between inner rail-head faces in this rectangular rail proxy",
+    "railHeadProxyWidthM": 0.15,
+    "railTopZM": 0,
+    "profileStatus": "self-selected rectangular proxy, not a certified rail section"
+  },
+  "wheel": {
+    "diameterM": 2.032,
+    "envelopeHalfWidthM": 0.09,
+    "flangeProfile": null,
+    "backToBackM": null,
+    "contactMeaning": "nominal rolling circles above rail-head centre lines; not actual flange/tread contact"
+  },
+  "strokeM": 0.6604,
+  "rodPinCentresM": 3.2,
+  "outsideRodGapFromWheelFaceM": 0.11,
+  "cylinders": [
+    {
+      "id": "right",
+      "axisAngleRad": 0,
+      "axisYM": -0.9924999999999999,
+      "crankPhaseRad": 0,
+      "equivalentReciprocatingMassKg": null
+    },
+    {
+      "id": "inside",
+      "axisAngleRad": 0,
+      "axisYM": 0,
+      "crankPhaseRad": 2.0943951023931953,
+      "equivalentReciprocatingMassKg": null
+    },
+    {
+      "id": "left",
+      "axisAngleRad": 0,
+      "axisYM": 0.9924999999999999,
+      "crankPhaseRad": 4.1887902047863905,
+      "equivalentReciprocatingMassKg": null
+    }
+  ],
+  "phaseRationale": "Explicit new-design choice: three equal, horizontal, inline cylinders with phases 0/120/240 degrees cancel the first two longitudinal reciprocating harmonics for equal masses. This is not historical A3/A4 crank indexing; spatial couples and higher harmonics remain.",
+  "provenance": {
+    "nominalGaugeM": "Selected nominal 88 design gauge, not measured from the old game-unit shape.",
+    "railHeadProxyWidthM": "New explicit proxy dimension; actual rail profile remains undecided.",
+    "diameterM": "Science Museum Group Mallard A4 catalogue: 2.032 m; adopted for 88.",
+    "strokeM": "Existing FH88 candidate.",
+    "rodPinCentresM": "Existing FH88 single-cylinder candidate.",
+    "envelopeHalfWidthM": "New wheel bounding-width choice, not a validated wheel section.",
+    "axisYM": "Derived from nominal contact half-spacing + bounding half-width + outside rod gap; inside on vehicle centre line. Whole-machine packaging unverified."
+  },
+  "unresolved": [
+    "actual rail/wheel profiles",
+    "bearing and crankshaft construction",
+    "frame/cylinder interference",
+    "masses and centres of mass",
+    "counterweights",
+    "steam admission and cutoff",
+    "rod inertia",
+    "wheel/vehicle dynamics",
+    "adhesion and braking"
+  ]
+};

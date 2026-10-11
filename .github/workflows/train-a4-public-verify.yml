@@ -1,0 +1,35 @@
+name: Existing train public release verification
+on:
+  push:
+    branches: ['gh-pages']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/app.mjs'
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r01-pre-a4-40861390/**'
+      - 'kaopu-minigame-workbench/voxel-train-study/tests/a4-public-smoke.cjs'
+      - '.github/workflows/train-a4-public-verify.yml'
+permissions:
+  contents: read
+jobs:
+  verify-public:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Official pinned browser runner
+        run: |
+          npm install --prefix "$RUNNER_TEMP/a4-public" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/a4-public/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/a4-public/node_modules" >> "$GITHUB_ENV"
+      - name: Verify published game and byte-preserved old version
+        run: node kaopu-minigame-workbench/voxel-train-study/tests/a4-public-smoke.cjs
+      - name: Preserve actual public browser evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: train-public-${{ github.sha }}
+          path: train-public-results/
+          retention-days: 7
+          compression-level: 0

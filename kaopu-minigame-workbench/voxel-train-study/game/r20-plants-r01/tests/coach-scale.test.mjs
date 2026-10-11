@@ -21,7 +21,7 @@ test('R17 rejects legacy geometry explicitly instead of importing or silently fa
 
 test('complete exported train constructor and Session update compose without mutations',()=>{
   const train=createGameTrain(),session=new Session({line:'kcr1'}),view=session.view(),original=structuredClone(view);train.update(view);train.root.updateWorldMatrix(true,true);
-  assert.equal(train.coaches.length,2);assert.equal(train.wheels.length,34);assert.equal(train.proof.coachBodyMotion.coaches.length,2);assert.deepEqual(view,original);assert.deepEqual(train.root.scale.toArray(),[1,1,1]);
+  assert.equal(train.coaches.length,2);assert.equal(train.wheels.length,36);assert.equal(train.proof.coachBodyMotion.coaches.length,2);assert.deepEqual(view,original);assert.deepEqual(train.root.scale.toArray(),[1,1,1]);
   train.update({...view,door:1},{interior:true});assert.equal(train.coaches[0].roof.material.opacity,.22);train.resetBodyMotion();train.setBodyMotionEnabled(false);
 });
 

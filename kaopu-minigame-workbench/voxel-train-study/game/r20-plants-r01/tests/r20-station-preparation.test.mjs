@@ -6,7 +6,7 @@ import {createGameWorld,createStationModel,WORLD} from '../world.mjs';
 import {createStationStreaming,STATION_PREPARATION_METRES,STATION_MAX_CONTINUOUS_STEP} from '../station-streaming.mjs';
 import {PLATFORM_LAYOUT} from '../metre-scale.mjs';
 import {FLAT_WORLD} from '../flat-terrain.mjs';
-import {Session} from '../session.mjs';
+import {Session,DT} from '../session.mjs';
 import {kcrRoute} from '../timetable.mjs';
 
 // Actual Three geometry and all actual procedural texture drawing commands.
@@ -126,12 +126,13 @@ test('all nine stations, 0→6000→0, retain the baseline 17 builds instead of 
 test('actual Session max-throttle stepping retains identical signature, actors and complete events',()=>{
   const a=harness(),game=new Session({line:'kcr1',seed:'actual-station-stream'}),control=new Session({line:'kcr1',seed:'actual-station-stream'});
   for(const session of [game,control]){session.command('start');for(let i=0;i<3;i++)session.command('throttle-up');}
-  let maximum=0,preparations=0;
+  let maximum=0,preparations=0,governorTicks=0;
   try{for(let i=0;i<3000&&game.distance<=700;i++){
-    game.stepTicks(1);control.stepTicks(1);const signature=game.signature(),events=JSON.stringify(game.events);a.update(game.view(),game.route);maximum=Math.max(maximum,game.velocity);preparations+=a.snapshot().lastUpdatePreparationCount;
+    const beforeSpeed=game.velocity;game.stepTicks(1);control.stepTicks(1);if(beforeSpeed>18){governorTicks++;assert.equal(game.physics.controls.throttle,0);assert(game.physics.controls.brake>0);}
+    const signature=game.signature(),events=JSON.stringify(game.events);a.update(game.view(),game.route);maximum=Math.max(maximum,game.velocity);preparations+=a.snapshot().lastUpdatePreparationCount;
     assert.equal(game.signature(),signature);assert.equal(JSON.stringify(game.events),events);assert.equal(game.signature(),control.signature());assert.deepEqual(game.events,control.events);
   }
-    assert(game.distance>=700);assert.equal(maximum,18);assert.equal(preparations,1);assert.equal(a.snapshot().buildCount,2);assert.equal(a.snapshot().reuseCount,1);
+    assert(game.distance>=700);const p=game.physics.p,oneHostTickAcceleration=p.rail.adhesionCoefficient*p.train.adhesiveMassKg*p.rail.gravityMps2/game.physics.effectiveMassKg*DT;assert(maximum>=18&&maximum<=18+oneHostTickAcceleration+1e-8);assert(governorTicks>0);assert.equal(preparations,1);assert.equal(a.snapshot().buildCount,2);assert.equal(a.snapshot().reuseCount,1);
   }finally{a.dispose();}released(a.records);
 });
 
