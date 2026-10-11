@@ -1,0 +1,57 @@
+name: Tailor R0434 native replay diagnosis
+on:
+  push:
+    branches: [fix/tailor-display-r0434-20261011]
+    paths: [.github/workflows/tailor-r0434-replay.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: kaopu-tailor-workbench/presets/r04
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Preserve exact first public acceptance including the failed comparison
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p replay-evidence
+          python - <<'PY'
+          import urllib.request,os,hashlib,zipfile,io
+          from pathlib import Path
+          req=urllib.request.Request('https://api.github.com/repos/haihao0307/guilin-dem-pipeline/actions/artifacts/11692510757/zip',headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+          data=urllib.request.urlopen(req,timeout=90).read()
+          assert hashlib.sha256(data).hexdigest()=='f18fbf1038da6b442218fcc3f2a515e399522ed784fc33ca158458036cd1cd79'
+          p=Path('kaopu-tailor-workbench/presets/r04/qa-r0434-first-public');p.mkdir()
+          with zipfile.ZipFile(io.BytesIO(data)) as z:
+            for n in ['R0434_PUBLIC_REPORT.json','R0434_SAFETY_PUBLIC_REPORT.json','R0434_FRESH_PUBLIC_REPORT.json','R0434_PUBLIC_BYTES.json','public-fresh.log','finish.log']:
+              (p/n).write_bytes(z.read(n))
+          PY
+      - name: Prepare actual browser
+        run: |
+          pip install playwright==1.57.0 pillow
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y fonts-noto-cjk
+      - name: Two independent public native solves with strict unchanged output tolerance
+        run: python kaopu-tailor-workbench/presets/r04/qa_replay_r0434.py 2>&1 | tee replay-evidence/replay.log
+      - name: Preserve complete native packets and visual evidence
+        if: always()
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          cp "$P/qa_replay_r0434.py" replay-evidence/
+          cp "$P/R0434_REPLAY_REPORT.json" replay-evidence/ 2>/dev/null || true
+          cp -r "$P/qa-r0434-replay" "$P/qa-r0434-first-public" replay-evidence/ 2>/dev/null || true
+          git rev-parse HEAD > replay-evidence/COMMIT.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r0434-native-replay-evidence
+          path: replay-evidence/
+          retention-days: 14
