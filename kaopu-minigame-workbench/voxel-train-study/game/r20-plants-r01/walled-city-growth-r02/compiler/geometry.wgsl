@@ -71,7 +71,7 @@ return geo_get(i32(geo_get(1).w)+i32(stateId));
 fn geoBuildingHeight(buildingId:u32)->f32{
 if(buildingId==0u){return 0.0;}return geo_get(i32(geo_get(1).x)+(i32(buildingId)-1)*8+1).w;
 }
-fn geo_building(hh:GeoHit,x:f32,y:f32,z:f32,bi:i32)->GeoHit{
+fn geo_building(hh:GeoHit,x:f32,y:f32,z:f32,bi:i32,skipBelow:i32,stoneUpperM:f32)->GeoHit{
 
  var h=hh;var head=geo_get(1);var off=i32(head.x)+bi*8;var a=geo_get(off);var b=geo_get(off+1);var c=geo_get(off+2);var port=geo_get(off+3);var service=geo_get(off+4);var core=geo_get(off+5);var rules=geo_get(off+6);
  var u=a.z*0.5-(x-a.x)*c.x;var v=a.w*0.5-(z-a.y)*c.y;var W=a.z;var D=a.w;var top=b.w;var bid=u32(c.w);var bb=geo_box(u-W*0.5,y-top*0.5-0.45,v-D*0.5,W*0.5+1.05,top*0.5+0.70,D*0.5+1.05);
@@ -80,9 +80,11 @@ fn geo_building(hh:GeoHit,x:f32,y:f32,z:f32,bi:i32)->GeoHit{
  var first=max(0,f0-1);var last=min(i32(b.z)-1,f0+1);var wt=core.w;var cw=core.x;var land=core.y;var fw=core.z;var slab=rules.x;var tread=rules.y;var far=rules.z;var empty=vec4f(0.0,0.0,0.0,0.0);
  for(var f=first;f<=last;f=f+1){
   var fi=i32(c.z)+f;var floorRec=geo_get(i32(head.y)+fi*2);var by=floorRec.x;var fh=floorRec.y;var zones=i32(floorRec.z);var sid=u32(fi+1);var cid=bid*65536u+u32(f)*256u;var doors=geo_get(i32(geo_get(2).x)+fi);var hasBorrow=i32(port.y)==f;var roomMid=(cw+W-wt)*0.5;
+  if(skipBelow==0||y<=by+stoneUpperM){
   var slabD=geo_box(u-W*0.5,y-by+slab*0.5,v-D*0.5,W*0.5,slab*0.5,D*0.5);var slabN=geo_axis(u-W*0.5,y-by+slab*0.5,v-D*0.5,W*0.5,slab*0.5,D*0.5);
   if(f>0){var hole=-geo_box(u-(wt+cw-wt)*0.5,y-by,v-(land+D-wt)*0.5,(cw-2.0*wt)*0.5,1000.0,(D-wt-land)*0.5);slabD=max(slabD,hole);}
   h=geo_take(h,slabD,select(1u,6u,y>=by-slab*0.5),bid,cid+1u,sid,vec3f(u-W*0.5,y-by+slab*0.5,v-D*0.5),slabN);
+  }
   var frontO=vec4f(roomMid,0.85,1.45,1.15);var frontO2=empty;if(f==0){frontO2=vec4f(1.52,0.0,1.12,2.2);}if(hasBorrow&&i32(port.z)==2){frontO=vec4f(port.w,0.0,1.12,2.2);}
   h=geo_panel(h,u,y,v,1,wt*0.5,W*0.5,W,by,fh,wt,frontO,frontO2,bid,cid+2u,sid);
   h=geo_port(h,u,y,v,1,wt*0.5,frontO.x,by,frontO.z,frontO.w,frontO.y,select(0,1,hasBorrow&&i32(port.z)==2),doors.x,bid,cid+40u,sid);
@@ -100,7 +102,7 @@ fn geo_building(hh:GeoHit,x:f32,y:f32,z:f32,bi:i32)->GeoHit{
   // Central handrails follow flight slope. They do not cross either end landing.
   var progress=clamp((v-land)/(run+0.0001),0.0,1.0);var ry=by+progress*f32(na)*riser+1.0;var rd=geo_box(u-(wt+fw+0.025),y-ry,v-land-run*0.5,0.022,0.028,run*0.5)/sqrt(1.0+pow(f32(na)*riser/run,2.0));h=geo_take(h,rd,3u,bid,cid+19u,sid,vec3f(u-(wt+fw+0.025),y-ry,v-land-run*0.5),vec3f(1.0,0.0,0.0));
  }
- var roofSid=u32(i32(c.z)+i32(b.z));var roofCid=bid*65536u+60000u;var roofD=geo_box(u-W*0.5,y-top+slab*0.5,v-D*0.5,W*0.5,slab*0.5,D*0.5);var roofHole=-geo_box(u-cw*0.5,y-top,v-(land+D-wt)*0.5,(cw-2.0*wt)*0.5,1000.0,(D-wt-land)*0.5);roofD=max(roofD,roofHole);h=geo_take(h,roofD,6u,bid,roofCid,roofSid,vec3f(u-W*0.5,y-top+slab*0.5,v-D*0.5),vec3f(0.0,1.0,0.0));
+ var roofSid=u32(i32(c.z)+i32(b.z));var roofCid=bid*65536u+60000u;if(skipBelow==0||y<=top+stoneUpperM){var roofD=geo_box(u-W*0.5,y-top+slab*0.5,v-D*0.5,W*0.5,slab*0.5,D*0.5);var roofHole=-geo_box(u-cw*0.5,y-top,v-(land+D-wt)*0.5,(cw-2.0*wt)*0.5,1000.0,(D-wt-land)*0.5);roofD=max(roofD,roofHole);h=geo_take(h,roofD,6u,bid,roofCid,roofSid,vec3f(u-W*0.5,y-top+slab*0.5,v-D*0.5),vec3f(0.0,1.0,0.0));}
  for(var side=0;side<2;side=side+1){h=geo_rail(h,u,y,v,0,select(0.09,W-0.09,side==1),D*0.5,D-0.18,top,bid,roofCid+1u,roofSid);h=geo_rail(h,u,y,v,1,select(0.09,D-0.09,side==1),W*0.5,W-0.18,top,bid,roofCid+2u,roofSid);}
  // Roof tank stays in the rear room domain, with clear landing and access passage.
  var tx=u-(cw+W-wt)*0.5;var tz=v-(D-1.0);var radial=sqrt(tx*tx+tz*tz)-0.52;var tankD=max(radial,abs(y-top-0.55)-0.45);var rn=max(sqrt(tx*tx+tz*tz),0.00001);h=geo_take(h,tankD,3u,bid,roofCid+3u,roofSid,vec3f(tx,y-top-0.55,tz),vec3f(tx/rn,0.0,tz/rn));
@@ -130,9 +132,25 @@ fn geo_tracks(hh:GeoHit,p:vec3f)->GeoHit{
  var sleeper=clamp(round(p.x/0.6),-51.0,51.0)*0.6;h=geo_cube(h,p.x-sleeper,p.y-0.07,p.z,0.105,0.07,1.23,4u,0u,16u,0u);return h;
 
 }
-fn querySettlement(p:vec3f,maxDistance:f32)->GeoHit{
+fn geo_queryContext(p:vec3f,maxDistance:f32,skipBelow:i32,stoneUpperM:f32)->GeoHit{
 
- var h=geo_empty(maxDistance);var groundD=p.y;h=geo_take(h,groundD,6u,0u,1u,0u,vec3f(p.x,p.y,p.z),vec3f(0.0,1.0,0.0));
- h=geo_tracks(h,p);var counts=geo_get(0);for(var bi=0;bi<i32(counts.y);bi=bi+1){h=geo_building(h,p.x,p.y,p.z,bi);}for(var j=0;j<i32(counts.w);j=j+1){h=geo_bridge(h,p.x,p.y,p.z,j);}return h;
+ var h=geo_empty(maxDistance);var groundD=p.y;if(skipBelow==0||p.y<=stoneUpperM){h=geo_take(h,groundD,6u,0u,1u,0u,vec3f(p.x,p.y,p.z),vec3f(0.0,1.0,0.0));}
+ h=geo_tracks(h,p);var counts=geo_get(0);for(var bi=0;bi<i32(counts.y);bi=bi+1){h=geo_building(h,p.x,p.y,p.z,bi,skipBelow,stoneUpperM);}for(var j=0;j<i32(counts.w);j=j+1){h=geo_bridge(h,p.x,p.y,p.z,j);}return h;
+
+}
+fn querySettlement(p:vec3f,maxDistance:f32)->GeoHit{
+return geo_queryContext(p,maxDistance,0,0.0);
+}
+fn querySettlementRay(p:vec3f,maxDistance:f32,rd:vec3f,stoneUpperM:f32)->GeoHit{
+
+ var skipBelow=0;if(rd.y>=0.0&&stoneUpperM>=0.0){skipBelow=1;}return geo_queryContext(p,maxDistance,skipBelow,stoneUpperM);
+
+}
+fn geoExposure(stateId:u32,worldNormal:vec3f)->f32{
+
+ var counts=geo_get(0);if(counts.y<1.0||stateId>=u32(1.0+counts.z+counts.w)){return 1.0;}
+ var off=i32(geo_get(i32(geo_get(1).x)+7).x);if(off<=0){return 1.0;}
+ var ax=abs(worldNormal.x);var ay=abs(worldNormal.y);var az=abs(worldNormal.z);if(ay>=max(ax,az)){return 1.0;}
+ var e=geo_get(off+i32(stateId));if(ax>=az){return select(e.y,e.x,worldNormal.x>=0.0);}return select(e.w,e.z,worldNormal.z>=0.0);
 
 }

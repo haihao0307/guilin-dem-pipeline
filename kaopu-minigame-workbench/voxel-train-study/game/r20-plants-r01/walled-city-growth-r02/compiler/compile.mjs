@@ -1,4 +1,5 @@
 import {buildSettlement,PARCELS} from '../input/r01/prototype/settlement.mjs';
+import {deriveFacadeExposure} from './exposure.mjs';
 export const BUILDING_STRIDE=8,FLOOR_STRIDE=2,BRIDGE_STRIDE=4;
 export const MATERIALS=Object.freeze({plaster:1,brick:2,metal:3,wood:4,glass:5,stone:6});
 const seed=s=>{let h=2166136261;for(const c of s)h=Math.imul(h^c.charCodeAt(0),16777619);return (h>>>0)/4294967295;};
@@ -6,7 +7,7 @@ const seed=s=>{let h=2166136261;for(const c of s)h=Math.imul(h^c.charCodeAt(0),1
 export function compileSettlementRecipe(year=50){
  const source=buildSettlement(year),B=source.buildings.length,F=source.buildings.reduce((s,b)=>s+b.floorElevationsM.length,0),R=source.routes.filter(r=>r.kind==='borrow'),K=R.length;
  const layout={header:4,buildingOffset:4,buildingStride:8,floorOffset:4+B*8,floorStride:2,bridgeOffset:4+B*8+F*2,bridgeStride:4};
- layout.stateOffset=layout.bridgeOffset+K*4;layout.stateCount=1+F+K;layout.doorOffset=layout.stateOffset+layout.stateCount;layout.doorCount=F;layout.vec4Count=layout.doorOffset+F;
+ layout.stateOffset=layout.bridgeOffset+K*4;layout.stateCount=1+F+K;layout.doorOffset=layout.stateOffset+layout.stateCount;layout.doorCount=F;layout.exposureOffset=layout.doorOffset+F;layout.exposureCount=layout.stateCount;layout.exposureStride=1;layout.vec4Count=layout.exposureOffset+layout.exposureCount;
  const packed=new Float32Array(layout.vec4Count*4),set=(i,a)=>packed.set(a,i*4),buildings=[],bridges=[];
  set(0,[20261011,B,F,K]);set(1,[layout.buildingOffset,layout.floorOffset,layout.bridgeOffset,layout.stateOffset]);set(2,[layout.doorOffset,F,year,12*3600]);set(3,[-38,38,-25,25]);set(layout.stateOffset,[1,0,0,0]);
  let fi=0;
@@ -14,7 +15,7 @@ export function compileSettlementRecipe(year=50){
   const b=source.buildings[bi],p=PARCELS.find(p=>p.id===b.id),street=source.spaces.find(s=>s.id===b.id+'-street'),frontSign=Math.sign(street.positionM[2]-p.z),at=layout.buildingOffset+bi*8,n=b.floorElevationsM.length;
   const rec={id:b.id,index:bi,buildingId:bi+1,x:p.x,z:p.z,width:p.width,depth:p.depth,coreSide:p.coreSide,frontSign,groundRise:p.groundRise,rise:p.rise,top:b.topM,floors:n,floorStart:fi,coreWidth:2.7,landing:1.35,flightWidth:1.05,wall:.18,slab:.18,tread:.245,turnLanding:1.05,street:street.positionM,programme:p.programme};
   buildings.push(rec);
-  set(at,[p.x,p.z,p.width,p.depth]);set(at+1,[p.groundRise,p.rise,n,b.topM]);set(at+2,[p.coreSide,frontSign,fi,bi+1]);set(at+3,[-1,-1,-1,-1]);set(at+4,[p.width-.3,-.12,fi,p.foundYear]);set(at+5,[2.7,1.35,1.05,.18]);set(at+6,[.18,.245,1.05,fi+n]);set(at+7,[0,0,0,0]);
+  set(at,[p.x,p.z,p.width,p.depth]);set(at+1,[p.groundRise,p.rise,n,b.topM]);set(at+2,[p.coreSide,frontSign,fi,bi+1]);set(at+3,[-1,-1,-1,-1]);set(at+4,[p.width-.3,-.12,fi,p.foundYear]);set(at+5,[2.7,1.35,1.05,.18]);set(at+6,[.18,.245,1.05,fi+n]);set(at+7,[layout.exposureOffset,fi+1,0,0]);
   for(let f=0;f<n;f++,fi++){
    const y=b.floorElevationsM[f],h=f?p.rise:p.groundRise,e=source.events.find(e=>e.id===`${p.id}-event-${f}`),zoneCount=source.spaces.filter(s=>s.buildingId===p.id&&s.id.startsWith(`${p.id}-room-${f}`)&&(s.id===`${p.id}-room-${f}`||s.id.startsWith(`${p.id}-room-${f}-zone-`))).length;
    set(layout.floorOffset+fi*2,[y,h,zoneCount,e.tick]);set(layout.floorOffset+fi*2+1,[fi+1,fi,0,0]);set(layout.stateOffset+fi+1,[Math.max(0,year-e.tick)/50,seed(e.id),0,y]);set(layout.doorOffset+fi,[f===0?-Math.PI/2:Math.PI/2,Math.PI/2,Math.PI/2,Math.PI/2]);
@@ -31,7 +32,11 @@ export function compileSettlementRecipe(year=50){
   set(layout.bridgeOffset+i*4,[low[0],low[2],high[0],high[2]]);set(layout.bridgeOffset+i*4+1,[low[1],high[1],1.05,.18]);set(layout.bridgeOffset+i*4+2,[a.buildingId,b.buildingId,F+1+i,0]);set(layout.bridgeOffset+i*4+3,[Math.PI/2,length,steps,0]);set(layout.stateOffset+F+1+i,[(year-24)/50,seed(r.id),0,low[1]]);
   set(layout.buildingOffset+a.index*8+3,[i,f,aw,alongA]);set(layout.buildingOffset+b.index*8+3,[i,f,bw,alongB]);a.bridge={index:i,floor:f,wall:aw,along:alongA};b.bridge={index:i,floor:f,wall:bw,along:alongB};
  }
- return {version:'settlement-analytic-compiler-r02',packed,layout,buildings,bridges,year,counts:{buildings:B,floors:F,bridges:K,sourceGraphRoutes:source.routes.length},sourceRouteIds:source.routes.map(r=>r.id),rail:source.rail,corrections:[
+ // Quantize to the actual geometry buffer before deriving sky; no parallel footprint model.
+ const exposureBounds=buildings.map(b=>({...b,x:packed[(layout.buildingOffset+b.index*8)*4],z:packed[(layout.buildingOffset+b.index*8)*4+1],width:packed[(layout.buildingOffset+b.index*8)*4+2],depth:packed[(layout.buildingOffset+b.index*8)*4+3],top:packed[(layout.buildingOffset+b.index*8+1)*4+3]}));
+ for(let sid=0;sid<layout.exposureCount;sid++)set(layout.exposureOffset+sid,[1,1,1,1]);
+ for(const b of exposureBounds)for(let f=0;f<b.floors;f++){const row=(layout.floorOffset+(b.floorStart+f)*2)*4,midY=packed[row]+packed[row+1]*.5;set(layout.exposureOffset+b.floorStart+f+1,deriveFacadeExposure(exposureBounds,b,midY));}
+ return {version:'settlement-analytic-compiler-r02' ,packed,layout,buildings,bridges,year,exposure:{method:'three-outward-ray facade-midpoint AABB horizon approximation',facades:['+X','-X','+Z','-Z'],fanDegrees:[-45,0,45],skyRule:'mean(1-sin(maximum positive neighbor horizon angle))',source:'same Float32 packed footprints and roof heights',sampleOffsetM:.02,indoorClassification:'host-owned; normal is a facade selector, not an exterior detector',groundBridgeAndHorizontalSurfaceValue:1},counts:{buildings:B,floors:F,bridges:K,sourceGraphRoutes:source.routes.length},sourceRouteIds:source.routes.map(r=>r.id),rail:source.rail,corrections:[
  'Core landing positions are consistent on every floor; independent stairs no longer connect arbitrarily mirrored landing centres.',
  'Stair holes penetrate every upper slab and roof. Two opposing procedural flights and intermediate landings use true floor elevations.',
  'Borrow ports move to near-facade landing corridors instead of opening directly into mid-flight stairs. Differing floor levels create actual treads.',

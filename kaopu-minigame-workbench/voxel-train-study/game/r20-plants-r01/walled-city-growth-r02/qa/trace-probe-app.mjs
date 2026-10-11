@@ -2,7 +2,7 @@ import {loadWorld} from '../runtime/world-data.mjs';
 import {GEOMETRY_WGSL} from '../runtime/geometry.mjs';
 import {receiverWGSL} from '../runtime/receiver.mjs';
 import {selectStageSource} from '../runtime/stage-source.mjs';
-const out={status:'initializing',scope:'exact 9fb shader equations; only packSample ray.y reports final displaced distance; sparse original X-view failure rays'};window.__traceProbe=out;
+const out={status:'initializing',scope:'original failed X-view rays, updated directional floor exclusion and continuous coating CSG; packSample ray.y reports final displaced distance'};window.__traceProbe=out;
 const stage=s=>{out.stage=s;window.__qaProgress?.({stage:s}).catch(()=>{});};
 try{
  if(!navigator.gpu)throw Error('No WebGPU');const adapter=await navigator.gpu.requestAdapter();if(!adapter)throw Error('No adapter');const device=await adapter.requestDevice();out.errors=[];device.addEventListener('uncapturederror',e=>out.errors.push(e.error.message));out.adapter={vendor:adapter.info.vendor,architecture:adapter.info.architecture};stage('device');
