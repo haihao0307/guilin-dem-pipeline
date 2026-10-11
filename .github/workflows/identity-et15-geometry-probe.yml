@@ -1,0 +1,36 @@
+name: Identity ET15 ocular geometry probe
+on:
+  push:
+    branches: [fix/identity-et15-eye-skin-audit-20261011]
+    paths: [.github/workflows/identity-et15-geometry-probe.yml]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          mkdir -p /tmp/ocular-probe/evidence
+          cd /tmp/ocular-probe
+          npm init -y >/dev/null
+          npm install playwright@1.56.1
+          npx playwright install --with-deps chromium
+          curl -fL --retry 2 --max-time 120 https://raw.githubusercontent.com/xrblocks/assets-gnm/134feb02b11fa642a43ff5e7e880246255a74e86/gnm_head_web.bin -o evidence/gnm_head_web.bin
+          cat > probe.cjs <<'JS'
+          const {chromium}=require('playwright'),fs=require('fs');
+          (async()=>{const browser=await chromium.launch({headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']});const page=await browser.newPage({viewport:{width:1600,height:1000}});const errors=[];page.on('pageerror',e=>errors.push(String(e)));
+          await page.goto('https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/7ff27f9b5e16f2635b1e665c1321265d5da2b221/kaopu-unified-human-workbench/identity-lab/preview.html',{waitUntil:'domcontentloaded',timeout:90000});await page.waitForFunction(()=>window.__IDENTITY_QA__?.model()&&window.identityWorkbench,{timeout:90000});await page.waitForTimeout(2000);
+          const data=await page.evaluate(()=>{let m=__IDENTITY_QA__.model(),v=__IDENTITY_QA__.viewer(),c=__IDENTITY_QA__.controller();return{state:m.state,archive:c.archive(),viewerKeys:Object.keys(v),mKeys:Object.keys(m),eyeSurfaceKeys:Object.keys(m.eyeSurface),faceFieldsKeys:Object.keys(m.faceSurface.fields),skinKeys:Object.keys(v.skin),globals:Object.keys(identityWorkbench),report:v.report(),eye:m.eyeSurface.eyes.map(e=>({...e,patch:undefined,positions:e.vertices.map(i=>Array.from(m.positions.slice(i*3,i*3+3))),template:e.vertices.map(i=>{const[a,b,t]=m.canonical.gnmRecipes[i-m.bodyCount];return Array.from(m.gnm.template.slice(a*3,a*3+3))}),material:e.vertices.map(i=>{const[a,b,t]=m.canonical.gnmRecipes[i-m.bodyCount];return m.gnm.materialId[t>.5?b:a]}),materialNames:m.gnm.meta.materialNames})),catalog:c.catalog.rows.filter(r=>/eye|blink|look|jaw|brow/i.test(r.key)).map(r=>({key:r.key,label:r.label,bounds:r.bounds})),controllers:Object.keys(c)}});
+          fs.writeFileSync('evidence/probe.json',JSON.stringify({...data,errors},null,2));await page.evaluate(()=>__IDENTITY_QA__.model().eyeSurface.viewEyes());await page.screenshot({path:'evidence/baseline-eye-close.png'});await browser.close();})().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          node probe.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: identity-et15-ocular-geometry-probe
+          path: /tmp/ocular-probe/evidence
+          retention-days: 7

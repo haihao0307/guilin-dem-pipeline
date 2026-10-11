@@ -1,0 +1,38 @@
+name: Identity ET15 eye reference audit
+on:
+  push:
+    branches: [fix/identity-et15-eye-skin-audit-20261011]
+    paths: [.github/workflows/identity-et15-eye-assets.yml]
+permissions:
+  contents: read
+jobs:
+  assets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Fetch the user supplied eye pack, originals and license records
+        run: |
+          mkdir -p /tmp/eye-reference
+          cd /tmp/eye-reference
+          curl -fL --retry 2 --max-time 120 'https://files2.makehumancommunity.org/asset_packs/system_eye_materials03/system_eye_materials03_cc-by.zip' -o source-pack.zip
+          python3 - <<'PY'
+          import zipfile,pathlib,json,hashlib,urllib.request
+          z=zipfile.ZipFile('source-pack.zip')
+          pathlib.Path('PACK_CONTENTS.txt').write_text('\n'.join(z.namelist()))
+          selected=[]
+          for n in z.namelist():
+            if 'harvey_eye' in n.lower() or any(s in n.lower() for s in ['license','readme','credits']):
+              if not n.endswith('/'):
+                p=pathlib.Path('selected')/n;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(z.read(n));selected.append({'path':n,'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          for name,url in [('pack-page.html','https://static.makehumancommunity.org/assets/assetpacks/system_eye_materials03.html'),('eye1-source.html','https://www.makehumancommunity.org/node/489'),('eye1-preview.png','https://static.makehumancommunity.org/assets/assetpacks/callharvey3d_harvey_eye1.png'),('eye2-preview.png','https://static.makehumancommunity.org/assets/assetpacks/callharvey3d_harvey_eye2.png')]:
+            try: pathlib.Path(name).write_bytes(urllib.request.urlopen(url,timeout=60).read())
+            except Exception as e: print(name,str(e))
+          pathlib.Path('SELECTED.json').write_text(json.dumps({'pack_sha256':hashlib.sha256(pathlib.Path('source-pack.zip').read_bytes()).hexdigest(),'selected':selected},indent=2))
+          print(pathlib.Path('SELECTED.json').read_text())
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: identity-et15-makehuman-eye-originals
+          path: /tmp/eye-reference
+          retention-days: 7

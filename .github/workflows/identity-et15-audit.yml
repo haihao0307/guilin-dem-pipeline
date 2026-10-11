@@ -1,0 +1,71 @@
+name: Identity ET15 baseline audit
+on:
+  push:
+    branches: [fix/identity-et15-eye-skin-audit-20261011]
+    paths: [.github/workflows/identity-et15-audit.yml]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            scripts
+            tools
+            .github/workflows
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Collect actual baseline source
+        run: |
+          mkdir -p evidence/source
+          python3 - <<'PY'
+          import pathlib,subprocess,shutil
+          paths=subprocess.check_output(['git','ls-tree','-r','--name-only','HEAD'],text=True).splitlines()
+          pathlib.Path('evidence/TREE.txt').write_text('\n'.join(paths))
+          for x in paths:
+            p=pathlib.Path(x)
+            relevant=x.startswith('kaopu-unified-human-workbench/') or ('identity' in x.lower() or 'et13' in x.lower() or 'et12' in x.lower()) or x in ['README.md','AGENTS.md','package.json']
+            if relevant and p.is_file() and p.suffix.lower() in ['.js','.mjs','.cjs','.ts','.py','.json','.md','.html','.yml','.yaml','.css'] and p.stat().st_size<3000000:
+              dest=pathlib.Path('evidence/source')/p;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(p,dest)
+          print('Collected',sum(1 for p in pathlib.Path('evidence/source').rglob('*') if p.is_file()),'source files')
+          PY
+      - name: Prepare desktop browser
+        run: |
+          mkdir -p /tmp/identity-et15-tools
+          cd /tmp/identity-et15-tools
+          npm init -y >/dev/null
+          npm install playwright@1.56.1 esbuild@0.25.11
+          npx playwright install --with-deps chromium
+      - name: Render the user pinned public page and capture resources
+        env:
+          NODE_PATH: /tmp/identity-et15-tools/node_modules
+        run: |
+          cat > /tmp/identity-et15-tools/audit.cjs <<'JS'
+          const {chromium}=require('playwright');const fs=require('fs');
+          (async()=>{const out=process.env.GITHUB_WORKSPACE+'/evidence';
+            const browser=await chromium.launch({headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']});
+            const context=await browser.newContext({viewport:{width:1600,height:1000},deviceScaleFactor:1,recordHar:{path:out+'/baseline.har',content:'embed',mode:'full'}});
+            const page=await context.newPage();const errors=[],consoleLogs=[],failed=[];
+            page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error'||m.type()==='warning')consoleLogs.push(m.text())});page.on('requestfailed',r=>failed.push({url:r.url(),error:r.failure()}));
+            const url='https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/7ff27f9b5e16f2635b1e665c1321265d5da2b221/kaopu-unified-human-workbench/identity-lab/preview.html';
+            let navError=null;try{await page.goto(url,{waitUntil:'domcontentloaded',timeout:90000});await page.waitForTimeout(35000);}catch(e){navError=String(e)}
+            const data=await page.evaluate(()=>({url:location.href,title:document.title,body:document.body.innerText,buttons:[...document.querySelectorAll('button')].map(e=>({id:e.id,text:e.innerText})),selects:[...document.querySelectorAll('select')].map(e=>({id:e.id,value:e.value,options:[...e.options].map(o=>({value:o.value,text:o.text}))})),globals:Object.keys(window).filter(k=>/kaopu|debug|identity|workbench|model|rig|app|et1/i.test(k)),canvas:[...document.querySelectorAll('canvas')].map(c=>({id:c.id,width:c.width,height:c.height}))}));
+            fs.writeFileSync(out+'/baseline-report.json',JSON.stringify({navError,errors,consoleLogs,failed,...data},null,2));
+            await page.screenshot({path:out+'/baseline-desktop.png'});console.log(JSON.stringify({title:data.title,navError,errors,failed,globals:data.globals,canvas:data.canvas},null,2));
+            await context.close();await browser.close();
+          })().catch(e=>{console.error(e);process.exitCode=1});
+          JS
+          node /tmp/identity-et15-tools/audit.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: identity-et15-baseline-audit
+          path: evidence
+          retention-days: 7
