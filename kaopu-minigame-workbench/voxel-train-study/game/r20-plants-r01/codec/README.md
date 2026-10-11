@@ -2,7 +2,7 @@
 
 This extends the reviewed R04 fixed-layout SQLite-envelope technique for the existing train game's real Session. It does not rename JSON as `.KaoPu`, introduce a demo, invoke SQL/WASM in the browser, or deserialize incoming executable code.
 
-Profile: `kaopu.fh88-game-session/1-experimental`
+Profile: `kaopu.fh88-game-session/2-experimental`
 Container: real SQLite 3, application id `0x4B505531`, with `header`, `records`, `links`, `fields`, `assets` tables. Independent Python sqlite3 `PRAGMA integrity_check` passes. The inert canonical JSON payload is one SQLite BLOB. Its SHA256 is integrity checking, not author authentication.
 
 This is an explicitly supported prototype profile for this game. It is not claimed compatible with every KAOPU authoring tool, the older desktop image reader, the functional rail reader, or the R04 hot-start-only decoder.

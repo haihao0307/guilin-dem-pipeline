@@ -7,7 +7,7 @@ import sqlite3,hashlib,json,struct,base64,re,tempfile
 HERE=Path(__file__).resolve().parent
 GAME=HERE.parent
 CAPACITY=4*1024*1024
-PROFILE='kaopu.fh88-game-session/1-experimental'
+PROFILE='kaopu.fh88-game-session/2-experimental'
 APP=0x4b505531
 sha=lambda b:hashlib.sha256(b).hexdigest()
 
