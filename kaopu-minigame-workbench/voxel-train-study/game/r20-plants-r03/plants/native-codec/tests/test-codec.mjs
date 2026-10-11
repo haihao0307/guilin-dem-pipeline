@@ -36,7 +36,7 @@ await test('independent Musa schema, rule, operator and procedural resource scop
  for(const r of recipe.resources)assert.deepEqual(r.source,{kind:'procedural',license:'CC0-1.0',generator:'tropical-library-76/musa-balbisiana/'+r.id});
  assert.equal(codec.formatInfo.ruleResourcesIncludeCC0ProxyBarkPixels,false);
  assert.equal(codec.formatInfo.ruleResourcesAreProceduralCC0,true);
- assert.deepEqual(recipe.instance,{id:'station-rear-establishing-musa',positionM:[-35.32316911636920,0.081,-10.5],yawRadians:0});
+ assert.deepEqual(recipe.instance,{id:'station-front-establishing-musa',positionM:[10.05,0.081,-4.273963513064663],yawRadians:0.6981317007977318});
 });
 await test('old Ficus schema/operator/rule rejected even with valid SQLite checksum',async()=>{
  await rejectChange(r=>r.schema='kaopu.functional-plant/0.1-experimental',/UNKNOWN_PROFILE/);

@@ -1,5 +1,5 @@
 import {CAMERA_PRESET_IDS, getCameraPreset} from './camera-presets.mjs';
-export const VIEW_STORAGE_KEY='kaopu.train-driver.r20-plants-r02.views.v1';
+export const VIEW_STORAGE_KEY='kaopu.train-driver.r20-plants-r03.views.v1';
 export const VIEW_REVISION='flat-platform-r09';
 const MODES=['landscape','portrait'];
 const clone=p=>structuredClone(p);

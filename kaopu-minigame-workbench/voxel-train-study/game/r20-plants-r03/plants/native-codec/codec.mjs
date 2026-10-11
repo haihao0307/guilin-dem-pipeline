@@ -88,7 +88,7 @@ export function createPlantRecipe(options={}){
  const p=LAYOUT.static;
  const result={schema:PROFILE,profileVersion:1,operator:p.operator,ruleSet:p.ruleSet,
   dependencies:pinnedDependencies(),source:copy(p.source),profile:copy(options.profile===undefined?p.profile76:options.profile),units:copy(p.units),
-  instance:{id:'station-rear-establishing-musa',positionM:[-35.32316911636920,0.081,-10.5],yawRadians:0,...copy(options.instance??{})},
+  instance:{id:'station-front-establishing-musa',positionM:[10.05,0.081,-4.273963513064663],yawRadians:0.6981317007977318,...copy(options.instance??{})},
   motion:{timeSource:'host.elapsed',timeUnit:'second',model:'native76',strength:0.25,...copy(options.motion??{})},
   resources:pinnedResources(),metadata:copy(p.metadata)};
  validateRecipe(result);return result;
