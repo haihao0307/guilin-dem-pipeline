@@ -1,4 +1,5 @@
 import * as T from '/native/kaopu-unified-human-workbench/full/source/registration-vendor/three.module.js';
+import {createScalpPrefixRouteR30} from './ScalpPrefixRouteR30.js';
 import {strandClearanceR30} from './StrandClearanceR30.js';
 import {FullerScalpBinding} from './RefinedHairLayer.js';
 import {scalpMargin} from './RegionFields.js';
@@ -8,7 +9,7 @@ class RootSampler extends FullerScalpBinding{setStyle(){}}
  * Builds the final FP32 texels directly: no expanded two-sided vertex arrays,
  * tangents, per-strand indices, legacy mesh or GPU upload is constructed here.
  */
-export function buildPackedGroomR30(a,guides,{count=1800,radius=.000045,textureWidth=2048,prefixSegmentRepair=true,matchingRootSupport=false}={}){
+export function buildPackedGroomR30(a,guides,{count=1800,radius=.000045,textureWidth=2048,prefixSegmentRepair=true,matchingRootSupport=false,repairPrefixRoutes=false}={}){
  if(!Number.isInteger(count)||count<1||count>16777216)throw Error('Invalid packed strand count');
  if(!Number.isFinite(radius)||radius<0)throw Error('Invalid physical radius');
  if(!Number.isInteger(textureWidth)||textureWidth<1)throw Error('Invalid texture width');
@@ -30,6 +31,7 @@ export function buildPackedGroomR30(a,guides,{count=1800,radius=.000045,textureW
  const prefixRepair=prefixSegmentRepair
   ?clearanceSolver.repairPrefixSegments({pointData,count,segments,surfaceSegments})
   :{enabled:false,method:'disabled explicitly; no prefix repair performed'};
+ let prefixRoute={enabled:repairPrefixRoutes,applied:[],errors:[]};if(repairPrefixRoutes&&prefixRepair.remainingExamples?.length){const indices=new Uint32Array(triangles.flatMap(t=>t.ids.map(id=>inv[id]))),route=createScalpPrefixRouteR30({positions:p,normals:n,triangleIndices:indices,allowedTriangleIds:triangles.map((_,i)=>i)});for(const e of prefixRepair.remainingExamples){try{prefixRoute.applied.push(route.applyToPacked({pointData,normalData,strandIndex:e.strand}).report);}catch(error){prefixRoute.errors.push({strand:e.strand,error:String(error)});}}prefixRoute.graph=route.report();}
  // Read-only direction and spread diagnostics. No root or guide edits.
  const rearAxis=new T.Vector3(...G.headFrame.currentAxes[2]).negate().normalize();
  const lateralAxis=new T.Vector3(...G.headFrame.currentAxes[0]).normalize();
@@ -75,7 +77,7 @@ export function buildPackedGroomR30(a,guides,{count=1800,radius=.000045,textureW
  const textureBytes=pointData.byteLength+normalData.byteLength,texturePayloadBytes=count*(per+surfaceSegments+1)*16;
  const constructionMs=performance.now()-started,clearanceReport=clearanceSolver.report();
  const reportData={scalpProjection:{matchingRootSupport,minimumProjectedMarginM,fallbackCount:scalpFallbackCount,fallbackMaxDistanceM:scalpFallbackMaxDistanceM,method:"local12mm-grid then actual supported triangles when empty; 60mm max bound"},
-  kind:'R30-direct-packed-fibre-data',count,segments,surfaceSegments,prefixRepair,rootDirectionDiagnostics,
+  kind:'R30-direct-packed-fibre-data',count,segments,surfaceSegments,prefixRepair,prefixRoute,rootDirectionDiagnostics,
   finite:pointData.every(Number.isFinite)&&normalData.every(Number.isFinite),missingSupports:0,
   orientedFacesVerified:verified,rootLiftMax,
   rootSampler:'existing FullerScalpBinding surface follicular-unit roots',
