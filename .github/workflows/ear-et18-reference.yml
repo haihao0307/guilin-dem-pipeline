@@ -1,0 +1,25 @@
+name: Ear ET18 licensed reference intake
+on:
+  push:
+    branches: [feature/ear-anatomy-et18-20261011]
+    paths: [.github/workflows/ear-et18-reference.yml]
+permissions:
+  contents: read
+jobs:
+  reference:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Download original publicly licensed reference
+        run: |
+          mkdir -p reference
+          curl --fail --location --retry 3 'https://cdn.artec3d.com/content-hub-3dmodels/ear_obj.zip?VersionId=mCOZqtBT85vCVgF1g56N5W3v1BE4Dunw' -o reference/artec-ear.zip
+          curl --fail --location --retry 3 'https://www.artec3d.com/3d-models/ear' -o reference/source-page.html
+          sha256sum reference/* > reference/SHA256.txt
+          printf '%s\n' 'Ear by Artec 3D' 'https://www.artec3d.com/3d-models/ear' 'CC BY 4.0 https://creativecommons.org/licenses/by/4.0/' 'Reference only at intake. Not a MetaHuman asset. No accuracy or likeness certification.' > reference/ATTRIBUTION.txt
+          unzip -l reference/artec-ear.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ear-et18-licensed-reference
+          path: reference
+          retention-days: 14
