@@ -1,0 +1,75 @@
+name: Finish verified main-eye candidate after asynchronous preview bootstrap
+on:
+  push:
+    branches: [fix/main-natural-eyes-integration-20261011]
+    paths: [.github/workflows/main-eyes-finish-verified.yml]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  finish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      R: kaopu-unified-human-workbench/main-eye-integration/r01
+      BRANCH: fix/main-natural-eyes-integration-20261011
+      NODE_PATH: /tmp/eye-node/node_modules
+      BUILD_SHA: f662a52e30b568eeec09e8d3f5b2e692cccc5ab5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          sparse-checkout: kaopu-unified-human-workbench/main-eye-integration/r01
+      - name: Preserve actual passed eye-core evidence and prove identical candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api repos/haihao0307/guilin-dem-pipeline/actions/artifacts/11699660672/zip > /tmp/verified-eyes.zip
+          echo '83d5e2465930d5c73bfe7791596ad6e46c57877a8c97daaba1032c84ec00eaef  /tmp/verified-eyes.zip' | sha256sum -c -
+          mkdir /tmp/verified-eyes
+          unzip -q /tmp/verified-eyes.zip -d /tmp/verified-eyes
+          python3 - <<'PY'
+          import pathlib,json,hashlib,shutil
+          r=pathlib.Path('kaopu-unified-human-workbench/main-eye-integration/r01');v=pathlib.Path('/tmp/verified-eyes/main-eye-integration/r01');h=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+          m=json.loads((r/'BUILD.json').read_text());assert h(r/'preview.html')==h(v/'preview.html')==m['previewSHA256']=='4e4c608b48da74eaec9feb88470515aa4384343540bb8a31f154b098f8bcd6e9'
+          for name in ['BUILD.json','build.cjs','verify-main.cjs']:
+            assert h(r/name)==h(v/name),name
+          for name,f in [('local-eye','browser-report.json'),('public-eye','browser-report.json'),('local-main','main-report.json')]:
+            d=json.loads((v/'qa'/name/f).read_text());assert d['passed'],name
+            shutil.copytree(v/'qa'/name,r/'qa'/name,dirs_exist_ok=True)
+          shutil.copytree(v/'qa/public-main',r/'qa/interrupted-public-main',dirs_exist_ok=True)
+          p=r/'verify-main.cjs';s=p.read_text();a="await page.goto(url,{waitUntil:'domcontentloaded'});";assert s.count(a)==1
+          s=s.replace(a,a+"await page.waitForFunction(()=>typeof window.fullCommonWorkbench?.load==='function');")
+          p.write_text(s)
+          (r/'EVIDENCE_REUSE.json').write_text(json.dumps({'coreRun':38130075720,'artifact':11699660672,'artifactSHA256':'83d5e2465930d5c73bfe7791596ad6e46c57877a8c97daaba1032c84ec00eaef','candidateSHA256':m['previewSHA256'],'reason':'13 local and 13 fixed-public eye groups already passed on these exact immutable bytes. The main harness counted entries before HTMLPreview had replaced its initial document. Wait for the actual application API, then rerun all 14 main checks locally and at fixed HTTPS. No rendering source changes.','coreRerunClaimed':False,'oldMainFailurePreserved':'qa/interrupted-public-main'},ensure_ascii=False,indent=2))
+          PY
+          npm --prefix /tmp/eye-node install --no-save --package-lock=false playwright@1.57.0
+          node /tmp/eye-node/node_modules/playwright/cli.js install --with-deps chromium
+      - name: Actual local and fixed public main, after application readiness
+        run: |
+          python3 -m http.server 8765 >/tmp/server.log 2>&1 &
+          EYE_URL="http://127.0.0.1:8765/$R/preview.html" EYE_EVIDENCE="$R/qa/local-main" timeout -k 15s 260s node "$R/verify-main.cjs"
+          EYE_URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$BUILD_SHA/$R/preview.html" EYE_EVIDENCE="$R/qa/public-main" timeout -k 15s 260s node "$R/verify-main.cjs"
+      - name: Record complete verified candidate without claiming live activation
+        run: |
+          python3 - <<'PY'
+          import pathlib,json,os,hashlib,urllib.request
+          r=pathlib.Path(os.environ['R']);m=json.loads((r/'BUILD.json').read_text());q={k:json.loads((r/'qa'/k/f).read_text()) for k,f in [('local-eye','browser-report.json'),('local-main','main-report.json'),('public-eye','browser-report.json'),('public-main','main-report.json')]};assert all(v['passed'] for v in q.values())
+          raw=urllib.request.urlopen('https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+os.environ['BUILD_SHA']+'/'+os.environ['R']+'/preview.html',timeout=180).read();assert hashlib.sha256(raw).hexdigest()==m['previewSHA256']
+          url='https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+os.environ['BUILD_SHA']+'/'+os.environ['R']+'/preview.html'
+          d={'version':'MAIN-EYES-R01','sourceCommit':m['sourceCommit'],'buildCommit':os.environ['BUILD_SHA'],'publicURL':url,'publicVerified':True,'mainRootActivated':False,'checks':{k:len(v.get('tests',v.get('checks',[]))) for k,v in q.items()},'workflowRun':os.environ['GITHUB_RUN_ID'],'eyeCoreEvidenceRun':38130075720,'unchangedCoreEvidenceReused':True,'coreRerunClaimed':False,'mainBaseline':m['mainBaseline'],'eyeSource':m['eyeSource'],'eyeVerifiedBuild':m['eyeVerifiedBuild'],'previewSHA256':m['previewSHA256'],'previewBytes':m['previewBytes'],'physicalPhoneTested':False,'userAccepted':False,'anatomicalEyelidClosureCertified':False}
+          (r/'DELIVERY.json').write_text(json.dumps(d,ensure_ascii=False,indent=2));print(json.dumps(d,ensure_ascii=False))
+          PY
+          test "$(git ls-remote origin refs/heads/$BRANCH | cut -f1)" = '${{ github.sha }}'
+          git config user.name 'KAOPU Main Eye Verification'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$R"
+          find "$R/qa" -name '*.png' -print0 | xargs -0 -r git add -f --
+          git commit -m 'human: verify all main-entry checks after actual public bootstrap [skip ci]'
+          git push origin HEAD:$BRANCH
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: main-eyes-complete-candidate-evidence
+          path: kaopu-unified-human-workbench/main-eye-integration/r01
+          retention-days: 14
