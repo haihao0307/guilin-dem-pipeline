@@ -1,4 +1,4 @@
-name: Identity ET15 natural eye delivery
+name: Identity ET17 periocular delivery
 on:
   push:
     branches: [fix/identity-et15-eye-skin-audit-20261011]
@@ -6,6 +6,7 @@ on:
       - .github/workflows/identity-et15-build.yml
       - kaopu-unified-human-workbench/eye-materials/*.mjs
       - kaopu-unified-human-workbench/eye-materials/*.cjs
+      - kaopu-unified-human-workbench/eye-materials/layout.css
       - kaopu-unified-human-workbench/eye-materials/prepare-assets.py
 concurrency:
   group: identity-et15-delivery-${{ github.ref }}
@@ -15,7 +16,7 @@ permissions:
 jobs:
   build-test-public:
     runs-on: ubuntu-latest
-    timeout-minutes: 24
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
         with:
@@ -57,7 +58,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add kaopu-unified-human-workbench/eye-materials/assets kaopu-unified-human-workbench/eye-materials/preview.html kaopu-unified-human-workbench/eye-materials/BUILD.json kaopu-unified-human-workbench/eye-materials/SOURCE_LOCK.json
-          if ! git diff --cached --quiet; then git commit -m 'build(eyes): source-locked ET15 natural eye preview [skip ci]'; git push origin HEAD:fix/identity-et15-eye-skin-audit-20261011; fi
+          if ! git diff --cached --quiet; then git commit -m 'build(eyelids): source-locked ET17 periocular preview [skip ci]'; git push origin HEAD:fix/identity-et15-eye-skin-audit-20261011; fi
           SHA=$(git rev-parse HEAD)
           echo "$SHA" > eye-evidence/PUBLISHED_COMMIT.txt
           echo "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$SHA/kaopu-unified-human-workbench/eye-materials/preview.html" > eye-evidence/PUBLIC_URL.txt
@@ -76,6 +77,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: identity-et15-natural-eyes-delivery
+          name: identity-et17-periocular-delivery
           path: eye-evidence
           retention-days: 14
