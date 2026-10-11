@@ -21,29 +21,29 @@ export function createSupportWalker({human,standingFrame,soleIndices,sampleSuppo
     const ankle=pos(standingFrame.posedMatrices[rig.index.get('foot.'+side)]);
     calibration[side]={contact,soleBandIndices:soleIndices[side].filter((_,i)=>points[i][2]<=bottom+.01),footprint:points.filter(p=>p[2]<=bottom+.035).map(p=>p.map((x,i)=>x-contact[i])),ankleOffset:ankle.map((x,i)=>x-contact[i]),footRotation:rotation(standingFrame.skinMatrices[rig.index.get('foot.'+side)])};
   }
-  let state={distance:0,phaseOrigin:0,previous:null,heading:0,feet:null},latest=null;
+  let state={distance:0,phaseOrigin:0,previous:null,heading:0,feet:null},latest=null,lastFailure=null,attemptTrace=null;
   const support=(x,z,referenceY)=>{const p=sampleSupport({x,z,referenceY,maxRise,maxDrop});if(!p||!Number.isFinite(p.y)||!Array.isArray(p.normal)||p.normal.length!==3||!p.normal.every(Number.isFinite)||p.normal[1]<.999||p.y-referenceY>maxRise+1e-6||referenceY-p.y>maxDrop+1e-6)return null;return p;};
   function samplePath(trajectory,distance){
     const points=trajectory.points;let left=Math.max(0,Math.min(trajectory.totalLength,distance));
     for(let i=1;i<points.length;i++){const a=points[i-1],b=points[i],length=Math.hypot(...b.map((x,k)=>x-a[k]));if(left<=length||i===points.length-1){const t=length?Math.min(1,left/length):0;return{point:lerp(a,b,t),heading:Math.atan2(b[0]-a[0],b[2]-a[2])};}left-=length;}
     throw Error('Actual path has no usable segment');
   }
-  function fitFoot(side,point,heading,surface){
+  function fitFoot(side,point,heading,surface,trace=[]){
     if(!surface.bounds)return {point};
     const b=surface.bounds,clampTo=(p)=>[clamp(p[0],b.x0+.025,b.x1-.025),surface.y,clamp(p[2],b.z0+.025,b.z1-.025)],center=[(b.x0+b.x1)/2,surface.y,(b.z0+b.z1)/2];
     const initial=clampTo(point),candidates=[initial,[initial[0],surface.y,center[2]],[center[0],surface.y,initial[2]],center];
     // Add positions along this actual tread; never create a height or extend it.
     for(const fraction of [.2,.8,.35,.65])candidates.push([initial[0],surface.y,b.z0+(b.z1-b.z0)*fraction],[b.x0+(b.x1-b.x0)*fraction,surface.y,initial[2]]);
     let best=null;
-    for(const c of candidates){let supported=0,blocked=false;for(const delta of calibration[side].footprint){const q=rotate([delta[0],delta[2],-delta[1]],heading),p=c.map((x,i)=>x+q[i]),s=sampleSupport({x:p[0],z:p[2],referenceY:surface.y,maxRise,maxDrop});if(!s)continue;if(p[1]-s.y<-.008){blocked=true;break;}if(Math.abs(s.y-surface.y)<.008)supported++;}const coverage=supported/calibration[side].footprint.length;if(blocked||coverage<.3)continue;const error=Math.hypot(c[0]-point[0],c[2]-point[2]);if(!best||error<best.error)best={point:c,coverage,error};}
+    for(const c of candidates){let supported=0,blocked=false,firstBlock=null,missing=0;for(let index=0;index<calibration[side].footprint.length;index++){const delta=calibration[side].footprint[index],q=rotate([delta[0],delta[2],-delta[1]],heading),p=c.map((x,i)=>x+q[i]),s=sampleSupport({x:p[0],z:p[2],referenceY:surface.y,maxRise,maxDrop});if(!s){missing++;continue;}if(p[1]-s.y<-.008){blocked=true;firstBlock={footprintIndex:index,offset:delta,point:p,supportId:s.supportId,supportY:s.y,gapM:p[1]-s.y};break;}if(Math.abs(s.y-surface.y)<.008)supported++;}const coverage=supported/calibration[side].footprint.length;trace.push({point:c,blocked,firstBlock,supported,missing,total:calibration[side].footprint.length,coverage,rejected:blocked?'predicted-penetration':coverage<.3?'insufficient-supported-footprint':null});if(blocked||coverage<.3)continue;const error=Math.hypot(c[0]-point[0],c[2]-point[2]);if(!best||error<best.error)best={point:c,coverage,error};}
     return best;
   }
   function footTarget(side,root,heading,referenceY,lead,previousY=referenceY,trajectory=null){
-    const lateral=calibration[side].contact[0];
+    const lateral=calibration[side].contact[0];attemptTrace={side,root:[...root],heading,referenceY,lead,previousY,candidates:[],calibration:{contact:calibration[side].contact,footprintCount:calibration[side].footprint.length,footprintBounds:[0,1,2].map(k=>({min:Math.min(...calibration[side].footprint.map(p=>p[k])),max:Math.max(...calibration[side].footprint.map(p=>p[k]))}))}};
     for(const shortening of [1,.72,.44,.2,0]){
       const future=trajectory?samplePath(trajectory,trajectory.distanceAlong+lead*shortening):{point:root,heading},p=rotate([lateral,0,trajectory?0:lead*shortening],future.heading),x=future.point[0]+p[0],z=future.point[2]+p[2],surface=support(x,z,referenceY);
-      if(!surface||surface.y-previousY>maxRise*2+1e-6||previousY-surface.y>maxDrop+1e-6)continue;
-      const fit=fitFoot(side,[x,surface.y,z],future.heading,surface);if(!fit)continue;
+      const candidate={shortening,future,requested:[x,referenceY,z],surface,footFits:[]};attemptTrace.candidates.push(candidate);if(!surface){candidate.rejected='no-height-compatible-support';continue;}if(surface.y-previousY>maxRise*2+1e-6||previousY-surface.y>maxDrop+1e-6){candidate.rejected='foot-transfer-height-limit';continue;}
+      const fit=fitFoot(side,[x,surface.y,z],future.heading,surface,candidate.footFits);if(!fit){candidate.rejected='no-valid-footprint-placement';continue;}
       return {point:fit.point,heading:future.heading,supportId:surface.supportId||null,footprintSupportFraction:fit.coverage??null};
     }
     throw Error('No actual support for '+side+' foot; route or step exceeds bounds');
@@ -54,7 +54,7 @@ export function createSupportWalker({human,standingFrame,soleIndices,sampleSuppo
   function evaluate({elapsed,actor}) {
     if(!Number.isFinite(elapsed)||elapsed<0||!actor?.position?.every(Number.isFinite))throw Error('Finite host locomotion frame required');
     if(state.previous&&elapsed<state.previous.elapsed)throw Error('Native locomotion rewind requires a new actor');
-    const old=state;state=structuredClone(state);
+    const old=state;state=structuredClone(state);attemptTrace=null;
     try{
       const root=actor.position,desiredHeading=Math.hypot(actor.direction[0],actor.direction[2])>1e-9?Math.atan2(actor.direction[0],actor.direction[2]):state.heading;
       const dt=state.previous?elapsed-state.previous.elapsed:0,displacement=state.previous?Math.hypot(...root.map((x,i)=>x-state.previous.root[i])):0;
@@ -102,7 +102,7 @@ export function createSupportWalker({human,standingFrame,soleIndices,sampleSuppo
       state.previous={elapsed,root:[...root],moving:actor.moving};state.heading=heading;
       latest={schema:'native-rescue-support-walk/1',heading,posedMatrices:rig.posedMatrices,skinMatrices:rig.skinMatrices,rootTranslation:rig.rootTranslation,footContacts,metrics,source:'Original NativeRig 104-bone FK/IK; distance-driven support-foot adapter',state:{pose:actor.pose,quality:'experimental; source geometry, CPU constraints and integrated visual review are separate'}};
       return latest;
-    }catch(error){state=old;throw error;}
+    }catch(error){lastFailure={schema:'native-support-failure/1',message:error.message,elapsed,actor:structuredClone(actor),previousAcceptedState:structuredClone(old),attemptedState:structuredClone(state),candidates:structuredClone(attemptTrace)};state=old;error.nativeDiagnostic=lastFailure;throw error;}
   }
-  return {evaluate,rig,calibration,reset(){state={distance:0,phaseOrigin:0,previous:null,heading:0,feet:null};latest=null;},report(){return {schema:'native-rescue-support-walk/1',distanceM:state.distance,metrics:latest?.metrics||null,feet:latest?.footContacts||null,originalBoneCount:rig.count,originalSoleCounts:{L:soleIndices.L.length,R:soleIndices.R.length},independentClock:false,loopedCapture:false,supportSearchWindow:{aboveRootM:maxRise,belowRootM:maxDrop},footTransferLimits:{upM:maxRise*2,downM:maxDrop},physics:false,visualAcceptance:false};}};
+  return {evaluate,rig,calibration,inspectFailure:()=>structuredClone(lastFailure),reset(){state={distance:0,phaseOrigin:0,previous:null,heading:0,feet:null};latest=null;lastFailure=null;attemptTrace=null;},report(){return {schema:'native-rescue-support-walk/1',failure:lastFailure?{message:lastFailure.message,elapsed:lastFailure.elapsed,actorId:lastFailure.actor.id,root:lastFailure.actor.position,side:lastFailure.candidates?.side,candidateCount:lastFailure.candidates?.candidates.length}:null,distanceM:state.distance,metrics:latest?.metrics||null,feet:latest?.footContacts||null,originalBoneCount:rig.count,originalSoleCounts:{L:soleIndices.L.length,R:soleIndices.R.length},independentClock:false,loopedCapture:false,supportSearchWindow:{aboveRootM:maxRise,belowRootM:maxDrop},footTransferLimits:{upM:maxRise*2,downM:maxDrop},physics:false,visualAcceptance:false};}};
 }

@@ -50,3 +50,11 @@ The same next revision gives residents separate supported roof arrivals and the 
 The view now shows people first, then only the selected person's 2–3 relevant anchors. A real “更多锚点” control exposes the rest. It holds the committed route measurements steady during an operation, selects a closer shot, and reveals the actual back bridge when borrowed routing is chosen. Paused commands may queue a logical operation; native poses are only applied on a positive shared-world step. Initial actor binding and retry explicitly reset original native state.
 
 Latest CPU verification: 59/59 top-level tests plus 2/2 actual r170 line-buffer tests. These do not erase the first real UI failure or establish the next revision's WebGL/UI/contact acceptance. Keep the first artifact tied to 7bd60f2a and rerun the corrected candidate.
+
+## R04 framing correction after actual R03 images
+
+The R03 `9203d5a9` real UI run confirms the 18.4 m refusal, repeated anchor selection and paused native-pose queue. It stops at 1.5 game seconds with the original walker's `No actual support for L foot`; neither full route is accepted yet. The core remains SHA-256 `28b1514571f75e0604d899d39b0384142283acb2536b4333d58514cd992b9371`.
+
+The actual images also exposed a 266 px control panel occluding a low anchor, and a departing crew head clipped at the top. The view now fits actual feet, 2.05 m head/label envelopes and route points into a screen rectangle with separate 76 px top and measured panel bottom margins. It uses the actual host perspective (43 degrees, current aspect), a near-frontal initial view and the real rear direction for the borrowed route. It does not relocate any world target. The desktop panel shares the route/more-anchor row and removes the repeated footer, preserving readable mobile fonts. Expanding all anchors also widens the director framing to their true positions.
+
+`makeRescueDirectorCue(game, snapshot, event = null, {width, height, fov} = {})` is backward-compatible. Host `rescueView` should supply its real canvas dimensions and camera FOV. The view itself reads canvas/panel rectangles. Same-Three CPU projection tests cover 900×700, 390×844, 1280×720 and 900×500 with initial, selected, departure and rear views. Projection is evidence of bounds, not of visual occlusion or usability; new screenshots remain required.

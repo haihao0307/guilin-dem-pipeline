@@ -67,3 +67,13 @@ Run `node --test rescue-native-actor/*.test.mjs rescue-native-actor/sources/test
 The continuous route tests use a synthetic 104-bone unit fixture, never a runtime person or replacement mesh. They cover the complete east-first route at 120 Hz, the upper-first borrowed-gate route at 50 ms steps, stopping, tight turns, original floor/tread queries and declared reset. They do not claim actual-model contact or visual success.
 
 For isolated local CPU module-import validation only, set `NATIVE_HOST_THREE_FILE` to the verified host r170 module and launch Node with `--import ./rescue-native-actor/test-host-loader.mjs`. That helper must not run in a browser deployment.
+
+## R03 first-step diagnostic probe
+
+The real R03 integration loaded three original actors and passed the six static low-sole bands, but first walking failed at game time 1.5 s on the first descending staircase. CPU synthetic fixture passes must not override that actual failure.
+
+`actual-route-probe.mjs` runs in official Actions with Node 22 and the same `loadNativeActorResources`, fixed original asset URLs, original factory and original source rig. It creates no renderer or browser. Set `NATIVE_ROUTE_OUT` (or `NATIVE_ACTOR_OUT`) for the artifact directory, `NATIVE_PROBE_SECONDS` (default 2.5) and `NATIVE_PROBE_DT` (default 0.05, maximum 0.05). It writes progress, actual original foot CSR/rig diagnostic data, per-frame contact summaries and failure candidates even on failure; failure sets exit code 1.
+
+Every actor now exposes `inspectFailure()` and `exportDiagnosticFixture()`. The former contains the failed root, previous accepted anchors, attempted foot state and individual candidate support/footprint rejection reasons. The latter exports only the original rig and complete original CSR influences for its existing foot-region vertices, not a replacement body mesh. It is diagnostic evidence, not a production asset; do not publish the generated fixture as a new model.
+
+An already obtained fixture can be replayed entirely offline with `NATIVE_FOOT_FIXTURE=/path/original-native-foot-fixture.json NATIVE_ACTOR_OUT=/path/results node actual-foot-replay.mjs`. This reuses the original NativeRig and source foot CSR, with the current actual floor/tread sampler. No remote load or browser is needed for this replay.

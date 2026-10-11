@@ -9,7 +9,7 @@ permissions:
   contents: read
 jobs:
   city-rescue:
-    if: ${{ contains(github.event.head_commit.message, '[rescue-probe]') }}
+    if: ${{ contains(github.event.head_commit.message, '[rescue-probe]') && !contains(github.event.head_commit.message, '[actor-probe]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 18
     env:
@@ -43,5 +43,34 @@ jobs:
         with:
           name: city-rescue-${{ github.sha }}
           path: city-rescue-qa-results/
+          compression-level: 0
+          retention-days: 7
+
+  actual-native-route:
+    if: ${{ contains(github.event.head_commit.message, '[actor-probe]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01
+            kaopu-minigame-workbench/voxel-train-study/vendor
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22.23.3
+      - name: Replay real original rig and feet against actual route supports
+        timeout-minutes: 6
+        env:
+          NATIVE_ROUTE_OUT: actual-native-route-results
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/rescue-native-actor/actual-route-probe.mjs
+      - name: Preserve actual source calibration and route diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: actual-native-route-${{ github.sha }}
+          path: actual-native-route-results/
           compression-level: 0
           retention-days: 7
