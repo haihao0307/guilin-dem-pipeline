@@ -1,0 +1,172 @@
+name: Ear ET18 deterministic preview and browser evidence
+on:
+  push:
+    branches: [feature/ear-anatomy-et18-20261011]
+    paths:
+      - .github/workflows/ear-et18-publish.yml
+      - kaopu-unified-human-workbench/ear-structure/*.mjs
+      - kaopu-unified-human-workbench/ear-structure/build.cjs
+      - kaopu-unified-human-workbench/ear-structure/verify.cjs
+      - kaopu-unified-human-workbench/ear-structure/layout.css
+concurrency:
+  group: ear-et18-publish-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: write
+jobs:
+  deterministic-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    outputs:
+      published_sha: ${{ steps.publish.outputs.published_sha }}
+      public_url: ${{ steps.publish.outputs.public_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pinned deterministic builder
+        run: |
+          mkdir -p /tmp/ear-build
+          cd /tmp/ear-build
+          npm init -y >/dev/null
+          npm install esbuild@0.25.11
+      - name: Build one-file preview and verify static invariants
+        env:
+          NODE_PATH: /tmp/ear-build/node_modules
+        run: |
+          node kaopu-unified-human-workbench/ear-structure/build.cjs
+          node - <<'NODE'
+          const fs=require('fs');
+          const h=fs.readFileSync('kaopu-unified-human-workbench/ear-structure/preview.html','utf8');
+          if((h.match(/<script\b/g)||[]).length!==1)throw Error('preview must retain exactly one script');
+          if(!h.includes('ET18-A1')||!h.includes('earWorkbench'))throw Error('ear runtime missing');
+          const b=JSON.parse(fs.readFileSync('kaopu-unified-human-workbench/ear-structure/BUILD.json'));
+          if(!b.oneCharacter||!b.oneCanvas||!b.canonicalBuffersUnchanged||!b.oldPreviewUnchanged)throw Error('build invariants failed');
+          console.log(JSON.stringify({bytes:Buffer.byteLength(h),sha:b.previewSHA256,version:b.version}));
+          NODE
+          git diff --exit-code HEAD -- kaopu-unified-human-workbench/lip-structure kaopu-unified-human-workbench/eye-materials kaopu-unified-human-workbench/identity-lab kaopu-unified-human-workbench/full kaopu-unified-human-workbench/face-transfer kaopu-unified-human-workbench/eye-transfer
+      - name: Commit only generated ear preview and manifest, fast-forward only
+        id: publish
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/ear-structure/preview.html kaopu-unified-human-workbench/ear-structure/BUILD.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'build(ears): ET18 deterministic preview [skip ci]'
+            git push origin HEAD:feature/ear-anatomy-et18-20261011
+          fi
+          SHA=$(git rev-parse HEAD)
+          URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$SHA/kaopu-unified-human-workbench/ear-structure/preview.html"
+          echo "published_sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "public_url=$URL" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "$SHA" "$URL"
+
+  core-browser-acceptance:
+    needs: deterministic-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.deterministic-build.outputs.published_sha }}
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            kaopu-unified-human-workbench/ear-structure
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pinned browser dependencies
+        run: |
+          mkdir -p /tmp/ear-tools
+          cd /tmp/ear-tools
+          npm init -y >/dev/null
+          npm install playwright@1.56.1 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: Actual local-browser core acceptance
+        env:
+          NODE_PATH: /tmp/ear-tools/node_modules
+          EAR_EVIDENCE: ear-evidence/local
+          EAR_SMOKE: '1'
+        run: |
+          mkdir -p ear-evidence/local ear-evidence/public ear-evidence/build
+          printf '%s\n' '${{ needs.deterministic-build.outputs.published_sha }}' > ear-evidence/PUBLISHED_COMMIT.txt
+          printf '%s\n' '${{ needs.deterministic-build.outputs.public_url }}' > ear-evidence/PUBLIC_URL.txt
+          cp kaopu-unified-human-workbench/ear-structure/BUILD.json ear-evidence/BUILD.json
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/ear-http.log 2>&1 &
+          node kaopu-unified-human-workbench/ear-structure/verify.cjs
+      - name: Actual immutable HTTPS browser acceptance with bounded cache retry
+        env:
+          NODE_PATH: /tmp/ear-tools/node_modules
+          EAR_EVIDENCE: ear-evidence/public
+          EAR_SMOKE: '1'
+          EAR_URL: ${{ needs.deterministic-build.outputs.public_url }}
+        run: |
+          status=1
+          for attempt in 1 2 3; do
+            echo "immutable public attempt $attempt"
+            if node kaopu-unified-human-workbench/ear-structure/verify.cjs; then status=0; break; fi
+            sleep 20
+          done
+          exit "$status"
+      - name: Retain exact source, manifest and rendered evidence
+        if: always()
+        run: cp -r kaopu-unified-human-workbench/ear-structure/. ear-evidence/build/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ear-et18-core-delivery-${{ needs.deterministic-build.outputs.published_sha }}
+          path: ear-evidence
+          retention-days: 14
+
+  extended-regression:
+    needs: deterministic-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 38
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.deterministic-build.outputs.published_sha }}
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            kaopu-unified-human-workbench/ear-structure
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pinned browser dependencies
+        run: |
+          mkdir -p /tmp/ear-tools
+          cd /tmp/ear-tools
+          npm init -y >/dev/null
+          npm install playwright@1.56.1 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: All controls, 36 people, expressions and archive regression
+        env:
+          NODE_PATH: /tmp/ear-tools/node_modules
+          EAR_EVIDENCE: ear-full-evidence/browser
+        run: |
+          mkdir -p ear-full-evidence/browser ear-full-evidence/build
+          printf '%s\n' '${{ needs.deterministic-build.outputs.published_sha }}' > ear-full-evidence/PUBLISHED_COMMIT.txt
+          cp kaopu-unified-human-workbench/ear-structure/BUILD.json ear-full-evidence/BUILD.json
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/ear-full-http.log 2>&1 &
+          node kaopu-unified-human-workbench/ear-structure/verify.cjs
+      - name: Retain full evidence without blocking preview availability
+        if: always()
+        run: cp -r kaopu-unified-human-workbench/ear-structure/. ear-full-evidence/build/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ear-et18-full-regression-${{ needs.deterministic-build.outputs.published_sha }}
+          path: ear-full-evidence
+          retention-days: 14
