@@ -1,0 +1,31 @@
+name: Tailor R0433 review
+on:
+  push:
+    branches: [fix/tailor-all-category-display-r0433-20261011]
+    paths: [.github/workflows/tailor-r0433-review.yml]
+permissions:
+  contents: read
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/workflows
+            kaopu-tailor-workbench/presets/r04
+            kaopu-unified-human-workbench/full
+          fetch-depth: 1
+      - name: Record source paths and immutable input
+        run: |
+          mkdir -p review-snapshot
+          git rev-parse HEAD > review-snapshot/HEAD.txt
+          git ls-tree -r --name-only HEAD kaopu-tailor-workbench > review-snapshot/TAILOR_PATHS.txt
+          git ls-tree -r --name-only HEAD | grep -E '(^|/)(AGENTS.md|BUILD_MANIFEST[^/]*|WORKBENCH_BUILD_SYSTEM.md)$' > review-snapshot/RULE_PATHS.txt || true
+          tar -czf review-snapshot/source.tgz .github/workflows kaopu-tailor-workbench/presets/r04 kaopu-unified-human-workbench/full
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tailor-r0433-source-review
+          path: review-snapshot/
+          retention-days: 7
