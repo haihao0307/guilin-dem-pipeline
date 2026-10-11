@@ -1,0 +1,50 @@
+name: Ear ET18 deterministic preview build
+on:
+  push:
+    branches: [feature/ear-anatomy-et18-20261011]
+    paths:
+      - .github/workflows/ear-et18-publish.yml
+      - kaopu-unified-human-workbench/ear-structure/*.mjs
+      - kaopu-unified-human-workbench/ear-structure/build.cjs
+      - kaopu-unified-human-workbench/ear-structure/layout.css
+concurrency:
+  group: ear-et18-publish-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: write
+jobs:
+  deterministic-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pinned builder
+        run: |
+          mkdir -p /tmp/ear-build
+          cd /tmp/ear-build
+          npm init -y >/dev/null
+          npm install esbuild@0.25.11
+      - name: Build one-file immutable preview and static invariants
+        env:
+          NODE_PATH: /tmp/ear-build/node_modules
+        run: |
+          node kaopu-unified-human-workbench/ear-structure/build.cjs
+          node -e "const fs=require('fs'),vm=require('vm');const h=fs.readFileSync('kaopu-unified-human-workbench/ear-structure/preview.html','utf8');if((h.match(/<script\\b/g)||[]).length!==1)throw Error('preview must retain one script');if(!h.includes('ET18-A1')||!h.includes('earWorkbench'))throw Error('ear runtime missing');console.log('preview bytes',Buffer.byteLength(h))"
+          git diff --exit-code HEAD -- kaopu-unified-human-workbench/lip-structure kaopu-unified-human-workbench/eye-materials kaopu-unified-human-workbench/identity-lab kaopu-unified-human-workbench/full kaopu-unified-human-workbench/face-transfer kaopu-unified-human-workbench/eye-transfer
+      - name: Commit only generated ear preview and manifest, fast-forward only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/ear-structure/preview.html kaopu-unified-human-workbench/ear-structure/BUILD.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'build(ears): ET18 deterministic preview'
+            git push origin HEAD:feature/ear-anatomy-et18-20261011
+          fi
