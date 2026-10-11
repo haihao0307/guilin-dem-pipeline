@@ -1,7 +1,8 @@
 # R3.12 single-wall runtime surface adapter probe
 
-Status: isolated local candidate. 13 CPU/static tests pass. GPU compilation, images,
-quality and speed are NOT accepted yet. The local Chromium attempt was actually run
+Status: r02 topology correction, isolated local candidate. 18 CPU/static tests pass.
+The previous r01 ran on GPU and FAILED macro-shape quality and interactive performance.
+The r02 correction below still needs its bounded single-brick/door GPU verification. The local Chromium attempt was actually run
 and refused by this executor's socket permissions; see `local-smoke-evidence/receipt.json`.
 Use the existing authorized QA CI, not a claim that no GPU means a pass. Nothing here
 is published, connected to the room, or substituted into the game. Original `r312-wall/`
@@ -42,8 +43,8 @@ not in the middle of another render pass.
 
 ## Fixed initial configuration and cost accounting
 
-Default spacing is 0.06 m across source bounding cube axes (actual radial surface
-spacing varies). For the full 43-course wall:
+Historical r01 benchmark only: spacing was 0.06 m across conservative bounding
+cube axes, which proved to be the wrong chart. Its full 43-course wall had:
 
 - 108 grid samples / brick, 161,352 brick samples total
 - 11,928 core samples; 173,280 total samples
@@ -71,10 +72,11 @@ The door remains an analytic full-thickness rectangle in original wall coordinat
 Surface fragments strictly inside it discard. Runtime jamb/header quads are generated
 only where their planes intersect a source solid's conservative bound. A cap fragment
 checks the ORIGINAL exact field once and discards where the original solid is absent;
-it then uses the original material/light with the analytic cut normal. Door caps are
+it then uses the original material/light and the original adapter’s composed-field
+  cut normal, including the source’s potentially degenerate y=0 boundary. Door caps are
 not a painted dark rectangle or a solid plane filling all source holes. Core caps keep
 the original depth-only tie priority via vertex clip-depth adjustment. Source outer
-normals/material remain original; cap normals are explicitly geometric adaptation.
+normals/material remain original; the original door-composed normal is reused on caps.
 
 ## Honest quality boundary
 
@@ -162,3 +164,63 @@ correction only adds location=0 to the original output declaration in the bake s
 all original functions remain unchanged. A 13th CPU/static test pins all three output
 locations and proves reverting that single declaration restores the original prefix.
 GPU rerun remains required.
+
+## r02: minimal correction after the actual r01 failure
+
+Actual r01 run 38114965976 / commit 9f077825 completed 623×481, original and
+adapter each first + two warm full RGBA readbacks. Construction 6.825 s; warm
+front original 39.458/39.798 s versus adapter 3.409/3.415 s; oblique original
+46.820/46.801 s versus adapter 4.151/4.154 s. This is a real approximately 11×
+improvement, yet still seconds per frame. Interactive acceptance FAILED.
+
+The images also FAILED macro geometry: repeated heavily clipped brick corners,
+wider mortar, jagged top and broken door-bottom strips. This was NOT merely
+micro-pore loss. MAE 4.23/5.11 and silhouette disagreement 1.86%/1.95% did not
+make the images acceptable. Vertex residual below 1 μm for bricks did not detect it.
+
+Root cause: ray bounds [.134,.043,.070] were mistakenly used as chart dimensions.
+The native mother half-size is MODEL_SCALE × [1.04,.265,.480], approximately
+[.120,.0305769,.0553846], with radius MODEL_SCALE × .055 = .00634615 m.
+The three radial ratios differ, so chart seams landed on different native faces;
+triangles spanned across corners and deeply cut the solid. The unweathered ORIGINAL
+round-box diagnostic has only 0.013 μm vertex residual but 15.29 mm worst sampled
+edge-chord intrusion and 12.94 mm triangle-centroid intrusion with the bad chart.
+
+Changes are limited to this construction error and the door boundary:
+
+1. Brick charts use native half-size and explicit source-radius tangent and arc
+   midpoint anchors (h-r and h-r/2), plus the original coarse interior spacing.
+   This is feature-aligned topology, not a global increase in sampling frequency.
+   A mother brick now has 406 samples / 624 triangles. The source base diagnostic
+   bounds sampled edge-chord intrusion to 0.545 mm and centroids to 0.412 mm.
+   These tests cover the source base, NOT all original weather geometry; GPU images
+   still decide whether the correction is sufficient. A triangle error estimate
+   cannot be inferred from vertex field residual.
+2. Core chart dimensions use source layer base dimensions and .0055 m smooth-max
+   feature anchors. Original functions/parameters stay unchanged.
+3. Conservative source ray bounds only supply the exterior root bracket. They no
+   longer define chart topology. All 19 original exact-field evaluations per vertex
+   and invalid-point rejection remain. No hit is filled or patched when invalid.
+4. A bottom=0 opening now gets the same exact-occupancy-tested bottom cap as a
+   raised opening. The shell's bottom portal test uses the common 0.15 mm sampler
+   tolerance, removing both signs of tiny root residue instead of leaving strips.
+   The original adapter's cut normal is reused. This intentionally preserves the
+   original zero-plane CSG behavior; it is not a new physical threshold design or
+   a silent change to a completely threshold-free doorway.
+5. The original mother mode is preserved: one instance, center (0,.030575,0), yaw=0,
+   seed=0, variant=0, variation=0. `proof.sourceBrickInstances` and `sourceMode` make
+   a genuine mother fixture distinguishable from one ordinary randomized wall brick.
+
+### Bounded correction QA, use this instead of another complete-wall benchmark
+
+`PROBE_TOPOLOGY=1 PROBE_WIDTH=360 PROBE_HEIGHT=270 PROBE_FRAMES=3 PROBE_TIMEOUT_MS=300000 node .../wall-surface-adapter-probe/gpu-ab.cjs`
+
+Only two small fixtures are run:
+- `mother-one-brick`: actual source mother mode, one brick, no core or door.
+- `door-zero-boundary`: six source courses (204 bricks), same material controls,
+  .9 × .32 m opening at bottom=0; oblique close view of its two jambs and bottom.
+
+Original and adapter use identical parameters/camera and each one first + TWO warm
+full readbacks. Both numeric difference and top-down difference image remain. This
+is bounded shape/cut-boundary evidence, not a 43-course wall performance claim.
+The r02 full wall has not been run and must not be silently equated to r01's timings.

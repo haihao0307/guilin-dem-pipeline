@@ -1,25 +1,25 @@
 import {createR312Wall,original} from '../r312-wall/r312-wall.mjs';
-import {cubeLattice,rotateToWorld,rotatedHalf,doorCaps} from './geometry.mjs';
+import {cubeLattice,brickSurfaceLattice,anchoredBoxLattice,rotateToWorld,rotatedHalf,doorCaps} from './geometry.mjs';
 import {surfaceVertex,surfaceFragment} from './shaders.mjs';
 import {sampleOriginalSurface} from './gpu-sampler.mjs';
 const caches=new WeakMap();
 const noVersion=s=>s.replace(/^#version 300 es\n/,'');
-export const PROBE_VERSION='radial-surface-r01';
+export const PROBE_VERSION='radial-surface-r02-topology-fix';
 export function createR312SurfaceProbe({THREE,renderer,spacing=.06,cache=true,...options}={}){
  if(!renderer?.getContext)throw Error('Supply existing host WebGL2 renderer');
  if(options.showPlaster!==false)throw Error('First surface probe requires explicit showPlaster:false; original plaster is not approximated');
- if(options.mode&&options.mode!=='wall'&&options.mode!=='bricks'&&options.mode!=='soil')throw Error('First probe supports wall/bricks/soil');
+ if(options.mode&&options.mode!=='wall'&&options.mode!=='bricks'&&options.mode!=='soil'&&options.mode!=='mother')throw Error('First probe supports wall/bricks/soil/mother');
  if(spacing<.01||spacing>.12)throw Error('Sampling spacing must be .01 to .12 metres');
  const start=performance.now(),wall=createR312Wall({THREE,...options,proxyCulling:'double'}),p=wall.parameters;
- wall.group.name='R3.12 isolated sampled surface probe';const stages=[];let retainedCPUBytes=0,triangles=0,cacheHits=0,peakTransientBytes=0;
+ wall.proof.sourceBrickInstances=wall.meshes.filter(m=>m.material.name.includes('brick')).reduce((n,m)=>n+m.geometry.instanceCount,0);wall.proof.sourceMode=p.mode;wall.group.name='R3.12 isolated sampled surface probe';const stages=[];let retainedCPUBytes=0,triangles=0,cacheHits=0,peakTransientBytes=0;
  if(!caches.has(renderer))caches.set(renderer,new Map());const cacheMap=caches.get(renderer);
  try{for(const mesh of wall.meshes){
-  const mat=mesh.material,kind=mat.name.includes('brick')?'brick':'soil',top=mat.uniforms.uSoilTop.value,half=kind==='brick'?[.134,.043,.070]:[2.17,top/2+.145,.365],center=kind==='brick'?[0,0,0]:[0,top/2,0],count=kind==='brick'?mesh.geometry.instanceCount:1;
-  const lattice=cubeLattice(half,spacing),key=JSON.stringify({version:PROBE_VERSION,source:original.sourceSha256,kind,batch:mat.uniforms.uBatch?.value,spacing,count,parameters:p});
+  const mat=mesh.material,kind=mat.name.includes('brick')?'brick':'soil',top=mat.uniforms.uSoilTop.value,half=kind==='brick'?[.134,.043,.070]:[2.17,top/2+.145,.365],center=kind==='brick'?[0,0,0]:[0,(top+.34*(p.coreOffset+Math.max(...mat.uniforms.uLayerOut.value)))/2,0],count=kind==='brick'?mesh.geometry.instanceCount:1;
+  const outset=p.coreOffset+Math.max(...mat.uniforms.uLayerOut.value),chartHalf=[Math.max(1.82,1.990+.44*outset),center[1],Math.max(.08,.244615+outset)],lattice=kind==='brick'?brickSurfaceLattice(spacing):anchoredBoxLattice(chartHalf,spacing,.0055),boundsMin=kind==='brick'?half.map(x=>-x):[-2.17,-.015,-.365],boundsMax=kind==='brick'?half:[2.17,top+.145,.365],key=JSON.stringify({version:PROBE_VERSION,source:original.sourceSha256,kind,batch:mat.uniforms.uBatch?.value,spacing,count,parameters:p});
   let data=cache?cacheMap.get(key):null;
   if(data){cacheHits++;stages.push({kind,cacheHit:true,samples:lattice.vertexCount*count,totalSamplingThroughReadbackMs:0});}
   else{
-   const sampled=sampleOriginalSurface({renderer,kind,lattice,instanceCount:count,uniforms:mat.uniforms,center});peakTransientBytes=Math.max(peakTransientBytes,sampled.metrics.temporaryReadbackBytes+sampled.metrics.temporaryGPUAttachmentBytes);
+   const sampled=sampleOriginalSurface({renderer,kind,lattice,instanceCount:count,uniforms:mat.uniforms,center,boundsMin,boundsMax});peakTransientBytes=Math.max(peakTransientBytes,sampled.metrics.temporaryReadbackBytes+sampled.metrics.temporaryGPUAttachmentBytes);
    const buildStart=performance.now();data=buildSurfaceData({kind,lattice,count,sampled,door:p.door,center,half});sampled.metrics.cpuBuildMs=performance.now()-buildStart;stages.push(sampled.metrics);if(cache)cacheMap.set(key,data);
   }
   const geo=new THREE.BufferGeometry();for(const [name,itemSize]of [['position',3],['probeNormal',3],['probeCap',1],...(kind==='brick'?[['probeMeta',4],['probeSeed',2]]:[])])geo.setAttribute(name,new THREE.BufferAttribute(data[name],itemSize));geo.setIndex(new THREE.BufferAttribute(data.indices,1));geo.computeBoundingBox();geo.computeBoundingSphere();

@@ -11,13 +11,14 @@ permissions:
 jobs:
   wall-surface-probe:
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
+    timeout-minutes: 9
     env:
-      PROBE_WIDTH: '623'
-      PROBE_HEIGHT: '481'
+      PROBE_TOPOLOGY: '1'
+      PROBE_WIDTH: '360'
+      PROBE_HEIGHT: '270'
       PROBE_ORIGINAL_FRAMES: '3'
       PROBE_SURFACE_FRAMES: '3'
-      PROBE_TIMEOUT_MS: '480000'
+      PROBE_TIMEOUT_MS: '300000'
       PROBE_OUT: wall-surface-probe-results
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -37,8 +38,8 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/room-browser" --registry=https://registry.npmjs.org --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/room-browser/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/room-browser/node_modules" >> "$GITHUB_ENV"
-      - name: Compare one original-field wall with equal cold plus two warm completed frames
-        timeout-minutes: 9
+      - name: Compare one mother brick and limited zero-bottom doorway with equal completed frames
+        timeout-minutes: 6
         run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/room-unit-r02/wall-surface-adapter-probe/gpu-ab.cjs
       - name: Preserve every completed stage, image and failure
         if: always()
