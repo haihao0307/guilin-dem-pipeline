@@ -14,8 +14,6 @@ shutil.copy2(base/'workbench.css',p/'workbench.css')
 def change(text,old,new):
     assert old in text, 'Missing immutable source anchor: '+old[:100]
     return text.replace(old,new)
-# Stable stochastic coverage keeps actual radii and per-pixel integral, but
-# covered fragments now write nearest depth. No alpha-blend fallback or helmet.
 s=(base/'src/FiberMaterial.js').read_text()
 s=change(s,"['auto', 'blend', 'a2c']","['auto', 'blend', 'a2c', 'depth']")
 s=change(s,'auto, blend or a2c','auto, blend, a2c or depth')
@@ -35,8 +33,6 @@ s=change(s,'record.coverageMode = !record.coverageAA ?',"record.coverageMode = d
 s=change(s,'guideMode: {value: guides ? 1 : 0},','coverageDepth:{value:0}, guideMode: {value: guides ? 1 : 0},')
 s=change(s,"'non-MSAA fallback uses order-dependent alpha blending'","'depth coverage uses stable spatial samples, not temporal reconstruction; sparse strands may show sampling noise'")
 (p/'src/FiberMaterial.js').write_text(s)
-# Preserve root sampler, curve transport and triangle guards; replace macro
-# topology, local trims and globally hard half-head interpolation restriction.
 s=(base/'src/LengthKernel.js').read_text()
 s="import {partSign,canInterpolate,trimLength,rootVisibility,enforceTrim,growthDirection,coherentPhase,TOPOLOGY_SPEC} from './GroomTopology.js';\n"+s
 s=change(s,"'textured-fringe':{name:'微分碎盖',lengthMM:85,partMM:-7,partOpen:18,volumeMM:16,sideRatio:42,backRatio:48,fringeRatio:65,clump:48,waveMM:.60,tipVariation:24,flow:10}","'textured-fringe':{name:'微分碎盖 · 耳侧收短',lengthMM:85,partMM:-7,partOpen:8,volumeMM:10,sideRatio:32,backRatio:40,fringeRatio:62,clump:25,waveMM:.40,tipVariation:22,flow:10,sideburnMM:14,napeMM:18}")
@@ -54,8 +50,6 @@ s=change(s,'point=add(point,mul(sub(primary.root,root),gather));','const bundle=
 s=change(s,'skin.earGuard.apply(pts);skin.headGuard.apply(pts);','enforceTrim(root,pts,d);skin.earGuard.apply(pts);skin.headGuard.apply(pts);')
 s=change(s,'skin.earGuard.apply(finalPoints);skin.headGuard.apply(finalPoints);','enforceTrim(root,finalPoints,d);skin.earGuard.apply(finalPoints);skin.headGuard.apply(finalPoints);')
 s=change(s,'return{recipe:d,curves,','return{topology:TOPOLOGY_SPEC,recipe:d,curves,');(p/'src/LengthKernel.js').write_text(s)
-# Native head sources, pinned individually and hash-recorded. A local exact
-# snapshot can be supplied for offline reproduction; no broad model imports.
 ref='99defb97123d8101fefddf5aa039991446f557a8';dest=p/'native-head';records=[];seen=set()
 queue=['full/ui/skin/CommonSkinLayer.mjs','face-transfer/FaceSurface.mjs','face-transfer/FaceSkin.mjs','identity-lab/IdentityModel.mjs','identity-lab/IdentitySkin.mjs','eye-materials/NaturalEyeState.mjs','eye-materials/OcularRefinement.mjs','lip-structure/LipState.mjs','lip-structure/LipSurface.mjs','face-transfer/THIRD_PARTY.txt','eye-materials/THIRD_PARTY.md']
 while queue:
@@ -80,14 +74,17 @@ while queue:
         s="import detailURL from './assets/detail.png';\nimport chromaURL from './assets/chroma.png';\n"+s
         s=change(s,"['detail.png','chroma.png'].map(name=>loader.loadAsync(new URL('./assets/'+name,import.meta.url).href)","[detailURL,chromaURL].map(url=>loader.loadAsync(url)")
         queue.extend(['face-transfer/assets/detail.png','face-transfer/assets/chroma.png'])
-    if rel=='lip-structure/LipMath.mjs':s=change(s,'const display=a=>[a[0],a[2],-a[1]];','const display=a=>a.slice(); // Native Y-up head adapter.')
+    if rel=='lip-structure/LipMath.mjs':
+        s=change(s,'const display=a=>[a[0],a[2],-a[1]];','const display=a=>a.slice(); /* Native Y-up head adapter. */')
+        assert '*/return {x:display(X)' in s, 'Native lip-frame return must not be swallowed by an inline comment'
     target.write_text(s)
 (p/'NATIVE_HEAD_LOCK.json').write_text(json.dumps({'revision':ref,'sources':records,'adaptations':['single Three instance','inline original atlas URLs','LipMath native Y-up display conversion'],'fullBodyViewer':False},indent=2))
-# Keep JSON diagnostics small: never serialize uniform textures or image bytes.
 f=p/'src/NativeHead.js';s=f.read_text();s=s.replace('face:skin.faceExtension,','face:{version:skin.faceExtension.version,ready:skin.faceExtension.ready,shaderCompiles:skin.faceExtension.shaderCompiles,errors:skin.faceExtension.errors},');f.write_text(s)
 s=(base/'src/app.js').read_text();s="import {installNativeHead,NATIVE_HEAD_REVISION} from './NativeHead.js';\nimport {anatomicalRegion,TOPOLOGY_SPEC,finitePart} from './GroomTopology.js';\n"+s
 s=change(s,'let recipe={...INITIAL},model,','let nativeHead;\nlet recipe={...INITIAL},model,')
 s=s.replace('R13-M1','R13C.1').replace('kaopu.hair.r13-m1.groomDNA','kaopu.hair.r13c.groomDNA').replace("coverageResolve:'blend'","coverageResolve:'depth'")
+s=change(s,"antialias:true,alpha:false","antialias:new URLSearchParams(location.hash.slice(1)).get('aa')!=='0',alpha:false")
+s=change(s,'errors.push(String(e.message||e));','errors.push(String(e.stack||e.message||e));')
 s=change(s,"head.name='single-original-GNM-head';","nativeHead=await installNativeHead({gnm:model,positions,geometry,mesh:head,renderer,render:draw});")
 s=change(s,'skin=new SkinField(model);','skin=new SkinField(nativeHead.collisionModel);')
 s=change(s,'geometry.attributes.normal.array);scene.add(brows.mesh)','nativeHead.geometry.attributes.normal.array);scene.add(brows.mesh)')
