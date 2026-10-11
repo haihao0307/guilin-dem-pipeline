@@ -54,8 +54,8 @@ jobs:
           node kaopu-unified-human-workbench/joey-observation-r01/brow-tip-r44/native-geometry-qa.test.cjs
       - name: Test bounded smile-state contract
         run: node --test kaopu-unified-human-workbench/joey-observation-r01/expression-state-r01/states.test.cjs
-      - name: Render one shared R45 candidate and validate native surfaces
-        run: node kaopu-unified-human-workbench/joey-observation-r01/face-relation-r45/render-candidate.cjs
+      - name: Verify exact R45 geometry against original baseline in every saved view
+        run: node kaopu-unified-human-workbench/joey-observation-r01/face-relation-r45/combined-contact-check.cjs
       - name: Keep bounded research evidence
         if: always()
         uses: actions/upload-artifact@v4
