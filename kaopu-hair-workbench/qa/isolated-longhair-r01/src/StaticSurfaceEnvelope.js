@@ -1,0 +1,10 @@
+import * as THREE from '/native/kaopu-unified-human-workbench/full/source/registration-vendor/three.module.js';
+// Pose-local clearance projection. This is authored static contact correction,
+// not hair dynamics. It never shifts an entire bundle to a shoulder envelope.
+export function createStaticSurfaceEnvelope(geometry,{clearance=.0015,cell=.025}={}){
+ const p=geometry.attributes.position.array,f=geometry.index.array,grid=new Map(),triangles=[];
+ for(let i=0;i<f.length;i+=3){const t=new THREE.Triangle(...[0,1,2].map(k=>new THREE.Vector3().fromArray(p,f[i+k]*3))),normal=t.getNormal(new THREE.Vector3()),id=triangles.length;triangles.push({t,normal});const vs=[t.a,t.b,t.c],lo=[0,1,2].map(k=>Math.floor(Math.min(...vs.map(v=>v.getComponent(k)))/cell)),hi=[0,1,2].map(k=>Math.floor(Math.max(...vs.map(v=>v.getComponent(k)))/cell));for(let x=lo[0];x<=hi[0];x++)for(let y=lo[1];y<=hi[1];y++)for(let z=lo[2];z<=hi[2];z++){const key=[x,y,z].join(',');if(!grid.has(key))grid.set(key,[]);grid.get(key).push(id);}}
+ let corrections=0,maxDisplacement=0;const q=new THREE.Vector3(),best=new THREE.Vector3(),delta=new THREE.Vector3();
+ function project(point){const original=point.clone();for(let pass=0;pass<16;pass++){const c=point.toArray().map(x=>Math.floor(x/cell)),seen=new Set();let d2=Infinity,chosen=null;for(let x=c[0]-1;x<=c[0]+1;x++)for(let y=c[1]-1;y<=c[1]+1;y++)for(let z=c[2]-1;z<=c[2]+1;z++)for(const id of grid.get([x,y,z].join(','))||[]){if(seen.has(id))continue;seen.add(id);const r=triangles[id];r.t.closestPointToPoint(point,q);const d=q.distanceToSquared(point);if(d<d2){d2=d;chosen=r;best.copy(q);}}if(!chosen||d2>.035*.035)break;const signed=delta.copy(point).sub(best).dot(chosen.normal);if(signed>=clearance)break;point.addScaledVector(chosen.normal,Math.min(.004,clearance-signed));corrections++;}maxDisplacement=Math.max(maxDisplacement,point.distanceTo(original));return point;}
+ return{project,report:()=>({kind:'nearest-triangle local normal clearance',clearance,maxStep:.004,maxIterations:16,corrections,maxDisplacement,physics:false})};
+}
