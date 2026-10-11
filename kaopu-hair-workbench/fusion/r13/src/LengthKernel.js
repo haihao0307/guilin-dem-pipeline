@@ -1,3 +1,4 @@
+import {HeadSegmentGuard} from './HeadSegmentGuard.js';
 import {NeutralEarGuard} from './NeutralEarGuard.js';
 /** R13 self-authored length-conditioned rest-groom compiler.
  * Teachers: Perm global/local separation and root-relative curves;
@@ -59,7 +60,7 @@ export function transportFrame(axis,t0,t1){
  * Approximate neutral-head obstacle field, not a dynamic or full-body collision claim.
  */
 export class SkinField{
- constructor(model){this.earGuard=new NeutralEarGuard(model);this.bvh=new TeacherSkinBVH(model);this.step=.003;this.origin=[-.18,.14,-.20];this.dims=[121,121,151];this.values=new Map();this.samples=0;}
+ constructor(model){this.earGuard=new NeutralEarGuard(model);this.bvh=new TeacherSkinBVH(model);this.headGuard=new HeadSegmentGuard(this.bvh);this.step=.003;this.origin=[-.18,.14,-.20];this.dims=[121,121,151];this.values=new Map();this.samples=0;}
  corner(x,y,z){const key=x+this.dims[0]*(y+this.dims[1]*z);let v=this.values.get(key);if(v)return v;const p=[x,y,z].map((n,k)=>this.origin[k]+n*this.step),h=this.bvh.nearest(p);v=[dot(sub(p,h.p),h.n),...h.n];this.values.set(key,v);return v;}
  sample(p){const u=p.map((x,k)=>(x-this.origin[k])/this.step),c=u.map(Math.floor),f=u.map((x,k)=>x-c[k]),out=[0,0,0,0];
   if(c.some((x,k)=>x<0||x>=this.dims[k]-1)){const h=this.bvh.nearest(p);return{distance:dot(sub(p,h.p),h.n),normal:h.n};}
@@ -108,7 +109,7 @@ function makeGuide(b,id,d,skin,segments){
   p=skin.project(p,.00075);
   pts.push(p);
  }
- skin.earGuard.apply(pts);
+ skin.earGuard.apply(pts);skin.headGuard.apply(pts);
  const arc=[0];for(let i=1;i<pts.length;i++)arc.push(arc.at(-1)+Math.hypot(...sub(pts[i],pts[i-1])));
  return{id,root,normal:n,points:pts,arc,length:arc.at(-1),side:partSide(root,d),region:regionAt(root),requestedLength:length};
 }
@@ -142,11 +143,11 @@ export async function compileGroom(b,skin,recipe,{segments=24,cancel,onProgress}
    let p=base[j];if(j>0){const low=Math.sin(s*Math.PI*2.2+phase)*a,hi=Math.sin(s*22+finePhase)*a*.14;p=add(p,add(mul(frame,low),mul(binormal,hi)));p=skin.project(p,.0007);}
    curves.set(p,q);normals.set(n,q);minimumY=Math.min(minimumY,p[1]);maximumY=Math.max(maximumY,p[1]);
   }
-  const finalPoints=Array.from({length:per},(_,j)=>Array.from(curves.subarray((i*per+j)*3,(i*per+j+1)*3)));skin.earGuard.apply(finalPoints);for(let j=0;j<per;j++)curves.set(finalPoints[j],(i*per+j)*3);
+  const finalPoints=Array.from({length:per},(_,j)=>Array.from(curves.subarray((i*per+j)*3,(i*per+j+1)*3)));skin.earGuard.apply(finalPoints);skin.headGuard.apply(finalPoints);for(let j=0;j<per;j++)curves.set(finalPoints[j],(i*per+j)*3);
   for(let j=0;j<=segments;j++){const q=(i*per+j)*3,a=(i*per+Math.max(0,j-1))*3,c=(i*per+Math.min(segments,j+1))*3,t=unit([curves[c]-curves[a],curves[c+1]-curves[a+1],curves[c+2]-curves[a+2]]);tangents.set(t,q);if(j)lengths[i]+=Math.hypot(curves[q]-curves[q-3],curves[q+1]-curves[q-2],curves[q+2]-curves[q-1]);}
   maxRootOffset=Math.max(maxRootOffset,Math.hypot(...sub(curves.subarray(i*per*3,i*per*3+3),root)));
   if(i%768===0){guard(cancel);onProgress?.('密集发丝 / 贴肤避让',.25+.75*i/b.count);await pause();}
  }
  guard(cancel);const sorted=Array.from(lengths).sort((a,b)=>a-b),stats={requestedTopLengthMM:d.lengthMM,actualArcLengthMM:{min:sorted[0]*1000,median:sorted[Math.floor(sorted.length*.5)]*1000,p95:sorted[Math.floor(sorted.length*.95)]*1000,max:sorted.at(-1)*1000}};
- return{recipe:d,curves,normals,tangents,randoms,active,guideMap,weights,guides,lengths,count:b.count,segments,per,activeCount,regions,maxRootOffset,stats,minimumY,maximumY,curveHash:hashArray(curves),rootHash:hashArray(b.templateRoots),buildMs:performance.now()-started,fieldCacheCells:skin.values.size,earGuard:skin.earGuard.diagnostics()};
+ return{recipe:d,curves,normals,tangents,randoms,active,guideMap,weights,guides,lengths,count:b.count,segments,per,activeCount,regions,maxRootOffset,stats,minimumY,maximumY,curveHash:hashArray(curves),rootHash:hashArray(b.templateRoots),buildMs:performance.now()-started,fieldCacheCells:skin.values.size,earGuard:skin.earGuard.diagnostics(),headGuard:skin.headGuard.diagnostics()};
 }
