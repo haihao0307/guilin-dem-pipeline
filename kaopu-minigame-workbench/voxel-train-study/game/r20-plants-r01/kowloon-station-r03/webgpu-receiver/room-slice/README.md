@@ -6,6 +6,8 @@ Brick family 0, plaster macro/micro, V26 water/weather, Library v3 wood, STONE_S
 
 The glass is a finite shell with secondary reflection and straight transmission; there is no full refractive path transport. Function displacements and cloth section inversion are not proven strict distance fields. Conservative tracing, signed-crossing refinement, grazing views and explicit diagnostic rays are acceptance checks, not a mathematical Lipschitz proof.
 
-Run `node qa/source.test.mjs` for static contracts. Official Playwright Actions performs actual WebGPU compilation, five views, age A/B and compute diagnostic rays. No WebGL fallback is enabled. QA starts at 480x320 internal render resolution in a 960x640 viewport. Real-device performance and final appearance remain unaccepted until separately verified.
+Run `node qa/source.test.mjs` for static contracts. Official Playwright Actions performs actual WebGPU compilation, five views, age A/B and compute diagnostic rays. No WebGL fallback is enabled. QA starts at 240x160 internal render resolution in a 960x640 viewport. Real-device performance and final appearance remain unaccepted until separately verified.
 
 This directory is the requested room deliverable, not the independent cave demonstration. It contains no cave mapM/mapC, cave camera or prebaked cave fields. The original baseline and its failed compiler evidence remain unchanged outside this directory.
+
+Execution uses 32x32 scissor tiles with GPU-completion waits and an outer conservative wall envelope. The same surface functions run at candidate intersections; no stored geometry/field volume is substituted. The full frame includes all tiles and real depth.

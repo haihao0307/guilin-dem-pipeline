@@ -16,6 +16,7 @@ fn plasterParams()->KpPlasterParams{return KpPlasterParams(vec2<f32>(0,1.7),vec2
 fn woodLocalNormal(f:RoomField)->vec3<f32>{let b=select(vec3<f32>(1.20,.11,.75),vec3<f32>(.25,.075,.075),f.variant==1);let v=abs(f.q)/b;if(v.x>v.y&&v.x>v.z){return vec3<f32>(sign(f.q.x),0,0);}if(v.y>v.z){return vec3<f32>(0,sign(f.q.y),0);}return vec3<f32>(0,0,sign(f.q.z));}
 fn wallState(p:vec3<f32>)->KpFabricState{let original=kpV26WaterWeather(p/4.,vec3<f32>(0,0,-1),p-vec3<f32>(0,1.7,0),vec3<f32>(6,3.4,.24),19.,67.);let causal=historyAt(p);let runoff=clamp(causal*(.75+original.x*.25)*u.wetness,0.,1.);let a=plasterParams();let pm=kpPlasterMacro(p,a);let pu=kpPlasterMicro(p,a);let thickness=clamp(a.thicknessM+a.reliefM*pm+a.geometryMicroM*pu,a.minThicknessM,a.maxThicknessM);return kpFabricState(u.age,.88,runoff,original.y,0.,repairAt(p),pm,pu,thickness,.001,.025);}
 fn wallDomain(p:vec3<f32>)->RoomField{
+ let envelope=pierceFront(p,boxD(p-vec3<f32>(0.,1.7,0.),vec3<f32>(3.,1.7,.18)));if(envelope>.065){return rawField(envelope,1,p);}
  let rep=repairAt(p);let state=wallState(p);let age=u.age;let wet=state.moisture;
  var result=rawField(pierceFront(p,boxD(p-vec3<f32>(0.,1.7,.037),vec3<f32>(3.,1.7,.133))),1,p);result.age=age;result.wet=wet;result.repair=rep;
  // Query only local neighbours; each query has its own fixed native mother tuple.
