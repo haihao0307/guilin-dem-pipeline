@@ -15,3 +15,16 @@ test('actual host perspective keeps all declared heads and route points above th
   for(const p of cue.fitPoints){const v=new THREE.Vector3(...p).project(camera),x=(v.x+1)/2,y=(1-v.y)/2;assert(x>=r.left-1e-6&&x<=r.right+1e-6&&y>=r.top-1e-6&&y<=r.bottom+1e-6,JSON.stringify({width,height,event,p,x,y,r}));assert(v.z>-1&&v.z<1);}
  }
 });
+
+test('both real success states retain two rooftop residents and the actual crew above desktop/mobile HUD',()=>{
+ for(const order of [[['east-neighbour','half-7','front'],['west-neighbour','landing-8','stairs']],[['west-neighbour','landing-8','stairs'],['east-neighbour','W7-home','borrowed']]]){
+  const game=createCityRescueGame({contract:makeRescueContract(makeBuildingRecipe())});game.command({type:'start'});
+  for(const [personId,anchorId,mode]of order){if(game.snapshot().rope.state==='deployed'){assert(game.command({type:'recover'}).accepted);game.update(game.snapshot().operation.end);}assert(game.command({type:'rescue',personId,anchorId,mode}).accepted);game.update(game.snapshot().operation.end);}
+  const snapshot=game.snapshot();assert.equal(snapshot.status,'succeeded');assert(snapshot.actors.filter(a=>a.id!=='crew').every(a=>a.isSafe));
+  for(const [width,height]of [[900,700],[390,844],[1280,720],[900,500]]){
+   const cue=makeRescueDirectorCue(game,snapshot,{type:'success'},{width,height,fov:43});assert.equal(cue.cameraIntent,'rescue-success');assert.deepEqual(new Set(cue.subjects.map(a=>a.id)),new Set(snapshot.actors.map(a=>a.id)));assert(cue.nodeIds.includes('roof'));
+   const camera=new THREE.PerspectiveCamera(43,width/height,.05,180);camera.position.fromArray(cue.position);camera.lookAt(new THREE.Vector3(...cue.lookAt));camera.updateMatrixWorld(true);const r=cue.safeScreenRect;
+   for(const p of cue.fitPoints){const v=new THREE.Vector3(...p).project(camera),x=(v.x+1)/2,y=(1-v.y)/2;assert(x>=r.left-1e-6&&x<=r.right+1e-6&&y>=r.top-1e-6&&y<=r.bottom+1e-6,JSON.stringify({order,width,height,p,x,y,r}));assert(v.z>-1&&v.z<1);}
+  }
+ }
+});

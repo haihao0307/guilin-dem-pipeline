@@ -22,13 +22,15 @@ export function makeRescueDirectorCue(game,snapshot,event=null,viewport={}){
  purpose=event.type==='person-safe'?'确认住户已到天台，再看剩余的人':'交代正在行动的人与完整返回路线';}
  if(event?.type==='route-warning'||event?.type==='front-route-closed'){const d=game.contract.doors.find(d=>d.id===game.scenario.frontDoor);subjects=[{id:d.id,position:d.hinge},...people.filter(a=>!a.isSafe).map(a=>({id:a.id,position:a.position}))];purpose='先交代前侧危险，再带到后侧借道；不能藏住剩余住户';}
  if(event?.type==='anchors')subjects=[...subjects,...game.scenario.anchors.map(a=>({id:a.id,position:position(a.node)}))];
- const rear=event?.mode==='borrowed';if(rear)purpose='看清后侧借道门、半层桥与住户，再沿同一路线返回';
+ const success=snapshot.status==='succeeded';
+ if(success){subjects=snapshot.actors.map(a=>({id:a.id,position:a.position}));purpose='确认两位居民分开站在真实天台，并保留队员的真实所在位置';}
+ const rear=!success&&event?.mode==='borrowed';if(rear)purpose='看清后侧借道门、半层桥与住户，再沿同一路线返回';
  const points=subjects.flatMap(s=>[s.position,s.position.map((v,i)=>v+(i===1?2.05:0))]);
  // The first view and an active departure must retain the real roof and crew.
- if(!event||event.type==='start'||event.type==='rescue-started'){points.push(position('roof'),position('roof').map((v,i)=>v+(i===1?2.05:0)));}
+ if(success||!event||event.type==='start'||event.type==='rescue-started'){points.push(position('roof'),position('roof').map((v,i)=>v+(i===1?2.05:0)));}
  if(event?.anchorId&&event?.personId){const route=game.preview(event.personId,event.anchorId,event.mode||'front');if(route.guide?.points)points.push(...route.guide.points);}
  const height=viewport.height||700,bottom=viewport.bottom??(height<600?174:(viewport.width||900)<=680?264:204),frame=frameRescuePoints(points,{...viewport,bottom,rear});
- return {...frame,nodeIds:[...new Set([game.scenario.safeNode,...game.scenario.people.filter(p=>snapshot.people.find(s=>s.id===p.id).status!=='rescued').map(p=>p.node)])],exposeWallIds:rear?['W7-back','E7-back','E7-left','W8-front']:['W7-front','W8-front','E7-front','E7-left'],cameraIntent:'upper-rescue',coordinateFrame:'building-local metres; host applies the same root transform',schema:'city-rescue-director/2',type:event?.type||'establishing',subjects,transitionSeconds:.95,worldSeconds:snapshot.worldSeconds,purpose,section:{levels:[7,8,9],keepRooftop:true,label:'上部空间剖视'},focus:{targetId:subjects[0].id,depthOfField:false,keepRequiredRoutesSharp:true},playerMayInterrupt:true};
+ return {...frame,nodeIds:[...new Set([game.scenario.safeNode,...game.scenario.people.filter(p=>snapshot.people.find(s=>s.id===p.id).status!=='rescued').map(p=>p.node)])],exposeWallIds:rear?['W7-back','E7-back','E7-left','W8-front']:['W7-front','W8-front','E7-front','E7-left'],cameraIntent:success?'rescue-success':'upper-rescue',coordinateFrame:'building-local metres; host applies the same root transform',schema:'city-rescue-director/2',type:event?.type||'establishing',subjects,transitionSeconds:.95,worldSeconds:snapshot.worldSeconds,purpose,section:{levels:[7,8,9],keepRooftop:true,label:'上部空间剖视'},focus:{targetId:success?people[0].id:subjects[0].id,depthOfField:false,keepRequiredRoutesSharp:true},playerMayInterrupt:true};
 }
 
 // r170 setFromPoints reuses the existing attribute count when it shrinks. Fill
