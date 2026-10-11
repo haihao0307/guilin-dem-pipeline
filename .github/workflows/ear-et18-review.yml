@@ -1,65 +1,10 @@
-name: Ear ET18 core browser acceptance
+name: Ear ET18 manual core browser rerun
 on:
-  push:
-    branches: [feature/ear-anatomy-et18-20261011]
-    paths:
-      - kaopu-unified-human-workbench/ear-structure/preview.html
-      - kaopu-unified-human-workbench/ear-structure/BUILD.json
-concurrency:
-  group: ear-et18-review-${{ github.ref }}
-  cancel-in-progress: true
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  local-and-immutable-public:
+  guidance:
     runs-on: ubuntu-latest
-    timeout-minutes: 18
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-          filter: blob:none
-          sparse-checkout: |
-            kaopu-unified-human-workbench/ear-structure
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Pinned browser dependencies
-        run: |
-          mkdir -p /tmp/ear-tools
-          cd /tmp/ear-tools
-          npm init -y >/dev/null
-          npm install playwright@1.56.1 pngjs@7.0.0
-          npx playwright install --with-deps chromium
-      - name: Actual local-browser core acceptance
-        env:
-          NODE_PATH: /tmp/ear-tools/node_modules
-          EAR_EVIDENCE: ear-evidence/local
-          EAR_SMOKE: '1'
-        run: |
-          mkdir -p ear-evidence/local ear-evidence/public
-          git rev-parse HEAD > ear-evidence/PUBLISHED_COMMIT.txt
-          cp kaopu-unified-human-workbench/ear-structure/BUILD.json ear-evidence/BUILD.json
-          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/ear-http.log 2>&1 &
-          node kaopu-unified-human-workbench/ear-structure/verify.cjs
-      - name: Actual immutable HTTPS browser acceptance
-        env:
-          NODE_PATH: /tmp/ear-tools/node_modules
-          EAR_EVIDENCE: ear-evidence/public
-          EAR_SMOKE: '1'
-        run: |
-          SHA=$(git rev-parse HEAD)
-          export EAR_URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$SHA/kaopu-unified-human-workbench/ear-structure/preview.html"
-          echo "$EAR_URL" > ear-evidence/PUBLIC_URL.txt
-          node kaopu-unified-human-workbench/ear-structure/verify.cjs
-      - name: Retain exact source, manifest and rendered evidence
-        if: always()
-        run: |
-          mkdir -p ear-evidence/build
-          cp -r kaopu-unified-human-workbench/ear-structure/. ear-evidence/build/
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: ear-et18-core-delivery
-          path: ear-evidence
-          retention-days: 14
+      - run: echo 'Core browser acceptance now runs after deterministic publication in ear-et18-publish.yml. This manual entry is retained only as an explicit rerun marker.'
