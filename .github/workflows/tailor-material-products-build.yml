@@ -5,6 +5,9 @@ on:
     paths: [kaopu-tailor-workbench/material-products/r01/MATERIAL_EXPORT_INPUT.json]
 permissions:
   contents: write
+defaults:
+  run:
+    shell: bash
 concurrency:
   group: tailor-mp01-candidate
   cancel-in-progress: false
@@ -27,7 +30,7 @@ jobs:
           data=urllib.request.urlopen(req,timeout=90).read()
           assert hashlib.sha256(data).hexdigest()==config['sha256'],'Rendered output archive checksum mismatch'
           with zipfile.ZipFile(io.BytesIO(data)) as z:
-            names=z.namelist()
+            names=z.namelist();assert len(names)==43
             for name in names:
               f=PurePosixPath(name)
               assert not f.is_absolute() and '..' not in f.parts
@@ -46,6 +49,7 @@ jobs:
         run: |
           P=kaopu-tailor-workbench/material-products/r01
           python "$P/prepare.py"
+          python "$P/finish_macro.py"
           node --check "$P/app.mjs"
           node --check "$P/looks.mjs"
           python -m py_compile "$P/qa/browser.py"
@@ -59,6 +63,12 @@ jobs:
       - name: Preserve tested runtime and appearance outputs without replacing other workbenches
         run: |
           P=kaopu-tailor-workbench/material-products/r01
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('kaopu-tailor-workbench/material-products/r01');r=json.loads((p/'CANDIDATE_REPORT.json').read_text())
+          assert r['passed'] and len(r['looks'])==12 and all(v['passed'] for v in r['looks']) and not r['pageErrors'] and not r['shaderErrors'],'Candidate did not pass; publication prohibited'
+          PY
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git fetch origin "$GITHUB_REF_NAME" --depth=1
