@@ -22,7 +22,7 @@ const server=http.createServer((req,res)=>{let p;try{p=path.resolve(ROOT,'.'+dec
  await page.waitForFunction(()=>window.__roomQA?.ready||window.__roomQA?.error,null,{timeout:150000});
  const state=await page.evaluate(()=>({ready:window.__roomQA.ready,error:window.__roomQA.error}));console.log('ROOM_READY',JSON.stringify(state));
  if(!state.ready)throw Error(state.error);
- const views=[['complete-dwelling-exterior',[-3.3,4.3,21],[-10,1.4,11.5],40,false],['complete-dwelling-interior-cutaway',[-5.4,5.1,18.2],[-10,1.0,10.9],46,true],['old-door-window-detail',[-8.5,2.3,19],[-10,1.35,13],38,false]];
+ const views=[['normal-human-height-oblique',[-5.8,1.72,18.6],[-10,1.10,12],40,false],['complete-dwelling-exterior',[-3.3,4.3,21],[-10,1.4,11.5],40,false],['complete-dwelling-interior-cutaway',[-5.4,5.1,18.2],[-10,1.0,10.9],46,true],['old-door-window-detail',[-8.5,2.3,19],[-10,1.35,13],38,false]];
  for(const [name,position,target,fov,cutaway] of views){
  const proof=await page.evaluate(v=>window.__roomQA.pose(v[0],v[1],v[2],v[3]),[position,target,fov,cutaway]);
  await page.locator('#gameScene').screenshot({path:path.join(OUT,name+'.png'),timeout:60000});
