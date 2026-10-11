@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>KaoPu Instrument Skills · Cave WebGPU R02.7</title>
+<style>
+:root{color-scheme:dark}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#eee;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;background:#000}
+.top{position:fixed;z-index:5;left:10px;top:max(10px,env(safe-area-inset-top));right:10px;display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+button{appearance:none;border:1px solid #777;border-radius:11px;background:#101010d8;color:#eee;padding:9px 12px;font-size:13px;backdrop-filter:blur(8px)}
+button.on{background:#f2f2f2;color:#111;border-color:#fff}
+.info{position:fixed;z-index:5;left:10px;bottom:max(10px,env(safe-area-inset-bottom));max-width:min(700px,calc(100vw - 20px));box-sizing:border-box;background:#080808c9;border:1px solid #555;border-radius:12px;padding:9px 11px;font-size:12px;line-height:1.42;backdrop-filter:blur(8px)}
+.title{font-weight:700;font-size:13px}.muted{opacity:.76}.ok{color:#b8e2ba}.warn{color:#f3d38d}.stat{font-variant-numeric:tabular-nums;color:#a8d4ff}
+#loading{position:fixed;z-index:10;inset:0;display:grid;place-items:center;background:#080808;color:#eee;font-size:15px;text-align:center;padding:20px}
+#bar{width:min(420px,80vw);height:6px;background:#333;border-radius:99px;overflow:hidden;margin:12px auto 0}#fill{height:100%;width:0;background:#ddd}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="loading"><div><b id="loadTitle">正在建立 WebGPU 运行时…</b><div class="muted" id="loadSub">GPU renderer + compact volume upload</div><div id="bar"><div id="fill"></div></div><div id="pct" class="muted">0%</div></div></div>
+<div class="top">
+  <button id="moreBtn">01 More Surface</button>
+  <button id="caveBtn" class="on">02 Cave Passage</button>
+  <button id="autoBtn" class="on">实时 Auto</button>
+  <button id="highBtn">高质 High</button>
+  <button id="pauseBtn">暂停</button>
+  <button id="restartBtn">从洞外重新开始</button>
+</div>
+<div class="info">
+  <div class="title" id="modeTitle">02 Cave Passage / WebGPU Edge-Safe</div>
+  <div class="muted">老师的 path / terrain / tunnel / sand / camera / sky 关系保持；运行预算改为现代实时管线。</div>
+  <div class="ok">WebGPU 主路径已修复 WGSL 编译错误；提高最低渲染比例，并加入薄洞顶保护、交叉二分和受限近表面补命中，减少轮廓漏面。</div>
+  <div class="stat" id="stats">初始化…</div>
+  <div class="warn">高质模式用于停下观察；实时模式会自动降/升内部分辨率，目标是不再卡成 PPT。WebGPU 不可用时会明确提示，不偷偷退回上一版高负载算法。</div>
+</div>
+<script>
+const canvas=document.getElementById('c');
+const loading=document.getElementById('loading'),fill=document.getElementById('fill'),pct=document.getElementById('pct'),loadTitle=document.getElementById('loadTitle'),loadSub=document.getElementById('loadSub');
+const stats=document.getElementById('stats');
+const moreBtn=document.getElementById('moreBtn'),caveBtn=document.getElementById('caveBtn'),autoBtn=document.getElementById('autoBtn'),highBtn=document.getElementById('highBtn'),pauseBtn=document.getElementById('pauseBtn'),restartBtn=document.getElementById('restartBtn'),modeTitle=document.getElementById('modeTitle');
+function progress(v,msg){fill.style.width=(v*100).toFixed(0)+'%';pct.textContent=(v*100).toFixed(0)+'%'+(msg?' · '+msg:'');}
+
+// One-time compact precalculation. Per-frame work is entirely WebGPU.
+function hash32(x){x|=0;x=Math.imul(x^(x>>>16),0x7feb352d);x=Math.imul(x^(x>>>15),0x846ca68b);return ((x^(x>>>16))>>>0)/4294967296;}
+function imod(a,n){a%=n;return a<0?a+n:a}
+function fade(t){return t*t*(3-2*t)}
+function vnoise2(x,y,period){const ix=Math.floor(x),iy=Math.floor(y),fx=x-ix,fy=y-iy,sx=fade(fx),sy=fade(fy);const H=(a,b)=>hash32(imod(a,period)+imod(b,period)*period+9137);const a=H(ix,iy),b=H(ix+1,iy),c=H(ix,iy+1),d=H(ix+1,iy+1);return (a+(b-a)*sx)*(1-sy)+(c+(d-c)*sx)*sy}
+function fbm2(x,y,period){let a=.5,s=0,n=0;for(let i=0;i<5;i++){s+=a*vnoise2(x,y,period);n+=a;x*=2;y*=2;period*=2;a*=.5}return s/n}
+function vnoise3(x,y,z,period){const ix=Math.floor(x),iy=Math.floor(y),iz=Math.floor(z),fx=x-ix,fy=y-iy,fz=z-iz,sx=fade(fx),sy=fade(fy),sz=fade(fz);const H=(a,b,c)=>hash32(imod(a,period)+imod(b,period)*period+imod(c,period)*period*period+3811);const c000=H(ix,iy,iz),c100=H(ix+1,iy,iz),c010=H(ix,iy+1,iz),c110=H(ix+1,iy+1,iz),c001=H(ix,iy,iz+1),c101=H(ix+1,iy,iz+1),c011=H(ix,iy+1,iz+1),c111=H(ix+1,iy+1,iz+1);const x00=c000+(c100-c000)*sx,x10=c010+(c110-c010)*sx,x01=c001+(c101-c001)*sx,x11=c011+(c111-c011)*sx;return (x00+(x10-x00)*sy)*(1-sz)+(x01+(x11-x01)*sy)*sz}
+function fbm3(x,y,z,period){let a=.55,s=0,n=0;for(let i=0;i<4;i++){s+=a*vnoise3(x,y,z,period);n+=a;x*=2;y*=2;z*=2;period*=2;a*=.5}return s/n}
+function worley3(x,y,z,cells){const ix=Math.floor(x),iy=Math.floor(y),iz=Math.floor(z),fx=x-ix,fy=y-iy,fz=z-iz;let md=99;for(let dz=-1;dz<=1;dz++)for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const cx=imod(ix+dx,cells),cy=imod(iy+dy,cells),cz=imod(iz+dz,cells),id=cx+cy*cells+cz*cells*cells;const ox=hash32(id*3+1),oy=hash32(id*3+2),oz=hash32(id*3+3),qx=dx+ox-fx,qy=dy+oy-fy,qz=dz+oz-fz,d=qx*qx+qy*qy+qz*qz;if(d<md)md=d}return Math.min(1,Math.sqrt(md))}
+async function makeFields(){
+ const W=256,H=256,tex2=new Uint8Array(W*H*4);
+ for(let y=0;y<H;y++){
+  for(let x=0;x<W;x++){
+   const u=x/W,v=y/H,wx=(fbm2(u*4,v*4,4)-.5)*.52,wy=(fbm2(u*4+1.73,v*4+2.41,4)-.5)*.52;
+   let q=fbm2(u*8+wx,v*8+wy,8)*.82+(1-Math.abs(fbm2(u*16-wy*1.7,v*16+wx*1.7,16)*2-1))*.18;q=q*q*(3-2*q);
+   const z=(y*W+x)*4,b=Math.round(Math.max(0,Math.min(1,q))*255);tex2[z]=tex2[z+1]=tex2[z+2]=b;tex2[z+3]=255;
+  }
+  if((y&31)===0){progress(.05+.20*y/H,'2D field');await new Promise(r=>setTimeout(r,0));}
+ }
+ const N=64,tex3=new Uint8Array(N*N*N*4);let k=0;
+ for(let z=0;z<N;z++){
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+   const u=x/N,v=y/N,w=z/N,wx=(fbm3(u*4,v*4,w*4,4)-.5)*1.05,wy=(fbm3(u*4+1.37,v*4+2.11,w*4+.73,4)-.5)*1.05,wz=(fbm3(u*4+2.43,v*4+.57,w*4+1.91,4)-.5)*1.05;
+   const qx=u*8+wx,qy=v*8+wy,qz=w*8+wz,coarse=fbm3(qx,qy,qz,8),cells=worley3(qx,qy,qz,8),fine=worley3(u*16+wx*1.7+2,v*16+wy*1.7+5,w*16+wz*1.7+9,16);
+   let q=coarse*.64+Math.pow(Math.max(0,1-cells),1.25)*.25+Math.pow(Math.max(0,1-fine),1.45)*.11;q=q*q*(3-2*q);const b=Math.round(Math.max(0,Math.min(1,q))*255);tex3[k++]=b;tex3[k++]=b;tex3[k++]=b;tex3[k++]=255;
+  }
+  if((z&3)===0){progress(.27+.56*z/N,'3D volume');await new Promise(r=>setTimeout(r,0));}
+ }
+ return {W,H,N,tex2,tex3};
+}
+
+const WGSL=String.raw`
+struct Params {
+ resolution: vec2<f32>,
+ time: f32,
+ mode: u32,
+ maxSteps: u32,
+ shadowSteps: u32,
+ aoSteps: u32,
+ quality: f32,
+};
+@group(0) @binding(0) var<uniform> u: Params;
+@group(0) @binding(1) var linearRepeat: sampler;
+@group(0) @binding(2) var surface2D: texture_2d<f32>;
+@group(0) @binding(3) var surface3D: texture_3d<f32>;
+
+struct VSOut {@builtin(position) pos: vec4<f32>};
+@vertex fn vs(@builtin(vertex_index) vi:u32)->VSOut{
+ var p=array<vec2<f32>,3>(vec2<f32>(-1.,-1.),vec2<f32>(3.,-1.),vec2<f32>(-1.,3.));
+ var o:VSOut;o.pos=vec4<f32>(p[vi],0.,1.);return o;
+}
+fn rot2(a:f32)->mat2x2<f32>{let c=cos(a);let s=sin(a);return mat2x2<f32>(vec2<f32>(c,s),vec2<f32>(-s,c));}
+fn smax(a:f32,b:f32,k:f32)->f32{let h=clamp(.5+.5*(a-b)/k,0.,1.);return mix(b,a,h)+k*h*(1.-h);}
+fn hash21(p:vec2<f32>)->f32{return fract(sin(dot(p,vec2<f32>(127.1,311.7)))*43758.5453);}
+fn noise2(p0:vec2<f32>)->f32{let i=floor(p0);var f=fract(p0);f=f*f*(3.-2.*f);return mix(mix(hash21(i),hash21(i+vec2<f32>(1,0)),f.x),mix(hash21(i+vec2<f32>(0,1)),hash21(i+vec2<f32>(1,1)),f.x),f.y);}
+fn fbm2(p:vec2<f32>)->f32{return .5*noise2(p)+.25*noise2(p*2.)+.125*noise2(p*4.)+.0625*noise2(p*8.);}
+fn path(z:f32)->vec2<f32>{return vec2<f32>(cos(z*.18)*2.-sin(z*.1)*4.,sin(z*.12)*3.-1.);}
+fn surf2(p:vec3<f32>)->f32{return textureSampleLevel(surface2D,linearRepeat,p.xz/64.,0.).r;}
+fn surf3(p:vec3<f32>)->f32{return textureSampleLevel(surface3D,linearRepeat,p/8.,0.).r;}
+fn mapPair(p:vec3<f32>)->vec2<f32>{
+ let s2=surf2(p);let s3=surf3(p);let ph=path(p.z);
+ let tun=2.-length((p.xy-ph)*vec2<f32>(.7,1.));
+ var ter=p.y+(.5-s2)*4.-s2*2.75;
+ ter=smax(ter,tun,3.);
+ // Only low/mid volume structure affects marching. Finest texture is shading-only.
+ ter+=(.5-s2)+(.5-s3)*.68;
+ let sand=p.y-ph.y-s2*2.+2.65;
+ return vec2<f32>(ter,sand);
+}
+fn mapC(p:vec3<f32>)->f32{let q=mapPair(p);return min(q.x,q.y);}
+fn mapM(p:vec3<f32>)->f32{return p.y+.45*fbm2(p.zx)+2.55*noise2(.1*p.xz)+.83*noise2(.4*p.xz)+3.33*noise2(.001*p.xz)+3.59*noise2(.0005*(p.xz+132.453));}
+fn map(p:vec3<f32>)->f32{if(u.mode==0u){return mapM(p);}return mapC(p);}
+struct Trace{t:f32,hit:f32};
+fn trace(ro:vec3<f32>,rd:vec3<f32>)->Trace{
+ var t=0.;var prevT=0.;var h=map(ro);var prevH=h;var hit=0.;
+ var minAbs=abs(h);var minT=0.;
+ for(var i=0u;i<180u;i++){
+  if(i>=u.maxSteps){break;}
+  let ah=abs(h);
+  if(ah<minAbs){minAbs=ah;minT=t;}
+  let eps=.002*(1.+t*.022);
+  if(ah<eps){hit=1.;break;}
+  if(h<0.&&prevH>0.){
+   var a=prevT;var b=t;
+   for(var j=0u;j<8u;j++){
+    let m=(a+b)*.5;
+    let hm=map(ro+rd*m);
+    if(hm>0.){a=m;}else{b=m;}
+   }
+   t=(a+b)*.5;hit=1.;break;
+  }
+  prevT=t;prevH=h;
+  let safe=max(h,0.);
+  t+=clamp(safe*.48+ah*.055,.006,.72);
+  if(t>100.){break;}
+  h=map(ro+rd*t);
+ }
+ if(hit<.5 && minAbs<(.026+minT*.00055)){t=minT;hit=1.;}
+ if(hit<.5){return Trace(100.,0.);}
+ return Trace(t,1.);
+}
+fn normalTetra(p:vec3<f32>,t:f32)->vec3<f32>{
+ let e=clamp(.012+t*.00030,.012,.034);
+ let a=vec3<f32>(1.,-1.,-1.);
+ let b=vec3<f32>(-1.,-1.,1.);
+ let c=vec3<f32>(-1.,1.,-1.);
+ let d=vec3<f32>(1.,1.,1.);
+ return normalize(a*map(p+a*e)+b*map(p+b*e)+c*map(p+c*e)+d*map(p+d*e));
+}
+fn detailValue(p:vec3<f32>,rock:f32)->f32{
+ let r=mix(surf3(p),1.-surf3(p*3.7),.24);
+ let ph=path(p.z);let q=p.xz*1.3;let ripple=.5+.5*sin((q.x-q.y)*18.+(surf2(p)-.5)*5.);
+ return mix(ripple,r,rock);
+}
+fn detailNormal(p:vec3<f32>,n:vec3<f32>,amount:f32,rock:f32)->vec3<f32>{
+ let e=.035;let ref=detailValue(p,rock);
+ var g=vec3<f32>(detailValue(p-vec3<f32>(e,0,0),rock),detailValue(p-vec3<f32>(0,e,0),rock),detailValue(p-vec3<f32>(0,0,e),rock))-vec3<f32>(ref);
+ g/=e;g-=n*dot(n,g);return normalize(n+g*amount);
+}
+fn ao(p:vec3<f32>,n:vec3<f32>)->f32{
+ var occ=0.;var sca=1.4;
+ for(var i=0u;i<4u;i++){if(i>=u.aoSteps){break;}let hr=(f32(i)+1.)*.055;let d=map(p+n*hr);occ+=(hr-d)*sca;sca*=.65;}
+ return clamp(1.-occ,0.,1.);
+}
+fn shadow(ro:vec3<f32>,lp:vec3<f32>,n:vec3<f32>)->f32{
+ var rd=lp-ro;let end=max(length(rd),.001);rd/=end;var t=.04;var shade=1.;
+ for(var i=0u;i<24u;i++){if(i>=u.shadowSteps){break;}let d=map(ro+n*.02+rd*t);if(d<.003){return 0.;}shade=min(shade,7.*d/max(t,.02));t+=clamp(abs(d)*.55,.045,.55);if(t>end){break;}}
+ return clamp(shade,0.,1.);
+}
+fn sky(ro:vec3<f32>,rd0:vec3<f32>,ld:vec3<f32>)->vec3<f32>{
+ var rd=rd0;var c=mix(vec3<f32>(.8,.7,.5),vec3<f32>(.4,.6,.9),pow(max(rd.y+.15,0.),.5));var sun=clamp(dot(ld,rd),0.,1.);c+=vec3<f32>(1.,.7,.4)*pow(sun,16.)*.2;c+=vec3<f32>(1.6,1.,.5)*pow(sun,64.)*.35;return c*vec3<f32>(1.1,1.,.9);
+}
+fn caveColor(pos:vec2<f32>)->vec3<f32>{
+ let uv=(pos-.5*u.resolution)/u.resolution.y;
+ var ro=vec3<f32>(0.,-.5,u.time*5.);var look=ro+vec3<f32>(0.,0.,.5);let lp=vec3<f32>(0.,0.,ro.z)+vec3<f32>(12.5,35.,100.);ro.xy+=path(ro.z);look.xy+=path(look.z);
+ let fw=normalize(look-ro);let rt=normalize(vec3<f32>(fw.z,0.,-fw.x));let up=cross(fw,rt);var rd=normalize(fw+(3.14159265/2.5)*uv.x*rt+(3.14159265/2.5)*uv.y*up);rd.xy=rot2(path(look.z).x/32.)*rd.xy;
+ let tr=trace(ro,rd);let gld=normalize(lp-vec3<f32>(0.,0.,ro.z));var col=vec3<f32>(0.);
+ if(tr.hit>.5){
+  let sp=ro+rd*tr.t;var n=normalTetra(sp,tr.t);let pair=mapPair(sp);let rock=select(0.,1.,pair.x<pair.y);
+  let fade=1./(1.+tr.t*tr.t*.0025);n=detailNormal(sp,n,mix(.025,.28,rock)*fade,rock);
+  var ld=normalize(lp-sp);let dif=max(dot(ld,n),0.);let sh=shadow(sp,lp,n);let occ=ao(sp,n);let fre=clamp(1.+dot(rd,n),0.,1.);let spe=pow(max(dot(reflect(-ld,n),-rd),0.),24.);
+  let s3=surf3(sp);var base=clamp(mix(vec3<f32>(1.08,.68,.44),vec3<f32>(.58,.39,.20),(sp.y-1.)*.15),vec3<f32>(.42,.22,.11),vec3<f32>(1.));
+  let sandCol=mix(base*1.15,vec3<f32>(1.,.9,.78),.18);let border=pair.x-pair.y;base=mix(base,sandCol,smoothstep(-.10,.10,border));base*=mix(.72,1.28,detailValue(sp,rock));base=mix(base*.28,base,smoothstep(.05,.95,s3));
+  let amb=.16+.16*smoothstep(-1.,1.,n.y);col=base*(dif*sh+amb)+vec3<f32>(1.,.96,.90)*spe*sh*.25+sky(sp,reflect(rd,n),ld)*fre*.05;col*=occ;
+ }
+ let sk=min(sky(ro,rd,gld)+vec3<f32>(1.,.6,.2)*pow(max(dot(rd,gld),0.),16.)*.25,vec3<f32>(1.));col=mix(col,sk,smoothstep(0.,.99,tr.t/100.));
+ let q=pos/u.resolution;col*=pow(max(16.*q.x*q.y*(1.-q.x)*(1.-q.y),0.),.0625);return sqrt(clamp(col,vec3<f32>(0.),vec3<f32>(1.)));
+}
+fn moonColor(pos:vec2<f32>)->vec3<f32>{
+ let uv=pos/u.resolution*2.-1.;if(abs(.001+uv.y)>=.7){return vec3<f32>(0.);}let uvn=uv*vec2<f32>(u.resolution.x/u.resolution.y,1.);let vel=25.*u.time;let cp=vec3<f32>(0.,3.1+noise2(vec2<f32>(u.time))*3.1,vel);let ct=vec3<f32>(1.5*sin(u.time),-2.+cos(u.time)+fbm2(cp.xz)*.4,13.+vel);let rz=normalize(ct-cp);let rx=normalize(cross(rz,vec3<f32>(0,1,0)));let ry=normalize(cross(rx,rz));let rd=normalize(mat3x3<f32>(rx,ry,rz)*normalize(vec3<f32>(uvn,1.)));let tr=trace(cp,rd);var col=vec3<f32>(0.);if(tr.hit>.5){let sp=cp+rd*tr.t;let n=normalTetra(sp,tr.t);col=vec3<f32>(.6)*max(dot(n,normalize(vec3<f32>(cp.x,cp.y+.5,cp.z)-sp)),0.);}col*=1.75*smoothstep(length(uv)*.35,.75,.4);return col;
+}
+@fragment fn fs(@builtin(position) p:vec4<f32>)->@location(0) vec4<f32>{
+ var c:vec3<f32>;
+ if(u.mode==0u){c=moonColor(p.xy);}else{c=caveColor(p.xy);}
+ return vec4<f32>(c,1.);
+}
+`;
+
+async function main(){
+ if(!navigator.gpu){throw new Error('当前浏览器未开放 WebGPU。请使用支持 WebGPU 的新版 Chrome / Edge / Safari。');}
+ progress(.01,'request adapter');
+ const adapter=await navigator.gpu.requestAdapter({powerPreference:'high-performance'});if(!adapter)throw new Error('没有取得 WebGPU 高性能适配器');
+ const device=await adapter.requestDevice();
+ const context=canvas.getContext('webgpu');const format=navigator.gpu.getPreferredCanvasFormat();context.configure({device,format,alphaMode:'opaque'});
+ const fields=await makeFields();progress(.86,'upload textures');
+ function tex2D(){const t=device.createTexture({size:[fields.W,fields.H,1],format:'rgba8unorm',usage:GPUTextureUsage.TEXTURE_BINDING|GPUTextureUsage.COPY_DST});device.queue.writeTexture({texture:t},fields.tex2,{bytesPerRow:fields.W*4,rowsPerImage:fields.H},[fields.W,fields.H,1]);return t;}
+ function tex3D(){const t=device.createTexture({size:[fields.N,fields.N,fields.N],dimension:'3d',format:'rgba8unorm',usage:GPUTextureUsage.TEXTURE_BINDING|GPUTextureUsage.COPY_DST});device.queue.writeTexture({texture:t},fields.tex3,{bytesPerRow:fields.N*4,rowsPerImage:fields.N},[fields.N,fields.N,fields.N]);return t;}
+ const t2=tex2D(),t3=tex3D(),sampler=device.createSampler({addressModeU:'repeat',addressModeV:'repeat',addressModeW:'repeat',magFilter:'linear',minFilter:'linear'});
+ const module=device.createShaderModule({code:WGSL});
+ const diagnostics=await module.getCompilationInfo();
+ const shaderErrors=diagnostics.messages.filter(m=>m.type==='error');
+ if(shaderErrors.length)throw new Error(shaderErrors.map(m=>`WGSL ${m.lineNum}:${m.linePos} ${m.message}`).join('\n'));
+ const pipeline=await device.createRenderPipelineAsync({layout:'auto',vertex:{module,entryPoint:'vs'},fragment:{module,entryPoint:'fs',targets:[{format}]},primitive:{topology:'triangle-list'}});
+ const uniform=device.createBuffer({size:32,usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST});
+ const bind=device.createBindGroup({layout:pipeline.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:uniform}},{binding:1,resource:sampler},{binding:2,resource:t2.createView()},{binding:3,resource:t3.createView({dimension:'3d'})}]});
+ let mode=1,paused=false,start=performance.now(),held=0,profile='auto',scale=innerWidth<900?.64:.76,ema=22,last=performance.now(),counter=0,lastAdjust=performance.now();
+ function profileValues(){if(profile==='high')return {steps:144,shadow:16,ao:3,min:.76,max:.94,target:30};return {steps:112,shadow:10,ao:2,min:.56,max:.90,target:45};}
+ function resize(){const p=profileValues(),d=Math.min(devicePixelRatio,1.5),s=profile==='high'?p.max:scale,w=Math.max(2,Math.floor(innerWidth*d*s)),h=Math.max(2,Math.floor(innerHeight*d*s));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}}
+ function writeUniform(time){const p=profileValues(),ab=new ArrayBuffer(32),dv=new DataView(ab);dv.setFloat32(0,canvas.width,true);dv.setFloat32(4,canvas.height,true);dv.setFloat32(8,time,true);dv.setUint32(12,mode,true);dv.setUint32(16,p.steps,true);dv.setUint32(20,p.shadow,true);dv.setUint32(24,p.ao,true);dv.setFloat32(28,profile==='high'?1:.65,true);device.queue.writeBuffer(uniform,0,ab);}
+ function render(now){
+  const dt=Math.min(100,now-last);last=now;ema=ema*.92+dt*.08;counter++;
+  const p=profileValues();if(profile==='auto'&&now-lastAdjust>650){if(ema>1000/p.target*1.12)scale=Math.max(p.min,scale-.06);else if(ema<1000/p.target*.78)scale=Math.min(p.max,scale+.025);lastAdjust=now;}
+  resize();const time=paused?held:(now-start)/1000;writeUniform(time);
+  const enc=device.createCommandEncoder(),pass=enc.beginRenderPass({colorAttachments:[{view:context.getCurrentTexture().createView(),clearValue:{r:0,g:0,b:0,a:1},loadOp:'clear',storeOp:'store'}]});pass.setPipeline(pipeline);pass.setBindGroup(0,bind);pass.draw(3);pass.end();device.queue.submit([enc.finish()]);
+  if((counter&15)===0){stats.textContent=`WebGPU · ${Math.round(1000/ema)} FPS · 内部分辨率 ${canvas.width}×${canvas.height} · Scale ${(profile==='high'?p.max:scale).toFixed(2)} · Steps ${p.steps}/${p.shadow}/${p.ao}`;}
+  requestAnimationFrame(render);
+ }
+ moreBtn.onclick=()=>{mode=0;moreBtn.classList.add('on');caveBtn.classList.remove('on');modeTitle.textContent='01 More Surface / WebGPU';};
+ caveBtn.onclick=()=>{mode=1;caveBtn.classList.add('on');moreBtn.classList.remove('on');modeTitle.textContent='02 Cave Passage / WebGPU Edge-Safe';};
+ autoBtn.onclick=()=>{profile='auto';autoBtn.classList.add('on');highBtn.classList.remove('on');};
+ highBtn.onclick=()=>{profile='high';highBtn.classList.add('on');autoBtn.classList.remove('on');};
+ pauseBtn.onclick=()=>{paused=!paused;if(paused)held=(performance.now()-start)/1000;else start=performance.now()-held*1000;pauseBtn.textContent=paused?'继续':'暂停';};
+ restartBtn.onclick=()=>{start=performance.now();held=0;paused=false;pauseBtn.textContent='暂停';};
+ progress(1,'ready');setTimeout(()=>loading.style.display='none',120);requestAnimationFrame(render);
+}
+main().catch(e=>{console.error(e);loading.innerHTML='<div><b>WebGPU 启动失败</b><pre style="white-space:pre-wrap;text-align:left;max-width:90vw">'+String(e)+'</pre><div class="muted">本版不自动退回旧的高负载 WebGL2，以免再次卡成 PPT。</div></div>';});
+</script>
+</body></html>
