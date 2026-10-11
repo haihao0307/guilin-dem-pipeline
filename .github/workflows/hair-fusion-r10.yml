@@ -14,7 +14,7 @@ concurrency:
 jobs:
   build-test-preview:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
@@ -52,6 +52,7 @@ jobs:
           (p/'build.py').write_text(b)
           PY
           python kaopu-hair-workbench/fusion/r10/build.py
+          python kaopu-hair-workbench/fusion/r10/post-build.py
           find kaopu-hair-workbench/fusion/r10/src -name '*.js' -print0 | xargs -0 -n1 node --check
           node kaopu-hair-workbench/fusion/r10/bundle.mjs
           python kaopu-hair-workbench/fusion/r10/finalize.py
