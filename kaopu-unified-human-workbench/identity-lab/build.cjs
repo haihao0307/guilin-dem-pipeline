@@ -1,0 +1,22 @@
+const fs=require('fs'),path=require('path'),assert=require('assert/strict'),crypto=require('crypto'),vm=require('vm'),esbuild=require('esbuild');
+const hash=x=>crypto.createHash('sha256').update(x).digest('hex');
+(async()=>{
+ const root=path.resolve(__dirname,'..'),repo=path.resolve(root,'..'),BASE='02f596def9d07ebfc187e1eb18ad345a57c8a6b6',NATIVE='0b4703359efbae10ffc6c0e5fe3fc081e7eca4fe',source=fs.readFileSync(root+'/full/ui/face-transfer-app.generated.mjs','utf8');
+ assert.equal(hash(source),'872745bed3ab3a1d09470b367561b6742b31588b0d6d56b911b507ff50faac28','ET12 original generated entry must remain unchanged');
+ let app=source;function patch(a,b){assert.equal(app.split(a).length,2,'Unique integration anchor absent: '+a);app=app.replace(a,()=>b);}
+ app="import {installIdentity} from '../../identity-lab/IdentityModel.mjs';\nimport {installIdentitySkin} from '../../identity-lab/IdentitySkin.mjs';\nimport {mountIdentityUI} from '../../identity-lab/IdentityUI.mjs';\n"+app;
+ patch('installFaceSkinBridge(model);if(savedArchive)','installFaceSkinBridge(model);installIdentity(model);installIdentitySkin(model);if(savedArchive)');
+ patch('mountFaceUI({model,viewer,controller});wasLoaded=true;','mountFaceUI({model,viewer,controller});mountIdentityUI({model,viewer,controller});wasLoaded=true;');
+ patch('function release(){','function release(){controller?.model.identityLab?.disposeUI?.();');
+ patch('faceSurface:appearance.faceSurface};','faceSurface:appearance.faceSurface,faceIdentity:appearance.faceIdentity};');
+ app+='\nwindow.__IDENTITY_QA__={model:()=>controller?.model,viewer:()=>viewer,controller:()=>controller};\n';
+ const generated=root+'/full/ui/identity-app.generated.mjs';fs.writeFileSync(generated,app);
+ const plugin={name:'fixed-native-entry-and-assets',setup(b){b.onResolve({filter:/\.(mjs|js)\?/},a=>({path:path.resolve(a.resolveDir,a.path.split('?')[0])}));b.onLoad({filter:/\.(mjs|js)$/},a=>{let s=fs.readFileSync(a.path,'utf8'),rel=path.relative(repo,a.path).split(path.sep).join('/');if(s.includes('import.meta.url'))s=s.replaceAll('import.meta.url',JSON.stringify('https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+(rel.includes('/face-transfer/')?BASE:NATIVE)+'/'+rel));return{contents:s,loader:'js',resolveDir:path.dirname(a.path)};});}};
+ const result=await esbuild.build({entryPoints:[generated],bundle:true,minify:true,format:'iife',target:'es2022',write:false,metafile:true,legalComments:'inline',alias:{three:root+'/full/source/registration-vendor/three.module.js'},plugins:[plugin]});const code=result.outputFiles[0].text.replace(/<\/script/gi,'<\\/script');new vm.Script(code);
+ let html=fs.readFileSync(root+'/index.html','utf8').replace(/<script type="importmap">[\s\S]*?<\/script>/,'').replace(/<script type="module" src="\.\/full\/ui\/browser-app\.mjs[^\"]*"><\/script>/,()=>'<script>'+code+'</script>');
+ html=html.replace(/<link rel="stylesheet" href="([^\"]+)">/g,(_,s)=>'<style>'+fs.readFileSync(path.resolve(root,s.split('?')[0]))+'</style>');
+ html=html.replace(/href="\.\/([^\"]+)"/g,(_,s)=>'href="https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/'+s+'"');html=html.replace(/<title>[^<]*<\/title>/,'<title>共同人物 · ET13 五官与皮肤身份</title>').replace('原生人物 · 五官对比 · 动作验证','ET13 · 五官形态 × 皱纹/雀斑/痘痘/疤痕');
+ html=html.replace('</head>','<!-- Retains original Anny/MakeHuman and GNM licensing. ET12 scan bands: Infinite 3D Head Scan / Lee Perry-Smith, CC BY3.0. Separable SSS: Copyright (C) 2012 Jorge Jimenez and Diego Gutierrez. ET13 markings are newly authored deterministic fields. -->\n</head>');
+ assert.equal([...html.matchAll(/<script\b/g)].length,1);fs.writeFileSync(__dirname+'/preview.html',html);
+ const files=Object.keys(result.metafile.inputs).filter(p=>p.includes('/identity-lab/'));const manifest={schema:'kaopu/semantic-face-build@1',version:'ET13-I1',baseline:BASE,nativeAssetCommit:NATIVE,baseAppSHA256:hash(source),previewSHA256:hash(html),previewBytes:Buffer.byteLength(html),nativeGeneratorReplaced:false,oldNativeParametersPreserved:true,oldET12SourceUnchanged:true,controlTopologyUnchanged:true,oneRenderer:true,realMobileDeviceTested:false,traitMaps:[1024,1280,2],traitRelief:'bump normals, not geometric silhouette',eyeStyleLabels:'editable artistic combinations, not clinical classes',sources:files.map(p=>({path:p,sha256:hash(fs.readFileSync(p))}))};fs.writeFileSync(__dirname+'/BUILD.json',JSON.stringify(manifest,null,2));console.log(manifest);
+})().catch(e=>{console.error(e);process.exit(1)});
