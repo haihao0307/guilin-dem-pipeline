@@ -1,0 +1,22 @@
+name: Identity lips ET17 native dependency evidence
+on:
+  push:
+    branches: [fix/identity-lips-et17-20261011]
+    paths: [.github/workflows/identity-lips-et17-native-cache.yml]
+permissions:
+  contents: read
+jobs:
+  existing-native-dependency:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fetch exact already-used dependency, no replacement model
+        run: |
+          mkdir -p native-cache
+          curl --fail --retry 3 -L 'https://raw.githubusercontent.com/xrblocks/assets-gnm/134feb02b11fa642a43ff5e7e880246255a74e86/gnm_head_web.bin' -o native-cache/gnm_head_web.bin
+          sha256sum native-cache/gnm_head_web.bin > native-cache/SHA256.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: identity-lips-et17-pinned-native
+          path: native-cache
+          retention-days: 7
