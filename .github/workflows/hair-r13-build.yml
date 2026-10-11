@@ -1,0 +1,100 @@
+name: Hair R13 Progressive Length
+on:
+  push:
+    branches: [feature/hair-r13-length-ladder-20261011]
+    paths: ['kaopu-hair-workbench/fusion/r13/**', .github/workflows/hair-r13-build.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: hair-r13-length
+  cancel-in-progress: true
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-hair-workbench/fusion/r12
+            kaopu-hair-workbench/fusion/r13
+            .github/workflows/hair-r13-build.yml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preserve accepted R12 and install pinned tools
+        run: |
+          git fetch --depth=1 origin 5d420df72b94c089d38be934a02aa4b8323404fc
+          test "$(git rev-parse HEAD:kaopu-hair-workbench/fusion/r12)" = "$(git rev-parse 5d420df72b94c089d38be934a02aa4b8323404fc:kaopu-hair-workbench/fusion/r12)"
+          npm install --prefix /tmp/hair-r13-tools --no-save esbuild@0.25.10 playwright@1.55.1 pngjs@7.0.0
+          ln -s /tmp/hair-r13-tools/node_modules node_modules
+          /tmp/hair-r13-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Build readable isolated source and test original geometry
+        run: |
+          python kaopu-hair-workbench/fusion/r13/prepare.py
+          find kaopu-hair-workbench/fusion/r13/src -name '*.js' -print0 | xargs -0 -n1 node --check
+          node --input-type=module - <<'JS'
+          import esbuild from 'esbuild';import path from 'node:path';
+          const p=path.resolve('kaopu-hair-workbench/fusion/r13');
+          for(const name of ['kernel','length-boundaries'])await esbuild.build({entryPoints:[p+'/tests/'+name+'.mjs'],bundle:true,platform:'node',format:'esm',outfile:p+'/tests/'+name+'-bundled.mjs',alias:{three:p+'/vendor/three.module.js'}});
+          JS
+          node kaopu-hair-workbench/fusion/r13/tests/kernel-bundled.mjs
+          node kaopu-hair-workbench/fusion/r13/tests/length-boundaries-bundled.mjs
+          rm kaopu-hair-workbench/fusion/r13/tests/*-bundled.mjs
+          node kaopu-hair-workbench/fusion/r13/bundle.mjs
+          python kaopu-hair-workbench/fusion/r13/package.py
+      - name: Actual native candidate browser interactions and geometry checks
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/hair-r13-http.log 2>&1 &
+          node kaopu-hair-workbench/fusion/r13/tests/browser.mjs http://127.0.0.1:8765/kaopu-hair-workbench/fusion/r13/public-lite.html
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-r13-candidate-checkpoint
+          path: |
+            kaopu-hair-workbench/fusion/r13/evidence
+            kaopu-hair-workbench/fusion/r13/BUILD_MANIFEST.json
+          retention-days: 14
+      - name: Publish only new R13 files on draft branch
+        id: publish
+        run: |
+          python - <<'PY'
+          import subprocess
+          paths=subprocess.check_output(['git','diff','--name-only']).decode().splitlines()
+          assert all(p.startswith('kaopu-hair-workbench/fusion/r13/') for p in paths),paths
+          PY
+          git config user.name 'KAOPU Hair Build'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add kaopu-hair-workbench/fusion/r13
+          git diff --cached --quiet || git commit -m 'build(hair): R13 generated source and browser-tested length ladder'
+          git push origin HEAD:refs/heads/feature/hair-r13-length-ladder-20261011
+          sha=$(git rev-parse HEAD)
+          url="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$sha/kaopu-hair-workbench/fusion/r13/public-lite.html"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "$url" >> "$GITHUB_STEP_SUMMARY"
+      - name: Real external fixed webpage deployment smoke
+        run: node kaopu-hair-workbench/fusion/r13/tests/public.mjs '${{ steps.publish.outputs.url }}'
+      - name: Record evidence without changing tested HTML
+        env:
+          PUBLIC_URL: ${{ steps.publish.outputs.url }}
+        run: |
+          python kaopu-hair-workbench/fusion/r13/finalize.py
+          git add kaopu-hair-workbench/fusion/r13
+          git commit -m 'test(hair): R13 real public browser result and immutable preview'
+          git push origin HEAD:refs/heads/feature/hair-r13-length-ladder-20261011
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-r13-evidence
+          path: |
+            kaopu-hair-workbench/fusion/r13/evidence
+            kaopu-hair-workbench/fusion/r13/BUILD_MANIFEST.json
+            kaopu-hair-workbench/fusion/r13/PUBLIC_URL.txt
+            kaopu-hair-workbench/fusion/r13/TEACHER_INDEX.md
+            kaopu-hair-workbench/fusion/r13/REVIEW_ITERATION_01.md
+            kaopu-hair-workbench/fusion/r13/src/LengthKernel.js
+            kaopu-hair-workbench/fusion/r13/src/NeutralEarGuard.js
+            kaopu-hair-workbench/fusion/r13/src/app.js
+          retention-days: 30
