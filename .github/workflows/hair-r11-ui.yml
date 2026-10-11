@@ -1,0 +1,62 @@
+name: R11 Display Correction
+on:
+  push:
+    branches: [qa/hair-r11-evidence-read-20261011]
+    paths:
+      - kaopu-hair-workbench/fusion/r11-ui/**
+      - .github/workflows/hair-r11-ui.yml
+permissions:
+  contents: write
+jobs:
+  check-layout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: kaopu-hair-workbench/fusion/r11-ui
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare immutable core and browser
+        run: |
+          git fetch --depth=1 origin 80b4ba2862343a9a14a02686ccb3207f8cceaffb
+          npm install --prefix /tmp/hair-ui-tools --no-save playwright@1.55.1
+          ln -s /tmp/hair-ui-tools/node_modules node_modules
+          /tmp/hair-ui-tools/node_modules/.bin/playwright install --with-deps chromium
+          python kaopu-hair-workbench/fusion/r11-ui/build.py
+      - name: Check gallery layout and unchanged runtime locally
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/hair-ui.log 2>&1 &
+          node kaopu-hair-workbench/fusion/r11-ui/verify.mjs http://127.0.0.1:8765/kaopu-hair-workbench/fusion/r11-ui/public-lite.html
+      - name: Publish isolated immutable display correction
+        id: publish
+        run: |
+          git config user.name 'KAOPU Hair Build'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add kaopu-hair-workbench/fusion/r11-ui
+          git commit -m 'build(hair): R11 CSS-only gallery correction, unchanged runtime scripts'
+          git push origin HEAD:refs/heads/qa/hair-r11-evidence-read-20261011
+          sha=$(git rev-parse HEAD)
+          url="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$sha/kaopu-hair-workbench/fusion/r11-ui/public-lite.html"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "$url" > kaopu-hair-workbench/fusion/r11-ui/PUBLIC_URL.txt
+      - name: Actual public desktop and mobile gallery check
+        run: node kaopu-hair-workbench/fusion/r11-ui/verify.mjs '${{ steps.publish.outputs.url }}' --public
+      - name: Record verified URL without changing the HTML
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('kaopu-hair-workbench/fusion/r11-ui');r=json.loads((p/'evidence/public/report.json').read_text());assert r['success'];m=json.loads((p/'BUILD_MANIFEST.json').read_text());m['publicBrowserVerified']=True;m['publicURL']=(p/'PUBLIC_URL.txt').read_text().strip();(p/'BUILD_MANIFEST.json').write_text(json.dumps(m,indent=2))
+          PY
+          git add kaopu-hair-workbench/fusion/r11-ui
+          git commit -m 'test(hair): R11 display correction verified on actual public URL'
+          git push origin HEAD:refs/heads/qa/hair-r11-evidence-read-20261011
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r11-display-evidence
+          path: kaopu-hair-workbench/fusion/r11-ui
+          retention-days: 14
