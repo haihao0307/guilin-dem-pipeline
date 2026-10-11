@@ -6,7 +6,8 @@ export function createTimberMember(THREE,recipe={}) {
  for(const n of [length,height,depth])if(!Number.isFinite(n)||n<=0)throw Error('Timber dimensions must be positive metres');
  const preset=Original.getYunnanTimberPreset(presetId);
  if(preset.id!==presetId)throw Error('Unknown original timber preset: '+presetId);
- const geometryData=Original.createSubdividedBoxGeometry(length,height,depth,{grainOffset,...tessellation});
+ const geometryFunction=recipe.geometryMode==='hewn'?Original.createHewnBoxGeometry:Original.createSubdividedBoxGeometry;
+ const geometryData=geometryFunction(length,height,depth,{grainOffset,...tessellation});
  const geometry=new THREE.BufferGeometry();
  const attr=(key,values,size)=>geometry.setAttribute(key,new THREE.BufferAttribute(values,size));
  attr('position',geometryData.positions,3);attr('a_position',geometryData.positions,3);
@@ -15,6 +16,7 @@ export function createTimberMember(THREE,recipe={}) {
  attr('a_surfaceClass',geometryData.surfaceClasses,1);geometry.setIndex(new THREE.BufferAttribute(geometryData.indices,1));
  geometry.computeBoundingBox();geometry.computeBoundingSphere();
  const originalMaterial=Original.materialFor(sourceId,id,seed,preset), uniforms={};
+ if(recipe.fabricFinish){originalMaterial.roughness=Math.max(.24,Math.min(.95,originalMaterial.roughness+(recipe.fabricFinish.roughnessDelta??0)));originalMaterial.reliefScale=(originalMaterial.reliefScale??1)*(recipe.fabricFinish.reliefScale??1);}
  const names=[...new Set([...Original.vertexShaderSource.matchAll(/uniform\s+\w+\s+(\w+)\s*;/g),...Original.fragmentShaderSource.matchAll(/uniform\s+\w+\s+(\w+)\s*;/g)].map(m=>m[1]))];
  for(const n of names)uniforms[n]={value:0};
  const locations=Object.fromEntries(names.map(n=>[n,n]));
@@ -29,7 +31,7 @@ export function createTimberMember(THREE,recipe={}) {
   Original.bindOriginalTimberUniforms(gl,locations,sourceMesh,{preset,settings:state.settings,view:camera.matrixWorldInverse.elements,projection:camera.projectionMatrix.elements,cameraPosition:new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld).toArray(),...state.lighting,debugMode:0});
   material.uniformsNeedUpdate=true;
  };
- const proof={source:'Library preview-standalone.html v3',sourceLibraryFileId:'libfile_76c3c196b2808191b995220a779dcd7f',preset:preset.id,originalShaderUnmodified:true,originalGeometryFunction:'createSubdividedBoxGeometry',originalMaterialFunction:'materialFor',originalUniformBinding:true,grainAxis:[1,0,0],grainOffset,seed:originalMaterial.seed,triangles:geometryData.indices.length/3,newImageTextures:0,gpuVerified:false};
+ const proof={source:'Library preview-standalone.html v3',sourceLibraryFileId:'libfile_76c3c196b2808191b995220a779dcd7f',preset:preset.id,originalShaderUnmodified:true,originalGeometryFunction:recipe.geometryMode==='hewn'?'createHewnBoxGeometry':'createSubdividedBoxGeometry',originalMaterialFunction:'materialFor',originalUniformBinding:true,grainAxis:[1,0,0],grainOffset,seed:originalMaterial.seed,triangles:geometryData.indices.length/3,newImageTextures:0,gpuVerified:false};
  return {mesh,proof,preset,sourceMesh,state,dispose(){geometry.dispose();material.dispose();}};
 }
 export {Original};

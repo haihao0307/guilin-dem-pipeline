@@ -64,7 +64,8 @@ export function compileStationRecipe(input={}, {scope='one-bay',bayIndex=5}={}){
  for(let row=0;row<4;row++)column(last,plan.supportRows[row],'end-'+row);
  for(let span=0;span<3;span++)arch(last,(plan.supportRows[span]+plan.supportRows[span+1])/2,'end-'+span);
  for(const pf of plan.platforms){const z0=pf.bounds.min[2],z1=pf.bounds.max[2],z=(z0+z1)/2;
-  box(pf.id+'-deck',[(first+last)/2,s.platform.top/2,z],[last-first,s.platform.top,z1-z0],'platform-stone','load-bearing-deck',{contact:'ground-bearing'});
+  box(pf.id+'-deck-core',[(first+last)/2,(s.platform.top-.10)/2,z],[last-first,s.platform.top-.10,z1-z0],'platform-stone','load-bearing-deck',{contact:'ground-bearing'});
+  box(pf.id+'-deck',[(first+last)/2,s.platform.top-.05,z],[last-first,.10,z1-z0-.56],'platform-stone','load-bearing-deck',{contact:'ground-bearing'});
   for(const side of [-1,1]){const edgeZ=side<0?z0:z1;for(let x=first;x<last-.001;x+=1.2){const w=Math.min(1.2,last-x)-.006;box(pf.id+'-coping-'+side+'-'+Math.round(x*10),[x+w/2,s.platform.top-.045,edgeZ-side*.14],[w,.09,.28],'platform-stone','coping-drip-edge',{contact:'rain-exposed'});}}
  }
  function bench(x,z,index){const id='bench-'+index,py=s.platform.top,seat=s.furnishings.seatHeight,L=s.furnishings.benchLength;

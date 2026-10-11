@@ -20,7 +20,7 @@ jobs:
           persist-credentials: false
           sparse-checkout: kaopu-minigame-workbench/voxel-train-study
       - name: Fabric geometry and source identity tests
-        run: node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r03/qa/fabric.test.mjs
+        run: node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r03/qa/{fabric,native}.test.mjs
       - name: Install official pinned Playwright runner
         run: |
           npm install --prefix "$RUNNER_TEMP/station" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
