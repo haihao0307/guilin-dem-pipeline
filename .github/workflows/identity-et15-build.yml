@@ -1,0 +1,81 @@
+name: Identity ET15 natural eye delivery
+on:
+  push:
+    branches: [fix/identity-et15-eye-skin-audit-20261011]
+    paths:
+      - .github/workflows/identity-et15-build.yml
+      - kaopu-unified-human-workbench/eye-materials/*.mjs
+      - kaopu-unified-human-workbench/eye-materials/*.cjs
+      - kaopu-unified-human-workbench/eye-materials/prepare-assets.py
+concurrency:
+  group: identity-et15-delivery-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: write
+jobs:
+  build-test-public:
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            .github/workflows
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pinned desktop build and test dependencies
+        run: |
+          mkdir -p /tmp/et15-tools
+          cd /tmp/et15-tools
+          npm init -y >/dev/null
+          npm install esbuild@0.25.11 playwright@1.56.1 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+          python3 -m pip install Pillow==11.3.0 numpy==2.3.4 scipy==1.16.2
+      - name: Source-locked textures and independent preview
+        env:
+          NODE_PATH: /tmp/et15-tools/node_modules
+        run: |
+          python3 kaopu-unified-human-workbench/eye-materials/prepare-assets.py
+          node kaopu-unified-human-workbench/eye-materials/build.cjs
+          mkdir -p eye-evidence/local eye-evidence/public
+          git rev-parse HEAD > eye-evidence/SOURCE_COMMIT.txt
+          cp kaopu-unified-human-workbench/eye-materials/BUILD.json eye-evidence/BUILD.json
+          cp kaopu-unified-human-workbench/eye-materials/SOURCE_LOCK.json eye-evidence/SOURCE_LOCK.json
+      - name: Actual desktop browser, controls and 36-preset regressions
+        env:
+          NODE_PATH: /tmp/et15-tools/node_modules
+          EYE_EVIDENCE: eye-evidence/local
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/et15-http.log 2>&1 &
+          node kaopu-unified-human-workbench/eye-materials/verify-browser.cjs
+      - name: Publish only this new workbench, fast-forward only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/eye-materials/assets kaopu-unified-human-workbench/eye-materials/preview.html kaopu-unified-human-workbench/eye-materials/BUILD.json kaopu-unified-human-workbench/eye-materials/SOURCE_LOCK.json
+          if ! git diff --cached --quiet; then git commit -m 'build(eyes): source-locked ET15 natural eye preview [skip ci]'; git push origin HEAD:fix/identity-et15-eye-skin-audit-20261011; fi
+          SHA=$(git rev-parse HEAD)
+          echo "$SHA" > eye-evidence/PUBLISHED_COMMIT.txt
+          echo "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$SHA/kaopu-unified-human-workbench/eye-materials/preview.html" > eye-evidence/PUBLIC_URL.txt
+      - name: Verify the actual immutable public page
+        env:
+          NODE_PATH: /tmp/et15-tools/node_modules
+          EYE_EVIDENCE: eye-evidence/public
+        run: |
+          export EYE_URL=$(cat eye-evidence/PUBLIC_URL.txt)
+          node kaopu-unified-human-workbench/eye-materials/verify-browser.cjs
+      - name: Preserve desktop evidence and exact build
+        if: always()
+        run: |
+          mkdir -p eye-evidence/build
+          cp -r kaopu-unified-human-workbench/eye-materials/. eye-evidence/build/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: identity-et15-natural-eyes-delivery
+          path: eye-evidence
+          retention-days: 14
