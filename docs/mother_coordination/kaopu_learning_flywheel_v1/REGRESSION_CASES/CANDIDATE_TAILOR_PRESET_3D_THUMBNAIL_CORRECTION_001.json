@@ -1,7 +1,7 @@
 {
   "schema": "kaopu.regression-case/2",
   "caseId": "TAILOR-PRESET-3D-THUMBNAIL-CORRECTION-001",
-  "status": "CANDIDATE_TAILOR_R0433_LOCAL_DISPLAY_VERIFIED__HOLD_EXACT_PUBLIC_HEAD_FAILED_VISUAL_PHYSICS_USER_N134_NOT_ADOPTED",
+  "status": "CANDIDATE_TAILOR_R0434_TRANSACTIONAL_PUBLIC_VERIFIED__HOLD_VISUAL_PHYSICS_USER_N135_NOT_ADOPTED",
   "active": false,
   "scope": {
     "mother": "Tailor",
@@ -194,7 +194,8 @@
     "Do not treat a strictly improved but still failing solver route as an accepted garment; preserve its remaining failure categories and keep it out of accepted/front-row claims.",
     "Do not generalize successful public-byte, gallery-decode or CI-browser verification into universal browser/device runtime readiness; WebGL context creation is a separate scoped observation and an unavailable context must fail closed without fallback.",
     "Do not treat qualityPassed=true, thumbReady=true, PNG decode success or an aggregate visual-review approval as member-level visual readiness; compare each claimed-ready member against an authorized reference or prior accepted golden and record visible failure categories.",
-    "Do not inherit a successful local/browser audit from an earlier tested source into a later PR head or public-delivery claim; exact public verification must pass for the exact delivered subject."
+    "Do not inherit a successful local/browser audit from an earlier tested source into a later PR head or public-delivery claim; exact public verification must pass for the exact delivered subject.",
+    "Do not allow a stale fetch, cancelled request or late worker rejection to clear or overwrite a newer valid garment/outfit; only the current request identity may commit display state."
   ],
   "requiredPerMemberReceipt": [
     "presetId",
@@ -224,7 +225,8 @@
     "R0431_SELECTIVE_PROMOTION_VERIFIED_SCOPED__HOLD_39_STATIC_FAILURES_VISUAL_PHYSICS_PUBLIC_USER_ACCEPTANCE",
     "R0432_PUBLIC_BYTES_AND_CI_BROWSER_VERIFIED_SCOPED__HOLD_INDEPENDENT_WEBGL_RUNTIME_DEVICE_USER_ACCEPTANCE",
     "R0432_STATIC_PASS_VISUAL_ACCEPTANCE_GAP_CONFIRMED__HOLD_MEMBER_VISUAL_COMPARISON_USER_ACCEPTANCE",
-    "R0433_LOCAL_ALL_CATEGORY_DISPLAY_VERIFIED_SCOPED__HOLD_EXACT_PUBLIC_HEAD_FAILURE_VISUAL_PHYSICS_USER_ACCEPTANCE"
+    "R0433_LOCAL_ALL_CATEGORY_DISPLAY_VERIFIED_SCOPED__HOLD_EXACT_PUBLIC_HEAD_FAILURE_VISUAL_PHYSICS_USER_ACCEPTANCE",
+    "R0434_TRANSACTIONAL_PUBLIC_DISPLAY_VERIFIED_SCOPED__HOLD_38_STATIC_FAILURES_VISUAL_PHYSICS_USER_ACCEPTANCE"
   ],
   "gate": [
     "Preserve the old paper-library success as a scoped historical observation; do not relabel it as failure.",
@@ -248,7 +250,8 @@
     "A failed numerical trial may contribute only complete routes whose failure-category set is a strict subset of the baseline; regressions, ties and incomplete candidates must preserve the prior parent, while improved-but-failing routes remain failed.",
     "Public verification must remain layered by exact source, public bytes, CI browser, independent browser/device and user acceptance; a WebGL getContext failure on an independent browser is a scoped runtime HOLD, not permission to substitute another model or to erase successful exact-subject publication evidence.",
     "A static-pass member remains visual HOLD until its exact public image has a member-level visual receipt with reference-or-prior-accepted comparator, visible failure categories, independent verifier, and explicit comparison state; aggregate decode/static success cannot fill these fields.",
-    "A successful local 60-style/432-outfit display audit is scoped to its exact tested source. If the current head public workflow fails or publicVerified=false, delivery remains HOLD even when all local display checks pass."
+    "A successful local 60-style/432-outfit display audit is scoped to its exact tested source. If the current head public workflow fails or publicVerified=false, delivery remains HOLD even when all local display checks pass.",
+    "Garment selection is transactional: build and validate off-screen, commit only if the request token is still current, retain the last valid garment on failure, and expose the failed requested identity plus retry without silently promoting stale work."
   ],
   "activation": {
     "global": false,
@@ -396,7 +399,7 @@
     }
   },
   "currentCycleLifecycle": {
-    "POSTED": true,
+    "POSTED": false,
     "ACKNOWLEDGED": false,
     "IMPLEMENTED": true,
     "GATE-RUN": true,
@@ -953,5 +956,99 @@
       "url": "https://github.com/haihao0307/guilin-dem-pipeline/pull/208#issuecomment-6105119399",
       "purpose": "Route the N134 exact-head public failure boundary to the affected Tailor candidate without changing its production branch."
     }
+  },
+  "n135R0434TransactionalPublicVerificationResult": {
+    "pullRequest": 211,
+    "baseR0433Head": "5a0770741e6ecc35c41a66c7320d7390028d7fe4",
+    "currentPrHead": "36ce375dd0c2fc6f419b627899ecce1aa6849e7e",
+    "runtimeSourceCommit": "8c8245dd87e5fdf0e2a7720a96776743134ab17a",
+    "publicationCommit": "5d641c4fc105db205c0a1d860a4927cc8dadaa8e",
+    "publicEvidenceSourceCommit": "58dd8def8c52382437e73dfac1c05c577942807a",
+    "fixedPublicUrl": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/presets/r0434-8c8245dd87e5/?preset=T01-P01",
+    "independentNativeReplay": {
+      "runId": 38113321537,
+      "headSha": "e3e3dd8651fbcce05649953d36d3d931e9b002a2",
+      "conclusion": "success",
+      "artifactId": 11692209416,
+      "artifactDigest": "sha256:d7dc6450242b04112ef075d29a11756fbaf212e88b8962a920c530d9f995bd9d"
+    },
+    "finalPublicWorkflow": {
+      "runId": 38113488943,
+      "headSha": "441930cf69c2f5dbc7e998e31d03baaa0cb784b3",
+      "conclusion": "success",
+      "artifactId": 11692503213,
+      "artifactDigest": "sha256:4e2654fcf60edac9160ec9e5ec715a8bea495ca1bc3177b92a9f609ef7b27890",
+      "exactSuccessfulSteps": [
+        "require successful independent native browser replay",
+        "promote only repeatable browser result",
+        "verify actual HTTPS content and 492 current previews",
+        "full public all-style, all-outfit, safety and strict fresh-native replay acceptance"
+      ]
+    },
+    "publicEvidence": {
+      "actualPublicBrowser": true,
+      "publicVerified": true,
+      "publicPathsChecked": 739,
+      "decoded3DPreviewCount": 492,
+      "publicChecks": "31/31",
+      "freshChecks": "8/8",
+      "safetyChecks": "10/10",
+      "styleDisplay": "60/60",
+      "outfitDisplay": "432/432",
+      "mobileScope": "390x844 Chromium viewport; not a physical phone"
+    },
+    "transactionalFailureReplay": {
+      "transient503RetriesToExactRequestedGarment": true,
+      "permanent404RetainsLastValidGarmentAndDeepLink": true,
+      "failedRequestedIdentityExplicit": true,
+      "retryRecoversWithoutFullRefresh": true,
+      "integrityMismatchNotRetriedCachedOrPromoted": true,
+      "newerSelectionAbortsStaleFetch": true,
+      "lateCancelledWorkerRejectionCannotClearNewestOutfit": true,
+      "noUnhandledPageErrors": true
+    },
+    "evidenceOnlyHeadBinding": {
+      "compareBase": "58dd8def8c52382437e73dfac1c05c577942807a",
+      "compareHead": "36ce375dd0c2fc6f419b627899ecce1aa6849e7e",
+      "commits": 1,
+      "changedFiles": 132,
+      "runtimeOrSolverFilesChanged": false,
+      "changedFilesMeaning": "retained R0434 reports and QA screenshots only"
+    },
+    "preservedBoundaries": {
+      "staticPass": 22,
+      "needsRepair": 38,
+      "all60GarmentsAccepted": false,
+      "allGarmentsQualityAccepted": false,
+      "physicalFitAccepted": false,
+      "dynamicWearCertified": false,
+      "jointOutfitCollisionCertified": false,
+      "userAccepted": false,
+      "qualityThresholdsChanged": false
+    },
+    "comparisonToCurrentOS": {
+      "result": "NO_NOVELTY",
+      "reason": "R2 tested-subject, task-freshness, no-stale-delivery and explicit-failure rules already require current-subject binding and forbid stale asynchronous work from becoming delivery truth."
+    },
+    "falsifiableHypothesis": "If selection commits are request-token bound and public acceptance is tied to an independently replayed exact source chain, injected 503/404/integrity/stale-worker failures will retain the latest valid display and explicit failed identity, while the exact immutable public candidate passes display checks without promoting the 38 static failures or visual/physics/user acceptance.",
+    "replay": {
+      "checks": 22,
+      "passed": 22,
+      "outcome": "R0434_TRANSACTIONAL_PUBLIC_DISPLAY_VERIFIED_SCOPED__HOLD_38_STATIC_FAILURES_VISUAL_PHYSICS_USER_ACCEPTANCE",
+      "staleAsyncPromotionPrevented": true,
+      "priorValidDisplayPreserved": true,
+      "n134PublicHoldClosedForExactR0434Candidate": true
+    },
+    "boundary": "Tailor R04.3.4 PR #211 and fixed r0434-8c8245dd87e5 snapshot only. It does not certify physical phone/GPU, visual quality of all garments, the 38 static failures, continuous collision, dynamic wear, joint outfit physics or user acceptance.",
+    "decision": "UPDATE_EXISTING_REGRESSION_CASE_NO_NOVELTY",
+    "lifecycle": {
+      "POSTED": false,
+      "ACKNOWLEDGED": false,
+      "IMPLEMENTED": true,
+      "GATE-RUN": true,
+      "ADOPTED": false,
+      "USER-ACCEPTED": false
+    },
+    "postingReceipt": null
   }
 }
