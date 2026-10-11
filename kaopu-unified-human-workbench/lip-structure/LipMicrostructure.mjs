@@ -29,7 +29,7 @@ export function buildLipAtlas({widthMM=50,upperMM=7,lowerMM=9,seed=37,density=1}
   let root=-widthMM*.485;
   while(root<widthMM*.485){
    root+=(.52+1.25*rnd())/density;const x=root,phase=rnd()*6.283,bend=(rnd()-.5)*.9,fan=x/(widthMM*.5)*(.35+.55*rnd());
-   const v0=.005+rnd()*.26,v1=Math.min(.99,v0+.34+rnd()*.62),w=.050+rnd()*.055,d=.023+rnd()*.045;
+   const v0=.005+rnd()*.26,v1=Math.min(.99,v0+.34+rnd()*.62),w=.072+rnd()*.080,d=.036+rnd()*.046;
    const fn=v=>x+fan*(v-.3)+bend*Math.sin(v*3.9+phase)+.045*Math.sin(v*15.+phase);
    stroke(fn,v0,v1,w,d,0);primary++;
    const count=rnd()<.22?0:1+(rnd()>.55?1:0);
@@ -40,7 +40,7 @@ export function buildLipAtlas({widthMM=50,upperMM=7,lowerMM=9,seed=37,density=1}
   }
   for(let j=0;j<Math.round(widthMM*2.4*density);j++){
    const x=(rnd()-.5)*widthMM*.96,a=.05+.78*rnd(),b=Math.min(.97,a+.065+.23*rnd()),reach=(rnd()-.5)*.9,phase=rnd()*6.283;
-   stroke((v,t)=>x+reach*t+.04*Math.sin(phase+t*5),a,b,.026+.033*rnd(),.004+.010*rnd(),1);secondary++;
+   stroke((v,t)=>x+reach*t+.04*Math.sin(phase+t*5),a,b,.026+.033*rnd(),.006+.015*rnd(),1);secondary++;
   }
  }
  const data=new Uint8Array(W*H*4);let min=0,max=0;

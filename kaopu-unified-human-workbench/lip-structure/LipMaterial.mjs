@@ -45,12 +45,15 @@ export function attachLipMaterial(skin,api){
    float csMacro=`);
   shader.fragmentShader=patch(shader.fragmentShader,'csBase=mix(csBase,csLipColor*(1.+csMacro*.06),csLip*csLipMix);',`
    vec3 lpColor=mix(csBase,csLipColor,clamp(csLipMix*(.94+uLPigment*.38),0.,1.));
-   float lpTissue=(lpBroad*.95+lpMottle*.40)*uLVariation;
+   float lpWarmCenter=exp(-pow((lpU-.12)/.56,2.))*exp(-pow((lpV-.32)/.7,2.));
+   float lpTissue=(lpBroad*2.05+lpMottle*.64+lpWarmCenter*.11)*uLVariation;
    float lpTone=-lpUpper*uLUpperShade*.14+(1.-lpUpper)*.022;
-   lpColor*=vec3(1.+lpTissue*.24+lpTone,1.-lpTissue*.32+lpTone,1.-lpTissue*.16+lpTone);
+   lpColor*=vec3(1.+lpTissue*.34+lpTone,1.-lpTissue*.51+lpTone,1.-lpTissue*.34+lpTone);
    lpColor*=1.+lpBroad*.10*uLVariation;
    lpColor=mix(lpColor,lpColor*vec3(1.025,.956,.962),lpMoist*.48);
    lpColor=mix(lpColor,mix(lpColor,csBase,.24)*1.025,lpDryPatch*.42);
+   float lpOuterFade=smoothstep(.58,1.,lpV)*(.08+.10*(lpBroad+.5));
+   lpColor=mix(lpColor,csBase,lpOuterFade+smoothstep(.60,1.,abs(lpU))*.045);
    // Only a small albedo residual in grooves: shape is carried by the normal.
    lpColor*=1.+lpFine*.030*uLFurrows*lpVisible;
    csBase=mix(csBase,mix(csLipColor*(1.+csMacro*.06),lpColor,uLEnabled),csLip*mix(csLipMix,1.,uLEnabled));
@@ -78,7 +81,7 @@ export function attachLipMaterial(skin,api){
    material.clearcoatRoughness=mix(material.clearcoatRoughness,.43-lpMoist*uLWet*.20,lpMask);
   `);
  };
- skin.material.customProgramCacheKey=()=>key()+'/ET18-bounded-graph-vermilion-v1';skin.lipExtension={version:'ET18-L2',shaderCompiles:0,kind:'bounded lip field + seeded curve graph, not a scanned map',sourceHeadReplaced:false,oldSkinMastersRetained:true,distanceFiltering:true};api.skins.add(skin);
+ skin.material.customProgramCacheKey=()=>key()+'/ET18-bounded-graph-vermilion-v2';skin.lipExtension={version:'ET18-L2',shaderCompiles:0,kind:'bounded lip field + seeded curve graph, not a scanned map',sourceHeadReplaced:false,oldSkinMastersRetained:true,distanceFiltering:true};api.skins.add(skin);
  const update=skin.updateFace?.bind(skin),dispose=skin.dispose.bind(skin);skin.updateLips=()=>{const s=api.settings;U.uLEnabled.value=s.enabled?1:0;for(const[k,n]of Object.entries({furrows:'uLFurrows',pigment:'uLPigment',wetness:'uLWet',dryRoughness:'uLRough',borderSoftness:'uLSoft',colorVariation:'uLVariation',upperShade:'uLUpperShade',dryness:'uLDryness',microRelief:'uLMicro'}))U[n].value=s[k];U.uLDebug.value=api.debug||0;
  const atlasKey=[s.patternSeed,s.textureDensity,r.half].join('/');
  if(api.atlasKey!==atlasKey){
