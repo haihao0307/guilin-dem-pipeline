@@ -31,7 +31,77 @@ export function buildPackedGroomR30(a,guides,{count=1800,radius=.000045,textureW
  const prefixRepair=prefixSegmentRepair
   ?clearanceSolver.repairPrefixSegments({pointData,count,segments,surfaceSegments})
   :{enabled:false,method:'disabled explicitly; no prefix repair performed'};
- let prefixRoute={enabled:repairPrefixRoutes,applied:[],errors:[]};if(repairPrefixRoutes&&prefixRepair.remainingExamples?.length){const indices=new Uint32Array(triangles.flatMap(t=>t.ids.map(id=>inv[id]))),route=createScalpPrefixRouteR30({positions:p,normals:n,triangleIndices:indices,allowedTriangleIds:triangles.map((_,i)=>i)});for(const e of prefixRepair.remainingExamples){try{prefixRoute.applied.push(route.applyToPacked({pointData,normalData,strandIndex:e.strand}).report);}catch(error){prefixRoute.errors.push({strand:e.strand,error:String(error)});}}prefixRoute.graph=route.report();}
+ // Record the actual sampled source root, never infer its region from a
+ // rough inverse head frame. These are diagnostic labels, not repartitioning.
+ for(const example of prefixRepair.remainingExamples||[]){
+  const i=example.strand,sourceRoot=Array.from(roots.templateRoots.subarray(i*3,i*3+3));
+  example.sourceRoot=sourceRoot;example.sourceRootTriangle=roots.rootTriangles[i];
+  example.sourceMargin=scalpMargin(sourceRoot);example.assignedGuide=records[i]?.guide;
+  example.assignedRegion=records[i]?.region;
+ }
+ let prefixRoute={enabled:repairPrefixRoutes,applied:[],errors:[]};
+ if(repairPrefixRoutes&&prefixRepair.remainingExamples?.length){
+  // Only the bad-root fallback graph gets partially eligible sampling faces.
+  // The main projection triangles/matchingRootSupport above remain untouched.
+  const maskStats={source:'roots.selectFaces() boundary faces, restricted per source edge and anchor connection',
+   samplesPerConnection:17,minimumAllowedMarginM:-.0002,
+   edgeChecks:0,rejectedEdges:0,connectionChecks:0,rejectedConnections:0,sameFaceConnections:0,
+   totalSamples:0,nonfiniteSamples:0,minimumSampledMarginM:Infinity,minimumAcceptedSampledMarginM:Infinity,
+   interpretation:'17-point sampled grooming-mask boundary, not an anatomical truth or continuous-boundary proof; minima include rejected candidates unless labeled accepted'};
+  try{
+   const commonToSource=new Int32Array(p.length/3).fill(-1);
+   for(let sourceId=0;sourceId<inv.length;sourceId++)if(inv[sourceId]>=0)commonToSource[inv[sourceId]]=sourceId;
+   const sourceVertices=new Map();
+   function sourceVertex(commonId){
+    const sourceId=commonToSource[commonId];if(sourceId===undefined||sourceId<0)throw Error('Boundary route vertex has no exact source GNM inverse');
+    if(!sourceVertices.has(commonId))sourceVertices.set(commonId,pt(g.template,sourceId));
+    return sourceVertices.get(commonId);
+   }
+   const routeFaces=roots.selectFaces().items,routeSourceToLocal=new Map();
+   const indices=new Uint32Array(routeFaces.length*3);
+   routeFaces.forEach(({t},localId)=>{
+    const sourceIds=Array.from(g.triangles.subarray(t*3,t*3+3)),commonIds=sourceIds.map(id=>inv[id]);
+    if(sourceIds.some(id=>g.componentId[id]!==0)||commonIds.some(id=>id<0)||!oriented.has(commonIds.join(',')))throw Error('Boundary route lacks an exact oriented final scalp face');
+    indices.set(commonIds,localId*3);routeSourceToLocal.set(t,localId);
+   });
+   function sampledConnectionAllowed(from,to,kind){
+    if(kind==='edge')maskStats.edgeChecks++;else{maskStats.connectionChecks++;if(kind==='same-face')maskStats.sameFaceConnections++;}
+    let minimum=Infinity,finite=true;
+    for(let j=0;j<17;j++){
+     const margin=scalpMargin(from.clone().lerp(to,j/16).toArray());maskStats.totalSamples++;
+     if(!Number.isFinite(margin)){finite=false;maskStats.nonfiniteSamples++;continue;}
+     minimum=Math.min(minimum,margin);maskStats.minimumSampledMarginM=Math.min(maskStats.minimumSampledMarginM,margin);
+    }
+    const allowed=finite&&minimum>=-.0002;
+    if(allowed)maskStats.minimumAcceptedSampledMarginM=Math.min(maskStats.minimumAcceptedSampledMarginM,minimum);
+    else if(kind==='edge')maskStats.rejectedEdges++;else maskStats.rejectedConnections++;
+    return allowed;
+   }
+   function sourcePointOnFace(point,commonIds){
+    const tri=new T.Triangle(...commonIds.map(id=>pt(p,id))),bary=tri.getBarycoord(new T.Vector3(...point),new T.Vector3());
+    if(!bary||!bary.toArray().every(Number.isFinite)||bary.toArray().some(weight=>weight<-.000001||weight>1.000001))throw Error('Boundary anchor cannot be inverted inside its actual supporting triangle');
+    const source=new T.Vector3();commonIds.forEach((id,k)=>source.addScaledVector(sourceVertex(id),bary.getComponent(k)));return source;
+   }
+   const route=createScalpPrefixRouteR30({positions:p,normals:n,triangleIndices:indices,
+    allowedTriangleIds:routeFaces.map((_,i)=>i),
+    edgeAllowed:({aId,bId})=>sampledConnectionAllowed(sourceVertex(aId),sourceVertex(bId),'edge'),
+    connectionAllowed:({from,to,triangleVertexIds,kind})=>sampledConnectionAllowed(
+     sourcePointOnFace(from,triangleVertexIds),sourcePointOnFace(to,triangleVertexIds),kind),
+   });
+   for(const example of prefixRepair.remainingExamples){
+    try{
+     const rootTriangleId=routeSourceToLocal.get(roots.rootTriangles[example.strand]);
+     if(rootTriangleId===undefined)throw Error('Sampled root face is absent from roots.selectFaces()');
+     prefixRoute.applied.push(route.applyToPacked({pointData,normalData,strandIndex:example.strand,rootTriangleId}).report);
+    }catch(error){prefixRoute.errors.push({strand:example.strand,error:String(error)});}
+   }
+   prefixRoute.graph=route.report();
+  }catch(error){prefixRoute.errors.push({stage:'boundary-graph-build',error:String(error)});}
+  prefixRoute.boundaryMask={...maskStats,
+   minimumSampledMarginM:Number.isFinite(maskStats.minimumSampledMarginM)?maskStats.minimumSampledMarginM:null,
+   minimumAcceptedSampledMarginM:Number.isFinite(maskStats.minimumAcceptedSampledMarginM)?maskStats.minimumAcceptedSampledMarginM:null,
+  };
+ }
  // Read-only direction and spread diagnostics. No root or guide edits.
  const rearAxis=new T.Vector3(...G.headFrame.currentAxes[2]).negate().normalize();
  const lateralAxis=new T.Vector3(...G.headFrame.currentAxes[0]).normalize();

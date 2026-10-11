@@ -9,11 +9,24 @@ import * as T from '/native/kaopu-unified-human-workbench/full/source/registrati
  * Rebuild this static graph if displayed body geometry changes. If applying to
  * already-attached textures, the caller must mark uploads dirty and update bounds.
  */
-export function createScalpPrefixRouteR30({positions, normals, triangleIndices, allowedTriangleIds} = {}) {
+export function createScalpPrefixRouteR30({positions, normals, triangleIndices, allowedTriangleIds,
+  edgeAllowed = null, connectionAllowed = null} = {}) {
   const started = performance.now();
   if (!positions || !normals || positions.length % 3 || normals.length !== positions.length || !triangleIndices || triangleIndices.length % 3)
     throw new Error('Final displayed xyz positions, normals and triangle indices are required');
   if (!allowedTriangleIds || allowedTriangleIds.length === 0) throw new Error('An explicit nonempty scalp triangle allowlist is required');
+  if (edgeAllowed !== null && typeof edgeAllowed !== 'function') throw new Error('edgeAllowed must be a function or null');
+  if (connectionAllowed !== null && typeof connectionAllowed !== 'function') throw new Error('connectionAllowed must be a function or null');
+  // Callbacks are optional fail-closed boolean filters. edgeAllowed describes
+  // an UNDIRECTED edge and is evaluated once per unique final-vertex pair.
+  // connectionAllowed receives actual on-triangle endpoints and the containing
+  // face IDs, including the otherwise-short-circuited same-face direct path.
+  const filterStats = {edgeCallbackEnabled: !!edgeAllowed, connectionCallbackEnabled: !!connectionAllowed,
+    checkedEdges: 0, acceptedEdges: 0, rejectedEdges: 0,
+    checkedConnections: 0, acceptedConnections: 0, rejectedConnections: 0,
+    checkedSameFaceConnections: 0, rejectedSameFaceConnections: 0,
+    anchorsRejectedForNoAllowedConnection: 0};
+  const edgeDecisions = new Map();
   const vertexCount = positions.length / 3;
   const graph = new Map(), records = new Map(), vertices = new Map(), vertexNormals = new Map();
   function vector(value, name) {
@@ -40,14 +53,32 @@ export function createScalpPrefixRouteR30({positions, normals, triangleIndices, 
     records.set(id, {id, ids, tri});
     for (let edge = 0; edge < 3; edge++) {
       const a = ids[edge], b = ids[(edge + 1) % 3], length = vertex(a).distanceTo(vertex(b));
-      if (length > 0) { graph.get(a).set(b, length); graph.get(b).set(a, length); }
+      const key = `${Math.min(a, b)},${Math.max(a, b)}`;
+      if (!edgeDecisions.has(key)) {
+        const allowed = !edgeAllowed || edgeAllowed({aId: a, bId: b, triangleId: id,
+          triangleVertexIds: [...ids], a: vertex(a).toArray(), b: vertex(b).toArray()}) === true;
+        edgeDecisions.set(key, allowed); filterStats.checkedEdges++;
+        if (allowed) filterStats.acceptedEdges++; else filterStats.rejectedEdges++;
+      }
+      if (length > 0 && edgeDecisions.get(key)) { graph.get(a).set(b, length); graph.get(b).set(a, length); }
     }
   }
   let searches = 0, visitedVertices = 0;
   const changedStrands = new Set();
   const buildMs = performance.now() - started;
 
-  function anchor(point, triangleId, maxDistanceM) {
+  function permitsConnection(record, from, to, {kind, role, toVertexId = null}) {
+    filterStats.checkedConnections++;
+    if (kind === 'same-face') filterStats.checkedSameFaceConnections++;
+    const allowed = !connectionAllowed || connectionAllowed({kind, role,
+      triangleId: record.id, triangleVertexIds: [...record.ids],
+      from: from.toArray(), to: to.toArray(), toVertexId}) === true;
+    if (allowed) filterStats.acceptedConnections++;
+    else { filterStats.rejectedConnections++; if (kind === 'same-face') filterStats.rejectedSameFaceConnections++; }
+    return allowed;
+  }
+
+  function anchor(point, triangleId, maxDistanceM, role) {
     const candidates = triangleId === undefined || triangleId === null ? records.values() : [records.get(triangleId)];
     if (triangleId !== undefined && triangleId !== null && !records.has(triangleId))
       throw new Error('Explicit endpoint support is outside the legal scalp triangle allowlist');
@@ -56,9 +87,14 @@ export function createScalpPrefixRouteR30({positions, normals, triangleIndices, 
     for (const record of candidates) {
       record.tri.closestPointToPoint(point, closest);
       const squared = point.distanceToSquared(closest);
-      if (squared < bestSquared) { bestSquared = squared; best = {record, point: closest.clone()}; }
+      if (squared < bestSquared && squared <= maxDistanceM * maxDistanceM) {
+        const support = closest.clone();
+        const connectionVertexIds = record.ids.filter(id => permitsConnection(record, support, vertex(id), {kind: 'anchor-to-vertex', role, toVertexId: id}));
+        if (!connectionVertexIds.length) { filterStats.anchorsRejectedForNoAllowedConnection++; continue; }
+        bestSquared = squared; best = {record, point: support, connectionVertexIds};
+      }
     }
-    if (!best || Math.sqrt(bestSquared) > maxDistanceM) throw new Error('Endpoint has no allowed scalp support within the explicit anchor-distance bound');
+    if (!best || Math.sqrt(bestSquared) > maxDistanceM) throw new Error('Endpoint has no allowed scalp support and allowed vertex connection within the explicit anchor-distance bound');
     const bary = best.record.tri.getBarycoord(best.point, new T.Vector3()), normal = new T.Vector3();
     best.record.ids.forEach((id, index) => normal.addScaledVector(vertexNormals.get(id), bary.getComponent(index)));
     if (normal.lengthSq() < 1e-18) throw new Error('Endpoint support has a degenerate interpolated normal');
@@ -78,10 +114,10 @@ export function createScalpPrefixRouteR30({positions, normals, triangleIndices, 
       if (heap.length) { let index = 0; while (index * 2 + 1 < heap.length) { let child = index * 2 + 1; if (child + 1 < heap.length && heap[child + 1][1] < heap[child][1]) child++; if (heap[child][1] >= last[1]) break; heap[index] = heap[child]; index = child; } heap[index] = last; }
       return first;
     };
-    for (const id of start.record.ids) {
+    for (const id of start.connectionVertexIds) {
       const distance = start.point.distanceTo(vertex(id)); distances.set(id, distance); previous.set(id, null); push(id, distance);
     }
-    const endIds = new Set(end.record.ids); let bestEnd = null, bestDistance = Infinity;
+    const endIds = new Set(end.connectionVertexIds); let bestEnd = null, bestDistance = Infinity;
     while (heap.length) {
       const [id, distance] = pop();
       if (distance !== distances.get(id)) continue;
@@ -111,9 +147,10 @@ export function createScalpPrefixRouteR30({positions, normals, triangleIndices, 
     const routeStarted = performance.now(), rootPoint = vector(root, 'root'), releasePoint = vector(release, 'release');
     for (const [name, value] of Object.entries({normalGapM, maxAnchorDistanceM, maxRouteLengthM}))
       if (!Number.isFinite(value) || value <= 0) throw new Error(`${name} must be finite and positive`);
-    const start = anchor(rootPoint, rootTriangleId, maxAnchorDistanceM);
-    const end = anchor(releasePoint, releaseTriangleId, maxAnchorDistanceM);
-    const ids = start.record.id === end.record.id ? [] : shortestVertexPath(start, end);
+    const start = anchor(rootPoint, rootTriangleId, maxAnchorDistanceM, 'root');
+    const end = anchor(releasePoint, releaseTriangleId, maxAnchorDistanceM, 'release');
+    const sameFaceDirectAllowed = start.record.id === end.record.id && permitsConnection(start.record, start.point, end.point, {kind: 'same-face', role: 'root-to-release'});
+    const ids = sameFaceDirectAllowed ? [] : shortestVertexPath(start, end);
     const surface = [{point: start.point, normal: start.normal, vertexId: null}];
     for (const id of ids) if (surface.at(-1).point.distanceToSquared(vertex(id)) > 1e-20)
       surface.push({point: vertex(id), normal: vertexNormals.get(id), vertexId: id});
@@ -147,8 +184,12 @@ export function createScalpPrefixRouteR30({positions, normals, triangleIndices, 
         nominalNormalGapM: normalGapM, fixedPointIndices: [0, 20], graphVertexCount: ids.length,
         sampling: '20 equal surface-edge arc-length intervals, then interpolated-unit-normal interior lift',
         legalSurfacePath: true, collisionVerified: false, naturalGroomClaimed: false,
+        filteredBoundaryRouting: !!edgeAllowed || !!connectionAllowed,
+        sameFaceDirectUsed: sameFaceDirectAllowed,
+        rootAllowedConnectionVertexIds: [...start.connectionVertexIds],
+        releaseAllowedConnectionVertexIds: [...end.connectionVertexIds],
         elapsedMs: performance.now() - routeStarted,
-        limitations: ['edge-shortest path is not an authored natural groom', 'normal-offset polyline and resampled chords require complete collision QA', 'no full-radius clearance guarantee', 'scalp legality depends on the explicit caller allowlist'],
+        limitations: ['edge-shortest path is not an authored natural groom', 'normal-offset polyline and resampled chords require complete collision QA', 'no full-radius clearance guarantee', 'scalp legality depends on the explicit caller allowlist and optional sampled filters', 'vertex graph can conservatively reject narrow valid within-face routes'],
       }};
   }
 
@@ -186,5 +227,6 @@ export function createScalpPrefixRouteR30({positions, normals, triangleIndices, 
     allowedTriangleCount: records.size, allowedVertexCount: graph.size, searches, visitedVertices,
     changedRootCount: changedStrands.size, changedStrandIndices: [...changedStrands],
     rootCoordinatesChanged: 0, wholeBodyFallback: false, automaticallyApplied: false, buildMs,
+    filters: {...filterStats},
   })};
 }
