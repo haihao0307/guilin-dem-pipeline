@@ -188,6 +188,6 @@ export const DEPENDENCIES = [
   {
     "id": "wheel-rail-profile.mjs",
     "path": "wheel-rail-profile.mjs",
-    "sha256": "e8821457203ac22aed2e203198c88c95cebe06ed03e00ef291084376b9733308"
+    "sha256": "8816c1df2e5ca274e23e1c5931af5a9a0eea79b7403111f8bcbe8d15bfb538bd"
   }
 ];

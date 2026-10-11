@@ -85,16 +85,23 @@ export function railSection(rail=RAIL_56E1){
  right.push(bottomCenter);
  return [...right,...right.slice(1,-1).reverse().map(([z,y])=>[-z,y])];
 }
-export function createRailGeometry(T,{lengthM,centerXM=0,centerZM=0,railTopM=.3485,rail=RAIL_56E1,capEnds=true}={}){
- positive(lengthM,'rail length');if(![centerXM,centerZM,railTopM].every(Number.isFinite))throw Error('Finite rail placement required');
+export function createRailGeometry(T,{lengthM,centerXM=0,centerZM=0,railTopM=.3485,rail=RAIL_56E1,capEnds=true,maxSegmentLengthM=8}={}){
+ positive(lengthM,'rail length');positive(maxSegmentLengthM,'rail segment length');if(![centerXM,centerZM,railTopM].every(Number.isFinite))throw Error('Finite rail placement required');
  const section=railSection(rail),positions=[],indices=[],colors=[],x0=centerXM-lengthM/2,x1=centerXM+lengthM/2;
  const add=(x,[z,y])=>{positions.push(x,railTopM+y,centerZM+z);const c=new T.Color(y>-.02?0x9d9a88:0x625e53);colors.push(c.r,c.g,c.b);return positions.length/3-1;};
- for(let i=0;i<section.length;i++){const j=(i+1)%section.length,a=add(x0,section[i]),b=add(x0,section[j]),c=add(x1,section[j]),d=add(x1,section[i]);indices.push(a,b,c,a,c,d);}
+ // Bound raster triangles along the track. A 488 m face with a sub-mm
+ // fillet edge crosses the near plane, creating an avoidable extreme
+ // aspect ratio for clipping and raster depth interpolation. Shared boundary coordinates preserve the exact original solid;
+ // there are no overlapping caps or artificial gaps at internal boundaries.
+ const longitudinalSegments=Math.ceil(lengthM/maxSegmentLengthM);
+ for(let k=0;k<longitudinalSegments;k++){const start=x0+lengthM*k/longitudinalSegments,end=x0+lengthM*(k+1)/longitudinalSegments;
+  for(let i=0;i<section.length;i++){const j=(i+1)%section.length,a=add(start,section[i]),b=add(start,section[j]),c=add(end,section[j]),d=add(end,section[i]);indices.push(a,b,c,a,c,d);}
+ }
  if(capEnds){const faces=T.ShapeUtils.triangulateShape(section.map(([z,y])=>new T.Vector2(z,y)),[]);
   for(const [x,sign] of [[x0,-1],[x1,1]])for(const tri of faces){const v=tri.map(i=>section[i]);let ids=v.map(p=>add(x,p));const normalX=(v[1][1]-v[0][1])*(v[2][0]-v[0][0])-(v[1][0]-v[0][0])*(v[2][1]-v[0][1]);if(normalX*sign<0)ids.reverse();indices.push(...ids);}
  }
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.setIndex(indices);g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();
- g.userData={profile:rail.id,source:PROFILE_SOURCES.railDrawing,railTopM,lengthM,headWidthReferenceDepthM:rail.headReferenceDepthM,manufacturingProfileCertified:false};return g;
+ g.userData={profile:rail.id,longitudinalSegments,maxSegmentLengthM,source:PROFILE_SOURCES.railDrawing,railTopM,lengthM,headWidthReferenceDepthM:rail.headReferenceDepthM,manufacturingProfileCertified:false};return g;
 }
 /** Append real extruded profile vertices into the existing heritage Blocks batch. */
 export function appendRailSection(T,builder,options){
