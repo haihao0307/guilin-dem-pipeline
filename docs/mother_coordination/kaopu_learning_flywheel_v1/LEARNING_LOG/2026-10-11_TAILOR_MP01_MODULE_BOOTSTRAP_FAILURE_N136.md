@@ -40,14 +40,31 @@ R2 的 tested-subject、explicit failure 与 no-stale-delivery 已禁止把材�
 
 这验证了“不发布失败主体”，但没有验证建议的 ≤10 秒快速失败，也没有验证修复后 12/12 look；两项均保持 Candidate。
 
+## 修复后最小重放
+
+PR #215 随后产生局部修复与精确正向回放：
+
+- 实现 head：`1ff395d89e0b2e777a028747eadf49c13696bcde`
+- 保留证据 head：`5c63ab38b8822cb3e5e097489f1a95d1b46a0088`
+- workflow [38122512641](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/38122512641)，job `114419985913`：success
+- artifact `11695579703`；digest `sha256:9dfefeb9080f1bf81e38db7b5b152d1f4cd580f5388d5ed1825e90a1fe664851`
+- 修复：固定 `three` import map；readiness 与 pageerror/初始化失败竞速；只从失败 artifact 恢复获准材质字段，不恢复旧应用源码
+- 27/27 checks、12/12 looks 通过；原人物/服装 identity、毫米 UV、真实材质像素变化、快速切换 latest-wins、非法材质不替换、390×844 viewport 均有正向证据
+- `public=false`、`physicalWearAccepted=false`，无 page/shader error
+- 尚未故意重新破坏 specifier 验证 ≤10 秒负向快速失败，因此该一项仍为 Candidate
+
+正向结果：
+
+`MP01_FIXED_MODULE_BOOT_LOCAL_12_LOOKS_VERIFIED__HOLD_PUBLIC_VISUAL_PHYSICS_USER_ACCEPTANCE`
+
 ## 适用边界
 
-仅 PR #215 head `8d1e3bec...` 的首次候选工作流。材质导出 provenance 可保留，但没有成衣 look、公网页面、物理设备、材质物理、联合碰撞、动态穿着或用户接受证据。原 R0434 仍是最后一个已验证的 Tailor 公网展示。
+覆盖首次失败 head `8d1e3bec...`、修复 workflow head `1ff395d...` 与保留证据 head `5c63ab3...`。正向 CI 回放验证固定原成衣上的 12 套静态材质外观，不是实际 HTTPS、公网浏览器、物理设备、全部视觉质量、材质物理、联合碰撞、动态穿着或用户接受。原 R0434 仍是最后一个已验证公网 Tailor 展示。
 
 ## 是否采用
 
 更新既有 `TAILOR-PRESET-3D-THUMBNAIL-CORRECTION-001`，不新建重复 regression case；向 PR #215 路由 Tailor 局部 Candidate，不改生产分支、不降低门槛。
 
-状态：POSTED=true / ACKNOWLEDGED=false / IMPLEMENTED=false / GATE-RUN=true（失败结果） / ADOPTED=false / USER-ACCEPTED=false。
+状态：POSTED=true / ACKNOWLEDGED=false（无独立文字回执） / IMPLEMENTED=true / GATE-RUN=true（失败与修复正向结果） / ADOPTED=false / USER-ACCEPTED=false。
 
 路由回执：[PR #215 comment 6106819576](https://github.com/haihao0307/guilin-dem-pipeline/pull/215#issuecomment-6106819576)。
