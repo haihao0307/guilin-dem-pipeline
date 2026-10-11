@@ -50,7 +50,7 @@ fn('geoFabric','stateId:u32','vec4f',`return geo_get(i32(geo_get(1).w)+i32(state
 fn('geoBuildingHeight','buildingId:u32','f32',`if(buildingId==0u){return 0.0;}return geo_get(i32(geo_get(1).x)+(i32(buildingId)-1)*8+1).w;`);
 fn('geo_building','hh:GeoHit,x:f32,y:f32,z:f32,bi:i32','GeoHit',`
  var h=hh;var head=geo_get(1);var off=i32(head.x)+bi*8;var a=geo_get(off);var b=geo_get(off+1);var c=geo_get(off+2);var port=geo_get(off+3);var service=geo_get(off+4);var core=geo_get(off+5);var rules=geo_get(off+6);
- var u=a.z*0.5-(x-a.x)*c.x;var v=a.w*0.5-(z-a.y)*c.y;var W=a.z;var D=a.w;var top=b.w;var bid=u32(c.w);var bb=geo_box(u-W*0.5,y-top*0.5-0.45,v-D*0.5,W*0.5+0.30,top*0.5+0.65,D*0.5+0.30);
+ var u=a.z*0.5-(x-a.x)*c.x;var v=a.w*0.5-(z-a.y)*c.y;var W=a.z;var D=a.w;var top=b.w;var bid=u32(c.w);var bb=geo_box(u-W*0.5,y-top*0.5-0.45,v-D*0.5,W*0.5+1.05,top*0.5+0.70,D*0.5+1.05);
  if(bb>h.d){return h;}if(bb>0.30){return geo_take(h,bb,0u,bid,0u,0u,vec3f(u,y,v),vec3f(0.0,1.0,0.0));}
  var f0=0;if(y>=b.x){f0=i32(floor((y-b.x)/b.y))+1;}f0=clamp(f0,0,i32(b.z)-1);
  var first=max(0,f0-1);var last=min(i32(b.z)-1,f0+1);var wt=core.w;var cw=core.x;var land=core.y;var fw=core.z;var slab=rules.x;var tread=rules.y;var far=rules.z;var empty=vec4f(0.0,0.0,0.0,0.0);
@@ -87,7 +87,7 @@ fn('geo_building','hh:GeoHit,x:f32,y:f32,z:f32,bi:i32','GeoHit',`
 `);
 fn('geo_bridge','hh:GeoHit,x:f32,y:f32,z:f32,ii:i32','GeoHit',`
  var h=hh;var off=i32(geo_get(1).z)+ii*4;var a=geo_get(off);var b=geo_get(off+1);var c=geo_get(off+2);var e=geo_get(off+3);var len=e.y;var dx=(a.z-a.x)/len;var dz=(a.w-a.y)/len;var t=(x-a.x)*dx+(z-a.y)*dz;var w=-(x-a.x)*dz+(z-a.y)*dx;var bid=u32(c.x);var sid=u32(c.z);var cid=15000000u+u32(ii)*32u;
- var bb=geo_box(t-len*0.5,y-(b.x+b.y)*0.5-0.45,w,max(len*0.5+0.15,b.z+0.05),(b.y-b.x)*0.5+0.7,b.z*0.5+0.1);if(bb>h.d){return h;}if(bb>0.30){return geo_take(h,bb,0u,bid,0u,sid,vec3f(t,y,w),vec3f(0.0,1.0,0.0));}
+ var bb=geo_box(t-len*0.5,y-(b.x+b.y)*0.5-0.45,w,max(len*0.5+0.15,b.z+0.05),(b.y-b.x)*0.5+0.75,b.z*1.5+0.05);if(bb>h.d){return h;}if(bb>0.30){return geo_take(h,bb,0u,bid,0u,sid,vec3f(t,y,w),vec3f(0.0,1.0,0.0));}
  var steps=i32(e.z);var tread=len/f32(steps+1);var rise=(b.y-b.x)/max(1.0,f32(steps));
  for(var j=0;j<=steps;j=j+1){var yy=b.x+f32(j)*rise;var d=geo_box(t-(f32(j)+0.5)*tread,y-yy+b.w*0.5,w,tread*0.5,b.w*0.5,b.z*0.5);var n=geo_axis(t-(f32(j)+0.5)*tread,y-yy+b.w*0.5,w,tread*0.5,b.w*0.5,b.z*0.5);h=geo_take(h,d,6u,bid,cid,sid,vec3f(t-(f32(j)+0.5)*tread,y-yy+b.w*0.5,w),vec3f(n.x*dx-n.z*dz,n.y,n.x*dz+n.z*dx));}
  var yDeck=b.x+clamp(t/len,0.0,1.0)*(b.y-b.x);

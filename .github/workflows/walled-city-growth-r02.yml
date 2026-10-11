@@ -20,7 +20,7 @@ jobs:
           echo "NODE_PATH=$RUNNER_TEMP/wgpu/node_modules" >> "$GITHUB_ENV"
       - name: Check frozen sources and begin true whole-world rendering
         run: |
-          node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/qa/source.test.mjs
+          node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/qa/source.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/compiler/query.test.mjs
           mkdir -p "$RUNNER_TEMP/city-run"
           (
             set +e
