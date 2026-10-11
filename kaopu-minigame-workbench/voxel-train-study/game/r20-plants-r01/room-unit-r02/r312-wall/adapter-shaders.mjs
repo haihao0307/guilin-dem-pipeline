@@ -58,8 +58,9 @@ vec3 r312Normal(vec3 p){
  // eye-space depth-only priority resolves local/world float roundoff on that plane.
  // Shading positions, silhouettes and all uncut depths remain unchanged.
  const capBias=kind==='soil'?'.00005':kind==='plaster'?'.00010':'0.';
+ const capDepthSteps=kind==='soil'?'2.':'4.';
  const position=kind==='brick'?'world':'p', direction=kind==='brick'?'worldRd':'rd';
- if(kind!=='brick') main=main.replace('gl_FragDepth=clamp(clip.z/clip.w*.5+.5,0.,1.);',`gl_FragDepth=clamp(clip.z/clip.w*.5+.5,0.,1.);if(r312CapHit){vec4 capClip=uViewProj*vec4(${position}-${direction}*${capBias},1.);gl_FragDepth=clamp(capClip.z/capClip.w*.5+.5,0.,1.);}`);
+ if(kind!=='brick') main=main.replace('gl_FragDepth=clamp(clip.z/clip.w*.5+.5,0.,1.);',`gl_FragDepth=clamp(clip.z/clip.w*.5+.5,0.,1.);if(r312CapHit){vec4 capClip=uViewProj*vec4(${position}-${direction}*${capBias},1.);gl_FragDepth=clamp(min(capClip.z/capClip.w*.5+.5,clip.z/clip.w*.5+.5-${capDepthSteps}/16777215.),0.,1.);}`);
  return originalPrefix(original[kind+'FS'])+common+helpers+main;
 }
 export function doorInterval(ro,rd,center,half){let a=-Infinity,b=Infinity;for(let i=0;i<3;i++){const lo=center[i]-half[i],hi=center[i]+half[i];if(Math.abs(rd[i])<1e-9){if(ro[i]<lo||ro[i]>hi)return null;}else{const t0=(lo-ro[i])/rd[i],t1=(hi-ro[i])/rd[i];a=Math.max(a,Math.min(t0,t1));b=Math.min(b,Math.max(t0,t1));}}return a<=b?[a,b]:null;}

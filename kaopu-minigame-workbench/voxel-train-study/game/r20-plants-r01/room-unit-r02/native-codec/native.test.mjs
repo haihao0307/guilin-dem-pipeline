@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {readFile} from 'node:fs/promises';
+import {readFile, copyFile, mkdir, mkdtemp, rm} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 import {encode, pinnedDependencies} from './codec.mjs';
@@ -44,6 +44,28 @@ test('restore proof reports the recipe-selected declared or legacy binding witho
       assert(room.proof.sources.wall.every(proof => proof.bindingMode === wallBindingMode));
     } finally {room.dispose();}
   }
+});
+
+test('exposed original brick candidate restores recessed grey core without plaster test patch or exposed extra layers', async () => {
+  const room = await loadNativeDwelling(await encode({}), {THREE, dependencyBytes: dependencies});
+  try {
+    const wallMaterials = [];
+    room.root.traverse(object => {
+      if (object.isMesh && object.material?.name.startsWith('R312-')) wallMaterials.push(object.material);
+    });
+    assert.equal(wallMaterials.length, 16);
+    assert.equal(wallMaterials.filter(material => material.name.includes('brick')).length, 12);
+    assert.equal(wallMaterials.filter(material => material.name.includes('soil')).length, 4);
+    assert.equal(wallMaterials.some(material => material.name.includes('plaster')), false);
+    for (const material of wallMaterials) {
+      assert.equal(material.uniforms.uCoreOffset.value, -.018);
+      assert.equal(material.uniforms.uCoreRelief.value, .002);
+      assert.equal(material.uniforms.uCoreMicro.value, 0);
+      assert.equal(material.uniforms.uSoilColor.value, 0);
+      assert.deepEqual(material.uniforms.uLayerOut.value, [0, 0, 0, 0, 0]);
+      assert.deepEqual(material.uniforms.uLayerReveal.value, [0, 0, 0, 0, 0]);
+    }
+  } finally {room.dispose();}
 });
 
 test('all four source timber presets and closed-door recipe rebuild through verified closure', async () => {
@@ -104,4 +126,35 @@ test('host mount uses only existing THREE and scene; repeated mount/dispose and 
   } finally {globalThis.fetch = savedFetch;}
   const source = await readFile(path.join(root, 'host-qa.mjs'), 'utf8');
   assert(!/requestAnimationFrame\(|setInterval\(|setTimeout\(|Date\.now\(|addEventListener\(/.test(source));
+});
+
+test('complete runtime relocates to a new directory and mounts with no source-workspace references', async () => {
+  const target = await mkdtemp(path.join(root, 'native-codec/.relocated-runtime-'));
+  const relativeFiles = [...pinnedDependencies().map(pin => pin.id.replaceAll('__', '/')),
+    'host-qa.mjs', 'native-codec/codec.mjs', 'native-codec/template-data.mjs',
+    'native-codec/samples/original-material-dwelling.KaoPu'];
+  const savedFetch = globalThis.fetch, scene = new THREE.Scene();
+  try {
+    for (const relative of relativeFiles) {
+      const output = path.join(target, relative);
+      await mkdir(path.dirname(output), {recursive: true});
+      await copyFile(path.join(root, relative), output);
+    }
+    globalThis.fetch = async url => {
+      const file = fileURLToPath(url);
+      assert(file.startsWith(target + path.sep), 'Relocated mount cannot read the source workspace');
+      return new Response(await readFile(file));
+    };
+    const relocated = await import(pathToFileURL(path.join(target, 'host-qa.mjs')));
+    const room = await relocated.mountNativeDwelling({THREE, scene});
+    try {
+      assert.equal(scene.children.length, 1);
+      assert.equal(room.proof.nativeContainer.wallBindingMode, 'declared');
+      assert.equal(room.proof.nativeContainer.dependencyPinsVerified, true);
+    } finally {room.dispose();}
+    assert.equal(scene.children.length, 0);
+  } finally {
+    globalThis.fetch = savedFetch;
+    await rm(target, {recursive: true, force: true});
+  }
 });

@@ -4,7 +4,7 @@ This candidate replaces none of the rejected V1 production code. It is an incomp
 
 ## What actually generates the room
 
-- Walls: the original Brick Mother R3.12 brick, soil and plaster fields, material functions and source lighting. Original shader bodies are preserved in `r312-wall/original-shaders.mjs`. The adapter adds rigid coordinates, real opening CSG, camera/depth binding and explicitly selected controller binding mode.
+- Walls: the original Brick Mother R3.12 fired-brick and continuous core fields, material functions and source lighting. The revised candidate switches off the plaster specimen and layer-reveal demonstrations; a neutral core is recessed 18 mm with 2 mm original-field relief. This is an exposed-brick parameter candidate. Original shader bodies are preserved in `r312-wall/original-shaders.mjs`. The adapter adds rigid coordinates, real opening CSG, camera/depth binding and explicitly selected controller binding mode.
 - Wood: the Library historical-building workbench v3 original geometry, stock coordinate field, `woodSignals`, material parameters and GLSL. Every floor/roof plank, door frame/leaf, window frame and wooden furnishing invokes `createTimberMember`; no replacement wood shader is used.
 - Native container: a real SQLite `.KaoPu` stores an inert bounded room recipe and pins the trusted local generation dependencies. It does not carry mesh or image payloads or execute code from the file.
 - Host: `mountNativeDwelling({THREE, scene, position, yaw})` uses the existing game scene and renderer. Call `room.update(authoritativeSeconds)` from the existing world clock. Door and cutaway controls are `setDoorOpen(bool)` and `setInspectionCutaway(bool)`.

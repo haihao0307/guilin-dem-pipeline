@@ -33,7 +33,7 @@ const server=http.createServer((req,res)=>{let p;try{p=path.resolve(ROOT,'.'+dec
  }
  const closed=await page.evaluate(()=>{window.__roomQA.room.setDoorOpen(false);return window.__roomQA.pose([-7.5,1.72,20.5],[-10,1.2,14.5],40);});
  fs.writeFileSync(path.join(OUT,'original-sources-room-door-closed.png'),Buffer.from(closed.png.split(',')[1],'base64'));
- receipt.cost=await page.evaluate(()=>{window.__roomQA.pose([-3.7,3.5,20.8],[-10,1.5,13],43,false);return window.__roomQA.cost();});
+ receipt.cost=await page.evaluate(()=>window.__roomQA.cost());
  receipt.runtime=await page.evaluate(()=>window.__roomQA.receipt());
  receipt.programDiagnostics=await page.evaluate(()=>window.__roomQA.diagnostics());
  receipt.captureMethod='Actual host WebGL canvas read immediately after the same render; no compositor stability wait';
