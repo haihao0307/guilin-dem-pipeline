@@ -1,0 +1,42 @@
+name: Hair R12 Takeover
+on:
+  push:
+    branches: [fix/hair-r12-takeover-20261011]
+    paths: [.github/workflows/hair-r12-takeover.yml, 'kaopu-hair-workbench/fusion/r12/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 653c9ec7f7fce99d19e69a5cf99f66c7e96f6cbd
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-hair-workbench/fusion/r11
+            kaopu-hair-workbench/handoffs/ten24-original-local
+            kaopu-human-overview
+      - name: Collect unchanged source and exact public GNM assets
+        run: |
+          mkdir -p /tmp/hair-takeover/kaopu-hair-workbench/fusion /tmp/hair-takeover/kaopu-hair-workbench/handoffs /tmp/hair-takeover/assets
+          cp -a kaopu-hair-workbench/fusion/r11 /tmp/hair-takeover/kaopu-hair-workbench/fusion/
+          cp -a kaopu-hair-workbench/handoffs/ten24-original-local /tmp/hair-takeover/kaopu-hair-workbench/handoffs/
+          cp -a kaopu-human-overview /tmp/hair-takeover/
+          rm -rf /tmp/hair-takeover/kaopu-hair-workbench/fusion/r11/evidence
+          python - <<'PY'
+          import urllib.request,hashlib
+          from pathlib import Path
+          base='https://raw.githubusercontent.com/xrblocks/assets-gnm/134feb02b11fa642a43ff5e7e880246255a74e86/'
+          for name,expected in [('gnm_head_web.bin','fd19f46eef6f8bfb725fceab581e1bc8837209997ca3fd43f3c1735003c86961'),('gnm_samplers_web.bin','827fc7850022cbc62d4401c6f6782b876c4dfa48f2a6f446d9644b0ba2b8122b')]:
+              data=urllib.request.urlopen(base+name,timeout=120).read()
+              assert hashlib.sha256(data).hexdigest()==expected
+              Path('/tmp/hair-takeover/assets',name).write_bytes(data)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hair-r12-frozen-source
+          path: /tmp/hair-takeover
+          retention-days: 7
