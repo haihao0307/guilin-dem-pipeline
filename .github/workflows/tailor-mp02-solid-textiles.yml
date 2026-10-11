@@ -3,7 +3,7 @@ on:
   push:
     branches: [feature/tailor-mp02-solid-textiles-20261011]
     paths:
-      - 'kaopu-tailor-workbench/material-products/r02/TRANSPORT_READY.json'
+      - 'kaopu-tailor-workbench/material-products/r02/READY.json'
       - 'kaopu-tailor-workbench/material-products/r02/*.mjs'
   workflow_dispatch:
 permissions:
@@ -15,44 +15,36 @@ jobs:
   source-validation:
     runs-on: ubuntu-latest
     timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: project
     steps:
       - uses: actions/checkout@v4
         with:
+          path: project
           fetch-depth: 1
           sparse-checkout: |
             kaopu-tailor-workbench/material-products
             kaopu-tailor-workbench/presets/r04/person-core
+      - uses: actions/checkout@v4
+        with:
+          repository: haihao0307/Humanoid-Rig-Lab-Next
+          ref: bef688f8152212bf57207aa99703a9be81a0272f
+          path: upstream-denim
+          sparse-checkout: |
+            denim-workshop/r08
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Register readable canonical source from integrity-checked transport
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import json,base64,gzip,hashlib,shutil
-          p=Path('kaopu-tailor-workbench/material-products/r02')
-          marker=p/'TRANSPORT_READY.json'
-          if marker.exists():
-              ready=json.loads(marker.read_text())
-              data=base64.b64decode(''.join((p/n).read_text().strip() for n in ready['parts']))
-              assert hashlib.sha256(data).hexdigest()==ready['sha256']
-              bundle=json.loads(gzip.decompress(data))
-              for name,text in bundle['files'].items():
-                  assert '/' not in name and name not in ('.','..')
-                  assert hashlib.sha256(text.encode()).hexdigest()==bundle['sha256'][name]
-                  target=p/name
-                  assert not target.exists() or target.read_text()==text, 'Refuse overwrite: '+name
-                  target.write_text(text)
-              parent=p.parent/'r01'
-              for name in ['looks.mjs','outfits-r043.mjs','source-contract.mjs','sewn-normals-r0433.mjs','panel-grain.mjs']:
-                  shutil.copyfile(parent/name,p/name)
-              shutil.copytree(parent/'native',p/'native',dirs_exist_ok=True)
-              for name in ready['parts']:(p/name).unlink()
-              marker.unlink()
-          PY
+      - name: Inherit pinned dependencies without overwriting canonical implementation
+        env:
+          COTTON_SOURCE: ${{ github.workspace }}/upstream-denim/denim-workshop/r08
+        run: python kaopu-tailor-workbench/material-products/r02/bootstrap.py
       - name: JavaScript syntax and numerical topology, no browser
         env:
-          THREE_PATH: ${{ github.workspace }}/kaopu-tailor-workbench/presets/r04/person-core/kaopu-unified-human-workbench/full/source/registration-vendor/three.module.js
+          THREE_PATH: ${{ github.workspace }}/project/kaopu-tailor-workbench/presets/r04/person-core/kaopu-unified-human-workbench/full/source/registration-vendor/three.module.js
+          NODE_OPTIONS: --max-old-space-size=5120
         run: |
           P=kaopu-tailor-workbench/material-products/r02
           for f in "$P"/*.mjs "$P"/*.js; do node --check "$f"; done
@@ -70,24 +62,25 @@ jobs:
           p=pathlib.Path('kaopu-tailor-workbench/material-products/r02')
           (p/'SHADER_REPORT.json').write_text(json.dumps({'passed':True,'compiler':'glslangValidator','scope':'custom vertex functions and varying link; not a browser frame','programs':['yarn','leather'],'visualVerified':False},indent=2))
           PY
-      - name: Retain canonical implementation and current source-only evidence
+      - name: Retain canonical implementation and source-only evidence
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git fetch origin feature/tailor-mp02-solid-textiles-20261011 --depth=1
           test "$(git rev-parse HEAD)" = "$(git rev-parse origin/feature/tailor-mp02-solid-textiles-20261011)"
           git add -- kaopu-tailor-workbench/material-products/r02
-          git commit -m 'feat(mp02-s1): closed yarns, native leather solids, source evidence; visual unverified [skip ci]'
-          git push origin HEAD:refs/heads/feature/tailor-mp02-solid-textiles-20261011
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat(mp02-s1): retain closed material cores and source evidence; visual unverified [skip ci]'
+            git push origin HEAD:refs/heads/feature/tailor-mp02-solid-textiles-20261011
+          fi
       - name: Publish additive development candidate and verify bytes only
         run: python kaopu-tailor-workbench/material-products/r02/release.py
       - name: Package exact source and evidence
         if: always()
-        run: |
-          tar -czf mp02-source-validation.tgz kaopu-tailor-workbench/material-products/r02
+        run: tar -czf mp02-source-validation.tgz kaopu-tailor-workbench/material-products/r02
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: mp02-source-validation
-          path: mp02-source-validation.tgz
+          path: project/mp02-source-validation.tgz
           retention-days: 14
