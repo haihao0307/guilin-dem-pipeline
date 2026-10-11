@@ -1,0 +1,76 @@
+name: Train native Musa actual WebKit game and Worker smoke
+# Read-only isolated source checkout. No Pages deployment or runtime modification.
+# Headed Xvfb is documented at https://playwright.dev/docs/ci#running-headed
+# Mesa software flags: https://docs.mesa3d.org/envvars.html
+on:
+  push:
+    branches: ['qa/train-native-musa-webkit-20261011']
+    paths:
+      - 'tests/train-native-musa-webkit-scene.cjs'
+      - '.github/workflows/train-native-musa-webkit-scene.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: train-native-musa-webkit-scene-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  actual-scene:
+    if: github.ref == 'refs/heads/qa/train-native-musa-webkit-20261011'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      MUSA_SCENE_SOURCE_ROOT: ${{ github.workspace }}/runtime-source
+      MUSA_SCENE_OUT: ${{ github.workspace }}/train-plants-r03-results/webkit-scene
+      LIBGL_ALWAYS_SOFTWARE: 'true'
+      GALLIUM_DRIVER: llvmpipe
+    steps:
+      - name: Read this exact scene harness commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          path: scene-harness
+          persist-credentials: false
+          sparse-checkout: tests
+      - name: Read the unchanged current game and shared source assets
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 03ae7767710ee91aa6e6da5efcd2aac37ca1f553
+          path: runtime-source
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Use the actual reference Node22 runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.3'
+      - name: Prepare evidence and check harness syntax
+        run: |
+          mkdir -p "$MUSA_SCENE_OUT"
+          node --version > "$MUSA_SCENE_OUT/node-version.txt"
+          node --check scene-harness/tests/train-native-musa-webkit-scene.cjs
+      - name: Install official pinned WebKit and Linux dependencies
+        run: |
+          npm install --prefix "$RUNNER_TEMP/musa-webkit-scene" --registry=https://registry.npmjs.org --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/musa-webkit-scene/node_modules/.bin/playwright" install --with-deps webkit
+          echo "NODE_PATH=$RUNNER_TEMP/musa-webkit-scene/node_modules" >> "$GITHUB_ENV"
+          command -v xvfb-run
+      - name: Serve only the pinned runtime checkout on CI localhost
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory runtime-source > "$MUSA_SCENE_OUT/http-server.log" 2>&1 &
+          for n in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r03/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: Actual WebKit game Worker cameras and real control inputs
+        timeout-minutes: 8
+        run: xvfb-run -a --server-args='-screen 0 1280x960x24' node scene-harness/tests/train-native-musa-webkit-scene.cjs
+      - name: Preserve actual pixels provenance and earliest failures
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: train-native-musa-webkit-scene-${{ github.sha }}
+          path: train-plants-r03-results/webkit-scene/
+          if-no-files-found: warn
+          retention-days: 7
+          compression-level: 0
