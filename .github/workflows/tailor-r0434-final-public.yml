@@ -1,0 +1,119 @@
+name: Tailor R0434 final browser-consistent public acceptance
+on:
+  push:
+    branches: [fix/tailor-display-r0434-20261011]
+    paths: [.github/workflows/tailor-r0434-final-public.yml]
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: tailor-r0434-final-public
+  cancel-in-progress: false
+jobs:
+  final-public:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: kaopu-tailor-workbench/presets/r04
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Require successful independent native browser replay
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p final-public-evidence
+          python - <<'PY'
+          import json,os,time,urllib.request
+          url='https://api.github.com/repos/haihao0307/guilin-dem-pipeline/actions/runs/38113321537'
+          for i in range(100):
+            req=urllib.request.Request(url,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+            r=json.load(urllib.request.urlopen(req,timeout=30))
+            assert r['head_sha']=='e3e3dd8651fbcce05649953d36d3d931e9b002a2' and r['head_branch']=='fix/tailor-display-r0434-20261011'
+            if r['status']=='completed':
+              assert r['conclusion']=='success',('Independent replay did not pass; promotion forbidden',r['conclusion'])
+              break
+            time.sleep(10)
+          else:raise AssertionError('Independent replay not finished; no publication')
+          PY
+      - name: Retrieve independent native replay evidence
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          repository: haihao0307/guilin-dem-pipeline
+          run-id: 38113321537
+          name: tailor-r0434-native-replay-evidence
+          path: independent-replay
+      - name: Promote only true repeatable browser result and affected original outfits
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          pip install pillow
+          cp independent-replay/R0434_REPLAY_REPORT.json "$P/"
+          cp -r independent-replay/qa-r0434-replay independent-replay/qa-r0434-first-public "$P/"
+          python "$P/promote_replay_r0434.py" 2>&1 | tee final-public-evidence/promotion.log
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('kaopu-tailor-workbench/presets/r04/release_r0434.py')
+          t=p.read_text();old="'materialRecordsChangedThisRevision':False"
+          assert t.count(old)==1
+          t=t.replace(old,"'materialRecordsChangedThisRevision':True,'recompiledMaterialFingerprints':['T08'],'browserNativeCacheRebaked':['T08'],'originalPaperReplaced':False,'solverMathChanged':False")
+          p.write_text(t)
+          PY
+          node "$P/test_resources_r0434.mjs" | tee final-public-evidence/unit.log
+          node "$P/test_display_r0433.mjs" | tee -a final-public-evidence/unit.log
+          node --input-type=module - <<'JS'
+          import assert from 'node:assert/strict';import fs from 'node:fs';import zlib from 'node:zlib';
+          import {materialHash} from './kaopu-tailor-workbench/presets/r04/source-contract.mjs';
+          const d=JSON.parse(zlib.gunzipSync(fs.readFileSync('kaopu-tailor-workbench/presets/r04/assets/results/T08.json.gz')));
+          assert.equal(await materialHash(d.spec),d.binding.materialSHA256);assert.deepEqual(d.binding,d.record.nativeBinding);
+          console.log('EXACT_BROWSER_MATERIAL_BINDING_VERIFIED');
+          JS
+      - name: Commit guarded correction with source branch lease
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$GITHUB_REF_NAME" --depth=1
+          test "$(git rev-parse origin/$GITHUB_REF_NAME)" = "$GITHUB_SHA"
+          git add -- "$P/assets/results/T08.json.gz" "$P/assets/results/T08.png" "$P/assets/results/index.json" "$P/assets/outfits/"T08-*.png "$P/R0434_BROWSER_REPORT.json" "$P/R0434_REPLAY_REPORT.json" "$P/R0434_REPLAY_PROMOTION.json" "$P/qa-r0434-replay" "$P/qa-r0434-first-public" "$P/release_r0434.py"
+          git commit -m 'fix(tailor-r0434): use independently repeated browser-native T08 result; preserve original paper, solver thresholds and other 59 garments'
+          git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
+      - name: Publish new immutable snapshot while preserving first attempt and old entrances
+        run: python kaopu-tailor-workbench/presets/r04/release_r0434.py publish 2>&1 | tee final-public-evidence/publish.log
+      - name: Install real acceptance browser
+        run: |
+          pip install playwright==1.57.0
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y fonts-noto-cjk
+      - name: Verify actual HTTPS content and all current 492 previews
+        run: python kaopu-tailor-workbench/presets/r04/release_r0434.py verify 2>&1 | tee final-public-evidence/public-bytes.log
+      - name: Full new HTTPS all-style, all-outfit, safety and strict fresh-native replay acceptance
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          export R0434_BASE=$(python -c "import json;print(json.load(open('$P/R0434_RELEASE_STATE.json'))['fixedURL'].split('?')[0])")
+          export GITHUB_SHA=$(git rev-parse HEAD)
+          python "$P/qa_r0434.py" 2>&1 | tee final-public-evidence/public-browser.log
+          python "$P/qa_safety_r0434.py" 2>&1 | tee final-public-evidence/public-safety.log
+          python "$P/qa_fresh_r0434.py" 2>&1 | tee final-public-evidence/public-fresh.log
+          python "$P/release_r0434.py" finish 2>&1 | tee final-public-evidence/finish.log
+      - name: Preserve exact final reports, source and real screenshots
+        if: always()
+        run: |
+          mkdir -p final-public-evidence
+          P=kaopu-tailor-workbench/presets/r04
+          git rev-parse HEAD > final-public-evidence/COMMIT.txt
+          cp "$P/"R0434*.json "$P/"*r0434.py "$P/"*.mjs "$P/index.html" "$P/style.css" final-public-evidence/
+          cp -r "$P/person-core" final-public-evidence/
+          cp -r "$P/qa-r0434-replay" "$P/qa-r0434-first-public" "$P/qa-r0434-public" "$P/qa-r0434-safety-public" "$P/qa-r0434-fresh-public" final-public-evidence/ 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r0434-final-actual-public-evidence
+          path: final-public-evidence/
+          retention-days: 14

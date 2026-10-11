@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import {readBytes} from './resource-r0434.mjs';
+import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+let checks=0;
+const pass=(name)=>{checks++;console.log('PASS',name);};
+let calls=0;
+let result=await readBytes('test',{delayMs:0,fetchImpl:async()=>{calls++;return calls===1?new Response('busy',{status:503}):new Response('verified bytes');}});
+assert.equal(new TextDecoder().decode(result),'verified bytes');assert.equal(calls,2);pass('transient 503 retried without replacing content');
+calls=0;await assert.rejects(readBytes('test',{delayMs:0,fetchImpl:async()=>{calls++;return new Response('missing',{status:404});}}),/404/);assert.equal(calls,1);pass('permanent 404 is not retried');
+calls=0;await assert.rejects(readBytes('test',{delayMs:0,fetchImpl:async()=>{calls++;throw new TypeError('offline');}}),/offline/);assert.equal(calls,3);pass('offline requests have bounded attempts');
+const cancelled=new AbortController();cancelled.abort();calls=0;await assert.rejects(readBytes('test',{signal:cancelled.signal,fetchImpl:async()=>{calls++;return new Response('bad');}}));assert.equal(calls,0);pass('pre-cancelled selection never starts network');
+calls=0;const pending=new AbortController();
+const promise=readBytes('test',{signal:pending.signal,delayMs:0,fetchImpl:async(_,{signal})=>{calls++;return new Promise((resolve,reject)=>signal.addEventListener('abort',()=>reject(signal.reason),{once:true}));}});
+pending.abort();await assert.rejects(promise);assert.equal(calls,1);pass('in-flight selection cancellation is not retried');
+calls=0;await assert.rejects(readBytes('test',{timeoutMs:8,delayMs:0,attempts:2,fetchImpl:async(_,{signal})=>{calls++;return new Promise((resolve,reject)=>signal.addEventListener('abort',()=>reject(signal.reason),{once:true}));}}),/超时/);assert.equal(calls,2);pass('timeout covers response lifetime with bounded retries');
+await assert.rejects(readBytes('test',{attempts:0}),/policy/);pass('invalid retry policy rejected');
+const p=new URL('./',import.meta.url),index=JSON.parse(readFileSync(new URL('assets/results/index.json',p)));
+assert.equal(Object.keys(index.rows).length,60);
+for(const[id,row]of Object.entries(index.rows)){const bytes=readFileSync(new URL('assets/results/'+row.file,p));assert.equal(createHash('sha256').update(bytes).digest('hex'),row.sha256,id);}
+assert.equal(Object.values(index.rows).filter(r=>r.qualityPassed).length,22);pass('all 60 native records and original 22/38 quality split unchanged');
+console.log('R0434_UNIT_PASS',checks);
