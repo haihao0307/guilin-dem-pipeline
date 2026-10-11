@@ -42,4 +42,4 @@ R2 tested-subject、freshness 与 no-stale-delivery 门已经要求精确主体�
 ## 是否采用
 
 更新既有 Tailor regression case；不新增全局门禁、不降低阈值。当前状态：
-POSTED=false / ACKNOWLEDGED=false / IMPLEMENTED=true / GATE-RUN=true / ADOPTED=false / USER-ACCEPTED=false。
+POSTED=true / ACKNOWLEDGED=false / IMPLEMENTED=true / GATE-RUN=true / ADOPTED=false / USER-ACCEPTED=false。\n\n路由回执：PR #208 comment `6105119399`。
