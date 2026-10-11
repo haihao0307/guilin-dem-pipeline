@@ -2,6 +2,7 @@
 // Official CI only. Existing production game, native input and real RAF clock.
 // No source rewrite, artificial dt, test teleport, new page or synthetic commands.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),{execFileSync}=require('node:child_process');
+const {approachAction}=require('./approach-policy.cjs');
 const gameDir=path.resolve(__dirname,'..'),repoRoot=path.resolve(gameDir,'../../../..');
 const target=process.env.TRAIN_GAME_URL||'http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/';
 const out=path.resolve(process.env.TRAIN_QA_OUT||'train-a4-results/browser');
@@ -27,7 +28,7 @@ if(process.argv.includes('--self-check')){assert.deepEqual(normalizeSignedZero({
   const until=(predicate,arg)=>page.waitForFunction(predicate,arg,{polling:50,timeout:180000});
   const click=async id=>{const button=page.locator(id);await button.waitFor({state:'visible'});if(report.mobile)await button.tap();else await button.click();};
   const check=async label=>{const s=await state(),p=s.physics;assert(p,'actual game must expose physical snapshot');assert.equal(s.proof.nativeA4,true);assert.equal(s.proof.wheels,36);assert.equal(s.proof.addedCoaches,2);assert.equal(s.proof.coaches.length,2);assert.equal(p.wheelDiameterM,2.032);assert.equal(s.distance,p.positionM);assert.equal(s.velocity,p.speedMps);assert(Math.abs((p.positionM-p.rollingOriginPositionM)-p.wheelRadiusM*p.wheelAngleRad)<1e-7);assert.equal(p.tick,s.tick*4);report.checkpoints.push({label,state:s});write();console.log('Verified game checkpoint:',label,'distance',s.distance,'tick',s.tick);return s;};
-  const screenshot=async label=>{const png=await page.screenshot({path:path.join(out,label+'.png')});report.screenshots.push({label,bytes:png.length,sha256:sha(png),source:'Actual existing game; trusted controls; no simulation fixtures'});};
+  const screenshot=async label=>{await until(()=>{const s=__trainDriver.getState();return !s.streetDistrict||s.streetDistrict.pending===0;});const png=await page.screenshot({path:path.join(out,label+'.png')});report.screenshots.push({label,bytes:png.length,sha256:sha(png),source:'Actual existing game; trusted controls; no simulation fixtures'});};
   await page.goto(target,{waitUntil:'domcontentloaded'});await until(()=>window.__trainDriver?.ready);await until(()=>['ready','error'].includes(__trainDriver.getState().nativePlants?.status));
   const np=(await state()).nativePlants;assert.equal(np.status,'ready',JSON.stringify(np.failure));assert.equal(np.count,2);assert.equal(np.generationCount,1);assert.equal(np.sharedGeometry,true);assert.equal(np.worldGeometryScale,1);assert.equal(np.elapsed,(await state()).elapsed);for(const plant of np.plants){assert.equal(plant.proof.triangles,36330);assert(Math.abs(plant.proof.bounds.max[1]-5.031538486480713)<1e-5);}const retained=(await state()).retainedPlants;assert.equal(retained.count,4);assert.equal(retained.elapsed,(await state()).elapsed);report.retainedPlantsInitial=retained;report.nativePlantsInitial=np;await click('#startGame');await until(()=>__trainDriver.getState().station.canOpen);if(report.mobile){await click('#openSettings');await click('#portraitView');await click('#closeSettings');assert.equal((await state()).viewSettings.layout,'portrait');assert.equal((await state()).viewSettings.rotated,false);}await check('initial-platform');
   await click('#stationAction');await until(()=>__trainDriver.getState().phase==='ready-depart');let s=await check('passenger-service');assert.equal(s.velocity,0);assert.equal(s.stats.stops,1);assert(s.stats.pickedUp>0);await screenshot('first-station-a4');
@@ -90,19 +91,28 @@ if(process.argv.includes('--self-check')){assert.deepEqual(normalizeSignedZero({
   s=await check('physical-brake-stop');assert.equal(s.velocity,0);assert(s.physics.ledger.brakeLossJ>0);const d=s.distance;await page.waitForTimeout(600);assert.equal((await state()).distance,d);await screenshot('stopped-a4');
   // Drive the same unmodified train through the next real passenger stop before
   // photographing it on open track. No position/time/scene writes or hidden city.
+  await click('#openSettings');await page.locator('#renderQuality').selectOption('smooth');await click('#closeSettings');assert.equal((await state()).qualityMode,'smooth');report.longDriveQuality='Existing smooth setting, pixel ratio only; physics and scene geometry unchanged. Photography returns to clear.';
   const routeBrakeRect=report.mobile?await page.locator('#brake').boundingBox():null,routeBrakeCDP=report.mobile?await context.newCDPSession(page):null;
   for(let i=0;i<3;i++)await click('#accelerate');
-  await page.waitForFunction(()=>{const v=__trainDriver.getState();return v.station.remaining<=v.brakingDistance+3.2;},null,{polling:50,timeout:600000});
+  await page.waitForFunction(()=>{const v=__trainDriver.getState();return v.station.remaining<=v.brakingDistance+140;},null,{polling:50,timeout:600000});
   async function holdBrakeToStop(){
    if(report.mobile){const b=routeBrakeRect,cdp=routeBrakeCDP;await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:b.x+b.width/2,y:b.y+b.height/2}]});await until(()=>__trainDriver.getState().velocity===0);await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});}
    else{await page.keyboard.down('Space');await until(()=>__trainDriver.getState().velocity===0);await page.keyboard.up('Space');}
   }
-  await holdBrakeToStop();await until(()=>__trainDriver.getState().station.canOpen);await click('#stationAction');await until(()=>__trainDriver.getState().phase==='ready-depart');
+  async function preciseStop(target){
+   const begin=Date.now();report.approach=report.approach||[];
+   while(Date.now()-begin<600000){const view=await state(),action=approachAction(view,target);report.approach.push({wallTimeMs:Date.now(),target,action,tick:view.tick,physicsTimeS:view.physics.timeS,distance:view.distance,velocity:view.velocity,brakingDistance:view.brakingDistance,throttle:view.throttle,stationTarget:view.station.target});write();
+    if(action==='brake'){await holdBrakeToStop();return;}
+    if(action==='accelerate'||action==='decelerate')await click('#'+action);
+    await page.waitForTimeout(200);
+   }throw Error('Actual-control low-speed approach timed out');
+  }
+  await holdBrakeToStop();await check('early-second-station-brake');await preciseStop(700);await until(()=>__trainDriver.getState().station.canOpen);await click('#stationAction');await until(()=>__trainDriver.getState().phase==='ready-depart');
   const secondStation=await check('second-station-passenger-service');assert.equal(secondStation.stats.stops,2);assert.equal(secondStation.stats.missed,0);await screenshot('second-station-a4');
-  await page.waitForFunction(()=>__trainDriver.getState().timetable.dwellRemaining<=0,null,{polling:50,timeout:600000});await click('#stationAction');await until(()=>__trainDriver.getState().phase==='running');await click('#accelerate');
-  await page.waitForFunction(()=>{const v=__trainDriver.getState();return v.distance+v.brakingDistance>=788.5;},null,{polling:50,timeout:600000});await holdBrakeToStop();if(routeBrakeCDP)await routeBrakeCDP.detach();
-  await click('#openSettings');await click('#photoMode');await until(()=>__trainDriver.getState().paused);
-  const openTrack=await state();assert(openTrack.distance>=786&&openTrack.distance<=794,'The actual controlled stop must remain in the independently checked open-track window');assert.equal(openTrack.velocity,0);report.photography.openTrack={distance:openTrack.distance,stops:openTrack.stats.stops,actualControls:true,sceneHidden:false};
+  await page.waitForFunction(()=>__trainDriver.getState().timetable.dwellRemaining<=0,null,{polling:50,timeout:600000});await click('#stationAction');await until(()=>__trainDriver.getState().phase==='running');
+  await preciseStop(790);if(routeBrakeCDP)await routeBrakeCDP.detach();
+  await click('#openSettings');await page.locator('#renderQuality').selectOption('clear');await click('#photoMode');await until(()=>__trainDriver.getState().paused);
+  const openTrack=await state();assert.equal(openTrack.qualityMode,'clear');assert(openTrack.distance>=786&&openTrack.distance<=794,'The actual controlled stop must remain in the independently checked open-track window');assert.equal(openTrack.velocity,0);report.photography.openTrack={distance:openTrack.distance,stops:openTrack.stats.stops,actualControls:true,sceneHidden:false};
   for(const preset of ['leftSide','rightSide','overview']){
    await click('#photoCamera');await click(`[data-camera="${preset}"]`);await until(()=>document.getElementById('settingsScreen').hidden);await page.waitForTimeout(600);
    const frame=await check('open-track-'+preset);assert.deepEqual(frozenPart(frame),frozenPart(openTrack));assert.deepEqual(frame.cameraProjection.up,[0,1,0]);
@@ -112,5 +122,5 @@ if(process.argv.includes('--self-check')){assert.deepEqual(normalizeSignedZero({
   await click('#photoReturn');assert.equal(await page.locator('#drivePanel').isVisible(),true);await screenshot('open-track-restored-driver-controls');
   const packet=await page.evaluate(()=>__trainDriver.exportReplay());const {replay}=await import('../session.mjs');const played=replay(packet);assert.deepEqual(played.view().physics,(await state()).physics);report.replayMatches=true;
   await Promise.all(pending);for(const row of sources.values())assert(report.sources.some(r=>r.url===row.url&&r.matches),'missing/stale runtime: '+row.file);assert.deepEqual(report.errors,[]);assert.deepEqual(report.network,[]);report.pass=true;
- }catch(e){report.failure=e.stack;if(page)await page.screenshot({path:path.join(out,'failure.png')}).catch(()=>{});console.error(e);}finally{write();if(context)await context.close();if(browser)await browser.close();}if(!report.pass)process.exitCode=1;
+ }catch(e){report.failure=e.stack;if(page){report.failureState=await page.evaluate(()=>window.__trainDriver?.getState()).catch(()=>null);report.failureReplay=await page.evaluate(()=>window.__trainDriver?.exportReplay()).catch(()=>null);}if(page)await page.screenshot({path:path.join(out,'failure.png')}).catch(()=>{});console.error(e);}finally{write();if(context)await context.close();if(browser)await browser.close();}if(!report.pass)process.exitCode=1;
 })();
