@@ -270,7 +270,7 @@ fn sceneField(p:vec3<f32>)->Field {
  f=take(f,machineField(p));
  for(var i=0u;i<u.counts.x;i++){let r=items[i];let q=p-r.position.xyz;let dd=box(q,r.size.xyz)-.025;if(dd<f.d){f=field(dd,4u,q,r.position.w);}}
  let exposure=field(f.d,f.mat,p,f.seed);f.wet=exposure.wet;
- if((f.mat==1u||f.mat==19u)&&abs(f.d)<.045){let pp=receiverPlasterParams();let cp=plasterCoordinates(p);let macro=kpPlasterMacro(cp,pp);let micro=kpPlasterMicro(cp,pp);let originalThickness=clamp(pp.thicknessM+pp.reliefM*macro+pp.geometryMicroM*micro,pp.minThicknessM,pp.maxThicknessM);let state=kpFabricState(f.age,f.wet,f.wet,macro,.42,.08,macro,micro,originalThickness,.004,.025);let gate=1.-smoothstep(.015,.045,abs(f.d));f.d-=(state.thicknessM-.0165)*gate;}
+ if((f.mat==1u||f.mat==19u)&&abs(f.d)<.045){let pp=receiverPlasterParams();let cp=plasterCoordinates(p);let coatMacro=kpPlasterMacro(cp,pp);let micro=kpPlasterMicro(cp,pp);let originalThickness=clamp(pp.thicknessM+pp.reliefM*coatMacro+pp.geometryMicroM*micro,pp.minThicknessM,pp.maxThicknessM);let state=kpFabricState(f.age,f.wet,f.wet,coatMacro,.42,.08,coatMacro,micro,originalThickness,.004,.025);let gate=1.-smoothstep(.015,.045,abs(f.d));f.d-=(state.thicknessM-.0165)*gate;}
  if(abs(f.d)<.025&&u.options.z>.5){let envelope=1.-smoothstep(.005,.025,abs(f.d));let grain=br_noise3(f.local*3.+vec3<f32>(f.seed));f.d+=(grain-.5)*.006*f.age*f.wet*envelope;}return f;
 }
 `;

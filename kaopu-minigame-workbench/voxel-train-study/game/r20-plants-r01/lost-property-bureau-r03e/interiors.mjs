@@ -219,9 +219,9 @@ fn interiorSouthOffices(p:vec3<f32>)->Field {
  // Divider piers and transom beams stop short of the circulation strip. Their
 // open portals are 1.9m wide; no cabinet stands in an east-west doorway.
  let partitionX=clamp(round((p.x+20.)/8.),0.,7.);let wallX=-20.+8.*partitionX;
- var partition=box(p-vec3<f32>(wallX,base+1.28,-34.65),vec3<f32>(.075,1.28,1.40));
- partition=max(partition,-box(p-vec3<f32>(wallX,base+1.10,-33.45),vec3<f32>(.2,1.12,.95)));
- f=take(f,interiorPart(partition,19u,p,bay+51.,p));
+ var officeDivider=box(p-vec3<f32>(wallX,base+1.28,-34.65),vec3<f32>(.075,1.28,1.40));
+ officeDivider=max(officeDivider,-box(p-vec3<f32>(wallX,base+1.10,-33.45),vec3<f32>(.2,1.12,.95)));
+ f=take(f,interiorPart(officeDivider,19u,p,bay+51.,p));
  f=take(f,interiorPart(box(p-vec3<f32>(8.,10.18,-32.4),vec3<f32>(36.25,.065,3.8)),19u,p,5.,p));
  let zone=select(4u,1u,upper);let lamp=interiorNearestLight(p,zone);f=take(f,interiorPendant(p,zone,lamp));return f;
 }
