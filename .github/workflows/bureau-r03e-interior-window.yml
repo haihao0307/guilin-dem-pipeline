@@ -1,0 +1,72 @@
+name: Bureau R03e complete interior window WebGPU QA
+on:
+  push:
+    branches: ['qa/bureau-r03e-interior-window-20261011']
+permissions:
+  contents: read
+jobs:
+  bureau-webgpu:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03e
+      - name: Install official pinned Playwright
+        run: |
+          npm install --prefix "$RUNNER_TEMP/wgpu" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/wgpu/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/wgpu/node_modules" >> "$GITHUB_ENV"
+      - name: Source and inventory contracts
+        run: |
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03e/qa/source.test.mjs
+          node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03e/qa/inventory.test.mjs
+          node --input-type=module -e "import('./kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03e/interiors.mjs').then(m=>console.log(JSON.stringify(m.selfTestInteriors())))"
+      - name: Native WebGPU seven exterior and interior views
+        run: |
+          mkdir -p "$RUNNER_TEMP/bureau-run"
+          (
+            set +e
+            node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03e/qa/webgpu.cjs > "$RUNNER_TEMP/bureau-run/log" 2>&1
+            echo "$?" > "$RUNNER_TEMP/bureau-run/exit"
+          ) </dev/null >/dev/null 2>&1 &
+          for i in $(seq 1 460); do
+            if [ -f bureau-r03e-results/exterior-ready.json ]; then break; fi
+            if [ -f "$RUNNER_TEMP/bureau-run/exit" ]; then cat "$RUNNER_TEMP/bureau-run/log"; exit 1; fi
+            sleep 5
+          done
+          cat "$RUNNER_TEMP/bureau-run/log"
+          test -f bureau-r03e-results/exterior-ready.json
+      - name: Upload first actual exterior for review
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: bureau-r03e-first-exterior-${{ github.sha }}
+          path: bureau-r03e-results/
+          retention-days: 7
+      - name: Await complete exterior and interior views
+        run: |
+          for i in $(seq 1 690); do
+            if [ -f bureau-r03e-results/visuals-ready.json ]; then break; fi
+            if [ -f "$RUNNER_TEMP/bureau-run/exit" ]; then cat "$RUNNER_TEMP/bureau-run/log"; exit 1; fi
+            sleep 5
+          done
+          cat "$RUNNER_TEMP/bureau-run/log"
+          test -f bureau-r03e-results/visuals-ready.json
+      - name: Upload seven actual views
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: bureau-r03e-seven-views-${{ github.sha }}
+          path: bureau-r03e-results/
+          retention-days: 7
+      - name: Await other actual views
+        run: |
+          while [ ! -f "$RUNNER_TEMP/bureau-run/exit" ]; do sleep 5; done
+          cat "$RUNNER_TEMP/bureau-run/log"
+          exit "$(cat "$RUNNER_TEMP/bureau-run/exit")"
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: bureau-r03e-evidence-${{ github.sha }}
+          path: bureau-r03e-results/
+          retention-days: 7
