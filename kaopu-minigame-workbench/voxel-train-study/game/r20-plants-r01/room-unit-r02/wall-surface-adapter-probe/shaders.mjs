@@ -9,7 +9,10 @@ export function bakeVertex(kind){
 export function bakeFragment(kind){
  const field=KIND_FIELD[kind];if(!field)throw Error('Only original brick/core supported in this probe');
  const meta=kind==='brick'?'probeMeta=vec4(vCenter,vYaw);probeSeed=vec4(vSeed,float(vVariant),residual,ok?1.:0.);':'probeMeta=vec4(0.);probeSeed=vec4(0.,0.,residual,ok?1.:0.);';
- return originalPrefix(original[kind+'FS'])+`\nlayout(location=1)out vec4 probeMeta;layout(location=2)out vec4 probeSeed;uniform vec3 probeCenter;
+ // WebGL2 requires explicit locations for EVERY output when MRT is used.
+ // This declaration-only bridge leaves all original function text unchanged.
+ const prefix=originalPrefix(original[kind+'FS']).replace('out vec4 frag;','layout(location=0) out vec4 frag;');
+ return prefix+`\nlayout(location=1)out vec4 probeMeta;layout(location=2)out vec4 probeSeed;uniform vec3 probeCenter;
 // A bounded radial surface sampler, not a per-pixel view-ray trace.
 // Exact original field is evaluated 19 times; output topology is one shell.
 void main(){vec3 a=probeCenter,b=probeCenter+vBoxPoint*1.025;float da=${field}(a),db=${field}(b);bool ok=da<0.&&db>0.;for(int i=0;i<16;i++){vec3 mid=.5*(a+b);float d=${field}(mid);if(d<=0.)a=mid;else b=mid;}vec3 p=.5*(a+b);float residual=abs(${field}(p));ok=ok&&residual<.00015;frag=vec4(p,1.);${meta}}`;

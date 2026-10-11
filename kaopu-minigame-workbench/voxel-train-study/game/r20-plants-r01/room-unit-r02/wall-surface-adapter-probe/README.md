@@ -1,6 +1,6 @@
 # R3.12 single-wall runtime surface adapter probe
 
-Status: isolated local candidate. 12 CPU/static tests pass. GPU compilation, images,
+Status: isolated local candidate. 13 CPU/static tests pass. GPU compilation, images,
 quality and speed are NOT accepted yet. The local Chromium attempt was actually run
 and refused by this executor's socket permissions; see `local-smoke-evidence/receipt.json`.
 Use the existing authorized QA CI, not a claim that no GPU means a pass. Nothing here
@@ -14,8 +14,9 @@ an existing renderer and the same original wall options, returning the original
 adapter interface `{group, materials, meshes, proof, updateCamera, dispose}`.
 It does not make a website, renderer, camera, animation loop or network request.
 
-- Original R3.12 six shaders and source snapshot remain hash-locked. Both new fragment
-  programs begin with the entire original fragment prefix. Original field, derivative
+- Original R3.12 six shaders and source snapshot remain hash-locked. The visible fragment program begins with the entire original prefix. The bake
+  program has one declaration-only bridge: `out vec4 frag` gains `layout(location=0)`
+  because WebGL2 MRT requires explicit locations for all outputs. Original field, derivative
   normal, material and lighting functions are byte-for-byte, not a new noise imitation.
 - The original vertex shader's decodeBase/decodeClosure/decodeCap and exact GPU seed
   expression generate all 1,494 brick identities. Centers, yaw, seed and variant are
@@ -106,7 +107,7 @@ This mesh is NOT pointwise equivalent to view-ray hits from the mother:
 - `probe.test.mjs`, `cpu-test-results.txt`: executable CPU/static tests and output
 
 Run from room-unit root: `node --test wall-surface-adapter-probe/probe.test.mjs`.
-Includes original source hashes, full function-prefix retention, exact GPU layout,
+Includes original source hashes, full function-text retention with the explicit MRT output-location bridge, exact GPU layout,
 no pixel tracing/depth writes, closed-grid outward winding, bounded sampler, door
 candidates, exact cap occupancy branch, retained GPU identity and valid geometry indices.
 These are not a GPU image or field-equivalence test.
@@ -153,3 +154,11 @@ The A/B context is antialias:false, recorded together with actual drawing-buffer
 Both variants share that exact context. Do not directly compare these numbers with
 previous MSAA-on room captures. Difference PNG rows are flipped for the same top-down
 orientation as canvas screenshots; numerical differences use the original readback rows.
+
+### First actual GPU finding and narrow correction
+Run 38114704057 reached the sampler compile and rejected mixed implicit/explicit
+fragment output locations. No sample, frame, quality or cost result existed. The
+correction only adds location=0 to the original output declaration in the bake shader;
+all original functions remain unchanged. A 13th CPU/static test pins all three output
+locations and proves reverting that single declaration restores the original prefix.
+GPU rerun remains required.
