@@ -7,8 +7,8 @@ function replace(source,a,b){assert.equal(source.split(a).length,2,'Pinned sourc
  assert.equal(hash(baselineApp),'a3351e4b9eefe98628a945c5b1ddb8660b24e7e27eb28b585ba10922a33dfa85');
  assert.equal(hash(baselineHTML),'99942c121ec46428e980568a6b0b82c5872359bf1a7576f600ac5fa1a4a952ad');
  const expansion=require('./TraitExpansion.cjs'),overrides=expansion.prepare(root,__dirname);
- // Each generated extension is saved as inspectable source. Frozen originals
- // are never overwritten; mappings below apply only to this isolated bundle.
+ require('./Refinements.cjs').apply(root,__dirname,overrides);
+ // Inspectable generated extensions leave the original ET13 and ET14 files intact.
  let fold=read('skin-cinema-et14/FoldField.mjs');
  fold=replace(fold,"from './Schema.mjs'","from '../skin-cinema-et14/Schema.mjs'");
  fold=replace(fold,'const base=paintTraitMaps(noWrinkles);base.color.dispose();','const base=paintTraitMaps(noWrinkles); // Keep non-wrinkle color; remove duplicate dark crease ink.');
@@ -43,7 +43,7 @@ function replace(source,a,b){assert.equal(source.split(a).length,2,'Pinned sourc
  const code=result.outputFiles[0].text.replace(/<\/script/gi,'<\\/script');new vm.Script(code);
  let html=baselineHTML.replace(/<script>[\s\S]*?<\/script>/,()=>'<script>'+code+'</script>');html=html.replace(/<title>[^<]*<\/title>/,'<title>ET15-R2 · 36人身份 · 眼睛与肤质</title>').replace('ET13 · 五官形态 × 皱纹/雀斑/痘痘/疤痕','ET15-R2 · 36人身份 × 眼睛与肤质');
  assert.equal([...html.matchAll(/<script\b/g)].length,1);fs.writeFileSync(__dirname+'/preview.html',html);
- const manifest={version:'ET15-R2',sourceCommit:process.env.GITHUB_SHA||null,protectedET13:'7ff27f9b5e16f2635b1e665c1321265d5da2b221',protectedET13SHA256:hash(baselineHTML),inheritedCinemaSource:'772908914d9a7ac096c9ea58bc013bbc73d5c6e6',previewSHA256:hash(html),previewBytes:Buffer.byteLength(html),nativeCastProfiles:36,oldFacialControls:89,oldSkinTraits:37,newSkinTraits:expansion.fields.length,totalSkinTraits:37+expansion.fields.length,cinemaControls:17,eyeOpticScalars:8,oneRenderer:true,newHumanMesh:false,bodyPreserved:true,oldWrinkleInkRemoved:true,geometryWrinkleDisplacement:false,ocularRefraction:false,tearMeniscusGeometry:false,stressSolver:false,realDeviceTest:false,mobileTested:false,filmQualityAccepted:false,sourceOverrides:[...overrides].map(([a,b])=>({original:path.relative(repo,a),generated:path.relative(repo,b)})),sources:Object.keys(result.metafile.inputs).filter(p=>p.includes('skin-eye-et15')).map(p=>({path:p,sha256:hash(fs.readFileSync(p))}))};
+ const manifest={version:'ET15-R2',sourceCommit:process.env.GITHUB_SHA||null,protectedET13:'7ff27f9b5e16f2635b1e665c1321265d5da2b221',protectedET13SHA256:hash(baselineHTML),inheritedCinemaSource:'772908914d9a7ac096c9ea58bc013bbc73d5c6e6',previewSHA256:hash(html),previewBytes:Buffer.byteLength(html),nativeCastProfiles:36,oldFacialControls:89,oldSkinTraits:37,newSkinTraits:expansion.fields.length,totalSkinTraits:37+expansion.fields.length,cinemaControls:17,eyeOpticScalars:8,oneRenderer:true,newHumanMesh:false,bodyFaceOwnershipSeparated:true,nativeNeckRepairRetained:true,unboundSkinWetline:false,oldWrinkleInkRemoved:true,geometryWrinkleDisplacement:false,ocularRefraction:false,tearMeniscusGeometry:false,stressSolver:false,realDeviceTest:false,mobileTested:false,filmQualityAccepted:false,sourceOverrides:[...overrides].map(([a,b])=>({original:path.relative(repo,a),generated:path.relative(repo,b)})),sources:Object.keys(result.metafile.inputs).filter(p=>p.includes('skin-eye-et15')).map(p=>({path:p,sha256:hash(fs.readFileSync(p))}))};
  fs.writeFileSync(__dirname+'/BUILD.json',JSON.stringify(manifest,null,2));
  fs.mkdirSync('qa-et15/build',{recursive:true});for(const file of fs.readdirSync(__dirname))if(/\.(mjs|cjs|json|html)$/.test(file))fs.copyFileSync(path.join(__dirname,file),path.join('qa-et15/build',file));
  console.log('ET15_BUILD',JSON.stringify(manifest));
