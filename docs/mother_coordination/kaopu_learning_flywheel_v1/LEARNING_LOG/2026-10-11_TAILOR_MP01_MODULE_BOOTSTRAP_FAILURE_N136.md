@@ -67,4 +67,4 @@ PR #215 随后产生局部修复与精确正向回放：
 
 状态：POSTED=true / ACKNOWLEDGED=false（无独立文字回执） / IMPLEMENTED=true / GATE-RUN=true（失败与修复正向结果） / ADOPTED=false / USER-ACCEPTED=false。
 
-路由回执：[PR #215 comment 6106819576](https://github.com/haihao0307/guilin-dem-pipeline/pull/215#issuecomment-6106819576)。
+失败路由回执：[PR #215 comment 6106819576](https://github.com/haihao0307/guilin-dem-pipeline/pull/215#issuecomment-6106819576)。修复重放回执：[PR #215 comment 6106851950](https://github.com/haihao0307/guilin-dem-pipeline/pull/215#issuecomment-6106851950)。
