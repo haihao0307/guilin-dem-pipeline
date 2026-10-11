@@ -1,0 +1,81 @@
+name: Lips ET19 continuous surface verification
+on:
+  push:
+    branches: [feature/lips-et19-continuity-20261011]
+    paths:
+      - kaopu-unified-human-workbench/lip-structure/**.mjs
+      - kaopu-unified-human-workbench/lip-structure/**.cjs
+      - kaopu-unified-human-workbench/lip-structure/**.css
+      - .github/workflows/lips-et19-verify.yml
+permissions:
+  contents: write
+concurrency:
+  group: lips-et19-only
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pinned build and browser dependencies
+        run: |
+          mkdir -p /tmp/lip-tools
+          cd /tmp/lip-tools
+          npm init -y >/dev/null
+          npm install esbuild@0.25.11 playwright@1.56.1 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: Build additive lip mother without changing other modules
+        env:
+          NODE_PATH: /tmp/lip-tools/node_modules
+        run: |
+          mkdir -p lip19-evidence/build
+          echo "$GITHUB_SHA" > lip19-evidence/source-commit.txt
+          node kaopu-unified-human-workbench/lip-structure/upgrade-et19.cjs
+          node kaopu-unified-human-workbench/lip-structure/build.cjs
+          node kaopu-unified-human-workbench/lip-structure/verify-et19.cjs --unit | tee lip19-evidence/unit.json
+          cp -r kaopu-unified-human-workbench/lip-structure/. lip19-evidence/build/
+          git diff --name-only | tee lip19-evidence/generated-paths.txt
+          if git diff --name-only | grep -v '^kaopu-unified-human-workbench/lip-structure/'; then exit 1; fi
+      - name: Actual Chromium render, geometry, contacts, controls and original presets
+        env:
+          NODE_PATH: /tmp/lip-tools/node_modules
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/lip19-http.log 2>&1 &
+          node kaopu-unified-human-workbench/lip-structure/verify-et19.cjs
+      - name: Publish generated preview by ordinary fast-forward on this branch only
+        id: publish
+        run: |
+          REMOTE=$(git ls-remote origin "refs/heads/$GITHUB_REF_NAME" | cut -f1)
+          test "$REMOTE" = "$GITHUB_SHA"
+          git config user.name 'KAOPU Lip Workbench'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/lip-structure/*.mjs kaopu-unified-human-workbench/lip-structure/build.cjs kaopu-unified-human-workbench/lip-structure/preview.html kaopu-unified-human-workbench/lip-structure/BUILD.json
+          git commit -m 'build(lips): ET19 native-surface mother review candidate [skip ci]'
+          git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
+          SHA=$(git rev-parse HEAD)
+          URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$SHA/kaopu-unified-human-workbench/lip-structure/preview.html"
+          echo "$SHA" > lip19-evidence/published-commit.txt
+          echo "$URL" > lip19-evidence/public-url.txt
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+      - name: Verify the actual fixed public HTTPS page
+        env:
+          NODE_PATH: /tmp/lip-tools/node_modules
+          LIP_PUBLIC: '1'
+          LIP_URL: ${{ steps.publish.outputs.url }}
+          LIP_EVIDENCE: lip19-evidence/public
+        run: node kaopu-unified-human-workbench/lip-structure/verify-et19.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lips-et19-delivery
+          path: lip19-evidence
+          retention-days: 14
