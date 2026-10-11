@@ -1,7 +1,7 @@
 {
   "schema": "kaopu.regression-case/2",
   "caseId": "TAILOR-PRESET-3D-THUMBNAIL-CORRECTION-001",
-  "status": "CANDIDATE_TAILOR_MP01_MODULE_BOOTSTRAP_FAILED__HOLD_PUBLIC_VISUAL_PHYSICS_USER_N136_NOT_ADOPTED",
+  "status": "CANDIDATE_TAILOR_MP01_LOCAL_MATERIAL_LOOKS_VERIFIED__HOLD_PUBLIC_VISUAL_PHYSICS_USER_N136_NOT_ADOPTED",
   "active": false,
   "scope": {
     "mother": "Tailor",
@@ -228,7 +228,8 @@
     "R0432_STATIC_PASS_VISUAL_ACCEPTANCE_GAP_CONFIRMED__HOLD_MEMBER_VISUAL_COMPARISON_USER_ACCEPTANCE",
     "R0433_LOCAL_ALL_CATEGORY_DISPLAY_VERIFIED_SCOPED__HOLD_EXACT_PUBLIC_HEAD_FAILURE_VISUAL_PHYSICS_USER_ACCEPTANCE",
     "R0434_TRANSACTIONAL_PUBLIC_DISPLAY_VERIFIED_SCOPED__HOLD_38_STATIC_FAILURES_VISUAL_PHYSICS_USER_ACCEPTANCE",
-    "MP01_MATERIAL_EXPORT_VERIFIED__MODULE_BOOTSTRAP_FAILED__NO_LOOKS_RETAINED__HOLD_PUBLIC_VISUAL_PHYSICS_USER_ACCEPTANCE"
+    "MP01_MATERIAL_EXPORT_VERIFIED__MODULE_BOOTSTRAP_FAILED__NO_LOOKS_RETAINED__HOLD_PUBLIC_VISUAL_PHYSICS_USER_ACCEPTANCE",
+    "MP01_FIXED_MODULE_BOOT_LOCAL_12_LOOKS_VERIFIED__HOLD_PUBLIC_VISUAL_PHYSICS_USER_ACCEPTANCE"
   ],
   "gate": [
     "Preserve the old paper-library success as a scoped historical observation; do not relabel it as failure.",
@@ -1115,13 +1116,17 @@
       "observedFastFailSatisfied": false,
       "observedRetainedLookCount": 0,
       "observedPublicationPrevented": true,
-      "repairReplayRequired": true
+      "repairReplayRequired": false,
+      "repairReplayRun": 38122512641,
+      "repairReplayOutcome": "MP01_FIXED_MODULE_BOOT_LOCAL_12_LOOKS_VERIFIED__HOLD_PUBLIC_VISUAL_PHYSICS_USER_ACCEPTANCE",
+      "fastFailNegativeReplayRequired": true
     },
     "candidateExecutableIncrement": {
       "scope": "Tailor MP01 only",
       "producerAction": "Add an exact import map matching the pinned R0434 runtime or replace bare imports with fully qualified pinned URLs; do not replace the original person, garment geometry or materials.",
       "verifierGate": "Preflight the module graph or race readiness against pageerror/critical console error; require failure classification within 10 seconds and require 12/12 exact-look browser checks before retaining outputs.",
-      "rollbackPoint": "Keep PR #215 draft and preserve R0434 as the last verified public Tailor display; do not publish or overwrite any existing workbench."
+      "rollbackPoint": "Keep PR #215 draft and preserve R0434 as the last verified public Tailor display; do not publish or overwrite any existing workbench.",
+      "verifierGateStatus": "ENTRY_IMPORT_MAPPING_IMPLEMENTED_AND_POSITIVE_12_LOOK_REPLAY_PASSED__NEGATIVE_FAST_FAIL_FAULT_INJECTION_NOT_YET_RUN"
     },
     "preservedBoundaries": {
       "materialAppearanceOnly": true,
@@ -1132,12 +1137,12 @@
       "publicVerified": false,
       "userAccepted": false
     },
-    "boundary": "PR #215 head 8d1e3bec only and its first candidate workflow. It verifies selected material-export provenance but no product look, actual HTTPS page, physical device, material physics, joint collision, dynamic wear or user acceptance.",
-    "decision": "UPDATE_EXISTING_REGRESSION_CASE_WITH_NEW_FAILURE_MECHANISM__TAILOR_LOCAL_CANDIDATE_NOT_ADOPTED",
+    "boundary": "PR #215 first failed head 8d1e3bec, repair workflow head 1ff395d and retained evidence head 5c63ab3. The positive CI replay verifies 12 static material looks on the pinned original Tailor geometry, but not actual HTTPS delivery, a physical device, exhaustive visual acceptance, material physics, joint collision, dynamic wear or user acceptance; the new fast-fail path still lacks a deliberate broken-specifier negative replay.",
+    "decision": "UPDATE_EXISTING_REGRESSION_CASE_WITH_NEW_FAILURE_AND_REPAIR_REPLAY__TAILOR_LOCAL_CANDIDATE_NOT_ADOPTED",
     "lifecycle": {
       "POSTED": true,
       "ACKNOWLEDGED": false,
-      "IMPLEMENTED": false,
+      "IMPLEMENTED": true,
       "GATE-RUN": true,
       "ADOPTED": false,
       "USER-ACCEPTED": false
@@ -1148,6 +1153,33 @@
       "commentId": 6106819576,
       "url": "https://github.com/haihao0307/guilin-dem-pipeline/pull/215#issuecomment-6106819576",
       "purpose": "Route the exact module-bootstrap failure and fast-fail candidate gate to the affected Tailor MP01 work without modifying its production branch."
+    },
+    "repairReplay": {
+      "implementationHead": "1ff395d89e0b2e777a028747eadf49c13696bcde",
+      "retainedEvidenceHead": "5c63ab38b8822cb3e5e097489f1a95d1b46a0088",
+      "implementation": "Pinned import map for bare `three` plus readiness/pageerror race in browser gate; restored only approved material fields from the failed-run artifact, not stale application source.",
+      "workflowRun": 38122512641,
+      "workflowJob": 114419985913,
+      "conclusion": "success",
+      "artifactId": 11695579703,
+      "artifactDigest": "sha256:9dfefeb9080f1bf81e38db7b5b152d1f4cd580f5388d5ed1825e90a1fe664851",
+      "candidateReportSourceCommit": "1ff395d89e0b2e777a028747eadf49c13696bcde",
+      "checksPassed": 27,
+      "checksTotal": 27,
+      "looksPassed": 12,
+      "looksTotal": 12,
+      "sourceHumanAndGarmentIdentityChecked": true,
+      "exactMetricUvChecked": true,
+      "realMaterialPixelDifferenceChecked": true,
+      "rapidNewestSelectionWinsChecked": true,
+      "unregisteredMaterialRetainsValidDisplayChecked": true,
+      "pageErrors": [],
+      "shaderErrors": [],
+      "mobileScope": "390x844 Chromium viewport, not a physical phone",
+      "public": false,
+      "physicalWearAccepted": false,
+      "fastFailBrokenSpecifierFaultInjectionRun": false,
+      "result": "MP01_FIXED_MODULE_BOOT_LOCAL_12_LOOKS_VERIFIED__HOLD_PUBLIC_VISUAL_PHYSICS_USER_ACCEPTANCE"
     }
   }
 }
