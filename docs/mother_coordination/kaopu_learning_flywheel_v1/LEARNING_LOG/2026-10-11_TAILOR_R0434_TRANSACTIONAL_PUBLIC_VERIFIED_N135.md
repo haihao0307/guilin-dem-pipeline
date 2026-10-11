@@ -44,4 +44,4 @@ R2 tested-subject、task freshness、no-stale-delivery 和 explicit failure 已�
 
 更新既有 Tailor regression case；不新增重复 case，不改生产分支。当前状态：
 
-POSTED=false / ACKNOWLEDGED=false / IMPLEMENTED=true / GATE-RUN=true / ADOPTED=false / USER-ACCEPTED=false。
+POSTED=true / ACKNOWLEDGED=false / IMPLEMENTED=true / GATE-RUN=true / ADOPTED=false / USER-ACCEPTED=false。\n\n路由回执：PR #211 comment `6105982558`。
