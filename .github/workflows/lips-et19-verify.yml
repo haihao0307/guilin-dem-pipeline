@@ -40,12 +40,13 @@ jobs:
           mkdir -p lip19-evidence/build
           echo "$GITHUB_SHA" > lip19-evidence/source-commit.txt
           node kaopu-unified-human-workbench/lip-structure/upgrade-et19.cjs
+          node kaopu-unified-human-workbench/lip-structure/refine-et19.cjs
           node kaopu-unified-human-workbench/lip-structure/build.cjs
           node kaopu-unified-human-workbench/lip-structure/verify-et19.cjs --unit | tee lip19-evidence/unit.json
           cp -r kaopu-unified-human-workbench/lip-structure/. lip19-evidence/build/
           git diff --name-only | tee lip19-evidence/generated-paths.txt
           if git diff --name-only | grep -v '^kaopu-unified-human-workbench/lip-structure/'; then exit 1; fi
-      - name: Actual Chromium render, geometry, contacts, controls and original presets
+      - name: Actual Chromium render, geometry, contacts, controls and retained presets
         env:
           NODE_PATH: /tmp/lip-tools/node_modules
         run: |
@@ -58,7 +59,7 @@ jobs:
           test "$REMOTE" = "$GITHUB_SHA"
           git config user.name 'KAOPU Lip Workbench'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add kaopu-unified-human-workbench/lip-structure/*.mjs kaopu-unified-human-workbench/lip-structure/build.cjs kaopu-unified-human-workbench/lip-structure/preview.html kaopu-unified-human-workbench/lip-structure/BUILD.json
+          git add kaopu-unified-human-workbench/lip-structure/*.mjs kaopu-unified-human-workbench/lip-structure/*.cjs kaopu-unified-human-workbench/lip-structure/*.css kaopu-unified-human-workbench/lip-structure/preview.html kaopu-unified-human-workbench/lip-structure/BUILD.json
           git commit -m 'build(lips): ET19 native-surface mother review candidate [skip ci]'
           git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
           SHA=$(git rev-parse HEAD)
