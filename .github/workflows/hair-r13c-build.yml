@@ -1,0 +1,104 @@
+name: Hair R13C coherence and native head
+on:
+  push:
+    branches: [fix/hair-r13-groom-coherence-20261011]
+    paths: ['kaopu-hair-workbench/fusion/r13c/**', '.github/workflows/hair-r13c-build.yml']
+permissions:
+  contents: write
+concurrency:
+  group: hair-r13c-coherence
+  cancel-in-progress: false
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-hair-workbench/fusion/r12
+            kaopu-hair-workbench/fusion/r13
+            kaopu-hair-workbench/fusion/r13c
+            .github/workflows/hair-r13c-build.yml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check frozen old workbenches and install pinned test tools
+        run: |
+          git fetch --depth=1 origin 78698827a763e706924da97d785f8f373ce055ce
+          for p in kaopu-hair-workbench/fusion/r12 kaopu-hair-workbench/fusion/r13; do
+            test "$(git rev-parse HEAD:$p)" = "$(git rev-parse 78698827a763e706924da97d785f8f373ce055ce:$p)"
+          done
+          npm install --prefix /tmp/r13c-tools --no-save esbuild@0.25.10 playwright@1.55.1 pngjs@7.0.0
+          ln -s /tmp/r13c-tools/node_modules node_modules
+          /tmp/r13c-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Build readable new source and validate grooming geometry
+        run: |
+          python kaopu-hair-workbench/fusion/r13c/prepare.py
+          find kaopu-hair-workbench/fusion/r13c/src -name '*.js' -print0 | xargs -0 -n1 node --check
+          node --input-type=module - <<'JS'
+          import esbuild from 'esbuild';import path from 'node:path';
+          const p=path.resolve('kaopu-hair-workbench/fusion/r13c');
+          await esbuild.build({entryPoints:[p+'/tests/coherence.mjs'],bundle:true,platform:'node',format:'esm',outfile:p+'/tests/coherence-bundled.mjs',alias:{three:p+'/vendor/three.module.js'}});
+          JS
+          node kaopu-hair-workbench/fusion/r13c/tests/coherence-bundled.mjs
+          rm kaopu-hair-workbench/fusion/r13c/tests/coherence-bundled.mjs
+          node kaopu-hair-workbench/fusion/r13c/bundle.mjs
+          python kaopu-hair-workbench/fusion/r13c/package.py
+      - name: Render all three hairstyles, native head and real controls
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/r13c-http.log 2>&1 &
+          node kaopu-hair-workbench/fusion/r13c/tests/browser.mjs http://127.0.0.1:8765/kaopu-hair-workbench/fusion/r13c/public-lite.html
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-r13c-candidate
+          path: kaopu-hair-workbench/fusion/r13c
+          retention-days: 14
+      - name: Publish only new directory, fast forward only
+        id: publish
+        run: |
+          python - <<'PY'
+          import subprocess
+          changed=subprocess.check_output(['git','diff','--name-only'],text=True).splitlines()
+          assert all(p.startswith('kaopu-hair-workbench/fusion/r13c/') for p in changed),changed
+          PY
+          git config user.name 'KAOPU Hair R13C Build'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add kaopu-hair-workbench/fusion/r13c
+          git diff --cached --quiet || git commit -m 'build(hair-r13c): source-locked native head and browser-tested continuous groom'
+          git push origin HEAD:refs/heads/fix/hair-r13-groom-coherence-20261011
+          sha=$(git rev-parse HEAD)
+          url="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$sha/kaopu-hair-workbench/fusion/r13c/public-lite.html"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "$url" >> "$GITHUB_STEP_SUMMARY"
+      - name: Independently open and operate real immutable public webpage
+        run: node kaopu-hair-workbench/fusion/r13c/tests/browser.mjs '${{ steps.publish.outputs.url }}' --public
+      - name: Record public evidence without changing tested HTML
+        env:
+          PUBLIC_URL: ${{ steps.publish.outputs.url }}
+          BUILD_SHA: ${{ steps.publish.outputs.sha }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,os,hashlib
+          p=Path('kaopu-hair-workbench/fusion/r13c')
+          r=json.loads((p/'evidence/public/report.json').read_text());assert r['success']
+          m=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          assert hashlib.sha256((p/'public-lite.html').read_bytes()).hexdigest()==m['htmlSha256']
+          m.update(publicBrowserVerified=True,publicURL=os.environ['PUBLIC_URL'],buildRevision=os.environ['BUILD_SHA'],actionsRun=os.environ['GITHUB_RUN_ID'])
+          (p/'BUILD_MANIFEST.json').write_text(json.dumps(m,indent=2))
+          (p/'PUBLIC_URL.txt').write_text(os.environ['PUBLIC_URL']+'\n')
+          (p/'DELIVERY.md').write_text('# R13C test candidate\n\n'+os.environ['PUBLIC_URL']+'\n\nBuild: '+os.environ['BUILD_SHA']+'\n\nActual candidate and external browser reports are under evidence/. Static grooming only. Mobile viewport, not a phone benchmark. Visual acceptance remains pending. Old R12/R13 unchanged.\n')
+          PY
+          git add kaopu-hair-workbench/fusion/r13c
+          git commit -m 'test(hair-r13c): immutable external webpage and real browser evidence'
+          git push origin HEAD:refs/heads/fix/hair-r13-groom-coherence-20261011
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-r13c-delivery
+          path: kaopu-hair-workbench/fusion/r13c
+          retention-days: 30
