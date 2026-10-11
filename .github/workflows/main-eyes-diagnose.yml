@@ -1,0 +1,48 @@
+name: Main eyes bounded diagnostic only
+on:
+  push:
+    branches: [test/main-eye-integration-diagnose-20261011]
+    paths: [.github/workflows/main-eyes-diagnose.yml]
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      NODE_PATH: /tmp/eye-node/node_modules
+      R: kaopu-unified-human-workbench/main-eye-integration/r01
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          sparse-checkout: kaopu-unified-human-workbench
+      - name: Build identical candidate, no publication
+        run: |
+          git fetch --depth=1 origin 528f813d5f02ee0e3bfbf870d1f6fb02fe722fc1
+          for p in eye-materials eye-transfer face-transfer identity-lab; do git restore --source=528f813d5f02ee0e3bfbf870d1f6fb02fe722fc1 --staged --worktree -- kaopu-unified-human-workbench/$p; done
+          npm --prefix /tmp/eye-node install --no-save --package-lock=false esbuild@0.25.12 playwright@1.57.0
+          node /tmp/eye-node/node_modules/playwright/cli.js install --with-deps chromium
+          node "$R/build.cjs"
+      - name: Bounded browser stage snapshots
+        run: |
+          python3 -m http.server 8765 >/tmp/server.log 2>&1 &
+          mkdir diagnosis
+          cat > /tmp/probe.cjs <<'JS'
+          const fs=require('fs'),{chromium}=require('playwright');
+          const report={events:[],console:[],errors:[],requests:[]};const save=()=>fs.writeFileSync('diagnosis/report.json',JSON.stringify(report,null,2));
+          const bounded=(p,ms=25000)=>Promise.race([p,new Promise((_,reject)=>setTimeout(()=>reject(Error('Bounded stage timeout '+ms)),ms))]);
+          (async()=>{const b=await chromium.launch({args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}),page=await b.newPage({viewport:{width:1440,height:1000}});page.setDefaultTimeout(30000);page.on('pageerror',e=>{report.errors.push(String(e));save();});page.on('console',m=>{if(m.type()==='error'||m.type()==='warning'){report.console.push(m.text());save();}});page.on('response',r=>{if(r.status()>=400){report.requests.push({url:r.url(),status:r.status()});save();}});
+          try{await page.goto('http://127.0.0.1:8765/'+process.env.R+'/preview.html');await page.locator('#load-model').click();
+           for(let i=0;i<12;i++){await page.waitForTimeout(3000);const s=await bounded(page.evaluate(()=>({text:document.getElementById('load-status').textContent,diag:window.fullCommonWorkbench?.diagnostics(),eye:window.naturalEyeWorkbench?.version,main:!!window.mainEyeIntegration})));report.events.push({stage:'load-'+i,data:s});save();console.log(JSON.stringify(s));if(s.main)break;}
+           await bounded(page.screenshot({path:'diagnosis/loaded.png'}));
+           for(const [stage,fn] of [['open',()=>{naturalEyeWorkbench.open();naturalEyeWorkbench.view('eyes');return naturalEyeWorkbench.report();}],['preset',()=>{const t=performance.now();__IDENTITY_QA__.controller().applyPreset(fullCommonWorkbench.presets()[1].id);return {ms:performance.now()-t,report:mainEyeIntegration.report()};}],['walk',async()=>{const t=performance.now();const r=await fullCommonWorkbench.activateMainEntry('walk');return{ms:performance.now()-t,r};}]]){report.events.push({stage:'start-'+stage});save();const result=await bounded(page.evaluate(fn),90000);report.events.push({stage:'done-'+stage,data:result});save();await bounded(page.screenshot({path:'diagnosis/'+stage+'.png'}));}
+          }catch(e){report.failure=String(e.stack||e);save();console.error(report.failure);try{await bounded(page.screenshot({path:'diagnosis/failure.png'}),10000);}catch{}}
+          finally{save();await bounded(b.close(),10000).catch(()=>{});process.exit(0);}})();
+          JS
+          timeout 260s node /tmp/probe.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: main-eyes-bounded-diagnosis
+          path: diagnosis
+          retention-days: 7
