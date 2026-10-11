@@ -33,10 +33,12 @@ case 57u:{return 15235630u;}
 case 46u:{return 4194304u;}
 default:{return 0u;}}}
 fn textRow(p:vec3<f32>,line:u32)->f32 {
-let title=array<u32,37>(72u,79u,78u,71u,32u,75u,79u,78u,71u,32u,71u,69u,78u,69u,82u,65u,76u,32u,76u,79u,83u,84u,32u,38u,32u,70u,79u,85u,78u,68u,32u,79u,70u,70u,73u,67u,69u);
-let year=array<u32,9>(65u,46u,68u,46u,32u,49u,57u,49u,49u);
-let scale=select(.049,.043,line==1u);let count=select(37. ,9. ,line==1u);let baseline=select(10.39,9.97,line==1u);let q=vec3<f32>(p.x+count*scale*3.,baseline-p.y,p.z+29.785);var d=100.;let cell=i32(floor(q.x/(scale*6.)));for(var g=-1;g<=1;g++){let index=cell+g;if(index<0||f32(index)>=count){continue;}var code=0u;if(line==0u){code=title[u32(index)];}else{code=year[u32(index)];}let mask=glyph(code);let local=vec2<f32>(q.x-f32(index)*scale*6.,q.y+2.5*scale);let ix=i32(floor(local.x/scale));let iy=i32(floor(local.y/scale));for(var dy=-1;dy<=1;dy++){for(var dx=-1;dx<=1;dx++){let xx=ix+dx;let yy=iy+dy;if(xx<0||xx>4||yy<0||yy>4){continue;}if((mask&(1u<<u32(yy*5+xx)))!=0u){let r=vec3<f32>(local.x-(f32(xx)+.5)*scale,local.y-(f32(yy)+.5)*scale,q.z);d=min(d,box(r,vec3<f32>(scale*.43,scale*.43,.017)));}}}}return d;}
-fn entranceText(p:vec3<f32>)->f32 {let bound=box(p-vec3<f32>(0.,10.2,-29.8),vec3<f32>(6.2,.5,.05));if(bound>.1){return 100.;}return min(textRow(p,0u),textRow(p,1u));}
+let place=array<u32,18>(72u,79u,78u,71u,32u,75u,79u,78u,71u,32u,65u,46u,68u,46u,49u,57u,49u,49u);
+let office=array<u32,27>(71u,69u,78u,69u,82u,65u,76u,32u,76u,79u,83u,84u,32u,38u,32u,70u,79u,85u,78u,68u,32u,79u,70u,70u,73u,67u,69u);
+let scale=select(.088,.073,line==1u);let count=select(18.,27.,line==1u);let baseline=select(7.00,6.53,line==1u);
+let q=vec3<f32>(p.x+count*scale*3.,baseline-p.y,p.z);var d=100.;let cell=i32(floor(q.x/(scale*6.)));
+for(var g=-1;g<=1;g++){let index=cell+g;if(index<0||f32(index)>=count){continue;}var code=0u;if(line==0u){code=place[u32(index)];}else{code=office[u32(index)];}let mask=glyph(code);let local=vec2<f32>(q.x-f32(index)*scale*6.,q.y+2.5*scale);let ix=i32(floor(local.x/scale));let iy=i32(floor(local.y/scale));for(var dy=-1;dy<=1;dy++){for(var dx=-1;dx<=1;dx++){let xx=ix+dx;let yy=iy+dy;if(xx<0||xx>4||yy<0||yy>4){continue;}if((mask&(1u<<u32(yy*5+xx)))!=0u){let r=vec3<f32>(local.x-(f32(xx)+.5)*scale,local.y-(f32(yy)+.5)*scale,q.z);d=min(d,box(r,vec3<f32>(scale*.43,scale*.43,.017)));}}}}return d;}
+fn entranceText(p:vec3<f32>)->f32 {let bound=box(p-vec3<f32>(0.,6.78,0.),vec3<f32>(6.6,.51,.04));if(bound>.1){return 100.;}return min(textRow(p,0u),textRow(p,1u));}
 // Round-headed openings and their stone archivolts share the same field.
 fn archOpening(q:vec3<f32>,radius:f32,spring:f32,depth:f32)->f32 {
  let plan=min(max(abs(q.x)-radius,max(-q.y,q.y-spring)),length(vec2<f32>(q.x,q.y-spring))-radius);
@@ -100,9 +102,10 @@ fn architecture(p:vec3<f32>)->Field {
  if(u.options.x<.5){
  let crown=max(abs(p.y-(23.5-abs(tq.z)*.40))-.18,box(tq-vec3<f32>(0.,21.7,0.),vec3<f32>(8.1,3.,8.7)));f=take(f,field(crown,7u,p,7.));
  let tympanum=max(box(tq-vec3<f32>(-7.7,21.,0.),vec3<f32>(.28,2.4,8.4)),p.y-(23.1-abs(tq.z)*.40));f=take(f,field(tympanum,3u,p,7.));
- f=take(f,field(box(p-vec3<f32>(-42.93,6.8,-18.),vec3<f32>(.12,.44,5.4)),12u,p,1.));
- // Existing plaque lettering, physically raised; candidate readability is reviewed.
- f=take(f,field(entranceText(vec3<f32>(p.z+18.,p.y+3.4,p.x+13.10)),13u,p,1.));}
+ f=take(f,field(box(p-vec3<f32>(-42.93,6.78,-18.),vec3<f32>(.12,.50,6.5)),12u,p,1.));
+ // Two larger rows retain the full institutional title and A.D.1911.
+ // Plaque front x=-43.05; letters x=-43.10 are 5 cm outward, never buried.
+ f=take(f,field(entranceText(vec3<f32>(p.z+18.,p.y,p.x+43.10)),13u,p,1.));}
  // East and railway-facing walls; storage net boundary x44 is separate from service strip.
  let rz=repeatX(p.z-2.,6.,6.);var east=box(p-vec3<f32>(49.75,4.8,0.),vec3<f32>(.25,4.8,40.));east=max(east,-box(vec3<f32>(p.x-49.75,p.y-5.7,rz),vec3<f32>(.8,1.7,.85)));f=take(f,field(shell(east,p),2u,p,3.));
  let gateX=repeatX(p.x-4.,20.,1.);let freightDoor=box(vec3<f32>(gateX,p.y-2.1,p.z-39.75),vec3<f32>(2.5,2.2,1.));var rear=box(p-vec3<f32>(4.,4.8,39.75),vec3<f32>(46.,4.8,.25));rear=max(rear,-freightDoor);f=take(f,field(shell(rear,p),2u,p,3.));

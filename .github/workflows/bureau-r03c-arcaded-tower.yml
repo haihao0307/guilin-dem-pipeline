@@ -1,4 +1,4 @@
-name: Bureau R03c right-entry layout WebGPU QA
+name: Bureau R03c sign geometry WebGPU regression
 on:
   push:
     branches: ['qa/bureau-r03c-arcaded-tower-20261011']
@@ -27,7 +27,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/bureau-run"
           (
             set +e
-            node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03c/qa/webgpu.cjs > "$RUNNER_TEMP/bureau-run/log" 2>&1
+            BUREAU_SIGN_ONLY=1 node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03c/qa/webgpu.cjs > "$RUNNER_TEMP/bureau-run/log" 2>&1
             echo "$?" > "$RUNNER_TEMP/bureau-run/exit"
           ) </dev/null >/dev/null 2>&1 &
           for i in $(seq 1 230); do
