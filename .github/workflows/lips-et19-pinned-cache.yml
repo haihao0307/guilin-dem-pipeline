@@ -1,0 +1,23 @@
+name: Lips ET19 retained dependency QA cache
+on:
+  push:
+    branches: [test/lips-et19-pinned-cache-20261011]
+    paths: [.github/workflows/lips-et19-pinned-cache.yml]
+permissions:
+  contents: read
+jobs:
+  retained-input:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Retrieve exactly the already-retained source asset, verify existing source-lock hash
+        run: |
+          mkdir -p lips-et19-pinned-cache
+          curl --fail --location --retry 2 --max-time 90 'https://raw.githubusercontent.com/xrblocks/assets-gnm/134feb02b11fa642a43ff5e7e880246255a74e86/gnm_head_web.bin' -o lips-et19-pinned-cache/gnm_head_web.bin
+          echo 'fd19f46eef6f8bfb725fceab581e1bc8837209997ca3fd43f3c1735003c86961  lips-et19-pinned-cache/gnm_head_web.bin' | sha256sum -c -
+          echo 'Existing fixed GNM dependency from full/ui/runtime-metadata.json. No new model introduced. Private short-lived QA input only, no git push or public asset copy.' > lips-et19-pinned-cache/README.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lips-et19-pinned-qa-input
+          path: lips-et19-pinned-cache
+          retention-days: 1
