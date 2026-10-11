@@ -1,0 +1,92 @@
+name: Main human natural eyes integration and immutable preview
+on:
+  push:
+    branches: [fix/main-natural-eyes-integration-20261011]
+    paths: [.github/workflows/main-natural-eyes-integration.yml]
+permissions:
+  contents: write
+concurrency:
+  group: main-natural-eyes-r01
+  cancel-in-progress: false
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      BRANCH: fix/main-natural-eyes-integration-20261011
+      NODE_PATH: /tmp/eye-node/node_modules
+      R: kaopu-unified-human-workbench/main-eye-integration/r01
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+      - name: Read stable eye source without replacing current main or motion source
+        run: |
+          git fetch --depth=1 origin 528f813d5f02ee0e3bfbf870d1f6fb02fe722fc1
+          for p in eye-materials eye-transfer face-transfer identity-lab; do
+            git restore --source=528f813d5f02ee0e3bfbf870d1f6fb02fe722fc1 --staged --worktree -- kaopu-unified-human-workbench/$p
+          done
+          git diff --name-only --cached > /tmp/copied-eye-paths.txt
+          npm --prefix /tmp/eye-node install --no-save --package-lock=false esbuild@0.25.12 playwright@1.57.0 pngjs@7.0.0
+          node /tmp/eye-node/node_modules/playwright/cli.js install --with-deps chromium
+      - name: Build exact current main entry with verified eye adapters
+        run: |
+          node --check "$R/build.cjs"
+          node "$R/build.cjs"
+          python3 - <<'PY'
+          from pathlib import Path
+          r=Path('kaopu-unified-human-workbench/main-eye-integration/r01')
+          s=Path('kaopu-unified-human-workbench/eye-materials/verify-browser.cjs').read_text()
+          needle="await page.goto(url,{waitUntil:'domcontentloaded',timeout:120000});"
+          assert s.count(needle)==1
+          s=s.replace(needle,needle+"await page.locator('#load-model').click();")
+          (r/'verify-eye-core.generated.cjs').write_text(s)
+          PY
+      - name: Actual browser eyes and original main controls
+        run: |
+          python3 -m http.server 8765 >/tmp/eye-server.log 2>&1 &
+          export EYE_URL="http://127.0.0.1:8765/$R/preview.html"
+          EYE_EVIDENCE="$R/qa/local-eye" node "$R/verify-eye-core.generated.cjs"
+          EYE_EVIDENCE="$R/qa/local-main" node "$R/verify-main.cjs"
+      - name: Commit tested source and immutable candidate only
+        run: |
+          test "$(git ls-remote origin refs/heads/$BRANCH | cut -f1)" = '${{ github.sha }}'
+          git config user.name 'KAOPU Main Eye Integration'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/eye-materials kaopu-unified-human-workbench/eye-transfer kaopu-unified-human-workbench/face-transfer kaopu-unified-human-workbench/identity-lab kaopu-unified-human-workbench/full/ui/main-eye-app.generated.mjs "$R"
+          find "$R/qa" -name '*.png' -print0 | xargs -0 -r git add -f --
+          git commit -m 'human: verified current main entry with stable ET16 natural eyes [skip ci]'
+          git push origin HEAD:$BRANCH
+          BUILD_SHA=$(git rev-parse HEAD)
+          echo "BUILD_SHA=$BUILD_SHA" >> "$GITHUB_ENV"
+          echo "EYE_URL=https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$BUILD_SHA/$R/preview.html" >> "$GITHUB_ENV"
+      - name: Real fixed public eyes and main controls, not only HTTP status
+        run: |
+          EYE_EVIDENCE="$R/qa/public-eye" node "$R/verify-eye-core.generated.cjs"
+          EYE_EVIDENCE="$R/qa/public-main" node "$R/verify-main.cjs"
+          python3 - <<'PY'
+          import pathlib,json,os,hashlib,urllib.request
+          r=pathlib.Path(os.environ['R']);m=json.loads((r/'BUILD.json').read_text());q={k:json.loads((r/'qa'/k/f).read_text()) for k,f in [('local-eye','browser-report.json'),('local-main','main-report.json'),('public-eye','browser-report.json'),('public-main','main-report.json')]};assert all(v['passed'] for v in q.values())
+          raw=urllib.request.urlopen('https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+os.environ['BUILD_SHA']+'/'+os.environ['R']+'/preview.html',timeout=180).read();assert hashlib.sha256(raw).hexdigest()==m['previewSHA256']
+          receipt={'version':'MAIN-EYES-R01','sourceCommit':os.environ['GITHUB_SHA'],'buildCommit':os.environ['BUILD_SHA'],'publicURL':os.environ['EYE_URL'],'publicVerified':True,'mainRootActivated':False,'checks':{k:len(v.get('tests',v.get('checks',[]))) for k,v in q.items()},'workflowRun':os.environ['GITHUB_RUN_ID'],'mainBaseline':m['mainBaseline'],'eyeSource':m['eyeSource'],'eyeVerifiedBuild':m['eyeVerifiedBuild'],'previewSHA256':m['previewSHA256'],'previewBytes':m['previewBytes'],'physicalPhoneTested':False,'userAccepted':False,'anatomicalEyelidClosureCertified':False}
+          (r/'DELIVERY.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2));print(json.dumps(receipt,ensure_ascii=False))
+          PY
+      - name: Preserve public evidence without changing live main
+        run: |
+          test "$(git ls-remote origin refs/heads/$BRANCH | cut -f1)" = "$BUILD_SHA"
+          git add "$R"
+          find "$R/qa" -name '*.png' -print0 | xargs -0 -r git add -f --
+          git commit -m 'human: record actual immutable main-eye integration tests [skip ci]'
+          git push origin HEAD:$BRANCH
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: main-natural-eyes-r01-evidence
+          path: |
+            kaopu-unified-human-workbench/main-eye-integration/r01
+            kaopu-unified-human-workbench/full/ui/main-eye-app.generated.mjs
+            /tmp/copied-eye-paths.txt
+          retention-days: 14
