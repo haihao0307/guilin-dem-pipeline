@@ -1,0 +1,47 @@
+const fs=require('fs'),path=require('path'),assert=require('assert/strict');
+const fields=[['freckleClustering','雀斑成簇程度',0,1,.05,'','色斑'],['freckleEdge','雀斑边缘实度',0,.85,.05,'','色斑'],['acneStage','痘点消退与留印',0,1,.05,'','痘痘'],['acneDistribution','额头 ← 痘点分布 → 双颊',-1,1,.05,'','痘痘'],['scarCount','疤痕条数',1,5,1,'','疤痕'],['scarSpacing','多疤间距',4,22,1,'mm','疤痕'],['scarVariation','多疤差异',0,1,.05,'','疤痕'],['moleCount','痣的数量',1,10,1,'','痣'],['moleRelief','痣的微表面高度',0,.18,.01,'mm','痣'],['capillaries','细小分支血丝',0,1,.05,'','色斑']];
+const recipes={clusterFreckles:{label:'成簇雀斑',traits:{freckles:.38,freckleSize:.58,freckleContrast:.55,freckleClustering:.88,freckleEdge:.2}},tinyFreckles:{label:'稀疏细雀斑',traits:{freckles:.12,freckleSize:.33,freckleContrast:.48,freckleEdge:.12}},recentAcne:{label:'浅红痘点',traits:{acne:.34,acneSize:.9,acneRelief:.18,acneWhiteheads:.15,acneRedness:.58,acneDistribution:.7}},lateAcne:{label:'消退痘点',traits:{acne:.34,acneSize:.9,acneRelief:.18,acneStage:.82,acneMarks:.2,acneDistribution:.7}},flatMarks:{label:'平面痘印与细坑',traits:{acneMarks:.4,pittedScars:.2,acneSize:.75}},capillary:{label:'鼻颊细血丝',traits:{capillaries:.55,redPatches:.08}},scarGroup:{label:'多条浅凹疤',traits:{scar:.68,scarX:36,scarY:272,scarLength:17,scarWidth:.9,scarRelief:-.14,scarAge:.8,scarCount:3,scarSpacing:10,scarVariation:.65}},raisedScar:{label:'微凸新疤',traits:{scar:.62,scarLength:17,scarWidth:1.45,scarRelief:.23,scarAge:.25}},paleScars:{label:'淡旧疤群',traits:{scar:.52,scarLength:15,scarWidth:1.2,scarRelief:-.07,scarAge:.98,scarCount:3,scarSpacing:12}},moleScatter:{label:'分散小痣',traits:{moles:.6,moleCount:5,moleSize:.65,moleRelief:.045}}};
+function sub(s,a,b){assert.equal(s.split(a).length,2,'ET15 source anchor missing/ambiguous: '+a.slice(0,100));return s.replace(a,()=>b);}
+exports.fields=fields;exports.recipes=recipes;
+exports.prepare=function(root,dir){
+ const overrides=new Map(),read=p=>fs.readFileSync(path.join(root,p),'utf8');
+ function output(original,name,text){const dest=path.join(dir,name);fs.writeFileSync(dest,text);overrides.set(path.join(root,original),dest);}
+ let schema=read('identity-lab/TraitSchema.mjs');
+ schema=sub(schema,'redPatches:0});','redPatches:0,freckleClustering:0,freckleEdge:.25,acneStage:0,acneDistribution:0,scarCount:1,scarSpacing:12,scarVariation:.4,moleCount:1,moleRelief:.06,capillaries:0});');
+ schema=sub(schema,'];\nexport function validateTraits','];\nTRAIT_FIELDS.push(...'+JSON.stringify(fields)+');\nexport function validateTraits');
+ schema=sub(schema,"throw Error('皮肤参数越界 '+k);return s;","throw Error('皮肤参数越界 '+k);for(const k of ['scarCount','moleCount'])if(!Number.isInteger(s[k]))throw Error('数量必须是整数 '+k);return s;");
+ schema+='\n// ET15-R2 authored appearances; not diagnostic categories.\nObject.assign(SKIN_RECIPES,'+JSON.stringify(recipes)+');\n';
+ output('identity-lab/TraitSchema.mjs','TraitSchema.generated.mjs',schema);
+ let maps=read('identity-lab/TraitMaps.mjs');
+ maps=maps.replace("from './Catalogue.mjs'","from '../identity-lab/Catalogue.mjs'").replace("from './FieldRaster.mjs'","from '../identity-lab/FieldRaster.mjs'");
+ maps=sub(maps,'scar:[],moles:[],wrinklePaths:[]','scar:[],scarPaths:[],moles:[],capillaryPaths:[],wrinklePaths:[]');
+ maps=sub(maps,'if(r()>coverage||!valid(x,y))continue;','const cluster=.08+.92*Math.pow(.5+.5*Math.sin(x*.19+y*.071+s.seed%29)*Math.sin(y*.22-x*.041),2);if(r()>coverage*(1-s.freckleClustering+s.freckleClustering*cluster)||!valid(x,y))continue;');
+ maps=sub(maps,'op,r()*6.28,.25);marks.freckles','op,r()*6.28,s.freckleEdge);marks.freckles');
+ maps=sub(maps,"(y<215&&Math.abs(x)<30)))break;","(y<215&&Math.abs(x)<30))&&(!s.acneDistribution||rc()<((s.acneDistribution>0?y<300:y>325)?1:1-Math.abs(s.acneDistribution)*.9)))break;");
+ maps=sub(maps,'s.acneRedness*redness);blob(rise,x,y,size,size,s.acneRelief*height,0,0);','s.acneRedness*redness*(1-s.acneStage*.72));blob(rise,x,y,size,size,s.acneRelief*height*(1-s.acneStage*.94),0,0);blob(pigment,x,y,size*1.2,size,s.acneStage*.17);');
+ maps=sub(maps,'if(whitehead<s.acneWhiteheads)','if(whitehead<s.acneWhiteheads*(1-s.acneStage))');
+ maps=sub(maps,'marks.scar=pts;}','marks.scar=pts;marks.scarPaths.push(pts);\n'+`   const sr=seededRandom(s.seed^345627);for(let n=1;n<s.scarCount;n++){const angle=s.scarAngle*Math.PI/180+(sr()-.5)*s.scarVariation,shift=(n%2?1:-1)*Math.ceil(n/2)*s.scarSpacing,cx=Math.max(-55,Math.min(55,s.scarX+shift*.48)),cy=Math.max(205,Math.min(377,s.scarY+shift));if(!valid(cx,cy))continue;const length=s.scarLength*(1+(sr()-.5)*s.scarVariation),width=s.scarWidth*(1+(sr()-.5)*s.scarVariation*.6),points=[];for(let j=0;j<=42;j++){const t=j/42-.5,d=t*length,v=Math.sin(t*19+n)*s.scarJagged*.7;points.push([cx+Math.cos(angle)*d-Math.sin(angle)*v,cy+Math.sin(angle)*d+Math.cos(angle)*v]);}curve(s.scarRelief>=0?rise:depth,points,width,Math.abs(s.scarRelief)*s.scar);curve(red,points,width*1.7,s.scar*(1-s.scarAge)*.6);curve(white,points,width,s.scar*s.scarAge*.55);curve(rough,points,width*1.7,s.scar*.8);marks.scarPaths.push(points);}\n  }`);
+ const moleLine='if(s.moles){blob(pigment,s.moleX,s.moleY,s.moleSize,s.moleSize*.85,s.moles,0,.65);blob(rise,s.moleX,s.moleY,s.moleSize*.9,s.moleSize*.8,s.moles*.06,0,.2);marks.moles.push([s.moleX,s.moleY,s.moleSize]);}';
+ maps=sub(maps,moleLine,`if(s.moles){const mr=seededRandom(s.seed^985751);for(let j=0;j<s.moleCount;j++){let x=s.moleX,y=s.moleY,size=s.moleSize;if(j){for(let k=0;k<60;k++){x=(mr()*2-1)*53;y=254+mr()*110;if(valid(x,y))break;}size*=.60+mr()*.55;}blob(pigment,x,y,size,size*.85,s.moles,0,.65);blob(rise,x,y,size*.9,size*.8,s.moles*s.moleRelief,0,.2);marks.moles.push([x,y,size]);}}\n  if(s.capillaries){const cr=seededRandom(s.seed^818763);for(const side of [-1,1])for(let n=0;n<6;n++){const x=side*(27+cr()*20),y=266+cr()*15,pts=[];for(let j=0;j<=16;j++){const t=j/16;pts.push([x+side*t*(3+cr()),y-t*6+Math.sin(t*8+n)*.5]);}curve(red,pts,.13,s.capillaries*.34);const q=pts[8],branch=[q,[q[0]-side*1.6,q[1]-1.4],[q[0]-side*2.2,q[1]-2.9]];curve(red,branch,.10,s.capillaries*.24);marks.capillaryPaths.push(pts,branch);}}`);
+ maps=sub(maps,'scarPoints:marks.scar.length,buildMS:','scarPoints:marks.scar.length,scarCount:marks.scarPaths.length,moleCount:marks.moles.length,capillaryCurves:marks.capillaryPaths.length,buildMS:');
+ output('identity-lab/TraitMaps.mjs','TraitMaps.generated.mjs',maps);
+ let eyes=read('skin-eye-et15/EyeSurface.mjs');
+ eyes=sub(eyes,"float phase=angle*121.+e15Wave(angle*19.)*.8+t*7.;","float phase=angle*51.+e15Wave(angle*11.)*.8+t*7.;");
+ eyes=sub(eyes,"float fibers=.50+.19*e15Wave(phase)+.11*e15Wave(angle*211.-t*15.);","float fibers=.50+.12*e15Wave(angle*9.+t*3.)+.16*e15Wave(angle*27.-t*8.)+.11*e15Wave(phase)+.065*e15Wave(angle*113.-t*15.);");
+ eyes=eyes.replace('/ET15-ocular-contact-v1','/ET15-ocular-multiscale-v2');
+ output('skin-eye-et15/EyeSurface.mjs','EyeSurface.generated.mjs',eyes);
+ let profile=read('skin-eye-et15/ProfileLibrary.mjs').replaceAll('ET15-R1','ET15-R2');
+ profile=sub(profile,"const surfaceType=['fine'","traits.freckleClustering=history===1?.68:0;traits.acneStage=history===2?.24:0;traits.scarCount=history===4?2:1;traits.moleCount=history===5?3:1;traits.capillaries=stage>3&&history===5?.12:0;\n const surfaceType=['fine'");
+ output('skin-eye-et15/ProfileLibrary.mjs','ProfileLibrary.generated.mjs',profile);
+ let runtime=read('skin-eye-et15/Runtime.mjs').replaceAll('ET15-R1','ET15-R2');
+ runtime="import {TRAIT_FIELDS} from '../identity-lab/TraitSchema.mjs';\n"+runtime;
+ runtime=sub(runtime,"function view(which){if(which==='eyes')","function view(which){if(which==='eye'){const a=model.eyeSurface.landmark(42),b=model.eyeSurface.landmark(45),c=a.map((v,i)=>(v+b[i])*.5),target=[c[0],c[2],-c[1]],d=.042/(2*Math.tan(viewer.camera.fov*Math.PI/360)*Math.min(1,viewer.camera.aspect));viewer.restoreCamera({position:[target[0],target[1],target[2]+d],target,zoom:1});}else if(which==='eyes')");
+ runtime=sub(runtime,'<button data-eview="eyes">双眼近景</button>','<button data-eview="eyes">双眼近景</button><button data-eview="eye">单眼微距</button>');
+ const buttons=Object.entries(recipes).map(([k,p])=>'<button data-markrecipe="'+k+'">'+p.label+'</button>').join('');
+ runtime=sub(runtime,'<details><summary>眼睛参数与闭眼检查</summary>','<details><summary>斑、痘、疤痕 · 10组细分预设</summary><div class="tools">'+buttons+'</div><p>增加成簇分布、痘点消退、多条疤痕、多颗痣与细血丝；全部附在同一人物上。单项参数在下方原控制中可编辑。</p></details><details><summary>眼睛参数与闭眼检查</summary>');
+ runtime=sub(runtime,"function treatment(id)","function marks(id){window.identityWorkbench.skinRecipe(id);view('face');sync();}\n function treatment(id)");
+ runtime=sub(runtime,"for(const el of panel.querySelectorAll('[data-treatment]'))el.onclick=()=>safe(()=>treatment(el.dataset.treatment));","for(const el of panel.querySelectorAll('[data-treatment]'))el.onclick=()=>safe(()=>treatment(el.dataset.treatment));for(const el of panel.querySelectorAll('[data-markrecipe]'))el.onclick=()=>safe(()=>marks(el.dataset.markrecipe));");
+ runtime=sub(runtime,'treatment,view,blink,restoreExpression','treatment,marks,markRecipes:'+JSON.stringify(Object.keys(recipes))+',traitFields:TRAIT_FIELDS,view,blink,restoreExpression');
+ output('skin-eye-et15/Runtime.mjs','Runtime.generated.mjs',runtime);
+ return overrides;
+};
