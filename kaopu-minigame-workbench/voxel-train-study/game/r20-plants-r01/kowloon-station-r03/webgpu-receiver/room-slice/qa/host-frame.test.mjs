@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 'node:vm';
+const app=fs.readFileSync(new URL('../app.mjs',import.meta.url),'utf8');
+const code=app.slice(app.indexOf('function captureFrame()'),app.indexOf('function lockControls('));
+const ctx=vm.createContext({structuredClone,Math,ArrayBuffer,Float32Array,Uint32Array,camera:{eye:[1,2,3],target:[1,2,4]},selected:'room',age:.64,debug:2,microscope:1,clothLocalBudget:512,clothFilter:1,stoneFloor:[3,.123,1,0],stoneFrame:[0,.123,1,0],canvas:{width:480,height:320},uniform:{},device:{queue:{writeBuffer(_b,_o,value){ctx.output=value;}}}});
+vm.runInContext('const normalize=a=>{const n=Math.hypot(...a);return a.map(x=>x/n)},sub=(a,b)=>a.map((x,i)=>x-b[i]),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];'+code+';saved=captureFrame();',ctx);
+ctx.camera.eye[0]=99;ctx.age=.04;ctx.debug=9;ctx.microscope=2;ctx.clothLocalBudget=0;ctx.clothFilter=0;ctx.stoneFloor[0]=0;ctx.canvas.width=900;ctx.canvas.height=600;
+vm.runInContext('write({x:32,y:64,width:32,height:32},saved);',ctx);
+const f=new Float32Array(ctx.output),u=new Uint32Array(ctx.output);
+assert.deepEqual([...f.slice(0,3)],[1,2,3]);assert(Math.abs(f[3]-.64)<1e-7);assert.equal(f[11],1);assert.equal(f[16],480);assert.equal(f[17],320);assert.equal(u[18],2);assert.equal(u[19],512);assert.equal(f[20],3);assert.equal(u[32],1);assert.deepEqual([...u.slice(28,32)],[32,64,32,32]);
+assert(app.includes('write({x,y,width:tw,height:th},frozen)'));assert(app.includes('if(frozen.clothFilter||frameDebug===7'));assert(app.includes('if(busy||!proof.ready)return;drag='));assert(app.includes('if(!drag||busy)return;'));assert(app.includes('Cannot run diagnostic probe during rendering'));
+console.log('host snapshot: camera/age/resolution/debug/microscope/cloth/stone frozen through uniform writes; UI guards checked. Real browser acceptance remains separate.');

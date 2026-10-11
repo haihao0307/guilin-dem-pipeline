@@ -53,3 +53,6 @@ Reusable per32x32tile buffers now include64KB primary hits,16KB resume vectors,8
 
 ### Sparse continuation GPU verified, 17:10 UTC
 Commit44a9e71e / run38158063381 passed actual saved-state GPU continuation for120room+255inside failed primaries and3reflections. All resolved; maximum traversal counts818/373/481. Status, material ID and t matched the prior uninterrupted original-equation results exactly (measured maximum t error0), with unchanged reflection origins/directions. Five production1x1queries exercised compact retry queues and glass recompositing with zero final exhaustion; original retry counters stayed visible. Actual whole-room confirmation is the next scoped test, not inferred from this sparse result. The renderer and all material sources are held fixed for it.
+
+### Reviewed full views and bounded host preview
+Run38158637329 / commit6062d761 passed both full480x320views: room551.70s, inside482.17s, initialization169.98s on software WebGPU. Zero final primary/secondary exhaustion, full pixel accounting and17contracts passed. Original retries120+3 and255 remain recorded. Parent inspected both images. The preview adds only a153600pixel host ceiling, computing-time controls lock and frozen frame parameters. Every reviewed WGSL field/trace byte is unchanged. Public HTTPS acceptance is still pending.
