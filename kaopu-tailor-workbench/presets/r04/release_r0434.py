@@ -26,12 +26,13 @@ def publish():
  files=set(load('R0432_ACCEPTANCE.json')['files'])
  files.update(['parameter-schema.json','PARAMETER_AUDIT_R043.json','SOURCE_AUDIT.json','display-r0433.mjs','sewn-normals-r0433.mjs','initial-placement-r0433.mjs','resource-r0434.mjs','R0433_NATIVE_REVIEW.json','R0433_RUNTIME_REPAIR.json','R0433_DISPLAY_PATCH.json','RELEASE_NOTES_R0433_ZH.md','R0434_SOURCE_PATCH.json','R0434_PERSON_PIN.json','R0434_QA_INHERITANCE.json','R0434_BROWSER_REPORT.json','R0434_SAFETY_REPORT.json'])
  files.update(str(f.relative_to(P)) for f in (P/'person-core').rglob('*') if f.is_file())
+ files.update(['R0434_REPLAY_REPORT.json','R0434_REPLAY_PROMOTION.json'])
  info={n:{'sha256':sha(P/n),'bytes':(P/n).stat().st_size} for n in sorted(files)}
  from bundle_closure_r0432 import verify_literal_json_closure
  save('R0434_BUNDLE_CLOSURE.json',verify_literal_json_closure(P,info))
  info['R0434_BUNDLE_CLOSURE.json']={'sha256':sha(P/'R0434_BUNDLE_CLOSURE.json'),'bytes':(P/'R0434_BUNDLE_CLOSURE.json').stat().st_size}
  source=git('rev-parse','HEAD');fixed='kaopu-tailor-workbench/presets/r0434-'+source[:12]
- m={'version':'R04.3.4','owner':BRANCH,'runtimeSourceCommit':source,'testedSourceCommit':report['sourceCommit'],'person':load('assets/identity.json')['person'],'personRuntimeCommit':pin['sourceCommit'],'categories':report['categories'],'styleCount':60,'outfitCount':432,'parameterCount':122,'staticPassCount':22,'needsRepairCount':38,'materialRecordsChangedThisRevision':False,'all60GarmentsAccepted':False,'physicalFitAccepted':False,'dynamicWearCertified':False,'jointOutfitCollisionCertified':False,'files':info}
+ m={'version':'R04.3.4','owner':BRANCH,'runtimeSourceCommit':source,'testedSourceCommit':report['sourceCommit'],'person':load('assets/identity.json')['person'],'personRuntimeCommit':pin['sourceCommit'],'categories':report['categories'],'styleCount':60,'outfitCount':432,'parameterCount':122,'staticPassCount':22,'needsRepairCount':38,'materialRecordsChangedThisRevision':True,'recompiledMaterialFingerprints':['T08'],'browserNativeCacheRebaked':['T08'],'originalPaperReplaced':False,'solverMathChanged':False,'all60GarmentsAccepted':False,'physicalFitAccepted':False,'dynamicWearCertified':False,'jointOutfitCollisionCertified':False,'files':info}
  save('R0434_MANIFEST.json',m)
  git('config','user.name','github-actions[bot]');git('config','user.email','41898282+github-actions[bot]@users.noreply.github.com')
  temp=Path(tempfile.mkdtemp(prefix='r0434-'));snapshot=temp/'snapshot';snapshot.mkdir()
@@ -45,7 +46,7 @@ def publish():
    shutil.copytree(snapshot,target);git('add','--sparse','--',fixed,cwd=work)
    changed=git('diff','--cached','--name-only',cwd=work).splitlines();assert changed and all(n.startswith(fixed+'/') for n in changed)
    git('commit','-m','publish(tailor-r0434): isolated verified display; all old entrances untouched',cwd=work);commit=git('rev-parse','HEAD',cwd=work)
-   protected=['kaopu-tailor-workbench/presets/r0432-eeca9dee0c3a','kaopu-tailor-workbench/presets/r0433-f2e0cf1646b6',PREFIX,'kaopu-unified-human-workbench','kaopu-tailor-workbench/catalogue','kaopu-tailor-workbench/r07']
+   protected=['kaopu-tailor-workbench/presets/r0434-2318c29107e7','kaopu-tailor-workbench/presets/r0432-eeca9dee0c3a','kaopu-tailor-workbench/presets/r0433-f2e0cf1646b6',PREFIX,'kaopu-unified-human-workbench','kaopu-tailor-workbench/catalogue','kaopu-tailor-workbench/r07']
    proof={n:{'before':git('rev-parse',parent+':'+n,cwd=work),'after':git('rev-parse',commit+':'+n,cwd=work)} for n in protected}
    assert all(v['before']==v['after'] for v in proof.values())
    try:
