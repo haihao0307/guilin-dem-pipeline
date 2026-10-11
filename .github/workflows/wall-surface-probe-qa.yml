@@ -1,0 +1,50 @@
+name: Original-field single-wall surface probe QA
+on:
+  push:
+    branches: ['qa/wall-surface-probe-20261011']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/room-unit-r02/wall-surface-adapter-probe/**'
+      - '.github/workflows/wall-surface-probe-qa.yml'
+permissions:
+  contents: read
+jobs:
+  wall-surface-probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      PROBE_WIDTH: '623'
+      PROBE_HEIGHT: '481'
+      PROBE_ORIGINAL_FRAMES: '3'
+      PROBE_SURFACE_FRAMES: '3'
+      PROBE_TIMEOUT_MS: '480000'
+      PROBE_OUT: wall-surface-probe-results
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01
+            kaopu-minigame-workbench/voxel-train-study/vendor
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.3'
+      - name: Verify original source bytes and bounded surface sampler
+        run: node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/room-unit-r02/wall-surface-adapter-probe/probe.test.mjs
+      - name: Install official pinned browser test runtime
+        run: |
+          npm install --prefix "$RUNNER_TEMP/room-browser" --registry=https://registry.npmjs.org --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/room-browser/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/room-browser/node_modules" >> "$GITHUB_ENV"
+      - name: Compare one original-field wall with equal cold plus two warm completed frames
+        timeout-minutes: 9
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/room-unit-r02/wall-surface-adapter-probe/gpu-ab.cjs
+      - name: Preserve every completed stage, image and failure
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: original-field-surface-probe-${{ github.sha }}
+          path: wall-surface-probe-results/
+          if-no-files-found: warn
+          retention-days: 7
+          compression-level: 0
