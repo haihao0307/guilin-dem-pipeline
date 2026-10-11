@@ -8,13 +8,16 @@ import {attachInstancedFiberMaterialR30, fiberMaterialDiagnostics} from './Insta
  * Use createDecodedProbeView() with the original contact probes: this mesh's
  * position attribute is only a tiny render template, not the full groom.
  */
-export function attachInstancedGroomR30(a, reference, {textureWidth = 2048} = {}) {
+export function attachInstancedGroomR30(a, reference, {textureWidth = 2048, packedData = null} = {}) {
   const started = performance.now();
   const viewer = a.motion().viewer;
+  if (reference?.kind === 'R30-packed-fibre-data') { packedData = reference; reference = null; }
   const source = reference?.mesh;
-  if (!source?.geometry || typeof reference.report !== 'function')
-    throw new Error('Pass the already constructed safe LowCountGroomR30 object');
-  const baseline = reference.report();
+  if (packedData && (packedData.kind !== 'R30-packed-fibre-data' || typeof packedData.report !== 'function'))
+    throw new Error('Invalid direct packed groom object');
+  if (!packedData && (!source?.geometry || typeof reference.report !== 'function'))
+    throw new Error('Pass the safe LowCountGroomR30 object or direct packed data');
+  const baseline = (packedData || reference).report();
   const {count, segments, surfaceSegments} = baseline;
   const per = segments + 1, normalPer = surfaceSegments + 1;
   if (!Number.isInteger(count) || count < 1 || count > 16777216 || segments !== 64 || surfaceSegments !== 20)
@@ -24,19 +27,27 @@ export function attachInstancedGroomR30(a, reference, {textureWidth = 2048} = {}
   if (!(capabilities.maxVertexTextures >= 2)) throw new Error('At least two vertex texture units are required');
   const maxSize = capabilities.maxTextureSize;
   if (!(maxSize >= 1)) throw new Error('Renderer texture size capability is unavailable');
-  const originalGeometry = source.geometry;
-  const arrays = {};
-  for (const key of ['position', 'tangent', 'scalpNormal', 'strandSide', 'strandRadius', 'along', 'strandRandom']) {
+  const originalGeometry = source?.geometry;
+  const arrays = source ? {} : null;
+  if (source) {
+    const sourceReport = reference.report();
+    if (sourceReport.count !== count || sourceReport.segments !== segments || sourceReport.surfaceSegments !== surfaceSegments)
+      throw new Error('Explicit comparison reference has a different strand layout');
+  }
+  if (source) for (const key of ['position', 'tangent', 'scalpNormal', 'strandSide', 'strandRadius', 'along', 'strandRandom']) {
     const attribute = originalGeometry.getAttribute(key);
     if (!attribute || attribute.count !== count * per * 2 || !(attribute.array instanceof Float32Array))
       throw new Error(`Unexpected source attribute: ${key}`);
     arrays[key] = attribute.array;
   }
-  function makeTexture(entries, name) {
-    const width = Math.min(textureWidth, maxSize, entries);
-    const height = Math.ceil(entries / width);
-    if (height > maxSize) throw new Error(`${name} exceeds the device texture dimensions`);
-    const data = new Float32Array(width * height * 4);
+  function makeTexture(entries, name, preparedData = null, preparedSize = null) {
+    const width = preparedSize ? preparedSize[0] : Math.min(textureWidth, maxSize, entries);
+    const height = preparedSize ? preparedSize[1] : Math.ceil(entries / width);
+    if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width > maxSize || height > maxSize || width * height < entries)
+      throw new Error(`${name} exceeds the device texture dimensions`);
+    if (preparedData && (!(preparedData instanceof Float32Array) || preparedData.length !== width * height * 4))
+      throw new Error(`${name} has invalid FP32 backing storage`);
+    const data = preparedData || new Float32Array(width * height * 4);
     const texture = new T.DataTexture(data, width, height, T.RGBAFormat, T.FloatType);
     texture.name = name;
     texture.internalFormat = 'RGBA32F';
@@ -48,10 +59,10 @@ export function attachInstancedGroomR30(a, reference, {textureWidth = 2048} = {}
     texture.colorSpace = T.NoColorSpace;
     return texture;
   }
-  const points = makeTexture(count * per, 'R30 FP32 corrected positions and actual radii');
-  const normals = makeTexture(count * normalPer, 'R30 FP32 scalp normals and strand random');
+  const points = makeTexture(count * per, 'R30 FP32 corrected positions and actual radii', packedData?.pointData, packedData?.pointTextureSize);
+  const normals = makeTexture(count * normalPer, 'R30 FP32 scalp normals and strand random', packedData?.normalData, packedData?.normalTextureSize);
   const pointData = points.image.data, normalData = normals.image.data;
-  for (let i = 0; i < count; i++) {
+  if (!packedData) for (let i = 0; i < count; i++) {
     for (let j = 0; j < per; j++) {
       const vertex = (i * per + j) * 2;
       const p = vertex * 3, d = (i * per + j) * 4;
@@ -95,6 +106,17 @@ export function attachInstancedGroomR30(a, reference, {textureWidth = 2048} = {}
   geometry.setAttribute('fiberStrandId', new T.InstancedBufferAttribute(ids, 1));
   geometry.setIndex(new T.BufferAttribute(indices, 1));
   geometry.instanceCount = count;
+  // Three uses the bounding-sphere centre for transparent-object sorting even
+  // with frustumCulled=false. Keep the source centre, not the template origin.
+  if (originalGeometry) {
+    if (!originalGeometry.boundingSphere) originalGeometry.computeBoundingSphere();
+    geometry.boundingSphere = originalGeometry.boundingSphere.clone();
+    if (originalGeometry.boundingBox) geometry.boundingBox = originalGeometry.boundingBox.clone();
+  } else {
+    if (!packedData.boundingSphere?.isSphere) throw new Error('Packed data requires its complete centreline bounding sphere');
+    geometry.boundingSphere = packedData.boundingSphere.clone();
+    if (packedData.boundingBox) geometry.boundingBox = packedData.boundingBox.clone();
+  }
 
   function checkPoint(i, j) {
     if (!Number.isInteger(i) || i < 0 || i >= count || !Number.isInteger(j) || j < 0 || j >= per)
@@ -116,6 +138,16 @@ export function attachInstancedGroomR30(a, reference, {textureWidth = 2048} = {}
     };
   }
   function audit() {
+    if (!arrays) return {
+      method: 'direct packed FP32 storage; no expanded reference constructed or retained',
+      comparedPoints: 0, comparedVertices: 0, decodedPointCount: count * per,
+      finite: pointData.every(Number.isFinite) && normalData.every(Number.isFinite),
+      maxPositionErrorM: null, maxNormalComponentError: null, maxRadiusErrorM: null,
+      maxRandomError: null, maxAlongError: null, maxTangentComponentError: null, maxSideError: null,
+      exactStoredAttributes: null, tangentWithinFloat32Tolerance: null, referenceCompared: false,
+      gpuReadbackVerified: false,
+      limitation: 'No reference equivalence claim without explicit reference; run decoded full-segment contact QA',
+    };
     const max = {position: 0, normal: 0, radius: 0, random: 0, along: 0, tangent: 0, side: 0};
     let finite = true, comparedVertices = 0;
     for (let i = 0; i < count; i++) for (let j = 0; j < per; j++) {
@@ -140,7 +172,7 @@ export function attachInstancedGroomR30(a, reference, {textureWidth = 2048} = {}
     }
     return {
       method: 'all CPU-decoded FP32 texels and template attributes versus both original ribbon vertices',
-      comparedPoints: count * per, comparedVertices, finite,
+      comparedPoints: count * per, comparedVertices, finite, referenceCompared: true,
       maxPositionErrorM: max.position, maxNormalComponentError: max.normal,
       maxRadiusErrorM: max.radius, maxRandomError: max.random, maxAlongError: max.along,
       maxTangentComponentError: max.tangent, maxSideError: max.side,
@@ -151,42 +183,53 @@ export function attachInstancedGroomR30(a, reference, {textureWidth = 2048} = {}
     };
   }
   const decodeAudit = audit();
-  if (!decodeAudit.exactStoredAttributes || !decodeAudit.tangentWithinFloat32Tolerance) {
+  if (!decodeAudit.finite || (arrays && (!decodeAudit.exactStoredAttributes || !decodeAudit.tangentWithinFloat32Tolerance))) {
     geometry.dispose(); points.dispose(); normals.dispose();
     throw new Error(`Source is not representable by this lossless R30 layout: ${JSON.stringify(decodeAudit)}`);
   }
 
-  const originalVisible = source.visible;
-  const originalMaterial = source.material;
-  const u = originalMaterial.uniforms;
-  const sourceDiagnostics = sourceFiberDiagnostics(originalMaterial);
-  const mesh = new T.Mesh(geometry);
-  mesh.name = 'R30 instanced FP32 actual fibre ribbons';
-  mesh.matrixAutoUpdate = false;
-  mesh.matrix.copy(source.matrix);
-  mesh.renderOrder = source.renderOrder;
-  mesh.layers.mask = source.layers.mask;
-  const fiber = attachInstancedFiberMaterialR30(mesh, {
-    renderer: viewer.renderer,
-    fiberData: {points, normals, pointCount: per, normalPointCount: normalPer},
+  const originalVisible = source?.visible;
+  const originalMaterial = source?.material;
+  const u = originalMaterial?.uniforms;
+  const sourceDiagnostics = originalMaterial ? sourceFiberDiagnostics(originalMaterial) : null;
+  const fiberOptions = sourceDiagnostics ? {
     color: u.hairColor.value, roughness: u.roughness.value, specular: u.surfaceSpecular.value,
     radiusScale: u.radiusScale.value, opacity: u.fiberOpacity.value,
     coverageAA: sourceDiagnostics.coverageAA, coverageResolve: sourceDiagnostics.coverageResolve,
     shadows: sourceDiagnostics.shadows, guides: u.guideMode.value > 0.5,
     ambientGain: u.ambientGain.value,
+  } : packedData.fiberOptions;
+  const mesh = new T.Mesh(geometry);
+  mesh.name = packedData ? 'R30 direct-packed FP32 actual fibre ribbons' : 'R30 instanced FP32 actual fibre ribbons';
+  mesh.matrixAutoUpdate = false;
+  mesh.matrix.copy(source?.matrix || packedData.matrix);
+  mesh.renderOrder = source?.renderOrder || 0;
+  if (source) mesh.layers.mask = source.layers.mask;
+  const fiber = attachInstancedFiberMaterialR30(mesh, {
+    renderer: viewer.renderer,
+    fiberData: {points, normals, pointCount: per, normalPointCount: normalPer},
+    ...fiberOptions,
   });
-  source.visible = false;
-  (source.parent || viewer.scene).add(mesh);
+  const hiddenGuides = [];
+  if (source) source.visible = false;
+  else viewer.scene.traverse(object => {
+    if (object.name === '18 colour-coded structural guides (diagnostic thickness)') {
+      hiddenGuides.push([object, object.visible]); object.visible = false;
+    }
+  });
+  (source?.parent || viewer.scene).add(mesh);
   const templateBytes = placeholders.byteLength + pointIndices.byteLength + sides.byteLength + along.byteLength + indices.byteLength;
   const instanceBytes = ids.byteLength;
   const textureBytes = pointData.byteLength + normalData.byteLength;
   const texturePayloadBytes = (count * per + count * normalPer) * 16;
-  const originalGeometryBytes = Object.values(originalGeometry.attributes).reduce((sum, attribute) => sum + attribute.array.byteLength, 0) + (originalGeometry.index?.array.byteLength || 0);
+  const originalGeometryBytes = originalGeometry ? Object.values(originalGeometry.attributes).reduce((sum, attribute) => sum + attribute.array.byteLength, 0) + (originalGeometry.index?.array.byteLength || 0) : 0;
   const dataBytes = {
     textureBytes, texturePayloadBytes, texturePaddingBytes: textureBytes - texturePayloadBytes,
     pointTextureBytes: pointData.byteLength, normalTextureBytes: normalData.byteLength,
     templateBytes, instanceBytes,
     cpuTypedArrayBytes: textureBytes + templateBytes + instanceBytes,
+    cpuTextureStorageReusedWithoutCopy: !!packedData,
+    cpuAdditionalTypedArrayBytesDuringAttach: (packedData ? 0 : textureBytes) + templateBytes + instanceBytes,
     gpuDataBytesEstimated: textureBytes + templateBytes + instanceBytes,
     originalGeometryBytesRetainedSeparately: originalGeometryBytes,
     combinedGpuDataBytesEstimated: textureBytes + templateBytes + instanceBytes + originalGeometryBytes,
@@ -197,10 +240,12 @@ export function attachInstancedGroomR30(a, reference, {textureWidth = 2048} = {}
   function report() {
     return {
       ...baseline,
-      kind: 'R30-instanced-FP32-equivalence-study',
+      kind: packedData ? 'R30-direct-packed-instanced-fibre-study' : 'R30-instanced-FP32-equivalence-study',
       sourceKind: baseline.kind, geometryBytes: textureBytes + templateBytes + instanceBytes,
       storage: 'RGBA32F final corrected positions/radii; RGBA32F 21-point normals/random; one indexed ribbon template',
-      noGuideRegeneration: true, originalCollisionCorrectionsPreserved: true,
+      noGuideRegenerationDuringAttach: true, originalCollisionCorrectionsPreserved: true,
+      directPacked: !!packedData, expandedReferenceRetained: !!source,
+      packedBuildDataBytes: packedData ? baseline.dataBytes : null,
       count, segments, surfaceSegments, conversionMs, decodeAudit, dataBytes,
       textures: {
         points: [points.image.width, points.image.height],
@@ -210,15 +255,16 @@ export function attachInstancedGroomR30(a, reference, {textureWidth = 2048} = {}
       render: {instanceCount: geometry.instanceCount, templateVertices: vertices, trianglesPerPass: count * segments * 2},
       comparisonMode: mode, disposed, physics: false, animation: false,
       fiber: fiberMaterialDiagnostics(fiber.material),
-      referenceFiber: sourceFiberDiagnostics(originalMaterial),
+      referenceFiber: originalMaterial ? sourceFiberDiagnostics(originalMaterial) : null,
     };
   }
   function setComparisonMode(nextMode) {
     if (disposed) throw new Error('Instanced groom is disposed');
     if (!['instanced', 'reference', 'both', 'none'].includes(nextMode)) throw new Error('Unknown comparison mode');
+    if (!source && (nextMode === 'reference' || nextMode === 'both')) throw new Error('No expanded reference was supplied');
     mode = nextMode;
     mesh.visible = nextMode === 'instanced' || nextMode === 'both';
-    source.visible = nextMode === 'reference' || nextMode === 'both';
+    if (source) source.visible = nextMode === 'reference' || nextMode === 'both';
     viewer.render();
   }
   function createDecodedProbeView() {
@@ -247,8 +293,15 @@ export function attachInstancedGroomR30(a, reference, {textureWidth = 2048} = {}
       disposed = true;
       mesh.parent?.remove(mesh);
       geometry.dispose(); fiber.dispose(); points.dispose(); normals.dispose();
-      source.visible = originalVisible;
+      if (source) source.visible = originalVisible;
+      for (const [guide, visible] of hiddenGuides) guide.visible = visible;
       viewer.render();
     },
   };
+}
+
+/** Attach existing direct-packed arrays without copying them. Passing reference
+ * is optional and explicit, intended for 1800-strand equivalence QA only. */
+export function attachPackedGroomR30(a, packed, {reference = null, ...options} = {}) {
+  return attachInstancedGroomR30(a, reference, {...options, packedData: packed});
 }
