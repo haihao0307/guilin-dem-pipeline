@@ -1,0 +1,89 @@
+name: Tailor MP01 retained-output review
+on:
+  push:
+    branches: [feature/tailor-three-material-products-r01-20261011]
+    paths: [.github/workflows/tailor-material-products-review.yml]
+permissions:
+  contents: write
+  actions: read
+defaults:
+  run:
+    shell: bash
+concurrency:
+  group: tailor-mp01-candidate
+  cancel-in-progress: false
+jobs:
+  products:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: kaopu-tailor-workbench/material-products/r01
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          repository: haihao0307/guilin-dem-pipeline
+          run-id: 38122050774
+          name: tailor-mp01-candidate-evidence
+          path: retained-output
+      - name: Restore only approved material fields, not old application source
+        run: |
+          P=kaopu-tailor-workbench/material-products/r01
+          cp -r "retained-output/$P/maps" "$P/"
+          cp "retained-output/$P/materials.json" "retained-output/$P/EXPORT_SOURCE_RECEIPT.json" "retained-output/$P/EXPORT_FIELDS_REPORT.json" "retained-output/$P/MATERIAL_EXPORT_INPUT.json" "$P/"
+          mkdir -p mp01-review-evidence
+          cp "retained-output/$P/CANDIDATE_REPORT.json" mp01-review-evidence/FIRST_BOOT_FAILURE.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare exact original garment inputs and browser
+        run: |
+          P=kaopu-tailor-workbench/material-products/r01
+          python "$P/prepare.py"
+          python "$P/finish_macro.py"
+          python "$P/fix_boot.py"
+          node --check "$P/app.mjs"
+          node --check "$P/looks.mjs"
+          python -m py_compile "$P/qa/browser.py"
+          pip install playwright==1.57.0 pillow
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y fonts-noto-cjk
+      - name: Render twelve exact native products and current previews
+        env:
+          MP01_GENERATE: '1'
+        run: python kaopu-tailor-workbench/material-products/r01/qa/browser.py 2>&1 | tee mp01-review-evidence/browser.log
+      - name: Retain outputs only after explicit full candidate pass
+        run: |
+          P=kaopu-tailor-workbench/material-products/r01
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('kaopu-tailor-workbench/material-products/r01');r=json.loads((p/'CANDIDATE_REPORT.json').read_text())
+          assert r['passed'] and len(r['looks'])==12 and all(v['passed'] for v in r['looks']) and not r['pageErrors'] and not r['shaderErrors'],'Candidate failed; no publication'
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$GITHUB_REF_NAME" --depth=1
+          test "$(git rev-parse origin/$GITHUB_REF_NAME)" = "$GITHUB_SHA"
+          git add -- "$P"
+          git commit -m 'feat(tailor-mp01): actual twelve-look material exhibition with unchanged native shapes and verified controls'
+          git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
+      - name: Preserve source and actual visual evidence without duplicating large input maps
+        if: always()
+        run: |
+          P=kaopu-tailor-workbench/material-products/r01
+          mkdir -p mp01-review-evidence
+          cp "$P/"*.json "$P/"*.mjs "$P/"*.html "$P/"*.css "$P/"*.py mp01-review-evidence/
+          cp -r "$P/qa" "$P/thumbs" mp01-review-evidence/ 2>/dev/null || true
+          git rev-parse HEAD > mp01-review-evidence/COMMIT.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-mp01-reviewed-product-evidence
+          path: mp01-review-evidence/
+          retention-days: 14

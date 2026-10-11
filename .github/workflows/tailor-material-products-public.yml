@@ -1,0 +1,86 @@
+name: Tailor MP01 final public material exhibition
+on:
+  push:
+    branches: [feature/tailor-three-material-products-r01-20261011]
+    paths: [.github/workflows/tailor-material-products-public.yml]
+permissions:
+  contents: write
+defaults:
+  run:
+    shell: bash
+concurrency:
+  group: tailor-mp01-public
+  cancel-in-progress: false
+jobs:
+  final-public:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: kaopu-tailor-workbench/material-products/r01
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Finish measured appearance grain and pixel-identical texture delivery
+        run: |
+          mkdir -p mp01-public-evidence
+          P=kaopu-tailor-workbench/material-products/r01
+          pip install pillow playwright==1.57.0
+          python "$P/finish_products.py" 2>&1 | tee mp01-public-evidence/finish-products.log
+          node "$P/test-panel-grain.mjs" | tee mp01-public-evidence/panel-grain.log
+          node --check "$P/app.mjs"
+          python -m py_compile "$P/release.py" "$P/qa/browser.py"
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y fonts-noto-cjk
+      - name: Actual twelve-look regression and new current material previews
+        env:
+          MP01_GENERATE: '1'
+        run: python kaopu-tailor-workbench/material-products/r01/qa/browser.py 2>&1 | tee mp01-public-evidence/candidate.log
+      - name: Retain only explicitly passed product implementation and inputs
+        run: |
+          P=kaopu-tailor-workbench/material-products/r01
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          p=Path('kaopu-tailor-workbench/material-products/r01')
+          r=json.loads((p/'CANDIDATE_REPORT.json').read_text());g=json.loads((p/'PANEL_GRAIN_REPORT.json').read_text());t=json.loads((p/'TEXTURE_PACK_REPORT.json').read_text())
+          assert r['passed'] and len(r['looks'])==12 and all(x['passed'] for x in r['looks']) and not r['pageErrors'] and not r['shaderErrors']
+          assert g['passed'] and g['garments']==7 and g['panels']==42 and t['passed'] and t['maps']==40 and t['decodedRGBAIdentical']
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$GITHUB_REF_NAME" --depth=1
+          test "$(git rev-parse origin/$GITHUB_REF_NAME)" = "$GITHUB_SHA"
+          git add -- "$P"
+          git commit -m 'feat(tailor-mp01): final twelve material looks with rigid sleeve orientation, pixel-identical packed maps and native geometry proof'
+          git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
+      - name: Publish additive immutable exhibition without changing any old entrance
+        run: python kaopu-tailor-workbench/material-products/r01/release.py publish 2>&1 | tee mp01-public-evidence/publish.log
+      - name: Verify actual public file bytes
+        run: python kaopu-tailor-workbench/material-products/r01/release.py verify 2>&1 | tee mp01-public-evidence/public-bytes.log
+      - name: Actual HTTPS twelve product looks, independent materials and mobile viewport
+        run: |
+          P=kaopu-tailor-workbench/material-products/r01
+          export MP01_BASE=$(python -c "import json;print(json.load(open('$P/RELEASE_STATE.json'))['fixedURL'].split('?')[0])")
+          export GITHUB_SHA=$(git rev-parse HEAD)
+          python "$P/qa/browser.py" 2>&1 | tee mp01-public-evidence/public-browser.log
+          python "$P/release.py" finish 2>&1 | tee mp01-public-evidence/finish.log
+      - name: Keep complete actual visual evidence and implementation without duplicating texture inputs
+        if: always()
+        run: |
+          mkdir -p mp01-public-evidence
+          P=kaopu-tailor-workbench/material-products/r01
+          cp "$P/"*.json "$P/"*.mjs "$P/"*.html "$P/"*.css "$P/"*.py "$P/THIRD_PARTY_NOTICES.md" mp01-public-evidence/
+          cp -r "$P/qa" "$P/thumbs" mp01-public-evidence/ 2>/dev/null || true
+          git rev-parse HEAD > mp01-public-evidence/COMMIT.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-mp01-real-public-evidence
+          path: mp01-public-evidence/
+          retention-days: 14
