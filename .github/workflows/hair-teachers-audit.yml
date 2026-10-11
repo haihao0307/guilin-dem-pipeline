@@ -1,0 +1,41 @@
+name: Hair Teachers Audit
+on:
+  push:
+    branches: [feature/hair-fusion-r10-20261011]
+    paths: [.github/workflows/hair-teachers-audit.yml]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Fetch official eyebrow asset pack and selected source trees
+        run: |
+          mkdir -p /tmp/teachers
+          cd /tmp/teachers
+          curl --fail --location --retry 2 --max-time 150 -o eyebrows01_cc0.zip https://files2.makehumancommunity.org/asset_packs/eyebrows01/eyebrows01_cc0.zip
+          git clone --filter=blob:none --depth=1 --sparse https://github.com/digital-salon/Digital-Salon.git salon
+          git -C salon sparse-checkout set src shaders
+          git clone --filter=blob:none --depth=1 --sparse https://github.com/c-he/perm.git perm
+          git -C perm sparse-checkout set src/hair data/roots
+          git -C salon rev-parse HEAD > salon/REVISION.txt
+          git -C perm rev-parse HEAD > perm/REVISION.txt
+          rm -rf salon/.git perm/.git
+          python - <<'PY'
+          from pathlib import Path
+          import json,zipfile,hashlib
+          p=Path('.');z=zipfile.ZipFile('eyebrows01_cc0.zip');names=z.namelist();assert all(not n.startswith('/') and '..' not in Path(n).parts for n in names);z.extractall('makehuman')
+          report={'eyebrow_zip_sha256':hashlib.sha256(Path('eyebrows01_cc0.zip').read_bytes()).hexdigest(),'eyebrow_files':names,'source_revisions':{k:Path(k+'/REVISION.txt').read_text().strip() for k in ['salon','perm']}}
+          Path('inventory.json').write_text(json.dumps(report,indent=2));print(json.dumps(report,indent=2))
+          for base in ['salon/src','salon/shaders','perm/src/hair']:
+            print('\nSOURCE INVENTORY',base)
+            for f in sorted(Path(base).rglob('*')):
+              if f.is_file():print(str(f),f.stat().st_size)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-teachers-audit
+          path: /tmp/teachers
+          retention-days: 7
