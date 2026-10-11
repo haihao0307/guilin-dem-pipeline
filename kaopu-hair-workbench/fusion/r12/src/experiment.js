@@ -37,7 +37,7 @@ function hash(a){const b=new Uint8Array(a.buffer,a.byteOffset,a.byteLength);let 
 const assetCache=new Map();let sessionSignal;
 async function loadAsset(kind){
  if(assetCache.has(kind))return assetCache.get(kind);const[file,size,expected]=ASSETS[kind];
- const packed='__R12_ASSET_BASE__',base=packed.startsWith('https://')?packed:new URL('assets/',location.href).href;
+ const packed='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/a042dc0e4aa0370e2dbd3225dfa05f8c9ee905d4/kaopu-hair-workbench/fusion/r12/assets/',base=packed.startsWith('https://')?packed:new URL('assets/',location.href).href;
  const result=await loadFixedAsset({primary:base+file+'.gz',fallback:ASSET_BASE+file,signal:sessionSignal,size,sha256:expected,onProgress:(n,mode)=>{$('loadingText').textContent='原 GNM '+kind+' · '+(mode==='compressed'?'无损压缩':'原数据')+' '+(n/1e6).toFixed(1)+' MB';$('progress').value=Math.min(.97,n/size);},onFallback:reason=>{$('loadingText').textContent='主资源未通过读取，尝试同一模型原数据';records.push({kind,recoveredFrom:reason})}});
  records.push({kind,bytes:size,sha256:expected,transport:result.transport});const parsed=parseContainer(result.buffer);assetCache.set(kind,parsed);return parsed;
 }
@@ -185,7 +185,7 @@ function refreshFusionRoots(){
  if(groom.browsVisible&&groom.browsModel>0&&makeBrows){for(let i=0;i<makeBrows.count;i++){if(!makeBrows.selected[i])continue;points.push(...makeBrows.positions.subarray(i*makeBrows.per*3,i*makeBrows.per*3+3));colors.push(.9,.5,.95)}}
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(points,3));g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));fusionRootMesh=new THREE.Points(g,new THREE.PointsMaterial({size:.0007,vertexColors:true,sizeAttenuation:true}));fusionRootMesh.name='R10 exact surface root inspection';scene.add(fusionRootMesh);legacyHair.mesh.visible=false;teacherMeshes[0].visible=false;legacyFace.regions.beard.mesh.visible=false;if(makeBrows)makeBrows.mesh.visible=false;teacherMeshes[1].visible=false;
 }
-function fusionSnapshot(){return{schema:'kaopu.hair.groom@1.0',version:FUSION_VERSION,sourceRevision:'__R12_SOURCE_REVISION__',baseRevision:'653c9ec7f7fce99d19e69a5cf99f66c7e96f6cbd',subject:'gnm-original',units:'metre',groom:{...groom},case:state.case,light:state.light}}
+function fusionSnapshot(){return{schema:'kaopu.hair.groom@1.0',version:FUSION_VERSION,sourceRevision:'70a040d14a8bb8f432866cd8795a7371fb3fc3d3',baseRevision:'653c9ec7f7fce99d19e69a5cf99f66c7e96f6cbd',subject:'gnm-original',units:'metre',groom:{...groom},case:state.case,light:state.light}}
 function loadFusionSnapshot(v){if(v?.schema!=='kaopu.hair.groom@1.0'||v.subject!=='gnm-original'||!v.groom||typeof v.groom!=='object')throw Error('不是有效的 R12 毛发参数');if(!['neutral','smile','surprise','identity'].includes(v.case)||!['both','warm','cool','ambient'].includes(v.light))throw Error('存档的表情或灯光无效');setGroom({...DEFAULT_GROOM,...v.groom});setCase(v.case);setLight(v.light);setRoots(false)}
 function fusionDiagnostics(){
  if(!legacyHair)return{version:FUSION_VERSION,ready:false};const h=legacyHair,b=h.binding,counts={crown:0,front:0,left:0,right:0,ear:0,nape:0};for(let j=0;j<h.activeCount;j++){const i=h.activeRoots[j],p=b.templateRoots.subarray(i*3,i*3+3),w=regionWeights(p);if(w.crown>.5)counts.crown++;if(p[2]>.055)counts.front++;if(w.side>.4)counts[p[0]>0?'left':'right']++;if(w.ear>.25)counts.ear++;if(w.nape>.4)counts.nape++}
