@@ -70,14 +70,14 @@ test('fresh repair is a small feathered field area, reducing the same damage and
 });
 test('CPU/GLSL use matching bounded erosion terms, integer hash, and three non-fractal noise samples',()=>{
   const glsl=ROOM_SURFACE_SHADER.field;
-  for(const phrase of ['q*.61','q*3.7','q*17.3','(f.macro-.49)*.009+f.damp*.0015','(f.meso-.49)*.025+f.damp*.002','(f.chip-.54)*.012','f.damage=clamp(f.erosionDepth/.009','f.height=clamp((f.plasterThickness-.01)*rwReliefStrength,-.012,.012)','uvec3 q=uvec3(ivec3(floor(p)))'])assert(glsl.includes(phrase),phrase);
+  for(const phrase of ['q*.61','q.y*1.45','q*17.3','(f.macro-.49)*.009+f.damp*.0015','(f.meso-.51)*.027+(f.chip-.5)*.0055+f.damp*.002','(f.chip-.54)*.012','f.damage=clamp(f.erosionDepth/.009','f.height=clamp((f.plasterThickness-.01)*rwReliefStrength,-.012,.012)','uvec3 q=uvec3(ivec3(floor(p)))'])assert(glsl.includes(phrase),phrase);
   assert(!/sdFbm|raymarch|sampler2D|texture2D|iTime/.test(glsl));assert(ROOM_SURFACE_SHADER.surface.includes('if(rwFootprint<.019)'));assert(ROOM_SURFACE_SHADER.surface.includes('rwWeaveWeight'));
 });
 test('all eight real Three r170 materials receive valid source hooks without stacked host fields',()=>{
   assert.equal(THREE.REVISION,'170');const host=createHostMaterialLibrary(THREE),lib=createRoomMaterialLibrary(THREE,{recipe:make(),hostLibrary:host});
   try {for(const kind of ROOM_MATERIAL_KINDS) {
     const m=lib.get(kind),shader=shaderOf(m);assert(m.isMeshStandardMaterial);assert.equal(m.userData.room.kind,kind);assert(m.userData.room.hostReused);
-    assert(shader.vertexShader.includes('vRoomPosition=transformed'));assert(shader.vertexShader.includes('vRoomNormal=objectNormal'));
+    assert(shader.vertexShader.includes('vRoomPosition=roomFieldPosition'));assert(shader.vertexShader.includes('vRoomNormal=objectNormal'));assert(shader.vertexShader.includes('attribute vec3 roomFieldPosition;'));assert(!shader.vertexShader.includes('vRoomPosition=transformed'));
     assert(shader.fragmentShader.includes('RoomField rwF=rwField(rwP,rwN)'));assert(!shader.fragmentShader.includes('stNoise('));assert(!shader.fragmentShader.includes('vStreetPosition'));
     assert.equal(shader.uniforms.rwAge.value,48/58);assert.equal(shader.uniforms.rwSillCount.value,1);assert.equal(shader.uniforms.rwSillA.value.length,6);
     assert.equal(shader.uniforms.rwDripA.value.length,8);assert.equal(shader.uniforms.rwWallThickness.value,.18);
@@ -108,4 +108,25 @@ test('explicit failure is preferable to silent shader incompatibility or hidden 
     assert.throws(()=>m.onBeforeCompile({uniforms:{},vertexShader:'void main(){}',fragmentShader:'void main(){}'}),/Unsupported/);
     assert.throws(()=>lib.get('cloth',{clothBounds:[1,0,0,2]}),/clothBounds/);
   }finally{lib.dispose();}
+});
+
+
+test('lane-seeded runoff makes mostly short seepage and a minority of long flows',()=>{
+  const r=make({sills:[{position:[.67,2.3,.13],normal:[0,0,1],width:1.3,length:1.8}],drips:[],rainShadows:[],repairs:[],groundContact:false});
+  let near=0,far=0,shortLanes=0,longLanes=0;
+  for(let lane=1;lane<14;lane++){
+    let early=0,late=0;
+    for(let k=0;k<20;k++){
+      const x=.02+(lane+k/20)*.087;
+      early=Math.max(early,field([x,2.20,.13],r).runoff);
+      late=Math.max(late,field([x,1.55,.13],r).runoff);
+    }
+    near+=early;far+=late;if(early>.015&&late<.005)shortLanes++;if(late>.015)longLanes++;
+  }
+  assert(shortLanes>=4,`expected short seepage, got ${shortLanes}`);assert(longLanes>=1&&longLanes<=4,`expected few long flows, got ${longLanes}`);assert(far<near*.45);
+});
+test('roof ponding is high/upward-only and does not dirty tabletop or floor fields',()=>{
+  const r=make();let roof=0;
+  for(let x=-1.5;x<1.6;x+=.13){roof=Math.max(roof,field([x,2.87,-2],r,[0,1,0]).roofPonding);assert.equal(field([x,.78,-2],r,[0,1,0]).roofPonding,0);assert.equal(field([x,0,-2],r,[0,1,0]).roofPonding,0);assert.equal(field([x,2.87,-2],r,[0,-1,0]).roofPonding,0);}
+  assert(roof>.25);assert(ROOM_SURFACE_SHADER.surface.includes('#if RW_KIND == 1\n// High upward concrete alone'));
 });

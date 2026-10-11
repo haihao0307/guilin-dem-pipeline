@@ -32,6 +32,7 @@ jobs:
           mkdir -p "$ROOM_OUT"
           ROOM_HOST_GAME_ROOT="$GITHUB_WORKSPACE/$ROOM_GAME" ROOM_HOST_ROOT="$GITHUB_WORKSPACE/$ROOM_GAME" node --test "$ROOM_GAME/room-unit/room-unit.test.mjs" "$ROOM_GAME/room-unit/room-weathering.test.mjs" | tee "$ROOM_OUT/unit-tests.txt"
           node "$ROOM_GAME/room-unit/native-codec/write_sample.mjs" | tee "$ROOM_OUT/sample-manifest.json"
+          ROOM_HOST_GAME_ROOT="$GITHUB_WORKSPACE/$ROOM_GAME" node --test "$ROOM_GAME/room-unit/room-native.test.mjs" | tee "$ROOM_OUT/native-tests.txt"
       - name: Install official pinned browser test runtime
         run: |
           npm install --prefix "$RUNNER_TEMP/room-browser" --registry=https://registry.npmjs.org --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0

@@ -11,8 +11,8 @@ export function buildDwellingUnit(input,{THREE,createHostMaterialLibrary}={}){
  for(const key of ['cloth','clothBlue','clothRed','zinc'])mats[key].side=THREE.DoubleSide;
  const batches=new Map(),geometries=[],colliders=[],fieldSamples=[];let disposed=false,doorOpen=s.doorOpen;
  const P=new THREE.Vector3(),N=new THREE.Vector3();
- function bake(g,mat='plaster',group='static',transform=null,{deform=false,normal=null,tag=''}={}){
-  if(transform)g.applyMatrix4(transform);const p=g.attributes.position,n=g.attributes.normal;
+ function bake(g,mat='plaster',group='static',transform=null,{deform=false,normal=null,tag='',fieldTransform=null}={}){
+  if(transform)g.applyMatrix4(transform);const p=g.attributes.position,n=g.attributes.normal;const reference=Array.from(p.array);if(fieldTransform)for(let i=0;i<p.count;i++){P.fromBufferAttribute(p,i).applyMatrix4(fieldTransform);reference.splice(i*3,3,P.x,P.y,P.z);}
   if(deform){for(let i=0;i<p.count;i++){
    P.fromBufferAttribute(p,i);N.fromBufferAttribute(n,i);const a=P.toArray(),nn=normal||N.toArray(),f=evaluateRoomSurfaceField(a,nn,s.surface);
    const relief=Math.max(-.011,Math.min(.006,f.height??((f.plasterThickness??.008)-.012)));
@@ -21,8 +21,8 @@ export function buildDwellingUnit(input,{THREE,createHostMaterialLibrary}={}){
    p.setXYZ(i,P.x+N.x*relief,P.y+N.y*relief,P.z+N.z*relief);
    if(i%53===0)fieldSamples.push({p:a,damage:f.damage,height:relief,substrateExposure:f.substrateExposure});
   }g.computeVertexNormals();}
-  const key=group+'/'+mat;let b=batches.get(key);if(!b){b={position:[],normal:[],color:[],index:[],mat,group,tags:new Set()};batches.set(key,b);}const off=b.position.length/3;
-  for(let i=0;i<p.count;i++){b.position.push(p.getX(i),p.getY(i),p.getZ(i));b.normal.push(g.attributes.normal.getX(i),g.attributes.normal.getY(i),g.attributes.normal.getZ(i));b.color.push(1,1,1);}
+  const key=group+'/'+mat;let b=batches.get(key);if(!b){b={position:[],normal:[],color:[],roomFieldPosition:[],index:[],mat,group,tags:new Set()};batches.set(key,b);}const off=b.position.length/3;
+  for(let i=0;i<p.count;i++){b.position.push(p.getX(i),p.getY(i),p.getZ(i));b.normal.push(g.attributes.normal.getX(i),g.attributes.normal.getY(i),g.attributes.normal.getZ(i));b.color.push(1,1,1);b.roomFieldPosition.push(...reference.slice(i*3,i*3+3));}
   if(g.index)for(const ix of g.index.array)b.index.push(off+ix);else for(let i=0;i<p.count;i++)b.index.push(off+i);if(tag)b.tags.add(tag);g.dispose();
  }
  function transform(pos,rot=[0,0,0]){return new THREE.Matrix4().compose(new THREE.Vector3(...pos),new THREE.Quaternion().setFromEuler(new THREE.Euler(...rot)),new THREE.Vector3(1,1,1));}
@@ -47,7 +47,7 @@ export function buildDwellingUnit(input,{THREE,createHostMaterialLibrary}={}){
    let mat=({wall:'plaster',repair:'plaster',sill:'concrete',frame:plan.score.kind==='tile-door'?'wood':'iron',glass:'glass',iron:'iron',door:'wood'})[p.material]||'iron';
    const group=p.group==='door'?'door':frontGroup;let g;
    if(p.shape==='box'){g=new THREE.BoxGeometry(...p.size);g.translate(...p.position);}else{const a=new THREE.Vector3(...p.a),b=new THREE.Vector3(...p.b);g=new THREE.CylinderGeometry(p.radius,p.radius,a.distanceTo(b),8);g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize()));g.translate(...a.add(b).multiplyScalar(.5).toArray());}
-   bake(g,mat,group,p.group==='door'?null:matrix,{tag:p.tag});
+   bake(g,mat,group,p.group==='door'?null:matrix,{tag:p.tag,fieldTransform:p.group==='door'?matrix.clone().multiply(transform(plan.hinge.position)):null});
   }
   if(plan.hinge){groups.door.position.fromArray(new THREE.Vector3(...plan.hinge.position).applyMatrix4(matrix).toArray());groups.door.rotation.y=doorOpen?plan.hinge.openAngle:0;}
  }
@@ -66,8 +66,8 @@ export function buildDwellingUnit(input,{THREE,createHostMaterialLibrary}={}){
  for(const x of [bed.x-.4,bed.x+.4])for(const z of [bed.z-.86,bed.z+.86])rod([x,.03,z],[x,.39,z],.024,'iron');
  for(const z of [bed.z-.94,bed.z+.94]){rod([bed.x-.43,.39,z],[bed.x-.43,.74,z],.021,'iron');rod([bed.x+.43,.39,z],[bed.x+.43,.74,z],.021,'iron');rod([bed.x-.43,.74,z],[bed.x+.43,.74,z],.021,'iron');}
  box([bed.x,.45,bed.z],[bed.width,.16,bed.length],'cloth');sphere([bed.x,.575,bed.z-.61],[.32,.075,.19],'cloth');
- function fabricRect(x,y,z,width,length,material,phase=0){const g=new THREE.PlaneGeometry(width,length,16,24),p=g.attributes.position;for(let i=0;i<p.count;i++){const u=p.getX(i),v=p.getY(i);p.setXYZ(i,x+u,y+.025*Math.sin(u*17+phase)*Math.sin(v*7)+.010*Math.sin(v*31+u*9),z+v);}g.computeVertexNormals();bake(g,material);}
- fabricRect(bed.x,.551,bed.z+.30,.89,1.17,'clothBlue',1.2);
+ function fabricRect(x,y,z,width,length,material,phase=0){const g=new THREE.PlaneGeometry(width,length,16,24),p=g.attributes.position;for(let i=0;i<p.count;i++){const u=p.getX(i),v=p.getY(i);p.setXYZ(i,x+u,y+.018*(.5+.5*Math.sin(u*17+phase)*Math.sin(v*7))+.003*(.5+.5*Math.sin(v*31+u*9)),z+v);}g.computeVertexNormals();bake(g,material);}
+ fabricRect(bed.x,.536,bed.z+.30,.89,1.17,'clothBlue',1.2);
  colliders.push({id:'bed',min:[bed.x-.46,0,bed.z-1],max:[bed.x+.46,.80,bed.z+1]});
  // Reused timber rules for desk, stool, shelf, storage chest. No borrowed meshes.
  box([1.03,.77,-.74],[1.00,.075,.62],'wood');for(const x of [.63,1.43])for(const z of [-.98,-.5])box([x,.40,z],[.05,.75,.05],'darkWood');
@@ -91,7 +91,16 @@ export function buildDwellingUnit(input,{THREE,createHostMaterialLibrary}={}){
   const shape=new THREE.Shape(pts.map(([x,y])=>new THREE.Vector2(x*width,y*length)));let g=new THREE.ShapeGeometry(shape,2).toNonIndexed();
   // Refine the fixed silhouette twice, then evaluate its hanging-wave surface.
   for(let k=0;k<3;k++){const a=g.attributes.position.array,v=[];for(let i=0;i<a.length;i+=9){const A=Array.from(a.slice(i,i+3)),B=Array.from(a.slice(i+3,i+6)),C=Array.from(a.slice(i+6,i+9)),ab=A.map((x,j)=>(x+B[j])/2),bc=B.map((x,j)=>(x+C[j])/2),ca=C.map((x,j)=>(x+A[j])/2);for(const p of [A,ab,ca,ab,B,bc,ca,bc,C,ab,bc,ca])v.push(...p);}g.dispose();g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));}
-  const p=g.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),fall=-y/length;p.setXYZ(i,cx+x,topY+y,z+.026*Math.sin(x*37+fall*1.7)*fall+.03*Math.sin(fall*3.1));}g.computeVertexNormals();bake(g,mat);
+  const p=g.attributes.position;for(let i=0;i<p.count;i++){
+   const x=p.getX(i),y=p.getY(i),fall=Math.max(0,-y/length),u=x/width;
+   const heldSpan=width*.16,betweenPegs=Math.max(0,1-(x/heldSpan)**2);
+   const topSag=.034*betweenPegs*Math.exp(-fall*3.2);
+   const sleeveDrop=shirt?.13*Math.max(0,(Math.abs(u)-.24)/.26)*Math.exp(-fall*2.4):0;
+   const weightCurve=.014*Math.sin(u*5.7+cx)*fall+.018*Math.sin(u*11.3)*fall*fall;
+   const fold=.055*Math.sin(u*12.7+fall*1.2+cx*1.7)*(.18+.82*fall);
+   const softTurn=.025*Math.sin(fall*3.6+u*2.1)+.025*fall*fall;
+   p.setXYZ(i,cx+x+.018*Math.sin(fall*2.5+cx)*fall,topY+y-topSag-sleeveDrop+weightCurve,z+fold+softTurn);
+  }g.computeVertexNormals();bake(g,mat);
   for(const x of [cx-width*.14,cx+width*.14])box([x,topY+.025,z],[.018,.062,.025],'wood');
  }
  garment(.40,2.36,.63,.67,.65,'cloth',true);garment(.96,2.36,.64,.55,.57,'clothRed',true);garment(1.38,2.38,.65,.25,.67,'clothBlue',false);
@@ -105,10 +114,10 @@ export function buildDwellingUnit(input,{THREE,createHostMaterialLibrary}={}){
  box([door.x,-.025,.27],[door.width+.18,.055,.38],'concrete');
  let triangles=0,bytes=0;
  for(const b of batches.values()){
-  const g=new THREE.BufferGeometry();for(const key of ['position','normal','color'])g.setAttribute(key,new THREE.Float32BufferAttribute(b[key],3));g.setIndex(b.index);g.computeBoundingBox();g.computeBoundingSphere();geometries.push(g);const mesh=new THREE.Mesh(g,mats[b.mat]);mesh.name=b.group+'/'+b.mat;mesh.castShadow=true;mesh.receiveShadow=true;mesh.userData.tags=[...b.tags];groups[b.group].add(mesh);triangles+=g.index.count/3;bytes+=g.index.array.byteLength;for(const a of Object.values(g.attributes))bytes+=a.array.byteLength;
+  const g=new THREE.BufferGeometry();for(const key of ['position','normal','color','roomFieldPosition'])g.setAttribute(key,new THREE.Float32BufferAttribute(b[key],3));g.setIndex(b.index);g.computeBoundingBox();g.computeBoundingSphere();geometries.push(g);const mesh=new THREE.Mesh(g,mats[b.mat]);mesh.name=b.group+'/'+b.mat;mesh.castShadow=true;mesh.receiveShadow=true;mesh.userData.tags=[...b.tags];groups[b.group].add(mesh);triangles+=g.index.count/3;bytes+=g.index.array.byteLength;for(const a of Object.values(g.attributes))bytes+=a.array.byteLength;
  }
  const graph={nodes:[{id:'front-common-corridor',position:[door.x,.01,.55],type:'walk',destination:'shared-kitchen-toilet-network',connected:false},{id:'inside-entry',position:[door.x,.01,-.55],type:'walk'},{id:'central-room',position:[0,.01,-1.7],type:'walk'},{id:'bedside',position:[-.05,.01,-3],type:'walk'}],edges:[{from:'front-common-corridor',to:'inside-entry',width:dp.opening.clearWidth,height:dp.opening.clearHeight,enabled:doorOpen},{from:'inside-entry',to:'central-room',width:.82,height:2.3,enabled:true},{from:'central-room',to:'bedside',width:.80,height:2.3,enabled:true}]};
- const proof={schema:s.schema,id:s.id,units:'metres',originalProcedural:true,singleRecipe:true,externalMeshes:0,imageTextures:0,completeRoom:true,standingFloor:true,closedRoof:true,bedCount:1,bedCountMeaning:'one inspection furnishing; not final population rule',shapeAndSurfaceField:s.surface,fieldSamples,geometryFieldBoundM:[-.011,.006],wallCoreMinThicknessM:t-.022,stats:{triangles,geometryBytes:bytes,drawCalls:batches.size,materials:Object.keys(mats).length},graph,colliders,utilityPaths:[{role:'rainwater',points:rainPoints,from:'gutter',to:'external-drain',endConnected:false},{role:'water-supply',points:supplyPoints,from:'external-common-service',to:'reserved-interior-endpoint',endConnected:false}],doorOpen,cutaway:false,construction:'single build from immutable metric recipe, field generated shape and material together'};
+ const proof={schema:s.schema,id:s.id,units:'metres',originalProcedural:true,singleRecipe:true,externalMeshes:0,imageTextures:0,completeRoom:true,standingFloor:true,closedRoof:true,bedCount:1,bedCountMeaning:'one inspection furnishing; not final population rule',shapeAndSurfaceField:s.surface,fieldCoordinateAttribute:'roomFieldPosition (before bounded displacement)' ,fieldSamples,geometryFieldBoundM:[-.011,.006],wallCoreMinThicknessM:t-.022,stats:{triangles,geometryBytes:bytes,drawCalls:batches.size,materials:Object.keys(mats).length},graph,colliders,utilityPaths:[{role:'rainwater',points:rainPoints,from:'gutter',to:'external-drain',endConnected:false},{role:'water-supply',points:supplyPoints,from:'external-common-service',to:'reserved-interior-endpoint',endConnected:false}],doorOpen,cutaway:false,construction:'single build from immutable metric recipe, field generated shape and material together'};
  root.userData.dwelling=proof;
  function setDoorOpen(value){if(typeof value!=='boolean')throw Error('Boolean door state required');doorOpen=value;groups.door.rotation.y=value?dp.hinge.openAngle:0;proof.doorOpen=value;graph.edges[0].enabled=value;}
  function measure(){root.updateWorldMatrix(true,true);const b=new THREE.Box3().setFromObject(root);return{...proof.stats,bounds:{min:b.min.toArray(),max:b.max.toArray()}};}

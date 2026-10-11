@@ -1,6 +1,8 @@
 /**
  * Room-local, metre-scaled procedural ageing. No maps, imports, overlay meshes or clock ageing.
- * Bake component geometry into one ROOM frame before using these materials. Translating or
+ * Bake component geometry into one ROOM frame and preserve the pre-displacement coordinates
+ * in a vec3 roomFieldPosition attribute. Unchanged parts copy position to that attribute.
+ * Translating or
  * rotating the finished room does not change its surface. Do not instance transformed parts
  * unless their instance transform has already been baked into that same room-local frame.
  */
@@ -24,7 +26,7 @@
 export const ROOM_WEATHERING_REVISION = 'room-causal-weathering-r01';
 export const ROOM_MATERIAL_KINDS = Object.freeze(['plaster','concrete','ceramic','iron','zinc','wood','cloth','glass']);
 export const ROOM_FIELD_LIMITS = Object.freeze({sills:6,drips:8,rainShadows:4,repairs:6,maxMaterials:48});
-export const ROOM_FIELD_SCALES = Object.freeze({macro:.61,meso:3.7,chip:17.3,micro:117,minimumPlaster:.003,maximumPlaster:.016});
+export const ROOM_FIELD_SCALES = Object.freeze({macro:.61,meso:3.7,mesoVertical:1.45,chip:17.3,micro:117,minimumPlaster:.003,maximumPlaster:.016});
 const sat = x => Math.max(0,Math.min(1,x));
 const mix = (a,b,t) => a+(b-a)*t;
 const smooth = (a,b,x) => {const t=sat((x-a)/(b-a));return t*t*(3-2*t);};
@@ -84,7 +86,11 @@ function emitterFrame(p,n,e) {
 export function evaluateRoomSurfaceField(position,normal,input={}) {
   const r=createRoomSurfaceRecipe(input),p=vec3(position),n=normal3(normal),s=r.seedValue;
   const q=p.map((v,i)=>v+s*[1,.71,.37][i]);
-  const macro=noise(q.map(v=>v*.61)),meso=noise(q.map(v=>v*3.7)),chip=noise(q.map(v=>v*17.3));
+  const macro=noise(q.map(v=>v*.61));
+  // Existing macro signal bends the elongated middle-scale domain. The fine field
+  // chips its boundary; it does not add more independent circular dirt islands.
+  const meso=noise([(q[0]+(macro-.5)*.36)*3.7,q[1]*1.45,(q[2]+(macro-.5)*.28)*3.7]);
+  const chip=noise(q.map((v,i)=>v*17.3+[meso*.74,macro*.38,meso*.57][i]));
   const age=sat(r.ageYears/58),y=Math.max(0,p[1]-r.groundY);
   const tideHeight=.17+macro*.54+meso*.09;
   const rising=(1-smooth(tideHeight-.11,tideHeight+.09,y))*r.groundContact;
@@ -96,13 +102,17 @@ export function evaluateRoomSurfaceField(position,normal,input={}) {
   }
   for(const e of r.sills) {
     const f=emitterFrame(p,n,e),edgeDistance=Math.abs(Math.abs(f.along)-e.width*.5);
-    const edge=Math.exp(-Math.pow(edgeDistance/.065,2)),lane=Math.floor((f.along+e.width*.5)/.065);
+    const edge=Math.exp(-Math.pow(edgeDistance/.055,2)),lane=Math.floor((f.along+e.width*.5)/.087);
     const laneHash=hash([lane,s,e.position[0]+e.position[2]*3.1]);
-    const laneCenter=(lane+.18+laneHash*.6)*.065-e.width*.5;
-    const finger=Math.exp(-Math.pow((f.along-laneCenter)/(.008+laneHash*.011),2))*(.22+laneHash*.4);
+    const laneCenter=(lane+.15+laneHash*.7)*.087-e.width*.5;
+    const longFlow=smooth(.82,.97,laneHash),laneLength=e.length*(.08+.24*laneHash+.68*longFlow);
+    const finger=Math.exp(-Math.pow((f.along-laneCenter)/(.004+laneHash*.008),2))*(.06+laneHash*.2+longFlow*.3)*smooth(.16,.42,laneHash);
     const span=1-smooth(e.width*.47,e.width*.54,Math.abs(f.along));
-    const tail=smooth(0,.035,f.below)*(1-smooth(e.length*.62,e.length,f.below))*Math.exp(-Math.max(0,f.below)/e.length*1.15);
-    runoff+=Math.max(edge*.94,finger*span)*tail*f.gate*e.strength;
+    const sideHash=hash([f.along<0?19:20,s+11,e.position[0]*17+e.position[2]*11]);
+    const edgeLength=e.length*(.3+sideHash*.5);
+    const fingerTail=smooth(0,.025,f.below)*(1-smooth(laneLength*.55,laneLength,f.below))*Math.exp(-Math.max(0,f.below)/laneLength*.7);
+    const edgeTail=smooth(0,.035,f.below)*(1-smooth(edgeLength*.62,edgeLength,f.below))*Math.exp(-Math.max(0,f.below)/edgeLength*.7);
+    runoff+=Math.max(edge*(.78+sideHash*.22)*edgeTail,finger*span*fingerTail)*f.gate*e.strength;
   }
   for(const e of r.drips) {
     const f=emitterFrame(p,n,e),width=e.radius*(1+.85*sat(f.below/e.length));
@@ -119,16 +129,20 @@ export function evaluateRoomSurfaceField(position,normal,input={}) {
   const damp=sat((rising*(.61+meso*.2)+tideBand*.27+runoff*.93)*r.dampStrength*(.52+age*.48)*(1-repair*.8));
   const maximumErosion=Math.min(.011,r.wallThickness*.075);
   const largeCarve=roomSmoothCarveMax(0,(macro-.49)*.009+damp*.0015,.0016);
-  const middleCarve=roomSmoothCarveMax(largeCarve,(meso-.49)*.025+damp*.002,.0015);
+  const middleCarve=roomSmoothCarveMax(largeCarve,(meso-.51)*.027+(chip-.5)*.0055+damp*.002,.00085);
   const rawCarve=roomSmoothCarveMax(middleCarve,(chip-.54)*.012,.00065);
   const erosionDepth=Math.min(maximumErosion,Math.max(0,rawCarve)*age*r.damageStrength*(1-repair*.95));
   const damage=sat(erosionDepth/.009);
-  const substrateExposure=smooth(.34,.79,damage);
+  const substrateExposure=smooth(.39,.53,damage);
   const plasterThickness=Math.max(.003,Math.min(.016,.014-erosionDepth+(.5-macro)*.002*(1-repair)+repair*.001));
+  const roofExposure=smooth(1.9,2.45,y)*Math.max(0,n[1])*r.rainExposure;
+  const roofLevel=macro*.68+meso*.32;
+  const roofPonding=roofExposure*smooth(.44,.62,roofLevel);
+  const roofTide=roofExposure*(1-smooth(.012,.048,Math.abs(roofLevel-.47)));
   const dust=sat((.12+macro*.2)*(1-Math.min(1,damp)*.8)+Math.max(0,n[1])*.31);
   const height=Math.max(-.012,Math.min(.012,(plasterThickness-.01)*r.reliefStrength));
   const roughnessDelta=.05*meso+.12*damage+.04*dust-.07*repair;
-  return {macro,meso,chip,age,rising,tideBand,shadow,runoff,rust,repair,damp,damage,substrateExposure,erosionDepth,plasterThickness,dust,height,roughnessDelta};
+  return {macro,meso,chip,age,rising,tideBand,shadow,runoff,rust,repair,damp,damage,substrateExposure,erosionDepth,plasterThickness,roofExposure,roofPonding,roofTide,dust,height,roughnessDelta};
 }
 
 const GLSL_FIELD = `
@@ -164,10 +178,12 @@ vec3 rwEmitter(vec3 p,vec3 n,vec4 a,vec4 b){
   float plane=dot(d,b.xyz),facing=max(0.0,dot(n,b.xyz));
   return vec3(dot(d,t),-d.y,exp(-plane*plane/.0256)*facing*facing);
 }
-struct RoomField{float macro;float meso;float chip;float rising;float tideBand;float shadow;float runoff;float rust;float repair;float damp;float damage;float substrateExposure;float erosionDepth;float plasterThickness;float dust;float height;float roughnessDelta;};
+struct RoomField{float macro;float meso;float chip;float rising;float tideBand;float shadow;float runoff;float rust;float repair;float damp;float damage;float substrateExposure;float erosionDepth;float plasterThickness;float roofExposure;float roofPonding;float roofTide;float dust;float height;float roughnessDelta;};
 RoomField rwField(vec3 p,vec3 n){
   RoomField f;vec3 q=p+vec3(rwSeed,rwSeed*.71,rwSeed*.37);
-  f.macro=rwNoise(q*.61);f.meso=rwNoise(q*3.7);f.chip=rwNoise(q*17.3);
+  f.macro=rwNoise(q*.61);
+  f.meso=rwNoise(vec3((q.x+(f.macro-.5)*.36)*3.7,q.y*1.45,(q.z+(f.macro-.5)*.28)*3.7));
+  f.chip=rwNoise(q*17.3+vec3(f.meso*.74,f.macro*.38,f.meso*.57));
   float y=max(0.0,p.y-rwGroundY),tideHeight=.17+f.macro*.54+f.meso*.09;
   f.rising=(1.0-smoothstep(tideHeight-.11,tideHeight+.09,y))*rwGroundContact;
   f.tideBand=exp(-rwSquare((y-tideHeight)/.052))*rwGroundContact;
@@ -175,11 +191,14 @@ RoomField rwField(vec3 p,vec3 n){
   for(int i=0;i<RW_MAX_SHADOWS;i++){if(i>=rwShadowCount)break;vec4 a=rwShadowA[i],b=rwShadowB[i],c=rwShadowC[i];vec3 e=rwEmitter(p,n,a,b);
     f.shadow=max(f.shadow,(1.0-smoothstep(a.w*.43,a.w*.53,abs(e.x)))*smoothstep(-.04,.04,e.y)*(1.0-smoothstep(c.x*.75,c.x,e.y))*e.z*b.w);}
   for(int i=0;i<RW_MAX_SILLS;i++){if(i>=rwSillCount)break;vec4 a=rwSillA[i],b=rwSillB[i],c=rwSillC[i];vec3 e=rwEmitter(p,n,a,b);
-    float edge=exp(-rwSquare(abs(abs(e.x)-a.w*.5)/.065)),lane=floor((e.x+a.w*.5)/.065),laneHash=rwHash(vec3(lane,rwSeed,a.x+a.z*3.1));
-    float laneCenter=(lane+.18+laneHash*.6)*.065-a.w*.5;
-    float finger=exp(-rwSquare((e.x-laneCenter)/(.008+laneHash*.011)))*(.22+laneHash*.4),span=1.0-smoothstep(a.w*.47,a.w*.54,abs(e.x));
-    float tail=smoothstep(0.0,.035,e.y)*(1.0-smoothstep(c.x*.62,c.x,e.y))*exp(-max(0.0,e.y)/c.x*1.15);
-    f.runoff+=max(edge*.94,finger*span)*tail*e.z*b.w;}
+    float edge=exp(-rwSquare(abs(abs(e.x)-a.w*.5)/.055)),lane=floor((e.x+a.w*.5)/.087),laneHash=rwHash(vec3(lane,rwSeed,a.x+a.z*3.1));
+    float laneCenter=(lane+.15+laneHash*.7)*.087-a.w*.5;
+    float longFlow=smoothstep(.82,.97,laneHash),laneLength=c.x*(.08+.24*laneHash+.68*longFlow);
+    float finger=exp(-rwSquare((e.x-laneCenter)/(.004+laneHash*.008)))*(.06+laneHash*.2+longFlow*.3)*smoothstep(.16,.42,laneHash),span=1.0-smoothstep(a.w*.47,a.w*.54,abs(e.x));
+    float sideHash=rwHash(vec3(e.x<0.0?19.0:20.0,rwSeed+11.0,a.x*17.0+a.z*11.0)),edgeLength=c.x*(.3+sideHash*.5);
+    float fingerTail=smoothstep(0.0,.025,e.y)*(1.0-smoothstep(laneLength*.55,laneLength,e.y))*exp(-max(0.0,e.y)/laneLength*.7);
+    float edgeTail=smoothstep(0.0,.035,e.y)*(1.0-smoothstep(edgeLength*.62,edgeLength,e.y))*exp(-max(0.0,e.y)/edgeLength*.7);
+    f.runoff+=max(edge*(.78+sideHash*.22)*edgeTail,finger*span*fingerTail)*e.z*b.w;}
   for(int i=0;i<RW_MAX_DRIPS;i++){if(i>=rwDripCount)break;vec4 a=rwDripA[i],b=rwDripB[i],c=rwDripC[i];vec3 e=rwEmitter(p,n,a,b);
     float width=a.w*(1.0+.85*clamp(e.y/c.x,0.0,1.0));
     float line=exp(-rwSquare(e.x/width))*smoothstep(-.018,.025,e.y)*(1.0-smoothstep(c.x*.55,c.x,e.y));
@@ -191,12 +210,16 @@ RoomField rwField(vec3 p,vec3 n){
   f.damp=clamp((f.rising*(.61+f.meso*.2)+f.tideBand*.27+f.runoff*.93)*rwDampStrength*(.52+rwAge*.48)*(1.0-f.repair*.8),0.0,1.0);
   float maximumErosion=min(.011,rwWallThickness*.075);
   float largeCarve=rwSmoothCarveMax(0.0,(f.macro-.49)*.009+f.damp*.0015,.0016);
-  float middleCarve=rwSmoothCarveMax(largeCarve,(f.meso-.49)*.025+f.damp*.002,.0015);
+  float middleCarve=rwSmoothCarveMax(largeCarve,(f.meso-.51)*.027+(f.chip-.5)*.0055+f.damp*.002,.00085);
   float rawCarve=rwSmoothCarveMax(middleCarve,(f.chip-.54)*.012,.00065);
   f.erosionDepth=min(maximumErosion,max(0.0,rawCarve)*rwAge*rwDamageStrength*(1.0-f.repair*.95));
   f.damage=clamp(f.erosionDepth/.009,0.0,1.0);
-  f.substrateExposure=smoothstep(.34,.79,f.damage);
+  f.substrateExposure=smoothstep(.39,.53,f.damage);
   f.plasterThickness=clamp(.014-f.erosionDepth+(.5-f.macro)*.002*(1.0-f.repair)+f.repair*.001,.003,.016);
+  f.roofExposure=smoothstep(1.9,2.45,y)*max(0.0,n.y)*rwRain;
+  float roofLevel=f.macro*.68+f.meso*.32;
+  f.roofPonding=f.roofExposure*smoothstep(.44,.62,roofLevel);
+  f.roofTide=f.roofExposure*(1.0-smoothstep(.012,.048,abs(roofLevel-.47)));
   f.dust=clamp((.12+f.macro*.2)*(1.0-min(1.0,f.damp)*.8)+max(0.0,n.y)*.31,0.0,1.0);
   f.height=clamp((f.plasterThickness-.01)*rwReliefStrength,-.012,.012);
   f.roughnessDelta=.05*f.meso+.12*f.damage+.04*f.dust-.07*f.repair;
@@ -216,12 +239,12 @@ vec3 rwBase=diffuseColor.rgb;
 #if RW_KIND == 0 || RW_KIND == 1
 // Multiple generations of fading paint, peeled lime finish and plaster are one 3D field.
 float rwFade=smoothstep(.26,.78,rwF.macro)*rwAge*(1.0-rwF.repair);
-vec3 rwOldPaint=mix(rwBase,rwBase*vec3(.71,.77,.67)+vec3(.038,.03,.016),rwFade*.7);
+vec3 rwOldPaint=mix(rwBase,rwBase*vec3(.71,.77,.67)+vec3(.038,.03,.016),rwFade*.43);
 vec3 rwSubstrate=mix(vec3(.235,.209,.165),vec3(.39,.365,.30),rwF.meso);
 #if RW_KIND == 1
 rwSubstrate=vec3(.17,.174,.157)*( .82+rwF.meso*.4 );
 #endif
-diffuseColor.rgb=mix(rwOldPaint,rwSubstrate,rwF.substrateExposure*.93);
+diffuseColor.rgb=mix(rwOldPaint,rwSubstrate,rwF.substrateExposure*.78);
 // Damp is strong at its real sources, never a whole-wall random dark wash.
 vec3 rwDampColor=vec3(.022,.031,.023)+rwBase*.075;
 diffuseColor.rgb=mix(diffuseColor.rgb,rwDampColor,rwF.damp*.83*rwAge);
@@ -230,6 +253,14 @@ vec3 rwFresh=mix(rwBase,vec3(.64,.61,.51),.21);
 diffuseColor.rgb=mix(diffuseColor.rgb,rwFresh,rwF.repair*.89);
 // Macro thickness drives geometry; remaining chipped relief is visible under raking light.
 rwHeight+=((rwF.meso-.5)*.0008-rwF.damage*.0025+rwF.repair*.0003)*rwReliefStrength;
+#if RW_KIND == 1
+// High upward concrete alone collects roof ponding/tide dust; floors and belongings do not.
+vec3 rwRoofFilm=rwBase*vec3(.31,.35,.29)+vec3(.014,.017,.01);
+diffuseColor.rgb=mix(diffuseColor.rgb,rwRoofFilm,rwF.roofPonding*.63*rwAge);
+diffuseColor.rgb=mix(diffuseColor.rgb,rwBase*.66+vec3(.085,.073,.047),rwF.roofTide*.40*rwAge);
+rwHeight+=(rwF.roofPonding*(rwF.chip-.5)*.0011+rwF.roofTide*.0003)*rwReliefStrength;
+rwRoughDelta+=rwF.roofTide*.10;rwWet=clamp(rwWet+rwWetness*rwF.roofPonding*.55,0.0,1.0);
+#endif
 #elif RW_KIND == 2
 // 150 mm kitchen/bath tiles, 3 mm recessed grout; no image-derived grid.
 vec2 rwTile=rwUV/.15,rwCell=fract(rwTile);float rwEdge=min(min(rwCell.x,1.0-rwCell.x),min(rwCell.y,1.0-rwCell.y))*.15;
@@ -276,8 +307,8 @@ diffuseColor.rgb*=1.0-rwWet*.15;
 `;
 export const ROOM_SURFACE_SHADER = Object.freeze({
   field:GLSL_FIELD,surface:GLSL_SURFACE,
-  vertexDeclarations:'varying vec3 vRoomPosition;\nvarying vec3 vRoomNormal;\n',
-  vertexNormal:'vRoomNormal=objectNormal;',vertexPosition:'vRoomPosition=transformed;',
+  vertexDeclarations:'attribute vec3 roomFieldPosition;\nvarying vec3 vRoomPosition;\nvarying vec3 vRoomNormal;\n',
+  vertexNormal:'vRoomNormal=objectNormal;',vertexPosition:'vRoomPosition=roomFieldPosition;',
   roughness:'roughnessFactor=clamp(roughnessFactor+rwRoughDelta-rwWet*.24,.19,1.0);',
   metalness:'metalnessFactor*=1.0-rwMetalLoss;',
   normal:`
@@ -352,7 +383,7 @@ export function createRoomMaterialLibrary(THREE,options={}) {
     };
     cache.set(key,material);materials.push(material);return material;
   }
-  const proof={revision:ROOM_WEATHERING_REVISION,textureFree:true,imageTextures:0,importedMeshes:0,overlayMeshes:0,coordinateSpace:'baked-room-local-metres',cpuField:'evaluateRoomSurfaceField',glslField:'rwField',
+  const proof={revision:ROOM_WEATHERING_REVISION,textureFree:true,imageTextures:0,importedMeshes:0,overlayMeshes:0,coordinateSpace:'baked-room-local-metres',cpuField:'evaluateRoomSurfaceField',glslField:'rwField',sourcePositionAttribute:'roomFieldPosition',
     firstFrameAgeYears:recipe.ageYears,elapsedChangesAge:false,geometryField:'plasterThickness',carvingKernel:'MIT Inigo Quilez 2019 smax, three depth layers',maximumErosion:Math.min(.011,recipe.wallThickness*.075),maxBaseNoiseEvaluations:3,maxCloseupNoiseEvaluations:4,
     materialBudget:maxMaterials,emitterCounts:Object.fromEntries(['sills','drips','rainShadows','repairs'].map(k=>[k,recipe[k].length])),gpuCompilationVerified:false};
   return {get,materials,recipe,proof,update(seconds,inputs={}) {
