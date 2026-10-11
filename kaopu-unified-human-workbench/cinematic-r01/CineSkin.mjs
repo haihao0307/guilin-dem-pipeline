@@ -8,20 +8,39 @@ uniform sampler2D uCShadowMap;uniform mat4 uCShadowMatrix;
 uniform float uCShadowEnable,uCShadowSoftness;uniform vec3 uCKeyView,uCKeyPosition;
 varying vec3 vCWorld;
 float cSkinMask=0.;float cLobeWeight=0.;vec3 cDiffuseN=vec3(0.,0.,1.);
+float cCompareShadow(vec2 uv,vec3 receiver,vec2 slope,float bias){
+ float depth=receiver.z+dot(slope,uv-receiver.xy)-bias;
+ return step(depth,texture2D(uCShadowMap,uv).r);
+}
+float cBilinearShadow(vec2 uv,vec3 receiver,vec2 slope,float bias){
+ vec2 texel=uv*1024.-.5,base=floor(texel),f=fract(texel);
+ vec2 q=(base+.5)/1024.;
+ float a=cCompareShadow(q,receiver,slope,bias);
+ float b=cCompareShadow(q+vec2(1./1024.,0.),receiver,slope,bias);
+ float c=cCompareShadow(q+vec2(0.,1./1024.),receiver,slope,bias);
+ float d=cCompareShadow(q+vec2(1./1024.),receiver,slope,bias);
+ return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);
+}
 float cShadow(){
- // Compare each PCF tap with receiver depth at that actual texel center.
  vec4 q=uCShadowMatrix*vec4(vCWorld,1.);vec3 p=q.xyz/q.w;
+ // Derivatives are taken before any divergent bounds branch.
  vec3 dx=dFdx(p),dy=dFdy(p);float det=dx.x*dy.y-dx.y*dy.x;
  vec2 slope=abs(det)>1e-12?vec2(dy.y*dx.z-dx.y*dy.z,dx.x*dy.z-dy.x*dx.z)/det:vec2(0.);
  slope=clamp(slope,vec2(-8.),vec2(8.));
  if(uCShadowEnable<.5||q.w<=0.)return 1.;
  if(p.x<=0.||p.x>=1.||p.y<=0.||p.y>=1.||p.z<=0.||p.z>=1.)return 1.;
- float bias=.00012+min(.0015,(abs(slope.x)+abs(slope.y))*.00012);float total=0.;
- for(int j=0;j<4;j++)for(int i=0;i<4;i++){
-  vec2 offset=(vec2(float(i),float(j))-1.5)*uCShadowSoftness/1024.;
-  vec2 uv=(floor((p.xy+offset)*1024.)+.5)/1024.;
-  float receiver=p.z+dot(slope,uv-p.xy);
-  float z=texture2D(uCShadowMap,uv).r;total+=step(receiver-bias,z);
+ // Bounded 0.6 mm receiver bias; avoids interpreting raster mismatch as pores.
+ // This is shadow comparison tolerance, not a displacement of the skin mesh.
+ vec3 towardLight=normalize(uCKeyPosition-vCWorld);
+ vec4 biased=uCShadowMatrix*vec4(vCWorld+towardLight*.0006,1.);
+ float bias=max(.000015,p.z-biased.z/biased.w);
+ // Filter comparison coverage, not raw depth or the skin image.
+ // 3x3 tent with four bilinear texel comparisons per tap: 36 reads total.
+ float total=0.;
+ for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){
+  float weight=(x==0?2.:1.)*(y==0?2.:1.);
+  vec2 offset=vec2(float(x),float(y))*uCShadowSoftness/1024.;
+  total+=weight*cBilinearShadow(p.xy+offset,p,slope,bias);
  }return total/16.;
 }
 // Jittered, elliptical pores in millimetres. Vary size/depth; no frame-time noise.
@@ -39,7 +58,7 @@ export function installCineSkin(viewer){
  const report={compiled:0,method:'weighted dual GGX + specular microdetail + bounded sheen, existing RGB diffusion',newSkinTextures:0,cinemaRendererPort:false};
  const patch=(text,a,b)=>{if(text.split(a).length!==2)throw Error('ET20 shader anchor changed: '+a.slice(0,100));return text.replace(a,()=>b);};
  mat.sheen=1;mat.sheenColor.setRGB(1,1,1);mat.sheenRoughness=.8;
- mat.customProgramCacheKey=()=>key()+'/ET20-dualGGX-shadow-receiver-plane-v2';
+ mat.customProgramCacheKey=()=>key()+'/ET20-dualGGX-shadow-bilinear-tent-v3';
  mat.onBeforeCompile=shader=>{
   previous(shader);Object.assign(shader.uniforms,U);report.compiled++;
   shader.vertexShader='varying vec3 vCWorld;\n'+shader.vertexShader;

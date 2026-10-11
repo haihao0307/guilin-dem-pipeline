@@ -33,7 +33,7 @@
 7. Three.js RectAreaLight 官方实现与限制：
    https://threejs.org/docs/pages/RectAreaLight.html
    https://github.com/mrdoob/three.js/tree/r170/examples/jsm/lights
-   复用与宿主一致的r170 LTC查找表，保留MIT许可。RectAreaLight本身不支持阴影；本版明确增加的是主光中心深度投影+16次PCF采样近似，不是完整面积光可见性积分或光线追踪。补光/轮廓未实现独立投影阴影。
+   复用与宿主一致的r170 LTC查找表，保留MIT许可。RectAreaLight本身不支持阴影；本版明确增加的是主光中心深度投影+双线性比较/3x3帐篷核PCF近似（36次深度读取，0.6mm比较容差），不是完整面积光可见性积分或光线追踪。补光/轮廓未实现独立投影阴影。
 
 ## 学习后固定的工作方法
 
