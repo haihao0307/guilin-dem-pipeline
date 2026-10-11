@@ -16,7 +16,7 @@ const mime={'.html':'text/html','.mjs':'text/javascript','.js':'text/javascript'
    {name:'r312-exposed-brick-front',position:[0,1.4,-6.5],opening:{x:0,bottom:0,width:.9,height:2.05}},
    {name:'r312-exposed-brick-oblique',position:[-3,2.1,-5],opening:{x:0,bottom:0,width:.9,height:2.05}}
   ]){
-   camera.position.fromArray(item.position);camera.lookAt(0,1.35,0);camera.updateMatrixWorld();const candidate=createR312Wall({THREE,seed:312,bindingMode:'declared',door:item.opening,showPlaster:false,materialFamily:0,layerReveal:[0,0,0,0,0],layerOut:[0,0,0,0,0],coreOffset:-.018,coreRelief:.002,coreMicro:0,soilColor:0,layerColors:Array(5).fill('#77736b')});scene.add(candidate.group);renderer.render(scene,camera);g.finish();const buf=new Uint8Array(w*h*4);g.readPixels(0,0,w,h,g.RGBA,g.UNSIGNED_BYTE,buf);let clearSamples=0,blockedSamples=0,solidSamples=0,solidCyanLeaks=0;
+   camera.position.fromArray(item.position);camera.lookAt(0,1.35,0);camera.updateMatrixWorld();const candidate=createR312Wall({THREE,seed:312,bindingMode:'declared',proxyCulling:'adaptive',door:item.opening,showPlaster:false,materialFamily:0,layerReveal:[0,0,0,0,0],layerOut:[0,0,0,0,0],coreOffset:-.018,coreRelief:.002,coreMicro:0,soilColor:0,layerColors:Array(5).fill('#77736b')});scene.add(candidate.group);renderer.render(scene,camera);g.finish();const buf=new Uint8Array(w*h*4);g.readPixels(0,0,w,h,g.RGBA,g.UNSIGNED_BYTE,buf);let clearSamples=0,blockedSamples=0,solidSamples=0,solidCyanLeaks=0;
    camera.getWorldPosition(cameraWorld);
    for(let py=0;py<h;py++)for(let px=0;px<w;px++){
     projectRay.set((px+.5)/w*2-1,(py+.5)/h*2-1,.5).unproject(camera);ray.copy(projectRay).sub(cameraWorld).normalize();if(ray.z<=0)continue;

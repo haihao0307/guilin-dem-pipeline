@@ -13,7 +13,7 @@ export function buildDwellingUnit(input,{THREE}={}){
   parent.add(member.mesh);timbers.push(member);return member;
  }
  function wall(name,position,yaw,opening,parent=groups.walls){
-  const w=createR312Wall({THREE,seed:(recipe.seed+walls.length*97)%65536,bindingMode:recipe.wallBindingMode,door:opening,showPlaster:false,materialFamily:0,layerReveal:[0,0,0,0,0],layerOut:[0,0,0,0,0],coreOffset:-.018,coreRelief:.002,coreMicro:0,soilColor:0,layerColors:Array(5).fill('#77736b')});
+  const w=createR312Wall({THREE,seed:(recipe.seed+walls.length*97)%65536,bindingMode:recipe.wallBindingMode,proxyCulling:'adaptive',door:opening,showPlaster:false,materialFamily:0,layerReveal:[0,0,0,0,0],layerOut:[0,0,0,0,0],coreOffset:-.018,coreRelief:.002,coreMicro:0,soilColor:0,layerColors:Array(5).fill('#77736b')});
   w.group.name=name;w.group.position.fromArray(position);w.group.rotation.y=yaw;parent.add(w.group);walls.push(w);return w;
  }
  // Original R3.12 has a fixed 4m-wide solid field. Rotations preserve its metre scale.

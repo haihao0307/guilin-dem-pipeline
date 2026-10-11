@@ -24,11 +24,11 @@ const server=http.createServer((req,res)=>{let p;try{p=path.resolve(ROOT,'.'+dec
  await page.waitForFunction(()=>window.__roomQA?.ready||window.__roomQA?.error,null,{timeout:150000});
  const state=await page.evaluate(()=>({ready:window.__roomQA.ready,error:window.__roomQA.error}));console.log('ROOM_READY',JSON.stringify(state));
  if(!state.ready)throw Error(state.error);
- const views=[['original-sources-room-exterior',[-3.7,3.5,20.8],[-10,1.5,13],43,false],['original-sources-room-cutaway',[-4.5,4.5,19.0],[-10,1.1,13],46,true]];
+ const views=[['original-sources-room-exterior',[-3.7,3.5,20.8],[-10,1.5,13],43,false],['original-sources-room-cutaway',[-9,4.8,19.5],[-10,1.1,13],46,true]];
  for(const [name,position,target,fov,cutaway] of views){
  const proof=await page.evaluate(v=>window.__roomQA.pose(v[0],v[1],v[2],v[3]),[position,target,fov,cutaway]);
  fs.writeFileSync(path.join(OUT,name+'.png'),Buffer.from(proof.png.split(',')[1],'base64'));delete proof.png;
- receipt.screenshots.push({name,camera:proof.camera,target:proof.target,fov:proof.fov,gpuErrors:proof.errors});
+ receipt.screenshots.push({name,camera:proof.camera,target:proof.target,fov:proof.fov,gpuErrors:proof.errors,budget:proof.budget,synchronizedRenderMs:proof.synchronizedRenderMs});
  console.log('CAPTURED',name);fs.writeFileSync(path.join(OUT,'receipt-progress.json'),JSON.stringify(receipt,null,2));
  }
  const closed=await page.evaluate(()=>{window.__roomQA.room.setDoorOpen(false);return window.__roomQA.pose([-7.5,1.72,20.5],[-10,1.2,14.5],40);});
