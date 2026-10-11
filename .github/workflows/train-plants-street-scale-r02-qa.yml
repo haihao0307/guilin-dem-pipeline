@@ -38,7 +38,6 @@ jobs:
           echo "NODE_PATH=$RUNNER_TEMP/plant-scale-qa/node_modules" >> "$GITHUB_ENV"
       - name: Serve preserved R20 and native KAOPU plant candidate
         run: |
-          cp -a "$GAME/r20" "$GAME/r20-no-plants-baseline"
           python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/plant-scale-http.log" 2>&1 &
           for n in $(seq 1 30); do curl --fail --silent http://127.0.0.1:8765/$CANDIDATE/ >/dev/null && exit 0; sleep 1; done
           exit 1
@@ -55,6 +54,13 @@ jobs:
           path: train-plants-r02-results/native-first-look/
           retention-days: 7
           compression-level: 0
+      - name: Read exact preserved R20 baseline with its original dependencies
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: fdbc36e17a34c21c14cc9566a533bb080e3dacc2
+          path: r20-reference
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
       - name: Actual same-camera before and after, native juvenile Ficus
         run: node "$CANDIDATE/plants/browser-comparison.cjs"
       - name: Preserve evidence without publishing Pages
