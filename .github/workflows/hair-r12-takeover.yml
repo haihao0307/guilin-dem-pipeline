@@ -6,13 +6,14 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+  actions: read
 concurrency:
   group: hair-r12-takeover
   cancel-in-progress: false
 jobs:
   build-test-preview:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
@@ -44,14 +45,30 @@ jobs:
           data=json.loads(zlib.decompress(b))
           assert set(data)=={'refine.py','AssetLoader.js','build12.py','finalize12.py','README.md','tests/fields.mjs','tests/verify12.mjs'}
           for name,text in data.items():
-              f=p/name;f.parent.mkdir(parents=True,exist_ok=True);f.write_text(text)
+              f=p/name;f.parent.mkdir(parents=True,exist_ok=True)
+              if not f.exists(): f.write_text(text)
           PYCODE
+      - uses: actions/download-artifact@v4
+        if: hashFiles('kaopu-hair-workbench/fusion/r12/evidence/attempt-01/report.json') == ''
+        with:
+          name: hair-r12-takeover-evidence
+          run-id: 38115223409
+          github-token: ${{ github.token }}
+          path: /tmp/hair-r12-attempt-one
+      - name: Preserve the failed first browser attempt
+        run: |
+          if [ ! -f kaopu-hair-workbench/fusion/r12/evidence/attempt-01/report.json ]; then
+            mkdir -p kaopu-hair-workbench/fusion/r12/evidence/attempt-01
+            cp -a /tmp/hair-r12-attempt-one/evidence/local/. kaopu-hair-workbench/fusion/r12/evidence/attempt-01/
+          fi
       - name: Generate isolated readable source and exact lossless assets
         run: |
           python kaopu-hair-workbench/fusion/r12/refine.py
+          python kaopu-hair-workbench/fusion/r12/repair12.py
           python kaopu-hair-workbench/fusion/r12/build12.py
           find kaopu-hair-workbench/fusion/r12/src -name '*.js' -print0 | xargs -0 -n1 node --check
           node kaopu-hair-workbench/fusion/r12/tests/fields.mjs
+          node kaopu-hair-workbench/fusion/r12/tests/render-gate.mjs
           node kaopu-hair-workbench/fusion/r12/tests/inherited-strand-unit.mjs
       - name: Commit fixed source and assets only on takeover branch
         id: assets
@@ -83,6 +100,14 @@ jobs:
         run: |
           python -m http.server 8765 --bind 127.0.0.1 >/tmp/hair-r12-http.log 2>&1 &
           node kaopu-hair-workbench/fusion/r12/tests/verify12.mjs http://127.0.0.1:8765/kaopu-hair-workbench/fusion/r12/public-lite.html
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-r12-local-checkpoint
+          path: |
+            kaopu-hair-workbench/fusion/r12/evidence
+            kaopu-hair-workbench/fusion/r12/BUILD_MANIFEST.json
+          retention-days: 30
       - name: Publish tested bundle without merging any branch
         id: publish
         run: |
