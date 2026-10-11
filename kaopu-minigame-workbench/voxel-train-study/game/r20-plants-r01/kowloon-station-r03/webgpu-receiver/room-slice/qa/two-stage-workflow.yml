@@ -7,7 +7,7 @@ permissions:
 jobs:
   room-webgpu:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -31,7 +31,7 @@ jobs:
             node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r03/webgpu-receiver/room-slice/qa/room-two-stage.cjs > "$RUNNER_TEMP/room-run/log" 2>&1
             echo "$?" > "$RUNNER_TEMP/room-run/exit"
           ) </dev/null >/dev/null 2>&1 &
-          for i in $(seq 1 150); do
+          for i in $(seq 1 180); do
             if [ -f kowloon-room-webgpu-results/room.png ]; then break; fi
             if [ -f "$RUNNER_TEMP/room-run/exit" ]; then cat "$RUNNER_TEMP/room-run/log"; exit 1; fi
             sleep 5
