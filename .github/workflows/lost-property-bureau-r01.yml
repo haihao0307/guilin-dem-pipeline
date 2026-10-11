@@ -25,6 +25,9 @@ jobs:
           echo "NODE_PATH=$RUNNER_TEMP/bureau/node_modules" >> "$GITHUB_ENV"
       - name: Actual WebGL desktop and mobile viewport
         run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r01/qa/browser.cjs
+      - name: Verify deployed source bytes and public WebGL
+        if: github.ref_name == 'gh-pages'
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r01/qa/public-check.cjs
       - name: Retain real screenshots and receipts
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9

@@ -5,7 +5,7 @@ import {createTimberMember} from '../kowloon-station-r02/timber/three-adapter.mj
 import {createForgedRod,placeForgedRod,createCrosshead} from '../native-a4/running-gear/forged-rods.mjs';
 import {batchStaticDisplay} from '../native-a4/display-batching.mjs';
 import {createWordFactory} from './labels.mjs';
-import {SOURCE_X,SOURCE_Z,LEVELS,routeFor} from './simulation.mjs';
+import {SOURCE_X,SOURCE_Z,LEVELS,routeFor,sampleRoute} from './simulation.mjs';
 export function buildBureau(){
 const root=new T.Group(),fixed=new T.Group(),facade=new T.Group(),roof=new T.Group(),wood=new T.Group(),moving=new T.Group();root.add(fixed,facade,roof,wood,moving);
 const surface=stationSurfaceCatalog(),words=createWordFactory(T),timbers=[],rotors=[],labels=[],carriers=[],catalog=surface.get;
@@ -29,7 +29,12 @@ function lamp(p,parent=fixed){cyl([p[0],p[1]-.2,p[2]],.12,.18,mats.brass,parent)
 // Ground and tiled public hall, surrounded by a real structural base.
 box([0,-.6,0],[50,.8,47],mats.floor);box([0,-.1,0],[44,.3,38],mats.stone);box([0,.03,12.5],[40,.08,12],mats.trim);
 for(let x=-20;x<20;x+=2)for(let z=8;z<18;z+=2)if((x+z)%4===0)box([x+1,.083,z+1],[1.94,.025,1.94],mats.floor);
-for(const x of[-21,21]){box([x,7.3,0],[1,14.6,36],mats.brick,x<0?fixed:facade);for(const y of [1,6,12,14.6])box([x,y,0],[1.35,.28,37],mats.trim,x<0?fixed:facade);}
+for(const x of[-21,21]){const group=x<0?fixed:facade;
+for(const [za,zb]of[[-18,-14.7],[-11.3,-6.7],[-3.3,1.3],[4.7,9.3],[12.7,18]])box([x,7.3,(za+zb)/2],[1,14.6,zb-za],mats.brick,group);
+for(const [ya,yb]of[[0,2],[6.5,8],[12.5,14.6]])for(const z of[-13,-5,3,11])box([x,(ya+yb)/2,z],[1,yb-ya,3.4],mats.brick,group);
+for(const y of[1,6.5,12.5,14.6])box([x,y,0],[1.35,.28,37],mats.trim,group);
+for(const z of[-13,-5,3,11]){const bay=new T.Group();bay.position.set(x+(x<0?-.56:.56),0,z);bay.rotation.y=x<0?-Math.PI/2:Math.PI/2;group.add(bay);windowBay(0,0,2,bay);windowBay(0,0,8,bay);}}
+
 // Rear elevation has three actual transfer doorways, never a solid wall across cargo.
 for(const x of[-20,-16,-8.5,-1.5,6,11,16,21])box([x,5.5,-18],[1,11,1],mats.brick);
 box([0,12.5,-18],[44,3.2,1],mats.brick);for(const y of[6,11,14.2])box([0,y,-18],[44,.3,1.25],mats.trim);
@@ -42,14 +47,41 @@ for(const x of[-7,7])column(x,18,9.2,0,facade);
 arc([0,5.5,18],6.2,.70,1,mats.trim,facade);for(const x of[-6.2,6.2])box([x,2.75,18],[.72,5.5,1],mats.trim,facade);
 box([0,10.9,18],[15,1.05,1.4],mats.trim,facade);box([0,11,18.78],[12,.64,.15],mats.enamel,facade);text('LOST PROPERTY BUREAU',[0,10.79,18.9],.45,facade);
 for(const y of [10.35,11.8])box([0,y,18],[44,.24,1.6],mats.trim,facade);
-for(const x of[-18,18]){box([x,12.9,15.5],[7.6,2.2,6.5],mats.brick,roof);const r=box([x,15,15.5],[8.4,1,7.8],mats.copper,roof);for(const sign of[-1,1]){const p=box([x+sign*2,14.2,15.5],[4.5,.18,7.6],mats.copper,roof);p.rotation.z=-sign*.35;}}
+for(const x of[-18,18]){box([x,12.9,15.5],[7.6,2.2,6.5],mats.brick,roof);box([x,14.05,15.5],[8.4,.18,7.8],mats.copper,roof);for(const sign of[-1,1]){const p=box([x+sign*2,14.2,15.5],[4.5,.18,7.6],mats.copper,roof);p.rotation.z=-sign*.35;}}
 cyl([0,13.4,13.8],5.8,3.3,mats.trim,roof,'y',5.8);for(let i=0;i<12;i++){const a=i*Math.PI/6,x=Math.sin(a)*5.8,z=13.8+Math.cos(a)*5.8;column(x,z,2.6,12,roof);}ball([0,15,13.8],5.7,mats.copper,roof,[1,.76,1]);cyl([0,19.6,13.8],.65,2.1,mats.copper,roof);ball([0,20.8,13.8],.35,mats.brass,roof);
+// Within the monumental arch, a real double entrance and fixed side glazing.
+for(const sign of[-1,1]){box([sign*3.85,2.7,18.08],[4.15,5.4,.08],mats.glass,facade);for(const x of[sign*1.75,sign*5.95])box([x,2.7,18.19],[.16,5.4,.18],mats.iron,facade);for(const y of[.14,2.7,5.4])box([sign*3.85,y,18.19],[4.2,.14,.18],mats.iron,facade);
+const door=new T.Group();door.position.set(sign*1.7,0,18.12);door.rotation.y=-sign*.20;facade.add(door);const cx=-sign*.83;box([cx,2.15,0],[1.6,4.2,.08],mats.glass,door);for(const xx of[cx-.80,cx+.80])box([xx,2.15,0],[.12,4.3,.18],mats.enamel,door);for(const yy of[.12,1.0,4.23])box([cx,yy,0],[1.72,.12,.18],mats.enamel,door);cyl([cx-sign*.52,1.7,.15],.035,.7,mats.brass,door);}
+box([0,4.82,18.12],[3.4,1.1,.08],mats.glass,facade);box([0,4.3,18.2],[3.5,.16,.18],mats.iron,facade);box([0,5.45,18.2],[12,.18,.20],mats.iron,facade);
+const fan=new T.Shape();fan.moveTo(-5.95,0);fan.absarc(0,0,5.95,Math.PI,0,true);fan.lineTo(-5.95,0);fan.closePath();mesh(new T.ShapeGeometry(fan,48),mats.glass,[0,5.5,18.07],facade);
+for(let i=0;i<=12;i++){const a=i*Math.PI/12;beam([0,5.5,18.18],[5.95*Math.cos(a),5.5+5.95*Math.sin(a),18.18],.045,.065,mats.iron,facade);}
+arc([0,5.5,18.2],3.1,.07,.09,mats.iron,facade);
+// Shared-time civic clock mounted on the entrance drum.
+const clockFace=cyl([0,13.5,19.73],1.15,.10,mats.cream,roof,'z');
+const clockRim=mesh(new T.TorusGeometry(1.18,.06,8,56),mats.brass,[0,13.5,19.81],roof);
+for(let i=0;i<12;i++){const a=i*Math.PI/6;const tick=box([Math.sin(a)*.96,13.5+Math.cos(a)*.96,19.84],[.04,.15,.025],mats.dark,roof);tick.rotation.z=-a;}
+const clockHands=[];for(const [length,width]of [[.65,.07],[.92,.045]]){const hand=new T.Group();hand.position.set(0,13.5,19.89);box([0,length*.38,0],[width,length,.025],mats.dark,hand);roof.add(hand);clockHands.push(hand);}ball([0,13.5,19.92],.08,mats.brass,roof);
 // Great hall contains people-space only. The machine service hatch terminates behind it.
 for(const x of[-14,-7,0,7,14])column(x,7,11.4);
 for(const z of[-14,-7,0,7]){for(const x of[-18,18])column(x,z,14.5);for(let i=0;i<20;i++){const x=-18+i*1.8,y=14.3+4.1*Math.sin((x+18)/36*Math.PI),x2=x+1.8,y2=14.3+4.1*Math.sin((x2+18)/36*Math.PI);beam([x,y,z],[x2,y2,z],.15,.2,mats.iron);beam([x,y-.75,z],[x2,y2-.75,z],.12,.16,mats.iron);beam([x,y,z],[x2,y2-.75,z],.065,.065,mats.brass);}
 for(const x of [-12,-6,0,6,12]){const y=14.3+4.1*Math.sin((x+18)/36*Math.PI);beam([x,y,z-3.5],[x,y,z+3.5],.11,.14,mats.iron,roof);}}
-// Standing-seam roof, selectively hidden as a single shell in section view.
-for(let i=0;i<20;i++){const x=-18+(i+.5)*1.8,y=14.4+4.1*Math.sin((x+18)/36*Math.PI);const o=box([x,y,-3.5],[1.84,.12,30],i%5===2?mats.glass:mats.copper,roof);o.rotation.z=Math.atan(4.1*Math.PI/36*Math.cos((x+18)/36*Math.PI));}
+// Closed barrel envelope. Continuous metric panel corners eliminate floating strips.
+const roofY=x=>14.6+3.9*Math.sin((x+22)/44*Math.PI);
+for(let i=0;i<28;i++){const x0=-22+i*44/28,x1=-22+(i+1)*44/28;
+const corners=[[x0,roofY(x0),-19],[x1,roofY(x1),-19],[x1,roofY(x1),8],[x0,roofY(x0),8]];
+const g=geometryForPart(T,{id:'continuous-roof-'+i,shape:{type:'roof-panel',corners,thickness:.13},surface:{role:'roof-copper'}});mesh(g,(i===9||i===10||i===17||i===18)?mats.glass:mats.copper,[0,0,0],roof);
+beam([x0,roofY(x0)+.05,-19],[x0,roofY(x0)+.05,8],.075,.075,mats.iron,roof);
+for(const z of[-19,-14,-7,0,7,8])beam([x0,roofY(x0)-.13,z],[x1,roofY(x1)-.13,z],.13,.13,mats.iron,roof);
+// The step down to the public hall is an actual glazed clerestory enclosure.
+box([(x0+x1)/2,(12.3+roofY((x0+x1)/2))/2,8],[(x1-x0)+.015,roofY((x0+x1)/2)-12.3,.10],mats.glass,roof);
+beam([x0,12.3,8],[x0,roofY(x0),8],.11,.11,mats.iron,roof);
+const rh=roofY((x0+x1)/2)-14.2;box([(x0+x1)/2,14.2+rh/2,-18.65],[x1-x0+.01,rh,.10],mats.glass,roof);beam([x0,14.2,-18.65],[x0,roofY(x0),-18.65],.09,.09,mats.iron,roof);
+}
+for(const x of[-22,22]){box([x,14.5,-5.5],[.30,.35,27.5],mats.trim,roof);pipe([[x,14.75,-19],[x,14.75,8],[x,12.5,8],[x,12.5,19]],.10,mats.copper,roof);}
+// Continuous lower hall roof beneath the civic dome and corner pavilions.
+box([0,12.18,13.5],[44.5,.24,11.4],mats.copper,roof);for(const x of[-22,22])box([x,12,13.5],[.42,.35,11.6],mats.trim,roof);
+for(let x=-21;x<=21;x+=1.5)beam([x,12.35,8],[x,12.35,19.2],.06,.06,mats.iron,roof);
+box([0,12.08,19],[44.5,.45,.6],mats.trim,roof);
 // Administrative wings and unobstructed service galleries.
 for(const x of[-18,18])for(const y of[6,12]){if(x<0)box([x,y,-3],[5.6,.23,27],mats.stone);else{box([x,y,-8.25],[5.6,.23,16.5],mats.stone);box([x,y,7.5],[5.6,.23,6],mats.stone);}guard([x-2.8,-16],[x-2.8,10],y);guard([x+2.8,-16],[x+2.8,10],y);for(const z of[-12,-6,0,6]){timber('desk-'+x+y+z,[x,y+.85,z],[2.8,.14,1.05]);box([x,y+.4,z],[.12,.8,.7]);box([x+1.1,y+.4,z],[.12,.8,.7]);box([x,y+1.1,z],[.65,.32,.4],mats.cream);lamp([x+1,y+1.35,z]);}}
 for(const x of[-18,18])for(let i=0;i<24;i++){const z=7+i*.3;box([x,.125+i*.25,z],[2,.25,.34],mats.stone);}
@@ -63,7 +95,7 @@ for(const dx of[-1,1])for(const dz of[-.85,.85])beam([x+dx,0,z+dz],[x+dx,13.6,z+
 for(let y0=1;y0<13;y0+=2)for(const dz of[-.85,.85]){beam([x-1,y0,z+dz],[x+1,y0+1.7,z+dz],.055,.055,mats.brass);}
 for(const dx of[-.72,.72])pipe([[x+dx,0,z],[x+dx,13,z]],.055,mats.dark);
 belt([x,y-.1,z],[6,y-.1,z]);belt([6,y-.1,z],[6,y-.1,-7]);belt([6,y-.1,-7],[17.5,y-.1,-7]);belt([6,y-.1,2],[19,y-.1,2]);belt([6,y-.1,-7],[6,y-.1,2]);
-for(let n=0;n<6;n++){const g=new T.Group();moving.add(g);box([0,-.08,0],[1.55,.16,1.4],mats.steel,g);for(const dx of[-.75,.75])box([dx,.3,0],[.06,.65,1.4],mats.brass,g);carriers.push({g,x,z,phase:n/6,source:s});}}
+}
 // Four-tier archive cabinet structure, ladder service edges, addresses and stored luggage.
 for(const x of[8.5,12,15.5,19])for(const z of[-12,-8.6])beam([x,0,z],[x,15.5,z],.16,.16,mats.iron);
 for(const y of[2.5,6.5,10.5,14.5]){box([13.8,y,-9.5],[12,.15,5.2],mats.steel);for(const x of[10.25,13.75,17.25]){box([x,y+1.45,-12.05],[3.3,2.8,.12],mats.enamel);text(String(Math.round(y/4)+1)+' / '+String(Math.round(x)),[x,y+2.3,-8.42],.22);for(let n=0;n<3;n++){const p=[x+(n-1)*.83,y+.43,-10.7];box(p,[.65,.7,.55],n%2?mats.copper:mats.dark);box([p[0],p[1]+.38,p[2]],[.25,.09,.12],mats.brass);}}}
@@ -92,6 +124,6 @@ labels.push({text:'01  公眾大廳',detail:'等候 / 登記 / 文員櫃台',p:[
 for(const group of[fixed,facade,roof]){const b=batchStaticDisplay(group,{domain:true});proof.staticSourceMeshes=(proof.staticSourceMeshes||0)+b.sources.length;proof.staticBatches=(proof.staticBatches||0)+b.displays.length;}
 const luggageMaterials=[catalog('brass'),catalog('water'),catalog('hall-brick')];const luggage=new Map();
 function makeBag(id,source){const g=new T.Group();g.name=id;box([0,.41,0],[.88,.82,.58],luggageMaterials[source],g);for(const x of[-.29,.29])box([x,.41,0],[.045,.84,.61],mats.dark,g);box([0,.87,0],[.29,.10,.10],mats.brass,g);box([.2,.57,.3],[.15,.21,.018],mats.cream,g);const tray=box([0,-.13,0],[1.35,.18,1.12],mats.steel,g);tray.name='synchronised elevator carrier';g.userData.tray=tray;moving.add(g);luggage.set(id,g);return g;}
-return {root,proof,labels,materials:surface,groups:{fixed,facade,roof,wood,moving},setCutaway(value){facade.visible=roof.visible=!value;},update(state){surface.update({elapsed:state.time,distance:0});const a=state.shaftAngle;wheel.rotation.y=a;const A=[.65*Math.cos(a),-.25,-.65*Math.sin(a)],B=[.65*Math.cos(a)+Math.sqrt(9-.65*.65*Math.sin(a)**2),-.25,0];placeForgedRod(T,rod,A,B);crosshead.moving.position.set(...B);for(const r of rotors)r.rotation.x=a;for(const c of carriers){const f=(state.time/32+c.phase)%1;c.g.position.set(c.x+1.6,(1-f)*12.2+.35,c.z);}
-const visible=new Set();for(const p of state.packages){const g=luggage.get(p.id)||makeBag(p.id,p.source);g.visible=true;g.userData.tray.visible=p.segment===3||p.segment===11;g.position.fromArray(p.position);visible.add(p.id);}for(const[id,g]of luggage)if(!visible.has(id))g.visible=false;},state(){return{...proof,activeBags:luggage.size}}};
+return {root,proof,labels,materials:surface,groups:{fixed,facade,roof,wood,moving},setCutaway(value){facade.visible=roof.visible=!value;},update(state){surface.update({elapsed:state.time,distance:0});const minutes=380+state.time/60;clockHands[0].rotation.z=-(minutes%720)*Math.PI/360;clockHands[1].rotation.z=-(minutes%60)*Math.PI/30;const a=state.shaftAngle;wheel.rotation.y=a;const A=[.65*Math.cos(a),-.25,-.65*Math.sin(a)],B=[.65*Math.cos(a)+Math.sqrt(9-.65*.65*Math.sin(a)**2),-.25,0];placeForgedRod(T,rod,A,B);crosshead.moving.position.set(...B);for(const r of rotors)r.rotation.x=a;for(const c of carriers){const f=(state.time/32+c.phase)%1;c.g.position.set(c.x+1.6,(1-f)*12.2+.35,c.z);}
+const visible=new Set();for(const p of state.packages){const g=luggage.get(p.id)||makeBag(p.id,p.source);g.visible=true;g.userData.tray.visible=p.segment===3||p.segment===11;g.position.fromArray(p.position);visible.add(p.id);}for(const[id,g]of luggage)if(!visible.has(id))g.visible=false;},auditClearance(){root.updateMatrixWorld(true);const solids=[];for(const group of [fixed,wood])group.traverse(o=>{if(o.isMesh&&!o.userData.nativeDisplayBatch&&o.geometry?.attributes.position){o.geometry.computeBoundingBox();solids.push({o,b:o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld)});}});const hits=[],cargo=new T.Box3(),tri=new T.Triangle(),v=[new T.Vector3(),new T.Vector3(),new T.Vector3()];for(let source=0;source<3;source++)for(let age=0;age<130;age+=.5){const q=sampleRoute(source,age),p=q.position;cargo.min.set(p[0]-.43,p[1]+.025,p[2]-.28);cargo.max.set(p[0]+.43,p[1]+.80,p[2]+.28);for(const {o,b}of solids){if(!cargo.intersectsBox(b))continue;const g=o.geometry,a=g.attributes.position,n=g.index?.count??a.count;let hit=false;for(let i=0;i<n;i+=3){for(let j=0;j<3;j++)v[j].fromBufferAttribute(a,g.index?g.index.getX(i+j):i+j).applyMatrix4(o.matrixWorld);tri.set(...v);if(cargo.intersectsTriangle(tri)){hit=true;break;}}if(hit){hits.push({source,age,p,mesh:o.name,material:o.material?.name,bounds:[b.min.toArray(),b.max.toArray()]});if(hits.length>=40)return{testedUntil:{source,age},hits,complete:false};}}}return{samples:780,solidCount:solids.length,hits,complete:true};},state(){return{...proof,activeBags:luggage.size}}};
 }
