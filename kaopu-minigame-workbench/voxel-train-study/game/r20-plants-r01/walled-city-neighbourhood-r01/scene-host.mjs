@@ -1,0 +1,34 @@
+import * as THREE from 'three';
+import {OrbitControls} from '../../../vendor/OrbitControls.js';
+import {makeBuildingRecipe}from'./building-plan.mjs';
+import {buildNeighbourhood}from'./neighbourhood.mjs';
+import {makeRescueContract}from'./rescue-contract.mjs';
+import {createCityRescueGame,makeRescueSupportSampler}from'./rescue-gameplay.mjs';
+import {attachCityRescueGameplay,makeRescueDirectorCue}from'./rescue-gameplay-view.mjs';
+const canvas=document.querySelector('#world'),container=document.querySelector('#hud'),stage=document.querySelector('#stage'),loading=document.querySelector('#loading'),loadingText=document.querySelector('#loading-text'),errorBox=document.querySelector('#load-error');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.NoToneMapping;renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.25));renderer.setClearColor(0xaaaead,1);
+const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(43,1,.05,180),controls=new OrbitControls(camera,canvas);controls.enableDamping=false;controls.minDistance=1.5;controls.maxDistance=100;controls.maxPolarAngle=Math.PI*.96;
+scene.add(new THREE.HemisphereLight(0xd8e5e7,0x666252,2));const sun=new THREE.DirectionalLight(0xffeed9,2.5);sun.position.set(-4,9,6);scene.add(sun);
+const clock={elapsed:14*3600,paused:false,last:null},proof={version:'city-rescue-r02-candidate',noSecondRenderer:true,noSecondRAF:true,worldClock:'shared elapsed seconds',visualAcceptance:false,interactiveAcceptance:false,errors:[],actorReady:false};let hood,game,view,actorBundle,frame=0,disposed=false,tween=null,director=true,dirty=true;
+renderer.debug.onShaderError=(g,p,v,f)=>{const e=[g.getProgramInfoLog(p),g.getShaderInfoLog(v),g.getShaderInfoLog(f)].join('\n');proof.errors.push(e);showError('材質編譯失敗，場景未通過。');};
+function showError(message){errorBox.textContent=message;errorBox.hidden=false;}
+function resize(){const r=stage.getBoundingClientRect();renderer.setSize(Math.max(1,r.width),Math.max(1,r.height),false);camera.aspect=r.width/Math.max(1,r.height);camera.updateProjectionMatrix();dirty=true;}
+function placeCamera(position,target){camera.position.fromArray(position);controls.target.fromArray(target);camera.lookAt(controls.target);camera.updateMatrixWorld(true);controls.update();dirty=true;}
+function wholeView(){director=false;tween=null;hood?.setWallInspection([]);placeCamera([25,23,40],[0,13.8,-1.3]);}
+function cue(c){if(!director)return;hood?.setWallInspection(c.exposeWallIds||['W7-front','E7-front','E7-left','W8-front']);const start=clock.elapsed;tween={start,duration:c.transitionSeconds||1.25,fromPosition:camera.position.clone(),fromTarget:controls.target.clone(),position:new THREE.Vector3(...c.position),target:new THREE.Vector3(...c.lookAt)};dirty=true;}
+function rescueView(){if(!game)return;director=true;cue(makeRescueDirectorCue(game,game.snapshot()));}
+function step(seconds=0){clock.elapsed+=seconds;hood?.update(clock.elapsed);const snapshot=view?.update(clock.elapsed);if(tween){const t=Math.min(1,Math.max(0,(clock.elapsed-tween.start)/tween.duration)),s=t*t*(3-2*t);camera.position.lerpVectors(tween.fromPosition,tween.position,s);controls.target.lerpVectors(tween.fromTarget,tween.target,s);controls.update();if(t===1)tween=null;}hood?.updateVisibility(camera);return snapshot;}
+function advanceWorld(seconds){let result;if(seconds===0)return step(0);for(let remain=seconds;remain>1e-9;){const dt=Math.min(.05,remain);result=step(dt);remain-=dt;}return result;}
+function draw(){camera.updateMatrixWorld(true);renderer.render(scene,camera);if(view&&game)view.render(game.snapshot());dirty=false;proof.lastCalls=renderer.info.render.calls;proof.lastTriangles=renderer.info.render.triangles;}
+function loop(now){if(disposed)return;const dt=clock.last===null?0:(now-clock.last)/1000;clock.last=now;if(!clock.paused){advanceWorld(Math.max(0,dt));dirty=true;}if(dirty)draw();frame=requestAnimationFrame(loop);}
+controls.addEventListener('start',()=>{director=false;tween=null;});controls.addEventListener('change',()=>{dirty=true;});window.addEventListener('resize',resize);document.addEventListener('visibilitychange',()=>{dirty=true;});
+document.querySelector('#whole-view').onclick=wholeView;document.querySelector('#rescue-view').onclick=rescueView;document.querySelector('#source-status').onclick=()=>{const n=document.querySelector('#state-note');n.hidden=!n.hidden;};
+canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();clock.paused=true;showError('圖形裝置已中斷。進度暫停，請重新載入。');});
+resize();placeCamera([25,23,40],[0,13.8,-1.3]);
+async function start(){await new Promise(requestAnimationFrame);const buildStart=performance.now();hood=buildNeighbourhood({THREE,renderer,recipe:makeBuildingRecipe()});scene.add(hood.root);hood.update(clock.elapsed);proof.buildMs=performance.now()-buildStart;proof.geometry=hood.metrics();game=createCityRescueGame({contract:makeRescueContract(hood.recipe),onDoorChange:(id,open)=>hood.setDoor(id,open)});view=attachCityRescueGameplay({THREE,game,worldRoot:hood.root,camera,canvas,container,onDirectorCue:cue,onPause:()=>{clock.paused=!clock.paused;clock.last=null;dirty=true;return clock.paused;},onRetry:()=>{clock.paused=false;clock.last=null;director=true;return clock.elapsed;}});loadingText.textContent='建築與路線已生成，正在驗證原生人物資源…';loading.hidden=true;step(0);draw();frame=requestAnimationFrame(loop);
+ const {createNativeRescueActors}=await import('./rescue-native-actor/NativeActor.mjs');actorBundle=await createNativeRescueActors({THREE,worldRoot:hood.root,sampleSupport:makeRescueSupportSampler(game.contract),onProgress:e=>{proof.actorProgress=e;},signal:null});view.bindNativeActors(actorBundle.actors);proof.actorReady=true;proof.actor=actorBundle.proof;dirty=true;
+ if(new URLSearchParams(location.search).get('qa')==='1')window.__CITY_RESCUE_QA__={proof,hood,game,view,actorBundle,camera,controls,clock,pause:v=>{clock.paused=!!v;clock.last=null;},advance:s=>{if(!(s>=0&&Number.isFinite(s)))throw Error('Finite positive world interval');clock.paused=true;const result=advanceWorld(s);draw();return result;},render:()=>{step(0);draw();return game.snapshot();},wholeView,rescueView};
+ window.dispatchEvent(new CustomEvent('city-rescue-ready',{detail:{version:proof.version}}));
+}
+start().catch(e=>{proof.errors.push(String(e.stack||e));loading.hidden=true;showError('載入尚未完成，沒有使用替代人物。\n'+e.message);window.__CITY_RESCUE_LOAD_ERROR__=String(e.stack||e);});
+window.addEventListener('pagehide',()=>{if(disposed)return;disposed=true;cancelAnimationFrame(frame);view?.dispose();actorBundle?.dispose();hood?.dispose();controls.dispose();renderer.dispose();},{once:true});

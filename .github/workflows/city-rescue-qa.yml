@@ -1,0 +1,47 @@
+name: City rescue actual entry NativeRig gameplay GPU
+on:
+  push:
+    branches: ['qa/walled-neighbours-20261011']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/**'
+      - '.github/workflows/city-rescue-qa.yml'
+permissions:
+  contents: read
+jobs:
+  city-rescue:
+    if: ${{ contains(github.event.head_commit.message, '[rescue-probe]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    env:
+      CITY_TIMEOUT_MS: '780000'
+      CITY_OUT: city-rescue-qa-results
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01
+            kaopu-minigame-workbench/voxel-train-study/vendor
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22.23.3
+      - name: Verify geometry, game, and native actor contracts
+        run: |
+          node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/building-plan.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/rescue-contract.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/rescue-gameplay.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/rescue-native-actor/host-frame.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/rescue-native-actor/SupportWalker.test.mjs
+      - name: Install official pinned browser test runtime
+        run: |
+          npm install --prefix "$RUNNER_TEMP/room-browser" --registry=https://registry.npmjs.org --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/room-browser/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/room-browser/node_modules" >> "$GITHUB_ENV"
+      - name: Real entry, original three actors and both rescue paths
+        timeout-minutes: 14
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/rescue-qa/run-browser.cjs
+      - name: Preserve successful and failed evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: city-rescue-${{ github.sha }}
+          path: city-rescue-qa-results/
+          compression-level: 0
+          retention-days: 7
