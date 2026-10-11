@@ -203,11 +203,11 @@ fn architecture(p:vec3<f32>)->Field {
  let innerRoof=min(max((p.y-hyW+.20)*.90,biw),max((p.y-hyS+.20)*.90,bis));
  // Each street gable has a full two-pitch roof extending inward to the main ridge.
  let gx=repeatX(p.x-4.,33.,1.);let gz=repeatX(p.z,27.5,1.);
- let gs=vec3<f32>(gx,p.y,p.z+40.5);let gw=vec3<f32>(gz,p.y,p.x+42.6);
+ let gs=vec3<f32>(gx,p.y,p.z+40.5);let roofWestQ=vec3<f32>(gz,p.y,p.x+42.6);
  let gsh=15.91-abs(gs.x)*.72-max(gs.z,0.)*.24;
- let gwh=15.91-abs(gw.x)*.72-max(gw.z,0.)*.24;
+ let gwh=15.91-abs(roofWestQ.x)*.72-max(roofWestQ.z,0.)*.24;
  let gsBound=box(gs-vec3<f32>(0.,13.5,3.1),vec3<f32>(5.99,3.,3.75));
- let gwBound=box(gw-vec3<f32>(0.,13.5,3.1),vec3<f32>(5.99,3.,3.75));
+ let gwBound=box(roofWestQ-vec3<f32>(0.,13.5,3.1),vec3<f32>(5.99,3.,3.75));
  let towerGap=-box(p-tc-vec3<f32>(0.,14.,0.),vec3<f32>(8.,6.,8.8));
  let dormerOuter=min(max((p.y-gsh)*.81,gsBound),max(max((p.y-gwh)*.81,gwBound),towerGap));
  let dormerInner=min(max((p.y-gsh+.19)*.81,gsBound-.24),max(max((p.y-gwh+.19)*.81,gwBound-.24),towerGap));
