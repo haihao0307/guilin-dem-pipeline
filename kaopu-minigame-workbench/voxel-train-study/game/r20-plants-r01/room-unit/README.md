@@ -22,10 +22,12 @@ The actual MIT `smax` smooth carving kernel from the existing KAOPU volcanic-sto
 
 ## Verification status
 
-29 local CPU tests passed: geometry budget/finite bounds, deterministic field/shape, door ray tests and walk edge, furniture clearance, causal damp/runoff, age consistency, shader hook insertion, disposal, same-recipe reuse and bounded erosion. One genuine 53,248-byte SQLite sample passed sqlite3 integrity_check.
+30 local CPU tests passed: geometry budget/finite bounds, deterministic field/shape, door ray tests and walk edge, furniture clearance, causal damp/runoff, age consistency, shader hook insertion, disposal, same-recipe reuse and bounded erosion. One genuine 53,248-byte SQLite sample passed sqlite3 integrity_check.
 
 Initial geometry: 18,780 triangles, 1,064,376 bytes, 23 grouped mesh draw calls, zero image textures. These figures are not whole-game FPS. Actual GPU compilation, whole-room views, close-up, door open/closed and same-view incremental rendering cost are collected by the isolated existing-game QA harness. Until its receipt is read, do not claim visual or GPU acceptance.
 
 The main app/world/session/train and Pages publication are unchanged. The old R01 game/train is only the test carrier, not the new A4/No88 release. Source references containing restricted teacher shaders remain local research only and are excluded from the published candidate closure.
 
 Second inspection changes: blanket folds now remain above the mattress; hanging garments use a gravity-shaped sag and curved folds. The same pre-displacement roomFieldPosition attribute feeds the shape/material reference coordinates. Weathering uses domain-warped connected areas and varied drip lengths, replacing the first inspection's round patches and even-length stripes. Await the second actual GPU receipt before visual acceptance.
+
+Final seam regression: opening sub-panels sample the same wall-normal displacement at their shared reference coordinates. Endcaps no longer carve sideways into artificial construction cracks. This is checked at shared edge vertices, not hidden by a texture or extra repair strip.

@@ -11,10 +11,10 @@ export function buildDwellingUnit(input,{THREE,createHostMaterialLibrary}={}){
  for(const key of ['cloth','clothBlue','clothRed','zinc'])mats[key].side=THREE.DoubleSide;
  const batches=new Map(),geometries=[],colliders=[],fieldSamples=[];let disposed=false,doorOpen=s.doorOpen;
  const P=new THREE.Vector3(),N=new THREE.Vector3();
- function bake(g,mat='plaster',group='static',transform=null,{deform=false,normal=null,tag='',fieldTransform=null}={}){
+ function bake(g,mat='plaster',group='static',transform=null,{deform=false,normal=null,tag='',fieldTransform=null,deformWall=null}={}){
   if(transform)g.applyMatrix4(transform);const p=g.attributes.position,n=g.attributes.normal;const reference=Array.from(p.array);if(fieldTransform)for(let i=0;i<p.count;i++){P.fromBufferAttribute(p,i).applyMatrix4(fieldTransform);reference.splice(i*3,3,P.x,P.y,P.z);}
   if(deform){for(let i=0;i<p.count;i++){
-   P.fromBufferAttribute(p,i);N.fromBufferAttribute(n,i);const a=P.toArray(),nn=normal||N.toArray(),f=evaluateRoomSurfaceField(a,nn,s.surface);
+   P.fromBufferAttribute(p,i);N.fromBufferAttribute(n,i);const a=P.toArray();if(deformWall){const side=(P.x-deformWall.origin[0])*deformWall.axis[0]+(P.y-deformWall.origin[1])*deformWall.axis[1]+(P.z-deformWall.origin[2])*deformWall.axis[2];N.fromArray(deformWall.axis).multiplyScalar(side>=0?1:-1);}const nn=normal||N.toArray(),f=evaluateRoomSurfaceField(a,nn,s.surface);
    const relief=Math.max(-.011,Math.min(.006,f.height??((f.plasterThickness??.008)-.012)));
    // Every face remains a solid bounded slab. Recesses share the surface field;
    // no separate repair sticker or material-pass geometry is added later.
@@ -29,7 +29,7 @@ export function buildDwellingUnit(input,{THREE,createHostMaterialLibrary}={}){
  function box(pos,size,mat,group='static',opts={}){const seg=opts.deform?size.map(v=>Math.max(1,Math.min(28,Math.ceil(v/.18)))):[1,1,1];bake(new THREE.BoxGeometry(...size,...seg),mat,group,transform(pos,opts.rotation),opts);}
  function rod(a,b,r,mat='iron',group='static',segments=8){const av=new THREE.Vector3(...a),bv=new THREE.Vector3(...b),v=bv.clone().sub(av);const g=new THREE.CylinderGeometry(r,r,v.length(),segments,1,false);g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),v.clone().normalize()));g.translate(...av.add(bv).multiplyScalar(.5).toArray());bake(g,mat,group,null,{tag:'native-rod'});}
  function sphere(pos,size,mat='cloth',group='static'){const g=new THREE.SphereGeometry(1,14,8);g.scale(...size);g.translate(...pos);bake(g,mat,group);}
- function wallRect(rect,holes,frame,mat,group){let rs=[rect];for(const hole of holes)rs=rs.flatMap(r=>subtractOpening(r,hole));for(const r of rs){const center=[(r[0]+r[2])/2,(r[1]+r[3])/2,0],dim=[r[2]-r[0],r[3]-r[1],t];let m=frame.clone().multiply(transform(center));bake(new THREE.BoxGeometry(...dim,Math.max(1,Math.ceil(dim[0]/.18)),Math.max(1,Math.ceil(dim[1]/.18)),1),mat,group,m,{deform:true,tag:'bounded-solid-wall'});}}
+ function wallRect(rect,holes,frame,mat,group){let rs=[rect];for(const hole of holes)rs=rs.flatMap(r=>subtractOpening(r,hole));for(const r of rs){const center=[(r[0]+r[2])/2,(r[1]+r[3])/2,0],dim=[r[2]-r[0],r[3]-r[1],t];let m=frame.clone().multiply(transform(center));bake(new THREE.BoxGeometry(...dim,Math.max(1,Math.ceil(dim[0]/.18)),Math.max(1,Math.ceil(dim[1]/.18)),1),mat,group,m,{deform:true,tag:'bounded-solid-wall',deformWall:{axis:new THREE.Vector3(0,0,1).transformDirection(frame).toArray(),origin:new THREE.Vector3().setFromMatrixPosition(frame).toArray()}});}}
  const door=s.door,fw=s.frontWindow,sw=s.sideWindow;
  wallRect([-w/2,0,w/2,h],[[door.x-door.width/2,0,door.x+door.width/2,door.height],[fw.x-fw.width/2,fw.bottom,fw.x+fw.width/2,fw.bottom+fw.height]],transform([0,0,0]),'plaster','front');
  wallRect([-d/2,0,d/2,h],[],transform([-w/2,0,-d/2],[0,-Math.PI/2,0]),'plaster','static');
