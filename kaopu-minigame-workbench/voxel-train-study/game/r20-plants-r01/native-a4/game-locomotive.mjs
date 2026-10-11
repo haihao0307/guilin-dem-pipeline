@@ -14,7 +14,7 @@ export function createA4GameLocomotive(){
  const emitters={chimney:point([0,Y+R+.6,L/2-.8]),whistle:point([0,Y+R+.25,-2.1]),cylinderLeft:[frontOffset+3.2,TRACK.railHead+1.016,-design.cylinders[2].axisYM],cylinderRight:[frontOffset+3.2,TRACK.railHead+1.016,-design.cylinders[0].axisYM]};
  // Retain the actual game's existing original driver character and head animation.
  const old=existingCrewSource(),crewRoot=new T.Group();root.add(crewRoot);crewRoot.add(old.driverBody,old.crew.driverHead);
- const cabFloor=point([0,1.95,-L/2-.5]),head=old.proof.placeholderDriver.position;
+ const cabFloor=point([0,1.95*model.bodyScales.cabHeightFactor,-L/2-.5]),head=old.proof.placeholderDriver.position;
  crewRoot.position.set(cabFloor[0]-head[0],cabFloor[1]-old.proof.placeholderDriver.floorY,0);
  const wheels=model.wheels.map(w=>{const g=new T.Group();g.position.set(w.xM+frontOffset,TRACK.railHead+w.radiusM,-w.yM);g.userData={kind:w.driver?'driver':(+w.axle.split('-')[1]>=6?'tender':'guide'),radius:w.radiusM,nativeWheel:true,source:w.object.userData.sourceName};return g;});
  const bodyMotion={setEnabled(){},proof:{kind:'Rigid retained A4 shell; no fabricated suspension claim'}};

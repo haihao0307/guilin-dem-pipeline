@@ -9,6 +9,11 @@ export const CAMERA_LIMITS = freeze({minHeight: .7, minRadius: 5.5, maxRadius: 1
   trainClearance: {min: [CONSIST_BOUNDS.min[0]-.5, -.5, -1.9], max: [6, 4.8, 1.9]}});
 export const TRAIN_FOCUS_BOUNDS = freeze({min: [...CONSIST_BOUNDS.min], max: [...CONSIST_BOUNDS.max]});
 export const CAMERA_PRESETS = freeze({
+  leftSide:{label:'左侧整车',focusBounds:{min:[-16.7,0,-1.6],max:[5.1,4.5,1.6]},landscape:{position:[-5.8,4.5,27],target:[-5.8,2.2,0],zoom:1,projection:horizontal},portrait:{position:[-5.8,4.5,35],target:[-5.8,2.2,0],zoom:.6}},
+  // Elevated street-side pose clears projecting awnings without hiding the district.
+  // Full locomotive bounds and actual district triangles are swept in camera tests.
+  rightSide:{label:'右侧整车',focusBounds:{min:[-16.7,0,-1.6],max:[5.1,4.5,1.6]},landscape:{position:[-5.8,6,-6.2],target:[-5.8,2.2,0],zoom:.4,projection:{kind:'horizontal',referenceAspect:4}},portrait:{position:[-5.8,6,-6.2],target:[-5.8,2.2,0],zoom:.4,projection:{kind:'horizontal',referenceAspect:4}}},
+  tailBrand:{label:'尾部标志',focusBounds:{min:[-58.4,1,-1.6],max:[-56.8,4.5,1.6]},landscape:{position:[-67,3,0],target:[-57.84,2.55,0],zoom:1.25,projection:horizontal},portrait:{position:[-67,3,0],target:[-57.84,2.55,0],zoom:1.1}},
   overview: {label: '全景', focusBounds: TRAIN_FOCUS_BOUNDS,
     landscape: {position: [9, 19, 70], target: [-24, 2, 0], zoom: 1, projection: horizontal},
     portrait: {position: [39, 31, 62], target: [-24, 2, 0], zoom: .9}},

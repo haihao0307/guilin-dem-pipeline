@@ -33,7 +33,7 @@ export const DEPENDENCIES = [
   {
     "id": "native-a4/adapter.mjs",
     "path": "native-a4/adapter.mjs",
-    "sha256": "e231ef66cb0bed241d5e846b5f48d2827cbc2667692c1ce66b140e22a794c031"
+    "sha256": "d131ad3db7c056b6847453f5037f35af497c1051cf81c747c01642d4b0f4d5f1"
   },
   {
     "id": "native-a4/branding/angel_left.mjs",
@@ -53,7 +53,12 @@ export const DEPENDENCIES = [
   {
     "id": "native-a4/branding/install.mjs",
     "path": "native-a4/branding/install.mjs",
-    "sha256": "3c479717013ae2903652f9953730e98ad2c3747c23443610ba8b8a55ec51f3d3"
+    "sha256": "1bac37fa120076546de1479fdab20ab8e408f2f1b5c3765310e2a80da4956fba"
+  },
+  {
+    "id": "native-a4/branding/number88.mjs",
+    "path": "native-a4/branding/number88.mjs",
+    "sha256": "b700ce9af533088480fa211138ded64f3ffe6b72baa3661ef350bbbc60315401"
   },
   {
     "id": "native-a4/branding/wordmark-gold.mjs",
@@ -74,6 +79,11 @@ export const DEPENDENCIES = [
     "id": "native-a4/dimensions.mjs",
     "path": "native-a4/dimensions.mjs",
     "sha256": "ab0a21390e17f92511ad3f9112bad5ffb9abeb34d9b21f069931eed6647bb518"
+  },
+  {
+    "id": "native-a4/display-batching.mjs",
+    "path": "native-a4/display-batching.mjs",
+    "sha256": "0132e3a114f250a0af56c83900908d80fd05bf658871dcf597ed691a9ef0a7a4"
   },
   {
     "id": "native-a4/frozen/learned-shape/derived/train-shape-only.mjs",
@@ -103,7 +113,7 @@ export const DEPENDENCIES = [
   {
     "id": "native-a4/game-locomotive.mjs",
     "path": "native-a4/game-locomotive.mjs",
-    "sha256": "bcdf405ab91388af3ace37f181fa0cca99725838b46915f7c5dd5461c43721a0"
+    "sha256": "04fd11e55e06fb7b7fb2e0b163fa14ce827c348b01625117821c1fa151ca1d7a"
   },
   {
     "id": "native-a4/recipe.mjs",

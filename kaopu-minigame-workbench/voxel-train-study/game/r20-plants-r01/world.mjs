@@ -1,3 +1,4 @@
+import {createRetainedPandanusSegment} from './plants/retained-pandanus-segment.mjs';
 import {PLATFORM_LAYOUT,COACH_DIMENSIONS,COACH_LAYOUT,TRACK} from './metre-scale.mjs';
 import {createStreetDistrict} from './street-district.mjs';
 import {createNativePlantSegment} from './plants/segment.mjs';
@@ -35,7 +36,8 @@ export function partitionTerrain(blocks){
 export function createGameWorld({street=true,plants=true,onChange=()=>{}}={}){
   const root=new THREE.Group(),parts=partitionTerrain(buildEnvironment(WORLD,{platformCorridor:true,includeBridge:false,optimizeGeometry:true})),flatTerrain=createFlatTerrain(parts),terrain=flatTerrain.root;root.add(terrain);const train=createGameTrain();root.add(train.root);
   const streetDistrict=street?createStreetDistrict({onChange,renderBudgetMs:6}):null;if(streetDistrict)root.add(streetDistrict.root);
-  const nativePlants=plants?createNativePlantSegment():null;if(nativePlants)root.add(nativePlants.root);
+  const nativePlants=plants?createNativePlantSegment({onChange}):null;if(nativePlants)root.add(nativePlants.root);
+  const retainedPlants=plants?createRetainedPandanusSegment():null;if(retainedPlants)root.add(retainedPlants.root);
   const people=createPassengers(pathFrame,{seatGeometry:(actor,position)=>({floorY:position[1],seatSurfaceY:position[1]+COACH_DIMENSIONS.seatHeight,ceilingY:position[1]+COACH_DIMENSIONS.interiorHeight})});root.add(people.mesh);
   const stationStreaming=createStationStreaming({root,createModel:createStationModel,minOffset:WORLD.centerX-FLAT_WORLD.terrainRadius-5,maxOffset:WORLD.centerX+FLAT_WORLD.terrainRadius-PLATFORM_LAYOUT.minX,isVisible:offset=>!(offset+5<WORLD.centerX-FLAT_WORLD.terrainRadius||offset+PLATFORM_LAYOUT.minX>WORLD.centerX+FLAT_WORLD.terrainRadius)}),stations=stationStreaming.stations,bridges=new Map();let disposed=false;
   const stones=new THREE.InstancedMesh(new THREE.DodecahedronGeometry(.092,0),new THREE.MeshStandardMaterial({color:0xb5b5a2,roughness:.93}),80);stones.castShadow=true;stones.frustumCulled=false;root.add(stones);
@@ -71,9 +73,9 @@ export function createGameWorld({street=true,plants=true,onChange=()=>{}}={}){
     for(const name of ['chimney','cylinderLeft','cylinderRight'])soundVector.fromArray(output[name]).applyMatrix4(train.root.matrixWorld).toArray(output[name]);
     return output;
   }
-  return{root,train,terrain,people,streetDistrict,nativePlants,pathFrame,fillAudioSources,fillSteamEmitters,stationProof:()=>[...stations].map(([index,m])=>({index,...m.proof,offset:m.group.position.x})),stationPreparationProof:stationStreaming.snapshot,update(view,route,{interior=false,cameraTarget=null,cameraPosition=null}={}){
+  return{root,train,terrain,people,streetDistrict,nativePlants,retainedPlants,pathFrame,fillAudioSources,fillSteamEmitters,stationProof:()=>[...stations].map(([index,m])=>({index,...m.proof,offset:m.group.position.x})),stationPreparationProof:stationStreaming.snapshot,update(view,route,{interior=false,cameraTarget=null,cameraPosition=null}={}){
     if(disposed)return;
-    streetDistrict?.update(view,route,{cameraTarget,cameraPosition});flatTerrain.update(view.distance,streetDistrict?.exclusions(view.distance)||[]);train.update(view,{interior});nativePlants?.update(view);
+    streetDistrict?.update(view,route,{cameraTarget,cameraPosition});flatTerrain.update(view.distance,streetDistrict?.exclusions(view.distance)||[]);train.update(view,{interior});nativePlants?.update(view);retainedPlants?.update(view);
     // Convert world actors once at the renderer boundary, keeping the original
     // farmer/passenger geometry and Session paths while removing the old belt cull.
     people.update({...view,actors:view.actors.map(actor=>{const rendered=flatActor(actor,view.distance,FRONT_X);if(actor.frame==='train'&&train.transformPassengerPoint)rendered.position=train.transformPassengerPoint(rendered.position);return rendered;}).filter(actor=>Math.abs(actor.position[0]-WORLD.centerX)<FLAT_WORLD.terrainRadius)});
@@ -84,7 +86,7 @@ export function createGameWorld({street=true,plants=true,onChange=()=>{}}={}){
     for(const e of effects){const age=(view.tick-e.tick)/30;for(let j=0;j<8;j++){const a=j*Math.PI/4+e.id;pose.position.set(e.point[0]+Math.cos(a)*age*.85,e.point[1]+Math.sin(a)*age*.8+.15,e.point[2]+age*.6);pose.rotation.set(0,0,a+age*2);pose.scale.set(.065*(1-age),.065*(1-age),.065*(1-age));pose.updateMatrix();impacts.setMatrixAt(count++,pose.matrix);}}impacts.count=count;impacts.instanceMatrix.needsUpdate=true;
     rain.visible=view.station.wet;if(rain.visible){for(let i=0;i<110;i++){const x=((i*13.37)%38)-26,z=((i*7.17)%11)-3.5,y=7-((view.elapsed*8+i*.173)%7);pose.position.set(x,y,z);pose.rotation.set(0,0,-.13);pose.scale.set(1,1,1);pose.updateMatrix();rain.setMatrixAt(i,pose.matrix);}rain.instanceMatrix.needsUpdate=true;}
   },resetEffects(){lastEvent=0;effects=[];train.resetBodyMotion?.();stationStreaming.reset();},dispose(){
-    if(disposed)return;disposed=true;stationStreaming.dispose();streetDistrict?.dispose();nativePlants?.dispose();
+    if(disposed)return;disposed=true;stationStreaming.dispose();streetDistrict?.dispose();nativePlants?.dispose();retainedPlants?.dispose();
     const geometries=new Set(),materials=new Set(),textures=new Set();root.traverse(object=>{if(object.isInstancedMesh)object.dispose();if(object.geometry)geometries.add(object.geometry);for(const material of Array.isArray(object.material)?object.material:object.material?[object.material]:[]){materials.add(material);for(const value of Object.values(material))if(value?.isTexture)textures.add(value);}});
     for(const resource of [...textures,...materials,...geometries])resource.dispose();bridges.clear();effects=[];root.removeFromParent();root.clear();
   }};

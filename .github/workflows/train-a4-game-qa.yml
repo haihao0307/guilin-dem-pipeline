@@ -27,7 +27,10 @@ jobs:
           persist-credentials: false
           sparse-checkout: kaopu-minigame-workbench/voxel-train-study
       - name: Physical game and input regression
-        run: node --test "$CANDIDATE/tests/a4-session-physics.test.mjs" "$CANDIDATE/tests/driver-input.test.mjs"
+        run: |
+          node --test "$CANDIDATE"/tests/*.test.mjs "$CANDIDATE"/plants/*.test.mjs
+          node "$CANDIDATE/plants/native-codec/tests/test-codec.mjs"
+          python3 "$CANDIDATE/plants/native-codec/tests/verify_sqlite.py"
       - name: Official pinned browser runner
         run: |
           npm install --prefix "$RUNNER_TEMP/a4-native" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
