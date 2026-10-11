@@ -29,8 +29,8 @@ try{
    const hashes=[];for(let i=0;i<3;i++)hashes.push(hash(await page.evaluate(()=>{const v=fullCommonWorkbench.motion().viewer;v.render();return v.canvas.toDataURL()})));assert.equal(new Set(hashes).size,1);
    if(!isCandidate)assert.equal(hashes[0],golden.barePixelHashes[view],'Original R43 pixel parity');
    const pixels=await page.evaluate(()=>fullCommonWorkbench.pixelAudit());assert.equal(pixels.error,0);assert(pixels.colors>100);
-   const saved=await page.evaluate(()=>{const v=fullCommonWorkbench.motion().viewer,r=v.canvas.getBoundingClientRect();v.camera.updateMatrixWorld(true);return{clip:{x:r.x,y:r.y,width:r.width,height:r.height},fov:v.camera.fov,aspect:v.camera.aspect,near:v.camera.near,far:v.camera.far,projectionMatrix:v.camera.projectionMatrix.toArray(),matrixWorldInverse:v.camera.matrixWorldInverse.toArray()}});
-   assert.equal(saved.clip.width,797);assert.equal(saved.clip.height,590);await page.screenshot({path:path.join(OUT,stage+'-'+view+'.png'),clip:saved.clip});
+   const saved=await page.evaluate(()=>{const v=fullCommonWorkbench.motion().viewer,r=v.canvas.getBoundingClientRect();v.camera.updateMatrixWorld(true);return{clip:{x:r.x,y:r.y,width:r.width,height:r.height},fov:v.camera.fov,aspect:v.camera.aspect,near:v.camera.near,far:v.camera.far,canvasWidth:v.canvas.width,canvasHeight:v.canvas.height,projectionMatrix:v.camera.projectionMatrix.toArray(),matrixWorldInverse:v.camera.matrixWorldInverse.toArray()}});
+   assert.equal(saved.canvasWidth,797);assert.equal(saved.canvasHeight,590);const screenshot=await page.screenshot({path:path.join(OUT,stage+'-'+view+'.png'),clip:saved.clip});assert.equal(screenshot.readUInt32BE(16),797);assert.equal(screenshot.readUInt32BE(20),590);const nativeCanvas=await page.evaluate(()=>fullCommonWorkbench.motion().viewer.canvas.toDataURL());fs.writeFileSync(path.join(OUT,stage+'-'+view+'-native-canvas.png'),Buffer.from(nativeCanvas.split(',')[1],'base64'));
    row.views[view]={camera:c,hashes,pixels};if(stage==='A-R43-baseline')cameras[view]={...c,...saved,width:797,height:590};
   }
   if(stage!=='F-R43-restore'){

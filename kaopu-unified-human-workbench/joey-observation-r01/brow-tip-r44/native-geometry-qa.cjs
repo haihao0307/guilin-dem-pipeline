@@ -431,5 +431,23 @@ function captureCamera() {
   return {position:c.position.toArray(),target:viewer.orbit.target.toArray(),up:c.up.toArray(),zoom:c.zoom,fov:c.fov,aspect:c.aspect,near:c.near,far:c.far,width:r.width,height:r.height,projectionMatrix:c.projectionMatrix.toArray(),matrixWorldInverse:c.matrixWorldInverse.toArray(),drawingBufferWidth:viewer.canvas.width,drawingBufferHeight:viewer.canvas.height};
 }
 
-module.exports={auditNativeGeometry,captureNativeSnapshot,captureCamera,DEFAULTS,SCHEMA,
+// A bounded, transparent vector diagnostic, aligned to the exact screenshot
+// dimensions. Place over the unmodified matching PNG; this is not a beauty render.
+function witnessOverlaySVG(report,stage,view) {
+  if(!['baseline','candidate'].includes(stage)) throw Error('Overlay stage must be baseline or candidate');
+  const contacts=report[stage+'Contacts'],camera=report.cameras?.[view];
+  if(!contacts||!camera) throw Error('Missing contact report or saved camera');
+  const escape=s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+  const fmt=n=>Number(n.toFixed(5));
+  const lines=[];
+  for(const w of contacts.witnesses) {
+    const v=w.views[view];if(!v?.pixels?.every(p=>p.x!==null&&p.y!==null))continue;
+    const [a,b]=v.pixels,visible=v.potentiallyVisibleFrontSide,uncertain=!!v.counts?.frontSide.unresolved;
+    const color=visible?'#ff3355':uncertain?'#c04cff':'#ffba33';
+    lines.push(`<line x1="${fmt(a.x)}" y1="${fmt(a.y)}" x2="${fmt(b.x)}" y2="${fmt(b.y)}" stroke="${color}" stroke-width="${visible?1.5:0.65}" opacity="${visible?0.95:0.4}"><title>${escape(w.pair+' '+w.kind+' '+w.eye+(visible?' potentially visible':uncertain?' unresolved ray':' occluded/outside'))}</title></line>`);
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${camera.width}" height="${camera.height}" viewBox="0 0 ${camera.width} ${camera.height}"><title>${escape(stage+' '+view+' native surface contact witnesses')}</title><desc>Transparent diagnostic for the same saved camera. Red: sampled line potentially visible with native FrontSide. Amber: occluded or outside sampled frame. Purple: unresolved ray samples. No raw mesh. ${contacts.witnessesOmitted} contact witnesses omitted by output cap.</desc><g>${lines.join('')}</g></svg>`;
+}
+
+module.exports={auditNativeGeometry,captureNativeSnapshot,captureCamera,witnessOverlaySVG,DEFAULTS,SCHEMA,
   _testing:{triangleIntersection,makeTriangles,makeBVH,firstRayHit,rayTriangle,prepareCamera,projectPoint,toDisplay,fromDisplay,classifyMapping}};

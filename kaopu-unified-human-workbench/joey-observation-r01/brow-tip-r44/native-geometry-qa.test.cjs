@@ -1,7 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict');
 const {test}=require('node:test');
-const {auditNativeGeometry,_testing:T}=require('./native-geometry-qa.cjs');
+const {auditNativeGeometry,witnessOverlaySVG,_testing:T}=require('./native-geometry-qa.cjs');
 const close=(a,b,eps=1e-9)=>assert.ok(Math.abs(a-b)<=eps,`${a} != ${b}`);
 const closePoint=(a,b,eps)=>a.forEach((x,i)=>close(x,b[i],eps));
 const sortedLine=line=>line.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]||a[2]-b[2]);
@@ -150,5 +150,50 @@ test('report never exports the complete native arrays or component recipes',()=>
   const r=auditNativeGeometry(fixture());
   const visit=o=>{if(o&&typeof o==='object')for(const [k,v]of Object.entries(o)){assert.ok(!['positions','faces','gnmRecipes','gnmTriangles','componentId'].includes(k),'raw field '+k);visit(v);}};
   visit(r);assert.doesNotThrow(()=>JSON.stringify(r));
+});
+test('bounded SVG keeps saved canvas coordinates and original report pair identity',()=>{
+  const r=auditNativeGeometry(fixture()),svg=witnessOverlaySVG(r,'candidate','front');
+  assert.ok(svg.includes('viewBox="0 0 797 590"'));
+  assert.ok(svg.includes(r.candidateContacts.witnesses[0].pair));
+  assert.ok(svg.includes('<line '));assert.ok(!svg.includes('<image'));
+  assert.throws(()=>witnessOverlaySVG(r,'unknown','front'),/stage/);
+});
+test('deterministic random proper crossings lie on both triangles and remain symmetric',()=>{
+  let seed=20261011,hits=0;
+  const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+  const vector=()=>[random()*2-1,random()*2-1,random()*2-1];
+  const sub=(a,b)=>a.map((x,i)=>x-b[i]);
+  const dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0);
+  const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+  function inside(p,t) {
+    const u=sub(t[1],t[0]),v=sub(t[2],t[0]),w=sub(p,t[0]),n=cross(u,v);
+    close(dot(w,n)/Math.hypot(...n),0,1e-8);
+    const uu=dot(u,u),uv=dot(u,v),vv=dot(v,v),wu=dot(w,u),wv=dot(w,v),den=uu*vv-uv*uv;
+    const a=(vv*wu-uv*wv)/den,b=(uu*wv-uv*wu)/den;
+    assert.ok(a>=-1e-8&&b>=-1e-8&&a+b<=1+1e-8);
+  }
+  for(let i=0;i<1000;i++) {
+    const a=[vector(),vector(),vector()],b=[vector(),vector(),vector()];
+    const hit=T.triangleIntersection(a,b),reverse=T.triangleIntersection(b,a);
+    assert.equal(!!hit,!!reverse);
+    if(hit?.kind==='proper_crossing') {
+      hits++;assert.equal(reverse.kind,hit.kind);close(hit.lengthM,reverse.lengthM,1e-8);
+      for(const p of hit.line){inside(p,a);inside(p,b);}
+    }
+  }
+  assert.ok(hits>100,'exercise many distinct intersections');
+});
+test('BVH first hit agrees with brute-force triangles on deterministic random rays',()=>{
+  let seed=1144;
+  const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+  const positions=Array.from({length:300*9},()=>random()*4-2),faces=Array.from({length:300*3},(_,i)=>i),triangles=T.makeTriangles(positions,faces,faces.map(()=> 'skin')),tree=T.makeBVH(triangles);
+  for(let i=0;i<50;i++) {
+    const direction=[random()-.5,random()-.5,-1],norm=Math.hypot(...direction);for(let j=0;j<3;j++)direction[j]/=norm;
+    for(const frontSide of [false,true]) {
+      const brute=triangles.map(tri=>T.rayTriangle([0,0,4],direction,tri,frontSide)).filter(x=>x!==null&&x<=10).sort((a,b)=>a-b)[0];
+      const hit=T.firstRayHit(tree,[0,0,4],direction,10,frontSide,1e-10);
+      assert.equal(hit===null,brute===undefined);if(hit)close(hit.distanceM,brute,1e-9);
+    }
+  }
 });
 
