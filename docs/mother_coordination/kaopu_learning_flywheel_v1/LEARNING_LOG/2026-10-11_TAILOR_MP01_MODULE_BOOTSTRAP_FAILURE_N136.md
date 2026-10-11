@@ -61,6 +61,14 @@ PR #215 随后产生局部修复与精确正向回放：
 
 覆盖首次失败 head `8d1e3bec...`、修复 workflow head `1ff395d...` 与保留证据 head `5c63ab3...`。正向 CI 回放验证固定原成衣上的 12 套静态材质外观，不是实际 HTTPS、公网浏览器、物理设备、全部视觉质量、材质物理、联合碰撞、动态穿着或用户接受。原 R0434 仍是最后一个已验证公网 Tailor 展示。
 
+## 效果指标
+
+- 首次候选通过：false（run 38122050774）
+- 到当前本地合法候选的精确 workflow 迭代：2（首次失败 + 一次修复重放）
+- stale delivery 推广：0；失败 run 的保留/发布步骤被跳过
+- rejected lineage 继承：0 observed；修复只恢复获准材质字段，并重新生成当前应用/原成衣绑定
+- 用户纠错次数、同类错误复发率、从用户指令到合法 candidate 的时间：unknown
+
 ## 是否采用
 
 更新既有 `TAILOR-PRESET-3D-THUMBNAIL-CORRECTION-001`，不新建重复 regression case；向 PR #215 路由 Tailor 局部 Candidate，不改生产分支、不降低门槛。
