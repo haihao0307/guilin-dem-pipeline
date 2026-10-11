@@ -14,8 +14,8 @@ export const COACH_DIMENSIONS=Object.freeze({underframeLength:19.3294,bodyLength
   wheelRadius:.5335,bogieCenters:14.1732,bogieWheelbase:2.5908,seatHeight:.46,
   status:Object.freeze({lengthWidth:'Original BR116 Mk1 FK AA101 dimensions; body and overbuffers kept separate',roofWheelBogie:'BR116 roof/overall/bogie; WOSS612 new Commonwealth/BR1 wheel diameter verified',floorDoorSeat:'provisional ergonomic authoring dimensions; not prototype-certified'})});
 export const COACH_FLOOR=TRACK.railHead+COACH_DIMENSIONS.floorAboveRail;
-export const CONSIST=Object.freeze({frontX:5,coachCount:2,couplingGap:.34,tenderRearX:-12.25,
-  tenderRearStatus:'provisional packaging boundary pending complete WD tender drawing; not verified overall length'});
+export const CONSIST=Object.freeze({frontX:5,coachCount:2,couplingGap:.34,tenderRearX:-16.65,
+  tenderRearStatus:'88 adopts 21.650 m A4 locomotive+tender museum envelope, front X=5; native retained body calibrated separately from wheel diameter'});
 export const COACH_LAYOUT=Object.freeze(Array.from({length:2},(_,i)=>{const x=CONSIST.tenderRearX-CONSIST.couplingGap-COACH_DIMENSIONS.overBuffers/2-i*(COACH_DIMENSIONS.overBuffers+CONSIST.couplingGap);return Object.freeze({id:'coach-'+(i+1),x,length:COACH_DIMENSIONS.underframeLength,overBuffers:COACH_DIMENSIONS.overBuffers,frontDoor:x+8.2,rearDoor:x-8.2});}));
 export const PLATFORM_LAYOUT=Object.freeze({minX:COACH_LAYOUT.at(-1).x-COACH_DIMENSIONS.overBuffers/2-2.5,maxX:4.6,top:1.10,minZ:COACH_DIMENSIONS.width/2+.18,maxZ:6.15});
 export const CONSIST_BOUNDS=Object.freeze({min:Object.freeze([PLATFORM_LAYOUT.minX+1.7,TRACK.railHead-.05,-1.75]),max:Object.freeze([5.5,4.65,1.75])});

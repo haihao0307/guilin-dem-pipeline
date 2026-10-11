@@ -1,0 +1,50 @@
+name: Actual train A4 native integration
+on:
+  push:
+    branches: ['qa/train-a4-game-20261011']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/**'
+      - '.github/workflows/train-a4-game-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: train-a4-game-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  native-game:
+    strategy:
+      matrix:
+        mobile: ['0', '1']
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      CANDIDATE: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01
+      TRAIN_QA_MOBILE: ${{ matrix.mobile }}
+      TRAIN_QA_OUT: train-a4-results/browser-${{ matrix.mobile }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Physical game and input regression
+        run: node --test "$CANDIDATE/tests/a4-session-physics.test.mjs" "$CANDIDATE/tests/driver-input.test.mjs"
+      - name: Official pinned browser runner
+        run: |
+          npm install --prefix "$RUNNER_TEMP/a4-native" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/a4-native/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/a4-native/node_modules" >> "$GITHUB_ENV"
+      - name: Serve immutable candidate
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/a4-native-http.log" 2>&1 &
+          for n in $(seq 1 30); do curl --fail --silent http://127.0.0.1:8765/$CANDIDATE/ >/dev/null && exit 0; sleep 1; done
+          exit 1
+      - name: Existing game actual input, native A4, both coaches, branding and physical driving
+        run: node "$CANDIDATE/tests/a4-session-browser.cjs"
+      - name: Preserve actual browser evidence including failures
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: train-a4-game-${{ matrix.mobile }}-${{ github.sha }}
+          path: train-a4-results/
+          retention-days: 7
+          compression-level: 0
