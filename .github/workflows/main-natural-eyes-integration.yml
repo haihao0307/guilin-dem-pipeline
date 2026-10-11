@@ -2,7 +2,10 @@ name: Main human natural eyes integration and immutable preview
 on:
   push:
     branches: [fix/main-natural-eyes-integration-20261011]
-    paths: [.github/workflows/main-natural-eyes-integration.yml]
+    paths:
+      - .github/workflows/main-natural-eyes-integration.yml
+      - kaopu-unified-human-workbench/main-eye-integration/r01/*.cjs
+      - kaopu-unified-human-workbench/full/ui/skin/CommonSkinLayer.mjs
 permissions:
   contents: write
 concurrency:
@@ -29,7 +32,7 @@ jobs:
           for p in eye-materials eye-transfer face-transfer identity-lab; do
             git restore --source=528f813d5f02ee0e3bfbf870d1f6fb02fe722fc1 --staged --worktree -- kaopu-unified-human-workbench/$p
           done
-          git diff --name-only --cached > /tmp/copied-eye-paths.txt
+          git diff --name-only --cached > "$R/copied-eye-paths.txt"
           npm --prefix /tmp/eye-node install --no-save --package-lock=false esbuild@0.25.12 playwright@1.57.0 pngjs@7.0.0
           node /tmp/eye-node/node_modules/playwright/cli.js install --with-deps chromium
       - name: Build exact current main entry with verified eye adapters
@@ -88,5 +91,4 @@ jobs:
           path: |
             kaopu-unified-human-workbench/main-eye-integration/r01
             kaopu-unified-human-workbench/full/ui/main-eye-app.generated.mjs
-            /tmp/copied-eye-paths.txt
           retention-days: 14
