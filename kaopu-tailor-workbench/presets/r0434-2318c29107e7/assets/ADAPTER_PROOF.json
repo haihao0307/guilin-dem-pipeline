@@ -1,0 +1,67 @@
+{
+  "originalWorkerSHA256": "488274a330f788f4a7fada24a68c1426c061d6146db3923b0ef50e61a37604c8",
+  "adapterSHA256": "790931009abd557a86dd3a43becaa9272889b74a8e5656e6d7a8fa0512ac48e8",
+  "patches": [
+    {
+      "old": "postMessage({ requestId, ...data, type }, transfer)",
+      "new": "postMessage({ requestId, ...data, type, binding:nativeBinding }, transfer)",
+      "occurrences": 1
+    },
+    {
+      "old": "bodyPath = \"garments-r04/assets/body-anny-adult.json\", metaPath = directory + \"/assets/body-sdf-grid.json\"",
+      "new": "bodyPath = new URL(\"common-body.json\",nativeAssets).href, metaPath = new URL(\"body-sdf-grid.json\",nativeAssets).href",
+      "occurrences": 1
+    },
+    {
+      "old": "body = await json(bodyPath);",
+      "new": "body = await nativeJSON(bodyPath,R04_LOCK.bodyFileSHA256);",
+      "occurrences": 1
+    },
+    {
+      "old": "const meta = await json(metaPath), raw = await bytes(directory + \"/assets/\" + meta.transport.file), buffer = await decodeSDF(new Blob([raw]), meta);",
+      "new": "const meta = await nativeJSON(metaPath,R04_LOCK.sdfMetadataSHA256), raw = await bytes(new URL(meta.transport.file,nativeAssets).href);\n    if(await sha(raw)!==R04_LOCK.sdfFileSHA256)throw Error(\"共同人物碰撞场内容不符\");\n    const buffer = await decodeSDF(new Blob([raw]), meta);",
+      "occurrences": 1
+    },
+    {
+      "old": "configureWasm(await bytes(\"r07/stability/joint-r072.wasm\"));",
+      "new": "configureWasm(await bytes(new URL(\"../r07/stability/joint-r072.wasm\",import.meta.url).href));",
+      "occurrences": 1
+    },
+    {
+      "old": "} else if (data.type === \"generate\") {",
+      "new": "} else if(data.type === \"load-native-paper\") {\n      await loadNativePaper(data);\n    } else if (data.type === \"generate\") {\n      throw Error(\"本橱柜只接入已记录的原纸样；新量体制版必须走完整原系统，不回退到旧人台。\");",
+      "occurrences": 1
+    },
+    {
+      "old": "await continuationEdit(data);",
+      "new": "throw Error(\"裁片编辑继续使用保留的原 R07.4；此来源修正版不冒称已接通共同人物重新制版。\");",
+      "occurrences": 1
+    },
+    {
+      "old": "if (!spec) throw Error(\"Generate the current flat material first\");",
+      "new": "if (!spec) throw Error(\"Generate the current flat material first\");\n      requirePerson(data.person,R04_LOCK.person);\n      if(!nativeBinding)throw Error(\"缺少原材料来源绑定\");",
+      "occurrences": 1
+    },
+    {
+      "old": "record.trial={version:\"R07.4\",",
+      "new": "record.nativeBinding=structuredClone(nativeBinding);\n            record.trial={version:\"R07.4-native-common-adapter\",",
+      "occurrences": 1
+    }
+  ],
+  "unchangedNumericalRegions": {
+    "compileAnalytic": "00bf1967cba81bcf9f9e403e47bca7daabd4ea06ffd4165f9147eac6af7e91d7",
+    "tick": "f018f4f8357bf8bf3c23ec696ddbb8bc20d3af43d4cb2cc30179ae2acbac19f8"
+  },
+  "nativeStaticGatesChanged": false,
+  "nativeMaterialTopologyModifiedForDisplay": false,
+  "newBodyCollisionField": true,
+  "originalPaperSizeRetained": true,
+  "boundedSamplingExtension": {
+    "beforeAdapterSHA256": "790931009abd557a86dd3a43becaa9272889b74a8e5656e6d7a8fa0512ac48e8",
+    "afterAdapterSHA256": "9a836a813dd56a1a9cf3f6646b1eae11d7b997545a6b4a0a22caedf61673e110",
+    "nativeNumericalRegionsUnchanged": true,
+    "validatorAcceptanceUnchanged": true,
+    "onlyInteriorStepAdjustedOnProvenVertexBudgetError": true,
+    "originalBoundariesUnchanged": true
+  }
+}
