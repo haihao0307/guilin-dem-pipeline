@@ -1,7 +1,7 @@
 {
   "schema": "kaopu/natural-eye-build@1",
-  "version": "ET16-E1",
-  "previousVerifiedBuild": "7bc25d5e31808d0a5724f602d4a4ade42a14c385",
+  "version": "ET17-P1",
+  "previousVerifiedBuild": "99f89145f514eecaabdae31dc42fd51311602dd6",
   "userBaseline": "7ff27f9b5e16f2635b1e665c1321265d5da2b221",
   "inheritedET14": "45dfd9d9370987eb1d0d728bc4491426e3450bfd",
   "nativeAssetCommit": "0b4703359efbae10ffc6c0e5fe3fc081e7eca4fe",
@@ -9,14 +9,16 @@
   "originalIdentityPreviewSHA256": "99942c121ec46428e980568a6b0b82c5872359bf1a7576f600ac5fa1a4a952ad",
   "originalIdentityEntrySHA256": "a3351e4b9eefe98628a945c5b1ddb8660b24e7e27eb28b585ba10922a33dfa85",
   "layoutSHA256": "f972b6e2c956418343eb891b39e19bf196a857ef1c3452cf613cb4351e2bb31c",
-  "previewSHA256": "365bf0d32a9a14ac97b0c57e6fa850fe3a246f864065e3795207689f2d9037c9",
-  "previewBytes": 4752807,
+  "previewSHA256": "90d8bb5acb9dcfb7d59f9c8524ac9eef0cc5359cda273ad4c08656dbe9df7114",
+  "previewBytes": 4766338,
   "oneCharacter": true,
   "oneRenderer": true,
   "canonicalTopologyUnchanged": true,
+  "periocularVerticesModified": true,
+  "bodyAndEyeVerticesUnchanged": true,
   "oldIdentityPreviewUnchanged": true,
   "oldET14SkinIntegrationCompleted": false,
-  "oldLidReconstructionCompleted": false,
+  "finalLidAnatomyCertified": false,
   "realMobileDeviceTested": false,
   "sourceLock": {
     "schema": "kaopu/eye-source-lock@1",
@@ -144,6 +146,16 @@
       "sha256": "72d15a348e86e510792a6ee205c5460fb134d52a380ff476f1802c1abce197f9"
     },
     {
+      "path": "kaopu-unified-human-workbench/eye-materials/PeriocularGeometry.mjs",
+      "bytes": 11530,
+      "sha256": "409eccaefefab77ae13c044a2585db34ed0ea04e6853b1c071068e6aa0cdc223"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/eye-materials/PeriocularUI.mjs",
+      "bytes": 4974,
+      "sha256": "c23d2306fa4be205e4c8be173d294063432bf57016971c01b1c4c0663568e59d"
+    },
+    {
       "path": "kaopu-unified-human-workbench/eye-materials/EyeContactField.mjs",
       "bytes": 5286,
       "sha256": "f63de920d59092c059bf1277339f14978d839e2ef8af9e6397b7ab597b10a8f8"
@@ -160,9 +172,9 @@
     }
   ],
   "limitations": [
-    "Original atlas 1024x1024, iris about243px across; not a cinematic scan",
-    "Bounded shader refraction and scene-linked finite-source reflection, not volumetric optics",
-    "Measured skin/eye intersection shading does not repair inherited eyelid anatomy or certify closure",
-    "Source pixels preserved in reference mode; renderer/lighting differ from MakeHuman screenshots"
+    "Original eye atlas 1024x1024, iris about243px across; not a cinematic scan",
+    "Measured-eye arc motion and signed rim sections are constrained engineering approximations, not Disney capture or a volumetric tissue solver",
+    "Source native topology and binding stay intact; local skin positions now intentionally change",
+    "Inherited eye texture and real-time optical limitations remain"
   ]
 }
