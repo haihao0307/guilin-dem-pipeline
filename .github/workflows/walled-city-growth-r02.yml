@@ -1,0 +1,56 @@
+name: Walled city 24-building native WebGPU function candidate
+on:
+  push:
+    branches: ['qa/walled-city-growth-r02-20261011']
+permissions:
+  contents: read
+jobs:
+  whole-world-webgpu:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02
+      - name: Install official pinned Playwright
+        run: |
+          npm install --prefix "$RUNNER_TEMP/wgpu" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/wgpu/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/wgpu/node_modules" >> "$GITHUB_ENV"
+      - name: Check frozen sources and begin true whole-world rendering
+        run: |
+          node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/qa/source.test.mjs
+          mkdir -p "$RUNNER_TEMP/city-run"
+          (
+            set +e
+            node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/qa/whole-world.cjs > "$RUNNER_TEMP/city-run/log" 2>&1
+            echo "$?" > "$RUNNER_TEMP/city-run/exit"
+          ) </dev/null >/dev/null 2>&1 &
+          for i in $(seq 1 270); do
+            if [ -f walled-city-growth-r02-results/overall.png ]; then break; fi
+            if [ -f "$RUNNER_TEMP/city-run/exit" ]; then cat "$RUNNER_TEMP/city-run/log"; exit 1; fi
+            sleep 5
+          done
+          cat "$RUNNER_TEMP/city-run/log"
+          test -f walled-city-growth-r02-results/overall.png
+      - name: Save actual complete overall frame before remaining sections
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: walled-city-overall-${{ github.sha }}
+          path: |
+            walled-city-growth-r02-results/overall.png
+            walled-city-growth-r02-results/receipt.json
+            walled-city-growth-r02-results/progress-*.json
+          retention-days: 7
+      - name: Await same-world X and Z sections
+        run: |
+          while [ ! -f "$RUNNER_TEMP/city-run/exit" ]; do sleep 5; done
+          cat "$RUNNER_TEMP/city-run/log"
+          exit "$(cat "$RUNNER_TEMP/city-run/exit")"
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: walled-city-whole-webgpu-${{ github.sha }}
+          path: walled-city-growth-r02-results/
+          retention-days: 7
