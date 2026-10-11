@@ -1,0 +1,44 @@
+name: MP02 current source audit
+on:
+  push:
+    branches: [feature/tailor-mp02-solid-textiles-20261011]
+    paths: ['.github/workflows/tailor-mp02-current-sources.yml']
+permissions:
+  contents: read
+jobs:
+  sources:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: haihao0307/Humanoid-Rig-Lab-Next
+          ref: fix/denim-r09-budget-stitches-20261011
+          path: denim
+          sparse-checkout: |
+            denim-workshop/r09
+            denim-workshop/r08
+      - uses: actions/checkout@v4
+        with:
+          repository: haihao0307/Humanoid-Rig-Lab-Next
+          ref: refactor/leather-r12-source-normalization-20261011
+          path: leather
+          sparse-checkout: |
+            leather-workshop/r12
+            leather-workshop/START_HERE.md
+            leather-workshop/TASK_STATE.json
+      - name: Preserve source identities and readable interfaces
+        run: |
+          mkdir current-source
+          git -C denim rev-parse HEAD > current-source/DENIM_COMMIT.txt
+          git -C leather rev-parse HEAD > current-source/LEATHER_COMMIT.txt
+          cp -a denim/denim-workshop/r09 current-source/denim-r09
+          cp -a denim/denim-workshop/r08 current-source/denim-r08
+          cp -a leather/leather-workshop/r12 current-source/leather-r12
+          find denim leather -name AGENTS.md -not -path '*/.git/*' -exec sh -c 'echo "$1"; cat "$1"' _ {} \; > current-source/AGENTS.txt
+          tar --exclude='*/qa/*' --exclude='*.png' --exclude='*.webp' -czf current-source.tgz current-source
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mp02-current-source
+          path: current-source.tgz
+          retention-days: 7
