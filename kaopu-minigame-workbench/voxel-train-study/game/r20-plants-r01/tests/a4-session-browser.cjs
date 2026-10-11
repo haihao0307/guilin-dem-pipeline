@@ -71,7 +71,7 @@ if(process.argv.includes('--self-check')){assert.deepEqual(normalizeSignedZero({
   assert(download.suggestedFilename().endsWith('.KaoPu'));const savePath=path.join(out,'Flying_Hongkonger_88.KaoPu');await download.saveAs(savePath);
   const bytes=fs.readFileSync(savePath);assert.equal(bytes.subarray(0,16).toString('binary'),'SQLite format 3\0');
   const sql=JSON.parse(execFileSync('python3',['-c',"import sqlite3,json,hashlib,sys\nc=sqlite3.connect('file:'+sys.argv[1]+'?mode=ro',uri=True)\nrole,mime,sha,data=c.execute('select * from assets').fetchone()\nm=json.loads(data)\nprint(json.dumps({'integrity':c.execute('pragma integrity_check').fetchone()[0],'profile':dict(c.execute('select * from header'))['profile'],'role':role,'shaMatches':hashlib.sha256(data).hexdigest()==sha,'packet':m['packet'],'verification':m['verification'],'appearance':m['appearance']}))",savePath],{encoding:'utf8',maxBuffer:8*1024*1024}));
-  assert.equal(sql.integrity,'ok');assert.equal(sql.shaMatches,true);assert.equal(sql.profile,'kaopu.fh88-game-session/1-experimental');// JSON defines -0 as 0; normalize only the serialization representation.
+  assert.equal(sql.integrity,'ok');assert.equal(sql.shaMatches,true);assert.equal(sql.profile,'kaopu.fh88-game-session/2-experimental');// JSON defines -0 as 0; normalize only the serialization representation.
   assert.deepEqual(sql.verification.physics,normalizeSignedZero(saved.physics));
   report.nativeSave={filename:download.suggestedFilename(),bytes:bytes.length,sha256:sha(bytes),independentSQLite:sql,savedState:saved};
   await click('#closeSettings');await until(()=>!__trainDriver.getState().paused);await until(d=>__trainDriver.getState().distance>d+1,saved.distance);

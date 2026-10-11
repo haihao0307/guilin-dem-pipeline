@@ -9,6 +9,8 @@ export const CAMERA_LIMITS = freeze({minHeight: .7, minRadius: 5.5, maxRadius: 1
   trainClearance: {min: [CONSIST_BOUNDS.min[0]-.5, -.5, -1.9], max: [6, 4.8, 1.9]}});
 export const TRAIN_FOCUS_BOUNDS = freeze({min: [...CONSIST_BOUNDS.min], max: [...CONSIST_BOUNDS.max]});
 export const CAMERA_PRESETS = freeze({
+  runningGear:{label:'轮系与连杆',visibility:'mechanical-inspection',focusBounds:{min:[-5.6,.20,-1.5],max:[3.7,2.65,1.5]},landscape:{position:[-1,2.3,10.8],target:[-1,1.10,0],zoom:1,projection:horizontal},portrait:{position:[-1,3,16],target:[-1,1.1,0],zoom:1,projection:horizontal}},
+  wheelRail:{label:'轮轨与制动',visibility:'mechanical-inspection',focusBounds:{min:[-3.4,.10,-1.5],max:[-.6,2.5,1.5]},landscape:{position:[-1.4,1.15,5.6],target:[-2,1.1,.6],zoom:1.5,projection:horizontal},portrait:{position:[-1.4,1.8,6.5],target:[-2,1.1,.6],zoom:1.2,projection:horizontal}},
   // Conventional 54-degree horizontal lenses. These two full-side views are
   // intended for open track after the bounded street, not squeezed through shops.
   leftSide:{label:'左侧整车 · 开阔段',visibility:'open-track',recommendedAfterChainageM:786,focusBounds:{min:[-16.7,0,-1.6],max:[5.1,4.5,1.6]},landscape:{position:[-5.8,17,31],target:[-5.8,2.2,0],zoom:1,projection:horizontal},portrait:{position:[-5.8,17,45],target:[-5.8,2.2,0],zoom:1,projection:horizontal}},

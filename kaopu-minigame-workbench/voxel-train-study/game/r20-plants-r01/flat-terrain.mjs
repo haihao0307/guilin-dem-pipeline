@@ -1,5 +1,6 @@
-import {TRACK} from './metre-scale.mjs';
+import {TRACK,TRACK_SUPPORT} from './metre-scale.mjs';
 import * as THREE from '../../vendor/three.module.js';
+import {appendRailSection} from './wheel-rail-profile.mjs';
 import {Blocks,PALETTE} from './heritage.mjs';
 
 // The legacy source interval is reused as ordinary scenery, never as a bent path.
@@ -50,7 +51,7 @@ export function splitFlatGround(source,spec=FLAT_WORLD){
 }
 function farTrackChunk(index,spec){
   const b=new Blocks(),{min,max}=chunkBounds(index,spec),start=spec.sourceStart,end=start+spec.period;
-  for(let x=start;x<end;x+=.64){if(x<min||x>=max)continue;b.box(x,.184,0,.23,.16,2.33,0x514839);for(const z of [-TRACK.centerOffset,TRACK.centerOffset])b.box(x,.277,z,.28,.03,.29,0x423e36);}
+  for(let x=start;x<end;x+=.64){if(x<min||x>=max)continue;b.box(x,TRACK_SUPPORT.sleeperCenterM,0,.23,TRACK_SUPPORT.sleeperThicknessM,2.33,0x514839);for(const z of [-TRACK.railCenterZ,TRACK.railCenterZ])b.box(x,TRACK_SUPPORT.plateCenterM,z,.28,TRACK_SUPPORT.plateThicknessM,.29,0x423e36);}
   for(let x=start;x<end;x+=1.07){if(x<min||x>=max)continue;b.box(x,.56,-3.01,.11,1.12,.11,0xc3c6b2);b.box(x,.99,-3.01,.17,.08,.17,0xd8d9c7);b.box(x+.53,.72,-3.01,1.06,.09,.076,0xc9cbb8);b.box(x+.53,.32,-3.01,1.06,.08,.075,0xb4b7a7);}
   return b.geometry();
 }
@@ -101,8 +102,8 @@ export function createFlatTerrain(parts,spec=FLAT_WORLD){
   root.userData.proof={...parts.proof,...proof,flat:true,period:spec.period,terrainRadius:spec.terrainRadius,detailRadius:spec.detailRadius,groundHalfSize:spec.groundHalfSize,recycleOutsideDistance:3*spec.period,blackUndersideRendered:false,platformSideFloraShiftZ:spec.platformFoliageOffset};
   const ground=new THREE.Mesh(new THREE.PlaneGeometry(spec.groundHalfSize*2,spec.groundHalfSize*2),new THREE.MeshStandardMaterial({color:PALETTE.grass,roughness:.99,metalness:0}));ground.rotation.x=-Math.PI/2;ground.position.y=.081;ground.receiveShadow=true;ground.name='Broad continuous earth, no exposed strip edge';root.add(ground);
   const base=new Blocks(),length=spec.terrainRadius*2+40;
-  base.box(spec.centerX,.1297,0,length,.10,3.02,0xaba995);
-  for(const z of [-TRACK.centerOffset,TRACK.centerOffset]){base.box(spec.centerX,.2447,z,length,.155,.13,0x625e53);base.box(spec.centerX,.3307,z,length,.035,.15,0x9d9a88);}
+  base.box(spec.centerX,TRACK_SUPPORT.ballastCenterM,0,length,TRACK_SUPPORT.ballastThicknessM,3.02,0xaba995);
+  for(const z of [-TRACK.railCenterZ,TRACK.railCenterZ])appendRailSection(THREE,base,{lengthM:length,centerXM:spec.centerX,centerZM:z,railTopM:TRACK.railHead});
   const railway=new THREE.Mesh(base.geometry(),material);railway.receiveShadow=true;railway.name='Unbroken straight ballast and rails';root.add(railway);
   const high=geometries.map((geometry,index)=>Array.from({length:spec.slotCount},(_,slot)=>{const mesh=new THREE.Mesh(geometry,material);mesh.castShadow=mesh.receiveShadow=true;mesh.name=`Original close detail ${index}:${slot}`;root.add(mesh);return mesh;}));
   const low=geometries.map((_,index)=>{const mesh=new THREE.InstancedMesh(farTrackChunk(index,spec),material,spec.slotCount);mesh.receiveShadow=true;mesh.frustumCulled=false;mesh.name=`Distant sleepers and fence ${index}`;root.add(mesh);return mesh;});

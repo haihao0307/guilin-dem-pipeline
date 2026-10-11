@@ -1,0 +1,6 @@
+// Preserve the existing explicit slider-crank solver. Only assembly datums and
+// linkage shape are corrected here; the Session/steam/vehicle integrator is not replaced.
+import {contract as legacyContract,evaluate as legacyEvaluate} from '../frozen/three-cylinder/three-cylinder.mjs';
+export function contract(d){const c=legacyContract(d),w=d.wheel.referenceHalfSpacingM;if(!Number.isFinite(w)||w<=0)throw Error('EXPLICIT_WHEEL_TREAD_DATUM_REQUIRED');return {...c,nominalRollingCircleYM:[-w,w],crankReferencePointM:[d.drivingAxleXM,0,c.wheelAxleZM],actualTreadFlangeCompatibilityEstablished:true,scope:'DIMENSIONED_PROFILE_DATUM; geometric contact, not dynamic contact certification'};}
+export function evaluate(d,state,forces,masses){const v=legacyEvaluate(d,state,forces,masses),x=d.drivingAxleXM;if(!Number.isFinite(x))throw Error('DRIVING_AXLE_DATUM_REQUIRED');for(const c of v.cylinders){c.crankPinWorldM[0]+=x;c.crossheadPinWorldM[0]+=x;}v.momentReferencePointM[0]+=x;return v;}
+export function nominalRollingContact(d,{bodySpeedMS,omegaRadS,bodyXM=0}){const c=contract(d),slip=bodySpeedMS+c.wheelRadiusM*omegaRadS;return {scope:'IDEAL_ROLLING_AT_DECLARED_TREAD_RADIUS',bottomPointWorldM:c.railHeadCentreYM.map(y=>[bodyXM,y,c.railTopZM]),contactPointLongitudinalVelocityMS:slip,pureRolling:Math.abs(slip)<1e-10,actualTreadOrAdhesionValidated:false};}

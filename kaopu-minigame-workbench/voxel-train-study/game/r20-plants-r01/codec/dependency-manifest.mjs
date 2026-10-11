@@ -23,17 +23,17 @@ export const DEPENDENCIES = [
   {
     "id": "heritage.mjs",
     "path": "heritage.mjs",
-    "sha256": "b426d536771b23b0ec0eefdd93c3b0e4451eceb8e13874ddba95ef157d1f1d3c"
+    "sha256": "ac1de03e519741eae19ca788e05dc1c45ce18b502e7715158c92244011b132d0"
   },
   {
     "id": "metre-scale.mjs",
     "path": "metre-scale.mjs",
-    "sha256": "3d22f96d73b6f224bac17e3839f18a25d2a25262178f3260c32c742157e967f2"
+    "sha256": "2e35ec9b99f2f23c1eafc84a3fc2e33eabeae76e2276353756525ccb0b442f10"
   },
   {
     "id": "native-a4/adapter.mjs",
     "path": "native-a4/adapter.mjs",
-    "sha256": "d131ad3db7c056b6847453f5037f35af497c1051cf81c747c01642d4b0f4d5f1"
+    "sha256": "4e0f7aef2058842e0cd8fdbdf8348c8510e057559d703766084430885e9046bc"
   },
   {
     "id": "native-a4/branding/angel_left.mjs",
@@ -58,7 +58,7 @@ export const DEPENDENCIES = [
   {
     "id": "native-a4/branding/install.mjs",
     "path": "native-a4/branding/install.mjs",
-    "sha256": "3113ae226cbdc222f90c93fbe9bde95755d6b6f4d15b9813780050681c0382d5"
+    "sha256": "982bde2e47a8fb39594ef9866a4db2c583a176b4b4a7f956b11a74b041cb9733"
   },
   {
     "id": "native-a4/branding/number88.mjs",
@@ -78,12 +78,12 @@ export const DEPENDENCIES = [
   {
     "id": "native-a4/design.mjs",
     "path": "native-a4/design.mjs",
-    "sha256": "2f4c2bb2f0a48daacf7aae4945e6af486acb1123e4dd6b84cc3f6dc7aeb53890"
+    "sha256": "82ebfce47b125c71690dd993b40e3f5cbf26f07282c4c346b1cb022520d1df32"
   },
   {
     "id": "native-a4/dimensions.mjs",
     "path": "native-a4/dimensions.mjs",
-    "sha256": "ab0a21390e17f92511ad3f9112bad5ffb9abeb34d9b21f069931eed6647bb518"
+    "sha256": "f66ec7531d078ac8415c049bf0e5d250a08373502562a55bef41cd493b9f41cb"
   },
   {
     "id": "native-a4/display-batching.mjs",
@@ -118,12 +118,32 @@ export const DEPENDENCIES = [
   {
     "id": "native-a4/game-locomotive.mjs",
     "path": "native-a4/game-locomotive.mjs",
-    "sha256": "04fd11e55e06fb7b7fb2e0b163fa14ce827c348b01625117821c1fa151ca1d7a"
+    "sha256": "6c03fa154893442f1f525c5e6be7bfc07cc6757bbf0eb2c100197a29019cd79e"
   },
   {
     "id": "native-a4/recipe.mjs",
     "path": "native-a4/recipe.mjs",
     "sha256": "78f893698fc9b9023117656bce5a1e219c236552314b66934a2151dd114c304f"
+  },
+  {
+    "id": "native-a4/running-gear/brakes.mjs",
+    "path": "native-a4/running-gear/brakes.mjs",
+    "sha256": "ea81eec32602a7d5d98b0090ff8fd819ad412de04c892bd1d920c63a3a5e7b2a"
+  },
+  {
+    "id": "native-a4/running-gear/cast-wheels.mjs",
+    "path": "native-a4/running-gear/cast-wheels.mjs",
+    "sha256": "72b2b473339e620e82e6b1f2480d0ca79f5c91b30cd143f92556b2802342dd12"
+  },
+  {
+    "id": "native-a4/running-gear/forged-rods.mjs",
+    "path": "native-a4/running-gear/forged-rods.mjs",
+    "sha256": "b841f7cbc100d3a967a37f69920da5f3aa88ab87da8416f9ea6fe656cbfa63da"
+  },
+  {
+    "id": "native-a4/running-gear/kinematics.mjs",
+    "path": "native-a4/running-gear/kinematics.mjs",
+    "sha256": "f1e35701302f14b3e13310d858dac75f96dea258746f4ce2c96191085d77c683"
   },
   {
     "id": "physics/driving-physics.mjs",
@@ -159,5 +179,10 @@ export const DEPENDENCIES = [
     "id": "train-model.mjs",
     "path": "train-model.mjs",
     "sha256": "df7898a47885cc3e73e8e50d041403e33bf53213e2f3baa2248bba07264ab454"
+  },
+  {
+    "id": "wheel-rail-profile.mjs",
+    "path": "wheel-rail-profile.mjs",
+    "sha256": "e8821457203ac22aed2e203198c88c95cebe06ed03e00ef291084376b9733308"
   }
 ];

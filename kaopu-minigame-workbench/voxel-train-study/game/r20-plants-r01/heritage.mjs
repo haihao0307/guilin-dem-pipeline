@@ -1,7 +1,8 @@
-import {TRACK,CONSIST_BOUNDS} from './metre-scale.mjs';
+import {TRACK,TRACK_SUPPORT,CONSIST_BOUNDS} from './metre-scale.mjs';
 // Game-only derivative of the approved procedural builders. Classic source remains unchanged.
 // Original buildTrain() is retained verbatim and verified against the approved mesh.
 import * as THREE from '../../vendor/three.module.js';
+import {appendRailSection} from './wheel-rail-profile.mjs';
 
 // Original, procedural study geometry. No author mesh, texture or image is embedded.
 export const SPEC = Object.freeze({ halfRun:7.93554791, radius:3.8, width:12.2, nearEdge:7.6, farEdge:-4.6, period:6, scale:1, phase:0 });
@@ -61,9 +62,9 @@ function bridge(b,x){const L=14.05576,H=CONSIST_BOUNDS.max[1]+.25+.08,panels=5;
 function buildEnvironment(spec=SPEC,options={}){const length=4*spec.halfRun+2*Math.PI*spec.radius;const rand=random(19790214),b=new Blocks(),p=PALETTE;b.thinGround=false;const start=-spec.halfRun,end=length-spec.halfRun;b.gameTerrain=!!options.optimizeGeometry;b.floraRanges=[];const flora=(x,z,build)=>{const first=b.p.length/3;if(options.optimizeGeometry)b.floraVoxels=new Map();build();if(b.floraVoxels){const voxels=b.floraVoxels,q=.085;for(const voxel of voxels.values()){const {x,y,z,color}=voxel;b.surfaceBox(x,y,z,q,q,q,color,n=>!voxels.has([x+n[0]*q,y+n[1]*q,z+n[2]*q].map(v=>Math.round(v/q)).join(',')));}b.floraVoxels=null;}b.floraRanges.push({first,count:b.p.length/3-first,x,z});};
   // One closed belt, discretized along its full arc-length; motion is a deformation of the same geometry.
   const segments=Math.ceil(length/.20),pitch=length/segments;
-  for(let j=0;j<segments;j++){const x=start+(j+.5)*pitch;b.box(x,.015,1.5,pitch,.14,spec.width,p.grass,0,true);b.box(x,-.09,1.5,pitch,.065,spec.width,0x1c1e23,0,true);b.box(x,.13,0,pitch,.10,3.02,0xaba995,0,true);for(const z of [-TRACK.centerOffset,TRACK.centerOffset]){b.box(x,.245,z,pitch,.155,.13,0x625e53,0,true);b.box(x,.331,z,pitch,.035,.15,0x9d9a88,0,true);}}
-  for(let x=start;x<end;x+=.64){b.box(x,.184,0,.23,.16,2.33,0x514839);for(const z of [-TRACK.centerOffset,TRACK.centerOffset])b.box(x,.277,z,.28,.03,.29,0x423e36);}
-  for(let i=0;i<12500;i++){const x=start+rand()*length;let z=spec.farEdge+rand()*spec.width;if(Math.abs(z)<1.6){if(Math.abs(z)>.89||rand()>.65){const size=.035+rand()*.09;b.box(x,.22+rand()*.09,z,size,.025+rand()*.045,size,[0xcac8b0,0xa5a58f,0xe1ddc3,0x797e69,0xbab59b][Math.floor(rand()*5)]);}}else{const width=.03+rand()*.025;b.box(x,.104+rand()*.008,z,.04+rand()*.12,.012+rand()*.01,width,[0x64763a,0x77853e,0x414f2b,0x96a044,0x4a5931][Math.floor(rand()*5)]);}}
+  for(let j=0;j<segments;j++){const x=start+(j+.5)*pitch;b.box(x,.015,1.5,pitch,.14,spec.width,p.grass,0,true);b.box(x,-.09,1.5,pitch,.065,spec.width,0x1c1e23,0,true);b.box(x,TRACK_SUPPORT.ballastCenterM,0,pitch,TRACK_SUPPORT.ballastThicknessM,3.02,0xaba995,0,true);if(!spec.flat)for(const z of [-TRACK.railCenterZ,TRACK.railCenterZ])appendRailSection(THREE,b,{lengthM:pitch,centerXM:x,centerZM:z,railTopM:TRACK.railHead,capEnds:false});}
+  for(let x=start;x<end;x+=.64){b.box(x,TRACK_SUPPORT.sleeperCenterM,0,.23,TRACK_SUPPORT.sleeperThicknessM,2.33,0x514839);for(const z of [-TRACK.railCenterZ,TRACK.railCenterZ])b.box(x,TRACK_SUPPORT.plateCenterM,z,.28,TRACK_SUPPORT.plateThicknessM,.29,0x423e36);}
+  for(let i=0;i<12500;i++){const x=start+rand()*length;let z=spec.farEdge+rand()*spec.width;if(Math.abs(z)<1.6){if(Math.abs(z)>.89||rand()>.65){const size=.035+rand()*.09,embed=rand(),height=.025+rand()*.045,color=[0xcac8b0,0xa5a58f,0xe1ddc3,0x797e69,0xbab59b][Math.floor(rand()*5)];if(Math.abs(Math.abs(z)-TRACK.railCenterZ)>.07+size/2)b.box(x,TRACK_SUPPORT.ballastTopM+height*(.35+.1*embed),z,size,height,size,color);}}else{const width=.03+rand()*.025;b.box(x,.104+rand()*.008,z,.04+rand()*.12,.012+rand()*.01,width,[0x64763a,0x77853e,0x414f2b,0x96a044,0x4a5931][Math.floor(rand()*5)]);}}
   // Long crop-like bands are visible on the original flat terrain module.
   for(let i=0;i<1900;i++){const x=start+rand()*length,z=spec.farEdge+rand()*spec.width;if(Math.abs(z)<1.75)continue;b.box(x,.11+rand()*.025,z,.15+rand()*.72,.018+rand()*.019,.025+rand()*.025,rand()>.52?0x809042:0x40562d);}
   for(const z of [2.75,3.55,4.55,5.55,6.5,7.1])for(let x=start;x<end;x+=.6){if(rand()<.24)continue;const band=Math.floor((x-start)/3.2),height=.032+.018*Math.sin(band*1.7+z);b.box(x,.105+height/2,z+(rand()-.5)*.08,.42+rand()*.24,height,.15+.08*Math.sin(z),z>5?0x4e632f:0x566c36);}
