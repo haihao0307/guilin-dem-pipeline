@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';import fs from 'node:fs';import path from 'node:path';import {fileURLToPath} from 'node:url';import{shaderSource,VIEWS}from'../renderer.mjs';import{SCENE,DOMAIN}from'../domain.mjs';import{selectStageSource}from'../stage-source.mjs';
+const dir=path.dirname(fileURLToPath(import.meta.url)),root=path.dirname(dir);const source=shaderSource();let tests=0;const check=(name,fn)=>{fn();tests++;console.log('PASS',name)};
+check('main footprint exceeds twice old main footprint',()=>assert.ok(SCENE.building.reduce((a,b)=>a*b)>SCENE.oldBuilding.reduce((a,b)=>a*b)*2));
+check('long-term storage dominates receiving by factor 4.2',()=>assert.equal(SCENE.warehouse[1]/SCENE.receiving[1],4.2));
+check('mixed-size capacity arithmetic',()=>assert.equal(10*20*6*2+6*20*6*2*6,SCENE.regularSlots+SCENE.smallSlots));
+check('no CPU geometry mesh or image resources',()=>{for(const file of['app.mjs','renderer.mjs','domain.mjs']){const s=fs.readFileSync(path.join(root,file),'utf8');assert.ok(!/new\s+(?:THREE\.)?(?:Mesh|BoxGeometry|BufferGeometry|InstancedMesh)|createVertexBuffer|\.glb\b|\.gltf\b|\.obj\b|\.jpg\b|\.png\b|\.webp\b/.test(s),file)}});
+check('three fullscreen vertices and independent intersection shading',()=>{assert.match(source,/@compute[^]*fn primary/);assert.match(source,/@fragment[^]*fn shade/);assert.match(source,/array<vec2<f32>,3>/)});
+check('nearest-coordinate shelves are bounded',()=>{assert.match(DOMAIN,/clamp\(round\(\(p.x\+31.5\)\/4.2\),0.,15.\)/);assert.match(DOMAIN,/clamp\(floor\(\(p.z\+14.\)\/1.2\),0.,19.\)/)});
+check('roof and side cut retain inventory',()=>{assert.equal(VIEWS.exterior.cut,0);assert.equal(VIEWS.section.cut,1);assert.match(DOMAIN,/items\[i\]/)});
+check('explicit retry and exhaustion status',()=>{assert.match(source,/status==2u/);assert.match(source,/atomicAdd\(&stats.exhausted/);assert.match(source,/return vec4<f32>\(1.,0.,1.,1.\)/)});
+for(const name of ['primary','resume','finalize','shade'])check('WGSL reachability '+name,()=>{const stage=selectStageSource(source,name==='shade'?['vs','shade']:[name]);assert.ok(stage.bytes>100);assert.ok(stage.functionNames.includes(name));});
+console.log(JSON.stringify({passed:tests,shaderBytes:source.length,geometry:'function-domain only'}));
