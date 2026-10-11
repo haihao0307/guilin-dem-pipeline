@@ -1,0 +1,56 @@
+name: Tailor MP02 solid textiles
+on:
+  push:
+    branches: [feature/tailor-mp02-solid-textiles-20261011]
+    paths:
+      - '.github/workflows/tailor-mp02-solid-textiles.yml'
+      - 'kaopu-tailor-workbench/material-products/r02/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: tailor-mp02-solid-textiles
+  cancel-in-progress: false
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: project
+          sparse-checkout: |
+            kaopu-tailor-workbench/material-products
+            kaopu-tailor-workbench/presets/r04
+            .github/workflows
+      - uses: actions/checkout@v4
+        with:
+          repository: haihao0307/Humanoid-Rig-Lab-Next
+          ref: af389cc216ddd01e3b1aa66c972f42b2587bc797
+          path: leather-source
+          sparse-checkout: |
+            leather-workshop/r10
+            AGENTS.md
+      - uses: actions/checkout@v4
+        with:
+          repository: haihao0307/Humanoid-Rig-Lab-Next
+          ref: fa143743b1b0f3d74ff827664d06ff119ef87063
+          path: denim-source
+          sparse-checkout: |
+            denim-workshop/r07
+      - name: Package inspected source and published person dependencies
+        run: |
+          mkdir -p takeover
+          cp -a project/kaopu-tailor-workbench/material-products/r01 takeover/mp01
+          cp -a project/kaopu-tailor-workbench/presets/r04 takeover/tailor-r04
+          cp -a project/.github/workflows takeover/workflows
+          cp -a leather-source/leather-workshop/r10 takeover/leather-r10
+          cp -a denim-source/denim-workshop/r07 takeover/denim-r07
+          find project leather-source denim-source -name AGENTS.md -not -path '*/.git/*' -print > takeover/AGENTS_LOCATIONS.txt
+          git -C project ls-tree -r --name-only HEAD > takeover/TREE.txt
+          tar --exclude='*/qa/*' --exclude='*/thumbs/*' --exclude='*/.git/*' -czf takeover-sources.tgz takeover
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mp02-takeover-sources
+          path: takeover-sources.tgz
+          retention-days: 7
