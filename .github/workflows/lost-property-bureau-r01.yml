@@ -8,6 +8,22 @@ on:
 permissions:
   contents: read
 jobs:
+  fixed-solid-clearance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Exact generated-triangle cargo clearance
+        run: node --experimental-default-type=module kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r01/qa/clearance.mjs
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: bureau-clearance-${{ github.sha }}
+          path: bureau-clearance/
+          retention-days: 7
   full-machine:
     runs-on: ubuntu-24.04
     timeout-minutes: 25

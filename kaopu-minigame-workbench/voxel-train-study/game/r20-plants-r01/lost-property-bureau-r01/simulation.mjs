@@ -2,7 +2,7 @@
 export const REVISION='LPB-R01-machine-20261011';
 export const SOURCES=['rail','air','sea'];
 export const SOURCE_NAMES=['鐵路轉運','航空轉運','船運轉運'];
-export const SOURCE_X=[-12,-5,2], SOURCE_Z=[-2,-4,-6], LEVELS=[3.2,7.2,11.2];
+export const SOURCE_X=[-12,-5,2], SOURCE_Z=[-2,-4,-6], LEVELS=[3.2,7.2,10.85];
 export const BUILDING={width:44,depth:38,height:21,units:'metre',floor:[0,6,12],publicZone:{min:[-20,0,10],max:[20,5.5,18]},machineZone:{min:[-21,0,-18],max:[21,17,8.8]}};
 export function routeFor(source){const x=SOURCE_X[source],z=SOURCE_Z[source],y=LEVELS[source],slot=10+source*3.5;return [
  {t:0,p:[x,1.6,-22],stage:'到貨'}, {t:15,p:[x,1.6,-10],stage:'登記'},
