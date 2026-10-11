@@ -1,0 +1,43 @@
+name: Human cinematic skin ET20
+on:
+  push:
+    branches: [feature/human-cinematic-skin-et20-20261011]
+    paths: ['.github/workflows/human-cinematic-et20.yml','kaopu-unified-human-workbench/cinematic-r01/**']
+permissions:
+  contents: read
+jobs:
+  intake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+      - name: Read exact renderer and compatible official area-light files
+        run: |
+          mkdir -p et20-intake/vendor
+          python - <<'PY'
+          import urllib.request,json,hashlib,zipfile
+          from pathlib import Path
+          base='https://raw.githubusercontent.com/mrdoob/three.js/r170/'
+          records=[]
+          for name in ['RectAreaLightUniformsLib.js','RectAreaLightTexturesLib.js']:
+            url=base+'examples/jsm/lights/'+name
+            data=urllib.request.urlopen(url,timeout=40).read()
+            Path('et20-intake/vendor/'+name).write_bytes(data)
+            records.append({'url':url,'file':name,'sha256':hashlib.sha256(data).hexdigest(),'bytes':len(data)})
+          data=urllib.request.urlopen(base+'LICENSE',timeout=40).read()
+          Path('et20-intake/vendor/THREE-LICENSE.txt').write_bytes(data)
+          Path('et20-intake/VENDOR.json').write_text(json.dumps(records,indent=2))
+          with zipfile.ZipFile('et20-intake/source.zip','w',zipfile.ZIP_DEFLATED) as z:
+            for p in Path('kaopu-unified-human-workbench').rglob('*'):
+              if p.is_file() and p.suffix in ['.mjs','.js','.cjs','.css','.json','.md','.png'] and p.stat().st_size<5000000:z.write(p)
+          print(json.dumps(records,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: human-et20-intake
+          path: et20-intake/
+          retention-days: 3
