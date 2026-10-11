@@ -1,56 +1,93 @@
-name: Tailor MP02 solid textiles
+name: MP02 solid source validation
 on:
   push:
     branches: [feature/tailor-mp02-solid-textiles-20261011]
     paths:
-      - '.github/workflows/tailor-mp02-solid-textiles.yml'
-      - 'kaopu-tailor-workbench/material-products/r02/**'
+      - 'kaopu-tailor-workbench/material-products/r02/TRANSPORT_READY.json'
+      - 'kaopu-tailor-workbench/material-products/r02/*.mjs'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 concurrency:
-  group: tailor-mp02-solid-textiles
+  group: tailor-mp02-solid-source
   cancel-in-progress: false
 jobs:
-  inspect:
+  source-validation:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
         with:
-          path: project
+          fetch-depth: 1
           sparse-checkout: |
             kaopu-tailor-workbench/material-products
-            kaopu-tailor-workbench/presets/r04
-            .github/workflows
-      - uses: actions/checkout@v4
+            kaopu-tailor-workbench/presets/r04/person-core
+      - uses: actions/setup-node@v4
         with:
-          repository: haihao0307/Humanoid-Rig-Lab-Next
-          ref: af389cc216ddd01e3b1aa66c972f42b2587bc797
-          path: leather-source
-          sparse-checkout: |
-            leather-workshop/r10
-            AGENTS.md
-      - uses: actions/checkout@v4
-        with:
-          repository: haihao0307/Humanoid-Rig-Lab-Next
-          ref: fa143743b1b0f3d74ff827664d06ff119ef87063
-          path: denim-source
-          sparse-checkout: |
-            denim-workshop/r07
-      - name: Package inspected source and published person dependencies
+          node-version: '22'
+      - name: Register readable canonical source from integrity-checked transport
         run: |
-          mkdir -p takeover
-          cp -a project/kaopu-tailor-workbench/material-products/r01 takeover/mp01
-          cp -a project/kaopu-tailor-workbench/presets/r04 takeover/tailor-r04
-          cp -a project/.github/workflows takeover/workflows
-          cp -a leather-source/leather-workshop/r10 takeover/leather-r10
-          cp -a denim-source/denim-workshop/r07 takeover/denim-r07
-          find project leather-source denim-source -name AGENTS.md -not -path '*/.git/*' -print > takeover/AGENTS_LOCATIONS.txt
-          git -C project ls-tree -r --name-only HEAD > takeover/TREE.txt
-          tar --exclude='*/qa/*' --exclude='*/thumbs/*' --exclude='*/.git/*' -czf takeover-sources.tgz takeover
+          python - <<'PY'
+          from pathlib import Path
+          import json,base64,gzip,hashlib,shutil
+          p=Path('kaopu-tailor-workbench/material-products/r02')
+          marker=p/'TRANSPORT_READY.json'
+          if marker.exists():
+              ready=json.loads(marker.read_text())
+              data=base64.b64decode(''.join((p/n).read_text().strip() for n in ready['parts']))
+              assert hashlib.sha256(data).hexdigest()==ready['sha256']
+              bundle=json.loads(gzip.decompress(data))
+              for name,text in bundle['files'].items():
+                  assert '/' not in name and name not in ('.','..')
+                  assert hashlib.sha256(text.encode()).hexdigest()==bundle['sha256'][name]
+                  target=p/name
+                  assert not target.exists() or target.read_text()==text, 'Refuse overwrite: '+name
+                  target.write_text(text)
+              parent=p.parent/'r01'
+              for name in ['looks.mjs','outfits-r043.mjs','source-contract.mjs','sewn-normals-r0433.mjs','panel-grain.mjs']:
+                  shutil.copyfile(parent/name,p/name)
+              shutil.copytree(parent/'native',p/'native',dirs_exist_ok=True)
+              for name in ready['parts']:(p/name).unlink()
+              marker.unlink()
+          PY
+      - name: JavaScript syntax and numerical topology, no browser
+        env:
+          THREE_PATH: ${{ github.workspace }}/kaopu-tailor-workbench/presets/r04/person-core/kaopu-unified-human-workbench/full/source/registration-vendor/three.module.js
+        run: |
+          P=kaopu-tailor-workbench/material-products/r02
+          for f in "$P"/*.mjs "$P"/*.js; do node --check "$f"; done
+          node --loader "./$P/node-loader.mjs" "$P/test-geometry.mjs"
+          node --loader "./$P/node-loader.mjs" "$P/emit-shaders.mjs"
+      - name: Compile and link custom GLSL functions, no rendering claim
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq glslang-tools
+          P=kaopu-tailor-workbench/material-products/r02
+          glslangValidator -l "$P/qa-shaders/yarn.vert" "$P/qa-shaders/material.frag"
+          glslangValidator -l "$P/qa-shaders/leather.vert" "$P/qa-shaders/material.frag"
+          python - <<'PY'
+          import json,pathlib
+          p=pathlib.Path('kaopu-tailor-workbench/material-products/r02')
+          (p/'SHADER_REPORT.json').write_text(json.dumps({'passed':True,'compiler':'glslangValidator','scope':'custom vertex functions and varying link; not a browser frame','programs':['yarn','leather'],'visualVerified':False},indent=2))
+          PY
+      - name: Retain canonical implementation and current source-only evidence
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin feature/tailor-mp02-solid-textiles-20261011 --depth=1
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/feature/tailor-mp02-solid-textiles-20261011)"
+          git add -- kaopu-tailor-workbench/material-products/r02
+          git commit -m 'feat(mp02-s1): closed yarns, native leather solids, source evidence; visual unverified [skip ci]'
+          git push origin HEAD:refs/heads/feature/tailor-mp02-solid-textiles-20261011
+      - name: Publish additive development candidate and verify bytes only
+        run: python kaopu-tailor-workbench/material-products/r02/release.py
+      - name: Package exact source and evidence
+        if: always()
+        run: |
+          tar -czf mp02-source-validation.tgz kaopu-tailor-workbench/material-products/r02
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: mp02-takeover-sources
-          path: takeover-sources.tgz
-          retention-days: 7
+          name: mp02-source-validation
+          path: mp02-source-validation.tgz
+          retention-days: 14
