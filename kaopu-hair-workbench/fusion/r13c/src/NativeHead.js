@@ -32,7 +32,7 @@ export async function installNativeHead({gnm,positions,geometry,mesh,renderer,re
  const componentId=new Uint8Array(display.attributes.position.count),T=display.attributes.csType.array;for(let i=0;i<componentId.length;i++)componentId[i]=T[i]>3.5?(display.attributes.position.array[i*3]<0?1:2):0;
  const collisionModel={template:display.attributes.position.array,triangles:display.index.array,componentId,numVertices:componentId.length};
  return {model,skin,geometry:display,collisionModel,
-  report(){return{sourceRevision:NATIVE_HEAD_REVISION,sourceModule:'kaopu-unified-human-workbench/lip-structure',nativeVersion:'ET18-L2',baseTopology:'same GNM native head as R13',visibleHeadMeshes:1,bodyLoaded:false,skin:skin.report(),face:skin.faceExtension,eyes:skin.naturalEyeExtension,lips:lips.stats,lipMaterial:skin.lipExtension,ocular:ocular.report(),faceDiffusionEnabled:false,coordinateAdapter:'native Y-up; no rescale or alternative skull',fullBodyViewerMigrated:false};},
+  report(){return{sourceRevision:NATIVE_HEAD_REVISION,sourceModule:'kaopu-unified-human-workbench/lip-structure',nativeVersion:'ET18-L2',baseTopology:'same GNM native head as R13',visibleHeadMeshes:1,bodyLoaded:false,skin:skin.report(),face:{version:skin.faceExtension.version,ready:skin.faceExtension.ready,shaderCompiles:skin.faceExtension.shaderCompiles,errors:skin.faceExtension.errors},eyes:skin.naturalEyeExtension,lips:lips.stats,lipMaterial:skin.lipExtension,ocular:ocular.report(),faceDiffusionEnabled:false,coordinateAdapter:'native Y-up; no rescale or alternative skull',fullBodyViewerMigrated:false};},
   setTone(tone){skin.set({tone});render();},dispose(){lips.dispose();ocular.dispose();skin.dispose();model.identityLab?.dispose();}
  };
 }
