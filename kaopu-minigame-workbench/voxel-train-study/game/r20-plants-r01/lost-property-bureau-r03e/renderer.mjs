@@ -20,6 +20,10 @@ struct Queue {count:atomic<u32>,indices:array<u32,1024>};
 @group(0) @binding(3) var<storage,read_write> retry:Queue;
 struct Stats {hit:atomic<u32>,miss:atomic<u32>,exhausted:atomic<u32>,retried:atomic<u32>,maxSteps:atomic<u32>,glassRays:atomic<u32>,glassMiss:atomic<u32>,glassExhausted:atomic<u32>};
 @group(0) @binding(4) var<storage,read_write> stats:Stats;
+struct Transmission {distance:f32,status:u32,steps:u32,depth:f32};
+@group(0) @binding(5) var<storage,read_write> transmission:array<Transmission,1024>;
+struct ShadingRecord {positionDistance:vec4<f32>,normalAO:vec4<f32>,glassNormalDepth:vec4<f32>,params:vec4<f32>,localSeed:vec4<f32>,flags:vec4<u32>};
+@group(0) @binding(6) var<storage,read_write> shadingRecords:array<ShadingRecord,1024>;
 `;
 const RECEIVER=String.raw`
 fn ray(pixel:vec2<f32>)->vec3<f32>{let q=(pixel/u.resolution.xy*2.-vec2<f32>(1.))*vec2<f32>(u.resolution.z,-1.);return normalize(u.forward.xyz+(u.right.xyz*q.x+u.up.xyz*q.y)*.48);}
@@ -69,10 +73,9 @@ fn resolvedWeather(f:Field,p:vec3<f32>,n:vec3<f32>,m:KpSurface)->KpSurface {
  let state=kpFabricState(f.age,f.wet,ww.x,ww.y,.42,.08,.5,.5,.016,.004,.018);
  return kpApplyFabricSurface(m,state);
 }
-fn litSurface(f:Field,p:vec3<f32>,ng:vec3<f32>,rd:vec3<f32>,fp:f32,dx:vec3<f32>,dy:vec3<f32>)->vec3<f32>{
+fn litSurface(f:Field,p:vec3<f32>,ng:vec3<f32>,rd:vec3<f32>,fp:f32,dx:vec3<f32>,dy:vec3<f32>,ao:f32,sh:f32)->vec3<f32>{
  let raw=surface(f,p,ng,fp,dx,dy);let n=materialNormal(f,p,ng,fp,raw);let m=resolvedWeather(f,p,n,raw);
- let light=normalize(vec3<f32>(-3.,7.,-4.));let nl=max(dot(n,light),0.);let sh=shadow(p,ng,light);
- let ao=clamp(sceneField(p+ng*.28).d/.28,.24,1.);
+ let light=normalize(vec3<f32>(-3.,7.,-4.));let nl=max(dot(n,light),0.);
  let inHall=p.x> -38.45&&p.x< -28.1&&p.z> -39.5&&p.z<39.5&&p.y<11.3;
  let inStore=p.x> -28.1&&p.x<44.5&&p.z> -28.2&&p.z<34.7&&p.y<12.3;
  var ambient=vec3<f32>(.19,.245,.30)*(.65+.35*max(n.y,0.))*ao;
@@ -84,19 +87,42 @@ fn litSurface(f:Field,p:vec3<f32>,ng:vec3<f32>,rd:vec3<f32>,fp:f32,dx:vec3<f32>,
  if(inHall||inStore){let zone=select(0u,2u,inStore);let lp=interiorLightPosition(zone,interiorNearestLight(p,zone))-p;let ld=length(lp);color+=m.albedo*vec3<f32>(1.,.76,.46)*max(dot(n,normalize(lp)),0.)*1.15/(1.+ld*ld*.13);}
  if(f.mat==11u||f.mat==17u){color=m.albedo*select(1.8,2.4,f.mat==17u);}return color;
 }
-fn throughGlass(p:vec3<f32>,rd:vec3<f32>)->vec3<f32>{
- atomicAdd(&stats.glassRays,1u);var t=.003;var glassDepth=0.;
- for(var i=0u;i<1400u;i++){let q=p+rd*t;let f=sceneField(q);if(f.mat==8u&&f.d<.010){let step=max(.003,min(.015,abs(f.d)+.003));glassDepth+=select(0.,step,f.d<0.);t+=step;continue;}
- if(f.d<.003&&f.mat!=0u){let n=normal(q,t);return litSurface(f,q,n,rd,max(.002,t*.96/u.resolution.y),vec3<f32>(0.),vec3<f32>(0.))*exp(-vec3<f32>(.7,.20,.45)*glassDepth);}
- t+=max(.003,abs(f.d)*.75);if(t>180.){atomicAdd(&stats.glassMiss,1u);return sky(rd);}}
- atomicAdd(&stats.glassExhausted,1u);return vec3<f32>(1.,0.,1.);
+// Secondary intersection is its own compute pass. No material is evaluated here.
+fn throughGlass(ro:vec3<f32>,rd:vec3<f32>,start:Hit)->Transmission {
+ var t=start.distance+.003;var glassDepth=0.;
+ for(var i=0u;i<1400u;i++){let q=ro+rd*t;let f=sceneField(q);if(f.mat==8u&&f.d<.010){let step=max(.003,min(.015,abs(f.d)+.003));glassDepth+=select(0.,step,f.d<0.);t+=step;continue;}
+ if(f.d<.003&&f.mat!=0u){return Transmission(t,1u,i+1u,glassDepth);}
+ t+=max(.003,abs(f.d)*.75);if(t>start.distance+180.){return Transmission(t,0u,i+1u,glassDepth);}}
+ return Transmission(t,2u,1400u,glassDepth);
+}
+@compute @workgroup_size(8,8) fn transmit(@builtin(global_invocation_id) gid:vec3<u32>){
+ if(any(gid.xy>=u.tile.zw)){return;}let idx=gid.y*32u+gid.x;let h=hits[idx];transmission[idx]=Transmission(0.,0u,0u,0.);
+ if(h.status!=1u||h.mat!=8u){return;}atomicAdd(&stats.glassRays,1u);
+ let rd=ray(vec2<f32>(u.tile.xy+gid.xy)+vec2<f32>(.5));let g=throughGlass(u.eye.xyz,rd,h);transmission[idx]=g;
+ if(g.status==2u){atomicAdd(&stats.glassExhausted,1u);}else if(g.status==0u){atomicAdd(&stats.glassMiss,1u);}
+}
+// Geometry-only normals, visibility and receiver coordinates are resolved before
+// the material pass. This keeps the full domain out of the fragment compiler.
+@compute @workgroup_size(8,8) fn geometryLight(@builtin(global_invocation_id) gid:vec3<u32>){
+ if(any(gid.xy>=u.tile.zw)){return;}let idx=gid.y*32u+gid.x;let h=hits[idx];var record:ShadingRecord;
+ record.flags=vec4<u32>(h.status,h.mat,0u,0u);record.params=vec4<f32>(0.,0.,1.,h.distance);
+ if(h.status!=1u){shadingRecords[idx]=record;return;}
+ let rd=ray(vec2<f32>(u.tile.xy+gid.xy)+vec2<f32>(.5));var distance=h.distance;var p=u.eye.xyz+rd*distance;var n=normal(p,distance);
+ record.glassNormalDepth=vec4<f32>(n,0.);
+ if(h.mat==8u){let g=transmission[idx];record.flags.z=1u;record.flags.x=g.status;record.glassNormalDepth.w=g.depth;if(g.status!=1u){shadingRecords[idx]=record;return;}distance=g.distance;p=u.eye.xyz+rd*distance;n=normal(p,distance);}
+ let f=sceneField(p);let ao=clamp(sceneField(p+n*.28).d/.28,.24,1.);let sh=shadow(p,n,normalize(vec3<f32>(-3.,7.,-4.)));
+ record.positionDistance=vec4<f32>(p,distance);record.normalAO=vec4<f32>(n,ao);record.params=vec4<f32>(f.age,f.wet,sh,h.distance);record.localSeed=vec4<f32>(f.local,f.seed);record.flags.y=f.mat;shadingRecords[idx]=record;
 }
 @vertex fn vs(@builtin(vertex_index) i:u32)->@builtin(position) vec4<f32>{let p=array<vec2<f32>,3>(vec2<f32>(-1,-1),vec2<f32>(3,-1),vec2<f32>(-1,3));return vec4<f32>(p[i],0.,1.);}
-@fragment fn shade(@builtin(position) pix:vec4<f32>)->@location(0) vec4<f32>{let q=vec2<u32>(pix.xy)-u.tile.xy;let h=hits[q.y*32u+q.x];let rd=ray(pix.xy);var color=sky(rd);if(h.status==2u){return vec4<f32>(1.,0.,1.,1.);}if(h.status==1u){let p=u.eye.xyz+rd*h.distance;let f=sceneField(p);let n=normal(p,h.distance);if(u.options.w>.5){return vec4<f32>(fract(vec3<f32>(.37,.57,.79)*f32(f.mat)),1.);}
- let fp=max(.0003,h.distance*.96/u.resolution.y);let rx=ray(pix.xy+vec2<f32>(1.,0.));let ry=ray(pix.xy+vec2<f32>(0.,1.));let plane=dot(p-u.eye.xyz,n);let dx=clamp(plane/dot(rx,n),0.,320.)*rx-h.distance*rd;let dy=clamp(plane/dot(ry,n),0.,320.)*ry-h.distance*rd;
- if(f.mat==8u){let fresnel=.045+.955*pow(1.-abs(dot(n,rd)),5.);let transmitted=throughGlass(p,rd)*vec3<f32>(.91,.96,.92);color=mix(transmitted,sky(reflect(rd,n)),clamp(fresnel,.06,.84));}else{color=litSurface(f,p,n,rd,fp,dx,dy);}
- color=mix(color,vec3<f32>(.58,.68,.72),1.-exp(-h.distance*.00018));}
- // One display transform; material mother albedos remain linear.
+@fragment fn shade(@builtin(position) pix:vec4<f32>)->@location(0) vec4<f32>{
+ let q=vec2<u32>(pix.xy)-u.tile.xy;let idx=q.y*32u+q.x;let r=shadingRecords[idx];let rd=ray(pix.xy);var color=sky(rd);
+ if(r.flags.x==2u){return vec4<f32>(1.,0.,1.,1.);}
+ if(r.flags.x==1u){let p=r.positionDistance.xyz;let distance=r.positionDistance.w;let n=r.normalAO.xyz;let f=Field(0.,r.flags.y,r.localSeed.xyz,r.localSeed.w,r.params.x,r.params.y);
+ if(u.options.w>.5){return vec4<f32>(fract(vec3<f32>(.37,.57,.79)*f32(f.mat)),1.);}
+ let fp=max(.0003,distance*.96/u.resolution.y);let rx=ray(pix.xy+vec2<f32>(1.,0.));let ry=ray(pix.xy+vec2<f32>(0.,1.));let plane=dot(p-u.eye.xyz,n);let dx=clamp(plane/dot(rx,n),0.,320.)*rx-distance*rd;let dy=clamp(plane/dot(ry,n),0.,320.)*ry-distance*rd;
+ color=litSurface(f,p,n,rd,fp,dx,dy,r.normalAO.w,r.params.z);}
+ if(r.flags.z==1u){let gn=r.glassNormalDepth.xyz;let fresnel=.045+.955*pow(1.-abs(dot(gn,rd)),5.);let transmitted=color*exp(-vec3<f32>(.7,.20,.45)*r.glassNormalDepth.w)*vec3<f32>(.97,.99,.98);color=mix(transmitted,sky(reflect(rd,gn)),clamp(fresnel,.06,.84));}
+ if(r.flags.x==1u){color=mix(color,vec3<f32>(.58,.68,.72),1.-exp(-r.params.w*.00018));}
  color=clamp((color*(2.51*color+vec3<f32>(.03)))/(color*(2.43*color+vec3<f32>(.59))+vec3<f32>(.14)),vec3<f32>(0.),vec3<f32>(1.));color=pow(max(color,vec3<f32>(0.)),vec3<f32>(1./2.2));return vec4<f32>(color,1.);
 }
 
@@ -107,12 +133,12 @@ export async function createRenderer(canvas,onProgress=()=>{}){
  const proof={version:'bureau-r03e-right-entry-field-candidate',ready:false,vertexBuffers:0,indexBuffers:0,instanceGeometry:0,appearanceTextures:0,drawVertices:3,compilation:[],errors:[],frames:[],adapter:null};
  if(!navigator.gpu)throw Error('此浏览器没有 WebGPU；没有启用 WebGL 或模型替代。');const adapter=await navigator.gpu.requestAdapter();if(!adapter)throw Error('没有可用的 WebGPU 适配器。');const device=await adapter.requestDevice();proof.adapter={vendor:adapter.info.vendor,device:adapter.info.device,architecture:adapter.info.architecture};device.addEventListener('uncapturederror',e=>proof.errors.push(e.error.message));device.lost.then(e=>proof.errors.push(e.message));onProgress({stage:'device',adapter:proof.adapter});
  const format=navigator.gpu.getPreferredCanvasFormat(),context=canvas.getContext('webgpu');context.configure({device,format,alphaMode:'opaque',usage:GPUTextureUsage.RENDER_ATTACHMENT|GPUTextureUsage.COPY_DST});
- const uniform=device.createBuffer({size:144,usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST});const itemBuffer=device.createBuffer({size:128*32,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST});const hitBuffer=device.createBuffer({size:16384,usage:GPUBufferUsage.STORAGE});const queueBuffer=device.createBuffer({size:4100,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST});const statBuffer=device.createBuffer({size:32,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_SRC|GPUBufferUsage.COPY_DST});
- const layout=device.createBindGroupLayout({entries:[{binding:0,visibility:6,buffer:{type:'uniform'}},{binding:1,visibility:6,buffer:{type:'read-only-storage'}},...[2,3,4].map(binding=>({binding,visibility:6,buffer:{type:'storage'}}))]});const pipelineLayout=device.createPipelineLayout({bindGroupLayouts:[layout]});const bind=device.createBindGroup({layout,entries:[uniform,itemBuffer,hitBuffer,queueBuffer,statBuffer].map((buffer,binding)=>({binding,resource:{buffer}}))});
- const full=shaderSource(),pipelines={};for(const [name,entry]of Object.entries({primary:['primary'],resume:['resume'],finalize:['finalize'],shade:['vs','shade']})){const stage=selectStageSource(full,entry);const module=device.createShaderModule({code:stage.code});const info=await module.getCompilationInfo();proof.compilation.push(...info.messages.map(x=>({stage:name,type:x.type,message:x.message,lineNum:x.lineNum})));if(info.messages.some(x=>x.type==='error'))throw Error(JSON.stringify(proof.compilation));pipelines[name]=name==='shade'?await device.createRenderPipelineAsync({layout:pipelineLayout,vertex:{module,entryPoint:'vs'},fragment:{module,entryPoint:'shade',targets:[{format}]},primitive:{topology:'triangle-list'}}):await device.createComputePipelineAsync({layout:pipelineLayout,compute:{module,entryPoint:name}});onProgress({stage:'pipeline',name});}
+ const uniform=device.createBuffer({size:144,usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST});const itemBuffer=device.createBuffer({size:128*32,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST});const hitBuffer=device.createBuffer({size:16384,usage:GPUBufferUsage.STORAGE});const queueBuffer=device.createBuffer({size:4100,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST});const statBuffer=device.createBuffer({size:32,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_SRC|GPUBufferUsage.COPY_DST});const transmissionBuffer=device.createBuffer({size:16384,usage:GPUBufferUsage.STORAGE});const shadingBuffer=device.createBuffer({size:98304,usage:GPUBufferUsage.STORAGE});
+ const layout=device.createBindGroupLayout({entries:[{binding:0,visibility:6,buffer:{type:'uniform'}},{binding:1,visibility:6,buffer:{type:'read-only-storage'}},...[2,3,4,5,6].map(binding=>({binding,visibility:6,buffer:{type:'storage'}}))]});const pipelineLayout=device.createPipelineLayout({bindGroupLayouts:[layout]});const bind=device.createBindGroup({layout,entries:[uniform,itemBuffer,hitBuffer,queueBuffer,statBuffer,transmissionBuffer,shadingBuffer].map((buffer,binding)=>({binding,resource:{buffer}}))});
+ const full=shaderSource(),pipelines={};for(const [name,entry]of Object.entries({primary:['primary'],resume:['resume'],transmit:['transmit'],geometryLight:['geometryLight'],finalize:['finalize'],shade:['vs','shade']})){const stage=selectStageSource(full,entry);const module=device.createShaderModule({code:stage.code});const info=await module.getCompilationInfo();proof.compilation.push(...info.messages.map(x=>({stage:name,type:x.type,message:x.message,lineNum:x.lineNum})));if(info.messages.some(x=>x.type==='error'))throw Error(JSON.stringify(proof.compilation));pipelines[name]=name==='shade'?await device.createRenderPipelineAsync({layout:pipelineLayout,vertex:{module,entryPoint:'vs'},fragment:{module,entryPoint:'shade',targets:[{format}]},primitive:{topology:'triangle-list'}}):await device.createComputePipelineAsync({layout:pipelineLayout,compute:{module,entryPoint:name}});onProgress({stage:'pipeline',name});}
  let busy=false,texture;async function render(snapshot){if(busy)throw Error('已有画面正在计算');busy=true;proof.ready=false;try{const start=performance.now();const snap=structuredClone(snapshot);const width=snap.width??480,height=snap.height??320;canvas.width=width;canvas.height=height;texture?.destroy();texture=device.createTexture({size:[width,height],format,usage:GPUTextureUsage.RENDER_ATTACHMENT|GPUTextureUsage.COPY_SRC});
  const objects=snap.items??[];if(objects.length>128)throw Error('展示数据超过128个物品的明确上限');const itemData=new Float32Array(128*8);objects.forEach((r,i)=>{itemData.set([...r.position,i+19,...r.size,0],i*8)});device.queue.writeBuffer(itemBuffer,0,itemData);device.queue.writeBuffer(statBuffer,0,new Uint32Array(8));const fw=norm(sub(snap.camera.target,snap.camera.eye)),rt=norm(cross(fw,[0,1,0])),up=norm(cross(rt,fw));let tiles=0;const total=Math.ceil(width/32)*Math.ceil(height/32);
- for(let y=0;y<height;y+=32){for(let x=0;x<width;x+=32){const w=Math.min(32,width-x),h=Math.min(32,height-y),ub=new ArrayBuffer(144),fl=new Float32Array(ub),ui=new Uint32Array(ub);fl.set([...snap.camera.eye,0,...fw,0,...rt,0,...up,0,width,height,width/height,0,snap.cut??0,snap.age??.7,1,snap.debug??0,snap.seconds??0,snap.running===false?0:1,0,0]);ui.set([objects.length,0,0,0,x,y,w,h],28);device.queue.writeBuffer(uniform,0,ub);device.queue.writeBuffer(queueBuffer,0,new Uint32Array(1));const encoder=device.createCommandEncoder();for(const name of['primary','resume','finalize']){const pass=encoder.beginComputePass();pass.setPipeline(pipelines[name]);pass.setBindGroup(0,bind);if(name==='resume')pass.dispatchWorkgroups(16);else pass.dispatchWorkgroups(Math.ceil(w/8),Math.ceil(h/8));pass.end();}const pass=encoder.beginRenderPass({colorAttachments:[{view:texture.createView(),clearValue:{r:.35,g:.43,b:.45,a:1},loadOp:tiles?'load':'clear',storeOp:'store'}]});pass.setPipeline(pipelines.shade);pass.setBindGroup(0,bind);pass.setScissorRect(x,y,w,h);pass.draw(3);pass.end();device.queue.submit([encoder.finish()]);await device.queue.onSubmittedWorkDone();tiles++;if(tiles%8===0||tiles===total){const present=device.createCommandEncoder();present.copyTextureToTexture({texture},{texture:context.getCurrentTexture()},[width,height]);device.queue.submit([present.finish()]);onProgress({stage:'render',tiles,total,ms:performance.now()-start});}}}
+ for(let y=0;y<height;y+=32){for(let x=0;x<width;x+=32){const w=Math.min(32,width-x),h=Math.min(32,height-y),ub=new ArrayBuffer(144),fl=new Float32Array(ub),ui=new Uint32Array(ub);fl.set([...snap.camera.eye,0,...fw,0,...rt,0,...up,0,width,height,width/height,0,snap.cut??0,snap.age??.7,1,snap.debug??0,snap.seconds??0,snap.running===false?0:1,0,0]);ui.set([objects.length,0,0,0,x,y,w,h],28);device.queue.writeBuffer(uniform,0,ub);device.queue.writeBuffer(queueBuffer,0,new Uint32Array(1));const encoder=device.createCommandEncoder();for(const name of['primary','resume','transmit','geometryLight','finalize']){const pass=encoder.beginComputePass();pass.setPipeline(pipelines[name]);pass.setBindGroup(0,bind);if(name==='resume')pass.dispatchWorkgroups(16);else pass.dispatchWorkgroups(Math.ceil(w/8),Math.ceil(h/8));pass.end();}const pass=encoder.beginRenderPass({colorAttachments:[{view:texture.createView(),clearValue:{r:.35,g:.43,b:.45,a:1},loadOp:tiles?'load':'clear',storeOp:'store'}]});pass.setPipeline(pipelines.shade);pass.setBindGroup(0,bind);pass.setScissorRect(x,y,w,h);pass.draw(3);pass.end();device.queue.submit([encoder.finish()]);await device.queue.onSubmittedWorkDone();tiles++;if(tiles%8===0||tiles===total){const present=device.createCommandEncoder();present.copyTextureToTexture({texture},{texture:context.getCurrentTexture()},[width,height]);device.queue.submit([present.finish()]);onProgress({stage:'render',tiles,total,ms:performance.now()-start});}}}
  const read=device.createBuffer({size:32,usage:GPUBufferUsage.MAP_READ|GPUBufferUsage.COPY_DST}),e=device.createCommandEncoder();e.copyBufferToBuffer(statBuffer,0,read,0,32);device.queue.submit([e.finish()]);await read.mapAsync(GPUMapMode.READ);const values=Array.from(new Uint32Array(read.getMappedRange()));read.unmap();read.destroy();const stats=Object.fromEntries(['hit','miss','exhausted','retried','maxSteps','glassRays','glassMiss','glassExhausted'].map((key,i)=>[key,values[i]]));const frame={view:snap.view,cut:snap.cut,width,height,renderThroughCompletionMs:performance.now()-start,stats,items:objects.length,camera:snap.camera,worldTime:snap.worldTime};proof.frames.push(frame);proof.ready=true;onProgress({stage:'complete',...frame});return frame;}finally{busy=false;}}
- proof.shaderBytes=new TextEncoder().encode(full).length;proof.knownBuffersBytes=144+4096+16384+4100+32;return {render,proof,isBusy:()=>busy};
+ proof.shaderBytes=new TextEncoder().encode(full).length;proof.knownBuffersBytes=144+4096+16384+4100+32+16384+98304;return {render,proof,isBusy:()=>busy};
 }
