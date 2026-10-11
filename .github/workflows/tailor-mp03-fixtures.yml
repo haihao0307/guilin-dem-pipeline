@@ -1,0 +1,29 @@
+name: MP03 locked collision fixtures
+on:
+  push:
+    branches: [fix/tailor-mp03-knit-seams-gravity-20261011]
+    paths: [.github/workflows/tailor-mp03-fixtures.yml]
+permissions:
+  contents: read
+jobs:
+  fixtures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-tailor-workbench/presets/r04/assets
+            kaopu-tailor-workbench/material-products/r01/thumbs
+      - run: |
+          mkdir -p fixtures
+          cp kaopu-tailor-workbench/presets/r04/assets/common-body.json fixtures/
+          cp kaopu-tailor-workbench/presets/r04/assets/body-sdf-grid.json fixtures/
+          cp kaopu-tailor-workbench/presets/r04/assets/common-body.sdfd.gz fixtures/
+          cp -r kaopu-tailor-workbench/material-products/r01/thumbs fixtures/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mp03-locked-fixtures
+          path: fixtures
+          retention-days: 14
