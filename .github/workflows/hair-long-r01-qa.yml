@@ -34,7 +34,7 @@ jobs:
           for n in $(seq 1 30); do curl --fail --silent http://127.0.0.1:8765/native/kaopu-unified-human-workbench/ > /dev/null && exit 0; sleep 1; done
           exit 1
       - name: Render real long-hair candidate
-        run: node kaopu-hair-workbench/qa/isolated-longhair-r01/test-fill-r30.cjs
+        run: node kaopu-hair-workbench/qa/isolated-longhair-r01/test-instance-r30.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
