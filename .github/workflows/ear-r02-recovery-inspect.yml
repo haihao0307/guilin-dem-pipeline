@@ -1,0 +1,69 @@
+name: Ear R02 recover frozen runtime evidence
+on:
+  push:
+    branches: [fix/ear-growth-r02-recovery-20261011]
+    paths: [.github/workflows/ear-r02-recovery-inspect.yml]
+permissions:
+  contents: read
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Pinned local analysis tools
+        run: |
+          mkdir -p /tmp/ear-tools
+          cd /tmp/ear-tools
+          npm init -y >/dev/null
+          npm install esbuild@0.25.11 playwright@1.56.1 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: Retain only project source and public runtime dependencies
+        run: |
+          mkdir -p ear-recovery-evidence/http ear-recovery-evidence/source
+          python3 - <<'PY'
+          import pathlib,shutil
+          root=pathlib.Path('kaopu-unified-human-workbench')
+          for p in root.rglob('*'):
+            if not p.is_file(): continue
+            rel=p.relative_to(root).as_posix()
+            take=p.suffix in ('.mjs','.cjs','.js','.css','.json') or rel in ('index.html','lip-structure/preview.html','ear-structure/preview.html') or (rel.startswith('eye-materials/') and p.suffix=='.png')
+            if take:
+              q=pathlib.Path('ear-recovery-evidence/source')/p
+              q.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(p,q)
+          PY
+          tar -czf ear-recovery-evidence/build-tools.tar.gz -C /tmp/ear-tools node_modules
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/ear-recovery-http.log 2>&1 &
+          cat >/tmp/ear-tools/recover.cjs <<'JS'
+          const {chromium}=require('playwright'),fs=require('fs'),path=require('path'),crypto=require('crypto');
+          (async()=>{
+            const out=path.resolve(process.env.GITHUB_WORKSPACE,'ear-recovery-evidence'),b=await chromium.launch({headless:true,args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']}),p=await b.newPage({viewport:{width:1200,height:900}}),pending=[],rows=[],errors=[];
+            p.on('pageerror',e=>errors.push(String(e)));
+            p.on('response',r=>{if(!/^https:\/\/raw\.githubusercontent\.com\//.test(r.url())||!r.ok())return;pending.push((async()=>{try{const bytes=await r.body(),hash=crypto.createHash('sha256').update(bytes).digest('hex');fs.writeFileSync(out+'/http/'+hash,bytes);rows.push({url:r.url(),sha256:hash,bytes:bytes.length,contentType:r.headers()['content-type']||'application/octet-stream'});}catch(e){rows.push({url:r.url(),error:String(e)});}})());});
+            await p.goto('http://127.0.0.1:8765/kaopu-unified-human-workbench/ear-structure/preview.html',{waitUntil:'domcontentloaded',timeout:120000});
+            await p.waitForFunction(()=>window.earWorkbench&&__IDENTITY_QA__.viewer().skin.naturalEyeExtension.ready,null,{timeout:180000});
+            await p.waitForTimeout(1500);
+            await p.evaluate(()=>{earWorkbench.open();earWorkbench.view('left');earWorkbench.view('macro');});
+            await p.screenshot({path:out+'/A1-macro.png'});
+            const d=await p.evaluate(()=>{const v=__IDENTITY_QA__.viewer(),s=v.currentEar.source,g=v.geometry;const attrs=x=>Object.fromEntries(Object.entries(x.attributes).map(([k,a])=>[k,{size:a.itemSize,array:Array.from(a.array)}]));return {source:{attributes:attrs(s),index:Array.from(s.index.array)},display:{attributes:attrs(g),index:Array.from(g.index.array)},settings:earWorkbench.settings(),report:earWorkbench.report()};});
+            fs.writeFileSync(out+'/A1-geometry.json',JSON.stringify(d));
+            const material=await p.evaluate(()=>{const v=__IDENTITY_QA__.viewer();return {programs:v.renderer.info.programs.map(x=>({name:x.name,diagnostics:x.diagnostics||null})),skin:v.skin.report()};});
+            await Promise.all(pending);fs.writeFileSync(out+'/http/index.json',JSON.stringify(rows,null,2));fs.writeFileSync(out+'/inspection.json',JSON.stringify({errors,material,responses:rows.length},null,2));await b.close();
+            if(errors.length)throw Error(errors.join('\n'));
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          node /tmp/ear-tools/recover.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ear-r02-recovered-runtime
+          path: ear-recovery-evidence
+          retention-days: 14
