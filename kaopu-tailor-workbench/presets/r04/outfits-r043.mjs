@@ -1,3 +1,4 @@
+import{smoothSewnNormals}from'./sewn-normals-r0433.mjs';
 /** Outfit identities resolve to two native material/solver records, never proxy shells. */
 import{requirePerson,materialHash,facesOf,stable}from'./source-contract.mjs';
 export function buildOutfits(rows){const tops=rows.filter(r=>r.category==='上装'),bottoms=rows.filter(r=>['裤装','半裙'].includes(r.category));return tops.flatMap(a=>bottoms.map(b=>({id:a.id+'-'+b.id,name:a.name+' ＋ '+b.name,members:[a.id,b.id],category:'上下装套系',jointClothCollisionCertified:false})));}
@@ -12,6 +13,6 @@ export function nativeGarmentMesh(THREE,packet,groundShiftM,{panelColors=false,w
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));g.setIndex(indices);g.computeVertexNormals();g.computeBoundingSphere();
  const mats=spec.panels.map((p,i)=>new THREE.MeshStandardMaterial({color:panelColors?[0xbbab8b,0x9ab5ac,0xc4a4a4,0xa1a8c6][i%4]:0xc6b591,roughness:.82,side:THREE.DoubleSide,wireframe:wire}));let offset=0;
  spec.panels.forEach((p,i)=>{g.addGroup(offset,p.triangles.length*3,i);offset+=p.triangles.length*3});const mesh=new THREE.Mesh(g,mats);mesh.name='native-outfit-member-'+packet.binding.presetId;
- mesh.userData={binding:structuredClone(packet.binding),coordinateOffsetOnlyM:groundShiftM,sourceIndexSequenceUnchanged:stable(Array.from(g.index.array))===stable(indices),jointClothCollisionCertified:false};return mesh;
+ mesh.userData={sewnNormalAudit:smoothSewnNormals(g,spec,record.activeSeams),binding:structuredClone(packet.binding),coordinateOffsetOnlyM:groundShiftM,sourceIndexSequenceUnchanged:stable(Array.from(g.index.array))===stable(indices),jointClothCollisionCertified:false};return mesh;
 }
 export function disposeGarment(mesh){mesh.geometry.dispose();for(const m of(Array.isArray(mesh.material)?mesh.material:[mesh.material]))m.dispose();}
