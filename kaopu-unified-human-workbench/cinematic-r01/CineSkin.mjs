@@ -9,11 +9,20 @@ uniform float uCShadowEnable,uCShadowSoftness;uniform vec3 uCKeyView,uCKeyPositi
 varying vec3 vCWorld;
 float cSkinMask=0.;float cLobeWeight=0.;vec3 cDiffuseN=vec3(0.,0.,1.);
 float cShadow(){
- if(uCShadowEnable<.5)return 1.;vec4 q=uCShadowMatrix*vec4(vCWorld,1.);vec3 p=q.xyz/q.w;
+ // Compare each PCF tap with receiver depth at that actual texel center.
+ vec4 q=uCShadowMatrix*vec4(vCWorld,1.);vec3 p=q.xyz/q.w;
+ vec3 dx=dFdx(p),dy=dFdy(p);float det=dx.x*dy.y-dx.y*dy.x;
+ vec2 slope=abs(det)>1e-12?vec2(dy.y*dx.z-dx.y*dy.z,dx.x*dy.z-dy.x*dx.z)/det:vec2(0.);
+ slope=clamp(slope,vec2(-8.),vec2(8.));
+ if(uCShadowEnable<.5||q.w<=0.)return 1.;
  if(p.x<=0.||p.x>=1.||p.y<=0.||p.y>=1.||p.z<=0.||p.z>=1.)return 1.;
- float bias=.00032;float total=0.;
- for(int j=0;j<4;j++)for(int i=0;i<4;i++){vec2 offset=(vec2(float(i),float(j))-1.5)*uCShadowSoftness/1024.;float z=texture2D(uCShadowMap,p.xy+offset).r;total+=step(p.z-bias,z);}
- return total/16.;
+ float bias=.00012+min(.0015,(abs(slope.x)+abs(slope.y))*.00012);float total=0.;
+ for(int j=0;j<4;j++)for(int i=0;i<4;i++){
+  vec2 offset=(vec2(float(i),float(j))-1.5)*uCShadowSoftness/1024.;
+  vec2 uv=(floor((p.xy+offset)*1024.)+.5)/1024.;
+  float receiver=p.z+dot(slope,uv-p.xy);
+  float z=texture2D(uCShadowMap,uv).r;total+=step(receiver-bias,z);
+ }return total/16.;
 }
 // Jittered, elliptical pores in millimetres. Vary size/depth; no frame-time noise.
 float cPores(vec2 mm){vec2 p=mm/.42,cell=floor(p),f=fract(p);float h=0.;
@@ -30,7 +39,7 @@ export function installCineSkin(viewer){
  const report={compiled:0,method:'weighted dual GGX + specular microdetail + bounded sheen, existing RGB diffusion',newSkinTextures:0,cinemaRendererPort:false};
  const patch=(text,a,b)=>{if(text.split(a).length!==2)throw Error('ET20 shader anchor changed: '+a.slice(0,100));return text.replace(a,()=>b);};
  mat.sheen=1;mat.sheenColor.setRGB(1,1,1);mat.sheenRoughness=.8;
- mat.customProgramCacheKey=()=>key()+'/ET20-dualGGX-shadow-v1';
+ mat.customProgramCacheKey=()=>key()+'/ET20-dualGGX-shadow-receiver-plane-v2';
  mat.onBeforeCompile=shader=>{
   previous(shader);Object.assign(shader.uniforms,U);report.compiled++;
   shader.vertexShader='varying vec3 vCWorld;\n'+shader.vertexShader;
