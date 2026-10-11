@@ -1,0 +1,141 @@
+name: Hair R12 Takeover
+on:
+  push:
+    branches: [fix/hair-r12-takeover-20261011]
+    paths: [.github/workflows/hair-r12-takeover.yml, 'kaopu-hair-workbench/fusion/r12/**']
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: hair-r12-takeover
+  cancel-in-progress: false
+jobs:
+  build-test-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-hair-workbench/fusion/r11
+            kaopu-hair-workbench/fusion/r12
+            kaopu-hair-workbench/handoffs/ten24-original-local
+            kaopu-human-overview
+            .github/workflows/hair-r12-takeover.yml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fixed base and browser tools
+        run: |
+          git fetch --depth=1 origin 653c9ec7f7fce99d19e69a5cf99f66c7e96f6cbd
+          test "$(git rev-parse HEAD:kaopu-hair-workbench/fusion/r11)" = "$(git rev-parse 653c9ec7f7fce99d19e69a5cf99f66c7e96f6cbd:kaopu-hair-workbench/fusion/r11)"
+          npm install --prefix /tmp/hair-r12-tools --no-save esbuild@0.25.10 playwright@1.55.1 pngjs@7.0.0
+          ln -s /tmp/hair-r12-tools/node_modules node_modules
+          /tmp/hair-r12-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Restore reviewed build input to readable files
+        run: |
+          python - <<'PYCODE'
+          from pathlib import Path
+          import base64,zlib,json,hashlib
+          p=Path('kaopu-hair-workbench/fusion/r12')
+          b=base64.b64decode(''.join((p/'build-inputs'/f'source-{i}.b64').read_text().strip() for i in [1,2,3]),validate=True)
+          assert hashlib.sha256(b).hexdigest()=='6a813592d579de489b98ac248d2910fd7840eb13c797a5251524e92809416832'
+          data=json.loads(zlib.decompress(b))
+          assert set(data)=={'refine.py','AssetLoader.js','build12.py','finalize12.py','README.md','tests/fields.mjs','tests/verify12.mjs'}
+          for name,text in data.items():
+              f=p/name;f.parent.mkdir(parents=True,exist_ok=True)
+              if not f.exists(): f.write_text(text)
+          PYCODE
+      - uses: actions/download-artifact@v4
+        if: hashFiles('kaopu-hair-workbench/fusion/r12/evidence/attempt-01/report.json') == ''
+        with:
+          name: hair-r12-takeover-evidence
+          run-id: 38115223409
+          github-token: ${{ github.token }}
+          path: /tmp/hair-r12-attempt-one
+      - name: Preserve the failed first browser attempt
+        run: |
+          if [ ! -f kaopu-hair-workbench/fusion/r12/evidence/attempt-01/report.json ]; then
+            mkdir -p kaopu-hair-workbench/fusion/r12/evidence/attempt-01
+            cp -a /tmp/hair-r12-attempt-one/evidence/local/. kaopu-hair-workbench/fusion/r12/evidence/attempt-01/
+          fi
+      - name: Generate isolated readable source and exact lossless assets
+        run: |
+          python kaopu-hair-workbench/fusion/r12/refine.py
+          python kaopu-hair-workbench/fusion/r12/repair12.py
+          python kaopu-hair-workbench/fusion/r12/build12.py
+          find kaopu-hair-workbench/fusion/r12/src -name '*.js' -print0 | xargs -0 -n1 node --check
+          node kaopu-hair-workbench/fusion/r12/tests/fields.mjs
+          node kaopu-hair-workbench/fusion/r12/tests/render-gate.mjs
+          node kaopu-hair-workbench/fusion/r12/tests/inherited-strand-unit.mjs
+      - name: Commit fixed source and assets only on takeover branch
+        id: assets
+        run: |
+          python - <<'PY'
+          import subprocess
+          paths=subprocess.check_output(['git','diff','--name-only']).decode().splitlines()
+          assert all(p.startswith('kaopu-hair-workbench/fusion/r12/') for p in paths),paths
+          PY
+          git config user.name 'KAOPU Hair Build'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add kaopu-hair-workbench/fusion/r12
+          git diff --cached --quiet || git commit -m 'build(hair): R12 source and lossless fixed-hash GNM assets'
+          git push origin HEAD:refs/heads/fix/hair-r12-takeover-20261011
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Bundle both fixed public entry points
+        env:
+          R12_ASSET_SHA: ${{ steps.assets.outputs.sha }}
+        run: |
+          R12_MODE=stamp python kaopu-hair-workbench/fusion/r12/build12.py
+          node kaopu-hair-workbench/fusion/r12/bundle.mjs
+          node --input-type=module - <<'JS'
+          import esbuild from 'esbuild';
+          await esbuild.build({entryPoints:['kaopu-hair-workbench/fusion/r12/female-src/viewer.js'],outfile:'kaopu-hair-workbench/fusion/r12/female-bundle.js',bundle:true,format:'esm',target:'es2022',minify:true,legalComments:'inline',alias:{three:'./kaopu-hair-workbench/fusion/r12/female-src/vendor/three.module.js'}});
+          JS
+          python kaopu-hair-workbench/fusion/r12/package.py
+          R12_MODE=female python kaopu-hair-workbench/fusion/r12/build12.py
+      - name: Actual full-quality candidate browser regression
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/hair-r12-http.log 2>&1 &
+          node kaopu-hair-workbench/fusion/r12/tests/verify12.mjs http://127.0.0.1:8765/kaopu-hair-workbench/fusion/r12/public-lite.html
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-r12-local-checkpoint
+          path: |
+            kaopu-hair-workbench/fusion/r12/evidence
+            kaopu-hair-workbench/fusion/r12/BUILD_MANIFEST.json
+          retention-days: 30
+      - name: Publish tested bundle without merging any branch
+        id: publish
+        run: |
+          git add kaopu-hair-workbench/fusion/r12
+          git diff --cached --quiet || git commit -m 'build(hair): R12 tested crown-preserving edges and five-zone beard'
+          git push origin HEAD:refs/heads/fix/hair-r12-takeover-20261011
+          sha=$(git rev-parse HEAD)
+          url="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$sha/kaopu-hair-workbench/fusion/r12/public-lite.html"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "$url" >> "$GITHUB_STEP_SUMMARY"
+      - name: Actual external webpage regression
+        run: node kaopu-hair-workbench/fusion/r12/tests/verify12.mjs '${{ steps.publish.outputs.url }}' --public
+      - name: Record actual public evidence, preserve tested HTML
+        env:
+          R12_PUBLIC_URL: ${{ steps.publish.outputs.url }}
+        run: |
+          python kaopu-hair-workbench/fusion/r12/finalize12.py
+          git add kaopu-hair-workbench/fusion/r12
+          git commit -m 'test(hair): R12 real public rendering controls and immutable preview receipt'
+          git push origin HEAD:refs/heads/fix/hair-r12-takeover-20261011
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-r12-takeover-evidence
+          path: |
+            kaopu-hair-workbench/fusion/r12/evidence
+            kaopu-hair-workbench/fusion/r12/BUILD_MANIFEST.json
+            kaopu-hair-workbench/fusion/r12/PUBLIC_URL.txt
+            kaopu-hair-workbench/fusion/r12/README.md
+            kaopu-hair-workbench/fusion/r12/src
+          retention-days: 30

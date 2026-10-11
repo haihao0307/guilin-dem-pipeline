@@ -1,0 +1,377 @@
+{
+  "asset": "GNM teacher-derived free 3D hair and eyebrow guides",
+  "creditExact": "Daniel Bystedt. CC BY-SA license",
+  "sourceTitle": "Hair Styles — Blender 3.5 Geometry Nodes demo by Daniel Bystedt",
+  "sourceUrl": "https://www.blender.org/download/demo/geometry-nodes/hair_nodes-female_hair_styles.blend",
+  "officialLicensePage": "https://www.blender.org/download/demo-files/",
+  "sourceSha256": "1ad6202095c1793678fee7d69a7e9f8b5fdb6e5c293d300eb1062d2d437e8d48",
+  "license": "CC BY-SA; version unspecified by the official demo page and embedded source credit. This derivative preserves that exact provided license declaration; no particular CC BY-SA version is invented.",
+  "derivativeLicense": "CC BY-SA (same source-provided unspecified-version license declaration)",
+  "originalPolicy": "Original blend unchanged and not included in this workbench. No source head, images, shader graphs, packed assets, or Blender materials are included in the runtime data.",
+  "extraction": {
+    "blender": "4.3.2 --background --disable-autoexec",
+    "evaluatedGeometry": false,
+    "objects": {
+      "long hair main": {
+        "guides": 346,
+        "points": 6770
+      },
+      "long hair strands": {
+        "guides": 30,
+        "points": 360
+      },
+      "eyebrows.001": {
+        "guides": 88,
+        "points": 386
+      }
+    },
+    "retainedGrowthIslands": 2
+  },
+  "retarget": {
+    "axisMap": "source world (x-5,z,-y)",
+    "scale": [
+      0.0949999988079071,
+      0.0949999988079071,
+      0.11599999666213989
+    ],
+    "translation": [
+      0.0,
+      -1.1519232988357544,
+      -0.050999999046325684
+    ],
+    "method": "affine cranium registration; exact GNM component-0 root projection; brow arch-relative registration; one-way outside-skin guide repair",
+    "originalUnmodified": true
+  },
+  "retargetMetrics": {
+    "main": {
+      "count": 346,
+      "maxRootRetargetDistance": 0.038854025304317474,
+      "meanRootRetargetDistance": 0.006794551549429038,
+      "maxClearanceCorrection": 0.009318547837513616,
+      "minLength": 0.10417830897492085,
+      "maxLength": 0.3656584699213549
+    },
+    "independent": {
+      "count": 30,
+      "maxRootRetargetDistance": 0.016554970294237137,
+      "meanRootRetargetDistance": 0.002806439192014902,
+      "maxClearanceCorrection": 0.030895115941651164,
+      "minLength": 0.02828901163598792,
+      "maxLength": 0.200232661941259
+    },
+    "brows": {
+      "count": 88,
+      "maxRootRetargetDistance": 0.007209042552858591,
+      "meanRootRetargetDistance": 0.005667894464832815,
+      "maxClearanceCorrection": 0.00044750044682776205,
+      "minLength": 0.0033897045833146994,
+      "maxLength": 0.01191025391444982
+    }
+  },
+  "guideRepresentation": "All 464 artist guides retained; 33 arc samples for each scalp guide, 17 for brows. Retargeted root triangles and barycentrics are original GNM component 0. Shaft shapes remain free 3D guide offsets, deformed in local GNM root frames.",
+  "hierarchy": "Within original source growth-mesh islands, inverse-distance interpolation of 3 nearby artist guides, gentle attraction to primary authored clump, seeded small fibre noise. Independent source strands remain a separate interpolation family. This is a new approximation, not execution or a literal port of the source Geometry Nodes graph.",
+  "browRegions": "Original 88 eyebrow guides retained; inner/middle/outer labels use original abs(root x)<0.23 / <0.38 / outer in extracted source units. Arch-relative registration adapts source roots to GNM. No single constant brow direction field.",
+  "radius": {
+    "units": "GNM native model units; not asserted to be metres or micrometres",
+    "sourceScalpRadius": 0.0011,
+    "sourceBrowRadius": 0.001,
+    "sourceBrowFactorMax": 0.65,
+    "registrationScaleReference": 0.095,
+    "scalpDisplayRootRadius": 3.7e-05,
+    "browDisplayRootRadius": 4.5e-05,
+    "artScaleScalp": 0.354066985645933,
+    "artScaleBrow": 0.7287449392712549,
+    "variation": [
+      0.78,
+      1.2
+    ],
+    "profile": "Source Set Hair Curve Profile uses Shape=0 and FactorMin=0 (linear tip taper). Web implementation uses max(0.06,1-s), an explicitly added 6% tip floor for finite visible ribbons. Raw source radius attributes are retained as audit metadata but are overridden by the source profile node and are not used as the evaluated radius.",
+    "relativeToNeutralHeadHeight": {
+      "referenceHeight": 0.21588260000000004,
+      "scalpRootRadiusFraction": 0.00017138944963605214,
+      "browRootRadiusFraction": 0.00020844662793573912
+    },
+    "sourceScaledScalpRootRadius": 0.0001045,
+    "sourceScaledBrowRootRadius": 6.175000000000001e-05,
+    "rendererComparisonScale": {
+      "sourceNodeScaledScalp": 2.8243243243243246,
+      "sourceNodeScaledBrow": 1.3722222222222225,
+      "fineFibre": 1,
+      "scope": "The page may multiply the binding radius by these explicit comparison factors. Point/midpoint clearance audits do not validate finite-radius capsule clearance."
+    }
+  },
+  "modifications": [
+    "Axis conversion and nonuniform affine cranium registration",
+    "Brow arch-relative root registration",
+    "Original GNM root triangle projection",
+    "Arc resampling",
+    "One-way point and shaft midpoint collision repair against GNM skin",
+    "New bounded child interpolation and clumping",
+    "Fine-fibre art radius scaling and tip floor",
+    "Root-local deformation and cached one-way skin clearance constraints"
+  ],
+  "validation": {
+    "numerical": "TEACHER-GROOM-NUMERICAL.json",
+    "clearance": "TEACHER-GROOM-CLEARANCE.json",
+    "states": [
+      "neutral",
+      "smile",
+      "surprise",
+      "identity",
+      "identity-smile-pose",
+      "neutral-reset"
+    ],
+    "allOriginalGuidesRetained": true,
+    "finiteOutputs": true,
+    "allRootsSafe": true,
+    "browClearanceAllTestedPointAndMidpointSamples": true,
+    "scalpBroadVisibleFaceClearanceNeutralIdentitySurprise": true,
+    "scalpBroadVisibleFaceClearancePureSmile": true,
+    "clearanceSummary": [
+      {
+        "state": "neutral",
+        "scalpSamples": 686000,
+        "scalpInsideSamples": 337,
+        "scalpVisibleFaceInsideSamples": 0,
+        "scalpWorstSignedGap": -0.0015415656998811755,
+        "worstScalpSample": {
+          "strand": 4988,
+          "point": 18,
+          "type": "point",
+          "pointCoordinates": [
+            0.07607250660657883,
+            0.25966981053352356,
+            0.02360217645764351
+          ],
+          "nearest": [
+            0.07747071236371994,
+            0.25991353392601013,
+            0.02420387789607048
+          ],
+          "distance": 0.0015415657544508576
+        },
+        "browInsideSamples": 0
+      },
+      {
+        "state": "smile",
+        "scalpSamples": 686000,
+        "scalpInsideSamples": 468,
+        "scalpVisibleFaceInsideSamples": 0,
+        "scalpWorstSignedGap": -0.002918729504926887,
+        "worstScalpSample": {
+          "strand": 8561,
+          "point": 15,
+          "type": "point",
+          "pointCoordinates": [
+            0.07020483911037445,
+            0.24690945446491241,
+            0.03179232403635979
+          ],
+          "nearest": [
+            0.07008427381515503,
+            0.24496318399906158,
+            0.02957870438694954
+          ],
+          "distance": 0.002950019668787718
+        },
+        "browInsideSamples": 0
+      },
+      {
+        "state": "surprise",
+        "scalpSamples": 686000,
+        "scalpInsideSamples": 330,
+        "scalpVisibleFaceInsideSamples": 0,
+        "scalpWorstSignedGap": -0.0016106107068480924,
+        "worstScalpSample": {
+          "strand": 8749,
+          "point": 13,
+          "type": "point",
+          "pointCoordinates": [
+            0.07515180855989456,
+            0.2643582224845886,
+            0.010598825290799141
+          ],
+          "nearest": [
+            0.07426243275403976,
+            0.2638598382472992,
+            0.00935195293277502
+          ],
+          "distance": 0.0016106106340885162
+        },
+        "browInsideSamples": 0
+      },
+      {
+        "state": "identity",
+        "scalpSamples": 686000,
+        "scalpInsideSamples": 328,
+        "scalpVisibleFaceInsideSamples": 0,
+        "scalpWorstSignedGap": -0.004341877733168076,
+        "worstScalpSample": {
+          "strand": 13706,
+          "point": 13,
+          "type": "point",
+          "pointCoordinates": [
+            0.07466445863246918,
+            0.2601262629032135,
+            0.015673479065299034
+          ],
+          "nearest": [
+            0.07502922415733337,
+            0.2643420696258545,
+            0.01672421023249626
+          ],
+          "distance": 0.004360059276223183
+        },
+        "browInsideSamples": 0
+      },
+      {
+        "state": "identity-smile-pose",
+        "scalpSamples": 686000,
+        "scalpInsideSamples": 493,
+        "scalpVisibleFaceInsideSamples": 2,
+        "scalpWorstSignedGap": -0.004853942838963121,
+        "worstScalpSample": {
+          "strand": 13205,
+          "point": 24,
+          "type": "point",
+          "pointCoordinates": [
+            -0.08203691989183426,
+            0.1335792988538742,
+            -0.04043259471654892
+          ],
+          "nearest": [
+            -0.0839536041021347,
+            0.1376238912343979,
+            -0.042310986667871475
+          ],
+          "distance": 0.004853942897170782
+        },
+        "browInsideSamples": 0
+      },
+      {
+        "state": "neutral-reset",
+        "scalpSamples": 686000,
+        "scalpInsideSamples": 337,
+        "scalpVisibleFaceInsideSamples": 0,
+        "scalpWorstSignedGap": -0.0015415656998811755,
+        "worstScalpSample": {
+          "strand": 4988,
+          "point": 18,
+          "type": "point",
+          "pointCoordinates": [
+            0.07607250660657883,
+            0.25966981053352356,
+            0.02360217645764351
+          ],
+          "nearest": [
+            0.07747071236371994,
+            0.25991353392601013,
+            0.02420387789607048
+          ],
+          "distance": 0.0015415657544508576
+        },
+        "browInsideSamples": 0
+      }
+    ]
+  },
+  "knownLimits": [
+    "Geometric registration and collision repair materially change original guide coordinates; not an untouched source reproduction.",
+    "All tested brows are clear at points/midpoints. Scalp still has local ear-side point/shaft intersections, recorded in clearance audit; arbitrary identity/expression/pose clearance is not guaranteed.",
+    "Combined identity-smile-head-neck pose has two scalp samples inside the broad visible-face region in the current audit.",
+    "Nearest-triangle signed distance at open boundaries is not a closed-volume inside test. Audits use actual GNM component-0 triangle normals and report thresholds.",
+    "No inter-hair collision or physics simulation.",
+    "14k scalp/1k brow runtime budget compared with observed original VIEWPORT depsgraph:11,193 main+30 independent and340 brow curves. Final render-depsgraph count was not measured.",
+    "CPU bind33.7s in final Node audit; live scalp updates57.7–74.8ms. Browser/device timings may differ.",
+    "Clearance tests sample centerline points and shaft midpoints, not finite-radius strand capsules or every continuous point."
+  ],
+  "publicRuntimeFiles": [
+    "src/TeacherGroomBinding.js",
+    "data/teacher-groom.js",
+    "TEACHER-GROOM-PROVENANCE.json",
+    "licenses/TEACHER-GROOM-CC-BY-SA.txt"
+  ],
+  "doNotPackage": [
+    "teacher-export/numerical/*",
+    "teacher-export/*.log",
+    "teacher-export/teacher-raw-guides.json",
+    "any original .blend or source head mesh"
+  ],
+  "evaluatedViewportCounts": {
+    "scope": "Read-only original graph evaluated in temporary scene, no .blend save. Counts are VIEWPORT depsgraph unless mode says otherwise, not automatically final render counts.",
+    "results": [
+      {
+        "object": "long hair main",
+        "originalType": "CURVES",
+        "rawCurves": 346,
+        "rawPoints": 6770,
+        "evaluatedType": "CURVES",
+        "evaluatedCurves": 11193,
+        "evaluatedPoints": 211265,
+        "evaluationMode": "VIEWPORT",
+        "originalHideViewport": false,
+        "originalHideRender": false,
+        "modifiers": [
+          {
+            "name": "Surface Deform",
+            "viewport": true,
+            "render": true
+          },
+          {
+            "name": "Long hair",
+            "viewport": true,
+            "render": true
+          }
+        ]
+      },
+      {
+        "object": "long hair strands",
+        "originalType": "CURVES",
+        "rawCurves": 30,
+        "rawPoints": 360,
+        "evaluatedType": "CURVES",
+        "evaluatedCurves": 30,
+        "evaluatedPoints": 360,
+        "evaluationMode": "VIEWPORT",
+        "originalHideViewport": false,
+        "originalHideRender": false,
+        "modifiers": [
+          {
+            "name": "Surface Deform",
+            "viewport": true,
+            "render": true
+          },
+          {
+            "name": "GeometryNodes",
+            "viewport": true,
+            "render": true
+          }
+        ]
+      },
+      {
+        "object": "eyebrows.001",
+        "originalType": "CURVES",
+        "rawCurves": 88,
+        "rawPoints": 386,
+        "evaluatedType": "CURVES",
+        "evaluatedCurves": 340,
+        "evaluatedPoints": 830,
+        "evaluationMode": "VIEWPORT",
+        "originalHideViewport": false,
+        "originalHideRender": true,
+        "modifiers": [
+          {
+            "name": "Surface Deform",
+            "viewport": true,
+            "render": true
+          },
+          {
+            "name": "Eeybrows",
+            "viewport": true,
+            "render": true
+          }
+        ]
+      }
+    ]
+  },
+  "visualStatus": "visualHold / known ear contacts. This geometry audit is not a rendering or aesthetic pass."
+}
