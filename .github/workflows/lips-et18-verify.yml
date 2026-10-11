@@ -41,6 +41,7 @@ jobs:
           git rev-parse HEAD > lip18-evidence/SOURCE_COMMIT.txt
           sha256sum kaopu-unified-human-workbench/lip-structure/preview.html > lip18-evidence/INPUT_PREVIEW_SHA256.txt
           node kaopu-unified-human-workbench/lip-structure/upgrade-et18.cjs
+          node kaopu-unified-human-workbench/lip-structure/refine-et18.cjs
           node kaopu-unified-human-workbench/lip-structure/build.cjs
           node kaopu-unified-human-workbench/lip-structure/verify-et18.cjs --unit
           python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/lips-http.log 2>&1 &
@@ -66,7 +67,7 @@ jobs:
           git diff --exit-code HEAD -- kaopu-unified-human-workbench/eye-materials kaopu-unified-human-workbench/identity-lab kaopu-unified-human-workbench/full kaopu-unified-human-workbench/face-transfer kaopu-unified-human-workbench/eye-transfer
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add kaopu-unified-human-workbench/lip-structure/LipState.mjs kaopu-unified-human-workbench/lip-structure/LipViewer.mjs kaopu-unified-human-workbench/lip-structure/LipUI.mjs kaopu-unified-human-workbench/lip-structure/build.cjs kaopu-unified-human-workbench/lip-structure/preview.html kaopu-unified-human-workbench/lip-structure/BUILD.json
+          git add kaopu-unified-human-workbench/lip-structure
           if ! git diff --cached --quiet; then git commit -m 'build(lips): ET18 editable sources and preview after inherited browser regressions [skip ci]'; git push origin HEAD:fix/lips-et18-materials-20261011; fi
           SHA=$(git rev-parse HEAD)
           echo "$SHA" > lip18-evidence/PUBLISHED_COMMIT.txt
