@@ -8,7 +8,7 @@ import { KP_STONE_SLATE_WGSL } from './mothers/stone-slate.mjs';
 import { KP_METAL_WGSL } from './metal.mjs';
 import { selectStageSource } from './stage-source.mjs';
 import { skipZeroContributions } from './evaluation.mjs';
-export const VIEWS={exterior:{eye:[104,72,-124],target:[4,2,0],cut:0},section:{eye:[80,98,-82],target:[3,1,0],cut:1},hall:{eye:[27,18,-47],target:[0,2,-24],cut:2},warehouse:{eye:[29,20,-21],target:[0,3,4],cut:1},freight:{eye:[81,43,85],target:[10,3,23],cut:1},street:{eye:[46,16,-70],target:[0,5,-26],cut:0}};
+export const VIEWS={exterior:{eye:[78,48,-88],target:[4,3,0],cut:0},section:{eye:[66,81,-66],target:[3,1,0],cut:1},hall:{eye:[30,24,-41],target:[0,1,-23],cut:1},warehouse:{eye:[29,20,-21],target:[0,3,4],cut:1},freight:{eye:[65,32,65],target:[12,3,22],cut:1},street:{eye:[46,16,-70],target:[0,5,-26],cut:0}};
 const HEADER=String.raw`
 struct Params { eye:vec4<f32>,forward:vec4<f32>,right:vec4<f32>,up:vec4<f32>,resolution:vec4<f32>,options:vec4<f32>,clock:vec4<f32>,counts:vec4<u32>,tile:vec4<u32> };
 struct ItemRecord {position:vec4<f32>,size:vec4<f32>};
@@ -40,11 +40,13 @@ fn surface(f:Field,p:vec3<f32>,n:vec3<f32>,fp:f32)->KpSurface {
  if(f.mat==8u){m=KpSurface(0.,vec3<f32>(.075,.15,.16)*(1.+noise*.25),.17);}
  if(f.mat==10u){m=KpSurface(0.,mix(vec3<f32>(.21,.23,.22),vec3<f32>(.27,.29,.27),noise),.95);let line=abs(abs(p.x)-.5);if(p.z< -42.&&p.z> -53.&&line<.07){m.albedo=vec3<f32>(.69,.62,.39);}}
  if(f.mat==11u){m=KpSurface(0.,vec3<f32>(1.,.32,.03),.5);}
+ if(f.mat==12u){m=KpSurface(0.,vec3<f32>(.023,.065,.054),.42);}
+ if(f.mat==13u){m=KpSurface(0.,vec3<f32>(.82,.72,.48),.55);}
  return m;
 }
 fn sky(rd:vec3<f32>)->vec3<f32>{return mix(vec3<f32>(.64,.71,.72),vec3<f32>(.28,.46,.57),smoothstep(-.2,1.,rd.y));}
 @vertex fn vs(@builtin(vertex_index) i:u32)->@builtin(position) vec4<f32>{let p=array<vec2<f32>,3>(vec2<f32>(-1,-1),vec2<f32>(3,-1),vec2<f32>(-1,3));return vec4<f32>(p[i],0.,1.);}
-@fragment fn shade(@builtin(position) pix:vec4<f32>)->@location(0) vec4<f32>{let q=vec2<u32>(pix.xy)-u.tile.xy;let h=hits[q.y*32u+q.x];let rd=ray(pix.xy);var color=sky(rd);if(h.status==2u){return vec4<f32>(1.,0.,1.,1.);}if(h.status==1u){let p=u.eye.xyz+rd*h.distance;let f=sceneField(p);let n=normal(p,h.distance);if(u.options.w>.5){return vec4<f32>(fract(vec3<f32>(.37,.57,.79)*f32(f.mat)),1.);}let light=normalize(vec3<f32>(-3.,7.,-4.));let nl=max(dot(n,light),0.);let sh=shadow(p,n,light);let fp=max(.0003,h.distance*.96/u.resolution.y);let m=surface(f,p,n,fp);let ao=clamp(sceneField(p+n*.5).d/.5,.2,1.);let ambient=(.27+.15*max(n.y,0.))*ao;let spec=pow(max(dot(n,normalize(light-rd)),0.),mix(90.,4.,m.roughness))*(1.-m.roughness)*sh*.35;color=m.albedo*(ambient+nl*sh*1.25)+vec3<f32>(spec);if(f.mat==11u){color=m.albedo*(.9+.1*sin(u.clock.x*3.));}if(f.mat==8u){color=mix(color,sky(reflect(rd,n)),.28);}color=mix(color,vec3<f32>(.54,.61,.63),1.-exp(-h.distance*.0018));}
+@fragment fn shade(@builtin(position) pix:vec4<f32>)->@location(0) vec4<f32>{let q=vec2<u32>(pix.xy)-u.tile.xy;let h=hits[q.y*32u+q.x];let rd=ray(pix.xy);var color=sky(rd);if(h.status==2u){return vec4<f32>(1.,0.,1.,1.);}if(h.status==1u){let p=u.eye.xyz+rd*h.distance;let f=sceneField(p);let n=normal(p,h.distance);if(u.options.w>.5){return vec4<f32>(fract(vec3<f32>(.37,.57,.79)*f32(f.mat)),1.);}let light=normalize(vec3<f32>(-3.,7.,-4.));let nl=max(dot(n,light),0.);let sh=shadow(p,n,light);let fp=max(.0003,h.distance*.96/u.resolution.y);let m=surface(f,p,n,fp);let ao=clamp(sceneField(p+n*.5).d/.5,.2,1.);let ambient=(.27+.15*max(n.y,0.))*ao;let spec=pow(max(dot(n,normalize(light-rd)),0.),mix(90.,4.,m.roughness))*(1.-m.roughness)*sh*.35;color=m.albedo*(ambient+nl*sh*1.25)+vec3<f32>(spec);if(f.mat==11u){color=m.albedo*(.9+.1*sin(u.clock.x*3.));}if(f.mat==8u){color=mix(color,sky(reflect(rd,n)),.28);}color=mix(color,vec3<f32>(.54,.61,.63),1.-exp(-h.distance*.00025));}
  color=color/(vec3<f32>(1.)+color);color=pow(max(color,vec3<f32>(0.)),vec3<f32>(1./2.2));return vec4<f32>(color,1.);
 }
 `;

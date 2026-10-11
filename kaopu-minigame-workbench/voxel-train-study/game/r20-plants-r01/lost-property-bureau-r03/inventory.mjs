@@ -76,7 +76,7 @@ export function slotPosition(slotId, options = {}) {
     return [origin[0] + (slot.row - 1) * (options.rowPitch || 4.2) + (slot.face === 'A' ? -0.48 : 0.48), origin[1] + (slot.level - 1) * (options.levelPitch || 1.15) + (slot.cell ? Math.floor(cell / 3) * (options.levelPitch || 1.15) / 2 : 0), origin[2] + (slot.bay - 1) * (options.bayPitch || 1.2) + (slot.cell ? (cell % 3 - 1) * 0.36 : 0)];
   }
   const n = +slotId.slice(-2) - 1;
-  const origins = { receiving: [-23, 0.6, 27], inspection: [-6, 0.8, 25], handover: [-14, 0.85, -22], quarantine: [23, 0.5, 26], oversize: [23, 0.6, 15], vault: [-31, 0.8, 16] };
+  const origins = { receiving: [-23, 0.6, 27], inspection: [-6, 0.8, 25], handover: [-14, 1.3, -22], quarantine: [23, 0.5, 26], oversize: [23, 0.6, 15], vault: [-31, 0.8, 16] };
   const p = origins[slot.kind]; return [p[0] + (n % 8) * 2.2, p[1], p[2] + Math.floor(n / 8) * 2.5];
 }
 const materialize = (s, slotId) => s.slots[slotId] || (s.slots[slotId] = getSlot(slotId));
@@ -279,7 +279,31 @@ export function taskWaypoints(s, taskOrId, layout = {}) {
   const from = getSlot(task.from.slotId), to = getSlot(task.to.slotId), laneY = (layout.transportFloor ?? 0.65) + i.dimensions[1] / 2;
   const aisle = (slot, p) => slot.kind === 'rack' ? p[0] + (slot.face === 'A' ? -1.05 : 1.05) : p[0];
   const ax = aisle(from, a), bx = aisle(to, b), crossZ = (from.kind === 'handover' || to.kind === 'handover') ? (layout.frontCrossAisle ?? -17) : (layout.rearCrossAisle ?? 13);
-  return [a, [ax, a[1], a[2]], [ax, laneY, a[2]], [ax, laneY, crossZ], [bx, laneY, crossZ], [bx, laneY, b[2]], [bx, b[1], b[2]], b];
+  // Clear the public counter before lowering, and lift before approaching it.
+  // This prevents both static and moving parcels from intersecting its body.
+  const base = [a, [ax, a[1], a[2]]];
+  if (from.kind === 'handover') base.push([ax, a[1], -21]);
+  base.push([ax, laneY, from.kind === 'handover' ? -21 : a[2]], [ax, laneY, crossZ], [bx, laneY, crossZ]);
+  if (to.kind === 'handover') base.push([bx, b[1], crossZ], [bx, b[1], b[2]]);
+  else base.push([bx, laneY, b[2]], [bx, b[1], b[2]]);
+  base.push(b);
+  // Partitions are at z=-20 and z=22, with door centres x=0, ±16, ±32.
+  // Every crossing gets explicit approach and exit nodes at a door centre.
+  // The front approach is the clear z=-17 cross aisle, exit z=-21;
+  // the rear approaches are z=21 and z=23 on the two sides of its wall.
+  const gates = [{ wall: -20, lower: -21, upper: layout.frontCrossAisle ?? -17 }, { wall: 22, lower: 21, upper: 23 }];
+  const path = [base[0]];
+  for (let n = 1; n < base.length; n++) {
+    const fromPoint = base[n - 1], toPoint = base[n];
+    const crossed = gates.filter(g => (fromPoint[2] - g.wall) * (toPoint[2] - g.wall) < 0).sort((g, h) => toPoint[2] > fromPoint[2] ? g.wall - h.wall : h.wall - g.wall);
+    for (const gate of crossed) {
+      const increasing = toPoint[2] > fromPoint[2], beforeZ = increasing ? gate.lower : gate.upper, afterZ = increasing ? gate.upper : gate.lower;
+      const doorX = Math.max(-32, Math.min(32, Math.round(toPoint[0] / 16) * 16));
+      path.push([fromPoint[0], fromPoint[1], beforeZ], [doorX, fromPoint[1], beforeZ], [doorX, toPoint[1], afterZ], [toPoint[0], toPoint[1], afterZ]);
+    }
+    path.push(toPoint);
+  }
+  return path;
 }
 export function itemPosition(s, itemOrId, layout = {}) {
   const i = typeof itemOrId === 'string' ? itemById(s, itemOrId) : itemOrId;

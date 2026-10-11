@@ -11,6 +11,34 @@ fn field(d:f32,mat:u32,p:vec3<f32>,seed:f32)->Field {let rain=(1.-smoothstep(.15
 fn take(a:Field,b:Field)->Field {if(b.d<a.d){return b;}return a;}
 fn repeatX(x:f32,pitch:f32,limit:f32)->f32 {return x-clamp(round(x/pitch),-limit,limit)*pitch;}
 fn opening(p:vec3<f32>,w:f32,h:f32,depth:f32)->f32 {return min(box(p-vec3<f32>(0.,-.3,0.),vec3<f32>(w,h-.3,depth)),cylinder(p.xzy-vec3<f32>(0.,0.,h-.6),w,depth));}
+fn glyph(code:u32)->u32 {switch(code){
+case 65u:{return 18415150u;}
+case 66u:{return 16301615u;}
+case 68u:{return 16303663u;}
+case 69u:{return 32554047u;}
+case 70u:{return 1096767u;}
+case 71u:{return 32044094u;}
+case 72u:{return 18415153u;}
+case 73u:{return 32641183u;}
+case 75u:{return 18128177u;}
+case 76u:{return 32539681u;}
+case 78u:{return 18667121u;}
+case 79u:{return 15255086u;}
+case 82u:{return 18136623u;}
+case 83u:{return 16267326u;}
+case 84u:{return 4329631u;}
+case 85u:{return 15255089u;}
+case 67u:{return 31491134u;}
+case 38u:{return 23894310u;}
+case 49u:{return 14815428u;}
+case 57u:{return 15235630u;}
+case 46u:{return 4194304u;}
+default:{return 0u;}}}
+fn textRow(p:vec3<f32>,line:u32)->f32 {
+let title=array<u32,37>(72u,79u,78u,71u,32u,75u,79u,78u,71u,32u,71u,69u,78u,69u,82u,65u,76u,32u,76u,79u,83u,84u,32u,38u,32u,70u,79u,85u,78u,68u,32u,79u,70u,70u,73u,67u,69u);
+let year=array<u32,9>(65u,46u,68u,46u,32u,49u,57u,49u,49u);
+let scale=select(.049,.043,line==1u);let count=select(37. ,9. ,line==1u);let baseline=select(10.39,9.97,line==1u);let q=vec3<f32>(p.x+count*scale*3.,baseline-p.y,p.z+29.785);var d=100.;let cell=i32(floor(q.x/(scale*6.)));for(var g=-1;g<=1;g++){let index=cell+g;if(index<0||f32(index)>=count){continue;}var code=0u;if(line==0u){code=title[u32(index)];}else{code=year[u32(index)];}let mask=glyph(code);let local=vec2<f32>(q.x-f32(index)*scale*6.,q.y+2.5*scale);let ix=i32(floor(local.x/scale));let iy=i32(floor(local.y/scale));for(var dy=-1;dy<=1;dy++){for(var dx=-1;dx<=1;dx++){let xx=ix+dx;let yy=iy+dy;if(xx<0||xx>4||yy<0||yy>4){continue;}if((mask&(1u<<u32(yy*5+xx)))!=0u){let r=vec3<f32>(local.x-(f32(xx)+.5)*scale,local.y-(f32(yy)+.5)*scale,q.z);d=min(d,box(r,vec3<f32>(scale*.43,scale*.43,.017)));}}}}return d;}
+fn entranceText(p:vec3<f32>)->f32 {let bound=box(p-vec3<f32>(0.,10.2,-29.8),vec3<f32>(6.2,.5,.05));if(bound>.1){return 100.;}return min(textRow(p,0u),textRow(p,1u));}
 fn architecture(p:vec3<f32>)->Field {
  var f=field(box(p-vec3<f32>(0.,-.24,0.),vec3<f32>(36.5,.24,32.5)),3u,p,1.);
  // Three metres of street-facing arcade are part of the 72 x 64 footprint.
@@ -20,6 +48,7 @@ fn architecture(p:vec3<f32>)->Field {
  let highWindow=box(vec3<f32>(x,p.y-7.1,p.z+28.8),vec3<f32>(.68,1.25,.9));
  let door=box(p-vec3<f32>(0.,1.65,-28.8),vec3<f32>(2.2,1.7,1.));front=max(front,-min(door,min(lowWindow,highWindow)));
  f=take(f,field(shell(front,p),1u,p,bay));
+ if(u.options.x<.5){f=take(f,field(box(p-vec3<f32>(0.,10.25,-29.63),vec3<f32>(6.6,.58,.13)),12u,p,1.));f=take(f,field(entranceText(p),13u,p,1.));}
  let windowFrame=max(box(vec3<f32>(x,p.y-7.1,p.z+29.26),vec3<f32>(.82,1.41,.16)),-box(vec3<f32>(x,p.y-7.1,p.z+29.26),vec3<f32>(.65,1.24,.3)));
  f=take(f,field(shell(windowFrame,p),3u,p,1.));
  // Recessed dark glass is a material surface; it is not an image texture.
@@ -36,8 +65,7 @@ fn architecture(p:vec3<f32>)->Field {
  let upperPilaster=box(vec3<f32>(cx,p.y-7.35,p.z+29.36),vec3<f32>(.22,2.25,.22));
  f=take(f,field(shell(upperPilaster,p),3u,p,1.));
  // Side and rear warehouse walls have real tall openings.
- let wz=repeatX(p.z-1.,6.,4.);var sides=box(p-vec3<f32>(0.,4.8,1.6),vec3<f32>(36.,4.8,30.4));
- sides=max(sides,-box(p-vec3<f32>(0.,4.85,1.6),vec3<f32>(35.5,4.9,29.9)));
+ let wz=repeatX(p.z-1.,6.,4.);var sides=min(box(vec3<f32>(abs(p.x)-35.75,p.y-4.8,p.z-1.6),vec3<f32>(.25,4.8,30.4)),box(p-vec3<f32>(0.,4.8,31.75),vec3<f32>(36.,4.8,.25)));
  sides=max(sides,-box(vec3<f32>(abs(p.x)-36.,p.y-5.5,wz),vec3<f32>(1.,1.8,.85)));
  sides=max(sides,-box(p-vec3<f32>(15.,2.1,31.8),vec3<f32>(3.4,2.2,1.)));
  sides=max(sides,-box(p-vec3<f32>(-15.,2.1,31.8),vec3<f32>(3.4,2.2,1.)));
@@ -71,7 +99,7 @@ fn rackField(p:vec3<f32>)->Field {
  let bound=box(p-vec3<f32>(-31.5+row*4.2,3.28,-2.),vec3<f32>(.96,3.38,12.05));
  var d=min(box(vec3<f32>(abs(rx)-.90,p.y-3.28,abs(qz)-.55),vec3<f32>(.045,3.38,.045)),box(vec3<f32>(rx,ly,p.z+2.),vec3<f32>(.96,.045,12.05)));
  // Subdividers in the six small-item rows only; not 8,640 separate objects.
- if(row>9.5){let sz=repeatX(qz,.4,1.);d=min(d,box(vec3<f32>(rx,p.y-3.3,sz),vec3<f32>(.90,3.3,.018)));let halfLevel=repeatX(p.y-.575,.575,5.);d=min(d,box(vec3<f32>(rx,halfLevel,p.z+2.),vec3<f32>(.9,.018,12.)));}
+ if(row>9.5){let sz=repeatX(qz,.4,1.);d=min(d,box(vec3<f32>(rx,p.y-3.3,sz),vec3<f32>(.90,3.3,.018)));let halfLevel=p.y-(.3+clamp(round((p.y-.3)/.575),0.,11.)*.575);d=min(d,box(vec3<f32>(rx,halfLevel,p.z+2.),vec3<f32>(.9,.018,12.)));}
  return field(max(d,bound),5u,vec3<f32>(rx,p.y,qz),row);
 }
 fn machineField(p:vec3<f32>)->Field {
@@ -89,13 +117,22 @@ fn machineField(p:vec3<f32>)->Field {
  pipe=min(pipe,capsule(p,vec3<f32>(34.,4.1,22.),vec3<f32>(34.,4.1,-18.),.18));
  pipe=min(pipe,capsule(p,vec3<f32>(34.,4.1,-18.),vec3<f32>(0.,4.1,-18.),.18));
  pipe=min(pipe,capsule(p,vec3<f32>(0.,4.1,-18.),vec3<f32>(0.,1.45,-18.),.18));
+ pipe=min(pipe,capsule(p,vec3<f32>(34.,4.1,22.),vec3<f32>(15.,4.1,22.),.12));
+ pipe=min(pipe,capsule(p,vec3<f32>(15.,4.1,22.),vec3<f32>(15.,4.1,27.),.12));
+ pipe=min(pipe,capsule(p,vec3<f32>(15.,4.1,27.),vec3<f32>(15.,.65,27.),.12));
+ pipe=min(pipe,capsule(p,vec3<f32>(34.,4.1,17.),vec3<f32>(34.,1.45,17.),.12));
+ pipe=min(pipe,capsule(p,vec3<f32>(34.,1.45,17.),vec3<f32>(31.7,1.45,17.),.12));
  f=take(f,field(pipe,9u,p,1.));
  // Separate lower condensate return and feedwater tank; no disconnected pipes.
  var ret=capsule(p,vec3<f32>(0.,.65,-18.),vec3<f32>(33.,.65,-18.),.11);
  ret=min(ret,capsule(p,vec3<f32>(33.,.65,-18.),vec3<f32>(33.,.65,25.),.11));
  ret=min(ret,capsule(p,vec3<f32>(33.,.65,25.),vec3<f32>(43.,.65,25.),.11));
+ ret=min(ret,capsule(p,vec3<f32>(15.,.65,27.),vec3<f32>(33.,.65,27.),.09));
+ ret=min(ret,capsule(p,vec3<f32>(33.,.65,27.),vec3<f32>(33.,.65,25.),.09));
+ ret=min(ret,capsule(p,vec3<f32>(31.7,.65,17.),vec3<f32>(33.,.65,17.),.09));
  f=take(f,field(ret,5u,p,1.));
  // Working cross conveyor: phase comes from the same persisted world clock.
+ f=take(f,field(cylinder((p-vec3<f32>(32.,1.15,17.)).yxz,.37,.65),5u,p,4.));
  let conveyorBounds=box(p-vec3<f32>(0.,1.05,17.),vec3<f32>(31.5,.18,.65));
  f=take(f,field(conveyorBounds,5u,p,4.));
  let slatX=repeatX(p.x-u.clock.x*.4,.55,60.);let slats=max(box(vec3<f32>(slatX,p.y-1.24,p.z-17.),vec3<f32>(.20,.065,.61)),box(p-vec3<f32>(0.,1.25,17.),vec3<f32>(31.5,.2,.65)));

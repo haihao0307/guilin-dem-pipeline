@@ -184,7 +184,7 @@ test('item centres rest above shelf floors; receiving is rear +z and handover fr
   }
   assert.equal(I.slotPosition('RECEIVING-01')[2], 27); assert.equal(I.slotPosition('HANDOVER-01')[2], -22);
   const a = approve(s), move = pick(s, a.claimId), path = I.taskWaypoints(s, move.taskId);
-  assert.deepEqual(path[0], I.itemPosition(s, 'LP-0001')); assert.equal(path[3][2], -17); assert.equal(path.at(-1)[2], -22); assert.equal(path.length, 8);
+  assert.deepEqual(path[0], I.itemPosition(s, 'LP-0001')); assert.equal(path[3][2], -17); assert.equal(path.at(-1)[2], -22); assert.ok(path.length >= 8);
 });
 test('cancelling only an in-progress pick safely returns it without trapping its valid claim', () => {
   const s = I.createInventory(), a = approve(s), task = pick(s, a.claimId); pickup(s, task.taskId);
@@ -192,4 +192,30 @@ test('cancelling only an in-progress pick safely returns it without trapping its
   assert.equal(s.items['LP-0001'].location.type, 'carrier'); arrive(s, task.taskId);
   const returnId = s.items['LP-0001'].activeTaskId; pickup(s, returnId); arrive(s, returnId);
   assert.equal(s.claims[a.claimId].status, 'approved'); assert.equal(s.items['LP-0001'].state, 'stored'); assert.ok(pick(s, a.claimId).taskId); I.assertInvariants(s);
+});
+test('outgoing handover and return paths use the nearest front door with nodes on both sides', () => {
+  const s = I.createInventory(), a = approve(s), move = pick(s, a.claimId), item = s.items['LP-0001'];
+  const outgoing = I.taskWaypoints(s, move.taskId), bottom = p => p[1] - item.dimensions[1] / 2;
+  assert.equal(I.slotPosition(move.targetSlotId)[1], 1.3);
+  assert.ok(outgoing.some(p => p[0] === -16 && p[2] === -17));
+  assert.ok(outgoing.some(p => p[0] === -16 && p[2] === -21));
+  for (let n = 1; n < outgoing.length; n++) {
+    const from = outgoing[n - 1], to = outgoing[n];
+    if ((from[2] + 20) * (to[2] + 20) < 0) { assert.equal(from[0], -16); assert.equal(to[0], -16); }
+    if (to[2] <= -21) assert.ok(bottom(to) >= 1.3 - 1e-9);
+  }
+  pickup(s, move.taskId); arrive(s, move.taskId); assert.ok(Math.abs(I.itemPosition(s, 'LP-0001')[1] - item.dimensions[1] / 2 - 1.3) < 1e-9);
+  I.cancelClaim(s, command({ claimId: a.claimId })); const returning = I.taskWaypoints(s, s.items['LP-0001'].activeTaskId);
+  assert.ok(returning.some(p => p[0] === -16 && p[2] === -21)); assert.ok(returning.some(p => p[0] === -16 && p[2] === -17));
+  for (let n = 1; n < returning.length; n++) if ((returning[n - 1][2] + 20) * (returning[n][2] + 20) < 0) { assert.equal(returning[n - 1][0], -16); assert.equal(returning[n][0], -16); }
+});
+test('incoming storage paths cross the rear partition only through a door centre at both side nodes', () => {
+  const s = I.createInventory(); I.intake(s, command({ item: newItem() })); I.inspectItem(s, command({ itemId: 'NEW-1', safeToStore: true, inspectorRef: 'INSPECTOR-1' }));
+  const move = I.requestMove(s, command({ itemId: 'NEW-1' })), path = I.taskWaypoints(s, move.taskId);
+  assert.equal(path[0][2], 27); assert.ok(path.some(p => p[0] === -16 && p[2] === 23)); assert.ok(path.some(p => p[0] === -16 && p[2] === 21));
+  let crossings = 0;
+  for (let n = 1; n < path.length; n++) if ((path[n - 1][2] - 22) * (path[n][2] - 22) < 0) {
+    assert.equal(path[n - 1][0], -16); assert.equal(path[n][0], -16); assert.equal(path[n - 1][2], 23); assert.equal(path[n][2], 21); crossings++;
+  }
+  assert.equal(crossings, 1); I.assertInvariants(s);
 });
