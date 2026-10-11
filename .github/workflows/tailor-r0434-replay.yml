@@ -18,21 +18,26 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Preserve exact first public acceptance including the failed comparison
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Retrieve original public acceptance artifact
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          repository: haihao0307/guilin-dem-pipeline
+          run-id: 38110665349
+          name: tailor-r0434-actual-public-evidence
+          path: original-public-evidence
+      - name: Preserve exact first public acceptance including failed comparison
         run: |
           mkdir -p replay-evidence
           python - <<'PY'
-          import urllib.request,os,hashlib,zipfile,io
+          import hashlib,shutil
           from pathlib import Path
-          req=urllib.request.Request('https://api.github.com/repos/haihao0307/guilin-dem-pipeline/actions/artifacts/11692510757/zip',headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
-          data=urllib.request.urlopen(req,timeout=90).read()
-          assert hashlib.sha256(data).hexdigest()=='f18fbf1038da6b442218fcc3f2a515e399522ed784fc33ca158458036cd1cd79'
+          expected={'R0434_PUBLIC_REPORT.json':'cef725c76807ee40389010a52cfa8b8a1798487537e673bcc4fa245d00c963ad','R0434_SAFETY_PUBLIC_REPORT.json':'d6dde95f09d19dfc38111749512fa89a09d30e7c6bfc3461baac6bfad95127b8','R0434_FRESH_PUBLIC_REPORT.json':'264bc9137875c586a2afc283ab4d77cc740f3a5851c7c64c291f7d80aa0fedcc','R0434_PUBLIC_BYTES.json':'0c2c13a3aa0c973e076a4dbd369148df1187c2f74f05870319e4eb9373662b67','public-fresh.log':'4758f734e7a1a7f9261756c536a85ae03f4694379ba41eb7d66fc9e171516c6c','finish.log':'1f2754f76950405a2816fc4c67f78be186681cbc103e31e4a8032f7e06bab827'}
           p=Path('kaopu-tailor-workbench/presets/r04/qa-r0434-first-public');p.mkdir()
-          with zipfile.ZipFile(io.BytesIO(data)) as z:
-            for n in ['R0434_PUBLIC_REPORT.json','R0434_SAFETY_PUBLIC_REPORT.json','R0434_FRESH_PUBLIC_REPORT.json','R0434_PUBLIC_BYTES.json','public-fresh.log','finish.log']:
-              (p/n).write_bytes(z.read(n))
+          for n,h in expected.items():
+            f=Path('original-public-evidence')/n
+            assert hashlib.sha256(f.read_bytes()).hexdigest()==h,n
+            shutil.copy2(f,p/n)
           PY
       - name: Prepare actual browser
         run: |
@@ -44,6 +49,7 @@ jobs:
       - name: Preserve complete native packets and visual evidence
         if: always()
         run: |
+          mkdir -p replay-evidence
           P=kaopu-tailor-workbench/presets/r04
           cp "$P/qa_replay_r0434.py" replay-evidence/
           cp "$P/R0434_REPLAY_REPORT.json" replay-evidence/ 2>/dev/null || true
