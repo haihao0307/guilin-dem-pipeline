@@ -1,0 +1,5 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {makeBuildingRecipe}from'./building-plan.mjs';import{makeSurfacePlan}from'./surface-plan.mjs';
+const recipe=makeBuildingRecipe(),plan=makeSurfacePlan(recipe);
+test('phase setbacks lie inside shared water domains with physical coat padding',()=>{assert.equal(plan.domains.length,12);for(const w of recipe.walls){const s=plan.walls.find(s=>s.wallId===w.id),d=plan.domains.find(d=>d.id===s.weatherDomain);for(const u of [w.start,w.end])for(const y of [w.bottom,w.bottom+w.height])for(const z of [-.08,.08]){const p=w.alongX?[u,y,w.fixed+z]:[w.fixed+z,y,u];p.forEach((v,i)=>assert(Math.abs(v-d.parentOriginMetres[i])<=d.fullDimensionsMetres[i]/2+1e-8,w.id+' domain axis '+i));}}});
+test('plaster field does not stretch with tower or restart at an extension',()=>{for(const d of plan.domains){const group=plan.walls.filter(w=>w.weatherDomain===d.id),ref=group[0].coatings[0].params;assert.deepEqual(ref.half,[1.8,1.8]);for(const w of group)for(const c of w.coatings){assert.deepEqual(c.params.center,ref.center);assert.deepEqual(c.params.half,ref.half);}}});

@@ -27,13 +27,13 @@ jobs:
         with:
           node-version: 22.23.3
       - name: Lock original material and geometry contract
-        run: node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/building-plan.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/coated-brick-visibility.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/plaster-native/plaster-native.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/weather-cache/cache.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/brick-native/brick-native.test.mjs
+        run: node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/building-plan.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/rescue-contract.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/surface-plan.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/coated-brick-visibility.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/plaster-native/plaster-native.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/plaster-native/metric-field-domain.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/weather-cache/cache.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/brick-native/brick-native.test.mjs
       - name: Install official pinned browser test runtime
         run: |
           npm install --prefix "$RUNNER_TEMP/room-browser" --registry=https://registry.npmjs.org --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/room-browser/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/room-browser/node_modules" >> "$GITHUB_ENV"
-      - name: Full three-unit original-material completed GPU frames
+      - name: Full ten-storey original-material completed GPU frames
         timeout-minutes: 11
         run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/qa/building-scene.cjs
       - name: Preserve successful and failed evidence
