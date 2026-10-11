@@ -1,0 +1,167 @@
+name: Ear R02 build and real browser acceptance
+on:
+  push:
+    branches: [fix/ear-growth-r02-recovery-20261011]
+    paths:
+      - kaopu-unified-human-workbench/ear-growth/**
+      - .github/workflows/ear-r02-build.yml
+permissions:
+  contents: read
+concurrency:
+  group: ear-r02-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      published_sha: ${{ steps.publish.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: kaopu-unified-human-workbench
+      - name: Preserve exact transport for integrity diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: ear-r02-transport-${{ github.run_id }}
+          path: kaopu-unified-human-workbench/ear-growth/_source_transfer
+          if-no-files-found: ignore
+          retention-days: 3
+      - name: Recover checksum-locked UTF-8 source only
+        run: |
+          python3 - <<'PY'
+          import pathlib,json,base64,zlib,hashlib
+          root=pathlib.Path('kaopu-unified-human-workbench/ear-growth'); transfer=root/'_source_transfer'
+          if transfer.exists():
+            m=json.loads((transfer/'manifest.json').read_text())
+            assert m['schema']=='kaopu/ear-source-transfer@1'
+            assert m['parts']==['part-0.b64','part-1.b64','part-2.b64']
+            repairs=json.loads((transfer/'repairs.json').read_text()) if (transfer/'repairs.json').exists() else {}
+            chunks=[]
+            for name in m['parts']:
+              text=(transfer/name).read_text().strip()
+              for patch in sorted(repairs.get(name,[]),key=lambda p:p['start'],reverse=True):
+                assert text[patch['start']:patch['end']]==patch['old']
+                text=text[:patch['start']]+patch['new']+text[patch['end']:]
+              chunks.append(text)
+            raw=zlib.decompress(base64.b64decode(''.join(chunks),validate=True));assert len(raw)<1000000
+            assert hashlib.sha256(raw).hexdigest()==m['uncompressedSHA256'],'Transport integrity failure: do not publish'
+            files=json.loads(raw)
+            allowed={'EarParameters.mjs','EarMath.mjs','EarGuard.mjs','EarSurface.mjs','EarState.mjs','EarMaterial.mjs','EarViewer.mjs','EarUI.mjs','layout.css','build.cjs','unit.mjs','verify.cjs','README.md','RESEARCH.md','THIRD_PARTY.md'}
+            assert {f['path'] for f in files}==allowed and len(files)==len(allowed)
+            for f in files:
+              data=f['content'].encode('utf-8');assert len(data)==f['bytes'];assert hashlib.sha256(data).hexdigest()==f['sha256'];(root/f['path']).write_bytes(data)
+            print('Verified',len(files),'source files:',m['uncompressedSHA256'])
+          PY
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Pinned build tools and unit checks
+        run: |
+          mkdir -p /tmp/ear-tools
+          cd /tmp/ear-tools
+          npm init -y >/dev/null
+          npm install esbuild@0.25.11
+          cd "$GITHUB_WORKSPACE"
+          mkdir -p ear-r02-build-evidence
+          node kaopu-unified-human-workbench/ear-growth/unit.mjs | tee ear-r02-build-evidence/unit.json
+          NODE_PATH=/tmp/ear-tools/node_modules node kaopu-unified-human-workbench/ear-growth/build.cjs >ear-r02-build-evidence/build-first.json
+          cp kaopu-unified-human-workbench/ear-growth/BUILD.json /tmp/ear-build-first.json
+          NODE_PATH=/tmp/ear-tools/node_modules node kaopu-unified-human-workbench/ear-growth/build.cjs >ear-r02-build-evidence/build-second.json
+          cmp /tmp/ear-build-first.json kaopu-unified-human-workbench/ear-growth/BUILD.json
+      - name: Commit only the isolated source and immutable preview
+        id: publish
+        run: |
+          set -eu
+          branch=fix/ear-growth-r02-recovery-20261011
+          remote=$(git ls-remote origin "refs/heads/$branch" | cut -f1)
+          test "$remote" = "$GITHUB_SHA" || { echo 'Branch changed: abort instead of overwrite'; exit 1; }
+          rm -rf kaopu-unified-human-workbench/ear-growth/_source_transfer
+          git add --all -- kaopu-unified-human-workbench/ear-growth
+          git diff --cached --name-only | tee ear-r02-build-evidence/changed-paths.txt
+          if git diff --cached --name-only | grep -v '^kaopu-unified-human-workbench/ear-growth/'; then exit 1; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if ! git diff --cached --quiet; then
+            git commit -m 'build(ears): freeze EAR-R02.0 authored regional morphology preview [skip ci]'
+            git push origin "HEAD:refs/heads/$branch"
+          fi
+          sha=$(git rev-parse HEAD)
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "$sha" > ear-r02-build-evidence/published-sha.txt
+          cp kaopu-unified-human-workbench/ear-growth/BUILD.json ear-r02-build-evidence/BUILD.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ear-r02-build-${{ github.run_id }}
+          path: |
+            ear-r02-build-evidence
+            kaopu-unified-human-workbench/ear-growth
+          retention-days: 14
+  browser:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: core
+            mode: core
+            shard: 0
+          - label: controls
+            mode: controls
+            shard: 0
+          - label: people-0
+            mode: people
+            shard: 0
+          - label: people-1
+            mode: people
+            shard: 1
+          - label: people-2
+            mode: people
+            shard: 2
+          - label: public
+            mode: public
+            shard: 0
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.build.outputs.published_sha }}
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: kaopu-unified-human-workbench/ear-growth
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Pinned browser and pixel tools
+        run: |
+          mkdir -p /tmp/ear-tools
+          cd /tmp/ear-tools
+          npm init -y >/dev/null
+          npm install playwright@1.56.1 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: Real rendered acceptance
+        env:
+          EAR_MODE: ${{ matrix.mode }}
+          EAR_SHARD: ${{ matrix.shard }}
+          EAR_OUT: ear-r02-browser-evidence
+          PUBLISHED_SHA: ${{ needs.build.outputs.published_sha }}
+          NODE_PATH: /tmp/ear-tools/node_modules
+        run: |
+          if [ "$EAR_MODE" = public ]; then
+            export EAR_URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$PUBLISHED_SHA/kaopu-unified-human-workbench/ear-growth/preview.html"
+          else
+            python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/ear-r02-http.log 2>&1 &
+          fi
+          node kaopu-unified-human-workbench/ear-growth/verify.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ear-r02-${{ matrix.label }}-${{ github.run_id }}
+          path: ear-r02-browser-evidence
+          retention-days: 14
