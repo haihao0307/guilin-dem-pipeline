@@ -143,6 +143,7 @@ uniform float coverageAA;
 uniform float fiberShadows;
 uniform float guideMode;
 uniform float coverageDepth;
+uniform float coverageSampleAA;
 uniform float ambientGain;
 varying float vFiberAcross;
 varying float vFiberRadius;
@@ -189,11 +190,11 @@ void main() {
   float alpha = fiberOpacity * fiberCoverage();
   if (alpha < 0.001) discard;
   if (coverageDepth > 0.5) {
-    vec3 sampleKey=fract(vec3(floor(gl_FragCoord.xy).xyx)*0.1031+vFiberRandom*19.19);
-    sampleKey+=dot(sampleKey,sampleKey.yzx+33.33);
-    float threshold=fract((sampleKey.x+sampleKey.y)*sampleKey.z);
-    if (alpha<=threshold) discard;
-    alpha=1.0;
+    float threshold=fract(floor(vFiberRandom*65535.0+0.5)*0.754877666);
+    if(coverageSampleAA>.5){
+      alpha=alpha>=.999?1.0:smoothstep(threshold-.065,threshold+.065,alpha);
+      if(alpha<=.001)discard;
+    }else{if(alpha<=threshold)discard;alpha=1.0;}
   }
   vec3 T = normalize(vFiberTangent);
   vec3 V = isOrthographic ? vec3(0.0, 0.0, 1.0) : normalize(vFiberViewPosition);
@@ -282,15 +283,16 @@ function applyCoverageMode(material) {
   const depthCoverage=record.coverageResolve==='depth';
   const useMSAA = !depthCoverage && record.coverageAA && record.coverageResolve !== 'blend' && record.samples > 1;
   const useBlend = !depthCoverage && !useMSAA && (record.coverageAA || material.uniforms.fiberOpacity.value < 1);
-  const changed = material.alphaToCoverage !== useMSAA || material.transparent !== useBlend;
-  material.alphaToCoverage = useMSAA;
+  const changed = material.alphaToCoverage !== (useMSAA || (depthCoverage && record.samples>1)) || material.transparent !== useBlend;
+  material.alphaToCoverage = useMSAA || (depthCoverage && record.samples>1);
+  material.uniforms.coverageSampleAA.value=depthCoverage && record.samples>1?1:0;
   material.transparent = useBlend;
   material.depthWrite = !useBlend;
   material.blending = depthCoverage?THREE.NoBlending:THREE.NormalBlending;
   material.uniforms.coverageDepth.value=depthCoverage?1:0;
   material.forceSinglePass = true;
   material.uniforms.coverageAA.value = record.coverageAA ? 1 : 0;
-  record.coverageMode = depthCoverage ? 'stable-strand-coverage-depth' : !record.coverageAA ? (useBlend ? 'hard-raster-alpha-blend' : 'hard-raster') :
+  record.coverageMode = depthCoverage ? 'continuous-strand-coverage-depth' : !record.coverageAA ? (useBlend ? 'hard-raster-alpha-blend' : 'hard-raster') :
     useMSAA ? 'analytic-alpha-to-coverage' : 'analytic-alpha-blend';
   record.coverageResolveFallback = record.coverageAA && record.coverageResolve === 'a2c' && record.samples <= 1 ?
     'A2C requested but current framebuffer has no multisample coverage; using analytic alpha blend' : null;
@@ -311,7 +313,7 @@ export function createFiberMaterial({color = '#21170f', roughness = 0.42,
       coverageAA: {value: coverageAA ? 1 : 0}, hairColor: {value: new THREE.Color(color)},
       roughness: {value: clamp(roughness, 0, 1)}, surfaceSpecular: {value: clamp(specular, 0, 0.25)},
       fiberOpacity: {value: clamp(opacity, 0, 1)}, fiberShadows: {value: shadows ? 1 : 0},
-      coverageDepth:{value:0}, guideMode: {value: guides ? 1 : 0}, ambientGain: {value: Math.max(0, ambientGain)},
+      coverageDepth:{value:0},coverageSampleAA:{value:0}, guideMode: {value: guides ? 1 : 0}, ambientGain: {value: Math.max(0, ambientGain)},
     }]),
     side: THREE.DoubleSide,
     depthTest: true,
@@ -459,6 +461,6 @@ export function fiberMaterialDiagnostics(material) {
     colorLinear: u.hairColor.value.toArray(), opacity: u.fiberOpacity.value,
     ambientGain: u.ambientGain.value, guides: u.guideMode.value > 0.5,
     limitations: ['no multiple scattering or deep opacity maps', 'no coloured shadow transmission',
-      'directional lights with PCF only', 'depth coverage uses stable spatial samples, not temporal reconstruction; sparse strands may show sampling noise'],
+      'directional lights with PCF only', 'continuous per-strand coverage; MSAA when available; no temporal reconstruction, sparse isolated strands may alias'],
   };
 }

@@ -41,7 +41,7 @@ export function enforceTrim(root,points,d){
 export function growthDirection(p,root,d){
  const w=zoneWeights(root),side=partSign(root,d),part=finitePart(root,d);
  // Point whorl, not an ear-to-ear transition belt.
- const wx=-.008,wz=.005,dx=root[0]-wx,dz=root[2]-wz,rad=Math.hypot(dx,dz),turn=.10+.29*Math.exp(-Math.pow(rad/.022,2));
+ const wx=-.008,wz=.005,dx=p[0]-wx,dz=p[2]-wz,rad=Math.hypot(dx,dz),turn=.32+1.15*Math.exp(-Math.pow(rad/.021,2));
  let x=(dx*Math.cos(turn)-dz*Math.sin(turn))/.065,z=(dx*Math.sin(turn)+dz*Math.cos(turn))/.065,y=-.08-.7*(1-w.crown);
  if(rad<.0015){x+=.10;z+=.08;}
  let authored;
@@ -54,4 +54,4 @@ export function growthDirection(p,root,d){
  return unit([x,y,z]);
 }
 export function coherentPhase(p){return .75*Math.sin(p[0]*91+p[2]*34)+.55*Math.sin(p[1]*83-p[2]*71);}
-export const TOPOLOGY_SPEC={version:'R13C-topology@1',units:'metre',whorlXZ:[-.008,.005],partExtent:'frontal scalp only; fades behind z=8–33mm',sideburnMinimumTipY:.278,napeMinimumTipY:.261,sharedInnerOuterField:true,innerCapMeshes:0,staticOnly:true};
+export const TOPOLOGY_SPEC={version:'R13C-topology@2',units:'metre',whorlXZ:[-.008,.005],partExtent:'frontal scalp only; fades behind z=8–33mm',sideburnMinimumTipY:.278,napeMinimumTipY:.261,sharedInnerOuterField:true,innerCapMeshes:0,staticOnly:true};
