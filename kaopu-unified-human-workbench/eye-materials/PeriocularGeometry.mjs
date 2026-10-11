@@ -28,7 +28,6 @@ function supportField(vertices,triangles){
  return (x,y)=>{if(x<lo[0]||x>hi[0]||y<lo[1]||y>hi[1])return null;const c=cell(x,y);let z=-Infinity;for(const[a,b,c0]of cells[c[1]*N+c[0]]){const d=(b[1]-c0[1])*(a[0]-c0[0])+(c0[0]-b[0])*(a[1]-c0[1]);if(Math.abs(d)<1e-14)continue;const u=((b[1]-c0[1])*(x-c0[0])+(c0[0]-b[0])*(y-c0[1]))/d,v=((c0[1]-a[1])*(x-c0[0])+(a[0]-c0[0])*(y-c0[1]))/d,w=1-u-v;if(Math.min(u,v,w)>=-1e-7)z=Math.max(z,u*a[2]+v*b[2]+w*c0[2]);}return Number.isFinite(z)?z:null;};
 }
 function fitCenter(points){
- // Least-squares sphere center of the current sclera, not an assumed 12mm ball.
  const A=Array.from({length:4},()=>Array(5).fill(0));
  for(const p of points){const a=[2*p[0],2*p[1],2*p[2],1],b=dot(p,p);for(let i=0;i<4;i++){for(let j=0;j<4;j++)A[i][j]+=a[i]*a[j];A[i][4]+=a[i]*b;}}
  for(let i=0;i<4;i++){let j=i;for(let k=i+1;k<4;k++)if(Math.abs(A[k][i])>Math.abs(A[j][i]))j=k;[A[i],A[j]]=[A[j],A[i]];const d=A[i][i];if(Math.abs(d)<1e-16)throw Error('Eye center fit is singular');for(let k=i;k<5;k++)A[i][k]/=d;for(let j=0;j<4;j++)if(j!==i){const d=A[j][i];for(let k=i;k<5;k++)A[j][k]-=d*A[i][k];}}
@@ -40,13 +39,13 @@ function measuredMargins(frame,local,eye,skinFaces,support){
  for(const ids of skinFaces){if(!ids.every(i=>delta.has(i)))continue;const cuts=[];for(let k=0;k<3;k++){const j=(k+1)%3,a=ids[k],b=ids[j],d=delta.get(a),e=delta.get(b);if((d>=0)===(e>=0))continue;const t=d/(d-e);cuts.push(local.get(a).map((v,k)=>v*(1-t)+local.get(b)[k]*t));}if(cuts.length===2)segments.push(cuts);}
  const knots=[0,.07,.16,.28,.40,.53,.66,.78,.90,.96,1],U=[],D=[];
  for(const s of knots){const x=s*frame.width,ys=[];for(const[a,b]of segments){if((a[0]<=x&&b[0]>=x)||(b[0]<=x&&a[0]>=x)){const d=b[0]-a[0];if(Math.abs(d)>1e-10){const t=(x-a[0])/d;ys.push(a[1]*(1-t)+b[1]*t);}}}let upper=frame.upper(s),lower=frame.lower(s);const near=ys.filter(y=>y<upper+.004&&y>lower-.004);if(near.length>=2){upper=Math.max(...near);lower=Math.min(...near);}if(s===0||s===1)upper=lower=(frame.upper(s)+frame.lower(s))*.5;U.push([s,upper]);D.push([s,lower]);}
- // Fixed low-order contour suppresses disjoint inner-corner intersections.
- // Original landmarks anchor both canthi. There is no camera-dependent mask.
  return{upper:makeSpline(U),lower:makeSpline(D),segments:segments.length,knots:{upper:U,lower:D}};
 }
-/** Native-topology eyelid deformation. Source is the same generated person.
- * Arc motion wraps the actual eyeball. No replacement head, second skin, scaled
- * eye, or hidden eyeball toggle. See RESEARCH_ET17.md for approximation limits. */
+/** Same native-topology skin and eye geometry. Rim sections and globe-arc
+ * correction are engineering approximations, not captured tissue dynamics.
+ * The correction is blended into the current pose at the canthi and orbit.
+ * No eye is hidden or scaled and no second face surface is introduced.
+ */
 export function installPeriocularGeometry(model){
  if(model.periocular)return model.periocular;
  const previous=model.compute.bind(model),archive=model.archive.bind(model),restore=model.restore.bind(model),P=model.positions,B=model.bodyCount,skin=model.eyeSurface.skin;
@@ -55,8 +54,7 @@ export function installPeriocularGeometry(model){
  const api={schema:LID_SCHEMA,settings:{...LID_DEFAULTS},before:P.slice(),open:null,openSignature:'',builds:0,report:null};
  function neutralState(s){const q=structuredClone(s);if(q.owners.expression==='anny'){q.anny.facialActions.eyeBlinkLeft=0;q.anny.facialActions.eyeBlinkRight=0;}return q;}
  function buildOpen(input){
-  const s=neutralState(input),signature=JSON.stringify([s,model.eyeSurface.settings,model.faceSurface.settings,model.identityLab?.shape]);
-  if(signature===api.openSignature)return;
+  const s=neutralState(input),signature=JSON.stringify([s,model.eyeSurface.settings,model.faceSurface.settings,model.identityLab?.shape]);if(signature===api.openSignature)return;
   previous(s);const open=P.slice();const profiles=binding.map(({eye,nodes})=>{const frame=eyeFrame(model,open,eye.side),local=new Map(nodes.map(i=>[i,frame.project(at(open,i))])),ocular=new Map(eye.vertices.map(i=>[i,frame.project(at(open,i))])),support=supportField(ocular,eye.triangles),sclera=eye.vertices.filter(i=>model.faceSurface.fields.legacy.types[i]===4).map(i=>ocular.get(i)),center=fitCenter(sclera),margin=measuredMargins(frame,local,eye,skinFaces,support);return{eye,nodes,frame,local,support,center,margin};});
   api.open={positions:open,profiles};api.openSignature=signature;api.builds++;
  }
@@ -67,21 +65,23 @@ export function installPeriocularGeometry(model){
    let edited=0,contact=0,radialError=0;
    for(const i of nodes){const q=local.get(i),u=q[0]/F.width;if(u<0||u>1)continue;const top=margin.upper(u),bottom=margin.lower(u),mid=(top+bottom)*.5,upper=q[1]>=mid,edge=upper?top:bottom,d=upper?q[1]-edge:edge-q[1];if(d<-.0025*scale||d>.016*scale)continue;
     const h=support(q[0],q[1]);if(h===null||q[2]<h-.0032*scale)continue;let out=q.slice();
-    const roll=(upper?s.upperRollMM:s.lowerRollMM)*.001*scale,band=s.marginBlendMM*.001*scale,corner=1+(.25*s.cornerRegularity)*(1-smooth(.02,.20,u));
-    const influence=Math.exp(-Math.pow(Math.abs(d)/band,4))*s.cornerRegularity;
-    // Rounded signed section continuously turning from skin to inner lid.
-    const target=h+roll*Math.tanh(d/(.00040*scale))*corner;
-    out[2]+=clamp(target-out[2],-.0012*scale,.0013*scale)*influence;
+    const roll=(upper?s.upperRollMM:s.lowerRollMM)*.001*scale,band=s.marginBlendMM*.001*scale,corner=1+(.25*s.cornerRegularity)*(1-smooth(.02,.20,u)),influence=Math.exp(-Math.pow(Math.abs(d)/band,4))*s.cornerRegularity;
+    const target=h+roll*Math.tanh(d/(.00040*scale))*corner;out[2]+=clamp(target-out[2],-.0012*scale,.0013*scale)*influence;
     if(blink>.00001){const seal=bottom+(top-bottom)*.20,eh=support(q[0],edge),sh=support(q[0],seal);if(eh!==null&&sh!==null){const alpha0=Math.atan2(edge-C[1],eh-C[2]),alpha1=Math.atan2(seal-C[1],sh-C[2]),w=1-smooth(.0018*scale,.012*scale,Math.max(d,0)),angle=(alpha1-alpha0)*blink*w,dy=out[1]-C[1],dz=out[2]-C[2],radius=Math.hypot(dy,dz);out[1]=C[1]+Math.sin(angle)*dz+Math.cos(angle)*dy;out[2]=C[2]+Math.cos(angle)*dz-Math.sin(angle)*dy;radialError=Math.max(radialError,Math.abs(Math.hypot(out[1]-C[1],out[2]-C[2])-radius));}}
     const hs=support(out[0],out[1]);
-    if(hs!==null&&blink>.72&&d>-.00045*scale&&d<.0013*scale){const sealBlend=smooth(.72,1,blink);out[2]+=Math.max(0,hs+.00010*scale-out[2])*sealBlend;}
+    if(hs!==null&&blink>.72&&d>-.00045*scale&&d<.0013*scale){const sealBlend=smooth(.72,1,blink);out[2]+=Math.max(0,hs+.00020*scale-out[2])*sealBlend;}
     if(hs!==null&&d>.00013*scale&&d<.010*scale&&q[2]>h-.00025*scale){out[2]=Math.max(out[2],hs+.00004*scale);contact++;}
+    // Preserve the original corner attachments and exterior orbital motion.
+    // Blend the correction relative to the current pose, not to the open pose.
+    const gate=smooth(.015,.22,u)*(1-smooth(.78,.985,u))*(1-smooth(.010*scale,.016*scale,Math.max(d,0)));
+    const base=F.project(at(api.before,i));out=out.map((v,k)=>base[k]+(v-base[k])*gate);
+    const envelope=support(out[0],out[1]);if(envelope!==null&&blink>.8&&d>-.0007*scale&&d<.0016*scale)out[2]+=Math.max(0,envelope+.00020*scale-out[2])*smooth(.8,1,blink)*gate;
     const v=F.unproject(out),delta=Math.hypot(...sub(v,at(api.before,i)));if(delta>1e-9){P.set(v,i*3);edited++;changed++;maxMM=Math.max(maxMM,delta*1000);}
    }
    rows.push({side:eye.side,blink,affectedVertices:edited,fittedEyeCenter:C,contourSegments:margin.segments,exteriorContactConstraints:contact,arcRadialErrorMM:radialError*1000,openWidthMM:F.width*1000});
   }
   if(!P.every(Number.isFinite))throw Error('Nonfinite periocular correction');
-  api.report={version:'ET17-P1',enabled:true,changedVertices:changed,maxDisplacementMM:maxMM,openFits:api.builds,eyes:rows,nativeTopologyChanged:false,bodyVerticesChanged:0,eyeballVerticesChanged:0,method:'current-person margin regularization + measured-globe arc wrapping; engineering approximation, not captured person-specific dynamics'};return P;
+  api.report={version:'ET17-P1',enabled:true,changedVertices:changed,maxDisplacementMM:maxMM,openFits:api.builds,eyes:rows,nativeTopologyChanged:false,bodyVerticesChanged:0,eyeballVerticesChanged:0,method:'current-person margin regularization + measured-globe arc wrapping; pose-relative corner blending; engineering approximation, not captured dynamics'};return P;
  }
  model.compute=input=>{const old=P.slice(),oldState=model.state;try{const s=input||model.state;if(api.settings.enabled)buildOpen(s);previous(s);return apply(s);}catch(e){P.set(old);model.state=oldState;throw e;}};
  model.archive=()=>({...archive(),periocular:{schema:LID_SCHEMA,topology:model.canonical.topologySha256,settings:{...api.settings}}});
