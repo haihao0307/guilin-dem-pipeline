@@ -1,0 +1,29 @@
+name: Read R11 Visual Evidence
+on:
+  push:
+    branches: [qa/hair-r11-evidence-read-20261011]
+    paths: [.github/workflows/hair-r11-read-evidence.yml]
+permissions:
+  contents: read
+jobs:
+  read:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 80b4ba2862343a9a14a02686ccb3207f8cceaffb
+          sparse-checkout: |
+            kaopu-hair-workbench/fusion/r11/evidence
+            kaopu-hair-workbench/fusion/r11/src
+            kaopu-hair-workbench/fusion/r11/data
+            kaopu-hair-workbench/fusion/r11/licenses
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r11-local-visual-evidence
+          path: |
+            kaopu-hair-workbench/fusion/r11/evidence
+            kaopu-hair-workbench/fusion/r11/src
+            kaopu-hair-workbench/fusion/r11/data
+            kaopu-hair-workbench/fusion/r11/BUILD_MANIFEST.json
+          retention-days: 7
