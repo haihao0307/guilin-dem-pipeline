@@ -1,0 +1,91 @@
+{
+  "schema": "kaopu/lip-delivery-evidence@1",
+  "version": "ET18-L2",
+  "date": "2026-10-11",
+  "sourceCommit": "68d8fdd052934f309c43a4f26e567dfc8a9bc9ef",
+  "buildCommit": "99defb97123d8101fefddf5aa039991446f557a8",
+  "userBaseline": "7f90e53c1d114f65b08710d67d792d489719ee67",
+  "publicURL": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/99defb97123d8101fefddf5aa039991446f557a8/kaopu-unified-human-workbench/lip-structure/preview.html",
+  "draftPR": 216,
+  "merged": false,
+  "workflowRun": 38122456309,
+  "workflowResult": "success",
+  "artifact": {
+    "id": 11695948765,
+    "name": "lips-et18-delivery",
+    "bytes": 21155314,
+    "sha256": "ee2b1783c6dac1b1972ed7c5f0b59ce84bfee1f79a0f40dd53c453d98ed0a379",
+    "expiresAt": "2026-10-25T08:05:06Z"
+  },
+  "build": {
+    "previewBytes": 4771886,
+    "previewSHA256": "47f56c7be09005c8b1a0bea5b2eef37fdcdbb642a73f79d9e3b9e48c24364574",
+    "sourceHashesChecked": 14,
+    "publicReportSHA256": "894ec5d7cb558597c18cb78169ab3835afdb7405c629a0dfca15c9f047f1fa41",
+    "inheritedReportSHA256": "76d05a0ee47be43920616cf34c75b54c677d9f3c11c168ca8aff8290acfdaa2f"
+  },
+  "checks": {
+    "inheritedGroupsPassed": 9,
+    "newGroupsPassed": 7,
+    "browserErrors": 0,
+    "shaderErrors": 0,
+    "failedRequests": 0,
+    "cornerMaskAtMaximumSoftness": {"sampledPixels":7650,"brightPixelsOutside":0},
+    "changedPixelsRGBAbsoluteSumGreaterThan6": {
+      "colorVariationAlbedo":38125,
+      "upperShadeAlbedo":20243,
+      "microReliefNormalsInMicroView":250,
+      "wetnessRoughness":17369,
+      "drynessRoughness":7330
+    },
+    "patternSeedRoundTrip": {"sequence":[37,51,37],"repeatChangedPixels":0,"texturesBefore":17,"texturesAfter":17},
+    "profileMigration": {"from":"kaopu/lip-structure@1","to":"kaopu/lip-structure@2","invalidRestoreRolledBack":true},
+    "controlsRegistered":18,
+    "materialPresetButtonsChecked":3,
+    "originalPersonPresetsFiniteAndTopologyChecked":36,
+    "smallExpressionsChecked":["jawOpen 0.25","mouthSmileLeft/Right 0.25","eyeBlinkLeft/Right 0.65"],
+    "leftEyeEditableWithoutChangingRightEye":true,
+    "actualSliderAndPersonDownloadChecked":true
+  },
+  "geometry": {
+    "nativeVertices":25417,
+    "nativeTriangles":50624,
+    "displayVertices":150459,
+    "displayTriangles":300424,
+    "canonicalBuffersUnchanged":true,
+    "bodyVertexDelta":0,
+    "eyeballVertexDelta":0,
+    "extraHeadMeshes":0,
+    "newDisplaySubdivisionComparedWithET17":0
+  },
+  "textureCost": {
+    "dimensions":[1024,512],
+    "baseBytes":2097152,
+    "estimatedWithMipsBytes":2796203,
+    "isFullGPUAllocationMeasurement":false
+  },
+  "screenshotsSHA256": {
+    "public/macro.png":"0b59b45a674a0da68deef47565f515cafc30d451c222b9df7a718575b468b250",
+    "public/micro.png":"eb39b6827edc403b45d6edd95d6c1a14f8c8f07e28ab77da6605376537f80f56",
+    "public/oblique.png":"c4b165f54c2227388588ec99d377c1e9bfec7c20612e69a29d87451599662466",
+    "public/mobile-viewport.png":"876b3c06843cc36b6481bfb68ee3641be84623187e59264e7a7ad1063ba4160a"
+  },
+  "environment": {
+    "renderer":"GitHub Actions Chromium / SwiftShader",
+    "desktopViewport":[1600,1000],
+    "mobileViewport":[390,844],
+    "mobileCanvasSize":[376,271.359375],
+    "realMobileDeviceTested":false,
+    "consumerGPUPerformanceBenchmark":false
+  },
+  "visualAcceptance": "User review required; visible improvement in corner leakage and periodic pattern, but regular border and large color regions still look procedural",
+  "limitations": [
+    "Height-field normal/bump approximation, not a new microdisplacement mesh or scanned lip surface",
+    "Static reference-space graph, not measured strain-driven dynamic wrinkles",
+    "No new lip/teeth/tongue collision, muscle or saliva solver",
+    "Inherited screen-space diffusion, not new volume scattering or measured BSSRDF",
+    "Distance filtering implemented; no dedicated long-sequence temporal-aliasing certification",
+    "Mobile viewport is not a real device or complete touch-interaction test",
+    "Asset acquisition and licensing, renderer budget and target-device calibration remain constraints"
+  ]
+}

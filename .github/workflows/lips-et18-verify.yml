@@ -1,0 +1,92 @@
+name: Lips ET18 bounded microstructure and public verification
+on:
+  push:
+    branches: [fix/lips-et18-materials-20261011]
+    paths:
+      - .github/workflows/lips-et18-verify.yml
+      - kaopu-unified-human-workbench/lip-structure/*.mjs
+      - kaopu-unified-human-workbench/lip-structure/*.cjs
+      - kaopu-unified-human-workbench/lip-structure/*.css
+concurrency:
+  group: lips-et18-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: write
+jobs:
+  build-test-public:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pinned build and browser tools
+        run: |
+          mkdir -p /tmp/lip-tools
+          cd /tmp/lip-tools
+          npm init -y >/dev/null
+          npm install esbuild@0.25.11 playwright@1.56.1 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: Migrate only lips and build with frozen host and asset pins
+        env:
+          NODE_PATH: /tmp/lip-tools/node_modules
+        run: |
+          mkdir -p lip18-evidence/smoke lip18-evidence/inherited lip18-evidence/public
+          git rev-parse HEAD > lip18-evidence/SOURCE_COMMIT.txt
+          sha256sum kaopu-unified-human-workbench/lip-structure/preview.html > lip18-evidence/INPUT_PREVIEW_SHA256.txt
+          node kaopu-unified-human-workbench/lip-structure/upgrade-et18.cjs
+          node kaopu-unified-human-workbench/lip-structure/refine-et18.cjs
+          node kaopu-unified-human-workbench/lip-structure/build.cjs
+          node kaopu-unified-human-workbench/lip-structure/verify-et18.cjs --unit
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/lips-http.log 2>&1 &
+      - name: Actual GPU smoke and corner leak check
+        env:
+          NODE_PATH: /tmp/lip-tools/node_modules
+          LIP_EVIDENCE: lip18-evidence/smoke
+          LIP_SMOKE: '1'
+        run: node kaopu-unified-human-workbench/lip-structure/verify-et18.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lips-et18-smoke
+          path: lip18-evidence/smoke
+          retention-days: 14
+      - name: Inherited body, eyes, 36 presets, expressions and save regressions
+        env:
+          NODE_PATH: /tmp/lip-tools/node_modules
+          LIP_EVIDENCE: lip18-evidence/inherited
+        run: node kaopu-unified-human-workbench/lip-structure/verify.cjs
+      - name: Publish editable lips sources and build, fast-forward only
+        run: |
+          git diff --exit-code HEAD -- kaopu-unified-human-workbench/eye-materials kaopu-unified-human-workbench/identity-lab kaopu-unified-human-workbench/full kaopu-unified-human-workbench/face-transfer kaopu-unified-human-workbench/eye-transfer
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/lip-structure
+          if ! git diff --cached --quiet; then git commit -m 'build(lips): ET18 editable sources and preview after inherited browser regressions [skip ci]'; git push origin HEAD:fix/lips-et18-materials-20261011; fi
+          SHA=$(git rev-parse HEAD)
+          echo "$SHA" > lip18-evidence/PUBLISHED_COMMIT.txt
+          echo "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$SHA/kaopu-unified-human-workbench/lip-structure/preview.html" > lip18-evidence/PUBLIC_URL.txt
+      - name: Verify fixed public HTTPS render, new controls, presets and mobile viewport
+        env:
+          NODE_PATH: /tmp/lip-tools/node_modules
+          LIP_EVIDENCE: lip18-evidence/public
+        run: |
+          export LIP_URL=$(cat lip18-evidence/PUBLIC_URL.txt)
+          node kaopu-unified-human-workbench/lip-structure/verify-et18.cjs
+      - name: Retain source and exact generated build for independent review
+        if: always()
+        run: |
+          mkdir -p lip18-evidence/build
+          cp -r kaopu-unified-human-workbench/lip-structure/. lip18-evidence/build/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lips-et18-delivery
+          path: lip18-evidence
+          retention-days: 14
