@@ -1,0 +1,56 @@
+name: Bureau R03b right-entry layout WebGPU QA
+on:
+  push:
+    branches: ['qa/bureau-r03b-right-entry-20261011']
+permissions:
+  contents: read
+jobs:
+  bureau-webgpu:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03b
+      - name: Install official pinned Playwright
+        run: |
+          npm install --prefix "$RUNNER_TEMP/wgpu" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/wgpu/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/wgpu/node_modules" >> "$GITHUB_ENV"
+      - name: Source and inventory contracts
+        run: |
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03b/qa/source.test.mjs
+          node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03b/qa/inventory.test.mjs
+      - name: Native WebGPU three layout views
+        run: |
+          mkdir -p "$RUNNER_TEMP/bureau-run"
+          (
+            set +e
+            node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03b/qa/webgpu.cjs > "$RUNNER_TEMP/bureau-run/log" 2>&1
+            echo "$?" > "$RUNNER_TEMP/bureau-run/exit"
+          ) </dev/null >/dev/null 2>&1 &
+          for i in $(seq 1 230); do
+            if [ -f bureau-r03b-results/visuals-ready.json ]; then break; fi
+            if [ -f "$RUNNER_TEMP/bureau-run/exit" ]; then cat "$RUNNER_TEMP/bureau-run/log"; exit 1; fi
+            sleep 5
+          done
+          cat "$RUNNER_TEMP/bureau-run/log"
+          test -f bureau-r03b-results/visuals-ready.json
+      - name: Upload three real layout views for review
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: bureau-r03b-three-views-${{ github.sha }}
+          path: bureau-r03b-results/
+          retention-days: 7
+      - name: Await other actual views
+        run: |
+          while [ ! -f "$RUNNER_TEMP/bureau-run/exit" ]; do sleep 5; done
+          cat "$RUNNER_TEMP/bureau-run/log"
+          exit "$(cat "$RUNNER_TEMP/bureau-run/exit")"
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: bureau-r03b-evidence-${{ github.sha }}
+          path: bureau-r03b-results/
+          retention-days: 7
