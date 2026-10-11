@@ -22,8 +22,8 @@ export function sessionStatus(id, sessions, inherited) {
 export function captureNativePreview({viewer,canvas,key,previews}) {
   const result={captured:false,cameraRestored:false};let saved=null;
   try {
-    saved=viewer.cameraState();viewer.view('three');viewer.render();
-    const url=canvas.toDataURL('image/png');
+    saved=viewer.cameraState();
+    const url=viewer.captureNativeThumbnail?viewer.captureNativeThumbnail():(viewer.view('three'),viewer.render(),canvas.toDataURL('image/png'));
     if(typeof url!=='string'||!url.startsWith('data:image/png;')||url.length<30)throw Error('原渲染器未返回有效预览');
     previews.set(key,url);result.captured=true;
   } catch(error) {
