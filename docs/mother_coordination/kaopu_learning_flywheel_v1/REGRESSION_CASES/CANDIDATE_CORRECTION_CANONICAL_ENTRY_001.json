@@ -1,7 +1,7 @@
 {
   "schema": "kaopu.regression-case/2",
   "caseId": "CORRECTION-CANONICAL-ENTRY-001",
-  "status": "CANDIDATE_HAIYU_HISTORY_REPLAY_PASSED_NOT_ADOPTED",
+  "status": "CANDIDATE_HAIYU_REPLAY_AND_HUMAN_POSITIVE_CONTROL_VERIFIED_NOT_GLOBALLY_ADOPTED",
   "active": false,
   "scope": {
     "mother": "Haiyu",
@@ -125,6 +125,25 @@
         "fixedEntryAutomaticallyResolvesCandidate": true
       },
       "expect": "HOLD_CORRECTION_INVARIANT_FAILED"
+    },
+    {
+      "id": "HUMAN_MAIN_EYES_R01_FIXED_ENTRY_MATCHES_ACTIVATED_CANDIDATE",
+      "input": {
+        "candidateVerified": true,
+        "candidateIdentity": "sha256:4e4c608b48da74eaec9feb88470515aa4384343540bb8a31f154b098f8bcd6e9",
+        "candidateBlobIdentity": "blob:29568c9997ad91907339f0546dec57717529968f",
+        "candidateInvariantsPass": true,
+        "candidateReceiptMainRootActivated": false,
+        "activationReceiptMainRootActivated": true,
+        "fixedEntryReadbackPerformed": true,
+        "fixedEntryIdentity": "blob:29568c9997ad91907339f0546dec57717529968f",
+        "fixedEntryInvariantsPass": true,
+        "fixedEntryAutomaticallyResolvesCandidate": true,
+        "liveMainChecksPassed": 14,
+        "freshOneClickChecksPassed": 5,
+        "userVisualAccepted": false
+      },
+      "expect": "CORRECTION_PROMOTED_NOT_USER_ACCEPTED"
     }
   ],
   "activation": {
@@ -140,5 +159,36 @@
     "GATE-RUN": true,
     "ADOPTED": false,
     "USER-ACCEPTED": false
-  }
+  },
+  "lastEvidenceUpdateAt": "2026-10-11T15:39:25Z",
+  "evidenceUpdates": [
+    {
+      "id": "HUMAN_MAIN_EYES_R01_CANONICAL_ACTIVATION_20261011",
+      "mother": "Human",
+      "classification": "POSITIVE_CONTROL_SCOPED_CANONICAL_PROMOTION",
+      "candidateSourceSha": "ca1670d502246cfea01160d46cbc388bbc0cda30",
+      "immutableBuildSha": "f662a52e30b568eeec09e8d3f5b2e692cccc5ab5",
+      "candidateContentSha256": "4e4c608b48da74eaec9feb88470515aa4384343540bb8a31f154b098f8bcd6e9",
+      "candidateReceiptMainRootActivated": false,
+      "activationReceiptMainRootActivated": true,
+      "activationReceiptEntryBlobSha": "29568c9997ad91907339f0546dec57717529968f",
+      "observedGhPagesHead": "10ae8355bc4c79709cdd28906efd2dde5d72b78b",
+      "observedFixedEntryPath": "kaopu-unified-human-workbench/index.html",
+      "observedFixedEntryBlobSha": "29568c9997ad91907339f0546dec57717529968f",
+      "liveVerificationRunId": 38131463913,
+      "liveMainChecksPassed": 14,
+      "freshOneClickChecksPassed": 5,
+      "leftEyePixelDelta": 6025,
+      "rightEyePixelDeltaDuringLeftControl": 0,
+      "artifactId": 11700055599,
+      "artifactDigest": "sha256:93eee8286fdc1c184289af32eb34f4efc5475e8292014bb7b298d97f8d53fcf3",
+      "result": "CORRECTION_PROMOTED_NOT_USER_ACCEPTED",
+      "holds": [
+        "allMotionModesCertified=false",
+        "physicalPhoneTested=false",
+        "anatomicalEyelidClosureCertified=false",
+        "userVisualAccepted=false"
+      ]
+    }
+  ]
 }
