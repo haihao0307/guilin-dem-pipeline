@@ -1,7 +1,15 @@
 {
-  "url": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/2ea09264f224206042fd3df8b55deefb8a177712/kaopu-hair-workbench/fusion/r13c/public-lite.html",
+  "url": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/e8bd818726cdfb2c85abe1366c229816314178ab/kaopu-hair-workbench/fusion/r13c/public-lite.html",
   "success": true,
   "checks": [
+    {
+      "name": "actual immutable public HTML matches build SHA256",
+      "pass": true,
+      "detail": {
+        "bytes": 7787223,
+        "sha256": "fe3a860afde9a7e54e4781afae76d13c66ef912e9f804fa096939252bc5547d8"
+      }
+    },
     {
       "name": "one actual current native head with loaded skin and natural eyes",
       "pass": true,
@@ -16,17 +24,17 @@
         "radiusUnits": "world",
         "radiusScale": 1,
         "coverageAA": true,
-        "coverageMode": "stable-strand-coverage-depth",
+        "coverageMode": "continuous-strand-coverage-depth",
         "coverageResolve": "depth",
         "coverageResolveFallback": null,
-        "alphaToCoverage": false,
+        "alphaToCoverage": true,
         "actualSamples": 4,
         "framebufferMeasured": true,
         "drawingBuffer": [
-          926,
-          808
+          1389,
+          1212
         ],
-        "viewportHeight": 808,
+        "viewportHeight": 1212,
         "transparent": false,
         "depthWrite": true,
         "shadows": true,
@@ -47,7 +55,7 @@
           "no multiple scattering or deep opacity maps",
           "no coloured shadow transmission",
           "directional lights with PCF only",
-          "depth coverage uses stable spatial samples, not temporal reconstruction; sparse strands may show sampling noise"
+          "continuous per-strand coverage; MSAA when available; no temporal reconstruction, sparse isolated strands may alias"
         ]
       }
     },
@@ -56,7 +64,7 @@
       "pass": true,
       "detail": {
         "range": 685,
-        "coloredPixels": 743284,
+        "coloredPixels": 742538,
         "pixels": 749134
       }
     },
@@ -64,9 +72,9 @@
       "name": "triangle order cannot change nearest visible hair layer",
       "pass": true,
       "detail": {
-        "mean": 0.0024753025938394646,
-        "max": 7,
-        "changedFraction": 0.00013348746686173634
+        "mean": 0.0036504372604456168,
+        "max": 12,
+        "changedFraction": 0.0003430627898346624
       }
     },
     {
@@ -78,7 +86,7 @@
       "pass": true,
       "detail": {
         "range": 685,
-        "coloredPixels": 724660,
+        "coloredPixels": 719106,
         "pixels": 749134
       }
     },
@@ -91,7 +99,7 @@
       "pass": true,
       "detail": {
         "range": 685,
-        "coloredPixels": 719492,
+        "coloredPixels": 715582,
         "pixels": 749134
       }
     },
@@ -113,7 +121,7 @@
       "pass": true,
       "detail": {
         "range": 688,
-        "coloredPixels": 233812,
+        "coloredPixels": 233643,
         "pixels": 237900
       }
     },
@@ -131,7 +139,7 @@
     {
       "name": "textured-fringe-three",
       "diagnostics": {
-        "version": "R13C.1",
+        "version": "R13C.2",
         "ready": true,
         "busy": false,
         "revision": 1,
@@ -162,7 +170,7 @@
         "modelVertices": 17821,
         "modelPositionHash": 3301171636,
         "rootHash": 3014738776,
-        "curveHash": 2877959738,
+        "curveHash": 3258412024,
         "guideCount": 675,
         "activeCount": 60273,
         "regions": {
@@ -175,16 +183,18 @@
         "maxRootOffset": 0.000020014927896059354,
         "actualLengths": {
           "min": 2.1245249081403017,
-          "median": 62.02617660164833,
-          "p95": 90.14692902565002,
-          "max": 94.53719109296799
+          "median": 62.040064483881,
+          "p95": 90.08561074733734,
+          "max": 94.5214107632637
         },
-        "buildMs": 19666.800000000047,
-        "skinFieldCells": 66348,
+        "buildMs": 11315.699999999953,
+        "skinFieldCells": 64891,
         "geometryBytes": 201117248,
         "inspection": "fibers",
         "view": "three",
         "light": "studio",
+        "renderPixelRatio": 1.5,
+        "guideRegionColors": false,
         "headIntegration": {
           "sourceRevision": "99defb97123d8101fefddf5aa039991446f557a8",
           "sourceModule": "kaopu-unified-human-workbench/lip-structure",
@@ -306,7 +316,7 @@
           "fullBodyViewerMigrated": false
         },
         "topology": {
-          "version": "R13C-topology@1",
+          "version": "R13C-topology@2",
           "units": "metre",
           "whorlXZ": [
             -0.008,
@@ -325,17 +335,17 @@
           "radiusUnits": "world",
           "radiusScale": 1,
           "coverageAA": true,
-          "coverageMode": "stable-strand-coverage-depth",
+          "coverageMode": "continuous-strand-coverage-depth",
           "coverageResolve": "depth",
           "coverageResolveFallback": null,
-          "alphaToCoverage": false,
+          "alphaToCoverage": true,
           "actualSamples": 4,
           "framebufferMeasured": true,
           "drawingBuffer": [
-            926,
-            808
+            1389,
+            1212
           ],
-          "viewportHeight": 808,
+          "viewportHeight": 1212,
           "transparent": false,
           "depthWrite": true,
           "shadows": true,
@@ -356,7 +366,7 @@
             "no multiple scattering or deep opacity maps",
             "no coloured shadow transmission",
             "directional lights with PCF only",
-            "depth coverage uses stable spatial samples, not temporal reconstruction; sparse strands may show sampling noise"
+            "continuous per-strand coverage; MSAA when available; no temporal reconstruction, sparse isolated strands may alias"
           ]
         },
         "opacity": {
@@ -457,14 +467,14 @@
           "finite": true,
           "triangleAttached": true,
           "meshOverlay": false,
-          "bindMs": 57.59999999997672
+          "bindMs": 42.5
         }
       }
     },
     {
       "name": "textured-fringe-left",
       "diagnostics": {
-        "version": "R13C.1",
+        "version": "R13C.2",
         "ready": true,
         "busy": false,
         "revision": 1,
@@ -495,7 +505,7 @@
         "modelVertices": 17821,
         "modelPositionHash": 3301171636,
         "rootHash": 3014738776,
-        "curveHash": 2877959738,
+        "curveHash": 3258412024,
         "guideCount": 675,
         "activeCount": 60273,
         "regions": {
@@ -508,16 +518,18 @@
         "maxRootOffset": 0.000020014927896059354,
         "actualLengths": {
           "min": 2.1245249081403017,
-          "median": 62.02617660164833,
-          "p95": 90.14692902565002,
-          "max": 94.53719109296799
+          "median": 62.040064483881,
+          "p95": 90.08561074733734,
+          "max": 94.5214107632637
         },
-        "buildMs": 19666.800000000047,
-        "skinFieldCells": 66348,
+        "buildMs": 11315.699999999953,
+        "skinFieldCells": 64891,
         "geometryBytes": 201117248,
         "inspection": "fibers",
         "view": "left",
         "light": "studio",
+        "renderPixelRatio": 1.5,
+        "guideRegionColors": false,
         "headIntegration": {
           "sourceRevision": "99defb97123d8101fefddf5aa039991446f557a8",
           "sourceModule": "kaopu-unified-human-workbench/lip-structure",
@@ -639,7 +651,7 @@
           "fullBodyViewerMigrated": false
         },
         "topology": {
-          "version": "R13C-topology@1",
+          "version": "R13C-topology@2",
           "units": "metre",
           "whorlXZ": [
             -0.008,
@@ -658,17 +670,17 @@
           "radiusUnits": "world",
           "radiusScale": 1,
           "coverageAA": true,
-          "coverageMode": "stable-strand-coverage-depth",
+          "coverageMode": "continuous-strand-coverage-depth",
           "coverageResolve": "depth",
           "coverageResolveFallback": null,
-          "alphaToCoverage": false,
+          "alphaToCoverage": true,
           "actualSamples": 4,
           "framebufferMeasured": true,
           "drawingBuffer": [
-            926,
-            808
+            1389,
+            1212
           ],
-          "viewportHeight": 808,
+          "viewportHeight": 1212,
           "transparent": false,
           "depthWrite": true,
           "shadows": true,
@@ -689,7 +701,7 @@
             "no multiple scattering or deep opacity maps",
             "no coloured shadow transmission",
             "directional lights with PCF only",
-            "depth coverage uses stable spatial samples, not temporal reconstruction; sparse strands may show sampling noise"
+            "continuous per-strand coverage; MSAA when available; no temporal reconstruction, sparse isolated strands may alias"
           ]
         },
         "opacity": {
@@ -790,14 +802,14 @@
           "finite": true,
           "triangleAttached": true,
           "meshOverlay": false,
-          "bindMs": 57.59999999997672
+          "bindMs": 42.5
         }
       }
     },
     {
       "name": "side-flow-left",
       "diagnostics": {
-        "version": "R13C.1",
+        "version": "R13C.2",
         "ready": true,
         "busy": false,
         "revision": 2,
@@ -828,7 +840,7 @@
         "modelVertices": 17821,
         "modelPositionHash": 3301171636,
         "rootHash": 3014738776,
-        "curveHash": 690547835,
+        "curveHash": 1154720113,
         "guideCount": 675,
         "activeCount": 60273,
         "regions": {
@@ -840,17 +852,19 @@
         },
         "maxRootOffset": 0.000020014927896059354,
         "actualLengths": {
-          "min": 1.780387363396585,
-          "median": 87.11446821689606,
-          "p95": 114.31816220283508,
-          "max": 118.7339648604393
+          "min": 1.9900023471564054,
+          "median": 87.04876154661179,
+          "p95": 114.55609649419785,
+          "max": 118.83499473333359
         },
-        "buildMs": 18832.600000000093,
-        "skinFieldCells": 91984,
+        "buildMs": 10429.900000000023,
+        "skinFieldCells": 88835,
         "geometryBytes": 201117248,
         "inspection": "fibers",
         "view": "left",
         "light": "studio",
+        "renderPixelRatio": 1.5,
+        "guideRegionColors": false,
         "headIntegration": {
           "sourceRevision": "99defb97123d8101fefddf5aa039991446f557a8",
           "sourceModule": "kaopu-unified-human-workbench/lip-structure",
@@ -972,7 +986,7 @@
           "fullBodyViewerMigrated": false
         },
         "topology": {
-          "version": "R13C-topology@1",
+          "version": "R13C-topology@2",
           "units": "metre",
           "whorlXZ": [
             -0.008,
@@ -991,17 +1005,17 @@
           "radiusUnits": "world",
           "radiusScale": 1,
           "coverageAA": true,
-          "coverageMode": "stable-strand-coverage-depth",
+          "coverageMode": "continuous-strand-coverage-depth",
           "coverageResolve": "depth",
           "coverageResolveFallback": null,
-          "alphaToCoverage": false,
+          "alphaToCoverage": true,
           "actualSamples": 4,
           "framebufferMeasured": true,
           "drawingBuffer": [
-            926,
-            808
+            1389,
+            1212
           ],
-          "viewportHeight": 808,
+          "viewportHeight": 1212,
           "transparent": false,
           "depthWrite": true,
           "shadows": true,
@@ -1022,7 +1036,7 @@
             "no multiple scattering or deep opacity maps",
             "no coloured shadow transmission",
             "directional lights with PCF only",
-            "depth coverage uses stable spatial samples, not temporal reconstruction; sparse strands may show sampling noise"
+            "continuous per-strand coverage; MSAA when available; no temporal reconstruction, sparse isolated strands may alias"
           ]
         },
         "opacity": {
@@ -1123,14 +1137,14 @@
           "finite": true,
           "triangleAttached": true,
           "meshOverlay": false,
-          "bindMs": 57.59999999997672
+          "bindMs": 42.5
         }
       }
     },
     {
       "name": "mobile-390x844",
       "diagnostics": {
-        "version": "R13C.1",
+        "version": "R13C.2",
         "ready": true,
         "busy": false,
         "revision": 1,
@@ -1161,7 +1175,7 @@
         "modelVertices": 17821,
         "modelPositionHash": 3301171636,
         "rootHash": 47981328,
-        "curveHash": 533335033,
+        "curveHash": 1536362028,
         "guideCount": 658,
         "activeCount": 33913,
         "regions": {
@@ -1174,16 +1188,18 @@
         "maxRootOffset": 0.000020014753805714526,
         "actualLengths": {
           "min": 2.474417444318533,
-          "median": 61.975568532943726,
-          "p95": 90.12521058320999,
-          "max": 94.48065608739853
+          "median": 61.919745057821274,
+          "p95": 90.04660695791245,
+          "max": 94.48099881410599
         },
-        "buildMs": 12404,
-        "skinFieldCells": 63393,
+        "buildMs": 7080.300000000047,
+        "skinFieldCells": 62968,
         "geometryBytes": 113133888,
         "inspection": "fibers",
         "view": "three",
         "light": "studio",
+        "renderPixelRatio": 1,
+        "guideRegionColors": false,
         "headIntegration": {
           "sourceRevision": "99defb97123d8101fefddf5aa039991446f557a8",
           "sourceModule": "kaopu-unified-human-workbench/lip-structure",
@@ -1305,7 +1321,7 @@
           "fullBodyViewerMigrated": false
         },
         "topology": {
-          "version": "R13C-topology@1",
+          "version": "R13C-topology@2",
           "units": "metre",
           "whorlXZ": [
             -0.008,
@@ -1324,10 +1340,10 @@
           "radiusUnits": "world",
           "radiusScale": 1,
           "coverageAA": true,
-          "coverageMode": "stable-strand-coverage-depth",
+          "coverageMode": "continuous-strand-coverage-depth",
           "coverageResolve": "depth",
           "coverageResolveFallback": null,
-          "alphaToCoverage": false,
+          "alphaToCoverage": true,
           "actualSamples": 4,
           "framebufferMeasured": true,
           "drawingBuffer": [
@@ -1355,7 +1371,7 @@
             "no multiple scattering or deep opacity maps",
             "no coloured shadow transmission",
             "directional lights with PCF only",
-            "depth coverage uses stable spatial samples, not temporal reconstruction; sparse strands may show sampling noise"
+            "continuous per-strand coverage; MSAA when available; no temporal reconstruction, sparse isolated strands may alias"
           ]
         },
         "opacity": {
@@ -1456,7 +1472,7 @@
           "finite": true,
           "triangleAttached": true,
           "meshOverlay": false,
-          "bindMs": 88.39999999990687
+          "bindMs": 77
         }
       }
     }
