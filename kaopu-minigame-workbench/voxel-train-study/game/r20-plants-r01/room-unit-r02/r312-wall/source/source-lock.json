@@ -1,0 +1,156 @@
+{
+  "sourceSha256": "1532ea02c31f014c23390fa028385338c3d2caa572f3a36511db81d6609e1581",
+  "shaderSha256": {
+    "brickVS": "71f4b6f4b4b3525bed9d544016e2be2788b5538c4c964cdab4b5829b80c76ee3",
+    "brickFS": "be1126e6b4db4505c6047a57612ca76f125137b05fad818aa1d6c8e1cba81fc5",
+    "soilVS": "3f630b0a9fffd7b3e4c02ae1a4a153ceb45b60bed9da59190b50fac11a6c71ae",
+    "soilFS": "468b1bc4bcfa2906d0dfe812520bfe003ba9fb63595cd2a3db7c9c1cea0bc191",
+    "plasterVS": "0ebbfd95d12dbdce51620f3c531368588b74725aaef3c58ad9bf229ea8fcdec8",
+    "plasterFS": "6e6acf08c21ed3ad3dd390325e17ffd404f85d4d86eff957b499bcdb1dee55ff"
+  },
+  "constants": {
+    "MODEL_SCALE": 0.1153846154,
+    "BRICK_L": 0.24,
+    "BRICK_H": 0.06115,
+    "BRICK_W": 0.11077,
+    "BED": 0.008822619047619,
+    "WALL_W": 4,
+    "WALL_H": 3,
+    "WALL_T": 0.48923,
+    "HEAD_A": 0.01115375,
+    "HEAD_B": 0.010666666666667,
+    "CENTER_TIE_GAP": 0.00923,
+    "CAP_COUNT": 32,
+    "BRICK_FACE": 0.244615,
+    "BRICK_VARIATION": 0.82
+  },
+  "manifest": {
+    "schemaVersion": "3.12",
+    "status": "material-bridge-candidate-awaiting-user-review",
+    "interpretation": "继续修复极端侧视代理覆盖和非保守隐式求交；关闭代理背面剔除并扩大代理体。墙心改成五个连续三维层，每层可分别调整颜色、相对出面和端部露边；五层共用连续 Microscope 域但相位略有差异。细表皮几何不再由相机距离门控。",
+    "objectCounts": {
+      "brick": 1494,
+      "baseWallBrick": 1420,
+      "endClosureBrick": 42,
+      "topCapBrick": 32,
+      "soilCoreLayers": 5,
+      "plasterPatch": 1,
+      "mortar": 0,
+      "straw": 0
+    },
+    "freeze": {
+      "motherKernel": "R2.14.8.1",
+      "motherSourceCommit": "7362f830bcac83a0883e7855fa5d41ee30e52718",
+      "material": "R2.1-B",
+      "motherUnchanged": true
+    },
+    "sideViewFix": {
+      "safeAabbReciprocal": true,
+      "twoStageBrickIntersection": true,
+      "baseSdfSteps": 40,
+      "exactBandSamples": 36,
+      "bisectionSteps": 8,
+      "proxyBackFaceCulling": false,
+      "proxyType": "camera-facing bounding-sphere quad",
+      "proxyRadiusM": 0.16,
+      "proxyHalfSizeM": [
+        0.134,
+        0.043,
+        0.07
+      ],
+      "reason": "extreme grazing angles still lost projected proxy coverage; rasterize both proxy sides and retain conservative exact-band refinement"
+    },
+    "microscope": {
+      "coordinates": [
+        "log2(length(p))-2",
+        "-pz/length(p)",
+        "atan(px,py)"
+      ],
+      "scaleCount": 17,
+      "scales": "1..65536 powers of two",
+      "coefficient": "1/s",
+      "localSampling": "two continuous position-dependent rotations",
+      "cameraIndependentGeometry": true,
+      "geometryBands": {
+        "macroMeso": "low prefixes",
+        "micro": "selected fine band actual SDF displacement"
+      },
+      "observationFiltering": "material and normal only"
+    },
+    "soilLayers": {
+      "count": 5,
+      "globalOffsetRangeM": [
+        -0.018,
+        0.028
+      ],
+      "relativeOutRangeM": [
+        0,
+        0.028
+      ],
+      "edgeRevealRangeM": [
+        0,
+        0.18
+      ],
+      "macroReliefRangeM": [
+        0,
+        0.03
+      ],
+      "microReliefRangeM": [
+        0,
+        0.003
+      ],
+      "colorsEditable": true,
+      "colorVariationRange": [
+        0,
+        2
+      ],
+      "continuousSolids": true,
+      "sideWallsVisible": true
+    },
+    "plaster": {
+      "centerRangeM": {
+        "x": [
+          -1.55,
+          1.55
+        ],
+        "y": [
+          0.35,
+          2.65
+        ]
+      },
+      "sizeRangeM": {
+        "width": [
+          0.35,
+          3.2
+        ],
+        "height": [
+          0.3,
+          2.35
+        ]
+      },
+      "macroReliefRangeM": [
+        0,
+        0.014
+      ],
+      "microReliefRangeM": [
+        0,
+        0.003
+      ],
+      "embedded": true,
+      "floating": false,
+      "substrate": "outermost active soil layer or brick face",
+      "edge": "smooth superellipse with low-frequency radial modulation; thickness and micro displacement fade before edge"
+    },
+    "delivery": {
+      "singleFile": true,
+      "externalRuntimeDependencies": 0,
+      "directOpen": true,
+      "publicPreviewPendingRuntimeVerification": true
+    },
+    "approvals": {
+      "humanVisualApproved": false,
+      "productionApproved": false,
+      "historicalConstructionVerified": false
+    }
+  }
+}

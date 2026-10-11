@@ -12,14 +12,16 @@ const server=http.createServer((req,res)=>{let f=path.resolve(ROOT,'.'+decodeURI
  // Only material modules are exercised. Prevent the unrelated existing game script from running.
  await page.route(origin+'/'+GAME+'/app.mjs',route=>route.fulfill({status:200,contentType:'text/javascript',body:'// Isolated material verification; original disk entry remains untouched.'}));
  await page.goto(origin+'/'+GAME+'/index.html',{waitUntil:'domcontentloaded'});
- const result=await page.evaluate(async base=>{
+ const cases=[{name:'light-weathered-close',presetId:'yunnan_light_weathered_v2',weathered:true},{name:'warm-medium-close',presetId:'yunnan_warm_medium_v2',weathered:false}];receipt.cases=[];
+ for(const testCase of cases){
+ const result=await page.evaluate(async ({base,testCase})=>{
   const THREE=await import(base+'/../../vendor/three.module.js');
   const O=await import(base+'/room-unit-r02/native/timber/original-core.mjs');
   const {WebGLTimberRenderer}=await import(base+'/room-unit-r02/native/timber/original-renderer.mjs');
   const {createTimberMember}=await import(base+'/room-unit-r02/native/timber/three-adapter.mjs');
   const w=960,h=960,make=()=>{const c=document.createElement('canvas');c.width=w;c.height=h;c.style.width=w+'px';c.style.height=h+'px';document.body.append(c);return c};
-  const camera=new THREE.PerspectiveCamera(32,1,.05,30);camera.position.set(2.2,1.65,3.6);camera.lookAt(0,1,0);camera.updateMatrixWorld();
-  const recipe={id:'original-jamb',sourceId:'test-mother-01',seed:198107,length:2.05,height:.18,depth:.26,position:[0,1.025,0],rotation:[0,0,Math.PI/2],tessellation:{lengthSegments:28,crossSegments:4,endSegments:5},settings:{reliefMode:'inspection'}};
+  const camera=new THREE.PerspectiveCamera(32,1,.05,30);camera.position.set(-.85,.30,1.12);camera.lookAt(0,0,0);camera.updateMatrixWorld();
+  const recipe={id:'original-jamb',sourceId:'test-mother-01',seed:198107,length:.72,height:.18,depth:.26,position:[0,0,0],rotation:[0,0,0],presetId:testCase.presetId,tessellation:{lengthSegments:28,crossSegments:4,endSegments:5,sideClass:testCase.weathered?'weathered':'longitudinal'},settings:{reliefMode:'inspection',textureContrast:1.20,fineness:1.12,reliefStrength:1.10}};
   const t=createTimberMember(THREE,recipe);t.mesh.updateMatrixWorld();
   const rawCanvas=make(),raw=new WebGLTimberRenderer(rawCanvas);raw.gl.viewport(0,0,w,h);
   const frame={preset:t.preset,settings:recipe.settings,view:camera.matrixWorldInverse.elements,projection:camera.projectionMatrix.elements,cameraPosition:camera.position.toArray(),debugMode:0};
@@ -32,11 +34,12 @@ const server=http.createServer((req,res)=>{let f=path.resolve(ROOT,'.'+decodeURI
   const scene=new THREE.Scene();scene.add(t.mesh);let adapterBindCalls=0;const hook=t.mesh.onBeforeRender;t.mesh.onBeforeRender=(...args)=>{adapterBindCalls++;return hook(...args)};
   renderer.render(scene,camera);const gl=renderer.getContext();gl.finish();const adaptedPNG=threeCanvas.toDataURL('image/png'),threePixels=new Uint8Array(w*h*4);gl.readPixels(0,0,w,h,gl.RGBA,gl.UNSIGNED_BYTE,threePixels);
   let sum=0,max=0,changed=0,foreground=0;for(let i=0;i<rawPixels.length;i+=4){let d=0;for(let j=0;j<3;j++){const v=Math.abs(rawPixels[i+j]-threePixels[i+j]);sum+=v;max=Math.max(max,v);d=Math.max(d,v)}if(d>2)changed++;if(rawPixels[i]>24||rawPixels[i+1]>24||rawPixels[i+2]>24)foreground++;}
-  const stats={width:w,height:h,maeRGB:sum/(w*h*3),maxChannelDifference:max,pixelsDifferenceOver2:changed,foregroundPixels:foreground,originalDrawCalls,adapterBindCalls,shaderVertexIdentical:t.mesh.material.vertexShader===O.vertexShaderSource.replace(/^#version 300 es\n/,''),shaderFragmentIdentical:t.mesh.material.fragmentShader===O.fragmentShaderSource.replace(/^#version 300 es\n/,''),originalGeometryUnchanged:O.createSubdividedBoxGeometry(recipe.length,recipe.height,recipe.depth,recipe.tessellation).positions.every((v,i)=>v===t.sourceMesh.geometry.positions[i]),gpuErrors,rawError:raw.gl.getError(),threeError:gl.getError(),renderer:gl.getParameter(gl.RENDERER),proof:t.proof,frame:{camera:camera.position.toArray(),target:[0,1,0],fov:32,originalLightingDefaults:true,settings:recipe.settings},uniformCount:Object.keys(t.mesh.material.uniforms).length};
+  const stats={width:w,height:h,maeRGB:sum/(w*h*3),maxChannelDifference:max,pixelsDifferenceOver2:changed,foregroundPixels:foreground,originalDrawCalls,adapterBindCalls,shaderVertexIdentical:t.mesh.material.vertexShader===O.vertexShaderSource.replace(/^#version 300 es\n/,''),shaderFragmentIdentical:t.mesh.material.fragmentShader===O.fragmentShaderSource.replace(/^#version 300 es\n/,''),originalGeometryUnchanged:O.createSubdividedBoxGeometry(recipe.length,recipe.height,recipe.depth,recipe.tessellation).positions.every((v,i)=>v===t.sourceMesh.geometry.positions[i]),gpuErrors,rawError:raw.gl.getError(),threeError:gl.getError(),renderer:gl.getParameter(gl.RENDERER),proof:t.proof,frame:{camera:camera.position.toArray(),target:[0,0,0],fov:32,originalLightingDefaults:true,settings:recipe.settings},uniformCount:Object.keys(t.mesh.material.uniforms).length};
   return {originalPNG,adaptedPNG,stats};
- },origin+'/'+GAME);
- for(const [name,data] of [['timber-v3-original-workbench',result.originalPNG],['timber-v3-three-adapted',result.adaptedPNG]])fs.writeFileSync(path.join(OUT,name+'.png'),Buffer.from(data.split(',')[1],'base64'));
- receipt.stats=result.stats;receipt.sourceAppUnchanged=hash(fs.readFileSync(app))===appHash;
+ },{base:origin+'/'+GAME,testCase});
+ for(const [name,data] of [['timber-v3-'+testCase.name+'-original',result.originalPNG],['timber-v3-'+testCase.name+'-adapted',result.adaptedPNG]])fs.writeFileSync(path.join(OUT,name+'.png'),Buffer.from(data.split(',')[1],'base64'));
+ receipt.cases.push({name:testCase.name,stats:result.stats});receipt.sourceAppUnchanged=hash(fs.readFileSync(app))===appHash;
  if(result.stats.gpuErrors.length||result.stats.rawError||result.stats.threeError||!result.stats.shaderVertexIdentical||!result.stats.shaderFragmentIdentical||!result.stats.originalGeometryUnchanged||result.stats.maeRGB>1||result.stats.foregroundPixels<500)throw Error('Original/adapted material equivalence gate failed');
+ }
  receipt.passed=true;
  }catch(e){receipt.failure=String(e);process.exitCode=1}finally{fs.writeFileSync(path.join(OUT,'timber-equivalence-receipt.json'),JSON.stringify(receipt,null,2));console.log(JSON.stringify(receipt,null,2));await browser?.close();server.close()}})();

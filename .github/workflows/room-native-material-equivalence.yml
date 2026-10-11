@@ -5,6 +5,7 @@ on:
     paths:
       - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/room-unit-r02/**'
       - 'tests/room-native-material-equivalence.cjs'
+      - 'tests/room-wall-equivalence.cjs'
       - '.github/workflows/room-native-material-equivalence.yml'
 permissions:
   contents: read
@@ -21,6 +22,7 @@ jobs:
             kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01
             kaopu-minigame-workbench/voxel-train-study/vendor
             tests/room-native-material-equivalence.cjs
+            tests/room-wall-equivalence.cjs
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22.23.3'
@@ -31,6 +33,9 @@ jobs:
           echo "NODE_PATH=$RUNNER_TEMP/room-browser/node_modules" >> "$GITHUB_ENV"
       - name: Compare original workbench renderer and unchanged-core Three binding
         run: node tests/room-native-material-equivalence.cjs
+      - name: Compare original wall raymarch to translated Three binding and test door
+        if: always()
+        run: node tests/room-wall-equivalence.cjs
       - name: Preserve true GPU images and signature evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
