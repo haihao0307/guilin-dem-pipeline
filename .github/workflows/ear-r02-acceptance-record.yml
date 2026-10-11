@@ -1,0 +1,103 @@
+name: Ear R02 preserve verified acceptance
+on:
+  push:
+    branches: [fix/ear-growth-r02-recovery-20261011]
+    paths: [.github/workflows/ear-r02-acceptance-record.yml]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: kaopu-unified-human-workbench/ear-growth
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 38130525617
+          pattern: ear-r02-*-38130525617
+          path: /tmp/ear-r02-accepted
+      - name: Verify every report and preserve actual screenshots
+        run: |
+          python3 - <<'PY'
+          import json,pathlib,shutil,hashlib
+          source=pathlib.Path('/tmp/ear-r02-accepted');root=pathlib.Path('kaopu-unified-human-workbench/ear-growth');out=root/'acceptance';out.mkdir(exist_ok=True)
+          sha='b2bb70362e2af7d8792b31d6340cf5565f83c685'
+          url='https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+sha+'/kaopu-unified-human-workbench/ear-growth/preview.html'
+          expected='c437fc6d37d061d9b79a9d1094eff7f965551f305fced11590bd74bb7f00bc4f'
+          assert hashlib.sha256((root/'preview.html').read_bytes()).hexdigest()==expected
+          reports={}
+          for label in ['core','controls','public','people-0','people-1','people-2']:
+            p=source/('ear-r02-'+label+'-38130525617')/'report.json';d=json.loads(p.read_text());assert d['pass'] is True and d['version']=='EAR-R02.0',label
+            assert not d['errors'],label
+            if label=='public': assert d['url']==url
+            reports[label]=d;shutil.copyfile(p,out/(label+'.json'))
+          controls=reports['controls']['controls'];assert len(controls)==36 and len(reports['controls']['presets'])==8
+          geom=[x for x in controls if 'maxMetres' in x];mat=[x for x in controls if 'changedPixels' in x]
+          assert len(geom)==29 and all(x['maxMetres']>1e-7 and x['otherEarMetres']==0 for x in geom)
+          assert len(mat)==7 and all(x['changedPixels']>4 for x in mat)
+          people=[p['id'] for k,d in reports.items() if k.startswith('people-') for p in d['people']]
+          assert len(people)==len(set(people))==reports['people-0']['totalPeople']==36
+          for label,names in {'public':['01-new-left.png','02-new-canvas.png','03-original-same-camera.png','04-gray.png','05-right.png','05-rear.png','05-face.png','06-mobile-viewport.png','07-mobile-controls.png'],'controls':['preset-balanced.png','preset-rounded.png','preset-long-free.png','preset-deep.png','preset-shallow.png','material-pores-min.png','material-pores-max.png']}.items():
+            for name in names:
+              p=source/('ear-r02-'+label+'-38130525617')/name;assert p.is_file();shutil.copyfile(p,out/name)
+          summary={'schema':'kaopu/ear-acceptance@1','version':'EAR-R02.0','publishedCommit':sha,'previewURL':url,'previewSHA256':expected,'runID':38130525617,'pass':True,'reports':{k:{'assertions':len(v['assertions']),'pass':v['pass'],'pageErrors':len(v['errors']),'initialReadyMS':v['initialReadyMS']} for k,v in reports.items()},'geometryControls':len(geom),'materialControls':len(mat),'materialPixelResponses':{x['key']:x['changedPixels'] for x in mat},'earPresets':8,'originalPersonPresets':people,'desktopViewport':[1440,1040],'mobileViewport':[390,844],'physicalMobileDeviceTest':False,'biologicalGrowthSimulation':False,'filmQualityAccepted':False,'visualReviewNotes':['The ear surface still reads too smooth in close-up. Fine folds and the native canal entrance need further visual refinement.','Local triangle and sampled sheet-gap guards are not full self-collision detection. Several authored presets are deliberately attenuated.','Growth controls are coupled anatomical phenotype rules, not fetal development, genetics or a population-trained model.','Immutable external native head/body dependencies remain; first load and rendering cost depend on network and hardware.']}
+          (out/'summary.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\n')
+          text='''# EAR-R02.0 固定交付与断线恢复收据
+
+## 网页与源头
+
+- 固定网页：'''+url+'''
+- 源码与构建提交：`'''+sha+'''`
+- GitHub Actions： https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/38130525617
+- Draft PR： https://github.com/haihao0307/guilin-dem-pipeline/pull/222
+- 分支：`fix/ear-growth-r02-recovery-20261011`；父版本 `8edcc5da021b277b8782f05f61b1390e2dac1ef4`，原 Draft #218 / ET18-A1。
+- 用户原始入口：`7f90e53c1d114f65b08710d67d792d489719ee67/kaopu-unified-human-workbench/lip-structure/preview.html`。原 lip-structure 与 ear-structure 保留，未合并或强推。
+
+## 已经完成并实测
+
+每耳 36 项真实参数，其中 29 项形态、7 项表面；8 种耳形预设；左右独立或同步；可复现种子；软骨分区、耳甲腔、耳垂三个联动生成量；原版同相机对照、灰模观察、撤销/重做、完整人物档案保存恢复。
+
+构建的校验与重复构建通过。六个浏览器任务全部通过：核心、公网、逐项参数、原 36 个人物预设的三个分片。29 项形态参数均产生几何变化且不改动另一耳和基础绑定位置；7 项表面参数均有实际像素响应。毛孔强度的最小/最大值比较有 5,111 个像素越过测试阈值，毛孔尺度有 452 个，不再是旧版的无响应滑块。像素响应证明功能接通，不证明质感已经真实。
+
+真实公网浏览器验证包含一份原人物、一个画布、灰模/皮肤/左右视角、档案往返与非法档案原子拒绝、真实滑块、撤销/重做和手机视口布局。桌面 1440×1040；手机 390×844 只是视口模拟，不是实机。三个人物分片各检查 12 个原有预设，并检查眨眼/张嘴组合后的几何有限性与局部约束。
+
+## 不应掩盖的不足
+
+这次完成的是可操作、可回退、经过功能测试的耳形专项验收版，不是已达到影视级无瑕的最终耳朵。实际近景仍偏光滑，部分细褶和耳道入口不够真实。没有完整外耳道、实体软骨/软组织物理、全局自碰撞或实测多层散射。局部约束会缩减某些形态组合，界面显示实际采用比例。
+
+“生长”是有解剖关系的区域形态联动，不是生物发育、遗传或人群统计预测。未把 MetaHuman 或 Artec 耳网格直接拼接到人物。原人物资产依赖固定公网资源，首次加载、显存与实时操作成本仍受网络和硬件约束；没有宣称移动实机性能或 60 FPS。
+
+## 后续窗口应从哪里接续
+
+直接检查本目录 `summary.json` 与六份实际 `*.json` 报告，并从上述固定网页和提交接续 `ear-growth/` 可读源码。不要把旧版毛孔失败记录当作本版未通过，也不要把本版功能通过当作影视质量已经认可。下一轮视觉重点应是对耳轮分叉与三角窝的准确度、耳垂轮廓、耳根细褶和耳道入口；保留用户确认前的固定网页。
+'''
+          (out/'RECOVERY_RECEIPT.md').write_text(text)
+          hashes={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in out.iterdir() if p.is_file()}
+          (out/'SHA256.json').write_text(json.dumps(hashes,indent=2)+'\n')
+          print(json.dumps(summary,ensure_ascii=False,indent=2))
+          PY
+      - name: Fast-forward receipt only on the authorized branch
+        run: |
+          set -eu
+          branch=fix/ear-growth-r02-recovery-20261011
+          remote=$(git ls-remote origin "refs/heads/$branch" | cut -f1)
+          test "$remote" = "$GITHUB_SHA" || { echo 'Branch changed: refuse overwrite'; exit 1; }
+          git add -- kaopu-unified-human-workbench/ear-growth/acceptance
+          if git diff --cached --name-only | grep -v '^kaopu-unified-human-workbench/ear-growth/acceptance/'; then exit 1; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'docs(ears): persist six passing R02 reports, real screenshots and bounded delivery receipt [skip ci]'
+          git push origin "HEAD:refs/heads/$branch"
+          git rev-parse HEAD
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ear-r02-permanent-acceptance-receipt
+          path: kaopu-unified-human-workbench/ear-growth/acceptance
+          retention-days: 14
