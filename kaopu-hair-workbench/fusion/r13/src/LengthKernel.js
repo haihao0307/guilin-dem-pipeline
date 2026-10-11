@@ -53,7 +53,7 @@ export function transportFrame(axis,t0,t1){
  let result;
  if(c<-.99999){const aux=unit(cross(a,Math.abs(a[0])<.8?[1,0,0]:[0,1,0]));result=sub(mul(aux,2*dot(aux,axis)),axis)}
  else{result=add(add(axis,cross(v,axis)),mul(cross(v,cross(v,axis)),1/Math.max(1e-8,1+c)));}
- return unit(sub(result,mul(b,dot(result,b))));
+ const projected=sub(result,mul(b,dot(result,b)));return Math.hypot(...projected)>1e-9?unit(projected):unit(cross(b,Math.abs(b[0])<.8?[1,0,0]:[0,1,0]));
 }
 /** Lazy actual-triangle signed-distance cache, 3mm cells and trilinear interpolation.
  * Approximate neutral-head obstacle field, not a dynamic or full-body collision claim.
@@ -72,7 +72,7 @@ function fieldDirection(p,root,d){
  const side=partSide(root,d),lateral=smooth(.033,.080,Math.abs(root[0])),back=1-smooth(-.040,.016,root[2]),low=1-smooth(.303,.35,root[1]);
  let crown;
  if(d.style==='textured-fringe')crown=[.08+side*(d.partOpen*.004+(d.flow-10)*.003),-.08,1];
- else if(d.style==='side-flow')crown=[side*(.6+d.flow*.008),-.13,.70];
+ else if(d.style==='side-flow')crown=[side*(.6+d.flow*.008+(d.partOpen-56)*.004),-.13,.70];
  else crown=[side*(.5+d.partOpen*.008+(d.flow-65)*.004),-.10,.60];
  const flank=[side*.12,-1,root[2]>.025?.24:-.32];
  crown=blend(crown,flank,lateral*(.3+.7*low));
