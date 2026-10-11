@@ -1,4 +1,4 @@
-name: Kowloon sparse saved-state continuation QA
+name: Kowloon complete room with sparse native ray continuation
 on:
   push:
     branches: ['qa/kowloon-webgpu-r01-20261011']
@@ -7,7 +7,7 @@ permissions:
 jobs:
   room-webgpu:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -18,17 +18,45 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/wgpu" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/wgpu/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/wgpu/node_modules" >> "$GITHUB_ENV"
-      - name: Replay actual primary and glass failures
+      - name: Static contracts, start real GPU QA, await complete first frame
         run: |
           node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r03/webgpu-receiver/room-slice/qa/wgsl-identifiers.test.mjs
           node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r03/webgpu-receiver/room-slice/qa/stage-source.test.mjs
-          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r03/webgpu-receiver/room-slice/qa/ray-diagnostics.test.mjs
-          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r03/webgpu-receiver/room-slice/qa/trace-resume-control.test.mjs
           node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r03/webgpu-receiver/room-slice/qa/ray-status.test.mjs
-          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r03/webgpu-receiver/room-slice/qa/ray-resume.cjs
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r03/webgpu-receiver/room-slice/qa/coverage-contract.test.mjs
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r03/webgpu-receiver/room-slice/qa/source.test.mjs
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r03/webgpu-receiver/room-slice/qa/trace-resume-control.test.mjs
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r03/webgpu-receiver/room-slice/qa/ray-diagnostics.test.mjs
+          mkdir -p "$RUNNER_TEMP/room-run"
+          (
+            set +e
+            node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r03/webgpu-receiver/room-slice/qa/room-two-stage.cjs > "$RUNNER_TEMP/room-run/log" 2>&1
+            echo "$?" > "$RUNNER_TEMP/room-run/exit"
+          ) </dev/null >/dev/null 2>&1 &
+          for i in $(seq 1 180); do
+            if [ -f kowloon-room-webgpu-results/room.png ]; then break; fi
+            if [ -f "$RUNNER_TEMP/room-run/exit" ]; then cat "$RUNNER_TEMP/room-run/log"; exit 1; fi
+            sleep 5
+          done
+          cat "$RUNNER_TEMP/room-run/log"
+          test -f kowloon-room-webgpu-results/room.png
+      - name: Upload actual complete first frame while remaining views continue
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: kowloon-room-first-frame-${{ github.sha }}
+          path: |
+            kowloon-room-webgpu-results/room.png
+            kowloon-room-webgpu-results/receipt.json
+            kowloon-room-webgpu-results/progress-*.json
+          retention-days: 7
+      - name: Await same browser remaining views and final ray contracts
+        run: |
+          while [ ! -f "$RUNNER_TEMP/room-run/exit" ]; do sleep 5; done
+          cat "$RUNNER_TEMP/room-run/log"
+          exit "$(cat "$RUNNER_TEMP/room-run/exit")"
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: kowloon-ray-resume-${{ github.sha }}
-          path: kowloon-ray-resume-results/
+          name: kowloon-room-webgpu-${{ github.sha }}
+          path: kowloon-room-webgpu-results/
           retention-days: 7
