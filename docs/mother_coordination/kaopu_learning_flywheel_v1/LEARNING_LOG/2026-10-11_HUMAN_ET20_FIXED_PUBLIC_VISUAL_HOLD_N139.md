@@ -118,11 +118,11 @@ Producer 不得自批 baseline 或最终视觉结论。自动门全绿仍只写 
 
 ## 9. 指标
 
-- 首次候选功能门通过率：true（最终 exact run）
+- 首次候选功能门通过率：false（首轮固定 800ms playback wait 失败；最终 exact run #4 成功）
 - 首次候选视觉通过率：unknown
 - 用户纠错次数：0（ET20 暂无新用户反馈）
 - 同类错误复发率：unknown
 - rejected lineage 继承次数：0
 - stale delivery 次数：0
-- 每个 accepted delta 的内部迭代数：unknown（尚无视觉/user accepted delta）
+- 每个 functional accepted delta 的内部迭代数：4 个 workflow runs；视觉/user accepted delta：unknown
 - 用户指令到合法视觉 candidate 时间：unknown
