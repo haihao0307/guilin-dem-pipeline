@@ -77,6 +77,7 @@ export class CommonSkinLayer{
   const f=this.fields;for(const[name,array,size]of[['csRest',f.rest,3],['csRegion',f.regions,4],['csExtra',f.extra,4],['csType',f.types,1]])viewer.geometry.setAttribute(name,new THREE.BufferAttribute(array,size));
   this.U={csTone:{value:new THREE.Color()},csLipColor:{value:new THREE.Color()},csLipMix:{value:0},csDetail:{value:0},csRoughness:{value:0},csOil:{value:0},csVariation:{value:0},csRedness:{value:0},csAge:{value:.5},csLayer:{value:0},csBand:{value:0}};
   this.material=makeMaterial(this.U);this.set(settings);
+  viewer.model.faceSurface?.attachSkin?.(this);
  }
  set(values={}){
   if(this.disposed)return this.settings;
