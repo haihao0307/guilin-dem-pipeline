@@ -43,3 +43,13 @@ The first R13C.1 passed geometric and browser checks but was rejected on actual 
 The crown now advects a localized tangent-dominant field along guide points, rather than projecting fixed straight radial spokes. Local crown root puff is reduced. The existing second directional light is repositioned to the rear quarter so the back of the hairstyle can be inspected, not hidden in black. Real guide colors show actual anatomical classifications. The native ET18 head remains one visible mesh. Desktop uses at least 1.5 display samples per CSS pixel; this improves thin-edge sampling but increases fill cost.
 
 The nearest-guide early distance rejection now precedes expensive finite-part compatibility. A local 36k regression preserved identical root/curve hashes before and after that isolated optimization; this is not a device FPS claim. The full renderer and new crown geometry are separately retested. Prior cinematic and dynamic-physics limitations remain.
+
+## R13C.3 recovery
+
+R13C.2 build e8bd818726cdfb2c85abe1366c229816314178ab and run 38129669156 finished successfully while the conversation was interrupted. Actual top-view inspection still showed an overly wide radial crown exposure. Do not confuse browser success with visual acceptance.
+
+The new crown uses a near-tangential root direction that relaxes along the guide instead of radial spokes and excessive root puff. Adaptive 3–8 mm guide spacing and local orientation-aware guide selection resolve the curved region; the same potential roots and single dense strand mesh are retained. Crown-root emergence and lift are reduced in that same local field, not hidden by a scalp cap, black material or cloned lower layer.
+
+The existing public browser matrix now also opens all three styles and their top views; prior versions and original workbenches remain unchanged. Local Node tests can execute. The recovery container blocks browser navigation with ERR_BLOCKED_BY_ADMINISTRATOR, so actual browser rendering remains in the existing GitHub Actions runner. No local render claim is made.
+
+References checked on 2026-10-11: SideFX Guide Groom and Fur workflow (localized masks, compatible guide interpolation, no deletion at group labels), and AMD GPUOpen TressFX (high-quality coverage and simulation are distinct systems). This is our bounded static adaptation, not an embedded Houdini, TressFX, Perm or CUDA solver.

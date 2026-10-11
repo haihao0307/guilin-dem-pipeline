@@ -41,9 +41,9 @@ export function enforceTrim(root,points,d){
 export function growthDirection(p,root,d){
  const w=zoneWeights(root),side=partSign(root,d),part=finitePart(root,d);
  // Point whorl, not an ear-to-ear transition belt.
- const wx=-.008,wz=.005,dx=p[0]-wx,dz=p[2]-wz,rad=Math.hypot(dx,dz),turn=.32+1.15*Math.exp(-Math.pow(rad/.021,2));
+ const wx=-.008,wz=.005,dx=p[0]-wx,dz=p[2]-wz,rad=Math.hypot(dx,dz),turn=.32+1.20*Math.exp(-Math.pow(rad/.038,4))*Math.exp(-Math.pow(Math.hypot(p[0]-root[0],p[2]-root[2])/.030,2));
  let x=(dx*Math.cos(turn)-dz*Math.sin(turn))/.065,z=(dx*Math.sin(turn)+dz*Math.cos(turn))/.065,y=-.08-.7*(1-w.crown);
- if(rad<.0015){x+=.10;z+=.08;}
+ const core=1-smooth(.0003,.0018,rad);x+=.06*core;z+=.04*core;
  let authored;
  if(d.style==='textured-fringe')authored=[.11+(d.flow-10)*.006+side*d.partOpen*.0025,-.16,1];
  else if(d.style==='side-flow')authored=[side*(.48+d.flow*.008+d.partOpen*.003),-.18,.67];
@@ -54,4 +54,8 @@ export function growthDirection(p,root,d){
  return unit([x,y,z]);
 }
 export function coherentPhase(p){return .75*Math.sin(p[0]*91+p[2]*34)+.55*Math.sin(p[1]*83-p[2]*71);}
-export const TOPOLOGY_SPEC={version:'R13C-topology@2',units:'metre',whorlXZ:[-.008,.005],partExtent:'frontal scalp only; fades behind z=8–33mm',sideburnMinimumTipY:.278,napeMinimumTipY:.261,sharedInnerOuterField:true,innerCapMeshes:0,staticOnly:true};
+export const TOPOLOGY_SPEC={version:'R13C-topology@3',units:'metre',whorlXZ:[-.008,.005],partExtent:'frontal scalp only; fades behind z=8–33mm',sideburnMinimumTipY:.278,napeMinimumTipY:.261,sharedInnerOuterField:true,innerCapMeshes:0,staticOnly:true};
+
+// Adaptive guide sampling resolves a high-curvature flow without changing roots.
+export function crownWeight(p){return Math.exp(-Math.pow(Math.hypot(p[0]+.008,p[2]-.005)/.038,4))*smooth(.350,.380,p[1]);}
+export function guideSpacingAt(p){const r=Math.hypot(p[0]+.008,p[2]-.005);return mix(.008,mix(.003,.008,smooth(.018,.055,r)),smooth(.350,.380,p[1]));}

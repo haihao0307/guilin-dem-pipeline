@@ -27,7 +27,8 @@ s=s.replace('depth coverage uses stable spatial samples, not temporal reconstruc
 f.write_text(s)
 
 f=p/'src/GroomTopology.js';s=f.read_text()
-s=patch(s,'dx=root[0]-wx,dz=root[2]-wz,rad=Math.hypot(dx,dz),turn=.10+.29*Math.exp(-Math.pow(rad/.022,2))','dx=p[0]-wx,dz=p[2]-wz,rad=Math.hypot(dx,dz),turn=.32+1.15*Math.exp(-Math.pow(rad/.021,2))')
+if "R13C-topology@3" not in s:
+ s=patch(s,'dx=root[0]-wx,dz=root[2]-wz,rad=Math.hypot(dx,dz),turn=.10+.29*Math.exp(-Math.pow(rad/.022,2))','dx=p[0]-wx,dz=p[2]-wz,rad=Math.hypot(dx,dz),turn=.32+1.15*Math.exp(-Math.pow(rad/.021,2))')
 s=s.replace('R13C-topology@1','R13C-topology@2')
 f.write_text(s)
 

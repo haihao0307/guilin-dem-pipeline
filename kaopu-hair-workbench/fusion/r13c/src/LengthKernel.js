@@ -1,4 +1,4 @@
-import {partSign,canInterpolate,trimLength,rootVisibility,enforceTrim,growthDirection,coherentPhase,TOPOLOGY_SPEC} from './GroomTopology.js';
+import {crownWeight,guideSpacingAt,partSign,canInterpolate,trimLength,rootVisibility,enforceTrim,growthDirection,coherentPhase,TOPOLOGY_SPEC} from './GroomTopology.js';
 import {HeadSegmentGuard} from './HeadSegmentGuard.js';
 import {NeutralEarGuard} from './NeutralEarGuard.js';
 /** R13 self-authored length-conditioned rest-groom compiler.
@@ -75,23 +75,23 @@ export const fieldDirection=growthDirection;
 const pause=()=>new Promise(r=>setTimeout(r,0));
 function guard(cancel){if(cancel?.())throw new DOMException('已取消旧生成','AbortError');}
 export function selectGuideRoots(b,spacing=.008){
- const ids=[],bins=new Map(),key=(x,y,z)=>`${x},${y},${z}`;
+ const ids=[],guideRadii=[],bins=new Map(),key=(x,y,z)=>`${x},${y},${z}`;
  for(let i=0;i<b.count;i++){
-  const p=b.templateRoots.subarray(i*3,i*3+3),c=Array.from(p,v=>Math.floor(v/spacing));let near=false;
-  for(let x=-1;x<=1&&!near;x++)for(let y=-1;y<=1&&!near;y++)for(let z=-1;z<=1&&!near;z++)for(const id of bins.get(key(c[0]+x,c[1]+y,c[2]+z))||[]){const q=b.templateRoots.subarray(id*3,id*3+3);if(Math.hypot(...sub(p,q))<spacing){near=true;break}}
-  if(!near){ids.push(i);const k=key(...c);if(!bins.has(k))bins.set(k,[]);bins.get(k).push(i);}
+  const p=b.templateRoots.subarray(i*3,i*3+3),c=Array.from(p,v=>Math.floor(v/spacing)),localSpacing=Math.min(spacing,guideSpacingAt(p));let near=false;
+  for(let x=-1;x<=1&&!near;x++)for(let y=-1;y<=1&&!near;y++)for(let z=-1;z<=1&&!near;z++)for(const id of bins.get(key(c[0]+x,c[1]+y,c[2]+z))||[]){const q=b.templateRoots.subarray(id*3,id*3+3);if(Math.hypot(...sub(p,q))<Math.max(localSpacing,guideRadii[id])){near=true;break}}
+  if(!near){ids.push(i);guideRadii[i]=localSpacing;const k=key(...c);if(!bins.has(k))bins.set(k,[]);bins.get(k).push(i);}
  }
  return ids;
 }
 function makeGuide(b,id,d,skin,segments){
  const root=Array.from(b.templateRoots.subarray(id*3,id*3+3)),n=normalAt(b,id),rng=random01(id),length=lengthAt(root,d,rng),ds=length/segments,pts=[add(root,mul(n,.00002))],front=smooth(.025,.075,root[2])*(1-smooth(.05,.08,Math.abs(root[0]))),top=smooth(.325,.375,root[1]);
- let direction=fieldDirection(root,root,d),tan=unit(sub(direction,mul(n,dot(direction,n))));direction=unit(add(tan,mul(n,.35)));
+ let direction=fieldDirection(root,root,d),tan=unit(sub(direction,mul(n,dot(direction,n))));direction=unit(add(tan,mul(n,.35-.24*crownWeight(root))));
  for(let j=1;j<=segments;j++){
   const s=j/segments,prev=pts[j-1],near=skin.bvh.nearest(prev),normal=near.n,aim=fieldDirection(prev,root,d),along=unit(sub(aim,mul(normal,dot(aim,normal))));
   const release=smooth(.32,.82,s)*(.30+.70*front);
   let free=unit([aim[0]*(1-.35*s),-.5-1.2*s,aim[2]*(1-.75*s)]);
   let target=unit(blend(along,free,release));
-  const liftDerivative=d.volumeMM*(1-.45*Math.exp(-Math.pow(Math.hypot(root[0]+.008,root[2]-.005)/.022,2)))*.001/Math.max(.008,length)*Math.PI*Math.cos(Math.PI*s)*(.35+.65*top);
+  const liftDerivative=d.volumeMM*(1-.78*crownWeight(root))*.001/Math.max(.008,length)*Math.PI*Math.cos(Math.PI*s)*(.35+.65*top);
   target=unit(add(target,mul(normal,liftDerivative*(1-release))));
   direction=unit(blend(direction,target,.46));let p=add(prev,mul(direction,ds));
   // Contact clearance is sampled on the original head, not on a substitute sphere.
@@ -100,10 +100,10 @@ function makeGuide(b,id,d,skin,segments){
  }
  enforceTrim(root,pts,d);skin.earGuard.apply(pts);skin.headGuard.apply(pts);
  const arc=[0];for(let i=1;i<pts.length;i++)arc.push(arc.at(-1)+Math.hypot(...sub(pts[i],pts[i-1])));
- return{id,root,normal:n,points:pts,arc,length:arc.at(-1),side:partSide(root,d),region:regionAt(root),requestedLength:length};
+ return{id,root,normal:n,points:pts,arc,length:arc.at(-1),side:partSide(root,d),region:regionAt(root),requestedLength:length,rootFlow:fieldDirection(root,root,d)};
 }
 function sampleGuide(g,s){const a=clamp(s)*g.length;let j=1;while(j<g.arc.length-1&&g.arc[j]<a)j++;return blend(g.points[j-1],g.points[j],(a-g.arc[j-1])/Math.max(1e-9,g.arc[j]-g.arc[j-1]));}
-function nearestGuides(root,d,gs){const id=[-1,-1,-1],ds=[Infinity,Infinity,Infinity],side=partSide(root,d);for(let i=0;i<gs.length;i++){const g=gs[i];const delta=sub(g.root,root),dist=dot(delta,delta);if(dist>=ds[2])continue;if(!canInterpolate(root,g.root,d))continue;let k=2;while(k>0&&dist<ds[k-1]){ds[k]=ds[k-1];id[k]=id[k-1];k--;}ds[k]=dist;id[k]=i;}
+function nearestGuides(root,d,gs){const id=[-1,-1,-1],ds=[Infinity,Infinity,Infinity],side=partSide(root,d),cw=crownWeight(root),flow=fieldDirection(root,root,d);for(let i=0;i<gs.length;i++){const g=gs[i];const delta=sub(g.root,root),dist=dot(delta,delta)*(1+5*cw*Math.pow(1-clamp(dot(flow,g.rootFlow),-1,1),2));if(dist>=ds[2])continue;if(!canInterpolate(root,g.root,d))continue;let k=2;while(k>0&&dist<ds[k-1]){ds[k]=ds[k-1];id[k]=id[k-1];k--;}ds[k]=dist;id[k]=i;}
  if(id[0]<0)throw Error('局部发区缺少兼容导向');for(let j=1;j<3;j++)if(id[j]<0){id[j]=id[0];ds[j]=ds[0];}let w=ds.map(x=>1/Math.max(x,1e-8)),sum=w.reduce((a,b)=>a+b,0);return{id,w:w.map(x=>x/sum)};
 }
 function rotateNormal(delta,a,b){const v=cross(a,b),c=clamp(dot(a,b),-1,1);if(c<-.95)return delta;return add(add(delta,cross(v,delta)),mul(cross(v,cross(v,delta)),1/Math.max(1e-5,1+c)));}

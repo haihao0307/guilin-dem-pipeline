@@ -14,10 +14,11 @@ try{
  let d=await page.evaluate('lengthGroom.diagnostics()');check('one actual current native head with loaded skin and natural eyes',d.headCount===1&&d.headIntegration?.nativeVersion==='ET18-L2'&&d.headIntegration.face.ready&&d.headIntegration.eyes.ready,d.headIntegration?.sourceRevision);
  check('hair uses nearest-depth coverage, not sorted alpha blending',d.fiber.coverageMode==='continuous-strand-coverage-depth'&&!d.fiber.transparent&&d.fiber.depthWrite&&d.fiber.opacity===1,d.fiber);
  const firstHash=d.curveHash,rootHash=d.rootHash;const before=await shot(page,'textured-fringe-three');await page.evaluate('lengthGroom.reverseHairOrder()');await page.evaluate('lengthGroom.whenRendered()');const reversed=await page.locator('#canvas').screenshot(),order=difference(before,reversed);check('triangle order cannot change nearest visible hair layer',order.changedFraction<.001&&order.mean<.05,order);await page.evaluate('lengthGroom.reverseHairOrder()');await page.evaluate('lengthGroom.whenRendered()');
- const styles=publicMode?['textured-fringe','side-flow']:['textured-fringe','side-flow','curtain-layer'];const hashes=[];
+ const styles=['textured-fringe','side-flow','curtain-layer'];const hashes=[];
  for(const style of styles){if(style!=='textured-fringe')await page.locator('[data-preset="'+style+'"]').click();await ready(page);await page.evaluate('lengthGroom.whenRendered()');d=await page.evaluate('lengthGroom.diagnostics()');hashes.push(d.curveHash);check(style+' expected real preset and fixed root set',d.recipe.style===style&&d.rootHash===rootHash&&!d.busy);
-  for(const view of publicMode?['left']:['front','left','back','top']){await page.evaluate(v=>lengthGroom.camera(v),view);await shot(page,style+'-'+view);}
+  for(const view of publicMode?['left','top']:['front','left','back','top']){await page.evaluate(v=>lengthGroom.camera(v),view);await shot(page,style+'-'+view);}
  }
+ check('compact crown flow and adaptive guides are really running',d.topology.version==='R13C-topology@3'&&d.guideCount>675,{version:d.topology.version,guides:d.guideCount});
  check('style buttons produce distinct geometries',new Set(hashes).size===hashes.length);
  if(!publicMode){
   await page.evaluate('lengthGroom.camera("three");lengthGroom.setInspection("guides")');await shot(page,'actual-guide-groups');check('real guide groups have geometry color data',(await page.evaluate('lengthGroom.diagnostics()')).guideRegionColors===true);await page.evaluate('lengthGroom.setInspection("fibers")');
