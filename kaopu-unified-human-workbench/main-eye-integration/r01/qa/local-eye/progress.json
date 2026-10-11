@@ -1,0 +1,1560 @@
+{
+  "tests": [
+    {
+      "name": "native buffers and nonocular triangles preserved",
+      "passed": true,
+      "ms": 7,
+      "data": {
+        "mode": "eye-only tangent-plane midpoint refinement",
+        "addedVertices": 18192,
+        "eyeTrianglesBefore": 12096,
+        "eyeTrianglesAfter": 48384,
+        "maxCorrectionMM": 0.05540602346784787,
+        "correctionCapMM": 0.08,
+        "nativeVerticesMoved": 0,
+        "nonOcularTrianglesChanged": 0,
+        "retainedPrefixDelta": 0,
+        "nativeVertices": 25417,
+        "displayVertices": 91635,
+        "displayTriangles": 182776
+      }
+    },
+    {
+      "name": "contact is measured from current skin and ocular intersections",
+      "passed": true,
+      "ms": 9,
+      "data": {
+        "version": "ET16-contact@1",
+        "updates": 1,
+        "method": "current native skin/ocular intersection; view-independent; appearance field only",
+        "eyes": [
+          {
+            "side": "right",
+            "contactSegments": 84,
+            "sourceVertices": 771,
+            "sourceTriangles": 1512,
+            "insideSkinVertices": 294
+          },
+          {
+            "side": "left",
+            "contactSegments": 91,
+            "sourceVertices": 771,
+            "sourceTriangles": 1512,
+            "insideSkinVertices": 279
+          }
+        ],
+        "shadedVertices": 25877,
+        "addedGeometry": 0,
+        "nativePositionsChanged": 0,
+        "clinicalMeasurement": false
+      }
+    },
+    {
+      "name": "six natural presets produce distinct actual images",
+      "passed": true,
+      "ms": 45838,
+      "data": [
+        {
+          "id": "harveyHazel",
+          "pixelSHA256": "9227f19039a3bd59a24b480133907f1c8786b925ce7ae1c59d96f6090bb4c9ed"
+        },
+        {
+          "id": "harveyBlue",
+          "pixelSHA256": "5d887ce06eb05da8de881f0c3f69c6306170f257abd3861d3f50687a084b4d70"
+        },
+        {
+          "id": "darkBrown",
+          "pixelSHA256": "9af1eff5df2f8a3e18c7b202e2e1a87af783cef535863dabe4af90a30bc76cdc"
+        },
+        {
+          "id": "lightBrown",
+          "pixelSHA256": "ee68ab9e8891f9bf7263d3481a61e5630164221a3a9dff19a1379d8766999fd9"
+        },
+        {
+          "id": "olive",
+          "pixelSHA256": "944b072e68c97fa847b6c4dc3fa5560b61daad403d3d29c83725c238e1cc481d"
+        },
+        {
+          "id": "slate",
+          "pixelSHA256": "f7de2453ed30c2f152db3e01885f602720d991c8d10367f380e7a9aebdfe4ae7"
+        }
+      ]
+    },
+    {
+      "name": "left and right labels address the matching anatomical eye pixels",
+      "passed": true,
+      "ms": 41522,
+      "data": {
+        "boxes": {
+          "right": {
+            "x": 1.1283031342956982,
+            "y": 170.14160188347947,
+            "width": 255.84415542591486,
+            "height": 254.28655097554932
+          },
+          "left": {
+            "x": 540.1805775952414,
+            "y": 169.72294401029023,
+            "width": 255.75023347019396,
+            "height": 254.1975490610576
+          }
+        },
+        "rows": [
+          {
+            "side": "left",
+            "own": {
+              "changedPixels": 4563,
+              "sumChannelDelta": 495726
+            },
+            "other": {
+              "changedPixels": 0,
+              "sumChannelDelta": 0
+            }
+          },
+          {
+            "side": "right",
+            "own": {
+              "changedPixels": 4667,
+              "sumChannelDelta": 482260
+            },
+            "other": {
+              "changedPixels": 0,
+              "sumChannelDelta": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "pupil sclera vessels optics and new transitions change actual pixels",
+      "passed": true,
+      "ms": 208318,
+      "data": [
+        {
+          "key": "pupil",
+          "changedPixels": 9429,
+          "sumChannelDelta": 1158391
+        },
+        {
+          "key": "yellow",
+          "changedPixels": 11620,
+          "sumChannelDelta": 295270
+        },
+        {
+          "key": "redness",
+          "changedPixels": 10894,
+          "sumChannelDelta": 186518
+        },
+        {
+          "key": "veinAmount",
+          "changedPixels": 3067,
+          "sumChannelDelta": 71970
+        },
+        {
+          "key": "veinDensity",
+          "changedPixels": 3067,
+          "sumChannelDelta": 71970
+        },
+        {
+          "key": "wetness",
+          "changedPixels": 927,
+          "sumChannelDelta": 33225
+        },
+        {
+          "key": "limbusSoftness",
+          "changedPixels": 3472,
+          "sumChannelDelta": 242247
+        },
+        {
+          "key": "pupilFeather",
+          "changedPixels": 1181,
+          "sumChannelDelta": 18851
+        },
+        {
+          "key": "contactShadow",
+          "changedPixels": 11227,
+          "sumChannelDelta": 396129
+        },
+        {
+          "key": "tearWetness",
+          "changedPixels": 86,
+          "sumChannelDelta": 8114
+        }
+      ]
+    },
+    {
+      "name": "original-source mode bypasses iris and sclera edits",
+      "passed": true,
+      "ms": 17236,
+      "data": {
+        "changedPixels": 0,
+        "sumChannelDelta": 0
+      }
+    },
+    {
+      "name": "no imaginary catchlight remains when scene direct lights are off",
+      "passed": true,
+      "ms": 34680,
+      "data": {
+        "changedPixels": 0,
+        "sumChannelDelta": 0
+      }
+    },
+    {
+      "name": "ET15 archives migrate with named eye parameters retained",
+      "passed": true,
+      "ms": 709,
+      "data": {
+        "schema": "kaopu/natural-eyes@2",
+        "oldLabelsPreserved": true,
+        "newDefaultsAdded": true
+      }
+    },
+    {
+      "name": "complete archive round trip and invalid archive rollback",
+      "passed": true,
+      "ms": 568,
+      "data": {
+        "roundTrip": true,
+        "invalidRejected": true
+      }
+    },
+    {
+      "name": "36 character presets retain finite geometry and fixed buffers",
+      "passed": true,
+      "ms": 79859,
+      "data": [
+        {
+          "id": "r02-child-female-short-slim",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1,\"tint\":\"#776044\",\"tintAmount\":0,\"innerColor\":\"#927340\",\"innerAmount\":0,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":4,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1,\"tint\":\"#776044\",\"tintAmount\":0,\"innerColor\":\"#927340\",\"innerAmount\":0,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":1,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 2,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 84,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 293
+              },
+              {
+                "side": "left",
+                "contactSegments": 91,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 280
+              }
+            ],
+            "shadedVertices": 30137,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-child-male-tall-slim",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.86,\"tint\":\"#64452f\",\"tintAmount\":0.94,\"innerColor\":\"#765438\",\"innerAmount\":0.18,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":6,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.86,\"tint\":\"#64452f\",\"tintAmount\":0.94,\"innerColor\":\"#765438\",\"innerAmount\":0.18,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-2,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 3,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 82,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 293
+              },
+              {
+                "side": "left",
+                "contactSegments": 91,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 281
+              }
+            ],
+            "shadedVertices": 28459,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-child-female-tall-sturdy",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1.08,\"tint\":\"#967343\",\"tintAmount\":0.9,\"innerColor\":\"#977341\",\"innerAmount\":0.23,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":8,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1.08,\"tint\":\"#967343\",\"tintAmount\":0.9,\"innerColor\":\"#977341\",\"innerAmount\":0.23,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-6,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 4,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 84,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 294
+              },
+              {
+                "side": "left",
+                "contactSegments": 96,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 267
+              }
+            ],
+            "shadedVertices": 29028,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-child-male-short-heavy",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.95,\"tint\":\"#64735b\",\"tintAmount\":0.65,\"innerColor\":\"#9c793b\",\"innerAmount\":0.32,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":8,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.95,\"tint\":\"#64735b\",\"tintAmount\":0.65,\"innerColor\":\"#9c793b\",\"innerAmount\":0.32,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-6,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 5,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 84,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 293
+              },
+              {
+                "side": "left",
+                "contactSegments": 96,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 266
+              }
+            ],
+            "shadedVertices": 29043,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-child-female-rounded",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1.08,\"tint\":\"#967343\",\"tintAmount\":0.9,\"innerColor\":\"#977341\",\"innerAmount\":0.23,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-1,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1.08,\"tint\":\"#967343\",\"tintAmount\":0.9,\"innerColor\":\"#977341\",\"innerAmount\":0.23,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":8,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 6,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 87,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 291
+              },
+              {
+                "side": "left",
+                "contactSegments": 92,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 263
+              }
+            ],
+            "shadedVertices": 29304,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-child-male-sturdy",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":1,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.94,\"tint\":\"#607887\",\"tintAmount\":0.82,\"innerColor\":\"#7d7862\",\"innerAmount\":0.22,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":6,\"contrast\":0.82,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":1,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.94,\"tint\":\"#607887\",\"tintAmount\":0.82,\"innerColor\":\"#7d7862\",\"innerAmount\":0.22,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-8,\"contrast\":0.82,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 7,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 84,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 293
+              },
+              {
+                "side": "left",
+                "contactSegments": 96,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 268
+              }
+            ],
+            "shadedVertices": 28600,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-teen-female-short-slim",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.86,\"tint\":\"#64452f\",\"tintAmount\":0.94,\"innerColor\":\"#765438\",\"innerAmount\":0.18,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":0,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.86,\"tint\":\"#64452f\",\"tintAmount\":0.94,\"innerColor\":\"#765438\",\"innerAmount\":0.18,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-7,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 8,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 83,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 291
+              },
+              {
+                "side": "left",
+                "contactSegments": 91,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 282
+              }
+            ],
+            "shadedVertices": 27602,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-teen-male-tall-slim",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.86,\"tint\":\"#64452f\",\"tintAmount\":0.94,\"innerColor\":\"#765438\",\"innerAmount\":0.18,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":6,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.86,\"tint\":\"#64452f\",\"tintAmount\":0.94,\"innerColor\":\"#765438\",\"innerAmount\":0.18,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-1,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 9,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 84,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 299
+              },
+              {
+                "side": "left",
+                "contactSegments": 91,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 284
+              }
+            ],
+            "shadedVertices": 26381,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-teen-female-tall-sturdy",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1.08,\"tint\":\"#967343\",\"tintAmount\":0.9,\"innerColor\":\"#977341\",\"innerAmount\":0.23,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":3,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1.08,\"tint\":\"#967343\",\"tintAmount\":0.9,\"innerColor\":\"#977341\",\"innerAmount\":0.23,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":7,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 10,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 82,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 295
+              },
+              {
+                "side": "left",
+                "contactSegments": 96,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 270
+              }
+            ],
+            "shadedVertices": 26690,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-teen-male-short-heavy",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1.08,\"tint\":\"#967343\",\"tintAmount\":0.9,\"innerColor\":\"#977341\",\"innerAmount\":0.23,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":0,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1.08,\"tint\":\"#967343\",\"tintAmount\":0.9,\"innerColor\":\"#977341\",\"innerAmount\":0.23,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-4,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 11,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 85,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 292
+              },
+              {
+                "side": "left",
+                "contactSegments": 96,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 267
+              }
+            ],
+            "shadedVertices": 26951,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-teen-female-rounded",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1.08,\"tint\":\"#967343\",\"tintAmount\":0.9,\"innerColor\":\"#977341\",\"innerAmount\":0.23,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-2,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1.08,\"tint\":\"#967343\",\"tintAmount\":0.9,\"innerColor\":\"#977341\",\"innerAmount\":0.23,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":8,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 12,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 86,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 295
+              },
+              {
+                "side": "left",
+                "contactSegments": 96,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 268
+              }
+            ],
+            "shadedVertices": 27050,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-teen-male-sturdy",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.86,\"tint\":\"#64452f\",\"tintAmount\":0.94,\"innerColor\":\"#765438\",\"innerAmount\":0.18,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":4,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.86,\"tint\":\"#64452f\",\"tintAmount\":0.94,\"innerColor\":\"#765438\",\"innerAmount\":0.18,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-1,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 13,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 85,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 292
+              },
+              {
+                "side": "left",
+                "contactSegments": 96,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 267
+              }
+            ],
+            "shadedVertices": 26540,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-young-female-short-slim",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":1,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.94,\"tint\":\"#607887\",\"tintAmount\":0.82,\"innerColor\":\"#7d7862\",\"innerAmount\":0.22,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-4,\"contrast\":0.82,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":1,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.94,\"tint\":\"#607887\",\"tintAmount\":0.82,\"innerColor\":\"#7d7862\",\"innerAmount\":0.22,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-3,\"contrast\":0.82,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 14,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 83,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 290
+              },
+              {
+                "side": "left",
+                "contactSegments": 88,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 286
+              }
+            ],
+            "shadedVertices": 27277,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-young-male-tall-slim",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.86,\"tint\":\"#64452f\",\"tintAmount\":0.94,\"innerColor\":\"#765438\",\"innerAmount\":0.18,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-4,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.86,\"tint\":\"#64452f\",\"tintAmount\":0.94,\"innerColor\":\"#765438\",\"innerAmount\":0.18,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-1,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 15,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 83,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 302
+              },
+              {
+                "side": "left",
+                "contactSegments": 86,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 288
+              }
+            ],
+            "shadedVertices": 25889,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-young-female-tall-sturdy",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1.08,\"tint\":\"#967343\",\"tintAmount\":0.9,\"innerColor\":\"#977341\",\"innerAmount\":0.23,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":0,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1.08,\"tint\":\"#967343\",\"tintAmount\":0.9,\"innerColor\":\"#977341\",\"innerAmount\":0.23,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-3,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 16,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 86,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 294
+              },
+              {
+                "side": "left",
+                "contactSegments": 98,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 269
+              }
+            ],
+            "shadedVertices": 26081,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-young-male-short-heavy",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1.08,\"tint\":\"#967343\",\"tintAmount\":0.9,\"innerColor\":\"#977341\",\"innerAmount\":0.23,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":3,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1.08,\"tint\":\"#967343\",\"tintAmount\":0.9,\"innerColor\":\"#977341\",\"innerAmount\":0.23,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":1,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 17,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 87,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 290
+              },
+              {
+                "side": "left",
+                "contactSegments": 94,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 265
+              }
+            ],
+            "shadedVertices": 26225,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-young-female-rounded",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.95,\"tint\":\"#64735b\",\"tintAmount\":0.65,\"innerColor\":\"#9c793b\",\"innerAmount\":0.32,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":7,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.95,\"tint\":\"#64735b\",\"tintAmount\":0.65,\"innerColor\":\"#9c793b\",\"innerAmount\":0.32,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-4,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 18,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 92,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 288
+              },
+              {
+                "side": "left",
+                "contactSegments": 92,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 262
+              }
+            ],
+            "shadedVertices": 26483,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-young-male-sturdy",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1,\"tint\":\"#776044\",\"tintAmount\":0,\"innerColor\":\"#927340\",\"innerAmount\":0,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-5,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1,\"tint\":\"#776044\",\"tintAmount\":0,\"innerColor\":\"#927340\",\"innerAmount\":0,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-7,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 19,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 87,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 290
+              },
+              {
+                "side": "left",
+                "contactSegments": 93,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 264
+              }
+            ],
+            "shadedVertices": 25869,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-adult-female-short-slim",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":1,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.94,\"tint\":\"#607887\",\"tintAmount\":0.82,\"innerColor\":\"#7d7862\",\"innerAmount\":0.22,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-1,\"contrast\":0.82,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":1,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.94,\"tint\":\"#607887\",\"tintAmount\":0.82,\"innerColor\":\"#7d7862\",\"innerAmount\":0.22,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-6,\"contrast\":0.82,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 20,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 83,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 290
+              },
+              {
+                "side": "left",
+                "contactSegments": 88,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 286
+              }
+            ],
+            "shadedVertices": 27379,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-adult-male-tall-slim",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":1,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.94,\"tint\":\"#607887\",\"tintAmount\":0.82,\"innerColor\":\"#7d7862\",\"innerAmount\":0.22,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-7,\"contrast\":0.82,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":1,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.94,\"tint\":\"#607887\",\"tintAmount\":0.82,\"innerColor\":\"#7d7862\",\"innerAmount\":0.22,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":1,\"contrast\":0.82,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 21,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 84,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 301
+              },
+              {
+                "side": "left",
+                "contactSegments": 84,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 289
+              }
+            ],
+            "shadedVertices": 25925,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-adult-female-tall-sturdy",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.95,\"tint\":\"#64735b\",\"tintAmount\":0.65,\"innerColor\":\"#9c793b\",\"innerAmount\":0.32,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-6,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.95,\"tint\":\"#64735b\",\"tintAmount\":0.65,\"innerColor\":\"#9c793b\",\"innerAmount\":0.32,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-7,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 22,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 88,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 296
+              },
+              {
+                "side": "left",
+                "contactSegments": 96,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 268
+              }
+            ],
+            "shadedVertices": 26121,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-adult-male-short-heavy",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1.08,\"tint\":\"#967343\",\"tintAmount\":0.9,\"innerColor\":\"#977341\",\"innerAmount\":0.23,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":4,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1.08,\"tint\":\"#967343\",\"tintAmount\":0.9,\"innerColor\":\"#977341\",\"innerAmount\":0.23,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":3,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 23,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 88,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 287
+              },
+              {
+                "side": "left",
+                "contactSegments": 91,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 263
+              }
+            ],
+            "shadedVertices": 26213,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-adult-female-rounded",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1.08,\"tint\":\"#967343\",\"tintAmount\":0.9,\"innerColor\":\"#977341\",\"innerAmount\":0.23,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":6,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1.08,\"tint\":\"#967343\",\"tintAmount\":0.9,\"innerColor\":\"#977341\",\"innerAmount\":0.23,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":8,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 24,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 90,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 288
+              },
+              {
+                "side": "left",
+                "contactSegments": 92,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 261
+              }
+            ],
+            "shadedVertices": 26520,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-adult-male-sturdy",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":1,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.94,\"tint\":\"#607887\",\"tintAmount\":0.82,\"innerColor\":\"#7d7862\",\"innerAmount\":0.22,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-6,\"contrast\":0.82,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":1,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.94,\"tint\":\"#607887\",\"tintAmount\":0.82,\"innerColor\":\"#7d7862\",\"innerAmount\":0.22,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":4,\"contrast\":0.82,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 25,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 88,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 287
+              },
+              {
+                "side": "left",
+                "contactSegments": 91,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 263
+              }
+            ],
+            "shadedVertices": 25823,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-middle-female-short-slim",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.95,\"tint\":\"#64735b\",\"tintAmount\":0.65,\"innerColor\":\"#9c793b\",\"innerAmount\":0.32,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-6,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.95,\"tint\":\"#64735b\",\"tintAmount\":0.65,\"innerColor\":\"#9c793b\",\"innerAmount\":0.32,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-4,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 26,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 83,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 291
+              },
+              {
+                "side": "left",
+                "contactSegments": 82,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 290
+              }
+            ],
+            "shadedVertices": 27438,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-middle-male-tall-slim",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1.08,\"tint\":\"#967343\",\"tintAmount\":0.9,\"innerColor\":\"#977341\",\"innerAmount\":0.23,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-6,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1.08,\"tint\":\"#967343\",\"tintAmount\":0.9,\"innerColor\":\"#977341\",\"innerAmount\":0.23,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":7,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 27,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 83,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 302
+              },
+              {
+                "side": "left",
+                "contactSegments": 84,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 290
+              }
+            ],
+            "shadedVertices": 25984,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-middle-female-tall-sturdy",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":1,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.94,\"tint\":\"#607887\",\"tintAmount\":0.82,\"innerColor\":\"#7d7862\",\"innerAmount\":0.22,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":8,\"contrast\":0.82,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":1,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.94,\"tint\":\"#607887\",\"tintAmount\":0.82,\"innerColor\":\"#7d7862\",\"innerAmount\":0.22,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":5,\"contrast\":0.82,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 28,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 87,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 303
+              },
+              {
+                "side": "left",
+                "contactSegments": 101,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 274
+              }
+            ],
+            "shadedVertices": 26153,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-middle-male-short-heavy",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1,\"tint\":\"#776044\",\"tintAmount\":0,\"innerColor\":\"#927340\",\"innerAmount\":0,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-4,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1,\"tint\":\"#776044\",\"tintAmount\":0,\"innerColor\":\"#927340\",\"innerAmount\":0,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":1,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 29,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 84,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 292
+              },
+              {
+                "side": "left",
+                "contactSegments": 96,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 268
+              }
+            ],
+            "shadedVertices": 26241,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-middle-female-rounded",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.86,\"tint\":\"#64452f\",\"tintAmount\":0.94,\"innerColor\":\"#765438\",\"innerAmount\":0.18,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-8,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.86,\"tint\":\"#64452f\",\"tintAmount\":0.94,\"innerColor\":\"#765438\",\"innerAmount\":0.18,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":7,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 30,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 88,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 300
+              },
+              {
+                "side": "left",
+                "contactSegments": 96,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 270
+              }
+            ],
+            "shadedVertices": 26490,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-middle-male-sturdy",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1.08,\"tint\":\"#967343\",\"tintAmount\":0.9,\"innerColor\":\"#977341\",\"innerAmount\":0.23,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":5,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1.08,\"tint\":\"#967343\",\"tintAmount\":0.9,\"innerColor\":\"#977341\",\"innerAmount\":0.23,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-8,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 31,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 84,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 292
+              },
+              {
+                "side": "left",
+                "contactSegments": 98,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 269
+              }
+            ],
+            "shadedVertices": 25779,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-senior-female-short-slim",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.86,\"tint\":\"#64452f\",\"tintAmount\":0.94,\"innerColor\":\"#765438\",\"innerAmount\":0.18,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-3,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.86,\"tint\":\"#64452f\",\"tintAmount\":0.94,\"innerColor\":\"#765438\",\"innerAmount\":0.18,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-4,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 32,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 83,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 303
+              },
+              {
+                "side": "left",
+                "contactSegments": 83,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 294
+              }
+            ],
+            "shadedVertices": 27559,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-senior-male-tall-slim",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.86,\"tint\":\"#64452f\",\"tintAmount\":0.94,\"innerColor\":\"#765438\",\"innerAmount\":0.18,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":3,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.86,\"tint\":\"#64452f\",\"tintAmount\":0.94,\"innerColor\":\"#765438\",\"innerAmount\":0.18,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":0,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 33,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 83,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 303
+              },
+              {
+                "side": "left",
+                "contactSegments": 85,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 293
+              }
+            ],
+            "shadedVertices": 25945,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-senior-female-tall-sturdy",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.95,\"tint\":\"#64735b\",\"tintAmount\":0.65,\"innerColor\":\"#9c793b\",\"innerAmount\":0.32,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":5,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.95,\"tint\":\"#64735b\",\"tintAmount\":0.65,\"innerColor\":\"#9c793b\",\"innerAmount\":0.32,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":1,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 34,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 84,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 306
+              },
+              {
+                "side": "left",
+                "contactSegments": 86,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 291
+              }
+            ],
+            "shadedVertices": 26258,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-senior-male-short-heavy",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.95,\"tint\":\"#64735b\",\"tintAmount\":0.65,\"innerColor\":\"#9c793b\",\"innerAmount\":0.32,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-1,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.95,\"tint\":\"#64735b\",\"tintAmount\":0.65,\"innerColor\":\"#9c793b\",\"innerAmount\":0.32,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-6,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 35,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 84,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 305
+              },
+              {
+                "side": "left",
+                "contactSegments": 97,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 284
+              }
+            ],
+            "shadedVertices": 26178,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-senior-female-rounded",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.86,\"tint\":\"#64452f\",\"tintAmount\":0.94,\"innerColor\":\"#765438\",\"innerAmount\":0.18,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-1,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":0.86,\"tint\":\"#64452f\",\"tintAmount\":0.94,\"innerColor\":\"#765438\",\"innerAmount\":0.18,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":0,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 36,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 84,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 306
+              },
+              {
+                "side": "left",
+                "contactSegments": 95,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 285
+              }
+            ],
+            "shadedVertices": 26490,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        },
+        {
+          "id": "r02-senior-male-sturdy",
+          "eyeProfile": "{\"schema\":\"kaopu/natural-eyes@2\",\"enabled\":true,\"reference\":false,\"autoPupil\":false,\"illumination\":0.5,\"left\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1,\"tint\":\"#776044\",\"tintAmount\":0,\"innerColor\":\"#927340\",\"innerAmount\":0,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":-5,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48},\"right\":{\"source\":0,\"irisScale\":1,\"pupil\":0.39,\"brightness\":1,\"tint\":\"#776044\",\"tintAmount\":0,\"innerColor\":\"#927340\",\"innerAmount\":0,\"scleraWhite\":0.28,\"yellow\":0.035,\"redness\":0.06,\"veinAmount\":0.38,\"veinDensity\":0.65,\"limbal\":0.28,\"rotation\":1,\"contrast\":1,\"wetness\":0.68,\"corneaRoughness\":0.075,\"scleraRoughness\":0.29,\"parallax\":0.45,\"limbusWidth\":0.12,\"limbusSoftness\":0.065,\"pupilFeather\":0.008,\"vesselSoftness\":0.38,\"contactShadow\":0.55,\"tearWetness\":0.48}}",
+          "contact": {
+            "version": "ET16-contact@1",
+            "updates": 37,
+            "method": "current native skin/ocular intersection; view-independent; appearance field only",
+            "eyes": [
+              {
+                "side": "right",
+                "contactSegments": 84,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 305
+              },
+              {
+                "side": "left",
+                "contactSegments": 97,
+                "sourceVertices": 771,
+                "sourceTriangles": 1512,
+                "insideSkinVertices": 284
+              }
+            ],
+            "shadedVertices": 25751,
+            "addedGeometry": 0,
+            "nativePositionsChanged": 0,
+            "clinicalMeasurement": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "gaze and open half-closed closed paths retain material attachment",
+      "passed": true,
+      "ms": 132870,
+      "data": {
+        "gaze": [
+          {
+            "axis": 6,
+            "value": 0.16,
+            "contact": {
+              "version": "ET16-contact@1",
+              "updates": 39,
+              "method": "current native skin/ocular intersection; view-independent; appearance field only",
+              "eyes": [
+                {
+                  "side": "right",
+                  "contactSegments": 89,
+                  "sourceVertices": 771,
+                  "sourceTriangles": 1512,
+                  "insideSkinVertices": 291
+                },
+                {
+                  "side": "left",
+                  "contactSegments": 93,
+                  "sourceVertices": 771,
+                  "sourceTriangles": 1512,
+                  "insideSkinVertices": 277
+                }
+              ],
+              "shadedVertices": 25873,
+              "addedGeometry": 0,
+              "nativePositionsChanged": 0,
+              "clinicalMeasurement": false
+            }
+          },
+          {
+            "axis": 6,
+            "value": -0.16,
+            "contact": {
+              "version": "ET16-contact@1",
+              "updates": 41,
+              "method": "current native skin/ocular intersection; view-independent; appearance field only",
+              "eyes": [
+                {
+                  "side": "right",
+                  "contactSegments": 88,
+                  "sourceVertices": 771,
+                  "sourceTriangles": 1512,
+                  "insideSkinVertices": 292
+                },
+                {
+                  "side": "left",
+                  "contactSegments": 100,
+                  "sourceVertices": 771,
+                  "sourceTriangles": 1512,
+                  "insideSkinVertices": 277
+                }
+              ],
+              "shadedVertices": 26040,
+              "addedGeometry": 0,
+              "nativePositionsChanged": 0,
+              "clinicalMeasurement": false
+            }
+          },
+          {
+            "axis": 7,
+            "value": 0.16,
+            "contact": {
+              "version": "ET16-contact@1",
+              "updates": 43,
+              "method": "current native skin/ocular intersection; view-independent; appearance field only",
+              "eyes": [
+                {
+                  "side": "right",
+                  "contactSegments": 87,
+                  "sourceVertices": 771,
+                  "sourceTriangles": 1512,
+                  "insideSkinVertices": 298
+                },
+                {
+                  "side": "left",
+                  "contactSegments": 89,
+                  "sourceVertices": 771,
+                  "sourceTriangles": 1512,
+                  "insideSkinVertices": 277
+                }
+              ],
+              "shadedVertices": 25890,
+              "addedGeometry": 0,
+              "nativePositionsChanged": 0,
+              "clinicalMeasurement": false
+            }
+          },
+          {
+            "axis": 7,
+            "value": -0.16,
+            "contact": {
+              "version": "ET16-contact@1",
+              "updates": 45,
+              "method": "current native skin/ocular intersection; view-independent; appearance field only",
+              "eyes": [
+                {
+                  "side": "right",
+                  "contactSegments": 85,
+                  "sourceVertices": 771,
+                  "sourceTriangles": 1512,
+                  "insideSkinVertices": 290
+                },
+                {
+                  "side": "left",
+                  "contactSegments": 103,
+                  "sourceVertices": 771,
+                  "sourceTriangles": 1512,
+                  "insideSkinVertices": 279
+                }
+              ],
+              "shadedVertices": 26021,
+              "addedGeometry": 0,
+              "nativePositionsChanged": 0,
+              "clinicalMeasurement": false
+            }
+          }
+        ],
+        "blinks": [
+          {
+            "t": 0,
+            "contact": {
+              "version": "ET16-contact@1",
+              "updates": 46,
+              "method": "current native skin/ocular intersection; view-independent; appearance field only",
+              "eyes": [
+                {
+                  "side": "right",
+                  "contactSegments": 84,
+                  "sourceVertices": 771,
+                  "sourceTriangles": 1512,
+                  "insideSkinVertices": 294
+                },
+                {
+                  "side": "left",
+                  "contactSegments": 91,
+                  "sourceVertices": 771,
+                  "sourceTriangles": 1512,
+                  "insideSkinVertices": 279
+                }
+              ],
+              "shadedVertices": 25877,
+              "addedGeometry": 0,
+              "nativePositionsChanged": 0,
+              "clinicalMeasurement": false
+            }
+          },
+          {
+            "t": 0.5,
+            "contact": {
+              "version": "ET16-contact@1",
+              "updates": 47,
+              "method": "current native skin/ocular intersection; view-independent; appearance field only",
+              "eyes": [
+                {
+                  "side": "right",
+                  "contactSegments": 96,
+                  "sourceVertices": 771,
+                  "sourceTriangles": 1512,
+                  "insideSkinVertices": 278
+                },
+                {
+                  "side": "left",
+                  "contactSegments": 95,
+                  "sourceVertices": 771,
+                  "sourceTriangles": 1512,
+                  "insideSkinVertices": 259
+                }
+              ],
+              "shadedVertices": 26802,
+              "addedGeometry": 0,
+              "nativePositionsChanged": 0,
+              "clinicalMeasurement": false
+            }
+          },
+          {
+            "t": 1,
+            "contact": {
+              "version": "ET16-contact@1",
+              "updates": 49,
+              "method": "current native skin/ocular intersection; view-independent; appearance field only",
+              "eyes": [
+                {
+                  "side": "right",
+                  "contactSegments": 91,
+                  "sourceVertices": 771,
+                  "sourceTriangles": 1512,
+                  "insideSkinVertices": 238
+                },
+                {
+                  "side": "left",
+                  "contactSegments": 95,
+                  "sourceVertices": 771,
+                  "sourceTriangles": 1512,
+                  "insideSkinVertices": 225
+                }
+              ],
+              "shadedVertices": 27393,
+              "addedGeometry": 0,
+              "nativePositionsChanged": 0,
+              "clinicalMeasurement": false
+            }
+          }
+        ],
+        "anatomicalClosureCertified": false
+      }
+    },
+    {
+      "name": "actual UI fields and new transition sliders write selected parameters",
+      "passed": true,
+      "ms": 72,
+      "data": {
+        "left": {
+          "source": 0,
+          "irisScale": 1,
+          "pupil": 0.39,
+          "brightness": 1,
+          "tint": "#6b785c",
+          "tintAmount": 1,
+          "innerColor": "#927340",
+          "innerAmount": 0,
+          "scleraWhite": 0.28,
+          "yellow": 0.035,
+          "redness": 0.06,
+          "veinAmount": 0.38,
+          "veinDensity": 0.65,
+          "limbal": 0.28,
+          "rotation": 0,
+          "contrast": 1,
+          "wetness": 0.68,
+          "corneaRoughness": 0.075,
+          "scleraRoughness": 0.29,
+          "parallax": 0.45,
+          "limbusWidth": 0.12,
+          "limbusSoftness": 0.12,
+          "pupilFeather": 0.008,
+          "vesselSoftness": 0.38,
+          "contactShadow": 0.55,
+          "tearWetness": 0.48
+        },
+        "right": {
+          "source": 0,
+          "irisScale": 1,
+          "pupil": 0.39,
+          "brightness": 1,
+          "tint": "#776044",
+          "tintAmount": 0,
+          "innerColor": "#927340",
+          "innerAmount": 0,
+          "scleraWhite": 0.28,
+          "yellow": 0.035,
+          "redness": 0.06,
+          "veinAmount": 0.38,
+          "veinDensity": 0.65,
+          "limbal": 0.28,
+          "rotation": 0,
+          "contrast": 1,
+          "wetness": 0.68,
+          "corneaRoughness": 0.075,
+          "scleraRoughness": 0.29,
+          "parallax": 0.45,
+          "limbusWidth": 0.12,
+          "limbusSoftness": 0.065,
+          "pupilFeather": 0.008,
+          "vesselSoftness": 0.38,
+          "contactShadow": 0.55,
+          "tearWetness": 0.48
+        },
+        "nativeColorDialogTested": false
+      }
+    },
+    {
+      "name": "save button exports complete ET16 person",
+      "passed": true,
+      "ms": 81,
+      "data": {
+        "bytes": 15668
+      }
+    }
+  ],
+  "errors": [],
+  "shaderErrors": []
+}
