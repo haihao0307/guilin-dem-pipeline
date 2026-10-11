@@ -1,0 +1,76 @@
+name: Tailor material products MP01 candidate
+on:
+  push:
+    branches: [feature/tailor-three-material-products-r01-20261011]
+    paths: [kaopu-tailor-workbench/material-products/r01/MATERIAL_EXPORT_INPUT.json]
+permissions:
+  contents: write
+concurrency:
+  group: tailor-mp01-candidate
+  cancel-in-progress: false
+jobs:
+  products:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: kaopu-tailor-workbench/material-products/r01
+      - name: Retrieve only the approved rendered material fields
+        run: |
+          python - <<'PY'
+          from pathlib import Path,PurePosixPath
+          import json,hashlib,urllib.request,zipfile,io
+          p=Path('kaopu-tailor-workbench/material-products/r01');config=json.loads((p/'MATERIAL_EXPORT_INPUT.json').read_text())
+          req=urllib.request.Request(config['downloadURL'],headers={'User-Agent':'KAOPU-MP01-Material-Outputs'})
+          data=urllib.request.urlopen(req,timeout=90).read()
+          assert hashlib.sha256(data).hexdigest()==config['sha256'],'Rendered output archive checksum mismatch'
+          with zipfile.ZipFile(io.BytesIO(data)) as z:
+            names=z.namelist()
+            for name in names:
+              f=PurePosixPath(name)
+              assert not f.is_absolute() and '..' not in f.parts
+              assert name in ['materials.json','EXPORT_SOURCE_RECEIPT.json','EXPORT_FIELDS_REPORT.json'] or (name.startswith('maps/') and name.endswith('.png')),name
+              target=p/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(z.read(name))
+          config.pop('downloadURL',None);config['downloadCompleted']=True;config['publicDataScope']='Selected rendered material fields and recipes only; no private source code';(p/'MATERIAL_EXPORT_INPUT.json').write_text(json.dumps(config,indent=2))
+          print('SELECTED_MATERIAL_OUTPUTS_RECEIVED',len(names))
+          PY
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare exact original garment inputs and browser
+        run: |
+          P=kaopu-tailor-workbench/material-products/r01
+          python "$P/prepare.py"
+          node --check "$P/app.mjs"
+          node --check "$P/looks.mjs"
+          python -m py_compile "$P/qa/browser.py"
+          pip install playwright==1.57.0 pillow
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y fonts-noto-cjk
+      - name: Render twelve exact native products and their current previews
+        env:
+          MP01_GENERATE: '1'
+        run: python kaopu-tailor-workbench/material-products/r01/qa/browser.py 2>&1 | tee mp01-candidate.log
+      - name: Preserve tested runtime and appearance outputs without replacing other workbenches
+        run: |
+          P=kaopu-tailor-workbench/material-products/r01
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$GITHUB_REF_NAME" --depth=1
+          test "$(git rev-parse origin/$GITHUB_REF_NAME)" = "$GITHUB_SHA"
+          git add -- "$P"
+          git commit -m 'feat(tailor-mp01): verified twelve real product looks with selected knit leather denim fields and unchanged original garments'
+          git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-mp01-candidate-evidence
+          path: |
+            kaopu-tailor-workbench/material-products/r01/
+            mp01-candidate.log
+          retention-days: 14
