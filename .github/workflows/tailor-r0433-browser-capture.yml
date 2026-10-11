@@ -1,0 +1,49 @@
+name: Tailor R0433 browser capture
+on:
+  push:
+    branches: [fix/tailor-all-category-display-r0433-20261011]
+    paths: [.github/workflows/tailor-r0433-browser-capture.yml]
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install playwright==1.57.0 && python -m playwright install --with-deps chromium
+      - name: Render public baseline and save response bytes
+        run: |
+          mkdir -p browser-capture/network
+          cat > capture.py <<'PY'
+          from pathlib import Path
+          import json,hashlib
+          from playwright.sync_api import sync_playwright
+          root=Path('browser-capture');records={};errors=[]
+          def capture(r):
+              if not r.url.startswith('https://haihao0307.github.io/'): return
+              try:
+                  data=r.body();name=hashlib.sha256(r.url.encode()).hexdigest();(root/'network'/name).write_bytes(data)
+                  records[r.url]={'file':name,'status':r.status,'contentType':r.headers.get('content-type','application/octet-stream'),'sha256':hashlib.sha256(data).hexdigest()}
+              except Exception as e: errors.append(str(e))
+          with sync_playwright() as p:
+              b=p.chromium.launch(headless=True,args=['--no-sandbox','--enable-unsafe-swiftshader','--use-angle=swiftshader'])
+              page=b.new_page(viewport={'width':1440,'height':1080});page.on('response',capture)
+              page.goto('https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/presets/r0432-eeca9dee0c3a/?preset=T01-P01')
+              page.wait_for_function('window.__R04?.state().ready',timeout=300000)
+              (root/'baseline-state.json').write_text(json.dumps(page.evaluate('__R04.state()'),ensure_ascii=False,indent=2))
+              page.screenshot(path=str(root/'baseline.png'));page.wait_for_timeout(1000)
+              b.close()
+          (root/'network.json').write_text(json.dumps(records,indent=2));(root/'capture-errors.json').write_text(json.dumps(errors))
+          assert records and not errors
+          PY
+          python capture.py
+          tar -czf browser-capture/chromium.tgz -C "$HOME/.cache/ms-playwright" chromium-1200 chromium_headless_shell-1200
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r0433-browser-runtime
+          path: browser-capture/
+          retention-days: 7

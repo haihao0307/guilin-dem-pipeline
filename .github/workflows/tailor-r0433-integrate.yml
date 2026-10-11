@@ -1,0 +1,44 @@
+name: Tailor R0433 integrate
+on:
+  push:
+    branches: [fix/tailor-all-category-display-r0433-20261011]
+    paths: [.github/workflows/tailor-r0433-integrate.yml]
+permissions:
+  contents: write
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-tailor-workbench/presets/r04
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Integrate exact reviewed source patch
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          python "$P/apply_display_r0433.py"
+          node --check "$P/app.mjs"
+          node --check "$P/display-r0433.mjs"
+          node --check "$P/variant-preview-r0431.mjs"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$GITHUB_REF_NAME" --depth=1
+          test "$(git rev-parse origin/$GITHUB_REF_NAME)" = "$GITHUB_SHA"
+          git add -- "$P/app.mjs" "$P/index.html" "$P/style.css" "$P/variant-preview-r0431.mjs" "$P/R0433_DISPLAY_PATCH.json"
+          git commit -m 'fix(tailor-r0433): integrate garment-aware camera, portrait rendering, cache and navigation recovery'
+          git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
+      - name: Retrieve immutable original GNM head dependency for offline regression
+        run: |
+          mkdir -p original-dependency
+          curl --fail --location --retry 3 'https://raw.githubusercontent.com/xrblocks/assets-gnm/134feb02b11fa642a43ff5e7e880246255a74e86/gnm_head_web.bin' -o original-dependency/gnm_head_web.bin
+          sha256sum original-dependency/gnm_head_web.bin > original-dependency/SHA256.txt
+          git rev-parse HEAD > original-dependency/SOURCE_HEAD.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tailor-r0433-original-head-dependency
+          path: original-dependency/
+          retention-days: 7

@@ -1,3 +1,4 @@
+import{stageLowerBodyPanels}from'../../../initial-placement-r0433.mjs';
 import {stageRadialSkirt} from '../../../correctives/r043b/radial-assembly.mjs';
 import {configureMaterialBending} from '../../../correctives/r043b/hinge-bending.mjs';
 import {beginMaterialRefinement} from '../../../correctives/r043c/seam-frames.mjs';
@@ -3363,7 +3364,7 @@ function packet(type, extra = {}) {
   emit(type, { positionsM, metrics: lab.metrics(), frame: lab.frameCount, stage: stages[stageIndex] || "complete", progress: (stages.slice(0,stageIndex).reduce((n,s)=>n+r043Frames(s),0)+stageFrame) / totalFrames, activeWallMs: wallMs + (running ? performance.now() - runStarted : 0), profile: { ...profile }, ...extra }, [positionsM.buffer]);
 }
 async function startLegacySolve(token) {
- const corrected43=config?.variant43||!new Set(["T01","T02","T03","T04","T08","T15","T16","T17","T18"]).has(nativeBinding?.presetId);
+ const corrected43=config?.variant43||!new Set(["T01","T02","T03","T04","T15","T16","T17","T18"]).has(nativeBinding?.presetId);
  const spanCorrected43=corrected43&&new Set(["D07","J01","J02","J04","J06","P01","P02","P03","P04","P05","P08","P10","S03","S04","S10","S14"]).has(nativeBinding?.presetId)&&spec.seams.some(s=>s.numericalStitchPlan&&Math.max(s.sourceSeam.lengthAMm,s.sourceSeam.lengthBMm)/Math.min(s.sourceSeam.lengthAMm,s.sourceSeam.lengthBMm)<=1.12+1e-12),kernelMode43=corrected43?(spanCorrected43?'seam-spans':'bending'):'legacy';
  r043PreGuides=r043PreJoint=null;r043BudgetOrigin=0;r043Recovery=[];
  const sizing=preflightSizing(analytic);if(sizing.blocking)throw Error(sizing.message);
@@ -3391,7 +3392,7 @@ async function startLegacySolve(token) {
   }
   profile.bodyMs = performance.now() - start;
   if(config.kind==="legacy")throw Error("基础款须使用保留的 R06 原始计算线程");
-  prepareAssembly(spec,body);prepareShoulderFixtures(spec,sdf);if(corrected43)stageRadialSkirt(spec,analytic,body);
+  prepareAssembly(spec,body);if(nativeBinding?.presetId==="S06")stageLowerBodyPanels(spec,body);prepareShoulderFixtures(spec,sdf);if(corrected43)stageRadialSkirt(spec,analytic,body);
   lab = new GarmentLab2(spec, sdf, { substeps: corrected43&&nativeBinding.presetId==="T06"?18:12, iterations: corrected43&&nativeBinding.presetId==="T06"?4:1, sewingDuration:.75 });
  lab.pipeline43=corrected43;lab.spanCorrected43=spanCorrected43;lab.sideClearance43d=corrected43&&nativeBinding?.presetId==="P06";if(corrected43)configureMaterialBending(lab);if(corrected43)lab.kernel.setBodyExterior43(...sdf.exteriorBounds.lo,...sdf.exteriorBounds.hi);
   lab.orientationGuides = false;
