@@ -1,0 +1,67 @@
+name: Tailor R0433 full display audit
+on:
+  push:
+    branches: [fix/tailor-all-category-display-r0433-20261011]
+    paths: [.github/workflows/tailor-r0433-build.yml]
+permissions:
+  contents: write
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-tailor-workbench/presets/r04
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install playwright==1.57.0 pillow && python -m playwright install --with-deps chromium
+      - name: Integrate reviewed numerical routes and render-normal continuity
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          python "$P/finish_display_r0433.py"
+          node --check "$P/app.mjs"
+          node --check "$P/outfits-r043.mjs"
+          node --check "$P/native/kaopu-tailor-workbench/catalogue/native-adapter.mjs"
+          python "$P/prepare_node_r043.py"
+      - name: Fresh original-material solves, not edited cached vertices
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          mkdir -p "$P/candidate-r0433"
+          node "$P/node_solve_r043.mjs" T08 "$P/candidate-r0433/T08.json.gz" > "$P/candidate-r0433/T08.log" 2>&1 &
+          A=$!
+          node "$P/node_solve_r043.mjs" S06 "$P/candidate-r0433/S06.json.gz" > "$P/candidate-r0433/S06.log" 2>&1 &
+          B=$!
+          wait "$A"; wait "$B"
+          python "$P/finish_display_r0433.py" promote
+      - name: Every garment, every outfit and actual WebGL recovery
+        env:
+          R0433_GENERATE: '1'
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 > /tmp/tailor-http.log 2>&1 &
+          python kaopu-tailor-workbench/presets/r04/qa_r0433.py
+      - name: Commit only tested repair paths without overwriting another writer
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$GITHUB_REF_NAME" --depth=1
+          test "$(git rev-parse origin/$GITHUB_REF_NAME)" = "$GITHUB_SHA"
+          git add -- "$P/app.mjs" "$P/outfits-r043.mjs" "$P/native/kaopu-tailor-workbench/catalogue/native-adapter.mjs" "$P/assets/results" "$P/assets/outfits" "$P/R0433_RUNTIME_REPAIR.json" "$P/R0433_NATIVE_REVIEW.json" "$P/R0433_BROWSER_REPORT.json" "$P/qa-r0433"
+          git commit -m 'fix(tailor-r0433): verified 60-style/432-outfit display, real T08/S06 re-solves and all portrait cards'
+          git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r0433-complete-display-evidence
+          path: |
+            kaopu-tailor-workbench/presets/r04/R0433_*.json
+            kaopu-tailor-workbench/presets/r04/qa-r0433/
+            kaopu-tailor-workbench/presets/r04/candidate-r0433/
+            kaopu-tailor-workbench/presets/r04/assets/results/*.png
+          retention-days: 14
