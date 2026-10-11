@@ -16,10 +16,14 @@ int neSide(){return vFEye.w>.5?1:0;}
 vec2 neAtlas(vec2 q,int side,float source){vec2 center=side==0?vec2(.7104,.3032):vec2(.2896,.6988);float radius=source<.5?.1185:.1215;return clamp(center+vec2(q.x,-q.y)*radius,vec2(.001),vec2(.999));}
 vec3 neSource(vec2 uv,float source){vec3 a=texture2D(neOriginal0,uv).rgb,b=texture2D(neOriginal1,uv).rgb;return mix(a,b,step(.5,source));}
 vec2 neRefract(vec2 q,int side){
- // Bounded view-dependent refraction approximation. The native eyeball remains
- // the outer envelope; the iris is sampled as a recessed optical layer.
+ // Bounded view-dependent refraction approximation, with a recessed iris layer.
  vec3 dx=dFdx(-vViewPosition),dy=dFdy(-vViewPosition);vec2 ux=dFdx(vFEye.xy),uy=dFdy(vFEye.xy);float det=ux.x*uy.y-ux.y*uy.x;
- if(abs(det)>1e-12){vec3 tx=(dx*uy.y-dy*ux.y)/det,ty=(dy*ux.x-dx*uy.x)/det;vec3 n=normalize(vNormal),ray=refract(-normalize(vViewPosition),n,1./1.376);float z=max(.35,abs(dot(ray,n)));vec2 shift=vec2(dot(ray,normalize(tx))/max(length(tx),.002),dot(ray,normalize(ty))/max(length(ty),.002))*.0012*neSurface[side].w/z;q+=clamp(shift,vec2(-.16),vec2(.16))*(1.-smoothstep(.8,1.18,length(q)));}return q;
+ #ifdef FLAT_SHADED
+ vec3 refractiveNormal=normalize(cross(dx,dy));
+ #else
+ vec3 refractiveNormal=normalize(vNormal);
+ #endif
+ if(abs(det)>1e-12){vec3 tx=(dx*uy.y-dy*ux.y)/det,ty=(dy*ux.x-dx*uy.x)/det;vec3 n=refractiveNormal,ray=refract(-normalize(vViewPosition),n,1./1.376);float z=max(.35,abs(dot(ray,n)));vec2 shift=vec2(dot(ray,normalize(tx))/max(length(tx),.002),dot(ray,normalize(ty))/max(length(ty),.002))*.0012*neSurface[side].w/z;q+=clamp(shift,vec2(-.16),vec2(.16))*(1.-smoothstep(.8,1.18,length(q)));}return q;
 }
 vec3 neEyeColor(){
  int side=neSide();vec4 iris=neIris[side],tint=neTint[side],inner=neInner[side],sclera=neSclera[side],misc=neMisc[side];vec2 q=vFEye.xy;
@@ -58,11 +62,12 @@ export function attachNaturalEyeMaterial(skin,api){
  for(const k of ['neIris','neTint','neInner','neSclera','neMisc','neSurface'])U[k]={value:[new THREE.Vector4(),new THREE.Vector4()]};
  const ext={version:'ET15-E1',ready:false,shaderCompiles:0,errors:[],originalTextures:[1024,1024],sourceAuthors:['callharvey3d'],sourcePack:'system_eye_materials03',license:'CC-BY as listed by source pack',unmodifiedSourcePNGs:true,bodyMaterialChanged:false,medicalSimulation:false};skin.naturalEyeExtension=ext;api.skins.add(skin);
  function patch(text,anchor,replacement){if(text.split(anchor).length!==2)throw Error('眼球材质接口不匹配：'+anchor);return text.replace(anchor,()=>replacement);}
- skin.material.customProgramCacheKey=()=>key()+'/ET15-source-eye-optics-v1';
+ skin.material.customProgramCacheKey=()=>key()+'/ET15-source-eye-optics-v2';
  skin.material.onBeforeCompile=shader=>{
   before(shader);Object.assign(shader.uniforms,U);ext.shaderCompiles++;
   const original=shader.fragmentShader.match(/vec3 fEyeColor\(\)\{[^\n]*\}/g);if(original?.length!==1)throw Error('未找到原生眼球颜色接口');
-  shader.fragmentShader=patch(shader.fragmentShader,original[0],original[0]+'\n'+declarations);
+  // Physical shader varyings must be declared before the refractive functions.
+  shader.fragmentShader=patch(shader.fragmentShader,'#include <normal_pars_fragment>','#include <normal_pars_fragment>\n'+declarations);
   shader.fragmentShader=patch(shader.fragmentShader,'if(vFEye.z>.01&&vCSType>3.5)csPaint=mix(csPaint,fEyeColor(),vFEye.z*uFEnabled);',`if(vCSType>3.5){vec3 priorEye=mix(csPaint,fEyeColor(),vFEye.z*uFEnabled);csPaint=mix(priorEye,neEyeColor(),neEnabled*neReady);}`);
   shader.fragmentShader=patch(shader.fragmentShader,'roughnessFactor=mix(vCSType>3.5?.25:.46,csSurfaceRough,csCover);',`roughnessFactor=mix(vCSType>3.5?.25:.46,csSurfaceRough,csCover);
    if(vCSType>3.5&&neEnabled*neReady>.5){int side=neSide();float radial=length(vFEye.xy)/neIris[side].x;float cornea=1.-smoothstep(.94,1.18,radial);float wet=neSurface[side].x;roughnessFactor=mix(neSurface[side].z,neSurface[side].y+(.08*(1.-wet)),cornea);}
@@ -76,7 +81,7 @@ export function attachNaturalEyeMaterial(skin,api){
   `);
  };
  const rgb=color=>new THREE.Color(color);
- skin.updateNaturalEyes=()=>{const s=api.settings;U.neEnabled.value=s.enabled?1:0;U.neReference.value=s.reference?1:0;['right','left'].forEach((side,i)=>{const e=s[side],t=rgb(e.tint),c=rgb(e.innerColor),pupil=s.autoPupil?.59-.35*(s.illumination*s.illumination*(3-2*s.illumination)):e.pupil;U.neIris.value[i].set(e.irisScale,pupil,e.brightness,e.source);U.neTint.value[i].set(t.r,t.g,t.b,e.tintAmount);U.neInner.value[i].set(c.r,c.g,c.b,e.innerAmount);U.neSclera.value[i].set(e.scleraWhite,e.yellow,e.redness,e.veinAmount);U.neMisc.value[i].set(e.veinDensity,e.limbal,e.rotation*Math.PI/180,e.contrast);U.neSurface.value[i].set(e.wetness,e.corneaRoughness,e.scleraRoughness,e.parallax);});};
+ skin.updateNaturalEyes=()=>{const s=api.settings;U.neEnabled.value=s.enabled?1:0;U.neReference.value=s.reference?1:0;['right','left'].forEach((side,i)=>{const e=s[side],t=rgb(e.tint),c=rgb(e.innerColor),pupil=s.autoPupil ? .59-.35*(s.illumination*s.illumination*(3-2*s.illumination)) : e.pupil;U.neIris.value[i].set(e.irisScale,pupil,e.brightness,e.source);U.neTint.value[i].set(t.r,t.g,t.b,e.tintAmount);U.neInner.value[i].set(c.r,c.g,c.b,e.innerAmount);U.neSclera.value[i].set(e.scleraWhite,e.yellow,e.redness,e.veinAmount);U.neMisc.value[i].set(e.veinDensity,e.limbal,e.rotation*Math.PI/180,e.contrast);U.neSurface.value[i].set(e.wetness,e.corneaRoughness,e.scleraRoughness,e.parallax);});};
  skin.material.onBeforeRender=(renderer,scene,camera,...args)=>{oldRender?.call(skin.material,renderer,scene,camera,...args);U.neLightView.value.set(-.45,.65,1).transformDirection(camera.matrixWorldInverse);};
  skin.updateFace=()=>{oldUpdate?.();skin.updateNaturalEyes();};skin.dispose=()=>{api.skins.delete(skin);fallback.dispose();oldDispose();};
  skin.naturalEyesReady=textures().then(list=>{if(skin.disposed)return false;['neOriginal0','neOriginal1','neClean','neVessels'].forEach((k,i)=>{U[k].value=list[i];});U.neReady.value=1;ext.ready=true;fallback.dispose();skin.viewer.render();return true;}).catch(e=>{ext.errors.push(String(e));return false;});
