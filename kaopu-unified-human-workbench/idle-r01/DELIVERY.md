@@ -1,10 +1,10 @@
 # ET19-IDLE-R01 待机候选
 
-固定网页：https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/2c12ed2aaec4e32c42c19d4e8eb71a4fa3c97c69/kaopu-unified-human-workbench/idle-r01/preview.html
+固定网页：https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/be54aaa728f8f4ffd22786b82cfa3f8efbd99b11/kaopu-unified-human-workbench/idle-r01/preview.html
 
-源码：`024963f620cda046b33a5ca3521b840d2e6630ce`；构建：`2c12ed2aaec4e32c42c19d4e8eb71a4fa3c97c69`。
+源码：`29492e0d519f620bf62850a09879a0b965f050f6`；构建：`be54aaa728f8f4ffd22786b82cfa3f8efbd99b11`。
 
-Actions：https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/38130252867
+Actions：https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/38130772559
 
 真实源码与固定公网浏览器测试已执行；具体检查见 evidence/source-qa.json 与 evidence/public-qa.json。截图在同一运行的 artifact，需人工检查后才可讨论视觉质量。自动测试不得代替用户视觉验收。
 
