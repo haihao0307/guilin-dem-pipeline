@@ -29,7 +29,7 @@ export class IdleRuntime extends EventTarget{
  get settings(){return this.profile.settings;}
  notify(){this.dispatchEvent(new Event('change'));}
  detach(){if(this.geometry){this.viewer.geometry=this.rawGeometry;this.viewer.mesh.geometry=this.rawGeometry;this.viewer.mesh.morphTargetInfluences=[];this.viewer.mesh.morphTargetDictionary={};this.geometry.dispose();this.geometry=null;}this.ready=false;}
- invalidate(){if(this.disposed)return;const ticket=++this.generation;this.ready=false;this.status='正在按当前人物重新校准待机';clearTimeout(this.debounce);this.debounce=setTimeout(()=>{void this.bake(ticket);},180);this.notify();}
+ invalidate(){if(this.disposed)return;if(this.timeline.seed!==this.settings.seed||this.timeline.profile!==this.settings.profile){this.timeline=new IdleTimeline(this.settings.seed,this.settings.profile);this.time=0;}const ticket=++this.generation;this.ready=false;this.status='正在按当前人物重新校准待机';clearTimeout(this.debounce);this.debounce=setTimeout(()=>{void this.bake(ticket);},180);this.notify();}
  async bake(ticket){if(this.disposed||ticket!==this.generation)return;
   const start=performance.now(),m=this.model,v=this.viewer,base=clone(m.state),positionRef=m.positions,indexRef=m.faces,savedPositions=m.positions.slice(),schemaBefore=authoringJSON(m);this.detach();this.rawGeometry=v.geometry;const snapshot=()=>({p:v.geometry.attributes.position.array.slice(),n:v.geometry.attributes.normal.array.slice()}),rest=snapshot();const targets=[],info=[];
   const take=s=>{this.suppressed++;try{m.compute(s);this.originalUpdate();if(v.geometry.attributes.position.count*3!==rest.p.length)throw Error('Display topology changed during native sample');return snapshot();}finally{m.compute(base);this.originalUpdate();this.suppressed--;}};
