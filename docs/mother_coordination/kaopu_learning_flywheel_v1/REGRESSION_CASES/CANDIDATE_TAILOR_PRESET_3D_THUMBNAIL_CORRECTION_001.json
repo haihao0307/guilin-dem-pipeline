@@ -1,7 +1,7 @@
 {
   "schema": "kaopu.regression-case/2",
   "caseId": "TAILOR-PRESET-3D-THUMBNAIL-CORRECTION-001",
-  "status": "CANDIDATE_TAILOR_R0434_TRANSACTIONAL_PUBLIC_VERIFIED__HOLD_VISUAL_PHYSICS_USER_N135_NOT_ADOPTED",
+  "status": "CANDIDATE_TAILOR_MP01_MODULE_BOOTSTRAP_FAILED__HOLD_PUBLIC_VISUAL_PHYSICS_USER_N136_NOT_ADOPTED",
   "active": false,
   "scope": {
     "mother": "Tailor",
@@ -195,7 +195,8 @@
     "Do not generalize successful public-byte, gallery-decode or CI-browser verification into universal browser/device runtime readiness; WebGL context creation is a separate scoped observation and an unavailable context must fail closed without fallback.",
     "Do not treat qualityPassed=true, thumbReady=true, PNG decode success or an aggregate visual-review approval as member-level visual readiness; compare each claimed-ready member against an authorized reference or prior accepted golden and record visible failure categories.",
     "Do not inherit a successful local/browser audit from an earlier tested source into a later PR head or public-delivery claim; exact public verification must pass for the exact delivered subject.",
-    "Do not allow a stale fetch, cancelled request or late worker rejection to clear or overwrite a newer valid garment/outfit; only the current request identity may commit display state."
+    "Do not allow a stale fetch, cancelled request or late worker rejection to clear or overwrite a newer valid garment/outfit; only the current request identity may commit display state.",
+    "Do not treat verified material-export bytes or pinned garment/material source receipts as a rendered product result when the browser module graph never booted; zero executed look checks means no visual or public candidate exists."
   ],
   "requiredPerMemberReceipt": [
     "presetId",
@@ -226,7 +227,8 @@
     "R0432_PUBLIC_BYTES_AND_CI_BROWSER_VERIFIED_SCOPED__HOLD_INDEPENDENT_WEBGL_RUNTIME_DEVICE_USER_ACCEPTANCE",
     "R0432_STATIC_PASS_VISUAL_ACCEPTANCE_GAP_CONFIRMED__HOLD_MEMBER_VISUAL_COMPARISON_USER_ACCEPTANCE",
     "R0433_LOCAL_ALL_CATEGORY_DISPLAY_VERIFIED_SCOPED__HOLD_EXACT_PUBLIC_HEAD_FAILURE_VISUAL_PHYSICS_USER_ACCEPTANCE",
-    "R0434_TRANSACTIONAL_PUBLIC_DISPLAY_VERIFIED_SCOPED__HOLD_38_STATIC_FAILURES_VISUAL_PHYSICS_USER_ACCEPTANCE"
+    "R0434_TRANSACTIONAL_PUBLIC_DISPLAY_VERIFIED_SCOPED__HOLD_38_STATIC_FAILURES_VISUAL_PHYSICS_USER_ACCEPTANCE",
+    "MP01_MATERIAL_EXPORT_VERIFIED__MODULE_BOOTSTRAP_FAILED__NO_LOOKS_RETAINED__HOLD_PUBLIC_VISUAL_PHYSICS_USER_ACCEPTANCE"
   ],
   "gate": [
     "Preserve the old paper-library success as a scoped historical observation; do not relabel it as failure.",
@@ -251,7 +253,8 @@
     "Public verification must remain layered by exact source, public bytes, CI browser, independent browser/device and user acceptance; a WebGL getContext failure on an independent browser is a scoped runtime HOLD, not permission to substitute another model or to erase successful exact-subject publication evidence.",
     "A static-pass member remains visual HOLD until its exact public image has a member-level visual receipt with reference-or-prior-accepted comparator, visible failure categories, independent verifier, and explicit comparison state; aggregate decode/static success cannot fill these fields.",
     "A successful local 60-style/432-outfit display audit is scoped to its exact tested source. If the current head public workflow fails or publicVerified=false, delivery remains HOLD even when all local display checks pass.",
-    "Garment selection is transactional: build and validate off-screen, commit only if the request token is still current, retain the last valid garment on failure, and expose the failed requested identity plus retry without silently promoting stale work."
+    "Garment selection is transactional: build and validate off-screen, commit only if the request token is still current, retain the last valid garment on failure, and expose the failed requested identity plus retry without silently promoting stale work.",
+    "Before a Tailor browser gate enters a long readiness wait, it must preflight the entry module graph or race readiness against pageerror/critical module-resolution failure; a module bootstrap error must fail closed promptly, retain no look result, skip publication and remain bound to the exact head."
   ],
   "activation": {
     "global": false,
@@ -1062,6 +1065,89 @@
       "commentId": 6105982558,
       "url": "https://github.com/haihao0307/guilin-dem-pipeline/pull/211#issuecomment-6105982558",
       "purpose": "Route the N135 transactional stale-worker and exact-public verification boundary to the affected Tailor candidate without changing its production branch."
+    }
+  },
+  "n136Mp01ModuleBootstrapFailureResult": {
+    "pullRequest": 215,
+    "baseR0434Head": "5c6d0c36535648d8b3d4b61c70d7047258e3a969",
+    "exactHead": "8d1e3bec101a097ed4937425443146c48e648000",
+    "sourceLocks": {
+      "tailorRuntimeCommit": "8c8245dd87e5fdf0e2a7720a96776743134ab17a",
+      "knitCommit": "20b466073bb458408a078260a018460c81f627b9",
+      "leatherCommit": "af389cc216ddd01e3b1aa66c972f42b2587bc797",
+      "denimCommit": "fa143743b1b0f3d74ff827664d06ff119ef87063"
+    },
+    "materialExportEvidence": {
+      "sourceRun": 38121211507,
+      "sourceArtifactId": 11695448211,
+      "archiveSha256": "91ff4ec11e0f2dc6db9dfcb77b40726c3a1d852cbe53af4a2f2ed0cde57bfdfe",
+      "materialCount": 12,
+      "mapCount": 40,
+      "resolution": "2048x2048",
+      "unlitFieldExport": true,
+      "privateSourceIncluded": false,
+      "fullRayWaveRendererTransferred": false,
+      "result": "VERIFIED_SCOPED"
+    },
+    "exactCandidateWorkflow": {
+      "runId": 38122050774,
+      "jobId": 114418623339,
+      "conclusion": "failure",
+      "failedStep": "Render twelve exact native products and their current previews",
+      "artifactId": 11695579206,
+      "artifactDigest": "sha256:13db349a4e444ef334b05dfef88db1efdc49056a137b4c13bb18785341727f36",
+      "browserError": "Failed to resolve module specifier \"three\". Relative references must start with either \"/\", \"./\", or \"../\".",
+      "timeoutSeconds": 300,
+      "candidateChecksExecuted": 0,
+      "candidateLooksExecuted": 0,
+      "retainedResult": false,
+      "publicationStepSkipped": true
+    },
+    "failureMechanism": "The additive page imports pinned R0434 modules whose dependency graph contains the bare specifier `three`, but MP01 index.html provides no import map. The browser therefore fails before window.__MP01__ becomes ready; the current gate discovers it only after a 300-second readiness timeout.",
+    "comparisonToCurrentOS": {
+      "result": "NO_NOVELTY",
+      "reason": "R2 exact-subject, explicit-failure and no-stale-delivery rules already forbid promoting source receipts or earlier R0434 public evidence when the current exact browser subject never starts."
+    },
+    "falsifiableHypothesis": "If the MP01 entrypoint supplies an exact import map or fully qualified module URLs and the browser gate races readiness against the first pageerror/critical module-resolution failure, an intentionally broken bare specifier will fail closed within 10 seconds with zero retained looks, while a repaired exact head must complete all twelve look checks before any publication step runs.",
+    "minimalReplay": {
+      "observedRun": 38122050774,
+      "observedOutcome": "MP01_MATERIAL_EXPORT_VERIFIED__MODULE_BOOTSTRAP_FAILED__NO_LOOKS_RETAINED__HOLD_PUBLIC_VISUAL_PHYSICS_USER_ACCEPTANCE",
+      "observedFastFailSatisfied": false,
+      "observedRetainedLookCount": 0,
+      "observedPublicationPrevented": true,
+      "repairReplayRequired": true
+    },
+    "candidateExecutableIncrement": {
+      "scope": "Tailor MP01 only",
+      "producerAction": "Add an exact import map matching the pinned R0434 runtime or replace bare imports with fully qualified pinned URLs; do not replace the original person, garment geometry or materials.",
+      "verifierGate": "Preflight the module graph or race readiness against pageerror/critical console error; require failure classification within 10 seconds and require 12/12 exact-look browser checks before retaining outputs.",
+      "rollbackPoint": "Keep PR #215 draft and preserve R0434 as the last verified public Tailor display; do not publish or overwrite any existing workbench."
+    },
+    "preservedBoundaries": {
+      "materialAppearanceOnly": true,
+      "garmentGeometryChanged": false,
+      "materialPhysicsCalibrated": false,
+      "jointOutfitCollisionCertified": false,
+      "dynamicWearCertified": false,
+      "publicVerified": false,
+      "userAccepted": false
+    },
+    "boundary": "PR #215 head 8d1e3bec only and its first candidate workflow. It verifies selected material-export provenance but no product look, actual HTTPS page, physical device, material physics, joint collision, dynamic wear or user acceptance.",
+    "decision": "UPDATE_EXISTING_REGRESSION_CASE_WITH_NEW_FAILURE_MECHANISM__TAILOR_LOCAL_CANDIDATE_NOT_ADOPTED",
+    "lifecycle": {
+      "POSTED": true,
+      "ACKNOWLEDGED": false,
+      "IMPLEMENTED": false,
+      "GATE-RUN": true,
+      "ADOPTED": false,
+      "USER-ACCEPTED": false
+    },
+    "postingReceipt": {
+      "surface": "PR #215",
+      "status": "posted",
+      "commentId": 6106819576,
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/pull/215#issuecomment-6106819576",
+      "purpose": "Route the exact module-bootstrap failure and fast-fail candidate gate to the affected Tailor MP01 work without modifying its production branch."
     }
   }
 }
