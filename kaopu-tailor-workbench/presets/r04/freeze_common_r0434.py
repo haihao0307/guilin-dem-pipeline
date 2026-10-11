@@ -1,4 +1,4 @@
-"""Freeze original CommonPerson code byte-for-byte and resolve data URLs to the same existing commit."""
+"""Freeze original CommonPerson code byte-for-byte and resolve data URLs to its existing commit."""
 from pathlib import Path,PurePosixPath
 from urllib.parse import urljoin,urlsplit
 from urllib.request import urlopen,Request
@@ -14,29 +14,29 @@ def read(path):
  assert not path.startswith('/') and '..' not in PurePosixPath(path).parts
  for attempt in range(4):
   try:
-   with urlopen(Request(REPO+PREFIX+path,headers={'User-Agent':'KAOPU-Tailor-R0434'}),timeout=60) as r:return r.read()
+   with urlopen(Request(REPO+path,headers={'User-Agent':'KAOPU-Tailor-R0434'}),timeout=60) as r:return r.read()
   except Exception:
    if attempt==3:raise
    time.sleep(1+attempt)
-metadata_bytes=read('ui/runtime-metadata.json');metadata=json.loads(metadata_bytes)
+metadata_bytes=read(PREFIX+'ui/runtime-metadata.json');metadata=json.loads(metadata_bytes)
 roots=['ui/load-common.mjs','ui/Viewer.mjs','src/State.mjs','ui/PresetCatalogueR2.mjs','source/registration-vendor/three.module.js']
-pending=[*roots,*metadata['coreHashes']];copied={};external=[]
+pending=[PREFIX+n for n in [*roots,*metadata['coreHashes']]];copied={}
 pattern=re.compile(r'''\b(?:from\s*|import\s*(?:\(\s*)?)(['"])([^'"\n]+)\1''')
 while pending:
  name=pending.pop()
  if name in copied:continue
- data=read(name);text=data.decode('utf-8');copied[name]={'sha256':digest(data),'bytes':len(data)}
+ assert name.endswith(('.js','.mjs')),('Review non-module dependency',name)
+ data=read(name);assert len(data)<8000000,('Unexpectedly large code module',name)
+ text=data.decode('utf-8');copied[name]={'sha256':digest(data),'bytes':len(data)}
  target=DEST/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(data)
  for match in pattern.finditer(text):
   source=match.group(2)
-  if source=='three':pending.append('source/registration-vendor/three.module.js');continue
-  if not source.startswith(('./','../')):
-   raise AssertionError(('Unpinned module import requires review',name,source))
-  resolved=urljoin('https://frozen.invalid/'+PREFIX+name,source)
-  path=urlsplit(resolved).path.lstrip('/')
-  assert path.startswith(PREFIX),('Module escapes original runtime',name,source)
-  pending.append(path[len(PREFIX):])
-for name,expected in metadata['coreHashes'].items():assert copied[name]['sha256']==expected,('Original core integrity mismatch',name)
+  if source=='three':pending.append(PREFIX+'source/registration-vendor/three.module.js');continue
+  if not source.startswith(('./','../')):raise AssertionError(('Unpinned module import requires review',name,source))
+  resolved=urljoin('https://frozen.invalid/'+name,source);path=urlsplit(resolved).path.lstrip('/')
+  assert path.startswith('kaopu-unified-human-workbench/'),('Module escapes original common-person subtree',name,source)
+  pending.append(path)
+for name,expected in metadata['coreHashes'].items():assert copied[PREFIX+name]['sha256']==expected,('Original core integrity mismatch',name)
 asset_urls=dict(metadata.get('assetURLs',{}));rewritten={}
 for name in sorted(set(metadata['assetHashes'])|set(asset_urls)):
  old=asset_urls.get(name,name);new=urljoin(REPO+PREFIX,old)
@@ -45,11 +45,11 @@ for name in sorted(set(metadata['assetHashes'])|set(asset_urls)):
  rewritten[name]=new
 metadata['assetURLs']=rewritten
 metadata['tailorRuntimeFreeze']={'sourceCommit':SHA,'copiedCoreUnmodified':True,'geometryAndAdapterUnchanged':True}
-(DEST/'ui/runtime-metadata.json').write_text(json.dumps(metadata,ensure_ascii=False,indent=2))
+meta=DEST/PREFIX/'ui/runtime-metadata.json';meta.write_text(json.dumps(metadata,ensure_ascii=False,indent=2))
 original='https://haihao0307.github.io/guilin-dem-pipeline/'+PREFIX
 for name,count in [('app.mjs',5),('index.html',1)]:
  f=P/name;text=f.read_text();assert text.count(original)==count,(name,text.count(original))
- f.write_text(text.replace(original,'./person-core/'))
-proof={'schema':'kaopu-tailor-common-runtime-pin@1','sourceCommit':SHA,'originalMetadataSHA256':digest(metadata_bytes),'localMetadataSHA256':digest((DEST/'ui/runtime-metadata.json').read_bytes()),'coreFiles':copied,'assetURLs':rewritten,'coreHashesUnchanged':True,'adapterFingerprint':metadata['adapterFingerprint'],'vertices':metadata['vertices'],'triangles':metadata['triangles'],'bodyScaling':False,'newMannequin':False,'thirdPartyBinaryDuplicated':False,'note':'Only code is copied; binary reads resolve existing immutable original assets. Original identity and all geometry checks remain mandatory.'}
+ f.write_text(text.replace(original,'./person-core/'+PREFIX))
+proof={'schema':'kaopu-tailor-common-runtime-pin@1','sourceCommit':SHA,'originalMetadataSHA256':digest(metadata_bytes),'localMetadataSHA256':digest(meta.read_bytes()),'coreFiles':copied,'assetURLs':rewritten,'coreHashesUnchanged':True,'adapterFingerprint':metadata['adapterFingerprint'],'vertices':metadata['vertices'],'triangles':metadata['triangles'],'bodyScaling':False,'newMannequin':False,'thirdPartyBinaryDuplicated':False,'note':'Original repository-relative module layout is retained, including shared Three.js vendor. Only code is copied; binary reads resolve existing immutable original assets. Original identity checks remain mandatory.'}
 (P/'R0434_PERSON_PIN.json').write_text(json.dumps(proof,ensure_ascii=False,indent=2))
 print('ORIGINAL_PERSON_PINNED',len(copied),sum(r['bytes'] for r in copied.values()),flush=True)
