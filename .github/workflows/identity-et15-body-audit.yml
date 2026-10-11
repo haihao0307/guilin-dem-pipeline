@@ -1,0 +1,34 @@
+name: ET15 native body diagnostic
+on:
+  push:
+    branches: [fix/identity-eye-skin-et15-20261011]
+    paths: ['.github/workflows/identity-et15-body-audit.yml','kaopu-unified-human-workbench/et15-tests/BodyAudit.cjs']
+permissions:
+  contents: read
+jobs:
+  body:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      NODE_PATH: /tmp/et15-tools/node_modules
+      ET15_DIAGNOSTIC: face-body-separated
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-unified-human-workbench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --prefix /tmp/et15-tools --no-audit --no-fund esbuild@0.25.10 playwright@1.56.1
+          /tmp/et15-tools/node_modules/.bin/playwright install --with-deps chromium
+      - run: |
+          node kaopu-unified-human-workbench/skin-eye-et15/build.cjs
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/et15-http.log 2>&1 &
+          node kaopu-unified-human-workbench/et15-tests/BodyAudit.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: et15-body-${{ github.run_number }}
+          path: qa-et15-body/
+          retention-days: 14

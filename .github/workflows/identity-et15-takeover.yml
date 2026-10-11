@@ -1,0 +1,83 @@
+name: ET15 identity eyes and skin takeover
+on:
+  push:
+    branches: [fix/identity-eye-skin-et15-20261011]
+    paths:
+      - '.github/workflows/identity-et15-takeover.yml'
+      - 'kaopu-unified-human-workbench/skin-eye-et15/**'
+permissions:
+  contents: write
+concurrency:
+  group: identity-et15-takeover
+  cancel-in-progress: true
+jobs:
+  desktop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      NODE_PATH: /tmp/et15-tools/node_modules
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-unified-human-workbench
+      - name: Export exact reviewable source
+        run: |
+          mkdir -p qa-et15/source-snapshot
+          python3 - <<'PY'
+          import pathlib, shutil, json
+          root=pathlib.Path('kaopu-unified-human-workbench')
+          records=[]
+          for p in root.rglob('*'):
+            if p.is_file() and p.suffix.lower() in {'.mjs','.cjs','.js','.json','.md'} and p.stat().st_size<6000000:
+              dest=pathlib.Path('qa-et15/source-snapshot')/p
+              dest.parent.mkdir(parents=True,exist_ok=True)
+              shutil.copy2(p,dest)
+              records.append({'path':str(p),'bytes':p.stat().st_size})
+          pathlib.Path('qa-et15/source-index.json').write_text(json.dumps(records,indent=2))
+          print('Exported',len(records),'source files;',sum(r['bytes'] for r in records),'bytes')
+          PY
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated fixed browser tools
+        run: |
+          npm install --prefix /tmp/et15-tools --no-audit --no-fund esbuild@0.25.10 playwright@1.56.1
+          /tmp/et15-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Build isolated candidate
+        run: node kaopu-unified-human-workbench/skin-eye-et15/build.cjs
+      - name: Desktop source regression and exact-state readback audit
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/et15-http.log 2>&1 &
+          node kaopu-unified-human-workbench/skin-eye-et15/VerificationGate.cjs
+      - name: Upload desktop evidence before publication
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: et15-desktop-${{ github.run_number }}
+          path: |
+            qa-et15/source/
+            qa-et15/build/
+          retention-days: 14
+      - name: Publish checked candidate only to independent branch
+        run: |
+          git config user.name 'KAOPU Identity Takeover'
+          git config user.email 'kaopu-workbench@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/skin-eye-et15
+          if ! git diff --cached --quiet; then
+            git commit -m 'build(identity): verified ET15 eyes and skin candidate [skip ci]'
+            git push origin HEAD:fix/identity-eye-skin-et15-20261011
+          fi
+          git rev-parse HEAD > qa-et15/public-commit.txt
+      - name: Verify actual fixed public webpage
+        run: PUBLIC_COMMIT=$(git rev-parse HEAD) node kaopu-unified-human-workbench/skin-eye-et15/VerificationGate.cjs
+      - name: Retain exact generated verification source
+        if: always()
+        run: |
+          mkdir -p qa-et15/build
+          cp kaopu-unified-human-workbench/skin-eye-et15/verify.audit.generated.cjs qa-et15/build/ 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: et15-review-${{ github.run_number }}
+          path: qa-et15/
+          retention-days: 14
