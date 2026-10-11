@@ -1,3 +1,4 @@
+import {RESUMABLE_TRACE_WGSL} from './trace-core.mjs';
 /** Native WebGPU implicit surface receiver derived from the existing R02.7
  * three-vertex WGSL entry/trace organization. No Three/WebGL fallback. */
 export function receiverWGSL(fields,domain){return String.raw`
@@ -9,7 +10,6 @@ fn kpIdentityHash(p:f32)->f32{return br_h11(p);}
 ${domain}
 // Every unresolved ray is explicit. A finite cloth interval receives a separate
 // local refinement budget; global empty-space/opaque traversal stays at 180.
-struct Hit { t:f32,hit:bool,exhausted:bool,steps:u32,localSteps:u32,field:RoomField };
 fn clothRayInterval(ro:vec3<f32>,rd:vec3<f32>)->vec2<f32>{
  let q=ro-vec3<f32>(1.2,2.08,2.15);let half=vec3<f32>(.474,.684,.068);
  var nearT=0.;var farT=1e4;
@@ -23,18 +23,9 @@ fn clothEmptyIntervalStep(p:vec3<f32>,rd:vec3<f32>)->f32{
  let a=rd.x*8.;let b=rd.y*5.+rd.x*3.;let slope=rd.z-.045*cos(q.x*8.)*a-.018*cos(phase)*b;let curvature=.045*a*a+.018*b*b;
  let den=abs(slope)+sqrt(slope*slope+2.*curvature*gap);return min(.55,.9*2.*gap/max(den,1e-8));
 }
-fn traceWorld(ro:vec3<f32>,rd:vec3<f32>,farT:f32)->Hit{
- var t=.001;var prevT=t;var prevD=1.;var f=rawField(1e4,0,ro);var regularSteps=0u;var localSteps=0u;let interval=clothRayInterval(ro,rd);
- for(var i=0u;i<692u;i++){
- if(t>farT){return Hit(farT,false,false,i,localSteps,rawField(1e4,0,ro+rd*farT));}
- let local=u.clothLocalBudget>0u&&t>=interval.x&&t<=interval.y;
- if(local){if(localSteps>=min(u.clothLocalBudget,512u)){return Hit(t,false,true,i,localSteps,f);}localSteps++;}else{if(regularSteps>=180u){return Hit(t,false,true,i,localSteps,f);}regularSteps++;}
- let sample=sceneSample(ro+rd*t);f=sample.field;if(u.clothLocalBudget>0u&&!local){f=sample.other;}let eps=.000008+t*.000001;
- if(abs(f.d)<eps){return Hit(t,true,false,i+1u,localSteps,f);}if(f.d<0. && prevD>0.){var a=prevT;var b=t;for(var j=0;j<9;j++){let m=(a+b)*.5;let d=sceneField(ro+rd*m).d;if(d>0.){a=m;}else{b=m;}}t=(a+b)*.5;return Hit(t,true,false,i+1u,localSteps,sceneField(ro+rd*t));}
- prevT=t;prevD=f.d;var advance=clamp(abs(f.d)*.48,.000006,.55);if(local&&f.id==8){let possible=clothEmptyIntervalStep(ro+rd*t,rd);if(possible>advance){let other=sample.other;advance=max(advance,min(possible,clamp(abs(other.d)*.48,.000006,.55)));}}if(u.clothLocalBudget>0u&&interval.x<=interval.y&&t<interval.x){advance=min(advance,interval.x-t);}t+=advance;}
- return Hit(t,false,true,692u,localSteps,f);
-}
-struct RayStatistics { primaryHit:atomic<u32>,trueMiss:atomic<u32>,primaryExhausted:atomic<u32>,secondaryExhausted:atomic<u32>,maxPrimarySteps:atomic<u32>,maxLocalSteps:atomic<u32>,primaryRefined:atomic<u32>,reserved:atomic<u32> };
+${RESUMABLE_TRACE_WGSL}
+
+struct RayStatistics { primaryHit:atomic<u32>,trueMiss:atomic<u32>,primaryExhausted:atomic<u32>,secondaryExhausted:atomic<u32>,maxPrimarySteps:atomic<u32>,maxLocalSteps:atomic<u32>,primaryRefined:atomic<u32>,reserved:atomic<u32>,primaryRetried:atomic<u32>,secondaryRetried:atomic<u32> };
 @group(0) @binding(2) var<storage,read_write> rayStats:RayStatistics;
 fn countPrimary(h:Hit){atomicMax(&rayStats.maxPrimarySteps,h.steps);atomicMax(&rayStats.maxLocalSteps,h.localSteps);if(h.localSteps>0u){atomicAdd(&rayStats.primaryRefined,1u);}if(h.hit){atomicAdd(&rayStats.primaryHit,1u);}else if(h.exhausted){atomicAdd(&rayStats.primaryExhausted,1u);}else{atomicAdd(&rayStats.trueMiss,1u);}}
 fn fieldNormal(p:vec3<f32>)->vec3<f32>{let e=max(.00001,receiverFootprint(p)*.25);let a=vec3<f32>(1,-1,-1);let b=vec3<f32>(-1,-1,1);let c=vec3<f32>(-1,1,-1);let d=vec3<f32>(1,1,1);return normalize(a*sceneField(p+a*e).d+b*sceneField(p+b*e).d+c*sceneField(p+c*e).d+d*sceneField(p+d*e).d);}
@@ -54,9 +45,22 @@ fn shadeOpaqueCore(p:vec3<f32>,n:vec3<f32>,rd:vec3<f32>,f:RoomField,filtered:KpS
 // They are intersection results, not geometry or an appearance/field texture.
 struct GpuHit {distances:vec4<f32>,coordinates:vec4<f32>,state:vec4<f32>,identity:vec4<u32>};
 @group(0) @binding(3) var<storage,read_write> tileHits:array<GpuHit,1024>;
+@group(0) @binding(5) var<storage,read_write> tileResume:array<vec4<f32>,1024>;
+struct RetryQueue {count:atomic<u32>,indices:array<u32,2048>};
+@group(0) @binding(6) var<storage,read_write> retryQueue:RetryQueue;
+struct GlassRetry {origin:vec4<f32>,direction:vec4<f32>,record:GpuHit,previous:vec4<f32>,link:vec4<u32>};
+@group(0) @binding(7) var<storage,read_write> glassRays:array<GlassRetry,2048>;
+struct GlassComposite {transmission:vec4<f32>,reflection:vec4<f32>,blend:vec4<f32>};
+@group(0) @binding(8) var<storage,read_write> glassComposite:array<GlassComposite,1024>;
+fn packHit(h:Hit)->GpuHit{let status=select(select(0u,2u,h.exhausted),1u,h.hit);return GpuHit(vec4<f32>(h.t,h.field.d,f32(h.steps),f32(h.localSteps)),vec4<f32>(h.field.q,h.field.seed),vec4<f32>(h.field.wet,h.field.repair,h.field.age,0.),vec4<u32>(u32(h.field.id),u32(h.field.variant),status,0u));}
+fn unpackHit(r:GpuHit)->Hit{return Hit(r.distances.x,r.identity.z==1u,r.identity.z==2u,u32(r.distances.z),u32(r.distances.w),RoomField(r.distances.y,i32(r.identity.x),r.coordinates.xyz,r.coordinates.w,i32(r.identity.y),r.state.x,r.state.y,r.state.z));}
 fn cameraRay(pixel:vec2<f32>)->vec3<f32>{let uv=(pixel/u.resolution*2.-vec2<f32>(1.))*vec2<f32>(u.aspect,-1.);return normalize(u.fw+(u.rt*uv.x+u.up*uv.y)*.48);}
-@compute @workgroup_size(8,8) fn primaryMain(@builtin(global_invocation_id) gid:vec3<u32>){if(any(gid.xy>=u.tileExtent)){return;}let rd=cameraRay(vec2<f32>(u.tileOrigin+gid.xy)+vec2<f32>(.5));let h=traceWorld(u.ro,rd,32.);countPrimary(h);let status=select(select(0u,2u,h.exhausted),1u,h.hit);tileHits[gid.y*32u+gid.x]=GpuHit(vec4<f32>(h.t,h.field.d,f32(h.steps),f32(h.localSteps)),vec4<f32>(h.field.q,h.field.seed),vec4<f32>(h.field.wet,h.field.repair,h.field.age,0.),vec4<u32>(u32(h.field.id),u32(h.field.variant),status,0u));}
-fn readPrimary(pixel:vec2<f32>)->Hit{let local=vec2<u32>(pixel)-u.tileOrigin;let r=tileHits[local.y*32u+local.x];return Hit(r.distances.x,r.identity.z==1u,r.identity.z==2u,u32(r.distances.z),u32(r.distances.w),RoomField(r.distances.y,i32(r.identity.x),r.coordinates.xyz,r.coordinates.w,i32(r.identity.y),r.state.x,r.state.y,r.state.z));}
+@compute @workgroup_size(8,8) fn primaryMain(@builtin(global_invocation_id) gid:vec3<u32>){if(any(gid.xy>=u.tileExtent)){return;}let index=gid.y*32u+gid.x;let rd=cameraRay(vec2<f32>(u.tileOrigin+gid.xy)+vec2<f32>(.5));let result=traceProgress(u.ro,rd,32.,traceStart(u.ro),vec4<f32>(.001,1.,0.,0.),180u,692u);tileHits[index]=packHit(result.h);tileResume[index]=result.previous;if(result.h.exhausted){let slot=atomicAdd(&retryQueue.count,1u);retryQueue.indices[slot]=index;atomicAdd(&rayStats.primaryRetried,1u);}}
+@compute @workgroup_size(64) fn primaryResumeMain(@builtin(global_invocation_id) gid:vec3<u32>){let slot=gid.x;if(slot>=atomicLoad(&retryQueue.count)){return;}let index=retryQueue.indices[slot];let pixel=u.tileOrigin+vec2<u32>(index%32u,index/32u);let rd=cameraRay(vec2<f32>(pixel)+vec2<f32>(.5));let result=traceProgress(u.ro,rd,32.,unpackHit(tileHits[index]),tileResume[index],1024u,1024u);tileHits[index]=packHit(result.h);tileResume[index]=result.previous;}
+@compute @workgroup_size(8,8) fn primaryFinalizeMain(@builtin(global_invocation_id) gid:vec3<u32>){if(any(gid.xy>=u.tileExtent)){return;}countPrimary(unpackHit(tileHits[gid.y*32u+gid.x]));}
+
+fn readPrimary(pixel:vec2<f32>)->Hit{let local=vec2<u32>(pixel)-u.tileOrigin;return unpackHit(tileHits[local.y*32u+local.x]);}
+
 fn shadeOpaque(p:vec3<f32>,n:vec3<f32>,rd:vec3<f32>,f:RoomField)->vec3<f32>{return shadeOpaqueCore(p,n,rd,f,KpSurface(0.,vec3<f32>(0.),-1.));}
 struct GpuCoverage {surface:vec4<f32>,coverageInfo:vec4<f32>};
 @group(0) @binding(4) var<storage,read_write> tileCoverage:array<GpuCoverage,1024>;
@@ -72,10 +76,17 @@ struct Frag { @location(0) color:vec4<f32>,@builtin(frag_depth) depth:f32, };
 }
 @fragment fn fsGlass(@builtin(position) pixel:vec4<f32>)->Frag{
  if(u.debug!=0u){discard;}let rd=cameraRay(pixel.xy);let tr=readPrimary(pixel.xy);if(!tr.hit||tr.field.id!=6){discard;}let p=u.ro+rd*tr.t;let n=fieldNormal(p);let z=dot(p-u.ro,u.fw);let depth=clamp(32./(32.-.05)-32.*.05/((32.-.05)*max(z,.05)),0.,1.);var col=vec3<f32>(0.);
-let fresnel=.04+.96*pow(1.-abs(dot(-rd,n)),5.);let exitZ=select(-.069,-.061,rd.z>0.);let exitT=max(0.,(exitZ-p.z)/select(-1e-7,1e-7,rd.z>=0.));let slabExit=select(max(0.,(exitZ-p.z)/rd.z),exitT,abs(rd.z)<1e-7);let throughOrigin=p+rd*(slabExit+.001);let transmitted=traceWorld(throughOrigin,rd,24.);var behind=sky(rd);if(transmitted.exhausted){atomicAdd(&rayStats.secondaryExhausted,1u);behind=vec3<f32>(1.,0.,1.);}if(transmitted.hit){let pp=throughOrigin+rd*transmitted.t;behind=shadeOpaque(pp,fieldNormal(pp),rd,transmitted.field);}let reflected=traceWorld(p+n*.006,reflect(rd,n),24.);var reflection=sky(reflect(rd,n));if(reflected.exhausted){atomicAdd(&rayStats.secondaryExhausted,1u);reflection=vec3<f32>(1.,0.,1.);}if(reflected.hit){let pp=p+n*.006+reflect(rd,n)*reflected.t;reflection=shadeOpaque(pp,fieldNormal(pp),reflect(rd,n),reflected.field);}col=mix(behind*vec3<f32>(.88,.94,.92),reflection,fresnel);
+let fresnel=.04+.96*pow(1.-abs(dot(-rd,n)),5.);let exitZ=select(-.069,-.061,rd.z>0.);let exitT=max(0.,(exitZ-p.z)/select(-1e-7,1e-7,rd.z>=0.));let slabExit=select(max(0.,(exitZ-p.z)/rd.z),exitT,abs(rd.z)<1e-7);let throughOrigin=p+rd*(slabExit+.001);let pixelLocal=vec2<u32>(pixel.xy)-u.tileOrigin;let pixelIndex=pixelLocal.y*32u+pixelLocal.x;
+let transmissionResult=traceProgress(throughOrigin,rd,24.,traceStart(throughOrigin),vec4<f32>(.001,1.,0.,0.),180u,692u);let transmitted=transmissionResult.h;var behind=sky(rd);var needsRetry=false;if(transmitted.exhausted){queueGlassRetry(transmissionResult,throughOrigin,rd,pixelIndex,0u);behind=vec3<f32>(1.,0.,1.);needsRetry=true;}if(transmitted.hit){let pp=throughOrigin+rd*transmitted.t;behind=shadeOpaque(pp,fieldNormal(pp),rd,transmitted.field);}
+let reflectionOrigin=p+n*.006;let reflectionDirection=reflect(rd,n);let reflectionResult=traceProgress(reflectionOrigin,reflectionDirection,24.,traceStart(reflectionOrigin),vec4<f32>(.001,1.,0.,0.),180u,692u);let reflected=reflectionResult.h;var reflection=sky(reflectionDirection);if(reflected.exhausted){queueGlassRetry(reflectionResult,reflectionOrigin,reflectionDirection,pixelIndex,1u);reflection=vec3<f32>(1.,0.,1.);needsRetry=true;}if(reflected.hit){let pp=reflectionOrigin+reflectionDirection*reflected.t;reflection=shadeOpaque(pp,fieldNormal(pp),reflectionDirection,reflected.field);}
+glassComposite[pixelIndex]=GlassComposite(vec4<f32>(behind,1.),vec4<f32>(reflection,1.),vec4<f32>(fresnel,depth,select(0.,1.,needsRetry),0.));col=mix(behind*vec3<f32>(.88,.94,.92),reflection,fresnel);
 
  col=col/(vec3<f32>(1.)+col);return Frag(vec4<f32>(pow(max(col,vec3<f32>(0.)),vec3<f32>(1./2.2)),1.),depth);
 }
+fn queueGlassRetry(result:TraceProgress,origin:vec3<f32>,direction:vec3<f32>,pixelIndex:u32,component:u32){let index=atomicAdd(&retryQueue.count,1u);glassRays[index]=GlassRetry(vec4<f32>(origin,24.),vec4<f32>(direction,1.),packHit(result.h),result.previous,vec4<u32>(pixelIndex,component,0u,0u));atomicAdd(&rayStats.secondaryRetried,1u);}
+@compute @workgroup_size(64) fn glassResumeMain(@builtin(global_invocation_id) gid:vec3<u32>){let index=gid.x;if(index>=atomicLoad(&retryQueue.count)){return;}let ray=glassRays[index];let result=traceProgress(ray.origin.xyz,ray.direction.xyz,ray.origin.w,unpackHit(ray.record),ray.previous,1024u,1024u);glassRays[index].record=packHit(result.h);glassRays[index].previous=result.previous;}
+@compute @workgroup_size(64) fn glassShadeRetryMain(@builtin(global_invocation_id) gid:vec3<u32>){let index=gid.x;if(index>=atomicLoad(&retryQueue.count)){return;}let ray=glassRays[index];let h=unpackHit(ray.record);let rd=ray.direction.xyz;var radiance=sky(rd);if(h.exhausted){atomicAdd(&rayStats.secondaryExhausted,1u);radiance=vec3<f32>(1.,0.,1.);}if(h.hit){let p=ray.origin.xyz+rd*h.t;radiance=shadeOpaque(p,fieldNormal(p),rd,h.field);}if(ray.link.y==0u){glassComposite[ray.link.x].transmission=vec4<f32>(radiance,1.);}else{glassComposite[ray.link.x].reflection=vec4<f32>(radiance,1.);}}
+@fragment fn fsGlassComposite(@builtin(position) pixel:vec4<f32>)->Frag{if(u.debug!=0u){discard;}let h=readPrimary(pixel.xy);if(!h.hit||h.field.id!=6){discard;}let local=vec2<u32>(pixel.xy)-u.tileOrigin;let c=glassComposite[local.y*32u+local.x];if(c.blend.z<.5){discard;}var col=mix(c.transmission.xyz*vec3<f32>(.88,.94,.92),c.reflection.xyz,c.blend.x);col=col/(vec3<f32>(1.)+col);return Frag(vec4<f32>(pow(max(col,vec3<f32>(0.)),vec3<f32>(1./2.2)),1.),c.blend.y);}
 @group(0) @binding(1) var<storage,read_write> probeOut:array<vec4<f32>,8>;
 @compute @workgroup_size(1) fn probeMain(@builtin(global_invocation_id) gid:vec3<u32>){let i=gid.x;if(i>=8u){return;}let origins=array<vec3<f32>,8>(vec3<f32>(-2.3,1.4,-2),vec3<f32>(-.85,1.3,-2),vec3<f32>(1.35,1.97,-2),vec3<f32>(-2.5,.07,-2),vec3<f32>(-1.62,2,2.18),vec3<f32>(1.2,2.08,1.5),vec3<f32>(.5,1.07,-2),vec3<f32>(0,2.93,-1));let dirs=array<vec3<f32>,8>(vec3<f32>(0,0,1),vec3<f32>(0,0,1),vec3<f32>(0,0,1),vec3<f32>(0,0,1),vec3<f32>(0,-1,0),vec3<f32>(0,0,1),vec3<f32>(0,0,1),vec3<f32>(0,0,1));let h=traceWorld(origins[i],dirs[i],20.);probeOut[i]=vec4<f32>(h.t,f32(h.field.id),select(0.,1.,h.hit),h.field.d);}
 `;}

@@ -1,29 +1,13 @@
-// QA-only sparse replay. Uses the exact renderer camera, field and glass rays.
-// It builds no geometry and is not included in the normal render stage closures.
+// QA-only sparse replay using the production resumable trace core. No geometry.
 import {selectStageSource} from './stage-source.mjs';
-export function diagnosticSources(fullCode) {
-  const start=fullCode.indexOf('fn traceWorld('), end=fullCode.indexOf('\nstruct RayStatistics',start);
-  if(start<0||end<0)throw Error('Trace diagnostic source boundary changed');
-  const original=fullCode.slice(start,end);
-  let replay=original.replace('fn traceWorld(', 'fn traceDiagnosticWorld(')
-    .replace('farT:f32)->Hit', 'farT:f32,regularBudget:u32,useSupport:bool)->Hit')
-    .replace('i<692u','i<1536u').replace('regularSteps>=180u','regularSteps>=min(regularBudget,1024u)')
-    .replace('true,692u,localSteps','true,1536u,localSteps')
-    .replace('var t=.001;var prevT=t;', 'var limit=farT;var t=.001;if(useSupport){let support=diagnosticSupportInterval(ro,rd);if(support.x>support.y||support.y<.001||support.x>farT){return Hit(farT,false,false,0u,0u,rawField(1e4,0,ro+rd*farT));}t=max(t,support.x);limit=min(limit,support.y);}var prevT=t;')
-    .replace('if(t>farT){return Hit(farT,false,false,i,localSteps,rawField(1e4,0,ro+rd*farT));}', 'if(t>limit){return Hit(limit,false,false,i,localSteps,rawField(1e4,0,ro+rd*limit));}');
-  if(replay===original||!replay.includes('regularSteps>=min(regularBudget,1024u)'))throw Error('Trace diagnostic budget bridge changed');
-  const code=fullCode+'\n'+replay+String.raw`
-// QA candidate only. Proven whole-room zero support plus 50um query padding
-// encloses the unchanged hit epsilon (<=40um for primary far32m).
-fn diagnosticSupportInterval(ro:vec3<f32>,rd:vec3<f32>)->vec2<f32>{
- let lo=vec3<f32>(-3.47,-.20,-1.42)-vec3<f32>(.00005);let hi=vec3<f32>(3.47,3.4,4.32)+vec3<f32>(.00005);var enter=0.;var leave=1e4;
- for(var axis=0;axis<3;axis++){if(abs(rd[axis])<1e-8){if(ro[axis]<lo[axis]||ro[axis]>hi[axis]){return vec2<f32>(1.,-1.);}}else{let a=(lo[axis]-ro[axis])/rd[axis];let b=(hi[axis]-ro[axis])/rd[axis];enter=max(enter,min(a,b));leave=min(leave,max(a,b));}}return vec2<f32>(enter,leave);
-}
-struct DiagnosticRay { origin:vec4<f32>, direction:vec4<f32> };
-@group(0) @binding(5) var<storage,read> diagnosticQueries:array<vec4<u32>>;
-@group(0) @binding(6) var<storage,read_write> diagnosticRays:array<DiagnosticRay>;
-@group(0) @binding(7) var<storage,read> diagnosticPrimary:array<GpuHit>;
-@group(0) @binding(8) var<storage,read_write> diagnosticHits:array<GpuHit>;
+export function diagnosticSources(fullCode){
+ const code=fullCode+String.raw`
+struct DiagnosticRay {origin:vec4<f32>,direction:vec4<f32>};
+@group(0) @binding(9) var<storage,read> diagnosticQueries:array<vec4<u32>>;
+@group(0) @binding(10) var<storage,read_write> diagnosticRays:array<DiagnosticRay>;
+@group(0) @binding(11) var<storage,read> diagnosticPrimary:array<GpuHit>;
+@group(0) @binding(12) var<storage,read_write> diagnosticHits:array<GpuHit>;
+@group(0) @binding(13) var<storage,read_write> diagnosticPrevious:array<vec4<f32>>;
 @compute @workgroup_size(64) fn diagnosticOriginsMain(@builtin(global_invocation_id) gid:vec3<u32>){
  let i=gid.x;if(i>=arrayLength(&diagnosticQueries)){return;}let query=diagnosticQueries[i];let rd=cameraRay(vec2<f32>(query.xy)+vec2<f32>(.5));
  if(query.w==0u){diagnosticRays[i]=DiagnosticRay(vec4<f32>(u.ro,32.),vec4<f32>(rd,1.));return;}
@@ -34,29 +18,25 @@ struct DiagnosticRay { origin:vec4<f32>, direction:vec4<f32> };
 }
 @compute @workgroup_size(64) fn diagnosticTraceMain(@builtin(global_invocation_id) gid:vec3<u32>){
  let i=gid.x;if(i>=arrayLength(&diagnosticQueries)){return;}let ray=diagnosticRays[i];if(ray.direction.w==0.){diagnosticHits[i]=GpuHit(vec4<f32>(0.),vec4<f32>(0.),vec4<f32>(0.),vec4<u32>(0u,0u,3u,0u));return;}
- let h=traceDiagnosticWorld(ray.origin.xyz,ray.direction.xyz,ray.origin.w,diagnosticQueries[i].z&65535u,(diagnosticQueries[i].z&65536u)!=0u);let state=select(select(0u,2u,h.exhausted),1u,h.hit);
- diagnosticHits[i]=GpuHit(vec4<f32>(h.t,h.field.d,f32(h.steps),f32(h.localSteps)),vec4<f32>(h.field.q,h.field.seed),vec4<f32>(h.field.wet,h.field.repair,h.field.age,0.),vec4<u32>(u32(h.field.id),u32(h.field.variant),state,0u));
+ let limit=diagnosticQueries[i].z;let result=traceProgress(ray.origin.xyz,ray.direction.xyz,ray.origin.w,traceStart(ray.origin.xyz),vec4<f32>(.001,1.,0.,0.),limit,select(692u,1024u,limit>180u));diagnosticHits[i]=packHit(result.h);diagnosticPrevious[i]=result.previous;
+}
+@compute @workgroup_size(64) fn diagnosticResumeMain(@builtin(global_invocation_id) gid:vec3<u32>){
+ let i=gid.x;if(i>=arrayLength(&diagnosticQueries)||diagnosticHits[i].identity.z!=2u){return;}let ray=diagnosticRays[i];let result=traceProgress(ray.origin.xyz,ray.direction.xyz,ray.origin.w,unpackHit(diagnosticHits[i]),diagnosticPrevious[i],1024u,1024u);diagnosticHits[i]=packHit(result.h);diagnosticPrevious[i]=result.previous;
 }
 `;
-  return {origins:selectStageSource(code,['diagnosticOriginsMain']), trace:selectStageSource(code,['diagnosticTraceMain'])};
+ return Object.fromEntries([['origins','diagnosticOriginsMain'],['trace','diagnosticTraceMain'],['resume','diagnosticResumeMain']].map(([name,entry])=>[name,selectStageSource(code,[entry])]));
 }
-
 export async function createRayDiagnostics(device,fullCode,uniform){
  const stages=diagnosticSources(fullCode),pipelines={};
- for(const name of ['origins','trace']){const module=device.createShaderModule({code:stages[name].code});const info=await module.getCompilationInfo();const errors=info.messages.filter(m=>m.type==='error');if(errors.length)throw Error(JSON.stringify(errors.map(m=>({stage:name,message:m.message,line:m.lineNum}))));pipelines[name]=await device.createComputePipelineAsync({layout:'auto',compute:{module,entryPoint:name==='origins'?'diagnosticOriginsMain':'diagnosticTraceMain'}});}
- return async function replay(pixels,{regularBudget=180,secondary=false,bounded=false}={}){
+ for(const[name,entryPoint]of [['origins','diagnosticOriginsMain'],['trace','diagnosticTraceMain'],['resume','diagnosticResumeMain']]){const module=device.createShaderModule({code:stages[name].code});const info=await module.getCompilationInfo();const errors=info.messages.filter(m=>m.type==='error');if(errors.length)throw Error(JSON.stringify(errors.map(m=>({stage:name,message:m.message,line:m.lineNum}))));pipelines[name]=await device.createComputePipelineAsync({layout:'auto',compute:{module,entryPoint}});}
+ return async function replay(pixels,{regularBudget=180,secondary=false,resume=false}={}){
   if(!pixels.length||pixels.length>8192||!Number.isInteger(regularBudget)||regularBudget<180||regularBudget>1024)throw Error('Sparse diagnostic bounds');
-  const n=pixels.length,queries=new Uint32Array(n*4);pixels.forEach(([x,y],i)=>queries.set([x,y,regularBudget|(bounded?65536:0),0],i*4));
-  const query=device.createBuffer({size:queries.byteLength,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST});
-  const rays=device.createBuffer({size:n*32,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_SRC});
-  const primary=device.createBuffer({size:n*64,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST});
-  const hits=device.createBuffer({size:n*64,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_SRC});
-  const read=device.createBuffer({size:n*96,usage:GPUBufferUsage.MAP_READ|GPUBufferUsage.COPY_DST});
-  const originGroup=device.createBindGroup({layout:pipelines.origins.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:uniform}},{binding:5,resource:{buffer:query}},{binding:6,resource:{buffer:rays}},{binding:7,resource:{buffer:primary}}]});
-  const traceGroup=device.createBindGroup({layout:pipelines.trace.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:uniform}},{binding:5,resource:{buffer:query}},{binding:6,resource:{buffer:rays}},{binding:8,resource:{buffer:hits}}]});
-  const out={regularBudget,bounded,pixels,passes:[],stageBytes:Object.fromEntries(Object.entries(stages).map(([k,v])=>[k,v.bytes]))};
-  try{for(let mode=0;mode<(secondary?3:1);mode++){pixels.forEach((_,i)=>queries[i*4+3]=mode);device.queue.writeBuffer(query,0,queries);const t=performance.now(),e=device.createCommandEncoder();for(const [name,group]of [['origins',originGroup],['trace',traceGroup]]){const p=e.beginComputePass();p.setPipeline(pipelines[name]);p.setBindGroup(0,group);p.dispatchWorkgroups(Math.ceil(n/64));p.end();}if(mode===0)e.copyBufferToBuffer(hits,0,primary,0,n*64);e.copyBufferToBuffer(hits,0,read,0,n*64);e.copyBufferToBuffer(rays,0,read,n*64,n*32);device.queue.submit([e.finish()]);await read.mapAsync(GPUMapMode.READ);const buffer=read.getMappedRange(),f=new Float32Array(buffer),u=new Uint32Array(buffer);const records=pixels.map((pixel,i)=>({pixel,t:f[i*16],distance:f[i*16+1],steps:f[i*16+2],localSteps:f[i*16+3],localPoint:Array.from(f.slice(i*16+4,i*16+7)),seed:f[i*16+7],variant:u[i*16+13],id:u[i*16+12],status:u[i*16+14],origin:Array.from(f.slice(n*16+i*8,n*16+i*8+3)),direction:Array.from(f.slice(n*16+i*8+4,n*16+i*8+7))}));read.unmap();out.passes.push({mode,elapsedMs:performance.now()-t,records});}}
-  finally{query.destroy();rays.destroy();primary.destroy();hits.destroy();read.destroy();}
-  return out;
+  const n=pixels.length,queries=new Uint32Array(n*4);pixels.forEach(([x,y],i)=>queries.set([x,y,regularBudget,0],i*4));
+  const query=device.createBuffer({size:queries.byteLength,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST}),rays=device.createBuffer({size:n*32,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_SRC}),primary=device.createBuffer({size:n*64,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST}),hits=device.createBuffer({size:n*64,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_SRC}),previous=device.createBuffer({size:n*16,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_SRC}),read=device.createBuffer({size:n*112,usage:GPUBufferUsage.MAP_READ|GPUBufferUsage.COPY_DST});
+  const buffers={0:uniform,9:query,10:rays,11:primary,12:hits,13:previous},groups={};for(const[name,stage]of Object.entries(stages)){groups[name]=device.createBindGroup({layout:pipelines[name].getBindGroupLayout(0),entries:stage.bindings.map(({binding})=>({binding,resource:{buffer:buffers[binding]}}))});}
+  const out={regularBudget,resume,pixels,passes:[],stageBytes:Object.fromEntries(Object.entries(stages).map(([k,v])=>[k,v.bytes]))};
+  async function run(names,mode,resumed){const t=performance.now(),e=device.createCommandEncoder();for(const name of names){const p=e.beginComputePass();p.setPipeline(pipelines[name]);p.setBindGroup(0,groups[name]);p.dispatchWorkgroups(Math.ceil(n/64));p.end();}if(mode===0&&!resumed)e.copyBufferToBuffer(hits,0,primary,0,n*64);e.copyBufferToBuffer(hits,0,read,0,n*64);e.copyBufferToBuffer(rays,0,read,n*64,n*32);e.copyBufferToBuffer(previous,0,read,n*96,n*16);device.queue.submit([e.finish()]);await read.mapAsync(GPUMapMode.READ);const buffer=read.getMappedRange(),f=new Float32Array(buffer),u=new Uint32Array(buffer);const records=pixels.map((pixel,i)=>({pixel,t:f[i*16],distance:f[i*16+1],steps:f[i*16+2],localSteps:f[i*16+3],localPoint:Array.from(f.slice(i*16+4,i*16+7)),seed:f[i*16+7],variant:u[i*16+13],id:u[i*16+12],status:u[i*16+14],origin:Array.from(f.slice(n*16+i*8,n*16+i*8+3)),direction:Array.from(f.slice(n*16+i*8+4,n*16+i*8+7)),previous:Array.from(f.slice(n*24+i*4,n*24+i*4+4))}));read.unmap();out.passes.push({mode,resumed,elapsedMs:performance.now()-t,records});}
+  try{for(let mode=0;mode<(secondary?3:1);mode++){pixels.forEach((_,i)=>queries[i*4+3]=mode);device.queue.writeBuffer(query,0,queries);await run(['origins','trace'],mode,false);if(resume)await run(['resume'],mode,true);}}
+  finally{for(const b of [query,rays,primary,hits,previous,read])b.destroy();}return out;
  };
 }

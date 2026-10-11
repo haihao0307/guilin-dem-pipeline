@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-const receiver=readFileSync(new URL('../receiver.mjs',import.meta.url),'utf8'),app=readFileSync(new URL('../app.mjs',import.meta.url),'utf8');
+const receiver=readFileSync(new URL('../receiver.mjs',import.meta.url),'utf8')+readFileSync(new URL('../trace-core.mjs',import.meta.url),'utf8'),app=readFileSync(new URL('../app.mjs',import.meta.url),'utf8');
 assert(receiver.includes('exhausted:bool'));
-assert(receiver.includes('return Hit(farT,false,false'));
-assert(receiver.includes('return Hit(t,false,true'));
-assert(receiver.includes('regularSteps>=180u'));
+assert(receiver.includes('Hit(farT,false,false'));
+assert(receiver.includes('Hit(t,false,true'));
+assert(receiver.includes('regularSteps>=regularLimit')&&receiver.includes('180u,692u'));
 assert(receiver.includes('t>=interval.x&&t<=interval.y'));
 assert(receiver.includes('min(u.clothLocalBudget,512u)'));
 assert(receiver.includes('atomicAdd(&rayStats.primaryExhausted'));
