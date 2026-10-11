@@ -114,7 +114,7 @@ for(let source=0;source<3;source++){const picker=new T.Group();moving.add(picker
 for(const dx of[-1,1])for(const dz of[-.85,.85])beam([19+dx,0,2+dz],[19+dx,13.5,2+dz],.16,.16,mats.iron);belt([19,1.5,2.8],[19,1.5,8.5]);box([19,1,9.5],[2.7,2,1],mats.enamel);arc([19,2,8.9],1.1,.16,.16,mats.brass);
 // The boilers now live in the separate rear service court (site.mjs).
 // A real supply connection reaches the engine through the open rear service bay.
-pipe([[-18,5,-18],[-18,5,-.5],[-17,3,-.5]],.2);
+// Supply is authored by site.mjs, offset around the original cast columns.
 pipe([[-12,1,-.5],[-12,.45,-.5],[-14,.45,-.5],[-14,.45,-15],[-18,.45,-15],[-18,.45,-18]],.10,mats.iron);
 // Protected ground-level maintenance route remains under the office gallery.
 for(const z of[-15,-10,-5,0])box([-19.45,.10,z],[1.6,.08,4.7],mats.trim);

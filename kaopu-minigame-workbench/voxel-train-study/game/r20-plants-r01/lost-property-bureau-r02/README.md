@@ -21,3 +21,5 @@ Official pinned Playwright/Chromium SwiftShader on GitHub Actions captures actua
 ## Explicitly incomplete
 
 No full train consist, crowd simulation, operational coal/ash logistics, traffic routing beyond this small site, fire-safety engineering, torque/load simulation, local fault/isolator state machine, native SQLite.KaoPu export or general-editor interchange. Visible clerks are function-built static figures. Service paths are authored access routes, not certified evacuation routes. Original institution narrative rules remain in `kaopu-minigame-workbench/lost-found-bureau/FOUNDATION.md`.
+
+Public, fireman and ground-floor maintenance approaches are also sampled against the generated scene using a human-sized clearance envelope (484 samples). This is access verification for these authored routes, not a full crowd or evacuation model. The bureau adds no new puzzle; this remains an architectural/logistics candidate.
