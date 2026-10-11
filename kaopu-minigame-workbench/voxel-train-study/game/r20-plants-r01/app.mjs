@@ -177,3 +177,6 @@ $('loadNativeGame').addEventListener('change',async event=>{const file=event.tar
 $('photoMode').addEventListener('click',()=>{if(game.started&&game.phase!=='summary')game.command('pause',true);initSettingsUI()?.close({resume:false,restoreFocus:false});$('pauseScreen').hidden=true;$('driverGame').dataset.photo='true';$('photoTools').hidden=false;needsRender=true;});
 $('photoCamera').addEventListener('click',()=>initSettingsUI()?.open());
 $('photoReturn').addEventListener('click',()=>{$('driverGame').dataset.photo='false';$('photoTools').hidden=true;$('pauseScreen').hidden=!game.paused;needsRender=true;});
+
+// Local CI diagnostic only. This changes no geometry, visibility, camera or Session.
+if(location.hostname==='127.0.0.1'&&params.has('renderAudit'))window.__trainRenderAudit={setShadows(enabled){renderer.shadowMap.enabled=!!enabled;renderer.shadowMap.needsUpdate=true;const materials=new Set();scene.traverse(o=>{if(o.material)for(const m of(Array.isArray(o.material)?o.material:[o.material]))materials.add(m);});for(const m of materials)m.needsUpdate=true;needsRender=true;}};
