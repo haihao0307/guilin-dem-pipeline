@@ -52,8 +52,10 @@ jobs:
         run: |
           node kaopu-unified-human-workbench/joey-observation-r01/brow-tip-r44/brow-band.test.mjs
           node kaopu-unified-human-workbench/joey-observation-r01/brow-tip-r44/native-geometry-qa.test.cjs
-      - name: Render one reversible native brow and nose-tip candidate
-        run: node kaopu-unified-human-workbench/joey-observation-r01/brow-tip-r44/render-r44.cjs
+      - name: Test bounded smile-state contract
+        run: node --test kaopu-unified-human-workbench/joey-observation-r01/expression-state-r01/states.test.cjs
+      - name: Render R44 owner-neutral and soft-smile state comparison
+        run: node kaopu-unified-human-workbench/joey-observation-r01/expression-state-r01/render.cjs
       - name: Keep bounded research evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -89,6 +91,7 @@ jobs:
             joey-combined-appearance-r22/
             joey-macro-face-r43/
             joey-brow-tip-r44/
+            joey-expression-state-r01/
           retention-days: 7
           compression-level: 0
           if-no-files-found: warn
