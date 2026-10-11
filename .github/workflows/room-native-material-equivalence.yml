@@ -1,0 +1,41 @@
+name: Original native material equivalence QA
+on:
+  push:
+    branches: ['qa/walled-room-r01-20261011']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/room-unit-r02/**'
+      - 'tests/room-native-material-equivalence.cjs'
+      - '.github/workflows/room-native-material-equivalence.yml'
+permissions:
+  contents: read
+jobs:
+  original-native-materials:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01
+            kaopu-minigame-workbench/voxel-train-study/vendor
+            tests/room-native-material-equivalence.cjs
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.3'
+      - name: Install official pinned browser test runtime
+        run: |
+          npm install --prefix "$RUNNER_TEMP/room-browser" --registry=https://registry.npmjs.org --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/room-browser/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/room-browser/node_modules" >> "$GITHUB_ENV"
+      - name: Compare original workbench renderer and unchanged-core Three binding
+        run: node tests/room-native-material-equivalence.cjs
+      - name: Preserve true GPU images and signature evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: original-native-material-${{ github.sha }}
+          path: room-native-material-results/
+          retention-days: 7
+          compression-level: 0
