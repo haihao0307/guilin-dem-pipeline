@@ -37,7 +37,8 @@ fn wallDomain(p:vec3<f32>)->RoomField{
  if(remain>.0003){let highBound=.000096*abs(u.microscope);var micro=highBound;if(-p.z-.12-remain<=highBound+.001){micro=kpPlasterOriginalField(p,plasterParams(),.0003).surface.height*u.microscope;}let coat=max(-p.z-.12-remain-micro,p.z+.12);let bounded=max(coat,boxD(p-vec3<f32>(0.,1.7,0.),vec3<f32>(3.,1.7,.5)));let d=pierceFront(p,bounded);if(d<result.d){result=RoomField(d,1,p,19.,0,wet,rep,age);}}
  return result;
 }
-fn sceneFieldInternal(p:vec3<f32>,includeCloth:bool)->RoomField{
+struct SceneSample {field:RoomField,other:RoomField};
+fn sceneSample(p:vec3<f32>)->SceneSample{
  var f=wallDomain(p);
  f=chooseField(f,stoneField(boxD(p-vec3<f32>(0.,-.09,1.45),vec3<f32>(3.45,.09,2.85)),vec3<f32>(p.x,p.z-1.45,p.y),0));
  // Finite rear/side envelope leaves the room genuinely open through its door.
@@ -56,10 +57,10 @@ fn sceneFieldInternal(p:vec3<f32>,includeCloth:bool)->RoomField{
 
  // Rail and a single bounded hanging cloth height domain, no tessellated garment.
  f=chooseField(f,rawField(capsuleD(p,vec3<f32>(-.1,2.85,2.15),vec3<f32>(2.45,2.85,2.15),.018),5,p));
- if(includeCloth){let cq=p-vec3<f32>(1.2,2.08,2.15);let sheet=.045*sin(cq.x*8.)+.018*sin(cq.y*5.+cq.x*3.);let q=vec3<f32>(cq.x,cq.y,cq.z-sheet);var cloth=boxD(q,vec3<f32>(.46,.67,.0006));if(abs(q.z)<.002&&abs(q.x)<.47&&abs(q.y)<.68){cloth=max(clothNative(q).d,boxD(q,vec3<f32>(.46,.67,.02)));}f=chooseField(f,rawField(cloth,8,q));}
  if(abs(f.d)<.012){if(f.id==3){f.d-=stoneMemberSurface(f,p,.0003).height*u.microscope;}if(f.id==4){let wn=woodLocalNormal(f);let wc=select(0.,1.,abs(wn.x)>.72);f.d-=kpWoodMacroDisplacement(f.q,wc,kpWoodDefaultParams())+kpWoodOriginalSurface(f.q,wn,wc,kpWoodDefaultParams(),.0003,0.).height*u.microscope;}if(f.id==5){f.d-=kpMetalSurface(p,u.age,historyAt(p)*u.wetness,repairAt(p),.0003).height*u.microscope;}if(f.id==7){f.d-=kpCableSurface(p,.0003).height*u.microscope;}}
- return f;
+ let other=f;
+ let cq=p-vec3<f32>(1.2,2.08,2.15);let sheet=.045*sin(cq.x*8.)+.018*sin(cq.y*5.+cq.x*3.);let q=vec3<f32>(cq.x,cq.y,cq.z-sheet);var cloth=boxD(q,vec3<f32>(.46,.67,.0006));if(abs(q.z)<.002&&abs(q.x)<.47&&abs(q.y)<.68){cloth=max(clothNative(q).d,boxD(q,vec3<f32>(.46,.67,.02)));}f=chooseField(f,rawField(cloth,8,q));
+ return SceneSample(f,other);
 }
-fn sceneField(p:vec3<f32>)->RoomField{return sceneFieldInternal(p,true);}
-fn sceneFieldWithoutCloth(p:vec3<f32>)->RoomField{return sceneFieldInternal(p,false);}
+fn sceneField(p:vec3<f32>)->RoomField{return sceneSample(p).field;}
 `;
