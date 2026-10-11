@@ -109,12 +109,14 @@ R2、`TASK_FRESHNESS_AND_NO_STALE_DELIVERY_GATE` 与 `CORRECTION-CANONICAL-ENTRY
 
 `UPDATE_EXISTING_REGRESSION_CASE_WITH_SCOPED_POSITIVE_CONTROL`
 
-- POSTED=true（待 PR #221 路由回执）
+- POSTED=true — PR #221 comment 6110734894
 - ACKNOWLEDGED=false
 - IMPLEMENTED=true（canonical activation 已存在）
 - GATE-RUN=true（N140 14/14）
 - ADOPTED=false（无制度采纳回执）
 - USER-ACCEPTED=false
+
+路由回执：https://github.com/haihao0307/guilin-dem-pipeline/pull/221#issuecomment-6110734894
 
 ## 9. 指标
 
