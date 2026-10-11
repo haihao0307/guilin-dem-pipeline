@@ -4,40 +4,117 @@ on:
     branches: [feature/human-cinematic-skin-et20-20261011]
     paths: ['.github/workflows/human-cinematic-et20.yml','kaopu-unified-human-workbench/cinematic-r01/**']
 permissions:
-  contents: read
+  contents: write
+concurrency:
+  group: human-cinematic-skin-et20
+  cancel-in-progress: false
 jobs:
-  intake:
+  verify-and-publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          persist-credentials: true
           sparse-checkout: |
             kaopu-unified-human-workbench
-      - name: Read exact renderer and compatible official area-light files
+            kaopu-anny-workbench
+            .handoff
+            .github/workflows
+      - name: Materialize hash-locked reviewed source once
         run: |
-          mkdir -p et20-intake/vendor
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           python - <<'PY'
-          import urllib.request,json,hashlib,zipfile
           from pathlib import Path
-          base='https://raw.githubusercontent.com/mrdoob/three.js/r170/'
-          records=[]
-          for name in ['RectAreaLightUniformsLib.js','RectAreaLightTexturesLib.js']:
-            url=base+'examples/jsm/lights/'+name
-            data=urllib.request.urlopen(url,timeout=40).read()
-            Path('et20-intake/vendor/'+name).write_bytes(data)
-            records.append({'url':url,'file':name,'sha256':hashlib.sha256(data).hexdigest(),'bytes':len(data)})
-          data=urllib.request.urlopen(base+'LICENSE',timeout=40).read()
-          Path('et20-intake/vendor/THREE-LICENSE.txt').write_bytes(data)
-          Path('et20-intake/VENDOR.json').write_text(json.dumps(records,indent=2))
-          with zipfile.ZipFile('et20-intake/source.zip','w',zipfile.ZIP_DEFLATED) as z:
-            for p in Path('kaopu-unified-human-workbench').rglob('*'):
-              if p.is_file() and p.suffix in ['.mjs','.js','.cjs','.css','.json','.md','.png'] and p.stat().st_size<5000000:z.write(p)
-          print(json.dumps(records,indent=2))
+          import json,base64,zlib,hashlib,urllib.request
+          transfer=Path('.handoff/et20')
+          if not transfer.exists():
+            print('Editable source already materialized');raise SystemExit(0)
+          data=''.join((transfer/f'part{i}.b64').read_text().strip() for i in range(3))
+          # Correct transport transcription only; the full source hash below is authoritative.
+          for a,b in [('//fl+e39','//fl+39'),('K7fvck5RaX2','K7fvck5LhX2'),('QwSfPX2/aff','QwSfPX2+aff')]:
+            data=data.replace(a,b)
+          raw=zlib.decompress(base64.b64decode(data,validate=True))
+          assert hashlib.sha256(raw).hexdigest()=='c2cb307e04a603bebda9d1a674d0ffad8241b3ccc0adb59fc3b38fa92194d26b','Source transport hash differs'
+          files=json.loads(raw)
+          assert len(files)==11
+          for name,text in files.items():
+            p=Path(name)
+            assert name.startswith('kaopu-unified-human-workbench/cinematic-r01/') and '..' not in p.parts and not p.is_absolute()
+            p.parent.mkdir(parents=True,exist_ok=True);p.write_text(text)
+          root=Path('kaopu-unified-human-workbench/cinematic-r01');(root/'vendor').mkdir(exist_ok=True)
+          for item in json.loads((root/'VENDOR.json').read_text()):
+            assert item['url'].startswith('https://raw.githubusercontent.com/mrdoob/three.js/r170/examples/jsm/lights/')
+            source=urllib.request.urlopen(item['url'],timeout=50).read()
+            assert hashlib.sha256(source).hexdigest()==item['sha256']
+            (root/'vendor'/item['file']).write_bytes(source)
+          (root/'vendor/THREE-LICENSE.txt').write_bytes(urllib.request.urlopen('https://raw.githubusercontent.com/mrdoob/three.js/r170/LICENSE',timeout=40).read())
+          for p in transfer.glob('part*.b64'):p.unlink()
+          transfer.rmdir()
+          print('Verified and materialized',len(files),'editable source/document files')
           PY
+          if test -n "$(git status --porcelain -- kaopu-unified-human-workbench/cinematic-r01 .handoff/et20)"; then
+            git add kaopu-unified-human-workbench/cinematic-r01 .handoff/et20
+            git commit -m 'feat(et20): cinematic light mixer, native skin response, diagnostics and reference mapping'
+            git push origin HEAD:feature/human-cinematic-skin-et20-20261011
+          fi
+          echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false playwright@1.58.2 esbuild@0.25.11
+      - run: npx playwright install --with-deps chromium
+      - name: Unit and inherited idle checks
+        run: |
+          mkdir -p et20-evidence
+          node kaopu-unified-human-workbench/cinematic-r01/test.mjs | tee et20-evidence/units.txt
+          node kaopu-unified-human-workbench/idle-r01/test-timeline.mjs | tee et20-evidence/inherited-idle.json
+      - name: Build the same original human with cinematic lighting and skin
+        run: node kaopu-unified-human-workbench/cinematic-r01/build.cjs
+      - name: Actual source browser rendering and controls
+        run: node kaopu-unified-human-workbench/cinematic-r01/verify.cjs
+      - name: Publish immutable isolated candidate only after source checks
+        run: |
+          mkdir -p kaopu-unified-human-workbench/cinematic-r01/evidence
+          cp et20-evidence/qa.json kaopu-unified-human-workbench/cinematic-r01/evidence/source-qa.json
+          cp et20-evidence/units.txt kaopu-unified-human-workbench/cinematic-r01/evidence/units.txt
+          cp et20-evidence/inherited-idle.json kaopu-unified-human-workbench/cinematic-r01/evidence/inherited-idle.json
+          git add kaopu-unified-human-workbench/cinematic-r01
+          git commit -m 'build(et20): immutable original-human cinematic candidate with source browser proof'
+          git push origin HEAD:feature/human-cinematic-skin-et20-20261011
+          echo "BUILD_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Actual fixed-public rendering and control tests
+        env:
+          QA_OUT: et20-public
+          PUBLIC_ONLY: '1'
+        run: |
+          export PREVIEW_URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${BUILD_SHA}/kaopu-unified-human-workbench/cinematic-r01/preview.html"
+          node kaopu-unified-human-workbench/cinematic-r01/verify.cjs
+      - name: Record actual public result without declaring visual acceptance
+        run: |
+          cp et20-public/qa.json kaopu-unified-human-workbench/cinematic-r01/evidence/public-qa.json
+          python - <<'PY'
+          from pathlib import Path
+          import json,os
+          root=Path('kaopu-unified-human-workbench/cinematic-r01');q=json.loads(Path('et20-public/qa.json').read_text())
+          assert q['completed'] and not q['pageErrors'] and not q['consoleErrors']
+          source=os.environ['SOURCE_SHA'];build=os.environ['BUILD_SHA'];run=os.environ['GITHUB_RUN_ID']
+          url=f'https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/{build}/kaopu-unified-human-workbench/cinematic-r01/preview.html'
+          receipt={'version':'ET20-CINE-R01','sourceCommit':source,'buildCommit':build,'publicURL':url,'run':run,'base':'fcc12621054981ee9aaf153888968cf932c697b0','publicBrowserVerified':True,'visualReviewPending':True,'userVisualAccepted':False,'productionReady':False,'karmaRendererPort':False,'pathTracing':False,'realPhoneTested':False}
+          (root/'DELIVERY.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n')
+          (root/'DELIVERY.md').write_text(f'# ET20-CINE-R01 影视布光与皮肤候选\n\n固定网页：{url}\n\n源码 `{source}`；固定构建 `{build}`。\n\nActions：https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/{run}\n\n原待机版及人物、眼球、嘴唇、身体源码保留，只新增 cinematic-r01 与专用 workflow。4组灯光、独立灯光/肤质对照、分灯、真实材质输出检查和完整人物保存。全部具体浏览器测量见 evidence/source-qa.json 和 evidence/public-qa.json。截图在运行 artifact；尚需人工检查，自动测试不构成视觉验收。\n\n参考与代码映射见 RESEARCH.md。不是 Karma、RenderMan、路径追踪或完整 ACES/OCIO；主光采用单中心深度投影加PCF近似，非面积光可见度积分。皮肤为双高光瓣、程序化微表面与继承的屏幕空间RGB扩散，不是扫描位移或体积组织仿真。\n\n原待机缓存和在线原生资产的成本继承；新增阴影目标和查找表增加GPU开销。桌面1560×1150、手机390×844视口，非手机实机/消费显卡性能认证。原走跑和多人模式未做此次影视照明升级。\n\n保留Draft，不合并、不强推，用户视觉验收待定。\n')
+          PY
+          git add kaopu-unified-human-workbench/cinematic-r01
+          git commit -m 'docs(et20): record fixed-public renderer and interaction evidence'
+          git push origin HEAD:feature/human-cinematic-skin-et20-20261011
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: human-et20-intake
-          path: et20-intake/
-          retention-days: 3
+          name: human-et20-${{ github.run_number }}
+          path: |
+            et20-evidence/
+            et20-public/
+            kaopu-unified-human-workbench/cinematic-r01/
+            .handoff/et20/
+          include-hidden-files: true
+          retention-days: 14
