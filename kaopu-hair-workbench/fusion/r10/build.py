@@ -97,20 +97,7 @@ write('index.html',html)
 imports=json.loads(re.search(r'<script type="importmap">(.*?)</script>',html).group(1))['imports']
 imports={key:'./'+str((OUT/value.split('?')[0]).relative_to(ROOT)) for key,value in imports.items()}
 write('bundle.mjs',"import esbuild from 'esbuild';import fs from 'node:fs';\nconst aliases="+json.dumps(imports)+";\nconst result=await esbuild.build({entryPoints:['"+str((OUT/'src/experiment.js').relative_to(ROOT))+"'],bundle:true,format:'esm',write:false,minify:true,target:'es2022',alias:aliases});fs.writeFileSync('"+str((OUT/'bundle.js').relative_to(ROOT))+"',result.outputFiles[0].text);\n")
-write('finalize.py', '''from pathlib import Path
-import re,json,hashlib
-p=Path(__file__).parent
-s=(p/'index.html').read_text()
-s=re.sub(r'<script type="importmap">.*?</script>','',s,flags=re.S)
-s=re.sub(r'<script type="module" src="[^"]+"></script>','<script type="module">'+(p/'bundle.js').read_text().replace('</script','<\\\\/script')+'</script>',s,flags=re.S)
-for href in re.findall(r'<link rel="stylesheet" href="([^"]+)">',s):
- css=(p/href).resolve().read_text();s=s.replace('<link rel="stylesheet" href="'+href+'">','<style>'+css+'</style>')
-for src in re.findall(r'<script src="([^"]+)" defer></script>',s):
- js=(p/src).resolve().read_text();s=s.replace('<script src="'+src+'" defer></script>','<script>'+js+'</script>')
-s=s.replace('href="TEACHER-GROOM-PROVENANCE.json"','href="https://github.com/haihao0307/guilin-dem-pipeline/blob/40861390bb57673c677a08d5216286d2dcbcf4da/kaopu-hair-workbench/qa/gnm-groom-editor/TEACHER-GROOM-PROVENANCE.json"')
-(p/'public-lite.html').write_text(s)
-m=json.loads((p/'BUILD_MANIFEST.json').read_text());m['bundleSha256']=hashlib.sha256((p/'bundle.js').read_bytes()).hexdigest();m['htmlSha256']=hashlib.sha256((p/'public-lite.html').read_bytes()).hexdigest();m['htmlBytes']=(p/'public-lite.html').stat().st_size;(p/'BUILD_MANIFEST.json').write_text(json.dumps(m,indent=2))
-''')
+write('finalize.py',(OUT/'package.py').read_text())
 write('BUILD_MANIFEST.json',json.dumps({'version':'R10.0','baseRevision':BASE,'sourceRevision':os.getenv('GITHUB_SHA','local'),'sources':{'R3':R3,'R9':R9},'oldPathsModified':False,'oneScene':True,'singleHead':True,'physics':False,'ten24Loaded':False,'productionAccepted':False,'publicBrowserVerified':False,'licenses':'GNM and teacher source provenance retained; no Houdini/MetaHuman proprietary code copied'},indent=2))
 write('RESEARCH.md','''# R10 learned methods and implementation mapping
 Checked 2026-10-11; official primary sources only. No closed commercial code copied.
