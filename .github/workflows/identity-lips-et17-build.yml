@@ -1,0 +1,79 @@
+name: Identity lips ET17 build and public verification
+on:
+  push:
+    branches: [fix/identity-lips-et17-20261011]
+    paths:
+      - .github/workflows/identity-lips-et17-build.yml
+      - kaopu-unified-human-workbench/lip-structure/*.mjs
+      - kaopu-unified-human-workbench/lip-structure/build.cjs
+      - kaopu-unified-human-workbench/lip-structure/verify.cjs
+      - kaopu-unified-human-workbench/lip-structure/layout.css
+concurrency:
+  group: identity-lips-et17-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: write
+jobs:
+  build-test-public:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pinned dependencies
+        run: |
+          mkdir -p /tmp/lip-tools
+          cd /tmp/lip-tools
+          npm init -y >/dev/null
+          npm install esbuild@0.25.11 playwright@1.56.1 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: Build independent lips preview from the exact frozen host
+        env:
+          NODE_PATH: /tmp/lip-tools/node_modules
+        run: |
+          node kaopu-unified-human-workbench/lip-structure/build.cjs
+          mkdir -p lip-evidence/local lip-evidence/public
+          git rev-parse HEAD > lip-evidence/SOURCE_COMMIT.txt
+          cp kaopu-unified-human-workbench/lip-structure/BUILD.json lip-evidence/BUILD.json
+      - name: Actual local-browser rendered comparisons and regressions
+        env:
+          NODE_PATH: /tmp/lip-tools/node_modules
+          LIP_EVIDENCE: lip-evidence/local
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/lips-http.log 2>&1 &
+          node kaopu-unified-human-workbench/lip-structure/verify.cjs
+      - name: Preserve old versions and publish only the new preview, fast-forward only
+        run: |
+          git diff --exit-code HEAD -- kaopu-unified-human-workbench/eye-materials kaopu-unified-human-workbench/identity-lab kaopu-unified-human-workbench/full kaopu-unified-human-workbench/face-transfer kaopu-unified-human-workbench/eye-transfer
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/lip-structure/preview.html kaopu-unified-human-workbench/lip-structure/BUILD.json
+          if ! git diff --cached --quiet; then git commit -m 'build(lips): ET17 independent preview after browser regressions [skip ci]'; git push origin HEAD:fix/identity-lips-et17-20261011; fi
+          SHA=$(git rev-parse HEAD)
+          echo "$SHA" > lip-evidence/PUBLISHED_COMMIT.txt
+          echo "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$SHA/kaopu-unified-human-workbench/lip-structure/preview.html" > lip-evidence/PUBLIC_URL.txt
+      - name: Verify actual immutable HTTPS preview in browser
+        env:
+          NODE_PATH: /tmp/lip-tools/node_modules
+          LIP_EVIDENCE: lip-evidence/public
+        run: |
+          export LIP_URL=$(cat lip-evidence/PUBLIC_URL.txt)
+          node kaopu-unified-human-workbench/lip-structure/verify.cjs
+      - name: Retain source, exact build, reports and rendered evidence
+        if: always()
+        run: |
+          mkdir -p lip-evidence/build
+          cp -r kaopu-unified-human-workbench/lip-structure/. lip-evidence/build/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: identity-lips-et17-delivery
+          path: lip-evidence
+          retention-days: 14
