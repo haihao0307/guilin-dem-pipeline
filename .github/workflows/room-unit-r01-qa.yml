@@ -1,0 +1,51 @@
+name: Complete native dwelling existing-game GPU QA
+on:
+  push:
+    branches: ['qa/walled-room-r01-20261011']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/room-unit/**'
+      - 'tests/room-unit-scene.cjs'
+      - '.github/workflows/room-unit-r01-qa.yml'
+permissions:
+  contents: read
+jobs:
+  native-wall-gpu:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      ROOM_GAME: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01
+      ROOM_OUT: room-unit-results
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01
+            kaopu-minigame-workbench/voxel-train-study/vendor
+            tests/room-unit-scene.cjs
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.3'
+      - name: Verify native sources and generate the actual SQLite objects
+        run: |
+          mkdir -p "$ROOM_OUT"
+          ROOM_HOST_GAME_ROOT="$GITHUB_WORKSPACE/$ROOM_GAME" ROOM_HOST_ROOT="$GITHUB_WORKSPACE/$ROOM_GAME" node --test "$ROOM_GAME/room-unit/room-unit.test.mjs" "$ROOM_GAME/room-unit/room-weathering.test.mjs" | tee "$ROOM_OUT/unit-tests.txt"
+          node "$ROOM_GAME/room-unit/native-codec/write_sample.mjs" | tee "$ROOM_OUT/sample-manifest.json"
+      - name: Install official pinned browser test runtime
+        run: |
+          npm install --prefix "$RUNNER_TEMP/room-browser" --registry=https://registry.npmjs.org --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/room-browser/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/room-browser/node_modules" >> "$GITHUB_ENV"
+      - name: Render the complete SQLite dwelling in the existing game scene
+        timeout-minutes: 7
+        run: node tests/room-unit-scene.cjs
+      - name: Preserve real screenshots and errors
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: native-room-unit-${{ github.sha }}
+          path: room-unit-results/
+          if-no-files-found: warn
+          retention-days: 7
+          compression-level: 0
