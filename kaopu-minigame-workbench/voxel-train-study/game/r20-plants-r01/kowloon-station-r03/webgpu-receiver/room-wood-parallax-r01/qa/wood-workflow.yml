@@ -1,0 +1,30 @@
+name: Kowloon wood original-parallax small-crop QA
+on:
+  push:
+    branches: ['qa/kowloon-wood-parallax-r01-20261011']
+permissions:
+  contents: read
+jobs:
+  wood-crops:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r03/webgpu-receiver
+      - name: Install official pinned Playwright
+        run: |
+          npm install --prefix "$RUNNER_TEMP/wgpu" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/wgpu/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/wgpu/node_modules" >> "$GITHUB_ENV"
+      - name: Frozen source contracts and actual WebGPU timber crops
+        run: |
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r03/webgpu-receiver/room-wood-parallax-r01/qa/wood-contract.test.mjs
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r03/webgpu-receiver/room-wood-parallax-r01/qa/wood-crops.cjs
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: kowloon-wood-parallax-crops-${{ github.sha }}
+          path: kowloon-wood-parallax-results/
+          retention-days: 7
