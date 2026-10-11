@@ -3,6 +3,7 @@
 // No source rewrite, artificial dt, test teleport, new page or synthetic commands.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),{execFileSync}=require('node:child_process');
 const {approachAction}=require('./approach-policy.cjs');
+const {photoApproachAction}=require('./photo-approach-policy.cjs');
 const gameDir=path.resolve(__dirname,'..'),repoRoot=path.resolve(gameDir,'../../../..');
 const target=process.env.TRAIN_GAME_URL||'http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/';
 const out=path.resolve(process.env.TRAIN_QA_OUT||'train-a4-results/browser');
@@ -99,10 +100,12 @@ if(process.argv.includes('--self-check')){assert.deepEqual(normalizeSignedZero({
    if(report.mobile){const b=routeBrakeRect,cdp=routeBrakeCDP;await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:b.x+b.width/2,y:b.y+b.height/2}]});await until(()=>__trainDriver.getState().velocity===0);await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});}
    else{await page.keyboard.down('Space');await until(()=>__trainDriver.getState().velocity===0);await page.keyboard.up('Space');}
   }
-  async function preciseStop(target){
+  async function preciseStop(target,{photoCreep=false}={}){
    const begin=Date.now();report.approach=report.approach||[];
-   while(Date.now()-begin<600000){const view=await state(),action=approachAction(view,target);report.approach.push({wallTimeMs:Date.now(),target,action,tick:view.tick,physicsTimeS:view.physics.timeS,distance:view.distance,velocity:view.velocity,brakingDistance:view.brakingDistance,throttle:view.throttle,stationTarget:view.station.target});write();
-    if(action==='brake'){await holdBrakeToStop();return;}
+   while(Date.now()-begin<600000){const view=await state(),action=photoCreep?photoApproachAction(view,target):approachAction(view,target);report.approach.push({wallTimeMs:Date.now(),target,action,tick:view.tick,physicsTimeS:view.physics.timeS,distance:view.distance,velocity:view.velocity,brakingDistance:view.brakingDistance,throttle:view.throttle,stationTarget:view.station.target});write();
+    if(action==='done')return;
+    if(action==='overshoot')throw Error('Actual photo approach exceeded its original upper bound');
+    if(action==='brake'){await holdBrakeToStop();if(!photoCreep)return;continue;}
     if(action==='accelerate'||action==='decelerate')await click('#'+action);
     await page.waitForTimeout(200);
    }throw Error('Actual-control low-speed approach timed out');
@@ -110,7 +113,7 @@ if(process.argv.includes('--self-check')){assert.deepEqual(normalizeSignedZero({
   await holdBrakeToStop();await check('early-second-station-brake');await preciseStop(700);await until(()=>__trainDriver.getState().station.canOpen);await click('#stationAction');await until(()=>__trainDriver.getState().phase==='ready-depart');
   const secondStation=await check('second-station-passenger-service');assert.equal(secondStation.stats.stops,2);assert.equal(secondStation.stats.missed,0);await screenshot('second-station-a4');
   await page.waitForFunction(()=>__trainDriver.getState().timetable.dwellRemaining<=0,null,{polling:50,timeout:600000});await click('#stationAction');await until(()=>__trainDriver.getState().phase==='running');
-  await preciseStop(790);if(routeBrakeCDP)await routeBrakeCDP.detach();
+  await preciseStop(790,{photoCreep:report.mobile});if(routeBrakeCDP)await routeBrakeCDP.detach();
   await click('#openSettings');await page.locator('#renderQuality').selectOption('clear');await click('#photoMode');await until(()=>__trainDriver.getState().paused);
   const openTrack=await state();assert.equal(openTrack.qualityMode,'clear');assert(openTrack.distance>=786&&openTrack.distance<=794,'The actual controlled stop must remain in the independently checked open-track window');assert.equal(openTrack.velocity,0);report.photography.openTrack={distance:openTrack.distance,stops:openTrack.stats.stops,actualControls:true,sceneHidden:false};
   for(const preset of ['leftSide','rightSide','runningGear','wheelRail','overview']){
