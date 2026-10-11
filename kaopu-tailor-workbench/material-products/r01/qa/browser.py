@@ -9,6 +9,17 @@ R={'url':BASE,'public':PUBLIC,'networkMocked':False,'sourceCommit':os.environ.ge
 def check(name,value,detail=None):
  R['checks'].append({'name':name,'passed':bool(value),'detail':detail});print(name,bool(value),flush=True)
 def inspect(a):return a['ready'] and len(a['rows'])==2 and all(r['maxCoordinateErrorM']==0 and r['indexUnchanged'] and r['uvErrorM']==0 and r['sourceStaticPassed'] and r['textureSize']==2048 for r in a['rows']) and a['bodyVisible'] and a['bodyVertexCount']==25417 and a['glError']==0
+def wait_boot(page):
+ start=time.monotonic()
+ while time.monotonic()-start<180:
+  status=page.locator('#status').inner_text()
+  if R['pageErrors'] or status.startswith('工作台初始化未完成') or status.startswith('载入 K02 失败'):
+   R['initialStatus']=status;page.screenshot(path=str(OUT/'boot-failure.png'))
+   raise AssertionError({'status':status,'pageErrors':R['pageErrors']})
+  if page.evaluate('!!window.__MP01__ && __MP01__.audit().rows.length===2 && !__MP01__.audit().pending'):return
+  page.wait_for_timeout(500)
+ R['initialStatus']=page.locator('#status').inner_text();page.screenshot(path=str(OUT/'boot-timeout.png'))
+ raise AssertionError('Initial display exceeded bounded wait: '+R['initialStatus'])
 server=None
 try:
  if not PUBLIC:server=subprocess.Popen(['python','-m','http.server','8768','--directory',str(P)],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);time.sleep(1)
@@ -17,7 +28,7 @@ try:
   c=b.new_context(viewport={'width':1440,'height':1040},device_scale_factor=1);page=c.new_page();page.set_default_timeout(300000)
   page.on('pageerror',lambda e:R['pageErrors'].append(str(e)))
   page.on('console',lambda e:R['shaderErrors'].append(e.text) if e.type=='error' and ('Shader' in e.text or 'VALIDATE_STATUS' in e.text) else None)
-  page.goto(BASE+'?look=K02',wait_until='domcontentloaded');page.wait_for_function('window.__MP01__?.audit().rows.length===2 && !__MP01__.audit().pending')
+  page.goto(BASE+'?look=K02',wait_until='domcontentloaded');wait_boot(page)
   check('actual original human and first material outfit render',inspect(page.evaluate('__MP01__.audit()')))
   looks=page.evaluate('__MP01__.looks()')
   for look in looks:
