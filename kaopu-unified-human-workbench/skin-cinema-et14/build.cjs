@@ -1,0 +1,24 @@
+const fs=require('fs'),path=require('path'),assert=require('assert/strict'),crypto=require('crypto'),vm=require('vm'),esbuild=require('esbuild');
+const hash=x=>crypto.createHash('sha256').update(x).digest('hex');
+(async()=>{
+ const root=path.resolve(__dirname,'..'),repo=path.resolve(root,'..');
+ const baselineApp=fs.readFileSync(root+'/full/ui/identity-app.generated.mjs','utf8'),baselineHTML=fs.readFileSync(root+'/identity-lab/preview.html','utf8');
+ assert.equal(hash(baselineApp),'a3351e4b9eefe98628a945c5b1ddb8660b24e7e27eb28b585ba10922a33dfa85');
+ assert.equal(hash(baselineHTML),'99942c121ec46428e980568a6b0b82c5872359bf1a7576f600ac5fa1a4a952ad');
+ let app="import {installCinema,mountCinema} from '../../skin-cinema-et14/Runtime.mjs';\n"+baselineApp;
+ const patch=(a,b)=>{assert.equal(app.split(a).length,2,'Missing unique ET13 integration anchor '+a);app=app.replace(a,()=>b);};
+ patch('installIdentitySkin(model);if(savedArchive)','installIdentitySkin(model);installCinema(model);if(savedArchive)');
+ patch('mountIdentityUI({model,viewer,controller});wasLoaded=true;','mountIdentityUI({model,viewer,controller});mountCinema({model,viewer,controller});wasLoaded=true;');
+ patch('function release(){','function release(){controller?.model.cinemaSkin?.disposeUI?.();');
+ patch('panel=null;controller=null;','panel=null;controller?.model.cinemaSkin?.dispose?.();controller=null;');
+ patch('faceIdentity:appearance.faceIdentity};','faceIdentity:appearance.faceIdentity,cinemaSkin:appearance.cinemaSkin};');
+ const generated=root+'/full/ui/cinema-app.generated.mjs';fs.writeFileSync(generated,app);
+ const plugin={name:'fixed-host-assets',setup(b){b.onResolve({filter:/\.(mjs|js)\?/},a=>({path:path.resolve(a.resolveDir,a.path.split('?')[0])}));b.onLoad({filter:/\.(mjs|js)$/},a=>{let text=fs.readFileSync(a.path,'utf8'),rel=path.relative(repo,a.path).split(path.sep).join('/');const ref=rel.includes('/face-transfer/')?'02f596def9d07ebfc187e1eb18ad345a57c8a6b6':'0b4703359efbae10ffc6c0e5fe3fc081e7eca4fe';text=text.replaceAll('import.meta.url',JSON.stringify('https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+ref+'/'+rel));return{contents:text,loader:'js',resolveDir:path.dirname(a.path)};});}};
+ const result=await esbuild.build({entryPoints:[generated],bundle:true,minify:true,format:'iife',target:'es2022',write:false,metafile:true,legalComments:'inline',alias:{three:root+'/full/source/registration-vendor/three.module.js'},plugins:[plugin]});
+ const code=result.outputFiles[0].text.replace(/<\/script/gi,'<\\/script');new vm.Script(code);
+ let html=baselineHTML.replace(/<script>[\s\S]*?<\/script>/,()=>'<script>'+code+'</script>');
+ html=html.replace(/<title>[^<]*<\/title>/,'<title>ET14-S1 · 皮肤近景精修候选</title>').replace('ET13 · 五官形态 × 皱纹/雀斑/痘痘/疤痕','ET14-S1 · 原生人物皮肤近景研究');
+ assert.equal([...html.matchAll(/<script\b/g)].length,1);fs.writeFileSync(__dirname+'/preview.html',html);
+ const manifest={version:'ET14-S1',sourceCommit:process.env.GITHUB_SHA||null,baselineBuild:'7ff27f9b5e16f2635b1e665c1321265d5da2b221',samplingSource:'9289ec5075e2600ff5aed5d6c159995b1032d09e',previewSHA256:hash(html),previewBytes:Buffer.byteLength(html),protectedET13SHA256:hash(baselineHTML),oneRenderer:true,newSkinControls:17,oldSkinControls:37,oldFacialControls:89,newMeshImported:false,geometryDisplacement:false,stressSimulation:false,phoneTested:false,filmQualityAccepted:false,sources:Object.keys(result.metafile.inputs).filter(p=>p.includes('skin-cinema-et14')||p.includes('skin-quality-r01')).map(p=>({path:p,sha256:hash(fs.readFileSync(p))}))};
+ fs.writeFileSync(__dirname+'/BUILD.json',JSON.stringify(manifest,null,2));console.log(JSON.stringify(manifest));
+})().catch(e=>{console.error(e);process.exit(1)});
