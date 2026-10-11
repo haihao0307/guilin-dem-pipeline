@@ -43,7 +43,7 @@ jobs:
           for n in $(seq 1 30); do curl --fail --silent http://127.0.0.1:8765/$CANDIDATE/ >/dev/null && exit 0; sleep 1; done
           exit 1
       - name: Existing game actual input, native A4, both coaches, branding and physical driving
-        run: node "$CANDIDATE/tests/running-gear-browser.cjs"
+        run: node "$CANDIDATE/tests/running-gear-surface-diagnostic.cjs"
       - name: Preserve actual browser evidence including failures
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9

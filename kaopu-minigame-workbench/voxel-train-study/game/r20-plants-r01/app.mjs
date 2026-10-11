@@ -177,3 +177,15 @@ $('loadNativeGame').addEventListener('change',async event=>{const file=event.tar
 $('photoMode').addEventListener('click',()=>{if(game.started&&game.phase!=='summary')game.command('pause',true);initSettingsUI()?.close({resume:false,restoreFocus:false});$('pauseScreen').hidden=true;$('driverGame').dataset.photo='true';$('photoTools').hidden=false;needsRender=true;});
 $('photoCamera').addEventListener('click',()=>initSettingsUI()?.open());
 $('photoReturn').addEventListener('click',()=>{$('driverGame').dataset.photo='false';$('photoTools').hidden=true;$('pauseScreen').hidden=!game.paused;needsRender=true;});
+
+// Local CI renderer isolation. Same parts, matrices, camera and Session.
+if(location.hostname==='127.0.0.1'&&params.has('surfaceAudit')){
+ const model=world.train.steam.model, originals=new Map();
+ const normalMaterial=new THREE.MeshNormalMaterial();
+ window.__trainSurfaceAudit={setMode(mode){
+  for(const b of model.wheelBatches){b.mesh.visible=mode!=='unbatched';for(const s of b.sources)s.visible=mode==='unbatched';}
+  model.gear.traverse(o=>{if(!o.isMesh)return;if(!originals.has(o))originals.set(o,o.material);o.material=mode==='normal'?normalMaterial:originals.get(o);});
+  camera.near=mode==='depth'?.8:.08;camera.updateProjectionMatrix();
+  needsRender=true;return {mode,near:camera.near,batches:model.wheelBatches.length};
+ }};
+}
