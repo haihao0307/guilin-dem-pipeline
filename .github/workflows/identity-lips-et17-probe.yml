@@ -1,0 +1,52 @@
+name: Identity lips ET17 baseline probe
+on:
+  push:
+    branches: [fix/identity-lips-et17-20261011]
+    paths: [.github/workflows/identity-lips-et17-probe.yml, kaopu-unified-human-workbench/lip-structure/probe.cjs]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pinned dependencies
+        run: |
+          mkdir -p /tmp/lip-tools
+          cd /tmp/lip-tools
+          npm init -y >/dev/null
+          npm install esbuild@0.25.11 playwright@1.56.1 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: Actual frozen public page and geometry
+        env:
+          NODE_PATH: /tmp/lip-tools/node_modules
+        run: node kaopu-unified-human-workbench/lip-structure/probe.cjs
+      - name: Portable editable source (not a replacement deliverable)
+        if: always()
+        run: |
+          mkdir -p lip-probe/tools
+          python3 - <<'PY'
+          import pathlib,shutil
+          root=pathlib.Path('kaopu-unified-human-workbench');out=pathlib.Path('lip-probe/source')
+          for p in root.rglob('*'):
+            if not p.is_file(): continue
+            keep=p.suffix in ['.mjs','.cjs','.js','.json','.css','.md','.txt'] or str(p)==str(root/'index.html') or (p.parent==root/'eye-materials'/'assets')
+            if keep and p.stat().st_size<16000000:
+              q=out/p;q.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(p,q)
+          PY
+          cp -r /tmp/lip-tools/node_modules/esbuild /tmp/lip-tools/node_modules/@esbuild lip-probe/tools/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: identity-lips-et17-baseline
+          path: lip-probe
+          retention-days: 14
