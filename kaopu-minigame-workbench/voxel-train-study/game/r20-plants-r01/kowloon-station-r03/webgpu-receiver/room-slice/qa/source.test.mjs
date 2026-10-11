@@ -6,3 +6,5 @@ const names=[...shader.matchAll(/\b(?:fn|struct)\s+(\w+)/g)].map(m=>m[1]);assert
 console.log(JSON.stringify({checks:10,shaderFunctionsAndStructs:names.length,wgslBytes:Buffer.byteLength(shader),scoreBytes:Buffer.byteLength(JSON.stringify(ROOM_SCORE)),result:'static JS/contract pass; actual WGSL compilation not run'},null,2));
 
 for(const [name,roots] of Object.entries({opaque:['vs','fsOpaque'],glass:['vs','fsGlass'],primary:['primaryMain'],coverage:['coverageMain'],probe:['probeMain']})){const stage=selectStageSource(shader,roots);assert.deepEqual(scanWGSLIdentifiers(stage.code),[]);if(name==='opaque')assert(!stage.functionNames.includes('traceWorld'));if(name==='coverage')assert(!stage.functionNames.includes('sceneSample'));console.log(JSON.stringify({stage:name,bytes:stage.bytes,functions:stage.functionNames.length,bindings:stage.bindings}));}
+
+export {shader};

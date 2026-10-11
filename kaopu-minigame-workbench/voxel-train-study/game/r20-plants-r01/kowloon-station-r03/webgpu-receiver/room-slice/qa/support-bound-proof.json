@@ -1,0 +1,252 @@
+{
+  "status": "PASS",
+  "domainSha256": "d6d9dda691e85ee43278ce48b35905ad9f066030459cf585c501572cc88e9c64",
+  "scope": "Analytic support proof and CPU f64 camera/slab/planar recurrence only; not native WGSL field or GPU replay",
+  "worldLo": [
+    -3.47,
+    -0.2,
+    -1.42
+  ],
+  "worldHi": [
+    3.47,
+    3.4,
+    4.32
+  ],
+  "rayBoundPaddingM": 5e-05,
+  "maxPrimaryHitEpsilonM": 3.9999999999999996e-05,
+  "nominalExtraPaddingM": 1.0000000000000006e-05,
+  "members": {
+    "front_all": {
+      "bounds": [
+        [
+          -3,
+          0,
+          -0.245
+        ],
+        [
+          3,
+          3.4,
+          0.245
+        ]
+      ],
+      "proof": "All three branches clipped at x=+-3,y=0..3.4. Envelope >.065 early return makes abs(z)>.18+.065 strictly positive."
+    },
+    "floor": {
+      "bounds": [
+        [
+          -3.462,
+          -0.192,
+          -1.4120000000000001
+        ],
+        [
+          3.462,
+          0.012,
+          4.311999999999999
+        ]
+      ],
+      "proof": "Original box, final displacement only under abs(selected base d)<.012."
+    },
+    "side": {
+      "bounds": [
+        [
+          -3.16,
+          0.0,
+          0.0
+        ],
+        [
+          -3.0,
+          3.4,
+          3.8
+        ]
+      ],
+      "proof": "Analytic id1 box; no final distance displacement."
+    },
+    "rear": {
+      "bounds": [
+        [
+          -3,
+          0.0,
+          3.8
+        ],
+        [
+          3,
+          3.4,
+          3.92
+        ]
+      ],
+      "proof": "Analytic id1 box; no final distance displacement."
+    },
+    "door_frame": {
+      "bounds": [
+        [
+          -1.532,
+          -0.08200000000000006,
+          -0.247
+        ],
+        [
+          -0.16799999999999993,
+          2.5420000000000003,
+          -0.05299999999999999
+        ]
+      ],
+      "proof": "CSG max(outer,-inner) subset of outer; final id3 displacement activation shell .012."
+    },
+    "window_frame": {
+      "bounds": [
+        [
+          0.5780000000000001,
+          1.198,
+          -0.167
+        ],
+        [
+          2.1220000000000003,
+          2.742,
+          -0.033
+        ]
+      ],
+      "proof": "CSG max(outer,-inner) subset of outer; final id5 displacement activation shell .012."
+    },
+    "glass": {
+      "bounds": [
+        [
+          0.668,
+          1.2879999999999998,
+          -0.069
+        ],
+        [
+          2.032,
+          2.652,
+          -0.061
+        ]
+      ],
+      "proof": "Analytic id6 box; no final displacement."
+    },
+    "rail_posts": {
+      "bounds": [
+        [
+          -2.78,
+          0.020000000000000004,
+          -0.85
+        ],
+        [
+          2.78,
+          1.08,
+          -0.7899999999999999
+        ]
+      ],
+      "proof": "x is clamped to the finite segment; capsule radius .018 and final id5 activation .012."
+    },
+    "rail_horizontal": {
+      "bounds": [
+        [
+          -2.789,
+          1.0310000000000001,
+          -0.859
+        ],
+        [
+          2.789,
+          1.109,
+          -0.7809999999999999
+        ]
+      ],
+      "proof": "Finite capsule endpoints, radius .027 and final id5 activation .012."
+    },
+    "cable": {
+      "bounds": [
+        [
+          -2.8249999999999997,
+          2.9050000000000002,
+          -0.245
+        ],
+        [
+          2.8249999999999997,
+          3.0549999999999997,
+          -0.195
+        ]
+      ],
+      "proof": "tx clamped +-2.8, parabola cy in [2.93,3.03]; radius .013 and id7 activation .012."
+    },
+    "bed": {
+      "bounds": [
+        [
+          -2.382,
+          0.398,
+          0.9680000000000002
+        ],
+        [
+          -0.8580000000000001,
+          0.642,
+          3.392
+        ]
+      ],
+      "proof": "Analytic box with final id4 activation .012, independent of mother height amplitude."
+    },
+    "bed_legs": {
+      "bounds": [
+        [
+          -2.367,
+          -0.012,
+          0.9929999999999999
+        ],
+        [
+          -0.873,
+          0.512,
+          3.367
+        ]
+      ],
+      "proof": "Union of four leg boxes, final id4 activation .012."
+    },
+    "cloth_rail": {
+      "bounds": [
+        [
+          -0.13,
+          2.8200000000000003,
+          2.12
+        ],
+        [
+          2.48,
+          2.88,
+          2.1799999999999997
+        ]
+      ],
+      "proof": "Finite capsule radius .018 and final id5 activation .012."
+    },
+    "cloth": {
+      "bounds": [
+        [
+          0.74,
+          1.4100000000000001,
+          2.0669999999999997
+        ],
+        [
+          1.66,
+          2.75,
+          2.233
+        ]
+      ],
+      "proof": "Fold abs(sheet)<=.045+.018=.063. Base box is tighter; native branch uses max(native,box(q,[.46,.67,.02])). No later displacement."
+    }
+  },
+  "summary": {
+    "candidateCount": 120,
+    "rooflineCandidateCount": 101,
+    "allRooflineEnterTop": true,
+    "paddedTopPlaneEvaluationsRange": [
+      102,
+      122
+    ],
+    "oneCmTopPlaneEvaluationsRange": [
+      594,
+      937
+    ],
+    "savedPlaneEvaluationsRange": [
+      492,
+      815
+    ]
+  },
+  "limits": [
+    "50 micrometres is query padding, not geometry displacement.",
+    "10 micrometres beyond the maximum hit epsilon is a chosen numerical margin, not a general formal f32 error proof. GPU replay is still required.",
+    "Plane recurrence assumes the upper plane controls the distance. It diagnoses convergence; it does not predict final native hit identity for every candidate."
+  ]
+}
