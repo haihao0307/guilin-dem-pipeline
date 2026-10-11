@@ -6,9 +6,9 @@ import {clamp,smooth,gauss,currentLipFrame,point} from './LipMath.mjs';
 export class LipSurface{
  constructor(source,api){
   this.source=source;this.api=api;this.layers=[];let g=source;
-  for(let level=0;level<2;level++){
+  for(let level=0;level<3;level++){
    const R=g.attributes.fRest.array,T=g.attributes.csType.array,A=g.attributes.fA.array,oldCount=g.attributes.position.count,edges=new Map(),pairs=[];
-   const roi=i=>api.rails.sample(point(R,i),T[i]).roi||(level===0&&T[i]<.5&&A[i*4+2]>.65);
+   const roi=i=>{const q=api.rails.sample(point(R,i),T[i]);return level===2?q.roi&&q.v>-.12&&q.v<1.12&&Math.abs(q.u)<.97&&q.front>.5:q.roi||(level===0&&T[i]<.5&&A[i*4+2]>.65);};
    const selected=Uint8Array.from({length:oldCount},(_,i)=>roi(i)?1:0),key=(a,b)=>a<b?a+','+b:b+','+a;
    for(let k=0;k<g.index.count;k+=3){const ids=[g.index.array[k],g.index.array[k+1],g.index.array[k+2]];if(ids.every(i=>selected[i]))for(let j=0;j<3;j++){const a=ids[j],b=ids[(j+1)%3],s=key(a,b);if(!edges.has(s)){edges.set(s,oldCount+pairs.length);pairs.push([a,b]);}}}
    const out=[];for(let k=0;k<g.index.count;k+=3){const a=g.index.array[k],b=g.index.array[k+1],c=g.index.array[k+2],ab=edges.get(key(a,b))??-1,bc=edges.get(key(b,c))??-1,ca=edges.get(key(c,a))??-1,count=[ab,bc,ca].filter(x=>x>=0).length;

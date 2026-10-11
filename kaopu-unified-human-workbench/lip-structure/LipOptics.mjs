@@ -31,6 +31,11 @@ export function attachLipOptics(skin,api){
    if(uLDebug>5.5&&uLDebug<6.5){float e=clamp((vL19State.y-1.)*3.,-1.,1.);outgoingLight=mix(vec3(.25,.28,.25),e>0.?vec3(.15,.65,.90):vec3(.92,.32,.08),abs(e))*max(lpMask,.15);}
    if(uLDebug>6.5)outgoingLight=vec3(lpMoist*lpWetGain);
   `);
+  s=replace(s,'(lpBroad*2.05+lpMottle*.64+lpWarmCenter*.11)*uLVariation','(lpBroad*.58+lpMottle*.32+lpWarmCenter*.13)*uLVariation');
+  s=replace(s,'if(uLDebug>.5&&uLDebug<1.5)',`float l19Inside=max(lpMucosa,step(.5,vCSType)*(1.-step(3.5,vCSType)))*uLEnabled;
+   float l19Visibility=.12+.88*exp(-max(0.,vL19Detail.w)*120.);
+   outgoingLight*=mix(1.,l19Visibility,clamp(l19Inside,0.,1.));
+   if(uLDebug>.5&&uLDebug<1.5)`);
   shader.fragmentShader=s;skin.lipMotherOptics.compiles++;
  };
  mat.customProgramCacheKey=()=>key()+'/ET19-geometry-regional-optics-v1';skin.lipMotherOptics={version:'ET19-L3',compiles:0,measuredOptics:false,independentUpperLower:true,wetness:'continuous original surface, not a transparent extra sheet',SSS:'retained host diffusion approximation; no measured volumetric scattering'};

@@ -87,8 +87,8 @@ export function attachLipMaterial(skin,api){
  if(api.atlasKey!==atlasKey){
   const a=buildLipAtlas({widthMM:r.half*2000,upperMM:Math.max(3,(r.top[3][1]-r.innerTop[2][1])*1000),lowerMM:Math.max(3,(r.innerBottom[2][1]-r.bottom[3][1])*1000),seed:s.patternSeed,density:s.textureDensity});
   const tex=new THREE.DataTexture(a.data,a.width,a.height,THREE.RGBAFormat,THREE.UnsignedByteType);tex.colorSpace=THREE.NoColorSpace;tex.flipY=false;tex.wrapS=tex.wrapT=THREE.ClampToEdgeWrapping;tex.generateMipmaps=true;tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;tex.anisotropy=Math.min(8,skin.viewer.renderer.capabilities.getMaxAnisotropy());tex.needsUpdate=true;
-  api.microTexture?.dispose();api.microTexture=tex;api.atlasKey=atlasKey;api.atlasStats=a.stats;
+  api.microTexture?.dispose();api.microTexture=tex;api.atlasKey=atlasKey;api.atlasStats=a.stats;api.atlasData=a;
  }
  U.uLAtlas.value=api.microTexture;skin.lipExtension.atlas=api.atlasStats;
- };skin.updateFace=()=>{update?.();skin.updateLips();};skin.dispose=()=>{api.skins.delete(skin);if(!api.skins.size){api.microTexture?.dispose();api.microTexture=null;api.atlasKey=null;}dispose();};skin.updateLips();skin.material.needsUpdate=true;
+ };skin.updateFace=()=>{update?.();skin.updateLips();};skin.dispose=()=>{api.skins.delete(skin);if(!api.skins.size){api.microTexture?.dispose();api.microTexture=null;api.atlasKey=null;api.atlasData=null;}dispose();};skin.updateLips();skin.material.needsUpdate=true;
 }

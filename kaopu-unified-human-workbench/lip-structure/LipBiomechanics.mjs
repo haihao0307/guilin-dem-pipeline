@@ -14,22 +14,22 @@ class OralEnvelope{
 }
 export function sampleLipHeight(atlas,u,v,upper,band=0){if(!atlas)return 0;const x=clamp(u*.5+.5)*(atlas.width-1),y=clamp(((upper?1:0)+.06+.88*clamp(v))*.5*atlas.height-.5,0,atlas.height-1),ix=Math.floor(x),iy=Math.floor(y),fx=x-ix,fy=y-iy,read=(a,b)=>atlas.data[(Math.min(atlas.height-1,b)*atlas.width+Math.min(atlas.width-1,a))*4+band];return ((read(ix,iy)*(1-fx)+read(ix+1,iy)*fx)*(1-fy)+(read(ix,iy+1)*(1-fx)+read(ix+1,iy+1)*fx)*fy-128)/255*(band===0?.00025:.00010);}
 export class LipBiomechanics{
- constructor(topology){this.topology=topology;this.reference=null;this.lastKey=null;}
+ constructor(topology){this.topology=topology;this.reference=null;this.referenceHorizontal=null;this.lastKey=null;}
  apply(model,api){const topo=this.topology,g=topo.geometry,P=g.attributes.position.array,N=g.attributes.normal.array,p=api.performance.settings,s=api.settings,dna=api.anatomy.settings,frame=currentLipFrame(model),scale=api.anatomy.scale(frame.width),base=this.base||(this.base=new Float32Array(P.length)),origin=frame.center;base.set(P);
   const key=JSON.stringify([model.state.gnm.identity,model.state.anny.phenotypes,model.state.anny.localChanges,model.identityLab?.settings?.shape]);
   // Identity-neutral calibration is recorded only when the original jaw and
   // native expression are neutral. Non-neutral first loads are explicitly marked.
   const neutral=api.performance.jawOpen<.002&&model.state.gnm.expression.every(v=>Math.abs(v)<1e-5);
-  if(key!==this.lastKey){this.reference=null;this.lastKey=key;}
-  if(!this.reference&&neutral){this.reference=new Float32Array(topo.count);for(const i of topo.active){let sum=0;for(const j of topo.neighbors[i])sum+=Math.hypot(base[i*3]-base[j*3],base[i*3+1]-base[j*3+1],base[i*3+2]-base[j*3+2]);this.reference[i]=sum/Math.max(1,topo.neighbors[i].length);}}
+  if(key!==this.lastKey){this.reference=null;this.referenceHorizontal=null;this.lastKey=key;}
+  const horizontal=i=>{const ns=topo.neighbors[i],w=topo.horizontalWeights[i];let sum=0,weight=0;for(let k=0;k<ns.length;k++){const j=ns[k];sum+=w[k]*Math.abs((P[i*3]-P[j*3])*frame.x[0]+(P[i*3+1]-P[j*3+1])*frame.x[1]+(P[i*3+2]-P[j*3+2])*frame.x[2]);weight+=w[k];}return sum/Math.max(1e-8,weight);};if(!this.referenceHorizontal&&neutral){this.referenceHorizontal=new Float32Array(topo.count);for(const i of topo.active)this.referenceHorizontal[i]=horizontal(i);}if(!this.reference&&neutral){this.reference=new Float32Array(topo.count);for(const i of topo.active){let sum=0;for(const j of topo.neighbors[i])sum+=Math.hypot(base[i*3]-base[j*3],base[i*3+1]-base[j*3+1],base[i*3+2]-base[j*3+2]);this.reference[i]=sum/Math.max(1,topo.neighbors[i].length);}}
   let maxMove=0;const add=(i,dx,dy,dz)=>{for(let k=0;k<3;k++)P[i*3+k]+=frame.x[k]*dx+frame.up[k]*dy+frame.front[k]*dz;};
   for(const i of topo.active){const q=topo.samples[i],v=point(base,i).map((v,k)=>v-origin[k]),x=dot(v,frame.x),y=dot(v,frame.up),side=smooth(-.16,.16,q.u),stretch=p.stretchLeft*(1-side)+p.stretchRight*side,corner=p.cornerLeft*(1-side)+p.cornerRight*side,w=q.weight,inside=q.inner;
    const hScale=1-.23*p.pucker-.12*p.funnel+.18*stretch,transverse=Math.min(1.18,1/Math.sqrt(Math.max(.65,hScale))),roll=p.rollOut-p.rollIn,lipOnly=gauss(q.v-.35,.85)*(1-inside*.8),cornerW=gauss(Math.abs(q.u)-.82,.33);
-   let dx=x*(hScale-1),dy=y*(transverse-1)-y*.33*p.press,dz=(.0036*p.pucker+.0025*p.funnel)*gauss(q.u,.85)-.0008*stretch*lipOnly;
-   dy+=(q.upper?.0018*p.upperRaise:-.0024*p.lowerDepress)*gauss(q.u,.9);dy+=.0028*corner*cornerW;
-   dy+=(q.upper?1:-1)*.0017*p.funnel*gauss(q.u,.85)*gauss(q.v,.8);
-   dy+=(q.upper?-1:1)*.00125*roll*gauss(q.v-.20,.75);dz+=.00115*roll*lipOnly+.00065*p.press*lipOnly;
-   dz+=(dna.tissueDepth-1)*.0011*lipOnly;
+   let dx=x*(hScale-1),dy=y*(transverse-1)-y*.33*p.press,dz=((.0036*p.pucker+.0025*p.funnel)*gauss(q.u,.85)-.0008*stretch*lipOnly)*scale;
+   dy+=(q.upper?.0018*p.upperRaise:-.0024*p.lowerDepress)*gauss(q.u,.9)*scale;dy+=.0028*corner*cornerW*scale;
+   dy+=(q.upper?1:-1)*.0017*p.funnel*gauss(q.u,.85)*gauss(q.v,.8)*scale;
+   dy+=(q.upper?-1:1)*.00125*roll*gauss(q.v-.20,.75)*scale;dz+=(.00115*roll*lipOnly+.00065*p.press*lipOnly)*scale;
+   dz+=(dna.tissueDepth-1)*.0011*lipOnly*scale;
    dx*=w;dy*=w;dz*=w;add(i,dx,dy,dz);maxMove=Math.max(maxMove,Math.hypot(dx,dy,dz));
   }
   const yAt=i=>{let y=0;for(let k=0;k<3;k++)y+=(P[i*3+k]-origin[k])*frame.up[k];return y;};
@@ -40,15 +40,15 @@ export class LipBiomechanics{
   const env=new OralEnvelope(g,frame,scale);let contacts=0,maxProjection=0,remaining=0;
   for(const i of topo.lips){const q=topo.samples[i];if(q.v<.05||q.v>1.05)continue;const pt=point(P,i),z=dot(pt.map((v,k)=>v-origin[k]),frame.front),boundary=env.sample(pt),depth=boundary+.00016*scale-z;if(depth>0&&Number.isFinite(boundary)){const correction=Math.min(depth,.004*scale);add(i,0,0,correction);contacts++;maxProjection=Math.max(maxProjection,correction);remaining=Math.max(remaining,depth-correction);}}
   g.computeVertexNormals();let minStrain=Infinity,maxStrain=0,sumStrain=0,count=0,maxRelief=0;const dynN=g.attributes.normal.array;
-  for(const i of topo.active){const q=topo.samples[i],ns=topo.neighbors[i];let sum=0;for(const j of ns)sum+=Math.hypot(P[i*3]-P[j*3],P[i*3+1]-P[j*3+1],P[i*3+2]-P[j*3+2]);const length=sum/Math.max(1,ns.length),reference=this.reference?.[i]||topo.restLength[i]*scale,strain=clamp(length/Math.max(1e-7,reference),.55,1.85),gain=clamp(Math.pow(1/strain,1.55),.40,2.1);
+  for(const i of topo.active){const q=topo.samples[i],ns=topo.neighbors[i];let sum=0;for(const j of ns)sum+=Math.hypot(P[i*3]-P[j*3],P[i*3+1]-P[j*3+1],P[i*3+2]-P[j*3+2]);const length=sum/Math.max(1,ns.length),reference=this.reference?.[i]||topo.restLength[i]*scale,strain=clamp(this.referenceHorizontal?.[i]>1e-7?horizontal(i)/this.referenceHorizontal[i]:length/Math.max(1e-7,reference),.55,1.85),gain=clamp(Math.pow(1/strain,1.55)*(1+topo.fields[i*4+3]*.16),.40,2.1);
    const relief=sampleLipHeight(api.atlasData,q.u,q.v,q.upper)*s.furrows*dna.microGeometry*q.red*gain*(1-q.inner*.85);
    for(let k=0;k<3;k++)P[i*3+k]+=dynN[i*3+k]*relief;maxRelief=Math.max(maxRelief,Math.abs(relief));
    const j=i*4;topo.fields[j]=q.inner;topo.fields[j+1]=strain;topo.fields[j+2]=q.red;topo.detail[j]=gain;topo.detail[j+1]=relief*1000;topo.detail[j+2]=q.upper?1:0;topo.detail[j+3]=q.skin?1:0;
    if(q.red>.15){minStrain=Math.min(minStrain,strain);maxStrain=Math.max(maxStrain,strain);sumStrain+=strain;count++;}
   }
-  let minGap=Infinity,closed=0;for(const pair of topo.pairs){const gap=yAt(pair.upper)-yAt(pair.lower);minGap=Math.min(minGap,gap);if(gap<.00035*scale)closed++;}
+  for(const i of topo.oralSurface){let depth=0;for(let k=0;k<3;k++)depth+=(origin[k]-P[i*3+k])*frame.front[k];topo.detail[i*4+3]=Math.max(0,depth)/Math.max(.35,scale);}let minGap=Infinity,closed=0;for(const pair of topo.pairs){const gap=yAt(pair.upper)-yAt(pair.lower);minGap=Math.min(minGap,gap);if(gap<.00035*scale)closed++;}
   g.attributes.position.needsUpdate=true;g.attributes.l19State.needsUpdate=true;g.attributes.l19Detail.needsUpdate=true;g.computeVertexNormals();g.computeBoundingSphere();
-  this.report={kind:'native jaw + reduced geometric lip constraints; not FEM',...topo.audit,referenceCalibration:this.reference?'identity-neutral native surface':'template fallback (non-neutral first load)',localStretch:{min:Number.isFinite(minStrain)?minStrain:1,max:maxStrain,mean:sumStrain/Math.max(1,count)},maxGeometryFurrowMicrons:maxRelief*1e6,maxPerformanceDisplacementMM:maxMove*1000,minimumPairedGapMM:minGap*1000,closedSections:closed,totalSections:topo.pairs.length,dentalEnvelopeTriangles:env.triangles,dentalEnvelopeContacts:contacts,maxDentalProjectionMM:maxProjection*1000,remainingFrontalEnvelopePenetrationMM:remaining*1000,contactScope:'fixed opposing rim samples and frontal dental/gum/tongue triangle envelope; not whole-mesh CCD',volumeStatus:'reciprocal transverse compensation; enclosed lip volume is NOT verified',salivaSimulation:false};
+  this.report={kind:'registered Anny jawOpen + reduced lip constraints; not FEM',...topo.audit,referenceCalibration:this.reference?'identity-neutral native surface':'template fallback (non-neutral first load)',strainMetric:'weighted across-furrow tangent extension; pressure deepens contact creases',localStretch:{min:Number.isFinite(minStrain)?minStrain:1,max:maxStrain,mean:sumStrain/Math.max(1,count)},maxGeometryFurrowMicrons:maxRelief*1e6,maxPerformanceDisplacementMM:maxMove*1000,minimumPairedGapMM:minGap*1000,closedSections:closed,totalSections:topo.pairs.length,dentalEnvelopeTriangles:env.triangles,dentalEnvelopeContacts:contacts,maxDentalProjectionMM:maxProjection*1000,remainingFrontalEnvelopePenetrationMM:remaining*1000,contactScope:'fixed opposing rim samples and frontal dental/gum/tongue triangle envelope; not whole-mesh CCD',volumeStatus:'reciprocal transverse compensation; enclosed lip volume is NOT verified',salivaSimulation:false};
   api.biomechanicsReport=this.report;return this.report;
  }
 }
