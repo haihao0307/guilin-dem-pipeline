@@ -1,7 +1,7 @@
 import {createRenderer,VIEWS} from './renderer.mjs';import * as I from './inventory.mjs';
 const $=id=>document.getElementById(id),canvas=$('scene'),params=new URLSearchParams(location.search),storageKey=I.STORAGE_KEY;
 let state,renderer,selected='exterior',camera=structuredClone(VIEWS.exterior),chosen='LP-0001',commandSequence=0;const proof={ready:false,frames:[],errors:[]};window.__bureau={proof};
-const messages={exterior:'与上一版保持完全同机位。主入口已转到画面右端的 x−街面；下方临街一面改为两层办公窗。仓库扩大，锅炉后退。',section:'净仓储 64 × 62.5 = 4,500 m²，不计大厅、办公、收货、外墙或锅炉院。两组柜列真实转 90°，中央通道连接右端接待。',hall:'主接待、核验与交接已集中到右端公共翼。临下方街道只有办公窗，没有另一座同规格主门。',warehouse:'两组 × 16排横向货架，长轴从原 z 改为 x。22,080 为混合尺寸地址，实际初始仍是24件虚构记录。',freight:'铁路仍在后端；锅炉后移至后侧服务院，供汽与回水接到中央输送、收货机械臂和前部驱动。',street:'从右侧街道正看新主门：大门向 x−，门廊后方直接进入接待与核验大厅。此机位用于解释门向，另外两图维持原机位。'};
+const messages={exterior:'与上一版保持完全同机位。主入口已转到画面右端的 x−街面；下方临街一面改为两层办公窗。仓库扩大，锅炉后退。',section:'净仓储 72 × 62.5 = 4,500 m²，不计大厅、办公、收货、外墙或锅炉院。两组柜列真实转 90°，中央通道连接右端接待。',hall:'主接待、核验与交接已集中到右端公共翼。临下方街道只有办公窗，没有另一座同规格主门。',warehouse:'两组 × 16排横向货架，长轴从原 z 改为 x。22,080 为混合尺寸地址，实际初始仍是24件虚构记录。',freight:'铁路仍在后端；锅炉后移至后侧服务院，供汽与回水接到中央输送、收货机械臂和前部驱动。',street:'从右侧街道正看新主门：大门向 x−，门廊后方直接进入接待与核验大厅。此机位用于解释门向，另外两图维持原机位。'};
 function cmd(prefix){return `${prefix}-${state.revision}-${++commandSequence}`;}
 function notify(text){$('message').textContent=text;}
 function persist(){localStorage.setItem(storageKey,I.serializeInventory(state));}
