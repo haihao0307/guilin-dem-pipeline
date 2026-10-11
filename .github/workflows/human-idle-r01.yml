@@ -1,0 +1,73 @@
+name: Human lifelike idle R01
+on:
+  push:
+    branches: [feature/human-lifelike-idle-r01-20261011]
+    paths:
+      - '.github/workflows/human-idle-r01.yml'
+      - 'kaopu-unified-human-workbench/idle-r01/**'
+permissions:
+  contents: read
+concurrency:
+  group: human-idle-r01
+  cancel-in-progress: false
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+            .github/workflows
+          fetch-depth: 1
+      - name: Collect pinned source and inspect user reference
+        env:
+          REFERENCE_VIDEO: 'https://video-lax3-1.xx.fbcdn.net/o1/v/t2/f2/m69/AQNn4KIBjgAVQrpSil63UJNDMNuO4lPCMy3DjNH7Q5HVRB91mQ4kent99NADnUFgi9K0J033rnS2-GhcGGGZ3NPm.mp4?strext=1&_nc_cat=110&_nc_sid=5e9851&_nc_ht=video-lax3-1.xx.fbcdn.net&_nc_ohc=eVSx7080j4EQ7kNvwE2eW-j&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5GQUNFQk9PSy4uQzMuMTkyMC5kYXNoX2gyNjQtYmFzaWMtZ2VuMl8xMDgwcCIsInhwdl9hc3NldF9pZCI6MTU1NTg2MTE3MTYyNzA4NSwiYXNzZXRfYWdlX2RheXMiOjg0OCwidmlfdXNlY2FzZV9pZCI6MTA1NzYsImR1cmF0aW9uX3MiOjQzLCJ1cmxnZW5fc291cmNlIjoid3d3In0%3D&ccb=17-1&vs=108c61f8ceb01459&_nc_vs=HBksFQIYOnBhc3N0aHJvdWdoX2V2ZXJzdG9yZS9HTlp3dVJyTUJHU0lpcFlCQVB0WmxsRG9Rem80YnY0R0FBQUYVAALIARIAFQIYOnBhc3N0aHJvdWdoX2V2ZXJzdG9yZS9HSkg1dHhyR0pFdWN5THNjQUNUVEZNS0NQNzFwYnY0R0FBQUYVAgLIARIAKAAYABsCiAd1c2Vfb2lsATEScHJvZ3Jlc3NpdmVfcmVjaXBlATEVAAAmmpGjh4XDwwUVAigCQzMsF0BFgAAAAAAAGBpkYXNoX2gyNjQtYmFzaWMtZ2VuMl8xMDgwcBEAdQJloKUBAA&_nc_gid=QMVwo84lAAxgGpdumJ997w&_nc_ss=79289&_nc_zt=28&oh=00_AQMhsvGNiJyuPcgGwDqoDiOaJIDEnG1T8JPzDLPPAih7pA&oe=6AD1170C&bitrate=879592&tag=dash_h264-basic-gen2_1080p'
+        run: |
+          mkdir -p idle-evidence
+          python -m pip -q install requests pillow opencv-python-headless
+          python - <<'PY'
+          from pathlib import Path
+          import os,json,zipfile,hashlib,requests,cv2
+          from PIL import Image,ImageDraw
+          out=Path('idle-evidence')
+          paths=[]
+          with zipfile.ZipFile(out/'source.zip','w',zipfile.ZIP_DEFLATED) as z:
+            for root in ['kaopu-unified-human-workbench','kaopu-anny-workbench','.github/workflows']:
+              for p in Path(root).rglob('*'):
+                if p.is_file() and p.suffix in ['.mjs','.js','.py','.json','.md','.css','.yml','.html'] and p.stat().st_size<5000000:
+                  paths.append(str(p));z.write(p)
+          (out/'files.txt').write_text('\n'.join(paths))
+          status={'decoded':False,'framesObserved':False,'source':'user supplied FB CDN MP4','noRedistributionInGit':True}
+          try:
+            r=requests.get(os.environ['REFERENCE_VIDEO'],timeout=40)
+            status.update(http=r.status_code,bytes=len(r.content))
+            if r.ok:
+              v=out/'reference.mp4';v.write_bytes(r.content)
+              cap=cv2.VideoCapture(str(v));fps=cap.get(cv2.CAP_PROP_FPS);n=int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+              status.update(fps=fps,frames=n,width=cap.get(3),height=cap.get(4),sha256=hashlib.sha256(r.content).hexdigest())
+              if fps>0 and n>0:
+                status['decoded']=True;status['duration']=n/fps
+                imgs=[]
+                for i in range(0,n,max(1,int(fps*.5))):
+                  cap.set(cv2.CAP_PROP_POS_FRAMES,i);ok,frame=cap.read()
+                  if not ok:continue
+                  image=Image.fromarray(cv2.cvtColor(frame,cv2.COLOR_BGR2RGB));image.thumbnail((400,400))
+                  tile=Image.new('RGB',(400,425),(24,24,24));tile.paste(image,((400-image.width)//2,25));ImageDraw.Draw(tile).text((8,6),f'{i/fps:.2f} s',fill='white');imgs.append(tile)
+                for j in range(0,len(imgs),12):
+                  sheet=Image.new('RGB',(1600,1275),(24,24,24))
+                  for k,tile in enumerate(imgs[j:j+12]):sheet.paste(tile,((k%4)*400,(k//4)*425))
+                  sheet.save(out/f'reference-sheet-{j//12:02}.jpg',quality=90)
+              cap.release()
+          except Exception as e:status['error']=str(e).split('url:')[0][:500]
+          (out/'reference-status.json').write_text(json.dumps(status,indent=2))
+          print(json.dumps(status));print('SOURCE FILES',len(paths))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: human-idle-intake-${{ github.run_number }}
+          path: idle-evidence/
+          retention-days: 2
