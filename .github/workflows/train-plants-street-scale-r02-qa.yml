@@ -51,6 +51,16 @@ jobs:
           path: train-plants-r02-results/hash-diagnostic/
           retention-days: 7
           compression-level: 0
+      - name: Actual Worker responsiveness, strict output and cancellation
+        run: node "$CANDIDATE/plants/browser-worker-probe.cjs"
+      - name: Preserve isolated Worker evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-native-ficus-worker-${{ github.sha }}
+          path: train-plants-r02-results/worker-probe/
+          retention-days: 7
+          compression-level: 0
       - name: First native KAOPU Ficus look before full comparison
         env:
           PLANTS_QA_FIRST_LOOK: '1'
