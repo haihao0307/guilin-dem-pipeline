@@ -118,6 +118,14 @@ if(process.argv.includes('--self-check')){assert.deepEqual(normalizeSignedZero({
    const frame=await check('open-track-'+preset);assert.deepEqual(frozenPart(frame),frozenPart(openTrack));assert.deepEqual(frame.cameraProjection.up,[0,1,0]);
    if(['leftSide','rightSide'].includes(preset)){const h=2*Math.atan(Math.tan(frame.cameraProjection.effectiveFov*Math.PI/360)*frame.cameraProjection.aspect)*180/Math.PI;assert(h>=35&&h<=55,'Conventional horizontal field of view, not an ultrawide lens');}
    await screenshot('photo-open-track-'+preset);
+   if(preset==='runningGear'&&!report.mobile){
+    // Native pointer orbit by pi at the genuinely driven open-track stop.
+    // No camera/state assignment, scenery hiding or alternative model.
+    const box=await page.locator('#gameScene').boundingBox();
+    await page.mouse.move(box.x+box.width*.15,box.y+box.height*.50);await page.mouse.down();await page.mouse.move(box.x+box.width*.775,box.y+box.height*.50,{steps:16});await page.mouse.up();await page.waitForTimeout(600);
+    const opposite=await check('open-track-runningGear-opposite');assert.deepEqual(frozenPart(opposite),frozenPart(openTrack));assert.deepEqual(opposite.cameraProjection.up,[0,1,0]);assert(opposite.camera[2]<-5);
+    await screenshot('photo-open-track-runningGear-opposite');
+   }
   }
   await click('#photoReturn');assert.equal(await page.locator('#drivePanel').isVisible(),true);await screenshot('open-track-restored-driver-controls');
   const packet=await page.evaluate(()=>__trainDriver.exportReplay());const {replay}=await import('../session.mjs');const played=replay(packet);assert.deepEqual(played.view().physics,(await state()).physics);report.replayMatches=true;
