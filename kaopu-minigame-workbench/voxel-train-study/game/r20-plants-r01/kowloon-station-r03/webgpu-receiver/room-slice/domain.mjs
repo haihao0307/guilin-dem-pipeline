@@ -26,7 +26,7 @@ fn wallDomain(p:vec3<f32>)->RoomField{
  nearest=max(nearest,boxD(p-vec3<f32>(0.,1.7,0.),vec3<f32>(3.,1.7,.4)));nearest=pierceFront(p,nearest);if(nearest<result.d){result=RoomField(nearest,2,nq,ns,nv,wet,rep,age);}
  // A finite retained plaster thickness from the same causal ageing state.
  let remain=state.thicknessM*smoothstep(-.075,.08,state.retention);
- if(remain>.0003){let micro=kpPlasterOriginalField(p,plasterParams(),.0003).surface.height*u.microscope;let coat=max(-p.z-.12-remain-micro,p.z+.12);let bounded=max(coat,boxD(p-vec3<f32>(0.,1.7,0.),vec3<f32>(3.,1.7,.5)));let d=pierceFront(p,bounded);if(d<result.d){result=RoomField(d,1,p,19.,0,wet,rep,age);}}
+ if(remain>.0003){let highBound=.000096*abs(u.microscope);var micro=highBound;if(-p.z-.12-remain<=highBound+.001){micro=kpPlasterOriginalField(p,plasterParams(),.0003).surface.height*u.microscope;}let coat=max(-p.z-.12-remain-micro,p.z+.12);let bounded=max(coat,boxD(p-vec3<f32>(0.,1.7,0.),vec3<f32>(3.,1.7,.5)));let d=pierceFront(p,bounded);if(d<result.d){result=RoomField(d,1,p,19.,0,wet,rep,age);}}
  return result;
 }
 fn sceneField(p:vec3<f32>)->RoomField{

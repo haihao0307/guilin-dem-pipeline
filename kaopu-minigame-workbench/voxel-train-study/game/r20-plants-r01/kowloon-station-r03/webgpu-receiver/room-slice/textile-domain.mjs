@@ -2,7 +2,7 @@
 // equations. No yarn vertex arrays. Nearby warp/weft sections are queried.
 export const TEXTILE_DOMAIN_WGSL=String.raw`
 struct ClothSample {d:f32,albedo:vec3<f32>,roughness:f32,};
-fn clothParams(kind:f32)->KpWovenParams{return KpWovenParams(kind,.58,.64,.64,0.,.3,0.,1.,0.,vec3<f32>(.020,.047,.080),vec3<f32>(.25,.29,.30));}
+fn clothParams(kind:f32)->KpWovenParams{return KpWovenParams(kind,.42,.64,.70,0.,.25,0.,.78,0.,vec3<f32>(.008023193,.035601315,.086500462),vec3<f32>(.479320183,.456411023,.376262123));}
 fn flatClothChart(mm:vec2<f32>)->KpFabricChartSample{return KpFabricChartSample(vec3<f32>(mm*.001,0.),vec3<f32>(0,0,1));}
 fn clothNative(q:vec3<f32>)->ClothSample{
  var best=ClothSample(1e4,vec3<f32>(0.),.95);
