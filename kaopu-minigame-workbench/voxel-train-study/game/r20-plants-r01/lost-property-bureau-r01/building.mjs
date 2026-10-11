@@ -45,7 +45,7 @@ for(const x of[-20,-15,-10,10,15,20]){box([x,5.2,18],[1.1,10.4,1.2],mats.brick,f
 for(const x of[-17.5,-12.5,12.5,17.5]){box([x,1.25,18],[4,2.5,1],mats.brick,facade);windowBay(x,18.2,2.5);box([x,9.5,18],[4,1.5,1],mats.brick,facade);}
 for(const x of[-7,7])column(x,18,9.2,0,facade);
 arc([0,5.5,18],6.2,.70,1,mats.trim,facade);for(const x of[-6.2,6.2])box([x,2.75,18],[.72,5.5,1],mats.trim,facade);
-box([0,10.9,18],[15,1.05,1.4],mats.trim,facade);box([0,11,18.78],[12,.64,.15],mats.enamel,facade);text('LOST PROPERTY BUREAU',[0,10.79,18.9],.45,facade);
+box([0,10.9,18],[15,1.05,1.4],mats.trim,facade);box([0,11,18.78],[12,1.2,.15],mats.enamel,facade);text('HONG KONG GENERAL LOST & FOUND OFFICE A.D. 1911',[0,10.95,18.9],.25,facade);text('失物招領局',[0,10.48,18.9],.38,facade);
 for(const y of [10.35,11.8])box([0,y,18],[44,.24,1.6],mats.trim,facade);
 for(const x of[-18,18]){box([x,13.25,15.5],[7.6,2.9,6.5],mats.brick,roof);
 for(const sign of[-1,1]){const corners=[[x,16,11.5],[x+sign*4.25,14.85,11.5],[x+sign*4.25,14.85,19.5],[x,16,19.5]];if(sign<0)corners.reverse();mesh(geometryForPart(T,{id:'pavilion-roof',shape:{type:'roof-panel',corners,thickness:.14},surface:{role:'roof-copper'}}),mats.copper,[0,0,0],roof);}

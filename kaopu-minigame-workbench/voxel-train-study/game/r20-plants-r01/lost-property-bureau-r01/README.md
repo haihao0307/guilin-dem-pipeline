@@ -1,6 +1,6 @@
 # Lost Property Bureau R01
 
-A new, independent, function-generated 44 × 38 m institution-machine. Fictional Hong Kong, 1978. It preserves the existing 88 game, Kowloon station and other cases.
+A new, independent, function-generated 44 × 38 m institution-machine. Fictional Hong Kong, 1976, retaining the original building date 1911 and the frozen entrance wording “HONG KONG GENERAL LOST & FOUND OFFICE A.D. 1911”. It preserves the existing 88 game, Kowloon station and other cases.
 
 The whole composition includes the public entrance hall, five clerk booths, waiting benches, upper office wings and maintenance galleries; three source-specific receiving and inspection lines; dedicated freight lift towers; level sorting and four archive tiers; synchronized moving luggage, storage dwell and retrieval; a screened return counter; two boilers, linked supply/return pipes, retained A4 forged connecting rod and crosshead, and the common transmission shaft.
 
@@ -23,3 +23,7 @@ This first complete building candidate does not yet offer a native SQLite.KaoPu 
 ## R01 clearance refinement
 
 The fixed-solid check samples all three complete cargo routes at 0.5 s intervals (780 samples) against the actual generated triangles, including galleries, walls, structural members, conveyors and timber. It is not a proof for every continuous-time point. Cargo-to-cargo checks sample the first 400 s at 0.1 s intervals. Lift entry/output openings, junction guide rails, archive ceiling clearance and the return lift gallery opening are physically left clear. The prime mover shaft has a dedicated opening in each left gallery. Archive shuttles and lift trays follow the very same bag coordinates, with no independent floating cargo animation. Exterior clocks are excluded from static batching and use the shared clock. Finished luggage geometry is released, bounding active inventory display objects.
+
+## Existing story anchors retained
+
+The original `kaopu-minigame-workbench/lost-found-bureau/FOUNDATION.md` remains the authority for 1976, the 1911 building, the established English entrance wording, deadpan characters, non-verbal performance, tea/newspaper opening and continuous business conveyor during incidents. The user has expanded the older single-interior scope to the whole building as a machine. This candidate is an architectural/logistics study, not a replacement gameplay narrative. Its viewer pause is an observation control. Character event logic is not implemented here. Camera focus/DOF architecture is a future discussion; no DOF or simulation-stopping performance shortcut was added.
