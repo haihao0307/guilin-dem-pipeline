@@ -1,10 +1,10 @@
 # ET19-IDLE-R01 待机候选
 
-固定网页：https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/e7d829ca4c3faa9a5976d3b766afe569d9cd2649/kaopu-unified-human-workbench/idle-r01/preview.html
+固定网页：https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/2c12ed2aaec4e32c42c19d4e8eb71a4fa3c97c69/kaopu-unified-human-workbench/idle-r01/preview.html
 
-源码：`e91f4ad5ffc0aa760770785632508d5953313f72`；构建：`e7d829ca4c3faa9a5976d3b766afe569d9cd2649`。
+源码：`024963f620cda046b33a5ca3521b840d2e6630ce`；构建：`2c12ed2aaec4e32c42c19d4e8eb71a4fa3c97c69`。
 
-Actions：https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/38129637480
+Actions：https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/38130252867
 
 真实源码与固定公网浏览器测试已执行；具体检查见 evidence/source-qa.json 与 evidence/public-qa.json。截图在同一运行的 artifact，需人工检查后才可讨论视觉质量。自动测试不得代替用户视觉验收。
 
@@ -12,4 +12,4 @@ Actions：https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/3812963
 
 1280×960 桌面与390×844手机视口；后者不是实机。软件GPU不是用户显卡帧率证明。首次需要原平台固定在线原生资产，并非完整离线版。
 
-保留 Draft，不合并、不强推。原 ET18 链接不变。
+保留 Draft，不合并、不强推。原 ET18 链接不变。首个待机候选 e7d829ca4c3faa9a5976d3b766afe569d9cd2649 的固定链接也保留。
