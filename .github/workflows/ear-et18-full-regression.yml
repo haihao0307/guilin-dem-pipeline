@@ -1,0 +1,61 @@
+name: Ear ET18 extended controls and 36-person regression
+on:
+  push:
+    branches: [feature/ear-anatomy-et18-20261011]
+    paths:
+      - .github/workflows/ear-et18-full-regression.yml
+      - kaopu-unified-human-workbench/ear-structure/*.mjs
+      - kaopu-unified-human-workbench/ear-structure/*.cjs
+      - kaopu-unified-human-workbench/ear-structure/layout.css
+concurrency:
+  group: ear-et18-full-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  extended-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pinned build and browser dependencies
+        run: |
+          mkdir -p /tmp/ear-tools
+          cd /tmp/ear-tools
+          npm init -y >/dev/null
+          npm install esbuild@0.25.11 playwright@1.56.1 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: Build the same source used by core publication
+        env:
+          NODE_PATH: /tmp/ear-tools/node_modules
+        run: |
+          mkdir -p ear-full-evidence
+          git rev-parse HEAD > ear-full-evidence/SOURCE_COMMIT.txt
+          node kaopu-unified-human-workbench/ear-structure/build.cjs
+          cp kaopu-unified-human-workbench/ear-structure/BUILD.json ear-full-evidence/BUILD.json
+      - name: Full controls, all person presets, expressions and archive regression
+        env:
+          NODE_PATH: /tmp/ear-tools/node_modules
+          EAR_EVIDENCE: ear-full-evidence/browser
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/ear-full-http.log 2>&1 &
+          node kaopu-unified-human-workbench/ear-structure/verify.cjs
+      - name: Retain full evidence without blocking publication
+        if: always()
+        run: |
+          mkdir -p ear-full-evidence/build
+          cp -r kaopu-unified-human-workbench/ear-structure/. ear-full-evidence/build/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ear-et18-full-regression
+          path: ear-full-evidence
+          retention-days: 14
