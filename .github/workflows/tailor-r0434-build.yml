@@ -1,0 +1,67 @@
+name: Tailor R0434 complete display regression
+on:
+  push:
+    branches: [fix/tailor-display-r0434-20261011]
+    paths: [.github/workflows/tailor-r0434-build.yml]
+permissions:
+  contents: write
+concurrency:
+  group: tailor-r0434-build
+  cancel-in-progress: false
+jobs:
+  repair-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: kaopu-tailor-workbench/presets/r04
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Apply exact-source repairs and pin original common runtime
+        run: |
+          mkdir -p repair-evidence
+          P=kaopu-tailor-workbench/presets/r04
+          { python "$P/repair_display_r0434.py" && python "$P/freeze_common_r0434.py" && python "$P/prepare_qa_r0434.py" && node --check "$P/app.mjs" && node "$P/test_resources_r0434.mjs" && node "$P/test_display_r0433.mjs" && python -m py_compile "$P/qa_r0434.py" "$P/qa_fresh_r0434.py" "$P/qa_safety_r0434.py"; } 2>&1 | tee repair-evidence/integration.log
+      - name: Commit only guarded display changes on isolated branch
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$GITHUB_REF_NAME" --depth=1
+          test "$(git rev-parse origin/$GITHUB_REF_NAME)" = "$GITHUB_SHA"
+          git add -- "$P/app.mjs" "$P/style.css" "$P/index.html" "$P/person-core" "$P/R0434_SOURCE_PATCH.json" "$P/R0434_PERSON_PIN.json" "$P/R0434_QA_INHERITANCE.json" "$P/qa_r0434.py" "$P/qa_fresh_r0434.py"
+          git commit -m 'fix(tailor-r0434): transactional garment display, stale-worker isolation, pinned original human and complete preview labels'
+          git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
+      - name: Prepare actual browser
+        run: |
+          pip install playwright==1.57.0 pillow
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y fonts-noto-cjk
+      - name: Actual WebGL all-category and all-outfit regression
+        run: |
+          export GITHUB_SHA=$(git rev-parse HEAD)
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/tailor-r0434-http.log 2>&1 &
+          python kaopu-tailor-workbench/presets/r04/qa_r0434.py 2>&1 | tee repair-evidence/browser.log
+          python kaopu-tailor-workbench/presets/r04/qa_safety_r0434.py 2>&1 | tee repair-evidence/safety.log
+      - name: Preserve patched source and diagnostic evidence
+        if: always()
+        run: |
+          mkdir -p repair-evidence
+          P=kaopu-tailor-workbench/presets/r04
+          git rev-parse HEAD > repair-evidence/COMMIT.txt
+          cp "$P/"*.mjs "$P/index.html" "$P/style.css" "$P/"*r0434.py repair-evidence/
+          cp "$P/"R0434*.json repair-evidence/ 2>/dev/null || true
+          cp -r "$P/person-core" repair-evidence/ 2>/dev/null || true
+          cp -r "$P/qa-r0434" "$P/qa-r0434-safety" repair-evidence/ 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r0434-source-and-display-evidence
+          path: repair-evidence/
+          retention-days: 14
