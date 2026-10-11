@@ -1,0 +1,47 @@
+name: Native original brick normal-cache comparison
+on:
+  push:
+    branches: ['qa/walled-neighbours-20261011']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/brick-native/**'
+      - '.github/workflows/neighbourhood-brick-source-qa.yml'
+permissions:
+  contents: read
+jobs:
+  source-brick-comparison:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    env:
+      BRICK_WIDTH: '360'
+      BRICK_HEIGHT: '270'
+      BRICK_TIMEOUT_MS: '300000'
+      BRICK_OUT: brick-native-qa-results
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01
+            kaopu-minigame-workbench/voxel-train-study/vendor
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22.23.3
+      - name: Lock original material and geometry contract
+        run: node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/brick-native/brick-native.test.mjs
+      - name: Install official pinned browser test runtime
+        run: |
+          npm install --prefix "$RUNNER_TEMP/room-browser" --registry=https://registry.npmjs.org --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/room-browser/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/room-browser/node_modules" >> "$GITHUB_ENV"
+      - name: Equal original and cached-normal completed GPU frames
+        timeout-minutes: 6
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-neighbourhood-r01/brick-native/gpu-qa.cjs
+      - name: Preserve successful and failed evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: neighbourhood-brick-source-${{ github.sha }}
+          path: brick-native-qa-results/
+          compression-level: 0
+          retention-days: 7
