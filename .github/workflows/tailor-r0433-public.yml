@@ -29,6 +29,18 @@ jobs:
           python -m playwright install --with-deps chromium
           sudo apt-get install -y fonts-noto-cjk
           node kaopu-tailor-workbench/presets/r04/test_display_r0433.mjs
+      - name: Integrate guarded final card and public-registry repair
+        run: |
+          P=kaopu-tailor-workbench/presets/r04
+          python "$P/finalize_display_r0433.py"
+          python -m py_compile "$P/qa_r0433.py" "$P/release_r0433.py"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$GITHUB_REF_NAME" --depth=1
+          test "$(git rev-parse origin/$GITHUB_REF_NAME)" = "$GITHUB_SHA"
+          git add -- "$P/style.css" "$P/qa_r0433.py" "$P/release_r0433.py" "$P/R0433_FINAL_PATCH.json"
+          git commit -m 'fix(tailor-r0433): keep state labels below complete garment previews and scope active 492-card verification'
+          git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
       - name: Publish new immutable snapshot without changing any old entrance
         run: python kaopu-tailor-workbench/presets/r04/release_r0433.py publish
       - name: Verify actual public bytes and decode every real 3D card
