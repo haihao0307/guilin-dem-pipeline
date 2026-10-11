@@ -1,0 +1,33 @@
+name: Existing train Kowloon station public candidate verification
+on:
+  push:
+    branches: ['gh-pages']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r02/**'
+      - '.github/workflows/kowloon-station-public-r02.yml'
+permissions:
+  contents: read
+jobs:
+  verify-public-station:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Official pinned browser runner
+        run: |
+          npm install --prefix "$RUNNER_TEMP/station-public" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/station-public/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/station-public/node_modules" >> "$GITHUB_ENV"
+      - name: Exact public source, desktop and mobile inspection, return to drive
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r02/qa/public-station-smoke.cjs
+      - name: Preserve genuine public browser evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: kowloon-station-public-${{ github.sha }}
+          path: station-public-results/
+          retention-days: 7
+          compression-level: 0
