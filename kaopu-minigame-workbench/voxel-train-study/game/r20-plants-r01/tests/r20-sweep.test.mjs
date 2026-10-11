@@ -11,12 +11,12 @@ import {photoTargets,streetVisibilityProbe} from './camera-visibility.mjs';
 const read=n=>JSON.parse(fs.readFileSync(new URL('../street/'+n,import.meta.url)));
 const route=[{target:0},{target:700}],layouts=['landscape','portrait'];
 const originalIds=['overview','front','rear','detail','city','platform'];
-const photographyIds=['tailBrand'],openTrackIds=['leftSide','rightSide'];
+const photographyIds=['tailBrand'],openTrackIds=['leftSide','rightSide'],mechanicalIds=['runningGear','wheelRail'];
 const distances=Array.from({length:71},(_,i)=>i*10);
 const corridorTargets=[[-45,2,0],[-28,2,0],[-10,2,0],[4,2,0],...COACH_LAYOUT.flatMap(c=>[[c.frontDoor,2,1.55],[c.rearDoor,2,1.55]])];
 
 test('Every route sample keeps original camera corridors and station-tail photography unobstructed',async()=>{
- assert.deepEqual([...CAMERA_PRESET_IDS].sort(),[...originalIds,...photographyIds,...openTrackIds].sort(),'New presets must select an explicit visibility contract');
+ assert.deepEqual([...CAMERA_PRESET_IDS].sort(),[...originalIds,...photographyIds,...openTrackIds,...mechanicalIds].sort(),'New presets must select an explicit visibility contract');
  const score=read('route.score.json'),anchor=read('first-street.score.json'),plan=createRoutePlan(score,route),rows=[];
  let maxBytes=0,maxBatches=0,corridorChecks=0,triangleRays=0;
  const poses=layouts.flatMap(layout=>[...originalIds,...photographyIds].map(name=>{
@@ -85,4 +85,11 @@ test('Conventional left and right side views clear the actual district after the
   const probe=streetVisibilityProbe(d.renderBatches.root);
   try{for(const id of openTrackIds)for(const layout of layouts){const p=getCameraPreset(id,layout),safe=boundCameraPose(p.position,p.target);for(const target of photoTargets(p)){assert.equal(probe.firstHit(safe.position,target),null,JSON.stringify({id,layout,distance,target}));rays++;}}}finally{probe.dispose();}
  }}finally{d.dispose();}assert.equal(rays,360);
+});
+
+// Mechanical presets view the positive-Z corridor. This certifies sampled street
+// geometry only: a station platform may obscure low wheels until the train clears it.
+test('Mechanical inspection lenses clear real street geometry on the driving route',async()=>{
+ const d=createStreetDistrict({routeScore:read('route.score.json'),anchorScore:read('first-street.score.json')});await d.ready;let rays=0;
+ try{for(const distance of[80,100,250,500,790]){for(let i=0;i<25;i++){d.update({distance,elapsed:10},route,{cameraTarget:[-1,1.1,0]});if(!d.proof.pending)break;}assert.equal(d.proof.pending,0);const probe=streetVisibilityProbe(d.renderBatches.root);try{for(const id of mechanicalIds)for(const layout of layouts){const p=getCameraPreset(id,layout),safe=boundCameraPose(p.position,p.target);for(const target of photoTargets(p)){assert.equal(probe.firstHit(safe.position,target),null,JSON.stringify({id,layout,distance,target}));rays++;}}}finally{probe.dispose();}}}finally{d.dispose();}assert(rays>0);
 });

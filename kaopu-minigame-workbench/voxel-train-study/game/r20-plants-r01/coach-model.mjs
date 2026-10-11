@@ -85,8 +85,10 @@ export function createFullSizeCoach(spec,index,{bodyMotion:motionOptions={}}={})
 
   // New bogies: 14.1732 m pivot spacing and separately specified axle base.
   const wheelY=TRACK.railHead+D.wheelRadius,bogies=[c-D.bogieCenters/2,c+D.bogieCenters/2],axles=bogies.flatMap(x=>[x-D.bogieWheelbase/2,x+D.bogieWheelbase/2]);
-  for(const z of [-.72,.72])fixed.box(c,floor-.19,z,D.underframeLength,.20,.16,PALETTE.greenDark);
-  for(let x=c-D.underframeLength/2+.35;x<c+D.underframeLength/2;x+=1.5)fixed.box(x,floor-.30,0,.12,.10,2.44,0x35433c);
+  // Longitudinal sills stay inside the full wheel/hub envelope; transverse
+  // members sit above the flange crown, with 20 mm vertical clearance.
+  for(const z of [-.52,.52])fixed.box(c,floor-.19,z,D.underframeLength,.20,.16,PALETTE.greenDark);
+  for(let x=c-D.underframeLength/2+.35;x<c+D.underframeLength/2;x+=1.5)fixed.box(x,floor-.085,0,.12,.10,2.44,0x35433c);
   for(const sign of [-1,1])fixed.box(c+sign*(D.underframeLength/2-.075),floor-.18,0,.15,.23,2.45,PALETTE.greenDark);
   for(const x of bogies){for(const sign of [-1,1]){fixed.box(x,wheelY+.10,sign*1.02,D.bogieWheelbase+.67,.28,.16,0x28332e);for(const dx of [-D.bogieWheelbase/2,D.bogieWheelbase/2]){fixed.box(x+dx,wheelY,sign*1.04,.34,.30,.22,0x25302c);for(let j=0;j<4;j++)fixed.box(x+dx,wheelY+.23+j*.045,sign*1.01,.70-j*.10,.035,.20,0x535c50);}}fixed.box(x,wheelY+.20,0,.50,.24,2.12,0x25352e);}
   const fixedMesh=mesh(fixed.geometry(),mat,'Dimensioned underframe and two BR1-size bogies');root.add(fixedMesh);
@@ -97,7 +99,7 @@ export function createFullSizeCoach(spec,index,{bodyMotion:motionOptions={}}={})
   const markers=new THREE.InstancedMesh(new THREE.BoxGeometry(.048,D.wheelRadius*.38,.025),new THREE.MeshStandardMaterial({color:0xb5ad83,roughness:.7}),8);markers.name='Distance-driven wheel witness marks';root.add(markers);
   const padGeometry=new THREE.BoxGeometry(.13,.30,.14),brakeMaterial=new THREE.MeshStandardMaterial({color:0x614634,roughness:.8}),pads=new THREE.InstancedMesh(padGeometry,brakeMaterial,8);pads.name='Coach brake shoes';root.add(pads);
   const brakes=wheels.map(w=>({x:w.position.x+D.wheelRadius+.075,group:new THREE.Group(),pad:{geometry:padGeometry,material:brakeMaterial}})),offset=new THREE.Matrix4(),combined=new THREE.Matrix4();
-  function updateHardware(distance=0,pressure=0){const angle=-distance/D.wheelRadius;for(let i=0;i<wheels.length;i++){const w=wheels[i];w.rotation.z=angle;pose.position.copy(w.position);pose.rotation.set(0,w.position.z<0?Math.PI:0,angle,'ZYX');pose.scale.set(1,1,1);pose.updateMatrix();wheelBatch.setMatrixAt(i,pose.matrix);offset.makeTranslation(0,D.wheelRadius*.5,.13);combined.multiplyMatrices(pose.matrix,offset);markers.setMatrixAt(i,combined);pose.rotation.set(0,0,0);pose.position.set(brakes[i].x-.045*pressure,wheelY,w.position.z);pose.updateMatrix();brakes[i].group.position.copy(pose.position);pads.setMatrixAt(i,pose.matrix);}for(const b of [wheelBatch,markers,pads])b.instanceMatrix.needsUpdate=true;}updateHardware();
+  function updateHardware(distance=0,pressure=0){const angle=-distance/D.wheelRadius;for(let i=0;i<wheels.length;i++){const w=wheels[i];w.rotation.z=angle;pose.position.copy(w.position);pose.rotation.set(0,w.position.z<0?Math.PI:0,angle,'ZYX');pose.scale.set(1,1,1);pose.updateMatrix();wheelBatch.setMatrixAt(i,pose.matrix);offset.makeTranslation(0,D.wheelRadius*.5,.13);combined.multiplyMatrices(pose.matrix,offset);markers.setMatrixAt(i,combined);pose.rotation.set(0,0,0);pose.position.set(brakes[i].x-.0095*Math.max(0,Math.min(1,pressure)),wheelY,w.position.z);pose.updateMatrix();brakes[i].group.position.copy(pose.position);pads.setMatrixAt(i,pose.matrix);}for(const b of [wheelBatch,markers,pads])b.instanceMatrix.needsUpdate=true;}updateHardware();
 
   const glassMaterial=new THREE.MeshStandardMaterial({color:0x91b3ae,transparent:true,opacity:.22,roughness:.15,metalness:.12,depthWrite:false});
   const glazing=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,.013),glassMaterial,windowCenters.length*2);glazing.name='Twenty independently spaced window bays';let wi=0;

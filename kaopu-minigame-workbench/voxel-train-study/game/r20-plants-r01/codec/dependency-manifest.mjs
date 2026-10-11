@@ -13,7 +13,7 @@ export const DEPENDENCIES = [
   {
     "id": "coach-model.mjs",
     "path": "coach-model.mjs",
-    "sha256": "8a479dcbe3244780289c140865c17ef7e3366b4834dfec45e08cfc15bacf0aa3"
+    "sha256": "f7b935b24135ad3233b8dd165ccd83d935756025ba1eee13aaa216cc1972d21a"
   },
   {
     "id": "crew-state.mjs",
@@ -33,7 +33,7 @@ export const DEPENDENCIES = [
   {
     "id": "native-a4/adapter.mjs",
     "path": "native-a4/adapter.mjs",
-    "sha256": "4e0f7aef2058842e0cd8fdbdf8348c8510e057559d703766084430885e9046bc"
+    "sha256": "1d1de8f94343ff181ed30fc8f2781a70cce9255078733931091a295184044af3"
   },
   {
     "id": "native-a4/branding/angel_left.mjs",
@@ -118,7 +118,7 @@ export const DEPENDENCIES = [
   {
     "id": "native-a4/game-locomotive.mjs",
     "path": "native-a4/game-locomotive.mjs",
-    "sha256": "6c03fa154893442f1f525c5e6be7bfc07cc6757bbf0eb2c100197a29019cd79e"
+    "sha256": "537ea7d3134e9ad00da7cae812d6935a169affdcef2be8901c582ec6473457de"
   },
   {
     "id": "native-a4/recipe.mjs",

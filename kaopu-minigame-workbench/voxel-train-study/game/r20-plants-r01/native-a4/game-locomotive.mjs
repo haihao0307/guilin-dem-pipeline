@@ -10,8 +10,8 @@ export function createA4GameLocomotive(){
  root.name='Flying Hongkonger 88 native A4';frame.name='SI to game floating origin';frame.rotation.x=-Math.PI/2;frame.position.y=TRACK.railHead;root.add(frame);frame.add(model.train);
  const bound=new T.Box3().setFromObject(root),frontOffset=CONSIST.frontX-bound.max.x;frame.position.x=frontOffset;
  const point=source=>new T.Vector3(...model.mapSourcePoint(source)).applyMatrix4(model.body.matrix).applyAxisAngle(new T.Vector3(1,0,0),-Math.PI/2).add(new T.Vector3(frontOffset,TRACK.railHead,0)).toArray();
- const p=model.nativeSource.spec.parameters,L=p.boilerLength,Y=p.boilerY,R=p.boilerRadius;
- const emitters={chimney:point([0,Y+R+.6,L/2-.8]),whistle:point([0,Y+R+.25,-2.1]),cylinderLeft:[frontOffset+model.firstDrivingDatumXM-2.2098+design.rodPinCentresM+1.02,TRACK.railHead+1.016,-design.cylinders[2].axisYM],cylinderRight:[frontOffset+model.firstDrivingDatumXM-2.2098+design.rodPinCentresM+1.02,TRACK.railHead+1.016,-design.cylinders[0].axisYM]};
+ const p=model.nativeSource.spec.parameters,L=p.boilerLength,Y=p.boilerY,R=p.boilerRadius;root.updateMatrixWorld(true);const chimneyBox=new T.Box3().setFromObject(model.nativeSource.parts.find(p=>p.name==='烟囱与蒸汽出口'));const chimneyExit=[(chimneyBox.min.x+chimneyBox.max.x)/2,chimneyBox.max.y,(chimneyBox.min.z+chimneyBox.max.z)/2];
+ const emitters={chimney:chimneyExit,whistle:point([0,Y+R+.25,-2.1]),cylinderLeft:[frontOffset+model.firstDrivingDatumXM-2.2098+design.rodPinCentresM+1.02,TRACK.railHead+1.016,-design.cylinders[2].axisYM],cylinderRight:[frontOffset+model.firstDrivingDatumXM-2.2098+design.rodPinCentresM+1.02,TRACK.railHead+1.016,-design.cylinders[0].axisYM]};
  // Retain the actual game's existing original driver character and head animation.
  const old=existingCrewSource(),crewRoot=new T.Group();root.add(crewRoot);crewRoot.add(old.driverBody,old.crew.driverHead);
  const cabFloor=point([0,1.95*model.bodyScales.cabHeightFactor,-L/2-.5]),head=old.proof.placeholderDriver.position;

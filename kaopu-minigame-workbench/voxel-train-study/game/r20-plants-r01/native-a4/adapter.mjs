@@ -81,8 +81,9 @@ export function buildPreview(recipe,design,dimensions){
  const gear=new T.Group();gear.name='new SI running gear';train.add(gear);const steel=material('#aab7c2'),iron=material('#202c36'),crankMat=material('#c6a66a');
  const wheels=wheelSpecs.map(w=>{const axle=axles.find(a=>a.id===w.axle),g=createCorrectedNativeWheel(T,{sourceWheel:axle.sourceWheel,sourceRadius:axle.sourceRadius,radiusM:w.radiusM,side:Math.sign(w.yM),driver:w.driver,spokes:w.driver?20:10,steel,cast:iron});gear.add(g);g.name=w.id;g.position.set(w.xM,w.yM,w.radiusM);return {...w,object:g};});
  for(const a of axles){if(a.id!=='axle-1')cylinder(gear,.08,1.49,[a.xM,0,a.radiusM],steel,a.id+' axle');else for(const side of[-1,1])cylinder(gear,.08,.50,[a.xM,side*.49,a.radiusM],steel,'middle driving axle stub');
-  for(const side of[-1,1]){const y=side*.57;box(gear,[.24,.20,.26],[a.xM,y,a.radiusM],iron,a.id+' axlebox');const leaves=a.driver?16:8,maxLength=a.driver?1.2192:.72;
-   for(let j=0;j<leaves;j++){const leaf=createLaminatedSpring(T,{lengthM:maxLength-j*.035,widthM:.127,thicknessM:.009525,steel:iron});leaf.position.set(a.xM,y,a.radiusM+.20+j*.009525);gear.add(leaf);}
+  for(const side of[-1,1]){const y=side*.57;box(gear,[.24,.20,.26],[a.xM,y,a.radiusM],iron,a.id+' axlebox');const isBogie=['axle-3','axle-4'].includes(a.id),isTrailing=a.id==='axle-5',leaves=isBogie?0:a.driver?16:isTrailing?11:8,maxLength=a.driver?1.2192:isTrailing?1.3716:.72,leafThickness=isTrailing?.0079375:.009525;
+   if(isBogie){const points=Array.from({length:97},(_,i)=>{const t=i/96;return new T.Vector3(.0508*Math.cos(t*Math.PI*12),.0508*Math.sin(t*Math.PI*12),t*.254);});const spring=new T.Mesh(cached('bogie-helical-spring',()=>new T.TubeGeometry(new T.CatmullRomCurve3(points),96,.0127,8,false)),iron);spring.name='bogie helical spring 10in free, 5in outside';spring.position.set(a.xM,y,a.radiusM+.14);gear.add(spring);}
+   for(let j=0;j<leaves;j++){const leaf=createLaminatedSpring(T,{lengthM:maxLength-j*.035,widthM:.127,thicknessM:leafThickness,steel:iron});leaf.position.set(a.xM,y,a.radiusM+.20+j*leafThickness);gear.add(leaf);}
    for(const dx of[-maxLength*.43,maxLength*.43])box(gear,[.035,.035,.30],[a.xM+dx,y,a.radiusM+.25],steel,a.id+' spring hanger');
   }
  }
@@ -93,6 +94,7 @@ export function buildPreview(recipe,design,dimensions){
   const main=createForgedRod(T,{lengthM:design.rodPinCentresM,bigBoreM:.06985+.0002,smallBoreM:.055+.0002,steel:mechanismMaterial,bush:bronze,name:c.id+' wide fluted connecting rod'});gear.add(main);
   const crossAssembly=createCrosshead(T,{steel:mechanismMaterial,bush:bronze,axisYM:c.axisYM,slideZM:R,guideCentreXM:guideX,strokeM:design.strokeM,name:c.id+' crosshead and twin slidebars'});gear.add(crossAssembly.root);const cross=crossAssembly.moving;
   const pin=cylinder(gear,.06985,.1524,[driveX,c.axisYM,R],steel,c.id+' outside main crank journal 5.5in x 6in');
+  const outsideSign=Math.sign(c.axisYM)||1;const washer=cylinder(pin,.089,.016,[0,outsideSign*.084,0],steel,'main crankpin retaining washer');const nut=new T.Mesh(cached('main-crank-hexnut',()=>new T.CylinderGeometry(.042,.042,.035,6)),steel);nut.position.y=outsideSign*.11;nut.name='crankpin retaining nut';pin.add(nut);
   const casing=cylinder(gear,.280,.84,[guideX+1.02,c.axisYM,R],iron,c.id+' cylinder casing');casing.rotation.z=Math.PI/2;
   for(const x of[guideX+.59,guideX+1.45]){const cap=cylinder(gear,.287,.034,[x,c.axisYM,R],steel,c.id+' cylinder end cover');cap.rotation.z=Math.PI/2;}
   const pistonRod=bar(gear,.035,[guideX,c.axisYM,R],[guideX+1,c.axisYM,R],steel,c.id+' piston rod');motions.push({id:c.id,main,cross,pin,pistonRod,crossAssembly});
@@ -107,8 +109,10 @@ export function buildPreview(recipe,design,dimensions){
  for(const y of[-.19,.19])box(insideCrank,[design.strokeM/2+.18,.065,.18],[design.strokeM/4,y,0],iron,'centre crank web');cylinder(insideCrank,.08,.38,[design.strokeM/2,0,0],steel,'centre crank journal');
 
  // Batch the preserved wheel meshes by their actual shared geometry/material. Source objects remain the motion authority.
- const batchGroups=new Map(),wheelBatches=[];
- gear.traverse(o=>{if(!o.isMesh)return;const key=o.geometry.uuid+':'+o.material.uuid;if(!batchGroups.has(key))batchGroups.set(key,[]);batchGroups.get(key).push(o);});
+ const batchGroups=new Map(),wheelBatches=[],geometryBuckets=new Map();
+ const sameGeometry=(a,b)=>{const names=Object.keys(a.attributes).sort(),other=Object.keys(b.attributes).sort();if(names.join()!==other.join()||a.index?.count!==b.index?.count)return false;for(const name of [...names,'$index']){const x=name==='$index'?a.index:a.attributes[name],y=name==='$index'?b.index:b.attributes[name];if(!x&&!y)continue;if(!x||!y||x.itemSize!==y.itemSize||x.array.length!==y.array.length)return false;for(let i=0;i<x.array.length;i++)if(x.array[i]!==y.array[i])return false;}return true;};
+ const sharedGeometry=g=>{let h=2166136261;for(const name of [...Object.keys(g.attributes).sort(),'$index']){const a=name==='$index'?g.index:g.attributes[name];if(!a)continue;const b=new Uint8Array(a.array.buffer,a.array.byteOffset,a.array.byteLength);for(const v of b)h=Math.imul(h^v,16777619);}const list=geometryBuckets.get(h)||[];for(const old of list)if(sameGeometry(g,old))return old;list.push(g);geometryBuckets.set(h,list);return g;};
+ gear.traverse(o=>{if(!o.isMesh)return;o.geometry=sharedGeometry(o.geometry);const key=o.geometry.uuid+':'+o.material.uuid;if(!batchGroups.has(key))batchGroups.set(key,[]);batchGroups.get(key).push(o);});
  for(const sources of batchGroups.values()){const mesh=new T.InstancedMesh(sources[0].geometry,sources[0].material,sources.length);mesh.castShadow=mesh.receiveShadow=true;mesh.frustumCulled=false;gear.add(mesh);for(const o of sources)o.visible=false;wheelBatches.push({mesh,sources});}
  const inverseGear=new T.Matrix4(),batchMatrix=new T.Matrix4();
  const syncWheels=()=>{inverseGear.copy(gear.matrixWorld).invert();for(const b of wheelBatches){b.sources.forEach((o,i)=>b.mesh.setMatrixAt(i,batchMatrix.copy(inverseGear).multiply(o.matrixWorld)));b.mesh.instanceMatrix.needsUpdate=true;}};
