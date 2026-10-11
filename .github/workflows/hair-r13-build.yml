@@ -8,7 +8,7 @@ permissions:
   contents: write
 concurrency:
   group: hair-r13-length
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   build-and-verify:
     runs-on: ubuntu-latest
@@ -38,26 +38,25 @@ jobs:
           node --input-type=module - <<'JS'
           import esbuild from 'esbuild';import path from 'node:path';
           const p=path.resolve('kaopu-hair-workbench/fusion/r13');
-          await esbuild.build({entryPoints:[p+'/tests/kernel.mjs'],bundle:true,platform:'node',format:'esm',outfile:p+'/tests/kernel-bundled.mjs',alias:{three:p+'/vendor/three.module.js'}});
+          for(const name of ['kernel','length-boundaries'])await esbuild.build({entryPoints:[p+'/tests/'+name+'.mjs'],bundle:true,platform:'node',format:'esm',outfile:p+'/tests/'+name+'-bundled.mjs',alias:{three:p+'/vendor/three.module.js'}});
           JS
           node kaopu-hair-workbench/fusion/r13/tests/kernel-bundled.mjs
-          rm kaopu-hair-workbench/fusion/r13/tests/kernel-bundled.mjs
+          node kaopu-hair-workbench/fusion/r13/tests/length-boundaries-bundled.mjs
+          rm kaopu-hair-workbench/fusion/r13/tests/*-bundled.mjs
           node kaopu-hair-workbench/fusion/r13/bundle.mjs
           python kaopu-hair-workbench/fusion/r13/package.py
-      - name: Start candidate server and capture real visual checkpoint
+      - name: Actual native candidate browser interactions and geometry checks
         run: |
           python -m http.server 8765 --bind 127.0.0.1 >/tmp/hair-r13-http.log 2>&1 &
-          node kaopu-hair-workbench/fusion/r13/tests/visual.mjs http://127.0.0.1:8765/kaopu-hair-workbench/fusion/r13/public-lite.html
+          node kaopu-hair-workbench/fusion/r13/tests/browser.mjs http://127.0.0.1:8765/kaopu-hair-workbench/fusion/r13/public-lite.html
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: hair-r13-visual-checkpoint
+          name: hair-r13-candidate-checkpoint
           path: |
-            kaopu-hair-workbench/fusion/r13/evidence/visual
+            kaopu-hair-workbench/fusion/r13/evidence
             kaopu-hair-workbench/fusion/r13/BUILD_MANIFEST.json
           retention-days: 14
-      - name: Actual native browser interactions and geometry checks
-        run: node kaopu-hair-workbench/fusion/r13/tests/browser.mjs http://127.0.0.1:8765/kaopu-hair-workbench/fusion/r13/public-lite.html
       - name: Publish only new R13 files on draft branch
         id: publish
         run: |
@@ -75,8 +74,8 @@ jobs:
           url="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$sha/kaopu-hair-workbench/fusion/r13/public-lite.html"
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "$url" >> "$GITHUB_STEP_SUMMARY"
-      - name: Real external fixed webpage verification
-        run: node kaopu-hair-workbench/fusion/r13/tests/browser.mjs '${{ steps.publish.outputs.url }}' --public
+      - name: Real external fixed webpage deployment smoke
+        run: node kaopu-hair-workbench/fusion/r13/tests/public.mjs '${{ steps.publish.outputs.url }}'
       - name: Record evidence without changing tested HTML
         env:
           PUBLIC_URL: ${{ steps.publish.outputs.url }}
@@ -94,6 +93,8 @@ jobs:
             kaopu-hair-workbench/fusion/r13/BUILD_MANIFEST.json
             kaopu-hair-workbench/fusion/r13/PUBLIC_URL.txt
             kaopu-hair-workbench/fusion/r13/TEACHER_INDEX.md
+            kaopu-hair-workbench/fusion/r13/REVIEW_ITERATION_01.md
             kaopu-hair-workbench/fusion/r13/src/LengthKernel.js
+            kaopu-hair-workbench/fusion/r13/src/NeutralEarGuard.js
             kaopu-hair-workbench/fusion/r13/src/app.js
           retention-days: 30

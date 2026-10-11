@@ -1,3 +1,4 @@
+import {NeutralEarGuard} from './NeutralEarGuard.js';
 /** R13 self-authored length-conditioned rest-groom compiler.
  * Teachers: Perm global/local separation and root-relative curves;
  * Digital Salon guide/follower split, parallel-transport frames and collision field.
@@ -19,7 +20,7 @@ const blend=(a,b,t)=>a.map((v,k)=>mix(v,b[k],t));
 export function random01(id){let x=Math.imul(id+13,0x45d9f3b);x=Math.imul(x^(x>>>16),0x45d9f3b);return ((x^(x>>>16))>>>0)/4294967296;}
 export function hashArray(a){let h=2166136261;for(const v of new Uint8Array(a.buffer,a.byteOffset,a.byteLength))h=Math.imul(h^v,16777619);return h>>>0;}
 export const PRESETS={
- 'textured-fringe':{name:'微分碎盖',lengthMM:85,partMM:-7,partOpen:18,volumeMM:16,sideRatio:42,backRatio:48,fringeRatio:100,clump:38,waveMM:.45,tipVariation:22,flow:10},
+ 'textured-fringe':{name:'微分碎盖',lengthMM:85,partMM:-7,partOpen:18,volumeMM:16,sideRatio:42,backRatio:48,fringeRatio:65,clump:48,waveMM:.60,tipVariation:24,flow:10},
  'side-flow':{name:'偏长侧分',lengthMM:110,partMM:-27,partOpen:56,volumeMM:21,sideRatio:55,backRatio:60,fringeRatio:92,clump:34,waveMM:.3,tipVariation:13,flow:42},
  'curtain-layer':{name:'中分层次刘海',lengthMM:135,partMM:0,partOpen:82,volumeMM:18,sideRatio:65,backRatio:70,fringeRatio:100,clump:32,waveMM:.65,tipVariation:18,flow:65}
 };
@@ -37,7 +38,7 @@ export function validateRecipe(recipe){
 class RootSet extends FullerScalpBinding{setStyle(style){this.style=style}}
 export function makeRootSet(model,count=64000){return new RootSet(model,{count,segments:1,seed:724,length:.13});}
 const normalAt=(b,i)=>unit(b.point(b.rootTriangles[i],b.rootBarycentrics.subarray(i*3,i*3+3),b.templateNormals));
-export function partSide(p,d){return p[0]>=d.partMM*.001+.025*p[2]?1:-1;}
+export function partSide(p,d){return p[0]>=d.partMM*.001+.025*p[2]+.00065*Math.sin((p[2]+.01)*70)+.00035*Math.sin(p[2]*139+.4)?1:-1;}
 export function regionAt(p){const[x,y,z]=p;return y>.355?'crown':z>.065&&Math.abs(x)<.06?'fringe':z<-.025?'back':x<0?'right':'left';}
 export function lengthAt(p,d,r=.5){
  const crown=smooth(.305,.365,p[1]),frontal=smooth(.025,.08,p[2])*(1-smooth(.045,.083,Math.abs(p[0]))),rear=1-smooth(-.045,.01,p[2]);
@@ -58,7 +59,7 @@ export function transportFrame(axis,t0,t1){
  * Approximate neutral-head obstacle field, not a dynamic or full-body collision claim.
  */
 export class SkinField{
- constructor(model){this.bvh=new TeacherSkinBVH(model);this.step=.003;this.origin=[-.18,.14,-.20];this.dims=[121,121,151];this.values=new Map();this.samples=0;}
+ constructor(model){this.earGuard=new NeutralEarGuard(model);this.bvh=new TeacherSkinBVH(model);this.step=.003;this.origin=[-.18,.14,-.20];this.dims=[121,121,151];this.values=new Map();this.samples=0;}
  corner(x,y,z){const key=x+this.dims[0]*(y+this.dims[1]*z);let v=this.values.get(key);if(v)return v;const p=[x,y,z].map((n,k)=>this.origin[k]+n*this.step),h=this.bvh.nearest(p);v=[dot(sub(p,h.p),h.n),...h.n];this.values.set(key,v);return v;}
  sample(p){const u=p.map((x,k)=>(x-this.origin[k])/this.step),c=u.map(Math.floor),f=u.map((x,k)=>x-c[k]),out=[0,0,0,0];
   if(c.some((x,k)=>x<0||x>=this.dims[k]-1)){const h=this.bvh.nearest(p);return{distance:dot(sub(p,h.p),h.n),normal:h.n};}
@@ -70,9 +71,9 @@ export class SkinField{
 function fieldDirection(p,root,d){
  const side=partSide(root,d),lateral=smooth(.033,.080,Math.abs(root[0])),back=1-smooth(-.040,.016,root[2]),low=1-smooth(.303,.35,root[1]);
  let crown;
- if(d.style==='textured-fringe')crown=[.08+side*d.partOpen*.004,-.08,1];
+ if(d.style==='textured-fringe')crown=[.08+side*(d.partOpen*.004+(d.flow-10)*.003),-.08,1];
  else if(d.style==='side-flow')crown=[side*(.6+d.flow*.008),-.13,.70];
- else crown=[side*(.5+d.partOpen*.008),-.10,.60];
+ else crown=[side*(.5+d.partOpen*.008+(d.flow-65)*.004),-.10,.60];
  const flank=[side*.12,-1,root[2]>.025?.24:-.32];
  crown=blend(crown,flank,lateral*(.3+.7*low));
  crown=blend(crown,[root[0]*2,-.65,-.9],back*(.4+.6*low));
@@ -104,6 +105,7 @@ function makeGuide(b,id,d,skin,segments){
   p=skin.project(p,.00075);
   pts.push(p);
  }
+ skin.earGuard.apply(pts);
  const arc=[0];for(let i=1;i<pts.length;i++)arc.push(arc.at(-1)+Math.hypot(...sub(pts[i],pts[i-1])));
  return{id,root,normal:n,points:pts,arc,length:arc.at(-1),side:partSide(root,d),region:regionAt(root),requestedLength:length};
 }
@@ -118,7 +120,7 @@ export async function compileGroom(b,skin,recipe,{segments=24,cancel,onProgress}
  const per=segments+1,curves=new Float32Array(b.count*per*3),normals=new Float32Array(curves.length),tangents=new Float32Array(curves.length),randoms=new Float32Array(b.count),active=new Uint8Array(b.count),guideMap=new Uint32Array(b.count*3),weights=new Float32Array(b.count*3),lengths=new Float32Array(b.count),regions={crown:0,fringe:0,left:0,right:0,back:0};
  let activeCount=0,maxRootOffset=0,minimumY=Infinity,maximumY=-Infinity;
  for(let i=0;i<b.count;i++){
-  const root=Array.from(b.templateRoots.subarray(i*3,i*3+3)),n=normalAt(b,i),near=nearestGuides(root,d,guides),seed=b.random[i*4],phase=random01(i+441)*Math.PI*2;
+  const root=Array.from(b.templateRoots.subarray(i*3,i*3+3)),n=normalAt(b,i),near=nearestGuides(root,d,guides),seed=b.random[i*4],phase=random01(guides[near.id[0]].id+441)*Math.PI*2,finePhase=random01(i+791)*Math.PI*2;
   guideMap.set(near.id,i*3);weights.set(near.w,i*3);randoms[i]=seed;
   active[i]=b.selectionRandom[i]<(d.density/100)*mix(.15,1,smooth(.0002,.005,scalpMargin(root)))?1:0;if(active[i]){activeCount++;regions[regionAt(root)]++;}
   const requested=lengthAt(root,d,seed),avg=near.id.reduce((a,id,j)=>a+guides[id].requestedLength*near.w[j],0),scale=clamp(requested/avg,.45,1.5),base=[];
@@ -134,13 +136,14 @@ export async function compileGroom(b,skin,recipe,{segments=24,cancel,onProgress}
   for(let j=0;j<=segments;j++){
    const s=j/segments,q=(i*per+j)*3,t=unit(sub(base[Math.min(segments,j+1)],base[Math.max(0,j-1)]));
    frame=transportFrame(frame,prevT,t);prevT=t;const binormal=unit(cross(t,frame)),a=d.waveMM*.001*smooth(0,.25,s)*(0.65+.35*seed);
-   let p=base[j];if(j>0){const low=Math.sin(s*Math.PI*2.2+phase)*a,hi=Math.sin(s*22+phase)*a*.14;p=add(p,add(mul(frame,low),mul(binormal,hi)));p=skin.project(p,.0007);}
+   let p=base[j];if(j>0){const low=Math.sin(s*Math.PI*2.2+phase)*a,hi=Math.sin(s*22+finePhase)*a*.14;p=add(p,add(mul(frame,low),mul(binormal,hi)));p=skin.project(p,.0007);}
    curves.set(p,q);normals.set(n,q);minimumY=Math.min(minimumY,p[1]);maximumY=Math.max(maximumY,p[1]);
   }
+  const finalPoints=Array.from({length:per},(_,j)=>Array.from(curves.subarray((i*per+j)*3,(i*per+j+1)*3)));skin.earGuard.apply(finalPoints);for(let j=0;j<per;j++)curves.set(finalPoints[j],(i*per+j)*3);
   for(let j=0;j<=segments;j++){const q=(i*per+j)*3,a=(i*per+Math.max(0,j-1))*3,c=(i*per+Math.min(segments,j+1))*3,t=unit([curves[c]-curves[a],curves[c+1]-curves[a+1],curves[c+2]-curves[a+2]]);tangents.set(t,q);if(j)lengths[i]+=Math.hypot(curves[q]-curves[q-3],curves[q+1]-curves[q-2],curves[q+2]-curves[q-1]);}
   maxRootOffset=Math.max(maxRootOffset,Math.hypot(...sub(curves.subarray(i*per*3,i*per*3+3),root)));
   if(i%768===0){guard(cancel);onProgress?.('密集发丝 / 贴肤避让',.25+.75*i/b.count);await pause();}
  }
  guard(cancel);const sorted=Array.from(lengths).sort((a,b)=>a-b),stats={requestedTopLengthMM:d.lengthMM,actualArcLengthMM:{min:sorted[0]*1000,median:sorted[Math.floor(sorted.length*.5)]*1000,p95:sorted[Math.floor(sorted.length*.95)]*1000,max:sorted.at(-1)*1000}};
- return{recipe:d,curves,normals,tangents,randoms,active,guideMap,weights,guides,lengths,count:b.count,segments,per,activeCount,regions,maxRootOffset,stats,minimumY,maximumY,curveHash:hashArray(curves),rootHash:hashArray(b.templateRoots),buildMs:performance.now()-started,fieldCacheCells:skin.values.size};
+ return{recipe:d,curves,normals,tangents,randoms,active,guideMap,weights,guides,lengths,count:b.count,segments,per,activeCount,regions,maxRootOffset,stats,minimumY,maximumY,curveHash:hashArray(curves),rootHash:hashArray(b.templateRoots),buildMs:performance.now()-started,fieldCacheCells:skin.values.size,earGuard:skin.earGuard.diagnostics()};
 }

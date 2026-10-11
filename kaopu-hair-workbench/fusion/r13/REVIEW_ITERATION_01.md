@@ -1,0 +1,15 @@
+# R13 first real visual checkpoint: findings and targeted revision
+
+The actual Chromium visual checkpoint of source `3f90ca92837dadb544e756adf1a5c62cdbe14c26` is in run 38121747876, artifact 11694959361. It rendered three real styles on the original GNM at 64k roots. All three screenshots were viewed. This is not acceptance of the whole unfinished browser run.
+
+Observed: the first micro-part fringe hangs too low across the eyes. Its new default fringe-region length factor is 65%, while its 85mm top-guide target and the other two style lengths remain separate. The part now has a bounded sub-millimetre irregularity. Low-frequency wave phase is shared within a guide family; smaller high-frequency phase remains strand-specific. The side-flow control now affects all three styles rather than being an inert control outside the side-part preset.
+
+A separate actual-GNM 8k-root computational check found an important counterexample: every tested endpoint can be outside the head while the joining segment crosses the ear. In the old micro-fringe 140mm fixture, root 6630 segment 12 crosses triangle 28134 even though its endpoints are outside. Five crossings were found among 19,200 tested segments in that fixture. Point-only SDF checks cannot be called complete collision handling.
+
+`NeutralEarGuard.js` reuses the R12 measured neutral-ear envelope fits, conservatively refits them to all vertices of the selected original GNM ear triangles, and triggers only on exact segment/triangle intersections. A local, smoothly spread outward displacement clears those contacts without moving roots. It is applied to generation guides and final follower curves. The original visible head is never replaced by these collision-only proxies. Unresolved segments and displacement cost are counted. This is neither full dynamic collision nor a continuous swept-radius proof.
+
+`tests/length-boundaries.mjs` freezes the original intersecting chord and tests it directly, then tests three styles at 55 and 160mm on an 8k-root original-head fixture, sampling 800 strands / 19,200 segments per case. `tests/browser.mjs` separately tests real default-density browser output. Tests do not reduce the production root count.
+
+Full candidate regression and public deployment smoke are separate reports. Public smoke verifies the exact shipped HTML and asset hash plus real three-style rendering, native length/save/camera controls and mobile layout. It is not falsely called a repeat of every candidate test. The final build has to pass both. An older in-progress run can be superseded within the R13-only concurrency group; no R12 or other workbench workflow is cancelled.
+
+Visual checkpoint also shows remaining approximations: hair bundles and part lines still need refinement, and long-hair dynamics/self/body collision are not implemented. The first actual fibre buffer was 202,863,680 bytes; a small HTML download does not establish a small GPU allocation. This is an initial length-ladder authoring system, not a cinematic certificate.
