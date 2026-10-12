@@ -1,4 +1,4 @@
-name: Train88 same-session bureau views and driving return
+name: Train88 bureau round-trip driving and brake recovery
 on:
   push:
     branches: ['qa/train88-kowloon-function-r01-20261012']
@@ -31,7 +31,7 @@ jobs:
           node experiments/bureau-query-r01/emit.mjs
           node --check qa/bureau-host.cjs
           node --check ../bureau-train88-r01/function-receiver.mjs
-          node --test experiments/spatial-query-r01/*.test.mjs experiments/candidate-storage-r01/*.test.mjs experiments/compact-trace-r01/*.test.mjs qa/bounded-browser.test.mjs qa/shader-closure.test.mjs qa/group-runtime.test.mjs qa/group-ray-stages.test.mjs qa/compact-host.test.mjs qa/bureau-host.test.mjs qa/bureau-readback.test.mjs experiments/bureau-query-r01/contract.test.mjs ../bureau-train88-r01/qa/*.test.mjs
+          node --test experiments/spatial-query-r01/*.test.mjs experiments/candidate-storage-r01/*.test.mjs experiments/compact-trace-r01/*.test.mjs qa/bounded-browser.test.mjs qa/shader-closure.test.mjs qa/group-runtime.test.mjs qa/group-ray-stages.test.mjs qa/compact-host.test.mjs qa/bureau-host.test.mjs qa/bureau-readback.test.mjs qa/session-recovery.test.mjs experiments/bureau-query-r01/contract.test.mjs ../bureau-train88-r01/qa/*.test.mjs
       - name: Compile pinned Naga and all exact compact runtime entries
         working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/compiler
         run: |
