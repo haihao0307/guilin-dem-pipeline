@@ -1,0 +1,43 @@
+name: Lips ET19 immutable public recovery
+on:
+  push:
+    branches: [feature/lips-et19-continuity-20261011]
+    paths:
+      - qa/lips-et19-recovery/**
+      - .github/workflows/lips-et19-recovery.yml
+permissions:
+  contents: read
+concurrency:
+  group: lips-et19-public-recovery
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            qa/lips-et19-recovery
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned browser tools
+        run: |
+          mkdir -p /tmp/lip-recovery-tools
+          cd /tmp/lip-recovery-tools
+          npm init -y >/dev/null
+          npm install playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Fresh immutable public baseline and ET19 checks, no runtime writes
+        env:
+          NODE_PATH: /tmp/lip-recovery-tools/node_modules
+        run: node qa/lips-et19-recovery/verify.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lips-et19-recovery-public
+          path: lip19-recovery-evidence
+          retention-days: 14
