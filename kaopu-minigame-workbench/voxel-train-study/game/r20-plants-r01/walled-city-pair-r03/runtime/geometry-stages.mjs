@@ -19,8 +19,8 @@ const pipes=between(b,'// Joint-aligned water and drainage, not arbitrary noise 
 const lifeMatch=/if\(abs\(p.x-inner\)>1.0[^\n]+/.exec(b);if(!lifeMatch)throw Error('missing life receiver');
 const life=lifeMatch[0].replace('h=wetService(h,p,s);','');
 const parts=[
- slab.slice(slab.indexOf('let slabQ='))+(front+side).replace(/h=windowParts\([^;]+;/g,'')+partition.replace(sep,''),
- (front+side).replace(/h=choose\([^;]+;/g,''),
+ slab.slice(slab.indexOf('let slabQ='))+(front+side).replace(/h=(?:windowParts|householdFrontageOpenings)\([^;]+;/g,'')+partition.replace(sep,''),
+ (front+side).replace(/h=(?:choose|householdFrontageShell)\([^;]+;/g,''),
  stairs,exterior+pipes,life,'h=wetService(h,p,s);'
 ];
 export const GEOMETRY_PARTITION_PROOF={sourceStorey:original.text,groups:parts,common:lead+'let wall=.11;'+local+inner+sep,rule:'Each original h-changing field operation appears once across six storey groups. Per-group min plus repeated shared exclusion is equivalent to global min.'};

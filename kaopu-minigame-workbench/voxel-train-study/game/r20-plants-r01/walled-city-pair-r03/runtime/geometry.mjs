@@ -30,6 +30,29 @@ fn roomLife(h0:GeoHit,p:vec3<f32>,s:u32)->GeoHit{var h=h0;let a=rec(s,0u);let b=
  let sh=vec3<f32>(center.x-bay*.85,a.y+1.3,b.y-.30);h=woodBox(h,p,sh,vec3<f32>(.6,.035,.22),s,c+70u,0u);h=addBox(h,p,sh+vec3<f32>(.15,.18,.01),vec3<f32>(.20,.14,.14),7u,s,c+71u);return h;}
 fn wetService(h0:GeoHit,p:vec3<f32>,s:u32)->GeoHit{var h=h0;let a=rec(s,0u);let b=rec(s,1u);let bid=u32(rec(s,3u).x);let signX=select(-1.,1.,bid==2u);let center=vec3<f32>(a.x+signX*(a.z*.5-.75),a.y,b.y-1.05);let q=p-center;let basinQ=q-vec3<f32>(0.,.78,0.);let outer=boxD(basinQ,vec3<f32>(.5,.18,.34))-.04;let cavity=boxD(basinQ-vec3<f32>(0.,.055,0.),vec3<f32>(.46,.20,.30))-.025;h=choose(h,max(outer,-cavity),3u,s,800000u+s,basinQ,boxN(basinQ,vec3<f32>(.5,.18,.34)));let corner=vec3<f32>(select(-.43,.43,q.x>0.),.32,select(-.28,.28,q.z>0.));h=addBox(h,p,center+corner,vec3<f32>(.025,.32,.025),3u,s,800100u+s);h=addPipe(h,p,center+vec3<f32>(0.,0.,.36),center+vec3<f32>(0.,1.18,.36),.022,s,800200u+s);h=addPipe(h,p,center+vec3<f32>(0.,1.18,.36),center+vec3<f32>(0.,1.18,.10),.023,s,800300u+s);h=addPipe(h,p,center+vec3<f32>(0.,.56,0.),center+vec3<f32>(0.,.10,0.),.04,s,800400u+s);h=woodBox(h,p,center+vec3<f32>(.84,.72,.03),vec3<f32>(.26,.035,.35),s,800500u+s,0u);return h;}
 fn canopy(h0:GeoHit,p:vec3<f32>,center:vec3<f32>,half:vec2<f32>,s:u32,c:u32)->GeoHit{var h=h0;let q=p-center;let slope=.18;let yy=q.y+slope*q.z-.014*sin(q.x*52.);let sheet=boxD(vec3<f32>(q.x,yy,q.z),vec3<f32>(half.x,.025,half.y))*.94;h=choose(h,sheet,3u,s,c,q,normalize(vec3<f32>(0.,1.,slope)));let x=select(-half.x+.1,half.x-.1,q.x>0.);h=addPipe(h,p,center+vec3<f32>(x,.10,-half.y),center+vec3<f32>(x,-.18,half.y),.035,s,c+1u);h=addPipe(h,p,center+vec3<f32>(x,-.18,half.y),center+vec3<f32>(x,-.95,half.y),.031,s,c+2u);return h;}
+// Dated household event, partitioned along existing execution groups.
+fn householdFrontageShell(h0:GeoHit,p:vec3<f32>,s:u32)->GeoHit{var h=h0;let a=rec(s,0u);let b=rec(s,1u);let event=rec(s,3u);if(event.y<.5||u.size.w<event.w){return h;}let bays=select(3.,2.,b.z==0.||b.z==1.||b.z==3.);let pitch=a.z/bays;let x=a.x-a.z*.5+(event.y-.5)*pitch;let hw=pitch*.43;let depth=event.z;let z=b.x-depth;let base=a.y;let height=2.28;let c=1000000u;let fq=p-vec3<f32>(x,base+height*.5,z);
+ let wh=vec2<f32>(min(.90,hw-.20),.52);let window=vec3<f32>(x,base+1.48,z);
+ h=choose(h,max(boxD(fq,vec3<f32>(hw,height*.5,.065)),-boxD(p-window,vec3<f32>(wh,.20))),1u,s,c,fq,boxN(fq,vec3<f32>(hw,height*.5,.065)));
+ let side=select(-1.,1.,p.x>x);let sq=p-vec3<f32>(x+side*hw,base+height*.5,b.x-depth*.5);
+ h=choose(h,boxD(sq,vec3<f32>(.055,height*.5,depth*.5)),1u,s,c+1u,sq,boxN(sq,vec3<f32>(.055,height*.5,depth*.5)));
+return h;}
+fn householdFrontageOpenings(h0:GeoHit,p:vec3<f32>,s:u32)->GeoHit{var h=h0;let a=rec(s,0u);let b=rec(s,1u);let event=rec(s,3u);if(event.y<.5||u.size.w<event.w){return h;}let bays=select(3.,2.,b.z==0.||b.z==1.||b.z==3.);let pitch=a.z/bays;let x=a.x-a.z*.5+(event.y-.5)*pitch;let hw=pitch*.43;let depth=event.z;let z=b.x-depth;let base=a.y;let height=2.28;let c=1000000u;let wh=vec2<f32>(min(.90,hw-.20),.52);let window=vec3<f32>(x,base+1.48,z);h=windowParts(h,p,window,wh,s,c+20u,false,false);return h;}
+fn householdFrontageLife(h0:GeoHit,p:vec3<f32>,s:u32)->GeoHit{var h=h0;let a=rec(s,0u);let b=rec(s,1u);let event=rec(s,3u);if(event.y<.5||u.size.w<event.w){return h;}let bays=select(3.,2.,b.z==0.||b.z==1.||b.z==3.);let pitch=a.z/bays;let x=a.x-a.z*.5+(event.y-.5)*pitch;let hw=pitch*.43;let depth=event.z;let z=b.x-depth;let base=a.y;let height=2.28;let c=1000000u; h=table(h,p,vec3<f32>(x+.55,base,z+.26),vec2<f32>(.48,.17),.74,s,c+40u);
+ h=woodBox(h,p,vec3<f32>(x-.55,base+.91,z+.18),vec3<f32>(.30,.035,.14),s,c+44u,0u);
+return h;}
+fn householdFrontageExterior(h0:GeoHit,p:vec3<f32>,s:u32)->GeoHit{var h=h0;let a=rec(s,0u);let b=rec(s,1u);let event=rec(s,3u);if(event.y<.5||u.size.w<event.w){return h;}let bays=select(3.,2.,b.z==0.||b.z==1.||b.z==3.);let pitch=a.z/bays;let x=a.x-a.z*.5+(event.y-.5)*pitch;let hw=pitch*.43;let depth=event.z;let z=b.x-depth;let base=a.y;let height=2.28;let c=1000000u; h=canopy(h,p,vec3<f32>(x,base+height+.015,b.x-depth*.5),vec2<f32>(hw+.07,depth*.5+.08),s,c+60u);
+ // Water is led to the existing riser instead of inventing a new wet service.
+ let gutter=vec3<f32>(x+hw,base+height-.10,z-.035);let oldPipe=vec3<f32>(a.x+a.z*.5-.15,base+height-.15,b.x-.14);
+ h=addPipe(h,p,gutter,vec3<f32>(gutter.x,oldPipe.y,oldPipe.z),.026,s,c+70u);
+ h=addPipe(h,p,vec3<f32>(gutter.x,oldPipe.y,oldPipe.z),oldPipe,.026,s,c+71u);
+ // The negotiated drying location is the adjacent still-open balcony bay.
+ let nextBay=select(event.y,event.y-2.,event.y>=bays);let dryX=a.x-a.z*.5+(nextBay+.5)*pitch;
+ let ca=vec3<f32>(dryX-.75,base+1.90,b.x-.70);let cb=vec3<f32>(dryX+.75,base+1.90,b.x-.70);
+ h=addPipe(h,p,ca,cb,.009,s,c+80u);
+ let cloth=p-vec3<f32>(dryX,base+1.53,b.x-.70);let fold=.045*sin(cloth.x*20.)+.025*sin(cloth.y*9.);
+ h=choose(h,boxD(vec3<f32>(cloth.x,cloth.y,cloth.z-fold),vec3<f32>(.24,.35,.018))*.88,7u,s,c+81u,cloth.xzy,vec3<f32>(0.,0.,-1.));
+return h;}
 fn storey(h0:GeoHit,p:vec3<f32>,s:u32)->GeoHit{var h=h0;let a=rec(s,0u);let b=rec(s,1u);let c=rec(s,2u);let bid=u32(rec(s,3u).x);let halfW=a.z*.5;let middleZ=(b.x+b.y)*.5;let depth=(b.y-b.x)*.5;let center=vec3<f32>(a.x,a.y+a.w*.5,middleZ);let bound=boxD(p-center,vec3<f32>(halfW+.9,a.w*.5+.18,depth+1.));if(bound>h.d+.024){return h;}if(bound>.22){return choose(h,bound-.06,0u,s,0u,p,vec3<f32>(0.,1.,0.));}
  let wall=.11;let q=p-center;let f=u32(c.w);let base=a.y;let top=base+a.w;let family=1000u+s*100u;
  // Main slab leaves a real alternating switchback stair opening next to the gap.
@@ -37,6 +60,7 @@ fn storey(h0:GeoHit,p:vec3<f32>,s:u32)->GeoHit{var h=h0;let a=rec(s,0u);let b=re
  // Front and rear apertures programmeCode the actual storey footprint and programme.
  let bays=select(3.,2.,b.z==0.||b.z==1.||b.z==3.);let pitch=a.z/bays;let cell=clamp(floor((p.x-a.x+halfW)/pitch),0.,bays-1.);let bx=a.x-halfW+(cell+.5)*pitch;let frontDoor=f==0u||b.w>.5;let wy=select(base+1.48,base+1.03,frontDoor);let wh=select(vec2<f32>(pitch*.30,.65),vec2<f32>(pitch*.33,1.02),frontDoor);let fq=p-vec3<f32>(a.x,base+a.w*.5,b.x);let opening=boxD(p-vec3<f32>(bx,wy,b.x),vec3<f32>(wh,.32));let frontWall=max(boxD(fq,vec3<f32>(halfW,a.w*.5,wall)),-opening);h=choose(h,frontWall,1u,s,family+1u,fq,boxN(fq,vec3<f32>(halfW,a.w*.5,wall)));h=windowParts(h,p,vec3<f32>(bx,wy,b.x-.005),wh,s,family+20u,false,frontDoor);
  let rq=p-vec3<f32>(a.x,base+a.w*.5,b.y);let rearHole=boxD(p-vec3<f32>(bx,base+1.55,b.y),vec3<f32>(pitch*.26,.58,.35));h=choose(h,max(boxD(rq,vec3<f32>(halfW,a.w*.5,wall)),-rearHole),1u,s,family+2u,rq,boxN(rq,vec3<f32>(halfW,a.w*.5,wall)));h=windowParts(h,p,vec3<f32>(bx,base+1.55,b.y),vec2<f32>(pitch*.26,.58),s,family+25u,false,false);
+ h=householdFrontageShell(h,p,s);h=householdFrontageOpenings(h,p,s);
  // Both sides contain real windows and gap-side doors to shared landings.
  let signX=select(-1.,1.,p.x>a.x);let sideX=a.x+signX*halfW;let gapSide=(bid==1u&&signX>0.)||(bid==2u&&signX<0.);let sideCell=clamp(floor((p.z-b.x)/2.5),0.,floor((b.y-b.x)/2.5)-1.);let rawSZ=b.x+(sideCell+.5)*2.5;let isDoor=gapSide&&abs(p.z-stairZ)<1.5;let sz=select(rawSZ,stairZ,isDoor);let sh=select(vec2<f32>(.54,.62),vec2<f32>(.48,1.02),isDoor);let sy=select(base+1.48,base+1.03,isDoor);let sideQ=p-vec3<f32>(sideX,base+a.w*.5,middleZ);let sideHole=boxD((p-vec3<f32>(sideX,sy,sz)).zyx,vec3<f32>(sh,.32));h=choose(h,max(boxD(sideQ,vec3<f32>(wall,a.w*.5,depth)),-sideHole),1u,s,family+3u,sideQ,boxN(sideQ,vec3<f32>(wall,a.w*.5,depth)));h=windowParts(h,p,vec3<f32>(sideX,sy,sz),sh,s,family+30u,true,isDoor);
  // Life split: side stair/service strip, small front work/sleep area, rear wet/storage.
@@ -47,9 +71,10 @@ fn storey(h0:GeoHit,p:vec3<f32>,s:u32)->GeoHit{var h=h0;let a=rec(s,0u);let b=re
  // Shared balcony is only generated when a rent/addition event grants access.
  if(b.w>.5){h=addBox(h,p,vec3<f32>(a.x,base-.02,b.x-.47),vec3<f32>(halfW,.085,.48),9u,s,family+80u);h=rail(h,p,vec3<f32>(a.x-halfW,base,b.x-.91),vec3<f32>(a.x+halfW,base,b.x-.91),s,family+81u);}
  if(f==0u||f==3u||f==7u||f==10u){h=canopy(h,p,vec3<f32>(a.x,top-.20,b.x-.55),vec2<f32>(halfW+.1,.7),s,family+84u);}
+ h=householdFrontageExterior(h,p,s);
  // Joint-aligned water and drainage, not arbitrary noise streaks.
  h=addPipe(h,p,vec3<f32>(a.x+halfW-.15,base,b.x-.14),vec3<f32>(a.x+halfW-.15,top,b.x-.14),.047,s,family+90u);h=addPipe(h,p,vec3<f32>(a.x+halfW-.15,base+.23,b.x-.14),vec3<f32>(a.x+halfW-.15,base+.23,b.y),.025,s,family+91u);
- if(abs(p.x-inner)>1.0&&p.z>max(b.x,-1.9)&&p.z<sepZ+.2){h=roomLife(h,p,s);}h=wetService(h,p,s);
+ if(abs(p.x-inner)>1.0&&p.z>max(b.x,-1.9)&&p.z<sepZ+.2){h=roomLife(h,p,s);}h=householdFrontageLife(h,p,s);h=wetService(h,p,s);
  return h;}
 fn roof(h0:GeoHit,p:vec3<f32>,s:u32)->GeoHit{var h=h0;let a=rec(s,0u);let b=rec(s,1u);let y=a.y+a.w;let mid=(b.x+b.y)*.5;h=addBox(h,p,vec3<f32>(a.x,y,mid),vec3<f32>(a.z*.5,.10,(b.y-b.x)*.5),9u,s,900000u+s);let signX=select(-1.,1.,p.x>a.x);h=addBox(h,p,vec3<f32>(a.x+signX*(a.z*.5-.075),y+.45,mid),vec3<f32>(.075,.45,(b.y-b.x)*.5),1u,s,900010u+s);let signZ=select(b.x+.075,b.y-.075,p.z>mid);h=addBox(h,p,vec3<f32>(a.x,y+.45,signZ),vec3<f32>(a.z*.5,.45,.075),1u,s,900020u+s);
  h=canopy(h,p,vec3<f32>(a.x-.8,y+2.08,mid+.15),vec2<f32>(1.35,1.45),s,900030u+s);let q=p-vec3<f32>(a.x+2.,y+.64,b.y-1.2);h=choose(h,max(length(q.xz)-.65,abs(q.y)-.61),3u,s,900040u+s,q,normalize(vec3<f32>(q.x,.15,q.z)));h=addPipe(h,p,vec3<f32>(a.x-2.4,y,b.x+.4),vec3<f32>(a.x-2.4,y+3.4,b.x+.4),.029,s,900050u+s);h=addPipe(h,p,vec3<f32>(a.x-3.1,y+3.1,b.x+.4),vec3<f32>(a.x-1.7,y+3.1,b.x+.4),.012,s,900052u+s);return h;}
