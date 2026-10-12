@@ -1,0 +1,40 @@
+name: Train88 upright desktop entry
+on:
+  push:
+    branches: ['qa/train88-desktop-r01-20261012', 'gh-pages']
+    paths: ['kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/desktop-r01/**', '.github/workflows/train88-desktop-r01.yml']
+permissions:
+  contents: read
+jobs:
+  desktop:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Preserve old baseline and test entry scope
+        run: node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/desktop-r01/qa/source.test.mjs
+      - name: Install pinned browser test runner
+        run: |
+          npm install --prefix "$RUNNER_TEMP/desktop-qa" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/desktop-qa/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/desktop-qa/node_modules" >> "$GITHUB_ENV"
+      - name: Upright desktop keyboard mouse and resize
+        if: github.ref != 'refs/heads/gh-pages'
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/desktop-r01/qa/browser.cjs
+      - name: Verify deployed public HTTPS game
+        if: github.ref == 'refs/heads/gh-pages'
+        env:
+          PUBLIC_QA: '1'
+        run: |
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/desktop-r01/qa/browser.cjs
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: train88-desktop-${{ github.sha }}
+          path: |
+            train88-desktop-results/
+            train88-desktop-local-results/
+          retention-days: 7
