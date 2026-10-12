@@ -51,3 +51,9 @@ The restored complete construction and original bureau c38 source are now on the
 - Recovered construction now includes the original quay, finite road and pedestrian ingredients. Site layout, original-platform alignment, visual quality, interaction, native-resolution performance and final transparency ordering remain unaccepted until actual shared-game evidence.
 
 There is still no public new integrated entry or restored whole-station frame. Original public driving and R02 station entries remain the available fallback.
+
+### Group execution result and next complete-frame candidate, 13:36 UTC
+
+`566993e3`, Actions `38251687932`, established that the exact constant-lookup lowering repairs both previously invalid lettering groups. All twelve WebGL2 groups completed all three ages; their strict original-order physical merge had zero raw-candidate overflow at the probe points. The original complete single closure still lost its GL/WebGPU context. The newly introduced compute diagnostic timed out at pipeline creation for every group; no cross-backend numerical conclusion follows from that diagnostic failure.
+
+The next receiver uses those complete grouped physical queries for each original ray step, including the original alternate roof/floor union advances. Normal preparation uses the same center plus four tetrahedral samples, with a separate error field that marks invalid normals/overflow unresolved. It preserves every original source ingredient and the original material preparation/presentation. It is still an unvalidated runtime candidate, not a performance claim. A single-group fragment diagnostic will run independently; the next actual visual test is one complete station perspective frame inside the retained shared game. Bureau/return-to-driving views remain separate pending acceptance gates.

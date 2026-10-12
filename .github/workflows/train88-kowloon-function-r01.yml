@@ -1,4 +1,4 @@
-name: Train88 restored function geometry and shared game validation
+name: Train88 complete grouped function scene
 on:
   push:
     branches: ['qa/train88-kowloon-function-r01-20261012']
@@ -20,6 +20,7 @@ jobs:
         run: |
           node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/emit-shader-inputs.mjs
           node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/emit-geometry-groups.mjs
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/emit-group-runtime.mjs
           node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/bureau-train88-r01/emit-shader-inputs.mjs
           node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/bureau-train88-r01/qa/emit-probes.mjs
           node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/bureau-train88-r01/qa/*.test.mjs
@@ -42,6 +43,11 @@ jobs:
           target/release/kaopu-station-shader-bridge ../generated/matter.wgsl ../generated/matter.frag recordMatter
           for i in $(seq 0 11); do
             target/release/kaopu-station-shader-bridge "../generated/group-$i.wgsl" "../generated/group-$i.frag" geometryGroupProbe
+            target/release/kaopu-station-shader-bridge "../generated/group-runtime-$i.wgsl" "../generated/group-runtime-$i.frag" stationGroupQuery
+          done
+          for pair in 'group-init initializeGroupedRays' 'group-advance advanceGroupedRays' 'group-normal-pack packGroupedGeometry'; do
+            read -r stage entry <<< "$pair"
+            target/release/kaopu-station-shader-bridge "../generated/$stage.wgsl" "../generated/$stage.frag" "$entry"
           done
           for pair in 'step stepRays' 'glass transmitGlass' 'normal recordGeometry' 'matter recordMatter' 'geometry-probe geometryProbe' 'material-probe materialProbe'; do
             read -r stage entry <<< "$pair"
@@ -52,22 +58,22 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/station-bridge" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
-      - name: Full source partition, original host closure and shared-game validation
-        run: |
-          set +e
-          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/geometry-group-probes.cjs
-          group_status=$?
-          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/isolated-probes.cjs --host-only
-          host_status=$?
-          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/bureau-train88-r01/qa/backend-probes.cjs
-          bureau_status=$?
-          if test "$group_status" -eq 0 && test "$host_status" -eq 0 && test "$bureau_status" -eq 0; then
-            node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/shared-bus.cjs
-            scene_status=$?
-          else
-            scene_status=1
-          fi
-          test "$group_status" -eq 0 && test "$host_status" -eq 0 && test "$bureau_status" -eq 0 && test "$scene_status" -eq 0
+      - name: One-group fragment diagnostic channel check
+        id: sentinel
+        continue-on-error: true
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/geometry-group-probes.cjs --group=11 --timeout-ms=120000
+      - name: Save completed diagnostic immediately
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: station-sentinel-${{ github.sha }}
+          path: train88-kowloon-bridge-results/geometry-group-probes.json
+          retention-days: 7
+      - name: Complete station in original shared game first perspective frame
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/shared-bus.cjs --first-frame
+      - name: Keep diagnostic channel outcome explicit
+        if: always()
+        run: test '${{ steps.sentinel.outcome }}' = success
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:

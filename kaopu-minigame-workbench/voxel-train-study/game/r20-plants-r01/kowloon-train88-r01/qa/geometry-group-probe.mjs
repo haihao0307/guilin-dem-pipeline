@@ -146,18 +146,18 @@ async function webgpu(group, probe) {
   device.addEventListener('uncapturederror', event => {result.errors.push(event.error.message); fail(Error(event.error.message));});
   device.lost.then(info => {if (result.status === 'running') fail(Error(`device-lost (${info.reason}): ${info.message}`));});
   result.adapter = {vendor: adapter.info?.vendor, architecture: adapter.info?.architecture, device: adapter.info?.device, description: adapter.info?.description};
-  result.outputLayout = '64-byte HitField storage record; no color attachments';
+  result.outputLayout = 'four adjacent rgba32float pixels per complete HitField; diagnostic only';
   stage('fetch');
   const original = await source(`../generated/${group.stem}.wgsl`);
-  // Keep the exact fragment query body and sample locations, changing only its
-  // output interface to storage. Baseline WebGPU allows 32B color/sample, so
-  // four rgba32float outputs cannot portably be a single render pass.
+  // Same point/state queried independently for each output vec4. This avoids
+  // both the 32B render-attachment baseline and an unvalidated compute backend.
+  // It serializes diagnostics only; it is not a station rendering strategy.
   const code = original.replace(/@location\([0-3]\)/g, '')
-    .replace('@fragment fn geometryGroupProbe(@builtin(position)pixel:', 'fn geometryGroupProbe(pixel:') + `
-@group(1) @binding(0) var<storage,read_write> groupProbeOutput:array<GeometryGroupResult>;
-@compute @workgroup_size(1) fn computeGeometryGroupProbe(@builtin(global_invocation_id) gid:vec3<u32>){
- if(gid.x>=${width}u||gid.y>=${height}u){return;}
- groupProbeOutput[gid.y*${width}u+gid.x]=geometryGroupProbe(vec4<f32>(vec2<f32>(gid.xy)+vec2<f32>(.5),0.,1.));
+    .replace('@fragment fn geometryGroupProbe(@builtin(position)pixel:', 'fn geometryGroupRecord(pixel:') + `
+@vertex fn geometryGroupProbeVertex(@builtin(vertex_index)i:u32)->@builtin(position)vec4<f32>{let p=array<vec2<f32>,3>(vec2<f32>(-1.,-1.),vec2<f32>(3.,-1.),vec2<f32>(-1.,3.));return vec4<f32>(p[i],0.,1.);}
+@fragment fn serializedGeometryGroupProbe(@builtin(position)pixel:vec4<f32>)->@location(0)vec4<f32>{
+ let h=geometryGroupRecord(vec4<f32>(floor(pixel.x/4.)+.5,pixel.y,0.,1.));
+ switch u32(pixel.x)%4u{case 0u:{return h.a;}case 1u:{return h.b;}case 2u:{return h.c;}default:{return h.e;}}
 }
 `;
   stage('compile');
@@ -167,32 +167,31 @@ async function webgpu(group, probe) {
   if (info.messages.some(message => message.type === 'error')) throw Error(JSON.stringify(result.compilationMessages));
   // Explicit layouts allow either UBO to be optimized away without guessing the auto-layout's holes.
   const bindGroupLayout = device.createBindGroupLayout({entries: [
-    {binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: 'uniform', minBindingSize: 80}},
-    {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: 'uniform', minBindingSize: 224}},
+    {binding: 0, visibility: GPUShaderStage.FRAGMENT, buffer: {type: 'uniform', minBindingSize: 80}},
+    {binding: 1, visibility: GPUShaderStage.FRAGMENT, buffer: {type: 'uniform', minBindingSize: 224}},
   ]});
-  const outputLayout=device.createBindGroupLayout({entries:[{binding:0,visibility:GPUShaderStage.COMPUTE,buffer:{type:'storage'}}]});
   stage('pipeline');
-  const pipeline = await device.createComputePipelineAsync({layout: device.createPipelineLayout({bindGroupLayouts: [bindGroupLayout,outputLayout]}), compute: {module, entryPoint: 'computeGeometryGroupProbe'}});
+  const pipeline = await device.createRenderPipelineAsync({layout:device.createPipelineLayout({bindGroupLayouts:[bindGroupLayout]}),vertex:{module,entryPoint:'geometryGroupProbeVertex'},fragment:{module,entryPoint:'serializedGeometryGroupProbe',targets:[{format:'rgba32float'}]},primitive:{topology:'triangle-list'}});
   active(); stage('bindings');
   const uniform = device.createBuffer({size: 80, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});
   const frame = device.createBuffer({size: 224, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});
   device.queue.writeBuffer(frame, 0, frameParams(width, height));
   const bindGroup = device.createBindGroup({layout: bindGroupLayout, entries: [{binding: 0, resource: {buffer: uniform}}, {binding: 1, resource: {buffer: frame}}]});
-  const recordFloats=16, readSize=width*height*recordFloats*4;
-  const output=device.createBuffer({size:readSize,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_SRC});
-  const outputBind=device.createBindGroup({layout:outputLayout,entries:[{binding:0,resource:{buffer:output}}]});
+  const recordFloats=16,renderWidth=width*4,bytesPerRow=Math.ceil(renderWidth*16/256)*256,readSize=bytesPerRow*height;
+  const output=device.createTexture({size:[renderWidth,height],format:'rgba32float',usage:GPUTextureUsage.RENDER_ATTACHMENT|GPUTextureUsage.COPY_SRC});
   result.startupMs = performance.now() - started;
   for (const age of ages) {
     stage(`draw-${age}`); const start = performance.now();
     device.queue.writeBuffer(uniform, 0, params(age, width, height));
     const encoder = device.createCommandEncoder();
-    const pass = encoder.beginComputePass();
-    pass.setPipeline(pipeline); pass.setBindGroup(0, bindGroup);pass.setBindGroup(1,outputBind);pass.dispatchWorkgroups(width,height);pass.end();
+    const pass=encoder.beginRenderPass({colorAttachments:[{view:output.createView(),loadOp:'clear',storeOp:'store',clearValue:[0,0,0,0]}]});
+    pass.setPipeline(pipeline);pass.setBindGroup(0,bindGroup);pass.draw(3);pass.end();
     const read=device.createBuffer({size:readSize,usage:GPUBufferUsage.COPY_DST|GPUBufferUsage.MAP_READ});
-    encoder.copyBufferToBuffer(output,0,read,0,readSize);
+    encoder.copyTextureToBuffer({texture:output},{buffer:read,bytesPerRow},[renderWidth,height]);
     device.queue.submit([encoder.finish()]); stage(`readback-${age}`);
     await read.mapAsync(GPUMapMode.READ); active();
-    const packed=new Float32Array(read.getMappedRange()),attachments={};
+    const padded=new Float32Array(read.getMappedRange()),packed=new Float32Array(width*height*recordFloats),attachments={};
+    for(let row=0;row<height;row++)packed.set(padded.subarray(row*bytesPerRow/4,row*bytesPerRow/4+width*recordFloats),row*width*recordFloats);
     for(let a=0;a<attachmentNames.length;a++){
       const values=new Float32Array(width*height*4);
       for(let i=0;i<width*height;i++)values.set(packed.subarray(i*recordFloats+a*4,i*recordFloats+a*4+4),i*4);
