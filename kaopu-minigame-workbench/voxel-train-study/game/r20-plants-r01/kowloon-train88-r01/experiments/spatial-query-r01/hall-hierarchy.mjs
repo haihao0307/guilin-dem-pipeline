@@ -37,13 +37,13 @@ export function lowerHallHierarchy(source,{leafSize=4,counters=false}={}){
  };
  const initial=original.initial+`\nlet hallHierarchySafe=all(abs(p)<vec3<f32>(2048.));\n`+(counters?'stationHallBoundsVisited=0u;stationHallBlocksVisited=0u;stationHallBlocksSkipped=0u;\n':'');
  const replacement=original.head+initial+emit(tree)+original.tail+'}';
- const declarations=counters?'\nvar<private>stationHallBoundsVisited:u32;\nvar<private>stationHallBlocksVisited:u32;\nvar<private>stationHallBlocksSkipped:u32;\n':'';
+ const declarations=counters?'\nvar<private> stationHallBoundsVisited:u32;\nvar<private> stationHallBlocksVisited:u32;\nvar<private> stationHallBlocksSkipped:u32;\n':'';
  const lowered=declarations+source.slice(0,original.start)+replacement+source.slice(original.end+1);
  // Original blocks occur ONCE byte-for-byte; no original geometry/matter rewrite.
  for(const b of original.blocks)if(lowered.split(b.text).length!==2)throw Error('Original block duplicated or modified');
  return{source:lowered,original,tree,metrics:{blocks:original.blocks.length,nodes,leafSize,representedMembers:original.blocks.reduce((s,b)=>s+b.count,0),paddingM:HALL_HIERARCHY_PADDING,comparisonGuardM:HALL_HIERARCHY_GUARD,coordinateLimitM:HALL_HIERARCHY_LIMIT,counters}};
 }
-export function instrumentReferenceHall(source){const o=readHallBlocks(source);const init=o.initial+'\nstationHallBoundsVisited=0u;stationHallBlocksVisited=0u;stationHallBlocksSkipped=0u;\n';const body=o.blocks.map(b=>'stationHallBlocksVisited+=1u;\n'+b.text).join('\n');return '\nvar<private>stationHallBoundsVisited:u32;\nvar<private>stationHallBlocksVisited:u32;\nvar<private>stationHallBlocksSkipped:u32;\n'+source.slice(0,o.start)+o.head+init+body+o.tail+'}'+source.slice(o.end+1);}
+export function instrumentReferenceHall(source){const o=readHallBlocks(source);const init=o.initial+'\nstationHallBoundsVisited=0u;stationHallBlocksVisited=0u;stationHallBlocksSkipped=0u;\n';const body=o.blocks.map(b=>'stationHallBlocksVisited+=1u;\n'+b.text).join('\n');return '\nvar<private> stationHallBoundsVisited:u32;\nvar<private> stationHallBlocksVisited:u32;\nvar<private> stationHallBlocksSkipped:u32;\n'+source.slice(0,o.start)+o.head+init+body+o.tail+'}'+source.slice(o.end+1);}
 // Conservative CPU branch trace for tests only. Calling visit returns the same
 // current physical winner distance the original sequential block would return.
 export function walkOrderedHall(tree,blocks,p,visit,initial=1e5){let best=initial,visited=0,nodes=0,skipped=0;const safe=p.every(x=>Number.isFinite(x)&&Math.abs(x)<HALL_HIERARCHY_LIMIT);
