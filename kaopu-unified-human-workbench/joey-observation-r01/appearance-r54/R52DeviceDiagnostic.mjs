@@ -24,30 +24,32 @@ export function compareR52Coordinates(actual,referenceBytes){
 async function bytes(url,fetcher){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);try{const r=await fetcher(url,{signal:controller.signal,cache:'no-cache'});if(!r.ok)throw Error('HTTP '+r.status+' '+new URL(url).pathname);return await r.arrayBuffer();}finally{clearTimeout(timer);}}
 export async function diagnoseR52Device({positions,faces,state,archive,nativeArchive,fetcher=fetch,baseURL=import.meta.url,onProgress=()=>{}}){
  const snapshot=positions instanceof Float32Array?positions.slice():positions;
+ const trace=stage=>{const f=globalThis.frameElement;const rows=globalThis.r54DeviceTrace||(globalThis.r54DeviceTrace=[]);rows.push({stage,at:globalThis.performance?.now?.()||0,visibility:globalThis.document?.visibilityState||null,frameVisibility:f?getComputedStyle(f).visibility:null,frameDisplay:f?getComputedStyle(f).display:null});};trace('diagnostic:start');
+ const hash=async(label,value)=>{trace('digest:start:'+label);const result=await sha256(value);trace('digest:end:'+label);return result;};
  const report={schema:DIAGNOSTIC_VERSION,referenceSHA:R52_REFERENCE_SHA,expectedArchiveSHA:R52_ARCHIVE_SHA,expectedTopologySHA:TOPOLOGY_SHA,createdAt:new Date().toISOString(),userAgent:globalThis.navigator?.userAgent||null,geometryAccepted:false,geometryWritten:false,automaticUpload:false,checks:{},failure:null};
  try{
   if(!(snapshot instanceof Float32Array)||snapshot.length!==VERTICES*3)throw Error('实际坐标类型或长度不符');
-  report.actualSHA=await sha256(snapshot);report.actualCoordinateCount=snapshot.length;
+  report.actualSHA=await hash('actual',snapshot);report.actualCoordinateCount=snapshot.length;
   report.nonFiniteActualCoordinates=Array.from(snapshot,(x,i)=>Number.isFinite(x)?-1:i).filter(i=>i>=0);
   report.checks.stateMatches=equal(state,archive.state);if(!report.checks.stateMatches)throw Error('参数状态与已校验档案不一致');
   report.checks.archiveMetadataMatches=nativeArchive.topologySha256===archive.topologySha256&&nativeArchive.adapterFingerprint===archive.adapterFingerprint;if(!report.checks.archiveMetadataMatches)throw Error('原生拓扑/适配版本与档案不同');
   if(!(faces instanceof Uint32Array)||faces.length!==INDICES||!faces.every(i=>Number.isInteger(i)&&i>=0&&i<VERTICES))throw Error('实际三角索引类型/长度/范围不符');
   // Hash canonical little-endian uint32 indices, independent of machine byte order.
   const indexBytes=new ArrayBuffer(faces.length*4),iv=new DataView(indexBytes);faces.forEach((x,i)=>iv.setUint32(i*4,x,true));
-  report.topologySHA=await sha256(indexBytes);report.checks.topologyMatches=report.topologySHA===TOPOLOGY_SHA;if(!report.checks.topologyMatches)throw Error('三角索引内容与固定拓扑不同');
+  report.topologySHA=await hash('topology',indexBytes);report.checks.topologyMatches=report.topologySHA===TOPOLOGY_SHA;if(!report.checks.topologyMatches)throw Error('三角索引内容与固定拓扑不同');
   onProgress('3/5 校验本机诊断输入与源码');
-  const archiveBytes=await bytes(new URL('archive-r52.json',baseURL),fetcher);report.archiveSHA=await sha256(archiveBytes);report.checks.archiveBytesMatch=report.archiveSHA===R52_ARCHIVE_SHA;if(!report.checks.archiveBytesMatch)throw Error('固定参数档案字节不同');
+  const archiveBytes=await bytes(new URL('archive-r52.json',baseURL),fetcher);report.archiveSHA=await hash('archive',archiveBytes);report.checks.archiveBytesMatch=report.archiveSHA===R52_ARCHIVE_SHA;if(!report.checks.archiveBytesMatch)throw Error('固定参数档案字节不同');
   if(!equal(JSON.parse(new TextDecoder().decode(archiveBytes)).state,state))throw Error('重新读取的固定档案与故障现场参数不同');
-  const manifestBytes=await bytes(new URL('r52-diagnostic-sources.json',baseURL),fetcher);report.sourceManifestSHA=await sha256(manifestBytes);if(report.sourceManifestSHA!==SOURCE_MANIFEST_SHA)throw Error('诊断源码清单校验失败');
+  const manifestBytes=await bytes(new URL('r52-diagnostic-sources.json',baseURL),fetcher);report.sourceManifestSHA=await hash('source-manifest',manifestBytes);if(report.sourceManifestSHA!==SOURCE_MANIFEST_SHA)throw Error('诊断源码清单校验失败');
   const manifest=JSON.parse(new TextDecoder().decode(manifestBytes));report.sources=[];let cursor=0;
-  await Promise.all(Array.from({length:4},async()=>{while(cursor<manifest.files.length){const item=manifest.files[cursor++];try{const raw=await bytes(new URL(item.url,baseURL),fetcher),actual=await sha256(raw);report.sources.push({...item,actualSHA:actual,matches:actual===item.sha256});}catch(e){report.sources.push({...item,matches:false,error:e.message});}}}));
+  await Promise.all(Array.from({length:4},async()=>{while(cursor<manifest.files.length){const item=manifest.files[cursor++];try{const raw=await bytes(new URL(item.url,baseURL),fetcher),actual=await hash(item.url,raw);report.sources.push({...item,actualSHA:actual,matches:actual===item.sha256});}catch(e){report.sources.push({...item,matches:false,error:e.message});}}}));
   report.sources.sort((a,b)=>a.url.localeCompare(b.url));report.checks.sourceFilesMatch=report.sources.every(x=>x.matches);if(!report.checks.sourceFilesMatch)throw Error('诊断发现源码/元数据不同或未读取成功');
   report.sourceCheckScope='Fetched exact versioned source URLs and metadata; native loader separately verifies asset hashes. A post-load refetch does not prove a previous browser module-cache byte identity.';
   onProgress('3/5 下载固定基准并在本机逐点比较');
-  const reference=await bytes(new URL('r52-reference-positions.f32',baseURL),fetcher);onProgress('3/5 校验本机已读基准字节');report.loadedReferenceSHA=await sha256(reference);report.checks.referenceMatches=report.loadedReferenceSHA===R52_REFERENCE_SHA;if(!report.checks.referenceMatches)throw Error('原始基准字节校验失败');
-  onProgress('3/5 在本机统计全部坐标差异');report.comparison=compareR52Coordinates(snapshot,reference);report.checks.actualFinite=report.nonFiniteActualCoordinates.length===0;
- }catch(e){report.failure=e.message;}
- return report;
+  const reference=await bytes(new URL('r52-reference-positions.f32',baseURL),fetcher);onProgress('3/5 校验本机已读基准字节');report.loadedReferenceSHA=await hash('reference',reference);report.checks.referenceMatches=report.loadedReferenceSHA===R52_REFERENCE_SHA;if(!report.checks.referenceMatches)throw Error('原始基准字节校验失败');
+  onProgress('3/5 在本机统计全部坐标差异');trace('compare:start');report.comparison=compareR52Coordinates(snapshot,reference);trace('compare:end');report.checks.actualFinite=report.nonFiniteActualCoordinates.length===0;
+ }catch(e){report.failure=e.message;trace('diagnostic:catch:'+e.message);}
+ trace('diagnostic:return');return report;
 }
 export function formatR52Diagnostic(r){
  const lines=['本机诊断 '+r.schema,'实际输出 SHA256：'+(r.actualSHA||'未取得'),'固定基准 SHA256：'+r.referenceSHA,'参数档案字节：'+r.checks.archiveBytesMatch+'；参数匹配：'+r.checks.stateMatches,'拓扑匹配：'+r.checks.topologyMatches+'；源码取回匹配：'+r.checks.sourceFilesMatch,'基准文件校验：'+r.checks.referenceMatches];
