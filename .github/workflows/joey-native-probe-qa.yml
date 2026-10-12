@@ -29,11 +29,11 @@ jobs:
           df -h /dev/shm || true
           npm install --prefix "$RUNNER_TEMP/joey-native" --no-save --ignore-scripts playwright@1.57.0
           echo "NODE_PATH=$RUNNER_TEMP/joey-native/node_modules" >> "$GITHUB_ENV"
-      - name: Verify known startup and detached-snapshot diagnostic fault
+      - name: Verify deployed bytes, startup and local diagnostic fault
         env:
+          R54_PUBLIC_HASHES: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/r54-public-release-hashes.json
           R54_BROWSER: ${{ matrix.browser }}
-          R54_CANDIDATE_DIR: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54
-        run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/verify-device-diagnostic.cjs
+        run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/verify-public-device-diagnostic.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -54,11 +54,11 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/joey-native" --no-save --ignore-scripts playwright@1.57.0
           "$RUNNER_TEMP/joey-native/node_modules/.bin/playwright" install webkit
           echo "NODE_PATH=$RUNNER_TEMP/joey-native/node_modules" >> "$GITHUB_ENV"
-      - name: Verify known startup and detached-snapshot diagnostic fault
+      - name: Verify deployed bytes, startup and local diagnostic fault
         env:
+          R54_PUBLIC_HASHES: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/r54-public-release-hashes.json
           R54_BROWSER: webkit
-          R54_CANDIDATE_DIR: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54
-        run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/verify-device-diagnostic.cjs
+        run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/verify-public-device-diagnostic.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
