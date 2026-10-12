@@ -1,13 +1,16 @@
-name: Train88 Kowloon same-source function bridge
+name: Train88 shared Kowloon and bureau function game
 on:
   push:
     branches: ['qa/train88-kowloon-function-r01-20261012']
+concurrency:
+  group: train88-shared-function-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
   compiler-and-equivalence:
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -16,6 +19,9 @@ jobs:
       - name: Source locks and host binding tests
         run: |
           node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/emit-shader-inputs.mjs
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/bureau-train88-r01/emit-shader-inputs.mjs
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/bureau-train88-r01/qa/emit-probes.mjs
+          node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/bureau-train88-r01/qa/*.test.mjs
           node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r04/qa/*.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r04/qa/continuity/*.test.mjs
           node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/*.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/material-envelope-proof.mjs
       - name: Compile pinned official Naga source
@@ -33,6 +39,10 @@ jobs:
           target/release/kaopu-station-shader-bridge ../generated/step.wgsl ../generated/step.frag stepRays
           target/release/kaopu-station-shader-bridge ../generated/normal.wgsl ../generated/normal.frag recordGeometry
           target/release/kaopu-station-shader-bridge ../generated/matter.wgsl ../generated/matter.frag recordMatter
+          for pair in 'step stepRays' 'glass transmitGlass' 'normal recordGeometry' 'matter recordMatter' 'geometry-probe geometryProbe' 'material-probe materialProbe'; do
+            read -r stage entry <<< "$pair"
+            target/release/kaopu-station-shader-bridge "../../bureau-train88-r01/generated/$stage.wgsl" "../../bureau-train88-r01/generated/$stage.frag" "$entry"
+          done
       - name: Install pinned official browser QA runner
         run: |
           npm install --prefix "$RUNNER_TEMP/station-bridge" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
@@ -40,8 +50,10 @@ jobs:
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
       - name: Same-source WebGL2 and WebGPU numerical probes
         run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/isolated-probes.cjs
-      - name: Source-restored native-pixel construction ROIs
-        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/structure-roi.cjs
+      - name: Same-source bureau backend numerical probes
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/bureau-train88-r01/qa/backend-probes.cjs
+      - name: Complete shared-game perspective scenes and return to driving
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/shared-bus.cjs
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
@@ -51,6 +63,9 @@ jobs:
             train88-kowloon-host-results/
             train88-kowloon-material-roi-results/
             train88-kowloon-structure-roi-results/
+            train88-shared-bus-results/
+            train88-bureau-bridge-results/
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/bureau-train88-r01/generated/
             kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/generated/
             kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/compiler/Cargo.lock
           retention-days: 7

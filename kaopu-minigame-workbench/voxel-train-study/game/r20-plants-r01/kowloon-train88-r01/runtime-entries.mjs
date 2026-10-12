@@ -14,8 +14,9 @@ fn hostRay(pixel:vec2<f32>)->mat2x3<f32>{var ndc=pixel/frame.viewport.xy*2.-vec2
 // Shared source-derived coverage includes the 84m pier end and -3.47m piles.
 // Envelope margins exceed every proven material displacement; no ingredient is omitted.
 ${PIXEL_FOOTPRINT_WGSL}
-fn stationRayInterval(ro:vec3<f32>,rd:vec3<f32>)->vec2<f32>{
- let lo=${rayBoundVector(STATION_RAY_BOUNDS.lo)};let hi=${rayBoundVector(STATION_RAY_BOUNDS.hi)};var near=0.;var far=frame.controls.y;
+fn hostRayLength(pixel:vec2<f32>)->f32{var ndc=pixel/frame.viewport.xy*2.-vec2<f32>(1.);if(frame.viewport.z>.5){ndc.y=-ndc.y;}return length(localPoint(vec4<f32>(ndc,1.,1.))-localPoint(vec4<f32>(ndc,-1.,1.)));}
+fn stationRayInterval(ro:vec3<f32>,rd:vec3<f32>,rayMax:f32)->vec2<f32>{
+ let lo=${rayBoundVector(STATION_RAY_BOUNDS.lo)};let hi=${rayBoundVector(STATION_RAY_BOUNDS.hi)};var near=0.;var far=rayMax;
  for(var axis=0u;axis<3u;axis++){if(abs(rd[axis])<.0000001){if(ro[axis]<lo[axis]||ro[axis]>hi[axis]){return vec2<f32>(1.,-1.);}}else{let a=(lo[axis]-ro[axis])/rd[axis];let b=(hi[axis]-ro[axis])/rd[axis];near=max(near,min(a,b));far=min(far,max(a,b));}}
  return vec2<f32>(near,far);
 }
@@ -24,7 +25,7 @@ export const STEP_ENTRY=String.raw`
 @fragment fn stepRays(@builtin(position)pixel:vec4<f32>)->@location(0)vec4<f32>{
  // Terminal rays need no camera transform, box query, construction or mother work.
  if(frame.controls.x<.5){let previous=textureLoad(traceInput,vec2<i32>(pixel.xy),0);if(previous.w!=0.){return previous;}}
- let ray=hostRay(pixel.xy);let ro=ray[0];let rd=ray[1];let interval=stationRayInterval(ro,rd);if(interval.y<interval.x){return vec4<f32>(0.,0.,0.,2.);}var tr=vec4<f32>(interval.x,0.,0.,0.);
+ let ray=hostRay(pixel.xy);let ro=ray[0];let rd=ray[1];let interval=stationRayInterval(ro,rd,hostRayLength(pixel.xy));if(interval.y<interval.x){return vec4<f32>(0.,0.,0.,2.);}var tr=vec4<f32>(interval.x,0.,0.,0.);
  if(frame.controls.x<.5){tr=textureLoad(traceInput,vec2<i32>(pixel.xy),0);}
  // tr=(metric ray distance, material id, query count, status). 0=active,
  // 1=actual hit, 2=escaped/miss, 3=budget unresolved. Bounds never hit.

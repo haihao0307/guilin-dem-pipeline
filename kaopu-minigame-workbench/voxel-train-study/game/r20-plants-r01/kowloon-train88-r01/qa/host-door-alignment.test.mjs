@@ -268,7 +268,7 @@ test('CPU recipe: outer supports clear every rail vehicle envelope and deep tran
 });
 
 test('CPU recipe: retained boarding-island benches are wholly outside the swept corridor',()=>{
-  assert.deepEqual(hc.benches.retainedLocalZ,[-81.25,-88.75,-103.75,-111.25,-126.25,-133.75]);
+  assert.deepEqual(hc.benches.retainedLocalZ,[-81.25,-88.75,-96.25,-103.75,-126.25,-133.75]);
   assert.deepEqual(hc.benches.relocated.map(p=>p.from),[-13.75,-36.25,-58.75]);
   for(const z of hc.benches.retainedLocalZ){
     const maxZ=z+hc.benches.halfLengthM+hc.passengerClearance.clearanceM;

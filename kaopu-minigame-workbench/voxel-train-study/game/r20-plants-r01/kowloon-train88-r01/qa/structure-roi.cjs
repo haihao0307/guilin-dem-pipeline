@@ -9,11 +9,12 @@ const server=http.createServer((req,res)=>{const p=path.resolve('.'+decodeURICom
  browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-gpu-watchdog','--enable-unsafe-webgpu','--use-angle=swiftshader','--use-vulkan=swiftshader','--enable-features=Vulkan','--disable-vulkan-surface']});
  const page=await browser.newPage({viewport:{width:640,height:426}});page.setDefaultTimeout(900000);
  page.on('pageerror',e=>{report.errors.push(e.message);save();});page.on('console',m=>{if(m.type()==='error'){report.errors.push(m.text());save();}if(m.text().includes('KOWLOON_STAGE'))console.log(m.text());});
- const q=new URLSearchParams({bridgeQA:'1',bridgeWidth:'640',bridgeHeight:'426',bridgeView:'station',bridgeStartTicks:'240'});
+ const q=new URLSearchParams({bridgeQA:'1',bridgeWidth:'640',bridgeHeight:'426',bridgeShadowWidth:'96',bridgeShadowHeight:'64',bridgeView:'station',bridgeStartTicks:'240'});
  await page.goto('http://127.0.0.1:8784/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/index.html?'+q,{waitUntil:'domcontentloaded',timeout:900000});await page.waitForFunction(()=>window.__trainDriver?.ready);
  await page.addStyleTag({content:'#driverGame>*:not(#sceneWrap){visibility:hidden!important}#sceneWrap>*:not(canvas){visibility:hidden!important}'});
  const full=await page.evaluate(()=>window.__trainDriver.getState());report.full=full;save();
  await page.screenshot({path:out+'/complete-station-perspective-640x426.png',timeout:180000});
+ if(JSON.stringify(full.kowloonFunction.testShadowResolution)!==JSON.stringify(report.shadowDiagnostic))throw Error('Actual shadow dimensions differ from the disclosed diagnostic dimensions');
  const projection=full.kowloonFunction.shared.projection;if(projection[11]!==-1||projection[15]!==0)throw Error('Display camera is not a normal perspective projection');
  if(!full.kowloonFunction.complete||full.kowloonFunction.unresolved)throw Error('Incomplete full perspective station frame');
  const origin=await page.evaluate(()=>window.__trainDriver.getState().kowloonFunction.shared.state.origin);

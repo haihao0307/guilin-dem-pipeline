@@ -30,12 +30,12 @@ The score's hotel reservation is unbuilt and berth boats are unbuilt. Neither cr
 
 | File | SHA-256 at audit |
 |---|---|
-| `kowloon-station-r04/station-field.mjs` | `e103d9d98373cf3816c665897beb7a8997db5fa8b20a7e7a69e2a817d9abfdfa` |
+| `kowloon-station-r04/station-field.mjs` | `53aeb64f3d1eb769aab7bbdecd20c2734457f4109781ac06da7c55bfa6e20ad8` |
 | `kowloon-station-r04/station-score.mjs` | `e4ba201e06037232536dff03ab3ff46a98fe4f813713e4df05af44fb5a3ac04b` |
-| `kowloon-train88-r01/host-construction.mjs` | `2b96b1b9f014a6737c4e2ed023697b99959cae7590e7edd8c583cdff389267b1` |
+| `kowloon-train88-r01/host-construction.mjs` | `f8fc83dfd2968fdbc9c6336d7edf90f1b0487473808b1bf168468c5a4c3ccbde` |
 | `kowloon-train88-r01/runtime-entries.mjs` | `fe07176e29d7e0026d71b0fc97f2be3badc8ef08c398205210e5556584498efc` |
 
-The source reader checked every call site of `recordPart`, `recordCoated` and `recordTimber` in `stationDomain`. The table below accounts for the five guarded domains and all candidate families outside those guards. Host parameters were evaluated by the actual `createStationBinding` using `qa/host-datums.json`, not re-created from a second railway model.
+The source reader checked every call site of `recordPart`, `recordCoated` and `recordTimber` in `stationDomain`. The table below accounts for the five guarded domains and all candidate families outside those guards. Host parameters were evaluated by the actual `createStationBinding` using `qa/host-datums.json`, not re-created from a second railway model. The source snapshot was refreshed after the renderer owner shifted the six boarding-row benches to X=8.8; that change remains within the same audited shed gate and does not alter the envelope.
 
 The runtime is `stationRayInterval` in `runtime-entries.mjs:13–16`, with the proposed box declared at line14. The comments at line11 currently list nominal architectural extrema. Their numbers such as -221.13 and 26 should not be read as including material displacement: the inflated values are -221.130274 and 26.004 in this enclosure.
 
@@ -49,9 +49,9 @@ If `box(p-center,half)<2`, then each coordinate lies strictly between `center-ha
 
 | Domain / candidate coverage | X | Y | Z | Source gate |
 |---|---|---|---|---|
-| Hall: brick walls, coated piers/bands/arches, roof/pediment/oculus, hall benches and legs | [-33.5,33.5] | [-3.2,17.2] | [-12.5,12.5] | `hallBound`, field lines38–65 |
-| Tower: core/openings, frames, bands, all four clock faces/hands, belfry, dome and spire | [17.2,30.8] | [-2,48] | [-2.8,10.8] | `tb`, field lines68–87 |
-| Shed: all three barrels/trusses, all 76 posts, longitudinal beams, platforms/copings, within-shed rails/sleepers, all 24 benches/legs, signs/lamps | [-36,36] | [-3,17] | [-149.2,-5.8] | `shedBox`, field lines90–118 |
+| Hall: brick walls, coated piers/bands/arches, roof/pediment/oculus, hall benches and legs | [-33.5,33.5] | [-3.2,17.2] | [-12.5,12.5] | `hallBound`, field lines42–69 |
+| Tower: core/openings, frames, bands, all four clock faces/hands, belfry, dome and spire | [17.2,30.8] | [-2,48] | [-2.8,10.8] | `tb`, field lines71–89 |
+| Shed: all three barrels/trusses, all 76 posts, longitudinal beams, platforms/copings, within-shed rails/sleepers, all 24 benches/legs, signs/lamps | [-36,36] | [-3,17] | [-149.2,-5.8] | `shedBox`, field lines91–118 |
 | Goods shed/dock: slab, masonry piers and wall, coated lintels, roof and steel members | [32.5,50.5] | [-2.8,8.8] | [-103,-13] | `gb`, field lines123–134 |
 | Covered passenger walk: slab, columns, roof and longitudinal members | [28.5,69.5] | [-2.1,7.1] | [8.8,17.2] | `wb`, field lines139–145 |
 
@@ -63,9 +63,9 @@ Material amplitude arguments are in `material-envelope-proof.md` and its CPU ass
 
 | Candidate family | X enclosure | Y enclosure | Z enclosure | Source |
 |---|---|---|---|---|
-| Hall floor | [-31.20021,31.20021] | [-.55021,.85021] | [-8.80021,8.80021] | field35 |
-| Forecourt floor | [-31.20021,31.20021] | [-.25021,.85021] | [8.79979,14.80021] | field36 |
-| Four entrance steps | [-4.704,4.704] | [-.154,.714] | [14.676,16.324] | field37 |
+| Hall floor | [-31.20021,31.20021] | [-.55021,.85021] | [-8.80021,8.80021] | field38 |
+| Forecourt floor | [-31.20021,31.20021] | [-.25021,.85021] | [8.79979,14.80021] | field39 |
+| Four entrance steps | [-4.704,4.704] | [-.154,.714] | [14.676,16.324] | field40 |
 | Landward approach rails | [-25.78735,25.78735] | [-.0335,.0985] | [-221,-145] | field120 |
 | Landward approach sleepers | [-26.230274,26.230274] | [-.165274,-.054726] | [-221.130274,-145] | field120 |
 | Working-siding rails | [49.21265,50.78735] | [-.0335,.0985] | [-170,-12] | field136 |
@@ -96,7 +96,7 @@ Actual evaluated host parameters contain 19 boarding-row post centers plus three
 
 All six boarding-row benches remain, giving24 across four rows. Their current centers are [-81.25,-88.75,-103.75,-111.25,-126.25,-133.75]. Their half-length1.7m, iron legs and wood relief all remain in the shed's existing active domain.
 
-Separate quality diagnostic, not a bbox failure: all six boarding-row bench centers currently coincide with post centers at the same X=10m. This was reported to the renderer owner. Changing their positions requires rechecking construction collisions; the present global-box conclusion is not a collision-free furniture claim.
+The initial read found all six boarding-row benches intersecting same-Z posts at X=10m. The renderer owner has since moved the full benches to X=8.8; the updated generator consumes `HOST_BENCH_ROW_X` and keeps the posts at X=10. The nominal transverse clearance is 1.2-.4-.42=.38m. Both old and new placements lie within the same shed gate. This update does not enlarge the proposed station box, and the bbox audit is not a broader collision-free furniture certification.
 
 ### Transfer truss exceeds its nominal endpoint span slightly
 
