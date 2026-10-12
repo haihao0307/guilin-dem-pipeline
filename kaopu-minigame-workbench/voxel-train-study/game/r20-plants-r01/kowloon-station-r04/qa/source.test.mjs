@@ -7,3 +7,8 @@ test('unresolved rays remain visible failures, not silently counted as sky',()=>
 test('spatial pruning preserves conservative exterior distance instead of dropping the building',()=>{for(const x of['hallBound','tb','shedBox'])assert(WGSL.includes('else{h=join(h,'+x+',0u,p,0.);}'));});
 
 test('brick orientation and wood grain normals use explicit material axes',()=>{assert.match(WGSL,/select\(p.x,p.z,axis==12u\)/);assert.match(WGSL,/select\(n,n.zxy,h.seed==38.\)/);assert(!WGSL.includes('abs(q.x)>abs(q.z)'));});
+
+test('sea ground domains union instead of overriding station distance',()=>{assert(WGSL.includes('max(p.y+.28,p.z-27.)'));assert(WGSL.includes('max(p.y+.52,27.-p.z)'));assert(!WGSL.includes('if(p.z>27.)'));});
+test('angular features preserve their zero set with conservative frequency scaling',()=>{assert(WGSL.includes('(web-.034)/16.'));assert(WGSL.includes('(tick-.045)/6.'));});
+
+test('six track boarding geometry leaves explicit ten centimetre designed envelope gap',()=>{for(const track of STATION_SCORE.tracks.centers){const d=Math.min(...STATION_SCORE.platforms.centers.map(p=>Math.abs(track-p)));assert(Math.abs(d-STATION_SCORE.platforms.halfWidth-STATION_SCORE.tracks.assumedVehicleHalfWidth-.1)<1e-9);}assert(WGSL.includes('rep(p.x-5.,10.,-3.,2.)'));});

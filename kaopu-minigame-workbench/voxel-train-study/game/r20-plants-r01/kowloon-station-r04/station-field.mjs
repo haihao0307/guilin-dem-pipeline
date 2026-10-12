@@ -11,7 +11,8 @@ fn stateWet(p:vec3<f32>)->f32{let drain=1.-smoothstep(.12,.75,abs(rep(p.x,7.5,-4
 fn repairAt(p:vec3<f32>)->f32{return .08+.65*(1.-smoothstep(.9,1.4,abs(p.x-15.)))*(1.-smoothstep(1.1,2.2,p.y));}
 fn brickQ(p:vec3<f32>,axis:u32,d:f32)->vec3<f32>{let row=floor(p.y/.073);let shift=select(0.,.125,(i32(row)&1)==1);let face=select(p.x,p.z,axis==12u);return vec3<f32>(fract((face+shift)/.25)*.25-.125,fract(p.y/.073)*.073-.0365,.055384615+d);}
 fn stationMacro(p:vec3<f32>)->HitField{
- var h=HitField(p.y+.28,6u,p,0.);
+ var h=HitField(max(p.y+.28,p.z-27.),6u,p,0.);
+ h=join(h,max(p.y+.52,27.-p.z),10u,p,0.);
  // Promenade and hall threshold share the platform datum, with real entrance steps.
  h=join(h,box(p-vec3<f32>(0,.15,0),vec3<f32>(31.2,.7,8.8)),2u,p,1.);
  for(var i=0;i<4;i++){let z=8.9+f32(i)*.4;h=join(h,box(p-vec3<f32>(0,.55-f32(i)*.18,z),vec3<f32>(4.7,.16,.22)),2u,p,1.);}
@@ -52,7 +53,7 @@ fn stationMacro(p:vec3<f32>)->HitField{
   let front=abs(tq.z)>abs(tq.x);let fq=select(vec3<f32>(tq.z,tq.y,abs(tq.x)),vec3<f32>(tq.x,tq.y,abs(tq.z)),front);
   let dial=vec3<f32>(fq.x,fq.y-27.,fq.z-3.76);h=join(h,max(length(dial.xy)-1.46,abs(dial.z)-.07),7u,dial,0.);
   h=join(h,max(abs(length(dial.xy)-1.47)-.085,abs(dial.z-.07)-.045),2u,dial,0.);
-  let angle=atan2(dial.y,dial.x);let tick=abs(sin(angle*6.))*length(dial.xy);let ticks=max(max(tick-.045,1.12-length(dial.xy)),length(dial.xy)-1.34);h=join(h,max(ticks,abs(dial.z-.1)-.026),8u,dial,0.);
+  let angle=atan2(dial.y,dial.x);let tick=abs(sin(angle*6.))*length(dial.xy);let ticks=max(max((tick-.045)/6.,1.12-length(dial.xy)),length(dial.xy)-1.34);h=join(h,max(ticks,abs(dial.z-.1)-.026),8u,dial,0.);
   h=join(h,segment(dial,vec3<f32>(0.,0.,.13),vec3<f32>(.72,.45,.13),.055),8u,dial,0.);h=join(h,segment(dial,vec3<f32>(0.,0.,.15),vec3<f32>(-.35,1.03,.15),.035),8u,dial,0.);
   // Open belfry, four pairs of vertical piers. No solid upper box.
   let bq=tq-vec3<f32>(0,36.7,0);h=join(h,box(vec3<f32>(abs(bq.x)-2.45,bq.y,abs(bq.z)-2.45),vec3<f32>(.38,3.1,.38)),2u,bq,5.);
@@ -62,20 +63,20 @@ fn stationMacro(p:vec3<f32>)->HitField{
  }
  else{h=join(h,tb,0u,p,0.);}
  // Three continuous barrel canopies with actual daylight slots and open trusses.
- let shedBox=box(p-vec3<f32>(0,7,-55),vec3<f32>(32,8,46));
+ let shedBox=box(p-vec3<f32>(0,7,-55),vec3<f32>(34,8,46.4));
  if(shedBox<2.){
   let xi=clamp(round(p.x/20.),-1.,1.);let x=p.x-xi*20.;let z=rep(p.z+10.,7.5,-12.,0.);let radial=length(vec2<f32>(x,p.y-1.2));let bounded=max(max(abs(x)-10.,abs(p.z+55.)-45.),9.-p.y);
   var panel=max(abs(radial-12.8)-.055,bounded);panel=max(panel,.55-abs(x));h=join(h,panel,3u,vec3<f32>(x,p.y,p.z),55.+xi);
   for(var j=0;j<2;j++){let r=12.8-f32(j)*.5;h=join(h,max(max(abs(radial-r)-.08,bounded),abs(z)-.11),3u,p,52.);}
-  let a=atan2(x,p.y-1.2);let web=abs(sin(a*16.))*radial;h=join(h,max(max(max(web-.034,abs(radial-12.55)-.24),abs(z)-.055),bounded),3u,p,52.);
+  let a=atan2(x,p.y-1.2);let web=abs(sin(a*16.))*radial;h=join(h,max(max(max((web-.034)/16.,abs(radial-12.55)-.24),abs(z)-.055),bounded),3u,p,52.);
   let support=rep(p.x-10.,20.,-2.,1.);let cq=vec3<f32>(support,p.y-5.,z);h=join(h,cyl(cq,.20-.009*cos(atan2(cq.z,cq.x)*12.),4.15),3u,cq,56.);
   h=join(h,box(vec3<f32>(support,p.y-1.05,z),vec3<f32>(.42,.2,.42)),3u,cq,56.);h=join(h,cyl(vec3<f32>(support,p.y-8.93,z),.43,.2),3u,cq,56.);
   h=join(h,box(vec3<f32>(support,p.y-9.25,p.z+55.),vec3<f32>(.13,.17,45.)),3u,p,56.);
   // Four islands, mineral copings, with twin steel rails and actual sleeper gaps.
-  let pq=vec3<f32>(support,p.y-.35,p.z+55.);h=join(h,box(pq,vec3<f32>(2.,.5,46.)),2u,pq,77.);
-  let coping=vec3<f32>(abs(support)-1.83,p.y-.84,rep(p.z,1.2,-84.,-7.));h=join(h,box(coping,vec3<f32>(.18,.07,.595)),2u,coping,79.);
-  let rail=vec3<f32>(abs(x)-.7175,p.y-.02,p.z+62.);h=join(h,box(rail,vec3<f32>(.034,.066,54.)),3u,rail,55.);
-  h=join(h,box(vec3<f32>(x,p.y+.11,rep(p.z,.65,-175.,-13.)),vec3<f32>(1.23,.055,.13)),4u,vec3<f32>(x,0.,p.z),30.);
+  let pq=vec3<f32>(support,p.y-.35,p.z+55.);h=join(h,box(pq,vec3<f32>(3.4,.5,46.3)),2u,pq,77.);
+  let coping=vec3<f32>(abs(support)-3.23,p.y-.84,rep(p.z,1.2,-84.,-7.));h=join(h,box(coping,vec3<f32>(.18,.07,.595)),2u,coping,79.);
+  let railX=rep(p.x-5.,10.,-3.,2.);let rail=vec3<f32>(abs(railX)-.7175,p.y-.02,p.z+62.);h=join(h,box(rail,vec3<f32>(.034,.066,54.)),3u,rail,55.);
+  h=join(h,box(vec3<f32>(railX,p.y+.11,rep(p.z,.65,-175.,-13.)),vec3<f32>(1.23,.055,.13)),4u,vec3<f32>(x,0.,p.z),30.);
   let bz=rep(p.z+17.5,22.5,-3.,0.);let bq=vec3<f32>(support,p.y-1.35,bz);h=join(h,box(vec3<f32>(rep(bq.x,.13,-2.,2.),bq.y,bq.z),vec3<f32>(.05,.04,1.7)),4u,bq.zxy,38.);
   h=join(h,box(vec3<f32>(bq.x+.32,rep(bq.y-.5,.13,-2.,2.),bq.z),vec3<f32>(.04,.048,1.7)),4u,bq.zxy,38.);
   h=join(h,box(vec3<f32>(bq.x,p.y-1.08,abs(bq.z)-1.15),vec3<f32>(.3,.28,.045)),3u,bq,38.);
@@ -85,10 +86,10 @@ fn stationMacro(p:vec3<f32>)->HitField{
  }
  else{h=join(h,shedBox,0u,p,0.);}
  // Landward running tracks continue outside the train shed.
- if(p.z< -100.){let x=rep(p.x,20.,-1.,1.);h=join(h,box(vec3<f32>(abs(x)-.7175,p.y-.02,p.z+146.),vec3<f32>(.034,.066,46.)),3u,p,55.);h=join(h,box(vec3<f32>(x,p.y+.11,rep(p.z,.65,-295.,-153.)),vec3<f32>(1.23,.055,.13)),4u,vec3<f32>(x,0.,p.z),30.);}
+ if(p.z< -100.){let x=rep(p.x-5.,10.,-3.,2.);h=join(h,box(vec3<f32>(abs(x)-.7175,p.y-.02,p.z+146.),vec3<f32>(.034,.066,46.)),3u,p,55.);h=join(h,box(vec3<f32>(x,p.y+.11,rep(p.z,.65,-295.,-153.)),vec3<f32>(1.23,.055,.13)),4u,vec3<f32>(x,0.,p.z),30.);}
  // Stone quay and sea occupy distinct domains; no cropped station island.
  h=join(h,box(p-vec3<f32>(0,-.65,26.),vec3<f32>(150.,.43,1.2)),2u,p,82.);
- if(p.z>27.){h=HitField(p.y+.52,10u,p,0.);}
+
  return h;
 }
 fn stationField(p:vec3<f32>)->HitField{
