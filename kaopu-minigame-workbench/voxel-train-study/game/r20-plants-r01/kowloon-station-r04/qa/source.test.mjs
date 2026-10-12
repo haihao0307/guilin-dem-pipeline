@@ -24,3 +24,5 @@ test('coated solids supply real local source frames and extents',()=>{assert(WGS
 test('roof acceleration bounds every barrel and refuses nearly axial rays',()=>{assert(WGSL.includes('for(var barrel= -1;barrel<=1;barrel++)'));assert(WGSL.includes('if(A<=.0000001){return 0.;}'));assert(WGSL.includes('if(length(q)<=r){return 0.;}'));});
 
 test('procedural candidate capacity covers every recipe even without spatial pruning',()=>{const capacity=80,maxUnpruned=5+18+23+18+2+1;assert.equal(maxUnpruned,67);assert(maxUnpruned<capacity);assert(WGSL.includes('items:array<HitField,80>'));});
+
+test('staged GPU keeps the complete shared field and only caches current ray intersections',()=>{assert(WGSL.includes('fn primaryRays('));assert(WGSL.includes('rayHits:array<Trace>'));assert(WGSL.includes('let tr=march(u.eye,rd,420.)'));assert(WGSL.includes('color=shade(tr,u.eye,rd)'));});
