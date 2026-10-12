@@ -21,7 +21,7 @@ with sync_playwright() as p:
   assert before['mapAssembled'] is False
   cfg=before['configuration']['ocean'];weather=before['configuration']['weather']
   for k,v in {'swell':.3,'period':8.8,'chop':.4,'rough':.18,'foam':.04,'tint':.45,'seaSpeed':1}.items():assert abs(cfg[k]-v)<1e-6,(k,cfg[k])
-  assert weather['wind']==4
+  assert weather['wind']==4 and weather['kind']=='Ci' and weather['density']==.30 and weather['count']==2 and weather['fog']==.02
   renderer=page.evaluate('''()=>{const g=document.querySelector('canvas').getContext('webgl2'),e=g.getExtension('WEBGL_debug_renderer_info');return{renderer:e?g.getParameter(e.UNMASKED_RENDERER_WEBGL):g.getParameter(g.RENDERER),vendor:e?g.getParameter(e.UNMASKED_VENDOR_WEBGL):g.getParameter(g.VENDOR),version:g.getParameter(g.VERSION),depthBits:g.getParameter(g.DEPTH_BITS)};}''')
   page.evaluate('HKBackgroundSea.pause()');page.wait_for_timeout(900)
   t1=page.evaluate('OceanMother.qa.waveTime');page.wait_for_timeout(600);t2=page.evaluate('OceanMother.qa.waveTime');assert t1==t2

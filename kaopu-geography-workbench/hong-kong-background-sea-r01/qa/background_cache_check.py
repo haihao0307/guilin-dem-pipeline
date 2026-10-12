@@ -2,7 +2,7 @@ from playwright.sync_api import sync_playwright
 from pathlib import Path
 import time,json,hashlib,sys
 R=Path(__file__).resolve().parents[1];url=sys.argv[1] if len(sys.argv)>1 else (R/'index.html').as_uri()
-results={'build':'HK-BACKGROUND-SEA-R01B-20261012','candidateSha256':hashlib.sha256((R/'index.html').read_bytes()).hexdigest(),'backend':'Chromium ANGLE SwiftShader software renderer','physicalGpuVerified':False,'physicalPhoneVerified':False,'cases':[],'checks':{},'visualAcceptance':False,'productionReady':False}
+results={'build':'HK-BACKGROUND-SEA-R01C-20261012','candidateSha256':hashlib.sha256((R/'index.html').read_bytes()).hexdigest(),'backend':'Chromium ANGLE SwiftShader software renderer','physicalGpuVerified':False,'physicalPhoneVerified':False,'cases':[],'checks':{},'visualAcceptance':False,'productionReady':False}
 with sync_playwright() as p:
  b=p.chromium.launch(headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
  for live in [True,False]:
@@ -25,6 +25,10 @@ with sync_playwright() as p:
     n=page.evaluate('OceanMother.qa.cloudAtlasFrames');page.evaluate('([k,v])=>HKBackgroundSea.setConfig({[k]:v})',[k,v]);page.wait_for_function('(n)=>OceanMother.qa.cloudAtlasFrames>n&&!OceanMother.getReadiness().baking',arg=n,timeout=120000)
     if k=='hour':assert abs(page.evaluate('OceanMother.qa.atlasHour')-v)<1e-6
     results['checks'][k+'InvalidatesAtlas']=True
+   for name,action in [('setView',lambda:page.evaluate('HKBackgroundSea.setView(-.48,-.055,18)')),('wheel',lambda:page.mouse.wheel(0,120)),('cameraReset',lambda:page.click('#reset'))]:
+    page.mouse.move(400,300);n=page.evaluate('OceanMother.qa.cloudAtlasFrames');action();expected=page.evaluate('OceanMother.getConfiguration().ocean.height')
+    page.wait_for_function('([n,h])=>OceanMother.qa.cloudAtlasFrames>n && Math.abs(OceanMother.qa.atlasEyeHeight-h)<1e-6',arg=[n,expected],timeout=120000)
+    results['checks'][name+'HeightInvalidatesAtlas']=True
    page.click('#togglePanel')
    for control,value in [('weather','coast'),('kind','Cu')]:
     n=page.evaluate('OceanMother.qa.cloudAtlasFrames');page.locator('#'+control).select_option(value)
@@ -32,7 +36,7 @@ with sync_playwright() as p:
     results['checks'][control+'WorkerRevisionAndAtlas']=True
    n=page.evaluate('OceanMother.qa.cloudAtlasFrames');page.click('#cloudSeed');page.wait_for_function('(n)=>OceanMother.qa.cloudAtlasFrames>n&&!HKBackgroundSea.getState().readiness.weatherWorkerBusy&&OceanMother.qa.atlasWeatherRevision===OceanMother.qa.weatherAppliedRevision',arg=n,timeout=120000);results['checks']['cloudSeedWorkerRevisionAndAtlas']=True
    page.locator('#togglePanel').click();page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(1000)
-   assert page.evaluate('document.querySelector("canvas").width')>0
+   assert page.evaluate('[document.querySelector("canvas").width,document.querySelector("canvas").height]')==[390,844]
    results['checks']['resize']=True
    page.set_viewport_size({'width':960,'height':600});page.wait_for_timeout(500)
    with page.expect_download() as dl:
