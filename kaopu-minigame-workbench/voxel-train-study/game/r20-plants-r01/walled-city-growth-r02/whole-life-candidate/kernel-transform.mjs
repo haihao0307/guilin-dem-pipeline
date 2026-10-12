@@ -16,5 +16,10 @@ export function wholeLifeScalarSource(source){let s=source;
  s=once(s,"else if(kind==4){h=geo_cube", "else if(kind==7){var object=100000u+u32(rule.x)*32u+u32(localIndex)*4u+u32(k);h=life_water(h,u-x,y-base,v-z,bid,4000000u+(object-100000u)*32u,sid);}\n  else if(kind==4){h=geo_cube");
  s=once(s,'var nr=i32(ceil(fh/0.18));var na=i32(ceil(f32(nr)*0.5));','var stairCounts=geo_get(i32(head.y)+fi*2+1);var nr=i32(stairCounts.z);var na=i32(stairCounts.w);');
  s=once(s,'var nr=i32(ceil(fh/0.18));var na=i32(floor(f32(nr+1)*0.5));','var stairCounts=geo_get(i32(head.y)+fi*2+1);var nr=i32(stairCounts.z);var na=i32(stairCounts.w);');
+ // Walls stop at the underside of the next slab. Their former coincident top
+ // surface could win the material query over the actual load-bearing floor.
+ if(s.split('by,fh,').length!==12)throw Error('Expected eleven wall-panel clear-height sites');
+ s=s.replaceAll('by,fh,','by,fh-slab,');
+ s=s.replaceAll('y-by-fh*0.5,v-1.68','y-by-(fh-slab)*0.5,v-1.68').replaceAll('fh*0.5,1.68,1u','(fh-slab)*0.5,1.68,1u');
  return s;
 }

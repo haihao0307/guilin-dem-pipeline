@@ -22,7 +22,7 @@ async function readVisibilityTile(x,y,w,h){
 }
 
 async function readTraceTile(x,y,w,h){
- const rb=device.createBuffer({size:24576,usage:GPUBufferUsage.COPY_DST|GPUBufferUsage.MAP_READ}),e=device.createCommandEncoder();e.copyBufferToBuffer(hitBuffer,0,rb,0,24576);device.queue.submit([e.finish()]);await rb.mapAsync(GPUMapMode.READ);const f=new Float32Array(rb.getMappedRange()),u=new Uint32Array(rb.getMappedRange()),out=[];
+ const rb=device.createBuffer({size:24576,usage:GPUBufferUsage.COPY_DST|GPUBufferUsage.MAP_READ}),e=device.createCommandEncoder();e.copyBufferToBuffer(hitBuffer,0,rb,0,24576);device.queue.submit([e.finish()]);await rb.mapAsync(GPUMapMode.READ);const mapped=rb.getMappedRange(),f=new Float32Array(mapped),u=new Uint32Array(mapped),out=[];
  for(let j=0;j<h;j++)for(let i=0;i<w;i++){const k=(j*16+i)*24;if(f[k+3]===2)out.push({pixel:[x+i,y+j],ray:Array.from(f.slice(k,k+4)),local:Array.from(f.slice(k+4,k+8)),ids:Array.from(u.slice(k+8,k+12)),normal:Array.from(f.slice(k+12,k+16)),glass:Array.from(f.slice(k+16,k+20)),through:Array.from(f.slice(k+20,k+24))});}rb.unmap();rb.destroy();return out;
 }
 

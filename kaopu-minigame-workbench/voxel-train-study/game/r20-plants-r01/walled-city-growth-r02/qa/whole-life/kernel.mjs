@@ -141,14 +141,14 @@ fn('geo_observed','hh:GeoHit,x:f32,y:f32,z:f32,bi:i32,skipBelow:i32,stoneUpperM:
   for(var panelIndex=0;panelIndex<5;panelIndex=panelIndex+1){
    var panelAxis=1;var panelPlane=0.0;var panelSpan=W;
    if(panelIndex==1){panelPlane=D;}if(panelIndex==2){panelAxis=0;panelSpan=D;}if(panelIndex==3){panelAxis=0;panelPlane=W;panelSpan=D;}if(panelIndex==4){panelPlane=3.43;}
-   h=obs_panel(h,u,y,v,panelAxis,panelPlane,panelSpan*0.5,panelSpan,by,fh,wt,i32(tab.z),i32(map.z),i32(map.w),bid,cid+2u+u32(panelIndex),sid);
+   h=obs_panel(h,u,y,v,panelAxis,panelPlane,panelSpan*0.5,panelSpan,by,fh-slab,wt,i32(tab.z),i32(map.z),i32(map.w),bid,cid+2u+u32(panelIndex),sid);
   }
   for(var j=0;j<i32(map.y);j=j+1){var rr=geo_get(i32(tab.x)+(i32(map.x)+j)*3);var rule=geo_get(i32(tab.x)+(i32(map.x)+j)*3+1);
-   if(j>0&&!(f==0&&j==1)){var plane=rr.x-wt*0.5;h=geo_cube(h,u-plane,y-by-fh*0.5,v-1.68,wt*0.5,fh*0.5,1.68,1u,bid,cid+10u+u32(j),sid);}
+   if(j>0&&!(f==0&&j==1)){var plane=rr.x-wt*0.5;h=geo_cube(h,u-plane,y-by-(fh-slab)*0.5,v-1.68,wt*0.5,(fh-slab)*0.5,1.68,1u,bid,cid+10u+u32(j),sid);}
    h=obs_objects(h,u,y,v,rr,rule,j,by,bid,cid,sid);
   }
-  var life=geo_get(sg+5);if(f==i32(life.x)&&life.y>0.0){h=geo_cube(h,u-life.y,y-by-fh*0.5,v-1.68,life.z*0.5,fh*0.5,1.68,1u,bid,cid+19u,sid);}
-  if(f==0){h=geo_cube(h,u-ent.x+wt*0.5,y-by-fh*0.5,v-1.68,wt*0.5,fh*0.5,1.68,1u,bid,cid+17u,sid);h=geo_cube(h,u-ent.x-ent.y-wt*0.5,y-by-fh*0.5,v-1.68,wt*0.5,fh*0.5,1.68,1u,bid,cid+18u,sid);}
+  var life=geo_get(sg+5);if(f==i32(life.x)&&life.y>0.0){h=geo_cube(h,u-life.y,y-by-(fh-slab)*0.5,v-1.68,life.z*0.5,(fh-slab)*0.5,1.68,1u,bid,cid+19u,sid);}
+  if(f==0){h=geo_cube(h,u-ent.x+wt*0.5,y-by-(fh-slab)*0.5,v-1.68,wt*0.5,(fh-slab)*0.5,1.68,1u,bid,cid+17u,sid);h=geo_cube(h,u-ent.x-ent.y-wt*0.5,y-by-(fh-slab)*0.5,v-1.68,wt*0.5,(fh-slab)*0.5,1.68,1u,bid,cid+18u,sid);}
   for(var k=i32(map.z);k<i32(map.z+map.w);k=k+1){var aa=geo_get(i32(tab.z)+k*3);var pp=geo_get(i32(tab.z)+k*3+1);var ids=geo_get(i32(tab.z)+k*3+2);if(pp.z<2.0){h=geo_port(h,u,y,v,i32(aa.x),aa.y,aa.z,by,pp.x,pp.y,aa.w,i32(pp.z),pp.w,bid,cid+u32(ids.y),sid);}}
   var stairCounts=geo_get(i32(head.y)+fi*2+1);var nr=i32(stairCounts.z);var na=i32(stairCounts.w);var nb=nr-na;var rise=fh/f32(nr);var run=L-2.0*land;var actualTread=run/f32(na);var returnTread=run/f32(nb);var mid=by+f32(na)*rise;
   // Rotated 90 degrees: the existing scalar flight receives z as lateral axis and x as travel.
@@ -177,17 +177,17 @@ fn('geo_building','hh:GeoHit,x:f32,y:f32,z:f32,bi:i32,skipBelow:i32,stoneUpperM:
   h=geo_take(h,slabD,select(1u,6u,y>=by-slab*0.5),bid,cid+1u,sid,vec3f(u-W*0.5,y-by+slab*0.5,v-D*0.5),slabN);
   }
   var frontO=vec4f(roomMid,0.85,1.45,1.15);var frontO2=empty;if(f==0){frontO2=vec4f(1.52,0.0,1.12,2.2);}if(hasBorrow&&i32(port.z)==2){frontO=vec4f(port.w,0.0,1.12,2.2);}
-  h=geo_panel(h,u,y,v,1,wt*0.5,W*0.5,W,by,fh,wt,frontO,frontO2,bid,cid+2u,sid);
+  h=geo_panel(h,u,y,v,1,wt*0.5,W*0.5,W,by,fh-slab,wt,frontO,frontO2,bid,cid+2u,sid);
   h=geo_port(h,u,y,v,1,wt*0.5,frontO.x,by,frontO.z,frontO.w,frontO.y,select(0,1,hasBorrow&&i32(port.z)==2),doors.x,bid,cid+40u,sid);
   if(f==0){h=geo_port(h,u,y,v,1,wt*0.5,1.52,by,1.12,2.2,0.0,1,doors.x,bid,cid+42u,sid);}
-  var backO=vec4f(roomMid,0.9,1.35,1.10);h=geo_panel(h,u,y,v,1,D-wt*0.5,W*0.5,W,by,fh,wt,backO,empty,bid,cid+3u,sid);h=geo_port(h,u,y,v,1,D-wt*0.5,roomMid,by,1.35,1.10,0.9,0,0.0,bid,cid+44u,sid);
+  var backO=vec4f(roomMid,0.9,1.35,1.10);h=geo_panel(h,u,y,v,1,D-wt*0.5,W*0.5,W,by,fh-slab,wt,backO,empty,bid,cid+3u,sid);h=geo_port(h,u,y,v,1,D-wt*0.5,roomMid,by,1.35,1.10,0.9,0,0.0,bid,cid+44u,sid);
   for(var side=0;side<2;side=side+1){var plane=select(wt*0.5,W-wt*0.5,side==1);var oo=empty;var wo=empty;if(side==1){wo=vec4f(D*0.6,0.9,1.25,1.10);}if(hasBorrow&&i32(port.z)==side){oo=vec4f(port.w,0.0,1.12,2.2);}
-   h=geo_panel(h,u,y,v,0,plane,D*0.5,D,by,fh,wt,oo,wo,bid,cid+4u+u32(side),sid);
+   h=geo_panel(h,u,y,v,0,plane,D*0.5,D,by,fh-slab,wt,oo,wo,bid,cid+4u+u32(side),sid);
    if(wo.z>0.0){h=geo_port(h,u,y,v,0,plane,wo.x,by,wo.z,wo.w,wo.y,0,0.0,bid,cid+46u,sid);}if(oo.z>0.0){h=geo_port(h,u,y,v,0,plane,oo.x,by,oo.z,oo.w,oo.y,1,doors.x,bid,cid+48u,sid);}
   }
-  var door=vec4f(0.72,0.0,1.02,2.15);h=geo_panel(h,u,y,v,0,cw,D*0.5,D-2.0*wt,by,fh,0.12,door,empty,bid,cid+6u,sid);h=geo_port(h,u,y,v,0,cw,0.72,by,1.02,2.15,0.0,1,doors.y,bid,cid+50u,sid);
-  if(publicFront&&hasBorrow){var pu=vec4f(roomMid,0.0,1.02,2.1);h=geo_panel(h,u,y,v,1,1.44,(cw+W-wt)*0.5,W-wt-cw,by,fh,0.18,pu,empty,bid,cid+12u,sid);h=geo_port(h,u,y,v,1,1.44,roomMid,by,1.02,2.1,0.0,1,doors.z,bid,cid+58u,sid);}
-  for(var j=1;j<zones;j=j+1){var vz=wt+f32(j)*(D-2.0*wt)/f32(zones);var pp=vec4f(roomMid,0.0,1.02,2.10);h=geo_panel(h,u,y,v,1,vz,(cw+W-wt)*0.5,W-wt-cw,by,fh,0.10,pp,empty,bid,cid+6u+u32(j),sid);h=geo_port(h,u,y,v,1,vz,roomMid,by,1.02,2.10,0.0,1,select(doors.z,doors.w,j==2),bid,cid+52u+u32(j)*2u,sid);}
+  var door=vec4f(0.72,0.0,1.02,2.15);h=geo_panel(h,u,y,v,0,cw,D*0.5,D-2.0*wt,by,fh-slab,0.12,door,empty,bid,cid+6u,sid);h=geo_port(h,u,y,v,0,cw,0.72,by,1.02,2.15,0.0,1,doors.y,bid,cid+50u,sid);
+  if(publicFront&&hasBorrow){var pu=vec4f(roomMid,0.0,1.02,2.1);h=geo_panel(h,u,y,v,1,1.44,(cw+W-wt)*0.5,W-wt-cw,by,fh-slab,0.18,pu,empty,bid,cid+12u,sid);h=geo_port(h,u,y,v,1,1.44,roomMid,by,1.02,2.1,0.0,1,doors.z,bid,cid+58u,sid);}
+  for(var j=1;j<zones;j=j+1){var vz=wt+f32(j)*(D-2.0*wt)/f32(zones);var pp=vec4f(roomMid,0.0,1.02,2.10);h=geo_panel(h,u,y,v,1,vz,(cw+W-wt)*0.5,W-wt-cw,by,fh-slab,0.10,pp,empty,bid,cid+6u+u32(j),sid);h=geo_port(h,u,y,v,1,vz,roomMid,by,1.02,2.10,0.0,1,select(doors.z,doors.w,j==2),bid,cid+52u+u32(j)*2u,sid);}
   var stairCounts=geo_get(i32(head.y)+fi*2+1);var nr=i32(stairCounts.z);var na=i32(stairCounts.w);var nb=nr-na;var riser=fh/f32(nr);var xa=wt+fw*0.5;var xb=cw-wt-fw*0.5;var run=f32(max(na,nb))*tread;var midY=by+f32(na)*riser;
   h=geo_flight(h,u,y,v,xa,by,land,fw,tread,riser,na,0,bid,cid+16u,sid);h=geo_flight(h,u,y,v,xb,midY,land+run-f32(nb)*tread,fw,tread,riser,nb,1,bid,cid+17u,sid);
   h=geo_cube(h,u-cw*0.5,y-midY+slab*0.5,v-land-run-far*0.5,(cw-2.0*wt)*0.5,slab*0.5,far*0.5,6u,bid,cid+18u,sid);
