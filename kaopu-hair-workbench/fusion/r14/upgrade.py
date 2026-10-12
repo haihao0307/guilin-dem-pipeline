@@ -1,8 +1,8 @@
-"""Build R14 from the user's frozen R13C runtime, without modifying old paths.
-The readable generated sources are committed along with this reproducible patch.
+"""Build R14 from frozen R13C without modifying old paths.
+Readable generated sources are committed alongside this reproducible patch.
 """
 from pathlib import Path
-import shutil, json, re, hashlib
+import shutil, json
 p=Path(__file__).resolve().parent
 old=p.parent/'r13c'
 for name in ['src','vendor','data','native-head','licenses','tests']:
@@ -10,18 +10,18 @@ for name in ['src','vendor','data','native-head','licenses','tests']:
 for name in ['index.html','workbench.css','bundle.mjs','package.py','NATIVE_HEAD_LOCK.json']:
     shutil.copy2(old/name,p/name)
 
-def edit(file, a, b, count=1):
+def edit(file,a,b,count=1):
     f=p/file;s=f.read_text();assert s.count(a)==count,(file,a,s.count(a));f.write_text(s.replace(a,b))
 
 def instrumentation(folder):
     f=folder/'src/FiberMaterial.js';s=f.read_text()
     s=s.replace('uniform float guideMode;','uniform float guideMode;\nuniform float coverageAudit;')
-    s=s.replace('guideMode: {value: guides ? 1 : 0}', 'coverageAudit:{value:0}, guideMode: {value: guides ? 1 : 0}')
+    s=s.replace('guideMode: {value: guides ? 1 : 0}','coverageAudit:{value:0}, guideMode: {value: guides ? 1 : 0}')
     s=s.replace('gl_FragColor = vec4(max(color, vec3(0.0)), alpha);','if(coverageAudit>.5)color=vec3(0.0);\n  gl_FragColor = vec4(max(color, vec3(0.0)), alpha);')
     f.write_text(s)
     f=folder/'src/app.js';f.write_text(f.read_text()+'\n'+(p/'patches/audit-hook.js').read_text())
 
-# A private CI-only reference changes diagnostic hooks, NOT old geometry/appearance.
+# CI-only reference: additional measuring hooks; old geometry and beauty unchanged.
 reference=Path('/tmp/hair-r14-reference')
 if reference.exists():shutil.rmtree(reference)
 for name in ['src','vendor','data','native-head','licenses']:
@@ -29,12 +29,11 @@ for name in ['src','vendor','data','native-head','licenses']:
 for name in ['index.html','workbench.css','bundle.mjs','package.py']:
     shutil.copy2(old/name,reference/name)
 instrumentation(reference)
-
 shutil.copy2(p/'patches/RootProfile.js',p/'src/RootProfile.js')
-edit('src/LengthKernel.js',"import {HeadSegmentGuard}","import {rootGap,rootEnvelopeDerivative,rootDetailGain,rootClumpGain} from './RootProfile.js';\nimport {HeadSegmentGuard}")
+edit('src/LengthKernel.js','import {HeadSegmentGuard}',"import {rootGap,rootEnvelopeDerivative,rootDetailGain,rootClumpGain} from './RootProfile.js';\nimport {HeadSegmentGuard}")
 edit('src/LengthKernel.js','export const RANGES={','export const RANGES={rootBlendMM:[2,16],crownCover:[0,100],')
 edit('src/LengthKernel.js','density:100,width:100,roughness:48','rootBlendMM:8,crownCover:86,density:100,width:100,roughness:48')
-edit('src/LengthKernel.js','project(p,gap=.0007){', '''projectEmergence(p,distance){
+edit('src/LengthKernel.js','project(p,gap=.0007){','''projectEmergence(p,distance){
   const gap=rootGap(distance);if(distance>=.008)return this.project(p,gap);
   let result=p;
   for(let i=0;i<2;i++){const h=this.bvh.nearest(result),signed=dot(sub(result,h.p),h.n);if(signed>=gap)break;result=add(result,mul(h.n,gap-signed));}
@@ -46,15 +45,14 @@ edit('src/LengthKernel.js','d.volumeMM*(1-.78*crownWeight(root))*.001/Math.max(.
 edit('src/LengthKernel.js','p=skin.project(p,.00075);','p=skin.projectEmergence(p,length*s);')
 edit('src/LengthKernel.js','d.clump*.01*Math.sin(Math.PI*s*.85)*.55','d.clump*.01*Math.sin(Math.PI*s*.85)*.55*rootClumpGain(requested,d,requested*s)*(1-.45*crownWeight(root)*d.crownCover*.01)')
 edit('src/LengthKernel.js','skin.project(point,.0008)','skin.projectEmergence(point,requested*s)')
-edit('src/LengthKernel.js','if(j&&s>0){','if(j&&s>0&&rootDetailGain(requested,d,requested*s)>0){')
-edit('src/LengthKernel.js','d.waveMM*.001*smooth(0,.25,s)*(.65+.35*seed)','d.waveMM*.001*rootDetailGain(requested,d,requested*s)*(.65+.35*seed)')
+edit('src/LengthKernel.js','if(j>0){const low=','if(j>0&&rootDetailGain(requested,d,requested*s)>0){const low=')
+edit('src/LengthKernel.js','d.waveMM*.001*smooth(0,.25,s)*(0.65+.35*seed)','d.waveMM*.001*rootDetailGain(requested,d,requested*s)*(.65+.35*seed)')
 edit('src/LengthKernel.js','Math.sin(s*Math.PI*2.2+phase)*a','Math.sin(requested*s/.080*Math.PI*2+phase)*a')
 edit('src/LengthKernel.js','Math.sin(s*22+finePhase)*a*.14','Math.sin(requested*s/.020*Math.PI*2+finePhase)*a*.08')
-edit('src/LengthKernel.js','skin.project(points[j],.0007)','skin.projectEmergence(points[j],requested*s)')
-# Keep the same finite part domain and smooth ear/occiput field.
+edit('src/LengthKernel.js','skin.project(p,.0007)','skin.projectEmergence(p,requested*s)')
 f=p/'src/GroomTopology.js';s=f.read_text();start=s.index('export function enforceTrim(');end=s.index('export function growthDirection(',start)
 s=s[:start]+(p/'patches/trim.js').read_text()+s[end:]
-s=s.replace(' const core=1-smooth', ''' // Root flow crosses the old oversized crown opening; no duplicate lower hair.
+s=s.replace(' const core=1-smooth',''' // The local crown comb flow covers the old oversized opening with real strands.
  const cover=(d.crownCover??86)*.01*crownWeight(root)*.82;
  x=mix(x,.18+(d.flow-10)*.004,cover);z=mix(z,.85,cover);
  const core=1-smooth''')
@@ -62,7 +60,7 @@ s=s.replace("version:'R13C-topology@3'","version:'R14-root-topology@1'")
 s=s.replace('innerCapMeshes:0','innerCapMeshes:0,rootCollarMetres:true,trimMethod:"first-crossing-cut-and-arc-resample"')
 s=s.replace('mix(.003,.008,smooth(.018,.055,r))','mix(.0035,.007,smooth(.026,.070,r))')
 f.write_text(s)
-# Real root-shaft inspection reuses the SAME geometry and material, only its index.
+# Root inspection reuses exactly the same mesh/material; only its index changes.
 edit('src/app.js',"hair.visible=inspection==='fibers';",'''if(hair.userData.fullIndex)hair.geometry.setIndex(hair.userData.fullIndex);
  hair.visible=inspection==='fibers'||inspection==='root-shafts';
  if(inspection==='root-shafts'){
@@ -72,13 +70,13 @@ edit('src/app.js',"hair.visible=inspection==='fibers';",'''if(hair.userData.full
 edit('src/app.js','compiled=result;recipe=next;','hair.userData.fullIndex=geometry.index;compiled=result;recipe=next;')
 edit('src/app.js',"shapeControls:[['partMM'","shapeControls:[['rootBlendMM','起根过渡长度'],['crownCover','冠部发流覆盖'],['partMM'")
 edit('src/app.js',"['volumeMM','根部 / 头顶蓬松']","['volumeMM','中段 / 头顶蓬松']")
+edit('src/app.js','schedule({...PRESETS[style],style,name:undefined})','schedule({...PRESETS[style],style,name:undefined,rootBlendMM:8,crownCover:86})')
 edit('src/app.js','有限分缝 / 冠旋连续场 · 鬓角独立收束','毫米级起根 · 冠部连续覆盖 · 真剪短后颈')
 edit('index.html','<button data-inspect="roots">真实发根</button>','<button data-inspect="roots">发根位置</button><button data-inspect="root-shafts">起根段约8 mm</button>')
 for name in ['src/app.js','index.html','package.py']:
  f=p/name;s=f.read_text().replace('R13C.3','R14.0').replace('kaopu.hair.r13c.groomDNA','kaopu.hair.r14.groomDNA').replace('KAOPU-R13C-GroomDNA','KAOPU-R14-GroomDNA').replace('R13C GroomDNA','R14 GroomDNA').replace('R13C 存档','R14 存档').replace('/fusion/r13c/README.md','/fusion/r14/README.md');f.write_text(s)
 edit('package.py',"'userFrozenPreview':'a827dc71191a8394c3e98973cac5dde45fc1f716'","'userFrozenPreview':'c0816ec8388195bb79b12fc82e11ce2d3fa07d56'")
 instrumentation(p)
-# Existing independent tests remain; update only the expected new topology version.
 edit('tests/browser.mjs',"d.topology.version==='R13C-topology@3'","d.topology.version==='R14-root-topology@1'")
 (p/'README.md').write_text('''# R14.0 发根与顶部覆盖候选
 
