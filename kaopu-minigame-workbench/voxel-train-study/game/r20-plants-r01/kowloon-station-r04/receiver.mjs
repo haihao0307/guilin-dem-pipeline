@@ -45,16 +45,19 @@ fn shade(tr:Trace,ro:vec3<f32>,rd:vec3<f32>)->vec3<f32>{let p=ro+rd*tr.t;let h=t
  if(h.id==9u){s=KpSurface(0.,vec3<f32>(.045,.105,.075),.27);}
  if(h.id==10u){n=normalize(vec3<f32>(.09*sin(p.x*.37+p.z*.18),1.,.04*cos(p.z*.6)));let fre=.03+.97*pow(1.-abs(dot(-rd,n)),5.);s=KpSurface(0.,mix(vec3<f32>(.09,.21,.25),sky(reflect(rd,n)),fre),.17);metal=.18;}
  if(u.debug==1.){return n*.5+vec3<f32>(.5);}if(u.debug==2.){return s.albedo;}if(u.debug==3.){return fract(vec3<f32>(.37,.57,.79)*f32(h.id));}
- let ld=normalize(vec3<f32>(-.45,.78,.38));let sh=shadow(p,n,ld);let ambient=ao(p,n);let diffuse=max(dot(n,ld),0.);let hemi=.20+.21*max(n.y,0.);let reflected=reflect(-ld,n);let gloss=pow(max(dot(reflected,-rd),0.),mix(95.,8.,s.roughness));let F=mix(vec3<f32>(.04),s.albedo,metal);
- var color=s.albedo*(vec3<f32>(hemi,hemi*1.02,hemi*1.08)*ambient+vec3<f32>(1.55,1.39,1.18)*diffuse*sh)*cavity+F*gloss*sh*specular*.8;
- let fog=1.-exp(-tr.t*.0014);return mix(color,sky(rd),fog);
+ // Energy-conserving direct GGX response. Material inputs remain mother outputs;
+ // skylight is an explicit approximate environment, not claimed path-traced GI.
+ let ld=normalize(vec3<f32>(-.45,.78,.38));let sh=shadow(p,n,ld);let ambient=ao(p,n);let vd=-rd;let hv=normalize(ld+vd);let nl=max(dot(n,ld),0.);let nv=max(dot(n,vd),.001);let nh=max(dot(n,hv),0.);let vh=max(dot(vd,hv),0.);let rough=clamp(s.roughness,.065,.98);let alpha=rough*rough;let alpha2=alpha*alpha;let den=nh*nh*(alpha2-1.)+1.;let D=alpha2/(3.14159265*den*den);let k=(rough+1.)*(rough+1.)*.125;let G=(nl/(nl*(1.-k)+k))*(nv/(nv*(1.-k)+k));let F0=mix(vec3<f32>(.04),s.albedo,metal);let F=F0+(vec3<f32>(1.)-F0)*pow(1.-vh,5.);let spec=D*G*F/max(.004,4.*nl*nv)*specular;let diffuse=(vec3<f32>(1.)-F)*(1.-metal)*s.albedo/3.14159265;
+ let hemi=.22+.30*max(n.y,0.);let skyDiffuse=vec3<f32>(.83,.92,1.08)*hemi;let envSpec=sky(reflect(rd,n))*F0*(1.-rough*.72)*.15;
+ var color=((diffuse+spec)*vec3<f32>(4.6,4.24,3.75)*nl*sh+s.albedo*skyDiffuse*ambient+envSpec*ambient)*cavity;
+ let fog=1.-exp(-tr.t*.00065);return mix(color,sky(rd),fog);
 }
 @vertex fn vs(@builtin(vertex_index)i:u32)->@builtin(position)vec4<f32>{let p=array<vec2<f32>,3>(vec2<f32>(-1.,-1.),vec2<f32>(3.,-1.),vec2<f32>(-1.,3.));return vec4<f32>(p[i],0.,1.);}
 // Per-frame ray results only. This is not a sampled world field or texture atlas.
 @group(0)@binding(3)var<storage,read_write>rayHits:array<Trace>;
 fn stationRay(pixel:vec2<f32>)->vec3<f32>{let uv=(pixel/u.resolution*2.-vec2<f32>(1.))*vec2<f32>(u.aspect,-1.);return normalize(u.forward+(u.right*uv.x+u.up*uv.y)*u.fov);}
 @compute @workgroup_size(8,8)fn primaryRays(@builtin(global_invocation_id)gid:vec3<u32>){let pixel=gid.xy+vec2<u32>(u.pad);if(any(pixel>=vec2<u32>(u.resolution))){return;}let rd=stationRay(vec2<f32>(pixel)+vec2<f32>(.5));let tr=march(u.eye,rd,420.);rayHits[pixel.y*u32(u.resolution.x)+pixel.x]=tr;atomicMax(&stats.maxSteps,tr.steps);if(tr.status==2u){atomicAdd(&stats.exhausted,1u);}else if(tr.status==1u){atomicAdd(&stats.hit,1u);}else{atomicAdd(&stats.miss,1u);}}
-@fragment fn fs(@builtin(position)pixel:vec4<f32>)->@location(0)vec4<f32>{let rd=stationRay(pixel.xy);let tr=rayHits[u32(pixel.y)*u32(u.resolution.x)+u32(pixel.x)];var color=sky(rd);if(tr.status==2u){return vec4<f32>(1.,0.,1.,1.);}if(tr.status==1u){color=shade(tr,u.eye,rd);}color=color/(vec3<f32>(1.)+color*.38);return vec4<f32>(pow(max(color,vec3<f32>(0.)),vec3<f32>(1./2.2)),1.);}
+@fragment fn fs(@builtin(position)pixel:vec4<f32>)->@location(0)vec4<f32>{let rd=stationRay(pixel.xy);let tr=rayHits[u32(pixel.y)*u32(u.resolution.x)+u32(pixel.x)];var color=sky(rd);if(tr.status==2u){return vec4<f32>(1.,0.,1.,1.);}if(tr.status==1u){color=shade(tr,u.eye,rd);}color=clamp((color*(2.51*color+vec3<f32>(.03)))/(color*(2.43*color+vec3<f32>(.59))+vec3<f32>(.14)),vec3<f32>(0.),vec3<f32>(1.));return vec4<f32>(pow(max(color,vec3<f32>(0.)),vec3<f32>(1./2.2)),1.);}
 
 @group(0)@binding(2)var<storage,read_write>matterProbe:array<vec4<f32>,576>;
 @compute @workgroup_size(32)fn probeMatter(@builtin(global_invocation_id)gid:vec3<u32>){let index=gid.x;if(index>=192u){return;}let family=index/32u;let cell=index%32u;let ids=array<u32,6>(1u,2u,3u,4u,13u,17u);let q=vec3<f32>(f32(cell)*.13-1.5,.1+f32(cell%3u)*.037,.03+f32(cell%5u)*.021);let p=vec3<f32>(f32(cell)*.11,.15+f32(cell%8u)*.12,8.3);let h=HitField(0.,ids[family],q,select(19.,38.,family==3u),0.,vec3<f32>(2.,1.5,.3));let m=evaluateStationMatter(h,p,vec3<f32>(0.,1.,0.),.0005);matterProbe[index*3u]=vec4<f32>(m.d,m.surface.height,m.surface.roughness,f32(m.layer));matterProbe[index*3u+1u]=vec4<f32>(m.surface.albedo,m.microHeight);let st=resolveStationState(p);matterProbe[index*3u+2u]=vec4<f32>(st.age,st.wet,st.repair,st.retained);}

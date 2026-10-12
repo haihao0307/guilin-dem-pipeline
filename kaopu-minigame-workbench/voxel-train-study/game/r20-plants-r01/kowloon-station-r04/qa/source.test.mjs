@@ -26,3 +26,5 @@ test('roof acceleration bounds every barrel and refuses nearly axial rays',()=>{
 test('procedural candidate capacity covers every recipe even without spatial pruning',()=>{const capacity=80,maxUnpruned=5+18+23+18+2+1;assert.equal(maxUnpruned,67);assert(maxUnpruned<capacity);assert(WGSL.includes('items:array<HitField,80>'));});
 
 test('staged GPU keeps the complete shared field and only caches current ray intersections',()=>{assert(WGSL.includes('fn primaryRays('));assert(WGSL.includes('rayHits:array<Trace>'));assert(WGSL.includes('let tr=march(u.eye,rd,420.)'));assert(WGSL.includes('color=shade(tr,u.eye,rd)'));});
+
+test('iron contact and section loss share an actual height datum',()=>{assert(WGSL.includes('kpMetalCorrosion(stationMetalCoordinates(h,p),st.age'));assert(WGSL.includes('kpMetalSurface(stationMetalCoordinates(h,p),st.age'));assert(WGSL.includes('select(p.y,p.y+.984,rail)'));});

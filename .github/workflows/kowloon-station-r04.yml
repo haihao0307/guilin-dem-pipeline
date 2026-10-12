@@ -7,7 +7,7 @@ permissions:
 jobs:
   station-webgpu:
     runs-on: ubuntu-24.04
-    timeout-minutes: 50
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -49,6 +49,62 @@ jobs:
           name: kowloon-station-r04-first-${{ github.sha }}
           path: |
             kowloon-station-r04-results/exterior.png
+            kowloon-station-r04-results/receipt.json
+          retention-days: 7
+      - name: Await actual hall frame
+        run: |
+          while [ ! -f kowloon-station-r04-results/hall.png ]; do
+            if [ -f "$RUNNER_TEMP/kowloon-r04/exit" ]; then cat "$RUNNER_TEMP/kowloon-r04/log"; exit 1; fi
+            sleep 5
+          done
+      - name: Preserve hall frame immediately
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: kowloon-station-r04-hall-${{ github.sha }}
+          path: |
+            kowloon-station-r04-results/hall.png
+            kowloon-station-r04-results/receipt.json
+          retention-days: 7
+      - name: Await actual platform frame
+        run: |
+          while [ ! -f kowloon-station-r04-results/platform.png ]; do
+            if [ -f "$RUNNER_TEMP/kowloon-r04/exit" ]; then cat "$RUNNER_TEMP/kowloon-r04/log"; exit 1; fi
+            sleep 5
+          done
+      - name: Preserve platform frame immediately
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: kowloon-station-r04-platform-${{ github.sha }}
+          path: |
+            kowloon-station-r04-results/platform.png
+            kowloon-station-r04-results/receipt.json
+          retention-days: 7
+      - name: Await actual tower frame
+        run: |
+          while [ ! -f kowloon-station-r04-results/tower.png ]; do
+            if [ -f "$RUNNER_TEMP/kowloon-r04/exit" ]; then cat "$RUNNER_TEMP/kowloon-r04/log"; exit 1; fi
+            sleep 5
+          done
+      - name: Preserve tower frame immediately
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: kowloon-station-r04-tower-${{ github.sha }}
+          path: |
+            kowloon-station-r04-results/tower.png
+            kowloon-station-r04-results/receipt.json
+          retention-days: 7
+      - name: Await actual bench frame
+        run: |
+          while [ ! -f kowloon-station-r04-results/bench.png ]; do
+            if [ -f "$RUNNER_TEMP/kowloon-r04/exit" ]; then cat "$RUNNER_TEMP/kowloon-r04/log"; exit 1; fi
+            sleep 5
+          done
+      - name: Preserve bench frame immediately
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: kowloon-station-r04-bench-${{ github.sha }}
+          path: |
+            kowloon-station-r04-results/bench.png
             kowloon-station-r04-results/receipt.json
           retention-days: 7
       - name: Finish same browser hall platform and material views
