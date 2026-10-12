@@ -1,0 +1,6 @@
+import fs from'node:fs';import{loadWorld,WORLD_INFO}from'../../spatial-runtime/world-data.mjs';import{querySettlement}from'./kernel.mjs';
+const r={packed:loadWorld()},chain=JSON.parse(fs.readFileSync(new URL('./keyframes.json',import.meta.url),'utf8')),out=[];
+const body=[['foot',.055,.055],['ankle',.20,.07],['lower-body',.44,.18],['body',.68,.22],['body',.96,.22],['body',1.23,.22],['shoulder',1.48,.19],['head',1.64,.16]];
+const add=(p,kind,label,radius=0)=>{const fp=p.map(Math.fround),m=querySettlement(r,fp,600);out.push({p:fp,kind,label,radius,macroD:m.d,macroMaterial:m.materialId,macroComponent:m.componentId,objectId:m.objectId});};
+for(const k of chain.keyframes){add([k.p[0],k.p[1]+.012,k.p[2]],'support',k.label);for(const [kind,y,radius]of body)add([k.p[0],k.p[1]+y,k.p[2]],kind,k.label,radius);}
+const data={status:'CPU-prepared-GPU-not-run',snapshotId:WORLD_INFO.snapshotId,scope:'276 discrete tread/landing/approach keyframes and eight body spheres per keyframe; continuous <=6cm sweep remains separate CPU evidence',keyframes:chain.keyframes.length,probes:out,routeIds:chain.routeIds,newBorrow:'pending, no B09 borrowed chain claimed'};fs.writeFileSync(new URL('./points.json',import.meta.url),JSON.stringify(data));console.log(JSON.stringify({keyframes:data.keyframes,points:out.length,routeCount:data.routeIds.length}));

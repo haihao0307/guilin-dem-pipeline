@@ -1,13 +1,13 @@
-name: Walled city precise bound identity regression
+name: Walled city observed spatial candidate
 on:
   push:
     branches: ['qa/walled-city-growth-r02-20261011']
 permissions:
   contents: read
 jobs:
-  sparse-macro-reference:
+  same-world-observed-spatial-review:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 55
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -18,14 +18,40 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/wgpu" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/wgpu/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/wgpu/node_modules" >> "$GITHUB_ENV"
-      - name: Compare bounded and unaccelerated same geometry queries
+      - name: Validate observed spatial source and frozen mother closure
         run: |
-          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/qa/bounds/build-reference.mjs
-          node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/qa/bounds/reference.test.mjs
-          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/qa/bounds/run.cjs
+          P=kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02
+          node --test "$P/qa/spatial/runtime.test.mjs"
+          node "$P/qa/spatial/points-build.mjs"
+      - name: Start actual native WebGPU inspection and save first completed frame
+        run: |
+          mkdir -p "$RUNNER_TEMP/city-spatial"
+          (
+            set +e
+            node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/qa/spatial/run.cjs > "$RUNNER_TEMP/city-spatial/log" 2>&1
+            echo "$?" > "$RUNNER_TEMP/city-spatial/exit"
+          ) </dev/null >/dev/null 2>&1 &
+          for i in $(seq 1 420); do
+            if [ -f walled-city-spatial-results/first-frame-complete.json ]; then break; fi
+            if [ -f "$RUNNER_TEMP/city-spatial/exit" ]; then cat "$RUNNER_TEMP/city-spatial/log"; exit 1; fi
+            sleep 5
+          done
+          cat "$RUNNER_TEMP/city-spatial/log"
+          test -f walled-city-spatial-results/first-frame-complete.json
+      - name: Save first actual complete frame immediately
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: city-observed-first-frame-${{ github.sha }}
+          path: walled-city-spatial-results/
+          retention-days: 7
+      - name: Await second section of the same world snapshot
+        run: |
+          while [ ! -f "$RUNNER_TEMP/city-spatial/exit" ]; do sleep 5; done
+          cat "$RUNNER_TEMP/city-spatial/log"
+          exit "$(cat "$RUNNER_TEMP/city-spatial/exit")"
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: city-bound-identity-${{ github.sha }}
-          path: walled-city-growth-r02-results/
+          name: city-observed-complete-${{ github.sha }}
+          path: walled-city-spatial-results/
           retention-days: 7
