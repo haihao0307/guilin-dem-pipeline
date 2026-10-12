@@ -1,0 +1,162 @@
+{
+  "schema": "kaopu.regression-case/2",
+  "caseId": "HUMAN-EAR-REFERENCE-ANATOMY-IDENTITY-001",
+  "status": "CANDIDATE",
+  "scope": {
+    "mother": "Human",
+    "taskClass": "REFERENCE_LOCKED_VISIBLE_EAR_REFINEMENT",
+    "globalAdoption": false
+  },
+  "boundedQuestion": "Can functional, parameter-response and topology-safety checks promote a reference-locked ear candidate when no subject-bound anatomical comparison has run?",
+  "observedFailure": {
+    "subject": "EAR-R03.0@2cb1a37763893ccb68240190d3b15951515f17cc",
+    "productionEvidence": "PR #226 reports 63 candidate assertions and 18 public assertions passed, while its own final visual review still records soft ear-root/tragus structure.",
+    "mechanism": "The green suite proves execution and deformation safety but contains no approved subject-specific reference identity, calibrated anatomical anchor ledger, semantic curve/pocket comparison, frozen tolerance or independent reference-fidelity verdict.",
+    "currentDecision": "HOLD_REFERENCE_ANATOMY_IDENTITY_UNBOUND"
+  },
+  "deduplication": {
+    "visualGoldenCase": "VISUAL-GOLDEN-UPDATE-SEPARATION-001",
+    "relationship": "Complementary, not duplicate: the existing case governs immutable image baseline and comparison independence; this case binds semantic ear anatomy and UNKNOWN regions to the exact subject/reference views.",
+    "osNovelty": "NO_NOVELTY",
+    "externalMethodNovelty": "NO_NOVELTY"
+  },
+  "requiredReceiptFields": [
+    "taskId",
+    "testedSubjectSha",
+    "referenceSetId",
+    "referenceSetDigest",
+    "referenceAuthority",
+    "referenceViewIds",
+    "viewCalibrationDigest",
+    "anatomyAnchorLedgerDigest",
+    "visibleAnchorIds",
+    "unknownOrOccludedAnchorIds",
+    "candidateProjectionDigest",
+    "semanticRegionMaskDigest",
+    "metric",
+    "thresholdSource",
+    "frozenThresholds",
+    "actualMeasurements",
+    "comparisonDecision",
+    "producerIdentity",
+    "verifierIdentity",
+    "verifierReceipt",
+    "manualVisualAcceptance",
+    "userAcceptance"
+  ],
+  "minimumSemanticCoverage": [
+    "helix-root-attachment",
+    "tragus",
+    "antitragus",
+    "intertragic-notch",
+    "crus-helicis",
+    "cymba-conchae",
+    "cavum-conchae",
+    "lobule-attachment"
+  ],
+  "decisionRules": [
+    "Functional/browser success, control response and topology safety remain valid scoped claims but never imply reference anatomy validation.",
+    "A generic anatomy source can name structures but cannot authorize subject-specific anchor positions or hidden regions.",
+    "UNKNOWN or OCCLUDED reference regions remain unknown and cannot be filled by procedural defaults.",
+    "The same Producer cannot approve or update the subject reference baseline used to pass its candidate.",
+    "Thresholds must be frozen before comparison and must identify their measurement source; this Candidate does not invent production thresholds.",
+    "A machine anatomy pass does not imply manual visual acceptance or USER-ACCEPTED."
+  ],
+  "states": [
+    "HOLD_REFERENCE_ANATOMY_IDENTITY_UNBOUND",
+    "HOLD_REFERENCE_COMPARISON_NOT_RUN",
+    "HOLD_REFERENCE_BASELINE_SELF_APPROVED",
+    "HOLD_UNKNOWN_REGION_CREATIVE_SUBSTITUTE",
+    "REFERENCE_ANATOMY_REGRESSION_DETECTED",
+    "SCOPED_REFERENCE_ANATOMY_VALIDATED"
+  ],
+  "fixtures": [
+    {
+      "id": "EAR_R03_GREEN_FUNCTIONAL_NO_REFERENCE_LEDGER",
+      "input": {
+        "functionalGatePassed": true,
+        "topologyGuardPassed": true,
+        "parameterResponsePassed": true,
+        "referenceSetDigest": null,
+        "anatomyAnchorLedgerDigest": null,
+        "comparisonExecuted": false
+      },
+      "expect": "HOLD_REFERENCE_ANATOMY_IDENTITY_UNBOUND"
+    },
+    {
+      "id": "GENERIC_NIH_ANATOMY_NOT_SUBJECT_BOUND",
+      "input": {
+        "functionalGatePassed": true,
+        "referenceAuthority": "NIH/NHGRI anatomy terminology",
+        "referenceSetDigest": "generic-anatomy-only",
+        "subjectBound": false,
+        "anatomyAnchorLedgerDigest": "generic-structure-names",
+        "comparisonExecuted": false
+      },
+      "expect": "HOLD_REFERENCE_ANATOMY_IDENTITY_UNBOUND"
+    },
+    {
+      "id": "SCREENSHOTS_WITHOUT_SEMANTIC_COMPARISON",
+      "input": {
+        "functionalGatePassed": true,
+        "subjectBound": true,
+        "referenceSetDigest": "sha256:reference",
+        "anatomyAnchorLedgerDigest": "sha256:anchors",
+        "currentImageDigest": "sha256:candidate",
+        "comparisonExecuted": false
+      },
+      "expect": "HOLD_REFERENCE_COMPARISON_NOT_RUN"
+    },
+    {
+      "id": "PRODUCER_APPROVES_OWN_REFERENCE_UPDATE",
+      "input": {
+        "subjectBound": true,
+        "referenceSetDigest": "sha256:reference-v2",
+        "anatomyAnchorLedgerDigest": "sha256:anchors-v2",
+        "comparisonExecuted": true,
+        "producerIdentity": "Human-Producer",
+        "referenceApprovedBy": "Human-Producer"
+      },
+      "expect": "HOLD_REFERENCE_BASELINE_SELF_APPROVED"
+    },
+    {
+      "id": "OCCLUDED_TRAGUS_FILLED_BY_DEFAULT",
+      "input": {
+        "subjectBound": true,
+        "referenceSetDigest": "sha256:reference",
+        "anatomyAnchorLedgerDigest": "sha256:anchors",
+        "unknownOrOccludedAnchorIds": ["tragus"],
+        "proceduralDefaultsAppliedToUnknown": ["tragus"],
+        "comparisonExecuted": true
+      },
+      "expect": "HOLD_UNKNOWN_REGION_CREATIVE_SUBSTITUTE"
+    },
+    {
+      "id": "FROZEN_SUBJECT_BOUND_ANATOMY_COMPARISON_PASS",
+      "input": {
+        "functionalGatePassed": true,
+        "topologyGuardPassed": true,
+        "subjectBound": true,
+        "referenceSetDigest": "sha256:reference",
+        "anatomyAnchorLedgerDigest": "sha256:anchors",
+        "visibleAnchorIds": ["helix-root-attachment", "tragus", "antitragus", "intertragic-notch", "crus-helicis", "cymba-conchae", "cavum-conchae", "lobule-attachment"],
+        "unknownOrOccludedAnchorIds": [],
+        "comparisonExecuted": true,
+        "frozenThresholds": {"source": "approved-reference-measurement-plan"},
+        "comparisonDecision": "pass",
+        "producerIdentity": "Human-Producer",
+        "referenceApprovedBy": "Independent-Verifier",
+        "verifierIdentity": "Independent-Verifier",
+        "verifierReceipt": "sha256:verifier-receipt"
+      },
+      "expect": "SCOPED_REFERENCE_ANATOMY_VALIDATED"
+    }
+  ],
+  "adoption": {
+    "level": "HUMAN_EAR_LOCAL_CANDIDATE_ONLY",
+    "requiresSingleMotherTrial": true,
+    "requiresIndependentVerifier": true,
+    "changesR2": false,
+    "changesProductionBranch": false
+  }
+}
