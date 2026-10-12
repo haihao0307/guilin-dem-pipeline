@@ -365,10 +365,11 @@ test('source contract: actual WGSL routes wood normal, metric footprint and symm
   assert.match(functionBody(source, 'offsetComponent'), /g\.local\+=componentVector\(f,worldOffset\)/);
   assert.match(functionBody(source, 'componentTangent'), /letln=componentVector\(f,n\)/);
   assert.match(functionBody(source, 'componentTangent'), /transpose\(f\.component\.worldToLocal\)\*lt/);
-  const raw = functionBody(source, 'surfaceRaw');
+  assert.match(functionBody(source, 'surfaceRaw'), /receiverWoodSample\(f,n,fp\)\.surface/);
+  const raw = functionBody(source, 'receiverWoodSample');
   assert.match(raw, /letlocalNormal=componentVector\(f,n\)/);
-  assert.match(raw, /kpWoodOriginalSurface\(f\.local,localNormal,/);
-  assert.doesNotMatch(raw, /kpWoodOriginalSurface\(f\.local,n,/);
+  assert.match(raw, /kpWoodOriginalSample\(f\.local,localNormal,/);
+  assert.doesNotMatch(raw, /kpWoodOriginalSample\(f\.local,n,/);
   const normal = functionBody(source, 'materialNormal');
   for (const offset of ['t*e', '-t*e', 'b*e', '-b*e']) assert.ok(normal.includes(`offsetComponent(f,${offset})`), offset);
   assert.match(normal, /surfaceRaw\(fxp,p\+t\*e,n,fp\)\.height-surfaceRaw\(fxm,p-t\*e,n,fp\)\.height/);
@@ -398,7 +399,7 @@ test('GPU probe preparation only: real mother closure, f32 record packing and in
   assert.equal(probe.inputStride, 192);
   assert.equal(probe.outputStride, 112);
   assert.equal(probe.data.byteLength, probe.cases.length * probe.inputStride);
-  for (const name of ['surfaceRaw','materialNormal','kpWoodOriginalSurface','kpWoodOriginalSample','componentFootprint','offsetComponent']) assert.ok(probe.closure.functionNames.includes(name), name);
+  for (const name of ['surfaceRaw','materialNormal','receiverWoodSample','kpWoodOriginalSample','componentFootprint','offsetComponent']) assert.ok(probe.closure.functionNames.includes(name), name);
   assert.ok(!probe.closure.functionNames.includes('sceneField'));
   assert.match(probe.closure.code, /let q=a\*\(p-v\.origin\.xyz\)/);
   const values = Array.from(probe.data);

@@ -127,7 +127,7 @@ export function buildFrameProbe() {
   const closure=selectStageSource(shaderSource()+'\n'+PROBE_WGSL,['frameProbe']);
   const expectedBindings=['u','frameProbeInput','frameProbeOutput'];
   if(closure.bindings.length!==3||!expectedBindings.every(name=>closure.bindings.some(b=>b.name===name)))throw Error('Unexpected probe bindings: '+JSON.stringify(closure.bindings));
-  for(const name of ['frameProbe','surfaceRaw','materialNormal','componentFootprint','componentVector','componentTangent','offsetComponent','kpWoodOriginalSurface','kpWoodOriginalSample']) {
+  for(const name of ['frameProbe','surfaceRaw','materialNormal','componentFootprint','componentVector','componentTangent','offsetComponent','receiverWoodSample','kpWoodOriginalSample']) {
     if(!closure.functionNames.includes(name))throw Error('Missing real production shader function: '+name);
   }
   if(closure.functionNames.includes('sceneField'))throw Error('Probe must not expand or raymarch the building domain');
@@ -204,7 +204,7 @@ export async function runFrameProbe() {
       {binding:0,resource:{buffer:uniform}},{binding:8,resource:{buffer:input}},{binding:9,resource:{buffer:output}},
     ]});
     async function run(enabled) {
-      const params=new Float32Array(36);params[26]=enabled?1:0;device.queue.writeBuffer(uniform,0,params);
+      const params=new Float32Array(36);params[26]=enabled?1:0;params[27]=1;device.queue.writeBuffer(uniform,0,params);
       const encoder=device.createCommandEncoder(),pass=encoder.beginComputePass();pass.setPipeline(pipeline);pass.setBindGroup(0,bindGroup);
       pass.dispatchWorkgroups(Math.ceil(cases.length/64));pass.end();encoder.copyBufferToBuffer(output,0,readback,0,byteLength);
       device.queue.submit([encoder.finish()]);await readback.mapAsync(GPUMapMode.READ);
