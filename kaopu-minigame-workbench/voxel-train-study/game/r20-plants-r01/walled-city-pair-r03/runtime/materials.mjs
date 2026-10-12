@@ -6,9 +6,11 @@ import {KP_STONE_WGSL} from './mothers/stone-fields.mjs';
 import {KP_STONE_SLATE_WGSL} from './mothers/stone-slate.mjs';
 import {KP_METAL_WGSL} from './mothers/metal.mjs';
 import {KP_CLOTH_COARSE_WGSL} from './mothers/cloth-coarse.mjs';
+import {KP_MORTAR_WGSL} from './mortar-binding.mjs';
 import {skipZeroContributions} from './evaluation.mjs';
-export const MOTHER_WGSL=skipZeroContributions([KP_BRICK_WGSL,KP_PLASTER_WGSL,KP_V26_WGSL,KP_WOOD_WGSL,KP_STONE_WGSL,KP_STONE_SLATE_WGSL,KP_METAL_WGSL].join('\n'))+'\n'+KP_CLOTH_COARSE_WGSL;
+export const MOTHER_WGSL=skipZeroContributions([KP_BRICK_WGSL,KP_PLASTER_WGSL,KP_V26_WGSL,KP_WOOD_WGSL,KP_STONE_WGSL,KP_STONE_SLATE_WGSL,KP_METAL_WGSL].join('\n'))+'\n'+KP_CLOTH_COARSE_WGSL+'\n'+KP_MORTAR_WGSL;
 export const MATERIAL_CALLS={plaster:['kpPlasterMacro','kpPlasterMicro','kpPlasterOriginalField'],wet:['kpV26WaterWeather','kpFabricState','kpApplyFabricSurface'],brick:['kpBrickBaseDistance','kpBrickOriginalSurface'],wood:['kpWoodMacroDisplacement','kpWoodOriginalSample'],metal:['kpMetalSurface','kpMetalCorrosion'],stone:['kpStoneSlateSurface'],newBridges:['whole-building facade orientation and metric brick cells','dated storey age, located drainage and local maintenance','glass straight transmission and sky Fresnel; no full refraction','screen footprint filtering without changing physical shape']};
+MATERIAL_CALLS.mortar=['kpMortarOriginalSurface','R3.12 shadeSoil surface-channel extraction'];
 MATERIAL_CALLS.cloth=['kpClothCoarsePattern','kpClothCoarseSurface','kpClothCoarseLight'];
 export const MATERIAL_DOMAIN_WGSL=String.raw`
 struct MaterialResult{surface:KpSurface,metal:f32,cavity:f32,specular:f32,coat:f32,coatRough:f32}
@@ -28,6 +30,7 @@ fn stoneParameters(h:GeoHit)->KpStoneSlateParams{var a=kpStoneSlateDefaultParams
 fn sceneMaterial(h:GeoHit,p:vec3<f32>,n:vec3<f32>,fp:f32,cap:u32)->MaterialResult{var s=KpSurface(0.,vec3<f32>(.3),.8);var metal=0.;var cavity=1.;var spec=1.;var coat=0.;var coatRough=.25;let d=dna(h);
  if(h.materialId==1u){s=kpPlasterOriginalField(wallCoordinates(h,p),sourcePlasterParams(h,p),fp).surface;if(cap==0u){s=kpApplyFabricSurface(s,fabricAt(h,p));}}
  if(h.materialId==2u){let id=brickIdentity(h,p);s=kpBrickOriginalSurface(brickCoordinate(h,p,h.d),id.x,i32(id.y),.42,fp);if(cap==0u){s=kpApplyFabricSurface(s,fabricAt(h,p));}}
+ if(h.materialId==8u){s=kpMortarOriginalSurface(wallCoordinates(h,p),fp);if(cap==0u){s=kpApplyFabricSurface(s,fabricAt(h,p));}}
  if(h.materialId==3u){let state=physicalState(h,p);s=kpMetalSurface(state.q,state.age,state.wet,state.repair,fp);metal=.70*(1.-smoothstep(.05,.30,kpMetalCorrosion(state.q,state.age,state.wet,state.repair)));}
  if(h.materialId==4u){let wn=woodNormal(h,n);let sample=kpWoodOriginalSample(h.q,wn,select(0.,1.,abs(wn.x)>.72),kpWoodDefaultParams(),fp,length(p-u.eye.xyz));s=sample.surface;cavity=sample.cavity;spec=sample.specularLevel;coat=sample.clearcoat;coatRough=sample.clearcoatRoughness;}
  if(h.materialId==5u){s=KpSurface(0.,vec3<f32>(.65,.75,.72),.12);}
@@ -35,7 +38,7 @@ fn sceneMaterial(h:GeoHit,p:vec3<f32>,n:vec3<f32>,fp:f32,cap:u32)->MaterialResul
  if(h.materialId==7u){s=kpClothCoarseSurface(h.q.xz,fp);spec=.6;}
  return MaterialResult(s,metal,cavity,spec,coat,coatRough);}
 fn materialDistance(h:GeoHit,p:vec3<f32>)->SettlementField{var g=h;var d=h.d;
- if(h.materialId==1u){let state=fabricAt(h,p);let original=kpPlasterOriginalField(wallCoordinates(h,p),sourcePlasterParams(h,p),.00003);let remain=state.thicknessM*smoothstep(-.05,.08,state.retention);let coating=max(h.d+.0165-remain-original.surface.height,-state.retention*.018);let id=brickIdentity(h,p);var masonry=h.d+.0265;if(h.d<.025){let brickQ=brickCoordinate(h,p,h.d);let brickMicro=kpBrickOriginalSurface(brickQ,id.x,i32(id.y),.42,.00003).height;masonry=min(masonry,kpBrickBaseDistance(brickQ,id.x,i32(id.y),.42)-brickMicro);}d=min(coating,masonry);if(masonry<coating){g.materialId=2u;}}
+ if(h.materialId==1u){let state=fabricAt(h,p);let original=kpPlasterOriginalField(wallCoordinates(h,p),sourcePlasterParams(h,p),.00003);let remain=state.thicknessM*smoothstep(-.05,.08,state.retention);let coating=max(h.d+.0165-remain-original.surface.height,-state.retention*.018);let id=brickIdentity(h,p);let mortarSample=kpMortarOriginalSurface(wallCoordinates(h,p),.00003);let mortar=h.d+.0265+.002*state.damage-mortarSample.height;var brick=1e6;if(h.d<.025){let brickQ=brickCoordinate(h,p,h.d);let brickMicro=kpBrickOriginalSurface(brickQ,id.x,i32(id.y),.42,.00003).height;brick=kpBrickBaseDistance(brickQ,id.x,i32(id.y),.42)-brickMicro;}let masonry=min(mortar,brick);d=min(coating,masonry);if(masonry<coating){g.materialId=select(2u,8u,mortar<=brick);}}
  else if(h.materialId==3u){let state=physicalState(h,p);d-=kpMetalSurface(state.q,state.age,state.wet,state.repair,.00003).height;}
  else if(h.materialId==4u){let wp=kpWoodDefaultParams();let wn=woodNormal(h,h.n);let cls=select(0.,1.,abs(wn.x)>.72);let sample=kpWoodOriginalSample(h.q,wn,cls,wp,.00003,0.);d-=kpWoodMacroDisplacement(h.q,cls,wp)+sample.surface.height+(sample.parallaxHeight01-.5)*wp.parallaxM;}
  else if(h.materialId==7u){d-=kpClothCoarseSurface(h.q.xz,0.).height;}

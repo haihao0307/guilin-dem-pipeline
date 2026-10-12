@@ -1,0 +1,56 @@
+{
+  "source": "R3.12 brick-native/source-soil.mjs + mortar-receiver.mjs",
+  "sourceSha256": "1532ea02c31f014c23390fa028385338c3d2caa572f3a36511db81d6609e1581",
+  "receiverDefaults": {
+    "color": "#77736b",
+    "colorVariation": 0,
+    "micro": 0,
+    "layerId": 0
+  },
+  "functions": {
+    "mmXi": {
+      "sha256": "2c840d75abaa8deafd2d7cee2eccfe5ae49ec8d6810161612a11c0ead5c8aad9",
+      "source": "vec3 mmXi(vec3 p,vec3 phase){vec3 q=mmWarp(p,phase)+vec3(2.73,.91,1.37);float r=max(length(q),1e-4);return vec3(log2(r)-2.,-q.z/r,atan(q.x,q.y));}"
+    },
+    "mmCell": {
+      "sha256": "a6909fd8fba5ae4c6e10e9914bd1bf55989793d3d4ba5ca64cedec2fa8cf83b9",
+      "source": "float mmCell(vec3 xi,float sc){float a=cos(sc*xi.z)*cos(sc*xi.x)+cos(sc*xi.y)*cos(sc*xi.y)+cos(sc*xi.y)*cos(sc*xi.x);return cos(a)-.6556965458313674;}"
+    },
+    "mmGeomMacroFast": {
+      "sha256": "5561b4ad829bd7162adf5271ed271f9ca439952ea276c605f66d397284f6c1bb",
+      "source": "float mmGeomMacroFast(vec3 p){vec3 xi=mmXi(p,vec3(.7,-1.3,2.1));float s=mmCell(xi,1.)+mmCell(xi,2.)*.5+mmCell(xi,4.)*.25+mmCell(xi,8.)*.125+mmCell(xi,16.)*.0625;return tanh(.78*s);}"
+    },
+    "mmGeomMicroFast": {
+      "sha256": "43d5c5fd9f8f179c06f87344adbd29b846b9f0d28058342f8596f5cbef3c4cf3",
+      "source": "float mmGeomMicroFast(vec3 p){vec3 xi=mmXi(p,vec3(.7,-1.3,2.1));float s=mmCell(xi,16.)*.0625+mmCell(xi,32.)*.03125+mmCell(xi,64.)*.015625;return tanh(10.5*s);}"
+    },
+    "coreMacroBase": {
+      "sha256": "795553b1debcbe223e1d801348ef59d73faa04552ce09eebdb98cbbe705ee5f1",
+      "source": "float coreMacroBase(vec3 p){float low=mmGeomMacroFast(p),broad=sin(p.x*3.1+.55*sin(p.y*1.7))*sin(p.y*3.8-.42*sin(p.x*1.4));return clamp(.84*low+.16*broad,-1.,1.);}"
+    },
+    "coreMicroBase": {
+      "sha256": "59965e3aaac1ceb41eaa604d03d4d26b85d119386adf8fbfc60fa244044ec1cc",
+      "source": "float coreMicroBase(vec3 p){float m=mmGeomMicroFast(p*vec3(2.75,2.62,3.55)),r=sin(p.x*43.-p.y*37.+p.z*53.+1.1)*sin(p.x*29.+p.y*31.-p.z*41.);return clamp(.76*m+.24*r,-1.,1.);}"
+    },
+    "layerMacro": {
+      "sha256": "f68f272e686957a1adea61ecde53b3457b228974a7228e5e9ec035ca81ac9af5",
+      "source": "float layerMacro(vec3 p,int i,float base){float fi=float(i),v=sin(p.x*(2.25+.17*fi)+p.y*(1.62+.11*fi)+p.z*(3.10+.19*fi)+fi*1.37);return clamp(.87*base+.13*v,-1.,1.);}"
+    },
+    "layerMicro": {
+      "sha256": "64d2c4365e01265ff1d59ac301e4468d59f52822944910630c321f0ccc9af981",
+      "source": "float layerMicro(vec3 p,int i,float base){float fi=float(i),v=sin(p.x*(41.+3.*fi)-p.y*(34.+2.*fi)+p.z*(49.+4.*fi)+fi*.93);return clamp(.84*base+.16*v,-1.,1.);}"
+    },
+    "shadeSoil": {
+      "sha256": "b1ad5ea5f1d59fbb31eb4f358dfb65eb8f34d61145ed213bfc10e61337536cb4",
+      "source": "vec3 shadeSoil(vec3 p,vec3 n,vec3 rd,int id){float obs=mmObserved(p,vec3(.7,-1.3,2.1)),mb=coreMacroBase(p),ub=coreMicroBase(p),macro=layerMacro(p,id,mb),micro=layerMicro(p,id,ub),grain=sin(p.x*(67.+3.*float(id))-p.y*(51.+2.*float(id))+p.z*(83.+4.*float(id)));n=perturb(n,p,uCoreMicro*(.28*obs+.20*micro)+.00013*grain);float c=clamp(uSoilColor,0.,2.);vec3 base0=max(layerColorV(id),vec3(.004)),dark=base0*vec3(.20,.16,.12),warm=mix(base0,vec3(.67,.30,.052),.42),ochre=mix(base0,vec3(.79,.53,.12),.48),cool=base0*vec3(.49,.58,.65);float signal=clamp((.45*obs+.34*macro+.21*micro)*2.0,-1.,1.),tt=.5+.5*signal;vec3 varied=mix(dark,warm,tt);varied=mix(varied,ochre,.36*smoothstep(.02,.72,macro));varied=mix(varied,cool,.20*smoothstep(.10,.76,-macro));vec3 base=mix(base0,varied,min(c,1.));float extra=max(c-1.,0.);base=mix(base,signal>=0.?ochre:dark,.72*extra*abs(signal));float rough=clamp(.95+.035*(-obs)+.022*macro,.84,.996);vec3 L=normalize(vec3(-.92,.35,-.18)),V=normalize(-rd),H=normalize(L+V);float nl=max(dot(n,L),0.),nh=max(dot(n,H),0.);float spec=(1.-rough)*pow(nh,mix(24.,5.,rough));vec3 hemi=mix(vec3(.072,.068,.064),vec3(.34,.33,.30),n.y*.5+.5),rim=base*vec3(.24,.20,.17)*max(dot(n,normalize(vec3(.55,.18,.82))),0.);return base*(hemi+vec3(2.72,2.42,2.02)*nl/3.14159265)+rim+spec*vec3(.31,.27,.21);}"
+    }
+  },
+  "bridges": [
+    "GLSL to WGSL syntax; reused identical pl_xi/pl_cell/pl_macroFast helpers",
+    "screen derivatives replaced by explicit metric footprint; equivalence not yet GPU verified",
+    "original shadeSoil normal-height becomes shared field displacement and normal",
+    "original host lighting not copied; surface channels passed into shared PBR",
+    "age erosion .002m*existing fabric damage is authored coupling, not an original erosion solver"
+  ],
+  "visualAcceptance": false
+}

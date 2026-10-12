@@ -1,7 +1,7 @@
 Displaced candidate competition: current pinned mothers and parameters, metres.
 Delta = materialDistance(h,p).d - h.d. Analytic interval bounds, not sample maxima:
-plaster [-.008596,+.0265]; metal [-.000125,+.000925]; wood [-.000505612,+.001112435]; slate ground [-.001845,+.003345], building [-.0005904,+.0010704]; cloth [-.000117994,+.000065896].
-Brick OriginalSurface.height [-.002660614,+.001041779]; BrickBaseDistance >= h.d+.01592289. With micro subtraction >=h.d+.01488111. Keep masonry=min(h.d+.0265,brickD-brickMicro), retaining finite interior cap.
+plaster [-.008596,+.02863] after current mortar bridge; metal [-.000125,+.000925]; wood [-.000505612,+.001112435]; slate ground [-.001845,+.003345], building [-.0005904,+.0010704]; cloth [-.000117994,+.000065896].
+Brick OriginalSurface.height [-.002660614,+.001041779]; BrickBaseDistance >= h.d+.01592289. With micro subtraction >=h.d+.01488111. Current mortar cap is h.d+.0265+.002*state.damage-originalMortarHeight, with |originalMortarHeight|<=.00013m; upper delta<=.02863. Keep masonry=min(mortar,brickD-brickMicro), retaining finite interior cap.
 Plaster micro absolute bound .0002*(.26+.18)+.000008=.000096; remaining coating thickness in [0,.025]. The most outward current field is therefore -.008596.
 H=.012 is a conservative outward distance-value bound with margin. This is NOT a Lipschitz/SDF proof. World parameters and mother hashes are pinned by regression tests.
 Algorithm: repeatedly select next undisplaced GeoHit excluding already refined stateId/componentId, refine its original material, compare true field minimum; stop only if next base-H >= best true field. Ground is a distinct candidate, never mixed into another candidate's identity. Section max cannot lower that candidate's field. Far coarse envelopes have materialId=0 and cannot be accepted as surfaces.

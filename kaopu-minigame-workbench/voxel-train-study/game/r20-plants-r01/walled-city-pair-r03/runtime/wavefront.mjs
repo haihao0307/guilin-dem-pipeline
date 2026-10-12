@@ -8,6 +8,7 @@ struct FieldContext {
  glass:vec4<f32>,through:vec4<f32>,padding:vec4<f32>
 }
 // 512B per temporary query; 256 primary rays or 1024 normal sample points.
+@group(0) @binding(4) var<storage,read_write> geometryCandidates:array<GeoHit,7168>;
 @group(0) @binding(8) var<storage,read_write> contexts:array<FieldContext,1024>;
 fn vacantGeo(p:vec3<f32>)->GeoHit{return GeoHit(220.,0u,0u,0u,0u,p,vec3<f32>(0.,1.,0.),0u);}
 fn resetPoint(c0:FieldContext,p:vec3<f32>)->FieldContext{var c=c0;c.point=vec4<f32>(p,c.point.w);c.best=vacantGeo(p);c.bestMeta=vec4<f32>(220.,0.,0.,0.);c.counts.x=0u;c.counts.y=1u;c.counts.z=0u;return c;}
@@ -23,9 +24,9 @@ fn resetPoint(c0:FieldContext,p:vec3<f32>)->FieldContext{var c=c0;c.point=vec4<f
 }
 @compute @workgroup_size(64) fn queryCandidate(@builtin(global_invocation_id) gid:vec3<u32>){
  let id=gid.x;if(id>=1024u){return;}var c=contexts[id];if(c.counts.y==0u){return;}
- fieldCompetition=true;fieldExcludedCount=c.counts.x;for(var j=0u;j<fieldExcludedCount;j++){fieldExcluded[j]=c.excluded[j];}
- // ONLY the geometry closure is reachable from this entry point.
- let h=querySettlement(c.point.xyz,220.);fieldCompetition=false;c.pending=h;
+ // Each group submits its nearest NOT-YET-refined candidate. The next round
+ // reruns every group with the shared exclusion keys, retaining second-nearest competition.
+ var h=geometryCandidates[id];for(var group=1u;group<7u;group++){let other=geometryCandidates[group*1024u+id];if(other.d<h.d){h=other;}}c.pending=h;
  let lower=h.d-MATERIAL_DISTANCE_BOUND;
  if(lower>=c.bestMeta.x){c.counts.z=2u;}
  else if(h.materialId==0u||h.d>.04){c.pending.d=lower;c.pending.materialId=0u;c.counts.z=3u;}
