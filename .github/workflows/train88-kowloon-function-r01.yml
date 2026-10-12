@@ -21,7 +21,6 @@ jobs:
       - name: Compile pinned official Naga source
         working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/compiler
         run: |
-          cargo generate-lockfile
           python - <<'PY'
           import tomllib
           p=next(p for p in tomllib.load(open('Cargo.lock','rb'))['package'] if p['name']=='naga')
@@ -36,7 +35,7 @@ jobs:
           "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
       - name: Same-source WebGL2 and WebGPU numerical probes
-        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/backend-probe.cjs
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/isolated-probes.cjs
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:

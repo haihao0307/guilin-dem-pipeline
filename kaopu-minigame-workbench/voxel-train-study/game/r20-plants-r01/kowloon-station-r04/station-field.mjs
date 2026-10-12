@@ -9,7 +9,7 @@ fn segment(p:vec3<f32>,a:vec3<f32>,b:vec3<f32>,r:f32)->f32{let v=b-a;return leng
 // Candidate list is procedural construction metadata, not geometry vertices.
 // A single dynamic material call prevents per-part compiler expansion while all
 // candidates receive material displacement BEFORE the final nearest selection.
-struct StationCandidates {count:u32,items:array<HitField,96>,}
+struct StationCandidates {count:u32,items:array<HitField,64>,}
 fn recordPart(list:ptr<function,StationCandidates>,p:vec3<f32>,d:f32,id:u32,q:vec3<f32>,seed:f32){(*list).items[(*list).count]=HitField(d,id,q,seed,d,vec3<f32>(1.),0.);(*list).count+=1u;}
 fn recordCoated(list:ptr<function,StationCandidates>,p:vec3<f32>,d:f32,q:vec3<f32>,extent:vec3<f32>,seed:f32){(*list).items[(*list).count]=HitField(d,13u,q,seed,d,extent,0.);(*list).count+=1u;}
 fn recordTimber(list:ptr<function,StationCandidates>,p:vec3<f32>,d:f32,q:vec3<f32>,extent:vec3<f32>,role:f32,sourceSeed:f32){(*list).items[(*list).count]=HitField(d,4u,q,role,d,extent,sourceSeed);(*list).count+=1u;}

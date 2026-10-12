@@ -23,7 +23,7 @@ test('coated solids supply real local source frames and extents',()=>{assert(WGS
 
 test('roof acceleration bounds every barrel and refuses nearly axial rays',()=>{assert(WGSL.includes('for(var barrel= -1;barrel<=1;barrel++)'));assert(WGSL.includes('if(A<=.0000001){return 0.;}'));assert(WGSL.includes('if(length(q)<=r){return 0.;}'));});
 
-test('procedural candidate capacity covers every recipe even without spatial pruning',()=>{const capacity=96,maxUnpruned=6+21+23+20+2+8+2+4+3;assert.equal(maxUnpruned,89);assert(maxUnpruned<capacity);assert(WGSL.includes('items:array<HitField,96>'));});
+test('spatially concurrent candidate capacity covers every reachable recipe',()=>{const domains=[{lo:[-33.5,-3.2,-12.5],hi:[33.5,17.2,12.5],records:21},{lo:[17.2,-2,-2.8],hi:[30.8,48,10.8],records:23},{lo:[-36,-3,-149.2],hi:[36,17,-5.8],records:20},{lo:[32.5,-2.8,-103],hi:[50.5,8.8,-13],records:8},{lo:[28.5,-2.1,8.8],hi:[69.5,7.1,17.2],records:4}];let max=0;for(let mask=0;mask<32;mask++){const active=domains.filter((_,i)=>mask&(1<<i));if(active.length&&[0,1,2].some(i=>Math.max(...active.map(d=>d.lo[i]))>Math.min(...active.map(d=>d.hi[i]))))continue;const count=6+2+2+3+domains.reduce((s,d,i)=>s+((mask&(1<<i))?d.records:1),0);max=Math.max(max,count);}assert.equal(max,63);assert(WGSL.includes('items:array<HitField,64>'));assert.equal(STATION_SCORE.shed.length,135);});
 
 test('staged GPU keeps the complete shared field and only caches current ray intersections',()=>{assert(WGSL.includes('fn primaryRays('));assert(WGSL.includes('rayHits:array<Trace>'));assert(WGSL.includes('let tr=march(u.eye,rd,420.)'));assert(WGSL.includes('color=shade(tr,u.eye,rd)'));});
 
