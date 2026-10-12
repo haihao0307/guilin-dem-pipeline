@@ -1,4 +1,4 @@
-name: Train88 complete grouped function scene
+name: Train88 bounded first grouped query diagnostic
 on:
   push:
     branches: ['qa/train88-kowloon-function-r01-20261012']
@@ -10,7 +10,7 @@ permissions:
 jobs:
   compiler-and-equivalence:
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -58,22 +58,8 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/station-bridge" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
-      - name: One-group fragment diagnostic channel check
-        id: sentinel
-        continue-on-error: true
-        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/geometry-group-probes.cjs --group=11 --timeout-ms=120000
-      - name: Save completed diagnostic immediately
-        if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-        with:
-          name: station-sentinel-${{ github.sha }}
-          path: train88-kowloon-bridge-results/geometry-group-probes.json
-          retention-days: 7
-      - name: Complete station in original shared game first perspective frame
-        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/shared-bus.cjs --first-frame
-      - name: Keep diagnostic channel outcome explicit
-        if: always()
-        run: test '${{ steps.sentinel.outcome }}' = success
+      - name: Locate first physical query in retained game, no full-scene rerun
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/shared-bus.cjs --first-query
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:

@@ -9,7 +9,8 @@ import{TRACK,PLATFORM_LAYOUT,COACH_DIMENSIONS}from'../metre-scale.mjs';
 const triangle=()=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute([-1,-1,0,3,-1,0,-1,3,0],3));return g;};
 const mrt=(w,h,count=1)=>new THREE.WebGLRenderTarget(w,h,{count,type:THREE.FloatType,format:THREE.RGBAFormat,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter,depthBuffer:false,stencilBuffer:false});
 const mat=(fragmentShader,uniforms)=>new THREE.RawShaderMaterial({glslVersion:THREE.GLSL3,vertexShader:DISPATCH_VERTEX,fragmentShader,uniforms,depthTest:false,depthWrite:false,toneMapped:false});
-export async function createFunctionReceiver({renderer,scene,atmosphere,testResolution=null,testShadowResolution=null,testCrop=null,testCompare=false}={}){
+export async function createFunctionReceiver({renderer,scene,atmosphere,testResolution=null,testShadowResolution=null,testCrop=null,testCompare=false,testFirstQuery=false}={}){
+ if(testFirstQuery&&!testResolution)throw Error('First-query diagnostic requires explicit diagnostic mode');
  if(testShadowResolution&&(!testResolution||!Array.isArray(testShadowResolution)||testShadowResolution.length!==2||!testShadowResolution.every(n=>Number.isInteger(n)&&n>=16)))throw Error('Explicit diagnostic shadow dimensions require diagnostic mode');
  const shadowTestResolution=testResolution?(testShadowResolution|| (testCompare?[96,64]:testResolution)).slice():null;const gl=renderer.getContext();if(!renderer.capabilities.isWebGL2||!gl.getExtension('EXT_color_buffer_float'))throw Error('Station bridge requires WebGL2 with float render attachments');
  const binding=createStationBinding({score:STATION_SCORE,track:TRACK,platform:PLATFORM_LAYOUT,coach:COACH_DIMENSIONS});
@@ -23,7 +24,7 @@ export async function createFunctionReceiver({renderer,scene,atmosphere,testReso
  const f={inverseProjection:new THREE.Matrix4(),cameraToLocal:new THREE.Matrix4(),localToClip:new THREE.Matrix4(),viewport:new THREE.Vector4(1,1,0,8),controls:new THREE.Vector4(1,320,1400,0)};
  const normalControl={axisAndStep:new THREE.Vector4()};
  const materials=source.map((a,i)=>{const uniforms={};for(const entry of a.uniforms)uniforms[entry.name]={value:entry.type==='Params'?u:entry.type==='HostFrame'?f:entry.type==='GroupNormalControl'?normalControl:null};if(Object.values(uniforms).some(x=>x.value===null))throw Error('Unknown Naga uniform interface');for(const n of a.samplers)uniforms[n]={value:null};const m=mat(a.text,uniforms);m.userData.bindTexture=(index,texture)=>{const key=a.samplers.find(n=>n.includes('binding_'+index+'_'));if(!key)throw Error('Naga sampler reflection missing binding '+index+' in stage '+i);uniforms[key].value=texture;};return m;});
- const grouped=await createGroupQueryReceiver({renderer,THREE,u,frame:f});proof.geometryQuery=grouped.proof;
+ const grouped=await createGroupQueryReceiver({renderer,THREE,u,frame:f,diagnosticProgress:testResolution?(event=>{if(event.stage==='group-submitted'){gl.finish();const error=gl.getError();if(error!==gl.NO_ERROR)throw Error('Runtime group WebGL error '+error);}else console.log('KOWLOON_STAGE '+JSON.stringify(event));}):null});proof.geometryQuery=grouped.proof;
  const stageScene=new THREE.Scene(),stageCamera=new THREE.Camera(),dispatch=new THREE.Mesh(triangle(),materials[0]);dispatch.frustumCulled=false;stageScene.add(dispatch);
  let main=null,shadow=null,current=null,disposed=false,lastKey=null,lastShadowKey=null,clockMinutes=380,lastMainCamera=null;const localToWorld=new THREE.Matrix4(),worldToLocal=new THREE.Matrix4(),cameraLocal=new THREE.Matrix4(),clip=new THREE.Matrix4();
  function targets(w,h,withMatter){const reductions=[];let rw=w,rh=h;while(rw>1||rh>1){rw=Math.ceil(rw/4);rh=Math.ceil(rh/4);reductions.push(mrt(rw,rh));}const geometryPing=withMatter?[mrt(w,h,4),mrt(w,h,4)]:[];return{w,h,reductions,rays:[mrt(w,h),mrt(w,h)],fullField:mrt(w,h),geometryPing,geometry:geometryPing[0]||null,matter:withMatter?mrt(w,h,3):null,last:0};}
@@ -41,10 +42,10 @@ export async function createFunctionReceiver({renderer,scene,atmosphere,testReso
   if(t.coverage.rects.length){renderStage(materials.at(-1),t.rays[0],t.coverage.rects);
    for(let iteration=0;iteration<1400;iteration++){
     const options={width:t.w,height:t.h,traceTexture:t.rays[last].texture,rects:t.coverage.rects};
-    const complete=grouped.query(options);copyUniforms.inputMap.value=complete.a;renderStage(copyMaterial,t.fullField,t.coverage.rects);
+    const complete=grouped.query(options);if(testFirstQuery){console.log('KOWLOON_QUERY_DIAGNOSTIC_COMPLETE '+JSON.stringify({groups:grouped.proof.groups,queries:grouped.proof.queries,width:t.w,height:t.h,coverage:t.coverage}));throw Error('KOWLOON_QUERY_DIAGNOSTIC_COMPLETE');}copyUniforms.inputMap.value=complete.a;renderStage(copyMaterial,t.fullField,t.coverage.rects);
     const alternate=grouped.query({...options,fullHitTexture:t.fullField.texture,skip:3});
     const next=1-last;materials[0].userData.bindTexture(0,t.rays[last].texture);materials[0].userData.bindTexture(1,t.fullField.texture);materials[0].userData.bindTexture(2,alternate.a);renderStage(materials[0],t.rays[next],t.coverage.rects);last=next;
-    if(iteration%16===15&&!isActive(t.rays[last].texture,t))break;
+    if(iteration%16===15){const active=isActive(t.rays[last].texture,t);if(testResolution)console.log('KOWLOON_STAGE '+JSON.stringify({stage:'trace-batch',width:t.w,height:t.h,iterations:iteration+1,active}));if(!active)break;}
    }
   }t.last=last;return t.rays[last].texture;
  }

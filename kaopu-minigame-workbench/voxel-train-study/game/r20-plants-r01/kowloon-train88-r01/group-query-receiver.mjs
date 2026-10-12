@@ -17,8 +17,9 @@ import {GEOMETRY_GROUP_NAMES} from './geometry-groups.mjs';
  * copy, readback, finish, or scene render is added. Empty rects mean no valid pixels.
  * Synchronous dispatch does not claim GPU completion or numerical/visual validation.
  */
-export async function createGroupQueryReceiver({renderer, THREE, u, frame} = {}) {
+export async function createGroupQueryReceiver({renderer, THREE, u, frame, diagnosticProgress = null} = {}) {
   if (!renderer || !THREE || !u || !frame) throw Error('Group queries require the existing renderer, THREE, u, and frame');
+  if(diagnosticProgress!==null&&typeof diagnosticProgress!=='function')throw Error('Diagnostic progress must be a callback');
   const gl = renderer.getContext();
   if (!renderer.capabilities.isWebGL2 || !gl.getExtension('EXT_color_buffer_float')) throw Error('Group queries require WebGL2 floating-point render attachments');
   if (gl.getParameter(gl.MAX_DRAW_BUFFERS) < 4 || gl.getParameter(gl.MAX_COLOR_ATTACHMENTS) < 4) throw Error('Group queries require four RGBA32F MRT attachments');
@@ -130,7 +131,11 @@ export async function createGroupQueryReceiver({renderer, THREE, u, frame} = {})
         output = targets[index % 2];
         const textures = [traceTexture, ...(previous ? previous.textures : [traceTexture, traceTexture, traceTexture, traceTexture]), fullHitTexture || traceTexture];
         for (const [binding, name] of samplers[index]) materials[index].uniforms[name].value = textures[binding];
-        renderStage(materials[index], output, validRects); previous = output;
+        const observed=diagnosticProgress&&proof.queries===0;const start=observed?performance.now():0;
+        if(observed)diagnosticProgress({stage:'group-start',index,name:manifest.groups[index].name});
+        renderStage(materials[index], output, validRects);
+        if(observed){diagnosticProgress({stage:'group-submitted',index,name:manifest.groups[index].name});if(gl.isContextLost())throw Error(`Context lost while executing runtime group ${index}`);diagnosticProgress({stage:'group-complete',index,name:manifest.groups[index].name,elapsedMs:performance.now()-start});}
+        previous = output;
       }
       if (gl.isContextLost()) throw Error('Context lost during grouped query dispatch');
       const textures = output.textures.slice();
