@@ -54,8 +54,8 @@ jobs:
           node kaopu-unified-human-workbench/joey-observation-r01/brow-tip-r44/native-geometry-qa.test.cjs
       - name: Test bounded smile-state contract
         run: node --test kaopu-unified-human-workbench/joey-observation-r01/expression-state-r01/states.test.cjs
-      - name: Measure independent bounded mouth-expression controls
-        run: CONTOUR_OUT=joey-native-contour-r47-mouth CONTOUR_SPECS=./mouth-control-specs.json node kaopu-unified-human-workbench/joey-observation-r01/native-contour-r47/probe-contours.cjs
+      - name: Render frozen R45, bounded expression control and one diagnostic identity trial
+        run: node kaopu-unified-human-workbench/joey-observation-r01/native-contour-r47/render-trial.cjs
       - name: Keep bounded research evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -96,7 +96,7 @@ jobs:
             joey-face-relation-r45/
             joey-multiview-native-r46/
             joey-native-contour-r47/
-            joey-native-contour-r47-mouth/
+            joey-native-contour-r47-final/
           retention-days: 7
           compression-level: 0
           if-no-files-found: warn
