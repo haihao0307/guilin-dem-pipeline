@@ -263,7 +263,7 @@ fn machineField(p:vec3<f32>)->Field {
  ret=min(ret,capsule(p,vec3<f32>(.5,.45,32.),vec3<f32>(46.,.45,32.),.09));ret=min(ret,capsule(p,vec3<f32>(13.7,.45,9.75),vec3<f32>(.5,.45,9.75),.09));ret=min(ret,capsule(p,vec3<f32>(.5,.45,9.75),vec3<f32>(.5,.45,32.),.09));f=take(f,field(ret,5u,p,1.));
  f=take(f,transportField(p));
  let phase=u.transport.x/.155;let wheelP=p-vec3<f32>(-24.,1.45,-26.);f=take(f,field(length(vec2<f32>(length(wheelP.xy)-.8,wheelP.z))-.095,5u,p,2.));
- let crank=vec3<f32>(-24.+.65*cos(phase),1.45+.65*sin(phase),-26.);let sliderX=crank.x+sqrt(2.5*2.5-pow(crank.y-1.45,2.));f=take(f,field(capsule(p,crank,vec3<f32>(sliderX,1.45,-26.),.07),9u,p,2.));f=take(f,field(box(p-vec3<f32>(sliderX,1.45,-26.),vec3<f32>(.12,.20,.15)),5u,p,2.));
+ let crank=vec3<f32>(-24.+.65*cos(phase),1.45+.65*sin(phase),-26.);let sliderX=crank.x+sqrt(2.5*2.5-(crank.y-1.45)*(crank.y-1.45));f=take(f,field(capsule(p,crank,vec3<f32>(sliderX,1.45,-26.),.07),9u,p,2.));f=take(f,field(box(p-vec3<f32>(sliderX,1.45,-26.),vec3<f32>(.12,.20,.15)),5u,p,2.));
  f=take(f,field(box(p-vec3<f32>(-21.2,1.45,-26.),vec3<f32>(.55,.25,.3)),5u,p,2.));
 
  return f;
