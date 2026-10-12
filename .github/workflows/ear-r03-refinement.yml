@@ -1,0 +1,93 @@
+name: EAR-R03 refinement
+on:
+  push:
+    branches: [fix/ear-r03-lip-colour-anatomy-20261012]
+    paths:
+      - 'kaopu-unified-human-workbench/ear-refinement-r03/**'
+      - '.github/workflows/ear-r03-refinement.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: ear-r03-refinement
+  cancel-in-progress: false
+jobs:
+  refine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            .github/workflows
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned build and browser tools
+        run: |
+          npm install --no-save --package-lock=false esbuild@0.25.11 playwright@1.56.1 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: Collect relevant source and repository rules
+        run: |
+          mkdir -p ear-r03-audit
+          python3 - <<'PY'
+          import os,zipfile,subprocess
+          paths=subprocess.check_output(['git','ls-files'],text=True).splitlines()
+          with zipfile.ZipFile('ear-r03-audit/source-inspection.zip','w',zipfile.ZIP_DEFLATED) as z:
+            for p in paths:
+              if not os.path.isfile(p):continue
+              b=os.path.basename(p)
+              wanted=p.startswith('kaopu-unified-human-workbench/') and (p.endswith(('.mjs','.cjs','.js','.json','.css','.md')) and '/registration-vendor/' not in p and '/acceptance/' not in p and '/evidence/' not in p)
+              wanted=wanted or b=='AGENTS.md' or (p.startswith('.github/workflows/') and 'ear' in b)
+              if wanted and os.path.getsize(p)<1500000:z.write(p)
+          PY
+      - name: Start preview server
+        run: python3 -m http.server 8765 >/tmp/ear-r03-http.log 2>&1 &
+      - name: Audit frozen R02
+        if: ${{ hashFiles('kaopu-unified-human-workbench/ear-refinement-r03/build.cjs') == '' }}
+        run: node kaopu-unified-human-workbench/ear-refinement-r03/audit.cjs
+      - name: Build candidate
+        if: ${{ hashFiles('kaopu-unified-human-workbench/ear-refinement-r03/build.cjs') != '' }}
+        run: |
+          node kaopu-unified-human-workbench/ear-refinement-r03/build.cjs
+          node kaopu-unified-human-workbench/ear-refinement-r03/unit.mjs
+      - name: Verify candidate
+        if: ${{ hashFiles('kaopu-unified-human-workbench/ear-refinement-r03/build.cjs') != '' }}
+        env:
+          EAR_OUT: ear-r03-audit/candidate
+        run: node kaopu-unified-human-workbench/ear-refinement-r03/verify.cjs
+      - name: Publish isolated candidate as ordinary fast-forward commit
+        id: publish
+        if: ${{ hashFiles('kaopu-unified-human-workbench/ear-refinement-r03/build.cjs') != '' }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- kaopu-unified-human-workbench/ear-refinement-r03
+          if ! git diff --cached --quiet; then git commit -m 'build(ear-r03): publish tested candidate [skip ci]'; fi
+          git push origin HEAD:${{ github.ref_name }}
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Verify exact public build
+        if: ${{ steps.publish.outputs.sha != '' }}
+        env:
+          EAR_OUT: ear-r03-audit/public
+          EAR_MODE: public
+          EAR_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${{ steps.publish.outputs.sha }}/kaopu-unified-human-workbench/ear-refinement-r03/preview.html
+        run: node kaopu-unified-human-workbench/ear-refinement-r03/verify.cjs
+      - name: Keep evidence on isolated branch
+        if: ${{ steps.publish.outputs.sha != '' }}
+        run: |
+          mkdir -p kaopu-unified-human-workbench/ear-refinement-r03/acceptance
+          cp -r ear-r03-audit/candidate ear-r03-audit/public kaopu-unified-human-workbench/ear-refinement-r03/acceptance/
+          printf '%s\n' '${{ steps.publish.outputs.sha }}' > kaopu-unified-human-workbench/ear-refinement-r03/acceptance/BUILD_COMMIT.txt
+          git add -- kaopu-unified-human-workbench/ear-refinement-r03/acceptance
+          git commit -m 'test(ear-r03): retain candidate and public browser evidence [skip ci]'
+          git push origin HEAD:${{ github.ref_name }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ear-r03-audit-${{ github.run_id }}
+          path: ear-r03-audit
+          retention-days: 14
