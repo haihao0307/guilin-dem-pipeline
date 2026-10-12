@@ -65,3 +65,26 @@ eight counters move together with their custody addresses to the north wing.
 Four folded entrance leaves preserve the central entry axis, and a plaster
 ceiling finishes the retained structural slabs. The inventory save schema/key
 changes so an old moving carrier is never silently restored on a new path.
+
+## Visibility diagnosis and finite local expansion
+Component images from 04d750 isolated the apparent wall/floor ripples to the
+old distance-ratio soft-shadow approximation, not the material albedo or normal.
+The corrected point-sun visibility follows real opaque hits, skips empty
+candidate bounds and records budget expiry independently. A bound is only a
+safe step, never an occluder or an assumption of completed illumination.
+The tower's old 150 mm solid plinth was also covering its 33 mm finish floor;
+its inner cavity now reaches below the finish. Cut slate tiles retain source
+cleavage through explicit per-tile coordinates and subdued surface finishing.
+A focused 360 by 240 run (c54cccad) verified these defects with zero primary,
+glass or visibility exhaustion. It is not the final quality assessment.
+
+Whole civic and occupied-room bounds now prevent street/sky or unrelated-room
+rays from expanding every interior function. Local address/bay candidates and
+metric pixel footprints refine only necessary detail; custody state is never
+removed by view culling. Full visual regression uses native 960 by 640 frames,
+followed by 360 by 240 custody frames from the same commit and browser.
+The light model still uses an authored ambient/fixture approximation rather
+than full global illumination, and rotated wooden-frame normal coordinates
+remain a known binding limitation. These are explicit unfinished quality
+boundaries, not reasons to lower the target or call a passing test a finished
+artwork.

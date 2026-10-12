@@ -404,14 +404,22 @@ fn interiorRackWayfinding(p:vec3<f32>)->Field {
 }
 
 fn interiorField(p:vec3<f32>)->Field {
- var f=interiorHallFloor(p);f=take(f,interiorHallJoinery(p));f=take(f,interiorGroundCeilings(p));f=take(f,interiorTowerLobby(p));f=take(f,interiorPublicPlaster(p));
- f=take(f,interiorCounter(p));f=take(f,interiorBench(p));
- f=take(f,interiorSouthOffices(p));f=take(f,interiorWestOffices(p));
- f=take(f,interiorArcadeDetails(p));f=take(f,interiorWarehouseStructure(p));
- f=take(f,interiorRackWayfinding(p));
- let h=interiorNearestLight(p,0u);let c=interiorLightPosition(0u,h);
- let hb=box(p-vec3<f32>(c.x,5.45,c.z),vec3<f32>(.35,1.11,.35));
+ // Hierarchical world-space candidates: only the nearby occupied room group
+ // expands. The inventory is independent and remains present off screen.
+ let westBound=box(p-vec3<f32>(-35.5,9.1,0.),vec3<f32>(8.,9.4,41.));
+ let southBound=box(p-vec3<f32>(4.,5.4,-34.),vec3<f32>(47.,5.6,7.7));
+ let storeBound=box(p-vec3<f32>(8.,7.,3.25),vec3<f32>(36.7,7.,31.6));
+ let enclosing=min(min(westBound,southBound),storeBound);
+ if(enclosing>.8){return interiorEmpty(enclosing,p);}
+ var f=interiorEmpty(100.,p);
+ if(westBound<=.8){
+ f=take(f,interiorHallFloor(p));f=take(f,interiorHallJoinery(p));f=take(f,interiorTowerLobby(p));f=take(f,interiorCounter(p));f=take(f,interiorBench(p));f=take(f,interiorWestOffices(p));
+ let h=interiorNearestLight(p,0u);let c=interiorLightPosition(0u,h);let hb=box(p-vec3<f32>(c.x,5.45,c.z),vec3<f32>(.35,1.11,.35));
  if(hb<.7){f=take(f,interiorPendant(p,0u,h));}else{f=take(f,interiorEmpty(hb,p));}
+ }else{f=take(f,interiorEmpty(westBound,p));}
+ if(southBound<=.8){f=take(f,interiorSouthOffices(p));}else{f=take(f,interiorEmpty(southBound,p));}
+ if(min(westBound,southBound)<=.8){f=take(f,interiorGroundCeilings(p));f=take(f,interiorPublicPlaster(p));f=take(f,interiorArcadeDetails(p));}
+ if(storeBound<=.8){f=take(f,interiorWarehouseStructure(p));f=take(f,interiorRackWayfinding(p));}else{f=take(f,interiorEmpty(storeBound,p));}
  return f;
 }
 `;

@@ -156,6 +156,10 @@ fn taperedChimney(p:vec3<f32>)->Field {
  let rim=max(cylinder(q-vec3<f32>(0.,30.96,0.),1.49,.10),-cylinder(q-vec3<f32>(0.,30.96,0.),.75,.3));f=take(f,field(rim,3u,p,9.));return f;
 }
 fn architecture(p:vec3<f32>)->Field {
+ // A conservative whole-body candidate, not drawable cached geometry. Sky and
+ // street rays reach this envelope before any civic-wing/tower detail expands.
+ let civicBound=box(p-vec3<f32>(3.8,14.1,-.1),vec3<f32>(47.5,14.6,41.8));
+ if(civicBound>.8){return field(civicBound,0u,p,0.);}
  var f=field(box(p-vec3<f32>(4.,-.24,0.),vec3<f32>(46.,.24,40.)),3u,p,1.);
  // Continuous L-shaped, 3.2m clear sheltered walk. The x-negative street is public entry.
  let westQ=vec3<f32>(p.z,p.y,p.x+42.6);let southQ=vec3<f32>(p.x-4.,p.y,p.z+40.5);
