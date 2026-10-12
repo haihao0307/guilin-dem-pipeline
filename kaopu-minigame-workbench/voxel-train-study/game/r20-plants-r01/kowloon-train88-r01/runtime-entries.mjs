@@ -18,6 +18,8 @@ fn stationRayInterval(ro:vec3<f32>,rd:vec3<f32>)->vec2<f32>{
 `;
 export const STEP_ENTRY=String.raw`
 @fragment fn stepRays(@builtin(position)pixel:vec4<f32>)->@location(0)vec4<f32>{
+ // Terminal rays need no camera transform, box query, construction or mother work.
+ if(frame.controls.x<.5){let previous=textureLoad(traceInput,vec2<i32>(pixel.xy),0);if(previous.w!=0.){return previous;}}
  let ray=hostRay(pixel.xy);let ro=ray[0];let rd=ray[1];let interval=stationRayInterval(ro,rd);if(interval.y<interval.x){return vec4<f32>(0.,0.,0.,2.);}var tr=vec4<f32>(interval.x,0.,0.,0.);
  if(frame.controls.x<.5){tr=textureLoad(traceInput,vec2<i32>(pixel.xy),0);}
  // tr=(metric ray distance, material id, query count, status). 0=active,

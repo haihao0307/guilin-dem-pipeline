@@ -22,10 +22,24 @@ struct StationCandidates {count:u32,items:array<HitField,${host?96:64}>,}
 // function arguments in GLSL ES backends; reset before each nonrecursive query.
 var<private> stationCandidates:StationCandidates;
 var<private> stationCandidateOverflow:bool;
-fn recordPart(p:vec3<f32>,d:f32,id:u32,q:vec3<f32>,seed:f32){if(stationCandidates.count>=STATION_CANDIDATE_CAPACITY){stationCandidateOverflow=true;return;}stationCandidates.items[stationCandidates.count]=HitField(d,id,q,seed,d,vec3<f32>(1.),0.);stationCandidates.count+=1u;}
-fn recordCoated(p:vec3<f32>,d:f32,q:vec3<f32>,extent:vec3<f32>,seed:f32){if(stationCandidates.count>=STATION_CANDIDATE_CAPACITY){stationCandidateOverflow=true;return;}stationCandidates.items[stationCandidates.count]=HitField(d,13u,q,seed,d,extent,0.);stationCandidates.count+=1u;}
-fn recordTimber(p:vec3<f32>,d:f32,q:vec3<f32>,extent:vec3<f32>,role:f32,sourceSeed:f32){if(stationCandidates.count>=STATION_CANDIDATE_CAPACITY){stationCandidateOverflow=true;return;}stationCandidates.items[stationCandidates.count]=HitField(d,4u,q,role,d,extent,sourceSeed);stationCandidates.count+=1u;}
-fn resolveCandidates(p:vec3<f32>)->HitField{if(stationCandidateOverflow){return HitField(0.,999u,p,0.,0.,vec3<f32>(1.),0.);}var h=HitField(10000.,0u,p,0.,10000.,vec3<f32>(1.),0.);let st=resolveStationState(p);for(var i=0u;i<stationCandidates.count;i++){var candidate=stationCandidates.items[i];let d=candidate.d;let id=candidate.id;let native=id==1u||id==2u||id==3u||id==4u||id==12u||id==13u||id==15u||id==17u;if(native&&d-.03<h.d){if(abs(d)<.045){candidate.d=evaluateStationGeometry(candidate,p,st).d;}else{candidate.d=sign(d)*max(abs(d)-.03,0.);}}if(candidate.d<h.d){h=candidate;}}return h;}
+// Invocation-local admissible intervals prune only candidates that cannot win.
+// This broad 30.01mm envelope contains every locked mother displacement and the
+// retained far-field +/-30mm stepping convention. Order/ties remain unchanged.
+var<private> stationRawCandidateCount:u32;
+var<private> stationCandidateUpper:f32;
+fn stationNativeId(id:u32)->bool{return id==1u||id==2u||id==3u||id==4u||id==12u||id==13u||id==15u||id==17u;}
+fn recordCandidate(h:HitField){
+ if(stationRawCandidateCount>=STATION_CANDIDATE_CAPACITY){stationCandidateOverflow=true;return;}
+ stationRawCandidateCount+=1u;
+ let margin=select(0.,.03001,stationNativeId(h.id));
+ stationCandidateUpper=min(stationCandidateUpper,h.d+margin);
+ if(h.d-margin>stationCandidateUpper){return;}
+ stationCandidates.items[stationCandidates.count]=h;stationCandidates.count+=1u;
+}
+fn recordPart(p:vec3<f32>,d:f32,id:u32,q:vec3<f32>,seed:f32){recordCandidate(HitField(d,id,q,seed,d,vec3<f32>(1.),0.));}
+fn recordCoated(p:vec3<f32>,d:f32,q:vec3<f32>,extent:vec3<f32>,seed:f32){recordCandidate(HitField(d,13u,q,seed,d,extent,0.));}
+fn recordTimber(p:vec3<f32>,d:f32,q:vec3<f32>,extent:vec3<f32>,role:f32,sourceSeed:f32){recordCandidate(HitField(d,4u,q,role,d,extent,sourceSeed));}
+fn resolveCandidates(p:vec3<f32>)->HitField{if(stationCandidateOverflow){return HitField(0.,999u,p,0.,0.,vec3<f32>(1.),0.);}var h=HitField(10000.,0u,p,0.,10000.,vec3<f32>(1.),0.);let st=resolveStationState(p);for(var i=0u;i<stationCandidates.count;i++){var candidate=stationCandidates.items[i];let d=candidate.d;let id=candidate.id;let native=stationNativeId(id);if(d-select(0.,.03001,native)>stationCandidateUpper){continue;}if(native&&d-.03<h.d){if(abs(d)<.045){candidate.d=evaluateStationGeometry(candidate,p,st).d;}else{candidate.d=sign(d)*max(abs(d)-.03,0.);}}if(candidate.d<h.d){h=candidate;}}return h;}
 
 fn rep(x:f32,pitch:f32,lo:f32,hi:f32)->f32{return x-clamp(round(x/pitch),lo,hi)*pitch;}
 fn archHole(x:f32,y:f32,r:f32,spring:f32)->f32{return max(abs(x)-r,select(y-(spring+r),length(vec2<f32>(x,y-spring))-r,y>spring));}
@@ -33,7 +47,7 @@ fn stateWet(p:vec3<f32>)->f32{let drain=1.-smoothstep(.12,.75,abs(rep(p.x,7.5,-4
 fn repairAt(p:vec3<f32>)->f32{return .08+.65*(1.-smoothstep(.9,1.4,abs(p.x-15.)))*(1.-smoothstep(1.1,2.2,p.y));}
 fn brickQ(p:vec3<f32>,axis:u32,d:f32)->vec3<f32>{let row=floor(p.y/.073);let shift=select(0.,.125,(i32(row)&1)==1);let face=select(p.x,p.z,axis==12u);return vec3<f32>(fract((face+shift)/.25)*.25-.125,fract(p.y/.073)*.073-.0365,.055384615+d);}
 fn stationDomain(p:vec3<f32>,skipRoof:bool,skipFloor:bool)->HitField{
- stationCandidates.count=0u;stationCandidateOverflow=false;
+ stationCandidates.count=0u;stationCandidateOverflow=false;stationRawCandidateCount=0u;stationCandidateUpper=10000.;
  // Promenade and hall threshold share the platform datum, with real entrance steps.
  if(!skipFloor){recordPart(p,box(p-vec3<f32>(0,.15,0),vec3<f32>(31.2,.7,8.8)),17u,p,1.);}
  if(!skipFloor){recordPart(p,box(p-vec3<f32>(0.,.3,11.8),vec3<f32>(31.2,.55,3.)),17u,p,1.);}
