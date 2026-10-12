@@ -14,132 +14,40 @@ jobs:
   observe:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - case: remaining-native
-            engine: 0b4703359efbae10ffc6c0e5fe3fc081e7eca4fe
-          - case: candidate-page
-            engine: 0b3e95223e0b53048d954dd82c7469d06d984c20
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-          sparse-checkout: |
-            kaopu-unified-human-workbench/joey-observation-r01
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with:
-          ref: ${{ matrix.engine }}
-          path: native
-          persist-credentials: false
-          sparse-checkout: |
-            kaopu-unified-human-workbench
-            kaopu-anny-workbench
-            kaopu-mhr-workbench
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with:
-          ref: d689a5ee8bc5d493d2b43e7b6ea10dbea1868b15
-          path: hair
-          persist-credentials: false
-          sparse-checkout: kaopu-hair-workbench/qa/isolated-longhair-r01
+          sparse-checkout: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54
       - name: Install pinned official browser package
         run: |
           npm install --prefix "$RUNNER_TEMP/joey-native" --no-save --ignore-scripts playwright@1.57.0
           "$RUNNER_TEMP/joey-native/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/joey-native/node_modules" >> "$GITHUB_ENV"
-      - name: Serve fixed native engine without deployment
+      - name: Await the authorized isolated Pages candidate
         run: |
-          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/joey-server.log" 2>&1 &
-          for n in $(seq 1 30); do
-            curl --fail --silent http://127.0.0.1:8765/native/kaopu-unified-human-workbench/ > /dev/null && exit 0
-            sleep 1
-          done
-          exit 1
-      - name: Test fixed-root taper and native geometry diagnostics
-        run: |
-          node kaopu-unified-human-workbench/joey-observation-r01/brow-tip-r44/brow-band.test.mjs
-          node kaopu-unified-human-workbench/joey-observation-r01/brow-tip-r44/native-geometry-qa.test.cjs
-      - name: Test bounded smile-state contract
-        run: node --test kaopu-unified-human-workbench/joey-observation-r01/expression-state-r01/states.test.cjs
-      - name: Test direct surface guard metrics
-        run: node --test kaopu-unified-human-workbench/joey-observation-r01/local-head-control-r50/surface-guards.test.cjs
-      - name: Test first-order surface differential
-        run: node --test kaopu-unified-human-workbench/joey-observation-r01/local-head-control-r50/differential-guards.test.cjs
-      - name: Test and render frozen identity hair and eye adapters
-        run: |
-          node --test kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/eye/EyeSurface.test.mjs
-          node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/hair/test-r14-coverage.mjs
-          node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/hair/test-r54-flow.mjs
-      - name: Verify remaining native expression and profile
-        if: matrix.case == 'remaining-native'
+          python3 - <<'PYWAIT'
+          import json,time,urllib.request
+          url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/RELEASE.json'
+          for attempt in range(24):
+              try:
+                  r=json.load(urllib.request.urlopen(url,timeout=20))
+                  if r.get('qaCommit')=='61f69d2d4a481e18d5284d599f2d4dd922227663':
+                      print('Verified published candidate release',r['qaCommit']);break
+              except Exception as e: print(type(e).__name__,str(e))
+              time.sleep(5)
+          else: raise SystemExit('Candidate Pages release not yet available; public verification incomplete')
+          PYWAIT
+      - name: Verify actual public cold load, views, controls and visible error
         env:
-          R54_VIEWS: U07,profile
-        run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/render-appearance.cjs
-      - name: Verify actual isolated candidate page and controls
-        if: matrix.case == 'candidate-page'
+          R54_PREVIEW_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/index.html
         run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/test-preview.cjs
-      - name: Keep bounded research evidence
+      - name: Keep actual public verification evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: joey-native-probe-${{ matrix.case }}-${{ github.sha }}
-          path: |
-            joey-native-probe-results/
-            joey-native-candidate-results/
-            joey-relative-mouth-results/
-            joey-archive-file-verification/
-            joey-semantic-response-results/
-            joey-manual-r03-results/
-            joey-manual-r04-results/
-            joey-manual-r05-results/
-            joey-manual-r06-results/
-            joey-eye-control-audit/
-            joey-camera-expression-r02/
-            joey-nose-ab-r07/
-            joey-nose-depth-r08/
-            joey-eyelid-r09/
-            joey-eye-aspect-r10/
-            joey-appearance-r11/
-            joey-lowerface-r12/
-            joey-lip-control-r13/
-            joey-eye-bridge-r14/
-            joey-lid-response-r15/
-            joey-brow-head-r16/
-            joey-brow-flow-r17/
-            joey-eye-expression-r18/
-            joey-final-jacobian-r19/
-            joey-linear-domain-r20/
-            joey-brow-coverage-r21/
-            joey-combined-appearance-r22/
-            joey-macro-face-r43/
-            joey-brow-tip-r44/
-            joey-expression-state-r01/
-            joey-camera-expression-registration-r01/
-            joey-face-relation-r45/
-            joey-multiview-native-r46/
-            joey-native-contour-r47/
-            joey-native-contour-r47-final/
-            joey-gnm-face-r48-basis/
-            joey-gnm-face-r48-probes/
-            joey-gnm-face-r48-final/
-            joey-gnm-face-r48-b-final/
-            joey-gnm-face-r48-b-fixed-hair/
-            joey-reference-depth-r49/
-            joey-local-head-control-r50/
-            joey-local-head-control-r50-direct/
-            joey-local-head-control-r50-differential/
-            joey-local-head-control-r50-field2/
-            joey-local-head-control-r50-field2-differential/
-            joey-local-head-control-r50-field2-direct/
-            joey-local-head-control-r50-native-diagnostic/
-            joey-local-head-control-r50-diagnostic-render/
-            joey-global-relations-r51-response/
-            joey-global-relations-r51-render/
-            joey-brow-face-r52-render/
-            joey-cheek-volume-r53-light/
-            joey-appearance-r54/
-            joey-appearance-r54-preview/
+          name: joey-r54-public-${{ github.sha }}
+          path: joey-appearance-r54-preview/
           retention-days: 7
           compression-level: 0
           if-no-files-found: warn
