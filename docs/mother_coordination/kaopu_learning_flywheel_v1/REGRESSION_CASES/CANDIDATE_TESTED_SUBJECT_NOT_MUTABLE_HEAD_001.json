@@ -1,8 +1,8 @@
 {
   "id": "TESTED-SUBJECT-NOT-MUTABLE-HEAD-001",
   "status": "Candidate",
-  "scope": "Fish R012 receipt lineage; possible later reuse for multi-step publication receipts",
-  "trigger": "A tested implementation is followed by receipt or task-anchor commits before audit or delivery.",
+  "scope": "Fish R012 receipt lineage; Tailor N123 replay; Human EAR single-Mother provenance trial candidate",
+  "trigger": "A tested implementation is followed by receipt/task-anchor commits, or an artifact is delivered with a self-authored digest but without verifiable producer/workflow identity.",
   "requiredInputs": [
     "testedSubjectSha",
     "workflowRun and workflowJob",
@@ -34,7 +34,10 @@
     {
       "round": "N123",
       "mother": "Tailor",
-      "runs": [37878896327, 37880361490],
+      "runs": [
+        37878896327,
+        37880361490
+      ],
       "subjects": [
         "3463c654def88fed4cad8315fd7d7b36b6d06d87",
         "7e21a019512adfda29fd5d457fdf03c94563a0f9"
@@ -57,12 +60,178 @@
       },
       "result": "10/10 history replay passed; HOLD_LOCAL_BROWSER_GEOMETRY_PARITY_FAILED",
       "novelty": "NO_NOVELTY; native generation and card enumeration cannot transfer tested status to a failed browser-regenerated subject or to an unexecuted public delivery"
+    },
+    {
+      "round": "N147",
+      "mother": "Human EAR",
+      "subject": "EAR-R03.0@2cb1a37763893ccb68240190d3b15951515f17cc",
+      "workflowPath": ".github/workflows/ear-r03-refinement.yml",
+      "workflowBlob": "d45ce2179da904b0bb5123ba6901286e70e9cfd8",
+      "observedGap": "The workflow uploads ear-r03-audit with actions/upload-artifact@v4 but has no attestations:write/id-token:write permission, no actions/attest step and no attestation verification. Current digest/run receipts remain valid scoped evidence but are self-authored lineage claims.",
+      "result": "7/7 classification replay passed; HOLD_PROVENANCE_ATTESTATION_MISSING",
+      "novelty": "Cryptographic subject-digest plus signer repository/workflow/source identity is not present in R2 Delivery Receipt or prior tested-subject lineage fields; it complements rather than replaces them."
     }
   ],
+  "attestationExtensionCandidate": {
+    "status": "TEACHER_CANDIDATE",
+    "teacher": {
+      "source": "actions/attest",
+      "version": "v4.2.2",
+      "sourceCommit": "1e69f48acb82d1966a394da916b4c1698aa569d6",
+      "releaseDate": "2026-08-04",
+      "license": "MIT",
+      "provenance": "Official GitHub Actions organization; signed immutable release commit; public repository.",
+      "maintenance": "Repository pushed 2026-10-06 and had active scheduled Sigstore prober runs observed 2026-10-12.",
+      "executableEvidence": "Node24 action, unit/integration test directories, published releases and public Sigstore probing.",
+      "directNovelty": "Binds a named artifact digest to a signed in-toto/SLSA predicate and GitHub Actions OIDC identity, allowing verification against expected repository/workflow/source instead of trusting a copied receipt digest.",
+      "dependenciesRisks": [
+        "GitHub Actions",
+        "OIDC id-token permission",
+        "attestations write permission",
+        "GitHub/Sigstore availability",
+        "GitHub CLI verification",
+        "network access"
+      ],
+      "demoOnly": false,
+      "closedDependency": false
+    },
+    "applicability": "Single-Mother trial only for CI-built user-visible HTML/audit artifacts; does not attest manual local builds unless a separate trusted builder exists.",
+    "requiredFields": [
+      "artifactName",
+      "artifactDigest",
+      "attestationIdOrBundleDigest",
+      "signatureVerified",
+      "expectedRepository",
+      "verifiedSignerRepository",
+      "expectedWorkflow",
+      "verifiedSignerWorkflow",
+      "expectedSourceSha",
+      "verifiedSourceSha",
+      "expectedSourceRef",
+      "verifiedSourceRef",
+      "workflowRunId",
+      "workflowConclusion",
+      "attestationVerificationReceipt",
+      "existingPromotionGatesPassed"
+    ],
+    "states": [
+      "HOLD_ARTIFACT_DIGEST_MISMATCH",
+      "HOLD_PROVENANCE_ATTESTATION_MISSING",
+      "HOLD_PROVENANCE_SIGNATURE_INVALID",
+      "HOLD_PROVENANCE_SIGNER_SCOPE_MISMATCH",
+      "HOLD_PROVENANCE_SOURCE_MISMATCH",
+      "HOLD_PROVENANCE_WORKFLOW_NOT_SUCCESS",
+      "PROVENANCE_VERIFIED__PROMOTION_HOLD_EXISTING_GATES",
+      "PROVENANCE_VERIFIED__PROMOTION_ELIGIBLE"
+    ],
+    "boundary": [
+      "A valid attestation proves provenance/integrity only; it does not prove reference fidelity, visual quality, browser/device runtime, physics, independent verifier approval or USER-ACCEPTED.",
+      "Verification policy must bind repository, workflow, source SHA/ref and artifact digest; signature-valid alone is insufficient.",
+      "The action should be pinned to an immutable full commit during trial, not only a mutable major tag.",
+      "Failure of the external attestation service must fail closed for provenance claims but must not erase previously verified scoped production facts."
+    ],
+    "falsifiableHypothesis": "The extension must distinguish a stale artifact relabeled by a fresh receipt, an unsigned copied digest, a valid signature from the wrong workflow/source, and a correctly attested artifact whose semantic gates still fail. If it cannot, reject the Candidate.",
+    "fixtures": [
+      {
+        "id": "EAR_R03_CURRENT_UNSIGNED_AUDIT",
+        "input": {
+          "artifactDigestMatches": true,
+          "attestationPresent": false
+        },
+        "expect": "HOLD_PROVENANCE_ATTESTATION_MISSING"
+      },
+      {
+        "id": "STALE_ARTIFACT_RELABELED_BY_FRESH_RECEIPT",
+        "input": {
+          "artifactDigestMatches": false,
+          "attestationPresent": true,
+          "signatureVerified": true
+        },
+        "expect": "HOLD_ARTIFACT_DIGEST_MISMATCH"
+      },
+      {
+        "id": "COPIED_DIGEST_UNSIGNED_JSON_RECEIPT",
+        "input": {
+          "artifactDigestMatches": true,
+          "attestationPresent": true,
+          "signatureVerified": false
+        },
+        "expect": "HOLD_PROVENANCE_SIGNATURE_INVALID"
+      },
+      {
+        "id": "VALID_SIGNATURE_WRONG_WORKFLOW",
+        "input": {
+          "artifactDigestMatches": true,
+          "attestationPresent": true,
+          "signatureVerified": true,
+          "signerRepository": "haihao0307/guilin-dem-pipeline",
+          "expectedRepository": "haihao0307/guilin-dem-pipeline",
+          "signerWorkflow": ".github/workflows/unrelated.yml",
+          "expectedWorkflow": ".github/workflows/ear-r03-refinement.yml"
+        },
+        "expect": "HOLD_PROVENANCE_SIGNER_SCOPE_MISMATCH"
+      },
+      {
+        "id": "VALID_SIGNATURE_OLD_SOURCE_SHA",
+        "input": {
+          "artifactDigestMatches": true,
+          "attestationPresent": true,
+          "signatureVerified": true,
+          "signerRepository": "haihao0307/guilin-dem-pipeline",
+          "expectedRepository": "haihao0307/guilin-dem-pipeline",
+          "signerWorkflow": ".github/workflows/ear-r03-refinement.yml",
+          "expectedWorkflow": ".github/workflows/ear-r03-refinement.yml",
+          "sourceSha": "old",
+          "expectedSourceSha": "2cb1a377",
+          "sourceRef": "refs/heads/fix/ear-r03-lip-colour-anatomy-20261012",
+          "expectedSourceRef": "refs/heads/fix/ear-r03-lip-colour-anatomy-20261012"
+        },
+        "expect": "HOLD_PROVENANCE_SOURCE_MISMATCH"
+      },
+      {
+        "id": "VALID_PROVENANCE_REFERENCE_GATE_STILL_HOLDS",
+        "input": {
+          "artifactDigestMatches": true,
+          "attestationPresent": true,
+          "signatureVerified": true,
+          "signerRepository": "haihao0307/guilin-dem-pipeline",
+          "expectedRepository": "haihao0307/guilin-dem-pipeline",
+          "signerWorkflow": ".github/workflows/ear-r03-refinement.yml",
+          "expectedWorkflow": ".github/workflows/ear-r03-refinement.yml",
+          "sourceSha": "2cb1a377",
+          "expectedSourceSha": "2cb1a377",
+          "sourceRef": "refs/heads/fix/ear-r03-lip-colour-anatomy-20261012",
+          "expectedSourceRef": "refs/heads/fix/ear-r03-lip-colour-anatomy-20261012",
+          "workflowConclusion": "success",
+          "existingPromotionGatesPassed": false
+        },
+        "expect": "PROVENANCE_VERIFIED__PROMOTION_HOLD_EXISTING_GATES"
+      },
+      {
+        "id": "VALID_PROVENANCE_AND_EXISTING_GATES",
+        "input": {
+          "artifactDigestMatches": true,
+          "attestationPresent": true,
+          "signatureVerified": true,
+          "signerRepository": "haihao0307/guilin-dem-pipeline",
+          "expectedRepository": "haihao0307/guilin-dem-pipeline",
+          "signerWorkflow": ".github/workflows/ear-r03-refinement.yml",
+          "expectedWorkflow": ".github/workflows/ear-r03-refinement.yml",
+          "sourceSha": "2cb1a377",
+          "expectedSourceSha": "2cb1a377",
+          "sourceRef": "refs/heads/fix/ear-r03-lip-colour-anatomy-20261012",
+          "expectedSourceRef": "refs/heads/fix/ear-r03-lip-colour-anatomy-20261012",
+          "workflowConclusion": "success",
+          "existingPromotionGatesPassed": true
+        },
+        "expect": "PROVENANCE_VERIFIED__PROMOTION_ELIGIBLE"
+      }
+    ]
+  },
   "activation": {
     "global": false,
     "singleMotherTrialRequired": true,
     "independentVerifierRequired": true,
-    "rollback": "Do not activate; retain current R2 and require exact tested implementation SHA."
+    "rollback": "Do not activate globally. Remove the attestation extension if one real single-Mother trial adds no discrimination beyond exact digest/run receipts or causes unacceptable service coupling."
   }
 }
