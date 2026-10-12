@@ -10,5 +10,5 @@ for(const[id,key,label]of[['hair-toggle','hair','覆盖发层'],['eye-toggle','e
 frame.src=hostURL.href;
 
 const diagnosticJSON=()=>JSON.stringify(window.r54DeviceDiagnostic,null,2);
-document.querySelector('#copy-diagnostic').onclick=async()=>{const result=document.querySelector('#diagnostic-action-status');try{await navigator.clipboard.writeText(diagnosticJSON());result.textContent='完整诊断已复制；未自动发送。';}catch{result.textContent='此浏览器未允许复制，请使用下载诊断，或长按上方文字复制。';}};
+document.querySelector('#copy-diagnostic').onclick=async()=>{const result=document.querySelector('#diagnostic-action-status'),button=document.querySelector('#copy-diagnostic');result.textContent='正在复制完整诊断…';button.disabled=true;let timeout;try{await Promise.race([navigator.clipboard.writeText(diagnosticJSON()),new Promise((_,reject)=>{timeout=setTimeout(()=>reject(Error('copy timeout')),5000);})]);result.textContent='完整诊断已复制；未自动发送。';}catch{result.textContent='未确认复制完成，请下载诊断，或长按上方文字复制。';}finally{clearTimeout(timeout);button.disabled=false;}};
 document.querySelector('#download-diagnostic').onclick=()=>{const a=document.createElement('a'),url=URL.createObjectURL(new Blob([diagnosticJSON()],{type:'application/json'}));a.href=url;a.download='r54-device-diagnostic.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);document.querySelector('#diagnostic-action-status').textContent='已请求保存本机诊断；未自动发送。';};

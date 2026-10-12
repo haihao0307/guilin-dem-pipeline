@@ -44,8 +44,8 @@ export async function diagnoseR52Device({positions,faces,state,archive,nativeArc
   report.sources.sort((a,b)=>a.url.localeCompare(b.url));report.checks.sourceFilesMatch=report.sources.every(x=>x.matches);if(!report.checks.sourceFilesMatch)throw Error('诊断发现源码/元数据不同或未读取成功');
   report.sourceCheckScope='Fetched exact versioned source URLs and metadata; native loader separately verifies asset hashes. A post-load refetch does not prove a previous browser module-cache byte identity.';
   onProgress('3/5 下载固定基准并在本机逐点比较');
-  const reference=await bytes(new URL('r52-reference-positions.f32',baseURL),fetcher);report.loadedReferenceSHA=await sha256(reference);report.checks.referenceMatches=report.loadedReferenceSHA===R52_REFERENCE_SHA;if(!report.checks.referenceMatches)throw Error('原始基准字节校验失败');
-  report.comparison=compareR52Coordinates(snapshot,reference);report.checks.actualFinite=report.nonFiniteActualCoordinates.length===0;
+  const reference=await bytes(new URL('r52-reference-positions.f32',baseURL),fetcher);onProgress('3/5 校验本机已读基准字节');report.loadedReferenceSHA=await sha256(reference);report.checks.referenceMatches=report.loadedReferenceSHA===R52_REFERENCE_SHA;if(!report.checks.referenceMatches)throw Error('原始基准字节校验失败');
+  onProgress('3/5 在本机统计全部坐标差异');report.comparison=compareR52Coordinates(snapshot,reference);report.checks.actualFinite=report.nonFiniteActualCoordinates.length===0;
  }catch(e){report.failure=e.message;}
  return report;
 }

@@ -13,8 +13,8 @@ export async function mountPreview(){
  const started=performance.now();while(!window.fullCommonWorkbench){if(performance.now()-started>30000)throw Error('原生人物入口未就绪');await new Promise(r=>setTimeout(r,100));}
  const [archive,config]=await Promise.all(['archive-r52.json','views.json'].map(async n=>{const r=await fetch(new URL(n,import.meta.url));if(!r.ok)throw Error('候选配置载入失败');return n==='archive-r52.json'?verifyR52Archive(await r.arrayBuffer()):r.json();}));
  const api=window.fullCommonWorkbench,loadStatus=document.getElementById('load-status'),loadProgress=document.getElementById('load-progress');
- progress('2/5 载入原生人体');const watch=new MutationObserver(()=>{const text=loadStatus?.textContent?.trim();if(text)progress('2/5 '+text);});if(loadStatus)watch.observe(loadStatus,{childList:true,characterData:true,subtree:true});
- try{await api.load();}finally{watch.disconnect();}
+ progress('2/5 载入原生人体');let rejectNativeFailure;const nativeFailure=new Promise((_,reject)=>{rejectNativeFailure=reject;});const watch=new MutationObserver(()=>{const text=loadStatus?.textContent?.trim();if(text){progress('2/5 '+text);if(/^载入失败|^载入已取消/.test(text)){send('r54-error',{message:text});rejectNativeFailure(Error(text));}}});if(loadStatus)watch.observe(loadStatus,{childList:true,characterData:true,subtree:true});
+ try{await Promise.race([api.load(),nativeFailure]);}finally{watch.disconnect();}
  if(!api.diagnostics().ready||api.diagnostics().busy)throw Error(loadStatus?.textContent?.trim()||'原生模型载入未完成');progress('3/5 恢复并校验固定脸型');await api.motion().setMode('shape');api.restore(archive);
  const v=api.motion().viewer,expected=config.rows.find(x=>x.id==='E04');if(expected.expectedPositionSHA256!==R52_REFERENCE_SHA)throw Error('视图配置中的 R52 基线不同');
  async function checkGeometry(){const positions=api.positions(),state=api.state(),faces=api.faces(),nativeArchive=api.archive();try{return await verifyR52Geometry(positions,state,archive.state);}catch(error){
