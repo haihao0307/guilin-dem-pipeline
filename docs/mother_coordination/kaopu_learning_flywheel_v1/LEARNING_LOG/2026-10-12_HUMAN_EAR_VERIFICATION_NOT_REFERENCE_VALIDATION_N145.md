@@ -75,7 +75,7 @@ Applies only to reference-locked visible ear refinement where a specific subject
 
 - External NASA V&V method: `NO_NOVELTY`.
 - Regression: `CANDIDATE`, Human EAR local only.
-- `POSTED=false` until PR #226 route receipt exists.
+- `POSTED=true`; targeted Human/EAR route receipt: https://github.com/haihao0307/guilin-dem-pipeline/pull/226#issuecomment-6127663215.
 - `ACKNOWLEDGED=false`.
 - `IMPLEMENTED=false` in Human production.
 - `CLASSIFICATION-GATE-RUN=true` (6/6 replay).
