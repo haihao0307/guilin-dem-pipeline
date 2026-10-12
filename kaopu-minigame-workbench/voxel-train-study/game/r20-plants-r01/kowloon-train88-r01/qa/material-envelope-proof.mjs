@@ -73,7 +73,7 @@ test('brick lower bound follows rounded-box support plane and contour bounds, no
   contains(brick, 'br_contourLong', ['if(s>=-0.0022){return s;}', '-0.0022+0.00045*tanh((s+0.0022)/0.00045)']);
   contains(brick, 'br_surfaceDelta', ['0.038*tanh(sum.x*1.10/0.038)+sum.y/max(1.0,sum.z)']);
   contains(brick, 'kpBrickBaseDistance', ['vec3<f32>(1.04,0.265,0.480)', 'mix(1.0,0.90+0.20*br_h11(seed+7.1),variation)']);
-  contains(matter, 'evaluateStationGeometry', ['kpBrickBaseDistance(q,seed,variant,.42)', 'g.d=min(h.d+.006,native+g.loss)', '0.,.0016']);
+  contains(matter, 'evaluateStationGeometry', ['kpBrickBaseDistance(q,seed,variant,.42)', 'let mortarDistance=h.d+.006','let brickDistance=native+g.loss','g.d=min(mortarDistance,brickDistance)', '0.,.0016']);
   // Each mask is a product of smoothsteps in [0,1]. Chips >=0; every
   // contour >=-.0048, hence weighted contour/max(1,totalWeight)>=-.0048.
   // A rounded box satisfies B(q)>=q.z-b.z. Variant sign flips preserve B.

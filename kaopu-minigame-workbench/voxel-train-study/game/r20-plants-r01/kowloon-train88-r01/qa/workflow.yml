@@ -40,8 +40,8 @@ jobs:
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
       - name: Same-source WebGL2 and WebGPU numerical probes
         run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/isolated-probes.cjs
-      - name: Real FH88 host depth integration diagnostic
-        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/host-runtime.cjs
+      - name: Fixed native-pixel station material before-after ROIs
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/material-roi.cjs
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
@@ -49,6 +49,7 @@ jobs:
           path: |
             train88-kowloon-bridge-results/
             train88-kowloon-host-results/
+            train88-kowloon-material-roi-results/
             kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/generated/
             kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/compiler/Cargo.lock
           retention-days: 7
