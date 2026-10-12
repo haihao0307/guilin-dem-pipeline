@@ -26,20 +26,26 @@ var<private> stationCandidateOverflow:bool;
 // This broad 30.01mm envelope contains every locked mother displacement and the
 // retained far-field +/-30mm stepping convention. Order/ties remain unchanged.
 var<private> stationRawCandidateCount:u32;
-var<private> stationCandidateUpper:f32;
+var<private> stationCandidateUpper:vec3<f32>;
+var<private> stationCandidateKinds:array<u32,${host?96:64}>;
+var<private> stationCandidatePosition:vec3<f32>;
+var<private> stationCandidateFullSet:bool;
 fn stationNativeId(id:u32)->bool{return id==1u||id==2u||id==3u||id==4u||id==12u||id==13u||id==15u||id==17u;}
-fn recordCandidate(h:HitField){
+fn recordCandidate(h:HitField,kind:u32){
  if(stationRawCandidateCount>=STATION_CANDIDATE_CAPACITY){stationCandidateOverflow=true;return;}
- stationRawCandidateCount+=1u;
- let margin=select(0.,.03001,stationNativeId(h.id));
- stationCandidateUpper=min(stationCandidateUpper,h.d+margin);
- if(h.d-margin>stationCandidateUpper){return;}
- stationCandidates.items[stationCandidates.count]=h;stationCandidates.count+=1u;
+ stationRawCandidateCount+=1u;let margin=select(0.,.03001,stationNativeId(h.id));var keep=false;
+ // Groups: complete union, without barrel panel, without bounded floor solids.
+ for(var g=0u;g<3u;g++){if(g==0u||kind!=g){stationCandidateUpper[g]=min(stationCandidateUpper[g],h.d+margin);if(h.d-margin<=stationCandidateUpper[g]){keep=true;}}}
+ if(!keep){return;}
+ stationCandidateKinds[stationCandidates.count]=kind;stationCandidates.items[stationCandidates.count]=h;stationCandidates.count+=1u;
 }
-fn recordPart(p:vec3<f32>,d:f32,id:u32,q:vec3<f32>,seed:f32){recordCandidate(HitField(d,id,q,seed,d,vec3<f32>(1.),0.));}
-fn recordCoated(p:vec3<f32>,d:f32,q:vec3<f32>,extent:vec3<f32>,seed:f32){recordCandidate(HitField(d,13u,q,seed,d,extent,0.));}
-fn recordTimber(p:vec3<f32>,d:f32,q:vec3<f32>,extent:vec3<f32>,role:f32,sourceSeed:f32){recordCandidate(HitField(d,4u,q,role,d,extent,sourceSeed));}
-fn resolveCandidates(p:vec3<f32>)->HitField{if(stationCandidateOverflow){return HitField(0.,999u,p,0.,0.,vec3<f32>(1.),0.);}var h=HitField(10000.,0u,p,0.,10000.,vec3<f32>(1.),0.);let st=resolveStationState(p);for(var i=0u;i<stationCandidates.count;i++){var candidate=stationCandidates.items[i];let d=candidate.d;let id=candidate.id;let native=stationNativeId(id);if(d-select(0.,.03001,native)>stationCandidateUpper){continue;}if(native&&d-.03<h.d){if(abs(d)<.045){candidate.d=evaluateStationGeometry(candidate,p,st).d;}else{candidate.d=sign(d)*max(abs(d)-.03,0.);}}if(candidate.d<h.d){h=candidate;}}return h;}
+fn recordPart(p:vec3<f32>,d:f32,id:u32,q:vec3<f32>,seed:f32){recordCandidate(HitField(d,id,q,seed,d,vec3<f32>(1.),0.),0u);}
+fn recordRoof(p:vec3<f32>,d:f32,id:u32,q:vec3<f32>,seed:f32){recordCandidate(HitField(d,id,q,seed,d,vec3<f32>(1.),0.),1u);}
+fn recordFloor(p:vec3<f32>,d:f32,id:u32,q:vec3<f32>,seed:f32){recordCandidate(HitField(d,id,q,seed,d,vec3<f32>(1.),0.),2u);}
+fn recordCoated(p:vec3<f32>,d:f32,q:vec3<f32>,extent:vec3<f32>,seed:f32){recordCandidate(HitField(d,13u,q,seed,d,extent,0.),0u);}
+fn recordTimber(p:vec3<f32>,d:f32,q:vec3<f32>,extent:vec3<f32>,role:f32,sourceSeed:f32){recordCandidate(HitField(d,4u,q,role,d,extent,sourceSeed),0u);}
+fn resolveCandidateSet(p:vec3<f32>,skipKind:u32)->HitField{if(stationCandidateOverflow){return HitField(0.,999u,p,0.,0.,vec3<f32>(1.),0.);}var h=HitField(10000.,0u,p,0.,10000.,vec3<f32>(1.),0.);let st=resolveStationState(p);for(var i=0u;i<stationCandidates.count;i++){if(skipKind!=0u&&stationCandidateKinds[i]==skipKind){continue;}var candidate=stationCandidates.items[i];let d=candidate.d;let id=candidate.id;let native=stationNativeId(id);if(d-select(0.,.03001,native)>stationCandidateUpper[skipKind]){continue;}if(native&&d-.03<h.d){if(abs(d)<.045){candidate.d=evaluateStationGeometry(candidate,p,st).d;}else{candidate.d=sign(d)*max(abs(d)-.03,0.);}}if(candidate.d<h.d){h=candidate;}}return h;}
+fn resolveCandidates(p:vec3<f32>)->HitField{return resolveCandidateSet(p,0u);}
 
 fn rep(x:f32,pitch:f32,lo:f32,hi:f32)->f32{return x-clamp(round(x/pitch),lo,hi)*pitch;}
 fn archHole(x:f32,y:f32,r:f32,spring:f32)->f32{return max(abs(x)-r,select(y-(spring+r),length(vec2<f32>(x,y-spring))-r,y>spring));}
@@ -47,10 +53,10 @@ fn stateWet(p:vec3<f32>)->f32{let drain=1.-smoothstep(.12,.75,abs(rep(p.x,7.5,-4
 fn repairAt(p:vec3<f32>)->f32{return .08+.65*(1.-smoothstep(.9,1.4,abs(p.x-15.)))*(1.-smoothstep(1.1,2.2,p.y));}
 fn brickQ(p:vec3<f32>,axis:u32,d:f32)->vec3<f32>{let row=floor(p.y/.073);let shift=select(0.,.125,(i32(row)&1)==1);let face=select(p.x,p.z,axis==12u);return vec3<f32>(fract((face+shift)/.25)*.25-.125,fract(p.y/.073)*.073-.0365,.055384615+d);}
 fn stationDomain(p:vec3<f32>,skipRoof:bool,skipFloor:bool)->HitField{
- stationCandidates.count=0u;stationCandidateOverflow=false;stationRawCandidateCount=0u;stationCandidateUpper=10000.;
+ stationCandidates.count=0u;stationCandidateOverflow=false;stationRawCandidateCount=0u;stationCandidateUpper=vec3<f32>(10000.);stationCandidatePosition=p;stationCandidateFullSet=!(skipRoof||skipFloor);
  // Promenade and hall threshold share the platform datum, with real entrance steps.
- if(!skipFloor){recordPart(p,box(p-vec3<f32>(0,.15,0),vec3<f32>(31.2,.7,8.8)),17u,p,1.);}
- if(!skipFloor){recordPart(p,box(p-vec3<f32>(0.,.3,11.8),vec3<f32>(31.2,.55,3.)),17u,p,1.);}
+ if(!skipFloor){recordFloor(p,box(p-vec3<f32>(0,.15,0),vec3<f32>(31.2,.7,8.8)),17u,p,1.);}
+ if(!skipFloor){recordFloor(p,box(p-vec3<f32>(0.,.3,11.8),vec3<f32>(31.2,.55,3.)),17u,p,1.);}
  for(var i=0;i<4;i++){let z=14.9+f32(i)*.4;recordPart(p,box(p-vec3<f32>(0,.55-f32(i)*.18,z),vec3<f32>(4.7,.16,.22)),2u,p,1.);}
  // Long hall, arched openings cut through both external walls. Openings are real air.
  let hallBound=box(p-vec3<f32>(0,7,0),vec3<f32>(31.5,8.2,10.5));
@@ -105,7 +111,7 @@ fn stationDomain(p:vec3<f32>,skipRoof:bool,skipFloor:bool)->HitField{
  let shedBox=box(p-vec3<f32>(0,7,SHED_CENTER),vec3<f32>(34,8,SHED_HALF+2.2));
  if(shedBox<2.){
   let xi=clamp(round(p.x/20.),-1.,1.);let x=p.x-xi*20.;let z=rep(p.z-SHED_FRONT,7.5,-SHED_BAYS,0.);let radial=length(vec2<f32>(x,p.y-1.2));let bounded=max(max(abs(x)-10.,abs(p.z-SHED_CENTER)-SHED_HALF),9.-p.y);
-  var panel=max(abs(radial-12.8)-.055,bounded);panel=max(panel,.55-abs(x));if(!skipRoof){recordPart(p,panel,15u,vec3<f32>(x,p.y,p.z),55.+xi);}
+  var panel=max(abs(radial-12.8)-.055,bounded);panel=max(panel,.55-abs(x));if(!skipRoof){recordRoof(p,panel,15u,vec3<f32>(x,p.y,p.z),55.+xi);}
   for(var j=0;j<2;j++){let r=12.8-f32(j)*.5;recordPart(p,max(max(abs(radial-r)-.08,bounded),abs(z)-.11),3u,p,52.);}
   let a=atan2(x,p.y-1.2);let web=abs(sin(a*16.))*radial;recordPart(p,max(max(max((web-.034)/16.,abs(radial-12.55)-.24),abs(z)-.055),bounded),3u,p,52.);
   let support=rep(p.x-10.,20.,-2.,1.);
@@ -115,7 +121,7 @@ fn stationDomain(p:vec3<f32>,skipRoof:bool,skipFloor:bool)->HitField{
  ${host?'}':''}
   recordPart(p,box(vec3<f32>(support,p.y-9.25,p.z-SHED_CENTER),vec3<f32>(.13,.17,SHED_HALF)),3u,p,56.);
   // Four islands, mineral copings, with twin steel rails and actual sleeper gaps.
-  ${host?String.raw`for(var pi=0;pi<4;pi++){let center=-30.+f32(pi)*20.;let isBoard=abs(center-HOST_BOARDING_ROW_X)<.01;let cx=select(center,HOST_ISLAND_CENTER_X,isBoard);let half=select(3.4,HOST_ISLAND_HALF_WIDTH,isBoard);let pq=vec3<f32>(p.x-cx,p.y-.35,p.z-SHED_CENTER);if(!skipFloor){recordPart(p,box(pq,vec3<f32>(half,.5,SHED_HALF+1.3)),17u,pq,77.);}let coping=vec3<f32>(abs(p.x-cx)-(half-.18),p.y-.78,rep(p.z,1.2,floor((SHED_BACK-1.3)/1.2),-7.));recordPart(p,box(coping,vec3<f32>(.18,.07,.595)),2u,coping,79.);}`:String.raw`  let pq=vec3<f32>(support,p.y-.35,p.z-SHED_CENTER);if(!skipFloor){recordPart(p,box(pq,vec3<f32>(3.4,.5,SHED_HALF+1.3)),17u,pq,77.);}
+  ${host?String.raw`for(var pi=0;pi<4;pi++){let center=-30.+f32(pi)*20.;let isBoard=abs(center-HOST_BOARDING_ROW_X)<.01;let cx=select(center,HOST_ISLAND_CENTER_X,isBoard);let half=select(3.4,HOST_ISLAND_HALF_WIDTH,isBoard);let pq=vec3<f32>(p.x-cx,p.y-.35,p.z-SHED_CENTER);if(!skipFloor){recordFloor(p,box(pq,vec3<f32>(half,.5,SHED_HALF+1.3)),17u,pq,77.);}let coping=vec3<f32>(abs(p.x-cx)-(half-.18),p.y-.78,rep(p.z,1.2,floor((SHED_BACK-1.3)/1.2),-7.));recordPart(p,box(coping,vec3<f32>(.18,.07,.595)),2u,coping,79.);}`:String.raw`  let pq=vec3<f32>(support,p.y-.35,p.z-SHED_CENTER);if(!skipFloor){recordFloor(p,box(pq,vec3<f32>(3.4,.5,SHED_HALF+1.3)),17u,pq,77.);}
   let coping=vec3<f32>(abs(support)-3.23,p.y-.84,rep(p.z,1.2,floor((SHED_BACK-1.3)/1.2),-7.));recordPart(p,box(coping,vec3<f32>(.18,.07,.595)),2u,coping,79.);
 `}
   var railX=rep(p.x-5.,10.,-3.,2.);${host?'if(abs(p.x-railX-5.)<.01){railX=p.x-select(-5.,15.,p.x>=5.);}':''}let rail=vec3<f32>(abs(railX)-RAIL_CENTER_OFFSET,p.y-(RAIL_CROWN-.066),p.z-SHED_CENTER);recordPart(p,box(rail,vec3<f32>(RAIL_HALF_WIDTH,.066,SHED_HALF+2.)),3u,rail,55.);
@@ -136,7 +142,7 @@ fn stationDomain(p:vec3<f32>,skipRoof:bool,skipFloor:bool)->HitField{
  // Its loading dock, masonry piers, metal trusses and roof are one construction.
  let gq=p-vec3<f32>(GOODS_X,0.,GOODS_CENTER);let gb=box(gq-vec3<f32>(0.,3.,0.),vec3<f32>(7.,3.8,GOODS_HALF+1.));
  if(gb<2.){
-  if(!skipFloor){recordPart(p,box(gq-vec3<f32>(1.7,.30,0.),vec3<f32>(4.7,.55,GOODS_HALF+.6)),17u,gq,77.);}
+  if(!skipFloor){recordFloor(p,box(gq-vec3<f32>(1.7,.30,0.),vec3<f32>(4.7,.55,GOODS_HALF+.6)),17u,gq,77.);}
   let zz=rep(gq.z,7.,-6.,6.);let sideq=vec3<f32>(abs(gq.x)-3.,p.y-3.,zz);
   recordPart(p,box(sideq,vec3<f32>(.23,2.15,.40)),12u,sideq,91.);
   recordPart(p,box(gq-vec3<f32>(0.,3.,0.),vec3<f32>(.15,2.15,GOODS_HALF)),12u,gq,92.);
@@ -152,7 +158,7 @@ fn stationDomain(p:vec3<f32>,skipRoof:bool,skipFloor:bool)->HitField{
  // Covered passenger route turns seawards beyond the siding end, no cargo crossing.
  let walk=p-vec3<f32>(49.,0.,13.);let wb=box(walk-vec3<f32>(0.,2.5,0.),vec3<f32>(18.5,2.6,2.2));
  if(wb<2.){
-  if(!skipFloor){recordPart(p,box(walk-vec3<f32>(0.,.3,0.),vec3<f32>(18.,.55,1.8)),17u,walk,77.);}
+  if(!skipFloor){recordFloor(p,box(walk-vec3<f32>(0.,.3,0.),vec3<f32>(18.,.55,1.8)),17u,walk,77.);}
   let post=vec3<f32>(rep(walk.x,6.,-3.,3.),p.y-2.55,abs(walk.z)-1.65);recordPart(p,cyl(post,.07,1.7),3u,post,96.);
   let wr=abs(p.y-(4.7-abs(walk.z)*.13))-.045;recordPart(p,max(wr,max(abs(walk.x)-18.3,abs(walk.z)-1.95)),3u,walk,96.);
   recordPart(p,box(vec3<f32>(walk.x,p.y-4.35,abs(walk.z)-1.65),vec3<f32>(18.3,.085,.06)),3u,walk,96.);
@@ -189,5 +195,7 @@ fn stationDomain(p:vec3<f32>,skipRoof:bool,skipFloor:bool)->HitField{
 // nearest member. This prevents a farther coating being skipped behind a nearer
 // nominal core. No later geometric shell or second coplanar surface is emitted.
 fn stationField(p:vec3<f32>)->HitField{return stationDomain(p,false,false);}
+// Same-query construction residency. A different point or partial set falls back.
+fn stationCachedField(p:vec3<f32>,skipKind:u32)->HitField{if(stationCandidateFullSet&&all(stationCandidatePosition==p)){return resolveCandidateSet(p,skipKind);}return stationDomain(p,skipKind==1u,skipKind==2u);}
 `;}
 export const STATION_FIELD_WGSL=createStationFieldWGSL();
