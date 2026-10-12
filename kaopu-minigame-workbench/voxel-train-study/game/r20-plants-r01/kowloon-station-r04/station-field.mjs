@@ -65,7 +65,7 @@ fn stationMacro(p:vec3<f32>)->HitField{
  let shedBox=box(p-vec3<f32>(0,7,-55),vec3<f32>(32,8,46));
  if(shedBox<2.){
   let xi=clamp(round(p.x/20.),-1.,1.);let x=p.x-xi*20.;let z=rep(p.z+10.,7.5,-12.,0.);let radial=length(vec2<f32>(x,p.y-1.2));let bounded=max(max(abs(x)-10.,abs(p.z+55.)-45.),9.-p.y);
-  let panel=max(abs(radial-12.8)-.055,bounded);panel=max(panel,.55-abs(x));h=join(h,panel,3u,vec3<f32>(x,p.y,p.z),55.+xi);
+  var panel=max(abs(radial-12.8)-.055,bounded);panel=max(panel,.55-abs(x));h=join(h,panel,3u,vec3<f32>(x,p.y,p.z),55.+xi);
   for(var j=0;j<2;j++){let r=12.8-f32(j)*.5;h=join(h,max(max(abs(radial-r)-.08,bounded),abs(z)-.11),3u,p,52.);}
   let a=atan2(x,p.y-1.2);let web=abs(sin(a*16.))*radial;h=join(h,max(max(max(web-.034,abs(radial-12.55)-.24),abs(z)-.055),bounded),3u,p,52.);
   let support=rep(p.x-10.,20.,-2.,1.);let cq=vec3<f32>(support,p.y-5.,z);h=join(h,cyl(cq,.20-.009*cos(atan2(cq.z,cq.x)*12.),4.15),3u,cq,56.);
