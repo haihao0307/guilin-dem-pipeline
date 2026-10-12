@@ -1,0 +1,9 @@
+// Exact polygon half-plane difference used only on our generated skin triangles.
+// No reference geometry is read. Circular apertures use declared scalar radii.
+export function cutCircularXYApertures(T,g,holes,segments=96){
+ const a=g.attributes.position,idx=g.index,out=[];let affected=0;
+ function split(poly,A,B){const inside=[],outside=[],side=P=>(B[0]-A[0])*(P[1]-A[1])-(B[1]-A[1])*(P[0]-A[0]);for(let i=0;i<poly.length;i++){const P=poly[i],Q=poly[(i+1)%poly.length],d=side(P),e=side(Q),I=d>=-1e-12,J=e>=-1e-12;(I?inside:outside).push(P);if(I!==J){const t=d/(d-e),C=P.map((v,j)=>v+(Q[j]-v)*t);inside.push(C);outside.push(C)}}return[inside,outside]}
+ function subtract(poly,h){if(poly.every(v=>v[0]<h.x-h.r)||poly.every(v=>v[0]>h.x+h.r)||poly.every(v=>v[1]<h.y-h.r)||poly.every(v=>v[1]>h.y+h.r))return[poly];let remaining=poly,result=[];for(let i=0;i<segments&&remaining.length>=3;i++){const t=i*2*Math.PI/segments,u=(i+1)*2*Math.PI/segments,A=[h.x+h.r*Math.cos(t),h.y+h.r*Math.sin(t)],B=[h.x+h.r*Math.cos(u),h.y+h.r*Math.sin(u)];const[inside,outside]=split(remaining,A,B);if(outside.length>=3)result.push(outside);remaining=inside}if(remaining.length>=3)affected++;return result}
+ for(let i=0;i<(idx?idx.count:a.count);i+=3){let polys=[[0,1,2].map(k=>{const j=idx?idx.getX(i+k):i+k;return[a.getX(j),a.getY(j),a.getZ(j)]})];for(const h of holes)polys=polys.flatMap(poly=>subtract(poly,h));for(const p of polys)for(let j=1;j<p.length-1;j++){const A=new T.Vector3(...p[0]),B=new T.Vector3(...p[j]).sub(A),C=new T.Vector3(...p[j+1]).sub(A);if(B.cross(C).lengthSq()>1e-20)out.push(...p[0],...p[j],...p[j+1])}}
+ const n=new T.BufferGeometry();n.setAttribute('position',new T.Float32BufferAttribute(out,3));n.computeVertexNormals();n.userData={nativeAnalyticApertures:holes,segments,affectedSourceTriangles:affected,sourceGeometry:'own generated skin only'};return n;
+}
