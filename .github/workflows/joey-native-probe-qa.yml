@@ -58,10 +58,10 @@ jobs:
         run: node --test kaopu-unified-human-workbench/joey-observation-r01/local-head-control-r50/surface-guards.test.cjs
       - name: Test first-order surface differential
         run: node --test kaopu-unified-human-workbench/joey-observation-r01/local-head-control-r50/differential-guards.test.cjs
-      - name: Test and render one native brow/face candidate
+      - name: Test and diagnose frozen cheek illumination
         run: |
-          node --test kaopu-unified-human-workbench/joey-observation-r01/brow-face-r52/binding-math.test.mjs kaopu-unified-human-workbench/joey-observation-r01/brow-face-r52/macros.test.cjs kaopu-unified-human-workbench/joey-observation-r01/brow-face-r52/BrowProfile.test.mjs
-          node kaopu-unified-human-workbench/joey-observation-r01/brow-face-r52/render-candidate.cjs
+          node --test kaopu-unified-human-workbench/joey-observation-r01/cheek-volume-r53/light-cases.test.cjs
+          node kaopu-unified-human-workbench/joey-observation-r01/cheek-volume-r53/diagnose-light.cjs
       - name: Keep bounded research evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -120,6 +120,7 @@ jobs:
             joey-global-relations-r51-response/
             joey-global-relations-r51-render/
             joey-brow-face-r52-render/
+            joey-cheek-volume-r53-light/
           retention-days: 7
           compression-level: 0
           if-no-files-found: warn
