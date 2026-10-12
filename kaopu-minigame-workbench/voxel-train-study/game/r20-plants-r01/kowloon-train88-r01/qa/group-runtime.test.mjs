@@ -65,7 +65,7 @@ class WebGLRenderTarget {
   dispose() {this.disposed = true;}
 }
 const THREE = {Vector4, Scene, Camera, Mesh, BufferGeometry, RawShaderMaterial, WebGLRenderTarget, Float32BufferAttribute: class {constructor(values, size) {Object.assign(this, {values, size});}}, GLSL3: '300es', FloatType: 'float', RGBAFormat: 'rgba', NearestFilter: 'nearest', NoBlending: 'none', NoColorSpace: ''};
-function fixture() {
+function fixture(compactTrace=false) {
   const gl = {MAX_DRAW_BUFFERS: 1, MAX_COLOR_ATTACHMENTS: 2, MAX_TEXTURE_SIZE: 3, getExtension: () => ({}), getParameter: key => key === 3 ? 4096 : 4, isContextLost: () => false};
   const oldTarget = {name: 'caller-target'}, calls = [], paths = [];
   const renderer = {capabilities: {isWebGL2: true}, shadowMap: {enabled: true}, autoClear: true, target: oldTarget, getContext: () => gl, getRenderTarget() {return this.target;}, getActiveCubeFace: () => 2, getActiveMipmapLevel: () => 1,
@@ -78,13 +78,14 @@ function fixture() {
   const manifest = {sourceSHA256: 'test-source', groups: GEOMETRY_GROUP_NAMES.map((name, index) => ({index, name, outputs: 4}))};
   function fragment(index) {
     const types = index === 1 ? ['HostFrame', 'GroupQueryControl'] : ['Params', 'HostFrame', 'GroupQueryControl'];
-    return '#version 300 es\n' + types.map(type => {const binding = {Params: 0, HostFrame: 1, GroupQueryControl: 2}[type]; return `layout(std140) uniform ${type}_block { ${type} _group_0_binding_${binding}_fs; };`;}).join('\n') + '\n' + (index === 0 ? [0, 5] : [0, 1, 2, 3, 4, 5]).map(binding => `uniform highp sampler2D _group_1_binding_${binding}_fs;`).join('\n') + '\nvoid main(){}';
+    return '#version 300 es\n' + types.map(type => {const binding = {Params: 0, HostFrame: 1, GroupQueryControl: 2}[type]; return `layout(std140) uniform ${type}_block { ${type} _group_0_binding_${binding}_fs; };`;}).join('\n') + '\n' + (index === 0 ? [0, 5] : compactTrace ? [0,1,5] : [0, 1, 2, 3, 4, 5]).map(binding => `uniform highp sampler2D _group_1_binding_${binding}_fs;`).join('\n') + '\nvoid main(){}';
   }
   const fetch = async url => {
     const pathname = new URL(url).pathname; paths.push(pathname);
+    if(pathname.endsWith('/compact-trace-r01/generated/manifest.json'))return{ok:true,json:async()=>({sourceSHA256:'test-source',outputs:Object.fromEntries(GEOMETRY_GROUP_NAMES.map((_,i)=>['runtime-'+i,{entry:'stationCompactQuery',sha256:'fixture-'+i}]))})};
     if(pathname.endsWith('/generated/group-runtime-manifest.json'))return{ok:true,json:async()=>({sourceSHA256:'test-source',outputs:Object.fromEntries(GEOMETRY_GROUP_NAMES.map((_,i)=>['group-runtime-'+i,{entry:'stationGroupQuery',sha256:'fixture-'+i}]))})};
     if (pathname.endsWith('/generated/geometry-group-manifest.json')) return {ok: true, json: async () => manifest};
-    const match = /\/generated\/group-runtime-(\d+)\.frag$/.exec(pathname);
+    const match = (compactTrace?/\/generated\/runtime-(\d+)\.frag$/:/\/generated\/group-runtime-(\d+)\.frag$/).exec(pathname);
     assert(match, `Unexpected fetch ${pathname}`);
     return {ok: true, text: async () => fragment(Number(match[1]))};
   };
@@ -151,4 +152,15 @@ test('receiver source guard keeps this an explicit execution-only, no-copy/no-ca
   assert.doesNotMatch(text, /requestAnimationFrame\s*\(|gl\.finish\s*\(|readRenderTargetPixels\s*\(|copyTextureToTexture\s*\(|renderer\.render\(scene,/);
   assert.doesNotMatch(text, /frame\.(?:controls|cameraToLocal|inverseProjection)\s*=/);
   assert.match(text, /outputs expire|textures expire/);
+});
+
+
+test('opt-in compact receiver owns two one-RT targets and preserves binding5 alternate identity',async()=>{
+ const f=fixture(true),oldFetch=globalThis.fetch;globalThis.fetch=f.fetch;let r;
+ try{r=await createGroupQueryReceiver({renderer:f.renderer,THREE,u:f.u,frame:f.frame,compactTrace:true});const trace={isTexture:true},full={isTexture:true};const result=r.query({width:16,height:8,traceTexture:trace,fullHitTexture:full,skip:3});assert.equal(result.textures.length,1);assert.equal(result.b,undefined);assert.equal(r.proof.currentQueryAttachments,2);assert.equal(f.calls.length,12);assert.equal(new Set(f.calls.map(x=>x.target)).size,2);
+ for(const[c,i]of f.calls.map((c,i)=>[c,i])){assert.equal(c.target.textures.length,1);assert.equal(c.samplers._group_1_binding_0_fs,trace);assert.equal(c.samplers._group_1_binding_5_fs,full);if(i){assert.equal(c.samplers._group_1_binding_1_fs,f.calls[i-1].target.textures[0]);assert.notEqual(c.samplers._group_1_binding_1_fs,c.target.textures[0]);}assert(!('_group_1_binding_2_fs' in c.samplers));}assert.throws(()=>r.query({width:16,height:8,traceTexture:result.a}),/aliases/);assert.equal(f.renderer.target,f.oldTarget);
+ }finally{r?.dispose();globalThis.fetch=oldFetch;}
+});
+test('receiver candidate applies compact only to trace and keeps original five full metadata queries',()=>{
+ const now=fs.readFileSync(new URL('../function-receiver.mjs',import.meta.url),'utf8');assert.match(now,/testCompactTrace=false/);assert.match(now,/testCompactTrace&&!testResolution/);assert.match(now,/const complete=queryReceiver.query\(options\)/);assert.match(now,/const alternate=queryReceiver.query/);assert.match(now,/const hit=grouped.query\(\{width:t.w,height:t.h,traceTexture:ray,phase:1/);assert.match(now,/\[\[0,0,0\],\[1,-1,-1\],\[-1,-1,1\],\[-1,1,-1\],\[1,1,1\]\]/);assert.match(now,/if\(traceGrouped!==grouped\)traceGrouped.dispose\(\)/);
 });

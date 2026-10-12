@@ -17,12 +17,14 @@ import {GEOMETRY_GROUP_NAMES} from './geometry-groups.mjs';
  * copy, readback, finish, or scene render is added. Empty rects mean no valid pixels.
  * Synchronous dispatch does not claim GPU completion or numerical/visual validation.
  */
-export async function createGroupQueryReceiver({renderer, THREE, u, frame, diagnosticProgress = null} = {}) {
+export async function createGroupQueryReceiver({renderer, THREE, u, frame, diagnosticProgress = null, compactTrace = false} = {}) {
   if (!renderer || !THREE || !u || !frame) throw Error('Group queries require the existing renderer, THREE, u, and frame');
   if(diagnosticProgress!==null&&typeof diagnosticProgress!=='function')throw Error('Diagnostic progress must be a callback');
+  if(typeof compactTrace!=='boolean')throw Error('compactTrace must be explicit boolean');
+  const attachmentCount=compactTrace?1:4;
   const gl = renderer.getContext();
   if (!renderer.capabilities.isWebGL2 || !gl.getExtension('EXT_color_buffer_float')) throw Error('Group queries require WebGL2 floating-point render attachments');
-  if (gl.getParameter(gl.MAX_DRAW_BUFFERS) < 4 || gl.getParameter(gl.MAX_COLOR_ATTACHMENTS) < 4) throw Error('Group queries require four RGBA32F MRT attachments');
+  if (gl.getParameter(gl.MAX_DRAW_BUFFERS) < attachmentCount || gl.getParameter(gl.MAX_COLOR_ATTACHMENTS) < attachmentCount) throw Error('Group queries require four RGBA32F MRT attachments');
   const maximumSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
   async function fetchFile(relative, json = false) {
     const response = await fetch(new URL(relative, import.meta.url));
@@ -31,9 +33,11 @@ export async function createGroupQueryReceiver({renderer, THREE, u, frame, diagn
   }
   const manifest = await fetchFile('./generated/geometry-group-manifest.json', true);
   if (manifest.groups?.length !== GEOMETRY_GROUP_NAMES.length || manifest.groups.some((group, index) => group.index !== index || group.name !== GEOMETRY_GROUP_NAMES[index] || group.outputs !== 4)) throw Error('Station runtime group manifest/order changed');
-  const runtimeManifest=await fetchFile('./generated/group-runtime-manifest.json',true);
-  if(runtimeManifest.sourceSHA256!==manifest.sourceSHA256||manifest.groups.some(group=>runtimeManifest.outputs?.['group-runtime-'+group.index]?.entry!=='stationGroupQuery'))throw Error('Runtime group source identity differs');
-  const reflected = await Promise.all(manifest.groups.map(async group => threeFragment(await fetchFile(`./generated/group-runtime-${group.index}.frag?source=${runtimeManifest.outputs['group-runtime-'+group.index].sha256}`))));
+  const runtimeManifest=await fetchFile(compactTrace?'./experiments/compact-trace-r01/generated/manifest.json':'./generated/group-runtime-manifest.json',true);
+  const runtimeKey=index=>(compactTrace?'runtime-':'group-runtime-')+index;
+  const runtimeEntry=compactTrace?'stationCompactQuery':'stationGroupQuery';
+  if(runtimeManifest.sourceSHA256!==manifest.sourceSHA256||manifest.groups.some(group=>runtimeManifest.outputs?.[runtimeKey(group.index)]?.entry!==runtimeEntry))throw Error('Runtime group source identity differs');
+  const reflected = await Promise.all(manifest.groups.map(async group => threeFragment(await fetchFile(`${compactTrace?'./experiments/compact-trace-r01/generated/':'./generated/'}${runtimeKey(group.index)}.frag?source=${runtimeManifest.outputs[runtimeKey(group.index)].sha256}`))));
   const control = {offsetAndPhase: new THREE.Vector4(), options: new THREE.Vector4()};
   const materials = [];
   const samplers = [];
@@ -52,7 +56,7 @@ export async function createGroupQueryReceiver({renderer, THREE, u, frame, diagn
         if (!match || Number(match[1]) !== 1 || Number(match[2]) > 5 || bindingNames.has(Number(match[2]))) throw Error(`Unexpected runtime sampler ${name}`);
         bindingNames.set(Number(match[2]), name); uniforms[name] = {value: null};
       }
-      for (const required of (index === 0 ? [0, 5] : [0, 1, 2, 3, 4, 5])) if (!bindingNames.has(required)) throw Error(`Runtime group ${index} is missing texture binding ${required}`);
+      for (const required of (index === 0 ? [0, 5] : compactTrace ? [0, 1, 5] : [0, 1, 2, 3, 4, 5])) if (!bindingNames.has(required)) throw Error(`Runtime group ${index} is missing texture binding ${required}`);
       const material = new THREE.RawShaderMaterial({glslVersion: THREE.GLSL3, vertexShader: DISPATCH_VERTEX, fragmentShader: shader.text, uniforms, depthTest: false, depthWrite: false, toneMapped: false, blending: THREE.NoBlending});
       material.name = `Station grouped query ${index}: ${manifest.groups[index].name}`;
       materials.push(material); samplers.push(bindingNames);
@@ -65,10 +69,10 @@ export async function createGroupQueryReceiver({renderer, THREE, u, frame, diagn
   stageScene.add(dispatch);
   const ownedTextures = new WeakSet();
   let targets = null, disposed = false, querying = false;
-  const proof = {status: 'ready-unvalidated', queries: 0, groups: manifest.groups.length, currentQueryAttachments: 8, controlBytes: 32, sourceSHA256: manifest.sourceSHA256, executionOutputs:runtimeManifest.outputs, limitations: ['GPU compilation/execution and host integration require separate validation.', 'Output textures expire at the next query; only requested rectangles are valid.', 'Current interface writes full four-MRT HitFields; compact trace output is a separate future execution-only extension.']};
+  const proof = {status: 'ready-unvalidated', queries: 0, groups: manifest.groups.length, currentQueryAttachments: attachmentCount*2, compactTrace, controlBytes: 32, sourceSHA256: manifest.sourceSHA256, executionOutputs:runtimeManifest.outputs, limitations: ['GPU compilation/execution and host integration require separate validation.', 'Output textures expire at the next query; only requested rectangles are valid.', compactTrace?'Trace query writes only distance/id/rawCount/validity; final metadata and normal require original full query.':'Full query writes all original four-MRT HitField channels.']};
   function allocate(width, height) {
-    const target = new THREE.WebGLRenderTarget(width, height, {count: 4, type: THREE.FloatType, format: THREE.RGBAFormat, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: false, stencilBuffer: false, samples: 0});
-    if (!Array.isArray(target.textures) || target.textures.length !== 4) {target.dispose(); throw Error('This Three build did not create four MRT textures');}
+    const target = new THREE.WebGLRenderTarget(width, height, {count: attachmentCount, type: THREE.FloatType, format: THREE.RGBAFormat, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: false, stencilBuffer: false, samples: 0});
+    if (!Array.isArray(target.textures) || target.textures.length !== attachmentCount) {target.dispose(); throw Error('This Three build did not create four MRT textures');}
     for (const texture of target.textures) {
       texture.generateMipmaps = false;
       if (THREE.NoColorSpace !== undefined) texture.colorSpace = THREE.NoColorSpace;
@@ -129,7 +133,7 @@ export async function createGroupQueryReceiver({renderer, THREE, u, frame, diagn
       for (let index = 0; index < materials.length; index++) {
         if (gl.isContextLost()) throw Error(`Context lost before runtime group ${index}`);
         output = targets[index % 2];
-        const textures = [traceTexture, ...(previous ? previous.textures : [traceTexture, traceTexture, traceTexture, traceTexture]), fullHitTexture || traceTexture];
+        const textures = compactTrace?[traceTexture,previous?.textures[0]||traceTexture,traceTexture,traceTexture,traceTexture,fullHitTexture||traceTexture]:[traceTexture, ...(previous ? previous.textures : [traceTexture, traceTexture, traceTexture, traceTexture]), fullHitTexture || traceTexture];
         for (const [binding, name] of samplers[index]) materials[index].uniforms[name].value = textures[binding];
         const observed=diagnosticProgress&&proof.queries===0;const start=observed?performance.now():0;
         if(observed)diagnosticProgress({stage:'group-start',index,name:manifest.groups[index].name});
