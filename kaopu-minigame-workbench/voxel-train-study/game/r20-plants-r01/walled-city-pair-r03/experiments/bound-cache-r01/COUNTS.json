@@ -1,0 +1,89 @@
+{
+  "baselineCommit": "5c20bcf2b39c4901ff8d7e0f7393a79e3aaf164b",
+  "status": "CPU equivalence and operation count only; no runtime or GPU changes",
+  "sourceHashes": {
+    "geometry.mjs": "62829e27c4f46c8cc3c5d1a55647a15ae851b8dec500200a6a57afd97c884c48",
+    "geometry-stages.mjs": "b0232349c926b2fb9183fa60abd45aee5deb802b76036a612efdc79eaf69d712",
+    "materials.mjs": "bebb0052d157c2ea0a871e4cf5790cac2493ad1b1f110f7909acc18e1191b099",
+    "world-data.mjs": "c4b5f775865db692741c3fd2132c448da0250149037eaae4dca474f5e22da73c",
+    "wavefront.mjs": "4f738adc0082638c621e86d6d41a8e813ec415c3a6ffc7127ff849c5f6d60643"
+  },
+  "samples": 694,
+  "tags": {
+    "front-window-edge": 135,
+    "slab-neighbour": 135,
+    "stair-opening": 135,
+    "side-gap": 135,
+    "roof-edge": 27,
+    "borrowed-link": 27,
+    "camera-plane/overall": 21,
+    "camera-plane/pair-cut": 25,
+    "camera-plane/frontage-diagnostic": 54
+  },
+  "cases": [
+    {
+      "candidateRoundsPerSample": 1,
+      "samples": 694,
+      "uncached": {
+        "distanceEvaluations": 112428,
+        "thresholdChecks": 112428,
+        "detailInvocations": 5132
+      },
+      "cached": {
+        "distanceEvaluations": 18738,
+        "thresholdChecks": 112428,
+        "detailInvocations": 5132
+      },
+      "distanceEvaluationReduction": 0.8333333333333334,
+      "meaning": "CPU instrumented ordered coarse scans at fixed sample points; synthetic deterministic detail values, not GPU ray-total or mother timing"
+    },
+    {
+      "candidateRoundsPerSample": 4,
+      "samples": 694,
+      "uncached": {
+        "distanceEvaluations": 449712,
+        "thresholdChecks": 449712,
+        "detailInvocations": 20528
+      },
+      "cached": {
+        "distanceEvaluations": 18738,
+        "thresholdChecks": 449712,
+        "detailInvocations": 20528
+      },
+      "distanceEvaluationReduction": 0.9583333333333334,
+      "meaning": "CPU instrumented ordered coarse scans at fixed sample points; synthetic deterministic detail values, not GPU ray-total or mother timing"
+    },
+    {
+      "candidateRoundsPerSample": 32,
+      "samples": 694,
+      "uncached": {
+        "distanceEvaluations": 3597696,
+        "thresholdChecks": 3597696,
+        "detailInvocations": 164224
+      },
+      "cached": {
+        "distanceEvaluations": 18738,
+        "thresholdChecks": 3597696,
+        "detailInvocations": 164224
+      },
+      "distanceEvaluationReduction": 0.9947916666666666,
+      "meaning": "CPU instrumented ordered coarse scans at fixed sample points; synthetic deterministic detail values, not GPU ray-total or mother timing"
+    }
+  ],
+  "gpuMemoryProposed": {
+    "contexts": 1024,
+    "floors": 27,
+    "boundFloatBytes": 110592,
+    "keyBytes": 16384,
+    "totalExtraBytes": 126976,
+    "thresholdScansRemoved": false
+  },
+  "notClaims": [
+    "JS binary32 replay is not verified WGSL GPU equivalence",
+    "No speedup in milliseconds or FPS established",
+    "27 threshold checks per group remain; this caches only repeated distance calculation",
+    "Full exact detail/mother fields were not CPU-translated for this diagnostic",
+    "Roof/link group and visibility unchanged; all existing group tie order and .012 material bounds retained"
+  ],
+  "nextGPUDecision": "worth a bounded probe only: unchanged original source bound expression with cached/uncached buffers and identical query traces; no full frame"
+}
