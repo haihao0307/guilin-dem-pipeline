@@ -1,0 +1,31 @@
+name: Kowloon station R04 whole function QA
+on:
+  push:
+    branches: ['qa/kowloon-station-r04-20261012']
+permissions:
+  contents: read
+jobs:
+  station-webgpu:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r04
+      - name: Source and field contracts
+        run: node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r04/qa/source.test.mjs
+      - name: Install official pinned GPU QA runner
+        run: |
+          npm install --prefix "$RUNNER_TEMP/station" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/station/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/station/node_modules" >> "$GITHUB_ENV"
+      - name: Same commit whole station exterior hall and platform
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r04/qa/station-webgpu.cjs
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: kowloon-station-r04-${{ github.sha }}
+          path: kowloon-station-r04-results/
+          retention-days: 7
+          compression-level: 0
