@@ -6,10 +6,19 @@ struct HostFrame{inverseProjection:mat4x4<f32>,cameraToLocal:mat4x4<f32>,localTo
 @group(1)@binding(0)var traceInput:texture_2d<f32>;
 fn localPoint(v:vec4<f32>)->vec3<f32>{let p=frame.cameraToLocal*frame.inverseProjection*v;return p.xyz/p.w;}
 fn hostRay(pixel:vec2<f32>)->mat2x3<f32>{var ndc=pixel/frame.viewport.xy*2.-vec2<f32>(1.);if(frame.viewport.z>.5){ndc.y=-ndc.y;}let a=localPoint(vec4<f32>(ndc,-1.,1.));let b=localPoint(vec4<f32>(ndc,1.,1.));return mat2x3<f32>(a,normalize(b-a));}
+// Closed envelope for every authored station solid, including rail approaches.
+// Harbour plane/sky/retained host streets are NOT stationField solids.
+// Tightest authored extrema are X[-58.12,67.3],Y[-1.08,44.2],Z[-221.13,26].
+// Envelope margins exceed every proven material displacement; no ingredient is omitted.
+fn stationRayInterval(ro:vec3<f32>,rd:vec3<f32>)->vec2<f32>{
+ let lo=vec3<f32>(-61.,-4.,-224.);let hi=vec3<f32>(70.,49.,30.);var near=0.;var far=frame.controls.y;
+ for(var axis=0u;axis<3u;axis++){if(abs(rd[axis])<.0000001){if(ro[axis]<lo[axis]||ro[axis]>hi[axis]){return vec2<f32>(1.,-1.);}}else{let a=(lo[axis]-ro[axis])/rd[axis];let b=(hi[axis]-ro[axis])/rd[axis];near=max(near,min(a,b));far=min(far,max(a,b));}}
+ return vec2<f32>(near,far);
+}
 `;
 export const STEP_ENTRY=String.raw`
 @fragment fn stepRays(@builtin(position)pixel:vec4<f32>)->@location(0)vec4<f32>{
- let ray=hostRay(pixel.xy);let ro=ray[0];let rd=ray[1];var tr=vec4<f32>(0.,0.,0.,0.);
+ let ray=hostRay(pixel.xy);let ro=ray[0];let rd=ray[1];let interval=stationRayInterval(ro,rd);if(interval.y<interval.x){return vec4<f32>(0.,0.,0.,2.);}var tr=vec4<f32>(interval.x,0.,0.,0.);
  if(frame.controls.x<.5){tr=textureLoad(traceInput,vec2<i32>(pixel.xy),0);}
  // tr=(metric ray distance, material id, query count, status). 0=active,
  // 1=actual hit, 2=escaped/miss, 3=budget unresolved. Bounds never hit.
@@ -19,7 +28,7 @@ export const STEP_ENTRY=String.raw`
   if(h.id==999u){tr.w=3.;break;}let eps=clamp(tr.x*.000015,.00065,.004);
   if(h.id!=0u&&abs(h.d)<eps){tr.w=1.;break;}
   tr.x+=max(max(max(abs(h.d)*.60,barrelAdvance(p,rd,h)),floorAdvance(p,rd,h)),.00018);
-  if(tr.x>frame.controls.y){tr.w=2.;break;}
+  if(tr.x>interval.y){tr.w=2.;break;}
   if(tr.z>=frame.controls.z){tr.w=3.;break;}
  }
  return tr;

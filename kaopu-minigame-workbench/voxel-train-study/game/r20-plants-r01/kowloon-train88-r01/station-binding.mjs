@@ -4,7 +4,7 @@ export const HOST_BASELINE=Object.freeze({release:'2eacc2f45637ad1063efebec40087
 const finite=(n,label)=>{if(!Number.isFinite(n))throw Error('Nonfinite '+label);return n;};
 const vec=(p,label)=>{if(!Array.isArray(p)||p.length!==3||!p.every(Number.isFinite))throw Error('Invalid '+label);return p;};
 export function createStationBinding({score,track,platform,coach,frontX=5,hallBehindStopM=75,boardingTrackX=5,hostOptions={}}={}){
- if(score?.units!=='metres')throw Error('Station must remain SI metres');
+ if(score?.units!=='metres')throw Error('Station must remain SI metres');if(!Number.isFinite(score.fabric?.age)||score.fabric.age<0||score.fabric.age>1)throw Error('Station material age must remain in audited [0,1] range');
  if(!score.tracks.centers.includes(boardingTrackX))throw Error('Boarding track missing from the common recipe');
  if(Math.abs(track.gauge-score.tracks.gauge)>1e-9)throw Error('Track gauges differ; cannot scale the railway');
  const deckLocal=.85,shiftY=platform.top-deckLocal,railLocal=track.railHead-shiftY;

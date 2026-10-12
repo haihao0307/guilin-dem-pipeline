@@ -252,7 +252,7 @@ test('CPU recipe: actual path segments clear retained posts across the complete 
   }
   assert(minimum>2, 'Includes circumscribed square footing and rotated carrying-basket radius.');
   t.diagnostic('Minimum sampled path/footing separation after carrying radius + 0.10m reserve: '+minimum+'m');
-  assert.deepEqual(hc.supports.omittedBoardingPostLocalZ,[-17.5,-25,-32.5,-40,-47.5,-55,-62.5,-70]);
+  assert.deepEqual(hc.supports.vacatedBoardingPostLocalZ,[-17.5,-25,-32.5,-40,-47.5,-55,-62.5,-70]);
   assert.deepEqual(hc.supports.unchangedRowsLocalXM,[-30,-10,30]);
 });
 
@@ -268,8 +268,8 @@ test('CPU recipe: outer supports clear every rail vehicle envelope and deep tran
 });
 
 test('CPU recipe: retained boarding-island benches are wholly outside the swept corridor',()=>{
-  assert.deepEqual(hc.benches.retainedLocalZ,[-81.25,-103.75,-126.25]);
-  assert.deepEqual(hc.benches.omittedLocalZ,[-13.75,-36.25,-58.75]);
+  assert.deepEqual(hc.benches.retainedLocalZ,[-81.25,-88.75,-103.75,-111.25,-126.25,-133.75]);
+  assert.deepEqual(hc.benches.relocated.map(p=>p.from),[-13.75,-36.25,-58.75]);
   for(const z of hc.benches.retainedLocalZ){
     const maxZ=z+hc.benches.halfLengthM+hc.passengerClearance.clearanceM;
     assert(maxZ<hc.passengerClearance.local.minZ);

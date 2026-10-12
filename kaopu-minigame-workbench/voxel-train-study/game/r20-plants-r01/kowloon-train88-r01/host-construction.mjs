@@ -71,28 +71,37 @@ export function createHostConstruction({score, platform, coach, frontX = 5,
   requireThat(transferDepthM >= 1.6 && transferBottomLocalYM >= 9.25,
     'Transfer truss must retain at least 1.6m depth and 9.25m underside');
   const postLocalZ = Array.from({length: score.shed.bays + 1}, (_, i) => score.shed.front - i * score.shed.bay);
-  const omittedBoardingPostLocalZ = postLocalZ.filter(z => overlaps(z - footingHalfWidthM, z + footingHalfWidthM, clearLocal.minZ, clearLocal.maxZ));
-  const retainedBoardingPostLocalZ = postLocalZ.filter(z => !omittedBoardingPostLocalZ.includes(z));
+  const vacatedBoardingPostLocalZ = postLocalZ.filter(z => overlaps(z - footingHalfWidthM, z + footingHalfWidthM, clearLocal.minZ, clearLocal.maxZ));
+  const stationaryBoardingPostLocalZ = postLocalZ.filter(z => !vacatedBoardingPostLocalZ.includes(z));
+  // Preserve every original full-detail post. Densify the quiet rear half of the
+  // boarding island to a 3.75m rhythm; the boarding throat stays column-free.
+  const relocatedBoardingPosts=vacatedBoardingPostLocalZ.map((from,i)=>({from,to:-81.25-i*7.5}));
+  const retainedBoardingPostLocalZ=[...stationaryBoardingPostLocalZ,...relocatedBoardingPosts.map(p=>p.to)].sort((a,b)=>b-a);
+  requireThat(retainedBoardingPostLocalZ.length===postLocalZ.length&&new Set(retainedBoardingPostLocalZ).size===postLocalZ.length,'Every authored boarding post must survive');
   // The original three other support rows stay in the common recipe. The outer
   // row is SHARED, not duplicated at X=13.84 inside the adjacent rolling stock.
   const supports = {boardingRowLocalXM: originalIslandX, outerRowLocalXM: outerSupportLocalXM,
     unchangedRowsLocalXM: score.platforms.centers.filter(x => x !== originalIslandX),
-    retainedBoardingPostLocalZ, omittedBoardingPostLocalZ, columnRadiusMaxM, footingHalfWidthM,
+    retainedBoardingPostLocalZ, vacatedBoardingPostLocalZ, relocatedBoardingPosts, omittedBoardingPostLocalZ:[], columnRadiusMaxM, footingHalfWidthM,
     railClearanceM, vehicleHalfWidthM, trackCentersLocalX: score.tracks.centers.slice(),
     footingBottomLocalYM: -worldVerticalOffsetM, footingTopLocalYM: 1.25,
     transfer: {startLocalXM: transferStartLocalXM, endLocalXM: outerSupportLocalXM,
       spanM: outerSupportLocalXM - transferStartLocalXM, depthM: transferDepthM,
       bottomLocalYM: transferBottomLocalYM, topLocalYM: transferBottomLocalYM + transferDepthM,
-      localZ: omittedBoardingPostLocalZ, structuralLoadCertification: false}};
+      localZ: vacatedBoardingPostLocalZ, structuralLoadCertification: false}};
   const benchHalfLengthM = 1.7, benchHalfWidthM = .4;
   const originalBenchLocalZ = Array.from({length: 6}, (_, i) => -13.75 - i * 22.5);
-  const retainedBenchLocalZ = originalBenchLocalZ.filter(z => !overlaps(z - benchHalfLengthM - clearanceM,
+  const stationaryBenchLocalZ = originalBenchLocalZ.filter(z => !overlaps(z - benchHalfLengthM - clearanceM,
     z + benchHalfLengthM + clearanceM, clearLocal.minZ, clearLocal.maxZ));
-  const benches = {boardingRowLocalXM: originalIslandX, halfLengthM: benchHalfLengthM,
+  const relocatedBenches=originalBenchLocalZ.filter(z=>!stationaryBenchLocalZ.includes(z)).map((from,i)=>({from,to:-88.75-i*22.5}));
+  const benchPlacements=[...stationaryBenchLocalZ.map(z=>({from:z,to:z})),...relocatedBenches].sort((a,b)=>b.to-a.to);
+  const retainedBenchLocalZ=benchPlacements.map(p=>p.to);
+  const benchRowX=8.8; // Preserve all six benches beside, not through, the rear post row.
+  const benches = {boardingRowLocalXM: benchRowX, sourceRowLocalXM:originalIslandX, halfLengthM: benchHalfLengthM,
     halfWidthM: benchHalfWidthM, retainedLocalZ: retainedBenchLocalZ,
-    omittedLocalZ: originalBenchLocalZ.filter(z => !retainedBenchLocalZ.includes(z)),
+    omittedLocalZ:[],relocated:relocatedBenches,sourceLocalZ:benchPlacements.map(p=>p.from),
     otherIslandRowsUnchanged: true};
-  requireThat(originalIslandX - benchHalfWidthM >= near && originalIslandX + benchHalfWidthM <= far,
+  requireThat(benchRowX - benchHalfWidthM >= near && benchRowX + benchHalfWidthM <= far,
     'Retained benches extend outside the narrowed boarding island');
 
   // The unchanged actor linearly interpolates these heights. Ordinary flat
@@ -157,6 +166,7 @@ export function validateHostConstruction(c) {
     'Outer foundation enters track vehicle clearance');
   for (const z of s.retainedBoardingPostLocalZ) requireThat(!overlaps(z - s.footingHalfWidthM,
     z + s.footingHalfWidthM, q.minZ, q.maxZ), 'Retained boarding post enters swept passenger corridor');
+  requireThat(Math.abs(b.boardingRowLocalXM-s.boardingRowLocalXM)-b.halfWidthM-s.footingHalfWidthM>=c.passengerClearance.clearanceM,'Retained bench intersects a support footing');
   for (const z of b.retainedLocalZ) requireThat(!overlaps(z - b.halfLengthM - c.passengerClearance.clearanceM,
     z + b.halfLengthM + c.passengerClearance.clearanceM, q.minZ, q.maxZ), 'Retained bench enters swept passenger corridor');
   return true;
@@ -185,6 +195,7 @@ export function hostConstructionWGSL(c) {
   return ['// CPU contract constants only. The station field generator must consume them.',
     ...Object.entries({ISLAND_NEAR_X:b.nearLocalXM,ISLAND_FAR_X:b.farLocalXM,ISLAND_CENTER_X:b.centerLocalXM,
       ISLAND_HALF_WIDTH:b.halfWidthM,ISLAND_TOP_Y:b.topLocalYM,BOARDING_ROW_X:s.boardingRowLocalXM,
+      BENCH_ROW_X:c.benches.boardingRowLocalXM,
       COPING_TOP_Y:b.copingTopLocalYM,COPING_CENTER_Y:b.copingCenterLocalYM,COPING_HALF_HEIGHT:b.copingHalfHeightM,
       COPING_NEAR_X:b.copingNearCenterLocalXM,COPING_FAR_X:b.copingFarCenterLocalXM,
       OUTER_SUPPORT_X:s.outerRowLocalXM,FOUNDATION_HALF:s.footingHalfWidthM,
@@ -194,8 +205,8 @@ export function hostConstructionWGSL(c) {
       CLEAR_MIN_X:q.minX,CLEAR_MAX_X:q.maxX,CLEAR_MIN_Z:q.minZ,CLEAR_MAX_Z:q.maxZ,
       EXIT_GROUND_Y:c.exits[0].groundOverride.topLocalYM,
     }).map(([name,n]) => scalar(name,n)),
-    array('OMITTED_POST_Z',s.omittedBoardingPostLocalZ), array('RETAINED_POST_Z',s.retainedBoardingPostLocalZ),
-    array('RETAINED_BENCH_Z',c.benches.retainedLocalZ),
+    array('VACATED_POST_Z',s.vacatedBoardingPostLocalZ), array('RETAINED_POST_Z',s.retainedBoardingPostLocalZ),
+    array('RETAINED_BENCH_Z',c.benches.retainedLocalZ),array('BENCH_SOURCE_Z',c.benches.sourceLocalZ),
     array('EXIT_MIN_Z',c.exits.map(e=>e.localMinZ)), array('EXIT_MAX_Z',c.exits.map(e=>e.localMaxZ)),
     array('EXIT_APRON_MIN_Z',c.exits.map(e=>e.finalApronLocalMinZ)),
     array('EXIT_PROFILE_X',c.exits[0].profile.map(p=>p.localX)),

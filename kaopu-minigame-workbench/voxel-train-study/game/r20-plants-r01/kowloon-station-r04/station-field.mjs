@@ -94,10 +94,11 @@ fn stationDomain(p:vec3<f32>,skipRoof:bool,skipFloor:bool)->HitField{
   var panel=max(abs(radial-12.8)-.055,bounded);panel=max(panel,.55-abs(x));if(!skipRoof){recordPart(p,panel,15u,vec3<f32>(x,p.y,p.z),55.+xi);}
   for(var j=0;j<2;j++){let r=12.8-f32(j)*.5;recordPart(p,max(max(abs(radial-r)-.08,bounded),abs(z)-.11),3u,p,52.);}
   let a=atan2(x,p.y-1.2);let web=abs(sin(a*16.))*radial;recordPart(p,max(max(max((web-.034)/16.,abs(radial-12.55)-.24),abs(z)-.055),bounded),3u,p,52.);
-  let support=rep(p.x-10.,20.,-2.,1.);var columnSupport=support;
- ${host?`let postZ=p.z-z;if(abs(p.x-support-HOST_BOARDING_ROW_X)<.01&&postZ>=HOST_CLEAR_MIN_Z-.42&&postZ<=HOST_CLEAR_MAX_Z+.42){columnSupport=p.x-select(HOST_TRUSS_START_X,HOST_TRUSS_END_X,p.x>HOST_BOARDING_ROW_X);}`:''}
- let cq=vec3<f32>(columnSupport,p.y-5.,z);recordPart(p,cyl(cq,.20-.009*cos(atan2(cq.z,cq.x)*12.),4.15),3u,cq,56.);
-  recordPart(p,box(vec3<f32>(columnSupport,p.y-1.05,z),vec3<f32>(.42,.2,.42)),3u,cq,56.);recordPart(p,cyl(vec3<f32>(columnSupport,p.y-8.93,z),.43,.2),3u,cq,56.);
+  let support=rep(p.x-10.,20.,-2.,1.);
+ ${host?`for(var row=0u;row<4u;row++){let center=-30.+f32(row)*20.;let columnSupport=p.x-center;var columnZ=z;if(abs(center-HOST_BOARDING_ROW_X)<.01){columnZ=1e5;for(var pi=0u;pi<${host.supports.retainedBoardingPostLocalZ.length}u;pi++){let d=p.z-HOST_RETAINED_POST_Z[pi];if(abs(d)<abs(columnZ)){columnZ=d;}}}`:'let columnSupport=support;let columnZ=z;'}
+ let cq=vec3<f32>(columnSupport,p.y-5.,columnZ);recordPart(p,cyl(cq,.20-.009*cos(atan2(cq.z,cq.x)*12.),4.15),3u,cq,56.);
+  recordPart(p,box(vec3<f32>(columnSupport,p.y-1.05,columnZ),vec3<f32>(.42,.2,.42)),3u,cq,56.);recordPart(p,cyl(vec3<f32>(columnSupport,p.y-8.93,columnZ),.43,.2),3u,cq,56.);
+ ${host?'}':''}
   recordPart(p,box(vec3<f32>(support,p.y-9.25,p.z-SHED_CENTER),vec3<f32>(.13,.17,SHED_HALF)),3u,p,56.);
   // Four islands, mineral copings, with twin steel rails and actual sleeper gaps.
   ${host?String.raw`for(var pi=0;pi<4;pi++){let center=-30.+f32(pi)*20.;let isBoard=abs(center-HOST_BOARDING_ROW_X)<.01;let cx=select(center,HOST_ISLAND_CENTER_X,isBoard);let half=select(3.4,HOST_ISLAND_HALF_WIDTH,isBoard);let pq=vec3<f32>(p.x-cx,p.y-.35,p.z-SHED_CENTER);if(!skipFloor){recordPart(p,box(pq,vec3<f32>(half,.5,SHED_HALF+1.3)),17u,pq,77.);}let coping=vec3<f32>(abs(p.x-cx)-(half-.18),p.y-.78,rep(p.z,1.2,floor((SHED_BACK-1.3)/1.2),-7.));recordPart(p,box(coping,vec3<f32>(.18,.07,.595)),2u,coping,79.);}`:String.raw`  let pq=vec3<f32>(support,p.y-.35,p.z-SHED_CENTER);if(!skipFloor){recordPart(p,box(pq,vec3<f32>(3.4,.5,SHED_HALF+1.3)),17u,pq,77.);}
@@ -105,9 +106,9 @@ fn stationDomain(p:vec3<f32>,skipRoof:bool,skipFloor:bool)->HitField{
 `}
   var railX=rep(p.x-5.,10.,-3.,2.);${host?'if(abs(p.x-railX-5.)<.01){railX=p.x-select(-5.,15.,p.x>=5.);}':''}let rail=vec3<f32>(abs(railX)-RAIL_CENTER_OFFSET,p.y-(RAIL_CROWN-.066),p.z-SHED_CENTER);recordPart(p,box(rail,vec3<f32>(RAIL_HALF_WIDTH,.066,SHED_HALF+2.)),3u,rail,55.);
   recordTimber(p,box(vec3<f32>(railX,p.y+.11,rep(p.z,.65,floor((SHED_BACK-2.)/.65),-13.)),vec3<f32>(1.23,.055,.13)),vec3<f32>(railX,p.y+.11,rep(p.z,.65,floor((SHED_BACK-2.)/.65),-13.)),vec3<f32>(1.23,.055,.13),30.,round(p.z/.65)+round((p.x-5.)/10.)*301.);
-  ${host?'for(var bi=0;bi<4;bi++){let benchRow=-30.+f32(bi)*20.;let benchSupport=p.x-benchRow;var bz=rep(p.z+13.75,22.5,-5.,0.);if(abs(benchRow-HOST_BOARDING_ROW_X)<.01){bz=1e5;for(var j=0u;j<'+host.benches.retainedLocalZ.length+'u;j++){let q=p.z-HOST_RETAINED_BENCH_Z[j];if(abs(q)<abs(bz)){bz=q;}}}':''}
-  ${host?'':'let bz=rep(p.z+13.75,22.5,-5.,0.);'}let bq=vec3<f32>(${host?'benchSupport':'support'},p.y-1.35,bz);recordTimber(p,box(vec3<f32>(rep(bq.x,.13,-2.,2.),bq.y,bq.z),vec3<f32>(.05,.04,1.7)),vec3<f32>(bq.z,rep(bq.x,.13,-2.,2.),bq.y),vec3<f32>(1.7,.05,.04),38.,round(bq.x/.13)+round((p.z+13.75)/22.5)*17.+round((p.x-10.)/20.)*71.);
-  recordTimber(p,box(vec3<f32>(bq.x+.32,rep(bq.y-.5,.13,-2.,2.),bq.z),vec3<f32>(.04,.048,1.7)),vec3<f32>(bq.z,bq.x+.32,rep(bq.y-.5,.13,-2.,2.)),vec3<f32>(1.7,.04,.048),38.,round((bq.y-.5)/.13)+round((p.z+13.75)/22.5)*17.+round((p.x-10.)/20.)*71.+.37);
+  ${host?'for(var bi=0;bi<4;bi++){let benchRow=-30.+f32(bi)*20.;let benchSupport=p.x-select(benchRow,HOST_BENCH_ROW_X,abs(benchRow-HOST_BOARDING_ROW_X)<.01);var bz=rep(p.z+13.75,22.5,-5.,0.);var benchSourceZ=p.z-bz;if(abs(benchRow-HOST_BOARDING_ROW_X)<.01){bz=1e5;for(var j=0u;j<'+host.benches.retainedLocalZ.length+'u;j++){let q=p.z-HOST_RETAINED_BENCH_Z[j];if(abs(q)<abs(bz)){bz=q;benchSourceZ=HOST_BENCH_SOURCE_Z[j];}}}':''}
+  ${host?'':'let bz=rep(p.z+13.75,22.5,-5.,0.);let benchSourceZ=p.z-bz;'}let bq=vec3<f32>(${host?'benchSupport':'support'},p.y-1.35,bz);recordTimber(p,box(vec3<f32>(rep(bq.x,.13,-2.,2.),bq.y,bq.z),vec3<f32>(.05,.04,1.7)),vec3<f32>(bq.z,rep(bq.x,.13,-2.,2.),bq.y),vec3<f32>(1.7,.05,.04),38.,round(bq.x/.13)+round((benchSourceZ+13.75)/22.5)*17.+round((p.x-10.)/20.)*71.);
+  recordTimber(p,box(vec3<f32>(bq.x+.32,rep(bq.y-.5,.13,-2.,2.),bq.z),vec3<f32>(.04,.048,1.7)),vec3<f32>(bq.z,bq.x+.32,rep(bq.y-.5,.13,-2.,2.)),vec3<f32>(1.7,.04,.048),38.,round((bq.y-.5)/.13)+round((benchSourceZ+13.75)/22.5)*17.+round((p.x-10.)/20.)*71.+.37);
   let leg=vec3<f32>(bq.x,p.y,abs(bq.z)-1.15);recordPart(p,segment(leg,vec3<f32>(-.27,.86,0.),vec3<f32>(.27,1.32,0.),.028),3u,leg,38.);recordPart(p,segment(leg,vec3<f32>(.27,.86,0.),vec3<f32>(-.27,1.32,0.),.028),3u,leg,38.);recordPart(p,segment(leg,vec3<f32>(-.27,1.25,0.),vec3<f32>(-.35,2.18,0.),.024),3u,leg,38.);
   ${host?'}':''}
   // Signboard and hanging lamp remain physical authored objects.
@@ -149,7 +150,7 @@ fn stationDomain(p:vec3<f32>,skipRoof:bool,skipFloor:bool)->HitField{
 
 
  ${host?String.raw`
- // A 40m transfer truss replaces the omitted aisle posts. This is an authored
+ // A 40m transfer truss spans the clear boarding throat; original posts remain at re-sited rear bays. This is an authored
  // construction proposal, not an engineering load certification.
  let trZ=rep(p.z-SHED_FRONT,7.5,-SHED_BAYS,0.);let trCenter=p.z-trZ;
  if(trCenter>=HOST_CLEAR_MIN_Z-.42&&trCenter<=HOST_CLEAR_MAX_Z+.42){
