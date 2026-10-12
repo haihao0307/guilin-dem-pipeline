@@ -34,10 +34,85 @@ function specializeLetterDispatch(source){
  if(text===next)throw Error('Platform dispatcher hall branch missing');
  return source.slice(0,template.start)+next+source.slice(template.end);
 }
+
+/** Execution-only lowering of native lettering's constant array indexing.
+ * A source glyph loop keeps its original index interval and every operation.
+ * Its table access becomes a glyph-local switch returning the ORIGINAL arc
+ * constructor text. There is no dynamic array, new curve, resampling, material,
+ * resource binding, candidate regrouping, or changed winding/distance loop.
+ *
+ * This addresses the common closure of the two observed all-zero WebGL groups;
+ * it is a testable driver-lowering hypothesis, not proof of a GPU repair.
+ * Both the original whole-station source and partitioned sources may use it.
+ */
+export function adaptStationLettering(source) {
+ if(typeof source!=='string')throw TypeError('Station lettering source must be a string');
+ const declarations=[];
+ const declarationPattern=/\bconst\s+(stationLetteringCurves([0-5]))\s*=\s*array\s*<\s*StationLetteringArc\s*,\s*(\d+)\s*>\s*\(/g;
+ let match;
+ while((match=declarationPattern.exec(source))){
+  const bodyStart=declarationPattern.lastIndex;let end=bodyStart,depth=1;
+  for(;depth&&end<source.length;end++){if(source[end]==='(')depth++;if(source[end]===')')depth--;}
+  if(depth)throw Error('Unclosed native lettering table '+match[1]);
+  const body=source.slice(bodyStart,end-1);let declarationEnd=end;
+  while(/\s/.test(source[declarationEnd]||'')&&declarationEnd<source.length)declarationEnd++;
+  if(source[declarationEnd]!==';')throw Error('Unexpected native lettering table terminator '+match[1]);
+  declarationEnd++;
+  const arcs=[];let position=0;
+  while(position<body.length){
+   while(position<body.length&&/[\s,]/.test(body[position]))position++;
+   if(position===body.length)break;
+   if(!body.startsWith('StationLetteringArc(',position))throw Error('Unexpected native lettering arc expression '+match[1]);
+   const start=position;position+='StationLetteringArc('.length;let nesting=1;
+   for(;nesting&&position<body.length;position++){if(body[position]==='(')nesting++;if(body[position]===')')nesting--;}
+   if(nesting)throw Error('Unclosed native lettering arc '+match[1]);
+   const literal=body.slice(start,position),flat=literal.replace(/\s+/g,'');
+   const number='[+-]?(?:\\d+\\.?\\d*|\\.\\d+)(?:[eE][+-]?\\d+)?';
+   const pair='vec2<f32>\\('+number+','+number+'\\),';
+   if(!new RegExp('^StationLetteringArc\\((?:'+pair+'){6}\\d+u,\\d+u\\)$').test(flat))throw Error('Native arc must contain exactly its original 12 float and two integer literals');
+   arcs.push(literal);
+  }
+  if(arcs.length!==Number(match[3])||!arcs.length)throw Error('Native lettering table count mismatch '+match[1]);
+  declarations.push({name:match[1],template:Number(match[2]),arcs,text:source.slice(match.index,declarationEnd)});
+  declarationPattern.lastIndex=declarationEnd;
+ }
+ if(!declarations.length){
+  if(/\bstationLetteringCurves[0-5]\b/.test(source.replace(/\/\/[^\n]*/g,'')))throw Error('Unrecognized native lettering array interface');
+  return source; // Safe for material-only or already adapted sources.
+ }
+ if(new Set(declarations.map(item=>item.name)).size!==declarations.length)throw Error('Duplicate native lettering table');
+ let output=source;
+ for(const table of declarations){
+  const loopPattern=new RegExp('\\bfor\\s*\\(\\s*var\\s+(\\w+)\\s*=\\s*(\\d+)u\\s*;\\s*\\1\\s*<\\s*(\\d+)u\\s*;\\s*\\1\\s*\\+\\+\\s*\\)\\s*\\{\\s*let\\s+arc\\s*=\\s*'+table.name+'\\s*\\[\\s*\\1\\s*\\]\\s*;','g');
+  const loops=[...source.matchAll(loopPattern)];
+  let cursor=0;const helpers=[];
+  for(const [glyph,loop]of loops.entries()){
+   const begin=Number(loop[2]),end=Number(loop[3]);
+   if(begin!==cursor||end<=begin||end>table.arcs.length)throw Error('Native glyph intervals no longer cover the original arc table exactly: '+table.name);
+   cursor=end;
+   const helper=`stationLetteringArcWord${table.template}Glyph${glyph}`;
+   if(new RegExp('\\bfn\\s+'+helper+'\\b').test(source))throw Error('Native lettering lookup name collision '+helper);
+   let code=`// Exact source arcs [${begin},${end}); the original glyph loop proves the index range.\nfn ${helper}(index:u32)->StationLetteringArc{\nswitch index{\n`;
+   for(let index=begin;index<end-1;index++)code+=`case ${index}u:{return ${table.arcs[index]};}\n`;
+   // Default is the last valid source index. It is reached only for end-1:
+   // the guarded, unmodified source loop traverses begin <= index < end.
+   code+=`default:{return ${table.arcs[end-1]};}\n}\n}\n`;
+   helpers.push(code);
+   const access=new RegExp(table.name+'\\s*\\[\\s*'+loop[1]+'\\s*\\]');
+   const replacement=loop[0].replace(access,`${helper}(${loop[1]})`);
+   if(replacement===loop[0])throw Error('Native lettering access replacement failed');
+   output=output.replace(loop[0],replacement);
+  }
+  if(cursor!==table.arcs.length)throw Error('Not every original native arc is traversed: '+table.name);
+  output=output.replace(table.text,helpers.join(''));
+ }
+ if(/\bstationLetteringCurves[0-5]\b/.test(output.replace(/\/\/[^\n]*/g,'')))throw Error('A native lettering table reference remains outside the proven glyph loops');
+ return output;
+}
 export function stationGeometryGroupSource(source,index){
  const p=stationGeometryPartition(source);if(!Number.isInteger(index)||!p.groups[index])throw Error('Invalid group');
  const replacement=p.original.head+p.reset+p.groups[index]+'return resolveCandidates(p);\n}';
- return specializeLetterDispatch(source.slice(0,p.original.start)+replacement+source.slice(p.original.end));
+ return adaptStationLettering(specializeLetterDispatch(source.slice(0,p.original.start)+replacement+source.slice(p.original.end)));
 }
 // Original global overflow checks count recorded candidates BEFORE pruning.
 export function mergePhysicalGroupSamples(samples,capacity=96){

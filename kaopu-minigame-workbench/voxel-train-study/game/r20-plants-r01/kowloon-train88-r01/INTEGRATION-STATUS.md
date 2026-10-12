@@ -39,3 +39,15 @@ a7254801 / run38205163034 is testing source-audited projected coverage rectangle
 The current retained train's visual construction has been rejected by the user and is being repaired separately. Its presence in an integration screenshot establishes no train-faithfulness or whole-game visual acceptance. Station work does not edit its parts.
 
 No integrated station candidate has been published or accepted as interactive. All original mother sources and station components remain; unresolved rays and raw candidate overflow remain explicit failures.
+
+## Restored shared-bus verification, 12 October 2026, 12:40 UTC
+
+The restored complete construction and original bureau c38 source are now on the independent QA branch, not on Pages. The current source candidate is `a5c366b5f53b86813a989ac9d3230840bc7afc19`, Actions `38249956374`.
+
+- All station and bureau raster stages passed the pinned Naga compiler. The original single station geometry closure failed actual driver execution, despite compiler success.
+- Contiguous physical-geometry partitioning executed 10 of 12 station groups on WebGL2. Hall lettering and platform castings/lettering returned invalid all-zero records on the first readback. A common dynamic constant-struct-array access is under controlled execution-only investigation; no geometry ingredient or curve is removed.
+- The four-output station WebGPU diagnostic requested 64 bytes of color attachments per sample; this test adapter supports 32. That diagnostic did not execute its geometry. Its next version stores the complete 64-byte record in a compute storage buffer instead of reducing precision or dropping fields.
+- The complete bureau source's geometry and material sample probes passed WebGL2-versus-WebGPU comparisons for three ages. Maximum errors were 2.24e-8 and 5.96e-8. This is source numerical evidence, not a rendered whole-building or gameplay acceptance.
+- Recovered construction now includes the original quay, finite road and pedestrian ingredients. Site layout, original-platform alignment, visual quality, interaction, native-resolution performance and final transparency ordering remain unaccepted until actual shared-game evidence.
+
+There is still no public new integrated entry or restored whole-station frame. Original public driving and R02 station entries remain the available fallback.

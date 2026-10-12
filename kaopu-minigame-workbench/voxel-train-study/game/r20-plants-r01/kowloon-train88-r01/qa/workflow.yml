@@ -1,4 +1,4 @@
-name: Train88 full-geometry partition and shared bureau validation
+name: Train88 restored function geometry and shared game validation
 on:
   push:
     branches: ['qa/train88-kowloon-function-r01-20261012']
@@ -52,14 +52,22 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/station-bridge" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
-      - name: Full source partition and bureau numerical validation
+      - name: Full source partition, original host closure and shared-game validation
         run: |
           set +e
           node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/geometry-group-probes.cjs
-          station_status=$?
+          group_status=$?
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/isolated-probes.cjs --host-only
+          host_status=$?
           node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/bureau-train88-r01/qa/backend-probes.cjs
           bureau_status=$?
-          test "$station_status" -eq 0 -a "$bureau_status" -eq 0
+          if test "$group_status" -eq 0 && test "$host_status" -eq 0 && test "$bureau_status" -eq 0; then
+            node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/shared-bus.cjs
+            scene_status=$?
+          else
+            scene_status=1
+          fi
+          test "$group_status" -eq 0 && test "$host_status" -eq 0 && test "$bureau_status" -eq 0 && test "$scene_status" -eq 0
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
