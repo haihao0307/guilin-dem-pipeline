@@ -1,5 +1,6 @@
 import{KP_BRICK_WGSL}from'./mothers/brick-core.mjs';
 import{KP_WOOD_WGSL}from'./mothers/wood-core.mjs';
+import{KP_PLASTER_WGSL}from'./mothers/plaster-core.mjs';
 import{KP_STONE_WGSL}from'./mothers/stone-fields.mjs';
 import{KP_METAL_WGSL}from'./mothers/metal.mjs';
 import{STATION_FIELD_WGSL}from'./station-field.mjs';
@@ -12,16 +13,21 @@ ${KP_BRICK_WGSL}
 ${KP_WOOD_WGSL}
 ${KP_STONE_WGSL}
 ${KP_METAL_WGSL}
+${KP_PLASTER_WGSL}
+fn stationPlasterParams()->KpPlasterParams{return KpPlasterParams(vec2<f32>(0.,1.4),vec2<f32>(2.,1.5),.0165,.0012+.0018*u.age,0.,.013,.020,.0001,vec3<f32>(.48,.44,.35),vec3<f32>(.82,.76,.64),.0008,.000008,.018);}
 ${STATION_FIELD_WGSL}
 struct Trace{t:f32,status:u32,steps:u32,h:HitField}
-fn march(ro:vec3<f32>,rd:vec3<f32>,limit:f32)->Trace{var t=.02;var h=stationField(ro+rd*t);for(var i=0u;i<900u;i++){h=stationField(ro+rd*t);let eps=clamp(t*.000015,.00065,.006);if(abs(h.d)<eps){return Trace(t,1u,i+1u,h);}t+=max(abs(h.d)*.60,.00018);if(t>limit){return Trace(t,0u,i+1u,h);}}return Trace(t,2u,900u,h);}
+fn groundRay(ro:vec3<f32>,rd:vec3<f32>)->vec2<f32>{var best=vec2<f32>(1e6,0.);if(rd.y< -0.0000001){let land=(-.28-ro.y)/rd.y;let sea=(-.52-ro.y)/rd.y;if(land>.001&&(ro+rd*land).z<=27.){best=vec2<f32>(land,6.);}if(sea>.001&&(ro+rd*sea).z>=27.&&sea<best.x){best=vec2<f32>(sea,10.);}}return best;}
+fn march(ro:vec3<f32>,rd:vec3<f32>,limit:f32)->Trace{let ground=groundRay(ro,rd);let end=min(limit,ground.x);var t=.02;var h=stationField(ro+rd*t);for(var i=0u;i<1400u;i++){h=stationField(ro+rd*t);let eps=clamp(t*.000015,.00065,.006);if(abs(h.d)<eps&&h.id!=0u){return Trace(t,1u,i+1u,h);}t+=max(abs(h.d)*.60,.00018);if(t>=end){if(ground.x<=limit){let p=ro+rd*ground.x;return Trace(ground.x,1u,i+1u,HitField(0.,u32(ground.y),p,0.));}return Trace(t,0u,i+1u,h);}}return Trace(t,2u,1400u,h);}
+
 fn fieldNormal(p:vec3<f32>)->vec3<f32>{let e=.00045;let a=vec3<f32>(1,-1,-1);let b=vec3<f32>(-1,-1,1);let c=vec3<f32>(-1,1,-1);let d=vec3<f32>(1,1,1);return normalize(a*stationField(p+a*e).d+b*stationField(p+b*e).d+c*stationField(p+c*e).d+d*stationField(p+d*e).d);}
 fn sky(rd:vec3<f32>)->vec3<f32>{return mix(vec3<f32>(.72,.78,.76),vec3<f32>(.22,.38,.54),smoothstep(-.15,.85,rd.y));}
 fn shadow(p:vec3<f32>,n:vec3<f32>,ld:vec3<f32>)->f32{var t=.04;var res=1.;for(var i=0;i<38;i++){let d=stationMacro(p+n*.018+ld*t).d;if(d<.001){return .1;}res=min(res,12.*d/t);t+=clamp(d*.65,.025,3.);if(t>70.){break;}}return clamp(res,.1,1.);}
 fn ao(p:vec3<f32>,n:vec3<f32>)->f32{var occ=0.;var weight=1.;for(var i=1;i<5;i++){let d=f32(i)*.20;occ+=max(0.,d-stationMacro(p+n*d).d)*weight;weight*=.55;}return clamp(1.-occ*.7,.28,1.);}
-fn shade(tr:Trace,ro:vec3<f32>,rd:vec3<f32>)->vec3<f32>{let p=ro+rd*tr.t;let h=tr.h;var n=fieldNormal(p);let fp=max(.00001,tr.t*2.*u.fov/u.resolution.y);let wet=stateWet(p);let repair=repairAt(p);var s=KpSurface(0.,vec3<f32>(.34,.33,.28),.85);var metal=0.;var cavity=1.;var specular=1.;
+fn shade(tr:Trace,ro:vec3<f32>,rd:vec3<f32>)->vec3<f32>{let p=ro+rd*tr.t;let h=tr.h;var n=vec3<f32>(0.,1.,0.);if(h.id!=6u&&h.id!=10u){n=fieldNormal(p);}let fp=max(.00001,tr.t*2.*u.fov/u.resolution.y);let wet=stateWet(p);let repair=repairAt(p);var s=KpSurface(0.,vec3<f32>(.34,.33,.28),.85);var metal=0.;var cavity=1.;var specular=1.;
  if(h.id==1u||h.id==12u){s=kpBrickOriginalSurface(h.q,h.seed,i32(abs(h.seed))%4,.42,fp);let mortar=min(.125-abs(h.q.x),.0365-abs(h.q.y));if(mortar<.004){s=KpSurface(0.,vec3<f32>(.28,.26,.21),.94);}s.albedo*=1.-wet*.18;}
- if(h.id==2u){s=kpStoneSurface(h.q,u.age,wet,repair,fp);}
+ if(h.id==2u){s=kpStoneSurface(h.q*.19,u.age,wet,repair,fp*.19);}
+ if(h.id==13u){s=kpPlasterOriginalField(h.q,stationPlasterParams(),fp).surface;s.albedo*=1.-wet*.18;}
  if(h.id==3u){s=kpMetalSurface(h.q,u.age,wet,repair,fp);metal=.45;}
  if(h.id==4u){let wn=select(n,n.zxy,h.seed==38.);let ws=kpWoodOriginalSample(h.q,wn,select(0.,1.,abs(wn.x)>.72),kpWoodDefaultParams(),fp,tr.t);s=ws.surface;cavity=ws.cavity;specular=ws.specularLevel;}
  if(h.id==6u){s=KpSurface(0.,vec3<f32>(.21,.225,.215),.92);}
