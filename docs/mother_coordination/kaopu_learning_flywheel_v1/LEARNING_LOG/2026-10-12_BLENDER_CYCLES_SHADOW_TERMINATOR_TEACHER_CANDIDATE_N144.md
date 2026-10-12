@@ -4,7 +4,7 @@ Date: 2026-10-12
 Bounded owner: Learning Flywheel → Human / ET20 only  
 Teacher state: `TEACHER_CANDIDATE`  
 Production import: not performed  
-Lifecycle at publication: `POSTED=false / ACKNOWLEDGED=false / IMPLEMENTED=false / CLASSIFICATION-GATE-RUN=true / HUMAN-PRODUCTION-GATE-RUN=false / ADOPTED=false / USER-ACCEPTED=false`
+Lifecycle after targeted route: `POSTED=true / ACKNOWLEDGED=false / IMPLEMENTED=false / CLASSIFICATION-GATE-RUN=true / HUMAN-PRODUCTION-GATE-RUN=false / ADOPTED=false / USER-ACCEPTED=false`
 
 ## Bounded question
 
@@ -115,6 +115,8 @@ Not `ACTIVE_TEACHER`: no Human Mother ACK exists.
 Not a global OS change.
 
 Route only to PR #227 with four questions:
+
+Posted route: https://github.com/haihao0307/guilin-dem-pipeline/pull/227#issuecomment-6123606079
 
 1. Is the unresolved eye/low-key stripe still the next true Human defect?
 2. Does current runtime already expose/bind triangle vertices, vertex normals, geometric normals and barycentrics for the shadow lookup?
