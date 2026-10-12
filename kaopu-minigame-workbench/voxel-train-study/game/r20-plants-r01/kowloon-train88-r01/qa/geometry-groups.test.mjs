@@ -35,3 +35,5 @@ test('physical group winners preserve full identity and original strict ties aft
 test('global raw count and any local overflow keep the old explicit id999 failure',()=>{
  const groups=Array.from({length:12},()=>({hit:{d:1,id:2},rawCount:9,overflow:false}));assert.equal(mergePhysicalGroupSamples(groups).hit.id,999);groups.forEach(g=>g.rawCount=1);groups[5].overflow=true;assert.equal(mergePhysicalGroupSamples(groups).hit.id,999);
 });
+
+test('all constants referenced by the independent probe entry are retained in each emitted group',()=>{for(let i=0;i<12;i++){const s=comments(fs.readFileSync(new URL('../generated/group-'+i+'.wgsl',import.meta.url),'utf8'));for(const name of new Set(s.match(/\b[A-Z][A-Z0-9_]{2,}\b/g)||[]))assert(s.includes('const '+name+':')||s.includes('const '+name+'='),'Missing entry constant '+name+' in group '+i);}});

@@ -42,7 +42,7 @@ const points=Array.from({length:192},(_,i)=>{const family=Math.floor(i/16),x=i%1
  ][family];});
 const manifest={schema:'kaopu.station.geometry-groups/1',sourceSHA256:sha(source),construction,merge:'physical winner, contiguous original-order strict minimum, sum rawCount, any overflow or sum>96 fails id999',probe:{width:192,height:1,ages:[.05,.58,.95],points},groups:[]};
 for(let i=0;i<GEOMETRY_GROUP_NAMES.length;i++){
- const selected=stationGeometryGroupSource(source,i),part=extraction(selected),body=part.closure(['stationField']),usesHostFrame=/\bframe\./.test(body);
+ const selected=stationGeometryGroupSource(source,i),part=extraction(selected),body=part.closure(['stationField'],entry),usesHostFrame=/\bframe\./.test(body);
  const code=part.header+(usesHostFrame?RUNTIME_HEADER:'')+body+entry;
  if(/--(?=\d)|\+\+(?=\d)/.test(code))throw Error('Ambiguous numeric literal in group '+i);
  const stem='group-'+i;fs.writeFileSync(new URL(stem+'.wgsl',dir),code);
