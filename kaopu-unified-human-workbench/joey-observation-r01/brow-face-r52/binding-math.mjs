@@ -17,9 +17,11 @@ export function smoothBrowValue(x,line){
 }
 export function faceFrame(landmarks){
  const l=landmarks[36],r=landmarks[45],origin=l.map((x,k)=>(x+r[k])/2),x=unit(sub(r,l));
- const brow=[0,1,2].map(k=>landmarks.slice(17,27).reduce((s,p)=>s+p[k],0)/10),up=sub(brow,origin),y=unit(up.map((v,k)=>v-x[k]*dot(up,x))),z=unit(cross(x,y));
+ // The brow ridge is forward of the eye corners and is not the head's up axis.
+ // Eye-to-chin span separates longitudinal direction from brow surface depth.
+ const up=sub(origin,landmarks[8]),y=unit(up.map((v,k)=>v-x[k]*dot(up,x))),z=unit(cross(x,y));
  if(dot(sub(landmarks[30],origin),z)<=0)throw Error('Face frame points into head or landmark sides are reversed');
- return{origin,x,y,z};
+ return{convention:'eye-horizontal/chin-longitudinal/1',origin,x,y,z};
 }
 export function toLocal(p,f,direction=false){const v=direction?p:sub(p,f.origin);return[f.x,f.y,f.z].map(a=>dot(v,a));}
 export function fromLocal(p,f,direction=false){return[0,1,2].map(k=>(direction?0:f.origin[k])+f.x[k]*p[0]+f.y[k]*p[1]+f.z[k]*p[2]);}

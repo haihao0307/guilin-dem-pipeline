@@ -1,5 +1,6 @@
 import * as THREE from '/native/kaopu-unified-human-workbench/full/source/registration-vendor/three.module.js';
 import {MakeHumanBrows} from './MakeHumanBrows.mjs';
+import{BROW_PROFILE}from'./BrowProfile.mjs';
 import{faceFrame,toLocal,sourceMap,normalizedLandmarks,verifySupports}from'./binding-math.mjs';
 import{attachFiberMaterial,fiberMaterialDiagnostics}from'../brow-r04/FiberMaterial.js';
 /** Current native head supplies binding geometry. Each support is an exact original triangle.
@@ -8,6 +9,7 @@ import{attachFiberMaterial,fiberMaterialDiagnostics}from'../brow-r04/FiberMateri
 export function attachNativeBrows(a){
  const m=a.motion().controller.model,g=m.gnm,v=a.motion().viewer,map=sourceMap(m.canonical.gnmRecipes,m.bodyCount,g.numVertices);
  const display=v.geometry.attributes.position.array,landmarks=normalizedLandmarks(g,display,map),frame=faceFrame(landmarks),localLandmarks=landmarks.map(p=>toLocal(p,frame));
+ if(frame.convention!==BROW_PROFILE.frameConvention)throw Error('Brow profile/frame convention mismatch');
  const p=new Float32Array(g.numVertices*3).fill(NaN),n=p.slice();
  const copy=ids=>{const pp=v.geometry.attributes.position.array,nn=v.geometry.attributes.normal.array;for(const id of ids){const i=map[id];if(i<0)throw Error('Missing source vertex');p.set(toLocal(Array.from(pp.subarray(i*3,i*3+3)),frame),id*3);n.set(toLocal(Array.from(nn.subarray(i*3,i*3+3)),frame,true),id*3);}};
  const mapped=Array.from(map,(_,i)=>i).filter(i=>map[i]>=0);copy(mapped);

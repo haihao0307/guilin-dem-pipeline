@@ -1,19 +1,20 @@
 // Original KAOPU brow-band adaptation. Private observation data stays outside runtime.
 export const BROW_PROFILE={
   "schema": "native-brow-band-profile/1",
+  "frameConvention": "eye-horizontal/chin-longitudinal/1",
   "targetLocalAbsX": [
     0.0135,
     0.0525
   ],
   "targetCenterYCoeff": [
-    0.023063507612645855,
-    0.020934294793689197,
-    -0.03601081230538286
+    0.013677520543367048,
+    0.02070214564972197,
+    -0.02106164907674558
   ],
   "targetHalfWidthCoeff": [
-    0.00358127304465216,
-    -0.0033153868300632976,
-    0.0006735128544348608
+    0.0031203730227873025,
+    -0.0018400133471860002,
+    0.0011977208506788843
   ],
   "sourceAbsX": [
     0.13910000026226044,
