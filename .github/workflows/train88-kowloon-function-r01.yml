@@ -1,4 +1,4 @@
-name: Train88 bounded independent query optimizations
+name: Train88 compact trace consumer contracts
 on:
   push:
     branches: ['qa/train88-kowloon-function-r01-20261012']
@@ -23,9 +23,10 @@ jobs:
           node emit-group-runtime.mjs >/dev/null
           node experiments/spatial-query-r01/emit.mjs
           node experiments/spatial-query-r01/emit-flat.mjs
+          node experiments/compact-trace-r01/emit-contracts.mjs
           node experiments/compact-trace-r01/emit.mjs
           node --test experiments/spatial-query-r01/*.test.mjs experiments/candidate-storage-r01/*.test.mjs experiments/compact-trace-r01/*.test.mjs qa/bounded-browser.test.mjs qa/shader-closure.test.mjs
-      - name: Compile pinned Naga and three independent query variants
+      - name: Compile pinned Naga and all exact compact runtime entries
         working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/compiler
         run: |
           python - <<'PYLOCK'
@@ -34,22 +35,25 @@ jobs:
           assert p['version']=='27.0.3' and p['checksum']=='066cf25f0e8b11ee0df221219010f213ad429855f57c494f995590c861a9a7d8'
           PYLOCK
           cargo build --release --locked
-          for variant in reference hierarchy capacity flat-hierarchy compact-trace; do
-            entry=hierarchyProbe; if [ "$variant" = "compact-trace" ]; then entry=compactTraceProbe; fi
-            target/release/kaopu-station-shader-bridge ../experiments/spatial-query-r01/generated/$variant.wgsl ../experiments/spatial-query-r01/generated/$variant.frag "$entry"
+          for i in $(seq 0 11); do
+            target/release/kaopu-station-shader-bridge ../experiments/compact-trace-r01/generated/runtime-$i.wgsl ../experiments/compact-trace-r01/generated/runtime-$i.frag stationCompactQuery
           done
+          for variant in advance-full advance-compact; do
+            target/release/kaopu-station-shader-bridge ../experiments/compact-trace-r01/generated/$variant.wgsl ../experiments/compact-trace-r01/generated/$variant.frag advanceGroupedRays
+          done
+          target/release/kaopu-station-shader-bridge ../experiments/compact-trace-r01/generated/merge-contract.wgsl ../experiments/compact-trace-r01/generated/merge-contract.frag mergeContract
       - name: Install pinned official browser QA runner
         run: |
           npm install --prefix "$RUNNER_TEMP/station-bridge" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
-      - name: Three ages and three exclusion modes of full versus compact original field
-        run: SPATIAL_VARIANTS=reference,compact-trace SPATIAL_GRID=1 node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/spatial-query-r01/run.cjs
+      - name: Ordered group merge and original advance versus compact consumer
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/compact-trace-r01/contracts-run.cjs
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: train88-query-experiments-${{ github.sha }}
           path: |
-            train88-spatial-query-results/
-            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/spatial-query-r01/generated/
+            train88-compact-contract-results/
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/compact-trace-r01/generated/
           retention-days: 7
