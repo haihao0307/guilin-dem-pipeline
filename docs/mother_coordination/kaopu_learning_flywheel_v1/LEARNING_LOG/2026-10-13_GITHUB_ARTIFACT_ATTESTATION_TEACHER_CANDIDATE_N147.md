@@ -45,6 +45,6 @@ Ear PR #226 的 `.github/workflows/ear-r03-refinement.yml`（blob `d45ce2179da90
 
 决定：保留 `TEACHER_CANDIDATE`，尚未进入 `AUDITION`；不修改 R2、不修改生产 workflow、不改变晋级阈值。
 
-生命周期：`POSTED=false`（写入时）；`CLASSIFICATION-GATE-RUN=true (7/7)`；`ACKNOWLEDGED / IMPLEMENTED / HUMAN-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`。
+生命周期：`POSTED=true`（PR #226 comment `6134819204`）；`CLASSIFICATION-GATE-RUN=true (7/7)`；`ACKNOWLEDGED / IMPLEMENTED / HUMAN-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`。
 
 效果指标：首次候选通过率、用户纠错次数、同错复发率、rejected lineage 继承次数、stale delivery 次数、accepted delta 内部迭代数与指令到合法 candidate 时间均为 `unknown`。
