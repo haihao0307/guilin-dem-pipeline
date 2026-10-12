@@ -53,14 +53,17 @@ fn footprint(p:vec3<f32>,n:vec3<f32>,rd:vec3<f32>)->f32{return max(.00005,length
 fn packSample(f:SettlementField,t:f32,steps:u32,status:u32,glass:vec4<f32>,through:vec4<f32>)->HitRecord{return HitRecord(vec4<f32>(t,f.geo.d,f32(steps),f32(status)),vec4<f32>(f.geo.q,f32(f.geo.objectId)),vec4<u32>(f.geo.materialId,f.geo.buildingId,f.geo.componentId,f.geo.stateId),vec4<f32>(f.geo.n,f32(f.sectionCap)),glass,through);}
 fn fromRecord(h:HitRecord)->GeoHit {var g:GeoHit;g.d=h.ray.y;g.materialId=h.ids.x;g.buildingId=h.ids.y;g.componentId=h.ids.z;g.stateId=h.ids.w;g.q=h.local.xyz;g.n=h.normal.xyz;g.objectId=u32(h.local.w);return g;}
 fn trace(ro:vec3<f32>,rd:vec3<f32>,startT:f32,startSteps:u32,budget:u32,oldGlass:vec4<f32>,oldThrough:vec4<f32>)->HitRecord{
- var t=startT;var prevT=t;var prevD=1e6;var glass=oldGlass;var through=oldThrough;var steps=startSteps;var f=raySceneField(ro+rd*t,rd);
- loop{if(steps>=budget){return packSample(f,t,steps,2u,glass,through);}if(t>220.){return packSample(f,t,steps,0u,glass,through);}f=raySceneField(ro+rd*t,rd);steps++;
-  if(f.geo.materialId>0u){
-   if(abs(f.d)<.00055||(f.d<0.&&prevD>0.&&prevD<1e5)){
-    if(f.d<0.&&prevD>0.&&prevD<1e5){var lo=prevT;var hi=t;for(var j=0;j<8;j++){let mid=(lo+hi)*.5;let m=raySceneField(ro+rd*mid,rd);if(j<7){if(m.d>0.){lo=mid;}else{hi=mid;}}else{t=mid;f=m;}}}
-    if(f.geo.materialId==5u&&f.sectionCap==0u){if(glass.w<0.){glass=vec4<f32>(f.geo.n,.04+.96*pow(1.-abs(dot(-rd,f.geo.n)),5.));atomicAdd(&stats.glassRays,1u);}through=vec4<f32>(through.xyz*vec3<f32>(.88,.94,.92),through.w+1.);t+=.026/max(.07,abs(dot(rd,f.geo.n)));prevD=1e6;continue;}
-    return packSample(f,t,steps,1u,glass,through);
-   }
+ var t=startT;var prevT=t;var prevD=1e6;var glass=oldGlass;var through=oldThrough;var steps=startSteps;
+ var f=SettlementField(0.,GeoHit(0.,0u,0u,0u,0u,vec3<f32>(0.),vec3<f32>(0.,1.,0.),0u),0u);
+ var refineLeft=0u;var lo=0.;var hi=0.;
+ loop{if(steps>=budget&&refineLeft==0u){return packSample(f,t,steps,2u,glass,through);}if(t>220.){return packSample(f,t,steps,0u,glass,through);}
+  // One textual field receiver, shared by march and the original eight bisection samples.
+  f=raySceneField(ro+rd*t,rd);steps++;var accept=false;
+  if(refineLeft>0u){if(refineLeft==1u){refineLeft=0u;accept=true;}else{if(f.d>0.){lo=t;}else{hi=t;}refineLeft--;t=(lo+hi)*.5;continue;}}
+  else if(f.geo.materialId>0u){if(f.d<0.&&prevD>0.&&prevD<1e5){lo=prevT;hi=t;refineLeft=8u;t=(lo+hi)*.5;continue;}else if(abs(f.d)<.00055){accept=true;}}
+  if(accept&&f.geo.materialId>0u){
+   if(f.geo.materialId==5u&&f.sectionCap==0u){if(glass.w<0.){glass=vec4<f32>(f.geo.n,.04+.96*pow(1.-abs(dot(-rd,f.geo.n)),5.));atomicAdd(&stats.glassRays,1u);}through=vec4<f32>(through.xyz*vec3<f32>(.88,.94,.92),through.w+1.);t+=.026/max(.07,abs(dot(rd,f.geo.n)));prevD=1e6;continue;}
+   return packSample(f,t,steps,1u,glass,through);
   }
   prevT=t;prevD=f.d;t+=clamp(abs(f.d)*.64,.00018,4.0);
  }
