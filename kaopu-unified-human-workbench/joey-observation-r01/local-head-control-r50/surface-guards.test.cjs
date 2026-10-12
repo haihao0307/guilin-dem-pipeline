@@ -1,0 +1,9 @@
+const test=require('node:test'),assert=require('node:assert/strict'),{geometryStats,weightedStats,sourceGates}=require('./surface-guards.cjs');
+const b=[0,0,0,1,0,0,0,1,0,1,1,0],f=[0,1,2,1,3,2],g=[0,0,0,0],guard=[true,true,true,true];
+test('Rigid translation preserves intrinsic normal and edge metrics',()=>{const r=geometryStats({before:b,after:b.map((x,i)=>x+(i%3===2?.001:0)),faces:f,groups:g,guard});assert(Math.abs(r.regions[0].rms-.001)<1e-12);assert(r.criticalNormalsDegrees.max<1e-5);assert(r.criticalEdgeStrain.max<1e-12);});
+test('Peak guard reveals a small-area spike concealed by RMS',()=>{const r=weightedStats([0,0,.02],[1,1,.000001]);assert(r.rms<.0001);assert.equal(r.max,.02);});
+test('Flipped and collapsed triangles are retained as failures',()=>{const flip=[...b];flip[7]=-1;const r=geometryStats({before:b,after:flip,faces:f,groups:g,guard});assert(r.reversedNormalCount>0);const collapsed=[...b];collapsed[6]=0;collapsed[7]=0;const q=geometryStats({before:b,after:collapsed,faces:f,groups:g,guard});assert(q.newDegenerate>0);});
+
+test('Mixed semantic vertex participates in every critical source guard',()=>{const after=[...b];after[2]=.01;const r=geometryStats({before:b,after,faces:f,groups:[20,15,15,15],memberships:[[10,15],[15],[15],[15]],guard});assert.equal(r.regions[10].max,.01);assert(r.criticalNormalsDegrees.max>0);assert(r.criticalEdgeStrain.max>0);});
+
+test('Unknown protected surface still measures normal change and cannot pass by empty critical sets',()=>{const p=[0,0,0,.001,0,0,0,.001,0],q=[...p];q[2]=.0001;const r=geometryStats({before:p,after:q,faces:[0,1,2],groups:[20,20,20],guard:[true,true,true]});assert(r.guardNormalsDegrees.max>5);assert.equal(r.criticalNormalsDegrees.count,0);const gates=sourceGates(r,.01);assert.equal(gates.guardNormalMax,false);assert.equal(gates.criticalCoverage,false);assert.equal(gates.criticalShapeCoverage,false);});
