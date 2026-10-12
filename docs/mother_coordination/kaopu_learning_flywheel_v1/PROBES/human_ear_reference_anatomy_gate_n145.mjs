@@ -12,6 +12,25 @@ function classify(x) {
   if (x.referenceApprovedBy && x.referenceApprovedBy === x.producerIdentity) {
     return 'HOLD_REFERENCE_BASELINE_SELF_APPROVED';
   }
+  if (x.stateViewCoverageRequired) {
+    if (!x.anchorCarrierLedgerDigest) return 'HOLD_ANCHOR_CARRIER_UNBOUND';
+    if (!x.stateViewMatrixDigest) return 'HOLD_STATE_VIEW_COVERAGE_INCOMPLETE';
+    const cells = x.stateViewCells || [];
+    if (cells.some(cell => ['OCCLUDED', 'UNKNOWN'].includes(cell.status)
+      && (cell.candidateMeasurement !== undefined || cell.proceduralDefaultApplied))) {
+      return 'HOLD_UNKNOWN_REGION_CREATIVE_SUBSTITUTE';
+    }
+    const complete = (x.requiredAnchorIds || []).every(anchorId =>
+      (x.requiredStateIds || []).every(stateId =>
+        (x.requiredViewIds || []).every(viewId =>
+          cells.some(cell => cell.anchorId === anchorId
+            && cell.stateId === stateId
+            && cell.viewId === viewId
+            && ['OBSERVED', 'OCCLUDED', 'UNKNOWN', 'NOT_APPLICABLE'].includes(cell.status)
+            && cell.carrierKind
+            && (cell.status !== 'OBSERVED' || cell.evidenceFrameDigest)))));
+    if (!complete) return 'HOLD_STATE_VIEW_COVERAGE_INCOMPLETE';
+  }
   if (!x.comparisonExecuted) return 'HOLD_REFERENCE_COMPARISON_NOT_RUN';
   if (!x.frozenThresholds || !x.verifierIdentity || !x.verifierReceipt) {
     return 'HOLD_REFERENCE_COMPARISON_NOT_RUN';
@@ -28,7 +47,7 @@ const assertions = fixture.fixtures.map(test => ({
   passed: classify(test.input) === test.expect
 }));
 const result = {
-  probeId: 'HUMAN-EAR-REFERENCE-ANATOMY-IDENTITY-001-N145-REPLAY',
+  probeId: 'HUMAN-EAR-REFERENCE-ANATOMY-IDENTITY-001-N146-STATE-VIEW-REPLAY',
   boundedQuestion: fixture.boundedQuestion,
   assertions,
   summary: {
