@@ -29,15 +29,14 @@ jobs:
           df -h /dev/shm || true
           npm install --prefix "$RUNNER_TEMP/joey-native" --no-save --ignore-scripts playwright@1.57.0
           echo "NODE_PATH=$RUNNER_TEMP/joey-native/node_modules" >> "$GITHUB_ENV"
-      - name: Verify full candidate with original public native engine
+      - name: Verify deployed original R54 URL without overlay
         env:
           R54_BROWSER: ${{ matrix.browser }}
-          R54_CANDIDATE_DIR: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54
-        run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/verify-face-lock.cjs
+        run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/verify-public-face-lock.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: r54-lock-linux-${{ matrix.browser }}
+          name: r54-public-lock-linux-${{ matrix.browser }}
           path: r54-lock-verified-*/
           retention-days: 7
   apple:
@@ -54,14 +53,13 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/joey-native" --no-save --ignore-scripts playwright@1.57.0
           "$RUNNER_TEMP/joey-native/node_modules/.bin/playwright" install webkit
           echo "NODE_PATH=$RUNNER_TEMP/joey-native/node_modules" >> "$GITHUB_ENV"
-      - name: Verify full candidate with original public native engine
+      - name: Verify deployed original R54 URL without overlay
         env:
           R54_BROWSER: webkit
-          R54_CANDIDATE_DIR: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54
-        run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/verify-face-lock.cjs
+        run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/verify-public-face-lock.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: r54-lock-apple-webkit
+          name: r54-public-lock-apple-webkit
           path: r54-lock-verified-*/
           retention-days: 7
