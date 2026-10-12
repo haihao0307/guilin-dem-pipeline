@@ -1,3 +1,5 @@
+import {EQUIPMENT_SLOTS,LAYOUT} from './transport-layout.mjs';
+import {routeObstructions,cargoHalf} from './traffic.mjs';
 /**
  * Lost Property Bureau R03b — fictional 1976 custody ledger, no dependencies.
  * Positions and rendered sizes are metres [x, y, z]; worldTime is UTC milliseconds.
@@ -10,9 +12,9 @@
  * JSON snapshots contain fictional internal verification features. Public UI
  * should use publicItem(), not expose the internalFeature field to claimants.
  */
-export const SCHEMA_VERSION = 7;
+export const SCHEMA_VERSION = 8;
 export const SCENARIO_ID = 'lost-property-bureau-r03e-fictional-1976';
-export const STORAGE_KEY = 'kaopu.bureau.r03e.custody.v2';
+export const STORAGE_KEY = 'kaopu.bureau.r03e.custody.v3-network';
 export const RACK_LAYOUT = Object.freeze({ banks: 2, rowsPerBank: 16, bays: 20, levels: 6, bankStartX: Object.freeze([-25, 12]), rowStartZ: -23.5, rowPitch: 3.5, bayPitch: 1.2, faceOffset: 0.48 });
 export const STORAGE_BOUNDS = Object.freeze({ minX: -28, maxX: 44, minZ: -28, maxZ: 34.5, netArea: 4500 });
 export const WORLD_START = Date.UTC(1976, 6, 1, 8);
@@ -73,7 +75,7 @@ export function getSlot(slotId) {
   if (rack) {
     const row = +rack[1], bay = +rack[2], level = +rack[3], face = rack[4], cell = rack[5] ? +rack[5] : null, localRow = (row - 1) % 16 + 1, bank = row <= 16 ? 'A' : 'B', small = localRow >= 11;
     check(row >= 1 && row <= 32 && bay >= 1 && bay <= 20 && (small ? cell !== null : cell === null), 'INVALID_SLOT', 'Invalid rack address.');
-    return { slotId, kind: 'rack', bank, localRow, row, bay, level, face, cell, address: `${bank}组—${small ? '小件' : '普通'}区—${pad(row)}排—${pad(bay)}架间—${level}层—${face}面${cell ? `—${cell}小格` : ''}`, dimensions: small ? [0.85, 0.32, 0.33] : [0.85, 0.8, 1.1], categories: small ? ['small', 'document'] : ['baggage', 'parcel', 'umbrella', 'small', 'document'], disabled: false, occupiedBy: null, reservedBy: null };
+    return { slotId, kind: 'rack', bank, localRow, row, bay, level, face, cell, address: `${bank}组—${small ? '小件' : '普通'}区—${pad(row)}排—${pad(bay)}架间—${level}层—${face}面${cell ? `—${cell}小格` : ''}`, dimensions: small ? [0.85, 0.32, 0.33] : [0.85, 0.8, 1.1], categories: small ? ['small', 'document'] : ['baggage', 'parcel', 'umbrella', 'small', 'document'], disabled: EQUIPMENT_SLOTS.includes(slotId), equipmentReason:EQUIPMENT_SLOTS.includes(slotId)?'Cartesian crosshead clearance':null, occupiedBy: null, reservedBy: null };
   }
   const buffer = /^(RECEIVING|INSPECTION|HANDOVER|QUARANTINE|OVERSIZE|VAULT)-(\d\d)$/.exec(slotId);
   const specs = { RECEIVING: [16, [4, 3, 4], 'receiving', '接收'], INSPECTION: [4, [4, 3, 4], 'inspection', '检查'], HANDOVER: [8, [4, 3, 4], 'handover', '交接'], QUARANTINE: [4, [4, 3, 4], 'quarantine', '隔离'], OVERSIZE: [8, [4, 3, 4], 'oversize', '大件'], VAULT: [16, [1, 1, 1], 'vault', '贵重'] };
@@ -171,7 +173,7 @@ function initialManifest() {
 export function createInventory(options = {}) {
   const worldTime = time(options.worldTime ?? WORLD_START), manifest = options.items ?? initialManifest();
   check(Array.isArray(manifest), 'INVALID_MANIFEST', 'Initial items must be an array.');
-  const s = { schemaVersion: SCHEMA_VERSION, scenario: SCENARIO_ID, worldTime, initialWorldTime: worldTime, seed: options.seed ?? 1976, revision: 0, items: {}, slots: {}, tasks: {}, carriers: {}, claims: {}, lossReports: {}, receipts: {}, commands: {}, events: [], lastEventSequence: 0, lastEventId: null, ledger: { initial: manifest.length, received: 0, delivered: 0, externallyTransferred: 0, disposed: 0 }, capacity: { addressedRackSlots: ADDRESS_CAPACITY, actualInitialItems: manifest.length }, policy: { id: 'FICTIONAL-1976-PENDING', automaticDisposal: false, realInstitutionData: false } };
+  const s = { schemaVersion: SCHEMA_VERSION, scenario: SCENARIO_ID, worldTime, initialWorldTime: worldTime, seed: options.seed ?? 1976, revision: 0, items: {}, slots: {}, tasks: {}, carriers: {}, claims: {}, lossReports: {}, receipts: {}, commands: {}, events: [], lastEventSequence: 0, lastEventId: null, ledger: { initial: manifest.length, received: 0, delivered: 0, externallyTransferred: 0, disposed: 0 }, capacity: { addressedRackSlots: ADDRESS_CAPACITY, equipmentDisabledSlots: EQUIPMENT_SLOTS.length, usableRackSlots: ADDRESS_CAPACITY-EQUIPMENT_SLOTS.length, actualInitialItems: manifest.length }, policy: { id: 'FICTIONAL-1976-PENDING', automaticDisposal: false, realInstitutionData: false } };
   for (const input of manifest) {
     const item = normalizedItem(input, worldTime, true); check(!s.items[item.itemId], 'DUPLICATE_ITEM', 'Duplicate initial item ID.');
     const slot = materialize(s, input.slotId); check(['rack', 'vault', 'oversize'].includes(slot.kind), 'INITIAL_LOCATION', 'Initial items require a storage location.');
@@ -187,7 +189,7 @@ export function publicItem(s, itemId) {
 }
 export function summary(s) {
   const items = Object.values(s.items), local = items.filter(i => i.state !== 'delivered');
-  return { worldTime: s.worldTime, worldDate: new Date(s.worldTime).toISOString(), inCustody: local.length, stored: items.filter(i => i.state === 'stored').length, moving: items.filter(i => i.location.type === 'carrier').length, awaitingHandover: items.filter(i => i.state === 'handover').length, delivered: s.ledger.delivered, initial: s.ledger.initial, received: s.ledger.received, addressCapacity: ADDRESS_CAPACITY, occupiedRackSlots: Object.values(s.slots).filter(p => p.kind === 'rack' && p.occupiedBy).length, reservedSlots: Object.values(s.slots).filter(p => p.reservedBy).length, oldestReceiptYear: items.length ? Math.min(...items.map(i => new Date(i.receivedAt).getUTCFullYear())) : null, reviewRequired: local.filter(i => i.retention.reviewRequired).length };
+  return { worldTime: s.worldTime, worldDate: new Date(s.worldTime).toISOString(), inCustody: local.length, stored: items.filter(i => i.state === 'stored').length, moving: items.filter(i => i.location.type === 'carrier').length, awaitingHandover: items.filter(i => i.state === 'handover').length, delivered: s.ledger.delivered, initial: s.ledger.initial, received: s.ledger.received, addressCapacity: ADDRESS_CAPACITY, usableRackSlots:ADDRESS_CAPACITY-EQUIPMENT_SLOTS.length,equipmentDisabledSlots:EQUIPMENT_SLOTS.length, occupiedRackSlots: Object.values(s.slots).filter(p => p.kind === 'rack' && p.occupiedBy).length, reservedSlots: Object.values(s.slots).filter(p => p.reservedBy).length, oldestReceiptYear: items.length ? Math.min(...items.map(i => new Date(i.receivedAt).getUTCFullYear())) : null, reviewRequired: local.filter(i => i.retention.reviewRequired).length };
 }
 function changeTime(s, seconds, commandId = null) {
   check(Number.isFinite(seconds) && seconds >= 0, 'TIME_REVERSAL', 'Advance by a finite nonnegative number of seconds; replay cannot edit live time.');
@@ -320,10 +322,13 @@ export function taskWaypoints(s, taskOrId, layout = {}) {
     const slot = getSlot(slotId), p = itemSlotPosition(item, slotId, layout);
     if (slot.kind === 'rack') {
       const aisleZ = p[2] + (slot.face === 'A' ? -1.05 : 1.05);
-      return [p, [p[0], p[1], aisleZ], [p[0], laneY, aisleZ], [spineX, laneY, aisleZ]];
+      const head=[p,[p[0],p[1],aisleZ],[p[0],laneY,aisleZ]];
+      if(slot.bank==='A'){const endZ=nearest(aisleZ,[LAYOUT.frontCrossZ,rearCrossZ]);return [...head,[westAisleX,laneY,aisleZ],[westAisleX,laneY,endZ],[spineX,laneY,endZ]];}
+      if(slot.row===26&&slot.bay===1&&slot.face==='B'&&slot.level>=4){const clearX=p[0]+1.2;return[p,[p[0],p[1],aisleZ],[clearX,p[1],aisleZ],[clearX,laneY,aisleZ],[spineX,laneY,aisleZ]];}
+      return [...head,[spineX,laneY,aisleZ]];
     }
     if (slot.kind === 'handover') {
-      const doorZ = nearest(p[2], [-20, 0, 20]), crossZ = nearest(doorZ, crossAisles), counterClearX = layout.counterClearX ?? -30.5;
+      const doorZ = nearest(p[2], [-20, 0, 20]), crossZ = nearest(doorZ, [LAYOUT.frontCrossZ,rearCrossZ]), counterClearX = layout.counterClearX ?? -30.5;
       // Leave the 1.3m counter at counter height before lowering; reverse to place.
       return [p, [counterClearX, p[1], p[2]], [counterClearX, laneY, p[2]], [counterClearX, laneY, doorZ], [-29.5, laneY, doorZ], [-26.5, laneY, doorZ], [westAisleX, laneY, crossZ], [spineX, laneY, crossZ]];
     }
@@ -389,6 +394,7 @@ export function advanceTask(s, c) {
       task.status = task.previousStatus; task.previousStatus = null; task.blockedAt = null; task.blockReason = null;
     } else if (c.action === 'pickup') {
       check(task.status === 'reserved' && !i.holdReason, 'PICKUP_BLOCKED', 'Pickup requires an unblocked reservation and no item hold.');
+      if(!task.motionDriver){const obstructions=routeObstructions(taskWaypoints(d,task),cargoHalf(i.dimensions,!!i.mechanicalPlacement),d);check(obstructions.length===0,'TRAFFIC_BLOCKED','Physical route blocked by '+obstructions.join(', '));}
       check(source.occupiedBy === i.itemId && target.reservedBy === task.taskId && !carrier.itemId, 'CUSTODY_CONFLICT', 'Source, target reservation or carrier is inconsistent.');
       source.occupiedBy = null; carrier.itemId = i.itemId; i.location = { type: 'carrier', carrierId: carrier.carrierId }; i.state = task.kind === 'pick' ? 'pick_transit' : 'in_transit';
       task.status = 'moving'; task.startedAt = d.worldTime; task.dueAt = d.worldTime + task.durationSeconds * 1000;
@@ -465,7 +471,7 @@ export function assertInvariants(s) {
   for (let n = 0; n < s.events.length; n++) { const e = s.events[n]; check(e.sequence === n + 1 && e.eventId === `E-${String(n + 1).padStart(7, '0')}` && e.worldTime >= priorTime && e.worldTime <= s.worldTime, 'INVARIANT', 'Event ordering or time is invalid.'); check(e.commandId === null || !!s.commands[e.commandId], 'INVARIANT', 'Applied command ledger is missing.'); eventIds.add(e.eventId); priorTime = e.worldTime; }
   const occupied = new Set(), reservations = new Set(), activeItems = new Set(), tags = new Set();
   for (const [slotId, slot] of Object.entries(s.slots)) {
-    const spec = getSlot(slotId); check(slot.slotId === slotId && stable(slot.dimensions) === stable(spec.dimensions) && stable(slot.categories) === stable(spec.categories) && slot.kind === spec.kind, 'INVARIANT', 'Slot specification changed.');
+    const spec = getSlot(slotId); check(!spec.equipmentReason || (slot.disabled && !slot.occupiedBy && !slot.reservedBy),'INVARIANT','Equipment cell cannot hold or reserve property.'); check(slot.slotId === slotId && stable(slot.dimensions) === stable(spec.dimensions) && stable(slot.categories) === stable(spec.categories) && slot.kind === spec.kind, 'INVARIANT', 'Slot specification changed.');
     if (slot.occupiedBy) { const i = s.items[slot.occupiedBy]; check(i && !occupied.has(i.itemId) && i.location.type === 'slot' && i.location.slotId === slotId && fitsSlot(i, { ...slot, disabled: false }), 'INVARIANT', 'Duplicate/incompatible occupancy or item location mismatch.'); occupied.add(i.itemId); }
     if (slot.reservedBy) { const task = s.tasks[slot.reservedBy]; check(!slot.occupiedBy && !slot.disabled && task && ACTIVE.has(task.status) && task.to.slotId === slotId && fitsSlot(s.items[task.itemId], slot) && !reservations.has(task.taskId), 'INVARIANT', 'Invalid or duplicate target reservation.'); reservations.add(task.taskId); }
   }

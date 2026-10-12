@@ -1,3 +1,6 @@
+import {LAYOUT as L} from './transport-layout.mjs';
+const f=v=>Number.isInteger(v)?v+'.0':String(v);
+const v=a=>`vec3<f32>(${a.map(f).join(',')})`;
 // The scene consumes the same drive coordinates as transport.mjs; no clock sine
 // determines carried-object or tool position. All lengths are metres.
 export const TRANSPORT_FIELD=String.raw`
@@ -19,27 +22,30 @@ fn transportField(p:vec3<f32>)->Field {
  shaft=min(shaft,box(p-vec3<f32>(.5,.82,-26.),vec3<f32>(.32,.3,.32)));
  f=take(f,field(shaft,5u,p,9012.0));
  let roller=min(cylinder((p-vec3<f32>(.5,1.15,-24.)).yxz,.155,.65),cylinder((p-vec3<f32>(.5,1.15,31.)).yxz,.155,.65));f=take(f,field(roller,9u,p,9004.0));
- let bound=box(p-vec3<f32>(6.9,1.8,9.6),vec3<f32>(7.25,1.85,1.55));
+ let bound=box(p-vec3<f32>(6.9,1.8,9.6),vec3<f32>(7.25,1.85,1.75));
  if(bound>1.){return take(f,field(bound,0u,p,9000.0));}
- // Two bearing rails, lead screw, driven carriage, rollers and real legs.
+ // Floor-recessed rails. Rail crown is 4 mm above the finished floor.
+ // Onboard wheel drive; no raised screw or stationary leg cuts the crossing.
  let rz=abs(p.z-9.75)-.46;
- var metal=box(vec3<f32>(p.x-6.55,p.y-.81,rz),vec3<f32>(6.7,.10,.055));
- let legX=.5+clamp(round((p.x-.5)/2.),0.,6.)*2.;
- metal=min(metal,box(vec3<f32>(p.x-legX,p.y-.4,rz),vec3<f32>(.07,.4,.09)));
- metal=min(metal,cylinder(vec3<f32>(p.y-.91,p.x-6.55,p.z-9.75),.045,6.5));
- metal=min(metal,box(p-vec3<f32>(sx,1.16,9.75),vec3<f32>(.64,.05,.60)));
+ var metal=box(vec3<f32>(p.x-${f(L.railX)},p.y-${f(L.railCenterY)},rz),${v([L.railHalfX,L.railHalfY,L.railHalfZ])});
+ // Four carriage legs connect the low bogies to the original roller deck.
+ let legDX=abs(p.x-sx)-.48;let legDZ=abs(p.z-9.75)-.46;
+ metal=min(metal,box(vec3<f32>(legDX,p.y-.665,legDZ),vec3<f32>(.055,.455,.055)));
+ metal=min(metal,box(p-vec3<f32>(sx,.255,9.75),vec3<f32>(.55,.065,.50)));
+ metal=min(metal,box(p-vec3<f32>(sx,1.16,9.75),vec3<f32>(.64,.055,.60)));
  let rlocal=repeatX(p.z-9.75,.13,4.);
  metal=min(metal,max(cylinder(vec3<f32>(p.y-1.26,p.x-sx,rlocal),.045,.61),box(p-vec3<f32>(sx,1.26,9.75),vec3<f32>(.64,.055,.595))));
  // Raised stops are below the bag until it is centred and fully supported.
  metal=min(metal,box(vec3<f32>(p.x-sx,p.y-(1.235+fence),abs(p.z-9.75)-.385),vec3<f32>(.54,.07,.025)));
- let wheelX=abs(p.x-sx)-.48;metal=min(metal,cylinder(vec3<f32>(wheelX,abs(p.z-9.75)-.46,p.y-1.07),.16,.035));
- // Lead-screw carriage readout provides visible motion linked to its axle.
+ let wheelX=abs(p.x-sx)-.48;metal=min(metal,cylinder(vec3<f32>(wheelX,abs(p.z-9.75)-.46,p.y-${f(L.wheelY)}),${f(L.wheelRadius)},.035));
+ // Axle gearbox is carried by the trolley; simplified motor torque is not boiler pressure.
  f=take(f,field(metal,5u,p,9031.0));
  // Cartesian lifting/placing arm: fixed pillar -> crosshead -> vertical slide
  // -> telescoping reach -> opposed jaw pads. Each link has a bearing overlap.
- var arm=box(p-vec3<f32>(13.7,1.65,9.75),vec3<f32>(.16,1.65,.18));
- arm=min(arm,box(p-vec3<f32>(13.15,3.25,9.75),vec3<f32>(.70,.14,.18)));
- arm=min(arm,box(p-vec3<f32>(12.6,2.75,9.75),vec3<f32>(.095,.55,.10)));
+ var arm=box(p-${v(L.pillar)},${v(L.pillarHalf)});
+ arm=min(arm,box(p-vec3<f32>(12.2,3.25,8.86),vec3<f32>(.56,.14,.16)));
+ arm=min(arm,box(p-vec3<f32>(12.6,3.25,9.305),vec3<f32>(.16,.14,.605)));
+ arm=min(arm,box(p-vec3<f32>(12.6,2.95,9.75),vec3<f32>(.095,.35,.10)));
  arm=min(arm,box(p-vec3<f32>(12.6,(3.20+wy)/2.,9.75),vec3<f32>(.060,(3.20-wy)/2.+.08,.065)));
  arm=min(arm,box(p-vec3<f32>(12.6,wy,9.73),vec3<f32>(.18,.10,.20)));
  arm=min(arm,box(p-vec3<f32>(12.6,wy,(9.90+wz)/2.),vec3<f32>(.05,.04,(9.90-wz)/2.)));
@@ -47,8 +53,15 @@ fn transportField(p:vec3<f32>)->Field {
  let dx=abs(p.x-12.6)-jaw;arm=min(arm,box(vec3<f32>(dx,p.y-(wy-.18),p.z-wz),vec3<f32>(.025,.18,.18)));
  f=take(f,field(arm,9u,p,9007.0));
  // Identifiable spindle collars and carriage paint remain mother materials.
- let painted=min(box(p-vec3<f32>(sx,1.07,10.37),vec3<f32>(.6,.13,.04)),box(p-vec3<f32>(13.7,.22,9.75),vec3<f32>(.34,.22,.35)));
- return take(f,field(painted,14u,p,9043.0));
+ let painted=min(box(p-vec3<f32>(sx,1.07,10.37),vec3<f32>(.6,.13,.04)),box(p-vec3<f32>(11.8,.10,8.86),vec3<f32>(.30,.08,.24)));
+f=take(f,field(painted,14u,p,9043.0));
+ // Both crossing bars use the controller gate angle; pause/power loss keep them.
+ let gateAngle=u.transport.w;let gateZ=select(8.35,11.15,p.z>9.75);
+ let hinge=vec3<f32>(${f(L.gateX)},${f(L.gateY)},gateZ);
+ let end=hinge+vec3<f32>(cos(gateAngle),sin(gateAngle),0.)*${f(L.gateLength)};
+ var gates=capsule(p,hinge,end,${f(L.gateRadius)});
+ gates=min(gates,box(p-vec3<f32>(${f(L.gateX)},.55,gateZ),vec3<f32>(.075,.55,.075)));
+ return take(f,field(gates,14u,p,9044.0));
 }
 fn mechanicalBag(p:vec3<f32>,halfSize:vec3<f32>,seed:f32)->Field {
  let r=.02;var f=field(box(p,max(vec3<f32>(.001),halfSize-vec3<f32>(r)))-r,4u,p,seed+9000.);

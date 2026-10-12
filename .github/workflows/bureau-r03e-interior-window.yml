@@ -26,9 +26,9 @@ jobs:
           node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03e/qa/response-contract.test.mjs
           node --input-type=module -e "import('./kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03e/interiors.mjs').then(m=>console.log(JSON.stringify(m.selfTestInteriors())))"
           node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03e/qa/sky-contract.test.mjs
-      - name: Mechanical contact and conservation contracts
-        run: node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03e/qa/transport.test.mjs
-      - name: Small persistent readback gate and two framing proof images
+      - name: Mechanical contact, crossing interlock and conservation contracts
+        run: node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03e/qa/transport.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03e/qa/traffic.test.mjs
+      - name: Small persistent readback gate and two support proof images
         env:
           BUREAU_FRAMING_PROBE: '1'
         run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03e/qa/transport-webgpu.cjs

@@ -10,7 +10,7 @@ import { KP_STONE_SLATE_WGSL } from './mothers/stone-slate.mjs';
 import { KP_METAL_WGSL } from './metal.mjs';
 import { selectStageSource } from './stage-source.mjs';
 import { skipZeroContributions } from './evaluation.mjs';
-export const VIEWS={transport:{eye:[6,11,24],target:[6.5,1.5,13.7],cut:1},gripper:{eye:[10.9,2.65,11.3],target:[12.6,1.85,9.15],cut:0},exterior:{eye:[78,48,-88],target:[4,3,0],cut:0},section:{eye:[66,81,-66],target:[3,1,0],cut:1},hall:{eye:[-36.2,2.25,-22.8],target:[-31.1,3.15,-10.8],cut:0},warehouse:{eye:[4,3.2,-27],target:[11,4.0,18],cut:0},freight:{eye:[65,32,65],target:[12,3,22],cut:1},street:{eye:[-87,23,-23],target:[-36,5,-12],cut:0},window:{eye:[-42.0,7.9,3.1],target:[-38.55,7.65,0],cut:0},roof:{eye:[32,20,-55],target:[33,13.6,-35.7],cut:0}};
+export const VIEWS={transfer:{eye:[9,3.2,15],target:[6.2,1.0,9.75],cut:0},transport:{eye:[6,11,24],target:[6.5,1.5,13.7],cut:1},gripper:{eye:[10.9,2.65,11.3],target:[12.6,1.85,9.15],cut:0},exterior:{eye:[78,48,-88],target:[4,3,0],cut:0},section:{eye:[66,81,-66],target:[3,1,0],cut:1},hall:{eye:[-36.2,2.25,-22.8],target:[-31.1,3.15,-10.8],cut:0},warehouse:{eye:[4,3.2,-27],target:[11,4.0,18],cut:0},freight:{eye:[65,32,65],target:[12,3,22],cut:1},street:{eye:[-87,23,-23],target:[-36,5,-12],cut:0},window:{eye:[-42.0,7.9,3.1],target:[-38.55,7.65,0],cut:0},roof:{eye:[32,20,-55],target:[33,13.6,-35.7],cut:0}};
 const HEADER=String.raw`
 struct Params { eye:vec4<f32>,forward:vec4<f32>,right:vec4<f32>,up:vec4<f32>,resolution:vec4<f32>,options:vec4<f32>,clock:vec4<f32>,counts:vec4<u32>,tile:vec4<u32>,transport:vec4<f32>,tool:vec4<f32> };
 struct ItemRecord {position:vec4<f32>,size:vec4<f32>};

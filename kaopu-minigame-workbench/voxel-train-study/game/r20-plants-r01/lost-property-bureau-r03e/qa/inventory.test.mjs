@@ -207,7 +207,7 @@ test('item centres rest above shelf floors; receiving is rear +z and handover in
   }
   assert.equal(I.slotPosition('RECEIVING-01')[2], 37.5); assert.equal(I.slotPosition('HANDOVER-01')[0], I.HANDOVER_LAYOUT.x);
   const a = approve(s), move = pick(s, a.claimId), path = I.taskWaypoints(s, move.taskId);
-  assert.deepEqual(path[0], I.itemPosition(s, 'LP-0001')); assert.equal(path[3][0], 4); assert.equal(path.at(-1)[0], I.HANDOVER_LAYOUT.x); assert.ok(path.length >= 8);
+  assert.deepEqual(path[0], I.itemPosition(s, 'LP-0001')); assert.equal(path[3][0], -26.5); assert.ok(path.some(p=>p[0]===4)); assert.equal(path.at(-1)[0], I.HANDOVER_LAYOUT.x); assert.ok(path.length >= 8);
 });
 test('cancelling only an in-progress pick safely returns it without trapping its valid claim', () => {
   const s = I.createInventory(), a = approve(s), task = pick(s, a.claimId); pickup(s, task.taskId);
@@ -253,7 +253,7 @@ test('incoming storage crosses the rear partition only at explicit door-side nod
   }
   assert.equal(crossings, 1); assert.ok(path.some(p => p[0] === 4 && p[2] === 33.5)); I.assertInvariants(s);
 });
-test('both banks clear rack faces along z before lowering and join the x=4 spine before changing rows', () => {
+test('both banks clear rack faces and west bank uses end crossing around the belt', () => {
   const s = I.createInventory(), item = s.items['LP-0001'];
   for (let row = 1; row <= 32; row++) for (const face of ['A', 'B']) {
     const source = `R${String(row).padStart(2, '0')}-B10-L6-${face}${(row - 1) % 16 >= 10 ? '-C6' : ''}`;
@@ -261,7 +261,8 @@ test('both banks clear rack faces along z before lowering and join the x=4 spine
     assert.equal(path[1][0], path[0][0]); assert.equal(path[1][1], path[0][1]);
     assert.ok(Math.abs(path[1][2] - path[0][2] - (face === 'A' ? -1.05 : 1.05)) < 1e-9);
     assert.equal(path[2][0], path[1][0]); assert.equal(path[2][2], path[1][2]);
-    assert.equal(path[3][0], 4); assert.equal(path[3][2], path[2][2]);
+    assert.equal(path[3][0],row<=16?-26.5:4); assert.equal(path[3][2], path[2][2]);
+    if(row<=16)assert.ok(path.some(p=>p[0]===4&&[-27.2,33.5].includes(p[2])));
     assert.ok(path.some(p => p[0] === -26.5 && p[2] === 0));
     for (let n = 1; n < path.length; n++) assert.ok(path[n].filter((v, axis) => Math.abs(v - path[n - 1][axis]) > 1e-9).length <= 1, 'No diagonal shortcut through cabinets.');
   }
@@ -295,7 +296,7 @@ test('special custody and all receiving positions join clear cross aisles before
   }
 });
 test('R03e snapshots and browser keys cannot silently restore R03 coordinates', () => {
-  assert.equal(I.STORAGE_KEY, 'kaopu.bureau.r03e.custody.v2'); assert.equal(I.SCHEMA_VERSION, 7);
+  assert.equal(I.STORAGE_KEY, 'kaopu.bureau.r03e.custody.v3-network'); assert.equal(I.SCHEMA_VERSION, 8);
   const s = I.createInventory(); assert.equal(s.scenario, I.SCENARIO_ID);
   throwsCode(() => I.restoreInventory({ ...s, scenario: 'lost-property-bureau-r03-fictional-1976' }), 'SNAPSHOT_VERSION');
   throwsCode(() => I.restoreInventory({ ...s, schemaVersion: 3 }), 'SNAPSHOT_VERSION');

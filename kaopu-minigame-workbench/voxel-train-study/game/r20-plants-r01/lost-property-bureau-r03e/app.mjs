@@ -1,6 +1,6 @@
 import * as M from './transport.mjs';
 import {createRenderer,VIEWS} from './renderer.mjs';import * as I from './inventory.mjs';
-const $=id=>document.getElementById(id),canvas=$('scene'),params=new URLSearchParams(location.search),storageKey=I.STORAGE_KEY+'.mechanism-r01';
+const $=id=>document.getElementById(id),canvas=$('scene'),params=new URLSearchParams(location.search),storageKey=I.STORAGE_KEY+'.mechanism-r01.network-r01';
 let playing=false;let state,renderer,selected='exterior',camera=structuredClone(VIEWS.exterior),chosen='LP-0001',commandSequence=0;const proof={ready:false,frames:[],errors:[]};window.__bureau={proof};
 const messages={transport:'同一登记行李：皮带接触 → 带侧横移承载台 → 夹持升降伸臂 → R26-B01-L2-B。简化驱动与接触约束，锅炉热力尚未接入。',gripper:'看夹爪接触、货架净空和放稳后释放。当前只验证一个可达普通柜位。',exterior:'与上一版保持完全同机位。两面街廊的上下柱网对位；四层门塔逐级内收，烟囱下粗上细。右街主入口与4500平方米净库保留。',section:'净仓储 72 × 62.5 = 4,500 m²，不计大厅、办公、收货、外墙或锅炉院。两组柜列真实转 90°，中央通道连接右端接待。',hall:'从真实大厅内部看柜台、等候座椅、护墙和采光窗。完整顶棚保留，业务台与实际交接库位对齐。',warehouse:'实际仓库内部：横向双组柜列、屋架与开通屋面的采光带。22,080 为地址，空库位保持为空。',freight:'铁路仍在后端；锅炉后移至后侧服务院，供汽与回水接到中央输送、收货机械臂和前部驱动。',window:'后退墙面中的实体窗套、上下木窗扇与放射扇窗；玻璃后继续查询同一室内，非灰色贴片。',roof:'侧斜近看山墙后两坡屋顶，连续接入主屋面；前缘出檐覆盖墙头。',street:'从右侧街道正看新主门：大门向 x−，门廊后方直接进入接待与核验大厅。此机位用于解释门向，另外两图维持原机位。'};
 function cmd(prefix){return `${prefix}-${state.revision}-${++commandSequence}`;}

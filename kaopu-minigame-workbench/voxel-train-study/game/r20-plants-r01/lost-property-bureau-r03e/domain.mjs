@@ -255,12 +255,14 @@ fn machineField(p:vec3<f32>)->Field {
  pipe=min(pipe,capsule(p,vec3<f32>(47.,4.1,32.),vec3<f32>(.5,4.1,32.),.12));
  pipe=min(pipe,capsule(p,vec3<f32>(.5,4.1,32.),vec3<f32>(.5,1.45,32.),.12));
  pipe=min(pipe,capsule(p,vec3<f32>(47.,4.1,37.),vec3<f32>(.5,4.1,37.),.12));
- pipe=min(pipe,capsule(p,vec3<f32>(.5,4.1,37.),vec3<f32>(.5,4.1,9.75),.12));
- pipe=min(pipe,capsule(p,vec3<f32>(.5,4.1,9.75),vec3<f32>(13.7,4.1,9.75),.12));
- pipe=min(pipe,capsule(p,vec3<f32>(13.7,4.1,9.75),vec3<f32>(13.7,.65,9.75),.12));f=take(f,field(pipe,9u,p,1.));
+ pipe=min(pipe,capsule(p,vec3<f32>(.5,4.1,37.),vec3<f32>(.5,7.8,37.),.12));
+ pipe=min(pipe,capsule(p,vec3<f32>(.5,7.8,37.),vec3<f32>(.5,7.8,9.75),.12));
+ pipe=min(pipe,capsule(p,vec3<f32>(.5,7.8,9.75),vec3<f32>(11.65,7.8,9.75),.12));
+ pipe=min(pipe,capsule(p,vec3<f32>(11.65,7.8,9.75),vec3<f32>(11.65,7.8,8.86),.12));
+ pipe=min(pipe,capsule(p,vec3<f32>(11.65,7.8,8.86),vec3<f32>(11.65,.45,8.86),.12));f=take(f,field(pipe,9u,p,1.));
  var ret=capsule(p,vec3<f32>(-24.,.45,-26.),vec3<f32>(46.,.45,-26.),.1);
  ret=min(ret,capsule(p,vec3<f32>(46.,.45,-26.),vec3<f32>(46.,.45,50.),.1));ret=min(ret,capsule(p,vec3<f32>(46.,.45,50.),vec3<f32>(57.,.45,50.),.1));
- ret=min(ret,capsule(p,vec3<f32>(.5,.45,32.),vec3<f32>(46.,.45,32.),.09));ret=min(ret,capsule(p,vec3<f32>(13.7,.45,9.75),vec3<f32>(.5,.45,9.75),.09));ret=min(ret,capsule(p,vec3<f32>(.5,.45,9.75),vec3<f32>(.5,.45,32.),.09));f=take(f,field(ret,5u,p,1.));
+ ret=min(ret,capsule(p,vec3<f32>(.5,.45,32.),vec3<f32>(46.,.45,32.),.09));ret=min(ret,capsule(p,vec3<f32>(11.65,.45,8.86),vec3<f32>(11.65,.45,9.75),.09));ret=min(ret,capsule(p,vec3<f32>(11.65,.45,9.75),vec3<f32>(.5,.45,9.75),.09));ret=min(ret,capsule(p,vec3<f32>(.5,.45,9.75),vec3<f32>(.5,.45,32.),.09));f=take(f,field(ret,5u,p,1.));
  f=take(f,transportField(p));
  let phase=u.transport.x/.155;let wheelP=p-vec3<f32>(-24.,1.45,-26.);f=take(f,field(length(vec2<f32>(length(wheelP.xy)-.8,wheelP.z))-.095,5u,p,2.));
  let crank=vec3<f32>(-24.+.65*cos(phase),1.45+.65*sin(phase),-26.);let sliderX=crank.x+sqrt(2.5*2.5-(crank.y-1.45)*(crank.y-1.45));f=take(f,field(capsule(p,crank,vec3<f32>(sliderX,1.45,-26.),.07),9u,p,2.));f=take(f,field(box(p-vec3<f32>(sliderX,1.45,-26.),vec3<f32>(.12,.20,.15)),5u,p,2.));
