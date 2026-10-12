@@ -20,10 +20,10 @@ fn sky(rd:vec3<f32>)->vec3<f32>{return mix(vec3<f32>(.72,.78,.76),vec3<f32>(.22,
 fn shadow(p:vec3<f32>,n:vec3<f32>,ld:vec3<f32>)->f32{var t=.04;var res=1.;for(var i=0;i<38;i++){let d=stationMacro(p+n*.018+ld*t).d;if(d<.001){return .1;}res=min(res,12.*d/t);t+=clamp(d*.65,.025,3.);if(t>70.){break;}}return clamp(res,.1,1.);}
 fn ao(p:vec3<f32>,n:vec3<f32>)->f32{var occ=0.;var weight=1.;for(var i=1;i<5;i++){let d=f32(i)*.20;occ+=max(0.,d-stationMacro(p+n*d).d)*weight;weight*=.55;}return clamp(1.-occ*.7,.28,1.);}
 fn shade(tr:Trace,ro:vec3<f32>,rd:vec3<f32>)->vec3<f32>{let p=ro+rd*tr.t;let h=tr.h;var n=fieldNormal(p);let fp=max(.00001,tr.t*2.*u.fov/u.resolution.y);let wet=stateWet(p);let repair=repairAt(p);var s=KpSurface(0.,vec3<f32>(.34,.33,.28),.85);var metal=0.;var cavity=1.;var specular=1.;
- if(h.id==1u){s=kpBrickOriginalSurface(h.q,h.seed,i32(abs(h.seed))%4,.42,fp);let mortar=min(.125-abs(h.q.x),.0365-abs(h.q.y));if(mortar<.004){s=KpSurface(0.,vec3<f32>(.28,.26,.21),.94);}s.albedo*=1.-wet*.18;}
+ if(h.id==1u||h.id==12u){s=kpBrickOriginalSurface(h.q,h.seed,i32(abs(h.seed))%4,.42,fp);let mortar=min(.125-abs(h.q.x),.0365-abs(h.q.y));if(mortar<.004){s=KpSurface(0.,vec3<f32>(.28,.26,.21),.94);}s.albedo*=1.-wet*.18;}
  if(h.id==2u){s=kpStoneSurface(h.q,u.age,wet,repair,fp);}
  if(h.id==3u){s=kpMetalSurface(h.q,u.age,wet,repair,fp);metal=.45;}
- if(h.id==4u){let ws=kpWoodOriginalSample(h.q,n,select(0.,1.,abs(n.x)>.72),kpWoodDefaultParams(),fp,tr.t);s=ws.surface;cavity=ws.cavity;specular=ws.specularLevel;}
+ if(h.id==4u){let wn=select(n,n.zxy,h.seed==38.);let ws=kpWoodOriginalSample(h.q,wn,select(0.,1.,abs(wn.x)>.72),kpWoodDefaultParams(),fp,tr.t);s=ws.surface;cavity=ws.cavity;specular=ws.specularLevel;}
  if(h.id==6u){s=KpSurface(0.,vec3<f32>(.21,.225,.215),.92);}
  if(h.id==7u){s=KpSurface(0.,vec3<f32>(.82,.77,.62),.3);}
  if(h.id==8u){s=KpSurface(0.,vec3<f32>(.025,.031,.028),.35);metal=.25;}

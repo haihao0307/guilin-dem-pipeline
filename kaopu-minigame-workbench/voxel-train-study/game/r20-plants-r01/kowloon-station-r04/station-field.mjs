@@ -9,7 +9,7 @@ fn rep(x:f32,pitch:f32,lo:f32,hi:f32)->f32{return x-clamp(round(x/pitch),lo,hi)*
 fn archHole(x:f32,y:f32,r:f32,spring:f32)->f32{return max(abs(x)-r,select(y-(spring+r),length(vec2<f32>(x,y-spring))-r,y>spring));}
 fn stateWet(p:vec3<f32>)->f32{let drain=1.-smoothstep(.12,.75,abs(rep(p.x,7.5,-4.,4.)));let rain=(1.-smoothstep(7.5,12.,p.y))*smoothstep(.1,.4,p.y);return u.age*.12*(.15+drain*rain)+(1.-smoothstep(.2,1.8,p.y))*.15;}
 fn repairAt(p:vec3<f32>)->f32{return .08+.65*(1.-smoothstep(.9,1.4,abs(p.x-15.)))*(1.-smoothstep(1.1,2.2,p.y));}
-fn brickQ(p:vec3<f32>,q:vec3<f32>,d:f32)->vec3<f32>{let row=floor(p.y/.073);let shift=select(0.,.125,(i32(row)&1)==1);let face=select(p.x,p.z,abs(q.x)>abs(q.z));return vec3<f32>(fract((face+shift)/.25)*.25-.125,fract(p.y/.073)*.073-.0365,.055384615+d);}
+fn brickQ(p:vec3<f32>,axis:u32,d:f32)->vec3<f32>{let row=floor(p.y/.073);let shift=select(0.,.125,(i32(row)&1)==1);let face=select(p.x,p.z,axis==12u);return vec3<f32>(fract((face+shift)/.25)*.25-.125,fract(p.y/.073)*.073-.0365,.055384615+d);}
 fn stationMacro(p:vec3<f32>)->HitField{
  var h=HitField(p.y+.28,6u,p,0.);
  // Promenade and hall threshold share the platform datum, with real entrance steps.
@@ -22,7 +22,7 @@ fn stationMacro(p:vec3<f32>)->HitField{
   var wall=box(q,vec3<f32>(30.,5.55,.32));let opening=archHole(bay,p.y-.85,2.3,6.1);wall=max(wall,-opening);
   h=join(h,wall,1u,q,19.);
   // The opaque side walls, distinct from the open room interior.
-  let side=vec3<f32>(abs(p.x)-30.,p.y-6.4,p.z);h=join(h,box(side,vec3<f32>(.32,5.55,8.)),1u,side,31.);
+  let side=vec3<f32>(abs(p.x)-30.,p.y-6.4,p.z);h=join(h,box(side,vec3<f32>(.32,5.55,8.)),12u,side,31.);
   // Original quarry stone binds column body, base, capitals and bands.
   let cx=rep(p.x,7.5,-4.,4.);let col=vec3<f32>(cx,p.y-5.5,abs(p.z)-8.65);let theta=atan2(col.z,col.x);let flute=.014*(.5+.5*cos(theta*16.));
   h=join(h,cyl(col,.43-flute,4.4),2u,col,4.);h=join(h,box(vec3<f32>(cx,p.y-1.12,abs(p.z)-8.65),vec3<f32>(.64,.28,.64)),2u,col,4.);
@@ -46,7 +46,7 @@ fn stationMacro(p:vec3<f32>)->HitField{
  // Tower is attached to the sea end of the hall. Clock faces on four sides.
  let tq=p-vec3<f32>(24,0,4);let tb=box(tq-vec3<f32>(0,23,0),vec3<f32>(4.8,23,4.8));
  if(tb<2.){
-  h=join(h,box(tq-vec3<f32>(0,17.2,0),vec3<f32>(3.7,16.35,3.7)),1u,tq,71.);
+  h=join(h,box(tq-vec3<f32>(0,17.2,0),vec3<f32>(3.7,16.35,3.7)),select(1u,12u,abs(tq.x)>abs(tq.z)),tq,71.);
   let corner=vec3<f32>(abs(tq.x)-3.35,tq.y-17.2,abs(tq.z)-3.35);h=join(h,box(corner,vec3<f32>(.44,16.35,.44)),2u,tq,5.);
   for(var j=0;j<5;j++){let yy=select(14.+f32(j)*5.,1.3,j==0);h=join(h,box(tq-vec3<f32>(0,yy,0),vec3<f32>(3.98,.2,3.98)),2u,tq,5.);}
   let front=abs(tq.z)>abs(tq.x);let fq=select(vec3<f32>(tq.z,tq.y,abs(tq.x)),vec3<f32>(tq.x,tq.y,abs(tq.z)),front);
@@ -93,7 +93,7 @@ fn stationMacro(p:vec3<f32>)->HitField{
 }
 fn stationField(p:vec3<f32>)->HitField{
  var h=stationMacro(p);let wet=stateWet(p);let repair=repairAt(p);
- if(h.id==1u&&abs(h.d)<.03){let bq=brickQ(p,h.q,h.d);let seed=19.+floor(p.y/.073)*13.+floor((p.x+p.z)/.25);let bd=kpBrickBaseDistance(bq,seed,i32(abs(seed))%4,.42);h.d=min(h.d+.006,bd);h.q=bq;h.seed=seed;}
+ if((h.id==1u||h.id==12u)&&abs(h.d)<.03){let bq=brickQ(p,h.id,h.d);let seed=19.+floor(p.y/.073)*13.+floor((p.x+p.z)/.25);let bd=kpBrickBaseDistance(bq,seed,i32(abs(seed))%4,.42);h.d=min(h.d+.006,bd);h.q=bq;h.seed=seed;}
  if(h.id==4u&&abs(h.d)<.006){h.d-=kpWoodMacroDisplacement(h.q,0.,kpWoodDefaultParams());}
  if(h.id==3u&&abs(h.d)<.01){h.d+=kpMetalCorrosion(h.q,u.age,wet,repair)*.0008;}
  if(h.id==2u&&abs(h.d)<.008){h.d-=clamp(kpStoneSurface(h.q,u.age,wet,repair,0.).height,-.004,.004);}
