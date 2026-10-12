@@ -10,9 +10,9 @@
  * JSON snapshots contain fictional internal verification features. Public UI
  * should use publicItem(), not expose the internalFeature field to claimants.
  */
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 export const SCENARIO_ID = 'lost-property-bureau-r03e-fictional-1976';
-export const STORAGE_KEY = 'kaopu.bureau.r03e.custody.v1';
+export const STORAGE_KEY = 'kaopu.bureau.r03e.custody.v2';
 export const RACK_LAYOUT = Object.freeze({ banks: 2, rowsPerBank: 16, bays: 20, levels: 6, bankStartX: Object.freeze([-25, 12]), rowStartZ: -23.5, rowPitch: 3.5, bayPitch: 1.2, faceOffset: 0.48 });
 export const STORAGE_BOUNDS = Object.freeze({ minX: -28, maxX: 44, minZ: -28, maxZ: 34.5, netArea: 4500 });
 export const WORLD_START = Date.UTC(1976, 6, 1, 8);
@@ -59,6 +59,12 @@ function transact(s, command, type, operation) {
   Object.keys(s).forEach(k => delete s[k]); Object.assign(s, next);
   return clone(response);
 }
+/** Public counters sit north of the tower entrance; geometry uses these axes.
+ * A coordinate layout revision receives a distinct snapshot key so an old
+ * in-flight carrier is never silently restored onto a different trajectory.
+ */
+export const HANDOVER_LAYOUT = Object.freeze({ x: -32.4, y: 1.3, zStart: -6, zPitch: 3.2, count: 8 });
+
 /** Slots are resolved by address; 22,080 mixed-size addresses do not create items. */
 export function getSlot(slotId) {
   id(slotId);
@@ -86,7 +92,7 @@ export function slotPosition(slotId, options = {}) {
   }
   const n = +slotId.slice(-2) - 1;
   if (slot.kind === 'receiving') return [-22 + 3 * n, 0.6, 37.5];
-  if (slot.kind === 'handover') return [-33, 1.3, -18 + 4.4 * n];
+  if (slot.kind === 'handover') return [HANDOVER_LAYOUT.x, HANDOVER_LAYOUT.y, HANDOVER_LAYOUT.zStart + HANDOVER_LAYOUT.zPitch * n];
   // Vault and oversize are logical specialist custody positions in the side-service strip.
   if (slot.kind === 'vault') return [46.5, 0.8, -25 + 1.6 * n];
   if (slot.kind === 'oversize') return [46.5, 0.6, 2.5 + 4 * n];

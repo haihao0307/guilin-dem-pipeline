@@ -8,7 +8,7 @@ import { KP_STONE_SLATE_WGSL } from './mothers/stone-slate.mjs';
 import { KP_METAL_WGSL } from './metal.mjs';
 import { selectStageSource } from './stage-source.mjs';
 import { skipZeroContributions } from './evaluation.mjs';
-export const VIEWS={exterior:{eye:[78,48,-88],target:[4,3,0],cut:0},section:{eye:[66,81,-66],target:[3,1,0],cut:1},hall:{eye:[-35.5,2.4,-19],target:[-32.8,2.25,12],cut:0},warehouse:{eye:[4,3.2,-27],target:[11,4.0,18],cut:0},freight:{eye:[65,32,65],target:[12,3,22],cut:1},street:{eye:[-87,23,-23],target:[-36,5,-12],cut:0},window:{eye:[-42.0,7.9,3.1],target:[-38.55,7.65,0],cut:0},roof:{eye:[32,20,-55],target:[33,13.6,-35.7],cut:0}};
+export const VIEWS={exterior:{eye:[78,48,-88],target:[4,3,0],cut:0},section:{eye:[66,81,-66],target:[3,1,0],cut:1},hall:{eye:[-37.6,2.3,-23.2],target:[-29.3,3.1,-14.0],cut:0},warehouse:{eye:[4,3.2,-27],target:[11,4.0,18],cut:0},freight:{eye:[65,32,65],target:[12,3,22],cut:1},street:{eye:[-87,23,-23],target:[-36,5,-12],cut:0},window:{eye:[-42.0,7.9,3.1],target:[-38.55,7.65,0],cut:0},roof:{eye:[32,20,-55],target:[33,13.6,-35.7],cut:0}};
 const HEADER=String.raw`
 struct Params { eye:vec4<f32>,forward:vec4<f32>,right:vec4<f32>,up:vec4<f32>,resolution:vec4<f32>,options:vec4<f32>,clock:vec4<f32>,counts:vec4<u32>,tile:vec4<u32> };
 struct ItemRecord {position:vec4<f32>,size:vec4<f32>};
@@ -36,16 +36,16 @@ fn normal(p:vec3<f32>,t:f32)->vec3<f32>{let e=max(.002,min(.03,t/u.resolution.y*
 fn shadow(p:vec3<f32>,n:vec3<f32>,light:vec3<f32>)->f32{var t=.05;var s=1.;for(var i=0u;i<24u;i++){let f=sceneField(p+n*.025+light*t);if(f.mat==8u){t+=max(.025,abs(f.d));continue;}if(f.d<.004){return .10;}s=min(s,9.*f.d/t);t+=clamp(f.d*.8,.025,3.);if(t>45.){break;}}return clamp(s,.12,1.);}
 fn surfaceRaw(f:Field,p:vec3<f32>,n:vec3<f32>,fp:f32)->KpSurface {
  let weather=f.age*f.wet;let noise=br_noise3(p*2.1);var m=KpSurface(0.,vec3<f32>(.3),.8);
- if(f.mat==1u||f.mat==19u){let pp=receiverPlasterParams();let plasterP=plasterCoordinates(p);let pf=kpPlasterOriginalField(plasterP,pp,fp);let ps=kpFabricState(f.age,f.wet,f.wet,pf.macroTone,.42,.08,pf.macroTone,pf.micro,pf.thicknessM,.004,.025);m=kpApplyFabricSurface(pf.surface,ps);m.albedo*=vec3<f32>(1.26,1.24,1.12);let worn=smoothstep(.44,.76,noise+weather*.45);m.albedo=mix(m.albedo,vec3<f32>(.25,.135,.08),worn*.50);m.albedo*=1.-weather*.22;}
+ if(f.mat==1u||f.mat==19u){let pp=receiverPlasterParams();let plasterP=plasterCoordinates(p);let pf=kpPlasterOriginalField(plasterP,pp,fp);let ps=kpFabricState(f.age,f.wet,f.wet,pf.macroTone,.42,.08,pf.macroTone,pf.micro,pf.thicknessM,.004,.025);m=kpApplyFabricSurface(pf.surface,ps);m.albedo*=vec3<f32>(1.26,1.24,1.12);let dampBase=(1.-smoothstep(.15,1.25,p.y))*f.wet;let contact=(1.-smoothstep(.35,.80,abs(p.y-1.15)))*.025;let worn=f.age*clamp(dampBase*.32+contact,0.,.09);m.albedo=mix(m.albedo,vec3<f32>(.35,.30,.23),worn);m.albedo*=1.-weather*.12;}
  if(f.mat==2u){let axis=select(p.x,p.z,abs(n.x)>.6);let row=floor(p.y/.075);let stagger=fract(row*.5)*.25;let cell=floor((axis+stagger)/.25);let bx=(axis+stagger)-cell*.25;let bq=vec3<f32>(bx-.125,fract(p.y/.075)*.075-.0375,.055);let seed=cell+row*17.;m=kpBrickOriginalSurface(bq,seed,i32(abs(seed))%4,.42,fp);let edge=max(abs(bq.x)-.118,abs(bq.y)-.0305);let mortar=smoothstep(-max(.001,fp*.55),max(.001,fp*.55),edge);m.albedo=mix(m.albedo,vec3<f32>(.43,.40,.32),mortar);m.height=mix(m.height,-.003,mortar);m.albedo*=1.-weather*.16;}
 
- if(f.mat==3u){m=kpStoneSurface(p*.6,f.age,f.wet*.35,0.,fp*.6);m.albedo=mix(m.albedo,vec3<f32>(.64,.59,.47),.28);}
+ if(f.mat==3u){m=kpStoneSurface(p,f.age,f.wet*.35,0.,fp);let mineralTone=dot(m.albedo,vec3<f32>(.2126,.7152,.0722));m.albedo=vec3<f32>(.49,.445,.35)*(.92+clamp(mineralTone,.06,.40)*.32);m.height*=.22;m.roughness=clamp(m.roughness,.55,.80);if(n.y>.75&&p.y<.15){let phase=fract(p.xz/vec2<f32>(.85,.55));let edge=min(min(phase.x,1.-phase.x)*.85,min(phase.y,1.-phase.y)*.55);let joint=1.-smoothstep(.002,.005+fp*.55,edge);m.albedo=mix(m.albedo,vec3<f32>(.24,.225,.19),joint*.48);m.height-=joint*.001;}}
  if(f.mat==4u||f.mat==14u||f.mat==18u){var wp=kpWoodDefaultParams();wp.seed+=f.seed*.013;wp.textureScale=.70;wp.roughness=select(.63,.31,f.mat==18u);wp.clearcoat=select(.08,.48,f.mat==18u);m=kpWoodOriginalSurface(f.local,n,select(0.,1.,abs(n.x)>.7),wp,fp,0.);if(f.mat==14u){let wear=smoothstep(.52,.77,br_noise3(f.local*9.+vec3<f32>(f.seed)))*f.age*.20;m.albedo=mix(vec3<f32>(.19,.23,.18)*(1.+m.height*120.),m.albedo,wear);m.roughness=.46+wear*.15;}m.albedo*=1.-weather*.12;}
  if(f.mat==5u||f.mat==9u){m=kpMetalSurface(p,f.age,f.wet,0.,fp);if(f.mat==9u){m.albedo=mix(m.albedo,vec3<f32>(.28,.12,.035),.55);}m.albedo*=1.25;}
- if(f.mat==7u){var sp=kpStoneSlateDefaultParams();sp.sourceScaleM=.125;m=kpStoneSlateSurface(p,sp,f.age,f.wet*.25,0.,fp);let slope=select(p.x,p.z,abs(n.z)>abs(n.x));let seams=smoothstep(.015,.045+fp,abs(fract(slope/.38)-.5));m.albedo*=.82+.18*seams;}
+ if(f.mat==7u){var sp=kpStoneSlateDefaultParams();sp.sourceScaleM=.125;sp.materialScale=.42;sp.mineral=.16;sp.chroma=.22;sp.relief=.24;let across=select(p.z,p.x,abs(n.z)>abs(n.x));let slope=select(p.x,p.z,abs(n.z)>abs(n.x));let slateP=vec3<f32>(across,0.,slope);m=kpStoneSlateSurface(slateP,sp,f.age,f.wet*.25,0.,fp);let row=floor(slope/.38);let phase=fract(vec2<f32>(across+fract(row*.5)*.30,slope)/vec2<f32>(.30,.38));let edge=min(min(phase.x,1.-phase.x)*.30,min(phase.y,1.-phase.y)*.38);let joint=1.-smoothstep(.0015,.0035+fp*.45,edge);m.albedo*=1.-joint*.16;m.height-=joint*.0008;}
  if(f.mat==8u){m=KpSurface((br_noise3(p*5.)-.5)*.0001,vec3<f32>(.85,.93,.89),.09+f.wet*.08);}
  if(f.mat==10u){m=KpSurface(0.,mix(vec3<f32>(.21,.23,.22),vec3<f32>(.27,.29,.27),noise),.95);let line=abs(abs(p.x)-.5);if(p.z< -42.&&p.z> -53.&&line<.07){m.albedo=vec3<f32>(.69,.62,.39);}}
- if(f.mat==15u||f.mat==16u){m=kpStoneSurface(p*.45,f.age,.015,0.,fp*.45);if(f.mat==15u){let tile=floor(p.x/.52)+floor(p.z/.52);let dark=fract(tile*.5)>.25;let joint=min(abs(fract(p.x/.52)-.5),abs(fract(p.z/.52)-.5));let grout=1.-smoothstep(.008,.021+fp,joint);let base=select(vec3<f32>(.53,.47,.34),vec3<f32>(.075,.105,.099),dark);m.albedo=mix(base*(.90+.20*br_noise3(p*1.3)),vec3<f32>(.29,.26,.21),grout);let walk=1.-smoothstep(.4,2.1,abs(p.x+35.3));m.roughness=.52-walk*.18;m.height*=.13;}else{m.albedo=mix(m.albedo,vec3<f32>(.31,.31,.275),.6);let lane=1.-smoothstep(.6,1.6,abs(p.x-4.));m.roughness=.86-lane*.13;m.height*=.15;}}
+ if(f.mat==15u||f.mat==16u){m=kpStoneSurface(p*.45,f.age,.015,0.,fp*.45);if(f.mat==15u){let tile=floor(p.x/.52)+floor(p.z/.52);let dark=fract(tile*.5)>.25;let tilePhase=fract(p.xz/.52);let joint=min(min(tilePhase.x,1.-tilePhase.x),min(tilePhase.y,1.-tilePhase.y))*.52;let grout=1.-smoothstep(.0015,.0045+fp*.50,joint);let base=select(vec3<f32>(.53,.47,.34),vec3<f32>(.075,.105,.099),dark);m.albedo=mix(base*(.90+.20*br_noise3(p*1.3)),vec3<f32>(.29,.26,.21),grout);let walk=1.-smoothstep(.4,2.1,abs(p.x+35.3));m.roughness=.52-walk*.18;m.height*=.13;}else{let aggregateTone=dot(m.albedo,vec3<f32>(.2126,.7152,.0722));m.albedo=vec3<f32>(.275,.265,.23)*(.94+clamp(aggregateTone,.04,.40)*.24);let lane=1.-smoothstep(.6,1.6,abs(p.x-4.));m.roughness=.86-lane*.13;m.height*=.10;}}
  if(f.mat==17u){m=KpSurface(0.,vec3<f32>(1.,.77,.40),.24);}
  if(f.mat==11u){m=KpSurface(0.,vec3<f32>(1.,.32,.03),.5);}
  if(f.mat==12u){m=KpSurface(0.,vec3<f32>(.023,.065,.054),.42);}
@@ -54,19 +54,22 @@ fn surfaceRaw(f:Field,p:vec3<f32>,n:vec3<f32>,fp:f32)->KpSurface {
 }
 // Bounded tangent-footprint integration of unchanged stone mothers. No texture cache.
 fn surface(f:Field,p:vec3<f32>,n:vec3<f32>,fp:f32,dx:vec3<f32>,dy:vec3<f32>)->KpSurface {
- if((f.mat!=3u&&f.mat!=7u&&f.mat!=2u)||max(length(dx),length(dy))<.025){return surfaceRaw(f,p,n,fp);}
+ let tangentFp=max(fp,max(length(dx),length(dy)));if((f.mat!=3u&&f.mat!=7u&&f.mat!=2u&&f.mat!=15u&&f.mat!=16u)||tangentFp<.020){return surfaceRaw(f,p,n,tangentFp);}
  var albedo=vec3<f32>(0.);var rough=0.;var height=0.;
- for(var iy=0;iy<4;iy++){for(var ix=0;ix<4;ix++){let offset=dx*((f32(ix)+.5)/4.-.5)+dy*((f32(iy)+.5)/4.-.5);let sm=surfaceRaw(f,p+offset,n,fp*.25);albedo+=sm.albedo;rough+=sm.roughness;height+=sm.height;}}
+ for(var iy=0;iy<4;iy++){for(var ix=0;ix<4;ix++){let offset=dx*((f32(ix)+.5)/4.-.5)+dy*((f32(iy)+.5)/4.-.5);let sm=surfaceRaw(f,p+offset,n,tangentFp*.25);albedo+=sm.albedo;rough+=sm.roughness;height+=sm.height;}}
  return KpSurface(height/16.,albedo/16.,rough/16.);
 }
 fn sky(rd:vec3<f32>)->vec3<f32>{let horizon=vec3<f32>(.65,.73,.78);let zenith=vec3<f32>(.19,.40,.62);return mix(horizon,zenith,smoothstep(-.1,1.,rd.y));}
 // The original material height now participates in the resolved surface normal.
-fn materialNormal(f:Field,p:vec3<f32>,n:vec3<f32>,fp:f32,m:KpSurface)->vec3<f32>{
- if(fp>.055||f.mat==8u||f.mat==11u||f.mat==17u){return n;}
- let t=normalize(cross(n,select(vec3<f32>(0.,1.,0.),vec3<f32>(1.,0.,0.),abs(n.y)>.85)));let b=cross(n,t);let e=max(.0025,fp*.8);
- var fx=f;var fy=f;fx.local+=t*e;fy.local+=b*e;
- let hx=surfaceRaw(fx,p+t*e,n,fp).height;let hy=surfaceRaw(fy,p+b*e,n,fp).height;
- return normalize(n-t*clamp((hx-m.height)/e,-.22,.22)-b*clamp((hy-m.height)/e,-.22,.22));
+fn materialNormal(f:Field,p:vec3<f32>,n:vec3<f32>,fp:f32)->vec3<f32>{
+ // Symmetric derivatives share one physical footprint. Never subtract a raw
+ // neighbour from a pixel-filtered centre (that created false floor ripples).
+ if(fp>.030||f.mat==8u||f.mat==11u||f.mat==17u){return n;}
+ let t=normalize(cross(n,select(vec3<f32>(0.,1.,0.),vec3<f32>(1.,0.,0.),abs(n.y)>.85)));let b=cross(n,t);let e=max(.0025,fp);
+ var fxp=f;var fxm=f;var fyp=f;var fym=f;fxp.local+=t*e;fxm.local-=t*e;fyp.local+=b*e;fym.local-=b*e;
+ let hx=(surfaceRaw(fxp,p+t*e,n,fp).height-surfaceRaw(fxm,p-t*e,n,fp).height)/(2.*e);
+ let hy=(surfaceRaw(fyp,p+b*e,n,fp).height-surfaceRaw(fym,p-b*e,n,fp).height)/(2.*e);
+ let retained=1.-smoothstep(.008,.030,fp);return normalize(n-t*clamp(hx,-.18,.18)*retained-b*clamp(hy,-.18,.18)*retained);
 }
 fn resolvedWeather(f:Field,p:vec3<f32>,n:vec3<f32>,m:KpSurface)->KpSurface {
  if(f.wet<.08||!(f.mat==1u||f.mat==2u||f.mat==3u||f.mat==7u)){return m;}
@@ -75,17 +78,18 @@ fn resolvedWeather(f:Field,p:vec3<f32>,n:vec3<f32>,m:KpSurface)->KpSurface {
  return kpApplyFabricSurface(m,state);
 }
 fn litSurface(f:Field,p:vec3<f32>,ng:vec3<f32>,rd:vec3<f32>,fp:f32,dx:vec3<f32>,dy:vec3<f32>,ao:f32,sh:f32)->vec3<f32>{
- let raw=surface(f,p,ng,fp,dx,dy);let n=materialNormal(f,p,ng,fp,raw);let m=resolvedWeather(f,p,n,raw);
+ let tangentFp=max(fp,max(length(dx),length(dy)));let raw=surface(f,p,ng,tangentFp,dx,dy);let n=materialNormal(f,p,ng,tangentFp);let m=resolvedWeather(f,p,n,raw);
  let light=normalize(vec3<f32>(-3.,7.,-4.));let nl=max(dot(n,light),0.);
+ let inTower=p.x> -42.2&&p.x< -28.7&&p.z> -25.8&&p.z< -10.2&&p.y<6.4;
  let inHall=p.x> -38.45&&p.x< -28.1&&p.z> -39.5&&p.z<39.5&&p.y<11.3;
  let inStore=p.x> -28.1&&p.x<44.5&&p.z> -28.2&&p.z<34.7&&p.y<12.3;
  var ambient=vec3<f32>(.19,.245,.30)*(.65+.35*max(n.y,0.))*ao;
- if(inHall){ambient=vec3<f32>(.22,.23,.215)*(.50+.50*exp(-abs(p.x+38.4)*.13))*ao;}
+ if(inHall||inTower){ambient=vec3<f32>(.22,.23,.215)*(.50+.50*exp(-abs(p.x+38.4)*.13))*ao;}
  if(inStore){let ridge=abs(repeatX(p.z-3.25,20.833333,1.));ambient=vec3<f32>(.14,.18,.20)*(.55+.45*exp(-ridge*.16))*ao;}
  let spec=pow(max(dot(n,normalize(light-rd)),0.),mix(130.,5.,m.roughness))*(1.-m.roughness)*sh*.55;
  var color=m.albedo*(ambient+vec3<f32>(1.10,1.01,.83)*nl*sh*1.48)+vec3<f32>(spec);
  // Limited fixture fill is tied to actual pendant locations, not a global emissive wash.
- if(inHall||inStore){let zone=select(0u,2u,inStore);let lp=interiorLightPosition(zone,interiorNearestLight(p,zone))-p;let ld=length(lp);color+=m.albedo*vec3<f32>(1.,.76,.46)*max(dot(n,normalize(lp)),0.)*1.15/(1.+ld*ld*.13);}
+ if(inHall||inStore||inTower){let zone=select(select(0u,2u,inStore),5u,inTower);let lp=interiorLightPosition(zone,interiorNearestLight(p,zone))-p;let ld=length(lp);color+=m.albedo*vec3<f32>(1.,.76,.46)*max(dot(n,normalize(lp)),0.)*1.15/(1.+ld*ld*.13);}
  if(f.mat==11u||f.mat==17u){color=m.albedo*select(1.8,2.4,f.mat==17u);}return color;
 }
 // Secondary intersection is its own compute pass. No material is evaluated here.

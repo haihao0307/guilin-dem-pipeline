@@ -186,13 +186,20 @@ fn architecture(p:vec3<f32>)->Field {
  let rz=repeatX(p.z-2.,6.,6.);var east=box(p-vec3<f32>(49.75,4.8,0.),vec3<f32>(.25,4.8,40.));east=max(east,-archWindow(vec3<f32>(rz,p.y-4.,49.75-p.x),.85,2.4,.8));f=take(f,field(shell(east,p),2u,p,3.));var ew=sashWindow(vec3<f32>(rz,p.y-4.0,49.75-p.x),.85,2.4,10.);ew.d=shell(ew.d,p);f=take(f,ew);
  let gateX=repeatX(p.x-4.,20.,1.);let freightDoor=box(vec3<f32>(gateX,p.y-2.1,p.z-39.75),vec3<f32>(2.5,2.2,1.));var rear=box(p-vec3<f32>(4.,4.8,39.75),vec3<f32>(46.,4.8,.25));rear=max(rear,-freightDoor);f=take(f,field(shell(rear,p),2u,p,3.));
  // Warehouse clear rectangle is 72 x 62.5 m. All partitions lie OUTSIDE it.
- var westPartition=box(p-vec3<f32>(-28.3,5.9,3.25),vec3<f32>(.2,5.9,31.75));westPartition=max(westPartition,-box(vec3<f32>(p.x+28.3,p.y-1.65,repeatX(p.z,20.,1.)),vec3<f32>(1.,1.7,1.75)));f=take(f,field(shell(westPartition,p),1u,p,4.));
+ var westPartition=box(p-vec3<f32>(-28.3,5.9,3.25),vec3<f32>(.2,5.9,31.75));if(u.options.x<.5){let storeTop=12.9-abs(repeatX(p.z-3.25,20.833333,1.))*.25;let publicTop=14.7-.44*max(abs(p.x+35.5),max(abs(p.z)-33.3,0.));westPartition=max(westPartition,p.y-(max(storeTop,publicTop)-.10));}westPartition=max(westPartition,-box(vec3<f32>(p.x+28.3,p.y-1.65,repeatX(p.z,20.,1.)),vec3<f32>(1.,1.7,1.75)));f=take(f,field(shell(westPartition,p),1u,p,4.));
  f=take(f,field(shell(box(p-vec3<f32>(8.,5.9,-28.3),vec3<f32>(36.5,5.9,.2)),p),1u,p,4.));
  var rearPartition=box(p-vec3<f32>(8.,3.5,34.8),vec3<f32>(36.5,3.5,.2));rearPartition=max(rearPartition,-box(vec3<f32>(gateX,p.y-1.65,p.z-34.8),vec3<f32>(1.75,1.7,1.)));f=take(f,field(shell(rearPartition,p),1u,p,4.));
  var westFloor=box(p-vec3<f32>(-33.65,5.32,0.),vec3<f32>(5.1,.12,39.4));westFloor=max(westFloor,-box(p-vec3<f32>(-33.7,5.32,-18.),vec3<f32>(5.8,.4,8.4)));westFloor=max(westFloor,-box(p-vec3<f32>(-33.,5.32,30.),vec3<f32>(1.6,.4,5.5)));f=take(f,field(shell(westFloor,p),3u,p,1.));
  f=take(f,field(shell(box(p-vec3<f32>(8.,5.32,-32.4),vec3<f32>(36.4,.12,3.7)),p),3u,p,2.));
  let step=clamp(floor((p.z-25.)/.32),0.,29.);let stair=max(box(p-vec3<f32>(-33.,(step+1.)*.09,25.+(step+.5)*.32),vec3<f32>(1.3,(step+1.)*.09,.16)),box(p-vec3<f32>(-33.,2.8,29.8),vec3<f32>(1.3,2.8,4.8)));f=take(f,field(shell(stair,p),3u,p,1.));f=take(f,field(shell(box(p-vec3<f32>(-33.,5.36,35.13),vec3<f32>(1.3,.08,.61)),p),3u,p,1.));
  if(u.options.x<.5){let roofZ=repeatX(p.z-3.25,20.833333,1.);var warehouseRoof=max(abs(p.y-(12.9-abs(roofZ)*.25))-.14,box(p-vec3<f32>(8.,11.,3.25),vec3<f32>(36.6,3.,31.85)));let lightWell=box(vec3<f32>(p.x-8.,p.y-12.8,roofZ),vec3<f32>(30.9,2.,1.92));warehouseRoof=max(warehouseRoof,-lightWell);f=take(f,field(warehouseRoof,7u,p,3.));
+ // Roof end enclosure closes the old open triangles above the service roof.
+ // Its inner face x44.15 lies outside the fixed clear-storage boundary x44.
+ let endHeight=12.9-abs(roofZ)*.25;
+ let eastGable=max(box(p-vec3<f32>(44.34,11.36,3.25),vec3<f32>(.19,1.56,31.80)),p.y-(endHeight-.10));
+ f=take(f,field(eastGable,2u,p,30.));
+ let westGable=max(box(p-vec3<f32>(-28.34,12.11,3.25),vec3<f32>(.19,.81,31.80)),p.y-(endHeight-.10));f=take(f,field(westGable,1u,p,32.));
+ let northFascia=max(box(p-vec3<f32>(8.,10.10,34.93),vec3<f32>(36.5,.38,.18)),p.y-(endHeight-.10));f=take(f,field(northFascia,2u,p,31.));
  let light=max(abs(p.y-(13.45-abs(roofZ)*.43))-.006,box(vec3<f32>(p.x-8.,p.y-13.,roofZ),vec3<f32>(31.,1.5,2.1)));f=take(f,field(light,8u,p,3.));let endX=abs(p.x-8.)-31.08;let endGlass=max(abs(endX)-.006,max(abs(roofZ)-2.10,max((12.9-abs(roofZ)*.25+.12)-p.y,p.y-(13.45-abs(roofZ)*.43))));f=take(f,field(endGlass,8u,p,3.));
  // A single L-shaped hipped roof envelope: union volumes, subtract their inset union.
  let hyW=14.7-.44*max(abs(p.x+35.5),max(abs(p.z)-33.3,0.));

@@ -40,16 +40,18 @@ fn entryJoinery(p:vec3<f32>)->Field {
  let threshold=box(p-vec3<f32>(-38.70,.0165,-18.),vec3<f32>(.38,.0165,3.38));
  f=take(f,field(threshold,3u,p,20.));
  let outerLanding=box(p-vec3<f32>(-43.5,-.008,-18.),vec3<f32>(1.15,.008,4.3));f=take(f,field(outerLanding,3u,p,20.));
- // Two real panelled door leaves stand 70 degrees open into the vestibule.
- // Their hinge-to-leaf coordinates preserve a clear central public entrance.
- for(var side=0;side<2;side++){let sg=select(-1.,1.,side==1);let dx=p.x+38.62;let dz=(p.z+18.-sg*3.24)*(-sg);
- let door=vec3<f32>(dx*.9396926+dz*.3420201-1.51,p.y-1.56,dx*.3420201-dz*.9396926);
- var leaf=box(door,vec3<f32>(1.51,1.53,.062));let paneHole=box(door-vec3<f32>(0.,.59,0.),vec3<f32>(1.23,.62,.20));leaf=max(leaf,-paneHole);
- f=take(f,field(shell(leaf,p),4u,door,22.+f32(side)));
- let pane=max(paneHole,abs(door.z)-.0045);f=take(f,field(shell(pane,p),8u,door,22.+f32(side)));
- let glazingBars=min(box(door-vec3<f32>(0.,.59,0.),vec3<f32>(.025,.65,.075)),box(door-vec3<f32>(0.,.59,0.),vec3<f32>(1.25,.025,.075)));f=take(f,field(shell(glazingBars,p),14u,door,22.+f32(side)));
- let bottomPanel=max(box(door-vec3<f32>(0.,-.77,.068),vec3<f32>(1.27,.53,.022)),-box(door-vec3<f32>(0.,-.77,.068),vec3<f32>(1.19,.45,.10)));f=take(f,field(shell(bottomPanel,p),18u,door,22.+f32(side)));
- let pull=capsule(door,vec3<f32>(1.18,-.1,.12),vec3<f32>(1.18,.3,.12),.027);f=take(f,field(shell(pull,p),9u,door,22.+f32(side)));
+ // Four timber leaves form two inward-folded pairs. Each leaf is 1.56 m
+ // wide: the folded stack stays beside the jamb and intrudes only 1.62 m.
+ // The central 6.08 m entry axis stays open rather than a 3 m leaf filling it.
+ for(var leafIndex=0;leafIndex<4;leafIndex++){let side=leafIndex/2;let folded=leafIndex%2;let sg=select(-1.,1.,side==1);
+ let door=vec3<f32>(p.x+38.62-.81,p.y-1.56,(p.z+18.-sg*3.24)*sg+f32(folded)*.14);
+ var leaf=box(door,vec3<f32>(.78,1.53,.050));let paneHole=box(door-vec3<f32>(0.,.59,0.),vec3<f32>(.58,.62,.20));leaf=max(leaf,-paneHole);
+ f=take(f,field(shell(leaf,p),4u,door,22.+f32(leafIndex)));
+ let pane=max(paneHole,abs(door.z)-.0045);f=take(f,field(shell(pane,p),8u,door,22.+f32(leafIndex)));
+ let glazingBars=min(box(door-vec3<f32>(0.,.59,0.),vec3<f32>(.025,.65,.075)),box(door-vec3<f32>(0.,.59,0.),vec3<f32>(.60,.025,.075)));f=take(f,field(shell(glazingBars,p),14u,door,22.+f32(leafIndex)));
+ let bottomPanel=max(box(door-vec3<f32>(0.,-.77,.056),vec3<f32>(.60,.53,.022)),-box(door-vec3<f32>(0.,-.77,.056),vec3<f32>(.53,.45,.10)));f=take(f,field(shell(bottomPanel,p),18u,door,22.+f32(leafIndex)));
+ let pull=capsule(door,vec3<f32>(-.52,-.1,.11),vec3<f32>(-.52,.3,.11),.027);f=take(f,field(shell(pull,p),9u,door,22.+f32(leafIndex)));
+ let hinge=cylinder(vec3<f32>(p.x+37.04,p.y-1.56,(p.z+18.-sg*3.17)*sg),.035,.17);f=take(f,field(shell(hinge,p),9u,p,24.));
  }
  // Fanlight follows the same opening outline, not a second opaque arch plate.
  let fan=max(opening,max(3.14-q.y,abs(q.z-.14)-.0045));f=take(f,field(shell(fan,p),8u,q,20.));

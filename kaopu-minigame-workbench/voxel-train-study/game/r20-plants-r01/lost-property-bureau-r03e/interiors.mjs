@@ -1,3 +1,4 @@
+import { HANDOVER_LAYOUT } from './inventory.mjs';
 /**
  * R03e occupied interiors, authored as a bounded WGSL function domain.
  * Units: metres. No inventory is synthesized and no rack/address is changed.
@@ -8,12 +9,13 @@
  * Roof-light openings remain the architecture owner's responsibility.
  */
 export const INTERIOR_LAYOUT = Object.freeze({
-  version: 'bureau-r03e-occupied-interiors-01',
+  version: 'bureau-r03e-open-public-lobby-02',
   hallBounds: [[-38.35, 0, -39.4], [-28.55, 10.35, 39.4]],
   clearWarehouse: [[-28, -28], [44, 34.5]],
-  handover: { first: [-33, 1.3, -18], pitchZ: 4.4, count: 8, counterHalfSize: [.78, .65, 1.35] },
+  handover: { first: [HANDOVER_LAYOUT.x, HANDOVER_LAYOUT.y, HANDOVER_LAYOUT.zStart], pitchZ: HANDOVER_LAYOUT.zPitch, count: HANDOVER_LAYOUT.count, counterHalfSize: [.78, .65, 1.35] },
+  publicLobby: { clearPortal: { x: [-41.7, -29], z: [-20.8, -15.2] }, towerZ: [-26.2, -9.8], waitingBenches: [[-37.1, 0, -24.9], [-37.1, 0, -11.1], [-37.5, 0, -3], [-37.5, 0, 5], [-37.5, 0, 13]] },
   clearTransport: { hallSpineX: -30.5, warehouseSpinesX: [-26.5, 4, 42.5], gateZ: [-20, 0, 20], rearCrossZ: 33.5 },
-  publicCrossingsZ: [-25, 20],
+  publicCrossingsZ: [-18, 20],
   warehouseColumns: { x: [-28.42, 44.32], zStart: -28, zPitch: 10.4166665, zCount: 7, halfWidth: .11 },
   lightZones: [
     { zone: 0, count: 7, first: [-35.6, 4.48, -33], step: [0, 0, 11] },
@@ -21,6 +23,7 @@ export const INTERIOR_LAYOUT = Object.freeze({
     { zone: 2, count: 18, first: [-22, 8.45, -17.583333], grid: [6, 3], step: [12, 0, 20.833333] },
     { zone: 3, count: 5, first: [-35.6, 9.05, -33], z: [-33, 0, 11, 22, 33] },
     { zone: 4, count: 9, first: [-24, 4.48, -32.35], step: [8, 0, 0] },
+    { zone: 5, count: 4, first: [-39.5, 4.8, -23], grid: [2, 2], step: [8, 0, 10] },
   ],
   reservations: 'Architectural fixtures only. Filing cabinets are office records; empty storage bays remain empty.',
 });
@@ -36,6 +39,7 @@ fn interiorPart(d:f32,mat:u32,q:vec3<f32>,seed:f32,p:vec3<f32>)->Field {
 // Shared by physical lamp geometry and the receiver's illumination. No duplicate
 // hand-maintained light positions are needed in renderer.mjs.
 fn interiorLightPosition(zone:u32,index:u32)->vec3<f32> {
+ if(zone==5u){let i=min(index,3u);return vec3<f32>(-39.5+8.*f32(i%2u),4.8,-23.+10.*f32(i/2u));}
  if(zone==0u){return vec3<f32>(-35.6,4.48,-33.+11.*f32(min(index,6u)));}
  if(zone==1u){return vec3<f32>(-24.+8.*f32(min(index,8u)),9.05,-32.35);}
  if(zone==2u){let i=min(index,17u);return vec3<f32>(-22.+12.*f32(i%6u),8.45,-17.583333+20.833333*f32(i/6u));}
@@ -43,6 +47,7 @@ fn interiorLightPosition(zone:u32,index:u32)->vec3<f32> {
  return vec3<f32>(-24.+8.*f32(min(index,8u)),4.48,-32.35);
 }
 fn interiorNearestLight(p:vec3<f32>,zone:u32)->u32 {
+ if(zone==5u){return u32(select(0.,1.,p.x> -35.5))+2u*u32(select(0.,1.,p.z> -18.));}
  if(zone==0u){return u32(clamp(round((p.z+33.)/11.),0.,6.));}
  if(zone==2u){return u32(clamp(round((p.x+22.)/12.),0.,5.))+6u*u32(clamp(round((p.z+17.583333)/20.833333),0.,2.));}
  if(zone==3u){if(p.z< -16.5){return 0u;}return 1u+u32(clamp(round(p.z/11.),0.,3.));}
@@ -85,7 +90,7 @@ fn interiorBankLetter(q:vec3<f32>,bank:u32,scale:f32)->f32 {
 fn interiorPendant(p:vec3<f32>,zone:u32,index:u32)->Field {
  let c=interiorLightPosition(zone,index);let q=p-c;var top=select(5.17,10.08,zone==1u||zone==3u);
  if(zone==0u&&c.z> -26.5&&c.z< -9.5){top=6.34;}
- if(zone==2u){top=9.06;}
+ if(zone==2u){top=9.06;}if(zone==5u){top=6.34;}
  let size=select(.29,.43,zone==2u);
  var metal=cylinder(p-vec3<f32>(c.x,top-.025,c.z),.12,.035);
  metal=min(metal,cylinder(p-vec3<f32>(c.x,(top+c.y+.26)*.5,c.z),.019,(top-c.y-.26)*.5));
@@ -111,6 +116,36 @@ fn interiorHallFloor(p:vec3<f32>)->Field {
  let nz=clamp(round(p.z/5.5),-7.,7.);let mosaic=vec3<f32>(p.x+35.4,p.y-.033,p.z-nz*5.5);
  let diamond=vec3<f32>((mosaic.x+mosaic.z)*.70710678,mosaic.y,(mosaic.z-mosaic.x)*.70710678);
  f=take(f,field(box(diamond,vec3<f32>(.29,.004,.29)),7u,diamond,nz));return f;
+}
+
+fn interiorTowerLobby(p:vec3<f32>)->Field {
+ let bound=box(p-vec3<f32>(-35.5,3.22,-18.),vec3<f32>(6.68,3.23,7.78));if(bound>.7){return interiorEmpty(bound,p);}
+ let q=p-vec3<f32>(-35.5,0.,-18.);let plan=chamferPlan(q.xz,vec2<f32>(6.60,7.70),.5);
+ var f=field(max(plan,abs(p.y-.015)-.018),15u,q,27.);
+ // A restrained stone inlay belongs to the whole waiting room, at the same
+ // 33 mm floor height as the north hall. It is not a path-blocking step.
+ let inlay=max(max(chamferPlan(q.xz,vec2<f32>(6.23,7.33),.5),-chamferPlan(q.xz,vec2<f32>(6.13,7.23),.5)),abs(p.y-.031)-.005);
+ f=take(f,field(inlay,3u,q,27.));
+ let lamp=interiorNearestLight(p,5u);f=take(f,interiorPendant(p,5u,lamp));return f;
+}
+fn interiorPublicPlaster(p:vec3<f32>)->Field {
+ let bound=box(p-vec3<f32>(1.,5.20,0.),vec3<f32>(43.3,5.25,39.5));if(bound>.65){return interiorEmpty(bound,p);}
+ // These are interior finish skins, not substitute walls. Their apertures are
+ // the same full-sized arches used by architecture and its window joinery.
+ let wz=repeatX(p.z,5.5,7.);var west=box(p-vec3<f32>(-38.375,5.15,0.),vec3<f32>(.030,5.10,39.4));
+ west=max(west,-archOpening(vec3<f32>(p.z+18.,p.y,p.x+38.7),3.4,2.2,1.));
+ west=max(west,-archWindow(vec3<f32>(wz,p.y-1.25,p.x+38.7),.8,1.85,.8));
+ west=max(west,-archWindow(vec3<f32>(wz,p.y-6.1,p.x+38.7),.87,1.35,.8));
+ west=max(west,-box(p-vec3<f32>(-35.5,9.,-18.),vec3<f32>(7.5,3.55,8.5)));
+ let sx=repeatX(p.x-4.,5.5,8.);var south=box(p-vec3<f32>(8.,5.15,-36.275),vec3<f32>(36.4,5.10,.030));
+ south=max(south,-archWindow(vec3<f32>(sx,p.y-1.2,p.z+36.6),.9,1.85,.8));
+ south=max(south,-archWindow(vec3<f32>(sx,p.y-6.1,p.z+36.6),.9,1.35,.8));
+ let tq=p-vec3<f32>(-35.5,0.,-18.);let inner=chamferPlan(tq.xz,vec2<f32>(6.62,7.72),.42);
+ var tower=max(abs(inner+.012)-.022,max(.06-p.y,p.y-6.37));
+ tower=max(tower,-archOpening(vec3<f32>(tq.z,p.y,tq.x+7.10),3.05,3.15,1.1));
+ tower=max(tower,-archOpening(vec3<f32>(p.x+33.6,p.y,abs(tq.z)-8.2),3.95,1.55,1.1));
+ tower=max(tower,-box(p-vec3<f32>(-28.4,1.7,-20.),vec3<f32>(1.,1.75,1.75)));
+ return interiorPart(min(min(west,south),tower),19u,p,28.,p);
 }
 
 fn interiorHallJoinery(p:vec3<f32>)->Field {
@@ -140,7 +175,9 @@ fn interiorHallJoinery(p:vec3<f32>)->Field {
 }
 
 fn interiorCounter(p:vec3<f32>)->Field {
- let bay=clamp(round((p.z+18.)/4.4),0.,7.);let q=p-vec3<f32>(-33.,0.,-18.+4.4*bay);
+ // Eight service positions are NORTH of the tower lobby, never in its axis.
+ // HANDOVER_LAYOUT is the matching custody contract, tested below.
+ let bay=clamp(round((p.z+6.)/3.2),0.,7.);let q=p-vec3<f32>(-32.4,0.,-6.+3.2*bay);
  let bound=box(q-vec3<f32>(0.,1.62,0.),vec3<f32>(.90,1.62,1.47));if(bound>.65){return interiorEmpty(bound,p);}
  // Exactly 1.30m finished countertop: inventory's handover y is this surface.
  var body=box(q-vec3<f32>(0.,.68,0.),vec3<f32>(.66,.56,1.22));
@@ -174,8 +211,7 @@ fn interiorChair(q:vec3<f32>)->f32 {
  d=min(d,box(q-vec3<f32>(0.,.95,-.235),vec3<f32>(.26,.105,.035)));
  d=min(d,box(vec3<f32>(abs(q.x)-.23,q.y-.23,q.z),vec3<f32>(.025,.026,.23)));return d;
 }
-fn interiorBench(p:vec3<f32>)->Field {
- let bay=clamp(round((p.z+13.6)/4.4),0.,6.);let q=p-vec3<f32>(-37.05,0.,-13.6+4.4*bay);
+fn interiorBenchLocal(q:vec3<f32>,seed:f32,p:vec3<f32>)->Field {
  let bound=box(q-vec3<f32>(0.,.55,0.),vec3<f32>(.43,.55,1.15));if(bound>.6){return interiorEmpty(bound,p);}
  var wood=box(q-vec3<f32>(0.,.46,0.),vec3<f32>(.34,.06,1.12));
  wood=min(wood,box(q-vec3<f32>(-.31,.87,0.),vec3<f32>(.045,.21,1.12)));
@@ -183,7 +219,33 @@ fn interiorBench(p:vec3<f32>)->Field {
  iron=min(iron,box(vec3<f32>(q.x+.29,q.y-.76,abs(q.z)-.87),vec3<f32>(.035,.31,.038)));
  iron=min(iron,box(vec3<f32>(q.x,q.y-.71,abs(q.z)-1.04),vec3<f32>(.36,.026,.028)));
  iron=min(iron,box(vec3<f32>(q.x-.25,q.y-.59,abs(q.z)-1.04),vec3<f32>(.027,.13,.028)));
- var f=interiorPart(wood,4u,q.zyx,bay+31.,p);f=take(f,interiorPart(iron,5u,q,bay+31.,p));return f;
+ var f=interiorPart(wood,4u,q.zyx,seed,p);f=take(f,interiorPart(iron,5u,q,seed,p));return f;
+}
+fn interiorBench(p:vec3<f32>)->Field {
+ // The tower is a broad shared waiting room, with seats against its north and
+ // south edges. Its west entrance and east service access remain clear.
+ let south=p-vec3<f32>(-37.1,0.,-24.9);
+ var f=interiorBenchLocal(vec3<f32>(south.z,south.y,south.x),31.,p);
+ let north=p-vec3<f32>(-37.1,0.,-11.1);
+ f=take(f,interiorBenchLocal(vec3<f32>(-north.z,north.y,north.x),32.,p));
+ // Additional north-hall seating stays against the window wall, not the centre.
+ let bay=clamp(round((p.z+3.)/8.),0.,2.);let side=p-vec3<f32>(-37.5,0.,-3.+8.*bay);
+ f=take(f,interiorBenchLocal(side,33.+bay,p));return f;
+}
+
+fn interiorGroundCeilings(p:vec3<f32>)->Field {
+ // A 40 mm plaster finish overlaps, but never replaces, the existing structural
+ // stone slabs. All slab voids are copied exactly; no false floating ceiling
+ // closes the tower stairwell or the north public stair.
+ var west=box(p-vec3<f32>(-33.65,5.185,0.),vec3<f32>(5.1,.020,39.4));
+ west=max(west,-box(p-vec3<f32>(-33.7,5.185,-18.),vec3<f32>(5.8,.4,8.4)));
+ west=max(west,-box(p-vec3<f32>(-33.,5.185,30.),vec3<f32>(1.6,.4,5.5)));
+ let south=box(p-vec3<f32>(8.,5.185,-32.4),vec3<f32>(36.4,.020,3.7));
+ let storey=select(select(0u,1u,p.y>9.4),2u,p.y>15.25);let ys=array<f32,3>(6.5,12.3,18.2);let yy=ys[storey];
+ let tq=p-vec3<f32>(-35.5,0.,-18.);let hh=towerHalf(yy)-vec2<f32>(.5);
+ var tower=max(chamferPlan(tq.xz,hh,.5),abs(p.y-(yy-.145))-.020);
+ tower=max(tower,-box(tq-vec3<f32>(0.,yy-.145,0.),vec3<f32>(1.95,.4,3.1)));
+ return interiorPart(min(min(west,south),tower),19u,p,29.,p);
 }
 
 fn interiorDesk(q:vec3<f32>,seed:f32,p:vec3<f32>)->Field {
@@ -342,7 +404,7 @@ fn interiorRackWayfinding(p:vec3<f32>)->Field {
 }
 
 fn interiorField(p:vec3<f32>)->Field {
- var f=interiorHallFloor(p);f=take(f,interiorHallJoinery(p));
+ var f=interiorHallFloor(p);f=take(f,interiorHallJoinery(p));f=take(f,interiorGroundCeilings(p));f=take(f,interiorTowerLobby(p));f=take(f,interiorPublicPlaster(p));
  f=take(f,interiorCounter(p));f=take(f,interiorBench(p));
  f=take(f,interiorSouthOffices(p));f=take(f,interiorWestOffices(p));
  f=take(f,interiorArcadeDetails(p));f=take(f,interiorWarehouseStructure(p));
@@ -360,14 +422,19 @@ export function selfTestInteriors() {
   const check = (name, truth) => { if (!truth) throw Error(name); checks.push(name); };
   check('WGSL function domain is exported', /fn interiorField\(p:vec3<f32>\)->Field/.test(INTERIORS));
   check('lights and geometry share one position function', /let c=interiorLightPosition\(zone,index\)/.test(INTERIORS));
-  check('eight counters match the live custody coordinate helper', INTERIOR_LAYOUT.handover.count === 8 && /-18\.\+4\.4\*bay/.test(INTERIORS));
+  check('eight counters match the live north-hall custody coordinate helper', INTERIOR_LAYOUT.handover.count === 8 && HANDOVER_LAYOUT.x === -32.4 && HANDOVER_LAYOUT.zStart === -6 && HANDOVER_LAYOUT.zPitch === 3.2 && /-6\.\+3\.2\*bay/.test(INTERIORS));
   check('counter top is exactly the existing 1.30m handover surface', Math.abs(1.245 + .055 - 1.3) < 1e-12);
   check('warehouse net area remains 4500m²', (44 + 28) * (34.5 + 28) === 4500);
   const col = INTERIOR_LAYOUT.warehouseColumns;
   check('new warehouse columns remain outside the net rectangle', col.x[0] + col.halfWidth < -28 && col.x[1] - col.halfWidth > 44);
   check('column grid clears three warehouse gates', Array.from({ length: col.zCount }, (_, i) => col.zStart + i * col.zPitch).every(z => INTERIOR_LAYOUT.clearTransport.gateZ.every(g => Math.abs(z - g) > 1.75 + col.halfWidth)));
-  check('two full public cross-lines avoid counter footprints', INTERIOR_LAYOUT.publicCrossingsZ.every(z => Array.from({length: 8}, (_, i) => -18 + 4.4 * i).every(c => Math.abs(c-z) > 1.35)));
-  check('hall spine remains east of all counter and waiting-seat geometry', -33 + .90 < -30.5 - .65 && -37.05 + .43 < -30.5 - .65);
+  check('two full public cross-lines avoid counter footprints', INTERIOR_LAYOUT.publicCrossingsZ.every(z => Array.from({length: 8}, (_, i) => HANDOVER_LAYOUT.zStart + HANDOVER_LAYOUT.zPitch * i).every(c => Math.abs(c-z) > 1.35)));
+  check('hall spine remains east of all counter and waiting-seat geometry', HANDOVER_LAYOUT.x + .90 < -30.5 - .65 && -37.5 + .43 < -30.5 - .65);
+  check('counters leave the entire tower lobby clear', HANDOVER_LAYOUT.zStart - 1.47 > -9.8);
+  check('side benches leave the central entrance axis clear', INTERIOR_LAYOUT.publicLobby.waitingBenches.every(p => Math.abs(p[2] + 18) > 3.7));
+  check('ground floor ceilings are plaster over retained slab structure', /fn interiorGroundCeilings/.test(INTERIORS) && /yy-\.145/.test(INTERIORS) && /min\(min\(west,south\),tower\),19u/.test(INTERIORS));
+  check('tower lobby has matching floor, plaster and registered light geometry', /fn interiorTowerLobby/.test(INTERIORS) && /fn interiorPublicPlaster/.test(INTERIORS) && INTERIOR_LAYOUT.lightZones.find(x=>x.zone===5)?.count===4);
+  check('tower plaster preserves the north and south public arches', /tower=max\(tower,-archOpening\(vec3<f32>\(p.x\+33.6,p.y,abs\(tq.z\)-8.2\),3.95,1.55,1.1\)\)/.test(INTERIORS));
   check('all warehouse overhead trusses clear existing seven-metre racks', 9.06 - .075 > 7);
   check('no mesh buffers, textures, or fake custody boxes', !/createBuffer|createTexture|Mesh|Geometry|items\[|ItemRecord/.test(INTERIORS));
   check('upper-west stair and tower bays are explicitly excluded', /bay>=2\.&&bay<=4\./.test(INTERIORS) && /bay>=11\.&&bay<=12\./.test(INTERIORS));

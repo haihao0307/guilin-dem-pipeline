@@ -50,3 +50,18 @@ The render architecture remains function-only, with three fullscreen vertices,
 primary/sparse continuation and independent material pass. No mesh, image
 texture, per-cabinet geometry objects or sampled shape volumes are introduced.
 This remains a review candidate until actual images and exact-commit QA pass.
+
+## Coordinated actual-image correction
+The fb34fc candidate completed 16 SwiftShader frames and all business checks,
+but failed visual review. Its evidence is preserved independently. The receiver
+now uses metric tangent footprints for both mother sampling and fine-normal
+gates, with symmetric equal-filter height derivatives. Checker grout aligns
+with tile boundaries; all seam distances are in metres. Protected plaster no
+longer receives a 50% brown noise camouflage layer. Stone and slate finishes
+are explicit honed/laid construction bindings to the unchanged material cores.
+Actual warehouse end walls close the old open roof triangles outside the
+4500 m² net rectangle. A broad public tower vestibule is freed from counters;
+eight counters move together with their custody addresses to the north wing.
+Four folded entrance leaves preserve the central entry axis, and a plaster
+ceiling finishes the retained structural slabs. The inventory save schema/key
+changes so an old moving carrier is never silently restored on a new path.

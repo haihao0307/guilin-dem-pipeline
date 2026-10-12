@@ -205,9 +205,9 @@ test('item centres rest above shelf floors; receiving is rear +z and handover in
       assert.ok(Math.abs(p[1] - i.dimensions[1] / 2 - floor - 0.04) < 1e-9);
     }
   }
-  assert.equal(I.slotPosition('RECEIVING-01')[2], 37.5); assert.equal(I.slotPosition('HANDOVER-01')[0], -33);
+  assert.equal(I.slotPosition('RECEIVING-01')[2], 37.5); assert.equal(I.slotPosition('HANDOVER-01')[0], I.HANDOVER_LAYOUT.x);
   const a = approve(s), move = pick(s, a.claimId), path = I.taskWaypoints(s, move.taskId);
-  assert.deepEqual(path[0], I.itemPosition(s, 'LP-0001')); assert.equal(path[3][0], 4); assert.equal(path.at(-1)[0], -33); assert.ok(path.length >= 8);
+  assert.deepEqual(path[0], I.itemPosition(s, 'LP-0001')); assert.equal(path[3][0], 4); assert.equal(path.at(-1)[0], I.HANDOVER_LAYOUT.x); assert.ok(path.length >= 8);
 });
 test('cancelling only an in-progress pick safely returns it without trapping its valid claim', () => {
   const s = I.createInventory(), a = approve(s), task = pick(s, a.claimId); pickup(s, task.taskId);
@@ -218,16 +218,17 @@ test('cancelling only an in-progress pick safely returns it without trapping its
 });
 test('outgoing handover and return paths use the nearest hall door and clear the 1.3m counter', () => {
   const s = I.createInventory(), a = approve(s), move = pick(s, a.claimId), item = s.items['LP-0001'];
+  const targetZ = I.slotPosition(move.targetSlotId)[2], gateZ = [-20, 0, 20].reduce((a, b) => Math.abs(b - targetZ) < Math.abs(a - targetZ) ? b : a);
   const outgoing = I.taskWaypoints(s, move.taskId), bottom = p => p[1] - item.dimensions[1] / 2;
   assert.equal(I.slotPosition(move.targetSlotId)[1], 1.3);
-  assert.ok(outgoing.some(p => p[0] === -26.5 && p[2] === -20));
-  assert.ok(outgoing.some(p => p[0] === -29.5 && p[2] === -20));
+  assert.ok(outgoing.some(p => p[0] === -26.5 && p[2] === gateZ));
+  assert.ok(outgoing.some(p => p[0] === -29.5 && p[2] === gateZ));
   const gateCrossings = path => {
     let crossings = 0;
     for (let n = 1; n < path.length; n++) {
       const from = path[n - 1], to = path[n];
       if ((from[0] + 28.3) * (to[0] + 28.3) < 0) {
-        assert.equal(from[2], -20); assert.equal(to[2], -20);
+        assert.equal(from[2], gateZ); assert.equal(to[2], gateZ);
         assert.deepEqual([from[0], to[0]].sort((a, b) => a - b), [-29.5, -26.5]); crossings++;
       }
       if (from[0] < -30.5 || to[0] < -30.5) {
@@ -294,8 +295,40 @@ test('special custody and all receiving positions join clear cross aisles before
   }
 });
 test('R03e snapshots and browser keys cannot silently restore R03 coordinates', () => {
-  assert.equal(I.STORAGE_KEY, 'kaopu.bureau.r03e.custody.v1'); assert.equal(I.SCHEMA_VERSION, 6);
+  assert.equal(I.STORAGE_KEY, 'kaopu.bureau.r03e.custody.v2'); assert.equal(I.SCHEMA_VERSION, 7);
   const s = I.createInventory(); assert.equal(s.scenario, I.SCENARIO_ID);
   throwsCode(() => I.restoreInventory({ ...s, scenario: 'lost-property-bureau-r03-fictional-1976' }), 'SNAPSHOT_VERSION');
   throwsCode(() => I.restoreInventory({ ...s, schemaVersion: 3 }), 'SNAPSHOT_VERSION');
+});
+
+
+test('all eight custody handovers share the north counter layout and leave the tower lobby clear', () => {
+  const zs=[];
+  for(let n=1;n<=8;n++){
+    const p=I.slotPosition(`HANDOVER-${String(n).padStart(2,'0')}`);
+    assert.deepEqual(p,[I.HANDOVER_LAYOUT.x,1.3,I.HANDOVER_LAYOUT.zStart+(n-1)*I.HANDOVER_LAYOUT.zPitch]);
+    assert.ok(p[2]-1.47 > -9.8,'Counter must not enter the tower lobby');
+    assert.ok(p[2]+1.47 < 24.5,'Counter must stop before the public stair');
+    assert.ok(p[0]+.90 < -30.5-.65,'Staff spine remains unobstructed');
+    zs.push(p[2]);
+  }
+  assert.equal(new Set(zs).size,8);
+});
+test('all handovers reach the real doors through the staff spine, never through the public entrance', () => {
+  const s=I.createInventory();
+  for(let n=1;n<=8;n++){
+    const target=`HANDOVER-${String(n).padStart(2,'0')}`;
+    const path=I.taskWaypoints(s,{itemId:'LP-0001',from:{slotId:'R01-B01-L1-A'},to:{slotId:target}});
+    const last=path.at(-1);assert.deepEqual(last.slice(0,1),[I.HANDOVER_LAYOUT.x]);
+    assert.equal(last[2],I.slotPosition(target)[2]);
+    assert.ok(path.some(p=>p[0]===-30.5 && p[2]===last[2]));
+    const crossing=path.findIndex((p,i)=>i && (p[0]+28.3)*(path[i-1][0]+28.3)<0);
+    assert.ok(crossing>0);assert.ok([0,20].includes(path[crossing][2]));
+    assert.equal(path[crossing][2],path[crossing-1][2]);
+    for(let i=1;i<path.length;i++)assert.ok(path[i].filter((v,j)=>Math.abs(v-path[i-1][j])>1e-9).length<=1);
+  }
+});
+test('old R03e carrier snapshots are rejected after the public lobby layout revision', () => {
+  const old=I.createInventory();old.schemaVersion=6;
+  throwsCode(()=>I.restoreInventory(JSON.stringify(old)),'SNAPSHOT_VERSION');
 });
