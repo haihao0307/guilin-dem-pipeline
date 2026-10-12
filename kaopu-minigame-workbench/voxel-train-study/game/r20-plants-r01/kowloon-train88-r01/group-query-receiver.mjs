@@ -2,6 +2,8 @@
 // ray advancement, normal reconstruction, material replacement, or publication.
 import {threeFragment, DISPATCH_VERTEX} from './glsl-interface.mjs';
 import {GEOMETRY_GROUP_NAMES} from './geometry-groups.mjs';
+import {createShedRayCertificate} from './experiments/shed-domain-r01/ray-certificate.mjs';
+const SHED_CERTIFIED_SOURCE='588042e14707b2dcab1e890c18fca2afdd20104eaecb7a5d3b25baa71c6a8d36';
 
 /** Fetch generated runtime fragments and create a synchronous 4-MRT query runner.
  *
@@ -17,10 +19,11 @@ import {GEOMETRY_GROUP_NAMES} from './geometry-groups.mjs';
  * copy, readback, finish, or scene render is added. Empty rects mean no valid pixels.
  * Synchronous dispatch does not claim GPU completion or numerical/visual validation.
  */
-export async function createGroupQueryReceiver({renderer, THREE, u, frame, diagnosticProgress = null, compactTrace = false} = {}) {
+export async function createGroupQueryReceiver({renderer, THREE, u, frame, diagnosticProgress = null, compactTrace = false, testShedDomain = false} = {}) {
   if (!renderer || !THREE || !u || !frame) throw Error('Group queries require the existing renderer, THREE, u, and frame');
   if(diagnosticProgress!==null&&typeof diagnosticProgress!=='function')throw Error('Diagnostic progress must be a callback');
   if(typeof compactTrace!=='boolean')throw Error('compactTrace must be explicit boolean');
+  if(typeof testShedDomain!=='boolean'||(testShedDomain&&!compactTrace))throw Error('Shed domain is an explicit compact-trace diagnostic only');
   const attachmentCount=compactTrace?1:4;
   const gl = renderer.getContext();
   if (!renderer.capabilities.isWebGL2 || !gl.getExtension('EXT_color_buffer_float')) throw Error('Group queries require WebGL2 floating-point render attachments');
@@ -33,6 +36,7 @@ export async function createGroupQueryReceiver({renderer, THREE, u, frame, diagn
   }
   const manifest = await fetchFile('./generated/geometry-group-manifest.json', true);
   if (manifest.groups?.length !== GEOMETRY_GROUP_NAMES.length || manifest.groups.some((group, index) => group.index !== index || group.name !== GEOMETRY_GROUP_NAMES[index] || group.outputs !== 4)) throw Error('Station runtime group manifest/order changed');
+  if(testShedDomain&&manifest.sourceSHA256!==SHED_CERTIFIED_SOURCE)throw Error('Shed guard source identity changed; use original query path');
   const runtimeManifest=await fetchFile(compactTrace?'./experiments/compact-trace-r01/generated/manifest.json':'./generated/group-runtime-manifest.json',true);
   const runtimeKey=index=>(compactTrace?'runtime-':'group-runtime-')+index;
   const runtimeEntry=compactTrace?'stationCompactQuery':'stationGroupQuery';
@@ -68,8 +72,21 @@ export async function createGroupQueryReceiver({renderer, THREE, u, frame, diagn
   const dispatch = new THREE.Mesh(geometry, materials[0]); dispatch.frustumCulled = false;
   stageScene.add(dispatch);
   const ownedTextures = new WeakSet();
+  const carryUniforms={inputMap:{value:null}};
+  const carry=testShedDomain?new THREE.RawShaderMaterial({glslVersion:THREE.GLSL3,vertexShader:DISPATCH_VERTEX,fragmentShader:'precision highp float;precision highp int;uniform sampler2D inputMap;out vec4 value;void main(){value=texelFetch(inputMap,ivec2(gl_FragCoord.xy),0);}',uniforms:carryUniforms,depthTest:false,depthWrite:false,toneMapped:false,blending:THREE.NoBlending}):null;
+  if(carry)carry.name='Exact group3 prefix carry before shed domain';
+  let shedCertificate=null,shedFrameKey=null,shedDomainEnabled=testShedDomain;const shedPlanCache=new Map();
+  function shedPlan(width,height,rects,offset,phase){
+    if(!shedDomainEnabled||phase!==0||offset.some(x=>x!==0))return null;
+    const snapshot={inverseProjection:Array.from(frame.inverseProjection.elements),cameraToLocal:Array.from(frame.cameraToLocal.elements),width,height,flipY:frame.viewport.z>.5,precision:gl.getShaderPrecisionFormat?.(gl.FRAGMENT_SHADER,gl.HIGH_FLOAT)};
+    const key=JSON.stringify([snapshot.inverseProjection.map(Math.fround),snapshot.cameraToLocal.map(Math.fround),width,height,snapshot.flipY,snapshot.precision?.precision,snapshot.precision?.rangeMin,snapshot.precision?.rangeMax]);
+    if(key!==shedFrameKey){shedCertificate=createShedRayCertificate(snapshot);shedFrameKey=key;shedPlanCache.clear();}
+    const rectKey=JSON.stringify(rects);if(shedPlanCache.has(rectKey))return shedPlanCache.get(rectKey);
+    const plan=shedCertificate.partitionRects(rects??[{x:0,y:0,w:width,h:height}]);
+    const result={...plan,qualified:shedCertificate.qualified,reason:shedCertificate.reason};shedPlanCache.set(rectKey,result);return result;
+  }
   let targets = null, disposed = false, querying = false;
-  const proof = {status: 'ready-unvalidated', queries: 0, groups: manifest.groups.length, currentQueryAttachments: attachmentCount*2, compactTrace, controlBytes: 32, sourceSHA256: manifest.sourceSHA256, executionOutputs:runtimeManifest.outputs, limitations: ['GPU compilation/execution and host integration require separate validation.', 'Output textures expire at the next query; only requested rectangles are valid.', compactTrace?'Trace query writes only distance/id/rawCount/validity; final metadata and normal require original full query.':'Full query writes all original four-MRT HitField channels.']};
+  const proof = {status: 'ready-unvalidated', queries: 0, groups: manifest.groups.length, currentQueryAttachments: attachmentCount*2, compactTrace, testShedDomain, shedDomain:{queries:0,qualifiedQueries:0,totalPixels:0,eligiblePixels:0,excludedPixels:0,avoidedGroupPixelCalls:0,carryPixels:0}, controlBytes: 32, sourceSHA256: manifest.sourceSHA256, executionOutputs:runtimeManifest.outputs, limitations: ['GPU compilation/execution and host integration require separate validation.', 'Output textures expire at the next query; only requested rectangles are valid.', compactTrace?'Trace query writes only distance/id/rawCount/validity; final metadata and normal require original full query.':'Full query writes all original four-MRT HitField channels.']};
   function allocate(width, height) {
     const target = new THREE.WebGLRenderTarget(width, height, {count: attachmentCount, type: THREE.FloatType, format: THREE.RGBAFormat, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: false, stencilBuffer: false, samples: 0});
     if (!Array.isArray(target.textures) || target.textures.length !== attachmentCount) {target.dispose(); throw Error('This Three build did not create four MRT textures');}
@@ -116,6 +133,8 @@ export async function createGroupQueryReceiver({renderer, THREE, u, frame, diagn
     if (fullHitTexture !== null) validateTexture(fullHitTexture, 'fullHitTexture');
     if (skip === 3 && fullHitTexture === null) throw Error('Automatic roof/floor skip requires an independent fullHitTexture');
     const validRects = rectangles(rects, width, height);
+    const shed=shedPlan(width,height,validRects,offset,phase);
+    if(shed){const q=proof.shedDomain;q.queries++;q.qualifiedQueries+=Number(shed.qualified);for(const k of ['totalPixels','eligiblePixels','excludedPixels'])q[k]+=shed[k];q.avoidedGroupPixelCalls+=5*shed.excludedPixels;if(shed.excludedPixels)q.carryPixels+=shed.totalPixels;proof.lastShedPlan={...shed,rects:shed.rects.map(r=>({...r}))};}
     if (!targets || targets[0].width !== width || targets[0].height !== height) {
       const next = [];
       try {next.push(allocate(width, height)); next.push(allocate(width, height));}
@@ -133,11 +152,17 @@ export async function createGroupQueryReceiver({renderer, THREE, u, frame, diagn
       for (let index = 0; index < materials.length; index++) {
         if (gl.isContextLost()) throw Error(`Context lost before runtime group ${index}`);
         output = targets[index % 2];
+        // Outside the certified original shed guard, each of groups4..8 is the
+        // canonical empty candidate. Copy the group3 prefix into BOTH ping-pong
+        // buffers once; then every omitted pixel retains the identical prefix
+        // while eligible pixels execute all five original physical queries.
+        if(index===4&&shed?.excludedPixels){carryUniforms.inputMap.value=previous.textures[0];renderStage(carry,output,validRects);}
+        const groupRects=index>=4&&index<=8&&shed?.excludedPixels?shed.rects:validRects;
         const textures = compactTrace?[traceTexture,previous?.textures[0]||traceTexture,traceTexture,traceTexture,traceTexture,fullHitTexture||traceTexture]:[traceTexture, ...(previous ? previous.textures : [traceTexture, traceTexture, traceTexture, traceTexture]), fullHitTexture || traceTexture];
         for (const [binding, name] of samplers[index]) materials[index].uniforms[name].value = textures[binding];
         const observed=diagnosticProgress&&proof.queries===0;const start=observed?performance.now():0;
         if(observed)diagnosticProgress({stage:'group-start',index,name:manifest.groups[index].name});
-        renderStage(materials[index], output, validRects);
+        renderStage(materials[index], output, groupRects);
         if(observed){diagnosticProgress({stage:'group-submitted',index,name:manifest.groups[index].name});if(gl.isContextLost())throw Error(`Context lost while executing runtime group ${index}`);diagnosticProgress({stage:'group-complete',index,name:manifest.groups[index].name,elapsedMs:performance.now()-start});}
         previous = output;
       }
@@ -153,11 +178,13 @@ export async function createGroupQueryReceiver({renderer, THREE, u, frame, diagn
   }
   return {
     manifest, proof, query,
+    setDiagnosticShedDomain(enabled){if(!testShedDomain||typeof enabled!=='boolean')throw Error('Shed toggle requires explicit diagnostic construction');shedDomainEnabled=enabled;},
+    diagnosticBuffers(){if(!testShedDomain||!targets||querying)throw Error('No completed diagnostic query buffers');return targets.slice();},
     dispose() {
       if (querying) throw Error('Cannot dispose an active group query');
       if (disposed) return;
       disposed = true; if (targets) for (const target of targets) target.dispose();
-      for (const material of materials) material.dispose(); geometry.dispose(); dispatch.removeFromParent(); proof.status = 'disposed';
+      for (const material of materials) material.dispose(); carry?.dispose(); geometry.dispose(); dispatch.removeFromParent(); proof.status = 'disposed';
     },
   };
 }

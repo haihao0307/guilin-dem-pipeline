@@ -1,0 +1,61 @@
+import*as THREE from'../../../../../vendor/three.module.js';
+import{threeFragment,DISPATCH_VERTEX}from'../../glsl-interface.mjs';
+import{createGroupQueryReceiver}from'../../group-query-receiver.mjs';
+import{ACTIVE_BOUNDS_GLSL,decodeActiveBounds,clipActiveRects,rectArea}from'../active-query-r01/active-bounds.mjs';
+const report={status:'running',stage:'start',scope:'one conservative source-guard spatial exclusion; original full field, two frozen native focus ray sets, no host/public change',errors:[],runs:[],checks:[]};
+const publish=async()=>{document.querySelector('#status').textContent=JSON.stringify({status:report.status,stage:report.stage});await window.__shedReport(structuredClone(report));};
+const stage=async s=>{report.stage=s;console.log('SHED_DOMAIN_STAGE '+s);await publish();};
+const source=async p=>{const r=await fetch(p,{cache:'no-store'});if(!r.ok)throw Error(p+' HTTP '+r.status);return r.text();};
+const fixture=JSON.parse(await source('./fixture.json'));
+const renderer=new THREE.WebGLRenderer({antialias:false}),gl=renderer.getContext();renderer.autoClear=false;renderer.shadowMap.enabled=false;
+renderer.domElement.addEventListener('webglcontextlost',()=>report.errors.push({stage:report.stage,type:'contextlost'}));
+const info=gl.getExtension('WEBGL_debug_renderer_info');report.adapter=gl.getParameter(info?info.UNMASKED_RENDERER_WEBGL:gl.RENDERER);const precision=gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER,gl.HIGH_FLOAT);report.precision={precision:precision.precision,rangeMin:precision.rangeMin,rangeMax:precision.rangeMax};
+const timer=gl.getExtension('EXT_disjoint_timer_query_webgl2');report.timerSupported=!!timer;const timers=[];
+const mrt=(w,h)=>new THREE.WebGLRenderTarget(w,h,{type:THREE.FloatType,format:THREE.RGBAFormat,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter,depthBuffer:false,stencilBuffer:false});
+const mat=(s,u)=>new THREE.RawShaderMaterial({glslVersion:THREE.GLSL3,vertexShader:DISPATCH_VERTEX,fragmentShader:s,uniforms:u,depthTest:false,depthWrite:false,toneMapped:false,blending:THREE.NoBlending});
+const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute([-1,-1,0,3,-1,0,-1,3,0],3));const scene=new THREE.Scene(),camera=new THREE.Camera(),dispatch=new THREE.Mesh(geometry);dispatch.frustumCulled=false;scene.add(dispatch);
+function draw(m,t,rs=null){dispatch.material=m;t.scissorTest=rs!==null;if(rs===null){renderer.setRenderTarget(t);renderer.render(scene,camera);}else for(const r of rs){t.scissor.set(r.x,r.y,r.w,r.h);renderer.setRenderTarget(t);renderer.render(scene,camera);}t.scissorTest=false;}
+function read(t,r){const a=new Float32Array(r.w*r.h*4);renderer.readRenderTargetPixels(t,r.x,r.y,r.w,r.h,a);if(gl.getError()!==gl.NO_ERROR||gl.isContextLost())throw Error('Actual field readback failed');return a;}
+function bits(a){return Array.from(new Uint32Array(a.buffer,a.byteOffset,a.length));}
+function equal(a,b,label){if(a.length!==b.length)throw Error('Length mismatch '+label);let n=0;for(let i=0;i<a.length;i++)if(a[i]!==b[i])n++;report.checks.push({label,channels:a.length,mismatch:n});if(n)throw Error(label+' bit mismatch '+n);}
+const miss=mat('precision highp float;out vec4 value;void main(){value=vec4(0.,0.,0.,2.);}',{}),cu={inputMap:{value:null}},copy=mat('precision highp float;uniform sampler2D inputMap;out vec4 value;void main(){value=texelFetch(inputMap,ivec2(gl_FragCoord.xy),0);}',cu);
+const ru={inputMap:{value:null},inputSize:{value:new THREE.Vector2()},isTrace:{value:1}},bounds=mat(ACTIVE_BOUNDS_GLSL,ru);
+const u={eye:new THREE.Vector3(),age:fixture.age,forward:new THREE.Vector3(),fov:1,right:new THREE.Vector3(),aspect:1,up:new THREE.Vector3(),debug:0,resolution:new THREE.Vector2(),pad:new THREE.Vector2()},frame={inverseProjection:new THREE.Matrix4(),cameraToLocal:new THREE.Matrix4(),localToClip:new THREE.Matrix4(),viewport:new THREE.Vector4(),controls:new THREE.Vector4()};
+function configure(v){frame.inverseProjection.fromArray(v.footprint.inverseProjection);frame.cameraToLocal.fromArray(v.footprint.cameraToLocal);frame.localToClip.copy(frame.inverseProjection).invert().multiply(frame.cameraToLocal.clone().invert());frame.viewport.set(v.width,v.height,0,8);frame.controls.set(1,320,1400,fixture.clock);u.eye.setFromMatrixPosition(frame.cameraToLocal);u.fov=v.footprint.fovTan;u.aspect=v.width/v.height;u.resolution.set(v.width,v.height);}
+async function load(path){const a=threeFragment(await source(path)),uniforms={};for(const e of a.uniforms)uniforms[e.name]={value:e.type==='Params'?u:e.type==='HostFrame'?frame:null};for(const s of a.samplers)uniforms[s]={value:null};const m=mat(a.text,uniforms);m.userData.bind=(i,t)=>{const n=a.samplers.find(s=>s.includes('binding_'+i+'_'));if(!n)throw Error('Missing sampler '+i);uniforms[n].value=t;};return m;}
+function targets(v){const reductions=[];let x=v.width,y=v.height;while(x>1||y>1){x=Math.ceil(x/4);y=Math.ceil(y/4);reductions.push(mrt(x,y));}return{rays:[mrt(v.width,v.height),mrt(v.width,v.height)],full:mrt(v.width,v.height),scratch:mrt(v.width,v.height),reductions};}
+function reduce(tex,t,v){let w=v.width,h=v.height;for(let i=0;i<t.reductions.length;i++){ru.inputMap.value=tex;ru.inputSize.value.set(w,h);ru.isTrace.value=i===0?1:0;draw(bounds,t.reductions[i]);tex=t.reductions[i].texture;w=t.reductions[i].width;h=t.reductions[i].height;}return decodeActiveBounds(read(t.reductions.at(-1),{x:0,y:0,w:1,h:1}),v.width,v.height);}
+const allSnapshots=new Map();
+try{
+ await stage('initialize');const init=await load('../../generated/group-init.frag'),advance=await load('../compact-trace-r01/generated/advance-compact.frag');
+ const progress=e=>console.log('SHED_DOMAIN_STAGE '+JSON.stringify(e));
+ const grouped=await createGroupQueryReceiver({renderer,THREE,u,frame,compactTrace:true,testShedDomain:true,diagnosticProgress:progress});
+ const complete=await createGroupQueryReceiver({renderer,THREE,u,frame,diagnosticProgress:progress});
+ const manifest=JSON.parse(await source('../../generated/manifest.json'));if(grouped.proof.sourceSHA256!==fixture.sourceSHA256||manifest.hostExecutionSourceSHA256!==fixture.executionSHA256)throw Error('Frozen shape/material source differs');report.sourceSHA256=fixture.sourceSHA256;report.executionSHA256=fixture.executionSHA256;
+ async function run(v,mode,ordinal){configure(v);grouped.setDiagnosticShedDomain(mode==='candidate');const t=targets(v);let last=0,rects=v.rects,iterations=0,queryPixelSteps=0;const checkpoints=[],snapshots={},startProof=structuredClone(grouped.proof.shedDomain);gl.finish();const started=performance.now();const q=timer?gl.createQuery():null;if(q)gl.beginQuery(timer.TIME_ELAPSED_EXT,q);
+ for(const r of t.rays)draw(miss,r);draw(init,t.rays[0],v.rects);
+ for(let i=0;i<1400;i++){
+  const options={width:v.width,height:v.height,traceTexture:t.rays[last].texture,rects};const full=grouped.query(options);cu.inputMap.value=full.a;draw(copy,t.full,rects);
+  const capture=ordinal===0&&[0,15,63,111].includes(i);
+  if(capture)snapshots[i+'-full']={rects:rects.map(r=>({...r})),buffers:grouped.diagnosticBuffers().map(x=>bits(read(x,v.crop)))};
+  const alt=grouped.query({...options,fullHitTexture:t.full.texture,skip:3});
+  if(capture)snapshots[i+'-alternate']={rects:rects.map(r=>({...r})),buffers:grouped.diagnosticBuffers().map(x=>bits(read(x,v.crop)))};
+  const next=1-last;advance.userData.bind(0,t.rays[last].texture);advance.userData.bind(1,t.full.texture);advance.userData.bind(2,alt.a);draw(advance,t.rays[next],v.rects);last=next;iterations=i+1;queryPixelSteps+=rectArea(rects);
+  if(i%16===15){const b=reduce(t.rays[last].texture,t,v);rects=clipActiveRects(v.rects,b);checkpoints.push({iterations,rects:rects.map(r=>({...r})),shed:grouped.proof.lastShedPlan??null});console.log('SHED_DOMAIN_STAGE '+v.name+' '+mode+' '+ordinal+' step'+iterations+' active='+!!b);if(!b)break;}
+ }
+ if(q){gl.endQuery(timer.TIME_ELAPSED_EXT);timers.push({query:q,name:v.name,mode,ordinal});}
+ const data=read(t.rays[last],v.crop),wallMs=performance.now()-started,actual=bits(data);equal(actual,v.buffers.trace,v.name+' '+mode+ordinal+' frozen trace');if(data.some((x,i)=>i%4===3&&x!==1&&x!==2))throw Error('Unresolved rays');
+ if(ordinal===0){if(mode==='baseline')allSnapshots.set(v.name,snapshots);else{const old=allSnapshots.get(v.name);for(const key of Object.keys(old)){if(JSON.stringify(old[key].rects)!==JSON.stringify(snapshots[key].rects))throw Error('Snapshot coverage differs');for(let i=0;i<2;i++){const left=[],right=[];for(const r of old[key].rects)for(let y=r.y;y<r.y+r.h;y++)for(let x=r.x;x<r.x+r.w;x++){if(x<v.crop.x||x>=v.crop.x+v.crop.w||y<v.crop.y||y>=v.crop.y+v.crop.h)throw Error('Snapshot leaves focus');const at=((y-v.crop.y)*v.crop.w+x-v.crop.x)*4;left.push(...snapshots[key].buffers[i].slice(at,at+4));right.push(...old[key].buffers[i].slice(at,at+4));}equal(left,right,v.name+' '+key+' ping'+i+' valid d/id/raw/flags');}}}await window.__shedBits({name:v.name+'-'+mode+'-snapshots',json:snapshots});}
+ await window.__shedBits({name:v.name+'-'+mode+'-'+ordinal,bits:actual});
+ const diff=Object.fromEntries(Object.entries(grouped.proof.shedDomain).map(([k,n])=>[k,n-startProof[k]]));report.runs.push({view:v.name,mode,ordinal,wallMs,iterations,queryPixelSteps,domain:diff,checkpoints,cold:report.runs.length===0,snapshotReadbacks:ordinal===0});await publish();
+ // Original full query restores every material-bearing terminal field, unchanged.
+ if(mode==='candidate'&&ordinal===1){await stage(v.name+'-original-complete-terminal');const full=complete.query({width:v.width,height:v.height,traceTexture:t.rays[last].texture,phase:1,rects:v.rects}),a=[];for(const tex of full.textures){cu.inputMap.value=tex;draw(copy,t.scratch,v.rects);a.push(read(t.scratch,v.crop));}let channels=0,mismatch=0;const expected={q:new Float32Array(Uint32Array.from(v.buffers.qSeed).buffer),e:new Float32Array(Uint32Array.from(v.buffers.extentSourceSeed).buffer),n:new Float32Array(Uint32Array.from(v.buffers.normalBaseDistance).buffer)};
+  for(let p=0;p<data.length;p+=4){if(data[p+3]!==1)continue;const pairs=[[a[0][p+1],data[p+1]],[a[0][p+2],expected.n[p+3]],[a[0][p+3],expected.q[p+3]],[a[1][p+3],expected.e[p+3]]];for(let c=0;c<3;c++){pairs.push([a[1][p+c],expected.q[p+c]],[a[2][p+c],expected.e[p+c]]);}for(const[x,y]of pairs){channels++;const xx=new Uint32Array(new Float32Array([x]).buffer)[0],yy=new Uint32Array(new Float32Array([y]).buffer)[0];if(xx!==yy)mismatch++;}if(a[3][p]!==0)throw Error('Full candidate overflow');}
+  report.checks.push({label:v.name+' complete original seed/baseD/q/extent/sourceSeed',channels,mismatch});if(mismatch)throw Error('Original final fields differ');await window.__shedBits({name:v.name+'-complete-fields',json:a.map(bits)});await publish();}
+ for(const x of[...t.rays,t.full,t.scratch,...t.reductions])x.dispose();
+ }
+ for(const v of fixture.views)for(const[mode,ordinal]of[['baseline',0],['candidate',0],['baseline',1],['candidate',1]]){await stage(v.name+'-'+mode+'-'+ordinal);await run(v,mode,ordinal);}
+ // Timer availability polled only after bounded work; never interpret pending as zero.
+ for(let retry=0;retry<100&&timers.some(t=>!gl.getQueryParameter(t.query,gl.QUERY_RESULT_AVAILABLE));retry++)await new Promise(r=>setTimeout(r,20));const disjoint=timer&&gl.getParameter(timer.GPU_DISJOINT_EXT);report.gpuTimings=timers.map(t=>{const ready=gl.getQueryParameter(t.query,gl.QUERY_RESULT_AVAILABLE);const o={name:t.name,mode:t.mode,ordinal:t.ordinal,gpuMs:ready&&!disjoint?gl.getQueryParameter(t.query,gl.QUERY_RESULT)/1e6:null,status:disjoint?'disjoint':ready?'available':'pending'};gl.deleteQuery(t.query);return o;});
+ if(report.errors.length)throw Error('Context loss recorded');report.status='passed';report.remaining=['host adoption only after measured benefit','normal-clear whole scene','native hardware/realtime','art acceptance'];report.timingCaveat='Cold first use and ordinal0 diagnostic ping-pong readback costs are separate; compare ordinal1 warm runs only. GPU interval and wall-through-readback reported separately; no full-frame or hardware extrapolation.';await stage('complete');grouped.dispose();complete.dispose();renderer.dispose();
+}catch(e){report.status='failed';report.failure=e.stack||String(e);await publish();}

@@ -164,3 +164,21 @@ test('opt-in compact receiver owns two one-RT targets and preserves binding5 alt
 test('receiver candidate applies compact only to trace and keeps original five full metadata queries',()=>{
  const now=fs.readFileSync(new URL('../function-receiver.mjs',import.meta.url),'utf8');assert.match(now,/testCompactTrace=false/);assert.match(now,/testCompactTrace&&!testResolution/);assert.match(now,/const complete=queryReceiver.query\(options\)/);assert.match(now,/const alternate=queryReceiver.query/);assert.match(now,/const hit=execution.geometry.query\(\{width:t.w,height:t.h,traceTexture:ray,phase:1/);assert.match(now,/\[\[0,0,0\],\[1,-1,-1\],\[-1,-1,1\],\[-1,1,-1\],\[1,1,1\]\]/);assert.match(now,/if\(traceGrouped!==grouped\)traceGrouped.dispose\(\)/);
 });
+
+test('opt-in shed path carries group3 prefix to both ping-pong buffers and keeps canonical later input parity',async()=>{
+ const f=fixture(true),oldFetch=globalThis.fetch,baseFetch=f.fetch,actualSHA='588042e14707b2dcab1e890c18fca2afdd20104eaecb7a5d3b25baa71c6a8d36';
+ const view=JSON.parse(fs.readFileSync(new URL('../experiments/shed-domain-r01/fixture.json',import.meta.url))).views[0];
+ f.frame={viewport:new Vector4(640,426,0,8),inverseProjection:{elements:view.footprint.inverseProjection},cameraToLocal:{elements:view.footprint.cameraToLocal}};
+ f.gl.FRAGMENT_SHADER=4;f.gl.HIGH_FLOAT=5;f.gl.getShaderPrecisionFormat=()=>({precision:23,rangeMin:127,rangeMax:127});
+ globalThis.fetch=async url=>{const r=await baseFetch(url);if(!r.json)return r;return{ok:true,json:async()=>({...await r.json(),sourceSHA256:actualSHA})};};let r;
+ // Copy has no GroupQueryControl: the existing recorder deliberately sees it too.
+ f.renderer.render=function(scene,camera){const material=scene.children[0].material;f.calls.push({material,target:this.target,scissor:{...this.target.scissor},samplers:Object.fromEntries(Object.entries(material.uniforms).map(([k,v])=>[k,v.value]))});};
+ try{
+  r=await createGroupQueryReceiver({renderer:f.renderer,THREE,u:f.u,frame:f.frame,compactTrace:true,testShedDomain:true});
+  const output=r.query({width:640,height:426,traceTexture:{isTexture:true},rects:view.rects});
+  assert.deepEqual(f.calls.map(c=>c.material.name),[0,1,2,3].map(i=>`Station grouped query ${i}: ${GEOMETRY_GROUP_NAMES[i]}`).concat('Exact group3 prefix carry before shed domain',[9,10,11].map(i=>`Station grouped query ${i}: ${GEOMETRY_GROUP_NAMES[i]}`)));
+  const group3=f.calls[3],carry=f.calls[4],group9=f.calls[5];assert.equal(carry.samplers.inputMap,group3.target.textures[0]);assert.notEqual(carry.target,group3.target);assert.equal(group9.samplers._group_1_binding_1_fs,carry.target.textures[0]);assert.notEqual(group9.target,carry.target);assert.equal(output.a,f.calls.at(-1).target.textures[0]);assert.equal(r.proof.lastShedPlan.excludedPixels,324);assert.equal(r.proof.shedDomain.avoidedGroupPixelCalls,1620);
+  const start=f.calls.length;r.setDiagnosticShedDomain(false);r.query({width:640,height:426,traceTexture:{isTexture:true},rects:view.rects});assert.equal(f.calls.length-start,12);assert.equal(r.diagnosticBuffers().length,2);
+  assert.throws(()=>r.setDiagnosticShedDomain(1));
+ }finally{r?.dispose();globalThis.fetch=oldFetch;}
+});
