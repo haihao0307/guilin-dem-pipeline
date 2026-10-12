@@ -1,0 +1,67 @@
+{
+  "caseId": "CANDIDATE-HAIR-SCALP-EXPOSURE-SPATIAL-IDENTITY-001",
+  "status": "CANDIDATE",
+  "boundedClaim": "Aggregate top-ROI visible-scalp reduction cannot prove that localized crown holes are absent or that remaining exposure matches an authorized part/whorl.",
+  "fixtures": [
+    {
+      "id": "R14_2_REAL_AGGREGATE_PASS_WITHOUT_SPATIAL_IDENTITY",
+      "subjectBound": true,
+      "cameraBound": true,
+      "maskIdentityBound": false,
+      "aggregateVisibleFraction": 0.067206,
+      "aggregateMax": 0.08,
+      "largestForbiddenComponentFraction": null,
+      "largestForbiddenComponentMax": 0.01,
+      "positiveControlDetected": false,
+      "expected": "HOLD_SPATIAL_EXPOSURE_IDENTITY_UNBOUND"
+    },
+    {
+      "id": "LOCALIZED_HOLE_HIDDEN_BY_GOOD_GLOBAL_MEAN",
+      "subjectBound": true,
+      "cameraBound": true,
+      "maskIdentityBound": true,
+      "aggregateVisibleFraction": 0.06,
+      "aggregateMax": 0.08,
+      "largestForbiddenComponentFraction": 0.025,
+      "largestForbiddenComponentMax": 0.01,
+      "positiveControlDetected": true,
+      "expected": "REJECT_LOCALIZED_SCALP_EXPOSURE"
+    },
+    {
+      "id": "AUTHORIZED_PART_ONLY_WITH_SMALL_FORBIDDEN_COMPONENTS",
+      "subjectBound": true,
+      "cameraBound": true,
+      "maskIdentityBound": true,
+      "aggregateVisibleFraction": 0.07,
+      "aggregateMax": 0.08,
+      "largestForbiddenComponentFraction": 0.004,
+      "largestForbiddenComponentMax": 0.01,
+      "positiveControlDetected": true,
+      "expected": "SCOPED_SPATIAL_EXPOSURE_PASS"
+    },
+    {
+      "id": "GLOBAL_EXPOSURE_TOO_HIGH",
+      "subjectBound": true,
+      "cameraBound": true,
+      "maskIdentityBound": true,
+      "aggregateVisibleFraction": 0.12,
+      "aggregateMax": 0.08,
+      "largestForbiddenComponentFraction": 0.008,
+      "largestForbiddenComponentMax": 0.01,
+      "positiveControlDetected": true,
+      "expected": "REJECT_GLOBAL_SCALP_EXPOSURE"
+    },
+    {
+      "id": "DETECTOR_MISSES_KNOWN_CROWN_HOLE",
+      "subjectBound": true,
+      "cameraBound": true,
+      "maskIdentityBound": true,
+      "aggregateVisibleFraction": 0.05,
+      "aggregateMax": 0.08,
+      "largestForbiddenComponentFraction": 0.003,
+      "largestForbiddenComponentMax": 0.01,
+      "positiveControlDetected": false,
+      "expected": "HOLD_EXPOSURE_POSITIVE_CONTROL_FAILED"
+    }
+  ]
+}
