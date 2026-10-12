@@ -68,6 +68,7 @@ export const HANDOVER_LAYOUT = Object.freeze({ x: -32.4, y: 1.3, zStart: -6, zPi
 /** Slots are resolved by address; 22,080 mixed-size addresses do not create items. */
 export function getSlot(slotId) {
   id(slotId);
+  if(slotId==='BELT-IN-01')return {slotId,kind:'receiving',address:'登记输送带接收位',dimensions:[.75,.55,.65],categories:['baggage','parcel'],disabled:false,occupiedBy:null,reservedBy:null};
   const rack = /^R(\d\d)-B(\d\d)-L([1-6])-([AB])(?:-C([1-6]))?$/.exec(slotId);
   if (rack) {
     const row = +rack[1], bay = +rack[2], level = +rack[3], face = rack[4], cell = rack[5] ? +rack[5] : null, localRow = (row - 1) % 16 + 1, bank = row <= 16 ? 'A' : 'B', small = localRow >= 11;
@@ -85,6 +86,7 @@ export function getSlot(slotId) {
  * Operational positions are logical custody addresses, not extra net warehouse area.
  */
 export function slotPosition(slotId, options = {}) {
+  if(slotId==='BELT-IN-01')return [.5,1.305,18.5];
   const slot = getSlot(slotId), origin = options.origin || [-25, 0.45, -23.5];
   if (slot.kind === 'rack') {
     const cell = (slot.cell || 1) - 1, bayPitch = options.bayPitch ?? 1.2, levelPitch = options.levelPitch ?? 1.15;
@@ -297,6 +299,7 @@ function itemSlotPosition(item, slotId, layout = {}) {
   const slot = getSlot(slotId), p = slotPosition(slotId, layout);
   if (slot.kind === 'rack') p[1] = (layout.shelfFloor ?? 0.3) + (slot.level - 1) * (layout.levelPitch || 1.15) + (slot.cell ? Math.floor((slot.cell - 1) / 3) * (layout.levelPitch || 1.15) / 2 : 0) + 0.04 + item.dimensions[1] / 2;
   else p[1] += item.dimensions[1] / 2;
+  if(item.mechanicalPlacement?.slotId===slotId)p[1]=item.mechanicalPlacement.supportY+item.dimensions[1]/2;
   return p;
 }
 /** Collision-conscious orthogonal transport via the two rack banks and actual doors.
@@ -341,7 +344,9 @@ export function itemPosition(s, itemOrId, layout = {}) {
   const i = typeof itemOrId === 'string' ? itemById(s, itemOrId) : itemOrId;
   if (i.location.type === 'slot') return itemSlotPosition(i, i.location.slotId, layout);
   if (i.location.type === 'recipient') return null;
-  const task = s.tasks[i.activeTaskId], path = taskWaypoints(s, task, layout), lengths = path.slice(1).map((p, n) => Math.hypot(...p.map((v, axis) => v - path[n][axis])));
+  const task = s.tasks[i.activeTaskId];
+  if(task.motionDriver==='belt-sort-arm-r01')return [...s.carriers[task.carrierId].position];
+  const path = taskWaypoints(s, task, layout), lengths = path.slice(1).map((p, n) => Math.hypot(...p.map((v, axis) => v - path[n][axis])));
   let distance = lengths.reduce((a, b) => a + b, 0) * taskProgress(s, task);
   for (let n = 0; n < lengths.length; n++) { if (distance <= lengths[n] && lengths[n] > 0) { const t = distance / lengths[n]; return path[n].map((v, axis) => v + (path[n + 1][axis] - v) * t); } distance -= lengths[n]; }
   return [...path.at(-1)];
@@ -388,6 +393,7 @@ export function advanceTask(s, c) {
       source.occupiedBy = null; carrier.itemId = i.itemId; i.location = { type: 'carrier', carrierId: carrier.carrierId }; i.state = task.kind === 'pick' ? 'pick_transit' : 'in_transit';
       task.status = 'moving'; task.startedAt = d.worldTime; task.dueAt = d.worldTime + task.durationSeconds * 1000;
     } else if (c.action === 'arrive') {
+      check(!task.motionDriver||task.contactDelivered===true,'NO_MECHANICAL_DELIVERY','The contact solver must confirm a supported release first.');
       check(task.status === 'moving' && d.worldTime >= task.dueAt, 'NOT_ARRIVED', 'Transport must be unblocked and reach its world-time destination first.');
       check(target.reservedBy === task.taskId && !target.occupiedBy && carrier.itemId === i.itemId && fitsSlot(i, target), 'CUSTODY_CONFLICT', 'Destination or carrier is inconsistent.');
       target.occupiedBy = i.itemId; target.reservedBy = null; carrier.itemId = null; carrier.activeTaskId = null; carrier.position = slotPosition(target.slotId);

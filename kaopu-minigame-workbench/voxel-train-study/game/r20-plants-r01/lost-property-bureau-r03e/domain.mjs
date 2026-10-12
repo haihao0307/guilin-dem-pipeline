@@ -1,3 +1,4 @@
+import { TRANSPORT_FIELD } from './transport-field.mjs';
 import { MATERIAL_FRAME } from './material-frame.mjs';
 import { WINDOWS, ENTRY_JOINERY } from './windows.mjs';
 import { INTERIORS } from './interiors.mjs';
@@ -237,6 +238,7 @@ fn rackField(p:vec3<f32>)->Field {
  if(row>9.5){let sx=abs(qx)-.2;d=min(d,box(vec3<f32>(sx,p.y-3.5,rz),vec3<f32>(.018,3.5,.9)));let halfLevel=p.y-(.3+clamp(round((p.y-.3)/.575),0.,11.)*.575);d=min(d,box(vec3<f32>(p.x-startX-12.,halfLevel,rz),vec3<f32>(12.,.018,.9)));}
  return field(max(d,bound),5u,vec3<f32>(qx,p.y,rz),row+bank*16.);
 }
+${TRANSPORT_FIELD}
 fn machineField(p:vec3<f32>)->Field {
  var f=field(box(p-vec3<f32>(58.,-.15,48.),vec3<f32>(6.3,.15,9.3)),3u,p,1.);
  var house=max(box(p-vec3<f32>(58.,3.2,48.),vec3<f32>(6.,3.2,9.)),-box(p-vec3<f32>(58.,3.4,48.),vec3<f32>(5.6,3.3,8.6)));
@@ -252,19 +254,18 @@ fn machineField(p:vec3<f32>)->Field {
  pipe=min(pipe,capsule(p,vec3<f32>(-24.,4.1,-26.),vec3<f32>(-24.,1.45,-26.),.18));
  pipe=min(pipe,capsule(p,vec3<f32>(47.,4.1,32.),vec3<f32>(.5,4.1,32.),.12));
  pipe=min(pipe,capsule(p,vec3<f32>(.5,4.1,32.),vec3<f32>(.5,1.45,32.),.12));
- pipe=min(pipe,capsule(p,vec3<f32>(47.,4.1,37.),vec3<f32>(24.,4.1,37.),.12));
- pipe=min(pipe,capsule(p,vec3<f32>(24.,4.1,37.),vec3<f32>(24.,.65,37.),.12));f=take(f,field(pipe,9u,p,1.));
+ pipe=min(pipe,capsule(p,vec3<f32>(47.,4.1,37.),vec3<f32>(.5,4.1,37.),.12));
+ pipe=min(pipe,capsule(p,vec3<f32>(.5,4.1,37.),vec3<f32>(.5,4.1,9.75),.12));
+ pipe=min(pipe,capsule(p,vec3<f32>(.5,4.1,9.75),vec3<f32>(13.7,4.1,9.75),.12));
+ pipe=min(pipe,capsule(p,vec3<f32>(13.7,4.1,9.75),vec3<f32>(13.7,.65,9.75),.12));f=take(f,field(pipe,9u,p,1.));
  var ret=capsule(p,vec3<f32>(-24.,.45,-26.),vec3<f32>(46.,.45,-26.),.1);
  ret=min(ret,capsule(p,vec3<f32>(46.,.45,-26.),vec3<f32>(46.,.45,50.),.1));ret=min(ret,capsule(p,vec3<f32>(46.,.45,50.),vec3<f32>(57.,.45,50.),.1));
- ret=min(ret,capsule(p,vec3<f32>(.5,.45,32.),vec3<f32>(46.,.45,32.),.09));ret=min(ret,capsule(p,vec3<f32>(24.,.45,37.),vec3<f32>(46.,.45,37.),.09));f=take(f,field(ret,5u,p,1.));
- // Central conveyor and adjacent x=4 transport lane are deliberately separate.
- f=take(f,field(box(p-vec3<f32>(.5,1.05,3.5),vec3<f32>(.65,.18,27.5)),5u,p,4.));
- let slatZ=repeatX(p.z-u.clock.x*.4,.55,60.);let slats=max(box(vec3<f32>(p.x-.5,p.y-1.24,slatZ),vec3<f32>(.61,.065,.20)),box(p-vec3<f32>(.5,1.25,3.5),vec3<f32>(.65,.2,27.5)));f=take(f,field(slats,4u,p,2.));
- f=take(f,field(cylinder((p-vec3<f32>(.5,1.15,32.)).xzy,.37,.65),5u,p,4.));
- let phase=u.clock.x*1.8;let wheelP=p-vec3<f32>(-24.,1.45,-26.);f=take(f,field(length(vec2<f32>(length(wheelP.xy)-.8,wheelP.z))-.095,5u,p,2.));
- let crank=vec3<f32>(-24.+.65*cos(phase),1.45+.65*sin(phase),-26.);f=take(f,field(capsule(p,crank,vec3<f32>(-21.5,1.45,-26.),.07),9u,p,2.));
+ ret=min(ret,capsule(p,vec3<f32>(.5,.45,32.),vec3<f32>(46.,.45,32.),.09));ret=min(ret,capsule(p,vec3<f32>(13.7,.45,9.75),vec3<f32>(.5,.45,9.75),.09));ret=min(ret,capsule(p,vec3<f32>(.5,.45,9.75),vec3<f32>(.5,.45,32.),.09));f=take(f,field(ret,5u,p,1.));
+ f=take(f,transportField(p));
+ let phase=u.transport.x/.155;let wheelP=p-vec3<f32>(-24.,1.45,-26.);f=take(f,field(length(vec2<f32>(length(wheelP.xy)-.8,wheelP.z))-.095,5u,p,2.));
+ let crank=vec3<f32>(-24.+.65*cos(phase),1.45+.65*sin(phase),-26.);let sliderX=crank.x+sqrt(2.5*2.5-pow(crank.y-1.45,2.));f=take(f,field(capsule(p,crank,vec3<f32>(sliderX,1.45,-26.),.07),9u,p,2.));f=take(f,field(box(p-vec3<f32>(sliderX,1.45,-26.),vec3<f32>(.12,.20,.15)),5u,p,2.));
  f=take(f,field(box(p-vec3<f32>(-21.2,1.45,-26.),vec3<f32>(.55,.25,.3)),5u,p,2.));
- let elbow=vec3<f32>(24.,3.4,37.);let hand=vec3<f32>(24.+2.*sin(phase*.25),2.2,34.6);f=take(f,field(capsule(p,vec3<f32>(24.,.3,37.),elbow,.18),5u,p,3.));f=take(f,field(capsule(p,elbow,hand,.14),9u,p,3.));f=take(f,field(box(p-hand,vec3<f32>(.43,.13,.32)),5u,p,3.));
+
  return f;
 }
 fn outsideField(p:vec3<f32>)->Field {
@@ -281,9 +282,9 @@ fn sceneField(p:vec3<f32>)->Field {
  var f=outsideField(p);f=take(f,architecture(p));f=take(f,interiorField(p));f=take(f,entryJoinery(p));
  if(box(p-vec3<f32>(5.5,3.5,2.75),vec3<f32>(31.5,4.,28.))<max(1.,f.d)){f=take(f,rackField(p));}
  f=take(f,machineField(p));
- for(var i=0u;i<u.counts.x;i++){let r=items[i];let q=p-r.position.xyz;let dd=box(q,r.size.xyz)-.025;if(dd<f.d){f=field(dd,4u,q,r.position.w);}}
+ for(var i=0u;i<u.counts.x;i++){let r=items[i];let q=p-r.position.xyz;if(r.size.w>.5){f=take(f,mechanicalBag(q,r.size.xyz,r.position.w));}else{let dd=box(q,r.size.xyz)-.025;if(dd<f.d){f=field(dd,4u,q,r.position.w);}}}
  let exposure=field(f.d,f.mat,p,f.seed);f.wet=exposure.wet;
  if((f.mat==1u||f.mat==19u)&&abs(f.d)<.045){let pp=receiverPlasterParams();let cp=plasterCoordinates(p);let coatMacro=kpPlasterMacro(cp,pp);let micro=kpPlasterMicro(cp,pp);let originalThickness=clamp(pp.thicknessM+pp.reliefM*coatMacro+pp.geometryMicroM*micro,pp.minThicknessM,pp.maxThicknessM);let state=kpFabricState(f.age,f.wet,f.wet,coatMacro,.42,.08,coatMacro,micro,originalThickness,.004,.025);let gate=1.-smoothstep(.015,.045,abs(f.d));f.d-=(state.thicknessM-.0165)*gate;}
- if(abs(f.d)<.025&&u.options.z>.5){let envelope=1.-smoothstep(.005,.025,abs(f.d));let grain=br_noise3(f.local*3.+vec3<f32>(f.seed));f.d+=(grain-.5)*.006*f.age*f.wet*envelope;}return f;
+ if(abs(f.d)<.025&&u.options.z>.5&&f.seed<9000.){let envelope=1.-smoothstep(.005,.025,abs(f.d));let grain=br_noise3(f.local*3.+vec3<f32>(f.seed));f.d+=(grain-.5)*.006*f.age*f.wet*envelope;}return f;
 }
 `;

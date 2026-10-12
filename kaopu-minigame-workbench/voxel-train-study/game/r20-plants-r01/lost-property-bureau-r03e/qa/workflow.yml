@@ -1,4 +1,4 @@
-name: Bureau R03e occluded sky response ROI QA
+name: Bureau R03e constrained conveyor chain QA
 on:
   push:
     branches: ['qa/bureau-r03e-interior-window-20261011']
@@ -7,7 +7,7 @@ permissions:
 jobs:
   bureau-webgpu:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -26,11 +26,13 @@ jobs:
           node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03e/qa/response-contract.test.mjs
           node --input-type=module -e "import('./kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03e/interiors.mjs').then(m=>console.log(JSON.stringify(m.selfTestInteriors())))"
           node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03e/qa/sky-contract.test.mjs
-      - name: GPU covariance, small sky-visibility gate and same-ray window comparison
-        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03e/qa/frame-roi.cjs
+      - name: Mechanical contact and conservation contracts
+        run: node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03e/qa/transport.test.mjs
+      - name: Same-world conveyor and gripper actual frames
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03e/qa/transport-webgpu.cjs
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: bureau-r03e-sky-roi-${{ github.sha }}
-          path: bureau-r03e-sky-roi-results/
+          name: bureau-r03e-transport-${{ github.sha }}
+          path: bureau-r03e-transport-results/
           retention-days: 7

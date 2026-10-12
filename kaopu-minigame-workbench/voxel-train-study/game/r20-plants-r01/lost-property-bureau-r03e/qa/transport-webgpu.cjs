@@ -1,0 +1,23 @@
+const {chromium}=require('playwright'),fs=require('fs'),path=require('path'),http=require('http');
+const OUT='bureau-r03e-transport-results',ENTRY='kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03e/';fs.mkdirSync(OUT,{recursive:true});
+const server=http.createServer((req,res)=>{let p=path.resolve('.'+decodeURIComponent(req.url.split('?')[0]));if(!p.startsWith(process.cwd()+path.sep))return res.writeHead(403).end();try{if(fs.statSync(p).isDirectory())p+='/index.html';res.setHeader('content-type',p.endsWith('.html')?'text/html':p.endsWith('.json')?'application/json':'text/javascript');res.end(fs.readFileSync(p));}catch{res.writeHead(404).end();}});
+(async()=>{await new Promise(r=>server.listen(8783,'127.0.0.1',r));const browser=await chromium.launch({headless:true,args:['--no-sandbox','--enable-unsafe-webgpu','--use-angle=swiftshader','--use-vulkan=swiftshader','--enable-features=Vulkan','--disable-vulkan-surface']}),page=await browser.newPage({viewport:{width:1270,height:800}});
+const receipt={commit:process.env.GITHUB_SHA,status:'running',errors:[],console:[],views:[],backend:'WebGPU on CI SwiftShader; actual frame time, not phone or hardware FPS',scope:'One registered bag; bounded acceleration drives and analytic support/grip constraints. No steam-pressure, rigid-body, thermal or multi-item traffic simulation.'};const save=()=>fs.writeFileSync(OUT+'/receipt.json',JSON.stringify(receipt,null,2));page.on('pageerror',e=>{receipt.errors.push(e.message);save();});page.on('console',m=>{if(m.type()==='error'){receipt.console.push(m.text());save();}});
+try{
+ await page.exposeFunction('__qaProgress',e=>{console.log('TRANSPORT_PROGRESS',JSON.stringify(e));fs.writeFileSync(OUT+'/progress.json',JSON.stringify(e));});
+ await page.goto('http://127.0.0.1:8783/'+ENTRY+'?qa=1&width=384&height=256&view=transport&machine=1&response=1&roi=176,112,32,32',{waitUntil:'domcontentloaded'});
+ await page.waitForFunction(()=>window.__bureau?.proof?.ready||window.__bureau?.proof?.failure,null,{timeout:1000000});let proof=await page.evaluate(()=>window.__bureau.proof);if(proof.failure)throw Error(proof.failure);receipt.gate=proof.frames.at(-1);save();
+ const capture=async(name,view,seconds)=>{await page.evaluate(t=>window.__bureau.machine.advance(t),seconds);await page.evaluate(()=>window.__bureau.roi([0,0,384,256]));const frame=await page.evaluate(v=>window.__bureau.view(v),view);const data=await page.locator('canvas').evaluate(c=>c.toDataURL('image/png'));fs.writeFileSync(OUT+'/'+name+'.png',Buffer.from(data.split(',')[1],'base64'));receipt.views.push({name,frame,audit:await page.evaluate(()=>window.__bureau.machine.audit())});save();};
+ await capture('01-belt-loaded','transport',0);
+ await capture('02-belt-moving','transport',10);
+ await capture('03-shuttle-carried','transport',14);
+ receipt.pauseBefore=await page.evaluate(()=>{window.__bureau.machine.pause(true);return window.__bureau.state();});await page.evaluate(()=>window.__bureau.machine.advance(10));receipt.pauseAfter=await page.evaluate(()=>window.__bureau.state());receipt.pausedStateExact=receipt.pauseBefore===receipt.pauseAfter;await page.evaluate(()=>window.__bureau.machine.pause(false));
+ await capture('04-gripped-lift','transport',16);
+ await capture('05-tool-grip','gripper',0);
+ await capture('06-tool-inserting','gripper',4);
+ await capture('07-tool-supported-release','gripper',5);
+ await capture('08-stored-whole','transport',7);
+ receipt.final=await page.evaluate(()=>window.__bureau.proof);receipt.state=await page.evaluate(()=>JSON.parse(window.__bureau.state()));receipt.contract={pausedStateExact:receipt.pausedStateExact,oneItemAtTarget:receipt.state.items['MACHINE-BAG-01'].location.slotId==='R26-B01-L2-B',singleOccupancy:Object.values(receipt.state.slots).filter(s=>s.occupiedBy==='MACHINE-BAG-01').length===1,conserved:receipt.state.ledger.initial+receipt.state.ledger.received===25,stored:receipt.state.items['MACHINE-BAG-01'].state==='stored'};
+ const failed=receipt.errors.length||receipt.console.length||receipt.final.errors.length||Object.values(receipt.contract).some(v=>!v)||receipt.final.frames.some(f=>f.stats.exhausted||f.stats.glassExhausted||f.stats.visibilityUnresolved||f.stats.hit+f.stats.miss!==f.dispatchedPixels);
+ receipt.status=failed?'failed':'rendered-for-mechanical-chain-review';save();if(failed)process.exitCode=1;
+}catch(e){receipt.status='failed';receipt.failure=e.stack;receipt.proof=await page.evaluate(()=>window.__bureau?.proof).catch(()=>null);save();process.exitCode=1;}finally{await browser.close();server.close();}})();
