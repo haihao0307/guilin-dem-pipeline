@@ -1,4 +1,4 @@
-# 香港背景海试接 R01
+# 香港背景海试接 R01B
 
 Scope: independent sea-layer trial. The Hong Kong terrain, railway and map are not assembled here.
 
@@ -6,11 +6,11 @@ The editable standalone index.html reuses Ocean Mother V001's original 24-compon
 
 Source: haihao0307/guilin-dem-pipeline commit 499e8eb8a74041c35c55622f391ee5de04aaca60, ocean-mother/v001/. The frozen standalone deep payload is extracted from canonical package commit 90a49e399079674230e658ca9cea242c8ec44b94 and has SHA-256 3498800d4bb287eadf448f01fb8fa8cf1b1f07eb3eab57f1428d824a62b55fd1. The full nearshore branch is not included in this page.
 
-Rights basis: the original V001 README identifies its new sea implementation as original project code, with the user's Weather Mother providing the weather side. No externally supplied meshes, audio, images or restricted shader-study payloads have been added. No broader open-source license or user visual acceptance is asserted.
+Rights basis: the original V001 README identifies its new sea implementation as original project code, with the user's Weather Mother providing the weather side. The background default keeps the original generated sky cache as a fixed snapshot, rebaking on weather/light/wind/height changes while sea animation and reflection continue. It does not claim live shared cloud/sea time. The QA-only ?liveWeather=1 option retains original live weather for like-for-like comparison. No externally supplied meshes, audio, images or restricted shader-study payloads have been added. No broader open-source license or user visual acceptance is asserted. The V001 technical references are retained: NVIDIA GPU Gems, Chapter 1, Effective Water Simulation from Physical Models (https://developer.nvidia.com/gpugems/gpugems/part-i-natural-effects/chapter-1-effective-water-simulation-physical-models), and Khronos EXT_disjoint_timer_query_webgl2 (https://registry.khronos.org/webgl/extensions/EXT_disjoint_timer_query_webgl2/).
 
 Default sea parameters: wind 4 m/s, swell scale 0.30 m, period 8.8 s, chop 0.40, roughness 0.18, foam 0.04, tint 0.45, time multiplier 1, seed 8071, eye height 9 m. Parameter controls, camera drag, zoom, pause, reset and configuration export remain editable.
 
-HKBackgroundSea exposes getState, setConfig, reset, sampleHeight, pause, play and setView as a thin adapter over the inherited V001 API. Units are metres, +X east, +Y up and -Z north. The sea-level vertical datum is UNBOUND. sampleHeight retains V001's undisplaced-coordinate height sampling and is not a validated inverse Gerstner collision query.
+HKBackgroundSea exposes getState, setConfig, reset, sampleHeight, pause, play and setView as a thin adapter over the inherited V001 API. reset only reapplies the sea colour/wave preset; it preserves the independent clock, seed, sea speed and exposure. This is an independent page, without a reusable mount/dispose lifecycle or automatic graphics-context restoration. Units are metres, +X east, +Y up and -Z north. The sea-level vertical datum is UNBOUND. sampleHeight retains V001's undisplaced-coordinate height sampling and is not a validated inverse Gerstner collision query.
 
 Future map integration must supply the same local metric origin, clock, camera and projection, and real coastline/depth occlusion. This file does not pretend that those connections already exist. Rendering uses inherited perspective; no orthographic flattening or proxy image is substituted.
 
