@@ -1,4 +1,5 @@
-import {crownWeight,guideSpacingAt,partSign,canInterpolate,trimLength,rootVisibility,enforceTrim,growthDirection,coherentPhase,TOPOLOGY_SPEC} from './GroomTopology.js';
+import {growthDirection} from './AppearanceFlowR54.js';
+import {crownWeight,guideSpacingAt,partSign,canInterpolate,trimLength,rootVisibility,enforceTrim,coherentPhase,TOPOLOGY_SPEC} from './GroomTopology.js';
 import {rootGap,rootEnvelopeDerivative,rootDetailGain,rootClumpGain} from './RootProfile.js';
 import {HeadSegmentGuard} from './HeadSegmentGuard.js';
 import {NeutralEarGuard} from './NeutralEarGuard.js';

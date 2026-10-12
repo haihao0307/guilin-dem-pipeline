@@ -60,3 +60,7 @@ Source extractions:
 - Other shipped R14 modules retain the verified source bytes.
 
 Actual GNM template compilation and rendered visual QA are intentionally left to the approved integration/browser task. This package has not published anything.
+
+## First real integration correction
+
+The first actual R52 render showed forward strands over the eyes. R14 forward crown and fringe direction is retained in its original source audit, but this adapter now imports AppearanceFlowR54 for front/top side-back mid-shaft styling. Original root emergence (first 3 mm) and low/rear roots remain unchanged; the transition reaches its authored direction over 3–18 mm. This is a local integration change, not an upstream R14.2 preset or proven mature long hairstyle. Keep the real collision guards and visual review.

@@ -63,7 +63,7 @@ export async function attachR14Coverage(api,options={}){
   update(){if(!checkState())throw Error(invalidReason||'R14 coverage is disposed');return true;},
   report(){checkState();return {
    kind:'r14.2-static-current-mesh-coverage',sourceCommit:SOURCE_COMMIT,archive,count,segments,
-   role:'scalp coverage and short/mid-length flow over owner-retained R30 long strands',
+   role:'scalp coverage and short/mid-length flow over owner-retained R30 long strands',styling:'R54 front/top mid-shaft side-back adaptation; original root emergence and low rear field preserved',
    recipe:{...recipe},staticBinding:true,requiresRecompileOn:'any common vertex or triangle change, including face/pose/expression',
    valid:!disposed&&!invalidated,visible:mesh.visible,disposed,invalidReason,physics:false,
    nativeVertexCount:context.positions.length/3,nativeTriangleCount:context.displayFaces.length/3,
