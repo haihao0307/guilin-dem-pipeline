@@ -4,7 +4,7 @@ This is a candidate implementation audit, not a visual quality certificate.
 
 ## Actual construction path
 
-`stationDomain → join(component, world position, nominal distance, material family, source frame, seed) → evaluateStationMatter → union`.
+`stationDomain → procedural candidate records (distance, family, local frame, extent, seed) → resolveCandidates → evaluateStationMatter → union`. A bounded list carries analytic construction records, not mesh vertices or cached material samples. Material evaluation is called at one dynamic loop site, rather than being expanded independently into each part call.
 
 Matter is evaluated before the union selects the nearest component. This fixes a real earlier weakness: selecting a nominal box first, then displacing only that selected box could miss a neighbouring coating. Each `HitField` retains the nominal `baseD`, material family, metric frame and seed. Shading reuses that same record and the same `evaluateStationMatter` function, with only the declared pixel footprint changing. Normals query the same final distance field. No second coplanar shell is drawn.
 
@@ -26,3 +26,9 @@ Source locks and static tests check the actual imports, absence of scene meshes/
 The 2188851f predecessor produced all five views without exhausted rays, but failed art review because a column pierced a bench, the platform looked like strongly veined decorative stone, and close timber lacked readable grain. It remains rejected and is not a delivery baseline. The new common-matter version requires new GPU images and renewed review.
 
 No reference photograph, external mesh, raster appearance map, per-brick vertex array or copied room scene is shipped. R02 remains unchanged. No public stable preview has been replaced by this candidate.
+
+## Local coordinates and compiler audit
+
+The 8c92 run failed during GPU pipeline creation without a WGSL diagnostic, with “A valid external Instance reference no longer exists.” This proves a backend failure, not a measured out-of-memory cause. The next candidate removes the large per-part call-site expansion without changing material-before-union ordering.
+
+All 17 coated-member recipes now carry their real centered local frame and half extents. For example a cornice is (30.7, 0.13, 0.64) m, a column shaft (0.43, 4.4, 0.43) m, and each window frame uses its own width and height. Mother normalization receives those extents, while station wetness/repair still use the separate world point. There is no world coordinate interpreted as a fixed four-metre wall. Current weather resolver remains an authored station-wide drainage approximation, not measured drain topology.
