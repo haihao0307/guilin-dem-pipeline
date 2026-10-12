@@ -113,10 +113,21 @@
 </script>
 <script type="module">
 const send=(type,message)=>parent.postMessage({type,message},location.origin);
+// Some WebKit network failures leave dynamic import pending. Bound only module
+// downloads; model computation and groom generation have their own progress.
+async function importWithDeadline(url,label){
+ let timer;
+ try{
+  return await Promise.race([
+   import(url),
+   new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+'在30秒内未能载入，请重新载入。')),30000);})
+  ]);
+ }finally{clearTimeout(timer);}
+}
 (async()=>{
- await import(new URL('full/ui/browser-app.mjs?v=entry-r06-20261010',document.baseURI).href);
+ await importWithDeadline(new URL('full/ui/browser-app.mjs?v=entry-r06-20261010',document.baseURI).href,'原生引擎模块');
  send('r54-progress','1/5 正在加载发眼组件');
- const module=await import(new URL('install-preview.mjs?v=r54-startup-2',location.href).href);
+ const module=await importWithDeadline(new URL('install-preview.mjs?v=r54-startup-2',location.href).href,'发眼组件');
  await module.mountPreview();
 })().catch(error=>send('r54-error','启动失败：'+error.message));
 </script>
