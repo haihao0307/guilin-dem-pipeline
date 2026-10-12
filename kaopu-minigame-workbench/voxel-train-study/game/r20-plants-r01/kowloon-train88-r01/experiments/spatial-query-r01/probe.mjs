@@ -1,3 +1,4 @@
+import{sentinel,inspectReadback,readMRT,createWriteControl}from'./readback-control.mjs';
 const selected=new URLSearchParams(location.search).get('variant');
 if(!['reference','capacity','hierarchy'].includes(selected))throw Error('Explicit isolated variant required');
 const report={variant:selected,status:'running',stage:'fetch',timings:[],comparisons:[],errors:[],scope:'original hall physical GeometryHit and source material identity, small samples only'};
@@ -22,21 +23,20 @@ try{
  }
  const input=gl.createTexture();gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,input);const values=new Float32Array(width*4);manifest.points.forEach((p,i)=>values.set([...p,1],i*4));gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA32F,width,1,0,gl.RGBA,gl.FLOAT,values);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
  const fb=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,fb);const attachments=[];for(let i=0;i<4;i++){const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.texStorage2D(gl.TEXTURE_2D,1,gl.RGBA32F,width,1);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0+i,gl.TEXTURE_2D,t,0);attachments.push(gl.COLOR_ATTACHMENT0+i);}gl.drawBuffers(attachments);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error('MRT incomplete');gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,input);gl.viewport(0,0,width,1);gl.disable(gl.DEPTH_TEST);gl.disable(gl.BLEND);gl.bindVertexArray(gl.createVertexArray());
+ const control=createWriteControl(gl,vertex,width);report.writeControlBefore=control();if(!report.writeControlBefore.passed)throw Error('Simple MRT control failed before field query');
  const same=(a,b)=>{const x=new Uint32Array(a.buffer),y=new Uint32Array(b.buffer);let mismatches=0,first=[];for(let i=0;i<width;i++)for(let c=0;c<13;c++)if(x[i*16+c]!==y[i*16+c]){mismatches++;if(first.length<10)first.push({point:i,label:manifest.labels[i],channel:c,left:a[i*16+c],right:b[i*16+c],leftBits:x[i*16+c],rightBits:y[i*16+c]});}return{mismatches,first};};
  for(const age of[.05])for(const mode of[0]){const previous={};for(let repeat=0;repeat<manifest.repeats;repeat++){const pair={};for(const name of[selected]){
    await stage(`draw-${name}-${age}-${mode}-${repeat}`);const p=programs[name];report.uniformBits=Array.from(new Uint32Array(params(age,mode,width).buffer));gl.useProgram(p.program);gl.bindBuffer(gl.UNIFORM_BUFFER,p.buffer);gl.bufferSubData(gl.UNIFORM_BUFFER,0,params(age,mode,width));gl.bindBufferBase(gl.UNIFORM_BUFFER,0,p.buffer);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,input);
+   for(let a=0;a<4;a++)gl.clearBufferfv(gl.COLOR,a,sentinel(a));
    const t=performance.now();gl.drawArrays(gl.TRIANGLES,0,3);gl.finish();const returned=performance.now();
-   const drawError=gl.getError(),drawContextLost=gl.isContextLost(),combined=new Float32Array(width*16),attachmentErrors=[];
-   for(let a=0;a<4;a++){const data=new Float32Array(width*4);gl.readBuffer(gl.COLOR_ATTACHMENT0+a);gl.readPixels(0,0,width,1,gl.RGBA,gl.FLOAT,data);attachmentErrors.push(gl.getError());for(let i=0;i<width;i++)combined.set(data.subarray(i*4,i*4+4),i*16+a*4);}
-   const readbackReturned=performance.now(),contextLost=gl.isContextLost(),nonFinite=[];let nonFiniteCount=0,nonZeroCount=0;
-   for(let i=0;i<combined.length;i++){if(!Number.isFinite(combined[i])){nonFiniteCount++;if(nonFinite.length<10)nonFinite.push({point:Math.floor(i/16),channel:i%16,bits:new Uint32Array(combined.buffer)[i]});}if(combined[i]!==0)nonZeroCount++;}
-   const validity={drawError,drawContextLost,attachmentErrors,contextLost,nonFiniteCount,nonFinite,allZero:nonZeroCount===0};
-   const failed=drawError!==gl.NO_ERROR||drawContextLost||attachmentErrors.some(x=>x!==gl.NO_ERROR)||contextLost||nonFiniteCount>0||nonZeroCount===0;
+   const drawError=gl.getError(),drawContextLost=gl.isContextLost(),{combined,errors:attachmentErrors}=readMRT(gl,width);
+   const readbackReturned=performance.now(),validity=inspectReadback(combined,width,drawError,drawContextLost,attachmentErrors,gl.isContextLost());
+   const failed=drawError!==gl.NO_ERROR||drawContextLost||attachmentErrors.some(x=>x!==gl.NO_ERROR)||validity.contextLost||validity.nonFiniteCount>0||validity.allZero||validity.unchangedSentinelCount>0;
    // Preserve exact IEEE bits, including invalid values, BEFORE a failure is raised.
    await window.__saveHierarchyField({name:name+'-'+age+'-'+mode+'-'+repeat,bits:Array.from(new Uint32Array(combined.buffer))});
    report.readbacks??=[];report.readbacks.push({name,age,mode,repeat,...validity});
    report.lastDraw={name,age,mode,repeat,drawThroughReadbackMs:readbackReturned-t,submitAndFinishReturnMs:returned-t,readbackMs:readbackReturned-returned};
-   if(failed){await send();throw Error('Invalid readback: '+JSON.stringify(validity));}
+   if(failed){report.writeControlAfterFailure=control();await send();throw Error('Invalid readback: '+JSON.stringify(validity));}
    let nodes=0,blocks=0,skipped=0,overflows=0;for(let i=0;i<width;i++){overflows+=combined[i*16+12];nodes+=combined[i*16+13];blocks+=combined[i*16+14];skipped+=combined[i*16+15];}if(overflows)throw Error('Candidate overflow in original field');
    report.timings.push({name,age,mode,repeat,cold:p.draws++===0,...report.lastDraw,nodes,blocks,skipped});pair[name]=combined;
    if(previous[name]){const c=same(previous[name],combined);if(c.mismatches)throw Error('Same-state repeated field changed '+JSON.stringify(c));}else previous[name]=combined;
