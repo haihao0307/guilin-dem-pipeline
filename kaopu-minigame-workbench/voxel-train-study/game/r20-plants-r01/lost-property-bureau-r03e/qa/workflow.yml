@@ -1,4 +1,4 @@
-name: Bureau R03e complete interior window WebGPU QA
+name: Bureau R03e diagnostic surface components
 on:
   push:
     branches: ['qa/bureau-r03e-interior-window-20261011']
@@ -8,6 +8,8 @@ jobs:
   bureau-webgpu:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    env:
+      BUREAU_DIAGNOSTIC: 1
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
