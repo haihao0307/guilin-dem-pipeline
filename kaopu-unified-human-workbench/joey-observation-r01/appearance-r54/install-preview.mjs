@@ -1,4 +1,3 @@
-import {diagnoseR52Device,formatR52Diagnostic} from './R52DeviceDiagnostic.mjs?v=r54-device-diagnostic-3';
 import * as THREE from '/native/kaopu-unified-human-workbench/full/source/registration-vendor/three.module.js';
 import {sha256 as digest,verifyR52Archive,verifyR52Geometry,R52_REFERENCE_SHA} from './FrozenR52Lock.mjs';
 import {attachAppearanceR52} from './base/brow-face-r52/AppearanceR52.mjs';
@@ -18,7 +17,9 @@ export async function mountPreview(){
  if(!api.diagnostics().ready||api.diagnostics().busy)throw Error(loadStatus?.textContent?.trim()||'原生模型载入未完成');progress('3/5 恢复并校验固定脸型');await api.motion().setMode('shape');api.restore(archive);
  const v=api.motion().viewer,expected=config.rows.find(x=>x.id==='E04');if(expected.expectedPositionSHA256!==R52_REFERENCE_SHA)throw Error('视图配置中的 R52 基线不同');
  async function checkGeometry(){const positions=api.positions(),state=api.state(),faces=api.faces(),nativeArchive=api.archive();try{return await verifyR52Geometry(positions,state,archive.state);}catch(error){
-  try{progress('3/5 未知输出，正在生成本机诊断');const diagnostic=await diagnoseR52Device({positions,faces,state,archive,nativeArchive,onProgress:progress});window.r54DeviceTrace?.push({stage:'installer:received-report'});window.r54DeviceDiagnostic=diagnostic;const text=formatR52Diagnostic(diagnostic);window.r54DeviceTrace?.push({stage:'installer:formatted-report'});send('r54-diagnostic',{report:diagnostic,text});window.r54DeviceTrace?.push({stage:'installer:posted-report'});}catch(diagnosticError){send('r54-diagnostic',{report:{schema:'R54-device-diagnostic/3',failure:diagnosticError.message,automaticUpload:false},text:'本机诊断未完成：'+diagnosticError.message});}throw error;
+  // Same-origin parent copies the exact failed snapshot synchronously before any await.
+  // Do not depend on completion messages from a renderer iframe after failure.
+  try{parent.r54ReceiveFailure({positions,faces,state,archive,nativeArchive,error:error.message});}catch(diagnosticError){send('r54-error',{message:error.message+'；本机诊断未启动：'+diagnosticError.message});}throw error;
  }}
  const frozenGeometry=await checkGeometry();window.r54StartupDiagnostics={faceLock:frozenGeometry};
  const appearance=await attachAppearanceR52(api,{pigmentScale:.55,candidateBrows:true,taper:true});
