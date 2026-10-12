@@ -1,0 +1,168 @@
+{
+  "schema": "kaopu/regression-case@candidate-v1",
+  "id": "CANDIDATE-HUMAN-SHADOW-TERMINATOR-GEOMETRY-IDENTITY-001",
+  "status": "CANDIDATE",
+  "owner": "Learning Flywheel / Human Mother",
+  "boundedQuestion": "Can a local-geometry-aware shadow lookup distinguish shadow-terminator correction from contact-shadow erasure on ET20 R01.1?",
+  "subject": {
+    "productionPR": 227,
+    "sourceSha": "cdb27baae71bb51af1f176ac67ef9c2ecf0c44eb",
+    "buildSha": "ccf5a1ed9ddde8803e292f1e62d777b141ff52d8",
+    "evidenceSha": "80e8ace61c36efefb0ded90f1873eed339aa30b9",
+    "currentMethod": "world-space normal lookup offset capped at 1.5mm and scaled only by grazing angle"
+  },
+  "teacherCandidate": {
+    "name": "Blender Cycles geometry-aware shadow terminator offset",
+    "repository": "blender/blender",
+    "fixedCommit": "05b4ed5d395292b1da0acf431515d3f0ca3e45f1",
+    "sourcePath": "intern/cycles/kernel/light/sample.h",
+    "sourceFileLicense": "Apache-2.0",
+    "repositoryLicenseBoundary": "Blender overall is GPL; do not copy from other files without per-file license review",
+    "decision": "TEACHER_CANDIDATE",
+    "learnOnly": [
+      "derive lookup displacement from triangle vertices, vertex normals and barycentric location",
+      "activate only near the shading/geometric-normal terminator",
+      "do not skip a true self hit when geometric normal and light direction disagree"
+    ]
+  },
+  "candidateReceipt": {
+    "required": [
+      "subjectSha",
+      "buildSha",
+      "shadowMethodId",
+      "shadowMapDigest",
+      "trianglePositionDigest",
+      "triangleIndexDigest",
+      "vertexNormalDigest",
+      "geometricNormalDigest",
+      "barycentricConvention",
+      "lightSampleSetDigest",
+      "offsetCutoff",
+      "maximumOffsetLocalEdgeRatio",
+      "affectedSampleFraction",
+      "eyeLowKeyTerminatorBandScoreBefore",
+      "eyeLowKeyTerminatorBandScoreAfter",
+      "contactOccluderRecallBefore",
+      "contactOccluderRecallAfter",
+      "knownTerminatorPositiveControlDetected",
+      "knownContactPositiveControlPreserved",
+      "independentVerifier"
+    ],
+    "forbiddenShortcuts": [
+      "blackening skin or background",
+      "disabling shadows",
+      "moving production mesh",
+      "blur of final beauty image",
+      "copying Blender code without per-file license validation",
+      "using whole-frame hash change as proof of visual improvement"
+    ]
+  },
+  "falsifiableHypothesis": "On the exact ET20 R01.1 subject, a local-geometry-aware lookup offset reduces the eye/low-key terminator band score more than the current fixed 1.5mm bias while preserving contact-occluder recall. If either condition fails, reject this Candidate and investigate shadow-map resolution, PCF/depth precision, tessellation or true facial geometry.",
+  "fixtures": [
+    {
+      "id": "ET20_CURRENT_EXACT_SUBJECT",
+      "input": {
+        "hasExactSubject": true,
+        "usesFixedWorldOffsetOnly": true,
+        "hasTrianglePositions": false,
+        "hasVertexNormals": true,
+        "hasGeometricNormals": false,
+        "hasBarycentrics": false,
+        "hasKnownTerminatorControl": false,
+        "hasKnownContactControl": false
+      },
+      "expected": "HOLD_SHADOW_TERMINATOR_METHOD_UNBOUND"
+    },
+    {
+      "id": "FIXED_BIAS_ERASES_CONTACT",
+      "input": {
+        "hasExactSubject": true,
+        "usesFixedWorldOffsetOnly": true,
+        "terminatorBandImproved": true,
+        "contactOccluderRecallBefore": 1.0,
+        "contactOccluderRecallAfter": 0.72,
+        "hasKnownContactControl": true
+      },
+      "expected": "REJECT_CONTACT_SHADOW_ERASURE"
+    },
+    {
+      "id": "LOCAL_GEOMETRY_RECEIPT_INCOMPLETE",
+      "input": {
+        "hasExactSubject": true,
+        "usesGeometryAwareOffset": true,
+        "hasTrianglePositions": true,
+        "hasVertexNormals": true,
+        "hasGeometricNormals": false,
+        "hasBarycentrics": true
+      },
+      "expected": "HOLD_LOCAL_GEOMETRY_RECEIPT_INCOMPLETE"
+    },
+    {
+      "id": "GEOMETRY_OFFSET_APPLIED_EVERYWHERE",
+      "input": {
+        "hasExactSubject": true,
+        "usesGeometryAwareOffset": true,
+        "hasTrianglePositions": true,
+        "hasVertexNormals": true,
+        "hasGeometricNormals": true,
+        "hasBarycentrics": true,
+        "terminatorLimited": false,
+        "affectedSampleFraction": 1.0
+      },
+      "expected": "REJECT_UNBOUNDED_GEOMETRY_OFFSET"
+    },
+    {
+      "id": "WHOLE_FRAME_HASH_ONLY",
+      "input": {
+        "hasExactSubject": true,
+        "usesGeometryAwareOffset": true,
+        "hasTrianglePositions": true,
+        "hasVertexNormals": true,
+        "hasGeometricNormals": true,
+        "hasBarycentrics": true,
+        "terminatorLimited": true,
+        "hasWholeFrameHashDelta": true,
+        "hasTerminatorBandMetric": false,
+        "hasKnownContactControl": false
+      },
+      "expected": "HOLD_CAUSAL_VISUAL_EVIDENCE_MISSING"
+    },
+    {
+      "id": "LICENSE_SCOPE_UNBOUND",
+      "input": {
+        "usesGeometryAwareOffset": true,
+        "implementationProvenance": "copied_from_blender_tree",
+        "sourceFileLicenseVerified": false
+      },
+      "expected": "HOLD_LICENSE_FILE_SCOPE_UNBOUND"
+    },
+    {
+      "id": "SCOPED_GEOMETRY_AWARE_PASS",
+      "input": {
+        "hasExactSubject": true,
+        "usesGeometryAwareOffset": true,
+        "hasTrianglePositions": true,
+        "hasVertexNormals": true,
+        "hasGeometricNormals": true,
+        "hasBarycentrics": true,
+        "terminatorLimited": true,
+        "maximumOffsetLocalEdgeRatio": 0.04,
+        "affectedSampleFraction": 0.17,
+        "hasTerminatorBandMetric": true,
+        "terminatorBandScoreBefore": 0.31,
+        "terminatorBandScoreAfter": 0.16,
+        "hasKnownTerminatorControl": true,
+        "knownTerminatorPositiveControlDetected": true,
+        "hasKnownContactControl": true,
+        "contactOccluderRecallBefore": 1.0,
+        "contactOccluderRecallAfter": 1.0,
+        "knownContactPositiveControlPreserved": true,
+        "implementationProvenance": "independent_from_paper_and_algorithm_description",
+        "sourceFileLicenseVerified": true,
+        "independentVerifier": true
+      },
+      "expected": "SCOPED_GEOMETRY_AWARE_SHADOW_TERMINATOR_PASS"
+    }
+  ],
+  "productionThresholds": "UNKNOWN; fixture numbers are classification-only and must not be copied into ET20 production"
+}
