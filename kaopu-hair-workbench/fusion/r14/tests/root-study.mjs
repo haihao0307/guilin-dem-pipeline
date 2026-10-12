@@ -1,5 +1,6 @@
 import{chromium}from'playwright';import fs from'node:fs';import path from'node:path';import{fileURLToPath}from'node:url';import assert from'node:assert/strict';
-const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),out=root+'/evidence/root-study';fs.mkdirSync(out,{recursive:true});
+const styles=process.argv[4]?[process.argv[4]]:['textured-fringe','side-flow','curtain-layer'];
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),out=root+'/evidence/root-study'+(process.argv[4]?'/'+process.argv[4]:'');fs.mkdirSync(out,{recursive:true});
 const report={success:false,referenceFrozenBuild:'c0816ec8388195bb79b12fc82e11ce2d3fa07d56',referenceInstrumentationOnly:true,checks:[],reference:[],candidate:[],errors:[],environment:{desktop:[1280,1000],softwareGPU:'SwiftShader',realMobileDevice:false},limitations:'Static sampled geometry; fixed top ROI visibility is not biological density or cinematic acceptance.'};
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
 function check(name,pass,detail){report.checks.push({name,pass:!!pass,detail});console.log(pass?'PASS':'FAIL',name,detail??'');assert(pass,name);}
@@ -9,14 +10,14 @@ try{
  for(const [kind,url]of[['reference',process.argv[3]],['candidate',process.argv[2]]]){
   const context=await browser.newContext({viewport:{width:1280,height:1000},deviceScaleFactor:1}),p=await context.newPage();p.on('pageerror',e=>report.errors.push(String(e)));p.on('console',m=>{if(m.type()==='error')report.errors.push(m.text());});
   await p.goto(url,{waitUntil:'domcontentloaded',timeout:120000});await ready(p);
-  for(const style of['textured-fringe','side-flow','curtain-layer']){
+  for(const style of styles){
    if(style!=='textured-fringe')await p.evaluate(s=>lengthGroom.preset(s),style);await ready(p);
    await p.evaluate('lengthGroom.camera("top")');await image(p,kind+'-'+style+'-top');
    const coverage=await p.evaluate('lengthGroom.coverageAudit()'),roots=await p.evaluate('lengthGroom.rootAudit(600)'),collision=await p.evaluate('lengthGroom.audit(300)'),diagnostics=await p.evaluate('lengthGroom.diagnostics()');
    report[kind].push({style,coverage,roots,collision,diagnostics});console.log(kind,style,JSON.stringify({coverage,roots,collision}));
    for(const view of['left','back']){await p.evaluate(v=>lengthGroom.camera(v),view);await image(p,kind+'-'+style+'-'+view);}
   }
-  if(kind==='candidate'){
+  if(kind==='candidate'&&styles.includes('textured-fringe')){
    await p.evaluate('lengthGroom.preset("textured-fringe")');await ready(p);const saved=await p.evaluate('lengthGroom.snapshot()'),initial=await p.evaluate('lengthGroom.diagnostics()');
    await p.evaluate('lengthGroom.camera("left");lengthGroom.setInspection("root-shafts")');await image(p,'candidate-actual-root-shafts-left');const shaft=await p.evaluate('lengthGroom.diagnostics()');
    check('root shaft view draws the actual indexed hair',shaft.inspection==='root-shafts'&&shaft.geometryBytes<initial.geometryBytes&&shaft.curveHash===initial.curveHash,{beforeBytes:initial.geometryBytes,rootShaftBytes:shaft.geometryBytes});
@@ -30,7 +31,7 @@ try{
   }
   await context.close();fs.writeFileSync(out+'/report.json',JSON.stringify(report,null,2));
  }
- for(let i=0;i<3;i++){
+ for(let i=0;i<report.reference.length;i++){
   const a=report.reference[i],b=report.candidate[i],ratio=b.coverage.visibleFraction/Math.max(.000001,a.coverage.visibleFraction);b.crownVisibleRatioToReference=ratio;
   check(b.style+' identical follicles, native head, diameter and buffer budget',a.diagnostics.rootHash===b.diagnostics.rootHash&&a.diagnostics.modelPositionHash===b.diagnostics.modelPositionHash&&a.diagnostics.geometryBytes===b.diagnostics.geometryBytes&&a.diagnostics.recipe.width===b.diagnostics.recipe.width);
   check(b.style+' crown exposure reduced by at least 20% in fixed ID pass',b.coverage.bareScalpSamples>1000&&ratio<.8,{before:a.coverage.visibleFraction,after:b.coverage.visibleFraction,ratio});
