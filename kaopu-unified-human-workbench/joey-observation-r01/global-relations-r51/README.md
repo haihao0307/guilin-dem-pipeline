@@ -1,0 +1,13 @@
+# R51 global relationship comparison
+
+This is a bounded native experiment, not a new accepted portrait. The 19 original Anny semantic controls were actually measured on the shared R45 native actor at commit b1ab6abec562b30ad4d6571b83734e0dee5081eb, run38199820056. 38 actual ±.25 endpoint meshes restored exactly. These probes establish finite response and topology, not appearance/contact acceptance.
+
+Three independently authored hypotheses now compare global vertical distribution, cheek/jaw balance, and mouth/face proportion. All originate directly from R45; no candidate inherits another. Every combination runs through original CommonPerson.compute. GNM identity, phenotype, pose, gaze, materials and style remain the same; corresponding skin-attached appearance follows the native surface. The same per-view camera, light and expression apply across candidates. No source photographs, target coordinates or biometric embeddings are in this runtime. R45 remains a Git rollback, not an accepted likeness or a production comparison gallery.
+
+Positive/negative semantic bases differ. Several finite probes cross zero. No central derivative or linear summed mesh is used to manufacture the candidates; the selected zero values and combinations are evaluated directly in the original engine.
+
+Engineering protection is distinct from old unaccepted facial coordinates: topology, finite values, degeneration/normal checks, whole native eye topology and visible skin/eye contacts are reported; exact original archive/geometry/pixels restore is required. Native head-height/chin-height controls also coordinate the neck. Their source body displacement is explicitly measured and remains an acceptance question, not hidden by widening an old tolerance. Triangle contact counts are not counts of visible defects. Lip/dental and skin-self intersections are not certified by the eye-contact helper.
+
+Observations use the same offline official MP observer on actual source photos and actual rendered images, with manual visibility review. MP478 and GNM68 are not one-to-one geometry: on the same R45 rendered image nominal nose/lip correspondences differ by 4–9 canvas pixels. Such offsets are not assumed permanent; no raw photo MP point is blindly matched to a nominal GNM point. Photographic ratio intervals are descriptive, not millimetres, depth or statistical confidence. Subsequent rendered evidence uses fixed reference scale and eye-line coordinates; no candidate-dependent denominator optimization.
+
+No production deployment, no new eye system, and no learned-network/Pixel3DMM execution claim. Any candidate still needs multi-angle image judgment and full structural interpretation before selection.

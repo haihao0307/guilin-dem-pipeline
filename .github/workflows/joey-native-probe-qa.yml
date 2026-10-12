@@ -58,10 +58,10 @@ jobs:
         run: node --test kaopu-unified-human-workbench/joey-observation-r01/local-head-control-r50/surface-guards.test.cjs
       - name: Test first-order surface differential
         run: node --test kaopu-unified-human-workbench/joey-observation-r01/local-head-control-r50/differential-guards.test.cjs
-      - name: Probe original native global semantic controls
+      - name: Render three original global face hypotheses
         run: |
-          node --test kaopu-unified-human-workbench/joey-observation-r01/global-relations-r51/axes.test.cjs
-          node kaopu-unified-human-workbench/joey-observation-r01/global-relations-r51/probe-native.cjs
+          node --test kaopu-unified-human-workbench/joey-observation-r01/global-relations-r51/axes.test.cjs kaopu-unified-human-workbench/joey-observation-r01/global-relations-r51/macros.test.cjs
+          node kaopu-unified-human-workbench/joey-observation-r01/global-relations-r51/render-macros.cjs
       - name: Keep bounded research evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -118,6 +118,7 @@ jobs:
             joey-local-head-control-r50-native-diagnostic/
             joey-local-head-control-r50-diagnostic-render/
             joey-global-relations-r51-response/
+            joey-global-relations-r51-render/
           retention-days: 7
           compression-level: 0
           if-no-files-found: warn
