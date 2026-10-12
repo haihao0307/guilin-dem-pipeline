@@ -55,10 +55,10 @@ export function createHostConstruction({score, platform, coach, frontX = 5,
     frontLocalZM: platformFront, backLocalZM: platformBack,
     topLocalYM: platform.top - worldVerticalOffsetM,
     nearWorldZM: platform.minZ, farWorldZM: boardingFarWorldZM,
-    copingHalfWidthM: .18, copingNearCenterLocalXM: near + .18, copingFarCenterLocalXM: far - .18,
+    copingHalfWidthM: .14, copingNearCenterLocalXM: near + .14, copingFarCenterLocalXM: far - .14,
     copingTopLocalYM: platform.top-worldVerticalOffsetM,
-    copingHalfHeightM: .07, copingCenterLocalYM: platform.top-worldVerticalOffsetM-.07};
-  const footingHalfWidthM = .42, columnRadiusMaxM = .209;
+    copingHalfHeightM: .045, copingCenterLocalYM: platform.top-worldVerticalOffsetM-.045};
+  const footingHalfWidthM = .42, columnRadiusMaxM = .34;
   const vehicleHalfWidthM = Math.max(coach.width / 2, score.tracks.assumedVehicleHalfWidth || 0);
   const railClearanceM = Math.min(...score.tracks.centers.map(x => Math.abs(x - outerSupportLocalXM)))
     - vehicleHalfWidthM - footingHalfWidthM;
@@ -94,6 +94,9 @@ export function createHostConstruction({score, platform, coach, frontX = 5,
   const stationaryBenchLocalZ = originalBenchLocalZ.filter(z => !overlaps(z - benchHalfLengthM - clearanceM,
     z + benchHalfLengthM + clearanceM, clearLocal.minZ, clearLocal.maxZ));
   const relocatedBenches=originalBenchLocalZ.filter(z=>!stationaryBenchLocalZ.includes(z)).map((from,i)=>({from,to:-88.75-i*22.5}));
+  // The complete restored stair replaces empty R04 space. Preserve this bench's
+  // identity/wood stock while moving it to the audited vacant inter-column bay.
+  if(score.bridge?.boardingBenchRelocation){const move=score.bridge.boardingBenchRelocation,r=relocatedBenches.find(b=>b.from===move.sourceLocalZ);requireThat(r&&r.to===move.previousLocalZ,'Changed bench history requires footbridge clearance audit');r.to=move.to;}
   const benchPlacements=[...stationaryBenchLocalZ.map(z=>({from:z,to:z})),...relocatedBenches].sort((a,b)=>b.to-a.to);
   const retainedBenchLocalZ=benchPlacements.map(p=>p.to);
   const benchRowX=8.8; // Preserve all six benches beside, not through, the rear post row.

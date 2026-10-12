@@ -11,7 +11,7 @@ export function createStationBinding({score,track,platform,coach,frontX=5,hallBe
  const host=createHostConstruction({...hostOptions,score,platform,coach,frontX,hallBehindStopM,boardingTrackX,worldVerticalOffsetM:shiftY});
  const platformCenter=host.boardingIsland.centerLocalXM,halfWidth=host.boardingIsland.halfWidthM;
  if(!(halfWidth>0)||halfWidth>=5)throw Error('Invalid functional platform envelope');
- const construction=Object.freeze({stationDeckTopM:deckLocal,worldVerticalOffsetM:shiftY,railTopLocalM:railLocal,railCenterOffsetM:track.railCenterZ,railHeadWidthM:track.headWidth,platformCenterLocalM:platformCenter,platformHalfWidthM:halfWidth,otherPlatformHalfWidthM:score.platforms.halfWidth,copingHalfWidthM:.18,copingCenterOffsetM:halfWidth-.18,boardingGapM:platform.minZ-coach.width/2,uniformScale:1,host});
+ const construction=Object.freeze({stationDeckTopM:deckLocal,worldVerticalOffsetM:shiftY,railTopLocalM:railLocal,railCenterOffsetM:track.railCenterZ,railHeadWidthM:track.headWidth,platformCenterLocalM:platformCenter,platformHalfWidthM:halfWidth,otherPlatformHalfWidthM:score.platforms.halfWidth,copingHalfWidthM:.14,copingCenterOffsetM:halfWidth-.14,boardingGapM:platform.minZ-coach.width/2,uniformScale:1,host});
  function frame(view,route){
   finite(view.distance,'distance');finite(view.elapsed,'elapsed');finite(view.tick,'tick');const plan=route.find(s=>s.index===HOST_BASELINE.stationIndex);
   if(!plan)throw Error('Kowloon station is absent from this route');

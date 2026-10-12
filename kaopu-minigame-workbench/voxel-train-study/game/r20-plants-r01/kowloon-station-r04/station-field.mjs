@@ -1,14 +1,43 @@
-import {SITE_WGSL} from './station-score.mjs';
+import{platformEdgeWGSL}from'./native-platform-edge.mjs';
+import{stationWaterfrontWGSL}from'./native-station-waterfront.mjs';
+import{stationLetteringWGSL}from'./native-station-lettering.mjs';
+import{terminalHallWGSL,terminalHallMembers,terminalHallBounds}from'./native-terminal-hall.mjs';
+import{stationRailWGSL}from'./native-station-rail.mjs';
+import{stationLampWGSL}from'./native-station-lamps.mjs';
+import{footbridgeWGSL,footbridgeBounds}from'./native-footbridge.mjs';
+import{clockTowerWGSL}from'./native-clock-tower.mjs';
+import{stationBenchWGSL}from'./native-station-bench.mjs';
+import{archTrussWGSL}from'./native-arch-truss.mjs';
+import{shedRoofWGSL}from'./native-shed-roof.mjs';
+import{castColumnWGSL}from'./native-cast-column.mjs';
+import {SITE_WGSL,STATION_SCORE} from './station-score.mjs';
 // Authored continuous station domain. No component vertex/index buffers.
 export function createStationFieldWGSL({construction=null,hostWGSL=""}={}){
- const host=construction?.host;const f=n=>Number.isInteger(n)?n+".":String(n);
+ const host=construction?.host;const deck=host?.boardingIsland.topLocalYM??.85,eave=STATION_SCORE.shed.eave;const f=n=>Number.isInteger(n)?n+".":String(n);
+ const titleAnchor=terminalHallMembers({...STATION_SCORE.hall,deck}).anchors[0],terminalBound=terminalHallBounds({...STATION_SCORE.hall,deck}),terminalCenter=terminalBound.min.map((x,i)=>(x+terminalBound.max[i])/2),terminalHalf=terminalBound.min.map((x,i)=>(terminalBound.max[i]-x)/2);
+ const bridge={...STATION_SCORE.bridge,deck,stairCenters:host?STATION_SCORE.bridge.stairCenters:[-28.7,-8.7,11.3,28.7],platformCenters:host?[-30,-10,host.boardingIsland.centerLocalXM,30]:STATION_SCORE.platforms.centers,platformHalfWidths:host?[3.4,3.4,host.boardingIsland.halfWidthM,3.4]:[3.4,3.4,3.4,3.4]};const bridgeBound=footbridgeBounds(bridge),bridgeCenter=bridgeBound.min.map((x,i)=>(x+bridgeBound.max[i])/2),bridgeHalf=bridgeBound.min.map((x,i)=>(bridgeBound.max[i]-x)/2+.031),v=x=>`vec3<f32>(${x.map(f).join(",")})`;
  return String.raw`
 ${SITE_WGSL}
+${stationWaterfrontWGSL({site:STATION_SCORE.site,materialDistance:"stationWaterfrontPhysicalDistance"})}
+${terminalHallWGSL({...STATION_SCORE.hall,deck})}
+${castColumnWGSL({deck,eave})}
+${stationBenchWGSL({deck,length:3.4})}
+${clockTowerWGSL({width:STATION_SCORE.tower.footprint})}
+${stationRailWGSL()}
+${platformEdgeWGSL({deck,eave,back:STATION_SCORE.shed.front-STATION_SCORE.shed.length,front:STATION_SCORE.shed.front,bay:STATION_SCORE.shed.bay,materialDistance:"stationPlatformEdgePhysicalDistance",stationDistanceContract:true})}
+${stationLetteringWGSL({deck,hallEmbed:.045,id:7,seed:187})}
+${stationLampWGSL({deck,materialDistance:"stationLampPhysicalDistance"})}
+${footbridgeWGSL({...bridge,materialDistance:"stationBridgePhysicalDistance"})}
+${archTrussWGSL({span:STATION_SCORE.shed.span,eave,radius:STATION_SCORE.shed.radius,depth:STATION_SCORE.shed.trussDepth})}
+${shedRoofWGSL({span:STATION_SCORE.shed.span,eave,radius:STATION_SCORE.shed.radius,bay:STATION_SCORE.shed.bay})}
 ${host?hostWGSL:''}
 const STATION_CANDIDATE_CAPACITY:u32=${host?96:64}u;
-const RAIL_CENTER_OFFSET:f32=${f(construction?.railCenterOffsetM??.7175)};
-const RAIL_HALF_WIDTH:f32=${f((construction?.railHeadWidthM??.068)/2)};
+const HALL_BENCH_PUBLIC_X:array<f32,5>=array<f32,5>(${STATION_SCORE.hall.benchRows.publicX.map(f).join(",")});
+const HALL_BENCH_RAIL_X:array<f32,5>=array<f32,5>(${STATION_SCORE.hall.benchRows.railX.map(f).join(",")});
+const RAIL_CENTER_OFFSET:f32=${f(construction?.railCenterOffsetM??.752425)};
+const RAIL_HALF_WIDTH:f32=${f((construction?.railHeadWidthM??.06985)/2)};
 const RAIL_CROWN:f32=${f(construction?.railTopLocalM??.086)};
+const RAIL_FOOT:f32=RAIL_CROWN-.15875;const SLEEPER_CENTER:f32=RAIL_FOOT-.03-.08;
 
 struct HitField { d:f32, id:u32, q:vec3<f32>, seed:f32, baseD:f32, extent:vec3<f32>, sourceSeed:f32, }
 fn box(p:vec3<f32>,b:vec3<f32>)->f32{let q=abs(p)-b;return length(max(q,vec3<f32>(0.)))+min(max(q.x,max(q.y,q.z)),0.);}
@@ -39,7 +68,18 @@ fn recordCandidate(h:HitField){
 fn recordPart(p:vec3<f32>,d:f32,id:u32,q:vec3<f32>,seed:f32){recordCandidate(HitField(d,id,q,seed,d,vec3<f32>(1.),0.));}
 fn recordCoated(p:vec3<f32>,d:f32,q:vec3<f32>,extent:vec3<f32>,seed:f32){recordCandidate(HitField(d,13u,q,seed,d,extent,0.));}
 fn recordTimber(p:vec3<f32>,d:f32,q:vec3<f32>,extent:vec3<f32>,role:f32,sourceSeed:f32){recordCandidate(HitField(d,4u,q,role,d,extent,sourceSeed));}
-fn resolveCandidates(p:vec3<f32>)->HitField{if(stationCandidateOverflow){return HitField(0.,999u,p,0.,0.,vec3<f32>(1.),0.);}var h=HitField(10000.,0u,p,0.,10000.,vec3<f32>(1.),0.);let st=resolveStationState(p);for(var i=0u;i<stationCandidates.count;i++){var candidate=stationCandidates.items[i];let d=candidate.d;let id=candidate.id;let native=stationNativeId(id);if(d-select(0.,.03001,native)>stationCandidateUpper){continue;}if(native&&d-.03<h.d){if(abs(d)<.045){candidate.d=evaluateStationGeometry(candidate,p,st).d;}else{candidate.d=sign(d)*max(abs(d)-.03,0.);}}if(candidate.d<h.d){h=candidate;}}return h;}
+// Shared near/far execution of one material-bearing candidate. Native bench
+// children use it before their inner union, then retain raw construction data.
+fn stationCandidatePhysicalDistance(h:HitField,p:vec3<f32>,st:StationState)->f32{if(!stationNativeId(h.id)){return h.d;}if(abs(h.d)<.045){return evaluateStationGeometry(h,p,st).d;}return sign(h.d)*max(abs(h.d)-.03,0.);}
+fn stationLampPhysicalDistance(h:StationLampMemberHit,p:vec3<f32>)->f32{return stationCandidatePhysicalDistance(HitField(h.baseD,h.id,h.q,184.,h.baseD,h.extent,h.member),p,resolveStationState(p));}
+// A conservative word bound is traversable scheduling data only (id0).
+// Finite raised glyphs use the original paint role and source Bézier counters.
+fn stationLetterCandidate(h:StationLetteringHit,id:u32)->HitField{if(h.valid==0u){return HitField(h.lowerBound,0u,h.q,0.,h.lowerBound,vec3<f32>(1.),0.);}return HitField(h.d,id,h.q,h.seed,h.d,vec3<f32>(1.),0.);}
+fn completeLampLettering(p:vec3<f32>,origin:vec3<f32>,row:u32)->HitField{var h=HitField(1e5,0u,p,0.,1e5,vec3<f32>(1.),0.);for(var side=-1;side<=1;side+=2){for(var line=0u;line<2u;line++){let candidate=stationLetterCandidate(stationLetteringPlatform(p,origin,row,side,line),7u);if(candidate.d<h.d){h=candidate;}}}return h;}
+fn stationPlatformEdgePhysicalDistance(h:StationPlatformEdgeHit,p:vec3<f32>)->f32{return stationCandidatePhysicalDistance(HitField(h.baseD,h.id,h.q,h.seed,h.baseD,h.extent,h.sourceSeed),p,resolveStationState(p));}
+fn stationWaterfrontPhysicalDistance(h:StationWaterfrontHit,p:vec3<f32>)->f32{return stationCandidatePhysicalDistance(HitField(h.baseD,h.id,h.q,h.seed,h.baseD,h.extent,h.member),p,resolveStationState(p));}
+fn stationBridgePhysicalDistance(h:FootbridgeMemberHit,p:vec3<f32>)->f32{return stationCandidatePhysicalDistance(HitField(h.baseD,h.id,h.q,185.,h.baseD,h.extent,h.member),p,resolveStationState(p));}
+fn resolveCandidates(p:vec3<f32>)->HitField{if(stationCandidateOverflow){return HitField(0.,999u,p,0.,0.,vec3<f32>(1.),0.);}var h=HitField(10000.,0u,p,0.,10000.,vec3<f32>(1.),0.);let st=resolveStationState(p);for(var i=0u;i<stationCandidates.count;i++){var candidate=stationCandidates.items[i];let d=candidate.d;let id=candidate.id;let native=stationNativeId(id);if(d-select(0.,.03001,native)>stationCandidateUpper){continue;}if(native&&d-.03<h.d){candidate.d=stationCandidatePhysicalDistance(candidate,p,st);}if(candidate.d<h.d){h=candidate;}}return h;}
 
 fn rep(x:f32,pitch:f32,lo:f32,hi:f32)->f32{return x-clamp(round(x/pitch),lo,hi)*pitch;}
 fn archHole(x:f32,y:f32,r:f32,spring:f32)->f32{return max(abs(x)-r,select(y-(spring+r),length(vec2<f32>(x,y-spring))-r,y>spring));}
@@ -48,95 +88,104 @@ fn repairAt(p:vec3<f32>)->f32{return .08+.65*(1.-smoothstep(.9,1.4,abs(p.x-15.))
 fn brickQ(p:vec3<f32>,axis:u32,d:f32)->vec3<f32>{let row=floor(p.y/.073);let shift=select(0.,.125,(i32(row)&1)==1);let face=select(p.x,p.z,axis==12u);return vec3<f32>(fract((face+shift)/.25)*.25-.125,fract(p.y/.073)*.073-.0365,.055384615+d);}
 fn stationDomain(p:vec3<f32>,skipRoof:bool,skipFloor:bool)->HitField{
  stationCandidates.count=0u;stationCandidateOverflow=false;stationRawCandidateCount=0u;stationCandidateUpper=10000.;
- // Promenade and hall threshold share the platform datum, with real entrance steps.
- if(!skipFloor){recordPart(p,box(p-vec3<f32>(0,.15,0),vec3<f32>(31.2,.7,8.8)),17u,p,1.);}
- if(!skipFloor){recordPart(p,box(p-vec3<f32>(0.,.3,11.8),vec3<f32>(31.2,.55,3.)),17u,p,1.);}
+ // Complete terminal source construction replaces the former seven-opening shell.
+ // The inner union has already evaluated each actual construction ingredient.
+ let terminalEnvelope=box(p-${v(terminalCenter)},${v(terminalHalf)});
+ if(terminalEnvelope<.15){recordCandidate(terminalHallRawWinner(completeTerminalHall(p,skipFloor)));}else{recordPart(p,terminalEnvelope,0u,p,0.);}
+ // Preserve exact title anchor/tip; a 45mm buried root closes its source 40mm mounting gap.
+ recordCandidate(stationLetterCandidate(stationLetteringHall(p,${v(titleAnchor.at)}),8u));
+ if(!skipFloor){recordPart(p,box(p-vec3<f32>(0.,.275,11.8),vec3<f32>(31.2,.575,3.)),17u,p,1.);}
  for(var i=0;i<4;i++){let z=14.9+f32(i)*.4;recordPart(p,box(p-vec3<f32>(0,.55-f32(i)*.18,z),vec3<f32>(4.7,.16,.22)),2u,p,1.);}
- // Long hall, arched openings cut through both external walls. Openings are real air.
  let hallBound=box(p-vec3<f32>(0,7,0),vec3<f32>(31.5,8.2,10.5));
  if(hallBound<2.){
-  let bay=rep(p.x,7.5,-3.,3.);let q=vec3<f32>(p.x,p.y-6.4,abs(p.z)-8.);
-  var wall=box(q,vec3<f32>(30.,5.55,.32));let opening=archHole(bay,p.y-.85,2.3,6.1);wall=max(wall,-opening);
-  recordPart(p,wall,1u,q,19.);
-  // The opaque side walls, distinct from the open room interior.
-  let side=vec3<f32>(abs(p.x)-30.,p.y-6.4,p.z);recordPart(p,box(side,vec3<f32>(.32,5.55,8.)),12u,side,31.);
-  // Original quarry stone binds column body, base, capitals and bands.
-  let cx=rep(p.x-3.75,7.5,-4.,3.);let col=vec3<f32>(cx,p.y-5.5,abs(p.z)-8.65);let theta=atan2(col.z,col.x);let flute=.014*(.5+.5*cos(theta*16.));
-  recordCoated(p,cyl(col,.43-flute,4.4),col,vec3<f32>(.43,4.4,.43),4.);recordCoated(p,box(vec3<f32>(cx,p.y-1.12,abs(p.z)-8.65),vec3<f32>(.64,.28,.64)),vec3<f32>(cx,p.y-1.12,abs(p.z)-8.65),vec3<f32>(.64,.28,.64),4.);
-  recordCoated(p,cyl(vec3<f32>(cx,p.y-10.,abs(p.z)-8.65),.63,.24),vec3<f32>(cx,p.y-10.,abs(p.z)-8.65),vec3<f32>(.63,.24,.63),4.);
-  for(var j=0;j<3;j++){let yy=10.3+f32(j)*.31;recordCoated(p,box(vec3<f32>(p.x,p.y-yy,abs(p.z)-8.3),vec3<f32>(30.7,.13,.64)),vec3<f32>(p.x,p.y-yy,abs(p.z)-8.3),vec3<f32>(30.7,.13,.64),4.);}
-  recordCoated(p,box(vec3<f32>(p.x,p.y-12.15,abs(p.z)-8.1),vec3<f32>(30.7,.13,.3)),vec3<f32>(p.x,p.y-12.15,abs(p.z)-8.1),vec3<f32>(30.7,.13,.3),4.);
-  recordCoated(p,box(vec3<f32>(rep(p.x,.6,-50.,50.),p.y-11.65,abs(p.z)-8.1),vec3<f32>(.07,.4,.19)),vec3<f32>(rep(p.x,.6,-50.,50.),p.y-11.65,abs(p.z)-8.1),vec3<f32>(.07,.4,.19),4.);
-  // Ring arches and keystones over every real opening.
-  let ar=abs(length(vec2<f32>(bay,p.y-6.95))-2.46)-.15;recordCoated(p,max(max(ar,6.95-p.y),abs(abs(p.z)-8.38)-.24),vec3<f32>(bay,p.y-8.255,abs(p.z)-8.38),vec3<f32>(2.61,1.305,.24),4.);
-  recordCoated(p,box(vec3<f32>(bay,p.y-9.6,abs(p.z)-8.5),vec3<f32>(.2,.38,.27)),vec3<f32>(bay,p.y-9.6,abs(p.z)-8.5),vec3<f32>(.2,.38,.27),4.);
-  // Pitched hall roof and central pediment are extruded functions, not planes.
-  let roof=abs(p.y-(14.3-abs(p.z)*.25))-.07;recordPart(p,max(roof,max(abs(p.x)-30.1,abs(p.z)-8.2)),3u,p,8.);
-  let ped=max(abs(p.x)-6.4,max(10.7-p.y,(p.y+abs(p.x)*.53-14.15)/1.14));recordPart(p,max(ped,abs(p.z-8.75)-.35),1u,vec3<f32>(p.x,p.y,1.),22.);
-  let rim=abs((p.y+abs(p.x)*.53-14.15)/1.14)-.11;recordCoated(p,max(rim,max(abs(p.x)-6.55,abs(p.z-8.95)-.39)),vec3<f32>(p.x,p.y-12.4,p.z-8.95),vec3<f32>(6.55,2.,.39),4.);
-  let oculus=abs(length(vec2<f32>(p.x,p.y-12.5))-.52)-.105;recordCoated(p,max(oculus,abs(p.z-9.15)-.12),vec3<f32>(p.x,p.y-12.5,p.z-9.15),vec3<f32>(.625,.625,.12),4.);
-  // Shelter benches sit against room sides, long axial grain preserved.
-  let bq=vec3<f32>(rep(p.x,10.,-2.,2.),p.y-1.35,abs(p.z)-4.5);let slat=vec3<f32>(bq.x,bq.y,rep(bq.z,.13,-2.,2.));recordTimber(p,box(slat,vec3<f32>(1.8,.045,.051)),slat,vec3<f32>(1.8,.045,.051),39.,round(p.x/10.)*17.+round(bq.z/.13)+select(0.,101.,p.z<0.));
-  recordTimber(p,box(vec3<f32>(bq.x,rep(bq.y-.5,.13,-2.,2.),bq.z-.33),vec3<f32>(1.8,.048,.039)),vec3<f32>(bq.x,rep(bq.y-.5,.13,-2.,2.),bq.z-.33),vec3<f32>(1.8,.048,.039),39.,round(p.x/10.)*17.+round((bq.y-.5)/.13)+.37+select(0.,101.,p.z<0.));
-  let hl=vec3<f32>(abs(bq.x)-1.25,p.y,bq.z);recordPart(p,segment(hl,vec3<f32>(0.,.86,-.28),vec3<f32>(0.,1.32,.28),.028),3u,hl,39.);recordPart(p,segment(hl,vec3<f32>(0.,.86,.28),vec3<f32>(0.,1.32,-.28),.028),3u,hl,39.);recordPart(p,segment(hl,vec3<f32>(0.,1.25,.27),vec3<f32>(0.,2.18,.35),.024),3u,hl,39.);
+  // Complete source bench construction also serves the authored hall rows.
+  // Both signed axes rotate together; the opposite wall never reflects grain.
+  let benchSide=select(-1.,1.,p.z>=0.);var hallBenchX=1e5;var hallBenchIndex=0u;for(var i=0u;i<5u;i++){let x=select(HALL_BENCH_RAIL_X[i],HALL_BENCH_PUBLIC_X[i],p.z>=0.);let delta=p.x-x;if(abs(delta)<abs(hallBenchX)){hallBenchX=delta;hallBenchIndex=i;}}let bq=vec3<f32>(hallBenchX*benchSide,p.y,abs(p.z)-4.5);
+  let hallBenchBound=box(bq-vec3<f32>(0.,${f(deck+.60)},.05),vec3<f32>(1.731,.631,.40));
+  if(hallBenchBound<.15){let stockBase=10000.+f32(hallBenchIndex)+select(0.,100.,p.z<0.);recordCandidate(completeBenchTimber(p,bq,stockBase,148.));let iron=completeBenchIron(bq);recordCandidate(HitField(iron.d,3u,bq,39.,iron.d,vec3<f32>(1.731,.631,.40),iron.member));}else{recordPart(p,hallBenchBound,0u,bq,39.);}
+
  }
  else{recordPart(p,hallBound,0u,p,0.);}
- // Tower is attached to the sea end of the hall. Clock faces on four sides.
- let tq=p-vec3<f32>(24,0,4);let tb=box(tq-vec3<f32>(0,23,0),vec3<f32>(4.8,23,4.8));
+ // Complete source tower family, with the existing site anchor and 44m top.
+ // Stone group shares one quarry-coordinate field, so member min commutes with
+ // that common displacement. Source masks never become painted facade strips.
+ let tq=p-vec3<f32>(24.,0.,4.);let tb=box(tq-vec3<f32>(0.,23.,0.),vec3<f32>(4.8,23.,4.8));
  if(tb<2.){
-  let front=abs(tq.z)>abs(tq.x);let fq=select(vec3<f32>(tq.z,tq.y,abs(tq.x)),vec3<f32>(tq.x,tq.y,abs(tq.z)),front);
-  var towerCore=box(tq-vec3<f32>(0,17.2,0),vec3<f32>(3.7,16.35,3.7));
-  for(var wi=0;wi<2;wi++){let wy=select(22.3,31.,wi==1);let wx=select(fq.x,rep(fq.x,.9,-1.,1.),wi==1);let ww=select(.57,.30,wi==1);let wq=vec3<f32>(wx,fq.y-wy,fq.z-3.7);let hole=box(wq,vec3<f32>(ww,.85,.36));towerCore=max(towerCore,-hole);let frame=max(box(wq-vec3<f32>(0.,0.,.02),vec3<f32>(ww+.11,.97,.13)),-box(wq,vec3<f32>(ww,.85,.3)));recordCoated(p,frame,wq-vec3<f32>(0.,0.,.02),vec3<f32>(ww+.11,.97,.13),84.);recordPart(p,box(wq-vec3<f32>(0.,0.,.002),vec3<f32>(.022,.85,.034)),3u,wq,84.);recordPart(p,box(wq-vec3<f32>(0.,0.,.002),vec3<f32>(ww,.022,.034)),3u,wq,84.);}
-  recordPart(p,towerCore,select(1u,12u,abs(tq.x)>abs(tq.z)),tq,71.);
-  let corner=vec3<f32>(abs(tq.x)-3.35,tq.y-17.2,abs(tq.z)-3.35);recordCoated(p,box(corner,vec3<f32>(.44,16.35,.44)),corner,vec3<f32>(.44,16.35,.44),5.);
-  for(var j=0;j<5;j++){let yy=select(14.+f32(j)*5.,1.3,j==0);recordCoated(p,box(tq-vec3<f32>(0,yy,0),vec3<f32>(3.98,.2,3.98)),tq-vec3<f32>(0,yy,0),vec3<f32>(3.98,.2,3.98),5.);}
-  let dial=vec3<f32>(fq.x,fq.y-27.,fq.z-3.76);recordPart(p,max(length(dial.xy)-1.46,abs(dial.z)-.07),7u,dial,0.);
-  recordCoated(p,max(abs(length(dial.xy)-1.47)-.085,abs(dial.z-.07)-.045),dial-vec3<f32>(0.,0.,.07),vec3<f32>(1.555,1.555,.045),0.);
-  let angle=atan2(dial.y,dial.x);let tick=abs(sin(angle*6.))*length(dial.xy);let ticks=max(max((tick-.045)/6.,1.12-length(dial.xy)),length(dial.xy)-1.34);recordPart(p,max(ticks,abs(dial.z-.1)-.026),8u,dial,0.);
-  ${host?'let clockMinutes=frame.controls.w;let ma=1.57079632679-clockMinutes*3.14159265359/30.;let ha=1.57079632679-clockMinutes*3.14159265359/360.;recordPart(p,segment(dial,vec3<f32>(0.,0.,.13),vec3<f32>(cos(ha)*.85,sin(ha)*.85,.13),.055),8u,dial,0.);recordPart(p,segment(dial,vec3<f32>(0.,0.,.15),vec3<f32>(cos(ma)*1.09,sin(ma)*1.09,.15),.035),8u,dial,0.);':String.raw`recordPart(p,segment(dial,vec3<f32>(0.,0.,.13),vec3<f32>(.72,.45,.13),.055),8u,dial,0.);recordPart(p,segment(dial,vec3<f32>(0.,0.,.15),vec3<f32>(-.35,1.03,.15),.035),8u,dial,0.);`}
-  // Open belfry, four pairs of vertical piers. No solid upper box.
-  let bq=tq-vec3<f32>(0,36.7,0);recordCoated(p,box(vec3<f32>(abs(bq.x)-2.45,bq.y,abs(bq.z)-2.45),vec3<f32>(.38,3.1,.38)),vec3<f32>(abs(bq.x)-2.45,bq.y,abs(bq.z)-2.45),vec3<f32>(.38,3.1,.38),5.);
-  for(var j=0;j<2;j++){recordCoated(p,box(tq-vec3<f32>(0,33.6+f32(j)*6.2,0),vec3<f32>(3.1,.27,3.1)),tq-vec3<f32>(0,33.6+f32(j)*6.2,0),vec3<f32>(3.1,.27,3.1),5.);}
-  let dome=tq-vec3<f32>(0,39.85,0);recordCoated(p,max(abs(length(dome)-2.63)-.055,-dome.y),dome-vec3<f32>(0.,1.315,0.),vec3<f32>(2.685,1.37,2.685),4.);
-  recordPart(p,cyl(tq-vec3<f32>(0,43.1,0),.07,1.1),3u,tq,4.);
- }
- else{recordPart(p,tb,0u,p,0.);}
+  let stone=completeTowerstone(tq);recordCandidate(HitField(stone.d,2u,tq,171.,stone.d,vec3<f32>(4.8,23.,4.8),stone.member));
+  let brick=completeTowerbrick(tq);recordCandidate(HitField(brick.d,select(1u,12u,abs(tq.x)>abs(tq.z)),tq,71.,brick.d,vec3<f32>(2.96,13.65,2.96),brick.member));
+  let iron=completeToweriron(tq);recordCandidate(HitField(iron.d,3u,tq,183.,iron.d,vec3<f32>(1.),iron.member));
+  let copper=completeTowercopper(tq);recordCandidate(HitField(copper.d,3u,tq,181.,copper.d,vec3<f32>(1.),copper.member));
+  let brass=completeTowerbrass(tq);recordCandidate(HitField(brass.d,3u,tq,182.,brass.d,vec3<f32>(1.),brass.member));
+  let dial=completeTowerdial(tq);recordCandidate(HitField(dial.d,7u,tq,0.,dial.d,vec3<f32>(1.),dial.member));
+  for(var face=0u;face<4u;face++){
+   let a=f32(face)*1.570796326794897;let n=vec3<f32>(sin(a),0.,cos(a));let right=vec3<f32>(n.z,0.,-n.x);let q=vec3<f32>(dot(tq,right),tq.y-25.,dot(tq,n)-3.30);
+   let cb=box(q-vec3<f32>(0.,0.,.08),vec3<f32>(1.50,1.50,.13));
+   if(cb<.15){let indices=completeTowerDialIndices(q);recordCandidate(HitField(indices.d,8u,q,0.,indices.d,vec3<f32>(1.),f32(face)*60.+indices.member));
+    ${host?'let clockMinutes=frame.controls.w;':'let clockMinutes=380.;'}
+    let hands=min(completeTowerHand(q-vec3<f32>(0.,0.,.09),clockMinutes*3.14159265359/360.,false),completeTowerHand(q-vec3<f32>(0.,0.,.09),clockMinutes*3.14159265359/30.,true));recordPart(p,hands,8u,q,0.);
+    let cap=length(q-vec3<f32>(0.,0.,.09))-.095;recordCandidate(HitField(cap,3u,tq,182.,cap,vec3<f32>(1.),f32(face)+500.));
+   }else{recordPart(p,cb,0u,tq,0.);}
+  }
+ }else{recordPart(p,tb,0u,p,0.);}
  // Three continuous barrel canopies with actual daylight slots and open trusses.
  let shedBox=box(p-vec3<f32>(0,7,SHED_CENTER),vec3<f32>(34,8,SHED_HALF+2.2));
  if(shedBox<2.){
-  let xi=clamp(round(p.x/20.),-1.,1.);let x=p.x-xi*20.;let z=rep(p.z-SHED_FRONT,7.5,-SHED_BAYS,0.);let radial=length(vec2<f32>(x,p.y-1.2));let bounded=max(max(abs(x)-10.,abs(p.z-SHED_CENTER)-SHED_HALF),9.-p.y);
-  var panel=max(abs(radial-12.8)-.055,bounded);panel=max(panel,.55-abs(x));if(!skipRoof){recordPart(p,panel,15u,vec3<f32>(x,p.y,p.z),55.+xi);}
-  for(var j=0;j<2;j++){let r=12.8-f32(j)*.5;recordPart(p,max(max(abs(radial-r)-.08,bounded),abs(z)-.11),3u,p,52.);}
-  let a=atan2(x,p.y-1.2);let web=abs(sin(a*16.))*radial;recordPart(p,max(max(max((web-.034)/16.,abs(radial-12.55)-.24),abs(z)-.055),bounded),3u,p,52.);
+  let xi=clamp(round(p.x/20.),-1.,1.);let x=p.x-xi*20.;let z=rep(p.z-SHED_FRONT,7.5,-SHED_BAYS,0.);
+  if(!skipRoof){let panel=completeBarrelPanel(vec3<f32>(x,p.y,p.z));let pd=max(panel.d,abs(p.z-SHED_CENTER)-SHED_HALF);recordCandidate(HitField(pd,15u,vec3<f32>(x,p.y,p.z),55.+xi,pd,vec3<f32>(1.),panel.member));}
+  // Restore the original alternating Warren web and real sections, not a
+  // sinusoidal stripe. Source upper/lower chords are .72m apart vertically.
+  let trussLow=${f(eave-STATION_SCORE.shed.trussDepth-.13)};let trussHigh=SHED_CY+SHED_RADIUS+.13;
+  let trussEnvelope=box(vec3<f32>(x,p.y-(trussLow+trussHigh)*.5,z),vec3<f32>(${f(STATION_SCORE.shed.span/2+.13)},(trussHigh-trussLow)*.5,.065));
+  if(trussEnvelope<.15){let member=completeWarrenTruss(vec3<f32>(x,p.y,z));recordCandidate(HitField(member.d,3u,p,52.,member.d,vec3<f32>(1.),member.member));}
+  else{recordPart(p,trussEnvelope,0u,p,52.);}
+  let purlin=completePurlins(vec3<f32>(x,p.y,p.z-SHED_CENTER),SHED_HALF);recordCandidate(HitField(purlin.d,3u,p,52.,purlin.d,vec3<f32>(1.),100.+purlin.member));
   let support=rep(p.x-10.,20.,-2.,1.);
  ${host?`for(var row=0u;row<4u;row++){let center=-30.+f32(row)*20.;let columnSupport=p.x-center;var columnZ=z;if(abs(center-HOST_BOARDING_ROW_X)<.01){columnZ=1e5;for(var pi=0u;pi<${host.supports.retainedBoardingPostLocalZ.length}u;pi++){let d=p.z-HOST_RETAINED_POST_Z[pi];if(abs(d)<abs(columnZ)){columnZ=d;}}}`:'let columnSupport=support;let columnZ=z;'}
- let cq=vec3<f32>(columnSupport,p.y-5.,columnZ);recordPart(p,cyl(cq,.20-.009*cos(atan2(cq.z,cq.x)*12.),4.15),3u,cq,56.);
-  recordPart(p,box(vec3<f32>(columnSupport,p.y-1.05,columnZ),vec3<f32>(.42,.2,.42)),3u,cq,56.);recordPart(p,cyl(vec3<f32>(columnSupport,p.y-8.93,columnZ),.43,.2),3u,cq,56.);
+ let cq=vec3<f32>(columnSupport,p.y-5.,columnZ);
+ // Every accepted child of the casting is restored in one analytic assembly.
+ // The common iron displacement at (cq,p,state) is identical for every child,
+ // so material(min(child distances)) equals min(material(child distances)).
+ let columnEnvelope=box(vec3<f32>(columnSupport,p.y-${f((deck-.03+eave+.62)/2)},columnZ),vec3<f32>(.82,${f((eave+.62-deck+.03)/2)},.49));
+ if(columnEnvelope<.15){let member=completeCastColumn(vec3<f32>(columnSupport,p.y,columnZ));recordCandidate(HitField(member.d,3u,cq,56.,member.d,vec3<f32>(.82,${f((eave+.62-deck+.03)/2)},.49),member.member));}
+ else{recordPart(p,columnEnvelope,0u,cq,56.);}
+ // Full six-member lamps travel with their actual load-bearing columns.
+ var lampOffsetZ=rep(p.z-SHED_FRONT+.70,7.5,-SHED_BAYS,0.)-.70;
+ ${host?'if(abs(center-HOST_BOARDING_ROW_X)<.01){lampOffsetZ=1e5;for(var li=0u;li<'+host.supports.retainedBoardingPostLocalZ.length+'u;li++){let offset=p.z-HOST_RETAINED_POST_Z[li];if(abs(offset+.70)<abs(lampOffsetZ+.70)){lampOffsetZ=offset;}}}':''}
+ let lampEnvelope=box(vec3<f32>(columnSupport,p.y-${f(deck+3.15)},lampOffsetZ+.70),vec3<f32>(.271,.901,.761));
+ if(lampEnvelope<.15){let origin=vec3<f32>(p.x-columnSupport,0.,p.z-lampOffsetZ);let lamp=completeStationLamp(p,origin);recordCandidate(HitField(lamp.baseD,lamp.id,lamp.q,184.,lamp.baseD,lamp.extent,lamp.member));recordCandidate(completeLampLettering(p,origin,${host?'row':'u32(clamp(round((p.x-support+30.)/20.),0.,3.))'}));}else{recordPart(p,lampEnvelope,0u,cq,184.);}
  ${host?'}':''}
-  recordPart(p,box(vec3<f32>(support,p.y-9.25,p.z-SHED_CENTER),vec3<f32>(.13,.17,SHED_HALF)),3u,p,56.);
   // Four islands, mineral copings, with twin steel rails and actual sleeper gaps.
-  ${host?String.raw`for(var pi=0;pi<4;pi++){let center=-30.+f32(pi)*20.;let isBoard=abs(center-HOST_BOARDING_ROW_X)<.01;let cx=select(center,HOST_ISLAND_CENTER_X,isBoard);let half=select(3.4,HOST_ISLAND_HALF_WIDTH,isBoard);let pq=vec3<f32>(p.x-cx,p.y-.35,p.z-SHED_CENTER);if(!skipFloor){recordPart(p,box(pq,vec3<f32>(half,.5,SHED_HALF+1.3)),17u,pq,77.);}let coping=vec3<f32>(abs(p.x-cx)-(half-.18),p.y-.78,rep(p.z,1.2,floor((SHED_BACK-1.3)/1.2),-7.));recordPart(p,box(coping,vec3<f32>(.18,.07,.595)),2u,coping,79.);}`:String.raw`  let pq=vec3<f32>(support,p.y-.35,p.z-SHED_CENTER);if(!skipFloor){recordPart(p,box(pq,vec3<f32>(3.4,.5,SHED_HALF+1.3)),17u,pq,77.);}
-  let coping=vec3<f32>(abs(support)-3.23,p.y-.84,rep(p.z,1.2,floor((SHED_BACK-1.3)/1.2),-7.));recordPart(p,box(coping,vec3<f32>(.18,.07,.595)),2u,coping,79.);
+  ${host?String.raw`for(var pi=0;pi<4;pi++){let center=-30.+f32(pi)*20.;let isBoard=abs(center-HOST_BOARDING_ROW_X)<.01;let cx=select(center,HOST_ISLAND_CENTER_X,isBoard);let half=select(3.4,HOST_ISLAND_HALF_WIDTH,isBoard);let pq=vec3<f32>(p.x-cx,p.y-.275,p.z-SHED_CENTER);if(!skipFloor){recordPart(p,box(pq,vec3<f32>(half,.575,SHED_HALF+1.3)),17u,pq,77.);}let edgeBound=stationPlatformEdgeRowBound(p,center,cx,half);if(edgeBound<.15){recordCandidate(stationPlatformEdgeRawWinner(completeStationPlatformEdgeRow(p,center,cx,half,u32(pi))));}else{recordPart(p,edgeBound,0u,p,0.);}}`:String.raw`  let pq=vec3<f32>(support,p.y-.275,p.z-SHED_CENTER);if(!skipFloor){recordPart(p,box(pq,vec3<f32>(3.4,.575,SHED_HALF+1.3)),17u,pq,77.);}
+  let edgeCenter=p.x-support;let edgeBound=stationPlatformEdgeRowBound(p,edgeCenter,edgeCenter,3.4);if(edgeBound<.15){recordCandidate(stationPlatformEdgeRawWinner(completeStationPlatformEdgeRow(p,edgeCenter,edgeCenter,3.4,u32(clamp(round((edgeCenter+30.)/20.),0.,3.)))));}else{recordPart(p,edgeBound,0u,p,0.);}
 `}
-  var railX=rep(p.x-5.,10.,-3.,2.);${host?'if(abs(p.x-railX-5.)<.01){railX=p.x-select(-5.,15.,p.x>=5.);}':''}let rail=vec3<f32>(abs(railX)-RAIL_CENTER_OFFSET,p.y-(RAIL_CROWN-.066),p.z-SHED_CENTER);recordPart(p,box(rail,vec3<f32>(RAIL_HALF_WIDTH,.066,SHED_HALF+2.)),3u,rail,55.);
-  recordTimber(p,box(vec3<f32>(railX,p.y+.11,rep(p.z,.65,floor((SHED_BACK-2.)/.65),-13.)),vec3<f32>(1.23,.055,.13)),vec3<f32>(railX,p.y+.11,rep(p.z,.65,floor((SHED_BACK-2.)/.65),-13.)),vec3<f32>(1.23,.055,.13),30.,round(p.z/.65)+round((p.x-5.)/10.)*301.);
+  var railX=rep(p.x-5.,10.,-3.,2.);${host?'if(abs(p.x-railX-5.)<.01){railX=p.x-select(-5.,15.,p.x>=5.);}':''}let rail=vec3<f32>(abs(railX)-RAIL_CENTER_OFFSET,p.y-RAIL_CROWN,p.z-SHED_CENTER);recordPart(p,max(completeStationRail(rail.xy),abs(rail.z)-SHED_HALF-2.),3u,rail,55.);
+  recordTimber(p,box(vec3<f32>(railX,p.y-SLEEPER_CENTER,rep(p.z,.64,floor((SHED_BACK-2.)/.64),-13.)),vec3<f32>(1.165,.080,.115)),vec3<f32>(railX,p.y-SLEEPER_CENTER,rep(p.z,.64,floor((SHED_BACK-2.)/.64),-13.)),vec3<f32>(1.165,.080,.115),30.,round(p.z/.64)+round((p.x-5.)/10.)*301.);
+  let bearing=vec3<f32>(abs(railX)-RAIL_CENTER_OFFSET,p.y-(RAIL_FOOT-.015),rep(p.z,.64,floor((SHED_BACK-2.)/.64),-13.));recordPart(p,box(bearing,vec3<f32>(.09,.015,.11)),3u,bearing,189.);
   ${host?'for(var bi=0;bi<4;bi++){let benchRow=-30.+f32(bi)*20.;let benchSupport=p.x-select(benchRow,HOST_BENCH_ROW_X,abs(benchRow-HOST_BOARDING_ROW_X)<.01);var bz=rep(p.z+13.75,22.5,-5.,0.);var benchSourceZ=p.z-bz;if(abs(benchRow-HOST_BOARDING_ROW_X)<.01){bz=1e5;for(var j=0u;j<'+host.benches.retainedLocalZ.length+'u;j++){let q=p.z-HOST_RETAINED_BENCH_Z[j];if(abs(q)<abs(bz)){bz=q;benchSourceZ=HOST_BENCH_SOURCE_Z[j];}}}':''}
-  ${host?'':'let bz=rep(p.z+13.75,22.5,-5.,0.);let benchSourceZ=p.z-bz;'}let bq=vec3<f32>(${host?'benchSupport':'support'},p.y-1.35,bz);recordTimber(p,box(vec3<f32>(rep(bq.x,.13,-2.,2.),bq.y,bq.z),vec3<f32>(.05,.04,1.7)),vec3<f32>(bq.z,rep(bq.x,.13,-2.,2.),bq.y),vec3<f32>(1.7,.05,.04),38.,round(bq.x/.13)+round((benchSourceZ+13.75)/22.5)*17.+round((p.x-10.)/20.)*71.);
-  recordTimber(p,box(vec3<f32>(bq.x+.32,rep(bq.y-.5,.13,-2.,2.),bq.z),vec3<f32>(.04,.048,1.7)),vec3<f32>(bq.z,bq.x+.32,rep(bq.y-.5,.13,-2.,2.)),vec3<f32>(1.7,.04,.048),38.,round((bq.y-.5)/.13)+round((benchSourceZ+13.75)/22.5)*17.+round((p.x-10.)/20.)*71.+.37);
-  let leg=vec3<f32>(bq.x,p.y,abs(bq.z)-1.15);recordPart(p,segment(leg,vec3<f32>(-.27,.86,0.),vec3<f32>(.27,1.32,0.),.028),3u,leg,38.);recordPart(p,segment(leg,vec3<f32>(.27,.86,0.),vec3<f32>(-.27,1.32,0.),.028),3u,leg,38.);recordPart(p,segment(leg,vec3<f32>(-.27,1.25,0.),vec3<f32>(-.35,2.18,0.),.024),3u,leg,38.);
+  ${host?'':'let bz=rep(p.z+13.75,22.5,-5.,0.);let benchSourceZ=p.z-bz;'}let bq=vec3<f32>(-bz,p.y,${host?'benchSupport':'support'});
+  let benchBound=box(bq-vec3<f32>(0.,${f(deck+.60)},.05),vec3<f32>(1.731,.631,.40));
+  if(benchBound<.15){let stockBase=1000.+round((benchSourceZ+13.75)/22.5)+round((p.x-${host?'benchSupport':'support'}+30.)/20.)*100.;recordCandidate(completeBenchTimber(p,bq,stockBase,138.));let iron=completeBenchIron(bq);recordCandidate(HitField(iron.d,3u,bq,38.,iron.d,vec3<f32>(1.731,.631,.40),iron.member));}
+  else{recordPart(p,benchBound,0u,bq,38.);}
   ${host?'}':''}
-  // Signboard and hanging lamp remain physical authored objects.
-  recordPart(p,box(vec3<f32>(support,p.y-${host?'4.5':'3.5'},z+.3),vec3<f32>(.78,.31,.035)),9u,p,2.);
-  recordPart(p,cyl(vec3<f32>(support+.65,p.y-4.9,z),.025,.5),3u,p,2.);recordPart(p,cyl(vec3<f32>(support+.65,p.y-4.39,z),.20,.065),7u,p,2.);
+  // Complete transverse footbridge, open landing gaps and all four stair flights.
+  let bridgeEnvelope=box(p-${v(bridgeCenter)},${v(bridgeHalf)});
+  if(bridgeEnvelope<.15){let bridgeHit=completeFootbridge(p);recordCandidate(HitField(bridgeHit.baseD,bridgeHit.id,bridgeHit.q,185.,bridgeHit.baseD,bridgeHit.extent,bridgeHit.member));}else{recordPart(p,bridgeEnvelope,0u,p,185.);}
+
  }
  else{recordPart(p,shedBox,0u,p,0.);}
  // Landward running tracks continue outside the train shed.
- if(p.z<SHED_BACK){var x=rep(p.x-5.,10.,-3.,2.);${host?'if(abs(p.x-x-5.)<.01){x=p.x-select(-5.,15.,p.x>=5.);}':''}recordPart(p,box(vec3<f32>(abs(x)-RAIL_CENTER_OFFSET,p.y-(RAIL_CROWN-.066),p.z-(SHED_BACK-38.)),vec3<f32>(RAIL_HALF_WIDTH,.066,38.)),3u,p,55.);recordTimber(p,box(vec3<f32>(x,p.y+.11,rep(p.z,.65,floor((SHED_BACK-76.)/.65),ceil(SHED_BACK/.65))),vec3<f32>(1.23,.055,.13)),vec3<f32>(x,p.y+.11,rep(p.z,.65,floor((SHED_BACK-76.)/.65),ceil(SHED_BACK/.65))),vec3<f32>(1.23,.055,.13),30.,round(p.z/.65)+round((p.x-5.)/10.)*301.);}
+ if(p.z<SHED_BACK){var x=rep(p.x-5.,10.,-3.,2.);${host?'if(abs(p.x-x-5.)<.01){x=p.x-select(-5.,15.,p.x>=5.);}':''}let rail=vec3<f32>(abs(x)-RAIL_CENTER_OFFSET,p.y-RAIL_CROWN,p.z-(SHED_BACK-38.));recordPart(p,max(completeStationRail(rail.xy),abs(rail.z)-38.),3u,rail,55.);recordTimber(p,box(vec3<f32>(x,p.y-SLEEPER_CENTER,rep(p.z,.64,floor((SHED_BACK-76.)/.64),ceil(SHED_BACK/.64))),vec3<f32>(1.165,.080,.115)),vec3<f32>(x,p.y-SLEEPER_CENTER,rep(p.z,.64,floor((SHED_BACK-76.)/.64),ceil(SHED_BACK/.64))),vec3<f32>(1.165,.080,.115),30.,round(p.z/.64)+round((p.x-5.)/10.)*301.);}
+ if(p.z<SHED_BACK){var x=rep(p.x-5.,10.,-3.,2.);${host?'if(abs(p.x-x-5.)<.01){x=p.x-select(-5.,15.,p.x>=5.);}':''}let plate=vec3<f32>(abs(x)-RAIL_CENTER_OFFSET,p.y-(RAIL_FOOT-.015),rep(p.z,.64,floor((SHED_BACK-76.)/.64),ceil(SHED_BACK/.64)));recordPart(p,box(plate,vec3<f32>(.09,.015,.11)),3u,plate,189.);}
+ // Original track bed and six full buffer assemblies; no coarse head-only rail.
+ let bufferX=rep(p.x-5.,10.,-3.,2.);let bufferZ=p.z-(SHED_FRONT-.8);
+ let bufferLeg=vec3<f32>(abs(bufferX)-.72,p.y-.40,bufferZ);recordPart(p,box(bufferLeg,vec3<f32>(.14,.35,.135)),3u,bufferLeg,189.);
+ let bufferBeam=vec3<f32>(bufferX,p.y-.75,bufferZ);recordPart(p,box(bufferBeam,vec3<f32>(1.075,.10,.18)),3u,bufferBeam,188.);
+ let trackBed=vec3<f32>(p.x,p.y+.35,p.z-(SHED_BACK-76.+SHED_FRONT)*.5);recordPart(p,box(trackBed,vec3<f32>(29.,.10,(SHED_FRONT-SHED_BACK+76.)*.5)),2u,trackBed,190.);
  // Parcel / freight is an authored interpretation of the quay-side rail band.
  // Its loading dock, masonry piers, metal trusses and roof are one construction.
  let gq=p-vec3<f32>(GOODS_X,0.,GOODS_CENTER);let gb=box(gq-vec3<f32>(0.,3.,0.),vec3<f32>(7.,3.8,GOODS_HALF+1.));
  if(gb<2.){
-  if(!skipFloor){recordPart(p,box(gq-vec3<f32>(1.7,.30,0.),vec3<f32>(4.7,.55,GOODS_HALF+.6)),17u,gq,77.);}
+  if(!skipFloor){recordPart(p,box(gq-vec3<f32>(1.7,.275,0.),vec3<f32>(4.7,.575,GOODS_HALF+.6)),17u,gq,77.);}
   let zz=rep(gq.z,7.,-6.,6.);let sideq=vec3<f32>(abs(gq.x)-3.,p.y-3.,zz);
   recordPart(p,box(sideq,vec3<f32>(.23,2.15,.40)),12u,sideq,91.);
   recordPart(p,box(gq-vec3<f32>(0.,3.,0.),vec3<f32>(.15,2.15,GOODS_HALF)),12u,gq,92.);
@@ -147,21 +196,20 @@ fn stationDomain(p:vec3<f32>,skipRoof:bool,skipFloor:bool)->HitField{
   recordPart(p,segment(vec3<f32>(gq.x,p.y,zz),vec3<f32>(3.,5.1,0.),vec3<f32>(0.,6.15,0.),.035),3u,gq,94.);
  }else{recordPart(p,gb,0u,p,0.);}
  // Parallel working siding ends before the passenger-to-pier promenade.
- let sx=p.x-50.;let sq=vec3<f32>(abs(sx)-RAIL_CENTER_OFFSET,p.y-(RAIL_CROWN-.066),p.z+91.);recordPart(p,box(sq,vec3<f32>(RAIL_HALF_WIDTH,.066,79.)),3u,sq,55.);
- let sleeper=vec3<f32>(sx,p.y+.11,rep(p.z,.65,-261.,-19.));recordTimber(p,box(sleeper,vec3<f32>(1.23,.055,.13)),sleeper,vec3<f32>(1.23,.055,.13),30.,round(p.z/.65)+810.);
+ let sx=p.x-50.;let sq=vec3<f32>(abs(sx)-RAIL_CENTER_OFFSET,p.y-RAIL_CROWN,p.z+91.);recordPart(p,max(completeStationRail(sq.xy),abs(sq.z)-79.),3u,sq,55.);
+ let sleeper=vec3<f32>(sx,p.y-SLEEPER_CENTER,rep(p.z,.64,-265.,-19.));recordTimber(p,box(sleeper,vec3<f32>(1.165,.080,.115)),sleeper,vec3<f32>(1.165,.080,.115),30.,round(p.z/.64)+810.);
+ let sidingPlate=vec3<f32>(abs(sx)-RAIL_CENTER_OFFSET,p.y-(RAIL_FOOT-.015),rep(p.z,.64,-265.,-19.));recordPart(p,box(sidingPlate,vec3<f32>(.09,.015,.11)),3u,sidingPlate,189.);
  // Covered passenger route turns seawards beyond the siding end, no cargo crossing.
  let walk=p-vec3<f32>(49.,0.,13.);let wb=box(walk-vec3<f32>(0.,2.5,0.),vec3<f32>(18.5,2.6,2.2));
  if(wb<2.){
-  if(!skipFloor){recordPart(p,box(walk-vec3<f32>(0.,.3,0.),vec3<f32>(18.,.55,1.8)),17u,walk,77.);}
+  if(!skipFloor){recordPart(p,box(walk-vec3<f32>(0.,.275,0.),vec3<f32>(18.,.575,1.8)),17u,walk,77.);}
   let post=vec3<f32>(rep(walk.x,6.,-3.,3.),p.y-2.55,abs(walk.z)-1.65);recordPart(p,cyl(post,.07,1.7),3u,post,96.);
   let wr=abs(p.y-(4.7-abs(walk.z)*.13))-.045;recordPart(p,max(wr,max(abs(walk.x)-18.3,abs(walk.z)-1.95)),3u,walk,96.);
   recordPart(p,box(vec3<f32>(walk.x,p.y-4.35,abs(walk.z)-1.65),vec3<f32>(18.3,.085,.06)),3u,walk,96.);
  }else{recordPart(p,wb,0u,p,0.);}
- // Shore runs alongside rail operations. No boats or fake hotel volumes.
- let quay=p-vec3<f32>(SHORE_X-1.2,-.65,-74.5);recordPart(p,box(quay,vec3<f32>(1.2,.43,100.5)),2u,quay,82.);
- for(var ri=0;ri<2;ri++){let rx=select(-58.,-43.,ri==1);let curb=p-vec3<f32>(rx,-.18,-74.5);recordPart(p,box(curb,vec3<f32>(.12,.16,100.5)),2u,curb,82.);}
-
-
+ // Every quay, road, finite painted ingredient, bollard and pier support.
+ let coast=completeStationWaterfront(p,skipFloor);
+ recordCandidate(HitField(coast.baseD,coast.id,coast.q,coast.seed,coast.baseD,coast.extent,coast.member));
 
  ${host?String.raw`
  // A 40m transfer truss spans the clear boarding throat; original posts remain at re-sited rear bays. This is an authored

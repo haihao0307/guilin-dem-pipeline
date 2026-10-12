@@ -1,3 +1,5 @@
+import{STATION_RAY_BOUNDS}from'./field-coverage.mjs';
+const rayBoundVector=a=>'vec3<f32>('+a.map(x=>Number.isInteger(x)?x+'.':String(x)).join(',')+')';
 import{PIXEL_FOOTPRINT_WGSL}from'./pixel-footprint.mjs';
 // Raster staging stores only current-frame ray/HitField values. None of these
 // attachments is a surface map, baked appearance, mesh or persistent world grid.
@@ -9,11 +11,11 @@ fn localPoint(v:vec4<f32>)->vec3<f32>{let p=frame.cameraToLocal*frame.inversePro
 fn hostRay(pixel:vec2<f32>)->mat2x3<f32>{var ndc=pixel/frame.viewport.xy*2.-vec2<f32>(1.);if(frame.viewport.z>.5){ndc.y=-ndc.y;}let a=localPoint(vec4<f32>(ndc,-1.,1.));let b=localPoint(vec4<f32>(ndc,1.,1.));return mat2x3<f32>(a,normalize(b-a));}
 // Closed envelope for every authored station solid, including rail approaches.
 // Harbour plane/sky/retained host streets are NOT stationField solids.
-// Tightest authored extrema are X[-58.12,67.3],Y[-1.08,44.2],Z[-221.13,26].
+// Shared source-derived coverage includes the 84m pier end and -3.47m piles.
 // Envelope margins exceed every proven material displacement; no ingredient is omitted.
 ${PIXEL_FOOTPRINT_WGSL}
 fn stationRayInterval(ro:vec3<f32>,rd:vec3<f32>)->vec2<f32>{
- let lo=vec3<f32>(-61.,-4.,-224.);let hi=vec3<f32>(70.,49.,30.);var near=0.;var far=frame.controls.y;
+ let lo=${rayBoundVector(STATION_RAY_BOUNDS.lo)};let hi=${rayBoundVector(STATION_RAY_BOUNDS.hi)};var near=0.;var far=frame.controls.y;
  for(var axis=0u;axis<3u;axis++){if(abs(rd[axis])<.0000001){if(ro[axis]<lo[axis]||ro[axis]>hi[axis]){return vec2<f32>(1.,-1.);}}else{let a=(lo[axis]-ro[axis])/rd[axis];let b=(hi[axis]-ro[axis])/rd[axis];near=max(near,min(a,b));far=min(far,max(a,b));}}
  return vec2<f32>(near,far);
 }
@@ -60,7 +62,7 @@ struct MatterRecord{@location(0)albedoRoughness:vec4<f32>,@location(1)response:v
  let a=textureLoad(qSeedInput,ij,0);let b=textureLoad(extentInput,ij,0);let c=textureLoad(normalInput,ij,0);let ray=hostRay(pixel.xy);let p=ray[0]+ray[1]*tr.x;
  let h=HitField(c.w,u32(tr.y),a.xyz,a.w,c.w,b.xyz,b.w);let differential=hostSurfaceDifferentials(pixel.xy,p,c.xyz);let fp=max(.00001,max(length(differential[0]),length(differential[1])));let m=evaluateStationMatter(h,p,c.xyz,fp);
  var albedo=m.surface.albedo;var rough=m.surface.roughness;
- if(h.id==7u){albedo=vec3<f32>(.82,.77,.62);rough=.3;}if(h.id==8u){albedo=vec3<f32>(.025,.031,.028);rough=.35;}if(h.id==9u){albedo=vec3<f32>(.045,.105,.075);rough=.27;}
- return MatterRecord(vec4<f32>(albedo,rough),vec4<f32>(m.metal,m.cavity,m.specular,m.microHeight),vec4<f32>(m.clearcoat,m.clearcoatRoughness,m.parallaxHeight01,0.));
+
+ return MatterRecord(vec4<f32>(albedo,rough),vec4<f32>(m.metal,m.cavity,m.specular,m.microHeight),vec4<f32>(m.clearcoat,m.clearcoatRoughness,m.parallaxHeight01,stationLampEmission(h)));
 }
 `;

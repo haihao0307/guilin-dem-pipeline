@@ -15,9 +15,9 @@ jobs:
           sparse-checkout: kaopu-minigame-workbench/voxel-train-study
       - name: Source locks and host binding tests
         run: |
-          node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r04/qa/*.test.mjs
-          node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/*.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/material-envelope-proof.mjs
           node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/emit-shader-inputs.mjs
+          node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r04/qa/*.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r04/qa/continuity/*.test.mjs
+          node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/*.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/material-envelope-proof.mjs
       - name: Compile pinned official Naga source
         working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/compiler
         run: |
@@ -40,8 +40,8 @@ jobs:
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
       - name: Same-source WebGL2 and WebGPU numerical probes
         run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/isolated-probes.cjs
-      - name: Fixed native-pixel station material before-after ROIs
-        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/material-roi.cjs
+      - name: Source-restored native-pixel construction ROIs
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/structure-roi.cjs
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
@@ -50,6 +50,7 @@ jobs:
             train88-kowloon-bridge-results/
             train88-kowloon-host-results/
             train88-kowloon-material-roi-results/
+            train88-kowloon-structure-roi-results/
             kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/generated/
             kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/compiler/Cargo.lock
           retention-days: 7

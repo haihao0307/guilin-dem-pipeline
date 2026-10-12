@@ -5,10 +5,16 @@ export const STATION_MATTER_WGSL=String.raw`
 struct StationState{age:f32,wet:f32,repair:f32,retained:f32,}
 struct StationMatter{d:f32,surface:KpSurface,metal:f32,cavity:f32,specular:f32,microHeight:f32,layer:u32,clearcoat:f32,clearcoatRoughness:f32,parallaxHeight01:f32,}
 fn resolveStationState(p:vec3<f32>)->StationState{let repair=repairAt(p);return StationState(u.age,stateWet(p),repair,u.age*(1.-repair));}
-fn stationWoodParams(h:HitField,st:StationState)->KpWoodParams{var wp=kpWoodDefaultParams();if(h.seed==38.||h.seed==39.){wp.textureScale=BENCH_WOOD_SCALE;wp.grainContrast=BENCH_WOOD_CONTRAST;}wp.seed=fract(wp.seed+h.sourceSeed*.61803398875);wp.reliefScale*=.35+.85*st.retained;wp.roughness=clamp(wp.roughness+.07*st.retained-.12*st.repair,.2,.98);wp.agedSurfaceColor=mix(wp.freshCutColor,wp.agedSurfaceColor,.4+.6*st.retained);wp.clearcoat=.12*st.repair;return wp;}
+// Shore exposure is construction semantics. Water height is station-local,
+// never a centered member coordinate. Authored capillary fade is not calibration.
+fn stationMemberState(h:HitField,p:vec3<f32>,state:StationState)->StationState{var st=state;if(h.seed==186.){let contact=stationWaterfrontWaterContact(h.sourceSeed);st.wet=max(st.wet,contact*(1.-smoothstep(-.52,.65,p.y)));}return st;}
+fn stationWoodParams(h:HitField,st:StationState)->KpWoodParams{var wp=kpWoodDefaultParams();if(h.seed==38.||h.seed==39.||h.seed==138.||h.seed==139.||h.seed==148.||h.seed==149.){wp.textureScale=BENCH_WOOD_SCALE;wp.grainContrast=BENCH_WOOD_CONTRAST;}let stockSeed=select(h.sourceSeed,floor(h.sourceSeed/8.),h.seed==138.||h.seed==139.||h.seed==148.||h.seed==149.);wp.seed=fract(wp.seed+stockSeed*.61803398875);wp.reliefScale*=.35+.85*st.retained;wp.roughness=clamp(wp.roughness+.07*st.retained-.12*st.repair,.2,.98);wp.agedSurfaceColor=mix(wp.freshCutColor,wp.agedSurfaceColor,.4+.6*st.retained);wp.clearcoat=.12*st.repair;return wp;}
 // The complete material direction frame matches the position construction.
 // Platform slats use zxy; hall rows use an explicit signed Z reflection.
-fn stationMaterialDirection(h:HitField,p:vec3<f32>,d:vec3<f32>)->vec3<f32>{if(h.id==4u&&h.seed==38.){return d.zxy;}if(h.id==4u&&h.seed==39.){return vec3<f32>(d.x,d.y,d.z*select(-1.,1.,p.z>=0.));}return d;}
+fn stationMaterialDirection(h:HitField,p:vec3<f32>,d:vec3<f32>)->vec3<f32>{if(h.id==4u&&(h.seed==138.||h.seed==139.)){return vec3<f32>(-d.z,d.y,d.x);}if(h.id==4u&&(h.seed==148.||h.seed==149.)){let side=select(-1.,1.,p.z>=0.);return vec3<f32>(d.x*side,d.y,d.z*side);}if(h.id==4u&&h.seed==38.){return d.zxy;}if(h.id==4u&&h.seed==39.){return vec3<f32>(d.x,d.y,d.z*select(-1.,1.,p.z>=0.));}return d;}
+// q/extents remain each real slat for end/side classification. Mother sampling
+// adds the recovered offset in its common stock, in both geometry and shading.
+fn stationWoodCoordinates(h:HitField)->vec3<f32>{let k=h.sourceSeed-floor(h.sourceSeed/8.)*8.;if(h.seed==138.||h.seed==148.){return h.q+vec3<f32>(0.,0.,k*.115);}if(h.seed==139.||h.seed==149.){return h.q+vec3<f32>(0.,k*.10,0.);}return h.q;}
 fn stationWoodClass(h:HitField)->f32{let face=abs(h.q)-h.extent;return select(0.,1.,face.x>=max(face.y,face.z));}
 // Geometry-only closure of the SAME original matter signals. Avoid evaluating
 // pigment/filtered microscopy at every ray step. Shading calls this closure too.
@@ -23,24 +29,46 @@ fn stationMetalCoordinates(h:HitField,p:vec3<f32>)->vec3<f32>{let rail=h.id==3u&
 // assembly. The same corrosion event removes its 60um thickness and reveals rust.
 fn isStationRoof(h:HitField)->bool{return h.id==15u||(h.id==3u&&(h.seed==8.||h.seed==94.||h.seed==96.));}
 fn stationRoofPaintCoverage(h:HitField,p:vec3<f32>,st:StationState)->f32{return 1.-kpMetalCorrosion(stationMetalCoordinates(h,p),st.age,st.wet,st.repair)*.8;}
-fn evaluateStationGeometry(h:HitField,p:vec3<f32>,st:StationState)->StationGeometry{
+// R02 source parameter bindings, retaining the A4 kh/kn/kfb fields exactly.
+// Seed181 is the old green-iron surrogate named roof-copper, not a validated
+// copper mother. Seed182 is the actual original A4 brass parameter set. Neither
+// is silently passed through the iron-rust chemistry adapter.
+fn stationLegacyMetal(h:HitField,fp:f32)->KpSurface{let brass=h.seed==182.;let q=h.q+vec3<f32>(19.);let color=select(vec3<f32>(.1946178304415758,.3467040563550296,.2831487404299921),vec3<f32>(.4793201831008268,.3564001441459435,.14412847085805777),brass);let rough=select(.53,.31,brass);let height=(mt_kn(q*65.)-.5)*.00025*(1.-smoothstep(.4,1.6,fp*65.));return KpSurface(height,color*(.94+.09*mt_kfb(q*3.1)),clamp(rough+(mt_kn(q*9.)-.5)*.12,.08,.99));}
+// Original A4 finish closure, using the already source-locked noise functions.
+// These are named source parameter bindings, not replacement mother kernels.
+fn stationOriginalFinish(q0:vec3<f32>,base:vec3<f32>,rough:f32,fp:f32)->KpSurface{let q=q0+vec3<f32>(19.);return KpSurface((mt_kn(q*65.)-.5)*.00025*(1.-smoothstep(.4,1.6,fp*65.)),base*(.94+.09*mt_kfb(q*3.1)),clamp(rough+(mt_kn(q*9.)-.5)*.12,.08,.99));}
+fn stationLampEmission(h:HitField)->f32{return select(0.,2.2,h.id==7u&&h.seed==184.);}
+// Exact accepted R02 cast/rolled member role parameters. The locked FH88
+// corrosion/noise/height field remains one kernel; this binds its original
+// constructor inputs instead of flattening every metal to the same green/dielectric.
+fn stationIronRole(h:HitField)->vec4<f32>{let castRole=h.seed==56.||h.seed==38.||h.seed==39.||h.seed==184.;if(castRole){return vec4<f32>(.0953074666309647,.16826940018969075,.13563332965520566,.58);}if(h.seed==188.){return vec4<f32>(.0295568344378088,.05448027644244237,.04091519690685319,.53);}return vec4<f32>(.22696587351009836,.3049873140698863,.26225065752969623,.43);}
+fn stationIronMetalness(h:HitField)->f32{if(h.seed==56.||h.seed==38.||h.seed==39.||h.seed==184.){return .10;}if(h.seed==188.){return .60;}return .40;}
+fn evaluateStationGeometry(h:HitField,p:vec3<f32>,state:StationState)->StationGeometry{
+ let st=stationMemberState(h,p,state);
  var g=StationGeometry(h.d,0.,0.,1.);
  if(h.id==1u||h.id==12u){let q=brickQ(p,h.id,h.d);let seed=19.+floor(p.y/.073)*13.+floor((p.x+p.z)/.25);let variant=i32(abs(seed))%4;let native=kpBrickBaseDistance(q,seed,variant,.42);let macroSignal=native-kpBrickAnalyticBoundDistance(q);g.loss=clamp(st.retained*st.wet*(.0004+max(0.,macroSignal)*.6),0.,.0016);let mortarDistance=h.d+.006;let brickDistance=native+g.loss;g.brickWeight=select(0.,1.,brickDistance<=mortarDistance);g.d=min(mortarDistance,brickDistance);}
  if(h.id==2u){g.d=h.d-clamp(stationStoneHeight(h.q*.19)*(.25+.75*st.retained),-.004,.004);}
- if(h.id==3u||h.id==15u){g.loss=kpMetalCorrosion(stationMetalCoordinates(h,p),st.age,st.wet,st.repair)*.0008;g.d=h.d+g.loss;if(isStationRoof(h)){g.thickness=.00006*stationRoofPaintCoverage(h,p,st);g.d-=g.thickness;}}
- if(h.id==4u){g.d=h.d-kpWoodMacroDisplacement(h.q,stationWoodClass(h),stationWoodParams(h,st));}
+ if((h.id==3u||h.id==15u)&&h.seed!=181.&&h.seed!=182.){g.loss=kpMetalCorrosion(stationMetalCoordinates(h,p),st.age,st.wet,st.repair)*.0008;g.d=h.d+g.loss;if(isStationRoof(h)){g.thickness=.00006*stationRoofPaintCoverage(h,p,st);g.d-=g.thickness;}}
+ if(h.id==4u){g.d=h.d-kpWoodMacroDisplacement(stationWoodCoordinates(h),stationWoodClass(h),stationWoodParams(h,st));}
  if(h.id==17u){g.d=h.d-stationConcreteHeight(h.q,st.retained);}
  if(h.id==13u){g.thickness=stationCoatingThickness(h,p,st);g.d=h.d-clamp(stationStoneHeight(h.q*.19)*.25,-.001,.001)-g.thickness;}
  return g;
 }
 fn evaluateStationMatter(h:HitField,p:vec3<f32>,normal:vec3<f32>,fp:f32)->StationMatter{
- let st=resolveStationState(p);let g=evaluateStationGeometry(h,p,st);var m=StationMatter(g.d,KpSurface(0.,vec3<f32>(.34,.33,.28),.85),0.,1.,1.,0.,0u,0.,1.,0.);
+ let st=stationMemberState(h,p,resolveStationState(p));let g=evaluateStationGeometry(h,p,st);var m=StationMatter(g.d,KpSurface(0.,vec3<f32>(.34,.33,.28),.85),0.,1.,1.,0.,0u,0.,1.,0.);
  if(h.id==1u||h.id==12u){let q=brickQ(p,h.id,h.d);let seed=19.+floor(p.y/.073)*13.+floor((p.x+p.z)/.25);let variant=i32(abs(seed))%4;let loss=g.loss;m.surface=kpBrickOriginalSurface(q,seed,variant,.42,fp);if(g.brickWeight==0.){m.surface=KpSurface(0.,vec3<f32>(.28,.26,.21),.94);}m.surface.albedo*=1.-st.wet*.18-loss*60.;m.surface.roughness=clamp(m.surface.roughness+loss*50.,.15,.98);m.microHeight=m.surface.height;m.layer=1u;}
  if(h.id==2u){let relief=.25+.75*st.retained;m.surface=kpStoneSurface(h.q*.19,st.age,st.wet,st.repair,fp*.19);m.surface.height*=relief;m.layer=2u;}
- if(h.id==3u||h.id==15u){let loss=g.loss;m.surface=kpMetalSurface(stationMetalCoordinates(h,p),st.age,st.wet,st.repair,fp);if(isStationRoof(h)){let mq=stationMetalCoordinates(h,p);let pigmentDelta=vec3<f32>(.066,.073,.078)-vec3<f32>(.17,.235,.20);m.surface.albedo+=pigmentDelta*(.94+.09*mt_kfb((mq+vec3<f32>(19.))*3.1))*stationRoofPaintCoverage(h,p,st)*(1.-st.wet*.18);}m.metal=0.;if(h.id==3u&&h.seed==55.){let contact=1.-smoothstep(.01,.035,abs(stationMetalCoordinates(h,p).y-1.07));m.metal=.88*contact*(1.-kpMetalCorrosion(stationMetalCoordinates(h,p),st.age,st.wet,st.repair));}m.microHeight=m.surface.height+loss;m.layer=3u;}
- if(h.id==4u){let wp=stationWoodParams(h,st);let cls=stationWoodClass(h);let wn=stationMaterialDirection(h,p,normal);let source=kpWoodOriginalSample(h.q,wn,cls,wp,fp,length(p-u.eye));m.surface=source.surface;m.cavity=source.cavity;m.specular=source.specularLevel;m.microHeight=source.surface.height;m.layer=4u;m.clearcoat=source.clearcoat;m.clearcoatRoughness=source.clearcoatRoughness;m.parallaxHeight01=source.parallaxHeight01;}
+ if(h.id==3u||h.id==15u){let loss=g.loss;m.surface=kpMetalSurface(stationMetalCoordinates(h,p),st.age,st.wet,st.repair,fp);let corrosion=kpMetalCorrosion(stationMetalCoordinates(h,p),st.age,st.wet,st.repair);let role=stationIronRole(h);if(!isStationRoof(h)){m.surface.albedo+=(role.rgb-vec3<f32>(.17,.235,.20))*(.94+.09*mt_kfb((stationMetalCoordinates(h,p)+vec3<f32>(19.))*3.1))*(1.-corrosion*.80)*(1.-st.wet*.18);m.surface.roughness=clamp(m.surface.roughness+role.a-.53,.12,.97);}if(isStationRoof(h)){let mq=stationMetalCoordinates(h,p);let pigmentDelta=vec3<f32>(.066,.073,.078)-vec3<f32>(.17,.235,.20);m.surface.albedo+=pigmentDelta*(.94+.09*mt_kfb((mq+vec3<f32>(19.))*3.1))*stationRoofPaintCoverage(h,p,st)*(1.-st.wet*.18);}m.metal=select(stationIronMetalness(h)*(1.-corrosion),0.,isStationRoof(h));if(h.id==3u&&h.seed==55.){let contact=1.-smoothstep(.01,.035,abs(stationMetalCoordinates(h,p).y-1.07));m.metal=(.40+.48*contact)*(1.-corrosion);}m.microHeight=m.surface.height+loss;m.layer=3u;}
+ // Explicit preservation binding; physical copper ageing remains a recorded
+ // material gap. Source microheight is consumed by the original normal response.
+ if(h.id==3u&&(h.seed==181.||h.seed==182.)){m.surface=stationLegacyMetal(h,fp);m.metal=select(.60,.78,h.seed==182.);m.microHeight=m.surface.height;m.layer=3u;}
+ if(h.id==4u){let wp=stationWoodParams(h,st);let cls=stationWoodClass(h);let wn=stationMaterialDirection(h,p,normal);let source=kpWoodOriginalSample(stationWoodCoordinates(h),wn,cls,wp,fp,length(p-u.eye));m.surface=source.surface;m.cavity=source.cavity;m.specular=source.specularLevel;m.microHeight=source.surface.height;m.layer=4u;m.clearcoat=source.clearcoat;m.clearcoatRoughness=source.clearcoatRoughness;m.parallaxHeight01=source.parallaxHeight01;}
  if(h.id==17u){m.surface=kpConcreteStation(h.q,st.retained,st.wet,st.repair,fp);m.layer=17u;}
  if(h.id==13u){let a=stationPlasterParams(h.extent);let thickness=g.thickness;m.surface=kpPlasterOriginalField(h.q,a,fp).surface;let revealed=1.-smoothstep(.0001,.001,thickness);if(revealed>0.){let exposed=kpStoneSurface(h.q*.19,st.age,st.wet,st.repair,fp*.19);m.surface.albedo=mix(m.surface.albedo,exposed.albedo,revealed);m.surface.roughness=mix(m.surface.roughness,exposed.roughness,revealed);}m.surface.albedo*=1.-st.wet*.18;m.microHeight=m.surface.height*(1.-revealed);m.layer=select(13u,2u,revealed>.5);}
+ if(h.id==7u){let lamp=h.seed==184.;var base=select(vec3<f32>(.8148465722161012,.7529422167760779,.5520114015120001),vec3<f32>(1.,.7230551289219693,.3564001441459435),lamp);if(h.seed==187.){base=vec3<f32>(.7835377915261935,.7011018919329731,.5271151257058131);}m.surface=stationOriginalFinish(h.q,base,select(.34,.20,lamp),fp);m.metal=select(0.,.05,lamp);m.microHeight=m.surface.height;m.layer=7u;}
+ if(h.id==8u){m.surface=stationOriginalFinish(h.q,vec3<f32>(.0295568344378088,.052860647023180246,.04091519690685319),.34,fp);m.microHeight=m.surface.height;m.layer=8u;}
+ if(h.id==18u){m.surface=stationOriginalFinish(h.q,vec3<f32>(.13843161503245183,.16826940018969075,.14412847085805777),.92,fp);m.metal=.05;m.microHeight=m.surface.height;m.layer=18u;}
+ if(h.id==9u){m.surface=stationOriginalFinish(h.q,vec3<f32>(.04518620438567554,.10224173308810132,.07227185068231748),.34,fp);m.microHeight=m.surface.height;m.layer=9u;}
  return m;
 }
 `;

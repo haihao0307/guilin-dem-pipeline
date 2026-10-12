@@ -1,27 +1,32 @@
+import{terminalHallBounds}from'../kowloon-station-r04/native-terminal-hall.mjs';
+import{stationWaterfrontCoverageBounds}from'../kowloon-station-r04/native-station-waterfront.mjs';
+import{STATION_SCORE}from'../kowloon-station-r04/station-score.mjs';
 // Source-audited domain enclosures, SI metres. These restrict GPU dispatch only;
 // they never substitute for a surface/material query. See station-envelope-proof.
 const box=(name,lo,hi)=>Object.freeze({name,lo:Object.freeze(lo),hi:Object.freeze(hi)});
+const hall=terminalHallBounds(STATION_SCORE.hall);
 export const STATION_COVERAGE_BOUNDS=Object.freeze([
- box('hall-domain',[-33.5,-3.2,-12.5],[33.5,17.2,12.5]),
+ box('hall-domain',hall.min,hall.max),
  box('clock-tower-domain',[17.2,-2,-2.8],[30.8,48,10.8]),
  box('complete-shed-domain',[-36,-3,-149.2],[36,17,-5.8]),
  box('goods-domain',[32.5,-2.8,-103],[50.5,8.8,-13]),
  box('passenger-walk-domain',[28.5,-2.1,8.8],[69.5,7.1,17.2]),
- box('hall-floor',[-31.20021,-.55021,-8.80021],[31.20021,.85021,8.80021]),
- box('forecourt-floor',[-31.20021,-.25021,8.79979],[31.20021,.85021,14.80021]),
+ box('forecourt-floor',[-31.20021,-.30021,8.79979],[31.20021,.85021,14.80021]),
  box('entrance-steps',[-4.704,-.154,14.676],[4.704,.714,16.324]),
- box('approach-rails',[-25.78735,-.0335,-221],[25.78735,.0985,-145]),
- box('approach-timber',[-26.230274,-.165274,-221.130274],[26.230274,-.054726,-145]),
- box('siding-rails',[49.21265,-.0335,-170],[50.78735,.0985,-12]),
- box('siding-timber',[48.769726,-.165274,-169.780274],[51.230274,-.054726,-12.219726]),
- box('quay',[57.596,-1.084,-175.004],[60.004,-.216,26.004]),
- box('left-curb',[-58.124,-.344,-175.004],[-57.876,-.016,26.004]),
- box('right-curb',[-43.124,-.344,-175.004],[-42.876,-.016,26.004]),
+ box('approach-rails',[-25.822425,-.06025,-221],[25.822425,.0985,-145]),
+ box('approach-timber',[-26.165274,-.250524,-221.555274],[26.165274,-.089976,-144.524726]),
+ box('siding-rails',[49.177575,-.06025,-170],[50.822425,.0985,-12]),
+ box('siding-timber',[48.834726,-.250524,-169.715274],[51.165274,-.089976,-12.044726]),
+ box('approach-bearing-plates',[-25.842425,-.09025,-221.55],[25.842425,-.06025,-144.53]),
+ box('siding-bearing-plates',[49.157575,-.09025,-169.71],[50.842425,-.06025,-12.05]),
+ box('full-track-foundation',[-29.004,-.454,-221.004],[29.004,-.246,-9.996]),
+ ...stationWaterfrontCoverageBounds({site:STATION_SCORE.site}).map(b=>box(b.name,b.min,b.max)),
  box('transfer-chords',[-10.15,9.155,-70.11],[30.15,10.945,-17.39]),
  box('transfer-diagonals',[-11.294,9.206,-70.044],[31.294,10.894,-17.456]),
  box('exit-apron-0',[11.149790,-.400210,-51.180931],[13.416156,.850325,-35.545119]),
  box('exit-apron-1',[11.149790,-.400210,-30.393931],[13.416156,.850325,-14.758119]),
 ]);
+export const STATION_RAY_BOUNDS=box('station-ray',[-61,-4,-224],[85,49,30]);
 export function projectBoxPixels(b,m,width,height,padding=2){
  const corners=[];for(const x of[b.lo[0],b.hi[0]])for(const y of[b.lo[1],b.hi[1]])for(const z of[b.lo[2],b.hi[2]])corners.push([m[0]*x+m[4]*y+m[8]*z+m[12],m[1]*x+m[5]*y+m[9]*z+m[13],m[2]*x+m[6]*y+m[10]*z+m[14],m[3]*x+m[7]*y+m[11]*z+m[15]]);
  if(corners.some(c=>c.some(x=>!Number.isFinite(x))))throw Error('Nonfinite projected station bound');

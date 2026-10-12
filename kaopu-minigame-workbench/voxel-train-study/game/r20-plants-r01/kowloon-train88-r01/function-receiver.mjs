@@ -48,7 +48,7 @@ ${STATION_DIRECT_GLSL}
  vec3 direct=stationDirectBRDF(n,v,normalize(sunDirection),a.rgb,a.w,r.x,r.z,finish.xy)*sunColor*visibility(p,geometricNormal);
  direct+=stationDirectBRDF(n,v,normalize(fillDirection),a.rgb,a.w,r.x,r.z,finish.xy)*fillColor;
  direct+=stationDirectBRDF(n,v,normalize(rimDirection),a.rgb,a.w,r.x,r.z,finish.xy)*rimColor;
- vec3 col=(direct+a.rgb*mix(groundColor,skyColor,n.y*.5+.5)/3.14159265)*r.y;
+ vec3 col=(direct+a.rgb*mix(groundColor,skyColor,n.y*.5+.5)/3.14159265)*r.y+vec3(1.,.7230551289219693,.3564001441459435)*finish.w;
  float viewDepth=-(localToView*vec4(p,1.)).z;fragColor=vec4(stationHostPresentation(col,viewDepth,fogColor,fogRange),1.);}
 
  `,uniforms);composite.depthTest=true;composite.depthWrite=true;composite.shadowSide=THREE.DoubleSide;
