@@ -1,15 +1,17 @@
 // Pure SI/state adapter. No renderer, timer, scene mesh or state mutation.
+import {createHostConstruction} from './host-construction.mjs';
 export const HOST_BASELINE=Object.freeze({release:'2eacc2f45637ad1063efebec40087b2fb795f857',path:'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01',threeRevision:'170',appGitBlob:'c02b3690b2f619d9f791b34e3d7f28e68a3f030d',stationIndex:0});
 const finite=(n,label)=>{if(!Number.isFinite(n))throw Error('Nonfinite '+label);return n;};
 const vec=(p,label)=>{if(!Array.isArray(p)||p.length!==3||!p.every(Number.isFinite))throw Error('Invalid '+label);return p;};
-export function createStationBinding({score,track,platform,coach,frontX=5,hallBehindStopM=75,boardingTrackX=5}={}){
+export function createStationBinding({score,track,platform,coach,frontX=5,hallBehindStopM=75,boardingTrackX=5,hostOptions={}}={}){
  if(score?.units!=='metres')throw Error('Station must remain SI metres');
  if(!score.tracks.centers.includes(boardingTrackX))throw Error('Boarding track missing from the common recipe');
  if(Math.abs(track.gauge-score.tracks.gauge)>1e-9)throw Error('Track gauges differ; cannot scale the railway');
  const deckLocal=.85,shiftY=platform.top-deckLocal,railLocal=track.railHead-shiftY;
- const platformCenter=score.platforms.centers.find(x=>x>boardingTrackX),halfWidth=platformCenter-boardingTrackX-platform.minZ;
+ const host=createHostConstruction({...hostOptions,score,platform,coach,frontX,hallBehindStopM,boardingTrackX,worldVerticalOffsetM:shiftY});
+ const platformCenter=host.boardingIsland.centerLocalXM,halfWidth=host.boardingIsland.halfWidthM;
  if(!(halfWidth>0)||halfWidth>=5)throw Error('Invalid functional platform envelope');
- const construction=Object.freeze({stationDeckTopM:deckLocal,worldVerticalOffsetM:shiftY,railTopLocalM:railLocal,railCenterOffsetM:track.railCenterZ,railHeadWidthM:track.headWidth,platformHalfWidthM:halfWidth,copingHalfWidthM:.18,copingCenterOffsetM:halfWidth-.18,boardingGapM:platform.minZ-coach.width/2,uniformScale:1});
+ const construction=Object.freeze({stationDeckTopM:deckLocal,worldVerticalOffsetM:shiftY,railTopLocalM:railLocal,railCenterOffsetM:track.railCenterZ,railHeadWidthM:track.headWidth,platformCenterLocalM:platformCenter,platformHalfWidthM:halfWidth,otherPlatformHalfWidthM:score.platforms.halfWidth,copingHalfWidthM:.18,copingCenterOffsetM:halfWidth-.18,boardingGapM:platform.minZ-coach.width/2,uniformScale:1,host});
  function frame(view,route){
   finite(view.distance,'distance');finite(view.elapsed,'elapsed');finite(view.tick,'tick');const plan=route.find(s=>s.index===HOST_BASELINE.stationIndex);
   if(!plan)throw Error('Kowloon station is absent from this route');

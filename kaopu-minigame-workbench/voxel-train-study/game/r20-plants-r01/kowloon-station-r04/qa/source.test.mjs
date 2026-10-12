@@ -6,7 +6,7 @@ test('same score and camera set covers exterior, hall, platform and local materi
 test('unresolved rays remain visible failures, not silently counted as sky',()=>{assert.match(WGSL,/atomicAdd\(&stats.exhausted/);assert.match(WGSL,/vec4<f32>\(1\.,0\.,1\.,1\.\)/);assert.match(WGSL,/return Trace\(t,2u,1400u/);});
 test('spatial pruning preserves conservative exterior distance instead of dropping the building',()=>{for(const x of['hallBound','tb','shedBox'])assert(WGSL.includes('else{recordPart(p,'+x+',0u,p,0.);}'));});
 
-test('brick orientation and wood grain normals use explicit material axes',()=>{assert.match(WGSL,/select\(p.x,p.z,axis==12u\)/);assert.match(WGSL,/select\(normal,normal.zxy,h.seed==38.\)/);assert(!WGSL.includes('abs(q.x)>abs(q.z)'));});
+test('brick orientation and wood grain normals use explicit material axes',()=>{assert.match(WGSL,/select\(p.x,p.z,axis==12u\)/);assert.match(WGSL,/let wn=stationMaterialDirection\(h,p,normal\)/);assert.match(WGSL,/h.seed==38.\)\{return d.zxy;/);assert(!WGSL.includes('abs(q.x)>abs(q.z)'));});
 
 test('analytic ground ray is domain clipped and cannot override nearer station',()=>{assert(WGSL.includes('fn groundRay('));assert(WGSL.includes('let end=min(limit,ground.x)'));assert(WGSL.includes('(ro+rd*land).x<=SHORE_X'));assert(WGSL.includes('(ro+rd*sea).x>=SHORE_X'));assert(!WGSL.includes('if(p.z>27.)'));});
 test('angular features preserve their zero set with conservative frequency scaling',()=>{assert(WGSL.includes('(web-.034)/16.'));assert(WGSL.includes('(tick-.045)/6.'));});
@@ -27,7 +27,7 @@ test('spatially concurrent candidate capacity covers every reachable recipe',()=
 
 test('staged GPU keeps the complete shared field and only caches current ray intersections',()=>{assert(WGSL.includes('fn primaryRays('));assert(WGSL.includes('rayHits:array<Trace>'));assert(WGSL.includes('let tr=march(u.eye,rd,420.)'));assert(WGSL.includes('color=shade(tr,u.eye,rd)'));});
 
-test('iron contact and section loss share an actual height datum',()=>{assert(WGSL.includes('kpMetalCorrosion(stationMetalCoordinates(h,p),st.age'));assert(WGSL.includes('kpMetalSurface(stationMetalCoordinates(h,p),st.age'));assert(WGSL.includes('select(p.y,p.y+.984,rail)'));});
+test('iron contact and section loss share an actual height datum',()=>{assert(WGSL.includes('kpMetalCorrosion(stationMetalCoordinates(h,p),st.age'));assert(WGSL.includes('kpMetalSurface(stationMetalCoordinates(h,p),st.age'));assert(WGSL.includes('select(p.y,p.y+(1.07-RAIL_CROWN),rail)'));});
 
 test('wood is sampled in each actual slat or sleeper frame',()=>{assert(WGSL.includes('fn recordTimber('));assert(WGSL.includes('sourceSeed:f32'));assert(WGSL.includes('let face=abs(h.q)-h.extent'));assert(WGSL.includes('wp.seed=fract(wp.seed+h.sourceSeed*.61803398875)'));assert(!WGSL.includes('4u,bq.zxy,38.'));assert(WGSL.includes('if(revealed>0.){let exposed=kpStoneSurface'));});
 

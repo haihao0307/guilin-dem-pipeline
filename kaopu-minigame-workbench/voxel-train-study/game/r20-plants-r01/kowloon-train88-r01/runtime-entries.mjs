@@ -16,7 +16,7 @@ export const STEP_ENTRY=String.raw`
  if(tr.w!=0.){return tr;}
  for(var i=0u;i<u32(frame.viewport.w);i++){
   let p=ro+rd*tr.x;let h=stationField(p);tr.y=f32(h.id);tr.z+=1.;
-  let eps=clamp(tr.x*.000015,.00065,.004);
+  if(h.id==999u){tr.w=3.;break;}let eps=clamp(tr.x*.000015,.00065,.004);
   if(h.id!=0u&&abs(h.d)<eps){tr.w=1.;break;}
   tr.x+=max(max(max(abs(h.d)*.60,barrelAdvance(p,rd,h)),floorAdvance(p,rd,h)),.00018);
   if(tr.x>frame.controls.y){tr.w=2.;break;}

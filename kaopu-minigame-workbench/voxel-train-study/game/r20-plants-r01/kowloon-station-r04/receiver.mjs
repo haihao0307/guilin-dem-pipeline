@@ -5,8 +5,8 @@ import{KP_STONE_WGSL}from'./mothers/stone-fields.mjs';
 import{KP_METAL_WGSL}from'./mothers/metal.mjs';
 import{KP_CONCRETE_WGSL}from'./mothers/concrete-kst.mjs';
 import{STATION_MATTER_WGSL}from'./station-matter.mjs';
-import{STATION_FIELD_WGSL}from'./station-field.mjs';
-export const WGSL=String.raw`
+import{createStationFieldWGSL}from'./station-field.mjs';
+export function createStationWGSL(options={}){return String.raw`
 struct Params{eye:vec3<f32>,age:f32,forward:vec3<f32>,fov:f32,right:vec3<f32>,aspect:f32,up:vec3<f32>,debug:f32,resolution:vec2<f32>,pad:vec2<f32>}
 @group(0)@binding(0)var<uniform>u:Params;
 struct Stats{hit:atomic<u32>,miss:atomic<u32>,exhausted:atomic<u32>,maxSteps:atomic<u32>,visibilityRays:atomic<u32>,visibilityUnresolved:atomic<u32>}
@@ -18,7 +18,7 @@ ${KP_METAL_WGSL}
 ${KP_CONCRETE_WGSL}
 ${KP_PLASTER_WGSL}
 fn stationPlasterParams(extent:vec3<f32>)->KpPlasterParams{return KpPlasterParams(vec2<f32>(0.),max(extent.xy,vec2<f32>(.08)),.0165,.0012+.0018*u.age,0.,.013,.020,.0001,vec3<f32>(.48,.44,.35),vec3<f32>(.82,.76,.64),.0008,.000008,.018);}
-${STATION_FIELD_WGSL}
+${createStationFieldWGSL(options)}
 ${STATION_MATTER_WGSL}
 struct Trace{t:f32,status:u32,steps:u32,h:HitField}
 fn groundRay(ro:vec3<f32>,rd:vec3<f32>)->vec2<f32>{var best=vec2<f32>(1e6,0.);if(rd.y< -0.0000001){let land=(-.28-ro.y)/rd.y;let sea=(-.52-ro.y)/rd.y;if(land>.001&&(ro+rd*land).x<=SHORE_X){best=vec2<f32>(land,6.);}if(sea>.001&&(ro+rd*sea).x>=SHORE_X&&sea<best.x){best=vec2<f32>(sea,10.);}}if(abs(rd.x)>.0000001){let coast=(SHORE_X-ro.x)/rd.x;let yy=(ro+rd*coast).y;if(coast>.001&&yy>=-.52&&yy<=-.28&&coast<best.x){best=vec2<f32>(coast,6.);}}return best;}
@@ -29,8 +29,8 @@ fn barrelAdvance(p:vec3<f32>,rd:vec3<f32>,h:HitField)->f32{if(h.id!=15u){return 
 // Concrete source displacement is in [-.00091,.00021]m. These expanded
 // analytic boxes bound every floor ingredient; they are acceleration only.
 fn floorRayBox(p:vec3<f32>,rd:vec3<f32>,center:vec3<f32>,half:vec3<f32>)->f32{let q=p-center;if(all(abs(q)<=half)){return -1.;}var enter=0.;var leave=1e6;for(var axis=0u;axis<3u;axis++){if(abs(rd[axis])<.0000001){if(abs(q[axis])>half[axis]){return 1e5;}}else{let a=(-half[axis]-q[axis])/rd[axis];let b=(half[axis]-q[axis])/rd[axis];enter=max(enter,min(a,b));leave=min(leave,max(a,b));}}if(leave<enter||leave<0.){return 1e5;}return enter;}
-fn floorAdvance(p:vec3<f32>,rd:vec3<f32>,h:HitField)->f32{if(h.id!=17u){return 0.;}var near=1e5;for(var floorIndex=0u;floorIndex<8u;floorIndex++){var center=vec3<f32>(0.,.15,0.);var half=vec3<f32>(31.201,.701,8.801);if(floorIndex>=1u&&floorIndex<=4u){center=vec3<f32>(-30.+f32(floorIndex-1u)*20.,.35,SHED_CENTER);half=vec3<f32>(3.401,.501,SHED_HALF+1.301);}if(floorIndex==5u){center=vec3<f32>(GOODS_X+1.7,.3,GOODS_CENTER);half=vec3<f32>(4.701,.551,GOODS_HALF+.601);}if(floorIndex==6u){center=vec3<f32>(49.,.3,13.);half=vec3<f32>(18.001,.551,1.801);}if(floorIndex==7u){center=vec3<f32>(0.,.3,11.8);half=vec3<f32>(31.201,.551,3.001);}let entry=floorRayBox(p,rd,center,half);if(entry<0.){return 0.;}near=min(near,entry);}let other=max(0.,stationDomain(p,false,true).d-.03)*.60;return min(near*.98,other);}
-fn march(ro:vec3<f32>,rd:vec3<f32>,limit:f32)->Trace{let ground=groundRay(ro,rd);let end=min(limit,ground.x);var t=.02;var h=stationField(ro+rd*t);for(var i=0u;i<1400u;i++){h=stationField(ro+rd*t);let eps=clamp(t*.000015,.00065,.006);if(abs(h.d)<eps&&h.id!=0u){return Trace(t,1u,i+1u,h);}t+=max(max(max(abs(h.d)*.60,barrelAdvance(ro+rd*t,rd,h)),floorAdvance(ro+rd*t,rd,h)),.00018);if(t>=end){if(ground.x<=limit){let p=ro+rd*ground.x;return Trace(ground.x,1u,i+1u,HitField(0.,u32(ground.y),p,0.,0.,vec3<f32>(1.),0.));}return Trace(t,0u,i+1u,h);}}return Trace(t,2u,1400u,h);}
+fn floorAdvance(p:vec3<f32>,rd:vec3<f32>,h:HitField)->f32{if(h.id!=17u){return 0.;}var near=1e5;for(var floorIndex=0u;floorIndex<8u;floorIndex++){var center=vec3<f32>(0.,.15,0.);var half=vec3<f32>(31.201,.701,8.801);if(floorIndex>=1u&&floorIndex<=4u){center=vec3<f32>(-30.+f32(floorIndex-1u)*20.,.35,SHED_CENTER);half=vec3<f32>(3.401,.501,SHED_HALF+1.301);${options.construction?.host?`if(floorIndex==3u){center.x=${options.construction.host.boardingIsland.centerLocalXM};half.x=${options.construction.host.boardingIsland.halfWidthM+.001};}`:""}}if(floorIndex==5u){center=vec3<f32>(GOODS_X+1.7,.3,GOODS_CENTER);half=vec3<f32>(4.701,.551,GOODS_HALF+.601);}if(floorIndex==6u){center=vec3<f32>(49.,.3,13.);half=vec3<f32>(18.001,.551,1.801);}if(floorIndex==7u){center=vec3<f32>(0.,.3,11.8);half=vec3<f32>(31.201,.551,3.001);}let entry=floorRayBox(p,rd,center,half);if(entry<0.){return 0.;}near=min(near,entry);}let other=max(0.,stationDomain(p,false,true).d-.03)*.60;return min(near*.98,other);}
+fn march(ro:vec3<f32>,rd:vec3<f32>,limit:f32)->Trace{let ground=groundRay(ro,rd);let end=min(limit,ground.x);var t=.02;var h=stationField(ro+rd*t);for(var i=0u;i<1400u;i++){h=stationField(ro+rd*t);if(h.id==999u){return Trace(t,2u,i+1u,h);}let eps=clamp(t*.000015,.00065,.006);if(abs(h.d)<eps&&h.id!=0u){return Trace(t,1u,i+1u,h);}t+=max(max(max(abs(h.d)*.60,barrelAdvance(ro+rd*t,rd,h)),floorAdvance(ro+rd*t,rd,h)),.00018);if(t>=end){if(ground.x<=limit){let p=ro+rd*ground.x;return Trace(ground.x,1u,i+1u,HitField(0.,u32(ground.y),p,0.,0.,vec3<f32>(1.),0.));}return Trace(t,0u,i+1u,h);}}return Trace(t,2u,1400u,h);}
 
 fn fieldNormal(p:vec3<f32>)->vec3<f32>{let e=.00045;var gradient=vec3<f32>(0.);let axes=array<vec3<f32>,4>(vec3<f32>(1,-1,-1),vec3<f32>(-1,-1,1),vec3<f32>(-1,1,-1),vec3<f32>(1,1,1));for(var i=0u;i<4u;i++){gradient+=axes[i]*stationField(p+axes[i]*e).d;}return normalize(gradient);}
 fn sky(rd:vec3<f32>)->vec3<f32>{return mix(vec3<f32>(.72,.78,.76),vec3<f32>(.22,.38,.54),smoothstep(-.15,.85,rd.y));}
@@ -68,4 +68,5 @@ fn stationRay(pixel:vec2<f32>)->vec3<f32>{let uv=(pixel/u.resolution*2.-vec2<f32
 
 @group(0)@binding(2)var<storage,read_write>matterProbe:array<vec4<f32>,576>;
 @compute @workgroup_size(32)fn probeMatter(@builtin(global_invocation_id)gid:vec3<u32>){let index=gid.x;if(index>=192u){return;}let family=index/32u;let cell=index%32u;let ids=array<u32,6>(1u,2u,3u,4u,13u,17u);let q=vec3<f32>(f32(cell)*.13-1.5,.1+f32(cell%3u)*.037,.03+f32(cell%5u)*.021);let p=vec3<f32>(f32(cell)*.11,.15+f32(cell%8u)*.12,8.3);let h=HitField(0.,ids[family],q,select(19.,38.,family==3u),0.,vec3<f32>(2.,1.5,.3),0.);let m=evaluateStationMatter(h,p,vec3<f32>(0.,1.,0.),.0005);matterProbe[index*3u]=vec4<f32>(m.d,m.surface.height,m.surface.roughness,f32(m.layer));matterProbe[index*3u+1u]=vec4<f32>(m.surface.albedo,m.microHeight);let st=resolveStationState(p);matterProbe[index*3u+2u]=vec4<f32>(st.age,st.wet,st.repair,st.retained);}
-`;
+`;}
+export const WGSL=createStationWGSL();
