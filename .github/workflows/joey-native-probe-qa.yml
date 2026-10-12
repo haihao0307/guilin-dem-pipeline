@@ -56,8 +56,10 @@ jobs:
         run: node --test kaopu-unified-human-workbench/joey-observation-r01/expression-state-r01/states.test.cjs
       - name: Test direct surface guard metrics
         run: node --test kaopu-unified-human-workbench/joey-observation-r01/local-head-control-r50/surface-guards.test.cjs
-      - name: Validate protected source and actual common-head surface response
-        run: node kaopu-unified-human-workbench/joey-observation-r01/local-head-control-r50/validate-control.cjs
+      - name: Test first-order surface differential
+        run: node --test kaopu-unified-human-workbench/joey-observation-r01/local-head-control-r50/differential-guards.test.cjs
+      - name: Inspect normalized normal and strain control response
+        run: node kaopu-unified-human-workbench/joey-observation-r01/local-head-control-r50/source-differential-summary.cjs
       - name: Keep bounded research evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -107,6 +109,7 @@ jobs:
             joey-reference-depth-r49/
             joey-local-head-control-r50/
             joey-local-head-control-r50-direct/
+            joey-local-head-control-r50-differential/
           retention-days: 7
           compression-level: 0
           if-no-files-found: warn

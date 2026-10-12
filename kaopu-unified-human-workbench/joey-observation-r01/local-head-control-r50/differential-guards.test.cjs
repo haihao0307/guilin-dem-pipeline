@@ -1,0 +1,5 @@
+const test=require('node:test'),assert=require('node:assert/strict'),{normalRows,edgeRow}=require('./differential-guards.cjs');
+const norm=p=>{const a=p.slice(3,6).map((x,i)=>x-p[i]),b=p.slice(6,9).map((x,i)=>x-p[i]),v=[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],l=Math.hypot(...v);return v.map(x=>x/l)};
+test('Normal differential matches finite difference including tiny valid triangle',()=>{for(const scale of [1,.001]){const p=[0,0,0,scale,0,0,0,scale,0],j=[0,0,0,0,0,0,0,0,.0002],n=normalRows(p,j,[0,1,2],1),eps=1e-6,a=norm(p),b=norm(p.map((x,i)=>x+eps*j[i]));for(let k=0;k<3;k++)assert(Math.abs((b[k]-a[k])/eps-n.rows[k][0])<1e-6);}});
+test('Edge differential is dimensionless and matches finite strain',()=>{const p=[0,0,0,.001,0,0],j=[0,0,0,.0002,0,0];assert(Math.abs(edgeRow(p,j,0,1,1).row[0]-.2)<1e-12)});
+test('Rigid translation has zero differential and original thresholds reject degeneracy',()=>{const p=[0,0,0,1,0,0,0,1,0],j=Array(3).fill([.2,.3,.4]).flat();assert(normalRows(p,j,[0,1,2],1).rows.every(r=>r[0]===0));assert.equal(edgeRow(p,j,0,1,1).row[0],0);assert.equal(normalRows(Array(9).fill(0),j,[0,1,2],1),null);});
