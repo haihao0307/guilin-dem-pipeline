@@ -1,4 +1,4 @@
-import {sha256,R52_REFERENCE_SHA,R52_ARCHIVE_SHA} from './FrozenR52Lock.mjs';
+import {sha256,R52_REFERENCE_SHA,R52_ARCHIVE_SHA} from './FrozenR52Lock.mjs?v=exact-ios-output-3';
 export const DIAGNOSTIC_VERSION='R54-device-diagnostic/3';
 export const TOPOLOGY_SHA='e8526431b9b24bec71d8161ed409794a8398ffc68ad25800abb27e0fc09644de';
 const SOURCE_MANIFEST_SHA='3dc98b7d120613172f0f52e15bbadf7eb1c45ec5409b0791c91a345e70965565';
