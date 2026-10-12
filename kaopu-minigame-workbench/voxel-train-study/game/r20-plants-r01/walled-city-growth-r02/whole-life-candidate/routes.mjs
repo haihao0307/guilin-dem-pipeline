@@ -1,12 +1,19 @@
 import {localToWorld} from '../spatial-candidate/compile.mjs';import {makeObservedChain} from '../spatial-candidate/routes.mjs';import {floorY,floorH} from '../compiler/compile.mjs';import {querySettlement} from './kernel.mjs';
 export function makePairChain(r){const a=r.buildings.find(b=>b.id==='B08'),b=r.observedBuilding,br=r.bridges.find(q=>q.id===r.lifePair.bridgeId),keyframes=[],add=(p,label)=>keyframes.push({p,label}),local=(u,y,v,label)=>add(localToWorld(a,[u,y,v]),label);
  local(1.52,0,-.65,'B08 street');local(1.52,0,.72,'B08 entry');
- for(let f=0;f<2;f++){let y=floorY(a,f),h=floorH(a,f),n=Math.ceil(h/.18),na=Math.ceil(n/2),nb=n-na,rise=h/n,run=Math.max(na,nb)*a.tread,xa=a.wall+a.flightWidth/2,xb=a.coreWidth-a.wall-a.flightWidth/2;
+ for(let f=0;f<2;f++){let off=(r.layout.floorOffset+(a.floorStart+f)*2)*4,y=r.packed[off],h=r.packed[off+1],n=r.packed[off+6],na=r.packed[off+7],nb=n-na,rise=h/n,run=Math.max(na,nb)*a.tread,xa=a.wall+a.flightWidth/2,xb=a.coreWidth-a.wall-a.flightWidth/2;
  local(xa,y,.72,`B08 F${f} lower`);for(let k=0;k<na;k++)local(xa,y+(k+1)*rise,a.landing+(k+.5)*a.tread,`B08 F${f} first ${k}`);local(xa,y+na*rise,a.landing+run+a.turnLanding/2,`B08 F${f} turn A`);local(xb,y+na*rise,a.landing+run+a.turnLanding/2,`B08 F${f} turn B`);for(let k=0;k<nb;k++)local(xb,y+(na+k+1)*rise,a.landing+run-(k+.5)*a.tread,`B08 F${f} return ${k}`);local(xb,y+h,.72,`B08 F${f+1} upper`);}
  local(a.coreWidth,br.pa[1],.72,'B08 core to shared passage');local(a.width-.45,br.pa[1],.72,'B08 public front passage');add(br.pa,'B08 actual side threshold');
  for(let k=0;k<=br.steps;k++){let t=(k+.5)*br.length/(br.steps+1);add([br.pa[0]+t,br.pa[1]+k*(br.pb[1]-br.pa[1])/br.steps,br.pa[2]],`bridge real tread ${k}`);}add(br.pb,'B09 actual side threshold');
  const by=br.pb[1],v=br.pb[2]-(b.z-b.depth/2),w=p=>localToWorld(b,p);add(w([.665,by,v]),'B09 public side passage');add(w([.665,by,4.025]),'B09 side passage to rear corridor');add(w([(b.width-4.8)/2+.525,by,4.025]),'B09 rear corridor to own stair');
- const tail=makeObservedChain(r).keyframes,idx=tail.findIndex(q=>q.label===r.segment.floors[2].id+' lower landing');if(idx<0)throw Error('Missing observed F02 landing');keyframes.push(...tail.slice(idx));
+ const cx=(b.width-4.8)/2,cz=4.55,land=1.05,fw=1.05,C=2.4;for(let f=2;f<b.floors;f++){
+  const off=(r.layout.floorOffset+(b.floorStart+f)*2)*4,y=r.packed[off],h=r.packed[off+1],nr=r.packed[off+6],na=r.packed[off+7],nb=nr-na,rise=h/nr,run=2.7;
+  const local=(u,yy,vv,label)=>add(w([u,yy,vv]),'B09 F'+f+' '+label);local(cx+land/2,y,cz+fw/2,'lower');
+  for(let k=0;k<na;k++)local(cx+land+(k+.5)*run/na,y+(k+1)*rise,cz+fw/2,'first '+k);
+  local(cx+land+run+land/2,y+na*rise,cz+fw/2,'turn A');local(cx+land+run+land/2,y+na*rise,cz+C-fw/2,'turn B');
+  for(let k=0;k<nb;k++)local(cx+land+run-(k+.5)*run/nb,y+(na+k+1)*rise,cz+C-fw/2,'return '+k);
+  local(cx+land/2,y+h,cz+C-fw/2,'upper');
+ }add(w([cx+land/2,b.top,4.025]),'B09 roof working approach');
  return {name:'B08 street → own stair → shared front passage → stepped/gated bridge → B09 side passage → rear corridor → own stair → roof',keyframes};}
 export const BODY=[{y:.055,r:.055,kind:'foot'},{y:.2,r:.07},{y:.44,r:.18},{y:.68,r:.22},{y:.96,r:.22},{y:1.23,r:.22},{y:1.48,r:.19},{y:1.64,r:.16}];
 export function validatePairChain(r,{marginM=.006}={}){let chain=makePairChain(r),queries=0,supports=0,min=Infinity,maxStep=0;const failures=[];

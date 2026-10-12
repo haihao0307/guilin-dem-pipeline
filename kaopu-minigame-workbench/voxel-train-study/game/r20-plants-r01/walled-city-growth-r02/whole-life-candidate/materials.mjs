@@ -1,5 +1,6 @@
 const once=(s,a,b)=>{if(s.split(a).length!==2)throw Error('Life material anchor: '+a);return s.replace(a,b);};
 export function wholeLifeMaterialDomain(s){
+ s=once(s,'fn exteriorWeight(h:GeoHit)->f32{','fn exteriorWeight(h:GeoHit)->f32{\n if(h.objectId>0u){return 0.;}');
  s=once(s,'fn woodCoordinates(h:GeoHit)->vec3<f32>{','fn woodCoordinates(h:GeoHit)->vec3<f32>{\n if(h.componentId>=4000000u&&h.componentId<4014336u){let member=(h.componentId-4000000u)%32u;return h.q+vec3<f32>(f32(h.objectId%17u)*.137,f32(member)*.014,0.);}')
  s=once(s,'fn woodNormal(h:GeoHit,n:vec3<f32>)->vec3<f32>{',`fn woodNormal(h:GeoHit,n:vec3<f32>)->vec3<f32>{
  if(h.componentId>=4000000u&&h.componentId<4014336u){let axes=geo_get(i32(geo_get(1).x)+(i32(h.buildingId)-1)*8+2);let localN=vec3<f32>(-n.x*axes.x,n.y,-n.z*axes.y);let member=(h.componentId-4000000u)%32u;if(member<4u){return localN.yxz;}if(member<6u){return localN.zyx;}return localN;}`);

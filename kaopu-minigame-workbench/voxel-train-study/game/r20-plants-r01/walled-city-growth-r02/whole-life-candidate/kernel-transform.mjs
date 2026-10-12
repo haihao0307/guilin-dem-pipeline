@@ -14,5 +14,7 @@ export function wholeLifeScalarSource(source){let s=source;
  const bed="if(kind==1){var object=100000u+u32(rule.x)*32u+u32(localIndex)*4u+u32(k);h=life_bed(h,u-x,y-base,v-z,bid,4000000u+(object-100000u)*32u,sid);}";
  s=once(s,oldBed,bed);
  s=once(s,"else if(kind==4){h=geo_cube", "else if(kind==7){var object=100000u+u32(rule.x)*32u+u32(localIndex)*4u+u32(k);h=life_water(h,u-x,y-base,v-z,bid,4000000u+(object-100000u)*32u,sid);}\n  else if(kind==4){h=geo_cube");
+ s=once(s,'var nr=i32(ceil(fh/0.18));var na=i32(ceil(f32(nr)*0.5));','var stairCounts=geo_get(i32(head.y)+fi*2+1);var nr=i32(stairCounts.z);var na=i32(stairCounts.w);');
+ s=once(s,'var nr=i32(ceil(fh/0.18));var na=i32(floor(f32(nr+1)*0.5));','var stairCounts=geo_get(i32(head.y)+fi*2+1);var nr=i32(stairCounts.z);var na=i32(stairCounts.w);');
  return s;
 }

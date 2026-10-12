@@ -68,7 +68,7 @@ fn trace(ro:vec3<f32>,rd:vec3<f32>,startT:f32,startSteps:u32,budget:u32,oldGlass
 @compute @workgroup_size(64) fn traceTileMain(@builtin(global_invocation_id) gid:vec3<u32>){
  let resuming=u.controls.y==1.;var id=gid.x;var startT=.01;var steps=0u;var budget=180u;
  var glass=vec4<f32>(0.,0.,0.,-1.);var through=vec4<f32>(1.,1.,1.,0.);
- if(resuming){if(id>=atomicLoad(&retry.count)){return;}id=retry.indices[id];let old=hits[id];startT=old.ray.x;steps=u32(old.ray.z);budget=1024u;glass=old.glass;through=old.through;}
+ if(resuming){if(id>=atomicLoad(&retry.count)){return;}id=retry.indices[id];let old=hits[id];startT=old.ray.x;steps=u32(old.ray.z);budget=1024u;if(u.controls.w>=1024.&&u.controls.w<=8192.){budget=u32(u.controls.w);}glass=old.glass;through=old.through;}
  else{if(id>=256u){return;}if(id%16u>=u.tile.z||id/16u>=u.tile.w){return;}}
  let pixel=vec2<f32>(u.tile.xy+vec2<u32>(id%16u,id/16u))+vec2<f32>(.5);
  let h=trace(u.eye.xyz,cameraRay(pixel),startT,steps,budget,glass,through);hits[id]=h;

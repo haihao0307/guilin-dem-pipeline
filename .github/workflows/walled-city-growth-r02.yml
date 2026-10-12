@@ -1,4 +1,4 @@
-name: Walled city whole life pair candidate
+name: Walled city integer stair and sparse ray audit
 on:
   push:
     branches: ['qa/walled-city-growth-r02-20261011']
@@ -7,7 +7,7 @@ permissions:
 jobs:
   same-world-observed-spatial-review:
     runs-on: ubuntu-24.04
-    timeout-minutes: 65
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -23,50 +23,12 @@ jobs:
           P=kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02
           node --test "$P/qa/whole-life/runtime.test.mjs"
           node "$P/qa/whole-life/points-build.mjs"
-      - name: Start actual native WebGPU pipeline and small smoke crop
+      - name: Recheck integer-authority route and nine failed rays only
         run: |
-          mkdir -p "$RUNNER_TEMP/city-spatial"
-          (
-            set +e
-            CITY_DRAW_TIMEOUT_MS=2400000 DEBUG=pw:browser node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/qa/whole-life/run.cjs > "$RUNNER_TEMP/city-spatial/log" 2>&1
-            echo "$?" > "$RUNNER_TEMP/city-spatial/exit"
-          ) </dev/null >/dev/null 2>&1 &
-          for i in $(seq 1 180); do
-            if [ -f walled-city-whole-life-results/pipeline-smoke-complete.json ]; then break; fi
-            if [ -f "$RUNNER_TEMP/city-spatial/exit" ]; then cat "$RUNNER_TEMP/city-spatial/log"; exit 1; fi
-            sleep 5
-          done
-          cat "$RUNNER_TEMP/city-spatial/log"
-          test -f walled-city-whole-life-results/pipeline-smoke-complete.json
-      - name: Save exact pipeline smoke separately
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-        with:
-          name: city-whole-life-pipeline-smoke-${{ github.sha }}
-          path: walled-city-whole-life-results/
-          retention-days: 7
-      - name: Await the first complete observed section
-        run: |
-          for i in $(seq 1 540); do
-            if [ -f walled-city-whole-life-results/first-frame-complete.json ]; then break; fi
-            if [ -f "$RUNNER_TEMP/city-spatial/exit" ]; then cat "$RUNNER_TEMP/city-spatial/log"; exit 1; fi
-            sleep 5
-          done
-          cat "$RUNNER_TEMP/city-spatial/log"
-          test -f walled-city-whole-life-results/first-frame-complete.json
-      - name: Save first full-frame section immediately
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-        with:
-          name: city-whole-life-first-frame-${{ github.sha }}
-          path: walled-city-whole-life-results/
-          retention-days: 7
-      - name: Finish bounded whole-pair QA
-        run: |
-          while [ ! -f "$RUNNER_TEMP/city-spatial/exit" ]; do sleep 5; done
-          cat "$RUNNER_TEMP/city-spatial/log"
-          exit "$(cat "$RUNNER_TEMP/city-spatial/exit")"
+          DEBUG=pw:browser node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/qa/whole-life/run.cjs
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: city-whole-life-complete-${{ github.sha }}
+          name: city-whole-life-correctness-${{ github.sha }}
           path: walled-city-whole-life-results/
           retention-days: 7

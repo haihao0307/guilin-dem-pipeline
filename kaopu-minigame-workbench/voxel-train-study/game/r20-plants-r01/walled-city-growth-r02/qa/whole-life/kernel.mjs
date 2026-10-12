@@ -150,7 +150,7 @@ fn('geo_observed','hh:GeoHit,x:f32,y:f32,z:f32,bi:i32,skipBelow:i32,stoneUpperM:
   var life=geo_get(sg+5);if(f==i32(life.x)&&life.y>0.0){h=geo_cube(h,u-life.y,y-by-fh*0.5,v-1.68,life.z*0.5,fh*0.5,1.68,1u,bid,cid+19u,sid);}
   if(f==0){h=geo_cube(h,u-ent.x+wt*0.5,y-by-fh*0.5,v-1.68,wt*0.5,fh*0.5,1.68,1u,bid,cid+17u,sid);h=geo_cube(h,u-ent.x-ent.y-wt*0.5,y-by-fh*0.5,v-1.68,wt*0.5,fh*0.5,1.68,1u,bid,cid+18u,sid);}
   for(var k=i32(map.z);k<i32(map.z+map.w);k=k+1){var aa=geo_get(i32(tab.z)+k*3);var pp=geo_get(i32(tab.z)+k*3+1);var ids=geo_get(i32(tab.z)+k*3+2);if(pp.z<2.0){h=geo_port(h,u,y,v,i32(aa.x),aa.y,aa.z,by,pp.x,pp.y,aa.w,i32(pp.z),pp.w,bid,cid+u32(ids.y),sid);}}
-  var nr=i32(ceil(fh/0.18));var na=i32(ceil(f32(nr)*0.5));var nb=nr-na;var rise=fh/f32(nr);var run=L-2.0*land;var actualTread=run/f32(na);var returnTread=run/f32(nb);var mid=by+f32(na)*rise;
+  var stairCounts=geo_get(i32(head.y)+fi*2+1);var nr=i32(stairCounts.z);var na=i32(stairCounts.w);var nb=nr-na;var rise=fh/f32(nr);var run=L-2.0*land;var actualTread=run/f32(na);var returnTread=run/f32(nb);var mid=by+f32(na)*rise;
   // Rotated 90 degrees: the existing scalar flight receives z as lateral axis and x as travel.
   var before=h.componentId;h=geo_flight(h,v,y,u,cz+fw*0.5,by,cx+land,fw,actualTread,rise,na,0,bid,cid+20u,sid);h=geo_flight(h,v,y,u,cz+C-fw*0.5,mid,cx+land,fw,returnTread,rise,nb,1,bid,cid+21u,sid);if(h.componentId!=before){h.n=vec3f(h.n.z,h.n.y,h.n.x);h.q=vec3f(h.q.z,h.q.y,h.q.x);}
   h=geo_cube(h,u-cx-land-run-land*0.5,y-mid+slab*0.5,v-cz-C*0.5,land*0.5,slab*0.5,C*0.5,6u,bid,cid+22u,sid);
@@ -188,7 +188,7 @@ fn('geo_building','hh:GeoHit,x:f32,y:f32,z:f32,bi:i32,skipBelow:i32,stoneUpperM:
   var door=vec4f(0.72,0.0,1.02,2.15);h=geo_panel(h,u,y,v,0,cw,D*0.5,D-2.0*wt,by,fh,0.12,door,empty,bid,cid+6u,sid);h=geo_port(h,u,y,v,0,cw,0.72,by,1.02,2.15,0.0,1,doors.y,bid,cid+50u,sid);
   if(publicFront&&hasBorrow){var pu=vec4f(roomMid,0.0,1.02,2.1);h=geo_panel(h,u,y,v,1,1.44,(cw+W-wt)*0.5,W-wt-cw,by,fh,0.18,pu,empty,bid,cid+12u,sid);h=geo_port(h,u,y,v,1,1.44,roomMid,by,1.02,2.1,0.0,1,doors.z,bid,cid+58u,sid);}
   for(var j=1;j<zones;j=j+1){var vz=wt+f32(j)*(D-2.0*wt)/f32(zones);var pp=vec4f(roomMid,0.0,1.02,2.10);h=geo_panel(h,u,y,v,1,vz,(cw+W-wt)*0.5,W-wt-cw,by,fh,0.10,pp,empty,bid,cid+6u+u32(j),sid);h=geo_port(h,u,y,v,1,vz,roomMid,by,1.02,2.10,0.0,1,select(doors.z,doors.w,j==2),bid,cid+52u+u32(j)*2u,sid);}
-  var nr=i32(ceil(fh/0.18));var na=i32(floor(f32(nr+1)*0.5));var nb=nr-na;var riser=fh/f32(nr);var xa=wt+fw*0.5;var xb=cw-wt-fw*0.5;var run=f32(max(na,nb))*tread;var midY=by+f32(na)*riser;
+  var stairCounts=geo_get(i32(head.y)+fi*2+1);var nr=i32(stairCounts.z);var na=i32(stairCounts.w);var nb=nr-na;var riser=fh/f32(nr);var xa=wt+fw*0.5;var xb=cw-wt-fw*0.5;var run=f32(max(na,nb))*tread;var midY=by+f32(na)*riser;
   h=geo_flight(h,u,y,v,xa,by,land,fw,tread,riser,na,0,bid,cid+16u,sid);h=geo_flight(h,u,y,v,xb,midY,land+run-f32(nb)*tread,fw,tread,riser,nb,1,bid,cid+17u,sid);
   h=geo_cube(h,u-cw*0.5,y-midY+slab*0.5,v-land-run-far*0.5,(cw-2.0*wt)*0.5,slab*0.5,far*0.5,6u,bid,cid+18u,sid);
   // Central handrails follow flight slope. They do not cross either end landing.
