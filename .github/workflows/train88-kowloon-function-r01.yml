@@ -1,4 +1,4 @@
-name: Train88 isolated active query host terminal equivalence
+name: Train88 two native-resolution focus blocks
 on:
   push:
     branches: ['qa/train88-kowloon-function-r01-20261012']
@@ -29,13 +29,14 @@ jobs:
           node experiments/compact-trace-r01/emit-contracts.mjs
           node experiments/compact-trace-r01/emit.mjs
           node experiments/bureau-query-r01/emit.mjs
+          node --check qa/native-focus-host.cjs
           node --check qa/active-domain-host.cjs
           node --check function-receiver.mjs
           node --check host-app.mjs
           node --check experiments/active-query-r01/run.cjs
           node --check experiments/active-query-r01/probe.mjs
           node --check ../bureau-train88-r01/function-receiver.mjs
-          node --test qa/active-domain-host.test.mjs experiments/active-query-r01/*.test.mjs experiments/spatial-query-r01/*.test.mjs experiments/candidate-storage-r01/*.test.mjs experiments/compact-trace-r01/*.test.mjs qa/bounded-browser.test.mjs qa/shader-closure.test.mjs qa/group-runtime.test.mjs qa/group-ray-stages.test.mjs qa/compact-host.test.mjs qa/bureau-host.test.mjs qa/bureau-readback.test.mjs qa/session-recovery.test.mjs experiments/bureau-query-r01/contract.test.mjs ../bureau-train88-r01/qa/*.test.mjs
+          node --test qa/native-focus.test.mjs qa/active-domain-host.test.mjs experiments/active-query-r01/*.test.mjs experiments/spatial-query-r01/*.test.mjs experiments/candidate-storage-r01/*.test.mjs experiments/compact-trace-r01/*.test.mjs qa/bounded-browser.test.mjs qa/shader-closure.test.mjs qa/group-runtime.test.mjs qa/group-ray-stages.test.mjs qa/compact-host.test.mjs qa/bureau-host.test.mjs qa/bureau-readback.test.mjs qa/session-recovery.test.mjs experiments/bureau-query-r01/contract.test.mjs ../bureau-train88-r01/qa/*.test.mjs
       - name: Compile pinned Naga and all exact compact runtime entries
         working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/compiler
         run: |
@@ -68,14 +69,14 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/station-bridge" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
-      - name: Isolated host bounded-query, original terminal fields and explicit fallback
-        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/active-domain-host.cjs
+      - name: Two native focus blocks with fixed halos and measured completion costs
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/native-focus-host.cjs
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: train88-query-experiments-${{ github.sha }}
           path: |
-            train88-active-domain-host-results/
+            train88-native-focus-results/
             kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/compact-trace-r01/generated/
             kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/generated/group-init*
             kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/active-query-r01/
