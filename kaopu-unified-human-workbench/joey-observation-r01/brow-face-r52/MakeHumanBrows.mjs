@@ -5,6 +5,7 @@
 import * as THREE from '/native/kaopu-unified-human-workbench/full/source/registration-vendor/three.module.js';
 import {TeacherSkinBVH} from './SkinBVH.mjs';
 import {BROW_LIBRARY} from './BrowData.mjs';
+import{smoothBrowValue}from'./binding-math.mjs';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const mix=(a,b,t)=>a+(b-a)*t;
 const unit=a=>{const d=Math.hypot(...a)||1;return a.map(v=>v/d)};
@@ -12,7 +13,6 @@ const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]
 const point=(a,i)=>Array.from(a.subarray(i*3,i*3+3));
 const rootAt=(model,positions,t,b)=>{const p=[0,0,0];for(let j=0;j<3;j++)for(let k=0;k<3;k++)p[k]+=positions[model.triangles[t*3+j]*3+k]*b[j];return p};
 const rank=i=>{let x=(i+1)^0x9e3779b9;x=Math.imul(x^(x>>>16),0x21f0aaad);return ((x^(x>>>15))>>>0)/4294967296};
-function lineValue(x,line){const sorted=line.slice().sort((a,b)=>Math.abs(a[0])-Math.abs(b[0]));let j=1;while(j<sorted.length-1&&Math.abs(sorted[j][0])<x)j++;const a=sorted[j-1],b=sorted[j],t=(x-Math.abs(a[0]))/Math.max(1e-6,Math.abs(b[0])-Math.abs(a[0]));return a.map((v,k)=>mix(v,b[k],t))}
 function distance2(p,line){let d=Infinity;for(let i=1;i<line.length;i++){const a=line[i-1],b=line[i],dx=b[0]-a[0],dy=b[1]-a[1],t=clamp(((p[0]-a[0])*dx+(p[1]-a[1])*dy)/(dx*dx+dy*dy||1),0,1);d=Math.min(d,Math.hypot(p[0]-a[0]-t*dx,p[1]-a[1]-t*dy))}return d}
 const decode=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 const referenceY=u=>7.4+.00473699+.04515122*u+.30553433*u*u-.45473728*u*u*u;
@@ -22,7 +22,7 @@ function source(id){if(CACHE.has(id))return CACHE.get(id);const data=BROW_LIBRAR
 function sample(curve,s){const d=clamp(s,0,1)*curve.total;let j=1;while(j<curve.arc.length-1&&curve.arc[j]<d)j++;const t=(d-curve.arc[j-1])/(curve.arc[j]-curve.arc[j-1]||1);return curve.points[j-1].map((v,k)=>mix(v,curve.points[j][k],t))}
 export class MakeHumanBrows{
  constructor(model,positions,normals,context){
-  this.model=model;this.capacity=Math.max(...BROW_LIBRARY.map(p=>p.count));this.segments=10;this.per=this.segments+1;this.count=0;this.options={browsModel:3,browsDensity:92,browsLength:100,browsSpan:100,browsThickness:85,browsArch:-8,browsHeight:0,browsTail:-3,browsDirection:0,browsLift:6,...context.options};
+  this.model=model;this.capacity=Math.max(...BROW_LIBRARY.map(p=>p.count));this.segments=10;this.per=this.segments+1;this.count=0;this.options={browsModel:3,browsDensity:92,browsLength:100,browsSpan:100,browsThickness:120,browsArch:-8,browsHeight:0,browsTail:-3,browsDirection:0,browsLift:6,...context.options};
   this.lines=[context.landmarks.slice(17,22),context.landmarks.slice(22,27)];this.eyes=[context.landmarks.slice(36,42),context.landmarks.slice(42,48)];this.eyes.forEach(e=>e.push(e[0]));
   if(!context.allowed.size)throw Error('No valid current-head brow surface');this.bvh=new TeacherSkinBVH(model,positions,context.allowed);
   this.front=Math.max(...this.bvh.faces.map(f=>f.max[2]))+.025;this.back=Math.min(...this.bvh.faces.map(f=>f.min[2]))-.025;
@@ -32,7 +32,7 @@ export class MakeHumanBrows{
   this.mesh=new THREE.Mesh(this.geometry,new THREE.MeshBasicMaterial());this.mesh.name='Mindfront CC0 surface-bound eyebrows';this.mesh.frustumCulled=false;this.mesh.renderOrder=2;this.bind();this.update(positions,normals);
  }
  project(p){const ray=this.bvh.segmentHit([p[0],p[1],this.front],[p[0],p[1],this.back]),hit=this.bvh.nearest(ray?.point||p);return hit&&Math.hypot(hit.p[0]-p[0],hit.p[1]-p[1])<.006&&Math.abs(hit.p[2]-p[2])<.02?hit:null}
- mapPoint(p,root){const o=this.options,sign=root[0]<0?-1:1,line=this.lines.find(l=>Math.sign(l[2][0])===sign),inner=Math.min(...line.map(p=>Math.abs(p[0]))),outer=Math.max(...line.map(p=>Math.abs(p[0]))),u=(Math.abs(p[0])-.1)/.43,span=o.browsSpan/100,x=sign*(inner+u*(outer-inner)*span),base=lineValue(Math.abs(x),line);const thickness=o.browsThickness/100,delta=(p[1]-referenceY((Math.abs(p[0])-.1)/.5))*.085*thickness,arch=o.browsArch*.0001*Math.sin(Math.PI*clamp(u,0,1)),tail=o.browsTail*.0001*clamp((u-.6)/.4,0,1);return [x,base[1]+delta+arch+tail+o.browsHeight*.0001,base[2]]}
+ mapPoint(p,root){const o=this.options,sign=root[0]<0?-1:1,line=this.lines.find(l=>Math.sign(l[2][0])===sign),inner=Math.min(...line.map(p=>Math.abs(p[0]))),outer=Math.max(...line.map(p=>Math.abs(p[0]))),u=(Math.abs(p[0])-.1)/.43,span=o.browsSpan/100,x=sign*(inner+u*(outer-inner)*span),base=smoothBrowValue(Math.abs(x),line);const thickness=o.browsThickness/100,delta=(p[1]-referenceY((Math.abs(p[0])-.1)/.5))*.085*thickness,arch=o.browsArch*.0001*Math.sin(Math.PI*clamp(u,0,1)),tail=o.browsTail*.0001*clamp((u-.6)/.4,0,1);return [x,base[1]+delta+arch+tail+o.browsHeight*.0001,base[2]]}
  bind(){
   const started=performance.now(),o=this.options,src=source(o.browsModel);this.sourceData=src.data;this.count=0;this.rejectedRoots=0;this.minEyeGap=Infinity;let maxLift=0;
   for(let si=0;si<src.curves.length;si++){

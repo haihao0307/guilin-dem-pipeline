@@ -1,5 +1,20 @@
 const dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),sub=(a,b)=>a.map((x,i)=>x-b[i]),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 const unit=a=>{const d=Math.hypot(...a);if(!Number.isFinite(d)||d<1e-8)throw Error('Degenerate face frame');return a.map(x=>x/d)};
+const curveCache=new WeakMap();
+/** A single quadratic through the five observed native brow controls in least squares.
+ * The old piecewise line introduced slope discontinuities into every source fibre.
+ * This smooth carrier does not alter the source fibres' transverse variation. */
+export function smoothBrowValue(x,line){
+ let fit=curveCache.get(line);if(!fit){
+  const lo=Math.min(...line.map(p=>Math.abs(p[0]))),hi=Math.max(...line.map(p=>Math.abs(p[0])));if(hi-lo<1e-5)throw Error('Degenerate brow span');
+  const rows=line.map(p=>{const u=(Math.abs(p[0])-lo)/(hi-lo);return[1,u,u*u]});
+  const solve=k=>{const a=Array.from({length:3},(_,i)=>[...Array.from({length:3},(_,j)=>rows.reduce((s,r)=>s+r[i]*r[j],0)),rows.reduce((s,r,q)=>s+r[i]*line[q][k],0)]);
+   for(let i=0;i<3;i++){let at=i;for(let j=i+1;j<3;j++)if(Math.abs(a[j][i])>Math.abs(a[at][i]))at=j;[a[i],a[at]]=[a[at],a[i]];if(Math.abs(a[i][i])<1e-10)throw Error('Unidentifiable brow curve');const d=a[i][i];for(let k=i;k<4;k++)a[i][k]/=d;for(let j=0;j<3;j++)if(j!==i){const d=a[j][i];for(let k=i;k<4;k++)a[j][k]-=d*a[i][k];}}
+   return a.map(r=>r[3]);};
+  fit={lo,hi,coeff:[solve(1),solve(2)],sign:Math.sign(line[2][0])};curveCache.set(line,fit);
+ }
+ const u=(x-fit.lo)/(fit.hi-fit.lo);return[fit.sign*x,...fit.coeff.map(c=>c[0]+c[1]*u+c[2]*u*u)];
+}
 export function faceFrame(landmarks){
  const l=landmarks[36],r=landmarks[45],origin=l.map((x,k)=>(x+r[k])/2),x=unit(sub(r,l));
  const brow=[0,1,2].map(k=>landmarks.slice(17,27).reduce((s,p)=>s+p[k],0)/10),up=sub(brow,origin),y=unit(up.map((v,k)=>v-x[k]*dot(up,x))),z=unit(cross(x,y));
