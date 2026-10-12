@@ -5,8 +5,8 @@ export const STATION_MATTER_WGSL=String.raw`
 struct StationState{age:f32,wet:f32,repair:f32,retained:f32,}
 struct StationMatter{d:f32,surface:KpSurface,metal:f32,cavity:f32,specular:f32,microHeight:f32,layer:u32,}
 fn resolveStationState(p:vec3<f32>)->StationState{let repair=repairAt(p);return StationState(u.age,stateWet(p),repair,u.age*(1.-repair));}
-fn stationWoodParams(st:StationState)->KpWoodParams{var wp=kpWoodDefaultParams();wp.reliefScale*=.35+.85*st.retained;wp.roughness=clamp(wp.roughness+.07*st.retained-.12*st.repair,.2,.98);wp.agedSurfaceColor=mix(wp.freshCutColor,wp.agedSurfaceColor,.4+.6*st.retained);wp.clearcoat=.12*st.repair;return wp;}
-fn stationWoodClass(h:HitField)->f32{var end=1.69;if(h.seed==39.){end=1.79;}if(h.seed==30.){end=1.22;}return select(0.,1.,abs(h.q.x)>end);}
+fn stationWoodParams(h:HitField,st:StationState)->KpWoodParams{var wp=kpWoodDefaultParams();wp.seed=fract(wp.seed+h.sourceSeed*.61803398875);wp.reliefScale*=.35+.85*st.retained;wp.roughness=clamp(wp.roughness+.07*st.retained-.12*st.repair,.2,.98);wp.agedSurfaceColor=mix(wp.freshCutColor,wp.agedSurfaceColor,.4+.6*st.retained);wp.clearcoat=.12*st.repair;return wp;}
+fn stationWoodClass(h:HitField)->f32{let face=abs(h.q)-h.extent;return select(0.,1.,face.x>=max(face.y,face.z));}
 // Geometry-only closure of the SAME original matter signals. Avoid evaluating
 // pigment/filtered microscopy at every ray step. Shading calls this closure too.
 struct StationGeometry{d:f32,loss:f32,thickness:f32,}
@@ -21,7 +21,7 @@ fn evaluateStationGeometry(h:HitField,p:vec3<f32>,st:StationState)->StationGeome
  if(h.id==1u||h.id==12u){let q=brickQ(p,h.id,h.d);let seed=19.+floor(p.y/.073)*13.+floor((p.x+p.z)/.25);let variant=i32(abs(seed))%4;let native=kpBrickBaseDistance(q,seed,variant,.42);let macroSignal=native-kpBrickAnalyticBoundDistance(q);g.loss=clamp(st.retained*st.wet*(.0004+max(0.,macroSignal)*.6),0.,.0016);g.d=min(h.d+.006,native+g.loss);}
  if(h.id==2u){g.d=h.d-clamp(stationStoneHeight(h.q*.19)*(.25+.75*st.retained),-.004,.004);}
  if(h.id==3u||h.id==15u){g.loss=kpMetalCorrosion(stationMetalCoordinates(h,p),st.age,st.wet,st.repair)*.0008;g.d=h.d+g.loss;}
- if(h.id==4u){g.d=h.d-kpWoodMacroDisplacement(h.q,stationWoodClass(h),stationWoodParams(st));}
+ if(h.id==4u){g.d=h.d-kpWoodMacroDisplacement(h.q,stationWoodClass(h),stationWoodParams(h,st));}
  if(h.id==17u){g.d=h.d-stationConcreteHeight(h.q,st.retained);}
  if(h.id==13u){g.thickness=stationCoatingThickness(h,p,st);g.d=h.d-clamp(stationStoneHeight(h.q*.19)*.25,-.001,.001)-g.thickness;}
  return g;
@@ -31,9 +31,9 @@ fn evaluateStationMatter(h:HitField,p:vec3<f32>,normal:vec3<f32>,fp:f32)->Statio
  if(h.id==1u||h.id==12u){let q=brickQ(p,h.id,h.d);let seed=19.+floor(p.y/.073)*13.+floor((p.x+p.z)/.25);let variant=i32(abs(seed))%4;let loss=g.loss;m.surface=kpBrickOriginalSurface(q,seed,variant,.42,fp);let edge=min(.125-abs(q.x),.0365-abs(q.y));if(edge<.004){m.surface=KpSurface(0.,vec3<f32>(.28,.26,.21),.94);}m.surface.albedo*=1.-st.wet*.18-loss*60.;m.surface.roughness=clamp(m.surface.roughness+loss*50.,.15,.98);m.microHeight=m.surface.height;m.layer=1u;}
  if(h.id==2u){let relief=.25+.75*st.retained;m.surface=kpStoneSurface(h.q*.19,st.age,st.wet,st.repair,fp*.19);m.surface.height*=relief;m.layer=2u;}
  if(h.id==3u||h.id==15u){let loss=g.loss;m.surface=kpMetalSurface(stationMetalCoordinates(h,p),st.age,st.wet,st.repair,fp);m.metal=.45;m.microHeight=m.surface.height+loss;m.layer=3u;}
- if(h.id==4u){let wp=stationWoodParams(st);let cls=stationWoodClass(h);let wn=select(normal,normal.zxy,h.seed==38.);let source=kpWoodOriginalSample(h.q,wn,cls,wp,fp,length(p-u.eye));m.surface=source.surface;m.cavity=source.cavity;m.specular=source.specularLevel;m.microHeight=source.surface.height;m.layer=4u;}
+ if(h.id==4u){let wp=stationWoodParams(h,st);let cls=stationWoodClass(h);let wn=select(normal,normal.zxy,h.seed==38.);let source=kpWoodOriginalSample(h.q,wn,cls,wp,fp,length(p-u.eye));m.surface=source.surface;m.cavity=source.cavity;m.specular=source.specularLevel;m.microHeight=source.surface.height;m.layer=4u;}
  if(h.id==17u){m.surface=kpConcreteStation(h.q,st.retained,st.wet,st.repair,fp);m.layer=17u;}
- if(h.id==13u){let a=stationPlasterParams(h.extent);let thickness=g.thickness;m.surface=kpPlasterOriginalField(h.q,a,fp).surface;let revealed=1.-smoothstep(.0001,.001,thickness);let exposed=kpStoneSurface(h.q*.19,st.age,st.wet,st.repair,fp*.19);m.surface.albedo=mix(m.surface.albedo,exposed.albedo,revealed)*(1.-st.wet*.18);m.surface.roughness=mix(m.surface.roughness,exposed.roughness,revealed);m.microHeight=m.surface.height*(1.-revealed);m.layer=select(13u,2u,revealed>.5);}
+ if(h.id==13u){let a=stationPlasterParams(h.extent);let thickness=g.thickness;m.surface=kpPlasterOriginalField(h.q,a,fp).surface;let revealed=1.-smoothstep(.0001,.001,thickness);if(revealed>0.){let exposed=kpStoneSurface(h.q*.19,st.age,st.wet,st.repair,fp*.19);m.surface.albedo=mix(m.surface.albedo,exposed.albedo,revealed);m.surface.roughness=mix(m.surface.roughness,exposed.roughness,revealed);}m.surface.albedo*=1.-st.wet*.18;m.microHeight=m.surface.height*(1.-revealed);m.layer=select(13u,2u,revealed>.5);}
  return m;
 }
 `;

@@ -13,7 +13,7 @@ test('angular features preserve their zero set with conservative frequency scali
 
 test('six track boarding geometry leaves explicit ten centimetre designed envelope gap',()=>{for(const track of STATION_SCORE.tracks.centers){const d=Math.min(...STATION_SCORE.platforms.centers.map(p=>Math.abs(track-p)));assert(Math.abs(d-STATION_SCORE.platforms.halfWidth-STATION_SCORE.tracks.assumedVehicleHalfWidth-.1)<1e-9);}assert(WGSL.includes('rep(p.x-5.,10.,-3.,2.)'));});
 
-test('hall columns flank openings and outer platform bounds contain stone edge',()=>{assert(WGSL.includes('rep(p.x-3.75,7.5,-4.,3.)'));assert(WGSL.includes('vec3<f32>(34,8,47.2)'));assert(WGSL.includes('vec3<f32>(3.4,.5,46.3)'));assert(WGSL.includes('4u,vec3<f32>(railX,p.y+.11,p.z),30.'));});
+test('hall columns flank openings and outer platform bounds contain stone edge',()=>{assert(WGSL.includes('rep(p.x-3.75,7.5,-4.,3.)'));assert(WGSL.includes('vec3<f32>(34,8,47.2)'));assert(WGSL.includes('vec3<f32>(3.4,.5,46.3)'));assert(WGSL.includes('vec3<f32>(1.23,.055,.13),30.'));});
 
 test('one material evaluation precedes component union and is reused by shading',()=>{assert(WGSL.includes('candidate.d=evaluateStationGeometry(candidate,p'));assert(WGSL.includes('if(candidate.d<h.d)'));assert(WGSL.includes('nominal.d=h.baseD;let matter=evaluateStationMatter(nominal'));assert(WGSL.includes('fn resolveStationState('));assert(WGSL.includes('return sourceThickness*coverage'));assert(WGSL.includes('g.d=h.d-clamp(stationStoneHeight(h.q*.19)*.25,-.001,.001)-g.thickness'));assert(WGSL.includes('let g=evaluateStationGeometry(h,p,st)'));assert(!WGSL.includes('h.d=evaluateStationMatter(h,p'));});
 
@@ -28,3 +28,5 @@ test('procedural candidate capacity covers every recipe even without spatial pru
 test('staged GPU keeps the complete shared field and only caches current ray intersections',()=>{assert(WGSL.includes('fn primaryRays('));assert(WGSL.includes('rayHits:array<Trace>'));assert(WGSL.includes('let tr=march(u.eye,rd,420.)'));assert(WGSL.includes('color=shade(tr,u.eye,rd)'));});
 
 test('iron contact and section loss share an actual height datum',()=>{assert(WGSL.includes('kpMetalCorrosion(stationMetalCoordinates(h,p),st.age'));assert(WGSL.includes('kpMetalSurface(stationMetalCoordinates(h,p),st.age'));assert(WGSL.includes('select(p.y,p.y+.984,rail)'));});
+
+test('wood is sampled in each actual slat or sleeper frame',()=>{assert(WGSL.includes('fn recordTimber('));assert(WGSL.includes('sourceSeed:f32'));assert(WGSL.includes('let face=abs(h.q)-h.extent'));assert(WGSL.includes('wp.seed=fract(wp.seed+h.sourceSeed*.61803398875)'));assert(!WGSL.includes('4u,bq.zxy,38.'));assert(WGSL.includes('if(revealed>0.){let exposed=kpStoneSurface'));});
