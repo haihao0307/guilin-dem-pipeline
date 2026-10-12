@@ -23,34 +23,17 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with:
-          ref: 954164d3fb14c04633c457015c548dca9aaf8de6
-          path: native
-          persist-credentials: false
-          sparse-checkout: |
-            kaopu-unified-human-workbench
-            kaopu-anny-workbench
-            kaopu-mhr-workbench
-      - name: Stage only the candidate startup changes
-        run: cp -a kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/. native/kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/
       - name: Install pinned official browser package and selected engine
         run: |
           npm install --prefix "$RUNNER_TEMP/joey-native" --no-save --ignore-scripts playwright@1.57.0
           "$RUNNER_TEMP/joey-native/node_modules/.bin/playwright" install --with-deps ${{ matrix.browser }}
           echo "NODE_PATH=$RUNNER_TEMP/joey-native/node_modules" >> "$GITHUB_ENV"
-      - name: Serve existing native model and bounded candidate
-        run: |
-          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/joey-server.log" 2>&1 &
-          for n in $(seq 1 30); do
-            curl --fail --silent http://127.0.0.1:8765/native/kaopu-unified-human-workbench/ > /dev/null && exit 0
-            sleep 1
-          done
-          exit 1
       - name: Verify real startup, dependency failures and native rendering
         env:
           R54_BROWSER: ${{ matrix.browser }}
           R54_SKIP_OLD: 1
+          R54_RELEASE_HASHES: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/startup-release-hashes.json
+          R54_STARTUP_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/index.html
         run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/verify-startup.cjs
       - name: Keep browser evidence including any unsupported capability
         if: always()

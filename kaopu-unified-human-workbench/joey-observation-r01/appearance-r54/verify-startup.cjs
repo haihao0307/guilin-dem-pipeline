@@ -1,6 +1,11 @@
 const {chromium,webkit}=require('playwright'),fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const engine=process.env.R54_BROWSER||'chromium',kind=engine==='webkit'?webkit:chromium,OUT='joey-r54-startup-'+engine,URL=process.env.R54_STARTUP_URL||'http://127.0.0.1:8765/native/kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/index.html',OLD='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/index.html';fs.mkdirSync(OUT,{recursive:true});const report={engine,realIPhone:false,tests:[],timeline:[],errors:[],httpErrors:[],url:URL,oldURL:OLD};const save=()=>fs.writeFileSync(path.join(OUT,'report.json'),JSON.stringify(report,null,2));
-(async()=>{const browser=await kind.launch({headless:true,...(engine==='chromium'?{args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}:{})});report.browserVersion=browser.version();let mainPage;try{
+(async()=>{
+ if(process.env.R54_RELEASE_HASHES){
+  const crypto=require('node:crypto'),expected=JSON.parse(fs.readFileSync(process.env.R54_RELEASE_HASHES,'utf8'));report.sourceHashes={};
+  for(const [file,sha] of Object.entries(expected)){const response=await fetch(new global.URL(file,URL));assert(response.ok,'Release file HTTP '+response.status+': '+file);const actual=crypto.createHash('sha256').update(Buffer.from(await response.arrayBuffer())).digest('hex');assert.equal(actual,sha,'Public release drift: '+file);report.sourceHashes[file]=actual;}save();
+ }
+ const browser=await kind.launch({headless:true,...(engine==='chromium'?{args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}:{})});report.browserVersion=browser.version();let mainPage;try{
  // Characterize the old public boot. The one-map restriction is deliberately
  // injected in Chromium; it is not presented as the user's Safari version.
  if(!process.env.R54_SKIP_OLD){const old=await browser.newPage({viewport:{width:390,height:844}});const oldErrors=[],oldHTTP=[];old.on('pageerror',e=>oldErrors.push(e.message));old.on('response',r=>{if(r.status()>=400)oldHTTP.push({url:r.url(),status:r.status()});});
