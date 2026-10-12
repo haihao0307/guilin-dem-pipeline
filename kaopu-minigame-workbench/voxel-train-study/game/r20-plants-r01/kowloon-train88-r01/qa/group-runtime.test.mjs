@@ -162,5 +162,5 @@ test('opt-in compact receiver owns two one-RT targets and preserves binding5 alt
  }finally{r?.dispose();globalThis.fetch=oldFetch;}
 });
 test('receiver candidate applies compact only to trace and keeps original five full metadata queries',()=>{
- const now=fs.readFileSync(new URL('../function-receiver.mjs',import.meta.url),'utf8');assert.match(now,/testCompactTrace=false/);assert.match(now,/testCompactTrace&&!testResolution/);assert.match(now,/const complete=queryReceiver.query\(options\)/);assert.match(now,/const alternate=queryReceiver.query/);assert.match(now,/const hit=grouped.query\(\{width:t.w,height:t.h,traceTexture:ray,phase:1/);assert.match(now,/\[\[0,0,0\],\[1,-1,-1\],\[-1,-1,1\],\[-1,1,-1\],\[1,1,1\]\]/);assert.match(now,/if\(traceGrouped!==grouped\)traceGrouped.dispose\(\)/);
+ const now=fs.readFileSync(new URL('../function-receiver.mjs',import.meta.url),'utf8');assert.match(now,/testCompactTrace=false/);assert.match(now,/testCompactTrace&&!testResolution/);assert.match(now,/const complete=queryReceiver.query\(options\)/);assert.match(now,/const alternate=queryReceiver.query/);assert.match(now,/const hit=execution.geometry.query\(\{width:t.w,height:t.h,traceTexture:ray,phase:1/);assert.match(now,/\[\[0,0,0\],\[1,-1,-1\],\[-1,-1,1\],\[-1,1,-1\],\[1,1,1\]\]/);assert.match(now,/if\(traceGrouped!==grouped\)traceGrouped.dispose\(\)/);
 });
