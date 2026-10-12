@@ -4,19 +4,23 @@
   "status": "CANDIDATE",
   "scope": {
     "mother": "Human",
-    "taskClass": "REFERENCE_LOCKED_VISIBLE_EAR_REFINEMENT",
+    "taskClass": "REFERENCE_LOCKED_VISIBLE_ANATOMY_REFINEMENT",
     "globalAdoption": false
   },
-  "boundedQuestion": "Can functional, parameter-response and topology-safety checks promote a reference-locked ear candidate when no subject-bound anatomical comparison has run?",
+  "boundedQuestion": "Can a semantic anatomy gate prevent screenshot-count coverage claims when anchor visibility and carrier identity change across required subject states and reference views?",
   "observedFailure": {
-    "subject": "EAR-R03.0@2cb1a37763893ccb68240190d3b15951515f17cc",
-    "productionEvidence": "PR #226 reports 63 candidate assertions and 18 public assertions passed, while its own final visual review still records soft ear-root/tragus structure.",
-    "mechanism": "The green suite proves execution and deformation safety but contains no approved subject-specific reference identity, calibrated anatomical anchor ledger, semantic curve/pocket comparison, frozen tolerance or independent reference-fidelity verdict.",
-    "currentDecision": "HOLD_REFERENCE_ANATOMY_IDENTITY_UNBOUND"
+    "subjects": [
+      "EAR-R03.0@2cb1a37763893ccb68240190d3b15951515f17cc",
+      "LIP-ET19-L3@5b4997e6dca27106533022b4ab46164cea073818"
+    ],
+    "productionEvidence": "PR #226 reports 63 candidate and 18 public checks without subject-bound ear anatomy comparison. PR #224 reports 39 candidate and 19 public checks, but its own visual review still records a hard inner-lip–gingiva transition. KX-20261013-01 notes that an anchor can be OBSERVED in one state/view and OCCLUDED or UNKNOWN in another.",
+    "mechanism": "The N145 gate separated visible from occluded anchors but did not require a state×view matrix or bind each semantic anchor to its actual geometry/material carrier. Repeated screenshots from one state/view can therefore be mistaken for anatomy coverage, and hidden regions can receive invented measurements.",
+    "currentDecision": "HOLD_STATE_VIEW_COVERAGE_INCOMPLETE"
   },
   "deduplication": {
+    "updatedExistingCase": "HUMAN-EAR-REFERENCE-ANATOMY-IDENTITY-001",
+    "relationship": "Evidence and fixtures were added to the existing semantic-anatomy case; no duplicate regression case was created.",
     "visualGoldenCase": "VISUAL-GOLDEN-UPDATE-SEPARATION-001",
-    "relationship": "Complementary, not duplicate: the existing case governs immutable image baseline and comparison independence; this case binds semantic ear anatomy and UNKNOWN regions to the exact subject/reference views.",
     "osNovelty": "NO_NOVELTY",
     "externalMethodNovelty": "NO_NOVELTY"
   },
@@ -31,6 +35,12 @@
     "anatomyAnchorLedgerDigest",
     "visibleAnchorIds",
     "unknownOrOccludedAnchorIds",
+    "stateViewCoverageRequired",
+    "requiredStateIds",
+    "requiredViewIds",
+    "stateViewMatrixDigest",
+    "stateViewCells",
+    "anchorCarrierLedgerDigest",
     "candidateProjectionDigest",
     "semanticRegionMaskDigest",
     "metric",
@@ -54,12 +64,38 @@
     "cavum-conchae",
     "lobule-attachment"
   ],
+  "stateViewCellContract": {
+    "key": [
+      "anchorId",
+      "stateId",
+      "viewId"
+    ],
+    "allowedStatus": [
+      "OBSERVED",
+      "OCCLUDED",
+      "UNKNOWN",
+      "NOT_APPLICABLE"
+    ],
+    "observedRequires": [
+      "evidenceFrameDigest",
+      "carrierKind"
+    ],
+    "hiddenRule": "OCCLUDED or UNKNOWN cells must not contain a candidate measurement or procedural default.",
+    "carrierKinds": [
+      "native-topology",
+      "derived-display",
+      "material-boundary",
+      "action-state"
+    ]
+  },
   "decisionRules": [
-    "Functional/browser success, control response and topology safety remain valid scoped claims but never imply reference anatomy validation.",
+    "Functional/browser success, control response, topology safety and screenshot count remain valid scoped claims but never imply reference anatomy validation.",
     "A generic anatomy source can name structures but cannot authorize subject-specific anchor positions or hidden regions.",
-    "UNKNOWN or OCCLUDED reference regions remain unknown and cannot be filled by procedural defaults.",
+    "Coverage is computed over required (anchor,state,view) cells; repeated evidence from one cell does not cover another.",
+    "Each observed anchor must bind to evidenceFrameDigest and carrierKind; a label alone is not geometry identity.",
+    "UNKNOWN or OCCLUDED reference regions remain unknown and cannot be filled by candidate measurements or procedural defaults.",
     "The same Producer cannot approve or update the subject reference baseline used to pass its candidate.",
-    "Thresholds must be frozen before comparison and must identify their measurement source; this Candidate does not invent production thresholds.",
+    "Thresholds must be frozen before comparison and identify their measurement source; this Candidate invents no production thresholds.",
     "A machine anatomy pass does not imply manual visual acceptance or USER-ACCEPTED."
   ],
   "states": [
@@ -67,6 +103,8 @@
     "HOLD_REFERENCE_COMPARISON_NOT_RUN",
     "HOLD_REFERENCE_BASELINE_SELF_APPROVED",
     "HOLD_UNKNOWN_REGION_CREATIVE_SUBSTITUTE",
+    "HOLD_STATE_VIEW_COVERAGE_INCOMPLETE",
+    "HOLD_ANCHOR_CARRIER_UNBOUND",
     "REFERENCE_ANATOMY_REGRESSION_DETECTED",
     "SCOPED_REFERENCE_ANATOMY_VALIDATED"
   ],
@@ -125,8 +163,12 @@
         "subjectBound": true,
         "referenceSetDigest": "sha256:reference",
         "anatomyAnchorLedgerDigest": "sha256:anchors",
-        "unknownOrOccludedAnchorIds": ["tragus"],
-        "proceduralDefaultsAppliedToUnknown": ["tragus"],
+        "unknownOrOccludedAnchorIds": [
+          "tragus"
+        ],
+        "proceduralDefaultsAppliedToUnknown": [
+          "tragus"
+        ],
         "comparisonExecuted": true
       },
       "expect": "HOLD_UNKNOWN_REGION_CREATIVE_SUBSTITUTE"
@@ -139,10 +181,181 @@
         "subjectBound": true,
         "referenceSetDigest": "sha256:reference",
         "anatomyAnchorLedgerDigest": "sha256:anchors",
-        "visibleAnchorIds": ["helix-root-attachment", "tragus", "antitragus", "intertragic-notch", "crus-helicis", "cymba-conchae", "cavum-conchae", "lobule-attachment"],
+        "visibleAnchorIds": [
+          "helix-root-attachment",
+          "tragus",
+          "antitragus",
+          "intertragic-notch",
+          "crus-helicis",
+          "cymba-conchae",
+          "cavum-conchae",
+          "lobule-attachment"
+        ],
         "unknownOrOccludedAnchorIds": [],
         "comparisonExecuted": true,
-        "frozenThresholds": {"source": "approved-reference-measurement-plan"},
+        "frozenThresholds": {
+          "source": "approved-reference-measurement-plan"
+        },
+        "comparisonDecision": "pass",
+        "producerIdentity": "Human-Producer",
+        "referenceApprovedBy": "Independent-Verifier",
+        "verifierIdentity": "Independent-Verifier",
+        "verifierReceipt": "sha256:verifier-receipt"
+      },
+      "expect": "SCOPED_REFERENCE_ANATOMY_VALIDATED"
+    },
+    {
+      "id": "MANY_SCREENSHOTS_REPEAT_ONE_STATE_VIEW",
+      "input": {
+        "subjectBound": true,
+        "referenceSetDigest": "sha256:reference",
+        "anatomyAnchorLedgerDigest": "sha256:anchors",
+        "stateViewCoverageRequired": true,
+        "requiredAnchorIds": [
+          "tragus"
+        ],
+        "requiredStateIds": [
+          "neutral",
+          "jaw-open"
+        ],
+        "requiredViewIds": [
+          "front",
+          "rear"
+        ],
+        "stateViewMatrixDigest": "sha256:matrix-incomplete",
+        "anchorCarrierLedgerDigest": "sha256:carriers",
+        "stateViewCells": [
+          {
+            "anchorId": "tragus",
+            "stateId": "neutral",
+            "viewId": "front",
+            "status": "OBSERVED",
+            "evidenceFrameDigest": "sha256:f1",
+            "carrierKind": "native-topology"
+          }
+        ],
+        "screenshotCount": 12,
+        "comparisonExecuted": false
+      },
+      "expect": "HOLD_STATE_VIEW_COVERAGE_INCOMPLETE"
+    },
+    {
+      "id": "STATE_VIEW_ANCHORS_WITHOUT_CARRIER_IDENTITY",
+      "input": {
+        "subjectBound": true,
+        "referenceSetDigest": "sha256:reference",
+        "anatomyAnchorLedgerDigest": "sha256:anchors",
+        "stateViewCoverageRequired": true,
+        "requiredAnchorIds": [
+          "tragus"
+        ],
+        "requiredStateIds": [
+          "neutral"
+        ],
+        "requiredViewIds": [
+          "front"
+        ],
+        "stateViewMatrixDigest": "sha256:matrix",
+        "anchorCarrierLedgerDigest": null,
+        "stateViewCells": [
+          {
+            "anchorId": "tragus",
+            "stateId": "neutral",
+            "viewId": "front",
+            "status": "OBSERVED",
+            "evidenceFrameDigest": "sha256:f1"
+          }
+        ]
+      },
+      "expect": "HOLD_ANCHOR_CARRIER_UNBOUND"
+    },
+    {
+      "id": "OCCLUDED_CELL_INVENTS_MEASUREMENT",
+      "input": {
+        "subjectBound": true,
+        "referenceSetDigest": "sha256:reference",
+        "anatomyAnchorLedgerDigest": "sha256:anchors",
+        "stateViewCoverageRequired": true,
+        "requiredAnchorIds": [
+          "tragus"
+        ],
+        "requiredStateIds": [
+          "neutral"
+        ],
+        "requiredViewIds": [
+          "rear"
+        ],
+        "stateViewMatrixDigest": "sha256:matrix",
+        "anchorCarrierLedgerDigest": "sha256:carriers",
+        "stateViewCells": [
+          {
+            "anchorId": "tragus",
+            "stateId": "neutral",
+            "viewId": "rear",
+            "status": "OCCLUDED",
+            "candidateMeasurement": 0.42,
+            "carrierKind": "native-topology"
+          }
+        ]
+      },
+      "expect": "HOLD_UNKNOWN_REGION_CREATIVE_SUBSTITUTE"
+    },
+    {
+      "id": "COMPLETE_STATE_VIEW_MATRIX_SCOPED_PASS",
+      "input": {
+        "subjectBound": true,
+        "referenceSetDigest": "sha256:reference",
+        "anatomyAnchorLedgerDigest": "sha256:anchors",
+        "stateViewCoverageRequired": true,
+        "requiredAnchorIds": [
+          "tragus"
+        ],
+        "requiredStateIds": [
+          "neutral",
+          "jaw-open"
+        ],
+        "requiredViewIds": [
+          "front",
+          "rear"
+        ],
+        "stateViewMatrixDigest": "sha256:matrix",
+        "anchorCarrierLedgerDigest": "sha256:carriers",
+        "stateViewCells": [
+          {
+            "anchorId": "tragus",
+            "stateId": "neutral",
+            "viewId": "front",
+            "status": "OBSERVED",
+            "evidenceFrameDigest": "sha256:f1",
+            "carrierKind": "native-topology"
+          },
+          {
+            "anchorId": "tragus",
+            "stateId": "neutral",
+            "viewId": "rear",
+            "status": "OCCLUDED",
+            "carrierKind": "native-topology"
+          },
+          {
+            "anchorId": "tragus",
+            "stateId": "jaw-open",
+            "viewId": "front",
+            "status": "OBSERVED",
+            "evidenceFrameDigest": "sha256:f2",
+            "carrierKind": "derived-display"
+          },
+          {
+            "anchorId": "tragus",
+            "stateId": "jaw-open",
+            "viewId": "rear",
+            "status": "UNKNOWN",
+            "carrierKind": "derived-display"
+          }
+        ],
+        "comparisonExecuted": true,
+        "frozenThresholds": {
+          "source": "approved-reference-measurement-plan"
+        },
         "comparisonDecision": "pass",
         "producerIdentity": "Human-Producer",
         "referenceApprovedBy": "Independent-Verifier",
@@ -153,7 +366,7 @@
     }
   ],
   "adoption": {
-    "level": "HUMAN_EAR_LOCAL_CANDIDATE_ONLY",
+    "level": "HUMAN_REFERENCE_FIDELITY_LOCAL_CANDIDATE_ONLY",
     "requiresSingleMotherTrial": true,
     "requiresIndependentVerifier": true,
     "changesR2": false,
