@@ -2,6 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const{chromium}=require('playwright'),input=require('./input.json');
 const{macros,makeCandidate}=require('../brow-face-r52/macros.cjs'),rollback=require('../face-relation-r45/candidate.json');
+const selectedIDs=process.env.R54_VIEWS?.split(',').filter(Boolean);if(selectedIDs)assert(selectedIDs.length&&selectedIDs.every(id=>input.rows.some(r=>r.id===id)),'Unknown view subset');const selectedRows=selectedIDs?input.rows.filter(r=>selectedIDs.includes(r.id)):input.rows;
 const OUT='joey-appearance-r54',hash=x=>crypto.createHash('sha256').update(x).digest('hex');fs.mkdirSync(OUT,{recursive:true});
 (async()=>{
  const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
@@ -10,7 +11,8 @@ const OUT='joey-appearance-r54',hash=x=>crypto.createHash('sha256').update(x).di
  try{
   await page.goto('http://127.0.0.1:8765/native/kaopu-unified-human-workbench/');await page.evaluate(()=>fullCommonWorkbench.load());await page.waitForFunction(()=>fullCommonWorkbench.diagnostics().ready&&!fullCommonWorkbench.diagnostics().busy&&fullCommonWorkbench.motion());await page.evaluate(()=>fullCommonWorkbench.motion().setMode('shape'));
   const original=await page.evaluate(()=>fullCommonWorkbench.archive()),originalPositionSHA=hash(Buffer.from(new Float32Array(await page.evaluate(()=>Array.from(fullCommonWorkbench.positions()))).buffer));
-  for(const item of input.rows){
+  for(const item of selectedRows){
+   console.log(new Date().toISOString(),'begin native view',item.id);
    const a=makeCandidate(rollback,macros[0]);a.state.owners.expression='anny';a.state.anny.facialActions=item.actions;
    await page.evaluate(async a=>{
     if(window.__coverage){__coverage.dispose();window.__coverage=null;}if(window.__surface){__surface.dispose();window.__surface=null;}if(window.__light){__light.dispose();window.__light=null;}if(window.__fixedHair){__fixedHair.dispose();__fixedGuides.dispose();window.__fixedHair=null;window.__fixedGuides=null;}if(window.__appearance)__appearance.dispose();
@@ -30,7 +32,7 @@ const OUT='joey-appearance-r54',hash=x=>crypto.createHash('sha256').update(x).di
     const audit=await page.evaluate(()=>fullCommonWorkbench.pixelAudit());assert.equal(audit.error,0);assert(audit.colors>100);
     const file=item.scenario+'-'+control+'.png',actualPNG=await page.screenshot({path:path.join(OUT,file),clip:camera.clip}),pixelHash=hash(actualPNG);
     const report=await page.evaluate(()=>({appearance:__appearance.report(),coverage:window.__coverage?.report(),eye:window.__surface?.report(),renderer:{memory:{...fullCommonWorkbench.motion().viewer.renderer.info.memory},render:{...fullCommonWorkbench.motion().viewer.renderer.info.render},programs:fullCommonWorkbench.motion().viewer.renderer.info.programs.length}}));
-    rows.push({reference:item.id,scenario:item.scenario,control,file,positionSHA256:positionSHA,pixelHash,camera,lighting:light,hair,actions:a.state.anny.facialActions,...report});save();return pixelHash;
+    console.log(new Date().toISOString(),'captured',item.id,control);rows.push({reference:item.id,scenario:item.scenario,control,file,positionSHA256:positionSHA,pixelHash,camera,lighting:light,hair,actions:a.state.anny.facialActions,...report});save();return pixelHash;
    };
    const baselineHash=await snap('A-frozen-R52');
    const compile=await page.evaluate(async()=>{const{attachR14Coverage}=await import('/kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/hair/R14CoverageLayer.js');window.__coverage=await attachR14Coverage(fullCommonWorkbench,{count:36000,segments:24,recipe:{style:'side-flow'},onProgress:(label,n)=>console.log('R14',label,n)});return __coverage.report();});
@@ -80,6 +82,6 @@ const OUT='joey-appearance-r54',hash=x=>crypto.createHash('sha256').update(x).di
   }
   await page.evaluate(()=>{if(window.__coverage){__coverage.dispose();window.__coverage=null;}if(window.__surface){__surface.dispose();window.__surface=null;}__light.dispose();__fixedHair.dispose();__fixedGuides.dispose();__appearance.dispose();});await page.evaluate(a=>fullCommonWorkbench.restore(a),original);assert.deepEqual(await page.evaluate(()=>fullCommonWorkbench.archive()),original);assert.equal(hash(Buffer.from(new Float32Array(await page.evaluate(()=>Array.from(fullCommonWorkbench.positions()))).buffer)),originalPositionSHA);
   assert.equal(errors.length,0);assert.equal(consoleErrors.filter(x=>/shader|VALIDATE_STATUS|GL_INVALID/.test(x)).length,0);assert.equal(failedRequests.length,0);
-  fs.writeFileSync(path.join(OUT,'report.json'),JSON.stringify({schema:'native-frozen-identity-appearance/1',engine:'0b4703359efbae10ffc6c0e5fe3fc081e7eca4fe',frozenR52Commit:'4893e8f5fc9d8a0b5a2c67b5153449c5f3c8ace4',identityChanged:false,sourcePhotosUploaded:false,renderer:'GitHub Actions Chromium SwiftShader software WebGL',staticHair:true,hairPhysics:false,visualAcceptance:false,rows,eyeChecks,extraViews,archiveRestored:true,errors,consoleErrors,failedRequests},null,2));
+  fs.writeFileSync(path.join(OUT,'report.json'),JSON.stringify({schema:'native-frozen-identity-appearance/1',engine:'0b4703359efbae10ffc6c0e5fe3fc081e7eca4fe',frozenR52Commit:'4893e8f5fc9d8a0b5a2c67b5153449c5f3c8ace4',identityChanged:false,sourcePhotosUploaded:false,verifiedViews:selectedRows.map(x=>x.id),priorCompletedRun:'38243350193: E04/U05 and scene-light response',renderer:'GitHub Actions Chromium SwiftShader software WebGL',staticHair:true,hairPhysics:false,visualAcceptance:false,rows,eyeChecks,extraViews,archiveRestored:true,errors,consoleErrors,failedRequests},null,2));
  }catch(e){save();fs.writeFileSync(path.join(OUT,'failure.json'),JSON.stringify({error:e.stack},null,2));throw e;}finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

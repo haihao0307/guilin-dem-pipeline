@@ -14,6 +14,14 @@ jobs:
   observe:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - case: remaining-native
+            engine: 0b4703359efbae10ffc6c0e5fe3fc081e7eca4fe
+          - case: candidate-page
+            engine: 0b3e95223e0b53048d954dd82c7469d06d984c20
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -22,7 +30,7 @@ jobs:
             kaopu-unified-human-workbench/joey-observation-r01
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          ref: 0b4703359efbae10ffc6c0e5fe3fc081e7eca4fe
+          ref: ${{ matrix.engine }}
           path: native
           persist-credentials: false
           sparse-checkout: |
@@ -63,12 +71,19 @@ jobs:
           node --test kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/eye/EyeSurface.test.mjs
           node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/hair/test-r14-coverage.mjs
           node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/hair/test-r54-flow.mjs
-          node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/render-appearance.cjs
+      - name: Verify remaining native expression and profile
+        if: matrix.case == 'remaining-native'
+        env:
+          R54_VIEWS: U07,profile
+        run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/render-appearance.cjs
+      - name: Verify actual isolated candidate page and controls
+        if: matrix.case == 'candidate-page'
+        run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/test-preview.cjs
       - name: Keep bounded research evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: joey-native-probe-${{ github.sha }}
+          name: joey-native-probe-${{ matrix.case }}-${{ github.sha }}
           path: |
             joey-native-probe-results/
             joey-native-candidate-results/
@@ -124,6 +139,7 @@ jobs:
             joey-brow-face-r52-render/
             joey-cheek-volume-r53-light/
             joey-appearance-r54/
+            joey-appearance-r54-preview/
           retention-days: 7
           compression-level: 0
           if-no-files-found: warn
