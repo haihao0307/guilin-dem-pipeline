@@ -7,7 +7,7 @@ struct Frame { eye:vec4<f32>,forward:vec4<f32>,right:vec4<f32>,up:vec4<f32>,cut:
 ${geometry}
 ${MOTHER_WGSL}
 ${MATERIAL_DOMAIN_WGSL}
-struct Stats {hit:atomic<u32>,miss:atomic<u32>,exhausted:atomic<u32>,maximumSteps:atomic<u32>,retried:atomic<u32>,glassRays:atomic<u32>,boundOnly:atomic<u32>,reserved:atomic<u32>}
+struct Stats {hit:atomic<u32>,miss:atomic<u32>,exhausted:atomic<u32>,maximumSteps:atomic<u32>,retried:atomic<u32>,glassRays:atomic<u32>,boundOnly:atomic<u32>,reserved:atomic<u32>,visibilityRetried:atomic<u32>,visibilityMaximumSteps:atomic<u32>}
 @group(0) @binding(2) var<storage,read_write> stats:Stats;
 struct HitRecord { ray:vec4<f32>,local:vec4<f32>,ids:vec4<u32>,normal:vec4<f32>,glass:vec4<f32>,through:vec4<f32> }
 @group(0) @binding(3) var<storage,read_write> hits:array<HitRecord,256>;
@@ -16,6 +16,8 @@ struct RetryQueue {count:atomic<u32>,indices:array<u32,256>}
 
 @group(0) @binding(5) var<storage,read_write> normalSamples:array<f32,1024>;
 @group(0) @binding(6) var<storage,read_write> shadingSamples:array<vec4<f32>,256>;
+// Initial 64-step exit and final sparse continuation. No scene or material state is copied.
+@group(0) @binding(7) var<storage,read_write> visibilityStates:array<vec4<f32>,512>;
 fn normalDirection(i:u32)->vec3<f32>{let v=array<vec3<f32>,4>(vec3<f32>(1.,-1.,-1.),vec3<f32>(-1.,-1.,1.),vec3<f32>(-1.,1.,-1.),vec3<f32>(1.,1.,1.));return v[i];}
 @compute @workgroup_size(8,8) fn sampleNormals(@builtin(global_invocation_id) gid:vec3<u32>){
  if(any(gid.xy>=u.tile.zw)||gid.z>=4u){return;}let idx=gid.y*16u+gid.x;let h=hits[idx];normalSamples[idx*4u+gid.z]=0.;if(h.ray.w!=1.||h.normal.w==1.){return;}
@@ -23,21 +25,27 @@ fn normalDirection(i:u32)->vec3<f32>{let v=array<vec3<f32>,4>(vec3<f32>(1.,-1.,-
  normalSamples[idx*4u+gid.z]=sceneField(p+normalDirection(gid.z)*ep).d;
 }
 fn gatheredNormal(idx:u32)->vec3<f32>{var sum=vec3<f32>(0.);for(var i=0u;i<4u;i++){let term=normalDirection(i)*normalSamples[idx*4u+i];if(i==0u){sum=term;}else{sum=sum+term;}}return normalize(sum);}
-fn macroVisibility(p:vec3<f32>,n:vec3<f32>,ld:vec3<f32>)->vec2<f32>{
- var t=.045;var shade=1.;for(var i=0;i<64;i++){let q=p+n*.012+ld*t;let h=querySettlement(q,80.);var d=h.d;if(u.cut.w<500.){d=min(max(d,dot(q,u.cut.xyz)-u.cut.w),q.y);}
+fn macroVisibility(p:vec3<f32>,n:vec3<f32>,ld:vec3<f32>,initial:vec4<f32>,limit:u32)->vec4<f32>{
+ var t=initial.x;var shade=initial.y;var steps=u32(initial.z);for(var i=steps;i<limit;i++){let q=p+n*.012+ld*t;let h=querySettlement(q,80.);var d=h.d;if(u.cut.w<500.){d=min(max(d,dot(q,u.cut.xyz)-u.cut.w),q.y);}steps=i+1u;
   if(h.materialId==5u){t+=.06;shade*=.94;}else{
-   if(d<.004&&h.materialId>0u){return vec2<f32>(.10,0.);}
+   if(d<.004&&h.materialId>0u){return vec4<f32>(t,.10,f32(steps),0.);}
    // A conservative envelope is a STEP bound only. It is never a soft-shadow distance.
    if(h.materialId>0u){shade=min(shade,8.*max(d,.002)/t);}t+=clamp(abs(d)*.7,.025,2.5);
   }
-  if(t>65.){return vec2<f32>(clamp(shade,.10,1.),0.);}
+  if(t>65.){return vec4<f32>(t,clamp(shade,.10,1.),f32(steps),0.);}
  }
- return vec2<f32>(-1.,1.);
+ return vec4<f32>(t,shade,f32(steps),1.);
 }
 @compute @workgroup_size(8,8) fn geometryVisibility(@builtin(global_invocation_id) gid:vec3<u32>){
- if(any(gid.xy>=u.tile.zw)){return;}let idx=gid.y*16u+gid.x;let h=hits[idx];shadingSamples[idx]=vec4<f32>(0.,1.,0.,1.);if(h.ray.w!=1.){return;}
+ if(any(gid.xy>=u.tile.zw)){return;}let idx=gid.y*16u+gid.x;let resuming=u.controls.y>.5;let h=hits[idx];
+ if(!resuming){shadingSamples[idx]=vec4<f32>(0.,1.,0.,1.);visibilityStates[idx]=vec4<f32>(0.,1.,0.,0.);visibilityStates[idx+256u]=visibilityStates[idx];}
+ if(h.ray.w!=1.){return;}if(resuming&&visibilityStates[idx].w==0.){return;}
  var n=normalize(u.cut.xyz);if(h.normal.w==0.){n=gatheredNormal(idx);}let rd=cameraRay(vec2<f32>(u.tile.xy+gid.xy)+vec2<f32>(.5));let p=u.eye.xyz+rd*h.ray.x;let light=normalize(vec3<f32>(-3.,7.,-4.));
- if(dot(n,light)<=0.){shadingSamples[idx]=vec4<f32>(n,1.);return;}atomicAdd(&stats.boundOnly,1u);let visibility=macroVisibility(p,n,light);if(visibility.y>0.){atomicAdd(&stats.reserved,1u);}shadingSamples[idx]=vec4<f32>(n,visibility.x);
+ if(dot(n,light)<=0.){shadingSamples[idx]=vec4<f32>(n,1.);return;}var initial=vec4<f32>(.045,1.,0.,1.);var limit=64u;
+ if(resuming){initial=visibilityStates[idx];limit=1024u;atomicAdd(&stats.visibilityRetried,1u);}else{atomicAdd(&stats.boundOnly,1u);}
+ let visibility=macroVisibility(p,n,light,initial,limit);atomicMax(&stats.visibilityMaximumSteps,u32(visibility.z));
+ if(resuming){visibilityStates[idx+256u]=visibility;if(visibility.w>0.){atomicAdd(&stats.reserved,1u);}}else{visibilityStates[idx]=visibility;visibilityStates[idx+256u]=visibility;}
+ shadingSamples[idx]=vec4<f32>(n,select(visibility.y,-1.,visibility.w>0.));
 }
 
 fn cameraRay(pixel:vec2<f32>)->vec3<f32>{let uv=(pixel/u.size.xy*2.-vec2<f32>(1.))*vec2<f32>(u.size.x/u.size.y,-1.);return normalize(u.forward.xyz+(u.right.xyz*uv.x+u.up.xyz*uv.y)*u.forward.w);}
