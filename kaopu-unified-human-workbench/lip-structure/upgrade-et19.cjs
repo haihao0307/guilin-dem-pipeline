@@ -1,0 +1,21 @@
+const fs=require('fs'),path=require('path');
+function patch(name,a,b){const p=path.join(__dirname,name),s=fs.readFileSync(p,'utf8');if(s.includes(b))return;if(!s.includes(a))throw Error('ET19 migration anchor missing: '+name+' / '+a);fs.writeFileSync(p,s.replaceAll(a,b));}
+patch('LipSurface.mjs','level<2','level<3');
+patch('LipSurface.mjs','const roi=i=>api.rails.sample(point(R,i),T[i]).roi||(level===0&&T[i]<.5&&A[i*4+2]>.65);','const roi=i=>{const q=api.rails.sample(point(R,i),T[i]);return level===2?q.roi&&q.v>-.12&&q.v<1.12&&Math.abs(q.u)<.97&&q.front>.5:q.roi||(level===0&&T[i]<.5&&A[i*4+2]>.65);};');
+patch('LipMaterial.mjs','api.atlasStats=a.stats;','api.atlasStats=a.stats;api.atlasData=a;');
+patch('LipMaterial.mjs','api.microTexture=null;api.atlasKey=null;','api.microTexture=null;api.atlasKey=null;api.atlasData=null;');
+patch('LipViewer.mjs','this.currentLip=surface;','this.currentLip=surface;if(this.model.lipStructure.mother){const report=this.model.lipStructure.mother.update(this.geometry);surface.stats={...surface.stats,...report};}');
+patch('LipViewer.mjs',"version:'ET18-L2'","version:'ET19-L3'");
+patch('LipUI.mjs','ET18','ET19');patch('LipUI.mjs',"version:'ET19-L2'","version:'ET19-L3'");
+patch('LipUI.mjs','当前是实时结构与表面改进，不是扫描级资产，也未新增口腔软组织碰撞。','当前是实时结构与表面改进，不是扫描级资产；配对接触与牙舌正向包络的范围见上方说明。');
+patch('LipUI.mjs','不是叠一张新嘴巴。切换原版时，相机、人物和灯光不变。','不是叠一张新嘴巴。下方对照开关仅关闭唇部扩展，不等于 ET18；真正旧版请用上方固定入口。');
+patch('build.cjs',"import {mountLipUI} from '../../lip-structure/LipUI.mjs';\\n","import {mountLipUI} from '../../lip-structure/LipUI.mjs';\\nimport {installLipMother} from '../../lip-structure/LipMother.mjs';\\nimport {mountLipMotherUI} from '../../lip-structure/LipMotherUI.mjs';\\n");
+patch('build.cjs','installNaturalEyes(model);installLipStructure(model);if(savedArchive)','installNaturalEyes(model);installLipStructure(model);installLipMother(model);if(savedArchive)');
+patch('build.cjs','mountLipUI({model,viewer,controller});wasLoaded=true;','mountLipUI({model,viewer,controller});mountLipMotherUI({model,viewer,controller});wasLoaded=true;');
+patch('build.cjs',"ANCHOR='7f90e53c1d114f65b08710d67d792d489719ee67'","ANCHOR='99defb97123d8101fefddf5aa039991446f557a8'");
+patch('build.cjs','ET18','ET19');patch('build.cjs',"version:'ET19-L2'","version:'ET19-L3'");
+patch('build.cjs','84c7a27d1e8765d41c640a0bc66075bcddd82e81af1590d4d296ca49659dbafa','47f56c7be09005c8b1a0bea5b2eef37fdcdbb642a73f79d9e3b9e48c24364574');
+patch('build.cjs','Inherited jaw/expression controls, no new lip/teeth/tongue collision solver','Registered Anny jawOpen, reduced opposing lip sections and frontal dental/tongue envelope; not full 3D continuous collision or FEM');
+patch('build.cjs','Furrows and wetness are real-time approximations; not measured reflectance','Primary furrows are geometry displacement; secondary microrelief and optical wetness are real-time approximations, not measured reflectance');
+patch('build.cjs','1024x512 RGBA curve-graph height atlas; mipmapped, no new source asset','Seeded 1024x512 curve graph: main band displaces subdivided lip vertices; secondary band is filtered shading');
+patch('LipBiomechanics.mjs','native jaw + reduced geometric lip constraints; not FEM','registered Anny jawOpen + reduced lip constraints; not FEM');
