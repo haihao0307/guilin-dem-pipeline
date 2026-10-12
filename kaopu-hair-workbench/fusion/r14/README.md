@@ -1,15 +1,24 @@
-# R14.2 发根与冠部覆盖候选
+# R14.2 发根与顶部覆盖候选
 
-用户冻结R13C：c0816ec8388195bb79b12fc82e11ce2d3fa07d56。只新增r14与专用workflow；旧网页、原ET18头部与64k潜在发根保留，不合并、不强推。
+Parent immutable webpage: c0816ec8388195bb79b12fc82e11ce2d3fa07d56 / fusion/r13c/public-lite.html.
 
-upgrade.py从旧源码生成独立R14；crown-overlap.py完成生长/梳理分离。起根过渡按毫米计，极短发不套用长发波纹；后颈和鬓角采用第一次越界真实剪短、弧长重采样。
+原64k潜在发根、种子724、原生ET18头、发色、单丝半径、灯光、深度覆盖模式保留。不增加头皮黑帽或第二层短毛。
 
-保留发根处原发旋方向；既有发丝中段沿冠部梳理形成覆盖。后部连续保护带避免全部后根被前梳后露皮。没有黑色头皮贴片、额外短毛壳、第二个头模、替换发根或加粗遮掩。
+RootProfile: 起根高度从20微米锚点连续变化；最初8毫米使用原生三角形距离，不用粗距离网格替代根部。抬升在根部为零斜率，极短发抑制波纹；聚束延后到起根段之外。
+GroomTopology: 保留根部发旋、后部下垂，只让既有发丝中段梳过冠部覆盖原大开口；保留有限额前分缝。鬓角/后颈按第一次越界真实剪短并弧长重采样，不压平余下顶点。
+两项可保存参数：起根过渡长度2–16mm、冠部发流覆盖0–100；它们改变真实曲线，不是透明度。起根段查看重用同一发丝网格的前约8mm，不是点云冒充根段。
 
-起根过渡长度、冠部发流覆盖可调并保存。起根段约8mm观察用同一个真实发丝网格，只切换索引，不是点云。
+## 原始方法与边界
+SideFX Guide Groom: https://www.sidefx.com/docs/houdini/nodes/sop/guidegroom.html — Lock Root、Ray Bias、Smooth、Cut/Extend、Resample；只迁移原则，未移植Houdini求解器。
+Three Material: https://threejs.org/docs/pages/Material.html — depthWrite / alphaToCoverage / blending。
+继承原Perm宏/细分离、Digital Salon导向/跟随与原MakeHuman眉毛。没有运行其神经/CUDA求解器。
 
-R14.0仅移走露皮开口，已视觉拒绝；R14.1顶视改善但后冠露皮增大，也拒绝作为交付。R14.2须通过三种发型的顶/后/侧视、根部抽样、真实控件、存档和公网浏览器后才能交付；运行通过不等于影视级。
+## 验证与约束
+upgrade.py只读旧r13c，仅写r14。CI中的/tmp/hair-r14-reference仅追加测量接口，几何、头部、色彩、光照和半径均为原R13C。
+coverageAudit是顶视固定世界区域的白头皮/黑真实发丝ID渲染，保留真实深度和MSAA；不是生物密度测量、不是美术验收，也不涂黑正常画面的头皮。
+rootAudit检查固定抽样根点的原生表面间隙和12mm以下短发反向转折。证据还须经人工查看。
+当前无动态物理、自碰撞、肩/衣服碰撞。手机只测390×844视口，不是实机。64k顶点内存预算未提升，但导向与精确根部投射增加生成计算；不能声称普通手机影视特写实时。
+视觉验收未通过前不得称影视级、最终成品或用户认可。
 
-默认64k几何缓冲约201MB，不是整个应用内存。生成有额外CPU成本。当前静态头部避让，不具备动力学、毛发自碰撞、衣物/肩膀碰撞；390x844只是手机视口模拟。不得称用户已认可或所有硬件实时。
-
-方法来源：SideFX Guide Groom https://www.sidefx.com/docs/houdini/nodes/sop/guidegroom.html ，Three.js Material https://threejs.org/docs/pages/Material.html 。继承MakeHuman眉毛、Perm宏/细分离和Digital Salon导向/跟随原则；未运行其神经或CUDA系统。
+## 反例已拒绝
+R14.0 整个根部场加前向偏置仅把发旋露皮移到旁边，视觉拒绝。R14.1 将生长与中段梳理分开后顶视改善，但后部过度前梳又增加后冠露皮。R14.2 增加后根连续保护带，保留后脑下垂，三发型独立全视图对照。单一顶视ROI改善不能替代后视与侧视验收。

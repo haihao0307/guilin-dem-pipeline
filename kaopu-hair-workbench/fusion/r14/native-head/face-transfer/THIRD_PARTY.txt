@@ -1,0 +1,26 @@
+Uses Separable SSS. Copyright (C) 2012 by Jorge Jimenez and Diego Gutierrez.
+Original: https://github.com/iryoku/separable-sss/blob/master/SeparableSSS.h
+Inherited implementation: haihao0307/Humanoid-Rig-Lab-Next, skin-quality-lab/emily-transfer/app.js
+Changes: GLSL kernel, split-albedo diffusion and depth rejection retained; native face-region alpha, host tone mapping and body preservation added.
+
+Copyright (C) 2012 Jorge Jimenez (jorge@iryoku.com)
+Copyright (C) 2012 Diego Gutierrez (diegog@unizar.es)
+All rights reserved.
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the following disclaimer in the documentation and/or other materials provided with the distribution:
+"Uses Separable SSS. Copyright (C) 2012 by Jorge Jimenez and Diego Gutierrez."
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+The views and conclusions contained in the software and documentation are those of the authors and should not be interpreted as representing official policies, either expressed or implied, of the copyright holders.
+
+Scan-derived texture frequency samples:
+Infinite, 3D Head Scan by Lee Perry-Smith. CC BY 3.0 Unported.
+Based on a work at www.triplegangers.com / Infinite Realities.
+License: https://creativecommons.org/licenses/by/3.0/
+Distribution: Pixar RenderMan Photorealistic Head tutorial, Leif Pedersen.
+Source archive: https://assets.renderman.pixar.com/Tutorials/photorealistic_head/10100_skin_shading_renderman_21.zip
+Changes: 8 region samples projected from the existing scan; micro/meso split and log-color highpass; minor source seam pixels resampled as recorded in ATLAS.json. Artistic amplitudes, not measured pore depths. The original face identity mesh and low-frequency face color are NOT used to replace the native character.
+
+Emily-inspired RGB wrapping is the existing project's independent implementation of the light-response idea, not the XG engine, Emily mesh or original Phong shader. Physical reflection remains the host Three.js GGX implementation.
+
+The existing GNM, Anny, MHR, Three.js and other host licenses remain in their original workbench locations. This module does not change their licenses or claim endorsement by any source author.
