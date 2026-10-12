@@ -1,0 +1,9 @@
+// Source closure selection only. No mathematical rewrite.
+export function extraction(WGSL){const src=WGSL.replace(/\/\/[^\n]*/g,'').replace(/\/\*[\s\S]*?\*\//g,'');
+function blocks(keyword){const map=new Map(),re=new RegExp('\\b'+keyword+'\\s+(\\w+)\\s*','g');let m;while((m=re.exec(src))){const open=src.indexOf('{',re.lastIndex);if(open<0)throw Error('Missing body '+m[1]);let depth=1,end=open+1;for(;depth;end++){if(src[end]==='{')depth++;if(src[end]==='}')depth--;if(end>=src.length)throw Error('Unclosed '+m[1]);}map.set(m[1],src.slice(m.index,end));re.lastIndex=end;}return map;}
+const fns=blocks('fn'),structs=blocks('struct');
+const privateGlobals=[...src.matchAll(/\bvar<private>\s+\w+\s*:[^;]+;/g)].map(m=>m[0]);
+const constants=new Map([...src.matchAll(/\bconst\s+(\w+)\s*(?::[^=;]+)?=[^;]+;/g)].map(m=>[m[1],m[0]]));
+function closure(roots){const chosen=new Set();function add(n){if(chosen.has(n))return;if(!fns.has(n))throw Error('Missing function '+n);chosen.add(n);const b=fns.get(n);for(const m of b.matchAll(/\b(\w+)\s*\(/g))if(fns.has(m[1])&&m[1]!==n)add(m[1]);}roots.forEach(add);const bodies=[...fns].filter(([n])=>chosen.has(n)).map(([,s])=>s).join('\n');const usedConstants=new Set();function visitConstants(s){for(const m of s.matchAll(/\b[A-Za-z_]\w*\b/g)){const n=m[0];if(constants.has(n)&&!usedConstants.has(n)){usedConstants.add(n);visitConstants(constants.get(n));}}}visitConstants(bodies);visitConstants([...structs.values(),...privateGlobals].join('\n'));return[...constants].filter(([n])=>usedConstants.has(n)).map(([,s])=>s).join('\n')+'\n'+bodies;}
+const header=[...structs].filter(([n])=>!['Stats','Trace'].includes(n)).map(([,s])=>s).join('\n')+'\n'+privateGlobals.join('\n')+'\n@group(0)@binding(0)var<uniform>u:Params;\n';
+return{header,closure};}
