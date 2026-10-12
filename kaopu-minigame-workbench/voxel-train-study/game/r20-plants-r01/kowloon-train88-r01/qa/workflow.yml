@@ -1,0 +1,48 @@
+name: Train88 Kowloon same-source function bridge
+on:
+  push:
+    branches: ['qa/train88-kowloon-function-r01-20261012']
+permissions:
+  contents: read
+jobs:
+  compiler-and-equivalence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01
+      - name: Source locks and host binding tests
+        run: |
+          node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r04/qa/*.test.mjs
+          node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/*.test.mjs
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/emit-shader-inputs.mjs
+      - name: Compile pinned official Naga source
+        working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/compiler
+        run: |
+          cargo generate-lockfile
+          python - <<'PY'
+          import tomllib
+          p=next(p for p in tomllib.load(open('Cargo.lock','rb'))['package'] if p['name']=='naga')
+          assert p['version']=='27.0.3' and p['checksum']=='066cf25f0e8b11ee0df221219010f213ad429855f57c494f995590c861a9a7d8'
+          PY
+          cargo build --release --locked
+          target/release/kaopu-station-shader-bridge ../generated/material.wgsl ../generated/material.frag materialProbe
+          target/release/kaopu-station-shader-bridge ../generated/geometry.wgsl ../generated/geometry.frag geometryProbe
+      - name: Install pinned official browser QA runner
+        run: |
+          npm install --prefix "$RUNNER_TEMP/station-bridge" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
+      - name: Same-source WebGL2 and WebGPU numerical probes
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/backend-probe.cjs
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: train88-kowloon-function-bridge-${{ github.sha }}
+          path: |
+            train88-kowloon-bridge-results/
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/generated/
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/compiler/Cargo.lock
+          retention-days: 7
