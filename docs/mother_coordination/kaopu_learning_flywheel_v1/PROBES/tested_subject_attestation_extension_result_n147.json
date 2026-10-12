@@ -1,0 +1,23 @@
+{
+  "schema": "kaopu.probe-result/1",
+  "probeId": "TESTED-SUBJECT-NOT-MUTABLE-HEAD-001-N147-ATTESTATION-REPLAY",
+  "runAt": "2026-10-12T23:49:00Z",
+  "boundedQuestion": "Can signed artifact provenance distinguish stale/relabelled artifacts and wrong producer/workflow/source identity without bypassing existing semantic gates?",
+  "executionLayer": "isolated-node-classification-replay",
+  "environmentNote": "Pure classification replay against the N147 extension fixtures. No GitHub/Sigstore online verification and no production workflow, browser or device gate was run.",
+  "sourceCaseBlob": "aac2cb75aa8d2bc7898286dad70789633906e4d5",
+  "assertions": [
+    {"id": "EAR_R03_CURRENT_UNSIGNED_AUDIT", "expected": "HOLD_PROVENANCE_ATTESTATION_MISSING", "actual": "HOLD_PROVENANCE_ATTESTATION_MISSING", "passed": true},
+    {"id": "STALE_ARTIFACT_RELABELED_BY_FRESH_RECEIPT", "expected": "HOLD_ARTIFACT_DIGEST_MISMATCH", "actual": "HOLD_ARTIFACT_DIGEST_MISMATCH", "passed": true},
+    {"id": "COPIED_DIGEST_UNSIGNED_JSON_RECEIPT", "expected": "HOLD_PROVENANCE_SIGNATURE_INVALID", "actual": "HOLD_PROVENANCE_SIGNATURE_INVALID", "passed": true},
+    {"id": "VALID_SIGNATURE_WRONG_WORKFLOW", "expected": "HOLD_PROVENANCE_SIGNER_SCOPE_MISMATCH", "actual": "HOLD_PROVENANCE_SIGNER_SCOPE_MISMATCH", "passed": true},
+    {"id": "VALID_SIGNATURE_OLD_SOURCE_SHA", "expected": "HOLD_PROVENANCE_SOURCE_MISMATCH", "actual": "HOLD_PROVENANCE_SOURCE_MISMATCH", "passed": true},
+    {"id": "VALID_PROVENANCE_REFERENCE_GATE_STILL_HOLDS", "expected": "PROVENANCE_VERIFIED__PROMOTION_HOLD_EXISTING_GATES", "actual": "PROVENANCE_VERIFIED__PROMOTION_HOLD_EXISTING_GATES", "passed": true},
+    {"id": "VALID_PROVENANCE_AND_EXISTING_GATES", "expected": "PROVENANCE_VERIFIED__PROMOTION_ELIGIBLE", "actual": "PROVENANCE_VERIFIED__PROMOTION_ELIGIBLE", "passed": true}
+  ],
+  "summary": {"passed": 7, "total": 7, "allPassed": true},
+  "productionChanged": false,
+  "productionGateRun": false,
+  "globalR2Changed": false,
+  "productionThresholds": "UNKNOWN"
+}
