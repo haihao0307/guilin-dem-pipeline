@@ -3,6 +3,8 @@ import{KP_WOOD_WGSL}from'./mothers/wood-core.mjs';
 import{KP_PLASTER_WGSL}from'./mothers/plaster-core.mjs';
 import{KP_STONE_WGSL}from'./mothers/stone-fields.mjs';
 import{KP_METAL_WGSL}from'./mothers/metal.mjs';
+import{KP_CONCRETE_WGSL}from'./mothers/concrete-kst.mjs';
+import{STATION_MATTER_WGSL}from'./station-matter.mjs';
 import{STATION_FIELD_WGSL}from'./station-field.mjs';
 export const WGSL=String.raw`
 struct Params{eye:vec3<f32>,age:f32,forward:vec3<f32>,fov:f32,right:vec3<f32>,aspect:f32,up:vec3<f32>,debug:f32,resolution:vec2<f32>,pad:vec2<f32>}
@@ -13,23 +15,30 @@ ${KP_BRICK_WGSL}
 ${KP_WOOD_WGSL}
 ${KP_STONE_WGSL}
 ${KP_METAL_WGSL}
+${KP_CONCRETE_WGSL}
 ${KP_PLASTER_WGSL}
 fn stationPlasterParams()->KpPlasterParams{return KpPlasterParams(vec2<f32>(0.,1.4),vec2<f32>(2.,1.5),.0165,.0012+.0018*u.age,0.,.013,.020,.0001,vec3<f32>(.48,.44,.35),vec3<f32>(.82,.76,.64),.0008,.000008,.018);}
 ${STATION_FIELD_WGSL}
+${STATION_MATTER_WGSL}
 struct Trace{t:f32,status:u32,steps:u32,h:HitField}
-fn groundRay(ro:vec3<f32>,rd:vec3<f32>)->vec2<f32>{var best=vec2<f32>(1e6,0.);if(rd.y< -0.0000001){let land=(-.28-ro.y)/rd.y;let sea=(-.52-ro.y)/rd.y;if(land>.001&&(ro+rd*land).z<=27.){best=vec2<f32>(land,6.);}if(sea>.001&&(ro+rd*sea).z>=27.&&sea<best.x){best=vec2<f32>(sea,10.);}}return best;}
-fn march(ro:vec3<f32>,rd:vec3<f32>,limit:f32)->Trace{let ground=groundRay(ro,rd);let end=min(limit,ground.x);var t=.02;var h=stationField(ro+rd*t);for(var i=0u;i<1400u;i++){h=stationField(ro+rd*t);let eps=clamp(t*.000015,.00065,.006);if(abs(h.d)<eps&&h.id!=0u){return Trace(t,1u,i+1u,h);}t+=max(abs(h.d)*.60,.00018);if(t>=end){if(ground.x<=limit){let p=ro+rd*ground.x;return Trace(ground.x,1u,i+1u,HitField(0.,u32(ground.y),p,0.));}return Trace(t,0u,i+1u,h);}}return Trace(t,2u,1400u,h);}
+fn groundRay(ro:vec3<f32>,rd:vec3<f32>)->vec2<f32>{var best=vec2<f32>(1e6,0.);if(rd.y< -0.0000001){let land=(-.28-ro.y)/rd.y;let sea=(-.52-ro.y)/rd.y;if(land>.001&&(ro+rd*land).z<=27.){best=vec2<f32>(land,6.);}if(sea>.001&&(ro+rd*sea).z>=27.&&sea<best.x){best=vec2<f32>(sea,10.);}}if(abs(rd.z)>.0000001){let coast=(27.-ro.z)/rd.z;let yy=(ro+rd*coast).y;if(coast>.001&&yy>=-.52&&yy<=-.28&&coast<best.x){best=vec2<f32>(coast,6.);}}return best;}
+// Ray-specific empty-space bound for the roof's OUTER cylinder. All other
+// objects retain their ordinary conservative distance, with a 3cm material shell.
+// A negative discriminant proves this ray cannot touch this barrel shell.
+fn barrelAdvance(p:vec3<f32>,rd:vec3<f32>,h:HitField)->f32{if(h.id!=15u){return 0.;}let q=vec2<f32>(h.q.x,p.y-1.2);let r=12.856;if(length(q)<=r){return 0.;}let v=rd.xy;let A=dot(v,v);let B=dot(q,v);let C=dot(q,q)-r*r;let disc=B*B-A*C;var t=1e5;if(A>.0000001&&disc>=0.){let near=(-B-sqrt(disc))/A;if(near>0.){t=near;}}let other=max(0.,stationDomain(p,true).d-.03)*.60;return min(t*.98,other);}
+fn march(ro:vec3<f32>,rd:vec3<f32>,limit:f32)->Trace{let ground=groundRay(ro,rd);let end=min(limit,ground.x);var t=.02;var h=stationField(ro+rd*t);for(var i=0u;i<1400u;i++){h=stationField(ro+rd*t);let eps=clamp(t*.000015,.00065,.006);if(abs(h.d)<eps&&h.id!=0u){return Trace(t,1u,i+1u,h);}t+=max(max(abs(h.d)*.60,barrelAdvance(ro+rd*t,rd,h)),.00018);if(t>=end){if(ground.x<=limit){let p=ro+rd*ground.x;return Trace(ground.x,1u,i+1u,HitField(0.,u32(ground.y),p,0.,0.));}return Trace(t,0u,i+1u,h);}}return Trace(t,2u,1400u,h);}
 
 fn fieldNormal(p:vec3<f32>)->vec3<f32>{let e=.00045;let a=vec3<f32>(1,-1,-1);let b=vec3<f32>(-1,-1,1);let c=vec3<f32>(-1,1,-1);let d=vec3<f32>(1,1,1);return normalize(a*stationField(p+a*e).d+b*stationField(p+b*e).d+c*stationField(p+c*e).d+d*stationField(p+d*e).d);}
 fn sky(rd:vec3<f32>)->vec3<f32>{return mix(vec3<f32>(.72,.78,.76),vec3<f32>(.22,.38,.54),smoothstep(-.15,.85,rd.y));}
-fn shadow(p:vec3<f32>,n:vec3<f32>,ld:vec3<f32>)->f32{var t=.04;var res=1.;for(var i=0;i<38;i++){let d=stationMacro(p+n*.018+ld*t).d;if(d<.001){return .1;}res=min(res,12.*d/t);t+=clamp(d*.65,.025,3.);if(t>70.){break;}}return clamp(res,.1,1.);}
-fn ao(p:vec3<f32>,n:vec3<f32>)->f32{var occ=0.;var weight=1.;for(var i=1;i<5;i++){let d=f32(i)*.20;occ+=max(0.,d-stationMacro(p+n*d).d)*weight;weight*=.55;}return clamp(1.-occ*.7,.28,1.);}
+fn shadow(p:vec3<f32>,n:vec3<f32>,ld:vec3<f32>)->f32{var t=.04;var res=1.;for(var i=0;i<38;i++){let d=stationDomain(p+n*.018+ld*t,false).d;if(d<.001){return .1;}res=min(res,12.*d/t);t+=clamp(d*.65,.025,3.);if(t>70.){break;}}return clamp(res,.1,1.);}
+fn ao(p:vec3<f32>,n:vec3<f32>)->f32{var occ=0.;var weight=1.;for(var i=1;i<5;i++){let d=f32(i)*.20;occ+=max(0.,d-stationDomain(p+n*d,false).d)*weight;weight*=.55;}return clamp(1.-occ*.7,.28,1.);}
+fn surfaceAt(p:vec3<f32>,n:vec3<f32>,fp:f32)->StationMatter{var h=stationDomain(p,false);h.d=h.baseD;return evaluateStationMatter(h,p,n,fp);}
 fn shade(tr:Trace,ro:vec3<f32>,rd:vec3<f32>)->vec3<f32>{let p=ro+rd*tr.t;let h=tr.h;var n=vec3<f32>(0.,1.,0.);if(h.id!=6u&&h.id!=10u){n=fieldNormal(p);}let fp=max(.00001,tr.t*2.*u.fov/u.resolution.y);let wet=stateWet(p);let repair=repairAt(p);var s=KpSurface(0.,vec3<f32>(.34,.33,.28),.85);var metal=0.;var cavity=1.;var specular=1.;
- if(h.id==1u||h.id==12u){s=kpBrickOriginalSurface(h.q,h.seed,i32(abs(h.seed))%4,.42,fp);let mortar=min(.125-abs(h.q.x),.0365-abs(h.q.y));if(mortar<.004){s=KpSurface(0.,vec3<f32>(.28,.26,.21),.94);}s.albedo*=1.-wet*.18;}
- if(h.id==2u){s=kpStoneSurface(h.q*.19,u.age,wet,repair,fp*.19);}
- if(h.id==13u){s=kpPlasterOriginalField(h.q,stationPlasterParams(),fp).surface;s.albedo*=1.-wet*.18;}
- if(h.id==3u){s=kpMetalSurface(h.q,u.age,wet,repair,fp);metal=.45;}
- if(h.id==4u){let wn=select(n,n.zxy,h.seed==38.);let ws=kpWoodOriginalSample(h.q,wn,select(0.,1.,abs(wn.x)>.72),kpWoodDefaultParams(),fp,tr.t);s=ws.surface;cavity=ws.cavity;specular=ws.specularLevel;}
+ if(h.id==1u||h.id==2u||h.id==3u||h.id==4u||h.id==12u||h.id==13u||h.id==15u||h.id==17u){var nominal=h;nominal.d=h.baseD;let matter=evaluateStationMatter(nominal,p,n,fp);s=matter.surface;metal=matter.metal;cavity=matter.cavity;specular=matter.specular;
+  // Source micro-height changes PBR normal only; geometry uses the explicitly
+  // separate macro/thickness field above. No second geometric skin is rendered.
+  if(tr.t<18.&&fp<.02&&abs(matter.microHeight)>0.){let axis=select(vec3<f32>(0.,1.,0.),vec3<f32>(1.,0.,0.),abs(n.y)>.8);let t1=normalize(cross(axis,n));let t2=cross(n,t1);let e=max(.0007,fp*.5);let p1=p+t1*e;let p2=p-t1*e;let p3=p+t2*e;let p4=p-t2*e;let dh1=(surfaceAt(p1,n,fp).microHeight-surfaceAt(p2,n,fp).microHeight)/(2.*e);let dh2=(surfaceAt(p3,n,fp).microHeight-surfaceAt(p4,n,fp).microHeight)/(2.*e);n=normalize(n-t1*dh1-t2*dh2);}
+ }
  if(h.id==6u){s=KpSurface(0.,vec3<f32>(.21,.225,.215),.92);}
  if(h.id==7u){s=KpSurface(0.,vec3<f32>(.82,.77,.62),.3);}
  if(h.id==8u){s=KpSurface(0.,vec3<f32>(.025,.031,.028),.35);metal=.25;}
@@ -42,4 +51,7 @@ fn shade(tr:Trace,ro:vec3<f32>,rd:vec3<f32>)->vec3<f32>{let p=ro+rd*tr.t;let h=t
 }
 @vertex fn vs(@builtin(vertex_index)i:u32)->@builtin(position)vec4<f32>{let p=array<vec2<f32>,3>(vec2<f32>(-1.,-1.),vec2<f32>(3.,-1.),vec2<f32>(-1.,3.));return vec4<f32>(p[i],0.,1.);}
 @fragment fn fs(@builtin(position)pixel:vec4<f32>)->@location(0)vec4<f32>{let uv=(pixel.xy/u.resolution*2.-vec2<f32>(1.))*vec2<f32>(u.aspect,-1.);let rd=normalize(u.forward+(u.right*uv.x+u.up*uv.y)*u.fov);let tr=march(u.eye,rd,420.);atomicMax(&stats.maxSteps,tr.steps);var color=sky(rd);if(tr.status==2u){atomicAdd(&stats.exhausted,1u);return vec4<f32>(1.,0.,1.,1.);}if(tr.status==1u){atomicAdd(&stats.hit,1u);color=shade(tr,u.eye,rd);}else{atomicAdd(&stats.miss,1u);}color=color/(vec3<f32>(1.)+color*.38);return vec4<f32>(pow(max(color,vec3<f32>(0.)),vec3<f32>(1./2.2)),1.);}
+
+@group(0)@binding(2)var<storage,read_write>matterProbe:array<vec4<f32>,576>;
+@compute @workgroup_size(32)fn probeMatter(@builtin(global_invocation_id)gid:vec3<u32>){let index=gid.x;if(index>=192u){return;}let family=index/32u;let cell=index%32u;let ids=array<u32,6>(1u,2u,3u,4u,13u,17u);let q=vec3<f32>(f32(cell)*.13-1.5,.1+f32(cell%3u)*.037,.03+f32(cell%5u)*.021);let p=vec3<f32>(f32(cell)*.11,.15+f32(cell%8u)*.12,8.3);let h=HitField(0.,ids[family],q,select(19.,38.,family==3u),0.);let m=evaluateStationMatter(h,p,vec3<f32>(0.,1.,0.),.0005);matterProbe[index*3u]=vec4<f32>(m.d,m.surface.height,m.surface.roughness,f32(m.layer));matterProbe[index*3u+1u]=vec4<f32>(m.surface.albedo,m.microHeight);let st=resolveStationState(p);matterProbe[index*3u+2u]=vec4<f32>(st.age,st.wet,st.repair,st.retained);}
 `;
