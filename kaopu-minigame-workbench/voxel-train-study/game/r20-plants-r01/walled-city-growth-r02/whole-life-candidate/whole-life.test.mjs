@@ -17,8 +17,10 @@ test('sparse QA reuses the exact macro hit rather than inlining the whole scene 
 
 test('2.7m floors resolve to fifteen risers as a stored integer, shared by both kernels',()=>{let b=r.buildings.find(q=>q.id==='B08'),off=(r.layout.floorOffset+(b.floorStart+1)*2)*4;assert.equal(r.packed[off+6],15);assert.equal(r.packed[off+7],8);assert.doesNotMatch(SCALAR_SOURCE,/ceil\(fh\/0.18\)/);assert.match(SCALAR_SOURCE,/var nr=i32\(stairCounts.z\)/);});
 
-test("diagnostic extension is crop-bounded; default main/resume budgets remain unchanged",async()=>{const {files}=await buildWholeLife();assert.match(files.get("receiver.mjs"),/budget=1024u;if\(u.controls.w>=1024/);assert.match(files.get("app.mjs"),/rect\[2\]\*rect\[3\]>2048/);assert.match(files.get("app.mjs"),/primaryFailures.push/);});
+test("diagnostic extension is crop-bounded; default main/resume budgets remain unchanged",async()=>{const {files}=await buildWholeLife();assert.match(files.get("receiver.mjs"),/budget=select\(1024u,4096u,u.controls.y==2.\)/);assert.match(files.get("app.mjs"),/rect\[2\]\*rect\[3\]>2048/);assert.match(files.get("app.mjs"),/primaryFailures.push/);});
 
 test('open threshold support belongs to actual floor, not buried lower-storey plaster top',()=>{for(const p of[[-18.254333496,6.111999989,6.219999790],[-14.344333649,6.111999989,6.219999790]]){const h=querySettlement(r,p,600);assert.equal(h.materialId,6);assert.equal(h.componentId,590337);assert.ok(Math.abs(h.d-.012)<.000002);}});
 
 test('trace diagnostics use one mapped ArrayBuffer shared by float and ID views',async()=>{const {files}=await buildWholeLife();const src=files.get('app.mjs').split('async function readTraceTile')[1].split('async function render')[0];assert.equal((src.match(/getMappedRange\(/g)||[]).length,1);assert.match(src,/Float32Array\(mapped\),u=new Uint32Array\(mapped\)/);});
+
+test('third primary stage continues only still-exhausted sparse rays with explicit4096 cap',async()=>{const {files}=await buildWholeLife();assert.match(files.get('receiver.mjs'),/if\(old.ray.w!=2.\)\{return;\}/);assert.match(files.get('receiver.mjs'),/extendedPrimary/);assert.match(files.get('app.mjs'),/extendedFrameBuffer=device.createBuffer/);assert.match(files.get('app.mjs'),/maximumTileGPUCompletionMs/);});

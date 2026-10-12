@@ -7,7 +7,7 @@ struct Frame { eye:vec4<f32>,forward:vec4<f32>,right:vec4<f32>,up:vec4<f32>,cut:
 ${geometry}
 ${MOTHER_WGSL}
 ${MATERIAL_DOMAIN_WGSL}
-struct Stats {hit:atomic<u32>,miss:atomic<u32>,exhausted:atomic<u32>,maximumSteps:atomic<u32>,retried:atomic<u32>,glassRays:atomic<u32>,boundOnly:atomic<u32>,reserved:atomic<u32>,visibilityRetried:atomic<u32>,visibilityMaximumSteps:atomic<u32>}
+struct Stats {hit:atomic<u32>,miss:atomic<u32>,exhausted:atomic<u32>,maximumSteps:atomic<u32>,retried:atomic<u32>,glassRays:atomic<u32>,boundOnly:atomic<u32>,reserved:atomic<u32>,visibilityRetried:atomic<u32>,visibilityMaximumSteps:atomic<u32>,extendedPrimary:atomic<u32>}
 @group(0) @binding(2) var<storage,read_write> stats:Stats;
 struct HitRecord { ray:vec4<f32>,local:vec4<f32>,ids:vec4<u32>,normal:vec4<f32>,glass:vec4<f32>,through:vec4<f32> }
 @group(0) @binding(3) var<storage,read_write> hits:array<HitRecord,256>;
@@ -66,9 +66,9 @@ fn trace(ro:vec3<f32>,rd:vec3<f32>,startT:f32,startSteps:u32,budget:u32,oldGlass
  }
 }
 @compute @workgroup_size(64) fn traceTileMain(@builtin(global_invocation_id) gid:vec3<u32>){
- let resuming=u.controls.y==1.;var id=gid.x;var startT=.01;var steps=0u;var budget=180u;
+ let resuming=u.controls.y>=1.;var id=gid.x;var startT=.01;var steps=0u;var budget=180u;
  var glass=vec4<f32>(0.,0.,0.,-1.);var through=vec4<f32>(1.,1.,1.,0.);
- if(resuming){if(id>=atomicLoad(&retry.count)){return;}id=retry.indices[id];let old=hits[id];startT=old.ray.x;steps=u32(old.ray.z);budget=1024u;if(u.controls.w>=1024.&&u.controls.w<=8192.){budget=u32(u.controls.w);}glass=old.glass;through=old.through;}
+ if(resuming){if(id>=atomicLoad(&retry.count)){return;}id=retry.indices[id];let old=hits[id];if(old.ray.w!=2.){return;}if(u.controls.y==2.&&u.controls.w!=1024.){atomicAdd(&stats.extendedPrimary,1u);}startT=old.ray.x;steps=u32(old.ray.z);budget=select(1024u,4096u,u.controls.y==2.);if(u.controls.w>=1024.&&u.controls.w<=8192.){budget=u32(u.controls.w);}glass=old.glass;through=old.through;}
  else{if(id>=256u){return;}if(id%16u>=u.tile.z||id/16u>=u.tile.w){return;}}
  let pixel=vec2<f32>(u.tile.xy+vec2<u32>(id%16u,id/16u))+vec2<f32>(.5);
  let h=trace(u.eye.xyz,cameraRay(pixel),startT,steps,budget,glass,through);hits[id]=h;
