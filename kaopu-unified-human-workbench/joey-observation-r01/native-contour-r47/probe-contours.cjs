@@ -4,8 +4,8 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const {chromium}=require('playwright');
 const archive=require('../face-relation-r45/candidate.json');
 const input=require('../multiview-r46/fit-input.json');
-const OUT='joey-native-contour-r47';fs.mkdirSync(OUT,{recursive:true});
-const SPECS=require('./probe-specs.json');
+const OUT=process.env.CONTOUR_OUT||'joey-native-contour-r47';fs.mkdirSync(OUT,{recursive:true});
+const SPECS=require(process.env.CONTOUR_SPECS||'./probe-specs.json');
 const sha=x=>crypto.createHash('sha256').update(x).digest('hex');
 (async()=>{
  const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
