@@ -137,15 +137,15 @@ fn sampledNormal(idx:u32,offset:u32)->vec3<f32>{var sum=vec3<f32>(0.);for(var i=
  let q=vec2<u32>(pix.xy)-u.tile.xy;let idx=q.y*32u+q.x;let r=shadingRecords[idx];let rd=ray(pix.xy);var color=sky(rd);
  if(r.flags.x==2u){return vec4<f32>(1.,0.,1.,1.);}
  if(r.flags.x==1u){let p=r.positionDistance.xyz;let distance=r.positionDistance.w;let n=r.normalAO.xyz;let f=Field(0.,r.flags.y,r.localSeed.xyz,r.localSeed.w,r.params.x,r.params.y);
- let diagnostic=u32(round(u.options.w));
- if(diagnostic==1u){return vec4<f32>(fract(vec3<f32>(.37,.57,.79)*f32(f.mat)),1.);}
- if(diagnostic==2u){return vec4<f32>(n*.5+vec3<f32>(.5),1.);}
- if(diagnostic==5u){return vec4<f32>(vec3<f32>(r.params.z),1.);}
- if(diagnostic==6u){return vec4<f32>(vec3<f32>(r.normalAO.w),1.);}
+ let debugMode=u32(round(u.options.w));
+ if(debugMode==1u){return vec4<f32>(fract(vec3<f32>(.37,.57,.79)*f32(f.mat)),1.);}
+ if(debugMode==2u){return vec4<f32>(n*.5+vec3<f32>(.5),1.);}
+ if(debugMode==5u){return vec4<f32>(vec3<f32>(r.params.z),1.);}
+ if(debugMode==6u){return vec4<f32>(vec3<f32>(r.normalAO.w),1.);}
  let fp=max(.0003,distance*.96/u.resolution.y);let rx=ray(pix.xy+vec2<f32>(1.,0.));let ry=ray(pix.xy+vec2<f32>(0.,1.));let plane=dot(p-u.eye.xyz,n);let dx=clamp(plane/dot(rx,n),0.,320.)*rx-distance*rd;let dy=clamp(plane/dot(ry,n),0.,320.)*ry-distance*rd;
- if(diagnostic==3u){let mn=materialNormal(f,p,n,max(fp,max(length(dx),length(dy))));return vec4<f32>(mn*.5+vec3<f32>(.5),1.);}
- if(diagnostic==4u){let m=surface(f,p,n,fp,dx,dy);return vec4<f32>(pow(max(m.albedo,vec3<f32>(0.)),vec3<f32>(1./2.2)),1.);}
- color=litSurface(f,p,n,rd,fp,dx,dy,select(r.normalAO.w,1.,diagnostic==7u),select(r.params.z,1.,diagnostic==7u));}
+ if(debugMode==3u){let mn=materialNormal(f,p,n,max(fp,max(length(dx),length(dy))));return vec4<f32>(mn*.5+vec3<f32>(.5),1.);}
+ if(debugMode==4u){let m=surface(f,p,n,fp,dx,dy);return vec4<f32>(pow(max(m.albedo,vec3<f32>(0.)),vec3<f32>(1./2.2)),1.);}
+ color=litSurface(f,p,n,rd,fp,dx,dy,select(r.normalAO.w,1.,debugMode==7u),select(r.params.z,1.,debugMode==7u));}
  if(r.flags.z==1u){let gn=r.glassNormalDepth.xyz;let fresnel=.045+.955*pow(1.-abs(dot(gn,rd)),5.);let transmitted=color*exp(-vec3<f32>(.7,.20,.45)*r.glassNormalDepth.w)*vec3<f32>(.97,.99,.98);color=mix(transmitted,sky(reflect(rd,gn)),clamp(fresnel,.06,.84));}
  if(r.flags.x==1u){color=mix(color,vec3<f32>(.58,.68,.72),1.-exp(-r.params.w*.00018));}
  color=clamp((color*(2.51*color+vec3<f32>(.03)))/(color*(2.43*color+vec3<f32>(.59))+vec3<f32>(.14)),vec3<f32>(0.),vec3<f32>(1.));color=pow(max(color,vec3<f32>(0.)),vec3<f32>(1./2.2));return vec4<f32>(color,1.);
