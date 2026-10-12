@@ -58,10 +58,11 @@ jobs:
         run: node --test kaopu-unified-human-workbench/joey-observation-r01/local-head-control-r50/surface-guards.test.cjs
       - name: Test first-order surface differential
         run: node --test kaopu-unified-human-workbench/joey-observation-r01/local-head-control-r50/differential-guards.test.cjs
-      - name: Test and diagnose frozen cheek illumination
+      - name: Test and render frozen identity hair and eye adapters
         run: |
-          node --test kaopu-unified-human-workbench/joey-observation-r01/cheek-volume-r53/light-cases.test.cjs
-          node kaopu-unified-human-workbench/joey-observation-r01/cheek-volume-r53/diagnose-light.cjs
+          node --test kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/eye/EyeSurface.test.mjs
+          node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/hair/test-r14-coverage.mjs
+          node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/render-appearance.cjs
       - name: Keep bounded research evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -121,6 +122,7 @@ jobs:
             joey-global-relations-r51-render/
             joey-brow-face-r52-render/
             joey-cheek-volume-r53-light/
+            joey-appearance-r54/
           retention-days: 7
           compression-level: 0
           if-no-files-found: warn
