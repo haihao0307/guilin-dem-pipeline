@@ -1,9 +1,11 @@
+import { MATERIAL_FRAME } from './material-frame.mjs';
 import { WINDOWS, ENTRY_JOINERY } from './windows.mjs';
 import { INTERIORS } from './interiors.mjs';
 /** R03b: 4,500 m² clear warehouse, actual quarter-turn racks and west entry. */
 export const SCENE=Object.freeze({version:'bureau-r03e-arcaded-tower-01',units:'metres',building:[92,80],oldBuilding:[44,38],previousBuilding:[72,64],clearWarehouse:{min:[-28,-28],max:[44,34.5],size:[72,62.5],area:4500},hall:{side:'west x-negative',depth:14},office:{side:'south z-negative',depth:12},receiving:{min:[-28,34.5],max:[44,40]},arcade:{clearWidth:3.2,axisDepth:3.9,sides:['west','south']},tower:{storeys:4,roofHeight:28,halfWidthsXZ:[[7.1,8.2],[6.35,7.1],[5.05,5.4],[3.8,3.8]],transitionsY:[[7.2,8.4],[12.3,13.7],[18.2,19.4]]},chimney:{height:31,baseRadius:2.45,topRadius:1.18,basePlinthRadius:3.0},banks:2,rowsPerBank:16,bays:20,levels:6,regularSlots:4800,smallSlots:17280,capacityIs:'mixed-size addresses, not actual inventory',fiction:true});
 export const DOMAIN=String.raw`
-struct Field { d:f32, mat:u32, local:vec3<f32>, seed:f32, age:f32, wet:f32 };
+${MATERIAL_FRAME}
+struct Field { d:f32, mat:u32, local:vec3<f32>, seed:f32, age:f32, wet:f32, component:MaterialFrame };
 fn box(p:vec3<f32>,b:vec3<f32>)->f32 {let q=abs(p)-b;return length(max(q,vec3<f32>(0.)))+min(max(q.x,max(q.y,q.z)),0.);}
 fn cylinder(p:vec3<f32>,r:f32,h:f32)->f32 {let q=vec2<f32>(length(p.xz)-r,abs(p.y)-h);return min(max(q.x,q.y),0.)+length(max(q,vec2<f32>(0.)));}
 fn capsule(p:vec3<f32>,a:vec3<f32>,b:vec3<f32>,r:f32)->f32 {let q=p-a;let v=b-a;return length(q-v*clamp(dot(q,v)/dot(v,v),0.,1.))-r;}
@@ -13,7 +15,7 @@ fn field(d:f32,mat:u32,p:vec3<f32>,seed:f32)->Field {
  let runoff=1.-smoothstep(.04,.28,abs(fract((p.x+p.z*.13)/5.5)-.06)*5.5);
  let splash=(1.-smoothstep(.05,1.1,p.y))*.38;
  let wet=clamp(.025+outside*(.08+runoff*.34+splash),0.,.85);
- return Field(d,mat,p,seed,u.options.y,wet);
+ return Field(d,mat,p,seed,u.options.y,wet,identityFrame());
 }
 fn receiverPlasterParams()->KpPlasterParams {return KpPlasterParams(vec2<f32>(0.,5.),vec2<f32>(36.,5.),.0165,.0085,0.,.008,.025,.0002,vec3<f32>(.43,.425,.395),vec3<f32>(.64,.625,.57),.0008,.000008,.018);}
 fn plasterCoordinates(p:vec3<f32>)->vec3<f32> {return select(p,p.zyx,p.x< -27.8&&p.z> -28.8);}
@@ -85,7 +87,7 @@ fn upperLoggia(q:vec3<f32>,span:f32)->Field {
  let tooth=max(box(vec3<f32>(repeatX(q.x,.55,100.),q.y-11.30,q.z+.28),vec3<f32>(.13,.13,.29)),box(q-vec3<f32>(0.,11.3,0.),vec3<f32>(span,.3,.8)));
  f=take(f,field(shell(min(cornice,tooth),q),3u,q,6.));return f;
 }
-fn publicGable(q:vec3<f32>)->Field {
+fn publicGable(q:vec3<f32>,worldToGable:mat3x3<f32>)->Field {
  let tri=max(box(q-vec3<f32>(0.,13.35,0.),vec3<f32>(5.65,2.15,.32)),q.y-(15.6-abs(q.x)*.72));
  let ux=abs(q.x)-.85;let window=archOpening(vec3<f32>(ux,q.y-11.85,q.z),.47,1.15,1.);
  var f=field(shell(max(tri,-window),q),2u,q,12.);
@@ -93,7 +95,7 @@ fn publicGable(q:vec3<f32>)->Field {
  rake=min(rake,capsule(q,vec3<f32>(0.,15.75,-.1),vec3<f32>(5.75,11.47,-.1),.15));
  rake=min(rake,box(q-vec3<f32>(0.,11.65,-.05),vec3<f32>(5.9,.12,.43)));
  let frame=max(archOpening(vec3<f32>(ux,q.y-11.85,q.z+.1),.63,1.15,.4),-window);f=take(f,field(shell(min(rake,frame),q),3u,q,12.));
- var gw=sashWindow(vec3<f32>(ux,q.y-11.85,q.z),.47,1.15,12.);gw.d=shell(gw.d,q);f=take(f,gw);
+ var gw=sashWindow(vec3<f32>(ux,q.y-11.85,q.z),.47,1.15,12.,mat3x3<f32>(vec3<f32>(sign(q.x),0.,0.),vec3<f32>(0.,1.,0.),vec3<f32>(0.,0.,1.))*worldToGable);gw.d=shell(gw.d,q);f=take(f,gw);
  let finial=min(cylinder(q-vec3<f32>(0.,16.,0.),.11,.25),length(q-vec3<f32>(0.,16.25,0.))-.17);f=take(f,field(shell(finial,q),3u,q,12.));return f;
 }
 fn towerHalf(y:f32)->vec2<f32> {
@@ -119,8 +121,8 @@ fn taperedTower(p:vec3<f32>)->Field {
  let side=archOpening(vec3<f32>(v0,p.y-baseline,abs(tq.z)-h.y),radius,1.35,1.1);
  wall=max(max(wall,-front),-side);var f=field(shell(wall,p),2u,p,7.);
  let hallRing=max(archOpening(vec3<f32>(p.x+33.6,p.y,abs(tq.z)-8.2),4.18,1.55,.58),-hallArch);f=take(f,field(shell(hallRing,p),3u,p,20.));
- var fw=sashWindow(vec3<f32>(u0,p.y-baseline,h.x-abs(tq.x)),radius,1.35,7.);
- var sw=sashWindow(vec3<f32>(v0,p.y-baseline,h.y-abs(tq.z)),radius,1.35,8.);
+ var fw=sashWindow(vec3<f32>(u0,p.y-baseline,h.x-abs(tq.x)),radius,1.35,7.,mat3x3<f32>(vec3<f32>(0.,0.,-sign(tq.x)),vec3<f32>(0.,1.,0.),vec3<f32>(1.,0.,0.)));
+ var sw=sashWindow(vec3<f32>(v0,p.y-baseline,h.y-abs(tq.z)),radius,1.35,8.,mat3x3<f32>(vec3<f32>(1.,0.,0.),vec3<f32>(0.,1.,0.),vec3<f32>(0.,0.,-sign(tq.z))));
  fw.d=shell(max(fw.d,box(tq-vec3<f32>(0.,15.5,0.),vec3<f32>(7.4,8.3,8.5))),p);
  sw.d=shell(max(sw.d,box(tq-vec3<f32>(0.,15.5,0.),vec3<f32>(7.4,8.3,8.5))),p);
  fw.d=max(fw.d,-towerBridgePortal);sw.d=max(sw.d,-towerBridgePortal);f=take(f,fw);f=take(f,sw);
@@ -174,20 +176,20 @@ fn architecture(p:vec3<f32>)->Field {
  west=max(west,-winW);west=max(west,-archOpening(vec3<f32>(p.z+18.,p.y,p.x+38.7),3.4,2.2,1.));
  let groundW=archWindow(vec3<f32>(wz,p.y-1.25,p.x+38.7),.8,1.85,.8);west=max(west,-groundW);
  west=max(west,-towerUpperVoid);f=take(f,field(shell(west,p),2u,p,1.));
- var ww=sashWindow(vec3<f32>(wz,p.y-6.1,p.x+38.7),.87,1.35,1.);ww.d=shell(max(ww.d,-towerUpperVoid),p);f=take(f,ww);
- if(abs(p.z+18.)>4.){var wg=sashWindow(vec3<f32>(wz,p.y-1.25,p.x+38.7),.8,1.85,2.);wg.d=shell(wg.d,p);f=take(f,wg);}
+ var ww=sashWindow(vec3<f32>(wz,p.y-6.1,p.x+38.7),.87,1.35,1.,rigidWest());ww.d=shell(max(ww.d,-towerUpperVoid),p);f=take(f,ww);
+ if(abs(p.z+18.)>4.){var wg=sashWindow(vec3<f32>(wz,p.y-1.25,p.x+38.7),.8,1.85,2.,rigidWest());wg.d=shell(wg.d,p);f=take(f,wg);}
  let sx=repeatX(p.x-4.,5.5,8.);var south=box(p-vec3<f32>(4.,5.2,-36.6),vec3<f32>(46.,5.2,.3));
  let sw=archWindow(vec3<f32>(sx,p.y-6.1,p.z+36.6),.9,1.35,.8);let sg=archWindow(vec3<f32>(sx,p.y-1.2,p.z+36.6),.9,1.85,.8);south=max(max(south,-sw),-sg);
  f=take(f,field(shell(south,p),2u,p,2.));
- var su=sashWindow(vec3<f32>(sx,p.y-6.1,p.z+36.6),.9,1.35,2.);su.d=shell(su.d,p);f=take(f,su);
- var sl=sashWindow(vec3<f32>(sx,p.y-1.2,p.z+36.6),.9,1.85,3.);sl.d=shell(sl.d,p);f=take(f,sl);
+ var su=sashWindow(vec3<f32>(sx,p.y-6.1,p.z+36.6),.9,1.35,2.,rigidIdentity());su.d=shell(su.d,p);f=take(f,su);
+ var sl=sashWindow(vec3<f32>(sx,p.y-1.2,p.z+36.6),.9,1.85,3.,rigidIdentity());sl.d=shell(sl.d,p);f=take(f,sl);
  // Continuous stone string courses and eave, derived from the same bay grammar.
  let bandY=select(5.6,10.35,p.y>8.);f=take(f,field(shell(max(box(p-vec3<f32>(-38.9,bandY,0.),vec3<f32>(.55,.18,40.5)),-towerUpperVoid),p),3u,p,1.));
  f=take(f,field(shell(box(p-vec3<f32>(4.,bandY,-36.8),vec3<f32>(46.5,.18,.55)),p),3u,p,2.));
  // Four occupied storeys form a continuous tapered civic tower above the west entry.
  let tc=vec3<f32>(-35.5,0.,-18.);f=take(f,taperedTower(p));
  // East and railway-facing walls; storage net boundary x44 is separate from service strip.
- let rz=repeatX(p.z-2.,6.,6.);var east=box(p-vec3<f32>(49.75,4.8,0.),vec3<f32>(.25,4.8,40.));east=max(east,-archWindow(vec3<f32>(rz,p.y-4.,49.75-p.x),.85,2.4,.8));f=take(f,field(shell(east,p),2u,p,3.));var ew=sashWindow(vec3<f32>(rz,p.y-4.0,49.75-p.x),.85,2.4,10.);ew.d=shell(ew.d,p);f=take(f,ew);
+ let rz=repeatX(p.z-2.,6.,6.);var east=box(p-vec3<f32>(49.75,4.8,0.),vec3<f32>(.25,4.8,40.));east=max(east,-archWindow(vec3<f32>(rz,p.y-4.,49.75-p.x),.85,2.4,.8));f=take(f,field(shell(east,p),2u,p,3.));var ew=sashWindow(vec3<f32>(rz,p.y-4.0,49.75-p.x),.85,2.4,10.,mat3x3<f32>(vec3<f32>(0.,0.,-1.),vec3<f32>(0.,1.,0.),vec3<f32>(1.,0.,0.)));ew.d=shell(ew.d,p);f=take(f,ew);
  let gateX=repeatX(p.x-4.,20.,1.);let freightDoor=box(vec3<f32>(gateX,p.y-2.1,p.z-39.75),vec3<f32>(2.5,2.2,1.));var rear=box(p-vec3<f32>(4.,4.8,39.75),vec3<f32>(46.,4.8,.25));rear=max(rear,-freightDoor);f=take(f,field(shell(rear,p),2u,p,3.));
  // Warehouse clear rectangle is 72 x 62.5 m. All partitions lie OUTSIDE it.
  var westPartition=box(p-vec3<f32>(-28.3,5.9,3.25),vec3<f32>(.2,5.9,31.75));if(u.options.x<.5){let storeTop=12.9-abs(repeatX(p.z-3.25,20.833333,1.))*.25;let publicTop=14.7-.44*max(abs(p.x+35.5),max(abs(p.z)-33.3,0.));westPartition=max(westPartition,p.y-(max(storeTop,publicTop)-.10));}westPartition=max(westPartition,-box(vec3<f32>(p.x+28.3,p.y-1.65,repeatX(p.z,20.,1.)),vec3<f32>(1.,1.7,1.75)));f=take(f,field(shell(westPartition,p),1u,p,4.));
@@ -223,8 +225,8 @@ fn architecture(p:vec3<f32>)->Field {
  let dormerOuter=min(max((p.y-gsh)*.81,gsBound),max(max((p.y-gwh)*.81,gwBound),towerGap));
  let dormerInner=min(max((p.y-gsh+.19)*.81,gsBound-.24),max(max((p.y-gwh+.19)*.81,gwBound-.24),towerGap));
  var publicRoof=max(min(outerRoof,dormerOuter),-min(innerRoof,dormerInner));let towerCut=max(chamferPlan((p-tc).xz,towerHalf(p.y)+vec2<f32>(.08),.6)/2.3,max(-p.y,p.y-23.8));publicRoof=max(publicRoof,-towerCut);f=take(f,field(publicRoof,7u,p,1.));
- let gableX=repeatX(p.x-4.,33.,1.);f=take(f,publicGable(vec3<f32>(gableX,p.y,p.z+40.5)));
- let gableZ=repeatX(p.z,27.5,1.);var gw=publicGable(vec3<f32>(gableZ,p.y,p.x+42.6));gw.d=max(gw.d,-box(p-tc-vec3<f32>(0.,14.,0.),vec3<f32>(8.,6.,8.8)));f=take(f,gw);
+ let gableX=repeatX(p.x-4.,33.,1.);f=take(f,publicGable(vec3<f32>(gableX,p.y,p.z+40.5),rigidIdentity()));
+ let gableZ=repeatX(p.z,27.5,1.);var gw=publicGable(vec3<f32>(gableZ,p.y,p.x+42.6),rigidWest());gw.d=max(gw.d,-box(p-tc-vec3<f32>(0.,14.,0.),vec3<f32>(8.,6.,8.8)));f=take(f,gw);
  f=take(f,field(box(p-vec3<f32>(8.,9.7,37.5),vec3<f32>(36.5,.16,3.)),7u,p,2.));f=take(f,field(box(p-vec3<f32>(47.,9.7,3.25),vec3<f32>(3.5,.16,31.8)),7u,p,2.));}
  return f;
 }

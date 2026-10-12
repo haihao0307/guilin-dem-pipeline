@@ -1,7 +1,7 @@
 // Authored window joinery. Local x is bay width, y is sill-up, z points inside.
 // The glass is a physical slab in the same field; renderer continues through it.
 export const WINDOWS=String.raw`
-fn sashWindow(q:vec3<f32>,radius:f32,spring:f32,seed:f32)->Field {
+fn sashWindow(q:vec3<f32>,radius:f32,spring:f32,seed:f32,worldToWindow:mat3x3<f32>)->Field {
  let opening=archOpening(q,radius,spring,.8);
  let reveal=max(archOpening(vec3<f32>(q.xy,q.z+.08),radius+.14,spring,.27),-opening);
  var f=field(reveal,3u,q,seed);
@@ -24,7 +24,10 @@ fn sashWindow(q:vec3<f32>,radius:f32,spring:f32,seed:f32)->Field {
  let apron=box(q-vec3<f32>(0.,-.24,.025),vec3<f32>(radius+.10,.075,.19));f=take(f,field(apron,3u,q,seed));
  // Hardware lives at the meeting rail; sheltered contact polishes the handle.
  let handle=capsule(q,vec3<f32>(-.12,meeting+.09,.225),vec3<f32>(.12,meeting+.09,.225),.018);
- f=take(f,field(handle,9u,q,seed));f.wet=.035;return f;
+ f=take(f,field(handle,9u,q,seed));f.wet=.035;
+ // The complete timber frame has these actual local metre extents. No normal,
+ // tangent or footprint may silently switch back to world axes.
+ if(f.mat==14u){f.component=MaterialFrame(worldToWindow,vec3<f32>(-radius+.025,0.,.01),vec3<f32>(radius-.025,spring+radius-.025,.21),1.);}return f;
 }
 `;
 

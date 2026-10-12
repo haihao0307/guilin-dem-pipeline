@@ -88,3 +88,11 @@ than full global illumination, and rotated wooden-frame normal coordinates
 remain a known binding limitation. These are explicit unfinished quality
 boundaries, not reasons to lower the target or call a passing test a finished
 artwork.
+
+
+## Bounded component-frame follow-up (after eb88b1)
+
+The complete seven-view/custody anchor remains `eb88b134abaeb19d586d5b77b8f69b5092516356`, Actions 38192707192 (technical success, artistic quality unfinished).
+This candidate changes no building layout, inventory or material mother. It carries a rigid component frame and actual timber-window local bounds from the same field hit into shading. The wood mother receives its local normal; height differences, tangent basis and pixel footprint use that same frame. World noise remains a separate world coordinate. Other legacy timber families have not yet been migrated; this is not a claim that all receiver bindings are complete.
+
+QA is a native 192×192 west-window ROI within the unchanged 960×640 full-image ray coordinates. Only those 36,864 pixels are dispatched, before scene expansion. The six baseline/corrected beauty, albedo and normal images are local evidence, not a new whole-building pass. A separate small compute probe exercises the actual unchanged wood mother with matched object/light/view rotations. CPU frame tests alone are not GPU evidence. General affine scale/shear is outside the rigid orthogonal contract.
