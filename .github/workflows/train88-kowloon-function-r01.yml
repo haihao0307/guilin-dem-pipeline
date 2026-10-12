@@ -1,4 +1,4 @@
-name: Train88 bounded compact host correctness
+name: Train88 bounded bureau same-game verification
 on:
   push:
     branches: ['qa/train88-kowloon-function-r01-20261012']
@@ -27,7 +27,7 @@ jobs:
           node experiments/spatial-query-r01/emit-flat.mjs
           node experiments/compact-trace-r01/emit-contracts.mjs
           node experiments/compact-trace-r01/emit.mjs
-          node --test experiments/spatial-query-r01/*.test.mjs experiments/candidate-storage-r01/*.test.mjs experiments/compact-trace-r01/*.test.mjs qa/bounded-browser.test.mjs qa/shader-closure.test.mjs qa/group-runtime.test.mjs qa/group-ray-stages.test.mjs qa/compact-host.test.mjs
+          node --test experiments/spatial-query-r01/*.test.mjs experiments/candidate-storage-r01/*.test.mjs experiments/compact-trace-r01/*.test.mjs qa/bounded-browser.test.mjs qa/shader-closure.test.mjs qa/group-runtime.test.mjs qa/group-ray-stages.test.mjs qa/compact-host.test.mjs qa/bureau-host.test.mjs
       - name: Compile pinned Naga and all exact compact runtime entries
         working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/compiler
         run: |
@@ -62,14 +62,14 @@ jobs:
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
       - name: Ordered group merge and original advance versus compact consumer
         run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/compact-trace-r01/contracts-run.cjs
-      - name: Small intact same-game frame, original full-field comparison and retained Session step
-        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/compact-host.cjs
+      - name: Small same-game bureau views and return to original driving
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/bureau-host.cjs
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: train88-query-experiments-${{ github.sha }}
           path: |
             train88-compact-contract-results/
-            train88-compact-host-results/
+            train88-bureau-host-results/
             kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/compact-trace-r01/generated/
           retention-days: 7
