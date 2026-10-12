@@ -2,48 +2,55 @@ name: Joey isolated native observation probe
 on:
   push:
     branches: ['qa/joey-native-large-shape-r39-20261011']
-    paths:
-      - 'kaopu-unified-human-workbench/joey-observation-r01/**'
-      - '.github/workflows/joey-native-probe-qa.yml'
+    paths: ['kaopu-unified-human-workbench/joey-observation-r01/**', '.github/workflows/joey-native-probe-qa.yml']
 permissions:
   contents: read
 concurrency:
   group: joey-native-observation-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  startup:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
+  arm-linux:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 12
     container:
       image: mcr.microsoft.com/playwright:v1.57.0-noble
-    strategy:
-      fail-fast: false
-      matrix:
-        browser: [webkit]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
           sparse-checkout: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54
-      - name: Install matching package for official preinstalled browsers
-        timeout-minutes: 5
+      - name: Install matching official package
+        timeout-minutes: 3
         run: |
           npm install --prefix "$RUNNER_TEMP/joey-native" --no-save --ignore-scripts playwright@1.57.0
           echo "NODE_PATH=$RUNNER_TEMP/joey-native/node_modules" >> "$GITHUB_ENV"
-          node -e "const fs=require('node:fs');const pw=require(process.env.RUNNER_TEMP+'/joey-native/node_modules/playwright');const p=pw.webkit.executablePath();if(!fs.existsSync(p))throw Error('Official WebKit binary missing');console.log(p);"
-      - name: Verify real startup, dependency failures and native rendering
-        env:
-          R54_BROWSER: ${{ matrix.browser }}
-          R54_SKIP_OLD: 1
-          R54_RELEASE_HASHES: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/startup-release-hashes.json
-          R54_STARTUP_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/index.html
-        run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/verify-startup.cjs
-      - name: Keep browser evidence including any unsupported capability
+      - name: Read actual public native output on ARM WebKit
+        run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/diagnose-face-lock.cjs
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
-          name: joey-r54-startup-${{ matrix.browser }}-${{ github.sha }}
-          path: joey-r54-startup-${{ matrix.browser }}/
+          name: r54-face-lock-linux-arm64
+          path: r54-face-lock-*/
           retention-days: 7
-          compression-level: 0
-          if-no-files-found: warn
+  apple-arm:
+    runs-on: macos-14
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54
+      - name: Install pinned official package and WebKit
+        timeout-minutes: 5
+        run: |
+          npm install --prefix "$RUNNER_TEMP/joey-native" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/joey-native/node_modules/.bin/playwright" install webkit
+          echo "NODE_PATH=$RUNNER_TEMP/joey-native/node_modules" >> "$GITHUB_ENV"
+      - name: Read actual public native output on Apple WebKit
+        run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/diagnose-face-lock.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r54-face-lock-apple
+          path: r54-face-lock-*/
+          retention-days: 7
