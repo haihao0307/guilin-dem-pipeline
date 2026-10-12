@@ -11,43 +11,52 @@ concurrency:
   group: joey-native-observation-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  observe:
+  startup:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
           sparse-checkout: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54
-      - name: Install pinned official browser package
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 954164d3fb14c04633c457015c548dca9aaf8de6
+          path: native
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+            kaopu-mhr-workbench
+      - name: Stage only the candidate startup changes
+        run: cp -a kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/. native/kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/
+      - name: Install pinned official browser package and selected engine
         run: |
           npm install --prefix "$RUNNER_TEMP/joey-native" --no-save --ignore-scripts playwright@1.57.0
-          "$RUNNER_TEMP/joey-native/node_modules/.bin/playwright" install --with-deps chromium
+          "$RUNNER_TEMP/joey-native/node_modules/.bin/playwright" install --with-deps ${{ matrix.browser }}
           echo "NODE_PATH=$RUNNER_TEMP/joey-native/node_modules" >> "$GITHUB_ENV"
-      - name: Await the authorized isolated Pages candidate
+      - name: Serve existing native model and bounded candidate
         run: |
-          python3 - <<'PYWAIT'
-          import json,time,urllib.request
-          url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/RELEASE.json'
-          for attempt in range(24):
-              try:
-                  r=json.load(urllib.request.urlopen(url,timeout=20))
-                  if r.get('qaCommit')=='61f69d2d4a481e18d5284d599f2d4dd922227663':
-                      print('Verified published candidate release',r['qaCommit']);break
-              except Exception as e: print(type(e).__name__,str(e))
-              time.sleep(5)
-          else: raise SystemExit('Candidate Pages release not yet available; public verification incomplete')
-          PYWAIT
-      - name: Verify actual public cold load, views, controls and visible error
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/joey-server.log" 2>&1 &
+          for n in $(seq 1 30); do
+            curl --fail --silent http://127.0.0.1:8765/native/kaopu-unified-human-workbench/ > /dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Verify real startup, dependency failures and native rendering
         env:
-          R54_PREVIEW_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/index.html
-        run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/test-preview.cjs
-      - name: Keep actual public verification evidence
+          R54_BROWSER: ${{ matrix.browser }}
+        run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/verify-startup.cjs
+      - name: Keep browser evidence including any unsupported capability
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: joey-r54-public-${{ github.sha }}
-          path: joey-appearance-r54-preview/
+          name: joey-r54-startup-${{ matrix.browser }}-${{ github.sha }}
+          path: joey-r54-startup-${{ matrix.browser }}/
           retention-days: 7
           compression-level: 0
           if-no-files-found: warn
