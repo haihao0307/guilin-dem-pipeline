@@ -7,7 +7,7 @@ struct Frame { eye:vec4<f32>,forward:vec4<f32>,right:vec4<f32>,up:vec4<f32>,cut:
 ${geometry}
 ${MOTHER_WGSL}
 ${MATERIAL_DOMAIN_WGSL}
-struct Stats {hit:atomic<u32>,miss:atomic<u32>,exhausted:atomic<u32>,maximumSteps:atomic<u32>,retried:atomic<u32>,glassRays:atomic<u32>,boundOnly:atomic<u32>,reserved:atomic<u32>,visibilityRetried:atomic<u32>,visibilityMaximumSteps:atomic<u32>,extendedPrimary:atomic<u32>,candidateOverflows:atomic<u32>}
+struct Stats {hit:atomic<u32>,miss:atomic<u32>,exhausted:atomic<u32>,maximumSteps:atomic<u32>,retried:atomic<u32>,glassRays:atomic<u32>,boundOnly:atomic<u32>,reserved:atomic<u32>,visibilityRetried:atomic<u32>,visibilityMaximumSteps:atomic<u32>,extendedPrimary:atomic<u32>,candidateOverflows:atomic<u32>,activeQueries:atomic<u32>}
 @group(0) @binding(2) var<storage,read_write> stats:Stats;
 struct HitRecord { ray:vec4<f32>,local:vec4<f32>,ids:vec4<u32>,normal:vec4<f32>,glass:vec4<f32>,through:vec4<f32> }
 @group(0) @binding(3) var<storage,read_write> hits:array<HitRecord,256>;

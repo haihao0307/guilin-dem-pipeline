@@ -1,41 +1,56 @@
 {
   "version": "walled-city-pair-r03",
   "snapshotId": "c78e95ef19c1bd413a14f97a8746f476d1044a0a202d9f9117e3b0d1e1fc76eb",
-  "status": "shared-state-and-displaced-competition-fixed-pending-GPU",
-  "codeBytes": 167299,
+  "status": "wavefront-dispatch-split-pending-GPU",
+  "codeBytes": 175405,
   "worldParameterBytes": 1728,
   "stages": {
-    "trace": {
-      "bytes": 92976,
-      "functions": 162,
-      "sha256": "511f063441ccad3f4f0f2808938a3ab485180f5efb89a956c6e4499487f60215"
+    "init": {
+      "bytes": 10157,
+      "functions": 4,
+      "sha256": "78b89c2531d7770af649eda3fc2e9909e446ea0a1e4a8a62f9a1205a349ee527"
     },
-    "normals": {
-      "bytes": 90956,
-      "functions": 161,
-      "sha256": "ae9f86464b8ff83d1e502769387e4348ace4113c3ee87daf16fdf71ff093b552"
+    "query": {
+      "bytes": 27044,
+      "functions": 22,
+      "sha256": "96345dd5e7910aa70d57a1aaceac905f015cfd20c98a65d450f96af72940e936"
+    },
+    "material": {
+      "bytes": 75640,
+      "functions": 142,
+      "sha256": "da5c80b501db55ec8da95cebe9a8fbbc36473638a43d4e631f570d07381a6eec"
+    },
+    "normalsInit": {
+      "bytes": 10709,
+      "functions": 6,
+      "sha256": "ab7fd249e98cd6d023c0369fa780adb6634209f00ee48978535153981162feca"
+    },
+    "active": {
+      "bytes": 9365,
+      "functions": 1,
+      "sha256": "b9e7bdfab3d060f421d84c5716210280a5ddbe82f144ede235800c30476696f4"
     },
     "visibility": {
-      "bytes": 28890,
+      "bytes": 29227,
       "functions": 26,
-      "sha256": "7628a9d1185de2ab4190fcf260d5aea2ac6a1467ed9fc890363cf4077cdaa743"
+      "sha256": "32a3307a287334d6b68cb294d27a6915b850b3818c419379e70970ca44343186"
     },
     "finalize": {
-      "bytes": 9210,
+      "bytes": 9547,
       "functions": 1,
-      "sha256": "eef3d8263b64d2604d108824b3ea0c09466492694904aeba042402a29b45ac2c"
+      "sha256": "531d07b785d6a94332e490466d1687b0d646ee52179d56ccb57d3272555173fb"
     },
     "shade": {
-      "bytes": 60630,
+      "bytes": 60967,
       "functions": 106,
-      "sha256": "2a22224e2decea34a2cd11fb7f754da1d1b7425d215a262d551c91253beb27e3"
+      "sha256": "d40adc88cb8f9b5d9079a7e0e717d62cd90573a12aaa35606fb9bc4630a98e82"
     }
   },
   "files": [
     {
       "path": "app.mjs",
-      "bytes": 16225,
-      "sha256": "18c199cc9cefd5965654ae6461cf51d61acb53ec0afff1b5e32a23d5c5e675a3"
+      "bytes": 18594,
+      "sha256": "e48e820038fec2fb7704a946f464fa2eab22f105654be7708968036309445f9c"
     },
     {
       "path": "evaluation.mjs",
@@ -99,8 +114,8 @@
     },
     {
       "path": "receiver.mjs",
-      "bytes": 12188,
-      "sha256": "5eabea09341f3594725b528d3a74021e88433dace635672df415a1a724f9da7f"
+      "bytes": 12214,
+      "sha256": "95fddfb5f62260fb882ad62f6aca88eca9d7e3e9550350062217aaaf95181bb1"
     },
     {
       "path": "sources/MOTHER_LOCK.json",
@@ -148,20 +163,25 @@
       "sha256": "e13fcae24a26f6fe42e209bdea1cf71dbaf0ee22ea109e5f06c47d43adae0c80"
     },
     {
+      "path": "wavefront.mjs",
+      "bytes": 5711,
+      "sha256": "e5c134a9843d2868c533321e7e306ea64059d6d6cab6717d2e15661e0406bd30"
+    },
+    {
       "path": "world-data.mjs",
       "bytes": 20106,
       "sha256": "1d01d04ec4a382025fcaf9806a5dd2653d0c06c26efd2d3db82a3ae4df26dd9e"
     }
   ],
   "preRenderChecks": {
-    "tests": 20,
-    "passed": 20,
+    "tests": 24,
+    "passed": 24,
     "sourceRemoteParity": 15,
     "sourceImplementationAltered": false
   },
   "notClaims": [
     "Prior pipelines failed; current revision not yet GPU validated",
-    "20 CPU checks do not establish visual or physical passage acceptance",
+    "24 CPU checks do not establish visual or physical passage acceptance",
     "Cloth receiver has no mature visual acceptance",
     "No mature resident animation or ceramic fixtures included",
     "1728B parameters are not complete runtime/GPU resource usage"
