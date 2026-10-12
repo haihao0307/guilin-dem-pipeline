@@ -21,6 +21,7 @@ jobs:
         run: |
           node emit-geometry-groups.mjs >/dev/null
           node experiments/spatial-query-r01/emit.mjs
+          node experiments/spatial-query-r01/emit-flat.mjs
           node --test experiments/spatial-query-r01/*.test.mjs experiments/candidate-storage-r01/*.test.mjs qa/bounded-browser.test.mjs qa/shader-closure.test.mjs
       - name: Compile pinned Naga and three independent query variants
         working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/compiler
@@ -31,7 +32,7 @@ jobs:
           assert p['version']=='27.0.3' and p['checksum']=='066cf25f0e8b11ee0df221219010f213ad429855f57c494f995590c861a9a7d8'
           PYLOCK
           cargo build --release --locked
-          for variant in reference hierarchy capacity; do
+          for variant in reference hierarchy capacity flat-hierarchy; do
             target/release/kaopu-station-shader-bridge ../experiments/spatial-query-r01/generated/$variant.wgsl ../experiments/spatial-query-r01/generated/$variant.frag hierarchyProbe
           done
       - name: Install pinned official browser QA runner
@@ -39,8 +40,8 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/station-bridge" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
-      - name: Hierarchy MRT sentinel and before-after write controls
-        run: SPATIAL_VARIANTS=hierarchy node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/spatial-query-r01/run.cjs
+      - name: Shallow ordered hierarchy fixed-state equivalence and cold-warm cost
+        run: SPATIAL_VARIANTS=flat-hierarchy node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/spatial-query-r01/run.cjs
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:

@@ -51,3 +51,29 @@ export function walkOrderedHall(tree,blocks,p,visit,initial=1e5){let best=initia
  if(node.left){walk(node.left);walk(node.right);}else for(let i=node.lo;i<node.hi;i++){visited++;best=visit(blocks[i],best);}}
  walk(tree);return{best,visited,nodes,skipped};}
 export function boxF32(p,center,half){const q=p.map((x,k)=>F(Math.abs(F(F(x)-F(center[k])))-F(half[k]))),n=q.map(x=>F(Math.max(x,0)));const dot=F(F(F(n[0]*n[0])+F(n[1]*n[1]))+F(n[2]*n[2]));return F(F(Math.sqrt(dot))+Math.min(Math.max(...q),0));}
+
+// Same ordered tree and exactly the same entry-time gate. Scalar parent flags
+// retain each ancestor decision; no recursive/nested GPU control tree or array.
+export function lowerFlatHallHierarchy(source,{leafSize=4,counters=false}={}){
+ const original=readHallBlocks(source),tree=buildOrderedHierarchy(original.blocks,{leafSize});let nodes=0;
+ const emit=(node,parent=null)=>{nodes++;const flag='hallNode'+node.index,guard=`!hallHierarchySafe||box(p-${vec(node.center)},${vec(node.half)})<=max(.06,h.d)+.005`;
+  const decide=(counters?'stationHallBoundsVisited+=1u;\n':'')+`${flag}=${guard};\n`+(counters?`if(!${flag}){stationHallBlocksSkipped+=${node.hi-node.lo}u;}\n`:'');
+  const prefix=`// Shallow original ordered node [${node.lo},${node.hi}).\nvar ${flag}=false;\n`+(parent===null?decide:`if(hallNode${parent}){\n${decide}}\n`);
+  const body=node.left?emit(node.left,node.index)+emit(node.right,node.index):`if(${flag}){\n`+original.blocks.slice(node.lo,node.hi).map(b=>(counters?'stationHallBlocksVisited+=1u;\n':'')+b.text+'\n').join('')+'}\n';
+  return prefix+body;
+ };
+ const initial=original.initial+'\nlet hallHierarchySafe=all(abs(p)<vec3<f32>(2048.));\n'+(counters?'stationHallBoundsVisited=0u;stationHallBlocksVisited=0u;stationHallBlocksSkipped=0u;\n':'');
+ const replacement=original.head+initial+emit(tree)+original.tail+'}';
+ const declarations=counters?'\nvar<private> stationHallBoundsVisited:u32;\nvar<private> stationHallBlocksVisited:u32;\nvar<private> stationHallBlocksSkipped:u32;\n':'';
+ const lowered=declarations+source.slice(0,original.start)+replacement+source.slice(original.end+1);
+ for(const b of original.blocks)if(lowered.split(b.text).length!==2)throw Error('Original block duplicated or modified');
+ return{source:lowered,original,tree,metrics:{blocks:original.blocks.length,nodes,leafSize,representedMembers:original.blocks.reduce((s,b)=>s+b.count,0),paddingM:HALL_HIERARCHY_PADDING,comparisonGuardM:HALL_HIERARCHY_GUARD,coordinateLimitM:HALL_HIERARCHY_LIMIT,counters,controlFlow:'preorder scalar parent flags; original entry-time gates'}};
+}
+export function walkFlatOrderedHall(tree,blocks,p,visit,initial=1e5){
+ const ordered=[];function append(n,parent=null){ordered.push({n,parent});if(n.left){append(n.left,n.index);append(n.right,n.index);}}append(tree);
+ let best=initial,visited=0,nodes=0,skipped=0;const active=new Map(),safe=p.every(x=>Number.isFinite(x)&&Math.abs(x)<HALL_HIERARCHY_LIMIT);
+ for(const{n,parent}of ordered){if(parent!==null&&!active.get(parent)){active.set(n.index,false);continue;}nodes++;
+ const enabled=!safe||boxF32(p,n.center,n.half)<=F(F(Math.max(.06,best))+.005);active.set(n.index,enabled);if(!enabled){skipped+=n.hi-n.lo;continue;}
+ if(!n.left)for(let i=n.lo;i<n.hi;i++){visited++;best=visit(blocks[i],best);}}
+ return{best,visited,nodes,skipped};
+}
