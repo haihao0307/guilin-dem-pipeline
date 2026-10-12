@@ -60,8 +60,7 @@ jobs:
         run: node --test kaopu-unified-human-workbench/joey-observation-r01/local-head-control-r50/differential-guards.test.cjs
       - name: Inspect normalized normal and strain control response
         run: |
-          node kaopu-unified-human-workbench/joey-observation-r01/local-head-control-r50/source-control-field2.cjs
-          node kaopu-unified-human-workbench/joey-observation-r01/local-head-control-r50/differential-field2.cjs
+          node kaopu-unified-human-workbench/joey-observation-r01/local-head-control-r50/validate-field2.cjs
       - name: Keep bounded research evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -114,6 +113,7 @@ jobs:
             joey-local-head-control-r50-differential/
             joey-local-head-control-r50-field2/
             joey-local-head-control-r50-field2-differential/
+            joey-local-head-control-r50-field2-direct/
           retention-days: 7
           compression-level: 0
           if-no-files-found: warn
