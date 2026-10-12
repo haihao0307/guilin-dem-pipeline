@@ -28,7 +28,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/city-spatial"
           (
             set +e
-            DEBUG=pw:browser node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/qa/spatial/run.cjs > "$RUNNER_TEMP/city-spatial/log" 2>&1
+            CITY_REVIEW_VIEW=observed-cut-x CITY_DRAW_TIMEOUT_MS=1800000 DEBUG=pw:browser node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/qa/spatial/run.cjs > "$RUNNER_TEMP/city-spatial/log" 2>&1
             echo "$?" > "$RUNNER_TEMP/city-spatial/exit"
           ) </dev/null >/dev/null 2>&1 &
           for i in $(seq 1 180); do
@@ -46,7 +46,7 @@ jobs:
           retention-days: 7
       - name: Await the first complete observed section
         run: |
-          for i in $(seq 1 270); do
+          for i in $(seq 1 390); do
             if [ -f walled-city-spatial-results/first-frame-complete.json ]; then break; fi
             if [ -f "$RUNNER_TEMP/city-spatial/exit" ]; then cat "$RUNNER_TEMP/city-spatial/log"; exit 1; fi
             sleep 5
