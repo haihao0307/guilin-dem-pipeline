@@ -29,9 +29,9 @@ jobs:
           df -h /dev/shm || true
           npm install --prefix "$RUNNER_TEMP/joey-native" --no-save --ignore-scripts playwright@1.57.0
           echo "NODE_PATH=$RUNNER_TEMP/joey-native/node_modules" >> "$GITHUB_ENV"
-      - name: Verify exact iPhone output, native startup and unknown refusal
+      - name: Verify deployed exact iPhone output and unchanged native startup
         env:
-          R54_CANDIDATE_DIR: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54
+          R54_PUBLIC_HASHES: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/iphone-r04-release-hashes.json
           R54_BROWSER: ${{ matrix.browser }}
         run: |
           node --test kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/iphone-output-r04.test.mjs
@@ -56,9 +56,9 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/joey-native" --no-save --ignore-scripts playwright@1.57.0
           "$RUNNER_TEMP/joey-native/node_modules/.bin/playwright" install webkit
           echo "NODE_PATH=$RUNNER_TEMP/joey-native/node_modules" >> "$GITHUB_ENV"
-      - name: Verify exact iPhone output, native startup and unknown refusal
+      - name: Verify deployed exact iPhone output and unchanged native startup
         env:
-          R54_CANDIDATE_DIR: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54
+          R54_PUBLIC_HASHES: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/iphone-r04-release-hashes.json
           R54_BROWSER: webkit
         run: |
           node --test kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/iphone-output-r04.test.mjs
