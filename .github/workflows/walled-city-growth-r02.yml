@@ -23,7 +23,7 @@ jobs:
           P=kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02
           node --test "$P/qa/spatial/runtime.test.mjs"
           node "$P/qa/spatial/points-build.mjs"
-      - name: Start actual native WebGPU inspection and save first completed frame
+      - name: Start actual native WebGPU pipeline and small smoke crop
         run: |
           mkdir -p "$RUNNER_TEMP/city-spatial"
           (
@@ -31,14 +31,29 @@ jobs:
             node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/qa/spatial/run.cjs > "$RUNNER_TEMP/city-spatial/log" 2>&1
             echo "$?" > "$RUNNER_TEMP/city-spatial/exit"
           ) </dev/null >/dev/null 2>&1 &
-          for i in $(seq 1 420); do
+          for i in $(seq 1 180); do
+            if [ -f walled-city-spatial-results/pipeline-smoke-complete.json ]; then break; fi
+            if [ -f "$RUNNER_TEMP/city-spatial/exit" ]; then cat "$RUNNER_TEMP/city-spatial/log"; exit 1; fi
+            sleep 5
+          done
+          cat "$RUNNER_TEMP/city-spatial/log"
+          test -f walled-city-spatial-results/pipeline-smoke-complete.json
+      - name: Save exact pipeline smoke separately
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: city-observed-pipeline-smoke-${{ github.sha }}
+          path: walled-city-spatial-results/
+          retention-days: 7
+      - name: Await the first complete observed section
+        run: |
+          for i in $(seq 1 270); do
             if [ -f walled-city-spatial-results/first-frame-complete.json ]; then break; fi
             if [ -f "$RUNNER_TEMP/city-spatial/exit" ]; then cat "$RUNNER_TEMP/city-spatial/log"; exit 1; fi
             sleep 5
           done
           cat "$RUNNER_TEMP/city-spatial/log"
           test -f walled-city-spatial-results/first-frame-complete.json
-      - name: Save first actual complete frame immediately
+      - name: Save first full-frame section immediately
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: city-observed-first-frame-${{ github.sha }}

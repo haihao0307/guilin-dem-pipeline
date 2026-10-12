@@ -13,7 +13,7 @@ fn('geo_axis','x:f32,y:f32,z:f32,hx:f32,hy:f32,hz:f32','vec3f',`
 `);
 fn('geo_empty','d:f32','GeoHit',`return GeoHit(d,0u,0u,0u,0u,vec3f(0.0,0.0,0.0),vec3f(0.0,1.0,0.0),0u);`);
 fn('geo_take','h:GeoHit,d:f32,m:u32,b:u32,c:u32,s:u32,q:vec3f,n:vec3f','GeoHit',`
- if(d<h.d){return GeoHit(d,m,b,c,s,q,n,geoObjectId(c));}return h;
+ if(d<h.d){return GeoHit(d,m,b,c,s,q,n,0u);}return h;
 `);
 fn('geo_cube','h:GeoHit,x:f32,y:f32,z:f32,hx:f32,hy:f32,hz:f32,m:u32,b:u32,c:u32,s:u32','GeoHit',`
  return geo_take(h,geo_box(x,y,z,hx,hy,hz),m,b,c,s,vec3f(x,y,z),geo_axis(x,y,z,hx,hy,hz));
@@ -102,11 +102,11 @@ fn('geo_observed','hh:GeoHit,x:f32,y:f32,z:f32,bi:i32,skipBelow:i32,stoneUpperM:
  var first=max(0,f0-1);var last=min(i32(b.z)-1,f0+1);var cx=fm.z;var cz=fm.w;var land=core.z;var fw=core.w;var L=core.x;var C=core.y;var tread=cfg.x;
  for(var f=first;f<=last;f=f+1){var fi=i32(axes.z)+f;var floorRec=geo_get(i32(head.y)+fi*2);var by=floorRec.x;var fh=floorRec.y;var map=geo_get(i32(fm.x)+f);var sid=u32(fi+1);var cid=bid*65536u+u32(f)*256u;
   if(skipBelow==0||y<=by+stoneUpperM){var sd=geo_box(u-W*0.5,y-by+slab*0.5,v-D*0.5,W*0.5+wt*0.5,slab*0.5,D*0.5+wt*0.5);if(f>0){var hole=-geo_box(u-cx-(land+L)*0.5,y-by,v-cz-C*0.5,(L-land)*0.5,1000.0,C*0.5);sd=max(sd,hole);}h=geo_take(h,sd,6u,bid,cid+1u,sid,vec3f(u,y-by,v),vec3f(0.0,1.0,0.0));}
-  h=obs_panel(h,u,y,v,1,0.0,W*0.5,W,by,fh,wt,i32(tab.z),i32(map.z),i32(map.w),bid,cid+2u,sid);
-  h=obs_panel(h,u,y,v,1,D,W*0.5,W,by,fh,wt,i32(tab.z),i32(map.z),i32(map.w),bid,cid+3u,sid);
-  h=obs_panel(h,u,y,v,0,0.0,D*0.5,D,by,fh,wt,i32(tab.z),i32(map.z),i32(map.w),bid,cid+4u,sid);
-  h=obs_panel(h,u,y,v,0,W,D*0.5,D,by,fh,wt,i32(tab.z),i32(map.z),i32(map.w),bid,cid+5u,sid);
-  h=obs_panel(h,u,y,v,1,3.43,W*0.5,W,by,fh,wt,i32(tab.z),i32(map.z),i32(map.w),bid,cid+6u,sid);
+  for(var panelIndex=0;panelIndex<5;panelIndex=panelIndex+1){
+   var panelAxis=1;var panelPlane=0.0;var panelSpan=W;
+   if(panelIndex==1){panelPlane=D;}if(panelIndex==2){panelAxis=0;panelSpan=D;}if(panelIndex==3){panelAxis=0;panelPlane=W;panelSpan=D;}if(panelIndex==4){panelPlane=3.43;}
+   h=obs_panel(h,u,y,v,panelAxis,panelPlane,panelSpan*0.5,panelSpan,by,fh,wt,i32(tab.z),i32(map.z),i32(map.w),bid,cid+2u+u32(panelIndex),sid);
+  }
   for(var j=0;j<i32(map.y);j=j+1){var rr=geo_get(i32(tab.x)+(i32(map.x)+j)*3);var rule=geo_get(i32(tab.x)+(i32(map.x)+j)*3+1);
    if(j>0&&!(f==0&&j==1)){var plane=rr.x-wt*0.5;h=geo_cube(h,u-plane,y-by-fh*0.5,v-1.68,wt*0.5,fh*0.5,1.68,1u,bid,cid+10u+u32(j),sid);}
    h=obs_objects(h,u,y,v,rr,rule,j,by,bid,cid,sid);
@@ -183,7 +183,7 @@ fn('geo_tracks','hh:GeoHit,p:vec3f','GeoHit',`
 `);
 fn('geo_queryContext','p:vec3f,maxDistance:f32,skipBelow:i32,stoneUpperM:f32','GeoHit',`
  var h=geo_empty(maxDistance);var groundD=p.y;if(skipBelow==0||p.y<=stoneUpperM){h=geo_take(h,groundD,6u,0u,1u,0u,vec3f(p.x,p.y,p.z),vec3f(0.0,1.0,0.0));}
- h=geo_tracks(h,p);var counts=geo_get(0);for(var bi=0;bi<i32(counts.y);bi=bi+1){h=geo_building(h,p.x,p.y,p.z,bi,skipBelow,stoneUpperM);}for(var j=0;j<i32(counts.w);j=j+1){h=geo_bridge(h,p.x,p.y,p.z,j);}return h;
+ h=geo_tracks(h,p);var counts=geo_get(0);for(var bi=0;bi<i32(counts.y);bi=bi+1){h=geo_building(h,p.x,p.y,p.z,bi,skipBelow,stoneUpperM);}for(var j=0;j<i32(counts.w);j=j+1){h=geo_bridge(h,p.x,p.y,p.z,j);}h.objectId=geoObjectId(h.componentId);return h;
 `);
 fn('querySettlement','p:vec3f,maxDistance:f32','GeoHit',`return geo_queryContext(p,maxDistance,0,0.0);`);
 fn('querySettlementRay','p:vec3f,maxDistance:f32,rd:vec3f,stoneUpperM:f32','GeoHit',`

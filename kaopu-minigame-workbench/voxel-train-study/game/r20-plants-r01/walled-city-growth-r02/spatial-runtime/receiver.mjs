@@ -22,7 +22,7 @@ fn trace(ro:vec3<f32>,rd:vec3<f32>,startT:f32,startSteps:u32,budget:u32,oldGlass
  loop{if(steps>=budget){return packSample(f,t,steps,2u,glass,through);}if(t>220.){return packSample(f,t,steps,0u,glass,through);}f=raySceneField(ro+rd*t,rd);steps++;
   if(f.geo.materialId>0u){
    if(abs(f.d)<.00055||(f.d<0.&&prevD>0.&&prevD<1e5)){
-    if(f.d<0.&&prevD>0.&&prevD<1e5){var lo=prevT;var hi=t;for(var j=0;j<7;j++){let mid=(lo+hi)*.5;let m=raySceneField(ro+rd*mid,rd);if(m.d>0.){lo=mid;}else{hi=mid;}}t=(lo+hi)*.5;f=raySceneField(ro+rd*t,rd);}
+    if(f.d<0.&&prevD>0.&&prevD<1e5){var lo=prevT;var hi=t;for(var j=0;j<8;j++){let mid=(lo+hi)*.5;let m=raySceneField(ro+rd*mid,rd);if(j<7){if(m.d>0.){lo=mid;}else{hi=mid;}}else{t=mid;f=m;}}}
     if(f.geo.materialId==5u&&f.sectionCap==0u){if(glass.w<0.){glass=vec4<f32>(f.geo.n,.04+.96*pow(1.-abs(dot(-rd,f.geo.n)),5.));atomicAdd(&stats.glassRays,1u);}through=vec4<f32>(through.xyz*vec3<f32>(.88,.94,.92),through.w+1.);t+=.026/max(.07,abs(dot(rd,f.geo.n)));prevD=1e6;continue;}
     return packSample(f,t,steps,1u,glass,through);
    }
