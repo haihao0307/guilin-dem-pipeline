@@ -136,3 +136,7 @@ The implementation treats |direction component|<1e-7 as parallel. The preserved 
 The margins are large compared with ordinary f32 roundoff at this site's hundred-metre scale. This is not a formal bound on arbitrary float errors, invalid values or compiler behavior. It also does not prove the subsequent in-box ray-march step, candidate overflow behavior, shadow compositing or visual quality. Those remain separate checks.
 
 Any added geometry, changed repetition limit, larger shed/site recipe, changed material amplitude beyond the documented envelope, or relocation outside the audited domains must invalidate/recompute this bound before reusing the skip.
+
+## Signed-literal emission correction
+
+The rail and roof numeric emitters now parenthesize negative literals, e.g. `q.y-(-0.305)` instead of the invalid token `q.y--0.305`. No primitive, member, dimension, transform, material identity, or bound changed. The retained analytic rail curve continuity and all roof panel/purlin containment tests pass unchanged. The complete construction source hash therefore changes to `3b3584d2ea3033aad6c2929cda643a60cc6301b8c39a047666f5bd819275d1bb`; this is a syntax-only lock refresh, not a widened visibility envelope. Whole-source lexical regression strips comments before checking ambiguous increment/decrement tokens.
