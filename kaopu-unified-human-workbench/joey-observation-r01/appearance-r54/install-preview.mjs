@@ -1,5 +1,5 @@
 import * as THREE from '/native/kaopu-unified-human-workbench/full/source/registration-vendor/three.module.js';
-import {sha256 as digest,verifyR52Archive,verifyR52Geometry,R52_REFERENCE_SHA} from './FrozenR52Lock.mjs';
+import {sha256 as digest,verifyR52Archive,verifyR52Geometry,R52_REFERENCE_SHA} from './FrozenR52Lock.mjs?v=exact-ios-output-3';
 import {attachAppearanceR52} from './base/brow-face-r52/AppearanceR52.mjs';
 import {attachObservationLighting} from './ObservationLighting.mjs';
 import {attachGuideStructureR30} from './legacy-r30/GuideStructureR30.js';

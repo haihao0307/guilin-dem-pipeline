@@ -1,6 +1,6 @@
-import {diagnoseR52Device,formatR52Diagnostic} from './R52DeviceDiagnostic.mjs?v=r54-device-diagnostic-3';
+import {diagnoseR52Device,formatR52Diagnostic} from './R52DeviceDiagnostic.mjs?v=r54-device-diagnostic-4';
 const frame=document.querySelector('#native'),status=document.querySelector('#status'),progress=document.querySelector('#progress'),loading=document.querySelector('#loading'),retry=document.querySelector('#retry');
-const hostURL=new URL('./native-host.html?v=r54-device-diagnostic-3',import.meta.url);
+const hostURL=new URL('./native-host.html?v=r54-device-diagnostic-4',import.meta.url);
 function fail(error){window.r54Boot.fail(error);}
 retry.onclick=()=>location.reload();
 window.r54Boot.stage('1/5 正在打开原生人物页面');

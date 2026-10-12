@@ -1,0 +1,15 @@
+import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
+import {verifyR52Archive,verifyR52Geometry,R52_APPROVED_OUTPUTS,sha256} from './FrozenR52Lock.mjs';
+import {compareR52Coordinates} from './R52DeviceDiagnostic.mjs';
+const bytes=fs.readFileSync(new URL('./r52-reference-positions.f32',import.meta.url));
+const reference=bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength);
+const archiveBytes=fs.readFileSync(new URL('./archive-r52.json',import.meta.url)),archive=await verifyR52Archive(archiveBytes);
+const output=(delta=0,i=59274)=>{const a=new Float32Array(reference.slice(0));new Uint32Array(a.buffer)[i]+=delta;return a;};
+for(const [label,delta,hash] of [['original',0,'199e277439ac12afdcaa0587e4acbfd28e4fbadd5297d30060cab0d508677b19'],['independently retained Apple',-1,'44182e5d09b220db744dc1bcfb6e83e0057e076fce9710b9cdd9fba92d5ce47e'],['physical iPhone reconstructed',2,'0ef2fa104bd5ccbbe9ea88558a54723acaf455d555e4a72a1d204109d4964ff8']])test(label+' exact full output accepted without mutation',async()=>{const a=output(delta),before=Buffer.from(a.buffer);assert.equal(await sha256(a),hash);const result=await verifyR52Geometry(a,archive.state,archive.state);assert.equal(result.actualSHA,hash);assert.equal(result.geometryReplaced,false);assert.deepEqual(Buffer.from(a.buffer),before);});
+test('only three exact complete outputs are admitted',()=>assert.equal(Object.keys(R52_APPROVED_OUTPUTS).length,3));
+for(const delta of [-2,1,3])test('same-coordinate unobserved '+delta+' ULP remains refused',async()=>assert.rejects(verifyR52Geometry(output(delta),archive.state,archive.state),/未通过校验/));
+test('same two ULP at another coordinate remains refused',async()=>assert.rejects(verifyR52Geometry(output(2,59275),archive.state,archive.state),/未通过校验/));
+test('iPhone bytes independently reproduce all photographed statistics',()=>{const r=compareR52Coordinates(output(2),reference);assert.equal(r.all.bitDifferentCoordinates,1);assert.equal(r.all.differentVertices,1);assert.equal(r.all.maxFiniteULP,2);assert.equal(r.all.maxAxisAbsoluteM,2.842170943040401e-14);assert.equal(r.all.maxVertexDistanceM,2.842170943040401e-14);assert.equal(r.body.differentVertices,0);assert.equal(r.head.differentVertices,1);assert.equal(r.all.nonFiniteCoordinates,0);assert.equal(r.all.signedZeroDifferences,0);assert.equal(r.differences[0].coordinate,59274);});
+test('accepted bytes with changed parameters remain refused',async()=>{const state=structuredClone(archive.state);state.anny.phenotypes.age+=.001;await assert.rejects(verifyR52Geometry(output(2),state,archive.state),/参数/);});
+test('wrong archive bytes remain refused',async()=>assert.rejects(verifyR52Archive(Buffer.concat([archiveBytes,Buffer.from(' ')])),/参数文件/));
+test('invalid coordinate count or NaN remains refused',async()=>{await assert.rejects(verifyR52Geometry(new Float32Array(3),archive.state,archive.state),/格式/);const a=output(2);a[9]=NaN;await assert.rejects(verifyR52Geometry(a,archive.state,archive.state),/有限数/);});
