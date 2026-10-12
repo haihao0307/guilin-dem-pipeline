@@ -6,7 +6,7 @@ This folder is an unpublished local integration candidate. No visual, frame-time
 
 `source/` is a byte-identical copy of the complete R03e function modules at c38e0018aaa58c280ded445acf6485404301ff65. Hashes are in `qa/SOURCE_LOCKS.json`. The 92 × 80 m building, 72 × 62.5 m clear warehouse (4,500 m²), two banks of transverse racks, actual conveyor/boiler connections, L-shaped double arcade, stepped four-storey tower, tapering chimney, joinery and all original material mothers remain. Empty inventory means zero live item records, not deleted cabinets. Machine uniforms are its existing parked position.
 
-`emit-shader-inputs.mjs` selects the original function closures without changing function expressions. The shader interface is changed from independent WebGPU storage/compute to raster stages for the existing WebGL2 host. The pinned sibling Naga 27.0.3 compiler remains the sole language translator. This does not make the game a native WebGPU renderer.
+`emit-shader-inputs.mjs` selects the original function closures without changing equations; only sashWindow.handle and mechanicalBag.handle are alpha-renamed to nonreserved local identifiers. The shader interface is changed from independent WebGPU storage/compute to raster stages for the existing WebGL2 host. The pinned sibling Naga 27.0.3 compiler remains the sole language translator. This does not make the game a native WebGPU renderer.
 
 ## Host API
 
@@ -52,4 +52,8 @@ The conveyor layout and building siting have not been accepted by the user. This
 
 ## Restored diagnostic / numerical QA contract (2026-10-12)
 
-`node qa/emit-probes.mjs` emits exact-source `geometry-probe.wgsl` / `material-probe.wgsl`, manifest and preserved-function locks. Compile with the same Naga binary, entries `geometryProbe` and `materialProbe`. `node qa/backend-probes.cjs` from repository root runs isolated WebGL2 and WebGPU samples (6 comparisons: 2 domains × 3 ages). Geometry spans door, racks, transport, original boiler, chimney and hall; material samples retain original brick/stone/wood/metal/slate responses, material-normal and weather. This is backend numeric QA, not same-scene render or layout acceptance. Runtime stages remain step/normal/matter/glass. Current CPU tests: 24 passed; GPU results must be supplied by the actual unified workflow. No new boiler shape is included in this integration candidate.
+`node qa/emit-probes.mjs` emits exact-source `geometry-probe.wgsl` / `material-probe.wgsl`, manifest and preserved-function locks. Compile with the same Naga binary, entries `geometryProbe` and `materialProbe`. `node qa/backend-probes.cjs` from repository root runs isolated WebGL2 and WebGPU samples (6 comparisons: 2 domains × 3 ages). Geometry spans door, racks, transport, original boiler, chimney and hall; material samples retain original brick/stone/wood/metal/slate responses, material-normal and weather. This is backend numeric QA, not same-scene render or layout acceptance. Runtime stages remain step/normal/matter/glass. Current CPU tests: 27 passed; GPU results must be supplied by the actual unified workflow. No new boiler shape is included in this integration candidate.
+
+## Reserved identifier adapter fix
+
+Pinned Naga rejected the preserved local name `handle` in `sashWindow` and `mechanicalBag`. Only those two function-local bindings and their two matching uses are alpha-renamed at extraction. Inverse renaming reproduces each original body byte for byte; all other original function bodies and all 24 source files remain unchanged. Both numerical probes and all four runtime stages use the same rule. Six-stage token scan finds no `handle`. The actual Naga rerun, not this CPU scan, remains the compilation gate.
