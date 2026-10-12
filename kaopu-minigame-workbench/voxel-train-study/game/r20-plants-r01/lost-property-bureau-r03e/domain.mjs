@@ -104,7 +104,7 @@ fn taperedTower(p:vec3<f32>)->Field {
  let tq=p-vec3<f32>(-35.5,0.,-18.);let h=towerHalf(p.y);
  // Continuous curved setbacks, chamfered corners and conservative distance bound.
  let outer=max(chamferPlan(tq.xz,h,.65)/2.3,max(-p.y,p.y-23.8));
- let inner=max(chamferPlan(tq.xz,h-vec2<f32>(.48),.42)/2.3,max(.15-p.y,p.y-24.1));var wall=max(outer,-inner);
+ let inner=max(chamferPlan(tq.xz,h-vec2<f32>(.48),.42)/2.3,max(-.05-p.y,p.y-24.1));var wall=max(outer,-inner);
  let mainArch=archOpening(vec3<f32>(tq.z,p.y,tq.x+7.10),3.05,3.15,1.1);wall=max(wall,-mainArch);
  wall=max(wall,-box(p-vec3<f32>(-28.4,1.7,-20.),vec3<f32>(1.,1.75,1.75)));
  // Axial public arches join the vestibule to both lengths of the west hall.
