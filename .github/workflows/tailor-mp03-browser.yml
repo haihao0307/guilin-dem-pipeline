@@ -1,0 +1,60 @@
+name: MP03 cloth and browser validation
+on:
+  push:
+    branches: [fix/tailor-mp03-knit-seams-gravity-20261011]
+    paths:
+      - '.github/workflows/tailor-mp03-browser.yml'
+      - 'kaopu-tailor-workbench/material-products/r03/READY.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: tailor-mp03-validation
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: project
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: project
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-tailor-workbench/material-products
+            kaopu-tailor-workbench/presets/r04/assets
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Restore original fixtures and thumbnails, never overwrite editable source
+        run: python kaopu-tailor-workbench/material-products/r03/bootstrap.py
+      - name: Syntax, physical gravity and seven original garments
+        run: |
+          P=kaopu-tailor-workbench/material-products/r03
+          for f in "$P"/*.mjs; do node --check "$f"; done
+          node "$P/test-physics.mjs"
+      - run: npm install --no-save playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - name: Render exact candidate and exercise material and gravity controls
+        run: |
+          python -m http.server 8000 > /tmp/mp03-http.log 2>&1 &
+          node kaopu-tailor-workbench/material-products/r03/qa-browser.cjs
+      - name: Retain source and browser evidence artifact
+        if: always()
+        run: |
+          mkdir -p mp03-evidence
+          P=kaopu-tailor-workbench/material-products/r03
+          cp -r "$P/evidence" mp03-evidence/ 2>/dev/null || true
+          cp "$P/PHYSICS_REPORT.json" mp03-evidence/ 2>/dev/null || true
+          tar -czf mp03-evidence/runtime.tgz "$P"
+          git rev-parse HEAD > mp03-evidence/SOURCE_COMMIT.txt
+          cp /tmp/mp03-http.log mp03-evidence/ 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp03-runtime-and-browser
+          path: project/mp03-evidence
+          retention-days: 14
