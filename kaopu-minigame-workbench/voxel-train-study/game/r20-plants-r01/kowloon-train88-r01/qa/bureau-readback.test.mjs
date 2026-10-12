@@ -1,0 +1,5 @@
+import test from'node:test';import assert from'node:assert/strict';import{validateBureauReadback}from'./bureau-readback.mjs';
+const valid=()=>({width:1,height:1,buffers:{trace:[3,1,5,1],transmission:[3,1,0,1],position:[1,2,3,1],geometricNormal:[0,1,0,0],albedoRoughness:[.3,.2,.1,.8],response:[0,.9,.5,-.01],finish:[0,.5,0,0],materialNormal:[0,1,0,0]}});
+test('actual material output accepts physical signed height and independently valid normal channels',()=>{const r=validateBureauReadback(valid());assert.equal(r.shadedHits,1);assert.equal(r.populated,1);});
+test('missing, nonfinite, zero, invalid normal and response attachments cannot pass ray-only completion',()=>{for(const mutate of [r=>r.buffers.finish.pop(),r=>r.buffers.response[2]=NaN,r=>r.buffers.materialNormal=[0,0,0,0],r=>r.buffers.albedoRoughness[3]=1.1,r=>r.buffers.albedoRoughness=[0,0,0,.5]]){const r=valid();mutate(r);assert.throws(()=>validateBureauReadback(r));}});
+test('fully offscreen bureau is valid with no invented material hits',()=>{const r=valid();r.buffers.trace[3]=2;const p=validateBureauReadback(r);assert.equal(p.shadedHits,0);assert.equal(p.ranges,null);});
