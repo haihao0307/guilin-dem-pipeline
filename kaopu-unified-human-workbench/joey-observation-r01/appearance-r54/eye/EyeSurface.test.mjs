@@ -100,3 +100,16 @@ test('shader anchor failure is atomic and later material layers cannot be accide
  const api=attachNativeEyeSurfaceR54(f.skin),original=f.skin.material.onBeforeCompile;f.skin.material.onBeforeCompile=()=>{};
  assert.throws(()=>api.dispose(),/later eye/);assert.equal(api.report().disposed,false);f.skin.material.onBeforeCompile=original;f.bridge.dispose();
 });
+
+test('reinstallation binds fresh uniforms when the host caches programs by customProgramCacheKey',()=>{
+ const f=fixture(),cache=new Map();let active;
+ // Mirrors Three r170 getProgram: a cached material program does not invoke
+ // onBeforeCompile again. A fresh closure cannot reuse its predecessor's key.
+ f.skin.viewer.render=()=>{const key=f.skin.material.customProgramCacheKey();if(!cache.has(key)){const shader=f.shader();f.skin.material.onBeforeCompile(shader);cache.set(key,shader);}active=cache.get(key);};
+ const first=attachNativeEyeSurfaceR54(f.skin);first.enabled(false);first.dispose();f.skin.viewer.render();
+ const next=attachNativeEyeSurfaceR54(f.skin);next.set({wetness:.31});
+ assert.equal(active.uniforms.uR54EyeEnabled,next.uniforms.uR54EyeEnabled);
+ assert.equal(active.uniforms.uR54Wetness,next.uniforms.uR54Wetness);
+ assert.equal(active.uniforms.uR54EyeEnabled.value,1);assert.equal(active.uniforms.uR54Wetness.value,.31);assert.equal(next.report().compiles,1);
+ next.dispose();f.bridge.dispose();
+});

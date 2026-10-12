@@ -39,3 +39,7 @@ The missing future interface would be a separately verified, current-geometry na
 ## Verification boundary
 
 CPU tests pass against the actual pinned CommonSkin, R05EyeBridge and E1 hook chain, including fixture Git blob identities. They cover light response, bounded edge transitions, retained original atlas/chart/positions/faces, invalid-update atomicity, repeat installation, explicit disposal, owner disposal and shader-anchor failure. CPU hook assembly is not GLSL compilation or a real 3D render. No local browser was run. Real compile, pixel, light-change, multi-view and neutral/smile contact tests must run in the parent's isolated GitHub Actions render before selecting this candidate.
+
+## Real-render reinstall correction
+
+The second real run passed the first install, off and disposal pixel restoration, but the later close-eye light probe had no response. A new contract test reproduced Three r170's material program-cache behavior: when the same custom key is reused, onBeforeCompile is skipped, so the new closure's uniforms are not bound and the previous disabled uniforms survive. Each bounded adapter installation now has a distinct cache key. The new test failed before this change and passes after it. Native geometry and the original procedural iris are unchanged. The actual renderer must still verify the corrected second installation and light response. Program variants stay owned by the host material and are released with it; this experimental lifecycle is not a claim of unbounded cost-free toggling.
