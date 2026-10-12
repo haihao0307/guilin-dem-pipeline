@@ -1,0 +1,120 @@
+name: Hair R14 roots and crown coverage
+on:
+  push:
+    branches: [fix/hair-r14-root-coverage-20261012]
+    paths: ['kaopu-hair-workbench/fusion/r14/**', '.github/workflows/hair-r14-root-coverage.yml']
+permissions:
+  contents: write
+concurrency:
+  group: hair-r14-root-coverage
+  cancel-in-progress: false
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-hair-workbench/fusion/r12
+            kaopu-hair-workbench/fusion/r13c
+            kaopu-hair-workbench/fusion/r14
+            .github/workflows/hair-r14-root-coverage.yml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Freeze old workbenches and install pinned tools
+        run: |
+          git fetch --depth=1 origin dc36a8fc7b145ca3b217cd1a3e0c2987fa9b1877
+          git fetch --depth=1 origin c0816ec8388195bb79b12fc82e11ce2d3fa07d56
+          for p in kaopu-hair-workbench/fusion/r12 kaopu-hair-workbench/fusion/r13c; do
+            test "$(git rev-parse HEAD:$p)" = "$(git rev-parse dc36a8fc7b145ca3b217cd1a3e0c2987fa9b1877:$p)"
+          done
+          test -z "$(git diff c0816ec8388195bb79b12fc82e11ce2d3fa07d56 HEAD -- kaopu-hair-workbench/fusion/r13c/src)"
+          npm install --prefix /tmp/r14-tools --no-save esbuild@0.25.10 playwright@1.55.1 pngjs@7.0.0
+          ln -s /tmp/r14-tools/node_modules node_modules
+          ln -s /tmp/r14-tools/node_modules /tmp/node_modules
+          /tmp/r14-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Compile new source and run root, trim and static contact tests
+        run: |
+          python kaopu-hair-workbench/fusion/r14/upgrade.py
+          find kaopu-hair-workbench/fusion/r14/src -name '*.js' -print0 | xargs -0 -n1 node --check
+          node kaopu-hair-workbench/fusion/r14/tests/root-profile.mjs
+          node --input-type=module - <<'JS'
+          import esbuild from 'esbuild';import path from 'node:path';
+          const p=path.resolve('kaopu-hair-workbench/fusion/r14');
+          await esbuild.build({entryPoints:[p+'/tests/coherence.mjs'],bundle:true,platform:'node',format:'esm',outfile:p+'/tests/coherence-bundled.mjs',alias:{three:p+'/vendor/three.module.js'}});
+          JS
+          node kaopu-hair-workbench/fusion/r14/tests/coherence-bundled.mjs
+          rm kaopu-hair-workbench/fusion/r14/tests/coherence-bundled.mjs
+          node kaopu-hair-workbench/fusion/r14/bundle.mjs
+          python kaopu-hair-workbench/fusion/r14/package.py
+          node /tmp/hair-r14-reference/bundle.mjs
+          python /tmp/hair-r14-reference/package.py
+      - name: Compare actual root shafts and crown coverage to frozen R13C geometry
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/r14-http.log 2>&1 &
+          python -m http.server 8766 --directory /tmp/hair-r14-reference --bind 127.0.0.1 >/tmp/r14-reference-http.log 2>&1 &
+          node kaopu-hair-workbench/fusion/r14/tests/root-study.mjs http://127.0.0.1:8765/kaopu-hair-workbench/fusion/r14/public-lite.html http://127.0.0.1:8766/public-lite.html
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-r14-root-study
+          path: kaopu-hair-workbench/fusion/r14
+          retention-days: 14
+      - name: Independently render all styles, real controls, storage and mobile viewport
+        run: node kaopu-hair-workbench/fusion/r14/tests/browser.mjs http://127.0.0.1:8765/kaopu-hair-workbench/fusion/r14/public-lite.html
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-r14-candidate
+          path: kaopu-hair-workbench/fusion/r14
+          retention-days: 14
+      - name: Publish new directory only, without merge or force
+        id: publish
+        run: |
+          python - <<'PY'
+          import subprocess
+          changed=subprocess.check_output(['git','diff','--name-only'],text=True).splitlines()
+          assert all(p.startswith('kaopu-hair-workbench/fusion/r14/') for p in changed),changed
+          PY
+          git config user.name 'KAOPU Hair R14 Build'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add kaopu-hair-workbench/fusion/r14
+          git diff --cached --quiet || git commit -m 'build(hair-r14): tested physical root profile, crown coverage and native ET18 head'
+          git push origin HEAD:refs/heads/fix/hair-r14-root-coverage-20261012
+          sha=$(git rev-parse HEAD)
+          url="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$sha/kaopu-hair-workbench/fusion/r14/public-lite.html"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "$url" >> "$GITHUB_STEP_SUMMARY"
+      - name: Open and operate immutable public webpage in external browser
+        run: node kaopu-hair-workbench/fusion/r14/tests/browser.mjs '${{ steps.publish.outputs.url }}' --public
+      - name: Attach immutable delivery evidence without changing tested HTML
+        env:
+          PUBLIC_URL: ${{ steps.publish.outputs.url }}
+          BUILD_SHA: ${{ steps.publish.outputs.sha }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,os,hashlib
+          p=Path('kaopu-hair-workbench/fusion/r14')
+          r=json.loads((p/'evidence/public/report.json').read_text());assert r['success']
+          study=json.loads((p/'evidence/root-study/report.json').read_text());assert study['success']
+          m=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          assert hashlib.sha256((p/'public-lite.html').read_bytes()).hexdigest()==m['htmlSha256']
+          m.update(publicBrowserVerified=True,publicURL=os.environ['PUBLIC_URL'],buildRevision=os.environ['BUILD_SHA'],actionsRun=os.environ['GITHUB_RUN_ID'],rootStudy='evidence/root-study/report.json')
+          (p/'BUILD_MANIFEST.json').write_text(json.dumps(m,indent=2))
+          (p/'PUBLIC_URL.txt').write_text(os.environ['PUBLIC_URL']+'\n')
+          (p/'DELIVERY.md').write_text('# R14.0 用户验收候选\n\n'+os.environ['PUBLIC_URL']+'\n\nBuild: '+os.environ['BUILD_SHA']+'\n\nGeometry/root profile, candidate-browser, R13C comparison and immutable public-browser evidence: evidence/.\n\nNo black scalp cap, no added hair population, no duplicate head. Native head, root hash, radii and lights preserved.\n\nStatic grooming only. Phone viewport simulation is not physical-device testing. Cinematic quality and user visual acceptance are not claimed. Old paths untouched; no merge or force push.\n')
+          PY
+          git add kaopu-hair-workbench/fusion/r14
+          git commit -m 'test(hair-r14): immutable public rendering and actual root/crown evidence'
+          git push origin HEAD:refs/heads/fix/hair-r14-root-coverage-20261012
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-r14-delivery
+          path: kaopu-hair-workbench/fusion/r14
+          retention-days: 30
