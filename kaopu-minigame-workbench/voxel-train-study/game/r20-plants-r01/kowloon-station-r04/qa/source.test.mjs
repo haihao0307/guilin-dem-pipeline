@@ -37,7 +37,7 @@ test('charcoal steel finish shares pigment coverage and physical paint thickness
 
 
 test('visibility never treats acceleration bounds or budget exhaustion as illumination',()=>{assert(!WGSL.includes('12.*d/t'));assert(WGSL.includes('h.id!=0u&&h.d<.001'));assert(WGSL.includes('atomicAdd(&stats.visibilityUnresolved'));assert(WGSL.includes('if(q.y>46.)'));assert(WGSL.includes('let actual=evaluateStationGeometry(nominal,p+n*d'));assert(WGSL.includes('if(h.id!=0u){var nominal=h')); });
-test('floor acceleration includes every physical concrete domain and refuses interior starts',()=>{assert(WGSL.includes('floorIndex<8u'));assert(WGSL.includes('if(entry<0.){return 0.;}'));assert(WGSL.includes('stationCachedField(p,2u).d-.03'));assert(WGSL.includes('return stationDomain(p,skipKind==1u,skipKind==2u)'));assert(WGSL.includes('SHED_HALF+1.301'));assert(WGSL.includes('vec3<f32>(4.701,.551,GOODS_HALF+.601)'));});
+test('floor acceleration includes every physical concrete domain and refuses interior starts',()=>{assert(WGSL.includes('floorIndex<8u'));assert(WGSL.includes('if(entry<0.){return 0.;}'));assert(WGSL.includes('stationDomain(p,false,true).d-.03'));assert(WGSL.includes('SHED_HALF+1.301'));assert(WGSL.includes('vec3<f32>(4.701,.551,GOODS_HALF+.601)'));});
 
 
 test('level public route actually connects hall, forecourt and covered quay walk',()=>{const s=STATION_SCORE.site;const fc=s.forecourt,w=s.passengerWalk;assert(Math.abs(fc.center[1]-fc.halfExtent[1]-8.8)<1e-9);assert(fc.halfExtent[0]>=w.startX);assert(fc.center[1]+fc.halfExtent[1]>=w.z+w.halfWidth-1e-9);assert.equal(fc.top,.85);assert(w.z-w.halfWidth>s.siding.front);});

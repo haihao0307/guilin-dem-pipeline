@@ -12,8 +12,8 @@ The raw candidate count increments before pruning. Any original count above capa
 
 CPU regression exercises more than 700,000 candidate records with f32 arithmetic, positive/negative near and far fields, native/nonnative identities, duplicate ties, retained order, and raw overflow. This is regression support for the argument; real GPU/backend and whole-frame verification remain required.
 
-## Same-query construction reuse (next local candidate)
+## Same-query construction reuse (rejected execution experiment)
 
 The ray accelerators previously regenerated the entire architectural candidate set when asking for the union excluding roofs or excluding floors. The local revision assigns construction-only category metadata to the exact record calls already guarded by skipRoof/skipFloor. A complete query retains candidates admissible in any of three independently bounded sets. Alternate union resolution reuses those same function values in their original order, with independent upper endpoints. Exit ramps remain ordinary candidates; their material id17 does not make them skippable floor records.
 
-The reuse is valid only for the identical query position and a complete original construction set. A changed position or partial set explicitly regenerates the requested domain. No prior-frame/screen/world texture is reused. CPU regression compares all three unions with three independent original-style queries across a further 16,000 multi-candidate cases. GPU and frame timing acceptance remain pending.
+The reuse is valid only for the identical query position and a complete original construction set. A changed position or partial set explicitly regenerates the requested domain. No prior-frame/screen/world texture is reused. CPU regression compares all three unions with three independent original-style queries across a further 16,000 multi-candidate cases. The 50c15438 GPU run preserved counts but slowed the warm main pass from about7s to9.7s. That execution change was reverted to a463f814 while retaining its tests/history. It is not used as an optimization.
