@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-          sparse-checkout: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
       - name: Source locks and host binding tests
         run: |
           node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r04/qa/*.test.mjs
@@ -29,6 +29,9 @@ jobs:
           cargo build --release --locked
           target/release/kaopu-station-shader-bridge ../generated/material.wgsl ../generated/material.frag materialProbe
           target/release/kaopu-station-shader-bridge ../generated/geometry.wgsl ../generated/geometry.frag geometryProbe
+          target/release/kaopu-station-shader-bridge ../generated/step.wgsl ../generated/step.frag stepRays
+          target/release/kaopu-station-shader-bridge ../generated/normal.wgsl ../generated/normal.frag recordGeometry
+          target/release/kaopu-station-shader-bridge ../generated/matter.wgsl ../generated/matter.frag recordMatter
       - name: Install pinned official browser QA runner
         run: |
           npm install --prefix "$RUNNER_TEMP/station-bridge" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
@@ -36,12 +39,15 @@ jobs:
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
       - name: Same-source WebGL2 and WebGPU numerical probes
         run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/isolated-probes.cjs
+      - name: Real FH88 host depth integration diagnostic
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/host-runtime.cjs
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: train88-kowloon-function-bridge-${{ github.sha }}
           path: |
             train88-kowloon-bridge-results/
+            train88-kowloon-host-results/
             kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/generated/
             kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/compiler/Cargo.lock
           retention-days: 7

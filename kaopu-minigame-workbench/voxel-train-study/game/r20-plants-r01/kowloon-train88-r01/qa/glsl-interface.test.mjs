@@ -1,0 +1,3 @@
+import test from'node:test';import assert from'node:assert/strict';import fs from'node:fs';import{threeFragment}from'../glsl-interface.mjs';
+test('ES interface adapter changes only version and uniform block declarations',()=>{const s=fs.readFileSync(new URL('../generated/geometry.frag',import.meta.url),'utf8'),a=threeFragment(s);assert.equal(a.uniforms.length,1);assert.equal(a.uniforms[0].type,'Params');const fn=s.slice(s.indexOf('float box('));assert(a.text.endsWith(fn));});
+test('unsupported uniform interface fails explicitly',()=>{assert.throws(()=>threeFragment('#version 310 es\nvoid main(){}'));assert.throws(()=>threeFragment('#version 300 es\nlayout(std140) uniform Bad { float a; float b; };'));});
