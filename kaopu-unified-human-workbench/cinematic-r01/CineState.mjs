@@ -1,5 +1,5 @@
 /** Versioned lighting/look state. Calibration knobs are artistic, not skin measurements. */
-export const CINE_VERSION='ET20-CINE-R01';
+export const CINE_VERSION='ET20-CINE-R01.1';
 export const CINE_DEFAULTS=Object.freeze({lighting:true,skin:true,preset:'window',keyEV:0,fillStops:2.4,rimStops:1.6,keyAzimuth:-43,keyElevation:24,distance:1.10,width:.75,height:1.10,keyK:5600,fillK:7000,rimK:6500,exposureEV:-.10,ambient:.08,shadow:true,shadowSoftness:2.5,poreGain:1.05,mesoGain:.75,specular:.75,lobeMix:.30,roughnessOffset:.035,fuzz:.07,diffusionScale:.80});
 const bounds={keyEV:[-2,2],fillStops:[0,6],rimStops:[-1,5],keyAzimuth:[-100,100],keyElevation:[0,65],distance:[.65,2.5],width:[.20,1.8],height:[.25,2],keyK:[3000,10000],fillK:[3000,10000],rimK:[3000,10000],exposureEV:[-2,2],ambient:[0,.4],shadowSoftness:[0,8],poreGain:[0,2],mesoGain:[0,2],specular:[0,1.5],lobeMix:[0,.8],roughnessOffset:[-.12,.2],fuzz:[0,.25],diffusionScale:[0,1.5]};
 export const CINE_PRESETS=Object.freeze({

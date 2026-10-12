@@ -1,0 +1,30 @@
+name: Human ET20 recovery
+on:
+  push:
+    branches: [fix/human-et20-shadow-recovery-20261012]
+    paths: ['recovery/et20-shadow/**', '.github/workflows/human-et20-recovery.yml']
+permissions:
+  contents: read
+concurrency:
+  group: human-et20-recovery
+  cancel-in-progress: false
+jobs:
+  public-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: recovery/et20-shadow
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - run: node recovery/et20-shadow/probe.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: et20-recovery-${{ github.run_number }}
+          path: recovery-evidence/
+          retention-days: 14

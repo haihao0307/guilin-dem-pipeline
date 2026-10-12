@@ -1,0 +1,95 @@
+name: Human ET20 R01.1 delivery
+on:
+  push:
+    branches: [fix/human-et20-shadow-recovery-20261012]
+    paths: ['recovery/et20-r11/**', '.github/workflows/human-et20-r11.yml']
+permissions:
+  contents: write
+concurrency:
+  group: human-et20-r11-delivery
+  cancel-in-progress: false
+jobs:
+  build-and-public-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+            recovery/et20-r11
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - name: Apply reviewed source correction with all preimage hashes checked
+        run: |
+          mkdir -p r11-evidence
+          python recovery/et20-r11/install.py | tee r11-evidence/source-install.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/cinematic-r01/CineSkin.mjs kaopu-unified-human-workbench/cinematic-r01/CineRig.mjs kaopu-unified-human-workbench/cinematic-r01/CineState.mjs kaopu-unified-human-workbench/cinematic-r01/build.cjs kaopu-unified-human-workbench/cinematic-r01/verify.cjs
+          if ! git diff --cached --quiet; then
+            git commit -m 'fix(et20): bounded curved-receiver shadow lookup, original geometry and pores retained'
+            git push origin HEAD:fix/human-et20-shadow-recovery-20261012
+          fi
+          echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - run: npm install --no-save --package-lock=false playwright@1.58.2 esbuild@0.25.11
+      - name: Source tests and exact build
+        run: |
+          node kaopu-unified-human-workbench/cinematic-r01/test.mjs | tee r11-evidence/unit.txt
+          node kaopu-unified-human-workbench/idle-r01/test-timeline.mjs | tee r11-evidence/timeline.json
+          node kaopu-unified-human-workbench/cinematic-r01/build.cjs
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          p=Path('kaopu-unified-human-workbench/cinematic-r01')
+          build=json.loads((p/'BUILD.json').read_text())
+          actual=hashlib.sha256((p/'preview.html').read_bytes()).hexdigest()
+          assert actual==build['previewSHA256']=='cdac65a5c84a7a79366cbb67e76cece5c126c255be685488863ef1294d89a667'
+          assert build['version']=='ET20-CINE-R01.1'
+          print('Exact candidate build matched independent local build:',actual)
+          PY
+      - name: Publish fixed candidate on isolated branch; not user acceptance
+        run: |
+          git add kaopu-unified-human-workbench/cinematic-r01/preview.html kaopu-unified-human-workbench/cinematic-r01/BUILD.json
+          git commit -m 'build(et20): R01.1 immutable candidate pending final public verification'
+          git push origin HEAD:fix/human-et20-shadow-recovery-20261012
+          echo "BUILD_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - run: npx playwright install --with-deps chromium
+      - name: Full real fixed-public regression including new curved receiver counterexample
+        env:
+          QA_OUT: r11-evidence/public
+          PUBLIC_ONLY: '1'
+        run: |
+          export PREVIEW_URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${BUILD_SHA}/kaopu-unified-human-workbench/cinematic-r01/preview.html"
+          node kaopu-unified-human-workbench/cinematic-r01/verify.cjs
+      - name: Preserve verified delivery and all boundaries
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,os,hashlib
+          out=Path('recovery/et20-r11');p=Path('kaopu-unified-human-workbench/cinematic-r01')
+          qa=json.loads(Path('r11-evidence/public/qa.json').read_text())
+          assert qa['completed'] and not qa['pageErrors'] and not qa['consoleErrors'] and not qa['failedRequests']
+          assert all(x['pass'] for x in qa['tests'])
+          build=json.loads((p/'BUILD.json').read_text());sha=os.environ['BUILD_SHA'];run=os.environ['GITHUB_RUN_ID']
+          receipt={'version':'ET20-CINE-R01.1','recoveredET20Head':'ac6279f6f3275db16d0fa4af4377763f12b3c33b','oldBuildCommit':'1cd8904342118639c1dd5cd83322109880bbb7f8','sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':sha,'previewSHA256':build['previewSHA256'],'previewBytes':build['previewBytes'],'publicURL':qa['url'],'run':run,'publicBrowserVerified':True,'publicChecks':len(qa['tests']),'userVisualAccepted':False,'productionReady':False,'visualReviewPending':True,'newRuntimeChange':'bounded curved receiver normal offset for shadow lookup, no geometry or texture replacement','newNormalLookupOffsetMaxMM':1.5,'realPhoneTested':False,'hardwarePerformanceCertified':False,'originalET19AndET20URLsPreserved':True}
+          (out/'DELIVERY.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n');(p/'DELIVERY.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n')
+          (out/'PUBLIC_QA.json').write_text(json.dumps(qa,ensure_ascii=False,indent=2)+'\n')
+          doc=f"# ET20-CINE-R01.1 布光 / 皮肤恢复交付\n\n固定公网：{qa['url']}\n\n源码：`{os.environ['SOURCE_SHA']}`；构建：`{sha}`。\n\nActions：https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/{run}\n\n{len(qa['tests'])}组完整固定公网回归通过，JS、GLSL与失败请求均为0。原11组纯源码测试和7200调度采样通过。具体范围见 recovery/et20-r11/PUBLIC_QA.json；不把软件GPU测试说成消费显卡帧率或手机实机认证。\n\n本轮恢复已实现的ET20，并实际增加曲面阴影查询修正；原人物、材质贴图与待机、旧ET19/ET20网页保留。选择1.5mm上限的法线方向查询偏移，未移动网格；细小接触阴影可能弱化，未实现完整面积阴影/体积散射，不能称影视级完成。\n\n最终截图在同一run artifact，人工视觉尚待检查，用户视觉验收尚未通过。\n\n保持Draft，不合并、不强推。\n"
+          (out/'DELIVERY.md').write_text(doc);(p/'DELIVERY.md').write_text(doc)
+          print(json.dumps(receipt,ensure_ascii=False,indent=2))
+          PY
+          git add recovery/et20-r11/DELIVERY.json recovery/et20-r11/DELIVERY.md recovery/et20-r11/PUBLIC_QA.json kaopu-unified-human-workbench/cinematic-r01/DELIVERY.json kaopu-unified-human-workbench/cinematic-r01/DELIVERY.md
+          git commit -m 'docs(et20): record verified R01.1 fixed-public result and recovery handoff'
+          git push origin HEAD:fix/human-et20-shadow-recovery-20261012
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: human-et20-r11-${{ github.run_number }}
+          path: |
+            r11-evidence/
+            recovery/et20-r11/
+            kaopu-unified-human-workbench/cinematic-r01/
+          retention-days: 14

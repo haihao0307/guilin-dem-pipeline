@@ -1,15 +1,15 @@
-# ET20-CINE-R01 影视布光与皮肤候选
+# ET20-CINE-R01.1 布光 / 皮肤恢复交付
 
-固定网页：https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/1cd8904342118639c1dd5cd83322109880bbb7f8/kaopu-unified-human-workbench/cinematic-r01/preview.html
+固定公网：https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/ccf5a1ed9ddde8803e292f1e62d777b141ff52d8/kaopu-unified-human-workbench/cinematic-r01/preview.html
 
-源码 `8cf2fc0f297602600cb6ed4c6bd4452a0aab0df2`；固定构建 `1cd8904342118639c1dd5cd83322109880bbb7f8`。
+源码：`cdb27baae71bb51af1f176ac67ef9c2ecf0c44eb`；构建：`ccf5a1ed9ddde8803e292f1e62d777b141ff52d8`。
 
-Actions：https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/38135648318
+Actions：https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/38187713183
 
-原待机版及人物、眼球、嘴唇、身体源码保留，只新增 cinematic-r01 与专用 workflow。4组灯光、独立灯光/肤质对照、分灯、真实材质输出检查和完整人物保存。具体浏览器测量见 evidence/source-qa.json 和 evidence/public-qa.json。截图在运行 artifact；尚需人工检查，自动测试不构成视觉验收。
+17组完整固定公网回归通过，JS、GLSL与失败请求均为0。原11组纯源码测试和7200调度采样通过。具体范围见 recovery/et20-r11/PUBLIC_QA.json；不把软件GPU测试说成消费显卡帧率或手机实机认证。
 
-参考与代码映射见 RESEARCH.md。不是 Karma、RenderMan、路径追踪或完整 ACES/OCIO；主光采用单中心深度投影、receiver-plane校正与PCF近似，非面积光可见度积分。皮肤为双高光瓣、程序化微表面与继承的屏幕空间RGB扩散，不是扫描位移或体积组织仿真。
+本轮恢复已实现的ET20，并实际增加曲面阴影查询修正；原人物、材质贴图与待机、旧ET19/ET20网页保留。选择1.5mm上限的法线方向查询偏移，未移动网格；细小接触阴影可能弱化，未实现完整面积阴影/体积散射，不能称影视级完成。
 
-原待机缓存和在线原生资产的成本继承；新增阴影目标和查找表增加GPU开销。桌面1560×1150、手机390×844视口，非手机实机/消费显卡性能认证。原走跑和多人模式未做此次影视照明升级。
+最终截图在同一run artifact，人工视觉尚待检查，用户视觉验收尚未通过。
 
-保留Draft，不合并、不强推，用户视觉验收待定。
+保持Draft，不合并、不强推。

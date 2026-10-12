@@ -5,8 +5,8 @@
 const declarations=`
 uniform float uCSkin,uCPores,uCMeso,uCSpecular,uCLobe,uCRough,uCFuzz,uCInspect;
 uniform sampler2D uCShadowMap;uniform mat4 uCShadowMatrix;
-uniform float uCShadowEnable,uCShadowSoftness;uniform vec3 uCKeyView,uCKeyPosition;
-varying vec3 vCWorld;
+uniform float uCShadowEnable,uCShadowSoftness,uCReceiverNormalBias;uniform vec3 uCKeyView,uCKeyPosition;
+varying vec3 vCWorld,vCShadowNormal;
 float cSkinMask=0.;float cLobeWeight=0.;vec3 cDiffuseN=vec3(0.,0.,1.);
 float cCompareShadow(vec2 uv,vec3 receiver,vec2 slope,float bias){
  float depth=receiver.z+dot(slope,uv-receiver.xy)-bias;
@@ -22,7 +22,13 @@ float cBilinearShadow(vec2 uv,vec3 receiver,vec2 slope,float bias){
  return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);
 }
 float cShadow(){
- vec4 q=uCShadowMatrix*vec4(vCWorld,1.);vec3 p=q.xyz/q.w;
+ // Curved receivers: preserve geometry, offset only the shadow lookup.
+ // Bounded outward normal tolerance is largest near grazing incidence.
+ vec3 receiverNormal=normalize(vCShadowNormal);
+ vec3 receiverLight=normalize(uCKeyPosition-vCWorld);
+ float grazing=1.-abs(dot(receiverNormal,receiverLight));
+ vec3 receiverWorld=vCWorld+receiverNormal*(uCReceiverNormalBias*grazing);
+ vec4 q=uCShadowMatrix*vec4(receiverWorld,1.);vec3 p=q.xyz/q.w;
  // Derivatives are taken before any divergent bounds branch.
  vec3 dx=dFdx(p),dy=dFdy(p);float det=dx.x*dy.y-dx.y*dy.x;
  vec2 slope=abs(det)>1e-12?vec2(dy.y*dx.z-dx.y*dy.z,dx.x*dy.z-dy.x*dx.z)/det:vec2(0.);
@@ -32,7 +38,7 @@ float cShadow(){
  // Bounded 0.6 mm receiver bias; avoids interpreting raster mismatch as pores.
  // This is shadow comparison tolerance, not a displacement of the skin mesh.
  vec3 towardLight=normalize(uCKeyPosition-vCWorld);
- vec4 biased=uCShadowMatrix*vec4(vCWorld+towardLight*.0006,1.);
+ vec4 biased=uCShadowMatrix*vec4(receiverWorld+towardLight*.0006,1.);
  float bias=max(.000015,p.z-biased.z/biased.w);
  // Filter comparison coverage, not raw depth or the skin image.
  // 3x3 tent with four bilinear texel comparisons per tap: 36 reads total.
@@ -54,15 +60,15 @@ float cPores(vec2 mm){vec2 p=mm/.42,cell=floor(p),f=fract(p);float h=0.;
 `;
 export function installCineSkin(viewer){
  const mat=viewer.skin.material,previous=mat.onBeforeCompile,key=mat.customProgramCacheKey.bind(mat),rig=viewer.cineRig;
- const U={...rig.U,uCSkin:{value:1},uCPores:{value:1.05},uCMeso:{value:.75},uCSpecular:{value:.75},uCLobe:{value:.3},uCRough:{value:.035},uCFuzz:{value:.07},uCInspect:{value:0}};
+ const U={...rig.U,uCReceiverNormalBias:{value:0.001500},uCSkin:{value:1},uCPores:{value:1.05},uCMeso:{value:.75},uCSpecular:{value:.75},uCLobe:{value:.3},uCRough:{value:.035},uCFuzz:{value:.07},uCInspect:{value:0}};
  const report={compiled:0,method:'weighted dual GGX + specular microdetail + bounded sheen, existing RGB diffusion',newSkinTextures:0,cinemaRendererPort:false};
  const patch=(text,a,b)=>{if(text.split(a).length!==2)throw Error('ET20 shader anchor changed: '+a.slice(0,100));return text.replace(a,()=>b);};
  mat.sheen=1;mat.sheenColor.setRGB(1,1,1);mat.sheenRoughness=.8;
- mat.customProgramCacheKey=()=>key()+'/ET20-dualGGX-shadow-bilinear-tent-v3';
+ mat.customProgramCacheKey=()=>key()+'/ET20-dualGGX-shadow-curved-receiver-v4';
  mat.onBeforeCompile=shader=>{
   previous(shader);Object.assign(shader.uniforms,U);report.compiled++;
-  shader.vertexShader='varying vec3 vCWorld;\n'+shader.vertexShader;
-  shader.vertexShader=patch(shader.vertexShader,'#include <project_vertex>','#include <project_vertex>\nvCWorld=(modelMatrix*vec4(transformed,1.)).xyz;');
+  shader.vertexShader='varying vec3 vCWorld,vCShadowNormal;\n'+shader.vertexShader;
+  shader.vertexShader=patch(shader.vertexShader,'#include <project_vertex>','#include <project_vertex>\nvCWorld=(modelMatrix*vec4(transformed,1.)).xyz;vCShadowNormal=inverseTransformDirection(transformedNormal,viewMatrix);');
   // fHash is declared by inherited face code; place helpers after that declaration.
   shader.fragmentShader=patch(shader.fragmentShader,'vec3 fEyeColor(){',declarations+'\nvec3 fEyeColor(){');
   shader.fragmentShader=patch(shader.fragmentShader,'(fData.r-.5)*.000032*uFDetail','(fData.r-.5)*.000032*uFDetail*mix(1.,uCPores,uCSkin)');

@@ -1,16 +1,16 @@
 {
   "schema": "kaopu/cinematic-build@1",
-  "version": "ET20-CINE-R01",
+  "version": "ET20-CINE-R01.1",
   "idleBase": "be54aaa728f8f4ffd22786b82cfa3f8efbd99b11",
-  "sourceCommit": "8cf2fc0f297602600cb6ed4c6bd4452a0aab0df2",
+  "sourceCommit": "cdb27baae71bb51af1f176ac67ef9c2ecf0c44eb",
   "userBaseline": "be54aaa728f8f4ffd22786b82cfa3f8efbd99b11",
   "baselineLipSHA256": "47f56c7be09005c8b1a0bea5b2eef37fdcdbb642a73f79d9e3b9e48c24364574",
   "lipProfileSchema": "kaopu/lip-structure@2",
   "baselineEyePreviewSHA256": "76d383193ae7212428cb72bc78b536e048039f1414dc26ce756d6b4ea6ff9352",
   "nativeAssetCommit": "0b4703359efbae10ffc6c0e5fe3fc081e7eca4fe",
   "faceAssetCommit": "02f596def9d07ebfc187e1eb18ad345a57c8a6b6",
-  "previewSHA256": "01695e430eb7c0f15f4fabc097b9046e04dcfedf9c506aaecb0929d5786e1237",
-  "previewBytes": 5073322,
+  "previewSHA256": "cdac65a5c84a7a79366cbb67e76cece5c126c255be685488863ef1294d89a667",
+  "previewBytes": 5073947,
   "oldPreviewUnchanged": true,
   "sourceIdentityUnchanged": true,
   "canonicalBuffersUnchanged": true,
@@ -19,18 +19,18 @@
   "sources": [
     {
       "path": "kaopu-unified-human-workbench/cinematic-r01/CineRig.mjs",
-      "bytes": 7411,
-      "sha256": "e8a7df337fed50afda305fe30132cdbaec54a26058c6151f7bd2f28221fbd505"
+      "bytes": 7482,
+      "sha256": "061d855596b9315201d0bdfa717f8924e89dfd5e2344666e94c04651014b5b8b"
     },
     {
       "path": "kaopu-unified-human-workbench/cinematic-r01/CineSkin.mjs",
-      "bytes": 8677,
-      "sha256": "2699e705468ce89867c7ed0fd815b2ffcd5776c2c5c710554a719f01c0e8c2e3"
+      "bytes": 9230,
+      "sha256": "9eb96a9f6e3514c69d25f606872162b013c1774659b783c697c2e9a5b611aa38"
     },
     {
       "path": "kaopu-unified-human-workbench/cinematic-r01/CineState.mjs",
-      "bytes": 3882,
-      "sha256": "c5320f6d8fbb7128a84221bb9e2a1275734e55effb5d18f41b678dbe5423381e"
+      "bytes": 3884,
+      "sha256": "652c6afd017f4615e6d8c66ba3d3f59091dae90dbc651f627b23cfdda50e3cd3"
     },
     {
       "path": "kaopu-unified-human-workbench/cinematic-r01/CineUI.mjs",
@@ -44,8 +44,8 @@
     },
     {
       "path": "kaopu-unified-human-workbench/cinematic-r01/build.cjs",
-      "bytes": 7208,
-      "sha256": "678ec0fbca7dffaebc7a6fd0779cc658c7700ff9f8d5c2abbe3fcdfd92ad82ee"
+      "bytes": 7259,
+      "sha256": "66ff8720f779c913e969b0d25f04b8b7452d300bde5bdda0d226c438e576be04"
     },
     {
       "path": "kaopu-unified-human-workbench/cinematic-r01/layout.css",
@@ -59,13 +59,13 @@
     },
     {
       "path": "kaopu-unified-human-workbench/cinematic-r01/verify.cjs",
-      "bytes": 12095,
-      "sha256": "75a31db02efd449df4a62152c91e8589d65c2e2115c9664c065d5974d712a2da"
+      "bytes": 13124,
+      "sha256": "2980b0d60ee30a1bf3275ff3212ec8cdc93c2e3158a50de4c85c9378f269a1d3"
     }
   ],
   "limitations": [
     "Original Three r170 WebGL rendering, not Karma/RenderMan or path tracing",
-    "RectAreaLight visibility uses one key-center depth projection with receiver-plane bilinear tent PCF (36 reads, 0.6mm comparison tolerance), not physically exact area shadows",
+    "RectAreaLight visibility uses one key-center depth projection with receiver-plane bilinear tent PCF (36 reads, 0.6mm light-direction tolerance and <= 1.5mm grazing normal lookup offset), not physically exact area shadows",
     "Three ACESFilmic is retained; no full ACES/OCIO pipeline",
     "Weighted dual specular lobes, pore relief and sheen are bounded approximations, not measured skin or actual vellus hair",
     "Inherited split-albedo screen-space RGB diffusion, not random-walk volume scattering",
