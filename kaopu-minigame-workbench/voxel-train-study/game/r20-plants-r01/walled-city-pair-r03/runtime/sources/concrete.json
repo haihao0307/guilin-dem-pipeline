@@ -1,0 +1,30 @@
+{
+  "revision": "KST1-surfaces-2",
+  "sourcePath": "r20-plants-r01/street/materials.mjs",
+  "sha256": "4f427344d7c37b7fb80074e5d132a49c877280321a6a0d12083991ce06db85e5",
+  "sourceBranch": "ST_FAMILY == 0 || ST_FAMILY == 8",
+  "preserved": "macro/patch/fine/chip/height/color/roughness coefficients; source stHash/stNoise equals existing FH88 mt_kh/mt_kn translated closure",
+  "newBindings": "horizontal floor maintenance coordinates; shared station age/wet/repair; original source height now also drives real solid distance",
+  "limits": "not independent historical concrete measurement; GPU equivalence to original GLSL not yet established",
+  "copiedAdapterSHA256": "e0eb596c2d3b38526c2bcecadb2baa10b197e8cf9669fab37c9654cdad3f1d5d",
+  "cityBinding": {
+    "materialId": 9,
+    "appliesTo": [
+      "solid floors and ceilings",
+      "stairs",
+      "half-level landings",
+      "balconies",
+      "roof slabs",
+      "borrowed-link decks"
+    ],
+    "notAppliedTo": "exterior ground remains existing materialId6 slate",
+    "coordinates": "one metre local floor domain (p.x-floor.cx,p.y-floor.base,p.z-floor.front), not normalized per step",
+    "physicalState": "same age/wet/repair and coordinates in distance and PBR",
+    "heightRangeMetres": [
+      -0.00091,
+      0.00021
+    ],
+    "wetnessLimit": "current floor state constant .06; detailed use/cleaning/rain redistribution not yet implemented",
+    "visualAcceptance": false
+  }
+}
