@@ -1,4 +1,4 @@
-name: Train88 bounded bureau same-game verification
+name: Train88 isolated bureau query partition
 on:
   push:
     branches: ['qa/train88-kowloon-function-r01-20261012']
@@ -10,25 +10,20 @@ permissions:
 jobs:
   query-experiments:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
           sparse-checkout: kaopu-minigame-workbench/voxel-train-study
-      - name: Emit and test separate original-field candidates
+      - name: Emit exact bureau closures and step partition
         working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01
         run: |
-          node emit-shader-inputs.mjs >/dev/null
-          node ../bureau-train88-r01/emit-shader-inputs.mjs >/dev/null
-          node emit-geometry-groups.mjs >/dev/null
-          node emit-group-runtime.mjs >/dev/null
-          node experiments/spatial-query-r01/emit.mjs
-          node experiments/spatial-query-r01/emit-flat.mjs
-          node experiments/compact-trace-r01/emit-contracts.mjs
-          node experiments/compact-trace-r01/emit.mjs
-          node --test experiments/spatial-query-r01/*.test.mjs experiments/candidate-storage-r01/*.test.mjs experiments/compact-trace-r01/*.test.mjs qa/bounded-browser.test.mjs qa/shader-closure.test.mjs qa/group-runtime.test.mjs qa/group-ray-stages.test.mjs qa/compact-host.test.mjs qa/bureau-host.test.mjs
-      - name: Compile pinned Naga and all exact compact runtime entries
+          node experiments/bureau-query-r01/emit.mjs
+          node --check experiments/bureau-query-r01/probe.mjs
+          node --check experiments/bureau-query-r01/run.cjs
+          node --test experiments/bureau-query-r01/contract.test.mjs qa/bounded-browser.test.mjs
+      - name: Compile pinned Naga and six diagnostic entries
         working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/compiler
         run: |
           python - <<'PYLOCK'
@@ -37,39 +32,22 @@ jobs:
           assert p['version']=='27.0.3' and p['checksum']=='066cf25f0e8b11ee0df221219010f213ad429855f57c494f995590c861a9a7d8'
           PYLOCK
           cargo build --release --locked
-          for i in $(seq 0 11); do
-            target/release/kaopu-station-shader-bridge ../experiments/compact-trace-r01/generated/runtime-$i.wgsl ../experiments/compact-trace-r01/generated/runtime-$i.frag stationCompactQuery
-          done
-          for variant in advance-full advance-compact; do
-            target/release/kaopu-station-shader-bridge ../experiments/compact-trace-r01/generated/$variant.wgsl ../experiments/compact-trace-r01/generated/$variant.frag advanceGroupedRays
-          done
-          target/release/kaopu-station-shader-bridge ../experiments/compact-trace-r01/generated/merge-contract.wgsl ../experiments/compact-trace-r01/generated/merge-contract.frag mergeContract
-          for i in $(seq 0 11); do
-            target/release/kaopu-station-shader-bridge ../generated/group-runtime-$i.wgsl ../generated/group-runtime-$i.frag stationGroupQuery
-          done
-          for pair in 'group-init initializeGroupedRays' 'group-advance advanceGroupedRays' 'group-normal-pack packGroupedGeometry' 'matter recordMatter'; do
+          for pair in 'reference geometryProbe' 'points geometryProbe' 'loop stepRays' 'query queryBureauRays' 'init initializeBureauRays' 'advance advanceBureauRays'; do
             read -r stage entry <<< "$pair"
-            target/release/kaopu-station-shader-bridge ../generated/$stage.wgsl ../generated/$stage.frag "$entry"
-          done
-          for pair in 'step stepRays' 'glass transmitGlass' 'normal recordGeometry' 'matter recordMatter'; do
-            read -r stage entry <<< "$pair"
-            target/release/kaopu-station-shader-bridge ../../bureau-train88-r01/generated/$stage.wgsl ../../bureau-train88-r01/generated/$stage.frag "$entry"
+            target/release/kaopu-station-shader-bridge ../experiments/bureau-query-r01/generated/$stage.wgsl ../experiments/bureau-query-r01/generated/$stage.frag "$entry"
           done
       - name: Install pinned official browser QA runner
         run: |
           npm install --prefix "$RUNNER_TEMP/station-bridge" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
-      - name: Ordered group merge and original advance versus compact consumer
-        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/compact-trace-r01/contracts-run.cjs
-      - name: Small same-game bureau views and return to original driving
-        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/bureau-host.cjs
+      - name: Isolated query then loop, bounded cold and warm diagnostics
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/bureau-query-r01/run.cjs
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: train88-query-experiments-${{ github.sha }}
           path: |
-            train88-compact-contract-results/
-            train88-bureau-host-results/
-            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/compact-trace-r01/generated/
+            train88-bureau-query-results/
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/bureau-query-r01/generated/
           retention-days: 7
