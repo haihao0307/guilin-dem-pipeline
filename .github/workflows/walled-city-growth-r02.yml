@@ -1,13 +1,13 @@
-name: Walled city 24-building native WebGPU function candidate
+name: Walled city precise bound identity regression
 on:
   push:
     branches: ['qa/walled-city-growth-r02-20261011']
 permissions:
   contents: read
 jobs:
-  same-world-material-and-cut-review:
+  sparse-macro-reference:
     runs-on: ubuntu-24.04
-    timeout-minutes: 55
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -18,40 +18,14 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/wgpu" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/wgpu/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/wgpu/node_modules" >> "$GITHUB_ENV"
-      - name: Validate shared shape, source and actual failed-ray fixes
+      - name: Compare bounded and unaccelerated same geometry queries
         run: |
-          node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/qa/source.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/compiler/query.test.mjs
-          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/qa/trace-probe.cjs
-          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/qa/build-route-probes.mjs
-      - name: Render fixed-camera material comparisons before whole views
-        run: |
-          mkdir -p "$RUNNER_TEMP/city-review"
-          (
-            set +e
-            node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/qa/material-review.cjs > "$RUNNER_TEMP/city-review/log" 2>&1
-            echo "$?" > "$RUNNER_TEMP/city-review/exit"
-          ) </dev/null >/dev/null 2>&1 &
-          for i in $(seq 1 180); do
-            if [ -f walled-city-growth-r02-results/crops-complete.json ]; then break; fi
-            if [ -f "$RUNNER_TEMP/city-review/exit" ]; then cat "$RUNNER_TEMP/city-review/log"; exit 1; fi
-            sleep 5
-          done
-          cat "$RUNNER_TEMP/city-review/log"
-          test -f walled-city-growth-r02-results/crops-complete.json
-      - name: Save same-pixel original-stone comparisons immediately
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-        with:
-          name: city-material-comparisons-${{ github.sha }}
-          path: walled-city-growth-r02-results/
-          retention-days: 7
-      - name: Await same-world street and X-Z section review
-        run: |
-          while [ ! -f "$RUNNER_TEMP/city-review/exit" ]; do sleep 5; done
-          cat "$RUNNER_TEMP/city-review/log"
-          exit "$(cat "$RUNNER_TEMP/city-review/exit")"
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/qa/bounds/build-reference.mjs
+          node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/qa/bounds/reference.test.mjs
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/qa/bounds/run.cjs
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: city-same-world-review-${{ github.sha }}
+          name: city-bound-identity-${{ github.sha }}
           path: walled-city-growth-r02-results/
           retention-days: 7
