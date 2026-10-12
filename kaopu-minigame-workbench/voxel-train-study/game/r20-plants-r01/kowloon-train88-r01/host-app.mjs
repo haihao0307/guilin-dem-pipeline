@@ -47,7 +47,7 @@ function syncProjection(input){const w=wrap.clientWidth,h=wrap.clientHeight,p=Ar
 function resize(input){const w=wrap.clientWidth,h=wrap.clientHeight;qualityInfo=qualityBounds({mode:qualityMode,dpr:devicePixelRatio,width:w,height:h,maxBufferSize:gl.getParameter(gl.MAX_RENDERBUFFER_SIZE)});maxRenderRatio=qualityInfo.max;minRenderRatio=qualityInfo.min;renderRatio=qualityInfo.initial;frameMs=33;qualityFrames=0;previousQualityActive=false;renderer.setPixelRatio(renderRatio);renderer.setSize(w,h,false);lastCanvasSize=[w,h];projectionKey='';syncProjection(input);needsRender=true;}
 new ResizeObserver(resize).observe(wrap);
 function command(type,value){const result=game.command(type,value);if(result.accepted)journeyMusic.update(game.view());needsRender=true;if(!result.accepted&&type==='station-action')say('先停稳，让车门落在站台范围内。');return result;}
-let viewControls;let stationReceiver=null,bridgeTestCamera=null;
+let viewControls;let stationReceiver=null,bridgeTestCamera=params.get('bridgeView')==='station'?{eye:[-130,48.25,91],target:[-28,10.25,-1]}:null;
 try{stationReceiver=await createFunctionReceiver({renderer,scene,atmosphere,testResolution:params.has('bridgeQA')?[Number(params.get('bridgeWidth')||48),Number(params.get('bridgeHeight')||32)]:null});}catch(e){console.error('Kowloon function initialization failed',e);$('loading').textContent='九龙站函数加载失败：'+e.message;throw e;}
 
 function resetView(){if(viewControls?.manual())return;manualCamera=null;if(viewControls)viewControls.resetForSession();else{camera.position.copy(widePosition);cameraTarget.copy(wideTarget);camera.lookAt(cameraTarget);}needsRender=true;}
@@ -182,4 +182,4 @@ $('photoMode').addEventListener('click',()=>{if(game.started&&game.phase!=='summ
 $('photoCamera').addEventListener('click',()=>initSettingsUI()?.open());
 $('photoReturn').addEventListener('click',()=>{$('driverGame').dataset.photo='false';$('photoTools').hidden=true;$('pauseScreen').hidden=!game.paused;needsRender=true;});
 
-if(params.has('bridgeQA'))window.__stationBridgeQA={camera:(eye,target)=>{bridgeTestCamera={eye,target};draw(game.view(),1,true);return stationReceiver.proof;},render:()=>{draw(game.view(),1,true);return stationReceiver.proof;}};
+if(params.has('bridgeQA'))window.__stationBridgeQA={camera:(eye,target)=>{bridgeTestCamera={eye,target};draw(game.view(),1,true);return stationReceiver.proof;},render:()=>{draw(game.view(),1,true);return stationReceiver.proof;},driveTicks:(ticks)=>{game.command('start');game.command('pause',false);game.command('throttle-up');for(let i=0;i<ticks;i++)game.advance(1/30);game.command('pause',true);draw(game.view(),1,true);return window.__trainDriver.getState();}};

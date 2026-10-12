@@ -41,13 +41,13 @@ export const MATTER_HEADER=String.raw`
 @group(1)@binding(3)var normalInput:texture_2d<f32>;
 `;
 export const MATTER_ENTRY=String.raw`
-struct MatterRecord{@location(0)albedoRoughness:vec4<f32>,@location(1)response:vec4<f32>,}
+struct MatterRecord{@location(0)albedoRoughness:vec4<f32>,@location(1)response:vec4<f32>,@location(2)finish:vec4<f32>,}
 @fragment fn recordMatter(@builtin(position)pixel:vec4<f32>)->MatterRecord{
- let ij=vec2<i32>(pixel.xy);let tr=textureLoad(traceInput,ij,0);if(tr.w!=1.){return MatterRecord(vec4<f32>(0.),vec4<f32>(0.));}
+ let ij=vec2<i32>(pixel.xy);let tr=textureLoad(traceInput,ij,0);if(tr.w!=1.){return MatterRecord(vec4<f32>(0.),vec4<f32>(0.),vec4<f32>(0.));}
  let a=textureLoad(qSeedInput,ij,0);let b=textureLoad(extentInput,ij,0);let c=textureLoad(normalInput,ij,0);let ray=hostRay(pixel.xy);let p=ray[0]+ray[1]*tr.x;
  let h=HitField(c.w,u32(tr.y),a.xyz,a.w,c.w,b.xyz,b.w);let fp=max(.00001,tr.x*2.*u.fov/frame.viewport.y);let m=evaluateStationMatter(h,p,c.xyz,fp);
  var albedo=m.surface.albedo;var rough=m.surface.roughness;
  if(h.id==7u){albedo=vec3<f32>(.82,.77,.62);rough=.3;}if(h.id==8u){albedo=vec3<f32>(.025,.031,.028);rough=.35;}if(h.id==9u){albedo=vec3<f32>(.045,.105,.075);rough=.27;}
- return MatterRecord(vec4<f32>(albedo,rough),vec4<f32>(m.metal,m.cavity,m.specular,m.microHeight));
+ return MatterRecord(vec4<f32>(albedo,rough),vec4<f32>(m.metal,m.cavity,m.specular,m.microHeight),vec4<f32>(m.clearcoat,m.clearcoatRoughness,m.parallaxHeight01,0.));
 }
 `;
