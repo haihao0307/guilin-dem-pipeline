@@ -1,4 +1,4 @@
-name: Train88 bureau round-trip driving and brake recovery
+name: Train88 isolated active query domain equivalence and cost
 on:
   push:
     branches: ['qa/train88-kowloon-function-r01-20261012']
@@ -29,9 +29,10 @@ jobs:
           node experiments/compact-trace-r01/emit-contracts.mjs
           node experiments/compact-trace-r01/emit.mjs
           node experiments/bureau-query-r01/emit.mjs
-          node --check qa/bureau-host.cjs
+          node --check experiments/active-query-r01/run.cjs
+          node --check experiments/active-query-r01/probe.mjs
           node --check ../bureau-train88-r01/function-receiver.mjs
-          node --test experiments/spatial-query-r01/*.test.mjs experiments/candidate-storage-r01/*.test.mjs experiments/compact-trace-r01/*.test.mjs qa/bounded-browser.test.mjs qa/shader-closure.test.mjs qa/group-runtime.test.mjs qa/group-ray-stages.test.mjs qa/compact-host.test.mjs qa/bureau-host.test.mjs qa/bureau-readback.test.mjs qa/session-recovery.test.mjs experiments/bureau-query-r01/contract.test.mjs ../bureau-train88-r01/qa/*.test.mjs
+          node --test experiments/active-query-r01/*.test.mjs experiments/spatial-query-r01/*.test.mjs experiments/candidate-storage-r01/*.test.mjs experiments/compact-trace-r01/*.test.mjs qa/bounded-browser.test.mjs qa/shader-closure.test.mjs qa/group-runtime.test.mjs qa/group-ray-stages.test.mjs qa/compact-host.test.mjs qa/bureau-host.test.mjs qa/bureau-readback.test.mjs qa/session-recovery.test.mjs experiments/bureau-query-r01/contract.test.mjs ../bureau-train88-r01/qa/*.test.mjs
       - name: Compile pinned Naga and all exact compact runtime entries
         working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/compiler
         run: |
@@ -51,34 +52,21 @@ jobs:
           for i in $(seq 0 11); do
             target/release/kaopu-station-shader-bridge ../generated/group-runtime-$i.wgsl ../generated/group-runtime-$i.frag stationGroupQuery
           done
-          for pair in 'group-init initializeGroupedRays' 'group-advance advanceGroupedRays' 'group-normal-pack packGroupedGeometry' 'matter recordMatter'; do
-            read -r stage entry <<< "$pair"
-            target/release/kaopu-station-shader-bridge ../generated/$stage.wgsl ../generated/$stage.frag "$entry"
-          done
-          for pair in 'step stepRays' 'glass transmitGlass' 'normal recordGeometry' 'matter recordMatter'; do
-            read -r stage entry <<< "$pair"
-            target/release/kaopu-station-shader-bridge ../../bureau-train88-r01/generated/$stage.wgsl ../../bureau-train88-r01/generated/$stage.frag "$entry"
-          done
-          for pair in 'query queryBureauRays' 'init initializeBureauRays' 'advance advanceBureauRays' 'glass-init initializeBureauGlass' 'glass-advance advanceBureauGlass' 'glass-terminal-query queryBureauGlassTerminal' 'glass-pack packBureauGlass' 'normal-sample sampleBureauNormal' 'normal-pack packBureauNormals'; do
-            read -r stage entry <<< "$pair"
-            target/release/kaopu-station-shader-bridge ../experiments/bureau-query-r01/generated/$stage.wgsl ../experiments/bureau-query-r01/generated/$stage.frag "$entry"
-          done
+          target/release/kaopu-station-shader-bridge ../generated/group-init.wgsl ../generated/group-init.frag initializeGroupedRays
       - name: Install pinned official browser QA runner
         run: |
           npm install --prefix "$RUNNER_TEMP/station-bridge" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
-      - name: Ordered group merge and original advance versus compact consumer
-        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/compact-trace-r01/contracts-run.cjs
-      - name: Same-session bureau warehouse conveyor and driving return
-        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/bureau-host.cjs
+      - name: Isolated original and bounded same-query traces, interleaved warm timings
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/active-query-r01/run.cjs
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: train88-query-experiments-${{ github.sha }}
           path: |
-            train88-compact-contract-results/
-            train88-bureau-host-results/
+            train88-active-query-results/
             kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/compact-trace-r01/generated/
-            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/bureau-query-r01/generated/
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/generated/group-init*
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/active-query-r01/
           retention-days: 7
