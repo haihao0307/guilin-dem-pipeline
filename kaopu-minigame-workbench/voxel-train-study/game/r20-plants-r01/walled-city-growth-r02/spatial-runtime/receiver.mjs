@@ -13,6 +13,33 @@ struct HitRecord { ray:vec4<f32>,local:vec4<f32>,ids:vec4<u32>,normal:vec4<f32>,
 @group(0) @binding(3) var<storage,read_write> hits:array<HitRecord,256>;
 struct RetryQueue {count:atomic<u32>,indices:array<u32,256>}
 @group(0) @binding(4) var<storage,read_write> retry:RetryQueue;
+
+@group(0) @binding(5) var<storage,read_write> normalSamples:array<f32,1024>;
+@group(0) @binding(6) var<storage,read_write> shadingSamples:array<vec4<f32>,256>;
+fn normalDirection(i:u32)->vec3<f32>{let v=array<vec3<f32>,4>(vec3<f32>(1.,-1.,-1.),vec3<f32>(-1.,-1.,1.),vec3<f32>(-1.,1.,-1.),vec3<f32>(1.,1.,1.));return v[i];}
+@compute @workgroup_size(8,8) fn sampleNormals(@builtin(global_invocation_id) gid:vec3<u32>){
+ if(any(gid.xy>=u.tile.zw)||gid.z>=4u){return;}let idx=gid.y*16u+gid.x;let h=hits[idx];normalSamples[idx*4u+gid.z]=0.;if(h.ray.w!=1.||h.normal.w==1.){return;}
+ let rd=cameraRay(vec2<f32>(u.tile.xy+gid.xy)+vec2<f32>(.5));let p=u.eye.xyz+rd*h.ray.x;let ep=clamp(footprint(p,h.normal.xyz,rd)*.32,.00008,.035);
+ normalSamples[idx*4u+gid.z]=sceneField(p+normalDirection(gid.z)*ep).d;
+}
+fn gatheredNormal(idx:u32)->vec3<f32>{var sum=vec3<f32>(0.);for(var i=0u;i<4u;i++){let term=normalDirection(i)*normalSamples[idx*4u+i];if(i==0u){sum=term;}else{sum=sum+term;}}return normalize(sum);}
+fn macroVisibility(p:vec3<f32>,n:vec3<f32>,ld:vec3<f32>)->vec2<f32>{
+ var t=.045;var shade=1.;for(var i=0;i<64;i++){let q=p+n*.012+ld*t;let h=querySettlement(q,80.);var d=h.d;if(u.cut.w<500.){d=min(max(d,dot(q,u.cut.xyz)-u.cut.w),q.y);}
+  if(h.materialId==5u){t+=.06;shade*=.94;}else{
+   if(d<.004&&h.materialId>0u){return vec2<f32>(.10,0.);}
+   // A conservative envelope is a STEP bound only. It is never a soft-shadow distance.
+   if(h.materialId>0u){shade=min(shade,8.*max(d,.002)/t);}t+=clamp(abs(d)*.7,.025,2.5);
+  }
+  if(t>65.){return vec2<f32>(clamp(shade,.10,1.),0.);}
+ }
+ return vec2<f32>(-1.,1.);
+}
+@compute @workgroup_size(8,8) fn geometryVisibility(@builtin(global_invocation_id) gid:vec3<u32>){
+ if(any(gid.xy>=u.tile.zw)){return;}let idx=gid.y*16u+gid.x;let h=hits[idx];shadingSamples[idx]=vec4<f32>(0.,1.,0.,1.);if(h.ray.w!=1.){return;}
+ var n=normalize(u.cut.xyz);if(h.normal.w==0.){n=gatheredNormal(idx);}let rd=cameraRay(vec2<f32>(u.tile.xy+gid.xy)+vec2<f32>(.5));let p=u.eye.xyz+rd*h.ray.x;let light=normalize(vec3<f32>(-3.,7.,-4.));
+ if(dot(n,light)<=0.){shadingSamples[idx]=vec4<f32>(n,1.);return;}atomicAdd(&stats.boundOnly,1u);let visibility=macroVisibility(p,n,light);if(visibility.y>0.){atomicAdd(&stats.reserved,1u);}shadingSamples[idx]=vec4<f32>(n,visibility.x);
+}
+
 fn cameraRay(pixel:vec2<f32>)->vec3<f32>{let uv=(pixel/u.size.xy*2.-vec2<f32>(1.))*vec2<f32>(u.size.x/u.size.y,-1.);return normalize(u.forward.xyz+(u.right.xyz*uv.x+u.up.xyz*uv.y)*u.forward.w);}
 fn footprint(p:vec3<f32>,n:vec3<f32>,rd:vec3<f32>)->f32{return max(.00005,length(p-u.eye.xyz)*2.*u.forward.w/u.size.y/max(.18,abs(dot(n,-rd))));}
 fn packSample(f:SettlementField,t:f32,steps:u32,status:u32,glass:vec4<f32>,through:vec4<f32>)->HitRecord{return HitRecord(vec4<f32>(t,f.geo.d,f32(steps),f32(status)),vec4<f32>(f.geo.q,f32(f.geo.objectId)),vec4<u32>(f.geo.materialId,f.geo.buildingId,f.geo.componentId,f.geo.stateId),vec4<f32>(f.geo.n,f32(f.sectionCap)),glass,through);}
@@ -41,12 +68,12 @@ fn trace(ro:vec3<f32>,rd:vec3<f32>,startT:f32,startSteps:u32,budget:u32,oldGlass
 }
 @compute @workgroup_size(8,8) fn finalizeMain(@builtin(global_invocation_id) gid:vec3<u32>){if(any(gid.xy>=u.tile.zw)){return;}let h=hits[gid.y*16u+gid.x];atomicMax(&stats.maximumSteps,u32(h.ray.z));if(h.ray.w==1.){atomicAdd(&stats.hit,1u);}else if(h.ray.w==0.){atomicAdd(&stats.miss,1u);}else{atomicAdd(&stats.exhausted,1u);}}
 fn sky(rd:vec3<f32>)->vec3<f32>{return mix(vec3<f32>(.63,.65,.62),vec3<f32>(.19,.32,.43),smoothstep(-.15,.9,rd.y));}
-fn fieldNormal(p:vec3<f32>,rd:vec3<f32>,baseN:vec3<f32>)->vec3<f32>{let e=clamp(footprint(p,baseN,rd)*.32,.00008,.035);let a=vec3<f32>(1,-1,-1);let b=vec3<f32>(-1,-1,1);let c=vec3<f32>(-1,1,-1);let d=vec3<f32>(1,1,1);return normalize(a*sceneField(p+a*e).d+b*sceneField(p+b*e).d+c*sceneField(p+c*e).d+d*sceneField(p+d*e).d);}
+fn fieldNormal(p:vec3<f32>,rd:vec3<f32>,baseN:vec3<f32>)->vec3<f32>{let e=clamp(footprint(p,baseN,rd)*.32,.00008,.035);let offsets=array<vec3<f32>,4>(vec3<f32>(1,-1,-1),vec3<f32>(-1,-1,1),vec3<f32>(-1,1,-1),vec3<f32>(1,1,1));var gradient=vec3<f32>(0.);for(var i=0;i<4;i++){let axis=offsets[i];let weighted=axis*sceneField(p+axis*e).d;if(i==0){gradient=weighted;}else{gradient=gradient+weighted;}}return normalize(gradient);}
 fn macroShadow(p:vec3<f32>,n:vec3<f32>,ld:vec3<f32>)->f32{
  var t=.045;var shade=1.;for(var i=0;i<64;i++){let q=p+n*.012+ld*t;let h=querySettlement(q,80.);var d=h.d;if(u.cut.w<500.){d=min(max(d,dot(q,u.cut.xyz)-u.cut.w),q.y);}if(h.materialId==5u){t+=.06;shade*=.94;continue;}if(d<.004&&h.materialId>0u){return .10;}shade=min(shade,8.*max(d,.002)/t);t+=clamp(abs(d)*.7,.025,2.5);if(t>65.){break;}}return clamp(shade,.10,1.);
 }
-fn shade(p:vec3<f32>,rd:vec3<f32>,h:GeoHit,cap:u32)->vec3<f32>{
- var n=normalize(u.cut.xyz);if(cap==0u){n=fieldNormal(p,rd,h.n);}let fp=footprint(p,n,rd);let m=sceneMaterial(h,p,n,fp,cap);let ld=normalize(vec3<f32>(-3.,7.,-4.));let sh=macroShadow(p,n,ld);let nl=max(dot(n,ld),0.);let ndv=max(dot(n,-rd),.01);let halfV=normalize(ld-rd);let ndh=max(dot(n,halfV),0.);let vh=max(dot(-rd,halfV),0.);let rough=max(.09,m.surface.roughness);let alpha=rough*rough;let a2=alpha*alpha;let den=ndh*ndh*(a2-1.)+1.;let D=a2/max(3.14159265*den*den,.0001);let k=(rough+1.)*(rough+1.)/8.;let G=nl/(nl*(1.-k)+k)*ndv/(ndv*(1.-k)+k);let F0=mix(vec3<f32>(.04),m.surface.albedo,m.metal);let F=F0+(vec3<f32>(1.)-F0)*pow(1.-vh,5.);let spec=D*G*F/max(4.*nl*ndv,.001)*m.specular;
+fn shade(p:vec3<f32>,rd:vec3<f32>,h:GeoHit,cap:u32,prepared:vec4<f32>)->vec3<f32>{
+ let n=prepared.xyz;let fp=footprint(p,n,rd);let m=sceneMaterial(h,p,n,fp,cap);let ld=normalize(vec3<f32>(-3.,7.,-4.));let sh=prepared.w;let nl=max(dot(n,ld),0.);let ndv=max(dot(n,-rd),.01);let halfV=normalize(ld-rd);let ndh=max(dot(n,halfV),0.);let vh=max(dot(-rd,halfV),0.);let rough=max(.09,m.surface.roughness);let alpha=rough*rough;let a2=alpha*alpha;let den=ndh*ndh*(a2-1.)+1.;let D=a2/max(3.14159265*den*den,.0001);let k=(rough+1.)*(rough+1.)/8.;let G=nl/(nl*(1.-k)+k)*ndv/(ndv*(1.-k)+k);let F0=mix(vec3<f32>(.04),m.surface.albedo,m.metal);let F=F0+(vec3<f32>(1.)-F0)*pow(1.-vh,5.);let spec=D*G*F/max(4.*nl*ndv,.001)*m.specular;
  let openSky=select(sourceSky(h),1.,cap==1u);let hemi=.04+openSky*(.20+.16*max(n.y,0.));let reflected=m.surface.albedo*(hemi+(1.-m.metal)*nl*sh*1.25)*m.cavity+spec*nl*sh*1.7;
  // Complete original wood sample channels are retained; no cloned shader override.
  let clear=m.coat*.04*pow(max(dot(reflect(-ld,n),-rd),0.),mix(100.,6.,m.coatRough))*sh;
@@ -56,7 +83,7 @@ struct Frag { @location(0) color:vec4<f32>, @builtin(frag_depth) depth:f32 }
 @vertex fn vs(@builtin(vertex_index) i:u32)->@builtin(position) vec4<f32>{let a=array<vec2<f32>,3>(vec2<f32>(-1.,-1.),vec2<f32>(3.,-1.),vec2<f32>(-1.,3.));return vec4<f32>(a[i],0.,1.);}
 @fragment fn fs(@builtin(position) pixel:vec4<f32>)->Frag{
  let localPixel=vec2<u32>(pixel.xy)-u.tile.xy;let r=hits[localPixel.y*16u+localPixel.x];let rd=cameraRay(pixel.xy);var c=sky(rd);var depth=1.;
- if(r.ray.w==2.){return Frag(vec4<f32>(1.,0.,1.,1.),.99999);}if(r.ray.w==1.){let p=u.eye.xyz+rd*r.ray.x;let g=fromRecord(r);c=shade(p,rd,g,u32(r.normal.w));let z=dot(p-u.eye.xyz,u.forward.xyz);depth=clamp(220./219.9-22./(219.9*max(z,.1)),0.,1.);if(u.controls.x==1.){c=g.n*.5+vec3<f32>(.5);}if(u.controls.x==2.){c=vec3<f32>(fract(f32(g.materialId)*.37),fract(f32(g.materialId)*.57),fract(f32(g.materialId)*.79));}if(u.controls.x==3.){c=sceneMaterial(g,p,g.n,footprint(p,g.n,rd),u32(r.normal.w)).surface.albedo;}if(u.controls.x==4.){c=fieldNormal(p,rd,g.n)*.5+vec3<f32>(.5);}if(u.controls.x==5.){c=vec3<f32>(sourceSky(g));}}
+ if(r.ray.w==2.){return Frag(vec4<f32>(1.,0.,1.,1.),.99999);}if(r.ray.w==1.){let p=u.eye.xyz+rd*r.ray.x;let g=fromRecord(r);let prepared=shadingSamples[localPixel.y*16u+localPixel.x];if(prepared.w<0.){return Frag(vec4<f32>(1.,0.,1.,1.),.99999);}c=shade(p,rd,g,u32(r.normal.w),prepared);let z=dot(p-u.eye.xyz,u.forward.xyz);depth=clamp(220./219.9-22./(219.9*max(z,.1)),0.,1.);if(u.controls.x==1.){c=g.n*.5+vec3<f32>(.5);}if(u.controls.x==2.){c=vec3<f32>(fract(f32(g.materialId)*.37),fract(f32(g.materialId)*.57),fract(f32(g.materialId)*.79));}if(u.controls.x==3.){c=sceneMaterial(g,p,g.n,footprint(p,g.n,rd),u32(r.normal.w)).surface.albedo;}if(u.controls.x==4.){c=prepared.xyz*.5+vec3<f32>(.5);}if(u.controls.x==5.){c=vec3<f32>(sourceSky(g));}}
  if(r.glass.w>=0.){c=mix(c*r.through.xyz,sky(reflect(rd,r.glass.xyz)),r.glass.w);}
  c=c/(vec3<f32>(1.)+c);return Frag(vec4<f32>(pow(max(c,vec3<f32>(0.)),vec3<f32>(1./2.2)),1.),depth);
 }

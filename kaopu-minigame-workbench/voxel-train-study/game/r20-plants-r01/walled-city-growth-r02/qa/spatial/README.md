@@ -16,3 +16,11 @@ Runtime changes:
 Node static/source checks and local macro/body checks precede actual native WebGPU compilation. The runner separately records initialization, GPU-completed frame time, all-ray hit/miss/exhaustion, same-snapshot identity, finite sampled support/clearance and any conservative-bound comparison cases. Zero exhaustion or successful compilation does not imply visual acceptance or real-device speed.
 
 The two images are full-frame 480×320 internal render at 960×640 CSS: a Z section exposing actual uses and an X section exposing the rotated stair. These are inspection candidates inside the complete world, not a return to the rejected single room. No Pages deployment is part of this check.
+
+## Staged-shading correction after actual device loss
+
+Commit 44bb7d65 finished all pipelines in 131.8s and the first main-intersection tile in 1.42s, then lost the WebGPU device during the first combined shade. No complete frame exists for that commit. The adapted execution pattern comes from the user's verified bureau c54cccad / run38191438594, not from a new replacement renderer or imported geometry.
+
+Four original tetrahedral normal samples are now four independent invocations and store 4 floats/pixel. A separate macro-visibility compute stage gathers the same normal, and a pruned fragment stage only evaluates the existing material/PBR. Two fixed 4096-byte tile buffers are added. The final opaque hit already comes from the existing straight-glass trace; no duplicate glass geometry or new reflection model is introduced.
+
+Macro AABB distances are valid step bounds only. They no longer attenuate the soft-shadow value. Only actual macro surfaces may do that; a 64-step visibility exhaustion is explicit, counted and drawn magenta rather than silently reported as light. The shadow remains a macro-shape approximation, not a full microgeometry/global-illumination claim. The 32×32 smoke must complete with zero main/visibility unresolved rays before the expensive full sections are attempted.

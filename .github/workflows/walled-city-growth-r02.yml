@@ -28,7 +28,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/city-spatial"
           (
             set +e
-            node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/qa/spatial/run.cjs > "$RUNNER_TEMP/city-spatial/log" 2>&1
+            DEBUG=pw:browser node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-growth-r02/qa/spatial/run.cjs > "$RUNNER_TEMP/city-spatial/log" 2>&1
             echo "$?" > "$RUNNER_TEMP/city-spatial/exit"
           ) </dev/null >/dev/null 2>&1 &
           for i in $(seq 1 180); do
