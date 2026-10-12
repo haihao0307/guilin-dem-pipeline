@@ -26,6 +26,7 @@ jobs:
       - name: Install pinned matching official package
         timeout-minutes: 3
         run: |
+          df -h /dev/shm || true
           npm install --prefix "$RUNNER_TEMP/joey-native" --no-save --ignore-scripts playwright@1.57.0
           echo "NODE_PATH=$RUNNER_TEMP/joey-native/node_modules" >> "$GITHUB_ENV"
       - name: Verify full candidate with original public native engine
