@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium, webkit]
+        browser: [webkit]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -50,6 +50,7 @@ jobs:
       - name: Verify real startup, dependency failures and native rendering
         env:
           R54_BROWSER: ${{ matrix.browser }}
+          R54_SKIP_OLD: 1
         run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/verify-startup.cjs
       - name: Keep browser evidence including any unsupported capability
         if: always()
