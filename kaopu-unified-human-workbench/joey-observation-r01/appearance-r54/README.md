@@ -1,6 +1,6 @@
 # R54 appearance preview candidate
 
-This entry reuses the existing native human workbench's preserved pre-main-eyes page. It loads one frozen R52 artistic archive, verifies the native position SHA-256, and adds only the previously tested appearance adapters. No source photograph, observation targets, teacher model weights or additional human model is included. No old identity is loaded for comparison.
+This entry reuses the existing native human engine and the DOM of its preserved pre-main-eyes page, through a local host with one import map installed before modules run. It loads one frozen R52 artistic archive, verifies the native position SHA-256, and adds only the previously tested appearance adapters. No source photograph, observation targets, teacher model weights or additional human model is included. No old identity is loaded for comparison.
 
 The page is a static appearance candidate: the face is fixed; hair remains rough and short/long-layer continuity is not visually accepted; eyelid contact and likeness are not certified. Original R30 long strands remain, while R14.2 roots/current-skin collision and the R54 side-back mid-shaft adaptation supply coverage. This is not hair physics. Eye surface retains the original procedural iris; no Harvey images or whole eye-system replacement is used.
 
@@ -8,4 +8,4 @@ Source roots: R30 d689a5ee8bc5d493d2b43e7b6ea10dbea1868b15, R14.2 c40a86c92b2fe3
 
 The iframe hosts the same canonical 25,417-vertex model, with its UI reduced to a viewer. It does not embed a screenshot or generate a replacement person. Each camera remains perspective; original focal/shift matrices are reconstructed through PerspectiveCamera view offsets so resizing preserves their ratio.
 
-Test-only ?qa=native is restricted to hostname 127.0.0.1 and uses the same preserved host entry in the CI checkout. The public URL always uses the existing same-origin workbench. A load/hash error keeps the candidate concealed and displays the actual error instead of showing an unrelated default face.
+The local and public entry use the same native-host.html and same-origin native engine. Early script errors, actual native load stages and groom progress are visible. A 30-second deadline in the visible parent applies only to initial module stages; it does not time out model computation. A load/hash error keeps the candidate concealed and exposes a retry. Browser QA uses official Playwright 1.57.0 Chromium and WebKit on Ubuntu. A 390×844 viewport with DPR 3 is not an iPhone hardware test. Source-lock and release records distinguish the earlier release from this startup repair.
