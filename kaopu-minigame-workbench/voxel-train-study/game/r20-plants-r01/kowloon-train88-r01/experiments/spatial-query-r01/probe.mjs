@@ -1,6 +1,6 @@
 import{trafficControl}from'../compact-trace-r01/traffic-control.mjs';
 import{sentinel,inspectReadback,readMRT,createWriteControl}from'./readback-control.mjs';
-const selected=new URLSearchParams(location.search).get('variant');
+const query=new URLSearchParams(location.search),selected=query.get('variant'),grid=query.has('grid');
 if(!['reference','capacity','hierarchy','flat-hierarchy','compact-trace'].includes(selected))throw Error('Explicit isolated variant required');
 const report={variant:selected,status:'running',stage:'fetch',timings:[],comparisons:[],errors:[],scope:'original hall physical GeometryHit and source material identity, small samples only'};
 const send=async()=>{document.querySelector('#status').textContent=JSON.stringify({status:report.status,stage:report.stage});await window.__hierarchyReport(structuredClone(report));};
@@ -26,8 +26,8 @@ try{
  const fb=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,fb);const attachments=[];for(let i=0;i<attachmentCount;i++){const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.texStorage2D(gl.TEXTURE_2D,1,gl.RGBA32F,width,1);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0+i,gl.TEXTURE_2D,t,0);attachments.push(gl.COLOR_ATTACHMENT0+i);}gl.drawBuffers(attachments);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error('MRT incomplete');gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,input);gl.viewport(0,0,width,1);gl.disable(gl.DEPTH_TEST);gl.disable(gl.BLEND);gl.bindVertexArray(gl.createVertexArray());
  const control=createWriteControl(gl,vertex,width,attachmentCount);report.writeControlBefore=control();if(!report.writeControlBefore.passed)throw Error('Simple MRT control failed before field query');
  const same=(a,b)=>{const x=new Uint32Array(a.buffer),y=new Uint32Array(b.buffer);let mismatches=0,first=[];for(let i=0;i<width;i++)for(let c=0;c<13;c++)if(x[i*16+c]!==y[i*16+c]){mismatches++;if(first.length<10)first.push({point:i,label:manifest.labels[i],channel:c,left:a[i*16+c],right:b[i*16+c],leftBits:x[i*16+c],rightBits:y[i*16+c]});}return{mismatches,first};};
- for(const age of[.05])for(const mode of[0]){const previous={};for(let repeat=0;repeat<manifest.repeats;repeat++){const pair={};for(const name of[selected]){
-   await stage(`draw-${name}-${age}-${mode}-${repeat}`);const p=programs[name];report.uniformBits=Array.from(new Uint32Array(params(age,mode,width).buffer));gl.useProgram(p.program);gl.bindBuffer(gl.UNIFORM_BUFFER,p.buffer);gl.bufferSubData(gl.UNIFORM_BUFFER,0,params(age,mode,width));gl.bindBufferBase(gl.UNIFORM_BUFFER,0,p.buffer);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,input);
+ for(const age of(grid?manifest.ages:[.05]))for(const mode of(grid?manifest.skipModes:[0])){const previous={};for(let repeat=0;repeat<manifest.repeats;repeat++){const pair={};for(const name of[selected]){
+   await stage(`draw-${name}-${age}-${mode}-${repeat}`);const p=programs[name];report.uniformBits=Array.from(new Uint32Array(params(age,mode,width).buffer));report.stateUniformBits??={};report.stateUniformBits[age+'-'+mode]=report.uniformBits;gl.useProgram(p.program);gl.bindBuffer(gl.UNIFORM_BUFFER,p.buffer);gl.bufferSubData(gl.UNIFORM_BUFFER,0,params(age,mode,width));gl.bindBufferBase(gl.UNIFORM_BUFFER,0,p.buffer);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,input);
    for(let a=0;a<attachmentCount;a++)gl.clearBufferfv(gl.COLOR,a,sentinel(a));
    report.drawStartedAt=new Date().toISOString();const timer=timerExtension?gl.createQuery():null;const t=performance.now();if(timer)gl.beginQuery(timerExtension.TIME_ELAPSED_EXT,timer);gl.drawArrays(gl.TRIANGLES,0,3);if(timer)gl.endQuery(timerExtension.TIME_ELAPSED_EXT);gl.finish();const returned=performance.now();
    const drawError=gl.getError(),drawContextLost=gl.isContextLost(),{combined,errors:attachmentErrors,attachmentTimings}=readMRT(gl,width,attachmentCount);
@@ -43,6 +43,6 @@ try{
    if(previous[name]){const c=same(previous[name],combined);if(c.mismatches)throw Error('Same-state repeated field changed '+JSON.stringify(c));}else previous[name]=combined;
 
   }await send();}}
- if(selected==='compact-trace'){await stage('traffic-controls');report.trafficControls=trafficControl(gl,vertex);}
+ if(selected==='compact-trace'&&!grid){await stage('traffic-controls');report.trafficControls=trafficControl(gl,vertex);}
  report.programs=Object.fromEntries(Object.entries(programs).map(([n,p])=>[n,{compileAndLinkMs:p.compileAndLinkMs,draws:p.draws}]));report.status='isolated-field-and-warm-cost-measured';report.remaining=['full station visual acceptance','complete ray/normal/shadow integration','hardware interactive cost'];await stage('complete');
 }catch(error){report.status='failed';report.failure=error.stack||String(error);await send();}

@@ -43,8 +43,8 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/station-bridge" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
-      - name: Compact physical result equality and isolated render-target traffic cost
-        run: SPATIAL_VARIANTS=compact-trace node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/spatial-query-r01/run.cjs
+      - name: Three ages and three exclusion modes of full versus compact original field
+        run: SPATIAL_VARIANTS=reference,compact-trace SPATIAL_GRID=1 node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/spatial-query-r01/run.cjs
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
