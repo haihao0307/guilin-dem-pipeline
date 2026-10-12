@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-import {CooperativeScheduler,immutableSnapshot} from '../runtime/scheduler.mjs';
+import {CooperativeScheduler,immutableSnapshot,planCandidateBatches,candidateRoundWindows,CANDIDATE_STAGE_GROUPS,COUNTER_INTERVAL_ROUNDS} from '../runtime/scheduler.mjs';
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
 const deferred=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});return {promise,resolve,reject};};
 async function until(predicate){for(let i=0;i<100;i++){if(predicate())return;await tick();}assert.fail('mock scheduler did not reach expected checkpoint');}
@@ -65,10 +65,10 @@ test('paused callback can synchronously resume without losing the wake',async()=
  let s;let resumed=false;s=create({onState:state=>{if(state.active?.status==='paused'&&!resumed){resumed=true;s.resume();}}});s.pause();const job=s.enqueue(world(),ctx=>ctx.submit('stage',async()=>1));assert.equal((await job.done).status,'completed');assert.equal(resumed,true);
 });
 
-test('runtime wiring keeps single-stage completions, frozen time, isolated targets and a guarded final presentation',()=>{
+test('runtime wiring keeps bounded-batch completions, frozen time, isolated targets and a guarded final presentation',()=>{
  const code=fs.readFileSync(new URL('../runtime/app.mjs',import.meta.url),'utf8');
- assert.match(code,/import \{CooperativeScheduler\}/);assert.doesNotMatch(code,/requestAnimationFrame|setInterval|if\(busy\)/);
- assert.match(code,/hostSeconds:12\*3600/);assert.match(code,/await compute\(job,'geo'\+chunk/);assert.match(code,/await compute\(job,'query'/);assert.match(code,/await compute\(job,'material'/);
+ assert.match(code,/import \{CooperativeScheduler,planCandidateBatches/);assert.doesNotMatch(code,/requestAnimationFrame|setInterval|if\(busy\)/);
+ assert.match(code,/hostSeconds:12\*3600/);assert.match(code,/for\(const batch of batchPlan\)await computeBatch/);assert.match(code,/candidateRoundWindows\(maxIterations\)/);assert.match(code,/for\(const name of batch.stages\)dispatchCompute/);
  assert.match(code,/await device\.queue\.onSubmittedWorkDone\(\)/);assert.match(code,/job\.deferCleanup\(\(\)=>color\.destroy\(\)\)/);assert.match(code,/job\.deferCleanup\(\(\)=>depth\.destroy\(\)\)/);
  assert.match(code,/if\(!job\.isCurrent\(\)\)throw Error\('stale presentation blocked'\)/);assert.equal((code.match(/copyTextureToTexture/g)||[]).length,1);assert.match(code,/state:\(\)=>scheduler\.state/);
 });
@@ -91,4 +91,62 @@ test('stage progress remains queryable without repeating DOM updates',()=>{
  assert.equal(updates,1);assert.equal(proof.scheduler.active.submissionCount,100);
  notify({...state,paused:true,active:{...state.active,status:'paused'}});assert.equal(updates,2);assert.equal(proof.status,'paused');
  assert.match(code,/maxSubmissions:options.maxSubmissions\?\?2000000/);
+});
+
+
+test('measured light-stage grouping preserves order and respects soft prediction and hard four-stage cap',()=>{
+ const expected=['geo0','geo1','geo2','geo3','geo4','geo5','geo6','query','material'],defaults=planCandidateBatches();
+ assert.deepEqual(defaults.map(batch=>batch.stages),CANDIDATE_STAGE_GROUPS);assert.deepEqual(defaults.flatMap(batch=>batch.stages),expected);
+ assert.ok(Math.abs(defaults[0].predictedCompletionMs-10.35)<1e-8);assert.ok(Math.abs(defaults[1].predictedCompletionMs-5.19)<1e-8);assert.ok(Math.abs(defaults[2].predictedCompletionMs-9.24)<1e-8);
+ for(const targetSubmissionMs of [1,6,12,100])for(const maxStagesPerSubmission of [1,2,3,4]){
+  const batches=planCandidateBatches({targetSubmissionMs,maxStagesPerSubmission});assert.deepEqual(batches.flatMap(batch=>batch.stages),expected);
+  for(const batch of batches){assert.ok(batch.stages.length<=maxStagesPerSubmission);assert.ok(batch.predictedCompletionMs<=targetSubmissionMs||batch.stages.length===1);if(batch.stages.includes('geo4'))assert.deepEqual(batch.stages,['geo4']);}
+ }
+ assert.throws(()=>planCandidateBatches({maxStagesPerSubmission:5}),/1 to 4/);assert.throws(()=>planCandidateBatches({targetSubmissionMs:0}),/positive/);
+});
+
+test('counter windows contain complete unchanged rounds and at most fifteen inactive tail rounds',()=>{
+ assert.equal(COUNTER_INTERVAL_ROUNDS,16);assert.deepEqual([...candidateRoundWindows(34)],[{offset:0,count:16},{offset:16,count:16},{offset:32,count:2}]);
+ const originalRound=CANDIDATE_STAGE_GROUPS.flat(),plan=planCandidateBatches();
+ for(const activeRounds of [1,15,16,17,31,32,33,34]){
+  let completedRounds=0,activeMutations=0,polls=0;const dispatched=[];
+  for(const window of candidateRoundWindows(34)){
+   for(let i=0;i<window.count;i++){
+    for(const batch of plan)for(const stage of batch.stages){dispatched.push(stage);if(completedRounds<activeRounds)activeMutations++;}
+    completedRounds++;
+   }
+   polls++;if(completedRounds>=activeRounds)break;
+  }
+  assert.equal(activeMutations,activeRounds*9);assert.ok(completedRounds-activeRounds>=0&&completedRounds-activeRounds<=15);assert.equal(polls,Math.ceil(activeRounds/16));
+  assert.deepEqual(dispatched,Array.from({length:completedRounds},()=>originalRound).flat());
+ }
+ const cap=4096*32+32,windows=[...candidateRoundWindows(cap)];assert.equal(windows.reduce((sum,window)=>sum+window.count,0),cap);assert.equal(windows.length,cap/16);
+});
+
+test('pause and cancel are honored between bounded GPU groups without partial-round reinitialization',async()=>{
+ const firstGPU=deferred(),secondGPU=deferred(),events=[],s=create(),plan=planCandidateBatches();let persistentStage=0;
+ const job=s.enqueue(world(),async ctx=>{ctx.deferCleanup(()=>events.push('cleanup'));for(let i=0;i<plan.length;i++){const batch=plan[i];await ctx.submit(batch.label,async()=>{events.push(batch.label);await (i===0?firstGPU.promise:i===1?secondGPU.promise:Promise.resolve());persistentStage+=batch.stages.length;},{stages:batch.stages});}events.push('BAD completed round');});
+ await until(()=>s.state.active?.inFlight);s.pause();firstGPU.resolve();await until(()=>s.state.active?.status==='paused');
+ assert.equal(persistentStage,4);assert.equal(s.state.active.submissionCount,1);assert.equal(s.state.active.submittedStageCount,4);const frozen=s.state.active.snapshot;await tick();assert.deepEqual(events,['geo0+geo1+geo2+geo3']);
+ s.resume();await until(()=>s.state.active?.pendingStage?.label==='geo4');job.cancel();assert.equal(persistentStage,4);secondGPU.resolve();const outcome=await job.done;
+ assert.equal(outcome.status,'cancelled');assert.equal(persistentStage,5);assert.deepEqual(outcome.snapshot,frozen);assert.deepEqual(events,['geo0+geo1+geo2+geo3','geo4','cleanup']);assert.equal(outcome.metrics.maximumStagesPerSubmissionObserved,4);
+});
+
+test('scheduler enforces declared group cap before operation and records actual group overruns',async()=>{
+ let time=0;const s=create({now:()=>time}),events=[];
+ const invalid=s.enqueue(world(),ctx=>ctx.submit('oversized',async()=>events.push('BAD operation'),{stages:['a','b','c','d','e']}));
+ const bad=await invalid.done;assert.equal(bad.status,'failed');assert.match(bad.error.message,/maxStagesPerSubmission/);assert.equal(bad.metrics.submissionCount,0);assert.deepEqual(events,[]);
+ const batch=planCandidateBatches()[0],job=s.enqueue(world(),ctx=>ctx.submit(batch.label,async()=>{time+=19;},{stages:batch.stages,predictedCompletionMs:batch.predictedCompletionMs}));
+ const outcome=await job.done,group=outcome.metrics.stageTotals[batch.label];assert.equal(outcome.status,'completed');assert.equal(outcome.metrics.submittedStageCount,4);assert.equal(group.maximumCompletionMs,19);assert.equal(group.maximumOverBudgetMs,7);assert.equal(group.overBudgetSubmissions,1);assert.deepEqual(group.stages,batch.stages);assert.equal(outcome.metrics.lastCompletion.predictedCompletionMs,batch.predictedCompletionMs);
+ assert.throws(()=>s.enqueue(world(),()=>{},{maxStagesPerSubmission:5}),/1 to 4/);
+});
+
+test('actual host batch encoding retains nine separate compute passes and only three queue completions',async()=>{
+ const code=fs.readFileSync(new URL('../runtime/app.mjs',import.meta.url),'utf8'),source=code.slice(code.indexOf('function dispatchCompute('),code.indexOf('async function readBuffer('));
+ const submitted=[],completed=[],metadata=[],pipelines=Object.fromEntries(CANDIDATE_STAGE_GROUPS.flat().map(name=>[name,name]));
+ const device={createCommandEncoder:()=>{const passes=[];return {beginComputePass:()=>({setPipeline:name=>passes.push(name),setBindGroup:()=>{},dispatchWorkgroups:()=>{},end:()=>{}}),finish:()=>passes};},queue:{submit:commands=>submitted.push(commands[0]),onSubmittedWorkDone:async()=>completed.push(true)}};
+ const context={device,pipelines,bind:{}};vm.createContext(context);vm.runInContext(source,context);
+ const job={submit:async(label,operation,meta)=>{metadata.push({label,...meta});return operation();}};
+ for(const batch of planCandidateBatches())await context.computeBatch(job,batch,4,{phase:'primary',iteration:0});
+ assert.deepEqual(submitted,CANDIDATE_STAGE_GROUPS);assert.equal(completed.length,3);assert.deepEqual(submitted.flat(),CANDIDATE_STAGE_GROUPS.flat());assert.deepEqual(metadata.map(m=>m.stages.length),[4,1,4]);
 });

@@ -1,5 +1,5 @@
 import {WORLD_INFO,loadWorld} from './world-data.mjs';import {GEOMETRY_WGSL} from './geometry.mjs';import {receiverWGSL} from './receiver.mjs';import {selectStageSource} from './stage-source.mjs';import {MATERIAL_CALLS} from './materials.mjs';import {WAVEFRONT_WGSL} from './wavefront.mjs';import {geometryStageWGSL} from './geometry-stages.mjs';
-import {CooperativeScheduler} from './scheduler.mjs';
+import {CooperativeScheduler,planCandidateBatches,candidateRoundWindows,COUNTER_INTERVAL_ROUNDS} from './scheduler.mjs';
 const canvas=document.querySelector('#c'),status=document.querySelector('#status'),error=document.querySelector('#failure');
 const MAX_PIXELS=480*600,views={overall:{eye:[-40,25,-56],target:[-.2,18.5,.5],tanFov:.42,cut:[0,0,1,1000000]},'pair-cut':{eye:[-24,27,-63],target:[-.2,19,.5],tanFov:.42,cut:[0,0,-1,1.0]},'borrow':{eye:[-15,12,-20],target:[-.5,10,0],tanFov:.43,cut:[0,0,-1,1.0]}};
 const proof={version:'walled-city-pair-r03',backend:'WebGPU only',fieldRevision:'shared-physical-state-displaced-candidate-v1',status:'initializing',ready:false,world:WORLD_INFO,parameterBytes:WORLD_INFO.parameterBytes,vertexBuffers:0,indexBuffers:0,cpuSurfaceVertices:0,brickInstances:0,appearanceTextures:0,numericFieldTextures:0,drawVertices:3,deviceErrors:[],compilation:[],frames:[],stages:[],materialCalls:MATERIAL_CALLS,limits:{geometry:'independent two-building authored life domains; passage and structural design checks not real engineering certification',glass:'finite panes, straight transmission and sky Fresnel reflection; no full refraction',shadow:'macro shared geometry; source micro self-shadow not yet exact',device:'software Actions timing is not physical-device performance'}};window.__settlementGPU={proof};
@@ -22,15 +22,18 @@ const scheduler=new CooperativeScheduler({targetSubmissionMs:12,onState:state=>{
  if(job){if(job.status!=='cleaning'){proof.status=state.paused?'paused':'rendering';status.textContent=(state.paused?'暂停，保留当前世界与查询上下文：':'正在分阶段计算：')+job.snapshot.view+' · 可切换或取消';}}
  else if(state.lastResult?.status==='cancelled'){proof.status='cancelled';status.textContent='已取消计算；上次完整画面保持不变';}
 }});
-proof.limits.scheduler='12 ms soft target per submitted stage, measured as CPU wall time through actual queue/readback completion. One dispatch cannot be preempted; over-budget stages are recorded. Default finite diagnostic cap: 2,000,000 submitted stages, then submission-limit cancellation. More yields can increase total work time. No independent animation/world clock.';
+proof.limits.scheduler='12 ms predicted soft target per submitted batch; hard maximum 4 unchanged compute stages per batch. Actual CPU wall time through queue/readback completion and batch overruns are recorded. One submitted batch cannot be preempted. Active counter readback every 16 complete candidate rounds; at most 15 inactive tail rounds. Default finite diagnostic cap: 2,000,000 submissions, then submission-limit cancellation. More yields can increase total work time. No independent animation/world clock.';
 proof.scheduler=scheduler.state;
 function controls(action,reason){const state=action==='cancel'?scheduler.cancel(reason):scheduler[action]();progress('scheduler-'+action,{epoch:state.epoch,paused:state.paused,activeId:state.active?.id??null,inFlight:state.active?.inFlight??false});return state;}
 
-// A shared GPU context arena has exactly one job owner. Each stage submits once,
-// awaits actual completion, and yields. Pause never reinitializes these contexts.
+// A shared GPU context arena has exactly one job owner. Each bounded batch
+// awaits actual completion and yields. Pause never reinitializes these contexts.
 function dispatchCompute(encoder,name,gx,gy=1,group=bind){const pass=encoder.beginComputePass();pass.setPipeline(pipelines[name]);pass.setBindGroup(0,group);pass.dispatchWorkgroups(gx,gy);pass.end();}
 async function compute(job,name,gx,gy=1,group=bind,metadata={}){
  return job.submit(name,async()=>{const encoder=device.createCommandEncoder();dispatchCompute(encoder,name,gx,gy,group);device.queue.submit([encoder.finish()]);await device.queue.onSubmittedWorkDone();},metadata);
+}
+async function computeBatch(job,batch,groups,metadata){
+ return job.submit(batch.label,async()=>{const encoder=device.createCommandEncoder();for(const name of batch.stages)dispatchCompute(encoder,name,groups);device.queue.submit([encoder.finish()]);await device.queue.onSubmittedWorkDone();},{...metadata,stages:batch.stages,predictedCompletionMs:batch.predictedCompletionMs});
 }
 async function readBuffer(job,label,bytes,encode,decode){
  const rb=device.createBuffer({size:bytes,usage:GPUBufferUsage.COPY_DST|GPUBufferUsage.MAP_READ});
@@ -38,24 +41,20 @@ async function readBuffer(job,label,bytes,encode,decode){
 }
 async function readStatistics(job){return readBuffer(job,'statistics-readback',52,(e,rb)=>e.copyBufferToBuffer(statsBuffer,0,rb,0,52),mapped=>Object.fromEntries(['hit','trueMiss','exhausted','maxSteps','retried','glassRays','visibilityRays','visibilityUnresolved','visibilityRetried','visibilityMaximumSteps','extendedPrimary','candidateOverflows','activeQueries'].map((k,i)=>[k,new Uint32Array(mapped)[i]])));}
 
-// Geometry 0..6 -> query -> material is unchanged. The CPU can now pause between
-// these stages; persistent GPU records retain the exact intermediate state.
-// Only counter-poll spacing adapts (1..16 complete candidate rounds), never the
-// shader field, candidate order, quality, iteration cap, or per-submit stage size.
+// Geometry 0..6 -> query -> material remains nine separate compute passes in
+// exactly the same order. Small fixed groups reduce queue round trips; geo4 is
+// isolated. A lower target/stage limit may split groups, never reorder them.
+// Counter polling is once per 16 COMPLETE rounds (last window may be shorter).
+// Pause/cancel still occur at EVERY batch completion; shaders are unchanged.
 async function resolveWavefront(job,phase,groups,maxIterations,metadata){
  const readback=device.createBuffer({size:4,usage:GPUBufferUsage.COPY_DST|GPUBufferUsage.MAP_READ});
- const started=performance.now();let iterations=0,batches=0,active=0,counterInterval=1;
- try{while(iterations<maxIterations){
-  const count=Math.min(counterInterval,maxIterations-iterations),batchStart=performance.now();
-  for(let i=0;i<count;i++){
-   for(let chunk=0;chunk<7;chunk++)await compute(job,'geo'+chunk,groups,1,bind,{phase,...metadata,iteration:iterations+i});
-   await compute(job,'query',groups,1,bind,{phase,...metadata,iteration:iterations+i});
-   await compute(job,'material',groups,1,bind,{phase,...metadata,iteration:iterations+i});
-  }
+ const started=performance.now(),batchPlan=planCandidateBatches(job.limits);let iterations=0,batches=0,active=0;
+ try{for(const window of candidateRoundWindows(maxIterations)){
+  for(let i=0;i<window.count;i++)for(const batch of batchPlan)await computeBatch(job,batch,groups,{phase,...metadata,iteration:window.offset+i});
   active=await job.submit('active-counter',async()=>{const encoder=device.createCommandEncoder();device.queue.writeBuffer(statsBuffer,48,new Uint32Array(1));dispatchCompute(encoder,'active',groups);encoder.copyBufferToBuffer(statsBuffer,48,readback,0,4);device.queue.submit([encoder.finish()]);await readback.mapAsync(GPUMapMode.READ);try{return new Uint32Array(readback.getMappedRange())[0];}finally{readback.unmap();}},{phase,...metadata});
-  iterations+=count;batches++;counterInterval=Math.max(1,Math.min(16,Math.floor(job.metrics().targetSubmissionMs/Math.max(.001,(performance.now()-batchStart)/count))));
-  proof.wavefrontProgress={epoch:job.epoch,...metadata,phase,iterations,batches,active,counterInterval,elapsedMs:performance.now()-started};
-  if(batches%256===0)progress('wavefront-batch-progress',proof.wavefrontProgress);
+  iterations=window.offset+window.count;batches++;
+  proof.wavefrontProgress={epoch:job.epoch,...metadata,phase,iterations,batches,active,counterInterval:COUNTER_INTERVAL_ROUNDS,submissionsPerCandidateRound:batchPlan.length,elapsedMs:performance.now()-started};
+  if(batches%16===0)progress('wavefront-batch-progress',proof.wavefrontProgress);
   if(active===0)return {iterations,batches};
  }throw Error(`${phase} wavefront still has ${active} active contexts after ${iterations} candidate iterations`);}finally{readback.destroy();}
 }
@@ -72,7 +71,7 @@ function enqueue(view=selected,options={}){
  const rect=options.rect??[0,0,s.width,s.height];if(rect.length!==4||rect.some(v=>!Number.isInteger(v))||rect[0]<0||rect[1]<0||rect[2]<1||rect[3]<1||rect[0]+rect[2]>s.width||rect[1]+rect[3]>s.height)throw Error('invalid QA rectangle');s.rect=rect;
  if(options.diagnosticTraceLimit!==undefined){if(!options.rect||rect[2]*rect[3]>2048||!Number.isInteger(options.diagnosticTraceLimit)||options.diagnosticTraceLimit<1024||options.diagnosticTraceLimit>8192)throw Error('diagnostic continuation requires bounded <=2048 pixel crop');s.diagnosticTraceLimit=options.diagnosticTraceLimit;}
  s.inspectionCrop=!!options.rect;s.primaryDiagnostics=!!options.primaryDiagnostics;s.visibilityDiagnostics=!!options.visibilityDiagnostics;
- const handle=scheduler.enqueue(s,renderJob,{targetSubmissionMs:options.targetSubmissionMs??12,maxSubmissions:options.maxSubmissions??2000000});selected=view;proof.ready=false;return handle;
+ const handle=scheduler.enqueue(s,renderJob,{targetSubmissionMs:options.targetSubmissionMs??12,maxSubmissions:options.maxSubmissions??2000000,maxStagesPerSubmission:options.maxStagesPerSubmission??4});selected=view;proof.ready=false;return handle;
 }
 async function render(view=selected,options={}){const outcome=await enqueue(view,options).done;if(outcome.status==='failed')throw Error(outcome.error?.message??'render cleanup failed');return outcome.status==='completed'?outcome.value:outcome;}
 async function renderJob(job){
