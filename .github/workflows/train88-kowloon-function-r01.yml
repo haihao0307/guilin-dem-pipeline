@@ -1,4 +1,4 @@
-name: Train88 bounded first grouped query diagnostic
+name: Train88 bounded independent query optimizations
 on:
   push:
     branches: ['qa/train88-kowloon-function-r01-20261012']
@@ -8,7 +8,7 @@ concurrency:
 permissions:
   contents: read
 jobs:
-  compiler-and-equivalence:
+  query-experiments:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -16,63 +16,36 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: kaopu-minigame-workbench/voxel-train-study
-      - name: Source locks and host binding tests
+      - name: Emit and test separate original-field candidates
+        working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01
         run: |
-          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/emit-shader-inputs.mjs
-          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/emit-geometry-groups.mjs
-          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/emit-group-runtime.mjs
-          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/bureau-train88-r01/emit-shader-inputs.mjs
-          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/bureau-train88-r01/qa/emit-probes.mjs
-          node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/bureau-train88-r01/qa/*.test.mjs
-          node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r04/qa/*.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r04/qa/continuity/*.test.mjs
-          node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/*.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/material-envelope-proof.mjs
-      - name: Compile pinned official Naga source
+          node emit-geometry-groups.mjs >/dev/null
+          node experiments/spatial-query-r01/emit.mjs
+          node --test experiments/spatial-query-r01/*.test.mjs experiments/candidate-storage-r01/*.test.mjs qa/bounded-browser.test.mjs
+      - name: Compile pinned Naga and three independent query variants
         working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/compiler
         run: |
-          python - <<'PY'
+          python - <<'PYLOCK'
           import tomllib
           p=next(p for p in tomllib.load(open('Cargo.lock','rb'))['package'] if p['name']=='naga')
           assert p['version']=='27.0.3' and p['checksum']=='066cf25f0e8b11ee0df221219010f213ad429855f57c494f995590c861a9a7d8'
-          PY
+          PYLOCK
           cargo build --release --locked
-          target/release/kaopu-station-shader-bridge ../generated/material.wgsl ../generated/material.frag materialProbe
-          target/release/kaopu-station-shader-bridge ../generated/geometry.wgsl ../generated/geometry.frag geometryProbe
-          target/release/kaopu-station-shader-bridge ../generated/hostgeometry.wgsl ../generated/hostgeometry.frag geometryProbe
-          target/release/kaopu-station-shader-bridge ../generated/step.wgsl ../generated/step.frag stepRays
-          target/release/kaopu-station-shader-bridge ../generated/normal.wgsl ../generated/normal.frag recordGeometry
-          target/release/kaopu-station-shader-bridge ../generated/matter.wgsl ../generated/matter.frag recordMatter
-          for i in $(seq 0 11); do
-            target/release/kaopu-station-shader-bridge "../generated/group-$i.wgsl" "../generated/group-$i.frag" geometryGroupProbe
-            target/release/kaopu-station-shader-bridge "../generated/group-runtime-$i.wgsl" "../generated/group-runtime-$i.frag" stationGroupQuery
-          done
-          for pair in 'group-init initializeGroupedRays' 'group-advance advanceGroupedRays' 'group-normal-pack packGroupedGeometry'; do
-            read -r stage entry <<< "$pair"
-            target/release/kaopu-station-shader-bridge "../generated/$stage.wgsl" "../generated/$stage.frag" "$entry"
-          done
-          for pair in 'step stepRays' 'glass transmitGlass' 'normal recordGeometry' 'matter recordMatter' 'geometry-probe geometryProbe' 'material-probe materialProbe'; do
-            read -r stage entry <<< "$pair"
-            target/release/kaopu-station-shader-bridge "../../bureau-train88-r01/generated/$stage.wgsl" "../../bureau-train88-r01/generated/$stage.frag" "$entry"
+          for variant in reference hierarchy capacity; do
+            target/release/kaopu-station-shader-bridge ../experiments/spatial-query-r01/generated/$variant.wgsl ../experiments/spatial-query-r01/generated/$variant.frag hierarchyProbe
           done
       - name: Install pinned official browser QA runner
         run: |
           npm install --prefix "$RUNNER_TEMP/station-bridge" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
-      - name: Locate first physical query in retained game, no full-scene rerun
-        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/shared-bus.cjs --first-query
+      - name: Same-backend full HitField equality and cold versus warm cost
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/spatial-query-r01/run.cjs
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: train88-kowloon-function-bridge-${{ github.sha }}
+          name: train88-query-experiments-${{ github.sha }}
           path: |
-            train88-kowloon-bridge-results/
-            train88-kowloon-host-results/
-            train88-kowloon-material-roi-results/
-            train88-kowloon-structure-roi-results/
-            train88-shared-bus-results/
-            train88-kowloon-geometry-group-results/
-            train88-bureau-bridge-results/
-            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/bureau-train88-r01/generated/
-            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/generated/
-            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/compiler/Cargo.lock
+            train88-spatial-query-results/
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/spatial-query-r01/generated/
           retention-days: 7
