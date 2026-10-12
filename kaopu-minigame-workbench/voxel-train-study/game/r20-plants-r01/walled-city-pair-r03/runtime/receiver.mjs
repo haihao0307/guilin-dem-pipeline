@@ -7,7 +7,7 @@ struct Frame { eye:vec4<f32>,forward:vec4<f32>,right:vec4<f32>,up:vec4<f32>,cut:
 ${geometry}
 ${MOTHER_WGSL}
 ${MATERIAL_DOMAIN_WGSL}
-struct Stats {hit:atomic<u32>,miss:atomic<u32>,exhausted:atomic<u32>,maximumSteps:atomic<u32>,retried:atomic<u32>,glassRays:atomic<u32>,boundOnly:atomic<u32>,reserved:atomic<u32>,visibilityRetried:atomic<u32>,visibilityMaximumSteps:atomic<u32>,extendedPrimary:atomic<u32>}
+struct Stats {hit:atomic<u32>,miss:atomic<u32>,exhausted:atomic<u32>,maximumSteps:atomic<u32>,retried:atomic<u32>,glassRays:atomic<u32>,boundOnly:atomic<u32>,reserved:atomic<u32>,visibilityRetried:atomic<u32>,visibilityMaximumSteps:atomic<u32>,extendedPrimary:atomic<u32>,candidateOverflows:atomic<u32>}
 @group(0) @binding(2) var<storage,read_write> stats:Stats;
 struct HitRecord { ray:vec4<f32>,local:vec4<f32>,ids:vec4<u32>,normal:vec4<f32>,glass:vec4<f32>,through:vec4<f32> }
 @group(0) @binding(3) var<storage,read_write> hits:array<HitRecord,256>;
@@ -22,7 +22,7 @@ fn normalDirection(i:u32)->vec3<f32>{let v=array<vec3<f32>,4>(vec3<f32>(1.,-1.,-
 @compute @workgroup_size(8,8) fn sampleNormals(@builtin(global_invocation_id) gid:vec3<u32>){
  if(any(gid.xy>=u.tile.zw)||gid.z>=4u){return;}let idx=gid.y*16u+gid.x;let h=hits[idx];normalSamples[idx*4u+gid.z]=0.;if(h.ray.w!=1.||h.normal.w==1.){return;}
  let rd=cameraRay(vec2<f32>(u.tile.xy+gid.xy)+vec2<f32>(.5));let p=u.eye.xyz+rd*h.ray.x;let ep=clamp(footprint(p,h.normal.xyz,rd)*.32,.00008,.035);
- normalSamples[idx*4u+gid.z]=sceneField(p+normalDirection(gid.z)*ep).d;
+ let sample=sceneField(p+normalDirection(gid.z)*ep);if(sample.geo.componentId==4294967295u){atomicAdd(&stats.candidateOverflows,1u);}normalSamples[idx*4u+gid.z]=sample.d;
 }
 fn gatheredNormal(idx:u32)->vec3<f32>{var sum=vec3<f32>(0.);for(var i=0u;i<4u;i++){let term=normalDirection(i)*normalSamples[idx*4u+i];if(i==0u){sum=term;}else{sum=sum+term;}}return normalize(sum);}
 fn macroVisibility(p:vec3<f32>,n:vec3<f32>,ld:vec3<f32>,initial:vec4<f32>,limit:u32)->vec4<f32>{
@@ -58,7 +58,7 @@ fn trace(ro:vec3<f32>,rd:vec3<f32>,startT:f32,startSteps:u32,budget:u32,oldGlass
  var refineLeft=0u;var lo=0.;var hi=0.;
  loop{if(steps>=budget&&refineLeft==0u){return packSample(f,t,steps,2u,glass,through);}if(t>220.){return packSample(f,t,steps,0u,glass,through);}
   // One textual field receiver, shared by march and the original eight bisection samples.
-  f=raySceneField(ro+rd*t,rd);steps++;var accept=false;
+  f=raySceneField(ro+rd*t,rd);steps++;if(f.geo.componentId==4294967295u){atomicAdd(&stats.candidateOverflows,1u);return packSample(f,t,steps,2u,glass,through);}var accept=false;
   if(refineLeft>0u){if(refineLeft==1u){refineLeft=0u;accept=true;}else{if(f.d>0.){lo=t;}else{hi=t;}refineLeft--;t=(lo+hi)*.5;continue;}}
   else if(f.geo.materialId>0u){if(f.d<0.&&prevD>0.&&prevD<1e5){lo=prevT;hi=t;refineLeft=8u;t=(lo+hi)*.5;continue;}else if(abs(f.d)<.00055){accept=true;}}
   if(accept&&f.geo.materialId>0u){
