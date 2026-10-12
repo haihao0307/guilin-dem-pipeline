@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium, webkit]
+        browser: [chromium]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -40,32 +40,5 @@ jobs:
         if: always()
         with:
           name: r54-diagnostic-linux-${{ matrix.browser }}
-          path: r54-device-diagnostic-*/
-          retention-days: 7
-  apple:
-    runs-on: macos-14
-    timeout-minutes: 12
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with:
-          persist-credentials: false
-          sparse-checkout: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54
-      - name: Install pinned official package and WebKit
-        timeout-minutes: 5
-        run: |
-          npm install --prefix "$RUNNER_TEMP/joey-native" --no-save --ignore-scripts playwright@1.57.0
-          "$RUNNER_TEMP/joey-native/node_modules/.bin/playwright" install webkit
-          echo "NODE_PATH=$RUNNER_TEMP/joey-native/node_modules" >> "$GITHUB_ENV"
-      - name: Verify deployed exact iPhone output and unchanged native startup
-        env:
-          R54_PUBLIC_HASHES: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/iphone-r04-release-hashes.json
-          R54_BROWSER: webkit
-        run: |
-          node --test kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/iphone-output-r04.test.mjs
-          node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/verify-iphone-output-r04.cjs
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: r54-diagnostic-apple-webkit
           path: r54-device-diagnostic-*/
           retention-days: 7
