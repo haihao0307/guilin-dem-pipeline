@@ -1,0 +1,55 @@
+name: Hair R14 independent first frame
+on:
+  push:
+    branches: [test/hair-r14-first-frame-20261012]
+    paths: [.github/workflows/hair-r14-first-frame.yml]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-hair-workbench/fusion/r13c
+            kaopu-hair-workbench/fusion/r14
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --prefix /tmp/r14-tools --no-save esbuild@0.25.10 playwright@1.55.1
+          ln -s /tmp/r14-tools/node_modules node_modules
+          ln -s /tmp/r14-tools/node_modules /tmp/node_modules
+          /tmp/r14-tools/node_modules/.bin/playwright install --with-deps chromium
+          python kaopu-hair-workbench/fusion/r14/upgrade.py
+          node kaopu-hair-workbench/fusion/r14/bundle.mjs
+          python kaopu-hair-workbench/fusion/r14/package.py
+      - name: Independent actual browser first-frame probe
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/r14-probe-http.log 2>&1 &
+          cat > /tmp/r14-probe.mjs <<'JS'
+          import{chromium}from'playwright';import fs from'node:fs';
+          const out='kaopu-hair-workbench/fusion/r14/evidence/first-frame';fs.mkdirSync(out,{recursive:true});
+          const report={success:false,errors:[],events:[],source:'2e371851735a8b9000d9bf854ca0116824f859b3',started:new Date().toISOString()};
+          const save=()=>fs.writeFileSync(out+'/report.json',JSON.stringify(report,null,2));
+          const b=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']}),p=await b.newPage({viewport:{width:1280,height:1000},deviceScaleFactor:1});
+          p.on('pageerror',e=>{report.errors.push(String(e));save()});p.on('console',m=>{if(m.type()==='error'){report.errors.push(m.text());save()}});p.on('requestfailed',r=>{report.events.push({url:r.url(),failure:r.failure()});save()});
+          try{
+           await p.goto('http://127.0.0.1:8765/kaopu-hair-workbench/fusion/r14/public-lite.html',{waitUntil:'domcontentloaded',timeout:120000});
+           await p.waitForFunction('window.lengthGroom && (lengthGroom.diagnostics().ready || lengthGroom.diagnostics().errors.length)',{},{timeout:240000});
+           report.diagnostics=await p.evaluate('lengthGroom.diagnostics()');save();await p.evaluate('lengthGroom.whenRendered()');
+           for(const view of['top','left','back','front']){await p.evaluate(v=>lengthGroom.camera(v),view);await p.evaluate('lengthGroom.whenRendered()');await p.locator('#canvas').screenshot({path:out+'/'+view+'.png'});report.events.push({view,time:new Date().toISOString()});save();}
+           await p.evaluate('lengthGroom.camera("top")');await p.evaluate('lengthGroom.whenRendered()');report.coverage=await p.evaluate('lengthGroom.coverageAudit()');save();report.roots=await p.evaluate('lengthGroom.rootAudit(600)');save();
+           await p.evaluate('lengthGroom.camera("left");lengthGroom.setInspection("root-shafts")');await p.evaluate('lengthGroom.whenRendered()');await p.locator('#canvas').screenshot({path:out+'/root-shafts-left.png'});
+           report.success=report.errors.length===0;report.finished=new Date().toISOString();save();
+          }catch(e){report.failure=String(e.stack||e);save();process.exitCode=1;}finally{await b.close();}
+          JS
+          timeout 540s node /tmp/r14-probe.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-r14-first-frame
+          path: kaopu-hair-workbench/fusion/r14
+          retention-days: 14
