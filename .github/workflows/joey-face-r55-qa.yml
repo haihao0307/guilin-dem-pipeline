@@ -26,11 +26,11 @@ jobs:
         run: |
           npm install --prefix "$RUNNER_TEMP/joey-r55" --no-save --ignore-scripts playwright@1.57.0
           echo "NODE_PATH=$RUNNER_TEMP/joey-r55/node_modules" >> "$GITHUB_ENV"
-      - name: Render current native candidate and verify restoration
-        run: node kaopu-unified-human-workbench/joey-observation-r01/cheek-continuity-r55/render.cjs
+      - name: Diagnose fixed R52 field and same-object restoration
+        run: node kaopu-unified-human-workbench/joey-observation-r01/cheek-continuity-r55/causal.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: joey-face-r55-${{ github.sha }}
-          path: joey-face-r55/
+          path: joey-face-r55-causal/
           retention-days: 7
