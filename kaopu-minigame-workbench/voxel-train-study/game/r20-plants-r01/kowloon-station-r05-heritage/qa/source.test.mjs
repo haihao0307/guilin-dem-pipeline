@@ -26,9 +26,9 @@ test('roof acceleration bounds every barrel and refuses nearly axial rays',()=>{
 test('complete candidate capacity holds even if all domains were active simultaneously',()=>{
  // One terminal and one waterfront union each; internal children never enqueue.
  // Conservatively allow all four clock faces, every domain, all approach tracks.
- const counts={terminal:2,forecourt:1,steps:4,hallBenches:2,tower:6+4*3,shed:14,approach:3,buffersAndBed:3,goods:8,siding:3,walk:4,waterfront:1};
+ const counts={terminal:2,forecourt:1,steps:4,hallBenches:2,tower:7+4*3,shed:14,approach:3,buffersAndBed:3,goods:8,siding:3,walk:4,waterfront:1};
  const standalone=Object.values(counts).reduce((a,b)=>a+b,0),host=standalone+9+6+6+2+2;
- assert.equal(standalone,63);assert.equal(host,88);assert(standalone<=64&&host<=96);
+ assert.equal(standalone,64);assert.equal(host,89);assert(standalone<=64&&host<=96);
  assert(WGSL.includes('items:array<HitField,64>'));assert.equal(STATION_SCORE.shed.length,135);
 });
 

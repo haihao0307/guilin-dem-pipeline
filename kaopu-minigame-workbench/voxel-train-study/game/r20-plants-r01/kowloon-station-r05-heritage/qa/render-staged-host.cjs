@@ -1,8 +1,73 @@
-// Uses the previously verified original query -> compact -> advance -> full
-// geometry/normal -> material path. No giant all-in-one fragment shader.
-const{chromium}=require('playwright'),fs=require('fs'),path=require('path'),http=require('http'),{closeOwnedBrowser}=require('../../kowloon-train88-r01/qa/bounded-browser.cjs');
-const view=process.argv[2]||'towerWhole',smoke=process.env.HERITAGE_SMOKE==='1',out='heritage-staged-'+view+(smoke?'-smoke':'');fs.mkdirSync(out,{recursive:true});
-const shapes={towerWhole:{x:250,y:35,w:140,h:340},towerWindow:{x:220,y:110,w:192,h:192},heritageHall:{x:120,y:125,w:360,h:180}};const crops={towerWhole:{x:312,y:208,w:18,h:18},towerWindow:{x:366,y:214,w:18,h:18},heritageHall:{x:305,y:208,w:18,h:18}};const crop=smoke?crops[view]:shapes[view];if(!crop)throw Error('Unknown view');
-const report={commit:process.env.GITHUB_SHA,view,status:'running',crop,canvas:[640,426],shadow:[16,16],scope:(smoke?'18x18 diagnostic only; not architectural image acceptance. ':'')+'native perspective crop from the original complete shared host using R05 architecture; low-resolution shadow diagnostic, not final scene or realtime acceptance',stages:[],errors:[]};const save=()=>fs.writeFileSync(out+'/receipt.json',JSON.stringify(report,null,2));
-const server=http.createServer((req,res)=>{let p=path.resolve('.'+decodeURIComponent(req.url.split('?')[0]));if(!p.startsWith(process.cwd()+'/'))return res.writeHead(403).end();try{if(fs.statSync(p).isDirectory())p+='/index.html';res.setHeader('content-type',p.endsWith('.html')?'text/html':p.endsWith('.css')?'text/css':p.endsWith('.json')?'application/json':'text/javascript');res.end(fs.readFileSync(p));}catch{res.writeHead(404).end();}});
-(async()=>{let b,owner,interval,timer;let reject;const fatal=new Promise((_,r)=>reject=r);fatal.catch(()=>{});const bounded=p=>Promise.race([p,fatal]);const arm=()=>{clearTimeout(timer);timer=setTimeout(()=>reject(Error('No complete GPU stage for 240000ms')),240000);};try{await new Promise(r=>server.listen(0,'127.0.0.1',r));owner=await chromium.launchServer({headless:true,args:['--no-sandbox','--disable-gpu-watchdog','--use-angle=swiftshader','--enable-logging=stderr']});for(const stream of ['stdout','stderr'])owner.process()[stream]?.on('data',x=>fs.appendFileSync(out+'/browser-'+stream+'.log',x));b=await chromium.connect(owner.wsEndpoint());const page=await b.newPage({viewport:{width:640,height:426},deviceScaleFactor:1});page.setDefaultTimeout(1800000);page.on('pageerror',e=>{report.errors.push(e.message);save();reject(e)});page.on('console',m=>{const t=m.text();if(/HERITAGE_STARTUP|KOWLOON_STAGE|BUREAU_STAGE/.test(t)){if(/group-submitted|trace-batch/.test(t)&&!report.firstGPUProgressAt)report.firstGPUProgressAt=new Date().toISOString();report.stages.push({at:new Date().toISOString(),message:t});console.log(t);save();arm();}else if(m.type()==='error'){report.errors.push(t);save();reject(Error(t));}});const q=new URLSearchParams({bridgeQA:'1',bridgeCompactTrace:'1',bridgeActiveQueryBounds:'1',bridgeStageTiming:'1',bridgeWidth:'640',bridgeHeight:'426',bridgeShadowWidth:'16',bridgeShadowHeight:'16',bridgeView:'station',bridgeStartTicks:'240',bridgeCrop:JSON.stringify(crop),heritageView:view});arm();await bounded(page.goto('http://127.0.0.1:'+server.address().port+'/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-heritage-host-qa/index.html?'+q,{waitUntil:'domcontentloaded',timeout:45000}));await bounded(page.waitForFunction(()=>window.__heritageReviewStartup?.viewsBound,null,{timeout:45000}));report.startup=await bounded(page.evaluate(()=>window.__heritageReviewStartup));save();await bounded(page.waitForFunction(()=>window.__trainDriver?.ready));report.canvas=await bounded(page.evaluate(()=>{const c=document.querySelector('#sceneWrap canvas'),r=c.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height,buffer:[c.width,c.height],dpr:devicePixelRatio};}));if(report.canvas.w!==640||report.canvas.h!==426||report.canvas.buffer.join(',')!=='640,426'||report.canvas.dpr!==1)throw Error('Native canvas unexpectedly resampled');report.state=await page.evaluate(()=>window.__trainDriver.getState());const p=report.state.kowloonFunction;if(!p.complete||p.unresolved||!p.shadowComplete||!p.hit)throw Error('Incomplete original staged function frame');if(p.shared.projection[11]!==-1||p.shared.projection[15]!==0)throw Error('Perspective camera required');await page.addStyleTag({content:'#driverGame>*:not(#sceneWrap){visibility:hidden!important}#sceneWrap>*:not(canvas){visibility:hidden!important}'});await page.screenshot({path:out+'/perspective.png'});await page.screenshot({path:out+'/native-crop.png',clip:{x:report.canvas.x+crop.x,y:report.canvas.y+crop.y,width:crop.w,height:crop.h}});const raw=await page.evaluate(()=>window.__stationBridgeQA.focusReadback());fs.writeFileSync(out+'/readback.json',JSON.stringify(raw));report.readback={buffers:Object.keys(raw.buffers),footprint:raw.footprint};report.status=report.errors.length?'rendered-with-errors':smoke?'native-smoke-rendered-not-visual-acceptance':'rendered-for-architectural-review';save();if(report.errors.length)process.exitCode=1;}catch(e){report.status='failed';report.failure=e.stack;save();process.exitCode=1;}finally{clearInterval(interval);clearTimeout(timer);report.cleanup=await closeOwnedBrowser(b,owner);save();server.closeAllConnections();server.close();}})();
+// Original query -> compact -> advance -> full normal -> material architecture.
+// Capture completion has no hidden 30-minute page deadline. Startup, progress,
+// render-step and whole-job limits are separate and declared in the workflow.
+const {chromium}=require('playwright');
+const fs=require('fs'),path=require('path'),http=require('http');
+const {closeOwnedBrowser}=require('../../kowloon-train88-r01/qa/bounded-browser.cjs');
+const view=process.argv[2]||'towerWhole',smoke=process.env.HERITAGE_SMOKE==='1';
+const scale=smoke?1:Number(process.env.HERITAGE_REVIEW_SCALE||1);
+if(![.5,1].includes(scale))throw Error('Only native half/full review scales are supported');
+const out='heritage-staged-'+view+(smoke?'-smoke':scale===.5?'-small':'');
+fs.mkdirSync(out,{recursive:true});
+const shapes={towerWhole:{x:250,y:35,w:140,h:340},towerWindow:{x:220,y:110,w:192,h:192},heritageHall:{x:120,y:125,w:360,h:180}};
+const crops={towerWhole:{x:312,y:208,w:18,h:18},towerWindow:{x:366,y:214,w:18,h:18},heritageHall:{x:305,y:208,w:18,h:18}};
+const sourceCrop=smoke?crops[view]:shapes[view];if(!sourceCrop)throw Error('Unknown view');
+const crop=Object.fromEntries(Object.entries(sourceCrop).map(([k,v])=>[k,Math.floor(v*scale)]));
+const width=640*scale,height=426*scale;
+const report={commit:process.env.GITHUB_SHA,view,status:'running',crop,canvas:[width,height],scale,shadow:[16,16],scope:(smoke?'18x18 diagnostic only; not architectural image acceptance. ':scale===.5?'Small native architectural review; human review precedes larger crops. ':'')+'native perspective crop from the original complete shared host using R05 architecture; low-resolution shadow diagnostic, not final scene or realtime acceptance',stages:[],errors:[]};
+const save=()=>fs.writeFileSync(out+'/receipt.json',JSON.stringify(report,null,2));
+const server=http.createServer((req,res)=>{
+ const p0=path.resolve('.'+decodeURIComponent(req.url.split('?')[0]));
+ if(!p0.startsWith(process.cwd()+'/'))return res.writeHead(403).end();
+ try{let p=p0;if(fs.statSync(p).isDirectory())p+='/index.html';res.setHeader('content-type',p.endsWith('.html')?'text/html':p.endsWith('.css')?'text/css':p.endsWith('.json')?'application/json':'text/javascript');res.end(fs.readFileSync(p));}
+ catch{res.writeHead(404).end();}
+});
+(async()=>{
+ let browser,owner,page,timer,reject;
+ const fatal=new Promise((_,r)=>reject=r);fatal.catch(()=>{});
+ const bounded=p=>Promise.race([p,fatal]);
+ const arm=()=>{clearTimeout(timer);timer=setTimeout(()=>reject(Error('No complete GPU stage for 240000ms')),240000);};
+ try{
+  await new Promise(r=>server.listen(0,'127.0.0.1',r));
+  owner=await chromium.launchServer({headless:true,timeout:45000,args:['--no-sandbox','--disable-gpu-watchdog','--use-angle=swiftshader','--enable-logging=stderr']});
+  for(const stream of ['stdout','stderr'])owner.process()[stream]?.on('data',x=>fs.appendFileSync(out+'/browser-'+stream+'.log',x));
+  browser=await chromium.connect(owner.wsEndpoint(),{timeout:45000});
+  page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});page.setDefaultTimeout(45000);
+  page.on('pageerror',e=>{report.errors.push(e.message);save();reject(e);});
+  page.on('console',m=>{
+   const text=m.text();
+   if(/HERITAGE_STARTUP|KOWLOON_STAGE|BUREAU_STAGE/.test(text)){
+    if(/group-submitted|trace-batch/.test(text)&&!report.firstGPUProgressAt)report.firstGPUProgressAt=new Date().toISOString();
+    report.stages.push({at:new Date().toISOString(),message:text});console.log(text);save();arm();
+   }else if(m.type()==='error'){report.errors.push(text);save();reject(Error(text));}
+  });
+  const q=new URLSearchParams({bridgeQA:'1',bridgeCompactTrace:'1',bridgeActiveQueryBounds:'1',bridgeStageTiming:'1',bridgeWidth:String(width),bridgeHeight:String(height),bridgeShadowWidth:'16',bridgeShadowHeight:'16',bridgeView:'station',bridgeStartTicks:'240',bridgeCrop:JSON.stringify(crop),heritageView:view});
+  arm();
+  await bounded(page.goto('http://127.0.0.1:'+server.address().port+'/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-heritage-host-qa/index.html?'+q,{waitUntil:'domcontentloaded',timeout:45000}));
+  await bounded(page.waitForFunction(()=>window.__heritageReviewStartup?.viewsBound,null,{timeout:45000}));
+  report.startup=await bounded(page.evaluate(()=>window.__heritageReviewStartup));save();
+  // The progress watchdog and render-step/job limits own this wait. A page
+  // default must never discard a fully completed 31-minute GPU readback again.
+  await bounded(page.waitForFunction(()=>window.__trainDriver?.ready,null,{timeout:0}));
+  report.state=await bounded(page.evaluate(()=>window.__trainDriver.getState()));save();
+  report.canvas=await bounded(page.evaluate(()=>{const c=document.querySelector('#sceneWrap canvas'),r=c.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height,buffer:[c.width,c.height],dpr:devicePixelRatio};}));save();
+  if(report.canvas.w!==width||report.canvas.h!==height||report.canvas.buffer.join(',')!==[width,height].join(',')||report.canvas.dpr!==1)throw Error('Native canvas unexpectedly resampled');
+  await bounded(page.addStyleTag({content:'#driverGame>*:not(#sceneWrap){visibility:hidden!important}#sceneWrap>*:not(canvas){visibility:hidden!important}'}));
+  // Save the actual completed frame and raw diagnostics before acceptance
+  // assertions. A later bad normal/unresolved check cannot erase the evidence.
+  await bounded(page.screenshot({path:out+'/perspective.png',timeout:45000}));
+  await bounded(page.screenshot({path:out+'/native-crop.png',clip:{x:report.canvas.x+crop.x,y:report.canvas.y+crop.y,width:crop.w,height:crop.h},timeout:45000}));
+  report.savedImageAt=new Date().toISOString();save();
+  const raw=await bounded(page.evaluate(()=>window.__stationBridgeQA.focusReadback()));
+  fs.writeFileSync(out+'/readback.json',JSON.stringify(raw));
+  report.readback={buffers:Object.keys(raw.buffers),footprint:raw.footprint};save();
+  const station=report.state.kowloonFunction;
+  if(!station.complete||station.unresolved||!station.shadowComplete||!station.hit)throw Error('Incomplete original staged function frame');
+  if(station.shared.projection[11]!==-1||station.shared.projection[15]!==0)throw Error('Perspective camera required');
+  const lens=report.state.cameraProjection;
+  if(Math.abs(lens.fov-37.485728670400334)>1e-8||Math.abs(lens.zoom-.78)>1e-8||Math.abs(lens.aspect-640/426)>1e-8)throw Error('Heritage lens changed from the verified 640x426 view');
+  report.status=report.errors.length?'rendered-with-errors':smoke?'native-smoke-rendered-not-visual-acceptance':'rendered-for-architectural-review';save();
+  if(report.errors.length)process.exitCode=1;
+ }catch(e){report.status='failed';report.failure=e.stack;save();process.exitCode=1;}
+ finally{clearTimeout(timer);report.cleanup=await closeOwnedBrowser(browser,owner);save();server.closeAllConnections();server.close();}
+})();

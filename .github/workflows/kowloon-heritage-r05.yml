@@ -1,4 +1,4 @@
-name: Kowloon heritage R05 verified-loop architectural review
+name: Kowloon heritage R05 finite-cavity small architectural review
 on:
   push:
     branches: ['qa/kowloon-heritage-r05-20261013']
@@ -80,6 +80,7 @@ jobs:
           "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
       - name: Bounded 18x18 native smoke with first GPU progress
+        timeout-minutes: 10
         working-directory: baseline
         env:
           HERITAGE_SMOKE: '1'
@@ -90,14 +91,14 @@ jobs:
           name: heritage-smoke-${{ matrix.view }}
           path: baseline/heritage-staged-${{ matrix.view }}-smoke/
           retention-days: 7
-  architectural-review:
-    needs: native-smoke
+  small-architectural-review:
+    needs: [native-smoke, material-regression]
     strategy:
       fail-fast: false
       matrix:
         view: [towerWhole, towerWindow, heritageHall]
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -162,14 +163,56 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/station-bridge" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
-      - name: Independent normal-perspective architectural crop
+      - name: Small native perspective crop for human review before larger images
+        timeout-minutes: 20
         working-directory: baseline
         env:
           HERITAGE_SMOKE: '0'
+          HERITAGE_REVIEW_SCALE: '0.5'
         run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/render-staged-host.cjs ${{ matrix.view }}
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: heritage-architectural-${{ matrix.view }}
-          path: baseline/heritage-staged-${{ matrix.view }}/
+          name: heritage-small-${{ matrix.view }}
+          path: baseline/heritage-staged-${{ matrix.view }}-small/
+          retention-days: 7
+  material-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          path: revision
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 25c460991397665e2ad9068e79a93b2b16b80484
+          persist-credentials: false
+          path: baseline
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Copy isolated candidate and build pinned compiler
+        run: |
+          R=kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01
+          cp -a revision/$R/kowloon-station-r05-heritage baseline/$R/
+          cd baseline/$R/kowloon-train88-r01/compiler
+          cargo build --release --locked
+      - name: Install pinned official browser QA runner
+        run: |
+          npm install --prefix "$RUNNER_TEMP/station-bridge" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
+      - name: Check production geometry and matter once at all 30 material-state samples
+        timeout-minutes: 8
+        working-directory: baseline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage
+        run: |
+          node qa/heritage-state-emit.mjs
+          C=../kowloon-train88-r01/compiler/target/release/kaopu-station-shader-bridge
+          timeout 240s $C qa/heritage-state-generated/probe.wgsl qa/heritage-state-generated/probe.frag heritageStateProbe
+          node qa/heritage-state-run.cjs
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: heritage-state-regression
+          path: baseline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/heritage-state-*/
           retention-days: 7

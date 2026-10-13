@@ -61,4 +61,3 @@ export function stationLampWGSL(options={}){
  return code;
 }
 export const STATION_LAMPS_WGSL=stationLampWGSL();
-

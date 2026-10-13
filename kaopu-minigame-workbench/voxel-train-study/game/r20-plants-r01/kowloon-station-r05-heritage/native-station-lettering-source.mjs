@@ -41,4 +41,3 @@ export const STATION_SERIF_GLYPHS=Object.freeze({
     }},
 });
 for (const glyph of Object.values(STATION_SERIF_GLYPHS)) Object.freeze(glyph);
-

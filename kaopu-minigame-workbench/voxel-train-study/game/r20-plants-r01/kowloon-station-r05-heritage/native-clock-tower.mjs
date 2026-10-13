@@ -1,7 +1,7 @@
 // AMO 2024 pp.3/5 observations. Dimensions remain authored within the R04 site.
 // The retained R04 source is separate; this is an independent heritage candidate.
 import {clockTowerMembers as retainedTowerMembers,clockTowerWGSL as retainedTowerWGSL} from './native-clock-tower-r04.mjs';
-export const TOWER_EVIDENCE=Object.freeze({source:'https://www.amo.gov.hk/filemanager/amo/common/download-area/pamphlet/clock_tower.pdf',observed:['square main shaft','two octagonal turret stages','concrete dome','granite pediment window surrounds','timber window frames'],authored:['all new member dimensions','maintained finish and exposure history','current 44m-scale envelope retained'],unresolved:['whether reported 44m includes the 7m lightning rod','original hall plan/depth','period-specific clock glazing'],referenceImagesPublished:false});
+export const TOWER_EVIDENCE=Object.freeze({source:'https://www.amo.gov.hk/filemanager/amo/common/download-area/pamphlet/clock_tower.pdf',observed:['square main shaft','two octagonal turret stages','concrete dome','granite pediment window surrounds','timber window frames'],authored:['all new member dimensions','maintained finish and exposure history','current 44m-scale envelope retained','0.63m masonry shell and finite interior plaster lining; not surveyed dimensions'],unresolved:['whether reported 44m includes the 7m lightning rod','original hall plan/depth','period-specific clock glazing'],referenceImagesPublished:false});
 const clone=x=>JSON.parse(JSON.stringify(x));
 export function clockTowerMembers({width=6.2}={}){
  const original=retainedTowerMembers({width}),parts=original.parts.filter(p=>!/^belfry-|^tower-belfry|^tower-dome|^dome-crown|^tower-finial|^tower-quoin|^tower-pilaster|^tower-cornice-(31|38|39)/.test(p.id)).map(clone);
@@ -15,6 +15,11 @@ export function clockTowerMembers({width=6.2}={}){
   const y=1.3+(row+.5)*1.01;
   box(`heritage-quoin-${sx}-${sz}-${row}`,[sx*(width/2-.29),y,sz*(width/2-.29)],[.93,.996,.93]);
  }
+ // The measured section establishes a hollow tower, but wall thickness is not
+ // recovered here. This authored 0.63m masonry shell replaces the earlier solid
+ // mass: every window cutter overlaps the real inner room, not a brick stop.
+ const shaft=parts.find(p=>p.id==='clock-shaft');
+ shaft.shape={...shaft.shape,type:'hollow-box',innerCenter:[0,14.95,0],innerSize:[4.66,26.10,4.66]};
  // Four recessed windows per face. Their openings are subtracted in the same
  // brick solid. No black window decal and no claimed glass transmission.
  const levels=[{y:3.9,h:2.7},{y:9.8,h:2.5},{y:15.2,h:2.5},{y:20.5,h:1.9}];
@@ -61,10 +66,19 @@ export function clockTowerMembers({width=6.2}={}){
  for(const x of [-.11,.11])for(const z of [-.11,.11])beam(`heritage-mast-${x}-${z}`,[x,41.4,z],[x*.4,43.65,z*.4],.025,.025,'structural-iron');
  for(let i=0;i<5;i++){const y=41.4+i*.45;beam('heritage-mast-brace-'+i,[-.10,y,.10],[.10,y+.43,.10],.017,.017,'structural-iron');}
  add('heritage-mast-needle',{type:'cylinder',center:[0,43.8,0],radius:.013,radiusTop:.006,height:.5},'structural-iron','provisional-lightning-support');
+ // Append infill/lining descriptors after retained timber so existing member
+ // indices, stock seeds and grain realization do not drift with this correction.
+ for(let face=0;face<4;face++)for(const [i,win]of levels.entries()){
+  const spring=win.y+win.h/2+.36;
+  add(`heritage-window-tympanum-${face}-${i}`,{type:'triangle-prism',center:facePoint(face,0,spring+.06,width/2-.015),base:1.94,rise:.39,depth:.16,yaw:face*Math.PI/2},'masonry-trim','granite-pediment-infill');
+ }
+ for(let face=0;face<4;face++)add('heritage-inner-lining-'+face,{type:'interior-lining',center:facePoint(face,0,14.95,2.34),size:[4.66,25.9,.02],yaw:face*Math.PI/2},'tower-plaster','finite-interior-lining');
  return {parts,clockHands:original.clockHands,windows:levels,evidence:TOWER_EVIDENCE};
 }
 const f=x=>Math.abs(x)<1e-12?'0.':Number.isInteger(x)?x+'.':String(x),v=a=>'vec3<f32>('+a.map(f).join(',')+')';
 function field(s){const q=`(p-${v(s.center||[0,0,0])})`;
+ if(s.type==='hollow-box')return `max(box(${q},${v(s.size.map(n=>n/2))}),-box(p-${v(s.innerCenter)},${v(s.innerSize.map(n=>n/2))}))`;
+ if(s.type==='triangle-prism'){const a=s.yaw??0,c=f(Math.cos(a)),sn=f(Math.sin(a)),u=`(${c}*${q}.x-(${sn})*${q}.z)`,d=`(${sn}*${q}.x+${c}*${q}.z)`,half=s.base/2;return `max(max(-${q}.y,(${f(s.rise)}*abs(${u})+${f(half)}*${q}.y-${f(half*s.rise)})/${f(Math.hypot(s.rise,half))}),abs(${d})-${f(s.depth/2)})`;}
  if(s.type==='box')return `box(${q},${v(s.size.map(n=>n/2))})`;
  if(s.type==='oriented-box'){const a=s.yaw??0;return `box(vec3<f32>(${f(Math.cos(a))}*${q}.x-(${f(Math.sin(a))})*${q}.z,${q}.y,${f(Math.sin(a))}*${q}.x+${f(Math.cos(a))}*${q}.z),${v(s.size.map(n=>n/2))})`;}
  if(s.type==='beam')return `memberBeam(p,${v(s.a)},${v(s.b)},${f(s.width)},${f(s.depth)})`;
@@ -90,6 +104,14 @@ export function clockTowerWGSL(options={}){
  // One shared material call in a finite original-order loop. This avoids
  // asking the driver to inline the full timber mother 144 separate times.
  const timber=parts.map((part,i)=>({part,i})).filter(({part})=>part.surface.role==='window-timber');
+ out+='fn completeTowerPlaster(p:vec3<f32>)->HitField{var h=HitField(1e5,13u,p,174.,1e5,vec3<f32>(1.),0.);let world=p+vec3<f32>(24.,0.,4.);let st=resolveStationState(world);\n';
+ for(const [i,part]of parts.entries())if(part.surface.role==='tower-plaster'){
+  const sh=part.shape,a=sh.yaw,c=f(Math.cos(a)),sn=f(Math.sin(a)),off=`(p-${v(sh.center)})`,q=`vec3<f32>(${c}*${off}.x-(${sn})*${off}.z,${off}.y,${sn}*${off}.x+${c}*${off}.z)`,ex=v(sh.size.map(n=>n/2));
+  let expr=`box(q,${ex})`;
+  for(const win of windows)expr=`max(${expr},-box(vec3<f32>(min(abs(p.x),abs(p.z)),p.y-${f(win.y)},max(abs(p.x),abs(p.z))-${f(w/2-.26)}),vec3<f32>(.745,${f(win.h/2)},.66)))`;
+  out+=`{let q=${q};let d=${expr};if(d-.03001<h.d){var child=HitField(d,13u,q,174.,d,${ex},${f(i)});child.d=stationCandidatePhysicalDistance(child,world,st);if(child.d<h.d){h=child;}}}\n`;
+ }
+ out+='h.d=h.baseD;return h;}\n';
  out+='fn completeTowerTimber(p:vec3<f32>)->HitField{var h=HitField(1e5,4u,p,172.,1e5,vec3<f32>(1.),0.);let world=p+vec3<f32>(24.,0.,4.);let st=resolveStationState(world);\n';
  out+=`for(var j=0u;j<${timber.length}u;j++){var q=vec3<f32>(0.);var extent=vec3<f32>(1.);var member=0.;switch j{\n`;
  for(const [j,{part,i}]of timber.entries()){
@@ -97,6 +119,9 @@ export function clockTowerWGSL(options={}){
   out+=`${j===timber.length-1?'default':`case ${j}u`}:{q=(p-${v(s.center)}).${perm};extent=${v(ex)};member=${f(i)};}\n`;
  }
  out+='}let d=box(q,extent);if(d-.03001<h.d){var child=HitField(d,4u,q,172.,d,extent,member);child.d=stationCandidatePhysicalDistance(child,world,st);if(child.d<h.d){h=child;}}}h.d=h.baseD;return h;}\n';
+ out+='fn heritagePlasterDirection(member:f32,d:vec3<f32>)->vec3<f32>{\n';
+ for(const [i,part]of parts.entries())if(part.surface.role==='tower-plaster'){const a=part.shape.yaw;out+=`if(member==${f(i)}){return vec3<f32>(${f(Math.cos(a))}*d.x-(${f(Math.sin(a))})*d.z,d.y,${f(Math.sin(a))}*d.x+${f(Math.cos(a))}*d.z); }\n`;}
+ out+='return d;}\n';
  out+='fn heritageTimberDirection(member:f32,d:vec3<f32>)->vec3<f32>{\n';
  for(const [i,part]of parts.entries())if(part.surface.role==='window-timber'){const axis=part.shape.size.indexOf(Math.max(...part.shape.size)),perm=axis===1?'yxz':axis===2?'zxy':'xyz';out+=`if(member==${f(i)}){return d.${perm};}\n`;}
  out+='return d;}\n';

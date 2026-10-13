@@ -9,8 +9,10 @@ fn resolveStationState(p:vec3<f32>)->StationState{let repair=repairAt(p);return 
 // never a centered member coordinate. Authored capillary fade is not calibration.
 // Conservation is a material/member property, not a global "make it new" mask.
 // Tower and above-ground main-hall fabric only; platform/ground remain unchanged.
-fn stationHeritageMember(h:HitField)->bool{return h.seed==71.||h.seed==171.||h.seed==172.||h.seed==173.||(h.seed==191.&&h.id!=17u&&h.id!=3u);}
+fn stationHeritageMember(h:HitField)->bool{return h.seed==71.||h.seed==171.||h.seed==172.||h.seed==173.||h.seed==174.||(h.seed==191.&&h.id!=17u&&h.id!=3u);}
 fn stationHeritageExposure(h:HitField,p:vec3<f32>)->vec3<f32>{
+ // Interior lining is sheltered from facade run-off; handled edges retain wear.
+ if(h.seed==174.){return vec3<f32>(0.,.55,1.-smoothstep(1.2,2.,p.y));}
  let tower=h.seed==71.||h.seed==171.||h.seed==172.||h.seed==173.;
  let q=select(p,p-vec3<f32>(24.,0.,4.),tower);
  let belowCornice=select(12.-q.y,min(abs(q.y-28.60+.22),min(abs(q.y-37.55+.20),abs(q.y-8.10+.20))),tower);
@@ -26,7 +28,7 @@ if(h.seed==186.){let contact=stationWaterfrontWaterContact(h.sourceSeed);st.wet=
 fn stationWoodParams(h:HitField,st:StationState)->KpWoodParams{var wp=kpWoodDefaultParams();if(h.seed==38.||h.seed==39.||h.seed==138.||h.seed==139.||h.seed==148.||h.seed==149.){wp.textureScale=BENCH_WOOD_SCALE;wp.grainContrast=BENCH_WOOD_CONTRAST;}let stockSeed=select(h.sourceSeed,floor(h.sourceSeed/8.),h.seed==138.||h.seed==139.||h.seed==148.||h.seed==149.);wp.seed=fract(wp.seed+stockSeed*.61803398875);wp.reliefScale*=.35+.85*st.retained;wp.roughness=clamp(wp.roughness+.07*st.retained-.12*st.repair,.2,.98);wp.agedSurfaceColor=mix(wp.freshCutColor,wp.agedSurfaceColor,.4+.6*st.retained);wp.clearcoat=.12*st.repair;return wp;}
 // The complete material direction frame matches the position construction.
 // Platform slats use zxy; hall rows use an explicit signed Z reflection.
-fn stationMaterialDirection(h:HitField,p:vec3<f32>,d:vec3<f32>)->vec3<f32>{if(h.seed==172.){return heritageTimberDirection(h.sourceSeed,d);}if(h.id==4u&&(h.seed==138.||h.seed==139.)){return vec3<f32>(-d.z,d.y,d.x);}if(h.id==4u&&(h.seed==148.||h.seed==149.)){let side=select(-1.,1.,p.z>=0.);return vec3<f32>(d.x*side,d.y,d.z*side);}if(h.id==4u&&h.seed==38.){return d.zxy;}if(h.id==4u&&h.seed==39.){return vec3<f32>(d.x,d.y,d.z*select(-1.,1.,p.z>=0.));}return d;}
+fn stationMaterialDirection(h:HitField,p:vec3<f32>,d:vec3<f32>)->vec3<f32>{if(h.seed==172.){return heritageTimberDirection(h.sourceSeed,d);}if(h.seed==174.){return heritagePlasterDirection(h.sourceSeed,d);}if(h.id==4u&&(h.seed==138.||h.seed==139.)){return vec3<f32>(-d.z,d.y,d.x);}if(h.id==4u&&(h.seed==148.||h.seed==149.)){let side=select(-1.,1.,p.z>=0.);return vec3<f32>(d.x*side,d.y,d.z*side);}if(h.id==4u&&h.seed==38.){return d.zxy;}if(h.id==4u&&h.seed==39.){return vec3<f32>(d.x,d.y,d.z*select(-1.,1.,p.z>=0.));}return d;}
 // q/extents remain each real slat for end/side classification. Mother sampling
 // adds the recovered offset in its common stock, in both geometry and shading.
 fn stationWoodCoordinates(h:HitField)->vec3<f32>{let k=h.sourceSeed-floor(h.sourceSeed/8.)*8.;if(h.seed==138.||h.seed==148.){return h.q+vec3<f32>(0.,0.,k*.115);}if(h.seed==139.||h.seed==149.){return h.q+vec3<f32>(0.,k*.10,0.);}return h.q;}

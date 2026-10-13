@@ -95,4 +95,3 @@ fn stationLetteringArcDistance(a:StationLetteringArc,p:vec2<f32>)->f32{var dista
  code+=`return stationLetteringMiss(q,1e5,0.);}\n// origin is the relocated lamp/column attachment, not a repeated world-grid guess.\nfn stationLetteringPlatform(p:vec3<f32>,origin:vec3<f32>,row:u32,side:i32,line:u32)->StationLetteringHit{if(row>3u||line>1u||(side!=1&&side!=-1)){return stationLetteringMiss(p,1e5,0.);}let sidef=f32(side);let center=origin+vec3<f32>(.03+sidef*.0225,${f(deck+signHeight)},-.72);let offset=p-center;let dy=select(.075,-.16,line==1u);let q=vec3<f32>(-sidef*offset.z,offset.y-dy,sidef*offset.x);return stationLetteringTemplate(q,select(0u,row+1u,line==1u));}\n// Anchor is native-terminal-hall's −X short-end title anchor. No reflection.\nfn stationLetteringHall(p:vec3<f32>,anchor:vec3<f32>)->StationLetteringHit{let offset=p-anchor;return stationLetteringTemplate(vec3<f32>(offset.z,offset.y,-offset.x),5u);}\n`;
  return code;
 }
-

@@ -116,6 +116,7 @@ fn stationDomain(p:vec3<f32>,skipRoof:bool,skipFloor:bool)->HitField{
   let iron=completeToweriron(tq);recordCandidate(HitField(iron.d,3u,tq,183.,iron.d,vec3<f32>(1.),iron.member));
   let concrete=completeTowerconcrete(tq);recordCandidate(HitField(concrete.d,19u,tq,173.,concrete.d,vec3<f32>(2.7,1.3,2.7),concrete.member));
   let timber=completeTowerTimber(tq);recordCandidate(timber);
+  let innerPlaster=completeTowerPlaster(tq);recordCandidate(innerPlaster);
   let dial=completeTowerdial(tq);recordCandidate(HitField(dial.d,7u,tq,0.,dial.d,vec3<f32>(1.),dial.member));
   for(var face=0u;face<4u;face++){
    let a=f32(face)*1.570796326794897;let n=vec3<f32>(sin(a),0.,cos(a));let right=vec3<f32>(n.z,0.,-n.x);let q=vec3<f32>(dot(tq,right),tq.y-25.,dot(tq,n)-3.30);
@@ -239,4 +240,3 @@ fn stationDomain(p:vec3<f32>,skipRoof:bool,skipFloor:bool)->HitField{
 fn stationField(p:vec3<f32>)->HitField{return stationDomain(p,false,false);}
 `;}
 export const STATION_FIELD_WGSL=createStationFieldWGSL();
-

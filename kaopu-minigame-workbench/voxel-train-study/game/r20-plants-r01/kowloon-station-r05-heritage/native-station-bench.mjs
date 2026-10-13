@@ -22,4 +22,3 @@ export function stationBenchWGSL(options={}){
  for(const[i,m]of parts.filter(x=>x.type==='beam').entries())s+=`// ${m.id}: source cast leg or load-bearing seat crosspiece\nd=memberBeam(p,${v(m.a)},${v(m.b)},${f(m.width)},${f(m.depth)});if(d<h.d){h=ColumnMemberHit(d,${f(i)});}\n`;
  return s+'return h;}\n';
 }
-

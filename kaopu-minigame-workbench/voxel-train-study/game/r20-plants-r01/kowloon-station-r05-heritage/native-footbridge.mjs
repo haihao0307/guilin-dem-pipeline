@@ -107,4 +107,3 @@ export function recommendFootbridgeHostPlacement(host){
  const stairCrossExtent=.87,passageNear=options.stairCenters[2]-stairCrossExtent-island.nearLocalXM;
  return{options,benchRelocations:[relocation],stationaryColumnsPreserved:true,stairZ,passageNearM:passageNear,otherIslandSidePassageM:3.4-1.3-stairCrossExtent,steps:plan.stairs[2].steps,risersM:plan.stairs[2].rise,bridgeDeckY:plan.deckY,structuralLoadCertification:false,validationScope:'Analytic recipe and retained host clearances; render/GPU validation remains required'};
 }
-
