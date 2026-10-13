@@ -1,0 +1,80 @@
+name: Skin DNA R01 isolated review
+on:
+  push:
+    branches: [feature/skin-dna-r01-audit-20261013]
+    paths:
+      - kaopu-unified-human-workbench/skin-dna-r01/**
+      - .github/workflows/skin-dna-r01.yml
+permissions:
+  contents: write
+concurrency:
+  group: skin-dna-r01-isolated
+  cancel-in-progress: false
+jobs:
+  build-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DIR: kaopu-unified-human-workbench/skin-dna-r01
+      NODE_PATH: /tmp/skin-dna-node/node_modules
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            .github/workflows
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pinned build and browser tools
+        run: |
+          npm install --prefix /tmp/skin-dna-node --no-audit --no-fund esbuild@0.25.11 playwright@1.56.1
+          node /tmp/skin-dna-node/node_modules/playwright/cli.js install --with-deps chromium
+      - name: Build copied R04 and verify numerical profiles
+        run: |
+          mkdir -p skin-dna-evidence
+          node "$DIR/test.mjs" | tee skin-dna-evidence/unit.log
+          node "$DIR/build.cjs" 2>&1 | tee skin-dna-evidence/build.log
+      - name: Render actual local candidate
+        env:
+          QA_OUT: skin-dna-evidence/smoke
+          SMOKE_ONLY: '1'
+        run: node "$DIR/verify.cjs"
+      - name: Publish build only to this isolated branch
+        run: |
+          test "$GITHUB_REF_NAME" = feature/skin-dna-r01-audit-20261013
+          git diff --exit-code -- kaopu-unified-human-workbench/human-integrated-r04
+          git config user.name 'KAOPU Skin Review'
+          git config user.email 'actions@users.noreply.github.com'
+          git add "$DIR"
+          git commit -m "build(skin-dna): immutable candidate [skip ci]"
+          git push origin HEAD:refs/heads/feature/skin-dna-r01-audit-20261013
+          BUILD_SHA=$(git rev-parse HEAD)
+          echo "BUILD_SHA=$BUILD_SHA" >> "$GITHUB_ENV"
+          echo "PREVIEW_URL=https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$BUILD_SHA/$DIR/preview.html" >> "$GITHUB_ENV"
+      - name: Verify exact public page and all skin looks
+        env:
+          QA_OUT: skin-dna-evidence/public
+        run: |
+          node - <<'NODE'
+          const fs=require('fs'),crypto=require('crypto');(async()=>{const u='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+process.env.BUILD_SHA+'/'+process.env.DIR+'/preview.html';let b;for(let i=0;i<6;i++){const r=await fetch(u);if(r.ok){b=Buffer.from(await r.arrayBuffer());break;}await new Promise(r=>setTimeout(r,3000));}if(!b)throw Error('Fixed public HTML unavailable');const hash=x=>crypto.createHash('sha256').update(x).digest('hex');if(hash(b)!==hash(fs.readFileSync(process.env.DIR+'/preview.html')))throw Error('Public bytes differ');console.log('PUBLIC HTML HASH',hash(b));})();
+          NODE
+          node "$DIR/verify.cjs"
+      - name: Save permanent public receipt
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');const d=process.env.DIR,q=JSON.parse(fs.readFileSync('skin-dna-evidence/public/qa.json'));if(!q.completed)throw Error('Public verification incomplete');const b=JSON.parse(fs.readFileSync(d+'/BUILD.json'));fs.writeFileSync(d+'/PUBLIC_QA.json',JSON.stringify(q,null,2));fs.writeFileSync(d+'/DELIVERY.json',JSON.stringify({version:'SKIN-DNA-R01',url:process.env.PREVIEW_URL,sourceCommit:b.sourceCommit,buildCommit:process.env.BUILD_SHA,previewSHA256:b.previewSHA256,run:process.env.GITHUB_RUN_ID,tests:q.tests.length,publicVerified:true,userVisualAccepted:false,merged:false},null,2));
+          NODE
+          git add "$DIR/PUBLIC_QA.json" "$DIR/DELIVERY.json"
+          git commit -m "test(skin-dna): preserve fixed public evidence [skip ci]"
+          git push origin HEAD:refs/heads/feature/skin-dna-r01-audit-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-dna-r01-${{ github.run_number }}
+          retention-days: 14
+          path: |
+            skin-dna-evidence
+            kaopu-unified-human-workbench/skin-dna-r01
