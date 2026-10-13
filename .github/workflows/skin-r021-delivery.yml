@@ -53,7 +53,7 @@ jobs:
           git config user.name 'KAOPU Render Repair'
           git config user.email 'actions@users.noreply.github.com'
           git add "$DIR"
-          git commit -m "build(skin-r021): lossless sampler-budget repair [skip ci]"
+          git commit -m "build(skin-r021): exact-pixel sampler-budget repair [skip ci]"
           git push origin HEAD:refs/heads/fix/skin-dna-r02-1-blackframe-20261013
           SHA=$(git rev-parse HEAD)
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
@@ -111,11 +111,11 @@ jobs:
           else
             node "$RUNNER_TEMP/skin021/node_modules/playwright/cli.js" install chromium
           fi
-      - name: Exact public HTML hash
+      - name: Exact public HTML versus canonical Git bytes and manifest
         shell: bash
         run: |
           node - <<'NODE'
-          const fs=require('fs'),crypto=require('crypto');(async()=>{const url=process.env.PREVIEW_URL.split('?')[1],r=await fetch(url);if(!r.ok)throw Error('Public build unavailable');const b=Buffer.from(await r.arrayBuffer()),h=x=>crypto.createHash('sha256').update(x).digest('hex');if(h(b)!==h(fs.readFileSync(process.env.DIR+'/preview.html')))throw Error('Public hash mismatch');console.log(h(b));})().catch(e=>{console.error(e);process.exit(1)});
+          const fs=require('fs'),cp=require('child_process'),crypto=require('crypto');(async()=>{fs.mkdirSync('evidence',{recursive:true});const file=process.env.DIR+'/preview.html',r=await fetch(process.env.PREVIEW_URL.split('?')[1]);if(!r.ok)throw Error('Public build unavailable');const b=Buffer.from(await r.arrayBuffer()),canonical=cp.execFileSync('git',['show','HEAD:'+file],{maxBuffer:12000000}),h=x=>crypto.createHash('sha256').update(x).digest('hex'),manifest=JSON.parse(fs.readFileSync(process.env.DIR+'/BUILD.json'));const proof={public:h(b),git:h(canonical),manifest:manifest.previewSHA256,checkout:h(fs.readFileSync(file))};fs.writeFileSync('evidence/BYTE_PROOF.json',JSON.stringify(proof,null,2));if(proof.public!==proof.git||proof.public!==proof.manifest)throw Error('Public canonical hash mismatch');console.log(proof);})().catch(e=>{console.error(e);process.exit(1)});
           NODE
       - name: Actual unassisted browser tests
         shell: bash
@@ -144,10 +144,10 @@ jobs:
         with:
           pattern: skin-r021-qa-*-${{ github.run_number }}
           path: evidence
-      - name: Preserve all cross-driver proof, not a software-only success claim
+      - name: Preserve complete actual cross-driver proof
         run: |
           node - <<'NODE'
-          const fs=require('fs');const dirs=fs.readdirSync('evidence'),reports=dirs.map(n=>({name:n,qa:JSON.parse(fs.readFileSync('evidence/'+n+'/qa.json'))}));if(reports.length!==3||reports.some(r=>!r.qa.completed))throw Error('Cross-driver acceptance incomplete');const d=process.env.DIR;fs.cpSync('evidence',d+'/acceptance',{recursive:true});fs.writeFileSync(d+'/DELIVERY.json',JSON.stringify({version:'SKIN-DNA-R02.1',url:process.env.PREVIEW_URL,sourceCommit:process.env.GITHUB_SHA,buildCommit:process.env.BUILD_SHA,run:process.env.GITHUB_RUN_ID,publicVerified:true,windows16SamplerVerified:true,userHardwareTested:false,userVisualAccepted:false,merged:false,reports:reports.map(r=>({name:r.name,tests:r.qa.tests.length,screens:r.qa.screens.length})),scope:'black-frame compatibility repair; same R02 skin recipe and native character'},null,2));
+          const fs=require('fs');const dirs=fs.readdirSync('evidence'),reports=dirs.map(n=>({name:n,qa:JSON.parse(fs.readFileSync('evidence/'+n+'/qa.json'))}));if(reports.length!==3||reports.some(r=>!r.qa.completed))throw Error('Cross-driver acceptance incomplete');const windows=reports.find(r=>r.name.includes('windows'));if(!windows.qa.opening.graphics.valid||windows.qa.opening.graphics.caps.fragmentSamplers!==16||!windows.qa.eyeProof.passed)throw Error('Actual Windows 16-sampler proof missing');const d=process.env.DIR;fs.cpSync('evidence',d+'/acceptance',{recursive:true});fs.writeFileSync(d+'/DELIVERY.json',JSON.stringify({version:'SKIN-DNA-R02.1',url:process.env.PREVIEW_URL,sourceCommit:process.env.GITHUB_SHA,buildCommit:process.env.BUILD_SHA,previewSHA256:JSON.parse(fs.readFileSync(d+'/BUILD.json')).previewSHA256,run:process.env.GITHUB_RUN_ID,publicVerified:true,windows16SamplerVerified:true,userHardwareTested:false,userVisualAccepted:false,merged:false,reports:reports.map(r=>({name:r.name,tests:r.qa.tests.length,screens:r.qa.screens.length})),scope:'black-frame compatibility repair; same R02 skin recipe and native character'},null,2));
           NODE
           git config user.name 'KAOPU Render Repair'
           git config user.email 'actions@users.noreply.github.com'
