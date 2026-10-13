@@ -1,0 +1,183 @@
+name: MP06-R1.1 original prop visibility and public verification
+on:
+  push:
+    branches: [feature/tailor-mp06-native-human-motion-eb1-20261013]
+    paths: ['.github/workflows/tailor-mp06-prop-fix.yml','kaopu-tailor-workbench/material-products/mp06-prop-fix/**']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: write
+      actions: read
+    outputs:
+      url: ${{ steps.publish.outputs.url }}
+      source: ${{ steps.publish.outputs.source }}
+      public: ${{ steps.publish.outputs.public }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: project
+          sparse-checkout: kaopu-tailor-workbench/material-products/mp06-prop-fix
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 38395680223
+          name: mp06-release-runtime
+          path: pack
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Restore original source prop visibility, not animation or physics changes
+        run: |
+          python project/kaopu-tailor-workbench/material-products/mp06-prop-fix/fix.py pack
+          npm install --no-save esbuild@0.25.10 playwright@1.58.2
+          node pack/new/build.cjs
+          for d in solved validation source-evidence motion human light reproducibility; do cp -a pack/$d pack/runtime/; done
+          cp project/kaopu-tailor-workbench/material-products/mp06-prop-fix/fix.py pack/runtime/reproducibility/PROP_FIX.py
+          python - <<'PY'
+          import pathlib,hashlib,json
+          root=pathlib.Path('pack');rows=[]
+          for p in (root/'solved').rglob('*'):
+            if p.is_file():
+              q=root/'runtime/solved'/p.relative_to(root/'solved');assert p.read_bytes()==q.read_bytes();rows.append(str(q))
+          assert len(rows)>6
+          print('Physical cache bytes unchanged',len(rows))
+          PY
+      - name: Real source display and cloth controls before publication
+        env:
+          QA_URL: http://127.0.0.1:8765/
+          LOOK: L04
+        run: |
+          npx playwright install --with-deps chromium
+          python -m http.server 8765 --bind 127.0.0.1 --directory pack/runtime >/tmp/mp0611-server.log 2>&1 &
+          node pack/runtime/reproducibility/qa-public.cjs
+      - name: New immutable public version, preserving old snapshots
+        id: publish
+        run: python pack/runtime/reproducibility/publish.py pack/runtime project
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp0611-preflight
+          path: |
+            evidence-L04
+            /tmp/MP06_STAGE.json
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp0611-runtime
+          path: pack/runtime
+          retention-days: 30
+  bytes:
+    needs: stage
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - name: Public byte identity
+        env:
+          URL: ${{ needs.stage.outputs.url }}
+          SOURCE: ${{ needs.stage.outputs.source }}
+        run: |
+          python - <<'PY'
+          import os,json,hashlib,urllib.request,time,concurrent.futures
+          base=os.environ['URL'];m=None
+          def read(p):
+            with urllib.request.urlopen(base+p,timeout=90) as r:return r.read()
+          for attempt in range(85):
+            try:
+              m=json.loads(read('BUILD_MANIFEST.json'))
+              if m.get('sourceCommit')==os.environ['SOURCE']:break
+            except Exception:pass
+            time.sleep(10)
+          assert m and m['sourceCommit']==os.environ['SOURCE'] and m['version']=='MP06-R1.1'
+          def test(pair):
+            p,h=pair
+            for attempt in range(3):
+              try:
+                b=read(p);assert len(b)==h['bytes'] and hashlib.sha256(b).hexdigest()==h['sha256'],p
+                return {'path':p,**h}
+              except Exception:
+                if attempt==2:raise
+                time.sleep(1)
+          with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:rows=list(pool.map(test,m['files'].items()))
+          json.dump({'passed':True,'fixedURL':base,'source':os.environ['SOURCE'],'files':rows},open('/tmp/PUBLIC_BYTES.json','w'),indent=2);print('PUBLIC_BYTES',len(rows))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mp0611-public-bytes
+          path: /tmp/PUBLIC_BYTES.json
+          retention-days: 30
+  browser:
+    needs: [stage,bytes]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        look: [K04,L04,D01]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: mp0611-runtime
+          path: runtime
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.58.2 && npx playwright install --with-deps chromium
+      - name: Real public R05, original actions, original prop rules and EB1
+        env:
+          QA_URL: ${{ needs.stage.outputs.url }}
+          LOOK: ${{ matrix.look }}
+        run: node runtime/reproducibility/qa-public.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp0611-public-${{ matrix.look }}
+          path: evidence-${{ matrix.look }}
+          retention-days: 30
+  receipt:
+    needs: [stage,bytes,browser]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.stage.outputs.source }}
+          sparse-checkout: kaopu-tailor-workbench/material-products/r06-1-1
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mp0611-public-*
+          path: /tmp/public-evidence
+      - name: Preserve functional import and the unresolved physics and frame-rate requirements separately
+        env:
+          URL: ${{ needs.stage.outputs.url }}
+          SOURCE: ${{ needs.stage.outputs.source }}
+          PUBLIC: ${{ needs.stage.outputs.public }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import os,json,shutil,datetime
+          p=Path('kaopu-tailor-workbench/material-products/r06-1-1');e=Path('/tmp/public-evidence');reports=[json.loads(f.read_text()) for f in e.rglob('REPORT.json')];assert len(reports)==3 and all(r['passed'] for r in reports)
+          index=json.loads((p/'solved/index.json').read_text());assert json.loads(next(e.rglob('PUBLIC_BYTES.json')).read_text())['passed']
+          state={'version':'MP06-R1.1','fixedURL':os.environ['URL'],'sourceCommit':os.environ['SOURCE'],'publicCommit':os.environ['PUBLIC'],'publicCandidateFunctionallyVerified':True,'fullUserTaskComplete':False,'userAccepted':False,'physicalDeviceTested':False,'sourceCatalogueCount':22,'physicalClipCount':len(index['clips']),'physicalActions':sorted(set(c['action'] for c in index['clips'])),'failedPhysicalCases':len(index['failures']),'paperMetricsAdaptedToR05':True,'oldSyntheticActionsUsed':False,'oldPhysicalFramesUsed':False,'runtimePhysicsBakes':0,'propVisibilityMatchesOriginal':True,'propToClothCollision':False,'physicsMode':'new original-source solved-state playback, not arbitrary free real-time cloth','remaining':['failed walking/running/jumping/boxing cloth initialisation','remaining nine garments fitting','complete self collision and CCD','prop to cloth collision and load forces','consumer GPU and phone FPS acceptance','all 22 entries with garments'],'browserResults':[{'look':r['look'],'coldMS':r['coldMS'],'availablePhysicalActions':r['availablePhysicalActions'],'playback':r.get('playback')} for r in reports],'run':os.environ['GITHUB_RUN_ID'],'verifiedAt':datetime.datetime.now(datetime.timezone.utc).isoformat()}
+          (p/'PUBLIC_DELIVERY.json').write_text(json.dumps(state,ensure_ascii=False,indent=2));shutil.copytree(e,p/'public-evidence',dirs_exist_ok=True)
+          (p/'CURRENT_HANDOFF.md').write_text('# MP06-R1.1 原人物、原动作、EB1 成衣接续\n\n'+state['fixedURL']+'?look=K04\n\n人物 HUMAN-INTEGRATED-R05 源9b6644b、原构建475ead27；动作原总台773f717b；EB1 1.1 用户配方beb3dda0。原104骨骼完整权重，22条现有源动作／手部配置／拳击摘段，不是22份新动捕。\n\n本版仅修复非抓取抱物动作误显示道具的问题，与原总台显示条件一致。物理缓存全部原样保留，未重算，也未更改源动作。\n\n三套成衣K04/L04/D01按R05体型适配平面尺寸，保持原裁片数和缝合关系。可穿衣回放的原配置：'+', '.join(state['physicalActions'])+'。其余条目在衣物模式禁用，仅在明确隐藏衣物的来源核对模式开放。\n\n完整交付未完成：行走／跑跳／部分拳击初始衣形仍触发安全保护；道具不参与布料负载；全自碰撞／CCD、任意参数实时物理、消费GPU和实机帧率尚未认证。实际软件渲染数据见PUBLIC_DELIVERY，不能把没有重新求解等同于流畅。36个物理实验的成功与失败、3份本版真实公网报告和截图均保留。\n\n旧r06-1曾通过功能数值检查，但截图暴露额外方盒；旧版保留为失败边界，不作为最终交付。旧MP05/MP04及人物、动作、灯光源均未改。后续从本目录继续，不重做MP03，不用旧自编动作缓存冒充新人体结果。\n')
+          print(json.dumps(state,ensure_ascii=False,indent=2))
+          PY
+      - name: Fast-forward evidence without modifying frozen public bytes
+        env:
+          SOURCE: ${{ needs.stage.outputs.source }}
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git fetch origin feature/tailor-mp06-native-human-motion-eb1-20261013 --depth=1
+          test "$(git rev-parse origin/feature/tailor-mp06-native-human-motion-eb1-20261013)" = "$SOURCE"
+          git add -f kaopu-tailor-workbench/material-products/r06-1-1/PUBLIC_DELIVERY.json kaopu-tailor-workbench/material-products/r06-1-1/CURRENT_HANDOFF.md kaopu-tailor-workbench/material-products/r06-1-1/public-evidence
+          git commit -m 'docs(mp06-r1.1): retain native import verification and unresolved physics and performance facts [skip ci]'
+          git push origin HEAD:refs/heads/feature/tailor-mp06-native-human-motion-eb1-20261013
