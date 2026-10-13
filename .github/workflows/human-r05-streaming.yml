@@ -1,0 +1,84 @@
+name: Human R05 demand-paged native portraits
+on:
+  push:
+    branches: [feature/human-r05-streaming-portraits-20261013]
+    paths: ['kaopu-unified-human-workbench/human-integrated-r05/**', '.github/workflows/human-r05-streaming.yml']
+permissions: {contents: write}
+concurrency:
+  group: human-r05-streaming-portraits
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false playwright@1.58.2 esbuild@0.25.11
+      - name: Exact inherited source and demand-paged original data
+        run: |
+          mkdir -p r05-evidence
+          echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          node kaopu-unified-human-workbench/human-integrated-r05/install-base.cjs
+          node kaopu-unified-human-workbench/human-integrated-r05/prepare-assets.mjs
+          node kaopu-unified-human-workbench/human-integrated-r05/test-stream.mjs | tee r05-evidence/unit.txt
+          node kaopu-unified-human-workbench/human-integrated-r05/build.cjs
+      - run: npx playwright install --with-deps chromium
+      - name: Real rendered candidate before publication
+        env: {SMOKE_ONLY: '1', QA_OUT: r05-evidence/smoke}
+        run: node kaopu-unified-human-workbench/human-integrated-r05/verify.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: human-r05-smoke-${{ github.run_number }}
+          path: r05-evidence/
+          retention-days: 7
+      - name: Publish new immutable runtime only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm -rf kaopu-unified-human-workbench/human-integrated-r05/.native-cache
+          git add kaopu-unified-human-workbench/human-integrated-r05
+          git commit -m 'build(human-r05): exact native demand pages and six editable faces'
+          git push origin HEAD:feature/human-r05-streaming-portraits-20261013
+          echo "BUILD_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Full exact-public browser regression
+        env: {QA_OUT: r05-evidence/public}
+        run: |
+          export PREVIEW_URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${BUILD_SHA}/kaopu-unified-human-workbench/human-integrated-r05/preview.html"
+          node kaopu-unified-human-workbench/human-integrated-r05/verify.cjs
+      - name: Permanent public receipt and predecessor isolation
+        run: |
+          git fetch --depth=1 origin 4d2787db762fc3e72e4595827865f579026c2ad4
+          python - <<'PY'
+          from pathlib import Path
+          import os,json,subprocess,hashlib,urllib.request
+          p=Path('kaopu-unified-human-workbench/human-integrated-r05');q=json.loads(Path('r05-evidence/public/qa.json').read_text());b=json.loads((p/'BUILD.json').read_text())
+          assert q['completed'] and not q['pageErrors'] and not q['consoleErrors'] and not q['failedRequests']
+          url=f"https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/{os.environ['BUILD_SHA']}/{p}/preview.html"
+          assert hashlib.sha256(urllib.request.urlopen(url).read()).hexdigest()==b['previewSHA256']
+          changes=subprocess.check_output(['git','diff','--name-only','4d2787db762fc3e72e4595827865f579026c2ad4','HEAD'],text=True).splitlines()
+          assert all(x.startswith(str(p)+'/') or x in ['.github/workflows/human-r05-native-read.yml','.github/workflows/human-r05-streaming.yml'] for x in changes),changes
+          (p/'PUBLIC_QA.json').write_text(json.dumps(q,ensure_ascii=False,indent=2))
+          receipt={'version':'HUMAN-INTEGRATED-R05','sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':os.environ['BUILD_SHA'],'publicURL':q['url'],'previewSHA256':b['previewSHA256'],'hotModelBytes':b['hotModelBytes'],'originalModelBytes':b['originalModelBytes'],'coldReadyMS':q['coldReadyMS'],'warmReadyMS':q['warmReadyMS'],'checks':len(q['tests']),'unitChecks':15,'oldVersionsChanged':False,'userVisualAccepted':False,'physicalDeviceTested':False,'idleOnDemand':True}
+          (p/'DELIVERY.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2))
+          PY
+          git add kaopu-unified-human-workbench/human-integrated-r05/PUBLIC_QA.json kaopu-unified-human-workbench/human-integrated-r05/DELIVERY.json
+          git commit -m 'test(human-r05): exact public cold warm and six-face evidence'
+          git push origin HEAD:feature/human-r05-streaming-portraits-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: human-r05-full-${{ github.run_number }}
+          path: |
+            r05-evidence/
+            kaopu-unified-human-workbench/human-integrated-r05/*.mjs
+            kaopu-unified-human-workbench/human-integrated-r05/*.cjs
+            kaopu-unified-human-workbench/human-integrated-r05/*.json
+            kaopu-unified-human-workbench/human-integrated-r05/preview.html
+          retention-days: 14
