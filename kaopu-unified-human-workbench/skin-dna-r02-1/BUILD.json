@@ -1,12 +1,12 @@
 {
   "schema": "kaopu/unified-human-build@1",
   "version": "SKIN-DNA-R02.1",
-  "sourceCommit": "48245839bc1b98ce2f9efdd0a50d51beb8799ac5",
+  "sourceCommit": "d338b7755852094b1ba2956729d0c513d13673f8",
   "predecessor": "518cc9bd85b9aec53d8abbeffe303d1c0d03ddd9",
   "earSource": "38a8a2140b42561eecbd31af5df074e9210d0c64",
   "lipSource": "5b4997e6dca27106533022b4ab46164cea073818",
-  "previewSHA256": "4c998f72606a0f7120a16e3f62c5212dfabd62c16a8711ea6331900184027adb",
-  "previewBytes": 5553743,
+  "previewSHA256": "9ffb7aa89442a4fc1d4ca49c47e9f2650443f476f3dea15797f1c9ca4bd91a47",
+  "previewBytes": 5555863,
   "sources": [
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r02-1/Anatomy.mjs",
@@ -58,11 +58,11 @@
     },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r02-1/PackedEyeColors.mjs",
-      "sha256": "920b8fec68e7ae51963360e02e8133de9534e2a051709d09039b08fc58d0adbc"
+      "sha256": "f591b47424353a33dc0b94ee195a783ef3eb5d04f20eaa909b971a95596193e5"
     },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r02-1/R021Adapters.cjs",
-      "sha256": "f3467eab132e894ac34b111c65a374ad3224f3111d2baccacee895367c70bad3"
+      "sha256": "3b3190bdc7047d05606c37eda5a0d38974eacb30df7339dabe54002abb0c025c"
     },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r02-1/R02Adapters.cjs",
@@ -595,6 +595,10 @@
   ],
   "adapters": [
     {
+      "path": "kaopu-unified-human-workbench/lip-structure/LipUI.mjs",
+      "anchor": "tab.click();Promise.all([viewer.skin.faceReady,viewer.skin.naturalEyesReady].filter(Boolean)).then(("
+    },
+    {
       "path": "kaopu-unified-human-workbench/skin-dna-r02-1/Startup.mjs",
       "rule": "SKIN-R02",
       "anchor": "<strong>人物总台 R04 · 耳 R06 / 唇 ET19 / P3 恢复</strong>"
@@ -620,10 +624,6 @@
       "exactInputAnchor": "model.regionalFace=api;"
     },
     {
-      "path": "kaopu-unified-human-workbench/lip-structure/LipUI.mjs",
-      "anchor": "tab.click();Promise.all([viewer.skin.faceReady,viewer.skin.naturalEyesReady].filter(Boolean)).then(("
-    },
-    {
       "path": "kaopu-unified-human-workbench/ear-tissue-r05/EarUI.mjs",
       "anchor": "Promise.all([viewer.skin.faceReady,viewer.skin.naturalEyesReady].filter(Boolean)).then(()=>{if(dispo"
     },
@@ -638,11 +638,6 @@
       "anchor": "pause(value=true){this.playing=!value;"
     },
     {
-      "path": "kaopu-unified-human-workbench/idle-r01/IdleUI.mjs",
-      "rule": "SKIN-R02",
-      "anchor": "if(!disposed)viewer.view('face');"
-    },
-    {
       "path": "kaopu-unified-human-workbench/eye-transfer/NativeEyeLayer.mjs",
       "adapter": "eye-continuous-native-envelope",
       "from": "const back=r.displacement*near*settings.medial*outer;",
@@ -653,6 +648,11 @@
       "adapter": "eye-continuous-native-envelope",
       "from": "version:'ET11-U1',",
       "to": "version:'ET11-U1-R04-continuity',"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/idle-r01/IdleUI.mjs",
+      "rule": "SKIN-R02",
+      "anchor": "if(!disposed)viewer.view('face');"
     },
     {
       "path": "kaopu-unified-human-workbench/eye-materials/NaturalEyeShader.mjs",
@@ -683,6 +683,11 @@
       "path": "kaopu-unified-human-workbench/eye-materials/NaturalEyeShader.mjs",
       "rule": "lossless-eye-colour-array",
       "anchor": "+'/ET15-source-eye-optics-v2'"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/eye-materials/NaturalEyeShader.mjs",
+      "rule": "lossless-eye-colour-array",
+      "anchor": "skin.naturalEyesReady=textures().then(list=>{"
     },
     {
       "path": "kaopu-unified-human-workbench/eye-materials/NaturalEyeShader.mjs",
@@ -738,15 +743,15 @@
       "occurrences": 1
     },
     {
-      "path": "kaopu-unified-human-workbench/identity-lab/TraitMaps.mjs",
-      "anchor": "function wrinkle(p,width,amount){if(!amount)return;"
-    },
-    {
       "path": "kaopu-unified-human-workbench/skin-folds-r02/FoldSkin.mjs",
       "adapter": "unified-specialist-ownership",
       "exactInputAnchor": "clamp(vFA.x,0.,1.)*csCover*(1.-clamp(vFA.y*4.,0.,1.))",
       "result": "clamp(vFA.x,0.,1.)*csCover*(1.-clamp(vFA.y*4.,0.,1.))*(1.-lpMask)*(1.-eaM)",
       "occurrences": 1
+    },
+    {
+      "path": "kaopu-unified-human-workbench/identity-lab/TraitMaps.mjs",
+      "anchor": "function wrinkle(p,width,amount){if(!amount)return;"
     },
     {
       "path": "kaopu-unified-human-workbench/ear-root-r04/EarMaterial.mjs",
