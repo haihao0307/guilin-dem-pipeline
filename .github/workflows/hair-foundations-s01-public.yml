@@ -1,0 +1,64 @@
+name: Hair foundations S01 immutable public verification
+on:
+  push:
+    branches: ['feature/hair-scalp-foundation-s01-20261013']
+    paths: ['kaopu-hair-workbench/foundations/s01/public-request.json']
+permissions:
+  contents: write
+concurrency:
+  group: hair-foundations-s01-public
+  cancel-in-progress: false
+jobs:
+  public:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    env:
+      P: kaopu-hair-workbench/foundations/s01
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-hair-workbench/foundations/s01
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install pinned browser tools
+        run: |
+          npm install --prefix /tmp/scalp-tools --no-save playwright@1.55.1 pngjs@7.0.0
+          ln -s /tmp/scalp-tools/node_modules "$P/node_modules"
+          node /tmp/scalp-tools/node_modules/playwright/cli.js install --with-deps chromium
+          sudo apt-get install -y fonts-noto-cjk >/dev/null
+      - name: Wait for the exact append-only published candidate
+        run: |
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';import{createHash}from'node:crypto';
+          const p=process.env.P,r=JSON.parse(fs.readFileSync(p+'/public-request.json')),m=JSON.parse(fs.readFileSync(p+'/site/BUILD_MANIFEST.json'));
+          if(!/^https:\/\/haihao0307\.github\.io\/guilin-dem-pipeline\/kaopu-hair-workbench\/foundations\/s01-[a-f0-9]{12}\/$/.test(r.url))throw Error('Invalid fixed public URL');
+          if(r.source!==m.source)throw Error('Source mismatch');
+          let ok=false;for(let i=0;i<90;i++){try{const q=await fetch(r.url+'index.html',{signal:AbortSignal.timeout(15000)}),b=Buffer.from(await q.arrayBuffer());if(q.ok&&createHash('sha256').update(b).digest('hex')===m.files['index.html'].sha256){ok=true;break;}}catch{}await new Promise(x=>setTimeout(x,8000));}if(!ok)throw Error('Immutable public deployment not ready');
+          fs.appendFileSync(process.env.GITHUB_ENV,'PUBLIC_URL='+r.url+'\n');
+          JS
+      - name: Real public rendering and interaction verification
+        run: node "$P/test.mjs"
+      - name: Record public receipt without changing tested runtime
+        run: |
+          node --input-type=module <<'JS'
+          import fs from'node:fs';
+          const p=process.env.P,r=JSON.parse(fs.readFileSync(p+'/evidence/public/report.json')),m=JSON.parse(fs.readFileSync(p+'/site/BUILD_MANIFEST.json'));
+          if(!r.ok||r.errors.length||r.initial.source!==m.source)throw Error('Public evidence invalid');
+          fs.writeFileSync(p+'/PUBLIC_DELIVERY.json',JSON.stringify({version:m.version,source:m.source,url:process.env.PUBLIC_URL,publicRun:process.env.GITHUB_RUN_ID,checks:r.checkCount,initial:r.initial,final:r.final,phoneHardwareTest:false,anatomicalValidation:false,oldVersionsModified:false},null,2));
+          JS
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$P/evidence/public" "$P/PUBLIC_DELIVERY.json"
+          git commit -m 'test(scalp-s01): immutable public browser receipt'
+          git push origin "HEAD:$GITHUB_REF_NAME"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: scalp-s01-public-${{ github.run_id }}
+          path: |
+            kaopu-hair-workbench/foundations/s01/evidence/public
+            kaopu-hair-workbench/foundations/s01/PUBLIC_DELIVERY.json
+            kaopu-hair-workbench/foundations/s01/site/BUILD_MANIFEST.json
+          retention-days: 14
