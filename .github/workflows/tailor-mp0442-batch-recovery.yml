@@ -1,0 +1,173 @@
+name: MP04.4.2 exact-primitive batching public recovery
+on:
+  push:
+    branches: [fix/tailor-mp04-playback-finish-20261013]
+    paths: ['.github/workflows/tailor-mp0442-batch-recovery.yml','kaopu-tailor-workbench/material-products/r04-batch-recovery/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: write
+    outputs:
+      url: ${{ steps.publish.outputs.url }}
+      source: ${{ steps.publish.outputs.source }}
+      public: ${{ steps.publish.outputs.public }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: project
+          sparse-checkout: |
+            kaopu-tailor-workbench/material-products/r04-4-1
+            kaopu-tailor-workbench/material-products/r04-batch-recovery
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preserve primitive fields and physics while batching identical submissions
+        run: |
+          cp -a project/kaopu-tailor-workbench/material-products/r04-4-1 runtime
+          python project/kaopu-tailor-workbench/material-products/r04-batch-recovery/prepare.py runtime
+          node --check runtime/app.mjs
+          node --check runtime/solid-textiles.mjs
+          node --check runtime/qa-case.cjs
+          node runtime/unit.mjs
+          node runtime/test-render.mjs
+          THREE_PATH="$PWD/runtime/vendor/three.module.js" node --loader ./runtime/node-loader.mjs runtime/test-batch.mjs
+      - name: Save complete runtime and new immutable public directory
+        id: publish
+        run: python runtime/_build/publish-snapshot.py runtime project
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp0442-stage
+          path: |
+            /tmp/MP04_PUBLIC_STAGE.json
+            runtime/UNIT_REPORT.json
+            runtime/RENDER_UNIT_REPORT.json
+            runtime/BATCH_UNIT_REPORT.json
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mp0442-runtime
+          path: runtime
+          retention-days: 30
+  bytes:
+    needs: stage
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - name: Verify every fixed public file against the new source manifest
+        env:
+          URL: ${{ needs.stage.outputs.url }}
+          SOURCE: ${{ needs.stage.outputs.source }}
+        run: |
+          python - <<'PY'
+          import os,json,urllib.request,time,hashlib,concurrent.futures
+          base=os.environ['URL'];source=os.environ['SOURCE'];manifest=None
+          def read(name):
+              with urllib.request.urlopen(base+name,timeout=90) as r:return r.read()
+          for attempt in range(85):
+              try:
+                  manifest=json.loads(read('BUILD_MANIFEST.json'))
+                  if manifest.get('sourceCommit')==source:break
+              except Exception:pass
+              time.sleep(10)
+          assert manifest and manifest['sourceCommit']==source and manifest['version']=='MP04.4.2'
+          def check(item):
+              n,e=item
+              for attempt in range(4):
+                  try:
+                      b=read(n);assert len(b)==e['bytes'] and hashlib.sha256(b).hexdigest()==e['sha256'],n
+                      return {'path':n,**e}
+                  except Exception:
+                      if attempt==3:raise
+                      time.sleep(2)
+          with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:files=list(pool.map(check,manifest['files'].items()))
+          json.dump({'passed':True,'sourceCommit':source,'fixedURL':base,'files':files},open('/tmp/PUBLIC_BYTES.json','w'),indent=2)
+          print('PUBLIC_BYTES_PASS',source,len(files))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mp0442-public-bytes
+          path: /tmp/PUBLIC_BYTES.json
+          retention-days: 30
+  browser:
+    needs: [stage,bytes]
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        case: [D01-step,L04-twist,K04-step,K04,L04,D01,K04-raise,L04-raise,D01-raise,K04-twist,L04-step,D01-twist,K01,K02,K03,L01,L02,L03,D02,D03,D04,K04-detail,L04-detail,D01-detail]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: mp0442-runtime
+          path: runtime
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.58.2 && npx playwright install --with-deps chromium
+      - name: Real public UI and exact yarn fields with unchanged time limits and visual settings
+        env:
+          QA_CASE: ${{ matrix.case }}
+          QA_URL: ${{ needs.stage.outputs.url }}
+          RUNTIME_SOURCE: ${{ needs.stage.outputs.source }}
+        run: node runtime/qa-case.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp0442-public-${{ matrix.case }}
+          path: runtime/public-${{ matrix.case }}
+          retention-days: 30
+  receipt:
+    needs: [stage,bytes,browser]
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.stage.outputs.source }}
+          sparse-checkout: kaopu-tailor-workbench/material-products/r04-4-2
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mp0442-public-*
+          path: /tmp/evidence
+      - name: Write verified preview scope without claiming all latest workbenches have been ported
+        env:
+          URL: ${{ needs.stage.outputs.url }}
+          SOURCE: ${{ needs.stage.outputs.source }}
+          PUBLIC: ${{ needs.stage.outputs.public }}
+        run: |
+          python - <<'PY'
+          import pathlib,json,datetime,os
+          e=pathlib.Path('/tmp/evidence');reports=[json.loads(p.read_text()) for p in e.rglob('BROWSER_REPORT.json')]
+          expected={c+str(i).zfill(2) for c in ['K','L','D'] for i in range(1,5)}|{a+'-'+b for a in ['K04','L04','D01'] for b in ['raise','twist','step','detail']}
+          assert len(reports)==24 and {r['case'] for r in reports}==expected and all(r['passed'] for r in reports)
+          assert all(r['renderBackpressure']['maxInFlight']==1 and not r['renderBackpressure']['failed'] and all(p['passed'] for p in r['batchProof']) for r in reports)
+          hashes=json.loads(next(e.rglob('PUBLIC_BYTES.json')).read_text());assert hashes['passed']
+          latency=[row['wallMS'] for r in reports for row in r['rows'] if row['case']=='real-mouse-pause-latency'];assert len(latency)>=18
+          batch=[{'case':r['case'],'role':row['role'],'beforeDraws':row.get('originalVisibleYarnDrawCalls'),'afterDraws':row.get('batchedYarnDrawCalls'),'sameTriangles':row.get('batchedYarnTriangles')==row.get('submittedYarnTriangles'),'instances':row.get('batchedYarnInstances'),'extraAttributeBytes':row.get('batchIntervalStorageBytes')} for r in reports for row in r['finalRows'] if row['yarnSpans']]
+          assert all(r['sameTriangles'] for r in batch)
+          state={'version':'MP04.4.2','fixedURL':os.environ['URL'],'sourceCommit':os.environ['SOURCE'],'publicCommit':os.environ['PUBLIC'],'publicBrowserVerified':True,'publicBytesVerified':True,'thisRecoveryPreviewVerified':True,'fullUserTaskComplete':False,'remaining':['complete native knit R15 fuzz/distance renderer migration','native denim R12 damaged-fabric force integration','all material/garment combinations','full self-collision and continuous collision','real-device performance certification'],'testedCases':sorted(expected),'oldFailedRunsRetained':[38356384181,38362335029,38362561568,38365883577],'physicsSourcesAndClipsPreserved':True,'sameYarnPrimitiveFieldsVerified':True,'materialShadersAndDimensionsPreserved':True,'renderQueueAtMostOneFrame':True,'realMousePauseWallMS':latency,'batchCases':batch,'userAccepted':False,'physicalDeviceTested':False,'workflowRun':os.environ['GITHUB_RUN_ID'],'verifiedAt':datetime.datetime.now(datetime.timezone.utc).isoformat()}
+          p=pathlib.Path('kaopu-tailor-workbench/material-products/r04-4-2');(p/'PUBLIC_DELIVERY.json').write_text(json.dumps(state,ensure_ascii=False,indent=2));(p/'PUBLIC_BROWSER_REPORTS.json').write_text(json.dumps({'state':state,'reports':reports,'publicBytes':hashes},ensure_ascii=False,indent=2))
+          (p/'DELIVERY.md').write_text('# MP04.4.2 成衣接续成果\n\n'+state['fixedURL']+'?look=K04\n\n十二套搭配、九组人物动作和三类材质特写，共24个独立真实公网案例通过；保留实际鼠标暂停、继续、半速、时间轴、单灯、内外侧和移动视口检查。\n\n本次将同材质/裁片/LOD的纱线提交合并，逐项核对原始实例、截面模板、着色器和三角形数；不靠删纱线或降低阴影质量。动作仍是原求解器真实实算帧回放，不代表用户设备实时物理30FPS。新配方需重新求解。\n\n旧MP02/MP03/MP04及其他工作台不修改。完整材料升级交付未完成：完整R15毛羽/距离渲染、R12破损独立受力尚未全量合入；未取得实机性能认证或全部动态状态不穿模证明。\n')
+          print(json.dumps(state,ensure_ascii=False,indent=2))
+          PY
+      - name: Fast-forward permanent evidence without rewriting published runtime
+        env:
+          SOURCE: ${{ needs.stage.outputs.source }}
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git fetch origin fix/tailor-mp04-playback-finish-20261013 --depth=1
+          test "$(git rev-parse origin/fix/tailor-mp04-playback-finish-20261013)" = "$SOURCE"
+          git add -f kaopu-tailor-workbench/material-products/r04-4-2/PUBLIC_DELIVERY.json kaopu-tailor-workbench/material-products/r04-4-2/PUBLIC_BROWSER_REPORTS.json kaopu-tailor-workbench/material-products/r04-4-2/DELIVERY.md
+          git commit -m 'docs(mp04.4.2): preserve exact-primitive public delivery evidence and remaining goals [skip ci]'
+          git push origin HEAD:refs/heads/fix/tailor-mp04-playback-finish-20261013
