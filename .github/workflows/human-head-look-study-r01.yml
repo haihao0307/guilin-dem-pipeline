@@ -1,0 +1,56 @@
+name: Head Look R01 source and rendering study
+on:
+  push:
+    branches: [feature/human-head-look-r01-20261013]
+    paths: ['.github/workflows/human-head-look-study-r01.yml']
+permissions:
+  contents: read
+concurrency:
+  group: head-look-r01-study
+  cancel-in-progress: false
+jobs:
+  study:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false playwright@1.58.2 esbuild@0.25.11
+      - run: npx playwright install --with-deps chromium
+      - name: Collect bounded source and original baseline render inputs for private analysis
+        run: |
+          mkdir -p head-look-study/cache head-look-study/source head-look-study/reference
+          python - <<'PY'
+          import pathlib,shutil,urllib.request,json
+          root=pathlib.Path('kaopu-unified-human-workbench')
+          folders=['human-integrated-r03','skin-folds-r02','cinematic-r01','face-transfer','eye-materials','idle-r01','identity-lab','full/ui','full/source','full/runtime','full/core','full']
+          selected=set()
+          for folder in folders:
+            p=root/folder
+            if not p.exists():continue
+            for f in p.rglob('*'):
+              if f.is_file() and f.suffix in ['.mjs','.js','.cjs','.css','.json','.md'] and f.stat().st_size<12000000:selected.add(f)
+          for p in ['index.html','layout.css']:
+            if (root/p).exists():selected.add(root/p)
+          for f in selected:
+            dest=pathlib.Path('head-look-study/source')/f;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(f,dest)
+          for p in ['README.md','index.html','build/bundle.js','package.json']:
+            b=urllib.request.urlopen('https://raw.githubusercontent.com/lo-th/head/21462e471d53ba8c413a96989016510ca4495a34/'+p,timeout=60).read()
+            (pathlib.Path('head-look-study/reference')/p.replace('/','_')).write_bytes(b)
+          PY
+          cat > head-look-study/probe.cjs <<'JS'
+          const {chromium}=require('playwright'),fs=require('fs'),crypto=require('crypto'),path=require('path');
+          (async()=>{const r={errors:[],failed:[],cache:[],reference:'21462e471d53ba8c413a96989016510ca4495a34',baseline:'2c08fa9728f64e9119b4a666cf80ee3faecb23de'},tasks=[];let b,p;const write=()=>fs.writeFileSync('head-look-study/report.json',JSON.stringify(r,null,2));try{b=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});p=await b.newPage({viewport:{width:1100,height:900},deviceScaleFactor:1});p.on('pageerror',e=>{r.errors.push(String(e));write()});p.on('requestfailed',q=>{r.failed.push({url:q.url(),error:q.failure()});write()});p.on('response',q=>{if(!/^https?:/.test(q.url())||q.status()!==200)return;tasks.push((async()=>{try{const data=await q.body(),name=crypto.createHash('sha256').update(q.url()).digest('hex');fs.writeFileSync('head-look-study/cache/'+name,data);r.cache.push({url:q.url(),file:name,bytes:data.length,type:q.headers()['content-type']||'application/octet-stream'});}catch(e){}})());});await p.goto('file://'+path.resolve('kaopu-unified-human-workbench/human-integrated-r03/preview.html'));await p.waitForFunction(()=>window.unifiedHuman,null,{timeout:240000});await p.evaluate(()=>lifelikeIdle.pause(true));await p.waitForFunction(()=>lifelikeIdle.ready(),null,{timeout:240000});await p.evaluate(async()=>{await Promise.all([__IDENTITY_QA__.viewer().skin.faceReady,__IDENTITY_QA__.viewer().skin.naturalEyesReady]);lifelikeIdle.seek(0);unifiedHuman.face();const v=__IDENTITY_QA__.viewer(),m=v.skin.material,old=m.onBeforeCompile;m.onBeforeCompile=function(s,...a){old.call(this,s,...a);window.__studyShader=s};m.needsUpdate=true;v.render();});r.viewer=await p.evaluate(()=>{const v=__IDENTITY_QA__.viewer(),lights=[];v.scene.traverse(o=>{if(o.isLight)lights.push({name:o.name,type:o.type,color:o.color?.getHexString(),intensity:o.intensity,visible:o.visible,position:o.position.toArray(),shadow:o.castShadow,target:o.target?.position.toArray()})});return{keys:Object.keys(v),skin:Object.keys(v.skin),model:Object.keys(v.model),lights,environment:!!v.scene.environment,renderer:{toneMapping:v.renderer.toneMapping,exposure:v.renderer.toneMappingExposure,output:v.renderer.outputColorSpace},report:unifiedHuman.report()}});const shader=await p.evaluate(()=>({fragment:__studyShader.fragmentShader,vertex:__studyShader.vertexShader,uniforms:Object.fromEntries(Object.entries(__studyShader.uniforms).map(([k,x])=>[k,x.value?.isTexture?{texture:true,image:[x.value.image?.width,x.value.image?.height]}:typeof x.value==='number'?x.value:null]))}));fs.writeFileSync('head-look-study/retained.frag',shader.fragment);fs.writeFileSync('head-look-study/retained.vert',shader.vertex);fs.writeFileSync('head-look-study/uniforms.json',JSON.stringify(shader.uniforms,null,2));await p.screenshot({path:'head-look-study/baseline.png',timeout:120000});r.completed=true;}catch(e){r.failure=String(e);process.exitCode=1;}finally{await Promise.allSettled(tasks);write();await b?.close();}})();
+          JS
+          node head-look-study/probe.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: head-look-r01-private-study
+          path: head-look-study/
+          retention-days: 3
