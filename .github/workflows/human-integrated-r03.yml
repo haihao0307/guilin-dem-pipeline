@@ -1,0 +1,95 @@
+name: Human R03 ear lip face integration
+on:
+  push:
+    branches: [feature/human-integrated-anatomy-r03-20261013]
+    paths: ['kaopu-unified-human-workbench/human-integrated-r03/**', '.github/workflows/human-integrated-r03.yml']
+permissions:
+  contents: write
+concurrency:
+  group: human-integrated-anatomy-r03
+  cancel-in-progress: false
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false playwright@1.58.2 esbuild@0.25.11
+      - run: npx playwright install --with-deps chromium
+      - name: Import pinned specialist source into isolated integration folder only
+        run: |
+          git fetch --depth=1 origin 63e5dfddf2b5ca0d686651804beeba3333b2f41e 5b4997e6dca27106533022b4ab46164cea073818 69ffe5fb723b49e82fa3f1232b9353d37a16f717
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess,json,hashlib
+          root=Path('kaopu-unified-human-workbench/human-integrated-r03/specialists');records=[]
+          sources=[('63e5dfddf2b5ca0d686651804beeba3333b2f41e',f,f) for f in ['ear-structure','ear-growth','ear-refinement-r03','ear-root-r04','ear-tissue-r05']]+[('5b4997e6dca27106533022b4ab46164cea073818','lip-structure','lips-et19')]
+          for sha,folder,dest in sources:
+            prefix='kaopu-unified-human-workbench/'+folder+'/'
+            for name in subprocess.check_output(['git','ls-tree','-r','--name-only',sha,'--',prefix],text=True).splitlines():
+              p=Path(name)
+              if any(x in p.parts for x in ['acceptance','evidence']) or p.suffix not in ['.mjs','.js','.json','.md','.css','.cjs','.py']:continue
+              data=subprocess.check_output(['git','show',sha+':'+name]);q=root/dest/name[len(prefix):];q.parent.mkdir(parents=True,exist_ok=True)
+              if q.exists():assert q.read_bytes()==data, str(q)+' donor drift'
+              else:q.write_bytes(data)
+              records.append({'sourceCommit':sha,'sourcePath':name,'path':str(q),'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()})
+          (root/'PROVENANCE.json').write_text(json.dumps(records,indent=2)+'\n')
+          PY
+          mkdir -p r03-evidence
+          echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          node kaopu-unified-human-workbench/human-integrated-r03/test.mjs | tee r03-evidence/unit.txt
+          node kaopu-unified-human-workbench/human-integrated-r03/build.cjs
+      - name: Actual browser smoke before publishing
+        env:
+          QA_OUT: r03-evidence/smoke
+          SMOKE_ONLY: '1'
+        run: node kaopu-unified-human-workbench/human-integrated-r03/verify.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: human-r03-smoke-${{ github.run_number }}
+          path: r03-evidence/
+          retention-days: 7
+      - name: Publish immutable candidate without merging
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/human-integrated-r03
+          git commit -m 'build(human-r03): integrated ear R05 lip ET19 and regional face preview'
+          git push origin HEAD:feature/human-integrated-anatomy-r03-20261013
+          echo "BUILD_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Test exact fixed-public page
+        env:
+          QA_OUT: r03-evidence/public
+        run: |
+          export PREVIEW_URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${BUILD_SHA}/kaopu-unified-human-workbench/human-integrated-r03/preview.html"
+          node kaopu-unified-human-workbench/human-integrated-r03/verify.cjs
+      - name: Record current evidence and legacy isolation
+        run: |
+          python - <<'PY'
+          import os,json,subprocess
+          from pathlib import Path
+          p=Path('kaopu-unified-human-workbench/human-integrated-r03');q=json.loads(Path('r03-evidence/public/qa.json').read_text());b=json.loads((p/'BUILD.json').read_text())
+          assert q['completed'] and not q['pageErrors'] and not q['consoleErrors'] and not q['failedRequests']
+          changes=subprocess.check_output(['git','diff','--name-only','69ffe5fb723b49e82fa3f1232b9353d37a16f717','HEAD'],text=True).splitlines()
+          assert all(x.startswith(str(p)+'/') or x in ['.github/workflows/human-integrated-r03.yml','.github/workflows/human-integrated-r03-inspect.yml'] for x in changes),changes
+          receipt={'version':'HUMAN-INTEGRATED-R03','sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':os.environ['BUILD_SHA'],'publicURL':q['url'],'previewSHA256':b['previewSHA256'],'previewBytes':b['previewBytes'],'earSource':b['earSource'],'lipSource':b['lipSource'],'skinBase':b['predecessor'],'run':os.environ['GITHUB_RUN_ID'],'unitChecks':12,'publicChecks':len(q['tests']),'publicBrowserVerified':True,'legacyFilesChanged':False,'userVisualAccepted':False,'productionReady':False,'realPhoneTested':False,'consumerGPUPerformanceCertified':False,'report':q['final'],'draws':q.get('draws'),'limits':b['limitations']}
+          (p/'DELIVERY.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n');(p/'PUBLIC_QA.json').write_text(json.dumps(q,ensure_ascii=False,indent=2)+'\n')
+          PY
+          git add kaopu-unified-human-workbench/human-integrated-r03/DELIVERY.json kaopu-unified-human-workbench/human-integrated-r03/PUBLIC_QA.json
+          git commit -m 'docs(human-r03): exact public browser evidence and limitations'
+          git push origin HEAD:feature/human-integrated-anatomy-r03-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: human-r03-full-${{ github.run_number }}
+          path: |
+            r03-evidence/
+            kaopu-unified-human-workbench/human-integrated-r03/
+          retention-days: 14
