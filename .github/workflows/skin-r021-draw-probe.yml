@@ -1,0 +1,36 @@
+name: Skin Windows draw-path isolation
+on:
+  push:
+    branches: [fix/skin-dna-r02-1-blackframe-20261013]
+    paths: [.github/workflows/skin-r021-draw-probe.yml]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - shell: bash
+        run: |
+          npm install --prefix "$RUNNER_TEMP/draw-probe" playwright@1.56.1
+          echo "NODE_PATH=$RUNNER_TEMP/draw-probe/node_modules" >> "$GITHUB_ENV"
+          node "$RUNNER_TEMP/draw-probe/node_modules/playwright/cli.js" install chromium
+      - shell: bash
+        run: |
+          mkdir -p evidence
+          cat > probe.cjs <<'NODE'
+          const fs=require('fs'),{chromium}=require('playwright');(async()=>{const b=await chromium.launch({headless:true,args:['--use-angle=d3d11-warp','--enable-unsafe-swiftshader']}),p=await b.newPage({viewport:{width:1190,height:1190}}),R={errors:[],console:[]};p.on('pageerror',e=>R.errors.push(String(e)));p.on('console',m=>{if(['error','warning'].includes(m.type()))R.console.push(m.text());});try{await p.goto('https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/25ff59621736fd73513ca25de099a3a00d2bc270/kaopu-unified-human-workbench/skin-dna-r02-1/preview.html',{waitUntil:'domcontentloaded',timeout:120000});await p.waitForFunction(()=>window.__SKIN_REVIEW__?.ready||window.__SKIN_REVIEW__?.errors?.length,null,{timeout:300000});
+          R.state=await p.evaluate(()=>{const v=__IDENTITY_QA__.viewer(),g=v.renderer.getContext(),r=v.renderer,idle=lifelikeIdle.runtime();window.__dp={v,r,g};const fields={};for(const [k,x]of Object.entries(v))if(typeof x==='boolean'||typeof x==='number')fields[k]=x;const state={};for(const k of ['VIEWPORT','SCISSOR_BOX','SCISSOR_TEST','COLOR_WRITEMASK','DEPTH_WRITEMASK','DEPTH_TEST','CULL_FACE','RASTERIZER_DISCARD','DRAW_BUFFER0','READ_BUFFER','FRAMEBUFFER_BINDING']){const x=g.getParameter(g[k]);state[k]=ArrayBuffer.isView(x)?Array.from(x):x===null?null:typeof x==='object'?String(x):x;}return{fields,state,idle:{suppressed:idle.suppressed,ready:idle.ready,playing:idle.playing},target:r.getRenderTarget()?.uuid,info:r.info,camera:{p:v.camera.position.toArray(),q:v.camera.quaternion.toArray(),target:v.orbit.target.toArray(),matrix:v.camera.projectionMatrix.toArray()},mesh:{visible:v.mesh.visible,culled:v.mesh.frustumCulled,matrix:v.mesh.matrixWorld.toArray(),sphere:v.geometry.boundingSphere,drawRange:v.geometry.drawRange,vertices:v.geometry.attributes.position.count},errors:__SKIN_REVIEW__.errors};});
+          for(const mode of ['viewer','idle','direct','reset','unculled','clear','flat']){R[mode]=await p.evaluate(mode=>{const {v,r,g}=__dp,before=r.info.render.frame;if(mode==='viewer')v.render();if(mode==='idle')lifelikeIdle.runtime().originalRender();if(mode==='direct')r.render(v.scene,v.camera);if(mode==='reset'){r.resetState();r.setRenderTarget(null);r.setScissorTest(false);r.setViewport(0,0,r.domElement.width,r.domElement.height);r.render(v.scene,v.camera);}if(mode==='unculled'){v.mesh.frustumCulled=false;r.render(v.scene,v.camera);}if(mode==='clear'){g.clearColor(.9,.2,.1,1);g.clear(g.COLOR_BUFFER_BIT|g.DEPTH_BUFFER_BIT);}if(mode==='flat'){const m=v.mesh.material,old=m.onBeforeCompile;m.onBeforeCompile=s=>{old.call(m,s);s.fragmentShader='void main(){gl_FragColor=vec4(0.2,0.8,0.1,1.);}';};m.customProgramCacheKey=()=>'/diagnostic-flat-only';m.needsUpdate=true;r.render(v.scene,v.camera);}const a=new Uint8Array(g.drawingBufferWidth*g.drawingBufferHeight*4);g.readPixels(0,0,g.drawingBufferWidth,g.drawingBufferHeight,g.RGBA,g.UNSIGNED_BYTE,a);let min=255,max=0,alpha=0,col=0;for(let i=0;i<a.length;i+=4){min=Math.min(min,a[i]);max=Math.max(max,a[i]);alpha+=a[i+3]>0?1:0;col+=a[i]+a[i+1]+a[i+2]>30?1:0;}return{range:[min,max],alpha,col,error:g.getError(),frames:r.info.render.frame-before,calls:r.info.render.calls,triangles:r.info.render.triangles};},mode);await p.screenshot({path:'evidence/'+mode+'.png',timeout:120000});fs.writeFileSync('evidence/probe.json',JSON.stringify(R,null,2));}
+          }catch(e){R.failure=String(e);}finally{fs.writeFileSync('evidence/probe.json',JSON.stringify(R,null,2));await b.close();}})();
+          NODE
+          node probe.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-r021-draw-path
+          path: evidence
+          retention-days: 14
