@@ -66,5 +66,6 @@ Result: see `PROBES/render_device_capability_result_n152.json`.
 - Does not convert Chrome/WARP evidence into physical user-GPU, Safari, Vision Pro, mobile-device or performance acceptance.
 - Does not authorize deleting skin, eye, ear, lip, lighting or material features to fit a budget.
 - Does not modify PR #267, production branches, main, R2 or any threshold.
-- Route only to Skin PR #267. Lifecycle before posting: `POSTED=false`; `CLASSIFICATION-GATE-RUN=false`; `ACKNOWLEDGED / IMPLEMENTED / SKIN-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`.
+- Routed only to Skin PR #267: https://github.com/haihao0307/guilin-dem-pipeline/pull/267#issuecomment-6153809464
+- Lifecycle after routing: `POSTED=true`; `CLASSIFICATION-GATE-RUN=true (7/7)`; `ACKNOWLEDGED / IMPLEMENTED / SKIN-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`.
 - Effect KPIs: original user-visible black-frame correction count is one; all comparative rates and time-to-legal-candidate remain `unknown`.
