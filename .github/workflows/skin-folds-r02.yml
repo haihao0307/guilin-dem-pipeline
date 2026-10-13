@@ -2,7 +2,7 @@ name: Skin folds R02 continuous tissue
 on:
   push:
     branches: [fix/skin-folds-r02-soft-tissue-20261013]
-    paths: ['iteration/skin-folds-r02/**', '.github/workflows/skin-folds-r02.yml']
+    paths: ['kaopu-unified-human-workbench/skin-folds-r02/**', 'iteration/skin-folds-r02/**', '.github/workflows/skin-folds-r02.yml']
 permissions:
   contents: write
 concurrency:
@@ -23,24 +23,19 @@ jobs:
         with: {node-version: 22}
       - run: npm install --no-save --package-lock=false playwright@1.58.2 esbuild@0.25.11
       - run: npx playwright install --with-deps chromium
-      - name: Generate R02-only readable source with verified frozen inputs
+      - name: Validate canonical R02 source and frozen R01 predecessor
         run: |
           set -euo pipefail
           mkdir -p r02-evidence
           python - <<'PY'
           from pathlib import Path
-          import hashlib
-          p=Path('kaopu-unified-human-workbench/skin-folds-r01/preview.html')
-          assert hashlib.sha256(p.read_bytes()).hexdigest()=='58b394a4f8ab129fe4ea50bde4cfd3e3f8d9de50a4f8047022a9d59de3670f9c'
-          PY
-          python iteration/skin-folds-r02/install.py | tee r02-evidence/source-install.json
-          python - <<'PY'
-          from pathlib import Path
-          p=Path('kaopu-unified-human-workbench/skin-folds-r02/build.cjs');s=p.read_text()
-          old="userBaseline:'ccf5a1ed9ddde8803e292f1e62d777b141ff52d8'"
-          assert s.count(old)==1
-          s=s.replace(old,"userBaseline:'8eb41852b4751b02003867b9aff2c4dd7a6e338c',originalCinematicBaseline:'ccf5a1ed9ddde8803e292f1e62d777b141ff52d8',predecessorPreviewSHA256:'58b394a4f8ab129fe4ea50bde4cfd3e3f8d9de50a4f8047022a9d59de3670f9c',foldProfileSchema:'kaopu/geometric-skin-folds@2'")
-          p.write_text(s)
+          import hashlib,json
+          old=Path('kaopu-unified-human-workbench/skin-folds-r01')
+          assert hashlib.sha256((old/'preview.html').read_bytes()).hexdigest()=='58b394a4f8ab129fe4ea50bde4cfd3e3f8d9de50a4f8047022a9d59de3670f9c'
+          for f in json.loads((old/'BUILD.json').read_text())['sources']:
+            assert hashlib.sha256((old/Path(f['path']).name).read_bytes()).hexdigest()==f['sha256']
+          # The one-time bootstrap is retired. Do not regenerate and erase reviewed R02 source.
+          print('R01 unchanged; R02 readable modules are authoritative')
           PY
           for f in kaopu-unified-human-workbench/skin-folds-r02/*.mjs kaopu-unified-human-workbench/skin-folds-r02/*.cjs; do node --check "$f"; done
           node kaopu-unified-human-workbench/skin-folds-r02/test.mjs | tee r02-evidence/unit-regression.txt
@@ -48,11 +43,6 @@ jobs:
           node iteration/skin-folds-r02/test-r02.mjs | tee r02-evidence/unit-r02.txt
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add kaopu-unified-human-workbench/skin-folds-r02/
-          if ! git diff --cached --quiet; then
-            git commit -m 'feat(skin-r02): readable continuous-fold and bounded-cache runtime'
-            git push origin HEAD:fix/skin-folds-r02-soft-tissue-20261013
-          fi
           echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
       - name: Build deterministic new preview without modifying legacy entries
         run: node kaopu-unified-human-workbench/skin-folds-r02/build.cjs
