@@ -9,3 +9,29 @@
 旧固定 URL 和旧版本保留作历史对照；专项目标分支不得覆盖。只在独立分支提交，Draft PR，不合并、不强推。新的公网路径必须版本固定、真实渲染并验证交互；上传或 HTTP 200 不算完成。网页未验收的范围明确写“交付未完成”。
 
 毛衣源仓库 Human-Fabric-Workbench 的私有代码不得借本次布光迁移公开到此库。本文件为用户要求的长期规范，不是六个工作台已经全部接入或完成公网验收的证明。验收状态以 EB1 的交付收据为准。
+
+## 2026-10-13 用户确认的统一默认配方
+
+以下 JSON 是毛衣、皮革、牛仔、服装、鞋子和帽子工作台的权威 EB1 默认值：
+
+```json
+{
+  "schema": "kaopu.eb1/1",
+  "preset": "custom",
+  "exposure": 0.7,
+  "key": 1.6,
+  "rim": 3.5,
+  "environment": 0.9,
+  "keyAzimuth": -154,
+  "keyElevation": 8,
+  "rimAzimuth": 71,
+  "rimElevation": 11.309932,
+  "environmentRotation": -69,
+  "keyColor": "#ffffff",
+  "rimColor": "#efa37e",
+  "background": 0.85,
+  "shadowSize": 2048
+}
+```
+
+EB1 1.1 使用新的状态命名空间 `kaopu:lighting:eb1:v1:user-20261013-r1`，因此旧版浏览器缓存不得覆盖这套新默认值。迁移后用户继续手动调整时，修改仍可在新命名空间内保存。工作台原有的“默认”“影棚”或同类入口必须回到 `custom`，不能回到旧 `reference` 配方。
