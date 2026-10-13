@@ -27,3 +27,19 @@ assert s.count(needle)==1
 s=s.replace(needle,"return{shadowReadback:{width:shadow.w,height:shadow.h,bits:Array.from(new Uint32Array(shadowData.buffer))},encoding:'RGBA32F bits, rows bottom to top',width:r.w,height:r.h,cropTopLeft:crop,")
 p.write_text(s)
 print('Added completed full-shadow readback for exact tile equality. No query, normal, shader or draw was skipped.')
+
+# The old optional one-terminal-slot diagnostic hashes the whole group-0 reset.
+# Admit ONLY the two new scalar initializations, after proving this extracted
+# group cannot reach granite. Its original construction digest/cardinality and
+# recursive helper-purity checks still run, with no shader or draw omitted.
+p=target/'experiments/candidate-storage-r01/one-terminal-slot.mjs';s=p.read_text()
+needle=" const digest=crypto.createHash('sha256').update(domain.replace(/\\s+/g,'')).digest('hex');if(digest!==PROVEN_TERMINAL_DOMAIN_SHA)throw Error('One-candidate terminal proof is stale');"
+assert s.count(needle)==1
+replacement=""" const canonical=domain.replace(/\\s+/g,'');
+ const graniteReset='stationGraniteSlot=STATION_CANDIDATE_CAPACITY;stationGraniteDistance=10000.;';
+ const hasGraniteReset=canonical.includes(graniteReset);
+ if(hasGraniteReset&&(canonical.split(graniteReset).length!==2||fns.has('recordGraniteCandidate')||fns.has('kpGraniteHeight')||fns.has('gr_scell')))throw Error('Terminal granite-reset extension is not proven isolated');
+ const proofDomain=hasGraniteReset?canonical.replace(graniteReset,''):canonical;
+ const digest=crypto.createHash('sha256').update(proofDomain).digest('hex');if(digest!==PROVEN_TERMINAL_DOMAIN_SHA)throw Error('One-candidate terminal proof is stale');"""
+s=s.replace(needle,replacement);p.write_text(s)
+print('Extended optional group-0 storage proof for exactly two granite-free reset scalars; original digest and cardinality/purity checks retained.')
