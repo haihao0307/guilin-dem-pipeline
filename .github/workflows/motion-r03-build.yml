@@ -46,15 +46,17 @@ jobs:
             p=out/pathlib.Path(name).name;p.write_bytes(z.read(name))
           assert hashlib.sha256((out/'22_14.amc').read_bytes()).hexdigest()==json.load(open(root/'GUIDE.json'))['sourceAMC_SHA256']
           PY
-      - name: Generate new wrappers and record exact authoring commit
+      - name: Generate wrappers and apply inspected neutral-wrist corrections
         run: |
           python "$WORK/install.py"
+          python "$WORK/refine.py"
+          node --check "$WORK/InteractionRig.mjs"
           node --check "$WORK/Workbench.mjs"
           node --check "$WORK/verify.cjs"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$WORK"
-          if ! git diff --cached --quiet; then git commit -m 'build(motion-r03): record generated additive wrappers and finite source evidence'; fi
+          if ! git diff --cached --quiet; then git commit -m 'fix(motion-r03): preserve prop sizes and coordinate forearm wrist contact'; fi
           echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
       - name: Build same R04 with new surface contact controller
         run: node "$WORK/build.cjs"
