@@ -1,0 +1,55 @@
+name: MP06 freeze native integration sources
+on:
+  push:
+    branches: [feature/tailor-mp06-native-human-motion-eb1-20261013]
+    paths: ['.github/workflows/tailor-mp06-donors.yml']
+permissions:
+  contents: read
+jobs:
+  sources:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ca6f090c5652bbe848e909f755b0ac5e80b4c969
+          sparse-checkout: kaopu-tailor-workbench/material-products/r05-2
+      - name: Gather immutable public donor modules, preserving byte hashes and original namespaces
+        run: |
+          mkdir -p pack
+          cp -a kaopu-tailor-workbench/material-products/r05-2 pack/parent
+          python - <<'PY'
+          import pathlib,urllib.request,re,posixpath,json,hashlib,concurrent.futures,time
+          root=pathlib.Path('pack'); manifest=[];seen=set()
+          sources=[('human','haihao0307/guilin-dem-pipeline','9b6644b3210e5ee5f9b4e7fbb583dec98e90b285',['kaopu-unified-human-workbench/human-integrated-r05/preview.html','kaopu-unified-human-workbench/human-integrated-r05/README.md','kaopu-unified-human-workbench/human-integrated-r05/BUILD.json','kaopu-unified-human-workbench/human-integrated-r05/DELIVERY.json']),('motion','haihao0307/guilin-dem-pipeline','773f717b38ff5adf776c99fc30f06c113b4727a6',['kaopu-unified-human-workbench/motion-review-r01/Core.mjs','kaopu-unified-human-workbench/motion-review-r01/Workbench.mjs','kaopu-unified-human-workbench/motion-review-r01/Catalogue.mjs','kaopu-unified-human-workbench/motion-review-r01/style.css','kaopu-unified-human-workbench/motion-review-r01/BUILD.json','kaopu-unified-human-workbench/motion-review-r01/README.md']),('light','haihao0307/Humanoid-Rig-Lab-Next','beb3dda0a28f732e1e387dd68cc0d90f27ce8b7b',['lighting/eb1/eb1.js','lighting/eb1/README.md','lighting/eb1/USER_RECIPE_20261013.json'])]
+          def get(args):
+            key,repo,ref,p=args; url=f'https://raw.githubusercontent.com/{repo}/{ref}/{p}'
+            for attempt in range(3):
+              try:
+                with urllib.request.urlopen(url,timeout=90) as r:b=r.read()
+                break
+              except Exception:
+                if attempt==2:raise
+                time.sleep(1+attempt)
+            dest=root/key/p;dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes(b)
+            row={'donor':key,'repository':repo,'commit':ref,'path':p,'sha256':hashlib.sha256(b).hexdigest(),'bytes':len(b)}
+            deps=[]
+            if p.endswith(('.js','.mjs')):
+              text=b.decode('utf8'); specs=re.findall(r'(?:from\s*|import\s*\(?\s*)[\"\x27]([^\"\x27]+)[\"\x27]',text)
+              for spec in specs:
+                if spec.startswith('.'):
+                  child=posixpath.normpath(posixpath.join(posixpath.dirname(p),spec));deps.append((key,repo,ref,child))
+            return row,deps
+          tasks=[(k,r,c,p) for k,r,c,ps in sources for p in ps]
+          while tasks:
+            batch=[t for t in tasks if t not in seen];seen.update(batch);tasks=[]
+            with concurrent.futures.ThreadPoolExecutor(max_workers=6) as ex:
+              for row,deps in ex.map(get,batch):manifest.append(row);tasks+=deps
+          (root/'DONORS.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2));print('DONORS',len(manifest))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp06-native-donors
+          path: pack
+          retention-days: 30

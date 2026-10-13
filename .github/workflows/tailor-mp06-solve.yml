@@ -1,0 +1,104 @@
+name: MP06 original-source garment contact solutions
+on:
+  push:
+    branches: [feature/tailor-mp06-native-human-motion-eb1-20261013]
+    paths: ['.github/workflows/tailor-mp06-solve.yml','kaopu-tailor-workbench/material-products/mp06-release/bake.mjs','kaopu-tailor-workbench/material-products/mp06-release/fit-paper.py','kaopu-tailor-workbench/material-products/mp06-release/prepare-bake.py']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 38389565687
+          name: mp06-native-integration
+          path: pack
+      - name: Require identity and original motion provenance; retain the earlier unadapted cloth failure
+        run: |
+          python - <<'PY'
+          import json,pathlib
+          d=json.loads(pathlib.Path('pack/probe/REPORT.json').read_text());assert d['initial']['binding']['displayVertices']==266098 and d['initial']['binding']['nativeBones']==104
+          assert len(d['sources'])==22 and all(s['boneErrorM']<1e-7 for s in d['sources'])
+          assert d['initial']['lighting']['version']=='EB1-1.1.0'
+          print('SOURCE PROVENANCE ONLY PASS. Original cloth failure preserved:', d['errors'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mp06-solve-source
+          path: pack
+          retention-days: 30
+  fit:
+    needs: source
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    strategy:
+      fail-fast: false
+      matrix:
+        look: [K04,L04,D01]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-tailor-workbench/material-products/mp06-release
+      - uses: actions/download-artifact@v4
+        with:
+          name: mp06-solve-source
+          path: pack
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fit existing panels to actual R05 body; do not change source motion or soften physics safety
+        env:
+          LOOK: ${{ matrix.look }}
+          OPENBLAS_NUM_THREADS: '1'
+        run: |
+          python -m pip install numpy scipy
+          node kaopu-tailor-workbench/material-products/mp06-release/export-fit.mjs pack
+          python kaopu-tailor-workbench/material-products/mp06-release/fit-paper.py pack "$LOOK"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp06-fitted-${{ matrix.look }}
+          path: pack/fitting
+          retention-days: 30
+  solve:
+    needs: [source,fit]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        look: [K04,L04,D01]
+        action: [walk,run,jump,hand-reach-turn,hand-carry,detail-jab,detail-duck,detail-slip]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-tailor-workbench/material-products/mp06-release
+      - uses: actions/download-artifact@v4
+        with:
+          name: mp06-solve-source
+          path: pack
+      - uses: actions/download-artifact@v4
+        with:
+          name: mp06-fitted-${{ matrix.look }}
+          path: pack/fitting
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Original WASM constraints and same-frame native body; retain all failed cases
+        env:
+          ACTION: ${{ matrix.action }}
+          LOOK: ${{ matrix.look }}
+        run: |
+          python kaopu-tailor-workbench/material-products/mp06-release/prepare-bake.py
+          node kaopu-tailor-workbench/material-products/mp06-release/bake.mjs pack
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp06-solved-${{ matrix.look }}-${{ matrix.action }}
+          path: pack/solved
+          retention-days: 30

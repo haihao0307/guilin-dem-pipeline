@@ -1,0 +1,51 @@
+name: MP06 exact-source first-pose cloth validation
+on:
+  push:
+    branches: [feature/tailor-mp06-native-human-motion-eb1-20261013]
+    paths: ['.github/workflows/tailor-mp06-source-pose.yml','kaopu-tailor-workbench/material-products/mp06-release/prepare-initial-pose.py']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  solve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        look: [K04,L04,D01]
+        action: [walk,run,jump,hand-reach-turn,hand-carry,detail-jab,detail-duck,detail-slip]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-tailor-workbench/material-products/mp06-release
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 38391896556
+          name: mp06-solve-source
+          path: pack
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 38391896556
+          name: mp06-fitted-${{ matrix.look }}
+          path: pack/fitting
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Start at original first pose; retain original dynamic solver, thresholds and all failed cases
+        env:
+          ACTION: ${{ matrix.action }}
+          LOOK: ${{ matrix.look }}
+        run: |
+          python kaopu-tailor-workbench/material-products/mp06-release/prepare-bake.py
+          python kaopu-tailor-workbench/material-products/mp06-release/prepare-initial-pose.py pack
+          node kaopu-tailor-workbench/material-products/mp06-release/bake.mjs pack
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp06-source-pose-${{ matrix.look }}-${{ matrix.action }}
+          path: pack/solved
+          retention-days: 30
