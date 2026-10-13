@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref_name }}
+          ref: ${{ github.sha }}
           fetch-depth: 1
           sparse-checkout: |
             kaopu-unified-human-workbench
@@ -32,22 +32,28 @@ jobs:
         run: |
           npm install --prefix /tmp/skin-fold-tools --no-audit --no-fund esbuild@0.25.10 playwright@1.55.1
           /tmp/skin-fold-tools/node_modules/.bin/playwright install --with-deps chromium
-      - name: Probe frozen baseline or build new candidate
+      - name: Build and browser verify candidate
         run: |
-          if [ -f kaopu-unified-human-workbench/cinematic-r02/build.cjs ]; then
-            node kaopu-unified-human-workbench/cinematic-r02/build.cjs
-            node kaopu-unified-human-workbench/cinematic-r02/test.cjs
-            node kaopu-unified-human-workbench/cinematic-r02/verify.cjs
-          else
-            node kaopu-unified-human-workbench/cinematic-r02/probe.cjs
+          node kaopu-unified-human-workbench/cinematic-r02/build.cjs
+          node kaopu-unified-human-workbench/cinematic-r02/test.cjs
+          node kaopu-unified-human-workbench/cinematic-r02/verify.cjs
+      - name: Commit only verified new candidate on same branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/cinematic-r02/preview.html kaopu-unified-human-workbench/cinematic-r02/BUILD.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'build(skin-r02): verified real-fold candidate [skip ci]'
+            git push origin HEAD:feature/skin-fold-cinematic-r02-20261013
           fi
-      - name: Upload evidence and inspection inputs
+          echo "BUILD_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Upload evidence and built inspection inputs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: skin-fold-r02-${{ github.run_id }}
           path: |
-            skin-fold-probe/
             skin-fold-evidence/
-            kaopu-unified-human-workbench/cinematic-r02/BUILD.json
+            kaopu-unified-human-workbench/cinematic-r02/
+            kaopu-unified-human-workbench/vendor/three.module.js
           retention-days: 14
