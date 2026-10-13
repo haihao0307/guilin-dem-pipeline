@@ -1,0 +1,101 @@
+name: Hair Foundation S01 final immutable public acceptance
+on:
+  push:
+    branches: [feature/hair-foundation-s01-20261013]
+    paths: [.github/workflows/hair-foundation-s01-public-final.yml]
+permissions:
+  contents: write
+concurrency:
+  group: hair-foundation-s01-public-final
+  cancel-in-progress: false
+env:
+  P: kaopu-hair-workbench/foundations/s01
+  PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-hair-workbench/foundations/s01-e45d8da17e81/
+  SOURCE: e45d8da17e81417ff5a378d3b6ba1749a671a82c
+  SOURCE_BUILD: 45e36ef453dd5209c671683802b3bf844be85683
+  SITE_TREE: 9a8bca876af8ccaff6ee89f0eb667b60e87dc582
+  PAGES_COMMIT: fbd4d05610101a2338514389519c77115a60dd06
+  PAGES_PARENT: 6bb8ecf0eb074e93aafda6dc0c2894d26170c916
+  DESTINATION: kaopu-hair-workbench/foundations/s01-e45d8da17e81
+jobs:
+  public:
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-hair-workbench/foundations/s01
+      - name: Verify tested site and append-only publication
+        run: |
+          python - <<'PY'
+          import os,json,subprocess,pathlib
+          p=pathlib.Path(os.environ['P']);m=json.loads((p/'site/BUILD_MANIFEST.json').read_text());assert m['source']==os.environ['SOURCE']
+          for name in ['unit.json','brush.json','candidate/report.json']:
+              r=json.loads((p/'evidence'/name).read_text());assert r['success'] and all(c['pass'] for c in r['checks'])
+          assert json.loads((p/'evidence/candidate/report.json').read_text())['initial']['source']==os.environ['SOURCE']
+          for key in ['SOURCE_BUILD','PAGES_COMMIT','PAGES_PARENT']:
+              subprocess.check_call(['git','fetch','--filter=blob:none','--depth=1','origin',os.environ[key]])
+          for ref in ['HEAD:'+str(p)+'/site',os.environ['SOURCE_BUILD']+':'+str(p)+'/site',os.environ['PAGES_COMMIT']+':'+os.environ['DESTINATION']]:
+              assert subprocess.check_output(['git','rev-parse',ref],text=True).strip()==os.environ['SITE_TREE']
+          changes=subprocess.check_output(['git','diff','--name-status',os.environ['PAGES_PARENT'],os.environ['PAGES_COMMIT']],text=True).splitlines()
+          assert changes and all(c.startswith('A\t'+os.environ['DESTINATION']+'/') for c in changes),changes
+          (p/'PUBLISH.json').write_text(json.dumps({'source':os.environ['SOURCE'],'sourceBuild':os.environ['SOURCE_BUILD'],'pagesCommit':os.environ['PAGES_COMMIT'],'pagesParent':os.environ['PAGES_PARENT'],'destination':os.environ['DESTINATION'],'siteTree':os.environ['SITE_TREE'],'publicURL':os.environ['PUBLIC_URL'],'onlyNewFiles':changes,'publicBrowserVerified':False},indent=2))
+          PY
+      - name: Wait for exact fixed public revision
+        run: |
+          python -u - <<'PY'
+          import os,json,time,hashlib,urllib.request,pathlib
+          p=pathlib.Path(os.environ['P']);m=json.loads((p/'site/BUILD_MANIFEST.json').read_text())
+          for i in range(60):
+              try:
+                  r=urllib.request.urlopen(os.environ['PUBLIC_URL'],timeout=15);b=r.read();remote=json.load(urllib.request.urlopen(os.environ['PUBLIC_URL']+'BUILD_MANIFEST.json',timeout=15))
+                  if hashlib.sha256(b).hexdigest()==m['htmlSha256'] and remote['source']==m['source']:
+                      (p/'evidence/public-http.json').write_text(json.dumps({'status':r.status,'url':os.environ['PUBLIC_URL'],'source':m['source'],'bytes':len(b),'sha256':hashlib.sha256(b).hexdigest()},indent=2));break
+                  print('Waiting for exact published revision',i,flush=True)
+              except Exception as e:print('Waiting for native deployment',i,str(e),flush=True)
+              time.sleep(15)
+          else:raise RuntimeError('Public delivery incomplete: fixed site not available')
+          PY
+      - name: Install browser
+        run: |
+          python -m pip install playwright==1.55.0
+          python -m playwright install --with-deps chromium
+      - name: Actual immutable HTTPS page including erase add and density painting
+        run: python "$P/tests/browser.py" "$PUBLIC_URL"
+      - name: Record only matching public evidence and delivery
+        run: |
+          python - <<'PY'
+          import os,json,pathlib
+          p=pathlib.Path(os.environ['P']);m=json.loads((p/'site/BUILD_MANIFEST.json').read_text());reports={}
+          for label,name in [('unit','unit.json'),('brush','brush.json'),('candidate','candidate/report.json'),('public','public/report.json')]:
+              r=json.loads((p/'evidence'/name).read_text());assert r['success'] and all(c['pass'] for c in r['checks']);reports[label]=r
+          public=reports['public'];assert public['initial']['source']==os.environ['SOURCE'] and public['initial']['rootBindingHash']==reports['candidate']['initial']['rootBindingHash']
+          pub=json.loads((p/'PUBLISH.json').read_text());pub.update(publicBrowserVerified=True,publicRun=os.environ['GITHUB_RUN_ID']);(p/'PUBLISH.json').write_text(json.dumps(pub,indent=2))
+          m.update(publicBrowserVerified=True,publicURL=os.environ['PUBLIC_URL'],publicRun=os.environ['GITHUB_RUN_ID']);(p/'BUILD_MANIFEST.json').write_text(json.dumps(m,indent=2))
+          receipt={**pub,'version':'HAIR-FOUNDATION-S01','candidateRun':'38375320063','htmlSha256':m['htmlSha256'],'headJsonSha256':m['headJsonSha256'],'checks':{k:len(r['checks']) for k,r in reports.items()},'publicStats':public['initial'],'publicColdReadySeconds':public['coldReadySeconds'],'browserVersion':public['browserVersion'],'brushProof':next(c for c in public['checks'] if c['name']=='Actual surface brush removes roots and preserves bindings'),'limitations':['authored initial hairline awaits visual review, not anatomical inference','original neutral GNM gray head for diagnostics only; ET18 production unchanged','diagnostic root counts are not biological follicle counts','normal probes and test tangents are not a hairstyle or completed growth direction field','mesh-edge distances and chord spacing are approximations','same-topology x deformation is only a stress test','390x844 viewport only, not real phone; narrow framing may require zoom out','no full hair, dynamics, wind, collision certification or total-platform integration','standalone local document; no SharedWorker integration; no full-workbench speedup claim']}
+          (p/'DELIVERY.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2));(p/'PUBLIC_URL.txt').write_text(os.environ['PUBLIC_URL']+'\n')
+          text='# HAIR-FOUNDATION-S01 — 固定公网已验证，待发线视觉验收\n\n'+os.environ['PUBLIC_URL']+'\n\n'
+          text+='本轮实际完成：原生头部上的独立生长蒙版与密度场、稳定根点绑定、边界/距离/根点/法线诊断、同拓扑变形压力测试、局部增减生长区域与密度、撤销重做、本机保存读取及严格JSON导入导出。画笔修正版要求默认一次点按真正移除激活根点，并在真实画布中产生变化；随后补回、撤销和密度编辑验证通过。\n\n'
+          text+='源码 '+os.environ['SOURCE']+'\n构建 '+os.environ['SOURCE_BUILD']+'\nPages '+os.environ['PAGES_COMMIT']+'\n站点树 '+os.environ['SITE_TREE']+'\n公网任务 '+os.environ['GITHUB_RUN_ID']+'\n\n'
+          text+='检查：'+json.dumps(receipt['checks'],ensure_ascii=False)+'。所有列举检查通过，但部分范围重叠，不相加冒充独立场景。公网逐项核对实际运行资源SHA和体积；冷启动、六视角、字段显示、密度、短针、绑定变形、点选、擦除/补回/密度画笔、撤销、存档、下载、无效导入、刷新、手机视口面板通过，无JS/控制台着色器错误。\n\n'
+          text+='实际公网默认状态：'+json.dumps(public['initial'],ensure_ascii=False)+'\n画笔检查：'+json.dumps(receipt['brushProof'],ensure_ascii=False)+'\n\n'
+          text+='6158个激活点与20789个候选点仅为诊断采样，不代表真实毛囊总数。初始发际线是可编辑作者候选，额角、耳周、后颈仍须人物特定校准；没有宣称医学分区。灰模沿用原GNM中性几何和三角索引，不替换ET18正式头部材质。距离是网格边路径近似，间距是弦距；形变仅同拓扑横向压力测试。法线短针与测试切向不是完整头发或正确生长场。没有完整发型、冠旋生长解算、长度场、动力学或衣物碰撞。\n\n'
+          text+='手机只有390×844视口，不是实机；窄屏可能需缩小视图。此页不生成原64k完整发丝，不能将其轻量速度当成L03完整工作台的加速证明。本机存档不自动进入总台SharedWorker。旧L03与所有以前版本及其他工作台保留，PR250保持Draft，未合并、未强推。\n\n'
+          text+='下一方向：先校准发际线与局部密度；S02分离根部倾角/切向场并建立可调冠旋；S03独立弧长场和稀疏导向；之后才加入密集跟随发、发束、材质与物理。\n'
+          (p/'DELIVERY.md').write_text(text)
+          original=(p/'README.md').read_text();marker='## 当前固定验收入口\n'
+          if marker in original:original=original[:original.index(marker)]
+          (p/'README.md').write_text(original+'\n'+marker+'\n'+os.environ['PUBLIC_URL']+'\n\n最终源码 '+os.environ['SOURCE']+'；公网验证与限制见 DELIVERY.md / DELIVERY.json。旧031d版本保留历史，不是此次画笔修正版入口。\n')
+          PY
+          git config user.name 'KAOPU Hair Foundation Public Verification'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add "$P"
+          git commit -m 'test(hair-s01): final public visible-brush evidence and immutable delivery'
+          git push origin HEAD:refs/heads/feature/hair-foundation-s01-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-foundation-s01-public-final
+          path: kaopu-hair-workbench/foundations/s01
+          retention-days: 30
