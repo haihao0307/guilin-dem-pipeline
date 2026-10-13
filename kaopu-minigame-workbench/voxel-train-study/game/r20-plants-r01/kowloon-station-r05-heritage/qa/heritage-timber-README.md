@@ -1,33 +1,23 @@
-# Finite-domain timber emitter equivalence
+# Timber emitter equivalence, staged exact reference
 
-This regression compares the production unrolled `completeTowerTimber` with the separate single-loop experiment. It does not replace the production tower module, render the station, simulate timber on the CPU, or claim equivalence outside its tested domain.
+The first monolithic comparison compiled/linked at the frontend but crashed SwiftShader on first draw with SPIR-V ID overflow. Its all-zero outputs were rejected; it established no equality.
 
-`heritage-timber-loop-candidate.mjs` is a QA snapshot of the supplied `native-clock-tower-loop-candidate.mjs`. Its only import-path adaptation points the retained R04 import to `../native-clock-tower-r04.mjs`. The emitter verifies identical construction descriptors and identical generated WGSL outside the timber function. It renames only the two function declarations and selects their shared exact production dependency closure through the existing `shader-closure.mjs`. Candidate ordering, strict comparisons, the 30.01mm prune test, material closure calls, and raw-winner reset remain unchanged.
+This revision splits only the original expanded 144-statement reference into 16 consecutive nine-member GPU programs. Their original statements are concatenated and asserted byte-identical to the original body; the reconstructed full function SHA must equal the reference function SHA. Every original child, order, strict tie comparison, 30.01 mm prune, physical mother call and float field remains present. Four RGBA32F attachments carry the complete physical winner between stages. Only the final reference stage resets d to baseD, as the original did. No sampled material/world approximation or CPU material evaluation is used. The complete loop candidate runs separately in one shader.
 
-## Samples and outputs
+The 12,864 unchanged points cover all 144 members' faces, edges and corners with +/-0.2 mm perturbations, the pruning/near-field boundaries, stone adjacency and window-aperture points. Ages 0, 0.5 and 1 give 38,592 finite-domain comparisons. This is not an all-domain proof or architectural image acceptance.
 
-- All 144 timber members: six face centers, twelve edge centers, eight corners, each at -0.2mm, zero, and +0.2mm along its outward direction
-- Per member: five additional probes around the 30.01mm and 45mm distance boundaries
-- Six face centers of each window jamb, sill, head, and pediment-base stone box
-- Window-aperture centers, sides, and corners, with ±0.2mm depth offsets
-- Ages 0, 0.5, and 1, using the same original uniform parameters and actual mother functions
+Readback compares d/id/seed/baseD, q/sourceSeed, extents and the re-evaluated physical distance, plus point identity. A context loss, nonfinite result, all-zero output, invalid winner or feedback attachment is an immediate failure. Frontend compilation has a 240-second limit; all actual GPU draws and readbacks have a separate 240-second limit. Completed draw timings include first-use backend work and are not realtime claims.
 
-The input texture contains authored test coordinates only. Four RGBA32F attachments read back every field of each reference/candidate HitField, a recomputed actual physical distance, and the input point/tag. Each sample occupies two output rows, reference then candidate. IDs and sourceSeed winners must agree exactly; all floating fields and physical distances must agree within 1e-7m. Sentinel checks, finite checks, valid member IDs, positive extents, raw-distance reset, and nonzero physical displacement reject empty or raw-only output.
-
-Full raw float buffers, first mismatch records, fieldwise maximum errors, winner IDs, timings, hashes, and shader diagnostics are saved. The maximum error report also exposes differences below the acceptance tolerance. Compilation is bounded to 240 seconds and all three age readbacks to a single 120-second window. A timeout is a failure, never equivalence evidence.
-
-## Commands
-
-From the station candidate directory in the repository layout:
+From the candidate directory:
 
 ```sh
 node qa/heritage-timber-emit.mjs
-timeout 240s ../kowloon-train88-r01/compiler/target/release/kaopu-station-shader-bridge \
-  qa/heritage-timber-generated/probe.wgsl \
-  qa/heritage-timber-generated/probe.frag heritageTimberProbe
+C=../kowloon-train88-r01/compiler/target/release/kaopu-station-shader-bridge
+for n in $(seq 0 15); do
+ timeout 240s $C qa/heritage-timber-generated/reference-$n.wgsl qa/heritage-timber-generated/reference-$n.frag heritageTimberProbe
+done
+timeout 240s $C qa/heritage-timber-generated/candidate.wgsl qa/heritage-timber-generated/candidate.frag heritageTimberProbe
 node qa/heritage-timber-run.cjs
 ```
 
-Use the existing pinned Naga bridge and Playwright installation. If needed, build the unchanged compiler with `(cd ../kowloon-train88-r01/compiler && cargo build --release --locked)`. `HERITAGE_CLOSURE_MODULE` may point to that same extraction module in a detached audit directory.
-
-Generated inputs stay under `qa/heritage-timber-generated/`; results stay under `qa/heritage-timber-results/`. This is a finite-domain numeric regression, not an all-domain proof, visual acceptance, or performance claim.
+The manifest records all 16 slice hashes, the reconstructed reference hash, loop function hash, unchanged member descriptors and all sample coordinates. The test closure excludes evaluateStationMatter, so the independently tested once-only shading-state fix cannot change either timber side.

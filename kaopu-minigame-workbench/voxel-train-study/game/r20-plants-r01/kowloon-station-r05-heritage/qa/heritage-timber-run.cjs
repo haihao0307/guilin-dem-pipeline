@@ -21,13 +21,13 @@ async function closeOwned(browser,owner){
  let browser,owner,page,timer,rejectFatal;const fatal=new Promise((_,reject)=>{rejectFatal=reject;});fatal.catch(()=>{});
  const bounded=p=>Promise.race([p,fatal]);const arm=(ms,label)=>{clearTimeout(timer);timer=setTimeout(()=>rejectFatal(Error(`${label} exceeded ${ms}ms`)),ms);};
  try{
-  for(const name of ['probe.frag','manifest.json'])if(!fs.existsSync(path.join(root,'heritage-timber-generated',name)))throw Error(`Missing heritage-timber-generated/${name}; emit and compile first`);
+  for(const name of ['candidate.frag','reference-0.frag','manifest.json'])if(!fs.existsSync(path.join(root,'heritage-timber-generated',name)))throw Error(`Missing heritage-timber-generated/${name}; emit and compile first`);
   await new Promise(r=>server.listen(0,'127.0.0.1',r));
   arm(45000,'Browser startup');owner=await bounded(chromium.launchServer({headless:true,args:['--no-sandbox','--disable-gpu-watchdog','--use-angle=swiftshader','--enable-logging=stderr']}));
   for(const stream of ['stdout','stderr'])owner.process()[stream]?.on('data',x=>fs.appendFileSync(path.join(out,'browser-'+stream+'.log'),x));
   browser=await bounded(chromium.connect(owner.wsEndpoint()));page=await bounded(browser.newPage());
   page.on('pageerror',e=>{report.errors.push(e.message);save();rejectFatal(e);});
-  page.on('console',message=>{const text=message.text();if(text.startsWith('HERITAGE_TIMBER_STAGE ')){const stage=text.slice('HERITAGE_TIMBER_STAGE '.length);report.stages.push({stage,at:new Date().toISOString()});save();console.log(text);if(stage==='compile')arm(240000,'Shader compilation');if(stage==='readback')arm(120000,'GPU readback');}else if(message.type()==='error'){report.errors.push(text);save();}});
+  page.on('console',message=>{const text=message.text();if(text.startsWith('HERITAGE_TIMBER_STAGE ')){const stage=text.slice('HERITAGE_TIMBER_STAGE '.length);report.stages.push({stage,at:new Date().toISOString()});save();console.log(text);if(stage==='compile')arm(240000,'Shader compilation');if(stage==='readback')arm(240000,'GPU readback');}else if(text.startsWith('HERITAGE_TIMBER_DRAW ')){report.stages.push({stage:text,at:new Date().toISOString()});save();console.log(text);}else if(message.type()==='error'){report.errors.push(text);save();}});
   await bounded(page.goto('http://127.0.0.1:'+server.address().port+'/heritage-timber-probe.html',{waitUntil:'domcontentloaded',timeout:45000}));
   await bounded(page.waitForFunction(()=>['passed','failed'].includes(window.__heritageTimberProbe?.status),null,{timeout:0}));
   report.probe=await bounded(page.evaluate(()=>window.__heritageTimberProbe));

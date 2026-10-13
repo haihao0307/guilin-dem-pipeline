@@ -23,3 +23,9 @@ The dome is a finite 160 mm authored concrete shell, with new material ID 19. It
 qa/inspection-scope.mjs provides tower-only and hall-only diagnostic views by copying their complete construction blocks without changing their geometry or material functions. These views omit the other station buildings and their shadows, and cannot establish whole-station integration or frame rate. Without a scope parameter the entry retains the complete station field. Unresolved rays stay explicit failures.
 
 Checks: source/mother locks, geometry and floor bounds, original component retention, WGSL lexical/signed-number checks, new heritage contracts, actual WebGPU compilation and rendered view readback. CPU checks alone are not visual approval. See CI artifacts and the current review receipt for performed versus pending checks.
+
+## Verified state-history correction
+
+Run [38333972975](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/38333972975) reproduced a shading-distance mismatch caused by applying the non-idempotent conservation history twice. The maximum observed mismatch was 19.04 micrometres. Passing raw state to the shared geometry evaluator fixed all 27 actual GPU samples (zero observed distance differences); four original member controls at all three ages retained identical readbacks. This is a numeric material-consistency result, not visual acceptance.
+
+The controlled R04 native-focus baseline passed on run 38332496309. The R05 integration and original monolithic timber diagnostic encountered a SwiftShader SPIR-V ID overflow and GPU process failure. Architectural review images are still pending. No publication or whole-frame quality/performance acceptance follows from these checks.
