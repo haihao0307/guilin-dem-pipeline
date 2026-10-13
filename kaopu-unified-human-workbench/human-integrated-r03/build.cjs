@@ -1,53 +1,12 @@
-const fs=require('fs'),path=require('path'),assert=require('node:assert/strict'),crypto=require('crypto'),vm=require('vm'),esbuild=require('esbuild');
-const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
-(async()=>{
- const root=path.resolve(__dirname,'..'),repo=path.resolve(root,'..'),spec=__dirname+'/specialists',FACE='02f596def9d07ebfc187e1eb18ad345a57c8a6b6',NATIVE='0b4703359efbae10ffc6c0e5fe3fc081e7eca4fe';
- assert.equal(hash(fs.readFileSync(root+'/skin-folds-r02/preview.html')),'86046567b030d3722830a2ca6d0ea3b14318352b269aabcb1dfba83ce92e3c0a','User R02 baseline changed');
- let app=fs.readFileSync(root+'/full/ui/identity-app.generated.mjs','utf8');const patch=(a,b)=>{assert.equal(app.split(a).length,2,'Entry anchor changed: '+a);app=app.replace(a,()=>b);};
- app=`import {installAnatomy} from '../../human-integrated-r03/Anatomy.mjs';
-import {mountUnifiedUI} from '../../human-integrated-r03/UnifiedUI.mjs';
-import {installNaturalEyes} from '../../eye-materials/NaturalEyeState.mjs';
-import {mountNaturalEyeUI} from '../../eye-materials/NaturalEyeUI.mjs';
-import {installLipStructure} from '../../lip-structure/LipState.mjs';
-import {installLipMother} from '../../lip-structure/LipMother.mjs';
-import {mountLipUI} from '../../lip-structure/LipUI.mjs';
-import {mountLipMotherUI} from '../../lip-structure/LipMotherUI.mjs';
-import {installEarStructure} from '../../ear-tissue-r05/EarState.mjs';
-import {mountEarUI} from '../../ear-tissue-r05/EarUI.mjs';
-import {installIdleProfile} from '../../idle-r01/IdleRuntime.mjs';
-import {mountIdleUI} from '../../idle-r01/IdleUI.mjs';
-import {installCineProfile} from '../../cinematic-r01/CineState.mjs';
-import {mountCineUI} from '../../cinematic-r01/CineUI.mjs';
-import {installFoldProfile} from '../../skin-folds-r02/FoldProfile.mjs';
-import {mountFoldUI} from '../../skin-folds-r02/FoldUI.mjs';
-`+app;
- patch("import{FullFaceViewer as CommonViewer}from'../../face-transfer/FullFaceViewer.mjs'","import{UnifiedViewer as CommonViewer}from'../../human-integrated-r03/UnifiedViewer.mjs'");
- patch('installIdentity(model);installIdentitySkin(model);if(savedArchive)','installIdentity(model);installIdentitySkin(model);installNaturalEyes(model);installLipStructure(model);installLipMother(model);installEarStructure(model);installIdleProfile(model);installCineProfile(model);installFoldProfile(model);installAnatomy(model);if(!savedArchive){Object.assign(model.foldProfile.settings,{strength:.35,slack:.4,forehead:.25,eyes:.3});}if(savedArchive)');
- patch('mountIdentityUI({model,viewer,controller});wasLoaded=true;','mountIdentityUI({model,viewer,controller});mountNaturalEyeUI({model,viewer,controller});mountLipUI({model,viewer,controller});mountLipMotherUI({model,viewer,controller});mountEarUI({model,viewer,controller});mountIdleUI({model,viewer,controller});mountCineUI({model,viewer,controller});mountFoldUI({model,viewer,controller});mountUnifiedUI({model,viewer,controller});wasLoaded=true;');
- patch('function release(){','function release(){controller?.model.regionalFace?.disposeUI?.();controller?.model.foldProfile?.disposeUI?.();controller?.model.cineProfile?.disposeUI?.();controller?.model.idleProfile?.disposeUI?.();controller?.model.earStructure?.disposeUI?.();controller?.model.lipStructure?.disposeUI?.();controller?.model.naturalEyes?.disposeUI?.();');
- patch('faceIdentity:appearance.faceIdentity};','faceIdentity:appearance.faceIdentity,naturalEyes:appearance.naturalEyes,lipStructure:appearance.lipStructure,lipAnatomyDNA:appearance.lipAnatomyDNA,lipPerformance:appearance.lipPerformance,lipPerformanceContext:appearance.lipPerformanceContext,earStructure:appearance.earStructure,geometricSkinFolds:appearance.geometricSkinFolds,regionalFace:appearance.regionalFace,cinematicLook:appearance.cinematicLook,lifelikeIdle:appearance.lifelikeIdle};');
- const folders=['ear-structure','ear-growth','ear-refinement-r03','ear-root-r04','ear-tissue-r05'];
- const conceptual=p=>{if(!p.startsWith(spec+'/'))return p;const rel=p.slice(spec.length+1),folder=rel.split('/')[0];return root+'/'+(folder==='lips-et19'?'lip-structure':folder)+rel.slice(folder.length);};
- const route=p=>{if(p.startsWith(spec+'/'))return p;if(p.startsWith(root+'/lip-structure/'))return spec+'/lips-et19/'+p.slice((root+'/lip-structure/').length);for(const f of folders)if(p.startsWith(root+'/'+f+'/'))return spec+'/'+f+'/'+p.slice((root+'/'+f+'/').length);return p;};
- const adapters=[];
- const plugin={name:'pin-and-compose-specialists',setup(b){
-  b.onResolve({filter:/^\./},a=>{const dir=a.importer?path.dirname(conceptual(a.importer)):a.resolveDir;return{path:route(path.resolve(dir,a.path.split('?')[0]))};});
-  b.onLoad({filter:/\.(mjs|js)$/},a=>{let s=fs.readFileSync(a.path,'utf8'),virtual=conceptual(a.path),rel=path.relative(repo,virtual).split(path.sep).join('/');const once=(anchor,replacement)=>{assert.equal(s.split(anchor).length,2,'Adapter conflict '+rel+' '+anchor.slice(0,50));s=s.replace(anchor,()=>replacement);adapters.push({path:rel,anchor:anchor.slice(0,100)});};
-   if(rel.endsWith('/identity-lab/TraitMaps.mjs'))once('function wrinkle(p,width,amount){if(!amount)return;','function wrinkle(p,width,amount){return;');
-   if(rel.endsWith('/idle-r01/IdleSkin.mjs'))once('uIdleWrinkle*(.16*uIdleBlink*vFA.z+.28*uIdleSmile*vFB.y)','0.');
-   if(rel.endsWith('/lip-structure/LipUI.mjs'))once("tab.click();Promise.all([viewer.skin.faceReady,viewer.skin.naturalEyesReady].filter(Boolean)).then(()=>{if(!disposed){tab.click();model.eyeSurface.set({gray:false,grid:false});controller.changed();view('front');}});",'// Unified entry owns initial camera; specialist remains user-selectable.');
-   if(rel.endsWith('/ear-tissue-r05/EarUI.mjs'))once("Promise.all([viewer.skin.faceReady,viewer.skin.naturalEyesReady].filter(Boolean)).then(()=>{if(disposed)return;setTimeout(()=>{if(!disposed){tab.click();view('oblique');}},450);});",'// Unified entry owns initial camera; no delayed specialist focus steal.');
-   if(s.includes('import.meta.url'))s=s.replaceAll('import.meta.url',JSON.stringify('https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+(rel.includes('/face-transfer/')?FACE:NATIVE)+'/'+rel));
-   return{contents:s,loader:'js',resolveDir:path.dirname(a.path)};
-  });
- }};
- const result=await esbuild.build({stdin:{contents:app,resolveDir:root+'/full/ui',sourcefile:'unified-r03.generated.mjs',loader:'js'},bundle:true,minify:true,format:'iife',target:'es2022',write:false,metafile:true,legalComments:'inline',loader:{'.png':'dataurl'},alias:{three:root+'/full/source/registration-vendor/three.module.js'},plugins:[plugin]});
- const code=result.outputFiles[0].text.replace(/<\/script/gi,'<\\/script');new vm.Script(code);
- let html=fs.readFileSync(root+'/index.html','utf8').replace(/<script type="importmap">[\s\S]*?<\/script>/,'').replace(/<script type="module" src="\.\/full\/ui\/browser-app\.mjs[^\"]*"><\/script>/,()=>'<script>'+code+'</script>');
- html=html.replace(/<link rel="stylesheet" href="([^\"]+)">/g,(_,s)=>'<style>'+fs.readFileSync(path.resolve(root,s.split('?')[0]))+'</style>');html=html.replace(/href="\.\/([^\"]+)"/g,(_,s)=>'href="https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/'+s+'"').replace(/<title>[^<]*<\/title>/,'<title>共同人物 R03 · 耳唇融合与面部分区</title>').replace('原生人物 · 五官对比 · 动作验证','R03 · 耳 R05 / 唇 ET19 / 面部分区与曲面毛孔');
- const styles=[root+'/eye-materials/layout.css',spec+'/lips-et19/layout.css',spec+'/ear-tissue-r05/layout.css',root+'/idle-r01/layout.css',root+'/cinematic-r01/layout.css',root+'/skin-folds-r02/layout.css',__dirname+'/layout.css'];
- html=html.replace('<head>','<head><link rel="icon" href="data:,">').replace('</head>','<style>'+styles.map(p=>fs.readFileSync(p,'utf8')).join('\n')+'</style></head>');
- assert.equal([...html.matchAll(/<script\b/g)].length,1);fs.writeFileSync(__dirname+'/preview.html',html);
- const walk=p=>fs.readdirSync(p,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(p+'/'+e.name):[p+'/'+e.name]);
- const files=walk(__dirname).filter(p=>/\.(mjs|cjs|css)$/.test(p));const manifest={schema:'kaopu/unified-human-build@1',version:'HUMAN-INTEGRATED-R03',sourceCommit:process.env.SOURCE_SHA||process.env.GITHUB_SHA||'local',predecessor:'518cc9bd85b9aec53d8abbeffe303d1c0d03ddd9',earSource:'63e5dfddf2b5ca0d686651804beeba3333b2f41e',lipSource:'5b4997e6dca27106533022b4ab46164cea073818',previewSHA256:hash(html),previewBytes:Buffer.byteLength(html),sources:files.map(p=>({path:path.relative(repo,p),sha256:hash(fs.readFileSync(p))})),adapters,oneCharacter:true,oldFilesUnmodified:true,limitations:['Authored anatomical envelope increments, not a skull/muscle biomechanical simulation','Face pores use R05 sampling and separate bounded face-specific artistic parameters','Face shallow light wrapping is not measured subsurface volume transport','Surface lookup is fitted to settled geometry, not recomputed per idle frame','Native model downloads and larger combined display surface remain costs','Specialist inherited visual defects and browser/hardware limits remain subject to review']};fs.writeFileSync(__dirname+'/BUILD.json',JSON.stringify(manifest,null,2)+'\n');console.log('BUILT',manifest.version,manifest.previewBytes,manifest.previewSHA256);
-})().catch(e=>{console.error(e);process.exit(1);});
+const fs=require('fs'),assert=require('node:assert/strict'),crypto=require('crypto');
+// Explicit composition adapter; frozen donor source copies remain byte-identical.
+let source=fs.readFileSync(__dirname+'/build-core.cjs','utf8');
+assert.equal(crypto.createHash('sha256').update(source).digest('hex'),'562658d0ae6f73e35756e003621b9872db5e32f3f6c462a6cab7b838fe2a90c5');
+const at="if(s.includes('import.meta.url'))";assert.equal(source.split(at).length,2);
+source=source.replace(at,()=>`if(rel.endsWith('/ear-root-r04/EarMaterial.mjs')){
+ const from="'*csCover*uIEnabled*iInside*(1.-lpMask);'",to="'*csCover*uIEnabled*iInside;'";
+ assert.equal(s.split(from).length,2,'Ear/ET19 identity-mask composition drift');
+ s=s.replace(from,to);adapters.push({path:rel,anchor:'ET19 identity mask has no earlier R03 lip exclusion; apply combined lip + ear exclusion here'});
+}
+`+at);
+new Function('require','__dirname','process',source)(require,__dirname,process);
