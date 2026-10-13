@@ -30,7 +30,7 @@ export function headDelta(x,y,z,s){
  const pinna=1-smooth(.060,.078,ax)*(1-smooth(.321,.350,y))*(1-smooth(.017,.043,z));
  let protect=1;for(const cx of[-.031,.031])protect*=smooth(1,1.7,((x-cx)/.026)**2+((y-.301)/.017)**2);
  protect*=smooth(1,1.65,(x/.032)**2+((y-.233)/.018)**2); // retain lips and commissures
- const nose=smooth(.012,.029,ax)+(1-smooth(.242,.258,y));protect*=clamp(nose+1-smooth(.306,.320,y));
+ const nose=(1-smooth(.012,.028,ax))*smooth(.244,.258,y)*(1-smooth(.313,.334,y))*smooth(.040,.060,z);protect*=1-nose;
  const w=head*pinna*protect;
  const jaw=G(x,y,z,.053,.218,.010,.027,.021,.062),edge=G(x,y,z,.047,.208,.026,.030,.010,.055),cheek=G(x,y,z,.044,.254,.043,.022,.024,.040),malar=G(x,y,z,.034,.279,.052,.022,.020,.04),mass=G(x,y,z,.063,.242,.006,.018,.027,.038),jowl=G(x,y,z,.043,.219,.045,.023,.018,.043),chin=G(x,y,z,0,.197,.052,.032,.019,.036),under=G(x,y,z,0,.185,.016,.039,.022,.041),temple=G(x,y,z,.065,.331,.01,.022,.025,.052),zyg=G(x,y,z,.053,.286,.04,.023,.018,.04);
  const vault=smooth(.315,.360,y),back=(1-smooth(-.015,.035,z))*smooth(.270,.319,y),front=smooth(-.028,.035,z);
@@ -50,10 +50,10 @@ export function finishHeadPortrait(model,id){const api=model.headMorphology;if(a
 export function applyHeadMorphology(model,p,eye,tools){
  const api=model.headMorphology;if(!api)return;const started=performance.now(),s=api.settings;
  if(!api.cache){const c=model.canonical,g=model.gnm,B=model.bodyCount,rows=[];for(let hi=0;hi<c.gnmRecipes.length;hi++){const i=B+hi;if(!eye.skin[i])continue;const[a,b,t]=c.gnmRecipes[hi];const q=[0,1,2].map(k=>g.template[a*3+k]*(1-t)+g.template[b*3+k]*t);if(q[1]>.173)rows.push([i,...q]);}api.cache={rows};}
- if(!s.enabled){api.report={version:'HEAD-MORPHOLOGY-R06',enabled:false,changedVertices:0,sourceEyesChanged:false,bodyChanged:false,ms:performance.now()-started};return;}
+ if(!s.enabled||KEYS.every(k=>s[k]===0)){api.report={version:'HEAD-MORPHOLOGY-R06',enabled:false,changedVertices:0,sourceEyesChanged:false,bodyChanged:false,ms:performance.now()-started};return;}
  const landmark=i=>tools.getLandmark(p,i),rland=i=>tools.getLandmark(eye.rest,i),L=landmark(36),R=landmark(45),axisX=unit(sub(R,L)),rawUp=sub(landmark(27),landmark(8)),axisY=unit(rawUp.map((v,i)=>v-dot(rawUp,axisX)*axisX[i]));let axisZ=unit(cross(axisX,axisY));const middle=L.map((v,i)=>(v+R[i])*.5);if(dot(axisZ,sub(landmark(30),middle))<0)axisZ=axisZ.map(v=>-v);const scale=clamp(Math.hypot(...sub(R,L))/Math.hypot(...sub(rland(45),rland(36))),.65,1.5);
  let changed=0,max=0;for(const[i,x,y,z]of api.cache.rows){const d=headDelta(x,y,z,s);if(Math.hypot(...d)<1e-10)continue;for(let k=0;k<3;k++)p[i*3+k]+=scale*(axisX[k]*d[0]+axisY[k]*d[1]+axisZ[k]*d[2]);max=Math.max(max,Math.hypot(...d)*scale*1000);changed++;}
- const eyes=[];for(const e of eye.eyes){
+ const eyes=[];const activeEye=GROUPS[3][1].some(([k])=>s[k]!==0);for(const e of activeEye?eye.eyes:[]){
   const f=tools.frame(i=>tools.getLandmark(p,i),e.side),local=new Map(e.vertices.map(i=>[i,f.project(point(p,i))])),support=tools.supportField(local,e.triangles),opening=smooth(.0006,.005,f.gap),unitScale=clamp(f.width/.0255,.65,1.5);let moved=0,clearances=0,minClearance=Infinity,maximum=0;
   for(const {index:i,outer}of e.patch){const q=f.project(point(p,i)),t=q[0]/f.width;if(t<-.08||t>1.08)continue;const tc=clamp(t),top=f.upper(tc),bottom=f.lower(tc),mid=(top+bottom)*.5,upper=q[1]>=mid,d=upper?q[1]-top:bottom-q[1];if(d<-.0014*unitScale||d>.017*unitScale)continue;
    const mask=smooth(-.08,.06,t)*(1-smooth(.94,1.08,t))*(1-smooth(.009*unitScale,.017*unitScale,d))*outer,arc=Math.max(0,4*tc*(1-tc)),near=1-smooth(.003*unitScale,.012*unitScale,Math.abs(d));
@@ -61,7 +61,7 @@ export function applyHeadMorphology(model,p,eye,tools){
    let dx=(q[0]-f.width*.5)*.15*s.eyeWidth*mask;
    let dy=(.0014*s.eyeOpening*(upper?1:-1)+.00135*(upper?s.upperArch:-s.lowerArch)*arc+.00075*s.eyeApex*arc*(2*tc-1)*(upper?1:.25))*opening*near*mask*unitScale;
    dy+=.0045*s.eyeTilt*(tc-.5)*mask*unitScale;
-   let dz=upper?.0014*s.eyeHood*Math.exp(-((d-.004*unitScale)/(.004*unitScale))**2)*mask*opening*arc*unitScale:0;
+   let dz=upper?.0014*s.eyeHood*Math.exp(-(((d-.004*unitScale)/(.004*unitScale))**2))*mask*opening*arc*unitScale:0;
    const nextSupport=support(q[0]+dx,q[1]+dy);if(nextSupport!==null){const gap=oldSupport===null?.00010*unitScale:Math.max(.00006*unitScale,q[2]-oldSupport);const floor=nextSupport+gap;if(q[2]+dz<floor){dz=floor-q[2];clearances++;}minClearance=Math.min(minClearance,q[2]+dz-nextSupport);}
    const norm=Math.hypot(dx,dy,dz);if(norm>0.007*unitScale)continue;if(norm<1e-10)continue;for(let k=0;k<3;k++)p[i*3+k]+=f.x[k]*dx+f.y[k]*dy+f.z[k]*dz;moved++;maximum=Math.max(maximum,norm*1000);
   }
