@@ -9,7 +9,7 @@ permissions:
   contents: write
 concurrency:
   group: skin-r02-reference-recovery
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   build-review:
     runs-on: ubuntu-latest
@@ -47,6 +47,7 @@ jobs:
             rm -rf -- "$DIR"
           fi
           node iteration/skin-dna-r02/bootstrap.cjs
+          node -e "require('./iteration/skin-dna-r02/finalize.cjs')(process.env.DIR)"
           python iteration/skin-dna-r02/generate_bioskin.py | tee skin-r02-evidence/bioskin.log
           node "$DIR/unit.cjs" | tee skin-r02-evidence/unit.log
           node "$DIR/build.cjs" 2>&1 | tee skin-r02-evidence/build.log
