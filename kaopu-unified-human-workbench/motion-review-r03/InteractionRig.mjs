@@ -39,6 +39,12 @@ export class InteractionRig {
    const recipientSide=side,local=[-C[0],-(C[1]+this.peerDistance),C[2]],arrival=can?S(t,1.15,2.25):0,grip=can?S(t,2.25,2.8):0;
    peerHands.push(this.grip(p,recipientSide,'box',local,[0,-1,0],[-sgn,0,0],arrival,grip));peerFrame=copyFrame(p);owner=t<2.8||!can?'GIVER':t<3.3?'SHARED':'RECEIVER';phase=!can?'等待接收者 · 保持原持有':t<1.8?'递出':t<2.8?'接收者接触并包覆':t<3.3?'双方接触 · 交接':t<5.25?'递出者松手 · 接收者收回':'交接完成';
   }else throw Error('Unknown interaction '+task);
+  // unused crouch hands follow thigh region; no object-contact chain is changed.
+  if(q>0)for(const s of ['L','R'])if(!contacts.some(c=>c.side===s)){
+   const sign=s==='L'?1:-1,l=r.limbs['arm'+s],knee=pos(r.posedMatrices[r.limbs['leg'+s].b]),shoulder=pos(r.posedMatrices[l.a]),target=lerp(pos(r.posedMatrices[l.c]),add(knee,[sign*h*.04,h*.01,h*.075]),smooth(q));
+   r.solveLimb(l,target,add(shoulder,[sign*h*.18,h*.025,-h*(.25*(1-q)+.01*q)]),.995);
+   const elbow=pos(r.posedMatrices[l.b]),D=unit(sub(pos(r.posedMatrices[l.c]),elbow)),oldR=rotation(r.skinMatrices[l.c]),g=r.hand[s],goal=basisRotation(g.forward,g.palm,D,[0,0,-1]),wanted=blendR(oldR,goal,smooth(q)),oldN=mv(oldR,g.palm),wantN=mv(wanted,g.palm),a=unit(sub(oldN,scale(D,dot(oldN,D)))),b=unit(sub(wantN,scale(D,dot(wantN,D)))),roll=Math.atan2(dot(D,cross(a,b)),dot(a,b));r.rotateSubtree(l.b,axisRotation(D,roll),elbow);r.orientSkin(l.c,wanted);
+  }
   let contactMetrics=[],peerMetrics=[];if(obj){contactMetrics=contacts.map(c=>({side:c.side,reach:c.reach,close:c.close,wristBendDegrees:c.wristBendDegrees,reachErrorM:c.reachErrorM,retreatM:c.retreatM,...this.surface.measure(c.side,r.skinMatrices,obj),contacts:this.surface.actualContacts(c.side,c.template,r.skinMatrices,obj)}));if(peerFrame){const localObj={...obj,position:[-obj.position[0],-(obj.position[1]+this.peerDistance),obj.position[2]]};peerMetrics=peerHands.map(c=>({side:c.side,reach:c.reach,close:c.close,wristBendDegrees:c.wristBendDegrees,reachErrorM:c.reachErrorM,...this.surface.measure(c.side,p.skinMatrices,localObj),contacts:this.surface.actualContacts(c.side,c.template,p.skinMatrices,localObj)}));}}
   const metrics={task,phase,owner,contactMetrics,peerMetrics,crouch:q,body:r.validate(),peer:peerFrame?p.validate():null,handSurfaceMode:'retained full-CSR skin triangles',receiverReady,objectPhysics:'kinematic contact constraints, not mass/friction forces'};this.last={posedMatrices:copyFrame(r),peerMatrices:peerFrame,peerDistance:this.peerDistance,object:obj,support,state:{task,phase,owner},metrics};return this.last;
  }
