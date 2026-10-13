@@ -28,6 +28,6 @@ NASA 将 IV&V independence 分为 technical、managerial、financial 三类；�
 
 这不是要求所有技术检查都由外部人员运行。Producer 写的 CI 仍可证明 frozen predicate 执行，状态是 `AUTOMATED_CHECK_VERIFIED__INDEPENDENT_APPROVAL_PENDING`。只有当结论使用 `independent review/approved/verifier accepted` 时才要求本 Candidate 的 identity/authority receipt。
 
-决定：保留 Human-local `Candidate`，在 PR #245 做一次最小试验；不修改 R2、Human 生产分支或现行门槛。`POSTED=false`（写入时）；`CLASSIFICATION-GATE-RUN=true (9/9)`；`ACKNOWLEDGED / IMPLEMENTED / HUMAN-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`。
+决定：保留 Human-local `Candidate`，在 PR #245 做一次最小试验；不修改 R2、Human 生产分支或现行门槛。`POSTED=true`（PR #245 comment `6140828357`）；`CLASSIFICATION-GATE-RUN=true (9/9)`；`ACKNOWLEDGED / IMPLEMENTED / HUMAN-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`。
 
 效果指标：首次候选通过率、用户纠错次数、同错复发率、rejected lineage 继承次数、stale delivery 次数、accepted delta 内部迭代数与指令到合法 candidate 时间均为 `unknown`。
