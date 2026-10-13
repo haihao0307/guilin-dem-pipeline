@@ -1,0 +1,17 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto');
+const base=path.resolve(__dirname,'../human-integrated-r03');let code=fs.readFileSync(base+'/build-core.cjs','utf8');assert.equal(crypto.createHash('sha256').update(code).digest('hex'),'562658d0ae6f73e35756e003621b9872db5e32f3f6c462a6cab7b838fe2a90c5');
+const change=(a,b)=>{assert.equal(code.split(a).length,2,'Build drift '+a.slice(0,80));code=code.replace(a,()=>b);};
+change("spec=__dirname+'/specialists'","spec=path.resolve(__dirname,'../human-integrated-r03/specialists')");
+change("app=`import {installAnatomy}","app=`import {installLocalProfile} from '../../head-look-r03-1-recovery/Profile.mjs';\nimport {mountLocalFeatures} from '../../head-look-r03-1-recovery/UI.mjs';\nimport {installAnatomy}");
+change('installAnatomy(model);if(!savedArchive)','installAnatomy(model);installLocalProfile(model);if(!savedArchive)');
+change('mountUnifiedUI({model,viewer,controller});wasLoaded=true;','mountUnifiedUI({model,viewer,controller});mountLocalFeatures({model,viewer,controller});wasLoaded=true;');
+change('function release(){controller?.model.regionalFace','function release(){controller?.model.localFeatures?.disposeUI?.();controller?.model.regionalFace');
+change('regionalFace:appearance.regionalFace,cinematicLook:','regionalFace:appearance.regionalFace,localFeatures:appearance.localFeatures,cinematicLook:');
+change("if(s.includes('import.meta.url'))","s=require("+JSON.stringify(base+'/compatibility.cjs')+").adapt(s,rel,adapters);\n   if(s.includes('import.meta.url'))");
+change("__dirname+'/layout.css'];","root+'/human-integrated-r03/layout.css',__dirname+'/layout.css'];");
+change('<title>共同人物 R03 · 耳唇融合与面部分区</title>','<title>人物总台 · 原皮肤＋局部五官 R03.1</title>');
+change('R03 · 耳 R05 / 唇 ET19 / 面部分区与曲面毛孔','局部完善 R03.1 · 原皮肤保留 / 嘴唇 / 眼周 / 耳色 / 校准光');
+change("version:'HUMAN-INTEGRATED-R03'","version:'HUMAN-LOCAL-FEATURES-R03.1'");
+change("fs.writeFileSync(__dirname+'/BUILD.json'",`assert(!html.includes('uHLSurface')&&!html.includes('uHLScatter'),'Rejected whole-face shader returned');Object.assign(manifest,{parent:'87f6acf857230c44c16ac7121613b9e7ca6af589',skinSource:'2c08fa9728f64e9119b4a666cf80ee3faecb23de',originalOverallSkin:true,localTasks:['lip colour and border','periorbital texture','ear regional pigment','neutral light','stable soft-edge shadows','local scattering guards'],scopeCorrection:'Original skin retained does NOT cancel lips, eye-surround, ear or lighting tasks',referenceTexturesCopied:false,rejectedWholeFaceShader:false,limitations:['Local artist-authored pigment and optical rules, not measured skin transport','Original eyelid and ear geometry are preserved; structural defects are not claimed fixed','PCF is a fixed-radius visibility filter, not contact-hardening or area-light path tracing','Main/fill/rim direct visibility uses three depth maps; environment occlusion and tissue-exit geometry remain approximations','Native body downloads, geometry and idle calibration remain costs','No consumer GPU FPS, physical phone, Safari or Vision Pro certification']});fs.writeFileSync(__dirname+'/BUILD.json'`);
+require('node:child_process').execFileSync(process.execPath,[base+'/compatibility.cjs'],{stdio:'inherit'});
+new Function('require','__dirname','process',code)(require,__dirname,process);
