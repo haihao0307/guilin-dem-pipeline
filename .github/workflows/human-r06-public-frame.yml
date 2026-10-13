@@ -1,0 +1,30 @@
+name: R06 public first-frame visual evidence
+on:
+  push:
+    branches: [test/human-r06-ocular-pose-20261013]
+    paths: ['.github/workflows/human-r06-public-frame.yml']
+permissions: {contents: read}
+jobs:
+  frame:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-unified-human-workbench/human-integrated-r06
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - name: Exact public P05 frame
+        env:
+          PREVIEW_URL: 'https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/076efd87f2909b4354c25c1db45f7e1551e35533/kaopu-unified-human-workbench/human-integrated-r06/preview.html#portrait=P05'
+          QA_MODE: smoke
+          QA_OUT: r06-public-frame
+        run: node kaopu-unified-human-workbench/human-integrated-r06/verify.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r06-public-frame-${{ github.run_number }}
+          path: r06-public-frame/
+          retention-days: 14
