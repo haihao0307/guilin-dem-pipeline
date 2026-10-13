@@ -1,0 +1,47 @@
+name: MP05 isolated renderer diagnosis, not acceptance
+on:
+  push:
+    branches: [perf/tailor-mp05-fast-runtime-20261013]
+    paths: ['kaopu-tailor-workbench/material-products/mp05-profile/**','.github/workflows/tailor-mp05-profile.yml']
+permissions:
+  contents: read
+jobs:
+  profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-tailor-workbench/material-products/r04-4-2
+            kaopu-tailor-workbench/material-products/mp05-build
+            kaopu-tailor-workbench/material-products/mp05-profile
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build fixed test runtime without publishing a diagnostic view
+        run: |
+          cp -a kaopu-tailor-workbench/material-products/r04-4-2 runtime
+          python kaopu-tailor-workbench/material-products/mp05-build/prepare.py runtime
+          python -m pip install numpy pillow
+          python runtime/bake-tiles.py
+          node runtime/build-fast-cache.mjs
+          cp kaopu-tailor-workbench/material-products/mp05-profile/profile.cjs runtime/profile.cjs
+          npm install --no-save playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Measure restored single-variable comparisons; do not use as quality acceptance
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 --directory runtime >/tmp/http.log 2>&1 &
+          node runtime/profile.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp05-renderer-profile
+          path: runtime/PROFILE.json
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp05-inspected-runtime
+          path: runtime
+          retention-days: 30
