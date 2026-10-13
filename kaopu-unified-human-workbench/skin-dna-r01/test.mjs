@@ -1,4 +1,6 @@
+// SKIN_DNA_REVIEW_REFINED_V2
 import assert from 'node:assert/strict';import{SCHEMA,PRESETS,initialRecord,validateRecord,validateProfile,validateState,seedVector,opticalBase,fingerprint}from'./SkinProfile.mjs';
+const {createForCharacter}=await import('./CharacterSkin.mjs');
 const tests=[];function test(n,f){f();tests.push(n);console.log('PASS',n);}
 test('six distinct named looks',()=>{assert.equal(PRESETS.length,6);assert.equal(new Set(PRESETS.map(p=>p.id)).size,6);});
 for(const p of PRESETS)test('bounded complete profile '+p.id,()=>assert.deepEqual(validateRecord(initialRecord(p.id)).profile,validateProfile(p.profile)));
@@ -12,4 +14,6 @@ test('more blood changes colour without adding emitted energy',()=>{const a=opti
 test('reject wrong schema',()=>assert.throws(()=>validateRecord({...initialRecord(),schema:'skin/9'})));
 test('reject quality enum',()=>assert.throws(()=>validateRecord({...initialRecord(),quality:'magic'})));
 test('roundtrip JSON',()=>{const a=initialRecord('deep');assert.deepEqual(validateRecord(JSON.parse(JSON.stringify(a))),a);});
+test('36 stable independent character recipes',()=>{const rows=Array.from({length:36},(_,i)=>createForCharacter('skin-fixture-'+i,PRESETS[i%6].id));assert.equal(new Set(rows.map(fingerprint)).size,36);for(let i=0;i<36;i++)assert.deepEqual(rows[i],createForCharacter('skin-fixture-'+i,PRESETS[i%6].id));});
+test('reject missing character ID',()=>assert.throws(()=>createForCharacter('')));
 console.log(JSON.stringify({schema:SCHEMA,passed:tests.length,tests},null,2));

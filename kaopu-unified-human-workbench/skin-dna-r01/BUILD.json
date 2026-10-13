@@ -1,17 +1,13 @@
 {
   "schema": "kaopu/unified-human-build@1",
   "version": "SKIN-DNA-R01",
-  "sourceCommit": "534f75fc978f6e9e8fdf58c3709cf2379ed2f9e4",
+  "sourceCommit": "b25c93b916584c599021f300912cdf413a0d1a13",
   "predecessor": "518cc9bd85b9aec53d8abbeffe303d1c0d03ddd9",
   "earSource": "38a8a2140b42561eecbd31af5df074e9210d0c64",
   "lipSource": "5b4997e6dca27106533022b4ab46164cea073818",
-  "previewSHA256": "c63a4b5dfc2a02fa78501996cdbe7675f8060509a105c6b155d80e4fffe4c7dd",
-  "previewBytes": 5504731,
+  "previewSHA256": "0548a699005bfdeee2c9b8c57d53d9b3c44949c3292b03b6f003ce41292c2b12",
+  "previewBytes": 5506210,
   "sources": [
-    {
-      "path": "kaopu-unified-human-workbench/skin-dna-r01/.build-runtime.cjs",
-      "sha256": "b86f879e1da925efc0c645f9eb2c60cc6e735eacf00770e14dada2df00638067"
-    },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r01/Anatomy.mjs",
       "sha256": "fc5172de2dee765db4ab69a356326630c2f21f974dd91d5e36127c23d7a81c27"
@@ -23,6 +19,10 @@
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r01/AttributeBudget.mjs",
       "sha256": "427bc2ad21d5d9a452180261a61b958bde47d544b2ea3b84a57a2c3350536acd"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/skin-dna-r01/CharacterSkin.mjs",
+      "sha256": "b2c58fd49d240ffac6ec3bc6ab61425476be17a372b151d23821872539504cad"
     },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r01/ContinuityMaterial.adapted.mjs",
@@ -46,11 +46,11 @@
     },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r01/SkinDNA.mjs",
-      "sha256": "d3544e867997befdb6f3aa040d6e58cb9963d965563082742a709560403e93e5"
+      "sha256": "8b97d175b66c43122c2e4b1399d5837302504a059e43ee18f53f996bbc2438c1"
     },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r01/SkinMaterial.mjs",
-      "sha256": "cca96fbce72538c1665bbf2504bab1a10d6a27d24c3b13f205f69824a5058217"
+      "sha256": "1f8b21e2c388478dac5c54dc139209fa1930f02dfce9c2cd7984cce1c0fd1da8"
     },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r01/SkinProfile.mjs",
@@ -82,7 +82,7 @@
     },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r01/build.cjs",
-      "sha256": "201a8d8ac29f4272e5de939e04dd1a58e8e3f870fa35dff9e499c9d577d7a85d"
+      "sha256": "268b177d4e99325592ec32e5cc240d50b4b1b4a4c7c0c06fba7987b3f5aa8c12"
     },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r01/compatibility.cjs",
@@ -95,6 +95,10 @@
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r01/layout.css",
       "sha256": "15fc2f698f3f911eeb2b5aeffdf3e42b9f021bb01b607bf09a89d25c2a1f6baa"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/skin-dna-r01/refine.cjs",
+      "sha256": "dba2bc5e3e43625f4b50f1b1b6a454a35e020e1d4f32053a7c175d9fe0fdfdbc"
     },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r01/skin-dna.css",
@@ -542,22 +546,22 @@
     },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r01/test.mjs",
-      "sha256": "6f2dd8c0c09b8e4a602a9128c412f463cfbe7f65a0d8c67e4b992f831b3842af"
+      "sha256": "30feead82ba4692a47ea159391f2de28c00332e25a410f7c473cb3c2ad4b6710"
     },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r01/verify.cjs",
-      "sha256": "b250e6eadb22df07dbc69a21c86dfd5938e15a35ddf330781920444146648005"
+      "sha256": "a64f69f8a9b1e22a9bd5887cbf2f0fcfa2b32c1802507a3be6102fc32acb7f83"
     }
   ],
   "adapters": [
     {
+      "path": "kaopu-unified-human-workbench/lip-structure/LipUI.mjs",
+      "anchor": "tab.click();Promise.all([viewer.skin.faceReady,viewer.skin.naturalEyesReady].filter(Boolean)).then(("
+    },
+    {
       "path": "kaopu-unified-human-workbench/skin-dna-r01/Anatomy.mjs",
       "adapter": "lossless-vertex-slot-packing",
       "exactInputAnchor": "model.regionalFace=api;"
-    },
-    {
-      "path": "kaopu-unified-human-workbench/lip-structure/LipUI.mjs",
-      "anchor": "tab.click();Promise.all([viewer.skin.faceReady,viewer.skin.naturalEyesReady].filter(Boolean)).then(("
     },
     {
       "path": "kaopu-unified-human-workbench/ear-tissue-r05/EarUI.mjs",
@@ -574,21 +578,6 @@
       "adapter": "eye-continuous-native-envelope",
       "from": "version:'ET11-U1',",
       "to": "version:'ET11-U1-R04-continuity',"
-    },
-    {
-      "path": "kaopu-unified-human-workbench/eye-transfer/EyelidKnowledge.mjs",
-      "adapter": "eye-continuous-native-envelope",
-      "from": "export const KNOWLEDGE_VERSION='kaopu/eye-knowledge@1';",
-      "to": "export const KNOWLEDGE_VERSION='kaopu/eye-knowledge@2-r04';"
-    },
-    {
-      "path": "kaopu-unified-human-workbench/eye-transfer/EyelidKnowledge.mjs",
-      "adapter": "replace-underresolved-submillimetre-ridges-with-broad-C2-envelopes",
-      "nativeEyeballsChanged": false
-    },
-    {
-      "path": "kaopu-unified-human-workbench/identity-lab/TraitMaps.mjs",
-      "anchor": "function wrinkle(p,width,amount){if(!amount)return;"
     },
     {
       "path": "kaopu-unified-human-workbench/idle-r01/IdleSkin.mjs",
@@ -621,6 +610,21 @@
       "exactInputAnchor": "float idleDrySkin=fMask*(1.-lpMask)",
       "result": "float idleDrySkin=fMask*(1.-lpMask)*(1.-eaM)",
       "occurrences": 1
+    },
+    {
+      "path": "kaopu-unified-human-workbench/eye-transfer/EyelidKnowledge.mjs",
+      "adapter": "eye-continuous-native-envelope",
+      "from": "export const KNOWLEDGE_VERSION='kaopu/eye-knowledge@1';",
+      "to": "export const KNOWLEDGE_VERSION='kaopu/eye-knowledge@2-r04';"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/eye-transfer/EyelidKnowledge.mjs",
+      "adapter": "replace-underresolved-submillimetre-ridges-with-broad-C2-envelopes",
+      "nativeEyeballsChanged": false
+    },
+    {
+      "path": "kaopu-unified-human-workbench/identity-lab/TraitMaps.mjs",
+      "anchor": "function wrinkle(p,width,amount){if(!amount)return;"
     },
     {
       "path": "kaopu-unified-human-workbench/skin-folds-r02/FoldSkin.mjs",
@@ -672,5 +676,6 @@
   "modelBytes": 84045179,
   "presets": 6,
   "eb1SHA256": "929945387f6371b1c74848f342b74fd493992fa5fe91e6543252b18cf18f70f7",
-  "userVisualAccepted": false
+  "userVisualAccepted": false,
+  "reviewRefinement": "V2: weaker macro pigment, irregular soft freckles, bounded inherited normal, optical roughness calibration"
 }

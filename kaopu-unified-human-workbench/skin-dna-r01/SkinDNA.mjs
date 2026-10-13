@@ -1,3 +1,4 @@
+// SKIN_DNA_REVIEW_REFINED_V2
 import * as THREE from '../full/source/registration-vendor/three.module.js';
 import './EB1.js';
 import {SCHEMA,BASE,STATE,PRESETS,initialRecord,validateRecord,validateProfile,validateState,fingerprint} from './SkinProfile.mjs';
@@ -43,5 +44,5 @@ export function mountSkinDNA({model,viewer,controller}){
  state.onRestore=()=>apply();const changed=()=>{mat.update(state.record,view);sync();};controller.addEventListener('change',changed);
  state.disposeUI=()=>{disposed=true;controller.removeEventListener('change',changed);viewer.setFoldLook=oldFold;viewer.skinDNALights=null;lighting.dispose();store.dispose?.();mat.dispose();host.remove();};
  const id=new URLSearchParams(location.search).get('skin');if(PRESETS.some(x=>x.id===id))state.record=initialRecord(id);
- apply();return api;
+ window.lifelikeIdle?.pause(true);apply();return api;
 }
