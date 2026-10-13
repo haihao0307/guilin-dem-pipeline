@@ -1,0 +1,47 @@
+name: MP06 native person source integration probe
+on:
+  push:
+    branches: [feature/tailor-mp06-native-human-motion-eb1-20261013]
+    paths: ['kaopu-tailor-workbench/material-products/mp06-build/**','.github/workflows/tailor-mp06-build.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-tailor-workbench/material-products/mp06-build
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 38385824284
+          name: mp06-native-donors
+          path: pack
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build actual same-person and exact-source integration
+        run: |
+          cp -a kaopu-tailor-workbench/material-products/mp06-build pack/new
+          npm install --no-save esbuild@0.25.10 playwright@1.58.2
+          npx playwright install --with-deps chromium
+          node pack/new/build.cjs
+      - name: Inspect R05 native lineage, source actions, EB1 and a coupled contact step
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 --directory pack/runtime >/tmp/server.log 2>&1 &
+          node pack/new/qa.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp06-native-probe
+          path: pack/probe
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp06-native-integration
+          path: pack
+          retention-days: 30
