@@ -31,7 +31,7 @@ jobs:
           echo "NODE_PATH=$RUNNER_TEMP/joey-native/node_modules" >> "$GITHUB_ENV"
       - name: Verify single startup, local interruption record and unchanged native rendering
         env:
-          R54_CANDIDATE_DIR: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54
+          R54_PUBLIC_HASHES: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/startup-r05-release-hashes.json
           R54_BROWSER: ${{ matrix.browser }}
         run: |
           node --test kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/startup-r05.test.cjs
@@ -58,7 +58,7 @@ jobs:
           echo "NODE_PATH=$RUNNER_TEMP/joey-native/node_modules" >> "$GITHUB_ENV"
       - name: Verify single startup, local interruption record and unchanged native rendering
         env:
-          R54_CANDIDATE_DIR: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54
+          R54_PUBLIC_HASHES: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/startup-r05-release-hashes.json
           R54_BROWSER: webkit
         run: |
           node --test kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/startup-r05.test.cjs
