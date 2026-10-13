@@ -85,3 +85,10 @@ test('crop contract requires all 256 pixels and identical frozen world/camera', 
 test('normal-mode comparison reports raw baseline pixel differences without replacing them', () => {
   const a=Array(1024).fill(0),b=[...a];assert.equal(compareRGBA(a,b).exactMatch,true);b[10]=8;const result=compareRGBA(a,b);assert.equal(result.differingPixels,1);assert.equal(result.maximumChannelDelta,8);assert.equal(a[10],0);assert.throws(()=>compareRGBA(a,[0]));
 });
+test('crop capture decodes the first native PNG and rejects cleared transparent swap images',()=>{
+ const source=fs.readFileSync(path.join(ROOT,'qa/inspect-dark-shapes.cjs'),'utf8');
+ assert.ok(source.includes('fetch(nativePNG)'));
+ assert.ok(source.includes('ctx.drawImage(captured, tile[0], tile[1]'));
+ assert.ok(source.includes("throw Error('Native diagnostic crop is unexpectedly transparent')"));
+ assert.ok(!source.includes('ctx.drawImage(canvas,'));
+});

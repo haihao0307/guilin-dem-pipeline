@@ -179,8 +179,13 @@ async function runWorker(options) {
           const frame = await window.__settlementGPU.crop(view, tile, { debug: mode.debug, primaryDiagnostics: true, visibilityDiagnostics: true, maxSubmissions });
           const canvas = document.querySelector('#c'), nativePNG = canvas.toDataURL('image/png');
           const crop = document.createElement('canvas'); crop.width = 16; crop.height = 16;
-          const ctx = crop.getContext('2d'); ctx.drawImage(canvas, tile[0], tile[1], 16, 16, 0, 0, 16, 16);
+          const ctx = crop.getContext('2d');
+          // A second direct read of a presented WebGPU canvas can be cleared.
+          // Decode the first captured PNG, rather than reading the swap image twice.
+          const captured = await createImageBitmap(await (await fetch(nativePNG)).blob());
+          ctx.drawImage(captured, tile[0], tile[1], 16, 16, 0, 0, 16, 16); captured.close();
           const png = crop.toDataURL('image/png'), rgba = Array.from(ctx.getImageData(0, 0, 16, 16).data);
+          if (rgba.some((v, i) => i % 4 === 3 && v !== 255)) throw Error('Native diagnostic crop is unexpectedly transparent');
           let baselineRGBA = null;
           if (mode.debug === 0) {
             const image = await createImageBitmap(await (await fetch('/diagnostic-baseline.png')).blob());

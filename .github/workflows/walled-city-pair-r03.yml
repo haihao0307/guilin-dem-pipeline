@@ -1,4 +1,4 @@
-name: Walled city R04 complete frontage review
+name: Walled city whole-growth R05 review
 on:
   push:
     branches: ['qa/walled-city-pair-r03-20261012']
@@ -13,8 +13,6 @@ jobs:
         include:
           - view: overall
             viewport: 960x1200
-          - view: facade-detail
-            viewport: 960x1000
     runs-on: ubuntu-24.04
     timeout-minutes: 125
     steps:
@@ -27,25 +25,25 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/wgpu" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/wgpu/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/wgpu/node_modules" >> "$GITHUB_ENV"
-      - name: Check old anchor and new whole-frontage rules
-        run: node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/tests/*.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/tests/local-review.test.cjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/whole-frontage-r04/tests/*.test.mjs
+      - name: Check old anchors, ownership geometry and fixed-body routes
+        run: node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/tests/*.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/tests/local-review.test.cjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/whole-frontage-r04/tests/*.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/tests/inspect-dark-shapes.test.cjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/whole-growth-r05/tests/*.test.mjs
       - name: Compile and smoke the actual candidate field
-        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/qa/local-review.cjs --candidate whole-frontage-r04 --mode smoke --view ${{ matrix.view }} --viewport ${{ matrix.viewport }} --out whole-frontage-r04/qa/ci-${{ matrix.view }}/smoke
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/qa/local-review.cjs --candidate whole-growth-r05 --mode smoke --view ${{ matrix.view }} --viewport ${{ matrix.viewport }} --out whole-growth-r05/qa/ci-${{ matrix.view }}/smoke
       - name: Save smoke evidence before long render
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: walled-city-r04-smoke-${{ matrix.view }}-${{ github.sha }}
-          path: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/whole-frontage-r04/qa/ci-${{ matrix.view }}/smoke/
+          name: walled-city-r05-smoke-${{ matrix.view }}-${{ github.sha }}
+          path: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/whole-growth-r05/qa/ci-${{ matrix.view }}/smoke/
           retention-days: 7
 
       - name: Render complete requested perspective frame
         timeout-minutes: 100
-        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/qa/local-review.cjs --candidate whole-frontage-r04 --mode full --view ${{ matrix.view }} --viewport ${{ matrix.viewport }} --init-timeout-ms 300000 --render-timeout-ms 5400000 --out whole-frontage-r04/qa/ci-${{ matrix.view }}/full
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/qa/local-review.cjs --candidate whole-growth-r05 --mode full --view ${{ matrix.view }} --viewport ${{ matrix.viewport }} --init-timeout-ms 300000 --render-timeout-ms 5400000 --out whole-growth-r05/qa/ci-${{ matrix.view }}/full
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: walled-city-r04-${{ matrix.view }}-${{ github.sha }}
-          path: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/whole-frontage-r04/qa/ci-${{ matrix.view }}/
+          name: walled-city-r05-${{ matrix.view }}-${{ github.sha }}
+          path: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/whole-growth-r05/qa/ci-${{ matrix.view }}/
           retention-days: 7
 
   frozen-dark-shape-probe:

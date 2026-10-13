@@ -15,7 +15,7 @@ const os = require('node:os');
 const crypto = require('node:crypto');
 
 const ROOT = path.resolve(__dirname, '..');
-const CANDIDATES = Object.freeze(['whole-frontage-r04']);
+const CANDIDATES = Object.freeze(['whole-frontage-r04','whole-growth-r05']);
 const FLAGS = Object.freeze([
   '--no-sandbox', '--enable-unsafe-webgpu', '--use-angle=swiftshader',
   '--use-vulkan=swiftshader', '--enable-features=Vulkan', '--disable-vulkan-surface',
@@ -23,7 +23,7 @@ const FLAGS = Object.freeze([
 const HELP = `Usage: node qa/local-review.cjs [options]
   --mode smoke|full|init       Default smoke; full must be explicitly requested
   --view overall|pair-cut|frontage-diagnostic|facade-detail|borrow  Default overall
-  --candidate whole-frontage-r04  Optional isolated candidate; original is default
+  --candidate whole-frontage-r04|whole-growth-r05  Optional isolated candidate; original is default
   --viewport WIDTHxHEIGHT     Default 640x800, giving native 320x400
   --rect X,Y,W,H               Smoke rectangle; maximum 16x16 (default central tile)
   --growth on|off              Default on; requests runtime's existing world switch
