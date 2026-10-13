@@ -1,0 +1,107 @@
+name: Hair R14.2 startup network repair
+on:
+  push:
+    branches: [fix/hair-r14-startup-offline-20261013]
+    paths: ['kaopu-hair-workbench/fusion/r14-loadfix/**', '.github/workflows/hair-r14-startup-fix.yml']
+permissions:
+  contents: write
+concurrency:
+  group: hair-r14-startup-fix
+  cancel-in-progress: false
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-hair-workbench/fusion/r14
+            kaopu-hair-workbench/fusion/r14-loadfix
+            .github/workflows/hair-r14-startup-fix.yml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify unchanged parent and obtain exact fixed gzip
+        run: |
+          git fetch --depth=1 origin be92fc5ec93336bc555e85af5abee334d3913d47
+          test "$(git rev-parse HEAD:kaopu-hair-workbench/fusion/r14)" = "$(git rev-parse be92fc5ec93336bc555e85af5abee334d3913d47:kaopu-hair-workbench/fusion/r14)"
+          mkdir -p kaopu-hair-workbench/fusion/r14-loadfix/evidence
+          curl --fail --location --retry 3 --max-time 120 -D /tmp/head-response-headers.txt -w 'HTTP %{http_code}; bytes %{size_download}; seconds %{time_total}\n' 'https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/a042dc0e4aa0370e2dbd3225dfa05f8c9ee905d4/kaopu-hair-workbench/fusion/r12/assets/gnm_head_web.bin.gz' -o /tmp/gnm-head.gz | tee kaopu-hair-workbench/fusion/r14-loadfix/evidence/origin-fetch.txt
+          npm install --prefix /tmp/hair-load-tools --no-save esbuild@0.25.10 playwright@1.55.1 pngjs@7.0.0
+          ln -s /tmp/hair-load-tools/node_modules node_modules
+          /tmp/hair-load-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Assemble standalone source and test lossless integrity plus old timeout failure
+        run: |
+          python kaopu-hair-workbench/fusion/r14-loadfix/prepare.py /tmp/gnm-head.gz
+          node --check kaopu-hair-workbench/fusion/r14-loadfix/src/app.js
+          node kaopu-hair-workbench/fusion/r14-loadfix/tests/loader.mjs
+          node kaopu-hair-workbench/fusion/r14-loadfix/bundle.mjs
+          python kaopu-hair-workbench/fusion/r14-loadfix/package.py
+          rm kaopu-hair-workbench/fusion/r14-loadfix/HEAD_PAYLOAD.b64
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-r14-load-built
+          path: kaopu-hair-workbench/fusion/r14-loadfix
+          retention-days: 14
+      - name: Real browser without model network, frozen geometry and injected failure recovery
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/hair-load-http.log 2>&1 &
+          timeout 1000s node kaopu-hair-workbench/fusion/r14-loadfix/tests/startup.mjs http://127.0.0.1:8765/kaopu-hair-workbench/fusion/r14-loadfix/public-lite.html
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-r14-load-candidate
+          path: kaopu-hair-workbench/fusion/r14-loadfix
+          retention-days: 14
+      - name: Publish only the new startup-fix directory; fast-forward only
+        id: publish
+        run: |
+          python - <<'PY'
+          import subprocess,json
+          from pathlib import Path
+          p=Path('kaopu-hair-workbench/fusion/r14-loadfix')
+          assert json.loads((p/'evidence/candidate/report.json').read_text())['success']
+          changes=subprocess.check_output(['git','diff','--name-only'],text=True).splitlines()
+          assert all(x.startswith(str(p)+'/') for x in changes),changes
+          PY
+          git config user.name 'KAOPU Hair Startup Repair'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add kaopu-hair-workbench/fusion/r14-loadfix
+          git commit -m 'build(hair-r14-load): exact original head embedded; startup and geometry verified'
+          git push origin HEAD:refs/heads/fix/hair-r14-startup-offline-20261013
+          sha=$(git rev-parse HEAD)
+          url="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$sha/kaopu-hair-workbench/fusion/r14-loadfix/public-lite.html"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "$url" >> "$GITHUB_STEP_SUMMARY"
+      - name: Independently open immutable public webpage, with model endpoints blocked
+        run: timeout 800s node kaopu-hair-workbench/fusion/r14-loadfix/tests/startup.mjs '${{ steps.publish.outputs.url }}' --public
+      - name: Record external public result without changing tested HTML
+        env:
+          PUBLIC_URL: ${{ steps.publish.outputs.url }}
+          BUILD_SHA: ${{ steps.publish.outputs.sha }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,os,hashlib
+          p=Path('kaopu-hair-workbench/fusion/r14-loadfix')
+          report=json.loads((p/'evidence/public/report.json').read_text());assert report['success']
+          manifest=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          assert hashlib.sha256((p/'public-lite.html').read_bytes()).hexdigest()==manifest['htmlSha256']
+          manifest.update(publicBrowserVerified=True,publicURL=os.environ['PUBLIC_URL'],buildRevision=os.environ['BUILD_SHA'],actionsRun=os.environ['GITHUB_RUN_ID'])
+          (p/'BUILD_MANIFEST.json').write_text(json.dumps(manifest,indent=2))
+          (p/'PUBLIC_URL.txt').write_text(os.environ['PUBLIC_URL']+'\n')
+          (p/'DELIVERY.md').write_text('# R14.2-L01 启动修复\n\n'+os.environ['PUBLIC_URL']+'\n\nBuild: '+os.environ['BUILD_SHA']+'\n\n原人物字节不变；三预设根点、曲线、头部、几何缓冲与R14.2一致。公网实际渲染、预设切换、视角、起根模式、保存恢复和手机视口通过；模型请求被测试主动阻断但网页仍正常启动。启动错误与重试另经候选故障注入验证。\n\n入口HTML本身仍需网络，且约21MB；此修复不保证所有网络/显卡或手机实机，不改变发型残余视觉缺陷。原R14.2与其他工作台不改，无合并或强推。\n')
+          PY
+          git add kaopu-hair-workbench/fusion/r14-loadfix
+          git commit -m 'test(hair-r14-load): verified immutable public startup, controls and original model identity'
+          git push origin HEAD:refs/heads/fix/hair-r14-startup-offline-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-r14-load-delivery
+          path: kaopu-hair-workbench/fusion/r14-loadfix
+          retention-days: 30
