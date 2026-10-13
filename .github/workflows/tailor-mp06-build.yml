@@ -26,6 +26,7 @@ jobs:
       - name: Build actual same-person and exact-source integration
         run: |
           cp -a kaopu-tailor-workbench/material-products/mp06-build pack/new
+          python pack/new/prepare.py
           npm install --no-save esbuild@0.25.10 playwright@1.58.2
           npx playwright install --with-deps chromium
           node pack/new/build.cjs
