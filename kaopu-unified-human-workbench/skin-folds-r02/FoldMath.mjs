@@ -36,26 +36,24 @@ export function protectedSkin(x,y){
  if((x/27.8)**2+((y-232)/15.2)**2<1)return false;
  return y>204&&y<383&&Math.abs(x)<70;
 }
-/** Returns signed normal displacement and tangential compression, in mm. */
+/** Returns signed normal displacement and head-frame gathering, in mm. */
 export function foldAt(x,y,s,coverage=1){
  if(!protectedSkin(x,y)||coverage<=0||!s.strength||!s.slack)return [0,0,0];
  let h=0,dx=0,dy=0;
  const add=(d,w,a,g,nx,ny)=>{if(g<1e-5||Math.abs(d)>w*9)return;h+=roll(d,w,s.compression)*a*g;const q=-d*.095*s.compression*G(d/(w*1.65))*g*a;dx+=q*nx;dy+=q*ny;};
- // Rest-space fronts are broad bands rather than jagged dark curves.
  for(let j=0;j<3;j++){
   const span=[40,35,28][j],center=336+j*10+2.5*(1-(x/span)**2)+.55*Math.sin(x*.083+j);
   const gate=(1-smooth(span*.68,span,Math.abs(x)))*s.forehead*(1-j*.12);
   add(y-center,1.65+j*.20,.58,gate,-.004*x,1);
  }
  const side=x<0?-1:1,a=Math.abs(x);
- if(a>14&&a<63){
+ if(a>14&&a<64){
   const u=clamp((a-17)/30),gate=smooth(15,21,a)*(1-smooth(43,52,a))*s.eyes;
   const arc=290-3.5*Math.sin(u*Math.PI)-.025*(a-32);
   add(y-arc,1.40,.48,gate,side*.12,1);
   add(y-(arc-5.1),1.75,.13,gate*.65,side*.12,1);
   for(let j=0;j<2;j++){const rise=(a-47)*(.20+j*.36),g=smooth(46,50,a)*(1-smooth(58,64,a))*s.eyes;add(y-(297+rise),1.28,.30,g,-side*(.20+j*.36),1);}
  }
- // Nasolabial roll: the positive shoulder is on the cheek, not a cut in the lip.
  const t=clamp((264-y)/51),line=18+19*t+3.2*Math.sin(Math.PI*t);
  const slope=-(19+3.2*Math.PI*Math.cos(Math.PI*t))/51,den=Math.hypot(1,slope),d=(a-line)/den;
  const gate=smoothC2(213,230,y)*(1-smoothC2(253,266,y))*s.nasolabial;
@@ -63,9 +61,13 @@ export function foldAt(x,y,s,coverage=1){
  h+=cheekRoll(d,width,s.compression)*amplitude;
  const gather=-d*.070*s.compression*G(d/(width*1.8))*amplitude;
  dx+=gather*side/den;dy-=gather*slope/den;
- // Short, broad lower-cheek folds and downward loose-tissue drift.
- const lower=44-10*clamp((247-y)/34)+1.8*Math.sin((y-218)*.08),cg=smooth(208,219,y)*(1-smooth(246,260,y))*s.cheeks;
- add(a-lower,3.5,.60,cg,side,.22);
+ // Lower cheek has a broad roll, not the old narrow double-ridge scar-like rail.
+ const lower=42+.27*(y-235)+1.1*Math.sin((y-223)*.055);
+ const lowerSlope=.27+.0605*Math.cos((y-223)*.055),lowerDen=Math.hypot(1,lowerSlope);
+ const cd=(a-lower)/lowerDen,cg=smoothC2(209,226,y)*(1-smoothC2(244,263,y))*s.cheeks;
+ h+=cheekRoll(cd,5.3,s.compression)*.54*cg;
+ const cheekGather=-cd*.05*s.compression*G(cd/9.5)*.54*cg;
+ dx+=cheekGather*side/lowerDen;dy-=cheekGather*lowerSlope/lowerDen;
  dy-=1.45*s.sag*s.cheeks*G((a-44)/14)*G((y-235)/24);
  const gain=s.strength*s.slack*coverage*boundaryWeight(x,y);
  return [clamp(h*gain,-.48,1.35),clamp(dx*gain,-.70,.70),clamp(dy*gain,-1.8,.70)];
