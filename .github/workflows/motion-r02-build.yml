@@ -29,10 +29,11 @@ jobs:
       - run: npm install --no-save esbuild@0.25.10 playwright@1.56.1
       - run: npx playwright install --with-deps chromium
       - run: python -m pip install numpy scipy
-      - name: Generate new R02 sources and correct explicit test API argument
+      - name: Generate new R02 sources and bounded test contracts
         run: |
           python "$WORK/prepare_sources.py"
           python "$WORK/install.py"
+          python "$WORK/polish.py"
           python - <<'PY'
           import os,pathlib
           p=pathlib.Path(os.environ['WORK'])/'verify.cjs';s=p.read_text();a=',{timeout:200000})';b=',null,{timeout:200000})'
@@ -43,11 +44,11 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$WORK"
-          if ! git diff --cached --quiet; then git commit -m 'source(motion-r02): captured cycles, thumb runtime and correct startup test API'; fi
+          if ! git diff --cached --quiet; then git commit -m 'source(motion-r02): continuous cycles and corrected clock camera thumb'; fi
           echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
       - name: Build new fixed-person preview
         run: node "$WORK/build.cjs"
-      - name: Candidate actual-browser tests and thumb images
+      - name: Candidate browser and actual WebGL visual evidence
         env:
           QA_OUT: r02-evidence/candidate
         run: timeout 420 node "$WORK/verify.cjs"
@@ -71,18 +72,18 @@ jobs:
           work=os.environ['WORK'];url='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+os.environ['BUILD_SHA']+'/'+work+'/preview.html'
           data=urllib.request.urlopen(url,timeout=100).read();assert hashlib.sha256(data).hexdigest()==json.load(open(work+'/BUILD.json'))['outputHTMLSHA256']
           PY
-      - name: Exact-public continuous motion, thumb and natural gesture verification
+      - name: Exact-public continuous motion thumb and gestures
         env:
           QA_OUT: r02-evidence/public
           QA_FULL: '1'
         run: timeout 540 node "$WORK/verify.cjs"
-      - name: Record public result without implying artistic acceptance
+      - name: Record public result with explicit artistic limits
         run: |
           python - <<'PY'
           import os,pathlib,json
           p=pathlib.Path(os.environ['WORK']);q=json.load(open('r02-evidence/public/qa.json'));assert q['pass']
           (p/'PUBLIC_QA.json').write_text(json.dumps(q,ensure_ascii=False,indent=2))
-          (p/'DELIVERY.json').write_text(json.dumps({'version':'MOTION-REVIEW-R02','sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':os.environ['BUILD_SHA'],'publicURL':os.environ['QA_URL'],'run':os.environ['GITHUB_RUN_ID'],'checks':len(q['checks']),'publicVerified':True,'visualReview':'pending actual screenshot inspection','userAccepted':False,'productionReady':False,'physicalPhoneTested':False,'consumerGPU60FPSCertified':False},ensure_ascii=False,indent=2))
+          (p/'DELIVERY.json').write_text(json.dumps({'version':'MOTION-REVIEW-R02','sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':os.environ['BUILD_SHA'],'publicURL':os.environ['QA_URL'],'run':os.environ['GITHUB_RUN_ID'],'checks':len(q['checks']),'publicVerified':True,'captureMethod':q['captureMethod'],'visualReview':'pending actual canvas image inspection','userAccepted':False,'productionReady':False,'physicalPhoneTested':False,'consumerGPU60FPSCertified':False},ensure_ascii=False,indent=2))
           PY
           git add "$WORK/PUBLIC_QA.json" "$WORK/DELIVERY.json"
           git commit -m 'test(motion-r02): exact public QA with explicit performance and acceptance limits'
