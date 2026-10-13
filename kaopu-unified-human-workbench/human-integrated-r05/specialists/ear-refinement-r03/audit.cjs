@@ -1,0 +1,16 @@
+const fs=require('fs'),path=require('path'),{chromium}=require('playwright');
+const out=process.env.EAR_OUT||'ear-r03-audit';fs.mkdirSync(out,{recursive:true});
+(async()=>{let browser;const report={baseline:'b2bb70362e2af7d8792b31d6340cf5565f83c685',errors:[],consoleErrors:[],requests:[]};try{
+ browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});const page=await browser.newPage({viewport:{width:1440,height:1040}});page.setDefaultTimeout(180000);
+ page.on('pageerror',e=>report.errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')report.consoleErrors.push(m.text())});page.on('requestfailed',r=>report.requests.push({url:r.url(),failure:r.failure()}));
+ await page.goto('http://127.0.0.1:8765/kaopu-unified-human-workbench/ear-growth/preview.html',{waitUntil:'domcontentloaded',timeout:120000});await page.waitForFunction(()=>window.earWorkbench&&window.__IDENTITY_QA__?.viewer()?.skin?.naturalEyeExtension?.ready);await page.waitForTimeout(700);
+ report.version=await page.evaluate(()=>earWorkbench.version);report.archive=await page.evaluate(()=>earWorkbench.archive());report.state=await page.evaluate(()=>__IDENTITY_QA__.controller().state());report.runtime=await page.evaluate(()=>earWorkbench.report());
+ await page.evaluate(()=>{earWorkbench.open();earWorkbench.view('face')});await page.screenshot({path:path.join(out,'before-face.png')});
+ for(const side of ['left','right','rear']){await page.evaluate(side=>{earWorkbench.view(side);earWorkbench.view('macro');__IDENTITY_QA__.viewer().render()},side);await page.screenshot({path:path.join(out,'before-'+side+'.png')});}
+ await page.evaluate(()=>{earWorkbench.view('left');earWorkbench.view('macro');document.querySelector('[data-ear-action="gray"]')?.click();__IDENTITY_QA__.viewer().render()});await page.screenshot({path:path.join(out,'before-gray.png')});
+ report.globals=await page.evaluate(()=>Object.keys(window).filter(k=>/lip|ear|identity|Workbench|QA/.test(k)));
+ report.viewerKeys=await page.evaluate(()=>Object.keys(__IDENTITY_QA__.viewer()));report.skinKeys=await page.evaluate(()=>Object.keys(__IDENTITY_QA__.viewer().skin));
+ report.material=await page.evaluate(()=>{const s=__IDENTITY_QA__.viewer().skin;return {materialColor:s.material.color?.toArray(),roughness:s.material.roughness,uniforms:Object.fromEntries(Object.entries(s.uniforms||{}).map(([k,v])=>[k,v.value?.toArray?v.value.toArray():v.value]))}});
+ const geometry=await page.evaluate(()=>{const v=__IDENTITY_QA__.viewer(),g=v.geometry,r=g.attributes.fRest?.array||g.attributes.position.array,p=g.attributes.position.array;let ears=[];for(let i=0;i<r.length;i+=3)if(Math.abs(r[i])>.061&&r[i+1]>.23&&r[i+1]<.32&&r[i+2]>-.012&&r[i+2]<.06)ears.push({i:i/3,r:Array.from(r.slice(i,i+3)),p:Array.from(p.slice(i,i+3))});return {count:p.length/3,attributes:Object.keys(g.attributes),ears}});fs.writeFileSync(path.join(out,'baseline-geometry.json'),JSON.stringify(geometry));
+ report.pass=report.errors.length===0;console.log(JSON.stringify({pass:report.pass,version:report.version,errors:report.errors,globals:report.globals}));
+ }catch(e){report.pass=false;report.failure=String(e);console.error(e);process.exitCode=1}finally{fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2));await browser?.close()}})();
