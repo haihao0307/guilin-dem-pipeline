@@ -28,7 +28,7 @@ jobs:
           sparse-checkout: kaopu-geography-workbench/hong-kong-map-sea-r04
       - name: Unpack verified own-code QA source bundle
         run: |
-          echo "ed8583f8424bcafa4100a91cf55e64fbbda20988882b8732b59d1420bf56b9ba  $CASE/qa-source-bundle.zip" | sha256sum -c -
+          echo "1e162afd1fc272e7365656c9027a48dbd0a84e3deb0c809e8168520cd7c367a4  $CASE/qa-source-bundle.zip" | sha256sum -c -
           python3 -m zipfile -e "$CASE/qa-source-bundle.zip" "$CASE"
       - name: Install pinned official browser runner
         run: |
@@ -65,7 +65,7 @@ jobs:
           sparse-checkout: kaopu-geography-workbench/hong-kong-map-sea-r04
       - name: Unpack verified own-code QA source bundle
         run: |
-          echo "ed8583f8424bcafa4100a91cf55e64fbbda20988882b8732b59d1420bf56b9ba  $CASE/qa-source-bundle.zip" | sha256sum -c -
+          echo "1e162afd1fc272e7365656c9027a48dbd0a84e3deb0c809e8168520cd7c367a4  $CASE/qa-source-bundle.zip" | sha256sum -c -
           python3 -m zipfile -e "$CASE/qa-source-bundle.zip" "$CASE"
       - name: Install pinned official test runners
         run: |
@@ -91,9 +91,10 @@ jobs:
         run: |
           cd "$STATION"
           node near-material/emit-shaders.mjs
-          node --test near-material/qa/contract.test.mjs | tee qa/CPU-NEAR-RESULTS.txt
+          node --test near-material/qa/*.test.mjs | tee qa/CPU-NEAR-RESULTS.txt
           cd ..
           node --experimental-vm-modules --test interior-audit/*.test.mjs | tee qa/CPU-INTERIOR-RESULTS.txt
+          node --experimental-vm-modules interior-audit/reproduce-platform-boundary.mjs > qa/CPU-PLATFORM-BOUNDARY.txt
       - name: Locked Naga 27.0.3 original and near entry compilation
         run: |
           cd "$STATION"
@@ -104,6 +105,7 @@ jobs:
             compiler/target/release/kaopu-station-shader-bridge "generated/component-$name.wgsl" "generated/component-$name-naga.frag" componentProbe
           done
           compiler/target/release/kaopu-station-shader-bridge near-material/generated/near-material.wgsl near-material/generated/near-material-naga.frag stationNearFragment
+          compiler/target/release/kaopu-station-shader-bridge near-material/generated/near-material-visible.wgsl near-material/generated/near-material-visible-naga.frag stationNearVisibleFragment
       - name: Rebuild complete original B mesh including six rail axes
         run: |
           cd "$STATION"
@@ -145,6 +147,25 @@ jobs:
           python3 qa/pack_station.py
           python3 qa/bootstrap.py
           python3 build_map.py
+          python3 qa/near_tier_check_test.py
+      - name: Bounded original-mother visibility A/B fixtures
+        timeout-minutes: 10
+        run: timeout --signal=TERM --kill-after=10s 9m python3 "$CASE/qa/visibility_check.py"
+      - name: Bounded actual station visibility A/B
+        timeout-minutes: 10
+        run: timeout --signal=TERM --kill-after=10s 9m python3 "$CASE/qa/visibility_check.py" --scene
+      - name: Small actual-camera near/far cost and visibility checkpoints
+        timeout-minutes: 16
+        run: timeout --signal=TERM --kill-after=10s 15m python3 "$CASE/qa/near_tier_check.py"
+      - name: Preserve early near-camera evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: r04-near-checkpoint-${{ github.sha }}
+          path: |
+            kaopu-geography-workbench/hong-kong-map-sea-r04/qa/near-tier-results/
+            kaopu-geography-workbench/hong-kong-map-sea-r04/qa/VISIBILITY_*_QA.json
+          retention-days: 7
       - name: Actual HTTP perspective, 1.6m interiors, paths, WASD and shore coverage
         timeout-minutes: 30
         run: timeout --signal=TERM 29m python3 "$CASE/qa/browser_check.py"
