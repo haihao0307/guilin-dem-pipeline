@@ -1,0 +1,15 @@
+import{chromium}from'playwright';import fs from'node:fs';import assert from'node:assert/strict';import path from'node:path';import{fileURLToPath}from'node:url';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),out=root+'/evidence/cache-check';fs.mkdirSync(out,{recursive:true});const report={success:false,kind:'isolated storage test; synthetic arrays, NOT visual evidence',checks:[]};
+const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+try{const page=await browser.newPage();await page.goto(process.argv[2]+'tests/cache-fixture.html');report.checks=await page.evaluate(async()=>{
+ const{GroomResultCache}=await import('../src/GroomResultCache.js'),checks=[],test=(name,pass,detail)=>{checks.push({name,pass,detail});if(!pass)throw Error(name);};
+ const count=13,signature={engine:'synthetic-storage-test-only',count},connections=Array.from({length:4},()=>new GroomResultCache(signature));
+ const make=id=>({count,per:25,segments:24,recipe:{id},curves:new Float32Array(count*25*3).fill(id),normals:new Float32Array(count*25*3),tangents:new Float32Array(count*25*3),randoms:new Float32Array(count),active:new Uint8Array(count).fill(1),guideMap:new Uint32Array(count*3),weights:new Float32Array(count*3),lengths:new Float32Array(count)});
+ await Promise.all(connections.map(c=>c.open()));const results=await Promise.all(connections.map((c,i)=>c.save(make(i))));test('independent simultaneous cache writes complete',results.every(Boolean));
+ const db=connections[0].db,all=store=>new Promise((resolve,reject)=>{const r=db.transaction(store,'readonly').objectStore(store).getAll();r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
+ const meta=await all('meta'),records=await all('results');test('concurrent write budget stays within two entries',meta.length===2&&records.length===2,{count:meta.length,bytes:meta.reduce((s,x)=>s+x.bytes,0)});test('concurrent payload bytes bounded',meta.reduce((s,x)=>s+x.bytes,0)<=128000000);
+ for(const r of records){const recipe=JSON.parse(r.metadata).recipe,v=await connections[0].load(recipe);test('surviving concurrent result is exact '+recipe.id,!!v&&v.curves.every(x=>x===recipe.id));}
+ for(const c of connections)c.close();const descriptor=Object.getOwnPropertyDescriptor(window,'indexedDB');Object.defineProperty(window,'indexedDB',{configurable:true,get:()=>{throw new DOMException('Blocked by test','SecurityError');}});
+ try{const denied=new GroomResultCache(signature),v=await denied.load({id:0}),saved=await denied.save(make(0));test('storage denial returns cache miss instead of changing data',v===null&&saved===false&&denied.stats.warnings.length>0);denied.close();}finally{Object.defineProperty(window,'indexedDB',descriptor);}
+ return checks;
+});assert(report.checks.every(c=>c.pass));report.success=true;}catch(e){report.failure=String(e.stack||e);process.exitCode=1;}finally{fs.writeFileSync(out+'/report.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report));await browser.close();}
