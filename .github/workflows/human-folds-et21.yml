@@ -1,0 +1,51 @@
+name: Human ET21 geometric skin folds
+on:
+  push:
+    branches: [feature/skin-folds-et21-recovery-20261013]
+    paths: ['.github/workflows/human-folds-et21.yml', 'kaopu-unified-human-workbench/skin-folds-r01/**']
+permissions:
+  contents: write
+concurrency:
+  group: human-et21-skin-folds
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+            kaopu-hair-workbench
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - name: Preserve exact existing implementation and lighting references
+        run: |
+          mkdir -p et21-evidence/source
+          python - <<'PY'
+          from pathlib import Path
+          import shutil,json
+          root=Path('et21-evidence/source'); report=[]
+          for base in ['kaopu-unified-human-workbench','kaopu-anny-workbench','kaopu-hair-workbench']:
+            for p in Path(base).rglob('*'):
+              if not p.is_file() or p.stat().st_size>2000000: continue
+              if p.suffix not in ['.mjs','.js','.cjs','.py','.css','.md','.json','.html']: continue
+              if any(x in p.parts for x in ['assets','teacher-original','vendor','registration-vendor','node_modules','evidence']): continue
+              if p.suffix=='.html' and p.stat().st_size>120000: continue
+              target=root/p;target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(p,target)
+              if base=='kaopu-hair-workbench' and p.suffix in ['.js','.mjs','.html']:
+                s=p.read_text(errors='replace')
+                for key in ['DirectionalLight','warmCool','warm-cool','冷暖','warmKey']:
+                  i=s.find(key)
+                  if i>=0: report.append({'path':str(p),'key':key,'excerpt':s[max(0,i-500):i+2000]})
+          Path('et21-evidence/hair-lighting.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+          print(json.dumps(report[:10],ensure_ascii=False,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: et21-source-inspection
+          path: et21-evidence/
+          retention-days: 7
