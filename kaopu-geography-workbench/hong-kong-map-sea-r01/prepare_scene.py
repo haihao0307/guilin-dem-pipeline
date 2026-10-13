@@ -19,7 +19,8 @@ assert xy is not None,r.keys()
 routes=[{'kind':'story','title':'User story concept; revised second station—Lion Rock tunnel intention—Sha Tin river/racecourse/university zone; no engineering design','points':smooth},{'kind':'reference','title':'Modern East Rail Hung Hom to Lo Wu / OSM relation4248592v69 members current API; no track elevations','points':[[round(e-O[0],3),round(O[1]-n,3)]for e,n in xy]}]
 def view(lon,lat,d,yaw,pitch):
  x,z=loc(lon,lat);return{'target':[x,150,z],'distance':d,'yaw':yaw,'pitch':pitch}
-D={'width':m['width'],'height':m['height'],'step':30,'origin':O,'x0':m['geotransform'][0]+15,'y0':m['geotransform'][3]-15,'source':m,'datum':m['vertical_datum'],'labels':labels,'routes':routes,'views':{'overview':view(114.182,22.394,43000,-.82,-.78),'harbour':view(114.185,22.315,14000,-.2,-.48),'lion':view(114.19,22.361,15500,-.7,-.58),'shatin':view(114.201,22.402,11500,-.7,-.69)}}
+D={'width':m['width'],'height':m['height'],'step':30,'origin':O,'x0':m['geotransform'][0]+15,'y0':m['geotransform'][3]-15,'source':m,'datum':m['vertical_datum'],'labels':labels,'routes':routes,'views':{'overview':view(114.182,22.394,30000,-1.40,-.80),'harbour':view(114.185,22.315,14000,-.2,-.48),'harboursea':view(114.170,22.2935,800,0,-.022),'lion':view(114.19,22.361,15500,-.7,-.58),'shatin':view(114.201,22.402,11500,-.7,-.69)}}
+D['views']['harboursea']['target'][1]=9
 (R/'data/scene.json').write_text(json.dumps(D,ensure_ascii=False,separators=(',',':')))
 shutil.copy2(P/'heights.npy',R/'data/heights.npy');shutil.copy2(P/'sea_land_mask.npy',R/'data/mask.npy');shutil.copy2(P/'geographic_manifest.json',R/'data/geographic_manifest.json')
 print('prepared',m['width'],m['height'],len(xy))

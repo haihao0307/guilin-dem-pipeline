@@ -8,7 +8,7 @@ with sync_playwright() as p:
   page=b.new_page(viewport=size,device_scale_factor=1);errs=[];logs=[];page.on('pageerror',lambda e:errs.append(str(e)));page.on('console',lambda m:logs.append(m.text) if m.type=='error' else None)
   t=time.time();page.goto(url,wait_until='load',timeout=60000);page.wait_for_function('window.HKMap?.getState().ready && window.OceanMother?.qa.ready && OceanMother.qa.completedFrames>2',timeout=180000);ready=time.time()-t
   page.evaluate('HKBackgroundSea.pause()');page.wait_for_timeout(1000);state=page.evaluate('HKMap.getState()');assert state['heightExaggeration']==1;assert state['resolutionM']==30;assert state['qa']['lastGLerror']==0
-  for view in ['overview','harbour','lion','shatin']:
+  for view in ['overview','harbour','harboursea','lion','shatin']:
    page.click('[data-map-view='+view+']');page.wait_for_timeout(900);page.screenshot(path=str(R/'qa'/f'{name}-{view}.png'))
   page.click('[data-map-view=overview]');page.wait_for_timeout(500)
   yaw=page.evaluate('HKMap.getState().mapState.yaw');page.mouse.move(400,200);page.mouse.down();page.mouse.move(470,230,steps=3);page.mouse.up();page.wait_for_timeout(400);assert page.evaluate('HKMap.getState().mapState.yaw')!=yaw
