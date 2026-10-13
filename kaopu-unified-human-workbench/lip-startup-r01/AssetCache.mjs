@@ -20,9 +20,9 @@ export async function loadVerified(url,expected,signal){
  alive(signal);if(!/^[0-9a-f]{64}$/.test(expected||''))throw Error('资源缺少固定校验值：'+url);
  const key=new URL('/.kaopu-lips-verified/'+expected,location.origin).href;let cache;
  try{cache=await caches.open(CACHE_NAME);const r=await cache.match(key);if(r){const b=await r.arrayBuffer();alive(signal);if(await sha(b)===expected){P.cacheHits++;P.cacheBytes+=b.byteLength;P.notify?.();return b;}await cache.delete(key);P.warnings.push('损坏的资源缓存已单独重新获取');}}catch(e){if(e.name==='AbortError')throw e;P.warnings.push('缓存不可用，继续网络载入');cache=null;}
- await slot();alive(signal);const t=performance.now();P.requests++;
+ await slot();const t=performance.now();P.requests++;
  try{
-  const timed=AbortSignal.timeout(90000),sig=signal?AbortSignal.any([signal,timed]):timed;
+  alive(signal);const timed=AbortSignal.timeout(90000),sig=signal?AbortSignal.any([signal,timed]):timed;
   const response=await fetch(url,{signal:sig,cache:'force-cache'});if(!response.ok)throw Error('资源 HTTP '+response.status+': '+url);
   const parts=[];let size=0;const reader=response.body.getReader();while(true){const {done,value}=await reader.read();if(done)break;parts.push(value);size+=value.byteLength;P.networkBytes+=value.byteLength;P.notify?.();}
   const bytes=new Uint8Array(size);let at=0;for(const part of parts){bytes.set(part,at);at+=part.length;}alive(signal);if(await sha(bytes)!==expected)throw Error('资源校验失败：'+url);
