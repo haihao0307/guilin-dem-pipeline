@@ -29,6 +29,26 @@ if 'R03 inspected wrist and original prop dimensions' not in s:
  s=sub(s,"'box',local,[0,0,-1]","'box',local,[0,-1,0]")
  s=sub(s,'reachErrorM:c.reachErrorM,','wristBendDegrees:c.wristBendDegrees,reachErrorM:c.reachErrorM,',2)
  s='// R03 inspected wrist and original prop dimensions: current source geometry retained.\n'+s;p.write_text(s)
+p=P/'InteractionRig.mjs';s=p.read_text()
+if 'unused crouch hands follow thigh region' not in s:
+ fix="""  // unused crouch hands follow thigh region; no object-contact chain is changed.
+  if(q>0)for(const s of ['L','R'])if(!contacts.some(c=>c.side===s)){
+   const sign=s==='L'?1:-1,l=r.limbs['arm'+s],knee=pos(r.posedMatrices[r.limbs['leg'+s].b]),shoulder=pos(r.posedMatrices[l.a]),target=lerp(pos(r.posedMatrices[l.c]),add(knee,[sign*h*.04,h*.01,h*.075]),smooth(q));
+   r.solveLimb(l,target,add(shoulder,[sign*h*.18,h*.025,-h*(.25*(1-q)+.01*q)]),.995);
+   const elbow=pos(r.posedMatrices[l.b]),D=unit(sub(pos(r.posedMatrices[l.c]),elbow)),oldR=rotation(r.skinMatrices[l.c]),g=r.hand[s],goal=basisRotation(g.forward,g.palm,D,[0,0,-1]),wanted=blendR(oldR,goal,smooth(q)),oldN=mv(oldR,g.palm),wantN=mv(wanted,g.palm),a=unit(sub(oldN,scale(D,dot(oldN,D)))),b=unit(sub(wantN,scale(D,dot(wantN,D)))),roll=Math.atan2(dot(D,cross(a,b)),dot(a,b));r.rotateSubtree(l.b,axisRotation(D,roll),elbow);r.orientSkin(l.c,wanted);
+  }
+"""
+ s=sub(s,'  let contactMetrics=[],peerMetrics=[];',fix+'  let contactMetrics=[],peerMetrics=[];');p.write_text(s)
+p=P/'Runtime.mjs';s=p.read_text()
+if 'interaction framing includes floor object' not in s:
+ old="frameCamera(which){if(!this.peer?.mesh.visible||!['three','front','side'].includes(which))return false;"
+ new="""frameCamera(which){
+  // interaction framing includes floor object and views box hands from outside.
+  const r0=this.review,v0=this.viewer,h0=r0.binding.height;
+  if(r0.clip?.row.kind==='interaction'&&['handL','handR'].includes(which)&&r0.clip.objects.some(o=>o?.shape==='box')){const side=which==='handL'?'L':'R',m=this.current?.metrics.contactMetrics.find(x=>x.side===side);if(m){const t=new THREE.Vector3(m.palm[0],m.palm[2],-m.palm[1]);v0.orbit.target.copy(t);v0.camera.position.copy(t).add(new THREE.Vector3((side==='L'?1:-1)*h0*.22,h0*.09,h0*.17));v0.camera.updateProjectionMatrix();v0.orbit.update();r0.render();return true;}}
+  if(!this.peer?.mesh.visible){if(r0.clip?.row.kind!=='interaction'||!['three','front','side','rear'].includes(which))return false;const target=new THREE.Vector3(0,-r0.binding.floorOffset+h0*.48,h0*.03),f=Math.tan(v0.camera.fov*Math.PI/360),dist=Math.max(h0/(2*f)*1.35,h0/(Math.max(.45,v0.camera.aspect)*2*f)*.78),angle=which==='front'?0:which==='side'?Math.PI/2:which==='rear'?Math.PI:.48;v0.orbit.target.copy(target);v0.camera.position.copy(target).add(new THREE.Vector3(Math.sin(angle)*dist,h0*.12,Math.cos(angle)*dist));v0.camera.updateProjectionMatrix();v0.orbit.update();r0.lastRoot=null;r0.render();return true;}
+  if(!['three','front','side'].includes(which))return false;"""
+ s=sub(s,old,new);p.write_text(s)
 p=P/'verify.cjs';s=p.read_text()
 if 'original prop dimensions regression' not in s:
  s=sub(s,'const catalogue=await page.evaluate(()=>motionReviewCatalogue);',"""// original prop dimensions regression
@@ -37,6 +57,5 @@ if 'original prop dimensions regression' not in s:
  s=sub(s,'bone=0,qmin=1,qmax=0','bone=0,wrist=0,qmin=1,qmax=0')
  s=sub(s,"if(h.reach>.999&&h.close>.999){maxHeldContactGap", "if(h.reach>.999&&h.close>.999){wrist=Math.max(wrist,h.wristBendDegrees||0);maxHeldContactGap")
  s=sub(s,'maxHeldReach,bone,qmin,qmax','maxHeldReach,bone,wrist,qmin,qmax')
- s=sub(s,'d.bone<1e-6,d);','d.bone<1e-6&&d.wrist<65,d);')
- p.write_text(s)
-print('Applied current-surface palm frame, original prop sizes, forearm roll and wrist regression checks')
+ s=sub(s,'d.bone<1e-6,d);','d.bone<1e-6&&d.wrist<65,d);');p.write_text(s)
+print('Inspected contact/wrist/free-hand/camera corrections present; previous runtimes untouched')
