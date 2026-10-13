@@ -1,0 +1,34 @@
+{
+  "success": true,
+  "kind": "isolated storage test; synthetic arrays, NOT visual evidence",
+  "checks": [
+    {
+      "name": "independent simultaneous cache writes complete",
+      "pass": true
+    },
+    {
+      "name": "concurrent write budget stays within two entries",
+      "pass": true,
+      "detail": {
+        "count": 2,
+        "bytes": 24364
+      }
+    },
+    {
+      "name": "concurrent payload bytes bounded",
+      "pass": true
+    },
+    {
+      "name": "surviving concurrent result is exact 2",
+      "pass": true
+    },
+    {
+      "name": "surviving concurrent result is exact 3",
+      "pass": true
+    },
+    {
+      "name": "storage denial returns cache miss instead of changing data",
+      "pass": true
+    }
+  ]
+}
