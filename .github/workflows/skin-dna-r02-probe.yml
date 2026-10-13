@@ -1,0 +1,40 @@
+name: Skin R02 unassisted opening diagnosis
+on:
+  push:
+    branches: [fix/skin-dna-r02-reference-recovery-20261013]
+    paths: [.github/workflows/skin-dna-r02-probe.yml]
+permissions:
+  contents: read
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --prefix /tmp/skin-probe --no-audit --no-fund playwright@1.56.1
+          node /tmp/skin-probe/node_modules/playwright/cli.js install --with-deps chromium
+      - name: Observe exact user page without touching camera, idle or render
+        env:
+          NODE_PATH: /tmp/skin-probe/node_modules
+        run: |
+          mkdir -p evidence
+          cat > /tmp/skin-probe/probe.cjs <<'NODE'
+          const fs=require('fs'),{chromium}=require('playwright');
+          (async()=>{let b,p;const r={errors:[],console:[],observations:[]};try{
+          b=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});p=await b.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});p.on('pageerror',e=>r.errors.push(String(e)));p.on('console',m=>{if(m.type()==='error')r.console.push(m.text());});
+          const c=await p.context().newCDPSession(p),t=Date.now();await p.goto('https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/1d1af0e8fcbddfdf1465113babc05daeb8a0f8a2/kaopu-unified-human-workbench/skin-dna-r01/preview.html',{waitUntil:'domcontentloaded',timeout:120000});
+          await p.waitForFunction(()=>window.__LIP_P3__?.ready||window.__LIP_P3__?.errors?.length,null,{timeout:400000});
+          for(let i=0;i<2;i++){r.observations.push(await p.evaluate(()=>{const v=window.__IDENTITY_QA__?.viewer?.(),m=window.__IDENTITY_QA__?.model?.(),el=document.getElementById('skin-dna-controls'),cv=v?.renderer?.domElement;return{at:performance.now(),title:document.title,p3:window.__LIP_P3__?.snapshot?.(),skin:window.skinDNA?.report?.(),idle:window.lifelikeIdle?.report?.(),camera:v?{position:v.camera.position.toArray(),target:v.orbit.target.toArray(),zoom:v.camera.zoom}:null,modelFlags:m?{eye:m.eyeSurface.settings,fold:m.foldProfile.settings,face:m.faceSurface.settings}:null,bodyClass:document.body.className,scrollY,scroll:document.getElementById('control-shell')?.scrollTop,controls:el?{rect:el.getBoundingClientRect().toJSON(),display:getComputedStyle(el).display,visibility:getComputedStyle(el).visibility}:null,canvas:cv?{rect:cv.getBoundingClientRect().toJSON(),width:cv.width,height:cv.height}:null,body:document.body.innerText.slice(0,22000)}}));fs.writeFileSync('evidence/open-'+i+'.png',Buffer.from((await c.send('Page.captureScreenshot',{format:'png'})).data,'base64'));if(!i)await p.waitForTimeout(4000);}
+          r.elapsed=Date.now()-t;r.complete=true;
+          }catch(e){r.failure=String(e);process.exitCode=1;}finally{fs.writeFileSync('evidence/probe.json',JSON.stringify(r,null,2));await b?.close();}})();
+          NODE
+          node /tmp/skin-probe/probe.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-r02-opening-probe
+          path: evidence
+          retention-days: 14
