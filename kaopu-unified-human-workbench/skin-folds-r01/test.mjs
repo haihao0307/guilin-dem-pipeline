@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {DEFAULTS,validate,foldAt,roll,splitFace} from './FoldMath.mjs';
+let checks=0;const test=(n,f)=>{f();checks++;console.log('PASS',n);};
+test('reject unknown and nonfinite',()=>{assert.throws(()=>validate({strength:NaN}));assert.throws(()=>validate({foo:1}));assert.throws(()=>validate({slack:2}));});
+test('zero is truly zero geometry',()=>{for(let y=200;y<380;y+=2)for(let x=-68;x<69;x+=2)assert.deepEqual(foldAt(x,y,{...DEFAULTS,strength:0}),[0,0,0]);});
+test('eyes and mouth contact protected',()=>{for(const [x,y] of [[31,301],[-31,301],[20,301],[-20,301],[0,231],[20,232]])assert.deepEqual(foldAt(x,y,DEFAULTS),[0,0,0]);});
+test('positive tissue rolls and shallower valleys',()=>{const a=[];for(let d=-15;d<=15;d+=.01)a.push(roll(d,2,.7));assert(Math.max(...a)>.45);assert(Math.min(...a)<-.04);assert(Math.max(...a)>Math.abs(Math.min(...a))*2);});
+test('isolated profile signed integral',()=>{let total=0;for(let x=-100;x<=100;x+=.01)total+=roll(x,2,.5)*.01;assert(Math.abs(total)<.001);});
+test('compression changes width and volume distribution',()=>{assert.notEqual(roll(1,2,0),roll(1,2,1));});
+test('all presets within geometric caps',()=>{for(let y=180;y<405;y+=1.1)for(let x=-90;x<90;x+=1.1){const d=foldAt(x,y,{...DEFAULTS,strength:1.5,slack:1,compression:1,sag:1});assert(d.every(Number.isFinite));assert(d[0]>=-.48&&d[0]<=1.35);assert(d[2]>=-1.8&&d[2]<=.70);}});
+test('coverage zero never affects body',()=>{assert.deepEqual(foldAt(35,240,DEFAULTS,0),[0,0,0]);});
+test('all eight conforming split cases preserve winding and area',()=>{const p=[[0,0],[1,0],[0,1],[.5,0],[.5,.5],[0,.5]];for(let mask=0;mask<8;mask++){let out=[],area=0;splitFace(0,1,2,mask&1?3:-1,mask&2?4:-1,mask&4?5:-1,out);for(let k=0;k<out.length;k+=3){const[a,b,c]=out.slice(k,k+3).map(i=>p[i]);const z=(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);assert(z>0);area+=z/2;}assert(Math.abs(area-.5)<1e-12);}});
+test('deterministic rest attachment',()=>assert.deepEqual(foldAt(34,238,DEFAULTS),foldAt(34,238,DEFAULTS)));
+console.log(JSON.stringify({checks,pass:true,scope:'pure algorithm, not visual acceptance'}));
