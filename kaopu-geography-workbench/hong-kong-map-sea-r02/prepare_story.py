@@ -39,7 +39,7 @@ def fill_water(name, e,n):
     H.ravel()[cells]=v;M.ravel()[cells]=1
     return {'name':name,'kind':'fictional dry terrain synthesis','sourceComponent':k,'cells':len(cells),'areaKm2':len(cells)*.0009,'method':'Harmonic interpolation inside original selected WBM water cells, using adjacent DSM boundary heights; exterior terrain samples unchanged','originalMedianHeightM':float(np.median(ORIGINAL_H[area])),'newMinMaxHeightM':[float(v.min()),float(v.max())]}
 
-edits=[fill_water('船湾淡水湖 → 故事陆地',844678.6,837441.1),fill_water('城门河 → 故事谷地',838949.6,828050.9),fill_water('上方万宜水库 → 故事陆地（裁切外亦记录）',853842.9,826543.6)]
+edits=[fill_water('船湾淡水湖 → 故事陆地',844678.6,837441.1),fill_water('城门河 → 故事谷地',838949.6,828050.9)]
 MARK=json.loads((R/'research/markup_coordinates.json').read_text())
 RAW_MARK=copy.deepcopy(MARK)
 # Normalize hand-drawn intent to a small, coherent planning scene.
@@ -78,7 +78,14 @@ r0=max(0,int(np.ceil((S['y0']-north)/30)));r1=min(S['height']-1,int(np.floor((S[
 hc=H[r0:r1+1,c0:c1+1].astype('<f4');mc=M[r0:r1+1,c0:c1+1]
 D=copy.deepcopy(S);D.update(width=hc.shape[1],height=hc.shape[0],x0=S['x0']+c0*30,y0=S['y0']-r0*30)
 D['storyWorld']={'northAligned':True,'authority':'User sketch and explicit instructions 2026-10-13','boundsEpsg2326':[D['x0'],D['y0']-(D['height']-1)*30,D['x0']+(D['width']-1)*30,D['y0']],'boundaryRule':'All directors and writers keep stories inside this bounded world.','hydrologyEdits':edits,'stationGrading':station_grading,'notHistoricReconstruction':True,'unalteredReference':'../hong-kong-map-sea-r01/','markupFit':RAW_MARK,'planningAdjustments':{'shaTinSite':'Common intent region shifted 67m to nearby gentle land; paired platforms 60m apart, not 527m apart.','lionRock':'Named mountain control used for conceptual under-mountain segment, no rail grade claimed.'}}
-D['source']=copy.deepcopy(S['source']);D['source'].update(kind='Fictional story terrain derived from 30m modern DSM. Selected lakes and river replaced by synthetic terrain; source remains separately in R01.',width=D['width'],height=D['height'],shape_rc=list(hc.shape),bounds_epsg2326=D['storyWorld']['boundsEpsg2326'])
+D['originalSourceManifest']=copy.deepcopy(S['source'])
+D['storyWorld']['excludedWaterBodies']=[{'name':'万宜水库（红框图上方水库）','method':'Outside the new story boundary; not loaded or synthesized'}]
+D['source']=copy.deepcopy(S['source'])
+outer=[D['x0']-15,D['y0']-(D['height']-1)*30-15,D['x0']+(D['width']-1)*30+15,D['y0']+15]
+tr=Transformer.from_crs(2326,4326,always_xy=True)
+D['source'].update(kind='Fictional story terrain derived from 30m modern DSM. Selected lake and river replaced by synthetic terrain; source remains separately in R01.',width=D['width'],height=D['height'],shape_rc=list(hc.shape),bounds_epsg2326=outer,geotransform=[outer[0],30,0,outer[3],0,-30],corner_lonlat=[list(tr.transform(e,n)) for e,n in [(outer[0],outer[1]),(outer[0],outer[3]),(outer[2],outer[3]),(outer[2],outer[1])]],array_order=f"C row-major, row0 north; E={D['x0']}+col*30; N={D['y0']}-row*30",height_resampling='R01 samples cropped without resampling; explicitly marked fictional lake/river interpolation and small station grading',mask_file='mask.npy',mask_raw_file='mask.u8',mask_values={'0':'Original WBM ocean','1':'Original land plus designated fictional water-removal areas','2':'Remaining original inland water'},mask_method='Original WBM with only designated water-removal cells converted to fictional land',qa={'height_min_m':float(hc.min()),'height_max_m':float(hc.max()),'height_nodata_count':int(np.count_nonzero(~np.isfinite(hc))),'mask_counts':{str(i):int(np.count_nonzero(mc==i)) for i in [0,1,2]}},coordinate_usage='X=E-East0, Z=N0-N, Y=source height except documented fictional edits; no vertical exaggeration',limitations=['30m background, not 0.5m near-field','No HKPD/EGM2008 vertical datum alignment','Not a historical reconstruction','Platform, route and tunnel markers are planning annotations, not engineered geometry'])
+for k in ['water_class_file','water_class_raw_file','water_class_values','file_sha256']:D['source'].pop(k,None)
+
 D['labels']=[p for p in S['labels'] if not any(x in p['text'] for x in ['船湾','城门河','巨型庙宇','沙田候选','大学站'])]
 O=np.array(S['origin'])
 def local(p):return [round(float(p[0]-O[0]),3),round(float(O[1]-p[1]),3)]
@@ -105,6 +112,7 @@ cz=O[1]-(D['storyWorld']['boundsEpsg2326'][1]+D['storyWorld']['boundsEpsg2326'][
 span=max((D['width']-1)*30,(D['height']-1)*30)
 D['views']['overview']={'target':[float(cx),120,float(cz)],'distance':float(span*1.28),'yaw':0,'pitch':-1.20}
 D['views']['north']={**D['views']['overview'],'pitch':-1.48}
+D['views']['overview'].update(target=[float(cx),120,float(cz+6000)],distance=30000.,pitch=-.75)
 for st in D['stations']:
     if st['id']=='second':D['views']['station2']={'target':[st['point'][0],80,st['point'][1]],'distance':4200,'yaw':-.3,'pitch':-.65}
     if st['id']=='shatin':D['views']['shatin']={'target':[st['point'][0],100,st['point'][1]],'distance':6500,'yaw':-.65,'pitch':-.82}
@@ -112,6 +120,7 @@ D['views']['harbour']['yaw']=0
 D['datum']='EGM2008 source; local heights artistically edited in explicitly marked story water-removal zones'
 R.joinpath('data').mkdir(exist_ok=True)
 np.save(R/'data/heights.npy',hc);np.save(R/'data/mask.npy',mc)
+D['source']['file_sha256']={f:hashlib.sha256((R/'data'/f).read_bytes()).hexdigest() for f in ['heights.npy','mask.npy']}
 (R/'data/scene.json').write_text(json.dumps(D,ensure_ascii=False,separators=(',',':')))
 stats={'boundsEpsg2326':D['storyWorld']['boundsEpsg2326'],'gridShape':list(hc.shape),'edits':edits,'stationGrading':station_grading,'changedCellCount':int(np.count_nonzero(H!=ORIGINAL_H)),'storyGridSha256':hashlib.sha256(hc.tobytes()).hexdigest(),'referenceSourceSha256':hashlib.sha256(ORIGINAL_H.astype('<f4').tobytes()).hexdigest()}
 (R/'qa/STORY_DATA_QA.json').write_text(json.dumps(stats,ensure_ascii=False,indent=2))

@@ -10,7 +10,7 @@
   "y0": 845485.0,
   "source": {
     "dataset": "Hong Kong regional overview from Copernicus DEM GLO-30 Public, 2021 release",
-    "kind": "Fictional story terrain derived from 30m modern DSM. Selected lakes and river replaced by synthetic terrain; source remains separately in R01.",
+    "kind": "Fictional story terrain derived from 30m modern DSM. Selected lake and river replaced by synthetic terrain; source remains separately in R01.",
     "horizontal_crs": "EPSG:2326",
     "vertical_datum": "EGM2008 (EPSG:3855); no vertical conversion applied; not HKPD",
     "units": "metres",
@@ -24,60 +24,51 @@
       849
     ],
     "bounds_epsg2326": [
-      823035.0,
-      808015.0,
-      848475.0,
-      845485.0
+      823020.0,
+      808000.0,
+      848490.0,
+      845500.0
     ],
     "corner_lonlat": [
       [
-        114.03852322826761,
-        22.1834840068083
+        114.0483891039725,
+        22.2105842219031
       ],
       [
-        114.03815692502288,
-        22.553825323961235
+        114.04807790470286,
+        22.54922811094288
       ],
       [
-        114.35899204145308,
-        22.553781976375745
+        114.29569622951634,
+        22.549235745153577
       ],
       [
-        114.35851088496442,
-        22.183441395040976
+        114.29540894426196,
+        22.2105916938389
       ]
     ],
     "geotransform": [
-      822000.0,
-      30.0,
-      0.0,
-      846010.0,
-      0.0,
-      -30.0
+      823020.0,
+      30,
+      0,
+      845500.0,
+      0,
+      -30
     ],
-    "array_order": "C row-major, row 0 north; cell center E=822000+(col+0.5)*30, N=846010-(row+0.5)*30",
+    "array_order": "C row-major, row0 north; E=823035.0+col*30; N=845485.0-row*30",
     "height_file": "heights.npy",
     "height_raw_file": "heights.f32",
     "height_dtype": "little-endian Float32",
-    "height_resampling": "GDAL bilinear horizontal reprojection only",
-    "mask_file": "sea_land_mask.npy",
-    "mask_raw_file": "sea_land_mask.u8",
+    "height_resampling": "R01 samples cropped without resampling; explicitly marked fictional lake/river interpolation and small station grading",
+    "mask_file": "mask.npy",
+    "mask_raw_file": "mask.u8",
     "mask_dtype": "uint8",
     "mask_values": {
-      "0": "Ocean from official WBM class1",
-      "1": "Non-water from official WBM class0",
-      "2": "Inland water or unknown: inspect water_class.npy to distinguish"
+      "0": "Original WBM ocean",
+      "1": "Original land plus designated fictional water-removal areas",
+      "2": "Remaining original inland water"
     },
-    "water_class_file": "water_class.npy",
-    "water_class_raw_file": "water_class.u8",
-    "water_class_values": {
-      "0": "No water",
-      "1": "Ocean",
-      "2": "Lake",
-      "3": "River",
-      "255": "Unknown/outside coverage"
-    },
-    "mask_method": "Official co-registered Copernicus Water Body Mask, nearest-neighbour reprojected to exactly the elevation output grid; no elevation-threshold ocean inference",
+    "mask_method": "Original WBM with only designated water-removal cells converted to fictional land",
     "sources": [
       {
         "url": "https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_N22_00_E114_00_DEM/Copernicus_DSM_COG_10_N22_00_E114_00_DEM.tif",
@@ -101,31 +92,21 @@
       "height_max_m": 953.3991088867188,
       "height_nodata_count": 0,
       "mask_counts": {
-        "0": 602798,
-        "1": 869915,
-        "2": 30987
-      },
-      "water_class_counts": {
-        "0": 869915,
-        "1": 602798,
-        "2": 27020,
-        "3": 3967
-      },
-      "priorWest800ColumnsPreservedExactly": true,
-      "ploverCoveNoLongerClipped": true
+        "0": 315209,
+        "1": 736138,
+        "2": 9903
+      }
     },
-    "coordinate_usage": "For scene use E-East0 as X, N0-N as Z and original DSM height as Y. Do not multiply height for visual effect.",
+    "coordinate_usage": "X=E-East0, Z=N0-N, Y=source height except documented fictional edits; no vertical exaggeration",
     "limitations": [
-      "No 0.5m CEDD corridor data is mixed into this product.",
-      "No HKPD/EGM2008 vertical datum alignment has been performed.",
-      "Water mask and coast represent source-era edited DSM, not 1970s shoreline.",
-      "30m cell centres and bilinear reprojection do not give 30m vertical accuracy; no individual location accuracy is guaranteed.",
-      "Lake/river cells have actual DSM water-surface heights and must not be replaced by zero-ocean."
+      "30m background, not 0.5m near-field",
+      "No HKPD/EGM2008 vertical datum alignment",
+      "Not a historical reconstruction",
+      "Platform, route and tunnel markers are planning annotations, not engineered geometry"
     ],
     "file_sha256": {
-      "heights.npy": "7d314c422650ead3f7b8a95074029ce7610fa07d07d90cbc971d0f1ce841ecf7",
-      "sea_land_mask.npy": "2246109c1998645cbe58cec736b44d3cee297de11e5c280de01f3a0c079aea84",
-      "water_class.npy": "46688fa4ab638964a8fbc0450720adc3ce11aac9ea3cf651d87ac8bed9599088"
+      "heights.npy": "d5ee500e3e4df3925ad2dad3d6fa9160906c758a2b1b38388f8743c54f366089",
+      "mask.npy": "d78bf4c01a5aab1951a06243bdcaa4df7dcf0099484c64d473386b8abd04608f"
     }
   },
   "datum": "EGM2008 source; local heights artistically edited in explicitly marked story water-removal zones",
@@ -8824,11 +8805,11 @@
       "target": [
         1755.0,
         120,
-        250.0
+        6250.0
       ],
-      "distance": 47961.6,
+      "distance": 30000.0,
       "yaw": 0,
-      "pitch": -1.2
+      "pitch": -0.75
     },
     "harbour": {
       "target": [
@@ -8926,19 +8907,6 @@
         "newMinMaxHeightM": [
           1.3888597281856465,
           10.469049883806498
-        ]
-      },
-      {
-        "name": "上方万宜水库 → 故事陆地（裁切外亦记录）",
-        "kind": "fictional dry terrain synthesis",
-        "sourceComponent": 159,
-        "cells": 4105,
-        "areaKm2": 3.6945,
-        "method": "Harmonic interpolation inside original selected WBM water cells, using adjacent DSM boundary heights; exterior terrain samples unchanged",
-        "originalMedianHeightM": 47.0,
-        "newMinMaxHeightM": [
-          48.339343510476716,
-          69.34726165528829
         ]
       }
     ],
@@ -9674,6 +9642,132 @@
     "planningAdjustments": {
       "shaTinSite": "Common intent region shifted 67m to nearby gentle land; paired platforms 60m apart, not 527m apart.",
       "lionRock": "Named mountain control used for conceptual under-mountain segment, no rail grade claimed."
+    },
+    "excludedWaterBodies": [
+      {
+        "name": "万宜水库（红框图上方水库）",
+        "method": "Outside the new story boundary; not loaded or synthesized"
+      }
+    ]
+  },
+  "originalSourceManifest": {
+    "dataset": "Hong Kong regional overview from Copernicus DEM GLO-30 Public, 2021 release",
+    "kind": "DSM including vegetation and buildings, not bare-earth DTM; contemporary topographic context, not a historical reconstruction",
+    "horizontal_crs": "EPSG:2326",
+    "vertical_datum": "EGM2008 (EPSG:3855); no vertical conversion applied; not HKPD",
+    "units": "metres",
+    "grid_spacing_m": 30,
+    "source_grid_spacing": "1 arc-second (~30m)",
+    "vertical_exaggeration": 1,
+    "width": 1100,
+    "height": 1367,
+    "shape_rc": [
+      1367,
+      1100
+    ],
+    "bounds_epsg2326": [
+      822000.0,
+      805000.0,
+      855000.0,
+      846010.0
+    ],
+    "corner_lonlat": [
+      [
+        114.03852322826761,
+        22.1834840068083
+      ],
+      [
+        114.03815692502288,
+        22.553825323961235
+      ],
+      [
+        114.35899204145308,
+        22.553781976375745
+      ],
+      [
+        114.35851088496442,
+        22.183441395040976
+      ]
+    ],
+    "geotransform": [
+      822000.0,
+      30.0,
+      0.0,
+      846010.0,
+      0.0,
+      -30.0
+    ],
+    "array_order": "C row-major, row 0 north; cell center E=822000+(col+0.5)*30, N=846010-(row+0.5)*30",
+    "height_file": "heights.npy",
+    "height_raw_file": "heights.f32",
+    "height_dtype": "little-endian Float32",
+    "height_resampling": "GDAL bilinear horizontal reprojection only",
+    "mask_file": "sea_land_mask.npy",
+    "mask_raw_file": "sea_land_mask.u8",
+    "mask_dtype": "uint8",
+    "mask_values": {
+      "0": "Ocean from official WBM class1",
+      "1": "Non-water from official WBM class0",
+      "2": "Inland water or unknown: inspect water_class.npy to distinguish"
+    },
+    "water_class_file": "water_class.npy",
+    "water_class_raw_file": "water_class.u8",
+    "water_class_values": {
+      "0": "No water",
+      "1": "Ocean",
+      "2": "Lake",
+      "3": "River",
+      "255": "Unknown/outside coverage"
+    },
+    "mask_method": "Official co-registered Copernicus Water Body Mask, nearest-neighbour reprojected to exactly the elevation output grid; no elevation-threshold ocean inference",
+    "sources": [
+      {
+        "url": "https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_N22_00_E114_00_DEM/Copernicus_DSM_COG_10_N22_00_E114_00_DEM.tif",
+        "local": "copernicus-N22E114.tif",
+        "sha256": "b950ab75642d6684fe08c82b6aa3bb087c1d35acd229ef0e6e6586e1b0868fa3",
+        "size_bytes": 25030462
+      },
+      {
+        "url": "https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_N22_00_E114_00_DEM/AUXFILES/Copernicus_DSM_COG_10_N22_00_E114_00_WBM.tif",
+        "local": "copernicus-water-mask.tif",
+        "sha256": "4493d14116baa3c123a4056a04b89cf2f088fcf0e93bf0b522a0ddf48353f212",
+        "size_bytes": 277161
+      }
+    ],
+    "specification_url": "https://dataspace.copernicus.eu/sites/default/files/media/files/2024-06/geo1988-copernicusdem-spe-002_producthandbook_i5.0.pdf",
+    "mask_specification": "Product Handbook v5.0 page21/Table8 (PDF page index20)",
+    "license_url": "https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_N22_00_E114_00_DEM/INFO/eula_F.pdf",
+    "attribution": "produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved",
+    "qa": {
+      "height_min_m": 0.0,
+      "height_max_m": 953.3991088867188,
+      "height_nodata_count": 0,
+      "mask_counts": {
+        "0": 602798,
+        "1": 869915,
+        "2": 30987
+      },
+      "water_class_counts": {
+        "0": 869915,
+        "1": 602798,
+        "2": 27020,
+        "3": 3967
+      },
+      "priorWest800ColumnsPreservedExactly": true,
+      "ploverCoveNoLongerClipped": true
+    },
+    "coordinate_usage": "For scene use E-East0 as X, N0-N as Z and original DSM height as Y. Do not multiply height for visual effect.",
+    "limitations": [
+      "No 0.5m CEDD corridor data is mixed into this product.",
+      "No HKPD/EGM2008 vertical datum alignment has been performed.",
+      "Water mask and coast represent source-era edited DSM, not 1970s shoreline.",
+      "30m cell centres and bilinear reprojection do not give 30m vertical accuracy; no individual location accuracy is guaranteed.",
+      "Lake/river cells have actual DSM water-surface heights and must not be replaced by zero-ocean."
+    ],
+    "file_sha256": {
+      "heights.npy": "7d314c422650ead3f7b8a95074029ce7610fa07d07d90cbc971d0f1ce841ecf7",
+      "sea_land_mask.npy": "2246109c1998645cbe58cec736b44d3cee297de11e5c280de01f3a0c079aea84",
+      "water_class.npy": "46688fa4ab638964a8fbc0450720adc3ce11aac9ea3cf651d87ac8bed9599088"
     }
   },
   "stations": [
@@ -9728,8 +9822,8 @@
   ],
   "build": "HK-MAP-SEA-R02-20261013",
   "sourceOceanSha256": "84c48cc777f9860cb3e62cbfe2246a7e5fbf49e206d740546fd0f4abf7d46325",
-  "htmlBytes": 3816184,
-  "htmlSha256": "1f1e1df2be1c22f272842673fb6cd2beeb6ef5f2c8ee304e1bc44e3b9e2e3186",
+  "htmlBytes": 3820028,
+  "htmlSha256": "03eb7caa681b5ae0eeba296558e03aeb648c0facc3d71741ec2805e33ff0af24",
   "displayOnly": true,
   "native05mRestored": false,
   "visualAcceptance": false,
