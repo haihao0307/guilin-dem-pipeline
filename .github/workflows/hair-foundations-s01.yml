@@ -1,0 +1,61 @@
+name: Hair foundations S01 candidate
+on:
+  push:
+    branches: ['feature/hair-scalp-foundation-s01-20261013']
+    paths:
+      - 'kaopu-hair-workbench/foundations/s01/*.mjs'
+      - 'kaopu-hair-workbench/foundations/s01/index.html'
+      - '.github/workflows/hair-foundations-s01.yml'
+permissions:
+  contents: write
+concurrency:
+  group: hair-foundations-s01-candidate
+  cancel-in-progress: false
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      P: kaopu-hair-workbench/foundations/s01
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-hair-workbench/fusion/r14-l03
+            kaopu-hair-workbench/foundations/s01
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install pinned build and browser test tools
+        run: |
+          npm install --prefix /tmp/scalp-tools --no-save esbuild@0.25.5 playwright@1.55.1 pngjs@7.0.0
+          ln -s /tmp/scalp-tools/node_modules "$P/node_modules"
+          node /tmp/scalp-tools/node_modules/playwright/cli.js install --with-deps chromium
+          sudo apt-get install -y fonts-noto-cjk >/dev/null
+      - name: Build using unchanged original head arrays
+        run: node "$P/build.mjs"
+      - name: Actual native-head and UI tests
+        run: node "$P/test.mjs"
+      - name: Commit tested candidate and evidence only on this branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$P/site" "$P/BUILD_MANIFEST.json" "$P/evidence/candidate"
+          git diff --cached --name-only | python -c 'import sys; a=sys.stdin.read().splitlines(); assert a and all(x.startswith("kaopu-hair-workbench/foundations/s01/") for x in a)'
+          git commit -m 'build(scalp-s01): tested candidate and independent binding evidence'
+          git push origin "HEAD:$GITHUB_REF_NAME"
+          echo "CANDIDATE_COMMIT=$(git rev-parse HEAD)"
+          echo "SITE_TREE=$(git rev-parse HEAD:$P/site)"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: scalp-s01-candidate-${{ github.run_id }}
+          path: |
+            kaopu-hair-workbench/foundations/s01/site
+            kaopu-hair-workbench/foundations/s01/evidence
+            kaopu-hair-workbench/foundations/s01/*.mjs
+            kaopu-hair-workbench/foundations/s01/*.json
+            kaopu-hair-workbench/foundations/s01/index.html
+            kaopu-hair-workbench/foundations/s01/README.md
+          retention-days: 14
