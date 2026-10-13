@@ -1,0 +1,160 @@
+name: Hair L03 immutable public quality and repeated reloads
+on:
+  push:
+    branches: [fix/hair-r14-l03-lifecycle-20261013]
+    paths: [.github/workflows/hair-r14-l03-public.yml]
+permissions:
+  contents: read
+  actions: read
+env:
+  P: kaopu-hair-workbench/fusion/r14-l03
+  PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-hair-workbench/fusion/r14-l03-8b7d8453055b/
+  BASELINE_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-hair-workbench/fusion/r14-l02-7c1072ee121d/
+jobs:
+  wait:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-hair-workbench/fusion/r14-l03
+      - uses: actions/download-artifact@v4
+        with:
+          name: hair-l03-cache-check
+          run-id: 38354532987
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: /tmp/l03-cache
+      - name: Verify tested source, storage and exact published tree
+        run: |
+          python - <<'PY'
+          import os,subprocess,json,hashlib
+          from pathlib import Path
+          p=Path(os.environ['P']);r=json.loads((p/'PUBLISH.json').read_text());m=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          assert m['source']=='8b7d8453055b9c8a0f146d175370bc7e14ecc4ac'
+          for mode in ['quality','reload','recovery']:
+              q=json.loads((p/'evidence'/mode/'report.json').read_text());assert q['success'] and all(x['pass'] for x in q['checks'])
+          assert json.loads(Path('/tmp/l03-cache/report.json').read_text())['success']
+          for ref in [r['pagesCommit'],r['pagesParent']]:subprocess.check_call(['git','fetch','--depth=1','origin',ref])
+          changed=subprocess.check_output(['git','diff','--name-only',r['pagesParent'],r['pagesCommit']],text=True).splitlines()
+          assert all(x.startswith(r['destination']+'/') for x in changed),changed
+          a=subprocess.check_output(['git','rev-parse',r['pagesCommit']+':'+r['destination']],text=True).strip()
+          b=subprocess.check_output(['git','rev-parse','HEAD:'+str(p)+'/site'],text=True).strip();assert a==b
+          assert hashlib.sha256((p/'site/index.html').read_bytes()).hexdigest()==m['htmlSha256']
+          PY
+      - name: Wait only for exact immutable native page
+        run: |
+          python -u - <<'PY'
+          import os,json,time,hashlib,urllib.request
+          from pathlib import Path
+          p=Path(os.environ['P']);m=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          for i in range(60):
+              try:
+                  t=time.monotonic();r=urllib.request.urlopen(os.environ['PUBLIC_URL'],timeout=15);b=r.read()
+                  if hashlib.sha256(b).hexdigest()==m['htmlSha256']:
+                      (p/'evidence/public-http.json').write_text(json.dumps({'status':r.status,'url':os.environ['PUBLIC_URL'],'bytes':len(b),'sha256':hashlib.sha256(b).hexdigest(),'seconds':time.monotonic()-t},indent=2));break
+                  print('Other revision; wait',i,flush=True)
+              except Exception as e:print('Waiting for deployment',i,str(e),flush=True)
+              time.sleep(15)
+          else:raise RuntimeError('Public deployment incomplete')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-l03-public-http
+          path: kaopu-hair-workbench/fusion/r14-l03/evidence/public-http.json
+          retention-days: 30
+  browsers:
+    needs: wait
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [public, reload]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-hair-workbench/fusion/r14-fast
+            kaopu-hair-workbench/fusion/r14-l03
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --prefix /tmp/l03-public-tools --no-save playwright@1.55.1 pngjs@7.0.0
+          ln -s /tmp/l03-public-tools/node_modules node_modules
+          /tmp/l03-public-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Actual original-quality native HTTPS page
+        run: timeout 1200s node "$P/tests/browser.mjs" "$PUBLIC_URL" '${{ matrix.mode }}' "$BASELINE_URL"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-l03-native-${{ matrix.mode }}
+          path: kaopu-hair-workbench/fusion/r14-l03/evidence/${{ matrix.mode }}
+          retention-days: 30
+  receipt:
+    needs: [wait, browsers]
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-hair-workbench/fusion/r14-l03
+      - uses: actions/download-artifact@v4
+        with:
+          name: hair-l03-native-public
+          path: kaopu-hair-workbench/fusion/r14-l03/evidence/public
+      - uses: actions/download-artifact@v4
+        with:
+          name: hair-l03-native-reload
+          path: kaopu-hair-workbench/fusion/r14-l03/evidence/public-reload
+      - uses: actions/download-artifact@v4
+        with:
+          name: hair-l03-public-http
+          path: kaopu-hair-workbench/fusion/r14-l03/evidence
+      - uses: actions/download-artifact@v4
+        with:
+          name: hair-l03-cache-check
+          run-id: 38354532987
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: kaopu-hair-workbench/fusion/r14-l03/evidence/cache-check
+      - name: Record verified public version without changing tested runtime
+        run: |
+          python - <<'PY'
+          import os,json,hashlib
+          from pathlib import Path
+          p=Path(os.environ['P']);m=json.loads((p/'BUILD_MANIFEST.json').read_text());pub=json.loads((p/'PUBLISH.json').read_text())
+          reports={}
+          for name in ['quality','reload','recovery','public','public-reload','cache-check']:
+              q=json.loads((p/'evidence'/name/'report.json').read_text());assert q['success'] and all(x['pass'] for x in q['checks']),name;reports[name]=q
+          assert hashlib.sha256((p/'site/index.html').read_bytes()).hexdigest()==m['htmlSha256']
+          m.update(publicBrowserVerified=True,publicURL=os.environ['PUBLIC_URL'],pagesCommit=pub['pagesCommit'],sourceBuild=pub['sourceBuild'],publicRun=os.environ['GITHUB_RUN_ID'],validationRun=38354533211,cacheRun=38354532987)
+          pub.update(publicBrowserVerified=True,publicRun=os.environ['GITHUB_RUN_ID'])
+          (p/'PUBLISH.json').write_text(json.dumps(pub,indent=2))
+          (p/'BUILD_MANIFEST.json').write_text(json.dumps(m,indent=2));(p/'PUBLIC_URL.txt').write_text(os.environ['PUBLIC_URL']+'\n')
+          receipt={'version':m['version'],'source':m['source'],'sourceBuild':pub['sourceBuild'],'pagesCommit':pub['pagesCommit'],'publicRun':os.environ['GITHUB_RUN_ID'],'htmlSha256':m['htmlSha256'],'publicURL':os.environ['PUBLIC_URL'],'checks':{k:len(v['checks']) for k,v in reports.items()},'controlledReload':reports['reload']['reloadComparison'],'nativeReload':reports['public-reload']['reloadComparison'],'nativeColdWarm':[{'label':t['label'],'loading':t['loading'],'cache':t['perf']['cache'],'disposal':t['exit']} for t in reports['public']['timings']],'pixels':reports['public']['pixels'],'limitations':['CI Chromium SwiftShader is not user GPU or phone hardware','Cache entries can be evicted; cold start still compiles original quality','No definitive attribution of prior L02 49-second pre-loader delay','Existing crown visual defects unchanged','No merge or force push; previous pages preserved']}
+          (p/'DELIVERY.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2))
+          text='# R14.2-L03：代码迭代与公网验证完成\n\n'+os.environ['PUBLIC_URL']+'\n\n运行源码：'+m['source']+'\n候选构建：'+pub['sourceBuild']+'\nPages：'+pub['pagesCommit']+'\n\n'
+          text+='本机原算法结果完整SHA校验复用；相同DNA不重算/不重画；原浮点精度低临时分配组装；同一GPU索引用于起根查看并原序恢复；退出本页释放资源，隐藏/后退缓存只暂停；跨窗口缓存预算在同一事务内维护。\n\n'
+          text+='原质量不变：64k桌面潜在发根、24段、原头部/皮肤/眼/唇/眉、PNG与灯光阴影。三个公网顶视逐像素0差异，原三预设与自定义参数完整数组SHA一致。\n\n'
+          text+='固定5Mbps/80ms与SwiftShader测试：\n'+json.dumps({'controlled':receipt['controlledReload'],'nativePublic':receipt['nativeReload']},ensure_ascii=False,indent=2)+'\n\n'
+          text+='全部检查数量：'+json.dumps(receipt['checks'],ensure_ascii=False)+'。各测试阶段及完整导航时间见evidence/。缓存破坏能拒绝错误数据并用原算法重新生成；四连接并发写入预算与存储不可用回退通过。\n\n'
+          text+='限制：以上为软件渲染CI环境，不是用户电脑或手机实机。首次生成/GPU初始化仍花时间；两条/128MB仅缓存有效载荷，不是总堆或显存，缓存失效/淘汰后需要重算。此前49秒加载器启动前延迟不作单一原因归因。原冠部视觉不足未改。PR240保持Draft；旧网页不覆盖，不合并、不强推。\n'
+          (p/'DELIVERY.md').write_text(text)
+          PY
+          git config user.name 'KAOPU Hair L03 Public Verification'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add "$P"
+          git commit -m 'test(hair-l03): immutable public pixels, repeated reloads and honest timing evidence'
+          git push origin HEAD:refs/heads/fix/hair-r14-l03-lifecycle-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-l03-public-delivery
+          path: kaopu-hair-workbench/fusion/r14-l03
+          retention-days: 30
