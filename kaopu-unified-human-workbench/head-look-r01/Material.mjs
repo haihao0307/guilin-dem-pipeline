@@ -11,8 +11,8 @@ export function installLookMaterial(viewer){
  const report={version:'HEAD-LOOK-MATERIAL-R01',compiles:0,extraTextures:0,extraVertexAttributes:0,meshReplaced:false,volumeSSS:false,source:'Existing owned/previously admitted colour and height atlases, not lo-th texture pixels',thickness:'Authored regional translucency proxy, not measured skin thickness'};let lastShader;
  const patch=(s,a,b)=>{if(s.split(a).length!==2)throw Error('Head look shader anchor changed: '+a.slice(0,100));return s.replace(a,()=>b);};
  m.onBeforeCompile=function(s,...args){
-  previous.call(this,s,...args);Object.assign(s.uniforms,U);s.fragmentShader=declarations+s.fragmentShader;
-  const lipStart='vec3 lpColor=mix(csBase,csLipColor,clamp(csLipMix*(.94+uLPigment*.38),0.,1.));';
+  previous.call(this,s,...args);lastShader=s;Object.assign(s.uniforms,U);s.fragmentShader=declarations+s.fragmentShader;
+  const lipStart='vec3 lpColor=mix(csBase,csLipColor,clamp(csLipMix*(.43+uLPigment*.30+lpBlood*.25),0.,.94));';
   s.fragmentShader=patch(s.fragmentShader,lipStart,lipStart+`
    vec3 hlSkinBeforeLip=csBase;
    vec3 hlVermilion=mix(csBase,csBase*vec3(.96,.58,.91),clamp(.40+.40*uHLPigment,0.,1.));
@@ -48,7 +48,7 @@ export function installLookMaterial(viewer){
     if(abs(hd)>1e-14){vec3 slope=sign(hd)*(dFdx(hlHeight)*hr1+dFdy(hlHeight)*hr2)/abs(hd);slope*=min(1.,.26/max(length(slope),.00001));normal=normalize(normal-slope);}
     float hlRoughness=uHLRough-.065*rfNose-.028*rfForehead+.025*rfThin+(fData.b-.5)*.16+(csRoughness-.62)*.25;
     roughnessFactor=mix(roughnessFactor,clamp(hlRoughness,.46,.88),hlFace);
-    float hlLipRough=.66+(uLRough-.56)*.35-lpMoist*uHLWet*.26+lpDryPatch*.065+lpMottle*.032;
+    float hlLipRough=.66+(mix(uL19Rough.x,uL19Rough.y,lpUpper)-.515)*.7+(uLRough-.56)*.35-lpMoist*clamp(lpWetGain/.4,0.,2.)*uHLWet*.26+lpDryPatch*.065+lpMottle*.032;
     roughnessFactor=mix(roughnessFactor,clamp(hlLipRough,.31,.82),hlLip);
    }
    #include <clearcoat_normal_fragment_maps>
@@ -57,8 +57,8 @@ export function installLookMaterial(viewer){
   s.fragmentShader=patch(s.fragmentShader,coat,coat+`
    material.specularColor=mix(material.specularColor,vec3(.03252),hlFace);
    material.clearcoat=mix(material.clearcoat,.003,hlFace);
-   material.clearcoat=mix(material.clearcoat,.008+lpMoist*uHLWet*.27,hlLip);
-   material.clearcoatRoughness=mix(material.clearcoatRoughness,.48-lpMoist*uHLWet*.19,hlLip);
+   material.clearcoat=mix(material.clearcoat,.008+lpMoist*clamp(lpWetGain/.4,0.,2.)*uHLWet*.27,hlLip);
+   material.clearcoatRoughness=mix(material.clearcoatRoughness,.48-lpMoist*clamp(lpWetGain/.4,0.,2.)*uHLWet*.19,hlLip);
   `);
   const lighting='reflectedLight.directDiffuse+=mix(mix(etOld,etLight,etMask),rfAngular,rfArea)*directLight.color*BRDF_Lambert(material.diffuseColor);';
   s.fragmentShader=patch(s.fragmentShader,lighting,`
