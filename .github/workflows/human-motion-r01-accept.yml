@@ -1,0 +1,77 @@
+name: Human Motion R01 Bounded Public Acceptance
+on:
+  push:
+    branches: [feature/human-motion-workbench-r01-20261013]
+    paths: [.github/workflows/human-motion-r01-accept.yml]
+permissions:
+  contents: write
+concurrency:
+  group: human-motion-r01-build
+  cancel-in-progress: true
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      WORK: kaopu-unified-human-workbench/motion-review-r01
+      BUILD_SHA: 773f717b38ff5adf776c99fc30f06c113b4727a6
+      SOURCE_SHA: 2505ea9d994026a648ec48a84e3e5194deb0301b
+      QA_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/773f717b38ff5adf776c99fc30f06c113b4727a6/kaopu-unified-human-workbench/motion-review-r01/preview.html
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/human-motion-workbench-r01-20261013
+          sparse-checkout: kaopu-unified-human-workbench/motion-review-r01
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - name: Real public page, every entry, sampled rendered evidence
+        run: |
+          mkdir -p motion-accept
+          cat > accept.cjs <<'JS'
+          const fs=require('fs'),assert=require('assert/strict'),{chromium}=require('playwright');
+          const report={url:process.env.QA_URL,environment:'GitHub Actions Chromium 1.56.1 / SwiftShader software renderer',scope:'All 53 entries: actual selection, three body pose samples / facial influence checks. Representative body/face/mobile GPU screenshots. NOT a rendered-video review of every frame.',checks:[],clips:[],screenshots:[],errors:[],pass:false};
+          const save=()=>fs.writeFileSync('motion-accept/qa.json',JSON.stringify(report,null,2)),check=(name,pass,detail)=>{report.checks.push({name,pass,detail});save();console.log(name,pass?'PASS':'FAIL');assert(pass,name);};
+          const bounded=(promise,ms,label)=>Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(Error(label+' timeout')),ms))]);
+          (async()=>{let browser;try{browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});const context=await browser.newContext({viewport:{width:1360,height:940},deviceScaleFactor:1,acceptDownloads:true}),page=await context.newPage();page.on('pageerror',e=>{report.errors.push(String(e));save();});page.setDefaultTimeout(30000);const begin=Date.now();await page.goto(report.url,{waitUntil:'domcontentloaded',timeout:90000});await page.waitForFunction(()=>window.motionReviewError||window.motionReview?.ready&&!motionReview.busy&&motionReview.clip,{timeout:150000});report.startupMS=Date.now()-begin;report.initial=await page.evaluate(()=>({error:window.motionReviewError,report:window.motionReview?.report()}));check('public R04 initialized',!report.initial.error&&report.initial.report?.ready&&!report.initial.report.errors.length,report.initial);
+          await page.evaluate(()=>{const r=motionReview;r.play(false);r.blend=false;r._beforeP=r.model.positions.slice();r._beforeF=r.model.faces.slice();r._beforeA=JSON.stringify(r.model.archive());window._qaRender=r.viewer.render;window._qaIdleRender=lifelikeIdle.runtime().originalRender;window._qaQuiet=()=>{r.viewer.render=()=>{};lifelikeIdle.runtime().originalRender=()=>{};};window._qaDraw=()=>{r.viewer.render=window._qaRender;lifelikeIdle.runtime().originalRender=window._qaIdleRender;};});
+          const shot=async(name,id,t,view)=>{await bounded(page.evaluate(async({id,t,view})=>{const r=motionReview;window._qaQuiet();if(id)await r.select(id,{autoplay:false});r.seek(t??r.clip.duration*.4);window._qaDraw();r.view(view||'three');r.apply(r.time);r.viewer.renderer.getContext().finish();},{id,t,view}),90000,'render '+name);const c=await context.newCDPSession(page),image=await bounded(c.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,fromSurface:true}),20000,'screenshot '+name);fs.writeFileSync('motion-accept/'+name+'.png',Buffer.from(image.data,'base64'));await c.detach();report.screenshots.push(name+'.png');save();await page.evaluate(()=>window._qaQuiet());};
+          await shot('01-walk','walk',.4,'three');const rows=await page.evaluate(()=>motionReviewCatalogue);report.catalogue=rows;check('entry counts and unmigrated categories',rows.filter(x=>x.playable).length===53&&rows.filter(x=>x.kind==='legacy').length===10,report.initial.report.counts);
+          for(const row of rows.filter(x=>x.playable&&x.kind!=='face')){const result=await bounded(page.evaluate(async id=>{const r=motionReview,before=r.computeCalls;await r.select(id,{autoplay:false});if(r.errors.length)return{error:r.errors.at(-1)};const samples=[];for(const u of [.1,.45,.85]){r.time=r.clip.duration*u;r.apply(r.time,{render:false});samples.push({boneLengthErrorM:r.sampler.boneError(),finite:r.binding.boneData.every(Number.isFinite),leftWrist:r.sampler.world[r.binding.names.indexOf('wrist.L')].toArray()});}return{id,prepareMS:r.clip.prepareMS,modelComputes:r.computeCalls-before,duration:r.clip.duration,samples,metrics:r.clip.metrics};},row.id),30000,row.id);report.clips.push(result);check('body entry '+row.id,!result.error&&result.modelComputes===0&&result.samples.every(x=>x.finite&&x.boneLengthErrorM<1e-6),{prepareMS:result.prepareMS,error:result.error});}
+          await shot('02-carry','hand:carry',2.7,'three');await shot('03-boxing',rows.find(x=>x.kind==='boxing').id,2.1,'three');
+          for(const row of rows.filter(x=>x.kind==='face')){const result=await bounded(page.evaluate(async row=>{const r=motionReview;await r.select(row.id,{autoplay:false});if(r.errors.length)return{error:r.errors.at(-1)};r.seek(row.channel==='blink'?.41:row.channel==='idle'?3.5:['gazeX','gazeY','headX','headY'].includes(row.channel)?1:2);const idle=lifelikeIdle.runtime();return{id:row.id,ready:idle.ready,weights:r.viewer.mesh.morphTargetInfluences.slice(),basis:idle.basisInfo,cacheBytes:idle.report().cacheBytes,bakeMS:idle.bakeMS,errors:idle.errors};},row),110000,row.id);report.clips.push(result);check('face entry '+row.id,result.ready&&!result.error&&!result.errors.length&&result.weights.length===15,result.error||{bakeMS:result.bakeMS,cacheBytes:result.cacheBytes});}
+          await shot('04-face','face:smile',1,'face');
+          const retained=await page.evaluate(()=>{const r=motionReview;return{samePositions:r.model.positions.every((v,i)=>v===r._beforeP[i]),sameFaces:r.model.faces.every((v,i)=>v===r._beforeF[i]),sameArchive:JSON.stringify(r.model.archive())===r._beforeA,sameMesh:r.viewer.mesh===r.meshAtStart,sameMaterial:r.viewer.mesh.material===r.materialAtStart};});check('latest person and canonical authoring state retained',Object.values(retained).every(Boolean),retained);
+          const bid=rows.find(x=>x.kind==='boxing').id;await shot('05-body-after-face',bid,2.2,'three');await page.evaluate(()=>{window._qaDraw();motionReview.seek(0);motionReview.viewer.renderer.getContext().finish();});await page.locator('#mr-speed').selectOption('0.5');await page.locator('#mr-play').evaluate(e=>e.click());await page.waitForTimeout(300);await page.locator('#mr-play').evaluate(e=>e.click());const pause=await page.evaluate(()=>({time:motionReview.time,playing:motionReview.playing,speed:motionReview.speed}));await page.waitForTimeout(150);check('pause and slow motion controls',!pause.playing&&pause.speed===.5&&(await page.evaluate(()=>motionReview.time))===pause.time,pause);await page.locator('#mr-step').evaluate(e=>e.click());check('single frame control',Math.abs((await page.evaluate(()=>motionReview.time))-pause.time-1/60)<1e-5);
+          await page.evaluate(()=>{const r=motionReview;r.seek(1);r.viewer.renderer.getContext().finish();r.speed=1;r.intervals=[];r.cpu=[];r.play(true);});await page.waitForTimeout(5000);report.softwarePlayback=await page.evaluate(()=>{const r=motionReview,report=r.report();r.play(false);return report;});
+          const old=await page.evaluate(()=>motionReview.clip.row.id);await page.evaluate(()=>motionReview.select('legacy:salute'));check('unported action is not a substitute old actor',await page.evaluate(id=>motionReview.clip.row.id===id&&!motionReview.playing,old));
+          await page.setViewportSize({width:390,height:844});await page.locator('#mr-menu').evaluate(e=>e.click());check('mobile library opens',await page.locator('#mr-app').evaluate(e=>e.classList.contains('mr-menu-open')));await shot('06-mobile','hand:open',2.5,'three');const layout=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,width:innerWidth,viewport:document.getElementById('mr-viewport').getBoundingClientRect().height}));check('mobile viewport not physical phone',layout.scroll<=layout.width+1&&layout.viewport>250,layout);
+          report.final=await page.evaluate(()=>motionReview.report());check('no runtime errors',!report.errors.length&&!report.final.errors.length,{page:report.errors,runtime:report.final.errors});report.pass=true;save();console.log('PUBLIC_ACCEPTANCE_PASS',report.checks.length);
+          }catch(e){report.error=String(e.stack||e);save();console.error(e);process.exitCode=1;}finally{if(browser)await browser.close();}})();
+          JS
+          timeout 480 node accept.cjs
+      - name: Record verified immutable entry on the current branch
+        run: |
+          python - <<'PY'
+          import os,json,pathlib
+          root=pathlib.Path(os.environ['WORK']);qa=json.load(open('motion-accept/qa.json'));assert qa['pass']
+          (root/'PUBLIC_QA.json').write_text(json.dumps(qa,ensure_ascii=False,indent=2))
+          data={'version':'MOTION-REVIEW-R01','publicURL':os.environ['QA_URL'],'sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':os.environ['BUILD_SHA'],'actionsRun':os.environ['GITHUB_RUN_ID'],'publicVerified':True,'userVisualAcceptance':False,'productionReady':False,'physicalPhoneTested':False,'consumerGPUPerformanceCertified':False,'counts':qa['initial']['report']['counts'],'checks':len(qa['checks']),'firstReadyMS':qa['startupMS'],'scope':qa['scope'],'softwarePlayback':qa['softwarePlayback']}
+          (root/'DELIVERY.json').write_text(json.dumps(data,ensure_ascii=False,indent=2))
+          p=root/'README.md';p.write_text('# 固定公网验收入口\n\n'+os.environ['QA_URL']+'\n\n本次完成全部53个入口的姿势/面部通道检查，并独立抽查真实GPU画面、播放控件与手机尺寸布局。不是每个动作每一帧的视频审阅，也不是消费显卡60FPS或手机实机保证。首次人物加载和面部基底校准仍有成本，详见 PUBLIC_QA.json。\n\n'+p.read_text())
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$WORK/README.md" "$WORK/PUBLIC_QA.json" "$WORK/DELIVERY.json"
+          git commit -m 'test(motion): exact public 53-entry numerical and sampled-render acceptance with honest limits'
+          git push origin HEAD:feature/human-motion-workbench-r01-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: human-motion-r01-public-acceptance
+          path: |
+            motion-accept
+            kaopu-unified-human-workbench/motion-review-r01
+          retention-days: 14

@@ -1,0 +1,40 @@
+name: Human Motion R01 Bounded Face Diagnostic
+on:
+  push:
+    branches: [feature/human-motion-workbench-r01-20261013]
+    paths: [.github/workflows/human-motion-r01-faceprobe.yml]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 773f717b38ff5adf776c99fc30f06c113b4727a6
+          sparse-checkout: kaopu-unified-human-workbench/motion-review-r01
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - name: Bound and record every face preparation stage
+        run: |
+          mkdir -p face-probe
+          cat > face-probe.cjs <<'JS'
+          const fs=require('fs'),{chromium}=require('playwright');
+          const report={events:[],errors:[],done:false},save=()=>fs.writeFileSync('face-probe/report.json',JSON.stringify(report,null,2));
+          (async()=>{let browser;try{browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});const page=await browser.newPage({viewport:{width:1200,height:900}});page.on('pageerror',e=>{report.errors.push(String(e));save();});const html=fs.readFileSync('kaopu-unified-human-workbench/motion-review-r01/preview.html','utf8');await page.route('https://face-probe.invalid/',r=>r.fulfill({contentType:'text/html',body:html}));await page.goto('https://face-probe.invalid/',{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.motionReview?.ready&&!motionReview.busy&&motionReview.clip,{timeout:180000});await page.evaluate(()=>{motionReview.play(false);motionReview.select('face:idle',{autoplay:false}).then(()=>window._probeFaceDone=true);});
+          for(let k=0;k<32;k++){await page.waitForTimeout(5000);const data=await Promise.race([page.evaluate(()=>({done:window._probeFaceDone,stage:lifelikeIdle.runtime().status,ready:lifelikeIdle.runtime().ready,suppressed:lifelikeIdle.runtime().suppressed,errors:lifelikeIdle.runtime().errors,geometry:__IDENTITY_QA__.viewer().geometry.attributes.position.count,review:motionReview.report()})),new Promise((_,r)=>setTimeout(()=>r(Error('Main thread unresponsive beyond 20 seconds')),20000))]);report.events.push(data);save();console.log(k,data.stage,data.done);if(data.done){report.face=await page.evaluate(()=>lifelikeIdle.report());break;}}
+          await page.evaluate(()=>{motionReview.play(false);motionReview.seek(1);});
+          const id=await page.evaluate(()=>motionReviewCatalogue.find(x=>x.kind==='boxing').id);await page.evaluate(async id=>{await motionReview.select(id,{autoplay:false});motionReview.view('three');},id);await page.waitForTimeout(500);await page.evaluate(()=>{motionReview.intervals=[];motionReview.cpu=[];motionReview.play(true);});await page.waitForTimeout(6000);report.playback=await page.evaluate(()=>{motionReview.play(false);return motionReview.report();});report.done=true;save();
+          }catch(e){report.errors.push(String(e));save();console.error(e);}finally{if(browser)await browser.close();}})();
+          JS
+          timeout 360 node face-probe.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: human-motion-r01-face-diagnostic
+          path: face-probe
+          retention-days: 7

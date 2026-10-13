@@ -1,0 +1,63 @@
+name: Human Motion R01 Preserve Verified Evidence
+on:
+  push:
+    branches: [feature/human-motion-workbench-r01-20261013]
+    paths: [.github/workflows/human-motion-r01-evidence.yml]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  preserve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/human-motion-workbench-r01-20261013
+          sparse-checkout: |
+            kaopu-unified-human-workbench/motion-review-r01
+            docs/handoffs
+      - name: Preserve completed evidence; authorization stays on GitHub only
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import os,urllib.request,zipfile,io,json,pathlib,hashlib
+          root=pathlib.Path('docs/handoffs/motion-review-r01-20261013');root.mkdir(parents=True,exist_ok=True)
+          def artifact(id,digest):
+            req=urllib.request.Request('https://api.github.com/repos/haihao0307/guilin-dem-pipeline/actions/artifacts/'+str(id)+'/zip',headers={'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'})
+            req.add_unredirected_header('Authorization','Bearer '+os.environ['GH_TOKEN'])
+            data=urllib.request.urlopen(req,timeout=90).read();assert hashlib.sha256(data).hexdigest()==digest,'Artifact digest mismatch';return zipfile.ZipFile(io.BytesIO(data))
+          def matching(z,suffix):
+            names=[n for n in z.namelist() if n.endswith(suffix)];assert len(names)==1,(suffix,names);return z.read(names[0])
+          a=artifact(11802592127,'9012ba25f51ade914bebd60d341fb44a6735d6b3c294d85a545274b505f2de38')
+          qa=json.loads(matching(a,'motion-evidence/public/qa.json'));assert qa['pass'] and len(qa['checks'])==65 and len(qa['clips'])==53
+          build='773f717b38ff5adf776c99fc30f06c113b4727a6';url='https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+build+'/kaopu-unified-human-workbench/motion-review-r01/preview.html';assert qa['url']==url
+          (root/'PUBLIC_QA_FULL.json').write_text(json.dumps(qa,ensure_ascii=False,indent=2))
+          catalogue=json.loads(matching(a,'motion-review-r01/CATALOGUE.json'));(root/'CATALOGUE.json').write_text(json.dumps(catalogue,ensure_ascii=False,indent=2))
+          for image in qa['images']:(root/image).write_bytes(matching(a,'motion-evidence/public/'+image))
+          b=artifact(11803700255,'8145935b10ed2f2dfb99d30a36bde9da6681db9af89b14fe437e944175a4a500')
+          repeat=json.loads(matching(b,'motion-accept/qa.json'));assert len(repeat['clips'])==53 and not repeat['pass']
+          (root/'REPEAT_QA_WITH_SCREENSHOT_TIMEOUT.json').write_text(json.dumps(repeat,ensure_ascii=False,indent=2))
+          body=[c for c in qa['clips'] if 'prepareMS' in c];face=next(s for s in qa['final']['switches'] if s['id']=='face:idle')
+          summary={'version':'MOTION-REVIEW-R01','publicURL':url,'sourceCommit':'2505ea9d994026a648ec48a84e3e5194deb0301b','buildCommit':build,'character':'HUMAN-INTEGRATED-R04','characterCommit':'e5df3bcba13ba566d6da27d5cb051e91956055b3','counts':catalogue['counts'],'publicQA':{'run':38378225234,'checksPassed':65,'entriesChecked':53,'firstReadyMS':qa['startupMS'],'bodyPrepareMinMS':min(c['prepareMS'] for c in body),'bodyPrepareMaxMS':max(c['prepareMS'] for c in body),'fullBodyModelRegenerationCalls':sum(c['modelComputes'] for c in body),'firstFacialSelectionMS':face['milliseconds'],'softwareRenderFPS':qa['softwarePlayback']['fps'],'softwareFrameP95MS':qa['softwarePlayback']['frameP95MS'],'softwareCPUSubmitMS':qa['softwarePlayback']['meanSubmitMS'],'pageErrors':qa['pageErrors'],'consoleErrors':qa['consoleErrors']},'repeatQA':{'run':38380507521,'checksBeforeScreenshotTimeout':len(repeat['checks']),'entriesChecked':len(repeat['clips']),'completed':False,'failure':repeat['error'],'pageErrors':repeat['errors']},'userVisualAcceptance':False,'allActionsNatural':False,'stable60FPSCertified':False,'physicalPhoneTested':False,'physicsCertified':False,'unportedLegacyCount':10,'artifactDigestsVerified':True,'originalR04AndMotionRuntimeUnchanged':True}
+          (root/'DELIVERY.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2))
+          text='# 人物动作检查台 R01：交付、完整清单与真实质量\n\n固定网页：'+url+'\n\n人物是本轮核对的最新R04完整本体；旧总台、旧动作采样器和旧入口不改。新台不使用原动作展示中的旧简化演员替代最新人物。\n\n## 测试与性能\n\n实际公开页面完成65项检查，53个可播放入口；40个全身/手部/拳击入口各采样三处时间，13个面部通道检查。骨长、原始顶点、拓扑、存档、同一表皮和材质保留。报告和10张真实截图在本目录。此结果不是每个动作每一帧的人工视频审阅，也不是艺术质量或物理验收通过。\n\n全身条目准备约34–740毫秒；缓存复用不重建人物，全身条目准备和播放的形体重算为0次。首次人物就绪23.147秒，首次面部选择额外约59.3秒。原模型资产约84MB，面部基底缓存约95.8MB；不能宣称首次秒开。\n\n软件渲染测试约4.9FPS，P95帧间隔3200毫秒，有明显长停顿；CPU提交约0.65毫秒不等于GPU渲染流畅。尚未通过稳定60FPS验收；这也不是用户真实显卡或手机帧率。网页提供本浏览器实时FPS与帧间隔。\n\n第二次公开复测再次完成53入口及60项检查，但最终手机尺寸截图超时，因此整轮未通过，失败报告原样保留。第一轮390×844布局检查通过；从未当作手机实机测试。\n\n## 实际观感和边界\n\n抽查中，行走与拳击大形能够识别，最新耳唇、头部和身体跟随。握拳紧握感仍不足；抱物抽查的手与箱体贴合、支撑感不够，而且没有负载物理。闭眼睑缘与细褶仍不自然。小跳、跑步和停止的触地/缓冲/片段重播边界需要继续验收。循环只是重播来源片段，不是无缝连续行走。\n\n骨骼插值和快速切换不会自动修复原动作、接触、抓握、肌肉体积、服装或碰撞。旧R2的坐、躺、挥手、敬礼、负载搬运等尚未重定向到最新骨架和接触体系，本页灰色列明，不用旧人冒充完成。\n\n## 全部条目\n\n28个全身/手部/完整套路（3+7+18），12个拳击摘段另列，13个面部待机通道，共53可选择入口；摘段、松握配置和组合不是新的独立动捕。另10个旧R2分类和3个双人/群体场景未迁入。\n'
+          group=''
+          for r in catalogue['records']:
+            if r['group']!=group:group=r['group'];text+='\n### '+group+'\n\n'
+            text+='- '+r['label']+' (`'+r['id']+'`)：'+('可播放。' if r['playable'] else '未迁入此人物。')+r['note']+'\n'
+          (root/'README.md').write_text(text)
+          print(json.dumps(summary,ensure_ascii=False,indent=2))
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/handoffs/motion-review-r01-20261013
+          git commit -m 'docs(motion): preserve exact public evidence and honest quality limits [skip ci]'
+          git push origin HEAD:feature/human-motion-workbench-r01-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: human-motion-r01-permanent-handoff
+          path: docs/handoffs/motion-review-r01-20261013
+          retention-days: 14
