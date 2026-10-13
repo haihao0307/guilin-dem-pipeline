@@ -1,0 +1,87 @@
+name: MP04 native material build and browser gate
+on:
+  push:
+    branches: [feature/tailor-mp04-native-material-motion-20261013]
+    paths: ['.github/workflows/tailor-mp04-build.yml','kaopu-tailor-workbench/material-products/r04/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: mp04-candidate-build
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: project
+          sparse-checkout: |
+            .github
+            kaopu-tailor-workbench/material-products
+            kaopu-tailor-workbench/presets/r04/assets
+      - uses: actions/checkout@v4
+        with:
+          repository: haihao0307/Humanoid-Rig-Lab-Next
+          ref: 086414b317f313bf9465ea957753ae7e84453f6f
+          path: donor-denim
+          sparse-checkout: denim-workshop/r11
+      - uses: actions/checkout@v4
+        with:
+          repository: haihao0307/Humanoid-Rig-Lab-Next
+          ref: 65951309b46262784e72bb617ba1ca6cb5ca217f
+          path: donor-leather
+          sparse-checkout: leather-workshop/r13
+      - uses: actions/checkout@v4
+        with:
+          ref: 04a3911e5804569918348ec9129577d463e27947
+          path: frozen-person
+          sparse-checkout: kaopu-tailor-workbench/presets/r0434-8c8245dd87e5/person-core
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 38344510585
+          name: mp04-native-person-fast-path
+          path: project/kaopu-tailor-workbench/material-products/r04/assets
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Assemble complete readable candidate source
+        run: python project/kaopu-tailor-workbench/material-products/r04/_build/bootstrap.py
+      - name: Compile metric physics and check all JavaScript
+        working-directory: project
+        run: |
+          set -euo pipefail
+          P=kaopu-tailor-workbench/material-products/r04
+          sudo apt-get update -qq
+          sudo apt-get install -y clang lld
+          clang --target=wasm32 -O3 -ffreestanding -fno-builtin -nostdlib "$P/cloth-kernel.c" -Wl,--no-entry -Wl,--export-memory -Wl,--initial-memory=67108864 -Wl,--max-memory=134217728 -Wl,--allow-undefined -o "$P/cloth-kernel.wasm"
+          for f in "$P"/*.mjs "$P"/person/*.mjs "$P"/native/*.mjs; do node --check "$f"; done
+          printf '%s\n' "$GITHUB_SHA" > "$P/CANDIDATE_SOURCE_COMMIT.txt"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mp04-candidate-runtime
+          path: project/kaopu-tailor-workbench/material-products/r04
+          retention-days: 14
+      - name: Install browser test runtime
+        working-directory: project
+        run: |
+          npm install --no-save playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Real local Chromium image gate
+        working-directory: project
+        env:
+          QA_SCOPE: smoke
+        run: |
+          python -m http.server 8000 > /tmp/mp04-http.log 2>&1 &
+          node kaopu-tailor-workbench/material-products/r04/qa-mp04.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp04-local-browser-evidence
+          path: |
+            project/kaopu-tailor-workbench/material-products/r04/local-evidence
+            /tmp/mp04-http.log
+          retention-days: 14
