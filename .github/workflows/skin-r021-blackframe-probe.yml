@@ -1,0 +1,43 @@
+name: Skin R02.1 black-frame diagnosis
+on:
+  push:
+    branches: [fix/skin-dna-r02-1-blackframe-20261013]
+    paths: [.github/workflows/skin-r021-blackframe-probe.yml]
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --prefix /tmp/sb --no-audit --no-fund playwright@1.56.1
+          node /tmp/sb/node_modules/playwright/cli.js install --with-deps chromium
+      - name: Observe unchanged public build, then bounded diagnostic draws
+        env:
+          NODE_PATH: /tmp/sb/node_modules
+        run: |
+          mkdir -p evidence/assets
+          cat > /tmp/sb/probe.cjs <<'NODE'
+          const fs=require('fs'),crypto=require('crypto'),{chromium}=require('playwright');
+          const url='https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/69d5cb9bfd68c2950112346403f1bf530d4180c0/kaopu-unified-human-workbench/skin-dna-r02/preview.html';
+          (async()=>{const b=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}),all=[],assets=[],saves=[];
+          for(const [name,width,height,dpr] of [['portrait',1190,1190,1],['portrait-dpr2',1190,1190,2],['landscape',1440,960,1]]){const p=await b.newPage({viewport:{width,height},deviceScaleFactor:dpr}),r={name,errors:[],console:[]};all.push(r);p.on('pageerror',e=>r.errors.push(String(e)));p.on('console',m=>{if(m.type()==='error'||m.type()==='warning')r.console.push(m.text());});
+          if(name==='portrait')p.on('response',res=>saves.push((async()=>{if(!res.ok())return;try{const data=await res.body(),h=crypto.createHash('sha256').update(data).digest('hex');fs.writeFileSync('evidence/assets/'+h,data);assets.push({url:res.url(),hash:h,headers:res.headers()});}catch{}})()));
+          const c=await p.context().newCDPSession(p);async function snap(n){fs.writeFileSync('evidence/'+name+'-'+n+'.png',Buffer.from((await c.send('Page.captureScreenshot',{format:'png'})).data,'base64'));}
+          try{await p.goto(url,{waitUntil:'domcontentloaded',timeout:120000});await p.waitForFunction(()=>window.__SKIN_REVIEW__?.ready||window.__SKIN_REVIEW__?.errors?.length,null,{timeout:300000});await snap('unassisted');r.initial=await p.evaluate(()=>{const v=__IDENTITY_QA__.viewer(),g=v.renderer.getContext();const ext=g.getExtension('WEBGL_debug_renderer_info');const caps={};for(const k of ['MAX_VERTEX_ATTRIBS','MAX_TEXTURE_IMAGE_UNITS','MAX_VERTEX_TEXTURE_IMAGE_UNITS','MAX_COMBINED_TEXTURE_IMAGE_UNITS','MAX_VARYING_VECTORS','MAX_VERTEX_OUTPUT_COMPONENTS','MAX_FRAGMENT_INPUT_COMPONENTS','MAX_TEXTURE_SIZE','MAX_FRAGMENT_UNIFORM_VECTORS'])caps[k]=g.getParameter(g[k]);return{opening:skinDNA.opening(),caps,renderer:ext?g.getParameter(ext.UNMASKED_RENDERER_WEBGL):'',context:g.getContextAttributes(),lost:g.isContextLost(),glError:g.getError(),canvas:[g.drawingBufferWidth,g.drawingBufferHeight],camera:{position:v.camera.position.toArray(),quaternion:v.camera.quaternion.toArray(),target:v.orbit.target.toArray(),projection:v.camera.projectionMatrix.toArray(),near:v.camera.near,far:v.camera.far},info:v.renderer.info,flags:{active:v.active,renderable:v.startupRenderable,final:v.startupFinalFrame,shuttingDown:v.startupShuttingDown,inLip:v.inLipUpdate,inFold:v.inFoldUpdate,suppressed:lifelikeIdle.runtime().suppressed},material:skinDNA.report().material};});
+          r.programs=await p.evaluate(()=>{const v=__IDENTITY_QA__.viewer(),g=v.renderer.getContext();return v.renderer.info.programs.map((pr,i)=>({i,link:g.getProgramParameter(pr.program,g.LINK_STATUS),log:g.getProgramInfoLog(pr.program),uniforms:Array.from({length:g.getProgramParameter(pr.program,g.ACTIVE_UNIFORMS)},(_,j)=>{const u=g.getActiveUniform(pr.program,j);return{name:u.name,size:u.size,type:u.type};}),attributes:Array.from({length:g.getProgramParameter(pr.program,g.ACTIVE_ATTRIBUTES)},(_,j)=>{const a=g.getActiveAttrib(pr.program,j);return{name:a.name,size:a.size,type:a.type};}),shaders:g.getAttachedShaders(pr.program).map(s=>({type:g.getShaderParameter(s,g.SHADER_TYPE),ok:g.getShaderParameter(s,g.COMPILE_STATUS),log:g.getShaderInfoLog(s),source:g.getShaderSource(s)}))}));});
+          r.direct=await p.evaluate(()=>{const v=__IDENTITY_QA__.viewer(),g=v.renderer.getContext();let before=[];for(let i=0;i<8;i++){const e=g.getError();if(!e)break;before.push(e);}v.renderer.setRenderTarget(null);v.renderer.render(v.scene,v.camera);const w=g.drawingBufferWidth,h=g.drawingBufferHeight,a=new Uint8Array(w*h*4);g.readPixels(0,0,w,h,g.RGBA,g.UNSIGNED_BYTE,a);let min=255,max=0,alpha=0;for(let i=0;i<a.length;i+=4){min=Math.min(min,a[i]);max=Math.max(max,a[i]);alpha+=a[i+3]>0?1:0;}return{before,error:g.getError(),range:[min,max],alpha};});await snap('direct');
+          }catch(e){r.failure=String(e);try{await snap('failure');}catch{}}finally{fs.writeFileSync('evidence/'+name+'.json',JSON.stringify(r,null,2));await p.close();}}
+          await Promise.allSettled(saves);fs.writeFileSync('evidence/assets.json',JSON.stringify(assets));fs.writeFileSync('evidence/summary.json',JSON.stringify(all.map(({programs,...r})=>r),null,2));await b.close();})();
+          NODE
+          node /tmp/sb/probe.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-r021-blackframe-probe
+          path: evidence
+          retention-days: 7
