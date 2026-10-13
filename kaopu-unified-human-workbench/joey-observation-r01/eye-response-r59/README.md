@@ -1,0 +1,9 @@
+# R59: independent static eyelid response observation
+
+This is a small control audit, not a new face identity. On fixed R57, independently perturb the existing left height1, height2 and height3 controls by ±0.10. Eye scale, corner, fold, gaze and all expression actions remain fixed. The baseline plus six states are rendered from two existing perspective cameras.
+
+The original R47 component pass renders the complete original native mesh with true depth and FrontSide occlusion. Skin is gray; each full-eye component is red or green. Brows, hair and optical overlays are hidden only for this labelled diagnostic pass and restored. No 68-point anatomical correspondence is used to infer the visible outline. No photo pixels or target coordinates are included.
+
+The small original CPU scanner extracts connected eye regions and their top/bottom visible boundaries. Three colour-dominance thresholds record classification sensitivity, not a strict measurement-error bound. Selected top/bottom samples must meet adjacent gray skin within three antialiasing pixels; black/other components/viewport edges are rejected. Changes are evaluated at fixed baseline image columns, so a narrower eye cannot improve its own normalization denominator. These are image-pixel observations, not measurements of a person or proof of anatomical eyelid semantics. Existing optical/contact defects can also affect the boundary.
+
+Numbered source-region displacement summaries and common/screen eye centres expose coupling without assuming Anny left equals a particular colour or screen side. A later selected candidate still needs full native geometry/contact checks and real appearance evaluation. Rendering success and the synthetic scanner tests do not constitute a teacher result or likeness improvement. R52/R54 and R57/R58 evidence remain intact.
