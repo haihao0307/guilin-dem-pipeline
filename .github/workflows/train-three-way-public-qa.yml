@@ -1,0 +1,42 @@
+name: Train three-way preserved student public QA
+on:
+  push:
+    branches: ['qa/train-three-way-20261013']
+    paths:
+      - '.github/workflows/train-three-way-public-qa.yml'
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/three-way-comparison-r01/tests/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/three-way-comparison-r01/tests
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install official Playwright and Chromium
+        run: |
+          mkdir -p qa
+          cd qa
+          npm init -y
+          npm install --no-audit --no-fund playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Verify public bytes, full WebGL models, parts and mobile viewport
+        env:
+          NODE_PATH: ${{ github.workspace }}/qa/node_modules
+          QA_OUT: ${{ github.workspace }}/qa-output
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/three-way-comparison-r01/tests/public-qa.cjs
+      - name: Save actual screenshots and test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-three-way-public-proof
+          path: qa-output/
+          if-no-files-found: error
+          retention-days: 14
