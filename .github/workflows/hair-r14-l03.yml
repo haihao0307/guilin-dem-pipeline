@@ -1,0 +1,123 @@
+name: Hair L03 lifecycle and exact cached results
+on:
+  push:
+    branches: [fix/hair-r14-l03-lifecycle-20261013]
+    paths: ['kaopu-hair-workbench/fusion/r14-l03/**', '.github/workflows/hair-r14-l03.yml']
+permissions:
+  contents: read
+concurrency:
+  group: hair-r14-l03
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      P: kaopu-hair-workbench/fusion/r14-l03
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-hair-workbench/fusion/r14-fast
+            kaopu-hair-workbench/fusion/r14-l03
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build only new directory from immutable L02
+        run: |
+          git fetch --depth=1 origin 47da1ce9c26d63d4b9cb835aacbb6caee763094d
+          test -z "$(git diff 47da1ce9c26d63d4b9cb835aacbb6caee763094d HEAD -- kaopu-hair-workbench/fusion/r14-fast)"
+          npm install --prefix /tmp/hair-tools --no-save esbuild@0.25.10
+          ln -s /tmp/hair-tools/node_modules node_modules
+          python "$P/prepare.py"
+          find "$P/src" -name '*.js' -print0 | xargs -0 -n1 node --check
+          node "$P/tests/unit.mjs"
+          node "$P/build.mjs"
+          rm -rf "$P/build-data"
+          tar -czf /tmp/hair-l03-built.tgz "$P" kaopu-hair-workbench/fusion/r14-fast/site kaopu-hair-workbench/fusion/r14-fast/BASELINE_HASHES.json kaopu-hair-workbench/fusion/r14-fast/evidence/candidate
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-l03-built
+          path: /tmp/hair-l03-built.tgz
+          retention-days: 14
+  browsers:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [quality, reload, recovery]
+    env:
+      P: kaopu-hair-workbench/fusion/r14-l03
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: hair-l03-built
+          path: /tmp/l03
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          tar -xzf /tmp/l03/hair-l03-built.tgz
+          npm install --prefix /tmp/hair-tools --no-save playwright@1.55.1 pngjs@7.0.0
+          ln -s /tmp/hair-tools/node_modules node_modules
+          /tmp/hair-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Actual original-quality rendering, repeated navigation and recovery
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/l03-http.log 2>&1 &
+          timeout 1140s node "$P/tests/browser.mjs" "http://127.0.0.1:8765/$P/site/" '${{ matrix.mode }}' 'http://127.0.0.1:8765/kaopu-hair-workbench/fusion/r14-fast/site/'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-l03-${{ matrix.mode }}
+          path: kaopu-hair-workbench/fusion/r14-l03/evidence/${{ matrix.mode }}
+          retention-days: 30
+  candidate:
+    needs: [build, browsers]
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: write
+    env:
+      P: kaopu-hair-workbench/fusion/r14-l03
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-hair-workbench/fusion/r14-l03
+      - uses: actions/download-artifact@v4
+        with:
+          name: hair-l03-built
+          path: /tmp/l03
+      - run: tar -xzf /tmp/l03/hair-l03-built.tgz
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: hair-l03-*
+          path: /tmp/l03-evidence
+      - name: Commit tested candidate only; old pages preserved
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import os,json,shutil,subprocess
+          p=Path(os.environ['P'])
+          for mode in ['quality','reload','recovery']:
+              src=Path('/tmp/l03-evidence')/('hair-l03-'+mode)
+              r=json.loads((src/'report.json').read_text());assert r['success'] and all(c['pass'] for c in r['checks']),mode
+              shutil.copytree(src,p/'evidence'/mode,dirs_exist_ok=True)
+          changed=subprocess.check_output(['git','diff','--name-only'],text=True).splitlines()
+          assert all(x.startswith(str(p)+'/') for x in changed),changed
+          PY
+          git config user.name 'KAOPU Hair L03 Candidate'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add "$P"
+          git commit -m 'build(hair-l03): tested exact visual output, repeated reloads and local cache recovery'
+          git push origin HEAD:refs/heads/fix/hair-r14-l03-lifecycle-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-l03-candidate
+          path: kaopu-hair-workbench/fusion/r14-l03
+          retention-days: 30
