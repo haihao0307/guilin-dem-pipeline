@@ -19,7 +19,7 @@ jobs:
           sparse-checkout: kaopu-geography-workbench/hong-kong-map-sea-r03
       - name: Unpack verified own-code QA source bundle
         run: |
-          echo "b08d2e084eab5d4312d28fff72ab448c348d1e0a8d0644d44d06864c43ca3765  $CASE/qa-source-bundle.zip" | sha256sum --check
+          echo "8189c3f126e6fbfc5a3be425ab9923623bd7eedcda80d0d33b12e419f37adc9a  $CASE/qa-source-bundle.zip" | sha256sum --check
           python3 -m zipfile -e "$CASE/qa-source-bundle.zip" "$CASE"
       - name: Install pinned browser runner
         run: |
@@ -37,6 +37,8 @@ jobs:
         with:
           name: r03-terrain-${{ github.sha }}
           path: |
+            kaopu-geography-workbench/hong-kong-map-sea-r03/index.html
+            kaopu-geography-workbench/hong-kong-map-sea-r03/SOURCE_MANIFEST.json
             kaopu-geography-workbench/hong-kong-map-sea-r03/qa/*.json
             kaopu-geography-workbench/hong-kong-map-sea-r03/qa/*.png
           retention-days: 7
@@ -50,7 +52,7 @@ jobs:
           sparse-checkout: kaopu-geography-workbench/hong-kong-map-sea-r03
       - name: Unpack verified own-code QA source bundle
         run: |
-          echo "b08d2e084eab5d4312d28fff72ab448c348d1e0a8d0644d44d06864c43ca3765  $CASE/qa-source-bundle.zip" | sha256sum --check
+          echo "8189c3f126e6fbfc5a3be425ab9923623bd7eedcda80d0d33b12e419f37adc9a  $CASE/qa-source-bundle.zip" | sha256sum --check
           python3 -m zipfile -e "$CASE/qa-source-bundle.zip" "$CASE"
       - name: Install pinned official test runners
         run: |
@@ -61,6 +63,7 @@ jobs:
       - name: Verify frozen B and compile original material closure
         run: |
           cd "$STATION"
+          mkdir -p generated
           node emit-material-query.mjs
           node --test qa/*.test.mjs
           cargo build --release --locked --manifest-path compiler/Cargo.toml
