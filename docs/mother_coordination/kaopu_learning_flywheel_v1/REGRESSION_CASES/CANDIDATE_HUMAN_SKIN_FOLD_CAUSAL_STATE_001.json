@@ -1,0 +1,93 @@
+{
+  "id": "HUMAN-SKIN-FOLD-CAUSAL-STATE-001",
+  "status": "Candidate",
+  "scope": "Human Skin single-Mother trial; feature/skin-fold-cinematic-r02-20261013",
+  "trigger": "A visible wrinkle/fold is claimed to result from skin slack, expression or local compression rather than texture, normal/bump, or a static art-directed displacement.",
+  "currentSubject": {
+    "sourceSha": "16248d4d24eea363fe55bd7756e30ef6acd254dd",
+    "buildSha": "65c6310d12e4c2667747a7943ba09dfd2629b9f1",
+    "workflowRunId": 38341871199,
+    "artifactId": 11787177486,
+    "artifactDigest": "sha256:605d98ae0d3eb5ee457ab6e78a342adffc67df54259e4872ce9f24a1def01ae5",
+    "observedFact": "Texture-free gray/clay on/off evidence and vertex deltas prove genuine geometry displacement on the tested subject.",
+    "unprovenClaim": "No paired rest/compressed/stretched expression states bind the folds to measured local in-plane compression or prove deepen/narrow versus flatten/widen response and restoration."
+  },
+  "requiredInputs": [
+    "exact testedSubjectSha and buildSha",
+    "same topology/material/camera/light across states",
+    "rest, compressed-expression and stretched-expression state digests",
+    "fold-region vertex/triangle carrier ledger",
+    "expression or deformation driver identity per region",
+    "local in-plane strain/compression measurement from the same carriers",
+    "texture-disabled geometry positions and normals",
+    "fold height, trough depth, width and tangential shortening per state",
+    "rest restoration error and tolerance"
+  ],
+  "gate": [
+    "Texture, normal, bump or color-only differences cannot prove a geometric fold.",
+    "A static geometric fold proves geometry only; it cannot inherit the claim compression-driven.",
+    "The driver, local measured compression/stretch and responding fold region must be bound on the exact same subject.",
+    "Compression must deepen/narrow the applicable fold and stretch/tension must flatten/widen it within Mother-declared tolerances.",
+    "Unrelated regions must remain inside a declared negative-control bound.",
+    "Returning to rest must restore the baseline inside a declared error bound; otherwise HOLD."
+  ],
+  "states": [
+    "HOLD_FOLD_SUBJECT_IDENTITY_UNBOUND",
+    "HOLD_FOLD_GEOMETRY_NOT_PROVEN",
+    "SCOPED_GEOMETRIC_FOLD_PROVEN__HOLD_FOLD_DRIVER_IDENTITY_UNBOUND",
+    "SCOPED_GEOMETRIC_FOLD_PROVEN__HOLD_FOLD_LOCAL_STRAIN_MEASUREMENT_MISSING",
+    "SCOPED_GEOMETRIC_FOLD_PROVEN__HOLD_FOLD_CAUSAL_STATE_RESPONSE_MISSING",
+    "HOLD_FOLD_WRONG_REGION_RESPONSE",
+    "HOLD_FOLD_REST_RESTORATION_FAILED",
+    "SCOPED_COMPRESSION_DRIVEN_FOLD_VALIDATED"
+  ],
+  "fixtures": [
+    {
+      "id": "MUTABLE_OR_UNBOUND_SUBJECT",
+      "input": {"sameSubjectIdentity": false},
+      "expect": "HOLD_FOLD_SUBJECT_IDENTITY_UNBOUND"
+    },
+    {
+      "id": "PAINTED_OR_BUMP_WRINKLE_ONLY",
+      "input": {"sameSubjectIdentity": true, "textureFreeGeometryDelta": false},
+      "expect": "HOLD_FOLD_GEOMETRY_NOT_PROVEN"
+    },
+    {
+      "id": "ET21_R02_CURRENT_STATIC_GEOMETRIC_FOLD",
+      "input": {"sameSubjectIdentity": true, "textureFreeGeometryDelta": true, "expressionDriverBound": false},
+      "expect": "SCOPED_GEOMETRIC_FOLD_PROVEN__HOLD_FOLD_DRIVER_IDENTITY_UNBOUND"
+    },
+    {
+      "id": "DRIVER_NAMED_BUT_NO_LOCAL_STRAIN",
+      "input": {"sameSubjectIdentity": true, "textureFreeGeometryDelta": true, "expressionDriverBound": true, "localCompressionMeasured": false},
+      "expect": "SCOPED_GEOMETRIC_FOLD_PROVEN__HOLD_FOLD_LOCAL_STRAIN_MEASUREMENT_MISSING"
+    },
+    {
+      "id": "STATIC_FOLD_UNCHANGED_ACROSS_STATES",
+      "input": {"sameSubjectIdentity": true, "textureFreeGeometryDelta": true, "expressionDriverBound": true, "localCompressionMeasured": true, "stateResponseMonotonic": false},
+      "expect": "SCOPED_GEOMETRIC_FOLD_PROVEN__HOLD_FOLD_CAUSAL_STATE_RESPONSE_MISSING"
+    },
+    {
+      "id": "COMPRESSION_RESPONDS_IN_WRONG_REGION",
+      "input": {"sameSubjectIdentity": true, "textureFreeGeometryDelta": true, "expressionDriverBound": true, "localCompressionMeasured": true, "stateResponseMonotonic": true, "wrongRegionResponse": true},
+      "expect": "HOLD_FOLD_WRONG_REGION_RESPONSE"
+    },
+    {
+      "id": "REST_STATE_DOES_NOT_RESTORE",
+      "input": {"sameSubjectIdentity": true, "textureFreeGeometryDelta": true, "expressionDriverBound": true, "localCompressionMeasured": true, "stateResponseMonotonic": true, "wrongRegionResponse": false, "restRestored": false},
+      "expect": "HOLD_FOLD_REST_RESTORATION_FAILED"
+    },
+    {
+      "id": "SAME_SUBJECT_LOCAL_COMPRESSION_CAUSAL_PASS",
+      "input": {"sameSubjectIdentity": true, "textureFreeGeometryDelta": true, "expressionDriverBound": true, "localCompressionMeasured": true, "stateResponseMonotonic": true, "wrongRegionResponse": false, "restRestored": true},
+      "expect": "SCOPED_COMPRESSION_DRIVEN_FOLD_VALIDATED"
+    }
+  ],
+  "activation": {
+    "global": false,
+    "singleMotherTrialRequired": true,
+    "independentVerifierRequired": true,
+    "thresholds": "UNKNOWN; Human Skin Mother must declare them before a production gate run.",
+    "rollback": "Delete or retire this Candidate if the trial adds no discrimination beyond the existing texture-free geometry proof or imposes an unworkable capture cost."
+  }
+}
