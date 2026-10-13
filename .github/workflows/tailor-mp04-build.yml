@@ -1,4 +1,4 @@
-name: MP04 native material build and browser gate
+name: MP04.2 native materials and physical motion acceptance
 on:
   push:
     branches: [feature/tailor-mp04-native-material-motion-20261013]
@@ -9,79 +9,162 @@ permissions:
   actions: read
 concurrency:
   group: mp04-candidate-build
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 12
     steps:
-      - uses: actions/checkout@v4
-        with:
-          path: project
-          sparse-checkout: |
-            .github
-            kaopu-tailor-workbench/material-products
-            kaopu-tailor-workbench/presets/r04/assets
-      - uses: actions/checkout@v4
-        with:
-          repository: haihao0307/Humanoid-Rig-Lab-Next
-          ref: 086414b317f313bf9465ea957753ae7e84453f6f
-          path: donor-denim
-          sparse-checkout: denim-workshop/r11
-      - uses: actions/checkout@v4
-        with:
-          repository: haihao0307/Humanoid-Rig-Lab-Next
-          ref: 65951309b46262784e72bb617ba1ca6cb5ca217f
-          path: donor-leather
-          sparse-checkout: leather-workshop/r13
-      - uses: actions/checkout@v4
-        with:
-          ref: 04a3911e5804569918348ec9129577d463e27947
-          path: frozen-person
-          sparse-checkout: kaopu-tailor-workbench/presets/r0434-8c8245dd87e5/person-core
       - uses: actions/download-artifact@v4
         with:
           github-token: ${{ github.token }}
-          run-id: 38344510585
-          name: mp04-native-person-fast-path
-          path: project/kaopu-tailor-workbench/material-products/r04/assets
+          run-id: 38348237469
+          name: mp04-candidate-runtime
+          path: runtime
+      - uses: actions/checkout@v4
+        with:
+          path: project
+          sparse-checkout: kaopu-tailor-workbench/material-products/r04
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Assemble complete readable candidate source
-        run: python project/kaopu-tailor-workbench/material-products/r04/_build/bootstrap.py
-      - name: Compile metric physics and check all JavaScript
-        working-directory: project
+      - name: Overlay current readable source and apply exact pinned-donor refinements
         run: |
-          set -euo pipefail
-          P=kaopu-tailor-workbench/material-products/r04
+          cp -a project/kaopu-tailor-workbench/material-products/r04/. runtime/
+          python runtime/_build/refinement.py
+          python runtime/_build/visual-fixes.py
           sudo apt-get update -qq
           sudo apt-get install -y clang lld
-          clang --target=wasm32 -O3 -ffreestanding -fno-builtin -nostdlib "$P/cloth-kernel.c" -Wl,--no-entry -Wl,--export-memory -Wl,--initial-memory=67108864 -Wl,--max-memory=134217728 -Wl,--allow-undefined -o "$P/cloth-kernel.wasm"
-          for f in "$P"/*.mjs "$P"/person/*.mjs "$P"/native/*.mjs; do node --check "$f"; done
-          printf '%s\n' "$GITHUB_SHA" > "$P/CANDIDATE_SOURCE_COMMIT.txt"
+          clang --target=wasm32 -O3 -ffreestanding -fno-builtin -nostdlib runtime/cloth-kernel.c -Wl,--no-entry -Wl,--export-memory -Wl,--initial-memory=67108864 -Wl,--max-memory=134217728 -Wl,--allow-undefined -o runtime/cloth-kernel.wasm
+          for f in runtime/*.mjs runtime/person/*.mjs runtime/native/*.mjs; do node --check "$f"; done
+          printf '%s\n' "$GITHUB_SHA" > runtime/CANDIDATE_SOURCE_COMMIT.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: mp04-candidate-runtime
-          path: project/kaopu-tailor-workbench/material-products/r04
+          name: mp04.2-runtime
+          path: runtime
           retention-days: 14
-      - name: Install browser test runtime
-        working-directory: project
-        run: |
-          npm install --no-save playwright@1.58.2
-          npx playwright install --with-deps chromium
-      - name: Real local Chromium image gate
-        working-directory: project
+  first-pixels:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        family: [knit,leather,denim]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: mp04.2-runtime
+          path: runtime
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.58.2 && npx playwright install --with-deps chromium
+      - name: Actual material pictures before motion replay acceptance
         env:
-          QA_SCOPE: smoke
+          QA_FAMILY: ${{ matrix.family }}
         run: |
           python -m http.server 8000 > /tmp/mp04-http.log 2>&1 &
-          node kaopu-tailor-workbench/material-products/r04/qa-mp04.cjs
+          node runtime/qa-family.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: mp04-local-browser-evidence
-          path: |
-            project/kaopu-tailor-workbench/material-products/r04/local-evidence
-            /tmp/mp04-http.log
+          name: mp04.2-first-${{ matrix.family }}
+          path: runtime/local-${{ matrix.family }}
+          retention-days: 14
+  bake:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        look: [K04,L04,D01]
+        motion: [raise,twist,step]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: mp04.2-runtime
+          path: runtime
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Enforce real material thickness at vertices edges and face interiors
+        run: node runtime/bake-default.mjs '${{ matrix.look }}' '${{ matrix.motion }}'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp04.2-motion-${{ matrix.look }}-${{ matrix.motion }}
+          path: runtime/clips
+          retention-days: 14
+  catalogue:
+    needs: bake
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mp04.2-motion-*
+          path: gathered
+      - name: Require nine real six-second solves and exact recipe keys
+        run: |
+          python - <<'PY'
+          import pathlib,json,hashlib,shutil,gzip,struct
+          out=pathlib.Path('clips');out.mkdir();rows=[]
+          for p in pathlib.Path('gathered').rglob('*.bin.gz'):
+              info=json.loads(p.with_suffix('').with_suffix('.json').read_text())
+              b=p.read_bytes();assert hashlib.sha256(b).hexdigest()==info['sha256']
+              raw=gzip.decompress(b);magic,n=struct.unpack_from('<II',raw);assert magic==0x3430504d
+              h=json.loads(raw[8:8+n]);assert h['proof']['passed'] and h['frameCount']==181
+              assert h['recipe']==info['recipe'] and 'MP04.2' in h['recipe']
+              for check in h['proof']['checks']:
+                  assert check['bodyMinimumSampleMM']>=-.1
+                  assert check['pairMinimumSampleMM']>=check['pairTargetMM']-.1
+              shutil.copyfile(p,out/p.name)
+              rows.append({'look':info['look'],'motion':info['motion'],'file':p.name,'sha256':info['sha256'],'bytes':len(b),'recipe':info['recipe'],'proof':h['proof']})
+          assert len(rows)==9
+          (out/'index.json').write_text(json.dumps({'version':'MP04.2','clips':rows},ensure_ascii=False,indent=2))
+          print('STRICT_SOLVED_CLIPS',[(r['look'],r['motion']) for r in rows])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mp04.2-nine-solved-clips
+          path: clips
+          retention-days: 14
+  motion-pixels:
+    needs: [catalogue,first-pixels]
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        family: [knit,leather,denim]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: mp04.2-runtime
+          path: runtime
+      - uses: actions/download-artifact@v4
+        with:
+          name: mp04.2-nine-solved-clips
+          path: runtime/clips
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.58.2 && npx playwright install --with-deps chromium
+      - name: Real original actor and physically solved clothing in the same frame
+        env:
+          QA_FAMILY: ${{ matrix.family }}
+          QA_MOTION: '1'
+        run: |
+          python -m http.server 8000 > /tmp/mp04-http.log 2>&1 &
+          node runtime/qa-family.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp04.2-motion-pixels-${{ matrix.family }}
+          path: runtime/local-${{ matrix.family }}
           retention-days: 14
