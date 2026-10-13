@@ -5,7 +5,7 @@ export const BASE=Object.freeze({seed:41731,melanin:.22,blood:.28,variation:.5,f
 export const STATE=Object.freeze({flush:0,sweat:0,dryness:0});
 export const PRESETS=Object.freeze([
  {id:'silk',name:'01 · 细腻中性',note:'细毛孔 · 局部轻油脂 · 柔和色素变化',profile:{...BASE,seed:41731,melanin:.22,blood:.24,variation:.48,freckles:.035,oil:.27,pores:.65,detail:.55}},
- {id:'freckle',name:'02 · 浅色微红',note:'鼻颊不对称雀斑 · 微红与薄皮分区',profile:{...BASE,seed:86219,melanin:.08,blood:.29,variation:.68,freckles:.83,sun:.24,oil:.2,pores:.63,poreScale:.88,detail:.6}},
+ {id:'freckle',name:'02 · 浅色微红',note:'浅色基底 · 颊部微红 · 不制造雀斑',profile:{...BASE,seed:86219,melanin:.08,blood:.29,variation:.68,freckles:.83,sun:.24,oil:.2,pores:.63,poreScale:.88,detail:.6}},
  {id:'outdoor',name:'03 · 暖色日晒',note:'较深色素 · 暴露区差异 · 局部干润',profile:{...BASE,seed:27943,melanin:.39,blood:.2,variation:.83,freckles:.32,sun:.72,age:.42,oil:.35,hydration:.38,pores:1.02,poreScale:1.14,detail:.88}},
  {id:'deep',name:'04 · 深色缎面',note:'深色基底 · 不染黑的表面反光 · 色素层次',profile:{...BASE,seed:66107,melanin:.78,blood:.17,variation:.62,freckles:.08,sun:.12,oil:.38,hydration:.65,pores:.83,poreScale:.98,detail:.66}},
  {id:'mature',name:'05 · 干燥柔光',note:'较干表面 · 较宽柔光 · 不伪造衰老',profile:{...BASE,seed:19463,melanin:.23,blood:.21,variation:.9,freckles:.22,sun:.36,age:.85,oil:.12,hydration:.22,pores:.92,poreScale:1.13,detail:1.08}},
