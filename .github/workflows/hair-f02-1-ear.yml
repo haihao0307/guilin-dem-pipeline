@@ -1,0 +1,92 @@
+name: Hair F02.1 ear-only correction
+on:
+  push:
+    branches: [fix/hair-f02-1-ear-clearance-20261013]
+    paths: [.github/workflows/hair-f02-1-ear.yml]
+permissions:
+  contents: write
+env:
+  P: kaopu-hair-workbench/foundation/f02-1
+  ESBUILD: /tmp/f021-tools/node_modules/.bin/esbuild
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            kaopu-hair-workbench/foundation/f01
+            kaopu-hair-workbench/foundation/f02
+            kaopu-hair-workbench/foundation/f02-1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reproducible build and browser tools
+        run: |
+          npm install --prefix /tmp/f021-tools --no-save esbuild@0.25.0 playwright@1.55.1
+          ln -s /tmp/f021-tools/node_modules node_modules
+          /tmp/f021-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Build only F02.1 and validate native ear regression
+        run: |
+          python "$P/prepare.py"
+          python "$P/build.py"
+          node "$P/tests/core.mjs"
+          git fetch --depth=1 origin f60955a2a59cdd7a5ce83076d6e68192bcbe3e1c
+          test "$(git rev-parse HEAD:kaopu-hair-workbench/foundation/f02)" = "$(git rev-parse f60955a2a59cdd7a5ce83076d6e68192bcbe3e1c:kaopu-hair-workbench/foundation/f02)"
+          test "$(git rev-parse HEAD:kaopu-hair-workbench/foundation/f01)" = "$(git rev-parse f60955a2a59cdd7a5ce83076d6e68192bcbe3e1c:kaopu-hair-workbench/foundation/f01)"
+          git diff --name-only f60955a2a59cdd7a5ce83076d6e68192bcbe3e1c HEAD | python -c 'import sys,os; assert all(x.startswith(os.environ["P"]+"/") or x==".github/workflows/hair-f02-1-ear.yml" for x in sys.stdin.read().splitlines())'
+          test -z "$(git diff --name-only -- kaopu-hair-workbench/foundation/f02 kaopu-hair-workbench/foundation/f01)"
+      - name: Actual candidate WebGL and both ear close views
+        run: |
+          python -m http.server 8765 --directory "$P/site" >/tmp/f021-server.log 2>&1 &
+          timeout 300s node "$P/tests/browser.mjs" http://127.0.0.1:8765/ candidate
+      - name: Commit immutable candidate with readable source
+        run: |
+          git config user.name 'KAOPU Ear Clearance Verification'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add -f "$P/src" "$P/tests/browser.mjs" "$P/build.py" "$P/index.template.html" "$P/site" "$P/preview.html" "$P/BUILD_MANIFEST.json" "$P/evidence"
+          git diff --cached --name-only | python -c 'import os,sys; assert all(x.startswith(os.environ["P"]+"/") for x in sys.stdin.read().splitlines())'
+          git commit -m 'build(hair-f02.1): native ear-only subtraction and sparse-root clarification, browser verified'
+          git push origin HEAD:refs/heads/fix/hair-f02-1-ear-clearance-20261013
+          echo "SOURCE_BUILD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "PUBLIC_URL=https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$(git rev-parse HEAD)/$P/preview.html" >> "$GITHUB_ENV"
+      - name: Verify exact immutable source is public
+        run: |
+          python - <<'PY'
+          import os,time,urllib.request,hashlib
+          from pathlib import Path
+          expected=(Path(os.environ['P'])/'preview.html').read_bytes()
+          u='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+os.environ['SOURCE_BUILD']+'/'+os.environ['P']+'/preview.html'
+          for i in range(12):
+              try:
+                  if urllib.request.urlopen(u,timeout=20).read()==expected:break
+              except Exception:pass
+              time.sleep(3)
+          else:raise RuntimeError('Fixed public source unavailable')
+          PY
+      - name: Actual immutable HTTPS interaction verification
+        run: timeout 360s node "$P/tests/browser.mjs" "$PUBLIC_URL" public
+      - name: Record public results only after all tests pass
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import os,json,hashlib
+          p=Path(os.environ['P']);core=json.loads((p/'evidence/core.json').read_text());public=json.loads((p/'evidence/public/report.json').read_text());candidate=json.loads((p/'evidence/candidate/report.json').read_text());m=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          assert core['success'] and public['success'] and candidate['success']
+          for name,expected in m['sources'].items():assert hashlib.sha256((p/name).read_bytes()).hexdigest()==expected,name
+          assert (p/'preview.html').read_bytes()==(p/'site/index.html').read_bytes()
+          assert hashlib.sha256((p/'preview.html').read_bytes()).hexdigest()==m['htmlSHA256']
+          r={'version':'F02.1','source':m['source'],'sourceBuild':os.environ['SOURCE_BUILD'],'publicURL':os.environ['PUBLIC_URL'],'publicBrowserVerified':True,'run':os.environ['GITHUB_RUN_ID'],'htmlSHA256':m['htmlSHA256'],'htmlBytes':m['htmlBytes'],'coreChecks':len(core['checks']),'candidateChecks':len(candidate['checks']),'publicChecks':len(public['checks']),'publicReadyMS':public['readyMS'],'summary':core['summary'],'oldF02Changed':False,'oldF01Changed':False,'oldShortHairChanged':False,'photoUploadedPublicly':False,'physicsAdvanced':False,'limits':core['limits']+['Mobile viewport only, not physical phone']}
+          (p/'DELIVERY.json').write_text(json.dumps(r,ensure_ascii=False,indent=2));(p/'PUBLIC_URL.txt').write_text(os.environ['PUBLIC_URL']+'\n')
+          PY
+          git add -f "$P/evidence/public" "$P/DELIVERY.json" "$P/PUBLIC_URL.txt"
+          git commit -m 'test(hair-f02.1): public same-head ear correction and original-root records verified'
+          git push origin HEAD:refs/heads/fix/hair-f02-1-ear-clearance-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-f02-1-ear-clearance
+          path: kaopu-hair-workbench/foundation/f02-1
+          retention-days: 30
