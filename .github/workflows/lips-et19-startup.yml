@@ -8,13 +8,14 @@ on:
       - .github/workflows/lips-et19-startup.yml
 permissions:
   contents: write
+  actions: read
 concurrency:
   group: lips-et19-startup-only
   cancel-in-progress: true
 jobs:
   optimize:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,6 +23,7 @@ jobs:
           filter: blob:none
           sparse-checkout: |
             kaopu-unified-human-workbench
+            qa/lips-startup-p1
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -32,33 +34,44 @@ jobs:
           npm init -y >/dev/null
           npm install esbuild@0.25.11 playwright@1.56.1 pngjs@7.0.0
           npx playwright install --with-deps chromium
-      - name: Compose startup-only rendering gate without changing old modules
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path('kaopu-unified-human-workbench/lip-startup-r01/FastLoadCommon.mjs');s=p.read_text()
-          anchor="import './StartupRenderGate.mjs';\n"
-          if anchor not in s: p.write_text(anchor+s)
-          p=Path('kaopu-unified-human-workbench/lip-startup-r01/verify.cjs');s=p.read_text();s=s.replace('cacheHits:__LIP_STARTUP__.cacheHits,events:', 'cacheHits:__LIP_STARTUP__.cacheHits,coalescedStartupDraws:__LIP_STARTUP__.coalescedStartupDraws||0,events:');p.write_text(s)
-          PY
-      - name: Build lossless compressed startup and move source verification to build time
-        env:
-          NODE_PATH: /tmp/lip-tools/node_modules
+      - name: Read the already measured immutable original baseline, not substitute a new character
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 38339123537
+          name: lips-startup-p1-evidence
+          path: /tmp/lip-golden
+      - name: Verify original baseline evidence and require the final full-quality frame
         run: |
           mkdir -p lip-startup-evidence/build
-          echo "$GITHUB_SHA" > lip-startup-evidence/source-commit.txt
-          node kaopu-unified-human-workbench/lip-startup-r01/build.cjs
           python3 - <<'PY'
-          import json,pathlib
-          p=pathlib.Path('kaopu-unified-human-workbench/lip-startup-r01/BUILD.json');d=json.loads(p.read_text());d['changes'].append('coalesce asynchronous texture, initial camera and layout renders until full face/eye materials and original controls are ready; unchanged rendering afterward');p.write_text(json.dumps(d,indent=2)+'\n')
+          import hashlib,pathlib,shutil
+          p=pathlib.Path('/tmp/lip-golden')
+          pins={'baseline.json':'dd9dc0b3fa2b23f1bab0e0e7da266c23d8998b8a801e49b33dc32fe2d84421a7','baseline-macro.png':'01d4785355ed870424b3104ef115af466554a6f49afa87c4b1b10cbf6eafded6'}
+          for name,h in pins.items():
+              assert hashlib.sha256((p/name).read_bytes()).hexdigest()==h
+              shutil.copy2(p/name,pathlib.Path('lip-startup-evidence')/name)
+          pathlib.Path('lip-startup-evidence/baseline-origin.txt').write_text('Original public baseline measured in run 38339123537; reused only at these exact evidence hashes. This run measures candidate/public anew.\n')
+          p=pathlib.Path('kaopu-unified-human-workbench/lip-startup-r01/verify.cjs');s=p.read_text();a='skin?.faceExtension?.ready);';b='skin?.faceExtension?.ready&&(!window.__LIP_STARTUP__||window.__IDENTITY_QA__.viewer().startupFinalFrame));'
+          if b not in s:
+              assert a in s
+              s=s.replace(a,b)
+          p.write_text(s)
           PY
-          cp -r kaopu-unified-human-workbench/lip-startup-r01/. lip-startup-evidence/build/
-      - name: Measure actual original HTTPS cold/warm loads and capture all native regressions
+      - name: Build exact native transport and run isolated cache logic checks
         env:
           NODE_PATH: /tmp/lip-tools/node_modules
-          PERF_MODE: baseline
-        run: node kaopu-unified-human-workbench/lip-startup-r01/verify.cjs
-      - name: Verify optimized candidate, exact geometry and independent lip interactions
+          LIP_CACHE_REPORT: lip-startup-evidence/cache-unit.json
+        run: |
+          echo "$GITHUB_SHA" > lip-startup-evidence/source-commit.txt
+          node kaopu-unified-human-workbench/lip-startup-r01/build.cjs
+          node qa/lips-startup-p1/cache-unit.mjs
+          python3 - <<'PY'
+          import json,pathlib
+          p=pathlib.Path('kaopu-unified-human-workbench/lip-startup-r01/BUILD.json');d=json.loads(p.read_text());d['changes']+=['coalesce asynchronous texture and initial layout draws until the final complete frame','stop shutdown draws before original pagehide cleanup; keep actual cleanup and archives'];p.write_text(json.dumps(d,indent=2)+'\n')
+          PY
+          cp -r kaopu-unified-human-workbench/lip-startup-r01/. lip-startup-evidence/build/
+      - name: Verify optimized candidate, all retained geometry and independent lip interactions
         env:
           NODE_PATH: /tmp/lip-tools/node_modules
           PERF_MODE: candidate
@@ -74,7 +87,7 @@ jobs:
           git config user.name 'KAOPU Startup Verification'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add kaopu-unified-human-workbench/lip-startup-r01
-          git commit -m 'build(lips): P1 complete-frame startup after exact full-geometry regressions [skip ci]'
+          git commit -m 'build(lips): P1 startup and reload lifecycle after exact full-geometry regressions [skip ci]'
           git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
           SHA=$(git rev-parse HEAD)
           URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$SHA/kaopu-unified-human-workbench/lip-startup-r01/index.html"
