@@ -1,0 +1,15 @@
+{
+  "baselineMatterSHA256": "0ceb936046b4543bc0720971afe2543477b9cfc37101bcf2ecd11bc5950360da",
+  "baselineReceiverSHA256": "2bb90e807a99469fe15acd8c923c8006654023f6c89255cccbd5fdadf3d1bf20",
+  "addedMatterLines": [
+    "// Only the observed tower granite group changes leaf. Hall stone, quay,\n",
+    "// platforms and id13 plaster substrates retain the original kind-0 leaf.\n",
+    "fn stationHeritageGranite(h:HitField)->bool{return h.id==2u&&h.seed==171.;}\n",
+    " if(h.id==2u){let relief=.25+.75*st.retained;if(stationHeritageGranite(h)){g.d=h.d-clamp(kpGraniteHeight(h.q)*relief,-.004,.004);}else{g.d=h.d-clamp(stationStoneHeight(h.q*.19)*relief,-.004,.004);}}\n",
+    " if(h.id==2u){let relief=.25+.75*st.retained;if(stationHeritageGranite(h)){m.surface=kpGraniteSurface(h.q,normal,st.age,st.wet,st.repair,fp);}else{m.surface=kpStoneSurface(h.q*.19,st.age,st.wet,st.repair,fp*.19);}m.surface.height*=relief;m.layer=2u;}\n"
+  ],
+  "removedMatterLines": [
+    " if(h.id==2u){g.d=h.d-clamp(stationStoneHeight(h.q*.19)*(.25+.75*st.retained),-.004,.004);}\n",
+    " if(h.id==2u){let relief=.25+.75*st.retained;m.surface=kpStoneSurface(h.q*.19,st.age,st.wet,st.repair,fp*.19);m.surface.height*=relief;m.layer=2u;}\n"
+  ]
+}

@@ -2,6 +2,7 @@ import{KP_BRICK_WGSL}from'./mothers/brick-core.mjs';
 import{KP_WOOD_WGSL}from'./mothers/wood-core.mjs';
 import{KP_PLASTER_WGSL}from'./mothers/plaster-core.mjs';
 import{KP_STONE_WGSL}from'./mothers/stone-fields.mjs';
+import{KP_GRANITE_WGSL}from'./mothers/granite-fields.mjs';
 import{KP_METAL_WGSL}from'./mothers/metal.mjs';
 import{KP_CONCRETE_WGSL}from'./mothers/concrete-kst.mjs';
 import{STATION_MATTER_WGSL}from'./station-matter.mjs';
@@ -15,6 +16,7 @@ struct Stats{hit:atomic<u32>,miss:atomic<u32>,exhausted:atomic<u32>,maxSteps:ato
 ${KP_BRICK_WGSL}
 ${KP_WOOD_WGSL}
 ${KP_STONE_WGSL}
+${KP_GRANITE_WGSL}
 ${KP_METAL_WGSL}
 ${KP_CONCRETE_WGSL}
 ${KP_PLASTER_WGSL}

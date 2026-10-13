@@ -34,7 +34,7 @@ function check(values,age,m){
  if(!controls)failures.push('Missing original non-brick control age');
  for(const expected of controls?.rows||[]){
   const actual=rows.find(r=>r.name===expected.name);
-  if(JSON.stringify(actual)!==JSON.stringify(expected))failures.push('Unchanged non-brick material differs from actual04e5 GPU values: '+expected.name);
+  if(JSON.stringify(actual)!==JSON.stringify(expected))failures.push('Unchanged non-target material differs from actual1f46 GPU values: '+expected.name);
  }
  const named=name=>rows.find(r=>r.name===name)?.brickIdentity;
  for(const pair of [['heritage-brick-internal-left','heritage-brick-internal-right'],['heritage-brick-depth-back','heritage-brick-depth-front'],['heritage-brick-negative-left','heritage-brick-negative-right'],['heritage-lantern-local-depth-0','heritage-lantern-local-depth-1'],['heritage-brick-axis12-depth-0','heritage-brick-axis12-depth-1']]){
