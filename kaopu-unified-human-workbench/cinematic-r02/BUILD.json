@@ -1,0 +1,90 @@
+{
+  "schema": "kaopu/cinematic-build@2",
+  "version": "ET21-SKIN-FOLD-R02.0",
+  "sourceCommit": "b4cd673e0f6b130418fe09381025d14dd5d44278",
+  "userBaseline": "ccf5a1ed9ddde8803e292f1e62d777b141ff52d8",
+  "baselineSHA256": "cdac65a5c84a7a79366cbb67e76cece5c126c255be685488863ef1294d89a667",
+  "previewSHA256": "5820fe31eea7713103a9462b8045fb4a6b113e7c72215a49a76b2b391db08a20",
+  "previewBytes": 4838657,
+  "oneCharacter": true,
+  "oneCanvas": true,
+  "oldPreviewUnchanged": true,
+  "canonicalIdentityAndRigRetained": true,
+  "displayGeometry": "adaptive fixed-rest face-only edge splits; normal displacement and tangential shortening; no wrinkle displacement texture",
+  "defaultRendering": "2 directional lights + hemisphere, one beauty pass, no projected shadow or diffusion by default",
+  "hairLightingSource": "kaopu-hair-workbench/qa/gnm-study/src/app.js @ ccf5a1ed9ddde8803e292f1e62d777b141ff52d8",
+  "buildOnlyAdaptations": [
+    "IdleRuntime authoring signature excludes cinematicLook; original source file unchanged"
+  ],
+  "sources": [
+    {
+      "path": "kaopu-unified-human-workbench/cinematic-r02/CineRig.mjs",
+      "bytes": 4967,
+      "sha256": "492a86d09087a2022bd42fb430acbbd92005a8c8d0e0061af6a3aab15ec8a05c"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/cinematic-r02/CineSkin.mjs",
+      "bytes": 5772,
+      "sha256": "245fc1022941658745376a53e7a07c5da2b18bff03933c7cdee482010b62a2da"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/cinematic-r02/CineState.mjs",
+      "bytes": 5754,
+      "sha256": "2e9c0ccf5baec20238781e505a86c7b79a416679b9782be84068860095ba25df"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/cinematic-r02/CineUI.mjs",
+      "bytes": 10855,
+      "sha256": "cfb66161ba3f63349858d19b206ab2629e58f98763a8f5a90cee56bed3bb8551"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/cinematic-r02/CinematicViewer.mjs",
+      "bytes": 3245,
+      "sha256": "d65aefa3fde2b6c19b19ecd2717ac7b2f38d77e336582391042028c30ec59cbc"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/cinematic-r02/FoldKernel.mjs",
+      "bytes": 4550,
+      "sha256": "813a64fe686ed47e018920a1eb12e04848c80f6399f50d572c2027e9f87c35a5"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/cinematic-r02/FoldSurface.mjs",
+      "bytes": 8173,
+      "sha256": "b4ed449551ad827e15f317a9f88dd6c53fa4fa7d1bcbd2d68dbe0663e13b677d"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/cinematic-r02/build.cjs",
+      "bytes": 3678,
+      "sha256": "de340a40863f4f4fa33fb24401f1fa27377743d5e7a718730ca18d79377e2098"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/cinematic-r02/layout.css",
+      "bytes": 2401,
+      "sha256": "f61220b3e4e7362fe09af9bc732bb218fcda1b6618312a00e4980f0199a3c457"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/cinematic-r02/probe.cjs",
+      "bytes": 5099,
+      "sha256": "876cea9eeef2cec7050a1d03fbd43c476f3cc0df88949f23ef28ddb675916195"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/cinematic-r02/test.cjs",
+      "bytes": 1440,
+      "sha256": "3e9100c75c609a035d2a4b6f7f34f53ae4ca714042210dd69d51bb20a945ba4c"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/cinematic-r02/verify.cjs",
+      "bytes": 9716,
+      "sha256": "e7f7e59633bb7ca96bcbf700eee99ed1cc16cfd48aac272cd885798f51210ac7"
+    }
+  ],
+  "limitations": [
+    "Art-directed geometric buckling profiles, not a nonlinear skin FEM or full muscle solver",
+    "Native identity and existing eye/lip quality are inherited; no donor head replacement",
+    "Fold sliders rebase a fixed display mesh and retain previously calibrated small-expression deltas; not exact strain-dependent re-simulation",
+    "Micro pores and pigment remain optical shading; fold proof views bypass ALL skin textures",
+    "Default single-pass wrap diffuse is cheaper, not equivalent to physical subsurface scattering; original split-albedo diffusion is optional",
+    "Original pinned online assets are required; this is not an offline HTML",
+    "Chrome software-renderer QA does not establish consumer GPU frame rate or physical phone support"
+  ]
+}
