@@ -1,0 +1,22 @@
+name: EAR-R05 frozen asset audit
+on:
+  push:
+    branches: [fix/ear-r05-surface-tissue-20261013]
+    paths: ['.github/workflows/ear-r05-asset-audit.yml']
+permissions:
+  contents: read
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Fetch existing immutable GNM runtime asset
+        run: |
+          mkdir -p ear-r05-cache-recovery
+          curl --fail --retry 3 --max-time 240 -L 'https://raw.githubusercontent.com/xrblocks/assets-gnm/134feb02b11fa642a43ff5e7e880246255a74e86/gnm_head_web.bin' -o ear-r05-cache-recovery/gnm_head_web.bin
+          echo 'fd19f46eef6f8bfb725fceab581e1bc8837209997ca3fd43f3c1735003c86961  ear-r05-cache-recovery/gnm_head_web.bin' | sha256sum --check
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ear-r05-cache-recovery
+          path: ear-r05-cache-recovery
+          retention-days: 1
