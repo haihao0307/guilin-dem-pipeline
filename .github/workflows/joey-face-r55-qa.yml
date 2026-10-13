@@ -29,7 +29,12 @@ jobs:
           echo "NODE_PATH=$RUNNER_TEMP/joey-r55/node_modules" >> "$GITHUB_ENV"
       - name: Check visible-component scanner
         run: python3 -m unittest discover -s kaopu-unified-human-workbench/joey-observation-r01/eye-response-r59 -p test_scan.py
+      - name: Check exact perspective crop
+        run: node --test kaopu-unified-human-workbench/joey-observation-r01/eye-response-r59/crop_projection.test.cjs
       - name: Observe independent static eyelid responses
+        env:
+          EYE_RESPONSE_SCALE: 4
+          EYE_RESPONSE_STATES: base,left-height2-minus,left-height3-minus
         run: node kaopu-unified-human-workbench/joey-observation-r01/eye-response-r59/probe.cjs
       - uses: actions/upload-artifact@v4
         if: always()
