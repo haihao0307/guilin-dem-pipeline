@@ -1,0 +1,90 @@
+name: Skin R02.1 Windows verification and final receipt
+on:
+  push:
+    branches: [fix/skin-dna-r02-1-blackframe-20261013]
+    paths: [.github/workflows/skin-r021-windows-fixed.yml]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    env:
+      DIR: kaopu-unified-human-workbench/skin-dna-r02-1
+      PREVIEW_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/4fcd8d3adab5beb1e9337005f87801f1be9900ee/kaopu-unified-human-workbench/skin-dna-r02-1/preview.html
+      SKIN_BACKEND: d3d11-warp
+      QA_OUT: evidence
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 4fcd8d3adab5beb1e9337005f87801f1be9900ee
+          fetch-depth: 1
+          sparse-checkout: kaopu-unified-human-workbench/skin-dna-r02-1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - shell: bash
+        run: |
+          npm install --prefix "$RUNNER_TEMP/skin021" --no-audit --no-fund playwright@1.56.1 pngjs@7.0.0
+          echo "NODE_PATH=$RUNNER_TEMP/skin021/node_modules" >> "$GITHUB_ENV"
+          node "$RUNNER_TEMP/skin021/node_modules/playwright/cli.js" install chromium
+      - name: Public bytes versus canonical Git blob and manifest, not autocrlf worktree
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs=require('fs'),cp=require('child_process'),crypto=require('crypto');(async()=>{fs.mkdirSync('evidence',{recursive:true});const f=process.env.DIR+'/preview.html',manifest=JSON.parse(fs.readFileSync(process.env.DIR+'/BUILD.json')),r=await fetch(process.env.PREVIEW_URL.split('?')[1]);if(!r.ok)throw Error('Public build unavailable');const pub=Buffer.from(await r.arrayBuffer()),canonical=cp.execFileSync('git',['show','HEAD:'+f],{maxBuffer:12000000}),work=fs.readFileSync(f),h=x=>crypto.createHash('sha256').update(x).digest('hex');const proof={public:h(pub),gitBlob:h(canonical),manifest:manifest.previewSHA256,windowsWorktree:h(work),worktreeCRLFOnly:work.toString().replace(/\r\n/g,'\n')===canonical.toString()};fs.writeFileSync('evidence/BYTE_PROOF.json',JSON.stringify(proof,null,2));if(proof.public!==proof.gitBlob||proof.public!==proof.manifest)throw Error('Public canonical bytes differ');if(proof.windowsWorktree!==proof.gitBlob&&!proof.worktreeCRLFOnly)throw Error('Unexpected checkout difference');console.log(JSON.stringify(proof));})().catch(e=>{console.error(e);process.exit(1)});
+          NODE
+      - name: Actual Windows D3D11 16-texture renderer, same code and public page
+        shell: bash
+        run: node "$DIR/verify-compat.cjs"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-r021-verified-windows
+          path: evidence
+          retention-days: 14
+  receipt:
+    needs: windows
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DIR: kaopu-unified-human-workbench/skin-dna-r02-1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          sparse-checkout: kaopu-unified-human-workbench/skin-dna-r02-1
+      - uses: actions/download-artifact@v4
+        with:
+          name: skin-r021-verified-windows
+          path: evidence/windows
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: skin-r021-qa-linux-*-1
+          path: evidence/linux
+          run-id: 38398527161
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: skin-r021-windows-old
+          path: evidence/reproduced-old-windows
+          run-id: 38397563557
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify every report and preserve cross-driver receipt
+        run: |
+          node - <<'NODE'
+          const fs=require('fs'),d=process.env.DIR,dirs=fs.readdirSync('evidence/linux'),reports=[{name:'windows',qa:JSON.parse(fs.readFileSync('evidence/windows/qa.json'))},...dirs.map(n=>({name:n,qa:JSON.parse(fs.readFileSync('evidence/linux/'+n+'/qa.json'))}))];if(reports.length!==3||reports.some(r=>!r.qa.completed))throw Error('Cross-driver acceptance incomplete');const w=reports[0].qa;if(!w.opening.graphics.valid||w.opening.graphics.caps.fragmentSamplers!==16)throw Error('Windows actual 16-sampler gate not passed');fs.cpSync('evidence',d+'/acceptance',{recursive:true});const b=JSON.parse(fs.readFileSync(d+'/BUILD.json'));fs.writeFileSync(d+'/DELIVERY.json',JSON.stringify({version:'SKIN-DNA-R02.1',url:w.url,sourceCommit:'48245839bc1b98ce2f9efdd0a50d51beb8799ac5',buildCommit:'4fcd8d3adab5beb1e9337005f87801f1be9900ee',previewSHA256:b.previewSHA256,windowsRun:process.env.GITHUB_RUN_ID,linuxRun:'38398527161',windowsLegacyReproductionRun:'38397563557',publicVerified:true,windows16SamplerVerified:true,userHardwareTested:false,userVisualAccepted:false,merged:false,reports:reports.map(r=>({name:r.name,tests:r.qa.tests.length,screens:r.qa.screens.length})),scope:'black-frame compatibility repair; same R02 skin recipe and native character; Linux run had a separate Windows CRLF precheck failure, superseded by canonical-blob verification'},null,2));
+          NODE
+          git config user.name 'KAOPU Render Repair'
+          git config user.email 'actions@users.noreply.github.com'
+          git add "$DIR/acceptance" "$DIR/DELIVERY.json"
+          git commit -m "test(skin-r021): preserve actual Windows fix and Linux evidence [skip ci]"
+          git push origin HEAD:refs/heads/fix/skin-dna-r02-1-blackframe-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-r021-final-receipt
+          path: kaopu-unified-human-workbench/skin-dna-r02-1
+          retention-days: 14
