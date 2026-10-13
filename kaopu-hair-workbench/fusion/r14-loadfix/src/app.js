@@ -1,0 +1,162 @@
+import {installNativeHead,NATIVE_HEAD_REVISION} from './NativeHead.js';
+import {anatomicalRegion,TOPOLOGY_SPEC,finitePart} from './GroomTopology.js';
+import * as THREE from '../vendor/three.module.js';
+import {OrbitControls} from '../vendor/OrbitControls.js';
+import {GNMHeadModel,parseContainer} from './GNMModel.js';
+import {loadEmbeddedHead} from './EmbeddedHead.js';
+import {RenderGate} from './RenderGate.js';
+import {MakeHumanBrows} from './MakeHumanBrows.js';
+import * as Fiber from './FiberMaterial.js';
+import {createHairOpacityShadows} from './HairOpacityShadows.js';
+import {PRESETS,RANGES,validateRecipe,makeRootSet,SkinField,compileGroom,hashArray} from './LengthKernel.js';
+const $=id=>document.getElementById(id),errors=[],assets=[],checks={};
+const INITIAL=validateRecipe({style:'textured-fringe'}),KEY='kaopu.hair.r14.groomDNA';
+let nativeHead;
+let startupStage='idle',startupFailure=null,bootPromise=null;
+let recipe={...INITIAL},model,roots,skin,hair,brows,head,compiled,gate,opacity,capability,handle,browHandle,guideMesh,rootMesh,job=0,busy=false,ready=false,revision=0,disposed=false,view='three',inspection='fibers',light='studio',rotating=false,rotateRAF=0,last=0,pendingPromise;
+const qualityValue=Number(new URLSearchParams(location.hash.slice(1)).get('quality'));
+const count=[36000,64000,96000].includes(qualityValue)?qualityValue:innerWidth<700?36000:64000;
+const renderer=new THREE.WebGLRenderer({canvas:$('canvas'),antialias:new URLSearchParams(location.hash.slice(1)).get('aa')!=='0',alpha:false,preserveDrawingBuffer:true});
+renderer.setPixelRatio(Math.min(Math.max(devicePixelRatio,innerWidth<700?1:1.5),2));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;renderer.setClearColor(0x2b3239);renderer.shadowMap.enabled=true;renderer.shadowMap.autoUpdate=false;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(32,1,.001,10),orbit=new OrbitControls(camera,$('canvas')),target=new THREE.Vector3(0,.307,.020);
+orbit.enableDamping=false;orbit.minDistance=.16;orbit.maxDistance=1.5;orbit.addEventListener('change',()=>draw());orbit.addEventListener('start',()=>setRotate(false));
+const lamps=[new THREE.DirectionalLight('#eadcca',3.2),new THREE.DirectionalLight('#bacadf',2.7)];
+lamps.forEach((l,i)=>{l.position.set(i?-.8:.8,.75,i?-.48:.9);l.target.position.copy(target);l.castShadow=true;l.shadow.mapSize.set(1536,1536);Object.assign(l.shadow.camera,{left:-.27,right:.27,top:.30,bottom:-.30,near:.05,far:2.5});l.shadow.camera.updateProjectionMatrix();l.shadow.bias=-.00008;l.shadow.normalBias=.00012;l.shadow.radius=12;scene.add(l,l.target)});scene.add(new THREE.HemisphereLight(0xffffff,0x393130,.8));
+function fail(e){
+ if(e?.name==='AbortError')return;
+ const message=String(e.message||e);errors.push(String(e.stack||message));
+ $('error').hidden=false;
+ if(!ready){startupFailure={stage:startupStage,code:e.code||'STARTUP_ERROR',message};startupStage='error';
+  $('error').textContent='工作台启动未完成：'+message+'\n尚未生成可操作的人物。';$('busy').hidden=true;$('startupRecovery').hidden=false;
+  $('retryStartup').textContent=model||head?'重新载入本页':'重试本页载入';
+ }else $('error').textContent='本次操作未完成：'+message+'\n已显示的旧造型保留。';
+ console.error(e);
+}
+function draw(){if(gate&&!disposed&&!renderer.getContext().isContextLost())gate.request();}
+function dirty(reason){renderer.shadowMap.needsUpdate=true;opacity?.markDirty(reason);draw();}
+function dimensions(){const r=$('stage').getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix();draw();}
+function cameraView(name='three'){
+ setRotate(false);view=name;camera.zoom=1;camera.updateProjectionMatrix();orbit.target.copy(target);const d=.55*Math.max(1,.8/camera.aspect),loc={front:[0,.016,d],three:[.16,.028,d],left:[d,.01,0],right:[-d,.01,0],back:[0,.045,-d],top:[0,d,.055],brow:[0,.020,.23]}[name];if(!loc)throw Error('未知相机');if(name==='brow')orbit.target.set(0,.326,.101);camera.position.copy(orbit.target).add(new THREE.Vector3(...loc));camera.lookAt(orbit.target);orbit.update();document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('selected',b.dataset.view===name));draw();
+}
+function setRotate(on){rotating=!!on;$('rotate').textContent=rotating?'暂停旋转':'自动旋转';if(rotateRAF)cancelAnimationFrame(rotateRAF);rotateRAF=0;last=0;const tick=t=>{if(!rotating||disposed)return;const dt=last?Math.min(.1,(t-last)/1000):0;last=t;const p=camera.position.clone().sub(orbit.target).applyAxisAngle(new THREE.Vector3(0,1,0),dt*.25);camera.position.copy(orbit.target).add(p);camera.lookAt(orbit.target);draw();rotateRAF=requestAnimationFrame(tick)};if(rotating)rotateRAF=requestAnimationFrame(tick);}
+function meshGeometry(data){
+ const n=data.count*data.per*2,g=new THREE.BufferGeometry(),position=new Float32Array(n*3),tangent=new Float32Array(n*3),normal=new Float32Array(n*3),side=new Float32Array(n),radius=new Float32Array(n),along=new Float32Array(n),rand=new Float32Array(n),index=new Uint32Array(data.activeCount*data.segments*6);let at=0;
+ for(let i=0;i<data.count;i++)for(let j=0;j<data.per;j++){const q=i*data.per+j;for(let k=0;k<2;k++){const v=q*2+k;position.set(data.curves.subarray(q*3,q*3+3),v*3);tangent.set(data.tangents.subarray(q*3,q*3+3),v*3);normal.set(data.normals.subarray(q*3,q*3+3),v*3);side[v]=k?1:-1;along[v]=j/data.segments;rand[v]=data.randoms[i];radius[v]=.000052*(.74+.50*data.randoms[i])*(1-.91*Math.pow(j/data.segments,3.5));}if(data.active[i]&&j<data.segments){const v=q*2;index.set([v,v+1,v+2,v+1,v+3,v+2],at);at+=6;}}
+ for(const [name,a,k]of [['position',position,3],['tangent',tangent,3],['scalpNormal',normal,3],['strandSide',side,1],['strandRadius',radius,1],['along',along,1],['strandRandom',rand,1]])g.setAttribute(name,new THREE.BufferAttribute(a,k));g.setIndex(new THREE.BufferAttribute(index,1));g.computeBoundingSphere();return g;
+}
+function updateInspection(){
+ if(!compiled)return;for(const mesh of [guideMesh,rootMesh])if(mesh){scene.remove(mesh);mesh.geometry.dispose();mesh.material.dispose();}guideMesh=rootMesh=null;if(hair.userData.fullIndex)hair.geometry.setIndex(hair.userData.fullIndex);
+ hair.visible=inspection==='fibers'||inspection==='root-shafts';
+ if(inspection==='root-shafts'){
+  const ids=[],per=compiled.per;for(let i=0;i<count;i++)if(compiled.active[i]){let arc=0;for(let j=0;j<compiled.segments&&arc<.008;j++){const q=(i*per+j)*3,v=(i*per+j)*2;ids.push(v,v+1,v+2,v+1,v+3,v+2);arc+=Math.hypot(...[0,1,2].map(k=>compiled.curves[q+k+3]-compiled.curves[q+k]));}}
+  hair.geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(ids),1));
+ }brows.mesh.visible=inspection!=='roots';
+ if(inspection==='guides'){const values=[],colors=[],palette={crown:'#e6bf6d',fringe:'#64cad5','left-temple':'#7ccb83','right-temple':'#bda2f1',occiput:'#739ded',sideburn:'#ed9982',nape:'#c6b8a0'};for(const g of compiled.guides){const c=new THREE.Color(palette[anatomicalRegion(g.root)]);for(let i=1;i<g.points.length;i++){values.push(...g.points[i-1],...g.points[i]);colors.push(c.r,c.g,c.b,c.r,c.g,c.b);}}const geom=new THREE.BufferGeometry();geom.setAttribute('position',new THREE.Float32BufferAttribute(values,3));geom.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));guideMesh=new THREE.LineSegments(geom,new THREE.LineBasicMaterial({vertexColors:true}));guideMesh.name='real-generation-guides';scene.add(guideMesh);}
+ if(inspection==='roots'){const values=[];for(let i=0;i<count;i++)if(compiled.active[i])values.push(...compiled.curves.subarray(i*compiled.per*3,i*compiled.per*3+3));const geom=new THREE.BufferGeometry();geom.setAttribute('position',new THREE.Float32BufferAttribute(values,3));rootMesh=new THREE.Points(geom,new THREE.PointsMaterial({color:'#d9b979',size:.00065}));rootMesh.name='actual-visible-follicle-roots';scene.add(rootMesh);}
+ document.querySelectorAll('[data-inspect]').forEach(b=>b.classList.toggle('selected',b.dataset.inspect===inspection));dirty('inspection');
+}
+function sync(){
+ $('styleTitle').textContent=PRESETS[recipe.style].name;document.querySelectorAll('[data-preset]').forEach(b=>b.classList.toggle('selected',b.dataset.preset===recipe.style));document.querySelectorAll('[data-length]').forEach(b=>b.classList.toggle('selected',+b.dataset.length===recipe.lengthMM));
+ for(const[k,v]of Object.entries(recipe)){if($(k))$(k).value=v;const out=$(k+'Value');if(out)out.textContent=Number(v).toFixed(k==='waveMM'?2:0)+(k.endsWith('MM')?' mm':'%');}
+ if(compiled){$('metrics').textContent=`${count.toLocaleString()} 发根 · ${compiled.guides.length} 导向 · 目标 ${recipe.lengthMM} mm · 实际中位弧长 ${compiled.stats.actualArcLengthMM.median.toFixed(1)} mm`;$('status').textContent=`R14.2-L01 / ${PRESETS[recipe.style].name} · 毫米级起根 · 冠部连续覆盖 · 真剪短后颈 · 静态造型，无动态物理`;$('diagnostics').textContent=JSON.stringify(diagnostics(),null,2);}
+}
+function appearance(){if(!hair)return;Fiber.setFiberAppearance(handle.material,{color:recipe.color,roughness:recipe.roughness/100,radiusScale:recipe.width/100});dirty('appearance');}
+async function apply(patch={},options={}){
+ const next=validateRecipe({...recipe,...patch}),id=++job;busy=true;for(const k of ['color','width','roughness'])$(k).disabled=true;$('busy').hidden=false;$('cancel').hidden=!compiled;$('error').hidden=true;
+ try{
+  await gate.wait(180000);if(id!==job)return false;
+  const result=await compileGroom(roots,skin,next,{segments:24,cancel:()=>id!==job||disposed,onProgress:(stage,value)=>{$('progressText').textContent=stage+' '+Math.round(value*100)+'%';$('progress').value=value;}});
+  if(id!==job)return false;const geometry=meshGeometry(result);await gate.wait(180000);if(id!==job){geometry.dispose();return false;}
+  if(hair){const old=hair.geometry;hair.geometry=geometry;old.dispose();}
+  else{hair=new THREE.Mesh(geometry);hair.name='R13 self-authored progressive groom';hair.renderOrder=1;scene.add(hair);handle=Fiber.attachFiberMaterial(hair,{renderer,color:next.color,roughness:next.roughness/100,specular:.075,coverageResolve:'depth'});opacity?.attachFiber(hair);}
+  hair.userData.fullIndex=geometry.index;compiled=result;recipe=next;revision++;ready=true;busy=false;$('busy').hidden=true;$('cancel').hidden=true;appearance();updateInspection();sync();await gate.wait(180000);
+  if(options.save!==false){try{localStorage.setItem(KEY+'.auto',JSON.stringify(snapshot()));}catch(e){$('status').textContent+=' · 自动保存失败：'+e.message;}}
+  return true;
+ }catch(e){if(e.name==='AbortError')return false;fail(e);throw e;}finally{if(id===job){busy=false;for(const k of ['color','width','roughness'])$(k).disabled=false;$('busy').hidden=true;$('cancel').hidden=true;}}
+}
+function schedule(patch){pendingPromise=apply(patch);pendingPromise.catch(()=>{});return pendingPromise;}
+function preset(style){return schedule({...PRESETS[style],style,name:undefined,rootBlendMM:8,crownCover:86});}
+function snapshot(){return{schema:'kaopu.groomDNA@1.0',version:'R14.2-L01',revision,subject:{nativeHeadRevision:NATIVE_HEAD_REVISION,assetSha256:'fd19f46eef6f8bfb725fceab581e1bc8837209997ca3fd43f3c1735003c86961',topology:'GNM original',units:'metre'},rootSet:{seed:724,domain:'R12 conservative scalp',count},macro:{...recipe},brows:{style:Number($('browStyle').value),density:Number($('browDensity').value)},constraints:{neutralHeadOnly:true,dynamics:false,bodyCollision:false,teacherHairstyleLoaded:false},qualityAccepted:false};}
+async function restore(v){if(v?.schema!=='kaopu.groomDNA@1.0'||v.subject?.assetSha256!==snapshot().subject.assetSha256)throw Error('参数与原 GNM 头模不匹配');validateRecipe(v.macro);if(v.brows&&(!Number.isInteger(v.brows.style)||v.brows.style<1||v.brows.style>14||!Number.isFinite(v.brows.density)||v.brows.density<0||v.brows.density>100))throw Error('存档眉毛无效');await schedule(v.macro);if(v.brows)await setBrow(v.brows.style,v.brows.density);}
+async function setBrow(style,density=100){if(!Number.isInteger(style)||style<1||style>14||!Number.isFinite(density)||density<0||density>100)throw Error('眉毛参数无效');await gate.wait(180000);brows.apply({browsModel:style,browsDensity:density});$('browStyle').value=style;$('browDensity').value=density;$('browDensityValue').textContent=density+'%';dirty('brow');await gate.wait(180000);}
+function diagnostics(){return{startup:{stage:startupStage,failure:startupFailure,embeddedModel:true},version:'R14.2-L01',ready,busy,revision,recipe:{...recipe},qualityRoots:count,headCount:scene.children.filter(x=>x===head).length,teacherHairstyleLoaded:false,oldFemaleEntry:false,modelVertices:model?.numVertices,modelPositionHash:head?hashArray(head.geometry.attributes.position.array):null,rootHash:compiled?.rootHash,curveHash:compiled?.curveHash,guideCount:compiled?.guides.length,activeCount:compiled?.activeCount,regions:compiled?.regions,maxRootOffset:compiled?.maxRootOffset,actualLengths:compiled?.stats.actualArcLengthMM,buildMs:compiled?.buildMs,skinFieldCells:skin?.values.size,geometryBytes:hair?Object.values(hair.geometry.attributes).reduce((a,b)=>a+b.array.byteLength,0)+hair.geometry.index.array.byteLength:0,inspection,view,light,renderPixelRatio:renderer.getPixelRatio(),guideRegionColors:!!guideMesh?.geometry.attributes.color,headIntegration:nativeHead?.report(),topology:TOPOLOGY_SPEC,fiber:handle?Fiber.fiberMaterialDiagnostics(handle.material):null,opacity:capability,renderGate:gate?.diagnostics(),assets:[...assets],errors:[...errors],physics:false,bodyCollision:false,fullCollisionCertified:false,neuralModelRunning:false,cinematicAccepted:false,brows:brows?.diagnostics()};}
+function saveFile(name,data){const a=document.createElement('a'),u=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);}
+const controls={lengthControls:[['lengthMM','头顶目标弧长']],shapeControls:[['rootBlendMM','起根过渡长度'],['crownCover','冠部发流覆盖'],['partMM','分缝左右位置'],['partOpen','分缝梳开'],['volumeMM','中段 / 头顶蓬松'],['fringeRatio','刘海长度比例'],['sideRatio','耳上侧面长度'],['sideburnMM','鬓角独立长度'],['napeMM','后颈独立长度'],['backRatio','后脑长度比例'],['flow','侧向梳理']],detailControls:[['clump','发束聚合'],['waveMM','局部波纹幅度'],['tipVariation','发尾长短差异']],renderControls:[['density','发丝密度'],['width','单丝直径比例'],['roughness','粗糙度']]};
+for(const[id,items]of Object.entries(controls))for(const[key,label]of items){const el=document.createElement('label');el.className='slider';const[lo,hi]=RANGES[key];el.innerHTML=`<span>${label}</span><output id="${key}Value"></output><input id="${key}" type="range" min="${lo}" max="${hi}" step="${key==='waveMM'?'.05':'1'}">`;$(id).append(el);$(key).oninput=()=>$(key+'Value').textContent=$(key).value+(key.endsWith('MM')?' mm':'%');$(key).onchange=()=>{const patch={[key]:Number($(key).value)};if(['width','roughness'].includes(key)){recipe=validateRecipe({...recipe,...patch});appearance();sync();}else schedule(patch);};}
+$('color').onchange=()=>{recipe=validateRecipe({...recipe,color:$('color').value});appearance();sync();};
+for(let i=1;i<=14;i++)$('browStyle').add(new Option('Mindfront '+String(i).padStart(2,'0'),i));$('browStyle').onchange=()=>setBrow(Number($('browStyle').value),Number($('browDensity').value)).catch(fail);$('browDensity').onchange=$('browStyle').onchange;
+$('quality').value=count;$('quality').onchange=()=>{location.hash='quality='+$('quality').value;location.reload();};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>preset(b.dataset.preset));document.querySelectorAll('[data-length]').forEach(b=>b.onclick=()=>schedule({lengthMM:Number(b.dataset.length)}));document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>cameraView(b.dataset.view));document.querySelectorAll('[data-inspect]').forEach(b=>b.onclick=()=>{inspection=b.dataset.inspect;updateInspection();});
+function setLight(name){if(!['studio','warm','cool'].includes(name))throw Error('未知灯光');light=name;lamps[0].color.set(name==='studio'?'#eadcca':'#ffb473');lamps[1].color.set(name==='studio'?'#bacadf':'#7caaff');lamps[0].intensity=name==='cool'?0:3.2;lamps[1].intensity=name==='warm'?0:2.7;document.querySelectorAll('[data-light]').forEach(b=>b.classList.toggle('selected',b.dataset.light===name));dirty('light');}
+document.querySelectorAll('[data-light]').forEach(b=>b.onclick=()=>setLight(b.dataset.light));$('rotate').onclick=()=>setRotate(!rotating);$('resetCamera').onclick=()=>cameraView();$('browInspect').onclick=()=>cameraView('brow');$('cancel').onclick=()=>{job++;busy=false;for(const k of ['color','width','roughness'])$(k).disabled=false;$('busy').hidden=true;sync();};
+$('save').onclick=()=>{try{localStorage.setItem(KEY,JSON.stringify(snapshot()));$('status').textContent='R14 GroomDNA 已保存。R12 存档不覆盖。';}catch(e){fail(e)}};$('restore').onclick=()=>{try{const value=localStorage.getItem(KEY);if(!value)throw Error('此浏览器还没有 R14 存档');restore(JSON.parse(value)).catch(fail)}catch(e){fail(e)}};$('export').onclick=()=>saveFile('KAOPU-R14-GroomDNA.json',snapshot());$('import').onclick=()=>$('file').click();$('file').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;if(f.size>50000)throw Error('参数文件过大');await restore(JSON.parse(await f.text()));}catch(e){fail(e)}finally{$('file').value=''}};$('resetAll').onclick=()=>{setLight('studio');inspection='fibers';cameraView();schedule(INITIAL);};$('panelToggle').onclick=()=>{document.body.classList.toggle('controls-open');$('panelToggle').setAttribute('aria-expanded',String(document.body.classList.contains('controls-open')));};
+addEventListener('resize',dimensions);document.addEventListener('visibilitychange',()=>{if(document.hidden)setRotate(false)});
+$('canvas').addEventListener('webglcontextlost',e=>{e.preventDefault();setRotate(false);gate?.reset();job++;ready=false;fail(Error('图形上下文丢失。参数可导出；请刷新恢复固定版本。'));});
+async function load(kind){
+ if(kind!=='head')throw Error('未知资源');startupStage='unpack';
+ const a=await loadEmbeddedHead({onProgress:(phase,n,total)=>{
+  const labels={decode:'读取随页人物数据',inflate:'本地解压原 GNM',verify:'校验原人物 SHA-256',ready:'原人物校验完成'};
+  $('progressText').textContent=labels[phase]+' · '+(n/1e6).toFixed(1)+' / '+(total/1e6).toFixed(1)+' MB';
+  $('progress').value=phase==='decode'?.25*n/total:phase==='inflate'?.25+.65*n/total:.95;
+ }});
+ assets.push({kind,sha256:'fd19f46eef6f8bfb725fceab581e1bc8837209997ca3fd43f3c1735003c86961',bytes:34937952,compressedBytes:a.compressedBytes,transport:a.transport});
+ return parseContainer(a.buffer);
+}
+async function init(){
+ document.querySelectorAll('#controls button,#controls input,#controls select').forEach(x=>x.disabled=true);dimensions();cameraView();const h=await load('head');startupStage='native-head';$('progressText').textContent='建立原人物皮肤与眼球…';model=new GNMHeadModel(h.meta,h.sections);const positions=new Float32Array(model.numVertices*3);model.computeVertices(positions);const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));geometry.setIndex(new THREE.BufferAttribute(model.triangles,1));geometry.computeVertexNormals();head=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color:'#b9b2aa',roughness:.58,metalness:.02}));nativeHead=await installNativeHead({gnm:model,positions,geometry,mesh:head,renderer,render:draw});head.castShadow=head.receiveShadow=true;scene.add(head);
+ gate=new RenderGate({draw:()=>{opacity?.update();renderer.render(scene,camera)},getGL:()=>renderer.getContext(),canDraw:()=>!disposed,onError:fail});draw();await gate.wait(180000);
+ startupStage='groom';$('progressText').textContent='继承 R12 真实发根…';await new Promise(r=>setTimeout(r,0));roots=makeRootSet(model,count);skin=new SkinField(nativeHead.collisionModel);
+ brows=new MakeHumanBrows(model,positions,nativeHead.geometry.attributes.normal.array);scene.add(brows.mesh);browHandle=Fiber.attachFiberMaterial(brows.mesh,{renderer,color:'#21170f',roughness:.5,specular:.07,coverageResolve:'depth'});
+ opacity=createHairOpacityShadows({renderer,scene,lights:lamps,mapSize:512});capability=await opacity.init();if(capability.supported){opacity.attachHead(head);opacity.attachFiber(brows.mesh);opacity.setEnabled(true);}else{$('status').textContent='分层投影不可用，明确回退原 PCF';}
+ document.querySelectorAll('#controls button,#controls input,#controls select').forEach(x=>x.disabled=false);await apply(INITIAL,{save:false});sync();
+}
+window.lengthGroom={diagnostics,coverageMode:mode=>{Fiber.setFiberModes(handle.material,{coverageResolve:mode});draw();},reverseHairOrder:()=>{const a=hair.geometry.index.array;for(let lo=0,hi=a.length-3;lo<hi;lo+=3,hi-=3)for(let k=0;k<3;k++){const t=a[lo+k];a[lo+k]=a[hi+k];a[hi+k]=t;}hair.geometry.index.needsUpdate=true;draw();},setHeadTone:value=>nativeHead.setTone(value),apply:patch=>schedule(patch),preset,camera:cameraView,setLight,setInspection:name=>{inspection=name;updateInspection()},snapshot,restore,setBrow,whenRendered:async()=>{if(pendingPromise)await pendingPromise;await gate?.wait(180000)},guideData:()=>compiled?.guides.map(g=>({rootId:g.id,root:g.root,side:g.side,region:anatomicalRegion(g.root),partWeight:finitePart(g.root,recipe),points:g.points})),probe:limit=>{const items=[];if(!compiled)return items;for(let i=0;i<Math.min(limit||100,compiled.count);i++){const id=Math.floor(i*compiled.count/Math.min(limit||100,compiled.count));items.push({id,active:!!compiled.active[id],zone:anatomicalRegion(roots.templateRoots.subarray(id*3,id*3+3)),root:Array.from(roots.templateRoots.subarray(id*3,id*3+3)),points:Array.from(compiled.curves.subarray(id*compiled.per*3,(id+1)*compiled.per*3))});}return items},audit:limit=>{let inside=0,crossings=0,minGap=Infinity,total=0;const n=Math.min(limit||400,compiled.count);for(let z=0;z<n;z++){const i=Math.floor(z*compiled.count/n);for(let j=1;j<compiled.per;j++){const q=(i*compiled.per+j)*3,p=Array.from(compiled.curves.subarray(q,q+3)),prev=Array.from(compiled.curves.subarray(q-3,q));const h=skin.bvh.nearest(p),gap=p.reduce((a,v,k)=>a+(v-h.p[k])*h.n[k],0);minGap=Math.min(minGap,gap);if(gap<0)inside++;if(skin.bvh.segmentHit(prev,p))crossings++;total++;}}return{strands:n,total,inside,crossings,minGap,fullContinuousCollisionCertified:false};}};
+async function boot(){
+ if(bootPromise)return bootPromise;
+ startupFailure=null;startupStage='starting';$('error').hidden=true;$('startupRecovery').hidden=true;$('busy').hidden=false;
+ bootPromise=init().then(()=>{startupStage='ready';sync();}).catch(fail).finally(()=>{bootPromise=null;});return bootPromise;
+}
+function retryStartup(){
+ if(bootPromise||ready)return bootPromise;
+ if(model||head){location.reload();return;}
+ errors.length=0;return boot();
+}
+$('retryStartup').onclick=retryStartup;
+$('copyStartupLog').onclick=async()=>{
+ const text=JSON.stringify({version:'R14.2-L01',startupStage,startupFailure,assets,errors},null,2);
+ try{await navigator.clipboard.writeText(text);$('copyStartupLog').textContent='诊断已复制';}
+ catch{$('startupLog').hidden=false;$('startupLog').textContent=text;}
+};
+window.lengthGroom.retryStartup=retryStartup;
+boot();sync();
+
+// Diagnostic-only ID pass: same radii, mesh, depth and MSAA coverage.
+// White = visible native scalp, black = actual strands. Never used in beauty.
+window.lengthGroom.coverageAudit=async()=>{
+ await window.lengthGroom.whenRendered();
+ const gl=renderer.getContext(),size=renderer.getDrawingBufferSize(new THREE.Vector2()),W=size.x,H=size.y;
+ const corners=[[-.050,.396,-.035],[.050,.396,-.035],[-.050,.396,.055],[.050,.396,.055]].map(a=>new THREE.Vector3(...a).project(camera));
+ const xmin=Math.max(0,Math.floor(Math.min(...corners.map(v=>(v.x+1)*W/2)))),xmax=Math.min(W,Math.ceil(Math.max(...corners.map(v=>(v.x+1)*W/2))));
+ const ymin=Math.max(0,Math.floor(Math.min(...corners.map(v=>(v.y+1)*H/2)))),ymax=Math.min(H,Math.ceil(Math.max(...corners.map(v=>(v.y+1)*H/2))));
+ const w=xmax-xmin,h=ymax-ymin;if(w<10||h<10)throw Error('Coverage audit requires the top camera');
+ const saved={head:head.material,brows:brows.mesh.visible,hair:hair.visible,guide:guideMesh?.visible,roots:rootMesh?.visible,clear:renderer.getClearColor(new THREE.Color()),alpha:renderer.getClearAlpha()};
+ const unlit=new THREE.MeshBasicMaterial({color:0xffffff,toneMapped:false});let bare=0,visible=0;
+ try{
+  head.material=unlit;brows.mesh.visible=false;if(guideMesh)guideMesh.visible=false;if(rootMesh)rootMesh.visible=false;renderer.setClearColor(0,1);
+  hair.visible=false;renderer.render(scene,camera);const a=new Uint8Array(w*h*4);gl.readPixels(xmin,ymin,w,h,gl.RGBA,gl.UNSIGNED_BYTE,a);
+  hair.visible=true;handle.material.uniforms.coverageAudit.value=1;renderer.render(scene,camera);const b=new Uint8Array(a.length);gl.readPixels(xmin,ymin,w,h,gl.RGBA,gl.UNSIGNED_BYTE,b);
+  for(let i=0;i<a.length;i+=4){bare+=a[i]/255;visible+=Math.min(a[i],b[i])/255;}
+ }finally{head.material=saved.head;brows.mesh.visible=saved.brows;hair.visible=saved.hair;if(guideMesh)guideMesh.visible=saved.guide;if(rootMesh)rootMesh.visible=saved.roots;handle.material.uniforms.coverageAudit.value=0;renderer.setClearColor(saved.clear,saved.alpha);unlit.dispose();draw();await gate.wait(180000);}
+ return {view,roiWorldXZMetres:[[-.050,-.035],[.050,.055]],roiPixels:[xmin,ymin,w,h],bareScalpSamples:bare,visibleScalpSamples:visible,visibleFraction:visible/Math.max(1,bare),metric:'top-view actual strand coverage; same width/depth/MSAA; not biological density'};
+};
+window.lengthGroom.rootAudit=(limit=400)=>{
+ const result={strands:0,rootInside:0,minRootGapMM:Infinity,maxRootGapMM:-Infinity,firstSegmentGapMM:[],shortUnder12MM:0,shortReversals:0,shortMaxTurnDegrees:0};
+ const n=Math.min(limit,compiled.count);
+ for(let z=0;z<n;z++){const i=Math.floor(z*compiled.count/n);if(!compiled.active[i])continue;result.strands++;
+  const q=i*compiled.per*3,p=Array.from(compiled.curves.subarray(q,q+3)),a=skin.bvh.nearest(p),gap=p.reduce((s,x,k)=>s+(x-a.p[k])*a.n[k],0)*1000;
+  result.minRootGapMM=Math.min(result.minRootGapMM,gap);result.maxRootGapMM=Math.max(result.maxRootGapMM,gap);if(gap<-.1)result.rootInside++;
+  const p1=Array.from(compiled.curves.subarray(q+3,q+6)),a1=skin.bvh.nearest(p1);result.firstSegmentGapMM.push(p1.reduce((s,x,k)=>s+(x-a1.p[k])*a1.n[k],0)*1000);
+  if(compiled.lengths[i]<.012){result.shortUnder12MM++;for(let j=1;j<compiled.per-1;j++){const k=q+j*3,aa=[0,1,2].map(t=>compiled.curves[k+t]-compiled.curves[k+t-3]),bb=[0,1,2].map(t=>compiled.curves[k+t+3]-compiled.curves[k+t]),den=Math.hypot(...aa)*Math.hypot(...bb);if(den<1e-12)continue;const c=Math.max(-1,Math.min(1,aa.reduce((s,x,t)=>s+x*bb[t],0)/den)),angle=Math.acos(c)*180/Math.PI;result.shortMaxTurnDegrees=Math.max(result.shortMaxTurnDegrees,angle);if(c<0)result.shortReversals++;}}
+ }
+ result.firstSegmentGapMM.sort((a,b)=>a-b);const list=result.firstSegmentGapMM;result.firstSegmentGapMM={min:list[0],median:list[Math.floor(list.length*.5)],p95:list[Math.floor(list.length*.95)],max:list.at(-1)};return result;
+};
