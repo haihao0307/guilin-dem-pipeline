@@ -1,6 +1,6 @@
 import * as THREE from '../full/source/registration-vendor/three.module.js';
 const declaration=`
-uniform sampler2D uRFIndex,uRFPores;uniform int uRFHash;
+uniform sampler2D uRFIndex;uniform int uRFHash;
 uniform float uRFGain,uRFSize,uRFRegions,uRFOil,uRFScatter,uRFView;
 float rfArea=0.;
 float rfG(vec3 p,vec3 c,vec3 span){vec3 d=(vec3(abs(p.x),p.y,p.z)-c)/span;return exp(-dot(d,d));}
@@ -16,7 +16,7 @@ float rfPoreHeight(vec3 p,float size,float footprint){
 `;
 export function installRegionalSkin(viewer){
  const mat=viewer.skin.material,prior=mat.onBeforeCompile,key=mat.customProgramCacheKey.bind(mat),empty=new THREE.DataTexture(new Float32Array(4),1,1,THREE.RGBAFormat,THREE.FloatType);empty.needsUpdate=true;
- const U={uRFIndex:{value:empty},uRFPores:{value:empty},uRFHash:{value:0},uRFGain:{value:.85},uRFSize:{value:1},uRFRegions:{value:1},uRFOil:{value:.28},uRFScatter:{value:.4},uRFView:{value:0}};
+ const U={uRFIndex:{value:empty},uRFPores:{value:empty},uSDBioRow:{value:0},uRFHash:{value:0},uRFGain:{value:.85},uRFSize:{value:1},uRFRegions:{value:1},uRFOil:{value:.28},uRFScatter:{value:.4},uRFView:{value:0}};
  const report={version:'REGIONAL-SKIN-R03',compiles:0,facePoresAreColourDots:false,earShaderPreserved:true,lipShaderPreserved:true,faceMicroNormals:'replace inherited stacked face micro-normal, then apply bounded surface pore derivative',volumeScattering:false};
  const patch=(s,a,b)=>{if(s.split(a).length!==2)throw Error('Regional material integration conflict: '+a.slice(0,95));return s.replace(a,()=>b);};
  mat.onBeforeCompile=s=>{prior(s);Object.assign(s.uniforms,U);s.fragmentShader=declaration+'\n'+s.fragmentShader;
@@ -57,5 +57,5 @@ export function installRegionalSkin(viewer){
   #include <opaque_fragment>
  `);report.compiles++;};
  mat.customProgramCacheKey=()=>key()+'/unified-regional-replacement-r03';mat.needsUpdate=true;
- return {U,report,field(f){U.uRFIndex.value=f.indexTexture;U.uRFPores.value=f.poreTexture;U.uRFHash.value=f.hashSize;report.pores=f.report;},update(s){U.uRFGain.value=s.pores;U.uRFSize.value=s.poreScale;U.uRFRegions.value=s.regional;U.uRFOil.value=s.oil;U.uRFScatter.value=s.scatter;U.uRFView.value=s.diagnostic;},dispose(){empty.dispose();mat.onBeforeCompile=prior;mat.customProgramCacheKey=key;}};
+ return {U,report,field(f){U.uRFIndex.value=f.indexTexture;U.uRFPores.value=f.poreTexture;U.uRFHash.value=f.hashSize;U.uSDBioRow.value=f.bioSkinRow;report.pores=f.report;report.sharedBioSkin=f.sharedLUT;},update(s){U.uRFGain.value=s.pores;U.uRFSize.value=s.poreScale;U.uRFRegions.value=s.regional;U.uRFOil.value=s.oil;U.uRFScatter.value=s.scatter;U.uRFView.value=s.diagnostic;},dispose(){empty.dispose();mat.onBeforeCompile=prior;mat.customProgramCacheKey=key;}};
 }

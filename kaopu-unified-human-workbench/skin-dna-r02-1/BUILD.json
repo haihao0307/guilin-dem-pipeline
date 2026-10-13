@@ -1,12 +1,12 @@
 {
   "schema": "kaopu/unified-human-build@1",
   "version": "SKIN-DNA-R02.1",
-  "sourceCommit": "22ee75284d7f25f6a0ff495ce56f4100abb96c1e",
+  "sourceCommit": "c1498c0255bd2f065a61e1268c7db5cd035942d0",
   "predecessor": "518cc9bd85b9aec53d8abbeffe303d1c0d03ddd9",
   "earSource": "38a8a2140b42561eecbd31af5df074e9210d0c64",
   "lipSource": "5b4997e6dca27106533022b4ab46164cea073818",
-  "previewSHA256": "586a3eaa8866d61799fa74d0e33ebda85f381be95afc7ffe6f4e36649aae9d62",
-  "previewBytes": 5555956,
+  "previewSHA256": "19609ea6f60e3945e2c3caf9fad7fc6ff5cd2fdb037f7c6f317f87500798e2e3",
+  "previewBytes": 5556521,
   "sources": [
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r02-1/Anatomy.mjs",
@@ -46,7 +46,7 @@
     },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r02-1/FacePores.mjs",
-      "sha256": "ca7c15b99426be1a659395d181ecdbc055e919d375f937d0ca13b881ec47d8f9"
+      "sha256": "062018607398270f03582f2c3a1fde3e53480b561e0aeffa8fa05f5ca0cd5d75"
     },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r02-1/FastLoadCommon.mjs",
@@ -70,11 +70,15 @@
     },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r02-1/RegionalSkin.mjs",
-      "sha256": "5766558eca58e57eef29576af9bcf9c48fdde91fbc4c3282f71a1f852aa08bcd"
+      "sha256": "390446b845bfceeb2dbc7982c5c8077b2a06c6937cb14954941605bde92b63d2"
     },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r02-1/RenderHealth.mjs",
-      "sha256": "d5d8898af623a1fe5790f4a3171afc752664368bce033713a636ef03d7304313"
+      "sha256": "53ed8fc827dc64a0c19b8a5ac55f6a1690cf738e69ac1c218c87221c01d40c2a"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/skin-dna-r02-1/SharedBioSkinTable.cjs",
+      "sha256": "1e06d1e91fe8bf301f97d0b566941ee4197e8a8aa03974ea74e2447bb1c6557a"
     },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r02-1/SkinDNA.mjs",
@@ -82,7 +86,7 @@
     },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r02-1/SkinMaterial.mjs",
-      "sha256": "50f5a57dc2d267055c479861a349267dae56e7fb7710978de5cfab4453aaf223"
+      "sha256": "228672277df109dc67071ca0bde8d6d35f69d50eeb05f94a388ab2c6ee8678a0"
     },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r02-1/SkinProfile.mjs",
@@ -114,7 +118,7 @@
     },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r02-1/build.cjs",
-      "sha256": "6d2c0fd69bf801962760a37b2a88a9ea2e92aa20ab2a60f57707f5dff1fa4073"
+      "sha256": "7e0c3893078fde43a5609f6b88c95bd72134cd14f6a92d93c9d5ce59ffa54bca"
     },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r02-1/compatibility.cjs",
@@ -582,7 +586,7 @@
     },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r02-1/unit.cjs",
-      "sha256": "1d0cfd4c3b2419634e3e978f719258b47b0739dcf98163c98b119d612da67f59"
+      "sha256": "5b67b8ddb7f0dd1aaac9bfe5d078279f54d392ed455ef08148c421613d0180cc"
     },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r02-1/verify-compat.cjs",
@@ -594,6 +598,24 @@
     }
   ],
   "adapters": [
+    {
+      "path": "kaopu-unified-human-workbench/lip-structure/LipUI.mjs",
+      "anchor": "tab.click();Promise.all([viewer.skin.faceReady,viewer.skin.naturalEyesReady].filter(Boolean)).then(("
+    },
+    {
+      "path": "kaopu-unified-human-workbench/ear-tissue-r05/EarUI.mjs",
+      "anchor": "Promise.all([viewer.skin.faceReady,viewer.skin.naturalEyesReady].filter(Boolean)).then(()=>{if(dispo"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/idle-r01/IdleRuntime.mjs",
+      "rule": "SKIN-R02",
+      "anchor": "invalidate(){if(this.disposed)return;"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/idle-r01/IdleRuntime.mjs",
+      "rule": "SKIN-R02",
+      "anchor": "pause(value=true){this.playing=!value;"
+    },
     {
       "path": "kaopu-unified-human-workbench/skin-dna-r02-1/Startup.mjs",
       "rule": "SKIN-R02",
@@ -613,24 +635,6 @@
       "path": "kaopu-unified-human-workbench/skin-dna-r02-1/Startup.mjs",
       "rule": "SKIN-R02",
       "anchor": "P.stage='三维已就绪'"
-    },
-    {
-      "path": "kaopu-unified-human-workbench/ear-tissue-r05/EarUI.mjs",
-      "anchor": "Promise.all([viewer.skin.faceReady,viewer.skin.naturalEyesReady].filter(Boolean)).then(()=>{if(dispo"
-    },
-    {
-      "path": "kaopu-unified-human-workbench/lip-structure/LipUI.mjs",
-      "anchor": "tab.click();Promise.all([viewer.skin.faceReady,viewer.skin.naturalEyesReady].filter(Boolean)).then(("
-    },
-    {
-      "path": "kaopu-unified-human-workbench/idle-r01/IdleRuntime.mjs",
-      "rule": "SKIN-R02",
-      "anchor": "invalidate(){if(this.disposed)return;"
-    },
-    {
-      "path": "kaopu-unified-human-workbench/idle-r01/IdleRuntime.mjs",
-      "rule": "SKIN-R02",
-      "anchor": "pause(value=true){this.playing=!value;"
     },
     {
       "path": "kaopu-unified-human-workbench/idle-r01/IdleUI.mjs",
@@ -700,10 +704,6 @@
       "anchor": "api.skins.delete(skin);fallback.dispose();oldDispose();"
     },
     {
-      "path": "kaopu-unified-human-workbench/identity-lab/TraitMaps.mjs",
-      "anchor": "function wrinkle(p,width,amount){if(!amount)return;"
-    },
-    {
       "path": "kaopu-unified-human-workbench/eye-transfer/EyelidKnowledge.mjs",
       "adapter": "eye-continuous-native-envelope",
       "from": "export const KNOWLEDGE_VERSION='kaopu/eye-knowledge@1';",
@@ -713,13 +713,6 @@
       "path": "kaopu-unified-human-workbench/eye-transfer/EyelidKnowledge.mjs",
       "adapter": "replace-underresolved-submillimetre-ridges-with-broad-C2-envelopes",
       "nativeEyeballsChanged": false
-    },
-    {
-      "path": "kaopu-unified-human-workbench/skin-folds-r02/FoldSkin.mjs",
-      "adapter": "unified-specialist-ownership",
-      "exactInputAnchor": "clamp(vFA.x,0.,1.)*csCover*(1.-clamp(vFA.y*4.,0.,1.))",
-      "result": "clamp(vFA.x,0.,1.)*csCover*(1.-clamp(vFA.y*4.,0.,1.))*(1.-lpMask)*(1.-eaM)",
-      "occurrences": 1
     },
     {
       "path": "kaopu-unified-human-workbench/idle-r01/IdleSkin.mjs",
@@ -773,6 +766,17 @@
       "exactInputAnchor": "patch(shader.fragmentShader,'vec4(diffuseColor.rgb,fMask*(1.-lpMask*.65))','vec4(diffuseColor.rgb,fMask*(1.-lpMask*.65)*(1.-eaM*.86))')",
       "result": "patch(shader.fragmentShader,'vec4(diffuseColor.rgb,fMask)','vec4(diffuseColor.rgb,fMask*(1.-lpMask*.65)*(1.-eaM*.86))')",
       "occurrences": 1
+    },
+    {
+      "path": "kaopu-unified-human-workbench/skin-folds-r02/FoldSkin.mjs",
+      "adapter": "unified-specialist-ownership",
+      "exactInputAnchor": "clamp(vFA.x,0.,1.)*csCover*(1.-clamp(vFA.y*4.,0.,1.))",
+      "result": "clamp(vFA.x,0.,1.)*csCover*(1.-clamp(vFA.y*4.,0.,1.))*(1.-lpMask)*(1.-eaM)",
+      "occurrences": 1
+    },
+    {
+      "path": "kaopu-unified-human-workbench/identity-lab/TraitMaps.mjs",
+      "anchor": "function wrinkle(p,width,amount){if(!amount)return;"
     },
     {
       "path": "kaopu-unified-human-workbench/lip-structure/LipViewer.mjs",
@@ -841,7 +845,7 @@
     "predecessor": "69d5cb9bfd68c2950112346403f1bf530d4180c0",
     "appearanceRulesUnchanged": true,
     "bioSkinLUTUnchanged": true,
-    "method": "three sRGB eye images into independent texture-array layers; linear vessel sampler retained",
-    "portableFragmentSamplerBudget": 16
+    "method": "exact sRGB eye array and unchanged Float32 BioSkin slice appended after existing face pore records",
+    "portableFragmentSamplerBudget": 15
   }
 }

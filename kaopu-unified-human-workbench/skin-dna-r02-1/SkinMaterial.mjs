@@ -9,14 +9,15 @@ float sdCover=0.,sdSkin=0.,sdRough=.6,sdOil=0.,sdHeight=0.,sdPigment=0.;
 float sdHash(vec3 p){p=fract(p*.1031);p+=dot(p,p.yzx+33.33);return fract((p.x+p.y)*p.z);}
 float sdNoise(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(mix(sdHash(i),sdHash(i+vec3(1,0,0)),f.x),mix(sdHash(i+vec3(0,1,0)),sdHash(i+vec3(1,1,0)),f.x),f.y),mix(mix(sdHash(i+vec3(0,0,1)),sdHash(i+vec3(1,0,1)),f.x),mix(sdHash(i+vec3(0,1,1)),sdHash(i+vec3(1,1,1)),f.x),f.y),f.z);}
 // Official BioSkin fixed-property slice, sampled in LINEAR RGB.
-uniform sampler2D uSDBioLUT;
-vec3 sdBio(vec2 uv){vec2 p=clamp(uv,0.,1.)*vec2(32.,16.);ivec2 a=ivec2(floor(p)),b=min(a+ivec2(1),ivec2(32,16));vec2 f=fract(p);return mix(mix(texelFetch(uSDBioLUT,a,0).rgb,texelFetch(uSDBioLUT,ivec2(b.x,a.y),0).rgb,f.x),mix(texelFetch(uSDBioLUT,ivec2(a.x,b.y),0).rgb,texelFetch(uSDBioLUT,b,0).rgb,f.x),f.y);}
+uniform sampler2D uRFPores;uniform int uSDBioRow;
+vec3 sdBio(vec2 uv){vec2 p=clamp(uv,0.,1.)*vec2(32.,16.);ivec2 a=ivec2(floor(p)),b=min(a+ivec2(1),ivec2(32,16));vec2 f=fract(p);a.y+=uSDBioRow;b.y+=uSDBioRow;return mix(mix(texelFetch(uRFPores,a,0).rgb,texelFetch(uRFPores,ivec2(b.x,a.y),0).rgb,f.x),mix(texelFetch(uRFPores,ivec2(a.x,b.y),0).rgb,texelFetch(uRFPores,b,0).rgb,f.x),f.y);}
 `;
 export function installSkinMaterial(viewer){
  const m=viewer.skin.material,prior=m.onBeforeCompile,key=m.customProgramCacheKey.bind(m),U={};
  for(const k of ['On','Mel','Blood','Variation','Freckles','Sun','Age','Oil','Hydration','Pores','PoreScale','Detail','Flush','Sweat','Dry','View','Seed'])U['uSD'+k]={value:0};U.uSDOffset={value:[0,0,0]};
- if(LUT.width!==33||LUT.height!==17||LUT.colorSpace!=='linear-sRGB')throw Error('BioSkin LUT contract changed');const pixels=new Float32Array(33*17*4);for(let i=0;i<33*17;i++){pixels.set(LUT.data.slice(i*3,i*3+3),i*4);pixels[i*4+3]=1;}const tex=new THREE.DataTexture(pixels,33,17,THREE.RGBAFormat,THREE.FloatType);tex.minFilter=THREE.NearestFilter;tex.magFilter=THREE.NearestFilter;tex.generateMipmaps=false;tex.needsUpdate=true;U.uSDBioLUT={value:tex};
- const report={version:'SKIN-DNA-MATERIAL-R02',compiles:0,sourceGeometryChanged:false,wholeBodyIdentity:true,measuredOptics:false,chromophores:'Official BioSkin spectral decoder offline LUT; fixed 2D slice, not medical concentrations',bioSkinSource:LUT.sourceCommit,lutBytes:pixels.byteLength,addedWrinkleGeometry:false,noiseCreaseLayer:false,randomPigmentIslands:false,pores:'seeded subset and dimensions of retained area-sampled surface candidates',poreColourDots:false,specularIndependentOfMelanin:true};
+ if(LUT.width!==33||LUT.height!==17||LUT.colorSpace!=='linear-sRGB')throw Error('BioSkin LUT contract changed');const pixels=new Float32Array(33*17*4);for(let i=0;i<33*17;i++){pixels.set(LUT.data.slice(i*3,i*3+3),i*4);pixels[i*4+3]=1;}// LUT values are appended unchanged to the existing Float32 pore table.
+
+ const report={version:'SKIN-DNA-MATERIAL-R02',compiles:0,sourceGeometryChanged:false,wholeBodyIdentity:true,measuredOptics:false,chromophores:'Official BioSkin spectral decoder offline LUT; fixed 2D slice, not medical concentrations',bioSkinSource:LUT.sourceCommit,lutBytes:pixels.byteLength,sharedFloatTable:true,extraFragmentSamplers:0,addedWrinkleGeometry:false,noiseCreaseLayer:false,randomPigmentIslands:false,pores:'seeded subset and dimensions of retained area-sampled surface candidates',poreColourDots:false,specularIndependentOfMelanin:true};
  function once(s,a,b){if(s.split(a).length!==2)throw Error('Skin DNA shader anchor changed: '+a.slice(0,100));return s.replace(a,()=>b);}
  m.onBeforeCompile=s=>{prior(s);Object.assign(s.uniforms,U);let f=declarations+'\n'+s.fragmentShader;
  const colour='diffuseColor.rgb*=mix(vec3(1.),rfBlood*(1.+rfChroma),rfArea);';
@@ -63,5 +64,5 @@ export function installSkinMaterial(viewer){
  #include <opaque_fragment>`);
  s.fragmentShader=f;report.compiles++;report.fragmentBytes=f.length;report.uniforms=Object.keys(U);};
  m.customProgramCacheKey=()=>key()+'/skin-dna-r02-1-bioskin-v1';m.needsUpdate=true;
- return{U,report,update(record,view=0){const p=record.profile,t=record.state,vals={On:record.enabled?1:0,Mel:p.melanin,Blood:p.blood,Variation:p.variation,Freckles:p.freckles,Sun:p.sun,Age:p.age,Oil:p.oil,Hydration:p.hydration,Pores:p.pores,PoreScale:p.poreScale,Detail:p.detail,Flush:t.flush,Sweat:t.sweat,Dry:t.dryness,View:view,Seed:p.seed};for(const[k,v]of Object.entries(vals))U['uSD'+k].value=v;U.uSDOffset.value=seedVector(p.seed);},dispose(){tex.dispose();m.onBeforeCompile=prior;m.customProgramCacheKey=key;m.needsUpdate=true;}};
+ return{U,report,update(record,view=0){const p=record.profile,t=record.state,vals={On:record.enabled?1:0,Mel:p.melanin,Blood:p.blood,Variation:p.variation,Freckles:p.freckles,Sun:p.sun,Age:p.age,Oil:p.oil,Hydration:p.hydration,Pores:p.pores,PoreScale:p.poreScale,Detail:p.detail,Flush:t.flush,Sweat:t.sweat,Dry:t.dryness,View:view,Seed:p.seed};for(const[k,v]of Object.entries(vals))U['uSD'+k].value=v;U.uSDOffset.value=seedVector(p.seed);},dispose(){m.onBeforeCompile=prior;m.customProgramCacheKey=key;m.needsUpdate=true;}};
 }

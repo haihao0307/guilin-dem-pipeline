@@ -7,7 +7,7 @@ const once=(s,a,b)=>{assert.equal(s.split(a).length,2,'Skin build anchor drift: 
  const original={};for(const name of fs.readdirSync(r04)){const p=r04+'/'+name;if(fs.statSync(p).isFile())original[name]=hash(fs.readFileSync(p));}
  fs.cpSync(r04+'/specialists',__dirname+'/specialists',{recursive:true});
  for(const name of fs.readdirSync(r04)){if(!/\.(mjs|css|cjs)$/.test(name)||['build.cjs','verify.cjs','test.mjs'].includes(name))continue;put(__dirname+'/'+name,read(r04+'/'+name).replaceAll('human-integrated-r04','skin-dna-r02-1'));}
- let ear=read(__dirname+'/EarLatest.mjs');ear=once(ear,'[v.foldLights.key,v.foldLights.fill,v.earLight].map','(v.skinDNALights||[v.foldLights.key,v.foldLights.fill,v.earLight]).map');ear=once(ear,"const supported=v.model.foldProfile.settings.light!=='original';","const supported=!!v.skinDNALights||v.model.foldProfile.settings.light!=='original';");put(__dirname+'/EarLatest.mjs',ear);
+ require('./SharedBioSkinTable.cjs').regional(__dirname);let ear=read(__dirname+'/EarLatest.mjs');ear=once(ear,'[v.foldLights.key,v.foldLights.fill,v.earLight].map','(v.skinDNALights||[v.foldLights.key,v.foldLights.fill,v.earLight]).map');ear=once(ear,"const supported=v.model.foldProfile.settings.light!=='original';","const supported=!!v.skinDNALights||v.model.foldProfile.settings.light!=='original';");put(__dirname+'/EarLatest.mjs',ear);
  // Normalize the store adapter before bundling; retained as readable authored
  // runtime in the build commit, not an opaque patch of minified application.
  put(__dirname+'/SkinDNA.mjs',read(__dirname+'/SkinDNA.mjs').replaceAll('store.set(','store.import('));

@@ -11,11 +11,11 @@ export function installRenderHealth(viewer){
   const programs=[];for(const item of renderer.info.programs||[]){const p=item.program;if(!p)continue;const linked=!!g.getProgramParameter(p,g.LINK_STATUS);let fs=0,vs=0,combined=0;const names=[];
    if(linked)for(let i=0;i<g.getProgramParameter(p,g.ACTIVE_UNIFORMS);i++){const u=g.getActiveUniform(p,i);if(!types.has(u.type))continue;const base=u.name.replace(/\[.*$/,'');if(vertexOnly.has(base))vs+=u.size;else fs+=u.size;combined+=u.size;names.push({name:u.name,size:u.size,stage:vertexOnly.has(base)?'vertex-contract':'fragment-conservative'});}
    // D3D may release source after linking; an active uniform survives that.
-   programs.push({skin:names.some(u=>u.name==='uSDBioLUT'),linked,fragmentSamplers:fs,vertexSamplers:vs,combinedSamplers:combined,names,log:linked?'':g.getProgramInfoLog(p)});
+   programs.push({skin:names.some(u=>u.name==='uRFPores')&&names.some(u=>u.name==='neColorLayers'),linked,fragmentSamplers:fs,vertexSamplers:vs,combinedSamplers:combined,names,log:linked?'':g.getProgramInfoLog(p)});
   }
   const glErrors=[];for(let i=0;i<8;i++){const e=g.getError();if(e===g.NO_ERROR)break;glErrors.push(e);}
   const skin=programs.filter(p=>p.skin),valid=!g.isContextLost()&&!errors.length&&!glErrors.length&&skin.length>0&&programs.every(p=>p.linked&&p.fragmentSamplers<=caps.fragmentSamplers&&p.vertexSamplers<=caps.vertexSamplers&&p.combinedSamplers<=caps.combinedSamplers)&&skin.every(p=>p.fragmentSamplers<=16);
-  last={version:'SKIN-GPU-HEALTH-2',valid,driver,caps,context:g.getContextAttributes(),contextLost:g.isContextLost(),programs,stageAccounting:'actual active uniforms; pinned vertex-only names; all unknown samplers conservatively counted as fragment',errors:[...errors],glErrors,eyePacking:viewer.skin.eyeColorPacking?.report||null};
+  last={version:'SKIN-GPU-HEALTH-2',valid,driver,caps,context:g.getContextAttributes(),contextLost:g.isContextLost(),programs,stageAccounting:'actual active uniforms; pinned vertex-only names; all unknown samplers conservatively counted as fragment',errors:[...errors],glErrors,eyePacking:viewer.skin.eyeColorPacking?.report||null,sharedBioSkin:viewer.regionalSkin?.report?.sharedBioSkin||null};
   // Finish blocking driver inspection BEFORE the final draw/readPixels pair.
   // The original render path keeps current camera, light and surface choices.
   if(valid){const idle=window.lifelikeIdle?.runtime?.();if(idle?.originalRender)idle.originalRender();else viewer.render();last.postInspectionRedraw=true;}
