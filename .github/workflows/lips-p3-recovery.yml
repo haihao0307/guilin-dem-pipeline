@@ -1,0 +1,83 @@
+name: Lips P3 verified chunk recovery
+on:
+  push:
+    branches: [fix/lips-p3-stream-recovery-20261013]
+    paths:
+      - kaopu-unified-human-workbench/lip-startup-r03/*.mjs
+      - kaopu-unified-human-workbench/lip-startup-r03/*.js
+      - kaopu-unified-human-workbench/lip-startup-r03/*.cjs
+      - .github/workflows/lips-p3-recovery.yml
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: lips-p3-recovery-only
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /kaopu-unified-human-workbench/lip-startup-r02/site/
+            /kaopu-unified-human-workbench/lip-startup-r02/SITE.json
+            /kaopu-unified-human-workbench/lip-startup-r03/
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install matching verification browser
+        run: |
+          mkdir -p /tmp/lips-p3-tools
+          cd /tmp/lips-p3-tools
+          npm init -y >/dev/null
+          npm install playwright@1.56.1 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - uses: actions/download-artifact@v4
+        with:
+          name: lips-startup-p1-evidence
+          run-id: 38340455955
+          github-token: ${{ github.token }}
+          path: /tmp/lips-p3-original
+      - name: Build lossless chunks and check the retained reference
+        run: |
+          mkdir -p lip-p3-evidence/source
+          cp /tmp/lips-p3-original/baseline.json /tmp/lips-p3-original/baseline-macro.png lip-p3-evidence/
+          echo 'dd9dc0b3fa2b23f1bab0e0e7da266c23d8998b8a801e49b33dc32fe2d84421a7  lip-p3-evidence/baseline.json' | sha256sum -c
+          node kaopu-unified-human-workbench/lip-startup-r03/unit.mjs | tee lip-p3-evidence/unit.json
+          node kaopu-unified-human-workbench/lip-startup-r03/build.cjs | tee lip-p3-evidence/build-summary.json
+          cp kaopu-unified-human-workbench/lip-startup-r03/SITE.json lip-p3-evidence/
+          cp kaopu-unified-human-workbench/lip-startup-r03/*.mjs kaopu-unified-human-workbench/lip-startup-r03/*.js kaopu-unified-human-workbench/lip-startup-r03/*.cjs lip-p3-evidence/source/
+      - name: Full quality regression and browser streaming recovery
+        env:
+          NODE_PATH: /tmp/lips-p3-tools/node_modules
+          PERF_OUT: lip-p3-evidence
+        run: |
+          node kaopu-unified-human-workbench/lip-startup-r03/verify.cjs &
+          NORMAL=$!
+          node kaopu-unified-human-workbench/lip-startup-r03/faults.cjs &
+          FAULTS=$!
+          STATUS=0
+          wait "$NORMAL" || STATUS=1
+          wait "$FAULTS" || STATUS=1
+          exit "$STATUS"
+      - name: Retain the exact verified site on the isolated source branch
+        run: |
+          test "$(git ls-remote origin "refs/heads/$GITHUB_REF_NAME" | cut -f1)" = "$GITHUB_SHA"
+          git config user.name 'KAOPU Lip Recovery'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/lip-startup-r03/site kaopu-unified-human-workbench/lip-startup-r03/SITE.json
+          git commit -m 'build(lips): verified P3 original-quality resumable site [skip ci]'
+          git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
+          git rev-parse HEAD > lip-p3-evidence/build-commit.txt
+          git rev-parse HEAD:kaopu-unified-human-workbench/lip-startup-r03/site > lip-p3-evidence/site-tree.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lips-p3-candidate
+          path: lip-p3-evidence
+          retention-days: 14
