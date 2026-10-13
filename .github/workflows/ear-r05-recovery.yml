@@ -1,0 +1,64 @@
+name: EAR-R05 recovery verification
+on:
+  push:
+    branches: [fix/ear-r05-surface-tissue-20261013]
+    paths: ['.github/workflows/ear-r05-recovery.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: ear-r05-recovery
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            .github/workflows
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install fixed browser tools
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: Check source baseline and immutable public bytes
+        run: |
+          git fetch --depth=1 origin 3fd03f72078c309d14882a68217dde49f35eab2c
+          curl --fail --silent --show-error --location --retry 3 'https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/63e5dfddf2b5ca0d686651804beeba3333b2f41e/kaopu-unified-human-workbench/ear-tissue-r05/preview.html' -o /tmp/ear-r05-frozen-public.html
+          node kaopu-unified-human-workbench/ear-tissue-r05/unit.mjs
+      - name: Fresh browser verification of exact published workbench
+        env:
+          EAR_MODE: public
+          EAR_OUT: ear-r05-recovery/public
+          EAR_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/63e5dfddf2b5ca0d686651804beeba3333b2f41e/kaopu-unified-human-workbench/ear-tissue-r05/preview.html
+        run: |
+          node kaopu-unified-human-workbench/ear-tissue-r05/verify.cjs
+          node kaopu-unified-human-workbench/ear-tissue-r05/recovery-check.cjs
+      - name: Preserve fresh recovery receipt without touching runtime
+        run: |
+          dest=kaopu-unified-human-workbench/ear-tissue-r05/acceptance/recovery
+          mkdir -p "$dest"
+          cp ear-r05-recovery/receipt.json "$dest/receipt.json"
+          cp ear-r05-recovery/public/report.json "$dest/public-report.json"
+          cp ear-r05-recovery/public/03-right-neutral.png "$dest/neutral.png"
+          cp ear-r05-recovery/public/03-right-back.png "$dest/backlight.png"
+          cp ear-r05-recovery/public/04-pores.png "$dest/surface-pores.png"
+          cp ear-r05-recovery/public/04-thickness.png "$dest/model-thickness.png"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- "$dest"
+          git commit -m 'test(ear-r05): save recovered-public browser receipt [skip ci]'
+          git push origin HEAD:${{ github.ref_name }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ear-r05-recovery-${{ github.run_id }}
+          path: ear-r05-recovery
+          retention-days: 14
