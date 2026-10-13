@@ -1,0 +1,73 @@
+name: Motion R02 Permanent Evidence and Clean Playback
+on:
+  push:
+    branches: [feature/motion-r02-thumb-cycles-20261013]
+    paths: [.github/workflows/motion-r02-handoff.yml]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  handoff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/motion-r02-thumb-cycles-20261013
+          sparse-checkout: docs/handoffs/motion-r02-20261013
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - name: Preserve exact source-public evidence and rejected candidate result
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import os,pathlib,urllib.request,json,zipfile,hashlib,io
+          p=pathlib.Path('docs/handoffs/motion-r02-20261013');p.mkdir(parents=True,exist_ok=True)
+          def artifact(i,digest):
+            q=urllib.request.Request(f'https://api.github.com/repos/haihao0307/guilin-dem-pipeline/actions/artifacts/{i}/zip',headers={'Accept':'application/vnd.github+json'})
+            q.add_unredirected_header('Authorization','Bearer '+os.environ['GH_TOKEN'])
+            data=urllib.request.urlopen(q,timeout=80).read();assert hashlib.sha256(data).hexdigest()==digest
+            return zipfile.ZipFile(io.BytesIO(data))
+          def read(z,s):
+            names=[n for n in z.namelist() if n.endswith(s)];assert len(names)==1,(s,names);return z.read(names[0])
+          z=artifact(11809212160,'dc3934e1e3e98ad732f66951ae0911a1568b92feb19ab02918a59400770d4d32')
+          q=json.loads(read(z,'r02-evidence/public/qa.json'));assert q['pass'] and len(q['checks'])==21
+          for f in ['BUILD.json','DELIVERY.json','SOURCE_REPORT.json','CATALOGUE.json']:(p/f).write_bytes(read(z,'motion-review-r02/'+f))
+          (p/'PUBLIC_QA.json').write_text(json.dumps(q,ensure_ascii=False,indent=2))
+          (p/'CANDIDATE_QA.json').write_bytes(read(z,'r02-evidence/candidate/qa.json'))
+          for name in q['shots']:(p/name).write_bytes(read(z,'r02-evidence/public/'+name))
+          old=artifact(11808350752,'247048d0676257ee32f70e8f6f1c8271d47f109c706a70a5dc749a7d736b8f31');(p/'REJECTED_CANDIDATE_4.json').write_bytes(read(old,'r02-evidence/candidate/qa.json'))
+          receipt=json.loads((p/'DELIVERY.json').read_text());receipt['visualReview']='Actual public canvas images inspected: walk/run full and side views, seam-adjacent feet, bilateral old/new fist and boxing thumb, finite wave/stretch. Improved opposition and relaxed locomotion hands; inherited coarse finger/hand skin, some remaining loose fist/contact quality and flat-floor support residuals are not certified as film-realistic.';receipt['mobileRenderVerified']=False;receipt['mobileScope']='DOM layout and controls only; earlier software GPU readback timeout is preserved, not relabelled as passed';receipt['artifactDigestsVerified']=True;(p/'DELIVERY.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2))
+          PY
+      - name: Clean original fixed-public browser playback without prior screenshot series
+        run: |
+          cat > clean.cjs <<'JS'
+          const fs=require('fs'),{chromium}=require('playwright'),dir='docs/handoffs/motion-r02-20261013';
+          const report={environment:'GitHub Actions Chromium/SwiftShader, not user GPU or physical phone',scope:'fresh page, 3-second untimed playback warmup then 12-second uncapped real-rAF sampling',pass:false};
+          (async()=>{let b;try{b=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});const p=await b.newPage({viewport:{width:1320,height:940},deviceScaleFactor:1});const errors=[];p.on('pageerror',e=>errors.push(String(e)));await p.goto('https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5b573f90b2a2024beb8eb52bddf37f76dbcb255/kaopu-unified-human-workbench/motion-review-r02/preview.html',{waitUntil:'domcontentloaded',timeout:90000});await p.waitForFunction(()=>window.motionReview?.ready&&!motionReview.busy&&motionReview.clip,null,{timeout:140000});await p.evaluate(()=>{motionReview.play(false);motionReview.seek(0);motionReview.speed=1;motionReview.play(true);});await p.waitForTimeout(3000);await p.evaluate(()=>{motionReview.intervals=[];motionReview.cpu=[];window._cleanStart=performance.now();});await p.waitForTimeout(12000);report.sample=await p.evaluate(()=>{const r=motionReview;r.play(false);const sorted=r.intervals.slice().sort((a,b)=>a-b);return{...r.report(),frameSamples:r.intervals.length,measuredWallMS:performance.now()-window._cleanStart,rawFrameIntervalsMS:r.intervals.slice(),medianFrameMS:sorted[Math.floor(sorted.length*.5)]||null};});report.errors=errors;report.pass=errors.length===0&&report.sample.frameSamples>0;report.stable60FPS=report.sample.fps>=55&&report.sample.frameP95MS<=25;report.limit='This does not certify the user GPU or global visual/contact quality';}catch(e){report.error=String(e.stack||e);}finally{fs.writeFileSync(dir+'/CLEAN_PLAYBACK.json',JSON.stringify(report,null,2));if(b)await b.close();}})();
+          JS
+          timeout 230 node clean.cjs
+      - name: Final handoff receipt only, no runtime edits
+        run: |
+          python - <<'PY'
+          import pathlib,json
+          p=pathlib.Path('docs/handoffs/motion-r02-20261013');q=json.loads((p/'PUBLIC_QA.json').read_text());r=json.loads((p/'DELIVERY.json').read_text());perf=json.loads((p/'CLEAN_PLAYBACK.json').read_text());r['cleanPlayback']=perf;r['runtimeChangedAfterPublicVerification']=False;(p/'DELIVERY.json').write_text(json.dumps(r,ensure_ascii=False,indent=2))
+          text='# 动作 R02 · 固定交付与真实边界\n\n'+r['publicURL']+'\n\n本版只新增R02，不改R01/完整R04人物、原动作和旧入口；保持Draft，不合并、不强推。\n\n## 本轮接入\n\n拇指修正共用于参考握拳/松握与18套拳击及12摘段，左右手分别处理，提供原手型A/B。当前掌指关节连线先投影到掌面，再做向食指/中指外侧的内收与MCP/IP屈曲；修正只动拇指链。真人动捕手指并未实测，走跑自然松手另用明确标注的作者姿态。四指紧握、掌面厚度和接触挤压仍继承原模型限制，不能称完整手部物理。\n\n连续走：CMU16_15，完整步态174–315帧，1.175秒/周期。连续跑：CMU16_35，38–134帧，0.8秒/周期。两者取稳定前进段，尾部与原始前置帧过渡，根位移累计，不每圈归零。提供前进和原地检查；不是把停止片段反复播放。脚掌近竖直时的朝向歧义加入骨盆方向回退，俯仰轴使用同一滤波朝向。周期支撑IK后短离线平滑，最终残差另外计量，不冒称绝对锁足。\n\n新增挥手CMU143_25及伸展CMU143_30，保留真人身体时序；为有限动作，未编造无缝循环或同步打哈欠口型。共57可播放入口，原未迁移旧R2分类继续明确列出。\n\n## 实际核查\n\n候选14项、公网21项通过，页面/着色器错误零。100周期位移累积与原地模式、20处接缝邻域、固定骨长、原人物位置/拓扑/存档、左右手A/B、实际播放/暂停/慢放/逐帧经过检查。20张PNG来自真实WebGL画布，不是生成图。最终走跑、手部和挥手/伸展画面已实际查看。\n\n公网首开19.906秒；新动作准备约293–933毫秒，模型形体重算0次。先前动作/人物/面部加载费用仍存在，不能称全网页秒开。平滑引起的最大支撑踝位移：走5.76mm、跑7.36mm，是最终误差指标而非平滑前IK精度。平地/当前人物之外的地形、体型组合与碰撞未认证。\n\n原公网检查在大量近景读回后的短时播放不足6帧，FPS字段为空且存在5.6755秒长帧；不捏造帧率。另用全新页面进行独立真实时钟采样，原始数据见CLEAN_PLAYBACK.json。其结果也不是用户真实GPU或手机实机认证。\n\n手机仅390×844布局与控件。早先候选手机GPU读回超时保留在REJECTED_CANDIDATE_4.json；本轮没有把失败截图改写成通过。\n\n## 原始老师与资产边界\n\nCMU官方：https://mocap.cs.cmu.edu/ 。拳形原理参考：https://traditional-karate.com/karate-do/kihon-basics/seiken-proper-fist/ 。按已选原始ASF/AMC有限下载，来源摘要及未采用候选原因在SOURCE_REPORT.json。CMU手指/拇指未实测，其通道被忽略。没有下载或替换外部人物网格。CMU允许产品内使用，不允许直接转售原始或转换动作数据。本网页不是动作数据销售。\n\nThe data used in this project was obtained from mocap.cs.cmu.edu. The database was created with funding from NSF EIA-0196217.\n'
+          (p/'README.md').write_text(text)
+          print(json.dumps(perf,ensure_ascii=False,indent=2))
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/handoffs/motion-r02-20261013
+          git commit -m 'docs(motion-r02): preserve verified public images and independent clean playback evidence [skip ci]'
+          git push origin HEAD:feature/motion-r02-thumb-cycles-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: motion-r02-permanent-handoff
+          path: docs/handoffs/motion-r02-20261013
+          retention-days: 14

@@ -1,0 +1,46 @@
+name: Motion R02 Original CMU Data
+on:
+  push:
+    branches: [feature/motion-r02-thumb-cycles-20261013]
+    paths: [.github/workflows/motion-r02-source.yml]
+permissions:
+  contents: write
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/motion-r02-thumb-cycles-20261013
+          sparse-checkout: kaopu-unified-human-workbench/motion-review-r02
+      - name: Bounded public original source files, no authentication or TLS bypass
+        run: |
+          python - <<'PY'
+          import urllib.request,pathlib,json,hashlib,concurrent.futures
+          root=pathlib.Path('kaopu-unified-human-workbench/motion-review-r02/source');root.mkdir(parents=True,exist_ok=True)
+          paths=['16/16.asf','16/16_57.amc','16/16_15.amc','16/16_35.amc','143/143.asf','143/143_02.amc','143/143_03.amc']
+          def get(p):
+            url='http://mocap.cs.cmu.edu/subjects/'+p
+            with urllib.request.urlopen(url,timeout=50) as r:data=r.read()
+            digest=hashlib.sha256(data).hexdigest()
+            expected={'16/16.asf':'2323f876564610f84bfbec9b90b8ebffb57515673b7f4a45b0fb0849af465bdb','16/16_57.amc':'ae00399e82615e63be9590e0e11c679a5f033111a656e9ffbbb0a3e3060a01cd'}.get(p)
+            if expected:assert digest==expected,'Known source drift '+p
+            (root/p.split('/')[-1]).write_bytes(data);return {'path':p,'url':url,'bytes':len(data),'sha256':digest,'knownDigestMatches':expected==digest if expected else None}
+          with concurrent.futures.ThreadPoolExecutor(3) as pool:r=list(pool.map(get,paths))
+          (root/'download.json').write_text(json.dumps(r,indent=2))
+          for name,url in [('143-labels.html','http://mocap.cs.cmu.edu/search.php?subjectnumber=143'),('16-labels.html','http://mocap.cs.cmu.edu/search.php?subjectnumber=16')]:
+            (root/name).write_bytes(urllib.request.urlopen(url,timeout=50).read())
+          print(json.dumps(r,indent=2))
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/motion-review-r02/source
+          git commit -m 'data(motion-r02): bounded original CMU source recordings and provenance'
+          git push origin HEAD:feature/motion-r02-thumb-cycles-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: motion-r02-original-sources
+          path: kaopu-unified-human-workbench/motion-review-r02/source
+          retention-days: 7
