@@ -1,150 +1,34 @@
-name: Hair L02 native Pages fast start without quality loss
+name: Hair L02 frozen release audit (manual read-only)
 on:
-  push:
-    branches: [fix/hair-r14-l02-fast-start-20261013]
-    paths: ['kaopu-hair-workbench/fusion/r14-fast/**', '.github/workflows/hair-r14-l02-fast.yml']
+  workflow_dispatch:
 permissions:
-  contents: write
-  pages: write
-  actions: read
-concurrency:
-  group: hair-r14-l02-fast
-  cancel-in-progress: false
+  contents: read
 jobs:
-  finish-test-publish:
+  audit-frozen-files:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
-    env:
-      P: kaopu-hair-workbench/fusion/r14-fast
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
           sparse-checkout: |
-            kaopu-hair-workbench/fusion/r14-loadfix
             kaopu-hair-workbench/fusion/r14-fast
-      - uses: actions/download-artifact@v4
-        with:
-          name: hair-l02-candidate
-          run-id: 38339825323
-          github-token: ${{ github.token }}
-          path: /tmp/l02-exact-candidate
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Verify unchanged source and exact renderer from completed quality checks
-        run: |
-          git fetch --depth=1 origin 14acec63420129b22cc9ffbaf5def01991aeac76
-          test -z "$(git diff 14acec63420129b22cc9ffbaf5def01991aeac76 HEAD -- kaopu-hair-workbench/fusion/r14-loadfix)"
-          python "$P/tests/reuse.py"
-          npm install --prefix /tmp/hair-l02-tools --no-save playwright@1.55.1 pngjs@7.0.0
-          ln -s /tmp/hair-l02-tools/node_modules node_modules
-          /tmp/hair-l02-tools/node_modules/.bin/playwright install --with-deps chromium
-      - name: Finish fresh cold warm, cache corruption, retry and full basis hydration tests
-        run: |
-          python -m http.server 8765 --bind 127.0.0.1 >/tmp/hair-l02-http.log 2>&1 &
-          timeout 1200s node "$P/tests/resume.mjs" "http://127.0.0.1:8765/$P/site/"
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: hair-l02-candidate-completed
-          path: kaopu-hair-workbench/fusion/r14-fast
-          retention-days: 30
-      - name: Commit only new tested directory, keeping original HTML unchanged
-        id: source
-        run: |
-          git config user.name 'KAOPU Hair L02 Build'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add "$P"
-          git diff --cached --quiet || git commit -m 'build(hair-l02): exact original quality with completed cold warm and recovery evidence'
-          git push origin HEAD:refs/heads/fix/hair-r14-l02-fast-start-20261013
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-      - name: Append new immutable native Pages directory; preserve all other files
-        id: pages
-        run: |
-          dest="kaopu-hair-workbench/fusion/r14-l02-7c1072ee121d"
-          echo "dest=$dest" >> "$GITHUB_OUTPUT"
-          git fetch --depth=1 --filter=blob:none origin gh-pages
-          pg=$(git rev-parse FETCH_HEAD)
-          git worktree add --detach --no-checkout /tmp/hair-l02-pages "$pg"
-          done=0
-          for attempt in 1 2 3 4; do
-            git fetch --depth=1 --filter=blob:none origin gh-pages
-            pg=$(git rev-parse FETCH_HEAD)
-            test -z "$(git ls-tree -r --name-only "$pg" -- "$dest")" || { echo 'Immutable destination already exists'; exit 1; }
-            git -C /tmp/hair-l02-pages update-ref HEAD "$pg"
-            git -C /tmp/hair-l02-pages read-tree "$pg"
-            mkdir -p "/tmp/hair-l02-pages/$dest"
-            cp -a "$P/site/." "/tmp/hair-l02-pages/$dest/"
-            git -C /tmp/hair-l02-pages add "$dest"
-            git -C /tmp/hair-l02-pages diff --cached --name-only | grep -v "^$dest/" && exit 1 || true
-            git -C /tmp/hair-l02-pages commit -m 'publish(hair-l02): append native fast-start site without overwriting old pages'
-            if git -C /tmp/hair-l02-pages push origin HEAD:refs/heads/gh-pages; then done=1; break; fi
-            sleep 3
-          done
-          test "$done" = 1
-          psha=$(git -C /tmp/hair-l02-pages rev-parse HEAD)
-          url="https://haihao0307.github.io/guilin-dem-pipeline/$dest/"
-          echo "sha=$psha" >> "$GITHUB_OUTPUT"
-          echo "url=$url" >> "$GITHUB_OUTPUT"
-          printf '{"publicURL":"%s","pagesCommit":"%s","sourceBuild":"%s","destination":"%s"}\n' "$url" "$psha" '${{ steps.source.outputs.sha }}' "$dest" > "$P/PUBLISH.json"
-          git add "$P/PUBLISH.json"
-          git commit -m 'docs(hair-l02): record native Pages publication before external test'
-          git push origin HEAD:refs/heads/fix/hair-r14-l02-fast-start-20261013
-          echo "$url" >> "$GITHUB_STEP_SUMMARY"
-      - name: Request existing Pages build without changing settings
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          curl --max-time 30 -sS -X POST -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' "https://api.github.com/repos/$GITHUB_REPOSITORY/pages/builds" > "$P/evidence/pages-build-request.json"
-          cat "$P/evidence/pages-build-request.json"
-      - uses: actions/upload-artifact@v4
-        with:
-          name: hair-l02-before-public
-          path: kaopu-hair-workbench/fusion/r14-fast
-          retention-days: 14
-      - name: Wait for exact native public HTML
-        env:
-          PUBLIC_URL: ${{ steps.pages.outputs.url }}
-        run: |
-          python - <<'PY'
-          import os,time,urllib.request,hashlib,json
-          from pathlib import Path
-          m=json.loads((Path(os.environ['P'])/'BUILD_MANIFEST.json').read_text())
-          for i in range(40):
-              try:
-                  data=urllib.request.urlopen(os.environ['PUBLIC_URL'],timeout=20).read()
-                  if hashlib.sha256(data).hexdigest()==m['htmlSha256']:
-                      print('Exact public HTML ready',len(data));break
-                  print('Waiting for exact Pages revision',i)
-              except Exception as e:print('Pages pending',i,str(e))
-              time.sleep(15)
-          else:raise RuntimeError('Native Pages delivery incomplete')
-          PY
-      - name: Actual immutable native HTTPS page, original presets and warm loading
-        run: timeout 1080s node "$P/tests/public.mjs" '${{ steps.pages.outputs.url }}' --public
-      - name: Record completed delivery, without changing tested HTML
-        env:
-          PUBLIC_URL: ${{ steps.pages.outputs.url }}
-          SOURCE_BUILD: ${{ steps.source.outputs.sha }}
-          PAGES_SHA: ${{ steps.pages.outputs.sha }}
+      - name: Verify committed native site and lossless chunks without rebuilding or publishing
         run: |
           python - <<'PY'
           from pathlib import Path
-          import os,json,hashlib
-          p=Path(os.environ['P']);r=json.loads((p/'evidence/public/report.json').read_text());assert r['success']
-          m=json.loads((p/'BUILD_MANIFEST.json').read_text());assert hashlib.sha256((p/'site/index.html').read_bytes()).hexdigest()==m['htmlSha256']
-          m.update(publicBrowserVerified=True,publicURL=os.environ['PUBLIC_URL'],sourceBuild=os.environ['SOURCE_BUILD'],pagesCommit=os.environ['PAGES_SHA'],actionsRun=os.environ['GITHUB_RUN_ID'],qualityEvidenceRun=38339825323)
-          (p/'BUILD_MANIFEST.json').write_text(json.dumps(m,indent=2))
-          c=json.loads((p/'evidence/candidate/report.json').read_text());assert c['success']
-          (p/'DELIVERY.md').write_text('# R14.2-L02 原质量快启\n\n'+os.environ['PUBLIC_URL']+'\n\n'+json.dumps(m,ensure_ascii=False,indent=2)+'\n\nControlled L01 transport replay versus identical L02 renderer: '+json.dumps(c['timings'],ensure_ascii=False)+'\n\nThree preset/custom full array SHA and same-machine top-view pixels are identical. Prior partial job preserved: it passed 24 quality checks but hit a default 30s reload navigation deadline, not a successful complete job. All missing warm/recovery/mobile checks were completed in a fresh browser against exact same HTML SHA, then actual native HTTPS verified independently. All PNG bytes, 64k desktop roots, 24 segments, head, shaders and lights retained. Unused latent bases deferred, not removed; full GNM reconstruction verified. Phone viewport only. Appearance defects unchanged. Old localStorage remains at old origin; JSON export/import needed. No merge, force or old-page overwrite.\n')
+          import hashlib,json
+          p=Path('kaopu-hair-workbench/fusion/r14-fast')
+          m=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          assert hashlib.sha256((p/'site/index.html').read_bytes()).hexdigest()==m['htmlSha256']
+          a=json.loads((p/'ASSET_MANIFEST.json').read_text())
+          chunks=0
+          for item in a['assets'].values():
+              for c in item['chunks']:
+                  b=(p/'site'/c['path']).read_bytes()
+                  assert len(b)==c['bytes'] and hashlib.sha256(b).hexdigest()==c['sha256'],c['path']
+                  chunks+=1
+          for f in json.loads((p/'UNCHANGED_RUNTIME.json').read_text())['files']:
+              assert hashlib.sha256((p/f['path']).read_bytes()).hexdigest()==f['sha256'],f['path']
+          print(json.dumps({'readOnly':True,'htmlSha256':m['htmlSha256'],'verifiedChunks':chunks,'changedFiles':0}))
           PY
-          git add "$P"
-          git commit -m 'test(hair-l02): verified native public page and completed original-quality loading evidence'
-          git push origin HEAD:refs/heads/fix/hair-r14-l02-fast-start-20261013
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: hair-l02-delivery
-          path: kaopu-hair-workbench/fusion/r14-fast
-          retention-days: 30
