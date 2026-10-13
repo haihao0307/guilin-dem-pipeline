@@ -1,0 +1,40 @@
+name: Grand steam integrated candidate QA
+on:
+  push:
+    branches: ['qa/grand-steam-r01-20261013']
+    paths:
+      - '.github/workflows/grand-steam-candidate-qa.yml'
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/grand-steam-r01/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/grand-steam-r01
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install official browser test dependencies
+        run: |
+          mkdir -p qa && cd qa
+          npm init -y
+          npm install --no-audit --no-fund playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Render complete candidate and verify interactions
+        env:
+          NODE_PATH: ${{ github.workspace }}/qa/node_modules
+          QA_OUT: ${{ github.workspace }}/qa-output
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/grand-steam-r01/tests/browser-qa.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: grand-steam-candidate-proof
+          path: qa-output/
+          if-no-files-found: error
+          retention-days: 14
