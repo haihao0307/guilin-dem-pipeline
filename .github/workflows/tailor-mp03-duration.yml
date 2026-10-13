@@ -1,0 +1,38 @@
+name: MP03 sustained cloth recovery tests
+on:
+  push:
+    branches: [fix/tailor-mp03-r2-recovery-20261013]
+    paths:
+      - '.github/workflows/tailor-mp03-duration.yml'
+      - 'kaopu-tailor-workbench/material-products/recovery-audit/mp03-duration.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  duration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        look: [K04,L01,D01]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-tailor-workbench/material-products
+            kaopu-tailor-workbench/presets/r04/assets
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Restore exact inherited assets
+        run: python kaopu-tailor-workbench/material-products/r03/bootstrap.py
+      - name: Test every frame before and after the hem impulse
+        run: node kaopu-tailor-workbench/material-products/recovery-audit/mp03-duration.mjs '${{ matrix.look }}'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp03-duration-${{ matrix.look }}
+          path: kaopu-tailor-workbench/material-products/recovery-audit/evidence
+          retention-days: 30
