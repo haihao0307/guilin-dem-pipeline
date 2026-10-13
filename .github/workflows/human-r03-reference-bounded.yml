@@ -1,0 +1,37 @@
+name: Human R03 bounded reference capture
+on:
+  push:
+    branches: [test/human-r03-reference-recovery-20261013]
+    paths: ['.github/workflows/human-r03-reference-bounded.yml']
+permissions: {contents: read}
+jobs:
+  reference:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with: {sparse-checkout: .github}
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - name: Small viewport and bounded frames for reference observation only
+        run: |
+          mkdir -p bounded
+          cat > reference.cjs <<'JS'
+          const fs=require('fs'),{chromium}=require('playwright');
+          (async()=>{const b=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});const p=await b.newPage({viewport:{width:820,height:680},deviceScaleFactor:1});
+          const r={url:'https://lo-th.github.io/head/',mode:'WebGL fallback, small viewport, throttled and paused RAF for software capture only',errors:[],screens:[],physicalGPU:false,assetsCopiedToProduct:false};
+          await p.addInitScript(()=>{Object.defineProperty(navigator,'gpu',{value:undefined,configurable:true});let n=0;const pending=new Map();window.__auditPause=false;window.requestAnimationFrame=fn=>{const id=++n;pending.set(id,fn);return id};window.cancelAnimationFrame=id=>pending.delete(id);setInterval(()=>{if(window.__auditPause)return;const batch=Array.from(pending.entries());pending.clear();for(const [id,fn]of batch)fn(performance.now());},350);});
+          p.on('pageerror',e=>{if(r.errors.length<10)r.errors.push(String(e))});p.on('console',m=>{if(m.type()==='error'&&r.errors.length<10)r.errors.push(m.text().slice(0,2000))});
+          try{await p.goto(r.url,{waitUntil:'domcontentloaded',timeout:60000});await p.waitForFunction(()=>document.querySelector('canvas'),null,{timeout:60000});await p.waitForTimeout(20000);await p.evaluate(()=>window.__auditPause=true);await p.waitForTimeout(2000);r.body=await p.locator('body').innerText({timeout:20000});await p.screenshot({path:'bounded/front.png',timeout:30000});r.screens.push('front.png');
+          const box=await p.locator('canvas').first().boundingBox();if(box){await p.mouse.move(box.x+box.width*.55,box.y+box.height*.55);await p.mouse.down();await p.mouse.move(box.x+box.width*.64,box.y+box.height*.55,{steps:5});await p.mouse.up();await p.evaluate(()=>window.__auditPause=false);await p.waitForTimeout(5000);await p.evaluate(()=>window.__auditPause=true);await p.waitForTimeout(1500);await p.screenshot({path:'bounded/oblique.png',timeout:30000});r.screens.push('oblique.png');}
+          }catch(e){r.failure=String(e);}finally{fs.writeFileSync('bounded/report.json',JSON.stringify(r,null,2));await b.close();}})().catch(e=>{console.error(e);process.exitCode=1});
+          JS
+          node reference.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: human-r03-reference-bounded
+          path: bounded/
+          retention-days: 7
