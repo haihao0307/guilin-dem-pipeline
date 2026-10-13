@@ -1,0 +1,77 @@
+name: Human ET21 geometric skin folds
+on:
+  push:
+    branches: [feature/skin-folds-et21-recovery-20261013]
+    paths: ['.github/workflows/human-folds-et21.yml', 'kaopu-unified-human-workbench/skin-folds-r01/**']
+permissions:
+  contents: write
+concurrency:
+  group: human-et21-skin-folds
+  cancel-in-progress: false
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false playwright@1.58.2 esbuild@0.25.11
+      - run: npx playwright install --with-deps chromium
+      - name: Exact inherited baseline, pure geometry tests and reproducible build
+        run: |
+          mkdir -p et21-evidence
+          echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          node kaopu-unified-human-workbench/skin-folds-r01/test.mjs | tee et21-evidence/unit.txt
+          node kaopu-unified-human-workbench/skin-folds-r01/build.cjs
+      - name: Real browser smoke gate before publishing
+        env:
+          SMOKE_ONLY: '1'
+          QA_OUT: et21-evidence/smoke
+        run: node kaopu-unified-human-workbench/skin-folds-r01/verify.cjs
+      - name: Publish immutable isolated candidate, no merge
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/skin-folds-r01/preview.html kaopu-unified-human-workbench/skin-folds-r01/BUILD.json
+          git commit -m 'build(et21): real geometry folds and fast warm-cool isolated preview'
+          git push origin HEAD:feature/skin-folds-et21-recovery-20261013
+          echo "BUILD_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Full fixed-public geometry, shader, cosmetics and performance regression
+        env:
+          QA_OUT: et21-evidence/public
+        run: |
+          export PREVIEW_URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${BUILD_SHA}/kaopu-unified-human-workbench/skin-folds-r01/preview.html"
+          node kaopu-unified-human-workbench/skin-folds-r01/verify.cjs
+      - name: Save verifiable delivery receipt and limitations
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,os,subprocess
+          p=Path('kaopu-unified-human-workbench/skin-folds-r01')
+          qa=json.loads(Path('et21-evidence/public/qa.json').read_text())
+          assert qa['completed'] and not qa['errors'] and not qa['consoleErrors'] and not qa['requests']
+          assert all(t['pass'] for t in qa['tests'])
+          changes=subprocess.check_output(['git','diff','--name-only','ccf5a1ed9ddde8803e292f1e62d777b141ff52d8','HEAD'],text=True).splitlines()
+          assert all(x.startswith(str(p)+'/') or x=='.github/workflows/human-folds-et21.yml' for x in changes),changes
+          b=json.loads((p/'BUILD.json').read_text())
+          receipt={'version':'ET21-FOLD-R01','userBaseline':'ccf5a1ed9ddde8803e292f1e62d777b141ff52d8','sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':os.environ['BUILD_SHA'],'publicURL':qa['url'],'previewSHA256':b['previewSHA256'],'previewBytes':b['previewBytes'],'publicBrowserVerified':True,'publicChecks':len(qa['tests']),'unitChecks':10,'run':os.environ['GITHUB_RUN_ID'],'geometry':qa['initial']['geometry'],'performance':qa.get('performance'),'userVisualAccepted':False,'productionReady':False,'realPhoneTested':False,'consumerGPUPerformanceCertified':False,'legacyFilesChanged':False,'scope':'Derived facial skin geometry, surface finishing, lighting. Original rig, eyes, lips, body and idle retained.'}
+          (p/'DELIVERY.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n')
+          (p/'PUBLIC_QA.json').write_text(json.dumps(qa,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps(receipt,ensure_ascii=False,indent=2))
+          PY
+          git add kaopu-unified-human-workbench/skin-folds-r01/DELIVERY.json kaopu-unified-human-workbench/skin-folds-r01/PUBLIC_QA.json
+          git commit -m 'docs(et21): verified fixed-public checks and honest performance boundaries'
+          git push origin HEAD:feature/skin-folds-et21-recovery-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: et21-folds-${{ github.run_number }}
+          path: |
+            et21-evidence/
+            kaopu-unified-human-workbench/skin-folds-r01/
+          retention-days: 14

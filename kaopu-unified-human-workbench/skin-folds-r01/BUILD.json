@@ -1,0 +1,101 @@
+{
+  "schema": "kaopu/geometric-skin-build@1",
+  "version": "ET21-FOLD-R01",
+  "idleBase": "be54aaa728f8f4ffd22786b82cfa3f8efbd99b11",
+  "sourceCommit": "5f0ec04dd97715a8fd15c95871521cf0a4bba53a",
+  "userBaseline": "ccf5a1ed9ddde8803e292f1e62d777b141ff52d8",
+  "baselineLipSHA256": "47f56c7be09005c8b1a0bea5b2eef37fdcdbb642a73f79d9e3b9e48c24364574",
+  "lipProfileSchema": "kaopu/lip-structure@2",
+  "baselineEyePreviewSHA256": "76d383193ae7212428cb72bc78b536e048039f1414dc26ce756d6b4ea6ff9352",
+  "nativeAssetCommit": "0b4703359efbae10ffc6c0e5fe3fc081e7eca4fe",
+  "faceAssetCommit": "02f596def9d07ebfc187e1eb18ad345a57c8a6b6",
+  "previewSHA256": "58b394a4f8ab129fe4ea50bde4cfd3e3f8d9de50a4f8047022a9d59de3670f9c",
+  "previewBytes": 5102553,
+  "oldPreviewUnchanged": true,
+  "sourceIdentityUnchanged": true,
+  "canonicalBuffersUnchanged": true,
+  "oneCharacter": true,
+  "oneCanvas": true,
+  "sources": [
+    {
+      "path": "kaopu-unified-human-workbench/skin-folds-r01/FairSkin.mjs",
+      "bytes": 2523,
+      "sha256": "98f5f3a1cc48337208953cb2ae96c1a1bdf863de6aad72ee35e897b3c05f426b"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/skin-folds-r01/FoldMath.mjs",
+      "bytes": 4126,
+      "sha256": "cc875ca3cb3ea3369365636400aa78dbab6e82fc3c1fdaab5d37456f66d7a75d"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/skin-folds-r01/FoldProfile.mjs",
+      "bytes": 722,
+      "sha256": "51d739d111603ebfb2627316194a00cea875d1c1749973729dddb3dbe37659cb"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/skin-folds-r01/FoldSkin.mjs",
+      "bytes": 1674,
+      "sha256": "ede5145e76cb9eef7e61a73fb097dfaa0f512576475245f573cdc2d466d46252"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/skin-folds-r01/FoldSurface.mjs",
+      "bytes": 6273,
+      "sha256": "6b755e61c07d1e5c635746b30d0aa7fd4e0b1c849368cfaa5250088754faf337"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/skin-folds-r01/FoldUI.mjs",
+      "bytes": 9883,
+      "sha256": "a69f60df6708087eb08608eeb751267d5949d70c9298df86a0649a319019cb8b"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/skin-folds-r01/FoldViewer.mjs",
+      "bytes": 5084,
+      "sha256": "a8bc418b970fc20d148a562721929eae1f055c9e531e5c2f3e869d75949b0ae8"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/skin-folds-r01/SmoothSkinNormals.mjs",
+      "bytes": 2109,
+      "sha256": "66d9a60d5faaf6b1344e3bb290d77d38de17a14083e36e9c6fedc720567ba58f"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/skin-folds-r01/build.cjs",
+      "bytes": 4736,
+      "sha256": "6aecf513bc5125ab25ed508077b360422d1048af146c4a8e193d1c43e8655462"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/skin-folds-r01/fair-test.mjs",
+      "bytes": 838,
+      "sha256": "2fb5d1e02c466f7e721c7a924c6b2af2cdd73a490e3b731296b567352f7e9776"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/skin-folds-r01/layout.css",
+      "bytes": 1958,
+      "sha256": "a3675624544549cdbf90d5c74a5db1a3c3f137c8f3146b6b115557369635b611"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/skin-folds-r01/test.mjs",
+      "bytes": 2145,
+      "sha256": "d6b3d611cbca2a16f5de2ce1da1429e14b7b3e9d4a07f088812d9aae943bfe80"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/skin-folds-r01/verify.cjs",
+      "bytes": 10665,
+      "sha256": "8571869a864f8841557f0d97f86c82df7224f04018dc81bf582bf8fb6df38b17"
+    }
+  ],
+  "limitations": [
+    "Analytic bounded loose-skin rolls with tangential gathering; not a biomechanical FEM or contact solver",
+    "Default uses wrapped diffuse approximation, not volume scattering; optional old multi-pass diffusion costs extra",
+    "Only facial display geometry; eyelid aperture, lips, eye components, canonical rig/body buffers protected",
+    "Geometry edits rebuild retained idle cache after release; playback and camera orbit do not recompute folds",
+    "Close-up fidelity is limited by inherited parametric anatomy and local display tessellation",
+    "Screen-space/per-pixel and shader tests do not certify consumer GPU FPS or physical phone compatibility",
+    "Original pinned model/skin assets still load from public GitHub URLs; this is not an offline bundle"
+  ],
+  "oldCinematicPreviewSHA256": "cdac65a5c84a7a79366cbb67e76cece5c126c255be685488863ef1294d89a667",
+  "geometryRoute": "one derived display surface before retained native-derived GPU idle bake",
+  "oldWrinkleRasterDisabled": true,
+  "defaultLighting": "two warm/cool directional lights, no extra shadow, no multi-pass diffusion",
+  "lightingReference": "kaopu-hair-workbench/qa/gnm-study/src/app.js @ ccf5a1ed9ddde8803e292f1e62d777b141ff52d8",
+  "cosmetics": "existing identity pigment maps, independently controlled; new makeup finishing"
+}
