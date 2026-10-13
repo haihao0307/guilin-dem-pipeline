@@ -47,6 +47,8 @@ jobs:
             git push origin HEAD:feature/skin-fold-cinematic-r02-20261013
           fi
           echo "BUILD_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Verify immutable public preview in actual browser
+        run: node kaopu-unified-human-workbench/cinematic-r02/public.cjs
       - name: Upload evidence and built inspection inputs
         if: always()
         uses: actions/upload-artifact@v4
@@ -54,6 +56,7 @@ jobs:
           name: skin-fold-r02-${{ github.run_id }}
           path: |
             skin-fold-evidence/
+            skin-fold-public/
             kaopu-unified-human-workbench/cinematic-r02/
             kaopu-unified-human-workbench/vendor/three.module.js
           retention-days: 14

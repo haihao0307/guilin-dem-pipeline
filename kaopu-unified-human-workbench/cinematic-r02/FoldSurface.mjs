@@ -1,4 +1,5 @@
 import * as THREE from '../full/source/registration-vendor/three.module.js';
+import {SurfaceFairing} from './SurfaceFairing.mjs';
 import {clamp,smooth,makeLayout,sampleLayout,foldProfile,GROUPS} from './FoldKernel.mjs';
 const point=(a,i)=>[a[i*3],a[i*3+1],a[i*3+2]];
 /** Adaptive, fixed-rest edge stencils. Only the same head's SKIN is refined. Every
@@ -26,10 +27,11 @@ export class FoldSurface{
   if(!this.layers.length){g=source.clone();this.layers.push({geometry:g,pairs:[],oldCount:source.attributes.position.count});}
   this.geometry=g;const N=g.attributes.position.count;this.data=new Float32Array(N*16);this.info=new Float32Array(N);g.setAttribute('kFoldMM',new THREE.BufferAttribute(this.info,1));
   this.active=[];for(let i=this.bodyCount;i<N;i++){const q=sample(g,i),o=i*16;this.data[o]=q.mask;this.data[o+1]=q.sag;if(q.mask>.001)this.active.push(i);for(let j=0;j<q.folds.length;j++){const v=q.folds[j],p=o+2+j*7;this.data.set([v.distance,v.gate,v.width,v.group,v.nx,v.ny,v.support],p);}}
-  this.buildMS=performance.now()-start;this.added=added;this.stats={};this.up=new THREE.Vector3();this.right=new THREE.Vector3();this.basePositions=new Float32Array(N*3);
+  this.buildMS=performance.now()-start;this.added=added;this.stats={};this.up=new THREE.Vector3();this.right=new THREE.Vector3();this.basePositions=new Float32Array(N*3);this.baseNormals=new Float32Array(N*3);this.fairing=new SurfaceFairing(g,this.bodyCount);this.baseReady=false;
  }
- update(model,s,withoutFolds=false){
+ update(model,s,withoutFolds=false,geometryFresh=true){
   const start=performance.now();let prev=this.source;
+  if(geometryFresh||!this.baseReady){
   for(const layer of this.layers){const next=layer.geometry,oldP=prev.attributes.position.array,oldN=prev.attributes.normal.array,P=next.attributes.position.array;P.set(oldP);
    for(let j=0;j<layer.pairs.length;j++){const[a,b]=layer.pairs[j],u=a*3,v=b*3,k=(layer.oldCount+j)*3;const mx=(oldP[u]+oldP[v])*.5,my=(oldP[u+1]+oldP[v+1])*.5,mz=(oldP[u+2]+oldP[v+2])*.5;P[k]=mx;P[k+1]=my;P[k+2]=mz;
     const dot=oldN[u]*oldN[v]+oldN[u+1]*oldN[v+1]+oldN[u+2]*oldN[v+2];if(dot>.88){const da=(mx-oldP[u])*oldN[u]+(my-oldP[u+1])*oldN[u+1]+(mz-oldP[u+2])*oldN[u+2],db=(mx-oldP[v])*oldN[v]+(my-oldP[v+1])*oldN[v+1]+(mz-oldP[v+2])*oldN[v+2];let dx=-.22*(da*oldN[u]+db*oldN[v]),dy=-.22*(da*oldN[u+1]+db*oldN[v+1]),dz=-.22*(da*oldN[u+2]+db*oldN[v+2]);const kf=Math.min(1,.000065/(Math.hypot(dx,dy,dz)||1));P[k]+=dx*kf;P[k+1]+=dy*kf;P[k+2]+=dz*kf;}
@@ -37,7 +39,9 @@ export class FoldSurface{
    if(prev.attributes.color&&next.attributes.color){const A=prev.attributes.color.array,B=next.attributes.color.array;B.set(A);for(let j=0;j<layer.pairs.length;j++)for(let k=0;k<3;k++)B[(layer.oldCount+j)*3+k]=(A[layer.pairs[j][0]*3+k]+A[layer.pairs[j][1]*3+k])*.5;next.attributes.color.needsUpdate=true;}
    next.attributes.position.needsUpdate=true;next.computeVertexNormals();prev=next;
   }
-  const g=this.geometry,P=g.attributes.position.array,N=g.attributes.normal.array,R=g.attributes.fRest.array;this.basePositions.set(P);this.info.fill(0);
+  this.fairingStats=this.fairing.apply(this.geometry);this.basePositions.set(this.geometry.attributes.position.array);this.baseNormals.set(this.geometry.attributes.normal.array);this.baseReady=true;
+  }
+  const g=this.geometry,P=g.attributes.position.array,N=g.attributes.normal.array,R=g.attributes.fRest.array;P.set(this.basePositions);N.set(this.baseNormals);this.info.fill(0);
   const L=i=>model.faceSurface.fields.landmark(model.positions,i),toDisplay=p=>new THREE.Vector3(p[0],p[2],-p[1]),left=toDisplay(L(36)),right=toDisplay(L(45)),chin=toDisplay(L(8)),bridge=toDisplay(L(27));this.right.copy(right).sub(left).normalize();this.up.copy(bridge).sub(chin).normalize();this.up.addScaledVector(this.right,-this.up.dot(this.right)).normalize();
   const scale=clamp(right.distanceTo(left)/this.referenceEyeSpan,.4,1.9),legacy=model.identityLab?.traits||{},weights=GROUPS.map(k=>Math.max(s[k],legacy[k]||0)),activeFolds=s.folds&&!withoutFolds,delta=new THREE.Vector3();let affected=0,max=0,contracted=0,raised=0,depressed=0;
   const moles=Math.max(s.moles,legacy.moles||0),mX=s.moles? s.moleX:legacy.moleX,mY=s.moles?s.moleY:legacy.moleY,mR=s.moles?s.moleSize:legacy.moleSize;
@@ -51,7 +55,7 @@ export class FoldSurface{
    delta.set(nx*height+ax-nx*projection,ny*height+ay-ny*projection,nz*height+az-nz*projection).multiplyScalar(.001*scale);const len=delta.length(),cap=.0022*scale;if(len>cap)delta.multiplyScalar(cap/len);if(len<1e-10)continue;P[i*3]+=delta.x;P[i*3+1]+=delta.y;P[i*3+2]+=delta.z;const mm=Math.min(len,cap)*1000;this.info[i]=mm;max=Math.max(max,mm);affected++;contracted=Math.max(contracted,Math.hypot(tx,ty)*scale);raised=Math.max(raised,height*scale);depressed=Math.min(depressed,height*scale);
   }
   if(!P.every(Number.isFinite))throw Error('褶皱生成非有限顶点');g.attributes.position.needsUpdate=true;g.attributes.kFoldMM.needsUpdate=true;g.computeVertexNormals();g.computeBoundingSphere();
-  this.stats={method:'same native-derived skin; fixed-rest adaptive stencils + bounded soft buckling rolls / in-plane shortening / cheek sag',displayVertices:P.length/3,addedDisplayVertices:this.added,displayTriangles:g.index.count/3,affectedVertices:affected,maxDeltaMM:max,maxRaisedMM:raised,maxTroughMM:depressed,maxTangentialMM:contracted,buildMS:this.buildMS,updateMS:performance.now()-start,originalBodyMoved:false,extraFaceMesh:false,wrinkleHeightTexture:false,foldsEnabled:activeFolds,constitutiveTissueSimulation:false};return g;
+  this.stats={method:'same native-derived skin; fixed-rest adaptive stencils + bounded soft buckling rolls / in-plane shortening / cheek sag',displayVertices:P.length/3,addedDisplayVertices:this.added,displayTriangles:g.index.count/3,affectedVertices:affected,maxDeltaMM:max,maxRaisedMM:raised,maxTroughMM:depressed,maxTangentialMM:contracted,baseFairing:this.fairingStats,cachedRestReused:!geometryFresh,buildMS:this.buildMS,updateMS:performance.now()-start,originalBodyMoved:false,extraFaceMesh:false,wrinkleHeightTexture:false,foldsEnabled:activeFolds,constitutiveTissueSimulation:false};return g;
  }
  dispose(){for(const l of this.layers)l.geometry.dispose();this.active=[];}
 }

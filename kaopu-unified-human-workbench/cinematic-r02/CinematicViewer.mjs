@@ -9,7 +9,7 @@ export class CinematicViewer extends LipViewer{
   try{super.update();const source=this.geometry;let f=this.foldSurfaces.get(source);if(!f){f=new FoldSurface(source,this.model);this.foldSurfaces.set(source,f);}this.currentFold=f;this.geometry=f.update(this.model,this.model.cineProfile.settings,this.foldBefore);this.mesh.geometry=this.geometry;this.cineRig?.reframe();this.cineRig?.apply();}finally{this.inFoldUpdate=false;}this.render();
  }
  refreshFolds(){
-  const f=this.currentFold;if(!f)return;const runtime=window.lifelikeIdle?.runtime?.(),g=f.update(this.model,this.model.cineProfile.settings,this.foldBefore);
+  const f=this.currentFold;if(!f)return;const runtime=window.lifelikeIdle?.runtime?.(),g=f.update(this.model,this.model.cineProfile.settings,this.foldBefore,false);
   if(runtime?.ready&&runtime.geometry){for(const name of ['position','normal','kFoldMM']){const a=runtime.geometry.attributes[name],b=g.attributes[name];if(a&&a.count===b.count){a.array.set(b.array);a.needsUpdate=true;}}runtime.geometry.computeBoundingSphere();this.geometry=runtime.geometry;this.mesh.geometry=this.geometry;}
   else{this.geometry=g;this.mesh.geometry=g;if(runtime&&!runtime.disposed)runtime.invalidate();}
   if(this.cineRig)this.cineRig.dirty=true;this.render();

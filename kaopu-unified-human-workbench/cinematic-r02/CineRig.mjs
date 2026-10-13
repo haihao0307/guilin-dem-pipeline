@@ -4,7 +4,7 @@ import {kelvinRGB} from './CineState.mjs';
  * No LTC tables, rect lights or per-pixel 36-tap manual shadow projection. */
 export class CineRig{
  constructor(viewer){
-  this.v=viewer;this.solo='all';this.comparing=false;this.center=new THREE.Vector3();this.frames=0;this.shadowUpdates=0;
+  this.v=viewer;this.solo='all';this.comparing=false;this.center=new THREE.Vector3();this.neutralLight=new THREE.Color(0xffffff);this.frames=0;this.shadowUpdates=0;
   const r=viewer.renderer;this.original={lights:viewer.scene.children.filter(x=>x.isLight).map(l=>({l,visible:l.visible})),clear:r.getClearColor(new THREE.Color()),exposure:r.toneMappingExposure,shadow:r.shadowMap.enabled};
   this.group=new THREE.Group();this.group.name='ET21 two-light portrait';viewer.scene.add(this.group);
   this.lights={key:new THREE.DirectionalLight(0xffffff,3.2),fill:new THREE.DirectionalLight(0xffffff,3)};
@@ -22,8 +22,8 @@ export class CineRig{
   r.toneMappingExposure=this.original.exposure*(on?2**s.exposureEV:1);r.setClearColor(on?0x172126:this.original.clear);
   const{key,fill}=this.lights;
   if(s.preset==='warmcool'){
-   // Exact early-hair chromatic pair and directions; energy rebalanced for skin.
-   key.color.set('#ffb473');fill.color.set('#7caaff');
+   // Early-hair chromatic pair and directions; desaturate in linear light for skin.
+   key.color.set('#ffb473').lerp(this.neutralLight,.58);fill.color.set('#7caaff').lerp(this.neutralLight,.48);
    key.position.set(1,.45,.75).normalize().multiplyScalar(1.3).add(this.center);
    fill.position.set(-1,.35,.55).normalize().multiplyScalar(1.3).add(this.center);
   }else{
@@ -42,6 +42,6 @@ export class CineRig{
   const a=this.v.mesh.morphTargetInfluences||[];let h=0;for(let i=0;i<a.length;i++)h+=(i+1)*a[i];
   const dirty=this.dirty||h!==this.lastMorph;if(dirty){r.shadowMap.needsUpdate=true;this.shadowUpdates++;this.lastMorph=h;this.dirty=false;}
  }
- report(){return{method:'two DirectionalLights and hemisphere; optional one cached 1024 key shadow',source:'kaopu-hair-workbench/qa/gnm-study/src/app.js @ ccf5a1ed9ddde8803e292f1e62d777b141ff52d8',sourcePair:['#ffb473','#7caaff'],enabled:this.enabled,solo:this.solo,lights:Object.fromEntries(Object.entries(this.lights).map(([k,l])=>[k,{position:l.position.toArray(),colorLinear:l.color.toArray(),intensity:l.intensity}])),rectAreaLights:0,manualShadowSamples:0,shadowUpdates:this.shadowUpdates,frames:this.frames};}
+ report(){return{method:'two DirectionalLights and hemisphere; optional one cached 1024 key shadow',source:'kaopu-hair-workbench/qa/gnm-study/src/app.js @ ccf5a1ed9ddde8803e292f1e62d777b141ff52d8',sourcePair:['#ffb473','#7caaff'],linearWhiteMix:[.58,.48],enabled:this.enabled,solo:this.solo,lights:Object.fromEntries(Object.entries(this.lights).map(([k,l])=>[k,{position:l.position.toArray(),colorLinear:l.color.toArray(),intensity:l.intensity}])),rectAreaLights:0,manualShadowSamples:0,shadowUpdates:this.shadowUpdates,frames:this.frames};}
  dispose(){const v=this.v;for(const e of this.original.lights)e.l.visible=e.visible;v.scene.remove(this.group);for(const l of Object.values(this.lights))l.shadow.map?.dispose();v.renderer.shadowMap.enabled=this.original.shadow;v.renderer.setClearColor(this.original.clear);v.renderer.toneMappingExposure=this.original.exposure;}
 }
