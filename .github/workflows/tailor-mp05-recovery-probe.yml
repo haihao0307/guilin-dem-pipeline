@@ -1,0 +1,41 @@
+name: MP05 recovery focused profile
+on:
+  push:
+    branches: [perf/tailor-mp05-fast-runtime-20261013]
+    paths: [.github/workflows/tailor-mp05-recovery-probe.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          repository: haihao0307/guilin-dem-pipeline
+          run-id: 38379326592
+          github-token: ${{ github.token }}
+          name: mp05-inspected-runtime
+          path: runtime
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.58.2 && npx playwright install --with-deps chromium
+      - name: Compare restored diagnostic states, never claim these as shipped appearance
+        run: |
+          cat > runtime/recovery-probe.cjs <<'JS'
+          const {chromium}=require('playwright'),fs=require('fs');
+          (async()=>{const b=await chromium.launch({headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']}),p=await b.newPage({viewport:{width:1280,height:900}});p.setDefaultTimeout(120000);const start=Date.now();await p.goto('http://127.0.0.1:8765/?look=D01');await p.waitForFunction(()=>window.__MP05__?.debug().items.length===2&&!document.getElementById('top-material').disabled);await p.evaluate(()=>window.__MP05__.debug().viewer.frameGate.idle());const cold=Date.now()-start;
+          const result=await p.evaluate(async()=>{const d=window.__MP05__.debug(),v=d.viewer,g=v.frameGate,T=await import('./vendor/three.module.js'),r=[];const saved=[];v.scene.traverse(o=>{if(o.isMesh)saved.push([o,o.material]);});
+          const baseline=async name=>{d.lighting.dirty();await v.render();const times=[];for(let i=0;i<3;i++){d.lighting.dirty();const t=performance.now();await v.render();times.push(performance.now()-t);}r.push({name,times});};await baseline('original');
+          for(const [name,ctor,env] of [['standard',T.MeshStandardMaterial,true],['phong',T.MeshPhongMaterial,false],['lambert',T.MeshLambertMaterial,false]]){for(const[o,m]of saved){if(o===d.lighting.floor)continue;let opt={color:m.color,map:m.map,normalMap:m.normalMap,side:m.side};if(name==='standard')opt.roughness=.8;if(name==='phong')opt.shininess=16;o.material=new ctor(opt);}const orig=v.scene.environment;if(!env)v.scene.environment=null;await baseline(name);v.scene.environment=orig;for(const[o,m]of saved){if(o.material!==m)o.material.dispose();o.material=m;}}
+          const a=performance.now();await window.__MP05__.playMotion('raise');await new Promise(resolve=>{const t=setInterval(()=>{if(!d.physics.running){clearInterval(t);resolve();}},20);});await g.idle();const motion={wallMS:performance.now()-a,frame:d.physics.frame.audit.frameSequence,gate:g.audit()};return{rows:r,motion,diagnosticRestored:true};});result.coldMS=cold;fs.writeFileSync('runtime/RECOVERY_PROBE.json',JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));await b.close();})().catch(e=>{console.error(e);process.exitCode=1;});
+          JS
+          python -m http.server 8765 --bind 127.0.0.1 --directory runtime >/tmp/http.log 2>&1 &
+          node runtime/recovery-probe.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp05-recovery-probe
+          path: runtime/RECOVERY_PROBE.json
