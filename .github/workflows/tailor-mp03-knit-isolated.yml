@@ -1,0 +1,68 @@
+name: MP03 isolated public knit rendering
+on:
+  push:
+    branches: [test/mp03-public-knit-isolation-20261013]
+    paths: ['.github/workflows/tailor-mp03-knit-isolated.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  isolated:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        look: [K01,K02,K03,K04]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-tailor-workbench/material-products/recovery-audit
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - name: Fresh public page per outfit with persistent progress
+        env:
+          LOOK: ${{ matrix.look }}
+        run: |
+          cat > isolated-public.cjs <<'JS'
+          const {chromium}=require('playwright'),fs=require('fs'),assert=require('node:assert/strict');
+          const look=process.env.LOOK,root='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/material-products/mp03-r1-fbbef8bc7df2/';
+          fs.mkdirSync('isolation-evidence',{recursive:true});
+          const state={look,sourceCommit:'fbbef8bc7df2172f492dd60875432f4ffeff2429',entry:root+'?look='+look,passed:false,stages:[],errors:[],isolationOnly:true,parameterStressPassed:false,physicalDeviceTested:false};
+          const save=()=>fs.writeFileSync('isolation-evidence/ISOLATED_PUBLIC_REPORT.json',JSON.stringify(state,null,2));
+          const step=(name,data={})=>{state.stages.push({name,...data});save();console.log(name);};
+          save();
+          (async()=>{
+            const browser=await chromium.launch({headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
+            const page=await browser.newPage({viewport:{width:1440,height:1000}});
+            page.on('pageerror',e=>{state.errors.push(e.message);save();});
+            page.on('console',m=>{if(m.type()==='error'){state.errors.push(m.text());save();}});
+            try{
+              const response=await page.goto(state.entry,{waitUntil:'domcontentloaded',timeout:120000});assert.equal(response.status(),200);step('http-200');
+              await page.waitForFunction(()=>{const a=window.__MP03__?.audit();return a&&!a.pending&&(a.selected||a.error);},{},{timeout:480000});
+              state.audit=await page.evaluate(()=>window.__MP03__.audit());save();
+              assert.equal(state.audit.selected?.id,look);assert.equal(state.audit.error,null);assert.equal(state.audit.glError,0);assert.equal(state.audit.bodyVertexCount,25417);
+              for(const row of state.audit.rows){assert.equal(row.physics.seamGapMM,0);assert(row.physics.minBodyVertexDistanceMM>-.1);assert(row.physics.minBodyInteriorSampleMM>-.1);assert(row.physics.maxEdgeStretch<1.25);}
+              step('original-body-and-cloth-ready');
+              await page.locator('#stage').screenshot({path:'isolation-evidence/'+look+'-whole.png',timeout:120000});step('real-public-pixels');
+              if(look==='K04'){
+                state.thumbnails=await page.evaluate(async()=>{const a=[...document.querySelectorAll('#looks img')];await Promise.all(a.map(i=>{i.loading='eager';return i.decode();}));return a.map(i=>({src:i.getAttribute('src'),width:i.naturalWidth,height:i.naturalHeight}));});
+                assert.equal(state.thumbnails.length,12);assert(state.thumbnails.every(i=>i.width>0));step('twelve-original-thumbnails');
+                await page.screenshot({path:'isolation-evidence/K04-desktop.png',timeout:120000});step('desktop-layout');
+              }
+              assert.equal(state.errors.length,0);state.passed=true;save();
+            }catch(e){state.errors.push(e.stack||String(e));save();process.exitCode=1;console.error(e);}
+            finally{await browser.close();}
+          })().catch(e=>{state.errors.push(e.stack||String(e));save();process.exitCode=1;});
+          JS
+          timeout --signal=TERM 650 node isolated-public.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp03-isolated-${{ matrix.look }}
+          path: isolation-evidence
+          retention-days: 30
