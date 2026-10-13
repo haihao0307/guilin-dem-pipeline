@@ -10,7 +10,7 @@ Observed architectural facts used: red brick and granite, square main shaft, oct
 
 Authored interpretation: all new member dimensions, exact window levels, octagonal profiles, the hall's added 54 profile members, conservation colour/maintenance parameters and exposure response. Existing hall 60 × 16 m plan remains a design assumption. The four-column entrance and old cream dial are preserved authored choices, not claims of a specific period reconstruction. Current clock glazing is not used as evidence of 1970 appearance.
 
-Unresolved: official 44 m tower height versus 7 m rod datum. R05 keeps the existing approximate vertical envelope and marks its short visible support provisional; it does not claim a 51 m total or a recovered 7 m mast. Detailed survey dimensions, hall depth, glass transport and period clock construction remain unverified.
+Unresolved: official 44 m tower height versus 7 m rod datum. R05 keeps the existing approximate vertical envelope and marks its short visible support provisional; it does not claim a 51 m total or a recovered 7 m mast. Detailed survey dimensions, hall depth, glass transport and period clock construction remain unverified. The granite-coloured conservation binding still uses the inherited generic stone surface mother; its mineralogy has not been calibrated as granite.
 
 ## Function/material construction
 

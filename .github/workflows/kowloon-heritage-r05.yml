@@ -67,7 +67,20 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/station-bridge" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
-      - name: Review complete original function fields in normal perspective
+      - name: Startup and bounded native smoke before architectural frame
+        env:
+          HERITAGE_SMOKE: '1'
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/render-staged-host.cjs ${{ matrix.view }}
+      - name: Preserve smoke receipt before the larger render
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: heritage-smoke-${{ matrix.view }}
+          path: heritage-staged-${{ matrix.view }}-smoke/
+          retention-days: 7
+      - name: Review complete source construction in normal perspective
+        env:
+          HERITAGE_SMOKE: '0'
         run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/render-staged-host.cjs ${{ matrix.view }}
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
