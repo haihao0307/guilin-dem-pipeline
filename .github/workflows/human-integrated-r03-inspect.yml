@@ -1,0 +1,46 @@
+name: Human R03 pinned source inspection
+on:
+  push:
+    branches: [feature/human-integrated-anatomy-r03-20261013]
+    paths: ['.github/workflows/human-integrated-r03-inspect.yml']
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+      - name: Collect fixed specialist runtime without altering checked-out sources
+        run: |
+          git fetch --depth=1 origin 63e5dfddf2b5ca0d686651804beeba3333b2f41e 5b4997e6dca27106533022b4ab46164cea073818
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess,shutil,json,hashlib
+          out=Path('r03-source');out.mkdir()
+          for base in ['kaopu-unified-human-workbench','kaopu-anny-workbench']:
+            for p in Path(base).rglob('*'):
+              if not p.is_file() or any(x in p.parts for x in ['acceptance','evidence','node_modules']):continue
+              if p.suffix in ['.png','.jpg','.jpeg','.bin','.gz','.zip','.mp4','.webm']:continue
+              if p.stat().st_size>6000000:continue
+              q=out/p;q.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(p,q)
+          records=[]
+          for sha,folder,dest in [('63e5dfddf2b5ca0d686651804beeba3333b2f41e','ear-tissue-r05','donor-ear'),('5b4997e6dca27106533022b4ab46164cea073818','lip-structure','donor-lip')]:
+            prefix='kaopu-unified-human-workbench/'+folder+'/'
+            names=subprocess.check_output(['git','ls-tree','-r','--name-only',sha,'--',prefix],text=True).splitlines()
+            for name in names:
+              p=Path(name)
+              if any(x in p.parts for x in ['acceptance','evidence']) or p.suffix not in ['.mjs','.js','.json','.md','.css','.cjs','.py']:continue
+              data=subprocess.check_output(['git','show',sha+':'+name]);q=out/dest/name[len(prefix):];q.parent.mkdir(parents=True,exist_ok=True);q.write_bytes(data)
+              records.append({'sourceCommit':sha,'path':name,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()})
+          (out/'DONORS.json').write_text(json.dumps(records,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: human-r03-pinned-sources
+          path: r03-source/
+          retention-days: 7
