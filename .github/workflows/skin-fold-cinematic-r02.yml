@@ -1,0 +1,53 @@
+name: Skin Fold Cinematic R02
+on:
+  push:
+    branches: ['feature/skin-fold-cinematic-r02-20261013']
+    paths: ['kaopu-unified-human-workbench/cinematic-r02/**', '.github/workflows/skin-fold-cinematic-r02.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: skin-fold-r02-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      NODE_PATH: /tmp/skin-fold-tools/node_modules
+      SOURCE_SHA: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-hair-workbench
+            .github/workflows
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned build and browser tools
+        run: |
+          npm install --prefix /tmp/skin-fold-tools --no-audit --no-fund esbuild@0.25.10 playwright@1.55.1
+          /tmp/skin-fold-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Probe frozen baseline or build new candidate
+        run: |
+          if [ -f kaopu-unified-human-workbench/cinematic-r02/build.cjs ]; then
+            node kaopu-unified-human-workbench/cinematic-r02/build.cjs
+            node kaopu-unified-human-workbench/cinematic-r02/test.cjs
+            node kaopu-unified-human-workbench/cinematic-r02/verify.cjs
+          else
+            node kaopu-unified-human-workbench/cinematic-r02/probe.cjs
+          fi
+      - name: Upload evidence and inspection inputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skin-fold-r02-${{ github.run_id }}
+          path: |
+            skin-fold-probe/
+            skin-fold-evidence/
+            kaopu-unified-human-workbench/cinematic-r02/BUILD.json
+          retention-days: 14
