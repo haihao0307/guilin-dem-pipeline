@@ -61,8 +61,8 @@ jobs:
       - name: Verify frozen B and compile original material closure
         run: |
           cd "$STATION"
-          node --test qa/*.test.mjs
           node emit-material-query.mjs
+          node --test qa/*.test.mjs
           cargo build --release --locked --manifest-path compiler/Cargo.toml
           compiler/target/release/kaopu-station-shader-bridge generated/material-query.wgsl generated/material-query-naga.frag stationMapMaterialQuery
           node qa/emit-component-probes.mjs
