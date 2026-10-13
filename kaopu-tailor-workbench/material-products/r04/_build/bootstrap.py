@@ -4,6 +4,9 @@ r=Path(__file__).resolve().parents[1]
 
 if (r/'SOURCE_SNAPSHOT.json').exists():
  print('Frozen complete source: migration intentionally skipped');sys.exit(0)
+
+if (r/'SOURCE_SNAPSHOT.json').exists():
+ print('Frozen complete source: migration intentionally skipped');sys.exit(0)
 repo=r.parents[2]
 workspace=repo.parent
 base=r.parent/'r03'
