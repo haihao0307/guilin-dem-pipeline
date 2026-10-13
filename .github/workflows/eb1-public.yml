@@ -1,0 +1,161 @@
+name: EB1 fixed HTTPS release verification
+on:
+  push:
+    branches: [feature/eb1-public-20261013]
+    paths: [.github/workflows/eb1-public.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: write
+    outputs:
+      url: ${{ steps.publish.outputs.url }}
+      public: ${{ steps.publish.outputs.public }}
+      source: ${{ steps.publish.outputs.source }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: project
+          ref: feature/eb1-public-20261013
+          sparse-checkout: kaopu-lighting/eb1
+      - uses: actions/checkout@v4
+        with:
+          repository: haihao0307/Humanoid-Rig-Lab-Next
+          ref: 2a17b4ae0113b087b940adddedd1476fd5ce8003
+          path: upstream
+          sparse-checkout: lighting/eb1
+          persist-credentials: false
+      - name: Add immutable verified public snapshot; retain all legacy paths
+        id: publish
+        run: python project/kaopu-lighting/eb1/publish.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eb1-public-stage
+          path: /tmp/EB1_PUBLIC_STAGE.json
+          retention-days: 30
+  bytes:
+    needs: stage
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: eb1-public-stage
+          path: stage
+      - name: Verify every frozen HTTPS file without substituting a local server
+        env:
+          URL: ${{ needs.stage.outputs.url }}
+        run: |
+          python - <<'PY'
+          import os,json,time,urllib.request,hashlib,concurrent.futures,pathlib
+          stage=json.loads(pathlib.Path('stage/EB1_PUBLIC_STAGE.json').read_text());base=os.environ['URL'];got=None
+          def get(name):
+            with urllib.request.urlopen(base+name,timeout=90) as r:return r.read()
+          for i in range(80):
+            try:
+              got=json.loads(get('FILES.json'))
+              if got.get('candidateCommit')==stage['candidateCommit']:break
+            except Exception:pass
+            time.sleep(10)
+          assert got and got.get('candidateCommit')==stage['candidateCommit'],'Fixed HTTPS deployment unavailable'
+          assert got['files']==stage['files'],'Published manifest mismatch'
+          def verify(item):
+            n,d=item
+            for i in range(4):
+              try:
+                b=get(n);assert len(b)==d['bytes'] and hashlib.sha256(b).hexdigest()==d['sha256'],n
+                return {'path':n,**d}
+              except Exception:
+                if i==3:raise
+                time.sleep(2)
+          with concurrent.futures.ThreadPoolExecutor(max_workers=8) as ex:rows=list(ex.map(verify,got['files'].items()))
+          pathlib.Path('PUBLIC_BYTES.json').write_text(json.dumps({'passed':True,'fixedURL':base,'candidateCommit':stage['candidateCommit'],'files':rows},indent=2))
+          print('Verified public file count:',len(rows))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eb1-public-bytes
+          path: PUBLIC_BYTES.json
+          retention-days: 30
+  browser:
+    needs: [stage,bytes]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        case: [lab,leather,hat,denim,shoe,tailor]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: haihao0307/Humanoid-Rig-Lab-Next
+          ref: 2a17b4ae0113b087b940adddedd1476fd5ce8003
+          sparse-checkout: lighting/eb1
+          persist-credentials: false
+      - name: Install pinned real browser
+        run: |
+          python -m pip install playwright==1.56.0 pillow==11.3.0
+          python -m playwright install --with-deps chromium
+          rm -rf lighting/eb1/qa
+      - name: Real HTTPS content, exposure UI, native rebuild and reload persistence
+        env:
+          EB1_BASE_URL: ${{ needs.stage.outputs.url }}
+          EB1_SOURCE_SHA: ${{ needs.stage.outputs.source }}
+          EB1_CASES: ${{ matrix.case }}
+        run: python lighting/eb1/qa.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eb1-public-browser-${{ matrix.case }}
+          path: lighting/eb1/qa
+          retention-days: 30
+  receipt:
+    needs: [stage,bytes,browser]
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/eb1-public-20261013
+          sparse-checkout: kaopu-lighting/eb1
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: eb1-public-*
+          path: /tmp/evidence
+      - name: Persist factual complete public-scope receipt with knit outstanding
+        env:
+          URL: ${{ needs.stage.outputs.url }}
+          SOURCE: ${{ needs.stage.outputs.source }}
+          PUBLIC: ${{ needs.stage.outputs.public }}
+        run: |
+          python - <<'PY'
+          import pathlib,json,os,datetime
+          e=pathlib.Path('/tmp/evidence');rows={}
+          for p in e.rglob('REPORT.json'):
+            r=json.loads(p.read_text());assert r['passed'] and r['publicBrowserVerified']
+            rows.update(r['cases'])
+          assert set(rows)=={'lab','leather','hat','denim','shoe','tailor'} and all(x['passed'] for x in rows.values())
+          hashes=json.loads(next(e.rglob('PUBLIC_BYTES.json')).read_text());assert hashes['passed']
+          result={'version':'EB1-1.0.0','fixedURL':os.environ['URL'],'candidateCommit':os.environ['SOURCE'],'publicCommit':os.environ['PUBLIC'],'publicBytesVerified':True,'publicBrowserVerified':True,'verifiedPublicWorkbenches':['leather','hat','denim','shoe','tailor'],'calibrationLabVerified':True,'sixWorkbenchTaskComplete':False,'knitStatus':'Private integration source written; native verification and external webpage delivery incomplete. No private source was exported.','referencePixelIdentical':False,'eightBinEnvironmentApproximationForCustomShaders':True,'physicalDeviceTested':False,'userAccepted':False,'oldVersionsPreserved':True,'workflowRun':os.environ['GITHUB_RUN_ID'],'verifiedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'cases':rows,'publicFileCount':len(hashes['files'])}
+          p=pathlib.Path('kaopu-lighting/eb1');(p/'PUBLIC_DELIVERY.json').write_text(json.dumps(result,ensure_ascii=False,indent=2))
+          (p/'DELIVERY.md').write_text('# EB1 第一版：五个工作台与独立调光台\n\n'+result['fixedURL']+'\n\n真实公网浏览器已验证：皮革、牛仔、服装、鞋子、帽子、独立调光台。曝光滑块改变真实三维画面；原生重建和刷新保持 EB1。旧版路径保留。\n\n六台整体交付未完成：毛衣私有库接入源码已写，独立验证和外部网页尚未完成，未公开其私有源码。\n\n这是白主光、暖轮廓光、程序化 HDR 与中性色调映射的自有实现，不是原站 HDR 的逐像素复制。手写材质使用同光场的八方向正权重近似；没有更换材料本体、几何或物理。桌面 Chromium 软件渲染器和手机视口检查，不是用户显卡或真手机性能认证。\n\n后续六个工作台默认沿用 EB1，除非用户明确更换。统一核心与规范位于 Humanoid-Rig-Lab-Next/lighting/eb1，固定版本见 PUBLIC_DELIVERY.json。\n')
+          print(json.dumps({k:v for k,v in result.items() if k!='cases'},ensure_ascii=False,indent=2))
+          PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add kaopu-lighting/eb1/PUBLIC_DELIVERY.json kaopu-lighting/eb1/DELIVERY.md
+          git commit -m 'docs(eb1): verified fixed HTTPS receipt; private knit scope explicitly incomplete'
+          git push origin HEAD:refs/heads/feature/eb1-public-20261013
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eb1-final-public-receipt
+          path: kaopu-lighting/eb1
+          retention-days: 30
