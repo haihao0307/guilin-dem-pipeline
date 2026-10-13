@@ -1,0 +1,67 @@
+{
+  "schema": "kaopu/lip-startup-delivery@1",
+  "version": "ET19-L3-P1",
+  "date": "2026-10-13",
+  "status": "PUBLIC_VERIFIED",
+  "source_commit": "5837800bebbd1da18fecd5d5296025ca4dcb782b",
+  "build_commit": "41d5434c18de223d3b29e2717cca8bbef19ee56f",
+  "visual_baseline": "5b4997e6dca27106533022b4ab46164cea073818",
+  "branch_base": "37ff43ce53535474ca67abcaa20fff1921f55363",
+  "public_url": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/41d5434c18de223d3b29e2717cca8bbef19ee56f/kaopu-unified-human-workbench/lip-startup-r01/index.html",
+  "actions_run": 38340455955,
+  "actions_conclusion": "success",
+  "baseline_actions_run": 38339123537,
+  "measurement_scope": "GitHub Actions Chromium / Playwright 1.56.1, SwiftShader, desktop 1280x900. Baseline from previous run at fixed hashes; final URL measured anew. Not user hardware, not a physical phone.",
+  "samples": "One cold and one warm observation per URL; not a median or universal speed guarantee. Earlier baseline observations varied.",
+  "complete_ready_definition": "Original controller ready and not busy; full face and natural-eye textures ready; optimized startupFinalFrame executed; two subsequent requestAnimationFrame callbacks.",
+  "baseline": [
+    {"kind":"cold","complete_ready_ms":63295,"encoded_network_bytes":113719192,"first_contentful_paint_ms":1408,"startup_diffusion_frames":25},
+    {"kind":"warm","complete_ready_ms":83643.2,"encoded_network_bytes":100873722,"first_contentful_paint_ms":24748,"startup_diffusion_frames":25}
+  ],
+  "public": [
+    {"kind":"cold","complete_ready_ms":10947.2,"encoded_network_bytes":88675194,"first_contentful_paint_ms":596,"startup_diffusion_frames":1,"model_cache_hits":0,"model_cache_bytes":0,"model_fetch_body_bytes":84045179},
+    {"kind":"warm","complete_ready_ms":12257.6,"encoded_network_bytes":0,"first_contentful_paint_ms":4212,"startup_diffusion_frames":1,"model_cache_hits":26,"model_cache_bytes":84045179,"model_fetch_body_bytes":0}
+  ],
+  "sizes": {"old_html_bytes":4802066,"entry_html_bytes":32886,"program_gzip_bytes":3057642,"gnm_raw_bytes":34937952,"gnm_gzip_bytes":9970245},
+  "entry_sha256": "079d66c90884e6cd7a566acd9c0ed1fca938cfa9414bec1324208ef9f079cb35",
+  "gnm_decoded_sha256": "fd19f46eef6f8bfb725fceab581e1bc8837209997ca3fd43f3c1735003c86961",
+  "gnm_lossless": true,
+  "core_source_integrity_checks_passed": 16,
+  "model_cache": {"name":"kaopu-lips-verified-assets-p1","limit_bytes":134217728,"maximum_active_model_downloads":6,"sha256_verification_on_hit_and_download":true,"does_not_clear_localStorage_or_archives":true,"does_not_clear_other_named_caches":true,"ordinary_http_cache_managed_separately":true,"limit_is_not_total_runtime_memory":true},
+  "regressions": {
+    "candidate_checks_passed":15,"candidate_checks_failed":0,
+    "public_checks_passed":15,"public_checks_failed":0,
+    "javascript_or_shader_errors":[],
+    "initial_geometry_byte_identical":true,
+    "retained_preset_records_compared":72,
+    "retained_pose_records_compared":9,
+    "native_and_display_positions_and_display_index_hashes_identical":true,
+    "macro_pixel_difference":{"mean":0,"max":0},
+    "actual_pose_button":true,
+    "independent_upper_lower_lip_controls_and_archive_restore":true,
+    "original_full_workbench_expandable":true,
+    "mobile_viewport":[390,844],"physical_phone_test":false,
+    "final_public_images_visually_reviewed":["public-macro.png","public-mobile-viewport.png"]
+  },
+  "cache_unit_tests": {"passed":7,"failed":0,"scope":"Node.js logic checks with synthetic fetch and CacheStorage; NOT browser quota or performance tests","source_blob":"665c3f920c644190e4a8dd9299c98973782d4bae","checks":["verified hit avoids fetch","corrupt entry refetched and verified","storage denied falls back to verified fetch","queued cancellation does not leak a scheduler slot","128MiB budget accounting using simulated metadata","unrelated cache preserved","at most six active model fixture requests"],"reproduce":"node qa/lips-startup-p1/cache-unit.mjs"},
+  "artifact": {"id":11786900880,"name":"lips-startup-p1-evidence","retention_days":14,"sha256":"6c2c09c4be1de62e0d6963555dcbdafbd71091e5a79be40a537a9978b28bb4e7"},
+  "report_sha256": {
+    "baseline":"dd9dc0b3fa2b23f1bab0e0e7da266c23d8998b8a801e49b33dc32fe2d84421a7",
+    "candidate":"131dc08be03d90115758a6442f08f4d960e681246154be3f41e911152fb40261",
+    "public":"c8e5b82b637626e484e2b3a0fc98916d177149982a28b35ebac3438e75dc3b51"
+  },
+  "prior_experiments": [
+    {"run":38337754924,"build":"a58936e137d73f31a21882836335f45723c78a2b","baseline_cold_ms":26625.4,"baseline_warm_ms":98311.6,"candidate_public_cold_ms":40448.9,"candidate_public_warm_ms":79156.6,"interpretation":"Transport reduction and cache worked, but cold timing did not prove a faster whole startup; continued with lifecycle rendering fixes."},
+    {"run":38339123537,"build":"39f548345b65f8f0f257bf96594ac3a66b44fc54","candidate_public_cold_ms":12264.5,"candidate_public_warm_ms":47940.4,"interpretation":"Startup draw coalescing improved cold timing; observed reload delay before new program execution and added shutdown draw suppression."}
+  ],
+  "old_runtime_source_directories_unchanged":true,
+  "merged":false,
+  "force_pushed":false,
+  "limitations":[
+    "33KB is only the entry, not the entire first download; full Anny/MHR weights still load.",
+    "Browser cache can be denied or evicted; verified network fallback remains.",
+    "128MiB is the named model-resource cache budget, not total RAM, GPU memory or browser disk usage.",
+    "Cold/warm timings include initialization and page cleanup and are single cloud observations.",
+    "No new film-quality, whole-mouth collision, saliva-fluid or user-device FPS claims."
+  ]
+}
