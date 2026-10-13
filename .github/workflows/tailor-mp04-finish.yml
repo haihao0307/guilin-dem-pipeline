@@ -1,0 +1,192 @@
+name: MP04.3 fixed public delivery
+on:
+  push:
+    branches: [fix/tailor-mp04-public-finish-20261013]
+    paths:
+      - '.github/workflows/tailor-mp04-finish.yml'
+      - 'kaopu-tailor-workbench/material-products/r04/_build/finish-*.py'
+      - 'kaopu-tailor-workbench/material-products/r04/_build/publish-snapshot.py'
+      - 'kaopu-tailor-workbench/material-products/r04/qa-release.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: mp04-public-finish
+  cancel-in-progress: false
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    outputs:
+      url: ${{ steps.publish.outputs.url }}
+      source: ${{ steps.publish.outputs.source }}
+      public: ${{ steps.publish.outputs.public }}
+      folder: ${{ steps.publish.outputs.folder }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 38350576867
+          name: mp04.2-runtime
+          path: runtime
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 38350576867
+          name: mp04.2-nine-solved-clips
+          path: runtime/clips
+      - uses: actions/checkout@v4
+        with:
+          path: project
+          sparse-checkout: kaopu-tailor-workbench/material-products/r04
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply scoped corrections while proving solver and metric identity
+        run: |
+          cp project/kaopu-tailor-workbench/material-products/r04/_build/finish-*.py runtime/_build/
+          cp project/kaopu-tailor-workbench/material-products/r04/_build/publish-snapshot.py runtime/_build/
+          cp project/kaopu-tailor-workbench/material-products/r04/qa-release.cjs runtime/
+          python - <<'PY'
+          import pathlib,hashlib,json
+          r=pathlib.Path('runtime')
+          names=['cloth-kernel.c','cloth-kernel.wasm','native-motion.mjs','coupled-cloth.mjs','wasm-cloth.mjs','waist-attachments.mjs','material-settings.mjs','motion-cache.mjs','bake-default.mjs','materials.json']
+          (r/'PHYSICAL_PARENT_HASHES.json').write_text(json.dumps({n:hashlib.sha256((r/n).read_bytes()).hexdigest() for n in names},indent=2))
+          PY
+          python runtime/_build/finish-optics.py
+          python runtime/_build/finish-ui.py
+          for f in runtime/*.mjs runtime/person/*.mjs runtime/native/*.mjs runtime/qa-release.cjs; do node --check "$f"; done
+      - name: Save complete source and immutable Pages snapshot without merges or force pushes
+        id: publish
+        run: python runtime/_build/publish-snapshot.py runtime project
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp04.3-stage-state
+          path: /tmp/MP04_PUBLIC_STAGE.json
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mp04.3-frozen-runtime
+          path: runtime
+          retention-days: 30
+  public-bytes:
+    needs: stage
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - name: Wait for the fixed HTTPS snapshot and verify every public runtime file
+        env:
+          URL: ${{ needs.stage.outputs.url }}
+          SOURCE: ${{ needs.stage.outputs.source }}
+        run: |
+          python - <<'PY'
+          import os,time,json,hashlib,urllib.request,concurrent.futures
+          base=os.environ['URL'];source=os.environ['SOURCE'];manifest=None
+          for attempt in range(90):
+              try:
+                  with urllib.request.urlopen(base+'BUILD_MANIFEST.json',timeout=45) as r:manifest=json.load(r)
+                  if manifest.get('sourceCommit')==source:break
+              except Exception:pass
+              time.sleep(10)
+          assert manifest and manifest['sourceCommit']==source,'Fixed Pages snapshot not active'
+          def verify(item):
+              path,expected=item
+              for retry in range(4):
+                  try:
+                      with urllib.request.urlopen(base+path,timeout=90) as r:data=r.read()
+                      assert len(data)==expected['bytes'] and hashlib.sha256(data).hexdigest()==expected['sha256'],path
+                      return {'path':path,**expected}
+                  except Exception:
+                      if retry==3:raise
+                      time.sleep(3)
+          with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:files=list(pool.map(verify,manifest['files'].items()))
+          json.dump({'passed':True,'sourceCommit':source,'fixedURL':base,'files':files},open('/tmp/PUBLIC_BYTES.json','w'),indent=2)
+          print('PUBLIC_BYTES_PASS',len(files),source,base)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mp04.3-public-bytes
+          path: /tmp/PUBLIC_BYTES.json
+          retention-days: 30
+  public-browser:
+    needs: [stage,public-bytes]
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        family: [knit,leather,denim]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: mp04.3-frozen-runtime
+          path: runtime
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.58.2 && npx playwright install --with-deps chromium
+      - name: Inspect real public pixels body/cloth motion and user controls
+        env:
+          QA_FAMILY: ${{ matrix.family }}
+          QA_URL: ${{ needs.stage.outputs.url }}
+          RUNTIME_SOURCE: ${{ needs.stage.outputs.source }}
+        run: node runtime/qa-release.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp04.3-public-${{ matrix.family }}
+          path: runtime/public-${{ matrix.family }}
+          retention-days: 30
+  receipt:
+    needs: [stage,public-bytes,public-browser]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.stage.outputs.source }}
+          sparse-checkout: kaopu-tailor-workbench/material-products/r04
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mp04.3-public-*
+          path: evidence
+      - name: Require all twelve public looks nine actions and bytes before recording completion
+        env:
+          URL: ${{ needs.stage.outputs.url }}
+          SOURCE: ${{ needs.stage.outputs.source }}
+          PUBLIC: ${{ needs.stage.outputs.public }}
+        run: |
+          python - <<'PY'
+          import json,pathlib,os,datetime
+          e=pathlib.Path('evidence');reports=[json.loads(p.read_text()) for p in e.rglob('BROWSER_REPORT.json')]
+          assert len(reports)==3 and all(r['passed'] for r in reports)
+          required={x+str(i).zfill(2) for x in ['K','L','D'] for i in range(1,5)}
+          cases={row['case'] for r in reports for row in r['rows']};assert required<=cases
+          assert all(a+'-'+b in cases for a in ['K04','L04','D01'] for b in ['raise','twist','step'])
+          data=json.loads(next(e.rglob('PUBLIC_BYTES.json')).read_text());assert data['passed']
+          p=pathlib.Path('kaopu-tailor-workbench/material-products/r04')
+          state={'version':'MP04.3','fixedURL':os.environ['URL'],'sourceCommit':os.environ['SOURCE'],'publicCommit':os.environ['PUBLIC'],'publicBrowserVerified':True,'publicBytesVerified':True,'deliveryComplete':True,'userAccepted':False,'physicalDeviceTested':False,'materialPhysicsCalibrated':False,'continuousCollision':False,'fullSelfCollision':False,'separateKnitLayerMechanics':False,'knitLayers':1,'actionMode':'exact recipe physically solved frames; parameter changes require new solve','testedLooks':sorted(required),'testedMotionLooks':['K04','L04','D01'],'testedMotions':['raise','twist','step'],'workflowRun':os.environ['GITHUB_RUN_ID'],'verifiedAt':datetime.datetime.now(datetime.timezone.utc).isoformat()}
+          (p/'PUBLIC_DELIVERY.json').write_text(json.dumps(state,ensure_ascii=False,indent=2))
+          (p/'PUBLIC_BROWSER_REPORTS.json').write_text(json.dumps({'state':state,'browser':reports,'publicBytes':data},ensure_ascii=False,indent=2))
+          (p/'DELIVERY.md').write_text('# MP04.3 公网接续交付\n\n'+state['fixedURL']+'?look=K04\n\n源码：'+state['sourceCommit']+'\n\nActions：https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/'+state['workflowRun']+'\n\n十二套搭配、九组人物动作回放、毛衣前后外表与内侧、单灯环扫、原款缩略图和移动视口均从实际固定 HTTPS 验证。旧 MP02/MP03 保留。默认动作来自真实求解帧，不是实时全约束算力承诺；改参数后首次动作可能需要数分钟重新实算。原生材料来源见 DONOR_LOCK.json，物理复用一致性与实算结果见 PHYSICS_REUSE.json。未做实物力学标定、完整自碰撞/连续碰撞或手机实机认证。用户尚未视觉验收。\n')
+          print(json.dumps(state,ensure_ascii=False,indent=2))
+          PY
+      - name: Commit only the final delivery receipt by fast-forward
+        env:
+          SOURCE: ${{ needs.stage.outputs.source }}
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git fetch origin fix/tailor-mp04-public-finish-20261013 --depth=1
+          test "$(git rev-parse origin/fix/tailor-mp04-public-finish-20261013)" = "$SOURCE"
+          git add kaopu-tailor-workbench/material-products/r04/PUBLIC_DELIVERY.json kaopu-tailor-workbench/material-products/r04/PUBLIC_BROWSER_REPORTS.json kaopu-tailor-workbench/material-products/r04/DELIVERY.md
+          git commit -m 'docs(mp04.3): retain real fixed-HTTPS delivery proof [skip ci]'
+          git push origin HEAD:refs/heads/fix/tailor-mp04-public-finish-20261013
