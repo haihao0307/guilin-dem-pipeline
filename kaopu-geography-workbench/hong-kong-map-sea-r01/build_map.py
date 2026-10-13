@@ -4,7 +4,7 @@ R=Path(__file__).resolve().parent
 source=R.parent/'hong-kong-background-sea-r01/index.html'
 s=source.read_text()
 assert hashlib.sha256(source.read_bytes()).hexdigest()=='84c48cc777f9860cb3e62cbfe2246a7e5fbf49e206d740546fd0f4abf7d46325'
-D=json.loads((R/'data/scene.json').read_text());height=np.load(R/'data/heights.npy').astype('<f4');mask=np.load(R/'data/mask.npy').astype('u1');assert height.shape==mask.shape==(D['height'],D['width'])
+D=json.loads((R/'data/scene.json').read_text());D.pop('build',None);height=np.load(R/'data/heights.npy').astype('<f4');mask=np.load(R/'data/mask.npy').astype('u1');assert height.shape==mask.shape==(D['height'],D['width'])
 D['heights']=base64.b64encode(gzip.compress(height.tobytes(),mtime=0)).decode();D['mask']=base64.b64encode(gzip.compress(mask.tobytes(),mtime=0)).decode()
 D['build']='HK-MAP-SEA-R01-20261013'; data_script='<script>window.HK_MAP_DATA='+json.dumps(D,ensure_ascii=False,separators=(',',':'))+';</script>'
 s=s.replace('<script>\n/* Ocean adapter.',data_script+'<script>\n/* Ocean adapter.',1)
