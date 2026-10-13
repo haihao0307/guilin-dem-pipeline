@@ -1,0 +1,27 @@
+name: Human R05 retained native data audit
+on:
+  push:
+    branches: [feature/human-r05-streaming-portraits-20261013]
+    paths: ['.github/workflows/human-r05-native-read.yml']
+permissions: {contents: read}
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: |
+          mkdir -p retained
+          python - <<'PY'
+          import urllib.request,hashlib,gzip,json
+          from pathlib import Path
+          url='https://raw.githubusercontent.com/xrblocks/assets-gnm/134feb02b11fa642a43ff5e7e880246255a74e86/gnm_head_web.bin'
+          b=urllib.request.urlopen(url,timeout=60).read()
+          assert hashlib.sha256(b).hexdigest()=='fd19f46eef6f8bfb725fceab581e1bc8837209997ca3fd43f3c1735003c86961'
+          Path('retained/gnm.bin.gz').write_bytes(gzip.compress(b,mtime=0))
+          Path('retained/source.json').write_text(json.dumps({'url':url,'sha256':hashlib.sha256(b).hexdigest(),'bytes':len(b),'alreadyUsedByR04':True,'newExternalMesh':False},indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: human-r05-retained-gnm
+          path: retained/
+          retention-days: 7
