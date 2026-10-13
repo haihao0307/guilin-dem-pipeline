@@ -1,0 +1,165 @@
+name: MP04.3 visible controls public acceptance
+on:
+  push:
+    branches: [fix/tailor-mp04-visible-transport-20261013]
+    paths: ['.github/workflows/tailor-mp04-visible-transport.yml','kaopu-tailor-workbench/material-products/r04/visible-transport.mjs','kaopu-tailor-workbench/material-products/r04/_build/prepare-transport.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: write
+    outputs:
+      url: ${{ steps.publish.outputs.url }}
+      source: ${{ steps.publish.outputs.source }}
+      public: ${{ steps.publish.outputs.public }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: project
+          sparse-checkout: kaopu-tailor-workbench/material-products/r04
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare original-button transport without changing material or physics runtime
+        run: |
+          cp -a project/kaopu-tailor-workbench/material-products/r04 runtime
+          python runtime/_build/prepare-transport.py
+          node --check runtime/visible-transport.mjs
+          node --check runtime/qa-release.cjs
+      - name: Save complete source and unique frozen public snapshot by fast-forward
+        id: publish
+        run: python runtime/_build/publish-snapshot.py runtime project
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp04-visible-stage
+          path: /tmp/MP04_PUBLIC_STAGE.json
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mp04-visible-runtime
+          path: runtime
+          retention-days: 30
+  bytes:
+    needs: stage
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - name: Require the actual fixed public source and all of its files
+        env:
+          URL: ${{ needs.stage.outputs.url }}
+          SOURCE: ${{ needs.stage.outputs.source }}
+        run: |
+          python - <<'PY'
+          import os,json,urllib.request,time,hashlib,concurrent.futures
+          base=os.environ['URL'];source=os.environ['SOURCE'];manifest=None
+          def read(name):
+              with urllib.request.urlopen(base+name,timeout=90) as r:return r.read()
+          for attempt in range(85):
+              try:
+                  manifest=json.loads(read('BUILD_MANIFEST.json'))
+                  if manifest.get('sourceCommit')==source:break
+              except Exception:pass
+              time.sleep(10)
+          assert manifest and manifest['sourceCommit']==source
+          def check(item):
+              n,e=item
+              for attempt in range(4):
+                  try:
+                      b=read(n);assert len(b)==e['bytes'] and hashlib.sha256(b).hexdigest()==e['sha256'],n
+                      return {'path':n,**e}
+                  except Exception:
+                      if attempt==3:raise
+                      time.sleep(2)
+          with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:files=list(pool.map(check,manifest['files'].items()))
+          json.dump({'passed':True,'sourceCommit':source,'fixedURL':base,'files':files},open('/tmp/PUBLIC_BYTES.json','w'),indent=2)
+          print('PUBLIC_BYTES_PASS',source,len(files))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mp04-visible-public-bytes
+          path: /tmp/PUBLIC_BYTES.json
+          retention-days: 30
+  browser:
+    needs: [stage,bytes]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        family: [knit,leather,denim]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: mp04-visible-runtime
+          path: runtime
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.58.2 && npx playwright install --with-deps chromium
+      - name: Twelve looks nine motions and visible transport on the real fixed page
+        env:
+          QA_FAMILY: ${{ matrix.family }}
+          QA_URL: ${{ needs.stage.outputs.url }}
+          RUNTIME_SOURCE: ${{ needs.stage.outputs.source }}
+        run: node runtime/qa-release.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp04-visible-public-${{ matrix.family }}
+          path: runtime/public-${{ matrix.family }}
+          retention-days: 30
+  receipt:
+    needs: [stage,bytes,browser]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.stage.outputs.source }}
+          sparse-checkout: kaopu-tailor-workbench/material-products/r04
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mp04-visible-public-*
+          path: /tmp/evidence
+      - name: Write factual final acceptance only after all public checks
+        env:
+          URL: ${{ needs.stage.outputs.url }}
+          SOURCE: ${{ needs.stage.outputs.source }}
+          PUBLIC: ${{ needs.stage.outputs.public }}
+        run: |
+          python - <<'PY'
+          import pathlib,json,datetime,os
+          e=pathlib.Path('/tmp/evidence');reports=[json.loads(p.read_text()) for p in e.rglob('BROWSER_REPORT.json')]
+          assert len(reports)==3 and all(r['passed'] for r in reports)
+          required={x+str(i).zfill(2) for x in ['K','L','D'] for i in range(1,5)}
+          cases={r['case'] for p in reports for r in p['rows']};assert required<=cases
+          for a in ['K04','L04','D01']:
+              for b in ['raise','twist','step']:assert a+'-'+b in cases and a+'-'+b+'-natural-playback' in cases
+          hashes=json.loads(next(e.rglob('PUBLIC_BYTES.json')).read_text());assert hashes['passed']
+          p=pathlib.Path('kaopu-tailor-workbench/material-products/r04')
+          state={'version':'MP04.3','transportRevision':1,'fixedURL':os.environ['URL'],'sourceCommit':os.environ['SOURCE'],'publicCommit':os.environ['PUBLIC'],'publicBrowserVerified':True,'publicBytesVerified':True,'deliveryComplete':True,'originalMotionButtonsVisibleInsideStage':True,'naturalClockAndPauseVerified':True,'userAccepted':False,'physicalDeviceTested':False,'materialPhysicsCalibrated':False,'continuousCollision':False,'fullSelfCollision':False,'knitLayers':1,'testedLooks':sorted(required),'testedMotionLooks':['K04','L04','D01'],'testedMotions':['raise','twist','step'],'actionMode':'actual solved cache playback; new recipe requires new solve','workflowRun':os.environ['GITHUB_RUN_ID'],'preservedFailedCaptureRuns':[38352922606,38354432895],'verifiedAt':datetime.datetime.now(datetime.timezone.utc).isoformat()}
+          (p/'PUBLIC_DELIVERY.json').write_text(json.dumps(state,ensure_ascii=False,indent=2))
+          (p/'PUBLIC_BROWSER_REPORTS.json').write_text(json.dumps({'state':state,'reports':reports,'publicBytes':hashes},ensure_ascii=False,indent=2))
+          (p/'DELIVERY.md').write_text('# MP04.3 公网交付 · 画内控制\n\n'+state['fixedURL']+'?look=K04\n\n源码：'+state['sourceCommit']+'\n\nActions：https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/'+state['workflowRun']+'\n\n十二套搭配、九组人物动作自然播放/暂停/同帧服装、单灯环扫、毛衣外侧/内侧、十二张原缩略图和移动视口均在固定公网实测。原人物、原裁片和旧 MP02/MP03 保留。动作按钮移入画布，避免点击时人物滚出视口。\n\n默认动作来自真实物理解算缓存，不代表实时全约束三十帧。改材料配方后的首次动作可能耗费数分钟。单层针织近似原双层厚度，不等价于双层摩擦力学；完整毛羽渲染器尚未全部移植。材料未实体标定，离散接触不是完整自碰撞或连续碰撞，手机视口不是实机认证。用户尚未视觉验收。\n\n早期两个公开测试的截图裁剪/元素稳定等待失败仍保留；新测试用浏览器真实画面捕获，保留原质量阈值并检查自然播放与可见控制。\n')
+          print(json.dumps(state,ensure_ascii=False,indent=2))
+          PY
+      - name: Fast-forward final source receipt, without modifying the published page
+        env:
+          SOURCE: ${{ needs.stage.outputs.source }}
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git fetch origin fix/tailor-mp04-visible-transport-20261013 --depth=1
+          test "$(git rev-parse origin/fix/tailor-mp04-visible-transport-20261013)" = "$SOURCE"
+          git add kaopu-tailor-workbench/material-products/r04/PUBLIC_DELIVERY.json kaopu-tailor-workbench/material-products/r04/PUBLIC_BROWSER_REPORTS.json kaopu-tailor-workbench/material-products/r04/DELIVERY.md
+          git commit -m 'docs(mp04.3): retain verified public motion and visible-control delivery [skip ci]'
+          git push origin HEAD:refs/heads/fix/tailor-mp04-visible-transport-20261013
