@@ -1,0 +1,182 @@
+name: Hong Kong R04 independent terrain and original B assembly QA
+on:
+  push:
+    branches: ['qa/hong-kong-map-sea-r04-20261013']
+    paths: ['kaopu-geography-workbench/hong-kong-map-sea-r04/**', '.github/workflows/hong-kong-map-sea-r04.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+concurrency:
+  group: hong-kong-map-sea-r04-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  CASE: kaopu-geography-workbench/hong-kong-map-sea-r04
+  STATION: kaopu-geography-workbench/hong-kong-map-sea-r04/station-integration
+  PYTHONUNBUFFERED: '1'
+jobs:
+  terrain:
+    name: Independent terrain, coast coverage and empty canopy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-geography-workbench/hong-kong-map-sea-r04
+      - name: Unpack verified own-code QA source bundle
+        run: |
+          echo "49d68a95806985c837e2dcb0f7e8af4abad953e72f27c5c3fa7e6454fc6fa6ed  $CASE/qa-source-bundle.zip" | sha256sum -c -
+          python3 -m zipfile -e "$CASE/qa-source-bundle.zip" "$CASE"
+      - name: Install pinned official browser runner
+        run: |
+          python3 -m pip install playwright==1.57.0 pillow==11.3.0 numpy==2.2.6
+          python3 -m playwright install --with-deps chromium
+      - name: Assemble terrain independently of station GPU sampling
+        env:
+          ALLOW_INCOMPLETE_STATION: '1'
+        run: |
+          python3 "$CASE/qa/bootstrap.py"
+          python3 "$CASE/build_map.py"
+      - name: HTTP desktop and mobile terrain coverage screenshots
+        timeout-minutes: 30
+        env:
+          ALLOW_INCOMPLETE_STATION: '1'
+        run: timeout --signal=TERM 29m python3 "$CASE/qa/browser_check.py"
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: r04-terrain-${{ github.sha }}
+          path: |
+            kaopu-geography-workbench/hong-kong-map-sea-r04/qa/*.json
+            kaopu-geography-workbench/hong-kong-map-sea-r04/qa/*.png
+            kaopu-geography-workbench/hong-kong-map-sea-r04/SOURCE_MANIFEST.json
+          retention-days: 7
+  assembly:
+    name: Original B source, numeric GPU and perspective station assembly
+    runs-on: ubuntu-24.04
+    timeout-minutes: 115
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-geography-workbench/hong-kong-map-sea-r04
+      - name: Unpack verified own-code QA source bundle
+        run: |
+          echo "49d68a95806985c837e2dcb0f7e8af4abad953e72f27c5c3fa7e6454fc6fa6ed  $CASE/qa-source-bundle.zip" | sha256sum -c -
+          python3 -m zipfile -e "$CASE/qa-source-bundle.zip" "$CASE"
+      - name: Install pinned official test runners
+        run: |
+          python3 -m pip install playwright==1.57.0 pillow==11.3.0 numpy==2.2.6
+          python3 -m playwright install --with-deps chromium
+          npm install --prefix "$RUNNER_TEMP/station-material" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          echo "NODE_PATH=$RUNNER_TEMP/station-material/node_modules" >> "$GITHUB_ENV"
+          python3 --version
+          node --version
+          cargo --version
+      - name: Original fifteen B CPU and source-lock tests
+        run: |
+          cd "$STATION"
+          mkdir -p generated qa/results
+          node emit-material-query.mjs
+          node --test qa/source-contract.test.mjs qa/member-resolver.test.mjs | tee qa/CPU-B-RESULTS.txt
+      - name: Rail CPU recorder, gauge, profile and construction tests
+        run: |
+          cd "$STATION"
+          node --test qa/rail-resolver.test.mjs | tee qa/CPU-RAIL-RESULTS.txt
+      - name: Near-fragment interface and metric navigation contracts
+        run: |
+          cd "$STATION"
+          node near-material/emit-shaders.mjs
+          node --test near-material/qa/contract.test.mjs | tee qa/CPU-NEAR-RESULTS.txt
+          cd ..
+          node --experimental-vm-modules --test interior-audit/*.test.mjs | tee qa/CPU-INTERIOR-RESULTS.txt
+      - name: Locked Naga 27.0.3 original and near entry compilation
+        run: |
+          cd "$STATION"
+          cargo build --release --locked --manifest-path compiler/Cargo.toml
+          compiler/target/release/kaopu-station-shader-bridge generated/material-query.wgsl generated/material-query-naga.frag stationMapMaterialQuery
+          node qa/emit-component-probes.mjs
+          for name in clock-static clock-local shed-column; do
+            compiler/target/release/kaopu-station-shader-bridge "generated/component-$name.wgsl" "generated/component-$name-naga.frag" componentProbe
+          done
+          compiler/target/release/kaopu-station-shader-bridge near-material/generated/near-material.wgsl near-material/generated/near-material-naga.frag stationNearFragment
+      - name: Rebuild complete original B mesh including six rail axes
+        run: |
+          cd "$STATION"
+          node export-mesh.mjs
+          node qa/check-mesh-inputs.mjs
+          node qa/check-rail-mesh.mjs
+      # These MUST remain separate invocations: STATION_COMPONENTS replaces run.cjs's page.
+      - name: Sixteen original component GPU winner probes
+        timeout-minutes: 12
+        env:
+          STATION_NAGA: '1'
+          STATION_COMPONENTS: '1'
+        run: node "$STATION/qa/run.cjs"
+      - name: One hundred eighty-six original material GPU comparisons
+        timeout-minutes: 12
+        env:
+          STATION_NAGA: '1'
+          STATION_COMPONENTS: '0'
+        run: node "$STATION/qa/run.cjs"
+      - name: Eleven rail fixtures against pinned original-mother GPU reference
+        timeout-minutes: 12
+        run: python3 "$CASE/qa/gpu_probe.py" rail
+      - name: Actual independently compiled near-fragment diagnostic page
+        timeout-minutes: 12
+        run: python3 "$CASE/qa/gpu_probe.py" near
+      - name: Verify separate GPU receipts and exact probe counts
+        run: python3 "$CASE/qa/verify_gpu_receipts.py"
+      - name: Sample all approximately 783k original-mother mesh positions
+        timeout-minutes: 45
+        env:
+          STATION_NAGA: '1'
+          STATION_BAKE_TIMEOUT_MS: '2580000'
+        run: node "$STATION/qa/bake-run.cjs"
+      - name: Verify near flat ownership against real baked displacement and assemble
+        run: |
+          cd "$STATION"
+          node near-material/qa/check-full-mesh.mjs
+          cd ..
+          python3 qa/pack_station.py
+          python3 qa/bootstrap.py
+          python3 build_map.py
+      - name: Actual HTTP perspective, 1.6m interiors, paths, WASD and shore coverage
+        timeout-minutes: 30
+        run: timeout --signal=TERM 29m python3 "$CASE/qa/browser_check.py"
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: r04-assembly-${{ github.sha }}
+          path: |
+            kaopu-geography-workbench/hong-kong-map-sea-r04/index.html
+            kaopu-geography-workbench/hong-kong-map-sea-r04/SOURCE_MANIFEST.json
+            kaopu-geography-workbench/hong-kong-map-sea-r04/map-data.json
+            kaopu-geography-workbench/hong-kong-map-sea-r04/terrain-detail.json
+            kaopu-geography-workbench/hong-kong-map-sea-r04/station-data.json
+            kaopu-geography-workbench/hong-kong-map-sea-r04/walk-data.json
+            kaopu-geography-workbench/hong-kong-map-sea-r04/camera-data.json
+            kaopu-geography-workbench/hong-kong-map-sea-r04/path-data.json
+            kaopu-geography-workbench/hong-kong-map-sea-r04/data/
+            kaopu-geography-workbench/hong-kong-map-sea-r04/qa/*.json
+            kaopu-geography-workbench/hong-kong-map-sea-r04/qa/*.txt
+            kaopu-geography-workbench/hong-kong-map-sea-r04/qa/*.png
+            kaopu-geography-workbench/hong-kong-map-sea-r04/interior-audit/*.json
+            kaopu-geography-workbench/hong-kong-map-sea-r04/interior-audit/*.mjs
+            kaopu-geography-workbench/hong-kong-map-sea-r04/station-integration/qa/*RESULTS.txt
+            kaopu-geography-workbench/hong-kong-map-sea-r04/station-integration/qa/*CHECK.json
+            kaopu-geography-workbench/hong-kong-map-sea-r04/station-integration/qa/RAIL-PROBE-FIXTURES.json
+            kaopu-geography-workbench/hong-kong-map-sea-r04/station-integration/qa/results/
+            kaopu-geography-workbench/hong-kong-map-sea-r04/station-integration/qa/component-results/
+            kaopu-geography-workbench/hong-kong-map-sea-r04/station-integration/material-sampler.mjs
+            kaopu-geography-workbench/hong-kong-map-sea-r04/station-integration/member-resolver.mjs
+            kaopu-geography-workbench/hong-kong-map-sea-r04/station-integration/frozen-B/
+            kaopu-geography-workbench/hong-kong-map-sea-r04/station-integration/generated/
+            kaopu-geography-workbench/hong-kong-map-sea-r04/station-integration/near-material/
+            kaopu-geography-workbench/hong-kong-map-sea-r04/station-integration/baked/
+            kaopu-geography-workbench/hong-kong-map-sea-r04/station-integration/baked-map-station.json
+            kaopu-geography-workbench/hong-kong-map-sea-r04/station-integration/MESH_MANIFEST.json
+          retention-days: 7
