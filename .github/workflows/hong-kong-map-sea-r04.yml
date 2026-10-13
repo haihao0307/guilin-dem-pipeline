@@ -28,7 +28,7 @@ jobs:
           sparse-checkout: kaopu-geography-workbench/hong-kong-map-sea-r04
       - name: Unpack verified own-code QA source bundle
         run: |
-          echo "49d68a95806985c837e2dcb0f7e8af4abad953e72f27c5c3fa7e6454fc6fa6ed  $CASE/qa-source-bundle.zip" | sha256sum -c -
+          echo "ed8583f8424bcafa4100a91cf55e64fbbda20988882b8732b59d1420bf56b9ba  $CASE/qa-source-bundle.zip" | sha256sum -c -
           python3 -m zipfile -e "$CASE/qa-source-bundle.zip" "$CASE"
       - name: Install pinned official browser runner
         run: |
@@ -65,7 +65,7 @@ jobs:
           sparse-checkout: kaopu-geography-workbench/hong-kong-map-sea-r04
       - name: Unpack verified own-code QA source bundle
         run: |
-          echo "49d68a95806985c837e2dcb0f7e8af4abad953e72f27c5c3fa7e6454fc6fa6ed  $CASE/qa-source-bundle.zip" | sha256sum -c -
+          echo "ed8583f8424bcafa4100a91cf55e64fbbda20988882b8732b59d1420bf56b9ba  $CASE/qa-source-bundle.zip" | sha256sum -c -
           python3 -m zipfile -e "$CASE/qa-source-bundle.zip" "$CASE"
       - name: Install pinned official test runners
         run: |
@@ -81,6 +81,7 @@ jobs:
           cd "$STATION"
           mkdir -p generated qa/results
           node emit-material-query.mjs
+          node export-mesh.mjs
           node --test qa/source-contract.test.mjs qa/member-resolver.test.mjs | tee qa/CPU-B-RESULTS.txt
       - name: Rail CPU recorder, gauge, profile and construction tests
         run: |
