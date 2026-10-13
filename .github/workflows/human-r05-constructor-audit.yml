@@ -1,0 +1,35 @@
+name: Human R05 exact constructor coalescing audit
+on:
+  push:
+    branches: [test/human-r05-speed-portrait-proof-20261013]
+    paths: ['.github/workflows/human-r05-constructor-audit.yml']
+permissions: {contents: read}
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with: {sparse-checkout: .github}
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - run: |
+          mkdir -p audit
+          cat > audit.cjs <<'JS'
+          const fs=require('fs'),assert=require('node:assert/strict'),crypto=require('crypto'),{chromium}=require('playwright'),sha=b=>crypto.createHash('sha256').update(b).digest('hex');
+          const raw='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/016a88a29b0c04ad43d2b06a193e59d6afe4e0fd/kaopu-unified-human-workbench/human-integrated-r05/preview.html',url='https://htmlpreview.github.io/?'+raw;
+          (async()=>{const original=await(await fetch(raw)).text(),anchor='update(){if(!this.anatomySurfaces)return super.update();';assert.equal(original.split(anchor).length,2);const changed=original.replace(anchor,'update(){if(!this.anatomySurfaces){if(!this.skin)return super.update();return}');const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}),result={url,scope:'Private browser audition only; do not report as delivered before publication',originalSHA256:sha(original),patchedSHA256:sha(changed),runs:[],pass:false};
+          try{for(const mode of ['original','coalesced']){const ctx=await browser.newContext({viewport:{width:1280,height:960},deviceScaleFactor:1}),p=await ctx.newPage();p.setDefaultTimeout(120000);const r={mode,errors:[],faces:[]};result.runs.push(r);p.on('pageerror',e=>r.errors.push(String(e)));p.on('console',m=>{if(m.type()==='error')r.errors.push(m.text())});await p.route(raw,route=>route.fulfill({status:200,contentType:'text/plain',headers:{'access-control-allow-origin':'*'},body:mode==='original'?original:changed}));const start=performance.now();await p.goto(url,{waitUntil:'domcontentloaded'});await p.waitForFunction(()=>window.__LIP_P3__?.ready||window.__LIP_P3__?.errors?.length,null,{timeout:180000});assert(await p.evaluate(()=>__LIP_P3__.ready));r.readyMS=performance.now()-start;
+          for(const id of ['P01','P03','P05']){if(id!=='P01')await p.evaluate(id=>portraitBank.apply(id),id);await p.evaluate(()=>portraitBank.view('front'));const record=await p.evaluate(async()=>{const v=__IDENTITY_QA__.viewer(),digest=async a=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',a.buffer.slice(a.byteOffset,a.byteOffset+a.byteLength)))).map(x=>x.toString(16).padStart(2,'0')).join('');const gl=v.renderer.getContext();v.render();const pixels=new Uint8Array(gl.drawingBufferWidth*gl.drawingBufferHeight*4);gl.readPixels(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight,gl.RGBA,gl.UNSIGNED_BYTE,pixels);return{position:await digest(v.geometry.attributes.position.array),normal:await digest(v.geometry.attributes.normal.array),indices:await digest(v.geometry.index.array),pixels:await digest(pixels),report:unifiedHuman.report()};});r.faces.push({id,...record});await p.screenshot({path:'audit/'+mode+'-'+id+'.jpg',type:'jpeg',quality:91});fs.writeFileSync('audit/report.json',JSON.stringify(result,null,2));}assert.equal(r.errors.length,0);await ctx.close();}
+          for(let i=0;i<3;i++)for(const k of ['position','normal','indices','pixels'])assert.equal(result.runs[0].faces[i][k],result.runs[1].faces[i][k],result.runs[0].faces[i].id+' exact '+k);result.pass=true;
+          }catch(e){result.failure=String(e);process.exitCode=1;}finally{fs.writeFileSync('audit/report.json',JSON.stringify(result,null,2));await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
+          JS
+          node audit.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: human-r05-constructor-audition
+          path: audit/
+          retention-days: 7
