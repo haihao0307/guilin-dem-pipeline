@@ -1,0 +1,52 @@
+name: Motion R02 Reference and Hand Inputs
+on:
+  push:
+    branches: [feature/motion-r02-thumb-cycles-20261013]
+    paths: [.github/workflows/motion-r02-inputs.yml]
+permissions:
+  contents: read
+jobs:
+  inputs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-unified-human-workbench/motion-review-r01
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch only selected original CMU clips, not a crawl
+        run: |
+          mkdir -p r02-inputs/raw
+          python - <<'PY'
+          import urllib.request,pathlib,json,hashlib,concurrent.futures
+          root=pathlib.Path('r02-inputs/raw')
+          paths=['16/16.asf','16/16_57.amc','16/16_15.amc','16/16_35.amc','143/143.asf','143/143_02.amc','143/143_03.amc']
+          def get(p):
+            url='https://mocap.cs.cmu.edu/subjects/'+p
+            for attempt in range(3):
+              try:
+                data=urllib.request.urlopen(url,timeout=40).read();(root/p.split('/')[-1]).write_bytes(data);return {'path':p,'url':url,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
+              except Exception as e:
+                if attempt==2:return {'path':p,'error':str(e)}
+          with concurrent.futures.ThreadPoolExecutor(3) as pool:r=list(pool.map(get,paths))
+          (root/'download.json').write_text(json.dumps(r,indent=2));print(json.dumps(r,indent=2))
+          try:(root/'143-labels.html').write_bytes(urllib.request.urlopen('https://mocap.cs.cmu.edu/search.php?subjectnumber=143',timeout=40).read())
+          except Exception as e:print(e)
+          PY
+      - run: npm install --no-save playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - name: Retained R04 neutral hand geometry and actual fist
+        run: |
+          cat > probe.cjs <<'JS'
+          const fs=require('fs'),{chromium}=require('playwright');
+          (async()=>{const b=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}),p=await b.newPage({viewport:{width:1280,height:900}});p.on('pageerror',e=>console.error(e));await p.route('https://r02-inputs.invalid/',r=>r.fulfill({contentType:'text/html',body:fs.readFileSync('kaopu-unified-human-workbench/motion-review-r01/preview.html','utf8')}));await p.goto('https://r02-inputs.invalid/',{waitUntil:'domcontentloaded'});await p.waitForFunction(()=>window.motionReview?.ready&&!motionReview.busy&&motionReview.clip,{timeout:180000});const data=await p.evaluate(()=>{const r=motionReview;r.play(false);const h=r.binding;return {rig:h.rig,positions:Array.from(h.positions),range:Array.from(h.range),packed:Array.from(h.packed),height:h.height,floorOffset:h.floorOffset,N:h.N,report:h.report};});fs.writeFileSync('r02-inputs/native.json',JSON.stringify(data));await p.evaluate(async()=>{await motionReview.select('hand:fist',{autoplay:false});motionReview.seek(3);motionReview.view('hands');motionReview.viewer.renderer.getContext().finish();});const c=await p.context().newCDPSession(p),s=await c.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});fs.writeFileSync('r02-inputs/thumb-before.png',Buffer.from(s.data,'base64'));await b.close();})();
+          JS
+          timeout 250 node probe.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: motion-r02-inputs
+          path: r02-inputs
+          retention-days: 7
