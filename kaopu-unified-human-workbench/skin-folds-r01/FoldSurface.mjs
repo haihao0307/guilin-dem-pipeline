@@ -28,7 +28,6 @@ export class FoldSurface {
   const g=this.geometry,R=g.attributes.fRest.array,T=g.attributes.csType.array,Q=g.attributes.position.array,N=g.attributes.normal.array,key=GEOMETRY_KEYS.map(k=>settings[k]).join('|');
   if(key!==this.fieldKey){for(let i=0;i<T.length;i++){const d=T[i]<.5?foldAt(R[i*3]*1000,R[i*3+1]*1000,settings,this.coverage(i)):[0,0,0];this.delta.set(d,i*3);}this.fieldKey=key;}
   this.base.set(Q);
-  // Current native face basis, so tangential gathering follows posed heads.
   const fields=this.model.faceSurface.fields,L=id=>fields.landmark(this.model.positions,id),toView=p=>new THREE.Vector3(p[0],p[2],-p[1]);
   const x=toView(L(45)).sub(toView(L(36))).normalize(),up=toView(L(27)).sub(toView(L(8)));up.addScaledVector(x,-up.dot(x)).normalize();
   let affected=0,max=0,pos=0,neg=0,protectedDelta=0;
@@ -40,3 +39,4 @@ export class FoldSurface {
   this.stats={...this.stats,affectedVertices:affected,positiveRollVertices:pos,valleyVertices:neg,maxDeltaMM:max,protectedDeltaMM:protectedDelta*1000,updateMS:performance.now()-started,canonicalModified:false,bodyModified:false,extraHeadMeshes:0,foldSource:'CPU display-vertex positions + recomputed normals; included in native-derived idle GPU bases',physicalSkinSimulation:false};return g;
  }
  dispose(){for(const l of this.layers)l.geometry.dispose();}
+}
