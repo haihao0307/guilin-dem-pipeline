@@ -450,4 +450,4 @@ function witnessOverlaySVG(report,stage,view) {
 }
 
 module.exports={auditNativeGeometry,captureNativeSnapshot,captureCamera,witnessOverlaySVG,DEFAULTS,SCHEMA,
-  _testing:{triangleIntersection,makeTriangles,makeBVH,firstRayHit,rayTriangle,prepareCamera,projectPoint,toDisplay,fromDisplay,classifyMapping}};
+  _testing:{cameraWitness,triangleIntersection,makeTriangles,makeBVH,firstRayHit,rayTriangle,prepareCamera,projectPoint,toDisplay,fromDisplay,classifyMapping}};

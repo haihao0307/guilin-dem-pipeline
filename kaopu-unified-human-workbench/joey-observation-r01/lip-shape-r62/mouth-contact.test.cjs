@@ -1,0 +1,7 @@
+const test=require('node:test'),assert=require('node:assert/strict'),{mouthContactDelta,contactBeyondSharedTopology}=require('./mouth-contact.cjs');
+const qa=require(process.env.NATIVE_QA_MODULE||'../cheek-continuity-r55/native-geometry-qa.cjs');
+const a={ids:[0,1,2],p:[[0,0,0],[1,0,0],[0,1,0]]};
+test('shared boundary contact is excluded but adjacent folded overlap remains',()=>{const b={ids:[1,0,3],p:[[1,0,0],[0,0,0],[.5,.5,0]]};assert.equal(contactBeyondSharedTopology(a,b,{line:[[0,0,0],[1,0,0]]}),false);assert.equal(contactBeyondSharedTopology(a,b,{line:[[0,0,0],[1,0,0]],polygon:[[0,0,0],[1,0,0],[.5,.5,0]]}),true);});
+const mesh=()=>({positions:[0,0,0,1,0,0,0,1,0, 5,.2,-1,5,.2,1,5.8,.2,0],faces:[0,1,2,3,4,5]});
+test('fixed mouth selection still detects a moving external native target',()=>{const b=mesh(),c=mesh();for(let i=9;i<c.positions.length;i+=3)c.positions[i]-=4.8;const r=mouthContactDelta(b,c,[0,1,2],{},qa);assert.equal(r.baselinePairs,0);assert.equal(r.addedCount,1);assert.equal(r.selectedFaces,1);assert.equal(r.candidateWitnesses[0].kind,'proper_crossing');});
+test('empty or out-of-range semantic selection and changed topology fail',()=>{const a=mesh();assert.throws(()=>mouthContactDelta(a,a,[],{},qa),/selection/);assert.throws(()=>mouthContactDelta(a,a,[99],{},qa),/selection/);const b=mesh();b.faces[0]=1;assert.throws(()=>mouthContactDelta(a,b,[0],{},qa),/matching/);});

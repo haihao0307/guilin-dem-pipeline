@@ -1,0 +1,20 @@
+'use strict';
+function contactBeyondSharedTopology(a,b,hit,tolerance=1e-9){
+ if(!hit)return false;const shared=a.ids.filter(i=>b.ids.includes(i));if(!shared.length)return true;if(shared.length===3)return false;const points=[...(hit.line||[]),...(hit.polygon||[])];if(!points.length)return true;const p=a.p[a.ids.indexOf(shared[0])],q=shared.length===2?a.p[a.ids.indexOf(shared[1])]:p,edge=q.map((x,k)=>x-p[k]),length2=edge.reduce((s,x)=>s+x*x,0);return points.some(x=>{const t=length2?Math.max(0,Math.min(1,x.reduce((s,v,k)=>s+(v-p[k])*edge[k],0)/length2)):0;return Math.hypot(...x.map((v,k)=>v-p[k]-t*edge[k]))>tolerance;});
+}
+
+function mouthContactDelta(baseline,candidate,selectedVertices,cameras,provided){
+ const {_testing:T,DEFAULTS}=provided||require('../cheek-continuity-r55/native-geometry-qa.cjs');
+ if(!Array.isArray(selectedVertices)||!selectedVertices.length||selectedVertices.some(i=>!Number.isInteger(i)||i<0||i>=baseline.positions.length/3))throw Error('Explicit native mouth vertex selection required');
+ if(baseline.positions.length!==candidate.positions.length||baseline.faces.length!==candidate.faces.length||baseline.faces.some((v,i)=>v!==candidate.faces[i])||baseline.positions.some(v=>!Number.isFinite(v))||candidate.positions.some(v=>!Number.isFinite(v)))throw Error('Invalid matching native geometry');
+ const chosen=new Set(selectedVertices),selected=new Set();for(let f=0;f<baseline.faces.length/3;f++)if(baseline.faces.slice(3*f,3*f+3).some(v=>chosen.has(v)))selected.add(f);
+ const cameraList=Object.entries(cameras).map(([name,c])=>T.prepareCamera(name,c));const overlap=(a,b)=>[0,1,2].every(k=>a.min[k]<=b.max[k]+DEFAULTS.distanceEpsilonM&&b.min[k]<=a.max[k]+DEFAULTS.distanceEpsilonM);
+ function scan(mesh){const tris=T.makeTriangles(mesh.positions,mesh.faces,Array(mesh.faces.length/3).fill('native')),tree=T.makeBVH(tris.filter(t=>t.normalLength>DEFAULTS.doubleAreaEpsilonM2)),pairs=new Map(),seen=new Set();let tested=0;
+  const query=(n,t,out)=>{if(!n||!overlap(n,t))return;if(n.items){for(const v of n.items)if(overlap(v,t))out.push(v);}else{query(n.left,t,out);query(n.right,t,out);}};
+  for(const id of selected){const a=tris[id],near=[];query(tree,a,near);for(const b of near){if(a.id===b.id)continue;const key=a.id<b.id?a.id+':'+b.id:b.id+':'+a.id;if(seen.has(key))continue;seen.add(key);tested++;const hit=T.triangleIntersection(a,b,DEFAULTS);if(!contactBeyondSharedTopology(a,b,hit))continue;pairs.set(key,{pair:key,kind:hit.kind,line:hit.line,polygon:hit.polygon,views:Object.fromEntries(cameraList.map(c=>[c.name,T.cameraWitness(hit,c,tree,DEFAULTS)]))});}}
+  return{pairs,tested};}
+ const a=scan(baseline),b=scan(candidate),added=[...b.pairs.keys()].filter(p=>!a.pairs.has(p)),removed=[...a.pairs.keys()].filter(p=>!b.pairs.has(p)),views={};
+ for(const c of cameraList){const old=new Set([...a.pairs.values()].filter(w=>w.views[c.name].potentiallyVisibleFrontSide).map(w=>w.pair)),now=new Set([...b.pairs.values()].filter(w=>w.views[c.name].potentiallyVisibleFrontSide).map(w=>w.pair));views[c.name]={baselinePotentiallyVisible:old.size,candidatePotentiallyVisible:now.size,becamePotentiallyVisible:[...now].filter(p=>!old.has(p)),noLongerPotentiallyVisible:[...old].filter(p=>!now.has(p))};}
+ return{method:'native upper/lower lip semantic regions plus two surface-adjacency rings, tested against the complete native surface; shared-edge/vertex contact excluded only at the original 1e-9m tolerance',selectedVertices:chosen.size,selectedFaces:selected.size,baselineTests:a.tested,candidateTests:b.tested,baselinePairs:a.pairs.size,candidatePairs:b.pairs.size,addedCount:added.length,removedCount:removed.length,added,removed,views,baselineWitnesses:[...a.pairs.values()],candidateWitnesses:[...b.pairs.values()],noNewContactPairs:added.length===0,appearanceAccepted:false,limitation:'Float64 predicates and sampled full-native camera rays; contact pair changes alone do not prove a visible defect. No volumetric depth claim. Skin/dental/other native faces remain possible collision targets.'};
+}
+module.exports={mouthContactDelta,contactBeyondSharedTopology};
