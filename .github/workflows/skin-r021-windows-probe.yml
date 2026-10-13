@@ -1,0 +1,28 @@
+name: Skin R02 Windows black-frame reproduction
+on:
+  push:
+    branches: [fix/skin-dna-r02-1-blackframe-20261013]
+    paths: [.github/workflows/skin-r021-windows-probe.yml]
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: iteration/skin-r021
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --no-audit --no-fund playwright@1.56.1
+          npx playwright install chromium
+      - run: node iteration/skin-r021/win-probe.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-r021-windows-old
+          path: win-evidence
+          retention-days: 14
