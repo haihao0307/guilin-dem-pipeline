@@ -1,0 +1,67 @@
+name: MP04 physically solved motion cache
+on:
+  push:
+    branches: [feature/tailor-mp04-native-material-motion-20261013]
+    paths: ['.github/workflows/tailor-mp04-bake.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  bake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        look: [K04,L04,D01]
+        motion: [raise,twist,step]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 38348237469
+          name: mp04-candidate-runtime
+          path: runtime
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Solve six seconds without cloth skinning or frame interpolation
+        run: node runtime/bake-default.mjs '${{ matrix.look }}' '${{ matrix.motion }}'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp04-motion-${{ matrix.look }}-${{ matrix.motion }}
+          path: runtime/clips
+          retention-days: 14
+  catalogue:
+    needs: bake
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mp04-motion-*
+          path: gathered
+      - name: Retain only hash-matching solved clips with exact recipes
+        run: |
+          python - <<'PY'
+          import pathlib,json,hashlib,shutil,gzip,struct
+          out=pathlib.Path('clips');out.mkdir();rows=[]
+          for p in pathlib.Path('gathered').rglob('*.bin.gz'):
+              info=json.loads(p.with_suffix('').with_suffix('.json').read_text())
+              b=p.read_bytes();assert hashlib.sha256(b).hexdigest()==info['sha256']
+              raw=gzip.decompress(b);magic,n=struct.unpack_from('<II',raw);assert magic==0x3430504d
+              header=json.loads(raw[8:8+n]);assert header['proof']['passed'];assert header['frameCount']==181
+              assert header['recipe']==info['recipe'];shutil.copyfile(p,out/p.name)
+              rows.append({'look':info['look'],'motion':info['motion'],'file':p.name,'sha256':info['sha256'],'bytes':len(b),'recipe':info['recipe'],'proof':header['proof']})
+          assert len(rows)==9
+          (out/'index.json').write_text(json.dumps({'version':'MP04.1','sourceBuildRun':38348237469,'clips':rows},ensure_ascii=False,indent=2))
+          print('SOLVED_CLIPS',[(r['look'],r['motion']) for r in rows])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mp04-nine-solved-clips
+          path: clips
+          retention-days: 14
