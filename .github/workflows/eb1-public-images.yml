@@ -1,0 +1,65 @@
+name: EB1 public gallery image audit
+on:
+  push:
+    branches: [feature/eb1-public-20261013]
+    paths: [.github/workflows/eb1-public-images.yml]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Install pinned browser
+        run: |
+          python -m pip install playwright==1.56.0 pillow==11.3.0
+          python -m playwright install --with-deps chromium
+      - name: Observe exact gallery DOM, URLs, response headers and decoding
+        run: |
+          mkdir -p evidence
+          cat > /tmp/audit-images.py <<'PY'
+          from playwright.sync_api import sync_playwright
+          from pathlib import Path
+          import json,time,hashlib,traceback,urllib.request
+          url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-lighting/eb1-v1-2a17b4ae0113/tailor/index.html'
+          out=Path('evidence');r={'url':url,'passed':False,'responses':[],'failed':[],'console':[],'errors':[]}
+          with sync_playwright() as p:
+            b=p.chromium.launch(headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage'])
+            page=b.new_page(viewport={'width':1360,'height':900},device_scale_factor=1)
+            page.on('console',lambda x:r['console'].append({'type':x.type,'text':x.text}) if x.type in ['error','warning'] else None)
+            page.on('pageerror',lambda x:r['errors'].append(str(x)))
+            page.on('requestfailed',lambda x:r['failed'].append({'url':x.url,'reason':x.failure}))
+            def response(x):
+              if '/thumbs/' not in x.url:return
+              v={'url':x.url,'status':x.status,'headers':x.headers}
+              try:
+                data=x.body();v.update(bytes=len(data),sha256=hashlib.sha256(data).hexdigest(),signature=data[:24].hex())
+                (out/('network-'+x.url.rsplit('/',1)[-1])).write_bytes(data)
+              except Exception as e:v['bodyError']=str(e)
+              r['responses'].append(v)
+            page.on('response',response)
+            try:
+              page.goto(url,wait_until='domcontentloaded',timeout=120000)
+              page.wait_for_function('window.__MP04__?.audit().length>=2&&__MP04__.audit().every(x=>!x.pending&&x.ready!==false&&!x.error)',timeout=180000)
+              page.wait_for_timeout(3000)
+              r['initialImages']=page.evaluate('Array.from(document.images).map(i=>({src:i.src,currentSrc:i.currentSrc,complete:i.complete,width:i.naturalWidth,height:i.naturalHeight,loading:i.loading}))')
+              # Eager loading is a test interaction only. It changes no committed runtime.
+              page.evaluate('for(const i of document.images)i.loading="eager"')
+              page.wait_for_timeout(5000)
+              r['images']=page.evaluate('Array.from(document.images).map(i=>({src:i.src,currentSrc:i.currentSrc,complete:i.complete,width:i.naturalWidth,height:i.naturalHeight}))')
+              r['decode']=page.evaluate('async()=>await Promise.all(Array.from(document.images).map(async i=>{try{await i.decode();return {src:i.src,ok:true};}catch(e){return {src:i.src,ok:false,error:String(e)};}}))')
+              page.screenshot(path=str(out/'gallery-public.png'),timeout=120000)
+              r['passed']=len(r['images'])==12 and all(i['width']>0 for i in r['images']) and not r['errors']
+            except Exception as e:r['error']=str(e);r['trace']=traceback.format_exc()
+            finally:
+              (out/'REPORT.json').write_text(json.dumps(r,ensure_ascii=False,indent=2));b.close()
+          print(json.dumps(r,ensure_ascii=False,indent=2),flush=True)
+          raise SystemExit(0 if r['passed'] else 1)
+          PY
+          python /tmp/audit-images.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eb1-public-gallery-audit
+          path: evidence
+          retention-days: 30
