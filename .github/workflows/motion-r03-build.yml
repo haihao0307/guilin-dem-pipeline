@@ -1,0 +1,115 @@
+name: Motion R03 Surface Interaction Build
+on:
+  push:
+    branches: [feature/motion-r03-contact-interactions-20261013]
+    paths:
+      - kaopu-unified-human-workbench/motion-review-r03/**
+      - .github/workflows/motion-r03-build.yml
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: motion-r03-contact-interactions
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    env:
+      WORK: kaopu-unified-human-workbench/motion-review-r03
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/motion-r03-contact-interactions-20261013
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            .github/workflows
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save esbuild@0.25.10 playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - name: Preserve finite official reference provenance
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import os,urllib.request,hashlib,zipfile,io,pathlib,json
+          root=pathlib.Path(os.environ['WORK']);out=root/'references';out.mkdir(exist_ok=True)
+          req=urllib.request.Request('https://api.github.com/repos/haihao0307/guilin-dem-pipeline/actions/artifacts/11811492512/zip',headers={'Accept':'application/vnd.github+json'})
+          req.add_unredirected_header('Authorization','Bearer '+os.environ['GH_TOKEN'])
+          data=urllib.request.urlopen(req,timeout=90).read();assert hashlib.sha256(data).hexdigest()=='9f2116da472c6ca8d619e60ce592cd166fbf5d29f2c712530987afb67de17eac'
+          z=zipfile.ZipFile(io.BytesIO(data))
+          for name in z.namelist():
+            if name.endswith('/') or not (name.endswith(('DOWNLOAD.json','REPORT.json','.asf','.amc','.html'))):continue
+            p=out/pathlib.Path(name).name;p.write_bytes(z.read(name))
+          assert hashlib.sha256((out/'22_14.amc').read_bytes()).hexdigest()==json.load(open(root/'GUIDE.json'))['sourceAMC_SHA256']
+          PY
+      - name: Generate new wrappers and record exact authoring commit
+        run: |
+          python "$WORK/install.py"
+          node --check "$WORK/Workbench.mjs"
+          node --check "$WORK/verify.cjs"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$WORK"
+          if ! git diff --cached --quiet; then git commit -m 'build(motion-r03): record generated additive wrappers and finite source evidence'; fi
+          echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Build same R04 with new surface contact controller
+        run: node "$WORK/build.cjs"
+      - name: Candidate full-sequence numerical and actual-canvas checks
+        env:
+          QA_OUT: r03-evidence/candidate
+        run: timeout 600 node "$WORK/verify.cjs"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: motion-r03-candidate-${{ github.run_number }}
+          path: r03-evidence/candidate
+          retention-days: 14
+      - name: Publish immutable candidate without changing old entries
+        run: |
+          git add "$WORK"
+          git commit -m 'build(motion-r03): candidate-verified fixed contact workbench'
+          git push origin HEAD:feature/motion-r03-contact-interactions-20261013
+          SHA=$(git rev-parse HEAD)
+          echo "BUILD_SHA=$SHA" >> "$GITHUB_ENV"
+          echo "QA_URL=https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$SHA/$WORK/preview.html" >> "$GITHUB_ENV"
+          python - <<'PY'
+          import urllib.request,pathlib,json,hashlib,subprocess,time,os
+          sha=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip();root=os.environ['WORK'];url='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+sha+'/'+root+'/preview.html'
+          for attempt in range(6):
+            try:data=urllib.request.urlopen(url,timeout=90).read();break
+            except Exception:
+              if attempt==5:raise
+              time.sleep(3)
+          assert hashlib.sha256(data).hexdigest()==json.load(open(root+'/BUILD.json'))['outputHTMLSHA256']
+          PY
+      - name: Exact public hands pickup and two-person handover
+        env:
+          QA_OUT: r03-evidence/public
+          QA_FULL: '1'
+        run: timeout 660 node "$WORK/verify.cjs"
+      - name: Preserve reports and actual canvas images
+        run: |
+          python - <<'PY'
+          import pathlib,os,json,shutil
+          root=pathlib.Path(os.environ['WORK']);qa=json.load(open('r03-evidence/public/qa.json'));assert qa['pass']
+          for stage in ['candidate','public']:
+            dest=root/'acceptance'/stage;dest.mkdir(parents=True,exist_ok=True)
+            for p in pathlib.Path('r03-evidence',stage).iterdir():shutil.copyfile(p,dest/p.name)
+          d={'version':'MOTION-REVIEW-R03','sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':os.environ['BUILD_SHA'],'publicURL':os.environ['QA_URL'],'actionsRun':os.environ['GITHUB_RUN_ID'],'publicVerified':True,'checks':len(qa['checks']),'firstReadyMS':qa['firstReadyMS'],'visualAcceptance':'pending actual image review','productionReady':False,'physicalPhoneTested':False,'hardware60FPSCertified':False,'scope':'full new contact sequence vertex-SDF/pose checks, representative actual WebGL images; no complete triangle self-collision/force certification'}
+          (root/'DELIVERY.json').write_text(json.dumps(d,ensure_ascii=False,indent=2))
+          PY
+          git add "$WORK/acceptance" "$WORK/DELIVERY.json"
+          git commit -m 'test(motion-r03): preserve exact-public interaction checks and actual WebGL images'
+          git push origin HEAD:feature/motion-r03-contact-interactions-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: motion-r03-full-${{ github.run_number }}
+          path: |
+            r03-evidence
+            kaopu-unified-human-workbench/motion-review-r03
+          retention-days: 14
