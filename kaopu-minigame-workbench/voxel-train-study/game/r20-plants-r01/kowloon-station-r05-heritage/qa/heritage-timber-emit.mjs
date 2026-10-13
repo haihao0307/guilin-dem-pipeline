@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {createHash} from 'node:crypto';
 import {WGSL} from '../receiver.mjs';
-import {clockTowerMembers,clockTowerWGSL} from '../native-clock-tower.mjs';
+import {clockTowerMembers,clockTowerWGSL} from './heritage-timber-unrolled-reference.mjs';
 import {clockTowerMembers as loopMembers,clockTowerWGSL as loopWGSL} from './heritage-timber-loop-candidate.mjs';
 const sha=s=>createHash('sha256').update(s).digest('hex');
 function fn(source,name){const start=source.indexOf('fn '+name+'(');assert(start>=0,'Missing '+name);const open=source.indexOf('{',start);let depth=1,end=open+1;for(;depth&&end<source.length;end++){if(source[end]==='{')depth++;else if(source[end]==='}')depth--;}assert.equal(depth,0);return source.slice(start,end);}

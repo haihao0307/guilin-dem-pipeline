@@ -87,12 +87,16 @@ export function clockTowerWGSL(options={}){
   }out+=`// ${part.id}\nd=${expr};if(d<h.d){h=ColumnMemberHit(d,${f(i)});}\n`;}
   out+='return h;}\n';
  }
- out+='fn completeTowerTimber(p:vec3<f32>)->HitField{var h=HitField(1e5,4u,p,172.,1e5,vec3<f32>(1.),0.);var q=vec3<f32>(0.);var d=0.;let world=p+vec3<f32>(24.,0.,4.);let st=resolveStationState(world);\n';
- for(const [i,part]of parts.entries())if(part.surface.role==='window-timber'){
-  const s=part.shape,vertical=s.size[1]>s.size[0]&&s.size[1]>s.size[2],face=Number(part.id.split('-')[3]),axis=s.size.indexOf(Math.max(...s.size)),perm=axis===1?'yxz':axis===2?'zxy':'xyz',ex=perm.split('').map(k=>s.size['xyz'.indexOf(k)]/2);
-  out+=`q=(p-${v(s.center)}).${perm};d=box(q,${v(ex)});if(d-.03001<h.d){var child=HitField(d,4u,q,172.,d,${v(ex)},${f(i)});child.d=stationCandidatePhysicalDistance(child,world,st);if(child.d<h.d){h=child;}}\n`;
+ // One shared material call in a finite original-order loop. This avoids
+ // asking the driver to inline the full timber mother 144 separate times.
+ const timber=parts.map((part,i)=>({part,i})).filter(({part})=>part.surface.role==='window-timber');
+ out+='fn completeTowerTimber(p:vec3<f32>)->HitField{var h=HitField(1e5,4u,p,172.,1e5,vec3<f32>(1.),0.);let world=p+vec3<f32>(24.,0.,4.);let st=resolveStationState(world);\n';
+ out+=`for(var j=0u;j<${timber.length}u;j++){var q=vec3<f32>(0.);var extent=vec3<f32>(1.);var member=0.;switch j{\n`;
+ for(const [j,{part,i}]of timber.entries()){
+  const s=part.shape,axis=s.size.indexOf(Math.max(...s.size)),perm=axis===1?'yxz':axis===2?'zxy':'xyz',ex=perm.split('').map(k=>s.size['xyz'.indexOf(k)]/2);
+  out+=`${j===timber.length-1?'default':`case ${j}u`}:{q=(p-${v(s.center)}).${perm};extent=${v(ex)};member=${f(i)};}\n`;
  }
- out+='h.d=h.baseD;return h;}\n';
+ out+='}let d=box(q,extent);if(d-.03001<h.d){var child=HitField(d,4u,q,172.,d,extent,member);child.d=stationCandidatePhysicalDistance(child,world,st);if(child.d<h.d){h=child;}}}h.d=h.baseD;return h;}\n';
  out+='fn heritageTimberDirection(member:f32,d:vec3<f32>)->vec3<f32>{\n';
  for(const [i,part]of parts.entries())if(part.surface.role==='window-timber'){const axis=part.shape.size.indexOf(Math.max(...part.shape.size)),perm=axis===1?'yxz':axis===2?'zxy':'xyz';out+=`if(member==${f(i)}){return d.${perm};}\n`;}
  out+='return d;}\n';
