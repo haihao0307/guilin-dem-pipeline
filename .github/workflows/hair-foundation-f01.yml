@@ -23,6 +23,7 @@ jobs:
           node-version: '22'
       - name: Build exact native data and readable source
         run: |
+          python "$P/refine.py"
           python "$P/build.py"
           node "$P/bake-sdf.mjs"
           python "$P/build.py"
@@ -49,13 +50,14 @@ jobs:
           for name,v in m['files'].items():
               raw=(p/'site'/name).read_bytes()
               assert len(raw)==v['bytes'] and hashlib.sha256(raw).hexdigest()==v['sha256'],name
+          for f in (p/'src').glob('*.mjs'):assert f.read_bytes()==(p/'site'/f.name).read_bytes()
           (p/'CANDIDATE.json').write_text(json.dumps({'source':os.environ['GITHUB_SHA'],'run':os.environ['GITHUB_RUN_ID'],'nativeL03Unchanged':True,'candidateBrowserVerified':True,'publicBrowserVerified':False,'coreChecks':len(a['checks']),'browserChecks':len(b['checks']),'htmlSHA256':m['files']['index.html']['sha256']},indent=2))
           PY
           git config user.name 'KAOPU Hair Foundation Validation'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add -f "$P/site" "$P/BUILD_MANIFEST.json" "$P/CANDIDATE.json" "$P/evidence"
+          git add -f "$P/src" "$P/site" "$P/BUILD_MANIFEST.json" "$P/CANDIDATE.json" "$P/evidence"
           git diff --cached --name-only | python -c 'import os,sys; p=os.environ["P"]+"/"; assert all(x.startswith(p) for x in sys.stdin.read().splitlines())'
-          git commit -m 'build(hair-f01): verified native guide candidate and actual browser evidence'
+          git commit -m 'build(hair-f01): reviewed native nape and lighter display updates with browser evidence'
           git push origin HEAD:refs/heads/feature/hair-foundation-f01-20261013
       - uses: actions/upload-artifact@v4
         if: always()
