@@ -1,0 +1,81 @@
+name: Lips P2 native entry build and failure recovery
+on:
+  push:
+    branches: [fix/lips-p2-native-entry-20261013]
+    paths:
+      - kaopu-unified-human-workbench/lip-startup-r02/*.js
+      - kaopu-unified-human-workbench/lip-startup-r02/*.cjs
+      - .github/workflows/lips-p2-direct.yml
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: lips-p2-direct
+  cancel-in-progress: false
+jobs:
+  build-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            kaopu-unified-human-workbench/lip-startup-r01
+            kaopu-unified-human-workbench/lip-startup-r02
+            kaopu-unified-human-workbench/eye-materials
+            kaopu-unified-human-workbench/face-transfer
+            kaopu-unified-human-workbench/full
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pinned browser tools
+        run: |
+          mkdir -p /tmp/lips-p2-tools
+          cd /tmp/lips-p2-tools
+          npm init -y >/dev/null
+          npm install playwright@1.56.1 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - uses: actions/download-artifact@v4
+        with:
+          name: lips-startup-p1-evidence
+          run-id: 38340455955
+          github-token: ${{ github.token }}
+          path: /tmp/lips-p1-reference
+      - name: Read pinned original geometry and render evidence
+        run: |
+          mkdir -p lip-p2-evidence
+          cp /tmp/lips-p1-reference/baseline.json lip-p2-evidence/
+          cp /tmp/lips-p1-reference/baseline-macro.png lip-p2-evidence/
+          echo 'dd9dc0b3fa2b23f1bab0e0e7da266c23d8998b8a801e49b33dc32fe2d84421a7  lip-p2-evidence/baseline.json' | sha256sum -c
+          echo "$GITHUB_SHA" > lip-p2-evidence/source-commit.txt
+      - name: Package exact original resources for same-origin native hosting
+        run: |
+          node kaopu-unified-human-workbench/lip-startup-r02/build.cjs
+          cp kaopu-unified-human-workbench/lip-startup-r02/SITE.json lip-p2-evidence/
+      - name: Full original geometry and pixel regressions with raw and HTMLPreview forbidden
+        env:
+          NODE_PATH: /tmp/lips-p2-tools/node_modules
+        run: node kaopu-unified-human-workbench/lip-startup-r02/verify.cjs
+      - name: Browser-injected program404, stalled script, missing model and cache rejection
+        env:
+          NODE_PATH: /tmp/lips-p2-tools/node_modules
+        run: node kaopu-unified-human-workbench/lip-startup-r02/faults.cjs
+      - name: Retain candidate site on this branch only, no old runtime changes
+        run: |
+          test "$(git ls-remote origin "refs/heads/$GITHUB_REF_NAME" | cut -f1)" = "$GITHUB_SHA"
+          git diff --exit-code HEAD -- kaopu-unified-human-workbench/lip-startup-r01 kaopu-unified-human-workbench/lip-structure kaopu-unified-human-workbench/full kaopu-unified-human-workbench/eye-materials kaopu-unified-human-workbench/face-transfer
+          git config user.name 'KAOPU Lip Delivery'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/lip-startup-r02/SITE.json kaopu-unified-human-workbench/lip-startup-r02/site
+          git commit -m 'build(lips): verified P2 native site and inline recovery entry [skip ci]'
+          git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
+          git rev-parse HEAD > lip-p2-evidence/build-commit.txt
+          git rev-parse HEAD:kaopu-unified-human-workbench/lip-startup-r02/site > lip-p2-evidence/site-tree.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lips-p2-candidate
+          path: lip-p2-evidence
+          retention-days: 14
