@@ -1,8 +1,8 @@
-name: Joey R60 native static eye shape
+name: Joey R61 existing lip boundary observation
 on:
   push:
     branches: ['qa/joey-face-r55-20261013']
-    paths: ['kaopu-unified-human-workbench/joey-observation-r01/cheek-continuity-r55/**', 'kaopu-unified-human-workbench/joey-observation-r01/native-crease-r56/**', 'kaopu-unified-human-workbench/joey-observation-r01/lower-face-relations-r57/**', 'kaopu-unified-human-workbench/joey-observation-r01/brow-direction-r58/**', 'kaopu-unified-human-workbench/joey-observation-r01/eye-response-r59/**', 'kaopu-unified-human-workbench/joey-observation-r01/eye-shape-r60/**', '.github/workflows/joey-face-r55-qa.yml']
+    paths: ['kaopu-unified-human-workbench/joey-observation-r01/cheek-continuity-r55/**', 'kaopu-unified-human-workbench/joey-observation-r01/native-crease-r56/**', 'kaopu-unified-human-workbench/joey-observation-r01/lower-face-relations-r57/**', 'kaopu-unified-human-workbench/joey-observation-r01/brow-direction-r58/**', 'kaopu-unified-human-workbench/joey-observation-r01/eye-response-r59/**', 'kaopu-unified-human-workbench/joey-observation-r01/eye-shape-r60/**', 'kaopu-unified-human-workbench/joey-observation-r01/lip-boundary-r61/**', '.github/workflows/joey-face-r55-qa.yml']
 permissions:
   contents: read
 concurrency:
@@ -11,7 +11,7 @@ concurrency:
 jobs:
   native:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 15
     container:
       image: mcr.microsoft.com/playwright:v1.57.0-noble
     steps:
@@ -19,9 +19,8 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: |
-            kaopu-unified-human-workbench/joey-observation-r01/eye-shape-r60
+            kaopu-unified-human-workbench/joey-observation-r01/lip-boundary-r61
             kaopu-unified-human-workbench/joey-observation-r01/brow-direction-r58
-            kaopu-unified-human-workbench/joey-observation-r01/cheek-continuity-r55
             kaopu-unified-human-workbench/joey-observation-r01/lower-face-relations-r57
             kaopu-unified-human-workbench/joey-observation-r01/appearance-r54
       - name: Install matching official browser package
@@ -29,13 +28,13 @@ jobs:
         run: |
           npm install --prefix "$RUNNER_TEMP/joey-r55" --no-save --ignore-scripts playwright@1.57.0
           echo "NODE_PATH=$RUNNER_TEMP/joey-r55/node_modules" >> "$GITHUB_ENV"
-      - name: Check bounded static controls
-        run: node --test kaopu-unified-human-workbench/joey-observation-r01/eye-shape-r60/candidate.test.cjs
-      - name: Render one native static eye-shape comparison
-        run: node kaopu-unified-human-workbench/joey-observation-r01/eye-shape-r60/render.cjs
+      - name: Check existing-layer observation script
+        run: node --check kaopu-unified-human-workbench/joey-observation-r01/lip-boundary-r61/observe.cjs
+      - name: Compare original lip material layers
+        run: node kaopu-unified-human-workbench/joey-observation-r01/lip-boundary-r61/observe.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: joey-face-r55-${{ github.sha }}
-          path: joey-eye-shape-r60/
+          path: joey-lip-boundary-r61/
           retention-days: 7
