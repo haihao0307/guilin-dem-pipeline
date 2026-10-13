@@ -15,13 +15,13 @@ const partition=between(b,'// Life split: side stair/service strip, small front 
 const sep=/let sepZ=[^;]+;/.exec(partition)?.[0];if(!sep)throw Error('missing shared wet divider');
 const stairs=between(b,'// Two flights and a true half-height turning platform, with continuous handrail.','// Shared balcony');
 const exterior=between(b,'// Shared balcony is only generated when a rent/addition event grants access.','// Joint-aligned');
-const pipes=between(b,'// Joint-aligned water and drainage, not arbitrary noise streaks.','if(abs(p.x-inner)>1.0');
-const lifeMatch=/if\(abs\(p.x-inner\)>1.0[^\n]+/.exec(b);if(!lifeMatch)throw Error('missing life receiver');
-const life=lifeMatch[0].replace('h=wetService(h,p,s);','').replace('h=householdFrontageStorage(h,p,s);','');
+const pipes=between(b,'// Joint-aligned water and drainage, not arbitrary noise streaks.','h=roomLife(h,p,s);');
+const lifeMatch=/h=roomLife\(h,p,s\);[^\n]+/.exec(b);if(!lifeMatch)throw Error('missing life receiver');
+const life=lifeMatch[0].replace('h=wetService(h,p,s);','').replace('h=householdFrontageStorage(h,p,s);','').replace('h=frontageDrainage(h,p,s);','');
 const parts=[
- slab.slice(slab.indexOf('let slabQ='))+(front+side).replace(/h=(?:windowParts|frontageOpening|householdFrontageOpenings)\([^;]+;/g,'')+partition.replace(sep,''),
+ slab.slice(slab.indexOf('let slabQ='))+(front+side).replace(/h=(?:windowParts|frontageOpenings|householdFrontageOpenings)\([^;]+;/g,'')+partition.replace(sep,''),
  (front+side).replace(/h=(?:choose|householdFrontageShell)\([^;]+;/g,''),
- stairs,exterior+pipes,life,'h=householdFrontageStorage(h,p,s);h=wetService(h,p,s);'
+ stairs,exterior+pipes,life,'h=householdFrontageStorage(h,p,s);h=frontageDrainage(h,p,s);h=wetService(h,p,s);'
 ];
 export const GEOMETRY_PARTITION_PROOF={sourceStorey:original.text,groups:parts,common:lead+'let wall=.11;'+local+inner+sep,rule:'Each original h-changing field operation appears once across six storey groups. Per-group min plus repeated shared exclusion is equivalent to global min.'};
 export function geometryChunkSource(index){if(!Number.isInteger(index)||index<0||index>=7)throw Error('invalid geometry group');let geometry=GEOMETRY_WGSL;
@@ -29,12 +29,12 @@ export function geometryChunkSource(index){if(!Number.isInteger(index)||index<0|
  else{const q=fn(geometry,'querySettlement');const start=q.body.indexOf('let storeyCount='),end=q.body.indexOf('h=roof(');if(start<0||end<0)throw Error('missing floor loop boundary');const replacement='fn queryChunk(p:vec3<f32>,maximum:f32)->GeoHit{'+q.body.slice(0,start)+q.body.slice(end)+'}';geometry=geometry.slice(0,q.start)+replacement+geometry.slice(q.end);}
  return geometry;
 }
-export function geometryStageWGSL(index){return receiverWGSL(geometryChunkSource(index))+'\n'+WAVEFRONT_WGSL+String.raw`
+export function geometryStageWGSL(index){return (receiverWGSL(geometryChunkSource(index))+'\n'+WAVEFRONT_WGSL+String.raw`
 @compute @workgroup_size(64) fn queryGeometryChunk(@builtin(global_invocation_id) gid:vec3<u32>){
  let id=gid.x;if(id>=1024u){return;}let c=contexts[id];if(c.counts.y==0u){return;}
  fieldCompetition=true;fieldExcludedCount=c.counts.x;for(var j=0u;j<fieldExcludedCount;j++){fieldExcluded[j]=c.excluded[j];}
  let h=queryChunk(c.point.xyz,220.);fieldCompetition=false;
  geometryCandidates[${index}u*1024u+id]=h;
 }
-`;}
+`).replace(/\/\/[^\n]*/g,'');}
 

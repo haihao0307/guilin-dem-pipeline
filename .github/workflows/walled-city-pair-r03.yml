@@ -30,8 +30,15 @@ jobs:
         run: node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/tests/*.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/tests/local-review.test.cjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/whole-frontage-r04/tests/*.test.mjs
       - name: Compile and smoke the actual candidate field
         run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/qa/local-review.cjs --candidate whole-frontage-r04 --mode smoke --view ${{ matrix.view }} --viewport ${{ matrix.viewport }} --out whole-frontage-r04/qa/ci-${{ matrix.view }}/smoke
+      - name: Save smoke evidence before long render
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: walled-city-r04-smoke-${{ matrix.view }}-${{ github.sha }}
+          path: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/whole-frontage-r04/qa/ci-${{ matrix.view }}/smoke/
+          retention-days: 7
       - name: Render complete requested perspective frame
-        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/qa/local-review.cjs --candidate whole-frontage-r04 --mode full --view ${{ matrix.view }} --viewport ${{ matrix.viewport }} --render-timeout-ms 6900000 --out whole-frontage-r04/qa/ci-${{ matrix.view }}/full
+        timeout-minutes: 100
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/qa/local-review.cjs --candidate whole-frontage-r04 --mode full --view ${{ matrix.view }} --viewport ${{ matrix.viewport }} --init-timeout-ms 300000 --render-timeout-ms 5400000 --out whole-frontage-r04/qa/ci-${{ matrix.view }}/full
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
