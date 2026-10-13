@@ -1,0 +1,135 @@
+{
+  "schema": "kaopu/unified-human-build@1",
+  "version": "HUMAN-NATIVE-SKIN-R02",
+  "sourceCommit": "9b027248cb9ee85b5ce66e898deb72c0db974696",
+  "predecessor": "518cc9bd85b9aec53d8abbeffe303d1c0d03ddd9",
+  "earSource": "63e5dfddf2b5ca0d686651804beeba3333b2f41e",
+  "lipSource": "5b4997e6dca27106533022b4ab46164cea073818",
+  "previewSHA256": "acda37fcbb53e302fbc0340bbcf4960738e2241b1a085c1781e064df92716bcb",
+  "previewBytes": 5244723,
+  "sources": [
+    {
+      "path": "kaopu-unified-human-workbench/head-look-r02-native/Profile.mjs",
+      "sha256": "b360100ccda7de63f392fa08079bbb8d7de99075d90890937e7b51bf54939b44"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/head-look-r02-native/Studio.mjs",
+      "sha256": "cb7371bbec8ee6b62f3255a3763147ae1f210ae1d5043a4fd83cfbdee9f9fdfc"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/head-look-r02-native/UI.mjs",
+      "sha256": "7b42e6fb78af0a8404066a3cc3dbce4cb18e9ed81961bfe04618c59c5fb31d81"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/head-look-r02-native/build.cjs",
+      "sha256": "3b620bfebedca3264a514ff23d8beb30c7e31d52ae61b36921e2f81e36a98d28"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/head-look-r02-native/layout.css",
+      "sha256": "0fff2b2f9e92e13f5548e58894847bc97340552ad2538628e47364e58cb49ca0"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/head-look-r02-native/test.mjs",
+      "sha256": "bfb5122017d561be372e9f3643d9eb7998dc3d42d08c75a92dcfbbe8372f024b"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/head-look-r02-native/verify.cjs",
+      "sha256": "55144f2a19fb0ef1f28b1210f725278247d2bac4e72ef08ba8a61719c768f8db"
+    }
+  ],
+  "adapters": [
+    {
+      "path": "kaopu-unified-human-workbench/lip-structure/LipUI.mjs",
+      "anchor": "tab.click();Promise.all([viewer.skin.faceReady,viewer.skin.naturalEyesReady].filter(Boolean)).then(("
+    },
+    {
+      "path": "kaopu-unified-human-workbench/ear-tissue-r05/EarUI.mjs",
+      "anchor": "Promise.all([viewer.skin.faceReady,viewer.skin.naturalEyesReady].filter(Boolean)).then(()=>{if(dispo"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/human-integrated-r03/Anatomy.mjs",
+      "adapter": "lossless-vertex-slot-packing",
+      "exactInputAnchor": "model.regionalFace=api;"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/idle-r01/IdleSkin.mjs",
+      "anchor": "uIdleWrinkle*(.16*uIdleBlink*vFA.z+.28*uIdleSmile*vFB.y)"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/idle-r01/IdleSkin.mjs",
+      "adapter": "unified-specialist-ownership",
+      "exactInputAnchor": "csSurface*csDetail*csCover*(1.-vFA.x*uFEnabled*.65)",
+      "result": "csSurface*csDetail*csCover*(1.-vFA.x*uFEnabled*.65)*(1.-eaM)",
+      "occurrences": 2
+    },
+    {
+      "path": "kaopu-unified-human-workbench/idle-r01/IdleSkin.mjs",
+      "adapter": "unified-specialist-ownership",
+      "exactInputAnchor": "h*=fMask*fHostDetail*(1.-lpMask)",
+      "result": "h*=fMask*fHostDetail*(1.-lpMask)*(1.-eaM)",
+      "occurrences": 2
+    },
+    {
+      "path": "kaopu-unified-human-workbench/idle-r01/IdleSkin.mjs",
+      "adapter": "unified-specialist-ownership",
+      "exactInputAnchor": "lpMoist*uLWet*.20",
+      "result": "lpMoist*lpWetGain*.24",
+      "occurrences": 1
+    },
+    {
+      "path": "kaopu-unified-human-workbench/idle-r01/IdleSkin.mjs",
+      "adapter": "unified-specialist-ownership",
+      "exactInputAnchor": "float idleDrySkin=fMask*(1.-lpMask)",
+      "result": "float idleDrySkin=fMask*(1.-lpMask)*(1.-eaM)",
+      "occurrences": 1
+    },
+    {
+      "path": "kaopu-unified-human-workbench/identity-lab/TraitMaps.mjs",
+      "anchor": "function wrinkle(p,width,amount){if(!amount)return;"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/skin-folds-r02/FoldSkin.mjs",
+      "adapter": "unified-specialist-ownership",
+      "exactInputAnchor": "clamp(vFA.x,0.,1.)*csCover*(1.-clamp(vFA.y*4.,0.,1.))",
+      "result": "clamp(vFA.x,0.,1.)*csCover*(1.-clamp(vFA.y*4.,0.,1.))*(1.-lpMask)*(1.-eaM)",
+      "occurrences": 1
+    },
+    {
+      "path": "kaopu-unified-human-workbench/ear-root-r04/EarMaterial.mjs",
+      "adapter": "unified-specialist-ownership",
+      "exactInputAnchor": "patch(shader.fragmentShader,'*csCover*uIEnabled*iInside*(1.-lpMask);','*csCover*uIEnabled*iInside*(1.-lpMask)*(1.-eaM);')",
+      "result": "patch(shader.fragmentShader,'*csCover*uIEnabled*iInside;','*csCover*uIEnabled*iInside*(1.-lpMask)*(1.-eaM);')",
+      "occurrences": 1
+    },
+    {
+      "path": "kaopu-unified-human-workbench/ear-root-r04/EarMaterial.mjs",
+      "adapter": "unified-specialist-ownership",
+      "exactInputAnchor": "patch(shader.fragmentShader,'vec4(fDiffuse,fMask*(1.-lpMask*.65))','vec4(fDiffuse,fMask*(1.-lpMask*.65)*(1.-eaM*.86))')",
+      "result": "patch(shader.fragmentShader,'vec4(fDiffuse,fMask)','vec4(fDiffuse,fMask*(1.-lpMask*.65)*(1.-eaM*.86))')",
+      "occurrences": 1
+    },
+    {
+      "path": "kaopu-unified-human-workbench/ear-root-r04/EarMaterial.mjs",
+      "adapter": "unified-specialist-ownership",
+      "exactInputAnchor": "patch(shader.fragmentShader,'vec4(diffuseColor.rgb,fMask*(1.-lpMask*.65))','vec4(diffuseColor.rgb,fMask*(1.-lpMask*.65)*(1.-eaM*.86))')",
+      "result": "patch(shader.fragmentShader,'vec4(diffuseColor.rgb,fMask)','vec4(diffuseColor.rgb,fMask*(1.-lpMask*.65)*(1.-eaM*.86))')",
+      "occurrences": 1
+    }
+  ],
+  "oneCharacter": true,
+  "oldFilesUnmodified": true,
+  "limitations": [
+    "Skin is restored, not replaced by a newly acquired skin",
+    "Original skin/lip/ear/eye limitations and loading costs remain",
+    "PCF edge filtering is not physical area-light shadowing",
+    "No completion claim for SSS leak repair, new eye/ear texture authoring or film-quality calibration",
+    "No physical phone, Safari, Vision Pro or consumer GPU FPS certification"
+  ],
+  "parent": "c1e0fd1982322ae5a11e5473a69061e3d359df4d",
+  "host": "HUMAN-INTEGRATED-R03",
+  "skinSource": "2c08fa9728f64e9119b4a666cf80ee3faecb23de",
+  "rejectedSurfaceBundled": false,
+  "originalMaterialSourcesUnmodified": true,
+  "defaultLighting": "native",
+  "optionalLighting": "neutral with radius-controlled PCF filtering"
+}
