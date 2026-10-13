@@ -54,5 +54,6 @@ For Motion handoff tasks only, add a verifier receipt with the exact subject/act
 - Does not change PR #268, its code, visuals, thresholds, branch, or parent lineage.
 - Does not certify force closure, friction, mass, soft tissue, arbitrary objects, performance, artistic naturalness or user acceptance.
 - Motion Mother chooses task-local transform-step limits; N153 introduces no universal numeric threshold.
-- Route only to Motion PR #268. Lifecycle before routing: `POSTED=false`; `CLASSIFICATION-GATE-RUN=true (8/8)`; `ACKNOWLEDGED / IMPLEMENTED / MOTION-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`.
+- Routed only to Motion PR #268: https://github.com/haihao0307/guilin-dem-pipeline/pull/268#issuecomment-6157553138
+- Lifecycle after routing: `POSTED=true`; `CLASSIFICATION-GATE-RUN=true (8/8)`; `ACKNOWLEDGED / IMPLEMENTED / MOTION-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`.
 - Effect KPIs: all comparative rates, user-correction counts and time-to-legal-candidate remain `unknown`.
