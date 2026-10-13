@@ -1,0 +1,104 @@
+name: Hong Kong R03 assembly and original B material QA
+on:
+  push:
+    branches: ['qa/hong-kong-map-sea-r03-20261013']
+    paths: ['kaopu-geography-workbench/hong-kong-map-sea-r03/**', '.github/workflows/hong-kong-map-sea-r03.yml']
+permissions:
+  contents: read
+env:
+  CASE: kaopu-geography-workbench/hong-kong-map-sea-r03
+  STATION: kaopu-geography-workbench/hong-kong-map-sea-r03/station-integration
+jobs:
+  terrain:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-geography-workbench/hong-kong-map-sea-r03
+      - name: Unpack verified own-code QA source bundle
+        run: |
+          echo "b08d2e084eab5d4312d28fff72ab448c348d1e0a8d0644d44d06864c43ca3765  $CASE/qa-source-bundle.zip" | sha256sum --check
+          python3 -m zipfile -e "$CASE/qa-source-bundle.zip" "$CASE"
+      - name: Install pinned browser runner
+        run: |
+          python3 -m pip install playwright==1.57.0 pillow==11.3.0 numpy==2.2.6
+          python3 -m playwright install --with-deps chromium
+      - name: Test terrain, route and canopy independently while station sampling runs
+        env:
+          ALLOW_INCOMPLETE_STATION: '1'
+        run: |
+          python3 "$CASE/qa/bootstrap.py"
+          python3 "$CASE/build_map.py"
+          python3 "$CASE/qa/browser_check.py"
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: r03-terrain-${{ github.sha }}
+          path: |
+            kaopu-geography-workbench/hong-kong-map-sea-r03/qa/*.json
+            kaopu-geography-workbench/hong-kong-map-sea-r03/qa/*.png
+          retention-days: 7
+  assembly:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-geography-workbench/hong-kong-map-sea-r03
+      - name: Unpack verified own-code QA source bundle
+        run: |
+          echo "b08d2e084eab5d4312d28fff72ab448c348d1e0a8d0644d44d06864c43ca3765  $CASE/qa-source-bundle.zip" | sha256sum --check
+          python3 -m zipfile -e "$CASE/qa-source-bundle.zip" "$CASE"
+      - name: Install pinned official test runners
+        run: |
+          python3 -m pip install playwright==1.57.0 pillow==11.3.0 numpy==2.2.6
+          python3 -m playwright install --with-deps chromium
+          npm install --prefix "$RUNNER_TEMP/station-material" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          echo "NODE_PATH=$RUNNER_TEMP/station-material/node_modules" >> "$GITHUB_ENV"
+      - name: Verify frozen B and compile original material closure
+        run: |
+          cd "$STATION"
+          node --test qa/*.test.mjs
+          node emit-material-query.mjs
+          cargo build --release --locked --manifest-path compiler/Cargo.toml
+          compiler/target/release/kaopu-station-shader-bridge generated/material-query.wgsl generated/material-query-naga.frag stationMapMaterialQuery
+          node qa/emit-component-probes.mjs
+          for name in clock-static clock-local shed-column; do
+            compiler/target/release/kaopu-station-shader-bridge generated/component-$name.wgsl generated/component-$name-naga.frag componentProbe
+          done
+          node export-mesh.mjs
+          node qa/check-mesh-inputs.mjs
+      - name: Original B dynamic GPU comparison
+        env:
+          STATION_NAGA: '1'
+          STATION_COMPONENTS: '1'
+        run: node "$STATION/qa/run.cjs"
+      - name: Sample complete station from original shape and material functions
+        env:
+          STATION_NAGA: '1'
+        timeout-minutes: 45
+        run: node "$STATION/qa/bake-run.cjs"
+      - name: Assemble and check the actual full map
+        run: |
+          python3 "$CASE/qa/pack_station.py"
+          python3 "$CASE/qa/bootstrap.py"
+          python3 "$CASE/build_map.py"
+          python3 "$CASE/qa/browser_check.py"
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: r03-assembly-${{ github.sha }}
+          path: |
+            kaopu-geography-workbench/hong-kong-map-sea-r03/index.html
+            kaopu-geography-workbench/hong-kong-map-sea-r03/SOURCE_MANIFEST.json
+            kaopu-geography-workbench/hong-kong-map-sea-r03/qa/*.json
+            kaopu-geography-workbench/hong-kong-map-sea-r03/qa/*.png
+            kaopu-geography-workbench/hong-kong-map-sea-r03/station-integration/qa/results/
+            kaopu-geography-workbench/hong-kong-map-sea-r03/station-integration/baked/
+            kaopu-geography-workbench/hong-kong-map-sea-r03/station-integration/baked-map-station.json
+            kaopu-geography-workbench/hong-kong-map-sea-r03/station-integration/MESH_MANIFEST.json
+          retention-days: 7
+
