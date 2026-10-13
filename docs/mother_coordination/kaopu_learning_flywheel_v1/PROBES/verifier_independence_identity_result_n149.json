@@ -1,0 +1,36 @@
+{
+  "schema": "kaopu.probe-result/1",
+  "probeId": "VERIFIER-INDEPENDENCE-IDENTITY-001-N149-CLASSIFICATION-REPLAY",
+  "runAt": "2026-10-13T07:40:00Z",
+  "boundedQuestion": "Can a separate branch/read-only workflow created and interpreted under an unbound or shared principal be called an independent verifier review?",
+  "executionLayer": "isolated-node-classification-replay",
+  "environmentNote": "Pure classification replay against the N149 Candidate fixtures. No independent person, external agent, production visual gate, browser/device acceptance or user acceptance participated.",
+  "realSubject": {
+    "productionPullRequest": 244,
+    "auditPullRequest": 245,
+    "auditHead": "24c24c0740d2e17fb89e0284fd1c593715689693",
+    "workflowRunId": 38363582672,
+    "workflowConclusion": "success",
+    "actor": "haihao0307",
+    "triggeringActor": "haihao0307",
+    "reviewSubmissionsObserved": 0,
+    "commentClaimId": 6140672006
+  },
+  "assertions": [
+    {"id":"PRODUCER_IDENTITY_MISSING","expected":"HOLD_PRODUCER_IDENTITY_UNBOUND","actual":"HOLD_PRODUCER_IDENTITY_UNBOUND","passed":true},
+    {"id":"HUMAN_R03_READ_ONLY_AUDIT_CURRENT_STATE","expected":"AUDIT_EVIDENCE_CAPTURED__HOLD_INDEPENDENT_VERIFIER_IDENTITY_UNBOUND","actual":"AUDIT_EVIDENCE_CAPTURED__HOLD_INDEPENDENT_VERIFIER_IDENTITY_UNBOUND","passed":true},
+    {"id":"NAMED_VERIFIER_NO_ROLE_ASSIGNMENT","expected":"HOLD_VERIFIER_ROLE_ASSIGNMENT_MISSING","actual":"HOLD_VERIFIER_ROLE_ASSIGNMENT_MISSING","passed":true},
+    {"id":"SAME_PRINCIPAL_APPROVES_OWN_OUTPUT","expected":"REJECT_PRODUCER_SELF_APPROVAL","actual":"REJECT_PRODUCER_SELF_APPROVAL","passed":true},
+    {"id":"DIFFERENT_NAME_BUT_AUTHORED_SUBJECT","expected":"HOLD_TECHNICAL_INDEPENDENCE_UNPROVEN","actual":"HOLD_TECHNICAL_INDEPENDENCE_UNPROVEN","passed":true},
+    {"id":"PRODUCER_CAN_OVERRIDE_DECISION","expected":"HOLD_MANAGERIAL_DECISION_INDEPENDENCE_UNPROVEN","actual":"HOLD_MANAGERIAL_DECISION_INDEPENDENCE_UNPROVEN","passed":true},
+    {"id":"VERIFIER_ONLY_SEES_PRODUCER_CURATED_SCREENSHOTS","expected":"HOLD_EVIDENCE_SELECTION_INDEPENDENCE_UNPROVEN","actual":"HOLD_EVIDENCE_SELECTION_INDEPENDENCE_UNPROVEN","passed":true},
+    {"id":"PRODUCER_AUTHORED_FROZEN_AUTOMATED_CHECK","expected":"AUTOMATED_CHECK_VERIFIED__INDEPENDENT_APPROVAL_PENDING","actual":"AUTOMATED_CHECK_VERIFIED__INDEPENDENT_APPROVAL_PENDING","passed":true},
+    {"id":"DISTINCT_VERIFIER_FULL_RECEIPT","expected":"INDEPENDENT_VERIFIER_RECEIPT_VERIFIED","actual":"INDEPENDENT_VERIFIER_RECEIPT_VERIFIED","passed":true}
+  ],
+  "summary": {"passed":9,"total":9,"allPassed":true},
+  "currentSubjectDecision": "AUDIT_EVIDENCE_CAPTURED__HOLD_INDEPENDENT_VERIFIER_IDENTITY_UNBOUND",
+  "productionChanged": false,
+  "productionGateRun": false,
+  "globalR2Changed": false,
+  "productionThresholds": "UNKNOWN"
+}

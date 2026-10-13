@@ -1,0 +1,119 @@
+{
+  "schema": "kaopu.regression-case/2",
+  "caseId": "VERIFIER-INDEPENDENCE-IDENTITY-001",
+  "status": "CANDIDATE",
+  "scope": {
+    "mother": "Human",
+    "taskClass": "INDEPENDENT_REVIEW_OR_APPROVAL_CLAIM",
+    "globalAdoption": false
+  },
+  "failure": {
+    "summary": "A separate branch, read-only workflow, fresh browser run or audit artifact is labelled independent review/approval without a distinguishable verifier principal, role assignment and technical/decision independence receipt.",
+    "realSubject": {
+      "productionPullRequest": 244,
+      "auditPullRequest": 245,
+      "auditHead": "24c24c0740d2e17fb89e0284fd1c593715689693",
+      "workflowRunId": 38363582672,
+      "actor": "haihao0307",
+      "triggeringActor": "haihao0307",
+      "observedClaim": "PR #244 comment 6140672006 uses Independent visual review; PR #245 has no review submission or separately bound verifier identity.",
+      "preservedFact": "The read-only audit branch and successful workflow may produce scoped evidence; this Candidate does not invalidate that evidence."
+    }
+  },
+  "requiredReceiptFields": [
+    "claimId",
+    "testedSubjectSha",
+    "producerPrincipalId",
+    "producerTaskAnchor",
+    "verifierPrincipalId",
+    "verifierRoleAssignmentReceipt",
+    "technicalIndependenceDeclaration",
+    "managerialDecisionAuthority",
+    "verifierOriginalSubjectAccess",
+    "verifierOriginalReferenceAccess",
+    "criteriaFrozenBeforeReview",
+    "producerCanAlterVerifierDecision",
+    "verifierAuthoredTestedSubjectOrBaseline",
+    "evidenceReceipt",
+    "verifierDecision",
+    "verifierDecisionSignatureOrImmutableReceipt"
+  ],
+  "assertions": [
+    "Branch, workflow, process and write-permission isolation are evidence controls; none alone identifies an independent verifier.",
+    "A shared GitHub account cannot prove two distinct principals without a separate role-assignment and execution-identity receipt.",
+    "Automated checks authored by the producer may prove their frozen predicates ran, but cannot supply independent approval.",
+    "Technical independence requires the verifier not to author the tested subject or approve a baseline it created for the candidate.",
+    "Decision independence requires the producer not to select, rewrite or override the verifier's final decision.",
+    "A verifier restricted to producer-curated screenshots cannot claim independent reference validation without access to the exact subject and authorized reference evidence.",
+    "Valid scoped evidence capture remains valid when independent approval is held."
+  ],
+  "states": [
+    "HOLD_PRODUCER_IDENTITY_UNBOUND",
+    "AUDIT_EVIDENCE_CAPTURED__HOLD_INDEPENDENT_VERIFIER_IDENTITY_UNBOUND",
+    "HOLD_VERIFIER_ROLE_ASSIGNMENT_MISSING",
+    "REJECT_PRODUCER_SELF_APPROVAL",
+    "HOLD_TECHNICAL_INDEPENDENCE_UNPROVEN",
+    "HOLD_MANAGERIAL_DECISION_INDEPENDENCE_UNPROVEN",
+    "HOLD_EVIDENCE_SELECTION_INDEPENDENCE_UNPROVEN",
+    "AUTOMATED_CHECK_VERIFIED__INDEPENDENT_APPROVAL_PENDING",
+    "INDEPENDENT_VERIFIER_RECEIPT_VERIFIED"
+  ],
+  "fixtures": [
+    {
+      "id": "PRODUCER_IDENTITY_MISSING",
+      "input": {"claimClass":"INDEPENDENT_REVIEW","producerIdentityBound":false},
+      "expect": "HOLD_PRODUCER_IDENTITY_UNBOUND"
+    },
+    {
+      "id": "HUMAN_R03_READ_ONLY_AUDIT_CURRENT_STATE",
+      "input": {"claimClass":"INDEPENDENT_REVIEW","producerIdentityBound":true,"auditEvidenceCaptured":true,"verifierIdentityBound":false},
+      "expect": "AUDIT_EVIDENCE_CAPTURED__HOLD_INDEPENDENT_VERIFIER_IDENTITY_UNBOUND"
+    },
+    {
+      "id": "NAMED_VERIFIER_NO_ROLE_ASSIGNMENT",
+      "input": {"claimClass":"INDEPENDENT_REVIEW","producerIdentityBound":true,"auditEvidenceCaptured":true,"verifierIdentityBound":true,"roleAssignmentBound":false},
+      "expect": "HOLD_VERIFIER_ROLE_ASSIGNMENT_MISSING"
+    },
+    {
+      "id": "SAME_PRINCIPAL_APPROVES_OWN_OUTPUT",
+      "input": {"claimClass":"INDEPENDENT_APPROVAL","producerIdentityBound":true,"verifierIdentityBound":true,"roleAssignmentBound":true,"samePrincipal":true},
+      "expect": "REJECT_PRODUCER_SELF_APPROVAL"
+    },
+    {
+      "id": "DIFFERENT_NAME_BUT_AUTHORED_SUBJECT",
+      "input": {"claimClass":"INDEPENDENT_REVIEW","producerIdentityBound":true,"verifierIdentityBound":true,"roleAssignmentBound":true,"samePrincipal":false,"verifierAuthoredSubjectOrBaseline":true},
+      "expect": "HOLD_TECHNICAL_INDEPENDENCE_UNPROVEN"
+    },
+    {
+      "id": "PRODUCER_CAN_OVERRIDE_DECISION",
+      "input": {"claimClass":"INDEPENDENT_REVIEW","producerIdentityBound":true,"verifierIdentityBound":true,"roleAssignmentBound":true,"samePrincipal":false,"verifierAuthoredSubjectOrBaseline":false,"producerCanAlterVerifierDecision":true},
+      "expect": "HOLD_MANAGERIAL_DECISION_INDEPENDENCE_UNPROVEN"
+    },
+    {
+      "id": "VERIFIER_ONLY_SEES_PRODUCER_CURATED_SCREENSHOTS",
+      "input": {"claimClass":"INDEPENDENT_REVIEW","producerIdentityBound":true,"verifierIdentityBound":true,"roleAssignmentBound":true,"samePrincipal":false,"verifierAuthoredSubjectOrBaseline":false,"producerCanAlterVerifierDecision":false,"verifierOriginalSubjectAccess":false,"verifierOriginalReferenceAccess":false},
+      "expect": "HOLD_EVIDENCE_SELECTION_INDEPENDENCE_UNPROVEN"
+    },
+    {
+      "id": "PRODUCER_AUTHORED_FROZEN_AUTOMATED_CHECK",
+      "input": {"claimClass":"AUTOMATED_CHECK","producerIdentityBound":true,"evidenceReceiptBound":true},
+      "expect": "AUTOMATED_CHECK_VERIFIED__INDEPENDENT_APPROVAL_PENDING"
+    },
+    {
+      "id": "DISTINCT_VERIFIER_FULL_RECEIPT",
+      "input": {"claimClass":"INDEPENDENT_REVIEW","producerIdentityBound":true,"verifierIdentityBound":true,"roleAssignmentBound":true,"samePrincipal":false,"verifierAuthoredSubjectOrBaseline":false,"producerCanAlterVerifierDecision":false,"verifierOriginalSubjectAccess":true,"verifierOriginalReferenceAccess":true,"criteriaFrozenBeforeReview":true,"decisionReceiptBound":true},
+      "expect": "INDEPENDENT_VERIFIER_RECEIPT_VERIFIED"
+    }
+  ],
+  "activation": {
+    "posted": false,
+    "acknowledged": false,
+    "implemented": false,
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false,
+    "global": false,
+    "singleMotherTrialRequired": true,
+    "rollback": "Retire this Candidate if Human Mother shows an existing receipt that already binds principal identity, role assignment, technical independence, decision authority and original evidence access."
+  }
+}
