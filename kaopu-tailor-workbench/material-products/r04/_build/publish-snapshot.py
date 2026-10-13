@@ -1,6 +1,6 @@
 import pathlib,json,os,sys,subprocess,shutil,hashlib,gzip,struct,time
 runtime=pathlib.Path(sys.argv[1]).resolve();project=pathlib.Path(sys.argv[2]).resolve()
-branch='fix/tailor-mp04-public-finish-20261013';prefix='kaopu-tailor-workbench/material-products/r04'
+branch='fix/tailor-mp04-visible-transport-20261013';prefix='kaopu-tailor-workbench/material-products/r04'
 request=os.environ['GITHUB_SHA'];digest=lambda b:hashlib.sha256(b).hexdigest()
 def git(*args,cwd=project,check=True):
  p=subprocess.run(['git',*args],cwd=cwd,check=check,text=True,capture_output=True)
